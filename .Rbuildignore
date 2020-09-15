@@ -1,2 +1,4 @@
 ^OMtool\.Rproj$
 ^\.Rproj\.user$
+^build_tools$
+^data-raw$

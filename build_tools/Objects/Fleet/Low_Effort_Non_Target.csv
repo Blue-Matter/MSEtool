@@ -1,0 +1,16 @@
+Name,Declining effort_Domed,,,
+nyears,50,,,
+Spat_targ,1,1,,
+LFS,0.75,1.1,,
+L5,0.2,0.4,,
+Vmaxlen,0.4,0.8,,
+Fsd,0.1,0.4,,
+EffYears,0,0.3,0.6,1
+EffUpper,0,0.6,0.6,0.3
+EffLower,0,0.4,0.4,0.2
+qinc,-2,2,,
+qcv,0.1,0.3,,
+LR5,0,0,,
+LFR,0,0,,
+Rmaxlen,1,1,,
+DR,0,0,,

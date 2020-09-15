@@ -15,4 +15,38 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Depends: 
-    R (>= 2.10)
+    R (>= 3.5.0),
+    dplyr,
+    snowfall
+Imports:
+    abind,
+    dplyr,
+    methods,
+    grDevices,
+    ggplot2,
+    parallel,
+    Rcpp,
+    stats,
+    utils
+Suggests:
+    boot,
+    broom,
+    crayon,
+    devtools,
+    DT,
+    fmsb,
+    ggrepel,
+    gridExtra,
+    kableExtra,
+    knitr,
+    MASS,
+    mvtnorm,
+    openxlsx,
+    purrr,
+    readxl,
+    rfishbase,
+    rmarkdown,
+    shiny,
+    testthat,
+    tidyr
+LinkingTo: Rcpp, RcppArmadillo

@@ -303,7 +303,7 @@ importslot <- function(name, length=2, Data, Names, numeric=TRUE, essential=TRUE
 #' @docType class
 #' 
 #' @slot Name The name of the Stock object. Single value. Character string 
-# #' @template Stock_template
+#' @template Stock_template
 #' 
 #' @section Objects from the Class: Objects can be created by calls of the form
 #' \code{new('Stock')}
@@ -416,7 +416,7 @@ setClassUnion(name="char.log", members=c("character", "logical"))
 #' @name Fleet-class
 #' @docType class
 #' @slot Name Name of the Fleet object. Single value. Character string.
-# #' @template Fleet_template
+#' @template Fleet_template
 #' 
 #' @section Creating Object: 
 #' Objects can be created by calls of the form \code{new('Fleet')}
@@ -446,7 +446,7 @@ setClass("Fleet", slots = c(Name = "character",
                             Rmaxlen = "numeric",
                             DR = "numeric",
                             CurrentYr="numeric", 
-                            MPA='matrix'))
+                            MPA='char.log'))
 
 # initialize Fleet
 setMethod("initialize", "Fleet", function(.Object, file = NA, dec=c(".", ",")) {
@@ -500,7 +500,9 @@ setMethod("initialize", "Fleet", function(.Object, file = NA, dec=c(".", ",")) {
       if (NAor0(.Object@isRel)) .Object@isRel <- "TRUE"
       .Object@isRel <- as.character(.Object@isRel)
       
-      # TO DO - MPA 
+      .Object@MPA <- importslot("MPA", 1, Data, Names, FALSE, FALSE) 
+      if (NAor0(.Object@MPA)) .Object@MPA <- FALSE
+      .Object@MPA <- as.logical(.Object@MPA) 
     }
   }
   .Object
@@ -563,8 +565,7 @@ NULL
 #' hyperdeplete beta > 1, only.
 #' 
 #' @slot Name The name of the observation model object. Single value. Character string. 
-#' 
-# #' @template Obs_template
+#' @template Obs_template
 #' 
 #' @section Objects from the Class: Objects can be created by calls of the form
 #' \code{new('Obs')} 
@@ -577,15 +578,34 @@ NULL
 #' showClass('Obs')
 #' 
 setClass("Obs", representation(Name = "character", 
-                               Cobs = "numeric", Cbiascv = "numeric", CAA_nsamp = "numeric", CAA_ESS = "numeric", 
-                               CAL_nsamp = "numeric", CAL_ESS = "numeric", 
-                               Iobs = "numeric",  Ibiascv = "numeric", Btobs = "numeric", Btbiascv = "numeric", beta = "numeric",
-                               LenMbiascv = "numeric", Mbiascv = "numeric", Kbiascv = "numeric",t0biascv = "numeric", Linfbiascv = "numeric",
-                               LFCbiascv = "numeric", LFSbiascv = "numeric",
-                               FMSYbiascv = "numeric", FMSY_Mbiascv = "numeric", BMSY_B0biascv = "numeric",
-                               Irefbiascv = "numeric", Brefbiascv = "numeric", Crefbiascv = "numeric", 
-                               Dbiascv = "numeric", Dobs = "numeric",
-                               hbiascv = "numeric", Recbiascv = "numeric"))
+                               Cobs = "numeric", 
+                               Cbiascv = "numeric", 
+                               CAA_nsamp = "numeric", 
+                               CAA_ESS = "numeric", 
+                               CAL_nsamp = "numeric", 
+                               CAL_ESS = "numeric", 
+                               Iobs = "numeric",  
+                               Ibiascv = "numeric", 
+                               Btobs = "numeric", 
+                               Btbiascv = "numeric", 
+                               beta = "numeric",
+                               LenMbiascv = "numeric", 
+                               Mbiascv = "numeric", 
+                               Kbiascv = "numeric",
+                               t0biascv = "numeric", 
+                               Linfbiascv = "numeric",
+                               LFCbiascv = "numeric", 
+                               LFSbiascv = "numeric",
+                               FMSYbiascv = "numeric",
+                               FMSY_Mbiascv = "numeric",
+                               BMSY_B0biascv = "numeric",
+                               Irefbiascv = "numeric",
+                               Brefbiascv = "numeric", 
+                               Crefbiascv = "numeric", 
+                               Dbiascv = "numeric", 
+                               Dobs = "numeric",
+                               hbiascv = "numeric", 
+                               Recbiascv = "numeric"))
 
 # initialize Obs
 setMethod("initialize", "Obs", function(.Object, file = NA, dec=c(".", ",")) {
@@ -654,7 +674,7 @@ setMethod("initialize", "Obs", function(.Object, file = NA, dec=c(".", ",")) {
 #' @docType class
 #' @slot Name The name of the Implementation error object. Single value. Character string.
 #' 
-# #' @template Imp_template
+#' @template Imp_template
 #' 
 #' @section Objects from the Class: Objects can be created by calls of the form
 #' \code{new('Imp')}#' 
@@ -666,9 +686,13 @@ setMethod("initialize", "Obs", function(.Object, file = NA, dec=c(".", ",")) {
 #' 
 #' showClass('Imp')
 #' 
-setClass("Imp", representation(Name = "character", TACFrac = "numeric", TACSD = "numeric", 
-                               TAEFrac = "numeric", TAESD = "numeric", 
-                               SizeLimFrac="numeric", SizeLimSD = "numeric"))
+setClass("Imp", representation(Name = "character", 
+                               TACFrac = "numeric", 
+                               TACSD = "numeric", 
+                               TAEFrac = "numeric", 
+                               TAESD = "numeric", 
+                               SizeLimFrac="numeric", 
+                               SizeLimSD = "numeric"))
 
 # initialize Imp
 setMethod("initialize", "Imp", function(.Object, file = NA, dec=c(".", ",")) {
@@ -765,8 +789,8 @@ setClass("OM", representation(Name = "character", Agency="character",
                               cpars="list",seed="numeric", Source="character"), 
          contains=c("Stock", "Fleet", "Obs", "Imp"))
 # initialize OM
-setMethod("initialize", "OM", function(.Object, Stock=NULL, Fleet=DLMtool::Generic_Fleet, 
-                                       Obs=DLMtool::Generic_Obs, Imp=DLMtool::Perfect_Imp,
+setMethod("initialize", "OM", function(.Object, Stock=NULL, Fleet=OMtool::Generic_Fleet, 
+                                       Obs=OMtool::Generic_Obs, Imp=OMtool::Perfect_Imp,
                                        interval=4, pstar=0.5, maxF=0.8, reps=1, nsim=48, proyears=50) {
   if (is.null(Stock)) {
     message("No Stock object found. Returning a blank OM object") 
@@ -1753,6 +1777,8 @@ setMethod("show", signature = (object="Rec"), function(object) {
 #' @docType class
 #' 
 #' @slot Data The Data object at the end of the historical period
+#' @slot Obs A named list of observation parameters by simulation. Names with suffix  
+#' '_y' are by year. 
 #' 
 # #' @template Obs_desc
 #' @slot OM A numeric data.frame with nsim rows with sampled Stock & Fleet 

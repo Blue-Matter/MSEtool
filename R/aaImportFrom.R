@@ -8,7 +8,8 @@
 #' @importFrom grDevices col2rgb colorRampPalette dev.off jpeg rainbow rgb xy.coords
 #' @importFrom grid unit.c unit grid.newpage grid.draw
 #' @importFrom methods getClassDef getSlots .hasSlot new show slot slot<- slotNames
-#' @importFrom parallel detectCores 
+#' @importFrom parallel detectCores
+#' @importFrom Rcpp evalCpp 
 #' @importFrom snowfall sfClusterEval sfInit sfExportAll sfIsRunning sfExport 
 #' sfSapply sfLibrary
 #' @importFrom stats acf approx coef cor dbeta density dnorm dlnorm lm loess 

@@ -1,0 +1,25 @@
+Name,Pacific herring,
+maxage,18,
+R0,1000,
+M,0.28,0.38
+Msd,0,0.1
+h,0.4,0.6
+SRrel,1,
+Linf,25,29
+K,0.43,0.53
+t0,-0.05,0
+Ksd,0,0.025
+Linfsd,0,0.025
+LenCV,0.1,0.1
+a,4.50E-06,
+b,3.127,
+D,0.05,1
+L50,15,18
+L50_95,2,4
+Perr,0.2,0.4
+AC,0.1,0.9
+Size_area_1,0.095,0.105
+Frac_area_1,0.095,0.105
+Prob_staying,0.95,0.99
+Fdisc,0,0
+Source,http://www.dfo-mpo.gc.ca/csas-sccs/Publications/SAR-AS/2012/2012_062-eng.pdf,

@@ -1,0 +1,25 @@
+Name,Blue shark,
+maxage,32,
+R0,1000,
+M,0.15,0.25
+Msd,0,0.1
+h,0.4,0.9
+SRrel,1,
+Linf,195,205
+K,0.18,0.24
+t0,-1.05,-0.95
+Ksd,0,0.025
+LenCV,0.1,0.1
+Linfsd,0,0.025
+a,3.18E-06,
+b,3.1313,
+D,0.05,0.6
+L50,127,144
+L50_95,15,34
+Perr,0.15,0.25
+AC,0.1,0.9
+Size_area_1,0.095,0.105
+Frac_area_1,0.095,0.105
+Prob_staying,0.8,0.9
+Fdisc,0,0
+Source,http://www.pifsc.noaa.gov/tech/NOAA_Tech_Memo_PIFSC_17.pdf,

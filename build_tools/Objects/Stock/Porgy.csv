@@ -1,0 +1,25 @@
+Name,Porgy,
+maxage,25,
+R0,1000,
+M,0.2,0.25
+Msd,0,0.1
+h,0.31,0.51
+SRrel,1,
+Linf,50,54
+K,0.18,0.22
+t0,-1.05,-1
+Ksd,0,0.025
+Linfsd,0,0.025
+LenCV,0.1,0.1
+a,1.05E-05,
+b,3.076,
+D,0.05,0.6
+L50,17,29
+L50_95,12,20
+Perr,0.2,0.6
+AC,0.1,0.9
+Size_area_1,0.095,0.105
+Frac_area_1,0.095,0.105
+Prob_staying,0.9,0.99
+Fdisc,0,0
+Source,http://www.sefsc.noaa.gov/sedar/download/SEDAR01_red.porgy.2012update.pdf? id=DOCUMENT,

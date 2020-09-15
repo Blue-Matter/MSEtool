@@ -11,6 +11,20 @@ An operating model component that specifies the degree of adherence to managemen
 
 \describe{
 \item{\code{Name}}{The name of the Implementation error object. Single value. Character string.}
+
+\item{\code{Name}}{NA}
+
+\item{\code{TACFrac}}{NA}
+
+\item{\code{TACSD}}{NA}
+
+\item{\code{TAEFrac}}{NA}
+
+\item{\code{TAESD}}{NA}
+
+\item{\code{SizeLimFrac}}{NA}
+
+\item{\code{SizeLimSD}}{NA}
 }}
 
 \section{Objects from the Class}{

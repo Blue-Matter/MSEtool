@@ -1,0 +1,25 @@
+Name,Patagonian toothfish,
+maxage,37,
+R0,1000,
+M,0.132,0.198
+Msd,0,0.1
+h,0.55,0.8
+SRrel,1,
+Linf,98,103.5
+K,0.11,0.12
+t0,-5,-4.5
+Ksd,0,0.025
+Linfsd,0,0.025
+LenCV,0.1,0.1
+a,1.00E-06,
+b,3.067,
+D,0.05,0.6
+L50,75,85
+L50_95,8,12
+Perr,0.2,0.4
+AC,0.5,0.95
+Size_area_1,0.095,0.105
+Frac_area_1,0.095,0.105
+Prob_staying,0.9,0.95
+Fdisc,0,0
+Source,http://www.msc.org/track-a-fishery/fisheries-in-the-program/certified/south-atlantic-indian-ocean/south-georgia-patagonian-toothfish-longline/assessment-documents/Final_Report_Oct_2002.pdfAS/2012/2012_062-eng.pdf,

@@ -4,61 +4,19 @@
 \alias{runMSE}
 \title{Run a Management Strategy Evaluation}
 \usage{
-runMSE(
-  OM = NULL,
-  MPs = NA,
-  CheckMPs = FALSE,
-  timelimit = 1,
-  Hist = FALSE,
-  ntrials = 100,
-  fracD = 0.05,
-  CalcBlow = TRUE,
-  HZN = 2,
-  Bfrac = 0.5,
-  silent = FALSE,
-  PPD = TRUE,
-  parallel = FALSE,
-  save_name = NULL,
-  checks = FALSE
-)
+runMSE(OM = NULL, MPs = NA, Hist = FALSE, silent = FALSE, parallel = FALSE)
 }
 \arguments{
-\item{OM}{An operating model object (class 'OM')}
+\item{OM}{An operating model object (class \code{OM} or class \code{MOM})}
 
 \item{MPs}{A vector of methods (character string) of class MP}
-
-\item{CheckMPs}{Logical to indicate if \link{Can} function should be used to check
-if MPs can be run.}
-
-\item{timelimit}{Maximum time taken for a method to carry out 10 reps
-(methods are ignored that take longer)}
 
 \item{Hist}{Should model stop after historical simulations? Returns an object of
 class 'Hist' containing all historical data}
 
-\item{ntrials}{Maximum of times depletion and recruitment deviations are
-resampled to optimize for depletion. After this the model stops if more than
-percent of simulations are not close to the required depletion}
-
-\item{fracD}{Maximum allowed proportion of simulations where depletion is not
-close to sampled depletion from OM before model stops with error}
-
-\item{CalcBlow}{Should low biomass be calculated where this is the spawning
-biomass at which it takes HZN mean generation times of zero fishing to reach
-Bfrac fraction of SSBMSY}
-
-\item{HZN}{The number of mean generation times required to reach Bfrac SSBMSY
-in the Blow calculation}
-
-\item{Bfrac}{The target fraction of SSBMSY for calculating Blow}
-
 \item{silent}{Should messages be printed out to the console?}
 
 \item{parallel}{Logical. Should the MSE be run using parallel processing?}
-
-\item{save_name}{Character. Optional name to save parallel MSE list}
-
-\item{checks}{Logical. Run tests?}
 }
 \value{
 An object of class \linkS4class{MSE}
@@ -66,15 +24,4 @@ An object of class \linkS4class{MSE}
 \description{
 A function that runs a Management Strategy Evaluation (closed-loop
 simulation) for a specified operating model
-}
-\section{Functions}{
-\itemize{
-\item \code{runMSE}: Default function to use.
-}}
-
-\seealso{
-\link{joinMSE} \link{checkMSE} \link{updateMSE}
-}
-\author{
-T. Carruthers and A. Hordyk
 }

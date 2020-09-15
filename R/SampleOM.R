@@ -1,3 +1,20 @@
+myrunif <- function(n, val1, val2) {
+  min <- min(c(val1, val2))
+  max <- max(c(val1, val2))
+  
+  if (is.na(n)) stop("First argument is NA")
+  if (is.na(val1)) stop('Second argument is NA')
+  if (is.na(val2)) stop('Third argument is NA')
+  
+  if (all(is.na(c(min, max)))) return(rep(NA,n))
+  if (all(min == max)) {
+    tt <- runif(n)
+    return(rep(min, n))
+  } else {
+    return(runif(n, min, max))
+  }
+}
+
 
 #' Sample custom pars
 #'
@@ -113,22 +130,6 @@ SampleCpars <- function(cpars, nsim=48, msg=TRUE) {
 }
 
 
-myrunif <- function(n, val1, val2) {
-  min <- min(c(val1, val2))
-  max <- max(c(val1, val2))
-  
-  if (is.na(n)) stop("First argument is NA")
-  if (is.na(val1)) stop('Second argument is NA')
-  if (is.na(val2)) stop('Third argument is NA')
-  
-  if (all(is.na(c(min, max)))) return(rep(NA,n))
-  if (all(min == max)) {
-    tt <- runif(n)
-    return(rep(min, n))
-  } else {
-    return(runif(n, min, max))
-  }
-}
 
 
 #' Sample Stock parameters
@@ -159,14 +160,10 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   if (length(cpars) > 0) { # custom pars exist - assign to function environment 
     for (X in 1:length(cpars)) assign(names(cpars)[X], cpars[[X]])
   }
-  
-  Stock <- updateMSE(Stock) # update to add missing slots with default values
-  if (all(is.na(Stock@LenCV))) Stock@LenCV <- c(0.1, 0.1)
-  
+ 
   # ---- Maximum age ----
-  if (!exists("maxage", inherits=FALSE)) maxage <- Stock@maxage  
-  if (length(maxage) > 1) 
-    maxage  <- maxage[1] # check if maxage has been passed in custompars
+  maxage <- Stock@maxage  
+  if (length(maxage) > 1) maxage  <- maxage[1] # check if maxage has been passed in custompars
   
   # ---- Virgin Recruitment ----
   if (!exists("R0", inherits=FALSE)) 
@@ -243,10 +240,11 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   
   
   if (!exists("Linfarray", inherits=FALSE)) 
-    Linfarray <- gettempvar(Linf, Linfsd, targgrad=0, nyears + proyears,
-                            nsim, Linfrand) 
+    Linfarray <- gettempvar(Linf, Linfsd, nyears + proyears,
+                            nsim, Linfrand)
+
   if (!exists("Karray", inherits=FALSE)) 
-    Karray <- gettempvar(K, Ksd, targgrad=0, nyears + proyears, nsim, Krand) 
+    Karray <- gettempvar(K, Ksd,  nyears + proyears, nsim, Krand) 
   if (!exists("Agearray", inherits=FALSE))  
     Agearray <- array(rep(0:maxage, each = nsim), dim = c(nsim, n_age)) 
   
@@ -364,7 +362,6 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
     Wb <- as.numeric(coef(mod)[2])
     
   }
-  
   
   # ---- Sample Maturity Parameters ----
   if (exists("Mat_age", inherits=FALSE)){ # passed in cpars
@@ -523,7 +520,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   
   if (!exists("Marray", inherits=FALSE)) {
     # M by sim and year according to gradient and inter annual variability
-    Marray <- gettempvar(M, Msd, targgrad=0, nyears + proyears, nsim, Mrand)  
+    Marray <- gettempvar(M, Msd, nyears + proyears, nsim, Mrand)  
   }
   
   # ---- Natural mortality by simulation, age and year ----
@@ -707,9 +704,7 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
     StockPars <- SampleStockPars(Fleet, nsim, nyears, proyears, cpars, msg=msg)
     for (X in 1:length(StockPars)) assign(names(StockPars)[X], StockPars[[X]])
   }
-  
-  Fleet <- updateMSE(Fleet) # update to add missing slots with default values
-  
+
   if (class(Stock) == "Stock") {
     Stock <- updateMSE(Stock) # update to add missing slots with default values
     # Sample Stock Pars - need some to calculate selectivity at age and length  
@@ -985,6 +980,9 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
   retA <- retA * V2
   retL <- retL * SLarray2
   
+  # ---- Existing MPA ----
+  MPA <- as.logical(Fleet@MPA)
+  
   Fleetout$Fdisc <- Fdisc
   Fleetout$Fdisc_array1 <- Fdisc_array1
   Fleetout$Fdisc_array2 <- Fdisc_array2
@@ -1000,7 +998,8 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
   Fleetout$V <- V  # realized vulnerability-at-age
   Fleetout$SLarray <- SLarray # realized vulnerability-at-length
   Fleetout$V2 <- V2 # original vulnerablity-at-age curve 
-  Fleetout$SLarray2 <- SLarray2 # original vulnerablity-at-length curve 
+  Fleetout$SLarray2 <- SLarray2 # original vulnerablity-at-length curve
+  Fleetout$MPA <- MPA
   
   # check V 
   if (sum(apply(V, c(1,3), max) <0.01)) {
@@ -1445,8 +1444,6 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL){
     Names <- names(cpars)
     for (X in 1:length(Names)) assign(names(cpars)[X], cpars[[X]])
   }
-  
-  Obs <- updateMSE(Obs) # update to add missing slots with default values
   
   ObsOut <- list() 
   
