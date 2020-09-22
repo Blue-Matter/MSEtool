@@ -2,6 +2,7 @@
 % Please edit documentation in R/Data_make_update.R
 \name{genSizeCompWrap}
 \alias{genSizeCompWrap}
+\alias{getfifth}
 \title{Wrapper for C++ function to generate length composition}
 \usage{
 genSizeCompWrap(
@@ -17,6 +18,8 @@ genSizeCompWrap(
   LenCV,
   truncSD = 2
 )
+
+getfifth(lenvec, CAL_binsmid)
 }
 \arguments{
 \item{i}{Simulation number}
@@ -41,6 +44,8 @@ genSizeCompWrap(
 
 \item{truncSD}{Numeric. Number of standard deviations to truncate normal d
 distribution}
+
+\item{lenvec}{Vector of lengths}
 }
 \value{
 Generated length composition from \code{genSizeComp}
@@ -48,4 +53,9 @@ Generated length composition from \code{genSizeComp}
 \description{
 And other internal related functions
 }
+\section{Functions}{
+\itemize{
+\item \code{getfifth}: Internal function to calculate fifth percentile of size composition
+}}
+
 \keyword{internal}

@@ -793,7 +793,7 @@ setMethod("initialize", "OM", function(.Object, Stock=NULL, Fleet=OMtool::Generi
                                        Obs=OMtool::Generic_Obs, Imp=OMtool::Perfect_Imp,
                                        interval=4, pstar=0.5, maxF=0.8, reps=1, nsim=48, proyears=50) {
   if (is.null(Stock)) {
-    message("No Stock object found. Returning a blank OM object") 
+    # message("No Stock object found. Returning a blank OM object") 
     .Object@seed <- 1
     return(.Object)
   }
@@ -1777,13 +1777,10 @@ setMethod("show", signature = (object="Rec"), function(object) {
 #' @docType class
 #' 
 #' @slot Data The Data object at the end of the historical period
-#' @slot Obs A named list of observation parameters by simulation. Names with suffix  
-#' '_y' are by year. 
-#' 
-# #' @template Obs_desc
-#' @slot OM A numeric data.frame with nsim rows with sampled Stock & Fleet 
-#' parameters
-#' @slot AtAge A named list with arrays (dim nsim, maxage, nyears+proyears):
+#' @slot OMPars A numeric data.frame with nsim rows with sampled Stock, Fleet, 
+#' Obs, and Imp parameters.
+#' @slot AtAge A named list with arrays of dimensions: `c(nsim, maxage+1, nyears+proyears)` or 
+#' `c(nsim, maxage+1, nyears, nareas)`
 #'  \itemize{
 #'  \item Length: Length-at-age for each simulation, age, and year
 #'  \item Weight: Weight-at-age for each simulation, age, and year
@@ -1791,58 +1788,72 @@ setMethod("show", signature = (object="Rec"), function(object) {
 #'  \item Retention: Retention-at-age for each simulation, age, and year
 #'  \item Maturity: Maturity-at-age for each simulation, age, and year
 #'  \item N.Mortality: Natural mortality-at-age for each simulation, age, and year
-#'  \item Nage: Total numbers by simulation, age, and year
-#'  \item SSBage: Spawning stock biomass by simulation, age, and year
-#'  \item FM: Fishing mortality by simulation, age, year, and area
+#'  \item Z.Mortality: Total mortality-at-age for each simulation, age, year and area
+#'  \item F.Mortality: Fishing mortality-at-age for each simulation, age, year and area
+#'  \item Fret.Mortality: Fishing mortality-at-age for retained fish for each 
+#'  simulation, age, year and area
+#'  \item Number: Total numbers by simulation, age, year and area
+#'  \item Biomass: Total biomass by simulation, age, year and area
+#'  \item VBiomass: Vulnerable biomass by simulation, age, year and area 
+#'  \item SBiomass: Spawning biomass by simulation, age, year and area 
+#'  \item Removals: Removals (biomass) by simulation, age, year and area 
+#'  \item Landings: Landings (biomass) by simulation, age, year and area 
+#'  \item Discards: Discards (biomass) by simulation, age, year and area 
 #'  }
-#' @slot TSdata A named list with population dynamics by simulation and year :
+#' @slot TSdata A named list with population and fleet dynamics:
 #'  \itemize{
-#'  \item VB: Vulnerable biomass
-#'  \item SSB: Spawning stock biomass  
-#'  \item B: Total biomass
-#'  \item Removals: Removals 
-#'  \item Catch: Retained catch (will be same as removals unless there is discard mortality)
-#'  \item Rec: Recruitment 
-#'  \item N: Total numbers 
-#'  \item Find: Historical fishing effort 
-#'  \item Marray: Average adult natural mortality (historical & projection)
-#'  \item RecDev: Recruitment deviations (historical & projection)
+#'  \item Number: Total numbers; array dimensions `c(nsim, nyears, nareas)`
+#'  \item Biomass: Total biomass; array dimensions `c(nsim, nyears, nareas)`
+#'  \item VBiomass: Vulnerable biomass; array dimensions `c(nsim, nyears, nareas)`
+#'  \item SBiomass: Spawning Biomass; array dimensions `c(nsim, nyears, nareas)`
+#'  \item Removals: Removals (biomass); array dimensions `c(nsim, nyears, nareas)` 
+#'  \item Landings: Landings (biomass); array dimensions `c(nsim, nyears, nareas)`
+#'  \item Discards: Discards (biomass); array dimensions `c(nsim, nyears, nareas)`
+#'  \item Find: Historical fishing mortality (scale-free); matrix dimensions `c(nsim, nyears)`
+#'  \item RecDev: Recruitment deviations (historical and projection); 
+#'  matrix dimensions `c(nsim, nyears+proyears+maxage)`  
+#'  \item Unfished_Equilibrium: A named list with unfished equilibrium numbers and biomass-at-age 
 #' } 
 #' 
-#' @slot Ref A numeric data.frame with nsim rows containing biological 
-#' reference points:
+#' @slot Ref A named list with biological reference points:
 #'  \itemize{
-#'   \item B0: Average unfished total biomass
-#'   \item Blow: Spawning stock biomass where it takes MGThorizon x MGT to 
-#'   reach Bfrac of BMSY
-#'   \item BMSY: Average total biomass corresponding with MSY
-#'   \item BMSY_B0: Ratio of BMSY to B0
-#'   \item FMSY: Fishing mortality rate corresponding with MSY 
-#'   \item FMSY_M: Ratio of FMSY to (adult) M 
-#'   \item MGT: Mean generation time 
-#'   \item MSY: Maximum sustainable yield
-#'   \item N0: Average unfished numbers
-#'   \item R0: Average unfished recruitment
-#'   \item RefY: Maximum yield obtained in forward projections with a fixed F
-#'   \item SSB0: Average unfished spawning biomass 
-#'   \item SSBMSY: Average spawning biomass corresponding with MSY 
-#'   \item SSBMSY_SSB: Ratio of SSBMSY to SSB0 
-#'   \item UMSY: Exploitation rate corresponding with MSY 
-#'   \item VBMSY: Average vulnerable biomass corresponding with MSY
+#'    \item ByYear: A named list with `MSY`, `FMSY`, `SSBMSY`, `BMSY`, and `VBMSY` for each simulation and year
+#'    \item ReferencePoints: A data.frame with `nsim` rows with with biological reference points 
+#'    calculated as an average over age-of-maturity `ageM` years around the 
+#'    current year (i.e. `nyears`):
+#'    \itemize{
+#'      \item N0: Average unfished numbers
+#'      \item B0: Average unfished biomass
+#'      \item SSB0: Average unfished spawning biomass (used to calculate depletion)
+#'      \item SSN0: Average unfished spawning numbers
+#'      \item VB0: Average unfished vulnerable biomass (used to calculate depletion if `cpar$control$D='VB'`) 
+#'      \item MSY: Average maximum sustainable yield (equilibrium)
+#'      \item FMSY: Average fishing mortality corresponding with MSY
+#'      \item SSBMSY: Average spawning stock biomass corresponding with MSY
+#'      \item BMSY: Average total biomass corresponding with MSY
+#'      \item VBMSY: Average vulnerable biomass corresponding with MSY
+#'      \item UMSY: Average exploitation rate corresponding with MSY
+#'      \item FMSY_M: Average FMSY/M ratio
+#'      \item SSBMSY_SSB0: Average ratio of SSBMSY to SSB0
+#'      \item BMSY_B0: Average ratio of BMSY to B0
+#'      \item VBMSY_VB0: Average ratio of VBMSY to VB0
+#'      \item RefY: Maximum yield obtained in forward projections with a fixed F
+#'    } 
 #' }
 #' 
-#' @slot SampPars All sampled Stock, Fleet, Obs, and Imp parameters
-#' @slot Misc A list of additional information
+#' @slot SampPars A named list with all sampled Stock, Fleet, Obs, and Imp parameters
+#' @slot OM The `OM` object (without cpars)
+#' @slot Misc A list for additional information
 #' @author A. Hordyk
 #' @keywords classes
 setClass("Hist", representation(
   Data = 'Data',
-  Obs = 'data.frame',
-  OM = 'data.frame',
+  OMPars = 'data.frame',
   AtAge = 'list',
   TSdata = 'list',
-  Ref = "data.frame",
+  Ref = "list",
   SampPars='list',
-  Misc = 'list'
+  Misc = 'list',
+  OM = 'OM'
 ))
 

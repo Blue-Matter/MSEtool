@@ -8,3 +8,6 @@ message <- function(...) {
     return(base::message(...))
   }
 }
+
+
+tiny <- 1e-15  # define tiny variable

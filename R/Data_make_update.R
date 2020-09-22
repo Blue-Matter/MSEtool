@@ -23,9 +23,7 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
   
   # --- Observed catch ----
   # Simulated observed retained catch (biomass)
-  Cobs <- ObsPars$Cbias_y[, 1:nyears] * ObsPars$Cerr_y[, 1:nyears] * 
-    apply(CBret*Sample_Area$Catch[,,1:nyears,], c(1, 3), sum)  
-  Data@Cat <- Cobs 
+  Data@Cat <- ObsPars$Cobs_y[,1:nyears] * apply(CBret*Sample_Area$Catch[,,1:nyears,], c(1, 3), sum)  
   Data@CV_Cat <- matrix(Data@CV_Cat[,1], nrow=nsim, ncol=nyears)
   
   # --- Index of total abundance ----
@@ -61,7 +59,7 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
   Data@t <- rep(nyears, nsim) # number of years of data
   
   # --- Average catch ----
-  Data@AvC <- apply(Cobs, 1, mean) # average catch over all years
+  Data@AvC <- apply(Data@Cat, 1, mean, na.rm=TRUE) # average catch over all years
   
   # --- Depletion ----
   # observed depletion
@@ -87,35 +85,15 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
   
   # Observed steepness values 
   hs <- StockPars$hs
-  if (!is.null(SampCpars[['hsim']])) {
-    hsim <- SampCpars$hsim
-    hbias <- hsim/hs  # back calculate the simulated bias
-    hbias <- rep(1, nsim) 
-    ObsPars$hbias <- hbias 
-  } else {
-    hsim <- rep(NA, nsim)  
-    cond <- hs > 0.6
-    hsim[cond] <- 0.2 + rbeta(sum(hs > 0.6), alphaconv((hs[cond] - 0.2)/0.8, (1 - (hs[cond] - 0.2)/0.8) * OM@hbiascv), 
-                              betaconv((hs[cond] - 0.2)/0.8,  (1 - (hs[cond] - 0.2)/0.8) * OM@hbiascv)) * 0.8
-    hsim[!cond] <- 0.2 + rbeta(sum(hs <= 0.6), alphaconv((hs[!cond] - 0.2)/0.8,  (hs[!cond] - 0.2)/0.8 * OM@hbiascv), 
-                               betaconv((hs[!cond] - 0.2)/0.8, (hs[!cond] - 0.2)/0.8 * OM@hbiascv)) * 0.8
-    hbias <- hsim/hs  # back calculate the simulated bias
-    hbias <- rep(1, nsim) 
-    ObsPars$hbias <- hbias
-  }
   Data@steep <- hs * ObsPars$hbias # observed steepness
   
   # --- Reference points ----
   # Simulate observation error in BMSY/B0 
   ntest <- 20  # number of trials  
-  BMSY_B0bias <- array(rlnorm(nsim * ntest, 
-                              mconv(1, ObsPars$BMSY_B0biascv), sdconv(1, ObsPars$BMSY_B0biascv)), 
-                       dim = c(nsim, ntest))  # trial samples of BMSY relative to unfished  
-  test <- array(RefPoints$SSBMSY_SSB0 * BMSY_B0bias, dim = c(nsim, ntest))  # the simulated observed BMSY_B0 
+  test <- array(RefPoints$SSBMSY_SSB0 * ObsPars$BMSY_B0bias, dim = c(nsim, ntest))  # the simulated observed BMSY_B0 
   indy <- array(rep(1:ntest, each = nsim), c(nsim, ntest))  # index
   indy[test > max(0.9, max(RefPoints$SSBMSY_SSB0))] <- NA  # interval censor
-  BMSY_B0bias <- BMSY_B0bias[cbind(1:nsim, apply(indy, 1, min, na.rm = T))]  # sample such that BMSY_B0<90%
-  ObsPars$BMSY_B0bias <- BMSY_B0bias
+  ObsPars$BMSY_B0bias <- ObsPars$BMSY_B0bias[cbind(1:nsim, apply(indy, 1, min, na.rm = T))]  # sample such that BMSY_B0<90%
   
   Data@FMSY_M <- RefPoints$FMSY_M * ObsPars$FMSY_Mbias # observed FMSY/M
   Data@BMSY_B0 <- RefPoints$SSBMSY_SSB0 * ObsPars$BMSY_B0bias # observed BMSY/B0
@@ -143,10 +121,11 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
   Asp <- apply(SSB[, , nyears, ] * exp(-M_array), 1, sum)  # Spawning abundance (mid-year before fishing)
   OFLreal <- A * (1-exp(-RefPoints$FMSY))  # the true simulated Over Fishing Limit
   
-  Data@Abun <- A * ObsPars$Abias * 
-    rlnorm(nsim, mconv(1, ObsPars$Aerr), sdconv(1, ObsPars$Aerr)) # observed vulnerable abundance
-  Data@SpAbun <- Asp * ObsPars$Abias * 
-    rlnorm(nsim, mconv(1, ObsPars$Aerr), sdconv(1, ObsPars$Aerr)) # spawing abundance
+  # Observed total abundance
+  Data@Abun <- A * ObsPars$Aerr_y
+    
+  # observed spawning abundance
+  Data@SpAbun <- Asp * ObsPars$Aerr_y
   
   # --- Catch-at-age ----
   Cret2 <- apply(Cret * Sample_Area$CAA[,,1:nyears,], 1:3, sum)
@@ -170,7 +149,7 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
   Data@Lbar <- CALdat$Lbar # mean length above Lc 
   
   Data@LFC <- CALdat$LFC * ObsPars$LFCbias # length at first capture
-  Data@LFS <- FleetPars$LFS[nyears,] * ObsPars$LFSbias # length at full selection
+  Data@LFS <- FleetPars$LFS[,nyears] * ObsPars$LFSbias # length at full selection
   
   # --- Previous Management Recommendations ----
   Data@MPrec <- apply(CBret, c(1, 3), sum)[,nyears] # catch in last year
@@ -188,17 +167,15 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
   
   ind <- which(lapply(ImpPars, length) == nsim)
   imp <- as.data.frame(ImpPars[ind])
-  refs <- RefPoints %>% dplyr::select('MSY', 'FMSY', 'SSBMSY_SSB0', 'BMSY_B0', 'SSBMSY',
-                               'BMSY', 'UMSY', 'FMSY_M', 'RefY', 'SSB0')
+  refs <- RefPoints[!names(RefPoints) %in% names(stock)]
   
   OMtable <- data.frame(stock, fleet, imp, refs, ageM=StockPars$ageM[,nyears], 
-                        L5=FleetPars$L5[nyears, ], LFS=FleetPars$LFS[nyears, ], 
-                        Vmaxlen=FleetPars$Vmaxlen[nyears, ],
-                        LR5=FleetPars$LR5[nyears,], LFR=FleetPars$LFR[nyears,], 
-                        Rmaxlen=FleetPars$Rmaxlen[nyears,], 
-                        DR=FleetPars$DR[nyears,], OFLreal, maxF=StockPars$maxF,
+                        L5=FleetPars$L5[,nyears ], LFS=FleetPars$LFS[,nyears ], 
+                        Vmaxlen=FleetPars$Vmaxlen[,nyears ],
+                        LR5=FleetPars$LR5[,nyears], LFR=FleetPars$LFR[,nyears], 
+                        Rmaxlen=FleetPars$Rmaxlen[,nyears], 
+                        DR=FleetPars$DR[,nyears], OFLreal, maxF=StockPars$maxF,
                         A=A, Asp=Asp, CurrentYr=CurrentYr)
-  
   
   OMtable <- OMtable[,order(names(OMtable))]
   Data@OM <- OMtable
@@ -215,7 +192,7 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
   Data@wlb <- rep(StockPars$b, nsim)
   Data@nareas <- nareas
   Data@Ref <- OFLreal 
-  Data@LHYear <- OM@CurrentYr  # Last historical year is nyears (for fixed MPs)
+  Data@LHYear <- CurrentYr  # Last historical year is nyears (for fixed MPs)
   Data@Misc <- vector("list", nsim)
   
   Data
@@ -226,9 +203,9 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
                        N_P, SSB, SSB_P, VBiomass, VBiomass_P, RefPoints, 
                        FMSY_P, retA_P, 
                        retL_P, StockPars, FleetPars, ObsPars, 
-                       V_P, Mat_age,
+                       V_P,
                        upyrs, interval, y=2, 
-                       mm=1, Misc, SampCpars, Sample_Area, AddIunits, AddIndType) {
+                       mm=1, Misc, RealData, Sample_Area, AddIunits, AddIndType) {
   
   yind <- upyrs[match(y, upyrs) - 1]:(upyrs[match(y, upyrs)] - 1) # index
   
@@ -252,19 +229,18 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   
   # --- Observed catch ----
   # Simulated observed retained catch (biomass)
-  Cobs <- ObsPars$Cerr_y[, nyears + yind] * apply(CBtemp, c(1, 3), sum, na.rm = TRUE) *
-    ObsPars$Cbias_y[, nyears + yind]
+  Cobs <- ObsPars$Cobs_y[,nyears + yind] * apply(CBtemp, c(1, 3), sum, na.rm = TRUE) 
   Data@Cat <- cbind(Data@Cat, Cobs) 
   
-  if (!is.null(SampCpars$Data) && ncol(SampCpars$Data@Cat)>nyears &&
-      !all(is.na(SampCpars$Data@Cat[1,(nyears+1):length(SampCpars$Data@Cat[1,])]))) {
+  if (!is.null(RealData$Data) && ncol(RealData$Data@Cat)>nyears &&
+      !all(is.na(RealData$Data@Cat[1,(nyears+1):length(RealData$Data@Cat[1,])]))) {
     # update projection catches with observed catches
-    addYr <- min(y,ncol(SampCpars$Data@Cat) - nyears)
+    addYr <- min(y,ncol(RealData$Data@Cat) - nyears)
     
-    Data@Cat[,(nyears+1):(nyears+addYr)] <- matrix(SampCpars$Data@Cat[1,(nyears+1):(nyears+addYr)], 
+    Data@Cat[,(nyears+1):(nyears+addYr)] <- matrix(RealData$Data@Cat[1,(nyears+1):(nyears+addYr)], 
                                                    nrow=nsim, ncol=addYr, byrow=TRUE)
     
-    Data@CV_Cat[,(nyears+1):(nyears+addYr)] <- matrix(SampCpars$Data@CV_Cat[1,(nyears+1):(nyears+addYr)], 
+    Data@CV_Cat[,(nyears+1):(nyears+addYr)] <- matrix(RealData$Data@CV_Cat[1,(nyears+1):(nyears+addYr)], 
                                                       nrow=nsim, ncol=addYr, byrow=TRUE)
   } 
   
@@ -287,14 +263,14 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   newCV_Ind <- matrix(Data@CV_Ind[,yr.index], nrow=nsim, ncol=length(yind))
   Data@CV_Ind <- cbind(Data@CV_Ind, newCV_Ind)
   
-  if (!is.null(SampCpars$Data) && ncol(SampCpars$Data@Ind)>nyears &&
-      !all(is.na(SampCpars$Data@Ind[1,(nyears+1):length(SampCpars$Data@Ind[1,])]))) {
+  if (!is.null(RealData$Data) && ncol(RealData$Data@Ind)>nyears &&
+      !all(is.na(RealData$Data@Ind[1,(nyears+1):length(RealData$Data@Ind[1,])]))) {
     # update projection index with observed index if it exists
-    addYr <- min(y,ncol(SampCpars$Data@Ind) - nyears)
-    Data@Ind[,(nyears+1):(nyears+addYr)] <- matrix(SampCpars$Data@Ind[1,(nyears+1):(nyears+addYr)], 
+    addYr <- min(y,ncol(RealData$Data@Ind) - nyears)
+    Data@Ind[,(nyears+1):(nyears+addYr)] <- matrix(RealData$Data@Ind[1,(nyears+1):(nyears+addYr)], 
                                                    nrow=nsim, ncol=addYr, byrow=TRUE)
     
-    Data@CV_Ind[,(nyears+1):(nyears+addYr)] <- matrix(SampCpars$Data@CV_Ind[1,(nyears+1):(nyears+addYr)], 
+    Data@CV_Ind[,(nyears+1):(nyears+addYr)] <- matrix(RealData$Data@CV_Ind[1,(nyears+1):(nyears+addYr)], 
                                                       nrow=nsim, ncol=addYr, byrow=TRUE)
   }
   
@@ -317,14 +293,14 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   newCV_Ind <- matrix(Data@CV_SpInd[,yr.index], nrow=nsim, ncol=length(yind))
   Data@CV_SpInd <- cbind(Data@CV_SpInd, newCV_Ind)
   
-  if (!is.null(SampCpars$Data) && ncol(SampCpars$Data@SpInd)>nyears &&
-      !all(is.na(SampCpars$Data@SpInd[1,(nyears+1):length(SampCpars$Data@SpInd[1,])]))) {
+  if (!is.null(RealData$Data) && ncol(RealData$Data@SpInd)>nyears &&
+      !all(is.na(RealData$Data@SpInd[1,(nyears+1):length(RealData$Data@SpInd[1,])]))) {
     # update projection index with observed index if it exists
-    addYr <- min(y,ncol(SampCpars$Data@SpInd) - nyears)
-    Data@SpInd[,(nyears+1):(nyears+addYr)] <- matrix(SampCpars$Data@SpInd[1,(nyears+1):(nyears+addYr)], 
+    addYr <- min(y,ncol(RealData$Data@SpInd) - nyears)
+    Data@SpInd[,(nyears+1):(nyears+addYr)] <- matrix(RealData$Data@SpInd[1,(nyears+1):(nyears+addYr)], 
                                                      nrow=nsim, ncol=addYr, byrow=TRUE)
     
-    Data@CV_SpInd[,(nyears+1):(nyears+addYr)] <- matrix(SampCpars$Data@CV_SpInd[1,(nyears+1):(nyears+addYr)], 
+    Data@CV_SpInd[,(nyears+1):(nyears+addYr)] <- matrix(RealData$Data@CV_SpInd[1,(nyears+1):(nyears+addYr)], 
                                                         nrow=nsim, ncol=addYr, byrow=TRUE)
   }
   
@@ -347,14 +323,14 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   newCV_Ind <- matrix(Data@CV_VInd[,yr.index], nrow=nsim, ncol=length(yind))
   Data@CV_VInd <- cbind(Data@CV_VInd, newCV_Ind)
   
-  if (!is.null(SampCpars$Data) && ncol(SampCpars$Data@VInd)>nyears &&
-      !all(is.na(SampCpars$Data@VInd[1,(nyears+1):length(SampCpars$Data@VInd[1,])]))) {
+  if (!is.null(RealData$Data) && ncol(RealData$Data@VInd)>nyears &&
+      !all(is.na(RealData$Data@VInd[1,(nyears+1):length(RealData$Data@VInd[1,])]))) {
     # update projection index with observed index if it exists
-    addYr <- min(y,ncol(SampCpars$Data@VInd) - nyears)
-    Data@VInd[,(nyears+1):(nyears+addYr)] <- matrix(SampCpars$Data@VInd[1,(nyears+1):(nyears+addYr)], 
+    addYr <- min(y,ncol(RealData$Data@VInd) - nyears)
+    Data@VInd[,(nyears+1):(nyears+addYr)] <- matrix(RealData$Data@VInd[1,(nyears+1):(nyears+addYr)], 
                                                     nrow=nsim, ncol=addYr, byrow=TRUE)
     
-    Data@CV_VInd[,(nyears+1):(nyears+addYr)] <- matrix(SampCpars$Data@CV_VInd[1,(nyears+1):(nyears+addYr)], 
+    Data@CV_VInd[,(nyears+1):(nyears+addYr)] <- matrix(RealData$Data@CV_VInd[1,(nyears+1):(nyears+addYr)], 
                                                        nrow=nsim, ncol=addYr, byrow=TRUE)
   }
   
@@ -364,7 +340,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
     AddInd <- array(NA, dim=c(nsim, n.ind, nyears+y-1))
     CV_AddInd  <- array(NA, dim=c(nsim, n.ind, nyears+y-1))
     for (i in 1:n.ind) {
-      Ind_V <- SampCpars$Data@AddIndV[1,i, ]
+      Ind_V <- RealData$Data@AddIndV[1,i, ]
       Ind_V <- matrix(Ind_V, nrow=Data@MaxAge+1, ncol= nyears+proyears)
       Ind_V <- replicate(nsim, Ind_V) %>% aperm(., c(3,1,2))
       
@@ -395,8 +371,8 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
         }
         if (AddIndType[i]==2) {
           # spawning stock
-          b1 <- apply(N[,,yr.ind:nyears,, drop=FALSE], c(1, 2, 3), sum) * Mat_age[,,yr.ind:nyears,  drop=FALSE] 
-          b2 <- apply(N_P, c(1, 2, 3), sum)  * Mat_age[,,(nyears+1):(nyears+proyears),  drop=FALSE]
+          b1 <- apply(N[,,yr.ind:nyears,, drop=FALSE], c(1, 2, 3), sum) * StockPars$Mat_age[,,yr.ind:nyears,  drop=FALSE] 
+          b2 <- apply(N_P, c(1, 2, 3), sum)  * StockPars$Mat_age[,,(nyears+1):(nyears+proyears),  drop=FALSE]
         }
         if (AddIndType[i]==3) {
           # vuln stock
@@ -411,9 +387,9 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
       
       # standardize, apply  beta & obs error  
       tempI <- exp(lcs(tempI))^ObsPars$AddIbeta[,i] * ObsPars$AddIerr[,i,yr.ind:(nyears + (y - 1))]
-      year.ind <- max(which(!is.na(SampCpars$Data@AddInd[1,i,1:nyears])))
+      year.ind <- max(which(!is.na(RealData$Data@AddInd[1,i,1:nyears])))
       
-      scaler <- SampCpars$Data@AddInd[1,i,year.ind]/tempI[,1]
+      scaler <- RealData$Data@AddInd[1,i,year.ind]/tempI[,1]
       scaler <- matrix(scaler, nrow=nsim, ncol=ncol(tempI))
       tempI <- tempI * scaler # convert back to historical index scale
       
@@ -423,15 +399,15 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
       newCV_Ind <- matrix(Data@CV_AddInd[,i,yr.index], nrow=nsim, ncol=length(yind))
       CV_AddInd[,i,] <- cbind(Data@CV_AddInd[,i,], newCV_Ind)
       
-      if (!is.null(SampCpars$Data) && length(SampCpars$Data@AddInd[1,i,])>nyears &&
-          !all(is.na(SampCpars$Data@AddInd[1,i,(nyears+1):length(SampCpars$Data@AddInd[1,i,])]))) {
+      if (!is.null(RealData$Data) && length(RealData$Data@AddInd[1,i,])>nyears &&
+          !all(is.na(RealData$Data@AddInd[1,i,(nyears+1):length(RealData$Data@AddInd[1,i,])]))) {
         # update projection index with observed index if it exists
-        addYr <- min(y,length(SampCpars$Data@AddInd[1,i,]) - nyears)
+        addYr <- min(y,length(RealData$Data@AddInd[1,i,]) - nyears)
         
-        AddInd[,i,(nyears+1):(nyears+addYr)] <- matrix(SampCpars$Data@AddInd[1,i,(nyears+1):(nyears+addYr)], 
+        AddInd[,i,(nyears+1):(nyears+addYr)] <- matrix(RealData$Data@AddInd[1,i,(nyears+1):(nyears+addYr)], 
                                                        nrow=nsim, ncol=addYr, byrow=TRUE)
         
-        CV_AddInd[,i,(nyears+1):(nyears+addYr)] <- matrix(SampCpars$Data@CV_AddInd[1,i,(nyears+1):(nyears+addYr)], 
+        CV_AddInd[,i,(nyears+1):(nyears+addYr)] <- matrix(RealData$Data@CV_AddInd[1,i,(nyears+1):(nyears+addYr)], 
                                                           nrow=nsim, ncol=addYr, byrow=TRUE)
       }
     }
@@ -472,10 +448,9 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   M_array <- array(0.5*StockPars$M_ageArray[,,nyears+y], dim=c(nsim, StockPars$maxage+1, nareas))
   A <- apply(VBiomass_P[, , y, ] * exp(-M_array), 1, sum) # Abundance (mid-year before fishing)
   Asp <- apply(SSB_P[, , y, ] * exp(-M_array), 1, sum)  # Spawning abundance (mid-year before fishing)
-  Data@Abun <- A * ObsPars$Abias * rlnorm(nsim, mconv(1, ObsPars$Aerr), sdconv(1, ObsPars$Aerr))
-  Data@SpAbun <- Asp * ObsPars$Abias * rlnorm(nsim, mconv(1, ObsPars$Aerr), sdconv(1, ObsPars$Aerr))
-  # Data@Ref <- A * (1 - exp(-FMSY_P[,mm,y])) 
-  
+  Data@Abun <- A * ObsPars$Aerr_y[,nyears+yind]
+  Data@SpAbun <- Asp *  ObsPars$Aerr_y[,nyears+yind]
+ 
   # --- Catch-at-age ----
   # previous CAA
   oldCAA <- Data@CAA
@@ -516,7 +491,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   Data@Lbar <- cbind(Data@Lbar, CALdat$Lbar) # mean length above Lc 
   
   Data@LFC <- CALdat$LFC * ObsPars$LFCbias # length at first capture
-  Data@LFS <- FleetPars$LFS[nyears+y,] * ObsPars$LFSbias # length at full selection
+  Data@LFS <- FleetPars$LFS[,nyears+y] * ObsPars$LFSbias # length at full selection
   
   # --- Previous Management Recommendations ----
   Data@MPrec <- MPCalcs$TACrec # last MP  TAC recommendation

@@ -198,14 +198,9 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
   
     double PerrYr = Prec(yr+maxage+1); // rec dev
     for (int A=0; A<nareas; A++) {
-      Barray.subcube(0, yr+1, A, maxage, yr+1, A) = NextYrN.col(A) % WtAge.col(yr+1);
-      SSNarray.subcube(0, yr+1, A, maxage, yr+1, A) = NextYrN.col(A) % MatAge.col(yr+1);
+      // Spawning biomass before recruitment (age-0 doesn't contribute to SB)
       SBarray.subcube(0, yr+1, A, maxage, yr+1, A) = NextYrN.col(A) % WtAge.col(yr+1) % MatAge.col(yr+1);
-      VBarray.subcube(0, yr+1, A, maxage, yr+1, A) = NextYrN.col(A) % WtAge.col(yr+1) % Vuln.col(yr+1);
-      Marray.subcube(0, yr+1, A, maxage, yr+1, A) = M_age.col(yr+1);
-      tempVec(A) = accu(VBarray.subcube(0, yr+1, A, maxage-1, yr+1, A));
-      SB(A) = accu(SBarray.subcube(0, yr+1, A, maxage, yr+1, A)); // total spawning biomass
-      
+      SB(A) = accu(SBarray.subcube(1, yr+1, A, maxage, yr+1, A)); // total spawning biomass
       // Recruitment assuming regional R0 and stock wide steepness
       // next yr recruitment to age-0
       if (SRrelc == 1) {
@@ -216,6 +211,13 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
         // most transparent form of the Ricker uses alpha and beta params
         NextYrN(0, A) = PerrYr * aRc2(A) * SB(A) * exp(-bRc2(A) * SB(A));
       }
+      // Calculate biomass after recruitment
+      SBarray.subcube(0, yr+1, A, 0, yr+1, A) = 0;
+      Barray.subcube(0, yr+1, A, maxage, yr+1, A) = NextYrN.col(A) % WtAge.col(yr+1);
+      SSNarray.subcube(0, yr+1, A, maxage, yr+1, A) = NextYrN.col(A) % MatAge.col(yr+1);
+      VBarray.subcube(0, yr+1, A, maxage, yr+1, A) = NextYrN.col(A) % WtAge.col(yr+1) % Vuln.col(yr+1);
+      Marray.subcube(0, yr+1, A, maxage, yr+1, A) = M_age.col(yr+1);
+      tempVec(A) = accu(VBarray.subcube(0, yr+1, A, maxage-1, yr+1, A));
     }
   
     Narray.subcube(0, yr+1, 0, maxage, yr+1, nareas-1) = NextYrN;

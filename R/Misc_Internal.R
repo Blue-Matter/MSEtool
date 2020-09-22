@@ -6,7 +6,7 @@
 #' @param nsim number of simulations
 #' @keywords internal
 #'  
-gettempvar <- function(targ, targsd, nyears, nsim, rands=NULL) {
+GenerateRandomWalk <- function(targ, targsd, nyears, nsim, rands=NULL) {
   mutemp <- -0.5 * targsd^2
   
   if (!is.null(rands)) {
@@ -14,9 +14,6 @@ gettempvar <- function(targ, targsd, nyears, nsim, rands=NULL) {
   } else {
     temp <- array(exp(rnorm(nsim*nyears, mutemp, targsd)),dim = c(nsim, nyears))
   }
-  
-  # yarray <- array(rep((1:nyears) - 1, each = nsim), dim = c(nsim, nyears))
-  # temp <- temp * (1 + targgrad/100)^yarray
   if (nsim >1) {
     return(targ * temp/apply(temp, 1, mean))
   } else {
@@ -213,14 +210,15 @@ CalcUnfishedRefs <- function(x, ageM, N0_a, SSN0_a, SSB0_a, B0_a, VB0_a, SSBpRa,
   list(N0=N0, SSN0=SSN0, SSB0=SSB0, B0=B0, VB0=VB0, SSBpR=SSBpR, SSB0a=SSB0a)
 }
 
-CalcMSYRefs <- function(x, MSY_y, FMSY_y, SSBMSY_y, BMSY_y, VBMSY_y, ageM, OM) {
-  n.yrs <- ceiling(ageM[x,OM@nyears]) # MSY ref points averaged over these years
-  nyears <- dim(ageM)[2]
+
+CalcMSYRefs <- function(x, MSY_y, FMSY_y, SSBMSY_y, BMSY_y, VBMSY_y, ageM, nyears) {
+  n.yrs <- ceiling(ageM[x,nyears]) # MSY ref points averaged over these years
+  nyears1 <- dim(ageM)[2]
   minY <- floor(n.yrs/2) 
   maxY <- n.yrs - minY - 1 
-  avg.ind <- (OM@nyears - minY):(OM@nyears + maxY)
+  avg.ind <- (nyears - minY):(nyears + maxY)
   avg.ind <- avg.ind[avg.ind>0]
-  if (max(avg.ind) > nyears) avg.ind <- avg.ind[avg.ind < nyears]
+  if (max(avg.ind) > nyears1) avg.ind <- avg.ind[avg.ind < nyears1]
   
   MSY <- mean(MSY_y[x, avg.ind])
   FMSY <- mean(FMSY_y[x, avg.ind])
@@ -229,3 +227,76 @@ CalcMSYRefs <- function(x, MSY_y, FMSY_y, SSBMSY_y, BMSY_y, VBMSY_y, ageM, OM) {
   VBMSY <- mean(VBMSY_y[x, avg.ind])
   data.frame(MSY=MSY, FMSY=FMSY, SSBMSY=SSBMSY, BMSY=BMSY, VBMSY=VBMSY)
 }
+
+#' Linear interpolation of a y value at level xlev based on a vector x and y
+#'
+#' @param x A vector of x values
+#' @param y A vector of y values (identical length to x)
+#' @param xlev A the target level of x from which to guess y
+#' @param ascending Are the the x values supposed to be ordered before interpolation
+#' @param zeroint is there a zero-zero x-y intercept?
+#' @author T. Carruthers
+#' @keywords internal
+LinInterp<-function(x,y,xlev,ascending=F,zeroint=F){
+  
+  if(zeroint){
+    x<-c(0,x)
+    y<-c(0,y)
+  } 
+  
+  if(ascending){
+    cond<-(1:length(x))<which.max(x)
+  }else{
+    cond<-rep(TRUE,length(x))
+  }
+  
+  close<-which.min((x[cond]-xlev)^2)
+  ind<-c(close,close+(x[close]<xlev)*2-1)
+  ind <- ind[ind <= length(x)]
+  if (length(ind)==1) ind <- c(ind, ind-1)
+  ind<-ind[order(ind)]
+  pos<-(xlev-x[ind[1]])/(x[ind[2]]-x[ind[1]])
+  y[ind[1]]+pos*(y[ind[2]]-y[ind[1]])
+  
+}
+
+calcRecruitment <- function(x, SRrel, SSBcurr, recdev, hs, aR, bR, R0a, SSBpR) {
+  if (SRrel[x] == 1) { # BH rec
+    rec_A <- recdev[x] * (4*R0a[x,] * hs[x] * SSBcurr[x,])/(SSBpR[x,] * 
+                                                              R0a[x,] * (1-hs[x]) + (5*hs[x]-1) * SSBcurr[x,])
+  } else { # Ricker rec
+    rec_A <- recdev[x] * aR[x,] * SSBcurr[x,] * exp(-bR[x,]*SSBcurr[x,])
+  }
+  rec_A
+}
+
+lcs<-function(x){
+  if ("matrix" %in% class(x)) {
+    nsim <- nrow(x)
+    nyr <- ncol(x)
+    x1 <- x/matrix(apply(x, 1, mean, na.rm=TRUE), nrow=nsim, ncol=nyr) # rescale to mean 1
+    x2<- log(x1) # log it
+    x3 <- x2 -matrix(apply(x2, 1, mean, na.rm=TRUE), nrow=nsim, ncol=nyr) # mean 0
+    x3
+  } else {
+    x1<-x/mean(x, na.rm=TRUE) # rescale to mean 1
+    x2<-log(x1)     # log it
+    x3<-x2-mean(x2, na.rm=TRUE) # mean 0
+    x3
+  }
+  
+}
+
+
+#' get object class
+#' 
+#' Internal function for determining if object is of classy
+#' 
+#' 
+#' @param x Character string object name
+#' @param classy A class of object (character string, e.g. 'Fleet')
+#' @author T. Carruthers with nasty hacks from A. Hordyk
+#' @return TRUE or FALSE
+getclass <- function(x, classy) {
+  return(any(class(get(x)) == classy)) # inherits(get(x), classy) - this gives a problem since we now inherit Stock etc in OM
+} 

@@ -4,7 +4,14 @@
 \alias{SampleObsPars}
 \title{Sample Observation Parameters}
 \usage{
-SampleObsPars(Obs, nsim = NULL, cpars = NULL)
+SampleObsPars(
+  Obs,
+  nsim = NULL,
+  cpars = NULL,
+  Stock = NULL,
+  nyears = NULL,
+  proyears = NULL
+)
 }
 \arguments{
 \item{Obs}{An object of class 'Obs' or class 'OM'}
@@ -12,6 +19,12 @@ SampleObsPars(Obs, nsim = NULL, cpars = NULL)
 \item{nsim}{Number of simulations. Ignored if 'Obs' is class 'OM'}
 
 \item{cpars}{Optional named list of custom parameters. Ignored if 'OM' is class 'OM'}
+
+\item{Stock}{An object of class 'Stock' or a list of sampled Stock parameters. Not essential.}
+
+\item{nyears}{Number of historical years.}
+
+\item{proyears}{Number of projection years. Not essential.}
 }
 \value{
 A named list of sampled Observation parameters

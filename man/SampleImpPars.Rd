@@ -4,7 +4,7 @@
 \alias{SampleImpPars}
 \title{Sample Implementation Error Parameters}
 \usage{
-SampleImpPars(Imp, nsim = NULL, cpars = NULL)
+SampleImpPars(Imp, nsim = NULL, cpars = NULL, nyears = NULL, proyears = NULL)
 }
 \arguments{
 \item{Imp}{An object of class 'Imp' or class 'OM'}
@@ -12,6 +12,10 @@ SampleImpPars(Imp, nsim = NULL, cpars = NULL)
 \item{nsim}{Number of simulations. Ignored if 'Imp' is class 'OM'}
 
 \item{cpars}{Optional named list of custom parameters. Ignored if 'OM' is class 'OM'}
+
+\item{nyears}{Number of historical years.}
+
+\item{proyears}{Number of projection years. Not essential.}
 }
 \value{
 A named list of sampled Implementation Error parameters
