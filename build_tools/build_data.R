@@ -101,7 +101,7 @@ cat("#' ", ObjectClass, " class objects",
 # ---- Build Imp Objects ----
 files <- list.files("build_tools/Objects/Imp", full.names = TRUE)
 for (fl in files) {
-  temp <- new("Obs", fl)
+  temp <- new("Imp", fl)
   name <- strsplit(basename(fl), '.csv')[[1]]
   assign(name, temp)
   do.call("use_data", list(as.name(name), overwrite = TRUE))
