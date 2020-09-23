@@ -116,6 +116,10 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
     }
   }
   
+  plusgroup <- rep(1, np)
+  for (p in 1:np) {
+    if(!is.null(SampCpars[[p]][[1]]$plusgroup) & all(SampCpars[[p]][[1]]$plusgroup==0)) plusgroup[p] <- 0
+  }
   
   # --- Sample Stock Parameters ----
   StockPars<-FleetPars<-ObsPars<-ImpPars<-new('list')
@@ -123,12 +127,10 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
     StockPars[[p]] <- SampleStockPars(MOM@Stocks[[p]], nsim, nyears,
                                       proyears, SampCpars[[p]][[1]],
                                       msg=silent)
+    StockPars[[p]]$plusgroup <- plusgroup
   }
   
-  plusgroup <- rep(1, np)
-  for (p in 1:np) {
-    if(!is.null(SampCpars[[p]][[1]]$plusgroup) & all(SampCpars[[p]][[1]]$plusgroup==0)) plusgroup[p] <- 0
-  }
+ 
   
   # --- Sample Fleet Parameters ----
   for(p in 1:np){
@@ -338,6 +340,7 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
     # loop over fleets
     for(f in 1:nf) {
       FleetPars[[p]][[f]]$V<-VF[,p,f,,] # update fleet vulnerability for this stock
+      
       ## TODO - Need to do the same for retention ----
       
       # --- Historical Spatial closures ----
@@ -389,6 +392,7 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
   
   # --- Optimize catchability (q) to fit depletion ----
   if(!silent)
+    # TODO
     message("Optimizing for user-specified depletion ",
             "(takes approximately [(nstocks x nfleets)/(9 x number of cores in cluster)]",
             " minutes per simulation)")
@@ -398,12 +402,12 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
   # TODO - and update getq_multi to match Calculate q
   if(snowfall::sfIsRunning()){
     out<-snowfall::sfLapply(1:nsim,getq_multi_MICE,StockPars, FleetPars,
-                            np,nf, nareas, n_age, nyears, N, VF, FretA,
+                            np,nf, nareas, maxage, nyears, N, VF, FretA,
                             maxF=MOM@maxF, MPA, CatchFrac, bounds=bounds,
                             tol=1E-6,Rel,SexPars, plusgroup=plusgroup, optVB=optVB)
   }else{
     out<-lapply(1:nsim,getq_multi_MICE, StockPars, FleetPars, np, nf, nareas,
-                n_age, nyears, N, VF, FretA, maxF=MOM@maxF,
+                maxage, nyears, N, VF, FretA, maxF=MOM@maxF,
                 MPA,CatchFrac, bounds= bounds,tol=1E-6,Rel,SexPars, 
                 plusgroup=plusgroup, optVB=optVB)
   }              
@@ -542,7 +546,7 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
   
   histYrs <- sapply(1:nsim,HistMICE, StockPars=StockPars,
                     FleetPars=FleetPars,np=np,nf=nf,nareas=nareas,
-                    maxage=n_age,nyears=nyears,N=N,VF=VF,FretA=FretA,
+                    maxage=maxage,nyears=nyears,N=N,VF=VF,FretA=FretA,
                     maxF=MOM@maxF,MPA=MPA,Rel=Rel,SexPars=SexPars,qs=qs,qfrac=qfrac,
                     plusgroup=plusgroup)
   
@@ -780,7 +784,7 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
     }
   }
   
-  ObsPars$Sample_Area <- Sample_Area
+  
   
   # --- Populate Data object with Historical Data ----
   
@@ -791,6 +795,7 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
     DataList[[p]] <- vector('list', nf)
     message('Generating historical data for ', Snames[p])
     for (f in 1:nf) {
+      ObsPars[[p]][[f]]$Sample_Area <- Sample_Area # add to Obs Pars
       Data <- makeData(Biomass[,p,,,], 
                        CBret[,p,f,,,], 
                        Cret[,p,f,,,],
@@ -870,7 +875,7 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
         # TODO - add Unfished_Equilibrium
       )
       
-      Hist@Ref <- StockPars[[p]]$ReferencePoints$ReferencePoints
+      Hist@Ref <- StockPars[[p]]$ReferencePoints
       
       Hist@SampPars <- list(
         Stock=StockPars[[p]],
@@ -885,7 +890,7 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
       MOM@cpars$Data <- temp
       
       Hist@Misc <- list(
-        MOM <- MOM
+        MOM=MOM
       )
       
       HistList[[p]][[f]] <- Hist

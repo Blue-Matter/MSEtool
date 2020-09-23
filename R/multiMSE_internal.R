@@ -90,9 +90,11 @@ TEG<-function(vec){ # make index for list calculation
 #' @param SexPars A list of sex-specific relationships (SSBfrom, stock_age)
 #' @author T.Carruthers
 #' @keywords internal
-HistMICE<-function(x,StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, VF, FretA, maxF=0.9, MPA,Rel,SexPars,qs,qfrac,
+HistMICE<-function(x,StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, VF, 
+                   FretA, maxF=0.9, MPA,Rel,SexPars,qs,qfrac,
                    plusgroup){
 
+  n_age <- maxage+1 # including age-0
   Nx<-array(N[x,,,,],dim(N)[2:5])
   VFx<-array(VF[x,,,,],dim(VF)[2:5])
   FretAx<-array(FretA[x,,,,],dim(VF)[2:5])
@@ -110,12 +112,12 @@ HistMICE<-function(x,StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, VF,
   SRrelx<-matrix(unlist(lapply(StockPars,function(dat)dat['SRrel'])),ncol=np)[x,]
 
   distx<-Asizex<-SSBpRx<-R0ax<-aRx<-bRx<-array(NA,c(np,nareas))
-  Perrx<-array(NA,c(np,nyears+maxage))
-  movx<-array(NA,c(np,maxage,nareas,nareas,nyears))
+  Perrx<-array(NA,c(np,nyears+n_age))
+  movx<-array(NA,c(np,n_age,nareas,nareas,nyears))
 
   for(p in 1:np){
     distx[p,]<-StockPars[[p]]$R0a[x,]/sum(StockPars[[p]]$R0a[x,])
-    Perrx[p,]<-StockPars[[p]]$Perr_y[x,1:(nyears+maxage)]
+    Perrx[p,]<-StockPars[[p]]$Perr_y[x,1:(nyears+n_age)]
     Asizex[p,]<-StockPars[[p]]$Asize[x,]
     movx[p,,,,]<-StockPars[[p]]$mov[x,,,,1:nyears]
     SSBpRx[p,]<-StockPars[[p]]$SSBpR[x,]
@@ -124,7 +126,7 @@ HistMICE<-function(x,StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, VF,
     bRx[p,]<-StockPars[[p]]$bR[x,]
   }
 
-  M_ageArrayx<-Mat_agex<-array(NA,c(np,maxage,nyears))
+  M_ageArrayx<-Mat_agex<-array(NA,c(np,n_age,nyears))
   Effind<-array(NA,c(np,nf,nyears))
   Spat_targ<-array(NA,c(np,nf))
 

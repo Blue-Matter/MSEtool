@@ -44,25 +44,26 @@ popdynMICE<-function(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
                      t0x,Mx,R0x,R0ax,SSBpRx,hsx,aRx,
                      bRx,ax,bx,Perrx,SRrelx,Rel,SexPars,x, plusgroup) {
 
+  n_age <- maxage + 1 # include age-0
   Bx<-SSNx<-SSBx<-VBx<-Zx<-array(NA,dim(Nx))
-  VBfx<-array(NA,c(np,nf,maxage,nyears,nareas)) # initial year calculation
+  VBfx<-array(NA,c(np,nf,n_age,nyears,nareas)) # initial year calculation
   Fy<-array(NA,c(np,nf,nyears))
-  Fty<-array(NA,c(np,maxage,nyears,nareas))
-  FMy<-FMrety<-VBfx<-array(NA,c(np,nf,maxage,nyears,nareas))
-  Wt_agey<-array(NA,c(np,maxage,nyears))
+  Fty<-array(NA,c(np,n_age,nyears,nareas))
+  FMy<-FMrety<-VBfx<-array(NA,c(np,nf,n_age,nyears,nareas))
+  Wt_agey<-array(NA,c(np,n_age,nyears))
   Ky<-Linfy<-t0y<-My<-hsy<-ay <-by<-array(NA,c(np,nyears))
   Ky[,1]<-Kx; Linfy[,1]<-Linfx; t0y[,1]<-t0x; My[,1]<-Mx; hsy[,1]<-hsx; ay[,1]<-ax; by[,1]<-bx
 
-  Len_age<-matrix(Linfx*(1-exp(-(rep(1:maxage,each=np)-t0x)*(Kx))),nrow=np)
+  Len_age<-matrix(Linfx*(1-exp(-(rep(0:maxage,each=np)-t0x)*(Kx))),nrow=np)
   Wt_agey[,,1]<-ax*Len_age^bx
 
-  VBfind<-as.matrix(expand.grid(1:np,1:nf,1:maxage,1,1:nareas))
-  Nind<-as.matrix(expand.grid(1:np,1:maxage,1,1:nareas))
-  FMx<-FMretx<-Fdist<-array(NA,c(np,nf,maxage,nareas))
+  VBfind<-as.matrix(expand.grid(1:np,1:nf,1:n_age,1,1:nareas))
+  Nind<-as.matrix(expand.grid(1:np,1:n_age,1,1:nareas))
+  FMx<-FMretx<-Fdist<-array(NA,c(np,nf,n_age,nareas))
   Find<-TEG(dim(Fdist))
   VBcur<-array(NA,dim(VBfx)[c(1,2,3,5)])
   Ecur<-array(NA,c(np,nf))
-  Vcur<-Retcur<-array(NA,c(np,nf,maxage))
+  Vcur<-Retcur<-array(NA,c(np,nf,n_age))
 
   for(y in 2:(nyears+1)){
 
@@ -99,9 +100,9 @@ popdynMICE<-function(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
                        Vcur=Vcur,
                        FMretx=FMretx,
                        FMx=FMx,
-                       PerrYrp=Perrx[,y+maxage-2],
+                       PerrYrp=Perrx[,y+n_age-1],
                        hsx=hsy[,y-1], aRx=aRx, bRx=bRx,
-                       movy=array(movx[,,,,y-1],c(np,maxage,nareas,nareas)),
+                       movy=array(movx[,,,,y-1],c(np,n_age,nareas,nareas)),
                        Spat_targ=Spat_targ, SRrelx=SRrelx,
                        M_agecur=array(M_ageArrayx[,,y-1],dim(M_ageArrayx)[1:2]),
                        Mat_agecur=array(Mat_agex[,,y-1],dim(Mat_agex)[1:2]),
@@ -186,11 +187,12 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
                         Kx,Linfx,t0x,Mx,R0x,R0ax,SSBpRx,ax,bx,Rel,SexPars,x,
                         plusgroup){
 
+  n_age <- maxage+1
   # ----Initial Bcur calc (before any weight at age recalculation change) ----
   # Bcalc
   Bcur<-SSBcur<-SSNcur<-array(NA,dim(Ncur))
   Nind<-TEG(dim(Ncur)) # p, age, area
-  Len_age<-matrix(Linfx*(1-exp(-(rep(1:maxage,each=np)-t0x)*(Kx))),nrow=np)
+  Len_age<-matrix(Linfx*(1-exp(-(rep(0:maxage,each=np)-t0x)*(Kx))),nrow=np)
   Wt_age<-ax*Len_age^bx
   Bcur[Nind]<-Ncur[Nind]*Wt_age[Nind[,1:2]]
   SSBcur[Nind]<-Bcur[Nind]*Mat_agecur[Nind[,1:2]]
@@ -198,8 +200,8 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
 
   # old surv
   surv <- array(c(rep(1,np),
-                  t(exp(-apply(M_agecur, 1, cumsum)))[, 1:(maxage-1)]),
-                c(np,maxage))  # Survival array
+                  t(exp(-apply(M_agecur, 1, cumsum)))[, 1:(n_age-1)]),
+                c(np,n_age))  # Survival array
   oldM<-apply(M_agecur*Mat_agecur,1,sum)/apply(Mat_agecur,1,sum)
   M_agecurx<-M_agecur*Mx/oldM
 
@@ -210,7 +212,7 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
       eval(parse(text=paste0(Responses[rr,4],"[",Responses[rr,3],"]<-",
                              as.numeric(Responses[rr,1]))))
 
-    Len_age<-matrix(Linfx*(1-exp(-(rep(1:maxage,each=np)-t0x)*(Kx))),nrow=np)
+    Len_age<-matrix(Linfx*(1-exp(-(rep(0:maxage,each=np)-t0x)*(Kx))),nrow=np)
     Wt_age<-ax*Len_age^bx
 
     # Parameters that could have changed: M, K, Linf, t0, a, b, hs
@@ -241,13 +243,13 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
   }
 
   # Vulnerable biomass calculation --------------------------------------------------
-  VBft<-Fdist<-array(NA,c(np,nf,maxage,nareas))
+  VBft<-Fdist<-array(NA,c(np,nf,n_age,nareas))
   VBind<-TEG(dim(VBft))
   VBft[VBind]<-Vcur[VBind[,1:3]]*Bcur[VBind[,c(1,3:4)]]
-  Ft<-array(apply(FMx,c(1,3,4),sum),c(np,maxage,nareas))#FMx[VBind]+M_agecur[VBind[,c(1,3)]]
-  Zcur<-Ft+array(rep(M_agecur[VBind[,c(1,3)]],nareas),c(np,maxage,nareas))
+  Ft<-array(apply(FMx,c(1,3,4),sum),c(np,n_age,nareas))#FMx[VBind]+M_agecur[VBind[,c(1,3)]]
+  Zcur<-Ft+array(rep(M_agecur[VBind[,c(1,3)]],nareas),c(np,n_age,nareas))
 
-  Nnext<-array(NA,c(np,maxage,nareas))
+  Nnext<-array(NA,c(np,n_age,nareas))
 
   # just for vulnerable biomass calculation
   SumF<-apply(FMx,c(1,3:4),sum,na.rm=T) # sum over fleets stock,age,area
@@ -257,7 +259,7 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
   VBt<-Bcur*Selx
   
   for(p in 1:np){
-    NextYrN <- popdynOneTScpp(nareas, maxage-1, Ncurr=Ncur[p,,],
+    NextYrN <- popdynOneTScpp(nareas, maxage, Ncurr=Ncur[p,,],
                             Zcurr=Zcur[p,,], mov=movy[p,,,],
                             plusgroup = plusgroup[p])
     Nnext[p,,]<-NextYrN

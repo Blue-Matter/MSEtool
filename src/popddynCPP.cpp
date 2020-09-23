@@ -34,13 +34,13 @@ arma::mat popdynOneTScpp(double nareas, double maxage,
   arma::mat Nnext(n_age, nareas);
   // arma::mat tempMat2(nareas, nareas);	
   arma::mat Nstore(n_age, nareas); 
-
+  
   for (int A=0; A < nareas; A++) {
     // Mortality
     for (int age=1; age<n_age; age++) {
       Nnext(age, A) = Ncurr(age-1, A) * exp(-Zcurr(age-1, A)); // Total mortality
     }
-
+    
     if (plusgroup > 0) {
       Nnext(maxage, A) += Nnext(maxage, A) * exp(-Zcurr(maxage, A))/(1-exp(-Zcurr(maxage, A))); // Total mortality
     }
@@ -87,7 +87,7 @@ arma::mat popdynOneTScpp(double nareas, double maxage,
 //' @param movc Numeric array (nareas by nareas) with the movement matrix
 //' @param SRrelc Integer indicating the stock-recruitment relationship to use (1 for Beverton-Holt, 2 for Ricker)
 //' @param Effind Numeric vector (length pyears) with the fishing effort by year
-//' @param Spat_targc Integer. Spatial targetting
+//' @param Spat_targc Integer. Spatial targeting
 //' @param hc Numeric. Steepness of stock-recruit relationship
 //' @param R0c Numeric vector of length nareas with unfished recruitment by area
 //' @param SSBpRc Numeric vector of length nareas with unfished spawning per recruit by area
@@ -98,7 +98,7 @@ arma::mat popdynOneTScpp(double nareas, double maxage,
 //' @param maxF A numeric value specifying the maximum fishing mortality for any single age class
 //' @param MPA Spatial closure by year and area
 //' @param control Integer. 1 to use q and effort to calculate F, 2 to use Fapic (apical F) and 
-//' vulnerablity to calculate F.
+//' vulnerability to calculate F.
 //' @param plusgroup Integer. Include a plus-group (1) or not (0)?
 //' 
 //' @author A. Hordyk
@@ -113,12 +113,13 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
                NumericVector aRc, NumericVector bRc, double Qc, double Fapic, double maxF, 
                arma::mat MPA, int control, double SSB0c, int plusgroup=0) {
   
-  int n_age = maxage + 1; // number of age-classes (including age-0)
+  int n_age =maxage+1; // number of age classes (including age 0)
   arma::cube Narray(n_age, pyears, nareas, arma::fill::zeros);
   arma::cube Barray(n_age, pyears, nareas, arma::fill::zeros);
   arma::cube SSNarray(n_age, pyears, nareas, arma::fill::zeros);
   arma::cube SBarray(n_age, pyears, nareas, arma::fill::zeros);
   arma::cube VBarray(n_age, pyears, nareas, arma::fill::zeros);
+  
   arma::cube Marray(n_age, pyears, nareas, arma::fill::zeros);
   arma::cube FMarray(n_age, pyears, nareas, arma::fill::zeros);
   arma::cube FMretarray(n_age, pyears, nareas, arma::fill::zeros);
@@ -134,8 +135,8 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
   
   NumericVector SSB0a(nareas);
   double R0 = sum(R0c);
-
-  // Initial year
+  
+  // Beginning of Initial year
   Narray.subcube(0, 0, 0, maxage, 0, nareas-1) = Ncurr;
   
   int yr = 0;
@@ -143,7 +144,7 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
   
   for (int A=0; A<nareas; A++) {
     Barray.subcube(0, 0, A, maxage, 0, A) = Ncurr.col(A) % WtAge.col(0);
-    SSNarray.subcube(0, 0, A, maxage, 0, A) = Ncurr.col(A) % MatAge.col(0); 
+    SSNarray.subcube(0, 0, A, maxage, 0, A) = Ncurr.col(A) % MatAge.col(0);
     SBarray.subcube(0, 0, A, maxage, 0, A) = Ncurr.col(A) % WtAge.col(0) % MatAge.col(0);
     VBarray.subcube(0, 0, A, maxage, 0, A) = Ncurr.col(A) % WtAge.col(0) % Vuln.col(0);
     Marray.subcube(0, 0, A, maxage, 0, A) = M_age.col(0);
@@ -152,7 +153,7 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
   
   // fishdist = (pow(tempVec, Spat_targc))/mean((pow(tempVec, Spat_targc)));
   fishdist = (pow(tempVec, Spat_targc))/sum((pow(tempVec, Spat_targc)));
-
+  
   // calculate F at age for first year
   if (control == 1) {
     for (int A=0; A<nareas; A++) {
@@ -167,7 +168,7 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
     }
   }
   
-  // apply Fmax condition 
+  // apply Fmax condition
   // arma::uvec tempvals = arma::find(FMarray > (1-exp(-maxF)));
   // FMarray.elem(tempvals).fill(1-exp(-maxF));
   // arma::uvec tempvals2 = arma::find(FMretarray > (1-exp(-maxF)));
@@ -179,15 +180,15 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
   FMretarray.elem(tempvals2).fill(maxF);
   
   Zarray.subcube(0,0, 0, maxage, 0, nareas-1) = Marray.subcube(0,0, 0, maxage, 0, nareas-1) + FMarray.subcube(0,0, 0, maxage, 0, nareas-1);
-
-  for (int yr=0; yr<(pyears-1); yr++) {
+  
+  for (int yr=0; yr<(pyears-1); yr++) { // 
     // Rcpp::Rcout << "yr = " << yr << std::endl;
     arma::vec SB(nareas);
     arma::cube movcy = movc(yr);
     
-    // for (int A=0; A<nareas; A++) SB(A) = accu(SBarray.subcube(0, yr, A, maxage, yr, A));
-    // if ((yr >0) & (control==3)) SB = SSB0a;
-          
+    for (int A=0; A<nareas; A++) SB(A) = accu(SBarray.subcube(0, yr, A, maxage, yr, A));
+    if ((yr >0) & (control==3)) SB = SSB0a;
+    
     arma::mat Ncurr2 = Narray.subcube(0, yr, 0, maxage, yr, nareas-1);
     arma::mat Zcurr = Zarray.subcube(0, yr, 0, maxage, yr, nareas-1);
     // double age0M = M_age(0,yr+1);
@@ -195,7 +196,7 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
     arma::mat NextYrN = popdynOneTScpp(nareas, maxage, 
                                        wrap(Ncurr2), wrap(Zcurr),
                                        movcy, plusgroup); 
-  
+    
     double PerrYr = Prec(yr+maxage+1); // rec dev
     for (int A=0; A<nareas; A++) {
       // Spawning biomass before recruitment (age-0 doesn't contribute to SB)
@@ -219,12 +220,13 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
       Marray.subcube(0, yr+1, A, maxage, yr+1, A) = M_age.col(yr+1);
       tempVec(A) = accu(VBarray.subcube(0, yr+1, A, maxage-1, yr+1, A));
     }
-  
+    
+    
     Narray.subcube(0, yr+1, 0, maxage, yr+1, nareas-1) = NextYrN;
     
     // fishdist = (pow(tempVec, Spat_targc))/mean((pow(tempVec, Spat_targc)));
     fishdist = (pow(tempVec, Spat_targc))/sum((pow(tempVec, Spat_targc)));
-   
+    
     arma::vec d1(nareas);
     for (int A=0; A<nareas; A++) {
       d1(A) = MPA(yr,A) * fishdist(A);// historical closures
@@ -235,7 +237,7 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
       fracE2(A) = d1(A) * (fracE + (1-fracE))/fracE;
     }
     fishdist = fracE2;
-
+    
     // calculate F at age for next year
     if (control == 1) {
       for (int A=0; A<nareas; A++) {
@@ -243,25 +245,25 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
         FMretarray.subcube(0,yr+1, A, maxage, yr+1, A) =  (Effind(yr+1) * Qc * fishdist(A) * Retc.col(yr+1))/Asize_c(A);
       }
     }
- 
+    
     if (control == 2) {
       for (int A=0; A<nareas; A++) {
         FMarray.subcube(0,yr+1, A, maxage, yr+1, A) =  (Fapic * fishdist(A) * Vuln.col(yr+1))/Asize_c(A);
         FMretarray.subcube(0,yr+1, A, maxage, yr+1, A) =  (Fapic * fishdist(A) * Retc.col(yr+1))/Asize_c(A);
       }
-  
+      
     }
     
     if (control ==3) { // simulate unfished dynamics & update recruitment by area
       Zarray.subcube(0,yr+1, 0, maxage, yr+1, nareas-1) = Marray.subcube(0,yr+1, 0, maxage, yr+1, nareas-1);
       
-      // get spatial distribution 
+      // get spatial distribution
       for (int A=0; A<nareas; A++) {
         SSB0a(A) = accu(SBarray.subcube(0, yr+1, A, maxage, yr+1, A));
         R0c2(A) = accu(SBarray.subcube(0, yr, A, maxage, yr, A));
       }
       
-      SSB0a =   SSB0a/ (sum(SSB0a)/SSB0c); 
+      SSB0a =   SSB0a/ (sum(SSB0a)/SSB0c);
       R0c2 = R0c2/ (sum(R0c2)/R0);
       
       // recalculate recruitment parameters
@@ -269,9 +271,9 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
         bRc2(A) = log(5 * hc)/(0.8 * SSB0a(A));
         aRc2(A) = exp(bRc2(A) * SSB0a(A))/ SSBpRc(A);
       }
-
+      
     } else {
-      // apply Fmax condition 
+      // apply Fmax condition
       // arma::uvec tempvals3 = arma::find(FMarray > (1-exp(-maxF)));
       // FMarray.elem(tempvals3).fill(1-exp(-maxF));
       // arma::uvec tempvals4 = arma::find(FMretarray > (1-exp(-maxF)));
@@ -284,10 +286,33 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
       Zarray.subcube(0,yr+1, 0, maxage, yr+1, nareas-1) = Marray.subcube(0,yr+1, 0, maxage, yr+1, nareas-1) + FMarray.subcube(0,yr+1, 0, maxage, yr+1, nareas-1);
       
     }
-   
+    
   }
   
-  List out(8);
+  // Calculate N & Biomass at end of projection period 
+  int lastyr = pyears;
+  arma::vec SB2(nareas);
+  arma::cube movcy2 = movc(lastyr);
+  
+  
+  for (int A=0; A<nareas; A++) SB2(A) = accu(SBarray.subcube(0, lastyr-1, A, maxage, lastyr-1, A));
+  if ((lastyr >0) & (control==3)) SB2 = SSB0a;
+  
+  arma::mat Ncurr2 = Narray.subcube(0, lastyr-1, 0, maxage, lastyr-1, nareas-1); // N at the beginning of the last year
+  arma::mat Zcurr2 = Zarray.subcube(0, lastyr-1, 0, maxage, lastyr-1, nareas-1); // total mortality in the last year
+  // double age0M = M_age(0,yr+1);
+  
+  // Calculate number at end of last year (after fishing this year) before aging
+  arma::mat EndLastYrN(maxage+1, nareas);
+  
+  for (int A=0; A < nareas; A++) {
+    // Mortality
+    for (int age=0; age<=maxage; age++) {
+      EndLastYrN(age, A) = Ncurr2(age, A) * exp(-Zcurr2(age, A)); // Total mortality
+    }
+  }
+  
+  List out(9);
   out(0) = Narray;
   out(1) = Barray;
   out(2) = SSNarray;
@@ -296,9 +321,10 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
   out(5) = FMarray;
   out(6) = FMretarray;
   out(7) = Zarray;
+  out(8) = EndLastYrN;
   
   return out;
 }
 
-  
+
 

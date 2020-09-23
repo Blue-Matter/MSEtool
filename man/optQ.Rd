@@ -32,7 +32,7 @@ optQ(
   MPA,
   plusgroup,
   VB0c,
-  optVB
+  control
 )
 }
 \arguments{
@@ -90,7 +90,8 @@ optQ(
 
 \item{VB0c}{Unfished vulnerable biomass}
 
-\item{optVB}{Logical. Optimize for vulnerable biomass?}
+\item{control}{List. Control parameters including \code{optVB=TRUE} to optimize
+for vulnerable biomass instead of SSB?}
 }
 \description{
 Optimize q for a single simulation

@@ -896,6 +896,7 @@ multiMSE <- function(MOM, MPs=list(c("AvC","DCAC"),c("FMSYref","curE")),
     return(HistList)
   }
 
+  
   # ---- Detecting MP specification ----
   if(identical(ldim(MPs),ldim(Fleets))){
     message("Byfleet mode: you have specified an MP for each stock and fleet. ",
@@ -983,7 +984,7 @@ multiMSE <- function(MOM, MPs=list(c("AvC","DCAC"),c("FMSYref","curE")),
       CALout[[p]][[f]] <- list()
     }
   }
-
+  
   B_BMSYa <- Ba <- SSBa <- VBa <- array(NA, dim = c(nsim,np,nMP, proyears))
   FMa <-F_FMSYa<- Ca <- CaRet <- TACa <- Effort <- array(NA, dim = c(nsim,np,nf, nMP, proyears))  #
   CAAout <- array(NA, dim = c(nsim,np,nf, nMP, maxage))

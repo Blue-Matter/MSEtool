@@ -95,7 +95,7 @@ popdynOneTScpp <- function(nareas, maxage, Ncurr, Zcurr, mov, plusgroup = 0L) {
 #' @param movc Numeric array (nareas by nareas) with the movement matrix
 #' @param SRrelc Integer indicating the stock-recruitment relationship to use (1 for Beverton-Holt, 2 for Ricker)
 #' @param Effind Numeric vector (length pyears) with the fishing effort by year
-#' @param Spat_targc Integer. Spatial targetting
+#' @param Spat_targc Integer. Spatial targeting
 #' @param hc Numeric. Steepness of stock-recruit relationship
 #' @param R0c Numeric vector of length nareas with unfished recruitment by area
 #' @param SSBpRc Numeric vector of length nareas with unfished spawning per recruit by area
@@ -106,7 +106,7 @@ popdynOneTScpp <- function(nareas, maxage, Ncurr, Zcurr, mov, plusgroup = 0L) {
 #' @param maxF A numeric value specifying the maximum fishing mortality for any single age class
 #' @param MPA Spatial closure by year and area
 #' @param control Integer. 1 to use q and effort to calculate F, 2 to use Fapic (apical F) and 
-#' vulnerablity to calculate F.
+#' vulnerability to calculate F.
 #' @param plusgroup Integer. Include a plus-group (1) or not (0)?
 #' 
 #' @author A. Hordyk

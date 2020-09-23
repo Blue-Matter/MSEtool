@@ -8,12 +8,13 @@
 #' @param FleetPars List of Fleet Parameters
 #' @param pyears The number of years to project forward. Equal to 'nyears' for optimizing for q.
 #' @param bounds A numeric vector of length 2 with bounds for the optimizer
-#' @param optVB Logical. Optimize for vulnerable biomass instead of SSB?
+#' @param control List. Control parameters including `optVB=TRUE` to optimize 
+#' for vulnerable biomass instead of SSB?
 #' 
 #' @author A. Hordyk
 #' @keywords internal
 CalculateQ <- function(x, StockPars, FleetPars, pyears, 
-                  bounds = c(1e-05, 15), optVB) {
+                  bounds = c(1e-05, 15), control) {
   
   opt <- optimize(optQ, log(bounds), depc=StockPars$D[x], SSB0c=StockPars$SSB0[x],
                   StockPars$nareas, StockPars$maxage, Ncurr=StockPars$N[x,,1,], 
@@ -28,7 +29,7 @@ CalculateQ <- function(x, StockPars, FleetPars, pyears,
                   aRc=StockPars$aR[x,], bRc=StockPars$bR[x,], 
                   maxF=StockPars$maxF, MPA=FleetPars$MPA, 
                   plusgroup=StockPars$plusgroup, 
-                  StockPars$VB0[x], optVB)
+                  StockPars$VB0[x], control)
   
   return(exp(opt$minimum))
 }
@@ -62,26 +63,42 @@ CalculateQ <- function(x, StockPars, FleetPars, pyears,
 #' @param MPA A matrix of spatial closures by year
 #' @param plusgroup Integer. Default = 0 = no plus-group. Use 1 to include a plus-group 
 #' @param VB0c  Unfished vulnerable biomass
-#' @param optVB Logical. Optimize for vulnerable biomass? 
+#' @param control List. Control parameters including `optVB=TRUE` to optimize 
+#' for vulnerable biomass instead of SSB?
 #' @author A. Hordyk
 #' @keywords internal
 optQ <- function(logQ, depc, SSB0c, nareas, maxage, Ncurr, pyears, M_age, Asize_c,
                  MatAge, WtAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, 
-                 R0c, SSBpRc, aRc, bRc, maxF, MPA, plusgroup, VB0c, optVB) {
+                 R0c, SSBpRc, aRc, bRc, maxF, MPA, plusgroup, VB0c, control) {
   
   simpop <- popdynCPP(nareas, maxage, Ncurr, pyears, M_age, Asize_c,
-                      MatAge, WtAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, 
-                      R0c=R0c, SSBpRc=SSBpRc, aRc=aRc, bRc=bRc, Qc=exp(logQ), Fapic=0, 
-                      maxF=maxF, MPA=MPA, control=1, SSB0c=SSB0c, 
-                      plusgroup=plusgroup) 
+                      MatAge, WtAge, Vuln, Retc, Prec, movc, SRrelc, Effind, 
+                      Spat_targc, hc, R0c=R0c, SSBpRc=SSBpRc, aRc=aRc, bRc=bRc, 
+                      Qc=exp(logQ), Fapic=0, maxF=maxF, MPA=MPA, control=1, 
+                      SSB0c=SSB0c, plusgroup=plusgroup) 
   
-  ssb <- sum(simpop[[4]][,pyears,])
-  vb <- sum(simpop[[5]][,pyears,])
-  if (optVB) {
-    return((log(depc) - log(vb/VB0c))^2)
-  }
-  else {
-    return((log(depc) - log(ssb/SSB0c))^2)
+  if (!is.null(control$Depletion) && control$Depletion == 'end') {
+    # Calculate depletion using biomass at the end of the last projection year
+    N_at_end_yr <- rowSums(simpop[[9]])
+    SB_end <- sum(N_at_end_yr * WtAge[,pyears] * MatAge[,pyears])
+    VB_end <- sum(N_at_end_yr * WtAge[,pyears] * Vuln[,pyears])
+    if (control$optVB) {
+      return((log(depc) - log(VB_end/VB0c))^2)
+    }
+    else {
+      return((log(depc) - log(SB_end/SSB0c))^2)
+    }
+  } else {
+    # Calculate depletion using biomass at the beginning of last projection year
+    ssb <- sum(simpop[[4]][,pyears,])
+    vb <- sum(simpop[[5]][,pyears,])
+
+    if (control$optVB) {
+      return((log(depc) - log(vb/VB0c))^2)
+    }
+    else {
+      return((log(depc) - log(ssb/SSB0c))^2)
+    }
   }
 }
 

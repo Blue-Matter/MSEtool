@@ -201,7 +201,7 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
 
 updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret, 
                        N_P, SSB, SSB_P, VBiomass, VBiomass_P, RefPoints, 
-                       FMSY_P, retA_P, 
+                       retA_P, 
                        retL_P, StockPars, FleetPars, ObsPars, 
                        V_P,
                        upyrs, interval, y=2, 
@@ -495,7 +495,12 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   
   # --- Previous Management Recommendations ----
   Data@MPrec <- MPCalcs$TACrec # last MP  TAC recommendation
-  Data@MPeff <- Effort[, mm, y-1] # last recommended effort
+  if (length(dim(Effort)) == 5) {
+    Data@MPeff <- Effort[, 1,1,mm, y-1] # last recommended effort
+  } else {
+    Data@MPeff <- Effort[, mm, y-1] # last recommended effort  
+  }
+  
   
   Data@Misc <- Misc
   

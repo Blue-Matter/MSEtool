@@ -63,7 +63,7 @@ popdynCPP(
 
 \item{Effind}{Numeric vector (length pyears) with the fishing effort by year}
 
-\item{Spat_targc}{Integer. Spatial targetting}
+\item{Spat_targc}{Integer. Spatial targeting}
 
 \item{hc}{Numeric. Steepness of stock-recruit relationship}
 
@@ -84,7 +84,7 @@ popdynCPP(
 \item{MPA}{Spatial closure by year and area}
 
 \item{control}{Integer. 1 to use q and effort to calculate F, 2 to use Fapic (apical F) and
-vulnerablity to calculate F.}
+vulnerability to calculate F.}
 
 \item{plusgroup}{Integer. Include a plus-group (1) or not (0)?}
 

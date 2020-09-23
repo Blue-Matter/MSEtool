@@ -4,7 +4,7 @@
 \alias{CalculateQ}
 \title{Optimize for catchability (q)}
 \usage{
-CalculateQ(x, StockPars, FleetPars, pyears, bounds = c(1e-05, 15), optVB)
+CalculateQ(x, StockPars, FleetPars, pyears, bounds = c(1e-05, 15), control)
 }
 \arguments{
 \item{x}{Integer, the simulation number}
@@ -17,7 +17,8 @@ CalculateQ(x, StockPars, FleetPars, pyears, bounds = c(1e-05, 15), optVB)
 
 \item{bounds}{A numeric vector of length 2 with bounds for the optimizer}
 
-\item{optVB}{Logical. Optimize for vulnerable biomass instead of SSB?}
+\item{control}{List. Control parameters including \code{optVB=TRUE} to optimize
+for vulnerable biomass instead of SSB?}
 }
 \description{
 Function optimizes catchability (q, where F=qE) required to get to user-specified stock

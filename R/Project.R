@@ -28,8 +28,20 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
   
   # ---- Check MPs ----
   # Not currently included 
+  # if (CheckMPs) {
+  #   if(!silent) message("Determining available methods")
+  #   PosMPs <- Can( Data, timelimit = timelimit)
+  #   if (!is.na(allMPs[1])) {
+  #     cant <- allMPs[!allMPs %in% PosMPs]
+  #     if (length(cant) > 0) {
+  #       if(!silent) stop(paste0("Cannot run some MPs:",
+  #                               DLMtool::DLMdiag(Data, "not available",
+  #                                                funcs1=cant, timelimit = timelimit)))
+  #     }
+  #   }
+  # }
   if (all(is.na(MPs))) {
-    if (msg) message('No MPs have been specified, running with some demo MPs')
+    if (!silent) message('No MPs have been specified, running with some demo MPs')
     MPs <- c('AvC') # TODO
   }
   nMP <- length(MPs)  # the total number of methods used
@@ -38,7 +50,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
   # ---- Set Management Interval for each MP ----
   if (length(interval) != nMP) interval <- rep(interval, nMP)[1:nMP]
   if (!all(interval == interval[1])) {
-    if (msg) message("Variable management intervals:")
+    if (!silent) message("Variable management intervals:")
     df <- data.frame(MP=MPs,interval=interval)
     for (i in 1:nrow(df)) {
       message(df$MP[i], 'has management interval:', df$interval[i])
@@ -60,9 +72,11 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
   VBMSY_y <- array(VBMSY_y, dim=c(nsim, nyears+proyears, nMP)) %>% aperm(c(1,3,2)) 
   
   # ---- Set-up arrays and objects for projections ----
-  # create a data object for each method (they have identical historical data and branch in projected years)
+  # create a data object for each method 
+  # (they have identical historical data and branch in projected years)
   Data <- Hist@Data
   MSElist <- list(Data)[rep(1, nMP)]  
+  # TODO - update names of stored values
   B_BMSYa <- array(NA, dim = c(nsim, nMP, proyears))  # store the projected B_BMSY
   F_FMSYa <- array(NA, dim = c(nsim, nMP, proyears))  # store the projected F_FMSY
   Ba <- array(NA, dim = c(nsim, nMP, proyears))  # store the projected Biomass
@@ -353,7 +367,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
         MSElist[[mm]] <- updateData(Data=MSElist[[mm]], OM, MPCalcs, Effort, StockPars$Biomass, StockPars$N,
                                     Biomass_P, CB_Pret, N_P, StockPars$SSB, SSB_P, StockPars$VBiomass, VBiomass_P,
                                     RefPoints=ReferencePoints, 
-                                    FMSY_y, retA_P, retL_P, StockPars,
+                                    retA_P, retL_P, StockPars,
                                     FleetPars, ObsPars, V_P,
                                     upyrs, interval, y, mm,
                                     Misc=Data_p@Misc, RealData, ObsPars$Sample_Area,
@@ -475,7 +489,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
       MSElist[[mm]] <- updateData(Data=MSElist[[mm]], OM, MPCalcs, Effort, StockPars$Biomass, StockPars$N,
                                   Biomass_P, CB_Pret, N_P, StockPars$SSB, SSB_P, StockPars$VBiomass, VBiomass_P,
                                   RefPoints=ReferencePoints, 
-                                  FMSY_y, retA_P, retL_P, StockPars,
+                                  retA_P, retL_P, StockPars,
                                   FleetPars, ObsPars, V_P,
                                   upyrs=c(upyrs, proyears), interval, y, mm,
                                   Misc=Data_p@Misc, RealData, ObsPars$Sample_Area,

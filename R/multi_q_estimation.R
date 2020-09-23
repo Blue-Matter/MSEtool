@@ -34,6 +34,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage,
                             bounds= c(1e-05, 15),tol=1E-6,Rel,SexPars, plusgroup,
                             optVB=FALSE) {
 
+  n_age <- maxage +1 # include age-0
   Nx <- array(N[x,,,,],dim(N)[2:5])
   VFx <- array(VF[x,,,,],dim(VF)[2:5])
   FretAx <- array(FretA[x,,,,],dim(VF)[2:5])
@@ -52,12 +53,12 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage,
   SRrelx<-matrix(unlist(lapply(StockPars,function(dat)dat['SRrel'])),ncol=np)[x,]
 
   distx<-Asizex<-SSBpRx<-R0ax<-aRx<-bRx<-array(NA,c(np,nareas))
-  Perrx<-array(NA,c(np,nyears+maxage))
-  movx<-array(NA,c(np,maxage,nareas,nareas,nyears))
+  Perrx<-array(NA,c(np,nyears+n_age))
+  movx<-array(NA,c(np,n_age,nareas,nareas,nyears))
 
   for(p in 1:np){
     distx[p,]<-StockPars[[p]]$R0a[x,]/sum(StockPars[[p]]$R0a[x,])
-    Perrx[p,]<-StockPars[[p]]$Perr_y[x,1:(nyears+maxage)]
+    Perrx[p,]<-StockPars[[p]]$Perr_y[x,1:(nyears+n_age)]
     movx[p,,,,]<-StockPars[[p]]$mov[x,,,,1:nyears]
     SSBpRx[p,]<-StockPars[[p]]$SSBpR[x,]
     R0ax[p,]<-StockPars[[p]]$R0a[x,]
@@ -66,7 +67,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage,
     Asizex[p,]<-StockPars[[p]]$Asize[x,]
   }
 
-  M_ageArrayx<-Mat_agex<-array(NA,c(np,maxage,nyears))
+  M_ageArrayx<-Mat_agex<-array(NA,c(np,n_age,nyears))
   Effind<-array(NA,c(np,nf,nyears))
   Spat_targ<-array(NA,c(np,nf))
 
@@ -171,6 +172,7 @@ qestMICE<-function(par,depc,CFc,mode='opt',np,nf,nyears,nareas,maxage,Nx,VFx,
                    Asizex,Kx,Linfx,t0x,Mx,R0x,R0ax,SSBpRx,SSB0x,hsx,aRx, bRx,
                    ax,bx,Perrx,SRrelx,Rel,SexPars,x, plusgroup, optVB, VB0x){
 
+  n_age <- maxage + 1 # include age-0
   qsx<-exp(par[1:np])
   if(nf==1){
     qfracx<-matrix(1,nrow=np)
@@ -206,7 +208,7 @@ qestMICE<-function(par,depc,CFc,mode='opt',np,nf,nyears,nareas,maxage,Nx,VFx,
 
   }
 
-  Cpred0<-array(NA,c(np,nf,maxage,nareas))
+  Cpred0<-array(NA,c(np,nf,n_age,nareas))
   Cind<-TEG(dim(Cpred0))
   Find<-cbind(Cind[,1:3],nyears,Cind[,4]) # p f age y area
   Bind<-Find[,c(1,3:5)]
