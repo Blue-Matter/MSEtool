@@ -143,7 +143,7 @@ HistMICE<-function(x,StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, VF,
   popdynMICE(qsx=qsx,qfracx=qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
              movx,Spat_targ,M_ageArrayx,Mat_agex,Asizex,Kx,Linfx,t0x,Mx,R0x,R0ax,
              SSBpRx,hsx,aRx, bRx,ax,bx,Perrx,SRrelx,Rel,SexPars,x,
-             plusgroup)
+             plusgroup, maxF)
 
 }
 

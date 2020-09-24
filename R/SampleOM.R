@@ -407,7 +407,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
         t0[ss] <- mean(pars[3,])
         t0array <- matrix(t0, nrow=nsim, ncol=proyears+nyears)
       } # end loop over sims for vB estimation
-      cat("\n")
+      if(msg) cat("\n")
       # Add Linf, K, t0 to StockPars (current yr)
       Linf <- Linfarray[,nyears]
       K <- Karray[,nyears]

@@ -108,7 +108,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage,
              Linfx=Linfx, t0x=t0x, Mx=Mx, R0x=R0x, R0ax=R0ax, SSBpRx=SSBpRx,
              SSB0x=SSB0x, hsx=hsx, ax=ax, bx=bx, aRx=aRx, bRx=bRx, Perrx=Perrx,
              SRrelx=SRrelx, Rel=Rel, SexPars=SexPars, x=x, plusgroup=plusgroup,
-             optVB=optVB, VB0x=VB0x,
+             optVB=optVB, VB0x=VB0x, maxF=maxF,
              control=list(trace=1,factr=factr))
 
   out<-qestMICE(par=opt$par, depc=depc,CFc=CFc,mode='calc', np=np, nf=nf,
@@ -119,7 +119,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage,
                 R0ax=R0ax, SSBpRx=SSBpRx, SSB0x=SSB0x, hsx=hsx, aRx=aRx, bRx=bRx,
                 ax=ax, bx=bx, Perrx=Perrx, SRrelx=SRrelx,
                 Rel=Rel,SexPars=SexPars,x=x, plusgroup=plusgroup,
-                optVB=optVB, VB0x=VB0x)
+                optVB=optVB, VB0x=VB0x, maxF=maxF)
 
   out
 }
@@ -170,7 +170,8 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage,
 qestMICE<-function(par,depc,CFc,mode='opt',np,nf,nyears,nareas,maxage,Nx,VFx,
                    FretAx,Effind,distx,movx,Spat_targ,M_ageArrayx,Mat_agex,
                    Asizex,Kx,Linfx,t0x,Mx,R0x,R0ax,SSBpRx,SSB0x,hsx,aRx, bRx,
-                   ax,bx,Perrx,SRrelx,Rel,SexPars,x, plusgroup, optVB, VB0x){
+                   ax,bx,Perrx,SRrelx,Rel,SexPars,x, plusgroup, optVB, VB0x,
+                   maxF){
 
   n_age <- maxage + 1 # include age-0
   qsx<-exp(par[1:np])
@@ -185,7 +186,7 @@ qestMICE<-function(par,depc,CFc,mode='opt',np,nf,nyears,nareas,maxage,Nx,VFx,
   HistVars<-popdynMICE(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,
                        Effind,movx,Spat_targ,M_ageArrayx, Mat_agex,Asizex,Kx,
                        Linfx,t0x,Mx,R0x,R0ax,SSBpRx,hsx,aRx, bRx,ax,bx,Perrx,
-                       SRrelx,Rel,SexPars,x, plusgroup)
+                       SRrelx,Rel,SexPars,x, plusgroup, maxF)
 
 
   if (optVB) {

@@ -42,7 +42,7 @@
 popdynMICE<-function(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
                      movx,Spat_targ, M_ageArrayx,Mat_agex,Asizex,Kx,Linfx,
                      t0x,Mx,R0x,R0ax,SSBpRx,hsx,aRx,
-                     bRx,ax,bx,Perrx,SRrelx,Rel,SexPars,x, plusgroup) {
+                     bRx,ax,bx,Perrx,SRrelx,Rel,SexPars,x, plusgroup, maxF) {
 
   n_age <- maxage + 1 # include age-0
   Bx<-SSNx<-SSBx<-VBx<-Zx<-array(NA,dim(Nx))
@@ -82,12 +82,16 @@ popdynMICE<-function(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
     Vcur[]<-VFx[,,,y-1]#array(VFx[,,,y-1],c(np,nf,maxage))
     FMx[Find]<-qsx[Find[,1]]*qfracx[Find[,1:2]]*Ecur[Find[,1:2]]*Fdist[Find]*
       Vcur[Find[,1:3]]/Asizex[Find[,c(1,4)]]
+    
+    # apply maxF 
+    FMx[FMx>maxF] <- maxF
     Retcur[]<-FretAx[,,,y-1]#array(FretAx[,,,1],c(np,nf,maxage))
     FMretx[Find]<-qsx[Find[,1]]*qfracx[Find[,1:2]]*Ecur[Find[,1:2]]*Fdist[Find]*
       Retcur[Find[,1:3]]/Asizex[Find[,c(1,4)]]
+    FMretx[FMretx>maxF] <- maxF
     #Ft<-array(apply(FMx,c(1,3,4),sum),c(np,maxage,nareas))#FMx[VBind]+M_agecur[VBind[,c(1,3)]]
     # y<-y+1
-    Fy[,,y-1]<-Effind[,,y-1]*qsx*qfracx  # this is basically apical F - yet to be subject to Fdist and Asize (inside popdynOneMICE)
+    # Fy[,,y-1]<-Effind[,,y-1]*qsx*qfracx  # this is basically apical F - yet to be subject to Fdist and Asize (inside popdynOneMICE)
     # y<-2; M_agecur=M_ageArrayx[,,y-1];Mat_agecur=Mat_agex[,,y-1];    PerrYrp=Perrx[,y+maxage-2]
     #Retcur=array(FretAx[,,,y-1],dim(FretAx)[1:3])
     #Fcur=array(Fy[,,y-1],dim(Fy)[1:2])

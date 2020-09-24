@@ -294,6 +294,7 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
       ResampStockPars <- SampleStockPars(OM2, cpars=SampCpars2, msg=FALSE)  
       ResampStockPars$CAL_bins <- StockPars$CAL_bins
       ResampStockPars$CAL_binsmid <- StockPars$CAL_binsmid 
+      ResampStockPars$nCALbins <- length(StockPars$CAL_binsmid )
       
       StockPars$D[probQ] <- ResampStockPars$D  # Re-sampled depletion  
       StockPars$procsd[probQ] <- ResampStockPars$procsd # Re-sampled recruitment deviations

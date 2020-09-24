@@ -31,6 +31,18 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
     stop("You must specify an operating model of class `MOM`")
   }
   
+  # ---- Set up parallel processing ----
+  if (parallel) {
+    if (snowfall::sfIsRunning()) {
+      ncpus <- snowfall::sfCpus()
+    } else {
+      setup()
+      ncpus <- snowfall::sfCpus()
+    }
+  } else {
+    ncpus <- 1
+  }
+  
   set.seed(MOM@seed) # set seed for reproducibility
   nsim <- MOM@nsim
   nyears <- MOM@Fleets[[1]][[1]]@nyears  # number of historical years
@@ -91,49 +103,37 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
   maxage <- max(maxage_s)
   for(p in 1:np) MOM@Stocks[[p]]@maxage<-maxage
   
-  # --- Sample custom parameters ----
-  if(!silent) message("Loading operating model")
-  SampCpars <- list() # empty list
-  # custom parameters exist - sample and write to list
 
+  if(!silent) message("Loading operating model")
+  StockPars<-FleetPars<-ObsPars<-ImpPars<- SampCpars<-new('list')
+  
+  plusgroup <- rep(1, np)
+  # custom parameters exist - sample and write to list
   for(p in 1:np){
     SampCpars[[p]]<-list()
+    if(!silent) message(Stocks[[p]]@Name)
     for(f in 1:nf){
+      # --- Sample custom parameters ----
       if(length(cpars)>0 && length(cpars[[p]][[f]])>0){
-        if (length(cpars[[p]][[f]]$N_at_age_initial)>0) {
-          N_at_age_initial[,p] <- cpars[[p]][[f]]$N_at_age_initial
-          cpars[[p]][[f]]$N_at_age_initial <- NULL
-        }
-        
-        
-        message(paste(Stocks[[p]]@Name," - ",Fleets[[p]][[f]]@Name))
-        ncparsim <- cparscheck(cpars[[p]][[f]])
+        # TODO - skip non-stochastic ----
+        # ncparsim <- cparscheck(cpars[[p]][[f]]) 
         SampCpars[[p]][[f]] <- SampleCpars(cpars[[p]][[f]], nsim,
                                            silent=silent)
       }else{
         SampCpars[[p]][[f]] <-list()
       }
     }
-  }
-  
-  plusgroup <- rep(1, np)
-  for (p in 1:np) {
-    if(!is.null(SampCpars[[p]][[1]]$plusgroup) & all(SampCpars[[p]][[1]]$plusgroup==0)) plusgroup[p] <- 0
-  }
-  
-  # --- Sample Stock Parameters ----
-  StockPars<-FleetPars<-ObsPars<-ImpPars<-new('list')
-  for(p in 1:np){
+    
+    # --- Sample Stock Parameters ----
+    if(!is.null(SampCpars[[p]][[1]]$plusgroup) & all(SampCpars[[p]][[1]]$plusgroup==0))
+      plusgroup[p] <- 0
+    
     StockPars[[p]] <- SampleStockPars(MOM@Stocks[[p]], nsim, nyears,
                                       proyears, SampCpars[[p]][[1]],
                                       msg=silent)
     StockPars[[p]]$plusgroup <- plusgroup
-  }
-  
- 
-  
-  # --- Sample Fleet Parameters ----
-  for(p in 1:np){
+    
+    # --- Sample Fleet Parameters ----
     FleetPars[[p]]<-ObsPars[[p]]<-ImpPars[[p]]<-list()
     for(f in 1:nf){
       FleetPars[[p]][[f]] <- SampleFleetPars(MOM@Fleets[[p]][[f]],
@@ -142,31 +142,26 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
                                              cpars=SampCpars[[p]][[f]])
     }
     
-  }
-  
-  # --- Sample Obs Parameters ----
-  for(p in 1:np) {
+    # --- Sample Obs Parameters ----
     for(f in 1:nf) {
       ObsPars[[p]][[f]] <- SampleObsPars(MOM@Obs[[p]][[f]], nsim,
-                                                  cpars=SampCpars[[p]][[f]],
+                                         cpars=SampCpars[[p]][[f]],
                                          Stock=StockPars[[p]],
                                          nyears, proyears)
     }
-  }
-  
-  # --- Sample Imp Parameters ----
-  for(p in 1:np) {
+    
+    # --- Sample Imp Parameters ----
     for(f in 1:nf) {
       ImpPars[[p]][[f]] <- SampleImpPars(MOM@Imps[[p]][[f]], nsim,
-                                                  cpars=SampCpars[[p]][[f]],
+                                         cpars=SampCpars[[p]][[f]],
                                          nyears, proyears)
     }
   }
+
   
   # --- Update Parameters for two-sex stocks ----
   # Depletion, stock-recruit parameters, recdevs, Fleet, Obs, and Imp copied
   # from females to males
-  ## TODO - TEST AND FINISH ----
   if(length(SexPars)>0){
     sexmatches <- sapply(1:nrow(SexPars$SSBfrom), function(x,mat)
       paste(mat[x,],collapse="_"), mat=SexPars$SSBfrom)
@@ -229,17 +224,20 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
   
   ## TODO - CHECK HERM ----
   
+  Unfished_Equilibrium <- list()
   for(p in 1:np){ # loop over stocks
     #  --- Pre Equilibrium calcs ----
     surv <- matrix(1, nsim, n_age)
     surv[, 2:n_age] <- t(exp(-apply(StockPars[[p]]$M_ageArray[,,1], 1, cumsum)))[, 1:(n_age-1)]  # Survival array
     
     if (plusgroup[p]) {
-      surv[,n_age] <- surv[,n_age]+surv[,n_age]*exp(-StockPars[[p]]$M_ageArray[,n_age,1])/(1-exp(-StockPars[[p]]$M_ageArray[,n_age,1])) # indefinite integral
+      surv[,n_age] <- surv[,n_age]+surv[,n_age]*
+        exp(-StockPars[[p]]$M_ageArray[,n_age,1])/(1-exp(-StockPars[[p]]$M_ageArray[,n_age,1])) # indefinite integral
     }
     
     # predicted Numbers of mature ages in first year
     Nfrac <- surv * StockPars[[p]]$Mat_age[,,1] * HermFrac[,p,]
+    
     # Set up some array indexes sim (S) age (A) year (Y) region/area (R)
     SPAYR <- as.matrix(expand.grid(1:nareas, 1, 1:n_age, p, 1:nsim)[5:1])
     SPA <- SPAYR[,1:3]
@@ -251,74 +249,129 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
     SY <- SPAYR[, c(1, 4)]
     Sa[,2] <- n_age-Sa[,2]+1 # This is the process error index for initial year
     
-    # TODO - Previously an if statement for existence of initdist, see runMSE.R of DLMtool/R ----
+    # Calculate initial distribution if mov provided in cpars
+    # TODO - check if this works correctly ----
+    # - Previously an if statement for existence of initdist, see runMSE.R of DLMtool/R
+    # add code if mov passed in cpars
     
     #*HermFrac[,p,1]  # !!!! INITDIST OF AGE 1. Unfished recruitment by area
     R0a <- matrix(StockPars[[p]]$R0, nrow=nsim, ncol=nareas, byrow=FALSE) * StockPars[[p]]$initdist[,1,]
-    # Calculate initial spawning stock numbers
-    SSN[SPAYR] <- Nfrac[SA] * StockPars[[p]]$R0[S] * StockPars[[p]]$initdist[SAR]
-    # Calculate initial stock numbers
-    N[SPAYR] <- StockPars[[p]]$R0[S] * surv[SA] *HermFrac[SPA] * StockPars[[p]]$initdist[SAR]
     
-    Neq <- N
-    Biomass[SPAYR] <- N[SPAYR] * StockPars[[p]]$Wt_age[SAY]  # Calculate initial stock biomass
-    SSB[SPAYR] <- SSN[SPAYR] * StockPars[[p]]$Wt_age[SAY]    # Calculate spawning stock biomass
+    # ---- Unfished Equilibrium calcs ----
+    surv <- array(1, dim=c(nsim, n_age, nyears+proyears)) # unfished survival for every year
+    # Survival array
+    surv[, 2:n_age, ] <- aperm(exp(-apply(StockPars[[p]]$M_ageArray, c(1,3), cumsum))[1:(n_age-1), ,], c(2,1,3))
+    if (plusgroup[p]) {
+      surv[,n_age, ] <- surv[,n_age,]+surv[,n_age,]*
+        apply(-StockPars[[p]]$M_ageArray[,n_age,], 2, exp)/(1-apply(-StockPars[[p]]$M_ageArray[,n_age,], 2, exp))
+    }
+    Nfrac <- surv * StockPars[[p]]$Mat_age  # predicted numbers of mature ages in all years
+    
+    # indices for all years
+    SAYR_a <- as.matrix(expand.grid(1:nareas, 1:(nyears+proyears), 1:n_age, 1:nsim)[4:1])  
+    SAY_a <- SAYR_a[, 1:3]
+    SAR_a <- SAYR_a[, c(1,2,4)]
+    SA_a <- SAYR_a[, 1:2]
+    SR_a <- SAYR_a[, c(1, 4)]
+    S_a <- SAYR_a[, 1]
+    SY_a <- SAYR_a[, c(1, 3)]
+    
+    # arrays for unfished biomass for all years 
+    SSN_a <- array(NA, dim = c(nsim, n_age, nyears+proyears, nareas))  
+    N_a <- array(NA, dim = c(nsim, n_age, nyears+proyears, nareas))
+    Biomass_a <- array(NA, dim = c(nsim, n_age, nyears+proyears, nareas))
+    SSB_a <- array(NA, dim = c(nsim, n_age, nyears+proyears, nareas))
+    
+    # Calculate initial spawning stock numbers for all years
+    SSN_a[SAYR_a] <- Nfrac[SAY_a] * StockPars[[p]]$R0[S_a] * StockPars[[p]]$initdist[SAR_a] 
+    N_a[SAYR_a] <- StockPars[[p]]$R0[S_a] * surv[SAY_a] * StockPars[[p]]$initdist[SAR_a] 
+    Biomass_a[SAYR_a] <- N_a[SAYR_a] * StockPars[[p]]$Wt_age[SAY_a]  # Calculate initial stock biomass
+    SSB_a[SAYR_a] <- SSN_a[SAYR_a] * StockPars[[p]]$Wt_age[SAY_a]    # Calculate spawning stock biomass
+    
+    SSN0_a <- apply(SSN_a, c(1,3), sum) # unfished spawning numbers for each year
+    N0_a <- apply(N_a, c(1,3), sum) # unfished numbers for each year)
+    SSB0_a <- apply(SSB_a, c(1,3), sum) # unfished spawning biomass for each year
+    SSB0a_a <- apply(SSB_a, c(1, 3,4), sum)  # Calculate unfished spawning stock biomass by area for each year
+    B0_a <- apply(Biomass_a, c(1,3), sum) # unfished biomass for each year
     
     Vraw <- array(NIL(listy=FleetPars[[p]],namey="V"),c(nsim,n_age,allyears,nf))
     Vind <- as.matrix(expand.grid(1:nsim,p,1:nf,1:n_age,1:allyears))
     VF[Vind] <- Vraw[Vind[,c(1,4,5,3)]]
     
+    Fretraw <- array(NIL(listy=FleetPars[[p]],namey="retA"),c(nsim,n_age,allyears,nf))
+    FretA[Vind] <- Fretraw[Vind[,c(1,4,5,3)]]
+    
     if(nf==1){
       V <- VF[,p,1,,] #<-SOL(FleetPars[[p]],"V")
     }else{
       #Weight by catch fraction
-      V <- array(0,c(nsim,maxage,allyears))
+      V <- array(0,c(nsim,n_age,allyears))
       for(f in 1:nf){
         V <- V+VF[,p,f,,]*CatchFrac[[p]][,f]
       }
       #V<-nlz(V,c(1,3),"max") # currently assume unfished vulnerability is equally weighted among fleets
       # V includes discards
     }
+    VB0_a <- apply(apply(Biomass_a, c(1,2,3), sum) * V, c(1,3), sum) # unfished vulnerable biomass for each year
     
-    VBiomass[SPAYR] <- Biomass[SPAYR] * V[SAY]  # Calculate vulnerable biomass
-    Fretraw <- array(NIL(listy=FleetPars[[p]],namey="retA"),c(nsim,n_age,allyears,nf))
-    FretA[Vind] <- Fretraw[Vind[,c(1,4,5,3)]]
     
-    if (nsim > 1) {
-      SSN0 <- apply(SSN[,p , , 1, ], c(1, 3), sum)  # Calculate unfished spawning stock numbers
-      SSB0 <- apply(SSB[,p , , 1, ], 1, sum)  # Calculate unfished spawning stock biomass
-      SSBpR <- matrix(SSB0/StockPars[[p]]$R0, nrow=nsim, ncol=nareas)  # Spawning stock biomass per recruit
-      SSB0a <- apply(SSB[,p, , 1, ], c(1, 3), sum)  # Calculate unfished spawning stock numbers
-      B0 <- apply(Biomass[,p, , 1, ], 1, sum)
-      N0 <- apply(N[,p, , 1, ], 1, sum)
-      VB0 <- apply(VBiomass[,p,,1,], 1, sum)
-    } else {
-      SSN0 <- apply(SSN[,p, , 1, ], 2, sum)  # Calculate unfished spawning stock numbers
-      SSB0 <-  sum(SSB[,p, , 1, ])  # Calculate unfished spawning stock biomass
-      SSBpR <- SSB0/R0  # Spawning stock biomass per recruit
-      SSB0a <- apply(SSB[,p, , 1, ], 2, sum)  # Calculate unfished spawning stock numbers
-      B0 <- apply(Biomass[,p, , 1, ], 2, sum)
-      N0 <- apply(N[,p, , 1, ], 2, sum)
-      VB0 <- apply(VBiomass[,p,,1,], c(1,3), sum)
-    }
+    # ---- Unfished Reference Points ----
+    SSBpRa <- array(SSB0_a/matrix(StockPars[[p]]$R0, nrow=nsim, ncol=nyears+proyears), 
+                    dim = c(nsim, nyears+proyears))
     
+    UnfishedRefs <- sapply(1:nsim, CalcUnfishedRefs, ageM=StockPars[[p]]$ageM, N0_a=N0_a, SSN0_a=SSN0_a,
+                           SSB0_a=SSB0_a, B0_a=B0_a, VB0_a=VB0_a, SSBpRa=SSBpRa, SSB0a_a=SSB0a_a) 
+    
+    N0 <- UnfishedRefs[1,] %>% unlist() # average unfished numbers
+    SSN0 <- UnfishedRefs[2,] %>% unlist() # average unfished spawning numbers
+    SSB0 <- UnfishedRefs[3,] %>% unlist() # average unfished spawning biomass
+    B0 <- UnfishedRefs[4,] %>% unlist() # average unfished biomass
+    VB0 <- UnfishedRefs[5,] %>% unlist() # average unfished vulnerable biomass
+    
+    Unfished_Equilibrium[[p]] <- list(
+      N_at_age=N_a,
+      B_at_age=Biomass_a,
+      SSB_at_age=SSB_a,
+      SSN_at_age=SSN_a,
+      VB_at_age=Biomass_a * replicate(nareas,V)
+    )
+    
+    # average spawning stock biomass per recruit 
+    SSBpR <- matrix(UnfishedRefs[6,] %>% unlist(), nrow=nsim, ncol=nareas) 
+    # average unfished biomass
+    SSB0a <- UnfishedRefs[7,] %>% unlist() %>% matrix(nrow=nsim, ncol=nareas, byrow = TRUE)
     bR <- matrix(log(5 * StockPars[[p]]$hs)/(0.8 * SSB0a), nrow=nsim)  # Ricker SR params
     aR <- matrix(exp(bR * SSB0a)/SSBpR, nrow=nsim)  # Ricker SR params
     
-    #  --- Non-equilibrium calcs ----
-    # Calculate initial spawning stock numbers
-    # if (!all(is.na(N_at_age_initial))) {
-    #   N_init <- replicate(nsim,  N_at_age_initial[,p]) %>% t()
-    #   N[SPAYR] <- N_init[SA] *  StockPars[[p]]$initdist[SAR]
-    #   SSN[SPAYR] <- Nfrac[SA] * N[SPAYR]
+    # --- Optimize for Initial Depletion ----
+    # TODO - currently done in SS2MOM
+    
+    # initD <- SampCpars[[p]][[1]]$initD # 
+    # if (!is.null(initD)) { # initial depletion is not unfished
+    #   if (!silent) 
+    #     message("Optimizing for user-specified depletion in first historical year for ", Snames[p])
+    #   Perrmulti <- sapply(1:nsim, optDfunwrap, 
+    #                       initD=initD, 
+    #                       Nfrac=Nfrac, 
+    #                       R0=R0,
+    #                       Perr_y=StockPars[[p]]$Perr_y, 
+    #                       surv=surv,
+    #                       Wt_age=StockPars[[p]]$Wt_age, 
+    #                       SSB0=SSB0,
+    #                       n_age=n_age)
     #   
-    # } else {
-    SSN[SPAYR] <- Nfrac[SA] * StockPars[[p]]$R0[S] * StockPars[[p]]$initdist[SAR] *
+    #   StockPars[[p]]$Perr_y[,1:n_age] <- StockPars[[p]]$Perr_y[, 1:n_age] * Perrmulti
+    # }
+    # 
+    
+    
+    #  --- Non-equilibrium calcs ----
+    SSN[SPAYR] <- Nfrac[SAY] * StockPars[[p]]$R0[S] * StockPars[[p]]$initdist[SAR] *
       StockPars[[p]]$Perr_y[Sa]
     # Calculate initial stock numbers
-    N[SPAYR] <- StockPars[[p]]$R0[S] * surv[SA] * HermFrac[SPA] *
+    N[SPAYR] <- StockPars[[p]]$R0[S] * surv[SAY] * HermFrac[SPA] *
       StockPars[[p]]$initdist[SAR] * StockPars[[p]]$Perr_y[Sa]
-    # }
+
     # Calculate initial stock biomass
     Biomass[SPAYR] <- N[SPAYR] * StockPars[[p]]$Wt_age[SAY]
     # Calculate spawning stock biomass
@@ -340,9 +393,7 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
     # loop over fleets
     for(f in 1:nf) {
       FleetPars[[p]][[f]]$V<-VF[,p,f,,] # update fleet vulnerability for this stock
-      
-      ## TODO - Need to do the same for retention ----
-      
+
       # --- Historical Spatial closures ----
       
       MPA <- matrix(1, nrow=nyears+proyears, ncol=nareas)
@@ -391,25 +442,41 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
   } # end of SexPars loop
   
   # --- Optimize catchability (q) to fit depletion ----
-  if(!silent)
-    # TODO
-    message("Optimizing for user-specified depletion ",
-            "(takes approximately [(nstocks x nfleets)/(9 x number of cores in cluster)]",
-            " minutes per simulation)")
-  
+
   bounds <- c(0.0001, 15) # q bounds for optimizer
   
-  # TODO - and update getq_multi to match Calculate q
-  if(snowfall::sfIsRunning()){
-    out<-snowfall::sfLapply(1:nsim,getq_multi_MICE,StockPars, FleetPars,
+  # TODO - and update getq_multi to match Calculate q ----
+
+  if(snowfall::sfIsRunning() & parallel){
+    exp.time <- (np * nf)/(9*ncpus) * nsim 
+    exp.time <- round(exp.time,2)
+    
+    if(!silent)
+      message("Optimizing for user-specified depletion ",
+              'using parallel processing',
+              "(takes approximately [(nstocks x nfleets)/(9 x number of cores in cluster)]",
+              " minutes per simulation): about", exp.time, 'minutes')
+    
+    out<-snowfall::sfLapply(1:nsim, getq_multi_MICE,StockPars, FleetPars,
                             np,nf, nareas, maxage, nyears, N, VF, FretA,
                             maxF=MOM@maxF, MPA, CatchFrac, bounds=bounds,
                             tol=1E-6,Rel,SexPars, plusgroup=plusgroup, optVB=optVB)
+   
   }else{
+    exp.time <- (np * nf)/(9) * nsim 
+    exp.time <- round(exp.time,2)
+    
+    if(!silent)
+      message("Optimizing for user-specified depletion ",
+              'using single core',
+              "(takes approximately [(nstocks x nfleets)/9]",
+              " minutes per simulation): about", exp.time, 'minutes')
+    
     out<-lapply(1:nsim,getq_multi_MICE, StockPars, FleetPars, np, nf, nareas,
                 maxage, nyears, N, VF, FretA, maxF=MOM@maxF,
                 MPA,CatchFrac, bounds= bounds,tol=1E-6,Rel,SexPars, 
                 plusgroup=plusgroup, optVB=optVB)
+   
   }              
   
   qs <- t(matrix(NIL(out,"qtot"),nrow=np))
@@ -459,6 +526,10 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
                                                     proyears=proyears,
                                                     cpars=SampCpars2[[1]],
                                                     msg=FALSE)
+        ResampStockPars$CAL_bins <- StockPars[[p]]$CAL_bins
+        ResampStockPars$CAL_binsmid <- StockPars[[p]]$CAL_binsmid 
+        ResampStockPars$nCALbins <- length(StockPars[[p]]$CAL_binsmid )
+        
         # Re-sample depletion
         StockPars[[p]]$D[probQ] <- ResampStockPars$D
         
@@ -484,19 +555,18 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
         }
       }
       
-      if(snowfall::sfIsRunning()){
+      if(snowfall::sfIsRunning() & parallel){
         out2<-snowfall::sfLapply(probQ,getq_multi_MICE,StockPars, FleetPars,
-                                 np,nf, nareas, n_age, nyears, N, VF, FretA,
+                                 np,nf, nareas, maxage, nyears, N, VF, FretA,
                                  maxF=MOM@maxF, MPA,CatchFrac, bounds=bounds,
                                  tol=1E-6,Rel,SexPars,
                                  plusgroup=plusgroup, optVB=optVB)
       }else{
         out2<-lapply(probQ,getq_multi_MICE,StockPars, FleetPars, np,nf, nareas,
-                     n_age, nyears, N, VF, FretA, maxF=MOM@maxF,
+                     maxage, nyears, N, VF, FretA, maxF=MOM@maxF,
                      MPA,CatchFrac, bounds= bounds,tol=1E-6,Rel,SexPars,
                      plusgroup=plusgroup, optVB=optVB)
       }
-      
       
       qs2<-t(matrix(NIL(out2,"qtot"),nrow=np))
       qout2<-array(NIL(out2,"qfrac"),c(np,nf,nsim))
@@ -543,8 +613,7 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
     message("Calculating historical stock and fishing dynamics")
   
   # ---- Run Historical Simulations ----
-  
-  histYrs <- sapply(1:nsim,HistMICE, StockPars=StockPars,
+  histYrs <- sapply(1:nsim, HistMICE, StockPars=StockPars,
                     FleetPars=FleetPars,np=np,nf=nf,nareas=nareas,
                     maxage=maxage,nyears=nyears,N=N,VF=VF,FretA=FretA,
                     maxF=MOM@maxF,MPA=MPA,Rel=Rel,SexPars=SexPars,qs=qs,qfrac=qfrac,
@@ -785,7 +854,6 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
   }
   
   
-  
   # --- Populate Data object with Historical Data ----
   
   CurrentYr <- nyears
@@ -871,8 +939,7 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
         Discards=apply(CB[,p,f,,,]-CBret[,p,f,,,],c(1,3,4), sum),
         Find=FleetPars[[p]][[f]]$Find,
         RecDev=StockPars[[p]]$Perr_y,
-        Unfished_Equilibrium=NULL
-        # TODO - add Unfished_Equilibrium
+        Unfished_Equilibrium=Unfished_Equilibrium[[p]]
       )
       
       Hist@Ref <- StockPars[[p]]$ReferencePoints
@@ -901,3 +968,4 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
   HistList
   
 }
+

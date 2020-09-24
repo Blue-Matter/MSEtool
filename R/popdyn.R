@@ -683,6 +683,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     # retained fishing mortality with bio-economic effort
     FM_Pret[SAYR] <- (FleetPars$FinF[S1] * Effort_pot[S1] * retA_P[SAYt] * t(Si)[SR] * fishdist[SR] *
                         FleetPars$qvar[SY1] * FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y)/StockPars$Asize[SR]
+    
   }
   
   # ---- calculate required F and effort for TAC recommendation ----
@@ -699,8 +700,6 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
     expC <- TACusedE
     expC[TACusedE> availB] <- availB[TACusedE> availB] * 0.99
-    
-
     
     Ftot <- sapply(1:nsim, calcF, expC, V_P, Biomass_P, fishdist, StockPars$Asize, StockPars$maxage, StockPars$nareas,
                    StockPars$M_ageArray,nyears, y)
@@ -755,7 +754,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     FM_Pret[SAYR] <- Ftot[S] * retA_P[SAYt] * fishdist[SR]/StockPars$Asize[SR]
     Z_P[SAYR] <- FM_P[SAYR] + StockPars$M_ageArray[SAYt] # calculate total mortality
   }
-  
+
   # Apply maxF constraint 
   FM_P[SAYR][FM_P[SAYR] > maxF] <- maxF 
   FM_Pret[SAYR][FM_Pret[SAYR] > maxF] <- maxF
@@ -777,8 +776,9 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
                  StockPars$M_ageArray,nyears, y)
   
   # Effort relative to last historical with this potential catch
-  Effort_req <- Ftot/(  FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]* (1 + FleetPars$qinc/100)^y) * apply(fracE2, 1, sum) # effort required for this catch
+  Effort_req <- Ftot/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]* (1 + FleetPars$qinc/100)^y) * apply(fracE2, 1, sum) # effort required for this catch
   
+
   # Limit effort to potential effort from bio-economic model
   Effort_act <- Effort_req
   if (!all(is.na(Effort_pot))) {
@@ -869,3 +869,24 @@ calcF <- function(x, TACusedE, V_P, Biomass_P, fishdist, Asize, maxage, nareas,
   ft
 }
 
+
+optDfun <- function(Perrmulti, x, initD, Nfrac, R0, Perr_y, surv, 
+                    Wt_age, SSB0, n_age) {
+  
+  initRecs <- rev(Perr_y[x,1:n_age]) * exp(Perrmulti)
+  
+  SSN <- Nfrac[x,] * R0[x] *  initRecs # Calculate initial spawning stock numbers
+  SSB <- SSN * Wt_age[x,,1]    # Calculate spawning stock biomass
+  
+  (sum(SSB)/SSB0[x] - initD[x])^2
+}
+
+optDfunwrap <- function(x, initD, Nfrac, R0, initdist, Perr_y, surv,
+                        Wt_age, SSB0, n_age) {
+  interval <- log(c(0.01, 10))
+  
+  optD <- optimise(optDfun, interval=interval, x=x, initD=initD, Nfrac=Nfrac, 
+                   R0=R0, Perr_y=Perr_y, surv=surv, 
+                   Wt_age=Wt_age, SSB0=SSB0, n_age=n_age)
+  exp(optD$minimum)
+}

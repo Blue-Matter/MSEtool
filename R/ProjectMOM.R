@@ -106,24 +106,24 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
       message("Byfleet mode: you have specified an MP for each stock and fleet. ",
               "Only fleet-specific data (e.g. catches and indices) will be used to set ",
               "advice for each fleet for each stock")
+      MPcond <- "byfleet"
+      nMP <- length(MPs[[1]][[1]])
+      MPrefs <- array(NA,c(nMP,nf,np))
+      MPrefs[]<-unlist(MPs)
+    } else if (ldim(MPs)==ldim(Fleets)[1]){ # not a two-tier list
+      message("Bystock mode: you have specified a vector of MPs for each stock, ",
+              "but not a vector of MPs for each stock and fleet. The catch data for these",
+              " fleets will be combined, a single MP will be used to set a single TAC ",
+              "for all fleets combined that will be allocated between the fleets ",
+              "according to recent catches")
+      MPcond<-"bystock"
+      checkN <- unlist(lapply(MPs, length))
+      if (!all(checkN == checkN[1]))
+        stop('Must have the same number of MPs for each stock')
+      nMP<-length(MPs[[1]])
+      MPrefs<-array(NA,c(nMP,nf,np))
+      for(p in 1:np)MPrefs[,,p]<-MPs[[p]]
     }
-    MPcond <- "byfleet"
-    nMP <- length(MPs[[1]][[1]])
-    MPrefs <- array(NA,c(nMP,nf,np))
-    MPrefs[]<-unlist(MPs)
-  } else if (ldim(MPs)==ldim(Fleets)[1]){ # not a two-tier list
-    message("Bystock mode: you have specified a vector of MPs for each stock, ",
-            "but not a vector of MPs for each stock and fleet. The catch data for these",
-            " fleets will be combined, a single MP will be used to set a single TAC ",
-            "for all fleets combined that will be allocated between the fleets ",
-            "according to recent catches")
-    MPcond<-"bystock"
-    checkN <- unlist(lapply(MPs, length))
-    if (!all(checkN == checkN[1]))
-      stop('Must have the same number of MPs for each stock')
-    nMP<-length(MPs[[1]])
-    MPrefs<-array(NA,c(nMP,nf,np))
-    for(p in 1:np)MPrefs[,,p]<-MPs[[p]]
   }
  
   if (MPcond == 'unknown')
@@ -220,7 +220,6 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
   # ---- Grab Historical N-at-age etc ----
   N <- array(NA, dim=c(nsim, np, n_age, nyears, nareas))
   Biomass <- SSB <- VBiomass <- N  
-  
   
   FM <- FMret <- array(NA, dim=c(nsim, np, nf, n_age, nyears, nareas))
   VF<- array(NA, dim=c(nsim, np, nf, n_age, nyears+proyears))
@@ -1124,7 +1123,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
   
   # ---- Create MSE Object ---
   MSEout <- new("MMSE", Name = MOM@Name, nyears, proyears, nMPs=nMP, MPs=MPs,
-                MPcond=MPcond,MPrefs=MPrefs,nsim, nstocks=np, nfleets=nf,
+                MPcond=MPcond, MPrefs=MPrefs,nsim, nstocks=np, nfleets=nf,
                 Snames=Snames, Fnames=Fnames, Stocks=Stocks, Fleets=Fleets,
                 Obss=Obs, Imps=Imps,OM=OM, Obs=Obsout, B_BMSY=B_BMSYa,
                 F_FMSY=F_FMSYa, B=Ba, SSB=SSBa, VB=VBa, FM=FMa, CaRet, TAC=TACa,
