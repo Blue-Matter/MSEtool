@@ -628,6 +628,7 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
   Hist <- new("Hist")
   Data@Misc <- list()
   Hist@Data <- Data
+  Hist@Data@Obs <- data.frame() # remove
   
   ind <- which(lapply(ObsPars, length) == nsim)
   obs <- data.frame(ObsPars[ind])

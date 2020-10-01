@@ -953,10 +953,10 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
   if (is.null(LFS_y)) LFS_y <- matrix(LFS, nrow = nsim, ncol = nyears + proyears, byrow = FALSE)
   if (is.null(Vmaxlen_y)) Vmaxlen_y <- matrix(Vmaxlen, nrow = nsim, ncol = nyears + proyears, byrow = FALSE)
   
-  if (!is.null(cpars$SLarray) & !is.null(cpars$V)) {# both selectivity-at-length and -at-age in cpars
+  if (!is.null(cpars$SLarray) & !is.null(cpars[['V']])) {# both selectivity-at-length and -at-age in cpars
     SLarray <- cpars$SLarray
-    V <- cpars$V
-  } else if (!is.null(cpars$SLarray) & is.null(cpars$V)) { # SLarray in cpars
+    V <- cpars[['V']]
+  } else if (!is.null(cpars$SLarray) & is.null(cpars[['V']])) { # SLarray in cpars
     # Calculate selectivity parameters
     SLarray <- cpars$SLarray
     nbins <- length(StockPars$CAL_binsmid)
@@ -975,9 +975,9 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
         Vmaxlen_y[,yr] <- SLarray[,b_ind,yr][1,]
       }
     } # end calculate L5_y etc
-  } else if (is.null(cpars$SLarray) & !is.null(cpars$V)) {
+  } else if (is.null(cpars$SLarray) & !is.null(cpars[['V']])) {
     # update selectivity parameters
-    V <- cpars$V
+    V <- cpars[['V']]
     if (dim(V)[3] == nyears) {
       Dims <- dim(V)
       v2 <- array(V[,,nyears], dim=c(Dims[1], Dims[2], proyears))
@@ -1006,7 +1006,7 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
       }
     }
   }
-  
+
   if (!exists("SLarray", inherits = FALSE)) { # selectivity-at-length hasn't been defined yet
     # calculate SLarray 
     nCALbins <- length(StockPars$CAL_binsmid)
@@ -1014,7 +1014,9 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
     SLarray <- array(NA, dim=c(nsim, nCALbins, nyears+proyears)) # Selectivity-at-length 
     Vmaxlen_y[Vmaxlen_y<=0] <- tiny 
     for (yr in 1:(nyears+proyears)) {
+
       srs <- (StockPars$Linf - LFS_y[,yr]) / ((-log(Vmaxlen_y[,yr],2))^0.5) 
+
       srs[!is.finite(srs)] <- Inf
       sls <- (LFS_y[,yr] - L5_y[, yr]) /((-log(0.05,2))^0.5)
       SLarray[,, yr] <- t(sapply(1:nsim, getsel, lens=CAL_binsmidMat, lfs=LFS_y[,yr], sls=sls, srs=srs))

@@ -44,7 +44,8 @@ qestMICE(
   x,
   plusgroup,
   optVB,
-  VB0x
+  VB0x,
+  maxF
 )
 }
 \arguments{

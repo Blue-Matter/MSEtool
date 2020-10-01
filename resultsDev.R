@@ -3,10 +3,11 @@ RedCrab_MSE <- readRDS(file.path(OMdir, 'RedCrab_MSE.rda'))
 
 plot(RedCrab_MSE)
 
+x = RedCrab_MSE
 
 RedCrab_MSE@Fnames
 
-
+class(RedCrab_MSE)
 
 
 mm <- 6

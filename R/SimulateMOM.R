@@ -102,7 +102,6 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
                   "all simulations will run to",max(maxage_s),"ages"))
   maxage <- max(maxage_s)
   for(p in 1:np) MOM@Stocks[[p]]@maxage<-maxage
-  
 
   if(!silent) message("Loading operating model")
   StockPars<-FleetPars<-ObsPars<-ImpPars<- SampCpars<-new('list')
@@ -157,7 +156,6 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
                                          nyears, proyears)
     }
   }
-
   
   # --- Update Parameters for two-sex stocks ----
   # Depletion, stock-recruit parameters, recdevs, Fleet, Obs, and Imp copied
@@ -461,7 +459,7 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
                             np,nf, nareas, maxage, nyears, N, VF, FretA,
                             maxF=MOM@maxF, MPA, CatchFrac, bounds=bounds,
                             tol=1E-6,Rel,SexPars, plusgroup=plusgroup, optVB=optVB)
-   
+
   }else{
     exp.time <- (np * nf)/(9) * nsim 
     exp.time <- round(exp.time,2)
@@ -623,16 +621,13 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
                    dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
   Biomass <- aperm(array(as.numeric(unlist(histYrs[2,], use.names=FALSE)),
                          dim=c(np ,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
+
   SSN <- aperm(array(as.numeric(unlist(histYrs[3,], use.names=FALSE)),
                      dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
   SSB <- aperm(array(as.numeric(unlist(histYrs[4,], use.names=FALSE)),
                      dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
-  # first year VBiomass not returned - quick workaroud
-  temp <- VBiomass
   VBiomass <- aperm(array(as.numeric(unlist(histYrs[5,], use.names=FALSE)),
                           dim=c(np, n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
-  VBiomass[,,,1,] <- temp[,,,1,]
-  
   FM <- aperm(array(as.numeric(unlist(histYrs[6,], use.names=FALSE)),
                     dim=c(np,nf,n_age, nyears, nareas, nsim)), c(6,1,2,3,4,5))
   FMret <- aperm(array(as.numeric(unlist(histYrs[7,], use.names=FALSE)),
@@ -903,6 +898,7 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
       Hist <- new("Hist")
       Data@Misc <- list()
       Hist@Data <-  DataList[[p]][[f]]
+      Hist@Data@Obs <- data.frame() # remove
       
       ind <- which(lapply(ObsPars[[p]][[f]], length) == nsim)
       obs <- data.frame(ObsPars[[p]][[f]][ind])

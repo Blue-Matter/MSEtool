@@ -107,6 +107,8 @@ setMethod("initialize", "MOM", function(.Object, Stocks=NULL, Fleets=NULL,
         .Object@cpars[[p]][[f]]<-list()
       }
     }
+  } else {
+    .Object@cpars<-cpars
   }
 
   .Object@Obs<-Obs

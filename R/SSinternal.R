@@ -534,7 +534,7 @@ SS2MOM_stock <- function(i, replist, mainyrs, nyears, MOM) {
 
     adjust <- n_init / (n_virg)# *  cpars_bio$Perr_y[1,n_age:1])
     adjust <- as.numeric(adjust)
-    mat <-  matrix(adjust, nrow=nsim, ncol=n_age,byrow=TRUE)
+    mat <-  matrix(adjust, nrow=MOM@nsim, ncol=n_age,byrow=TRUE)
     cpars_bio$Perr_y[,n_age:1] <-  mat
   }
   
@@ -577,9 +577,9 @@ SS2MOM_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, MOM) {
   n_age <- Stock@maxage + 1
 
   #### Selectivity (Asel2 incorporates time-varying length selectivity, Asel age-based assumed constant)
-  #V <- replist$ageselex[replist$ageselex$Fleet == ff & replist$ageselex$Sex == i &
-  #                        replist$ageselex$Factor == "sel_nums", ]
-  #V2 <- vapply(1:Stock@maxage, function(x) V[1, parse(text = paste0("\"", x, "\"")) %>% eval()], numeric(1))
+  V <- replist$ageselex[replist$ageselex$Fleet == ff & replist$ageselex$Sex == i &
+                         replist$ageselex$Factor == "sel_nums", ]
+  V2 <- vapply(1:Stock@maxage, function(x) V[1, parse(text = paste0("\"", x, "\"")) %>% eval()], numeric(1))
   Asel2 <- replist$ageselex[replist$ageselex$Fleet == ff & replist$ageselex$Sex == i &
                               replist$ageselex$Factor == "Asel2", ]
   V2 <- vapply(0:Stock@maxage, function(x) Asel2[match(mainyrs, Asel2$Yr), parse(text = paste0("\"", x, "\"")) %>% eval()],
@@ -589,18 +589,21 @@ SS2MOM_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, MOM) {
   V <- vapply(0:Stock@maxage, function(x) Asel[1, parse(text = paste0("\"", x, "\"")) %>% eval()], numeric(1))
 
   V2 <- V2 * V
-  V2_proj <- matrix(V2[, nyears], nrow(V2), MOM@proyears)
-
-  #### Retention-at-age (not currently used in SampleFleetPars)
-  #VR <- replist$ageselex[replist$ageselex$Fleet == ff & replist$ageselex$Sex == i &
+  # V2_proj <- matrix(V2[, nyears], nrow(V2), MOM@proyears)
+  # 
+  # #### Retention-at-age (not currently used in SampleFleetPars)
+  # VR <- replist$ageselex[replist$ageselex$Fleet == ff & replist$ageselex$Sex == i &
   #                         replist$ageselex$Factor == "sel*ret_nums", ]
-  #VR2 <- vapply(1:Stock@maxage, function(x) VR[1, parse(text = paste0("\"", x, "\"")) %>% eval()], numeric(1))
-  #retA <- VR2/V2
+  # VR2 <- vapply(0:Stock@maxage, function(x) VR[1, parse(text = paste0("\"", x, "\"")) %>% eval()], numeric(1))
+  # retA <- VR2/V2
 
   #### Retention-at-length - assumed to be constant over time (need to update for time-varying retention)
   retL <- replist$sizeselex[replist$sizeselex$Fleet == ff & replist$sizeselex$Sex == i &
-                              replist$sizeselex$Factor == "Ret" & replist$sizeselex$Yr == max(mainyrs), -c(1:5)] %>% unlist()
+                              replist$sizeselex$Factor == "Keep" & replist$sizeselex$Yr == max(mainyrs), -c(1:5)] %>% unlist()
 
+  SLarray <- replist$sizeselex[replist$sizeselex$Fleet == ff & replist$sizeselex$Sex == i &
+                              replist$sizeselex$Factor == "Dead" & replist$sizeselex$Yr == max(mainyrs), -c(1:5)] %>% unlist()
+  
   #### Discard mortality
   disc_mort <- replist$sizeselex[replist$sizeselex$Fleet == ff & replist$sizeselex$Sex == i &
                                    replist$sizeselex$Factor == "Mort" & replist$sizeselex$Yr == max(mainyrs), -c(1:5)] %>% unlist() %>%
@@ -639,7 +642,9 @@ SS2MOM_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, MOM) {
   Fleet@EffLower <- Fleet@EffUpper <- Find
   Fleet@Esd <- Fleet@qinc <- Fleet@qcv <- rep(0, 2)
   Fleet@L5 <- Fleet@LFS <- Fleet@Vmaxlen <- rep(0, 2)
+  Fleet@LR5 <- Fleet@LFR <- Fleet@Rmaxlen <- rep(0, 2)
   Fleet@isRel <- "FALSE"
+  Fleet@MPA <- FALSE
   Fleet@CurrentYr <- max(mainyrs)
 
   #### cpars
@@ -647,9 +652,10 @@ SS2MOM_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, MOM) {
   cpars_fleet$binWidth <- replist$lbins[2] - replist$lbins[1]
   cpars_fleet$CAL_bins <- replist$lbins %>% c(max(replist$lbins) + cpars_fleet$binWidth)
   cpars_fleet$Fdisc <- rep(mean(disc_mort), MOM@nsim)
-  cpars_fleet$V <- cbind(V2, V2_proj) %>% array(c(n_age, allyears, MOM@nsim)) %>% aperm(c(3, 1, 2))
-  #cpars_fleet$retA <- retA %>% array(c(Stock@maxage, allyears, MOM@nsim)) %>% aperm(c(3, 1, 2))
+  # cpars_fleet$V <- cbind(V2, V2_proj) %>% array(c(n_age, allyears, MOM@nsim)) %>% aperm(c(3, 1, 2))
+  # cpars_fleet$retA <- retA %>% array(c(Stock@maxage, allyears, MOM@nsim)) %>% aperm(c(3, 1, 2))
   cpars_fleet$retL <- retL %>% array(c(length(retL), allyears, MOM@nsim)) %>% aperm(c(3, 1, 2))
+  cpars_fleet$SLarray <- SLarray %>% array(c(length(SLarray), allyears, MOM@nsim)) %>% aperm(c(3, 1, 2))
   cpars_fleet$DR <- rep(0, MOM@nsim)
   cpars_fleet$Find <- Find %>% matrix(MOM@nsim, length(mainyrs), byrow = TRUE)
   cpars_fleet$Data <- new("Data")

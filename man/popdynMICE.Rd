@@ -38,7 +38,8 @@ popdynMICE(
   Rel,
   SexPars,
   x,
-  plusgroup
+  plusgroup,
+  maxF
 )
 }
 \arguments{

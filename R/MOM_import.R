@@ -41,7 +41,7 @@ XL2Stock <- function(name=NULL, cpars=NULL, msg=TRUE) {
   if (!file.exists(name)) stop(name, " not found", call.=FALSE) 
   if (msg) message("Reading ", name)
   sheetnames <- readxl::excel_sheets(name)  # names of the sheets 
-  reqnames <- c("OM", "Stock", "Fleet", "Obs", "Imp") 
+  reqnames <- "Stock"
   ind <- which(!reqnames%in% sheetnames)
   if (length(ind)>0) stop("Sheets: ", paste(reqnames[ind], ""), "not found in ", name, call.=FALSE)
   
@@ -108,7 +108,7 @@ XL2Fleet <- function(name=NULL, cpars=NULL, msg=TRUE) {
   if (!file.exists(name)) stop(name, " not found", call.=FALSE) 
   if (msg) message("Reading ", name)
   sheetnames <- readxl::excel_sheets(name)  # names of the sheets 
-  reqnames <- c("OM", "Stock", "Fleet", "Obs", "Imp") 
+  reqnames <- "Fleet"
   ind <- which(!reqnames%in% sheetnames)
   if (length(ind)>0) stop("Sheets: ", paste(reqnames[ind], ""), "not found in ", name, call.=FALSE)
   

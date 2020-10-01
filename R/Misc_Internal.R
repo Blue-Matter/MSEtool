@@ -150,7 +150,7 @@ range01 <- function(x) {
 #' @param sls Vector of sigmas of ascending limb (nsim long)
 #' @param srs Vector of sigmas of descending limb (nsim long)
 #'
-#'
+#' @export
 getsel <- function(x, lens, lfs, sls, srs) {
   if (is.null(ncol(lens))) return(dnormal(lens, lfs[x], sls[x], srs[x]))
   dnormal(lens[x,], lfs[x], sls[x], srs[x])
@@ -181,6 +181,11 @@ calcV <- function(x, Len_age, LenCV, SLarray, n_age, nyears, proyears, CAL_binsm
   for (yr in 1:(nyears+proyears)) {
     ALK <- mapply(dnorm, mean=len_at_age[,yr], sd=len_aa_sd[,yr], MoreArgs=list(x=CAL_binsmid))
     ALK[ALK<=0] <- tiny
+   
+    if (all(ALK[,1]==tiny)) {
+      ALK[,1] <- 0
+      ALK[1,1] <- 1
+    }
     ALK_t <- matrix(colSums(ALK), nrow=nrow(ALK), ncol=ncol(ALK), byrow = TRUE)
     ALK <- t(ALK/ALK_t)
     sela <- ALK %*% sel_at_length[,yr] 

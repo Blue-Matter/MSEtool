@@ -23,6 +23,30 @@ plotquant<-function(x,p=c(0.05,0.25,0.75,0.95),yrs,qcol,lcol,addline=T,ablines=N
 }
 
 
+# ProjectPlot <- function(MMSE, Y=c('SB', 'F', 'Y', 'Y.fleet'), 
+#                                   maxcol = 6, 
+#                                   qcol = rgb(0.4, 0.8, 0.95), 
+#                                   lcol = "dodgerblue4",
+#                                   quants = c(0.05, 0.25, 0.75, 0.95), 
+#                                   curyr = 2018, addline = FALSE) {
+#   
+#   if(is.na(maxcol))maxcol=ceiling(length(MMSE@MPs)/0.5) # defaults to portrait 1:2
+#   MPs<-MMSE@MPs
+#   MPrefs<-MMSE@MPrefs
+#   nMPs<-length(MPrefs[,1,1])
+#   yrs<-curyr+(1:MMSE@proyears)
+#   ns<-MMSE@nstocks
+#   nf<-MMSE@nfleets
+#   
+#   Y <- match.arg(Y, choices=c('SB', 'F', 'Y', 'Y.fleet'))
+#   
+#   plots<-split(1:nMPs, ceiling(seq_along(1:nMPs)/maxcol))
+#   
+#   
+#   
+# }
+
+
 
 #' @name plot.MMSE
 #' @title Standard plot for an object of class MMSE (multi MSE)
@@ -53,8 +77,6 @@ setMethod("plot", signature(x = "MMSE", y = "missing"),
             nf<-MMSE@nfleets
 
             plots<-split(1:nMPs, ceiling(seq_along(1:nMPs)/maxcol))
-
-
 
             # --- Biomass projection ---------------------------------------------------
             B_BMSY<-MMSE@B_BMSY

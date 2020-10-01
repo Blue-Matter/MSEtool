@@ -55,6 +55,7 @@ popdynMICE<-function(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
   Ky[,1]<-Kx; Linfy[,1]<-Linfx; t0y[,1]<-t0x; My[,1]<-Mx; hsy[,1]<-hsx; ay[,1]<-ax; by[,1]<-bx
 
   Len_age<-matrix(Linfx*(1-exp(-(rep(0:maxage,each=np)-t0x)*(Kx))),nrow=np)
+  Len_age[Len_age<0] <- tiny
   Wt_agey[,,1]<-ax*Len_age^bx
 
   VBfind<-as.matrix(expand.grid(1:np,1:nf,1:n_age,1,1:nareas))
@@ -133,11 +134,15 @@ popdynMICE<-function(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
     FMrety[,,,y-1,]<-out$FMretx
 
   }
+  
+  
+  V_all <- apply(VFx, c(1,3,4), mean) # average V over fleets
 
   Nind<-TEG(dim(Nx))
   Bx[Nind]<-Nx[Nind]*Wt_agey[Nind[,1:3]]
   SSNx[Nind]<-Nx[Nind]*Mat_agex[Nind[,1:3]]
   SSBx[Nind]<-Bx[Nind]*Mat_agex[Nind[,1:3]]
+  VBx[Nind]<-Bx[Nind]*V_all[Nind[,1:3]]
 
   list(Nx=Nx,Bx=Bx,SSNx=SSNx,SSBx=SSBx,VBx=VBx,FMy=FMy,FMrety=FMrety,Ky=Ky,
        Linfy=Linfy,t0y=t0y,My=My,hsy=hsy,ay=ay,by=by,VBfx=VBfx,Zx=Zx,Fty=Fty)
@@ -197,6 +202,7 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
   Bcur<-SSBcur<-SSNcur<-array(NA,dim(Ncur))
   Nind<-TEG(dim(Ncur)) # p, age, area
   Len_age<-matrix(Linfx*(1-exp(-(rep(0:maxage,each=np)-t0x)*(Kx))),nrow=np)
+  Len_age[Len_age<0] <- tiny
   Wt_age<-ax*Len_age^bx
   Bcur[Nind]<-Ncur[Nind]*Wt_age[Nind[,1:2]]
   SSBcur[Nind]<-Bcur[Nind]*Mat_agecur[Nind[,1:2]]
@@ -217,6 +223,7 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
                              as.numeric(Responses[rr,1]))))
 
     Len_age<-matrix(Linfx*(1-exp(-(rep(0:maxage,each=np)-t0x)*(Kx))),nrow=np)
+    Len_age[Len_age<0] <- tiny
     Wt_age<-ax*Len_age^bx
 
     # Parameters that could have changed: M, K, Linf, t0, a, b, hs

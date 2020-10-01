@@ -659,30 +659,31 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
             FleetPars[[p]][[f]]$V_P[,,nyears+y] - 
             FleetPars[[p]][[f]]$V[,,nyears+y] !=0))  SelectChanged <- TRUE
           
-          if (SelectChanged) {
-            # recalculate MSY ref points because selectivity has changed
-            V_Pt[,f,,]<-FleetPars[[p]][[f]]$V_P*
-              apply(CB[,p,f,,nyears,], 1, sum) # Weighted by catch frac
-            #summed over fleets and normalized to 1
-            V_P<-nlz(apply(V_Pt,c(1,3,4),sum),c(1,3),"max")
-            y1 <- nyears + y
-            MSYrefsYr <- sapply(1:nsim, optMSY_eq, 
-                                StockPars[[p]]$M_ageArray, 
-                                StockPars[[p]]$Wt_age,
-                                StockPars[[p]]$Mat_age,
-                                V_P,
-                                StockPars[[p]]$maxage,
-                                StockPars[[p]]$R0, 
-                                StockPars[[p]]$SRrel,
-                                StockPars[[p]]$hs,
-                                yr.ind=y1, 
-                                plusgroup=StockPars[[p]]$plusgroup[p])
-            MSY_y[,p,mm,y1] <- MSYrefsYr[1,]
-            FMSY_y[,p,mm,y1] <- MSYrefsYr[2,]
-            SSBMSY_y[,p,mm,y1] <- MSYrefsYr[3,]
-            BMSY_y[,p,mm,y1] <- MSYrefsYr[6,]
-            VBMSY_y[,p,mm,y1] <- MSYrefsYr[7,]
-          }
+          
+          # recalculate MSY ref points because selectivity has changed
+          V_Pt[,f,,]<-FleetPars[[p]][[f]]$V_P*
+            apply(CB[,p,f,,nyears,], 1, sum) # Weighted by catch frac
+        }
+        if (SelectChanged) {
+          #summed over fleets and normalized to 1
+          V_P<-nlz(apply(V_Pt,c(1,3,4),sum),c(1,3),"max")
+          y1 <- nyears + y
+          MSYrefsYr <- sapply(1:nsim, optMSY_eq, 
+                              M_ageArray=StockPars[[p]]$M_ageArray, 
+                              Wt_age=StockPars[[p]]$Wt_age, 
+                              Mat_age=StockPars[[p]]$Mat_age,
+                              V=V_P, 
+                              maxage=StockPars[[p]]$maxage,
+                              R0=StockPars[[p]]$R0,
+                              SRrel=StockPars[[p]]$SRrel,
+                              hs=StockPars[[p]]$hs,
+                              yr.ind=y1, 
+                              plusgroup=StockPars[[p]]$plusgroup[p])
+          MSY_y[,p,mm,y1] <- MSYrefsYr[1,]
+          FMSY_y[,p,mm,y1] <- MSYrefsYr[2,]
+          SSBMSY_y[,p,mm,y1] <- MSYrefsYr[3,]
+          BMSY_y[,p,mm,y1] <- MSYrefsYr[6,]
+          VBMSY_y[,p,mm,y1] <- MSYrefsYr[7,]
         }
       } # end of annual MSY
       
