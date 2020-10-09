@@ -40,7 +40,7 @@
 VPA2OM<-function(Name="A fishery made by VPA2OM",
                  proyears=50, interval=2, CurrentYr=2019,
                  h=0.999,
-                 Obs = DLMtool::Imprecise_Unbiased, Imp=DLMtool::Perfect_Imp,
+                 Obs = OMtool::Imprecise_Unbiased, Imp=OMtool::Perfect_Imp,
                  naa, faa, waa, Mataa, Maa, laa,
                  nyr_par_mu = 3, LowerTri=1,
                  recind=2, plusgroup=TRUE, altinit=0, fixq1=TRUE,
@@ -127,6 +127,11 @@ VPA2OM<-function(Name="A fishery made by VPA2OM",
   OM@isRel<-F  # absolute selectivity relative to maturity - no used here
   OM@CurrentYr<-CurrentYr
 
+  OM@Linf<-rep(1,2)
+  OM@K<-rep(1,2)
+  OM@t0<-rep(1,2)
+  OM@DR<-rep(0,2)
+  
   # Time varying terms
   OM@Msd<-OM@Ksd<-OM@Linfsd<-OM@qcv<-OM@Esd<-OM@AC<-rep(0,2)
 
@@ -144,7 +149,7 @@ VPA2OM<-function(Name="A fishery made by VPA2OM",
   OM@qinc<-rep(0,2)
 
   # Invent an OM with full observation error model for replacing
-  temp<-new('OM', DLMtool::Albacore, DLMtool::Generic_Fleet, Obs, Imp)
+  temp<-new('OM', OMtool::Albacore, OMtool::Generic_Fleet, Obs, Imp)
   OM<-Replace(OM,temp,Sub="Obs")
   OM<-Replace(OM,temp,Sub="Imp")
 
@@ -211,9 +216,12 @@ VPA2OM<-function(Name="A fishery made by VPA2OM",
   for (y in maxage+((nyears-LowerTri):(nyears + proyears))-1) Perr[, y] <- AC * Perr[, y - 1] +   Perr[, y] * (1 - AC * AC)^0.5  # apply process error
   Perr<-exp(Perr)
 
-  OM@cpars$Perr<-Perr
+  OM@cpars$Perr_y<-Perr
   OM@Perr<-rep(mean(procsd),2)
-
+  OM@MPA<-F
+  OM@seed<-1
+  OM@maxage<-maxage-1
+  
   if(fixq1) OM@cpars$qs<-rep(1,nsim) # Overrides q estimation to fix q at 1 for VPA for which F history is
 
   OM@maxF<-10
@@ -234,16 +242,19 @@ VPA2OM<-function(Name="A fishery made by VPA2OM",
     pch<-rep(1,nyears)
     cols[nyears-(0:LowerTri)]<-"blue";pch[nyears-(0:LowerTri)]<-4
 
+    simN<-apply(Hist@AtAge$Number[1,1:maxage,,],1:2,sum)
+                
+    
     for(a in 1:maxage){
-      ylim=c(0,max(naa[1,a,],Hist@AtAge$Nage[1,a,])*1.05)
+      ylim=c(0,max(naa[1,a,],simN[a,])*1.05)
       if(a==1)plot(yrs,naa[1,a,],xlab="",ylab="",col=cols,pch=pch,ylim=ylim,yaxs='i')
       if(a>1)plot(yrs,naa[1,a,],xlab="",ylab="",ylim=ylim,yaxs='i')
-      lines(yrs,Hist@AtAge$Nage[1,a,],col='green')
+      lines(yrs,simN[a,],col='green')
       mtext(paste("Age ",a),3,line=0.5,cex=0.9)
       if(a==1)legend('top',legend=c("Assessment","OM","Recr. ignored (LowerTri)"),text.col=c('black','green','blue'),bty='n')
-      res<-Hist@AtAge$Nage[1,a,]-naa[1,a,]
+      res<-simN[a,]-naa[1,a,]
       plotres<-abs(res)>(mean(naa[1,a,]*0.025))
-      if(any(plotres))for(y in 1:nyears)if(plotres[y])lines(rep(yrs[y],2),c(naa[1,a,y],Hist@AtAge$Nage[1,a,y]),col='red')
+      if(any(plotres))for(y in 1:nyears)if(plotres[y])lines(rep(yrs[y],2),c(naa[1,a,y],simN[a,y]),col='red')
     } #plot(Hist)
 
     mtext("Year",1,line=0.3,outer=T)
