@@ -8,7 +8,7 @@
 #' @return
 #' @export
 #'
-SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
+SimulateMOM <- function(MOM=Albacore_TwoFleet, parallel=TRUE, silent=FALSE) {
   # ---- Initial Checks and Setup ----
   if (class(MOM) == 'MOM') {
     if (MOM@nsim <=1) stop("MOM@nsim must be > 1", call.=FALSE)
@@ -696,15 +696,14 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
     StockPars[[p]]$SSBMSY_y <- MSY_y # store SSBMSY for each sim, and year 
     StockPars[[p]]$BMSY_y <- MSY_y # store BMSY for each sim, and year
     StockPars[[p]]$VBMSY_y <- MSY_y # store VBMSY for each sim, and year
+  
+    FMt_future <- aperm(replicate(proyears, FMt[,,,nyears,, drop=FALSE]), c(1,2,3,4,6,5))
+    FMt_all <- abind::abind(FMt[,p,,,], FMt_future[,p,,1,,], along=3)
+    
+    V <- apply(FMt_all,1:3,sum)
+    V <- nlz(V,c(1,3),"max")
     
     for (y in 1:(nyears+proyears)) {
-      
-      FMt_future <- aperm(replicate(proyears, FMt[,,,nyears,]), c(1,2,3,5,4))
-      FMt_all <- abind::abind(FMt, FMt_future, along=4)
-      
-      V <- apply(FMt_all[,p,,,],1:3,sum)
-      V <- nlz(V,c(1,3),"max")
-      
       MSYrefsYr <- sapply(1:nsim, optMSY_eq, 
                           StockPars[[p]]$M_ageArray, 
                           StockPars[[p]]$Wt_age, 
