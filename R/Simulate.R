@@ -623,7 +623,7 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
                    silent=silent)
   
   # --- Condition Simulated Data on input Data object (if it exists) & calculate error stats ----
-  if (class( SampCpars$Data)=="Data") {
+  if (class(SampCpars$Data)=="Data") {
     # real data has been passed in cpars
     updatedData <- AddRealData(SimData=Data, 
                         RealData=SampCpars$Data, 
