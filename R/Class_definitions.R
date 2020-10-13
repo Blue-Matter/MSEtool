@@ -81,7 +81,7 @@ setClassUnion(name="prob.class", members=c("matrix", "numeric", "data.frame"))
 #'  
 #' @slot AddInd Optional additional indices. Array of dimensions `nsim`, n additional indices, and `nyears` (length `Year`).  
 #' @slot CV_AddInd Coefficient of variation for additional indices. Array of same dimensions as `AddInd`
-#' @slot AddIndV Vulnerability-at-age schedules for the additional indices. Array with dimensions: `nsim`, n additional indices, `MaxAge`.  
+#' @slot AddIndV Vulnerability-at-age schedules for the additional indices. Array with dimensions: `nsim`, n additional indices, `MaxAge+1`.  
 #' @slot AddIunits Units for the additional indices - biomass (1; default) or numbers (0). Numeric vector length n.ind.
 #' @slot AddIndType Index calculated from total stock (1, default), spawning stock (2), or vulnerable stock (3). Numeric vector of length n.ind
 #' 
@@ -93,8 +93,8 @@ setClassUnion(name="prob.class", members=c("matrix", "numeric", "data.frame"))
 #' @slot Lbar Mean length of catches over Lc. Matrix of nsim rows and nyears columns. Positive real numbers  
 #' @slot Vuln_CAA Optional vulnerability-at-age schedule for catch-at-age samples. Used to condition OM for closed-loop
 #' simulation testing. Replaces the fleet selectivity schedule in the OM used to generate CAA samples. Matrix
-#' with dimensions `nsim` x `MaxAge`.
-#' @slot CAA Catch at Age data (numbers). Array of dimensions nsim x nyears x MaxAge. Non-negative integers
+#' with dimensions `nsim` x `MaxAge+1`.
+#' @slot CAA Catch at Age data (numbers). Array of dimensions nsim x nyears x MaxAge+1. Non-negative integers
 #' @slot Vuln_CAL Optional vulnerability-at-length schedule for catch-at-length samples. Used to condition OM for closed-loop
 #' simulation testing. Replaces the fleet selectivity schedule in the OM used to generate CAL samples. Matrix
 #' with dimensions `nsim` x `length(CAL_mids)`.
