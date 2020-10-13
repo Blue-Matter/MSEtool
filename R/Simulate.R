@@ -507,6 +507,12 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
     lines(c(-10,10),c(-10,10))
   }
   
+  # ---- Calculate Mean Generation Time ----
+  MarrayArea <- replicate(nareas, StockPars$M_ageArray[,,1:nyears])
+  Mnow<-apply(MarrayArea[,,nyears,]*N[,,nyears,],1:2,sum)/apply(N[,,nyears,],1:2,sum)
+  MGTsurv<-t(exp(-apply(Mnow,1,cumsum)))
+  MGT<-apply(Agearray*(StockPars$Mat_age[,,nyears]*MGTsurv),1,sum)/apply(StockPars$Mat_age[,,nyears]*MGTsurv,1,sum)
+  
   # --- Calculate Reference Yield ----
   if(!silent) message("Calculating reference yield - best fixed F strategy")  
   RefY <- sapply(1:nsim, calcRefYield, StockPars, FleetPars, proyears, 
@@ -537,7 +543,8 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
       SSBMSY_SSB0=SSBMSY_SSB0,
       BMSY_B0=BMSY_B0,
       VBMSY_VB0=VBMSY_VB0,
-      RefY=RefY
+      RefY=RefY,
+      MGT=MGT
     )
   )
   
