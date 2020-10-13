@@ -109,7 +109,7 @@ VPA2OM<-function(Name="A fishery made by VPA2OM",
   # Dimensions
   OM@nsim<-nsim
   OM@nyears<-nyears
-  OM@maxage<-maxage
+  OM@maxage<-maxage-1
   OM@proyears<-proyears
   OM@interval<-interval
 
