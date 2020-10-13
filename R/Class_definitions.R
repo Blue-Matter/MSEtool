@@ -1427,7 +1427,7 @@ setMethod("summary",
                 }
               }
             }
-            if (interactive() & wait & !is.null(P2)) 
+            if (interactive() & wait & !is.null(P2) && P2) 
               invisible(readline(prompt="Press [enter] to continue..."))
             
             
@@ -1545,7 +1545,7 @@ setMethod("summary",
               }
             }
             
-            if (interactive() & wait & !is.null(P3))
+            if (interactive() & wait & !is.null(P3) && P3)
               invisible(readline(prompt="Press [enter] to continue..."))
             
             # Biology & Depletion
