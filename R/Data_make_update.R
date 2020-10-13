@@ -486,7 +486,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   Data@Lc <- cbind(Data@Lc, CALdat$Lc) # modal length 
   Data@Lbar <- cbind(Data@Lbar, CALdat$Lbar) # mean length above Lc 
   
-  Data@LFC <- FleetPars$L5_y[,nyear+y] * ObsPars$LFCbias # length at first capture
+  Data@LFC <- FleetPars$L5_y[,nyears+y] * ObsPars$LFCbias # length at first capture
   Data@LFS <- FleetPars$LFS_y[,nyears+y] * ObsPars$LFSbias # length at full selection
   
   # --- Previous Management Recommendations ----
