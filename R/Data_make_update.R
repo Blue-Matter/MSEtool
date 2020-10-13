@@ -692,7 +692,7 @@ UpdateSlot <- function(sl, RealData, SimData, msg) {
 }
 
 
-AddRealData <- function(SimData, RealData, ObsPars, msg) {
+AddRealData <- function(SimData, RealData, ObsPars, nsim, nyears, proyears, msg) {
   Data_out <- SimData
   
   if (msg)
