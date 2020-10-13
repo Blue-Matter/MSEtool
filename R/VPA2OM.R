@@ -211,7 +211,7 @@ VPA2OM<-function(Name="A fishery made by VPA2OM",
   for (y in maxage+((nyears-LowerTri):(nyears + proyears))-1) Perr[, y] <- AC * Perr[, y - 1] +   Perr[, y] * (1 - AC * AC)^0.5  # apply process error
   Perr<-exp(Perr)
 
-  OM@cpars$Perr<-Perr
+  OM@cpars$Perr_y<-Perr
   OM@Perr<-rep(mean(procsd),2)
 
   if(fixq1) OM@cpars$qs<-rep(1,nsim) # Overrides q estimation to fix q at 1 for VPA for which F history is
