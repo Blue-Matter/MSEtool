@@ -762,6 +762,18 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
     # TODO add equilbrium unfished reference points for each population
   }
   
+  # ---- Calculate Mean Generation Time ----
+  for (p in 1:np) {
+    MarrayArea <- replicate(nareas, StockPars[[p]]$M_ageArray[,,1:nyears])
+    Mnow<-apply(MarrayArea[,,nyears,]*N[,p,,nyears,],1:2,sum)/apply(N[,p,,nyears,],1:2,sum)
+    MGTsurv<-t(exp(-apply(Mnow,1,cumsum)))
+    StockPars[[p]]$MGT<-apply(Agearray*(StockPars[[p]]$Mat_age[,,nyears]*MGTsurv),1,sum)/apply(StockPars[[p]]$Mat_age[,,nyears]*MGTsurv,1,sum)
+  }
+
+  
+  
+  
+  
   # ---- Calculate Reference Yield ----
   if(!silent) message("Calculating reference yield - best fixed F strategy")
   ## TODO - add RefY calcs
@@ -794,7 +806,8 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
         SSBMSY_SSB0=StockPars[[p]]$SSBMSY_SSB0,
         BMSY_B0=StockPars[[p]]$BMSY_B0,
         VBMSY_VB0=StockPars[[p]]$VBMSY_VB0,
-        RefY=StockPars[[p]]$RefY
+        RefY=StockPars[[p]]$RefY,
+        MGT=StockPars[[p]]$MGT
       )
     )
   }
