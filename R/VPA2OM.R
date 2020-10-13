@@ -40,7 +40,7 @@
 VPA2OM<-function(Name="A fishery made by VPA2OM",
                  proyears=50, interval=2, CurrentYr=2019,
                  h=0.999,
-                 Obs = DLMtool::Imprecise_Unbiased, Imp=DLMtool::Perfect_Imp,
+                 Obs = OMtool::Imprecise_Unbiased, Imp=OMtool::Perfect_Imp,
                  naa, faa, waa, Mataa, Maa, laa,
                  nyr_par_mu = 3, LowerTri=1,
                  recind=2, plusgroup=TRUE, altinit=0, fixq1=TRUE,
@@ -144,7 +144,7 @@ VPA2OM<-function(Name="A fishery made by VPA2OM",
   OM@qinc<-rep(0,2)
 
   # Invent an OM with full observation error model for replacing
-  temp<-new('OM', DLMtool::Albacore, DLMtool::Generic_Fleet, Obs, Imp)
+  temp<-new('OM', OMtool::Albacore, OMtool::Generic_Fleet, Obs, Imp)
   OM<-Replace(OM,temp,Sub="Obs")
   OM<-Replace(OM,temp,Sub="Imp")
 
