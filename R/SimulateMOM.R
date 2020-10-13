@@ -909,6 +909,9 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
         updatedData <- AddRealData(SimData= DataList[[p]][[f]], 
                                    RealData=SampCpars[[p]][[f]]$Data, 
                                    ObsPars[[p]][[f]], 
+                                   nsim,
+                                   nyears,
+                                   proyears,
                                    msg=!silent)
         DataList[[p]][[f]] <- updatedData$Data
         ObsPars[[p]][[f]] <- updatedData$ObsPars
