@@ -35,17 +35,17 @@ replic8 <- function(Data, nrep) {
   
   for (sl in 1:length(slotnam)) {
     slt <- attr(Data, slotnam[sl])
-    if (length(slt)>0) {
-      if (inherits(slt, "matrix")) {
-        attr(Data, slotnam[sl]) <- matrix(rep(slt, each = nrep), 
-                                          nrow = nrep, ncol = ncol(slt))
-      } else if (inherits(slt, "numeric")) {
-        attr(Data, slotnam[sl]) <- rep(slt, nrep)
-      } else if (inherits(slt, "array")) {
-        attr(Data, slotnam[sl]) <- array(rep(slt, each = nrep), 
-                                         dim = c(nrep, dim(slt)[2:3]))
-      }
+    
+    if (inherits(slt, "matrix")) {
+      attr(Data, slotnam[sl]) <- matrix(rep(slt, each = nrep), 
+                                        nrow = nrep, ncol = ncol(slt))
+    } else if (inherits(slt, "numeric")) {
+      attr(Data, slotnam[sl]) <- rep(slt, nrep)
+    } else if (inherits(slt, "array")) {
+      attr(Data, slotnam[sl]) <- array(rep(slt, each = nrep), 
+                                       dim = c(nrep, dim(slt)[2:3]))
     }
+    
   
   }
   Data
