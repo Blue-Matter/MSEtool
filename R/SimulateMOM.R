@@ -852,7 +852,7 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
   # --- Populate Data object with Historical Data ----
   
   CurrentYr <- nyears
-  DataList<-new('list')
+  DataList <- new('list')
   for (p in 1:np) {
     StockPars[[p]]$maxF <- MOM@maxF
     DataList[[p]] <- vector('list', nf)
@@ -887,8 +887,23 @@ SimulateMOM <- function(MOM, parallel=FALSE, silent=FALSE) {
     }
   }
   
-  # --- Condition Simulated Data on input Data object (if it exists) & calculate error stats ----
-  # TODO 
+  # ---- Condition Simulated Data on input Data object (if it exists) & calculate error stats ----
+  for (p in 1:np) {
+    for (f in 1:nf) {
+      if (class(SampCpars[[p]][[f]]$Data)=="Data") {
+        
+        # real data has been passed in cpars
+        updatedData <- AddRealData(SimData= DataList[[p]][[f]], 
+                                   RealData=SampCpars[[p]][[f]]$Data, 
+                                   ObsPars[[p]][[f]], 
+                                   msg=!silent)
+        DataList[[p]][[f]] <- updatedData$Data
+        ObsPars[[p]][[f]] <- updatedData$ObsPars
+        
+      }
+      
+    }
+  }
   
   HistList <- vector('list', np)
   
