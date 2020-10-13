@@ -1,0 +1,427 @@
+---
+params: 
+    title: ""
+    Pars: "`r list()`"
+    plotPars: "`r list()`"
+    tabs: "`r TRUE`"
+    its: " `r numeric()`"
+    nyears: " `r numeric()`"
+    proyears: " `r numeric()`"
+    date: "`r Sys.Date()`"
+title: "`r params$title`"
+date: "`r params$date`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+## Observation Parameters
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE, results="asis"}
+if (params$tabs) {
+  cat('### Catch Observations {.tabset .tabset-fade .tabset-pills}' )
+} else {
+  cat('### Catch Observations')
+}
+
+Pars <- params$Pars
+nsim <- Pars$Obs$Csd %>% length()
+
+# ErrList <- list()
+# ErrList$Cbiasa <- array(Pars$Obs$Cbias, c(nsim, nyears + proyears))  # Catch bias array
+#  
+# # composite of bias and observation error
+# ErrList$Cerr <- array(rlnorm((nyears + proyears) * nsim, 
+#                      mconv(1, rep(Pars$Obs$Csd, (nyears + proyears))), 
+#                      sdconv(1, rep(Pars$Obs$Csd, nyears + proyears))), 
+#               c(nsim, nyears + proyears))  
+# # Index error
+# ErrList$Ierr <- array(rlnorm((nyears + proyears) * nsim, 
+#                      mconv(1, rep(Pars$Obs$Isd, nyears + proyears)), 
+#                      sdconv(1, rep(Pars$Obs$Isd, nyears + proyears))), 
+#               c(nsim, nyears + proyears))
+# 
+# # Simulate error in observed recruitment index 
+# ErrList$Recerr <- array(rlnorm((nyears + proyears) * nsim, 
+#                                mconv(1, rep(Pars$Obs$Recsd, (nyears + proyears))),
+#                                sdconv(1, rep(Pars$Obs$Recsd, nyears + proyears))),
+#                         c(nsim, nyears + proyears))
+#   
+# # Simulate error in observed depletion 
+# ErrList$Derr <- array(rlnorm((nyears + proyears) * nsim, 
+#                                mconv(1, rep(Pars$Obs$Derr, (nyears + proyears))),
+#                                sdconv(1, rep(Pars$Obs$Derr, nyears + proyears))),
+#                         c(nsim, nyears + proyears))
+# ErrList$Dbiasa <- array(Pars$Obs$Dbias, c(nsim, nyears + proyears))  # Catch bias array
+# 
+# # Simulate error in observed abundance 
+# ErrList$Aerr <- array(rlnorm((nyears + proyears) * nsim, 
+#                                mconv(1, rep(Pars$Aerr, (nyears + proyears))),
+#                                sdconv(1, rep(Pars$Aerr, nyears + proyears))),
+#                         c(nsim, nyears + proyears))
+# ErrList$Abiasa <- array(Pars$Obs$Abias, c(nsim, nyears + proyears))  # Catch bias array
+
+```
+
+
+#### Sampled Parameters
+Histograms of `r nsim` simulations of inter-annual variability in catch observations (`Csd`) and persistent bias in observed catch (`Cbias`), with vertical colored lines indicating `r nsamp` randomly drawn values used in other plots:
+
+```{r, echo=FALSE}
+par(mfrow=c(1,2))
+hist2(Pars$Obs$Csd, main="Csd", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Obs$Csd[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1) 
+
+hist2(Pars$Obs$Cbias, main="Cbias", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Obs$Cbias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1) 
+
+```
+
+#### Time-Series
+
+```{r, echo=FALSE}
+par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
+years <- c(seq(-nyears+1, 0, by=1), seq(1, proyears,1))
+ylim <- c(0, max(ObsPars$Cobs_y[params$its, ]))
+matplot(years, t(ObsPars$Cobs_y[params$its, ]),
+        type="l", lty=1, bty="l", main="Catch discrepancy by Year", 
+        lwd=params$plotPars$lwd, ylab="Observed/Real", xlab="Years", las=1, xpd=NA,
+        ylim=ylim)
+abline(v=0, col="darkgray", lty=2)
+abline(h=1, col="darkgray", lty=2)
+```
+
+
+```{r, echo=FALSE, results="asis"}
+if (params$tabs) {
+  cat('### Depletion Observations {.tabset .tabset-fade .tabset-pills}' )
+} else {
+  cat('### Depletion Observations')
+}
+```
+
+#### Sampled Parameters
+Histograms of `r nsim` simulations of inter-annual variability in depletion observations (`Dobs`) and persistent bias in observed depletion (`Dbias`), with vertical colored lines indicating `r nsamp` randomly drawn values used in other plots:
+
+
+```{r, echo=FALSE}
+par(mfrow=c(1,2))
+hist2(Pars$Obs$Derr, main="Dobs", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Obs$Derr[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1) 
+
+hist2(Pars$Obs$Dbias, main="Dbias", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Obs$Dbias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1) 
+
+
+
+```
+
+#### Time-Series
+
+```{r, echo=FALSE}
+par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
+years <- c(seq(-nyears+1, 0, by=1), seq(1, proyears,1))
+ylim <- c(0, max(ObsPars$Derr_y))
+matplot(years, t(ObsPars$Derr_y[params$its, ]),
+        type="l", lty=1, bty="l", main="Depletion discrepancy by Year", 
+        lwd=params$plotPars$lwd, ylab="Observed/Real", xlab="Years", las=1, xpd=NA,
+        ylim=ylim)
+abline(v=0, col="darkgray", lty=2)
+abline(h=1, col="darkgray", lty=2)
+```
+
+
+
+
+```{r, echo=FALSE, results="asis"}
+if (params$tabs) {
+  cat('### Abundance Observations {.tabset .tabset-fade .tabset-pills}' )
+} else {
+  cat('### Abundance Observations')
+}
+```
+
+#### Sampled Parameters
+Histograms of `r nsim` simulations of inter-annual variability in abundance observations (`Btobs`) and persistent bias in observed abundance (`Btbias`), with vertical colored lines indicating `r nsamp` randomly drawn values used in other plots:
+
+```{r, echo=FALSE}
+par(mfrow=c(1,2))
+hist2(Pars$Obs$Aerr, main="Btobs", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Obs$Aerr[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1) 
+
+hist2(Pars$Obs$Abias, main="Btbias", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Obs$Abias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1) 
+
+```
+
+#### Time-Series
+
+```{r, echo=FALSE}
+
+par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
+years <- c(seq(-nyears+1, 0, by=1), seq(1, proyears,1))
+ylim <- c(0, max(ObsPars$Aerr_y))
+matplot(years, t(ObsPars$Aerr_y[params$its, ]),
+        type="l", lty=1, bty="l", main="Abundance discrepancy by Year", 
+        lwd=params$plotPars$lwd, ylab="Observed/Real", xlab="Years", las=1, xpd=NA,
+        ylim=ylim)
+abline(v=0, col="darkgray", lty=2)
+abline(h=1, col="darkgray", lty=2)
+```
+
+
+
+
+```{r, echo=FALSE, results="asis"}
+if (params$tabs) {
+  cat('### Index Observations {.tabset .tabset-fade .tabset-pills}' )
+} else {
+  cat('### Index Observations')
+}
+```
+
+#### Sampled Parameters
+Histograms of `r nsim` simulations of inter-annual variability in index observations (`Iobs`) and hyper-stability/depletion in observed index (`beta`), with vertical colored lines indicating `r nsamp` randomly drawn values used in other plots:
+
+```{r, echo=FALSE}
+par(mfrow=c(1,2))
+hist2(Pars$Obs$Isd, main="Iobs", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Obs$Isd[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1) 
+
+hist2(Pars$Obs$betas, main="beta", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Obs$betas[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1) 
+
+```
+
+#### Time-Series
+Time-series plot of `r nsamp` samples of index observation error:
+
+```{r, echo=FALSE}
+
+par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(4,1,3,1))
+years <- c(seq(-nyears+1, 0, by=1), seq(1, proyears,1))
+ylim <- c(0, max(Pars$Obs$Ierr_y[params$its, ]))
+matplot(years, t(Pars$Obs$Ierr_y[params$its, ]),
+        type="l", lty=1, bty="l", main="Index observation error by Year", 
+        lwd=params$plotPars$lwd, ylab="Observed/Real", xlab="Years", las=1, xpd=NA,
+        ylim=ylim)
+abline(v=0, col="darkgray", lty=2)
+abline(h=1, col="darkgray", lty=2)
+```
+
+Plot showing an example true abundance index (blue) with `r nsamp` samples of index observation error and the hyper-stability/depletion parameter (`beta`):
+
+```{r, echo=FALSE}
+par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(4,1,3,1))
+ind<-seq(1,0.1,length.out=nyears)
+
+Imu<-array(rep(ind,each=nsamp)^rep(Pars$Obs$betas[params$its],nyears),
+           c(nsamp,nyears))*Pars$Obs$Ierr_y[params$its, 1:nyears]
+Imu<-Imu/apply(Imu,1,mean)
+ind <- ind/mean(ind)
+
+ylim <- range(c(ind,Imu))
+plot(1:nyears, ind, type="l", ylim=ylim, bty="l", las=1, xlab="Years", 
+     ylab="Relative Abundance", lwd=2, col="blue", xpd=NA,
+     main="Observed Index with beta parameter")
+matplot(t(Imu), add=TRUE, type="l", lwd=params$plotPars$lwd)
+legend("topright", bty="n", col=c("blue", 1:nsamp), lwd=params$plotPars$lwd, 
+       legend=c("True Index", paste0("Observed", 1:nsamp, sep=" ")), lty=c(1, 1:nsamp))
+```
+
+
+```{r, echo=FALSE, results="asis"}
+if (params$tabs) {
+  cat('### Recruitment Observations {.tabset .tabset-fade .tabset-pills}' )
+} else {
+  cat('### Recruitment Observations')
+}
+```
+
+#### Sampled Parameters
+Histograms of `r nsim` simulations of inter-annual variability in index observations (`Recsd`) , with vertical colored lines indicating `r nsamp` randomly drawn values used in other plots:
+
+```{r, echo=FALSE}
+
+par(mfrow=c(1,1))
+hist2(Pars$Obs$Recsd, main="Recsd", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Obs$Recsd[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1) 
+```
+
+<!-- # to add hbiascv -->
+
+#### Time-Series
+
+```{r, echo=FALSE}
+
+par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
+years <- c(seq(-nyears+1, 0, by=1), seq(1, proyears,1))
+ylim <- c(0, max(Pars$Obs$Recerr_y[params$its, ]))
+matplot(years, t(Pars$Obs$Recerr_y[params$its, ]),
+        type="l", lty=1, bty="l", main="Recruitment index discrepancy by Year", 
+        lwd=params$plotPars$lwd, ylab="Observed/Real", xlab="Years", las=1, xpd=NA,
+        ylim=ylim)
+abline(v=0, col="darkgray", lty=2)
+abline(h=1, col="darkgray", lty=2)
+```
+
+
+
+```{r, echo=FALSE, results="asis"}
+if (params$tabs) {
+  cat('### Composition Observations {.tabset .tabset-fade .tabset-pills}' )
+} else {
+  cat('### Composition Observations')
+}
+```
+
+#### Sampled Parameters
+Histograms of `r nsim` simulations of catch-at-age effective sample size (`CAA_ESS`) and sample size (`CAA_nsamp`) and catch-at-length effective (`CAL_ESS`) and actual sample size (`CAL_nsamp`) with vertical colored lines indicating `r nsamp` randomly drawn values:
+
+```{r, echo=FALSE}
+par(mfrow=c(2,2))
+hist2(Pars$Obs$CAA_ESS, main="CAA_ESS", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Obs$CAA_ESS[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1) 
+
+hist2(Pars$Obs$CAA_nsamp, main="CAA_nsamp", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Obs$CAA_nsamp[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1)
+
+hist2(Pars$Obs$CAL_ESS, main="CAL_ESS", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Obs$CAL_ESS[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1) 
+
+hist2(Pars$Obs$CAL_nsamp, main="CAL_nsamp", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Obs$CAL_nsamp[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1)
+```
+
+
+```{r, echo=FALSE, results="asis"}
+if (params$tabs) {
+  cat('### Parameter Observations {.tabset .tabset-fade .tabset-pills}' )
+} else {
+  cat('### Parameter Observations')
+}
+```
+
+#### Sampled Parameters
+Histograms of `r nsim` simulations of bias in observed natural mortality (`Mbias`), von Bertalanffy growth function parameters (`Linfbias`, `Kbias`, and `t0bias`), length-at-maturity (`lenMbias`), and bias in observed length at first capture (`LFCbias`) and first length at full capture (`LFSbias`) with vertical colored lines indicating `r nsamp` randomly drawn values:
+
+```{r, echo=FALSE}
+
+
+
+
+par(mfrow=c(2,2))
+hist2(Pars$Obs$Mbias, main="Mbias", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Obs$Mbias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1)
+
+hist2(Pars$Obs$Linfbias, main="Linfbias", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Obs$Linfbias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1) 
+
+hist2(Pars$Obs$Kbias, main="Kbias", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Obs$Kbias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1) 
+
+hist2(Pars$Obs$t0bias, main="t0bias", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Obs$t0bias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1) 
+
+par(mfrow=c(1,3))
+hist2(Pars$Obs$lenMbias, main="lenMbias", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Obs$lenMbias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1) 
+
+hist2(Pars$Obs$LFCbias, main="LFCbias", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Obs$LFCbias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1) 
+
+hist2(Pars$Obs$LFSbias, main="LFSbias", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Obs$LFSbias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1) 
+
+```
+
+
+
+```{r, echo=FALSE, results="asis"}
+if (params$tabs) {
+  cat('### Reference Point Observations {.tabset .tabset-fade .tabset-pills}' )
+} else {
+  cat('### Reference Point Observations')
+}
+```
+
+#### Sampled Parameters
+Histograms of `r nsim` simulations of bias in observed FMSY/M (`FMSY_Mbias`), BMSY/B0 (`BMSY_B0bias`), reference index (`Irefbias`), reference abundance (`Brefbias`) and reference catch (`Crefbias`), with vertical colored lines indicating `r nsamp` randomly drawn values:
+
+
+```{r, echo=FALSE}
+par(mfrow=c(2,3))
+hist2(Pars$FMSY_Mbias, main="FMSY_Mbias", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$FMSY_Mbias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1)
+
+hist2(Pars$BMSY_B0bias, main="BMSY_B0bias", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$BMSY_B0bias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1) 
+
+hist2(Pars$Irefbias, main="Irefbias", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Irefbias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1) 
+
+hist2(Pars$Brefbias, main="Brefbias", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Brefbias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1) 
+
+
+hist2(Pars$Crefbias, main="Crefbias", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+abline(v=Pars$Crefbias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+axis(side=1) 
+
+
+```
+
+

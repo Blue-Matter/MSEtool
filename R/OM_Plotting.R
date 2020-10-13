@@ -31,9 +31,11 @@ render_plot <- function(Object, Class, Stock=NULL, RMD=NULL, nsamp=3, nsim=200, 
  
   if (Class == "Stock") {
     if (is.null(title)) title <- "Stock Object Plots"
-    Pars <- SampleStockPars(Object, nsim, nyears, proyears, SampCpars, 
+    Pars <- list()
+    Pars$Stock <- SampleStockPars(Object, nsim, nyears, proyears, SampCpars, 
                             msg=FALSE)
     Pars$Name <- gsub(" ", "_", Object@Name)  
+    
   } else if (Class == "Fleet") {
     if (is.null(title)) title <- "Fleet Object Plots"
     if (class(Stock)!="Stock") 
@@ -43,47 +45,45 @@ render_plot <- function(Object, Class, Stock=NULL, RMD=NULL, nsamp=3, nsim=200, 
     FleetPars <- SampleFleetPars(Object, StockPars, nsim, nyears, proyears,
                                  SampCpars, msg=FALSE)
   
-    Pars <- c(StockPars, FleetPars)
+    Pars <- list()
+    Pars$Stock <- StockPars
+    Pars$Fleet <- FleetPars
     Pars$Name <- gsub(" ", "_", Object@Name)
     Pars$CurrentYr <- Object@CurrentYr
     Pars$MPA <- Object@MPA
     
   } else if (Class == "Obs") {
     if (is.null(title)) title <- "Obs Object Plots"
-    ObsPars <- SampleObsPars(Object, nsim, cpars=SampCpars)
+    ObsPars <- SampleObsPars(Object, nsim, cpars=SampCpars, nyears=nyears, proyears=proyears)
     BMSY_B0bias <- array(rlnorm(nsim, 
                                 mconv(1, Object@BMSY_B0biascv), sdconv(1, Object@BMSY_B0biascv)), 
                          dim = c(nsim))  # trial samples of BMSY relative to unfished  
 
     ObsPars$BMSY_B0bias <- BMSY_B0bias
     
-    Pars <- c(ObsPars)
+    Pars <- list()
+    Pars$Obs <- ObsPars
     
   } else if (Class == "Imp") {
     if (is.null(title)) title <- "Imp Object Plots"
-    ImpPars <- SampleImpPars(Object, nsim, cpars=SampCpars)
-    Pars <- c(ImpPars)
+    ImpPars <- SampleImpPars(Object, nsim, cpars=SampCpars, nyears=nyears, proyears=proyears)
+    Pars <- list()
+    Pars$Imp <- ImpPars
   } else if (Class == "OM") {
     if (is.null(title)) title <- "OM Object Plots"
     message("Sampling Stock, Fleet, Obs, and Imp parameters")
-    StockPars <- SampleStockPars(SubOM(Object, "Stock"), nsim, nyears, proyears, SampCpars, msg=FALSE)
-    FleetPars <- SampleFleetPars(SubOM(Object, "Fleet"), StockPars, nsim, nyears, proyears, SampCpars, msg=FALSE)
-    ObsPars <- SampleObsPars(Object, nsim, cpars=SampCpars)
-    BMSY_B0bias <- array(rlnorm(nsim, 
-                                mconv(1, Object@BMSY_B0biascv), sdconv(1, Object@BMSY_B0biascv)), 
-                         dim = c(nsim))  # trial samples of BMSY relative to unfished  
-    
-    ObsPars$BMSY_B0bias <- BMSY_B0bias
-    ImpPars <- SampleImpPars(SubOM(Object, "Imp"), nsim, cpars=SampCpars)
-
-    Pars <- c(StockPars, FleetPars, ObsPars, ImpPars)
-    Pars$CurrentYr <- Object@CurrentYr
     
     if (!parallel) dopar <- FALSE
     if (nsim>=48 & parallel) dopar <- TRUE
     if (nsim<48& parallel) dopar <- FALSE
     message("Running Historical Simulations")
     Hist <- runMSE(Object, Hist=TRUE, silent=TRUE, parallel = dopar)
+    
+    Pars <- list(Stock=Hist@SampPars$Stock, 
+              Fleet=Hist@SampPars$Fleet, 
+              Obs=Hist@SampPars$Obs, 
+              Imp=Hist@SampPars$Imp)
+    
     Pars$Hist <- Hist
     Pars$Name <- "OM"
     Pars$MPA <- Object@MPA

@@ -594,7 +594,7 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
     }
   }
   
-  # TODO -- 
+  # -- TODO -- 
   # add to ObsPars 
   ObsPars$Sample_Area <- Sample_Area
   
@@ -623,14 +623,23 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
                    silent=silent)
   
   # --- Condition Simulated Data on input Data object (if it exists) & calculate error stats ----
+  StockPars$CBret <- CBret 
+  StockPars$Biomass <- Biomass
+  StockPars$SSB <- SSB 
+  StockPars$VBiomass <- VBiomass 
+  StockPars$N <- N 
+  
   if (class(SampCpars$Data)=="Data") {
     # real data has been passed in cpars
     updatedData <- AddRealData(SimData=Data, 
                         RealData=SampCpars$Data, 
                         ObsPars, 
+                        StockPars,
+                        FleetPars,
                         nsim,
                         nyears,
                         proyears,
+                        SampCpars,
                         msg=!silent)
     Data <- updatedData$Data
     ObsPars <- updatedData$ObsPars

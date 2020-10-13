@@ -207,7 +207,6 @@ setMethod("initialize", "Data", function(.Object, stock="nada", ...) {
   if (file.exists(stock)) {
     .Object <- XL2Data(stock, ...)  
   } else {
-    print('here')
     slots <- slotNames('Data')
     for (x in seq_along(slots)) {
       sl <- slots[x]
