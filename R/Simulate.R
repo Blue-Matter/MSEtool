@@ -628,6 +628,9 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
     updatedData <- AddRealData(SimData=Data, 
                         RealData=SampCpars$Data, 
                         ObsPars, 
+                        nsim,
+                        nyears,
+                        proyears,
                         msg=!silent)
     Data <- updatedData$Data
     ObsPars <- updatedData$ObsPars
