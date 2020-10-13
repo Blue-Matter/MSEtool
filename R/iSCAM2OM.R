@@ -96,18 +96,13 @@ iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=F, Name=NULL, Source="No
   OM<-VPA2OM(Name="A fishery made by VPA2OM",
              proyears=50, interval=2, CurrentYr=2019,
              h=h,
-             Obs = DLMtool::Imprecise_Unbiased, Imp=DLMtool::Perfect_Imp,
+             Obs = OMtool::Imprecise_Unbiased, Imp=OMtool::Perfect_Imp,
              naa, faa, waa, Mataa, Maa, laa,
              nyr_par_mu = nyr_par_mu, LowerTri=1,
              recind=2, plusgroup=TRUE, altinit=2, fixq1=TRUE,
              report=report, silent=FALSE)
 
-  OM@Linf<-rep(Linf,2)
-  OM@K<-rep(K,2)
-  OM@t0<-rep(t0,2)
-
   # Observation model parameters ==============================================================================
-
 
   dat<-iSCAM2Data
 
