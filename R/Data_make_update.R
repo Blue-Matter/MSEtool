@@ -64,11 +64,8 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
   # --- Depletion ----
   # observed depletion
   Depletion <- apply(SSB[,,nyears,],1,sum)/RefPoints$SSB0 # current depletion
-  Data@Dt <- ObsPars$Dbias * Depletion * 
-    rlnorm(nsim, mconv(1, ObsPars$Derr), sdconv(1, ObsPars$Derr))
-  
-  Data@Dep <- ObsPars$Dbias * Depletion * 
-    rlnorm(nsim, mconv(1, ObsPars$Derr), sdconv(1, ObsPars$Derr))  
+  Data@Dt <- Depletion * ObsPars$Derr_y[,nyears]
+  Data@Dep <- Depletion * ObsPars$Derr_y[,nyears] 
   
   # --- Life-history parameters ----
   Data@vbLinf <- StockPars$Linfarray[,nyears] * ObsPars$Linfbias # observed vB Linf
@@ -429,8 +426,8 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   # --- Depletion ----
   Depletion <- apply(SSB_P[, , y, ], 1, sum)/RefPoints$SSB0 
   Depletion[Depletion < tiny] <- tiny
-  Data@Dt <- ObsPars$Dbias * Depletion * rlnorm(nsim, mconv(1, ObsPars$Derr), sdconv(1, ObsPars$Derr))
-  Data@Dep <- ObsPars$Dbias * Depletion * rlnorm(nsim, mconv(1, ObsPars$Derr), sdconv(1, ObsPars$Derr))
+  Data@Dt <- Depletion * ObsPars$Derr_y[,nyears+y]
+  Data@Dep <-  Depletion * ObsPars$Derr_y[,nyears+y]
   
   # --- Update life-history parameter estimates for current year ----
   Data@vbLinf <- StockPars$Linfarray[,nyears+y] * ObsPars$Linfbias # observed vB Linf
