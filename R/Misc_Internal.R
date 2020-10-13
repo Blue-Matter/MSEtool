@@ -305,3 +305,70 @@ lcs<-function(x){
 getclass <- function(x, classy) {
   return(any(class(get(x)) == classy)) # inherits(get(x), classy) - this gives a problem since we now inherit Stock etc in OM
 } 
+
+indfit <- function(sim.index,obs.ind, Year, plot=FALSE, lcex=0.8){
+  
+  sim.index <- lcs(sim.index[!is.na(obs.ind)]) # log space conversion of standardized simulated index
+  obs.ind <- lcs(obs.ind[!is.na(obs.ind)]) # log space conversion of standardized observed ind
+  
+  if(plot){
+    par(mfrow=c(1,2),mai=c(0.7,0.5,0.05,0.01),omi=c(0.01,0.2,0.01,0.01))
+    plot(exp(sim.index),exp(obs.ind),xlab="",ylab="",pch=19,col=rgb(0,0,0,0.5))
+    mtext("Model estimate",1,line=2.2)
+    mtext("Index",2,outer=T,line=0)
+  }
+  
+  opt<-optimize(getbeta,x=exp(sim.index),y=exp(obs.ind),interval=c(0.1,10))
+  res<-exp(obs.ind)-(exp(sim.index)^opt$minimum)
+  ac<-acf(res,plot=F)$acf[2,1,1] # lag-1 autocorrelation
+  
+  res2<-obs.ind-sim.index                  # linear, without hyperdepletion / hyperstability
+  ac2<-acf(res2,plot=F)$acf[2,1,1] # linear AC
+  
+  if(plot){
+    SSBseq<-seq(min(exp(sim.index)),max(exp(sim.index)),length.out=1000)
+    lines(SSBseq,SSBseq^opt$minimum,col='#0000ff90',pch=19)
+    legend('bottomright',legend=round(c(sum((obs.ind-sim.index)^2),opt$objective),3),text.col=c("black","blue"),bty='n',title="SSQ",cex=lcex)
+    legend('topleft',legend=round(opt$minimum,3),text.col="blue",bty='n',title='Hyper-stability, beta',cex=lcex)
+    legend('left',legend=round(stats::cor(sim.index,obs.ind),3),bty='n',title='Correlation',cex=lcex)
+    
+    plot(Year,sim.index,ylab="",xlab="",ylim=range(c(obs.ind,sim.index)),type="l")
+    mtext("Year",1,line=2.2)
+    points(Year,obs.ind,col='#ff000090',pch=19)
+    legend('topleft',legend=round(ac,3),text.col="red",bty='n',title="Lag 1 autocorrelation",cex=lcex)
+    legend('bottomleft',legend=round(sd(res),3),text.col="red",bty='n',title="Residual StDev",cex=lcex)
+    legend('topright',legend=c("Model estimate","Index"),text.col=c("black","red"),bty='n',cex=lcex)
+  }
+  
+  data.frame(beta=opt$minimum,AC=ac,sd=sd(exp(obs.ind)/(exp(sim.index)^opt$minimum)),
+             cor=stats::cor(sim.index,obs.ind),AC2=ac2,sd2=sd(obs.ind-sim.index))
+  
+  # list(stats=data.frame(beta=opt$minimum,AC=ac,sd=sd(exp(obs.ind)/(exp(sim.index)^opt$minimum)),
+  #                       cor=cor(sim.index,obs.ind),AC2=ac2,sd2=sd(obs.ind-sim.index)),
+  #      mult=exp(obs.ind)/(exp(sim.index)^opt$minimum))
+  
+}
+
+getbeta<-function(beta,x,y)sum((y-x^beta)^2)
+
+generateRes <- function(df, nsim, proyears, lst.err) {
+  sd <- df$sd 
+  ac <- df$AC
+  if (all(is.na(sd))) return(rep(NA, nsim))
+  mu <- -0.5 * (sd)^2 * (1 - ac)/sqrt(1 - ac^2)
+  Res <- matrix(rnorm(proyears*nsim, mu, sd), nrow=proyears, ncol=nsim, byrow=TRUE) 
+  # apply a pseudo AR1 autocorrelation 
+  Res <- sapply(1:nsim, applyAC, res=Res, ac=ac, max.years=proyears, lst.err=lst.err) # log-space
+  exp(t(Res))
+}
+
+applyAC <- function(x, res, ac, max.years, lst.err) {
+  for (y in 1:max.years) {
+    if (y == 1) {
+      res[y,x] <- ac[x] * lst.err[x] + lst.err[x] * (1-ac[x] * ac[x])^0.5 
+    } else {
+      res[y,x] <- ac[x] * res[y-1,x] + res[y,x] * (1-ac[x] * ac[x])^0.5  
+    }
+  }
+  res[,x]
+}
