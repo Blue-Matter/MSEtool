@@ -102,12 +102,7 @@ iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=F, Name=NULL, Source="No
              recind=2, plusgroup=TRUE, altinit=2, fixq1=TRUE,
              report=report, silent=FALSE)
 
-  OM@Linf<-rep(Linf,2)
-  OM@K<-rep(K,2)
-  OM@t0<-rep(t0,2)
-
   # Observation model parameters ==============================================================================
-
 
   dat<-iSCAM2Data
 

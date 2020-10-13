@@ -217,6 +217,12 @@ VPA2OM<-function(Name="A fishery made by VPA2OM",
   if(fixq1) OM@cpars$qs<-rep(1,nsim) # Overrides q estimation to fix q at 1 for VPA for which F history is
 
   OM@maxF<-10
+  
+  OM@Linf<-rep(1,2)
+  OM@K<-rep(0.3,2)
+  OM@t0<-rep(0,2)
+  OM@DR<-rep(0,2)
+  OM@MPA<-FALSE
 
   if(report){ # Produce a quick diagnostic plot of OM vs VPA numbers at age
 
