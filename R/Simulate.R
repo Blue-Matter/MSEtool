@@ -60,8 +60,8 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
   if (length(OM@cpars)>0)  {
     SampCpars <- SampleCpars(OM@cpars, nsim, silent=silent)
   }
-    
-  
+
+
   # Stock Parameters
   StockPars <- SampleStockPars(Stock=OM, 
                                nsim, 
@@ -69,6 +69,7 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
                                proyears, 
                                cpars=SampCpars, 
                                msg=!silent)
+
   # Fleet Parameters
   FleetPars <- SampleFleetPars(Fleet=SubOM(OM, "Fleet"), 
                                Stock=StockPars, 
@@ -616,9 +617,9 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
                    nyears,
                    proyears,
                    nsim, 
-                   StockPars$nareas,
+                   nareas=StockPars$nareas,
                    reps,
-                   OM@CurrentYr,
+                   CurrentYr=OM@CurrentYr,
                    silent=silent)
   
   # --- Condition Simulated Data on input Data object (if it exists) & calculate error stats ----
