@@ -4,7 +4,7 @@
 \alias{SimulateMOM}
 \title{Simulate historical dynamics for multi-OM}
 \usage{
-SimulateMOM(MOM, parallel = FALSE, silent = FALSE)
+SimulateMOM(MOM = Albacore_TwoFleet, parallel = TRUE, silent = FALSE)
 }
 \arguments{
 \item{MOM}{}
