@@ -57,8 +57,10 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
   
   # custom parameters exist - sample and write to list
   SampCpars <- list()
-  if(length(OM@cpars)>0) 
+  if (length(OM@cpars)>0)  {
     SampCpars <- SampleCpars(OM@cpars, nsim, silent=silent)
+  }
+    
   
   # Stock Parameters
   StockPars <- SampleStockPars(Stock=OM, 
@@ -67,7 +69,6 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
                                proyears, 
                                cpars=SampCpars, 
                                msg=!silent)
-  
   # Fleet Parameters
   FleetPars <- SampleFleetPars(Fleet=SubOM(OM, "Fleet"), 
                                Stock=StockPars, 
@@ -214,8 +215,18 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
   aR <- matrix(exp(bR * SSB0a)/SSBpR, nrow=nsim)  # Ricker SR params
   
   # --- Optimize for Initial Depletion ----
-  # TODO
-  
+  initD <- SampCpars$initD # 
+  if (!is.null(initD)) { # initial depletion is not unfished
+    if (!silent) message("Optimizing for user-specified depletion in first historical year")
+    Perrmulti <- sapply(1:nsim, optDfunwrap, initD=initD, Nfrac=Nfrac[,,1], 
+                        R0=StockPars$R0,
+                        StockPars$initdist,
+                        Perr_y=StockPars$Perr_y, surv=surv[,,1], Wt_age=StockPars$Wt_age, 
+                        SSB0=SSB0,
+                        StockPars$n_age)
+    StockPars$Perr_y[,1:StockPars$maxage] <- StockPars$Perr_y[, 1:StockPars$maxage] * Perrmulti
+  }
+
   # --- Non-equilibrium Initial Year ----
   SSN[SAYR] <- Nfrac[SAY] * StockPars$R0[S] * 
     StockPars$initdist[SAR]*StockPars$Perr_y[Sa]  # Calculate initial spawning stock numbers
@@ -403,25 +414,12 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
   Z <- aperm(array(as.numeric(unlist(histYrs[8,], use.names=FALSE)), 
                    dim=c(n_age, nyears, nareas, nsim)), c(4,1,2,3))
   
-  # Number at the end of the last projection year (after fishing)
-  N_at_end <- aperm(array(as.numeric(unlist(histYrs[9,], use.names=FALSE)), 
-                          dim=c(n_age, nareas, nsim)), c(3,1,2))
-  N_at_end <- apply(N_at_end, c(1,2), sum)
-  
   if (control$optVB) {
-    if (!is.null(control$Depletion) && control$Depletion == 'end') {
-      Depletion <- apply(N_at_end * FleetPars$V[,,nyears] * StockPars$Wt_age[,,nyears],1,sum)/VB0  
-    } else {
-      Depletion <- apply(VBiomass[,,nyears,],1,sum)/VB0 
-    }
+    Depletion <- apply(VBiomass[,,nyears,],1,sum)/VB0 
   } else {
-    if (!is.null(control$Depletion) && control$Depletion == 'end') {
-      Depletion <- apply(N_at_end * StockPars$Mat_age[,,nyears] * StockPars$Wt_age[,,nyears],1,sum)/SSB0  
-    } else {
-      Depletion <- apply(SSB[,,nyears,],1,sum)/SSB0
-    }
+    Depletion <- apply(SSB[,,nyears,],1,sum)/SSB0
   }
-  
+
   StockPars$N <- N
   StockPars$Biomass <- Biomass
   StockPars$SSN <- SSN
@@ -617,7 +615,17 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
                    silent=silent)
   
   # --- Condition Simulated Data on input Data object (if it exists) & calculate error stats ----
-  # TODO 
+  if (class( SampCpars$Data)=="Data") {
+    # real data has been passed in cpars
+    updatedData <- AddRealData(SimData=Data, 
+                        RealData=SampCpars$Data, 
+                        ObsPars, 
+                        msg=!silent)
+    Data <- updatedData$Data
+    ObsPars <- updatedData$ObsPars
+      
+      
+  }
   
   OMPars <- Data@OM
   
@@ -695,4 +703,4 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
   Hist@Misc <- list()
   
   Hist
-}
+  }
