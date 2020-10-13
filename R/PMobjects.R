@@ -41,9 +41,9 @@
 #' By default Long-Term Yield (`LTY`) is the Yield in the last ten years of the projection period in the MSE, 
 #' and Short-Term Yield (`STY`) is that in the first 10 years of the projection period.
 #'
-#' @templateVar url performance-metrics
-#' @templateVar ref NULL
-#' @template userguide_link
+#' # @templateVar url performance-metrics
+#' # @templateVar ref NULL
+#' # @template userguide_link
 #' 
 #' @return An object of class `PMobj`
 #' @examples 
