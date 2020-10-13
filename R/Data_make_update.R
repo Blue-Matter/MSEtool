@@ -699,17 +699,17 @@ AddRealData <- function(SimData, RealData, ObsPars, msg) {
     message('Updating Simulated Data with Real Data from `OM@cpars$Data`')
   
   # check last year
-  if (!SimData@LHYear == RealData@LHYear) {
+  if (!is.na(RealData@LHYear) && !SimData@LHYear == RealData@LHYear) {
     warning('`Fleet@CurrentYear` (', OM@CurrentYr, ') is not the same as `OM@cpars$Data@LHYear` (', RealData@LHYear, ')')
   }
   
   # check maxage 
-  if (!SimData@MaxAge == RealData@MaxAge) {
+  if (!is.na(RealData@MaxAge) && !SimData@MaxAge == RealData@MaxAge) {
     warning('`Stock@MaxAge` (', OM@maxage, ') is not the same as `OM@cpars$Data@MaxAge` (', RealData@MaxAge, ')')
   }
   
   # check dimensions of real data CAA
-  if (dim(RealData@CAA)[3] > 1) {
+  if (!all(is.na(RealData@CAA)) && dim(RealData@CAA)[3] > 1) {
     if (!dim(RealData@CAA)[3] == SimData@MaxAge+1)
       stop('`OM@cpars$Data@CAA` has incorrect dimensions, should be `Stock@maxage+1` age-classes')
   }
@@ -824,7 +824,7 @@ AddRealData <- function(SimData, RealData, ObsPars, msg) {
   
   # ---- Update Index (total biomass) ----
   if (!all(is.na(RealData@Ind[1,]))) { # Index exists
-    if (!silent) 
+    if (msg) 
       message('Updating Simulated Total Index from `OM@cpars$Data@Ind` (OM Index observation parameters are ignored).')
     Data_out@Ind <- matrix(RealData@Ind[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
     Data_out@CV_Ind <- matrix(RealData@CV_Ind[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
@@ -849,7 +849,7 @@ AddRealData <- function(SimData, RealData, ObsPars, msg) {
   
   # ---- Update Index (spawning biomass) ----
   if (!all(is.na(RealData@SpInd[1,]))) { # Index exists
-    if (!silent) 
+    if (msg) 
       message('Updating Simulated Spawning Index from `OM@cpars$Data@SpInd` (OM Index observation parameters are ignored).')
     Data_out@SpInd <- matrix(RealData@SpInd[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
     Data_out@CV_SpInd <- matrix(RealData@CV_SpInd[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
@@ -871,7 +871,7 @@ AddRealData <- function(SimData, RealData, ObsPars, msg) {
   
   # ---- Index (vulnerable biomass) ----
   if (!all(is.na(RealData@VInd[1,]))) { # Index exists
-    if (!silent) 
+    if (msg) 
       message('Updating Simulated Vulnerable Index from `OM@cpars$Data@VInd` (OM Index observation parameters are ignored).')
     Data_out@VInd <- matrix(RealData@VInd[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
     Data_out@CV_VInd <- matrix(RealData@CV_VInd[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
@@ -894,7 +894,7 @@ AddRealData <- function(SimData, RealData, ObsPars, msg) {
   
   # ---- Add Additional Indices ----
   if (!all(is.na(RealData@AddInd))) {
-    if (!silent) 
+    if (msg) 
       message('Adding Additional Indices to Simulated Data from `OM@cpars$Data@AddInd`')
     n.ind <- dim(RealData@AddInd)[2]
     Data_out@AddInd <- Data_out@CV_AddInd <- array(NA, dim=c(nsim, n.ind, nyears))
@@ -936,7 +936,7 @@ AddRealData <- function(SimData, RealData, ObsPars, msg) {
       units <- UnitsTab$units[match(AddIunits[i], UnitsTab$n)]
       type <- TypeTab$type[match(AddIndType[i], TypeTab$n)]
       
-      if(!silent) message("Additional index ", i, ' - ', type, ' stock', ' (', units, ')')
+      if(msg) message("Additional index ", i, ' - ', type, ' stock', ' (', units, ')')
       ind <- RealData@AddInd[1,i,1:nyears]
       cv_ind <- RealData@CV_AddInd[1,i,1:nyears]
       Data_out@AddInd[,i,] <- matrix(ind, nrow=nsim, ncol=nyears, byrow=TRUE)
@@ -954,7 +954,7 @@ AddRealData <- function(SimData, RealData, ObsPars, msg) {
         if (AddIndType[i]==3) SimIndex <- apply(N, c(1, 2, 3), sum) * FleetPars$V[,,1:nyears] # Spawning abundance-based index 
       }
       
-      Ind_V <- matrix(Ind_V, nrow=Data@MaxAge, ncol= nyears)
+      Ind_V <- matrix(Ind_V, nrow=Data@MaxAge+1, ncol= nyears)
       Ind_V <- replicate(nsim, Ind_V) %>% aperm(., c(3,1,2))
       SimIndex <- apply(SimIndex*Ind_V, c(1,3), sum) # apply vuln curve
       
@@ -977,7 +977,7 @@ AddRealData <- function(SimData, RealData, ObsPars, msg) {
   
   # ---- Update Recruitment ----
   if (!all(is.na(RealData@Rec))) {
-    if (!silent) 
+    if (msg) 
       message('Updating Simulated Recruitment Data from `OM@cpars$Data@Rec`')
     
     Data_out@Rec <- matrix(RealData@Rec[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
@@ -1007,7 +1007,7 @@ AddRealData <- function(SimData, RealData, ObsPars, msg) {
   
   # ---- Update CAA ----
   if (!all(is.na(RealData@CAA)) & !all(RealData@CAA ==0)) {
-    if (!silent) 
+    if (msg) 
       message('Updating Simulated Catch-at-Age Data from `OM@cpars$Data@CAA`. Note: CAA_ESS is currently NOT updated')
     
     Data_out@CAA <- aperm(replicate(nsim, RealData@CAA[1,1:nyears,]),c(3,1,2))
@@ -1026,7 +1026,7 @@ AddRealData <- function(SimData, RealData, ObsPars, msg) {
     if (!all(RealData@CAL_bins %in% StockPars$CAL_bins)) {
       warning('cpars$Data@CAL_bins cannot be matched with Simulated Data@CAL_bins. Add cpars$Data@CAL_bins to cpars$CAL_bins. cpars$Data@CAL are NOT being used')
     } else {
-      if (!silent) 
+      if (msg) 
         message('Updating Simulated Catch-at-Length Data from `OM@cpars$Data@CAL`. Note: CAL_ESS is currently NOT updated')
       
       # match length bins
