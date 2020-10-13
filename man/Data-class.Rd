@@ -110,7 +110,7 @@ Positive real numbers.}
 
 \item{\code{CV_AddInd}}{Coefficient of variation for additional indices. Array of same dimensions as \code{AddInd}}
 
-\item{\code{AddIndV}}{Vulnerability-at-age schedules for the additional indices. Array with dimensions: \code{nsim}, n additional indices, \code{MaxAge}.}
+\item{\code{AddIndV}}{Vulnerability-at-age schedules for the additional indices. Array with dimensions: \code{nsim}, n additional indices, \code{MaxAge+1}.}
 
 \item{\code{AddIunits}}{Units for the additional indices - biomass (1; default) or numbers (0). Numeric vector length n.ind.}
 
@@ -129,9 +129,9 @@ Positive real numbers. Note: built-in MPs use only the first value of \code{CV_R
 
 \item{\code{Vuln_CAA}}{Optional vulnerability-at-age schedule for catch-at-age samples. Used to condition OM for closed-loop
 simulation testing. Replaces the fleet selectivity schedule in the OM used to generate CAA samples. Matrix
-with dimensions \code{nsim} x \code{MaxAge}.}
+with dimensions \code{nsim} x \code{MaxAge+1}.}
 
-\item{\code{CAA}}{Catch at Age data (numbers). Array of dimensions nsim x nyears x MaxAge. Non-negative integers}
+\item{\code{CAA}}{Catch at Age data (numbers). Array of dimensions nsim x nyears x MaxAge+1. Non-negative integers}
 
 \item{\code{Vuln_CAL}}{Optional vulnerability-at-length schedule for catch-at-length samples. Used to condition OM for closed-loop
 simulation testing. Replaces the fleet selectivity schedule in the OM used to generate CAL samples. Matrix
