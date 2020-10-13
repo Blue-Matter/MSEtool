@@ -1319,7 +1319,7 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
   
   ObsOut$Ierr_y <- Ierr_y # total index
   ObsOut$SpIerr_y <- SpIerr_y # spawning biomass index
-  ObsOut$VIerr_y <- VIerr_y # vulernable index
+  ObsOut$VIerr_y <- VIerr_y # vulnerable index
   
   # ----- Depletion Observation ----
   # Depletion obs error
@@ -1329,6 +1329,11 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
   # Depletion bias 
   Dbias <- sample_lnorm('Dbias', cpars, Obs, nsim, 'Dbiascv')
   ObsOut$Dbias <- Dbias
+
+  ObsOut$Derr_y <- array(rlnorm((nyears + proyears) * nsim, 
+                                mconv(1, rep(ObsOut$Derr, nyears + proyears)), 
+                                sdconv(1, rep(ObsOut$Derr, nyears + proyears))), 
+                         c(nsim, nyears + proyears)) * Dbias
    
   # ---- M bias ----
   Mbias <- sample_lnorm('Mbias', cpars, Obs, nsim, 'Mbiascv')
