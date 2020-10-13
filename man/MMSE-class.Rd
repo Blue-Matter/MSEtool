@@ -41,51 +41,51 @@ simulation conditions and performance of MPs for a multi-stock, multi-fleet oper
 
 \item{\code{Obss}}{The fleet specific observation error operating model objects. Hierarchical list, fleets nested in stocks.}
 
-\item{\code{Imps}}{The fleet soecific implementation error operating model objects. Hierarchical list, fleets nested in stocks.}
+\item{\code{Imps}}{The fleet specific implementation error operating model objects. Hierarchical list, fleets nested in stocks.}
 
 \item{\code{OM}}{A table of sampled parameters of the operating model. Data frame of nsim rows.}
 
 \item{\code{Obs}}{A table of sampled parameters of the observation model. Data frame of nsim rows.}
 
-\item{\code{B_BMSY}}{Simulated biomass relative to BMSY over the projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers}
+\item{\code{B_BMSY}}{Simulated biomass relative to BMSY over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{F_FMSY}}{Simulated fishing mortality rate relative to FMSY over the projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers}
+\item{\code{F_FMSY}}{Simulated fishing mortality rate relative to FMSY over the projection. An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{B}}{Simulated stock biomass over the projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers}
+\item{\code{B}}{Simulated stock biomass over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{SSB}}{Simulated spawning stock biomass over the projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers}
+\item{\code{SSB}}{Simulated spawning stock biomass over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{VB}}{Simulated vulnerable biomass over the projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers}
+\item{\code{VB}}{Simulated vulnerable biomass over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{FM}}{Simulated fishing mortality rate over the projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers}
+\item{\code{FM}}{Simulated fishing mortality rate over the projection. An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{C}}{Simulated catches (taken) over the projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers}
+\item{\code{C}}{Simulated catches (taken) over the projection. An array with dimensions: nsim,  nStocks, nFleets, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{TAC}}{Simulated Total Allowable Catch (prescribed) over the projection (this is NA for input controls). An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers}
+\item{\code{TAC}}{Simulated Total Allowable Catch (prescribed) over the projection (this is NA for input controls). An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{SSB_hist}}{Simulated historical spawning stock biomass. An array with dimensions: nsim, nages, nyears, nareas. Non-negative real numbers}
+\item{\code{SSB_hist}}{Simulated historical spawning stock biomass. An array with dimensions: nsim, nStocks, nages, nyears, nareas. Non-negative real numbers}
 
-\item{\code{CB_hist}}{Simulated historical catches in weight. An array with dimensions: nsim, nages, nyears, nareas. Non-negative real numbers}
+\item{\code{CB_hist}}{Simulated historical catches in weight. An array with dimensions: nsim, nages, nStocks, nFleets, nyears, nareas. Non-negative real numbers}
 
-\item{\code{FM_hist}}{Simulated historical fishing mortality rate. An array with dimensions: nsim, nages, nyears, nareas. Non-negative real numbers}
+\item{\code{FM_hist}}{Simulated historical fishing mortality rate. An array with dimensions: nsim,  nStocks, nFleets, nages, nyears, nareas. Non-negative real numbers}
 
-\item{\code{Effort}}{Simulated relative fishing effort in the projection years. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers}
+\item{\code{Effort}}{Simulated relative fishing effort in the projection years. An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{PAA}}{Population at age in last projection year. An array with dimensions: nsim, nMPs, nages. Non-negative real numbers}
+\item{\code{PAA}}{Not used}
 
-\item{\code{CAA}}{Catch at age in last projection year. An array with dimensions: nsim, nMPs, nages. Non-negative real numbers}
+\item{\code{CAA}}{Not used}
 
-\item{\code{CAL}}{Catch at length in last projection year. An array with dimensions: nsim, nMPs, nCALbins. Non-negative real numbers}
+\item{\code{CAL}}{Not used}
 
-\item{\code{CALbins}}{Mid-points of the catch-at-length bins. Vector of length nCALbins. Positive real numbers.}
+\item{\code{CALbins}}{Not used}
 
-\item{\code{MSY_P}}{Array of projected MSY by year with dimensions: nsim, nstock, nMP, proyears.}
+\item{\code{MSY_P}}{Not used}
 
-\item{\code{FMSY_P}}{Array of projected FMSY by year with dimensions: nsim, nstock, nMP, proyears.}
+\item{\code{FMSY_P}}{Not used}
 
-\item{\code{SSBMSY_P}}{Array of projected Spawning Stock Biomass at MSY by year with dimensions: nsim, nstock, nMP, proyears.}
+\item{\code{SSBMSY_P}}{Not used}
 
-\item{\code{Misc}}{Miscellanenous output such as posterior predictive data}
+\item{\code{Misc}}{Miscellaneous output such as posterior predictive data}
 }}
 
 \section{Objects from the Class}{
