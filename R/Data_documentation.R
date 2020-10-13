@@ -160,3 +160,16 @@ NULL
 #' avail("OM")
 NULL
 
+#' @rdname MOM-class-objects 
+"Albacore_TwoFleet"
+
+#' MOM class objects
+#' 
+#' Example objects of class MOM
+#' 
+#' @name MOM-class-objects
+#' @format NULL
+#' @examples
+#' avail("MOM")
+NULL
+
