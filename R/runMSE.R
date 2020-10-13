@@ -14,10 +14,10 @@
 #' @export
 #' 
 runMSE <- function(OM=NULL, 
-                          MPs = NA, 
-                          Hist=FALSE, 
-                          silent=FALSE, 
-                          parallel=FALSE) {
+                   MPs = NA, 
+                   Hist=FALSE, 
+                   silent=FALSE, 
+                   parallel=FALSE) {
   
   # ---- Initial Checks and Setup ----
   if (class(OM) == 'OM') {
