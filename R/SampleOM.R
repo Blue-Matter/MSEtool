@@ -1172,8 +1172,13 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
   }
   
   # ---- Existing MPA ----
-  MPA <- as.logical(Fleet@MPA)
-  
+  if (inherits(Fleet@MPA, 'matrix')) {
+    warning('This OM is from a previous version. OM@MPA is now a logical instead of matrix. Assuming no existing MPA')
+    MPA <- FALSE
+  } else {
+    MPA <- as.logical(Fleet@MPA)  
+  }
+
   Fleetout$Fdisc <- Fdisc
   Fleetout$Fdisc_array1 <- Fdisc_array1
   Fleetout$Fdisc_array2 <- Fdisc_array2
