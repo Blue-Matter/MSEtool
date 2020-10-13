@@ -692,7 +692,8 @@ UpdateSlot <- function(sl, RealData, SimData, msg) {
 }
 
 
-AddRealData <- function(SimData, RealData, ObsPars, nsim, nyears, proyears, msg) {
+AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim, 
+                        nyears, proyears, SampCpars, msg) {
   Data_out <- SimData
   
   if (msg)
@@ -799,7 +800,7 @@ AddRealData <- function(SimData, RealData, ObsPars, nsim, nyears, proyears, msg)
     Data_out@Cat <- matrix(RealData@Cat[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
     Data_out@CV_Cat <- matrix(RealData@CV_Cat[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
     
-    simcatch <- apply(CBret, c(1,3), sum)
+    simcatch <- apply(StockPars$CBret, c(1,3), sum)
     
     Cbias <- matrix(apply(Data_out@Cat, 1, mean)/apply(simcatch, 1, mean),
                     nrow=nsim, ncol=nyears+proyears)
@@ -830,7 +831,7 @@ AddRealData <- function(SimData, RealData, ObsPars, nsim, nyears, proyears, msg)
     Data_out@CV_Ind <- matrix(RealData@CV_Ind[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
     
     # Calculate Error
-    SimBiomass <- apply(Biomass, c(1, 3), sum)
+    SimBiomass <- apply(StockPars$Biomass, c(1, 3), sum)
     I_Err <- lapply(1:nsim, function(i) indfit(SimBiomass[i,],  Data_out@Ind[i,]))
     I_Err <- do.call('rbind', I_Err)
     
@@ -855,7 +856,7 @@ AddRealData <- function(SimData, RealData, ObsPars, nsim, nyears, proyears, msg)
     Data_out@CV_SpInd <- matrix(RealData@CV_SpInd[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
     
     # Calculate Error
-    SimBiomass <- apply(SSB, c(1, 3), sum)
+    SimBiomass <- apply(StockPars$SSB, c(1, 3), sum)
     I_Err <- lapply(1:nsim, function(i) indfit(SimBiomass[i,],  Data_out@SpInd[i,]))
     I_Err <- do.call('rbind', I_Err)
     
@@ -945,16 +946,16 @@ AddRealData <- function(SimData, RealData, ObsPars, nsim, nyears, proyears, msg)
       # Calculate observation error for future projections 
       Ind_V <- RealData@AddIndV[1,i, ]
       if (AddIunits[i]) { 
-        if (AddIndType[i]==1) SimIndex <- apply(Biomass, c(1, 2, 3), sum) # Total Biomass-based index
-        if (AddIndType[i]==2) SimIndex <- apply(SSB, c(1, 2, 3), sum) # Spawning Biomass-based index
-        if (AddIndType[i]==3) SimIndex <- apply(VBiomass, c(1, 2, 3), sum) # vuln Biomass-based index
+        if (AddIndType[i]==1) SimIndex <- apply(StockPars$Biomass, c(1, 2, 3), sum) # Total Biomass-based index
+        if (AddIndType[i]==2) SimIndex <- apply(StockPars$SSB, c(1, 2, 3), sum) # Spawning Biomass-based index
+        if (AddIndType[i]==3) SimIndex <- apply(StockPars$VBiomass, c(1, 2, 3), sum) # vuln Biomass-based index
       } else {
-        if (AddIndType[i]==1) SimIndex <- apply(N, c(1, 2, 3), sum) # Total Abundance-based index 
-        if (AddIndType[i]==2) SimIndex <- apply(N, c(1, 2, 3), sum) * StockPars$Mat_age[,,1:nyears] # Spawning abundance-based index 
-        if (AddIndType[i]==3) SimIndex <- apply(N, c(1, 2, 3), sum) * FleetPars$V[,,1:nyears] # Spawning abundance-based index 
+        if (AddIndType[i]==1) SimIndex <- apply(StockPars$N, c(1, 2, 3), sum) # Total Abundance-based index 
+        if (AddIndType[i]==2) SimIndex <- apply(StockPars$N, c(1, 2, 3), sum) * StockPars$Mat_age[,,1:nyears] # Spawning abundance-based index 
+        if (AddIndType[i]==3) SimIndex <- apply(StockPars$N, c(1, 2, 3), sum) * FleetPars$V[,,1:nyears] # Spawning abundance-based index 
       }
       
-      Ind_V <- matrix(Ind_V, nrow=Data@MaxAge+1, ncol= nyears)
+      Ind_V <- matrix(Ind_V, nrow=SimData@MaxAge+1, ncol= nyears)
       Ind_V <- replicate(nsim, Ind_V) %>% aperm(., c(3,1,2))
       SimIndex <- apply(SimIndex*Ind_V, c(1,3), sum) # apply vuln curve
       
