@@ -79,7 +79,7 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
   Data@L95 <- StockPars$L95array[,nyears] * ObsPars$lenMbias # observed length at 95% maturity
   Data@L95[Data@L95 > 0.9 * Data@vbLinf] <- 0.9 * Data@vbLinf[Data@L95 > 0.9 * Data@vbLinf]  # Set a hard limit on ratio of L95 to Linf
   Data@L50[Data@L50 > 0.9 * Data@L95] <- 0.9 * Data@L95[Data@L50 > 0.9 * Data@L95]  # Set a hard limit on ratio of L95 to Linf
-  Data@LenCV <- StockPars$LenCV # variablity in length-at-age - no error at this time
+  Data@LenCV <- StockPars$LenCV # variability in length-at-age - no error at this time
   Data@sigmaR <- StockPars$procsd # observed sigmaR - assumed no obs error
   Data@MaxAge <- StockPars$maxage # maximum age - no error - used for setting up matrices only
   
@@ -122,10 +122,10 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
   OFLreal <- A * (1-exp(-RefPoints$FMSY))  # the true simulated Over Fishing Limit
   
   # Observed total abundance
-  Data@Abun <- A * ObsPars$Aerr_y
+  Data@Abun <- A * ObsPars$Aerr_y[,nyears]
     
   # observed spawning abundance
-  Data@SpAbun <- Asp * ObsPars$Aerr_y
+  Data@SpAbun <- Asp * ObsPars$Aerr_y[,nyears]
   
   # --- Catch-at-age ----
   Cret2 <- apply(Cret * Sample_Area$CAA[,,1:nyears,], 1:3, sum)
@@ -148,8 +148,8 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
   Data@Lc <- CALdat$Lc # modal length 
   Data@Lbar <- CALdat$Lbar # mean length above Lc 
   
-  Data@LFC <- CALdat$LFC * ObsPars$LFCbias # length at first capture
-  Data@LFS <- FleetPars$LFS[,nyears] * ObsPars$LFSbias # length at full selection
+  Data@LFC <- FleetPars$L5_y[,nyears] * ObsPars$LFCbias # length at first capture
+  Data@LFS <- FleetPars$LFS_y[,nyears] * ObsPars$LFSbias # length at full selection
   
   # --- Previous Management Recommendations ----
   Data@MPrec <- apply(CBret, c(1, 3), sum)[,nyears] # catch in last year
@@ -463,7 +463,6 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   CNtemp[is.na(CNtemp)] <- tiny
   CNtemp[!is.finite(CNtemp)] <- tiny
   
-  
   CAA <- simCAA(nsim, yrs=length(yind), StockPars$maxage+1, Cret=CNtemp, ObsPars$CAA_ESS, ObsPars$CAA_nsamp)
   
   Data@CAA[, nyears + yind, ] <- CAA
@@ -490,8 +489,8 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   Data@Lc <- cbind(Data@Lc, CALdat$Lc) # modal length 
   Data@Lbar <- cbind(Data@Lbar, CALdat$Lbar) # mean length above Lc 
   
-  Data@LFC <- CALdat$LFC * ObsPars$LFCbias # length at first capture
-  Data@LFS <- FleetPars$LFS[,nyears+y] * ObsPars$LFSbias # length at full selection
+  Data@LFC <- FleetPars$L5_y[,nyear+y] * ObsPars$LFCbias # length at first capture
+  Data@LFS <- FleetPars$LFS_y[,nyears+y] * ObsPars$LFSbias # length at full selection
   
   # --- Previous Management Recommendations ----
   Data@MPrec <- MPCalcs$TACrec # last MP  TAC recommendation
@@ -664,5 +663,427 @@ getfifth <- function(lenvec, CAL_binsmid) {
   dens$x[min(which(cumsum(dens$y/sum(dens$y)) >0.05))]
 }
 
+UpdateObs <- function(sl, obsval, OMval, RealData, SimData, msg){
+  RealVal <- slot(RealData, sl)
+  SimVal <- slot(SimData, sl)
+  if (!is.na(RealVal) & !all(SimVal == tiny)) {
+    if (msg)
+      message(paste0('Updating Observation Error for `OM@cpars$Data@', sl, '`'))
+    
+    # bias 
+    calcBias <- RealVal/OMval 
+    return(calcBias)
+  } else {
+    return(obsval)
+  }
+}
+
+UpdateSlot <- function(sl, RealData, SimData, msg) {
+  RealVal <- slot(RealData, sl)
+  SimVal <- slot(SimData, sl)
+  if (!is.na(RealVal) & !all(SimVal == tiny)) {
+    if (msg)
+      message(paste0('Using `OM@cpars$Data@', sl, '` (', RealVal, ')'))
+    nrep <- length(slot(SimData, sl))
+    
+    return(rep(RealVal, nrep))
+  } 
+  return(slot(SimData, sl))
+}
+
+
+AddRealData <- function(SimData, RealData, ObsPars, msg) {
+  Data_out <- SimData
+  
+  if (msg)
+    message('Updating Simulated Data with Real Data from `OM@cpars$Data`')
+  
+  # check last year
+  if (!SimData@LHYear == RealData@LHYear) {
+    warning('`Fleet@CurrentYear` (', OM@CurrentYr, ') is not the same as `OM@cpars$Data@LHYear` (', RealData@LHYear, ')')
+  }
+  
+  # check maxage 
+  if (!SimData@MaxAge == RealData@MaxAge) {
+    warning('`Stock@MaxAge` (', OM@maxage, ') is not the same as `OM@cpars$Data@MaxAge` (', RealData@MaxAge, ')')
+  }
+  
+  # check dimensions of real data CAA
+  if (dim(RealData@CAA)[3] > 1) {
+    if (!dim(RealData@CAA)[3] == SimData@MaxAge+1)
+      stop('`OM@cpars$Data@CAA` has incorrect dimensions, should be `Stock@maxage+1` age-classes')
+  }
+  
+  # update static slots 
+  slts <- c('Name', 'Common_Name', 'Species', 'Region', 'LHYear',
+            'Units')
+  for (sl in slts)
+    slot(Data_out, sl) <- slot(RealData, sl)
+  
+  Data_out@MaxAge <- SimData@MaxAge
+  Data_out@MPrec <- SimData@MPrec
+  Data_out@MPeff <- SimData@MPeff
+  Data_out@nareas <- SimData@nareas
+  
+  # ---- Update Life-history parameters ----
+  Data_out@Mort <- UpdateSlot('Mort', RealData, SimData, msg)
+  ObsPars$Mbias <- UpdateObs('Mort', ObsPars$Mbias, StockPars$Marray[, nyears], 
+                             RealData, SimData, msg)
+  
+  Data_out@vbLinf <- UpdateSlot('vbLinf', RealData, SimData, msg)
+  ObsPars$Linfbias <- UpdateObs('vbLinf', ObsPars$Linfbias, StockPars$Linfarray[, nyears], 
+                                RealData, SimData, msg)
+  
+  Data_out@vbK <- UpdateSlot('vbK', RealData, SimData, msg)
+  ObsPars$Kbias <- UpdateObs('vbK', ObsPars$Kbias, StockPars$Karray[, nyears], 
+                             RealData, SimData, msg)
+  
+  Data_out@vbt0 <- UpdateSlot('vbt0', RealData, SimData, msg)
+  ObsPars$t0bias <- UpdateObs('vbt0', ObsPars$t0bias, StockPars$t0array[, nyears], 
+                              RealData, SimData, msg)
+  
+  Data_out@CV_Mort <- UpdateSlot('CV_Mort', RealData, SimData, msg)
+  Data_out@CV_vbLinf <- UpdateSlot('CV_vbLinf', RealData, SimData, msg)
+  Data_out@CV_vbK <- UpdateSlot('CV_vbK', RealData, SimData, msg)
+  Data_out@CV_vbt0 <- UpdateSlot('CV_vbt0', RealData, SimData, msg)
+  
+  Data_out@wla <- UpdateSlot('wla', RealData, SimData, msg)
+  Data_out@wlb <- UpdateSlot('wlb', RealData, SimData, msg)
+  Data_out@CV_wla <- UpdateSlot('CV_wla', RealData, SimData, msg)
+  Data_out@CV_wlb <- UpdateSlot('CV_wlb', RealData, SimData, msg)
+  
+  Data_out@steep <- UpdateSlot('steep', RealData, SimData, msg)
+  Data_out@CV_steep <- UpdateSlot('CV_steep', RealData, SimData, msg)
+  ObsPars$hbias <- UpdateObs('steep', ObsPars$hbias, StockPars$hs, 
+                             RealData, SimData, msg)
+  
+  Data_out@sigmaR <- UpdateSlot('sigmaR', RealData, SimData, msg)
+  Data_out@CV_sigmaR <- UpdateSlot('CV_sigmaR', RealData, SimData, msg)
+  
+  # TODO ObsPars$sigmaRbias 
+  
+  Data_out@L50 <- UpdateSlot('L50', RealData, SimData, msg)
+  Data_out@CV_L50 <- UpdateSlot('CV_L50', RealData, SimData, msg)
+  
+  ObsPars$lenMbias <- UpdateObs('L50', ObsPars$lenMbias, StockPars$L50, 
+                                RealData, SimData, msg)
+  
+  Data_out@L95 <- UpdateSlot('L95', RealData, SimData, msg)
+  Data_out@LenCV <- UpdateSlot('LenCV', RealData, SimData, msg)
+  
+  Data_out@LFC <- UpdateSlot('LFC', RealData, SimData, msg)
+  Data_out@CV_LFC <- UpdateSlot('CV_LFC', RealData, SimData, msg)
+  ObsPars$LFCbias <- UpdateObs('LFC', ObsPars$LFCbias, FleetPars$L5_y[,nyears], 
+                               RealData, SimData, msg)
+  
+  Data_out@LFS <- UpdateSlot('LFS', RealData, SimData, msg)
+  Data_out@CV_LFS <- UpdateSlot('CV_LFS', RealData, SimData, msg)
+  ObsPars$LFSbias <- UpdateObs('LFS', ObsPars$LFSbias, FleetPars$LFS_y[,nyears], 
+                               RealData, SimData, msg)
+  
+  Data_out@Vmaxlen <- UpdateSlot('Vmaxlen',  RealData, SimData, msg)
+  
+  if (length(RealData@Year)>1) {
+    # check years 
+    if (all(RealData@Year !=SimData@Year)) {
+      stop('`OM$cpars$Data@Year` does not match `SimData@Year`. \nAre `Fleet@nyears` and `Fleet@CurrentYr` correct?')
+    }
+    Data_out@Year <- RealData@Year
+  }
+  
+  # ---- Update Catch ----
+  if (!all(is.na(RealData@Cat[1,]))) {
+    if (msg)
+      message('Updating Simulated Catch from `OM@cpars$Data@Cat` (OM Catch observation parameters also updated)')
+    
+    Data_out@Cat <- matrix(RealData@Cat[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
+    Data_out@CV_Cat <- matrix(RealData@CV_Cat[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
+    
+    simcatch <- apply(CBret, c(1,3), sum)
+    
+    Cbias <- matrix(apply(Data_out@Cat, 1, mean)/apply(simcatch, 1, mean),
+                    nrow=nsim, ncol=nyears+proyears)
+    
+    Cerr <- Data_out@Cat/(simcatch*Cbias[,1:nyears])
+    t1<-  Cerr[,max(nyears-10, 1):nyears]/apply(Cerr[,max(nyears-10, 1):nyears],1,mean)
+    SDs <- apply(log(t1), 1, sd)
+    Cerr_proj <- matrix(NA, nsim, proyears)
+    for (i in 1:nsim) {
+      Cerr_proj[i,] <- exp(rnorm(proyears, -((SDs[i]^2)/2), SDs[i]))     
+    }
+    Cerr <- cbind(Cerr, Cerr_proj)
+    
+    ObsPars$Cbias <- Cbias[,1]
+    ObsPars$Cerr_y <- Cerr * Cbias
+    
+  }
+  
+  
+  # ---- Update Effort -----
+  # TODO
+  
+  # ---- Update Index (total biomass) ----
+  if (!all(is.na(RealData@Ind[1,]))) { # Index exists
+    if (!silent) 
+      message('Updating Simulated Total Index from `OM@cpars$Data@Ind` (OM Index observation parameters are ignored).')
+    Data_out@Ind <- matrix(RealData@Ind[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
+    Data_out@CV_Ind <- matrix(RealData@CV_Ind[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
+    
+    # Calculate Error
+    SimBiomass <- apply(Biomass, c(1, 3), sum)
+    I_Err <- lapply(1:nsim, function(i) indfit(SimBiomass[i,],  Data_out@Ind[i,]))
+    I_Err <- do.call('rbind', I_Err)
+    
+    Ierr <- exp(lcs(Data_out@Ind))/exp(lcs(SimBiomass))^I_Err$beta
+    
+    
+    ObsPars$Ierr_y[, 1:nyears] <- Ierr # update Obs Error
+    
+    # Sample for projection years 
+    yr.ind <- max(which(!is.na(RealData@Ind[1,1:nyears])))
+    ObsPars$Ierr[, (nyears+1):(nyears+proyears)] <- generateRes(df=I_Err, 
+                                                                nsim, proyears, 
+                                                                lst.err=log(ObsPars$Ierr[,yr.ind]))
+    ObsPars$Ind_Stat <- I_Err
+  }
+  
+  # ---- Update Index (spawning biomass) ----
+  if (!all(is.na(RealData@SpInd[1,]))) { # Index exists
+    if (!silent) 
+      message('Updating Simulated Spawning Index from `OM@cpars$Data@SpInd` (OM Index observation parameters are ignored).')
+    Data_out@SpInd <- matrix(RealData@SpInd[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
+    Data_out@CV_SpInd <- matrix(RealData@CV_SpInd[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
+    
+    # Calculate Error
+    SimBiomass <- apply(SSB, c(1, 3), sum)
+    I_Err <- lapply(1:nsim, function(i) indfit(SimBiomass[i,],  Data_out@SpInd[i,]))
+    I_Err <- do.call('rbind', I_Err)
+    
+    Ierr <- exp(lcs(Data_out@SpInd))/exp(lcs(SimBiomass))^I_Err$beta
+    
+    ObsPars$SpIerr[,1:nyears] <- Ierr
+    
+    # Sample for projection years 
+    yr.ind <- max(which(!is.na(RealData@SpInd[1,1:nyears])))
+    ObsPars$SpIerr[, (nyears+1):(nyears+proyears)] <- generateRes(df=I_Err, nsim, proyears, lst.err=log(ObsPars$SpIerr[,yr.ind]))
+    ObsPars$SpInd_Stat <- I_Err # return index statistics
+  }
+  
+  # ---- Index (vulnerable biomass) ----
+  if (!all(is.na(RealData@VInd[1,]))) { # Index exists
+    if (!silent) 
+      message('Updating Simulated Vulnerable Index from `OM@cpars$Data@VInd` (OM Index observation parameters are ignored).')
+    Data_out@VInd <- matrix(RealData@VInd[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
+    Data_out@CV_VInd <- matrix(RealData@CV_VInd[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
+    
+    # Calculate Error
+    SimBiomass <- apply(VBiomass, c(1, 3), sum)
+    I_Err <- lapply(1:nsim, function(i) indfit(SimBiomass[i,],  Data_out@VInd[i,]))
+    I_Err <- do.call('rbind', I_Err)
+    
+    Ierr <- exp(lcs(Data_out@VInd))/exp(lcs(SimBiomass))^I_Err$beta
+    
+    ObsPars$VIerr[,1:nyears] <- Ierr
+    
+    # Sample for projection years 
+    yr.ind <- max(which(!is.na(RealData@VInd[1,1:nyears])))
+    ObsPars$VIerr[, (nyears+1):(nyears+proyears)] <- generateRes(df=I_Err, nsim, proyears, lst.err=log(ObsPars$VIerr[,yr.ind]))
+    ObsPars$VInd_Stat <- I_Err # return index statistics
+  }
+  
+  
+  # ---- Add Additional Indices ----
+  if (!all(is.na(RealData@AddInd))) {
+    if (!silent) 
+      message('Adding Additional Indices to Simulated Data from `OM@cpars$Data@AddInd`')
+    n.ind <- dim(RealData@AddInd)[2]
+    Data_out@AddInd <- Data_out@CV_AddInd <- array(NA, dim=c(nsim, n.ind, nyears))
+    
+    fitbeta <- fitIerr <- TRUE
+    if (!is.null(SampCpars$AddIbeta)) {
+      if (any(dim(SampCpars$AddIbeta) != c(nsim, n.ind))) stop("cpars$AddIbeta must be dimensions c(nsim, n.ind)")
+      ObsPars$AddIbeta <- SampCpars$AddIbeta
+      fitbeta <- FALSE
+    } else {
+      ObsPars$AddIbeta <- matrix(NA, nsim, n.ind)
+    }
+    
+    if (!is.null(SampCpars$AddIerr)) {
+      if (any(dim(SampCpars$AddIerr) != c(nsim, n.ind, nyears+proyears))) 
+        stop("cpars$AddIerr must be dimensions c(nsim, n.ind, nyears+proyears)")
+      ObsPars$AddIerr <- SampCpars$AddIerr
+      fitIerr <- FALSE
+    } else {
+      ObsPars$AddIerr <- array(NA, dim=c(nsim, n.ind, nyears+proyears))
+    }
+    
+    if (!is.null(SampCpars$AddIunits) && length(SampCpars$AddIunits) != n.ind) 
+      stop("cpars$AddIunits must be length n.ind")
+    
+    AddIunits <- RealData@AddIunits
+    if (all(is.na(AddIunits))) AddIunits <- rep(1, n.ind)
+    if (!is.null(SampCpars$AddIunits)) AddIunits <- SampCpars$AddIunits
+    
+    AddIndType <- RealData@AddIndType 
+    if (all(is.na(AddIndType))) AddIndType <- rep(1, n.ind)
+    
+    ObsPars$AddInd_Stat <- list()
+    
+    UnitsTab <- data.frame(n=1:0, units=c('biomass', 'numbers'))
+    TypeTab <- data.frame(n=1:3, type=c('total', 'spawning', 'vuln.'))
+    for (i in 1:n.ind) {
+      
+      units <- UnitsTab$units[match(AddIunits[i], UnitsTab$n)]
+      type <- TypeTab$type[match(AddIndType[i], TypeTab$n)]
+      
+      if(!silent) message("Additional index ", i, ' - ', type, ' stock', ' (', units, ')')
+      ind <- RealData@AddInd[1,i,1:nyears]
+      cv_ind <- RealData@CV_AddInd[1,i,1:nyears]
+      Data_out@AddInd[,i,] <- matrix(ind, nrow=nsim, ncol=nyears, byrow=TRUE)
+      Data_out@CV_AddInd[,i,] <- matrix(cv_ind, nrow=nsim, ncol=nyears, byrow=TRUE)
+      
+      # Calculate observation error for future projections 
+      Ind_V <- RealData@AddIndV[1,i, ]
+      if (AddIunits[i]) { 
+        if (AddIndType[i]==1) SimIndex <- apply(Biomass, c(1, 2, 3), sum) # Total Biomass-based index
+        if (AddIndType[i]==2) SimIndex <- apply(SSB, c(1, 2, 3), sum) # Spawning Biomass-based index
+        if (AddIndType[i]==3) SimIndex <- apply(VBiomass, c(1, 2, 3), sum) # vuln Biomass-based index
+      } else {
+        if (AddIndType[i]==1) SimIndex <- apply(N, c(1, 2, 3), sum) # Total Abundance-based index 
+        if (AddIndType[i]==2) SimIndex <- apply(N, c(1, 2, 3), sum) * StockPars$Mat_age[,,1:nyears] # Spawning abundance-based index 
+        if (AddIndType[i]==3) SimIndex <- apply(N, c(1, 2, 3), sum) * FleetPars$V[,,1:nyears] # Spawning abundance-based index 
+      }
+      
+      Ind_V <- matrix(Ind_V, nrow=Data@MaxAge, ncol= nyears)
+      Ind_V <- replicate(nsim, Ind_V) %>% aperm(., c(3,1,2))
+      SimIndex <- apply(SimIndex*Ind_V, c(1,3), sum) # apply vuln curve
+      
+      I_Err <- lapply(1:nsim, function(i) indfit(SimIndex[i,],  ind))
+      I_Err <- do.call('rbind', I_Err)
+      ind <- matrix(ind, nrow=nsim, ncol=nyears, byrow=TRUE)
+      Ierr <- exp(lcs(ind))/exp(lcs(SimIndex))^I_Err$beta
+      if (fitIerr) ObsPars$AddIerr[,i, 1:nyears] <- Ierr
+      if (fitbeta) ObsPars$AddIbeta[,i] <- I_Err$beta
+      
+      # Sample for projection years 
+      if (fitIerr) {
+        yr.ind <- max(which(!is.na(RealData@AddInd[1,i,1:nyears])))
+        ObsPars$AddIerr[,i, (nyears+1):(nyears+proyears)] <- generateRes(df=I_Err, nsim, proyears, lst.err=log(ObsPars$AddIerr[,i,yr.ind]))    
+      }
+      
+      ObsPars$AddInd_Stat[[i]] <- I_Err # index fit statistics
+    }
+  }
+  
+  # ---- Update Recruitment ----
+  if (!all(is.na(RealData@Rec))) {
+    if (!silent) 
+      message('Updating Simulated Recruitment Data from `OM@cpars$Data@Rec`')
+    
+    Data_out@Rec <- matrix(RealData@Rec[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
+    Data_out@CV_Rec <- matrix(RealData@CV_Rec[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
+    
+    # Calculate Error
+    Rec <- apply(StockPars$N[, 1, , ], c(1, 2), sum) # simulated recruitment
+    
+    Recbias <- matrix(apply(Data_out@Rec, 1, mean)/apply(Rec, 1, mean),
+                      nrow=nsim, ncol=nyears+proyears)
+    
+    Rec_err <- Data_out@Rec/(Rec*Recbias[,1:nyears])
+    
+    t1 <-  Rec_err[,max(nyears-10, 1):nyears]/apply(Rec_err[,max(nyears-10, 1):nyears],1,mean) # last 10 years used for projections
+    SDs <- apply(log(t1), 1, sd)
+    Rec_err_proj <- matrix(NA, nsim, proyears)
+    for (i in 1:nsim) {
+      Rec_err_proj[i,] <- exp(rnorm(proyears, -((SDs[i]^2)/2), SDs[i]))     
+    }
+    Rec_err_proj <- Rec_err_proj * Recbias[,(nyears+1):(nyears+proyears)]
+    Rec_err <- cbind(Rec_err, Rec_err_proj)
+    
+    ObsPars$Recerr_y <- Rec_err * Recbias
+    ObsPars$Recsd <- SDs
+    ObsPars$Recbias <- Recbias
+  }
+  
+  # ---- Update CAA ----
+  if (!all(is.na(RealData@CAA)) & !all(RealData@CAA ==0)) {
+    if (!silent) 
+      message('Updating Simulated Catch-at-Age Data from `OM@cpars$Data@CAA`. Note: CAA_ESS is currently NOT updated')
+    
+    Data_out@CAA <- aperm(replicate(nsim, RealData@CAA[1,1:nyears,]),c(3,1,2))
+    Data_out@Vuln_CAA <- RealData@Vuln_CAA
+    
+    # Get average sample size 
+    nsamp <- ceiling(mean(apply(RealData@CAA[1,1:nyears,], 1, sum)))
+    ObsPars$CAA_nsamp <- rep(nsamp, nsim)
+    
+  }  
+  
+  # ---- Update CAL ----
+  if (!all(is.na(RealData@CAL)) & !all(RealData@CAL ==0)) {
+    
+    # check length bins 
+    if (!all(RealData@CAL_bins %in% StockPars$CAL_bins)) {
+      warning('cpars$Data@CAL_bins cannot be matched with Simulated Data@CAL_bins. Add cpars$Data@CAL_bins to cpars$CAL_bins. cpars$Data@CAL are NOT being used')
+    } else {
+      if (!silent) 
+        message('Updating Simulated Catch-at-Length Data from `OM@cpars$Data@CAL`. Note: CAL_ESS is currently NOT updated')
+      
+      # match length bins
+      ind <- match(RealData@CAL_mids, StockPars$CAL_binsmid)
+      dd <- dim(Data_out@CAL)
+      Data_out@CAL <- array(0, dim=dd)
+      CAL <- Data_out@CAL[1,,]
+      CAL[,ind] <- RealData@CAL[1,,] # replace with real CAL
+      CAL <- aperm(replicate(nsim, CAL[1:nyears,]),c(3,1,2))
+      Data_out@CAL <- CAL
+      Data_out@Vuln_CAL <- RealData@Vuln_CAL
+      
+      # Get average sample size 
+      nsamp <- ceiling(mean(apply(RealData@CAL[1,1:nyears,], 1, sum, na.rm=TRUE), na.rm=TRUE))
+      ObsPars$CAL_nsamp <- rep(nsamp, nsim)
+    }
+  }
+    
+  
+  
+  # ---- Depletion ----
+  Data_out@Dep <- UpdateSlot('Dep', RealData, SimData, msg)
+  Data_out@CV_Dep <- UpdateSlot('CV_Dep', RealData, SimData, msg)
+  ObsPars$Dbias <- UpdateObs('Dep', ObsPars$Dbias, StockPars$Depletion, 
+                             RealData, SimData, msg)
+  
+
+  # ---- Index Reference -----
+  Data_out@Iref <- UpdateSlot('Iref', RealData, SimData, msg)
+  Data_out@CV_Iref <- UpdateSlot('CV_Iref', RealData, SimData, msg)
+  ObsPars$Irefbias <- rep(NA, nsim) # not calculated 
+  
+  
+  # TODO - not currently updated
+  NotUpdated <- function(RealData, sl, msg) {
+    if (!all(is.na(slot(RealData, sl)))) {
+      if (msg) 
+        message(paste0('Data detected in `OM@cpars$Data@', sl, '` but is NOT being used.'))
+    }
+  }
+  
+  
+  NotUpdated(RealData, 'ML', msg)
+  NotUpdated(RealData, 'Lc', msg)
+  NotUpdated(RealData, 'Lbar', msg)
+  NotUpdated(RealData, 'Abun', msg)
+  NotUpdated(RealData, 'SpAbun', msg)
+  NotUpdated(RealData, 'FMSY_M', msg)
+  NotUpdated(RealData, 'BMSY_B0', msg)
+  NotUpdated(RealData, 'Cref', msg)
+  NotUpdated(RealData, 'Bref', msg)
+ 
+  NotUpdated(RealData, 'AvC', msg)
+  NotUpdated(RealData, 'Dt', msg)
+  NotUpdated(RealData, 'Ref', msg)
+  
+  list(Data=Data_out, ObsPars=ObsPars)
+}
 
 
