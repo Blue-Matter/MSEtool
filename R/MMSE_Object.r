@@ -27,31 +27,31 @@
 #' @slot Stocks The stock operating model objects. List of Stocks
 #' @slot Fleets The fleet operating model objects. Hierarchical list, fleets nested in stocks.
 #' @slot Obss The fleet specific observation error operating model objects. Hierarchical list, fleets nested in stocks.
-#' @slot Imps The fleet soecific implementation error operating model objects. Hierarchical list, fleets nested in stocks.
+#' @slot Imps The fleet specific implementation error operating model objects. Hierarchical list, fleets nested in stocks.
 #'
 #' @slot OM A table of sampled parameters of the operating model. Data frame of nsim rows.
 #' @slot Obs A table of sampled parameters of the observation model. Data frame of nsim rows.
 #'
-#' @slot B_BMSY Simulated biomass relative to BMSY over the projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers
-#' @slot F_FMSY Simulated fishing mortality rate relative to FMSY over the projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers
-#' @slot B Simulated stock biomass over the projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers
-#' @slot SSB Simulated spawning stock biomass over the projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers
-#' @slot VB Simulated vulnerable biomass over the projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers
-#' @slot FM Simulated fishing mortality rate over the projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers
-#' @slot C Simulated catches (taken) over the projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers
-#' @slot TAC Simulated Total Allowable Catch (prescribed) over the projection (this is NA for input controls). An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers
-#' @slot SSB_hist Simulated historical spawning stock biomass. An array with dimensions: nsim, nages, nyears, nareas. Non-negative real numbers
-#' @slot CB_hist Simulated historical catches in weight. An array with dimensions: nsim, nages, nyears, nareas. Non-negative real numbers
-#' @slot FM_hist Simulated historical fishing mortality rate. An array with dimensions: nsim, nages, nyears, nareas. Non-negative real numbers
-#' @slot Effort Simulated relative fishing effort in the projection years. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers
-#' @slot PAA Population at age in last projection year. An array with dimensions: nsim, nMPs, nages. Non-negative real numbers
-#' @slot CAA Catch at age in last projection year. An array with dimensions: nsim, nMPs, nages. Non-negative real numbers
-#' @slot CAL Catch at length in last projection year. An array with dimensions: nsim, nMPs, nCALbins. Non-negative real numbers
-#' @slot CALbins Mid-points of the catch-at-length bins. Vector of length nCALbins. Positive real numbers.
-#' @slot MSY_P Array of projected MSY by year with dimensions: nsim, nstock, nMP, proyears.
-#' @slot FMSY_P Array of projected FMSY by year with dimensions: nsim, nstock, nMP, proyears.
-#' @slot SSBMSY_P Array of projected Spawning Stock Biomass at MSY by year with dimensions: nsim, nstock, nMP, proyears.
-#' @slot Misc Miscellanenous output such as posterior predictive data
+#' @slot B_BMSY Simulated biomass relative to BMSY over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers
+#' @slot F_FMSY Simulated fishing mortality rate relative to FMSY over the projection. An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers
+#' @slot B Simulated stock biomass over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers
+#' @slot SSB Simulated spawning stock biomass over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers
+#' @slot VB Simulated vulnerable biomass over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers
+#' @slot FM Simulated fishing mortality rate over the projection. An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers
+#' @slot C Simulated catches (taken) over the projection. An array with dimensions: nsim,  nStocks, nFleets, nMPs, proyears. Non-negative real numbers
+#' @slot TAC Simulated Total Allowable Catch (prescribed) over the projection (this is NA for input controls). An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers
+#' @slot SSB_hist Simulated historical spawning stock biomass. An array with dimensions: nsim, nStocks, nages, nyears, nareas. Non-negative real numbers
+#' @slot CB_hist Simulated historical catches in weight. An array with dimensions: nsim, nages, nStocks, nFleets, nyears, nareas. Non-negative real numbers
+#' @slot FM_hist Simulated historical fishing mortality rate. An array with dimensions: nsim,  nStocks, nFleets, nages, nyears, nareas. Non-negative real numbers
+#' @slot Effort Simulated relative fishing effort in the projection years. An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers
+#' @slot PAA Not used
+#' @slot CAA Not used
+#' @slot CAL Not used
+#' @slot CALbins Not used
+#' @slot MSY_P Not used
+#' @slot FMSY_P Not used
+#' @slot SSBMSY_P Not used
+#' @slot Misc Miscellaneous output such as posterior predictive data
 #' @author T. Carruthers
 #' @keywords classes
 #' @export
