@@ -1818,7 +1818,8 @@ setMethod("show", signature = (object="Rec"), function(object) {
 #' 
 #' @slot Ref A named list with biological reference points:
 #'  \itemize{
-#'    \item ByYear: A named list with `MSY`, `FMSY`, `SSBMSY`, `BMSY`, and `VBMSY` for each simulation and year
+#'    \item ByYear: A named list with `MSY`, `FMSY`, `SSBMSY`, `BMSY`, `VBMSY`, and `Dynamic_SSB0` for each simulation and year.
+#'    Dynamic SSB0 is the reconstructed spawning biomass with no fishing (F = 0) in the historical and projection period. 
 #'    \item ReferencePoints: A data.frame with `nsim` rows with with biological reference points 
 #'    calculated as an average over age-of-maturity `ageM` years around the 
 #'    current year (i.e. `nyears`):

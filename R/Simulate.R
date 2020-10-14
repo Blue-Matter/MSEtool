@@ -489,6 +489,9 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
   BMSY_B0 <- BMSY/B0 # Biomass relative to unfished (B0)
   VBMSY_VB0 <- VBMSY/VB0 # VBiomass relative to unfished (VB0)
   
+  # --- Dynamic Unfished Reference Points (SSB0) ---- 
+  Dynamic_SSB0 <- CalcDynamicSSB0(StockPars, nsim, nareas, nyears, proyears, StockPars$maxF, Z - FM, N)
+  
   StockPars$MSY <- MSY
   StockPars$FMSY <- FMSY
   StockPars$SSBMSY <- SSBMSY
@@ -526,7 +529,8 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
       FMSY=FMSY_y,
       SSBMSY=SSBMSY_y,
       BMSY=BMSY_y,
-      VBMSY=VBMSY_y
+      VBMSY=VBMSY_y,
+      Dynamic_SSB0=Dynamic_SSB0
     ),
     ReferencePoints=data.frame(
       N0=N0,

@@ -233,6 +233,105 @@ CalcMSYRefs <- function(x, MSY_y, FMSY_y, SSBMSY_y, BMSY_y, VBMSY_y, ageM, nyear
   data.frame(MSY=MSY, FMSY=FMSY, SSBMSY=SSBMSY, BMSY=BMSY, VBMSY=VBMSY)
 }
 
+CalcDynamicSSB0 <- function(StockPars, nsim, nareas, nyears, proyears, maxF, Mhist, Nhist) {
+  n_age <- StockPars$maxage + 1
+  UnfishedHist <- sapply(1:nsim, function(x) 
+    popdynCPP(nareas, StockPars$maxage, 
+              Ncurr=Nhist[x,,1,], 
+              nyears,  
+              M_age=StockPars$M_ageArray[x,,], 
+              Asize_c=StockPars$Asize[x,], 
+              MatAge=StockPars$Mat_age[x,,], 
+              WtAge=StockPars$Wt_age[x,,],
+              Vuln=matrix(1, n_age, nyears + proyears),
+              Retc=matrix(1, n_age, nyears + proyears), 
+              Prec=StockPars$Perr_y[x,], 
+              movc=split.along.dim(StockPars$mov[x,,,,],4), 
+              SRrelc=StockPars$SRrel[x], 
+              Effind=rep(0,nyears),  
+              Spat_targc=1, 
+              hc=StockPars$hs[x], 
+              R0c=StockPars$R0a[x,], 
+              SSBpRc=StockPars$SSBpR[x,], 
+              aRc=StockPars$aR[x,], 
+              bRc=StockPars$bR[x,], 
+              Qc=1, 
+              Fapic=0, 
+              MPA=matrix(1, nyears + proyears, nareas), 
+              maxF=maxF, 
+              control=1, 
+              SSB0c=StockPars$SSB0[x], 
+              plusgroup=StockPars$plusgroup))
+  
+  Dynamic_SSB0 <- aperm(array(as.numeric(unlist(UnfishedHist[4,], use.names=FALSE)), 
+                              dim=c(n_age, nyears, nareas, nsim)), c(4,1,2,3)) %>% apply(c(1,3), sum)
+  
+  # Projection period 
+  # (but called in Simulate.R, always check if closed-loop in Project.R has been updated; last checked 10-14-2020)
+  N_P <- SSN_P <- SSB_P <- array(NA, dim = c(nsim, n_age, proyears, nareas))
+  
+  # Movement and mortality in first year
+  SAYRt <- as.matrix(expand.grid(1:nsim, 1:n_age, 1 + nyears, 1:nareas)) 
+  SAYR <- as.matrix(expand.grid(1:nsim, 1:n_age, 1, 1:nareas))
+  SAY1 <- SAYRt[, 1:3]
+  
+  N <- aperm(array(as.numeric(unlist(UnfishedHist[1,], use.names=FALSE)), 
+                   dim=c(n_age, nyears, nareas, nsim)), c(4,1,2,3))
+  NextYrN <- lapply(1:nsim, function(x)
+    popdynOneTScpp(nareas, StockPars$maxage, Ncurr=N[x,,nyears,],
+                   Zcurr=Mhist[x,,nyears,],
+                   mov=StockPars$mov[x,,,,nyears+1],
+                   plusgroup = StockPars$plusgroup))
+  
+  # The stock at the beginning of projection period
+  N_P[,,1,] <- aperm(array(unlist(NextYrN), dim=c(n_age, nareas, nsim, 1)), c(3,1,4,2))
+  SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAY1]  # Calculate spawning stock numbers
+  SSB_P[SAYR] <- SSN_P[SAYR] * StockPars$Wt_age[SAY1]
+  
+  # recruitment in first projection year
+  SSBcurr <- apply(SSB_P[,,1,],c(1,3), sum)
+  recdev <- StockPars$Perr_y[, nyears+n_age-1]
+  rec_area <- sapply(1:nsim, calcRecruitment, SRrel=StockPars$SRrel, SSBcurr=SSBcurr,
+                     recdev=recdev, hs=StockPars$hs,
+                     aR= StockPars$aR, bR=StockPars$bR, R0a=StockPars$R0a,
+                     SSBpR=StockPars$SSBpR)
+  N_P[,1,1,] <- t(rec_area)
+  
+  # Loop over proyears
+  M_P <- StockPars$M_ageArray[, , (nyears+1):(nyears+proyears)] %>% 
+    array(c(nsim, n_age, proyears, nareas)) # Taken from CalcMPDynamics
+  for(y in 2:proyears) {
+    SAYRt <- as.matrix(expand.grid(1:nsim, 1:n_age, y + nyears, 1:nareas))  # Trajectory year
+    SAYt <- SAYRt[, 1:3]
+    SAYR <- as.matrix(expand.grid(1:nsim, 1:n_age, y, 1:nareas))
+    
+    NextYrN <- lapply(1:nsim, function(x)
+      popdynOneTScpp(nareas, StockPars$maxage,
+                     Ncurr=N_P[x,,y-1,],
+                     Zcurr=M_P[x,,y-1,],
+                     mov=StockPars$mov[x,,,, nyears+y],
+                     plusgroup=StockPars$plusgroup))
+    
+    N_P[,,y,] <- aperm(array(unlist(NextYrN), dim=c(n_age, nareas, nsim, 1)), c(3,1,4,2))
+    SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAYt]  # Calculate spawning stock numbers
+    SSB_P[SAYR] <- SSN_P[SAYR] * StockPars$Wt_age[SAYt]  # Calculate spawning stock biomass
+    
+    # recruitment in this year
+    SSBcurr <- apply(SSB_P[,,y,],c(1,3), sum)
+    recdev <- StockPars$Perr_y[, y+nyears+n_age-1]
+    rec_area <- sapply(1:nsim, calcRecruitment, SRrel=StockPars$SRrel,
+                       SSBcurr=SSBcurr,
+                       recdev=recdev, hs=StockPars$hs, aR=StockPars$aR,
+                       bR=StockPars$bR, R0a=StockPars$R0a, SSBpR=StockPars$SSBpR)
+    
+    N_P[,1,y,] <- t(rec_area)
+  }
+  
+  Dynamic_SSB0_P <- apply(SSB_P, c(1, 3), sum)
+  
+  return(abind::abind(Dynamic_SSB0, Dynamic_SSB0_P, along = 2))
+}
+
 #' Linear interpolation of a y value at level xlev based on a vector x and y
 #'
 #' @param x A vector of x values

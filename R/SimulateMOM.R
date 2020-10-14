@@ -763,6 +763,8 @@ SimulateMOM <- function(MOM=Albacore_TwoFleet, parallel=TRUE, silent=FALSE) {
     StockPars[[p]]$BMSY_B0 <- BMSY_B0
     StockPars[[p]]$VBMSY_VB0 <- VBMSY_VB0
     # TODO add equilbrium unfished reference points for each population
+    
+    
   }
   
   # ---- Calculate Mean Generation Time ----
@@ -772,9 +774,11 @@ SimulateMOM <- function(MOM=Albacore_TwoFleet, parallel=TRUE, silent=FALSE) {
     MGTsurv<-t(exp(-apply(Mnow,1,cumsum)))
     StockPars[[p]]$MGT<-apply(Agearray*(StockPars[[p]]$Mat_age[,,nyears]*MGTsurv),1,sum)/apply(StockPars[[p]]$Mat_age[,,nyears]*MGTsurv,1,sum)
   }
-
   
-  
+  # --- Dynamic Unfished Reference Points (SSB0) ---- 
+  Dynamic_SSB0 <- lapply(1:np, function(x) 
+    CalcDynamicSSB0(StockPars[[p]], nsim, nareas, nyears, proyears, maxF, 
+                    Mhist = Z[, p, , , ] - FMt[, p, , , ], Nhist = N[, p, , , ]))
   
   
   # ---- Calculate Reference Yield ----
@@ -791,7 +795,8 @@ SimulateMOM <- function(MOM=Albacore_TwoFleet, parallel=TRUE, silent=FALSE) {
         FMSY=StockPars[[p]]$FMSY_y,
         SSBMSY=StockPars[[p]]$SSBMSY_y,
         BMSY=StockPars[[p]]$BMSY_y,
-        VBMSY=StockPars[[p]]$VBMSY_y
+        VBMSY=StockPars[[p]]$VBMSY_y,
+        Dynamic_SSB0=Dynamic_SSB0[[p]]
       ),
       ReferencePoints=data.frame(
         N0=StockPars[[p]]$N0,
