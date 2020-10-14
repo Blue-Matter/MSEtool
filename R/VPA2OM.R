@@ -241,15 +241,16 @@ VPA2OM<-function(Name="A fishery made by VPA2OM",
     cols[nyears-(0:LowerTri)]<-"blue";pch[nyears-(0:LowerTri)]<-4
 
     for(a in 1:maxage){
-      ylim=c(0,max(naa[1,a,],Hist@AtAge$Nage[1,a,])*1.05)
+      N_OM<-apply(Hist@AtAge$Number[1,a,,],1,sum)
+      ylim=c(0,max(naa[1,a,],N_OM)*1.05)
       if(a==1)plot(yrs,naa[1,a,],xlab="",ylab="",col=cols,pch=pch,ylim=ylim,yaxs='i')
       if(a>1)plot(yrs,naa[1,a,],xlab="",ylab="",ylim=ylim,yaxs='i')
-      lines(yrs,Hist@AtAge$Nage[1,a,],col='green')
+      lines(yrs,N_OM,col='green')
       mtext(paste("Age ",a),3,line=0.5,cex=0.9)
       if(a==1)legend('top',legend=c("Assessment","OM","Recr. ignored (LowerTri)"),text.col=c('black','green','blue'),bty='n')
-      res<-Hist@AtAge$Nage[1,a,]-naa[1,a,]
+      res<-N_OM-naa[1,a,]
       plotres<-abs(res)>(mean(naa[1,a,]*0.025))
-      if(any(plotres))for(y in 1:nyears)if(plotres[y])lines(rep(yrs[y],2),c(naa[1,a,y],Hist@AtAge$Nage[1,a,y]),col='red')
+      if(any(plotres))for(y in 1:nyears)if(plotres[y])lines(rep(yrs[y],2),c(naa[1,a,y],N_OM[y]),col='red')
     } #plot(Hist)
 
     mtext("Year",1,line=0.3,outer=T)
