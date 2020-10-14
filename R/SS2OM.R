@@ -514,13 +514,15 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1,
   OM@cpars$Data<-NULL #!!!!!!!!!!!!
   OM@cpars$qs<-rep(NA,nsim)
   
+  if(all(OM@cpars$Mat_age==1)){
+    message("stupid maturity fix for hake 4 now")
+    OM@cpars$Mat_age[] <- rep(c(0,0,0,0.5,rep(1,OM@maxage-3)),each=nsim)
+  }
+  
+  
   if(report) {
     if(!silent) message("\nRunning historical simulations to compare SS output and OM conditioning...\n")
    
-    if(all(OM@cpars$Mat_age==1)){
-      message("stupid maturity fix for hake 4 now")
-      OM@cpars$Mat_age[] <- rep(c(0,0,0,0.5,rep(1,OM@maxage-3)),each=nsim)
-    }
     Hist <- runMSE(OM, Hist = TRUE)
 
     # interim checking code
