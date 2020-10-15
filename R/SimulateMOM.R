@@ -107,6 +107,7 @@ SimulateMOM <- function(MOM=Albacore_TwoFleet, parallel=TRUE, silent=FALSE) {
   StockPars<-FleetPars<-ObsPars<-ImpPars<- SampCpars<-new('list')
   
   plusgroup <- rep(1, np)
+  
   # custom parameters exist - sample and write to list
   for(p in 1:np){
     SampCpars[[p]]<-list()
@@ -193,7 +194,7 @@ SimulateMOM <- function(MOM=Albacore_TwoFleet, parallel=TRUE, silent=FALSE) {
         ImpPars[[p]][[f]] <- ImpPars[[parcopy[p]]][[f]]
       }
     }
-  }
+  } # end of sexpars
   
   nareas_s <- NIL(StockPars,"nareas",lev1=T)
   if(length(unique(nareas_s))!=1)
@@ -336,6 +337,7 @@ SimulateMOM <- function(MOM=Albacore_TwoFleet, parallel=TRUE, silent=FALSE) {
     
     # average spawning stock biomass per recruit 
     SSBpR <- matrix(UnfishedRefs[6,] %>% unlist(), nrow=nsim, ncol=nareas) 
+    
     # average unfished biomass
     SSB0a <- UnfishedRefs[7,] %>% unlist() %>% matrix(nrow=nsim, ncol=nareas, byrow = TRUE)
     bR <- matrix(log(5 * StockPars[[p]]$hs)/(0.8 * SSB0a), nrow=nsim)  # Ricker SR params
@@ -519,11 +521,13 @@ SimulateMOM <- function(MOM=Albacore_TwoFleet, parallel=TRUE, silent=FALSE) {
             SampCpars2[[f]] <- SampleCpars(cpars[[p]][[f]], Nprob, silent=silent)
           }
         }
+        
         ResampStockPars <- SampleStockPars(MOM2@Stocks[[p]],
                                                     nsim=Nprob,nyears=nyears,
                                                     proyears=proyears,
                                                     cpars=SampCpars2[[1]],
                                                     msg=FALSE)
+        
         ResampStockPars$CAL_bins <- StockPars[[p]]$CAL_bins
         ResampStockPars$CAL_binsmid <- StockPars[[p]]$CAL_binsmid 
         ResampStockPars$nCALbins <- length(StockPars[[p]]$CAL_binsmid )
