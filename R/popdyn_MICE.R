@@ -246,13 +246,6 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
 
   } # end of MICE
 
-  if(length(SexPars$SSBfrom)>0){
-    SSBs<-SSBcur
-    for(p in 1:np){ # use SSB from another stock to predict recruitment
-      SSBcur[p,,]<-apply(SexPars$SSBfrom[p,]*SSBs,2:3,sum)
-    }
-  }
-
   # Vulnerable biomass calculation --------------------------------------------------
   VBft<-Fdist<-array(NA,c(np,nf,n_age,nareas))
   VBind<-TEG(dim(VBft))
@@ -294,6 +287,14 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
   }
 
   SSBcur[Nind]<-Nnext[Nind]*Wt_age[Nind[,1:2]]*Mat_agecur[Nind[,1:2]]
+
+  if(length(SexPars$SSBfrom)>0){
+    SSBs<-SSBcur
+    for(p in 1:np){ # use SSB from another stock to predict recruitment
+      SSBcur[p,,]<-apply(SexPars$SSBfrom[p,]*SSBs,2:3,sum)
+    }
+  }
+  
   SSBcurr <- apply(SSBcur, c(1,3), sum)
   
   # this year's recruitment
