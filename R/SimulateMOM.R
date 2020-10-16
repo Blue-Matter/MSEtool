@@ -776,10 +776,9 @@ SimulateMOM <- function(MOM=Albacore_TwoFleet, parallel=TRUE, silent=FALSE) {
   }
   
   # --- Dynamic Unfished Reference Points (SSB0) ---- 
-  Dynamic_SSB0 <- lapply(1:np, function(x) 
+  Dynamic_SSB0 <- lapply(1:np, function(p) 
     CalcDynamicSSB0(StockPars[[p]], nsim, nareas, nyears, proyears, maxF, 
                     Mhist = Z[, p, , , ] - FMt[, p, , , ], Nhist = N[, p, , , ]))
-  
   
   # ---- Calculate Reference Yield ----
   if(!silent) message("Calculating reference yield - best fixed F strategy")
