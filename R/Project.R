@@ -40,6 +40,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
   #     }
   #   }
   # }
+  
+  # TODO - do this to runMSE as well
   if (all(is.na(MPs))) {
     if (!silent) message('No MPs have been specified, running with some demo MPs')
     MPs <- c('AvC') # TODO

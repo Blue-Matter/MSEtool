@@ -60,7 +60,7 @@ NA
 }
 
 \examples{
- GB_target(1, DLMtool::SimulatedData, plot=TRUE)
+ GB_target(1, OMtool::SimulatedData, plot=TRUE)
 }
 \references{
 Geromont, H.F. and Butterworth, D.S. 2014. Complex assessment or

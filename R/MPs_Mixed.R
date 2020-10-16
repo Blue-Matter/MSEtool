@@ -37,7 +37,7 @@
 #' 
 #' @export 
 #' @examples 
-#' Itarget1_MPA(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' Itarget1_MPA(1, OMtool::Atlantic_mackerel, plot=TRUE)
 #' @family Index methods
 Itarget1_MPA <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 5, xx = 0, Imulti = 1.5) {
   runItarget <- Itarget_(x, Data, reps, plot, yrsmth, xx, Imulti)
@@ -77,7 +77,7 @@ class(Itarget1_MPA) <- "MP"
 #' @family Average Catch MPs
 #' 
 #' @examples 
-#' Rec <- AvC_MLL(1, DLMtool::Cobia, reps=1000, plot=TRUE) # 1,000 log-normal samples with CV = 0.2
+#' Rec <- AvC_MLL(1, OMtool::Cobia, reps=1000, plot=TRUE) # 1,000 log-normal samples with CV = 0.2
 AvC_MLL <- function(x, Data, reps = 100, plot=FALSE) {
   if (length(Data@Year)<1 | is.na(Data@LHYear[1])) {
     Rec <- new("Rec")
@@ -125,11 +125,11 @@ class(AvC_MLL) <- "MP"
 #' @examples
 #' \dontrun{
 #' MeanMP <- makeMeanMP(c("AvC", "DCAC"))
-#' MSE <- runMSE(DLMtool::testOM, MPs=c("AvC", "DCAC", "MeanMP"))
+#' MSE <- runMSE(OMtool::testOM, MPs=c("AvC", "DCAC", "MeanMP"))
 #' Tplot2(MSE)
 #' 
 #' MeanMP <- makeMeanMP(c("matlenlim", "matlenlim2")) 
-#' Data <- DLMtool::SimulatedData
+#' Data <- OMtool::SimulatedData
 #' matlenlim(1, Data)
 #' matlenlim2(1, Data)
 #' MeanMP(1, Data)

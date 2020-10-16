@@ -194,7 +194,7 @@ using the generic \code{plot.pars} function. See Examples below.
 \examples{
 \dontrun{
 # Plot Stock Object:
-Stock <- DLMtool::Albacore
+Stock <- OMtool::Albacore
 plot(Stock)
 
 # Individual plots:
@@ -206,7 +206,7 @@ plot("Spatial", Stock)
 plot("Depletion", Stock)
 
 # Plot Fleet Object
-Fleet <- DLMtool::Generic_DecE
+Fleet <- OMtool::Generic_DecE
 plot(Fleet, Stock)
 
 # Individual plots:
@@ -217,16 +217,16 @@ plot("Selectivity", Fleet, Stock)
 
 
 # Plot Obs Object
-Obs <- DLMtool::Imprecise_Unbiased
+Obs <- OMtool::Imprecise_Unbiased
 plot(Obs)
 
 # Plot Imp Object
-Imp <- DLMtool::Overages
+Imp <- OMtool::Overages
 plot(Imp)
 
 
 # Plot Hist Object
-OM <- DLMtool::testOM 
+OM <- OMtool::testOM 
 Hist <- runMSE(OM, Hist=TRUE)
 plot(Hist)
 

@@ -1546,7 +1546,7 @@ validcpars <- function(type=c("all", "Stock", "Fleet", "Obs", "Imp", "internal")
   
   Valid <- Slot <- Dim <- Description <- NULL
   
-  # cpars_info <- DLMtool:::cpars_info
+  # cpars_info <- OMtool:::cpars_info
   cpars_info <- cpars_info[!duplicated(cpars_info$Slot),] # remove duplicated 'Name'
   
   cpars_info$type <- NA

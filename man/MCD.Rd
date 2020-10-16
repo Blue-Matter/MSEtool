@@ -52,8 +52,8 @@ NA
 }
 
 \examples{
-MCD(1, DLMtool::Atlantic_mackerel, plot=TRUE)
-MCD4010(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+MCD(1, OMtool::Atlantic_mackerel, plot=TRUE)
+MCD4010(1, OMtool::Atlantic_mackerel, plot=TRUE)
 }
 \author{
 T. Carruthers

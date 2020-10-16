@@ -24,7 +24,7 @@
 #' @author T. Carruthers & A. Hordyk
 #' @describeIn matlenlim Fishing retention-at-length is set equivalent to the maturity curve.
 #' @examples
-#' matlenlim(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' matlenlim(1, OMtool::Atlantic_mackerel, plot=TRUE)
 #' @export
 matlenlim <- function(x, Data, reps, plot=FALSE) {
   # Knife-edge vulnerability at estimated length-at-maturity
@@ -44,7 +44,7 @@ class(matlenlim) <- "MP"
 #' @template MPuses
 #' @export
 #' @examples
-#' matlenlim2(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' matlenlim2(1, OMtool::Atlantic_mackerel, plot=TRUE)
 matlenlim2 <- function(x, Data, reps, plot=FALSE) {
   # Knife-edge vulnerability slightly higher than length at maturity
   dependencies = "Data@L50"
@@ -78,7 +78,7 @@ class(matlenlim2) <- "MP"
 #' length composition, spawning-per-recruit, and the spawning potential ratio
 #' ICES Journal of Marine Science, doi:10.1093/icesjms/fst235.
 #' @examples
-#' minlenLopt1(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' minlenLopt1(1, OMtool::Atlantic_mackerel, plot=TRUE)
 minlenLopt1 <- function(x, Data, reps, plot=FALSE, buffer = 0.1) {
 
   # Minimum length MPs: Fix length-at-full-selectivity to 0.8*Lopt and
@@ -106,7 +106,7 @@ class(minlenLopt1) <- "MP"
 #' to demonstrate an upper harvest slot limit.
 #' @export
 #' @examples
-#' slotlim(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' slotlim(1, OMtool::Atlantic_mackerel, plot=TRUE)
 slotlim <- function(x, Data, reps, plot=FALSE) {
   # Example of slot limit between 0.95 and 1.25 * L50
   dependencies = "Data@L50, Data@vbLinf"
@@ -139,7 +139,7 @@ class(slotlim) <- "MP"
 #' @author T. Carruthers
 #' @export
 #' @examples
-#' MRreal(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' MRreal(1, OMtool::Atlantic_mackerel, plot=TRUE)
 MRreal <- function(x, Data, reps, plot=FALSE) {
   # A Marine reserve in area 1 with spatial reallocation of effort
 
@@ -159,7 +159,7 @@ class(MRreal) <- "MP"
 #' and does not reallocate this fishing effort to area 2.
 #' @export
 #' @examples
-#' MRnoreal(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' MRnoreal(1, OMtool::Atlantic_mackerel, plot=TRUE)
 MRnoreal <- function(x, Data, reps, plot=FALSE) {
   # A Marine reserve in area 1 with no spatial reallocation of effort
 
@@ -193,7 +193,7 @@ class(MRnoreal) <- "MP"
 #' @describeIn curE Set effort to 100\% of that in final year of historical simulations.
 #' @export
 #' @examples
-#' curE(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' curE(1, OMtool::Atlantic_mackerel, plot=TRUE)
 curE <- function(x, Data, reps, plot=FALSE) {
   # current effort
   rec <- new("Rec") # create recommendation object
@@ -208,7 +208,7 @@ class(curE) <- "MP"
 #' @describeIn curE Set effort to 75\% of that in final year.
 #' @export
 #' @examples
-#' curE75(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' curE75(1, OMtool::Atlantic_mackerel, plot=TRUE)
 curE75 <- function(x, Data, reps, plot=FALSE) {
   # 75% current effort
   rec <- new("Rec") # create recommendation object
@@ -249,7 +249,7 @@ class(curE75) <- "MP"
 # #' @describeIn DDe Effort-control version. The recommended effort is EMSY.
 # #' @family Delay-Difference MPs
 # #' @examples
-# #' DDe(1, Data=DLMtool::Atlantic_mackerel, plot=TRUE)
+# #' DDe(1, Data=OMtool::Atlantic_mackerel, plot=TRUE)
 # #' @export
 # DDe <- function(x, Data, reps = 100, plot=FALSE) {
 # 
@@ -270,7 +270,7 @@ class(curE75) <- "MP"
 # #' @describeIn DDe Variant of `DDe` that limits the maximum change in effort to 10 percent.
 # #' @export
 # #' @examples
-# #' DDes(1, Data=DLMtool::Atlantic_mackerel, plot=TRUE)
+# #' DDes(1, Data=OMtool::Atlantic_mackerel, plot=TRUE)
 # DDes <- function(x, Data, reps = 100, plot=FALSE, LB = 0.9, UB = 1.1) {
 #   runDD <- DD_(x, Data, reps)
 #   Eff <- runDD$eff
@@ -290,7 +290,7 @@ class(curE75) <- "MP"
 # #' @describeIn DDe Variant of `DDe` where the recommended effort is 75\% EMSY.
 # #' @export
 # #' @examples
-# #' DDe75(1, Data=DLMtool::Atlantic_mackerel, plot=TRUE)
+# #' DDe75(1, Data=OMtool::Atlantic_mackerel, plot=TRUE)
 # DDe75 <- function(x, Data, reps = 100, plot=FALSE) {
 #   runDD <- DD_(x, Data, reps)
 #   Eff <- runDD$eff * 0.75
@@ -325,7 +325,7 @@ class(curE75) <- "MP"
 #' @author T. Carruthers
 #' @export
 #' @examples
-#' DTe40(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' DTe40(1, OMtool::Atlantic_mackerel, plot=TRUE)
 #' @describeIn DTe40 Effort is adjusted to reach 40 percent stock depletion
 DTe40 <- function(x, Data, reps = 100, plot=FALSE, alpha = 0.4, LB = 0.9, UB = 1.1) {
 
@@ -389,7 +389,7 @@ class(DTe50) <- "MP"
 #' @author HF Geromont
 #' @export
 #' @examples
-#' EtargetLopt(1, DLMtool::SimulatedData, plot=TRUE)
+#' EtargetLopt(1, OMtool::SimulatedData, plot=TRUE)
 EtargetLopt <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 3, buffer = 0.1) {
 
   # Effort MP: adjust effort up/down if mean length above/below Ltarget
@@ -433,7 +433,7 @@ class(EtargetLopt) <- "MP"
 #' @author T. Carruthers
 #' @describeIn ITe5  Maximum annual changes are 5 per cent.
 #' @examples
-#' ITe5(1, DLMtool::SimulatedData, plot=TRUE)
+#' ITe5(1, OMtool::SimulatedData, plot=TRUE)
 #' @export ITe5
 ITe5 <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 5, mc = 0.05) {
   ind <- max(1, (length(Data@Year) - yrsmth + 1)):length(Data@Year)
@@ -463,7 +463,7 @@ class(ITe5) <- "MP"
 #'
 #' @describeIn ITe5  Maximum annual changes are 10 per cent.
 #' @examples
-#' ITe10(1, DLMtool::SimulatedData, plot=TRUE)
+#' ITe10(1, OMtool::SimulatedData, plot=TRUE)
 #' @export
 ITe10 <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 5, mc = 0.1) {
 
@@ -590,7 +590,7 @@ Itargeteff_ <- function(x, Data, reps, plot, yrsmth, Imulti) {
 #' @family Index methods
 #' @export
 #' @examples
-#' ItargetE1(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' ItargetE1(1, OMtool::Atlantic_mackerel, plot=TRUE)
 ItargetE1 <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 5, Imulti = 1.5) {
 
   runItargetE <- Itargeteff_(x, Data, reps, plot, yrsmth, Imulti)
@@ -605,7 +605,7 @@ class(ItargetE1) <- "MP"
 #' @describeIn ItargetE1 Increasing biologically precautionary TAE-based MP
 #' @export
 #' @examples
-#' ItargetE2(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' ItargetE2(1, OMtool::Atlantic_mackerel, plot=TRUE)
 ItargetE2 <- ItargetE1
 formals(ItargetE2)$Imulti <- 2
 class(ItargetE2) <- "MP"
@@ -613,7 +613,7 @@ class(ItargetE2) <- "MP"
 #' @describeIn ItargetE1 Increasing biologically precautionary TAE-based MP
 #' @export
 #' @examples
-#' ItargetE3(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' ItargetE3(1, OMtool::Atlantic_mackerel, plot=TRUE)
 ItargetE3 <- ItargetE1
 formals(ItargetE3)$Imulti <- 2.5
 class(ItargetE3) <- "MP"
@@ -621,7 +621,7 @@ class(ItargetE3) <- "MP"
 #' @describeIn ItargetE1 The most biologically precautionary TAE-based MP
 #' @export
 #' @examples
-#' ItargetE4(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' ItargetE4(1, OMtool::Atlantic_mackerel, plot=TRUE)
 ItargetE4 <- ItargetE1
 formals(ItargetE4)$Imulti <- 2.5
 class(ItargetE4) <- "MP"
@@ -667,7 +667,7 @@ class(ItargetE4) <- "MP"
 #' doi:10.1093/icesjms/fst232
 #' @export
 #' @examples
-#' LstepCE1(1, Data=DLMtool::SimulatedData, plot=TRUE)
+#' LstepCE1(1, Data=OMtool::SimulatedData, plot=TRUE)
 #' @seealso LstepCC1
 #' @describeIn LstepCE1 The least biologically precautionary effort-based MP.
 LstepCE1 <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 5, stepsz = 0.05,
@@ -722,7 +722,7 @@ class(LstepCE1) <- "MP"
 
 #' @describeIn LstepCE1 Step size is increased to 0.1
 #' @examples
-#' LstepCE2(1, Data=DLMtool::SimulatedData, plot=TRUE)
+#' LstepCE2(1, Data=OMtool::SimulatedData, plot=TRUE)
 #' @export
 LstepCE2 <- LstepCE1
 formals(LstepCE2)$stepsz <- 0.1
@@ -771,7 +771,7 @@ class(LstepCE2) <- "MP"
 #' @family Length target MPs
 #' @export
 #' @examples
-#' LtargetE1(1, Data=DLMtool::SimulatedData, plot=TRUE)
+#' LtargetE1(1, Data=OMtool::SimulatedData, plot=TRUE)
 LtargetE1 <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 5, xL = 1.05) {
 
   ind <- (length(Data@Year) - (yrsmth - 1)):length(Data@Year)  # recent 5 years
@@ -828,7 +828,7 @@ class(LtargetE1) <- "MP"
 #' @describeIn LtargetE1 The `xL` argument is increased to 1.15.
 #' @export
 #' @examples
-#' LtargetE4(1, Data=DLMtool::SimulatedData, plot=TRUE)
+#' LtargetE4(1, Data=OMtool::SimulatedData, plot=TRUE)
 LtargetE4 <- LtargetE1
 formals(LtargetE4)$xL <- 1.15
 class(LtargetE4) <- "MP"
@@ -1047,7 +1047,7 @@ LBSPR_ <- function(x, Data, reps, n=5, smoother=TRUE, R=0.2) {
 #'  171, 20-32. https://doi.org/10.1016/j.fishres.2014.12.018
 #'
 #' @examples
-#' LBSPR(1, Data=DLMtool::SimulatedData, plot=TRUE)
+#' LBSPR(1, Data=OMtool::SimulatedData, plot=TRUE)
 # LBSPR <- function(x, Data, reps=1, plot=FALSE, SPRtarg=0.4, theta1=0.3,
 #                   theta2=0.05, maxchange=0.3,
 #                   n=5, smoother=TRUE, R=0.2) {
@@ -1125,7 +1125,7 @@ LBSPR_ <- function(x, Data, reps, n=5, smoother=TRUE, R=0.2) {
 #' @export
 #'
 #' @examples
-#' LBSPR_MLL(1, Data=DLMtool::SimulatedData, plot=FALSE)
+#' LBSPR_MLL(1, Data=OMtool::SimulatedData, plot=FALSE)
 # LBSPR_MLL <- function(x, Data, reps=1, plot=FALSE, SPRtarg=0.4, n=5, smoother=TRUE, R=0.2) {
 # 
 #   Rec <- new("Rec")

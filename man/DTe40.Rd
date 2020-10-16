@@ -55,7 +55,7 @@ NA
 }
 
 \examples{
-DTe40(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+DTe40(1, OMtool::Atlantic_mackerel, plot=TRUE)
 }
 \author{
 T. Carruthers

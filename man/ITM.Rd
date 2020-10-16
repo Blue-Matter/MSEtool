@@ -42,7 +42,7 @@ NA
 }
 
 \examples{
-ITM(1, Data=DLMtool::SimulatedData, plot=TRUE)
+ITM(1, Data=OMtool::SimulatedData, plot=TRUE)
 }
 \author{
 T. Carruthers

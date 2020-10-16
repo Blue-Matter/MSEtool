@@ -140,7 +140,7 @@ PMLimit <- function(MSE, ..., Prob=NULL, Labels=NULL, FeaseMPs=NULL,
   knitr::knit_meta(class=NULL, clean = TRUE)
 
   if(is.null(RMDfile))
-    RMDfile <- file.path(system.file(package = "DLMtool"), 'PLimitTable.Rmd')
+    RMDfile <- file.path(system.file(package = "OMtool"), 'PLimitTable.Rmd')
 
   out <- df %>% dplyr::filter(min >= Prob & Feasible=="Yes") %>% dplyr::select(MP) %>% unique()
   if (build) {
@@ -275,7 +275,7 @@ PMObj <- function(MSE, ..., Labels=NULL, out.file=NULL,
   knitr::knit_meta(class=NULL, clean = TRUE)
   
   if(is.null(RMDfile))
-    RMDfile <- file.path(system.file(package = "DLMtool"), 'PObjTable.Rmd')
+    RMDfile <- file.path(system.file(package = "OMtool"), 'PObjTable.Rmd')
   
   if (build) {
     if (file.exists(RMDfileout)) unlink(RMDfileout)

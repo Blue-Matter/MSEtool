@@ -64,8 +64,8 @@ NA
 }
 
 \examples{
-LtargetE1(1, Data=DLMtool::SimulatedData, plot=TRUE)
-LtargetE4(1, Data=DLMtool::SimulatedData, plot=TRUE)
+LtargetE1(1, Data=OMtool::SimulatedData, plot=TRUE)
+LtargetE4(1, Data=OMtool::SimulatedData, plot=TRUE)
 }
 \references{
 Carruthers et al. 2015. Performance evaluation of simple

@@ -75,17 +75,17 @@ NA
 }
 
 \examples{
-CC1(1, DLMtool::Cobia, plot=TRUE)
+CC1(1, OMtool::Cobia, plot=TRUE)
 
-CC2(1, DLMtool::Cobia, plot=TRUE)
+CC2(1, OMtool::Cobia, plot=TRUE)
 
-CC3(1, DLMtool::Cobia, plot=TRUE)
+CC3(1, OMtool::Cobia, plot=TRUE)
 
-CC4(1, DLMtool::Cobia, plot=TRUE)
+CC4(1, OMtool::Cobia, plot=TRUE)
 
-CC5(1, DLMtool::Cobia, plot=TRUE)
+CC5(1, OMtool::Cobia, plot=TRUE)
 
-CurC(1, DLMtool::Cobia, plot=TRUE)
+CurC(1, OMtool::Cobia, plot=TRUE)
 
 }
 \references{

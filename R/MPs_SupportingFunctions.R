@@ -698,7 +698,7 @@ TACfilter <- function(TAC) {
 #' @export
 #'
 #' @examples
-#' CC(1, DLMtool::SimulatedData, plot=TRUE)
+#' CC(1, OMtool::SimulatedData, plot=TRUE)
 CC <- function(x, Data, reps = 100, plot=FALSE) {
   ny <- dim(Data@CAA)[2]
   CAA <- apply(Data@CAA[x, max(ny - 2, 1):ny, ], 2, sum)  # takes last two years as the sample (or last year if there is only one)

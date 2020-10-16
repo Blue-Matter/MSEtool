@@ -84,10 +84,10 @@ NA
 }
 
 \examples{
-matlenlim(1, DLMtool::Atlantic_mackerel, plot=TRUE)
-matlenlim2(1, DLMtool::Atlantic_mackerel, plot=TRUE)
-minlenLopt1(1, DLMtool::Atlantic_mackerel, plot=TRUE)
-slotlim(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+matlenlim(1, OMtool::Atlantic_mackerel, plot=TRUE)
+matlenlim2(1, OMtool::Atlantic_mackerel, plot=TRUE)
+minlenLopt1(1, OMtool::Atlantic_mackerel, plot=TRUE)
+slotlim(1, OMtool::Atlantic_mackerel, plot=TRUE)
 }
 \references{
 Hordyk, A., Ono, K., Sainsbury, K., Loneragan, N., and J.

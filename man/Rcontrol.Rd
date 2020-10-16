@@ -84,8 +84,8 @@ NA
 }
 
 \examples{
-Rcontrol(1, Data=DLMtool::Atlantic_mackerel, plot=TRUE)
-Rcontrol2(1, Data=DLMtool::Atlantic_mackerel, plot=TRUE)
+Rcontrol(1, Data=OMtool::Atlantic_mackerel, plot=TRUE)
+Rcontrol2(1, Data=OMtool::Atlantic_mackerel, plot=TRUE)
 }
 \references{
 Made-up for this package.

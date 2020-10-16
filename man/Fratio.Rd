@@ -82,10 +82,10 @@ NA
 }
 
 \examples{
-Fratio(1, DLMtool::Atlantic_mackerel, plot=TRUE)
-Fratio4010(1, DLMtool::Atlantic_mackerel, plot=TRUE)
-Fratio_CC(1, DLMtool::SimulatedData, plot=TRUE)
-Fratio_ML(1, DLMtool::SimulatedData, plot=TRUE)
+Fratio(1, OMtool::Atlantic_mackerel, plot=TRUE)
+Fratio4010(1, OMtool::Atlantic_mackerel, plot=TRUE)
+Fratio_CC(1, OMtool::SimulatedData, plot=TRUE)
+Fratio_ML(1, OMtool::SimulatedData, plot=TRUE)
 
 }
 \references{

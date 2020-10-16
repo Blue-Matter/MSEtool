@@ -22,5 +22,5 @@ A vector of length \code{reps} of samples of the negative slope of the catch-cur
 Age-based Catch Curve
 }
 \examples{
-CC(1, DLMtool::SimulatedData, plot=TRUE)
+CC(1, OMtool::SimulatedData, plot=TRUE)
 }

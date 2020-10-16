@@ -54,8 +54,8 @@ NA
 }
 
 \examples{
-SPSRA(1, DLMtool::SimulatedData, plot=TRUE)
-SPSRA_ML(1, DLMtool::SimulatedData, plot=TRUE)
+SPSRA(1, OMtool::SimulatedData, plot=TRUE)
+SPSRA_ML(1, OMtool::SimulatedData, plot=TRUE)
 }
 \references{
 McAllister, M.K., Pikitch, E.K., and Babcock, E.A. 2001. Using

@@ -70,9 +70,9 @@ NA
 }
 
 \examples{
-YPR(1, DLMtool::SimulatedData, plot=TRUE)
-YPR_CC(1, DLMtool::SimulatedData, plot=TRUE)
-YPR_ML(1, DLMtool::SimulatedData, plot=TRUE) 
+YPR(1, OMtool::SimulatedData, plot=TRUE)
+YPR_CC(1, OMtool::SimulatedData, plot=TRUE)
+YPR_ML(1, OMtool::SimulatedData, plot=TRUE) 
 }
 \references{
 Beverton and Holt. 1954.

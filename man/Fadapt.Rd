@@ -73,7 +73,7 @@ NA
 }
 
 \examples{
-Fadapt(1, Data=DLMtool::Atlantic_mackerel, plot=TRUE)
+Fadapt(1, Data=OMtool::Atlantic_mackerel, plot=TRUE)
 }
 \references{
 Carruthers et al. 2015. Performance evaluation of simple

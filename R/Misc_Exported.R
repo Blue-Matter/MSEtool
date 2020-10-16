@@ -3,10 +3,10 @@
 #' Generic class finder
 #' 
 #' Finds objects of the specified class in the global environment or the
-#' DLMtool package.
+#' OMtool package.
 #' 
 #' @param classy A class of object (character string, e.g. 'Fleet')
-#' @param builtin Logical. Only return Objects of class 'classy' from DLMtool & DLMextra packages?
+#' @param builtin Logical. Only return Objects of class 'classy' from OMtool & DLMextra packages?
 #' @examples
 #' avail("OM")
 #' @author T. Carruthers
@@ -114,7 +114,7 @@ alphaconv <- function(m, sd) m * (((m * (1 - m))/(sd^2)) - 1)
 #' @export 
 betaconv <- function(m, sd) (1 - m) * (((m * (1 - m))/(sd^2)) - 1)
 
-#' Lognormal distribution for DLMtool 
+#' Lognormal distribution for OMtool 
 #' 
 #' Variant of rlnorm which returns the mean when reps = 1.
 #' 
@@ -196,7 +196,7 @@ optCPU <- function(nsim=96, thresh=5, plot=TRUE, msg=TRUE, maxn=NULL) {
   if (!is.null(maxn)) cpus <- 1:maxn
   
   time <- NA
-  OM <- DLMtool::testOM
+  OM <- OMtool::testOM
   OM@nsim <- nsim
   for (n in cpus) {
     if (msg) message('Running MSE with ', nsim, ' simulations and ', n, ' of ', max(cpus), ' cpus')

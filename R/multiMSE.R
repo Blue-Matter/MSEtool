@@ -42,6 +42,7 @@ multiMSE <- function(MOM, MPs=list(c("AvC","DCAC"),c("FMSYref","curE")),
                      control=NULL, parallel=FALSE) {
 
   if (class(MOM) != "MOM")
+    stop('Function under development. Use SimulateMOM and ProjectMOM instead')
     stop("You must specify a valid operating model of class MOM (multi operating model)")
 
   set.seed(MOM@seed) # set seed for reproducibility

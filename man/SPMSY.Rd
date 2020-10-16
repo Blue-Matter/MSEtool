@@ -50,7 +50,7 @@ NA
 }
 
 \examples{
-SPMSY(1, Data=DLMtool::SimulatedData, plot=TRUE)
+SPMSY(1, Data=OMtool::SimulatedData, plot=TRUE)
 }
 \references{
 Martell, S. and Froese, R. 2012. A simple method for estimating

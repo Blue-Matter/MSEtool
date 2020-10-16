@@ -121,11 +121,11 @@ NA
 }
 
 \examples{
-LstepCC1(1, Data=DLMtool::SimulatedData, plot=TRUE)
+LstepCC1(1, Data=OMtool::SimulatedData, plot=TRUE)
 
-LstepCC2(1, Data=DLMtool::SimulatedData, plot=TRUE)
-LstepCC3(1, Data=DLMtool::SimulatedData, plot=TRUE)
-LstepCC4(1, Data=DLMtool::SimulatedData, plot=TRUE)
+LstepCC2(1, Data=OMtool::SimulatedData, plot=TRUE)
+LstepCC3(1, Data=OMtool::SimulatedData, plot=TRUE)
+LstepCC4(1, Data=OMtool::SimulatedData, plot=TRUE)
 }
 \references{
 Carruthers et al. 2015. Performance evaluation of simple

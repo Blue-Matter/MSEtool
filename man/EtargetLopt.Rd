@@ -49,7 +49,7 @@ NA
 }
 
 \examples{
-EtargetLopt(1, DLMtool::SimulatedData, plot=TRUE)
+EtargetLopt(1, OMtool::SimulatedData, plot=TRUE)
 }
 \author{
 HF Geromont

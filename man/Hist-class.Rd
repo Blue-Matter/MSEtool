@@ -54,7 +54,8 @@ matrix dimensions \code{c(nsim, nyears+proyears+maxage)}
 
 \item{\code{Ref}}{A named list with biological reference points:
 \itemize{
-\item ByYear: A named list with \code{MSY}, \code{FMSY}, \code{SSBMSY}, \code{BMSY}, and \code{VBMSY} for each simulation and year
+\item ByYear: A named list with \code{MSY}, \code{FMSY}, \code{SSBMSY}, \code{BMSY}, \code{VBMSY}, and \code{Dynamic_SSB0} for each simulation and year.
+Dynamic SSB0 is the reconstructed spawning biomass with no fishing (F = 0) in the historical and projection period.
 \item ReferencePoints: A data.frame with \code{nsim} rows with with biological reference points
 calculated as an average over age-of-maturity \code{ageM} years around the
 current year (i.e. \code{nyears}):

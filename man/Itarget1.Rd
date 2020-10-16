@@ -79,10 +79,10 @@ NA
 }
 
 \examples{
-Itarget1(1, DLMtool::Atlantic_mackerel, plot=TRUE)
-Itarget2(1, DLMtool::Atlantic_mackerel, plot=TRUE)
-Itarget3(1, DLMtool::Atlantic_mackerel, plot=TRUE)
-Itarget4(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+Itarget1(1, OMtool::Atlantic_mackerel, plot=TRUE)
+Itarget2(1, OMtool::Atlantic_mackerel, plot=TRUE)
+Itarget3(1, OMtool::Atlantic_mackerel, plot=TRUE)
+Itarget4(1, OMtool::Atlantic_mackerel, plot=TRUE)
 }
 \references{
 Carruthers et al. 2015. Performance evaluation of simple

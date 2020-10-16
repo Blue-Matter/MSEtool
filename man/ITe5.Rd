@@ -56,8 +56,8 @@ NA
 }
 
 \examples{
-ITe5(1, DLMtool::SimulatedData, plot=TRUE)
-ITe10(1, DLMtool::SimulatedData, plot=TRUE)
+ITe5(1, OMtool::SimulatedData, plot=TRUE)
+ITe10(1, OMtool::SimulatedData, plot=TRUE)
 }
 \author{
 T. Carruthers

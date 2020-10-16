@@ -44,7 +44,7 @@ NA
 }
 
 \examples{
-Iratio(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+Iratio(1, OMtool::Atlantic_mackerel, plot=TRUE)
 }
 \references{
 Ernesto Jardim, Manuela Azevedo, Nuno M. Brites, Harvest control rules for

@@ -65,11 +65,11 @@ NA
 }
 
 \examples{
-Lratio_BHI(1, Data=DLMtool::SimulatedData, plot=TRUE)
+Lratio_BHI(1, Data=OMtool::SimulatedData, plot=TRUE)
 
-Lratio_BHI2(1, Data=DLMtool::SimulatedData, plot=TRUE)
+Lratio_BHI2(1, Data=OMtool::SimulatedData, plot=TRUE)
 
-Lratio_BHI3(1, Data=DLMtool::SimulatedData, plot=TRUE)
+Lratio_BHI3(1, Data=OMtool::SimulatedData, plot=TRUE)
 
 }
 \references{

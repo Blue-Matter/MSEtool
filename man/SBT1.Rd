@@ -100,8 +100,8 @@ NA
 }
 
 \examples{
-SBT1(1, Data=DLMtool::SimulatedData, plot=TRUE)
-SBT2(1, Data=DLMtool::SimulatedData, plot=TRUE)
+SBT1(1, Data=OMtool::SimulatedData, plot=TRUE)
+SBT2(1, Data=OMtool::SimulatedData, plot=TRUE)
 }
 \references{
 http://www.ccsbt.org/site/recent_assessment.php

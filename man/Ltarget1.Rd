@@ -92,11 +92,11 @@ NA
 }
 
 \examples{
-Ltarget1(1, Data=DLMtool::SimulatedData, plot=TRUE)
-Ltarget2(1, Data=DLMtool::SimulatedData, plot=TRUE)
-Ltarget3(1, Data=DLMtool::SimulatedData, plot=TRUE)
-Ltarget4(1, Data=DLMtool::SimulatedData, plot=TRUE)
-L95target(1, Data=DLMtool::SimulatedData, plot=TRUE)
+Ltarget1(1, Data=OMtool::SimulatedData, plot=TRUE)
+Ltarget2(1, Data=OMtool::SimulatedData, plot=TRUE)
+Ltarget3(1, Data=OMtool::SimulatedData, plot=TRUE)
+Ltarget4(1, Data=OMtool::SimulatedData, plot=TRUE)
+L95target(1, Data=OMtool::SimulatedData, plot=TRUE)
 }
 \references{
 Carruthers et al. 2015. Performance evaluation of simple

@@ -46,8 +46,8 @@ NA
 }
 
 \examples{
-curE(1, DLMtool::Atlantic_mackerel, plot=TRUE)
-curE75(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+curE(1, OMtool::Atlantic_mackerel, plot=TRUE)
+curE75(1, OMtool::Atlantic_mackerel, plot=TRUE)
 }
 \author{
 T. Carruthers.

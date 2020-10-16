@@ -701,7 +701,10 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     expC <- TACusedE
     expC[TACusedE> availB] <- availB[TACusedE> availB] * 0.99
     
-    Ftot <- sapply(1:nsim, calcF, expC, V_P, Biomass_P, fishdist, StockPars$Asize, StockPars$maxage, StockPars$nareas,
+    Ftot <- sapply(1:nsim, calcF, expC, V_P, Biomass_P, fishdist, 
+                   StockPars$Asize,
+                   StockPars$maxage, 
+                   StockPars$nareas,
                    StockPars$M_ageArray,nyears, y)
     
     # apply max F constraint
@@ -848,10 +851,13 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   out
 }
 
+
+
 calcF <- function(x, TACusedE, V_P, Biomass_P, fishdist, Asize, maxage, nareas,
                   M_ageArray, nyears, y) {
   ct <- TACusedE[x]
   ft <- ct/sum(Biomass_P[x,,y,] * V_P[x,,y+nyears]) # initial guess 
+  if (ft <= 1E-3) return(tiny)
   for (i in 1:50) {
     Fmat <- ft * matrix(V_P[x,,y+nyears], nrow=maxage+1, ncol=nareas) *
       matrix(fishdist[x,], maxage+1, nareas, byrow=TRUE)/ 

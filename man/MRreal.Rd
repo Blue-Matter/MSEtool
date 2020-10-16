@@ -46,8 +46,8 @@ NA
 }
 
 \examples{
-MRreal(1, DLMtool::Atlantic_mackerel, plot=TRUE)
-MRnoreal(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+MRreal(1, OMtool::Atlantic_mackerel, plot=TRUE)
+MRnoreal(1, OMtool::Atlantic_mackerel, plot=TRUE)
 }
 \author{
 T. Carruthers

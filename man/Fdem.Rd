@@ -62,9 +62,9 @@ NA
 }
 
 \examples{
-Fdem(1, DLMtool::SimulatedData, plot=TRUE)
-Fdem_CC(1, DLMtool::SimulatedData, plot=TRUE)
-Fdem_ML(1, DLMtool::SimulatedData, plot=TRUE)
+Fdem(1, OMtool::SimulatedData, plot=TRUE)
+Fdem_CC(1, OMtool::SimulatedData, plot=TRUE)
+Fdem_ML(1, OMtool::SimulatedData, plot=TRUE)
 }
 \references{
 McAllister, M.K., Pikitch, E.K., and Babcock, E.A. 2001. Using

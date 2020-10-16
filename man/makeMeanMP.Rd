@@ -20,11 +20,11 @@ from the individual MPs.
 \examples{
 \dontrun{
 MeanMP <- makeMeanMP(c("AvC", "DCAC"))
-MSE <- runMSE(DLMtool::testOM, MPs=c("AvC", "DCAC", "MeanMP"))
+MSE <- runMSE(OMtool::testOM, MPs=c("AvC", "DCAC", "MeanMP"))
 Tplot2(MSE)
 
 MeanMP <- makeMeanMP(c("matlenlim", "matlenlim2")) 
-Data <- DLMtool::SimulatedData
+Data <- OMtool::SimulatedData
 matlenlim(1, Data)
 matlenlim2(1, Data)
 MeanMP(1, Data)

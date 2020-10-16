@@ -64,10 +64,10 @@ NA
 }
 
 \examples{
-LBSPR(1, Data=DLMtool::SimulatedData, plot=TRUE)
+LBSPR(1, Data=OMtool::SimulatedData, plot=TRUE)
 Length-Based SPR
 
-LBSPR_MLL(1, Data=DLMtool::SimulatedData, plot=FALSE)
+LBSPR_MLL(1, Data=OMtool::SimulatedData, plot=FALSE)
 Kalman filter and Rauch-Tung-Striebel smoother
 
 A function that applies a filter and smoother to estimates

@@ -66,9 +66,9 @@ NA
 }
 
 \examples{
-ICI(1, Data=DLMtool::Atlantic_mackerel, plot=TRUE)
+ICI(1, Data=OMtool::Atlantic_mackerel, plot=TRUE)
 
-ICI2(1, Data=DLMtool::Atlantic_mackerel, plot=TRUE)
+ICI2(1, Data=OMtool::Atlantic_mackerel, plot=TRUE)
 }
 \references{
 Ernesto Jardim, Manuela Azevedo, Nuno M. Brites, Harvest control rules for

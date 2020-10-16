@@ -64,7 +64,7 @@ NA
 }
 
 \examples{
-DynF(1, Data=DLMtool::Atlantic_mackerel, plot=TRUE)
+DynF(1, Data=OMtool::Atlantic_mackerel, plot=TRUE)
 }
 \references{
 Made-up for this package.

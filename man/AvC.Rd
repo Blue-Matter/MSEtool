@@ -43,7 +43,7 @@ NA
 }
 
 \examples{
-Rec <- AvC(1, DLMtool::Cobia, reps=1000, plot=TRUE) # 1,000 log-normal samples with CV = 0.2
+Rec <- AvC(1, OMtool::Cobia, reps=1000, plot=TRUE) # 1,000 log-normal samples with CV = 0.2
         
 }
 \seealso{

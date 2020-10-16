@@ -82,8 +82,8 @@ NA
 }
 
 \examples{
-LstepCE1(1, Data=DLMtool::SimulatedData, plot=TRUE)
-LstepCE2(1, Data=DLMtool::SimulatedData, plot=TRUE)
+LstepCE1(1, Data=OMtool::SimulatedData, plot=TRUE)
+LstepCE2(1, Data=OMtool::SimulatedData, plot=TRUE)
 }
 \references{
 Carruthers et al. 2015. Performance evaluation of simple

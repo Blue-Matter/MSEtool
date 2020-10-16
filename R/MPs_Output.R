@@ -29,7 +29,7 @@
 #' @family Average Catch MPs
 #' 
 #' @examples 
-#' Rec <- AvC(1, DLMtool::Cobia, reps=1000, plot=TRUE) # 1,000 log-normal samples with CV = 0.2
+#' Rec <- AvC(1, OMtool::Cobia, reps=1000, plot=TRUE) # 1,000 log-normal samples with CV = 0.2
 #'         
 AvC <- function(x, Data, reps = 100, plot=FALSE) {
   dependencies = "Data@Cat Data@LHYear"
@@ -93,7 +93,7 @@ class(AvC) <- "MP"
 #' 
 #' @examples 
 #' \dontrun{
-#' BK(1, DLMtool::SimulatedData, reps=1000, plot=TRUE)
+#' BK(1, OMtool::SimulatedData, reps=1000, plot=TRUE)
 #' }
 #' 
 #' @author T. Carruthers.
@@ -143,7 +143,7 @@ class(BK) <- "MP"
 #' @template MPuses
 #' @examples 
 #' \dontrun{
-#' BK_CC(1, DLMtool::SimulatedData, reps=1000, plot=TRUE)
+#' BK_CC(1, OMtool::SimulatedData, reps=1000, plot=TRUE)
 #' }
 #' 
 #' @export 
@@ -198,7 +198,7 @@ class(BK_CC) <- "MP"
 #' @template MPuses
 #' @examples 
 #' \dontrun{
-#' BK_ML(1, DLMtool::SimulatedData, reps=100, plot=TRUE)
+#' BK_ML(1, OMtool::SimulatedData, reps=100, plot=TRUE)
 #' }
 #' 
 #' @export 
@@ -277,7 +277,7 @@ class(BK_ML) <- "MP"
 #'  
 #' @describeIn CC1 TAC is average historical catch from recent `yrsmth` years
 #' @examples 
-#' CC1(1, DLMtool::Cobia, plot=TRUE)
+#' CC1(1, OMtool::Cobia, plot=TRUE)
 #' 
 
 #### Constant Catch MPs ####
@@ -315,7 +315,7 @@ class(CC1) <- "MP"
 
 #' @describeIn CC1 TAC is average historical catch from recent `yrsmth` years reduced by 10\%. 
 #' @examples 
-#' CC2(1, DLMtool::Cobia, plot=TRUE)
+#' CC2(1, OMtool::Cobia, plot=TRUE)
 #' 
 #' @export 
 CC2 <- CC1
@@ -324,7 +324,7 @@ class(CC2) <- "MP"
 
 #' @describeIn CC1 TAC is average historical catch from recent `yrsmth` years reduced by 20\%. 
 #' @examples 
-#' CC3(1, DLMtool::Cobia, plot=TRUE)
+#' CC3(1, OMtool::Cobia, plot=TRUE)
 #' 
 #' @export 
 CC3 <- CC1
@@ -334,7 +334,7 @@ class(CC3) <- "MP"
 
 #' @describeIn CC1 TAC is average historical catch from recent `yrsmth` years reduced by 30\%. 
 #' @examples 
-#' CC4(1, DLMtool::Cobia, plot=TRUE)
+#' CC4(1, OMtool::Cobia, plot=TRUE)
 #' 
 #' @export 
 CC4 <- CC1
@@ -343,7 +343,7 @@ class(CC4) <- "MP"
 
 #' @describeIn CC1 TAC is average historical catch from recent `yrsmth` years reduced by 40\%. 
 #' @examples 
-#' CC5(1, DLMtool::Cobia, plot=TRUE)
+#' CC5(1, OMtool::Cobia, plot=TRUE)
 #' 
 #' @export 
 CC5 <- CC1
@@ -352,7 +352,7 @@ class(CC5) <- "MP"
 
 #' @describeIn CC1 TAC is fixed at last historical catch 
 #' @examples 
-#' CurC(1, DLMtool::Cobia, plot=TRUE)
+#' CurC(1, OMtool::Cobia, plot=TRUE)
 #' 
 #' @export 
 CurC <- CC1
@@ -389,7 +389,7 @@ class(CurC) <- "MP"
 #' comparative study. ICES J. Mar. Sci. doi:10.1093/icesjms/fsu017
 #' @export
 #' @examples 
-#' GB_CC(1, DLMtool::SimulatedData, plot=TRUE)
+#' GB_CC(1, OMtool::SimulatedData, plot=TRUE)
 #' @family Constant Catch MPs
 GB_CC <- function(x, Data, reps = 100, plot=FALSE) {
   dependencies = "Data@Cref,Data@Cat"
@@ -505,7 +505,7 @@ class(GB_CC) <- "MP"
 # #' 
 # #' @examples
 # #' \dontrun{
-# #' CompSRA(1, DLMtool::SimulatedData, plot=TRUE)
+# #' CompSRA(1, OMtool::SimulatedData, plot=TRUE)
 # #' }
 # #' 
 # #' @export 
@@ -530,7 +530,7 @@ class(GB_CC) <- "MP"
 # #' @template MPuses
 # #' @describeIn CompSRA With a 40-10 control rule based on estimated depletion
 # #' @examples
-# #' CompSRA4010(1, DLMtool::SimulatedData, plot=TRUE)
+# #' CompSRA4010(1, OMtool::SimulatedData, plot=TRUE)
 # #' 
 # #' @export CompSRA4010
 # CompSRA4010 <- function(x, Data, reps = 100, plot=FALSE) {
@@ -646,7 +646,7 @@ DCAC_ <- function(x, Data, reps=100, Bt_K=NULL, updateD=FALSE) {
 #' @templateVar mp DCACs
 #' @template MPuses
 #' @examples 
-#' DCACs(1, DLMtool::Atlantic_mackerel, plot=TRUE) 
+#' DCACs(1, OMtool::Atlantic_mackerel, plot=TRUE) 
 #' 
 #' @export 
 DCACs <- function(x, Data, reps = 100, plot=FALSE) {
@@ -667,7 +667,7 @@ class(DCACs) <- "MP"
 #' @templateVar mp DCAC
 #' @template MPuses
 #' @examples 
-#' DCAC(1, DLMtool::Atlantic_mackerel, plot=TRUE) 
+#' DCAC(1, OMtool::Atlantic_mackerel, plot=TRUE) 
 #' 
 #' @export 
 DCAC <- function(x, Data, reps = 100, plot=FALSE) {
@@ -691,7 +691,7 @@ class(DCAC) <- "MP"
 #' @templateVar mp DCAC_40
 #' @template MPuses
 #' @examples 
-#' DCAC_40(1, DLMtool::Atlantic_mackerel, plot=TRUE) 
+#' DCAC_40(1, OMtool::Atlantic_mackerel, plot=TRUE) 
 #' 
 #' @export 
 DCAC_40 <- function(x, Data, reps = 100, plot=FALSE) {
@@ -716,7 +716,7 @@ class(DCAC_40) <- "MP"
 #' @templateVar mp DCAC4010
 #' @template MPuses
 #' @examples 
-#' Data <- DLMtool::Atlantic_mackerel
+#' Data <- OMtool::Atlantic_mackerel
 #' Data@LHYear <- 2005
 #' DCAC4010(1, Data, plot=TRUE) 
 #' 
@@ -752,7 +752,7 @@ class(DCAC4010) <- "MP"
 #' @templateVar mp DCAC_ML
 #' @template MPuses
 #' @examples 
-#' DCAC_ML(1, DLMtool::SimulatedData, plot=TRUE) 
+#' DCAC_ML(1, OMtool::SimulatedData, plot=TRUE) 
 #' 
 #' @export 
 DCAC_ML <- function(x, Data, reps = 100, plot=FALSE) {
@@ -808,7 +808,7 @@ class(DCAC_ML) <- "MP"
 #' @template MPuses
 #' 
 #' @examples
-#' Data <- DLMtool::Atlantic_mackerel
+#' Data <- OMtool::Atlantic_mackerel
 #' Data@LHYear <- 2005
 #' DAAC(1, Data, plot=TRUE) 
 #' 
@@ -837,7 +837,7 @@ class(DAAC) <- "MP"
 #' @templateVar mp HDAAC
 #' @template MPuses
 #' @examples
-#' Data <- DLMtool::Atlantic_mackerel
+#' Data <- OMtool::Atlantic_mackerel
 #' Data@LHYear <- 2005
 #' HDAAC(1, Data, plot=TRUE) 
 #' 
@@ -1074,7 +1074,7 @@ class(HDAAC) <- "MP"
 # #' @describeIn DBSRA Base Version. TAC is calculated assumed MSY harvest rate 
 # #' multiplied by the estimated current abundance (estimated B0 x Depletion)
 # #' @examples 
-# #' DBSRA(1, DLMtool::ourReefFish, plot=TRUE)
+# #' DBSRA(1, OMtool::ourReefFish, plot=TRUE)
 # #' 
 # #' @export 
 # DBSRA <- function(x, Data, reps = 100, plot=FALSE) {
@@ -1094,7 +1094,7 @@ class(HDAAC) <- "MP"
 # #' @describeIn DBSRA Same as the Base Version but assumes 40 percent current depletion (Bcurrent/B0 = # 0.4), which is 
 # #' more or less the most optimistic state for a stock (ie very close to BMSY/B0 for many stocks).
 # #' @examples 
-# #' DBSRA_40(1, DLMtool::ourReefFish, plot=TRUE)
+# #' DBSRA_40(1, OMtool::ourReefFish, plot=TRUE)
 # #' @export 
 # # DBSRA_40 <- function(x, Data, reps = 100, plot=FALSE) {
 #   runDBSRA <- DBSRA_(x,Data, reps, depo=0.4)
@@ -1113,7 +1113,7 @@ class(HDAAC) <- "MP"
 # #' @describeIn DBSRA Base version paired with the 40-10 rule that linearly throttles
 # #' back the TAC when depletion is below 0.4 down to zero at 10 percent of unfished biomass.
 # #' @examples 
-# #' DBSRA4010(1, DLMtool::ourReefFish, plot=TRUE)
+# #' DBSRA4010(1, OMtool::ourReefFish, plot=TRUE)
 # #' @export 
 # #' 
 # DBSRA4010 <- function(x, Data, reps = 100, plot=FALSE) {
@@ -1434,7 +1434,7 @@ class(HDAAC) <- "MP"
 # #' @describeIn DD Base version where the TAC = UMSY * Current Biomass.
 # #' 
 # #' @examples 
-# #' DD(1, Data=DLMtool::Atlantic_mackerel, plot=TRUE)
+# #' DD(1, Data=OMtool::Atlantic_mackerel, plot=TRUE)
 # #' @family Delay-Difference MPs
 # #' 
 # #' @export
@@ -1456,7 +1456,7 @@ class(HDAAC) <- "MP"
 # #' @templateVar mp DD4010
 # #' @template MPuses
 # #' @examples 
-# #' DD4010(1, Data=DLMtool::Atlantic_mackerel, plot=TRUE)
+# #' DD4010(1, Data=OMtool::Atlantic_mackerel, plot=TRUE)
 # #' @describeIn DD A 40-10 rule is imposed over the TAC recommendation.
 # #' @export 
 
@@ -1530,7 +1530,7 @@ class(HDAAC) <- "MP"
 #' @references Made-up for this package.
 #' @family Fmsy/M methods
 #' @examples 
-#' DynF(1, Data=DLMtool::Atlantic_mackerel, plot=TRUE)
+#' DynF(1, Data=OMtool::Atlantic_mackerel, plot=TRUE)
 #' @export 
 DynF <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 10, gg = 2) {
   
@@ -1637,7 +1637,7 @@ class(DynF) <- "MP"
 #' @family Fmsy/M methods
 #' @family Surplus production MPs
 #' @examples 
-#' Fadapt(1, Data=DLMtool::Atlantic_mackerel, plot=TRUE)
+#' Fadapt(1, Data=OMtool::Atlantic_mackerel, plot=TRUE)
 #' @export 
 Fadapt <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 7, gg = 1) {
   
@@ -1844,7 +1844,7 @@ Fdem_ <- function(x, Data, reps, Ac=NULL) {
 #' J. Fish. Aquat. Sci. 58: 1871-1890.
 #' @describeIn Fdem Current abundance is assumed to be known (i.e `Data@Abun`)
 #' @examples 
-#' Fdem(1, DLMtool::SimulatedData, plot=TRUE)
+#' Fdem(1, OMtool::SimulatedData, plot=TRUE)
 #' @export 
 Fdem <- function(x, Data, reps = 100, plot=FALSE) {
   runFdem <- Fdem_(x, Data, reps)
@@ -1869,7 +1869,7 @@ class(Fdem) <- "MP"
 #' 
 #' @describeIn Fdem Current abundance is estimated from catch curve analysis
 #' @examples 
-#' Fdem_CC(1, DLMtool::SimulatedData, plot=TRUE)
+#' Fdem_CC(1, OMtool::SimulatedData, plot=TRUE)
 #' @export 
 Fdem_CC <- function(x, Data, reps = 100, plot=FALSE, Fmin = 0.005) {
   
@@ -1903,7 +1903,7 @@ class(Fdem_CC) <- "MP"
 #' @template MPuses
 #' @describeIn Fdem Current abundance is estimated from mean length 
 #' @examples 
-#' Fdem_ML(1, DLMtool::SimulatedData, plot=TRUE)
+#' Fdem_ML(1, OMtool::SimulatedData, plot=TRUE)
 #' @export 
 Fdem_ML <- function(x, Data, reps = 100, plot=FALSE, Fmin = 0.005) {
   Mvec <- trlnorm(reps * 10, Data@Mort[x], Data@CV_Mort[x])
@@ -1996,7 +1996,7 @@ Fratio_ <- function(x, Data, reps=100, Abun=NULL) {
 #' @describeIn Fratio Requires an estimate of current abundance (i.e `Data@Abun`)
 #' @family Fmsy/M methods
 #' @examples 
-#' Fratio(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' Fratio(1, OMtool::Atlantic_mackerel, plot=TRUE)
 #' @export 
 Fratio <- function(x, Data, reps = 100, plot=FALSE) {
   # FMSY / M ratio method e.g. Gulland
@@ -2016,7 +2016,7 @@ class(Fratio) <- "MP"
 #' @template MPuses
 #' @describeIn Fratio Paired with the 40-10 rule that throttles back the OFL to zero at 10 percent of unfished biomass. Requires an estimate of current depletion.
 #' @examples 
-#' Fratio4010(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' Fratio4010(1, OMtool::Atlantic_mackerel, plot=TRUE)
 #' @export 
 Fratio4010 <- function(x, Data, reps = 100, plot=FALSE) {
   runFrat <- Fratio_(x, Data, reps)
@@ -2094,7 +2094,7 @@ class(DepF) <- "MP"
 #' @param Fmin Minimum current fishing mortality rate for the catch-curve analysis
 #' @describeIn Fratio Current abundance is estimated using average catch and estimate of F from an age-based catch curve 
 #' @examples 
-#' Fratio_CC(1, DLMtool::SimulatedData, plot=TRUE)
+#' Fratio_CC(1, OMtool::SimulatedData, plot=TRUE)
 #' @export
 Fratio_CC <- function(x, Data, reps = 100, plot=FALSE, Fmin = 0.005) {
   # estimate abundance from average catch and F
@@ -2131,7 +2131,7 @@ class(Fratio_CC) <- "MP"
 #' @template MPuses
 #' @describeIn Fratio Current abundance is estimated using average catch and estimate of F from mean lengths 
 #' @examples 
-#' Fratio_ML(1, DLMtool::SimulatedData, plot=TRUE)
+#' Fratio_ML(1, OMtool::SimulatedData, plot=TRUE)
 #' 
 #' @export 
 Fratio_ML <- function(x, Data, reps = 100, plot=FALSE) {
@@ -2200,7 +2200,7 @@ class(Fratio_ML) <- "MP"
 #' comparative study. ICES J. Mar. Sci. doi:10.1093/icesjms/fsu017
 #' @family Index methods
 #' @examples 
-#' GB_slope(1, DLMtool::SimulatedData, plot=TRUE)
+#' GB_slope(1, OMtool::SimulatedData, plot=TRUE)
 #' @export 
 GB_slope <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 5, lambda = 1) {
   dependencies = "Data@Year, Data@Cat, Data@CV_Cat, Data@Ind"
@@ -2274,7 +2274,7 @@ class(GB_slope) <- "MP"
 #' comparative study. ICES J. Mar. Sci. doi:10.1093/icesjms/fsu017
 #' @export 
 #' @examples 
-#'  GB_target(1, DLMtool::SimulatedData, plot=TRUE)
+#'  GB_target(1, OMtool::SimulatedData, plot=TRUE)
 #' @family Index methods
 GB_target <- function(x, Data, reps = 100, plot=FALSE, w = 0.5) {
   dependencies = "Data@Cat, Data@Cref, Data@Iref, Data@Ind"
@@ -2335,7 +2335,7 @@ class(GB_target) <- "MP"
 #' management procedures. ICES J. Mar Sci. 73, 464-482.
 #' @export 
 #' @examples 
-#' Gcontrol(1, Data=DLMtool::Atlantic_mackerel, plot=TRUE)
+#' Gcontrol(1, Data=OMtool::Atlantic_mackerel, plot=TRUE)
 #' @family Index methods
 Gcontrol <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 10, gg = 2, glim = c(0.5, 2)) {
   dependencies = "Data@Year, Data@Cat, Data@Ind, Data@Abun"
@@ -2420,7 +2420,7 @@ class(Gcontrol) <- "MP"
 #' @family Index methods
 #' @export 
 #' @examples 
-#' ICI(1, Data=DLMtool::Atlantic_mackerel, plot=TRUE)
+#' ICI(1, Data=OMtool::Atlantic_mackerel, plot=TRUE)
 #' 
 ICI <- function(x, Data, reps=100, plot=FALSE) {
   dependencies = "Data@Ind, Data@CV_Ind, Data@Cat, Data@CV_Cat"
@@ -2473,7 +2473,7 @@ class(ICI) <- "MP"
 #' if the Z-score of the current year's index is greater than 1.96. Otherwise, the catch is held constant.
 #' @export 
 #' @examples 
-#' ICI2(1, Data=DLMtool::Atlantic_mackerel, plot=TRUE)
+#' ICI2(1, Data=OMtool::Atlantic_mackerel, plot=TRUE)
 ICI2 <- function(x, Data, reps=100, plot=FALSE) {
   dependencies = "Data@Ind, Data@CV_Ind, Data@Cat, Data@CV_Cat"
   
@@ -2542,7 +2542,7 @@ class(ICI2) <- "MP"
 #' Advice. ICES CM 2012/ACOM 68. 42 pp.
 #' @family Index methods
 #' @examples 
-#' Iratio(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' Iratio(1, OMtool::Atlantic_mackerel, plot=TRUE)
 #' @export
 Iratio <- function(x, Data, reps=100, plot=FALSE, yrs = c(2, 5)) {
   dependencies = "Data@Ind, Data@CV_Ind, Data@Cat, Data@CV_Cat"
@@ -2653,7 +2653,7 @@ Islope_ <- function(x, Data, reps = 100, yrsmth = 5, lambda = 0.4,xx = 0.2) {
 #' @describeIn Islope1 The least biologically precautionary of the Islope methods
 #' @export 
 #' @examples 
-#' Islope1(1, DLMtool::SimulatedData, plot=TRUE)
+#' Islope1(1, OMtool::SimulatedData, plot=TRUE)
 #' @family Index methods
 Islope1 <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 5, lambda = 0.4,xx = 0.2) {
   
@@ -2676,7 +2676,7 @@ class(Islope1) <- "MP"
 #' @describeIn Islope1 More biologically precautionary. Reference TAC is 0.7 average catch
 #' @export 
 #' @examples 
-#' Islope2(1, DLMtool::SimulatedData, plot=TRUE)
+#' Islope2(1, OMtool::SimulatedData, plot=TRUE)
 Islope2 <- Islope1 
 formals(Islope2)$lambda <- 0.4
 formals(Islope2)$xx <- 0.3
@@ -2686,7 +2686,7 @@ class(Islope2) <- "MP"
 #' @describeIn Islope1 More biologically precautionary. Reference TAC is 0.6 average catch
 #' @export 
 #' @examples 
-#' Islope3(1, DLMtool::SimulatedData, plot=TRUE)
+#' Islope3(1, OMtool::SimulatedData, plot=TRUE)
 Islope3 <- Islope1 
 formals(Islope3)$lambda <- 0.4
 formals(Islope3)$xx <- 0.4
@@ -2697,7 +2697,7 @@ class(Islope3) <- "MP"
 #' Reference TAC is 0.6 average catch and gain parameter is 0.2
 #' @export 
 #' @examples 
-#' Islope4(1, DLMtool::SimulatedData, plot=TRUE)
+#' Islope4(1, OMtool::SimulatedData, plot=TRUE)
 Islope4 <- Islope1 
 formals(Islope4)$lambda <- 0.2
 formals(Islope4)$xx <- 0.4
@@ -2781,7 +2781,7 @@ IT_ <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 5, mc = 0.05) {
 #' @describeIn IT5 Maximum annual changes in TAC are 5 per cent.
 #' @export 
 #' @examples 
-#' IT5(1, DLMtool::SimulatedData, plot=TRUE)
+#' IT5(1, OMtool::SimulatedData, plot=TRUE)
 IT5 <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 5, mc = 0.05) {
   runIT <- IT_(x, Data, reps, plot, yrsmth, mc)
   Rec <- new("Rec")
@@ -2796,7 +2796,7 @@ class(IT5) <- "MP"
 #' @describeIn IT5 Maximum annual changes are 10 per cent.
 #' @export 
 #' @examples 
-#' IT10(1, DLMtool::SimulatedData, plot=TRUE)
+#' IT10(1, OMtool::SimulatedData, plot=TRUE)
 IT10 <- IT5
 formals(IT10)$mc <- 0.1
 class(IT10) <- "MP"
@@ -2929,7 +2929,7 @@ Itarget_ <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 5, xx = 0, Imulti
 #' @family Index methods
 #' @export 
 #' @examples 
-#' Itarget1(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' Itarget1(1, OMtool::Atlantic_mackerel, plot=TRUE)
 Itarget1 <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 5, xx = 0, Imulti = 1.5) {
   runItarget <- Itarget_(x, Data, reps, plot, yrsmth, xx, Imulti)
   Rec <- new("Rec")
@@ -2941,7 +2941,7 @@ class(Itarget1) <- "MP"
 #' @describeIn Itarget1 Increasing biologically precautionary TAC-based MP
 #' @export 
 #' @examples 
-#' Itarget2(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' Itarget2(1, OMtool::Atlantic_mackerel, plot=TRUE)
 Itarget2 <- Itarget1
 formals(Itarget2)$Imulti <- 2
 class(Itarget2) <- "MP"
@@ -2949,7 +2949,7 @@ class(Itarget2) <- "MP"
 #' @describeIn Itarget1 Increasing biologically precautionary TAC-based MP
 #' @export 
 #' @examples 
-#' Itarget3(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' Itarget3(1, OMtool::Atlantic_mackerel, plot=TRUE)
 Itarget3 <- Itarget1
 formals(Itarget3)$Imulti <- 2.5
 class(Itarget3) <- "MP"
@@ -2957,7 +2957,7 @@ class(Itarget3) <- "MP"
 #' @describeIn Itarget1 The most biologically precautionary TAC-based MP
 #' @export 
 #' @examples 
-#' Itarget4(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' Itarget4(1, OMtool::Atlantic_mackerel, plot=TRUE)
 Itarget4 <- Itarget1
 formals(Itarget4)$xx <- 0.3 
 formals(Itarget4)$Imulti <- 2.5
@@ -2986,7 +2986,7 @@ class(Itarget4) <- "MP"
 #' @author T. Carruthers
 #' @export 
 #' @examples 
-#' ITM(1, Data=DLMtool::SimulatedData, plot=TRUE)
+#' ITM(1, Data=OMtool::SimulatedData, plot=TRUE)
 ITM <- function(x, Data, reps = 100, plot=FALSE) {
   
   dependencies = "Data@Ind, Data@Cat, Data@CV_Ind, Data@Iref, Data@Mort"
@@ -3125,7 +3125,7 @@ Ltarget_ <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 5, xx = 0, xL = 1
 #' @family Length target MPs
 #' @export 
 #' @examples 
-#' Ltarget1(1, Data=DLMtool::SimulatedData, plot=TRUE)
+#' Ltarget1(1, Data=OMtool::SimulatedData, plot=TRUE)
 Ltarget1 <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 5, xx = 0, xL = 1.05) {
   runLtarget <- Ltarget_(x, Data, reps, plot, yrsmth, xx, xL)
   Rec <- new("Rec")
@@ -3139,7 +3139,7 @@ class(Ltarget1) <- "MP"
 #' @describeIn Ltarget1 Increasingly biologically precautionary (`xL` = 1.1).
 #' @export 
 #' @examples 
-#' Ltarget2(1, Data=DLMtool::SimulatedData, plot=TRUE)
+#' Ltarget2(1, Data=OMtool::SimulatedData, plot=TRUE)
 Ltarget2 <- Ltarget1
 formals(Ltarget2)$xL <- 1.1
 class(Ltarget2) <- "MP"
@@ -3149,7 +3149,7 @@ class(Ltarget2) <- "MP"
 #' @describeIn Ltarget1 Increasingly biologically precautionary (`xL` = 1.1).
 #' @export 
 #' @examples 
-#' Ltarget3(1, Data=DLMtool::SimulatedData, plot=TRUE)
+#' Ltarget3(1, Data=OMtool::SimulatedData, plot=TRUE)
 Ltarget3 <- Ltarget1
 formals(Ltarget3)$xL <- 1.15
 class(Ltarget3) <- "MP"
@@ -3159,7 +3159,7 @@ class(Ltarget3) <- "MP"
 #' @describeIn Ltarget1 The most biologically precautionary TAC-based MP (`xL` = 1.1, `xx`=0.2).
 #' @export 
 #' @examples 
-#' Ltarget4(1, Data=DLMtool::SimulatedData, plot=TRUE)
+#' Ltarget4(1, Data=OMtool::SimulatedData, plot=TRUE)
 Ltarget4 <- Ltarget1
 formals(Ltarget4)$xx <- 0.2
 formals(Ltarget4)$xL <- 1.15
@@ -3173,7 +3173,7 @@ class(Ltarget4) <- "MP"
 #' than an arbitrary multiplicative of the mean length 
 #' @export 
 #' @examples 
-#' L95target(1, Data=DLMtool::SimulatedData, plot=TRUE)
+#' L95target(1, Data=OMtool::SimulatedData, plot=TRUE)
 L95target <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 5, xx = 0, xL=1.05) {
   runLtarget <- Ltarget_(x, Data, reps, plot, yrsmth, xx, xL, Ltarget = Data@L95[x],
                          L0=0.9 * Data@L50[x])
@@ -3220,7 +3220,7 @@ class(L95target) <- "MP"
 #' @family Length target MPs
 #' @export
 #' @examples 
-#' Lratio_BHI(1, Data=DLMtool::SimulatedData, plot=TRUE)
+#' Lratio_BHI(1, Data=OMtool::SimulatedData, plot=TRUE)
 #' 
 Lratio_BHI <- function(x, Data, reps=100, plot=FALSE, yrsmth = 3) {
   dependencies = "Data@vb_Linf, Data@CV_vbLinf, Data@Cat, Data@CV_Cat, Data@CAL, Data@CAL_bins,
@@ -3264,7 +3264,7 @@ class(Lratio_BHI) <- "MP"
 #' function of M, K, and presumed FMSY/M.
 #' @export
 #' @examples 
-#' Lratio_BHI2(1, Data=DLMtool::SimulatedData, plot=TRUE)
+#' Lratio_BHI2(1, Data=OMtool::SimulatedData, plot=TRUE)
 #' 
 Lratio_BHI2 <- function(x, Data, reps=100, plot=FALSE, yrsmth = 3) {
   
@@ -3315,7 +3315,7 @@ class(Lratio_BHI2) <- "MP"
 #' is calculated for lengths > modal length (Lc)
 #' @export
 #' @examples 
-#' Lratio_BHI3(1, Data=DLMtool::SimulatedData, plot=TRUE)
+#' Lratio_BHI3(1, Data=OMtool::SimulatedData, plot=TRUE)
 #' 
 Lratio_BHI3 <- function(x, Data, reps=100, plot=FALSE, yrsmth = 3) {
   
@@ -3464,7 +3464,7 @@ LstepCC_ <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 5, xx = 0, stepsz
 #' @describeIn LstepCC1 The least biologically precautionary TAC-based MP.
 #' @export 
 #' @examples 
-#' LstepCC1(1, Data=DLMtool::SimulatedData, plot=TRUE)
+#' LstepCC1(1, Data=OMtool::SimulatedData, plot=TRUE)
 #' 
 LstepCC1 <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 5, xx = 0, stepsz = 0.05, 
                      llim = c(0.96, 0.98, 1.05)) {
@@ -3481,7 +3481,7 @@ class(LstepCC1) <- "MP"
 #' @describeIn LstepCC1 More biologically precautionary than `LstepCC1` (`xx` = 0.1)
 #' @export 
 #' @examples 
-#' LstepCC2(1, Data=DLMtool::SimulatedData, plot=TRUE)
+#' LstepCC2(1, Data=OMtool::SimulatedData, plot=TRUE)
 LstepCC2 <- LstepCC1
 formals(LstepCC2)$xx <- 0.1 
 class(LstepCC2) <- "MP"
@@ -3491,7 +3491,7 @@ class(LstepCC2) <- "MP"
 #' @describeIn LstepCC1 More biologically precautionary than `LstepCC2` (`xx` = 0.2)
 #' @export 
 #' @examples 
-#' LstepCC3(1, Data=DLMtool::SimulatedData, plot=TRUE)
+#' LstepCC3(1, Data=OMtool::SimulatedData, plot=TRUE)
 LstepCC3 <- LstepCC1
 formals(LstepCC3)$xx <- 0.2 
 class(LstepCC3) <- "MP"
@@ -3501,7 +3501,7 @@ class(LstepCC3) <- "MP"
 #' @describeIn LstepCC1 The most precautionary TAC-based MP.
 #' @export 
 #' @examples 
-#' LstepCC4(1, Data=DLMtool::SimulatedData, plot=TRUE)
+#' LstepCC4(1, Data=OMtool::SimulatedData, plot=TRUE)
 LstepCC4 <- LstepCC1
 formals(LstepCC4)$xx <- 0.3 
 class(LstepCC4) <- "MP"
@@ -3530,7 +3530,7 @@ class(LstepCC4) <- "MP"
 #' @author T. Carruthers
 #' @export 
 #' @examples 
-#' MCD(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' MCD(1, OMtool::Atlantic_mackerel, plot=TRUE)
 MCD <- function(x, Data, reps = 100, plot=FALSE) {
   # Daft method to demonstrate the relative value of information of
   # current depletion
@@ -3567,7 +3567,7 @@ class(MCD) <- "MP"
 #' @author T. Carruthers
 #' @export 
 #' @examples 
-#' MCD4010(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+#' MCD4010(1, OMtool::Atlantic_mackerel, plot=TRUE)
 MCD4010 <- function(x, Data, reps = 100, plot=FALSE) {
   # Daft method to demonstrate the relative value of information of
   # current depletion
@@ -3649,7 +3649,7 @@ class(MCD4010) <- "MP"
 #' @family Surplus production MPs
 #' @describeIn Rcontrol Base version `Rcontrol`
 #' @examples 
-#' Rcontrol(1, Data=DLMtool::Atlantic_mackerel, plot=TRUE)
+#' Rcontrol(1, Data=OMtool::Atlantic_mackerel, plot=TRUE)
 Rcontrol <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 10, gg = 2, glim = c(0.5, 2)) {
   dependencies = "Data@Mort, Data@CV_Mort, Data@vbK, Data@CV_vbK, Data@vbLinf, Data@CV_vbLinf, Data@vbt0, Data@CV_vbt0 Data@steep, Data@CV_steep, Data@MaxAge, Data@Dep, Data@CV_Dep, Data@Cat, Data@Ind"
   if (NAor0(Data@Mort[x])) stop("Data@Mort is NA")
@@ -3739,7 +3739,7 @@ class(Rcontrol) <- "MP"
 #' surplus production given biomass
 #' @export 
 #' @examples 
-#' Rcontrol2(1, Data=DLMtool::Atlantic_mackerel, plot=TRUE)
+#' Rcontrol2(1, Data=OMtool::Atlantic_mackerel, plot=TRUE)
 Rcontrol2 <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 10, gg = 2, glim = c(0.5, 2)) {
   dependencies = "Data@Mort, Data@CV_Mort, Data@vbK, Data@CV_vbK, Data@vbLinf, Data@CV_vbLinf, Data@vbt0, Data@CV_vbt0, Data@steep, Data@CV_steep, Data@MaxAge, Data@Dep, Data@CV_Dep, Data@Cat, Data@Ind"
   if (NAor0(Data@Mort[x])) stop("Data@Mort is NA")
@@ -3869,7 +3869,7 @@ class(Rcontrol2) <- "MP"
 #' @export
 #' @describeIn SBT1 Simple SBT MP
 #' @examples 
-#' SBT1(1, Data=DLMtool::SimulatedData, plot=TRUE)
+#' SBT1(1, Data=OMtool::SimulatedData, plot=TRUE)
 SBT1 <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 10, k1 = 1.5, k2 = 3, gamma = 1) {
   dependencies = "Data@Cat, Data@Year, Data@Ind"
   Cr <- length(Data@Cat[x, ])
@@ -3883,7 +3883,7 @@ SBT1 <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 10, k1 = 1.5, k2 = 3,
     lambda <- test[1]
   }
   # TAC <- cct * 1 + k2 * lambda
-  # see https://github.com/DLMtool/DLMtool/issues/17
+  # see https://github.com/OMtool/OMtool/issues/17
   TAC <- cct * (1 + k2 * lambda)
   cond <- lambda < 0
   # TAC[cond] <- cct[cond] * 1 - k1 * -lambda[cond]^gamma
@@ -3927,7 +3927,7 @@ class(SBT1) <- "MP"
 #' @export 
 #' @describeIn SBT1 Complex SBT MP
 #' @examples 
-#' SBT2(1, Data=DLMtool::SimulatedData, plot=TRUE)
+#' SBT2(1, Data=OMtool::SimulatedData, plot=TRUE)
 SBT2 <- function(x, Data, reps = 100, plot=FALSE, epsR = 0.75, tauR = 5, 
                  gamma = 1) {
   dependencies = "Data@Cref, Data@Rec, Data@Cat"
@@ -4014,7 +4014,7 @@ class(SBT2) <- "MP"
 #' @family Surplus production MPs
 #' @export 
 #' @examples 
-#' SPmod(1, Data=DLMtool::Atlantic_mackerel, plot=TRUE)
+#' SPmod(1, Data=OMtool::Atlantic_mackerel, plot=TRUE)
 SPmod <- function(x, Data, reps = 100, plot=FALSE, alp = c(0.8, 1.2), bet = c(0.8, 1.2)) {
   dependencies = "Data@Cat, Data@Ind, Data@Abun, Data@CV_Ind, Data@CV_Cat,  Data@CV_Abun"
   Ir <- length(Data@Ind[x, ])
@@ -4101,7 +4101,7 @@ class(SPmod) <- "MP"
 #' http://www.iattc.org/Meetings/Meetings2014/MAYSAC/PDFs/SAC-05-10b-Management-Strategy-Evaluation.pdf
 #' @export 
 #' @examples 
-#' SPslope(1, Data=DLMtool::Atlantic_mackerel, plot=TRUE)
+#' SPslope(1, Data=OMtool::Atlantic_mackerel, plot=TRUE)
 SPslope <- function(x, Data, reps = 100, plot=FALSE, yrsmth = 4, alp = c(0.9, 1.1), 
                     bet = c(1.5, 0.9)) {
   
@@ -4181,7 +4181,7 @@ class(SPslope) <- "MP"
 #' @family Surplus production MPs
 #' @export 
 #' @examples 
-#' SPMSY(1, Data=DLMtool::SimulatedData, plot=TRUE)
+#' SPMSY(1, Data=OMtool::SimulatedData, plot=TRUE)
 SPMSY <- function(x, Data, reps = 100, plot=FALSE) {
   # Martell and Froese 2012 Schaefer SP estimate of MSY given priors on
   # r, k and depletion for(x in 1:100){
@@ -4423,7 +4423,7 @@ SPSRAopt <- function(lnK, dep, r, Ct, PE) {
 #' @describeIn SPSRA Base version. Requires an estimate of current depletion
 #' @export 
 #' @examples 
-#' SPSRA(1, DLMtool::SimulatedData, plot=TRUE)
+#' SPSRA(1, OMtool::SimulatedData, plot=TRUE)
 SPSRA <- function(x, Data, reps = 100, plot=FALSE) {
   # Surplus productin stock reduction analysis T.Carruthers - basically
   # an SP version of DBSRA
@@ -4444,7 +4444,7 @@ class(SPSRA) <- "MP"
 #' a prior for current stock depletion. 
 #' @export 
 #' @examples 
-#' SPSRA_ML(1, DLMtool::SimulatedData, plot=TRUE)
+#' SPSRA_ML(1, OMtool::SimulatedData, plot=TRUE)
 SPSRA_ML <- function(x, Data, reps = 100, plot=FALSE) {
   dependencies = "Data@Mort, Data@CV_Mort, Data@vbK, Data@CV_vbK, Data@vbLinf, Data@CV_vbLinf, Data@vbt0, Data@CV_vbt0, Data@CAL, Data@Cat, Data@steep"
   if (NAor0(Data@Mort[x])) stop("Data@Mort is NA")
@@ -4719,7 +4719,7 @@ YPRopt <- function(Linfc, Kc, t0c, Mdb, a, b, LFS, maxage, reps = 100) {
 #' @references Beverton and Holt. 1954.
 #' @describeIn YPR Requires an external estimate of abundance.
 #' @examples 
-#' YPR(1, DLMtool::SimulatedData, plot=TRUE)
+#' YPR(1, OMtool::SimulatedData, plot=TRUE)
 #' @export 
 YPR <- function(x, Data, reps = 100, plot=FALSE) {
   runYPR <- YPR_(x, Data, reps = reps, Abun=NULL)
@@ -4741,7 +4741,7 @@ class(YPR) <- "MP"
 #' @describeIn YPR A catch-curve analysis is used to determine recent Z which given M (Mort)
 #' gives F and thus abundance = Ct/(1-exp(-F))
 #' @examples 
-#' YPR_CC(1, DLMtool::SimulatedData, plot=TRUE)
+#' YPR_CC(1, OMtool::SimulatedData, plot=TRUE)
 #' @export 
 YPR_CC <- function(x, Data, reps = 100, plot=FALSE, Fmin = 0.005) {
 
@@ -4780,7 +4780,7 @@ class(YPR_CC) <- "MP"
 #' @describeIn YPR A mean-length estimate of recent Z is used to infer current 
 #' abundance.
 #' @examples 
-#' YPR_ML(1, DLMtool::SimulatedData, plot=TRUE) 
+#' YPR_ML(1, OMtool::SimulatedData, plot=TRUE) 
 #' @export 
 YPR_ML <- function(x, Data, reps = 100, plot=FALSE) {
 

@@ -54,7 +54,7 @@ NA
 }
 
 \examples{
-GB_slope(1, DLMtool::SimulatedData, plot=TRUE)
+GB_slope(1, OMtool::SimulatedData, plot=TRUE)
 }
 \references{
 Geromont, H.F. and Butterworth, D.S. 2014. Complex assessment or

@@ -67,10 +67,10 @@ NA
 }
 
 \examples{
-Islope1(1, DLMtool::SimulatedData, plot=TRUE)
-Islope2(1, DLMtool::SimulatedData, plot=TRUE)
-Islope3(1, DLMtool::SimulatedData, plot=TRUE)
-Islope4(1, DLMtool::SimulatedData, plot=TRUE)
+Islope1(1, OMtool::SimulatedData, plot=TRUE)
+Islope2(1, OMtool::SimulatedData, plot=TRUE)
+Islope3(1, OMtool::SimulatedData, plot=TRUE)
+Islope4(1, OMtool::SimulatedData, plot=TRUE)
 }
 \references{
 Carruthers et al. 2015. Performance evaluation of simple

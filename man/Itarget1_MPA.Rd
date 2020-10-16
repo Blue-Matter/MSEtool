@@ -68,7 +68,7 @@ NA
 }
 
 \examples{
-Itarget1_MPA(1, DLMtool::Atlantic_mackerel, plot=TRUE)
+Itarget1_MPA(1, OMtool::Atlantic_mackerel, plot=TRUE)
 }
 \seealso{
 Other Index methods: 

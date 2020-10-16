@@ -509,7 +509,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
           }else{
             curdat<-MSElist[[p]][[f]][[mm]]
           }
-          runMP <- DLMtool::applyMP(curdat, MPs = MPs[[p]][mm], reps = 1,
+          runMP <- OMtool::applyMP(curdat, MPs = MPs[[p]][mm], reps = 1,
                                     silent=TRUE)  # Apply MP
           
           # Do allocation calcs
@@ -543,7 +543,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
         }else if(MPcond=="byfleet"){
           for(f in 1:nf){
             curdat<-MSElist[[p]][[f]][[mm]]
-            runMP <- DLMtool::applyMP(curdat, MPs = MPrefs[mm,f,p], reps = 1, silent=TRUE)  # Apply MP
+            runMP <- OMtool::applyMP(curdat, MPs = MPrefs[mm,f,p], reps = 1, silent=TRUE)  # Apply MP
             MPRecs_A[[p]][[f]]<-runMP[[1]][[1]]
             Data_p_A[[p]][[f]]<-runMP[[2]]
             Data_p_A[[p]][[f]]@TAC <- MPRecs_A[[p]][[f]]$TAC
@@ -772,7 +772,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
           for (f in 1:nf) {
             
             # TODO - remove this
-            OM <- suppressMessages(new('OM')) # temporary while DLMtool::makeData requires this
+            OM <- suppressMessages(new('OM')) # temporary while OMtool::makeData requires this
             OM@nyears <- nyears
             OM@hbiascv <- MOM@Obs[[p]][[f]]@hbiascv
             OM@maxF <- MOM@maxF
@@ -843,7 +843,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
           
           
           curdat<-multiDataS(MSElist,StockPars,np,mm,nf,realVB)
-          runMP <- DLMtool::applyMP(curdat, MPs = MPs[mm], reps = 1, silent=TRUE)  # Apply MP
+          runMP <- OMtool::applyMP(curdat, MPs = MPs[mm], reps = 1, silent=TRUE)  # Apply MP
           
           Stock_Alloc <- realVB[,,nyears, drop=FALSE]/
             apply(realVB[,,nyears, drop=FALSE],1,sum)
@@ -885,7 +885,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
               }else{
                 curdat<-MSElist[[p]][[f]][[mm]]
               }
-              runMP <- DLMtool::applyMP(curdat, MPs = MPs[[p]][mm],
+              runMP <- OMtool::applyMP(curdat, MPs = MPs[[p]][mm],
                                         reps = MOM@reps, silent=TRUE)  # Apply MP
               # Do allocation calcs
               TAC_A[,p,]<-array(as.vector(unlist(runMP[[1]][[1]]$TAC))*MOM@Allocation[[p]],c(nsim,nf))
@@ -915,7 +915,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
             } else if(MPcond=="byfleet"){
               for(f in 1:nf){
                 curdat<-MSElist[[p]][[f]][[mm]]
-                runMP <- DLMtool::applyMP(curdat, MPs = MPrefs[mm,f,p],
+                runMP <- OMtool::applyMP(curdat, MPs = MPrefs[mm,f,p],
                                           reps = MOM@reps, silent=TRUE)  # Apply MP
                 MPRecs_A[[p]][[f]]<-runMP[[1]][[1]]
                 Data_p_A[[p]][[f]]<-runMP[[2]]

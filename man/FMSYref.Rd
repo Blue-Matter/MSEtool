@@ -56,10 +56,10 @@ See \linkS4class{Data} for information on the \code{Data} object \cr
 }
 
 \examples{
-FMSYref(1, DLMtool::SimulatedData, plot=TRUE)
-FMSYref50(1, DLMtool::SimulatedData, plot=TRUE)
-FMSYref75(1, DLMtool::SimulatedData, plot=TRUE)
-NFref(1, DLMtool::SimulatedData, plot=TRUE)
+FMSYref(1, OMtool::SimulatedData, plot=TRUE)
+FMSYref50(1, OMtool::SimulatedData, plot=TRUE)
+FMSYref75(1, OMtool::SimulatedData, plot=TRUE)
+NFref(1, OMtool::SimulatedData, plot=TRUE)
 }
 \author{
 T. Carruthers, A. Hordyk

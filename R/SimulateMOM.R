@@ -62,7 +62,7 @@ SimulateMOM <- function(MOM=Albacore_TwoFleet, parallel=TRUE, silent=FALSE) {
   
   if(np==1 & nf==1){
     message("You have specified only a single stock and fleet. ",
-            "You should really be using the function DLMtool::runMSE()")
+            "You should really be using the function OMtool::runMSE()")
   } else if(np>1 & length(MOM@Rel)==0 & length(MOM@SexPars)==0) {
     message("You have specified more than one stock but no MICE relationships ",
             "(slot MOM@Rel) or sex-specific relationships (slot MOM@SexPars) among these. ",

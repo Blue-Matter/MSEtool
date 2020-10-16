@@ -70,7 +70,7 @@ NA
 }
 
 \examples{
-SPslope(1, Data=DLMtool::Atlantic_mackerel, plot=TRUE)
+SPslope(1, Data=OMtool::Atlantic_mackerel, plot=TRUE)
 }
 \references{
 http://www.iattc.org/Meetings/Meetings2014/MAYSAC/PDFs/SAC-05-10b-Management-Strategy-Evaluation.pdf
