@@ -131,7 +131,7 @@ SimulateMOM <- function(MOM=Albacore_TwoFleet, parallel=TRUE, silent=FALSE) {
     StockPars[[p]] <- SampleStockPars(MOM@Stocks[[p]], nsim, nyears,
                                       proyears, SampCpars[[p]][[1]],
                                       msg=silent)
-    StockPars[[p]]$plusgroup <- plusgroup
+    StockPars[[p]]$plusgroup <- plusgroup[1]
     
     # --- Sample Fleet Parameters ----
     FleetPars[[p]]<-ObsPars[[p]]<-ImpPars[[p]]<-list()

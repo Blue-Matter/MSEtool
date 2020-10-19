@@ -241,7 +241,7 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
   StockPars$SSB0 <- SSB0
   StockPars$VB0 <- VB0 
   StockPars$N <- N
-  StockPars$plusgroup <- plusgroup
+  StockPars$plusgroup <- plusgroup[1]
   StockPars$maxF <- OM@maxF
   StockPars$SSBpR <- SSBpR
   

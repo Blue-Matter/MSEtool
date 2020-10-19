@@ -261,7 +261,7 @@ CalcDynamicSSB0 <- function(StockPars, nsim, nareas, nyears, proyears, maxF, Mhi
               maxF=maxF, 
               control=1, 
               SSB0c=StockPars$SSB0[x], 
-              plusgroup=StockPars$plusgroup[x]))
+              plusgroup=StockPars$plusgroup))
   
   Dynamic_SSB0 <- aperm(array(as.numeric(unlist(UnfishedHist[4,], use.names=FALSE)), 
                               dim=c(n_age, nyears, nareas, nsim)), c(4,1,2,3)) %>% apply(c(1,3), sum)
@@ -281,7 +281,7 @@ CalcDynamicSSB0 <- function(StockPars, nsim, nareas, nyears, proyears, maxF, Mhi
     popdynOneTScpp(nareas, StockPars$maxage, Ncurr=N[x,,nyears,],
                    Zcurr=Mhist[x,,nyears,],
                    mov=StockPars$mov[x,,,,nyears+1],
-                   plusgroup = StockPars$plusgroup[x]))
+                   plusgroup = StockPars$plusgroup))
   
   # The stock at the beginning of projection period
   N_P[,,1,] <- aperm(array(unlist(NextYrN), dim=c(n_age, nareas, nsim, 1)), c(3,1,4,2))
@@ -310,7 +310,7 @@ CalcDynamicSSB0 <- function(StockPars, nsim, nareas, nyears, proyears, maxF, Mhi
                      Ncurr=N_P[x,,y-1,],
                      Zcurr=M_P[x,,y-1,],
                      mov=StockPars$mov[x,,,, nyears+y],
-                     plusgroup=StockPars$plusgroup[x]))
+                     plusgroup=StockPars$plusgroup))
     
     N_P[,,y,] <- aperm(array(unlist(NextYrN), dim=c(n_age, nareas, nsim, 1)), c(3,1,4,2))
     SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAYt]  # Calculate spawning stock numbers
