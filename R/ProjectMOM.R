@@ -678,7 +678,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
                               SRrel=StockPars[[p]]$SRrel,
                               hs=StockPars[[p]]$hs,
                               yr.ind=y1, 
-                              plusgroup=StockPars[[p]]$plusgroup[p])
+                              plusgroup=StockPars[[p]]$plusgroup)
           MSY_y[,p,mm,y1] <- MSYrefsYr[1,]
           FMSY_y[,p,mm,y1] <- MSYrefsYr[2,]
           SSBMSY_y[,p,mm,y1] <- MSYrefsYr[3,]
@@ -1083,7 +1083,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
     for(p in 1:np) for(f in 1:nf)
       CaRet[, p,f,mm, ] <- apply(FleetPars[[p]][[f]]$CB_Pret, c(1, 3),
                                  sum, na.rm=TRUE) # retained catch
-    
+
     if (!silent) {
       cat("\n")
       if (all(checkNA != nsim) & !all(checkNA == 0)) {
