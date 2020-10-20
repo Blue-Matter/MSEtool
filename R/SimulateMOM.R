@@ -834,6 +834,14 @@ SimulateMOM <- function(MOM=Albacore_TwoFleet, parallel=TRUE, silent=FALSE) {
   
   Ctemp[CNind] <- Biomass[Nind] * (1-exp(-Z[Nind])) * (FMret[CNind]/Z[Nind])
   CBret <- Ctemp
+  
+  # Add to FleetPars 
+  for (p in 1:np) {
+    for (f in 1:nf){
+      FleetPars[[p]][[f]]$CBret <- CBret[,p,f,,,]
+      FleetPars[[p]][[f]]$CB <- CB[,p,f,,,]
+    }
+  }
 
   # --- Sampling by area ----
   valNames <- c("Catch", 'BInd', 'SBInd', 'VInd', 'RecInd',
@@ -908,28 +916,30 @@ SimulateMOM <- function(MOM=Albacore_TwoFleet, parallel=TRUE, silent=FALSE) {
   }
   
   # ---- Condition Simulated Data on input Data object (if it exists) & calculate error stats ----
-  for (p in 1:np) {
-    for (f in 1:nf) {
-      if (class(SampCpars[[p]][[f]]$Data)=="Data") {
-        
-        # real data has been passed in cpars
-        updatedData <- AddRealData(SimData= DataList[[p]][[f]], 
-                                   RealData=SampCpars[[p]][[f]]$Data, 
-                                   ObsPars[[p]][[f]], 
-                                   StockPars[[p]],
-                                   FleetPars[[p]][[f]],
-                                   nsim,
-                                   nyears,
-                                   proyears,
-                                   SampCpars,
-                                   msg=!silent)
-        DataList[[p]][[f]] <- updatedData$Data
-        ObsPars[[p]][[f]] <- updatedData$ObsPars
-        
-      }
-      
-    }
-  }
+  # TODO - cpars$Data should be be stock and fleet - currently it is combined when using SS2MOM 
+  
+  # for (p in 1:np) {
+  #   for (f in 1:nf) {
+  #     if (class(SampCpars[[p]][[f]]$Data)=="Data") {
+  #       
+  #       # real data has been passed in cpars
+  #       updatedData <- AddRealData(SimData= DataList[[p]][[f]], 
+  #                                  RealData=SampCpars[[p]][[f]]$Data, 
+  #                                  ObsPars[[p]][[f]], 
+  #                                  StockPars[[p]],
+  #                                  FleetPars[[p]][[f]],
+  #                                  nsim,
+  #                                  nyears,
+  #                                  proyears,
+  #                                  SampCpars,
+  #                                  msg=!silent)
+  #       DataList[[p]][[f]] <- updatedData$Data
+  #       ObsPars[[p]][[f]] <- updatedData$ObsPars
+  #       
+  #     }
+  #     
+  #   }
+  # }
   
   HistList <- vector('list', np)
   
