@@ -660,6 +660,8 @@ SS2MOM_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, MOM) {
   cpars_fleet$Find <- Find %>% matrix(MOM@nsim, length(mainyrs), byrow = TRUE)
   cpars_fleet$Data <- new("Data")
   cpars_fleet$Data@Cat <- matrix(Cat, nrow = 1)
+  cpars_fleet$Data@CV_Cat <- matrix(0.2, nrow = 1, ncol=ncol(  cpars_fleet$Data@Cat)) # Default value
+
 
   return(list(Fleet = Fleet, cpars_fleet = cpars_fleet))
 }
