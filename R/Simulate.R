@@ -251,7 +251,6 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
       warning('problem with initial depletion')
   }
   
-  
   # --- Historical Spatial closures ----
   MPA <- matrix(1, nrow=nyears+proyears, ncol=nareas)
   if (FleetPars$MPA) {
