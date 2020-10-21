@@ -9,14 +9,14 @@ avail(classy, builtin = FALSE)
 \arguments{
 \item{classy}{A class of object (character string, e.g. 'Fleet')}
 
-\item{builtin}{Logical. Only return Objects of class 'classy' from OMtool & DLMextra packages?}
+\item{builtin}{Logical. Only return Objects of class 'classy' from DLMtool & DLMextra packages?}
 }
 \description{
 Generic class finder
 }
 \details{
 Finds objects of the specified class in the global environment or the
-OMtool package.
+DLMtool package.
 }
 \examples{
 avail("OM")

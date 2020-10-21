@@ -3,7 +3,7 @@
 \name{trlnorm}
 \alias{trlnorm}
 \alias{tdlnorm}
-\title{Lognormal distribution for OMtool}
+\title{Lognormal distribution for DLMtool}
 \usage{
 trlnorm(reps, mu, cv)
 

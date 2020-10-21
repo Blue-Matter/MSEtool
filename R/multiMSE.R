@@ -125,8 +125,8 @@ multiMSE <- function(MOM, MPs=list(c("AvC","DCAC"),c("FMSYref","curE")),
 
 
         message(paste(Stocks[[p]]@Name," - ",Fleets[[p]][[f]]@Name))
-        ncparsim <- DLMtool::cparscheck(cpars[[p]][[f]])
-        SampCpars[[p]][[f]] <- DLMtool::SampleCpars(cpars[[p]][[f]], nsim,
+        ncparsim <- OMtool::cparscheck(cpars[[p]][[f]])
+        SampCpars[[p]][[f]] <- OMtool::SampleCpars(cpars[[p]][[f]], nsim,
                                                     msg=!silent)
       }else{
         SampCpars[[p]][[f]] <-list()
@@ -137,7 +137,7 @@ multiMSE <- function(MOM, MPs=list(c("AvC","DCAC"),c("FMSYref","curE")),
   # --- Sample Stock Parameters ----
   StockPars<-FleetPars<-ObsPars<-ImpPars<-new('list')
   for(p in 1:np){
-    StockPars[[p]] <- DLMtool::SampleStockPars(MOM@Stocks[[p]], nsim, nyears,
+    StockPars[[p]] <- OMtool::SampleStockPars(MOM@Stocks[[p]], nsim, nyears,
                                                proyears, SampCpars[[p]][[1]],
                                                msg=silent)
   }
@@ -151,7 +151,7 @@ multiMSE <- function(MOM, MPs=list(c("AvC","DCAC"),c("FMSYref","curE")),
   for(p in 1:np){
     FleetPars[[p]]<-ObsPars[[p]]<-ImpPars[[p]]<-list()
     for(f in 1:nf){
-      FleetPars[[p]][[f]] <- DLMtool::SampleFleetPars(MOM@Fleets[[p]][[f]],
+      FleetPars[[p]][[f]] <- OMtool::SampleFleetPars(MOM@Fleets[[p]][[f]],
                                              Stock=StockPars[[p]],
                                              nsim, nyears, proyears,
                                              cpars=SampCpars[[p]][[f]])
@@ -162,7 +162,7 @@ multiMSE <- function(MOM, MPs=list(c("AvC","DCAC"),c("FMSYref","curE")),
   # --- Sample Obs Parameters ----
   for(p in 1:np) {
     for(f in 1:nf) {
-      ObsPars[[p]][[f]] <- DLMtool::SampleObsPars(MOM@Obs[[p]][[f]], nsim,
+      ObsPars[[p]][[f]] <- OMtool::SampleObsPars(MOM@Obs[[p]][[f]], nsim,
                                                   cpars=SampCpars[[p]][[f]])
     }
   }
@@ -170,7 +170,7 @@ multiMSE <- function(MOM, MPs=list(c("AvC","DCAC"),c("FMSYref","curE")),
   # --- Sample Imp Parameters ----
   for(p in 1:np) {
     for(f in 1:nf) {
-      ImpPars[[p]][[f]] <- DLMtool::SampleImpPars(MOM@Imps[[p]][[f]], nsim,
+      ImpPars[[p]][[f]] <- OMtool::SampleImpPars(MOM@Imps[[p]][[f]], nsim,
                                          cpars=SampCpars[[p]][[f]])
     }
   }

@@ -13,7 +13,7 @@
 #' @return An object of class \linkS4class{MSE}
 #' @export
 #' 
-runMSE <- function(OM=NULL, 
+runMSE <- function(OM=OMtool::testOM, 
                    MPs = NA, 
                    Hist=FALSE, 
                    silent=FALSE, 

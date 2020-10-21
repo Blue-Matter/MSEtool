@@ -206,3 +206,21 @@ cat("#' ", ObjectClass, " class objects",
     sep = "", append = TRUE, file = file.path("R/", RoxygenFile))
 
 
+# ---- Simulated Data ----
+Hist <- Simulate()
+SimulatedData <- Hist@Data 
+
+usethis::use_data(SimulatedData, overwrite = TRUE)
+
+clss <- 'Data'
+name <- 'SimulatedData'
+cat("#'  ", name, " ", clss,
+    "\n#'", 
+    "\n#'  An object of class ", clss, 
+    "\n#'\n",
+    '"', name, '"\n\n\n', sep="", append=TRUE, 
+    file=file.path('R/', RoxygenFile))  
+
+
+
+

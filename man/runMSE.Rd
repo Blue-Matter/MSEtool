@@ -4,7 +4,13 @@
 \alias{runMSE}
 \title{Run a Management Strategy Evaluation}
 \usage{
-runMSE(OM = NULL, MPs = NA, Hist = FALSE, silent = FALSE, parallel = FALSE)
+runMSE(
+  OM = OMtool::testOM,
+  MPs = NA,
+  Hist = FALSE,
+  silent = FALSE,
+  parallel = FALSE
+)
 }
 \arguments{
 \item{OM}{An operating model object (class \code{OM} or class \code{MOM})}
