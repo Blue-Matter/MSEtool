@@ -55,13 +55,13 @@ FMSYref75 <- function(x, Data, reps = 100, plot=FALSE) {
 class(FMSYref75) <- "MP"
 
 
-#' @describeIn FMSYref A reference MP that sets annual catch to almost zero (0.01)
+#' @describeIn FMSYref A reference MP that sets annual catch to almost zero (1e-15)
 #' @examples 
 #' NFref(1, OMtool::SimulatedData, plot=TRUE)
 #' @export 
 NFref <- function(x, Data, reps = 100, plot=FALSE) {
   rec <- new("Rec") # create recommendation object
-  rec@TAC <- rep(0.01, reps)
+  rec@TAC <- rep(tiny, reps)
   if (plot) boxplot(rec@TAC, ylab=paste0("TAC (", Data@Units, ")"))
   rec
 }
