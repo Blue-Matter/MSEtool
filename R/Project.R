@@ -540,6 +540,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
   Misc$Cost <- Cost_out
   Misc$TAE <- TAE_out
   Misc$Removals <- Ca # total removals
+  Misc$Ref <- Hist@Ref
   
   ## Create MSE Object #### 
   MSEout <- new("MSE", Name = OM@Name, nyears, proyears, nMPs=nMP, MPs, nsim, 
