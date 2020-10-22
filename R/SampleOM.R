@@ -801,6 +801,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   StockOut$L95 <- L95
   StockOut$L50_95 <- L50_95
   StockOut$L95array <- L95array
+  Mat_age[,1,] <- 0 # age-0 must not be mature
   StockOut$Mat_age <- Mat_age
   StockOut$LenCV <- LenCV
   StockOut$LatASD <- LatASD
