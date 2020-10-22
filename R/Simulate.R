@@ -280,8 +280,13 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
   
   # --- Check that q optimizer has converged ---- 
   LimBound <- c(1.1, 0.9)*range(bounds)  # bounds for q (catchability). Flag if bounded optimizer hits the bounds
-  probQ <- which(qs > max(LimBound) | qs < min(LimBound))
-  Nprob <- length(probQ)
+  if (!is.null(SampCpars$qs)) {
+    probQ <- numeric(0)
+  } else{
+    probQ <- which(qs > max(LimBound) | qs < min(LimBound))
+    Nprob <- length(probQ)  
+  }
+  
   
   ntrials <- 50 
   if (!is.null(control$ntrials)) ntrials <- control$ntrials
@@ -488,8 +493,49 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
   BMSY_B0 <- BMSY/B0 # Biomass relative to unfished (B0)
   VBMSY_VB0 <- VBMSY/VB0 # VBiomass relative to unfished (VB0)
   
-  # --- Dynamic Unfished Reference Points (SSB0) ---- 
-  Dynamic_SSB0 <- CalcDynamicSSB0(StockPars, nsim, nareas, nyears, proyears, StockPars$maxF, Z - FM, N)
+  # --- Dynamic Unfished Reference Points ---- 
+  Unfished <- sapply(1:nsim, function(x) 
+    popdynCPP(nareas, StockPars$maxage, 
+              Ncurr=StockPars$N[x,,1,], 
+              nyears+proyears,  
+              M_age=StockPars$M_ageArray[x,,], 
+              Asize_c=StockPars$Asize[x,], 
+              MatAge=StockPars$Mat_age[x,,], 
+              WtAge=StockPars$Wt_age[x,,],
+              Vuln=FleetPars$V[x,,], 
+              Retc=FleetPars$retA[x,,], 
+              Prec=StockPars$Perr_y[x,], 
+              movc=split.along.dim(StockPars$mov[x,,,,],4), 
+              SRrelc=StockPars$SRrel[x], 
+              Effind=rep(0, nyears+proyears),  
+              Spat_targc=FleetPars$Spat_targ[x], 
+              hc=StockPars$hs[x], 
+              R0c=StockPars$R0a[x,], 
+              SSBpRc=StockPars$SSBpR[x,], 
+              aRc=StockPars$aR[x,], 
+              bRc=StockPars$bR[x,], 
+              Qc=0, 
+              Fapic=0, 
+              MPA=FleetPars$MPA, 
+              maxF=StockPars$maxF, 
+              control=1, 
+              SSB0c=StockPars$SSB0[x], 
+              plusgroup=StockPars$plusgroup))
+
+  N_unfished <- aperm(array(as.numeric(unlist(Unfished[1,], use.names=FALSE)), 
+                   dim=c(n_age, nyears+proyears, nareas, nsim)), c(4,1,2,3))
+
+  Biomass_unfished <- aperm(array(as.numeric(unlist(Unfished[2,], use.names=FALSE)), 
+                         dim=c(n_age, nyears+proyears, nareas, nsim)), c(4,1,2,3))
+
+  SSN_unfished <- aperm(array(as.numeric(unlist(Unfished[3,], use.names=FALSE)), 
+                     dim=c(n_age, nyears+proyears, nareas, nsim)), c(4,1,2,3))
+
+  SSB_unfished <- aperm(array(as.numeric(unlist(Unfished[4,], use.names=FALSE)), 
+                     dim=c(n_age, nyears+proyears, nareas, nsim)), c(4,1,2,3))
+
+  VBiomass_unfished <- aperm(array(as.numeric(unlist(Unfished[5,], use.names=FALSE)), 
+                          dim=c(n_age, nyears+proyears, nareas, nsim)), c(4,1,2,3))
   
   StockPars$MSY <- MSY
   StockPars$FMSY <- FMSY
@@ -522,14 +568,48 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
                  Ncurr=StockPars$N[,,nyears,])
   
   # ---- Store Reference Points ----
+  
+  
+  # arrays for unfished biomass for all years 
+  SSN_a <- array(NA, dim = c(nsim, n_age, nyears+proyears, nareas))  
+  N_a <- array(NA, dim = c(nsim, n_age, nyears+proyears, nareas))
+  Biomass_a <- array(NA, dim = c(nsim, n_age, nyears+proyears, nareas))
+  SSB_a <- array(NA, dim = c(nsim, n_age, nyears+proyears, nareas))
+  
+  # Calculate initial spawning stock numbers for all years
+  SSN_a[SAYR_a] <- Nfrac[SAY_a] * StockPars$R0[S_a] * StockPars$initdist[SAR_a] 
+  N_a[SAYR_a] <- StockPars$R0[S_a] * surv[SAY_a] * StockPars$initdist[SAR_a] # Calculate initial stock numbers for all years
+  Biomass_a[SAYR_a] <- N_a[SAYR_a] * StockPars$Wt_age[SAY_a]  # Calculate initial stock biomass
+  SSB_a[SAYR_a] <- SSN_a[SAYR_a] * StockPars$Wt_age[SAY_a]    # Calculate spawning stock biomass
+  
+  SSN0_a <- apply(SSN_a, c(1,3), sum) # unfished spawning numbers for each year
+  N0_a <- apply(N_a, c(1,3), sum) # unfished numbers for each year)
+  SSB0_a <- apply(SSB_a, c(1,3), sum) # unfished spawning biomass for each year
+  SSB0a_a <- apply(SSB_a, c(1, 3,4), sum)  # Calculate unfished spawning stock biomass by area for each year
+  B0_a <- apply(Biomass_a, c(1,3), sum) # unfished biomass for each year
+  VB0_a <- apply(apply(Biomass_a, c(1,2,3), sum) * FleetPars$V, c(1,3), sum) # unfished vulnerable biomass for each year
+  
+  
   ReferencePoints <- list(
     ByYear=list(
+      N0=N0_a,
+      SN0=SSB0_a,
+      B0=B0_a,
+      SSB0=SSB0_a,
+      VB0=VB0_a,
       MSY=MSY_y,
       FMSY=FMSY_y,
       SSBMSY=SSBMSY_y,
       BMSY=BMSY_y,
-      VBMSY=VBMSY_y,
-      Dynamic_SSB0=Dynamic_SSB0
+      VBMSY=VBMSY_y
+    ),
+    Dynamic_Unfished=list(
+      N0=apply(N_unfished, c(1,3), sum), 
+      B0=apply(Biomass_unfished, c(1,3), sum),
+      SN0=apply(SSN_unfished, c(1,3), sum),
+      SSB0=apply(SSB_unfished, c(1,3), sum),
+      VB0=apply(VBiomass_unfished, c(1,3), sum),
+      Rec=apply(N_unfished[,1,,], c(1,2), sum)
     ),
     ReferencePoints=data.frame(
       N0=N0,
@@ -699,9 +779,7 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
     Unfished_Equilibrium=Unfished_Equilibrium
   )
   
-  StockPars$N <- StockPars$Biomass <- StockPars$SSN <- StockPars$SSB <- 
-    StockPars$VBiomass <- StockPars$FM <- StockPars$FMret <- StockPars$Z <- NULL
-  
+
   Hist@Ref <- ReferencePoints
   
   Hist@SampPars <- list()
@@ -710,6 +788,10 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
   # cpars_Fleet <- FleetPars[which(lapply(FleetPars, length) != nsim)]
   # cpars_Obs <- ObsPars[which(lapply(ObsPars, length) != nsim)]
   # cpars_Imp <- ImpPars[which(lapply(ImpPars, length) != nsim)]
+  
+  StockPars$N <- StockPars$Biomass <- StockPars$SSN <- StockPars$SSB <- 
+    StockPars$VBiomass <- StockPars$FM <- StockPars$FMret <- StockPars$Z <- NULL
+  
   
   Hist@SampPars <- list(
     Stock=StockPars,
@@ -726,4 +808,4 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
   Hist@Misc <- list()
   
   Hist
-  }
+}
