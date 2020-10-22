@@ -1235,7 +1235,11 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
                           nyears=NULL, proyears=NULL){
   if (class(Obs) != "Obs" & class(Obs) != "OM") 
     stop("First argument must be class 'Obs' or 'OM'")
-  if (class(Obs) == "OM") nsim <- Obs@nsim
+  if (class(Obs) == "OM") {
+    nsim <- Obs@nsim
+    nyears <- Obs@nyears
+    proyears <- Obs@proyears
+  }
   
   # Get custom pars if they exist
   if (class(Obs) == "OM" && length(Obs@cpars) > 0 && is.null(cpars)) 
