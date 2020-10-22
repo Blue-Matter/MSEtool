@@ -780,6 +780,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   
   # Effort relative to last historical with this potential catch
   Effort_req <- Ftot/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]* (1 + FleetPars$qinc/100)^y) * apply(fracE2, 1, sum) # effort required for this catch
+  Effort_req[!is.finite(Effort_req)] <- tiny
   
 
   # Limit effort to potential effort from bio-economic model
