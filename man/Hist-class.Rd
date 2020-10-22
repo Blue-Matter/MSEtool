@@ -54,8 +54,28 @@ matrix dimensions \code{c(nsim, nyears+proyears+maxage)}
 
 \item{\code{Ref}}{A named list with biological reference points:
 \itemize{
-\item ByYear: A named list with \code{MSY}, \code{FMSY}, \code{SSBMSY}, \code{BMSY}, \code{VBMSY}, and \code{Dynamic_SSB0} for each simulation and year.
-Dynamic SSB0 is the reconstructed spawning biomass with no fishing (F = 0) in the historical and projection period.
+\item ByYear: A named list with asymptotic reference points (i.e., calculated annually without recruitment deviations) all matrices with dimensions \code{nsim} by \code{nyears+proyears}:
+\itemize{
+\item N0: Asymptotic unfished total number
+\item SN0: Asymptotic unfished spawning number
+\item B0: Asymptotic unfished total biomass
+\item SSB0: Asymptotic unfished spawning biomass
+\item VB0: Asymptotic unfished vulnerable biomass
+\item MSY: Asymptotic MSY
+\item FMSY: Fishing mortality corresponding with asymptotic MSY
+\item SSBMSY: Spawning stock biomass corresponding with asymptotic MSY
+\item BMSY: total biomass corresponding with asymptotic MSY
+\item VBMSY: Vulneralbe biomass corresponding with asymptotic MSY
+}
+\item Dynamic_Unfished: A named list with dynamic unfished reference points for each simulation and year:
+\itemize{
+\item N0: Unfished total numbers
+\item B0: Unfished total biomass
+\item SN0: Unfished spawning numbers
+\item SSB0: Unfished spawning biomass
+\item VB0: Unfished vulnerable biomass
+\item Rec: Unfished recruitment
+}
 \item ReferencePoints: A data.frame with \code{nsim} rows with with biological reference points
 calculated as an average over age-of-maturity \code{ageM} years around the
 current year (i.e. \code{nyears}):

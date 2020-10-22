@@ -47,7 +47,7 @@ short-lived species of high temporal variability in productivity!
 
 \item \code{FMSYref75}: A reference FMSY method that fishes at 75\\% of FMSY
 
-\item \code{NFref}: A reference MP that sets annual catch to almost zero (0.01)
+\item \code{NFref}: A reference MP that sets annual catch to almost zero (1e-15)
 }}
 
 \section{Required Data}{
