@@ -184,7 +184,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
     }
     # Movement and mortality in first year
     NextYrN <- lapply(1:nsim, function(x)
-      popdynOneTScpp(nareas, StockPars$maxage, Ncurr=StockPars$N[x,,nyears,],
+      popdynOneTScpp(nareas, StockPars$maxage, 
+                     Ncurr=StockPars$N[x,,nyears,],
                      Zcurr=StockPars$Z[x,,nyears,],
                      mov=StockPars$mov[x,,,,nyears+1],
                      plusgroup = StockPars$plusgroup))
@@ -198,7 +199,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
     
     # recruitment in first projection year
     SSBcurr <- apply(SSB_P[,,1,],c(1,3), sum)
-    recdev <- StockPars$Perr_y[, nyears+n_age-1]
+    recdev <- StockPars$Perr_y[, nyears+n_age]
     rec_area <- sapply(1:nsim, calcRecruitment, SRrel=StockPars$SRrel, SSBcurr=SSBcurr,
                        recdev=recdev, hs=StockPars$hs,
                        aR= StockPars$aR, bR=StockPars$bR, R0a=StockPars$R0a,
