@@ -207,7 +207,9 @@ cat("#' ", ObjectClass, " class objects",
 
 
 # ---- Simulated Data ----
-Hist <- Simulate()
+OM <- testOM
+OM@reps <- 3
+Hist <- Simulate(OM)
 SimulatedData <- Hist@Data
 
 dims <- dim(SimulatedData@Ind)
