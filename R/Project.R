@@ -209,12 +209,6 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
     Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAY1]  # Calculate biomass
     VBiomass_P[SAYR] <- Biomass_P[SAYR] * V_P[SAYt]  # Calculate vulnerable biomass
     
-    # Update abundance estimates - used for FMSY ref methods so that FMSY is applied to current abundance
-    # TODO
-    M_array <- array(0.5*StockPars$M_ageArray[,,nyears+y], dim=c(nsim, n_age, nareas))
-    Atemp <- apply(VBiomass_P[, , y, ] * exp(-M_array), 1, sum) # Abundance (mid-year before fishing)
-    MSElist[[mm]]@OM$A <- Atemp
-    
     # -- Apply MP in initial projection year ----
     runMP <- applyMP(Data=MSElist[[mm]], MPs = MPs[mm], reps = reps, silent=TRUE)  # Apply MP
     MPRecs <- runMP[[1]][[1]] # MP recommendations
@@ -375,14 +369,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
                                     upyrs, interval, y, mm,
                                     Misc=Data_p@Misc, RealData, ObsPars$Sample_Area,
                                     AddIunits, AddIndType)
-        
-        # Update Abundance and FMSY for FMSYref MPs
-        # TODO
-        M_array <- array(0.5*StockPars$M_ageArray[,,nyears+y], dim=c(nsim, n_age, nareas))
-        Atemp <- apply(VBiomass_P[, , y, ] * exp(-M_array), 1, sum) # Abundance (mid-year before fishing)
-        MSElist[[mm]]@OM$A <- Atemp
-        MSElist[[mm]]@OM$FMSY <- FMSY_y[,mm,y+OM@nyears]
-        
+      
         # --- apply MP ----
         runMP <- applyMP(Data=MSElist[[mm]], MPs = MPs[mm], reps = reps, silent=TRUE)  # Apply MP
         MPRecs <- runMP[[1]][[1]] # MP recommendations
