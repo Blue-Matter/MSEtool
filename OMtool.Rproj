@@ -15,5 +15,6 @@ LaTeX: pdfLaTeX
 BuildType: Package
 PackageUseDevtools: Yes
 PackageInstallArgs: --with-keep.source
+PackageCheckArgs: --as-cran
 PackageRoxygenize: rd,collate,namespace
 DisableExecuteRprofile: Yes
