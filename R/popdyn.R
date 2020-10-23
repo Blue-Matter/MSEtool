@@ -684,6 +684,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     FM_Pret[SAYR] <- (FleetPars$FinF[S1] * Effort_pot[S1] * retA_P[SAYt] * t(Si)[SR] * fishdist[SR] *
                         FleetPars$qvar[SY1] * FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y)/StockPars$Asize[SR]
     
+    Effort_req <- Effort_pot
   }
   
   # ---- calculate required F and effort for TAC recommendation ----
@@ -752,36 +753,21 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
                           StockPars$maxage, StockPars$nareas, StockPars$M_ageArray,nyears, y)
     }
     
+    # Effort relative to last historical with this catch
+    Effort_req <- Ftot/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]* 
+                          (1 + FleetPars$qinc/100)^y) * apply(fracE2, 1, sum) # effort required
     # Calculate F & Z by age class
     FM_P[SAYR] <- Ftot[S] * V_P[SAYt] * fishdist[SR]/StockPars$Asize[SR]
     FM_Pret[SAYR] <- Ftot[S] * retA_P[SAYt] * fishdist[SR]/StockPars$Asize[SR]
     Z_P[SAYR] <- FM_P[SAYR] + StockPars$M_ageArray[SAYt] # calculate total mortality
   }
 
-  # Apply maxF constraint 
-  FM_P[SAYR][FM_P[SAYR] > maxF] <- maxF 
-  FM_Pret[SAYR][FM_Pret[SAYR] > maxF] <- maxF
-  Z_P[SAYR] <- FM_P[SAYR] + StockPars$M_ageArray[SAYt] # calculate total mortality
-  
-  # Update catches after maxF constraint
-  CB_P[SAYR] <- FM_P[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR]
-  CB_Pret[SAYR] <- FM_Pret[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR]
-  
+
   # Effort_req - effort required to catch TAC
   # Effort_pot - potential effort this year (active fishers) from bio-economic model
   # Effort_act - actual effort this year
   # TAE - maximum actual effort limit
   # Effort_act < Effort_pot if Effort_req < Effort_pot
-  
-  # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
-  totalCatch <- apply(CB_P[,,y,], 1, sum)
-  Ftot <- sapply(1:nsim, calcF, totalCatch, V_P, Biomass_P, fishdist, StockPars$Asize, StockPars$maxage, StockPars$nareas,
-                 StockPars$M_ageArray,nyears, y)
-  
-  # Effort relative to last historical with this potential catch
-  Effort_req <- Ftot/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]* (1 + FleetPars$qinc/100)^y) * apply(fracE2, 1, sum) # effort required for this catch
-  Effort_req[!is.finite(Effort_req)] <- tiny
-  
 
   # Limit effort to potential effort from bio-economic model
   Effort_act <- Effort_req
@@ -798,8 +784,8 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   
   # --- Re-calculate catch given actual effort ----
   # fishing mortality with actual effort 
-  FM_P[SAYR] <- (  FleetPars$FinF[S1] * Effort_act[S1] * V_P[SAYt] * t(Si)[SR] * fishdist[SR] *
-                   FleetPars$qvar[SY1] * (FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y))/StockPars$Asize[SR]
+  FM_P[SAYR] <- (FleetPars$FinF[S1] * Effort_act[S1] * V_P[SAYt] * t(Si)[SR] * fishdist[SR] *
+                 FleetPars$qvar[SY1] * (FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y))/StockPars$Asize[SR]
   
   # retained fishing mortality with actual effort 
   FM_Pret[SAYR] <- (  FleetPars$FinF[S1] * Effort_act[S1] * retA_P[SAYt] * t(Si)[SR] * fishdist[SR] *
@@ -816,9 +802,9 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   
   # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
   totalCatch <- apply(CB_P[,,y,], 1, sum)
-  Ftot <- sapply(1:nsim, calcF, totalCatch, V_P, Biomass_P, fishdist, StockPars$Asize, StockPars$maxage, StockPars$nareas,
+  Ftot <- sapply(1:nsim, calcF, totalCatch, V_P, Biomass_P, fishdist, 
+                 StockPars$Asize, StockPars$maxage, StockPars$nareas,
                  StockPars$M_ageArray,nyears, y) # update if effort has changed
-  
   
   # Returns
   out <- list()
