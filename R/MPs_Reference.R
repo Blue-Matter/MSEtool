@@ -25,6 +25,7 @@
 #' @export 
 FMSYref <- function(x, Data, reps = 100, plot=FALSE) {
   y <- max(Data@Year) - Data@LHYear+1
+  nyears <- length(Data@Misc$FleetPars$Find[x,])
   FMSY <- Data@Misc$ReferencePoints$ByYear$FMSY[x,nyears+y]
   q <- Data@Misc$FleetPars$qs[x]
   qvar <- Data@Misc$FleetPars$qvar[x,y] # future only
@@ -47,6 +48,7 @@ class(FMSYref) <- "MP"
 #' @export  
 FMSYref50 <- function(x, Data, reps = 100, plot=FALSE) {
   y <- max(Data@Year) - Data@LHYear+1
+  nyears <- length(Data@Misc$FleetPars$Find[x,])
   FMSY <- Data@Misc$ReferencePoints$ByYear$FMSY[x,nyears+y]
   q <- Data@Misc$FleetPars$qs[x]
   qvar <- Data@Misc$FleetPars$qvar[x,y] # future only
@@ -69,6 +71,7 @@ class(FMSYref50) <- "MP"
 #' @export 
 FMSYref75 <- function(x, Data, reps = 100, plot=FALSE) {
   y <- max(Data@Year) - Data@LHYear+1
+  nyears <- length(Data@Misc$FleetPars$Find[x,])
   FMSY <- Data@Misc$ReferencePoints$ByYear$FMSY[x,nyears+y]
   q <- Data@Misc$FleetPars$qs[x]
   qvar <- Data@Misc$FleetPars$qvar[x,y] # future only
