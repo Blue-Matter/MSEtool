@@ -805,6 +805,10 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
   Hist@OM <- OM
   Hist@Misc <- list()
   
+  attr(Hist, "version") <- packageVersion("OMtool")
+  attr(Hist, "date") <- date()
+  attr(Hist, "R.version") <- R.version
+  
   Hist
 }
 
@@ -1337,9 +1341,6 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
   MSEout 
   
 }
-
-
-
 
 #' Run a Management Strategy Evaluation
 #' 
