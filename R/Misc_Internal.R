@@ -471,3 +471,83 @@ applyAC <- function(x, res, ac, max.years, lst.err) {
   }
   res[,x]
 }
+
+
+#' Check for duplicated MPs names
+#'
+#' Custom MPs cannot have the same names of MPs in MSEtool and related packages  
+#' @param MPs Character vector of MP names
+#'
+#' @return An error if duplicated MP names, otherwise nothing
+CheckDuplicate <- function(MPs) {
+  # check if custom MP names already exist in DLMtool
+  tt <- suppressWarnings(try(lsf.str(envir=globalenv()), silent=TRUE))
+  if (class(tt)!="try-error") {
+    gl.funs <- as.vector(tt)
+    pkg.funs <- as.vector(ls.str('package:OMtool'))
+    if ('package:DLMtool' %in% search()) 
+      pkg.funs <- c(pkg.funs, as.vector(ls.str('package:DLMtool')))
+    if ('package:SAMtool' %in% search()) 
+      pkg.funs <- c(pkg.funs, as.vector(ls.str('package:SAMtool')))
+    
+    if (length(gl.funs)>0) {
+      gl.clss <- unlist(lapply(lapply(gl.funs, get), class))
+      gl.MP <- gl.funs[gl.clss %in% 'MP']
+      if (length(gl.MP)>0) {
+        inc.gl <- gl.MP[gl.MP %in% MPs]
+        if (length(inc.gl)>0) {
+          dup.MPs <- inc.gl[inc.gl %in% pkg.funs]
+          if (length(dup.MPs)>0) {
+            stop("Custom MP names already exist in MSEtool or other packages.\nRename Custom MPs: ", 
+                 paste0(dup.MPs, collapse=", "))
+          }
+        }
+      } 
+    }
+  } 
+}
+
+
+#' Check that specified MPs are valid and will run on OMtool::SimulatedData
+#'
+#' @param MPs Character vector of MP names 
+#' @param silent Logical. Report messages?
+#'
+#' @return MP names
+CheckMPs <- function(MPs=NA, silent=FALSE) {
+  if (all(is.na(MPs))) {
+    if (!silent) message('Argument `MPs=NA`, using all example MPs in `OMtool`')
+    MPs <- avail("MP", 'OMtool')
+  } 
+  
+  # Check for custom MPs with same name as built-it MPs
+  CheckDuplicate(MPs)
+  
+  if (!silent) message('Checking MPs')
+  
+  # Check MP names are valid functions of class MP
+  chkMP <- list()
+  for (mm in MPs) 
+    chkMP[[mm]] <- try(get(mm), silent=TRUE)
+  
+  clss <- unlist(lapply(chkMP, class))
+  invalid <- clss[clss!='MP']
+  if (length(invalid)>0) {
+    stop("Some MPs are not a functions of class `MP`: ", 
+         paste0(names(invalid), collapse=", "), call.=FALSE) 
+  }
+  
+  # Check on simulated data
+  pass <- rep(TRUE, length(MPs))
+  for (i in seq_along(MPs)) {
+    mp <- get(MPs[i])
+    tryMP <- try(sapply(1:3, mp, SimulatedData), silent=TRUE)
+    err <- unique(unlist(lapply(tryMP, class) ))
+    if (err =='character') pass[i] <- FALSE
+  }
+  if (any(!pass))
+    warning('Some MPs fail with OMtool::SimulatedData: ', 
+            paste0(MPs[!pass], collapse=", "), call.=FALSE) 
+  
+  MPs
+}
