@@ -30,8 +30,10 @@ NFref(x, Data, reps = 100, plot = FALSE)
 \description{
 Several reference MPs for your operating model to use in the management strategy
 evaluation. FMSYref (and related) assume perfect information about FMSY (FMSY
-is taken from the operating model stored at Data@OM$FMSY). NFref sets annual catch
-to zero (or close to it) and is used for looking at variability in stock with no fishing.
+is taken from the operating model stored at \code{Data@Misc$ReferencePoints$ByYear$FMSY}),
+and set an effort limit (TAE) so that F=FMSY (or some fraction of FMSY) in
+each year the MP is applied. NFref sets annual catch to zero and is used
+for looking at variability in stock with no fishing.
 }
 \details{
 Note that you can out-perform \code{FMSYref} easily. The requirement for fixed
@@ -43,9 +45,9 @@ short-lived species of high temporal variability in productivity!
 \itemize{
 \item \code{FMSYref}: A reference FMSY method that fishes at FMSY
 
-\item \code{FMSYref50}: A reference FMSY method that fishes at 50\\% of FMSY
+\item \code{FMSYref50}: A reference FMSY method that fishes at 50\% of FMSY
 
-\item \code{FMSYref75}: A reference FMSY method that fishes at 75\\% of FMSY
+\item \code{FMSYref75}: A reference FMSY method that fishes at 75\% of FMSY
 
 \item \code{NFref}: A reference MP that sets annual catch to almost zero (1e-15)
 }}
