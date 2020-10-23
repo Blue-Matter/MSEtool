@@ -265,24 +265,22 @@ makePerf <- function(OMin, except = NULL) {
 #' 
 MPtype <- function(MPs=NA) {
   if(class(MPs) == "MP") stop("MPs must be characters")
-  if (any(is.na(MPs))) MPs <- avail("MP")
+  availMPs <- avail("MP")
+  if (any(is.na(MPs))) MPs <- availMPs
   if (class(MPs) != 'character') stop("MPs must be characters")
   
-  Data <- OMtool::SimulatedData
-  dims <- dim(Data@Ind)
-  n.ind <- 5
-  Data@AddInd <- array(Data@Ind, dim=c(dims[1],n.ind,dims[2]))
-  Data@AddIndV <- array(1, dim=c(dims[1],n.ind,dims[2])) 
-  Data@AddIndType <- rep(1, n.ind)
-  Data@AddIunits <- rep(1, n.ind)
-  Data@CV_AddInd <- array(0.1, dim=c(dims[1],n.ind,dims[2])) 
+  existMPs <- MPs %in% availMPs
   
-  runMPs <- applyMP(Data, MPs, reps = 2, nsims=1, silent=TRUE)
+  if (any(!existMPs))
+    warning(paste0('Some MPs are not found in environment: ', MPs[!existMPs], collapse=", "))
+  
+  Data <- OMtool::SimulatedData
+  runMPs <- applyMP(Data, MPs[existMPs], reps = 2, nsims=1, silent=TRUE)
   recs <- runMPs[[1]]
   
-  type <- rep("NA", length(MPs))
-  rec <- rep("", length(MPs))
-  rectypes <- c("TAE", "Spatial", "SL", "Discards")
+  type <- rep("NA", length(MPs[existMPs]))
+  rec <- rep("", length(MPs[existMPs]))
+  rectypes <- c("TAE", "Spatial", "Selectivity", 'Retention', "Discards")
   for (mm in seq_along(recs)) {
     Effort <- Spatial <- Selectivity <- Discards<- FALSE
     output <- length(recs[[mm]]$TAC) > 0 
@@ -295,15 +293,16 @@ MPtype <- function(MPs=NA) {
       thisrec <- "TAC"
     }
     if (input) {
-      # what recommentations have been made?
+      # what recommendations have been made?
       if (any(is.finite(recs[[mm]]$Effort))) Effort <- TRUE
       if (any(is.finite(recs[[mm]]$Spatial))) Spatial <- TRUE
       if (any(is.finite(recs[[mm]]$LR5)) | any(is.finite(recs[[mm]]$LFR)) | any(is.finite(recs[[mm]]$HS)) |
-          any(is.finite(recs[[mm]]$Rmaxlen)) | any(is.finite(recs[[mm]]$L5)) | any(is.finite(recs[[mm]]$LFS)) |
+          any(is.finite(recs[[mm]]$Rmaxlen))) Retention <- TRUE
+      if (any(is.finite(recs[[mm]]$L5)) | any(is.finite(recs[[mm]]$LFS)) |
           any(is.finite(recs[[mm]]$Vmaxlen))) Selectivity <- TRUE
       if (any(is.finite(recs[[mm]]$DR)) | any(is.finite(recs[[mm]]$Fdisc))) Discards <- TRUE
       
-      dorecs <- rectypes[c(Effort, Spatial, Selectivity, Discards)]
+      dorecs <- rectypes[c(Effort, Spatial, Selectivity, Retention, Discards)]
       thisrec <- dorecs
       type[mm] <- "Input"
       
@@ -320,7 +319,11 @@ MPtype <- function(MPs=NA) {
   }
   type[grep("ref", MPs)] <- "Reference"
   
-  df <- data.frame(MP=MPs, Type=type, Recs=rec, stringsAsFactors = FALSE)
+  df <- data.frame(MP=MPs[existMPs], Type=type, Recs=rec, stringsAsFactors = FALSE)
+  if (sum(!existMPs)>0) {
+    df_non <- data.frame(MP=MPs[!existMPs], Type='unknown', Recs='unknown', stringsAsFactors = FALSE)
+    df <- rbind(df, df_non)
+  }
   df <- df[order(df$Type),]
   rownames(df) <- 1:nrow(df)
   df
