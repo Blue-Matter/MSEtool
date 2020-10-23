@@ -1,4 +1,17 @@
 
+get_funcs <- function(package, classy) {
+  pkgs <- search()
+  search_package <- paste0("package:",package)
+  funs <- NULL
+  if (search_package %in% pkgs) {
+    funs <- ls(search_package)[vapply(ls(search_package),
+                               getclass, 
+                               logical(1), 
+                               classy = classy)]
+  }
+  funs
+}
+
 #' What objects of this class are available
 #' 
 #' Generic class finder
@@ -7,7 +20,8 @@
 #' DLMtool package.
 #' 
 #' @param classy A class of object (character string, e.g. 'Fleet')
-#' @param builtin Logical. Only return Objects of class 'classy' from DLMtool & DLMextra packages?
+#' @param package Optional. Names(s) of the package to search for object of class `classy`. String
+#' Default is all `openMSE` packages.
 #' @examples
 #' avail("OM")
 #' @author T. Carruthers
@@ -17,7 +31,7 @@
 #' Fleets <- avail("Fleet")
 #' MPs <- avail("MP")
 #' @export 
-avail <- function(classy, builtin=FALSE) {
+avail <- function(classy, package=NULL) {
   temp <- try(class(classy), silent=TRUE)
   if (class(temp) == "try-error") classy <- deparse(substitute(classy))
   if (temp == "function") classy <- deparse(substitute(classy))
@@ -30,20 +44,21 @@ avail <- function(classy, builtin=FALSE) {
     return(temp)
     
   } else {
-    if (builtin) {
-      temp <- c(ls("package:DLMtool")[vapply(ls("package:DLMtool"), getclass, logical(1), classy = classy)])
-    } else {
-      temp <- c(ls("package:DLMtool")[vapply(ls("package:DLMtool"), getclass, logical(1), classy = classy)], 
-                ls(envir = .GlobalEnv)[vapply(ls(envir = .GlobalEnv), getclass, logical(1), classy = classy)])
-    }
     
-    pkgs <- search()
-    if ("package:DLMextra" %in% pkgs) {
-      temp_extra <- ls("package:DLMextra")[vapply(ls("package:DLMextra"), getclass, logical(1), classy = classy)]
-      temp <- c(temp, temp_extra)
-    }
+    if (is.null(package))
+      package <- c('OMtool', 'SAMtool', 'DLMtool', 'DLMextra')
     
-    if (classy == "Observation") message("Class 'Observation' has been re-named 'Obs'")	
+    OMtool_funs <- get_funcs('OMtool', classy)
+    SAMtool_funs <- get_funcs('SAMtool', classy)
+    DLMtool_funs <- get_funcs('DLMtool', classy)
+    DLMextra_funs <- get_funcs('DLMextra', classy)
+    global_funs <- ls(envir = .GlobalEnv)[vapply(ls(envir = .GlobalEnv), getclass, logical(1), classy = classy)]
+    
+    temp <- global_funs 
+    if ('OMtool' %in% package) temp <- c(temp, OMtool_funs)
+    if ('SAMtool' %in% package) temp <- c(temp, SAMtool_funs)
+    if ('DLMtool' %in% package) temp <- c(temp, DLMtool_funs)
+    if ('DLMextra' %in% package) temp <- c(temp, DLMextra_funs)
     if (length(temp) < 1) stop("No objects of class '", classy, "' found", call. = FALSE)
     return(unique(temp))
   }
