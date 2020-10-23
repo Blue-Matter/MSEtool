@@ -208,7 +208,17 @@ cat("#' ", ObjectClass, " class objects",
 
 # ---- Simulated Data ----
 Hist <- Simulate()
-SimulatedData <- Hist@Data 
+SimulatedData <- Hist@Data
+
+dims <- dim(SimulatedData@Ind)
+n.ind <- 15 # add 15 additional indices for Simulated Data for robustness
+SimulatedData@AddInd <- array(SimulatedData@Ind, dim=c(dims[1],n.ind,dims[2]))
+SimulatedData@AddIndV <- array(1, dim=c(dims[1],n.ind,dims[2])) 
+SimulatedData@AddIndType <- rep(1, n.ind)
+SimulatedData@AddIunits <- rep(1, n.ind)
+SimulatedData@CV_AddInd <- array(0.1, dim=c(dims[1],n.ind,dims[2])) 
+
+
 
 usethis::use_data(SimulatedData, overwrite = TRUE)
 
