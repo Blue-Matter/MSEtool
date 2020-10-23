@@ -568,8 +568,6 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
                  Ncurr=StockPars$N[,,nyears,])
   
   # ---- Store Reference Points ----
-  
-  
   # arrays for unfished biomass for all years 
   SSN_a <- array(NA, dim = c(nsim, n_age, nyears+proyears, nareas))  
   N_a <- array(NA, dim = c(nsim, n_age, nyears+proyears, nareas))
@@ -579,8 +577,8 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
   # Calculate initial spawning stock numbers for all years
   SSN_a[SAYR_a] <- Nfrac[SAY_a] * StockPars$R0[S_a] * StockPars$initdist[SAR_a] 
   N_a[SAYR_a] <- StockPars$R0[S_a] * surv[SAY_a] * StockPars$initdist[SAR_a] # Calculate initial stock numbers for all years
-  Biomass_a[SAYR_a] <- N_a[SAYR_a] * StockPars$Wt_age[SAY_a]  # Calculate initial stock biomass
-  SSB_a[SAYR_a] <- SSN_a[SAYR_a] * StockPars$Wt_age[SAY_a]    # Calculate spawning stock biomass
+  Biomass_a[SAYR_a] <- N_a[SAYR_a] * StockPars$Wt_age[SAY_a] # Calculate initial stock biomass
+  SSB_a[SAYR_a] <- SSN_a[SAYR_a] * StockPars$Wt_age[SAY_a]  # Calculate spawning stock biomass
   
   SSN0_a <- apply(SSN_a, c(1,3), sum) # unfished spawning numbers for each year
   N0_a <- apply(N_a, c(1,3), sum) # unfished numbers for each year)
@@ -588,7 +586,6 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
   SSB0a_a <- apply(SSB_a, c(1, 3,4), sum)  # Calculate unfished spawning stock biomass by area for each year
   B0_a <- apply(Biomass_a, c(1,3), sum) # unfished biomass for each year
   VB0_a <- apply(apply(Biomass_a, c(1,2,3), sum) * FleetPars$V, c(1,3), sum) # unfished vulnerable biomass for each year
-  
   
   ReferencePoints <- list(
     ByYear=list(
@@ -631,7 +628,6 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
       MGT=MGT
     )
   )
-  
   
   # --- Calculate Historical Catch ----
   # Calculate catch-at-age 
@@ -727,17 +723,21 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
     Data <- updatedData$Data
     ObsPars <- updatedData$ObsPars
       
-      
   }
   
   OMPars <- Data@OM
+  
+  # ---- Add Stock & Fleet Dynamics to Data ----
+  Data@Misc$StockPars <- StockPars
+  Data@Misc$FleetPars <- FleetPars
+  Data@Misc$ReferencePoints <- ReferencePoints
   
   # --- Return Historical Simulations and Data from last historical year ----
   
   if(!silent) 
     message("Returning historical simulations")
   Hist <- new("Hist")
-  Data@Misc <- list()
+  # Data@Misc <- list()
   Hist@Data <- Data
   Hist@Data@Obs <- data.frame() # remove
   

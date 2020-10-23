@@ -103,6 +103,9 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE) {
   
   Dataout@TAC <- TACout
   Dataout@MPs <- MPs
+  nms <- names(Data@Misc)
+  nms <- nms[nchar(nms)>0]
+  Dataout@Misc[nms] <- Data@Misc[nms]
   
   list(returnList, Dataout)
 }
