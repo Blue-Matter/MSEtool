@@ -5,6 +5,8 @@
 \title{Apply Management Procedures to an object of class Data}
 \usage{
 applyMP(Data, MPs = NA, reps = 100, nsims = NA, silent = FALSE)
+
+applyMP(Data, MPs = NA, reps = 100, nsims = NA, silent = FALSE)
 }
 \arguments{
 \item{Data}{An object of class Data}
@@ -20,7 +22,12 @@ applyMP(Data, MPs = NA, reps = 100, nsims = NA, silent = FALSE)
 \value{
 A list with the first element a list of management recommendations,
 and the second the updated Data object
+
+A list with the first element a list of management recommendations,
+and the second the updated Data object
 }
 \description{
+Apply Management Procedures to an object of class Data
+
 Apply Management Procedures to an object of class Data
 }

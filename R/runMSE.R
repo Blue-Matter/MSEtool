@@ -1,14 +1,7 @@
-#' Run Historical Simulations
-#' 
-#' 
-#' @param OM An operating model object (class `OM` or class `MOM`)
-#' @param silent Should messages be printed out to the console?
-#' @param parallel Logical. Should the MSE be run using parallel processing?
-#' 
-#' @return An object of class \linkS4class{Hist}
+#' @describeIn runMSE Run the Historical Simulations from an object of class `OM` 
 #' @export
 #
-Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
+Simulate <- function(OM=OMtool::testOM, parallel=FALSE, silent=FALSE) {
   # ---- Initial Checks and Setup ----
   if (class(OM) == 'OM') {
     if (OM@nsim <=1) stop("OM@nsim must be > 1", call.=FALSE)
@@ -812,16 +805,10 @@ Simulate <- function(OM=testOM, parallel=FALSE, silent=FALSE) {
   Hist
 }
 
-
-#' Run Forward Projections
-#' 
+#' @describeIn runMSE Run the Forward Projections
 #' 
 #' @param Hist An Historical Simulation object (class `Hist`)
-#' @param MPs A vector of methods (character string) of class MP
-#' @param silent Should messages be printed out to the console?
-#' @param parallel Logical. Should the MSE be run using parallel processing?
-#' 
-#' @return An object of class \linkS4class{Hist}
+#'
 #' @export
 Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
   
@@ -1344,23 +1331,27 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
 
 #' Run a Management Strategy Evaluation
 #' 
-#' A function that runs a Management Strategy Evaluation (closed-loop
+#' Functions to run the Management Strategy Evaluation (closed-loop
 #' simulation) for a specified operating model
 #' 
-#' @param OM An operating model object (class `OM` or class `MOM`)
+#' @param OM An operating model object (class `OM` or class `Hist`)
 #' @param MPs A vector of methods (character string) of class MP
 #' @param Hist Should model stop after historical simulations? Returns an object of 
 #' class 'Hist' containing all historical data
 #' @param silent Should messages be printed out to the console?
 #' @param parallel Logical. Should the MSE be run using parallel processing?
 #' 
-#' @return An object of class \linkS4class{MSE}
-#' @export
+#' @describeIn runMSE Run the Historical Simulations and Forward Projections
+#'  from an object of class `OM
 #' 
-runMSE <- function(OM=OMtool::testOM, 
-                   MPs = NA, 
-                   Hist=FALSE, 
-                   silent=FALSE, 
+#' @return Functions return objects of class \linkS4class{Hist} or \linkS4class{MSE}
+#' \itemize{
+#'   \item Simulate - An object of class \linkS4class{Hist}
+#'   \item Project - An object of class \linkS4class{MSE}
+#'   \item runMSE - An object of class \linkS4class{MSE}
+#' }
+#' @export
+runMSE <- function(OM=OMtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE, 
                    parallel=FALSE) {
   
   # ---- Initial Checks and Setup ----
@@ -1397,7 +1388,7 @@ runMSE <- function(OM=OMtool::testOM,
             crayon::red(attributes(MSEout)$condition))
     message('Returning the historical simulations (class `Hist`). To avoid re-running spool up, ',
     'the forward projections can be run with ',
-            '`Project(Hist, MPs)`')
+            '`runMSE(Hist, MPs, ...)`')
     return(Hist)
   }
   
