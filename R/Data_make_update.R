@@ -698,7 +698,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
   
   # check last year
   if (!is.na(RealData@LHYear) && !SimData@LHYear == RealData@LHYear) {
-    warning('`Fleet@CurrentYear` (', OM@CurrentYr, ') is not the same as `OM@cpars$Data@LHYear` (', RealData@LHYear, ')')
+    warning('`Fleet@CurrentYear` (', SimData@LHYear, ') is not the same as `OM@cpars$Data@LHYear` (', RealData@LHYear, ')')
   }
   
   # check maxage 
@@ -797,7 +797,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     Data_out@Cat <- matrix(RealData@Cat[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
     Data_out@CV_Cat <- matrix(RealData@CV_Cat[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
     
-    simcatch <- apply(FleetPars$CBret, c(1,3), sum)
+    simcatch <- apply(StockPars$CBret, c(1,3), sum)
     
     Cbias <- matrix(apply(Data_out@Cat, 1, mean)/apply(simcatch, 1, mean),
                     nrow=nsim, ncol=nyears+proyears)
@@ -875,7 +875,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     Data_out@CV_VInd <- matrix(RealData@CV_VInd[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
     
     # Calculate Error
-    SimBiomass <- apply(VBiomass, c(1, 3), sum)
+    SimBiomass <- apply(StockPars$VBiomass, c(1, 3), sum)
     I_Err <- lapply(1:nsim, function(i) indfit(SimBiomass[i,],  Data_out@VInd[i,]))
     I_Err <- do.call('rbind', I_Err)
     
