@@ -78,6 +78,10 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE) {
   returnList <- list() # a list nMPs long containing MPs recommendations
   recList <- list() # a list containing nsim recommendations from a single MP 
   TACout <- array(NA, dim=c(nMPs, reps, nsims))
+  
+  refMPs <- avail('MP', 'OMtool')
+  refMPs <- refMPs[grepl('ref', refMPs)]
+  
   # if (!sfIsRunning() | (nMPs < 8 & nsims < 8)) {
   for (mp in 1:nMPs) {
     temp <- lapply(1:nsims, MPs[mp], Data = Data, reps = reps)  
@@ -94,6 +98,14 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE) {
       recList[[X]] <- rec
       for (x in 1:nsims) Dataout@Misc[[x]] <- recList$Misc[[x]]
       recList$Misc <- NULL
+      
+      if (MPs[mp] %in% refMPs) {
+        recList$type <- 'reference'  
+      } else {
+        recList$type <- 'mp'  
+      }
+      
+      
     }
     if (length(recList$TAC)>0)  TACout[mp,,] <- recList$TAC 
     returnList[[mp]] <- recList

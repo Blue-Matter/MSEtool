@@ -418,18 +418,29 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   
   n_age <- StockPars$maxage + 1 # include age-0
   
+  # Implementation Error 
+  Effort_Imp_Error <- ImpPars$E_y
+  SL_Imp_Error <- ImpPars$SizeLim_y
+  TAC_Imp_Error <- ImpPars$TAC_y
+  
+  if (MPRecs$type == 'reference') {
+    Effort_Imp_Error[Effort_Imp_Error!=1] <- 1
+    SL_Imp_Error[SL_Imp_Error!=1] <- 1
+    TAC_Imp_Error[TAC_Imp_Error!=1] <- 1
+  }
+
   # Effort 
   if (length(MPRecs$Effort) == 0) { # no max effort recommendation
-    if (y==1) TAE <- LastTAE *  ImpPars$E_y[,y] # max effort is unchanged but has implementation error
-    if (y>1) TAE <- LastTAE /  ImpPars$E_y[,y-1]  *  ImpPars$E_y[,y] # max effort is unchanged but has implementation error
+    if (y==1) TAE <- LastTAE *  Effort_Imp_Error[,y] # max effort is unchanged but has implementation error
+    if (y>1) TAE <- LastTAE /  Effort_Imp_Error[,y-1] * Effort_Imp_Error[,y] # max effort is unchanged but has implementation error
   } else if (length(MPRecs$Effort) != nsim) {
     stop("Effort recommmendation is not 'nsim' long.\n Does MP return Effort recommendation under all conditions?")
   } else {
     # a maximum effort recommendation
     if (!all(is.na(histTAE))) {
-      TAE <- histTAE * MPRecs$Effort *  ImpPars$E_y[,y] # adjust existing TAE adjustment with implementation error  
+      TAE <- histTAE * MPRecs$Effort * Effort_Imp_Error[,y] # adjust existing TAE adjustment with implementation error  
     } else {
-      TAE <- MPRecs$Effort *  ImpPars$E_y[,y] # adjust existing TAE adjustment with implementation error
+      TAE <- MPRecs$Effort * Effort_Imp_Error[,y] # adjust existing TAE adjustment with implementation error
     }
   }
   
@@ -464,7 +475,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   } else if (length(MPRecs$LR5) != nsim) {
     stop("LR5 recommmendation is not 'nsim' long.\n Does MP return LR5 recommendation under all conditions?")
   } else {
-    LR5_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$LR5 *  ImpPars$SizeLim_y[,y], 
+    LR5_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$LR5 *  SL_Imp_Error[,y], 
                                                      ncol=(length((y + nyears):(nyears+proyears))),
                                                      nrow=nsim, byrow=FALSE) # recommendation with implementation error
     RetentFlag <- TRUE
@@ -477,7 +488,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   } else if (length(MPRecs$LFR) != nsim) {
     stop("LFR recommmendation is not 'nsim' long.\n Does MP return LFR recommendation under all conditions?")
   } else {
-    LFR_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$LFR *  ImpPars$SizeLim_y[,y], 
+    LFR_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$LFR *  SL_Imp_Error[,y], 
                                                      ncol=(length((y + nyears):(nyears+proyears))),
                                                      nrow=nsim, byrow=FALSE) # recommendation with implementation error
     RetentFlag <- TRUE
@@ -503,7 +514,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   } else if (length(MPRecs$HS) != nsim) {
     stop("HS recommmendation is not 'nsim' long.\n Does MP return HS recommendation under all conditions?")
   } else {
-    HS <- MPRecs$HS  *  ImpPars$SizeLim_y[,y] # recommendation
+    HS <- MPRecs$HS  *  SL_Imp_Error[,y] # recommendation
     RetentFlag <- TRUE
   }
   
@@ -518,7 +529,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   } else if (length(MPRecs$L5) != nsim) {
     stop("L5 recommmendation is not 'nsim' long.\n Does MP return L5 recommendation under all conditions?")
   } else {
-    L5_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$L5 *  ImpPars$SizeLim_y[,y], 
+    L5_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$L5 *  SL_Imp_Error[,y], 
                                                     ncol=(length((y + nyears):(nyears+proyears))),
                                                     nrow=nsim, byrow=FALSE) # recommendation with implementation error
     SelectFlag <- TRUE
@@ -531,7 +542,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   } else if (length(MPRecs$LFS) != nsim) {
     stop("LFS recommmendation is not 'nsim' long.\n Does MP return LFS recommendation under all conditions?")
   } else {
-    LFS_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$LFS *  ImpPars$SizeLim_y[,y], 
+    LFS_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$LFS *  SL_Imp_Error[,y], 
                                                      ncol=(length((y + nyears):(nyears+proyears))),
                                                      nrow=nsim, byrow=FALSE) # recommendation with implementation error
     SelectFlag <- TRUE
@@ -691,7 +702,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   if (!all(is.na(TACused))) { # a TAC has been set
     # if MP returns NA - TAC is set to TAC from last year
     TACused[is.na(TACused)] <- LastTAC[is.na(TACused)] 
-    TACusedE <-  ImpPars$TAC_y[,y]*TACused   # TAC taken after implementation error
+    TACusedE <-  TAC_Imp_Error[,y]*TACused   # TAC taken after implementation error
 
     # Calculate total vulnerable biomass available mid-year accounting for any changes in selectivity &/or spatial closures
     M_array <- array(0.5*StockPars$M_ageArray[,,nyears+y], dim=c(nsim, n_age, StockPars$nareas))
