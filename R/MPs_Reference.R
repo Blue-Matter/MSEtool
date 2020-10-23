@@ -4,8 +4,10 @@
 #' 
 #' Several reference MPs for your operating model to use in the management strategy
 #' evaluation. FMSYref (and related) assume perfect information about FMSY (FMSY 
-#' is taken from the operating model stored at Data@@OM$FMSY). NFref sets annual catch 
-#' to zero (or close to it) and is used for looking at variability in stock with no fishing.
+#' is taken from the operating model stored at `Data@Misc$ReferencePoints$ByYear$FMSY`),
+#' and set an effort limit (TAE) so that F=FMSY (or some fraction of FMSY) in 
+#' each year the MP is applied. NFref sets annual catch to zero and is used
+#'  for looking at variability in stock with no fishing.
 #'
 #' @templateVar mp FMSYref 
 #' @template MPtemplate
@@ -22,35 +24,64 @@
 #' FMSYref(1, OMtool::SimulatedData, plot=TRUE)
 #' @export 
 FMSYref <- function(x, Data, reps = 100, plot=FALSE) {
-  rec <- new("Rec") # create recommendation object
-  rec@TAC <- trlnorm(reps, Data@OM$A[x] * (1 - exp(-Data@OM$FMSY[x])), 0.01)
-  if (plot) boxplot(rec@TAC, ylab=paste0("TAC (", Data@Units, ")"))
-  rec
+  y <- max(Data@Year) - Data@LHYear+1
+  FMSY <- Data@Misc$ReferencePoints$ByYear$FMSY[x,nyears+y]
+  q <- Data@Misc$FleetPars$qs[x]
+  qvar <- Data@Misc$FleetPars$qvar[x,y] # future only
+  if (length(qvar)<1) qvar <- 1
+  qinc <- Data@Misc$FleetPars$qinc[x] # future only
+  qcur <- qvar * q*(1+qinc/100)^y # catchability this year
   
+  HistE <- Data@OM$FinF[x] # Last historical fishing effort
+  MSYE <- FMSY/qcur # effort for this year's FMSY
+  
+  Rec <- new('Rec')
+  Rec@Effort <- MSYE/HistE 
+  Rec
 }
 class(FMSYref) <- "MP"
 
-#' @describeIn FMSYref A reference FMSY method that fishes at 50\% of FMSY
+#' @describeIn FMSYref A reference FMSY method that fishes at 50% of FMSY
 #' @examples 
 #' FMSYref50(1, OMtool::SimulatedData, plot=TRUE)
 #' @export  
 FMSYref50 <- function(x, Data, reps = 100, plot=FALSE) {
-  rec <- new("Rec") # create recommendation object
-  rec@TAC <- trlnorm(reps, Data@OM$A[x] * (1 - exp(-Data@OM$FMSY[x]*0.5)) , 0.01)
-  if (plot) boxplot(rec@TAC, ylab=paste0("TAC (", Data@Units, ")"))
-  rec
+  y <- max(Data@Year) - Data@LHYear+1
+  FMSY <- Data@Misc$ReferencePoints$ByYear$FMSY[x,nyears+y]
+  q <- Data@Misc$FleetPars$qs[x]
+  qvar <- Data@Misc$FleetPars$qvar[x,y] # future only
+  if (length(qvar)<1) qvar <- 1
+  qinc <- Data@Misc$FleetPars$qinc[x] # future only
+  qcur <- qvar * q*(1+qinc/100)^y # catchability this year
+  
+  HistE <- Data@OM$FinF[x] # Last historical fishing effort
+  MSYE <- FMSY/qcur # effort for this year's FMSY
+  
+  Rec <- new('Rec')
+  Rec@Effort <- MSYE/HistE *0.5
+  Rec
 }
 class(FMSYref50) <- "MP"
 
-#' @describeIn FMSYref A reference FMSY method that fishes at 75\% of FMSY
+#' @describeIn FMSYref A reference FMSY method that fishes at 75% of FMSY
 #' @examples 
 #' FMSYref75(1, OMtool::SimulatedData, plot=TRUE)
 #' @export 
 FMSYref75 <- function(x, Data, reps = 100, plot=FALSE) {
-  rec <- new("Rec") # create recommendation object
-  rec@TAC <- trlnorm(reps, Data@OM$A[x] * (1 - exp(-Data@OM$FMSY[x]*0.75)) , 0.01)
-  if (plot) boxplot(rec@TAC, ylab=paste0("TAC (", Data@Units, ")"))
-  rec
+  y <- max(Data@Year) - Data@LHYear+1
+  FMSY <- Data@Misc$ReferencePoints$ByYear$FMSY[x,nyears+y]
+  q <- Data@Misc$FleetPars$qs[x]
+  qvar <- Data@Misc$FleetPars$qvar[x,y] # future only
+  if (length(qvar)<1) qvar <- 1
+  qinc <- Data@Misc$FleetPars$qinc[x] # future only
+  qcur <- qvar * q*(1+qinc/100)^y # catchability this year
+  
+  HistE <- Data@OM$FinF[x] # Last historical fishing effort
+  MSYE <- FMSY/qcur # effort for this year's FMSY
+  
+  Rec <- new('Rec')
+  Rec@Effort <- MSYE/HistE * 0.75
+  Rec
 }
 class(FMSYref75) <- "MP"
 
