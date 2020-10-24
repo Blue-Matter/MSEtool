@@ -829,7 +829,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
   control <- OM@cpars$control; OM@cpars$control <- NULL
   
   # ---- Check MPs ----
-  CheckMPs(MPs=MPs, silent=silent)
+  MPs <- CheckMPs(MPs=MPs, silent=silent)
   
   nMP <- length(MPs)  # the total number of methods used
   if (nMP < 1) stop("No valid MPs found", call.=FALSE)
@@ -1219,8 +1219,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
       } else {
         # --- Not an update yr ----
         NoMPRecs <- MPRecs # TAC & TAE stay the same
-        NoMPRecs[lapply(NoMPRecs, length) > 0 ] <- NULL
-        NoMPRecs$Spatial <- NA
+        # NoMPRecs[lapply(NoMPRecs, length) > 0 ] <- NULL
+        # NoMPRecs$Spatial <- NA
         MPCalcs <- CalcMPDynamics(NoMPRecs, y, nyears, proyears, nsim, Biomass_P,
                                   VBiomass_P, LastTAE, histTAE, LastSpatial, LastAllocat,
                                   LastTAC, TACused, maxF,LR5_P, LFR_P, Rmaxlen_P,
