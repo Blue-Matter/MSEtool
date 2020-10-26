@@ -446,8 +446,8 @@ setClass("Fleet", slots = c(Name = "character",
                             Rmaxlen = "numeric",
                             DR = "numeric",
                             CurrentYr="numeric", 
-                            MPA='char.log',
-                            Misc='list'))
+                            MPA='char.log'
+                            )
 
 # initialize Fleet
 setMethod("initialize", "Fleet", function(.Object, file = NA, dec=c(".", ",")) {
