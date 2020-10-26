@@ -703,7 +703,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
   
   # check maxage 
   if (!is.na(RealData@MaxAge) && !SimData@MaxAge == RealData@MaxAge) {
-    warning('`Stock@MaxAge` (', OM@maxage, ') is not the same as `OM@cpars$Data@MaxAge` (', RealData@MaxAge, ')')
+    warning('`Stock@MaxAge` (', SimData@MaxAge, ') is not the same as `OM@cpars$Data@MaxAge` (', RealData@MaxAge, ')')
   }
   
   # check dimensions of real data CAA

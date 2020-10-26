@@ -210,7 +210,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
       Data@Lbar <- matrix(NA, nrow = 1, ncol = ncol(Data@Lc))
       for(i in 1:ncol(Data@Lbar)) {
         if(!is.na(lcpos[i])) {
-          Data@Lbar[1, i] <- weighted.mean(x = Data@CAL_mids[lcpos[i]:length(replist$lbins)],
+          Data@Lbar[1, i] <- stats::weighted.mean(x = Data@CAL_mids[lcpos[i]:length(replist$lbins)],
                                            w = Data@CAL[1, i, lcpos[i]:length(replist$lbins)],
                                            na.rm = TRUE)
         }
@@ -263,7 +263,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
     CSD <- CSD[!is.na(CSD)]
     CSD[CSD <= 0] <- NA
     if(packageVersion("DLMtool") < 5.4) {
-      Csd_weighted <- weighted.mean(CSD, colSums(cbind(cat_weight, cat_numbers)), na.rm = TRUE)
+      Csd_weighted <- stats::weighted.mean(CSD, colSums(cbind(cat_weight, cat_numbers)), na.rm = TRUE)
       Data@CV_Cat <- sqrt(exp(Csd_weighted^2) - 1)
       message(paste0("CV of Catch (weighted by catch of individual fleets), Data@CV_Cat = ", round(Data@CV_Cat, 2)))
     } else {
@@ -530,7 +530,7 @@ SS2Data_get_comps <- function(replist, mainyrs, maxage, season_as_years = FALSE,
   dbase <- dbase[!is.na(dbase_ind), ]
   dbase$Obs2 <- dbase$Obs * dbase$N # Expand comp proportions to numbers
 
-  comp_mat <- split(dbase, dbase$Fleet) %>% lapply(acast, formula = list("Yr", "Bin"), fun.aggregate = sum, value.var = "Obs2", fill = 0) # Convert to matrix
+  comp_mat <- split(dbase, dbase$Fleet) %>% lapply(reshape2::acast, formula = list("Yr", "Bin"), fun.aggregate = sum, value.var = "Obs2", fill = 0) # Convert to matrix
   comp_mat <- comp_mat[match(comp_fleet, as.numeric(names(comp_mat)))] # Subset fleets
 
   expand_matrix <- function(x) {

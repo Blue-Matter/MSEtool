@@ -18,12 +18,12 @@
 #' @param h Numeric value greater than 0.2 and less than 1. The steepness of the stock-recruitment curve (assumed to be close to 1 to match VPA assumption).
 #' @param Obs The observation model (class Obs). This function only updates the catch and index observation error.
 #' @param Imp The implementation model (class Imp). This function does not update implementation parameters.
-#' @param naa Numeric array [sim, ages, year]. Numbers-at-age [first age is age zero].
-#' @param faa Numeric array [sim, ages, year]. Fishing mortality rate-at-age [first age is age zero].
-#' @param waa Numeric array [sim, ages, year]. Weight-at-age [first age is age zero].
-#' @param Mataa Numeric array [sim, ages, year]. Maturity (spawning fraction)-at-age [first age is age zero].
-#' @param Maa Numeric array [sim, ages, year]. Natural mortality rate-at-age [first age is age zero].
-#' @param laa Numeric array [sim, ages, year]. Length-at-age [first age is age zero].
+#' @param naa Numeric array `[sim, ages, year]`. Numbers-at-age `[first age is age zero]`.
+#' @param faa Numeric array `[sim, ages, year]`. Fishing mortality rate-at-age `[first age is age zero]`.
+#' @param waa Numeric array `[sim, ages, year]`. Weight-at-age `[first age is age zero]`.
+#' @param Mataa Numeric array `[sim, ages, year]`. Maturity (spawning fraction)-at-age `[first age is age zero]`.
+#' @param Maa Numeric array `[sim, ages, year]`. Natural mortality rate-at-age `[first age is age zero]`.
+#' @param laa Numeric array `[sim, ages, year]`. Length-at-age `[first age is age zero]`.
 #' @param nyr_par_mu Positive integer. The number of recent years that natural mortality, age vulnerability, weight, length and maturity parameters are averaged over for defining future projection conditions.
 #' @param LowerTri Integer. The number of recent years for which model estimates of recruitment are ignored (not reliably estimated by the VPA)
 #' @param recind Positive integer. The first age class that fish 'recruit to the fishery'. The default is 2 - ie the first position in the age dimension of naa is age zero

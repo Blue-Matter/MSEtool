@@ -12,7 +12,7 @@
 #' @param reps The number of stochastic replicates within each simulation in the operating model.
 #' @param maxF The maximum allowable F in the operating model.
 #' @param seed The random seed for the operating model.
-#' @param interval The interval at which management procedures will update the management advice in \link[DLMtool]{runMSE}, e.g., 1 = annual updates.
+#' @param interval The interval at which management procedures will update the management advice in \link[OMtool]{runMSE}, e.g., 1 = annual updates.
 #' @param Obs The observation model (class Obs). This function only updates the catch and index observation error.
 #' @param Imp The implementation model (class Imp). This function does not update implementation parameters.
 #' @param import_mov Logical, whether to import movement matrix from the assessment.
@@ -22,7 +22,7 @@
 #' @param Name The name of the operating model
 #' @param Source Reference to assessment documentation e.g. a url
 #' @param Author Who did the assessment
-#' @param report Logical, if TRUE, the function will run \link[DLMtool]{runMSE} to generate historical data from the operating model
+#' @param report Logical, if TRUE, the function will run \link[OMtool]{runMSE} to generate historical data from the operating model
 #' to compare against SS output. A markdown report will be generated.
 #' @param filename If \code{report = TRUE}, character string for the name of the markdown and HTML files.
 #' @param dir If \code{report = TRUE}, the directory in which the markdown and HTML files will be saved.
@@ -538,7 +538,8 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1,
     
     cols<-rep('black',nyears)
     pch<-rep(1,nyears)
-    cols[nyears-(0:1)]<-"blue";pch[nyears-(0:LowerTri)]<-4
+    cols[nyears-(0:1)]<-"blue";
+    # pch[nyears-(0:LowerTri)]<-4 # LowerTri not defined?
     
     for(a in 1:maxage){
       N_OM<-apply(Hist@AtAge$Number[1,a,,],1,sum)

@@ -138,6 +138,17 @@ getEffhist <- function(Esd, nyears, EffYears, EffLower, EffUpper) {
   }
 }
 
+#' Standardize values
+#' 
+#' Function to standardize to value relative to minimum and maximum values
+#' @param x vector of values 
+#' @param Max Maximum value
+#' @param Min Minimum value 
+#' @keywords internal
+Range <- function(x, Max, Min) {
+  (x - Min)/(Max - Min)  
+}
+
 range01 <- function(x) {
   (x - min(x))/(max(x) - min(x)) 
 }
@@ -541,7 +552,7 @@ CheckMPs <- function(MPs=NA, silent=FALSE) {
   pass <- rep(TRUE, length(MPs))
   for (i in seq_along(MPs)) {
     mp <- get(MPs[i])
-    tryMP <- try(sapply(1:3, mp, SimulatedData), silent=TRUE)
+    tryMP <- try(sapply(1:3, mp, OMtool::SimulatedData), silent=TRUE)
     err <- unique(unlist(lapply(tryMP, class) ))
     if (err =='character') pass[i] <- FALSE
   }

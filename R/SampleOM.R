@@ -86,18 +86,9 @@ cparscheck<-function(cpars){
 SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
   
   sampCpars <- list()
-  
-  # --- None stochastic parameters ----
-  Names <- c('CAL_bins', 'CAL_binsmid', 'binWidth', 'nCALbins',
-             'maxage', 'n_age','CurrentYr', 
-             'plusgroup', 'control', 'AddIUnits', 'Data', 'MPA',
-             'nareas', 'a', 'b', 'maxF')
-  
-  sampCpars[Names] <- cpars[Names]
-  cpars[Names] <- NULL
-  
+
   # --- Check custom parameters dimensions ----
-  ncparsim<-cparscheck(cpars)
+  ncparsim <- cparscheck(cpars)
   
   # --- Check for Invalid Cpars ----
   # TODO
@@ -179,8 +170,19 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
   }
   
   sampCpars <- sampCpars[lengths(sampCpars) != 0] # remove NULL
+  
+  
+  # --- Add non-stochastic parameters ----
+  Names <- c('CAL_bins', 'CAL_binsmid', 'binWidth', 'nCALbins',
+             'maxage', 'n_age', 'CurrentYr',
+             'plusgroup', 'control', 'AddIUnits', 'Data', 'MPA',
+             'nareas', 'a', 'b', 'maxF')
+  
+  sampCpars[Names] <- cpars[Names]
+  ind <- which(unlist(lapply(sampCpars, length)) ==0)
+  sampCpars[ind] <- NULL
+  
   sampCpars
-
 }
 
 sample_unif <- function(par, cpars, Obj, nsim, altpar=NULL) {
@@ -1247,7 +1249,7 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
   
   if (class(Stock) == "Stock") {
     # Sample Stock Pars - need some to calculate selectivity at age and length  
-    StockPars <- SampleStockPars(Stock, nsim, nyears, proyears, cpars, msg=msg)
+    StockPars <- SampleStockPars(Stock, nsim, nyears, proyears, cpars, msg=FALSE)
   } else if (is.null(Stock)) StockPars <- NULL
   if (class(Stock) == 'list') StockPars <- Stock 
 

@@ -329,7 +329,7 @@ GB_target_plot <- function(Itarg, Irec, I0, Data, Catrec, TAC) {
   text(1, I0, "I0", col="orange", cex=1.25, pos=2)
   
   
-  ylim <- range(c(Catrec, TAC))
+  ylim <- range(c(Catrec, TAC), na.rm=TRUE)
   boxplot(cbind(Catrec, TAC), ylim=ylim, ylab=Data@Units, names=c("Last Catch", "TAC"))
   
 }

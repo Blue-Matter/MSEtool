@@ -51,3 +51,60 @@ applyMMP <- function(DataList, MP = NA, reps = 1, nsims=NA, silent=FALSE) {
     CombineMMP(temp,nareas)
 
 }
+
+
+#' Create a blank MP recommendations object (class Rec) of the right dimensions
+#'
+#' @param temp A list of nsim simulations.
+#' @param nareas The number of areas.
+#' @author T. Carruthers
+#' @export
+CombineMMP<-function(temp,nareas){
+  
+  slots <- slotNames(temp[[1]][[1]][[1]]) # sim stock fleet
+  nsim<-length(temp)
+  np<-length(temp[[1]])
+  nf<-length(temp[[1]][[1]])
+  
+  recList<-new('list')
+  
+  for(pp in 1:np){
+    
+    recList[[pp]]<-new('list')
+    
+    for(ff in 1:nf){
+      
+      recList[[pp]][[ff]]<-new('list')
+      
+      for (X in slots) { # sequence along recommendation slots
+        
+        if (X == "Misc") { # convert to a list nsim by nareas
+          rec <- lapply(temp,getfirstlev,name=X,pp=pp,ff=ff)
+        } else {
+          rec <- matrix(unlist(lapply(temp,getfirstlev,name=X,pp=pp,ff=ff)),ncol=nsim) # unlist(lapply(temp, slot, name=X))
+        }
+        if (X == "Spatial") { # convert to a matrix nsim by nareas
+          rec <- matrix(rec, nareas, nsim)
+        }
+        recList[[pp]][[ff]][[X]] <- rec
+        recList$Misc <- NULL
+        
+      } # end of Rec slots
+      
+    } # end of fleets
+    
+  } # end of stocks
+  
+  recList
+  
+}
+
+#' Extract the first dimension of a hierachical list of recommendation objects
+#' 
+#' @param x Simulation number
+#' @param name Character. The slot name to extract.
+#' @param pp Integer. The stock number (second level list)
+#' @param ff Integer. The fleet number (third level list)
+#' @author T. Carruthers
+#' @export
+getfirstlev<-function(x, name,pp,ff) slot(x[[pp]][[ff]], name)

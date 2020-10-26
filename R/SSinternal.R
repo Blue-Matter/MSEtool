@@ -89,6 +89,8 @@ negcorlogspace<-function(xmu,ymu,xcv=0.1,nsim,cor=-0.9,ploty=FALSE){
 
 }
 
+ilogit <- function(x) 1/(1 + exp(-x))
+
 # #' Predict recruitment and return fit to S-R observations
 # #'
 # #' @description Internal function to \link{optSR}
@@ -525,11 +527,11 @@ SS2MOM_stock <- function(i, replist, mainyrs, nyears, MOM) {
     # numbers-at-age in initial year
     n_init <- replist$natage %>% dplyr::filter(Sex==i, Yr==mainyrs[1], `Beg/Mid`=='B')
     cols <- which(colnames(n_init) %in% 0:Stock@maxage)
-    n_init <- n_init %>% dplyr::select(all_of(cols))
+    n_init <- n_init %>% dplyr::select(dplyr::all_of(cols))
     
     n_virg <- replist$natage %>% 
       dplyr::filter(Sex==i, Era=="VIRG", `Beg/Mid`=='B') %>% 
-      dplyr::select(all_of(cols)) %>%
+      dplyr::select(dplyr::all_of(cols)) %>%
       as.numeric()
 
     adjust <- n_init / (n_virg)# *  cpars_bio$Perr_y[1,n_age:1])

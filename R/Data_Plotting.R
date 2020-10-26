@@ -6,6 +6,7 @@
 #' @param lwq Lower quantile of TACs for min ylim
 #' @param outline Logical. Include outliers in plot?
 #' @param ...  Optional additional arguments passed to \code{boxplot}
+#' @method plot Data
 #' @export
 plot.Data <- function(x, upq=0.9, lwq=0.1, outline = FALSE, ...) {
   boxplot.Data(x, upq, lwq, outline = FALSE, ...)
@@ -22,6 +23,7 @@ plot.Data <- function(x, upq=0.9, lwq=0.1, outline = FALSE, ...) {
 #' @param ...  Optional additional arguments passed to \code{boxplot}
 #' @return Returns a data frame containing the information shown in the plot
 #' @author A. Hordyk
+#' @method boxplot Data
 #' @export
 boxplot.Data <- function(x, upq=0.9, lwq=0.1, ylim=NULL, outline = FALSE, col = NULL, ...) {
   Data <- updateMSE(x)

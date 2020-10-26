@@ -22,6 +22,18 @@ Simulate <- function(OM=OMtool::testOM, parallel=FALSE, silent=FALSE) {
     stop("You must specify an operating model")
   } 
   
+  # ---- Set up parallel processing ----
+  if (parallel) {
+    if (snowfall::sfIsRunning()) {
+      ncpus <- snowfall::sfCpus()
+    } else {
+      setup()
+      ncpus <- snowfall::sfCpus()
+    }
+  } else {
+    ncpus <- 1
+  }
+  
   set.seed(OM@seed) # set seed for reproducibility 
   nsim <- OM@nsim # number of simulations
   nyears <- OM@nyears # number of historical years
@@ -51,7 +63,7 @@ Simulate <- function(OM=OMtool::testOM, parallel=FALSE, silent=FALSE) {
   # custom parameters exist - sample and write to list
   SampCpars <- list()
   if (length(OM@cpars)>0)  {
-    SampCpars <- SampleCpars(OM@cpars, nsim, silent=silent)
+    SampCpars <- SampleCpars(cpars=OM@cpars, nsim, silent=silent)
   }
   
   
@@ -79,7 +91,7 @@ Simulate <- function(OM=OMtool::testOM, parallel=FALSE, silent=FALSE) {
   ImpPars <- SampleImpPars(OM, nsim, cpars=SampCpars, nyears, proyears)
   
   # Bio-Economic Parameters
-  # TODO - add to Fleet object
+  # TODO - add to Fleet@Misc object
   BioEcoPars <- c("RevCurr", "CostCurr", "Response", "CostInc", "RevInc", "LatentEff")
   if (all(lapply(SampCpars[BioEcoPars], length) == 0)) {
     # no bio-economic model
@@ -281,7 +293,7 @@ Simulate <- function(OM=OMtool::testOM, parallel=FALSE, silent=FALSE) {
   }
   
   
-  ntrials <- 50 
+  fracD <- 0.05; ntrials <- 50 
   if (!is.null(control$ntrials)) ntrials <- control$ntrials
   
   # If q has hit bound, re-sample depletion and try again. Tries 'ntrials' times and then alerts user
@@ -715,6 +727,7 @@ Simulate <- function(OM=OMtool::testOM, parallel=FALSE, silent=FALSE) {
                                msg=!silent)
     Data <- updatedData$Data
     ObsPars <- updatedData$ObsPars
+
     
   }
   

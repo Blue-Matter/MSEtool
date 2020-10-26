@@ -147,6 +147,40 @@ NULL
 #' avail("Imp")
 NULL
 
+#' @rdname Data-class-objects 
+"Atlantic_mackerel"
+
+#' @rdname Data-class-objects 
+"China_rockfish"
+
+#' @rdname Data-class-objects 
+"Cobia"
+
+#' @rdname Data-class-objects 
+"Example_datafile"
+
+#' @rdname Data-class-objects 
+"Gulf_blue_tilefish"
+
+#' @rdname Data-class-objects 
+"ourReefFish"
+
+#' @rdname Data-class-objects 
+"Red_snapper"
+
+#' @rdname Data-class-objects 
+"Simulation_1"
+
+#' Data class objects
+#' 
+#' Example objects of class Data
+#' 
+#' @name Data-class-objects
+#' @format NULL
+#' @examples
+#' avail("Data")
+NULL
+
 #' @rdname OM-class-objects 
 "testOM"
 
@@ -178,5 +212,13 @@ NULL
 #'  An object of class Data
 #'
 "SimulatedData"
+
+
+#'  ReqData 
+#'
+#'  Dataframe with required data slots for built-in MPs
+#'
+#'
+"ReqData"
 
 

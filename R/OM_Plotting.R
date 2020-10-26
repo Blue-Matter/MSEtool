@@ -22,7 +22,7 @@ render_plot <- function(Object, Class, Stock=NULL, RMD=NULL, nsamp=3, nsim=200, 
     nsim <- Object@nsim 
     nyears <- Object@nyears
     proyears <- Object@proyears
-    SampCpars <- if(length(Object@cpars)>0) SampCpars <- SampleCpars(Object@cpars, nsim, msg=FALSE)
+    SampCpars <- if(length(Object@cpars)>0) SampCpars <- SampleCpars(Object@cpars, nsim, silent=TRUE)
     set.seed(Object@seed)
     Stock <- SubOM(Object, "Stock")
     # Class <- "OM"
@@ -155,6 +155,7 @@ plot.character <- function(x, Object, ...) {
 #' @param Object An object of class `Stock` or `Fleet`
 #' @param Stock An object of class `Stock` required for `Fleet` parameters
 #' @rdname plot.Stock
+#' @method plot pars
 #' @export
 plot.pars <- function(x, Object, Stock=NULL, nsamp=3, nsim=200, nyears=50, 
                       proyears=28, output_file=NULL, output_dir=getwd(), 
@@ -679,7 +680,7 @@ plotStock <- function(x, nsamp=3, nsim=500, nyears=50, proyears=28,
     
     if(length(Stock@cpars)>0){ # custom parameters exist - sample and write to list
       #ncparsim<-cparscheck(Stock@cpars)   # check each list object has the same length and if not stop and error report
-      SampCpars <- SampleCpars(Stock@cpars, nsim, msg=FALSE) 
+      SampCpars <- SampleCpars(Stock@cpars, nsim, silent=TRUE) 
     }
     Stock <- SubOM(Stock)
   }
@@ -918,7 +919,7 @@ plotFleet <- function(x, Stock=NULL, nsamp=3, nsim=500, proyears=28, col="darkgr
     if (is.finite(Fleet@nsim)) nsim <- Fleet@nsim	
     if (length(Fleet@cpars) > 0) {
       # ncparsim <-cparscheck(Fleet@cpars)   # check each list object has the same length and if not stop and error report
-      SampCpars <- SampleCpars(Fleet@cpars, nsim, msg=FALSE) 
+      SampCpars <- SampleCpars(Fleet@cpars, nsim, silent=TRUE) 
     }
     Stock <- SubOM(Fleet, "Stock")
     Fleet <- SubOM(Fleet, "Fleet")
@@ -1073,7 +1074,7 @@ plotObs <- function(x, nsim=500, nyears=50,
     if (is.finite(Obs@nsim)) nsim <- Obs@nsim	
     if (length(Obs@cpars) > 0) {
       # ncparsim <-cparscheck(Obs@cpars)   # check each list object has the same length and if not stop and error report
-      SampCpars <- SampleCpars(Obs@cpars, nsim, msg=FALSE) 
+      SampCpars <- SampleCpars(Obs@cpars, nsim, silent=TRUE) 
     }
     Obs <- SubOM(Obs,"Obs")
   }

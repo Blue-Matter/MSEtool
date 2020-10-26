@@ -3,7 +3,7 @@
 #' 
 #' @export
 #'
-SimulateMOM <- function(MOM=Albacore_TwoFleet, parallel=TRUE, silent=FALSE) {
+SimulateMOM <- function(MOM=OMtool::Albacore_TwoFleet, parallel=TRUE, silent=FALSE) {
   # ---- Initial Checks and Setup ----
   if (class(MOM) == 'MOM') {
     if (MOM@nsim <=1) stop("MOM@nsim must be > 1", call.=FALSE)
@@ -2138,7 +2138,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
                 F_FMSY=F_FMSYa, B=Ba, SSB=SSBa, VB=VBa, FM=FMa, CaRet, TAC=TACa,
                 SSB_hist = SSB, CB_hist = CB, FM_hist = FM, Effort = Effort,
                 PAA=array(), CAA=array(), CAL=list(), CALbins=list(),
-                MSY_P = MSY_P, FMSY_P = FMSY_P, SSBMSY_P = SSBMSY_P,
+                MSY_P = MSY_y, FMSY_P = FMSY_y, SSBMSY_P = SSBMSY_y,
                 Misc = Misc)
   MSEout
 }
@@ -2166,7 +2166,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
 #' }
 #' @author T. Carruthers and A. Hordyk
 #' @export
-multiMSE <- function(MOM=Albacore_TwoFleet, 
+multiMSE <- function(MOM=OMtool::Albacore_TwoFleet, 
                      MPs=list(c("AvC","DCAC"),c("FMSYref","curE")),
                      Hist=FALSE,
                      silent=FALSE,
@@ -2225,7 +2225,7 @@ multiMSE <- function(MOM=Albacore_TwoFleet,
     message('Returning the historical simulations (class `multiHist`). To avoid re-running spool up, ',
             'the forward projections can be run with ',
             '`ProjectMOM(multiHist, MPs, ...)`')
-    return(HistSims)
+    return(multiHist)
   }
   MSEout
 }

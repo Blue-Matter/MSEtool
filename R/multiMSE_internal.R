@@ -73,21 +73,22 @@ TEG<-function(vec){ # make index for list calculation
 #'
 #' @param x Integer, the simulation number
 #' @param StockPars A list of sampled stock parameters, one list element per stock
-#' @param FleetPars A hierarcical list of sampled fleet parameters, first list level is stock, second is fleet
+#' @param FleetPars A hierarchical list of sampled fleet parameters, first list level is stock, second is fleet
 #' @param np The number of stocks
 #' @param nf The number of fleets
 #' @param nareas The number of areas
-#' @param maxage The maximum number of modelled ages
+#' @param maxage The maximum number of modeled ages
 #' @param nyears The number of historical 'spool-up' years (from unfished to now)
-#' @param N An array of stock numbers [nsim,np,maxage,nyears,nareas] - only the values from the first year are used
-#' @param VF An array of vulnerability [nsim,np,nf,maxage,nyears+proyears]
-#' @param FretA An array of retention [nsim,np,nf,maxage,nyears+proyears]
+#' @param N An array of stock numbers `[nsim,np,maxage,nyears,nareas]` - only the values from the first year are used
+#' @param VF An array of vulnerability `[nsim,np,nf,maxage,nyears+proyears]`
+#' @param FretA An array of retention `[nsim,np,nf,maxage,nyears+proyears]`
 #' @param maxF A numeric value specifying the maximum fishing mortality for any single age class
-#' @param MPA An of spatial closures by year [np,nf,nyears+proyears,nareas]
-#' @param CatchFrac A list of stock-specific fleet fractions of current catch list[[stock]][nsim, nf]
-#' @param bounds Bounds for total q estimation
+#' @param MPA An of spatial closures by year `[np,nf,nyears+proyears,nareas]`
 #' @param Rel A list of inter-stock relationships see slot Rel of MOM object class
 #' @param SexPars A list of sex-specific relationships (SSBfrom, stock_age)
+#' @param qs Vector of q values
+#' @param qfrac Array of qfrac
+#' @param plusgroup Plusgroup
 #' @author T.Carruthers
 #' @keywords internal
 HistMICE<-function(x,StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, VF, 
@@ -147,14 +148,7 @@ HistMICE<-function(x,StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, VF,
 
 }
 
-
-#' Normalize
-#'
-#' Normalize an array over certain dimensions
-#'
-#' @param listy A list of objects
-#' @param namey A character vector representing the list item's name
-#' @author T. Carruthers
+# Normalize an array over certain dimensions
 nlz<-function(arr,dims=NULL,func="max"){
   arrdim<-dim(arr)
   ndim<-length(arrdim)
@@ -197,7 +191,7 @@ ldim<-function(x){
 #' @param np The number of stocks
 #' @param mm Integer the MP number
 #' @param nf The number of fleets
-#' @param realVB A matrix of real vulnerable biomass [nsim,np, year]
+#' @param realVB A matrix of real vulnerable biomass `[nsim,np, year]`
 #' @author T. Carruthers
 multiDataS<-function(MSElist,StockPars,np,mm,nf,realVB){
 

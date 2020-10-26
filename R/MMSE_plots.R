@@ -1,6 +1,6 @@
 #' A fairly tidy time-series quantile plot
 #'
-#' @param x Matrix. A time series quantity [simulation, year]
+#' @param x Matrix. A time series quantity `[simulation, year]`
 #' @param p Numeric vector. The percentiles that are plotted (LB2,LB1,UB1,UB2). LB2 and UB2 are the outer percentiles, LB1 and UB1 are the inner percentiles.
 #' @param yrs Numeric vector. The years corresponding to the indexing of x
 #' @param qcol Character, color. The color of the inner percentile range

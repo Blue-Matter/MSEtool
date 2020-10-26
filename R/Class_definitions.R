@@ -426,7 +426,6 @@ setClassUnion(name="char.log", members=c("character", "logical"))
 #' @export
 #' @keywords classes
 #' @examples
-#' 
 #' showClass('Fleet')
 #' 
 setClass("Fleet", slots = c(Name = "character",
@@ -447,7 +446,8 @@ setClass("Fleet", slots = c(Name = "character",
                             Rmaxlen = "numeric",
                             DR = "numeric",
                             CurrentYr="numeric", 
-                            MPA='char.log'))
+                            MPA='char.log',
+                            Misc='list'))
 
 # initialize Fleet
 setMethod("initialize", "Fleet", function(.Object, file = NA, dec=c(".", ",")) {

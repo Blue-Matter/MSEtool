@@ -834,439 +834,440 @@ formals(LtargetE4)$xL <- 1.15
 class(LtargetE4) <- "MP"
 
 
-
-#### Length-Based SPR ####
-
-
-#' Internal Estimation Function for LBSPR MP
-#'
-#' @param x Iteration number
-#' @param Data An object of class `Data`
-#' @param reps Number of samples. Not used in this method.
-#' @param n Numeric. Number of historical years to run the model.
-#' @param smoother Logical. Should estimates be smoothed over multiple years?
-#' @param R variance of sampling noise
-#'
-#' @export
-#' @keywords internal
-LBSPR_ <- function(x, Data, reps, n=5, smoother=TRUE, R=0.2) {
-  if (NAor0(Data@L50[x])) stop("Data@L50 is NA")
-  if (NAor0(Data@L95[x])) stop("Data@L95 is NA")
-  if (NAor0(Data@wlb[x])) stop("Data@wlb is NA")
-
-  LenBins <- Data@CAL_bins
-  By <- LenBins[2] - LenBins[1]
-  LenMids <- seq(from=By*0.5, by=By, length.out = length(LenBins)-1)
-  CVLinf <- Data@LenCV[x]
-  MK <- Data@Mort[x]/Data@vbK[x]
-  Linf <- Data@vbLinf[x]
-  L50 <- Data@L50[x]
-  L95 <- Data@L95[x]
-  Beta <- Data@wlb[x]
-
-  n <- min(n, nrow(Data@CAL[x,,]))
-  if (length(Data@Misc) ==0) Data@Misc[[x]] <- NA
-  if (length(Data@Misc[[x]]) ==0) Data@Misc[[x]] <- NA
-
-  nage <- 101
-  P <- 0.01
-  xs <- seq(0, to=1, length.out = nage)
-  rLens <- 1-P^(xs/MK)
-  EL <- rLens * Linf
-  SDL <- EL * CVLinf
-  Ml <- 1/(1+exp(-log(19.0)* (LenMids-L50)/(L95-L50)));
-
-  Prob <- matrix(0, nrow=nage, ncol=length(LenMids))
-  for (aa in 1:nage) {
-    d1 <- dnorm(LenMids, EL[aa], SDL[aa])
-    t1 <- dnorm(EL[aa] + SDL[aa]*2.5, EL[aa], SDL[aa]) # truncate at 2.5 sd
-    d1[d1<t1] <- 0
-    if (!all(d1==0)) Prob[aa,] <- d1/sum(d1)
-  }
-
-  if (all(is.na(Data@Misc[[x]]))) { # first time it's being run
-
-    # run model for n most recent years
-    yind <- match(Data@LHYear[1], Data@Year)
-    CALdata <- Data@CAL[x, (yind-n+1):length(Data@Year),]
-    if (inherits(CALdata,'numeric'))  CALdata <- matrix(CALdata, ncol=length(LenMids))
-    Ests <- Ests_smooth <- matrix(NA, nrow=nrow(CALdata), ncol=5)
-    Fit <- list()
-
-    for (y in 1:nrow(CALdata)) {
-      CAL <- CALdata[y,]
-      modalL <- LenMids[which.max(CAL)]
-      minL <- LenMids[min(which(CAL>0))]
-      sl50start <-  mean(c(modalL, minL))
-      starts <- log(c(sl50start/Linf, sl50start/Linf*0.1, 1))
-
-      runOpt <- optim(starts, LBSPRopt, CAL=CAL, nage=nage, nlen=length(LenMids), CVLinf=CVLinf,
-                      LenBins=LenBins, LenMids=LenMids,
-                      MK=MK, Linf=Linf, rLens=rLens, Prob=Prob, Ml=Ml,
-                      L50=L50, L95=L95, Beta=Beta)
-
-      SL50 <- exp(runOpt$par[1]) * Linf
-      dSL50 <- exp(runOpt$par[2])
-      SL95 <- SL50 + dSL50 * SL50
-      FM <- exp(runOpt$par[3])
-
-      runMod <- LBSPRgen(SL50, SL95, FM, nage=nage, nlen=length(LenMids), CVLinf,
-                         LenBins, LenMids,
-                         MK, Linf, rLens, Prob, Ml,L50, L95, Beta)
-
-      Ests[y,] <- c(SL50, SL95, FM, runMod[[2]], runOpt$value)
-      Fit[[y]] <- runMod[[1]] * sum(CALdata[y,])
-    }
-
-    # # ## Plot ###
-    # par(mfrow=c(2,3))
-    # for (y in 1:nrow(CALdata)) {
-    #   # for (y in 1:16) {
-    #   tt <- barplot(CALdata[y,], names.arg=LenMids)
-    #   lines(tt, Fit[[y]], lwd=2)
-    #   }
-    # Ests[1:16,]
-
-    if (nrow(Ests)>1) Ests_smooth <- apply(Ests, 2, FilterSmooth)
-    # if (smoother && nrow(Ests) > 1) Ests <- apply(Ests, 2, FilterSmooth)
-
-    Ests <- as.data.frame(Ests)
-    names(Ests) <- c("SL50", "SL95", "FM", "SPR", "NLL")
-    Ests$Year <- (yind-n+1):length(Data@Year)
-
-    Ests_smooth <- as.data.frame(Ests_smooth[,1:4])
-    names(Ests_smooth) <- c("SL50", "SL95", "FM", "SPR")
-    Ests_smooth$Year <- (yind-n+1):length(Data@Year)
-
-  } else {
-    lastYr <- max(Data@Misc[[x]]$Ests$Year)
-    curYr <- max(Data@Year)
-    yrs <- (lastYr+1):curYr
-
-    CALdata <- Data@CAL[x, (length(Data@Year)-length(yrs)+1):length(Data@Year),]
-    if (inherits(CALdata,'numeric'))  CALdata <- matrix(CALdata, ncol=length(LenMids))
-    Ests <- Ests_smooth <- matrix(NA, nrow=nrow(CALdata), ncol=5)
-    Fit <- list()
-    for (y in 1:nrow(CALdata)) {
-      CAL <- CALdata[y,]
-      modalL <- LenMids[which.max(CAL)]
-      minL <- LenMids[min(which(CAL>0))]
-      sl50start <-  mean(c(modalL, minL))
-      starts <- log(c(sl50start/Linf, sl50start/Linf*0.1, 1))
-      if (MK > 5) MK <- 5
-      if (MK < 0.4) MK <- 0.4
-      runOpt <- try(optim(starts, LBSPRopt, CAL=CAL, nage=101, nlen=length(LenMids), CVLinf=CVLinf,
-                      LenBins=LenBins, LenMids=LenMids,
-                      MK=MK, Linf=Linf, rLens=rLens, Prob=Prob, Ml=Ml, L50=L50,
-                      L95=L95, Beta=Beta), silent=TRUE)
-      if (inherits(runOpt,'try-error')) {
-        warning("Error in LBSPR ignoring estimate and using previous year. Sim = ", x)
-      } else {
-      SL50 <- exp(runOpt$par[1]) * Linf
-      dSL50 <- exp(runOpt$par[2])
-      SL95 <- SL50 + dSL50 * SL50
-      FM <- exp(runOpt$par[3])
-
-      runMod <- LBSPRgen(SL50, SL95, FM, nage=101, nlen=length(LenMids), CVLinf,
-                         LenBins, LenMids,
-                         MK, Linf, rLens=rLens, Prob=Prob, Ml=Ml, L50, L95, Beta)
-
-      Ests[y,] <- c(SL50, SL95, FM, runMod[[2]], runOpt$value)
-      Fit[[y]] <- runMod[[1]] * sum(CALdata[y,])
-      }
-    }
-
-    #
-    # ## Plot ###
-    # par(mfrow=c(2,3))
-    # for (y in 1:nrow(CALdata)) {
-    #   tt <- barplot(CALdata[y,], names.arg=LenMids)
-    #   lines(tt, Fit[[y]], lwd=2)
-    # }
-
-    Ests <- as.data.frame(Ests)
-    names(Ests) <- c("SL50", "SL95", "FM", "SPR", "NLL")
-    Ests$Year <- (length(Data@Year)-length(yrs)+1):length(Data@Year)
-
-    Ests_smooth <- as.data.frame(Ests[,1:4])
-    names(Ests_smooth) <- c("SL50", "SL95", "FM", "SPR")
-    Ests_smooth$Year <- (length(Data@Year)-length(yrs)+1):length(Data@Year)
-
-    Ests_smooth <- rbind(Data@Misc[[x]]$Ests, Ests)
-    Ests <-rbind(Data@Misc[[x]]$Ests, Ests)
-
-    if (smoother) {
-      SmoothEsts <- apply(Ests_smooth[,1:4], 2, FilterSmooth, R=R)
-      Ests_smooth[,1:4] <- SmoothEsts
-    }
-  }
-
- return(list(Ests=Ests, Ests_smooth=Ests_smooth, Fit=Fit))
-}
-
-
-#' Length-Based SPR MPs
-#'
-#' The spawning potential ratio (SPR) is estimated using the LBSPR method
-#' and compared to a target of 0.4.
-#'
-#' Effort is modified according to the harvest control rules described in
-#' Hordyk et al. (2015b):
-#'
-#' @templateVar mp LBSPR
-#' @param x A position in the data object
-#' @param Data A data object
-#' @param reps The number of stochastic samples of the MP recommendation(s)
-#' @param plot Logical. Show the plot?
-#'
-#' @section Required Data:
-#' See \linkS4class{Data} for information on the \code{Data} object \cr
-#'
-#' @return An object of class \code{\link[=Rec-class]{Rec}} with the TAE slot populated
-#'
-#' @template MPuses
-#'
-#' @param SPRtarg The target SPR
-#' @param theta1 Control parameter for the harvest control rule
-#' @param theta2 Control parameter for the harvest control rule
-#' @param maxchange Maximum change in effort
-#' @param n Last number of years to run the model on.
-#' @param smoother Logical. Should the SPR estimates be smoothed?
-#' @param R variance of sampling noise for smoother
-#'
-#' @export
-#' @references
-#' Hordyk, A., Ono, K., Valencia, S., Loneragan, N., and Prince J (2015a).
-#' A novel length-based empirical estimation method of spawning potential ratio (SPR),
-#' and tests of its performance, for small-scale, data-poor fisheries,
-#' ICES Journal of Marine Science, 72 (1), 217-231
-#'
-#' Hordyk, A. R., Loneragan, N. R., & Prince, J. D. (2015b). An evaluation of an
-#'  iterative harvest strategy for data-poor fisheries using the length-based
-#'  spawning potential ratio assessment methodology. Fisheries Research,
-#'  171, 20-32. https://doi.org/10.1016/j.fishres.2014.12.018
-#'
-#' @examples
-#' LBSPR(1, Data=OMtool::SimulatedData, plot=TRUE)
-LBSPR <- function(x, Data, reps=1, plot=FALSE, SPRtarg=0.4, theta1=0.3,
-                  theta2=0.05, maxchange=0.3,
-                  n=5, smoother=TRUE, R=0.2) {
-
-  runLBSPR <- LBSPR_(x, Data, reps, n, smoother, R=R)
-
-  if (!smoother) Ests <- runLBSPR$Ests
-  if (smoother) Ests <- runLBSPR$Ests_smooth
-
-  estSPR <- Ests$SPR[length(Ests$SPR)]
-  ratio <- estSPR/SPRtarg - 1
-
-  vt <- theta1 * (ratio^3) + theta2*ratio
-  vt[vt< -maxchange]  <- -maxchange
-  vt[vt> maxchange]  <- maxchange
-
-  Eff <- 1+vt
-
-  if (plot) {
-
-    nyr <- length(runLBSPR$Fit)
-
-    CAL <- Data@CAL[x,,]
-    nyears <- dim(CAL)[1]
-    CAL <- CAL[(nyears-nyr+1):nyears,]
-    LenBins <- Data@CAL_bins
-    By <- LenBins[2] - LenBins[1]
-    LenMids <- seq(from=By*0.5, by=By, length.out = length(LenBins)-1)
-
-    op <- par(no.readonly = TRUE)
-    on.exit(op)
-    nrow <- ceiling(sqrt(nyr))
-    ncol <- ceiling((nyr + 1)/nrow)
-    par(mfrow=c(nrow,ncol))
-
-    if (nyr > 1) {
-      ymin <- min(unlist(apply(CAL > 0, 1, which)))
-      ymax <- max(unlist(apply(CAL > 0, 1, which)))
-      ind <- (ymin-1):(ymax+1)
-      ylim <- c(0, max(c(CAL, unlist(lapply(runLBSPR$Fit, max)))))
-      for (p in 1:nyr) {
-        tt <- barplot(CAL[p,ind], xlab="Length", ylab="Count", bty="l", names=LenMids[ind], ylim=ylim)
-        lines(tt, runLBSPR$Fit[[p]][ind], lwd=2)
-        title(paste0("Year ", runLBSPR$Ests$Year[p]))
-      }
-    } else {
-        ymin <- min(which(CAL > 0))
-        ymax <- max(which(CAL > 0))
-        ind <- (ymin-1):(ymax+1)
-        ylim <- c(0, max(c(CAL, runLBSPR$Fit[[1]])))
-        tt <- barplot(CAL[ind], xlab="Length", ylab="Count", bty="l", names=LenMids[ind], ylim=ylim)
-        lines(tt, runLBSPR$Fit[[1]][ind], lwd=2)
-        title(paste0("Year ", runLBSPR$Ests$Year[p]))
-    }
-
-    plot(runLBSPR$Ests$Year, runLBSPR$Ests$SPR, ylim=c(0,1), xlab="Year",
-         ylab="SPR", type="b", las=1, bty="l")
-
-  }
-  Rec <- new("Rec")
-  Rec@Effort <- Eff
-  Rec@Misc$Ests <- runLBSPR$Ests
-  Rec@Misc$Ests_smooth <- runLBSPR$Ests_smooth
-  Rec
-
-}
-class(LBSPR) <- 'MP'
-
-
-#' Length-Based SPR
-#'
-#' @describeIn LBSPR Fishing retention-at-length is set equivalent to slightly
-#' higher than the maturity curve if SPR < 0.4
-#'
-#' @export
-#'
-#' @examples
-#' LBSPR_MLL(1, Data=OMtool::SimulatedData, plot=FALSE)
-LBSPR_MLL <- function(x, Data, reps=1, plot=FALSE, SPRtarg=0.4, n=5, smoother=TRUE, R=0.2) {
-
-  Rec <- new("Rec")
-  if (length(Data@Misc)<=1) Data@Misc <- vector('list', x)
-
-  if (is.null(Data@Misc[[x]]) || length(Data@Misc[[x]])<1 ||is.null(Data@Misc[[x]]$MLLset)) {
-    runLBSPR <- LBSPR_(x, Data, reps, n, smoother, R=R)
-    if (!smoother) Ests <- runLBSPR$Ests
-    if (smoother) Ests <- runLBSPR$Ests_smooth
-    estSPR <- Ests$SPR[length(Ests$SPR)]
-
-    Rec@Misc$Ests <- runLBSPR$Ests
-    Rec@Misc$Ests_smooth <- runLBSPR$Ests_smooth
-
-    if (estSPR < SPRtarg) {
-      # estimated SPR < SPRtarg --> set size limit at 1.1 L50
-      Rec@LFR <- 1.1 * Data@L50[x]
-      Rec@LR5 <- 0.95 * Rec@LFR
-      Rec@Misc$MLLset <- TRUE
-      Rec@Misc$LFR <- Rec@LFR
-      Rec@Misc$LR5 <- Rec@LR5
-    } else {
-      Rec@LFR <- Data@OM$LFR[x]
-      Rec@LR5 <- Data@OM$LR5[x]
-      Rec@Misc$MLLset <- FALSE
-    }
-  } else {
-    if (Data@Misc[[x]]$MLLset) {
-      # already set MLL - do nothing
-      Rec@LFR <- Data@Misc[[x]]$LFR
-      Rec@LR5 <- Data@Misc[[x]]$LR5
-      Rec@Misc$LFR <- Rec@LFR
-      Rec@Misc$LR5 <- Rec@LR5
-      Rec@Misc$MLLset <- TRUE
-    } else {
-      runLBSPR <- LBSPR_(x, Data, reps, n, smoother, R=R)
-      Rec@Misc$Ests <- runLBSPR$Ests
-      Rec@Misc$Ests_smooth <- runLBSPR$Ests_smooth
-      if (!smoother) Ests <- runLBSPR$Ests
-      if (smoother) Ests <- runLBSPR$Ests_smooth
-      estSPR <- Ests$SPR[length(Ests$SPR)]
-      if (estSPR < SPRtarg) {
-        # estimated SPR < SPRtarg --> set size limit at 1.1 L50
-        Rec@LFR <- 1.1 * Data@L50[x]
-        Rec@LR5 <- 0.95 * Rec@LFR
-        Rec@Misc$LFR <- Rec@LFR
-        Rec@Misc$LR5 <- Rec@LR5
-        Rec@Misc$MLLset <- TRUE
-      } else {
-        # estimated SPR > SPRtarg --> don't change retention
-        Rec@LFR <- Data@OM$LFR[x]
-        Rec@LR5 <- Data@OM$LR5[x]
-        Rec@Misc$MLLset <- FALSE
-      }
-    }
-  }
-
-  if (plot) {
-
-    nyr <- length(runLBSPR$Fit)
-
-    CAL <- Data@CAL[x,,]
-    nyears <- dim(CAL)[1]
-    CAL <- CAL[(nyears-nyr+1):nyears,]
-    LenBins <- Data@CAL_bins
-    By <- LenBins[2] - LenBins[1]
-    LenMids <- seq(from=By*0.5, by=By, length.out = length(LenBins)-1)
-
-    op <- par(no.readonly = TRUE)
-    on.exit(op)
-    nrow <- ceiling(sqrt(nyr))
-    ncol <- ceiling((nyr + 1)/nrow)
-    par(mfrow=c(nrow,ncol))
-
-    if (nyr > 1) {
-      ymin <- min(unlist(apply(CAL > 0, 1, which)))
-      ymax <- max(unlist(apply(CAL > 0, 1, which)))
-      ind <- (ymin-1):(ymax+1)
-      ylim <- c(0, max(c(CAL, unlist(lapply(runLBSPR$Fit, max)))))
-      for (p in 1:nyr) {
-        tt <- barplot(CAL[p,ind], xlab="Length", ylab="Count", bty="l", names=LenMids[ind], ylim=ylim)
-        lines(tt, runLBSPR$Fit[[p]][ind], lwd=2)
-        title(paste0("Year ", runLBSPR$Ests$Year[p]))
-      }
-    } else {
-      ymin <- min(which(CAL > 0))
-      ymax <- max(which(CAL > 0))
-      ind <- (ymin-1):(ymax+1)
-      ylim <- c(0, max(c(CAL, runLBSPR$Fit[[1]])))
-      tt <- barplot(CAL[ind], xlab="Length", ylab="Count", bty="l", names=LenMids[ind], ylim=ylim)
-      lines(tt, runLBSPR$Fit[[1]][ind], lwd=2)
-      title(paste0("Year ", runLBSPR$Ests$Year[p]))
-    }
-
-    plot(runLBSPR$Ests$Year, runLBSPR$Ests$SPR, ylim=c(0,1), xlab="Year",
-         ylab="SPR", type="b", las=1, bty="l")
-
-  }
-  Rec
-
-}
-class(LBSPR_MLL) <- 'MP'
-
-
-
-#' Kalman filter and Rauch-Tung-Striebel smoother
-#'
-#' A function that applies a filter and smoother to estimates
-#'
-#' @param RawEsts a vector of estimated values
-#' @param R variance of sampling noise
-#' @param Q variance of random walk increments
-#' @param Int covariance of initial uncertainty
-#' @return a vector of smoothed values
-#'
-#' @export
-#' @keywords internal
-FilterSmooth <- function(RawEsts, R=0.2, Q=0.1, Int=100) {
-  # Modified from \url{"http://read.pudn.com/downloads88/ebook/336360/Kalman%20Filtering%20Theory%20and%20Practice,%20Using%20MATLAB/CHAPTER4/RTSvsKF.m__.htm"}
-  Ppred <-  rep(Int, length(RawEsts))
-  nNA <- sum(is.na(RawEsts))
-  while(nNA > 0) { # NAs get replaced with last non-NA
-    RawEsts[is.na(RawEsts)] <- RawEsts[which(is.na(RawEsts))-1]
-    nNA <- sum(is.na(RawEsts))
-  }
-  Pcorr <- xcorr <- xpred <- rep(0, length(RawEsts))
-  # Kalman Filter
-  for (X in 1:length(Ppred)) {
-    if (X !=1) {
-      Ppred[X] <- Pcorr[X-1] + Q
-      xpred[X] <- xcorr[X-1]
-    }
-    W <- Ppred[X]/(Ppred[X] + R)
-    xcorr[X] <- xpred[X] + W * (RawEsts[X] - xpred[X]) # Kalman filter estimate
-    Pcorr[X] <- Ppred[X] - W * Ppred[X]
-  }
-  # Smoother
-  xsmooth <- xcorr
-  for (X in (length(Pcorr)-1):1) {
-    A <- Pcorr[X]/Ppred[X+1]
-    xsmooth[X] <- xsmooth[X] + A*(xsmooth[X+1] - xpred[X+1])
-  }
-  return(xsmooth)
-}
+# 
+# #### Length-Based SPR ####
+# 
+# 
+# #' Internal Estimation Function for LBSPR MP
+# #'
+# #' @param x Iteration number
+# #' @param Data An object of class `Data`
+# #' @param reps Number of samples. Not used in this method.
+# #' @param n Numeric. Number of historical years to run the model.
+# #' @param smoother Logical. Should estimates be smoothed over multiple years?
+# #' @param R variance of sampling noise
+# #'
+# #' @export
+# #' @keywords internal
+# LBSPR_ <- function(x, Data, reps, n=5, smoother=TRUE, R=0.2) {
+#   if (NAor0(Data@L50[x])) stop("Data@L50 is NA")
+#   if (NAor0(Data@L95[x])) stop("Data@L95 is NA")
+#   if (NAor0(Data@wlb[x])) stop("Data@wlb is NA")
+# 
+#   LenBins <- Data@CAL_bins
+#   By <- LenBins[2] - LenBins[1]
+#   LenMids <- seq(from=By*0.5, by=By, length.out = length(LenBins)-1)
+#   CVLinf <- Data@LenCV[x]
+#   MK <- Data@Mort[x]/Data@vbK[x]
+#   Linf <- Data@vbLinf[x]
+#   L50 <- Data@L50[x]
+#   L95 <- Data@L95[x]
+#   Beta <- Data@wlb[x]
+# 
+#   n <- min(n, nrow(Data@CAL[x,,]))
+#   if (length(Data@Misc) ==0) Data@Misc[[x]] <- NA
+#   if (length(Data@Misc[[x]]) ==0) Data@Misc[[x]] <- NA
+# 
+#   nage <- 101
+#   P <- 0.01
+#   xs <- seq(0, to=1, length.out = nage)
+#   rLens <- 1-P^(xs/MK)
+#   EL <- rLens * Linf
+#   SDL <- EL * CVLinf
+#   Ml <- 1/(1+exp(-log(19.0)* (LenMids-L50)/(L95-L50)));
+# 
+#   Prob <- matrix(0, nrow=nage, ncol=length(LenMids))
+#   for (aa in 1:nage) {
+#     d1 <- dnorm(LenMids, EL[aa], SDL[aa])
+#     t1 <- dnorm(EL[aa] + SDL[aa]*2.5, EL[aa], SDL[aa]) # truncate at 2.5 sd
+#     d1[d1<t1] <- 0
+#     if (!all(d1==0)) Prob[aa,] <- d1/sum(d1)
+#   }
+# 
+#   if (all(is.na(Data@Misc[[x]]))) { # first time it's being run
+# 
+#     # run model for n most recent years
+#     yind <- match(Data@LHYear[1], Data@Year)
+#     CALdata <- Data@CAL[x, (yind-n+1):length(Data@Year),]
+#     if (inherits(CALdata,'numeric'))  CALdata <- matrix(CALdata, ncol=length(LenMids))
+#     Ests <- Ests_smooth <- matrix(NA, nrow=nrow(CALdata), ncol=5)
+#     Fit <- list()
+# 
+#     for (y in 1:nrow(CALdata)) {
+#       CAL <- CALdata[y,]
+#       modalL <- LenMids[which.max(CAL)]
+#       minL <- LenMids[min(which(CAL>0))]
+#       sl50start <-  mean(c(modalL, minL))
+#       starts <- log(c(sl50start/Linf, sl50start/Linf*0.1, 1))
+# 
+#       runOpt <- optim(starts, LBSPRopt, CAL=CAL, nage=nage, nlen=length(LenMids), CVLinf=CVLinf,
+#                       LenBins=LenBins, LenMids=LenMids,
+#                       MK=MK, Linf=Linf, rLens=rLens, Prob=Prob, Ml=Ml,
+#                       L50=L50, L95=L95, Beta=Beta)
+# 
+#       SL50 <- exp(runOpt$par[1]) * Linf
+#       dSL50 <- exp(runOpt$par[2])
+#       SL95 <- SL50 + dSL50 * SL50
+#       FM <- exp(runOpt$par[3])
+# 
+#       runMod <- LBSPRgen(SL50, SL95, FM, nage=nage, nlen=length(LenMids), CVLinf,
+#                          LenBins, LenMids,
+#                          MK, Linf, rLens, Prob, Ml,L50, L95, Beta)
+# 
+#       Ests[y,] <- c(SL50, SL95, FM, runMod[[2]], runOpt$value)
+#       Fit[[y]] <- runMod[[1]] * sum(CALdata[y,])
+#     }
+# 
+#     # # ## Plot ###
+#     # par(mfrow=c(2,3))
+#     # for (y in 1:nrow(CALdata)) {
+#     #   # for (y in 1:16) {
+#     #   tt <- barplot(CALdata[y,], names.arg=LenMids)
+#     #   lines(tt, Fit[[y]], lwd=2)
+#     #   }
+#     # Ests[1:16,]
+# 
+#     if (nrow(Ests)>1) Ests_smooth <- apply(Ests, 2, FilterSmooth)
+#     # if (smoother && nrow(Ests) > 1) Ests <- apply(Ests, 2, FilterSmooth)
+# 
+#     Ests <- as.data.frame(Ests)
+#     names(Ests) <- c("SL50", "SL95", "FM", "SPR", "NLL")
+#     Ests$Year <- (yind-n+1):length(Data@Year)
+# 
+#     Ests_smooth <- as.data.frame(Ests_smooth[,1:4])
+#     names(Ests_smooth) <- c("SL50", "SL95", "FM", "SPR")
+#     Ests_smooth$Year <- (yind-n+1):length(Data@Year)
+# 
+#   } else {
+#     lastYr <- max(Data@Misc[[x]]$Ests$Year)
+#     curYr <- max(Data@Year)
+#     yrs <- (lastYr+1):curYr
+# 
+#     CALdata <- Data@CAL[x, (length(Data@Year)-length(yrs)+1):length(Data@Year),]
+#     if (inherits(CALdata,'numeric'))  CALdata <- matrix(CALdata, ncol=length(LenMids))
+#     Ests <- Ests_smooth <- matrix(NA, nrow=nrow(CALdata), ncol=5)
+#     Fit <- list()
+#     for (y in 1:nrow(CALdata)) {
+#       CAL <- CALdata[y,]
+#       modalL <- LenMids[which.max(CAL)]
+#       minL <- LenMids[min(which(CAL>0))]
+#       sl50start <-  mean(c(modalL, minL))
+#       starts <- log(c(sl50start/Linf, sl50start/Linf*0.1, 1))
+#       if (MK > 5) MK <- 5
+#       if (MK < 0.4) MK <- 0.4
+#       runOpt <- try(optim(starts, LBSPRopt, CAL=CAL, nage=101, nlen=length(LenMids), CVLinf=CVLinf,
+#                       LenBins=LenBins, LenMids=LenMids,
+#                       MK=MK, Linf=Linf, rLens=rLens, Prob=Prob, Ml=Ml, L50=L50,
+#                       L95=L95, Beta=Beta), silent=TRUE)
+#       if (inherits(runOpt,'try-error')) {
+#         warning("Error in LBSPR ignoring estimate and using previous year. Sim = ", x)
+#       } else {
+#       SL50 <- exp(runOpt$par[1]) * Linf
+#       dSL50 <- exp(runOpt$par[2])
+#       SL95 <- SL50 + dSL50 * SL50
+#       FM <- exp(runOpt$par[3])
+# 
+#       runMod <- LBSPRgen(SL50, SL95, FM, nage=101, nlen=length(LenMids), CVLinf,
+#                          LenBins, LenMids,
+#                          MK, Linf, rLens=rLens, Prob=Prob, Ml=Ml, L50, L95, Beta)
+# 
+#       Ests[y,] <- c(SL50, SL95, FM, runMod[[2]], runOpt$value)
+#       Fit[[y]] <- runMod[[1]] * sum(CALdata[y,])
+#       }
+#     }
+# 
+#     #
+#     # ## Plot ###
+#     # par(mfrow=c(2,3))
+#     # for (y in 1:nrow(CALdata)) {
+#     #   tt <- barplot(CALdata[y,], names.arg=LenMids)
+#     #   lines(tt, Fit[[y]], lwd=2)
+#     # }
+# 
+#     Ests <- as.data.frame(Ests)
+#     names(Ests) <- c("SL50", "SL95", "FM", "SPR", "NLL")
+#     Ests$Year <- (length(Data@Year)-length(yrs)+1):length(Data@Year)
+# 
+#     Ests_smooth <- as.data.frame(Ests[,1:4])
+#     names(Ests_smooth) <- c("SL50", "SL95", "FM", "SPR")
+#     Ests_smooth$Year <- (length(Data@Year)-length(yrs)+1):length(Data@Year)
+# 
+#     Ests_smooth <- rbind(Data@Misc[[x]]$Ests, Ests)
+#     Ests <-rbind(Data@Misc[[x]]$Ests, Ests)
+# 
+#     if (smoother) {
+#       SmoothEsts <- apply(Ests_smooth[,1:4], 2, FilterSmooth, R=R)
+#       Ests_smooth[,1:4] <- SmoothEsts
+#     }
+#   }
+# 
+#  return(list(Ests=Ests, Ests_smooth=Ests_smooth, Fit=Fit))
+# }
+# 
+# 
+# #' Length-Based SPR MPs
+# #'
+# #' The spawning potential ratio (SPR) is estimated using the LBSPR method
+# #' and compared to a target of 0.4.
+# #'
+# #' Effort is modified according to the harvest control rules described in
+# #' Hordyk et al. (2015b):
+# #'
+# #' @templateVar mp LBSPR
+# #' @param x A position in the data object
+# #' @param Data A data object
+# #' @param reps The number of stochastic samples of the MP recommendation(s)
+# #' @param plot Logical. Show the plot?
+# #'
+# #' @section Required Data:
+# #' See \linkS4class{Data} for information on the \code{Data} object \cr
+# #'
+# #' @return An object of class \code{\link[=Rec-class]{Rec}} with the TAE slot populated
+# #'
+# #' @template MPuses
+# #'
+# #' @param SPRtarg The target SPR
+# #' @param theta1 Control parameter for the harvest control rule
+# #' @param theta2 Control parameter for the harvest control rule
+# #' @param maxchange Maximum change in effort
+# #' @param n Last number of years to run the model on.
+# #' @param smoother Logical. Should the SPR estimates be smoothed?
+# #' @param R variance of sampling noise for smoother
+# #'
+# #' @export
+# #' @references
+# #' Hordyk, A., Ono, K., Valencia, S., Loneragan, N., and Prince J (2015a).
+# #' A novel length-based empirical estimation method of spawning potential ratio (SPR),
+# #' and tests of its performance, for small-scale, data-poor fisheries,
+# #' ICES Journal of Marine Science, 72 (1), 217-231
+# #'
+# #' Hordyk, A. R., Loneragan, N. R., & Prince, J. D. (2015b). An evaluation of an
+# #'  iterative harvest strategy for data-poor fisheries using the length-based
+# #'  spawning potential ratio assessment methodology. Fisheries Research,
+# #'  171, 20-32. https://doi.org/10.1016/j.fishres.2014.12.018
+# #'
+# #' @examples
+# #' LBSPR(1, Data=OMtool::SimulatedData, plot=TRUE)
+# LBSPR <- function(x, Data, reps=1, plot=FALSE, SPRtarg=0.4, theta1=0.3,
+#                   theta2=0.05, maxchange=0.3,
+#                   n=5, smoother=TRUE, R=0.2) {
+# 
+#   runLBSPR <- LBSPR_(x, Data, reps, n, smoother, R=R)
+# 
+#   if (!smoother) Ests <- runLBSPR$Ests
+#   if (smoother) Ests <- runLBSPR$Ests_smooth
+# 
+#   estSPR <- Ests$SPR[length(Ests$SPR)]
+#   ratio <- estSPR/SPRtarg - 1
+# 
+#   vt <- theta1 * (ratio^3) + theta2*ratio
+#   vt[vt< -maxchange]  <- -maxchange
+#   vt[vt> maxchange]  <- maxchange
+# 
+#   Eff <- 1+vt
+# 
+#   if (plot) {
+# 
+#     nyr <- length(runLBSPR$Fit)
+# 
+#     CAL <- Data@CAL[x,,]
+#     nyears <- dim(CAL)[1]
+#     CAL <- CAL[(nyears-nyr+1):nyears,]
+#     LenBins <- Data@CAL_bins
+#     By <- LenBins[2] - LenBins[1]
+#     LenMids <- seq(from=By*0.5, by=By, length.out = length(LenBins)-1)
+# 
+#     op <- par(no.readonly = TRUE)
+#     on.exit(op)
+#     nrow <- ceiling(sqrt(nyr))
+#     ncol <- ceiling((nyr + 1)/nrow)
+#     par(mfrow=c(nrow,ncol))
+# 
+#     if (nyr > 1) {
+#       ymin <- min(unlist(apply(CAL > 0, 1, which)))
+#       ymax <- max(unlist(apply(CAL > 0, 1, which)))
+#       ind <- (ymin-1):(ymax+1)
+#       ylim <- c(0, max(c(CAL, unlist(lapply(runLBSPR$Fit, max)))))
+#       for (p in 1:nyr) {
+#         tt <- barplot(CAL[p,ind], xlab="Length", ylab="Count", bty="l", names=LenMids[ind], ylim=ylim)
+#         lines(tt, runLBSPR$Fit[[p]][ind], lwd=2)
+#         title(paste0("Year ", runLBSPR$Ests$Year[p]))
+#       }
+#     } else {
+#         ymin <- min(which(CAL > 0))
+#         ymax <- max(which(CAL > 0))
+#         ind <- (ymin-1):(ymax+1)
+#         ylim <- c(0, max(c(CAL, runLBSPR$Fit[[1]])))
+#         tt <- barplot(CAL[ind], xlab="Length", ylab="Count", bty="l", names=LenMids[ind], ylim=ylim)
+#         lines(tt, runLBSPR$Fit[[1]][ind], lwd=2)
+#         title(paste0("Year ", runLBSPR$Ests$Year[p]))
+#     }
+# 
+#     plot(runLBSPR$Ests$Year, runLBSPR$Ests$SPR, ylim=c(0,1), xlab="Year",
+#          ylab="SPR", type="b", las=1, bty="l")
+# 
+#   }
+#   Rec <- new("Rec")
+#   Rec@Effort <- Eff
+#   Rec@Misc$Ests <- runLBSPR$Ests
+#   Rec@Misc$Ests_smooth <- runLBSPR$Ests_smooth
+#   Rec
+# 
+# }
+# class(LBSPR) <- 'MP'
+# 
+# 
+# #' Length-Based SPR
+# #'
+# #' @describeIn LBSPR Fishing retention-at-length is set equivalent to slightly
+# #' higher than the maturity curve if SPR < 0.4
+# #'
+# #' @export
+# #'
+# #' @examples
+# #' LBSPR_MLL(1, Data=OMtool::SimulatedData, plot=FALSE)
+# LBSPR_MLL <- function(x, Data, reps=1, plot=FALSE, SPRtarg=0.4, n=5, smoother=TRUE, R=0.2) {
+# 
+#   Rec <- new("Rec")
+#   if (length(Data@Misc)<=1) Data@Misc <- vector('list', x)
+# 
+#   if (is.null(Data@Misc[[x]]) || length(Data@Misc[[x]])<1 ||is.null(Data@Misc[[x]]$MLLset)) {
+#     runLBSPR <- LBSPR_(x, Data, reps, n, smoother, R=R)
+#     if (!smoother) Ests <- runLBSPR$Ests
+#     if (smoother) Ests <- runLBSPR$Ests_smooth
+#     estSPR <- Ests$SPR[length(Ests$SPR)]
+# 
+#     Rec@Misc$Ests <- runLBSPR$Ests
+#     Rec@Misc$Ests_smooth <- runLBSPR$Ests_smooth
+# 
+#     if (estSPR < SPRtarg) {
+#       # estimated SPR < SPRtarg --> set size limit at 1.1 L50
+#       Rec@LFR <- 1.1 * Data@L50[x]
+#       Rec@LR5 <- 0.95 * Rec@LFR
+#       Rec@Misc$MLLset <- TRUE
+#       Rec@Misc$LFR <- Rec@LFR
+#       Rec@Misc$LR5 <- Rec@LR5
+#     } else {
+#       Rec@LFR <- Data@OM$LFR[x]
+#       Rec@LR5 <- Data@OM$LR5[x]
+#       Rec@Misc$MLLset <- FALSE
+#     }
+#   } else {
+#     if (Data@Misc[[x]]$MLLset) {
+#       # already set MLL - do nothing
+#       Rec@LFR <- Data@Misc[[x]]$LFR
+#       Rec@LR5 <- Data@Misc[[x]]$LR5
+#       Rec@Misc$LFR <- Rec@LFR
+#       Rec@Misc$LR5 <- Rec@LR5
+#       Rec@Misc$MLLset <- TRUE
+#     } else {
+#       runLBSPR <- LBSPR_(x, Data, reps, n, smoother, R=R)
+#       Rec@Misc$Ests <- runLBSPR$Ests
+#       Rec@Misc$Ests_smooth <- runLBSPR$Ests_smooth
+#       if (!smoother) Ests <- runLBSPR$Ests
+#       if (smoother) Ests <- runLBSPR$Ests_smooth
+#       estSPR <- Ests$SPR[length(Ests$SPR)]
+#       if (estSPR < SPRtarg) {
+#         # estimated SPR < SPRtarg --> set size limit at 1.1 L50
+#         Rec@LFR <- 1.1 * Data@L50[x]
+#         Rec@LR5 <- 0.95 * Rec@LFR
+#         Rec@Misc$LFR <- Rec@LFR
+#         Rec@Misc$LR5 <- Rec@LR5
+#         Rec@Misc$MLLset <- TRUE
+#       } else {
+#         # estimated SPR > SPRtarg --> don't change retention
+#         Rec@LFR <- Data@OM$LFR[x]
+#         Rec@LR5 <- Data@OM$LR5[x]
+#         Rec@Misc$MLLset <- FALSE
+#       }
+#     }
+#   }
+# 
+#   if (plot) {
+# 
+#     nyr <- length(runLBSPR$Fit)
+# 
+#     CAL <- Data@CAL[x,,]
+#     nyears <- dim(CAL)[1]
+#     CAL <- CAL[(nyears-nyr+1):nyears,]
+#     LenBins <- Data@CAL_bins
+#     By <- LenBins[2] - LenBins[1]
+#     LenMids <- seq(from=By*0.5, by=By, length.out = length(LenBins)-1)
+# 
+#     op <- par(no.readonly = TRUE)
+#     on.exit(op)
+#     nrow <- ceiling(sqrt(nyr))
+#     ncol <- ceiling((nyr + 1)/nrow)
+#     par(mfrow=c(nrow,ncol))
+# 
+#     if (nyr > 1) {
+#       ymin <- min(unlist(apply(CAL > 0, 1, which)))
+#       ymax <- max(unlist(apply(CAL > 0, 1, which)))
+#       ind <- (ymin-1):(ymax+1)
+#       ylim <- c(0, max(c(CAL, unlist(lapply(runLBSPR$Fit, max)))))
+#       for (p in 1:nyr) {
+#         tt <- barplot(CAL[p,ind], xlab="Length", ylab="Count", bty="l", names=LenMids[ind], ylim=ylim)
+#         lines(tt, runLBSPR$Fit[[p]][ind], lwd=2)
+#         title(paste0("Year ", runLBSPR$Ests$Year[p]))
+#       }
+#     } else {
+#       ymin <- min(which(CAL > 0))
+#       ymax <- max(which(CAL > 0))
+#       ind <- (ymin-1):(ymax+1)
+#       ylim <- c(0, max(c(CAL, runLBSPR$Fit[[1]])))
+#       tt <- barplot(CAL[ind], xlab="Length", ylab="Count", bty="l", names=LenMids[ind], ylim=ylim)
+#       lines(tt, runLBSPR$Fit[[1]][ind], lwd=2)
+#       title(paste0("Year ", runLBSPR$Ests$Year[p]))
+#     }
+# 
+#     plot(runLBSPR$Ests$Year, runLBSPR$Ests$SPR, ylim=c(0,1), xlab="Year",
+#          ylab="SPR", type="b", las=1, bty="l")
+# 
+#   }
+#   Rec
+# 
+# }
+# class(LBSPR_MLL) <- 'MP'
+# 
+# 
+# 
+# #' Kalman filter and Rauch-Tung-Striebel smoother
+# #'
+# #' A function that applies a filter and smoother to estimates
+# #'
+# #' @param RawEsts a vector of estimated values
+# #' @param R variance of sampling noise
+# #' @param Q variance of random walk increments
+# #' @param Int covariance of initial uncertainty
+# #' @return a vector of smoothed values
+# #'
+# #' @export
+# #' @keywords internal
+# FilterSmooth <- function(RawEsts, R=0.2, Q=0.1, Int=100) {
+#   # Modified from \url{"http://read.pudn.com/downloads88/ebook/336360/Kalman%20Filtering%20Theory%20and%20Practice,%20Using%20MATLAB/CHAPTER4/RTSvsKF.m__.htm"}
+#   Ppred <-  rep(Int, length(RawEsts))
+#   nNA <- sum(is.na(RawEsts))
+#   while(nNA > 0) { # NAs get replaced with last non-NA
+#     RawEsts[is.na(RawEsts)] <- RawEsts[which(is.na(RawEsts))-1]
+#     nNA <- sum(is.na(RawEsts))
+#   }
+#   Pcorr <- xcorr <- xpred <- rep(0, length(RawEsts))
+#   # Kalman Filter
+#   for (X in 1:length(Ppred)) {
+#     if (X !=1) {
+#       Ppred[X] <- Pcorr[X-1] + Q
+#       xpred[X] <- xcorr[X-1]
+#     }
+#     W <- Ppred[X]/(Ppred[X] + R)
+#     xcorr[X] <- xpred[X] + W * (RawEsts[X] - xpred[X]) # Kalman filter estimate
+#     Pcorr[X] <- Ppred[X] - W * Ppred[X]
+#   }
+#   # Smoother
+#   xsmooth <- xcorr
+#   for (X in (length(Pcorr)-1):1) {
+#     A <- Pcorr[X]/Ppred[X+1]
+#     xsmooth[X] <- xsmooth[X] + A*(xsmooth[X+1] - xpred[X+1])
+#   }
+#   return(xsmooth)
+# }
+# 

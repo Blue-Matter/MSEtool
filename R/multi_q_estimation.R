@@ -13,15 +13,15 @@
 #' @param nareas The number of areas
 #' @param maxage The maximum number of modeled ages
 #' @param nyears The number of historical 'spool-up' years (from unfished to now)
-#' @param N An array of stock numbers [nsim,np,maxage,nyears,nareas] -
+#' @param N An array of stock numbers `[nsim,np,maxage,nyears,nareas]` -
 #' only the values from the first year are used
-#' @param VF An array of vulnerability [nsim,np,nf,maxage,nyears+proyears]
-#' @param FretA An array of retention [nsim,np,nf,maxage,nyears+proyears]
+#' @param VF An array of vulnerability `[nsim,np,nf,maxage,nyears+proyears]`
+#' @param FretA An array of retention `[nsim,np,nf,maxage,nyears+proyears]`
 #' @param maxF A numeric value specifying the maximum fishing mortality for any
 #' single age class
-#' @param MPA An of spatial closures by year [np,nf,nyears+proyears,nareas]
+#' @param MPA An of spatial closures by year `[np,nf,nyears+proyears,nareas]`
 #' @param CatchFrac A list of stock-specific fleet fractions of current catch
-#' list[[stock]][nsim, nf]
+#' list`[[stock]][nsim, nf]`
 #' @param bounds Bounds for total q estimation
 #' @param tol A numeric value that is the fraction of machine tolerance
 #' (once reduction in objective function steps below this, optimization ends)
@@ -131,37 +131,37 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage,
 #'
 #' @param par Integer, the simulation number
 #' @param depc Numeric vector, nstock long of specified stock depletion (SSB now / SSB0)
-#' @param CFc Matrix [nstock, nfleet], a catch fraction among fleets (sums to 1 for each stock (row))
+#' @param CFc Matrix `[nstock, nfleet]`, a catch fraction among fleets (sums to 1 for each stock (row))
 #' @param mod Character if 'opt' qestMICE returns the objective function otherwise the fitted values in a list
 #' @param nf Integer, number of stocks
 #' @param nf Integer, number of fleets
 #' @param nyears Integer, number of historical years (unfished til today)
 #' @param nareas Integer, number of areas (default is 2)
 #' @param maxage Integer, maximum number of age classes for calculation
-#' @param Nx Array [stock, age, year, area] of stock numbers
-#' @param VFx Array [fleet, age, year, area] of the vulnerability curve
-#' @param FretAx Array [fleet, age, year, area] of the retention curve
-#' @param Effind Array [fleet, year] of effort
-#' @param movx Array [stock,age,area,area] of movement transitions
-#' @param Spat_targ Matrix [stock, fleet] of spatial targetting parameter (0 evenly spatial distributed, 1 proportional to vulnerable biomass)
-#' @param M_ageArrayx Array [stock, age,year] of Natural mortality rate at age
-#' @param Mat_agex Array [stock, age, year] of maturity (spawning fraction) age age
-#' @param Asizex Matrix [stock, area] Area size
-#' @param Kx Vector [stock] of von B growth parameter K
-#' @param Linf Vector [stock] of von B asymptotic length parameter Linf
-#' @param t0 Vector [stock] of von B theoretical age at zero length (t0)
-#' @param Mx Vector [stock] mature natural mortality rate
-#' @param R0x Vector [stock] unfished recruitment
-#' @param R0ax Matrix [stock, area] unfished recruitment by area
-#' @param SSBpRx Matrix [stock, area] spawning biomass per recruit by area
-#' @param SSB0x Vector [stock] Unfished spawning stock biomass
-#' @param hsx Vector [stock] steepness of the stock recruitment curve
-#' @param aRx Vector [stock] stock recruitment parameter alpha (for Ricker curve)
-#' @param bRx Vector [stock] stock recruitment parameter beta (for Ricker curve)
-#' @param ax Vector [stock] weight-length parameter a W=aL^b
-#' @param bx Vector [stock] weight-length parameter b W=aL^b
-#' @param Perrx Matrix [stock, year] process error - the lognormal factor for recruitment strength
-#' @param SRrelx Integer vector [stock] the form of the stock recruitment relationship (1 = Beverton-Holt, 2= Ricker)
+#' @param Nx Array `[stock, age, year, area]` of stock numbers
+#' @param VFx Array `[fleet, age, year, area]` of the vulnerability curve
+#' @param FretAx Array `[fleet, age, year, area]` of the retention curve
+#' @param Effind Array `[fleet, year]` of effort
+#' @param movx Array `[stock,age,area,area]` of movement transitions
+#' @param Spat_targ Matrix `[stock, fleet]` of spatial targetting parameter (0 evenly spatial distributed, 1 proportional to vulnerable biomass)
+#' @param M_ageArrayx Array `[stock, age,year]` of Natural mortality rate at age
+#' @param Mat_agex Array `[stock, age, year]` of maturity (spawning fraction) age age
+#' @param Asizex Matrix `[stock, area]` Area size
+#' @param Kx Vector `[stock]` of von B growth parameter K
+#' @param Linf Vector `[stock]` of von B asymptotic length parameter Linf
+#' @param t0 Vector `[stock]` of von B theoretical age at zero length (t0)
+#' @param Mx Vector `[stock]` mature natural mortality rate
+#' @param R0x Vector `[stock]` unfished recruitment
+#' @param R0ax Matrix `[stock, area]` unfished recruitment by area
+#' @param SSBpRx Matrix `[stock, area]` spawning biomass per recruit by area
+#' @param SSB0x Vector `[stock]` Unfished spawning stock biomass
+#' @param hsx Vector `[stock]` steepness of the stock recruitment curve
+#' @param aRx Vector `[stock]` stock recruitment parameter alpha (for Ricker curve)
+#' @param bRx Vector `[stock]` stock recruitment parameter beta (for Ricker curve)
+#' @param ax Vector `[stock]` weight-length parameter a W=aL^b
+#' @param bx Vector `[stock]` weight-length parameter b W=aL^b
+#' @param Perrx Matrix `[stock, year]` process error - the lognormal factor for recruitment strength
+#' @param SRrelx Integer vector `[stock]` the form of the stock recruitment relationship (1 = Beverton-Holt, 2= Ricker)
 #' @param Rel A list of inter-stock relationships see slot Rel of MOM object class
 #' @param SexPars A list of sex-specific dynamics (SSBfrom, stcck_age)
 #' @param x Integer. The simulation number

@@ -3,36 +3,36 @@
 #' Calls popdynOneMICE iteratively to reconstruct a time series given MICE model inputs
 #'
 #' @param qsx Total catchability
-#' @param qfracx Vector [fleet], the fraction of total qs by fleet
+#' @param qfracx Vector `[fleet]`, the fraction of total qs by fleet
 #' @param np Integer, the number of stocks
 #' @param nf Integer, number of fleets
 #' @param nyears Integer, number of historical years (unfished til today)
 #' @param nareas Integer, the number of spatial areas
 #' @param maxage Integer, maximum modeled age
-#' @param Nx Array [stock, age, year, area] of stock numbers
-#' @param VFx Array [fleet, age, year, area] of the vulnerability curve
-#' @param FretAx Array [fleet, age, year, area] of the retention curve
-#' @param Effind Array [fleet, year] of effort
-#' @param movx Array [stock,age,area,area] of movement transitions
-#' @param Spat_targ Matrix [stock, fleet] of spatial targeting parameter
+#' @param Nx Array `[stock, age, year, area]` of stock numbers
+#' @param VFx Array `[fleet, age, year, area]` of the vulnerability curve
+#' @param FretAx Array `[fleet, age, year, area]` of the retention curve
+#' @param Effind Array `[fleet, year]` of effort
+#' @param movx Array `[stock,age,area,area]` of movement transitions
+#' @param Spat_targ Matrix `[stock, fleet]` of spatial targeting parameter
 #' (0 evenly spatial distributed, 1 proportional to vulnerable biomass)
-#' @param M_ageArrayx Array [stock, age,year] of Natural mortality rate at age
-#' @param Mat_agex Array [stock, age, year] of maturity (spawning fraction) age
-#' @param Asizex  Array [stock, area] Area size
-#' @param Kx Vector [stock] of von B growth parameter K
-#' @param Linf Vector [stock] of von B asymptotic length parameter Linf
-#' @param t0 Vector [stock] of von B theoretical age at zero length (t0)
-#' @param Mx Vector [stock] mature natural mortality rate
-#' @param R0x Vector [stock] unfished recruitment
-#' @param R0ax Matrix [stock, area] unfished recruitment by area
-#' @param SSBpRx Matrix [stock, area] spawning biomass per recruit by area
-#' @param hsx Vector [stock] steepness of the stock recruitment curve
-#' @param aRx Vector [stock] stock recruitment parameter alpha (for Ricker curve)
-#' @param bRx Vector [stock] stock recruitment parameter beta (for Ricker curve)
-#' @param ax Vector [stock] weight-length parameter a W=aL^b
-#' @param bx Vector [stock] weight-length parameter b W=aL^b
-#' @param Perrx Matrix [stock, year] process error - the lognormal factor for recruitment strength
-#' @param SRrelx Integer vector [stock] the form of the stock recruitment
+#' @param M_ageArrayx Array `[stock, age,year]` of Natural mortality rate at age
+#' @param Mat_agex Array `[stock, age, year]` of maturity (spawning fraction) age
+#' @param Asizex  Array `[stock, area]` Area size
+#' @param Kx Vector `[stock]` of von B growth parameter K
+#' @param Linf Vector `[stock]` of von B asymptotic length parameter Linf
+#' @param t0 Vector `[stock]` of von B theoretical age at zero length (t0)
+#' @param Mx Vector `[stock]` mature natural mortality rate
+#' @param R0x Vector `[stock]` unfished recruitment
+#' @param R0ax Matrix `[stock, area]` unfished recruitment by area
+#' @param SSBpRx Matrix `[stock, area]` spawning biomass per recruit by area
+#' @param hsx Vector `[stock]` steepness of the stock recruitment curve
+#' @param aRx Vector `[stock]` stock recruitment parameter alpha (for Ricker curve)
+#' @param bRx Vector `[stock]` stock recruitment parameter beta (for Ricker curve)
+#' @param ax Vector `[stock]` weight-length parameter a W=aL^b
+#' @param bx Vector `[stock]` weight-length parameter b W=aL^b
+#' @param Perrx Matrix `[stock, year]` process error - the lognormal factor for recruitment strength
+#' @param SRrelx Integer vector `[stock]` the form of the stock recruitment
 #' relationship (1 = Beverton-Holt, 2= Ricker)
 #' @param Rel A list of inter-stock relationships see slot Rel of MOM object class
 #' @param SexPars A list of sex-specific relationships (SSBfrom, stock_age)
@@ -159,32 +159,32 @@ popdynMICE<-function(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
 #' @param nf Integer, number of fleets
 #' @param nyears Integer, number of historical years (unfished til today)
 #' @param maxage Integer, maximum modelled age
-#' @param Ncur Array [stock, age, area] of stock numbers
-#' @param Vcur Array [fleet, age, area] of the vulnerability curve
-#' @param FMretx Array [stock, fleet, age, area] of the retention curve
-#' @param FMx Array [stock, fleet, age, area] fishing mortality rate
-#' @param PerrYrp Vector [stock] process error - the lognormal factor for
+#' @param Ncur Array `[stock, age, area]` of stock numbers
+#' @param Vcur Array `[fleet, age, area]` of the vulnerability curve
+#' @param FMretx Array `[stock, fleet, age, area]` of the retention curve
+#' @param FMx Array `[stock, fleet, age, area]` fishing mortality rate
+#' @param PerrYrp Vector `[stock]` process error - the lognormal factor for
 #' recruitment strength
-#' @param hsx Vector [stock] steepness of the stock recruitment curve
-#' @param aRx Vector [stock] stock recruitment parameter alpha (for Ricker curve)
-#' @param bRx Vector [stock] stock recruitment parameter beta (for Ricker curve)
-#' @param movy Array [stock,age,area,area] of movement transitions
-#' @param Spat_targ Matrix [stock, fleet] of spatial targetting parameter
+#' @param hsx Vector `[stock]` steepness of the stock recruitment curve
+#' @param aRx Vector `[stock]` stock recruitment parameter alpha (for Ricker curve)
+#' @param bRx Vector `[stock]` stock recruitment parameter beta (for Ricker curve)
+#' @param movy Array `[stock,age,area,area]` of movement transitions
+#' @param Spat_targ Matrix `[stock, fleet]` of spatial targetting parameter
 #' (0 evenly spatial distributed, 1 proportional to vulnerable biomass)
-#' @param SRrelx Integer vector [stock] the form of the stock recruitment
+#' @param SRrelx Integer vector `[stock]` the form of the stock recruitment
 #'  relationship (1 = Beverton-Holt, 2= Ricker)
-#' @param M_agecur Matrix [stock, age] of Natural mortality rate at age
-#' @param Mat_agecur Matrix [stock, age] of maturity (spawning fraction) age age
-#' @param Asizex Matrix [stock, area] of relative area sizes
-#' @param Kx Vector [stock] of von B growth parameter K
-#' @param Linf Vector [stock] of von B asymptotic length parameter Linf
-#' @param t0 Vector [stock] of von B theoretical age at zero length (t0)
-#' @param Mx Vector [stock] mature natural mortality rate
-#' @param R0x Vector [stock] unfished recruitment
-#' @param R0ax Matrix [stock, area] unfished recruitment by area
-#' @param SSBpRx Matrix [stock, area] spawning biomass per recruit by area
-#' @param ax Vector [stock] weight-length parameter a W=aL^b
-#' @param bx Vector [stock] weight-length parameter b W=aL^b
+#' @param M_agecur Matrix `[stock, age]` of Natural mortality rate at age
+#' @param Mat_agecur Matrix `[stock, age]` of maturity (spawning fraction) age age
+#' @param Asizex Matrix `[stock, area]` of relative area sizes
+#' @param Kx Vector `[stock]` of von B growth parameter K
+#' @param Linf Vector `[stock]` of von B asymptotic length parameter Linf
+#' @param t0 Vector `[stock]` of von B theoretical age at zero length (t0)
+#' @param Mx Vector `[stock]` mature natural mortality rate
+#' @param R0x Vector `[stock]` unfished recruitment
+#' @param R0ax Matrix `[stock, area]` unfished recruitment by area
+#' @param SSBpRx Matrix `[stock, area]` spawning biomass per recruit by area
+#' @param ax Vector `[stock]` weight-length parameter a W=aL^b
+#' @param bx Vector `[stock]` weight-length parameter b W=aL^b
 #' @param Rel A list of inter-stock relationships see slot Rel of MOM object class
 #' @param SexPars A list of sex-specific relationships (SSBfrom, stock_age)
 #' @param x Integer. The simulation number
@@ -326,9 +326,9 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
 #' Predicts stock-specific parameters from another stocks biomass, spawning biomass or numbers
 #'
 #' @param Rel A list of inter-stock relationships see slot Rel of MOM object class
-#' @param Bcur An array of current stock biomass [stock, age, area]
-#' @param SSBcur An array of current spawning stock biomass [stock, age, area]
-#' @param Ncur An array of current stock numbers [stock, age, area]
+#' @param Bcur An array of current stock biomass `[stock, age, area]`
+#' @param SSBcur An array of current spawning stock biomass `[stock, age, area]`
+#' @param Ncur An array of current stock numbers `[stock, age, area]`
 #' @author T.Carruthers
 #' @keywords internal
 ResFromRel<-function(Rel,Bcur,SSBcur,Ncur,seed){
@@ -363,7 +363,7 @@ ResFromRel<-function(Rel,Bcur,SSBcur,Ncur,seed){
     ys<-predict(Rel[[r]],newdat=newdat)
     templm<-Rel[[r]]
     templm$fitted.values <- ys
-    out[r,1]<-unlist(simulate(templm, nsim=1, seed=seed))
+    out[r,1]<-unlist(stats::simulate(templm, nsim=1, seed=seed))
     out[r,2]<-DV
     out[r,3]<-Dp
     out[r,4]<-modnam[match(Dnam,DVnam)]

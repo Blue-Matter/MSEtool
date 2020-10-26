@@ -2,6 +2,7 @@
 #' Plot MSE object
 #' @param x object of class MSE
 #' @param ... other parameters passed to plot (currently ignored)
+#' @method plot MSE 
 #' @export
 plot.MSE <- function(x, ...) {
   Pplot(x, nam = deparse(substitute(x)))

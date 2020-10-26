@@ -406,146 +406,146 @@ Cplot <- function(MSEobj, MPs = NA, lastYrs = 5,
 }
 
 
-#' Value of Information Plot using PM functions
-#'
-#' This VOI plot shows the value of information for a single MP and uses the `PM`
-#' functions.
-#' 
-#' @param MSE An object of class `MSE`
-#' @param MP The name or number of MP to plot. Character or numeric.
-#' @param type Character. Type of VOI plot - "Obs" or "OM"
-#' @param PM Name of a `PM` method to plot on the y-axis
-#' @param n The maximum number of variables to plot. 
-#' @param axis.title.size Size of axis title
-#' @param axis.text.size Size of axis text
-#' @param legend.title.size Size of legend text
-#' @param include.leg Logical. Include the legend?
-#'
-#' @author A. Hordyk
-#' @export
-#'
-#' @examples
-#' \dontrun{
-#' MSE <- runMSE()
-#' VOIplot2(MSE)
-#' 
-#' VOIplot2(MSE, "OM")
-#' 
-#' VOIplot2(MSE, PM='P100')
-#' 
-#' }
-#' 
-VOIplot2 <- function(MSE, MP=1, type=c("Obs", "OM"), PM="Yield", n=5,
-                     axis.title.size=12,
-                     axis.text.size=10,
-                     legend.title.size=10, include.leg=TRUE) {
-  if (class(MSE) !="MSE") stop("Object must be class MSE", call.=FALSE)
-  if (length(MP)>1) stop("MP must be length 1", call.=FALSE)
-  if (length(PM)>1) stop("PM must be length 1", call.=FALSE)
-  if (class(PM) != "character") stop("PM must be character", call.=FALSE)
-  if (!PM %in% avail('PM')) stop('PM is not an available `PM` function', call.=FALSE)
-  
-  # cran check 
-  key <- data <- fit <- var <- .fitted <- desc <- value <- NULL
-  MSEobj <- Sub(MSE, MPs=MP)
-  
-  if (!requireNamespace("broom", quietly = TRUE)) {
-    stop("Package \"broom\" needed for this function to work. Please install it.",
-         call. = FALSE)
-  }
-  if (!requireNamespace("purrr", quietly = TRUE)) {
-    stop("Package \"purrr\" needed for this function to work. Please install it.",
-         call. = FALSE)
-  }
-  if (!requireNamespace("tidyr", quietly = TRUE)) {
-    stop("Package \"tidyr\" needed for this function to work. Please install it.",
-         call. = FALSE)
-  }
-  
-  type <- match.arg(type)
-  
-  if (type =="OM") {
-    Ptype <- OM_desc # OM_desc <- OMtool:::OM_desc
-    Xvals <- MSEobj@OM
-  } else {
-    Ptype <- Obs_desc  # Obs_desc <- OMtool:::Obs_desc
-    Xvals <- MSEobj@Obs
-    reqdat <- Required(MSEobj@MPs)[,2]
-    reqdat <- trimws(unlist(strsplit(reqdat, ",")))
-    
-    for (rr in 1:nrow(Ptype)) {
-      tt <- any(trimws(unlist(strsplit(Ptype$DataSlot[rr], ","))) %in% reqdat)
-      Ptype$VOI_include[rr] <- tt
-    }
-  }
-  
-  Ptype$VOI_include[is.na(Ptype$VOI_include)] <- TRUE
-  Ptype$Const <- round(apply(Xvals, 2, mean),4) == round(apply(Xvals, 2, min),4)
-  Ptype$VOI_include[Ptype$Const] <- FALSE # drop any variables that are constant across simulations
-  
-  pm <- get(PM)(MSEobj)
-  Yval <- apply(pm@Stat, 1, mean)
-  rng <- quantile(Yval, c(0.025, 0.975))
-  ind <- which(Yval > rng[1] & Yval < rng[2]) # filter out middle 95%
-  Yval <- Yval[ind]
-  Xvals <- Xvals[,Ptype$VOI_include, drop=FALSE]
-  if (sum(Ptype$VOI_include) == 0) stop("No Observations for this MP", call.=FALSE)
-  Xvals <- Xvals[ind,, drop=FALSE]
-  Xdf <- tidyr::gather(Xvals)
-
-  Yval <- data.frame(Yval=rep(Yval, ncol(Xvals)))
-  df <- dplyr::bind_cols(Xdf, Yval)
-  
-  ## Fit a loess smoother  ##
-  span <- 0.75; degree <- 2
-  # l.mod_old <- df %>% tidyr::nest_legacy(-key) %>%
-  #   dplyr::mutate(fit = purrr::map(data, ~ loess(Yval ~ value, span=span, degree=degree, .))) %>%
-  #   tidyr::unnest_legacy(purrr::map2(fit, data, broom::augment))
-  
-  l.mod <- df %>% tidyr::nest(.,data=c('value', 'Yval')) %>%
-    dplyr::mutate(fit = purrr::map(data, ~ loess(Yval ~ value, span=span, degree=degree, .)))
-  l.mod2 <- purrr::map2(l.mod$fit, l.mod$data, broom::augment) %>% do.call("rbind",.)
-  l.mod <- left_join(df, l.mod2,  by=c("value", "Yval"))
-
-  # Calculate variance of fitted line and order by descending variance
-  lev.ord <- l.mod %>% group_by(key) %>%
-    dplyr::summarize(var=var(.fitted)) %>%
-    dplyr::arrange(desc(var))
-  
-  df <- dplyr::left_join(df, lev.ord, by="key")
-  df$key <- factor(df$key,  levels=lev.ord$key, ordered = TRUE)
-  levels(df$key) <- Ptype$Short_Name[match(levels(df$key), Ptype$Variable)]
-  
-  l.mod$key <- factor(l.mod$key,  levels=lev.ord$key, ordered = TRUE)
-  levels(l.mod$key) <- Ptype$Short_Name[match(levels(l.mod$key), Ptype$Variable)]
-  
-  sdf <- df %>% dplyr::select(key, var) %>% dplyr::distinct() %>%  dplyr::top_n(n, var) %>% select(key)
-  pdf <- df %>% filter(key %in% sdf$key)
-  l.mod2 <- l.mod %>% filter(key %in% sdf$key)
-
-  title <- paste0(MSEobj@MPs, ' - ',  type, ' Parameters (top ', n, ")")
-  nrow <- ceiling(n/5)
-  
-  
-  p1 <- ggplot2::ggplot(pdf, ggplot2::aes(x=value, y=Yval, color=var)) + 
-    ggplot2::facet_wrap(~key, scales="free_x", nrow=nrow, ncol=5) +
-    ggplot2::geom_point() + ggplot2::theme_classic() +
-    ggplot2::geom_line(data=l.mod2, ggplot2::aes(x=value, y=.fitted, color=NULL), size=1.25) +
-    ggplot2::labs(title=title, y=pm@Name, color='Variance', x="Parameter Value") +
-    ggplot2::expand_limits(y=0) +
-    ggplot2::theme(axis.title = ggplot2::element_text(size=axis.title.size),
-                   axis.text = ggplot2::element_text(size=axis.text.size),
-                   legend.text=ggplot2::element_text(size=legend.title.size),
-                   legend.title = ggplot2::element_text(size=legend.title.size)) 
-  
-  
-  if (!include.leg) p1 <- p1 + ggplot2::guides(colour=FALSE)
-  
-  p1
-  
-}
-
-
-
-
+# #' Value of Information Plot using PM functions
+# #'
+# #' This VOI plot shows the value of information for a single MP and uses the `PM`
+# #' functions.
+# #' 
+# #' @param MSE An object of class `MSE`
+# #' @param MP The name or number of MP to plot. Character or numeric.
+# #' @param type Character. Type of VOI plot - "Obs" or "OM"
+# #' @param PM Name of a `PM` method to plot on the y-axis
+# #' @param n The maximum number of variables to plot. 
+# #' @param axis.title.size Size of axis title
+# #' @param axis.text.size Size of axis text
+# #' @param legend.title.size Size of legend text
+# #' @param include.leg Logical. Include the legend?
+# #'
+# #' @author A. Hordyk
+# #' @export
+# #'
+# #' @examples
+# #' \dontrun{
+# #' MSE <- runMSE()
+# #' VOIplot2(MSE)
+# #' 
+# #' VOIplot2(MSE, "OM")
+# #' 
+# #' VOIplot2(MSE, PM='P100')
+# #' 
+# #' }
+# #' 
+# VOIplot2 <- function(MSE, MP=1, type=c("Obs", "OM"), PM="Yield", n=5,
+#                      axis.title.size=12,
+#                      axis.text.size=10,
+#                      legend.title.size=10, include.leg=TRUE) {
+#   if (class(MSE) !="MSE") stop("Object must be class MSE", call.=FALSE)
+#   if (length(MP)>1) stop("MP must be length 1", call.=FALSE)
+#   if (length(PM)>1) stop("PM must be length 1", call.=FALSE)
+#   if (class(PM) != "character") stop("PM must be character", call.=FALSE)
+#   if (!PM %in% avail('PM')) stop('PM is not an available `PM` function', call.=FALSE)
+#   
+#   # cran check 
+#   key <- data <- fit <- var <- .fitted <- desc <- value <- NULL
+#   MSEobj <- Sub(MSE, MPs=MP)
+#   
+#   if (!requireNamespace("broom", quietly = TRUE)) {
+#     stop("Package \"broom\" needed for this function to work. Please install it.",
+#          call. = FALSE)
+#   }
+#   if (!requireNamespace("purrr", quietly = TRUE)) {
+#     stop("Package \"purrr\" needed for this function to work. Please install it.",
+#          call. = FALSE)
+#   }
+#   if (!requireNamespace("tidyr", quietly = TRUE)) {
+#     stop("Package \"tidyr\" needed for this function to work. Please install it.",
+#          call. = FALSE)
+#   }
+#   
+#   type <- match.arg(type)
+#   
+#   if (type =="OM") {
+#     Ptype <- OM_desc # OM_desc <- OMtool:::OM_desc
+#     Xvals <- MSEobj@OM
+#   } else {
+#     Ptype <- Obs_desc  # Obs_desc <- OMtool:::Obs_desc
+#     Xvals <- MSEobj@Obs
+#     reqdat <- Required(MSEobj@MPs)[,2]
+#     reqdat <- trimws(unlist(strsplit(reqdat, ",")))
+#     
+#     for (rr in 1:nrow(Ptype)) {
+#       tt <- any(trimws(unlist(strsplit(Ptype$DataSlot[rr], ","))) %in% reqdat)
+#       Ptype$VOI_include[rr] <- tt
+#     }
+#   }
+#   
+#   Ptype$VOI_include[is.na(Ptype$VOI_include)] <- TRUE
+#   Ptype$Const <- round(apply(Xvals, 2, mean),4) == round(apply(Xvals, 2, min),4)
+#   Ptype$VOI_include[Ptype$Const] <- FALSE # drop any variables that are constant across simulations
+#   
+#   pm <- get(PM)(MSEobj)
+#   Yval <- apply(pm@Stat, 1, mean)
+#   rng <- quantile(Yval, c(0.025, 0.975))
+#   ind <- which(Yval > rng[1] & Yval < rng[2]) # filter out middle 95%
+#   Yval <- Yval[ind]
+#   Xvals <- Xvals[,Ptype$VOI_include, drop=FALSE]
+#   if (sum(Ptype$VOI_include) == 0) stop("No Observations for this MP", call.=FALSE)
+#   Xvals <- Xvals[ind,, drop=FALSE]
+#   Xdf <- tidyr::gather(Xvals)
+# 
+#   Yval <- data.frame(Yval=rep(Yval, ncol(Xvals)))
+#   df <- dplyr::bind_cols(Xdf, Yval)
+#   
+#   ## Fit a loess smoother  ##
+#   span <- 0.75; degree <- 2
+#   # l.mod_old <- df %>% tidyr::nest_legacy(-key) %>%
+#   #   dplyr::mutate(fit = purrr::map(data, ~ loess(Yval ~ value, span=span, degree=degree, .))) %>%
+#   #   tidyr::unnest_legacy(purrr::map2(fit, data, broom::augment))
+#   
+#   l.mod <- df %>% tidyr::nest(.,data=c('value', 'Yval')) %>%
+#     dplyr::mutate(fit = purrr::map(data, ~ loess(Yval ~ value, span=span, degree=degree, .)))
+#   l.mod2 <- purrr::map2(l.mod$fit, l.mod$data, broom::augment) %>% do.call("rbind",.)
+#   l.mod <- left_join(df, l.mod2,  by=c("value", "Yval"))
+# 
+#   # Calculate variance of fitted line and order by descending variance
+#   lev.ord <- l.mod %>% group_by(key) %>%
+#     dplyr::summarize(var=var(.fitted)) %>%
+#     dplyr::arrange(desc(var))
+#   
+#   df <- dplyr::left_join(df, lev.ord, by="key")
+#   df$key <- factor(df$key,  levels=lev.ord$key, ordered = TRUE)
+#   levels(df$key) <- Ptype$Short_Name[match(levels(df$key), Ptype$Variable)]
+#   
+#   l.mod$key <- factor(l.mod$key,  levels=lev.ord$key, ordered = TRUE)
+#   levels(l.mod$key) <- Ptype$Short_Name[match(levels(l.mod$key), Ptype$Variable)]
+#   
+#   sdf <- df %>% dplyr::select(key, var) %>% dplyr::distinct() %>%  dplyr::top_n(n, var) %>% select(key)
+#   pdf <- df %>% filter(key %in% sdf$key)
+#   l.mod2 <- l.mod %>% filter(key %in% sdf$key)
+# 
+#   title <- paste0(MSEobj@MPs, ' - ',  type, ' Parameters (top ', n, ")")
+#   nrow <- ceiling(n/5)
+#   
+#   
+#   p1 <- ggplot2::ggplot(pdf, ggplot2::aes(x=value, y=Yval, color=var)) + 
+#     ggplot2::facet_wrap(~key, scales="free_x", nrow=nrow, ncol=5) +
+#     ggplot2::geom_point() + ggplot2::theme_classic() +
+#     ggplot2::geom_line(data=l.mod2, ggplot2::aes(x=value, y=.fitted, color=NULL), size=1.25) +
+#     ggplot2::labs(title=title, y=pm@Name, color='Variance', x="Parameter Value") +
+#     ggplot2::expand_limits(y=0) +
+#     ggplot2::theme(axis.title = ggplot2::element_text(size=axis.title.size),
+#                    axis.text = ggplot2::element_text(size=axis.text.size),
+#                    legend.text=ggplot2::element_text(size=legend.title.size),
+#                    legend.title = ggplot2::element_text(size=legend.title.size)) 
+#   
+#   
+#   if (!include.leg) p1 <- p1 + ggplot2::guides(colour=FALSE)
+#   
+#   p1
+#   
+# }
+# 
+# 
+# 
+# 
 

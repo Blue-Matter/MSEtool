@@ -70,7 +70,6 @@ avail <- function(classy, package=NULL) {
 #' A way of locating where the package was installed so you can find example
 #' data files and code etc.
 #' 
-#' @usage DLMDataDir(stock=NA)
 #' @param stock Character string representing the name of a .csv file e.g.
 #' 'Snapper', 'Rockfish'
 #' @author T. Carruthers
@@ -282,7 +281,7 @@ MPtype <- function(MPs=NA) {
   rec <- rep("", length(MPs[existMPs]))
   rectypes <- c("TAE", "Spatial", "Selectivity", 'Retention', "Discards")
   for (mm in seq_along(recs)) {
-    Effort <- Spatial <- Selectivity <- Discards<- FALSE
+    Effort <- Spatial <- Selectivity <- Retention <- Discards<- FALSE
     output <- length(recs[[mm]]$TAC) > 0 
     names <- names(recs[[mm]])
     names <- names[!names %in% c("TAC", "Spatial")]
@@ -1090,7 +1089,7 @@ optCPU <- function(nsim=96, thresh=5, plot=TRUE, msg=TRUE, maxn=NULL) {
   if (!is.null(maxn)) cpus <- 1:maxn
   
   time <- NA
-  OM <- DLMtool::testOM
+  OM <- OMtool::testOM
   OM@nsim <- nsim
   for (n in cpus) {
     if (msg) message('Running MSE with ', nsim, ' simulations and ', n, ' of ', max(cpus), ' cpus')
@@ -1141,7 +1140,7 @@ DLMenv <- new.env()
 #' @param B Numeric. Which stock should be used to report biomass? Use NA to calculate mean for all stocks.
 #' @param C Numeric. Which fleet should be used to report catch? Use NA to calculate sum for all fleets.
 #' @param F Numeric. Which stock should be used to report fishing mortality? Use NA to calculate mean for all stocks.
-#' #' @param E Numeric. Which stock should be used to report effort? Use NA to calculate mean for all stocks.
+#' @param E Numeric. Which stock should be used to report effort? Use NA to calculate mean for all stocks.
 #'
 #' @return an object of class `MSE`
 #' @export
