@@ -727,7 +727,7 @@ Simulate <- function(OM=OMtool::testOM, parallel=FALSE, silent=FALSE) {
                                msg=!silent)
     Data <- updatedData$Data
     ObsPars <- updatedData$ObsPars
-
+    
     
   }
   
@@ -739,7 +739,7 @@ Simulate <- function(OM=OMtool::testOM, parallel=FALSE, silent=FALSE) {
   Data@Misc$ReferencePoints <- ReferencePoints
   
   # --- Return Historical Simulations and Data from last historical year ----
-
+  
   Hist <- new("Hist")
   # Data@Misc <- list()
   Hist@Data <- Data
@@ -1114,7 +1114,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
         SSBMSY_y[,mm,y1] <- MSYrefsYr[3,]
       }
       
-      TACa[, mm, y] <- TACa[, mm, y-1] # TAC same as last year unless changed
+      # TACa[, mm, y] <- TACa[, mm, y-1] # TAC same as last year unless changed
       SAYRt <- as.matrix(expand.grid(1:nsim, 1:n_age, y + nyears, 1:nareas))  # Trajectory year
       SAYt <- SAYRt[, 1:3]
       SAYtMP <- cbind(SAYt, mm)
@@ -1156,7 +1156,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
       Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAY1]  # Calculate biomass
       VBiomass_P[SAYR] <- Biomass_P[SAYR] * V_P[SAYt]  # Calculate vulnerable biomass
       
-      # --- An update year ----
+      # --- An update year - update data and run MP ----
       if (y %in% upyrs) {
         # --- Update Data object ----
         MSElist[[mm]] <- updateData(Data=MSElist[[mm]], OM, MPCalcs, Effort, StockPars$Biomass, StockPars$N,
@@ -1165,114 +1165,73 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
                                     retA_P, retL_P, StockPars,
                                     FleetPars, ObsPars, V_P,
                                     upyrs, interval, y, mm,
-                                    Misc=Data_p@Misc, RealData, ObsPars$Sample_Area,
-                                    AddIunits, AddIndType)
+                                    Misc=Data_p@Misc, RealData, ObsPars$Sample_Area
+        )
         
         # --- apply MP ----
         runMP <- applyMP(Data=MSElist[[mm]], MPs = MPs[mm], reps = reps, silent=TRUE)  # Apply MP
         MPRecs <- runMP[[1]][[1]] # MP recommendations
         Data_p <- runMP[[2]] # Data object object with saved info from MP
         Data_p@TAC <- MPRecs$TAC
-        # calculate pstar quantile of TAC recommendation dist
-        
-        
-        TACused <- apply(Data_p@TAC, 2, quantile, p = pstar, na.rm = T)
-        if (length(MPRecs$TAC) >0) {
-          # a TAC has been recommended
-          checkNA[y] <- sum(is.na(TACused))
-          TACused[is.na(TACused)] <- LastTAC[is.na(TACused)] # set to last yr TAC if NA
-          TACused[TACused<tiny] <- tiny
-          TACa[, mm, y] <- TACused # recommended TAC
-        }
-        
-        # -- Calc stock dynamics ----
-        MPCalcs <- CalcMPDynamics(MPRecs, y, nyears, proyears, nsim, Biomass_P,
-                                  VBiomass_P, LastTAE, histTAE, LastSpatial, LastAllocat,
-                                  LastTAC, TACused, maxF,LR5_P, LFR_P, Rmaxlen_P,
-                                  retL_P, retA_P, L5_P, LFS_P, Vmaxlen_P,
-                                  SLarray_P, V_P, Fdisc_P, DR_P, FM_P,
-                                  FM_Pret, Z_P, CB_P, CB_Pret, Effort_pot,
-                                  StockPars, FleetPars, ImpPars)
-        LastSpatial <- MPCalcs$Si
-        LastAllocat <- MPCalcs$Ai
-        LastTAE <- MPCalcs$TAE # adjustment to TAE
-        Effort[, mm, y] <- MPCalcs$Effort
-        FMa[,mm,y] <- MPCalcs$Ftot
-        
-        CB_P <- MPCalcs$CB_P # removals
-        CB_Pret <- MPCalcs$CB_Pret # retained catch
-        LastTAC <- TACa[, mm, y] # apply(CB_Pret[,,y,], 1, sum, na.rm=TRUE)
-        FM_P <- MPCalcs$FM_P # fishing mortality
-        FM_Pret <- MPCalcs$FM_Pret # retained fishing mortality
-        Z_P <- MPCalcs$Z_P # total mortality
-        retA_P <- MPCalcs$retA_P # retained-at-age
-        retL_P <- MPCalcs$retL_P # retained-at-length
-        V_P <- MPCalcs$V_P  # vulnerable-at-age
-        SLarray_P <- MPCalcs$SLarray_P # vulnerable-at-length
-        
-        LR5_P <- MPCalcs$LR5_P
-        LFR_P <- MPCalcs$LFR_P
-        Rmaxlen_P <- MPCalcs$Rmaxlen_P
-        L5_P <- MPCalcs$L5_P
-        LFS_P <- MPCalcs$LFS_P
-        Vmaxlen_P <- MPCalcs$Vmaxlen_P
-        Fdisc_P <- MPCalcs$Fdisc_P
-        DR_P <- MPCalcs$DR_P
-        
-        # ---- Bio-economics ----
-        RetainCatch <- apply(CB_Pret[,,y,], 1, sum) # retained catch this year
-        RetainCatch[RetainCatch<=0] <- tiny
-        Cost_out[,mm,y] <-  Effort[, mm, y] * CostCurr*(1+CostInc/100)^y # cost of effort this year
-        Rev_out[,mm,y] <- (RevPC*(1+RevInc/100)^y * RetainCatch)
-        Profit <- Rev_out[,mm,y] - Cost_out[,mm,y] # profit this year
-        Effort_pot <- Effort_pot + Response*Profit # bio-economic effort next year
-        Effort_pot[Effort_pot<0] <- tiny #
-        LatEffort_out[,mm,y] <- LastTAE - Effort[, mm, y]  # store the Latent Effort
-        TAE_out[,mm,y] <- LastTAE # store the TAE
-      } else {
-        # --- Not an update yr ----
-        NoMPRecs <- MPRecs # TAC & TAE stay the same
-        # NoMPRecs[lapply(NoMPRecs, length) > 0 ] <- NULL
-        # NoMPRecs$Spatial <- NA
-        MPCalcs <- CalcMPDynamics(NoMPRecs, y, nyears, proyears, nsim, Biomass_P,
-                                  VBiomass_P, LastTAE, histTAE, LastSpatial, LastAllocat,
-                                  LastTAC, TACused, maxF,LR5_P, LFR_P, Rmaxlen_P,
-                                  retL_P, retA_P, L5_P, LFS_P, Vmaxlen_P,
-                                  SLarray_P, V_P, Fdisc_P, DR_P, FM_P,
-                                  FM_Pret, Z_P, CB_P, CB_Pret, Effort_pot,
-                                  StockPars, FleetPars, ImpPars)
-        
-        TACa[, mm, y] <- TACused #
-        LastSpatial <- MPCalcs$Si
-        LastAllocat <- MPCalcs$Ai
-        LastTAE <- MPCalcs$TAE
-        Effort[, mm, y] <- MPCalcs$Effort
-        CB_P <- MPCalcs$CB_P # removals
-        CB_Pret <- MPCalcs$CB_Pret # retained catch
-        FMa[,mm,y] <- MPCalcs$Ftot
-        LastTAC <- TACa[, mm, y]  # apply(CB_Pret[,,y,], 1, sum, na.rm=TRUE)
-        FM_P <- MPCalcs$FM_P # fishing mortality
-        FM_Pret <- MPCalcs$FM_Pret # retained fishing mortality
-        Z_P <- MPCalcs$Z_P # total mortality
-        retA_P <- MPCalcs$retA_P # retained-at-age
-        retL_P <- MPCalcs$retL_P # retained-at-length
-        V_P <- MPCalcs$V_P  # vulnerable-at-age
-        SLarray_P <- MPCalcs$SLarray_P # vulnerable-at-length
-        
-        # ---- Bio-economics ----
-        RetainCatch <- apply(CB_Pret[,,y,], 1, sum) # retained catch this year
-        RetainCatch[RetainCatch<=0] <- tiny
-        Cost_out[,mm,y] <-  Effort[, mm, y] * CostCurr*(1+CostInc/100)^y # cost of effort this year
-        Rev_out[,mm,y] <- (RevPC*(1+RevInc/100)^y * RetainCatch)
-        PMargin <- 1 - Cost_out[,mm,y]/Rev_out[,mm,y] # profit margin this year
-        Profit <- Rev_out[,mm,y] - Cost_out[,mm,y] # profit this year
-        Effort_pot <- Effort_pot + Response*Profit # bio-economic effort next year
-        Effort_pot[Effort_pot<0] <- tiny #
-        LatEffort_out[,mm,y] <- LastTAE - Effort[, mm, y]  # store the Latent Effort
-        TAE_out[,mm,y] <- LastTAE # store the TAE
-      } # end of update loop
+      }
+      
+      # calculate pstar quantile of TAC recommendation dist
+      TACused <- apply(Data_p@TAC, 2, quantile, p = pstar, na.rm = T)
+      if (length(MPRecs$TAC) >0) {
+        # a TAC has been recommended
+        checkNA[y] <- sum(is.na(TACused))
+        TACused[is.na(TACused)] <- LastTAC[is.na(TACused)] # set to last yr TAC if NA
+        TACused[TACused<tiny] <- tiny
+        TACa[, mm, y] <- TACused # recommended TAC
+      }
+      
+      # ----- Calc stock dynamics ----
+      MPCalcs <- CalcMPDynamics(MPRecs, y, nyears, proyears, nsim, Biomass_P,
+                                VBiomass_P, LastTAE, histTAE, LastSpatial, LastAllocat,
+                                LastTAC, TACused, maxF,LR5_P, LFR_P, Rmaxlen_P,
+                                retL_P, retA_P, L5_P, LFS_P, Vmaxlen_P,
+                                SLarray_P, V_P, Fdisc_P, DR_P, FM_P,
+                                FM_Pret, Z_P, CB_P, CB_Pret, Effort_pot,
+                                StockPars, FleetPars, ImpPars)
+      LastSpatial <- MPCalcs$Si
+      LastAllocat <- MPCalcs$Ai
+      LastTAE <- MPCalcs$TAE # adjustment to TAE
+      Effort[, mm, y] <- MPCalcs$Effort
+      FMa[,mm,y] <- MPCalcs$Ftot
+      
+      CB_P <- MPCalcs$CB_P # removals
+      CB_Pret <- MPCalcs$CB_Pret # retained catch
+      LastTAC <- TACa[, mm, y] # apply(CB_Pret[,,y,], 1, sum, na.rm=TRUE)
+      FM_P <- MPCalcs$FM_P # fishing mortality
+      FM_Pret <- MPCalcs$FM_Pret # retained fishing mortality
+      Z_P <- MPCalcs$Z_P # total mortality
+      retA_P <- MPCalcs$retA_P # retained-at-age
+      retL_P <- MPCalcs$retL_P # retained-at-length
+      V_P <- MPCalcs$V_P  # vulnerable-at-age
+      SLarray_P <- MPCalcs$SLarray_P # vulnerable-at-length
+      
+      LR5_P <- MPCalcs$LR5_P
+      LFR_P <- MPCalcs$LFR_P
+      Rmaxlen_P <- MPCalcs$Rmaxlen_P
+      L5_P <- MPCalcs$L5_P
+      LFS_P <- MPCalcs$LFS_P
+      Vmaxlen_P <- MPCalcs$Vmaxlen_P
+      Fdisc_P <- MPCalcs$Fdisc_P
+      DR_P <- MPCalcs$DR_P
+      
+      # ---- Bio-economics ----
+      RetainCatch <- apply(CB_Pret[,,y,], 1, sum) # retained catch this year
+      RetainCatch[RetainCatch<=0] <- tiny
+      Cost_out[,mm,y] <-  Effort[, mm, y] * CostCurr*(1+CostInc/100)^y # cost of effort this year
+      Rev_out[,mm,y] <- (RevPC*(1+RevInc/100)^y * RetainCatch)
+      Profit <- Rev_out[,mm,y] - Cost_out[,mm,y] # profit this year
+      Effort_pot <- Effort_pot + Response*Profit # bio-economic effort next year
+      Effort_pot[Effort_pot<0] <- tiny #
+      LatEffort_out[,mm,y] <- LastTAE - Effort[, mm, y]  # store the Latent Effort
+      TAE_out[,mm,y] <- LastTAE # store the TAE
       
     }  # end of year loop
+    
     if (max(upyrs) < proyears) { # One more call to complete Data object
       MSElist[[mm]] <- updateData(Data=MSElist[[mm]], OM, MPCalcs, Effort, StockPars$Biomass, StockPars$N,
                                   Biomass_P, CB_Pret, N_P, StockPars$SSB, SSB_P, StockPars$VBiomass, VBiomass_P,
@@ -1280,8 +1239,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
                                   retA_P, retL_P, StockPars,
                                   FleetPars, ObsPars, V_P,
                                   upyrs=c(upyrs, proyears), interval, y, mm,
-                                  Misc=Data_p@Misc, RealData, ObsPars$Sample_Area,
-                                  AddIunits, AddIndType)
+                                  Misc=Data_p@Misc, RealData, ObsPars$Sample_Area
+      )
     }
     
     B_BMSYa[, mm, ] <- apply(SSB_P, c(1, 3), sum, na.rm=TRUE)/SSBMSY_y[,mm,(OM@nyears+1):(OM@nyears+OM@proyears)]  # SSB relative to SSBMSY
@@ -1400,13 +1359,13 @@ runMSE <- function(OM=OMtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
     message('The following error occured when running the forward projections: ',
             crayon::red(attributes(MSEout)$condition))
     message('Returning the historical simulations (class `Hist`). To avoid re-running spool up, ',
-    'the forward projections can be run with ',
+            'the forward projections can be run with ',
             '`runMSE(Hist, MPs, ...)`')
     return(Hist)
   }
   
   MSEout
-    
+  
 }
 
 
@@ -1414,13 +1373,13 @@ runMSE <- function(OM=OMtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
 
 
 
- 
 
 
 
- 
-  
-  
+
+
+
+
 
 
 
