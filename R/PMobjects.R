@@ -83,7 +83,9 @@ NULL
 #' @keywords internal
 #' @export
 ChkYrs <- function(Yrs, MSEobj) {
- if (class(MSEobj) !='MSE') stop('Require object of class MSE', call.=FALSE)
+   if (class(MSEobj) != "MSE" & class(MSEobj) != "MMSE") 
+      stop("Require object of class `MSE` or class `MMSE`", call. = FALSE)
+   
  if (is.null(Yrs)) {
    y.st <- 1 
    y.end <- MSEobj@proyears
