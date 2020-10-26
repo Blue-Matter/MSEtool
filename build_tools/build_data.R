@@ -26,7 +26,6 @@ for (fl in files) {
       "\n", '"', name, '"', "\n\n",
       sep = "", append = TRUE, file = file.path("R/", RoxygenFile))
   
-  
 }
 
 ObjectClass <- 'Stock'
@@ -124,6 +123,33 @@ cat("#' ", ObjectClass, " class objects",
     "\n#' avail(", '"', ObjectClass, '")',
     "\nNULL", "\n\n",
     sep = "", append = TRUE, file = file.path("R/", RoxygenFile))
+
+# ---- Build Data Objects ----
+files <- list.files("build_tools/Objects/Data", full.names = TRUE)
+for (fl in files) {
+  temp <- new("Data", fl)
+  name <- strsplit(basename(fl), '.csv')[[1]]
+  assign(name, temp)
+  do.call("use_data", list(as.name(name), overwrite = TRUE))
+  
+  cat("#' @rdname ", "Data-class-objects ", 
+      "\n", '"', name, '"', "\n\n",
+      sep = "", append = TRUE, file = file.path("R/", RoxygenFile))
+}
+
+ObjectClass <- 'Data'
+cat("#' ", ObjectClass, " class objects",
+    "\n#' ",
+    "\n#' Example objects of class ", ObjectClass,
+    "\n#' ",
+    "\n#' @name ", ObjectClass, "-class-objects",
+    "\n#' @format ", "NULL",
+    "\n#' @examples",
+    "\n#' avail(", '"', ObjectClass, '")',
+    "\nNULL", "\n\n",
+    sep = "", append = TRUE, file = file.path("R/", RoxygenFile))
+
+
 
 # ---- Build testOM Object ----
 Stock <- new("Stock", "build_tools/Objects/Stock/Albacore.csv")
@@ -236,3 +262,64 @@ cat("#'  ", name, " ", clss,
 
 
 
+# ---- Build MP Required Data Object ----- 
+
+message("\nLooping over Data slots to determine required Data for each built-in MP")
+
+MPs <- avail("MP")
+
+Data <- SimulatedData
+
+ig.slots <- c("Name", "Species", "Common_Name", "Region", "Misc", "OM", "TAC", "Sense", "Units", "Ref", "Ref_type", 
+              "Log", "params", "PosMPs", "MPs", "Obs", "nareas")
+slts <- slotNames(Data)
+slts <- slts[!slts %in% ig.slots]
+
+mat <- matrix(NA, nrow=length(MPs), ncol=length(slts))
+colnames(mat) <- slts
+rownames(mat) <- MPs
+mat <- as.data.frame(mat)
+
+
+for (sl in slts) {
+  message("Slot: ", sl, " (", match(sl, slts), " of ", length(slts), ")")
+  tData <- Data 
+  cls <- class(slot(tData, sl) )
+  
+  if ("matrix" %in% cls) {
+    slot(tData, sl) <-  get(cls)(NA)
+  } else if ("integer" %in% cls) {
+    slot(tData, sl) <-  get(cls)(0)
+  } else if ("array" %in% cls){
+    slot(tData, sl) <-  get(cls)(0)
+  } else{
+    slot(tData, sl) <- as.numeric(NA)
+  }
+  
+  canMPs <- Can(tData, dev=TRUE)
+  
+  cant <- MPs[!MPs %in% canMPs]
+  
+  mat[[sl]][match(cant, MPs)] <- TRUE
+  mat[[sl]][match(canMPs, MPs)] <- FALSE
+}
+
+ReqData <- matrix(NA, nrow=length(MPs), ncol=2)
+for (r in 1:nrow(mat)) {
+  ReqData[r,1] <- rownames(mat)[r]
+  ReqData[r,2] <- paste(sort(colnames(mat)[which(mat[r,]==TRUE)]), collapse=", ")
+}
+ReqData <- as.data.frame(ReqData, stringsAsFactors=FALSE)
+colnames(ReqData) <- c("MP", "Data")
+
+usethis::use_data(ReqData, overwrite = TRUE)
+
+clss <- class(ReqData)
+name <- "ReqData"
+cat("#'  ", name, " ", 
+    "\n#'", 
+    "\n#'  Dataframe with required data slots for built-in MPs",
+    "\n#'",
+    "\n#'\n",
+    '"', name, '"\n\n\n', sep="", append=TRUE, 
+    file=file.path('R/', RoxygenFile))  
