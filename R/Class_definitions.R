@@ -446,7 +446,7 @@ setClass("Fleet", slots = c(Name = "character",
                             Rmaxlen = "numeric",
                             DR = "numeric",
                             CurrentYr="numeric", 
-                            MPA='char.log'
+                            MPA='char.log')
                             )
 
 # initialize Fleet
