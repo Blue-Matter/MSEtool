@@ -149,8 +149,13 @@ TradePlot <- function(MSEobj, ..., Lims=c(0.2, 0.2, 0.8, 0.8),
     xrect <- data.frame(xmin=0, xmax=xline, ymin=0, ymax=max(ylim))
     yrect <- data.frame(xmin=0, xmax=max(xlim), ymin=0, ymax=yline)
     
-    MPType <- MPtype(MSEobj@MPs)
-    Class <- MPType[match(MSEobj@MPs, MPType[,1]),2]
+    if(legend) {
+      MPType <- MPtype(MSEobj@MPs)
+      Class <- MPType[match(MSEobj@MPs, MPType[,1]),2]  
+    } else {
+      Class <- rep('', MSEobj@nMPs)
+    }
+    
     
     labels <- MSEobj@MPs
     if (class(Labels) == "list") {

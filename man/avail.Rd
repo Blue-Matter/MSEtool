@@ -4,19 +4,20 @@
 \alias{avail}
 \title{What objects of this class are available}
 \usage{
-avail(classy, builtin = FALSE)
+avail(classy, package = NULL)
 }
 \arguments{
 \item{classy}{A class of object (character string, e.g. 'Fleet')}
 
-\item{builtin}{Logical. Only return Objects of class 'classy' from OMtool & DLMextra packages?}
+\item{package}{Optional. Names(s) of the package to search for object of class \code{classy}. String
+Default is all \code{openMSE} packages.}
 }
 \description{
 Generic class finder
 }
 \details{
 Finds objects of the specified class in the global environment or the
-OMtool package.
+DLMtool package.
 }
 \examples{
 avail("OM")

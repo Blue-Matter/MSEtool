@@ -1048,73 +1048,73 @@ LBSPR_ <- function(x, Data, reps, n=5, smoother=TRUE, R=0.2) {
 #'
 #' @examples
 #' LBSPR(1, Data=OMtool::SimulatedData, plot=TRUE)
-# LBSPR <- function(x, Data, reps=1, plot=FALSE, SPRtarg=0.4, theta1=0.3,
-#                   theta2=0.05, maxchange=0.3,
-#                   n=5, smoother=TRUE, R=0.2) {
-# 
-#   runLBSPR <- LBSPR_(x, Data, reps, n, smoother, R=R)
-# 
-#   if (!smoother) Ests <- runLBSPR$Ests
-#   if (smoother) Ests <- runLBSPR$Ests_smooth
-# 
-#   estSPR <- Ests$SPR[length(Ests$SPR)]
-#   ratio <- estSPR/SPRtarg - 1
-# 
-#   vt <- theta1 * (ratio^3) + theta2*ratio
-#   vt[vt< -maxchange]  <- -maxchange
-#   vt[vt> maxchange]  <- maxchange
-# 
-#   Eff <- 1+vt
-# 
-#   if (plot) {
-# 
-#     nyr <- length(runLBSPR$Fit)
-# 
-#     CAL <- Data@CAL[x,,]
-#     nyears <- dim(CAL)[1]
-#     CAL <- CAL[(nyears-nyr+1):nyears,]
-#     LenBins <- Data@CAL_bins
-#     By <- LenBins[2] - LenBins[1]
-#     LenMids <- seq(from=By*0.5, by=By, length.out = length(LenBins)-1)
-# 
-#     op <- par(no.readonly = TRUE)
-#     on.exit(op)
-#     nrow <- ceiling(sqrt(nyr))
-#     ncol <- ceiling((nyr + 1)/nrow)
-#     par(mfrow=c(nrow,ncol))
-# 
-#     if (nyr > 1) {
-#       ymin <- min(unlist(apply(CAL > 0, 1, which)))
-#       ymax <- max(unlist(apply(CAL > 0, 1, which)))
-#       ind <- (ymin-1):(ymax+1)
-#       ylim <- c(0, max(c(CAL, unlist(lapply(runLBSPR$Fit, max)))))
-#       for (p in 1:nyr) {
-#         tt <- barplot(CAL[p,ind], xlab="Length", ylab="Count", bty="l", names=LenMids[ind], ylim=ylim)
-#         lines(tt, runLBSPR$Fit[[p]][ind], lwd=2)
-#         title(paste0("Year ", runLBSPR$Ests$Year[p]))
-#       }
-#     } else {
-#         ymin <- min(which(CAL > 0))
-#         ymax <- max(which(CAL > 0))
-#         ind <- (ymin-1):(ymax+1)
-#         ylim <- c(0, max(c(CAL, runLBSPR$Fit[[1]])))
-#         tt <- barplot(CAL[ind], xlab="Length", ylab="Count", bty="l", names=LenMids[ind], ylim=ylim)
-#         lines(tt, runLBSPR$Fit[[1]][ind], lwd=2)
-#         title(paste0("Year ", runLBSPR$Ests$Year[p]))
-#     }
-# 
-#     plot(runLBSPR$Ests$Year, runLBSPR$Ests$SPR, ylim=c(0,1), xlab="Year",
-#          ylab="SPR", type="b", las=1, bty="l")
-# 
-#   }
-#   Rec <- new("Rec")
-#   Rec@Effort <- Eff
-#   Rec@Misc$Ests <- runLBSPR$Ests
-#   Rec@Misc$Ests_smooth <- runLBSPR$Ests_smooth
-#   Rec
-# 
-# }
-# class(LBSPR) <- 'MP'
+LBSPR <- function(x, Data, reps=1, plot=FALSE, SPRtarg=0.4, theta1=0.3,
+                  theta2=0.05, maxchange=0.3,
+                  n=5, smoother=TRUE, R=0.2) {
+
+  runLBSPR <- LBSPR_(x, Data, reps, n, smoother, R=R)
+
+  if (!smoother) Ests <- runLBSPR$Ests
+  if (smoother) Ests <- runLBSPR$Ests_smooth
+
+  estSPR <- Ests$SPR[length(Ests$SPR)]
+  ratio <- estSPR/SPRtarg - 1
+
+  vt <- theta1 * (ratio^3) + theta2*ratio
+  vt[vt< -maxchange]  <- -maxchange
+  vt[vt> maxchange]  <- maxchange
+
+  Eff <- 1+vt
+
+  if (plot) {
+
+    nyr <- length(runLBSPR$Fit)
+
+    CAL <- Data@CAL[x,,]
+    nyears <- dim(CAL)[1]
+    CAL <- CAL[(nyears-nyr+1):nyears,]
+    LenBins <- Data@CAL_bins
+    By <- LenBins[2] - LenBins[1]
+    LenMids <- seq(from=By*0.5, by=By, length.out = length(LenBins)-1)
+
+    op <- par(no.readonly = TRUE)
+    on.exit(op)
+    nrow <- ceiling(sqrt(nyr))
+    ncol <- ceiling((nyr + 1)/nrow)
+    par(mfrow=c(nrow,ncol))
+
+    if (nyr > 1) {
+      ymin <- min(unlist(apply(CAL > 0, 1, which)))
+      ymax <- max(unlist(apply(CAL > 0, 1, which)))
+      ind <- (ymin-1):(ymax+1)
+      ylim <- c(0, max(c(CAL, unlist(lapply(runLBSPR$Fit, max)))))
+      for (p in 1:nyr) {
+        tt <- barplot(CAL[p,ind], xlab="Length", ylab="Count", bty="l", names=LenMids[ind], ylim=ylim)
+        lines(tt, runLBSPR$Fit[[p]][ind], lwd=2)
+        title(paste0("Year ", runLBSPR$Ests$Year[p]))
+      }
+    } else {
+        ymin <- min(which(CAL > 0))
+        ymax <- max(which(CAL > 0))
+        ind <- (ymin-1):(ymax+1)
+        ylim <- c(0, max(c(CAL, runLBSPR$Fit[[1]])))
+        tt <- barplot(CAL[ind], xlab="Length", ylab="Count", bty="l", names=LenMids[ind], ylim=ylim)
+        lines(tt, runLBSPR$Fit[[1]][ind], lwd=2)
+        title(paste0("Year ", runLBSPR$Ests$Year[p]))
+    }
+
+    plot(runLBSPR$Ests$Year, runLBSPR$Ests$SPR, ylim=c(0,1), xlab="Year",
+         ylab="SPR", type="b", las=1, bty="l")
+
+  }
+  Rec <- new("Rec")
+  Rec@Effort <- Eff
+  Rec@Misc$Ests <- runLBSPR$Ests
+  Rec@Misc$Ests_smooth <- runLBSPR$Ests_smooth
+  Rec
+
+}
+class(LBSPR) <- 'MP'
 
 
 #' Length-Based SPR
@@ -1126,108 +1126,108 @@ LBSPR_ <- function(x, Data, reps, n=5, smoother=TRUE, R=0.2) {
 #'
 #' @examples
 #' LBSPR_MLL(1, Data=OMtool::SimulatedData, plot=FALSE)
-# LBSPR_MLL <- function(x, Data, reps=1, plot=FALSE, SPRtarg=0.4, n=5, smoother=TRUE, R=0.2) {
-# 
-#   Rec <- new("Rec")
-#   if (length(Data@Misc)<=1) Data@Misc <- vector('list', x)
-# 
-#   if (is.null(Data@Misc[[x]]) || length(Data@Misc[[x]])<1 ||is.null(Data@Misc[[x]]$MLLset)) {
-#     runLBSPR <- LBSPR_(x, Data, reps, n, smoother, R=R)
-#     if (!smoother) Ests <- runLBSPR$Ests
-#     if (smoother) Ests <- runLBSPR$Ests_smooth
-#     estSPR <- Ests$SPR[length(Ests$SPR)]
-# 
-#     Rec@Misc$Ests <- runLBSPR$Ests
-#     Rec@Misc$Ests_smooth <- runLBSPR$Ests_smooth
-# 
-#     if (estSPR < SPRtarg) {
-#       # estimated SPR < SPRtarg --> set size limit at 1.1 L50
-#       Rec@LFR <- 1.1 * Data@L50[x]
-#       Rec@LR5 <- 0.95 * Rec@LFR
-#       Rec@Misc$MLLset <- TRUE
-#       Rec@Misc$LFR <- Rec@LFR
-#       Rec@Misc$LR5 <- Rec@LR5
-#     } else {
-#       Rec@LFR <- Data@OM$LFR[x]
-#       Rec@LR5 <- Data@OM$LR5[x]
-#       Rec@Misc$MLLset <- FALSE
-#     }
-#   } else {
-#     if (Data@Misc[[x]]$MLLset) {
-#       # already set MLL - do nothing
-#       Rec@LFR <- Data@Misc[[x]]$LFR
-#       Rec@LR5 <- Data@Misc[[x]]$LR5
-#       Rec@Misc$LFR <- Rec@LFR
-#       Rec@Misc$LR5 <- Rec@LR5
-#       Rec@Misc$MLLset <- TRUE
-#     } else {
-#       runLBSPR <- LBSPR_(x, Data, reps, n, smoother, R=R)
-#       Rec@Misc$Ests <- runLBSPR$Ests
-#       Rec@Misc$Ests_smooth <- runLBSPR$Ests_smooth
-#       if (!smoother) Ests <- runLBSPR$Ests
-#       if (smoother) Ests <- runLBSPR$Ests_smooth
-#       estSPR <- Ests$SPR[length(Ests$SPR)]
-#       if (estSPR < SPRtarg) {
-#         # estimated SPR < SPRtarg --> set size limit at 1.1 L50
-#         Rec@LFR <- 1.1 * Data@L50[x]
-#         Rec@LR5 <- 0.95 * Rec@LFR
-#         Rec@Misc$LFR <- Rec@LFR
-#         Rec@Misc$LR5 <- Rec@LR5
-#         Rec@Misc$MLLset <- TRUE
-#       } else {
-#         # estimated SPR > SPRtarg --> don't change retention
-#         Rec@LFR <- Data@OM$LFR[x]
-#         Rec@LR5 <- Data@OM$LR5[x]
-#         Rec@Misc$MLLset <- FALSE
-#       }
-#     }
-#   }
-# 
-#   if (plot) {
-# 
-#     nyr <- length(runLBSPR$Fit)
-# 
-#     CAL <- Data@CAL[x,,]
-#     nyears <- dim(CAL)[1]
-#     CAL <- CAL[(nyears-nyr+1):nyears,]
-#     LenBins <- Data@CAL_bins
-#     By <- LenBins[2] - LenBins[1]
-#     LenMids <- seq(from=By*0.5, by=By, length.out = length(LenBins)-1)
-# 
-#     op <- par(no.readonly = TRUE)
-#     on.exit(op)
-#     nrow <- ceiling(sqrt(nyr))
-#     ncol <- ceiling((nyr + 1)/nrow)
-#     par(mfrow=c(nrow,ncol))
-# 
-#     if (nyr > 1) {
-#       ymin <- min(unlist(apply(CAL > 0, 1, which)))
-#       ymax <- max(unlist(apply(CAL > 0, 1, which)))
-#       ind <- (ymin-1):(ymax+1)
-#       ylim <- c(0, max(c(CAL, unlist(lapply(runLBSPR$Fit, max)))))
-#       for (p in 1:nyr) {
-#         tt <- barplot(CAL[p,ind], xlab="Length", ylab="Count", bty="l", names=LenMids[ind], ylim=ylim)
-#         lines(tt, runLBSPR$Fit[[p]][ind], lwd=2)
-#         title(paste0("Year ", runLBSPR$Ests$Year[p]))
-#       }
-#     } else {
-#       ymin <- min(which(CAL > 0))
-#       ymax <- max(which(CAL > 0))
-#       ind <- (ymin-1):(ymax+1)
-#       ylim <- c(0, max(c(CAL, runLBSPR$Fit[[1]])))
-#       tt <- barplot(CAL[ind], xlab="Length", ylab="Count", bty="l", names=LenMids[ind], ylim=ylim)
-#       lines(tt, runLBSPR$Fit[[1]][ind], lwd=2)
-#       title(paste0("Year ", runLBSPR$Ests$Year[p]))
-#     }
-# 
-#     plot(runLBSPR$Ests$Year, runLBSPR$Ests$SPR, ylim=c(0,1), xlab="Year",
-#          ylab="SPR", type="b", las=1, bty="l")
-# 
-#   }
-#   Rec
-# 
-# }
-# class(LBSPR_MLL) <- 'MP'
+LBSPR_MLL <- function(x, Data, reps=1, plot=FALSE, SPRtarg=0.4, n=5, smoother=TRUE, R=0.2) {
+
+  Rec <- new("Rec")
+  if (length(Data@Misc)<=1) Data@Misc <- vector('list', x)
+
+  if (is.null(Data@Misc[[x]]) || length(Data@Misc[[x]])<1 ||is.null(Data@Misc[[x]]$MLLset)) {
+    runLBSPR <- LBSPR_(x, Data, reps, n, smoother, R=R)
+    if (!smoother) Ests <- runLBSPR$Ests
+    if (smoother) Ests <- runLBSPR$Ests_smooth
+    estSPR <- Ests$SPR[length(Ests$SPR)]
+
+    Rec@Misc$Ests <- runLBSPR$Ests
+    Rec@Misc$Ests_smooth <- runLBSPR$Ests_smooth
+
+    if (estSPR < SPRtarg) {
+      # estimated SPR < SPRtarg --> set size limit at 1.1 L50
+      Rec@LFR <- 1.1 * Data@L50[x]
+      Rec@LR5 <- 0.95 * Rec@LFR
+      Rec@Misc$MLLset <- TRUE
+      Rec@Misc$LFR <- Rec@LFR
+      Rec@Misc$LR5 <- Rec@LR5
+    } else {
+      Rec@LFR <- Data@OM$LFR[x]
+      Rec@LR5 <- Data@OM$LR5[x]
+      Rec@Misc$MLLset <- FALSE
+    }
+  } else {
+    if (Data@Misc[[x]]$MLLset) {
+      # already set MLL - do nothing
+      Rec@LFR <- Data@Misc[[x]]$LFR
+      Rec@LR5 <- Data@Misc[[x]]$LR5
+      Rec@Misc$LFR <- Rec@LFR
+      Rec@Misc$LR5 <- Rec@LR5
+      Rec@Misc$MLLset <- TRUE
+    } else {
+      runLBSPR <- LBSPR_(x, Data, reps, n, smoother, R=R)
+      Rec@Misc$Ests <- runLBSPR$Ests
+      Rec@Misc$Ests_smooth <- runLBSPR$Ests_smooth
+      if (!smoother) Ests <- runLBSPR$Ests
+      if (smoother) Ests <- runLBSPR$Ests_smooth
+      estSPR <- Ests$SPR[length(Ests$SPR)]
+      if (estSPR < SPRtarg) {
+        # estimated SPR < SPRtarg --> set size limit at 1.1 L50
+        Rec@LFR <- 1.1 * Data@L50[x]
+        Rec@LR5 <- 0.95 * Rec@LFR
+        Rec@Misc$LFR <- Rec@LFR
+        Rec@Misc$LR5 <- Rec@LR5
+        Rec@Misc$MLLset <- TRUE
+      } else {
+        # estimated SPR > SPRtarg --> don't change retention
+        Rec@LFR <- Data@OM$LFR[x]
+        Rec@LR5 <- Data@OM$LR5[x]
+        Rec@Misc$MLLset <- FALSE
+      }
+    }
+  }
+
+  if (plot) {
+
+    nyr <- length(runLBSPR$Fit)
+
+    CAL <- Data@CAL[x,,]
+    nyears <- dim(CAL)[1]
+    CAL <- CAL[(nyears-nyr+1):nyears,]
+    LenBins <- Data@CAL_bins
+    By <- LenBins[2] - LenBins[1]
+    LenMids <- seq(from=By*0.5, by=By, length.out = length(LenBins)-1)
+
+    op <- par(no.readonly = TRUE)
+    on.exit(op)
+    nrow <- ceiling(sqrt(nyr))
+    ncol <- ceiling((nyr + 1)/nrow)
+    par(mfrow=c(nrow,ncol))
+
+    if (nyr > 1) {
+      ymin <- min(unlist(apply(CAL > 0, 1, which)))
+      ymax <- max(unlist(apply(CAL > 0, 1, which)))
+      ind <- (ymin-1):(ymax+1)
+      ylim <- c(0, max(c(CAL, unlist(lapply(runLBSPR$Fit, max)))))
+      for (p in 1:nyr) {
+        tt <- barplot(CAL[p,ind], xlab="Length", ylab="Count", bty="l", names=LenMids[ind], ylim=ylim)
+        lines(tt, runLBSPR$Fit[[p]][ind], lwd=2)
+        title(paste0("Year ", runLBSPR$Ests$Year[p]))
+      }
+    } else {
+      ymin <- min(which(CAL > 0))
+      ymax <- max(which(CAL > 0))
+      ind <- (ymin-1):(ymax+1)
+      ylim <- c(0, max(c(CAL, runLBSPR$Fit[[1]])))
+      tt <- barplot(CAL[ind], xlab="Length", ylab="Count", bty="l", names=LenMids[ind], ylim=ylim)
+      lines(tt, runLBSPR$Fit[[1]][ind], lwd=2)
+      title(paste0("Year ", runLBSPR$Ests$Year[p]))
+    }
+
+    plot(runLBSPR$Ests$Year, runLBSPR$Ests$SPR, ylim=c(0,1), xlab="Year",
+         ylab="SPR", type="b", las=1, bty="l")
+
+  }
+  Rec
+
+}
+class(LBSPR_MLL) <- 'MP'
 
 
 

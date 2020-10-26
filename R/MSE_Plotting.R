@@ -3323,6 +3323,54 @@ tradeoffplot4 <- function(x, y, xlab, ylab, labs, cex, vl, hl, ShowLabs = FALSE,
   
 }
 
+#' Plot Spawnign stock biomass and reference points for both historical and projected period
+#' 
+#' 
+#' @param MSE An object of class 'MSE' produced by from runMSE()
+#' @param simno Positive integer, the simulation number you wish to plot 
+#' @param ystart Positive integer, the calendar year corresponding with the first historical year
+#' @param log Boolean, whether log SSB and reference points should be plotted
+#' @param leg Boolean, should a legend be included in the plot? 
+#' @author T. Carruthers
+#' @export SSBrefplot
+SSBrefplot<-function(MSE,simno=1,ystart=1,log=F,leg=T){
+  
+  ylaby<-ystart-1+(1:(MSE@nyears+MSE@proyears))
+  SSB   <- c(apply(MSE@SSB_hist[simno,,,],2,sum),MSE@SSB[simno,1,])
+  dSSB0 <- MSE@Misc$Ref$Dynamic_Unfished$SSB0[simno,]
+  hSSB0 <- SSB[1]
+  aSSB0 <- MSE@Misc$Ref$ByYear$SSB0[simno,]
+  aSSBMSY <- MSE@Misc$Ref$ByYear$SSBMSY[simno,]
+  aBrat<-aSSBMSY/aSSB0
+  dSSBMSY <- aBrat*dSSB0
+  ylab="Spawning stock biomass"
+  ymin=0
+  
+  if(log){
+    SSB<-log(SSB); dSSB0<-log(dSSB0); hSSB0<-log(hSSB0); aSSB0=log(aSSB0); dSSBMSY=log(dSSBMSY); aSSBMSY=log(aSSBMSY)
+    ylab = "log Spawning Stock Biomass"; ymin=min(SSB,dSSB0,hSSB0,aSSB0)
+  }   
+  
+  plot(ylaby,SSB,ylim=c(ymin,max(SSB,dSSB0,hSSB0,aSSB0)),yaxs='i',type='l',xlab="Year",ylab=ylab,col="white")
+  abline(h=hSSB0,lty=2,col="grey")
+  abline(v=ystart+MSE@nyears-0.5,col='grey')
+  lines(ylaby,dSSB0,col='#ff000090',lty=2,lwd=2)
+  lines(ylaby,dSSBMSY,col='#ff000090',lty=2)
+  lines(ylaby,aSSB0,col='#0000ff90',lty=2,lwd=2)
+  lines(ylaby,aSSBMSY,col='#0000ff90',lty=2)
+  lines(ylaby,SSB,lwd=2,col='#99999999')
+  
+  if(leg)legend('topright',legend=c("Simulated","Asymp. SSB0","Asymp. SSBMSY","Dyn. SSB0","Dyn. SSBMSY","Historical"),
+                text.col=c('dark grey','blue','blue','red','red','dark grey'), 
+                col=c('dark grey','blue','blue','red','red','dark grey'), lty=c(1,2,2,2,2,2),lwd=c(2,2,1,2,1,1),bty='n')
+  
+  
+}
+
+
+
+
+
 
 #' Make colors transparent
 #' 

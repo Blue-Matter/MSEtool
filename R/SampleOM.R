@@ -801,6 +801,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   StockOut$L95 <- L95
   StockOut$L50_95 <- L50_95
   StockOut$L95array <- L95array
+  Mat_age[,1,] <- 0 # age-0 must not be mature
   StockOut$Mat_age <- Mat_age
   StockOut$LenCV <- LenCV
   StockOut$LatASD <- LatASD
@@ -1234,7 +1235,11 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
                           nyears=NULL, proyears=NULL){
   if (class(Obs) != "Obs" & class(Obs) != "OM") 
     stop("First argument must be class 'Obs' or 'OM'")
-  if (class(Obs) == "OM") nsim <- Obs@nsim
+  if (class(Obs) == "OM") {
+    nsim <- Obs@nsim
+    nyears <- Obs@nyears
+    proyears <- Obs@proyears
+  }
   
   # Get custom pars if they exist
   if (class(Obs) == "OM" && length(Obs@cpars) > 0 && is.null(cpars)) 

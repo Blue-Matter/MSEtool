@@ -418,18 +418,29 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   
   n_age <- StockPars$maxage + 1 # include age-0
   
+  # Implementation Error 
+  Effort_Imp_Error <- ImpPars$E_y
+  SL_Imp_Error <- ImpPars$SizeLim_y
+  TAC_Imp_Error <- ImpPars$TAC_y
+  
+  if (MPRecs$type == 'reference') {
+    Effort_Imp_Error[Effort_Imp_Error!=1] <- 1
+    SL_Imp_Error[SL_Imp_Error!=1] <- 1
+    TAC_Imp_Error[TAC_Imp_Error!=1] <- 1
+  }
+
   # Effort 
   if (length(MPRecs$Effort) == 0) { # no max effort recommendation
-    if (y==1) TAE <- LastTAE *  ImpPars$E_y[,y] # max effort is unchanged but has implementation error
-    if (y>1) TAE <- LastTAE /  ImpPars$E_y[,y-1]  *  ImpPars$E_y[,y] # max effort is unchanged but has implementation error
+    if (y==1) TAE <- LastTAE *  Effort_Imp_Error[,y] # max effort is unchanged but has implementation error
+    if (y>1) TAE <- LastTAE /  Effort_Imp_Error[,y-1] * Effort_Imp_Error[,y] # max effort is unchanged but has implementation error
   } else if (length(MPRecs$Effort) != nsim) {
     stop("Effort recommmendation is not 'nsim' long.\n Does MP return Effort recommendation under all conditions?")
   } else {
     # a maximum effort recommendation
     if (!all(is.na(histTAE))) {
-      TAE <- histTAE * MPRecs$Effort *  ImpPars$E_y[,y] # adjust existing TAE adjustment with implementation error  
+      TAE <- histTAE * MPRecs$Effort * Effort_Imp_Error[,y] # adjust existing TAE adjustment with implementation error  
     } else {
-      TAE <- MPRecs$Effort *  ImpPars$E_y[,y] # adjust existing TAE adjustment with implementation error
+      TAE <- MPRecs$Effort * Effort_Imp_Error[,y] # adjust existing TAE adjustment with implementation error
     }
   }
   
@@ -464,7 +475,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   } else if (length(MPRecs$LR5) != nsim) {
     stop("LR5 recommmendation is not 'nsim' long.\n Does MP return LR5 recommendation under all conditions?")
   } else {
-    LR5_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$LR5 *  ImpPars$SizeLim_y[,y], 
+    LR5_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$LR5 *  SL_Imp_Error[,y], 
                                                      ncol=(length((y + nyears):(nyears+proyears))),
                                                      nrow=nsim, byrow=FALSE) # recommendation with implementation error
     RetentFlag <- TRUE
@@ -477,7 +488,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   } else if (length(MPRecs$LFR) != nsim) {
     stop("LFR recommmendation is not 'nsim' long.\n Does MP return LFR recommendation under all conditions?")
   } else {
-    LFR_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$LFR *  ImpPars$SizeLim_y[,y], 
+    LFR_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$LFR *  SL_Imp_Error[,y], 
                                                      ncol=(length((y + nyears):(nyears+proyears))),
                                                      nrow=nsim, byrow=FALSE) # recommendation with implementation error
     RetentFlag <- TRUE
@@ -503,7 +514,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   } else if (length(MPRecs$HS) != nsim) {
     stop("HS recommmendation is not 'nsim' long.\n Does MP return HS recommendation under all conditions?")
   } else {
-    HS <- MPRecs$HS  *  ImpPars$SizeLim_y[,y] # recommendation
+    HS <- MPRecs$HS  *  SL_Imp_Error[,y] # recommendation
     RetentFlag <- TRUE
   }
   
@@ -518,7 +529,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   } else if (length(MPRecs$L5) != nsim) {
     stop("L5 recommmendation is not 'nsim' long.\n Does MP return L5 recommendation under all conditions?")
   } else {
-    L5_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$L5 *  ImpPars$SizeLim_y[,y], 
+    L5_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$L5 *  SL_Imp_Error[,y], 
                                                     ncol=(length((y + nyears):(nyears+proyears))),
                                                     nrow=nsim, byrow=FALSE) # recommendation with implementation error
     SelectFlag <- TRUE
@@ -531,7 +542,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   } else if (length(MPRecs$LFS) != nsim) {
     stop("LFS recommmendation is not 'nsim' long.\n Does MP return LFS recommendation under all conditions?")
   } else {
-    LFS_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$LFS *  ImpPars$SizeLim_y[,y], 
+    LFS_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$LFS *  SL_Imp_Error[,y], 
                                                      ncol=(length((y + nyears):(nyears+proyears))),
                                                      nrow=nsim, byrow=FALSE) # recommendation with implementation error
     SelectFlag <- TRUE
@@ -684,13 +695,14 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     FM_Pret[SAYR] <- (FleetPars$FinF[S1] * Effort_pot[S1] * retA_P[SAYt] * t(Si)[SR] * fishdist[SR] *
                         FleetPars$qvar[SY1] * FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y)/StockPars$Asize[SR]
     
+    Effort_req <- Effort_pot
   }
   
   # ---- calculate required F and effort for TAC recommendation ----
   if (!all(is.na(TACused))) { # a TAC has been set
     # if MP returns NA - TAC is set to TAC from last year
     TACused[is.na(TACused)] <- LastTAC[is.na(TACused)] 
-    TACusedE <-  ImpPars$TAC_y[,y]*TACused   # TAC taken after implementation error
+    TACusedE <-  TAC_Imp_Error[,y]*TACused   # TAC taken after implementation error
 
     # Calculate total vulnerable biomass available mid-year accounting for any changes in selectivity &/or spatial closures
     M_array <- array(0.5*StockPars$M_ageArray[,,nyears+y], dim=c(nsim, n_age, StockPars$nareas))
@@ -752,35 +764,21 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
                           StockPars$maxage, StockPars$nareas, StockPars$M_ageArray,nyears, y)
     }
     
+    # Effort relative to last historical with this catch
+    Effort_req <- Ftot/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]* 
+                          (1 + FleetPars$qinc/100)^y) * apply(fracE2, 1, sum) # effort required
     # Calculate F & Z by age class
     FM_P[SAYR] <- Ftot[S] * V_P[SAYt] * fishdist[SR]/StockPars$Asize[SR]
     FM_Pret[SAYR] <- Ftot[S] * retA_P[SAYt] * fishdist[SR]/StockPars$Asize[SR]
     Z_P[SAYR] <- FM_P[SAYR] + StockPars$M_ageArray[SAYt] # calculate total mortality
   }
 
-  # Apply maxF constraint 
-  FM_P[SAYR][FM_P[SAYR] > maxF] <- maxF 
-  FM_Pret[SAYR][FM_Pret[SAYR] > maxF] <- maxF
-  Z_P[SAYR] <- FM_P[SAYR] + StockPars$M_ageArray[SAYt] # calculate total mortality
-  
-  # Update catches after maxF constraint
-  CB_P[SAYR] <- FM_P[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR]
-  CB_Pret[SAYR] <- FM_Pret[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR]
-  
+
   # Effort_req - effort required to catch TAC
   # Effort_pot - potential effort this year (active fishers) from bio-economic model
   # Effort_act - actual effort this year
   # TAE - maximum actual effort limit
   # Effort_act < Effort_pot if Effort_req < Effort_pot
-  
-  # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
-  totalCatch <- apply(CB_P[,,y,], 1, sum)
-  Ftot <- sapply(1:nsim, calcF, totalCatch, V_P, Biomass_P, fishdist, StockPars$Asize, StockPars$maxage, StockPars$nareas,
-                 StockPars$M_ageArray,nyears, y)
-  
-  # Effort relative to last historical with this potential catch
-  Effort_req <- Ftot/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]* (1 + FleetPars$qinc/100)^y) * apply(fracE2, 1, sum) # effort required for this catch
-  
 
   # Limit effort to potential effort from bio-economic model
   Effort_act <- Effort_req
@@ -797,8 +795,8 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   
   # --- Re-calculate catch given actual effort ----
   # fishing mortality with actual effort 
-  FM_P[SAYR] <- (  FleetPars$FinF[S1] * Effort_act[S1] * V_P[SAYt] * t(Si)[SR] * fishdist[SR] *
-                   FleetPars$qvar[SY1] * (FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y))/StockPars$Asize[SR]
+  FM_P[SAYR] <- (FleetPars$FinF[S1] * Effort_act[S1] * V_P[SAYt] * t(Si)[SR] * fishdist[SR] *
+                 FleetPars$qvar[SY1] * (FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y))/StockPars$Asize[SR]
   
   # retained fishing mortality with actual effort 
   FM_Pret[SAYR] <- (  FleetPars$FinF[S1] * Effort_act[S1] * retA_P[SAYt] * t(Si)[SR] * fishdist[SR] *
@@ -815,9 +813,9 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   
   # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
   totalCatch <- apply(CB_P[,,y,], 1, sum)
-  Ftot <- sapply(1:nsim, calcF, totalCatch, V_P, Biomass_P, fishdist, StockPars$Asize, StockPars$maxage, StockPars$nareas,
+  Ftot <- sapply(1:nsim, calcF, totalCatch, V_P, Biomass_P, fishdist, 
+                 StockPars$Asize, StockPars$maxage, StockPars$nareas,
                  StockPars$M_ageArray,nyears, y) # update if effort has changed
-  
   
   # Returns
   out <- list()

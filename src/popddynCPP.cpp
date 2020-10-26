@@ -221,7 +221,6 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
       tempVec(A) = accu(VBarray.subcube(0, yr+1, A, maxage-1, yr+1, A));
     }
     
-    
     Narray.subcube(0, yr+1, 0, maxage, yr+1, nareas-1) = NextYrN;
     
     // fishdist = (pow(tempVec, Spat_targc))/mean((pow(tempVec, Spat_targc)));
@@ -286,33 +285,33 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
       Zarray.subcube(0,yr+1, 0, maxage, yr+1, nareas-1) = Marray.subcube(0,yr+1, 0, maxage, yr+1, nareas-1) + FMarray.subcube(0,yr+1, 0, maxage, yr+1, nareas-1);
       
     }
-    
+
   }
   
-  // Calculate N & Biomass at end of projection period 
-  int lastyr = pyears;
-  arma::vec SB2(nareas);
-  arma::cube movcy2 = movc(lastyr);
-  
-  
-  for (int A=0; A<nareas; A++) SB2(A) = accu(SBarray.subcube(0, lastyr-1, A, maxage, lastyr-1, A));
-  if ((lastyr >0) & (control==3)) SB2 = SSB0a;
-  
-  arma::mat Ncurr2 = Narray.subcube(0, lastyr-1, 0, maxage, lastyr-1, nareas-1); // N at the beginning of the last year
-  arma::mat Zcurr2 = Zarray.subcube(0, lastyr-1, 0, maxage, lastyr-1, nareas-1); // total mortality in the last year
-  // double age0M = M_age(0,yr+1);
-  
-  // Calculate number at end of last year (after fishing this year) before aging
-  arma::mat EndLastYrN(maxage+1, nareas);
-  
-  for (int A=0; A < nareas; A++) {
-    // Mortality
-    for (int age=0; age<=maxage; age++) {
-      EndLastYrN(age, A) = Ncurr2(age, A) * exp(-Zcurr2(age, A)); // Total mortality
-    }
-  }
-  
-  List out(9);
+  // // Calculate N & Biomass at end of projection period 
+  // int lastyr = pyears;
+  // arma::vec SB2(nareas);
+  // arma::cube movcy2 = movc(lastyr);
+  // 
+  // 
+  // for (int A=0; A<nareas; A++) SB2(A) = accu(SBarray.subcube(0, lastyr-1, A, maxage, lastyr-1, A));
+  // if ((lastyr >0) & (control==3)) SB2 = SSB0a;
+  // 
+  // arma::mat Ncurr2 = Narray.subcube(0, lastyr-1, 0, maxage, lastyr-1, nareas-1); // N at the beginning of the last year
+  // arma::mat Zcurr2 = Zarray.subcube(0, lastyr-1, 0, maxage, lastyr-1, nareas-1); // total mortality in the last year
+  // // double age0M = M_age(0,yr+1);
+  // 
+  // // Calculate number at end of last year (after fishing this year) before aging
+  // arma::mat EndLastYrN(maxage+1, nareas);
+  // 
+  // for (int A=0; A < nareas; A++) {
+  //   // Mortality
+  //   for (int age=0; age<=maxage; age++) {
+  //     EndLastYrN(age, A) = Ncurr2(age, A) * exp(-Zcurr2(age, A)); // Total mortality
+  //   }
+  // }
+  // 
+  List out(8);
   out(0) = Narray;
   out(1) = Barray;
   out(2) = SSNarray;
@@ -321,7 +320,7 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
   out(5) = FMarray;
   out(6) = FMretarray;
   out(7) = Zarray;
-  out(8) = EndLastYrN;
+
   
   return out;
 }

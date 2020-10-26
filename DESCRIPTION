@@ -20,12 +20,15 @@ Depends:
     snowfall
 Imports:
     abind,
+    coda,
     dplyr,
     methods,
+    mvtnorm,
     grDevices,
     ggplot2,
     parallel,
     Rcpp,
+    reshape2,
     stats,
     utils
 Suggests:

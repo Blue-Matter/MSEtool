@@ -173,3 +173,10 @@ NULL
 #' avail("MOM")
 NULL
 
+#'  SimulatedData Data
+#'
+#'  An object of class Data
+#'
+"SimulatedData"
+
+
