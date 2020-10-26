@@ -2,3 +2,26 @@
 ^\.Rproj\.user$
 ^build_tools$
 ^data-raw$
+
+man-roxygen
+
+^.*\.git
+## Ignore travis config file
+^\.travis\.yml$
+^\_pkgdown\.yml$
+docs
+
+# Ignore tests 
+tests\*.*
+
+# Ignore DLL
+src\*.o
+src\*.so
+src\*.dll
+
+\.o$
+\.so$
+\.dll$
+
+\.ini$
+^index\.md$
