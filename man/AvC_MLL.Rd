@@ -16,7 +16,7 @@ AvC_MLL(x, Data, reps = 100, plot = FALSE)
 \item{plot}{Logical. Show the plot?}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC, Retention slot(s) populated
 }
 \description{
 A example mixed control MP that uses the average catch output control MP together with a
@@ -41,10 +41,14 @@ This MP has been included for demonstration purposes of a mixed control MP.
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{AvC_MLL}: Cat, LHYear, Year
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
+
+See \href{https://dlmtool.github.io/DLMtool/reference/AvC_MLL.html}{Online Documentation} for correctly rendered equations
 }
 
 \examples{

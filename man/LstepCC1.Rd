@@ -71,7 +71,7 @@ first year}
 conditions for increasing, maintaining or reducing the TAC or effort.}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 A management procedure that incrementally adjusts the TAC according to the
@@ -108,16 +108,29 @@ The conditions are specified in the \code{llim} argument to the function.
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{LstepCC1}: Cat, LHYear, ML, Year
+
+
+\code{LstepCC2}: Cat, LHYear, ML, Year
+
+
+\code{LstepCC3}: Cat, LHYear, ML, Year
+
+
+\code{LstepCC4}: Cat, LHYear, ML, Year
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
 
-NA
+See \href{https://dlmtool.github.io/DLMtool/reference/LstepCC1.html}{Online Documentation} for correctly rendered equations
 
-NA
 
-NA
+
+
+
+
 }
 
 \examples{

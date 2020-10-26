@@ -33,7 +33,7 @@ first year}
 compared with recent levels.}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC, Spatial slot(s) populated
 }
 \description{
 A example mixed control MP that uses the Itarget1 output control MP together with a
@@ -61,10 +61,14 @@ This MP has been included for demonstration purposes of a mixed control MP.
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{Itarget1_MPA}: Cat, Ind, LHYear, Year
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
+
+See \href{https://dlmtool.github.io/DLMtool/reference/Itarget1_MPA.html}{Online Documentation} for correctly rendered equations
 }
 
 \examples{

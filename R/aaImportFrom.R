@@ -13,7 +13,7 @@
 #' @importFrom snowfall sfClusterEval sfInit sfExportAll sfIsRunning sfExport 
 #' sfSapply sfLibrary
 #' @importFrom stats acf approx coef cor dbeta density dnorm dlnorm lm loess 
-#' loess.smooth nls setNames SSasympOff
+#' loess.smooth nls setNames simulate SSasympOff weighted.mean
 #' median nlm optim optimise optimize plogis pnorm predict qlnorm quantile rbeta
 #' rlnorm rmultinom rnorm runif sd
 #' @importFrom utils  browseURL capture.output combn flush.console packageVersion 
@@ -44,5 +44,11 @@ Names <- c("maxage", "R0", "Mexp", "Msd", "dep", "D", "Mgrad", "SRrel", "hs", "p
            "V2", "SLarray2", "DR", "Asize", "Size_area_1", "L50array", "L95array",
            "Fdisc_array", "Fdisc_array2", "Pinitdist", "DataOut",
            'Perr_y', "Cobs", "Iobs", "Dobs", "Btbiascv", 'Btobs', "h", 'Index',
-           '.', 'MP', 'Data', 'DataClass', "Type", "Recs", "DominatedMPs"
+           '.', 'MP', 'Data', 'DataClass', "Type", "Recs", "DominatedMPs", 
+           'Era', 'SpawnBio', 'Yr', "Sex", 'Beg/Mid', 'steep','int_Age', 'Len_Beg',
+           'Wt_Beg', 'Len_Mat', 'Age_Mat', 'Age', "Yr", 'LAA', 'Gender', 'Year',
+           'true_Age', 'true_Year', 'true_Yr', 'exp_recr', 'pred_recr', 'Z',
+           'season_as_years', 'nseas', 'SR'
 )
+
+if(getRversion() >= "2.15.1") utils::globalVariables(Names)

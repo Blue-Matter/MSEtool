@@ -25,7 +25,7 @@ Fdem_ML(x, Data, reps = 100, plot = FALSE, Fmin = 0.005)
 analysis}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 FMSY is calculated as r/2 where r is calculated from a demographic approach
@@ -51,14 +51,24 @@ from the life-history parameters using the methods of McAllister et al. (2001).
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{Fdem}: Abun, FMSY_M, L50, MaxAge, Mort, steep, vbK, vbLinf, vbt0, wla, wlb
+
+
+\code{Fdem_CC}: CAA, Cat, FMSY_M, L50, MaxAge, Mort, steep, vbK, vbLinf, vbt0, wla, wlb
+
+
+\code{Fdem_ML}: CAL, Cat, FMSY_M, L50, Lbar, Lc, MaxAge, Mort, steep, vbK, vbLinf, vbt0, wla, wlb
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
 
-NA
+See \href{https://dlmtool.github.io/DLMtool/reference/Fdem.html}{Online Documentation} for correctly rendered equations
 
-NA
+
+
+
 }
 
 \examples{

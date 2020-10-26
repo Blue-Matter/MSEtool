@@ -16,7 +16,7 @@ ITM(x, Data, reps = 100, plot = FALSE)
 \item{plot}{Logical. Show the plot?}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 An index target MP where the TAC is modified according to current index
@@ -35,10 +35,14 @@ The maximum fractional change in TAC is determined by \eqn{mc}, defined as
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{ITM}: Ind, Iref, Mort, MPrec
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
+
+See \href{https://dlmtool.github.io/DLMtool/reference/ITM.html}{Online Documentation} for correctly rendered equations
 }
 
 \examples{

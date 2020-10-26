@@ -43,17 +43,17 @@ VPA2OM(
 
 \item{Imp}{The implementation model (class Imp). This function does not update implementation parameters.}
 
-\item{naa}{Numeric array \link{sim, ages, year}. Numbers-at-age \link{first age is age zero}.}
+\item{naa}{Numeric array \verb{[sim, ages, year]}. Numbers-at-age \verb{[first age is age zero]}.}
 
-\item{faa}{Numeric array \link{sim, ages, year}. Fishing mortality rate-at-age \link{first age is age zero}.}
+\item{faa}{Numeric array \verb{[sim, ages, year]}. Fishing mortality rate-at-age \verb{[first age is age zero]}.}
 
-\item{waa}{Numeric array \link{sim, ages, year}. Weight-at-age \link{first age is age zero}.}
+\item{waa}{Numeric array \verb{[sim, ages, year]}. Weight-at-age \verb{[first age is age zero]}.}
 
-\item{Mataa}{Numeric array \link{sim, ages, year}. Maturity (spawning fraction)-at-age \link{first age is age zero}.}
+\item{Mataa}{Numeric array \verb{[sim, ages, year]}. Maturity (spawning fraction)-at-age \verb{[first age is age zero]}.}
 
-\item{Maa}{Numeric array \link{sim, ages, year}. Natural mortality rate-at-age \link{first age is age zero}.}
+\item{Maa}{Numeric array \verb{[sim, ages, year]}. Natural mortality rate-at-age \verb{[first age is age zero]}.}
 
-\item{laa}{Numeric array \link{sim, ages, year}. Length-at-age \link{first age is age zero}.}
+\item{laa}{Numeric array \verb{[sim, ages, year]}. Length-at-age \verb{[first age is age zero]}.}
 
 \item{nyr_par_mu}{Positive integer. The number of recent years that natural mortality, age vulnerability, weight, length and maturity parameters are averaged over for defining future projection conditions.}
 

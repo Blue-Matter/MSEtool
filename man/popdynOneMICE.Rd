@@ -45,50 +45,50 @@ popdynOneMICE(
 
 \item{maxage}{Integer, maximum modelled age}
 
-\item{Ncur}{Array \link{stock, age, area} of stock numbers}
+\item{Ncur}{Array \verb{[stock, age, area]} of stock numbers}
 
-\item{Vcur}{Array \link{fleet, age, area} of the vulnerability curve}
+\item{Vcur}{Array \verb{[fleet, age, area]} of the vulnerability curve}
 
-\item{FMretx}{Array \link{stock, fleet, age, area} of the retention curve}
+\item{FMretx}{Array \verb{[stock, fleet, age, area]} of the retention curve}
 
-\item{FMx}{Array \link{stock, fleet, age, area} fishing mortality rate}
+\item{FMx}{Array \verb{[stock, fleet, age, area]} fishing mortality rate}
 
-\item{PerrYrp}{Vector \link{stock} process error - the lognormal factor for
+\item{PerrYrp}{Vector \verb{[stock]} process error - the lognormal factor for
 recruitment strength}
 
-\item{hsx}{Vector \link{stock} steepness of the stock recruitment curve}
+\item{hsx}{Vector \verb{[stock]} steepness of the stock recruitment curve}
 
-\item{aRx}{Vector \link{stock} stock recruitment parameter alpha (for Ricker curve)}
+\item{aRx}{Vector \verb{[stock]} stock recruitment parameter alpha (for Ricker curve)}
 
-\item{bRx}{Vector \link{stock} stock recruitment parameter beta (for Ricker curve)}
+\item{bRx}{Vector \verb{[stock]} stock recruitment parameter beta (for Ricker curve)}
 
-\item{movy}{Array \link{stock,age,area,area} of movement transitions}
+\item{movy}{Array \verb{[stock,age,area,area]} of movement transitions}
 
-\item{Spat_targ}{Matrix \link{stock, fleet} of spatial targetting parameter
+\item{Spat_targ}{Matrix \verb{[stock, fleet]} of spatial targetting parameter
 (0 evenly spatial distributed, 1 proportional to vulnerable biomass)}
 
-\item{SRrelx}{Integer vector \link{stock} the form of the stock recruitment
+\item{SRrelx}{Integer vector \verb{[stock]} the form of the stock recruitment
 relationship (1 = Beverton-Holt, 2= Ricker)}
 
-\item{M_agecur}{Matrix \link{stock, age} of Natural mortality rate at age}
+\item{M_agecur}{Matrix \verb{[stock, age]} of Natural mortality rate at age}
 
-\item{Mat_agecur}{Matrix \link{stock, age} of maturity (spawning fraction) age age}
+\item{Mat_agecur}{Matrix \verb{[stock, age]} of maturity (spawning fraction) age age}
 
-\item{Asizex}{Matrix \link{stock, area} of relative area sizes}
+\item{Asizex}{Matrix \verb{[stock, area]} of relative area sizes}
 
-\item{Kx}{Vector \link{stock} of von B growth parameter K}
+\item{Kx}{Vector \verb{[stock]} of von B growth parameter K}
 
-\item{Mx}{Vector \link{stock} mature natural mortality rate}
+\item{Mx}{Vector \verb{[stock]} mature natural mortality rate}
 
-\item{R0x}{Vector \link{stock} unfished recruitment}
+\item{R0x}{Vector \verb{[stock]} unfished recruitment}
 
-\item{R0ax}{Matrix \link{stock, area} unfished recruitment by area}
+\item{R0ax}{Matrix \verb{[stock, area]} unfished recruitment by area}
 
-\item{SSBpRx}{Matrix \link{stock, area} spawning biomass per recruit by area}
+\item{SSBpRx}{Matrix \verb{[stock, area]} spawning biomass per recruit by area}
 
-\item{ax}{Vector \link{stock} weight-length parameter a W=aL^b}
+\item{ax}{Vector \verb{[stock]} weight-length parameter a W=aL^b}
 
-\item{bx}{Vector \link{stock} weight-length parameter b W=aL^b}
+\item{bx}{Vector \verb{[stock]} weight-length parameter b W=aL^b}
 
 \item{Rel}{A list of inter-stock relationships see slot Rel of MOM object class}
 
@@ -98,9 +98,9 @@ relationship (1 = Beverton-Holt, 2= Ricker)}
 
 \item{nyears}{Integer, number of historical years (unfished til today)}
 
-\item{Linf}{Vector \link{stock} of von B asymptotic length parameter Linf}
+\item{Linf}{Vector \verb{[stock]} of von B asymptotic length parameter Linf}
 
-\item{t0}{Vector \link{stock} of von B theoretical age at zero length (t0)}
+\item{t0}{Vector \verb{[stock]} of von B theoretical age at zero length (t0)}
 }
 \description{
 Completes a single iteration of recruitment, mortality, fishing and

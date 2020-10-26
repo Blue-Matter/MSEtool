@@ -34,7 +34,7 @@ HDAAC(x, Data, reps = 100, plot = FALSE)
 \item{plot}{Logical. Show the plot?}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 This group of MPs calculates a catch limit (\emph{dcac}; intended as an MSY proxy) based on
@@ -96,22 +96,44 @@ below BMSY, DCAC tends to chronically overfish.
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{DCACs}: AvC, BMSY_B0, Dt, FMSY_M, LHYear, Mort, t, Year
+
+
+\code{DCAC}: AvC, BMSY_B0, Dt, FMSY_M, LHYear, Mort, t, Year
+
+
+\code{DCAC_40}: AvC, BMSY_B0, FMSY_M, LHYear, Mort, t, Year
+
+
+\code{DCAC4010}: AvC, BMSY_B0, Dt, FMSY_M, LHYear, Mort, t, Year
+
+
+\code{DCAC_ML}: Abun, AddInd, AddIndType, AddIndV, AddIunits, AvC, Bref, CAA, CAL, CAL_bins, CAL_mids, Cat, Cref, Dep, Dt, Effort, Ind, Iref, L50, L95, Lbar, Lc, LenCV, LFC, LFS, LHYear, MaxAge, ML, Mort, MPeff, MPrec, Rec, sigmaR, SpAbun, SpInd, steep, t, vbK, vbLinf, vbt0, VInd, Vmaxlen, Vuln_CAA, Vuln_CAL, wla, wlb, Year
+
+
+\code{DAAC}: AvC, BMSY_B0, Dt, FMSY_M, LHYear, Mort, t, Year
+
+
+\code{HDAAC}: AvC, BMSY_B0, Dt, FMSY_M, LHYear, Mort, t, Year
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
 
-NA
 
-NA
 
-NA
+See \href{https://dlmtool.github.io/DLMtool/reference/DCAC.html}{Online Documentation} for correctly rendered equations
 
-NA
 
-NA
 
-NA
+
+
+
+
+
+
+
 }
 
 \examples{

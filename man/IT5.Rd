@@ -23,7 +23,7 @@ IT10(x, Data, reps = 100, plot = FALSE, yrsmth = 5, mc = 0.1)
 \item{mc}{The maximum fractional change in the TAC among years.}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 An index target MP where the TAC is modified according to current index
@@ -53,12 +53,19 @@ uncertainty the in reference index.
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{IT5}: Ind, Iref, MPrec
+
+
+\code{IT10}: Ind, Iref, MPrec
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
 
-NA
+See \href{https://dlmtool.github.io/DLMtool/reference/IT5.html}{Online Documentation} for correctly rendered equations
+
+
 }
 
 \examples{

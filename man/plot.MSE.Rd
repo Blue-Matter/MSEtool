@@ -4,7 +4,7 @@
 \alias{plot.MSE}
 \title{Plot MSE object}
 \usage{
-plot.MSE(x, ...)
+\method{plot}{MSE}(x, ...)
 }
 \arguments{
 \item{x}{object of class MSE}

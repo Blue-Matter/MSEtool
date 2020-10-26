@@ -33,7 +33,7 @@ first year}
 compared with recent levels.}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 A management procedure that incrementally adjusts the TAC (starting from
@@ -72,10 +72,14 @@ where \eqn{x} is argument \code{xx} and C is the average catch over the last 5 y
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{Itarget1}: Cat, Ind, LHYear, Year
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
+
+See \href{https://dlmtool.github.io/DLMtool/reference/Itarget1.html}{Online Documentation} for correctly rendered equations
 }
 
 \examples{

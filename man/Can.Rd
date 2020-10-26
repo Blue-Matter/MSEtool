@@ -58,9 +58,9 @@ object
 }}
 
 \examples{
-CanMPs <- Can(DLMtool::Cobia)
-CantMPs <- Cant(DLMtool::Cobia)
-Needs <- Needed(DLMtool::Cobia)
+CanMPs <- Can(OMtool::Cobia)
+CantMPs <- Cant(OMtool::Cobia)
+Needs <- Needed(OMtool::Cobia)
 }
 \seealso{
 \link{avail} \linkS4class{Data}

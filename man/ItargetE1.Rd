@@ -30,7 +30,7 @@ ItargetE4(x, Data, reps = 100, plot = FALSE, yrsmth = 5, Imulti = 2.5)
 compared with recent levels.}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAE slot(s) populated
 }
 \description{
 A management procedure that incrementally adjusts the fishing effort
@@ -64,10 +64,14 @@ where \eqn{I_0} is \eqn{0.8 I_{\textrm{ave}}} (the average index over the 2 x \c
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{ItargetE1}: Ind, LHYear, MPeff, Year
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
+
+See \href{https://dlmtool.github.io/DLMtool/reference/ItargetE1.html}{Online Documentation} for correctly rendered equations
 }
 
 \examples{

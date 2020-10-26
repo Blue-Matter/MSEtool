@@ -21,7 +21,7 @@ index}
 \item{lambda}{A gain parameter}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 An MP similar to SBT1 that modifies a time-series of catch recommendations
@@ -47,10 +47,14 @@ data which might explain why in some cases it leads to stock declines.
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{GB_slope}: Cat, Ind, Year
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
+
+See \href{https://dlmtool.github.io/DLMtool/reference/GB_slope.html}{Online Documentation} for correctly rendered equations
 }
 
 \examples{

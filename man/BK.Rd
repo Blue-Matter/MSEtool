@@ -25,7 +25,7 @@ BK_ML(x, Data, reps = 100, plot = FALSE)
 catch-curve (interval censor).}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 Family of management procedures that sets the TAC by approximation of Fmax
@@ -70,14 +70,24 @@ These MPs have not been implemented that way.
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{BK}: Abun, LFC, vbK, vbLinf
+
+
+\code{BK_CC}: CAA, Cat, LFC, vbK, vbLinf
+
+
+\code{BK_ML}: CAL, Cat, Lbar, Lc, LFC, Mort, vbK, vbLinf
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
 
-NA
+See \href{https://dlmtool.github.io/DLMtool/reference/BK.html}{Online Documentation} for correctly rendered equations
 
-NA
+
+
+
 }
 
 \examples{

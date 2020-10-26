@@ -30,7 +30,7 @@ Fratio_ML(x, Data, reps = 100, plot = FALSE)
 \item{Fmin}{Minimum current fishing mortality rate for the catch-curve analysis}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 Calculates the OFL based on a fixed ratio of FMSY to M multiplied by a
@@ -67,18 +67,34 @@ stock depletion (made-up for this package).
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{Fratio}: Abun, FMSY_M, Mort
+
+
+\code{Fratio4010}: Abun, Dep, FMSY_M, Mort
+
+
+\code{DepF}: Abun, Dep, FMSY_M, Mort
+
+
+\code{Fratio_CC}: CAA, Cat, FMSY_M, Mort
+
+
+\code{Fratio_ML}: CAL, Cat, FMSY_M, Lbar, Lc, Mort, vbK, vbLinf
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
 
-NA
+See \href{https://dlmtool.github.io/DLMtool/reference/Fratio.html}{Online Documentation} for correctly rendered equations
 
-NA
 
-NA
 
-NA
+
+
+
+
+
 }
 
 \examples{

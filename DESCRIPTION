@@ -16,7 +16,6 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Depends: 
     R (>= 3.5.0),
-    dplyr,
     snowfall
 Imports:
     abind,
@@ -27,6 +26,7 @@ Imports:
     grDevices,
     ggplot2,
     parallel,
+    r4ss,
     Rcpp,
     reshape2,
     stats,
@@ -43,7 +43,6 @@ Suggests:
     kableExtra,
     knitr,
     MASS,
-    mvtnorm,
     openxlsx,
     purrr,
     readxl,

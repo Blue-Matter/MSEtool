@@ -32,7 +32,7 @@ Islope4(x, Data, reps = 100, plot = FALSE, yrsmth = 5, lambda = 0.2, xx = 0.4)
 first year}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 A management procedure that incrementally adjusts the TAC to maintain a
@@ -60,10 +60,14 @@ Reference TAC is 0.6 average catch and gain parameter is 0.2
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{Islope1}: Cat, Ind, LHYear, Year
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
+
+See \href{https://dlmtool.github.io/DLMtool/reference/Islope1.html}{Online Documentation} for correctly rendered equations
 }
 
 \examples{

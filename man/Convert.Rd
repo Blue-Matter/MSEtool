@@ -13,8 +13,9 @@ Convert(MMSE, B = 1, C = NA, F = 1, E = 1)
 
 \item{C}{Numeric. Which fleet should be used to report catch? Use NA to calculate sum for all fleets.}
 
-\item{F}{Numeric. Which stock should be used to report fishing mortality? Use NA to calculate mean for all stocks.
-#' @param E Numeric. Which stock should be used to report effort? Use NA to calculate mean for all stocks.}
+\item{F}{Numeric. Which stock should be used to report fishing mortality? Use NA to calculate mean for all stocks.}
+
+\item{E}{Numeric. Which stock should be used to report effort? Use NA to calculate mean for all stocks.}
 }
 \value{
 an object of class \code{MSE}

@@ -17,7 +17,7 @@ multiDataS(MSElist, StockPars, np, mm, nf, realVB)
 
 \item{nf}{The number of fleets}
 
-\item{realVB}{A matrix of real vulnerable biomass \link{nsim,np, year}}
+\item{realVB}{A matrix of real vulnerable biomass \verb{[nsim,np, year]}}
 }
 \description{
 Catches, CAA, CAL are summed. LFC and LFS are weighted averages. ML, Lc and Lbar are recalculated from summed CAL. All other observations are for fleet 1 (indicative)

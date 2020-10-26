@@ -19,7 +19,7 @@ MCD4010(x, Data, reps = 100, plot = FALSE)
 \item{plot}{Logical. Show the plot?}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 A simple average catch-depletion MP that was included to demonstrate just
@@ -43,12 +43,19 @@ The TAC is modified by a harvest control rule in \code{MCD4010}.
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{MCD}: Cat, Dep
+
+
+\code{MCD4010}: Cat, Dep
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
 
-NA
+See \href{https://dlmtool.github.io/DLMtool/reference/MCD.html}{Online Documentation} for correctly rendered equations
+
+
 }
 
 \examples{

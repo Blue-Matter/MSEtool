@@ -45,20 +45,20 @@ first list level is stock, second is fleet}
 
 \item{nyears}{The number of historical 'spool-up' years (from unfished to now)}
 
-\item{N}{An array of stock numbers \link{nsim,np,maxage,nyears,nareas} -
+\item{N}{An array of stock numbers \verb{[nsim,np,maxage,nyears,nareas]} -
 only the values from the first year are used}
 
-\item{VF}{An array of vulnerability \link{nsim,np,nf,maxage,nyears+proyears}}
+\item{VF}{An array of vulnerability \verb{[nsim,np,nf,maxage,nyears+proyears]}}
 
-\item{FretA}{An array of retention \link{nsim,np,nf,maxage,nyears+proyears}}
+\item{FretA}{An array of retention \verb{[nsim,np,nf,maxage,nyears+proyears]}}
 
 \item{maxF}{A numeric value specifying the maximum fishing mortality for any
 single age class}
 
-\item{MPA}{An of spatial closures by year \link{np,nf,nyears+proyears,nareas}}
+\item{MPA}{An of spatial closures by year \verb{[np,nf,nyears+proyears,nareas]}}
 
 \item{CatchFrac}{A list of stock-specific fleet fractions of current catch
-list[\link{stock}][nsim, nf]}
+list\verb{[[stock]][nsim, nf]}}
 
 \item{bounds}{Bounds for total q estimation}
 

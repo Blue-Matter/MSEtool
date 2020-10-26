@@ -28,7 +28,7 @@ slotlim(x, Data, reps, plot = FALSE)
 length of fish caught: minlen=Lopt*(0.7+buffer).}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the Retention slot(s) populated
 }
 \description{
 A set of size-selectivity MPs that adjust the retention curve of the fishery.
@@ -71,16 +71,29 @@ to demonstrate an upper harvest slot limit.
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{matlenlim}: L50
+
+
+\code{matlenlim2}: L50
+
+
+\code{minlenLopt1}: Mort, vbK, vbLinf, wlb
+
+
+\code{slotlim}: L50, vbLinf
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
 
-NA
+See \href{https://dlmtool.github.io/DLMtool/reference/matlenlim.html}{Online Documentation} for correctly rendered equations
 
-NA
 
-NA
+
+
+
+
 }
 
 \examples{

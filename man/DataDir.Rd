@@ -4,7 +4,7 @@
 \alias{DataDir}
 \title{Directory of the installed package on your computer}
 \usage{
-DLMDataDir(stock=NA)
+DataDir(stock = NA)
 }
 \arguments{
 \item{stock}{Character string representing the name of a .csv file e.g.

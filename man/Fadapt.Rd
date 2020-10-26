@@ -21,7 +21,7 @@ production}
 \item{gg}{A gain parameter controlling the speed in update in TAC.}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 
 A numeric vector of quota recommendations
 }
@@ -66,10 +66,14 @@ Tested in Carruthers et al. 2015.
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{Fadapt}: Abun, Cat, FMSY_M, Ind, Mort, Year
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
+
+See \href{https://dlmtool.github.io/DLMtool/reference/Fadapt.html}{Online Documentation} for correctly rendered equations
 }
 
 \examples{

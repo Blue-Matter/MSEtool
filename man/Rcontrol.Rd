@@ -41,7 +41,7 @@ Rcontrol2(
 \item{glim}{Limits for the change in TAC among years}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 An MP proposed by Carl Walters that modifies the TAC according to trends in
@@ -77,10 +77,14 @@ surplus production given biomass
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{Rcontrol}: Abun, Cat, Dep, FMSY_M, Ind, L50, MaxAge, Mort, steep, vbK, vbLinf, vbt0, wla, wlb, Year
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
+
+See \href{https://dlmtool.github.io/DLMtool/reference/Rcontrol.html}{Online Documentation} for correctly rendered equations
 }
 
 \examples{

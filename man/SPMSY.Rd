@@ -16,7 +16,7 @@ SPMSY(x, Data, reps = 100, plot = FALSE)
 \item{plot}{Logical. Show the plot?}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 An MP that uses Martell and Froese (2012) method for estimating MSY to
@@ -43,10 +43,14 @@ this case this method widens the search.
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{SPMSY}: Cat, L50, MaxAge, vbK, vbLinf, vbt0
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
+
+See \href{https://dlmtool.github.io/DLMtool/reference/SPMSY.html}{Online Documentation} for correctly rendered equations
 }
 
 \examples{

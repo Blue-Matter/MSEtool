@@ -18,7 +18,7 @@ Iratio(x, Data, reps = 100, plot = FALSE, yrs = c(2, 5))
 \item{yrs}{Vector of length 2 specifying the reference years}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 The TAC is adjusted by the ratio alpha, where the numerator
@@ -37,10 +37,14 @@ mean index in 3-5 years before current time (reference years are specified as
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{Iratio}: Cat, Ind
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
+
+See \href{https://dlmtool.github.io/DLMtool/reference/Iratio.html}{Online Documentation} for correctly rendered equations
 }
 
 \examples{

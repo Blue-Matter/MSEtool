@@ -19,7 +19,7 @@ ICI2(x, Data, reps = 100, plot = FALSE)
 \item{plot}{Logical. Show the plot?}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 The MP adjusts catch based on the value of the index in the current year relative to the
@@ -57,12 +57,19 @@ if the Z-score of the current year's index is greater than 1.96. Otherwise, the 
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{ICI}: Cat, Ind
+
+
+\code{ICI2}: Cat, Ind
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
 
-NA
+See \href{https://dlmtool.github.io/DLMtool/reference/ICI.html}{Online Documentation} for correctly rendered equations
+
+
 }
 
 \examples{

@@ -9,11 +9,11 @@ ResFromRel(Rel, Bcur, SSBcur, Ncur, seed)
 \arguments{
 \item{Rel}{A list of inter-stock relationships see slot Rel of MOM object class}
 
-\item{Bcur}{An array of current stock biomass \link{stock, age, area}}
+\item{Bcur}{An array of current stock biomass \verb{[stock, age, area]}}
 
-\item{SSBcur}{An array of current spawning stock biomass \link{stock, age, area}}
+\item{SSBcur}{An array of current spawning stock biomass \verb{[stock, age, area]}}
 
-\item{Ncur}{An array of current stock numbers \link{stock, age, area}}
+\item{Ncur}{An array of current stock numbers \verb{[stock, age, area]}}
 }
 \description{
 Predicts stock-specific parameters from another stocks biomass, spawning biomass or numbers

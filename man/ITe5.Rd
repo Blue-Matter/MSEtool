@@ -23,7 +23,7 @@ ITe10(x, Data, reps = 100, plot = FALSE, yrsmth = 5, mc = 0.1)
 \item{mc}{The maximum fractional change in the effort among years.}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAE slot(s) populated
 }
 \description{
 An index target MP where the Effort is modified according to current index
@@ -47,12 +47,19 @@ The maximum fractional change in TAE is specified in \code{mc}.
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{ITe5}: Ind, Iref, MPeff
+
+
+\code{ITe10}: Ind, Iref, MPeff
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
 
-NA
+See \href{https://dlmtool.github.io/DLMtool/reference/ITe5.html}{Online Documentation} for correctly rendered equations
+
+
 }
 
 \examples{

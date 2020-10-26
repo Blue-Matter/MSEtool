@@ -19,7 +19,7 @@ curE75(x, Data, reps, plot = FALSE)
 \item{plot}{Logical. Show the plot?}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAE slot(s) populated
 }
 \description{
 Constant fishing effort set at final year of historical simulations subject
@@ -37,12 +37,19 @@ in catchability determined by \code{OM@qcv}. This MP is intended to represent a
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{curE}:
+
+
+\code{curE75}:
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
 
-NA
+See \href{https://dlmtool.github.io/DLMtool/reference/curE.html}{Online Documentation} for correctly rendered equations
+
+
 }
 
 \examples{

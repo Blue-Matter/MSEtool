@@ -20,7 +20,7 @@ SPmod(x, Data, reps = 100, plot = FALSE, alp = c(0.8, 1.2), bet = c(0.8, 1.2))
 \item{bet}{Limits for how much the TAC can change among years}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 
 A numeric vector of TAC recommendations
 }
@@ -51,10 +51,14 @@ and \eqn{\alpha_1}, \eqn{\alpha_2}, and \eqn{\alpha_3} are specified in argument
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{SPmod}: Cat, Ind
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
+
+See \href{https://dlmtool.github.io/DLMtool/reference/SPmod.html}{Online Documentation} for correctly rendered equations
 }
 
 \examples{

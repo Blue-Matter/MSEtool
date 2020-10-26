@@ -15,7 +15,7 @@ plotquant(
 )
 }
 \arguments{
-\item{x}{Matrix. A time series quantity \link{simulation, year}}
+\item{x}{Matrix. A time series quantity \verb{[simulation, year]}}
 
 \item{p}{Numeric vector. The percentiles that are plotted (LB2,LB1,UB1,UB2). LB2 and UB2 are the outer percentiles, LB1 and UB1 are the inner percentiles.}
 

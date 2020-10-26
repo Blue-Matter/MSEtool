@@ -18,7 +18,7 @@ GB_target(x, Data, reps = 100, plot = FALSE, w = 0.5)
 \item{w}{A gain parameter}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 An MP similar to SBT2 that modifies a time-series of catch recommendations
@@ -53,10 +53,14 @@ The TAC is subject to the following conditions:
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{GB_target}: Cref, Ind, Iref
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
+
+See \href{https://dlmtool.github.io/DLMtool/reference/GB_target.html}{Online Documentation} for correctly rendered equations
 }
 
 \examples{

@@ -16,7 +16,7 @@ AvC(x, Data, reps = 100, plot = FALSE)
 \item{plot}{Logical. Show the plot?}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 A simple average catch MP that is included to demonstrate a 'status quo' management option
@@ -36,10 +36,14 @@ where \eqn{\textrm{TAC}} is the the mean catch recommendation, \eqn{n} is the nu
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{AvC}: Cat, LHYear, Year
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
+
+See \href{https://dlmtool.github.io/DLMtool/reference/AvC.html}{Online Documentation} for correctly rendered equations
 }
 
 \examples{

@@ -22,7 +22,7 @@ and biomass data}
 surplus production with biomass}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 The Fratio MP with a controller that changes the level of F according to the
@@ -57,10 +57,14 @@ and an estimate of abundance (\code{Data@Abun}) for the current year.
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{DynF}: Abun, Cat, FMSY_M, Ind, Mort, Year
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
+
+See \href{https://dlmtool.github.io/DLMtool/reference/DynF.html}{Online Documentation} for correctly rendered equations
 }
 
 \examples{

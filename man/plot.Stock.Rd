@@ -10,7 +10,7 @@
 \alias{plot.OM}
 \title{Plot Operating Model Object}
 \usage{
-plot.pars(
+\method{plot}{pars}(
   x,
   Object,
   Stock = NULL,

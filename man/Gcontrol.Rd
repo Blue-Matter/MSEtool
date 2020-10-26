@@ -32,7 +32,7 @@ data}
 recommendations}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 A harvest control rule proposed by Carl Walters that uses trajectory in
@@ -52,10 +52,14 @@ the TAC to decrease by more than half or increase more than twice the last annua
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{Gcontrol}: Abun, Cat, Ind, Year
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
+
+See \href{https://dlmtool.github.io/DLMtool/reference/Gcontrol.html}{Online Documentation} for correctly rendered equations
 }
 
 \examples{

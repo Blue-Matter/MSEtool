@@ -20,7 +20,7 @@ EtargetLopt(x, Data, reps = 100, plot = FALSE, yrsmth = 3, buffer = 0.1)
 \item{buffer}{Parameter controlling the fraction of calculated effor - acts as a precautionary buffer}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAE slot(s) populated
 }
 \description{
 This MP adjusts effort limit based on the ratio of recent mean length (over
@@ -42,10 +42,14 @@ exponent of the length-weight relationship, \eqn{M} is natural mortality, and
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{EtargetLopt}: ML, Mort, MPeff, vbK, vbLinf, wlb
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
+
+See \href{https://dlmtool.github.io/DLMtool/reference/EtargetLopt.html}{Online Documentation} for correctly rendered equations
 }
 
 \examples{

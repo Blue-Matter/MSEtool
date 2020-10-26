@@ -19,7 +19,7 @@ SPSRA_ML(x, Data, reps = 100, plot = FALSE)
 \item{plot}{Logical. Show the plot?}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 A surplus production equivalent of DB-SRA that uses a demographically
@@ -45,12 +45,19 @@ a prior for current stock depletion.
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{SPSRA}: Cat, Dep, FMSY_M, L50, MaxAge, Mort, steep, vbK, vbLinf, vbt0, wla, wlb
+
+
+\code{SPSRA_ML}: Abun, AddInd, AddIndType, AddIndV, AddIunits, AvC, BMSY_B0, Bref, CAA, CAL, CAL_bins, CAL_mids, Cat, Cref, Dep, Dt, Effort, FMSY_M, Ind, Iref, L50, L95, Lbar, Lc, LenCV, LFC, LFS, LHYear, MaxAge, ML, Mort, MPeff, MPrec, Rec, sigmaR, SpAbun, SpInd, steep, t, vbK, vbLinf, vbt0, VInd, Vmaxlen, Vuln_CAA, Vuln_CAL, wla, wlb, Year
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
 
-NA
+See \href{https://dlmtool.github.io/DLMtool/reference/SPSRA.html}{Online Documentation} for correctly rendered equations
+
+
 }
 
 \examples{

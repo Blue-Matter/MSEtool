@@ -32,7 +32,7 @@ abundance)}
 \item{bet}{Limits for how much the Data can change among years}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 A management procedure that makes incremental adjustments to TAC
@@ -63,10 +63,14 @@ is the predicted biomass in the next year.
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{SPslope}: Abun, Cat, Ind, Year
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
+
+See \href{https://dlmtool.github.io/DLMtool/reference/SPslope.html}{Online Documentation} for correctly rendered equations
 }
 
 \examples{

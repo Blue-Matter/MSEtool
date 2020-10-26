@@ -41,7 +41,7 @@ indices}
 \item{tauR}{Control parameter}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 An MP that makes incremental adjustments to TAC recommendations based on the
@@ -91,12 +91,19 @@ this approach.
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{SBT1}: Cat, Ind, Year
+
+
+\code{SBT2}: Cat, Cref, Rec
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
 
-NA
+See \href{https://dlmtool.github.io/DLMtool/reference/SBT1.html}{Online Documentation} for correctly rendered equations
+
+
 }
 
 \examples{

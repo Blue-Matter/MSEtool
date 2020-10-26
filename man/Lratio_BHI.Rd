@@ -24,7 +24,7 @@ Lratio_BHI3(x, Data, reps = 100, plot = FALSE, yrsmth = 3)
 \item{yrsmth}{The most recent years of data to smooth the calculation of the mean length}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 The TAC is calculated as the most recent catch, modified by the ratio alpha,
@@ -54,14 +54,24 @@ is calculated for lengths > modal length (Lc)
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{Lratio_BHI}: CAL, CAL_bins, Cat, LFS, vbLinf
+
+
+\code{Lratio_BHI2}: CAL, CAL_bins, Cat, FMSY_M, LFS, Mort, vbK, vbLinf
+
+
+\code{Lratio_BHI3}: BMSY_B0, CAL, CAL_bins, Cat, FMSY_M, LFS, Mort, vbK, vbLinf
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
 
-NA
+See \href{https://dlmtool.github.io/DLMtool/reference/Lratio_BHI.html}{Online Documentation} for correctly rendered equations
 
-NA
+
+
+
 }
 
 \examples{

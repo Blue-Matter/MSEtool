@@ -4,7 +4,7 @@
 \alias{plot.Data}
 \title{Plot Data object}
 \usage{
-plot.Data(x, upq = 0.9, lwq = 0.1, outline = FALSE, ...)
+\method{plot}{Data}(x, upq = 0.9, lwq = 0.1, outline = FALSE, ...)
 }
 \arguments{
 \item{x}{object of class Data}

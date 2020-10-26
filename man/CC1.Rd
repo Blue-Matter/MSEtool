@@ -36,7 +36,7 @@ CurC(x, Data, reps = 100, plot = FALSE, yrsmth = 1, xx = 0)
 (1-\code{xx})}
 }
 \value{
-
+An object of class \code{\link[=Rec-class]{Rec}} with the TAC slot(s) populated
 }
 \description{
 The TAC is the average historical catch over the last \code{yrsmth} (default 5) years,
@@ -68,10 +68,14 @@ The TAC is constant for all future projections.
 \section{Required Data}{
 
 See \linkS4class{Data} for information on the \code{Data} object \cr
+
+
+\code{CC1}: Cat, LHYear, Year
 }
 
-\section{Not added yet}{
-NA
+\section{Rendered Equations}{
+
+See \href{https://dlmtool.github.io/DLMtool/reference/CC1.html}{Online Documentation} for correctly rendered equations
 }
 
 \examples{
