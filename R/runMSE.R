@@ -115,7 +115,7 @@ Simulate <- function(OM=OMtool::testOM, parallel=FALSE, silent=FALSE) {
   FMret <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # fishing mortality rate array for retained fish 
   Z <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # total mortality rate array
   SPR <- array(NA, dim = c(nsim, n_age, nyears)) # store the Spawning Potential Ratio
-  Agearray <- array(rep(0:StockPars$maxag, each = nsim), dim = c(nsim, n_age))  # Age array
+  Agearray <- array(rep(0:StockPars$maxage, each = nsim), dim = c(nsim, n_age))  # Age array
   
   #  --- Pre Equilibrium calcs ----
   surv <- matrix(1, nsim, n_age)
