@@ -202,7 +202,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
                        retL_P, StockPars, FleetPars, ObsPars, 
                        V_P,
                        upyrs, interval, y=2, 
-                       mm=1, Misc, RealData, Sample_Area, AddIunits, AddIndType) {
+                       mm=1, Misc, RealData, Sample_Area) {
   
   yind <- upyrs[match(y, upyrs) - 1]:(upyrs[match(y, upyrs)] - 1) # index
   
@@ -229,15 +229,15 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   Cobs <- ObsPars$Cobs_y[,nyears + yind] * apply(CBtemp, c(1, 3), sum, na.rm = TRUE) 
   Data@Cat <- cbind(Data@Cat, Cobs) 
   
-  if (!is.null(RealData$Data) && ncol(RealData$Data@Cat)>nyears &&
-      !all(is.na(RealData$Data@Cat[1,(nyears+1):length(RealData$Data@Cat[1,])]))) {
+  if (!is.null(RealData) && ncol(RealData@Cat)>nyears &&
+      !all(is.na(RealData@Cat[1,(nyears+1):length(RealData@Cat[1,])]))) {
     # update projection catches with observed catches
-    addYr <- min(y,ncol(RealData$Data@Cat) - nyears)
+    addYr <- min(y,ncol(RealData@Cat) - nyears)
     
-    Data@Cat[,(nyears+1):(nyears+addYr)] <- matrix(RealData$Data@Cat[1,(nyears+1):(nyears+addYr)], 
+    Data@Cat[,(nyears+1):(nyears+addYr)] <- matrix(RealData@Cat[1,(nyears+1):(nyears+addYr)], 
                                                    nrow=nsim, ncol=addYr, byrow=TRUE)
     
-    Data@CV_Cat[,(nyears+1):(nyears+addYr)] <- matrix(RealData$Data@CV_Cat[1,(nyears+1):(nyears+addYr)], 
+    Data@CV_Cat[,(nyears+1):(nyears+addYr)] <- matrix(RealData@CV_Cat[1,(nyears+1):(nyears+addYr)], 
                                                       nrow=nsim, ncol=addYr, byrow=TRUE)
   } 
   
@@ -260,14 +260,14 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   newCV_Ind <- matrix(Data@CV_Ind[,yr.index], nrow=nsim, ncol=length(yind))
   Data@CV_Ind <- cbind(Data@CV_Ind, newCV_Ind)
   
-  if (!is.null(RealData$Data) && ncol(RealData$Data@Ind)>nyears &&
-      !all(is.na(RealData$Data@Ind[1,(nyears+1):length(RealData$Data@Ind[1,])]))) {
+  if (!is.null(RealData) && ncol(RealData@Ind)>nyears &&
+      !all(is.na(RealData@Ind[1,(nyears+1):length(RealData@Ind[1,])]))) {
     # update projection index with observed index if it exists
-    addYr <- min(y,ncol(RealData$Data@Ind) - nyears)
-    Data@Ind[,(nyears+1):(nyears+addYr)] <- matrix(RealData$Data@Ind[1,(nyears+1):(nyears+addYr)], 
+    addYr <- min(y,ncol(RealData@Ind) - nyears)
+    Data@Ind[,(nyears+1):(nyears+addYr)] <- matrix(RealData@Ind[1,(nyears+1):(nyears+addYr)], 
                                                    nrow=nsim, ncol=addYr, byrow=TRUE)
     
-    Data@CV_Ind[,(nyears+1):(nyears+addYr)] <- matrix(RealData$Data@CV_Ind[1,(nyears+1):(nyears+addYr)], 
+    Data@CV_Ind[,(nyears+1):(nyears+addYr)] <- matrix(RealData@CV_Ind[1,(nyears+1):(nyears+addYr)], 
                                                       nrow=nsim, ncol=addYr, byrow=TRUE)
   }
   
@@ -290,14 +290,14 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   newCV_Ind <- matrix(Data@CV_SpInd[,yr.index], nrow=nsim, ncol=length(yind))
   Data@CV_SpInd <- cbind(Data@CV_SpInd, newCV_Ind)
   
-  if (!is.null(RealData$Data) && ncol(RealData$Data@SpInd)>nyears &&
-      !all(is.na(RealData$Data@SpInd[1,(nyears+1):length(RealData$Data@SpInd[1,])]))) {
+  if (!is.null(RealData) && ncol(RealData@SpInd)>nyears &&
+      !all(is.na(RealData@SpInd[1,(nyears+1):length(RealData@SpInd[1,])]))) {
     # update projection index with observed index if it exists
-    addYr <- min(y,ncol(RealData$Data@SpInd) - nyears)
-    Data@SpInd[,(nyears+1):(nyears+addYr)] <- matrix(RealData$Data@SpInd[1,(nyears+1):(nyears+addYr)], 
+    addYr <- min(y,ncol(RealData@SpInd) - nyears)
+    Data@SpInd[,(nyears+1):(nyears+addYr)] <- matrix(RealData@SpInd[1,(nyears+1):(nyears+addYr)], 
                                                      nrow=nsim, ncol=addYr, byrow=TRUE)
     
-    Data@CV_SpInd[,(nyears+1):(nyears+addYr)] <- matrix(RealData$Data@CV_SpInd[1,(nyears+1):(nyears+addYr)], 
+    Data@CV_SpInd[,(nyears+1):(nyears+addYr)] <- matrix(RealData@CV_SpInd[1,(nyears+1):(nyears+addYr)], 
                                                         nrow=nsim, ncol=addYr, byrow=TRUE)
   }
   
@@ -320,14 +320,14 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   newCV_Ind <- matrix(Data@CV_VInd[,yr.index], nrow=nsim, ncol=length(yind))
   Data@CV_VInd <- cbind(Data@CV_VInd, newCV_Ind)
   
-  if (!is.null(RealData$Data) && ncol(RealData$Data@VInd)>nyears &&
-      !all(is.na(RealData$Data@VInd[1,(nyears+1):length(RealData$Data@VInd[1,])]))) {
+  if (!is.null(RealData) && ncol(RealData@VInd)>nyears &&
+      !all(is.na(RealData$Data@VInd[1,(nyears+1):length(RealData@VInd[1,])]))) {
     # update projection index with observed index if it exists
-    addYr <- min(y,ncol(RealData$Data@VInd) - nyears)
-    Data@VInd[,(nyears+1):(nyears+addYr)] <- matrix(RealData$Data@VInd[1,(nyears+1):(nyears+addYr)], 
+    addYr <- min(y,ncol(RealData@VInd) - nyears)
+    Data@VInd[,(nyears+1):(nyears+addYr)] <- matrix(RealData@VInd[1,(nyears+1):(nyears+addYr)], 
                                                     nrow=nsim, ncol=addYr, byrow=TRUE)
     
-    Data@CV_VInd[,(nyears+1):(nyears+addYr)] <- matrix(RealData$Data@CV_VInd[1,(nyears+1):(nyears+addYr)], 
+    Data@CV_VInd[,(nyears+1):(nyears+addYr)] <- matrix(RealData@CV_VInd[1,(nyears+1):(nyears+addYr)], 
                                                        nrow=nsim, ncol=addYr, byrow=TRUE)
   }
   
@@ -337,7 +337,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
     AddInd <- array(NA, dim=c(nsim, n.ind, nyears+y-1))
     CV_AddInd  <- array(NA, dim=c(nsim, n.ind, nyears+y-1))
     for (i in 1:n.ind) {
-      Ind_V <- RealData$Data@AddIndV[1,i, ]
+      Ind_V <- RealData@AddIndV[1,i, ]
       Ind_V <- matrix(Ind_V, nrow=Data@MaxAge+1, ncol= nyears+proyears)
       Ind_V <- replicate(nsim, Ind_V) %>% aperm(., c(3,1,2))
       
@@ -384,9 +384,9 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
       
       # standardize, apply  beta & obs error  
       tempI <- exp(lcs(tempI))^ObsPars$AddIbeta[,i] * ObsPars$AddIerr[,i,yr.ind:(nyears + (y - 1))]
-      year.ind <- max(which(!is.na(RealData$Data@AddInd[1,i,1:nyears])))
+      year.ind <- max(which(!is.na(RealData@AddInd[1,i,1:nyears])))
       
-      scaler <- RealData$Data@AddInd[1,i,year.ind]/tempI[,1]
+      scaler <- RealData@AddInd[1,i,year.ind]/tempI[,1]
       scaler <- matrix(scaler, nrow=nsim, ncol=ncol(tempI))
       tempI <- tempI * scaler # convert back to historical index scale
       
@@ -396,15 +396,15 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
       newCV_Ind <- matrix(Data@CV_AddInd[,i,yr.index], nrow=nsim, ncol=length(yind))
       CV_AddInd[,i,] <- cbind(Data@CV_AddInd[,i,], newCV_Ind)
       
-      if (!is.null(RealData$Data) && length(RealData$Data@AddInd[1,i,])>nyears &&
-          !all(is.na(RealData$Data@AddInd[1,i,(nyears+1):length(RealData$Data@AddInd[1,i,])]))) {
+      if (!is.null(RealData) && length(RealData@AddInd[1,i,])>nyears &&
+          !all(is.na(RealData$Data@AddInd[1,i,(nyears+1):length(RealData@AddInd[1,i,])]))) {
         # update projection index with observed index if it exists
-        addYr <- min(y,length(RealData$Data@AddInd[1,i,]) - nyears)
+        addYr <- min(y,length(RealData@AddInd[1,i,]) - nyears)
         
-        AddInd[,i,(nyears+1):(nyears+addYr)] <- matrix(RealData$Data@AddInd[1,i,(nyears+1):(nyears+addYr)], 
+        AddInd[,i,(nyears+1):(nyears+addYr)] <- matrix(RealData@AddInd[1,i,(nyears+1):(nyears+addYr)], 
                                                        nrow=nsim, ncol=addYr, byrow=TRUE)
         
-        CV_AddInd[,i,(nyears+1):(nyears+addYr)] <- matrix(RealData$Data@CV_AddInd[1,i,(nyears+1):(nyears+addYr)], 
+        CV_AddInd[,i,(nyears+1):(nyears+addYr)] <- matrix(RealData@CV_AddInd[1,i,(nyears+1):(nyears+addYr)], 
                                                           nrow=nsim, ncol=addYr, byrow=TRUE)
       }
     }
@@ -661,7 +661,7 @@ getfifth <- function(lenvec, CAL_binsmid) {
 }
 
 UpdateObs <- function(sl, obsval, OMval, RealData, SimData, msg){
-  RealVal <- slot(RealData, sl)
+  RealVal <- slot(RealData, sl)[1]
   SimVal <- slot(SimData, sl)
   if (!is.na(RealVal) & !all(SimVal == tiny)) {
     if (msg)
@@ -676,7 +676,7 @@ UpdateObs <- function(sl, obsval, OMval, RealData, SimData, msg){
 }
 
 UpdateSlot <- function(sl, RealData, SimData, msg) {
-  RealVal <- slot(RealData, sl)
+  RealVal <- slot(RealData, sl)[1]
   SimVal <- slot(SimData, sl)
   if (!is.na(RealVal) & !all(SimVal == tiny)) {
     if (msg)
@@ -979,6 +979,12 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
       message('Updating Simulated Recruitment Data from `OM@cpars$Data@Rec`')
     
     Data_out@Rec <- matrix(RealData@Rec[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
+    
+    dd <- dim(RealData@CV_Rec)
+    if (dd[2]<nyears) {
+      RealData@CV_Rec <- matrix(RealData@CV_Rec[1,1], nrow=nsim, ncol=nyears, byrow=TRUE)
+    }
+    
     Data_out@CV_Rec <- matrix(RealData@CV_Rec[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
     
     # Calculate Error
