@@ -7,7 +7,7 @@
 runMP(Data, MPs = NA, reps = 100, perc = 0.5, chkMPs = TRUE, silent = FALSE)
 }
 \arguments{
-\item{Data}{A OMtool Data object}
+\item{Data}{A MSEtool Data object}
 
 \item{MPs}{The name of the MP to run (or a vector or names)}
 
@@ -26,5 +26,5 @@ invisibly returns the Data object
 Run a Management Procedure
 }
 \examples{
-Data_TAc <- runMP(OMtool::Cobia)
+Data_TAc <- runMP(MSEtool::Cobia)
 }

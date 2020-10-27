@@ -48,7 +48,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' Turing(OMtool::testOM, OMtool::SimulatedData, wait=FALSE)
+#' Turing(MSEtool::testOM, MSEtool::SimulatedData, wait=FALSE)
 #' }
 #' 
 Turing <- function(OM, Data, wait=TRUE) {

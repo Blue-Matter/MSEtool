@@ -2,31 +2,31 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 bhnoneq_LL <- function(stpar, year, Lbar, ss, Linf, K, Lc, nbreaks) {
-    .Call('_OMtool_bhnoneq_LL', PACKAGE = 'OMtool', stpar, year, Lbar, ss, Linf, K, Lc, nbreaks)
+    .Call('_MSEtool_bhnoneq_LL', PACKAGE = 'MSEtool', stpar, year, Lbar, ss, Linf, K, Lc, nbreaks)
 }
 
 combine <- function(list) {
-    .Call('_OMtool_combine', PACKAGE = 'OMtool', list)
+    .Call('_MSEtool_combine', PACKAGE = 'MSEtool', list)
 }
 
 get_freq <- function(x, width, origin = 0, outlen = 0L) {
-    .Call('_OMtool_get_freq', PACKAGE = 'OMtool', x, width, origin, outlen)
+    .Call('_MSEtool_get_freq', PACKAGE = 'MSEtool', x, width, origin, outlen)
 }
 
 which_maxC <- function(x) {
-    .Call('_OMtool_which_maxC', PACKAGE = 'OMtool', x)
+    .Call('_MSEtool_which_maxC', PACKAGE = 'MSEtool', x)
 }
 
 rnormSelect2 <- function(N, mi, ma) {
-    .Call('_OMtool_rnormSelect2', PACKAGE = 'OMtool', N, mi, ma)
+    .Call('_MSEtool_rnormSelect2', PACKAGE = 'MSEtool', N, mi, ma)
 }
 
 tdnorm <- function(x, mi, ma) {
-    .Call('_OMtool_tdnorm', PACKAGE = 'OMtool', x, mi, ma)
+    .Call('_MSEtool_tdnorm', PACKAGE = 'MSEtool', x, mi, ma)
 }
 
 genSizeComp <- function(VulnN, CAL_binsmid, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD) {
-    .Call('_OMtool_genSizeComp', PACKAGE = 'OMtool', VulnN, CAL_binsmid, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD)
+    .Call('_MSEtool_genSizeComp', PACKAGE = 'MSEtool', VulnN, CAL_binsmid, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD)
 }
 
 #' Rcpp version of the Optimization function that returns the squared difference between user
@@ -47,10 +47,10 @@ genSizeComp <- function(VulnN, CAL_binsmid, selCurve, CAL_ESS, CAL_nsamp, Linfs,
 #' conditions)
 #' 
 #' @author T. Carruthers with an amateur attempt at converting to Rcpp by A. Hordyk (but it works!)
-#' @useDynLib OMtool
+#' @useDynLib MSEtool
 #' @export
 movfit_Rcpp <- function(par, prb, frac) {
-    .Call('_OMtool_movfit_Rcpp', PACKAGE = 'OMtool', par, prb, frac)
+    .Call('_MSEtool_movfit_Rcpp', PACKAGE = 'MSEtool', par, prb, frac)
 }
 
 #' Population dynamics model for one annual time-step
@@ -76,7 +76,7 @@ movfit_Rcpp <- function(par, prb, frac) {
 #' @export
 #' @keywords internal
 popdynOneTScpp <- function(nareas, maxage, Ncurr, Zcurr, mov, plusgroup = 0L) {
-    .Call('_OMtool_popdynOneTScpp', PACKAGE = 'OMtool', nareas, maxage, Ncurr, Zcurr, mov, plusgroup)
+    .Call('_MSEtool_popdynOneTScpp', PACKAGE = 'MSEtool', nareas, maxage, Ncurr, Zcurr, mov, plusgroup)
 }
 
 #' Population dynamics model in CPP
@@ -117,6 +117,6 @@ popdynOneTScpp <- function(nareas, maxage, Ncurr, Zcurr, mov, plusgroup = 0L) {
 #' @export
 #' @keywords internal
 popdynCPP <- function(nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, plusgroup = 0L) {
-    .Call('_OMtool_popdynCPP', PACKAGE = 'OMtool', nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, plusgroup)
+    .Call('_MSEtool_popdynCPP', PACKAGE = 'MSEtool', nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, plusgroup)
 }
 

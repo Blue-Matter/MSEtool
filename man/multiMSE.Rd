@@ -6,12 +6,12 @@
 \alias{multiMSE}
 \title{Run a multi-fleet multi-stock Management Strategy Evaluation}
 \usage{
-SimulateMOM(MOM = OMtool::Albacore_TwoFleet, parallel = TRUE, silent = FALSE)
+SimulateMOM(MOM = MSEtool::Albacore_TwoFleet, parallel = TRUE, silent = FALSE)
 
 ProjectMOM(multiHist = NULL, MPs = NA, parallel = FALSE, silent = FALSE)
 
 multiMSE(
-  MOM = OMtool::Albacore_TwoFleet,
+  MOM = MSEtool::Albacore_TwoFleet,
   MPs = list(c("AvC", "DCAC"), c("FMSYref", "curE")),
   Hist = FALSE,
   silent = FALSE,

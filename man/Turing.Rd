@@ -39,7 +39,7 @@ human and machine generated information.
 }
 \examples{
 \dontrun{
-Turing(OMtool::testOM, OMtool::SimulatedData, wait=FALSE)
+Turing(MSEtool::testOM, MSEtool::SimulatedData, wait=FALSE)
 }
 
 }

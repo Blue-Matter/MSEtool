@@ -495,7 +495,7 @@ CheckDuplicate <- function(MPs) {
   tt <- suppressWarnings(try(lsf.str(envir=globalenv()), silent=TRUE))
   if (class(tt)!="try-error") {
     gl.funs <- as.vector(tt)
-    pkg.funs <- as.vector(ls.str('package:OMtool'))
+    pkg.funs <- as.vector(ls.str('package:MSEtool'))
     if ('package:DLMtool' %in% search()) 
       pkg.funs <- c(pkg.funs, as.vector(ls.str('package:DLMtool')))
     if ('package:SAMtool' %in% search()) 
@@ -519,7 +519,7 @@ CheckDuplicate <- function(MPs) {
 }
 
 
-#' Check that specified MPs are valid and will run on OMtool::SimulatedData
+#' Check that specified MPs are valid and will run on MSEtool::SimulatedData
 #'
 #' @param MPs Character vector of MP names 
 #' @param silent Logical. Report messages?
@@ -527,8 +527,8 @@ CheckDuplicate <- function(MPs) {
 #' @return MP names
 CheckMPs <- function(MPs=NA, silent=FALSE) {
   if (all(is.na(MPs))) {
-    if (!silent) message('Argument `MPs=NA`, using all example MPs in `OMtool`')
-    MPs <- avail("MP", 'OMtool')
+    if (!silent) message('Argument `MPs=NA`, using all example MPs in `MSEtool`')
+    MPs <- avail("MP", 'MSEtool')
   } 
   
   # Check for custom MPs with same name as built-it MPs
@@ -552,12 +552,12 @@ CheckMPs <- function(MPs=NA, silent=FALSE) {
   pass <- rep(TRUE, length(MPs))
   for (i in seq_along(MPs)) {
     mp <- get(MPs[i])
-    tryMP <- try(sapply(1:3, mp, OMtool::SimulatedData), silent=TRUE)
+    tryMP <- try(sapply(1:3, mp, MSEtool::SimulatedData), silent=TRUE)
     err <- unique(unlist(lapply(tryMP, class) ))
     if (err =='character') pass[i] <- FALSE
   }
   if (any(!pass))
-    warning('Some MPs fail with OMtool::SimulatedData: ', 
+    warning('Some MPs fail with MSEtool::SimulatedData: ', 
             paste0(MPs[!pass], collapse=", "), call.=FALSE) 
   
   MPs

@@ -78,7 +78,6 @@ Objects can be created by calls of the form \code{new('Fleet')}
 }
 
 \examples{
-
 showClass('Fleet')
 
 }

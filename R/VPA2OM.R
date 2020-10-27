@@ -3,17 +3,17 @@
 # =======================================================================================================================================
 
 # T. Carruthers
-# A function for converting stochastic (bootstrap VPA) outputs to a DLMtool / MSEtool operating model
+# A function for converting stochastic (bootstrap VPA) outputs to a MSEtool operating model
 
 #' Reads bootstrap estimates from a VPA stock assessment into an operating model.
 #'
 #'
 #' @description A function that uses a set of VPA bootstrap estimates of numbers-at-age, fishing mortality rate-at-age, M-at-age,
-#' weight-at-age, length-at-age and Maturity-at-age to define a fully described DLMtool / MSEtool operating model. The user still
+#' weight-at-age, length-at-age and Maturity-at-age to define a fully described MSEtool operating model. The user still
 #' needs to parameterize most of the observation and implementation portions of the operating model.
 #' @param Name Character string. The name of the operating model.
 #' @param proyears Positive integer. The number of projection years for MSE.
-#' @param interval Positive integer. The interval at which management procedures will update the management advice in \link[DLMtool]{runMSE}, e.g., 1 = annual updates.
+#' @param interval Positive integer. The interval at which management procedures will update the management advice in \link[MSEtool]{runMSE}, e.g., 1 = annual updates.
 #' @param CurrentYr Positive integer. The current year (final year of VPA fitting to data)
 #' @param h Numeric value greater than 0.2 and less than 1. The steepness of the stock-recruitment curve (assumed to be close to 1 to match VPA assumption).
 #' @param Obs The observation model (class Obs). This function only updates the catch and index observation error.
@@ -28,7 +28,7 @@
 #' @param LowerTri Integer. The number of recent years for which model estimates of recruitment are ignored (not reliably estimated by the VPA)
 #' @param recind Positive integer. The first age class that fish 'recruit to the fishery'. The default is 2 - ie the first position in the age dimension of naa is age zero
 #' @param plusgroup Logical. Does the VPA assume that the oldes age class is a plusgroup?
-#' @param altinit Integer. Various assumptions for how VPAs set up the initial numbers. 0: standard, 1: no plus group, 2: temporary fix for DLMtool plus group initialization
+#' @param altinit Integer. Various assumptions for how VPAs set up the initial numbers. 0: standard, 1: no plus group, 2: temporary fix for MSEtool plus group initialization
 #' @param fixq1 Logical. Should q be fixed (ie assume the F-at-age array faa is accurate?
 #' @param report Logical, if TRUE, a diagnostic will be reported showing the matching of the OM reconstructed numbers at age vs the VPA assessment.
 #' @param silent Whether to silence messages to the console.
@@ -40,7 +40,7 @@
 VPA2OM<-function(Name="A fishery made by VPA2OM",
                  proyears=50, interval=2, CurrentYr=2019,
                  h=0.999,
-                 Obs = OMtool::Imprecise_Unbiased, Imp=OMtool::Perfect_Imp,
+                 Obs = MSEtool::Imprecise_Unbiased, Imp=MSEtool::Perfect_Imp,
                  naa, faa, waa, Mataa, Maa, laa,
                  nyr_par_mu = 3, LowerTri=1,
                  recind=2, plusgroup=TRUE, altinit=0, fixq1=TRUE,
@@ -144,7 +144,7 @@ VPA2OM<-function(Name="A fishery made by VPA2OM",
   OM@qinc<-rep(0,2)
 
   # Invent an OM with full observation error model for replacing
-  temp<-new('OM', OMtool::Albacore, OMtool::Generic_Fleet, Obs, Imp)
+  temp<-new('OM', MSEtool::Albacore, MSEtool::Generic_Fleet, Obs, Imp)
   OM<-Replace(OM,temp,Sub="Obs")
   OM<-Replace(OM,temp,Sub="Imp")
 

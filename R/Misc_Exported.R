@@ -46,16 +46,16 @@ avail <- function(classy, package=NULL) {
   } else {
     
     if (is.null(package))
-      package <- c('OMtool', 'SAMtool', 'DLMtool', 'DLMextra')
+      package <- c('MSEtool', 'SAMtool', 'DLMtool', 'DLMextra')
     
-    OMtool_funs <- get_funcs('OMtool', classy)
+    MSEtool_funs <- get_funcs('MSEtool', classy)
     SAMtool_funs <- get_funcs('SAMtool', classy)
     DLMtool_funs <- get_funcs('DLMtool', classy)
     DLMextra_funs <- get_funcs('DLMextra', classy)
     global_funs <- ls(envir = .GlobalEnv)[vapply(ls(envir = .GlobalEnv), getclass, logical(1), classy = classy)]
     
     temp <- global_funs 
-    if ('OMtool' %in% package) temp <- c(temp, OMtool_funs)
+    if ('MSEtool' %in% package) temp <- c(temp, MSEtool_funs)
     if ('SAMtool' %in% package) temp <- c(temp, SAMtool_funs)
     if ('DLMtool' %in% package) temp <- c(temp, DLMtool_funs)
     if ('DLMextra' %in% package) temp <- c(temp, DLMextra_funs)
@@ -81,9 +81,9 @@ avail <- function(classy, package=NULL) {
 #' @export DataDir
 DataDir <- function(stock = NA) {
   if (is.na(stock)) {
-    system.file(package = "OMtool")
+    system.file(package = "MSEtool")
   } else {
-    system.file(paste0(stock, ".csv"), package = "OMtool", mustWork = TRUE)
+    system.file(paste0(stock, ".csv"), package = "MSEtool", mustWork = TRUE)
   }
 }
 
@@ -150,7 +150,7 @@ setGeneric("tinyErr", function(x, ...) standardGeneric("tinyErr"))
 #' @export
 #'
 #' @examples
-#' OM_noErr <- tinyErr(OMtool::testOM)
+#' OM_noErr <- tinyErr(MSEtool::testOM)
 setMethod("tinyErr", signature(x = "OM"),
           function(x, obs=TRUE, imp=TRUE, proc=TRUE, grad=TRUE, silent=FALSE) {
             OM <- x
@@ -158,8 +158,8 @@ setMethod("tinyErr", signature(x = "OM"),
               warning("Note that this function doesn't apply to parameters in cpars.\n Must be removed manually e.g `OM@cpars$Perr_y <- NULL`")
             
             if (!inherits(OM, 'OM')) stop("Object must be class `OM`", call.=FALSE)
-            OMperf <- new("OM", OMtool::Albacore, OMtool::Generic_Fleet,
-                          OMtool::Perfect_Info, OMtool::Perfect_Imp)
+            OMperf <- new("OM", MSEtool::Albacore, MSEtool::Generic_Fleet,
+                          MSEtool::Perfect_Info, MSEtool::Perfect_Imp)
             OMout <- OM 
             
             if (obs) {
@@ -273,7 +273,7 @@ MPtype <- function(MPs=NA) {
   if (any(!existMPs))
     warning(paste0('Some MPs are not found in environment: ', MPs[!existMPs], collapse=", "))
   
-  Data <- OMtool::SimulatedData
+  Data <- MSEtool::SimulatedData
   runMPs <- applyMP(Data, MPs[existMPs], reps = 2, nsims=1, silent=TRUE)
   recs <- runMPs[[1]]
   
@@ -284,7 +284,7 @@ MPtype <- function(MPs=NA) {
     Effort <- Spatial <- Selectivity <- Retention <- Discards<- FALSE
     output <- length(recs[[mm]]$TAC) > 0 
     names <- names(recs[[mm]])
-    names <- names[!names %in% c("TAC", "Spatial")]
+    names <- names[!names %in% c("TAC", "Spatial", 'type')]
     input <- sum(unlist(lapply(Map(function(x) recs[[mm]][[x]], names), length))) > 0
     if (all(!is.na(recs[[mm]]$Spatial))) input <- TRUE
     if (output) {
@@ -355,14 +355,14 @@ NAor0 <- function(x) {
 #' @param class Character string. Prints out the plotting functions for objects
 #' of this class.
 #' @param msg Logical. Should the functions be printed to screen?
-#' @note Basically the function looks for any functions in the OMtool that
+#' @note Basically the function looks for any functions in the MSEtool that
 #' have the word `plot` in them.  There is a chance that some plotting
 #' functions are missed. Let us know if you find any and we will add them.
 #' @author A. Hordyk
 #' @export 
 plotFun <- function(class = c("MSE", "Data"), msg = TRUE) {
   class <- match.arg(class)
-  tt <- lsf.str("package:OMtool")
+  tt <- lsf.str("package:MSEtool")
   p <- p2 <- rep(FALSE, length(tt))
   for (X in seq_along(tt)) {
     temp <- grep("plot", tolower(tt[[X]]))
@@ -371,7 +371,7 @@ plotFun <- function(class = c("MSE", "Data"), msg = TRUE) {
     if (length(temp2) > 0)  p2[X] <- TRUE
   }
   if (msg) 
-    message("OMtool functions for plotting objects of class ", class, 
+    message("MSEtool functions for plotting objects of class ", class, 
             " are:")
   out <- sort(tt[which(p & p2)])
   
@@ -429,7 +429,7 @@ Required <- function(funcs = NA, noCV=FALSE) {
     if (class(tt) != "MP") stop(funcs[x], " is not class 'MP'")
   } 
   
-  ReqData <- OMtool::ReqData
+  ReqData <- MSEtool::ReqData
   builtin <- funcs[funcs %in% ReqData$MP]
   custom <- funcs[!funcs %in% ReqData$MP]
   
@@ -551,47 +551,6 @@ Required <- function(funcs = NA, noCV=FALSE) {
 
 
 
-#' Get help topic URL
-#'
-#' @param topic Name of the functions
-#' @param url URL for the help documentation
-#' @param nameonly Logical. Help file name only?
-#'
-#' @return file path to help file
-#' @export
-#'
-#' @keywords internal
-MPurl <- function(topic, url='https://dlmtool.github.io/DLMtool/reference/',
-                  nameonly=FALSE) {
-  
-  paths <- file.path(.libPaths()[1], "DLMtool")
-  
-  res <- character()
-  for (p in paths) {
-    if (file.exists(f <- file.path(p, "help", "aliases.rds"))) 
-      al <- readRDS(f)
-    else if (file.exists(f <- file.path(p, "help", "AnIndex"))) {
-      foo <- scan(f, what = list(a = "", b = ""), sep = "\t", 
-                  quote = "", na.strings = "", quiet = TRUE)
-      al <- structure(foo$b, names = foo$a)
-    }
-    else next
-    f <- al[topic]
-    if (is.na(f)) 
-      next
-    res <- c(res, file.path(p, "help", f))
-    
-  }
-  if (length(res)<1) return(NA)
-  
-  if(nameonly) {
-    return(basename(res))
-  } else{
-    return(paste0(url, basename(res), ".html"))
-  }
-  
-}
-
 
 #' Setup parallel processing
 #'
@@ -617,7 +576,7 @@ setup <- function(cpus=NULL, logical=FALSE, ...) {
   if(snowfall::sfIsRunning()) 
     snowfall::sfStop()
   snowfall::sfInit(parallel=TRUE,cpus=cpus, ...)
-  sfLibrary("OMtool", character.only = TRUE, verbose=FALSE)
+  sfLibrary("MSEtool", character.only = TRUE, verbose=FALSE)
   pkgs <- search()
   # if ("package:MSEtool" %in% pkgs) 
     # sfLibrary("MSEtool", character.only = TRUE, verbose=FALSE)
@@ -1089,7 +1048,7 @@ optCPU <- function(nsim=96, thresh=5, plot=TRUE, msg=TRUE, maxn=NULL) {
   if (!is.null(maxn)) cpus <- 1:maxn
   
   time <- NA
-  OM <- OMtool::testOM
+  OM <- MSEtool::testOM
   OM@nsim <- nsim
   for (n in cpus) {
     if (msg) message('Running MSE with ', nsim, ' simulations and ', n, ' of ', max(cpus), ' cpus')

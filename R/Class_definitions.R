@@ -790,8 +790,8 @@ setClass("OM", representation(Name = "character", Agency="character",
                               cpars="list",seed="numeric", Source="character"), 
          contains=c("Stock", "Fleet", "Obs", "Imp"))
 # initialize OM
-setMethod("initialize", "OM", function(.Object, Stock=NULL, Fleet=OMtool::Generic_Fleet, 
-                                       Obs=OMtool::Generic_Obs, Imp=OMtool::Perfect_Imp,
+setMethod("initialize", "OM", function(.Object, Stock=NULL, Fleet=MSEtool::Generic_Fleet, 
+                                       Obs=MSEtool::Generic_Obs, Imp=MSEtool::Perfect_Imp,
                                        interval=4, pstar=0.5, maxF=0.8, reps=1, nsim=48, proyears=50) {
   if (is.null(Stock)) {
     # message("No Stock object found. Returning a blank OM object") 

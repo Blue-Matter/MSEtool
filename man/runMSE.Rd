@@ -6,12 +6,12 @@
 \alias{runMSE}
 \title{Run a Management Strategy Evaluation}
 \usage{
-Simulate(OM = OMtool::testOM, parallel = FALSE, silent = FALSE)
+Simulate(OM = MSEtool::testOM, parallel = FALSE, silent = FALSE)
 
 Project(Hist = NULL, MPs = NA, parallel = FALSE, silent = FALSE)
 
 runMSE(
-  OM = OMtool::testOM,
+  OM = MSEtool::testOM,
   MPs = NA,
   Hist = FALSE,
   silent = FALSE,

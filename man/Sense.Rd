@@ -27,7 +27,7 @@ on the user-specified CV for that input (e.g. CV_Mort, Mort)
 }
 \examples{
 \dontrun{
-Data <- Sense(OMtool::Cobia, "AvC")
+Data <- Sense(MSEtool::Cobia, "AvC")
 }
 }
 \author{

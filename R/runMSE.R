@@ -1,7 +1,7 @@
 #' @describeIn runMSE Run the Historical Simulations from an object of class `OM` 
 #' @export
 #
-Simulate <- function(OM=OMtool::testOM, parallel=FALSE, silent=FALSE) {
+Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   # ---- Initial Checks and Setup ----
   if (class(OM) == 'OM') {
     if (OM@nsim <=1) stop("OM@nsim must be > 1", call.=FALSE)
@@ -197,8 +197,7 @@ Simulate <- function(OM=OMtool::testOM, parallel=FALSE, silent=FALSE) {
                   dim = c(nsim, nyears+proyears))
   
   UnfishedRefs <- sapply(1:nsim, CalcUnfishedRefs, ageM=StockPars$ageM, N0_a=N0_a, SSN0_a=SSN0_a,
-                         SSB0_a=SSB0_a, B0_a=B0_a, VB0_a=VB0_a, SSBpRa=SSBpRa, SSB0a_a=SSB0a_a) 
-  
+                         SSB0_a=SSB0_a, B0_a=B0_a, VB0_a=VB0_a, SSBpRa=SSBpRa, SSB0a_a=SSB0a_a)   
   N0 <- UnfishedRefs[1,] %>% unlist() # average unfished numbers
   SSN0 <- UnfishedRefs[2,] %>% unlist() # average unfished spawning numbers
   SSB0 <- UnfishedRefs[3,] %>% unlist() # average unfished spawning biomass
@@ -398,6 +397,7 @@ Simulate <- function(OM=OMtool::testOM, parallel=FALSE, silent=FALSE) {
               SSB0c=StockPars$SSB0[x], 
               plusgroup=StockPars$plusgroup))
   
+
   # Number at the beginning of each year
   N <- aperm(array(as.numeric(unlist(histYrs[1,], use.names=FALSE)), 
                    dim=c(n_age, nyears, nareas, nsim)), c(4,1,2,3))
@@ -811,7 +811,7 @@ Simulate <- function(OM=OMtool::testOM, parallel=FALSE, silent=FALSE) {
   Hist@OM <- OM
   Hist@Misc <- list()
   
-  attr(Hist, "version") <- packageVersion("OMtool")
+  attr(Hist, "version") <- packageVersion("MSEtool")
   attr(Hist, "date") <- date()
   attr(Hist, "R.version") <- R.version
   
@@ -1293,7 +1293,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
                 CB_hist = StockPars$CBret, FM_hist = StockPars$FM, Effort = Effort, PAA=array(), 
                 CAA=array(), CAL=array(), CALbins=numeric(), Misc = Misc)
   # Store MSE info
-  attr(MSEout, "version") <- packageVersion("OMtool")
+  attr(MSEout, "version") <- packageVersion("MSEtool")
   attr(MSEout, "date") <- date()
   attr(MSEout, "R.version") <- R.version
   
@@ -1323,7 +1323,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
 #'   \item runMSE - An object of class \linkS4class{MSE}
 #' }
 #' @export
-runMSE <- function(OM=OMtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE, 
+runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE, 
                    parallel=FALSE) {
   
   # ---- Initial Checks and Setup ----
@@ -1361,7 +1361,7 @@ runMSE <- function(OM=OMtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
     message('Returning the historical simulations (class `Hist`). To avoid re-running spool up, ',
             'the forward projections can be run with ',
             '`runMSE(Hist, MPs, ...)`')
-    return(Hist)
+    return(HistSims)
   }
   
   MSEout

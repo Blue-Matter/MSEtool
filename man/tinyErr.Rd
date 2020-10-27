@@ -38,5 +38,5 @@ life history parameters and catchability.
 Useful for debugging and testing that MPs perform as expected under perfect conditions.
 }
 \examples{
-OM_noErr <- tinyErr(OMtool::testOM)
+OM_noErr <- tinyErr(MSEtool::testOM)
 }

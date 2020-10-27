@@ -1,13 +1,13 @@
-Package: OMtool
+Package: MSEtool
 Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
-Authors@R: 
-    person(given = "First",
-           family = "Last",
-           role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+Version: 3.0.0
+Authors@R: c(person("Adrian", "Hordyk", email = "adrian@bluematterscience.com", role = c("aut", "cre")),
+  person("Quang", "Huynh", email = "quang@bluematterscience.com", role = "aut"), 
+  person("Tom", "Carruthers", email = "tom@bluematterscience.com", role = c("aut")),
+  person("Chris", "Grandin", rol = "ctb", comment = "iSCAM functions"))
+Description: Development, simulation testing, and implementation of management
+    procedures for fisheries 
+    (see Carruthers & Hordyk (2018) <doi:10.1111/2041-210X.13081>)
 License: GPL-3
 Encoding: UTF-8
 LazyData: true

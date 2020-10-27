@@ -12,8 +12,8 @@ SS2OM(
   maxF = 3,
   seed = 1,
   interval = 1,
-  Obs = OMtool::Generic_Obs,
-  Imp = OMtool::Perfect_Imp,
+  Obs = MSEtool::Generic_Obs,
+  Imp = MSEtool::Perfect_Imp,
   import_mov = TRUE,
   gender = 1:2,
   age_rec = 1,
@@ -41,7 +41,7 @@ SS2OM(
 
 \item{seed}{The random seed for the operating model.}
 
-\item{interval}{The interval at which management procedures will update the management advice in \link[OMtool]{runMSE}, e.g., 1 = annual updates.}
+\item{interval}{The interval at which management procedures will update the management advice in \link[MSEtool]{runMSE}, e.g., 1 = annual updates.}
 
 \item{Obs}{The observation model (class Obs). This function only updates the catch and index observation error.}
 
@@ -61,7 +61,7 @@ SS2OM(
 
 \item{Author}{Who did the assessment}
 
-\item{report}{Logical, if TRUE, the function will run \link[OMtool]{runMSE} to generate historical data from the operating model
+\item{report}{Logical, if TRUE, the function will run \link[MSEtool]{runMSE} to generate historical data from the operating model
 to compare against SS output. A markdown report will be generated.}
 
 \item{filename}{If \code{report = TRUE}, character string for the name of the markdown and HTML files.}

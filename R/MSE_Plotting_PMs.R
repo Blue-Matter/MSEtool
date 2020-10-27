@@ -465,10 +465,10 @@ Cplot <- function(MSEobj, MPs = NA, lastYrs = 5,
 #   type <- match.arg(type)
 #   
 #   if (type =="OM") {
-#     Ptype <- OM_desc # OM_desc <- OMtool:::OM_desc
+#     Ptype <- OM_desc # OM_desc <- MSEtool:::OM_desc
 #     Xvals <- MSEobj@OM
 #   } else {
-#     Ptype <- Obs_desc  # Obs_desc <- OMtool:::Obs_desc
+#     Ptype <- Obs_desc  # Obs_desc <- MSEtool:::Obs_desc
 #     Xvals <- MSEobj@Obs
 #     reqdat <- Required(MSEobj@MPs)[,2]
 #     reqdat <- trimws(unlist(strsplit(reqdat, ",")))

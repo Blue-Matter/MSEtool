@@ -87,8 +87,16 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
   
   sampCpars <- list()
 
+  # ---- Non-stochastic parameters ----
+  Names <- c('CAL_bins', 'CAL_binsmid', 'binWidth', 'nCALbins',
+             'maxage', 'n_age', 'CurrentYr',
+             'plusgroup', 'control', 'AddIUnits', 'Data', 'MPA',
+             'nareas', 'a', 'b', 'maxF')
+  
+  cpars2 <- cpars
+  cpars2[Names] <- NULL
   # --- Check custom parameters dimensions ----
-  ncparsim <- cparscheck(cpars)
+  ncparsim <- cparscheck(cpars2)
   
   # --- Check for Invalid Cpars ----
   # TODO
@@ -173,11 +181,6 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
   
   
   # --- Add non-stochastic parameters ----
-  Names <- c('CAL_bins', 'CAL_binsmid', 'binWidth', 'nCALbins',
-             'maxage', 'n_age', 'CurrentYr',
-             'plusgroup', 'control', 'AddIUnits', 'Data', 'MPA',
-             'nareas', 'a', 'b', 'maxF')
-  
   sampCpars[Names] <- cpars[Names]
   ind <- which(unlist(lapply(sampCpars, length)) ==0)
   sampCpars[ind] <- NULL
@@ -1553,7 +1556,7 @@ validcpars <- function(type=c("all", "Stock", "Fleet", "Obs", "Imp", "internal")
   
   Valid <- Slot <- Dim <- Description <- NULL
   
-  # cpars_info <- OMtool:::cpars_info
+  # cpars_info <- MSEtool:::cpars_info
   cpars_info <- cpars_info[!duplicated(cpars_info$Slot),] # remove duplicated 'Name'
   
   cpars_info$type <- NA

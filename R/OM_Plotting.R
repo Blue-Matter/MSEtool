@@ -128,7 +128,7 @@ render_plot <- function(Object, Class, Stock=NULL, RMD=NULL, nsamp=3, nsim=200, 
   if (dev) {
     input <- file.path('inst/Rmd', Class, RMD) 
   } else {
-    input <- file.path(system.file(package = 'OMtool'),'Rmd', Class, RMD)  
+    input <- file.path(system.file(package = 'MSEtool'),'Rmd', Class, RMD)  
   }
  
   knitr::knit_meta(class=NULL, clean = TRUE)
@@ -238,7 +238,7 @@ plot.pars <- function(x, Object, Stock=NULL, nsamp=3, nsim=200, nyears=50,
 #' @examples
 #' \dontrun{
 #' # Plot Stock Object:
-#' Stock <- OMtool::Albacore
+#' Stock <- MSEtool::Albacore
 #' plot(Stock)
 #' 
 #' # Individual plots:
@@ -250,7 +250,7 @@ plot.pars <- function(x, Object, Stock=NULL, nsamp=3, nsim=200, nyears=50,
 #' plot("Depletion", Stock)
 #' 
 #' # Plot Fleet Object
-#' Fleet <- OMtool::Generic_DecE
+#' Fleet <- MSEtool::Generic_DecE
 #' plot(Fleet, Stock)
 #' 
 #' # Individual plots:
@@ -261,16 +261,16 @@ plot.pars <- function(x, Object, Stock=NULL, nsamp=3, nsim=200, nyears=50,
 #' 
 #' 
 #' # Plot Obs Object
-#' Obs <- OMtool::Imprecise_Unbiased
+#' Obs <- MSEtool::Imprecise_Unbiased
 #' plot(Obs)
 #' 
 #' # Plot Imp Object
-#' Imp <- OMtool::Overages
+#' Imp <- MSEtool::Overages
 #' plot(Imp)
 #' 
 #' 
 #' # Plot Hist Object
-#' OM <- OMtool::testOM 
+#' OM <- MSEtool::testOM 
 #' Hist <- runMSE(OM, Hist=TRUE)
 #' plot(Hist)
 #' 

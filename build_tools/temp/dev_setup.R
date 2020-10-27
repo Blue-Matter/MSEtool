@@ -1,4 +1,4 @@
-library(OMtool)
+library(MSEtool)
 
 devtools::load_all()
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/Misc_Internal.R
 \name{CheckMPs}
 \alias{CheckMPs}
-\title{Check that specified MPs are valid and will run on OMtool::SimulatedData}
+\title{Check that specified MPs are valid and will run on MSEtool::SimulatedData}
 \usage{
 CheckMPs(MPs = NA, silent = FALSE)
 }
@@ -15,5 +15,5 @@ CheckMPs(MPs = NA, silent = FALSE)
 MP names
 }
 \description{
-Check that specified MPs are valid and will run on OMtool::SimulatedData
+Check that specified MPs are valid and will run on MSEtool::SimulatedData
 }

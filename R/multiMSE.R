@@ -3,7 +3,7 @@
 #' 
 #' @export
 #'
-SimulateMOM <- function(MOM=OMtool::Albacore_TwoFleet, parallel=TRUE, silent=FALSE) {
+SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FALSE) {
   # ---- Initial Checks and Setup ----
   if (class(MOM) == 'MOM') {
     if (MOM@nsim <=1) stop("MOM@nsim must be > 1", call.=FALSE)
@@ -57,7 +57,7 @@ SimulateMOM <- function(MOM=OMtool::Albacore_TwoFleet, parallel=TRUE, silent=FAL
   
   if(np==1 & nf==1){
     message("You have specified only a single stock and fleet. ",
-            "You should really be using the function OMtool::runMSE()")
+            "You should really be using the function MSEtool::runMSE()")
   } else if(np>1 & length(MOM@Rel)==0 & length(MOM@SexPars)==0) {
     message("You have specified more than one stock but no MICE relationships ",
             "(slot MOM@Rel) or sex-specific relationships (slot MOM@SexPars) among these. ",
@@ -1517,7 +1517,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
           }else{
             curdat<-MSElist[[p]][[f]][[mm]]
           }
-          runMP <- OMtool::applyMP(curdat, MPs = MPs[[p]][mm], reps = 1,
+          runMP <- MSEtool::applyMP(curdat, MPs = MPs[[p]][mm], reps = 1,
                                    silent=TRUE)  # Apply MP
           
           # Do allocation calcs
@@ -1551,7 +1551,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
         }else if(MPcond=="byfleet"){
           for(f in 1:nf){
             curdat<-MSElist[[p]][[f]][[mm]]
-            runMP <- OMtool::applyMP(curdat, MPs = MPrefs[mm,f,p], reps = 1, silent=TRUE)  # Apply MP
+            runMP <- MSEtool::applyMP(curdat, MPs = MPrefs[mm,f,p], reps = 1, silent=TRUE)  # Apply MP
             MPRecs_A[[p]][[f]]<-runMP[[1]][[1]]
             Data_p_A[[p]][[f]]<-runMP[[2]]
             Data_p_A[[p]][[f]]@TAC <- MPRecs_A[[p]][[f]]$TAC
@@ -1780,7 +1780,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
           for (f in 1:nf) {
             
             # TODO - remove this
-            OM <- suppressMessages(new('OM')) # temporary while OMtool::makeData requires this
+            OM <- suppressMessages(new('OM')) # temporary while MSEtool::makeData requires this
             OM@nyears <- nyears
             OM@hbiascv <- MOM@Obs[[p]][[f]]@hbiascv
             OM@maxF <- MOM@maxF
@@ -1817,9 +1817,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
                                                   mm=mm,
                                                   Misc=MSElist[[p]][[f]][[mm]]@Misc, 
                                                   RealData=NULL, #TODO 
-                                                  Sample_Area=ObsPars[[p]][[f]]$Sample_Area,
-                                                  AddIunits=NA,  # TODO
-                                                  AddIndType=NA)
+                                                  Sample_Area=ObsPars[[p]][[f]]$Sample_Area)
             
             # ---- Update true abundance ----
             M_array <- array(0.5*StockPars[[p]]$M_ageArray[,,nyears+y],
@@ -1851,7 +1849,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
           
           
           curdat<-multiDataS(MSElist,StockPars,np,mm,nf,realVB)
-          runMP <- OMtool::applyMP(curdat, MPs = MPs[mm], reps = 1, silent=TRUE)  # Apply MP
+          runMP <- MSEtool::applyMP(curdat, MPs = MPs[mm], reps = 1, silent=TRUE)  # Apply MP
           
           Stock_Alloc <- realVB[,,nyears, drop=FALSE]/
             apply(realVB[,,nyears, drop=FALSE],1,sum)
@@ -1893,7 +1891,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
               }else{
                 curdat<-MSElist[[p]][[f]][[mm]]
               }
-              runMP <- OMtool::applyMP(curdat, MPs = MPs[[p]][mm],
+              runMP <- MSEtool::applyMP(curdat, MPs = MPs[[p]][mm],
                                        reps = MOM@reps, silent=TRUE)  # Apply MP
               # Do allocation calcs
               TAC_A[,p,]<-array(as.vector(unlist(runMP[[1]][[1]]$TAC))*MOM@Allocation[[p]],c(nsim,nf))
@@ -1923,7 +1921,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
             } else if(MPcond=="byfleet"){
               for(f in 1:nf){
                 curdat<-MSElist[[p]][[f]][[mm]]
-                runMP <- OMtool::applyMP(curdat, MPs = MPrefs[mm,f,p],
+                runMP <- MSEtool::applyMP(curdat, MPs = MPrefs[mm,f,p],
                                          reps = MOM@reps, silent=TRUE)  # Apply MP
                 MPRecs_A[[p]][[f]]<-runMP[[1]][[1]]
                 Data_p_A[[p]][[f]]<-runMP[[2]]
@@ -2166,7 +2164,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
 #' }
 #' @author T. Carruthers and A. Hordyk
 #' @export
-multiMSE <- function(MOM=OMtool::Albacore_TwoFleet, 
+multiMSE <- function(MOM=MSEtool::Albacore_TwoFleet, 
                      MPs=list(c("AvC","DCAC"),c("FMSYref","curE")),
                      Hist=FALSE,
                      silent=FALSE,

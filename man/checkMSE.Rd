@@ -52,7 +52,7 @@ Returns an object of class matching class(MSEobj)
 \examples{
 # An example of joinMSE
 \dontrun{
-OM1 <- OMtool::testOM
+OM1 <- MSEtool::testOM
 MSE1 <- runMSE(OM1) 
 OM2 <- OM1 
 OM2@seed <- OM1@seed + 1

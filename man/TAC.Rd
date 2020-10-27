@@ -21,7 +21,7 @@ data-limited MPs (Output) given a data-limited data object Data
 }
 \examples{
 \dontrun{
-Data <- TAC(OMtool::Cobia)
+Data <- TAC(MSEtool::Cobia)
 plot(Data)
 }
 }

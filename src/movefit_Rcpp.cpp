@@ -19,7 +19,7 @@ using namespace Rcpp;
 //' conditions)
 //' 
 //' @author T. Carruthers with an amateur attempt at converting to Rcpp by A. Hordyk (but it works!)
-//' @useDynLib OMtool
+//' @useDynLib MSEtool
 //' @export
 // [[Rcpp::export]]
 double  movfit_Rcpp(NumericVector par, double prb, double frac) {

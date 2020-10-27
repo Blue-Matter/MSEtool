@@ -17,7 +17,7 @@ This function prints out the available plotting functions for objects of
 class MSE or Data
 }
 \note{
-Basically the function looks for any functions in the OMtool that
+Basically the function looks for any functions in the MSEtool that
 have the word \code{plot} in them.  There is a chance that some plotting
 functions are missed. Let us know if you find any and we will add them.
 }

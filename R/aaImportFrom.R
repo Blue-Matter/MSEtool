@@ -22,7 +22,7 @@
 NULL
 
 .onUnload <- function (libpath) {
-  library.dynam.unload("OMtool", libpath)
+  library.dynam.unload("MSEtool", libpath)
 }
 
 

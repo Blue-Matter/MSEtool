@@ -27,28 +27,28 @@ DataInit <- function(name="Data", ext=c("xlsx", "csv"), overwrite=FALSE, dir=NUL
   mdname <- paste(name, "md", sep=".")
   if (name == "Example") {
     name <- paste(name, ext, sep=".")
-    md.path <- system.file("Data_Example.md", package = "OMtool")
+    md.path <- system.file("Data_Example.md", package = "MSEtool")
     md.pathout <- gsub("Data_Example.md", mdname, md.path)
     if (ext == "xlsx") {
-      par.path <- system.file("Data_Example.xlsx", package = "OMtool")
+      par.path <- system.file("Data_Example.xlsx", package = "MSEtool")
       pathout <- gsub("Data_Example.xlsx", name, par.path)
       pathout <- gsub(dirname(pathout), dir, pathout)
     } else {
-      par.path <- system.file("Data_Example.csv", package = "OMtool")
+      par.path <- system.file("Data_Example.csv", package = "MSEtool")
       pathout <- gsub("Data_Example.csv", name, par.path)
       pathout <- gsub(dirname(pathout), dir, pathout) 
     }
     
   } else{
     name <- paste(name, ext, sep=".")
-    md.path <- system.file("Rmd/Data/Data.md", package = "OMtool")
+    md.path <- system.file("Rmd/Data/Data.md", package = "MSEtool")
     md.pathout <- gsub("Data.md", mdname, md.path)
     if (ext == "xlsx") {
-      par.path <- system.file("Data.xlsx", package = "OMtool")
+      par.path <- system.file("Data.xlsx", package = "MSEtool")
       pathout <- gsub("Data.xlsx", name, par.path)
       pathout <- gsub(dirname(pathout), dir, pathout)
     } else {
-      par.path <- system.file("Data.csv", package = "OMtool")
+      par.path <- system.file("Data.csv", package = "MSEtool")
       pathout <- gsub("Data.csv", name, par.path)
       pathout <- gsub(dirname(pathout), dir, pathout) 
     }
@@ -143,7 +143,7 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=TRUE) {
   colnames(datasheet) <- c("Name", "Data")
   
   # check names in Column 1 
-  input <- file.path(system.file(package = 'OMtool'), "Data.csv")
+  input <- file.path(system.file(package = 'MSEtool'), "Data.csv")
   valnames <- read.csv(input, header=FALSE, stringsAsFactors = FALSE)
   valnames <- valnames[,1]
   valnames <- c(valnames, "LHYear", "MPrec", 'MPeff')
@@ -598,7 +598,7 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=TRUE) {
 #   } else {
 #     sheetnames <- readxl::excel_sheets(file.path(dir,name))  # names of the sheets
 #     
-#     # DataXLSlot <- OMtool:::DataXLSlot
+#     # DataXLSlot <- MSEtool:::DataXLSlot
 #     NewSheetNames <- names(DataXLSlot)
 #     if (all(NewSheetNames %in% sheetnames)) {
 #       Data <- importnewXLData(dir,name, NewSheetNames)
@@ -748,7 +748,7 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=TRUE) {
 
 #' Run a Management Procedure
 #'
-#' @param Data A OMtool Data object
+#' @param Data A MSEtool Data object
 #' @param MPs The name of the MP to run (or a vector or names)
 #' @param reps Number of repititions
 #' @param perc Percentile to summarize reps (default is median)
@@ -757,7 +757,7 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=TRUE) {
 #'
 #' @export
 #' @examples
-#' Data_TAc <- runMP(OMtool::Cobia)
+#' Data_TAc <- runMP(MSEtool::Cobia)
 #' @return invisibly returns the Data object
 #'
 runMP <- function(Data, MPs = NA, reps = 100, perc=0.5, chkMPs=TRUE, silent=FALSE) {
@@ -947,9 +947,9 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE) {
 #' @param dev Logical. Run in development mode?
 #' @seealso \link{avail} \linkS4class{Data}
 #' @examples 
-#' CanMPs <- Can(OMtool::Cobia)
-#' CantMPs <- Cant(OMtool::Cobia)
-#' Needs <- Needed(OMtool::Cobia)
+#' CanMPs <- Can(MSEtool::Cobia)
+#' CantMPs <- Cant(MSEtool::Cobia)
+#' Needs <- Needed(MSEtool::Cobia)
 #' @describeIn Can Identifies MPs that have the correct data, do not produce errors,
 #' and run within the time limit.
 #' @export 
@@ -988,7 +988,7 @@ DLMdiag <- function(Data, command = c("available", "not available", "needed"), r
   rr <- try(slot(Data, "Misc"), silent = TRUE)
   if (inherits(rr,"try-error")) Data@Misc <- list()
   if (!dev) {
-    ReqData <- OMtool::ReqData
+    ReqData <- MSEtool::ReqData
     builtin <- funcs1[funcs1 %in% ReqData$MP]
     custom <- funcs1[!funcs1 %in% ReqData$MP]
     inMPind <- which(funcs1 %in% builtin)
@@ -1072,7 +1072,7 @@ DLMdiag <- function(Data, command = c("available", "not available", "needed"), r
 #' @param msg Logical. Should messages be printed?
 #' @author A. Hordyk
 #' @examples 
-#' Input(OMtool::Cobia)
+#' Input(MSEtool::Cobia)
 #' @export 
 Input <- function(Data, MPs = NA, reps = 100, timelimit = 10, CheckMPs = TRUE, 
                   msg=TRUE) {
@@ -1295,7 +1295,7 @@ replic8 <- function(Data, nrep) {
 #' @export 
 #' @examples 
 #' \dontrun{
-#' Data <- Sense(OMtool::Cobia, "AvC")
+#' Data <- Sense(MSEtool::Cobia, "AvC")
 #' }
 Sense <- function(Data, MP, nsense = 6, reps = 100, perc = c(0.05, 0.5, 0.95), ploty = T) {
   if (class(Data) != "Data") stop("First argument must be object of class 'Data'", call.=FALSE)
@@ -1412,7 +1412,7 @@ Sense <- function(Data, MP, nsense = 6, reps = 100, perc = c(0.05, 0.5, 0.95), p
 #' @author T. Carruthers
 #' @examples 
 #' \dontrun{
-#' Data <- TAC(OMtool::Cobia)
+#' Data <- TAC(MSEtool::Cobia)
 #' plot(Data)
 #' }
 #' @export 
@@ -2668,7 +2668,7 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE) {
   recList <- list() # a list containing nsim recommendations from a single MP 
   TACout <- array(NA, dim=c(nMPs, reps, nsims))
   
-  refMPs <- avail('MP', 'OMtool')
+  refMPs <- avail('MP', 'MSEtool')
   refMPs <- refMPs[grepl('ref', refMPs)]
   
   # if (!sfIsRunning() | (nMPs < 8 & nsims < 8)) {

@@ -1,4 +1,7 @@
 library(usethis)
+library(MSEtool)
+library(SAMtool)
+library(DLMtool)
 
 # ---- Source Object Classes ----
 source('R/Class_definitions.r')

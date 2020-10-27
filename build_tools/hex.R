@@ -27,12 +27,12 @@ s <- sticker(imgurl,
              h_fill='#355495',
              filename=outfile)
 
-# ---- OMtool----
+# ---- MSEtool----
 imgurl <- "build_tools/images/img/fish_logo2.png"
-outfile <- "build_tools/images/logo/V1/OMtool.png"
+outfile <- "build_tools/images/logo/V1/MSEtool.png"
 
 s <- sticker(imgurl, 
-             package='OMtool', # package name
+             package='MSEtool', # package name
              p_size=20,
              p_y=1.4,
              p_family='Oswald',

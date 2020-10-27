@@ -33,11 +33,11 @@ OM with one from another object.
 }
 \examples{
 # Replace Stock 
-OM <- OMtool::testOM
+OM <- MSEtool::testOM
 OM2 <- Replace(OM, Blue_shark)
 
 # Replace Fleet 
-OM <- OMtool::testOM
+OM <- MSEtool::testOM
 OM2 <- Replace(OM, Generic_DecE)
 
 # Replace Fleet from another OM 

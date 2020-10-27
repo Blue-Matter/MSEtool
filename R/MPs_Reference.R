@@ -21,7 +21,7 @@
 #' @author T. Carruthers, A. Hordyk
 #' @describeIn FMSYref A reference FMSY method that fishes at FMSY
 #' @examples 
-#' FMSYref(1, OMtool::SimulatedData, plot=TRUE)
+#' FMSYref(1, MSEtool::SimulatedData, plot=TRUE)
 #' @export 
 FMSYref <- function(x, Data, reps = 100, plot=FALSE) {
   y <- max(Data@Year) - Data@LHYear+1
@@ -44,7 +44,7 @@ class(FMSYref) <- "MP"
 
 #' @describeIn FMSYref A reference FMSY method that fishes at 50% of FMSY
 #' @examples 
-#' FMSYref50(1, OMtool::SimulatedData, plot=TRUE)
+#' FMSYref50(1, MSEtool::SimulatedData, plot=TRUE)
 #' @export  
 FMSYref50 <- function(x, Data, reps = 100, plot=FALSE) {
   y <- max(Data@Year) - Data@LHYear+1
@@ -67,7 +67,7 @@ class(FMSYref50) <- "MP"
 
 #' @describeIn FMSYref A reference FMSY method that fishes at 75% of FMSY
 #' @examples 
-#' FMSYref75(1, OMtool::SimulatedData, plot=TRUE)
+#' FMSYref75(1, MSEtool::SimulatedData, plot=TRUE)
 #' @export 
 FMSYref75 <- function(x, Data, reps = 100, plot=FALSE) {
   y <- max(Data@Year) - Data@LHYear+1
@@ -91,7 +91,7 @@ class(FMSYref75) <- "MP"
 
 #' @describeIn FMSYref A reference MP that sets annual catch to almost zero (1e-15)
 #' @examples 
-#' NFref(1, OMtool::SimulatedData, plot=TRUE)
+#' NFref(1, MSEtool::SimulatedData, plot=TRUE)
 #' @export 
 NFref <- function(x, Data, reps = 100, plot=FALSE) {
   rec <- new("Rec") # create recommendation object

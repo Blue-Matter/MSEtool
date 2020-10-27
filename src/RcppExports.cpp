@@ -8,7 +8,7 @@ using namespace Rcpp;
 
 // bhnoneq_LL
 double bhnoneq_LL(NumericVector stpar, NumericVector year, NumericVector Lbar, NumericVector ss, double Linf, double K, double Lc, int nbreaks);
-RcppExport SEXP _OMtool_bhnoneq_LL(SEXP stparSEXP, SEXP yearSEXP, SEXP LbarSEXP, SEXP ssSEXP, SEXP LinfSEXP, SEXP KSEXP, SEXP LcSEXP, SEXP nbreaksSEXP) {
+RcppExport SEXP _MSEtool_bhnoneq_LL(SEXP stparSEXP, SEXP yearSEXP, SEXP LbarSEXP, SEXP ssSEXP, SEXP LinfSEXP, SEXP KSEXP, SEXP LcSEXP, SEXP nbreaksSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -26,7 +26,7 @@ END_RCPP
 }
 // combine
 NumericVector combine(const List& list);
-RcppExport SEXP _OMtool_combine(SEXP listSEXP) {
+RcppExport SEXP _MSEtool_combine(SEXP listSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -37,7 +37,7 @@ END_RCPP
 }
 // get_freq
 NumericVector get_freq(NumericVector x, double width, double origin, int outlen);
-RcppExport SEXP _OMtool_get_freq(SEXP xSEXP, SEXP widthSEXP, SEXP originSEXP, SEXP outlenSEXP) {
+RcppExport SEXP _MSEtool_get_freq(SEXP xSEXP, SEXP widthSEXP, SEXP originSEXP, SEXP outlenSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -51,7 +51,7 @@ END_RCPP
 }
 // which_maxC
 double which_maxC(NumericVector x);
-RcppExport SEXP _OMtool_which_maxC(SEXP xSEXP) {
+RcppExport SEXP _MSEtool_which_maxC(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -62,7 +62,7 @@ END_RCPP
 }
 // rnormSelect2
 NumericVector rnormSelect2(int N, int mi, int ma);
-RcppExport SEXP _OMtool_rnormSelect2(SEXP NSEXP, SEXP miSEXP, SEXP maSEXP) {
+RcppExport SEXP _MSEtool_rnormSelect2(SEXP NSEXP, SEXP miSEXP, SEXP maSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -75,7 +75,7 @@ END_RCPP
 }
 // tdnorm
 NumericVector tdnorm(NumericVector x, double mi, double ma);
-RcppExport SEXP _OMtool_tdnorm(SEXP xSEXP, SEXP miSEXP, SEXP maSEXP) {
+RcppExport SEXP _MSEtool_tdnorm(SEXP xSEXP, SEXP miSEXP, SEXP maSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -88,7 +88,7 @@ END_RCPP
 }
 // genSizeComp
 NumericMatrix genSizeComp(NumericMatrix VulnN, NumericVector CAL_binsmid, NumericMatrix selCurve, double CAL_ESS, double CAL_nsamp, NumericVector Linfs, NumericVector Ks, NumericVector t0s, double LenCV, double truncSD);
-RcppExport SEXP _OMtool_genSizeComp(SEXP VulnNSEXP, SEXP CAL_binsmidSEXP, SEXP selCurveSEXP, SEXP CAL_ESSSEXP, SEXP CAL_nsampSEXP, SEXP LinfsSEXP, SEXP KsSEXP, SEXP t0sSEXP, SEXP LenCVSEXP, SEXP truncSDSEXP) {
+RcppExport SEXP _MSEtool_genSizeComp(SEXP VulnNSEXP, SEXP CAL_binsmidSEXP, SEXP selCurveSEXP, SEXP CAL_ESSSEXP, SEXP CAL_nsampSEXP, SEXP LinfsSEXP, SEXP KsSEXP, SEXP t0sSEXP, SEXP LenCVSEXP, SEXP truncSDSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -108,7 +108,7 @@ END_RCPP
 }
 // movfit_Rcpp
 double movfit_Rcpp(NumericVector par, double prb, double frac);
-RcppExport SEXP _OMtool_movfit_Rcpp(SEXP parSEXP, SEXP prbSEXP, SEXP fracSEXP) {
+RcppExport SEXP _MSEtool_movfit_Rcpp(SEXP parSEXP, SEXP prbSEXP, SEXP fracSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -121,7 +121,7 @@ END_RCPP
 }
 // popdynOneTScpp
 arma::mat popdynOneTScpp(double nareas, double maxage, NumericMatrix Ncurr, Rcpp::NumericMatrix Zcurr, arma::cube mov, int plusgroup);
-RcppExport SEXP _OMtool_popdynOneTScpp(SEXP nareasSEXP, SEXP maxageSEXP, SEXP NcurrSEXP, SEXP ZcurrSEXP, SEXP movSEXP, SEXP plusgroupSEXP) {
+RcppExport SEXP _MSEtool_popdynOneTScpp(SEXP nareasSEXP, SEXP maxageSEXP, SEXP NcurrSEXP, SEXP ZcurrSEXP, SEXP movSEXP, SEXP plusgroupSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -137,7 +137,7 @@ END_RCPP
 }
 // popdynCPP
 List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears, arma::mat M_age, arma::vec Asize_c, arma::mat MatAge, arma::mat WtAge, arma::mat Vuln, arma::mat Retc, arma::vec Prec, List movc, double SRrelc, arma::vec Effind, double Spat_targc, double hc, NumericVector R0c, NumericVector SSBpRc, NumericVector aRc, NumericVector bRc, double Qc, double Fapic, double maxF, arma::mat MPA, int control, double SSB0c, int plusgroup);
-RcppExport SEXP _OMtool_popdynCPP(SEXP nareasSEXP, SEXP maxageSEXP, SEXP NcurrSEXP, SEXP pyearsSEXP, SEXP M_ageSEXP, SEXP Asize_cSEXP, SEXP MatAgeSEXP, SEXP WtAgeSEXP, SEXP VulnSEXP, SEXP RetcSEXP, SEXP PrecSEXP, SEXP movcSEXP, SEXP SRrelcSEXP, SEXP EffindSEXP, SEXP Spat_targcSEXP, SEXP hcSEXP, SEXP R0cSEXP, SEXP SSBpRcSEXP, SEXP aRcSEXP, SEXP bRcSEXP, SEXP QcSEXP, SEXP FapicSEXP, SEXP maxFSEXP, SEXP MPASEXP, SEXP controlSEXP, SEXP SSB0cSEXP, SEXP plusgroupSEXP) {
+RcppExport SEXP _MSEtool_popdynCPP(SEXP nareasSEXP, SEXP maxageSEXP, SEXP NcurrSEXP, SEXP pyearsSEXP, SEXP M_ageSEXP, SEXP Asize_cSEXP, SEXP MatAgeSEXP, SEXP WtAgeSEXP, SEXP VulnSEXP, SEXP RetcSEXP, SEXP PrecSEXP, SEXP movcSEXP, SEXP SRrelcSEXP, SEXP EffindSEXP, SEXP Spat_targcSEXP, SEXP hcSEXP, SEXP R0cSEXP, SEXP SSBpRcSEXP, SEXP aRcSEXP, SEXP bRcSEXP, SEXP QcSEXP, SEXP FapicSEXP, SEXP maxFSEXP, SEXP MPASEXP, SEXP controlSEXP, SEXP SSB0cSEXP, SEXP plusgroupSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -174,20 +174,20 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_OMtool_bhnoneq_LL", (DL_FUNC) &_OMtool_bhnoneq_LL, 8},
-    {"_OMtool_combine", (DL_FUNC) &_OMtool_combine, 1},
-    {"_OMtool_get_freq", (DL_FUNC) &_OMtool_get_freq, 4},
-    {"_OMtool_which_maxC", (DL_FUNC) &_OMtool_which_maxC, 1},
-    {"_OMtool_rnormSelect2", (DL_FUNC) &_OMtool_rnormSelect2, 3},
-    {"_OMtool_tdnorm", (DL_FUNC) &_OMtool_tdnorm, 3},
-    {"_OMtool_genSizeComp", (DL_FUNC) &_OMtool_genSizeComp, 10},
-    {"_OMtool_movfit_Rcpp", (DL_FUNC) &_OMtool_movfit_Rcpp, 3},
-    {"_OMtool_popdynOneTScpp", (DL_FUNC) &_OMtool_popdynOneTScpp, 6},
-    {"_OMtool_popdynCPP", (DL_FUNC) &_OMtool_popdynCPP, 27},
+    {"_MSEtool_bhnoneq_LL", (DL_FUNC) &_MSEtool_bhnoneq_LL, 8},
+    {"_MSEtool_combine", (DL_FUNC) &_MSEtool_combine, 1},
+    {"_MSEtool_get_freq", (DL_FUNC) &_MSEtool_get_freq, 4},
+    {"_MSEtool_which_maxC", (DL_FUNC) &_MSEtool_which_maxC, 1},
+    {"_MSEtool_rnormSelect2", (DL_FUNC) &_MSEtool_rnormSelect2, 3},
+    {"_MSEtool_tdnorm", (DL_FUNC) &_MSEtool_tdnorm, 3},
+    {"_MSEtool_genSizeComp", (DL_FUNC) &_MSEtool_genSizeComp, 10},
+    {"_MSEtool_movfit_Rcpp", (DL_FUNC) &_MSEtool_movfit_Rcpp, 3},
+    {"_MSEtool_popdynOneTScpp", (DL_FUNC) &_MSEtool_popdynOneTScpp, 6},
+    {"_MSEtool_popdynCPP", (DL_FUNC) &_MSEtool_popdynCPP, 27},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_OMtool(DllInfo *dll) {
+RcppExport void R_init_MSEtool(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

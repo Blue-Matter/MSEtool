@@ -56,11 +56,11 @@ SubOM <- function(OM, Sub=c("Stock", "Fleet", "Obs", "Imp")) {
 #' @author A. Hordyk
 #' @examples 
 #' # Replace Stock 
-#' OM <- OMtool::testOM
+#' OM <- MSEtool::testOM
 #' OM2 <- Replace(OM, Blue_shark)
 #' 
 #' # Replace Fleet 
-#' OM <- OMtool::testOM
+#' OM <- MSEtool::testOM
 #' OM2 <- Replace(OM, Generic_DecE)
 #' 
 #' # Replace Fleet from another OM 
