@@ -915,7 +915,7 @@ setMethod("initialize", "OM", function(.Object, Stock=NULL, Fleet=MSEtool::Gener
 #' @slot CAA Catch at age in last projection year. An array with dimensions: nsim, nMPs, nages. Non-negative real numbers
 #' @slot CAL Catch at length in last projection year. An array with dimensions: nsim, nMPs, nCALbins. Non-negative real numbers
 #' @slot CALbins Mid-points of the catch-at-length bins. Vector of length nCALbins. Positive real numbers. 
-#' @slot Misc Miscellanenous output such as posterior predictive data
+#' @slot Misc Miscellaneous output such as posterior predictive data
 #'
 #' @author T. Carruthers
 #' @keywords classes
