@@ -48,8 +48,8 @@ plotquant<-function(x,p=c(0.05,0.25,0.75,0.95),yrs,qcol,lcol,addline=T,ablines=N
 
 
 
-#' @name plot.MMSE
-#' @title Standard plot for an object of class MMSE (multi MSE)
+
+#' Standard plot for an object of class MMSE (multi MSE)
 #'
 #' @description Plot the projected biomass, fishing, mortality rate and yield for all stocks and MPs
 #'
@@ -57,139 +57,140 @@ plotquant<-function(x,p=c(0.05,0.25,0.75,0.95),yrs,qcol,lcol,addline=T,ablines=N
 #' @param maxcol Integer. The maximum number of columns (MPs) to be plotted in each plot
 #' @param qcol Character, color. The color of the inner percentile range
 #' @param lcol Character, color. The color of the outer percentile range.
-#' @param quants Numeric vector. The percentiles that are plotted (LB2,LB1,UB1,UB2). LB2 and UB2 are the outer percentiles, LB1 and UB1 are the inner percentiles.
+#' @param quants Numeric vector. The percentiles that are plotted (LB2,LB1,UB1,UB2). 
+#' LB2 and UB2 are the outer percentiles, LB1 and UB1 are the inner percentiles.
 #' @param curyr Integer. The current year from which projections start.
 #' @param addline Logical. Should two individual simulations be added to the percentile plots?
 #' @author T.Carruthers
-#' @aliases plot,MMSE,missing-method
+#' @method plot MMSE
 #' @importFrom grDevices rgb
 #' @export
-setMethod("plot", signature(x = "MMSE", y = "missing"),
-          function(x, maxcol = 6, qcol = rgb(0.4, 0.8, 0.95), lcol = "dodgerblue4",
-                   quants = c(0.05, 0.25, 0.75, 0.95), curyr = 2018, addline = FALSE) {
-            MMSE <- x
-            if(is.na(maxcol))maxcol=ceiling(length(MMSE@MPs)/0.5) # defaults to portrait 1:2
-            MPs<-MMSE@MPs
-            MPrefs<-MMSE@MPrefs
-            nMPs<-length(MPrefs[,1,1])
-            yrs<-curyr+(1:MMSE@proyears)
-            ns<-MMSE@nstocks
-            nf<-MMSE@nfleets
-
-            plots<-split(1:nMPs, ceiling(seq_along(1:nMPs)/maxcol))
-
-            # --- Biomass projection ---------------------------------------------------
-            B_BMSY<-MMSE@B_BMSY
-            Blims <- c(0,quantile(B_BMSY,0.95))
-
-            for(pp in 1:length(plots)){
-
-              toplot<-plots[[pp]]
-              nt<-length(toplot)
-              par(mfcol=c(ns,nt),mai=c(0.3,0.3,0.3,0.01),omi=c(0.4,0.5,0.05,0.05))
-
-              for(MP in toplot){
-
-                for(ss in 1:ns){
-                  plot(range(yrs),Blims,col="white",yaxs="i")
-                  plotquant(B_BMSY[,ss,MP,],p=quants,yrs,qcol,lcol,ablines=c(0.5,1),addline=addline)
-                  mtext(paste(paste0("F",1:nf),MPrefs[MP,,ss],collapse=", "),3,line=0.2,font=2,cex=0.7)
-
-                  if(MP==toplot[1])mtext(MMSE@Snames[ss],2,line=2.5)
-                }
-              }
-            }
-
-            mtext("Projection Year",1,font=2,outer=T,line=1.2)
-            mtext("Biomass / BMSY",2,font=2,outer=T,line=1.9)
-
-
-            # --- F projection -----------------------------------------------------------
-
-            F_FMSY<-MMSE@F_FMSY
-            F_FMSYsum<-apply(F_FMSY,c(1,2,4,5),sum,na.rm=T)
-            Flims<- c(0,quantile(F_FMSYsum,0.95,na.rm=T))
-
-            for(pp in 1:length(plots)){
-
-              toplot<-plots[[pp]]
-              nt<-length(toplot)
-              par(mfcol=c(ns,nt),mai=c(0.3,0.3,0.3,0.01),omi=c(0.4,0.5,0.05,0.05))
-
-              for(MP in toplot){
-
-                for(ss in 1:ns){
-                  plot(range(yrs),Flims,col="white",yaxs="i")
-                  plotquant(F_FMSYsum[,ss,MP,],p=quants,yrs,qcol,lcol,ablines=c(0.5,1),addline=addline)
-                  mtext(paste(paste0("F",1:nf),MPrefs[MP,,ss],collapse=", "),3,line=0.2,font=2,cex=0.7)
-
-                  if(MP==toplot[1])mtext(MMSE@Snames[ss],2,line=2.5)
-                }
-              }
-            }
-
-            mtext("Projection Year",1,font=2,outer=T,line=1.2)
-            mtext("Total (all fleets) F / FMSY",2,font=2,outer=T,line=1.9)
-
-
-            # --- Total yield projection -----------------------------------------------------
-
-            Yd<-MMSE@C#MMSE@OM$RefY
-            Ydsum<-apply(Yd, c(1,2,4,5),sum,na.rm=T)
-            Ydsum<-Ydsum/array(rep(Ydsum[,,,1],MMSE@proyears),dim(Ydsum))
-            Ylims<- c(0,quantile(Ydsum,0.95,na.rm=T))
-
-            for(pp in 1:length(plots)){
-
-              toplot<-plots[[pp]]
-              nt<-length(toplot)
-              par(mfcol=c(ns,nt),mai=c(0.3,0.3,0.3,0.01),omi=c(0.4,0.5,0.05,0.05))
-
-              for(MP in toplot){
-
-                for(ss in 1:ns){
-
-                  plot(range(yrs),Ylims,col="white",yaxs="i")
-                  plotquant(Ydsum[,ss,MP,],p=quants,yrs,qcol,lcol,ablines=c(0.5,1),addline=addline)
-                  mtext(paste(paste0("F",1:nf),MPrefs[MP,,ss],collapse=", "),3,line=0.2,font=2,cex=0.7)
-
-                  if(MP==toplot[1])mtext(MMSE@Snames[ss],2,line=2.5)
-                }
-              }
-            }
-
-            mtext("Projection Year",1,font=2,outer=T,line=1.2)
-            mtext(paste("Total yield (all fleets) relative to",curyr),2,font=2,outer=T,line=1.9)
-
-
-            # --- Yield by fleet projection --------------------------------------------------
-
-            YdbyF<-apply(Yd, c(2,3,4,5),mean,na.rm=T)
-            cols<-rep(c('black','red','green','blue','orange','grey','purple'),3)
-            ltys<-rep(1:3,each=7)
-
-
-            for(pp in 1:length(plots)){
-
-              toplot<-plots[[pp]]
-              nt<-length(toplot)
-              par(mfcol=c(ns,nt),mai=c(0.3,0.3,0.3,0.01),omi=c(0.4,0.5,0.05,0.05))
-
-              for(MP in toplot){
-                for(ss in 1:ns){
-                  matplot(yrs,t(matrix(YdbyF[ss,,MP,],nrow=nf)),type='l',col=cols,lty=ltys,yaxs="i",ylim=c(0,max(YdbyF[ss,,MP,])))
-                  mtext(paste(paste0("F",1:nf),MPrefs[MP,,ss],collapse=", "),3,line=0.2,font=2,cex=0.7)
-                  if(MP==toplot[1])mtext(MMSE@Snames[ss],2,line=2.5)
-                  if(MP==toplot[1])legend("bottomleft",legend=paste(paste0("F",1:nf),MMSE@Fnames[,ss]),text.col=cols,cex=0.8,text.font=2,bty='n')
-                }
-              }
-            }
-
-            mtext("Projection Year",1,font=2,outer=T,line=1.2)
-            mtext("Expected yield by fleet",2,font=2,outer=T,line=1.9)
-
-
-          })
+plot.MMSE <- function(x=NULL, maxcol = 6, qcol = rgb(0.4, 0.8, 0.95), lcol = "dodgerblue4",
+                      quants = c(0.05, 0.25, 0.75, 0.95), curyr = 2018, addline = FALSE) {
+  MMSE <- x
+  if (class(MMSE)!='MMSE') stop('Object must be class `MMSE`')
+  if(is.na(maxcol))maxcol=ceiling(length(MMSE@MPs)/0.5) # defaults to portrait 1:2
+  MPs<-MMSE@MPs
+  MPrefs<-MMSE@MPrefs
+  nMPs<-length(MPrefs[,1,1])
+  yrs<-curyr+(1:MMSE@proyears)
+  ns<-MMSE@nstocks
+  nf<-MMSE@nfleets
+  
+  plots<-split(1:nMPs, ceiling(seq_along(1:nMPs)/maxcol))
+  
+  # --- Biomass projection ---------------------------------------------------
+  B_BMSY<-MMSE@B_BMSY
+  Blims <- c(0,quantile(B_BMSY,0.95))
+  
+  for(pp in 1:length(plots)){
+    
+    toplot<-plots[[pp]]
+    nt<-length(toplot)
+    par(mfcol=c(ns,nt),mai=c(0.3,0.3,0.3,0.01),omi=c(0.4,0.5,0.05,0.05))
+    
+    for(MP in toplot){
+      
+      for(ss in 1:ns){
+        plot(range(yrs),Blims,col="white",yaxs="i")
+        plotquant(B_BMSY[,ss,MP,],p=quants,yrs,qcol,lcol,ablines=c(0.5,1),addline=addline)
+        mtext(paste(paste0("F",1:nf),MPrefs[MP,,ss],collapse=", "),3,line=0.2,font=2,cex=0.7)
+        
+        if(MP==toplot[1])mtext(MMSE@Snames[ss],2,line=2.5)
+      }
+    }
+  }
+  
+  mtext("Projection Year",1,font=2,outer=T,line=1.2)
+  mtext("Biomass / BMSY",2,font=2,outer=T,line=1.9)
+  
+  
+  # --- F projection -----------------------------------------------------------
+  
+  F_FMSY<-MMSE@F_FMSY
+  F_FMSYsum<-apply(F_FMSY,c(1,2,4,5),sum,na.rm=T)
+  Flims<- c(0,quantile(F_FMSYsum,0.95,na.rm=T))
+  
+  for(pp in 1:length(plots)){
+    
+    toplot<-plots[[pp]]
+    nt<-length(toplot)
+    par(mfcol=c(ns,nt),mai=c(0.3,0.3,0.3,0.01),omi=c(0.4,0.5,0.05,0.05))
+    
+    for(MP in toplot){
+      
+      for(ss in 1:ns){
+        plot(range(yrs),Flims,col="white",yaxs="i")
+        plotquant(F_FMSYsum[,ss,MP,],p=quants,yrs,qcol,lcol,ablines=c(0.5,1),addline=addline)
+        mtext(paste(paste0("F",1:nf),MPrefs[MP,,ss],collapse=", "),3,line=0.2,font=2,cex=0.7)
+        
+        if(MP==toplot[1])mtext(MMSE@Snames[ss],2,line=2.5)
+      }
+    }
+  }
+  
+  mtext("Projection Year",1,font=2,outer=T,line=1.2)
+  mtext("Total (all fleets) F / FMSY",2,font=2,outer=T,line=1.9)
+  
+  
+  # --- Total yield projection -----------------------------------------------------
+  
+  Yd<-MMSE@C#MMSE@OM$RefY
+  Ydsum<-apply(Yd, c(1,2,4,5),sum,na.rm=T)
+  Ydsum<-Ydsum/array(rep(Ydsum[,,,1],MMSE@proyears),dim(Ydsum))
+  Ylims<- c(0,quantile(Ydsum,0.95,na.rm=T))
+  
+  for(pp in 1:length(plots)){
+    
+    toplot<-plots[[pp]]
+    nt<-length(toplot)
+    par(mfcol=c(ns,nt),mai=c(0.3,0.3,0.3,0.01),omi=c(0.4,0.5,0.05,0.05))
+    
+    for(MP in toplot){
+      
+      for(ss in 1:ns){
+        
+        plot(range(yrs),Ylims,col="white",yaxs="i")
+        plotquant(Ydsum[,ss,MP,],p=quants,yrs,qcol,lcol,ablines=c(0.5,1),addline=addline)
+        mtext(paste(paste0("F",1:nf),MPrefs[MP,,ss],collapse=", "),3,line=0.2,font=2,cex=0.7)
+        
+        if(MP==toplot[1])mtext(MMSE@Snames[ss],2,line=2.5)
+      }
+    }
+  }
+  
+  mtext("Projection Year",1,font=2,outer=T,line=1.2)
+  mtext(paste("Total yield (all fleets) relative to",curyr),2,font=2,outer=T,line=1.9)
+  
+  
+  # --- Yield by fleet projection --------------------------------------------------
+  
+  YdbyF<-apply(Yd, c(2,3,4,5),mean,na.rm=T)
+  cols<-rep(c('black','red','green','blue','orange','grey','purple'),3)
+  ltys<-rep(1:3,each=7)
+  
+  
+  for(pp in 1:length(plots)){
+    
+    toplot<-plots[[pp]]
+    nt<-length(toplot)
+    par(mfcol=c(ns,nt),mai=c(0.3,0.3,0.3,0.01),omi=c(0.4,0.5,0.05,0.05))
+    
+    for(MP in toplot){
+      for(ss in 1:ns){
+        matplot(yrs,t(matrix(YdbyF[ss,,MP,],nrow=nf)),type='l',col=cols,lty=ltys,yaxs="i",ylim=c(0,max(YdbyF[ss,,MP,])))
+        mtext(paste(paste0("F",1:nf),MPrefs[MP,,ss],collapse=", "),3,line=0.2,font=2,cex=0.7)
+        if(MP==toplot[1])mtext(MMSE@Snames[ss],2,line=2.5)
+        if(MP==toplot[1])legend("bottomleft",legend=paste(paste0("F",1:nf),MMSE@Fnames[,ss]),text.col=cols,cex=0.8,text.font=2,bty='n')
+      }
+    }
+  }
+  
+  mtext("Projection Year",1,font=2,outer=T,line=1.2)
+  mtext("Expected yield by fleet",2,font=2,outer=T,line=1.9)
+  
+  
+}
 
 
 #' A basic comparison of runMSE output (MSE) and multiMSE (MMSE)
