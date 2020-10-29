@@ -28,10 +28,9 @@
 #' 
 #' The question to ask when examining the plots produced by `Turing`: do the plots 
 #' of the 6 data samples look like they are all samples from the same underlying distribution?
-#'   
 #'
-#' @param OM An object of class `OM`
-#' @param Data An object of class `Data`
+#' @param OM An object of class `OM` or class `multiHist`
+#' @param Data An object of class `Data` or a nested list of `Data` objects for each stock and fleet
 #' @param wait Logical. Wait for key press before next plot?
 #'
 # #' @templateVar url evaluating-om
@@ -52,6 +51,7 @@
 #' }
 #' 
 Turing <- function(OM, Data, wait=TRUE) {
+  if (class(OM) == "multiHist") TuringMOM (OM, Data, wait)
   if (class(OM) != "OM") stop("OM must be class 'OM'")
   if (class(Data) != "Data") stop("Data must be class 'Data'")
 
@@ -120,7 +120,83 @@ Turing <- function(OM, Data, wait=TRUE) {
               SimDat, samps, YrInd, wait)
 }
 
-    
+#' @describeIn Turing Turing function for multi-stock, multi-fleet MOMs
+#' @param multiHist An object of class `multiHist`. The output of `SimulateMOM`
+#' @export
+TuringMOM <- function(multiHist, Data, wait=TRUE) {
+  
+  if (class(multiHist) != "multiHist") stop("multiHist must be class multiHist`")
+  if (class(Data) !='list') stop("Data must be list")
+  np <- length(multiHist)
+  nf <- length(multiHist[[1]])
+  
+  if (any(ldim(Data) != c(np, nf)))
+    stop('Data must be a nested list of length `nstocks` each with `nfleets')
+  if (class(Data[[1]][[1]]) !='Data')
+    stop('Data is not a nested list of objects of class `Data`')
+  
+  nsim <- nrow(multiHist[[1]][[1]]@OMPars)
+  nyears <- dim(multiHist[[1]][[1]]@TSdata$Number)[2]
+  
+  for (p in 1:np) {
+    for (f in 1:nf) {
+      if (length(Data[[p]][[f]]@Year) != nyears) {
+        stop("Note: length Data@Year (", length(Data[[p]][[f]]@Year), ") for stock ", p, 
+             " and fleet ", f, " is not equal to the number of historical simulated years (", nyears, ")")
+      }
+    }
+  }
+  
+  nsamp <- min(5, nsim)
+  set.seed(as.numeric(Sys.time()))
+  samps <- sample(1:OM@nsim, nsamp)
+  
+  message("Randomly sampling 5 iterations")
+  
+  YrInd <- 1:nyears
+  
+  for (p in 1:np) {
+    for (f in 1:nf) {
+      # ---- Catch Data ---- 
+      message <- paste0('Catch Data for Stock ', p, ' and Fleet ', f)
+      plotTSdata(Ylab="St. Catch", slot="Cat", message=message, Data[[p]][[f]], 
+                 multiHist[[p]][[f]]@Data, 
+                 samps, YrInd, wait)
+      
+      # ---- Index Data ---- 
+      message <- paste0('Index Data for Stock ', p, ' and Fleet ', f)
+      plotTSdata(Ylab="St. Index", slot="Ind", message=message, Data[[p]][[f]], 
+                 multiHist[[p]][[f]]@Data,
+                 samps, YrInd, wait)
+      
+      # ---- Recruitment Data ----
+      message <- paste0('Recruitment Data for Stock ', p, ' and Fleet ', f)
+      plotTSdata(Ylab="St. Recruitment", slot="Rec", message=message, Data[[p]][[f]], 
+                 multiHist[[p]][[f]]@Data, samps, YrInd, wait)
+      
+      # ---- Mean Length Data ----
+      message <- paste0('Mean Length Data for Stock ', p, ' and Fleet ', f)
+      plotTSdata(Ylab="Mean Length", slot="ML", message=message, Data[[p]][[f]], 
+                 multiHist[[p]][[f]]@Data, samps, YrInd, wait, standarise=FALSE)
+      
+      # ---- Mean Length Data ----
+      message <- paste0('Lbar Data for Stock ', p, ' and Fleet ', f)
+      plotTSdata(Ylab="Lbar", slot="Lbar", message=message, Data[[p]][[f]],  
+                 multiHist[[p]][[f]]@Data, samps, YrInd, wait, standarise=FALSE)
+      
+      # ---- Catch-at-Age ----
+      message <- paste0('Catch-at-Age Data for Stock ', p, ' and Fleet ', f)
+      plotCAAdata(Ylab="Count", slot="CAA", message=message, Data[[p]][[f]],  
+                  multiHist[[p]][[f]]@Data, samps, YrInd, wait)
+      
+      # ---- Catch-at-Length ----
+      message <- paste0('Catch-at-Length Data for Stock ', p, ' and Fleet ', f)
+      plotCAAdata(Ylab="Count", slot="CAL", message=message, Data[[p]][[f]], 
+                  multiHist[[p]][[f]]@Data, samps, YrInd, wait)
+    }
+  }
+}
+
 plotCAAdata <- function(Ylab="Count", slot="CAA", message="Catch-at-Age Data", 
                         Data, SimDat, samps, YrInd, wait) {
   Year <- Val <- Freq <- Sim <- NULL # cran check hacks

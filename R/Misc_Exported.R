@@ -1,11 +1,12 @@
 
-get_funcs <- function(package, classy) {
+get_funcs <- function(package, classy , msg) {
   pkgs <- search()
   search_package <- paste0("package:",package)
   funs <- NULL
   
   if (search_package %in% pkgs) {
-    message('Searching for objects of class', classy, ' in package: ', package)
+    if (msg) 
+      message('Searching for objects of class ', classy, ' in package: ', package)
     funs <- ls(search_package)[vapply(ls(search_package),
                                getclass, 
                                logical(1), 
@@ -24,8 +25,9 @@ get_funcs <- function(package, classy) {
 #' @param classy A class of object (character string, e.g. 'Fleet')
 #' @param package Optional. Names(s) of the package to search for object of class `classy`. String
 #' Default is all `openMSE` packages.
+#' @param msg Print messages?
 #' @examples
-#' avail("OM")
+#' avail("OM", msg=FALSE)
 #' @author T. Carruthers
 #' @seealso \link{Can} \link{Cant} \link{avail}
 #' @examples 
@@ -33,7 +35,7 @@ get_funcs <- function(package, classy) {
 #' Fleets <- avail("Fleet")
 #' MPs <- avail("MP")
 #' @export 
-avail <- function(classy, package=NULL) {
+avail <- function(classy, package=NULL, msg=TRUE) {
   temp <- try(class(classy), silent=TRUE)
   if (class(temp) == "try-error") classy <- deparse(substitute(classy))
   if (temp == "function") classy <- deparse(substitute(classy))
@@ -50,9 +52,9 @@ avail <- function(classy, package=NULL) {
     if (is.null(package))
       package <- c('MSEtool', 'SAMtool', 'DLMtool', 'DLMextra')
     
-    MSEtool_funs <- get_funcs('MSEtool', classy)
-    SAMtool_funs <- get_funcs('SAMtool', classy)
-    DLMtool_funs <- get_funcs('DLMtool', classy)
+    MSEtool_funs <- get_funcs('MSEtool', classy, msg)
+    SAMtool_funs <- get_funcs('SAMtool', classy, msg)
+    DLMtool_funs <- get_funcs('DLMtool', classy, msg)
     DLMextra_funs <- get_funcs('DLMextra', classy)
     global_funs <- ls(envir = .GlobalEnv)[vapply(ls(envir = .GlobalEnv), getclass, logical(1), classy = classy)]
     
@@ -266,7 +268,7 @@ makePerf <- function(OMin, except = NULL) {
 #' 
 MPtype <- function(MPs=NA) {
   if(class(MPs) == "MP") stop("MPs must be characters")
-  availMPs <- avail("MP")
+  availMPs <- avail("MP", msg=FALSE)
   if (any(is.na(MPs))) MPs <- availMPs
   if (class(MPs) != 'character') stop("MPs must be characters")
   
@@ -425,7 +427,7 @@ Required <- function(funcs = NA, noCV=FALSE) {
   
   if (class(funcs) != 'logical' & class(funcs) != "character") stop("first argument must be character with MP name")
   
-  if (all(is.na(funcs))) funcs <- avail("MP")
+  if (all(is.na(funcs))) funcs <- avail("MP", msg=FALSE)
   for (x in 1:length(funcs)) {
     tt <- try(get(funcs[x]))
     if (class(tt) != "MP") stop(funcs[x], " is not class 'MP'")

@@ -976,7 +976,7 @@ DLMdiag <- function(Data, command = c("available", "not available", "needed"), r
   if (class(Data) != "Data") stop("First argument must be object of class 'Data'", call.=FALSE)
   set.seed(101)
   Data <- updateMSE(Data)
-  if (all(is.na(funcs1))) funcs1 <- avail("MP")
+  if (all(is.na(funcs1))) funcs1 <- avail("MP", msg=FALSE)
   isMP <- vapply(funcs1, function(x) inherits(get(x), "MP"), logical(1))
   if (any(!isMP)) stop(paste0("Not an MP: ", paste(funcs1[!isMP], collapse = ", ")))
   
@@ -1082,7 +1082,7 @@ Input <- function(Data, MPs = NA, reps = 100, timelimit = 10, CheckMPs = TRUE,
   
   if (CheckMPs) PosMPs <- Can(Data, timelimit = timelimit)
   if (!CheckMPs) PosMPs <- MPs
-  PosMPs <- PosMPs[PosMPs %in% avail("Input")]
+  PosMPs <- PosMPs[PosMPs %in% avail("Input", msg=FALSE)]
   if (!is.na(MPs[1])) Data@MPs <- MPs[MPs %in% PosMPs]
   if (is.na(MPs[1])) Data@MPs <- PosMPs
   funcs <- Data@MPs
@@ -1421,7 +1421,7 @@ TAC <- function(Data, MPs = NA, reps = 100, timelimit = 1) {
   Data <- updateMSE(Data)
   nm <- deparse(substitute(Data))
   PosMPs <- Can(Data, timelimit = timelimit)
-  PosMPs <- PosMPs[PosMPs %in% avail("Output")]
+  PosMPs <- PosMPs[PosMPs %in% avail("Output", msg=FALSE)]
   Data@PosMPs <- PosMPs
   if (!is.na(MPs[1])) Data@MPs <- MPs[MPs %in% PosMPs]
   if (is.na(MPs[1])) Data@MPs <- PosMPs
@@ -1538,7 +1538,7 @@ Uses <- function(slot, silent=FALSE) {
   if (class(slot) !="character") stop("Slot must be character", call. = FALSE)
   if(length(slot)>1) stop("Slot must be length 1", call. = FALSE)
   if (!slot %in% slotNames('Data')) stop("Slot is not a valid slot in Data object. Use slotNames('Data')", call.=FALSE)
-  MPs <- avail("MP")
+  MPs <- avail("MP", msg=FALSE)
   List <- lapply(seq_along(MPs), function(x) Required(MPs[x]))
   df <- data.frame(matrix(unlist(List), nrow=length(MPs), byrow=T), stringsAsFactors = FALSE)
   mps <- df[grepl(slot, df[,2]),1]
@@ -2668,7 +2668,7 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE) {
   recList <- list() # a list containing nsim recommendations from a single MP 
   TACout <- array(NA, dim=c(nMPs, reps, nsims))
   
-  refMPs <- avail('MP', 'MSEtool')
+  refMPs <- avail('MP', 'MSEtool', msg=FALSE)
   refMPs <- refMPs[grepl('ref', refMPs)]
   
   # if (!sfIsRunning() | (nMPs < 8 & nsims < 8)) {

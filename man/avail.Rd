@@ -4,13 +4,15 @@
 \alias{avail}
 \title{What objects of this class are available}
 \usage{
-avail(classy, package = NULL)
+avail(classy, package = NULL, msg = TRUE)
 }
 \arguments{
 \item{classy}{A class of object (character string, e.g. 'Fleet')}
 
 \item{package}{Optional. Names(s) of the package to search for object of class \code{classy}. String
 Default is all \code{openMSE} packages.}
+
+\item{msg}{Print messages?}
 }
 \description{
 Generic class finder
@@ -20,7 +22,7 @@ Finds objects of the specified class in the global environment or the
 DLMtool package.
 }
 \examples{
-avail("OM")
+avail("OM", msg=FALSE)
 Stocks <- avail("Stock")
 Fleets <- avail("Fleet")
 MPs <- avail("MP")

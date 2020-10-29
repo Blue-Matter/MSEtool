@@ -2,16 +2,21 @@
 % Please edit documentation in R/Turing.R
 \name{Turing}
 \alias{Turing}
+\alias{TuringMOM}
 \title{Turing Test}
 \usage{
 Turing(OM, Data, wait = TRUE)
+
+TuringMOM(multiHist, Data, wait = TRUE)
 }
 \arguments{
-\item{OM}{An object of class \code{OM}}
+\item{OM}{An object of class \code{OM} or class \code{multiHist}}
 
-\item{Data}{An object of class \code{Data}}
+\item{Data}{An object of class \code{Data} or a nested list of \code{Data} objects for each stock and fleet}
 
 \item{wait}{Logical. Wait for key press before next plot?}
+
+\item{multiHist}{An object of class \code{multiHist}. The output of \code{SimulateMOM}}
 }
 \description{
 Plots the available data in the \code{Data} object together with 5 samples of
@@ -31,6 +36,11 @@ impute missing data for plotting purposes.
 The question to ask when examining the plots produced by \code{Turing}: do the plots
 of the 6 data samples look like they are all samples from the same underlying distribution?
 }
+\section{Functions}{
+\itemize{
+\item \code{TuringMOM}: Turing function for multi-stock, multi-fleet MOMs
+}}
+
 \note{
 The Turing function was suggested by Andre Punt in his review of one of our
 recent projects. It is named after the Turing test, developed by Alan Turing in
