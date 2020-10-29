@@ -128,7 +128,7 @@ cat("#' ", ObjectClass, " class objects",
     sep = "", append = TRUE, file = file.path("R/", RoxygenFile))
 
 # ---- Build Data Objects ----
-files <- list.files("build_tools/Objects/Data", full.names = TRUE)
+files <- list.files("/build_tools/Objects/Data", full.names = TRUE)
 for (fl in files) {
   temp <- new("Data", fl)
   name <- strsplit(basename(fl), '.csv')[[1]]
