@@ -447,7 +447,8 @@ setClass("Fleet", slots = c(Name = "character",
                             Rmaxlen = "numeric",
                             DR = "numeric",
                             CurrentYr="numeric", 
-                            MPA='char.log')
+                            MPA='char.log',
+                            Misc='list')
                             )
 
 # initialize Fleet
@@ -1626,91 +1627,6 @@ setMethod("summary",
             
           })
 
-
-
-# Summary of MSE object
-#
-# @param object object of class MSE
-# @rdname summary-MSE
-# @export
-# # setMethod("summary",
-# #           signature(object = "MSE"),
-# summaryold <- function(object){            
-#             
-#             MSEobj<-object      
-#             nm<-MSEobj@nMPs
-#             nsim<-MSEobj@nsim
-#             proyears<-MSEobj@proyears
-#             
-#             Yd<-P10<-P50<-P100<-POF<-LTY<-STY<-VY<-array(NA,c(nm,nsim))
-#             
-#             yind<-max(MSEobj@proyears-4,1):MSEobj@proyears
-#             RefYd<-MSEobj@OM$RefY
-#             yend<-max(MSEobj@proyears-9,1):MSEobj@proyears
-#             ystart<-1:10
-#             y1<-1:(MSEobj@proyears-1)
-#             y2<-2:MSEobj@proyears
-#             
-#             for(m in 1:nm){
-#               Yd[m,]<-round(apply(MSEobj@C[,m,yind],1,mean,na.rm=T)/RefYd*100,1)
-#               POF[m,]<-round(apply(MSEobj@F_FMSY[,m,]>1,1,sum,na.rm=T)/proyears*100,1)
-#               P10[m,]<-round(apply(MSEobj@B_BMSY[,m,]<0.1,1,sum,na.rm=T)/proyears*100,1)
-#               P50[m,]<-round(apply(MSEobj@B_BMSY[,m,]<0.5,1,sum,na.rm=T)/proyears*100,1)
-#               P100[m,]<-round(apply(MSEobj@B_BMSY[,m,]<1,1,sum,na.rm=T)/proyears*100,1)
-#               LTY[m]<-round(sum(MSEobj@C[,m,yend]/RefYd>0.5)/(MSEobj@nsim*length(yend))*100,1)
-#               STY[m]<-round(sum(MSEobj@C[,m,ystart]/RefYd>0.5)/(MSEobj@nsim*length(ystart))*100,1)
-#               AAVY<-apply(((MSEobj@C[,m,y1]-MSEobj@C[,m,y2])^2)^0.5,1,mean)/apply(MSEobj@C[,m,y2],1,mean)
-#               VY[m]<-round(sum(AAVY<0.1)/MSEobj@nsim*100,1)
-#             }
-#             nr<-2
-#             out<-cbind(MSEobj@MPs,round(apply(Yd,1,mean,na.rm=T),nr),round(apply(Yd,1,sd,na.rm=T),nr),
-#                        round(apply(POF,1,mean,na.rm=T),nr),round(apply(POF,1,sd,na.rm=T),nr),
-#                        round(apply(P10,1,mean,na.rm=T),nr),round(apply(P10,1,sd,na.rm=T),nr),
-#                        round(apply(P50,1,mean,na.rm=T),nr),round(apply(P50,1,sd,na.rm=T),nr),
-#                        round(apply(P100,1,mean,na.rm=T),nr),round(apply(P100,1,sd,na.rm=T),nr),
-#                        round(apply(LTY,1,mean,na.rm=T),nr),
-#                        round(apply(STY,1,mean,na.rm=T),nr),
-#                        round(apply(VY,1,mean,na.rm=T),nr))
-#             out<-as.data.frame(out)
-#             names(out)<-c("MP","Yield","stdev","POF","stdev ","P10","stdev",
-#                           "P50","stdev","P100","stdev","LTY","STY","VY")
-#             out[,1]<-as.character(out[,1])
-#             for(i in 2:ncol(out))out[,i]<-as.numeric(as.character(out[,i]))
-#             out
-#           }
-
-
-
-# # -- Input Control Recommendation Class -
-# #' Class \code{'InputRec'}
-# #' 
-# #' An object for storing the recommendation for an input control MP 
-# #' 
-# #' @name InputRec-class
-# #' @docType class
-# #' @section Objects from the Class: Objects can be created by calls of the form
-# #' \code{new('InputRec')} 
-# 
-# #' @slot Effort A numeric value with the effort recommendation as a fraction of current (nyear) fishing effort
-# #' @slot Spatial A boolean vector of length 'nareas' specifying if area is open (1) or closed (0) to fishing 
-# #' @slot Allocate A boolean value describing if effort should be re-allocated from close to open areas
-# #' @slot LR5 smallest length at 5 per cent retention
-# #' @slot LFR smallest length at full retention 
-# #' @slot HS upper harvest slot (no retention above this)
-# #' @slot Rmaxlen retention of the largest size class
-# #' @slot Misc An empty list that can be used to store information and pass on to MPs in future 
-# #' @author A. Hordyk
-# #' @keywords classes
-# 
-# setClass("InputRec", representation(Effort = "numeric", 
-#                                     Spatial="numeric", Allocate = "numeric", LR5 = "numeric",
-#                                     LFR = "numeric", HS="numeric", Rmaxlen="numeric", Misc="list"))
-# setMethod("initialize", "InputRec", function(.Object){
-#      .Object@Effort<-1
-#      .Object@Allocate<-1
-#      .Object@Spatial<-c(1,1)
-#      .Object
-#    })
 
 
 # -- Management Recommendation Class ----
