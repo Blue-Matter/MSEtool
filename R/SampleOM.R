@@ -25,6 +25,7 @@ myrunif <- function(n, val1, val2) {
 #' @author T. Carruthers
 cparscheck<-function(cpars){
   
+  if (length(cpars)<1) return(length(cpars))
   dim1check<-function(x){
     if (inherits(x, 'numeric') | inherits(x, 'integer')) return(length(x))
     else return(dim(x)[1])
