@@ -42,3 +42,4 @@
 #'  and upper bounds. Real numbers
 #' @slot MPA Is Area 1 currently closed (TRUE) or open (FALSE)? Defaults to
 #'  FALSE
+#' @slot Misc Miscellaneous list for bio-economic parameters

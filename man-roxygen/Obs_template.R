@@ -2,32 +2,72 @@
 # Do not edit by hand
 
 
-#' @slot Name NA
-#' @slot Cobs NA
-#' @slot Cbiascv NA
-#' @slot CAA_nsamp NA
-#' @slot CAA_ESS NA
-#' @slot CAL_nsamp NA
-#' @slot CAL_ESS NA
-#' @slot Iobs NA
-#' @slot Ibiascv NA
-#' @slot Btobs NA
-#' @slot Btbiascv NA
-#' @slot beta NA
-#' @slot LenMbiascv NA
-#' @slot Mbiascv NA
-#' @slot Kbiascv NA
-#' @slot t0biascv NA
-#' @slot Linfbiascv NA
-#' @slot LFCbiascv NA
-#' @slot LFSbiascv NA
-#' @slot FMSYbiascv NA
-#' @slot FMSY_Mbiascv NA
-#' @slot BMSY_B0biascv NA
-#' @slot Irefbiascv NA
-#' @slot Brefbiascv NA
-#' @slot Crefbiascv NA
-#' @slot Dbiascv NA
-#' @slot Dobs NA
-#' @slot hbiascv NA
-#' @slot Recbiascv NA
+#' @slot Name The name of the Observation error object. Single value. Character
+#'  string.
+#' @slot Cobs Log-normal catch observation error expressed as a coefficient of
+#'  variation. Uniform distribution lower and upper bounds. Non-negative real
+#'  numbers
+#' @slot Cbiascv Log-normal coefficient of variation controlling the sampling
+#'  of bias in catch observations for each simulation. Single value.  Non-negative
+#'  real number
+#' @slot CAA_nsamp Number of catch-at-age observation per time step. Uniform
+#'  distribution lower and upper bounds. Positive real numbers
+#' @slot CAA_ESS Effective sample size (independent age draws) of the
+#'  multinomial catch-at-age observation error model. Uniform distribution lower
+#'  and upper bounds. Positive integers
+#' @slot CAL_nsamp Number of catch-at-length observation per time step. Uniform
+#'  distribution lower and upper bounds. Positive integers
+#' @slot CAL_ESS Effective sample size (independent length draws) of the
+#'  multinomial catch-at-length observation error model. Uniform distribution lower
+#'  and upper bounds. Positive integers
+#' @slot Iobs Observation error in the relative abundance indices expressed as
+#'  a coefficient of variation. Uniform distribution lower and upper bounds.
+#'  Positive real numbers
+#' @slot Btobs Log-normal coefficient of variation controlling error in
+#'  observations of current stock biomass among years. Uniform distribution lower
+#'  and upper bounds. Positive real numbers
+#' @slot Btbiascv Uniform-log bounds for sampling persistent bias in current
+#'  stock biomass. Uniform-log distribution lower and upper bounds. Positive real
+#'  numbers
+#' @slot beta A parameter controlling hyperstability/hyperdepletion where
+#'  values below 1 lead to hyperstability (an index that decreases slower than true
+#'  abundance) and values above 1 lead to hyperdepletion (an index that decreases
+#'  more rapidly than true abundance). Uniform distribution lower and upper bounds.
+#'  Positive real numbers
+#' @slot LenMbiascv Log-normal coefficient of variation for sampling persistent
+#'  bias in length at 50 percent maturity. Single value. Positive real numbers
+#' @slot Mbiascv Log-normal coefficient of variation for sampling persistent
+#'  bias in observed natural mortality rate. Single value. Positive real number
+#' @slot Kbiascv Log-normal coefficient of variation for sampling persistent
+#'  bias in observed growth parameter K. Single value. Positive real number
+#' @slot t0biascv Log-normal coefficient of variation for sampling persistent
+#'  bias in observed t0. Single value. Positive real number
+#' @slot Linfbiascv Log-normal coefficient of variation for sampling persistent
+#'  bias in observed maximum length. Single value. Positive real number
+#' @slot LFCbiascv Log-normal coefficient of variation for sampling persistent
+#'  bias in observed length at first capture. Single value. Positive real number
+#' @slot LFSbiascv Log-normal coefficient of variation for sampling persistent
+#'  bias in length-at-full selection. Single value. Positive real number
+#' @slot FMSY_Mbiascv Log-normal coefficient of variation for sampling
+#'  persistent bias in FMSY/M. Single value. Positive real number
+#' @slot BMSY_B0biascv Log-normal coefficient of variation for sampling
+#'  persistent bias in BMSY relative to unfished.  Single value. Positive real
+#'  number
+#' @slot Irefbiascv Log-normal coefficient of variation for sampling persistent
+#'  bias in relative abundance index at BMSY.  Single value. Positive real number
+#' @slot Brefbiascv Log-normal coefficient of variation for sampling persistent
+#'  bias in BMSY.  Single value. Positive real number
+#' @slot Crefbiascv Log-normal coefficient of variation for sampling persistent
+#'  bias in MSY.  Single value. Positive real number
+#' @slot Dbiascv Log-normal coefficient of variation for sampling persistent
+#'  bias in stock depletion. Single value. Positive real number
+#' @slot Dobs Log-normal coefficient of variation controlling error in
+#'  observations of stock depletion among years. Uniform distribution lower and
+#'  upper bounds. Positive real numbers
+#' @slot hbiascv Log-normal coefficient of variation for sampling persistent
+#'  bias in steepness. Single value. Positive real number
+#' @slot Recbiascv Log-normal coefficient of variation for sampling persistent
+#'  bias in recent recruitment strength. Uniform distribution lower and upper
+#'  bounds. Positive real numbers
+#' @slot sigmaRbiascv Log-normal coefficeint of variation for sampling
+#'  persistent bias in recruitment variability.  Single value. Positive real number

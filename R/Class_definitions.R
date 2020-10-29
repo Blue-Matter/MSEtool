@@ -587,7 +587,6 @@ setClass("Obs", representation(Name = "character",
                                CAL_nsamp = "numeric", 
                                CAL_ESS = "numeric", 
                                Iobs = "numeric",  
-                               Ibiascv = "numeric", 
                                Btobs = "numeric", 
                                Btbiascv = "numeric", 
                                beta = "numeric",
@@ -598,7 +597,6 @@ setClass("Obs", representation(Name = "character",
                                Linfbiascv = "numeric",
                                LFCbiascv = "numeric", 
                                LFSbiascv = "numeric",
-                               FMSYbiascv = "numeric",
                                FMSY_Mbiascv = "numeric",
                                BMSY_B0biascv = "numeric",
                                Irefbiascv = "numeric",
@@ -607,7 +605,8 @@ setClass("Obs", representation(Name = "character",
                                Dbiascv = "numeric", 
                                Dobs = "numeric",
                                hbiascv = "numeric", 
-                               Recbiascv = "numeric"))
+                               Recbiascv = "numeric",
+                               sigmaRbiascv = 'numeric'))
 
 # initialize Obs
 setMethod("initialize", "Obs", function(.Object, file = NA, dec=c(".", ",")) {
@@ -622,40 +621,33 @@ setMethod("initialize", "Obs", function(.Object, file = NA, dec=c(".", ",")) {
       dname <- dat[, 1]
       dat <- dat[, 2:ncol(dat)]
       .Object@Name <- dat[match("Name", dname), 1]
-      .Object@LenMbiascv <- as.numeric(dat[match("LenMbiascv", dname), 1])
       .Object@Cobs <- as.numeric(dat[match("Cobs", dname), 1:2])
       .Object@Cbiascv <- as.numeric(dat[match("Cbiascv", dname), 1])
       .Object@CAA_nsamp <- as.numeric(dat[match("CAA_nsamp", dname), 1:2])
       .Object@CAA_ESS <- as.numeric(dat[match("CAA_ESS", dname), 1:2])
       .Object@CAL_nsamp <- as.numeric(dat[match("CAL_nsamp", dname), 1:2])
       .Object@CAL_ESS <- as.numeric(dat[match("CAL_ESS", dname), 1:2])
-      # .Object@CALcv <- as.numeric(dat[match("CALcv", dname), 1:2])
       .Object@Iobs <- as.numeric(dat[match("Iobs", dname), 1:2])
+      .Object@Btobs <- as.numeric(dat[match("Btobs", dname), 1:2])
+      .Object@Btbiascv <- as.numeric(dat[match("Btbiascv", dname), 1:2])
+      .Object@beta <- as.numeric(dat[match("beta", dname), 1:2])
+      .Object@LenMbiascv <- as.numeric(dat[match("LenMbiascv", dname), 1])
       .Object@Mbiascv <- as.numeric(dat[match("Mbiascv", dname), 1])
       .Object@Kbiascv <- as.numeric(dat[match("Kbiascv", dname), 1])
       .Object@t0biascv <- as.numeric(dat[match("t0biascv", dname), 1])
       .Object@Linfbiascv <- as.numeric(dat[match("Linfbiascv", dname), 1])
       .Object@LFCbiascv <- as.numeric(dat[match("LFCbiascv", dname), 1])
       .Object@LFSbiascv <- as.numeric(dat[match("LFSbiascv", dname), 1])
-      # .Object@B0cv <- as.numeric(dat[match("B0cv", dname), 1])
-      .Object@FMSYbiascv <- as.numeric(dat[match("FMSYbiascv", dname), 1])
       .Object@FMSY_Mbiascv <- as.numeric(dat[match("FMSY_Mbiascv", dname), 1])
       .Object@BMSY_B0biascv <- as.numeric(dat[match("BMSY_B0biascv", dname), 1])
-      # .Object@rcv <- as.numeric(dat[match("rcv", dname), 1])
-      .Object@Dbiascv <- as.numeric(dat[match("Dbiascv", dname), 1])
-      .Object@Dobs <- as.numeric(dat[match("Dobs", dname), 1:2])
-      .Object@Btbiascv <- as.numeric(dat[match("Btbiascv", dname), 1:2])
-      .Object@Btobs <- as.numeric(dat[match("Btobs", dname), 1:2])
-      # .Object@Fcurbiascv <- as.numeric(dat[match("Fcurbiascv", dname), 1])
-      # .Object@Fcurcv <- as.numeric(dat[match("Fcurcv", dname), 1:2])
-      .Object@hbiascv <- as.numeric(dat[match("hbiascv", dname), 1])
-      .Object@Ibiascv <- as.numeric(dat[match("Ibiascv", dname), 1])
-      # .Object@maxagecv <- as.numeric(dat[match("maxagecv", dname), 1])
-      .Object@Recbiascv <- as.numeric(dat[match("Recbiascv", dname), 1:2])
       .Object@Irefbiascv <- as.numeric(dat[match("Irefbiascv", dname), 1])
       .Object@Crefbiascv <- as.numeric(dat[match("Crefbiascv", dname), 1])
       .Object@Brefbiascv <- as.numeric(dat[match("Brefbiascv", dname), 1])
-      .Object@beta <- as.numeric(dat[match("beta", dname), 1:2])
+      .Object@Dbiascv <- as.numeric(dat[match("Dbiascv", dname), 1])
+      .Object@Dobs <- as.numeric(dat[match("Dobs", dname), 1:2])
+      .Object@hbiascv <- as.numeric(dat[match("hbiascv", dname), 1])
+      .Object@Recbiascv <- as.numeric(dat[match("Recbiascv", dname), 1:2])
+      .Object@sigmaRbiascv <- as.numeric(dat[match("Recbiascv", dname), 1])
     } else {
       message("File doesn't exist")
     }

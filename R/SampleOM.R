@@ -1429,6 +1429,8 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
   }
   ObsOut$Recerr_y <- Recerr_y
   
+  ObsOut$sigmaRbias <- sample_lnorm('sigmaRbias', cpars, Obs, nsim, 'sigmaRbiascv')
+  
   # ---- Steepness obs bias ----
   hsim <- cpars$hsim 
   if (is.null(hsim)) {
