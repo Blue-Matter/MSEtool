@@ -513,7 +513,7 @@ Sub <- function(MSEobj, MPs = NULL, sims = NULL, years = NULL) {
   MSEobj@proyears <- max(Years)
   
   SubF <- MSEobj@F_FMSY[SubIts, SubMPs, Years, drop = FALSE]
-  SubB <- MSEobj@B_BMSY[SubIts, SubMPs, Years, drop = FALSE]
+  SubSB <- MSEobj@SB_SBMSY[SubIts, SubMPs, Years, drop = FALSE]
   SubC <- MSEobj@C[SubIts, SubMPs, Years, drop = FALSE]
   SubBa <- MSEobj@B[SubIts, SubMPs, Years, drop = FALSE]
   SubFMa <- MSEobj@FM[SubIts, SubMPs, Years, drop = FALSE]
@@ -616,7 +616,7 @@ Sub <- function(MSEobj, MPs = NULL, sims = NULL, years = NULL) {
   SubResults <- new("MSE", Name = MSEobj@Name, nyears = MSEobj@nyears, 
                     proyears = MSEobj@proyears, nMPs = length(SubMPs), MPs = newMPs, 
                     nsim = length(SubIts), OM = OutOM, Obs = MSEobj@Obs[SubIts, , drop = FALSE],
-                    B_BMSY = SubB, F_FMSY = SubF, B = SubBa, SSB=SubSSB, VB=SubVB, 
+                    SB_SBMSY = SubSB, F_FMSY = SubF, B = SubBa, SSB=SubSSB, VB=SubVB, 
                     FM = SubFMa,  SubC, 
                     TAC = SubTACa, SSB_hist = MSEobj@SSB_hist[SubIts, , , , drop = FALSE], 
                     CB_hist = MSEobj@CB_hist[SubIts, , , , drop = FALSE], 
@@ -880,7 +880,7 @@ joinMSE <- function(MSEobjs = NULL) {
   newMSE <- new("MSE", Name = outlist$Name, nyears = unique(outlist$nyears), 
                 proyears = unique(outlist$proyears), nMP = unique(outlist$nMP), 
                 MPs = unique(outlist$MPs), nsim = sum(outlist$nsim), OM = outlist$OM, 
-                Obs = outlist$Obs, B_BMSY = outlist$B_BMSY, F_FMSY = outlist$F_FMSY, 
+                Obs = outlist$Obs, SB_SBMSY = outlist$B_BMSY, F_FMSY = outlist$F_FMSY, 
                 outlist$B, outlist$SSB, outlist$VB,
                 outlist$FM, outlist$C, outlist$TAC, outlist$SSB_hist, 
                 outlist$CB_hist, outlist$FM_hist, outlist$Effort, outlist$PAA,
@@ -1107,12 +1107,12 @@ addMPs <- function(MSEobjs) {
   MSEout@MPs <- MPs
   MSEout@nMPs <- length(MPs)
   
-  addmp <- function(sl='B_BMSY', MSEobjs, MSEout) {
+  addmp <- function(sl='SB_SBMSY', MSEobjs, MSEout) {
     vals <- lapply(MSEobjs, slot, sl)
     slot(MSEout, sl) <- abind::abind(vals, along=2)
     MSEout
   }
-  MSEout <- addmp('B_BMSY', MSEobjs, MSEout)
+  MSEout <- addmp('SB_SBMSY', MSEobjs, MSEout)
   MSEout <- addmp('F_FMSY', MSEobjs, MSEout)
   MSEout <- addmp('B', MSEobjs, MSEout)
   MSEout <- addmp('SSB', MSEobjs, MSEout)
