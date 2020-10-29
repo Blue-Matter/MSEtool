@@ -139,7 +139,7 @@ P10 <- function(MSEobj=NULL, Ref=0.1, Yrs=NULL) {
  }
  
  PMobj@Ref <- Ref
- PMobj@Stat <- MSEobj@B_BMSY[,,Yrs[1]:Yrs[2]] # Performance Metric statistic of interest - here SB/SBMSY 
+ PMobj@Stat <- MSEobj@SB_SBMSY[,,Yrs[1]:Yrs[2]] # Performance Metric statistic of interest - here SB/SBMSY 
  PMobj@Prob <- calcProb(PMobj@Stat > PMobj@Ref, MSEobj) # calculate probability Stat > 0.1 nsim by nMP
  
  PMobj@Mean <- calcMean(PMobj@Prob) # calculate mean probability by MP
