@@ -66,7 +66,6 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     SampCpars <- SampleCpars(cpars=OM@cpars, nsim, silent=silent)
   }
   
-  
   # Stock Parameters
   StockPars <- SampleStockPars(Stock=OM, 
                                nsim, 
@@ -256,9 +255,32 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   }
   
   # --- Historical Spatial closures ----
-  MPA <- matrix(1, nrow=nyears+proyears, ncol=nareas)
-  if (FleetPars$MPA) {
-    MPA[,1] <- 0
+  if (!is.null(SampCpars$MPA)) {
+    # MPA by year passed in cpars
+    MPA <- SampCpars$MPA 
+    if (any(dim(MPA) != c(nyears+proyears, nareas))) {
+      stop('cpars$MPA must be a matrix with `nyears+proyears` rows and `nareas` columns', .call=FALSE)
+    }
+    if (any(MPA !=1 & MPA!=0))
+      stop('values in cpars$MPA must be either 0 (closed) or open (1)', .call=FALSE)
+    if (any(MPA!=1)) {
+      for (a in 1:nareas) {
+        yrs <- which(MPA[,a] == 0)
+        if (length(yrs)>0) {
+          if (!silent)
+            message('Spatial closure detected in area ', a, ' in years ', 
+                    paste(findIntRuns(yrs), collapse=", "))  
+        }
+        
+        
+      }
+    }
+  } else {
+    MPA <- matrix(1, nrow=nyears+proyears, ncol=nareas)
+    if (FleetPars$MPA) {
+      if (!silent) message('Historical MPA in Area 1 for all years')
+      MPA[,1] <- 0
+    }  
   }
   FleetPars$MPA <- MPA
   

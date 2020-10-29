@@ -197,7 +197,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
          " for each stock object")
   nareas <- as.numeric(nareas_s[1])
   
-  
   # ---- Initialize arrays ----
   n_age <- maxage + 1 # number of age classes (starting at age-0)
   
@@ -359,7 +358,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     # }
     # 
     
-    
     #  --- Non-equilibrium calcs ----
     SSN[SPAYR] <- Nfrac[SAY] * StockPars[[p]]$R0[S] * StockPars[[p]]$initdist[SAR] *
       StockPars[[p]]$Perr_y[Sa]
@@ -390,12 +388,35 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       FleetPars[[p]][[f]]$V<-VF[,p,f,,] # update fleet vulnerability for this stock
       
       # --- Historical Spatial closures ----
+      if (!is.null(SampCpars[[p]][[f]]$MPA)) {
+        MPA <- SampCpars[[p]][[f]]$MPA
+        if (any(dim(MPA) != c(nyears+proyears, nareas))) {
+          stop('cpars$MPA must be a matrix with `nyears+proyears` rows and `nareas` columns', .call=FALSE)
+        }
+        if (any(MPA !=1 & MPA!=0))
+          stop('values in cpars$MPA must be either 0 (closed) or open (1)', .call=FALSE)
+        if (any(MPA!=1)) {
+          for (a in 1:nareas) {
+            yrs <- which(MPA[,a] == 0)
+            if (length(yrs)>0) {
+              if (!silent)
+                message('Spatial closure detected in area ', a, ' in years ', 
+                        paste(findIntRuns(yrs), collapse=", "))  
+            }
+          }
+        }
+      } else {
+        MPA <- matrix(1, nrow=nyears+proyears, ncol=nareas)
+        if (!is.na(FleetPars[[p]][[f]]$MPA) && all(FleetPars[[p]][[f]]$MPA==TRUE)) {
+          MPA[,1] <- 0
+          if (!silent) message('Historical MPA in Area 1 for all years')
+          
+        }
       
-      MPA <- matrix(1, nrow=nyears+proyears, ncol=nareas)
-      if (!is.na(FleetPars[[p]][[f]]$MPA) && all(FleetPars[[p]][[f]]$MPA==TRUE)) {
-        MPA[,1] <- 0
       }
       FleetPars[[p]][[f]]$MPA <- MPA
+      if (any(MPA!=1))
+        message('NOTE: MPA detected but currently NOT implemented in multiMSE')
       
     } # end of loop over fleets
   } # end of loop over stocks
