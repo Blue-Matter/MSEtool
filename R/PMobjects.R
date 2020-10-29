@@ -199,9 +199,9 @@ LTY <- function(MSEobj=NULL, Ref=0.5, Yrs=-10) {
    PMobj@Caption <- paste0('Prob. Yield > Ref. Yield (Years ', Yrs[1], "-", Yrs[2], ")") 
  }
 
- RefYd <- array(MSEobj@OM$RefY, dim=dim(MSEobj@C[,,Yrs[1]:Yrs[2]]))
+ RefYd <- array(MSEobj@OM$RefY, dim=dim(MSEobj@Catch[,,Yrs[1]:Yrs[2]]))
  
- PMobj@Stat <- MSEobj@C[,,Yrs[1]:Yrs[2]]/RefYd
+ PMobj@Stat <- MSEobj@Catch[,,Yrs[1]:Yrs[2]]/RefYd
  PMobj@Ref <- Ref
  PMobj@Prob <- calcProb(PMobj@Stat > PMobj@Ref, MSEobj)  
  
@@ -228,9 +228,9 @@ Yield <- function(MSEobj=NULL, Ref=1, Yrs=NULL) {
  PMobj@Name <- paste0("Yield relative to Reference Yield (Years ", Yrs[1], "-", Yrs[2], ")") 
  PMobj@Caption <- paste0("Mean Relative Yield (Years ", Yrs[1], "-", Yrs[2], ")")
  
- RefYd <- array(MSEobj@OM$RefY, dim=dim(MSEobj@C[,,Yrs[1]:Yrs[2]]))
+ RefYd <- array(MSEobj@OM$RefY, dim=dim(MSEobj@Catch[,,Yrs[1]:Yrs[2]]))
  
- PMobj@Stat <- MSEobj@C[,,Yrs[1]:Yrs[2]]/RefYd
+ PMobj@Stat <- MSEobj@Catch[,,Yrs[1]:Yrs[2]]/RefYd
  PMobj@Ref <- Ref
  PMobj@Prob <- calcProb(PMobj@Stat, MSEobj) # no probability to calculate
  
@@ -253,10 +253,10 @@ AAVY <- function(MSEobj=NULL, Ref=0.2, Yrs=NULL) {
  y2<-(Yrs[1]+1):Yrs[2] 
  
  if (MSEobj@nMPs > 1) {
-   AAVY <- apply(((((MSEobj@C[, , y1] - MSEobj@C[, , y2])/MSEobj@C[, , y2])^2)^0.5), c(1, 2), mean)
-   # AAVY <- apply(((MSEobj@C[,,y1]-MSEobj@C[,,y2])^2)^0.5,c(1,2),mean)/apply(MSEobj@C[,,y2],c(1,2),mean) 
+   AAVY <- apply(((((MSEobj@Catch[, , y1] - MSEobj@Catch[, , y2])/MSEobj@Catch[, , y2])^2)^0.5), c(1, 2), mean)
+   # AAVY <- apply(((MSEobj@Catch[,,y1]-MSEobj@Catch[,,y2])^2)^0.5,c(1,2),mean)/apply(MSEobj@Catch[,,y2],c(1,2),mean) 
  } else {
-   AAVY <- array(apply(((((MSEobj@C[,1,y1]-MSEobj@C[,1,y2])/MSEobj@C[,1,y2])^2)^0.5),c(1),mean))
+   AAVY <- array(apply(((((MSEobj@Catch[,1,y1]-MSEobj@Catch[,1,y2])/MSEobj@Catch[,1,y2])^2)^0.5),c(1),mean))
  }
  
  PMobj@Stat <- AAVY
