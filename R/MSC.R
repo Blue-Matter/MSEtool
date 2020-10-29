@@ -14,8 +14,8 @@ MSCplot<-function(MSEobj,LTL=FALSE,zoom=NA,plot=T) {
   
   if(!LTL){
     
-    B50<-100*apply(MSEobj@B_BMSY[, , yend]>0.5, 2, mean, na.rm = T)
-    B100<-100*apply(MSEobj@B_BMSY[, , yend]>1, 2, mean, na.rm = T)
+    B50<-100*apply(MSEobj@SB_SBMSY[, , yend]>0.5, 2, mean, na.rm = T)
+    B100<-100*apply(MSEobj@SB_SBMSY[, , yend]>1, 2, mean, na.rm = T)
     
     if(plot){
       plot(B50, B100, col = "white", xlab = "", ylab = "", axes = F,ylim=c(0,100),xlim=c(60,100), main="Status")
@@ -85,8 +85,8 @@ MSCplot<-function(MSEobj,LTL=FALSE,zoom=NA,plot=T) {
   HZN1<-max(HZN1,2)
   HZN1<-min(HZN1,10)
   
-  RB1<-100*apply(MSEobj@B_BMSY[, , HZN1]>1, 2, mean, na.rm = T)
-  RB2<-100*apply(MSEobj@B_BMSY[, , HZN]>1, 2, mean, na.rm = T)
+  RB1<-100*apply(MSEobj@SB_SBMSY[, , HZN1]>1, 2, mean, na.rm = T)
+  RB2<-100*apply(MSEobj@SB_SBMSY[, , HZN]>1, 2, mean, na.rm = T)
   
   if(plot){
     plot(RB1, RB2, col = "white", xlab = "", ylab = "", axes = F,xlim=c(0,100),ylim=c(20,100), main="Rebuilding")
