@@ -3,7 +3,9 @@ get_funcs <- function(package, classy) {
   pkgs <- search()
   search_package <- paste0("package:",package)
   funs <- NULL
+  
   if (search_package %in% pkgs) {
+    message('Searching for objects of class', classy, ' in package: ', package)
     funs <- ls(search_package)[vapply(ls(search_package),
                                getclass, 
                                logical(1), 
