@@ -178,7 +178,10 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
   Data@OM <- OMtable
   
   # --- Store Obs Parameters ----
-  ObsTable <- as.data.frame(ObsPars)
+  ObsParsDF <- ObsPars
+  ind <- which(lapply(ObsParsDF, length)==nsim) %>% as.numeric()
+  ObsParsDF <- ObsParsDF[ind]
+  ObsTable <- as.data.frame(ObsParsDF)
   ObsTable <- ObsTable[,order(names(ObsTable))]
   Data@Obs <- ObsTable # put all the observation error model parameters in one table
   

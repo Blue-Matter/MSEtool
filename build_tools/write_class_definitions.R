@@ -42,4 +42,6 @@ Write_Description('Obs')
 # ---- Imp Object Description -----
 Write_Description('Imp')
 
+# ---- MSE Object Description -----
+Write_Description('MSE')
 

@@ -13,58 +13,83 @@ simulation conditions and performance of data-limited methods
 \describe{
 \item{\code{Name}}{Name of the MSE object. Single value. Character string}
 
-\item{\code{nyears}}{The number of years for the historical simulation. Single value. Positive integer}
+\item{\code{nyears}}{The number of years for the historical simulation. Single
+value. Positive integer}
 
-\item{\code{proyears}}{The number of years for the projections - closed loop simulations. Single value. Positive integer}
+\item{\code{proyears}}{The number of years for the projections - closed loop
+simulations. Single value. Positive integer}
 
-\item{\code{nMPs}}{Number of management procedures simulation tested. Single value. Positive integer.}
+\item{\code{nMPs}}{Number of management procedures simulation tested. Single value.
+Positive integer.}
 
-\item{\code{MPs}}{The names of the MPs that were tested. Vector of length nMPs. Character strings.}
+\item{\code{MPs}}{The names of the MPs that were tested. Vector of length nMPs.
+Character strings.}
 
 \item{\code{nsim}}{Number of simulations. Single value. Positive integer}
 
-\item{\code{B_BMSY}}{Simulated spawning biomass relative to spawning BMSY over the projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers}
+\item{\code{OM}}{Operating model parameters (last historical year used for
+time-varying parameters). Data.frame with \code{nsim} rows}
 
-\item{\code{F_FMSY}}{Simulated fishing mortality rate relative to FMSY over the projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers}
+\item{\code{Obs}}{Observation parameters (last historical year used for time-varying
+parameters). Data.frame with \code{nsim} rows}
 
-\item{\code{B}}{Simulated stock biomass over the projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers}
+\item{\code{SB_SBMSY}}{Simulated spawning biomass relative to spawning BMSY over the
+projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real
+numbers}
 
-\item{\code{SSB}}{Simulated spawning stock biomass over the projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers}
+\item{\code{F_FMSY}}{Simulated fishing mortality rate relative to FMSY over the
+projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real
+numbers}
 
-\item{\code{VB}}{Simulated vulnerable biomass over the projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers}
+\item{\code{N}}{Simulated total numbers over the projection. An array with
+dimensions: nsim, maxage+1, nMPs, proyears, nareas. Non-negative real numbers.}
 
-\item{\code{FM}}{Simulated fishing mortality rate over the projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers}
+\item{\code{B}}{Simulated stock biomass over the projection. An array with
+dimensions: nsim, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{C}}{Simulated catches (taken) over the projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers}
+\item{\code{SSB}}{Simulated spawning stock biomass over the projection. An array
+with dimensions: nsim, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{TAC}}{Simulated Total Allowable Catch (prescribed) over the projection (this is NA for input controls). An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers}
+\item{\code{VB}}{Simulated vulnerable biomass over the projection. An array with
+dimensions: nsim, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{SSB_hist}}{Simulated historical spawning stock biomass. An array with dimensions: nsim, nages, nyears, nareas. Non-negative real numbers}
+\item{\code{FM}}{Simulated fishing mortality rate over the projection. An array with
+dimensions: nsim, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{CB_hist}}{Simulated historical catches in weight. An array with dimensions: nsim, nages, nyears, nareas. Non-negative real numbers}
+\item{\code{SPR}}{Currently not used.}
 
-\item{\code{FM_hist}}{Simulated historical fishing mortality rate. An array with dimensions: nsim, nages, nyears, nareas. Non-negative real numbers}
+\item{\code{C}}{Simulated catches (landings) over the projection. An array with
+dimensions: nsim, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{Effort}}{Simulated relative fishing effort in the projection years. An array with dimensions: nsim, nMPs, proyears. Non-negative real numbers}
+\item{\code{Removals}}{Simulated removals (catch + discards) over the projection. An
+array with dimensions: nsim, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{PAA}}{Population at age in last projection year. An array with dimensions: nsim, nMPs, nages. Non-negative real numbers}
+\item{\code{Effort}}{Simulated relative fishing effort in the projection years. An
+array with dimensions: nsim, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{CAA}}{Catch at age in last projection year. An array with dimensions: nsim, nMPs, nages. Non-negative real numbers}
+\item{\code{TAC}}{Simulated Total Allowable Catch prescribed by MPs. An array with
+dimensions: nsim, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{CAL}}{Catch at length in last projection year. An array with dimensions: nsim, nMPs, nCALbins. Non-negative real numbers}
+\item{\code{TAE}}{Simulated Total Allowable Effort prescribed by MPs. An array with
+dimensions: nsim, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{CALbins}}{Mid-points of the catch-at-length bins. Vector of length nCALbins. Positive real numbers.}
+\item{\code{BioEco}}{Named list with bio-economic output Only used if bio-economic
+parameters are included in OM}
 
-\item{\code{Misc}}{Miscellanenous output such as posterior predictive data}
+\item{\code{RefPoint}}{Named list of annual MSY reference points MSY, FMSY, and
+SBMSY. Array with dimensions: nsim, nMPs, nyears+proyears. Will be the same as
+\code{Hist@Ref$ByYear} unless selectivity is changed by MP}
+
+\item{\code{Hist}}{Information from the historical spool-up period. Object of class
+\code{Hist}}
+
+\item{\code{PPD}}{Posterior predictive data. List of \code{Data} objects at the end of
+the projection period (length \code{nMPs})}
+
+\item{\code{Misc}}{Miscellaneous output}
 }}
 
-\section{Objects from the Class}{
- Objects can be created by calls of the form
-\code{new('MSE', Name, nyears, proyears, nMPs, MPs, nsim, OMtable, Obs,
-B_BMSYa, F_FMSYa, Ba, FMa, Ca, OFLa, Effort, PAA, CAA, CAL, CALbins)}
-}
-
 \author{
-T. Carruthers
+T. Carruthers and A. Hordyk
 }
 \keyword{classes}

@@ -743,7 +743,6 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   Hist <- new("Hist")
   # Data@Misc <- list()
   Hist@Data <- Data
-  Hist@Data@Obs <- data.frame() # remove
   
   ind <- which(lapply(ObsPars, length) == nsim)
   obs <- data.frame(ObsPars[ind])
@@ -877,7 +876,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
   Data <- Hist@Data
   MSElist <- list(Data)[rep(1, nMP)]  
   # TODO - update names of stored values
-  B_BMSYa <- array(NA, dim = c(nsim, nMP, proyears))  # store the projected B_BMSY
+  SB_SBMSY_a <- array(NA, dim = c(nsim, nMP, proyears))  # store the projected SB_SBMSY
   F_FMSYa <- array(NA, dim = c(nsim, nMP, proyears))  # store the projected F_FMSY
   Ba <- array(NA, dim = c(nsim, nMP, proyears))  # store the projected Biomass
   SSBa <- array(NA, dim = c(nsim, nMP, proyears))  # store the projected SSB
@@ -921,6 +920,9 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
   # Add to Hist - TODO -----
   # Bio-economic parameters - and add to model 
   LatentEff <- RevCurr <- CostCurr <- Response <- CostInc <-  RevInc <- rep(NA, nsim)
+  
+  # projection array for numbers (index includes)
+  N_Pmp <- array(NA, dim = c(nsim, n_age, nMP, proyears, nareas))
   
   # ---- Begin loop over MPs ----
   mm <- 1 # for debugging
@@ -1243,7 +1245,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
       )
     }
     
-    B_BMSYa[, mm, ] <- apply(SSB_P, c(1, 3), sum, na.rm=TRUE)/SSBMSY_y[,mm,(OM@nyears+1):(OM@nyears+OM@proyears)]  # SSB relative to SSBMSY
+    SB_SBMSY_a[, mm, ] <- apply(SSB_P, c(1, 3), sum, na.rm=TRUE)/SSBMSY_y[,mm,(OM@nyears+1):(OM@nyears+OM@proyears)]  # SSB relative to SSBMSY
     F_FMSYa[, mm, ] <- FMa[, mm, ]/FMSY_y[,mm,(OM@nyears+1):(OM@nyears+OM@proyears)]
     
     Ba[, mm, ] <- apply(Biomass_P, c(1, 3), sum, na.rm=TRUE) # biomass
@@ -1272,33 +1274,48 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
           warning('package `shiny` needs to be installed for progress bar')
         }
       }
-  }
+    N_Pmp[,,mm,,] <- N_P
+  } # end of MP loop
   
-  # Miscellaneous reporting
-  Misc <- list()
-  Misc$Data <- MSElist
-  
-  # Report profit margin and latent effort
-  Misc$LatEffort <- LatEffort_out
-  Misc$Revenue <- Rev_out
-  Misc$Cost <- Cost_out
-  Misc$TAE <- TAE_out
-  Misc$Removals <- Ca # total removals
-  Misc$Ref <- Hist@Ref
-  
-  ## Create MSE Object #### 
-  MSEout <- new("MSE", Name = OM@Name, nyears, proyears, nMPs=nMP, MPs, nsim, 
-                Data@OM, Obs=Data@Obs, B_BMSY=B_BMSYa, F_FMSY=F_FMSYa, B=Ba, 
-                SSB=SSBa, VB=VBa, FM=FMa, CaRet, TAC=TACa, SSB_hist = StockPars$SSB, 
-                CB_hist = StockPars$CBret, FM_hist = StockPars$FM, Effort = Effort, PAA=array(), 
-                CAA=array(), CAL=array(), CALbins=numeric(), Misc = Misc)
+ 
+  # ---- Create MSE Object ----  
+  MSEout <- new("MSE", 
+                Name = OM@Name, 
+                nyears=nyears, proyears=proyears, nMPs=nMP, 
+                MPs=MPs, nsim=nsim,
+                OM=Data@OM,
+                Obs=Data@Obs,
+                SB_SBMSY=SB_SBMSY_a,
+                F_FMSY=F_FMSYa,
+                N=N_Pmp,
+                B=Ba,
+                SSB=SSBa,
+                VB=VBa,
+                FM=FMa,
+                SPR=list(),
+                Catch=CaRet,
+                Removals=Ca,
+                Effort=Effort,
+                TAC=TACa,
+                TAE=TAE_out,
+                BioEco=list(LatEffort=LatEffort_out,
+                            Revenue=Rev_out,
+                            Cost=Cost_out
+                            ),
+                RefPoint=list(MSY=MSY_y,
+                              FMSY=FMSY_y,
+                              SSBMSY=SSBMSY_y),
+                Hist=Hist,
+                PPD=MSElist,
+                Misc=list()
+  )
+
   # Store MSE info
   attr(MSEout, "version") <- packageVersion("MSEtool")
   attr(MSEout, "date") <- date()
   attr(MSEout, "R.version") <- R.version
   
   MSEout 
-  
 }
 
 #' Run a Management Strategy Evaluation
