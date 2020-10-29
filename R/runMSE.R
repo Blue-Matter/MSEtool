@@ -1300,7 +1300,9 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
   } # end of MP loop
   
  
-  # ---- Create MSE Object ----  
+  # ---- Create MSE Object ---- 
+  Misc <- list()
+  Misc$Data <- MSElist
   MSEout <- new("MSE", 
                 Name = OM@Name, 
                 nyears=nyears, proyears=proyears, nMPs=nMP, 
@@ -1329,7 +1331,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
                               SSBMSY=SSBMSY_y),
                 Hist=Hist,
                 PPD=MSElist,
-                Misc=list()
+                Misc=Misc
   )
 
   # Store MSE info
