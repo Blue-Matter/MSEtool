@@ -2,11 +2,10 @@
 % Please edit documentation in R/MMSE_plots.R
 \name{plot.MMSE}
 \alias{plot.MMSE}
-\alias{plot,MMSE,missing-method}
 \title{Standard plot for an object of class MMSE (multi MSE)}
 \usage{
-\S4method{plot}{MMSE,missing}(
-  x,
+\method{plot}{MMSE}(
+  x = NULL,
   maxcol = 6,
   qcol = rgb(0.4, 0.8, 0.95),
   lcol = "dodgerblue4",
@@ -24,7 +23,8 @@
 
 \item{lcol}{Character, color. The color of the outer percentile range.}
 
-\item{quants}{Numeric vector. The percentiles that are plotted (LB2,LB1,UB1,UB2). LB2 and UB2 are the outer percentiles, LB1 and UB1 are the inner percentiles.}
+\item{quants}{Numeric vector. The percentiles that are plotted (LB2,LB1,UB1,UB2).
+LB2 and UB2 are the outer percentiles, LB1 and UB1 are the inner percentiles.}
 
 \item{curyr}{Integer. The current year from which projections start.}
 

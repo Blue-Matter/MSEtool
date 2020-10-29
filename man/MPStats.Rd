@@ -6,7 +6,7 @@
 \usage{
 MPStats(
   MSEobj,
-  PMRefs = list(B_BMSY = 0.5, SSB_SSB0 = 0.2, F_FMSY = 1, AAVY = 30, AAVE = 30),
+  PMRefs = list(SB_SBMSY = 0.5, SSB_SSB0 = 0.2, F_FMSY = 1, AAVY = 30, AAVE = 30),
   lastYrs = 10,
   UseMean = TRUE,
   msg = TRUE

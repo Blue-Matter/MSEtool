@@ -12,19 +12,30 @@ An operating model component that specifies the degree of adherence to managemen
 \describe{
 \item{\code{Name}}{The name of the Implementation error object. Single value. Character string.}
 
-\item{\code{Name}}{NA}
+\item{\code{Name}}{The name of the Implementation error object. Single value.
+Character string.}
 
-\item{\code{TACFrac}}{NA}
+\item{\code{TACFrac}}{Mean fraction of TAC taken. Uniform distribution lower and
+upper bounds. Positive real number.}
 
-\item{\code{TACSD}}{NA}
+\item{\code{TACSD}}{Log-normal coefficient of variation in the fraction of Total
+Allowable Catch (TAC) taken. Uniform distribution lower and upper bounds.
+Non-negative real numbers.}
 
-\item{\code{TAEFrac}}{NA}
+\item{\code{TAEFrac}}{Mean fraction of TAE taken. Uniform distribution lower and
+upper bounds. Positive real number.}
 
-\item{\code{TAESD}}{NA}
+\item{\code{TAESD}}{Log-normal coefficient of variation in the fraction of Total
+Allowable Effort (TAE) taken. Uniform distribution lower and upper bounds.
+Non-negative real numbers.}
 
-\item{\code{SizeLimFrac}}{NA}
+\item{\code{SizeLimFrac}}{The real minimum size that is retained expressed as a
+fraction of the size of retention. Uniform distribution lower and upper bounds.
+Positive real number.}
 
-\item{\code{SizeLimSD}}{NA}
+\item{\code{SizeLimSD}}{Log-normal coefficient of variation controlling mismatch
+between a minimum size limit and the real minimum size retained. Uniform
+distribution lower and upper bounds. Non-negative real numbers.}
 }}
 
 \section{Objects from the Class}{

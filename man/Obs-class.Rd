@@ -12,63 +12,102 @@ An operating model component that controls the observation model
 \describe{
 \item{\code{Name}}{The name of the observation model object. Single value. Character string.}
 
-\item{\code{Name}}{NA}
+\item{\code{Name}}{The name of the Observation error object. Single value. Character
+string.}
 
-\item{\code{Cobs}}{NA}
+\item{\code{Cobs}}{Log-normal catch observation error expressed as a coefficient of
+variation. Uniform distribution lower and upper bounds. Non-negative real
+numbers}
 
-\item{\code{Cbiascv}}{NA}
+\item{\code{Cbiascv}}{Log-normal coefficient of variation controlling the sampling
+of bias in catch observations for each simulation. Single value.  Non-negative
+real number}
 
-\item{\code{CAA_nsamp}}{NA}
+\item{\code{CAA_nsamp}}{Number of catch-at-age observation per time step. Uniform
+distribution lower and upper bounds. Positive real numbers}
 
-\item{\code{CAA_ESS}}{NA}
+\item{\code{CAA_ESS}}{Effective sample size (independent age draws) of the
+multinomial catch-at-age observation error model. Uniform distribution lower
+and upper bounds. Positive integers}
 
-\item{\code{CAL_nsamp}}{NA}
+\item{\code{CAL_nsamp}}{Number of catch-at-length observation per time step. Uniform
+distribution lower and upper bounds. Positive integers}
 
-\item{\code{CAL_ESS}}{NA}
+\item{\code{CAL_ESS}}{Effective sample size (independent length draws) of the
+multinomial catch-at-length observation error model. Uniform distribution lower
+and upper bounds. Positive integers}
 
-\item{\code{Iobs}}{NA}
+\item{\code{Iobs}}{Observation error in the relative abundance indices expressed as
+a coefficient of variation. Uniform distribution lower and upper bounds.
+Positive real numbers}
 
-\item{\code{Ibiascv}}{NA}
+\item{\code{Btobs}}{Log-normal coefficient of variation controlling error in
+observations of current stock biomass among years. Uniform distribution lower
+and upper bounds. Positive real numbers}
 
-\item{\code{Btobs}}{NA}
+\item{\code{Btbiascv}}{Uniform-log bounds for sampling persistent bias in current
+stock biomass. Uniform-log distribution lower and upper bounds. Positive real
+numbers}
 
-\item{\code{Btbiascv}}{NA}
+\item{\code{beta}}{A parameter controlling hyperstability/hyperdepletion where
+values below 1 lead to hyperstability (an index that decreases slower than true
+abundance) and values above 1 lead to hyperdepletion (an index that decreases
+more rapidly than true abundance). Uniform distribution lower and upper bounds.
+Positive real numbers}
 
-\item{\code{beta}}{NA}
+\item{\code{LenMbiascv}}{Log-normal coefficient of variation for sampling persistent
+bias in length at 50 percent maturity. Single value. Positive real numbers}
 
-\item{\code{LenMbiascv}}{NA}
+\item{\code{Mbiascv}}{Log-normal coefficient of variation for sampling persistent
+bias in observed natural mortality rate. Single value. Positive real number}
 
-\item{\code{Mbiascv}}{NA}
+\item{\code{Kbiascv}}{Log-normal coefficient of variation for sampling persistent
+bias in observed growth parameter K. Single value. Positive real number}
 
-\item{\code{Kbiascv}}{NA}
+\item{\code{t0biascv}}{Log-normal coefficient of variation for sampling persistent
+bias in observed t0. Single value. Positive real number}
 
-\item{\code{t0biascv}}{NA}
+\item{\code{Linfbiascv}}{Log-normal coefficient of variation for sampling persistent
+bias in observed maximum length. Single value. Positive real number}
 
-\item{\code{Linfbiascv}}{NA}
+\item{\code{LFCbiascv}}{Log-normal coefficient of variation for sampling persistent
+bias in observed length at first capture. Single value. Positive real number}
 
-\item{\code{LFCbiascv}}{NA}
+\item{\code{LFSbiascv}}{Log-normal coefficient of variation for sampling persistent
+bias in length-at-full selection. Single value. Positive real number}
 
-\item{\code{LFSbiascv}}{NA}
+\item{\code{FMSY_Mbiascv}}{Log-normal coefficient of variation for sampling
+persistent bias in FMSY/M. Single value. Positive real number}
 
-\item{\code{FMSYbiascv}}{NA}
+\item{\code{BMSY_B0biascv}}{Log-normal coefficient of variation for sampling
+persistent bias in BMSY relative to unfished.  Single value. Positive real
+number}
 
-\item{\code{FMSY_Mbiascv}}{NA}
+\item{\code{Irefbiascv}}{Log-normal coefficient of variation for sampling persistent
+bias in relative abundance index at BMSY.  Single value. Positive real number}
 
-\item{\code{BMSY_B0biascv}}{NA}
+\item{\code{Brefbiascv}}{Log-normal coefficient of variation for sampling persistent
+bias in BMSY.  Single value. Positive real number}
 
-\item{\code{Irefbiascv}}{NA}
+\item{\code{Crefbiascv}}{Log-normal coefficient of variation for sampling persistent
+bias in MSY.  Single value. Positive real number}
 
-\item{\code{Brefbiascv}}{NA}
+\item{\code{Dbiascv}}{Log-normal coefficient of variation for sampling persistent
+bias in stock depletion. Single value. Positive real number}
 
-\item{\code{Crefbiascv}}{NA}
+\item{\code{Dobs}}{Log-normal coefficient of variation controlling error in
+observations of stock depletion among years. Uniform distribution lower and
+upper bounds. Positive real numbers}
 
-\item{\code{Dbiascv}}{NA}
+\item{\code{hbiascv}}{Log-normal coefficient of variation for sampling persistent
+bias in steepness. Single value. Positive real number}
 
-\item{\code{Dobs}}{NA}
+\item{\code{Recbiascv}}{Log-normal coefficient of variation for sampling persistent
+bias in recent recruitment strength. Uniform distribution lower and upper
+bounds. Positive real numbers}
 
-\item{\code{hbiascv}}{NA}
-
-\item{\code{Recbiascv}}{NA}
+\item{\code{sigmaRbiascv}}{Log-normal coefficeint of variation for sampling
+persistent bias in recruitment variability.  Single value. Positive real number}
 }}
 
 \note{
