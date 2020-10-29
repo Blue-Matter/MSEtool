@@ -1029,8 +1029,8 @@ NOAA_plot <- function(MSEobj, nam = NA, type = NA, panel = T) {
     
     PNOF[mm] <- round(mean(MSEobj@F_FMSY[, mm, ] <= 1, na.rm = T) * 100, 1)
     B50[mm] <- round(mean(MSEobj@SB_SBMSY[, mm, ] >= 0.5, na.rm = T) * 100, 1)
-    LTY[mm] <- round(mean(MSEobj@C[, mm, yend]/RefYd >= 0.5, na.rm = T), 3) * 100
-    AAVY <- apply((((MSEobj@C[, mm, y1] - MSEobj@C[, mm, y2])/MSEobj@C[, mm, y2])^2)^0.5, 1, mean, na.rm = T)
+    LTY[mm] <- round(mean(MSEobj@Catch[, mm, yend]/RefYd >= 0.5, na.rm = T), 3) * 100
+    AAVY <- apply((((MSEobj@Catch[, mm, y1] - MSEobj@Catch[, mm, y2])/MSEobj@Catch[, mm, y2])^2)^0.5, 1, mean, na.rm = T)
     VY[mm] <- round(mean(AAVY <= 0.15, na.rm = T), 3) * 100
     
   }
@@ -1117,9 +1117,9 @@ Pplot <- function(MSEobj, nam = NA, maxMP = 10,MPs=NA,maxsims=20) {
   RefYd <- MSEobj@OM$RefY
   
   for (mm in 1:MSEobj@nMPs) {
-    Yd[mm] <- round(mean(apply(MSEobj@C[, mm, yind], 1, mean, na.rm = T)/RefYd, 
+    Yd[mm] <- round(mean(apply(MSEobj@Catch[, mm, yind], 1, mean, na.rm = T)/RefYd, 
                          na.rm = T) * 100, 1)
-    # cbind(MSEobj@C[,mm,yind],unlist(MSEobj@OM$MSY))
+    # cbind(MSEobj@Catch[,mm,yind],unlist(MSEobj@OM$MSY))
     POF[mm] <- round(sum(MSEobj@F_FMSY[, mm, ] > 1, na.rm = T)/prod(dim(MSEobj@F_FMSY[, 
                                                                                       mm, ]), na.rm = T) * 100, 1)
     P10[mm] <- round(sum(MSEobj@SB_SBMSY[, mm, ] <= 0.1, na.rm = T)/prod(dim(MSEobj@SB_SBMSY[, 
@@ -1274,7 +1274,7 @@ Pplot2 <- function(MSEobj, YVar = c("F_FMSY", "SSB_SSBMSY"), MPs = NA, sims = NU
                  na.rm = TRUE)/RefYd
   temp <- aperm(replicate(nMPs, pastC), c(1, 3, 2))
   lastYr <- temp[, , MSEobj@nyears, drop = FALSE]
-  Yield <- abind::abind(lastYr, MSEobj@C[, , , drop = FALSE]/RefYd, along = 3)
+  Yield <- abind::abind(lastYr, MSEobj@Catch[, , , drop = FALSE]/RefYd, along = 3)
   
   Dat <- list(SSB_SSB0 = Deplet, SSB_SSBMSY = MSEobj@SB_SBMSY, F_FMSY = MSEobj@F_FMSY, 
               Yield = Yield)
@@ -1470,8 +1470,8 @@ PWhisker<-function(MSEobj){#},Pnames=c("POF","C30","D30","LD","DNC","LDNC","PGK"
     P10[,mm] <- round(apply(MSEobj@SB_SBMSY[, mm, ] <= 0.1,1,mean, na.rm = T) * 100, 1)
     P50[,mm] <- round(apply(MSEobj@SB_SBMSY[, mm, ] <= 0.5,1,mean, na.rm = T) * 100, 1)
     PNOF[,mm] <- round(apply(MSEobj@F_FMSY[, mm, ] <= 1,1,mean, na.rm = T) * 100, 1)
-    LTY[,mm] <- round(apply(MSEobj@C[, mm, yend]/RefYd >= 0.5,1,mean, na.rm = T), 3) * 100
-    AAVY[,mm] <- apply((((MSEobj@C[, mm, y1] - MSEobj@C[, mm, y2])/MSEobj@C[, mm, y2])^2)^0.5, 1, mean, na.rm = T)
+    LTY[,mm] <- round(apply(MSEobj@Catch[, mm, yend]/RefYd >= 0.5,1,mean, na.rm = T), 3) * 100
+    AAVY[,mm] <- apply((((MSEobj@Catch[, mm, y1] - MSEobj@Catch[, mm, y2])/MSEobj@Catch[, mm, y2])^2)^0.5, 1, mean, na.rm = T)
     #VY[,mm] <- round(apply(AAVY <= 0.15, na.rm = T), 3) * 100
     
     store[mm,1,]<-quantile(P10[,mm],c(0.05,0.25,0.5,0.72,0.95))
@@ -1678,9 +1678,9 @@ Tplot_old <- function(MSEobj, nam = NA) {
   RefYd <- MSEobj@OM$RefY
   
   for (mm in 1:MSEobj@nMPs) {
-    Yd[mm] <- round(mean(apply(MSEobj@C[, mm, yind], 1, mean, na.rm = T)/RefYd, 
+    Yd[mm] <- round(mean(apply(MSEobj@Catch[, mm, yind], 1, mean, na.rm = T)/RefYd, 
                          na.rm = T) * 100, 1)
-    # cbind(MSEobj@C[,mm,yind],unlist(MSEobj@OM$MSY))
+    # cbind(MSEobj@Catch[,mm,yind],unlist(MSEobj@OM$MSY))
     POF[mm] <- round(sum(MSEobj@F_FMSY[, mm, ] >= 1, na.rm = T)/prod(dim(MSEobj@F_FMSY[, 
                                                                                        mm, ]), na.rm = T) * 100, 1)
     P10[mm] <- round(sum(MSEobj@SB_SBMSY[, mm, ] <= 0.1, na.rm = T)/prod(dim(MSEobj@SB_SBMSY[, 
@@ -1736,12 +1736,12 @@ Tplot2_old  <- function(MSEobj, nam = NA) {
   y1 <- 1:(MSEobj@proyears - 1)
   y2 <- 2:MSEobj@proyears
   for (mm in 1:MSEobj@nMPs) {
-    LTY[mm] <- round(sum(MSEobj@C[, mm, yend]/RefYd > 0.5, na.rm = T)/(MSEobj@nsim * 
+    LTY[mm] <- round(sum(MSEobj@Catch[, mm, yend]/RefYd > 0.5, na.rm = T)/(MSEobj@nsim * 
                                                                          length(yend)), 3) * 100
-    STY[mm] <- round(sum(MSEobj@C[, mm, ystart]/RefYd > 0.5, na.rm = T)/(MSEobj@nsim * 
+    STY[mm] <- round(sum(MSEobj@Catch[, mm, ystart]/RefYd > 0.5, na.rm = T)/(MSEobj@nsim * 
                                                                            length(ystart)), 3) * 100
-    AAVY <- apply(((MSEobj@C[, mm, y1] - MSEobj@C[, mm, y2])^2)^0.5, 
-                  1, mean, na.rm = T)/apply(MSEobj@C[, mm, y2], 1, mean, na.rm = T)
+    AAVY <- apply(((MSEobj@Catch[, mm, y1] - MSEobj@Catch[, mm, y2])^2)^0.5, 
+                  1, mean, na.rm = T)/apply(MSEobj@Catch[, mm, y2], 1, mean, na.rm = T)
     VY[mm] <- round(sum(AAVY < 0.1, na.rm = T)/MSEobj@nsim, 3) * 100
     B10[mm] <- round(sum(MSEobj@SB_SBMSY[, mm, ] > 0.1, na.rm = T)/prod(dim(MSEobj@SB_SBMSY[, 
                                                                                         mm, ])), 3) * 100
@@ -1927,13 +1927,13 @@ TradePlot_old <- function(MSEobj, XAxis = c("Overfishing", "Biomass:BMSY"),
     BMSYref[mm] <- round(sum(MSEobj@SB_SBMSY[, mm, ] > BmsyRef, na.rm = T)/prod(dim(MSEobj@SB_SBMSY[, mm, ])) * 100, 1)
     B0ref[mm] <- round(sum((MSEobj@SB_SBMSY[, mm, ] * MSEobj@OM$SSBMSY_SSB0) > 
                              B0Ref, na.rm = T)/prod(dim(MSEobj@SB_SBMSY[, mm, ])) * 100, 1)
-    # LTY[mm]<-round(sum(MSEobj@C[,mm,yend]/RefYd>0.5,na.rm=T)/(MSEobj@nsim*length(yend)),3)*100
-    # STY[mm]<-round(sum(MSEobj@C[,mm,ystart]/RefYd>0.5,na.rm=T)/(MSEobj@nsim*length(ystart)),3)*100
-    LTY[mm] <- round(mean(apply(MSEobj@C[, mm, yend], 1, mean, na.rm = T)/RefYd, 
+    # LTY[mm]<-round(sum(MSEobj@Catch[,mm,yend]/RefYd>0.5,na.rm=T)/(MSEobj@nsim*length(yend)),3)*100
+    # STY[mm]<-round(sum(MSEobj@Catch[,mm,ystart]/RefYd>0.5,na.rm=T)/(MSEobj@nsim*length(ystart)),3)*100
+    LTY[mm] <- round(mean(apply(MSEobj@Catch[, mm, yend], 1, mean, na.rm = T)/RefYd, 
                           na.rm = T) * 100, 1)
-    STY[mm] <- round(mean(apply(MSEobj@C[, mm, ystart], 1, mean, na.rm = T)/RefYd, 
+    STY[mm] <- round(mean(apply(MSEobj@Catch[, mm, ystart], 1, mean, na.rm = T)/RefYd, 
                           na.rm = T) * 100, 1)
-    AAVY <- apply((((MSEobj@C[, mm, y1] - MSEobj@C[, mm, y2])/MSEobj@C[, 
+    AAVY <- apply((((MSEobj@Catch[, mm, y1] - MSEobj@Catch[, mm, y2])/MSEobj@Catch[, 
                                                                        mm, y2])^2)^0.5, 1, mean, na.rm = T)
     VY[mm] <- round(sum(AAVY < (maxVar/100), na.rm = T)/MSEobj@nsim, 
                     3) * 100
@@ -2019,7 +2019,7 @@ VOI <- function(MSEobj, ncomp = 6, nbins = 8, maxrow = 8, Ut = NA, Utnam = "Util
     RefYd <- MSEobj@OM$RefY
     
     for (mm in 1:MSEobj@nMPs) {
-      Ut[, mm] <- apply(MSEobj@C[, mm, yind], 1, mean, na.rm = T)/RefYd * 100
+      Ut[, mm] <- apply(MSEobj@Catch[, mm, yind], 1, mean, na.rm = T)/RefYd * 100
       # POF[,mm]<-apply(MSEobj@F_FMSY[,mm,]>1,1,sum)/MSEobj@proyears
       # P10[,mm]<-apply(MSEobj@B_BMSY[,mm,]<0.1,1,sum)/MSEobj@proyears
     }
@@ -2237,7 +2237,7 @@ VOI2 <- function(MSEobj, ncomp = 6, nbins = 4, Ut = NA, Utnam = "yield",
     RefYd <- MSEobj@OM$RefY
     
     for (mm in 1:MSEobj@nMPs) {
-      Ut[, mm] <- apply(MSEobj@C[, mm, yind], 1, mean, na.rm = T)/RefYd * 
+      Ut[, mm] <- apply(MSEobj@Catch[, mm, yind], 1, mean, na.rm = T)/RefYd * 
         100
       # POF[,mm]<-apply(MSEobj@F_FMSY[,mm,]>1,1,sum)/MSEobj@proyears
       # P10[,mm]<-apply(MSEobj@B_BMSY[,mm,]<0.1,1,sum)/MSEobj@proyears
@@ -2889,8 +2889,8 @@ MPStats <- function(MSEobj, PMRefs = list(SB_SBMSY = 0.5, SSB_SSB0 = 0.2, F_FMSY
   
   # AAVY - Interannual variability in yield
   maxVar <- ifelse(trefs$AAVY > 1, trefs$AAVY/100, trefs$AAVY)
-  MSEobj@C[(!is.finite(MSEobj@C[, , , drop = FALSE]))] <- 0  # if catch is NAN or NA, make it 0
-  aavy <- (((MSEobj@C[, , y1, drop = FALSE] - MSEobj@C[, , y2, drop = FALSE])/MSEobj@C[, 
+  MSEobj@Catch[(!is.finite(MSEobj@Catch[, , , drop = FALSE]))] <- 0  # if catch is NAN or NA, make it 0
+  aavy <- (((MSEobj@Catch[, , y1, drop = FALSE] - MSEobj@Catch[, , y2, drop = FALSE])/MSEobj@Catch[, 
                                                                                        , y2, drop = FALSE])^2)^0.5
   
   aavy[is.nan(aavy)] <- NA
@@ -2928,9 +2928,9 @@ MPStats <- function(MSEobj, PMRefs = list(SB_SBMSY = 0.5, SSB_SSB0 = 0.2, F_FMSY
   }
   
   # Yield
-  LTY <- round(apply(MSEobj@C[, , yrs, drop = FALSE]/RefYd, 2, sumFun, 
+  LTY <- round(apply(MSEobj@Catch[, , yrs, drop = FALSE]/RefYd, 2, sumFun, 
                      na.rm = TRUE) * 100, 1)  # long-term yield
-  STY <- round(apply(MSEobj@C[, , ystart, drop = FALSE]/RefYd, 2, sumFun, 
+  STY <- round(apply(MSEobj@Catch[, , ystart, drop = FALSE]/RefYd, 2, sumFun, 
                      na.rm = TRUE) * 100, 1)  # short-term yield
   
   MPtype <- sapply(1:nMPs, function(X) class(get(MPs[X])))
@@ -2959,14 +2959,14 @@ MPStats <- function(MSEobj, PMRefs = list(SB_SBMSY = 0.5, SSB_SSB0 = 0.2, F_FMSY
   
   lastYr <- temp[, , Nyears, drop = FALSE]
   lastYr2 <- replicate(Pyears, lastYr)
-  Yield <- abind::abind(lastYr, MSEobj@C[, , , drop = FALSE]/RefYd, along = 3)
+  Yield <- abind::abind(lastYr, MSEobj@Catch[, , , drop = FALSE]/RefYd, along = 3)
   # dim(Yield)
   
-  # totC <- abind(temp, MSEobj@C[,,, drop=FALSE]/RefYd, along=3)
+  # totC <- abind(temp, MSEobj@Catch[,,, drop=FALSE]/RefYd, along=3)
   
   bySim <- list(SSB_SSB0 = Deplet, B_BMSY = MSEobj@B_BMSY, F_FMSY = MSEobj@F_FMSY, 
-                AAVY = aavy, AAVE = aave, LTY = MSEobj@C[, , yrs, drop = FALSE]/RefYd, 
-                STY = MSEobj@C[, , ystart, drop = FALSE]/RefYd, Yield = Yield)
+                AAVY = aavy, AAVE = aave, LTY = MSEobj@Catch[, , yrs, drop = FALSE]/RefYd, 
+                STY = MSEobj@Catch[, , ystart, drop = FALSE]/RefYd, Yield = Yield)
   
   Out <- list(Perf = DF, BySim = bySim, Probs = Probs)
   Out
@@ -3007,10 +3007,10 @@ calcMSESense <- function(MP = 1, MSEobj, YVar = c("Y", "B"), Par = c("Obs","OM")
   if (is.null(evalbreaks)) evalbreaks <- as.integer(nsims/4)  # number of breaks for loess smoother
   
   if (YVar == "Y") {
-    if (length(dim(MSEobj@C)) > 2) {
-      yout <- apply(MSEobj@C[, mm, yind], 1, mean, na.rm = T)/RefYd * 100
+    if (length(dim(MSEobj@Catch)) > 2) {
+      yout <- apply(MSEobj@Catch[, mm, yind], 1, mean, na.rm = T)/RefYd * 100
     } else {
-      yout <- apply(MSEobj@C[, yind], 1, mean, na.rm = T)/RefYd * 100
+      yout <- apply(MSEobj@Catch[, yind], 1, mean, na.rm = T)/RefYd * 100
     }
   }
   if (YVar == "B") {
@@ -3193,7 +3193,7 @@ comp <- function(MSEobj, MPs = NA) {
   
   for (m in 1:nm) {
     mm <- mind[m]
-    Yd[m, ] <- round(apply(MSEobj@C[, mm, yind], 1, mean, na.rm = T)/RefYd * 
+    Yd[m, ] <- round(apply(MSEobj@Catch[, mm, yind], 1, mean, na.rm = T)/RefYd * 
                        100, 1)
     POF[m, ] <- round(apply(MSEobj@F_FMSY[, mm, ] > 1, 1, sum, na.rm = T)/proyears * 
                         100, 1)
