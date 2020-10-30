@@ -1101,97 +1101,98 @@ DLMenv <- new.env()
 
 
 
-#' Convert an MMSE object to an MSE object
-#'
-#' @param MMSE An object of class `MMSE`
-#' @param B Numeric. Which stock should be used to report biomass? Use NA to calculate mean for all stocks.
-#' @param C Numeric. Which fleet should be used to report catch? Use NA to calculate sum for all fleets.
-#' @param F Numeric. Which stock should be used to report fishing mortality? Use NA to calculate mean for all stocks.
-#' @param E Numeric. Which stock should be used to report effort? Use NA to calculate mean for all stocks.
-#'
-#' @return an object of class `MSE`
-#' @export
-#'
-Convert <- function(MMSE, B=1, C=NA, F=1, E=1) {
-  MPs <- MMSE@MPs
-  if (class(MPs) == 'list') {
-    # MPs by stock
-    if (class(MPs[[1]][[1]]) == 'list') {
-      # by fleet as well
-      stop("Function needs updating")
-    } else {
-      stocks <- 1:MMSE@nstocks
-      df <- data.frame(MPs)
-      colnames(df) <- stocks
-      MPnames <- rep('', nrow(df))
-      for (i in 1:nrow(df)) {
-        mps <- as.character(df[i,] )
-        MPnames[i] <- paste(unique(mps), collapse="-")
-      }
-    }
-  }
-  
-  OM <- MMSE@OM[[1]][[1]]
-  ns <- MMSE@nstocks
-  nf <- MMSE@nfleets
-  nsim <- MMSE@nsim
-  
-  refY <- array(NA, dim=c(nsim, ns, nf))
-  for (s in 1:ns){
-    for (f in 1:nf) {
-      refY[,s,f] <- MMSE@OM[[s]][[f]]$RefY
-    }
-  }
-  
-  OM$RefY <- apply(refY, 1, sum)
-  
-  if(is.na(B)) B <- 1:ns
-  if(is.na(C)) C <- 1:nf
-  if(is.na(F)) F <- 1:ns
-  
-  B_BMSY <- apply(MMSE@B_BMSY[,B,,, drop=FALSE], c(1,3,4), mean)
-  F_FMSY  <- apply(MMSE@F_FMSY[,F,1:nf,, ,drop=FALSE], c(1,4,5), mean)
-  Catch <- apply(MMSE@C[,1:ns,C,, ,drop=FALSE], c(1,4,5), sum)
-  Effort <- apply(MMSE@Effort[,E,1:nf,, ,drop=FALSE], c(1,4,5), mean)
-  
-  Biomass <-apply(MMSE@B[,B,,, drop=FALSE], c(1,3,4), mean)
-  SSB <- apply(MMSE@SSB[,B,,, drop=FALSE], c(1,3,4), mean)
-  VB <- apply(MMSE@VB[,B,,, drop=FALSE], c(1,3,4), mean)
-  FM <- apply(MMSE@FM[,F,1:nf,,, drop=FALSE], c(1,4,5), mean)
-  TAC <- apply(MMSE@TAC[,1:ns, C,,,drop=FALSE], c(1,4,5), sum)
-  SSB_hist <- apply(MMSE@SSB_hist[,B,,,,drop=FALSE], c(1,3,4,5), mean) 
-  CB_hist <- apply(MMSE@CB_hist[,1:ns,C,,,,drop=FALSE], c(1,4,5,6), sum) 
-  FM_hist <- apply(MMSE@FM_hist[,1:ns,C,,,,drop=FALSE], c(1,4,5,6), sum) 
-  
-  MSE <- new('MSE', MMSE@Name,
-             nyears=MMSE@nyears,
-             proyears=MMSE@proyears,
-             nMPs=MMSE@nMPs,
-             MPs=MPnames,
-             nsim=MMSE@nsim,
-             OM=OM,
-             Obs=MMSE@Obs[[1]][[1]],
-             B_BMSY=B_BMSY,
-             F_FMSY=F_FMSY,
-             B=Biomass,
-             SSB=SSB,
-             VB=VB,
-             FM=FM,
-             Catch,
-             TAC=TAC,
-             SSB_hist=SSB_hist,
-             CB_hist=CB_hist,
-             FM_hist=FM_hist,
-             Effort=Effort,
-             PAA=array(),
-             CAA=array(),
-             CAL=array(),
-             CALbins=numeric(),
-             Misc=MMSE@Misc
-  )
-  MSE
-}
-
+# #' Convert an MMSE object to an MSE object
+# #'
+# #' @param MMSE An object of class `MMSE`
+# #' @param B Numeric. Which stock should be used to report biomass? Use NA to calculate mean for all stocks.
+# #' @param C Numeric. Which fleet should be used to report catch? Use NA to calculate sum for all fleets.
+# #' @param F Numeric. Which stock should be used to report fishing mortality? Use NA to calculate mean for all stocks.
+# #' @param E Numeric. Which stock should be used to report effort? Use NA to calculate mean for all stocks.
+# #'
+# #' @return an object of class `MSE`
+# #' @export
+# #'
+# Convert <- function(MMSE, B=1, C=NA, F=1, E=1) {
+#   MPs <- MMSE@MPs
+#   if (class(MPs) == 'list') {
+#     # MPs by stock
+#     if (class(MPs[[1]][[1]]) == 'list') {
+#       # by fleet as well
+#       stop("Function needs updating")
+#     } else {
+#       stocks <- 1:MMSE@nstocks
+#       df <- data.frame(MPs)
+#       colnames(df) <- stocks
+#       MPnames <- rep('', nrow(df))
+#       for (i in 1:nrow(df)) {
+#         mps <- as.character(df[i,] )
+#         MPnames[i] <- paste(unique(mps), collapse="-")
+#       }
+#     }
+#   }
+#   
+#   OM <- MMSE@OM[[1]][[1]]
+#   ns <- MMSE@nstocks
+#   nf <- MMSE@nfleets
+#   nsim <- MMSE@nsim
+#   
+#   refY <- array(NA, dim=c(nsim, ns, nf))
+#   for (s in 1:ns){
+#     for (f in 1:nf) {
+#       refY[,s,f] <- MMSE@OM[[s]][[f]]$RefY
+#     }
+#   }
+#   
+#   OM$RefY <- apply(refY, 1, sum)
+#   
+#   if(is.na(B)) B <- 1:ns
+#   if(is.na(C)) C <- 1:nf
+#   if(is.na(F)) F <- 1:ns
+#   
+#   B_BMSY <- apply(MMSE@B_BMSY[,B,,, drop=FALSE], c(1,3,4), mean)
+#   F_FMSY  <- apply(MMSE@F_FMSY[,F,1:nf,, ,drop=FALSE], c(1,4,5), mean)
+#   Catch <- apply(MMSE@C[,1:ns,C,, ,drop=FALSE], c(1,4,5), sum)
+#   Effort <- apply(MMSE@Effort[,E,1:nf,, ,drop=FALSE], c(1,4,5), mean)
+#   
+#   Biomass <-apply(MMSE@B[,B,,, drop=FALSE], c(1,3,4), mean)
+#   SSB <- apply(MMSE@SSB[,B,,, drop=FALSE], c(1,3,4), mean)
+#   VB <- apply(MMSE@VB[,B,,, drop=FALSE], c(1,3,4), mean)
+#   FM <- apply(MMSE@FM[,F,1:nf,,, drop=FALSE], c(1,4,5), mean)
+#   TAC <- apply(MMSE@TAC[,1:ns, C,,,drop=FALSE], c(1,4,5), sum)
+#   SSB_hist <- apply(MMSE@SSB_hist[,B,,,,drop=FALSE], c(1,3,4,5), mean) 
+#   CB_hist <- apply(MMSE@CB_hist[,1:ns,C,,,,drop=FALSE], c(1,4,5,6), sum) 
+#   FM_hist <- apply(MMSE@FM_hist[,1:ns,C,,,,drop=FALSE], c(1,4,5,6), sum) 
+#   
+#   MSE <- new('MSE', MMSE@Name,
+#              nyears=MMSE@nyears,
+#              proyears=MMSE@proyears,
+#              nMPs=MMSE@nMPs,
+#              MPs=MPnames,
+#              nsim=MMSE@nsim,
+#              OM=OM,
+#              Obs=MMSE@Obs[[1]][[1]],
+#              SB_SBMSY=B_BMSY,
+#              F_FMSY=F_FMSY,
+#              N=array(),
+#              B=Biomass,
+#              SSB=SSB,
+#              VB=VB,
+#              FM=FM,
+#              SPR=list(),
+#              Catch,
+#              Removals=array(),
+#              TAC=TAC,
+#              TAE=array(),
+#              BioEco=list(),
+#              RefPoint=list(),
+#              Hist=new('Hist'),
+#              PPD=list(),
+#              Misc=list()
+#   )
+# 
+#   MSE
+# }
+# 
 
 #' Get help topic URL
 #'

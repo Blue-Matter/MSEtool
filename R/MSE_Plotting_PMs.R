@@ -50,13 +50,14 @@ TradePlot <- function(MSEobj, ..., Lims=c(0.2, 0.2, 0.8, 0.8),
                       Refs=NULL,
                       Yrs=NULL
                       ) {
-  if (class(MSEobj) != 'MSE') stop("Object must be class `MSE`", call.=FALSE)
+  if (class(MSEobj) != 'MSE' & class(MSEobj) !='MMSE') 
+    stop("Object must be class `MSE` or class `MMSE`", call.=FALSE)
   
+  if (class(MSEobj)=='MMSE') legend <- FALSE
   if (!requireNamespace("ggrepel", quietly = TRUE)) {
     stop("Package \"ggrepel\" needed for this function to work. Please install it.",
          call. = FALSE)
   }
-  
   
   if (is.null(PMlist)) {
     PMlist <- unlist(list(...))
@@ -156,18 +157,23 @@ TradePlot <- function(MSEobj, ..., Lims=c(0.2, 0.2, 0.8, 0.8),
       Class <- rep('', MSEobj@nMPs)
     }
     
-    
-    labels <- MSEobj@MPs
-    if (class(Labels) == "list") {
-      repnames <- names(Labels)
-      invalid <- repnames[!repnames %in% labels]
-      if (length(invalid >0)) {
-        warning("Labels: ", paste(invalid, collapse=", "), " are not MPs in MSE")
-        Labels[invalid] <- NULL
+    if (class(MSEobj) =='MSE') {
+      labels <- MSEobj@MPs
+      if (class(Labels) == "list") {
         repnames <- names(Labels)
+        invalid <- repnames[!repnames %in% labels]
+        if (length(invalid >0)) {
+          warning("Labels: ", paste(invalid, collapse=", "), " are not MPs in MSE")
+          Labels[invalid] <- NULL
+          repnames <- names(Labels)
+        }
+        labels[labels %in% repnames] <- Labels %>% unlist()
       }
-      labels[labels %in% repnames] <- Labels %>% unlist()
+    } else {
+      labels <- runPM[[1]]@MPs
+
     }
+ 
     
     df <- data.frame(x=xvals, y=yvals, label=labels, Class=Class,
                      pass=xvals>xline & yvals>yline, fontface="plain", xPM=xPM, yPM=yPM)
@@ -230,19 +236,22 @@ TradePlot <- function(MSEobj, ..., Lims=c(0.2, 0.2, 0.8, 0.8),
   out <- do.call("rbind", listout)
   tab <- table(out$label, out$pass)
   passall <- rownames(tab)[tab[,ncol(tab)] == nplots]
-  Results <- summary(MSEobj, PMlist, silent=TRUE, Refs=Refs)
-  Results$Satisificed <- FALSE
-  Results$Satisificed[match(passall, Results$MP)] <- TRUE
-  
-  Results <- Results[,unique(colnames(Results))]
-  
+  if (class(MSEobj)=='MSE') {
+    Results <- summary(MSEobj, PMlist, silent=TRUE, Refs=Refs)
+    Results$Satisificed <- FALSE
+    Results$Satisificed[match(passall, Results$MP)] <- TRUE
+    Results <- Results[,unique(colnames(Results))]
+  } else {
+    Results <- 'Summary table of results only available for objects of class `MSE`'
+  }
+
   if (Show == "plots") {
     join_plots(plots, n.col, n.row,  position = position, legend=legend)
   } else if (Show == "table") {
     print(Results)  
   } else {
     join_plots(plots, n.col, n.row,  position = position, legend=legend)
-    print(Results)  
+    if (class(MSEobj) =='MSE') print(Results)  
   }
   out <- list(Results=Results, Plots=plots)
   
