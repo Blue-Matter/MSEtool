@@ -11,7 +11,8 @@
   lcol = "dodgerblue4",
   quants = c(0.05, 0.25, 0.75, 0.95),
   curyr = 2018,
-  addline = FALSE
+  addline = FALSE,
+  ...
 )
 }
 \arguments{
@@ -29,6 +30,8 @@ LB2 and UB2 are the outer percentiles, LB1 and UB1 are the inner percentiles.}
 \item{curyr}{Integer. The current year from which projections start.}
 
 \item{addline}{Logical. Should two individual simulations be added to the percentile plots?}
+
+\item{...}{Not used}
 }
 \description{
 Plot the projected biomass, fishing, mortality rate and yield for all stocks and MPs

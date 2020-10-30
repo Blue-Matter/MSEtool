@@ -2805,173 +2805,173 @@ wormplot <- function(MSEobj, Bref = 0.5, LB = 0.25, UB = 0.75) {
 }
 
 ## old functions - may not be used anymore ####
-#' Calculate Statistics for MP Performance
-#' 
-#' Function calculates probabilities and other statistics for a range of
-#' performance metrics
-#' 
-#' @param MSEobj An object of class MSE
-#' @param PMRefs A list of reference points for the performance metrics (must
-#' be named)
-#' @param lastYrs The last number of years in the projection to calculate the
-#' statistics
-#' @param UseMean Logical. Calculate mean (TRUE) or median (FALSE)?
-#' @param msg Logical. Print out messages?
-#' @author A. Hordyk
-#' @export MPStats
-MPStats <- function(MSEobj, PMRefs = list(SB_SBMSY = 0.5, SSB_SSB0 = 0.2, F_FMSY = 1, 
-                                          AAVY = 30, AAVE = 30), lastYrs = 10, UseMean = TRUE, msg = TRUE) {
-  
-  if (msg) 
-    message("Calculating MP Performance for last ", lastYrs, " years")
-  flush.console()
-  
-  sumFun <- ifelse(UseMean, mean, median)
-  
-  # Assign Variables
-  Nyears <- MSEobj@nyears
-  Pyears <- MSEobj@proyears
-  nMPs <- MSEobj@nMPs
-  MPs <- MSEobj@MPs
-  nsim <- MSEobj@nsim
-  RefYd <- MSEobj@OM$RefY
-  
-  trefs <- PMRefs
-  if (length(names(trefs)) != 5) {
-    PMnames <- c("SB_SBMSY", "SSB_SSB0", "F_FMSY", "AAVY", "AAVE")
-    DF <- c(0.5, 0.2, 1, 30, 30)
-    ind <- which(!PMnames %in% names(trefs))
-    if (length(ind) > 0) {
-      for (xx in ind) {
-        trefs[[PMnames[xx]]] <- DF[xx]
-      }
-    }
-  }
-  
-  # Error Checks
-  if (!class(lastYrs) == "character" & lastYrs >= Pyears) {
-    message("lastYrs set too high. Defaulting to last 10 years")
-    lastYrs <- 10
-  }
-  if (lastYrs <= 0 | lastYrs == FALSE | lastYrs == "all" | lastYrs == 
-      "All") 
-    lastYrs <- Pyears
-  
-  yrs <- (Pyears - lastYrs + 1):Pyears  # Years to summarize performance
-  yrs <- yrs[!yrs == 1]
-  ystart <- 1:lastYrs  # First 10 years
-  y1 <- (yrs[1] - 1):(yrs[length(yrs)] - 1)  # for calculating interannual variability
-  y2 <- y1 + 1
-  
-  # Biomass/BMSY
-  B_BMSYm <- apply(MSEobj@SB_SBMSY[, , yrs, drop = FALSE], 2, sumFun, na.rm = TRUE)  # median/mean in last yrs
-  B_BMSYsd <- apply(MSEobj@SB_SBMSY[, , yrs, drop = FALSE], 2, sd, na.rm = TRUE)  # sd in last yrs 
-  B_BMSYref <- MSEobj@SB_SBMSY[, , yrs, drop = FALSE] > trefs$B_BMSY  #  above reference?
-  B_BMSYp <- round(apply(SB_SBMSYref, 2, sum, na.rm = TRUE)/(lastYrs * 
-                                                             nsim), 2)  # prob above ref
-  
-  # Biomass/B0
-  temp <- as.matrix(expand.grid(1:nsim, 1:nMPs, 1:Pyears))
-  Deplet <- array(NA, dim = dim(MSEobj@B_BMSY))
-  Deplet[temp] <- (MSEobj@B_BMSY[temp] * MSEobj@OM$SSBMSY_SSB0[temp[, 1]])
-  
-  SSB_SSB0ref <- Deplet[, , yrs, drop = FALSE] > trefs$SSB_SSB0  #  above reference?
-  SSB_SSB0m <- apply(Deplet[, , yrs, drop = FALSE], 2, sumFun, na.rm = TRUE)  # median/mean in last yrs
-  SSB_SSB0sd <- apply(Deplet[, , yrs, drop = FALSE], 2, sd, na.rm = TRUE)  # sd in last yrs 
-  SSB_SSB0p <- round(apply(SSB_SSB0ref, 2, sum, na.rm = TRUE)/(lastYrs * nsim), 
-                     2)  # prob above ref
-  
-  # F/FMSY
-  F_FMSYm <- apply(MSEobj@F_FMSY[, , yrs, drop = FALSE], 2, sumFun, na.rm = TRUE)  # median/mean in last yrs
-  F_FMSYsd <- apply(MSEobj@F_FMSY[, , yrs, drop = FALSE], 2, sd, na.rm = TRUE)  # sd in last yrs 
-  F_FMSYref <- MSEobj@F_FMSY[, , yrs, drop = FALSE] < trefs$F_FMSY  #  below reference?
-  F_FMSYp <- round(apply(F_FMSYref, 2, sum, na.rm = TRUE)/(lastYrs * nsim), 2)  # prob below ref
-  
-  # AAVY - Interannual variability in yield
-  maxVar <- ifelse(trefs$AAVY > 1, trefs$AAVY/100, trefs$AAVY)
-  MSEobj@Catch[(!is.finite(MSEobj@Catch[, , , drop = FALSE]))] <- 0  # if catch is NAN or NA, make it 0
-  aavy <- (((MSEobj@Catch[, , y1, drop = FALSE] - MSEobj@Catch[, , y2, drop = FALSE])/MSEobj@Catch[, 
-                                                                                       , y2, drop = FALSE])^2)^0.5
-  
-  aavy[is.nan(aavy)] <- NA
-  if (sum(aavy == Inf, na.rm=TRUE) > 0) aavy[aavy == Inf] <- NA
-  
-  # aavy[aavy > 10 * median(aavy, na.rm = TRUE)] <- NA  # remove huge spikes from F=0
-  AAVYm <- apply(aavy, 2, sumFun, na.rm = TRUE)  # median/mean in last yrs
-  
-  AAVYsd <- apply(aavy, 2, sd, na.rm = TRUE)  # sd in last yrs
-  AAVYref <- aavy < maxVar
-  AAVYp <- round(apply(AAVYref, 2, sum, na.rm = TRUE)/(lastYrs * nsim),  2)
-  
-  # AAVE - Interannual varialility in effort
-  maxVar <- ifelse(trefs$AAVE > 1, trefs$AAVE/100, trefs$AAVE)
-  eff <- MSEobj@Effort
-  if (all(is.na(eff))) {
-    message("Variability in effort unable to be calculated from this version of MSE object")
-    aave <- NA
-    AAVEm <- rep(NA, length(AAVYm))
-    AAVEsd <- rep(NA, length(AAVYsd))
-    AAVEref <- array(NA, dim = dim(AAVYref))
-    AAVEp <- rep(NA, length(AAVYp))
-    flush.console()
-  } else {
-    aave <- (((eff[, , y1 - 1, drop = FALSE] - eff[, , y2 - 1, drop = FALSE])/eff[, 
-                                                                                  , y2 - 1, drop = FALSE])^2)^0.5
-    aave[is.nan(aave)] <- NA
-    aave[aave == Inf] <- NA
-    # aave[aave > 10 * apply(aave, 2, median, na.rm = TRUE)] <- NA  # remove huge spikes from F=0
-    AAVEm <- apply(aave, 2, sumFun, na.rm = TRUE)  # median/mean in last yrs
-    AAVEsd <- apply(aave, 2, sd, na.rm = TRUE)  # sd in last yrs
-    AAVEref <- aave < maxVar
-    AAVEp <- round(apply(AAVEref, 2, sum, na.rm = TRUE)/(lastYrs * 
-                                                           nsim), 2)
-  }
-  
-  # Yield
-  LTY <- round(apply(MSEobj@Catch[, , yrs, drop = FALSE]/RefYd, 2, sumFun, 
-                     na.rm = TRUE) * 100, 1)  # long-term yield
-  STY <- round(apply(MSEobj@Catch[, , ystart, drop = FALSE]/RefYd, 2, sumFun, 
-                     na.rm = TRUE) * 100, 1)  # short-term yield
-  
-  MPtype <- sapply(1:nMPs, function(X) class(get(MPs[X])))
-  
-  DF <- data.frame(MP = MPs, B_BMSYm = B_BMSYm, B_BMSYsd = B_BMSYsd, 
-                   B_BMSYp = B_BMSYp, SSB_SSB0m = SSB_SSB0m, SSB_SSB0sd = SSB_SSB0sd, SSB_SSB0p = SSB_SSB0p, 
-                   F_FMSYm = F_FMSYm, F_FMSYsd = F_FMSYsd, F_FMSYp = F_FMSYp, AAVYm = AAVYm, 
-                   AAVYsd = AAVYsd, AAVYp = AAVYp, AAVEm = AAVEm, AAVEsd = AAVEsd, 
-                   AAVEp = AAVEp, LTY = LTY, STY = STY, lastYrs = lastYrs, B_BMSYRef = trefs$B_BMSY, 
-                   SSB_SSB0Ref = trefs$SSB_SSB0, F_FMSYRef = trefs$F_FMSY, AAVYRef = trefs$AAVY, 
-                   AAVERef = trefs$AAVE, MPtype = MPtype, stringsAsFactors = FALSE)
-  
-  Dist <- NULL  # calculate distance from corner
-  for (X in 1:nrow(DF)) Dist[X] <- euc.dist(c(DF[X, "B_BMSYp"] * 100, 
-                                              DF[X, "LTY"]), c(100, max(DF[, "LTY"], na.rm = TRUE)))
-  
-  DF$Dist <- Dist
-  
-  Probs <- list(F_FMSYref = F_FMSYref, SSB_SSB0ref = SSB_SSB0ref, B_BMSYref = B_BMSYref, 
-                AAVYref = AAVYref, AAVEref = AAVEref, Effort = eff)
-  
-  pastC <- apply(MSEobj@CB_hist[, , , , drop = FALSE], c(1, 3), sum, 
-                 na.rm = TRUE)/RefYd
-  temp <- replicate(nMPs, pastC)
-  temp <- aperm(temp, c(1, 3, 2))
-  
-  lastYr <- temp[, , Nyears, drop = FALSE]
-  lastYr2 <- replicate(Pyears, lastYr)
-  Yield <- abind::abind(lastYr, MSEobj@Catch[, , , drop = FALSE]/RefYd, along = 3)
-  # dim(Yield)
-  
-  # totC <- abind(temp, MSEobj@Catch[,,, drop=FALSE]/RefYd, along=3)
-  
-  bySim <- list(SSB_SSB0 = Deplet, B_BMSY = MSEobj@B_BMSY, F_FMSY = MSEobj@F_FMSY, 
-                AAVY = aavy, AAVE = aave, LTY = MSEobj@Catch[, , yrs, drop = FALSE]/RefYd, 
-                STY = MSEobj@Catch[, , ystart, drop = FALSE]/RefYd, Yield = Yield)
-  
-  Out <- list(Perf = DF, BySim = bySim, Probs = Probs)
-  Out
-}
-
+# #' Calculate Statistics for MP Performance
+# #' 
+# #' Function calculates probabilities and other statistics for a range of
+# #' performance metrics
+# #' 
+# #' @param MSEobj An object of class MSE
+# #' @param PMRefs A list of reference points for the performance metrics (must
+# #' be named)
+# #' @param lastYrs The last number of years in the projection to calculate the
+# #' statistics
+# #' @param UseMean Logical. Calculate mean (TRUE) or median (FALSE)?
+# #' @param msg Logical. Print out messages?
+# #' @author A. Hordyk
+# #' @export MPStats
+# MPStats <- function(MSEobj, PMRefs = list(SB_SBMSY = 0.5, SSB_SSB0 = 0.2, F_FMSY = 1, 
+#                                           AAVY = 30, AAVE = 30), lastYrs = 10, UseMean = TRUE, msg = TRUE) {
+#   
+#   if (msg) 
+#     message("Calculating MP Performance for last ", lastYrs, " years")
+#   flush.console()
+#   
+#   sumFun <- ifelse(UseMean, mean, median)
+#   
+#   # Assign Variables
+#   Nyears <- MSEobj@nyears
+#   Pyears <- MSEobj@proyears
+#   nMPs <- MSEobj@nMPs
+#   MPs <- MSEobj@MPs
+#   nsim <- MSEobj@nsim
+#   RefYd <- MSEobj@OM$RefY
+#   
+#   trefs <- PMRefs
+#   if (length(names(trefs)) != 5) {
+#     PMnames <- c("SB_SBMSY", "SSB_SSB0", "F_FMSY", "AAVY", "AAVE")
+#     DF <- c(0.5, 0.2, 1, 30, 30)
+#     ind <- which(!PMnames %in% names(trefs))
+#     if (length(ind) > 0) {
+#       for (xx in ind) {
+#         trefs[[PMnames[xx]]] <- DF[xx]
+#       }
+#     }
+#   }
+#   
+#   # Error Checks
+#   if (!class(lastYrs) == "character" & lastYrs >= Pyears) {
+#     message("lastYrs set too high. Defaulting to last 10 years")
+#     lastYrs <- 10
+#   }
+#   if (lastYrs <= 0 | lastYrs == FALSE | lastYrs == "all" | lastYrs == 
+#       "All") 
+#     lastYrs <- Pyears
+#   
+#   yrs <- (Pyears - lastYrs + 1):Pyears  # Years to summarize performance
+#   yrs <- yrs[!yrs == 1]
+#   ystart <- 1:lastYrs  # First 10 years
+#   y1 <- (yrs[1] - 1):(yrs[length(yrs)] - 1)  # for calculating interannual variability
+#   y2 <- y1 + 1
+#   
+#   # Biomass/BMSY
+#   B_BMSYm <- apply(MSEobj@SB_SBMSY[, , yrs, drop = FALSE], 2, sumFun, na.rm = TRUE)  # median/mean in last yrs
+#   B_BMSYsd <- apply(MSEobj@SB_SBMSY[, , yrs, drop = FALSE], 2, sd, na.rm = TRUE)  # sd in last yrs 
+#   B_BMSYref <- MSEobj@SB_SBMSY[, , yrs, drop = FALSE] > trefs$B_BMSY  #  above reference?
+#   B_BMSYp <- round(apply(SB_SBMSYref, 2, sum, na.rm = TRUE)/(lastYrs * 
+#                                                              nsim), 2)  # prob above ref
+#   
+#   # Biomass/B0
+#   temp <- as.matrix(expand.grid(1:nsim, 1:nMPs, 1:Pyears))
+#   Deplet <- array(NA, dim = dim(MSEobj@B_BMSY))
+#   Deplet[temp] <- (MSEobj@B_BMSY[temp] * MSEobj@OM$SSBMSY_SSB0[temp[, 1]])
+#   
+#   SSB_SSB0ref <- Deplet[, , yrs, drop = FALSE] > trefs$SSB_SSB0  #  above reference?
+#   SSB_SSB0m <- apply(Deplet[, , yrs, drop = FALSE], 2, sumFun, na.rm = TRUE)  # median/mean in last yrs
+#   SSB_SSB0sd <- apply(Deplet[, , yrs, drop = FALSE], 2, sd, na.rm = TRUE)  # sd in last yrs 
+#   SSB_SSB0p <- round(apply(SSB_SSB0ref, 2, sum, na.rm = TRUE)/(lastYrs * nsim), 
+#                      2)  # prob above ref
+#   
+#   # F/FMSY
+#   F_FMSYm <- apply(MSEobj@F_FMSY[, , yrs, drop = FALSE], 2, sumFun, na.rm = TRUE)  # median/mean in last yrs
+#   F_FMSYsd <- apply(MSEobj@F_FMSY[, , yrs, drop = FALSE], 2, sd, na.rm = TRUE)  # sd in last yrs 
+#   F_FMSYref <- MSEobj@F_FMSY[, , yrs, drop = FALSE] < trefs$F_FMSY  #  below reference?
+#   F_FMSYp <- round(apply(F_FMSYref, 2, sum, na.rm = TRUE)/(lastYrs * nsim), 2)  # prob below ref
+#   
+#   # AAVY - Interannual variability in yield
+#   maxVar <- ifelse(trefs$AAVY > 1, trefs$AAVY/100, trefs$AAVY)
+#   MSEobj@Catch[(!is.finite(MSEobj@Catch[, , , drop = FALSE]))] <- 0  # if catch is NAN or NA, make it 0
+#   aavy <- (((MSEobj@Catch[, , y1, drop = FALSE] - MSEobj@Catch[, , y2, drop = FALSE])/MSEobj@Catch[, 
+#                                                                                        , y2, drop = FALSE])^2)^0.5
+#   
+#   aavy[is.nan(aavy)] <- NA
+#   if (sum(aavy == Inf, na.rm=TRUE) > 0) aavy[aavy == Inf] <- NA
+#   
+#   # aavy[aavy > 10 * median(aavy, na.rm = TRUE)] <- NA  # remove huge spikes from F=0
+#   AAVYm <- apply(aavy, 2, sumFun, na.rm = TRUE)  # median/mean in last yrs
+#   
+#   AAVYsd <- apply(aavy, 2, sd, na.rm = TRUE)  # sd in last yrs
+#   AAVYref <- aavy < maxVar
+#   AAVYp <- round(apply(AAVYref, 2, sum, na.rm = TRUE)/(lastYrs * nsim),  2)
+#   
+#   # AAVE - Interannual varialility in effort
+#   maxVar <- ifelse(trefs$AAVE > 1, trefs$AAVE/100, trefs$AAVE)
+#   eff <- MSEobj@Effort
+#   if (all(is.na(eff))) {
+#     message("Variability in effort unable to be calculated from this version of MSE object")
+#     aave <- NA
+#     AAVEm <- rep(NA, length(AAVYm))
+#     AAVEsd <- rep(NA, length(AAVYsd))
+#     AAVEref <- array(NA, dim = dim(AAVYref))
+#     AAVEp <- rep(NA, length(AAVYp))
+#     flush.console()
+#   } else {
+#     aave <- (((eff[, , y1 - 1, drop = FALSE] - eff[, , y2 - 1, drop = FALSE])/eff[, 
+#                                                                                   , y2 - 1, drop = FALSE])^2)^0.5
+#     aave[is.nan(aave)] <- NA
+#     aave[aave == Inf] <- NA
+#     # aave[aave > 10 * apply(aave, 2, median, na.rm = TRUE)] <- NA  # remove huge spikes from F=0
+#     AAVEm <- apply(aave, 2, sumFun, na.rm = TRUE)  # median/mean in last yrs
+#     AAVEsd <- apply(aave, 2, sd, na.rm = TRUE)  # sd in last yrs
+#     AAVEref <- aave < maxVar
+#     AAVEp <- round(apply(AAVEref, 2, sum, na.rm = TRUE)/(lastYrs * 
+#                                                            nsim), 2)
+#   }
+#   
+#   # Yield
+#   LTY <- round(apply(MSEobj@Catch[, , yrs, drop = FALSE]/RefYd, 2, sumFun, 
+#                      na.rm = TRUE) * 100, 1)  # long-term yield
+#   STY <- round(apply(MSEobj@Catch[, , ystart, drop = FALSE]/RefYd, 2, sumFun, 
+#                      na.rm = TRUE) * 100, 1)  # short-term yield
+#   
+#   MPtype <- sapply(1:nMPs, function(X) class(get(MPs[X])))
+#   
+#   DF <- data.frame(MP = MPs, B_BMSYm = B_BMSYm, B_BMSYsd = B_BMSYsd, 
+#                    B_BMSYp = B_BMSYp, SSB_SSB0m = SSB_SSB0m, SSB_SSB0sd = SSB_SSB0sd, SSB_SSB0p = SSB_SSB0p, 
+#                    F_FMSYm = F_FMSYm, F_FMSYsd = F_FMSYsd, F_FMSYp = F_FMSYp, AAVYm = AAVYm, 
+#                    AAVYsd = AAVYsd, AAVYp = AAVYp, AAVEm = AAVEm, AAVEsd = AAVEsd, 
+#                    AAVEp = AAVEp, LTY = LTY, STY = STY, lastYrs = lastYrs, B_BMSYRef = trefs$B_BMSY, 
+#                    SSB_SSB0Ref = trefs$SSB_SSB0, F_FMSYRef = trefs$F_FMSY, AAVYRef = trefs$AAVY, 
+#                    AAVERef = trefs$AAVE, MPtype = MPtype, stringsAsFactors = FALSE)
+#   
+#   Dist <- NULL  # calculate distance from corner
+#   for (X in 1:nrow(DF)) Dist[X] <- euc.dist(c(DF[X, "B_BMSYp"] * 100, 
+#                                               DF[X, "LTY"]), c(100, max(DF[, "LTY"], na.rm = TRUE)))
+#   
+#   DF$Dist <- Dist
+#   
+#   Probs <- list(F_FMSYref = F_FMSYref, SSB_SSB0ref = SSB_SSB0ref, B_BMSYref = B_BMSYref, 
+#                 AAVYref = AAVYref, AAVEref = AAVEref, Effort = eff)
+#   
+#   pastC <- apply(MSEobj@CB_hist[, , , , drop = FALSE], c(1, 3), sum, 
+#                  na.rm = TRUE)/RefYd
+#   temp <- replicate(nMPs, pastC)
+#   temp <- aperm(temp, c(1, 3, 2))
+#   
+#   lastYr <- temp[, , Nyears, drop = FALSE]
+#   lastYr2 <- replicate(Pyears, lastYr)
+#   Yield <- abind::abind(lastYr, MSEobj@Catch[, , , drop = FALSE]/RefYd, along = 3)
+#   # dim(Yield)
+#   
+#   # totC <- abind(temp, MSEobj@Catch[,,, drop=FALSE]/RefYd, along=3)
+#   
+#   bySim <- list(SSB_SSB0 = Deplet, B_BMSY = MSEobj@B_BMSY, F_FMSY = MSEobj@F_FMSY, 
+#                 AAVY = aavy, AAVE = aave, LTY = MSEobj@Catch[, , yrs, drop = FALSE]/RefYd, 
+#                 STY = MSEobj@Catch[, , ystart, drop = FALSE]/RefYd, Yield = Yield)
+#   
+#   Out <- list(Perf = DF, BySim = bySim, Probs = Probs)
+#   Out
+# }
+# 
 
 ## Supporting functions - not exported ####
 

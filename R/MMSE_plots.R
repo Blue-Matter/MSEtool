@@ -61,12 +61,13 @@ plotquant<-function(x,p=c(0.05,0.25,0.75,0.95),yrs,qcol,lcol,addline=T,ablines=N
 #' LB2 and UB2 are the outer percentiles, LB1 and UB1 are the inner percentiles.
 #' @param curyr Integer. The current year from which projections start.
 #' @param addline Logical. Should two individual simulations be added to the percentile plots?
+#' @param ... Not used
 #' @author T.Carruthers
 #' @method plot MMSE
 #' @importFrom grDevices rgb
 #' @export
 plot.MMSE <- function(x=NULL, maxcol = 6, qcol = rgb(0.4, 0.8, 0.95), lcol = "dodgerblue4",
-                      quants = c(0.05, 0.25, 0.75, 0.95), curyr = 2018, addline = FALSE) {
+                      quants = c(0.05, 0.25, 0.75, 0.95), curyr = 2018, addline = FALSE, ...) {
   MMSE <- x
   if (class(MMSE)!='MMSE') stop('Object must be class `MMSE`')
   if(is.na(maxcol))maxcol=ceiling(length(MMSE@MPs)/0.5) # defaults to portrait 1:2

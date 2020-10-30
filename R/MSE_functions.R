@@ -389,25 +389,26 @@ Chk <- function(X, MSEobj, thresh, ref.it) {
 
 #' Utility functions for MSE objects
 #' 
-#' @param MSEobj A MSE object. For `updateMSE`, a MSE object from a previous version of 
-#' DLMtool. Also works with Stock, Fleet, Obs, Imp, and Data objects.
-#' @param MSEobjs A list of MSE objects. Must all have identical operating
-#' model and MPs. MPs which don't appear in all MSE objects will be dropped.
+#' @param MSEobj A `MSE` object
+# #' @param MSEobj A MSE object. For `updateMSE`, a MSE object from a previous version of 
+# #' DLMtool. Also works with Stock, Fleet, Obs, Imp, and Data objects.
+# #' @param MSEobjs A list of MSE objects. Must all have identical operating
+# #' model and MPs. MPs which don't appear in all MSE objects will be dropped.
 #' @return An object of class \code{MSE}
-#' @examples 
-#' # An example of joinMSE
-#' \dontrun{
-#' OM1 <- MSEtool::testOM
-#' MSE1 <- runMSE(OM1) 
-#' OM2 <- OM1 
-#' OM2@seed <- OM1@seed + 1
-#' MSE2 <- runMSE(OM2)
-#' MSE <- joinMSE(list(MSE1, MSE2))
-#' MSE@nsim
-#' }
+# #' @examples 
+# #' # An example of joinMSE
+# #' \dontrun{
+# #' OM1 <- MSEtool::testOM
+# #' MSE1 <- runMSE(OM1) 
+# #' OM2 <- OM1 
+# #' OM2@seed <- OM1@seed + 1
+# #' MSE2 <- runMSE(OM2)
+# #' MSE <- joinMSE(list(MSE1, MSE2))
+# #' MSE@nsim
+# #' }
 #' @author A. Hordyk
 #' @describeIn checkMSE Check that an MSE object includes all slots in the latest version of DLMtool
-#' Use `updateMSE` to update the MSE object
+# #' Use `updateMSE` to update the MSE object
 #' @export checkMSE
 checkMSE <- function(MSEobj) {
   nms <- slotNames(MSEobj)

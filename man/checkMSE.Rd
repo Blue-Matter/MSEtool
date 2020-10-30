@@ -10,11 +10,7 @@ checkMSE(MSEobj)
 updateMSE(MSEobj)
 }
 \arguments{
-\item{MSEobj}{A MSE object. For \code{updateMSE}, a MSE object from a previous version of
-DLMtool. Also works with Stock, Fleet, Obs, Imp, and Data objects.}
-
-\item{MSEobjs}{A list of MSE objects. Must all have identical operating
-model and MPs. MPs which don't appear in all MSE objects will be dropped.}
+\item{MSEobj}{A \code{MSE} object}
 }
 \value{
 An object of class \code{MSE}
@@ -25,7 +21,6 @@ Utility functions for MSE objects
 \section{Functions}{
 \itemize{
 \item \code{checkMSE}: Check that an MSE object includes all slots in the latest version of DLMtool
-Use \code{updateMSE} to update the MSE object
 
 \item \code{updateMSE}: Updates an existing MSE object (class MSE) from a previous version of the
 DLMtool to include slots new to the lastest version. Also works with Stock,
@@ -34,18 +29,6 @@ but avoids the 'slot doesn't exist' error that sometimes occurs.
 Returns an object of class matching class(MSEobj)
 }}
 
-\examples{
-# An example of joinMSE
-\dontrun{
-OM1 <- MSEtool::testOM
-MSE1 <- runMSE(OM1) 
-OM2 <- OM1 
-OM2@seed <- OM1@seed + 1
-MSE2 <- runMSE(OM2)
-MSE <- joinMSE(list(MSE1, MSE2))
-MSE@nsim
-}
-}
 \author{
 A. Hordyk
 }

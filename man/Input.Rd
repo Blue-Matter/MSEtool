@@ -23,7 +23,11 @@ Input(Data, MPs = NA, reps = 100, timelimit = 10, CheckMPs = TRUE, msg = TRUE)
 Runs a set of input control methods are returns the output in a single table
 }
 \examples{
+\dontrun{
+library(DLMtool)
 Input(MSEtool::Cobia)
+}
+
 }
 \author{
 A. Hordyk

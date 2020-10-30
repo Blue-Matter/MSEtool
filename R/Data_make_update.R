@@ -335,6 +335,9 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   }
   
   # --- Update additional indices (if they exist) ----
+  AddIunits <- Data@AddIUnits
+  AddIndType <- Data@AddIndType
+  
   if (length(ObsPars$AddIerr)>0) {
     n.ind <- dim(ObsPars$AddIerr)[2]
     AddInd <- array(NA, dim=c(nsim, n.ind, nyears+y-1))

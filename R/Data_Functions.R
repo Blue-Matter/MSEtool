@@ -1072,7 +1072,11 @@ DLMdiag <- function(Data, command = c("available", "not available", "needed"), r
 #' @param msg Logical. Should messages be printed?
 #' @author A. Hordyk
 #' @examples 
+#' \dontrun{
+#' library(DLMtool)
 #' Input(MSEtool::Cobia)
+#' }
+#' 
 #' @export 
 Input <- function(Data, MPs = NA, reps = 100, timelimit = 10, CheckMPs = TRUE, 
                   msg=TRUE) {

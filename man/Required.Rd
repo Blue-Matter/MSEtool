@@ -20,8 +20,11 @@ A function that finds all the MPs and searches the
 function text for slots in the Data object
 }
 \examples{
+\dontrun{
+library(DLMtool) # load Data-Limited MPs
 Required(c("DCAC", "AvC"))
 Required() # For all MPs
+}
 }
 \seealso{
 \link{Can} \link{Cant} \link{Needed} \link{MPtype} \linkS4class{Data}
