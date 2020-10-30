@@ -149,7 +149,7 @@ TuringMOM <- function(multiHist, Data, wait=TRUE) {
   
   nsamp <- min(5, nsim)
   set.seed(as.numeric(Sys.time()))
-  samps <- sample(1:MOM@nsim, nsamp)
+  samps <- sample(1:nsim, nsamp)
   
   message("Randomly sampling 5 iterations")
   
