@@ -428,7 +428,8 @@ plotFun <- function(class = c("MSE", "Data"), msg = TRUE) {
 #' @export 
 Required <- function(funcs = NA, noCV=FALSE) {
   
-  if (class(funcs) != 'logical' & class(funcs) != "character") stop("first argument must be character with MP name")
+  if (class(funcs) != 'logical' & class(funcs) != "character") 
+    stop("first argument must be character with MP name")
   
   if (all(is.na(funcs))) funcs <- avail("MP", msg=FALSE)
   for (x in 1:length(funcs)) {
