@@ -51,7 +51,8 @@
 #' }
 #' 
 Turing <- function(OM, Data, wait=TRUE) {
-  if (class(OM) == "multiHist") TuringMOM (OM, Data, wait)
+  if (class(OM) == "multiHist")
+    return(TuringMOM (OM, Data, wait))
   if (class(OM) != "OM") stop("OM must be class 'OM'")
   if (class(Data) != "Data") stop("Data must be class 'Data'")
 
