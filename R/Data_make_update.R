@@ -335,7 +335,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   }
   
   # --- Update additional indices (if they exist) ----
-  AddIunits <- Data@AddIUnits
+  AddIunits <- Data@AddIunits
   AddIndType <- Data@AddIndType
   
   if (length(ObsPars$AddIerr)>0) {
