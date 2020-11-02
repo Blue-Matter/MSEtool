@@ -66,6 +66,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     SampCpars <- SampleCpars(cpars=OM@cpars, nsim, silent=silent)
   }
   
+  set.seed(OM@seed) # set seed again after cpars has been sampled
+  
   # Stock Parameters
   StockPars <- SampleStockPars(Stock=OM, 
                                nsim, 
@@ -1116,7 +1118,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
     LatEffort_out[,mm,y] <- LastTAE - Effort[, mm, y]  # store the Latent Effort
     TAE_out[,mm,y] <- LastTAE # store the TAE
     
-    # --- Begin projection years ----
+    # ---- Begin projection years ----
     for (y in 2:proyears) {
       if(!silent) {
         cat("."); flush.console()
@@ -1188,7 +1190,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
                                     RefPoints=ReferencePoints, 
                                     retA_P, retL_P, StockPars,
                                     FleetPars, ObsPars, V_P,
-                                    upyrs, interval, y, mm,
+                                    upyrs, interval[mm], y, mm,
                                     Misc=Data_p@Misc, RealData, ObsPars$Sample_Area
         )
         
@@ -1262,7 +1264,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
                                   RefPoints=ReferencePoints, 
                                   retA_P, retL_P, StockPars,
                                   FleetPars, ObsPars, V_P,
-                                  upyrs=c(upyrs, proyears), interval, y, mm,
+                                  upyrs=c(upyrs, proyears),
+                                  interval=rep(proyears - max(upyrs), length(interval[mm])), y, mm,
                                   Misc=Data_p@Misc, RealData, ObsPars$Sample_Area
       )
     }
