@@ -136,7 +136,7 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
   
   # ---- Sample custom pars ----
 
-  if (!is.null(ncparsim)) {
+  if (!is.null(ncparsim) & ncparsim>0) {
     if (ncparsim < nsim) {
       ind <- sample(1:ncparsim, nsim, replace=TRUE) # index for cpars
     } else {
@@ -148,10 +148,10 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
     }
   }
   
-  if (length(cpars)>0) {
-    for (i in 1:length(cpars)) {
-      samps <- cpars[[i]]
-      name <- names(cpars)[i]
+  if (length(cpars2)>0) {
+    for (i in 1:length(cpars2)) {
+      samps <- cpars2[[i]]
+      name <- names(cpars2)[i]
       # sample vectors
       if ("numeric" %in% class(samps) | "integer" %in% class(samps)) 
         sampCpars[[name]] <- samps[ind]
@@ -190,7 +190,10 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
 }
 
 sample_unif <- function(par, cpars, Obj, nsim, altpar=NULL) {
-  if (!is.null(cpars[[par]])) return(cpars[[par]])
+  if (!is.null(cpars[[par]])) {
+    tt <- myrunif(nsim, 0,1) # call to runif to increment RNG 
+    return(cpars[[par]])
+  } 
   if (!is.null(altpar)) par <- altpar
   vals <- slot(Obj, par)
   if (length(vals)<1) stop('slot ', par, ' in object class ', class(Obj), ' is missing values')
