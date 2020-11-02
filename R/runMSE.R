@@ -1190,7 +1190,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
                                     RefPoints=ReferencePoints, 
                                     retA_P, retL_P, StockPars,
                                     FleetPars, ObsPars, V_P,
-                                    upyrs, interval[mm], y, mm,
+                                    upyrs, interval, y, mm,
                                     Misc=Data_p@Misc, RealData, ObsPars$Sample_Area
         )
         
