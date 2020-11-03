@@ -217,21 +217,28 @@ plotCAAdata <- function(Ylab="Count", slot="CAA", message="Catch-at-Age Data",
   zeros <- dim(sampDat)[3]-dim(realDat)[2]
   if (zeros>0) {
     zeromat <- matrix(0, nrow=nrow(realDat), ncol=zeros)
-    message('The number of columns in `CAA` is less than `Data@MaxAge`. Filling with 0s')
-    realDat <- cbind(realDat, zeromat)
+    if (slot=='CAA') {
+      message('The number of columns in `CAA` is less than `Data@MaxAge+1`. Filling with 0s')  
+      realDat <- cbind(realDat, zeromat)
+    }
   }
  
   if (!all(is.na(realDat))) {
     message("Plotting: ", message)
    
     if (slot == "CAA") {
-      nyrs <- nrow(realDat); maxage <- ncol(realDat)
-      dimnames(realDat) <- list(1:nyrs, 1:maxage)
+      # check maximum age 
+      if(Data@MaxAge != SimDat@MaxAge)
+        stop('Maximum age is different in Simulated and Real Data. Simulated Data has a maximum age of ', SimDat@MaxAge, 
+             ' but Real Data has maximum age of ', Data@MaxAge)
+    
+      nyrs <- nrow(realDat); n_age <- ncol(realDat)
+      dimnames(realDat) <- list(1:nyrs, 1:n_age)
       
       df1 <- as.data.frame.table(realDat, stringsAsFactors = FALSE)
       colnames(df1) <- c("Year", "Val", "Freq")
       
-      dimnames(sampDat) <- list(1:nsamp, 1:nyrs, 1:maxage)
+      dimnames(sampDat) <- list(1:nsamp, 1:nyrs, 1:n_age)
       df2 <- as.data.frame.table(sampDat, stringsAsFactors = FALSE)
       colnames(df2) <- c("Sim", "Year", "Val", "Freq")
       
@@ -241,6 +248,11 @@ plotCAAdata <- function(Ylab="Count", slot="CAA", message="Catch-at-Age Data",
       By <- Data@CAL_bins[2] - Data@CAL_bins[1]
       BinsMid <- seq(Data@CAL_bins[1] + 0.5*By, by=By,length.out = nbins)
       dimnames(realDat) <- list(1:nyrs, BinsMid)
+      
+      if (any(dim(realDat) != dim(sampDat[1,,]))) {
+        warning('Dimensions of Simulated CAL Data and Real CAL Data are not the same. You may need to add CAL_bins to cpars. Skipping this plot...')
+        return()
+      } 
       
       df1 <- as.data.frame.table(realDat, stringsAsFactors = FALSE)
       colnames(df1) <- c("Year", "Val", "Freq")
