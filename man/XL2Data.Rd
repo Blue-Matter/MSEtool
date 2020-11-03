@@ -4,7 +4,7 @@
 \alias{XL2Data}
 \title{Import a Data object from Excel file}
 \usage{
-XL2Data(name, dec = c(".", ","), sheet = 1, silent = TRUE)
+XL2Data(name, dec = c(".", ","), sheet = 1, silent = FALSE)
 }
 \arguments{
 \item{name}{Name of the data file, with or without file extension.
