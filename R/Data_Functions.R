@@ -90,7 +90,7 @@ DataInit <- function(name="Data", ext=c("xlsx", "csv"), overwrite=FALSE, dir=NUL
 #' \dontrun{
 #' MyData <- XL2Data("MyData.xlsx")
 #' }
-XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=TRUE) {
+XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
   if (!requireNamespace("readxl", quietly = TRUE)) {
     stop("Package \"readxl\" needed for this function to work. Please install it.",
          call. = FALSE)
@@ -190,10 +190,27 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=TRUE) {
   Data <- new("Data")
   
   # ---- Main ----
-  Data@Name <- datasheet$Data[which(datasheet$Name=="Name")]
-  Data@Common_Name <- datasheet$Data[which(datasheet$Name=="Common Name")]
-  Data@Species <- datasheet$Data[which(datasheet$Name=="Species")]
-  Data@Region <- datasheet$Data[which(datasheet$Name=="Region")]
+  import_convert <- function(Name, datasheet, numeric=TRUE) {
+    temp <- datasheet$Data[which(datasheet$Name==Name)]
+    if (is.na(temp)) return(temp)
+    if (temp == 'NA') return(as.numeric(NA))
+    if (numeric) temp <- as.numeric(temp)
+    temp
+  }
+  
+  # Data_Slots <- MSEtool:::Data_Slots # internal data object (in sysdata.rda)
+  
+  # loop over Data_Slots and populate slots in Data object with imported values
+  for(i in 1:nrow(Data_Slots)) {
+    if (!is.na(Data_Slots$Slot[i]) & !Data_Slots$Timeseries[i]) {
+      isNumeric <- Data_Slots$Numeric[i]
+      Name <- Data_Slots$Name[i]
+      Slot <- Data_Slots$Slot[i]
+      slot(Data, Slot) <- import_convert(Name, datasheet, isNumeric)
+    }
+  }
+  
+  # extra check for LHYear (used multiple names in CSV in the past)
   tryLHyear <- datasheet$Data[which(datasheet$Name=="LHYear")]
   if (length(tryLHyear)<1) {
     tryLHyear <- datasheet$Data[which(datasheet$Name=="Last Historical Year")]
@@ -201,119 +218,80 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=TRUE) {
   tryLHyear <- as.numeric(tryLHyear)
   if (length(tryLHyear)<1 | is.na(tryLHyear))
     stop("Last Historical Year must be specified (single numeric value)")
-  
   Data@LHYear <- tryLHyear
-  Data@MPrec <- datasheet$Data[which(datasheet$Name=="Previous TAC")] %>% as.numeric()
-  Data@Units <- datasheet$Data[which(datasheet$Name=="Units")]
-  Data@MPeff <- datasheet$Data[which(datasheet$Name=="Previous TAE")]  %>% as.numeric()
-  Data@nareas <- datasheet$Data[which(datasheet$Name=="nareas")] %>% as.numeric()
   
-  # ---- Biology ----
-  Data@MaxAge <- datasheet$Data[which(datasheet$Name=="Maximum age")] %>% as.numeric()
-  Data@Mort <- datasheet$Data[which(datasheet$Name=="M")] %>% as.numeric()
-  Data@CV_Mort  <- datasheet$Data[which(datasheet$Name=="CV M")] %>% as.numeric()
-  Data@vbLinf <- datasheet$Data[which(datasheet$Name=="Von Bertalanffy Linf parameter")] %>% as.numeric()
-  Data@CV_vbLinf  <- datasheet$Data[which(datasheet$Name=="CV von B. Linf parameter")] %>% as.numeric()
-  Data@vbK <- datasheet$Data[which(datasheet$Name=="Von Bertalanffy K parameter")] %>% as.numeric()
-  Data@CV_vbK <- datasheet$Data[which(datasheet$Name=="CV von B. K parameter")] %>% as.numeric()
-  Data@vbt0 <- datasheet$Data[which(datasheet$Name=="Von Bertalanffy t0 parameter")] %>% as.numeric() 
-  Data@CV_vbt0 <- datasheet$Data[which(datasheet$Name=="CV von B. t0 parameter")] %>% as.numeric() 
-  Data@wla <- datasheet$Data[which(datasheet$Name=="Length-weight parameter a")] %>% as.numeric()
-  Data@CV_wla <- datasheet$Data[which(datasheet$Name=="CV Length-weight parameter a")] %>% as.numeric()
-  Data@wlb <- datasheet$Data[which(datasheet$Name=="Length-weight parameter b")] %>% as.numeric()
-  Data@CV_wlb <- datasheet$Data[which(datasheet$Name=="CV Length-weight parameter b")] %>% as.numeric()
-  Data@steep <- datasheet$Data[which(datasheet$Name=="Steepness")] %>% as.numeric()
-  Data@CV_steep <- datasheet$Data[which(datasheet$Name=="CV Steepness")] %>% as.numeric()
-  Data@sigmaR <- datasheet$Data[which(datasheet$Name=="sigmaR")] %>% as.numeric()
-  Data@CV_sigmaR <- datasheet$Data[which(datasheet$Name=="CV sigmaR")] %>% as.numeric()
-  Data@L50  <- datasheet$Data[which(datasheet$Name=="Length at 50% maturity")] %>% as.numeric() 
-  Data@CV_L50 <- datasheet$Data[which(datasheet$Name=="CV Length at 50% maturity")] %>% as.numeric() 
-  Data@L95 <- datasheet$Data[which(datasheet$Name=="Length at 95% maturity")] %>% as.numeric() 
-  Data@LenCV <- datasheet$Data[which(datasheet$Name=="CV of length-at-age")] %>% as.numeric()
-  
-  
-  # ---- Selectivity ----
-  Data@LFC <- datasheet$Data[which(datasheet$Name=="Length at first capture")] %>% as.numeric() 
-  Data@CV_LFC <- datasheet$Data[which(datasheet$Name=="CV Length at first capture")] %>% as.numeric() 
-  Data@LFS <- datasheet$Data[which(datasheet$Name=="Length at full selection")] %>% as.numeric() 
-  Data@CV_LFS <- datasheet$Data[which(datasheet$Name=="CV Length at full selection")] %>% as.numeric() 
-  Data@Vmaxlen <-datasheet$Data[which(datasheet$Name=="Vulnerability at asymptotic length")] %>% as.numeric()  
   
   # ---- Time-Series ----
-  row <- which(datasheet$Name == "Year")
-  Year <- datasheet[row,2:ncol(datasheet)] %>% as.numeric()
-  if (!Data@LHYear %in% Year) 
+
+  import_convert_ts <- function(Name, datasheet, Data, matrix=TRUE, 
+                                checkLength=TRUE) {
+    row <- which(datasheet$Name==Name)
+    if (Name =="Year") {
+      columns <- 2:ncol(datasheet)  
+      temp <- datasheet[row, columns]
+      temp <- suppressWarnings(as.numeric(temp))
+      temp <- temp[!is.na(temp)]
+    } else {
+      columns <- 2:(length(Data@Year)+1)
+      temp <- datasheet[row, columns]
+    }
+
+    ind <- which(Data_Slots$Name == Name)
+    Slot <- Data_Slots$Slot[ind]
+    isNumeric <- Data_Slots$Numeric[ind]
+    if (isNumeric) temp <- suppressWarnings(as.numeric(temp))
+    
+    if (grepl('CV', Name)) {
+      if (!is.na(temp[1]) & all(is.na(temp[2:length(temp)]))) {
+        message('Only one value found for ', paste0(Name, '.'), 'Assuming this value for all years') 
+        temp <- rep(temp[1], length(Data@Year))
+      }
+    }
+    
+    if (matrix) temp <- matrix(temp, nrow=1)
+    if (checkLength) {
+      if (length(Data@Year)<=0) 
+        stop(Name, ' time-series data detected, but no data found for Year', call.=FALSE)
+      
+      if (length(temp) != length(Data@Year))
+        stop(Name, ' time-series data must be the same length as Year (use NA for years with missing data)', call.=FALSE)
+    }
+      
+    slot(Data, Slot) <- temp
+    Data
+  }
+  
+  # Year index
+  Data <- import_convert_ts('Year', datasheet, Data, FALSE, FALSE)
+  
+  if (!Data@LHYear %in% Data@Year) 
     stop("`Year` must include Last Historical Year", call. = FALSE)
-  Year <- Year[!is.na(Year)]
-  if (!all(seq(Year[1], Year[length(Year)], 1) == Year))
+  if (!all(seq(Data@Year[1], Data@Year[length(Data@Year)], 1) == Data@Year))
     stop("`Year` must be sequential and include all years")
-  Data@Year <- Year   
-  Nyears <- length(Year)
+  Nyears <- length(Data@Year)
+  
+
   # Catch time-series
-  Data@Cat <- suppressWarnings(datasheet[which(datasheet$Name=="Catch"), 2:(Nyears+1)] %>% 
-                                 as.numeric() %>% matrix(., nrow=1))
-  CV_Cat <- datasheet[which(datasheet$Name=="CV Catch"), 2:(Nyears+1)]
-  if (!is.na(CV_Cat[1]) & all(is.na(CV_Cat[2:length(CV_Cat)])))
-    CV_Cat <- rep(CV_Cat[1], Nyears)
-  Data@CV_Cat <- CV_Cat %>% as.numeric %>% matrix(., nrow=1)
+  Data <- import_convert_ts('Catch', datasheet, Data)
+  Data <- import_convert_ts('CV Catch', datasheet, Data)
+  
   
   # Effort time-series
-  Data@Effort <- suppressWarnings(datasheet[which(datasheet$Name=="Effort"), 2:(Nyears+1)] %>% 
-                                    as.numeric() %>% matrix(., nrow=1))
-  CV_Effort <- datasheet[which(datasheet$Name=="CV Effort"), 2:(Nyears+1)]
-  if (nrow(CV_Effort)>0) {
-    if (!is.na(CV_Effort[1]) & all(is.na(CV_Effort[2:length(CV_Effort)])))
-      CV_Effort <- rep(CV_Effort[1], Nyears)
-    CV_Effort <- suppressWarnings(as.numeric(CV_Effort))
-    Data@CV_Effort <-  matrix(CV_Effort, nrow=1)
-  }
+  Data <- import_convert_ts('Effort', datasheet, Data)
+  Data <- import_convert_ts('CV Effort', datasheet, Data)
+  
   
   # Total abundance index - fishery dependant
-  Data@Ind <- suppressWarnings(datasheet[which(datasheet$Name=="Abundance index"), 2:(Nyears+1)] %>%
-                                 as.numeric() %>% matrix(., nrow=1) )
-  CV_Ind <- datasheet[which(datasheet$Name=="CV Abundance index"), 2:(Nyears+1)]
-  if (!is.na(CV_Ind[1]) & all(is.na(CV_Ind[2:length(CV_Ind)])))
-    CV_Ind <- rep(CV_Ind[1], Nyears)
-  Data@CV_Ind <- CV_Ind %>% as.numeric %>% matrix(., nrow=1)
+  Data <- import_convert_ts('Abundance index', datasheet, Data)
+  Data <- import_convert_ts('CV Abundance index', datasheet, Data)
   
   # Spawning abundance index - fishery dependant
-  Data@SpInd <- matrix(NA, nrow=1, ncol=length(Year))
-  if ('Spawning Abundance index' %in% datasheet$Name) {
-    Data@SpInd <- suppressWarnings(datasheet[which(datasheet$Name=="Spawning Abundance index"), 2:(Nyears+1)] %>%
-                                     as.numeric() %>% matrix(., nrow=1) )  
-  }
-  
-  CV_Ind <- datasheet[which(datasheet$Name=="CV Spawning Abundance index"), 2:(Nyears+1)]
-  if (dim(CV_Ind)[1] >0) {
-    if (!is.na(CV_Ind[1]) & all(is.na(CV_Ind[2:length(CV_Ind)])))
-      CV_Ind <- rep(CV_Ind[1], Nyears)
-    Data@CV_SpInd <- CV_Ind %>% as.numeric %>% matrix(., nrow=1)
-  }
-  
+  Data <- import_convert_ts('Spawning Abundance index', datasheet, Data)
+  Data <- import_convert_ts('CV Spawning Abundance index', datasheet, Data)
   
   # Vulnerable abundance index - fishery dependant
-  Data@VInd <- matrix(NA, nrow=1, ncol=length(Year))
-  if ('Vulnerable Abundance index' %in% datasheet$Name) {
-    Data@VInd <- suppressWarnings(datasheet[which(datasheet$Name=="Vulnerable Abundance index"), 2:(Nyears+1)] %>%
-                                    as.numeric() %>% matrix(., nrow=1) )
-  }
-  
-  CV_Ind <- datasheet[which(datasheet$Name=="CV Vulnerable Abundance index"), 2:(Nyears+1)]
-  if (dim(CV_Ind)[1] >0) {
-    if (!is.na(CV_Ind[1]) & all(is.na(CV_Ind[2:length(CV_Ind)])))
-      CV_Ind <- rep(CV_Ind[1], Nyears)
-    Data@CV_VInd <- CV_Ind %>% as.numeric %>% matrix(., nrow=1)
-  }
-  
-  # # Spawning abundance index - subject to hyper-stability beta
-  # Data@SpInd <- suppressWarnings(datasheet[which(datasheet$Name=="SpAbun index"), 2:(Nyears+1)] %>%
-  #                                  as.numeric() %>% matrix(., nrow=1) )
-  # CV_SpInd <- datasheet[which(datasheet$Name=="CV SpAbun index"), 2:(Nyears+1)]
-  # if (nrow(CV_SpInd)>0) {
-  #   if (!is.na(CV_SpInd[1]) & all(is.na(CV_SpInd[2:length(CV_SpInd)])))
-  #     CV_SpInd <- rep(CV_SpInd[1], Nyears)
-  #   Data@CV_SpInd <- CV_SpInd %>% as.numeric %>% matrix(., nrow=1)
-  # }
+  Data <- import_convert_ts('Vulnerable Abundance index', datasheet, Data)
+  Data <- import_convert_ts('CV Vulnerable Abundance index', datasheet, Data)
   
   # Additional indices
   ind <- grepl("Index", datasheet$Name)
@@ -334,7 +312,7 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=TRUE) {
     if (is.na(Data@MaxAge))
       stop("Require `Maximum age` to use Additional Indices", call. = FALSE)
     Data@AddInd <- Data@CV_AddInd <- array(NA, dim=c(1, n_indices, Nyears))
-    Data@AddIndV <- array(NA, dim=c(1, n_indices, Data@MaxAge))
+    Data@AddIndV <- array(NA, dim=c(1, n_indices, Data@MaxAge+1))
   } else {
     Data@AddInd <- Data@CV_AddInd <- array(NA, dim=c(1,1,1))
     Data@AddIndV <- array(NA, dim=c(1,1,1))
@@ -348,48 +326,38 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=TRUE) {
       ind <- which(datasheet$Name == paste("CV Index", x))
       Data@CV_AddInd[1,x,] <- datasheet[ind, 2:(Nyears+1)] %>% as.numeric()
       ind <- which(datasheet$Name == paste("Vuln Index", x))
-      Data@AddIndV[1,x,] <- datasheet[ind, 2:(Data@MaxAge+1)] %>% as.numeric() 
+      Data@AddIndV[1,x,] <- datasheet[ind, 2:(Data@MaxAge+2)] %>% as.numeric() 
       if (any(is.na(Data@AddIndV[1,x,])))
-        warning("Vuln Index must be length `Maximum age` and contain only numeric values (no NA)")
+        warning("Vuln Index must be length `Maximum age`+1 and contain only numeric values (no NA)")
     }
   }
   
-  # Recruitment index 
-  ind <- grepl('Recruitment', datasheet$Name) %>% which()
-  Data@Rec <- suppressWarnings(datasheet[ind[1], 2:(Nyears+1)] %>% as.numeric() %>%
-                                 matrix(., nrow=1))
-  Data@CV_Rec <- suppressWarnings(datasheet[ind[2], 2:(Nyears+1)] %>% as.numeric() %>%
-                                    matrix(., nrow=1))
+  
+  # Recruitment index
+  Data <- import_convert_ts('Recruitment index', datasheet, Data)
+  Data <- import_convert_ts('CV Recruitment index', datasheet, Data)
+  
   
   # Mean length
-  ind <- which(datasheet$Name == "Mean length")
-  Data@ML <- suppressWarnings(datasheet[ind[1], 2:(Nyears+1)] %>% as.numeric() %>%
-                                matrix(., nrow=1))
-  ind <- which(datasheet$Name == "Modal length (Lc)")
-  Data@Lc <- suppressWarnings(datasheet[ind[1], 2:(Nyears+1)] %>% as.numeric() %>%
-                                matrix(., nrow=1))
-  ind <- which(datasheet$Name == "Mean length above Lc")
-  Data@Lbar <- suppressWarnings(datasheet[ind[1], 2:(Nyears+1)] %>% as.numeric() %>%
-                                  matrix(., nrow=1))
+  Data <- import_convert_ts('Mean length', datasheet, Data)
+  Data <- import_convert_ts('Modal length (Lc)', datasheet, Data)
+  Data <- import_convert_ts('Mean length above Lc', datasheet, Data)
   
   # ---- Catch-at-Age ----
-  ind <- which(datasheet$Name == "Vuln CAA")
-  if (length(ind)>0 && (!is.na(datasheet[ind,2]))) {
-    VulnCAA <- datasheet[ind, 2:(Data@MaxAge+1)]
-    nonNA <- as.vector(!is.na(VulnCAA[1,]))
-    if (!all(is.na(VulnCAA)) & !all(nchar(VulnCAA[nonNA])==0)) {
-      if (any(is.na(VulnCAA))) 
-        warning("Vuln CAA must be length `Maximum age` and contain only numeric values (no NA)")
-    }
-    Data@Vuln_CAA <- suppressWarnings(matrix(as.numeric(VulnCAA), nrow=1))
+  VulnCAA <- datasheet[which(datasheet$Name == "Vuln CAA"), 2:(Data@MaxAge+2)]
+  VulnCAA <- suppressWarnings(as.numeric(VulnCAA))
+  if (!all(is.na(VulnCAA))) {
+    if (any(is.na(VulnCAA)))
+      stop('Missing values in Vuln CAA. Must be length `Maximum age`+1 will values for each age (or all NA to ignore)')
   }
+  Data@Vuln_CAA <- matrix(VulnCAA, nrow=1)
   
   ind <- which(grepl('CAA', datasheet$Name))
   ind2 <-  which(datasheet$Name == "Vuln CAA")
   if (length(ind2)>0) 
     ind <- ind[!ind ==ind2]
   CAAexists <- grepl('CAA', datasheet$Name[ind])
-  if (length(CAAexists) < 1) CAAexists <- FALSE
+    if (length(CAAexists) < 1) CAAexists <- FALSE
   if (length(ind) <=1 || !CAAexists) {
     CAA_Yrs <- numeric(0)
   } else {
@@ -400,12 +368,19 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=TRUE) {
     if(!all(CAA_Yrs %in% Data@Year)) stop("All CAA Years must be included in `Year`")
   }
   
-  
   if (length(CAA_Yrs)>0) {
-    Data@CAA <- array(NA, dim=c(1, Nyears, Data@MaxAge))
-    CAAdat <- datasheet[ind, 2:(Data@MaxAge+1)] %>% as.matrix() %>% as.numeric() %>% matrix(., nrow=length(ind), ncol=Data@MaxAge)
-    # if (any(is.na(CAAdat))) 
-    #   stop("NAs in CAA data. Is each row of length `Maximum age`?", call. = FALSE)
+    Data@CAA <- array(NA, dim=c(1, Nyears, Data@MaxAge+1))
+    
+    CAAdat <- matrix(NA, nrow=length(ind), ncol=Data@MaxAge+1)
+    for (i in seq_along(ind)) {
+      vals <- datasheet[ind[i], 2:(Data@MaxAge+2)] 
+      vals <- suppressWarnings(as.numeric(vals))
+      if (!all(is.na(vals)) && any(is.na(vals))) {
+        warning('NA values found in CAA data Year ', paste0(CAA_Yrs[i], '.'),
+                " Is each row length `Maximum age`+1?")
+      }
+      CAAdat[i,] <- vals
+    }
     yrind <- match(CAA_Yrs, Data@Year)
     Data@CAA[1, yrind,] <- CAAdat
   } else{
@@ -413,16 +388,13 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=TRUE) {
   }
   
   # ---- Catch-at-Length ----
-  ind <- which(datasheet$Name == "Vuln CAL")
-  if (length(ind)>0 && !is.na(datasheet$Data[ind])) {
-    VulnCAL <- datasheet[ind, 2:(Data@MaxAge+1)]
-    nonNA <- as.vector(!is.na(VulnCAL[1,]))
-    if (!all(is.na(VulnCAL)) & !all(nchar(VulnCAL[nonNA])==0)) {
-      if (any(is.na(VulnCAL))) 
-        warning("Vuln CAL must be length `Maximum age` and contain only numeric values (no NA)")
-    }
-    Data@Vuln_CAL <- suppressWarnings(matrix(as.numeric(VulnCAL), nrow=1))
+  VulnCAL <- datasheet[which(datasheet$Name == "Vuln CAL"), 2:(Data@MaxAge+2)]
+  VulnCAL <- suppressWarnings(as.numeric(VulnCAL))
+  if (!all(is.na(VulnCAL))) {
+    if (any(is.na(VulnCAL)))
+      stop('Missing values in Vuln CAL. Must be length `Maximum age`+1 will values for each age (or all NA to ignore)')
   }
+  Data@Vuln_CAL <- matrix(VulnCAL, nrow=1)
   
   CAL_bins <- suppressWarnings(datasheet[which(datasheet$Name == "CAL_bins"),] %>% as.numeric())
   CAL_bins <- CAL_bins[!is.na(CAL_bins)]
@@ -441,7 +413,6 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=TRUE) {
     CAL_Yrs <- numeric(0)
   } 
   if (length(ind)>0) {
-    
     # CAL data exists
     if (length(CAL_bins)<1 & length(CAL_mids) < 1)
       stop("Require either CAL_mids or CAL_bins", call. = FALSE)
@@ -483,40 +454,22 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=TRUE) {
   NMids <- length(CAL_mids)
   Data@CAL <- array(NA, dim=c(1, Nyears, NMids))
   
-  CALdat <- datasheet[ind, 2:(NMids+1)] %>% as.matrix() %>% as.numeric() %>% matrix(., nrow=length(ind), ncol=NMids)
-  # if (any(is.na(CALdat))) 
-  # stop("NAs in CAL data. Is each row same length as `CAL_mids`? (or `length(CAL_bins)-1`)", call. = FALSE)
+  CALdat <- matrix(NA, nrow=length(ind), ncol=NMids)
+  for (i in seq_along(ind)) {
+    vals <- datasheet[ind[i], 2:(NMids+1)] 
+    vals <- suppressWarnings(as.numeric(vals))
+    if (!all(is.na(vals)) && any(is.na(vals))) {
+      warning('NA values found in CAL data Year ', paste0(CAL_Yrs[i], '.'),
+              " Is each row same length as `CAL_mids`? (or `length(CAL_bins)-1`)")
+    }
+    CALdat[i,] <- vals
+  }
+
   yrind <- match(CAL_Yrs, Data@Year)
   Data@CAL_bins <- CAL_bins
   Data@CAL_mids <- CAL_mids
   Data@CAL[1, yrind,] <- CALdat
   
-  # ---- Reference ----
-  Data@Dep <- datasheet[which(datasheet$Name=="Current stock depletion"),2] %>% as.numeric()
-  Data@CV_Dep <- datasheet[which(datasheet$Name=="CV current stock depletion"),2] %>% as.numeric()
-  Data@Abun <- datasheet[which(datasheet$Name=="Current stock abundance"),2] %>% as.numeric()
-  Data@CV_Abun <- datasheet[which(datasheet$Name=="CV current stock abundance"),2] %>% as.numeric()
-  Data@SpAbun <- datasheet[which(datasheet$Name=="Current spawning abundance"),2] %>% as.numeric()
-  Data@CV_SpAbun <- datasheet[which(datasheet$Name=="CV current spawning abundance"),2] %>% as.numeric()
-  
-  Data@FMSY_M <- datasheet[which(datasheet$Name=="FMSY/M"),2] %>% as.numeric()
-  Data@CV_FMSY_M <- datasheet[which(datasheet$Name=="CV FMSY/M"),2] %>% as.numeric()
-  Data@BMSY_B0 <- datasheet[which(datasheet$Name=="BMSY/B0"),2] %>% as.numeric()
-  Data@CV_BMSY_B0 <- datasheet[which(datasheet$Name=="CV BMSY/B0"),2] %>% as.numeric()
-  Data@Cref <- datasheet[which(datasheet$Name=="Catch Reference"),2] %>% as.numeric()
-  Data@CV_Cref <- datasheet[which(datasheet$Name=="CV Catch Reference"),2] %>% as.numeric()
-  Data@Bref <- datasheet[which(datasheet$Name=="Biomass Reference"),2] %>% as.numeric()
-  Data@CV_Bref <- datasheet[which(datasheet$Name=="CV Biomass Reference"),2] %>% as.numeric()
-  
-  Data@Iref <- datasheet[which(datasheet$Name=="Index Reference"),2] %>% as.numeric()
-  Data@CV_Iref <- datasheet[which(datasheet$Name=="CV Index Reference"),2] %>% as.numeric()
-  Data@t <- datasheet[which(datasheet$Name=="Duration t"),2] %>% as.numeric()
-  Data@AvC <- datasheet[which(datasheet$Name=="Average catch over time t"),2] %>% as.numeric()
-  Data@CV_AvC <- datasheet[which(datasheet$Name=="CV Average catch over time t"),2] %>% as.numeric()
-  Data@Dt <- datasheet[which(datasheet$Name=="Depletion over time t"),2] %>% as.numeric()
-  Data@CV_Dt <- datasheet[which(datasheet$Name=="CV Depletion over time t"),2] %>% as.numeric()
-  Data@Ref <- datasheet[which(datasheet$Name=="Reference OFL"),2] %>% as.numeric()
-  Data@Ref_type <- datasheet[which(datasheet$Name=="Reference OFL type"),2] %>% as.character() 
   
   # Default values
   if (all(is.na(Data@CV_Cat))) Data@CV_Cat <- matrix(0.2, nrow=1, ncol=Nyears)
