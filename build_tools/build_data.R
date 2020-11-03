@@ -326,3 +326,11 @@ cat("#'  ", name, " ",
     "\n#'\n",
     '"', name, '"\n\n\n', sep="", append=TRUE, 
     file=file.path('R/', RoxygenFile))  
+
+# ---- Import Data XL (internal data) ----
+Data_Slots <- readxl::read_xlsx('build_tools/Class_definitions/Class_definitions.xlsx', 
+                        sheet='Data')
+Data_Slots$Numeric[is.na(Data_Slots$Numeric)] <- TRUE
+Data_Slots$Timeseries[is.na(Data_Slots$Timeseries)] <- FALSE
+
+usethis::use_data(Data_Slots, internal = TRUE, overwrite = TRUE)
