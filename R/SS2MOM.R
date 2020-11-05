@@ -17,7 +17,7 @@
 #' @param Name The name of the operating model
 #' @param Source Reference to assessment documentation e.g. a url
 #' @param ... Arguments to pass to \link[r4ss]{SS_output}.
-#' @note Currently tested on r4ss version 1.38.1 and SS 3.30.14.
+#' @note Currently tested on r4ss version 1.38.1-40.0 and SS 3.30.14.
 #' @return An object of class \linkS4class{MOM}.
 #' @author Q. Huynh
 #' @export
@@ -38,7 +38,7 @@ SS2MOM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1
   MOM@maxF <- maxF
   MOM@interval <- 1
 
-  if(!silent) message(replist$nsexes, "-sex and ", replist$nfishfleets, "-fleet model detected.")
+  if(!silent) message(replist$nsexes, "- sex and ", replist$nfishfleets, "- fleet model detected.")
 
   mainyrs <- replist$startyr:replist$endyr
   nyears <- length(mainyrs)
@@ -47,8 +47,8 @@ SS2MOM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1
   MOM@nsim <- nsim
   MOM@pstar <- pstar
 
-  output <- lapply(seq_len(replist$nsexes), SS2MOM_stock, replist = replist, 
-                   mainyrs = mainyrs, nyears = nyears, MOM = MOM)
+  output <- lapply(seq_len(replist$nsexes), SS_stock, replist = replist, 
+                   mainyrs = mainyrs, nyears = nyears, MOM = MOM, single_sex = length(replist$nsexes) == 1)
 
   MOM@Stocks <- lapply(output, getElement, "Stock")
   MOM@Fleets <- lapply(output, getElement, "Fleet")
