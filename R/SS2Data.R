@@ -19,19 +19,18 @@
 #' sums over all available partitions.
 #' @param comp_gender Integer vector for selecting length/age observations that are female (1), male (2), or both (0), or both scaled to sum to one (3).
 #' By default, \code{"all"} sums over all gender codes.
-#' @param index_fleet Obsolete as of DLMtool version 5.4 (all indices will now be included in the AddInd slot).
 #' @param index_season Integer, for seasonal models, the season for which the value of the index will be used. By default, \code{"mean"}
 #' will take the average across seasons.
 #' @param ... Arguments to pass to \link[r4ss]{SS_output}
 #' @return An object of class Data.
-#' @note Currently supports the  version of r4ss on CRAN (v.1.24) and Github (v.1.34-38). Function may be incompatible with other versions of r4ss.
+#' @note Currently supports the version of r4ss on CRAN (v.1.24) and Github (v.1.34-40). Function may be incompatible with other versions of r4ss.
 #' @author T. Carruthers and Q. Huynh
 #' @export
 #' @seealso \link{SS2OM}
 SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Species = "", Region = "",
                     min_age_M = 1, gender = 1,
                     comp_fleet = "all", comp_season = "sum", comp_partition = "all", comp_gender = "all",
-                    index_fleet = "SSB", index_season = "mean", ...) {
+                    index_season = "mean", ...) {
 
   replist <- SS_import(SSdir, ...)
 
@@ -458,11 +457,15 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
 
   Z_at_age <- replist$Z_at_age[rows, ]
   M_at_age <- replist$M_at_age[rows, ]
-
+  
   rows2 <- Z_at_age$Gender == 1 & Z_at_age$Bio_Pattern == 1
   if((all(!rows2, na.rm = TRUE) | all(is.na(rows2))) && packageVersion("r4ss") >= 1.35) rows2 <- Z_at_age$Sex == 1 & Z_at_age$Bio_Pattern == 1
-
-  F_at_age <- t(Z_at_age[rows2, cols] - M_at_age[rows2, cols])
+  
+  Z_at_age <- Z_at_age[rows2, cols]
+  M_at_age <- suppressWarnings(M_at_age[rows2, cols] %>% apply(2, as.numeric))
+  #if(is.character(M_at_age[, ncol(M_at_age)])) M_at_age[, ncol(M_at_age)] <- NA_real_
+  
+  F_at_age <- t(Z_at_age - M_at_age)
   F_at_age[nrow(F_at_age), ] <- F_at_age[nrow(F_at_age) - 1, ] # assume F at maxage = F at maxage-1
 
   if(ncol(F_at_age) == nyears - 1) { # Typically because forecast is off
