@@ -59,10 +59,10 @@ various slots of an \linkS4class{MOM}. The function mainly populates the Stock (
 of the MOM; the user may still need to parameterize most of the observation and implementation portions of the MOM.
 }
 \note{
-Currently tested on r4ss version 1.38.1 and SS 3.30.14.
+Currently tested on r4ss version 1.38.1-40.0 and SS 3.30.14.
 }
 \seealso{
-\link{SS2Data} \link{SS2OM}
+\link{SS2Data} \link{SS2OM} \link{SS2DataMOM}
 }
 \author{
 Q. Huynh
