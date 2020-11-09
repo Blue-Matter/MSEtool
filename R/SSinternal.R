@@ -424,7 +424,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, MOM = NULL, single_sex = TRUE,
   if(all(is.na(M_age[nrow(M_age), ]))) M_age[nrow(M_age), ] <- endgrowth$M[Stock@maxage] 
   if(ncol(M_age) == (nyears - 1)) M_age <- cbind(M_age, endgrowth$M)
   if(proyears > 0) {
-    M_age_pro <- matrix(M_age[, nyears], n_age, proyears)
+    M_age_pro <- matrix(M_age[, nyears], Stock@maxage + 1, proyears)
     M_age <- cbind(M_age, M_age_pro)
   }
   cpars_bio$M_ageArray <- array(M_age, c(Stock@maxage + 1, allyears, nsim)) %>% aperm(c(3, 1, 2))
