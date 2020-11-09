@@ -50,17 +50,19 @@ SS2MOM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1
   output <- lapply(seq_len(replist$nsexes), SS_stock, replist = replist, 
                    mainyrs = mainyrs, nyears = nyears, MOM = MOM, single_sex = length(replist$nsexes) == 1)
 
-  MOM@Stocks <- lapply(output, getElement, "Stock")
-  MOM@Fleets <- lapply(output, getElement, "Fleet")
-  MOM@cpars <- lapply(output, getElement, "cpars")
+  MOM@Stocks <- lapply(output, getElement, "Stock") %>% structure(names = c("Female", "Male")[seq_len(replist$nsexes)])
+  MOM@Fleets <- lapply(output, getElement, "Fleet") %>% structure(names = c("Female", "Male")[seq_len(replist$nsexes)])
+  MOM@cpars <- lapply(output, getElement, "cpars") %>% structure(names = c("Female", "Male")[seq_len(replist$nsexes)])
 
   # Sample future recruitment
   Perr_proj <- exp(sample_recruitment(log(MOM@cpars[[1]][[1]]$Perr_y), proyears, 
                                       replist$sigma_R_in, MOM@Stocks[[1]]@AC[1], seed))
   MOM@cpars <- lapply(MOM@cpars, function(x) lapply(x, function(xx) {xx$Perr_y <- cbind(xx$Perr_y, Perr_proj); return(xx)}))
 
-  MOM@Obs <- lapply(seq_len(replist$nsexes), function(x) lapply(1:length(MOM@Fleets[[1]]), function(xx) return(Obs)))
-  MOM@Imps <- lapply(seq_len(replist$nsexes), function(x) lapply(1:length(MOM@Fleets[[1]]), function(xx) return(Imp)))
+  MOM@Obs <- lapply(seq_len(replist$nsexes), function(x) lapply(1:length(MOM@Fleets[[1]]), function(xx) return(Obs)) %>% 
+                      structure(names = names(MOM@Fleets[[1]]))) %>% structure(names = c("Female", "Male")[seq_len(replist$nsexes)])
+  MOM@Imps <- lapply(seq_len(replist$nsexes), function(x) lapply(1:length(MOM@Fleets[[1]]), function(xx) return(Imp)) %>% 
+                       structure(names = names(MOM@Fleets[[1]]))) %>% structure(names = c("Female", "Male")[seq_len(replist$nsexes)])
 
   if(replist$nsexes == 2) {
     MOM@SexPars <- list(SSBfrom = matrix(c(1, 0), 2, 2, byrow = TRUE))
@@ -69,7 +71,9 @@ SS2MOM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1
 
   # Catch Fracs
   CatchFrac <- lapply(MOM@cpars, function(x) vapply(x, function(xx) xx$Data@Cat[1, ncol(xx$Data@Cat)], numeric(1)))
-  MOM@CatchFrac <- lapply(CatchFrac, function(x) matrix(x/sum(x), nrow = MOM@nsim, ncol = length(x), byrow = TRUE))
+  MOM@CatchFrac <- lapply(CatchFrac, function(x) matrix(x/sum(x), nrow = MOM@nsim, ncol = length(x), byrow = TRUE) %>% 
+                            structure(dimnames = list(NULL, names(MOM@Fleets[[1]])))) %>% 
+    structure(names = c("Female", "Male")[seq_len(replist$nsexes)])
 
   return(MOM)
 }
