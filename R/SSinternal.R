@@ -408,6 +408,8 @@ SS_stock <- function(i, replist, mainyrs, nyears, MOM = NULL, single_sex = TRUE,
   ###### maxage
   N_at_age <- replist$natage[replist$natage$Sex == i, ]
   Stock@maxage <- suppressWarnings(colnames(N_at_age) %>% as.numeric()) %>% max(na.rm = TRUE)
+  
+  n_age <- Stock@maxage + 1 # include age-0
 
   ###### R0
   R0_row <- N_at_age$`Beg/Mid` == "B" & N_at_age$Era == "VIRG"
@@ -424,10 +426,11 @@ SS_stock <- function(i, replist, mainyrs, nyears, MOM = NULL, single_sex = TRUE,
   if(all(is.na(M_age[nrow(M_age), ]))) M_age[nrow(M_age), ] <- endgrowth$M[Stock@maxage] 
   if(ncol(M_age) == (nyears - 1)) M_age <- cbind(M_age, endgrowth$M)
   if(proyears > 0) {
-    M_age_pro <- matrix(M_age[, nyears], Stock@maxage + 1, proyears)
+    M_age_pro <- matrix(M_age[, nyears], n_age, proyears)
     M_age <- cbind(M_age, M_age_pro)
   }
-  cpars_bio$M_ageArray <- array(M_age, c(Stock@maxage + 1, allyears, nsim)) %>% aperm(c(3, 1, 2))
+  cpars_bio$M_ageArray <- array(M_age, c(n_age, allyears, nsim)) %>% aperm(c(3, 1, 2))
+  Stock@M <- mean(M_age[, nyears]) %>% rep(2)
 
   # Steepness
   SR_par <- SS_steepness(replist, mainyrs)
@@ -453,8 +456,6 @@ SS_stock <- function(i, replist, mainyrs, nyears, MOM = NULL, single_sex = TRUE,
   Stock@AC <- log(cpars_bio$Perr_y[1, ]) %>% acf(lag.max = 1, plot = FALSE) %>% getElement("acf") %>%
     getElement(2) %>% rep(2)
 
-  n_age <- Stock@maxage + 1 # include age-0
-  
   # Length at age - not found for terminal year
   Len_age_df <- replist$growthseries[replist$growthseries$Morph == i, ]
   Len_age_df <- Len_age_df[vapply(mainyrs, match, numeric(1), table = Len_age_df$Yr, nomatch = 0), ]
@@ -760,7 +761,8 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, MOM = NULL, single_
   CAL <- do.call(rbind, CAL)
   
   if(nrow(CAL) > 0) {
-    cpars_fleet$Data@CAL_mids <- cpars_fleet$CAL_binsmid
+    cpars_fleet$Data@CAL_bins <- cpars_fleet$CAL_bins
+    cpars_fleet$Data@CAL_mids <- cpars_fleet$CAL_binsmid # Optional
     
     CAL <- CAL %>% dplyr::mutate(Nout = Obs * Nsamp_adj) %>% reshape2::acast(list("Yr", "Bin"), value.var = "Nout", fun.aggregate = sum)
     
