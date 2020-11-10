@@ -77,6 +77,7 @@ avail <- function(classy, package=NULL, msg=TRUE) {
 #' @param stock Character string representing the name of a .csv file e.g.
 #' 'Snapper', 'Rockfish'
 #' @author T. Carruthers
+#' @return The file path to the object
 #' @examples
 #' \dontrun{
 #' tilefish_location <- DataDir("Gulf_blue_tilefish")
@@ -89,6 +90,20 @@ DataDir <- function(stock = NA) {
   } else {
     system.file(paste0(stock, ".csv"), package = "MSEtool", mustWork = TRUE)
   }
+}
+
+
+#' Directory of the installed package on your computer
+#'
+#' @param stock Character string representing the name of a .csv file e.g.
+#' 'Snapper', 'Rockfish'
+#'
+#' @return The file path to the object
+#' @export
+#'
+DLMDataDir <- function(stock = NA) {
+  .Deprecated('DataDir')
+  DataDir(stock)
 }
 
 
