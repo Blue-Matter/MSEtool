@@ -184,9 +184,10 @@ dnormal<-function(lens,lfs,sl,sr){
   sel
 }
 
-calcV <- function(x, Len_age, LenCV, SLarray, n_age, nyears, proyears, CAL_binsmid) {
+calcV <- function(x, Len_age, LatASD, SLarray, n_age, nyears, proyears, CAL_binsmid) {
   len_at_age <- Len_age[x,,]
-  len_aa_sd <- LenCV[x] * len_at_age
+  len_aa_sd <- LatASD[x,,]
+  
   sel_at_length <- SLarray[x,,]
   v <- matrix(tiny, n_age, nyears+proyears)
   for (yr in 1:(nyears+proyears)) {
