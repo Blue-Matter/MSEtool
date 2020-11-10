@@ -192,8 +192,10 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
   # ---- Main ----
   import_convert <- function(Name, datasheet, numeric=TRUE) {
     temp <- datasheet$Data[which(datasheet$Name==Name)]
+    if (is.na(temp)&& numeric) return(as.numeric(NA))
     if (is.na(temp)) return(temp)
-    if (temp == 'NA') return(as.numeric(NA))
+    if (temp == 'NA' && numeric) return(as.numeric(NA))
+    if (is.na(temp)) return(temp)
     if (numeric) temp <- as.numeric(temp)
     temp
   }
@@ -322,11 +324,11 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
   if (indexexist) {
     for (x in 1:n_indices) {
       ind <- which(datasheet$Name == paste("Index", x))
-      Data@AddInd[1,x,] <- datasheet[ind, 2:(Nyears+1)] %>% as.numeric()
+      Data@AddInd[1,x,] <- suppressWarnings(datasheet[ind, 2:(Nyears+1)] %>% as.numeric())
       ind <- which(datasheet$Name == paste("CV Index", x))
-      Data@CV_AddInd[1,x,] <- datasheet[ind, 2:(Nyears+1)] %>% as.numeric()
+      Data@CV_AddInd[1,x,] <- suppressWarnings(datasheet[ind, 2:(Nyears+1)] %>% as.numeric())
       ind <- which(datasheet$Name == paste("Vuln Index", x))
-      Data@AddIndV[1,x,] <- datasheet[ind, 2:(Data@MaxAge+2)] %>% as.numeric() 
+      Data@AddIndV[1,x,] <- suppressWarnings(datasheet[ind, 2:(Data@MaxAge+2)] %>% as.numeric())
       if (any(is.na(Data@AddIndV[1,x,])))
         warning("Vuln Index must be length `Maximum age`+1 and contain only numeric values (no NA)")
     }
