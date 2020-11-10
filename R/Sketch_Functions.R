@@ -369,7 +369,6 @@ ChooseSelect <- function(Fleet, Stock, FstYr = NULL, SelYears = NULL) {
 
 #' Internal function to create a blank plot for mapping selectivity at length
 #' 
-#' @usage BlankSelPlot(Stock = NULL, Yr = NULL, N = NULL, isRel)
 #' @param Stock Stock object. If provided, average length-at-maturity
 #' is included on plot for reference.
 #' @param Yr Year number
@@ -377,7 +376,6 @@ ChooseSelect <- function(Fleet, Stock, FstYr = NULL, SelYears = NULL) {
 #' @param isRel Logical. Are selectivity parameters relative to length of maturity?
 #' @author A. Hordyk
 #' @keywords internal
-#' @export BlankSelPlot
 BlankSelPlot <- function(Stock = NULL, Yr = NULL, N = NULL, isRel) {
   if (isRel) {
     Max <- 3
