@@ -846,7 +846,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
 #' @param Hist An Historical Simulation object (class `Hist`)
 #'
 #' @export
-Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
+Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, extended=FALSE) {
   
   # ---- Setup ----
   if (class(Hist) !='Hist')
@@ -929,6 +929,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
   StockPars$N <- Hist@AtAge$Number
   StockPars$Z <- Hist@AtAge$Z.Mortality
   StockPars$FM <- Hist@AtAge$F.Mortality
+  StockPars$CB <- Hist@AtAge$Removals
   StockPars$CBret <- Hist@AtAge$Landings
   StockPars$Biomass <- Hist@AtAge$Biomass
   StockPars$SSB <- Hist@AtAge$SBiomass
@@ -945,8 +946,13 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
   # Bio-economic parameters - and add to model 
   LatentEff <- RevCurr <- CostCurr <- Response <- CostInc <-  RevInc <- rep(NA, nsim)
   
-  # projection array for numbers (index includes)
-  N_Pmp <- array(NA, dim = c(nsim, n_age, nMP, proyears, nareas))
+  # projection arrays for storing all info (by simulation, age, MP, years, areas)
+  N_P_mp <- array(NA, dim = c(nsim, n_age, nMP, proyears, nareas))
+  B_P_mp <- array(NA, dim = c(nsim, n_age, nMP, proyears, nareas))
+  SB_P_mp <- array(NA, dim = c(nsim, n_age, nMP, proyears, nareas))
+  VB_P_mp <- array(NA, dim = c(nsim, n_age, nMP, proyears, nareas))
+  Catch_P_mp <- array(NA, dim = c(nsim, n_age, nMP, proyears, nareas))
+  Removals_P_mp <- array(NA, dim = c(nsim, n_age, nMP, proyears, nareas))
   
   # ---- Begin loop over MPs ----
   mm <- 1 # for debugging
@@ -1299,13 +1305,52 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
           warning('package `shiny` needs to be installed for progress bar')
         }
       }
-    N_Pmp[,,mm,,] <- N_P
+    
+    # Store all info (return if argument `extended=TRUE`)
+    N_P_mp[,,mm,,] <- N_P
+    B_P_mp[,,mm,,] <- Biomass_P
+    SB_P_mp[,,mm,,] <- SSB_P
+    VB_P_mp[,,mm,,] <- VBa
+    Catch_P_mp[,,mm,,] <- CaRet
+    Removals_P_mp[,,mm,,] <- Ca
   } # end of MP loop
   
  
   # ---- Create MSE Object ---- 
   Misc <- list()
   Misc$Data <- MSElist
+  
+  Misc$extended <- list()
+
+  if (extended) {
+    histN <- replicate(nMP, StockPars$N) %>% aperm(c(1,2,5,3,4))
+    N_all <- abind::abind(histN, N_P_mp, along=4)
+    
+    histB <- replicate(nMP, StockPars$Biomass) %>% aperm(c(1,2,5,3,4))
+    B_all <- abind::abind(histB, B_P_mp, along=4)
+    
+    histSSB <- replicate(nMP, StockPars$SSB) %>% aperm(c(1,2,5,3,4))
+    SB_all <- abind::abind(histSSB, SB_P_mp, along=4)
+    
+    histVB <- replicate(nMP, StockPars$VBiomass) %>% aperm(c(1,2,5,3,4))
+    VB_all <- abind::abind(histVB, VB_P_mp, along=4)
+
+    histCatch <- replicate(nMP, StockPars$CBret) %>% aperm(c(1,2,5,3,4))
+    Catch_all <- abind::abind(histCatch, Catch_P_mp, along=4)
+    
+    histRemovals <- replicate(nMP, StockPars$CB) %>% aperm(c(1,2,5,3,4))
+    Removals_all <- abind::abind(histRemovals, Removals_P_mp, along=4)
+    
+    Misc$extended <- list(
+      N = N_all,
+      B = B_all,
+      SSB = SB_all,
+      VB = VB_all,
+      Catch = Catch_all,
+      Removals = Removals_all
+    )
+  }
+
   MSEout <- new("MSE", 
                 Name = OM@Name, 
                 nyears=nyears, proyears=proyears, nMPs=nMP, 
@@ -1314,7 +1359,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
                 Obs=Data@Obs,
                 SB_SBMSY=SB_SBMSY_a,
                 F_FMSY=F_FMSYa,
-                N=N_Pmp,
+                N=N_P_mp,
                 B=Ba,
                 SSB=SSBa,
                 VB=VBa,
@@ -1356,6 +1401,9 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
 #' class 'Hist' containing all historical data
 #' @param silent Should messages be printed out to the console?
 #' @param parallel Logical. Should the MSE be run using parallel processing?
+#' @param extended Logical. Return extended projection results? 
+#' if TRUE, `MSE@Misc$extended` is a named list with extended data
+#' (including historical and projection by area)
 #' 
 #' @describeIn runMSE Run the Historical Simulations and Forward Projections
 #'  from an object of class `OM
@@ -1368,7 +1416,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
 #' }
 #' @export
 runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE, 
-                   parallel=FALSE) {
+                   parallel=FALSE, extended=FALSE) {
   
   # ---- Initial Checks and Setup ----
   if (class(OM) == 'OM') {
@@ -1411,6 +1459,7 @@ runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
   MSEout
   
 }
+
 
 
 

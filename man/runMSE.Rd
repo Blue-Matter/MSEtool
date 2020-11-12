@@ -8,14 +8,21 @@
 \usage{
 Simulate(OM = MSEtool::testOM, parallel = FALSE, silent = FALSE)
 
-Project(Hist = NULL, MPs = NA, parallel = FALSE, silent = FALSE)
+Project(
+  Hist = NULL,
+  MPs = NA,
+  parallel = FALSE,
+  silent = FALSE,
+  extended = FALSE
+)
 
 runMSE(
   OM = MSEtool::testOM,
   MPs = NA,
   Hist = FALSE,
   silent = FALSE,
-  parallel = FALSE
+  parallel = FALSE,
+  extended = FALSE
 )
 }
 \arguments{
@@ -29,6 +36,10 @@ runMSE(
 class 'Hist' containing all historical data}
 
 \item{MPs}{A vector of methods (character string) of class MP}
+
+\item{extended}{Logical. Return extended projection results?
+if TRUE, \code{MSE@Misc$extended} is a named list with extended data
+(including historical and projection by area)}
 }
 \value{
 Functions return objects of class \linkS4class{Hist} or \linkS4class{MSE}
