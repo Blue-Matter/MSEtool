@@ -1265,7 +1265,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
                                   retA_P, retL_P, StockPars,
                                   FleetPars, ObsPars, V_P,
                                   upyrs=c(upyrs, proyears),
-                                  interval=rep(proyears - max(upyrs), length(interval[mm])), y, mm,
+                                  interval=rep(proyears-max(upyrs), length(interval)), y, mm,
                                   Misc=Data_p@Misc, RealData, ObsPars$Sample_Area
       )
     }
