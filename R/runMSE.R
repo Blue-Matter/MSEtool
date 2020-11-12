@@ -1446,7 +1446,7 @@ runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
   }
   
   if(!silent) message("Running forward projections")
-  MSEout <- try(Project(Hist=HistSims, MPs, parallel, silent), silent=TRUE)
+  MSEout <- try(Project(Hist=HistSims, MPs, parallel, silent, extended = extended), silent=TRUE)
   if (class(MSEout) == 'try-error') {
     message('The following error occured when running the forward projections: ',
             crayon::red(attributes(MSEout)$condition))
