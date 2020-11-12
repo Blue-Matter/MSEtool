@@ -23,4 +23,3 @@ Calculate Reference Yield
 \author{
 A. Hordyk
 }
-\keyword{internal}

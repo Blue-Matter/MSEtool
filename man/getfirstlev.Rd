@@ -2,7 +2,7 @@
 % Please edit documentation in R/applyMMP.R
 \name{getfirstlev}
 \alias{getfirstlev}
-\title{Extract the first dimension of a hierachical list of recommendation objects}
+\title{Extract the first dimension of a hierarchical list of recommendation objects}
 \usage{
 getfirstlev(x, name, pp, ff)
 }
@@ -16,7 +16,7 @@ getfirstlev(x, name, pp, ff)
 \item{ff}{Integer. The fleet number (third level list)}
 }
 \description{
-Extract the first dimension of a hierachical list of recommendation objects
+Extract the first dimension of a hierarchical list of recommendation objects
 }
 \author{
 T. Carruthers

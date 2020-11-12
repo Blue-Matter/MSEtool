@@ -8,7 +8,7 @@ DataInit(name = "Data", ext = c("xlsx", "csv"), overwrite = FALSE, dir = NULL)
 }
 \arguments{
 \item{name}{Name of the data input files. Default is 'Data'. Use 'Example'
-to create populated example Data Input and Data Documenation files.}
+to create populated example Data Input and Data Documentation files.}
 
 \item{ext}{Optional file extension for input file. 'xlsx' (default) or 'csv'}
 
