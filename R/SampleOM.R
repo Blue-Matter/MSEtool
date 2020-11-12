@@ -92,7 +92,7 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
   Names <- c('CAL_bins', 'CAL_binsmid', 'binWidth', 'nCALbins',
              'maxage', 'n_age', 'CurrentYr',
              'plusgroup', 'control', 'AddIUnits', 'Data', 'MPA',
-             'nareas', 'a', 'b', 'maxF')
+             'nareas', 'a', 'b', 'maxF', 'Sample_Area')
   
   cpars2 <- cpars
   cpars2[Names] <- NULL
@@ -136,7 +136,7 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
   
   # ---- Sample custom pars ----
 
-  if (!is.null(ncparsim) & ncparsim>0) {
+  if (!is.null(ncparsim) && ncparsim>0) {
     if (ncparsim < nsim) {
       ind <- sample(1:ncparsim, nsim, replace=TRUE) # index for cpars
     } else {

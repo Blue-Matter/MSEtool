@@ -670,10 +670,10 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   S <- SYA[, 1]
   
   CurrentVB[SAR] <- CurrentB[SAR] * V_P[SAYt] # update available biomass if selectivity has changed
-  
+ 
   # Calculate fishing distribution if all areas were open 
   newVB <- apply(CurrentVB, c(1,3), sum) # calculate total vuln biomass by area 
-  fishdist <- (newVB^  FleetPars$Spat_targ)/apply(newVB^  FleetPars$Spat_targ, 1, sum)  # spatial preference according to spatial vulnerable biomass
+  fishdist <- (newVB^ FleetPars$Spat_targ)/apply(newVB^  FleetPars$Spat_targ, 1, sum)  # spatial preference according to spatial vulnerable biomass
   
   d1 <- t(Si) * fishdist  # distribution of fishing effort
   fracE <- apply(d1, 1, sum) # fraction of current effort in open areas

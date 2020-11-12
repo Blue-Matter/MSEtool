@@ -929,6 +929,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, extended=F
   StockPars$N <- Hist@AtAge$Number
   StockPars$Z <- Hist@AtAge$Z.Mortality
   StockPars$FM <- Hist@AtAge$F.Mortality
+  StockPars$FMret <- Hist@AtAge$Fret.Mortality
   StockPars$CB <- Hist@AtAge$Removals
   StockPars$CBret <- Hist@AtAge$Landings
   StockPars$Biomass <- Hist@AtAge$Biomass
@@ -953,6 +954,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, extended=F
   VB_P_mp <- array(NA, dim = c(nsim, n_age, nMP, proyears, nareas))
   Catch_P_mp <- array(NA, dim = c(nsim, n_age, nMP, proyears, nareas))
   Removals_P_mp <- array(NA, dim = c(nsim, n_age, nMP, proyears, nareas))
+  FM_P_mp <- array(NA, dim = c(nsim, n_age, nMP, proyears, nareas))
+  FMret_P_mp <- array(NA, dim = c(nsim, n_age, nMP, proyears, nareas))
   
   # ---- Begin loop over MPs ----
   mm <- 1 # for debugging
@@ -1313,6 +1316,9 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, extended=F
     VB_P_mp[,,mm,,] <- VBiomass_P
     Catch_P_mp[,,mm,,] <- CB_Pret
     Removals_P_mp[,,mm,,] <- CB_P
+    FM_P_mp[,,mm,,] <- FM_P
+    FMret_P_mp[,,mm,,] <- FM_Pret
+    
   } # end of MP loop
   
  
@@ -1341,13 +1347,21 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, extended=F
     histRemovals <- replicate(nMP, StockPars$CB) %>% aperm(c(1,2,5,3,4))
     Removals_all <- abind::abind(histRemovals, Removals_P_mp, along=4)
     
+    histF <- replicate(nMP, StockPars$FM) %>% aperm(c(1,2,5,3,4))
+    FM_all <- abind::abind(histF, FM_P_mp, along=4)
+    
+    histFret <- replicate(nMP, StockPars$FMret) %>% aperm(c(1,2,5,3,4))
+    FMret_all <- abind::abind(histFret, FMret_P_mp, along=4)
+      
     Misc$extended <- list(
       N = N_all,
       B = B_all,
       SSB = SB_all,
       VB = VB_all,
       Catch = Catch_all,
-      Removals = Removals_all
+      Removals = Removals_all,
+      FM=FM_all,
+      FMret=FMret_all
     )
   }
 
