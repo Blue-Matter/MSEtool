@@ -1310,9 +1310,9 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, extended=F
     N_P_mp[,,mm,,] <- N_P
     B_P_mp[,,mm,,] <- Biomass_P
     SB_P_mp[,,mm,,] <- SSB_P
-    VB_P_mp[,,mm,,] <- VBa
-    Catch_P_mp[,,mm,,] <- CaRet
-    Removals_P_mp[,,mm,,] <- Ca
+    VB_P_mp[,,mm,,] <- VBiomass_P
+    Catch_P_mp[,,mm,,] <- CB_Pret
+    Removals_P_mp[,,mm,,] <- CB_P
   } # end of MP loop
   
  
