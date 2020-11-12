@@ -966,3 +966,21 @@ runInMP <- function(Data, MPs = NA, reps = 100) {
   
   return(list(returnList, Data))
 }
+
+
+projectEq <- function(x, Asize, nareas, maxage, N, pyears, M_ageArray, Mat_age, Wt_age,
+                      V, retA, Perr, mov, SRrel, Find, Spat_targ, hs, R0a, SSBpR, aR, bR,
+                      SSB0, B0, MPA, maxF, Nyrs, R0) {
+  
+  simpop <- popdynCPP(nareas, maxage, Ncurr=N[x,,1,],
+                      pyears, M_age=M_ageArray[x,,], Asize_c=Asize[x,],
+                      MatAge=Mat_age[x,,],
+                      WtAge=Wt_age[x,,], Vuln=V[x,,], Retc=retA[x,,], Prec=Perr[x,],
+                      movc=split.along.dim(mov[x,,,,],4), SRrelc=SRrel[x],
+                      Effind=Find[x,],  Spat_targc=Spat_targ[x], hc=hs[x], R0c=R0a[x,],
+                      SSBpRc=SSBpR[x,], aRc=aR[x,], bRc=bR[x,], Qc=0, Fapic=0, MPA=MPA,
+                      maxF=maxF, control=3, SSB0c=SSB0[x])
+  
+  simpop[[1]][,Nyrs,]
+  
+}
