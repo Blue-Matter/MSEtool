@@ -151,15 +151,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   
   # Calculate initial distribution if mov provided in cpars
   if (is.null(StockPars$initdist)) {
-    
-    if (is.null(SampCpars$Asize)) {
-      message('Asize not set in cpars. Assuming all areas equal size')
-      StockPars$Asize <- matrix(1/nareas, nrow=nsim, ncol=nareas)
-    }
-    
     # mov has been passed in cpars - initdist hasn't been defined
     StockPars$initdist <- CalcDistribution(StockPars, SampCpars, OM, plusgroup, checks=FALSE)
-    
   }
   
   # Unfished recruitment by area - INITDIST OF AGE 1.
