@@ -73,7 +73,6 @@ movfit_Rcpp <- function(par, prb, frac) {
 #' 
 #' @author A. Hordyk
 #' 
-#' @export
 #' @keywords internal
 popdynOneTScpp <- function(nareas, maxage, Ncurr, Zcurr, mov, plusgroup = 0L) {
     .Call('_MSEtool_popdynOneTScpp', PACKAGE = 'MSEtool', nareas, maxage, Ncurr, Zcurr, mov, plusgroup)
@@ -114,7 +113,6 @@ popdynOneTScpp <- function(nareas, maxage, Ncurr, Zcurr, mov, plusgroup = 0L) {
 #' @param plusgroup Integer. Include a plus-group (1) or not (0)?
 #' 
 #' @author A. Hordyk
-#' @export
 #' @keywords internal
 popdynCPP <- function(nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, plusgroup = 0L) {
     .Call('_MSEtool_popdynCPP', PACKAGE = 'MSEtool', nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, plusgroup)

@@ -22,7 +22,6 @@ using namespace Rcpp;
 //' 
 //' @author A. Hordyk
 //' 
-//' @export
 //' @keywords internal
 //[[Rcpp::export]]
 arma::mat popdynOneTScpp(double nareas, double maxage, 
@@ -102,7 +101,6 @@ arma::mat popdynOneTScpp(double nareas, double maxage,
 //' @param plusgroup Integer. Include a plus-group (1) or not (0)?
 //' 
 //' @author A. Hordyk
-//' @export
 //' @keywords internal
 //[[Rcpp::export]]
 List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,

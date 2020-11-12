@@ -424,6 +424,8 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
                                                             Sample_Area$RecInd[,nyears+yind,], 
                                                           c(nsim, interval[mm], nareas)),
                                                     c(1, 2), sum)
+  
+
   Data@Rec <- cbind(Data@Rec, Recobs)
   
   # --- Average catch ----
@@ -626,7 +628,6 @@ simCAL <- function(nsim, nyears, maxage,  CAL_ESS, CAL_nsamp, nCALbins, CAL_bins
 #' distribution
 #'
 #' @return Generated length composition from `genSizeComp`
-#' @export
 #'
 #' @keywords internal
 genSizeCompWrap <- function(i, vn, CAL_binsmid, retL,
@@ -657,7 +658,6 @@ genSizeCompWrap <- function(i, vn, CAL_binsmid, retL,
 
 #' @describeIn genSizeCompWrap Internal function to calculate fifth percentile of size composition
 #' @param lenvec Vector of lengths 
-#' @export 
 getfifth <- function(lenvec, CAL_binsmid) {
   temp <- rep(CAL_binsmid, lenvec)
   if(sum(lenvec)==0) return(NA)

@@ -250,8 +250,6 @@ MSYCalcs <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age,
 #' @param pyears The number of years to project forward. Equal to 'nyears' for optimizing for q.
 #' @param Ncurr Array with current numbers-at-age (dim=c(nsim, maxage+1, nareas))
 #' @author A. Hordyk
-#' @export
-#' @keywords internal
 calcRefYield <- function(x, StockPars, FleetPars, pyears, Ncurr) {
   
   opt <- optimize(optYield, log(c(0.001, 10)), 
@@ -402,7 +400,6 @@ optYield <- function(logFa, Asize_c, nareas, maxage, Ncurr, pyears, M_age,
 #'
 #' @return A named list with updated population dynamics
 #' @author A. Hordyk
-#' @export
 #'
 #' @keywords internal
 CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,

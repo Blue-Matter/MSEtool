@@ -66,7 +66,6 @@ getmov2 <- function(x, Prob_staying, Frac_area_1) {
 #' @param EffYears index of years
 #' @param EffLower vector of lower bound
 #' @param EffUpper vector of upper bound
-#' @export getEffhist
 #' @keywords internal
 #'  
 getEffhist <- function(Esd, nyears, EffYears, EffLower, EffUpper) {

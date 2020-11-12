@@ -58,7 +58,6 @@ applyMMP <- function(DataList, MP = NA, reps = 1, nsims=NA, silent=FALSE) {
 #' @param temp A list of nsim simulations.
 #' @param nareas The number of areas.
 #' @author T. Carruthers
-#' @export
 CombineMMP<-function(temp,nareas){
   
   slots <- slotNames(temp[[1]][[1]][[1]]) # sim stock fleet
@@ -99,12 +98,11 @@ CombineMMP<-function(temp,nareas){
   
 }
 
-#' Extract the first dimension of a hierachical list of recommendation objects
+#' Extract the first dimension of a hierarchical list of recommendation objects
 #' 
 #' @param x Simulation number
 #' @param name Character. The slot name to extract.
 #' @param pp Integer. The stock number (second level list)
 #' @param ff Integer. The fleet number (third level list)
 #' @author T. Carruthers
-#' @export
 getfirstlev<-function(x, name,pp,ff) slot(x[[pp]][[ff]], name)

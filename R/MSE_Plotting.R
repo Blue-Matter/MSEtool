@@ -1642,124 +1642,124 @@ PWhisker<-function(MSEobj){#},Pnames=c("POF","C30","D30","LD","DNC","LDNC","PGK"
 # }
 # 
 
-#' Trade-off plots for an MSE object
-#' 
-#' Three figures showing trade-offs between fishing mortality, biomass, and yield.
-#' 
-#' @param MSEobj An object of class 'MSE'
-#' @param nam Name of the plot
-#' @author T. Carruthers & A. Hordyk
-#' @seealso \link{TradePlot} \link{PerformanceMetric}
-#' @describeIn Tplot Used in the plot method for MSE objects that shows trade-off between
-#' yield versus probability of overfishing and biomass levels (relative to BMSY).
-#' @export
-Tplot_old <- function(MSEobj, nam = NA) {
-  old_par <- par(no.readonly = TRUE)
-  on.exit(par(old_par))
-  
-  FMSYr <- quantile(MSEobj@F_FMSY, c(0.001, 0.9), na.rm = T)
-  BMSYr <- quantile(MSEobj@SB_SBMSY, c(0.001, 0.975), na.rm = T)
-  
-  colsse <- rainbow(100, start = 0, end = 0.36)[1:100]
-  colB <- rep(colsse[100], ceiling(BMSYr[2] * 100))
-  colB[1:100] <- colsse
-  colB <- makeTransparent(colB, 60)
-  colsse <- rainbow(200, start = 0, end = 0.36)[200:1]
-  colF <- rep(colsse[200], ceiling(FMSYr[2] * 100))
-  colF[1:200] <- colsse
-  colF <- makeTransparent(colF, 60)
-  
-  Yd <- rep(NA, MSEobj@nMPs)
-  P10 <- rep(NA, MSEobj@nMPs)
-  P50 <- rep(NA, MSEobj@nMPs)
-  P100 <- rep(NA, MSEobj@nMPs)
-  POF <- rep(NA, MSEobj@nMPs)
-  yind <- max(MSEobj@proyears - 4, 1):MSEobj@proyears
-  RefYd <- MSEobj@OM$RefY
-  
-  for (mm in 1:MSEobj@nMPs) {
-    Yd[mm] <- round(mean(apply(MSEobj@Catch[, mm, yind], 1, mean, na.rm = T)/RefYd, 
-                         na.rm = T) * 100, 1)
-    # cbind(MSEobj@Catch[,mm,yind],unlist(MSEobj@OM$MSY))
-    POF[mm] <- round(sum(MSEobj@F_FMSY[, mm, ] >= 1, na.rm = T)/prod(dim(MSEobj@F_FMSY[, 
-                                                                                       mm, ]), na.rm = T) * 100, 1)
-    P10[mm] <- round(sum(MSEobj@SB_SBMSY[, mm, ] <= 0.1, na.rm = T)/prod(dim(MSEobj@SB_SBMSY[, 
-                                                                                         mm, ])) * 100, 1)
-    P50[mm] <- round(sum(MSEobj@SB_SBMSY[, mm, ] <= 0.5, na.rm = T)/prod(dim(MSEobj@SB_SBMSY[, 
-                                                                                         mm, ])) * 100, 1)
-    P100[mm] <- round(sum(MSEobj@B_BMSY[, mm, ] <= 1, na.rm = T)/prod(dim(MSEobj@B_BMSY[, 
-                                                                                        mm, ])) * 100, 1)
-  }
-  
-  # dev.new2(width=7,height=7)
-  par(mfrow = c(2, 2), mar = c(5, 4, 1, 1), oma = c(0, 0, 2, 0))
-  
-  tradeoffplot(POF, Yd, "Prob. of overfishing (%)", "Relative yield", 
-               MSEobj@MPs[1:MSEobj@nMPs], vl = 50, hl = 100)
-  tradeoffplot(P100, Yd, "Prob. biomass < BMSY (%)", "Relative yield", 
-               MSEobj@MPs[1:MSEobj@nMPs], vl = 50, hl = 100)
-  tradeoffplot(P50, Yd, "Prob. biomass < 0.5BMSY (%)", "Relative yield", 
-               MSEobj@MPs[1:MSEobj@nMPs], vl = 50, hl = 100)
-  tradeoffplot(P10, Yd, "Prob. biomass < 0.1BMSY (%)", "Relative yield", 
-               MSEobj@MPs[1:MSEobj@nMPs], vl = 50, hl = 100)
-  
-  if (is.na(nam)) 
-    mtext(deparse(substitute(MSEobj)), 3, outer = T, line = 0.3, font = 2)
-  if (!is.na(nam) & !is.character(nam)) 
-    mtext(MSEobj@Name, 3, outer = T, line = 0.3, font = 2)
-  if (!is.na(nam) & is.character(nam)) 
-    mtext(nam, 3, outer = T, line = 0.3, font = 2)
-  return(invisible())
-}
+# #' Trade-off plots for an MSE object
+# #' 
+# #' Three figures showing trade-offs between fishing mortality, biomass, and yield.
+# #' 
+# #' @param MSEobj An object of class 'MSE'
+# #' @param nam Name of the plot
+# #' @author T. Carruthers & A. Hordyk
+# #' @seealso \link{TradePlot} \link{PerformanceMetric}
+# #' @describeIn Tplot Used in the plot method for MSE objects that shows trade-off between
+# #' yield versus probability of overfishing and biomass levels (relative to BMSY).
+# #' @export
+# Tplot_old <- function(MSEobj, nam = NA) {
+#   old_par <- par(no.readonly = TRUE)
+#   on.exit(par(old_par))
+#   
+#   FMSYr <- quantile(MSEobj@F_FMSY, c(0.001, 0.9), na.rm = T)
+#   BMSYr <- quantile(MSEobj@SB_SBMSY, c(0.001, 0.975), na.rm = T)
+#   
+#   colsse <- rainbow(100, start = 0, end = 0.36)[1:100]
+#   colB <- rep(colsse[100], ceiling(BMSYr[2] * 100))
+#   colB[1:100] <- colsse
+#   colB <- makeTransparent(colB, 60)
+#   colsse <- rainbow(200, start = 0, end = 0.36)[200:1]
+#   colF <- rep(colsse[200], ceiling(FMSYr[2] * 100))
+#   colF[1:200] <- colsse
+#   colF <- makeTransparent(colF, 60)
+#   
+#   Yd <- rep(NA, MSEobj@nMPs)
+#   P10 <- rep(NA, MSEobj@nMPs)
+#   P50 <- rep(NA, MSEobj@nMPs)
+#   P100 <- rep(NA, MSEobj@nMPs)
+#   POF <- rep(NA, MSEobj@nMPs)
+#   yind <- max(MSEobj@proyears - 4, 1):MSEobj@proyears
+#   RefYd <- MSEobj@OM$RefY
+#   
+#   for (mm in 1:MSEobj@nMPs) {
+#     Yd[mm] <- round(mean(apply(MSEobj@Catch[, mm, yind], 1, mean, na.rm = T)/RefYd, 
+#                          na.rm = T) * 100, 1)
+#     # cbind(MSEobj@Catch[,mm,yind],unlist(MSEobj@OM$MSY))
+#     POF[mm] <- round(sum(MSEobj@F_FMSY[, mm, ] >= 1, na.rm = T)/prod(dim(MSEobj@F_FMSY[, 
+#                                                                                        mm, ]), na.rm = T) * 100, 1)
+#     P10[mm] <- round(sum(MSEobj@SB_SBMSY[, mm, ] <= 0.1, na.rm = T)/prod(dim(MSEobj@SB_SBMSY[, 
+#                                                                                          mm, ])) * 100, 1)
+#     P50[mm] <- round(sum(MSEobj@SB_SBMSY[, mm, ] <= 0.5, na.rm = T)/prod(dim(MSEobj@SB_SBMSY[, 
+#                                                                                          mm, ])) * 100, 1)
+#     P100[mm] <- round(sum(MSEobj@B_BMSY[, mm, ] <= 1, na.rm = T)/prod(dim(MSEobj@B_BMSY[, 
+#                                                                                         mm, ])) * 100, 1)
+#   }
+#   
+#   # dev.new2(width=7,height=7)
+#   par(mfrow = c(2, 2), mar = c(5, 4, 1, 1), oma = c(0, 0, 2, 0))
+#   
+#   tradeoffplot(POF, Yd, "Prob. of overfishing (%)", "Relative yield", 
+#                MSEobj@MPs[1:MSEobj@nMPs], vl = 50, hl = 100)
+#   tradeoffplot(P100, Yd, "Prob. biomass < BMSY (%)", "Relative yield", 
+#                MSEobj@MPs[1:MSEobj@nMPs], vl = 50, hl = 100)
+#   tradeoffplot(P50, Yd, "Prob. biomass < 0.5BMSY (%)", "Relative yield", 
+#                MSEobj@MPs[1:MSEobj@nMPs], vl = 50, hl = 100)
+#   tradeoffplot(P10, Yd, "Prob. biomass < 0.1BMSY (%)", "Relative yield", 
+#                MSEobj@MPs[1:MSEobj@nMPs], vl = 50, hl = 100)
+#   
+#   if (is.na(nam)) 
+#     mtext(deparse(substitute(MSEobj)), 3, outer = T, line = 0.3, font = 2)
+#   if (!is.na(nam) & !is.character(nam)) 
+#     mtext(MSEobj@Name, 3, outer = T, line = 0.3, font = 2)
+#   if (!is.na(nam) & is.character(nam)) 
+#     mtext(nam, 3, outer = T, line = 0.3, font = 2)
+#   return(invisible())
+# }
 
 
 
-#' @describeIn Tplot Simpler plot that compares long-term yield (LTY:
-#' fraction of simulations getting over half FMSY yield in the last ten years
-#' of the projection), short-term yield (STY: fraction of simulations getting
-#' over half FMSY yield in the first ten years of the projection), variability
-#' in yield (VY: fraction of simulations where average annual variability in
-#' yield is less than 10 per cent) and biomass level (B10: the fraction of
-#' simulations in which biomass stays above 10 percent of BMSY).
-#' @export
-Tplot2_old  <- function(MSEobj, nam = NA) {
-  old_par <- par(no.readonly = TRUE)
-  on.exit(par(old_par))
-  
-  LTY <- rep(NA, MSEobj@nMPs)
-  STY <- rep(NA, MSEobj@nMPs)
-  VY <- rep(NA, MSEobj@nMPs)
-  B10 <- rep(NA, MSEobj@nMPs)
-  yend <- max(MSEobj@proyears - 4, 1):MSEobj@proyears
-  ystart <- 1:5
-  RefYd <- MSEobj@OM$RefY
-  y1 <- 1:(MSEobj@proyears - 1)
-  y2 <- 2:MSEobj@proyears
-  for (mm in 1:MSEobj@nMPs) {
-    LTY[mm] <- round(sum(MSEobj@Catch[, mm, yend]/RefYd > 0.5, na.rm = T)/(MSEobj@nsim * 
-                                                                         length(yend)), 3) * 100
-    STY[mm] <- round(sum(MSEobj@Catch[, mm, ystart]/RefYd > 0.5, na.rm = T)/(MSEobj@nsim * 
-                                                                           length(ystart)), 3) * 100
-    AAVY <- apply(((MSEobj@Catch[, mm, y1] - MSEobj@Catch[, mm, y2])^2)^0.5, 
-                  1, mean, na.rm = T)/apply(MSEobj@Catch[, mm, y2], 1, mean, na.rm = T)
-    VY[mm] <- round(sum(AAVY < 0.1, na.rm = T)/MSEobj@nsim, 3) * 100
-    B10[mm] <- round(sum(MSEobj@SB_SBMSY[, mm, ] > 0.1, na.rm = T)/prod(dim(MSEobj@SB_SBMSY[, 
-                                                                                        mm, ])), 3) * 100
-  }
-  par(mfrow = c(1, 2), mar = c(5, 4, 1, 1), oma = c(0, 0, 2, 0))
-
-  tradeoffplot(STY, LTY, "P(Short term yield > 0.5 FMSY)", "P(Long term yield > 0.5 FMSY)", 
-               MSEobj@MPs[1:MSEobj@nMPs], vl = 1, hl = 1)
-  tradeoffplot(B10, VY, "P(Biomass > 0.1 BMSY)", "P(CV in yield < 0.1)", 
-               MSEobj@MPs[1:MSEobj@nMPs], vl = 1, hl = 1)
-  if (is.na(nam)) 
-    mtext(deparse(substitute(MSEobj)), 3, outer = T, line = 0.3, font = 2)
-  if (!is.na(nam)) 
-    mtext(MSEobj@Name, 3, outer = T, line = 0.3, font = 2)
-  return(invisible())
-}
-
-
+# #' @describeIn Tplot Simpler plot that compares long-term yield (LTY:
+# #' fraction of simulations getting over half FMSY yield in the last ten years
+# #' of the projection), short-term yield (STY: fraction of simulations getting
+# #' over half FMSY yield in the first ten years of the projection), variability
+# #' in yield (VY: fraction of simulations where average annual variability in
+# #' yield is less than 10 per cent) and biomass level (B10: the fraction of
+# #' simulations in which biomass stays above 10 percent of BMSY).
+# #' @export
+# Tplot2_old  <- function(MSEobj, nam = NA) {
+#   old_par <- par(no.readonly = TRUE)
+#   on.exit(par(old_par))
+#   
+#   LTY <- rep(NA, MSEobj@nMPs)
+#   STY <- rep(NA, MSEobj@nMPs)
+#   VY <- rep(NA, MSEobj@nMPs)
+#   B10 <- rep(NA, MSEobj@nMPs)
+#   yend <- max(MSEobj@proyears - 4, 1):MSEobj@proyears
+#   ystart <- 1:5
+#   RefYd <- MSEobj@OM$RefY
+#   y1 <- 1:(MSEobj@proyears - 1)
+#   y2 <- 2:MSEobj@proyears
+#   for (mm in 1:MSEobj@nMPs) {
+#     LTY[mm] <- round(sum(MSEobj@Catch[, mm, yend]/RefYd > 0.5, na.rm = T)/(MSEobj@nsim * 
+#                                                                          length(yend)), 3) * 100
+#     STY[mm] <- round(sum(MSEobj@Catch[, mm, ystart]/RefYd > 0.5, na.rm = T)/(MSEobj@nsim * 
+#                                                                            length(ystart)), 3) * 100
+#     AAVY <- apply(((MSEobj@Catch[, mm, y1] - MSEobj@Catch[, mm, y2])^2)^0.5, 
+#                   1, mean, na.rm = T)/apply(MSEobj@Catch[, mm, y2], 1, mean, na.rm = T)
+#     VY[mm] <- round(sum(AAVY < 0.1, na.rm = T)/MSEobj@nsim, 3) * 100
+#     B10[mm] <- round(sum(MSEobj@SB_SBMSY[, mm, ] > 0.1, na.rm = T)/prod(dim(MSEobj@SB_SBMSY[, 
+#                                                                                         mm, ])), 3) * 100
+#   }
+#   par(mfrow = c(1, 2), mar = c(5, 4, 1, 1), oma = c(0, 0, 2, 0))
+# 
+#   tradeoffplot(STY, LTY, "P(Short term yield > 0.5 FMSY)", "P(Long term yield > 0.5 FMSY)", 
+#                MSEobj@MPs[1:MSEobj@nMPs], vl = 1, hl = 1)
+#   tradeoffplot(B10, VY, "P(Biomass > 0.1 BMSY)", "P(CV in yield < 0.1)", 
+#                MSEobj@MPs[1:MSEobj@nMPs], vl = 1, hl = 1)
+#   if (is.na(nam)) 
+#     mtext(deparse(substitute(MSEobj)), 3, outer = T, line = 0.3, font = 2)
+#   if (!is.na(nam)) 
+#     mtext(MSEobj@Name, 3, outer = T, line = 0.3, font = 2)
+#   return(invisible())
+# }
+# 
+# 
 # #' @describeIn Tplot By default, trade-off plots among LTY, STY, and biomass level B50 
 # #' (fraction of simulations in which biomass stays above 50 percent of BMSY), and 
 # #' Average Annual Variability in Yield (AAVY).
@@ -1846,148 +1846,148 @@ Tplot2_old  <- function(MSEobj, nam = NA) {
 # 
 # 
 # 
-#' Generic Trade-off Plot
-#' 
-#' Creates a trade-off plot (up to four panels) of built-in performance
-#' metrics.
-#' 
-#' Returns a list containing the names of performance metrics that meet the
-#' minimum performance metrics for each trade-off, and ranks the MPs by
-#' increasing distance from the top-right corner.
-#' 
-#' @param MSEobj Object of class MSE, output of the runMSE function
-#' @param XAxis Character string describing the performance metrics for the
-#' x-axis (or x-axes if vector; max 4). Must be chosen for list of existing PMs
-#' and same length as YAxis. See \code{PMs}
-#' @param YAxis Character string describing the performance metrics for the
-#' y-axis (or y-axes if vector; max 4). Must be chosen for list of existing PMs
-#' and same length as XAxis. See \code{PMs}
-#' @param XThresh Minimum threshold values in percent (i.e., 50 = 50\%) for the
-#' x-axes (must be same length as XAxis)
-#' @param YThresh Minimum threshold values in percent (i.e., 50 = 50\%) for the
-#' y-axes (must be same length as YAxis)
-#' @param maxVar Reference for average annual variability in yield in percent
-#' @param BmsyRef Reference level of BMSY, in proportion, i.e., 0.5 = 0.5BMSY
-#' @param B0Ref Reference level of B0, in proportion, i.e., 0.2 = 0.2B0
-#' @param AvailMPs vector of MPs that *could* be applied to the fishery, i.e.,
-#' sufficient data exists. These a plotted with different symbol
-#' @param ShowLabs Logical to specify if MP labels are shown
-#' @param ShowCols Logical to specify if background colors are shown
-#' @author A. Hordyk
-#' @export 
-TradePlot_old <- function(MSEobj, XAxis = c("Overfishing", "Biomass:BMSY"), 
-                      YAxis = c("Long-term Yield", "AnnualVar"), XThresh = c(30, 80), 
-                      YThresh = c(0, 50), maxVar = 15, BmsyRef = 0.5, B0Ref = 0.2, 
-                      AvailMPs = NULL, ShowLabs = FALSE, ShowCols = TRUE) {
-  PMs <- c("Long-term Yield", "Short-term Yield", "Overfishing", "Biomass:BMSY", 
-           "Biomass:B0", "AnnualVar")
-  op <- par(no.readonly=TRUE)
-  on.exit(par(op))
-  # Error Checks
-  if (prod(XAxis %in% PMs) != 1) {
-    message("Available Performance Metrics")
-    print(PMs)
-    stop("Invalid XAxis Performance Metrics")
-  }
-  if (prod(YAxis %in% PMs) != 1) {
-    message("Available Performance Metrics")
-    print(PMs)
-    stop("Invalid YAxis Performance Metrics")
-  }
-  if (length(XAxis) > 4) 
-    stop("Too many Performance Metrics (max 4)")
-  if (length(YAxis) > 4) 
-    stop("Too many Performance Metrics (max 4)")
-  if (length(XAxis) != length(YAxis)) 
-    stop("XAxis must be of same length as YAxis")
-  if (length(XThresh) != length(XAxis) | length(YThresh) != length(XAxis)) 
-    warning("Risk Threshold not same length as number of PMs")
-  
-  Yd <- rep(NA, MSEobj@nMPs)
-  BMSYref <- rep(NA, MSEobj@nMPs)
-  B0ref <- rep(NA, MSEobj@nMPs)
-  PNOF <- rep(NA, MSEobj@nMPs)
-  LTY <- rep(NA, MSEobj@nMPs)
-  STY <- rep(NA, MSEobj@nMPs)
-  VY <- rep(NA, MSEobj@nMPs)
-  
-  y1 <- 1:(MSEobj@proyears - 1)
-  y2 <- 2:MSEobj@proyears
-  
-  ystart <- 1:5
-  yend <- max(MSEobj@proyears - 4, 1):MSEobj@proyears
-  
-  RefYd <- MSEobj@OM$RefY
-  if (maxVar < 1) 
-    maxVar <- maxVar * 100
-  
-  for (mm in 1:MSEobj@nMPs) {
-    PNOF[mm] <- round(sum(MSEobj@F_FMSY[, mm, ] <= 1, na.rm = T)/prod(dim(MSEobj@F_FMSY[, 
-                                                                                        mm, ]), na.rm = T) * 100, 1)
-    BMSYref[mm] <- round(sum(MSEobj@SB_SBMSY[, mm, ] > BmsyRef, na.rm = T)/prod(dim(MSEobj@SB_SBMSY[, mm, ])) * 100, 1)
-    B0ref[mm] <- round(sum((MSEobj@SB_SBMSY[, mm, ] * MSEobj@OM$SSBMSY_SSB0) > 
-                             B0Ref, na.rm = T)/prod(dim(MSEobj@SB_SBMSY[, mm, ])) * 100, 1)
-    # LTY[mm]<-round(sum(MSEobj@Catch[,mm,yend]/RefYd>0.5,na.rm=T)/(MSEobj@nsim*length(yend)),3)*100
-    # STY[mm]<-round(sum(MSEobj@Catch[,mm,ystart]/RefYd>0.5,na.rm=T)/(MSEobj@nsim*length(ystart)),3)*100
-    LTY[mm] <- round(mean(apply(MSEobj@Catch[, mm, yend], 1, mean, na.rm = T)/RefYd, 
-                          na.rm = T) * 100, 1)
-    STY[mm] <- round(mean(apply(MSEobj@Catch[, mm, ystart], 1, mean, na.rm = T)/RefYd, 
-                          na.rm = T) * 100, 1)
-    AAVY <- apply((((MSEobj@Catch[, mm, y1] - MSEobj@Catch[, mm, y2])/MSEobj@Catch[, 
-                                                                       mm, y2])^2)^0.5, 1, mean, na.rm = T)
-    VY[mm] <- round(sum(AAVY < (maxVar/100), na.rm = T)/MSEobj@nsim, 
-                    3) * 100
-  }
-  
-  for (xx in seq_along(XAxis)) {
-    name <- paste0("X", xx)
-    name1 <- paste0("XLab", xx)
-    assign(name, GetStat(XAxis[xx], LTY, STY, PNOF, BMSYref, B0ref, 
-                         VY))
-    assign(name1, StatLab(XAxis[xx], maxVar, BmsyRef, B0Ref))
-    name <- paste0("Y", xx)
-    name1 <- paste0("YLab", xx)
-    assign(name, GetStat(YAxis[xx], LTY, STY, PNOF, BMSYref, B0ref, 
-                         VY))
-    assign(name1, StatLab(YAxis[xx], maxVar, BmsyRef, B0Ref))
-  }
-  
-  Nplot <- length(XAxis)
-  if (Nplot == 1) 
-    par(mfrow = c(1, 1), mar = c(4, 4.5, 1, 1), oma = c(1, 1, 0, 0))
-  if (Nplot == 2) 
-    par(mfrow = c(1, 2), mar = c(4, 4.5, 1, 1), oma = c(1, 1, 0, 0))
-  if (Nplot == 3) 
-    par(mfrow = c(1, 3), mar = c(4, 4.5, 1, 1), oma = c(1, 1, 0, 0))
-  if (Nplot == 4) 
-    par(mfrow = c(2, 2), mar = c(4, 4.5, 1, 1), oma = c(1, 1, 0, 0))
-  
-  OutList <- list()
-  for (xx in seq_along(XAxis)) {
-    Xname <- paste0("X", xx)
-    XLab <- paste0("XLab", xx)
-    Yname <- paste0("Y", xx)
-    YLab <- paste0("YLab", xx)
-    rr <- tradeoffplot4(x = get(Xname), y = get(Yname), get(XLab), 
-                        get(YLab), labs = MSEobj@MPs[1:MSEobj@nMPs], vl = XThresh[xx], 
-                        hl = YThresh[xx], ShowLabs = ShowLabs, ShowCols = ShowCols, 
-                        AvailMPs = AvailMPs)
-    
-    labs <- MSEobj@MPs[1:MSEobj@nMPs]
-    ind <- which(labs %in% rr)
-    tempDF <- data.frame(MP = rr, X = get(Xname)[ind], Y = get(Yname)[ind])
-    Dist <- NULL  # calculate distance from corner
-    for (X in 1:length(tempDF[, 2])) Dist[X] <- euc.dist(c(tempDF[X, 
-                                                                  2], tempDF[X, 3]), c(100, 100))
-    tempDF <- tempDF[order(Dist), ]
-    rownames(tempDF) <- 1:nrow(tempDF)
-    OutList[[xx]] <- tempDF
-  }
-  
-  
-  OutList
-  
-}
+# #' Generic Trade-off Plot
+# #' 
+# #' Creates a trade-off plot (up to four panels) of built-in performance
+# #' metrics.
+# #' 
+# #' Returns a list containing the names of performance metrics that meet the
+# #' minimum performance metrics for each trade-off, and ranks the MPs by
+# #' increasing distance from the top-right corner.
+# #' 
+# #' @param MSEobj Object of class MSE, output of the runMSE function
+# #' @param XAxis Character string describing the performance metrics for the
+# #' x-axis (or x-axes if vector; max 4). Must be chosen for list of existing PMs
+# #' and same length as YAxis. See \code{PMs}
+# #' @param YAxis Character string describing the performance metrics for the
+# #' y-axis (or y-axes if vector; max 4). Must be chosen for list of existing PMs
+# #' and same length as XAxis. See \code{PMs}
+# #' @param XThresh Minimum threshold values in percent (i.e., 50 = 50\%) for the
+# #' x-axes (must be same length as XAxis)
+# #' @param YThresh Minimum threshold values in percent (i.e., 50 = 50\%) for the
+# #' y-axes (must be same length as YAxis)
+# #' @param maxVar Reference for average annual variability in yield in percent
+# #' @param BmsyRef Reference level of BMSY, in proportion, i.e., 0.5 = 0.5BMSY
+# #' @param B0Ref Reference level of B0, in proportion, i.e., 0.2 = 0.2B0
+# #' @param AvailMPs vector of MPs that *could* be applied to the fishery, i.e.,
+# #' sufficient data exists. These a plotted with different symbol
+# #' @param ShowLabs Logical to specify if MP labels are shown
+# #' @param ShowCols Logical to specify if background colors are shown
+# #' @author A. Hordyk
+# #' @export 
+# TradePlot_old <- function(MSEobj, XAxis = c("Overfishing", "Biomass:BMSY"), 
+#                       YAxis = c("Long-term Yield", "AnnualVar"), XThresh = c(30, 80), 
+#                       YThresh = c(0, 50), maxVar = 15, BmsyRef = 0.5, B0Ref = 0.2, 
+#                       AvailMPs = NULL, ShowLabs = FALSE, ShowCols = TRUE) {
+#   PMs <- c("Long-term Yield", "Short-term Yield", "Overfishing", "Biomass:BMSY", 
+#            "Biomass:B0", "AnnualVar")
+#   op <- par(no.readonly=TRUE)
+#   on.exit(par(op))
+#   # Error Checks
+#   if (prod(XAxis %in% PMs) != 1) {
+#     message("Available Performance Metrics")
+#     print(PMs)
+#     stop("Invalid XAxis Performance Metrics")
+#   }
+#   if (prod(YAxis %in% PMs) != 1) {
+#     message("Available Performance Metrics")
+#     print(PMs)
+#     stop("Invalid YAxis Performance Metrics")
+#   }
+#   if (length(XAxis) > 4) 
+#     stop("Too many Performance Metrics (max 4)")
+#   if (length(YAxis) > 4) 
+#     stop("Too many Performance Metrics (max 4)")
+#   if (length(XAxis) != length(YAxis)) 
+#     stop("XAxis must be of same length as YAxis")
+#   if (length(XThresh) != length(XAxis) | length(YThresh) != length(XAxis)) 
+#     warning("Risk Threshold not same length as number of PMs")
+#   
+#   Yd <- rep(NA, MSEobj@nMPs)
+#   BMSYref <- rep(NA, MSEobj@nMPs)
+#   B0ref <- rep(NA, MSEobj@nMPs)
+#   PNOF <- rep(NA, MSEobj@nMPs)
+#   LTY <- rep(NA, MSEobj@nMPs)
+#   STY <- rep(NA, MSEobj@nMPs)
+#   VY <- rep(NA, MSEobj@nMPs)
+#   
+#   y1 <- 1:(MSEobj@proyears - 1)
+#   y2 <- 2:MSEobj@proyears
+#   
+#   ystart <- 1:5
+#   yend <- max(MSEobj@proyears - 4, 1):MSEobj@proyears
+#   
+#   RefYd <- MSEobj@OM$RefY
+#   if (maxVar < 1) 
+#     maxVar <- maxVar * 100
+#   
+#   for (mm in 1:MSEobj@nMPs) {
+#     PNOF[mm] <- round(sum(MSEobj@F_FMSY[, mm, ] <= 1, na.rm = T)/prod(dim(MSEobj@F_FMSY[, 
+#                                                                                         mm, ]), na.rm = T) * 100, 1)
+#     BMSYref[mm] <- round(sum(MSEobj@SB_SBMSY[, mm, ] > BmsyRef, na.rm = T)/prod(dim(MSEobj@SB_SBMSY[, mm, ])) * 100, 1)
+#     B0ref[mm] <- round(sum((MSEobj@SB_SBMSY[, mm, ] * MSEobj@OM$SSBMSY_SSB0) > 
+#                              B0Ref, na.rm = T)/prod(dim(MSEobj@SB_SBMSY[, mm, ])) * 100, 1)
+#     # LTY[mm]<-round(sum(MSEobj@Catch[,mm,yend]/RefYd>0.5,na.rm=T)/(MSEobj@nsim*length(yend)),3)*100
+#     # STY[mm]<-round(sum(MSEobj@Catch[,mm,ystart]/RefYd>0.5,na.rm=T)/(MSEobj@nsim*length(ystart)),3)*100
+#     LTY[mm] <- round(mean(apply(MSEobj@Catch[, mm, yend], 1, mean, na.rm = T)/RefYd, 
+#                           na.rm = T) * 100, 1)
+#     STY[mm] <- round(mean(apply(MSEobj@Catch[, mm, ystart], 1, mean, na.rm = T)/RefYd, 
+#                           na.rm = T) * 100, 1)
+#     AAVY <- apply((((MSEobj@Catch[, mm, y1] - MSEobj@Catch[, mm, y2])/MSEobj@Catch[, 
+#                                                                        mm, y2])^2)^0.5, 1, mean, na.rm = T)
+#     VY[mm] <- round(sum(AAVY < (maxVar/100), na.rm = T)/MSEobj@nsim, 
+#                     3) * 100
+#   }
+#   
+#   for (xx in seq_along(XAxis)) {
+#     name <- paste0("X", xx)
+#     name1 <- paste0("XLab", xx)
+#     assign(name, GetStat(XAxis[xx], LTY, STY, PNOF, BMSYref, B0ref, 
+#                          VY))
+#     assign(name1, StatLab(XAxis[xx], maxVar, BmsyRef, B0Ref))
+#     name <- paste0("Y", xx)
+#     name1 <- paste0("YLab", xx)
+#     assign(name, GetStat(YAxis[xx], LTY, STY, PNOF, BMSYref, B0ref, 
+#                          VY))
+#     assign(name1, StatLab(YAxis[xx], maxVar, BmsyRef, B0Ref))
+#   }
+#   
+#   Nplot <- length(XAxis)
+#   if (Nplot == 1) 
+#     par(mfrow = c(1, 1), mar = c(4, 4.5, 1, 1), oma = c(1, 1, 0, 0))
+#   if (Nplot == 2) 
+#     par(mfrow = c(1, 2), mar = c(4, 4.5, 1, 1), oma = c(1, 1, 0, 0))
+#   if (Nplot == 3) 
+#     par(mfrow = c(1, 3), mar = c(4, 4.5, 1, 1), oma = c(1, 1, 0, 0))
+#   if (Nplot == 4) 
+#     par(mfrow = c(2, 2), mar = c(4, 4.5, 1, 1), oma = c(1, 1, 0, 0))
+#   
+#   OutList <- list()
+#   for (xx in seq_along(XAxis)) {
+#     Xname <- paste0("X", xx)
+#     XLab <- paste0("XLab", xx)
+#     Yname <- paste0("Y", xx)
+#     YLab <- paste0("YLab", xx)
+#     rr <- tradeoffplot4(x = get(Xname), y = get(Yname), get(XLab), 
+#                         get(YLab), labs = MSEobj@MPs[1:MSEobj@nMPs], vl = XThresh[xx], 
+#                         hl = YThresh[xx], ShowLabs = ShowLabs, ShowCols = ShowCols, 
+#                         AvailMPs = AvailMPs)
+#     
+#     labs <- MSEobj@MPs[1:MSEobj@nMPs]
+#     ind <- which(labs %in% rr)
+#     tempDF <- data.frame(MP = rr, X = get(Xname)[ind], Y = get(Yname)[ind])
+#     Dist <- NULL  # calculate distance from corner
+#     for (X in 1:length(tempDF[, 2])) Dist[X] <- euc.dist(c(tempDF[X, 
+#                                                                   2], tempDF[X, 3]), c(100, 100))
+#     tempDF <- tempDF[order(Dist), ]
+#     rownames(tempDF) <- 1:nrow(tempDF)
+#     OutList[[xx]] <- tempDF
+#   }
+#   
+#   
+#   OutList
+#   
+# }
 
 #' Calculate Value Of Information
 #' 

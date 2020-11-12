@@ -7,7 +7,7 @@
 #' in the working directory or the directory specified by the `dir` argument
 #'
 #' @param name Name of the data input files. Default is 'Data'. Use 'Example'
-#' to create populated example Data Input and Data Documenation files. 
+#' to create populated example Data Input and Data Documentation files. 
 #' @param ext Optional file extension for input file. 'xlsx' (default) or 'csv'
 #' @param overwrite Logical. Overwrite existing files?
 #' @param dir Optional directory path to create the Data files. Default is `getwd()``
@@ -943,7 +943,7 @@ DLMdiag <- function(Data, command = c("available", "not available", "needed"), r
   rr <- try(slot(Data, "Misc"), silent = TRUE)
   if (inherits(rr,"try-error")) Data@Misc <- list()
   if (!dev) {
-    ReqData <- MSEtool::ReqData
+    # ReqData <- MSEtool:::ReqData # ReqData in internal sysdata
     builtin <- funcs1[funcs1 %in% ReqData$MP]
     custom <- funcs1[!funcs1 %in% ReqData$MP]
     inMPind <- which(funcs1 %in% builtin)
@@ -1361,7 +1361,7 @@ Sense <- function(Data, MP, nsense = 6, reps = 100, perc = c(0.05, 0.5, 0.95), p
 #' Calculate TAC recommendations for more than one MP
 #' 
 #' A function that returns the stochastic TAC recommendations from a vector of
-#' data-limited MPs (Output) given a data-limited data object Data
+#' output control MPs given a data object Data
 #' 
 #' 
 #' @param Data A data-limited methods data object
@@ -1371,6 +1371,7 @@ Sense <- function(Data, MP, nsense = 6, reps = 100, perc = c(0.05, 0.5, 0.95), p
 #' @author T. Carruthers
 #' @examples 
 #' \dontrun{
+#' library(DLMtool)
 #' Data <- TAC(MSEtool::Cobia)
 #' plot(Data)
 #' }
@@ -1391,7 +1392,6 @@ TAC <- function(Data, MPs = NA, reps = 100, timelimit = 1) {
   } else {
     Data <- applyMP(Data, MPs = funcs, reps)[[2]]
     return(Data)
-    # assign(nm,DLM,envir=.GlobalEnv)
   }
   
 }
