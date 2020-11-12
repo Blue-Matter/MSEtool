@@ -150,8 +150,17 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   Sa[,2]<- n_age-Sa[,2] + 1 # This is the process error index for initial year
   
   # Calculate initial distribution if mov provided in cpars
-  # TODO - check if this works correctly
-  # add code if mov passed in cpars
+  if (is.null(StockPars$initdist)) {
+    
+    if (is.null(SampCpars$Asize)) {
+      message('Asize not set in cpars. Assuming all areas equal size')
+      StockPars$Asize <- matrix(1/nareas, nrow=nsim, ncol=nareas)
+    }
+    
+    # mov has been passed in cpars - initdist hasn't been defined
+    StockPars$initdist <- CalcDistribution(StockPars, SampCpars, OM, plusgroup, checks=FALSE)
+    
+  }
   
   # Unfished recruitment by area - INITDIST OF AGE 1.
   StockPars$R0a <- matrix(StockPars$R0, nrow=nsim, ncol=nareas, byrow=FALSE) * StockPars$initdist[,1,] # 
@@ -1095,6 +1104,10 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, extended=F
     Effort[, mm, y] <- MPCalcs$Effort
     CB_P <- MPCalcs$CB_P # removals
     CB_Pret <- MPCalcs$CB_Pret # retained catch
+    
+    
+    CB_P[1,,y,]/
+    VBiomass_P[1,,y,]
     
     # apply(CB_Pret[,,1,], 1, sum)
     FM_P <- MPCalcs$FM_P # fishing mortality

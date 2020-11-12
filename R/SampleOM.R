@@ -748,7 +748,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
       movedarray<-array(0,c(nsim,nareas,nareas))
       Pinitdist<-array(1/nareas,c(nsim,nareas)) # population distribution by area
       for(i in 1:20){ # convergence in initial distribution is assumed to occur in 20 iterations (generally overkill)
-        # distribution in from areas mulitplied by movement array
+        # distribution in from areas multiplied by movement array
         movedarray[mind[,c(1,3,4)]]<-Pinitdist[mind[,c(1,3)]]*mov[mind]
         Pinitdist<-apply(movedarray,c(1,3),sum) # add over to areas
       }

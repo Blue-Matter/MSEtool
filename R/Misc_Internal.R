@@ -575,3 +575,98 @@ findIntRuns <- function(run){
 }
 
 
+CalcDistribution <- function(StockPars, SampCpars, OM, plusgroup, checks) {
+  nsim <- length(StockPars$M)
+  
+  n_age <- StockPars$maxage + 1 # number of age classes (starting at age-0)
+  nareas <- StockPars$nareas
+  N <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # stock numbers array
+  Biomass <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # stock biomass array
+  VBiomass <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # vulnerable biomass array
+  SSN <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # spawning stock numbers array
+  SSB <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # spawning stock biomass array
+  FM <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # fishing mortality rate array
+  FMret <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # fishing mortality rate array for retained fish 
+  Z <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # total mortality rate array
+  SPR <- array(NA, dim = c(nsim, n_age, nyears)) # store the Spawning Potential Ratio
+  Agearray <- array(rep(0:StockPars$maxage, each = nsim), dim = c(nsim, n_age))  # Age array
+  
+  # Set up array indexes sim (S) age (A) year (Y) region/area (R)
+  SAYR <- as.matrix(expand.grid(1:nareas, 1, 1:n_age, 1:nsim)[4:1])  
+  SAY <- SAYR[, 1:3]
+  SAR <- SAYR[, c(1,2,4)]
+  SA <- Sa <- SAYR[, 1:2]
+  SR <- SAYR[, c(1, 4)]
+  S <- SAYR[, 1]
+  SY <- SAYR[, c(1, 3)]
+  Sa[,2]<- n_age-Sa[,2] + 1 # This is the process error index for initial year
+  
+  surv <- matrix(1, nsim, n_age)
+  surv[, 2:n_age] <- t(exp(-apply(StockPars$M_ageArray[,,1], 1, cumsum)))[, 1:(n_age-1)]  # Survival array
+  
+  if (plusgroup) {
+    surv[,n_age] <- surv[,n_age]+surv[,n_age]*exp(-StockPars$M_ageArray[,n_age,1])/(1-exp(-StockPars$M_ageArray[,n_age,1])) # indefinite integral
+  }
+  Nfrac <- surv * StockPars$Mat_age[,,1]  # predicted Numbers of mature ages in first year
+  
+  SSN[SAYR] <- Nfrac[SA] * StockPars$R0[S] * StockPars$Pinitdist[SR]  # Calculate initial spawning stock numbers
+  N[SAYR] <- StockPars$R0[S] * surv[SA] * StockPars$Pinitdist[SR]  # Calculate initial stock numbers
+  Neq <- N
+  SSB[SAYR] <- SSN[SAYR] * StockPars$Wt_age[SAY]    # Calculate spawning stock biomass
+  SSB0 <- apply(SSB[, , 1, ], 1, sum)  # Calculate unfished spawning stock biomass
+  SSBpR <- matrix(SSB0/StockPars$R0, nrow=nsim, ncol=nareas)  # Spawning stock biomass per recruit
+  SSB0a <- apply(SSB[, , 1, ], c(1, 3), sum)  # Calculate unfished spawning stock numbers
+  
+  bR <- matrix(log(5 * StockPars$hs)/(0.8 * SSB0a), nrow=nsim)  # Ricker SR params
+  aR <- matrix(exp(bR * SSB0a)/SSBpR, nrow=nsim)  # Ricker SR params
+  R0a <- matrix(StockPars$R0, nrow=nsim, ncol=nareas, byrow=FALSE) * 1/nareas # initial distribution of recruits
+  
+  # Project unfished for Nyrs to calculate equilibrium spatial distribution
+  Nyrs <- ceiling(3 * StockPars$maxage) # Project unfished for 3 x maxage
+  # Set up projection arrays 
+  M_ageArrayp <- array(StockPars$M_ageArray[,,1], dim=c(dim(StockPars$M_ageArray)[1:2], Nyrs))
+  Wt_agep <- array(StockPars$Wt_age[,,1], dim=c(dim(StockPars$Wt_age)[1:2], Nyrs))
+  Mat_agep <- array(StockPars$Mat_age[,,1], dim=c(dim(StockPars$Mat_age)[1:2], Nyrs))
+  Perr_yp <- array(1, dim=c(dim(StockPars$Perr_y)[1], Nyrs+StockPars$maxage)) # no process error 
+  
+  # update mov if needed
+  dimMov <- dim(StockPars$mov)
+  movp <- StockPars$mov
+  if (dimMov[length(dimMov)] < Nyrs) {
+    movp <- array(movp, dim=c(dimMov[1:(length(dimMov)-1)], Nyrs))
+  }
+  
+  # Not used but make the arrays anyway
+  retAp <- array(FleetPars$retA[,,1], dim=c(dim(FleetPars$retA)[1:2], Nyrs))
+  Vp <- array(FleetPars$V[,,1], dim=c(dim(FleetPars$V)[1:2], Nyrs))
+  noMPA <- matrix(1, nrow=Nyrs, ncol=nareas)
+  
+  runProj <- lapply(1:nsim, projectEq, StockPars$Asize, nareas=nareas, 
+                    maxage=StockPars$maxage, N=N, pyears=Nyrs,
+                    M_ageArray=M_ageArrayp, Mat_age=Mat_agep, Wt_age=Wt_agep, V=Vp, retA=retAp,
+                    Perr=Perr_yp, mov=movp, SRrel=StockPars$SRrel,
+                    Find=FleetPars$Find, Spat_targ=FleetPars$Spat_targ, 
+                    hs=StockPars$hs,
+                    R0a=R0a, SSBpR=SSBpR, aR=aR, bR=bR, SSB0=SSB0, B0=B0, 
+                    MPA=noMPA, maxF=OM@maxF,
+                    Nyrs)
+  Neq1 <- aperm(array(as.numeric(unlist(runProj)), dim=c(n_age, nareas, nsim)), c(3,1,2))  # unpack the list 
+  
+  # --- Equilibrium spatial / age structure (initdist by SAR)
+  initdist <- Neq1/array(apply(Neq1, c(1,2), sum), dim=c(nsim, n_age, nareas))
+  
+  
+  # check arrays and calculations
+  if (checks) {
+    if(!all(round(apply(initdist, c(1,2), sum),1)==1)) warning('initdist does not sum to one')
+    if(!(all(round(apply(Neq[,,1,], 1, sum) /  apply(Neq1, 1, sum),1) ==1))) warning('eq age structure')
+    sim <- sample(1:nsim,1)
+    yrval <- sample(1:Nyrs,1)
+    if (!all(M_ageArrayp[sim,,yrval] == StockPars$M_ageArray[sim,,1] )) warning('problem with M_ageArrayp')
+    if(!all(Wt_agep[sim,,yrval] == StockPars$Wt_age[sim,,1]))  warning('problem with Wt_agep')
+    if(!all(Mat_agep[sim,,yrval] == StockPars$Mat_age[sim,,1])) warning('problem with Mat_agep')
+  } 
+  initdist
+}
+
+
