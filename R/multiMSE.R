@@ -1027,7 +1027,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     }
   }
   
-  class(HistList) <- 'multiHist'
+  class(HistList) <- c('list', 'multiHist')
   HistList
   
 }
@@ -1040,7 +1040,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
   
   # ---- Setup ----
-  if (class(multiHist) !='multiHist')
+  if (! 'multiHist' %in% class(multiHist))
     stop('Must provide an object of class `multiHist`')
   
   # Unpack historical simulation data
@@ -1217,7 +1217,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
     }
   }
   # TODO - update names of stored values
-  B_BMSYa <- array(NA, dim = c(nsim, np, nMP, proyears))  # store the projected B_BMSY
+  SB_SBMSYa <- array(NA, dim = c(nsim, np, nMP, proyears))  # store the projected SB_SBMSY
   Ba <- array(NA, dim = c(nsim, np, nMP, proyears))  # store the projected Biomass
   SSBa <- array(NA, dim = c(nsim, np, nMP, proyears))  # store the projected SSB
   VBa <- array(NA, dim = c(nsim, np, nMP, proyears))  # store the projected vulnerable biomass
@@ -1227,8 +1227,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
   Ca <- array(NA, dim = c(nsim, np, nf, nMP, proyears))  # store the projected removed catch
   CaRet <- array(NA, dim = c(nsim, np, nf, nMP, proyears))  # store the projected retained catch
   TACa <- array(NA, dim = c(nsim, np, nf, nMP, proyears))  # store the projected TAC recommendation
+  TAE_out <- array(NA, dim = c(nsim, np, nf, nMP, proyears))  # store the projected TAE recommendation
   Effort <- array(NA, dim = c(nsim, np, nf, nMP, proyears))  # store the Effort
   
+ 
   # ---- Grab Stock, Fleet, Obs and Imp values from Hist ----
   StockPars <- FleetPars <- ObsPars <- ImpPars <- list()
   for(p in 1:np){
@@ -1245,6 +1247,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
   maxage <- StockPars[[1]]$maxage
   n_age <- maxage + 1 
   plusgroup <- multiHist[[1]][[1]]@SampPars$Stock$plusgroup
+  
+  # projection arrays for storing all info (by simulation, stock, age, MP, years, areas)
+  N_P_mp <- array(NA, dim = c(nsim, np, n_age, nMP, proyears, nareas))
+  
   
   # ---- Grab Historical N-at-age etc ----
   N <- array(NA, dim=c(nsim, np, n_age, nyears, nareas))
@@ -1638,6 +1644,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
         LastAllocat[,p,f] <- MPCalcs$Ai
         
         LastTAE[,p,f] <- MPCalcs$TAE # TAE set by MP
+        TAE_out[,p,f, mm, y] <- MPCalcs$TAE # TAE 
         LastCatch[,p,f] <- MPCalcs$TACrec # TAC et by MP
         
         Effort[,p,f, mm, y] <- rep(MPCalcs$Effort,nsim)[1:nsim]
@@ -1997,6 +2004,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
             LastSpatial[,p,f,] <- MPCalcs$Si
             LastAllocat[,p,f] <- MPCalcs$Ai
             LastTAE[,p,f] <- MPCalcs$TAE # adjustment to TAE
+            TAE_out[,p,f, mm, y] <- MPCalcs$TAE # TAE 
             LastCatch[,p,f] <- MPCalcs$TACrec
             
             Effort[,p,f, mm, y] <- rep(MPCalcs$Effort,nsim)[1:nsim]
@@ -2059,11 +2067,13 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
             if(length(SexPars)>0)
               MPCalcs <- MPCalcsNAs(MPCalcs) # Zeros caused by SexPars
             TACa[,p,f, mm, y] <- TACused[,p,f] # recommended TAC
+            
             #TACa[,p,f, mm, y] <- MPCalcs$TACrec # recommended TAC
             LastSpatial[,p,f,] <- MPCalcs$Si
             LastAllocat[,p,f] <- MPCalcs$Ai
             
             LastTAE[,p,f] <- MPCalcs$TAE
+            TAE_out[,p,f, mm, y] <- MPCalcs$TAE # recommended TAE
             # LastEi[,p,f] <- MPCalcs$Ei # adjustment to effort
             LastCatch[,p,f] <- MPCalcs$TACrec
             
@@ -2089,7 +2099,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
     } # end of projection years
     
     # SSB relative to SSBMSY
-    B_BMSYa[, ,mm, ] <- apply(SSB_P, c(1,2, 4), sum, na.rm=TRUE)/array(SSBMSY_y[,,mm,],
+    SB_SBMSYa[, ,mm, ] <- apply(SSB_P, c(1,2, 4), sum, na.rm=TRUE)/array(SSBMSY_y[,,mm,],
                                                                        c(nsim,np,proyears))
     
     for(p in 1:np) for(f in 1:nf)
@@ -2103,6 +2113,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
     Ba[, ,mm, ] <- apply(Biomass_P, c(1, 2,4), sum, na.rm=TRUE) # biomass
     SSBa[, ,mm, ] <- apply(SSB_P, c(1, 2,4), sum, na.rm=TRUE) # spawning stock biomass
     VBa[, ,mm, ] <- apply(VBiomass_P, c(1, 2, 4), sum, na.rm=TRUE) # vulnerable biomass
+    
+    N_P_mp[,,, mm,,] <- N_P
     
     for(p in 1:np) for(f in 1:nf)
       Ca[, p,f,mm, ] <- apply(FleetPars[[p]][[f]]$CB_P, c(1, 3),
@@ -2149,16 +2161,46 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
   # need to reformat MMP and complex mode to work with MSEout slot
   if(class(MPs)=="character") MPs<-list(MPs)
   
-  # ---- Create MSE Object ---
-  MSEout <- new("MMSE", Name = MOM@Name, nyears, proyears, nMPs=nMP, MPs=MPs,
-                MPcond=MPcond, MPrefs=MPrefs,nsim, nstocks=np, nfleets=nf,
-                Snames=Snames, Fnames=Fnames, Stocks=Stocks, Fleets=Fleets,
-                Obss=Obs, Imps=Imps,OM=OM, Obs=Obsout, B_BMSY=B_BMSYa,
-                F_FMSY=F_FMSYa, B=Ba, SSB=SSBa, VB=VBa, FM=FMa, CaRet, TAC=TACa,
-                SSB_hist = SSB, CB_hist = CB, FM_hist = FM, Effort = Effort,
-                PAA=array(), CAA=array(), CAL=list(), CALbins=list(),
-                MSY_P = MSY_y, FMSY_P = FMSY_y, SSBMSY_P = SSBMSY_y,
-                Misc = Misc)
+  # ---- Create MMSE Object ----
+  MSEout <- new("MMSE", 
+                Name = MOM@Name, 
+                nyears, 
+                proyears,
+                nMPs=nMP, 
+                MPs=MPs,
+                MPcond=MPcond,
+                MPrefs=MPrefs,
+                nsim, 
+                nstocks=np, 
+                nfleets=nf,
+                Snames=Snames, 
+                Fnames=Fnames, 
+                Stocks=Stocks, 
+                Fleets=Fleets,
+                Obss=Obs, 
+                Imps=Imps,
+                OM=OM, 
+                Obs=Obsout,
+                SB_SBMSY=SB_SBMSYa,
+                F_FMSY=F_FMSYa,
+                N=N_P_mp,
+                B=Ba,
+                SSB=SSBa, 
+                VB=VBa, 
+                FM=FMa, 
+                SPR=list(),
+                Catch=CaRet, 
+                Removals=Ca,
+                Effort = Effort,
+                TAC=TACa,
+                TAE=TAE_out,
+                BioEco=list(),
+                RefPoint=list(MSY=MSY_y,
+                              FMSY=FMSY_y,
+                              SSBMSY=SSBMSY_y),
+                multiHist=multiHist,
+                PPD=MSElist,
+                Misc=Misc)
   MSEout
 }
 
@@ -2195,7 +2237,7 @@ multiMSE <- function(MOM=MSEtool::Albacore_TwoFleet,
   if (class(MOM) == 'MOM') {
     if (MOM@nsim <=1) stop("MOM@nsim must be > 1", call.=FALSE)
     
-  } else if (class(MOM) == 'multiHist') {
+  } else if ('multiHist' %in% class(MOM)) {
     stop("You must specify an operating model of class `MOM`")
     
     # if (!silent) message("Using `multiHist` object to reproduce historical dynamics")

@@ -81,7 +81,7 @@ plot.MMSE <- function(x=NULL, maxcol = 6, qcol = rgb(0.4, 0.8, 0.95), lcol = "do
   plots<-split(1:nMPs, ceiling(seq_along(1:nMPs)/maxcol))
   
   # --- Biomass projection ---------------------------------------------------
-  B_BMSY<-MMSE@B_BMSY
+  B_BMSY<-MMSE@SB_SBMSY
   Blims <- c(0,quantile(B_BMSY,0.95))
   
   for(pp in 1:length(plots)){
@@ -136,7 +136,7 @@ plot.MMSE <- function(x=NULL, maxcol = 6, qcol = rgb(0.4, 0.8, 0.95), lcol = "do
   
   # --- Total yield projection -----------------------------------------------------
   
-  Yd<-MMSE@C#MMSE@OM$RefY
+  Yd<-MMSE@Catch #MMSE@OM$RefY
   Ydsum<-apply(Yd, c(1,2,4,5),sum,na.rm=T)
   Ydsum<-Ydsum/array(rep(Ydsum[,,,1],MMSE@proyears),dim(Ydsum))
   Ylims<- c(0,quantile(Ydsum,0.95,na.rm=T))

@@ -1,3 +1,5 @@
+# ---- multiHist class ----
+
 
 # ---- MMSE Class ----
 #' Class \code{'MMSE'}
@@ -32,25 +34,25 @@
 #' @slot OM A table of sampled parameters of the operating model. Data frame of nsim rows.
 #' @slot Obs A table of sampled parameters of the observation model. Data frame of nsim rows.
 #'
-#' @slot B_BMSY Simulated biomass relative to BMSY over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers
+#' @slot SB_SBMSY Simulated spawing biomass relative to SBMSY over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers
 #' @slot F_FMSY Simulated fishing mortality rate relative to FMSY over the projection. An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers
+#' @slot N Simulated stock numbers over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers
 #' @slot B Simulated stock biomass over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers
 #' @slot SSB Simulated spawning stock biomass over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers
 #' @slot VB Simulated vulnerable biomass over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers
 #' @slot FM Simulated fishing mortality rate over the projection. An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers
-#' @slot C Simulated catches (taken) over the projection. An array with dimensions: nsim,  nStocks, nFleets, nMPs, proyears. Non-negative real numbers
-#' @slot TAC Simulated Total Allowable Catch (prescribed) over the projection (this is NA for input controls). An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers
-#' @slot SSB_hist Simulated historical spawning stock biomass. An array with dimensions: nsim, nStocks, nages, nyears, nareas. Non-negative real numbers
-#' @slot CB_hist Simulated historical catches in weight. An array with dimensions: nsim, nages, nStocks, nFleets, nyears, nareas. Non-negative real numbers
-#' @slot FM_hist Simulated historical fishing mortality rate. An array with dimensions: nsim,  nStocks, nFleets, nages, nyears, nareas. Non-negative real numbers
+#' @slot SPR A list of SPR values. Currently not used.
+#' @slot Catch Simulated catches (landings) over the projection. An array with dimensions: nsim,  nStocks, nFleets, nMPs, proyears. Non-negative real numbers
+#' @slot Removals Simulated removals (landings+discards) over the projection. An array with dimensions: nsim,  nStocks, nFleets, nMPs, proyears. Non-negative real numbers
 #' @slot Effort Simulated relative fishing effort in the projection years. An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers
-#' @slot PAA Not used
-#' @slot CAA Not used
-#' @slot CAL Not used
-#' @slot CALbins Not used
-#' @slot MSY_P Not used
-#' @slot FMSY_P Not used
-#' @slot SSBMSY_P Not used
+#' @slot TAC Simulated Total Allowable Catch (prescribed) over the projection (this is NA for input controls). An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers
+#' @slot TAE Simulated Total Allowable Effort (prescribed) over the projection (this is NA for output controls). An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers
+#' @slot BioEco A named list of bio-economic output. Not currently used.
+#' @slot RefPoint Named list of annual MSY reference points MSY, FMSY, and SBMSY. 
+#' Array with dimensions: nsim, nstocks, nMPs, nyears+proyears. Will be the same as `multiHist@Ref$ByYear` unless selectivity is changed by MP
+#' @slot multiHist The object of class `multiHist` containing information from the spool-up period.
+#' @slot PPD Posterior predictive data. List of `Data` objects at the end of
+#'  the projection period (length `nMPs`) 
 #' @slot Misc Miscellaneous output such as posterior predictive data
 #' @author T. Carruthers
 #' @keywords classes
@@ -59,19 +61,20 @@ setClass("MMSE", representation(Name = "character", nyears = "numeric",
                                 proyears = "numeric", nMPs = "numeric", MPs = "list", MPcond="character",MPrefs="array",
                                 nsim = "numeric",nstocks="numeric",nfleets="numeric", Snames="character",Fnames='array',
                                 Stocks="list",Fleets="list",Obss="list",Imps="list",
-                                OM = "list", Obs = "list", B_BMSY = "array", F_FMSY = "array",
-                                B = "array", SSB="array", VB="array", FM = "array", C = "array",
-                                TAC = "array", SSB_hist = "array",
-                                CB_hist = "array", FM_hist = "array", Effort = "array", PAA= "array", CAA= "array",
-                                CAL= "list", CALbins="list", MSY_P="array", FMSY_P="array", SSBMSY_P="array", Misc="list"))
+                                OM = "list", Obs = "list", SB_SBMSY = "array", F_FMSY = "array",
+                                N='array', B = "array", SSB="array", VB="array", FM = "array", 
+                                SPR='list', Catch = "array", Removals='array', Effort = "array",
+                                TAC = "array", TAE='array',
+                                BioEco='list', RefPoint='list', multiHist='list',
+                                PPD='list', Misc="list"))
 
 
 setMethod("initialize", "MMSE", function(.Object, Name, nyears, proyears,
                                          nMPs, MPs, MPcond, MPrefs,
                                          nsim, nstocks, nfleets, Snames, Fnames, Stocks, Fleets, Obss, Imps,
-                                         OM, Obs, B_BMSY, F_FMSY, B, SSB, VB, FM, C, TAC,
-                                         SSB_hist, CB_hist, FM_hist, Effort = array(), PAA,  CAA, CAL, CALbins,
-                                         MSY_P, FMSY_P, SSBMSY_P, Misc) {
+                                         OM, Obs, SB_SBMSY, F_FMSY, N, B, SSB, VB, FM, SPR,
+                                         Catch, Removals, Effort, TAC,TAE,
+                                         BioEco, RefPoint, multiHist, PPD, Misc) {
   .Object@Name <- Name
   .Object@nyears <- nyears
   .Object@proyears <- proyears
@@ -91,22 +94,22 @@ setMethod("initialize", "MMSE", function(.Object, Name, nyears, proyears,
   #.Object@MOM<-MOM
   .Object@OM <- OM
   .Object@Obs <- Obs
-  .Object@B_BMSY <- B_BMSY
+  .Object@SB_SBMSY <- SB_SBMSY
   .Object@F_FMSY <- F_FMSY
+  .Object@N <- N
   .Object@B <- B
   .Object@SSB <- SSB
   .Object@VB <- VB
   .Object@FM <- FM
-  .Object@C <- C
-  .Object@TAC <- TAC
-  .Object@SSB_hist <- SSB_hist
-  .Object@CB_hist <- CB_hist
-  .Object@FM_hist <- FM_hist
+  .Object@Catch <- Catch
+  .Object@Removals <- Removals
   .Object@Effort <- Effort
-  .Object@PAA <- PAA
-  .Object@CAA <- CAA
-  .Object@CAL <- CAL
-  .Object@CALbins <- CALbins
+  .Object@TAC <- TAC
+  .Object@TAC <- TAE
+  .Object@BioEco <- BioEco
+  .Object@RefPoint <- RefPoint 
+  .Object@multiHist <- multiHist 
+  .Object@PPD <- PPD
   .Object@Misc <- Misc
 
   .Object

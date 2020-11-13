@@ -47,9 +47,11 @@ simulation conditions and performance of MPs for a multi-stock, multi-fleet oper
 
 \item{\code{Obs}}{A table of sampled parameters of the observation model. Data frame of nsim rows.}
 
-\item{\code{B_BMSY}}{Simulated biomass relative to BMSY over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers}
+\item{\code{SB_SBMSY}}{Simulated spawing biomass relative to SBMSY over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers}
 
 \item{\code{F_FMSY}}{Simulated fishing mortality rate relative to FMSY over the projection. An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers}
+
+\item{\code{N}}{Simulated stock numbers over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers}
 
 \item{\code{B}}{Simulated stock biomass over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers}
 
@@ -59,31 +61,27 @@ simulation conditions and performance of MPs for a multi-stock, multi-fleet oper
 
 \item{\code{FM}}{Simulated fishing mortality rate over the projection. An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{C}}{Simulated catches (taken) over the projection. An array with dimensions: nsim,  nStocks, nFleets, nMPs, proyears. Non-negative real numbers}
+\item{\code{SPR}}{A list of SPR values. Currently not used.}
 
-\item{\code{TAC}}{Simulated Total Allowable Catch (prescribed) over the projection (this is NA for input controls). An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers}
+\item{\code{Catch}}{Simulated catches (landings) over the projection. An array with dimensions: nsim,  nStocks, nFleets, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{SSB_hist}}{Simulated historical spawning stock biomass. An array with dimensions: nsim, nStocks, nages, nyears, nareas. Non-negative real numbers}
-
-\item{\code{CB_hist}}{Simulated historical catches in weight. An array with dimensions: nsim, nages, nStocks, nFleets, nyears, nareas. Non-negative real numbers}
-
-\item{\code{FM_hist}}{Simulated historical fishing mortality rate. An array with dimensions: nsim,  nStocks, nFleets, nages, nyears, nareas. Non-negative real numbers}
+\item{\code{Removals}}{Simulated removals (landings+discards) over the projection. An array with dimensions: nsim,  nStocks, nFleets, nMPs, proyears. Non-negative real numbers}
 
 \item{\code{Effort}}{Simulated relative fishing effort in the projection years. An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{PAA}}{Not used}
+\item{\code{TAC}}{Simulated Total Allowable Catch (prescribed) over the projection (this is NA for input controls). An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{CAA}}{Not used}
+\item{\code{TAE}}{Simulated Total Allowable Effort (prescribed) over the projection (this is NA for output controls). An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{CAL}}{Not used}
+\item{\code{BioEco}}{A named list of bio-economic output. Not currently used.}
 
-\item{\code{CALbins}}{Not used}
+\item{\code{RefPoint}}{Named list of annual MSY reference points MSY, FMSY, and SBMSY.
+Array with dimensions: nsim, nstocks, nMPs, nyears+proyears. Will be the same as \code{multiHist@Ref$ByYear} unless selectivity is changed by MP}
 
-\item{\code{MSY_P}}{Not used}
+\item{\code{multiHist}}{The object of class \code{multiHist} containing information from the spool-up period.}
 
-\item{\code{FMSY_P}}{Not used}
-
-\item{\code{SSBMSY_P}}{Not used}
+\item{\code{PPD}}{Posterior predictive data. List of \code{Data} objects at the end of
+the projection period (length \code{nMPs})}
 
 \item{\code{Misc}}{Miscellaneous output such as posterior predictive data}
 }}
