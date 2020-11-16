@@ -1,14 +1,14 @@
 #' Creates a time series per simulation that has a random normal walk with sigma
-#' 
+#'
 #' @param targ mean
 #' @param targsd standard deviation
 #' @param nyears number of years to simulate
 #' @param nsim number of simulations
 #' @keywords internal
-#'  
+#'
 GenerateRandomWalk <- function(targ, targsd, nyears, nsim, rands=NULL) {
   mutemp <- -0.5 * targsd^2
-  
+
   if (!is.null(rands)) {
     temp <- rands
   } else {
@@ -19,18 +19,18 @@ GenerateRandomWalk <- function(targ, targsd, nyears, nsim, rands=NULL) {
   } else {
     return(targ * temp/mean(temp))
   }
-  
+
 }
 
 
 #' Optimization function to find a movement model that matches user specified
 #' movement characteristics modified for Rcpp.
-#' 
+#'
 #' The user specifies the probability of staying in the same area and spatial
 #' heterogeneity (both in the unfished state).
-#' 
+#'
 #' This is paired with movfit to find the correct movement model.
-#' 
+#'
 #' @param x A position in vectors Prob_staying and Frac_area_1
 #' @param Prob_staying User specified probability that individuals in area 1
 #' remain in that area (unfished conditions)
@@ -40,45 +40,45 @@ GenerateRandomWalk <- function(targ, targsd, nyears, nsim, rands=NULL) {
 #' @author T. Carruthers
 #' @export
 #' @examples
-#' 
+#'
 #' Prob_staying<-0.8 # probability  that individuals remain in area 1 between time-steps
 #' Frac_area_1<-0.35 # the fraction of the stock found in area 1 under equilibrium conditions
 #' markovmat<-getmov2(1,Prob_staying, Frac_area_1)
 #' vec<-c(0.5,0.5) # initial guess at equilibrium distribution (2 areas)
 #' for(i in 1:300)vec<-apply(vec*markovmat,2,sum) # numerical approximation to stable distribution
 #' c(markovmat[1,1],vec[1]) # pretty close right?
-#' 
-#' 
+#'
+#'
 getmov2 <- function(x, Prob_staying, Frac_area_1) {
-  test <- optim(par = c(0, 0, 0), movfit_Rcpp, method = "L-BFGS-B", 
-                lower = rep(-6, 3), upper = rep(6, 3), prb = Prob_staying[x], 
-                frac = Frac_area_1[x])	
+  test <- optim(par = c(0, 0, 0), movfit_Rcpp, method = "L-BFGS-B",
+                lower = rep(-6, 3), upper = rep(6, 3), prb = Prob_staying[x],
+                frac = Frac_area_1[x])
   mov <- array(c(test$par[1], test$par[2], 0, test$par[3]), dim = c(2, 2))
   mov <- exp(mov)
   mov/array(apply(mov, 1, sum), dim = c(2, 2))
 }
 
 #' Calculate historical fishing mortality
-#' 
-#' 
-#' @param Esd vector of standard deviation 
-#' @param nyears number of years 
+#'
+#'
+#' @param Esd vector of standard deviation
+#' @param nyears number of years
 #' @param EffYears index of years
 #' @param EffLower vector of lower bound
 #' @param EffUpper vector of upper bound
 #' @keywords internal
-#'  
+#'
 getEffhist <- function(Esd, nyears, EffYears, EffLower, EffUpper) {
   if (length(EffLower) == length(EffUpper) & length(EffUpper) == length(EffYears)) {
-    nsim <- length(Esd)  # get nsim 
+    nsim <- length(Esd)  # get nsim
     if (EffYears[1] == 1 & EffYears[length(EffYears)] == nyears & length(EffYears) == nyears) {
       refYear <- EffYears
     } else{
-      refYear <- ceiling(range01(EffYears + 0.5) * nyears) # standardize years 
-      refYear[1] <- 1 # first year is year 1 
-      refYear[length(refYear)] <- nyears  # first year is year 1 
+      refYear <- ceiling(range01(EffYears + 0.5) * nyears) # standardize years
+      refYear[1] <- 1 # first year is year 1
+      refYear[length(refYear)] <- nyears  # first year is year 1
     }
-    
+
     if (any(EffLower > EffUpper)) {
       ind <- which(EffLower > EffUpper)
       message("Some values in 'EffLower' are higher than 'EffUpper': Years ", paste(ind, ""),
@@ -87,31 +87,31 @@ getEffhist <- function(Esd, nyears, EffYears, EffLower, EffUpper) {
       EffLower <- apply(tt, 1, min)
       EffUpper <- apply(tt, 1, max)
     }
-    
+
     # sample Effort
     # fmat <- rbind(EffLower, EffUpper)
-    
+
     # nyrs <- length(EffLower)
     # Effs <- matrix(0, nsim, nyrs)
-    
+
     # ind <- which(diff(fmat) > 0)[1]
     # for (X in 1:ind) {
-    # Effs[,X] <- runif(nsim, min(fmat[,X]), max(fmat[,X]))  
+    # Effs[,X] <- runif(nsim, min(fmat[,X]), max(fmat[,X]))
     # }
-    
+
     # val <- (Effs[,ind] - min(fmat[,ind]))/ diff(fmat[,ind])
     # for (X in 2:nyrs) Effs[,X] <- min(fmat[,X]) + diff(fmat[,X])*val
-    
+
     Effs <- mapply(runif, n = nsim, min = EffLower, max = EffUpper)  # sample Effort
     if (nsim > 1) {
       if (ncol(Effs) == 1) {
         effort <- matrix(Effs, nrow=nsim, ncol=nyears)
       } else {
-        effort <- t(sapply(1:nsim, function(x) approx(x = refYear, 
+        effort <- t(sapply(1:nsim, function(x) approx(x = refYear,
                                                       y = Effs[x, ], method = "linear", n = nyears)$y))  # linear interpolation
       }
-      
-    } 
+
+    }
     if (nsim == 1) {
       if (length(Effs) == 1) {
         effort <- matrix(Effs, nrow=nsim, ncol=nyears)
@@ -119,15 +119,15 @@ getEffhist <- function(Esd, nyears, EffYears, EffLower, EffUpper) {
         effort <- matrix(approx(x = refYear, y = Effs, method = "linear", n = nyears)$y, nrow = 1)
       }
     }
-    
-    if (!all(effort == mean(effort))) effort <- range01(effort)  
-    
+
+    if (!all(effort == mean(effort))) effort <- range01(effort)
+
     effort[effort == 0] <- 0.01
-    
+
     Emu <- -0.5 * Esd^2
     Eerr <- array(exp(rnorm(nyears * nsim, rep(Emu, nyears), rep(Esd, nyears))), c(nsim, nyears))  # calc error
     out <- NULL
-    eff <- effort * Eerr  # add error 
+    eff <- effort * Eerr  # add error
     out[[1]] <- eff
     out[[2]] <- (effort[, nyears] - effort[, nyears - 4])/5
     return(out)
@@ -138,18 +138,18 @@ getEffhist <- function(Esd, nyears, EffYears, EffLower, EffUpper) {
 }
 
 #' Standardize values
-#' 
+#'
 #' Function to standardize to value relative to minimum and maximum values
-#' @param x vector of values 
+#' @param x vector of values
 #' @param Max Maximum value
-#' @param Min Minimum value 
+#' @param Min Minimum value
 #' @keywords internal
 Range <- function(x, Max, Min) {
-  (x - Min)/(Max - Min)  
+  (x - Min)/(Max - Min)
 }
 
 range01 <- function(x) {
-  (x - min(x))/(max(x) - min(x)) 
+  (x - min(x))/(max(x) - min(x))
 }
 
 #' Calculate selectivity curve
@@ -169,7 +169,7 @@ getsel <- function(x, lens, lfs, sls, srs) {
 
 #' Double-normal selectivity curve
 #'
-#' @param lens Vector of lengths 
+#' @param lens Vector of lengths
 #' @param lfs Length at full selection
 #' @param sl Sigma of ascending limb
 #' @param sr Sigma of descending limb
@@ -186,20 +186,20 @@ dnormal<-function(lens,lfs,sl,sr){
 calcV <- function(x, Len_age, LatASD, SLarray, n_age, nyears, proyears, CAL_binsmid) {
   len_at_age <- Len_age[x,,]
   len_aa_sd <- LatASD[x,,]
-  
+
   sel_at_length <- SLarray[x,,]
   v <- matrix(tiny, n_age, nyears+proyears)
   for (yr in 1:(nyears+proyears)) {
     ALK <- mapply(dnorm, mean=len_at_age[,yr], sd=len_aa_sd[,yr], MoreArgs=list(x=CAL_binsmid))
     ALK[ALK<=0] <- tiny
-   
+
     if (all(ALK[,1]==tiny)) {
       ALK[,1] <- 0
       ALK[1,1] <- 1
     }
     ALK_t <- matrix(colSums(ALK), nrow=nrow(ALK), ncol=ncol(ALK), byrow = TRUE)
     ALK <- t(ALK/ALK_t)
-    sela <- ALK %*% sel_at_length[,yr] 
+    sela <- ALK %*% sel_at_length[,yr]
     v[,yr] <- sela[,1]
   }
   v
@@ -207,10 +207,10 @@ calcV <- function(x, Len_age, LatASD, SLarray, n_age, nyears, proyears, CAL_bins
 
 # calculate average unfished ref points over first A50 years
 CalcUnfishedRefs <- function(x, ageM, N0_a, SSN0_a, SSB0_a, B0_a, VB0_a, SSBpRa, SSB0a_a) {
-  avg.ind <- 1:(ceiling(ageM[x,1])+1) # unfished eq ref points averaged over these years 
+  avg.ind <- 1:(ceiling(ageM[x,1])+1) # unfished eq ref points averaged over these years
   nyears <- dim(N0_a)[2]
   if (length(avg.ind) > nyears) avg.ind <- 1:nyears
-  
+
   N0 <- mean(N0_a[x, avg.ind])
   SSN0  <- mean(SSN0_a[x, avg.ind])
   SSB0 <- mean(SSB0_a[x, avg.ind])
@@ -218,11 +218,11 @@ CalcUnfishedRefs <- function(x, ageM, N0_a, SSN0_a, SSB0_a, B0_a, VB0_a, SSBpRa,
   VB0 <- mean(VB0_a[x, avg.ind])
   SSBpR <- mean(SSBpRa[x, avg.ind])
   if (length(avg.ind)>1) {
-    SSB0a <- apply(SSB0a_a[x,avg.ind,], 2, mean)  
+    SSB0a <- apply(SSB0a_a[x,avg.ind,], 2, mean)
   } else {
     SSB0a <- SSB0a_a[x,avg.ind,]
   }
-  
+
   list(N0=N0, SSN0=SSN0, SSB0=SSB0, B0=B0, VB0=VB0, SSBpR=SSBpR, SSB0a=SSB0a)
 }
 
@@ -230,12 +230,12 @@ CalcUnfishedRefs <- function(x, ageM, N0_a, SSN0_a, SSB0_a, B0_a, VB0_a, SSBpRa,
 CalcMSYRefs <- function(x, MSY_y, FMSY_y, SSBMSY_y, BMSY_y, VBMSY_y, ageM, nyears) {
   n.yrs <- ceiling(ageM[x,nyears]) # MSY ref points averaged over these years
   nyears1 <- dim(ageM)[2]
-  minY <- floor(n.yrs/2) 
-  maxY <- n.yrs - minY - 1 
+  minY <- floor(n.yrs/2)
+  maxY <- n.yrs - minY - 1
   avg.ind <- (nyears - minY):(nyears + maxY)
   avg.ind <- avg.ind[avg.ind>0]
   if (max(avg.ind) > nyears1) avg.ind <- avg.ind[avg.ind < nyears1]
-  
+
   MSY <- mean(MSY_y[x, avg.ind])
   FMSY <- mean(FMSY_y[x, avg.ind])
   SSBMSY <- mean(SSBMSY_y[x, avg.ind])
@@ -246,59 +246,59 @@ CalcMSYRefs <- function(x, MSY_y, FMSY_y, SSBMSY_y, BMSY_y, VBMSY_y, ageM, nyear
 
 CalcDynamicSSB0 <- function(StockPars, nsim, nareas, nyears, proyears, maxF, Mhist, Nhist) {
   n_age <- StockPars$maxage + 1
-  UnfishedHist <- sapply(1:nsim, function(x) 
-    popdynCPP(nareas, StockPars$maxage, 
-              Ncurr=Nhist[x,,1,], 
-              nyears,  
-              M_age=StockPars$M_ageArray[x,,], 
-              Asize_c=StockPars$Asize[x,], 
-              MatAge=StockPars$Mat_age[x,,], 
+  UnfishedHist <- sapply(1:nsim, function(x)
+    popdynCPP(nareas, StockPars$maxage,
+              Ncurr=Nhist[x,,1,],
+              nyears,
+              M_age=StockPars$M_ageArray[x,,],
+              Asize_c=StockPars$Asize[x,],
+              MatAge=StockPars$Mat_age[x,,],
               WtAge=StockPars$Wt_age[x,,],
               Vuln=matrix(1, n_age, nyears + proyears),
-              Retc=matrix(1, n_age, nyears + proyears), 
-              Prec=StockPars$Perr_y[x,], 
-              movc=split.along.dim(StockPars$mov[x,,,,],4), 
-              SRrelc=StockPars$SRrel[x], 
-              Effind=rep(0,nyears),  
-              Spat_targc=1, 
-              hc=StockPars$hs[x], 
-              R0c=StockPars$R0a[x,], 
-              SSBpRc=StockPars$SSBpR[x,], 
-              aRc=StockPars$aR[x,], 
-              bRc=StockPars$bR[x,], 
-              Qc=1, 
-              Fapic=0, 
-              MPA=matrix(1, nyears + proyears, nareas), 
-              maxF=maxF, 
-              control=1, 
-              SSB0c=StockPars$SSB0[x], 
+              Retc=matrix(1, n_age, nyears + proyears),
+              Prec=StockPars$Perr_y[x,],
+              movc=split.along.dim(StockPars$mov[x,,,,],4),
+              SRrelc=StockPars$SRrel[x],
+              Effind=rep(0,nyears),
+              Spat_targc=1,
+              hc=StockPars$hs[x],
+              R0c=StockPars$R0a[x,],
+              SSBpRc=StockPars$SSBpR[x,],
+              aRc=StockPars$aR[x,],
+              bRc=StockPars$bR[x,],
+              Qc=1,
+              Fapic=0,
+              MPA=matrix(1, nyears + proyears, nareas),
+              maxF=maxF,
+              control=1,
+              SSB0c=StockPars$SSB0[x],
               plusgroup=StockPars$plusgroup))
-  
-  Dynamic_SSB0 <- aperm(array(as.numeric(unlist(UnfishedHist[4,], use.names=FALSE)), 
+
+  Dynamic_SSB0 <- aperm(array(as.numeric(unlist(UnfishedHist[4,], use.names=FALSE)),
                               dim=c(n_age, nyears, nareas, nsim)), c(4,1,2,3)) %>% apply(c(1,3), sum)
-  
-  # Projection period 
+
+  # Projection period
   # (but called in Simulate.R, always check if closed-loop in Project.R has been updated; last checked 10-14-2020)
   N_P <- SSN_P <- SSB_P <- array(NA, dim = c(nsim, n_age, proyears, nareas))
-  
+
   # Movement and mortality in first year
-  SAYRt <- as.matrix(expand.grid(1:nsim, 1:n_age, 1 + nyears, 1:nareas)) 
+  SAYRt <- as.matrix(expand.grid(1:nsim, 1:n_age, 1 + nyears, 1:nareas))
   SAYR <- as.matrix(expand.grid(1:nsim, 1:n_age, 1, 1:nareas))
   SAY1 <- SAYRt[, 1:3]
-  
-  N <- aperm(array(as.numeric(unlist(UnfishedHist[1,], use.names=FALSE)), 
+
+  N <- aperm(array(as.numeric(unlist(UnfishedHist[1,], use.names=FALSE)),
                    dim=c(n_age, nyears, nareas, nsim)), c(4,1,2,3))
   NextYrN <- lapply(1:nsim, function(x)
     popdynOneTScpp(nareas, StockPars$maxage, Ncurr=N[x,,nyears,],
                    Zcurr=Mhist[x,,nyears,],
                    mov=StockPars$mov[x,,,,nyears+1],
                    plusgroup = StockPars$plusgroup))
-  
+
   # The stock at the beginning of projection period
   N_P[,,1,] <- aperm(array(unlist(NextYrN), dim=c(n_age, nareas, nsim, 1)), c(3,1,4,2))
   SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAY1]  # Calculate spawning stock numbers
   SSB_P[SAYR] <- SSN_P[SAYR] * StockPars$Wt_age[SAY1]
-  
+
   # recruitment in first projection year
   SSBcurr <- apply(SSB_P[,,1,],c(1,3), sum)
   recdev <- StockPars$Perr_y[, nyears+n_age-1]
@@ -307,26 +307,26 @@ CalcDynamicSSB0 <- function(StockPars, nsim, nareas, nyears, proyears, maxF, Mhi
                      aR= StockPars$aR, bR=StockPars$bR, R0a=StockPars$R0a,
                      SSBpR=StockPars$SSBpR)
   N_P[,1,1,] <- t(rec_area)
-  
+
   # Loop over proyears
-  M_P <- StockPars$M_ageArray[, , (nyears+1):(nyears+proyears)] %>% 
+  M_P <- StockPars$M_ageArray[, , (nyears+1):(nyears+proyears)] %>%
     array(c(nsim, n_age, proyears, nareas)) # Taken from CalcMPDynamics
   for(y in 2:proyears) {
     SAYRt <- as.matrix(expand.grid(1:nsim, 1:n_age, y + nyears, 1:nareas))  # Trajectory year
     SAYt <- SAYRt[, 1:3]
     SAYR <- as.matrix(expand.grid(1:nsim, 1:n_age, y, 1:nareas))
-    
+
     NextYrN <- lapply(1:nsim, function(x)
       popdynOneTScpp(nareas, StockPars$maxage,
                      Ncurr=N_P[x,,y-1,],
                      Zcurr=M_P[x,,y-1,],
                      mov=StockPars$mov[x,,,, nyears+y],
                      plusgroup=StockPars$plusgroup))
-    
+
     N_P[,,y,] <- aperm(array(unlist(NextYrN), dim=c(n_age, nareas, nsim, 1)), c(3,1,4,2))
     SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAYt]  # Calculate spawning stock numbers
     SSB_P[SAYR] <- SSN_P[SAYR] * StockPars$Wt_age[SAYt]  # Calculate spawning stock biomass
-    
+
     # recruitment in this year
     SSBcurr <- apply(SSB_P[,,y,],c(1,3), sum)
     recdev <- StockPars$Perr_y[, y+nyears+n_age-1]
@@ -334,12 +334,12 @@ CalcDynamicSSB0 <- function(StockPars, nsim, nareas, nyears, proyears, maxF, Mhi
                        SSBcurr=SSBcurr,
                        recdev=recdev, hs=StockPars$hs, aR=StockPars$aR,
                        bR=StockPars$bR, R0a=StockPars$R0a, SSBpR=StockPars$SSBpR)
-    
+
     N_P[,1,y,] <- t(rec_area)
   }
-  
+
   Dynamic_SSB0_P <- apply(SSB_P, c(1, 3), sum)
-  
+
   return(abind::abind(Dynamic_SSB0, Dynamic_SSB0_P, along = 2))
 }
 
@@ -353,18 +353,18 @@ CalcDynamicSSB0 <- function(StockPars, nsim, nareas, nyears, proyears, maxF, Mhi
 #' @author T. Carruthers
 #' @keywords internal
 LinInterp<-function(x,y,xlev,ascending=F,zeroint=F){
-  
+
   if(zeroint){
     x<-c(0,x)
     y<-c(0,y)
-  } 
-  
+  }
+
   if(ascending){
     cond<-(1:length(x))<which.max(x)
   }else{
     cond<-rep(TRUE,length(x))
   }
-  
+
   close<-which.min((x[cond]-xlev)^2)
   ind<-c(close,close+(x[close]<xlev)*2-1)
   ind <- ind[ind <= length(x)]
@@ -372,12 +372,12 @@ LinInterp<-function(x,y,xlev,ascending=F,zeroint=F){
   ind<-ind[order(ind)]
   pos<-(xlev-x[ind[1]])/(x[ind[2]]-x[ind[1]])
   y[ind[1]]+pos*(y[ind[2]]-y[ind[1]])
-  
+
 }
 
 calcRecruitment <- function(x, SRrel, SSBcurr, recdev, hs, aR, bR, R0a, SSBpR) {
   if (SRrel[x] == 1) { # BH rec
-    rec_A <- recdev[x] * (4*R0a[x,] * hs[x] * SSBcurr[x,])/(SSBpR[x,] * 
+    rec_A <- recdev[x] * (4*R0a[x,] * hs[x] * SSBcurr[x,])/(SSBpR[x,] *
                                                               R0a[x,] * (1-hs[x]) + (5*hs[x]-1) * SSBcurr[x,])
   } else { # Ricker rec
     rec_A <- recdev[x] * aR[x,] * SSBcurr[x,] * exp(-bR[x,]*SSBcurr[x,])
@@ -399,49 +399,49 @@ lcs<-function(x){
     x3<-x2-mean(x2, na.rm=TRUE) # mean 0
     x3
   }
-  
+
 }
 
 
 #' get object class
-#' 
+#'
 #' Internal function for determining if object is of classy
-#' 
-#' 
+#'
+#'
 #' @param x Character string object name
 #' @param classy A class of object (character string, e.g. 'Fleet')
 #' @author T. Carruthers with nasty hacks from A. Hordyk
 #' @return TRUE or FALSE
 getclass <- function(x, classy) {
   return(any(class(get(x)) == classy)) # inherits(get(x), classy) - this gives a problem since we now inherit Stock etc in OM
-} 
+}
 
 indfit <- function(sim.index,obs.ind, Year, plot=FALSE, lcex=0.8){
-  
+
   sim.index <- lcs(sim.index[!is.na(obs.ind)]) # log space conversion of standardized simulated index
   obs.ind <- lcs(obs.ind[!is.na(obs.ind)]) # log space conversion of standardized observed ind
-  
+
   if(plot){
     par(mfrow=c(1,2),mai=c(0.7,0.5,0.05,0.01),omi=c(0.01,0.2,0.01,0.01))
     plot(exp(sim.index),exp(obs.ind),xlab="",ylab="",pch=19,col=rgb(0,0,0,0.5))
     mtext("Model estimate",1,line=2.2)
     mtext("Index",2,outer=T,line=0)
   }
-  
+
   opt<-optimize(getbeta,x=exp(sim.index),y=exp(obs.ind),interval=c(0.1,10))
   res<-exp(obs.ind)-(exp(sim.index)^opt$minimum)
   ac<-acf(res,plot=F)$acf[2,1,1] # lag-1 autocorrelation
-  
+
   res2<-obs.ind-sim.index                  # linear, without hyperdepletion / hyperstability
   ac2<-acf(res2,plot=F)$acf[2,1,1] # linear AC
-  
+
   if(plot){
     SSBseq<-seq(min(exp(sim.index)),max(exp(sim.index)),length.out=1000)
     lines(SSBseq,SSBseq^opt$minimum,col='#0000ff90',pch=19)
     legend('bottomright',legend=round(c(sum((obs.ind-sim.index)^2),opt$objective),3),text.col=c("black","blue"),bty='n',title="SSQ",cex=lcex)
     legend('topleft',legend=round(opt$minimum,3),text.col="blue",bty='n',title='Hyper-stability, beta',cex=lcex)
     legend('left',legend=round(stats::cor(sim.index,obs.ind),3),bty='n',title='Correlation',cex=lcex)
-    
+
     plot(Year,sim.index,ylab="",xlab="",ylim=range(c(obs.ind,sim.index)),type="l")
     mtext("Year",1,line=2.2)
     points(Year,obs.ind,col='#ff000090',pch=19)
@@ -449,25 +449,25 @@ indfit <- function(sim.index,obs.ind, Year, plot=FALSE, lcex=0.8){
     legend('bottomleft',legend=round(sd(res),3),text.col="red",bty='n',title="Residual StDev",cex=lcex)
     legend('topright',legend=c("Model estimate","Index"),text.col=c("black","red"),bty='n',cex=lcex)
   }
-  
+
   data.frame(beta=opt$minimum,AC=ac,sd=sd(exp(obs.ind)/(exp(sim.index)^opt$minimum)),
              cor=stats::cor(sim.index,obs.ind),AC2=ac2,sd2=sd(obs.ind-sim.index))
-  
+
   # list(stats=data.frame(beta=opt$minimum,AC=ac,sd=sd(exp(obs.ind)/(exp(sim.index)^opt$minimum)),
   #                       cor=cor(sim.index,obs.ind),AC2=ac2,sd2=sd(obs.ind-sim.index)),
   #      mult=exp(obs.ind)/(exp(sim.index)^opt$minimum))
-  
+
 }
 
 getbeta<-function(beta,x,y)sum((y-x^beta)^2)
 
 generateRes <- function(df, nsim, proyears, lst.err) {
-  sd <- df$sd 
+  sd <- df$sd
   ac <- df$AC
   if (all(is.na(sd))) return(rep(NA, nsim))
   mu <- -0.5 * (sd)^2 * (1 - ac)/sqrt(1 - ac^2)
-  Res <- matrix(rnorm(proyears*nsim, mu, sd), nrow=proyears, ncol=nsim, byrow=TRUE) 
-  # apply a pseudo AR1 autocorrelation 
+  Res <- matrix(rnorm(proyears*nsim, mu, sd), nrow=proyears, ncol=nsim, byrow=TRUE)
+  # apply a pseudo AR1 autocorrelation
   Res <- sapply(1:nsim, applyAC, res=Res, ac=ac, max.years=proyears, lst.err=lst.err) # log-space
   exp(t(Res))
 }
@@ -475,9 +475,9 @@ generateRes <- function(df, nsim, proyears, lst.err) {
 applyAC <- function(x, res, ac, max.years, lst.err) {
   for (y in 1:max.years) {
     if (y == 1) {
-      res[y,x] <- ac[x] * lst.err[x] + lst.err[x] * (1-ac[x] * ac[x])^0.5 
+      res[y,x] <- ac[x] * lst.err[x] + lst.err[x] * (1-ac[x] * ac[x])^0.5
     } else {
-      res[y,x] <- ac[x] * res[y-1,x] + res[y,x] * (1-ac[x] * ac[x])^0.5  
+      res[y,x] <- ac[x] * res[y-1,x] + res[y,x] * (1-ac[x] * ac[x])^0.5
     }
   }
   res[,x]
@@ -486,7 +486,7 @@ applyAC <- function(x, res, ac, max.years, lst.err) {
 
 #' Check for duplicated MPs names
 #'
-#' Custom MPs cannot have the same names of MPs in MSEtool and related packages  
+#' Custom MPs cannot have the same names of MPs in MSEtool and related packages
 #' @param MPs Character vector of MP names
 #'
 #' @return An error if duplicated MP names, otherwise nothing
@@ -496,11 +496,11 @@ CheckDuplicate <- function(MPs) {
   if (class(tt)!="try-error") {
     gl.funs <- as.vector(tt)
     pkg.funs <- as.vector(ls.str('package:MSEtool'))
-    if ('package:DLMtool' %in% search()) 
+    if ('package:DLMtool' %in% search())
       pkg.funs <- c(pkg.funs, as.vector(ls.str('package:DLMtool')))
-    if ('package:SAMtool' %in% search()) 
+    if ('package:SAMtool' %in% search())
       pkg.funs <- c(pkg.funs, as.vector(ls.str('package:SAMtool')))
-    
+
     if (length(gl.funs)>0) {
       gl.clss <- unlist(lapply(lapply(gl.funs, get), class))
       gl.MP <- gl.funs[gl.clss %in% 'MP']
@@ -509,19 +509,19 @@ CheckDuplicate <- function(MPs) {
         if (length(inc.gl)>0) {
           dup.MPs <- inc.gl[inc.gl %in% pkg.funs]
           if (length(dup.MPs)>0) {
-            stop("Custom MP names already exist in MSEtool or other packages.\nRename Custom MPs: ", 
+            stop("Custom MP names already exist in MSEtool or other packages.\nRename Custom MPs: ",
                  paste0(dup.MPs, collapse=", "))
           }
         }
-      } 
+      }
     }
-  } 
+  }
 }
 
 
 #' Check that specified MPs are valid and will run on MSEtool::SimulatedData
 #'
-#' @param MPs Character vector of MP names 
+#' @param MPs Character vector of MP names
 #' @param silent Logical. Report messages?
 #'
 #' @return MP names
@@ -529,25 +529,25 @@ CheckMPs <- function(MPs=NA, silent=FALSE) {
   if (all(is.na(MPs))) {
     if (!silent) message('Argument `MPs=NA`, using all example MPs in `MSEtool`')
     MPs <- avail("MP", 'MSEtool')
-  } 
-  
+  }
+
   # Check for custom MPs with same name as built-it MPs
   CheckDuplicate(MPs)
-  
+
   if (!silent) message('Checking MPs')
-  
+
   # Check MP names are valid functions of class MP
   chkMP <- list()
-  for (mm in MPs) 
+  for (mm in MPs)
     chkMP[[mm]] <- try(get(mm), silent=TRUE)
-  
+
   clss <- unlist(lapply(chkMP, class))
   invalid <- clss[clss!='MP']
   if (length(invalid)>0) {
-    stop("Some MPs are not a functions of class `MP`: ", 
-         paste0(names(invalid), collapse=", "), call.=FALSE) 
+    stop("Some MPs are not a functions of class `MP`: ",
+         paste0(names(invalid), collapse=", "), call.=FALSE)
   }
-  
+
   # Check on simulated data
   pass <- rep(TRUE, length(MPs))
   for (i in seq_along(MPs)) {
@@ -557,14 +557,14 @@ CheckMPs <- function(MPs=NA, silent=FALSE) {
     if (err =='character') pass[i] <- FALSE
   }
   if (any(!pass))
-    warning('Some MPs fail with MSEtool::SimulatedData: ', 
-            paste0(MPs[!pass], collapse=", "), call.=FALSE) 
-  
+    warning('Some MPs fail with MSEtool::SimulatedData: ',
+            paste0(MPs[!pass], collapse=", "), call.=FALSE)
+
   MPs
 }
 
 
-# Calculate consecutive runs 
+# Calculate consecutive runs
 # https://stackoverflow.com/a/16912472/2885462
 findIntRuns <- function(run){
   rundiff <- c(1, diff(run))
@@ -577,22 +577,23 @@ findIntRuns <- function(run){
 
 CalcDistribution <- function(StockPars, SampCpars, OM, plusgroup, checks) {
   nsim <- length(StockPars$M)
-  
+
   n_age <- StockPars$maxage + 1 # number of age classes (starting at age-0)
   nareas <- StockPars$nareas
+  nyears <- OM@nyears
   N <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # stock numbers array
   Biomass <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # stock biomass array
   VBiomass <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # vulnerable biomass array
   SSN <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # spawning stock numbers array
   SSB <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # spawning stock biomass array
   FM <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # fishing mortality rate array
-  FMret <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # fishing mortality rate array for retained fish 
+  FMret <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # fishing mortality rate array for retained fish
   Z <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # total mortality rate array
   SPR <- array(NA, dim = c(nsim, n_age, nyears)) # store the Spawning Potential Ratio
   Agearray <- array(rep(0:StockPars$maxage, each = nsim), dim = c(nsim, n_age))  # Age array
-  
+
   # Set up array indexes sim (S) age (A) year (Y) region/area (R)
-  SAYR <- as.matrix(expand.grid(1:nareas, 1, 1:n_age, 1:nsim)[4:1])  
+  SAYR <- as.matrix(expand.grid(1:nareas, 1, 1:n_age, 1:nsim)[4:1])
   SAY <- SAYR[, 1:3]
   SAR <- SAYR[, c(1,2,4)]
   SA <- Sa <- SAYR[, 1:2]
@@ -600,15 +601,15 @@ CalcDistribution <- function(StockPars, SampCpars, OM, plusgroup, checks) {
   S <- SAYR[, 1]
   SY <- SAYR[, c(1, 3)]
   Sa[,2]<- n_age-Sa[,2] + 1 # This is the process error index for initial year
-  
+
   surv <- matrix(1, nsim, n_age)
   surv[, 2:n_age] <- t(exp(-apply(StockPars$M_ageArray[,,1], 1, cumsum)))[, 1:(n_age-1)]  # Survival array
-  
+
   if (plusgroup) {
     surv[,n_age] <- surv[,n_age]+surv[,n_age]*exp(-StockPars$M_ageArray[,n_age,1])/(1-exp(-StockPars$M_ageArray[,n_age,1])) # indefinite integral
   }
   Nfrac <- surv * StockPars$Mat_age[,,1]  # predicted Numbers of mature ages in first year
-  
+
   SSN[SAYR] <- Nfrac[SA] * StockPars$R0[S] * StockPars$Pinitdist[SR]  # Calculate initial spawning stock numbers
   N[SAYR] <- StockPars$R0[S] * surv[SA] * StockPars$Pinitdist[SR]  # Calculate initial stock numbers
   Neq <- N
@@ -616,46 +617,46 @@ CalcDistribution <- function(StockPars, SampCpars, OM, plusgroup, checks) {
   SSB0 <- apply(SSB[, , 1, ], 1, sum)  # Calculate unfished spawning stock biomass
   SSBpR <- matrix(SSB0/StockPars$R0, nrow=nsim, ncol=nareas)  # Spawning stock biomass per recruit
   SSB0a <- apply(SSB[, , 1, ], c(1, 3), sum)  # Calculate unfished spawning stock numbers
-  
+
   bR <- matrix(log(5 * StockPars$hs)/(0.8 * SSB0a), nrow=nsim)  # Ricker SR params
   aR <- matrix(exp(bR * SSB0a)/SSBpR, nrow=nsim)  # Ricker SR params
   R0a <- matrix(StockPars$R0, nrow=nsim, ncol=nareas, byrow=FALSE) * 1/nareas # initial distribution of recruits
-  
+
   # Project unfished for Nyrs to calculate equilibrium spatial distribution
   Nyrs <- ceiling(3 * StockPars$maxage) # Project unfished for 3 x maxage
-  # Set up projection arrays 
+  # Set up projection arrays
   M_ageArrayp <- array(StockPars$M_ageArray[,,1], dim=c(dim(StockPars$M_ageArray)[1:2], Nyrs))
   Wt_agep <- array(StockPars$Wt_age[,,1], dim=c(dim(StockPars$Wt_age)[1:2], Nyrs))
   Mat_agep <- array(StockPars$Mat_age[,,1], dim=c(dim(StockPars$Mat_age)[1:2], Nyrs))
-  Perr_yp <- array(1, dim=c(dim(StockPars$Perr_y)[1], Nyrs+StockPars$maxage)) # no process error 
-  
+  Perr_yp <- array(1, dim=c(dim(StockPars$Perr_y)[1], Nyrs+StockPars$maxage)) # no process error
+
   # update mov if needed
   dimMov <- dim(StockPars$mov)
   movp <- StockPars$mov
   if (dimMov[length(dimMov)] < Nyrs) {
     movp <- array(movp, dim=c(dimMov[1:(length(dimMov)-1)], Nyrs))
   }
-  
+
   # Not used but make the arrays anyway
   retAp <- array(FleetPars$retA[,,1], dim=c(dim(FleetPars$retA)[1:2], Nyrs))
   Vp <- array(FleetPars$V[,,1], dim=c(dim(FleetPars$V)[1:2], Nyrs))
   noMPA <- matrix(1, nrow=Nyrs, ncol=nareas)
-  
-  runProj <- lapply(1:nsim, projectEq, StockPars$Asize, nareas=nareas, 
+
+  runProj <- lapply(1:nsim, projectEq, StockPars$Asize, nareas=nareas,
                     maxage=StockPars$maxage, N=N, pyears=Nyrs,
                     M_ageArray=M_ageArrayp, Mat_age=Mat_agep, Wt_age=Wt_agep, V=Vp, retA=retAp,
                     Perr=Perr_yp, mov=movp, SRrel=StockPars$SRrel,
-                    Find=FleetPars$Find, Spat_targ=FleetPars$Spat_targ, 
+                    Find=FleetPars$Find, Spat_targ=FleetPars$Spat_targ,
                     hs=StockPars$hs,
-                    R0a=R0a, SSBpR=SSBpR, aR=aR, bR=bR, SSB0=SSB0, B0=B0, 
+                    R0a=R0a, SSBpR=SSBpR, aR=aR, bR=bR, SSB0=SSB0, B0=B0,
                     MPA=noMPA, maxF=OM@maxF,
                     Nyrs)
-  Neq1 <- aperm(array(as.numeric(unlist(runProj)), dim=c(n_age, nareas, nsim)), c(3,1,2))  # unpack the list 
-  
+  Neq1 <- aperm(array(as.numeric(unlist(runProj)), dim=c(n_age, nareas, nsim)), c(3,1,2))  # unpack the list
+
   # --- Equilibrium spatial / age structure (initdist by SAR)
   initdist <- Neq1/array(apply(Neq1, c(1,2), sum), dim=c(nsim, n_age, nareas))
-  
-  
+
+
   # check arrays and calculations
   if (checks) {
     if(!all(round(apply(initdist, c(1,2), sum),1)==1)) warning('initdist does not sum to one')
@@ -665,7 +666,7 @@ CalcDistribution <- function(StockPars, SampCpars, OM, plusgroup, checks) {
     if (!all(M_ageArrayp[sim,,yrval] == StockPars$M_ageArray[sim,,1] )) warning('problem with M_ageArrayp')
     if(!all(Wt_agep[sim,,yrval] == StockPars$Wt_age[sim,,1]))  warning('problem with Wt_agep')
     if(!all(Mat_agep[sim,,yrval] == StockPars$Mat_age[sim,,1])) warning('problem with Mat_agep')
-  } 
+  }
   initdist
 }
 
