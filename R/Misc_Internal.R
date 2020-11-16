@@ -575,7 +575,7 @@ findIntRuns <- function(run){
 }
 
 
-CalcDistribution <- function(StockPars, SampCpars, OM, plusgroup, checks) {
+CalcDistribution <- function(StockPars, FleetPars, SampCpars, OM, plusgroup, checks) {
   nsim <- length(StockPars$M)
 
   n_age <- StockPars$maxage + 1 # number of age classes (starting at age-0)
