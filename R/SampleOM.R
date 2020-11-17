@@ -92,7 +92,7 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
   Names <- c('CAL_bins', 'CAL_binsmid', 'binWidth', 'nCALbins',
              'maxage', 'n_age', 'CurrentYr',
              'plusgroup', 'control', 'AddIUnits', 'Data', 'MPA',
-             'nareas', 'a', 'b', 'maxF', 'Sample_Area')
+             'nareas', 'a', 'b', 'maxF', 'Sample_Area', 'Asize')
 
   cpars2 <- cpars
   cpars2[Names] <- NULL
@@ -715,11 +715,6 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
     if (!all(c('Frac_area_1', 'Size_area_1', 'Prob_staying') %in% names(cpars)))
       Size_area_1 <- Frac_area_1 <- Prob_staying <- rep(0,nsim)
   }
-
-  Asize <- cpars$Asize
-  if (is.null(Asize))
-    Asize <- cbind(Size_area_1, 1 - Size_area_1)
-
   # --- Calculate movement ----
   initdist <- Pinitdist <- NULL
   if (is.null(cpars$mov)) { # movement matrix has not been passed in cpars
@@ -734,6 +729,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
     initdist <- array(0,c(nsim,n_age,nareas))
     initdist[,,1]<- Frac_area_1
     initdist[,,2]<- 1- Frac_area_1 # spatial distribution of age classes in initial year
+    Asize <- cbind(Size_area_1, 1 - Size_area_1)
   } else {
     mov <- cpars$mov
     nareas <- dim(mov)[3]
@@ -756,8 +752,25 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
         movedarray[mind[,c(1,3,4)]]<-Pinitdist[mind[,c(1,3)]]*mov[mind]
         Pinitdist<-apply(movedarray,c(1,3),sum) # add over to areas
       }
+
     }
+    if(!is.null(cpars$Asize)) {
+      Asize <- cpars$Asize
+      if (is.null(dim(Asize))) {
+        Asize <- t(replicate(nsim, Asize) )
+      }
+    } else {
+      if(msg) message('cpars$Asize is not specified, assuming all areas equal size')
+      Asize <- matrix(1/nareas, nrow=nsim, ncol=nareas)
+    }
+
+    if (dim(Asize)[2]!=nareas) {
+      if(msg) message('Asize is not length "nareas", assuming all areas equal size')
+      Asize <- matrix(1/nareas, nrow=nsim, ncol=nareas)
+    }
+    colnames(Asize) <- NULL
   }
+
   if(is.na(dim(mov)[5])) { # movement matrix only specified for one year
     mov <- array(mov, dim=c(dim(mov), nyears+proyears))
   }
@@ -765,11 +778,10 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   if (any(dim(mov) != c(nsim,n_age,nareas,nareas, nyears+proyears)))
     stop('cpars$mov must be array with dimensions: \nc(nsim, maxage+1, nareas, nareas) \nOR \nc(nsim, maxage+1, nareas, nareas, nyears+proyears)', call.=FALSE)
 
-  if (dim(Asize)[2]!=nareas) {
-    if(msg) message('Asize is not length "nareas", assuming all areas equal size')
-    Asize <- matrix(1/nareas, nrow=nsim, ncol=nareas)
-  }
-  colnames(Asize) <- NULL
+
+
+
+
 
   StockOut <- list()
   StockOut$maxage <- maxage

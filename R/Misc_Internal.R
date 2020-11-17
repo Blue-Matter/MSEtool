@@ -623,7 +623,7 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, OM, plusgroup, che
   R0a <- matrix(StockPars$R0, nrow=nsim, ncol=nareas, byrow=FALSE) * 1/nareas # initial distribution of recruits
 
   # Project unfished for Nyrs to calculate equilibrium spatial distribution
-  Nyrs <- ceiling(3 * StockPars$maxage) # Project unfished for 3 x maxage
+  Nyrs <- ceiling(5 * StockPars$maxage) # Project unfished for 3 x maxage
   # Set up projection arrays
   M_ageArrayp <- array(StockPars$M_ageArray[,,1], dim=c(dim(StockPars$M_ageArray)[1:2], Nyrs))
   Wt_agep <- array(StockPars$Wt_age[,,1], dim=c(dim(StockPars$Wt_age)[1:2], Nyrs))
@@ -650,12 +650,12 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, OM, plusgroup, che
                     hs=StockPars$hs,
                     R0a=R0a, SSBpR=SSBpR, aR=aR, bR=bR, SSB0=SSB0, B0=B0,
                     MPA=noMPA, maxF=OM@maxF,
-                    Nyrs)
+                    Nyrs, plusgroup)
+
   Neq1 <- aperm(array(as.numeric(unlist(runProj)), dim=c(n_age, nareas, nsim)), c(3,1,2))  # unpack the list
 
   # --- Equilibrium spatial / age structure (initdist by SAR)
   initdist <- Neq1/array(apply(Neq1, c(1,2), sum), dim=c(nsim, n_age, nareas))
-
 
   # check arrays and calculations
   if (checks) {

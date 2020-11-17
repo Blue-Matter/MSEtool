@@ -149,10 +149,11 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   SY <- SAYR[, c(1, 3)]
   Sa[,2]<- n_age-Sa[,2] + 1 # This is the process error index for initial year
 
-  # Calculate initial distribution if mov provided in cpars
+  # ---- Calculate initial distribution if mov provided in cpars ----
   if (is.null(StockPars$initdist)) {
     # mov has been passed in cpars - initdist hasn't been defined
-    StockPars$initdist <- CalcDistribution(StockPars, FleetPars, SampCpars, OM, plusgroup, checks=FALSE)
+    StockPars$initdist <- CalcDistribution(StockPars, FleetPars, SampCpars, OM,
+                                           plusgroup, checks=FALSE)
   }
 
   # Unfished recruitment by area - INITDIST OF AGE 1.

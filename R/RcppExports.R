@@ -58,21 +58,21 @@ movfit_Rcpp <- function(par, prb, frac) {
 #' Project population forward one time-step given current numbers-at-age and total mortality
 #'
 #' @param nareas The number of spatial areas
-#' @param maxage The maximum age 
+#' @param maxage The maximum age
 #' @param SSBcurr A numeric vector of length nareas with the current spawning biomass in each area
 #' @param Ncurr A numeric matrix (maxage+1, nareas) with current numbers-at-age in each area
 #' @param Zcurr A numeric matrix (maxage+1, nareas) with total mortality-at-age in each area
-#' @param PerrYr A numeric value with recruitment deviation for current year 
+#' @param PerrYr A numeric value with recruitment deviation for current year
 #' @param hs Steepness of SRR
 #' @param R0a Numeric vector with unfished recruitment by area
-#' @param SSBpR Numeric vector with unfished spawning stock per recruit by area 
+#' @param SSBpR Numeric vector with unfished spawning stock per recruit by area
 #' @param aR Numeric vector with Ricker SRR a parameter by area
 #' @param bR Numeric vector with Ricker SRR b parameter by area
 #' @param mov Numeric matrix (nareas by nareas) with the movement matrix
 #' @param SRrel Integer indicating the stock-recruitment relationship to use (1 for Beverton-Holt, 2 for Ricker)
-#' 
+#'
 #' @author A. Hordyk
-#' 
+#'
 #' @keywords internal
 popdynOneTScpp <- function(nareas, maxage, Ncurr, Zcurr, mov, plusgroup = 0L) {
     .Call('_MSEtool_popdynOneTScpp', PACKAGE = 'MSEtool', nareas, maxage, Ncurr, Zcurr, mov, plusgroup)
@@ -80,11 +80,11 @@ popdynOneTScpp <- function(nareas, maxage, Ncurr, Zcurr, mov, plusgroup = 0L) {
 
 #' Population dynamics model in CPP
 #'
-#' Project population forward pyears given current numbers-at-age and total mortality, etc 
+#' Project population forward pyears given current numbers-at-age and total mortality, etc
 #' for the future years
 #'
 #' @param nareas The number of spatial areas
-#' @param maxage The maximum age 
+#' @param maxage The maximum age
 #' @param SSBcurr A numeric vector of length nareas with the current spawning biomass in each area
 #' @param Ncurr A numeric matrix (maxage+1, nareas) with current numbers-at-age in each area
 #' @param pyears The number of years to project the population forward
@@ -108,10 +108,10 @@ popdynOneTScpp <- function(nareas, maxage, Ncurr, Zcurr, mov, plusgroup = 0L) {
 #' @param Fapic Numeric. Apical F value
 #' @param maxF A numeric value specifying the maximum fishing mortality for any single age class
 #' @param MPA Spatial closure by year and area
-#' @param control Integer. 1 to use q and effort to calculate F, 2 to use Fapic (apical F) and 
+#' @param control Integer. 1 to use q and effort to calculate F, 2 to use Fapic (apical F) and
 #' vulnerability to calculate F.
 #' @param plusgroup Integer. Include a plus-group (1) or not (0)?
-#' 
+#'
 #' @author A. Hordyk
 #' @keywords internal
 popdynCPP <- function(nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, plusgroup = 0L) {
