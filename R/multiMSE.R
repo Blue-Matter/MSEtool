@@ -216,7 +216,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   HermFrac <- expandHerm(SexPars$Herm,maxage=n_age,np=np,nsim=nsim)
 
   ## TODO - CHECK HERM ----
-
   Unfished_Equilibrium <- list()
   for(p in 1:np){ # loop over stocks
     #  --- Pre Equilibrium calcs ----
@@ -473,7 +472,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
               "(takes approximately [(nstocks x nfleets)/(9 x number of cores in cluster)]",
               " minutes per simulation): about", exp.time, 'minutes')
 
-    out<-snowfall::sfLapply(1:nsim, getq_multi_MICE,StockPars, FleetPars,
+    out<-snowfall::sfLapply(1:nsim, getq_multi_MICE, StockPars, FleetPars,
                             np,nf, nareas, maxage, nyears, N, VF, FretA,
                             maxF=MOM@maxF, MPA, CatchFrac, bounds=bounds,
                             tol=1E-6,Rel,SexPars, plusgroup=plusgroup, optVB=optVB)
@@ -792,9 +791,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   }
 
   # --- Dynamic Unfished Reference Points (SSB0) ----
-  Dynamic_SSB0 <- lapply(1:np, function(p)
-    CalcDynamicSSB0(StockPars[[p]], nsim, nareas, nyears, proyears, maxF,
-                    Mhist = Z[, p, , , ] - FMt[, p, , , ], Nhist = N[, p, , , ]))
+  #TODO
 
   # ---- Calculate Reference Yield ----
   if(!silent) message("Calculating reference yield - best fixed F strategy")
@@ -810,8 +807,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
         FMSY=StockPars[[p]]$FMSY_y,
         SSBMSY=StockPars[[p]]$SSBMSY_y,
         BMSY=StockPars[[p]]$BMSY_y,
-        VBMSY=StockPars[[p]]$VBMSY_y,
-        Dynamic_SSB0=Dynamic_SSB0[[p]]
+        VBMSY=StockPars[[p]]$VBMSY_y
       ),
       ReferencePoints=data.frame(
         N0=StockPars[[p]]$N0,

@@ -2,23 +2,14 @@
 //[[Rcpp::depends(RcppArmadillo)]]
 using namespace Rcpp;
 
-//' Population dynamics model for one annual time-step
+//' Aging and Mortality for one time-step
 //'
 //' Project population forward one time-step given current numbers-at-age and total mortality
 //'
 //' @param nareas The number of spatial areas
 //' @param maxage The maximum age
-//' @param SSBcurr A numeric vector of length nareas with the current spawning biomass in each area
 //' @param Ncurr A numeric matrix (maxage+1, nareas) with current numbers-at-age in each area
 //' @param Zcurr A numeric matrix (maxage+1, nareas) with total mortality-at-age in each area
-//' @param PerrYr A numeric value with recruitment deviation for current year
-//' @param hs Steepness of SRR
-//' @param R0a Numeric vector with unfished recruitment by area
-//' @param SSBpR Numeric vector with unfished spawning stock per recruit by area
-//' @param aR Numeric vector with Ricker SRR a parameter by area
-//' @param bR Numeric vector with Ricker SRR b parameter by area
-//' @param mov Numeric matrix (nareas by nareas) with the movement matrix
-//' @param SRrel Integer indicating the stock-recruitment relationship to use (1 for Beverton-Holt, 2 for Ricker)
 //'
 //' @author A. Hordyk
 //'
@@ -26,7 +17,6 @@ using namespace Rcpp;
 //[[Rcpp::export]]
 arma::mat popdynOneTScpp(double nareas, double maxage,
                          NumericMatrix Ncurr,  Rcpp::NumericMatrix Zcurr,
-                         arma::cube mov,
                          int plusgroup=0) {
 
   int n_age = maxage + 1;
@@ -46,6 +36,41 @@ arma::mat popdynOneTScpp(double nareas, double maxage,
   }
 
   return Nnext;
+}
+
+
+//' Apply the movement model to the stock for one time-step
+//'
+//'
+//'
+//' @param nareas The number of spatial areas
+//' @param maxage The maximum age
+//' @param mov Numeric matrix (nareas by nareas) with the movement matrix
+//' @param Number A numeric matrix (maxage+1, nareas) with current numbers-at-age in each area
+//'
+//' @author A. Hordyk
+//'
+//' @export
+//[[Rcpp::export]]
+arma::mat movestockCPP(double nareas, double maxage, arma::cube mov, NumericMatrix Number) {
+
+  int n_age = maxage + 1;
+  arma::mat Nstore(n_age, nareas);
+  arma::mat tempMat2(nareas, nareas);
+
+  for (int age=0; age<n_age; age++) {
+    for (int AA = 0; AA < nareas; AA++) {   // (from areas)
+      for (int BB = 0; BB < nareas; BB++) { // (to areas)
+        arma::vec temp = mov.subcube(age, AA, BB, age, AA, BB);
+        double temp2 = temp(0);
+        tempMat2(BB, AA) = Number(age, AA) * temp2; // movement fractions
+      }
+    }
+    for (int BB = 0; BB < nareas; BB++) { // to areas
+      Nstore(age, BB) = sum(tempMat2.row(BB));   // sums all rows (from areas) in each column (to areas)
+    }
+  }
+  return Nstore;
 }
 
 
@@ -163,66 +188,53 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
   for (int yr=0; yr<(pyears-1); yr++) { //
     // Rcpp::Rcout << "yr = " << yr << std::endl;
     arma::vec SB(nareas);
-    arma::cube movcy = movc(yr);
+
 
     for (int A=0; A<nareas; A++) SB(A) = accu(SBarray.subcube(0, yr, A, maxage, yr, A));
     if ((yr >0) & (control==3)) SB = SSB0a;
 
     arma::mat Ncurr2 = Narray.subcube(0, yr, 0, maxage, yr, nareas-1);
     arma::mat Zcurr = Zarray.subcube(0, yr, 0, maxage, yr, nareas-1);
-    // double age0M = M_age(0,yr+1);
 
-    arma::mat NextYrN = popdynOneTScpp(nareas, maxage,
-                                       wrap(Ncurr2), wrap(Zcurr),
-                                       movcy, plusgroup);
+    // Mortality & aging
+    arma::mat Nnext = popdynOneTScpp(nareas, maxage,
+                             wrap(Ncurr2), wrap(Zcurr),
+                             plusgroup);
 
     // recruitment
     double PerrYr = Prec(yr+maxage+1); // rec dev
     for (int A=0; A<nareas; A++) {
       // Spawning biomass before recruitment (age-0 doesn't contribute to SB)
-      SBarray.subcube(0, yr+1, A, maxage, yr+1, A) = NextYrN.col(A) % WtAge.col(yr+1) % MatAge.col(yr+1);
+      SBarray.subcube(0, yr+1, A, maxage, yr+1, A) = Nnext.col(A) % WtAge.col(yr+1) % MatAge.col(yr+1);
       SB(A) = accu(SBarray.subcube(1, yr+1, A, maxage, yr+1, A)); // total spawning biomass
       // Recruitment assuming regional R0 and stock wide steepness
       // next yr recruitment to age-0
       if (SRrelc == 1) {
         // BH SRR
-        NextYrN(0, A) = PerrYr * (4*R0c2(A) * hc * SB(A))/(SSBpRc(A) * R0c2(A) * (1-hc) + (5*hc-1) * SB(A));
+        Nnext(0, A) = PerrYr * (4*R0c2(A) * hc * SB(A))/(SSBpRc(A) * R0c2(A) * (1-hc) + (5*hc-1) * SB(A));
       }
       if (SRrelc == 2) {
         // most transparent form of the Ricker uses alpha and beta params
-        NextYrN(0, A) = PerrYr * aRc2(A) * SB(A) * exp(-bRc2(A) * SB(A));
+        Nnext(0, A) = PerrYr * aRc2(A) * SB(A) * exp(-bRc2(A) * SB(A));
       }
     }
-    // movement
-    // Move stock
-    arma::mat Nstore(n_age, nareas);
-    for (int age=0; age<n_age; age++) {
 
-      arma::mat tempMat2(nareas, nareas);
-      for (int AA = 0; AA < nareas; AA++) {   // (from areas)
-        for (int BB = 0; BB < nareas; BB++) { // (to areas)
-          arma::vec temp = movcy.subcube(age, AA, BB, age, AA, BB);
-          double temp2 = temp(0);
-          tempMat2(BB, AA) = NextYrN(age, AA) * temp2; // movement fractions
-        }
-      }
-      for (int BB = 0; BB < nareas; BB++) { // to areas
-        Nstore(age, BB) = sum(tempMat2.row(BB));   // sums all rows (from areas) in each column (to areas)
-      }
-    }
-    // NextYrN = Nstore; // updated after movement
+    // Move stock
+    arma::cube movcy = movc(yr);
+    arma::mat NextYrN = movestockCPP(nareas, maxage,
+                                     movcy, wrap(Nnext));
 
     // Calculate biomass after recruitment and movement
     for (int A=0; A<nareas; A++) {
       SBarray.subcube(0, yr+1, A, 0, yr+1, A) = 0;
-      Barray.subcube(0, yr+1, A, maxage, yr+1, A) = Nstore.col(A) % WtAge.col(yr+1);
-      SSNarray.subcube(0, yr+1, A, maxage, yr+1, A) = Nstore.col(A) % MatAge.col(yr+1);
-      VBarray.subcube(0, yr+1, A, maxage, yr+1, A) = Nstore.col(A) % WtAge.col(yr+1) % Vuln.col(yr+1);
+      Barray.subcube(0, yr+1, A, maxage, yr+1, A) = NextYrN.col(A) % WtAge.col(yr+1);
+      SSNarray.subcube(0, yr+1, A, maxage, yr+1, A) = NextYrN.col(A) % MatAge.col(yr+1);
+      VBarray.subcube(0, yr+1, A, maxage, yr+1, A) = NextYrN.col(A) % WtAge.col(yr+1) % Vuln.col(yr+1);
       Marray.subcube(0, yr+1, A, maxage, yr+1, A) = M_age.col(yr+1);
       tempVec(A) = accu(VBarray.subcube(0, yr+1, A, maxage-1, yr+1, A));
     }
 
-    Narray.subcube(0, yr+1, 0, maxage, yr+1, nareas-1) = Nstore;
+    Narray.subcube(0, yr+1, 0, maxage, yr+1, nareas-1) = NextYrN;
 
     // fishdist = (pow(tempVec, Spat_targc))/mean((pow(tempVec, Spat_targc)));
     fishdist = (pow(tempVec, Spat_targc))/sum((pow(tempVec, Spat_targc)));

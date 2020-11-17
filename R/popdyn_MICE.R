@@ -83,8 +83,8 @@ popdynMICE<-function(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
     Vcur[]<-VFx[,,,y-1]#array(VFx[,,,y-1],c(np,nf,maxage))
     FMx[Find]<-qsx[Find[,1]]*qfracx[Find[,1:2]]*Ecur[Find[,1:2]]*Fdist[Find]*
       Vcur[Find[,1:3]]/Asizex[Find[,c(1,4)]]
-    
-    # apply maxF 
+
+    # apply maxF
     FMx[FMx>maxF] <- maxF
     Retcur[]<-FretAx[,,,y-1]#array(FretAx[,,,1],c(np,nf,maxage))
     FMretx[Find]<-qsx[Find[,1]]*qfracx[Find[,1:2]]*Ecur[Find[,1:2]]*Fdist[Find]*
@@ -134,8 +134,8 @@ popdynMICE<-function(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
     FMrety[,,,y-1,]<-out$FMretx
 
   }
-  
-  
+
+
   V_all <- apply(VFx, c(1,3,4), mean) # average V over fleets
 
   Nind<-TEG(dim(Nx))
@@ -261,10 +261,10 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
   Selx<-array(NA,dim(SumF))
   Selx[Nind]<-SumF[Nind]/MaxF[Nind[,c(1,3)]]
   VBt<-Bcur*Selx
-  
+
   for(p in 1:np){
     NextYrN <- popdynOneTScpp(nareas, maxage, Ncurr=Ncur[p,,],
-                            Zcurr=Zcur[p,,], mov=movy[p,,,],
+                            Zcurr=Zcur[p,,],
                             plusgroup = plusgroup[p])
     Nnext[p,,]<-NextYrN
     Nnext[p,1,] <- 0
@@ -294,9 +294,9 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
       SSBcur[p,,]<-apply(SexPars$SSBfrom[p,]*SSBs,2:3,sum)
     }
   }
-  
+
   SSBcurr <- apply(SSBcur, c(1,3), sum)
-  
+
   # this year's recruitment
   for (p in 1:np) {
     if (SRrelx[p]== 1) { # BH rec
@@ -307,7 +307,12 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
     }
     Nnext[p,1,] <- rec_A
   }
-  
+
+  for (p in 1:np) {
+    # movement this year
+    Nnext[p,,] <- movestockCPP(nareas,  maxage, mov=movy[p,,,], Nnext[p,,])
+  }
+
   Bcur[Nind]<-Nnext[Nind]*Wt_age[Nind[,1:2]]
   SSBcur[Nind]<-Bcur[Nind]*Mat_agecur[Nind[,1:2]]
   SSNcur[Nind]<-Nnext[Nind]*Mat_agecur[Nind[,1:2]]

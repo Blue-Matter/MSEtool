@@ -849,7 +849,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
 #' @param Hist An Historical Simulation object (class `Hist`)
 #'
 #' @export
-Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, extended=FALSE) {
+Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
+                     extended=FALSE) {
 
   # ---- Setup ----
   if (class(Hist) !='Hist')
@@ -1018,12 +1019,11 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, extended=F
     if(!silent) {
       cat("."); flush.console()
     }
-    # Movement and mortality in first year
+    # Mortality in first year
     NextYrN <- lapply(1:nsim, function(x)
       popdynOneTScpp(nareas, StockPars$maxage,
                      Ncurr=StockPars$N[x,,nyears,],
                      Zcurr=StockPars$Z[x,,nyears,],
-                     mov=StockPars$mov[x,,,,nyears+1],
                      plusgroup = StockPars$plusgroup))
 
     # The stock at the beginning of projection period
@@ -1042,6 +1042,14 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, extended=F
                        SSBpR=StockPars$SSBpR)
 
     N_P[,1,y,] <- t(rec_area)
+
+    # Movement of stock at beginning of first projection year
+    Ntemp <- lapply(1:nsim, function(x)
+      movestockCPP(nareas,  StockPars$maxage,
+                   StockPars$mov[x,,,,y+nyears],
+                   N_P[x,,y,])
+    )
+    N_P[,,y,] <- array(unlist(Ntemp), dim=c(n_age, nareas, nsim)) %>% aperm(c(3,1,2))
     Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAY1]  # Calculate biomass
     VBiomass_P[SAYR] <- Biomass_P[SAYR] * V_P[SAYt]  # Calculate vulnerable biomass
 
@@ -1099,11 +1107,6 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, extended=F
     CB_P <- MPCalcs$CB_P # removals
     CB_Pret <- MPCalcs$CB_Pret # retained catch
 
-
-    CB_P[1,,y,]/
-    VBiomass_P[1,,y,]
-
-    # apply(CB_Pret[,,1,], 1, sum)
     FM_P <- MPCalcs$FM_P # fishing mortality
     FM_Pret <- MPCalcs$FM_Pret # retained fishing mortality
     Z_P <- MPCalcs$Z_P # total mortality
@@ -1177,12 +1180,10 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, extended=F
         popdynOneTScpp(nareas, StockPars$maxage,
                        Ncurr=N_P[x,,y-1,],
                        Zcurr=Z_P[x,,y-1,],
-                       mov=StockPars$mov[x,,,, nyears+y],
                        plusgroup=StockPars$plusgroup))
 
       N_P[,,y,] <- aperm(array(unlist(NextYrN), dim=c(n_age, nareas, nsim, 1)), c(3,1,4,2))
       Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAYt]  # Calculate biomass
-      VBiomass_P[SAYR] <- Biomass_P[SAYR] * V_P[SAYt]  # Calculate vulnerable biomass
       SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAYt]  # Calculate spawning stock numbers
       SSB_P[SAYR] <- SSN_P[SAYR] * StockPars$Wt_age[SAYt]  # Calculate spawning stock biomass
 
@@ -1195,19 +1196,30 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, extended=F
                          bR=StockPars$bR, R0a=StockPars$R0a, SSBpR=StockPars$SSBpR)
 
       N_P[,1,y,] <- t(rec_area)
+
+      # movement this year
+      Ntemp <- lapply(1:nsim, function(x)
+        movestockCPP(nareas,  StockPars$maxage,
+                     StockPars$mov[x,,,,y+nyears],
+                     N_P[x,,y,])
+      )
+      N_P[,,y,] <- array(unlist(Ntemp), dim=c(n_age, nareas, nsim)) %>% aperm(c(3,1,2))
       Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAY1]  # Calculate biomass
       VBiomass_P[SAYR] <- Biomass_P[SAYR] * V_P[SAYt]  # Calculate vulnerable biomass
 
       # --- An update year - update data and run MP ----
       if (y %in% upyrs) {
         # --- Update Data object ----
-        MSElist[[mm]] <- updateData(Data=MSElist[[mm]], OM, MPCalcs, Effort, StockPars$Biomass, StockPars$N,
-                                    Biomass_P, CB_Pret, N_P, StockPars$SSB, SSB_P, StockPars$VBiomass, VBiomass_P,
+        MSElist[[mm]] <- updateData(Data=MSElist[[mm]], OM, MPCalcs, Effort,
+                                    StockPars$Biomass, StockPars$N,
+                                    Biomass_P, CB_Pret, N_P, StockPars$SSB,
+                                    SSB_P, StockPars$VBiomass, VBiomass_P,
                                     RefPoints=ReferencePoints,
                                     retA_P, retL_P, StockPars,
                                     FleetPars, ObsPars, V_P,
                                     upyrs, interval, y, mm,
-                                    Misc=Data_p@Misc, RealData, ObsPars$Sample_Area
+                                    Misc=Data_p@Misc, RealData,
+                                    ObsPars$Sample_Area
         )
 
         # --- apply MP ----
@@ -1275,8 +1287,10 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, extended=F
     }  # end of year loop
 
     if (max(upyrs) < proyears) { # One more call to complete Data object
-      MSElist[[mm]] <- updateData(Data=MSElist[[mm]], OM, MPCalcs, Effort, StockPars$Biomass, StockPars$N,
-                                  Biomass_P, CB_Pret, N_P, StockPars$SSB, SSB_P, StockPars$VBiomass, VBiomass_P,
+      MSElist[[mm]] <- updateData(Data=MSElist[[mm]], OM, MPCalcs, Effort,
+                                  StockPars$Biomass, StockPars$N,
+                                  Biomass_P, CB_Pret, N_P, StockPars$SSB, SSB_P,
+                                  StockPars$VBiomass, VBiomass_P,
                                   RefPoints=ReferencePoints,
                                   retA_P, retL_P, StockPars,
                                   FleetPars, ObsPars, V_P,

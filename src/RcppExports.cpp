@@ -120,8 +120,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // popdynOneTScpp
-arma::mat popdynOneTScpp(double nareas, double maxage, NumericMatrix Ncurr, Rcpp::NumericMatrix Zcurr, arma::cube mov, int plusgroup);
-RcppExport SEXP _MSEtool_popdynOneTScpp(SEXP nareasSEXP, SEXP maxageSEXP, SEXP NcurrSEXP, SEXP ZcurrSEXP, SEXP movSEXP, SEXP plusgroupSEXP) {
+arma::mat popdynOneTScpp(double nareas, double maxage, NumericMatrix Ncurr, Rcpp::NumericMatrix Zcurr, int plusgroup);
+RcppExport SEXP _MSEtool_popdynOneTScpp(SEXP nareasSEXP, SEXP maxageSEXP, SEXP NcurrSEXP, SEXP ZcurrSEXP, SEXP plusgroupSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -129,9 +129,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type maxage(maxageSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type Ncurr(NcurrSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type Zcurr(ZcurrSEXP);
-    Rcpp::traits::input_parameter< arma::cube >::type mov(movSEXP);
     Rcpp::traits::input_parameter< int >::type plusgroup(plusgroupSEXP);
-    rcpp_result_gen = Rcpp::wrap(popdynOneTScpp(nareas, maxage, Ncurr, Zcurr, mov, plusgroup));
+    rcpp_result_gen = Rcpp::wrap(popdynOneTScpp(nareas, maxage, Ncurr, Zcurr, plusgroup));
+    return rcpp_result_gen;
+END_RCPP
+}
+// movestockCPP
+arma::mat movestockCPP(double nareas, double maxage, arma::cube mov, NumericMatrix Number);
+RcppExport SEXP _MSEtool_movestockCPP(SEXP nareasSEXP, SEXP maxageSEXP, SEXP movSEXP, SEXP NumberSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type nareas(nareasSEXP);
+    Rcpp::traits::input_parameter< double >::type maxage(maxageSEXP);
+    Rcpp::traits::input_parameter< arma::cube >::type mov(movSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Number(NumberSEXP);
+    rcpp_result_gen = Rcpp::wrap(movestockCPP(nareas, maxage, mov, Number));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -182,7 +195,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_tdnorm", (DL_FUNC) &_MSEtool_tdnorm, 3},
     {"_MSEtool_genSizeComp", (DL_FUNC) &_MSEtool_genSizeComp, 10},
     {"_MSEtool_movfit_Rcpp", (DL_FUNC) &_MSEtool_movfit_Rcpp, 3},
-    {"_MSEtool_popdynOneTScpp", (DL_FUNC) &_MSEtool_popdynOneTScpp, 6},
+    {"_MSEtool_popdynOneTScpp", (DL_FUNC) &_MSEtool_popdynOneTScpp, 5},
+    {"_MSEtool_movestockCPP", (DL_FUNC) &_MSEtool_movestockCPP, 4},
     {"_MSEtool_popdynCPP", (DL_FUNC) &_MSEtool_popdynCPP, 27},
     {NULL, NULL, 0}
 };

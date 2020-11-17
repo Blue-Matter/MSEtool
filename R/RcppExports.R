@@ -53,29 +53,36 @@ movfit_Rcpp <- function(par, prb, frac) {
     .Call('_MSEtool_movfit_Rcpp', PACKAGE = 'MSEtool', par, prb, frac)
 }
 
-#' Population dynamics model for one annual time-step
+#' Aging and Mortality for one time-step
 #'
 #' Project population forward one time-step given current numbers-at-age and total mortality
 #'
 #' @param nareas The number of spatial areas
 #' @param maxage The maximum age
-#' @param SSBcurr A numeric vector of length nareas with the current spawning biomass in each area
 #' @param Ncurr A numeric matrix (maxage+1, nareas) with current numbers-at-age in each area
 #' @param Zcurr A numeric matrix (maxage+1, nareas) with total mortality-at-age in each area
-#' @param PerrYr A numeric value with recruitment deviation for current year
-#' @param hs Steepness of SRR
-#' @param R0a Numeric vector with unfished recruitment by area
-#' @param SSBpR Numeric vector with unfished spawning stock per recruit by area
-#' @param aR Numeric vector with Ricker SRR a parameter by area
-#' @param bR Numeric vector with Ricker SRR b parameter by area
-#' @param mov Numeric matrix (nareas by nareas) with the movement matrix
-#' @param SRrel Integer indicating the stock-recruitment relationship to use (1 for Beverton-Holt, 2 for Ricker)
 #'
 #' @author A. Hordyk
 #'
 #' @keywords internal
-popdynOneTScpp <- function(nareas, maxage, Ncurr, Zcurr, mov, plusgroup = 0L) {
-    .Call('_MSEtool_popdynOneTScpp', PACKAGE = 'MSEtool', nareas, maxage, Ncurr, Zcurr, mov, plusgroup)
+popdynOneTScpp <- function(nareas, maxage, Ncurr, Zcurr, plusgroup = 0L) {
+    .Call('_MSEtool_popdynOneTScpp', PACKAGE = 'MSEtool', nareas, maxage, Ncurr, Zcurr, plusgroup)
+}
+
+#' Apply the movement model to the stock for one time-step
+#'
+#'
+#'
+#' @param nareas The number of spatial areas
+#' @param maxage The maximum age
+#' @param mov Numeric matrix (nareas by nareas) with the movement matrix
+#' @param Number A numeric matrix (maxage+1, nareas) with current numbers-at-age in each area
+#'
+#' @author A. Hordyk
+#'
+#' @export
+movestockCPP <- function(nareas, maxage, mov, Number) {
+    .Call('_MSEtool_movestockCPP', PACKAGE = 'MSEtool', nareas, maxage, mov, Number)
 }
 
 #' Population dynamics model in CPP
