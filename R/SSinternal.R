@@ -65,8 +65,15 @@ SS_steepness <- function(replist, mainyrs) {
 }
 
 
-
+logit <- function(p) log(p/(1-p))
 ilogit <- function(x) 1/(1 + exp(-x))
+ilogitm <- function(x) {
+  if(inherits(x, "matrix")) {
+    return(exp(x)/apply(exp(x), 1, sum))
+  } else {
+    return(exp(x)/sum(exp(x)))
+  }
+}
 
 # #' Predict recruitment and return fit to S-R observations
 # #'

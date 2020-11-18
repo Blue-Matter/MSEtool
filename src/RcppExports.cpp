@@ -106,6 +106,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// grav
+List grav(arma::vec log_visc, arma::vec log_grav, arma::vec fracs, int nareas);
+RcppExport SEXP _MSEtool_grav(SEXP log_viscSEXP, SEXP log_gravSEXP, SEXP fracsSEXP, SEXP nareasSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type log_visc(log_viscSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type log_grav(log_gravSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type fracs(fracsSEXP);
+    Rcpp::traits::input_parameter< int >::type nareas(nareasSEXP);
+    rcpp_result_gen = Rcpp::wrap(grav(log_visc, log_grav, fracs, nareas));
+    return rcpp_result_gen;
+END_RCPP
+}
 // movfit_Rcpp
 double movfit_Rcpp(NumericVector par, double prb, double frac);
 RcppExport SEXP _MSEtool_movfit_Rcpp(SEXP parSEXP, SEXP prbSEXP, SEXP fracSEXP) {
@@ -194,6 +208,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_rnormSelect2", (DL_FUNC) &_MSEtool_rnormSelect2, 3},
     {"_MSEtool_tdnorm", (DL_FUNC) &_MSEtool_tdnorm, 3},
     {"_MSEtool_genSizeComp", (DL_FUNC) &_MSEtool_genSizeComp, 10},
+    {"_MSEtool_grav", (DL_FUNC) &_MSEtool_grav, 4},
     {"_MSEtool_movfit_Rcpp", (DL_FUNC) &_MSEtool_movfit_Rcpp, 3},
     {"_MSEtool_popdynOneTScpp", (DL_FUNC) &_MSEtool_popdynOneTScpp, 5},
     {"_MSEtool_movestockCPP", (DL_FUNC) &_MSEtool_movestockCPP, 4},
