@@ -519,12 +519,12 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, OM, plusgroup, che
   SSBpR <- matrix(SSB0/StockPars$R0, nrow=nsim, ncol=nareas)  # Spawning stock biomass per recruit
   SSB0a <- apply(SSB[, , 1, ], c(1, 3), sum)  # Calculate unfished spawning stock numbers
 
+  # Project unfished for Nyrs to calculate equilibrium spatial distribution
+  Nyrs <-  ceiling(5 * StockPars$maxage) # Project unfished for 5 x maxage
   bR <- matrix(log(5 * StockPars$hs)/(0.8 * SSB0a), nrow=nsim)  # Ricker SR params
   aR <- matrix(exp(bR * SSB0a)/SSBpR, nrow=nsim)  # Ricker SR params
-  R0a <- matrix(StockPars$R0, nrow=nsim, ncol=nareas, byrow=FALSE) * 1/nareas # initial distribution of recruits
+  R0a <- matrix(StockPars$R0, nrow=nsim, ncol=nareas, byrow=FALSE) * StockPars$Pinitdist # initial distribution of recruits
 
-  # Project unfished for Nyrs to calculate equilibrium spatial distribution
-  Nyrs <- ceiling(5 * StockPars$maxage) # Project unfished for 3 x maxage
   # Set up projection arrays
   M_ageArrayp <- array(StockPars$M_ageArray[,,1], dim=c(dim(StockPars$M_ageArray)[1:2], Nyrs))
   Wt_agep <- array(StockPars$Wt_age[,,1], dim=c(dim(StockPars$Wt_age)[1:2], Nyrs))
@@ -545,13 +545,14 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, OM, plusgroup, che
 
   runProj <- lapply(1:nsim, projectEq, StockPars$Asize, nareas=nareas,
                     maxage=StockPars$maxage, N=N, pyears=Nyrs,
-                    M_ageArray=M_ageArrayp, Mat_age=Mat_agep, Wt_age=Wt_agep, V=Vp, retA=retAp,
+                    M_ageArray=M_ageArrayp, Mat_age=Mat_agep,
+                    Wt_age=Wt_agep, V=Vp, retA=retAp,
                     Perr=Perr_yp, mov=movp, SRrel=StockPars$SRrel,
                     Find=FleetPars$Find, Spat_targ=FleetPars$Spat_targ,
                     hs=StockPars$hs,
                     R0a=R0a, SSBpR=SSBpR, aR=aR, bR=bR, SSB0=SSB0, B0=B0,
                     MPA=noMPA, maxF=OM@maxF,
-                    Nyrs, plusgroup)
+                    Nyrs, plusgroup, Pinitdist=StockPars$Pinitdist)
 
   Neq1 <- aperm(array(as.numeric(unlist(runProj)), dim=c(n_age, nareas, nsim)), c(3,1,2))  # unpack the list
 

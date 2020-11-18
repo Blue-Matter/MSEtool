@@ -2,6 +2,8 @@
 //[[Rcpp::depends(RcppArmadillo)]]
 using namespace Rcpp;
 
+
+
 //' Aging and Mortality for one time-step
 //'
 //' Project population forward one time-step given current numbers-at-age and total mortality
@@ -21,8 +23,6 @@ arma::mat popdynOneTScpp(double nareas, double maxage,
 
   int n_age = maxage + 1;
   arma::mat Nnext(n_age, nareas);
-  // arma::mat tempMat2(nareas, nareas);
-
 
   for (int A=0; A < nareas; A++) {
     // Mortality
@@ -33,6 +33,7 @@ arma::mat popdynOneTScpp(double nareas, double maxage,
     if (plusgroup > 0) {
       Nnext(maxage, A) += Nnext(maxage, A) * exp(-Zcurr(maxage, A))/(1-exp(-Zcurr(maxage, A))); // Total mortality
     }
+
   }
 
   return Nnext;
@@ -58,7 +59,8 @@ arma::mat movestockCPP(double nareas, double maxage, arma::cube mov, NumericMatr
   arma::mat Nstore(n_age, nareas);
   arma::mat tempMat2(nareas, nareas);
 
-  for (int age=0; age<n_age; age++) {
+  // move age-classes 1+ (age-0 recruitment already specified in R0a)
+  for (int age=1; age<n_age; age++) {
     for (int AA = 0; AA < nareas; AA++) {   // (from areas)
       for (int BB = 0; BB < nareas; BB++) { // (to areas)
         arma::vec temp = mov.subcube(age, AA, BB, age, AA, BB);
@@ -70,6 +72,11 @@ arma::mat movestockCPP(double nareas, double maxage, arma::cube mov, NumericMatr
       Nstore(age, BB) = sum(tempMat2.row(BB));   // sums all rows (from areas) in each column (to areas)
     }
   }
+  for (int AA = 0; AA < nareas; AA++) {
+     Nstore(0,AA) = Number(0,AA);
+  }
+
+
   return Nstore;
 }
 
@@ -189,7 +196,6 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
     // Rcpp::Rcout << "yr = " << yr << std::endl;
     arma::vec SB(nareas);
 
-
     for (int A=0; A<nareas; A++) SB(A) = accu(SBarray.subcube(0, yr, A, maxage, yr, A));
     if ((yr >0) & (control==3)) SB = SSB0a;
 
@@ -200,6 +206,7 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
     arma::mat Nnext = popdynOneTScpp(nareas, maxage,
                              wrap(Ncurr2), wrap(Zcurr),
                              plusgroup);
+    // arma::mat Nnext = Ncurr2;
 
     // recruitment
     double PerrYr = Prec(yr+maxage+1); // rec dev
@@ -219,8 +226,8 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
       }
     }
 
-    // Move stock
-    arma::cube movcy = movc(yr);
+    // Move stock - ages 1+
+    arma::cube movcy = movc(yr+1);
     arma::mat NextYrN = movestockCPP(nareas, maxage,
                                      movcy, wrap(Nnext));
 

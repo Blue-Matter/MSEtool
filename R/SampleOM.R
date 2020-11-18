@@ -740,14 +740,14 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
       if(msg) message("Custom movement matrix detected in cpars: simulating movement among ", nareas," areas")
       if(is.na(dim(mov)[5])) {
         # movement constant across years
-        mind <- as.matrix(expand.grid(1:nsim,n_age,1:nareas,1:nareas))
+        mind <- as.matrix(expand.grid(1:nsim,1,1:nareas,1:nareas))
       } else {
         # variable movement across years
-        mind<-as.matrix(expand.grid(1:nsim,n_age,1:nareas,1:nareas, 1)) # movement for 1st year
+        mind<-as.matrix(expand.grid(1:nsim,1,1:nareas,1:nareas, 1)) # movement for 1st year
       }
       movedarray<-array(0,c(nsim,nareas,nareas))
       Pinitdist<-array(1/nareas,c(nsim,nareas)) # population distribution by area
-      for(i in 1:20){ # convergence in initial distribution is assumed to occur in 20 iterations (generally overkill)
+      for(i in 1:100){ # convergence in initial distribution is assumed to occur in 100 iterations (generally overkill)
         # distribution in from areas multiplied by movement array
         movedarray[mind[,c(1,3,4)]]<-Pinitdist[mind[,c(1,3)]]*mov[mind]
         Pinitdist<-apply(movedarray,c(1,3),sum) # add over to areas
