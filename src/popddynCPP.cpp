@@ -149,6 +149,7 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
   NumericVector SSB0a(nareas);
   double R0 = sum(R0c);
 
+
   // Beginning of Initial year
   Narray.subcube(0, 0, 0, maxage, 0, nareas-1) = Ncurr;
 
@@ -197,7 +198,6 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
 
     for (int A=0; A<nareas; A++) SB(A) = accu(SBarray.subcube(0, yr, A, maxage, yr, A));
     if ((yr >0) & (control==3)) SB = SSB0a;
-
     arma::mat Ncurr2 = Narray.subcube(0, yr, 0, maxage, yr, nareas-1);
     arma::mat Zcurr = Zarray.subcube(0, yr, 0, maxage, yr, nareas-1);
 
@@ -205,12 +205,11 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
     arma::mat Nnext = popdynOneTScpp(nareas, maxage,
                              wrap(Ncurr2), wrap(Zcurr),
                              plusgroup);
-    
     // recruitment
     double PerrYr = Prec(yr+maxage+1); // rec dev
     double SBtot = 0; // Total spawning biomass this year
     arma::vec rec(1); // Total recruitment this year
-    
+
     // Spawning biomass before recruitment (age-0 doesn't contribute to SB)
     for (int A=0; A<nareas; A++) {
       // Spawning biomass before recruitment (age-0 doesn't contribute to SB)
@@ -218,23 +217,23 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
       SB(A) = accu(SBarray.subcube(1, yr+1, A, maxage, yr+1, A)); // total spawning biomass
       SBtot += SB(A);
     }
-  
+
     if (SRrelc == 1) {
       // BH SRR
-      rec(0) =  PerrYr * (4*R0 * hc * SBtot)/(SSBpRc(0) * R0 * (1-hc) + (5*hc-1) * SBtot); // global recruitment 
-    } 
+      rec(0) =  PerrYr * (4*R0 * hc * SBtot)/(SSBpRc(0) * R0 * (1-hc) + (5*hc-1) * SBtot); // global recruitment
+    }
     double bR = log(5 * hc)/(0.8*SSB0c);
     if (SRrelc == 2) {
       // most transparent form of the Ricker uses alpha and beta params
       rec(0) = PerrYr * aRc2(0) * SBtot * exp(-bR *SBtot);
     }
-   
-    // Distribute recruitment across areas 
+
+    // Distribute recruitment across areas
     arma::vec recdist = R0c2/sum(R0c2); // distribution of R0
     for (int A=0; A<nareas; A++) {
       Nnext(0, A) = rec(0) * recdist(A);
     }
-    
+
     // for (int A=0; A<nareas; A++) {
     //   // Spawning biomass before recruitment (age-0 doesn't contribute to SB)
     //   SBarray.subcube(0, yr+1, A, maxage, yr+1, A) = Nnext.col(A) % WtAge.col(yr+1) % MatAge.col(yr+1);
@@ -244,7 +243,7 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
     //   if (SRrelc == 1) {
     //     // BH SRR
     //     Nnext(0, A) = PerrYr * (4*R0c2(A) * hc * SB(A))/(SSBpRc(A) * R0c2(A) * (1-hc) + (5*hc-1) * SB(A));
-    //     
+    //
     //     Rcout << "SB in Area " << A << " is " << SB(A) << std::endl;
     //     Rcout << "Rec in Area " << A << " is " << Nnext(0,A) << std::endl;
     //   }
@@ -254,12 +253,12 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
     //   }
     //   rec = rec+ Nnext(0, A);
     // }
-    
+
     // Move stock - ages 1+
     arma::cube movcy = movc(yr+1);
     arma::mat NextYrN = movestockCPP(nareas, maxage,
                                      movcy, wrap(Nnext));
-  
+
     // Calculate biomass after recruitment and movement
     for (int A=0; A<nareas; A++) {
       SBarray.subcube(0, yr+1, A, 0, yr+1, A) = 0;

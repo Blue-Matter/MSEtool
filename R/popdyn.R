@@ -258,13 +258,13 @@ calcRefYield <- function(x, StockPars, FleetPars, pyears, Ncurr) {
                   StockPars$maxage,
                   Ncurr=Ncurr[x,,],
                   pyears=pyears,
-                  M_age=StockPars$M_ageArray[x,,],
-                  MatAge=StockPars$Mat_age[x,,],
-                  WtAge=StockPars$Wt_age[x,,],
-                  Vuln=FleetPars$V[x,,],
-                  Retc=FleetPars$retA[x,,],
-                  Prec=StockPars$Perr_y[x,],
-                  movc=split.along.dim(StockPars$mov[x,,,,],4),
+                  M_age=StockPars$M_ageArray[x,,(nyears):(nyears+proyears)],
+                  MatAge=StockPars$Mat_age[x,,(nyears):(nyears+proyears)],
+                  WtAge=StockPars$Wt_age[x,,(nyears):(nyears+proyears)],
+                  Vuln=FleetPars$V[x,,(nyears):(nyears+proyears)],
+                  Retc=FleetPars$retA[x,,(nyears):(nyears+proyears)],
+                  Prec=StockPars$Perr_y[x,(nyears):(nyears+proyears+StockPars$maxage)],
+                  movc=split.along.dim(StockPars$mov[x,,,,(nyears):(nyears+proyears)],4),
                   SRrelc=StockPars$SRrel[x],
                   Effind=FleetPars$Find[x,],
                   Spat_targc=FleetPars$Spat_targ[x],
@@ -764,9 +764,9 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     # Effort relative to last historical with this catch
     Effort_req <- Ftot/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]*
                           (1 + FleetPars$qinc/100)^y) * apply(fracE2, 1, sum) # effort required
-    
+
     Effort_req[Ftot<=1E-3] <- tiny
-    
+
     # Calculate F & Z by age class
     FM_P[SAYR] <- Ftot[S] * V_P[SAYt] * fishdist[SR]/StockPars$Asize[SR]
     FM_Pret[SAYR] <- Ftot[S] * retA_P[SAYt] * fishdist[SR]/StockPars$Asize[SR]

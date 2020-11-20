@@ -65,7 +65,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   if (length(OM@cpars)>0)  {
     SampCpars <- SampleCpars(cpars=OM@cpars, nsim, silent=silent)
   }
-  
+
   set.seed(OM@seed) # set seed again after cpars has been sampled
 
   # Stock Parameters
