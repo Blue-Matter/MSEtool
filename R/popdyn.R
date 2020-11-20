@@ -428,16 +428,16 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
 
   # Effort
   if (length(MPRecs$Effort) == 0) { # no max effort recommendation
-    if (y==1) TAE <- LastTAE *  Effort_Imp_Error[,y] # max effort is unchanged but has implementation error
-    if (y>1) TAE <- LastTAE /  Effort_Imp_Error[,y-1] * Effort_Imp_Error[,y] # max effort is unchanged but has implementation error
+    if (y==1) TAE_err <- LastTAE  *  Effort_Imp_Error[,y] # max effort is unchanged but has implementation error
+    if (y>1) TAE_err <- LastTAE  * Effort_Imp_Error[,y] # max effort is unchanged but has implementation error
   } else if (length(MPRecs$Effort) != nsim) {
     stop("Effort recommmendation is not 'nsim' long.\n Does MP return Effort recommendation under all conditions?")
   } else {
     # a maximum effort recommendation
     if (!all(is.na(histTAE))) {
-      TAE <- histTAE * MPRecs$Effort * Effort_Imp_Error[,y] # adjust existing TAE adjustment with implementation error
+      TAE_err <- histTAE * MPRecs$Effort * Effort_Imp_Error[,y] # adjust existing TAE adjustment with implementation error
     } else {
-      TAE <- MPRecs$Effort * Effort_Imp_Error[,y] # adjust existing TAE adjustment with implementation error
+      TAE_err <- MPRecs$Effort * Effort_Imp_Error[,y] # adjust existing TAE adjustment with implementation error
     }
   }
 
@@ -682,8 +682,8 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
 
   # ---- no TAC - calculate F with bio-economic effort ----
   if (all(is.na(TACused))) {
-    if (all(is.na(Effort_pot)) & all(is.na(TAE))) Effort_pot <- rep(1, nsim) # historical effort
-    if (all(is.na(Effort_pot))) Effort_pot <- TAE[1,]
+    if (all(is.na(Effort_pot)) & all(is.na(TAE_err))) Effort_pot <- rep(1, nsim) # historical effort
+    if (all(is.na(Effort_pot))) Effort_pot <- TAE_err[1,]
     # fishing mortality with bio-economic effort
     FM_P[SAYR] <- (FleetPars$FinF[S1] * Effort_pot[S1] * V_P[SAYt] * t(Si)[SR] * fishdist[SR] *
                      FleetPars$qvar[SY1] * (FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y))/StockPars$Asize[SR]
@@ -764,6 +764,9 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     # Effort relative to last historical with this catch
     Effort_req <- Ftot/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]*
                           (1 + FleetPars$qinc/100)^y) * apply(fracE2, 1, sum) # effort required
+    
+    Effort_req[Ftot<=1E-3] <- tiny
+    
     # Calculate F & Z by age class
     FM_P[SAYR] <- Ftot[S] * V_P[SAYt] * fishdist[SR]/StockPars$Asize[SR]
     FM_Pret[SAYR] <- Ftot[S] * retA_P[SAYt] * fishdist[SR]/StockPars$Asize[SR]
@@ -774,7 +777,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   # Effort_req - effort required to catch TAC
   # Effort_pot - potential effort this year (active fishers) from bio-economic model
   # Effort_act - actual effort this year
-  # TAE - maximum actual effort limit
+  # TAE_err - maximum actual effort limit - with imp error
   # Effort_act < Effort_pot if Effort_req < Effort_pot
 
   # Limit effort to potential effort from bio-economic model
@@ -785,8 +788,8 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   }
 
   # Limit actual effort <= TAE
-  if (!all(is.na(TAE))) { # a TAE exists
-    Effort_act[Effort_act>TAE] <- TAE[Effort_act>TAE]
+  if (!all(is.na(TAE_err))) { # a TAE exists
+    Effort_act[Effort_act>TAE_err] <- TAE_err[Effort_act>TAE_err]
   }
   Effort_act[Effort_act<=0] <- tiny
 
@@ -811,10 +814,12 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
   totalCatch <- apply(CB_P[,,y,], 1, sum)
   Ftot <- sapply(1:nsim, calcF, totalCatch, V_P, Biomass_P, fishdist,
-                 StockPars$Asize, StockPars$maxage, StockPars$nareas,
-                 StockPars$M_ageArray,nyears, y) # update if effort has changed
+                 Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
+                 M_ageArray=StockPars$M_ageArray,nyears, y) # update if effort has changed
 
   # Returns
+  TAE <- MPRecs$Effort
+  if (length(TAE)==0) TAE <- rep(NA, nsim)
   out <- list()
   out$TACrec <- TACused
   out$V_P <- V_P
@@ -852,6 +857,7 @@ calcF <- function(x, TACusedE, V_P, Biomass_P, fishdist, Asize, maxage, nareas,
                   M_ageArray, nyears, y) {
   ct <- TACusedE[x]
   ft <- ct/sum(Biomass_P[x,,y,] * V_P[x,,y+nyears]) # initial guess
+
   if (ft <= 1E-3) return(tiny)
   for (i in 1:50) {
     Fmat <- ft * matrix(V_P[x,,y+nyears], nrow=maxage+1, ncol=nareas) *
