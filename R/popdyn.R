@@ -249,8 +249,10 @@ MSYCalcs <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age,
 #' @param FleetPars List of Fleet Parameters
 #' @param pyears The number of years to project forward. Equal to 'nyears' for optimizing for q.
 #' @param Ncurr Array with current numbers-at-age (dim=c(nsim, maxage+1, nareas))
+#' @param nyears Number of historical years
+#' @param proyears Number of projection years
 #' @author A. Hordyk
-calcRefYield <- function(x, StockPars, FleetPars, pyears, Ncurr) {
+calcRefYield <- function(x, StockPars, FleetPars, pyears, Ncurr, nyears, proyears) {
 
   opt <- optimize(optYield, log(c(0.001, 10)),
                   Asize_c=StockPars$Asize[x,],

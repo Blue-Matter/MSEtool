@@ -597,7 +597,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   # --- Calculate Reference Yield ----
   if(!silent) message("Calculating reference yield - best fixed F strategy")
   RefY <- sapply(1:nsim, calcRefYield, StockPars, FleetPars, proyears,
-                 Ncurr=StockPars$N[,,nyears,])
+                 Ncurr=StockPars$N[,,nyears,], nyears, proyears)
 
   # ---- Store Reference Points ----
   # arrays for unfished biomass for all years

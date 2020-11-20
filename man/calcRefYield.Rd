@@ -4,7 +4,7 @@
 \alias{calcRefYield}
 \title{Calculate Reference Yield}
 \usage{
-calcRefYield(x, StockPars, FleetPars, pyears, Ncurr)
+calcRefYield(x, StockPars, FleetPars, pyears, Ncurr, nyears, proyears)
 }
 \arguments{
 \item{x}{Integer, the simulation number}
@@ -16,6 +16,10 @@ calcRefYield(x, StockPars, FleetPars, pyears, Ncurr)
 \item{pyears}{The number of years to project forward. Equal to 'nyears' for optimizing for q.}
 
 \item{Ncurr}{Array with current numbers-at-age (dim=c(nsim, maxage+1, nareas))}
+
+\item{nyears}{Number of historical years}
+
+\item{proyears}{Number of projection years}
 }
 \description{
 Calculate Reference Yield
