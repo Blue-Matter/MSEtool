@@ -840,14 +840,21 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     
     Ierr <- exp(lcs(Data_out@Ind))/exp(lcs(SimBiomass))^I_Err$beta
     
+    if (!is.null(SampCpars$Ierr_y)) {
+      if (msg) message('Total Index Observation Error found (cpars$Ierr_y) - not updating observation error')
+    } else {
+      if (msg) message('Updating Total Index Observation Error based on Observed Data')
+      ObsPars$Ierr_y[, 1:nyears] <- Ierr # update Obs Error  
+      # Sample for projection years 
+      yr.ind <- max(which(!is.na(RealData@Ind[1,1:nyears])))
+      ObsPars$Ierr[, (nyears+1):(nyears+proyears)] <- generateRes(df=I_Err, 
+                                                                  nsim, proyears, 
+                                                                  lst.err=log(ObsPars$Ierr[,yr.ind]))
+    }
     
-    ObsPars$Ierr_y[, 1:nyears] <- Ierr # update Obs Error
     
-    # Sample for projection years 
-    yr.ind <- max(which(!is.na(RealData@Ind[1,1:nyears])))
-    ObsPars$Ierr[, (nyears+1):(nyears+proyears)] <- generateRes(df=I_Err, 
-                                                                nsim, proyears, 
-                                                                lst.err=log(ObsPars$Ierr[,yr.ind]))
+    
+ 
     ObsPars$Ind_Stat <- I_Err
   }
   
