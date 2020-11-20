@@ -65,7 +65,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   if (length(OM@cpars)>0)  {
     SampCpars <- SampleCpars(cpars=OM@cpars, nsim, silent=silent)
   }
-
+  
   set.seed(OM@seed) # set seed again after cpars has been sampled
 
   # Stock Parameters
@@ -754,8 +754,6 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                                msg=!silent)
     Data <- updatedData$Data
     ObsPars <- updatedData$ObsPars
-
-
   }
 
   OMPars <- Data@OM
@@ -1039,7 +1037,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     rec_area <- sapply(1:nsim, calcRecruitment, SRrel=StockPars$SRrel, SSBcurr=SSBcurr,
                        recdev=recdev, hs=StockPars$hs,
                        aR= StockPars$aR, bR=StockPars$bR, R0a=StockPars$R0a,
-                       SSBpR=StockPars$SSBpR)
+                       SSBpR=StockPars$SSBpR, SSB0=StockPars$SSB0)
 
     N_P[,1,y,] <- t(rec_area)
 
@@ -1193,7 +1191,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       rec_area <- sapply(1:nsim, calcRecruitment, SRrel=StockPars$SRrel,
                          SSBcurr=SSBcurr,
                          recdev=recdev, hs=StockPars$hs, aR=StockPars$aR,
-                         bR=StockPars$bR, R0a=StockPars$R0a, SSBpR=StockPars$SSBpR)
+                         bR=StockPars$bR, R0a=StockPars$R0a, SSBpR=StockPars$SSBpR,
+                         SSB0=StockPars$SSB0)
 
       N_P[,1,y,] <- t(rec_area)
 
