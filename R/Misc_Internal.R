@@ -276,14 +276,24 @@ LinInterp<-function(x,y,xlev,ascending=F,zeroint=F){
 
 }
 
-calcRecruitment <- function(x, SRrel, SSBcurr, recdev, hs, aR, bR, R0a, SSBpR) {
+
+
+calcRecruitment <- function(x, SRrel, SSBcurr, recdev, hs, aR, bR, R0a, SSBpR, SSB0) {
+  
+  # calculate global recruitment and distribute according to R0a
+  R0 <- sum(R0a[x,])
+  SBtot <- sum(SSBcurr[x,])
+  rdist <- R0a[x,]/R0
+  
+  bR <- log(5*hs[x])/(0.8*SSB0[x])
   if (SRrel[x] == 1) { # BH rec
-    rec_A <- recdev[x] * (4*R0a[x,] * hs[x] * SSBcurr[x,])/(SSBpR[x,] *
-                                                              R0a[x,] * (1-hs[x]) + (5*hs[x]-1) * SSBcurr[x,])
+    rec <- recdev[x] * (4*R0 * hs[x] * SBtot)/(SSBpR[x,1] * R0 * (1-hs[x]) + (5*hs[x]-1) * SBtot)
   } else { # Ricker rec
-    rec_A <- recdev[x] * aR[x,] * SSBcurr[x,] * exp(-bR[x,]*SSBcurr[x,])
+    rec <-  recdev[x]  * aR[x,1] * SBtot * exp(-bR *SBtot)
+    # rec_A <- recdev[x] * aR[x,] * SSBcurr[x,] * exp(-bR[x,]*SSBcurr[x,])
   }
-  rec_A
+  rec * rdist
+  
 }
 
 lcs<-function(x){
@@ -525,6 +535,11 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, OM, plusgroup, che
   aR <- matrix(exp(bR * SSB0a)/SSBpR, nrow=nsim)  # Ricker SR params
   R0a <- matrix(StockPars$R0, nrow=nsim, ncol=nareas, byrow=FALSE) * StockPars$Pinitdist # initial distribution of recruits
 
+  
+  matrix(log(5 * StockPars$hs)/(0.8 * SSB0), nrow=nsim)  # Ricker SR params
+  
+  
+  
   # Set up projection arrays
   M_ageArrayp <- array(StockPars$M_ageArray[,,1], dim=c(dim(StockPars$M_ageArray)[1:2], Nyrs))
   Wt_agep <- array(StockPars$Wt_age[,,1], dim=c(dim(StockPars$Wt_age)[1:2], Nyrs))
@@ -552,7 +567,7 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, OM, plusgroup, che
                     hs=StockPars$hs,
                     R0a=R0a, SSBpR=SSBpR, aR=aR, bR=bR, SSB0=SSB0, B0=B0,
                     MPA=noMPA, maxF=OM@maxF,
-                    Nyrs, plusgroup, Pinitdist=StockPars$Pinitdist)
+                    Nyrs, plusgroup)
 
   Neq1 <- aperm(array(as.numeric(unlist(runProj)), dim=c(n_age, nareas, nsim)), c(3,1,2))  # unpack the list
 
@@ -571,5 +586,3 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, OM, plusgroup, che
   }
   initdist
 }
-
-
