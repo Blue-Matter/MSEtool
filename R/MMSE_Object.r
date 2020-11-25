@@ -48,11 +48,11 @@
 #' @slot TAC Simulated Total Allowable Catch (prescribed) over the projection (this is NA for input controls). An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers
 #' @slot TAE Simulated Total Allowable Effort (prescribed) over the projection (this is NA for output controls). An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers
 #' @slot BioEco A named list of bio-economic output. Not currently used.
-#' @slot RefPoint Named list of annual MSY reference points MSY, FMSY, and SBMSY. 
+#' @slot RefPoint Named list of annual MSY reference points MSY, FMSY, and SBMSY.
 #' Array with dimensions: nsim, nstocks, nMPs, nyears+proyears. Will be the same as `multiHist@Ref$ByYear` unless selectivity is changed by MP
 #' @slot multiHist The object of class `multiHist` containing information from the spool-up period.
 #' @slot PPD Posterior predictive data. List of `Data` objects at the end of
-#'  the projection period (length `nMPs`) 
+#'  the projection period (length `nMPs`)
 #' @slot Misc Miscellaneous output such as posterior predictive data
 #' @author T. Carruthers
 #' @keywords classes
@@ -62,7 +62,7 @@ setClass("MMSE", representation(Name = "character", nyears = "numeric",
                                 nsim = "numeric",nstocks="numeric",nfleets="numeric", Snames="character",Fnames='array',
                                 Stocks="list",Fleets="list",Obss="list",Imps="list",
                                 OM = "list", Obs = "list", SB_SBMSY = "array", F_FMSY = "array",
-                                N='array', B = "array", SSB="array", VB="array", FM = "array", 
+                                N='array', B = "array", SSB="array", VB="array", FM = "array",
                                 SPR='list', Catch = "array", Removals='array', Effort = "array",
                                 TAC = "array", TAE='array',
                                 BioEco='list', RefPoint='list', multiHist='list',
@@ -105,10 +105,10 @@ setMethod("initialize", "MMSE", function(.Object, Name, nyears, proyears,
   .Object@Removals <- Removals
   .Object@Effort <- Effort
   .Object@TAC <- TAC
-  .Object@TAC <- TAE
+  .Object@TAE <- TAE
   .Object@BioEco <- BioEco
-  .Object@RefPoint <- RefPoint 
-  .Object@multiHist <- multiHist 
+  .Object@RefPoint <- RefPoint
+  .Object@multiHist <- multiHist
   .Object@PPD <- PPD
   .Object@Misc <- Misc
 
