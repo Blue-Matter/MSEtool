@@ -2224,7 +2224,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
 #' @author T. Carruthers and A. Hordyk
 #' @export
 multiMSE <- function(MOM=MSEtool::Albacore_TwoFleet,
-                     MPs=list(c("AvC","DCAC"),c("FMSYref","curE")),
+                     MPs=list(list(c("AvC","DCAC"),c("FMSYref","curE"))),
                      Hist=FALSE,
                      silent=FALSE,
                      parallel=TRUE) {
