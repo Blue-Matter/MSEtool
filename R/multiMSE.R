@@ -991,10 +991,10 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   #   }
   # }
 
-  HistList <- vector('list', np)
+  multiHist <- vector('list', np)
 
   for (p in 1:np) {
-    HistList[[p]] <- vector('list', nf)
+    multiHist[[p]] <- vector('list', nf)
     for (f in 1:nf) {
       Hist <- new("Hist")
       Data@Misc <- list()
@@ -1057,12 +1057,17 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
         MOM=MOM
       )
 
-      HistList[[p]][[f]] <- Hist
+      multiHist[[p]][[f]] <- Hist
     }
   }
 
-  class(HistList) <- c('list', 'multiHist')
-  HistList
+  class(multiHist) <- c('list', 'multiHist')
+
+  attr(multiHist, "version") <- packageVersion("MSEtool")
+  attr(multiHist, "date") <- date()
+  attr(multiHist, "R.version") <- R.version
+
+  multiHist
 
 }
 
