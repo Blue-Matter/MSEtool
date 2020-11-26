@@ -23,16 +23,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   }
 
   # ---- Set up parallel processing ----
-  if (parallel) {
-    if (snowfall::sfIsRunning()) {
-      ncpus <- snowfall::sfCpus()
-    } else {
-      setup()
-      ncpus <- snowfall::sfCpus()
-    }
-  } else {
-    ncpus <- 1
-  }
+  ncpus <- set_parallel(parallel)
 
   set.seed(OM@seed) # set seed for reproducibility
   nsim <- OM@nsim # number of simulations
@@ -92,7 +83,6 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   ImpPars <- SampleImpPars(OM, nsim, cpars=SampCpars, nyears, proyears)
 
   # Bio-Economic Parameters
-  # TODO - add to Fleet@Misc object
   BioEcoPars <- c("RevCurr", "CostCurr", "Response", "CostInc", "RevInc", "LatentEff")
   if (all(lapply(SampCpars[BioEcoPars], length) == 0)) {
     # no bio-economic model
@@ -900,8 +890,11 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   # create a data object for each method
   # (they have identical historical data and branch in projected years)
   Data <- Hist@Data
+  # no need to replicate Data@Misc across MPs
+  Data_Misc <- Data@Misc
+  Data@Misc <- list()
   MSElist <- list(Data)[rep(1, nMP)]
-  # TODO - update names of stored values
+
   SB_SBMSY_a <- array(NA, dim = c(nsim, nMP, proyears))  # store the projected SB_SBMSY
   F_FMSYa <- array(NA, dim = c(nsim, nMP, proyears))  # store the projected F_FMSY
   Ba <- array(NA, dim = c(nsim, nMP, proyears))  # store the projected Biomass
@@ -963,6 +956,9 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   mm <- 1 # for debugging
 
   for (mm in 1:nMP) {  # MSE Loop over methods
+    Data_MP <- MSElist[[mm]]
+    Data_MP@Misc <- Data_Misc # add StockPars etc back to Data object
+
     if(!silent) message(mm, "/", nMP, " Running MSE for ", MPs[mm])
     checkNA <- rep(0, OM@proyears) # save number of NAs
     # years management is updated
@@ -1052,7 +1048,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     VBiomass_P[SAYR] <- Biomass_P[SAYR] * V_P[SAYt]  # Calculate vulnerable biomass
 
     # -- Apply MP in initial projection year ----
-    runMP <- applyMP(Data=MSElist[[mm]], MPs = MPs[mm], reps = reps, silent=TRUE)  # Apply MP
+    runMP <- applyMP(Data=Data_MP, MPs = MPs[mm], reps = reps, silent=TRUE)  # Apply MP
     MPRecs <- runMP[[1]][[1]] # MP recommendations
     Data_p <- runMP[[2]] # Data object object with saved info from MP
     Data_p@TAC <- MPRecs$TAC
@@ -1209,7 +1205,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       # --- An update year - update data and run MP ----
       if (y %in% upyrs) {
         # --- Update Data object ----
-        MSElist[[mm]] <- updateData(Data=MSElist[[mm]], OM, MPCalcs, Effort,
+        Data_MP <- updateData(Data=Data_MP, OM, MPCalcs, Effort,
                                     StockPars$Biomass, StockPars$N,
                                     Biomass_P, CB_Pret, N_P, StockPars$SSB,
                                     SSB_P, StockPars$VBiomass, VBiomass_P,
@@ -1222,7 +1218,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         )
 
         # --- apply MP ----
-        runMP <- applyMP(Data=MSElist[[mm]], MPs = MPs[mm], reps = reps, silent=TRUE)  # Apply MP
+        runMP <- applyMP(Data=Data_MP, MPs = MPs[mm], reps = reps, silent=TRUE)  # Apply MP
         MPRecs <- runMP[[1]][[1]] # MP recommendations
         Data_p <- runMP[[2]] # Data object object with saved info from MP
         Data_p@TAC <- MPRecs$TAC
@@ -1286,7 +1282,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     }  # end of year loop
 
     if (max(upyrs) < proyears) { # One more call to complete Data object
-      MSElist[[mm]] <- updateData(Data=MSElist[[mm]], OM, MPCalcs, Effort,
+      Data_MP <- updateData(Data=Data_MP, OM, MPCalcs, Effort,
                                   StockPars$Biomass, StockPars$N,
                                   Biomass_P, CB_Pret, N_P, StockPars$SSB, SSB_P,
                                   StockPars$VBiomass, VBiomass_P,
@@ -1339,12 +1335,15 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     FM_P_mp[,,mm,,] <- FM_P
     FMret_P_mp[,,mm,,] <- FM_Pret
 
+    # drop StockPars etc from Data_MP - already reported in Hist object
+    Data_MP@Misc$StockPars <- Data_MP@Misc$FleetPars <- Data_MP@Misc$ReferencePoints <- NULL
+
+    MSElist[[mm]] <- Data_MP # update MSElist with PPD for this MP
   } # end of MP loop
 
 
   # ---- Create MSE Object ----
   Misc <- list()
-  Misc$Data <- MSElist
 
   Misc$extended <- list()
 
