@@ -142,7 +142,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   # ---- Calculate initial distribution if mov provided in cpars ----
   if (is.null(StockPars$initdist)) {
     # mov has been passed in cpars - initdist hasn't been defined
-    StockPars$initdist <- CalcDistribution(StockPars, FleetPars, SampCpars, OM,
+    StockPars$initdist <- CalcDistribution(StockPars, FleetPars, SampCpars, nyears,
+                                           maxF,
                                            plusgroup, checks=FALSE)
   }
 
@@ -308,9 +309,9 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     Nprob <- length(probQ)
   }
 
-
   fracD <- 0.05; ntrials <- 50
   if (!is.null(control$ntrials)) ntrials <- control$ntrials
+  if (!is.null(control$ntrials)) fracD <- control$fracD
 
   # If q has hit bound, re-sample depletion and try again. Tries 'ntrials' times and then alerts user
   if (length(probQ) > 0) {
@@ -838,7 +839,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
 #'
 #' @export
 Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
-                     extended=FALSE) {
+                     extended=FALSE, checkMPs=TRUE) {
 
   # ---- Setup ----
   if (class(Hist) !='Hist')
@@ -857,7 +858,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   control <- OM@cpars$control; OM@cpars$control <- NULL
 
   # ---- Check MPs ----
-  MPs <- CheckMPs(MPs=MPs, silent=silent)
+  if (checkMPs)
+    MPs <- CheckMPs(MPs=MPs, silent=silent)
 
   nMP <- length(MPs)  # the total number of methods used
   if (nMP < 1) stop("No valid MPs found", call.=FALSE)
@@ -1437,6 +1439,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #' @param extended Logical. Return extended projection results?
 #' if TRUE, `MSE@Misc$extended` is a named list with extended data
 #' (including historical and projection by area)
+#' @param checkMPs Logical. Check if the specified MPs exist and can be run on `SimulatedData`?
 #'
 #' @describeIn runMSE Run the Historical Simulations and Forward Projections
 #'  from an object of class `OM
@@ -1449,7 +1452,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #' }
 #' @export
 runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
-                   parallel=FALSE, extended=FALSE) {
+                   parallel=FALSE, extended=FALSE, checkMPs=TRUE) {
 
   # ---- Initial Checks and Setup ----
   if (class(OM) == 'OM') {
@@ -1471,6 +1474,10 @@ runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
     stop("You must specify an operating model")
   }
 
+  # check MPs
+  if (checkMPs)
+    MPs <- CheckMPs(MPs=MPs, silent=silent)
+
   HistSims <- Simulate(OM, parallel, silent)
 
   if (Hist) {
@@ -1479,7 +1486,7 @@ runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
   }
 
   if(!silent) message("Running forward projections")
-  MSEout <- try(Project(Hist=HistSims, MPs, parallel, silent, extended = extended), silent=TRUE)
+  MSEout <- try(Project(Hist=HistSims, MPs, parallel, silent, extended = extended, checkMPs=FALSE), silent=TRUE)
   if (class(MSEout) == 'try-error') {
     message('The following error occured when running the forward projections: ',
             crayon::red(attributes(MSEout)$condition))
