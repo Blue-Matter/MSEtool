@@ -12,7 +12,7 @@ ProjectMOM(multiHist = NULL, MPs = NA, parallel = FALSE, silent = FALSE)
 
 multiMSE(
   MOM = MSEtool::Albacore_TwoFleet,
-  MPs = list(c("AvC", "DCAC"), c("FMSYref", "curE")),
+  MPs = list(list(c("AvC", "DCAC"), c("FMSYref", "curE"))),
   Hist = FALSE,
   silent = FALSE,
   parallel = TRUE
