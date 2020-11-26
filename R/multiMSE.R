@@ -1076,7 +1076,8 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 #' @describeIn multiMSE Run Forward Projections for a `MOM` object
 #' @param multiHist An Historical Simulation object (class `multiHist`)
 #' @export
-ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
+ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
+                        checkMPs=TRUE) {
 
   # ---- Setup ----
   if (! 'multiHist' %in% class(multiHist))
@@ -1197,30 +1198,16 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
   if (MPcond == 'unknown')
     stop('`MPs` is not a vector or list with correct dimensions. See `?multiMSE`')
 
-
   if(class(MPs)=="list"){
     allMPs<-unlist(MPs)
   }else{
     allMPs<-MPs
   }
-
   if (nMP < 1) stop("No valid MPs found", call.=FALSE)
 
   # ---- Check MPs ----
-  # Not currently included - TODO
-  # if (CheckMPs & MPcond != "MMP") {
-  #   if(!silent) message("Determining available methods")
-  #   PosMPs <- Can( Data, timelimit = timelimit)
-  #   if (!is.na(allMPs[1])) {
-  #     cant <- allMPs[!allMPs %in% PosMPs]
-  #     if (length(cant) > 0) {
-  #       if(!silent) stop(paste0("Cannot run some MPs:",
-  #                               DLMtool::DLMdiag(Data, "not available",
-  #                                                funcs1=cant, timelimit = timelimit)))
-  #     }
-  #   }
-  # }
-  #
+  if (checkMPs)
+    CheckMPs(MPs=allMPs, silent=silent)
 
   # ---- Set Management Interval for each MP ----
   # TODO - make same structure as MPs argument
@@ -2259,7 +2246,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE) {
 #' containing all historical data
 #' @param silent Should messages be printed out to the console?
 #' @param parallel Logical. Should the MSE be run using parallel processing?
-#'
+#' @param checkMPs Logical. Check if the specified MPs exist and can be run on `SimulatedData`?
 #' @describeIn multiMSE Run a multi-stock, multi-fleet MSE
 #' @return  Functions return objects of class `MMSE` and `multiHist`
 #' #' \itemize{
@@ -2273,7 +2260,8 @@ multiMSE <- function(MOM=MSEtool::Albacore_TwoFleet,
                      MPs=list(list(c("AvC","DCAC"),c("FMSYref","curE"))),
                      Hist=FALSE,
                      silent=FALSE,
-                     parallel=TRUE) {
+                     parallel=TRUE,
+                     checkMPs=TRUE) {
 
   # ---- Initial Checks and Setup ----
   if (class(MOM) == 'MOM') {
@@ -2311,6 +2299,11 @@ multiMSE <- function(MOM=MSEtool::Albacore_TwoFleet,
     stop("You must specify an operating model of class `MOM`")
   }
 
+  if (checkMPs) {
+    allMPs <- unique(unlist(MPs))
+    CheckMPs(MPs=allMPs, silent=silent)
+  }
+
   multiHist <- SimulateMOM(MOM, parallel, silent)
 
   if (Hist) {
@@ -2320,7 +2313,7 @@ multiMSE <- function(MOM=MSEtool::Albacore_TwoFleet,
 
   if(!silent) message("Running forward projections")
 
-  MSEout <- try(ProjectMOM(multiHist=multiHist, MPs, parallel, silent), silent=TRUE)
+  MSEout <- try(ProjectMOM(multiHist=multiHist, MPs, parallel, silent, checkMPs=FALSE), silent=TRUE)
 
   if (class(MSEout) == 'try-error') {
     message('The following error occured when running the forward projections: ',
