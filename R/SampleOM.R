@@ -991,11 +991,14 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
     if (!all(c('L5_y', 'LFS_y', 'Vmaxlen_y') %in% names(cpars))) {
       # need to calculate these
       for (yr in 1:(nyears+proyears)) {
-        bin_ind <- apply(SLarray[,,yr]>=0.05, 1, which)
-        if (length(bin_ind)<1) {
-          bin_ind <- matrix(1, ncol=nsim, nrow=nbins)
+        b_ind <- rep(NA, nsim)
+        for (i in 1:nsim) {
+          temp <- min(which(SLarray[i,,yr]>=0.05))
+          if (length(temp)<1) temp <- 1
+          if (is.na(temp)) temp <- 1
+          b_ind[i] <- temp
         }
-        b_ind <- apply(bin_ind, 2, min)
+
         L5_y[,yr] <- StockPars$CAL_binsmid[b_ind]
         b_ind <- apply(SLarray[,,yr], 1, which.max)
         LFS_y[,yr] <- StockPars$CAL_binsmid[b_ind]
@@ -1092,11 +1095,13 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
     if (!all(c('LR5_y', 'LFR_y', 'Rmaxlen_y') %in% names(cpars))) {
       # need to calculate these
       for (yr in 1:(nyears+proyears)) {
-        bin_ind <- apply(retL[,,yr]>=0.05, 1, which)
-        if (length(bin_ind)<1) {
-          bin_ind <- matrix(1, ncol=nsim, nrow=nbins)
+        b_ind <- rep(NA, nsim)
+        for (i in 1:nsim) {
+          temp <- min(which(SLarray[i,,yr]>=0.05))
+          if (length(temp)<1) temp <- 1
+          if (is.na(temp)) temp <- 1
+          b_ind[i] <- temp
         }
-        b_ind <- apply(bin_ind, 2, min)
         LR5_y[,yr] <- StockPars$CAL_binsmid[b_ind]
         b_ind <- apply(retL[,,yr], 1, which.max)
         LFR_y[,yr] <- StockPars$CAL_binsmid[b_ind]
