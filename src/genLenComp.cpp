@@ -4,20 +4,20 @@ using namespace Rcpp;
 
 
 
-// https://stackoverflow.com/questions/30175104/how-to-effectively-combine-a-list-of-numericvectors-into-one-large-numericvector 
+// https://stackoverflow.com/questions/30175104/how-to-effectively-combine-a-list-of-numericvectors-into-one-large-numericvector
 // [[Rcpp::export]]
 NumericVector combine(const List& list)
 {
   std::size_t n = list.size();
-  
+
   // Figure out the length of the output vector
   std::size_t total_length = 0;
   for (std::size_t i = 0; i < n; ++i)
     total_length += Rf_length(list[i]);
-  
+
   // Allocate the vector
   NumericVector output = no_init(total_length);
-  
+
   // Loop and fill
   std::size_t index = 0;
   for (std::size_t i = 0; i < n; ++i)
@@ -34,7 +34,7 @@ NumericVector combine(const List& list)
 // https://stackoverflow.com/questions/13661065/superimpose-histogram-fits-in-one-plot-ggplot
 
 // [[Rcpp::export]]
-NumericVector get_freq(NumericVector x, double width, double origin = 0, 
+NumericVector get_freq(NumericVector x, double width, double origin = 0,
                        int outlen=0) {
   int bin= 0;
   int nmissing = 0;
@@ -115,8 +115,8 @@ NumericMatrix  genSizeComp(NumericMatrix VulnN, NumericVector CAL_binsmid, Numer
       NumericVector Nage2 = (Nage/Ncatch) * CAL_ESS; // number-at-age effective sample
       List Lens(k*12);
       int count = 0;
-      for (int age=1; age <= k; age++) { // loop over 1:maxage
-        int Nage3 =  round(Nage2(age-1)); // number at this age
+      for (int age=0; age < k; age++) { // loop over 1:maxage
+        int Nage3 =  round(Nage2(age)); // number at this age
         NumericVector rands = RcppArmadillo::sample(NumericVector::create(0,1,2,3,4,5,6,7,8,9,10,11), Nage3, TRUE, NumericVector::create()) ; //  assume ages are uniformly distributed across months
         NumericVector subAgeVec = get_freq(rands, 1, 0, 12); // distribute n across months
         // NumericVector subAgeVec = Nage3/NumericVector::create(1,2,3,4,5,6,7,8,9,10,11,12); // distribute n across months
@@ -151,3 +151,49 @@ NumericMatrix  genSizeComp(NumericMatrix VulnN, NumericVector CAL_binsmid, Numer
   }
   return(CAL);
 }
+
+// [[Rcpp::export]]
+NumericMatrix  genSizeComp2(NumericMatrix VulnN, NumericVector CAL_binsmid, NumericMatrix selCurve,
+                           double CAL_ESS, double CAL_nsamp,
+                           NumericVector Linfs, NumericVector Ks, NumericVector t0s,
+                           double LenCV, double truncSD) {
+  int nyears = VulnN.nrow();
+  int k = VulnN.ncol();
+  int nbins = CAL_binsmid.size();
+  NumericMatrix CAL(nyears, nbins);
+  double width = CAL_binsmid(1) - CAL_binsmid(0);
+  double origin = CAL_binsmid(0) - 0.5* width;
+  for (int yr=0; yr < nyears; yr++) {
+
+    NumericVector Nage = (VulnN.row(yr)); // numbers of catch-at-age this year
+    List Lens(Nage);
+    double Ncatch = sum(Nage); // total catch this year
+    if (Ncatch>0) {
+      NumericVector Nage2 = (Nage/Ncatch) * CAL_ESS; // number-at-age effective sample
+      for (int age=0; age < k; age++) { // loop over 1:maxage
+        double mean = Linfs(yr) * (1-exp(-Ks(yr)* (age - t0s(yr)))); // calculate mean length at age;
+        if (mean < 0) mean = 0.01;
+        NumericVector dist = tdnorm((CAL_binsmid-mean)/(LenCV*mean), -truncSD, truncSD); // prob density of lengths for this age
+        NumericVector newdist = dist * selCurve(_,yr); // probability = dist * size-selection curve
+        if (sum(newdist)!=0) {
+          newdist = newdist/sum(newdist);
+          Lens(age) = RcppArmadillo::sample(CAL_binsmid, Nage2(age), TRUE, newdist); // sample lengths for this age class
+        } else {
+          Lens(age) = NA_INTEGER;
+        }
+      }
+
+      NumericVector LenVals = combine(Lens); // unlist
+      NumericVector templens = get_freq(LenVals, width, origin, nbins); // calculate frequencies
+      double rat = CAL_nsamp/sum(templens);
+      templens =  templens * rat; // scale to CAL_nsamp
+      CAL(yr,_) = templens;
+    } else {
+      NumericVector zeros(nbins);
+      CAL(yr,_) = zeros;
+    }
+  }
+  return(CAL);
+}
+
+
