@@ -865,8 +865,10 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   nMP <- length(MPs)  # the total number of methods used
   if (nMP < 1) stop("No valid MPs found", call.=FALSE)
 
+  isrunning <- snowfall::sfIsRunning()
+  if (!parallel & isrunning) snowfall::sfStop()
+
   if (parallel) {
-    isrunning <- snowfall::sfIsRunning()
     if (!isrunning) setup()
     Export_customMPs(MPs)
   }
@@ -1216,16 +1218,15 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       if (y %in% upyrs) {
         # --- Update Data object ----
         Data_MP <- updateData(Data=Data_MP, OM, MPCalcs, Effort,
-                                    StockPars$Biomass, StockPars$N,
-                                    Biomass_P, CB_Pret, N_P, StockPars$SSB,
-                                    SSB_P, StockPars$VBiomass, VBiomass_P,
-                                    RefPoints=ReferencePoints,
-                                    retA_P, retL_P, StockPars,
-                                    FleetPars, ObsPars, V_P,
-                                    upyrs, interval, y, mm,
-                                    Misc=Data_p@Misc, RealData,
-                                    ObsPars$Sample_Area
-        )
+                              Biomass=StockPars$Biomass, StockPars$N,
+                              Biomass_P, CB_Pret, N_P, SSB=StockPars$SSB,
+                              SSB_P, VBiomass=StockPars$VBiomass, VBiomass_P,
+                              RefPoints=ReferencePoints,
+                              retA_P, retL_P, StockPars,
+                              FleetPars, ObsPars, V_P,
+                              upyrs, interval, y, mm,
+                              Misc=Data_p@Misc, RealData,
+                              Sample_Area=ObsPars$Sample_Area)
 
         # --- apply MP ----
         runMP <- applyMP(Data=Data_MP, MPs = MPs[mm], reps = reps, silent=TRUE)  # Apply MP
