@@ -255,6 +255,9 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1,
     OM@cpars$Len_age <- aperm(Len_age2, c(2, 1, 3))
 
   }
+  OM@Linf <- replist$Growth_Parameters$Linf[gender] %>% mean(na.rm = TRUE) %>% rep(2)
+  OM@K <- replist$Growth_Parameters$K[gender] %>% mean(na.rm = TRUE) %>% rep(2)
+  OM@t0 <- replist$Growth_Parameters$A_a_L0[gender] %>% mean(na.rm = TRUE) %>% rep(2)
   if(!silent) message("Length-at-age found.")
 
   #if(replist$wtatage_switch) {
@@ -281,7 +284,6 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1,
   # Weight at age
   OM@a <- mean(replist$Growth_Parameters$WtLen1[gender], na.rm = TRUE)
   OM@b <- mean(replist$Growth_Parameters$WtLen2[gender], na.rm = TRUE)
-
 
   if(exists("Len_age_timevarying")) { # This is a better solution for weight at age when growth is time varying
     OM@cpars$Wt_age <- OM@a * OM@cpars$Len_age ^ OM@b
