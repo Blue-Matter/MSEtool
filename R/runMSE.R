@@ -857,12 +857,19 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
   control <- OM@cpars$control; OM@cpars$control <- NULL
 
+
   # ---- Check MPs ----
   if (checkMPs)
     MPs <- CheckMPs(MPs=MPs, silent=silent)
 
   nMP <- length(MPs)  # the total number of methods used
   if (nMP < 1) stop("No valid MPs found", call.=FALSE)
+
+  if (parallel) {
+    isrunning <- snowfall::sfIsRunning()
+    if (!isrunning) setup()
+    Export_customMPs(MPs)
+  }
 
   # ---- Set Management Interval for each MP ----
   if (length(interval) != nMP) interval <- rep(interval, nMP)[1:nMP]
@@ -1051,6 +1058,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
     # -- Apply MP in initial projection year ----
     runMP <- applyMP(Data=Data_MP, MPs = MPs[mm], reps = reps, silent=TRUE)  # Apply MP
+
     MPRecs <- runMP[[1]][[1]] # MP recommendations
     Data_p <- runMP[[2]] # Data object object with saved info from MP
     Data_p@TAC <- MPRecs$TAC

@@ -395,6 +395,15 @@ applyAC <- function(x, res, ac, max.years, lst.err) {
 }
 
 
+PackageFuns <- function() {
+  pkg.funs <- as.vector(ls.str('package:MSEtool'))
+  if ('package:DLMtool' %in% search())
+    pkg.funs <- c(pkg.funs, as.vector(ls.str('package:DLMtool')))
+  if ('package:SAMtool' %in% search())
+    pkg.funs <- c(pkg.funs, as.vector(ls.str('package:SAMtool')))
+  pkg.funs
+}
+
 #' Check for duplicated MPs names
 #'
 #' Custom MPs cannot have the same names of MPs in MSEtool and related packages
@@ -406,11 +415,7 @@ CheckDuplicate <- function(MPs) {
   tt <- suppressWarnings(try(lsf.str(envir=globalenv()), silent=TRUE))
   if (class(tt)!="try-error") {
     gl.funs <- as.vector(tt)
-    pkg.funs <- as.vector(ls.str('package:MSEtool'))
-    if ('package:DLMtool' %in% search())
-      pkg.funs <- c(pkg.funs, as.vector(ls.str('package:DLMtool')))
-    if ('package:SAMtool' %in% search())
-      pkg.funs <- c(pkg.funs, as.vector(ls.str('package:SAMtool')))
+    pkg.funs <- PackageFuns()
 
     if (length(gl.funs)>0) {
       gl.clss <- unlist(lapply(lapply(gl.funs, get), class))
@@ -600,3 +605,29 @@ set_parallel <- function(parallel) {
   ncpus
 }
 
+
+# export custom MPs
+Export_customMPs <- function(MPs) {
+  pkg.funs <- PackageFuns()
+  cMPs <- MPs[!MPs %in% pkg.funs]
+  globalMP <- NULL
+  extra_package <- NULL
+  for (mm in seq_along(cMPs)) {
+    nmspace <- utils::find(cMPs[mm])
+    if (nmspace==".GlobalEnv") {
+      globalMP <- c(globalMP, cMPs[mm])
+    } else {
+      extra_package <- c(extra_package, strsplit(nmspace, ":")[[1]][2])
+    }
+    extra_package <- unique(extra_package)
+  }
+  if (!is.null(globalMP)) {
+    message("Exporting custom MPs in global environment")
+    snowfall::sfExport(list=globalMP)
+  }
+  if (!is.null(extra_package)) {
+    message("Exporting additional packages with MPs")
+    for (pk in extra_package)
+      snowfall::sfLibrary(pk, character.only = TRUE, verbose=FALSE)
+  }
+}
