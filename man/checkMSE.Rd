@@ -2,18 +2,28 @@
 % Please edit documentation in R/MSE_functions.R, R/Misc_Exported.R
 \name{checkMSE}
 \alias{checkMSE}
+\alias{joinMSE}
+\alias{joinHist}
 \alias{updateMSE}
 \title{Utility functions for MSE objects}
 \usage{
 checkMSE(MSEobj)
 
+joinMSE(MSEobjs = NULL)
+
+joinHist(Hist_List)
+
 updateMSE(MSEobj)
 }
 \arguments{
 \item{MSEobj}{A \code{MSE} object}
+
+\item{Hist_List}{A list of objects of class \code{Hist}}
 }
 \value{
 An object of class \code{MSE}
+
+A new object of class \code{Hist}
 }
 \description{
 Utility functions for MSE objects
@@ -21,6 +31,12 @@ Utility functions for MSE objects
 \section{Functions}{
 \itemize{
 \item \code{checkMSE}: Check that an MSE object includes all slots in the latest version of DLMtool
+
+\item \code{joinMSE}: Joins two or more MSE objects together. MSE objects must have identical
+number of historical years, and projection years. Also works for Hist objects returned
+by \code{runMSE(Hist=TRUE)}
+
+\item \code{joinHist}: Join objects of class \code{Hist}
 
 \item \code{updateMSE}: Updates an existing MSE object (class MSE) from a previous version of the
 DLMtool to include slots new to the lastest version. Also works with Stock,

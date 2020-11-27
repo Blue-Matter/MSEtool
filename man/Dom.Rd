@@ -38,9 +38,9 @@ Consequently, it is important that all \code{PM} functions are constructed so th
 MSE <- runMSE(MPs=NA) # run all MPs
 Nondom <- Dom(MSE, "P10", "LTY", "PNOF")
 # Non-dominated MPs
-Nondom$MPs 
+Nondom$MPs
 
-# Dominated MPs 
+# Dominated MPs
 Nondom$DomMPs
 
 }

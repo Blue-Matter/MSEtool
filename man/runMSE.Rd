@@ -13,7 +13,8 @@ Project(
   MPs = NA,
   parallel = FALSE,
   silent = FALSE,
-  extended = FALSE
+  extended = FALSE,
+  checkMPs = TRUE
 )
 
 runMSE(
@@ -22,7 +23,8 @@ runMSE(
   Hist = FALSE,
   silent = FALSE,
   parallel = FALSE,
-  extended = FALSE
+  extended = FALSE,
+  checkMPs = TRUE
 )
 }
 \arguments{
@@ -40,6 +42,8 @@ class 'Hist' containing all historical data}
 \item{extended}{Logical. Return extended projection results?
 if TRUE, \code{MSE@Misc$extended} is a named list with extended data
 (including historical and projection by area)}
+
+\item{checkMPs}{Logical. Check if the specified MPs exist and can be run on \code{SimulatedData}?}
 }
 \value{
 Functions return objects of class \linkS4class{Hist} or \linkS4class{MSE}
