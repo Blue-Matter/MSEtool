@@ -23,7 +23,7 @@
 #'  projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real
 #'  numbers
 #' @slot N Simulated total numbers over the projection. An array with
-#'  dimensions: nsim, maxage+1, nMPs, proyears, nareas. Non-negative real numbers.
+#'  dimensions: nsim, nMPs, proyears Non-negative real numbers.
 #' @slot B Simulated stock biomass over the projection. An array with
 #'  dimensions: nsim, nMPs, proyears. Non-negative real numbers
 #' @slot SSB Simulated spawning stock biomass over the projection. An array

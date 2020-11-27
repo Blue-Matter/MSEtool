@@ -1103,7 +1103,6 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                               SLarray_P, V_P, Fdisc_P, DR_P, FM_P,
                               FM_Pret, Z_P, CB_P, CB_Pret, Effort_pot,
                               StockPars, FleetPars, ImpPars)
-
     TACa[, mm, y] <- MPCalcs$TACrec # recommended TAC
     LastSpatial <- MPCalcs$Si
     LastAllocat <- MPCalcs$Ai
@@ -1409,7 +1408,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                 Obs=Data@Obs,
                 SB_SBMSY=SB_SBMSY_a,
                 F_FMSY=F_FMSYa,
-                N=N_P_mp,
+                N=apply(N_P_mp, c(1,3,4), sum),
                 B=Ba,
                 SSB=SSBa,
                 VB=VBa,
