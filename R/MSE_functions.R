@@ -536,7 +536,7 @@ Sub <- function(MSEobj, MPs = NULL, sims = NULL, years = NULL) {
                 Obs=MSEobj@Obs[SubIts,, drop=FALSE],
                 SB_SBMSY=MSEobj@SB_SBMSY[SubIts, SubMPs,  Years, drop=FALSE],
                 F_FMSY=MSEobj@F_FMSY[SubIts, SubMPs,  Years, drop=FALSE],
-                N=MSEobj@N[SubIts, , SubMPs,  Years, , drop=FALSE],
+                N=MSEobj@N[SubIts, SubMPs, Years, drop=FALSE],
                 B=MSEobj@B[SubIts, SubMPs,  Years, drop=FALSE],
                 SSB=MSEobj@SSB[SubIts, SubMPs,  Years, drop=FALSE],
                 VB=MSEobj@VB[SubIts, SubMPs,  Years, drop=FALSE],
@@ -1273,6 +1273,7 @@ joinHist <- function(Hist_List) {
     Ref$Dynamic_Unfished[[nm]] <- abind::abind(temp, along = 1)
   }
 
+  temp <- list()
   for (obj in 1:length(Hist_List)) {
     temp[[obj]] <- Ref_List[[obj]]$ReferencePoints
   }

@@ -227,6 +227,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   newCV_Cat <- matrix(Data@CV_Cat[,yr.index], nrow=nsim, ncol=length(yind))
   Data@CV_Cat <- cbind(Data@CV_Cat, newCV_Cat)
 
+
   # --- Observed catch ----
   # Simulated observed retained catch (biomass)
   Cobs <- ObsPars$Cobs_y[,nyears + yind] * apply(CBtemp, c(1, 3), sum, na.rm = TRUE)
@@ -653,10 +654,18 @@ genSizeCompWrap <- function(i, vn, CAL_binsmid, retL,
   if (nyrs == 1) VulnN <- t(VulnN)
   retLa <- as.matrix(retL[i,,])
 
-  lens <- genSizeComp(VulnN, CAL_binsmid, retLa,
+  # assumes lengths sampled throughout years
+  # lens <- genSizeComp(VulnN, CAL_binsmid, retLa,
+  #                     CAL_ESS=CAL_ESS[i], CAL_nsamp=CAL_nsamp[i],
+  #                     Linfs=Linfarray[i,], Ks=Karray[i,], t0s=t0array[i,],
+  #                     LenCV=LenCV[i], truncSD)
+
+  # snapshot length comp
+  lens <- genSizeComp2(VulnN, CAL_binsmid, retLa,
                       CAL_ESS=CAL_ESS[i], CAL_nsamp=CAL_nsamp[i],
                       Linfs=Linfarray[i,], Ks=Karray[i,], t0s=t0array[i,],
                       LenCV=LenCV[i], truncSD)
+
 
   lens[!is.finite(lens)] <- 0
   lens

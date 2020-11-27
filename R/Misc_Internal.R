@@ -600,6 +600,7 @@ set_parallel <- function(parallel) {
       ncpus <- snowfall::sfCpus()
     }
   } else {
+    if (snowfall::sfIsRunning()) snowfall::sfStop()
     ncpus <- 1
   }
   ncpus
