@@ -1384,6 +1384,12 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       FM=FM_all,
       FMret=FMret_all
     )
+  } else {
+    Hist@Data <- new('Data')
+    Hist@OMPars <- data.frame()
+    Hist@AtAge <- list()
+    Hist@Ref <- list()
+    Hist@SampPars <- list()
   }
 
   MSEout <- new("MSE",
@@ -1438,7 +1444,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #' @param parallel Logical. Should the MSE be run using parallel processing?
 #' @param extended Logical. Return extended projection results?
 #' if TRUE, `MSE@Misc$extended` is a named list with extended data
-#' (including historical and projection by area)
+#' (including historical and projection by area), and extended version of `MSE@Hist`
+#' is returned.
 #' @param checkMPs Logical. Check if the specified MPs exist and can be run on `SimulatedData`?
 #'
 #' @describeIn runMSE Run the Historical Simulations and Forward Projections
