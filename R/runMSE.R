@@ -857,7 +857,6 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
   control <- OM@cpars$control; OM@cpars$control <- NULL
 
-
   # ---- Check MPs ----
   if (checkMPs)
     MPs <- CheckMPs(MPs=MPs, silent=silent)
@@ -1103,6 +1102,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                               SLarray_P, V_P, Fdisc_P, DR_P, FM_P,
                               FM_Pret, Z_P, CB_P, CB_Pret, Effort_pot,
                               StockPars, FleetPars, ImpPars)
+
     TACa[, mm, y] <- MPCalcs$TACrec # recommended TAC
     LastSpatial <- MPCalcs$Si
     LastAllocat <- MPCalcs$Ai
@@ -1120,6 +1120,10 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     V_P <- MPCalcs$V_P  # vulnerable-at-age
     SLarray_P <- MPCalcs$SLarray_P # vulnerable-at-length
     FMa[,mm,y] <- MPCalcs$Ftot
+
+
+
+
 
     LR5_P <- MPCalcs$LR5_P
     LFR_P <- MPCalcs$LFR_P
@@ -1210,8 +1214,11 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                      N_P[x,,y,])
       )
       N_P[,,y,] <- array(unlist(Ntemp), dim=c(n_age, nareas, nsim)) %>% aperm(c(3,1,2))
+
       Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAY1]  # Calculate biomass
       VBiomass_P[SAYR] <- Biomass_P[SAYR] * V_P[SAYt]  # Calculate vulnerable biomass
+      SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAYt]  # Calculate spawning stock numbers
+      SSB_P[SAYR] <- SSN_P[SAYR] * StockPars$Wt_age[SAYt]  # Calculate spawning stock biomass
 
       # --- An update year - update data and run MP ----
       if (y %in% upyrs) {

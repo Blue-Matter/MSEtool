@@ -775,7 +775,6 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     Z_P[SAYR] <- FM_P[SAYR] + StockPars$M_ageArray[SAYt] # calculate total mortality
   }
 
-
   # Effort_req - effort required to catch TAC
   # Effort_pot - potential effort this year (active fishers) from bio-economic model
   # Effort_act - actual effort this year
@@ -796,13 +795,14 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   Effort_act[Effort_act<=0] <- tiny
 
   # --- Re-calculate catch given actual effort ----
+  # TODO should really only do this for the sims where Effort_act is different than Effort_req
   # fishing mortality with actual effort
   FM_P[SAYR] <- (FleetPars$FinF[S1] * Effort_act[S1] * V_P[SAYt] * t(Si)[SR] * fishdist[SR] *
                  FleetPars$qvar[SY1] * (FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y))/StockPars$Asize[SR]
 
   # retained fishing mortality with actual effort
-  FM_Pret[SAYR] <- (  FleetPars$FinF[S1] * Effort_act[S1] * retA_P[SAYt] * t(Si)[SR] * fishdist[SR] *
-                      FleetPars$qvar[SY1] * FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y)/StockPars$Asize[SR]
+  FM_Pret[SAYR] <- (FleetPars$FinF[S1] * Effort_act[S1] * retA_P[SAYt] * t(Si)[SR] * fishdist[SR] *
+                    FleetPars$qvar[SY1] * FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y)/StockPars$Asize[SR]
 
   # Apply maxF constraint
   FM_P[SAYR][FM_P[SAYR] > maxF] <- maxF
@@ -818,6 +818,12 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   Ftot <- sapply(1:nsim, calcF, totalCatch, V_P, Biomass_P, fishdist,
                  Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
                  M_ageArray=StockPars$M_ageArray,nyears, y) # update if effort has changed
+
+  # Effort relative to last historical with this catch
+  Effort_act <- Ftot/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]*
+                        (1 + FleetPars$qinc/100)^y)  # effort required - already accounts for effort-by-area
+
+  Effort_act[Ftot<=1E-3] <- tiny
 
   # Returns
   TAE <- MPRecs$Effort
@@ -860,6 +866,8 @@ calcF <- function(x, TACusedE, V_P, Biomass_P, fishdist, Asize, maxage, nareas,
   ct <- TACusedE[x]
   ft <- ct/sum(Biomass_P[x,,y,] * V_P[x,,y+nyears]) # initial guess
 
+  fishdist[x,] <- fishdist[x,]/sum(fishdist[x,])
+
   if (ft <= 1E-3) return(tiny)
   for (i in 1:50) {
     Fmat <- ft * matrix(V_P[x,,y+nyears], nrow=maxage+1, ncol=nareas) *
@@ -873,8 +881,13 @@ calcF <- function(x, TACusedE, V_P, Biomass_P, fishdist, Asize, maxage, nareas,
     # derivative of catch wrt ft
     dct <- sum(Omat/Zmat - ((Fmat * Omat)/Zmat^2) + Fmat/Zmat * exp(-Zmat) * Biomass_P[x,,y,])
     ft <-  ft - (pct - ct)/dct
+
     if (abs(pct - ct)<1E-6) break;
   }
+
+
+  print(Fmat)
+
   ft
 }
 
