@@ -1109,6 +1109,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   np <- length(Stocks)
   nf <- length(Fleets[[1]])
 
+  ncpus <- set_parallel(parallel)
+
   # ---- Detect MP Specification ----
   MPcond <- "unknown"
   if(np==1&nf==1){
