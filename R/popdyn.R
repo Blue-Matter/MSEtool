@@ -885,9 +885,6 @@ calcF <- function(x, TACusedE, V_P, Biomass_P, fishdist, Asize, maxage, nareas,
     if (abs(pct - ct)<1E-6) break;
   }
 
-
-  print(Fmat)
-
   ft
 }
 
