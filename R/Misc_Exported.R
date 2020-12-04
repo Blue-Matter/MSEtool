@@ -11,6 +11,8 @@ get_funcs <- function(package, classy , msg) {
                                getclass,
                                logical(1),
                                classy = classy)]
+  } else {
+    stop('Package ', package, ' not loaded. Use `library(', package, ')`', call. = FALSE)
   }
   funs
 }
@@ -24,7 +26,7 @@ get_funcs <- function(package, classy , msg) {
 #'
 #' @param classy A class of object (character string, e.g. 'Fleet')
 #' @param package Optional. Names(s) of the package to search for object of class `classy`. String
-#' Default is all `openMSE` packages.
+#' Default is all `openMSE` packages. Always searches the global environment as well.
 #' @param msg Print messages?
 #' @examples
 #' avail("OM", msg=FALSE)
@@ -49,20 +51,29 @@ avail <- function(classy, package=NULL, msg=TRUE) {
 
   } else {
 
+    packages <- c('MSEtool', 'SAMtool', 'DLMtool', 'DLMextra')
     if (is.null(package))
-      package <- c('MSEtool', 'SAMtool', 'DLMtool', 'DLMextra')
+      package <- packages
 
-    MSEtool_funs <- get_funcs('MSEtool', classy, msg)
-    SAMtool_funs <- get_funcs('SAMtool', classy, msg)
-    DLMtool_funs <- get_funcs('DLMtool', classy, msg)
-    DLMextra_funs <- get_funcs('DLMextra', classy)
     global_funs <- ls(envir = .GlobalEnv)[vapply(ls(envir = .GlobalEnv), getclass, logical(1), classy = classy)]
-
     temp <- global_funs
-    if ('MSEtool' %in% package) temp <- c(temp, MSEtool_funs)
-    if ('SAMtool' %in% package) temp <- c(temp, SAMtool_funs)
-    if ('DLMtool' %in% package) temp <- c(temp, DLMtool_funs)
-    if ('DLMextra' %in% package) temp <- c(temp, DLMextra_funs)
+
+    if ('MSEtool' %in% package) {
+      MSEtool_funs <- get_funcs('MSEtool', classy, msg)
+      temp <- c(temp, MSEtool_funs)
+    }
+    if ('SAMtool' %in% package) {
+      SAMtool_funs <- get_funcs('SAMtool', classy, msg)
+      temp <- c(temp, SAMtool_funs)
+    }
+    if ('DLMtool' %in% package) {
+      DLMtool_funs <- get_funcs('DLMtool', classy, msg)
+      temp <- c(temp, DLMtool_funs)
+    }
+    if ('DLMextra' %in% package) {
+      DLMextra_funs <- get_funcs('DLMextra', classy)
+      temp <- c(temp, DLMextra_funs)
+    }
     if (length(temp) < 1) stop("No objects of class '", classy, "' found", call. = FALSE)
     return(unique(temp))
   }
