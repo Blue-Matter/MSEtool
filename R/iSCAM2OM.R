@@ -29,83 +29,83 @@
 # #' @importFrom graphics arrows contour
 # #' @importFrom stats acf aggregate qnorm window
 # #' @export iSCAM2OM
-# iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=F, Name=NULL, Source="No source provided",
-#                  length_timestep=1, nyr_par_mu=2, Author="No author provided", report=F, silent=F){
-# 
-#   nseas<-1/length_timestep # defaults to an annual model
-#   message("-- Using function of Chris Grandin (DFO PBS) to extract data from iSCAM file structure --")
-# 
-#   replist<-load.iscam.files(iSCAMdir)
-# 
-#   message("-- End of iSCAM extraction operations --")
-# 
-#   # get dimensions
-#   nyears<-(replist$dat$end.yr-replist$dat$start.yr+1)
-#   maxage<-replist$dat$end.age
-#   sage<-replist$dat$start.age
-# 
-#   # filling dimensions
-#   aind<-sage:maxage # for filling all quantities (that do not include age zero)
-#   nafill<-length(aind)
-# 
-#   ageArray<-array(rep(1:maxage,each=nsim),c(nsim,maxage,nyears))
-# 
-#   # make matrices
-#   naa<-Mataa<-laa<-array(NA,c(nsim,maxage,nyears))
-#   faa<-Maa<-waa<-array(0,c(nsim,maxage,nyears))
-# 
-#   # growth parameters
-#   Linf=replist$dat$linf[1]
-#   K=replist$dat$k[1]
-#   t0<-replist$dat$to[1]
-# 
-# 
-#   #ageM<-replist$dat$age.at.50.mat
-#   #ageMsd<-replist$dat$sd.at.50.mat
-# 
-#   # rip F, N and wt matrices
-#   faat<-t(replist$mpd$F) # maxage-1 x nyears-1
-#   naat<-t(replist$mpd$N) # maxage-1 x nyears
-#   naat<-rbind(c(naat[1,2:(nyears+1)],NA)*exp(replist$mpd$m),naat)
-#   naat<-naat[,1:nyears]
-#   waat<-t(replist$mpd$d3_wt_mat)[,1:nyears] # maxage-1 x nyears
-# 
-#   # Numbers
-#   naa<-array(rep(naat,each=nsim),c(nsim,maxage,nyears)) # !
-# 
-#   # Mat at age
-#   Maa[,aind,]<-rep(t(replist$mpd$M),each=nsim)   # !
-# 
-#   # Weight at age
-#   waa[,aind,]<-array(rep(waat,each=nsim),c(nsim,nafill,nyears)) # !
-# 
-#   # Fishing mortality rate  for F = 0 years
-#   Vtemp<-apply(faat,1,mean)
-#   Vtemp<-Vtemp/max(Vtemp)*1E-5 #fill with a very low typical vulnerability
-#   tofill<-apply(faat,2,function(x)all(x==0))
-#   faat[,tofill]<-rep(Vtemp,sum(tofill))
-# 
-#   faa[,aind,]<-array(rep(faat,each=nsim),c(nsim,nafill,nyears))
-#   #faa[,aind,1]<-rep(Vtemp,each=nsim)
-# 
-#   #Mataa<- 1/(1 + exp((ageM - ageArray)/ageMsd))
-#   Mataat<-c(0,replist$mpd$ma)
-#   Mataa[]<-rep(Mataat,each=nsim)
-#   laa<-Linf*(1-exp(-K*(ageArray-t0)))
-#   h<-rep(replist$mpd$steepness,nsim)
-# 
-#   # make the OM
-#   OM<-VPA2OM(Name="A fishery made by VPA2OM",
-#              proyears=50, interval=2, CurrentYr=2019,
-#              h=h,
-#              Obs = MSEtool::Imprecise_Unbiased, Imp=MSEtool::Perfect_Imp,
-#              naa, faa, waa, Mataa, Maa, laa,
-#              nyr_par_mu = nyr_par_mu, LowerTri=1,
-#              recind=2, plusgroup=TRUE, altinit=2, fixq1=TRUE,
-#              report=report, silent=FALSE)
-# 
+iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=F, Name=NULL, Source="No source provided",
+                  length_timestep=1, nyr_par_mu=2, Author="No author provided", report=F, silent=F){
+ 
+   nseas<-1/length_timestep # defaults to an annual model
+   message("-- Using function of Chris Grandin (DFO PBS) to extract data from iSCAM file structure --")
+ 
+   replist<-load.iscam.files(iSCAMdir)
+ 
+   message("-- End of iSCAM extraction operations --")
+ 
+   # get dimensions
+   nyears<-(replist$dat$end.yr-replist$dat$start.yr+1)
+   maxage<-replist$dat$end.age
+   sage<-replist$dat$start.age
+ 
+   # filling dimensions
+   aind<-sage:maxage # for filling all quantities (that do not include age zero)
+   nafill<-length(aind)
+ 
+   ageArray<-array(rep(1:maxage,each=nsim),c(nsim,maxage,nyears))
+ 
+   # make matrices
+   naa<-Mataa<-laa<-array(NA,c(nsim,maxage,nyears))
+   faa<-Maa<-waa<-array(0,c(nsim,maxage,nyears))
+ 
+   # growth parameters
+   Linf=replist$dat$linf[1]
+   K=replist$dat$k[1]
+   t0<-replist$dat$to[1]
+ 
+ 
+   #ageM<-replist$dat$age.at.50.mat
+   #ageMsd<-replist$dat$sd.at.50.mat
+ 
+   # rip F, N and wt matrices
+   faat<-t(replist$mpd$F) # maxage-1 x nyears-1
+   naat<-t(replist$mpd$N) # maxage-1 x nyears
+   naat<-rbind(c(naat[1,2:(nyears+1)],NA)*exp(replist$mpd$m),naat)
+   naat<-naat[,1:nyears]
+   waat<-t(replist$mpd$d3_wt_mat)[,1:nyears]#  maxage-1 x nyears
+ 
+   # Numbers
+   naa<-array(rep(naat,each=nsim),c(nsim,maxage,nyears)) # !
+ 
+   # Mat at age
+   Maa[,aind,]<-rep(t(replist$mpd$M),each=nsim)   # !
+ 
+   # Weight at age
+   waa[,aind,]<-array(rep(waat,each=nsim),c(nsim,nafill,nyears)) # !
+ 
+   # Fishing mortality rate  for F = 0 years
+   Vtemp<-apply(faat,1,mean)
+   Vtemp<-Vtemp/max(Vtemp)*1E-5 #fill with a very low typical vulnerability
+   tofill<-apply(faat,2,function(x)all(x==0))
+   faat[,tofill]<-rep(Vtemp,sum(tofill))
+ 
+   faa[,aind,]<-array(rep(faat,each=nsim),c(nsim,nafill,nyears))
+   #faa[,aind,1]<-rep(Vtemp,each=nsim)
+ 
+   #Mataa<- 1/(1 + exp((ageM - ageArray)/ageMsd))
+   Mataat<-c(0,replist$mpd$ma)
+   Mataa[]<-rep(Mataat,each=nsim)
+   laa<-Linf*(1-exp(-K*(ageArray-t0)))
+   h<-rep(replist$mpd$steepness,nsim)
+ 
+   # make the OM
+   OM<-VPA2OM(Name="A fishery made by VPA2OM",
+              proyears=50, interval=2, CurrentYr=2019,
+              h=h,
+              Obs = MSEtool::Imprecise_Unbiased, Imp=MSEtool::Perfect_Imp,
+              naa, faa, waa, Mataa, Maa, laa,
+              nyr_par_mu = nyr_par_mu, LowerTri=1,
+              recind=2, plusgroup=TRUE, altinit=2, fixq1=TRUE,
+              report=report, silent=FALSE)
+ 
 #   # Observation model parameters ==============================================================================
-# 
+ 
 #   dat<-iSCAM2Data
 # 
 #   # --- mcmc functionality ------------------------------------
@@ -176,11 +176,11 @@
 #     OM@cpars<-list(V=V,Perr=Perr,Wt_age=Wt_age2,K=K,Linf=Linf,hs=hs,Find=Find,D=D,M=M,R0=R0,AC=AC)
 # 
 #   }
-# 
-#   OM
-# 
-# }
-# 
+
+  OM
+ 
+}
+
 
 #' Reads iSCAM files into a hierarchical R list object
 #'
