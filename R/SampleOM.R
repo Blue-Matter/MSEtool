@@ -1213,7 +1213,9 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
     warning('This OM is from a previous version. OM@MPA is now a logical instead of matrix. Assuming no existing MPA')
     MPA <- FALSE
   } else {
+    if (length(Fleet@MPA)<1) Fleet@MPA <- FALSE
     MPA <- as.logical(Fleet@MPA)
+
   }
 
   Fleetout$Fdisc <- Fdisc
