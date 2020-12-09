@@ -186,17 +186,16 @@ qestMICE<-function(par,depc,CFc,mode='opt',np,nf,nyears,nareas,maxage,Nx,VFx,
   HistVars<-popdynMICE(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,
                        Effind,movx,Spat_targ,M_ageArrayx, Mat_agex,Asizex,Kx,
                        Linfx,t0x,Mx,R0x,R0ax,SSBpRx,hsx,aRx, bRx,ax,bx,Perrx,
-                       SRrelx,Rel,SexPars,x, plusgroup, maxF)
-
+                       SRrelx,Rel,SexPars,x, plusgroup, maxF, SSB0x)
 
   if (optVB) {
     VBest<-apply(HistVars$VBx,c(1,3),sum)
     deppred<-VBest[,nyears]/VB0x
   } else {
     SSBest<-apply(HistVars$SSBx,c(1,3),sum)
-    deppred<-SSBest[,nyears]/SSB0x  
+    deppred<-SSBest[,nyears]/SSB0x
   }
-  
+
 
   if(length(SexPars)>0){ # you need to make depletion just one variable for all components of a sex-specific model
 
