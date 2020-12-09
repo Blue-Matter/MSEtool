@@ -415,7 +415,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, MOM = NULL, single_sex = TRUE,
   ###### maxage
   N_at_age <- replist$natage[replist$natage$Sex == i, ]
   Stock@maxage <- suppressWarnings(colnames(N_at_age) %>% as.numeric()) %>% max(na.rm = TRUE)
-  
+
   n_age <- Stock@maxage + 1 # include age-0
 
   ###### R0
@@ -430,7 +430,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, MOM = NULL, single_sex = TRUE,
   M_at_age <- replist$M_at_age[replist$M_at_age$Sex == i, ]
   M_age <- suppressWarnings(lapply(0:Stock@maxage, function(x) parse(text = paste0("M_at_age$`", x, "`")) %>% eval() %>% as.numeric()))
   M_age <- do.call(rbind, M_age)
-  if(all(is.na(M_age[nrow(M_age), ]))) M_age[nrow(M_age), ] <- endgrowth$M[Stock@maxage] 
+  if(all(is.na(M_age[nrow(M_age), ]))) M_age[nrow(M_age), ] <- endgrowth$M[Stock@maxage]
   if(ncol(M_age) == (nyears - 1)) M_age <- cbind(M_age, endgrowth$M)
   if(proyears > 0) {
     M_age_pro <- matrix(M_age[, nyears], n_age, proyears)
@@ -473,13 +473,13 @@ SS_stock <- function(i, replist, mainyrs, nyears, MOM = NULL, single_sex = TRUE,
     Len_age <- cbind(Len_age, Len_age_pro)
   }
   cpars_bio$Len_age <- array(Len_age, c(n_age, allyears, nsim)) %>% aperm(c(3, 1, 2))
-  
+
   Stock@LenCV <- mean(endgrowth$SD_Beg[-1]/endgrowth$Len_Beg[-1]) %>% rep(2)
   cpars_bio$LatASD <- array(endgrowth$SD_Beg, c(n_age, allyears, nsim)) %>% aperm(c(3, 1, 2))
 
   # Weight at age
   growdat <- getGpars(replist)      # Age-specific parameters in endyr
-  
+
   # Weight at age
   Wt_age_df <- replist$mean_body_wt[replist$mean_body_wt$Morph == i, ]
   Wt_age_df <- Wt_age_df[vapply(mainyrs, match, numeric(1), table = Wt_age_df$Yr, nomatch = 0), ]
@@ -488,9 +488,9 @@ SS_stock <- function(i, replist, mainyrs, nyears, MOM = NULL, single_sex = TRUE,
   if(proyears > 0) {
     Wt_age_pro <- matrix(Wt_age[, nyears], n_age, proyears)
     Wt_age <- cbind(Wt_age, Wt_age_pro)
-  }  
+  }
   cpars_bio$Wt_age <- array(Wt_age, c(n_age, allyears, nsim)) %>% aperm(c(3, 1, 2))
-  
+
   # cpars_bio$plusgroup <- rep(1, nsim) not needed anymore
 
   # Maturity at age - technically fecundity = 0 for males
@@ -500,19 +500,19 @@ SS_stock <- function(i, replist, mainyrs, nyears, MOM = NULL, single_sex = TRUE,
   # initial Depletion
   sb0 <- replist$timeseries %>% dplyr::filter(Era=="VIRG") %>% dplyr::select(SpawnBio)
   sb1 <- replist$timeseries %>% dplyr::filter(Yr==mainyrs[1]) %>% dplyr::select(SpawnBio)
-  
+
   if (sb1$SpawnBio!=sb0$SpawnBio) {
     # initD <- sb1$SpawnBio/sb0$SpawnBio
     # cpars_bio$initD <- rep(initD, nsim)
     # Modify rec devs so N-at-age 1 is correct
-    
+
     # numbers-at-age in initial year
     n_init <- replist$natage %>% dplyr::filter(Sex==i, Yr==mainyrs[1], `Beg/Mid`=='B')
     cols <- which(colnames(n_init) %in% 0:Stock@maxage)
     n_init <- n_init %>% dplyr::select(dplyr::all_of(cols))
-    
-    n_virg <- replist$natage %>% 
-      dplyr::filter(Sex==i, Era=="VIRG", `Beg/Mid`=='B') %>% 
+
+    n_virg <- replist$natage %>%
+      dplyr::filter(Sex==i, Era=="VIRG", `Beg/Mid`=='B') %>%
       dplyr::select(dplyr::all_of(cols)) %>%
       as.numeric()
 
@@ -521,7 +521,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, MOM = NULL, single_sex = TRUE,
     mat <-  matrix(adjust, nrow = nsim, ncol = n_age, byrow = TRUE)
     cpars_bio$Perr_y[, n_age:1] <-  mat
   }
-  
+
   # Depletion
   if(i == 1) {
     sb_curr <- replist$timeseries %>% dplyr::filter(Yr==max(mainyrs)) %>% dplyr::select(SpawnBio)
@@ -533,7 +533,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, MOM = NULL, single_sex = TRUE,
       N_virg[1, parse(text = paste0("\"", x, "\"")) %>% eval()], numeric(1))
 
     N_now <- N_at_age[N_at_age$Yr == max(mainyrs) & N_at_age$`Beg/Mid` == "B", ]
-    N_now2 <- vapply(0:Stock@maxage, function(x) 
+    N_now2 <- vapply(0:Stock@maxage, function(x)
       N_now[1, parse(text = paste0("\"", x, "\"")) %>% eval()], numeric(1))
 
     Stock@D <- rep(sum(N_now2 * Mat_age * Wt_age[, nyears])/sum(N_virg2 * Mat_age * Wt_age[, 1]), 2)
@@ -547,7 +547,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, MOM = NULL, single_sex = TRUE,
   Stock@L50 <- Stock@L50_95 <- c(0, 0)
 
   fleet_output <- lapply(seq_len(replist$nfleets)[replist$IsFishFleet], SS_fleet, i = i, replist = replist,
-                         Stock = Stock, mainyrs = mainyrs, nyears = nyears, MOM = MOM, single_sex = single_sex, 
+                         Stock = Stock, mainyrs = mainyrs, nyears = nyears, MOM = MOM, single_sex = single_sex,
                          partition = partition, cpars_bio = cpars_bio, age_M = age_M)
 
   Fleet <- lapply(fleet_output, getElement, "Fleet") %>% structure(names = replist$FleetNames[replist$IsFishFleet])
@@ -556,9 +556,9 @@ SS_stock <- function(i, replist, mainyrs, nyears, MOM = NULL, single_sex = TRUE,
   return(list(Stock = Stock, Fleet = Fleet, cpars = cpars))
 }
 
-SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, MOM = NULL, single_sex = TRUE, 
+SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, MOM = NULL, single_sex = TRUE,
                      partition = 2, cpars_bio, age_M = NULL) {
-  
+  Obs <- Nsamp_adj <- NULL # hack for CRAN checks
   if(!is.null(MOM)) {
     proyears <- MOM@proyears
     nsim <- MOM@nsim
@@ -589,8 +589,8 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, MOM = NULL, single_
     return(Vout)
   }
   V <- get_V(ff)
-  
-   
+
+
   # #### Retention-at-age (not currently used in SampleFleetPars)
   # VR <- replist$ageselex[replist$ageselex$Fleet == ff & replist$ageselex$Sex == i &
   #                         replist$ageselex$Factor == "sel*ret_nums", ]
@@ -603,7 +603,7 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, MOM = NULL, single_
 
   SLarray <- replist$sizeselex[replist$sizeselex$Fleet == ff & replist$sizeselex$Sex == i &
                               replist$sizeselex$Factor == "Dead" & replist$sizeselex$Yr == max(mainyrs), -c(1:5)] %>% unlist()
-  
+
   #### Discard mortality
   disc_mort <- replist$sizeselex[replist$sizeselex$Fleet == ff & replist$sizeselex$Sex == i &
                                    replist$sizeselex$Factor == "Mort" & replist$sizeselex$Yr == max(mainyrs), -c(1:5)] %>% unlist() %>%
@@ -659,22 +659,22 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, MOM = NULL, single_
   cpars_fleet$SLarray <- SLarray %>% array(c(length(SLarray), allyears, nsim)) %>% aperm(c(3, 1, 2))
   cpars_fleet$DR <- rep(0, nsim) # Should be zero since we have retention in cpars (retL)
   cpars_fleet$Find <- Find %>% matrix(nsim, length(mainyrs), byrow = TRUE)
-  
+
   #### Data object
   cpars_fleet$Data <- new("Data")
   cpars_fleet$Data@Year <- mainyrs
   cpars_fleet$Data@Cat <- matrix(Cat, nrow = 1)
   cpars_fleet$Data@CV_Cat <- matrix(0.2, nrow = 1, ncol = ncol(cpars_fleet$Data@Cat)) # Default value
-  
+
   cpars_fleet$Data@Name <- paste0(Stock@Name, ", ", replist$FleetNames[ff])
   cpars_fleet$Data@LHYear <- max(mainyrs)
   cpars_fleet$Data@nareas <- replist$nareas
-  
+
   # Biological and fleet parameters
   cpars_fleet$Data@MaxAge <- Stock@maxage
   if(is.null(age_M)) age_M <- 0:Stock@maxage
   cpars_fleet$Data@Mort <- cpars_bio$M_ageArray[1, age_M + 1, nyears] %>% mean()
-  
+
   GP <- replist$Growth_Parameters[i, ]
   if(all(is.na(GP))) GP <- replist$Growth_Parameters[1, ]
   cpars_fleet$Data@vbLinf <- GP$Linf
@@ -682,34 +682,34 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, MOM = NULL, single_
   cpars_fleet$Data@vbt0 <- GP$A_a_L0
   cpars_fleet$Data@wla <- GP$WtLen1
   cpars_fleet$Data@wlb <- GP$WtLen2
-  
+
   cpars_fleet$Data@steep <- unique(Stock@h)
   cpars_fleet$Data@sigmaR <- unique(Stock@Perr)
-  
+
   cpars_fleet$Data@L50 <- LinInterp(cpars_bio$Mat_age[1,,nyears], cpars_bio$Len_age[1,,nyears], 0.5 + 1e-4)
   cpars_fleet$Data@L95 <- LinInterp(cpars_bio$Mat_age[1,,nyears], cpars_bio$Len_age[1,,nyears], 0.95)
   cpars_fleet$Data@LenCV <- GP$CVmax
-  
+
   cpars_fleet$Data@LFC <- LinInterp(V[, nyears], cpars_bio$Len_age[1,,nyears], 0.05)
   cpars_fleet$Data@LFS <- LinInterp(V[, nyears], cpars_bio$Len_age[1,,nyears], 0.95)
   cpars_fleet$Data@Vmaxlen <- V[n_age, nyears]
-  
+
   cpars_fleet$Data@Dep <- unique(Stock@D)
-  
+
   ts_Yr <- which(replist$timeseries$Yr == max(mainyrs))
   cpars_fleet$Data@SpAbun <- replist$timeseries$SpawnBio[ts_Yr]
   cpars_fleet$Data@Abun <- parse(text = paste0("replist$timeseries$`sel(B):_", ff, "`[ts_Yr]")) %>% eval()
   cpars_fleet$Data@FMSY_M <- replist$derived_quants$Value[replist$derived_quants$Label == "Fstd_MSY"]/cpars_fleet$Data@Mort
   cpars_fleet$Data@BMSY_B0 <- replist$derived_quants$Value[replist$derived_quants$Label == "B_MSY/SSB_unfished"]
   cpars_fleet$Data@Cref <- replist$derived_quants$Value[replist$derived_quants$Label == "Ret_Catch_MSY"]
-  
+
   cpars_fleet$Data@t <- length(mainyrs)
   cpars_fleet$Data@AvC <- mean(Cat, na.rm = TRUE)
   cpars_fleet$Data@Dt <- replist$derived_quants$Value[replist$derived_quants$Label == paste0("SSB_", mainyrs[nyears])]/
     replist$derived_quants$Value[replist$derived_quants$Label == paste0("SSB_", mainyrs[1])]
-  
+
   if(single_sex) { # Add Index if model is a single sex population
-    
+
     get_index <- function(ff) { # Get index function
       Ind <- replist$cpue[replist$cpue$Fleet == ff & replist$Use, ]
       if(nrow(Ind) > 0) {
@@ -721,67 +721,67 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, MOM = NULL, single_
       }
       return(list(Obs = Obs, CV = CV))
     }
-    
+
     Index <- get_index(ff) # Add fleet CPUE
     cpars_fleet$Data@VInd <- Index$Obs
     cpars_fleet$Data@CV_VInd <- Index$CV
-    
-    if(ff == 1) { # Add extra surveys 
+
+    if(ff == 1) { # Add extra surveys
       survey_ind <- which(!replist$IsFishFleet)
       if(length(survey_ind) > 0) {
         cpars_fleet$Data@AddInd <- lapply(survey_ind, get_index) %>% lapply(getElement, "Obs") %>% unlist() %>%
           array(c(nyears, length(survey_ind), 1)) %>% aperm(3:1)
-        
+
         cpars_fleet$Data@CV_AddInd <- lapply(survey_ind, get_index) %>% lapply(getElement, "CV") %>% unlist() %>%
           array(c(nyears, length(survey_ind), 1)) %>% aperm(3:1)
-        
-        cpars_fleet$Data@AddIndV <- lapply(survey_ind, get_V, rescale = TRUE) %>% lapply(function(x) x[, nyears]) %>% 
+
+        cpars_fleet$Data@AddIndV <- lapply(survey_ind, get_V, rescale = TRUE) %>% lapply(function(x) x[, nyears]) %>%
           unlist() %>% array(c(n_age, length(survey_ind), 1)) %>% aperm(3:1)
-        
+
         cpars_fleet$Data@AddIndType <- rep(1, length(survey_ind))
-        
+
         cpars_fleet$Data@AddIunits <- replist$survey_units[survey_ind]
-        cpars_fleet$Data@AddIunits[cpars_fleet$Data@AddIunits > 1] <- 0 
+        cpars_fleet$Data@AddIunits[cpars_fleet$Data@AddIunits > 1] <- 0
       }
     }
   }
-  
+
   CAA <- lapply(partition, function(x) {
-    replist$agedbase[replist$agedbase$Fleet == ff & replist$agedbase$sex == i & 
+    replist$agedbase[replist$agedbase$Fleet == ff & replist$agedbase$sex == i &
                        replist$agedbase$Used == "yes" & replist$agedbase$Part == x, ]
   })
   CAA <- do.call(rbind, CAA)
-  
+
   if(nrow(CAA) > 0) {
     CAA <- CAA %>% dplyr::mutate(Nout = Obs * Nsamp_adj) %>% reshape2::acast(list("Yr", "Bin"), value.var = "Nout", fun.aggregate = sum)
-    
+
     CAAout <- matrix(NA, nyears, n_age)
     CAAout[match(as.numeric(rownames(CAA)), mainyrs), match(as.numeric(colnames(CAA)), 0:Stock@maxage)] <- CAA
     CAA2 <- apply(CAAout, 1, function(x) {x[is.na(x)] <- 0; return(x)})
     cpars_fleet$Data@CAA <- CAA %>% array(c(n_age, nyears, 1)) %>% aperm(3:1)
   }
-  
+
   CAL <- lapply(partition, function(x) {
-    replist$lendbase[replist$lendbase$Fleet == ff & replist$lendbase$sex == i & 
-                       replist$lendbase$Used == "yes" & replist$lendbase$Part == x, ] # Retained CAL 
-  }) 
+    replist$lendbase[replist$lendbase$Fleet == ff & replist$lendbase$sex == i &
+                       replist$lendbase$Used == "yes" & replist$lendbase$Part == x, ] # Retained CAL
+  })
   CAL <- do.call(rbind, CAL)
-  
+
   if(nrow(CAL) > 0) {
     cpars_fleet$Data@CAL_bins <- cpars_fleet$CAL_bins
     cpars_fleet$Data@CAL_mids <- cpars_fleet$CAL_binsmid # Optional
-    
+
     CAL <- CAL %>% dplyr::mutate(Nout = Obs * Nsamp_adj) %>% reshape2::acast(list("Yr", "Bin"), value.var = "Nout", fun.aggregate = sum)
-    
+
     CALout <- matrix(NA, nyears, length(cpars_fleet$CAL_binsmid))
-    CALout[match(as.numeric(rownames(CAL)), mainyrs), 
+    CALout[match(as.numeric(rownames(CAL)), mainyrs),
            match(as.numeric(colnames(CAL)), cpars_fleet$CAL_bins[-length(cpars_fleet$CAL_bins)])] <- CAL
     CAL2 <- apply(CALout, 1, function(x) {x[is.na(x)] <- 0; return(x)})
     cpars_fleet$Data@CAL <- CAL2 %>% array(c(length(cpars_fleet$CAL_binsmid), nyears, 1)) %>% aperm(3:1)
-    
+
     cpars_fleet$Data@ML <- apply(CAL2, 2, function(xx) weighted.mean(x = cpars_fleet$CAL_binsmid, w = xx)) %>% matrix(1)
   }
-  
+
   return(list(Fleet = Fleet, cpars_fleet = cpars_fleet))
 }
 
