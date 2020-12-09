@@ -105,7 +105,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     LatentEff <- SampCpars$LatentEff
   }
 
-  # --- Initialize Arrays ----
+  # ---- Initialize Arrays ----
   n_age <- StockPars$maxage + 1 # number of age classes (starting at age-0)
   StockPars$n_age <- n_age
   nareas <- StockPars$nareas
@@ -120,7 +120,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   SPR <- array(NA, dim = c(nsim, n_age, nyears)) # store the Spawning Potential Ratio
   Agearray <- array(rep(0:StockPars$maxage, each = nsim), dim = c(nsim, n_age))  # Age array
 
-  #  --- Pre Equilibrium calcs ----
+  #  ---- Pre Equilibrium calcs ----
   surv <- matrix(1, nsim, n_age)
   surv[, 2:n_age] <- t(exp(-apply(StockPars$M_ageArray[,,1], 1, cumsum)))[, 1:(n_age-1)]  # Survival array
 
@@ -1056,6 +1056,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     N_P[,,y,] <- array(unlist(Ntemp), dim=c(n_age, nareas, nsim)) %>% aperm(c(3,1,2))
     Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAY1]  # Calculate biomass
     VBiomass_P[SAYR] <- Biomass_P[SAYR] * V_P[SAYt]  # Calculate vulnerable biomass
+    SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAY1]  # Calculate spawning stock numbers
+    SSB_P[SAYR] <- SSN_P[SAYR] * StockPars$Wt_age[SAY1]
 
     # -- Apply MP in initial projection year ----
     runMP <- applyMP(Data=Data_MP, MPs = MPs[mm], reps = reps, silent=TRUE)  # Apply MP
@@ -1120,9 +1122,6 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     V_P <- MPCalcs$V_P  # vulnerable-at-age
     SLarray_P <- MPCalcs$SLarray_P # vulnerable-at-length
     FMa[,mm,y] <- MPCalcs$Ftot
-
-
-
 
 
     LR5_P <- MPCalcs$LR5_P
