@@ -1068,6 +1068,7 @@ Dom <- function(MSEobj, ..., PMlist=NULL, Refs=NULL, Yrs=NULL) {
 #' @describeIn checkMSE Joins two or more MSE objects together. MSE objects must have identical
 #' number of historical years, and projection years. Also works for Hist objects returned
 #' by `runMSE(Hist=TRUE)`
+#' @param MSEobjs A list of MSE objects
 #' @export
 joinMSE <- function(MSEobjs = NULL) {
   # join two or more MSE objects
