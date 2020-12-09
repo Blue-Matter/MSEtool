@@ -539,11 +539,6 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, nyears, maxF, plus
   aR <- matrix(exp(bR * SSB0a)/SSBpR, nrow=nsim)  # Ricker SR params
   R0a <- matrix(StockPars$R0, nrow=nsim, ncol=nareas, byrow=FALSE) * StockPars$Pinitdist # initial distribution of recruits
 
-
-  matrix(log(5 * StockPars$hs)/(0.8 * SSB0), nrow=nsim)  # Ricker SR params
-
-
-
   # Set up projection arrays
   M_ageArrayp <- array(StockPars$M_ageArray[,,1], dim=c(dim(StockPars$M_ageArray)[1:2], Nyrs))
   Wt_agep <- array(StockPars$Wt_age[,,1], dim=c(dim(StockPars$Wt_age)[1:2], Nyrs))
@@ -569,7 +564,7 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, nyears, maxF, plus
                     Perr=Perr_yp, mov=movp, SRrel=StockPars$SRrel,
                     Find=FleetPars$Find, Spat_targ=FleetPars$Spat_targ,
                     hs=StockPars$hs,
-                    R0a=R0a, SSBpR=SSBpR, aR=aR, bR=bR, SSB0=SSB0, B0=B0,
+                    R0a=R0a, SSBpR=SSBpR, aR=aR, bR=bR, SSB0=SSB0,
                     MPA=noMPA, maxF=maxF,
                     Nyrs, plusgroup)
 
