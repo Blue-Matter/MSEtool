@@ -18,6 +18,8 @@ updateMSE(MSEobj)
 \arguments{
 \item{MSEobj}{A \code{MSE} object}
 
+\item{MSEobjs}{A list of MSE objects}
+
 \item{Hist_List}{A list of objects of class \code{Hist}}
 }
 \value{

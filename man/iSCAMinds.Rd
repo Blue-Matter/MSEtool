@@ -9,13 +9,13 @@ iSCAMinds(idata, Year, fleeteffect = T)
 \arguments{
 \item{idata}{List: the indices recorded in a read from an iSCAM data folder, e.g. replist$data$indices}
 
-\item{Year}{Integer vector: the years of the DLMtool data object ie Data@Year}
+\item{Year}{Integer vector: the years of the data object ie Data@Year}
 
 \item{fleeteffect}{Logical: should a fleet effect be added to the linear model?}
 }
 \description{
 iSCAM assessments often make use of multiple indices of abundance.
-The DLMtool data object and MPs currently only make use of a single index.
+The data object and MPs currently only make use of a single index.
 combiSCAMinds is a function that creates a single index from many using
 linear modelling. It is a simple way of providing initial calculations of
 management recommendations and it should be noted that this process

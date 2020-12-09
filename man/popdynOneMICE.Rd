@@ -35,7 +35,8 @@ popdynOneMICE(
   Rel,
   SexPars,
   x,
-  plusgroup
+  plusgroup,
+  SSB0x
 )
 }
 \arguments{
@@ -95,6 +96,10 @@ relationship (1 = Beverton-Holt, 2= Ricker)}
 \item{SexPars}{A list of sex-specific relationships (SSBfrom, stock_age)}
 
 \item{x}{Integer. The simulation number}
+
+\item{plusgroup}{Numeric vector. Use plus-group (1) or not (0)}
+
+\item{SSB0x}{Unfished SSB0, Vector nstock length.}
 
 \item{nyears}{Integer, number of historical years (unfished til today)}
 

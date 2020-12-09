@@ -42,7 +42,7 @@ projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real
 numbers}
 
 \item{\code{N}}{Simulated total numbers over the projection. An array with
-dimensions: nsim, maxage+1, nMPs, proyears, nareas. Non-negative real numbers.}
+dimensions: nsim, nMPs, proyears Non-negative real numbers.}
 
 \item{\code{B}}{Simulated stock biomass over the projection. An array with
 dimensions: nsim, nMPs, proyears. Non-negative real numbers}

@@ -10,7 +10,7 @@ avail(classy, package = NULL, msg = TRUE)
 \item{classy}{A class of object (character string, e.g. 'Fleet')}
 
 \item{package}{Optional. Names(s) of the package to search for object of class \code{classy}. String
-Default is all \code{openMSE} packages.}
+Default is all \code{openMSE} packages. Always searches the global environment as well.}
 
 \item{msg}{Print messages?}
 }

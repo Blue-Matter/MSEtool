@@ -2,7 +2,7 @@
 % Please edit documentation in R/iSCAM2OM.R
 \name{iSCAM2Data}
 \alias{iSCAM2Data}
-\title{Reads data from iSCAM file structure into a DLMtool Data object}
+\title{Reads data from iSCAM file structure into a Data object}
 \usage{
 iSCAM2Data(
   iSCAMdir,
