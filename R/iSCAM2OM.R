@@ -31,69 +31,69 @@
 # #' @export iSCAM2OM
 iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=F, Name=NULL, Source="No source provided",
                   length_timestep=1, nyr_par_mu=2, Author="No author provided", report=F, silent=F){
- 
+
    nseas<-1/length_timestep # defaults to an annual model
    message("-- Using function of Chris Grandin (DFO PBS) to extract data from iSCAM file structure --")
- 
+
    replist<-load.iscam.files(iSCAMdir)
- 
+
    message("-- End of iSCAM extraction operations --")
- 
+
    # get dimensions
    nyears<-(replist$dat$end.yr-replist$dat$start.yr+1)
    maxage<-replist$dat$end.age
    sage<-replist$dat$start.age
- 
+
    # filling dimensions
    aind<-sage:maxage # for filling all quantities (that do not include age zero)
    nafill<-length(aind)
- 
+
    ageArray<-array(rep(1:maxage,each=nsim),c(nsim,maxage,nyears))
- 
+
    # make matrices
    naa<-Mataa<-laa<-array(NA,c(nsim,maxage,nyears))
    faa<-Maa<-waa<-array(0,c(nsim,maxage,nyears))
- 
+
    # growth parameters
    Linf=replist$dat$linf[1]
    K=replist$dat$k[1]
    t0<-replist$dat$to[1]
- 
- 
+
+
    #ageM<-replist$dat$age.at.50.mat
    #ageMsd<-replist$dat$sd.at.50.mat
- 
+
    # rip F, N and wt matrices
    faat<-t(replist$mpd$F) # maxage-1 x nyears-1
    naat<-t(replist$mpd$N) # maxage-1 x nyears
    naat<-rbind(c(naat[1,2:(nyears+1)],NA)*exp(replist$mpd$m),naat)
    naat<-naat[,1:nyears]
    waat<-t(replist$mpd$d3_wt_mat)[,1:nyears]#  maxage-1 x nyears
- 
+
    # Numbers
    naa<-array(rep(naat,each=nsim),c(nsim,maxage,nyears)) # !
- 
+
    # Mat at age
    Maa[,aind,]<-rep(t(replist$mpd$M),each=nsim)   # !
- 
+
    # Weight at age
    waa[,aind,]<-array(rep(waat,each=nsim),c(nsim,nafill,nyears)) # !
- 
+
    # Fishing mortality rate  for F = 0 years
    Vtemp<-apply(faat,1,mean)
    Vtemp<-Vtemp/max(Vtemp)*1E-5 #fill with a very low typical vulnerability
    tofill<-apply(faat,2,function(x)all(x==0))
    faat[,tofill]<-rep(Vtemp,sum(tofill))
- 
+
    faa[,aind,]<-array(rep(faat,each=nsim),c(nsim,nafill,nyears))
    #faa[,aind,1]<-rep(Vtemp,each=nsim)
- 
+
    #Mataa<- 1/(1 + exp((ageM - ageArray)/ageMsd))
    Mataat<-c(0,replist$mpd$ma)
    Mataa[]<-rep(Mataat,each=nsim)
    laa<-Linf*(1-exp(-K*(ageArray-t0)))
    h<-rep(replist$mpd$steepness,nsim)
- 
+
    # make the OM
    OM<-VPA2OM(Name="A fishery made by VPA2OM",
               proyears=50, interval=2, CurrentYr=2019,
@@ -103,31 +103,31 @@ iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=F, Name=NULL, Source="No
               nyr_par_mu = nyr_par_mu, LowerTri=1,
               recind=2, plusgroup=TRUE, altinit=2, fixq1=TRUE,
               report=report, silent=FALSE)
- 
+
 #   # Observation model parameters ==============================================================================
- 
+
 #   dat<-iSCAM2Data
-# 
+#
 #   # --- mcmc functionality ------------------------------------
-# 
+#
 #   if(mcmc){
-# 
+#
 #     message("Attempting to read mcmc file to assign posterior samples to custom parameters")
-# 
+#
 #     model.dir=iSCAMdir
-# 
+#
 #     if(!file.exists(model.dir))stop(paste("Could not find the mcmc subfolder:",model.dir))
-# 
+#
 #     tmp<-read.mcmc(model.dir)
 #     nmcmc<-nrow(tmp$params)
-# 
+#
 #     if(nsim<nmcmc){
 #       samp<-sample(1:nmcmc,size=nsim)
 #     }else{
 #       message("You requested a greater number of simulations than the number of mcmc samples that are available - sampling with replacement")
 #       samp<-sample(1:nmcmc,size=nsim,replace=T)
 #     }
-# 
+#
 #     #@nyears<-nyears<-ncol(tmp$sbt[[1]])
 #     #M<-tmp$params$m_gs1[samp]
 #     #OM@M<-quantile(M,c(0.05,0.95))
@@ -135,50 +135,50 @@ iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=F, Name=NULL, Source="No
 #     #OM@h<-quantile(hs,c(0.05,0.95))
 #     R0<-(1E6)*tmp$params$ro_gr1[samp]
 #     #OM@R0<-quantile(R0, c(0.05,0.95))
-# 
+#
 #     #ssb_r <-tmp$params$sbo[samp]/R0
 #     D<-tmp$sbt[[1]][samp,nyears]/tmp$params$sbo[samp]#*ssb_r
 #     #OM@D<-quantile(D,c(0.05,0.95))
-# 
+#
 #     #recdevs<-tmp$rdev[[1]][samp,]
-# 
+#
 #     #procsd<-apply(recdevs,1,sd)
 #     #OM@Perr<-quantile(procsd,c(0.05,0.95))
-# 
+#
 #     #nrecs<-ncol(recdevs)
 #     #AC<-apply(recdevs,1,function(x)acf(x)$acf[2,1,1])
 #     #OM@AC<-quantile(AC,c(0.05,0.95))
-# 
+#
 #     #procmu <- -0.5 * (procsd)^2  # adjusted log normal mean
-# 
+#
 #     Perr<-matrix(rnorm(nsim*(maxage+nyears+proyears-1),rep(procmu,maxage+nyears+proyears-1),rep(procsd,maxage+nyears+proyears-1)),nrow=nsim)
 #     Perr[,(maxage-1)+(1:nrecs)]<-as.matrix(recdevs) # generate a bunch of simulations with uncertainty
-# 
+#
 #     for (y in c(2:(maxage-1),(-1:(proyears-1))+(maxage+nyears))) Perr[, y] <- AC * Perr[, y - 1] +   Perr[, y] * (1 - AC * AC)^0.5
 #     Perr<-exp(Perr)
-# 
+#
 #     agesind<-ncol(replist$mpd$d3_wt_mat)
 #     surv<-exp(cumsum(c(rep(-replist$mpd$m,maxage))))[maxage-((agesind-1):0)]
-# 
+#
 #     agearr<-maxage-((agesind-1):0)
 #     survarr<-exp(-array(rep(M,agesind)*rep(agearr,each=nsim),c(nsim,agesind)))
 #     N0vec<-array(rep(R0,agesind)*rep(surv,each=nsim),c(nsim,agesind))
 #     N0pred<-array(rep(replist$mpd$N[1,],each=nsim)*1E6,dim(N0vec))
-# 
+#
 #     RecDev0<-log(N0pred/N0vec)
 #     Perr[,ncol(N0vec):1]<-RecDev0
-# 
+#
 #     nfleet<-length(tmp$ft[[1]])
 #     FM<-tmp$ft[[1]][[1]][samp,1:nyears]
 #     for(ff in 2:nfleet)FM<-FM+tmp$ft[[1]][[ff]][samp,1:nyears]
 #     Find<-as.matrix(FM/apply(FM,1,mean))
-# 
+#
 #     OM@cpars<-list(V=V,Perr=Perr,Wt_age=Wt_age2,K=K,Linf=Linf,hs=hs,Find=Find,D=D,M=M,R0=R0,AC=AC)
-# 
+#
 #   }
 
   OM
- 
+
 }
 
 
@@ -1315,14 +1315,14 @@ strip.static.params <- function(model, dat){
 #' Combines indices into a single index using linear modelling
 #'
 #' @description iSCAM assessments often make use of multiple indices of abundance.
-#' The DLMtool data object and MPs currently only make use of a single index.
+#' The data object and MPs currently only make use of a single index.
 #' combiSCAMinds is a function that creates a single index from many using
 #' linear modelling. It is a simple way of providing initial calculations of
 #' management recommendations and it should be noted that this process
 #' is important and in a real application would require due diligence (ie
 #' peer reviewed data workshop).
 #' @param idata List: the indices recorded in a read from an iSCAM data folder, e.g. replist$data$indices
-#' @param Year Integer vector: the years of the DLMtool data object ie Data@Year
+#' @param Year Integer vector: the years of the data object ie Data@Year
 #' @param fleeteffect Logical: should a fleet effect be added to the linear model?
 #' @author T. Carruthers
 #' @export iSCAMinds
@@ -1363,7 +1363,7 @@ iSCAMinds<-function(idata,Year,fleeteffect=T){
 #' data. It should be noted that this process is important and in a real application would
 #' require due diligence (ie peer reviewed data workshop).
 #' @param replist S3 class object: the output from a read from an iSCAM data folder
-#' @param Year Integer vector: the years of the DLMtool data object ie Data@Year
+#' @param Year Integer vector: the years of the data object ie Data@Year
 #' @author T. Carruthers
 #' @export iSCAMcomps
 iSCAMcomps<-function(replist,Year){
@@ -1398,7 +1398,7 @@ LinInt<-function(x){
   x
 }
 
-#' Reads data from iSCAM file structure into a DLMtool Data object
+#' Reads data from iSCAM file structure into a Data object
 #'
 #' @description A function that uses the file location of a fitted iSCAM
 #' model including input files to population the various slots of an
