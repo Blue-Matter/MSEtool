@@ -52,11 +52,11 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1,
     if(!silent) message(paste("Season-as-years detected in SS model. There is one season in the year with duration of", replist$seasduration, "year."))
     season_as_years <- TRUE
     nseas <- 1/replist$seasduration
-    if(!silent) message("DLMtool operating model is an annual model. Since the SS model is seasonal, we need to aggregate over seasons.\n")
+    if(!silent) message("MSEtool operating model is an annual model. Since the SS model is seasonal, we need to aggregate over seasons.\n")
   } else {
     nseas <- replist$nseasons
     if(nseas > 1) {
-      if(!silent) message("DLMtool operating model is an annual model. Since the SS model is seasonal, we need to aggregate over seasons.\n")
+      if(!silent) message("MSEtool operating model is an annual model. Since the SS model is seasonal, we need to aggregate over seasons.\n")
     }
   }
 
@@ -509,40 +509,40 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1,
   }
 
   # Index observations -------------------------------------------------------
-  
+
   OM@maxage<-OM@maxage-1
   OM@MPA <- FALSE
   OM@DR <- c(0,0)
   OM@cpars$Data<-NULL #!!!!!!!!!!!!
   OM@cpars$qs<-rep(NA,nsim)
-  
+
   if(all(OM@cpars$Mat_age==1)){
     message("stupid maturity fix for hake 4 now")
     OM@cpars$Mat_age[] <- rep(c(0,0,0,0.5,rep(1,OM@maxage-3)),each=nsim)
   }
-  
-  
+
+
   if(report) {
     if(!silent) message("\nRunning historical simulations to compare SS output and OM conditioning...\n")
-   
+
     Hist <- runMSE(OM, Hist = TRUE)
 
     # interim checking code
-    
+
     naa <- replist$natage_annual_1_no_fishery
     naa<-t(naa[1:(nrow(naa)-3),5:ncol(naa)])
-    
+
     nc<-ceiling(maxage/3)
     nr<-ceiling(maxage/nc)
     par(mfrow=c(nr,nc),mai=c(0.4,0.4,0.3,0.05),omi=c(0.25,0.25,0.01,0.01))
-    
+
     yrs<-2019-((nyears-1):0)
-    
+
     cols<-rep('black',nyears)
     pch<-rep(1,nyears)
     cols[nyears-(0:1)]<-"blue";
     # pch[nyears-(0:LowerTri)]<-4 # LowerTri not defined?
-    
+
     for(a in 1:maxage){
       N_OM<-apply(Hist@AtAge$Number[1,a,,],1,sum)
       ylim=c(0,max(naa[a,],N_OM)*1.05)
@@ -555,10 +555,10 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1,
       plotres<-abs(res)>(mean(naa[a,]*0.025))
       if(any(plotres))for(y in 1:nyears)if(plotres[y])lines(rep(yrs[y],2),c(naa[a,y],N_OM[y]),col='red')
     } #plot(Hist)
-    
+
     mtext("Year",1,line=0.3,outer=T)
     mtext("Numbers",2,line=0.4,outer=T)
-     
+
     #rmd_file <- file.path(system.file(package = "MSEtool"), "rmarkdown_templates", "SS2OM.Rmd")
     #rmd <- readLines(rmd_file)
 
@@ -575,8 +575,8 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1,
 
   # fixes for interim MSEtool version
 
- 
-  
+
+
   return(OM)
 }
 
