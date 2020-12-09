@@ -47,7 +47,7 @@ SS2MOM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1
   MOM@nsim <- nsim
   MOM@pstar <- pstar
 
-  output <- lapply(seq_len(replist$nsexes), SS_stock, replist = replist, 
+  output <- lapply(seq_len(replist$nsexes), SS_stock, replist = replist,
                    mainyrs = mainyrs, nyears = nyears, MOM = MOM, single_sex = length(replist$nsexes) == 1)
 
   MOM@Stocks <- lapply(output, getElement, "Stock") %>% structure(names = c("Female", "Male")[seq_len(replist$nsexes)])
@@ -55,13 +55,13 @@ SS2MOM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1
   MOM@cpars <- lapply(output, getElement, "cpars") %>% structure(names = c("Female", "Male")[seq_len(replist$nsexes)])
 
   # Sample future recruitment
-  Perr_proj <- exp(sample_recruitment(log(MOM@cpars[[1]][[1]]$Perr_y), proyears, 
+  Perr_proj <- exp(sample_recruitment(log(MOM@cpars[[1]][[1]]$Perr_y), proyears,
                                       replist$sigma_R_in, MOM@Stocks[[1]]@AC[1], seed))
   MOM@cpars <- lapply(MOM@cpars, function(x) lapply(x, function(xx) {xx$Perr_y <- cbind(xx$Perr_y, Perr_proj); return(xx)}))
 
-  MOM@Obs <- lapply(seq_len(replist$nsexes), function(x) lapply(1:length(MOM@Fleets[[1]]), function(xx) return(Obs)) %>% 
+  MOM@Obs <- lapply(seq_len(replist$nsexes), function(x) lapply(1:length(MOM@Fleets[[1]]), function(xx) return(Obs)) %>%
                       structure(names = names(MOM@Fleets[[1]]))) %>% structure(names = c("Female", "Male")[seq_len(replist$nsexes)])
-  MOM@Imps <- lapply(seq_len(replist$nsexes), function(x) lapply(1:length(MOM@Fleets[[1]]), function(xx) return(Imp)) %>% 
+  MOM@Imps <- lapply(seq_len(replist$nsexes), function(x) lapply(1:length(MOM@Fleets[[1]]), function(xx) return(Imp)) %>%
                        structure(names = names(MOM@Fleets[[1]]))) %>% structure(names = c("Female", "Male")[seq_len(replist$nsexes)])
 
   if(replist$nsexes == 2) {
@@ -71,8 +71,8 @@ SS2MOM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1
 
   # Catch Fracs
   CatchFrac <- lapply(MOM@cpars, function(x) vapply(x, function(xx) xx$Data@Cat[1, ncol(xx$Data@Cat)], numeric(1)))
-  MOM@CatchFrac <- lapply(CatchFrac, function(x) matrix(x/sum(x), nrow = MOM@nsim, ncol = length(x), byrow = TRUE) %>% 
-                            structure(dimnames = list(NULL, names(MOM@Fleets[[1]])))) %>% 
+  MOM@CatchFrac <- lapply(CatchFrac, function(x) matrix(x/sum(x), nrow = MOM@nsim, ncol = length(x), byrow = TRUE) %>%
+                            structure(dimnames = list(NULL, names(MOM@Fleets[[1]])))) %>%
     structure(names = c("Female", "Male")[seq_len(replist$nsexes)])
 
   return(MOM)
@@ -84,34 +84,35 @@ SS2MOM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1
 #' @description A function that uses the file location of a fitted SS3 model including input files to population
 #' the various slots of an Data object.
 #' @param SSdir A folder with Stock Synthesis input and output files in it
-#' @param age_M A vector of ages to average across to calculate a single value of natural mortality. 
+#' @param age_M A vector of ages to average across to calculate a single value of natural mortality.
 #' Currently, the Data object supports a single value of M for all ages. By default, \code{NULL} averages over all ages.
 #' @param comp_partition Integer vector for selecting length/age observations that are retained (2), discarded (1), or both (0). By default, only retained
 #' comps are used. If multiple codes are used, then comp matrix is the sum over all codes.
+#' @param silent Logical. Suppress messages?
 #' @param ... Arguments to pass to \link[r4ss]{SS_output}
 #' @return A nested list of Data objects, with the first index by stock/sex and the second index by fleet.
 #' @note Currently tested on r4ss version 1.38.1-41 and SS 3.30.14.
-#' 
+#'
 #' Catches in \code{Data@@Cat} are the predicted sex-specific catch calculated from the SS output.
 #' @author Q. Huynh
 #' @export
 #' @seealso \link{SS2MOM}
 SS2DataMOM <- function(SSdir, age_M = NULL, comp_partition = 2, silent = FALSE, ...) {
-  
+
   replist <- SS_import(SSdir, silent, ...)
   if(replist$nseasons > 1) warning("Currently only supporting one season per year.")
-  
+
   if(!silent) message(replist$nsexes, "- sex and ", replist$nfishfleets, "- fleet model detected.")
-  
+
   mainyrs <- replist$startyr:replist$endyr
   nyears <- length(mainyrs)
-  
-  output <- lapply(seq_len(replist$nsexes), SS_stock, replist = replist, 
+
+  output <- lapply(seq_len(replist$nsexes), SS_stock, replist = replist,
                    mainyrs = mainyrs, nyears = nyears, MOM = NULL, single_sex = TRUE, partition = comp_partition,
                    age_M = age_M)
-  
+
   Data <- lapply(output, function(x) lapply(x$cpars, getElement, "Data")) %>%
     structure(names = c("Female", "Male")[seq_len(replist$nsexes)])
-  
+
   return(Data)
 }
