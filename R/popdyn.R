@@ -695,6 +695,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
                         FleetPars$qvar[SY1] * FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y)/StockPars$Asize[SR]
 
     Effort_req <- Effort_pot
+
   }
 
   # ---- calculate required F and effort for TAC recommendation ----
@@ -815,6 +816,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
 
   # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
   totalCatch <- apply(CB_P[,,y,], 1, sum)
+
   Ftot <- sapply(1:nsim, calcF, totalCatch, V_P, Biomass_P, fishdist,
                  Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
                  M_ageArray=StockPars$M_ageArray,nyears, y) # update if effort has changed
@@ -988,7 +990,7 @@ runInMP <- function(Data, MPs = NA, reps = 100) {
 
 projectEq <- function(x, Asize, nareas, maxage, N, pyears, M_ageArray, Mat_age, Wt_age,
                       V, retA, Perr, mov, SRrel, Find, Spat_targ, hs, R0a, SSBpR, aR, bR,
-                      SSB0, B0, MPA, maxF, Nyrs, plusgroup, Pinitdist) {
+                      SSB0, MPA, maxF, Nyrs, plusgroup, Pinitdist) {
 
   simpop <- popdynCPP(nareas, maxage, Ncurr=N[x,,1,],
                       pyears, M_age=M_ageArray[x,,], Asize_c=Asize[x,],
