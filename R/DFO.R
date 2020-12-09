@@ -1089,7 +1089,7 @@ DFO_tab_formatted<-function(Ptab1,thresh=c(30,     50,     40,    60,    50,  20
 
     # save(Ptab1,file="Ptab1")
     MPs<-as.character(Ptab1$MP)
-    Data <- DLMtool::SimulatedData
+    Data <- MSEtool::SimulatedData
     runMPs <- applyMP(Data, MPs, reps = 2, nsims=1, silent=TRUE)
     recs <- runMPs[[1]]
     type <- matrix(0, nrow=length(MPs),ncol=4) # TAC TAE SL MPA
