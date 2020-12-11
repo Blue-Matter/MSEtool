@@ -7,15 +7,13 @@
 SS2DataMOM(SSdir, age_M = NULL, comp_partition = 2, silent = FALSE, ...)
 }
 \arguments{
-\item{SSdir}{A folder with Stock Synthesis input and output files in it}
+\item{SSdir}{A folder with Stock Synthesis input and output files in it. Alternatively,}
 
 \item{age_M}{A vector of ages to average across to calculate a single value of natural mortality.
 Currently, the Data object supports a single value of M for all ages. By default, \code{NULL} averages over all ages.}
 
 \item{comp_partition}{Integer vector for selecting length/age observations that are retained (2), discarded (1), or both (0). By default, only retained
 comps are used. If multiple codes are used, then comp matrix is the sum over all codes.}
-
-\item{silent}{Logical. Suppress messages?}
 
 \item{...}{Arguments to pass to \link[r4ss]{SS_output}}
 }
