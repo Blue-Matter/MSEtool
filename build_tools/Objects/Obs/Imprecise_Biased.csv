@@ -37,3 +37,5 @@ Crefbiascv,0.3,
 Brefbiascv,0.5,
 beta,0.333,3
 sigmaRbiascv,0.1,
+Eobs,0.2,0.6
+Ebiascv,0.3,

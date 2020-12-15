@@ -42,7 +42,7 @@ projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real
 numbers}
 
 \item{\code{N}}{Simulated total numbers over the projection. An array with
-dimensions: nsim, nMPs, proyears Non-negative real numbers.}
+dimensions: nsim, maxage+1, nMPs, proyears, nareas. Non-negative real numbers.}
 
 \item{\code{B}}{Simulated stock biomass over the projection. An array with
 dimensions: nsim, nMPs, proyears. Non-negative real numbers}
@@ -58,7 +58,7 @@ dimensions: nsim, nMPs, proyears. Non-negative real numbers}
 
 \item{\code{SPR}}{Currently not used.}
 
-\item{\code{C}}{Simulated catches (landings) over the projection. An array with
+\item{\code{Catch}}{Simulated catches (landings) over the projection. An array with
 dimensions: nsim, nMPs, proyears. Non-negative real numbers}
 
 \item{\code{Removals}}{Simulated removals (catch + discards) over the projection. An
@@ -80,8 +80,17 @@ parameters are included in OM}
 SBMSY. Array with dimensions: nsim, nMPs, nyears+proyears. Will be the same as
 \code{Hist@Ref$ByYear} unless selectivity is changed by MP}
 
+\item{\code{CB_hist}}{Simulated catches (landings) from the spool-up period. An
+array with dimensions: nsim, nyears. Non-negative real numbers}
+
+\item{\code{FM_hist}}{Simulated fishing mortality rate from the spool-up period. An
+array with dimensions: nsim, nyears Non-negative real numbers}
+
+\item{\code{SSB_hist}}{Simulated spawning stock biomass from the spool-up period. An
+array with dimensions: nsim, nyears. Non-negative real numbers}
+
 \item{\code{Hist}}{Information from the historical spool-up period. Object of class
-\code{Hist}}
+\code{Hist}. Only returned if \code{extended=TRUE} in \code{runMSE}}
 
 \item{\code{PPD}}{Posterior predictive data. List of \code{Data} objects at the end of
 the projection period (length \code{nMPs})}

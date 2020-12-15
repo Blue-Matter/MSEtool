@@ -425,8 +425,6 @@ checkMSE <- function(MSEobj) {
   return(TRUE)
 }
 
-
-
 #' Subset MSE object by management procedure (MP) or simulation.
 #'
 #' Subset the MSE object by particular MPs (either MP number or name), or
@@ -483,7 +481,6 @@ Sub <- function(MSEobj, MPs = NULL, sims = NULL, years = NULL) {
     message("Subsetting by MPs: ", paste0(newMPs, " "))
   }
 
-
   ClassSims <- class(sims)
   if (ClassSims == "NULL")  SubIts <- 1:MSEobj@nsim
   if (ClassSims == "integer" | ClassSims == "numeric") {
@@ -512,7 +509,6 @@ Sub <- function(MSEobj, MPs = NULL, sims = NULL, years = NULL) {
     stop("You are going to want more than 1 projection year")
   MSEobj@proyears <- max(Years)
 
-
   SubBioEco <- MSEobj@BioEco
   for (i in 1:length(SubBioEco)) {
     SubBioEco[[i]] <-  SubBioEco[[i]][SubIts, SubMPs,  Years, drop=FALSE]
@@ -520,7 +516,7 @@ Sub <- function(MSEobj, MPs = NULL, sims = NULL, years = NULL) {
 
   SubRefPoint <- MSEobj@RefPoint
   for (i in 1:length(SubRefPoint)) {
-    SubRefPoint[[i]] <-   SubRefPoint[[i]] [SubIts, SubMPs, c(1:MSEobj@nyears, MSEobj@nyears+Years), drop=FALSE]
+    SubRefPoint[[i]] <- SubRefPoint[[i]] [SubIts, SubMPs, c(1:MSEobj@nyears, MSEobj@nyears+Years), drop=FALSE]
   }
 
   subMSElist <- MSEobj@PPD[SubMPs] # doesn't subset Data by years or simulations

@@ -608,7 +608,9 @@ setClass("Obs", representation(Name = "character",
                                Dobs = "numeric",
                                hbiascv = "numeric",
                                Recbiascv = "numeric",
-                               sigmaRbiascv = 'numeric'))
+                               sigmaRbiascv = 'numeric',
+                               Eobs='numeric',
+                               Ebiascv='numeric'))
 
 # initialize Obs
 setMethod("initialize", "Obs", function(.Object, file = NA, dec=c(".", ",")) {
@@ -650,6 +652,8 @@ setMethod("initialize", "Obs", function(.Object, file = NA, dec=c(".", ",")) {
       .Object@hbiascv <- as.numeric(dat[match("hbiascv", dname), 1])
       .Object@Recbiascv <- as.numeric(dat[match("Recbiascv", dname), 1:2])
       .Object@sigmaRbiascv <- as.numeric(dat[match("Recbiascv", dname), 1])
+      .Object@Eobs <- as.numeric(dat[match("Eobs", dname), 1:2])
+      .Object@Ebiascv <- as.numeric(dat[match("Ebiascv", dname), 1])
     } else {
       message("File doesn't exist")
     }
@@ -1019,6 +1023,9 @@ setClass("MSE", representation(Name = "character",
                                TAE = 'array',
                                BioEco = 'list',
                                RefPoint = 'list',
+                               CB_hist='array',
+                               FM_hist='array',
+                               SSB_hist='array',
                                Hist = 'Hist',
                                PPD = 'list',
                                Misc = 'list')
@@ -1029,7 +1036,9 @@ setMethod("initialize", "MSE", function(.Object, Name, nyears, proyears,
                                         nMPs, MPs, nsim, OM, Obs,
                                         SB_SBMSY, F_FMSY, N, B, SSB, VB, FM,
                                         SPR, Catch, Removals, Effort, TAC, TAE,
-                                        BioEco, RefPoint, Hist, PPD, Misc
+                                        BioEco, RefPoint,
+                                        CB_hist, FM_hist, SSB_hist,
+                                        Hist, PPD, Misc
                                         ) {
 
   slts <- slotNames('MSE')

@@ -1486,6 +1486,37 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
   }
   ObsOut$hbias <- hbias
 
+  # ---- Effort Obs Error -----
+  # Sampled effort observation error (lognormal sd)
+  if (length(Obs@Eobs)<2 && is.null(cpars$Eerr_y)) {
+    message('OM@Eobs not specified. Assuming no observation error on Effort')
+    Obs@Eobs <- rep(0,2)
+    Obs@Ebiascv <- 0
+  }
+  Evar <- sample_unif('Esd', cpars, Obs, nsim, 'Eobs')
+
+  ObsOut$Evar <- Evar
+
+  # Sampled effort bias (log normal sd)
+  Ebias <- sample_lnorm('Ebias', cpars, Obs, nsim, 'Ebiascv')
+  ObsOut$Ebias <- Ebias
+
+  # Generate effort obs error by year
+  Eerr_y <- cpars$Eerr_y
+  if (is.null(Eerr_y)) {
+    Eerr_y <- array(rlnorm((nyears + proyears) * nsim,
+                           mconv(1, rep(ObsOut$Evar, (nyears + proyears))),
+                           sdconv(1, rep(ObsOut$Evar, nyears + proyears))),
+                    c(nsim, nyears + proyears))
+  }
+  ObsOut$Eerr_y <- Eerr_y
+
+  Eobs_y <- cpars$Eobs_y
+  if (is.null(Eobs_y)) {
+    Eobs_y <- ObsOut$Ebias * ObsOut$Eerr_y
+  }
+  ObsOut$Eobs_y <- Eobs_y
+
   ObsOut
 }
 

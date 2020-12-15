@@ -192,6 +192,10 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
   # ---- Main ----
   import_convert <- function(Name, datasheet, numeric=TRUE) {
     temp <- datasheet$Data[which(datasheet$Name==Name)]
+    if (length(temp)<1) {
+      if(numeric) return(as.numeric(NA))
+      if(!numeric) return(as.character(NA))
+    }
     if (is.na(temp)&& numeric) return(as.numeric(NA))
     if (is.na(temp)) return(temp)
     if (temp == 'NA' && numeric) return(as.numeric(NA))
@@ -346,20 +350,23 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
   Data <- import_convert_ts('Mean length above Lc', datasheet, Data)
 
   # ---- Catch-at-Age ----
-  VulnCAA <- datasheet[which(datasheet$Name == "Vuln CAA"), 2:(Data@MaxAge+2)]
-  VulnCAA <- suppressWarnings(as.numeric(VulnCAA))
-  if (!all(is.na(VulnCAA))) {
-    if (any(is.na(VulnCAA)))
-      stop('Missing values in Vuln CAA. Must be length `Maximum age`+1 will values for each age (or all NA to ignore)')
+  ind <- which(datasheet$Name == "Vuln CAA")
+  if (length(ind>0)) {
+    VulnCAA <- datasheet[which(datasheet$Name == "Vuln CAA"), 2:(Data@MaxAge+2)]
+    VulnCAA <- suppressWarnings(as.numeric(VulnCAA))
+    if (!all(is.na(VulnCAA))) {
+      if (any(is.na(VulnCAA)))
+        stop('Missing values in Vuln CAA. Must be length `Maximum age`+1 will values for each age (or all NA to ignore)')
+    }
+    Data@Vuln_CAA <- matrix(VulnCAA, nrow=1)
   }
-  Data@Vuln_CAA <- matrix(VulnCAA, nrow=1)
 
   ind <- which(grepl('CAA', datasheet$Name))
   ind2 <-  which(datasheet$Name == "Vuln CAA")
   if (length(ind2)>0)
     ind <- ind[!ind ==ind2]
   CAAexists <- grepl('CAA', datasheet$Name[ind])
-    if (length(CAAexists) < 1) CAAexists <- FALSE
+  if (length(CAAexists) < 1) CAAexists <- FALSE
   if (length(ind) <=1 || !CAAexists) {
     CAA_Yrs <- numeric(0)
   } else {
@@ -390,13 +397,16 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
   }
 
   # ---- Catch-at-Length ----
-  VulnCAL <- datasheet[which(datasheet$Name == "Vuln CAL"), 2:(Data@MaxAge+2)]
-  VulnCAL <- suppressWarnings(as.numeric(VulnCAL))
-  if (!all(is.na(VulnCAL))) {
-    if (any(is.na(VulnCAL)))
-      stop('Missing values in Vuln CAL. Must be length `Maximum age`+1 will values for each age (or all NA to ignore)')
+  ind <- which(datasheet$Name == "Vuln CAA")
+  if (length(ind>0)) {
+    VulnCAL <- datasheet[which(datasheet$Name == "Vuln CAL"), 2:(Data@MaxAge+2)]
+    VulnCAL <- suppressWarnings(as.numeric(VulnCAL))
+    if (!all(is.na(VulnCAL))) {
+      if (any(is.na(VulnCAL)))
+        stop('Missing values in Vuln CAL. Must be length `Maximum age`+1 will values for each age (or all NA to ignore)')
+    }
+    Data@Vuln_CAL <- matrix(VulnCAL, nrow=1)
   }
-  Data@Vuln_CAL <- matrix(VulnCAL, nrow=1)
 
   CAL_bins <- suppressWarnings(datasheet[which(datasheet$Name == "CAL_bins"),] %>% as.numeric())
   CAL_bins <- CAL_bins[!is.na(CAL_bins)]

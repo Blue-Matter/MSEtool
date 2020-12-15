@@ -1359,6 +1359,10 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
 
   # ---- Create MSE Object ----
+  CB_hist <- apply(Hist@TSdata$Landings, 1:2, sum)
+  FM_hist <- Hist@TSdata$Find * Hist@SampPars$Fleet$qs
+  SSB_hist <- apply(Hist@TSdata$SBiomass, 1:2, sum)
+
   Misc <- list()
 
   Misc$extended <- list()
@@ -1399,11 +1403,12 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       FMret=FMret_all
     )
   } else {
-    Hist@Data <- new('Data')
-    Hist@OMPars <- data.frame()
-    Hist@AtAge <- list()
-    Hist@Ref <- list()
-    Hist@SampPars <- list()
+    Hist <- new("Hist")
+    # Hist@Data <- new('Data')
+    # Hist@OMPars <- data.frame()
+    # Hist@AtAge <- list()
+    # Hist@Ref <- list()
+    # Hist@SampPars <- list()
   }
 
   MSEout <- new("MSE",
@@ -1432,6 +1437,9 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                 RefPoint=list(MSY=MSY_y,
                               FMSY=FMSY_y,
                               SSBMSY=SSBMSY_y),
+                CB_hist=CB_hist,
+                FM_hist=FMSSB_hist_hist,
+                SSB_hist=SSB_hist,
                 Hist=Hist,
                 PPD=MSElist,
                 Misc=Misc

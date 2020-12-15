@@ -23,7 +23,7 @@
 #'  projection. An array with dimensions: nsim, nMPs, proyears. Non-negative real
 #'  numbers
 #' @slot N Simulated total numbers over the projection. An array with
-#'  dimensions: nsim, nMPs, proyears Non-negative real numbers.
+#'  dimensions: nsim, maxage+1, nMPs, proyears, nareas. Non-negative real numbers.
 #' @slot B Simulated stock biomass over the projection. An array with
 #'  dimensions: nsim, nMPs, proyears. Non-negative real numbers
 #' @slot SSB Simulated spawning stock biomass over the projection. An array
@@ -33,7 +33,7 @@
 #' @slot FM Simulated fishing mortality rate over the projection. An array with
 #'  dimensions: nsim, nMPs, proyears. Non-negative real numbers
 #' @slot SPR Currently not used.
-#' @slot C Simulated catches (landings) over the projection. An array with
+#' @slot Catch Simulated catches (landings) over the projection. An array with
 #'  dimensions: nsim, nMPs, proyears. Non-negative real numbers
 #' @slot Removals Simulated removals (catch + discards) over the projection. An
 #'  array with dimensions: nsim, nMPs, proyears. Non-negative real numbers
@@ -48,8 +48,14 @@
 #' @slot RefPoint Named list of annual MSY reference points MSY, FMSY, and
 #'  SBMSY. Array with dimensions: nsim, nMPs, nyears+proyears. Will be the same as
 #'  `Hist@Ref$ByYear` unless selectivity is changed by MP
+#' @slot CB_hist Simulated catches (landings) from the spool-up period. An
+#'  array with dimensions: nsim, nyears. Non-negative real numbers
+#' @slot FM_hist Simulated fishing mortality rate from the spool-up period. An
+#'  array with dimensions: nsim, nyears Non-negative real numbers
+#' @slot SSB_hist Simulated spawning stock biomass from the spool-up period. An
+#'  array with dimensions: nsim, nyears. Non-negative real numbers
 #' @slot Hist Information from the historical spool-up period. Object of class
-#'  `Hist`
+#'  `Hist`. Only returned if `extended=TRUE` in `runMSE`
 #' @slot PPD Posterior predictive data. List of `Data` objects at the end of
 #'  the projection period (length `nMPs`)
 #' @slot Misc Miscellaneous output
