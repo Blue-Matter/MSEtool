@@ -9,7 +9,7 @@ iSCAMcomps(replist, Year)
 \arguments{
 \item{replist}{S3 class object: the output from a read from an iSCAM data folder}
 
-\item{Year}{Integer vector: the years of the DLMtool data object ie Data@Year}
+\item{Year}{Integer vector: the years of the data object ie Data@Year}
 }
 \description{
 iSCAM assessments are often fitted to numerous fleets that have differing

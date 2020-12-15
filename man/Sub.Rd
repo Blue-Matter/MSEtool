@@ -26,7 +26,7 @@ projection years).
 }
 \examples{
 \dontrun{
-MSE <- runMSE() 
+MSE <- runMSE()
 MSE_1 <- Sub(MSE, MPs=1:2)
 MSE_1@MPs
 MSE_2 <- Sub(MSE, sims=1:10)

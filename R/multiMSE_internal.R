@@ -91,7 +91,7 @@ TEG<-function(vec){ # make index for list calculation
 #' @param plusgroup Plusgroup
 #' @author T.Carruthers
 #' @keywords internal
-HistMICE<-function(x,StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, VF, 
+HistMICE<-function(x,StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, VF,
                    FretA, maxF=0.9, MPA,Rel,SexPars,qs,qfrac,
                    plusgroup){
 
@@ -106,6 +106,8 @@ HistMICE<-function(x,StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, VF,
   t0x<-matrix(unlist(lapply(StockPars,function(dat)dat['t0'])),ncol=np)[x,]
   Mx<-matrix(unlist(lapply(StockPars,function(dat)dat['M'])),ncol=np)[x,]
   R0x<-matrix(unlist(lapply(StockPars,function(dat)dat['R0'])),ncol=np)[x,]
+
+  SSB0x<-matrix(unlist(lapply(StockPars,function(dat)dat['SSB0'])),ncol=np)[x,]
 
   hsx<-matrix(unlist(lapply(StockPars,function(dat)dat['hs'])),ncol=np)[x,]
   ax<-matrix(unlist(lapply(StockPars,function(dat)dat['a'])),ncol=np)[1,]
@@ -144,7 +146,7 @@ HistMICE<-function(x,StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, VF,
   popdynMICE(qsx=qsx,qfracx=qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
              movx,Spat_targ,M_ageArrayx,Mat_agex,Asizex,Kx,Linfx,t0x,Mx,R0x,R0ax,
              SSBpRx,hsx,aRx, bRx,ax,bx,Perrx,SRrelx,Rel,SexPars,x,
-             plusgroup, maxF)
+             plusgroup, maxF, SSB0x)
 
 }
 
@@ -235,15 +237,14 @@ multiDataS<-function(MSElist,StockPars,np,mm,nf,realVB){
   Dataout@CAL<-apply(CAL,1:3,sum)
 
   # Weighted means
-  Dataout@LFS<-apply(LFS*Cat[,nyears,],1,sum)/apply(Cat[,nyears,],1,sum)
-  Dataout@LFC<-apply(LFC*Cat[,nyears,],1,sum)/apply(Cat[,nyears,],1,sum)
+  Dataout@LFS<-apply(LFS*Cat[,nyears,],1,sum)/apply(Cat[,nyears,, drop=FALSE],1,sum)
+  Dataout@LFC<-apply(LFC*Cat[,nyears,],1,sum)/apply(Cat[,nyears,, drop=FALSE],1,sum)
 
   # Data among stocks have varying length bins so we resort to weighted averages here
   Dataout@ML<-apply(ML*Cat,1:2,sum)/apply(Cat,1:2,sum)
   Dataout@Lc<-apply(Lc*Cat,1:2,sum)/apply(Cat,1:2,sum)
   Dataout@Lbar<-apply(Lbar*Cat,1:2,sum)/apply(Cat,1:2,sum)
 
-  # You were here!!!
   Ind<-array(SIL(DBF,"Ind"),c(nsim,nyears,ni))
   Rec<-array(SIL(DBF,"Ind"),c(nsim,nyears,ni))
   Dataout@Ind<-apply(Ind*realVBi,1:2,sum)/apply(realVBi,1:2,sum)
@@ -254,7 +255,7 @@ multiDataS<-function(MSElist,StockPars,np,mm,nf,realVB){
 
   popsimslot<-function(Dataout,sloty,realVBi,nsim,ni){
     temp<-array(SIL(DBF,sloty),c(nsim,ni))
-    slot(Dataout,sloty)<-apply(temp*realVBi[,nyears,],1,sum)/apply(realVBi[,nyears,],1,sum)
+    slot(Dataout,sloty)<-apply(temp*realVBi[,nyears,],1,sum)/apply(realVBi[,nyears,, drop=FALSE],1,sum)
     Dataout
   }
 

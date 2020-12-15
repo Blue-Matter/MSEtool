@@ -23,16 +23,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   }
 
   # ---- Set up parallel processing ----
-  if (parallel) {
-    if (snowfall::sfIsRunning()) {
-      ncpus <- snowfall::sfCpus()
-    } else {
-      setup()
-      ncpus <- snowfall::sfCpus()
-    }
-  } else {
-    ncpus <- 1
-  }
+  ncpus <- set_parallel(parallel)
 
   set.seed(OM@seed) # set seed for reproducibility
   nsim <- OM@nsim # number of simulations
@@ -92,7 +83,6 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   ImpPars <- SampleImpPars(OM, nsim, cpars=SampCpars, nyears, proyears)
 
   # Bio-Economic Parameters
-  # TODO - add to Fleet@Misc object
   BioEcoPars <- c("RevCurr", "CostCurr", "Response", "CostInc", "RevInc", "LatentEff")
   if (all(lapply(SampCpars[BioEcoPars], length) == 0)) {
     # no bio-economic model
@@ -115,7 +105,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     LatentEff <- SampCpars$LatentEff
   }
 
-  # --- Initialize Arrays ----
+  # ---- Initialize Arrays ----
   n_age <- StockPars$maxage + 1 # number of age classes (starting at age-0)
   StockPars$n_age <- n_age
   nareas <- StockPars$nareas
@@ -130,7 +120,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   SPR <- array(NA, dim = c(nsim, n_age, nyears)) # store the Spawning Potential Ratio
   Agearray <- array(rep(0:StockPars$maxage, each = nsim), dim = c(nsim, n_age))  # Age array
 
-  #  --- Pre Equilibrium calcs ----
+  #  ---- Pre Equilibrium calcs ----
   surv <- matrix(1, nsim, n_age)
   surv[, 2:n_age] <- t(exp(-apply(StockPars$M_ageArray[,,1], 1, cumsum)))[, 1:(n_age-1)]  # Survival array
 
@@ -152,7 +142,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   # ---- Calculate initial distribution if mov provided in cpars ----
   if (is.null(StockPars$initdist)) {
     # mov has been passed in cpars - initdist hasn't been defined
-    StockPars$initdist <- CalcDistribution(StockPars, FleetPars, SampCpars, OM,
+    StockPars$initdist <- CalcDistribution(StockPars, FleetPars, SampCpars, nyears,
+                                           maxF,
                                            plusgroup, checks=FALSE)
   }
 
@@ -318,9 +309,9 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     Nprob <- length(probQ)
   }
 
-
   fracD <- 0.05; ntrials <- 50
   if (!is.null(control$ntrials)) ntrials <- control$ntrials
+  if (!is.null(control$ntrials)) fracD <- control$fracD
 
   # If q has hit bound, re-sample depletion and try again. Tries 'ntrials' times and then alerts user
   if (length(probQ) > 0) {
@@ -848,7 +839,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
 #'
 #' @export
 Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
-                     extended=FALSE) {
+                     extended=FALSE, checkMPs=TRUE) {
 
   # ---- Setup ----
   if (class(Hist) !='Hist')
@@ -867,10 +858,19 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   control <- OM@cpars$control; OM@cpars$control <- NULL
 
   # ---- Check MPs ----
-  MPs <- CheckMPs(MPs=MPs, silent=silent)
+  if (checkMPs)
+    MPs <- CheckMPs(MPs=MPs, silent=silent)
 
   nMP <- length(MPs)  # the total number of methods used
   if (nMP < 1) stop("No valid MPs found", call.=FALSE)
+
+  isrunning <- snowfall::sfIsRunning()
+  if (!parallel & isrunning) snowfall::sfStop()
+
+  if (parallel) {
+    if (!isrunning) setup()
+    Export_customMPs(MPs)
+  }
 
   # ---- Set Management Interval for each MP ----
   if (length(interval) != nMP) interval <- rep(interval, nMP)[1:nMP]
@@ -900,8 +900,11 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   # create a data object for each method
   # (they have identical historical data and branch in projected years)
   Data <- Hist@Data
+  # no need to replicate Data@Misc across MPs
+  Data_Misc <- Data@Misc
+  Data@Misc <- list()
   MSElist <- list(Data)[rep(1, nMP)]
-  # TODO - update names of stored values
+
   SB_SBMSY_a <- array(NA, dim = c(nsim, nMP, proyears))  # store the projected SB_SBMSY
   F_FMSYa <- array(NA, dim = c(nsim, nMP, proyears))  # store the projected F_FMSY
   Ba <- array(NA, dim = c(nsim, nMP, proyears))  # store the projected Biomass
@@ -963,6 +966,9 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   mm <- 1 # for debugging
 
   for (mm in 1:nMP) {  # MSE Loop over methods
+    Data_MP <- MSElist[[mm]]
+    Data_MP@Misc <- Data_Misc # add StockPars etc back to Data object
+
     if(!silent) message(mm, "/", nMP, " Running MSE for ", MPs[mm])
     checkNA <- rep(0, OM@proyears) # save number of NAs
     # years management is updated
@@ -1050,9 +1056,12 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     N_P[,,y,] <- array(unlist(Ntemp), dim=c(n_age, nareas, nsim)) %>% aperm(c(3,1,2))
     Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAY1]  # Calculate biomass
     VBiomass_P[SAYR] <- Biomass_P[SAYR] * V_P[SAYt]  # Calculate vulnerable biomass
+    SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAY1]  # Calculate spawning stock numbers
+    SSB_P[SAYR] <- SSN_P[SAYR] * StockPars$Wt_age[SAY1]
 
     # -- Apply MP in initial projection year ----
-    runMP <- applyMP(Data=MSElist[[mm]], MPs = MPs[mm], reps = reps, silent=TRUE)  # Apply MP
+    runMP <- applyMP(Data=Data_MP, MPs = MPs[mm], reps = reps, silent=TRUE)  # Apply MP
+
     MPRecs <- runMP[[1]][[1]] # MP recommendations
     Data_p <- runMP[[2]] # Data object object with saved info from MP
     Data_p@TAC <- MPRecs$TAC
@@ -1113,6 +1122,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     V_P <- MPCalcs$V_P  # vulnerable-at-age
     SLarray_P <- MPCalcs$SLarray_P # vulnerable-at-length
     FMa[,mm,y] <- MPCalcs$Ftot
+
 
     LR5_P <- MPCalcs$LR5_P
     LFR_P <- MPCalcs$LFR_P
@@ -1203,26 +1213,28 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                      N_P[x,,y,])
       )
       N_P[,,y,] <- array(unlist(Ntemp), dim=c(n_age, nareas, nsim)) %>% aperm(c(3,1,2))
+
       Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAY1]  # Calculate biomass
       VBiomass_P[SAYR] <- Biomass_P[SAYR] * V_P[SAYt]  # Calculate vulnerable biomass
+      SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAYt]  # Calculate spawning stock numbers
+      SSB_P[SAYR] <- SSN_P[SAYR] * StockPars$Wt_age[SAYt]  # Calculate spawning stock biomass
 
       # --- An update year - update data and run MP ----
       if (y %in% upyrs) {
         # --- Update Data object ----
-        MSElist[[mm]] <- updateData(Data=MSElist[[mm]], OM, MPCalcs, Effort,
-                                    StockPars$Biomass, StockPars$N,
-                                    Biomass_P, CB_Pret, N_P, StockPars$SSB,
-                                    SSB_P, StockPars$VBiomass, VBiomass_P,
-                                    RefPoints=ReferencePoints,
-                                    retA_P, retL_P, StockPars,
-                                    FleetPars, ObsPars, V_P,
-                                    upyrs, interval, y, mm,
-                                    Misc=Data_p@Misc, RealData,
-                                    ObsPars$Sample_Area
-        )
+        Data_MP <- updateData(Data=Data_MP, OM, MPCalcs, Effort,
+                              Biomass=StockPars$Biomass, StockPars$N,
+                              Biomass_P, CB_Pret, N_P, SSB=StockPars$SSB,
+                              SSB_P, VBiomass=StockPars$VBiomass, VBiomass_P,
+                              RefPoints=ReferencePoints,
+                              retA_P, retL_P, StockPars,
+                              FleetPars, ObsPars, V_P,
+                              upyrs, interval, y, mm,
+                              Misc=Data_p@Misc, RealData,
+                              Sample_Area=ObsPars$Sample_Area)
 
         # --- apply MP ----
-        runMP <- applyMP(Data=MSElist[[mm]], MPs = MPs[mm], reps = reps, silent=TRUE)  # Apply MP
+        runMP <- applyMP(Data=Data_MP, MPs = MPs[mm], reps = reps, silent=TRUE)  # Apply MP
         MPRecs <- runMP[[1]][[1]] # MP recommendations
         Data_p <- runMP[[2]] # Data object object with saved info from MP
         Data_p@TAC <- MPRecs$TAC
@@ -1286,7 +1298,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     }  # end of year loop
 
     if (max(upyrs) < proyears) { # One more call to complete Data object
-      MSElist[[mm]] <- updateData(Data=MSElist[[mm]], OM, MPCalcs, Effort,
+      Data_MP <- updateData(Data=Data_MP, OM, MPCalcs, Effort,
                                   StockPars$Biomass, StockPars$N,
                                   Biomass_P, CB_Pret, N_P, StockPars$SSB, SSB_P,
                                   StockPars$VBiomass, VBiomass_P,
@@ -1339,12 +1351,15 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     FM_P_mp[,,mm,,] <- FM_P
     FMret_P_mp[,,mm,,] <- FM_Pret
 
+    # drop StockPars etc from Data_MP - already reported in Hist object
+    Data_MP@Misc$StockPars <- Data_MP@Misc$FleetPars <- Data_MP@Misc$ReferencePoints <- NULL
+
+    MSElist[[mm]] <- Data_MP # update MSElist with PPD for this MP
   } # end of MP loop
 
 
   # ---- Create MSE Object ----
   Misc <- list()
-  Misc$Data <- MSElist
 
   Misc$extended <- list()
 
@@ -1383,6 +1398,12 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       FM=FM_all,
       FMret=FMret_all
     )
+  } else {
+    Hist@Data <- new('Data')
+    Hist@OMPars <- data.frame()
+    Hist@AtAge <- list()
+    Hist@Ref <- list()
+    Hist@SampPars <- list()
   }
 
   MSEout <- new("MSE",
@@ -1393,7 +1414,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                 Obs=Data@Obs,
                 SB_SBMSY=SB_SBMSY_a,
                 F_FMSY=F_FMSYa,
-                N=N_P_mp,
+                N=apply(N_P_mp, c(1,3,4), sum),
                 B=Ba,
                 SSB=SSBa,
                 VB=VBa,
@@ -1437,7 +1458,9 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #' @param parallel Logical. Should the MSE be run using parallel processing?
 #' @param extended Logical. Return extended projection results?
 #' if TRUE, `MSE@Misc$extended` is a named list with extended data
-#' (including historical and projection by area)
+#' (including historical and projection by area), and extended version of `MSE@Hist`
+#' is returned.
+#' @param checkMPs Logical. Check if the specified MPs exist and can be run on `SimulatedData`?
 #'
 #' @describeIn runMSE Run the Historical Simulations and Forward Projections
 #'  from an object of class `OM
@@ -1450,7 +1473,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #' }
 #' @export
 runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
-                   parallel=FALSE, extended=FALSE) {
+                   parallel=FALSE, extended=FALSE, checkMPs=TRUE) {
 
   # ---- Initial Checks and Setup ----
   if (class(OM) == 'OM') {
@@ -1472,6 +1495,10 @@ runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
     stop("You must specify an operating model")
   }
 
+  # check MPs
+  if (checkMPs)
+    MPs <- CheckMPs(MPs=MPs, silent=silent)
+
   HistSims <- Simulate(OM, parallel, silent)
 
   if (Hist) {
@@ -1480,7 +1507,7 @@ runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
   }
 
   if(!silent) message("Running forward projections")
-  MSEout <- try(Project(Hist=HistSims, MPs, parallel, silent, extended = extended), silent=TRUE)
+  MSEout <- try(Project(Hist=HistSims, MPs, parallel, silent, extended = extended, checkMPs=FALSE), silent=TRUE)
   if (class(MSEout) == 'try-error') {
     message('The following error occured when running the forward projections: ',
             crayon::red(attributes(MSEout)$condition))

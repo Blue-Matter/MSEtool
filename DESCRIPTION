@@ -21,7 +21,6 @@ Imports:
     coda,
     dplyr,
     methods,
-    mvtnorm,
     grDevices,
     ggplot2,
     parallel,

@@ -39,11 +39,11 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
     message(paste("Season-as-years detected in SS model. There is one season in the year with duration of", replist$seasduration, "year."))
     season_as_years <- TRUE
     nseas <- 1/replist$seasduration
-    message("DLMtool operates on annual basis. Since the SS model is seasonal, we need to aggregate over seasons.\n")
+    message("MSEtool operates on annual basis. Since the SS model is seasonal, we need to aggregate over seasons.\n")
   } else {
     nseas <- replist$nseasons
     if(nseas > 1) {
-      message("DLMtool operating model is an annual model. Since the SS model is seasonal, we need to aggregate over seasons.\n")
+      message("MSEtool operating model is an annual model. Since the SS model is seasonal, we need to aggregate over seasons.\n")
     }
   }
 
@@ -457,14 +457,14 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
 
   Z_at_age <- replist$Z_at_age[rows, ]
   M_at_age <- replist$M_at_age[rows, ]
-  
+
   rows2 <- Z_at_age$Gender == 1 & Z_at_age$Bio_Pattern == 1
   if((all(!rows2, na.rm = TRUE) | all(is.na(rows2))) && packageVersion("r4ss") >= 1.35) rows2 <- Z_at_age$Sex == 1 & Z_at_age$Bio_Pattern == 1
-  
+
   Z_at_age <- Z_at_age[rows2, cols]
   M_at_age <- suppressWarnings(M_at_age[rows2, cols] %>% apply(2, as.numeric))
   #if(is.character(M_at_age[, ncol(M_at_age)])) M_at_age[, ncol(M_at_age)] <- NA_real_
-  
+
   F_at_age <- t(Z_at_age - M_at_age)
   F_at_age[nrow(F_at_age), ] <- F_at_age[nrow(F_at_age) - 1, ] # assume F at maxage = F at maxage-1
 

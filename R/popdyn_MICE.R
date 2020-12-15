@@ -42,7 +42,7 @@
 popdynMICE<-function(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
                      movx,Spat_targ, M_ageArrayx,Mat_agex,Asizex,Kx,Linfx,
                      t0x,Mx,R0x,R0ax,SSBpRx,hsx,aRx,
-                     bRx,ax,bx,Perrx,SRrelx,Rel,SexPars,x, plusgroup, maxF) {
+                     bRx,ax,bx,Perrx,SRrelx,Rel,SexPars,x, plusgroup, maxF, SSB0x) {
 
   n_age <- maxage + 1 # include age-0
   Bx<-SSNx<-SSBx<-VBx<-Zx<-array(NA,dim(Nx))
@@ -115,7 +115,7 @@ popdynMICE<-function(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
                        Kx=Ky[,y-1], Linfx=Linfy[,y-1], t0x=t0y[,y-1],
                        Mx=My[,y-1], R0x=R0x,R0ax=R0ax,SSBpRx=SSBpRx,ax=ay[,y-1],
                        bx=by[,y-1],Rel=Rel, SexPars=SexPars, x=x,
-                       plusgroup=plusgroup)
+                       plusgroup=plusgroup, SSB0x=SSB0x)
 
 
     if(y<=nyears){
@@ -188,13 +188,15 @@ popdynMICE<-function(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
 #' @param Rel A list of inter-stock relationships see slot Rel of MOM object class
 #' @param SexPars A list of sex-specific relationships (SSBfrom, stock_age)
 #' @param x Integer. The simulation number
+#' @param plusgroup Numeric vector. Use plus-group (1) or not (0)
+#' @param SSB0x Unfished SSB0, Vector nstock length.
 #' @author T.Carruthers
 #' @keywords internal
 popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
                         hsx, aRx, bRx, movy,Spat_targ,
                         SRrelx,M_agecur,Mat_agecur,Asizex,
                         Kx,Linfx,t0x,Mx,R0x,R0ax,SSBpRx,ax,bx,Rel,SexPars,x,
-                        plusgroup){
+                        plusgroup, SSB0x){
 
   n_age <- maxage+1
   # ----Initial Bcur calc (before any weight at age recalculation change) ----
@@ -234,8 +236,8 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
     M_agecurx<-M_agecur*Mx/oldM  # updated M
 
     # --- This is redundant code for updating parameters when R0 changes -----
-    #surv <- cbind(rep(1,np),t(exp(-apply(M_agecurx, 1, cumsum)))[, 1:(maxage-1)])  # Survival array
-    #SSB0x<-apply(R0x*surv*Mat_agecur*Wt_age,1,sum)
+    # surv <- cbind(rep(1,np),t(exp(-apply(M_agecurx, 1, cumsum)))[, 1:(maxage-1)])  # Survival array
+    # SSB0x<-apply(R0x*surv*Mat_agecur*Wt_age,1,sum)
     #SSBpRx<-SSB0x/R0x
     #SSBpRax<-SSBpRx*distx
     #SSB0ax<-distx*SSB0x
@@ -299,13 +301,26 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
 
   # this year's recruitment
   for (p in 1:np) {
+    recdist <- R0ax[p,]/sum(R0ax[p,]) # distribute recruitment over areas
+
+    # global recruitment
+    SSBtot <- sum(SSBcurr[p,])
     if (SRrelx[p]== 1) { # BH rec
-      rec_A <- PerrYrp[p] * (4*R0ax[p,] * hsx[p] * SSBcurr[p,])/
-        (SSBpRx[p,] * R0ax[p,] * (1-hsx[p]) + (5*hsx[p]-1) *SSBcurr[p,])
+      rec_A <- PerrYrp[p] * (4*R0x[p] * hsx[p] * SSBtot)/
+        (SSBpRx[p,1] * R0x[p] * (1-hsx[p]) + (5*hsx[p]-1) *SSBtot)
     } else {
-      rec_A <- PerrYrp[p] * aRx[p,] * SSBcurr[p,] * exp(-bRx[p,]*SSBcurr[p,])
+      bR <- log(5*hsx[p])/(0.8*SSB0x[p])
+      rec_A <- PerrYrp[p] * aRx[p,1] * SSBtot * exp(-bR*SSBtot)
     }
-    Nnext[p,1,] <- rec_A
+    Nnext[p,1,] <- rec_A * recdist
+
+    # if (SRrelx[p]== 1) { # BH rec
+    #   rec_A <- PerrYrp[p] * (4*R0ax[p,] * hsx[p] * SSBcurr[p,])/
+    #     (SSBpRx[p,] * R0ax[p,] * (1-hsx[p]) + (5*hsx[p]-1) *SSBcurr[p,])
+    # } else {
+    #   rec_A <- PerrYrp[p] * aRx[p,] * SSBcurr[p,] * exp(-bRx[p,]*SSBcurr[p,])
+    # }
+    # Nnext[p,1,] <- rec_A
   }
 
   for (p in 1:np) {

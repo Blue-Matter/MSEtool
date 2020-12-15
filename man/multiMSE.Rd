@@ -8,14 +8,21 @@
 \usage{
 SimulateMOM(MOM = MSEtool::Albacore_TwoFleet, parallel = TRUE, silent = FALSE)
 
-ProjectMOM(multiHist = NULL, MPs = NA, parallel = FALSE, silent = FALSE)
+ProjectMOM(
+  multiHist = NULL,
+  MPs = NA,
+  parallel = FALSE,
+  silent = FALSE,
+  checkMPs = TRUE
+)
 
 multiMSE(
   MOM = MSEtool::Albacore_TwoFleet,
-  MPs = list(c("AvC", "DCAC"), c("FMSYref", "curE")),
+  MPs = list(list(c("AvC", "DCAC"), c("FMSYref", "curE"))),
   Hist = FALSE,
   silent = FALSE,
-  parallel = TRUE
+  parallel = TRUE,
+  checkMPs = TRUE
 )
 }
 \arguments{
@@ -28,6 +35,8 @@ multiMSE(
 \item{multiHist}{An Historical Simulation object (class \code{multiHist})}
 
 \item{MPs}{A matrix of methods (nstock x nfleet) (character string) of class MP}
+
+\item{checkMPs}{Logical. Check if the specified MPs exist and can be run on \code{SimulatedData}?}
 
 \item{Hist}{Should model stop after historical simulations? Returns a list
 containing all historical data}

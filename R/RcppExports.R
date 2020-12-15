@@ -29,6 +29,10 @@ genSizeComp <- function(VulnN, CAL_binsmid, selCurve, CAL_ESS, CAL_nsamp, Linfs,
     .Call('_MSEtool_genSizeComp', PACKAGE = 'MSEtool', VulnN, CAL_binsmid, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD)
 }
 
+genSizeComp2 <- function(VulnN, CAL_binsmid, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD) {
+    .Call('_MSEtool_genSizeComp2', PACKAGE = 'MSEtool', VulnN, CAL_binsmid, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD)
+}
+
 grav <- function(log_visc, log_grav, fracs, nareas) {
     .Call('_MSEtool_grav', PACKAGE = 'MSEtool', log_visc, log_grav, fracs, nareas)
 }

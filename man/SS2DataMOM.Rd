@@ -7,7 +7,7 @@
 SS2DataMOM(SSdir, age_M = NULL, comp_partition = 2, silent = FALSE, ...)
 }
 \arguments{
-\item{SSdir}{A folder with Stock Synthesis input and output files in it}
+\item{SSdir}{A folder with Stock Synthesis input and output files in it. Alternatively,}
 
 \item{age_M}{A vector of ages to average across to calculate a single value of natural mortality.
 Currently, the Data object supports a single value of M for all ages. By default, \code{NULL} averages over all ages.}

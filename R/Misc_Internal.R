@@ -279,12 +279,12 @@ LinInterp<-function(x,y,xlev,ascending=F,zeroint=F){
 
 
 calcRecruitment <- function(x, SRrel, SSBcurr, recdev, hs, aR, bR, R0a, SSBpR, SSB0) {
-  
+
   # calculate global recruitment and distribute according to R0a
   R0 <- sum(R0a[x,])
   SBtot <- sum(SSBcurr[x,])
   rdist <- R0a[x,]/R0
-  
+
   bR <- log(5*hs[x])/(0.8*SSB0[x])
   if (SRrel[x] == 1) { # BH rec
     rec <- recdev[x] * (4*R0 * hs[x] * SBtot)/(SSBpR[x,1] * R0 * (1-hs[x]) + (5*hs[x]-1) * SBtot)
@@ -293,7 +293,7 @@ calcRecruitment <- function(x, SRrel, SSBcurr, recdev, hs, aR, bR, R0a, SSBpR, S
     # rec_A <- recdev[x] * aR[x,] * SSBcurr[x,] * exp(-bR[x,]*SSBcurr[x,])
   }
   rec * rdist
-  
+
 }
 
 lcs<-function(x){
@@ -395,6 +395,15 @@ applyAC <- function(x, res, ac, max.years, lst.err) {
 }
 
 
+PackageFuns <- function() {
+  pkg.funs <- as.vector(ls.str('package:MSEtool'))
+  if ('package:DLMtool' %in% search())
+    pkg.funs <- c(pkg.funs, as.vector(ls.str('package:DLMtool')))
+  if ('package:SAMtool' %in% search())
+    pkg.funs <- c(pkg.funs, as.vector(ls.str('package:SAMtool')))
+  pkg.funs
+}
+
 #' Check for duplicated MPs names
 #'
 #' Custom MPs cannot have the same names of MPs in MSEtool and related packages
@@ -406,11 +415,7 @@ CheckDuplicate <- function(MPs) {
   tt <- suppressWarnings(try(lsf.str(envir=globalenv()), silent=TRUE))
   if (class(tt)!="try-error") {
     gl.funs <- as.vector(tt)
-    pkg.funs <- as.vector(ls.str('package:MSEtool'))
-    if ('package:DLMtool' %in% search())
-      pkg.funs <- c(pkg.funs, as.vector(ls.str('package:DLMtool')))
-    if ('package:SAMtool' %in% search())
-      pkg.funs <- c(pkg.funs, as.vector(ls.str('package:SAMtool')))
+    pkg.funs <- PackageFuns()
 
     if (length(gl.funs)>0) {
       gl.clss <- unlist(lapply(lapply(gl.funs, get), class))
@@ -486,12 +491,11 @@ findIntRuns <- function(run){
 }
 
 
-CalcDistribution <- function(StockPars, FleetPars, SampCpars, OM, plusgroup, checks) {
+CalcDistribution <- function(StockPars, FleetPars, SampCpars, nyears, maxF, plusgroup, checks) {
   nsim <- length(StockPars$M)
 
   n_age <- StockPars$maxage + 1 # number of age classes (starting at age-0)
   nareas <- StockPars$nareas
-  nyears <- OM@nyears
   N <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # stock numbers array
   Biomass <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # stock biomass array
   VBiomass <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # vulnerable biomass array
@@ -535,11 +539,6 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, OM, plusgroup, che
   aR <- matrix(exp(bR * SSB0a)/SSBpR, nrow=nsim)  # Ricker SR params
   R0a <- matrix(StockPars$R0, nrow=nsim, ncol=nareas, byrow=FALSE) * StockPars$Pinitdist # initial distribution of recruits
 
-  
-  matrix(log(5 * StockPars$hs)/(0.8 * SSB0), nrow=nsim)  # Ricker SR params
-  
-  
-  
   # Set up projection arrays
   M_ageArrayp <- array(StockPars$M_ageArray[,,1], dim=c(dim(StockPars$M_ageArray)[1:2], Nyrs))
   Wt_agep <- array(StockPars$Wt_age[,,1], dim=c(dim(StockPars$Wt_age)[1:2], Nyrs))
@@ -565,8 +564,8 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, OM, plusgroup, che
                     Perr=Perr_yp, mov=movp, SRrel=StockPars$SRrel,
                     Find=FleetPars$Find, Spat_targ=FleetPars$Spat_targ,
                     hs=StockPars$hs,
-                    R0a=R0a, SSBpR=SSBpR, aR=aR, bR=bR, SSB0=SSB0, B0=B0,
-                    MPA=noMPA, maxF=OM@maxF,
+                    R0a=R0a, SSBpR=SSBpR, aR=aR, bR=bR, SSB0=SSB0,
+                    MPA=noMPA, maxF=maxF,
                     Nyrs, plusgroup)
 
   Neq1 <- aperm(array(as.numeric(unlist(runProj)), dim=c(n_age, nareas, nsim)), c(3,1,2))  # unpack the list
@@ -585,4 +584,46 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, OM, plusgroup, che
     if(!all(Mat_agep[sim,,yrval] == StockPars$Mat_age[sim,,1])) warning('problem with Mat_agep')
   }
   initdist
+}
+
+set_parallel <- function(parallel) {
+  if (parallel) {
+    if (snowfall::sfIsRunning()) {
+      ncpus <- snowfall::sfCpus()
+    } else {
+      setup()
+      ncpus <- snowfall::sfCpus()
+    }
+  } else {
+    if (snowfall::sfIsRunning()) snowfall::sfStop()
+    ncpus <- 1
+  }
+  ncpus
+}
+
+
+# export custom MPs
+Export_customMPs <- function(MPs) {
+  pkg.funs <- PackageFuns()
+  cMPs <- MPs[!MPs %in% pkg.funs]
+  globalMP <- NULL
+  extra_package <- NULL
+  for (mm in seq_along(cMPs)) {
+    nmspace <- utils::find(cMPs[mm])
+    if (nmspace==".GlobalEnv") {
+      globalMP <- c(globalMP, cMPs[mm])
+    } else {
+      extra_package <- c(extra_package, strsplit(nmspace, ":")[[1]][2])
+    }
+    extra_package <- unique(extra_package)
+  }
+  if (!is.null(globalMP)) {
+    message("Exporting custom MPs in global environment")
+    snowfall::sfExport(list=globalMP)
+  }
+  if (!is.null(extra_package)) {
+    message("Exporting additional packages with MPs")
+    for (pk in extra_package)
+      snowfall::sfLibrary(pk, character.only = TRUE, verbose=FALSE)
+  }
 }

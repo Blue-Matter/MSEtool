@@ -1,0 +1,146 @@
+---
+title: "Operating model summary"
+subtitle: "Comparison of OM historical period and Stock Synthesis output"
+date: "`r Sys.Date()`"
+---
+<style type="text/css">
+h1 { /* Header 1 */
+  font-size: 24px;
+}
+</style>
+
+```{r setup, include = FALSE, echo = FALSE}
+  knitr::opts_chunk$set(collapse = TRUE, echo = FALSE, message = FALSE,
+  fig.width = 6, fig.height = 4.5, out.width = "650px", comment = "#>")
+```
+
+# {.tabset}
+
+## Spawning biomass
+
+```{r, fig.cap = "Spawning biomass from the operating model (black lines and dots) and Stock Synthesis (red lines)."}
+year_lab <- "Year"
+OM_years <- replist$startyr:replist$endyr
+
+SSB_SS <- replist$timeseries$SpawnBio[match(OM_years, replist$timeseries$Yr)]
+SSB_OM <- apply(Hist@AtAge$SBiomass, c(1, 3), sum)
+ylim_SSB <- c(0, 1.1 * max(c(SSB_SS, SSB_OM)))
+matplot(OM_years, t(SSB_OM), xlab = year_lab, ylab = "Spawning Biomass", ylim = ylim_SSB, pch = 1, col = "black", typ = "o")
+lines(OM_years, SSB_SS, col = "red", lwd = 3)
+abline(h = 0, col = "grey")
+```
+
+```{r, fig.cap = "Spawning depletion from the operating model (black lines and dots) and Stock Synthesis (red lines).."}
+dep_SS <- SSB_SS/replist$timeseries$SpawnBio[match("VIRG", replist$timeseries$Era)]
+dep_OM <- SSB_OM/Hist@Ref$ReferencePoints$SSB0
+ylim_dep <- c(0, 1.1 * max(c(dep_SS, dep_OM)))
+matplot(OM_years, t(dep_OM), xlab = year_lab, ylab = "Spawning Depletion", ylim = ylim_dep, pch = 1, col = "black", typ = "o")
+lines(OM_years, dep_SS, col = "red", lwd = 3)
+abline(h = 0, col = "grey")
+```
+
+## Catch
+
+```{r, fig.cap = "Catch from the operating model (black lines and dots) and Stock Synthesis (red lines)."}
+C_SS <- cbind(replist$timeseries[, 1:4], rowSums(replist$timeseries[, startsWith(names(replist$timeseries), "dead(B):")], na.rm = TRUE))
+C_SS <- aggregate(C_SS[, 5], list(Year = C_SS$Yr), sum)
+C_SS <- C_SS[vapply(C_SS$Year, "%in%", logical(1), OM_years), 2]
+
+C_OM <- apply(Hist@AtAge$Removals, c(1, 3), sum)
+ylim_cat <- c(0, 1.1 * max(C_SS, C_OM))
+matplot(OM_years, t(C_OM), xlab = year_lab, ylab = "Removals", ylim = ylim_cat, pch = 1, col = "black", typ = "o")
+lines(OM_years, C_SS, col = "red", lwd = 3)
+abline(h = 0, col = "grey")
+```
+
+```{r, fig.cap = "Relative catch from the operating model (black lines and dots) and Stock Synthesis (red lines)."}
+Cr_SS <- C_SS/C_SS[length(C_SS)]
+Cr_OM <- C_OM/C_OM[, ncol(C_OM)]
+ylim_cr <- c(0, 1.1 * max(Cr_SS, Cr_OM))
+matplot(OM_years, t(Cr_OM), xlab = year_lab, ylab = "Catch Relative to today", ylim = ylim_cr, pch = 1, col = "black", typ = "o")
+lines(OM_years, Cr_SS, col = "red", lwd = 3)
+abline(h = 0, col = "grey")
+abline(h = 1, lty = 3)
+```
+
+## Abundance-at-age {.tabset}
+
+### Recruitment
+
+```{r, fig.cap = "Recruitment from the operating model (black lines and dots) and Stock Synthesis (red lines)."}
+N_at_age <- reshape2::melt(replist$natage[replist$natage$`Beg/Mid` == "B" & replist$natage$Seas == 1, -c(9:12)], 
+                           list("Area", "Bio_Pattern", "Sex", "BirthSeas", "Settlement", "Platoon", "Morph", "Yr"),
+                           variable.name = "Age", value.name = "N")
+#N_at_age <- N_at_age[N_at_age$Age == 0, ]  # Subset by age >= age_rec
+N_at_age <- N_at_age[vapply(N_at_age$Yr, "%in%", logical(1), table = OM_years), ]  # Subset by year
+N_at_age <- N_at_age[vapply(N_at_age$Sex, "%in%", logical(1), table = gender), ] # Subset by gender
+
+N_at_age <- summarise(group_by(N_at_age, Yr, Age), N = sum(N)) # Sum over area, morphs, platoons, sex, etc.
+N_at_age <- reshape2::acast(N_at_age, list("Yr", "Age"), value.var = "N")
+
+R_OM <- apply(Hist@AtAge$Number[, 1, , ], c(1, 2), sum)
+R_SS <- N_at_age[, 1]
+ylim_R <- c(0, 1.1 * max(R_OM, R_SS))
+matplot(OM_years, t(R_OM), xlab = year_lab, ylab = "Recruitment (age 1)", ylim = ylim_R, pch = 1, col = "black", typ = "o")
+lines(OM_years, N_at_age[, 1], col = "red", lwd = 3)
+abline(h = 0, col = "grey")
+```
+
+### Absolute abundance
+
+```{r, fig.cap = "Annual abundance at age from the operating model (black lines and dots) and Stock Synthesis (red lines)."}
+if(requireNamespace("SAMtool", quietly = TRUE)) {
+  N_OM <- apply(Hist@AtAge$Number, 1:3, sum)
+  SAMtool::plot_composition(OM_years, t(N_OM[1, , ]), N_at_age, N = NULL, 
+                            ages = 1:ncol(N_OM) - 1, annual_ylab = "Numbers at age", annual_yscale = "raw")
+}
+```
+
+### Relative abundance
+
+```{r, fig.cap = "Annual proportions at age from the operating model (black lines and dots) and Stock Synthesis (red lines)."}
+if(requireNamespace("SAMtool", quietly = TRUE)) {
+  N_OM <- apply(Hist@AtAge$Number, 1:3, sum)
+  SAMtool::plot_composition(OM_years, t(N_OM[1, , ]), N_at_age, N = NULL, 
+                            ages = 1:ncol(N_OM) - 1, annual_ylab = "Proportions at age")
+}
+```
+
+## Selectivity and F {.tabset}
+
+### Apical F
+
+```{r, fig.cap = "Apical F from the operating model (black lines and dots) and Stock Synthesis (red lines)."}
+F_OM <- apply(Hist@AtAge$F.Mortality, c(1, 3), max)
+if(inherits(x, "OM")) {
+  F_SS <- OM@cpars$Find[1, ]
+} else {
+  # Grab from SSMOM2OM
+  FF <- filter(replist$ageselex, Factor == "F" & Yr %in% OM_years & Sex %in% gender)[, -c(1, 4, 6, 7)] %>% 
+    reshape2::melt(list("Fleet", "Yr", "Sex"), variable.name = "Age", value.name = "F") %>%
+    group_by(Yr, Sex, Age) %>% summarise(F = sum(F)) %>% group_by(Yr, Age) %>% summarise(F = mean(F)) %>%
+    group_by(Yr) %>% mutate(V = F/max(F))
+  F_SS <- group_by(FF, Yr) %>% summarise(F = max(F)) %>% getElement("F")
+}
+ylim_F <- c(0, 1.1 * max(F_SS, F_OM))
+matplot(OM_years, t(F_OM), typ = "o", xlab = "Year", ylab = "Apical F", ylim = ylim_F, pch = 1, col = "black")
+lines(OM_years, F_SS, col = "red", lwd = 3)
+abline(h = 0, col = "grey")
+```
+
+### Selectivity 
+
+```{r, fig.cap = "Annual selectivity at age for the operating model. This is the aggregate selectivity from all fleets in Stock Synthesis."}
+if(requireNamespace("SAMtool", quietly = TRUE)) {
+  V <- Hist@AtAge$Select[1, , 1:length(OM_years)]
+  SAMtool::plot_composition(OM_years, t(V), ages = 1:nrow(V) - 1,
+                            N = NULL, annual_ylab = "Selectivity", annual_yscale = "raw")
+}
+```
+
+## About
+
+This report was generated on: `r Sys.time()`<br />
+MSEtool version `r packageVersion("MSEtool")`<br />
+`r R.version.string`<br />
+

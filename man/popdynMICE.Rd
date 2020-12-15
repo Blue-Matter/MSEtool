@@ -39,7 +39,8 @@ popdynMICE(
   SexPars,
   x,
   plusgroup,
-  maxF
+  maxF,
+  SSB0x
 )
 }
 \arguments{
