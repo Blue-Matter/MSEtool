@@ -315,7 +315,7 @@ for (r in 1:nrow(mat)) {
 ReqData <- as.data.frame(ReqData, stringsAsFactors=FALSE)
 colnames(ReqData) <- c("MP", "Data")
 
-usethis::use_data(ReqData, overwrite = TRUE)
+usethis::use_data(ReqData, internal = TRUE, overwrite = TRUE)
 
 clss <- class(ReqData)
 name <- "ReqData"
