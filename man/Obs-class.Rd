@@ -108,6 +108,14 @@ bounds. Positive real numbers}
 
 \item{\code{sigmaRbiascv}}{Log-normal coefficeint of variation for sampling
 persistent bias in recruitment variability.  Single value. Positive real number}
+
+\item{\code{Eobs}}{Log-normal effort observation error expressed as a coefficient of
+variation. Uniform distribution lower and upper bounds. Non-negative real
+numbers}
+
+\item{\code{Ebiascv}}{Log-normal coefficient of variation controlling the sampling
+of bias in effort observations for each simulation. Single value.  Non-negative
+real number}
 }}
 
 \note{
