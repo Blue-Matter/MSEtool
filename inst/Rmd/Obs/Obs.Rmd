@@ -90,8 +90,8 @@ axis(side=1)
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 years <- c(seq(-nyears+1, 0, by=1), seq(1, proyears,1))
-ylim <- c(0, max(ObsPars$Cobs_y[params$its, ]))
-matplot(years, t(ObsPars$Cobs_y[params$its, ]),
+ylim <- c(0, max(Pars$Obs$Cobs_y[params$its, ]))
+matplot(years, t(Pars$Obs$Cobs_y[params$its, ]),
         type="l", lty=1, bty="l", main="Catch discrepancy by Year", 
         lwd=params$plotPars$lwd, ylab="Observed/Real", xlab="Years", las=1, xpd=NA,
         ylim=ylim)
@@ -133,8 +133,8 @@ axis(side=1)
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 years <- c(seq(-nyears+1, 0, by=1), seq(1, proyears,1))
-ylim <- c(0, max(ObsPars$Derr_y))
-matplot(years, t(ObsPars$Derr_y[params$its, ]),
+ylim <- c(0, max(Pars$Obs$Derr_y))
+matplot(years, t(Pars$Obs$Derr_y[params$its, ]),
         type="l", lty=1, bty="l", main="Depletion discrepancy by Year", 
         lwd=params$plotPars$lwd, ylab="Observed/Real", xlab="Years", las=1, xpd=NA,
         ylim=ylim)
@@ -176,8 +176,8 @@ axis(side=1)
 
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 years <- c(seq(-nyears+1, 0, by=1), seq(1, proyears,1))
-ylim <- c(0, max(ObsPars$Aerr_y))
-matplot(years, t(ObsPars$Aerr_y[params$its, ]),
+ylim <- c(0, max(Pars$Obs$Aerr_y))
+matplot(years, t(Pars$Obs$Aerr_y[params$its, ]),
         type="l", lty=1, bty="l", main="Abundance discrepancy by Year", 
         lwd=params$plotPars$lwd, ylab="Observed/Real", xlab="Years", las=1, xpd=NA,
         ylim=ylim)
@@ -395,30 +395,30 @@ Histograms of `r nsim` simulations of bias in observed FMSY/M (`FMSY_Mbias`), BM
 
 ```{r, echo=FALSE}
 par(mfrow=c(2,3))
-hist2(Pars$FMSY_Mbias, main="FMSY_Mbias", col=params$plotPars$col, axes=params$plotPars$axes,
+hist2(Pars$Obs$FMSY_Mbias, main="FMSY_Mbias", col=params$plotPars$col, axes=params$plotPars$axes,
       breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
-abline(v=Pars$FMSY_Mbias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+abline(v=Pars$Obs$FMSY_Mbias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
 axis(side=1)
 
-hist2(Pars$BMSY_B0bias, main="BMSY_B0bias", col=params$plotPars$col, axes=params$plotPars$axes,
+hist2(Pars$Obs$BMSY_B0bias, main="BMSY_B0bias", col=params$plotPars$col, axes=params$plotPars$axes,
       breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
-abline(v=Pars$BMSY_B0bias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+abline(v=Pars$Obs$BMSY_B0bias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
 axis(side=1) 
 
-hist2(Pars$Irefbias, main="Irefbias", col=params$plotPars$col, axes=params$plotPars$axes,
+hist2(Pars$Obs$Irefbias, main="Irefbias", col=params$plotPars$col, axes=params$plotPars$axes,
       breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
-abline(v=Pars$Irefbias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+abline(v=Pars$Obs$Irefbias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
 axis(side=1) 
 
-hist2(Pars$Brefbias, main="Brefbias", col=params$plotPars$col, axes=params$plotPars$axes,
+hist2(Pars$Obs$Brefbias, main="Brefbias", col=params$plotPars$col, axes=params$plotPars$axes,
       breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
-abline(v=Pars$Brefbias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+abline(v=Pars$Obs$Brefbias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
 axis(side=1) 
 
 
-hist2(Pars$Crefbias, main="Crefbias", col=params$plotPars$col, axes=params$plotPars$axes,
+hist2(Pars$Obs$Crefbias, main="Crefbias", col=params$plotPars$col, axes=params$plotPars$axes,
       breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
-abline(v=Pars$Crefbias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+abline(v=Pars$Obs$Crefbias[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
 axis(side=1) 
 
 

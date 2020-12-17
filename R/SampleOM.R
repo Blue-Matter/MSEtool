@@ -1488,12 +1488,12 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
 
   # ---- Effort Obs Error -----
   # Sampled effort observation error (lognormal sd)
-  if (length(Obs@Eobs)<2 && is.null(cpars$Eerr_y)) {
+  if (length(Obs@Eobs)<2 | all(is.na(Obs@Eobs)) && is.null(cpars$Eerr_y)) {
     message('OM@Eobs not specified. Assuming no observation error on Effort')
     Obs@Eobs <- rep(0,2)
     Obs@Ebiascv <- 0
   }
-  Evar <- sample_unif('Esd', cpars, Obs, nsim, 'Eobs')
+  Evar <- sample_unif('Eobs', cpars, Obs, nsim)
 
   ObsOut$Evar <- Evar
 

@@ -226,8 +226,8 @@ plot(Imp)
 
 
 # Plot Hist Object
-OM <- MSEtool::testOM 
-Hist <- runMSE(OM, Hist=TRUE)
+OM <- MSEtool::testOM
+Hist <- Simulate(OM)
 plot(Hist)
 
 # Plot OM Object

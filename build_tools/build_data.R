@@ -7,14 +7,14 @@ library(DLMtool)
 source('R/Class_definitions.r')
 
 # --- Create R file for roxygen code ----
-RoxygenFile <- "Data_documentation.r" # name of R script with roxygen 
-file.remove(file.path('R/', RoxygenFile)) # delete 
-file.create(file.path('R/', RoxygenFile)) # make empty file 
+RoxygenFile <- "Data_documentation.r" # name of R script with roxygen
+file.remove(file.path('R/', RoxygenFile)) # delete
+file.create(file.path('R/', RoxygenFile)) # make empty file
 
 cat("# This file is automatically built by build_tools/build_data.r \n",
-    "# Don't edit by hand!\n", 
-    "# \n\n", sep="", append=TRUE, 
-    file=file.path('R/', RoxygenFile)) 
+    "# Don't edit by hand!\n",
+    "# \n\n", sep="", append=TRUE,
+    file=file.path('R/', RoxygenFile))
 
 # ---- Build Stock Objects ----
 files <- list.files("build_tools/Objects/Stock", full.names = TRUE)
@@ -24,11 +24,11 @@ for (fl in files) {
   name <- strsplit(basename(fl), '.csv')[[1]]
   assign(name, temp)
   do.call("use_data", list(as.name(name), overwrite = TRUE))
-  
-  cat("#' @rdname ", "Stock-class-objects ", 
+
+  cat("#' @rdname ", "Stock-class-objects ",
       "\n", '"', name, '"', "\n\n",
       sep = "", append = TRUE, file = file.path("R/", RoxygenFile))
-  
+
 }
 
 ObjectClass <- 'Stock'
@@ -52,12 +52,12 @@ for (fl in files) {
   name <- strsplit(basename(fl), '.csv')[[1]]
   assign(name, temp)
   do.call("use_data", list(as.name(name), overwrite = TRUE))
-  
-  cat("#' @rdname ", "Fleet-class-objects ", 
+
+  cat("#' @rdname ", "Fleet-class-objects ",
       "\n", '"', name, '"', "\n\n",
       sep = "", append = TRUE, file = file.path("R/", RoxygenFile))
-  
-  
+
+
 }
 
 ObjectClass <- 'Fleet'
@@ -79,12 +79,12 @@ for (fl in files) {
   name <- strsplit(basename(fl), '.csv')[[1]]
   assign(name, temp)
   do.call("use_data", list(as.name(name), overwrite = TRUE))
-  
-  cat("#' @rdname ", "Obs-class-objects ", 
+
+  cat("#' @rdname ", "Obs-class-objects ",
       "\n", '"', name, '"', "\n\n",
       sep = "", append = TRUE, file = file.path("R/", RoxygenFile))
-  
-  
+
+
 }
 
 ObjectClass <- 'Obs'
@@ -107,12 +107,12 @@ for (fl in files) {
   name <- strsplit(basename(fl), '.csv')[[1]]
   assign(name, temp)
   do.call("use_data", list(as.name(name), overwrite = TRUE))
-  
-  cat("#' @rdname ", "Imp-class-objects ", 
+
+  cat("#' @rdname ", "Imp-class-objects ",
       "\n", '"', name, '"', "\n\n",
       sep = "", append = TRUE, file = file.path("R/", RoxygenFile))
-  
-  
+
+
 }
 
 ObjectClass <- 'Imp'
@@ -134,8 +134,8 @@ for (fl in files) {
   name <- strsplit(basename(fl), '.csv')[[1]]
   assign(name, temp)
   do.call("use_data", list(as.name(name), overwrite = TRUE))
-  
-  cat("#' @rdname ", "Data-class-objects ", 
+
+  cat("#' @rdname ", "Data-class-objects ",
       "\n", '"', name, '"', "\n\n",
       sep = "", append = TRUE, file = file.path("R/", RoxygenFile))
 }
@@ -163,7 +163,7 @@ Imp <- new("Imp", "build_tools/Objects/Imp/Perfect_Imp.csv")
 testOM <- new('OM', Stock, Fleet, Obs, Imp, nsim=3)
 usethis::use_data(testOM, overwrite = TRUE)
 
-cat("#' @rdname ", "OM-class-objects ", 
+cat("#' @rdname ", "OM-class-objects ",
     "\n", '"', 'testOM', '"', "\n\n",
     sep = "", append = TRUE, file = file.path("R/", RoxygenFile))
 
@@ -213,12 +213,12 @@ Imps <- list(list(Perfect_Imp, Perfect_Imp))
 CatchFrac <- list(matrix(rep(c(0.3, 0.7), each = nsim), nrow = nsim)) # Terminal year catch is 30%-70% ratio baitboat and longline, respectively
 
 
-Albacore_TwoFleet <- new("MOM", Stocks = Stocks, Fleets = Fleets, Obs = Obs, 
+Albacore_TwoFleet <- new("MOM", Stocks = Stocks, Fleets = Fleets, Obs = Obs,
                          Imps = Imps, CatchFrac = CatchFrac, nsim = nsim)
 usethis::use_data(Albacore_TwoFleet, overwrite = TRUE)
 
 
-cat("#' @rdname ", "MOM-class-objects ", 
+cat("#' @rdname ", "MOM-class-objects ",
     "\n", '"', 'Albacore_TwoFleet', '"', "\n\n",
     sep = "", append = TRUE, file = file.path("R/", RoxygenFile))
 
@@ -244,10 +244,10 @@ SimulatedData <- Hist@Data
 dims <- dim(SimulatedData@Ind)
 n.ind <- 15 # add 15 additional indices for Simulated Data for robustness
 SimulatedData@AddInd <- array(SimulatedData@Ind, dim=c(dims[1],n.ind,dims[2]))
-SimulatedData@AddIndV <- array(1, dim=c(dims[1],n.ind,dims[2])) 
+SimulatedData@AddIndV <- array(1, dim=c(dims[1],n.ind,dims[2]))
 SimulatedData@AddIndType <- rep(1, n.ind)
 SimulatedData@AddIunits <- rep(1, n.ind)
-SimulatedData@CV_AddInd <- array(0.1, dim=c(dims[1],n.ind,dims[2])) 
+SimulatedData@CV_AddInd <- array(0.1, dim=c(dims[1],n.ind,dims[2]))
 
 
 
@@ -256,16 +256,16 @@ usethis::use_data(SimulatedData, overwrite = TRUE)
 clss <- 'Data'
 name <- 'SimulatedData'
 cat("#'  ", name, " ", clss,
-    "\n#'", 
-    "\n#'  An object of class ", clss, 
+    "\n#'",
+    "\n#'  An object of class ", clss,
     "\n#'\n",
-    '"', name, '"\n\n\n', sep="", append=TRUE, 
-    file=file.path('R/', RoxygenFile))  
+    '"', name, '"\n\n\n', sep="", append=TRUE,
+    file=file.path('R/', RoxygenFile))
 
 
 
 
-# ---- Build MP Required Data Object ----- 
+# ---- Build MP Required Data Object -----
 
 message("\nLooping over Data slots to determine required Data for each built-in MP")
 
@@ -273,7 +273,7 @@ MPs <- avail("MP")
 
 Data <- SimulatedData
 
-ig.slots <- c("Name", "Species", "Common_Name", "Region", "Misc", "OM", "TAC", "Sense", "Units", "Ref", "Ref_type", 
+ig.slots <- c("Name", "Species", "Common_Name", "Region", "Misc", "OM", "TAC", "Sense", "Units", "Ref", "Ref_type",
               "Log", "params", "PosMPs", "MPs", "Obs", "nareas")
 slts <- slotNames(Data)
 slts <- slts[!slts %in% ig.slots]
@@ -283,12 +283,11 @@ colnames(mat) <- slts
 rownames(mat) <- MPs
 mat <- as.data.frame(mat)
 
-
 for (sl in slts) {
   message("Slot: ", sl, " (", match(sl, slts), " of ", length(slts), ")")
-  tData <- Data 
+  tData <- Data
   cls <- class(slot(tData, sl) )
-  
+
   if ("matrix" %in% cls) {
     slot(tData, sl) <-  get(cls)(NA)
   } else if ("integer" %in% cls) {
@@ -298,11 +297,11 @@ for (sl in slts) {
   } else{
     slot(tData, sl) <- as.numeric(NA)
   }
-  
+
   canMPs <- Can(tData, dev=TRUE)
-  
+
   cant <- MPs[!MPs %in% canMPs]
-  
+
   mat[[sl]][match(cant, MPs)] <- TRUE
   mat[[sl]][match(canMPs, MPs)] <- FALSE
 }
@@ -319,18 +318,148 @@ usethis::use_data(ReqData, internal = TRUE, overwrite = TRUE)
 
 clss <- class(ReqData)
 name <- "ReqData"
-cat("#'  ", name, " ", 
-    "\n#'", 
+cat("#'  ", name, " ",
+    "\n#'",
     "\n#'  Dataframe with required data slots for built-in MPs",
     "\n#'",
     "\n#'\n",
-    '"', name, '"\n\n\n', sep="", append=TRUE, 
-    file=file.path('R/', RoxygenFile))  
+    '"', name, '"\n\n\n', sep="", append=TRUE,
+    file=file.path('R/', RoxygenFile))
 
 # ---- Import Data XL (internal data) ----
-Data_Slots <- readxl::read_xlsx('build_tools/Class_definitions/Class_definitions.xlsx', 
+Data_Slots <- readxl::read_xlsx('build_tools/Class_definitions/Class_definitions.xlsx',
                         sheet='Data')
 Data_Slots$Numeric[is.na(Data_Slots$Numeric)] <- TRUE
 Data_Slots$Timeseries[is.na(Data_Slots$Timeseries)] <- FALSE
 
 usethis::use_data(Data_Slots, internal = TRUE, overwrite = TRUE)
+
+
+# ---- Add life-history data-base as data object  ----
+
+# devtools::install_github("james-thorson/FishLife")
+library(FishLife)
+
+db <- FishLife::FishBase
+
+LHdatabase <- list(Cov_gjj=db$Cov_gvv, ParentChild_gz=db$ParentChild_gz,
+                   ParHat=db$ParHat)
+
+usethis::use_data(LHdatabase, internal = FALSE, overwrite = TRUE)
+
+# Write roxygen
+chk <- file.exists(file.path('R/', RoxygenFile))
+if(!chk) file.create(file.path('R/', RoxygenFile)) # make empty file
+clss <- class(LHdatabase)
+name <- "LHdatabase"
+cat("#'  ", name, " ",
+    "\n#'",
+    "\n#'  Database from the FishLife package with predicted life-history parameters for all species on FishBase",
+    "\n#' ",
+    "\n#' @references Thorson, J. T., S. B. Munch, J. M. Cope, and J. Gao. 2017. ",
+    "\n#' Predicting life history parameters for all fishes worldwide. Ecological Applications. 27(8): 2262--2276  ",
+    "\n#' @source \\url{https://github.com/James-Thorson/FishLife/} ",
+    "\n#'",
+    "\n#'\n",
+    '"', name, '"\n\n\n', sep="", append=TRUE,
+    file=file.path('R/', RoxygenFile))
+
+
+
+# --- Object Descriptions ----
+slot_ripper<-function(filenam,slots){
+
+  ns<-length(slots)
+  sind<-rep(TRUE,ns)
+  out<-readLines(filenam,skipNul=T)
+  no<-length(out)
+  out2<-data.frame(matrix(NA,ncol=2,nrow=ns))
+  names(out2)<-c("Slot","Description")
+
+  k=TRUE # Before slot text?
+  ss<-0 # Slot counter
+
+  for(i in 1:no){
+    test<-scan(filenam,skip=i-1,what='character',nlines=1)
+    # readline(test)
+    nt<-length(test)
+    if(nt>0)
+      if(k & test[1]=="_\bS_\bl_\bo_\bt_\bs:")k=FALSE
+
+    if(nt==0&!k){ # new slot?
+      moretext=FALSE
+      ss<-ss+1
+    }
+
+    if(!(nt==0|substr(test[1],1,1)=="_"|k)){ # text, not a header, after slot text starts
+
+      if(test[1]%in%slots[sind]){
+        sind[match(test[1],slots)]=FALSE
+        out2[ss,1]<-test[1]
+        out2[ss,2]<-paste(test[2:nt],collapse=" ")
+        moretext=TRUE
+      }else{
+        bg <- 1 # max(2, length(test))
+        if (is.na(out2[ss,2])) out2[ss,2] <- ""
+        # detect bullet point
+        ttt <- test[bg:nt]
+        if (any(grepl("•", ttt))) {
+          ttt[grepl("•", ttt)] <- "-"
+          out2[ss,2]<-paste(c(out2[ss,2],ttt),collapse=" ")
+          out2[ss,1] <- ''
+        } else {
+          if(moretext) out2[ss,2]<-paste(c(out2[ss,2],test[bg:nt]),collapse=" ")
+        }
+
+      }
+
+    }
+
+  }
+  ind <- which(rowSums(apply(out2, 2, is.na)) ==  0)
+  out2[ind,]
+
+}
+
+getDescription <- function(class=c("Stock", "Fleet", "Obs", "Imp", "Data", "OM", "MSE"),
+                           Rdloc='man',
+                           Outloc=NULL) {
+  class <- match.arg(class)
+  if (is.null(Outloc)) Outloc <- tempdir()
+
+  rdloc <- paste0(file.path(Rdloc, class), "-class.Rd")
+  outloc <- paste0(file.path(Outloc, class), "-class.txt")
+  call <- paste("R CMD Rd2txt", rdloc, "-o", outloc)
+  system(call)
+  tt <- slot_ripper(filenam=paste0(file.path(Outloc, class), "-class.txt"), slots=slotNames(class))
+  name <- paste0(class, "Description")
+  assign(name, tt)
+
+
+  do.call("use_data", list(as.name(name), overwrite = TRUE))
+
+  # Write roxygen
+  chk <- file.exists(file.path('R/', RoxygenFile))
+  if(!chk) file.create(file.path('R/', RoxygenFile)) # make empty file
+
+  cat("#'  ", name, " ",
+      "\n#'",
+      "\n#'  A data.frame with description of slots for class ", class,
+      "\n#'\n",
+      '"', name, '"\n\n\n', sep="", append=TRUE,
+      file=file.path('R/', RoxygenFile))
+
+  file.remove(paste0(file.path(Outloc, class), "-class.txt"))
+
+
+}
+
+Outloc <- tempdir()
+getDescription("Stock", Outloc=Outloc)
+getDescription("Fleet", Outloc=Outloc)
+getDescription("Obs", Outloc=Outloc)
+getDescription("Imp", Outloc=Outloc)
+getDescription("Data", Outloc=Outloc)
+getDescription("OM", Outloc=Outloc)
+getDescription("MSE", Outloc=Outloc)
+

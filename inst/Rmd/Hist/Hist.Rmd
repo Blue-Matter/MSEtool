@@ -24,7 +24,6 @@ Pars <- params$Pars$Hist
 nsim <- dim(Pars@TSdata$VB)[1]
 nyears <- dim(Pars@TSdata$VB)[2]
 
-
 CurrentYr <- params$Pars$CurrentYr
 histYr <- (CurrentYr-nyears+1):CurrentYr
 futYr <- (CurrentYr+1):(CurrentYr+proyears)
@@ -47,7 +46,7 @@ if (params$tabs) {
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
-Depletion <- Pars@TSdata$SSB/matrix(Pars@Ref$SSB0, nrow=nsim, ncol=nyears)
+Depletion <- apply(Pars@TSdata$SBiomass, 1:2, sum)/matrix(Pars@Ref$ReferencePoints$SSB0, nrow=nsim, ncol=nyears)
 ylim <- c(0, max(Depletion))
 matplot(Years, t(Depletion),
         type="l", lty=1, bty="l", main="", 
@@ -62,7 +61,7 @@ abline(h=1, lty=2, lwd=2, col="darkgray")
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
-SSB <- Pars@TSdata$SSB
+SSB <- apply(Pars@TSdata$SBiomass, 1:2, sum)
 ylim <- c(0, max(SSB))
 matplot(Years, t(SSB),
         type="l", lty=1, bty="l", main="", 
@@ -84,7 +83,7 @@ if (params$tabs) {
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
-Depletion <- Pars@TSdata$VB/matrix(Pars@Ref$VB0, nrow=nsim, ncol=nyears)
+Depletion <- apply(Pars@TSdata$VBiomass, 1:2, sum)/matrix(Pars@Ref$ReferencePoints$VB0, nrow=nsim, ncol=nyears)
 ylim <- c(0, max(Depletion))
 matplot(Years, t(Depletion),
         type="l", lty=1, bty="l", main="", 
@@ -98,7 +97,7 @@ abline(h=1, lty=2, lwd=2, col="darkgray")
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
-Vb <- Pars@TSdata$VB
+Vb <- apply(Pars@TSdata$VBiomass, 1:2, sum)
 ylim <- c(0, max(Vb))
 matplot(Years, t(Vb),
         type="l", lty=1, bty="l", main="", 
@@ -119,7 +118,7 @@ if (params$tabs) {
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
-Depletion <- Pars@TSdata$B/matrix(Pars@Ref$B0, nrow=nsim, ncol=nyears)
+Depletion <- apply(Pars@TSdata$Biomass, 1:2, sum)/matrix(Pars@Ref$ReferencePoints$B0, nrow=nsim, ncol=nyears)
 ylim <- c(0, max(Depletion))
 matplot(Years, t(Depletion),
         type="l", lty=1, bty="l", main="", 
@@ -133,7 +132,7 @@ abline(h=1, lty=2, lwd=2, col="darkgray")
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
 
-B <- Pars@TSdata$B
+B <- apply(Pars@TSdata$Biomass, 1:2, sum)
 ylim <- c(0, max(B))
 matplot(Years, t(B),
         type="l", lty=1, bty="l", main="", 
@@ -155,7 +154,8 @@ if (params$tabs) {
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
-Depletion <- Pars@TSdata$Rec/matrix(Pars@Ref$R0, nrow=nsim, ncol=nyears)
+
+Depletion <- apply(Pars@AtAge$Number[,1,,], 1:2, sum)/matrix( Pars@SampPars$Stock$R0, nrow=nsim, ncol=nyears)
 ylim <- c(0, max(Depletion))
 matplot(Years, t(Depletion),
         type="l", lty=1, bty="l", main="", 
@@ -168,7 +168,7 @@ abline(h=1, lty=2, lwd=2, col="darkgray")
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
-Rec <- Pars@TSdata$Rec
+Rec <- apply(Pars@AtAge$Number[,1,,], 1:2, sum)
 ylim <- c(0, max(Rec))
 matplot(Years, t(Rec),
         type="l", lty=1, bty="l", main="", 
@@ -190,7 +190,7 @@ if (params$tabs) {
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
-Depletion <- Pars@TSdata$Catch/matrix(Pars@TSdata$Catch[,nyears], nrow=nsim, ncol=nyears)
+Depletion <- apply(Pars@TSdata$Landings, 1:2, sum)/matrix(apply(Pars@TSdata$Landings[,nyears,], 1, sum), nrow=nsim, ncol=nyears)
 ylim <- c(0, max(Depletion))
 matplot(Years, t(Depletion),
         type="l", lty=1, bty="l", main="", 
@@ -203,7 +203,7 @@ abline(h=1, lty=2, lwd=2, col="darkgray")
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
-Catch <- Pars@TSdata$Catch
+Catch <- apply(Pars@TSdata$Landings, 1:2, sum)
 ylim <- c(0, max(Catch))
 matplot(Years, t(Catch),
         type="l", lty=1, bty="l", main="", 
@@ -226,7 +226,7 @@ if (params$tabs) {
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
-Find <- Pars@TSdata$Find
+Find <- Pars@TSdata$Find * Pars@SampPars$Fleet$qs
 ylim <- c(0, max(Find))
 matplot(Years, t(Find),
         type="l", lty=1, bty="l", main="", 

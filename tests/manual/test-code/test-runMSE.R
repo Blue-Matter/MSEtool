@@ -1,6 +1,5 @@
 
-
-testthat::context("Quick test of runMSE function")
+testthat::context("Test of basic population dynamics")
 
 library(MSEtool)
 
