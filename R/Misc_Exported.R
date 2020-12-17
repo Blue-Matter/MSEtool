@@ -571,30 +571,30 @@ setup <- function(cpus=NULL, logical=FALSE, ...) {
 
 
 
-#' Open the DLMtool User Guide
-#'
-#' Opens the DLMtool User Guide website (requires internet connection)
-#'
-#' @export
-#' @examples
-#' \dontrun{
-#' userguide()
-#' }
-userguide <- function() {
-  utils::browseURL("https://dlmtool.github.io/DLMtool/userguide/introduction.html")
-}
-
-#' Opens the DLMtool Cheat-Sheets (requires internet connection)
-#'
-#' @export
-#' @examples
-#' \dontrun{
-#' cheatsheets()
-#' }
-cheatsheets <- function() {
-  # utils::browseURL("https://dlmtool.github.io/DLMtool/cheat_sheets/DLMtool_CheatSheets.pdf")
-  utils::browseURL("https://dlmtool.github.io/DLMtool/cheat_sheets/CheatSheets.html")
-}
+# #' Open the DLMtool User Guide
+# #'
+# #' Opens the DLMtool User Guide website (requires internet connection)
+# #'
+# #' @export
+# #' @examples
+# #' \dontrun{
+# #' userguide()
+# #' }
+# userguide <- function() {
+#   utils::browseURL("https://dlmtool.github.io/DLMtool/userguide/introduction.html")
+# }
+#
+# #' Opens the DLMtool Cheat-Sheets (requires internet connection)
+# #'
+# #' @export
+# #' @examples
+# #' \dontrun{
+# #' cheatsheets()
+# #' }
+# cheatsheets <- function() {
+#   # utils::browseURL("https://dlmtool.github.io/DLMtool/cheat_sheets/DLMtool_CheatSheets# .pdf")
+#   utils::browseURL("https://dlmtool.github.io/DLMtool/cheat_sheets/CheatSheets.html")
+# }
 
 RepmissingVal <- function(object, name, vals=NA) {
   miss <- FALSE
