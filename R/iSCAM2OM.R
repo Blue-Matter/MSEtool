@@ -1,36 +1,34 @@
 # === OM specification using iSCAM stock assessment ====================
 
-# needs to be updated for age-0 recruitment and for CRAN checks
-
-
-# #' Reads MLE estimates from iSCAM file structure into an operating model
-# #'
-# #' @description A function that uses the file location of a fitted iSCAM
-# #' model including input files to population the various slots of an
-# #' operating model parameter estimates. iSCAM2OM relies on several
-# #' functions written by Chris Grandin (DFO PBS).
-# #' @param iSCAMdir A folder with iSCAM input and output files in it
-# #' @param nsim The number of simulations to take for parameters with
-# #' uncertainty (for OM@cpars custom parameters)
-# #' @param proyears The number of MSE projection years
-# #' @param mcmc Whether to use mcmc samples to create custom parameters cpars
-# #' @param Name The name of the operating model
-# #' @param Source Reference to assessment documentation e.g. a url
-# #' @param length_timestep How long is a model time step in years
-# #' (e.g. a quarterly model is 0.25, a monthly model 1/12)
-# #' @param nyr_par_mu integer, the number of recent years to estimate vulnerability over for future projections
-# # #' @param LowerTri Integer. The number of recent years for which model estimates of recruitment are ignored (not reliably estimated by the assessment)
-# #' @param Author Who did the assessment
-# #' @param report logical should a numbers at age reconstruction plot be produced?
-# #' @param silent logical should progress reporting be printed to the console?
-# #' @author T. Carruthers
-# #' @importFrom grDevices dev.off gray jpeg png
-# #' @importFrom coda mcmc
-# #' @importFrom graphics arrows contour
-# #' @importFrom stats acf aggregate qnorm window
-# #' @export iSCAM2OM
-iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=F, Name=NULL, Source="No source provided",
-                  length_timestep=1, nyr_par_mu=2, Author="No author provided", report=F, silent=F){
+#' Reads MLE estimates from iSCAM file structure into an operating model
+#'
+#' @description A function that uses the file location of a fitted iSCAM
+#' model including input files to population the various slots of an
+#' operating model parameter estimates. iSCAM2OM relies on several
+#' functions written by Chris Grandin (DFO PBS).
+#' @param iSCAMdir A folder with iSCAM input and output files in it
+#' @param nsim The number of simulations to take for parameters with
+#' uncertainty (for OM@cpars custom parameters)
+#' @param proyears The number of MSE projection years
+#' @param mcmc Whether to use mcmc samples to create custom parameters cpars
+#' @param Name The name of the operating model
+#' @param Source Reference to assessment documentation e.g. a url
+#' @param length_timestep How long is a model time step in years
+#' (e.g. a quarterly model is 0.25, a monthly model 1/12)
+#' @param nyr_par_mu integer, the number of recent years to estimate vulnerability over for future projections
+#' @param LowerTri Integer. The number of recent years for which model estimates of recruitment are ignored (not reliably estimated by the assessment)
+#' @param Author Who did the assessment
+#' @param report logical should a numbers at age reconstruction plot be produced?
+#' @param silent logical should progress reporting be printed to the console?
+#' @author T. Carruthers
+#' @importFrom grDevices dev.off gray jpeg png
+#' @importFrom coda mcmc
+#' @importFrom graphics arrows contour
+#' @importFrom stats acf aggregate qnorm window
+#' @export iSCAM2OM
+iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=F, Name=NULL,
+                   Source="No source provided", length_timestep=1,
+                   nyr_par_mu=2, Author="No author provided", report=F, silent=F){
 
    nseas<-1/length_timestep # defaults to an annual model
    message("-- Using function of Chris Grandin (DFO PBS) to extract data from iSCAM file structure --")
