@@ -29,7 +29,7 @@
 #'  distribution lower and upper bounds. Fraction
 #' @slot isRel Selectivity parameters in units of size-of-maturity (or absolute
 #'  eg cm). Single value. Boolean
-#' @slot LR5 Shortest length corresponding ot 5 percent retention. Uniform
+#' @slot LR5 Shortest length corresponding at 5 percent retention. Uniform
 #'  distribution lower and upper bounds. Non-negative real numbers
 #' @slot LFR Shortest length that is fully retained. Uniform distribution lower
 #'  and upper bounds. Non-negative real numbers
