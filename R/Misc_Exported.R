@@ -413,7 +413,7 @@ Required <- function(funcs = NA, noCV=FALSE) {
 
   temp <- lapply(funcs1, function(x) paste(format(match.fun(x)), collapse = " "))
   repp <- vapply(temp, match_slots, character(1))
-  #repp[!nzchar(repp)] <- "No data needed for this MP."
+  repp[!nzchar(repp)] <- "No data detected in this MP."
 
   df2 <- data.frame(MP=funcs1, Data=repp, stringsAsFactors = FALSE)
 
@@ -447,11 +447,6 @@ Required <- function(funcs = NA, noCV=FALSE) {
     # Index
     if (grepl("Ind", dfout$Data[i])) {
       DataClass <- c(DataClass, 'Index of Abundance')
-    }
-
-    # Rec
-    if (grepl("Rec", dfout$Data[i])) {
-      DataClass <- c(DataClass, 'Recruitment Index')
     }
 
     # Rec
@@ -520,7 +515,9 @@ Required <- function(funcs = NA, noCV=FALSE) {
 
   }
 
-  as.matrix(dfout)
+  rownames(dfout) <- NULL
+
+  data.frame(dfout)
 }
 
 
