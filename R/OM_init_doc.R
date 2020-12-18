@@ -921,7 +921,7 @@ writeSection <- function(class=c("Intro", "Stock", "Fleet", "Obs", "Imp", "Refer
     Slots <- slotNames(class)
     if (any(!scLH %in% Slots)) {
       invalid <- scLH[!scLH %in% Slots]
-      stop("Invalid second level headings (must match slots in class ", class, "): ", paste(invalid, ""), call.=FALSE)
+      warning("Invalid second level headings (must match slots in class ", class, "): ", paste(invalid, ""), call.=FALSE)
     }
 
     # check for text after class heading

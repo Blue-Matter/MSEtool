@@ -288,8 +288,8 @@ importslot <- function(name, length=2, Data, Names, numeric=TRUE, essential=TRUE
   x <- Data[match(name, Names), 1:length]
   if (numeric) x <- as.numeric(x)
   if (essential) {
-    if (any(is.na(x))) stop('NAs in ', name, '. Should be length ', length)
-    if (length(x)<length) stop(name, ' is missing')
+    if (any(is.na(x))) warning('NAs in ', name, '. Should be length ', length)
+    if (length(x)<length) warning(name, ' is missing')
   }
   x
 }

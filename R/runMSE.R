@@ -67,6 +67,10 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                                cpars=SampCpars,
                                msg=!silent)
 
+  # Checks
+  if (any(range(StockPars$M_ageArray) <=tiny))
+    stop("range of StockPars$M_ageArray is: ", paste0(range(StockPars$M_ageArray), collapse="-"))
+
   # Fleet Parameters
   FleetPars <- SampleFleetPars(Fleet=SubOM(OM, "Fleet"),
                                Stock=StockPars,
@@ -299,6 +303,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                                pyears=nyears, bounds, control=control)
     }
   }
+
 
   # --- Check that q optimizer has converged ----
   LimBound <- c(1.1, 0.9)*range(bounds)  # bounds for q (catchability). Flag if bounded optimizer hits the bounds

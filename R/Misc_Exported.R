@@ -51,7 +51,7 @@ avail <- function(classy, package=NULL, msg=TRUE) {
 
   } else {
 
-    packages <- c('MSEtool', 'SAMtool', 'DLMtool', 'DLMextra')
+    packages <- c('MSEtool', 'SAMtool', 'DLMtool', 'MSEextra')
     if (is.null(package)) {
       package <- packages
       pkgs <- search()
@@ -74,9 +74,9 @@ avail <- function(classy, package=NULL, msg=TRUE) {
       DLMtool_funs <- get_funcs('DLMtool', classy, msg)
       temp <- c(temp, DLMtool_funs)
     }
-    if ('DLMextra' %in% package) {
-      DLMextra_funs <- get_funcs('DLMextra', classy)
-      temp <- c(temp, DLMextra_funs)
+    if ('MSEextra' %in% package) {
+      MSEextra_funs <- get_funcs('MSEextra', classy)
+      temp <- c(temp, MSEextra_funs)
     }
     if (length(temp) < 1) stop("No objects of class '", classy, "' found", call. = FALSE)
     return(unique(temp))
@@ -122,33 +122,23 @@ DLMDataDir <- function(stock = NA) {
 }
 
 
-#' Load more data from DLMextra package
+#' Load more data from MSEextra package
 #'
-#' Downloads the DLMextra package from GitHub
+#' Downloads the MSEextra package from GitHub
 #' @param silent Logical. Should messages to printed?
 #' @param force Logical. For install from github if package is up-to-date?
 #' @export
 #'
-DLMextra <- function(silent=FALSE, force=FALSE) {
+MSEextra <- function(silent=FALSE, force=FALSE) {
   if (!requireNamespace("devtools", quietly = TRUE)) {
     stop("devtools is needed for this function to work. Please install it.",
          call. = FALSE)
   }
 
-  if (!silent) message("\nDownloading 'DLMextra' from GitHub")
-  devtools::install_github("DLMtool/DLMextra", quiet=FALSE, force=force)
-  if (!silent) message("Use 'library(DLMextra)' to load additional data into workspace")
+  if (!silent) message("\nDownloading 'MSEextra' from GitHub")
+  devtools::install_github("blue-matter/MSEextra", quiet=FALSE, force=force)
+  if (!silent) message("Use 'library(MSEextra)' to load additional data into workspace")
 
-  ver <- packageVersion("DLMextra")
-  if (ver <= '0.1.3') stop("This version of DLMextra is not compatible with DLMtool V",
-                           packageVersion('DLMtool'), '. Please install DLMextra V0.1.4+')
-
-  # if (tt) {
-  #
-  # } else {
-  #   if (!silent) message("Package 'DLMextra' already up to date\n Use 'library(DLMextra)' to load additional data into workspace")
-  # }
-  #
 }
 
 

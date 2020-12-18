@@ -3,8 +3,8 @@ myrunif <- function(n, val1, val2) {
   max <- max(c(val1, val2))
 
   if (is.na(n)) stop("First argument is NA")
-  if (is.na(val1)) stop('Second argument is NA')
-  if (is.na(val2)) stop('Third argument is NA')
+  # if (is.na(val1)) stop('Second argument is NA')
+  # if (is.na(val2)) stop('Third argument is NA')
 
   if (all(is.na(c(min, max)))) return(rep(NA,n))
   if (all(min == max)) {
