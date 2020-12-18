@@ -101,38 +101,30 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
 
   # --- Check for Invalid Cpars ----
   # TODO
-  # CparsInfo <- cpars_info # get internal data from sysdata
-  #
-  #
-  # Names <- names(cpars)
-  # ValNames <- c(CparsInfo$Slot[which(CparsInfo$Valid>0)], CparsInfo$Legacy[which(CparsInfo$Valid>0)])
-  # ValNames <- ValNames[!is.na(ValNames)]
-  # InvalNames <- c(CparsInfo$Slot[!which(CparsInfo$Valid>0)], CparsInfo$Legacy[!which(CparsInfo$Valid>0)])
-  # InvalNames <- unique(InvalNames[!is.na(InvalNames)])
-  # report invalid names
-  # invalid <- Names[!Names %in% ValNames]
-  # if (length(invalid)>0) {
-  #   invdf <- data.frame(name=invalid, action='ignoring', alt="", stringsAsFactors = FALSE)
-  #   alt_inval <- invalid[invalid %in% InvalNames]
-  #   if (length(alt_inval)>0) {
-  #     alt <- CparsInfo$Description[match(alt_inval, CparsInfo$Slot)]
-  #     invdf$alt[match(alt_inval, invdf$name)] <-alt
-  #   }
-  #   if(!silent) {
-  #     message("invalid names found in custom parameters (OM@cpars)")
-  #     message(paste0(capture.output(invdf), collapse = "\n"))
-  #   }
-  # }
+  CparsInfo <- cpars_info # get internal data from sysdata
+
+  Names <- names(cpars)
+  ValNames <- CparsInfo$Var
+
+  invalid <- Names[!Names %in% ValNames]
+  if (length(invalid)>0) {
+    invdf <- data.frame(not_used_cpars=invalid, stringsAsFactors = FALSE)
+
+    if(!silent) {
+      message("invalid names found in custom parameters (OM@cpars):")
+      base::message(paste0(capture.output(invdf), collapse = "\n"))
+    }
+  }
   # # report found names
-  # valid <- which(Names %in% ValNames)
-  # cpars <- cpars[valid]
-  # if (length(valid) == 0) {
-  #   message("No valid names found in custompars (OM@cpars). Ignoring `OM@cpars`")
-  #   return(list())
-  # }
-  # Names <- names(cpars)
-  # outNames <- paste(Names, "")
-  # if(!silent) message("valid custom parameters (OM@cpars) found: \n", paste0(outNames, collapse="\n"))
+  valid <- which(Names %in% ValNames)
+  cpars <- cpars[valid]
+  if (length(valid) == 0) {
+    message("No valid names found in custompars (OM@cpars). Ignoring `OM@cpars`")
+    return(list())
+  }
+  Names <- names(cpars)
+  outNames <- paste(Names, "")
+  if(!silent) message("valid custom parameters (OM@cpars) found: \n", paste0(outNames, collapse="\n"))
 
   # ---- Sample custom pars ----
 
@@ -778,11 +770,6 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   if (any(dim(mov) != c(nsim,n_age,nareas,nareas, nyears+proyears)))
     stop('cpars$mov must be array with dimensions: \nc(nsim, maxage+1, nareas, nareas) \nOR \nc(nsim, maxage+1, nareas, nareas, nyears+proyears)', call.=FALSE)
 
-
-
-
-
-
   StockOut <- list()
   StockOut$maxage <- maxage
   StockOut$R0 <- R0
@@ -1373,10 +1360,15 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
   Dbias <- sample_lnorm('Dbias', cpars, Obs, nsim, 'Dbiascv')
   ObsOut$Dbias <- Dbias
 
-  ObsOut$Derr_y <- array(rlnorm((nyears + proyears) * nsim,
-                                mconv(1, rep(ObsOut$Derr, nyears + proyears)),
-                                sdconv(1, rep(ObsOut$Derr, nyears + proyears))),
-                         c(nsim, nyears + proyears)) * Dbias
+  Derr_y <- cpars$Derr_y
+  if (is.null(Derr_y)) {
+    Derr_y <- array(rlnorm((nyears + proyears) * nsim,
+                           mconv(1, rep(ObsOut$Derr, nyears + proyears)),
+                           sdconv(1, rep(ObsOut$Derr, nyears + proyears))),
+                    c(nsim, nyears + proyears)) * Dbias
+  }
+
+  ObsOut$Derr_y <- Derr_y
 
   # ---- M bias ----
   Mbias <- sample_lnorm('Mbias', cpars, Obs, nsim, 'Mbiascv')
@@ -1623,13 +1615,13 @@ validcpars <- function(type=c("all", "Stock", "Fleet", "Obs", "Imp", "internal")
   Valid <- Slot <- Dim <- Description <- NULL
 
   # cpars_info <- MSEtool:::cpars_info
-  cpars_info <- cpars_info[!duplicated(cpars_info$Slot),] # remove duplicated 'Name'
+  # cpars_info <- cpars_info[!duplicated(cpars_info$Slot),] # remove duplicated 'Name'
 
   cpars_info$type <- NA
-  stock_ind <- match(slotNames("Stock"), cpars_info$Slot)
-  fleet_ind <- match(slotNames("Fleet"), cpars_info$Slot)
-  obs_ind <- match(slotNames("Obs"), cpars_info$Slot)
-  imp_ind <- match(slotNames("Imp"), cpars_info$Slot)
+  stock_ind <- match(slotNames("Stock"), cpars_info$Var)
+  fleet_ind <- match(slotNames("Fleet"), cpars_info$Var)
+  obs_ind <- match(slotNames("Obs"), cpars_info$Var)
+  imp_ind <- match(slotNames("Imp"), cpars_info$Var)
   int_ind <- (1:nrow(cpars_info))[!1:nrow(cpars_info) %in%
                                     c(stock_ind, fleet_ind, obs_ind, imp_ind)]
 
@@ -1642,8 +1634,8 @@ validcpars <- function(type=c("all", "Stock", "Fleet", "Obs", "Imp", "internal")
   dflist <- list(); count <- 0
   for (ss in type) {
     count <- count + 1
-    df <- cpars_info %>% dplyr::filter(Valid==valid, cpars_info$type %in% ss) %>%
-      dplyr::select(Slot, Dim, Description, type)
+    df <- cpars_info %>% dplyr::filter(cpars_info$type %in% ss) %>%
+      dplyr::select(Var, Dim, Desc, type)
     names(df) <- c("Var.", "Dim.", "Desc.", "Type")
     if (nrow(df)> 0) {
       if (nrow(df)>1) {

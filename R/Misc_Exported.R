@@ -75,7 +75,7 @@ avail <- function(classy, package=NULL, msg=TRUE) {
       temp <- c(temp, DLMtool_funs)
     }
     if ('MSEextra' %in% package) {
-      MSEextra_funs <- get_funcs('MSEextra', classy)
+      MSEextra_funs <- get_funcs('MSEextra', classy, msg)
       temp <- c(temp, MSEextra_funs)
     }
     if (length(temp) < 1) stop("No objects of class '", classy, "' found", call. = FALSE)

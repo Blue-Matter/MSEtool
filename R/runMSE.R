@@ -49,7 +49,6 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
 
   # --- Sample OM parameters ----
   if(!silent) message("Loading operating model")
-  # TO DO - check all validcpars are included here
 
   # custom parameters exist - sample and write to list
   SampCpars <- list()

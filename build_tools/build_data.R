@@ -2,6 +2,7 @@ library(usethis)
 library(MSEtool)
 library(SAMtool)
 library(DLMtool)
+library(dplyr)
 
 # ---- Source Object Classes ----
 source('R/Class_definitions.r')
@@ -463,3 +464,32 @@ getDescription("Data", Outloc=Outloc)
 getDescription("OM", Outloc=Outloc)
 getDescription("MSE", Outloc=Outloc)
 
+
+### Add cpars_info to sysdata.rdata ####
+makeDF <- function(df_in, type=NULL) {
+  df_in$ValidCpars[is.na(df_in$ValidCpars)] <- TRUE
+  df_in <- df_in %>% dplyr::filter(ValidCpars!=FALSE)
+  data.frame(Var=df_in$Slot, Dim=df_in$Cpars_dim, Desc=df_in$Cpars_desc, Type=type)
+}
+
+cpars_Stock <- openxlsx::read.xlsx("build_tools/Class_definitions/Class_definitions.xlsx",
+                                   sheet="Stock") %>%
+  makeDF(., 'Stock')
+cpars_Fleet <- openxlsx::read.xlsx("build_tools/Class_definitions/Class_definitions.xlsx",
+                                   sheet="Fleet") %>%
+  makeDF(., 'Fleet')
+# cpars_Obs <- openxlsx::read.xlsx("build_tools/Class_definitions/Class_definitions.xlsx",
+#                                  sheet="Obs") %>%
+#   makeDF(., 'Obs')
+cpars_Imp <- openxlsx::read.xlsx("build_tools/Class_definitions/Class_definitions.xlsx",
+                                 sheet="Imp")%>%
+  makeDF(., 'Imp')
+
+
+cpars_internal <- openxlsx::read.xlsx("build_tools/Class_definitions/Class_definitions.xlsx",
+                                      sheet="cpars")
+
+
+cpars_info <- dplyr::bind_rows(cpars_Stock,cpars_Fleet,cpars_Imp,cpars_internal)
+
+usethis::use_data(cpars_info, internal = TRUE, overwrite = TRUE)
