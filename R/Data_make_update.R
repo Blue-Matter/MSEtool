@@ -569,28 +569,43 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
 
 #' Simulate Catch-at-Age Data
 #'
-#' CAA generated with a multinomial observation model from retained catch-at-age
-#' data
+#' CAA generated with either a multinomial or logistic normal observation model from retained catch-at-age
+#' array
 #'
 #' @param nsim Number of simulations
 #' @param yrs Number of years
 #' @param n_age Number of age classes
 #' @param Cret Retained Catch at age in numbers - array(sim, years, maxage+1)
-#' @param CAA_ESS CAA effective sample size
+#' @param CAA_ESS CAA effective sample size. If greater than 1, then this is the multinomial distribution sample size.
+#' If less than 1, this is the coefficient of variation for the logistic normal distribution (see details).
 #' @param CAA_nsamp CAA sample size
-#'
+#' @details The logistic normal generates the catch-at-age sample by first sampling once from a multivariate normal distribution 
+#' with the mean vector equal to the logarithm of the proportions-at-age and the diagonal of the covariance matrix is the square of the
+#' product of the CV and the log proportions (all off-diagonals are zero). The sampled vector is then converted to proportions 
+#' with the softmax function and expanded to numbers (CAA_nsamp). This method allows for simulating fractional values in the 
+#' catch-at-age matrix.
 #' @return CAA array
 simCAA <- function(nsim, yrs, n_age, Cret, CAA_ESS, CAA_nsamp) {
   # generate CAA from retained catch-at-age
   CAA <- array(NA, dim = c(nsim, yrs, n_age))  # Catch  at age array
 
   # a multinomial observation model for catch-at-age data
+  # logistic normal if CAA_ESS < 1
+  if(any(CAA_ESS < 1) && !requireNamespace("mvtnorm", quietly = TRUE)) stop("The mvtnorm package is needed.")
   for (i in 1:nsim) {
     for (j in 1:yrs) {
       if (!sum(Cret[i, ,j])) {
         CAA[i, j, ] <- 0
       } else {
-        CAA[i, j, ] <- ceiling(-0.5 + rmultinom(1, CAA_ESS[i], Cret[i, ,j]) * CAA_nsamp[i]/CAA_ESS[i])
+        if(CAA_ESS[i] < 1) {
+          log_PAA <- log(Cret[i, , j]/sum(Cret[i, , j]))
+          vcov_PAA <- (CAA_ESS[i] * log_PAA)^2 * diag(length(log_PAA))
+          
+          samp_PAA <- mvtnorm::rmvnorm(1, log_PAA, vcov_PAA) %>% ilogitm()
+          CAA[i, j, ] <- CAA_nsamp[i] * samp_PAA
+        } else {
+          CAA[i, j, ] <- ceiling(-0.5 + rmultinom(1, CAA_ESS[i], Cret[i, ,j]) * CAA_nsamp[i]/CAA_ESS[i])
+        }
       }
     }
   }
