@@ -950,9 +950,11 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     AddIunits <- RealData@AddIunits
     if (all(is.na(AddIunits))) AddIunits <- rep(1, n.ind)
     if (!is.null(SampCpars$AddIunits)) AddIunits <- SampCpars$AddIunits
+    Data_out@AddIunits <- AddIunits
 
     AddIndType <- RealData@AddIndType
     if (all(is.na(AddIndType))) AddIndType <- rep(1, n.ind)
+    Data_out@AddIndType <- AddIndType
 
     ObsPars$AddInd_Stat <- list()
 
