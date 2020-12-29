@@ -19,8 +19,8 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1,
 
   if(replist$nsexes == 1) gender <- 1
 
-  if(replist$nseasons > 1 || all(replist$seasduration < 1)) {
-    message("Seasonal model found. Using old SS2OM code.")
+  if(replist$nseasons == 1 && all(replist$seasduration < 1)) {
+    message("Model with season as years found. Using old SS2OM code.")
 
     OM <- old_SS2OM(replist, nsim = nsim, proyears = proyears, reps = reps, maxF = maxF, seed = seed,
                     interval = interval, Obs = Obs, Imp = Imp,
@@ -638,15 +638,20 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
     lapply(cpars[gender], function(x) parse(text = paste0("x[[1]]$", tt)) %>% eval()) %>%
       simplify2array() %>% apply(1:3, mean)
   }
-
+  
   cpars_out$M_ageArray <- mean_array("M_ageArray")
   cpars_out$Wt_age <- mean_array("Wt_age")
   cpars_out$Len_age <- mean_array("Len_age")
   cpars_out$LatASD <- mean_array("LatASD")
 
   mean_vector <- function(tt) {
-    lapply(cpars[gender], function(x) parse(text = paste0("x[[1]]$", tt)) %>% eval()) %>%
-      simplify2array() %>% apply(1, mean)
+    out <- lapply(cpars[gender], function(x) parse(text = paste0("x[[1]]$", tt)) %>% eval())
+    if(length(out) == 2 && is.null(out[[2]])) {
+      res <- out[[1]]
+    } else {
+      res <- simplify2array(out) %>% apply(1, mean)
+    }
+    return(res)
   }
 
   cpars_out$Linf <- mean_vector("Linf")
@@ -656,13 +661,14 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
   # Stock placeholders (overriden by cpars mean_arrays or mean_vectors above)
   Stock@M <- vapply(Stocks[gender], slot, numeric(2), "M") %>% apply(1, mean)
   Stock@LenCV <- vapply(Stocks[gender], slot, numeric(2), "LenCV") %>% apply(1, mean)
-  Stock@Linf <- vapply(Stocks[gender], slot, numeric(2), "Linf") %>% apply(1, mean)
-  Stock@K <- vapply(Stocks[gender], slot, numeric(2), "K") %>% apply(1, mean)
-  Stock@t0 <- vapply(Stocks[gender], slot, numeric(2), "t0") %>% apply(1, mean)
-  Stock@a <- vapply(Stocks[gender], slot, numeric(1), "a") %>% mean()
-  Stock@b <- vapply(Stocks[gender], slot, numeric(1), "b") %>% mean()
-
-
+  
+  Stock@Linf <- cpars_out$Linf %>% range()
+  Stock@K <- cpars_out$K %>% range()
+  Stock@t0 <- cpars_out$t0 %>% range()
+  
+  slot2 <- function(x, y) ifelse(length(slot(x, y)), slot(x, y), NA_real_)
+  Stock@a <- vapply(Stocks[gender], slot2, numeric(1), "a") %>% mean(na.rm = TRUE)
+  Stock@b <- vapply(Stocks[gender], slot2, numeric(1), "b") %>% mean(na.rm = TRUE)
 
   # cpars for the first gender, first fleet
   .cpars <- cpars[[1]][[1]]
@@ -713,44 +719,50 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
   Fleet@DR <- Stock@Fdisc <- c(0, 0) # No discards
   Fleet@MPA <- FALSE
 
-  # Selectivity = all dead catch
-  # No discards are modeled
-  FF <- filter(replist$ageselex, Factor == "F" & Yr %in% mainyrs)[, -c(1, 4, 6, 7)] %>%
-    reshape2::melt(list("Fleet", "Yr", "Sex"), variable.name = "Age", value.name = "F") %>%
-    group_by(Yr, Sex, Age) %>% summarise(F = sum(F)) %>% group_by(Yr, Age) %>% summarise(F = mean(F)) %>%
-    group_by(Yr) %>% mutate(V = F/max(F))
-  Fapic <- group_by(FF, Yr) %>% summarise(F = max(F)) %>% getElement("F")
-
-  V <- reshape2::acast(FF, Age ~ Yr, value.var = "V")
+  
+  if(replist$SS_versionNumeric == 3.30) { # Need to average over seasons
+    # Selectivity = all dead catch
+    # No discards are modeled
+    FF <- dplyr::filter(replist$ageselex, Factor == "F", Yr %in% mainyrs)[, -c(1, 4, 6, 7)] %>%
+      reshape2::melt(list("Fleet", "Yr", "Sex"), variable.name = "Age", value.name = "F") %>%
+      group_by(Yr, Sex, Age) %>% summarise(F = sum(F)) %>% # Sum over fleets
+      group_by(Yr, Age) %>% summarise(F = mean(F)) %>% # Mean over sexes
+      group_by(Yr) %>% mutate(V = F/max(F)) # Get vulnerability
+    Find <- group_by(FF, Yr) %>% summarise(F = max(F)) %>% getElement("F")
+    V <- reshape2::acast(FF, Age ~ Yr, value.var = "V")
+  } else {
+    # Selectivity = All mortality
+    Vfleet <- lapply(c(1:replist$nfleets)[replist$IsFishFleet], get_V_from_Asel2, i = gender,
+                     replist = replist, mainyrs = mainyrs, maxage = Stock@maxage)
+    
+    Fapic <- replist$exploitation[, replist$FleetNames[replist$IsFishFleet] %in% colnames(replist$exploitation)][, -3] %>%
+      dplyr::filter(Yr %in% mainyrs) %>% structure(names = c("Yr", "Seas", c(1:replist$nfleets)[replist$IsFishFleet])) %>%
+      reshape2::melt(value.name = "FF", variable.name = "Fleet", id.vars = c("Yr", "Seas")) %>% group_by(Yr, Fleet) %>%
+      summarise(FF = sum(FF)) %>% reshape2::acast(list("Yr", "Fleet"), value.var = "FF")
+    
+    F_at_age <- lapply(1:length(Vfleet), function(x) t(Vfleet[[x]]) * Fapic[, x]) %>% 
+      simplify2array() %>% apply(1:2, sum)
+    
+    Find <- apply(F_at_age, 1, max)
+    V <- t(F_at_age/Find)
+  }
   Vpro <- V[, ncol(V)] %>% matrix(nrow(V), proyears)
-
   cpars_out$V <- cbind(V, Vpro) %>% array(c(Stock@maxage + 1, nyears + proyears, nsim)) %>% aperm(c(3, 1 ,2))
-  #n_bins <- length(.cpars$CAL_binsmid)
-  #FF <- lapply(cpars[[1]], function(x) x$Find[1, ])
-  #SLarray <- lapply(cpars[[1]], function(x) x$SLarray[1, , 1:nyears])
-  #retL <- lapply(cpars[[1]], function(x) x$retL[1, , 1:nyears])
-  ##disc <- vapply(cpars[[1]], function(x) x$Fdisc[1], numeric(1))
-  #
-  #Fall <- Map(function(FF, SL) FF * t(SL), FF = FF, SL = SLarray) %>% simplify2array() %>% apply(1:2, sum)
-  #Fret <- Map(function(FF, SL, ret) FF * t(SL * ret), FF = FF, SL = SLarray, ret = retL) %>%
-  #  simplify2array() %>% apply(1:2, sum)
-  #
-  #Fapic <- apply(Fall, 1, max)
-  #SLall <- Fall/Fapic
-  #retall <- Fret/Fapic
-
-  #SLpro <- matrix(SLall[nyears, ], proyears, ncol(SLall))
-  #cpars_out$SLarray <- replicate(nsim, rbind(SLall, SLpro)) %>% aperm(3:1)
-  #
-  #retpro <- matrix(retall[nyears, ], proyears, ncol(retall))
-  #cpars_out$retL <- replicate(nsim, rbind(retall, retpro)) %>% aperm(3:1)
-  cpars_out$Find <- matrix(Fapic, nsim, nyears, byrow = TRUE)
+  
+  cpars_out$Find <- matrix(Find, nsim, nyears, byrow = TRUE)
 
   # Place holders
   Fleet@EffYears <- 1:nyears
-  Fleet@EffLower <- Fleet@EffUpper <- Fapic
+  Fleet@EffLower <- Fleet@EffUpper <- Find
 
   OM <- suppressMessages(new("OM", Stock = Stock, Fleet = Fleet, Obs = Obs, Imp = Imp))
+  OM@nsim <- MOM@nsim
+  OM@proyears <- MOM@proyears
+  OM@reps <- MOM@reps
+  OM@maxF <- MOM@maxF
+  OM@seed <- MOM@seed
+  OM@interval <- MOM@interval
+  OM@pstar <- MOM@pstar
   OM@cpars <- cpars_out
   return(OM)
 }
@@ -758,11 +770,13 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
 #' @rdname SS2MOM
 #' @export
 plot_SS2OM <- function(x, SSdir, gender = 1:2,
-                       filename = "SS2OM", dir = tempdir(), open_file = TRUE, silent = FALSE) {
+                       filename = "SS2OM", dir = tempdir(), open_file = TRUE, silent = FALSE, ...) {
+  if(missing(SSdir)) stop("SSdir not found.")
 
   if(inherits(x, "OM")) {
     if(!silent) message("Generating Hist object from OM...")
-    Hist <- runMSE(x, Hist = TRUE, silent = silent)
+    OM <- x
+    Hist <- runMSE(OM, Hist = TRUE, silent = silent)
   } else if(inherits(x, "Hist")) {
     Hist <- x
   } else {
@@ -789,5 +803,5 @@ plot_SS2OM <- function(x, SSdir, gender = 1:2,
   message("Rendering complete.")
 
   if(open_file) browseURL(out)
-  return(out)
+  return(invisible(out))
 }

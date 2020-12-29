@@ -46,7 +46,6 @@ SS2MOM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1
   } else {
     replist <- SS_import(SSdir, silent, ...)
   }
-  if(replist$nseasons > 1) warning("Currently only supporting one season per year.")
 
   # Create MOM object
   MOM <- suppressMessages(new("MOM"))
