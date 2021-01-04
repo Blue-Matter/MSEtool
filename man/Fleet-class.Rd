@@ -52,7 +52,7 @@ distribution lower and upper bounds. Fraction}
 \item{\code{isRel}}{Selectivity parameters in units of size-of-maturity (or absolute
 eg cm). Single value. Boolean}
 
-\item{\code{LR5}}{Shortest length corresponding ot 5 percent retention. Uniform
+\item{\code{LR5}}{Shortest length corresponding at 5 percent retention. Uniform
 distribution lower and upper bounds. Non-negative real numbers}
 
 \item{\code{LFR}}{Shortest length that is fully retained. Uniform distribution lower
