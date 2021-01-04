@@ -100,13 +100,14 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
   ncparsim <- cparscheck(cpars2)
 
   # --- Check for Invalid Cpars ----
-  # TODO
-  CparsInfo <- cpars_info # get internal data from sysdata
 
-  Names <- names(cpars)
+  # CparsInfo <- MSEtool:::cpars_info # get internal data from sysdata
+  CparsInfo <- cpars_info # get internal data from sysdata - above for debugging
+
+  CNames <- names(cpars)
   ValNames <- CparsInfo$Var
 
-  invalid <- Names[!Names %in% ValNames]
+  invalid <- CNames[!CNames %in% ValNames]
   if (length(invalid)>0) {
     invdf <- data.frame(not_used_cpars=invalid, stringsAsFactors = FALSE)
 
@@ -116,14 +117,14 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
     }
   }
   # # report found names
-  valid <- which(Names %in% ValNames)
+  valid <- which(CNames %in% ValNames)
   cpars <- cpars[valid]
   if (length(valid) == 0) {
     message("No valid names found in custompars (OM@cpars). Ignoring `OM@cpars`")
     return(list())
   }
-  Names <- names(cpars)
-  outNames <- paste(Names, "")
+  CNames <- names(cpars)
+  outNames <- paste(CNames, "")
   if(!silent) message("valid custom parameters (OM@cpars) found: \n", paste0(outNames, collapse="\n"))
 
   # ---- Sample custom pars ----
@@ -951,7 +952,12 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
     if (!Fleet@isRel) multi <- 1
   }
 
-  if (!any(is.null(c(cpars$L5, cpars$LFS, cpars$Vmaxlen, cpars$LR5, cpars$LFR, cpars$Rmaxlen))) & all(multi!=1))
+  if (!any(is.null(c(cpars[['L5']],
+                     cpars[['LFS']],
+                     cpars[['Vmaxlen']],
+                     cpars[['LR5']],
+                     cpars[['LFR']],
+                     cpars[['Rmaxlen']]))) & all(multi!=1))
     stop("Selectivity parameters provided in cpars must be absolute values. Is Fleet@isRel == 'FALSE'?")
 
   L5 <- sample_unif('L5', cpars, Fleet, nsim) * multi
