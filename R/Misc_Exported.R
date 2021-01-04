@@ -43,7 +43,7 @@ avail <- function(classy, package=NULL, msg=TRUE) {
   if (temp == "function") classy <- deparse(substitute(classy))
 
   if (classy %in% c('Output', 'Input', "Mixed", "Reference")) {
-    MPs <- avail('MP')
+    MPs <- avail('MP', msg=msg)
     gettype <- MPtype(MPs)
     temp <- gettype[gettype[,2] %in% classy,1]
     if (length(temp) < 1) stop("No MPs of type '", classy, "' found", call. = FALSE)
@@ -352,7 +352,7 @@ plotFun <- function(class = c("MSE", "Data"), msg = TRUE) {
                          'plotGrowth', 'plotMat','plotRec', 'plot.OM')]
 
   if (class == "MSE") {
-    out <- c(out, "barplot", "VOI", "VOI2", "DFO_proj",
+    out <- c(out, "VOI", "VOI2", "DFO_proj",
              "PWhisker")
     out <- sort(out)
   }
