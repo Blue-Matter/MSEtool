@@ -4,7 +4,7 @@
 \alias{runMP}
 \title{Run a Management Procedure}
 \usage{
-runMP(Data, MPs = NA, reps = 100, perc = 0.5, chkMPs = TRUE, silent = FALSE)
+runMP(Data, MPs = NA, reps = 100, perc = 0.5, chkMPs = FALSE, silent = FALSE)
 }
 \arguments{
 \item{Data}{A MSEtool Data object}
