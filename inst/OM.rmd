@@ -97,12 +97,6 @@ No justification provided.
 ## M
 No justification provided. 
 
-## M2
-No justification provided. 
-
-## Mexp
-No justification provided. 
-
 ## Msd
 No justification provided. 
 
@@ -118,28 +112,22 @@ No justification provided.
 ## AC
 No justification provided. 
 
-## Period
-No justification provided. 
-
-## Amplitude
-No justification provided. 
-
 ## Linf
 No justification provided. 
 
+## Linfsd
+No justification provided. 
+
 ## K
+No justification provided. 
+
+## Ksd
 No justification provided. 
 
 ## t0
 No justification provided. 
 
 ## LenCV
-No justification provided. 
-
-## Ksd
-No justification provided. 
-
-## Linfsd
 No justification provided. 
 
 ## L50
@@ -224,30 +212,6 @@ No justification provided.
 ## DR
 No justification provided. 
 
-## SelYears
-No justification provided. 
-
-## AbsSelYears
-No justification provided. 
-
-## L5Lower
-No justification provided. 
-
-## L5Upper
-No justification provided. 
-
-## LFSLower
-No justification provided. 
-
-## LFSUpper
-No justification provided. 
-
-## VmaxLower
-No justification provided. 
-
-## VmaxUpper
-No justification provided. 
-
 ## CurrentYr
 No justification provided. 
 
@@ -277,9 +241,6 @@ No justification provided.
 No justification provided. 
 
 ## Iobs
-No justification provided. 
-
-## Ibiascv
 No justification provided. 
 
 ## Btobs
@@ -312,9 +273,6 @@ No justification provided.
 ## LFSbiascv
 No justification provided. 
 
-## FMSYbiascv
-No justification provided. 
-
 ## FMSY_Mbiascv
 No justification provided. 
 
@@ -342,7 +300,14 @@ No justification provided.
 ## Recbiascv
 No justification provided. 
 
+## sigmaRbiascv
+No justification provided. 
 
+## Eobs
+No justification provided. 
+
+## Ebiascv
+No justification provided. 
 
 # Imp Parameters
 
