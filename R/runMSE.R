@@ -56,6 +56,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     SampCpars <- SampleCpars(cpars=OM@cpars, nsim, silent=silent)
   }
 
+
   set.seed(OM@seed) # set seed again after cpars has been sampled
 
   # Stock Parameters
@@ -589,6 +590,44 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   MGTsurv<-t(exp(-apply(Mnow,1,cumsum)))
   MGT<-apply(Agearray*(StockPars$Mat_age[,,nyears]*MGTsurv),1,sum)/apply(StockPars$Mat_age[,,nyears]*MGTsurv,1,sum)
 
+  # --- Calculate B-low ----
+  Blow <- rep(NA,nsim)
+  HZN=2; Bfrac=0.5
+  if (!is.null(control$HZN)) HZN <- control$HZN
+  if (!is.null(control$Bfrac)) Bfrac <- control$Bfrac
+  if(!silent) message("Calculating B-low reference points")
+
+  MGThorizon<-floor(HZN*MGT)
+  Blow <- sapply(1:nsim,getBlow,
+                 StockPars$N,
+                 StockPars$Asize,
+                 StockPars$SSBMSY,
+                 StockPars$SSBpR,
+                 FleetPars$MPA,
+                 StockPars$SSB0,
+                 StockPars$nareas,
+                 FleetPars$retA,
+                 MGThorizon,
+                 FleetPars$Find,
+                 StockPars$Perr_y,
+                 StockPars$M_ageArray,
+                 StockPars$hs,
+                 StockPars$Mat_age,
+                 StockPars$Wt_age,
+                 StockPars$R0a,
+                 FleetPars$V,
+                 nyears,
+                 StockPars$maxage,
+                 StockPars$mov,
+                 FleetPars$Spat_targ,
+                 StockPars$SRrel,
+                 StockPars$aR,
+                 StockPars$bR,
+                 Bfrac,
+                 maxF)
+
+
+  StockPars$Blow <- Blow
   # --- Calculate Reference Yield ----
   if(!silent) message("Calculating reference yield - best fixed F strategy")
   RefY <- sapply(1:nsim, calcRefYield, StockPars, FleetPars, proyears,
@@ -652,7 +691,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
       BMSY_B0=BMSY_B0,
       VBMSY_VB0=VBMSY_VB0,
       RefY=RefY,
-      MGT=MGT
+      MGT=MGT,
+      Blow=Blow
     )
   )
 
@@ -1406,8 +1446,9 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       FM=FM_all,
       FMret=FMret_all
     )
+    Hist_out <- Hist
   } else {
-    Hist <- new("Hist")
+    Hist_out <- new("Hist")
     # Hist@Data <- new('Data')
     # Hist@OMPars <- data.frame()
     # Hist@AtAge <- list()
@@ -1440,11 +1481,14 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                             ),
                 RefPoint=list(MSY=MSY_y,
                               FMSY=FMSY_y,
-                              SSBMSY=SSBMSY_y),
+                              SSBMSY=SSBMSY_y,
+                              Dynamic_Unfished=Hist@Ref$Dynamic_Unfished,
+                              ByYear=Hist@Ref$ByYear
+                              ),
                 CB_hist=CB_hist,
                 FM_hist=FM_hist,
                 SSB_hist=SSB_hist,
-                Hist=Hist,
+                Hist=Hist_out,
                 PPD=MSElist,
                 Misc=Misc
   )
