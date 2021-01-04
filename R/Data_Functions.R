@@ -725,15 +725,15 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
 #' Data_TAc <- runMP(MSEtool::Cobia)
 #' @return invisibly returns the Data object
 #'
-runMP <- function(Data, MPs = NA, reps = 100, perc=0.5, chkMPs=TRUE, silent=FALSE) {
+runMP <- function(Data, MPs = NA, reps = 100, perc=0.5, chkMPs=FALSE, silent=FALSE) {
   if (class(MPs) != 'character' && !all(is.na(MPs))) stop('MPs must be character string', call.=FALSE)
   if (class(Data) != 'Data') stop("Data must be class 'Data'", call.=FALSE)
   if (all(is.na(MPs))) {
-    MPs <- avail("MP")
+    MPs <- avail("MP", msg = !silent)
     if (!silent) message("running all available MPs")
   }
   if (chkMPs) {
-    cans <- Can(Data, MPs=MPs)
+    cans <- Can(Data, MPs=MPs, silent=silent)
     MPs <- MPs[MPs %in% cans]
   }
   if (length(MPs) <1) stop("No MPs possible")
@@ -864,25 +864,26 @@ runMP <- function(Data, MPs = NA, reps = 100, perc=0.5, chkMPs=TRUE, silent=FALS
 #' @describeIn Can Identifies MPs that have the correct data, do not produce errors,
 #' and run within the time limit.
 #' @export
-Can <- function(Data, timelimit = 1, MPs=NA, dev=FALSE) {
-  DLMdiag(Data, "available",  timelimit = timelimit, funcs1=MPs, dev=dev)
+Can <- function(Data, timelimit = 1, MPs=NA, dev=FALSE, silent=FALSE) {
+  DLMdiag(Data, "available",  timelimit = timelimit, funcs1=MPs, dev=dev, silent=silent)
 }
 
 
 #' @describeIn Can Identifies MPs that don't have sufficient data, lead to errors, or don't run in
 #' time along with a list of their data requirements.
 #' @export Cant
-Cant <- function(Data, timelimit = 1) {
-  DLMdiag(Data, "not available", timelimit = timelimit)
+Cant <- function(Data, timelimit = 1, silent=FALSE) {
+  DLMdiag(Data, "not available", timelimit = timelimit, silent=silent)
 }
 
 #' @describeIn Can Internal function called by `Can` and `Cant`
 #' @param command What to calculate? Character. Options = c("available", "not available", "needed")
 #' @param reps The number of replicates for the MP
 #' @param funcs1 A character vector of the MP names (optional)
+#' @param silent Logical Display messages?
 #' @export
 DLMdiag <- function(Data, command = c("available", "not available", "needed"), reps = 5,
-                    timelimit = 1, funcs1=NA, dev=FALSE) {
+                    timelimit = 1, funcs1=NA, dev=FALSE, silent=FALSE) {
   command <- match.arg(command)
   if (class(Data) != "Data") stop("First argument must be object of class 'Data'", call.=FALSE)
   set.seed(101)
@@ -933,6 +934,7 @@ DLMdiag <- function(Data, command = c("available", "not available", "needed"), r
   good[chk_needed] <- FALSE
 
   for (y in 1:length(funcs1)) {
+    if (!silent) message('Checking ', funcs1[y], ' (', y, '/', length(funcs1), ')')
     if(!chk_needed[y]) {
       setTimeLimit(timelimit * 1.5)
       time1 <- Sys.time()
@@ -1065,8 +1067,8 @@ match_slots <- function(func, slotnams = paste0("Data@", slotNames("Data")),
 #' the MPs that are currently not able to run given a Data
 #' object
 #' @export Needed
-Needed <- function(Data, timelimit = 1) {
-  DLMdiag(Data, "needed", timelimit = timelimit)
+Needed <- function(Data, timelimit = 1, silent=FALSE) {
+  DLMdiag(Data, "needed", timelimit = timelimit, silent=silent)
 }
 
 
@@ -1223,14 +1225,14 @@ Sense <- function(Data, MP, nsense = 6, reps = 100, perc = c(0.05, 0.5, 0.95), p
 
   Data <- DLM_data2
   reqs <- Required(MP)  #read.csv(paste(getwd(),'/Data/Data requirements.csv',sep=''),header=T)
-  ind <- (1:nrow(reqs))[reqs[, match(MP, names(reqs))] == "Y"]
+  # ind <- (1:nrow(reqs))[reqs[, match(MP, names(reqs))] == "Y"]
   # for(i in 1:length(reqs))
 
   slotsCV <- slotNames("Data")[grep("CV_", slotNames("Data"))]
   slots <- rep("", length(slotsCV))
   for (i in 1:length(slotsCV)) slots[i] <- substr(slotsCV[i], 4, nchar(slotsCV[i]))
 
-  ind <- slots %in% unlist(strsplit(reqs[2], ", "))
+  ind <- slots %in% unlist(strsplit(reqs[1,2], ", "))
   slots <- slots[ind]
   slotsCV <- slotsCV[ind]
   sname <- slots
@@ -1245,7 +1247,7 @@ Sense <- function(Data, MP, nsense = 6, reps = 100, perc = c(0.05, 0.5, 0.95), p
     ind <- (((i - 1) * nsense + 1):(i * nsense))
     mn <- attr(Data, slots[i])[1]
     cv <- attr(Data, slotsCV[i])[1] * 2  # twice the CV of the variable specified in the DLM object
-    if (class(attr(Data, slots[i])) == "numeric") {
+    if ('numeric' %in% class(attr(Data, slots[i]))) {
       if (mn > 0) {
         attr(Data, slots[i])[ind] <- qlnorm(pss, mconv(mn,
                                                        cv * mn), sdconv(mn, cv * mn))
@@ -1324,6 +1326,8 @@ Sense <- function(Data, MP, nsense = 6, reps = 100, perc = c(0.05, 0.5, 0.95), p
 #' @param MPs optional vector of MP names
 #' @param reps Number of repititions
 #' @param timelimit The maximum time (seconds) taken to complete 10 reps
+#' @param checkMP Logical. Check if the MP can be run first?
+#' @param silent Logical. Suppress messages?
 #' @author T. Carruthers
 #' @examples
 #' \dontrun{
@@ -1332,11 +1336,16 @@ Sense <- function(Data, MP, nsense = 6, reps = 100, perc = c(0.05, 0.5, 0.95), p
 #' plot(Data)
 #' }
 #' @export
-TAC <- function(Data, MPs = NA, reps = 100, timelimit = 1) {
+TAC <- function(Data, MPs = NA, reps = 100, timelimit = 1, checkMP=TRUE, silent=FALSE) {
   if (class(Data) != "Data") stop("First argument must be object of class 'Data'", call.=FALSE)
   Data <- updateMSE(Data)
   nm <- deparse(substitute(Data))
-  PosMPs <- Can(Data, timelimit = timelimit)
+  if (checkMP) {
+    PosMPs <- Can(Data, timelimit = timelimit, silent = silent)
+  } else {
+    PosMPs <- avail("Output", msg=!silent)
+  }
+
   PosMPs <- PosMPs[PosMPs %in% avail("Output", msg=FALSE)]
   Data@PosMPs <- PosMPs
   if (!is.na(MPs[1])) Data@MPs <- MPs[MPs %in% PosMPs]
@@ -1346,7 +1355,7 @@ TAC <- function(Data, MPs = NA, reps = 100, timelimit = 1) {
   if (length(funcs) == 0) {
     stop("None of the methods 'MPs' are possible given the data available")
   } else {
-    Data <- applyMP(Data, MPs = funcs, reps)[[2]]
+    Data <- applyMP(Data, MPs = funcs, reps, silent = silent)[[2]]
     return(Data)
   }
 
@@ -2589,36 +2598,46 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE) {
   runParallel <- snowfall::sfIsRunning()
   # if (nMPs < 8 & nsims < 8) runParallel <- FALSE
 
-  for (mp in 1:nMPs) {
-    if (runParallel) {
-      temp <- snowfall::sfLapply(1:nsims, MPs[mp], Data = Data, reps = reps)
-    } else {
-      temp <- lapply(1:nsims, MPs[mp], Data = Data, reps = reps)
-    }
-    slots <- slotNames(temp[[1]])
-    for (X in slots) { # sequence along recommendation slots
-      if (X == "Misc") { # convert to a list nsim by nareas
-        rec <- lapply(temp, slot, name=X)
-      } else {
-        rec <- do.call("cbind", lapply(temp, slot, name=X)) # unlist(lapply(temp, slot, name=X))
-      }
-      if (X == "Spatial") { # convert to a matrix nsim by nareas
-        rec <- matrix(rec, nareas, nsims, byrow=FALSE)
-      }
-      recList[[X]] <- rec
-      for (x in 1:nsims) Dataout@Misc[[x]] <- recList$Misc[[x]]
-      recList$Misc <- NULL
+  if (!silent)
+    message('Attempting to run ', length(MPs), ' MPs:')
 
-      if (MPs[mp] %in% refMPs) {
-        recList$type <- 'reference'
-      } else {
-        recList$type <- 'mp'
-      }
+  for (mp in 1:nMPs) {
+    if (!silent)  message(MPs[mp])
+    if (runParallel) {
+      temp <- try(snowfall::sfLapply(1:nsims, MPs[mp], Data = Data, reps = reps), silent=TRUE)
+    } else {
+      temp <- try(lapply(1:nsims, MPs[mp], Data = Data, reps = reps), silent=TRUE)
     }
-    if (length(recList$TAC)>0)  TACout[mp,,] <- recList$TAC
-    returnList[[mp]] <- recList
-    if (!silent && any(apply(is.na(recList$TAC), 2, sum) > rep(0.5 * reps, nsims)))
-      message("Method ", MPs[mp], " produced greater than 50% NA values")
+
+    if (class(temp)=='try-error') {
+      if (!silent)
+        message("Method ", MPs[mp], " failed with error: ", temp)
+    } else {
+      slots <- slotNames(temp[[1]])
+      for (X in slots) { # sequence along recommendation slots
+        if (X == "Misc") { # convert to a list nsim by nareas
+          rec <- lapply(temp, slot, name=X)
+        } else {
+          rec <- do.call("cbind", lapply(temp, slot, name=X)) # unlist(lapply(temp, slot, name=X))
+        }
+        if (X == "Spatial") { # convert to a matrix nsim by nareas
+          rec <- matrix(rec, nareas, nsims, byrow=FALSE)
+        }
+        recList[[X]] <- rec
+        for (x in 1:nsims) Dataout@Misc[[x]] <- recList$Misc[[x]]
+        recList$Misc <- NULL
+
+        if (MPs[mp] %in% refMPs) {
+          recList$type <- 'reference'
+        } else {
+          recList$type <- 'mp'
+        }
+      }
+      if (length(recList$TAC)>0)  TACout[mp,,] <- recList$TAC
+      returnList[[mp]] <- recList
+      if (!silent && any(apply(is.na(recList$TAC), 2, sum) > rep(0.5 * reps, nsims)))
+        message("Method ", MPs[mp], " produced greater than 50% NA values")
+    }
   }
 
   Dataout@TAC <- TACout
