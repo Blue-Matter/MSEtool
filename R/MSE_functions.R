@@ -415,7 +415,7 @@ checkMSE <- function(MSEobj) {
   errs <- NULL
   for (x in seq_along(nms)) {
     chk <- try(slot(MSEobj, nms[x]), silent=TRUE)
-    if (class(chk) == "try-error") errs <- c(errs, x)
+    if ("try-error" %in% class(chk)) errs <- c(errs, x)
   }
   if (length(errs) > 0) {
     message("MSE object slots not found: ", paste(nms[errs], ""))
@@ -545,6 +545,9 @@ Sub <- function(MSEobj, MPs = NULL, sims = NULL, years = NULL) {
                 TAE=MSEobj@TAE[SubIts, SubMPs,  Years, drop=FALSE],
                 BioEco=SubBioEco,
                 RefPoint=SubRefPoint,
+                CB_hist=MSEobj@CB_hist[SubIts,  Years, drop=FALSE],
+                FM_hist=MSEobj@FM_hist[SubIts,  Years, drop=FALSE],
+                SSB_hist=MSEobj@SSB_hist[SubIts,  Years, drop=FALSE],
                 Hist=MSEobj@Hist,
                 PPD=subMSElist,
                 Misc=MSEobj@Misc)
@@ -1173,6 +1176,10 @@ joinMSE <- function(MSEobjs = NULL) {
     RefPoint[[nm]] <- abind::abind(temp, along = 1)
   }
 
+  CB_hist <- abind::abind(lapply(Allobjs, slot, name = 'CB_hist'), along = 1)
+  FM_hist <- abind::abind(lapply(Allobjs, slot, name = 'FM_hist'), along = 1)
+  SSB_hist <- abind::abind(lapply(Allobjs, slot, name = 'SSB_hist'), along = 1)
+
   Hist_List <- lapply(Allobjs, slot, name = 'Hist')
   Hist <- joinHist(Hist_List)
 
@@ -1194,7 +1201,9 @@ joinMSE <- function(MSEobjs = NULL) {
 
   MSE <- new('MSE', Name, nyears, proyears, nMPs, MPs, nsim, OM, Obs,
              SB_SBMSY, F_FMSY, N, B, SSB, VB, FM, SPR, Catch, Removals, Effort,
-             TAC, TAE, BioEco, RefPoint, Hist, PPD, Misc)
+             TAC, TAE, BioEco, RefPoint,
+             CB_hist, FM_hist, SSB_hist,
+             Hist, PPD, Misc)
   MSE
 }
 
