@@ -742,11 +742,14 @@ COSEWIC_Pplot<-function(MSEobj,syear=2017,qcol='#FFCB62', quants=c(0.05,0.25,0.5
 
   op<-par(mfrow=c(3,2),mai=c(0.6,0.6,0.05,0.05),omi=c(0.05,0.05,0.3,0.05))
   #layout(matrix(1:4,ncol=2),heights=c(2.5,1))
-  proyears<-dim(MSEobj@SB_SBMSY)[3]
-  nyears<-dim(MSEobj@SSB_hist)[3]
+  proyears<-MSEobj@proyears
+  nyears<-MSEobj@nyears
+  nsim<-MSEobj@nsim
+  maxage<- MSEobj@PPD[[1]]@MaxAge
+
   yrs<-syear+((1:proyears)-1)
-  maxage<-dim(MSEobj@CAA)[3]
   MGT<-ceiling(MSEobj@OM$MGT)
+
   if(proyears<maxage*3)message("This function requires a suitably long time horizon for projections. Please create a COSEWIC class MSE object using the function runCOSEWIC()")
   timehorizon<-MGT*3
 
@@ -786,11 +789,11 @@ COSEWIC_Dplot<-function(MSEobj,syear=2017,qcol='#79F48D', quants=c(0.05,0.25,0.5
 
   op<-par(mfrow=c(3,1),mai=c(0.6,0.8,0.05,0.05),omi=c(0.05,0.05,0.3,0.05))
   #layout(matrix(1:4,ncol=2),heights=c(2.5,1))
-  proyears<-dim(MSEobj@SB_SBMSY)[3]
-  nyears<-dim(MSEobj@SSB_hist)[3]
-  nsim<-dim(MSEobj@SSB_hist)[1]
+  proyears<-MSEobj@proyears
+  nyears<-MSEobj@nyears
+  nsim<-MSEobj@nsim
   yrs<-syear+((-nyears+1):proyears)
-  maxage<-dim(MSEobj@CAA)[3]
+  maxage<- MSEobj@PPD[[1]]@MaxAge
   MGT<-ceiling(MSEobj@OM$MGT)
   mMGT<-max(MGT)
   if(proyears<maxage*nGT)stop("This function requires a suitably long time horizon for projections. Please create a COSEWIC class MSE object using the function runCOSEWIC()")
@@ -805,7 +808,7 @@ COSEWIC_Dplot<-function(MSEobj,syear=2017,qcol='#79F48D', quants=c(0.05,0.25,0.5
   i<-0
   for(MP in ord){
     i<-i+1
-    SSBh<-apply(MSEobj@SSB_hist,c(1,3),sum)
+    SSBh<-MSEobj@SSB_hist
     SSBd<-SSB<-cbind(matrix(rep(SSBh[,1],mMGT*nGT),nrow=nsim),SSBh,MSEobj@SSB[,MP,])
     SSBd[ind2]<-SSB[ind2]/SSB[ind1] * 100
     SSBd<-SSBd[,(mMGT*3)+(1:(nyears+proyears)-1)]
@@ -831,13 +834,16 @@ COSEWIC_Blow<-function(MSEobj,syear=2017,qcol=rgb(0.4,0.8,0.95), quants=c(0.05,0
 
   op<-par(mai=c(0.6,0.8,0.05,0.05),omi=c(0.05,0.05,0.3,0.05))
   #layout(matrix(1:4,ncol=2),heights=c(2.5,1))
-  proyears<-dim(MSEobj@SB_SBMSY)[3]
-  nyears<-dim(MSEobj@SSB_hist)[3]
-  nsim<-dim(MSEobj@SSB_hist)[1]
+
+  proyears<-MSEobj@proyears
+  nyears<-MSEobj@nyears
+  nsim<-MSEobj@nsim
+  yrs<-syear+((-nyears+1):proyears)
+  maxage<- MSEobj@PPD[[1]]@MaxAge
+
   allyrs<-syear+((-nyears+1):proyears)
   pyrs<-syear+((1:proyears)-1)
   hyrs<-syear-((nyears:1)-1)
-  maxage<-dim(MSEobj@CAA)[3]
   MGT<-ceiling(MSEobj@OM$MGT)
   mMGT<-max(MGT)
   if(proyears<maxage*nGT)stop("This function requires a suitably long time horizon for projections. Please create a COSEWIC class MSE object using the function runCOSEWIC()")
@@ -850,6 +856,8 @@ COSEWIC_Blow<-function(MSEobj,syear=2017,qcol=rgb(0.4,0.8,0.95), quants=c(0.05,0
   Blow=MSEobj@OM$Blow
 
   histSSB<-apply(apply(MSEobj@SSB_hist,c(1,3),sum)/Blow < 1,2,mean)*100
+  histSSB<-apply(MSEobj@SSB_hist/Blow < 1,2,mean)*100
+
   NFrefSSB<-apply(MSEobj@SSB[,match("NFref",MSEobj@MPs),]/Blow < 1,2,mean)*100
   FMSYrefSSB<-apply(MSEobj@SSB[,match("FMSYref",MSEobj@MPs),]/Blow < 1,2,mean)*100
   curESSB<-apply(MSEobj@SSB[,match("curE",MSEobj@MPs),]/Blow < 1,2,mean)*100
@@ -878,16 +886,19 @@ COSEWIC_Hplot<-function(MSEobj,syear=2017,qcol=rgb(0.4,0.8,0.95), quants=c(0.05,
   lcol<-makeTransparent(qcol,85)
   op<-par(mai=c(0.6,0.6,0.05,0.05),omi=c(0.05,0.05,0.3,0.05))
   layout(matrix(1:4,ncol=2),heights=c(2.5,1))
-  proyears<-dim(MSEobj@SB_SBMSY)[3]
-  nyears<-dim(MSEobj@SSB_hist)[3]
-  yrs<-syear-((nyears:1)-1)
-  maxage<-dim(MSEobj@CAA)[3]
+  proyears<-MSEobj@proyears
+  nyears<-MSEobj@nyears
+  nsim<-MSEobj@nsim
+  yrs<-syear+((-nyears+1):proyears)
+  maxage<- MSEobj@PPD[[1]]@MaxAge
+
   MGT<-ceiling(MSEobj@OM$MGT)
   if(proyears<maxage*3)message("This function requires a suitably long time horizon for projections. Please create a COSEWIC class MSE object using the function runCOSEWIC()")
   timehorizon<-MGT*3
 
   #Spawning biomass extraction
-  SSB<-apply(MSEobj@SSB_hist,c(1,3),sum)
+  # SSB<-apply(MSEobj@SSB_hist,c(1,3),sum)
+  SSB <-MSEobj@SSB_hist
 
   # Depletion plot relative to B0
   D<-SSB/MSEobj@OM$SSB0
