@@ -516,7 +516,14 @@ Sub <- function(MSEobj, MPs = NULL, sims = NULL, years = NULL) {
 
   SubRefPoint <- MSEobj@RefPoint
   for (i in 1:length(SubRefPoint)) {
-    SubRefPoint[[i]] <- SubRefPoint[[i]] [SubIts, SubMPs, c(1:MSEobj@nyears, MSEobj@nyears+Years), drop=FALSE]
+    if ('array' %in% class(SubRefPoint[[i]])) {
+      SubRefPoint[[i]] <- SubRefPoint[[i]][SubIts, SubMPs, c(1:MSEobj@nyears, MSEobj@nyears+Years), drop=FALSE]
+    } else if ('list' %in% class(SubRefPoint[[i]])) {
+        for (j in names(SubRefPoint[[i]])) {
+          SubRefPoint[[i]][[j]] <- SubRefPoint[[i]][[j]][SubIts, c(1:MSEobj@nyears, MSEobj@nyears+Years), drop=FALSE]
+        }
+    }
+
   }
 
   subMSElist <- MSEobj@PPD[SubMPs] # doesn't subset Data by years or simulations
