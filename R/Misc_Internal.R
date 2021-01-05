@@ -444,7 +444,7 @@ CheckDuplicate <- function(MPs) {
 CheckMPs <- function(MPs=NA, silent=FALSE) {
   if (all(is.na(MPs))) {
     if (!silent) message('Argument `MPs=NA`, using all example MPs in `MSEtool`')
-    MPs <- avail("MP", 'MSEtool')
+    MPs <- avail("MP", 'MSEtool', msg=!silent)
   }
 
   # Check for custom MPs with same name as built-it MPs
