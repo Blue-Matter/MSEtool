@@ -56,7 +56,6 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     SampCpars <- SampleCpars(cpars=OM@cpars, nsim, silent=silent)
   }
 
-
   set.seed(OM@seed) # set seed again after cpars has been sampled
 
   # Stock Parameters
@@ -304,9 +303,9 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     }
   }
 
-
   # --- Check that q optimizer has converged ----
-  LimBound <- c(1.1, 0.9)*range(bounds)  # bounds for q (catchability). Flag if bounded optimizer hits the bounds
+  LimBound <- c(1.1, 0.9)*range(bounds)
+  # bounds for q (catchability). Flag if bounded optimizer hits the bounds
   if (!is.null(SampCpars$qs)) {
     probQ <- numeric(0)
   } else{
@@ -1167,7 +1166,6 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     SLarray_P <- MPCalcs$SLarray_P # vulnerable-at-length
     FMa[,mm,y] <- MPCalcs$Ftot
 
-
     LR5_P <- MPCalcs$LR5_P
     LFR_P <- MPCalcs$LFR_P
     Rmaxlen_P <- MPCalcs$Rmaxlen_P
@@ -1556,6 +1554,7 @@ runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
     MPs <- CheckMPs(MPs=MPs, silent=silent)
 
   HistSims <- Simulate(OM, parallel, silent)
+
 
   if (Hist) {
     if(!silent) message("Returning historical simulations")
