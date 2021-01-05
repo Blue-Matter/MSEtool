@@ -325,7 +325,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   Data@CV_VInd <- cbind(Data@CV_VInd, newCV_Ind)
 
   if (!is.null(RealData) && ncol(RealData@VInd)>nyears &&
-      !all(is.na(RealData$Data@VInd[1,(nyears+1):length(RealData@VInd[1,])]))) {
+      !all(is.na(RealData@VInd[1,(nyears+1):length(RealData@VInd[1,])]))) {
     # update projection index with observed index if it exists
     addYr <- min(y,ncol(RealData@VInd) - nyears)
     Data@VInd[,(nyears+1):(nyears+addYr)] <- matrix(RealData@VInd[1,(nyears+1):(nyears+addYr)],
@@ -344,7 +344,12 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
     AddInd <- array(NA, dim=c(nsim, n.ind, nyears+y-1))
     CV_AddInd  <- array(NA, dim=c(nsim, n.ind, nyears+y-1))
     for (i in 1:n.ind) {
-      Ind_V <- RealData@AddIndV[1,i, ]
+      if (is.na(RealData@AddIndV[1,, ])) {
+        Ind_V <- NA
+      } else {
+        Ind_V <- RealData@AddIndV[1,i, ]
+      }
+      if (is.na(Ind_V)) Ind_V <- rep(1, Data@MaxAge+1)
       Ind_V <- matrix(Ind_V, nrow=Data@MaxAge+1, ncol= nyears+proyears)
       Ind_V <- replicate(nsim, Ind_V) %>% aperm(., c(3,1,2))
 
@@ -391,7 +396,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
 
       # standardize, apply  beta & obs error
       tempI <- exp(lcs(tempI))^ObsPars$AddIbeta[,i] * ObsPars$AddIerr[,i,yr.ind:(nyears + (y - 1))]
-      year.ind <- max(which(!is.na(RealData@AddInd[1,i,1:nyears])))
+      year.ind <- max(which(!is.na(RealData@AddInd[1,i,])))
 
       scaler <- RealData@AddInd[1,i,year.ind]/tempI[,1]
       scaler <- matrix(scaler, nrow=nsim, ncol=ncol(tempI))
@@ -404,9 +409,9 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
       CV_AddInd[,i,] <- cbind(Data@CV_AddInd[,i,], newCV_Ind)
 
       if (!is.null(RealData) && length(RealData@AddInd[1,i,])>nyears &&
-          !all(is.na(RealData$Data@AddInd[1,i,(nyears+1):length(RealData@AddInd[1,i,])]))) {
+          !all(is.na(RealData@AddInd[1,i,(nyears+1):length(RealData@AddInd[1,i,])]))) {
         # update projection index with observed index if it exists
-        addYr <- min(y,length(RealData@AddInd[1,i,]) - nyears)
+        addYr <- min(y-1,length(RealData@AddInd[1,i,]) - nyears)
 
         AddInd[,i,(nyears+1):(nyears+addYr)] <- matrix(RealData@AddInd[1,i,(nyears+1):(nyears+addYr)],
                                                        nrow=nsim, ncol=addYr, byrow=TRUE)
@@ -928,7 +933,8 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
 
     fitbeta <- fitIerr <- TRUE
     if (!is.null(SampCpars$AddIbeta)) {
-      if (any(dim(SampCpars$AddIbeta) != c(nsim, n.ind))) stop("cpars$AddIbeta must be dimensions c(nsim, n.ind)")
+      if (any(dim(SampCpars$AddIbeta) != c(nsim, n.ind)))
+        stop("cpars$AddIbeta must be dimensions c(nsim, n.ind)")
       ObsPars$AddIbeta <- SampCpars$AddIbeta
       fitbeta <- FALSE
     } else {
@@ -961,18 +967,34 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     UnitsTab <- data.frame(n=1:0, units=c('biomass', 'numbers'))
     TypeTab <- data.frame(n=1:3, type=c('total', 'spawning', 'vuln.'))
     for (i in 1:n.ind) {
-
       units <- UnitsTab$units[match(AddIunits[i], UnitsTab$n)]
       type <- TypeTab$type[match(AddIndType[i], TypeTab$n)]
 
-      if(msg) message("Additional index ", i, ' - ', type, ' stock', ' (', units, ')')
-      ind <- RealData@AddInd[1,i,1:nyears]
-      cv_ind <- RealData@CV_AddInd[1,i,1:nyears]
+      if(msg) message("Additional index ", i, ' - ', type, ' stock', paste0(' (', units, ')'))
+      nyrs <- length(RealData@AddInd[1,i,])
+      ind <- RealData@AddInd[1,i,1:nyrs]
+      cv_ind <- RealData@CV_AddInd[1,i,1:nyrs]
+      if (nyrs < nyears) {
+        ind <- c(ind, rep(NA,nyears-nyrs))
+        cv_ind <- c(cv_ind, rep(NA,nyears-nyrs))
+      }
       Data_out@AddInd[,i,] <- matrix(ind, nrow=nsim, ncol=nyears, byrow=TRUE)
       Data_out@CV_AddInd[,i,] <- matrix(cv_ind, nrow=nsim, ncol=nyears, byrow=TRUE)
 
       # Calculate observation error for future projections
-      Ind_V <- RealData@AddIndV[1,i, ]
+      if (is.na(RealData@AddIndV[1,, ])) {
+        # no vulnerability-at-age included
+        Ind_V <- NA
+      } else {
+        Ind_V <- RealData@AddIndV[1,i, ]
+      }
+
+      if (is.na(Ind_V)) Ind_V <- rep(1, Data_out@MaxAge+1)
+
+      # check dimensions
+      if (!length(Ind_V) == Data_out@MaxAge+1)
+        stop('Vulnerability-at-age for additional index ', i, ' is not length `maxage`+1' )
+
       if (AddIunits[i]) {
         if (AddIndType[i]==1) SimIndex <- apply(StockPars$Biomass, c(1, 2, 3), sum) # Total Biomass-based index
         if (AddIndType[i]==2) SimIndex <- apply(StockPars$SSB, c(1, 2, 3), sum) # Spawning Biomass-based index
@@ -996,8 +1018,23 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
 
       # Sample for projection years
       if (fitIerr) {
-        yr.ind <- max(which(!is.na(RealData@AddInd[1,i,1:nyears])))
-        ObsPars$AddIerr[,i, (nyears+1):(nyears+proyears)] <- generateRes(df=I_Err, nsim, proyears, lst.err=log(ObsPars$AddIerr[,i,yr.ind]))
+        yr.ind <- max(which(!is.na(RealData@AddInd[1,i,1:nyrs])))
+        diff <- nyears-nyrs
+
+        ObsPars$AddIerr[,i, (nyrs+1):(nyears+proyears)] <- generateRes(df=I_Err, nsim, proyears+diff, lst.err=log(ObsPars$AddIerr[,i,yr.ind]))
+      }
+
+      if (nyrs < nyears) {
+        # add simulated index for missing years
+        tempI <- SimIndex
+
+        # standardize, apply  beta & obs error
+        tempI <- exp(lcs(tempI))^ObsPars$AddIbeta[,i] * ObsPars$AddIerr[,i,1:nyears]
+        year.ind <- 1 #  max(which(!is.na(Data_out@AddInd[1,i,1:nyears])))
+        scaler <- Data_out@AddInd[1,i,year.ind]/tempI[,1]
+        scaler <- matrix(scaler, nrow=nsim, ncol=ncol(tempI))
+        tempI <- tempI * scaler # convert back to historical index scale
+        Data_out@AddInd[,i,1:nyears] <- tempI
       }
 
       ObsPars$AddInd_Stat[[i]] <- I_Err # index fit statistics
