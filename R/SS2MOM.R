@@ -20,6 +20,7 @@
 #' @param Obs The observation model (class Obs). These functions do not update implementation parameters.
 #' @param Imp The implementation model (class Imp). These functions do not update implementation parameters.
 #' @param silent Whether to silence messages to the console.
+#' @param seasons_to_years Logical, when season is the time step, whether to convert OM from a seasonal model to annual model.
 #' @param Name The name of the operating model
 #' @param Source Reference to assessment documentation e.g. a url
 #' @param Author Who did the assessment
@@ -46,7 +47,6 @@ SS2MOM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1
   } else {
     replist <- SS_import(SSdir, silent, ...)
   }
-  if(replist$nseasons > 1) warning("Currently only supporting one season per year.")
 
   # Create MOM object
   MOM <- suppressMessages(new("MOM"))
