@@ -840,12 +840,13 @@ sample_recruitment <- function(Perr_hist, proyears, procsd, AC, seed) {
   set.seed(seed)
   nsim <- nrow(Perr_hist)
   procmu <- -0.5 * procsd^2 * (1 - AC/sqrt(1 - AC^2)) # adjusted log normal mean with AC
-  Perr_proj <- rnorm(proyears * nsim, rep(procmu, each = nsim), rep(procsd, each = nsim)) %>%
+  Perr_delta <- rnorm(proyears * nsim, rep(procmu, each = nsim), rep(procsd, each = nsim)) %>%
     matrix(nrow = nsim, ncol = proyears) # Sample recruitment for projection
+  Perr_proj <- matrix(NA_real_, nsim, proyears)
 
   # Add autocorrelation to projection recruitment
-  Perr_proj[, 1] <- AC * Perr_hist[, ncol(Perr_hist)] + Perr_proj[, 1] * sqrt(1 - AC^2)
-  for(y in 2:ncol(Perr_proj)) Perr_proj[, y] <- AC * Perr_proj[, y-1] + Perr_proj[, y] * sqrt(1 - AC^2)
+  Perr_proj[, 1] <- AC * Perr_hist[, ncol(Perr_hist)] + Perr_delta[, 1] * sqrt(1 - AC^2)
+  for(y in 2:ncol(Perr_proj)) Perr_proj[, y] <- AC * Perr_proj[, y-1] + Perr_delta[, y] * sqrt(1 - AC^2)
 
   return(Perr_proj)
 }
@@ -875,4 +876,81 @@ get_V_from_Asel2 <- function(ff, i, replist, mainyrs, maxage, rescale = FALSE) {
     Vout <- Vout/Vapical
   }
   return(Vout)
+}
+
+
+SS_seasonalyears_to_annual <- function(OM, SSdir) {
+  
+  if(is.list(SSdir)) {
+    replist <- SSdir
+  } else {
+    replist <- SS_import(SSdir, silent, ...)
+  }
+  
+  nseas <- 1/replist$seasdurations
+  mainyrs <- replist$startyr:replist$endyr
+  year_frac <- data.frame(mainyrs = mainyrs, seas = rep(1:nseas, length(mainyrs)/nseas), 
+                          true_year = rep(1:(length(mainyrs)/nseas), each = nseas))
+  
+  age_frac <- data.frame(age = 0:OM@maxage) %>% mutate(true_age = floor(age/nseas))
+  
+  OM2 <- OM
+  OM2@nyears <- OM2@CurrentYr <- max(year_frac$true_year)
+  OM2@maxage <- max(age_frac$true_age)
+  
+  avg <- c("M_ageArray", "Wt_age", "Len_age", "LatASD", "Mat_age", "V")
+  OM2@cpars[match(avg, names(OM2@cpars))] <- 
+    lapply(avg, function(xx) parse(text = paste0("OM@cpars$", xx)) %>% eval() %>%
+             cpars_season(FUN = mean, year_frac = year_frac, age_frac = age_frac, proyears = OM2@proyears))
+  
+  OM2@cpars$M_ageArray <- OM2@cpars$M_ageArray * nseas
+  
+  OM2@cpars$V <- apply(OM2@cpars$V, c(1, 3), function(x) x/max(x)) %>% aperm(c(2, 1, 3))
+  OM2@cpars$Find <- cpars_season_Find(OM@cpars$Find, year_frac)
+  OM2@EffYears <- year_frac$true_year
+  OM2@EffLower <- OM2@EffUpper <- OM2@cpars$Find[1, ]
+  
+  OM2@cpars$Perr_y <- cpars_season_Perr(OM@cpars$Perr_y, year_frac, age_frac, OM2@proyears)
+  if(!is.null(OM@cpars$mov)) {
+    OM2@cpars$mov <- cpars_season_mov(OM@cpars$mov, age_frac)
+  }
+  OM2@R0 <- OM@R0 * nseas
+  
+  return(OM2)
+}
+
+cpars_season <- function(x, FUN, year_frac, age_frac, proyears) {
+  nsim <- dim(x)[1]
+  nyears <- max(year_frac$true_year)
+  n_age <- length(unique(age_frac$true_age))
+  
+  hist_x <- x[1, , 1:nrow(year_frac)] %>% 
+    apply(2, function(xx) aggregate(xx, by = list(Age = age_frac$true_age), FUN)$x) %>%
+    apply(1, function(xx) aggregate(xx, by = list(Yr = year_frac$true_year), FUN)$x)
+  
+  proj_x <- hist_x[nrow(hist_x), ] %>% matrix(proyears, n_age, byrow = TRUE)
+  
+  rbind(hist_x, proj_x) %>% array(c(nyears + proyears, n_age, nsim)) %>% aperm(3:1)
+}
+
+cpars_season_Find <- function(x, year_frac) {
+  aggregate(x[1, ], by = list(Yr = year_frac$true_year), mean) %>% getElement("x") %>% 
+    matrix(nrow(x), max(year_frac$true_year), byrow = TRUE)
+}
+
+cpars_season_Perr <- function(x, year_frac, age_frac, proyears) {
+  init_p <- x[, 2:nrow(age_frac)-1] %>% 
+    apply(1, function(xx) aggregate(xx, by = list(Age = age_frac$true_age[2:nrow(age_frac)-1]), mean)$x)
+  
+  hist_p <- x[, nrow(age_frac):(nrow(age_frac) + nrow(year_frac) - 1)]  %>% 
+    apply(1, function(xx) aggregate(xx, by = list(Yr = year_frac$true_year), mean)$x)
+  
+  rbind(init_p, hist_p) %>% t() %>% cbind(x[, (nrow(age_frac) + nrow(year_frac)):ncol(x)])
+}
+
+cpars_season_mov <- function(x, age_frac) {
+  mov <- apply(x, c(1, 3, 4), function(xx) aggregate(xx, by = list(Yr = age_frac$true_age), mean)$x) %>%
+    aperm(c(2, 1, 3, 4))
+  #mov <- apply(mov, c(1, 2), function(xx) apply(xx, 1, function(xxx) xxx/sum(xxx)))
+  return(mov)
 }

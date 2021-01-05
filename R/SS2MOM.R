@@ -20,6 +20,7 @@
 #' @param Obs The observation model (class Obs). These functions do not update implementation parameters.
 #' @param Imp The implementation model (class Imp). These functions do not update implementation parameters.
 #' @param silent Whether to silence messages to the console.
+#' @param seasons_to_years Logical, when season is the time step, whether to convert OM from a seasonal model to annual model.
 #' @param Name The name of the operating model
 #' @param Source Reference to assessment documentation e.g. a url
 #' @param Author Who did the assessment

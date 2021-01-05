@@ -20,10 +20,20 @@ h1 { /* Header 1 */
 
 ```{r, fig.cap = "Spawning biomass from the operating model (black lines and dots) and Stock Synthesis (red lines)."}
 year_lab <- "Year"
-OM_years <- replist$startyr:replist$endyr
+mainyrs <- replist$startyr:replist$endyr
+if(Hist@OM@nyears == length(mainyrs)) {
+  OM_years <- replist$startyr:replist$endyr
+} else {
+  nseas <- 1/replist$seasdurations
+  year_frac <- data.frame(mainyrs = mainyrs, seas = rep(1:nseas, length(mainyrs)/nseas), 
+                          true_year = rep(1:(length(mainyrs)/nseas), each = nseas))
+  age_frac <- data.frame(age = 0:OM@maxage) %>% mutate(true_age = floor(age/nseas))
+  OM_years <- dplyr::filter(year_frac, seas == 1) %>% getElement("mainyrs")
+}
 
-SSB_SS <- replist$timeseries %>% filter(Yr %in% OM_years) %>% group_by(Yr) %>% 
-  summarise(SpawnBio = mean(SpawnBio, na.rm = TRUE)) %>% getElement("SpawnBio")
+SSB_SS <- replist$timeseries %>% filter(Yr %in% OM_years) %>% group_by(Yr, Area) %>% 
+  summarise(SpawnBio = mean(SpawnBio, na.rm = TRUE)) %>% group_by(Yr) %>% 
+  summarise(SpawnBio = sum(SpawnBio, na.rm = TRUE)) %>% getElement("SpawnBio")
 SSB_OM <- apply(Hist@AtAge$SBiomass, c(1, 3), sum)
 ylim_SSB <- c(0, 1.1 * max(c(SSB_SS, SSB_OM)))
 matplot(OM_years, t(SSB_OM), xlab = year_lab, ylab = "Spawning Biomass", ylim = ylim_SSB, pch = 1, col = "black", typ = "o")
@@ -75,20 +85,32 @@ if(replist$SS_versionNumeric == 3.30) {
   N_at_age <- reshape2::melt(replist$natage[replist$natage$`Beg/Mid` == "B" & replist$natage$Seas == 1, -c(9:12)], 
                              list("Area", "Bio_Pattern", "Sex", "BirthSeas", "Settlement", "Platoon", "Morph", "Yr"),
                              variable.name = "Age", value.name = "N") %>% 
-    dplyr::filter(Yr %in% OM_years, Sex %in% gender)
+    dplyr::filter(Yr %in% mainyrs, Sex %in% gender)
 } else {
   
-  R_main <- replist$timeseries$Yr %in% OM_years
+  R_main <- replist$timeseries$Yr %in% mainyrs
   Recruits <- aggregate(replist$timeseries$Recruit[R_main], list(Yr = replist$timeseries$Yr[R_main]), 
                         sum, na.rm = TRUE)
   
   N_at_age <- reshape2::melt(replist$natage[replist$natage$`Beg/Mid` == "B" & replist$natage$Seas == 1, -c(8:11)], 
                              list("Area", "Bio_Pattern", "Sex", "BirthSeas", "Platoon", "Morph", "Yr"),
                              variable.name = "Age", value.name = "N") %>% 
-    dplyr::filter(Yr %in% OM_years, Sex %in% gender) %>% group_by(Yr, Age) %>% summarise(N = sum(N)) %>%
+    dplyr::filter(Yr %in% mainyrs, Sex %in% gender) %>% group_by(Yr, Age) %>% summarise(N = sum(N)) %>%
     reshape2::acast(list("Yr", "Age"), value.var = "N")
   N_at_age[, 1] <- Recruits$x
   
+}
+
+if(Hist@OM@nyears != length(mainyrs)) {
+  season_N_at_age <- function(x, year_frac, age_frac) {
+    newR <- aggregate(N_at_age[, 1], by = list(Yr = year_frac$true_year), sum)$x
+    
+    other <- N_at_age[year_frac$seas == 1, -c(1:nseas)] %>% 
+      apply(1, function(xx) aggregate(xx, by = list(Age = age_frac$true_age[-c(1:nseas)]), sum)$x)
+    
+    rbind(newR, other) %>% t()
+  }
+  N_at_age <- season_N_at_age(N_at_age, year_frac, age_frac)
 }
 
 #N_at_age <- summarise(group_by(N_at_age, Yr, Age), N = sum(N)) # Sum over area, morphs, platoons, sex, etc.
