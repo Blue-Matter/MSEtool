@@ -128,6 +128,25 @@ cat("#' ", ObjectClass, " class objects",
     "\nNULL", "\n\n",
     sep = "", append = TRUE, file = file.path("R/", RoxygenFile))
 
+# ---- Import Data XL (internal data) ----
+DataSlots <- readxl::read_xlsx('build_tools/Class_definitions/Class_definitions.xlsx',
+                                sheet='Data')
+DataSlots$Numeric[is.na(DataSlots$Numeric)] <- TRUE
+DataSlots$Timeseries[is.na(DataSlots$Timeseries)] <- FALSE
+
+usethis::use_data(DataSlots, internal = FALSE, overwrite = TRUE)
+
+clss <- class(DataSlots)
+name <- "DataSlots"
+cat("#'  ", name, " ",
+    "\n#'",
+    "\n#'  Dataframe with details of slots in Dat object",
+    "\n#'",
+    "\n#'\n",
+    '"', name, '"\n\n\n', sep="", append=TRUE,
+    file=file.path('R/', RoxygenFile))
+
+
 # ---- Build Data Objects ----
 files <- list.files("build_tools/Objects/Data", full.names = TRUE)
 for (fl in files) {
@@ -315,7 +334,7 @@ for (r in 1:nrow(mat)) {
 ReqData <- as.data.frame(ReqData, stringsAsFactors=FALSE)
 colnames(ReqData) <- c("MP", "Data")
 
-usethis::use_data(ReqData, internal = TRUE, overwrite = TRUE)
+usethis::use_data(ReqData, internal = FALSE, overwrite = TRUE)
 
 clss <- class(ReqData)
 name <- "ReqData"
@@ -327,13 +346,6 @@ cat("#'  ", name, " ",
     '"', name, '"\n\n\n', sep="", append=TRUE,
     file=file.path('R/', RoxygenFile))
 
-# ---- Import Data XL (internal data) ----
-Data_Slots <- readxl::read_xlsx('build_tools/Class_definitions/Class_definitions.xlsx',
-                        sheet='Data')
-Data_Slots$Numeric[is.na(Data_Slots$Numeric)] <- TRUE
-Data_Slots$Timeseries[is.na(Data_Slots$Timeseries)] <- FALSE
-
-usethis::use_data(Data_Slots, internal = TRUE, overwrite = TRUE)
 
 
 # ---- Add life-history data-base as data object  ----
