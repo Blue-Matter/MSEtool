@@ -186,7 +186,6 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
   datasheet$Name[datasheet$Name == "Recruitment"] <- 'Recruitment Index'
   datasheet$Name[datasheet$Name == "LenCV"] <- 'CV of length-at-age'
 
-
   Data <- new("Data")
 
   # ---- Main ----
@@ -204,14 +203,14 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
     temp
   }
 
-  # Data_Slots <- MSEtool:::Data_Slots # internal data object (in sysdata.rda)
+  # DataSlots <- MSEtool:::DataSlots #
 
-  # loop over Data_Slots and populate slots in Data object with imported values
-  for(i in 1:nrow(Data_Slots)) {
-    if (!is.na(Data_Slots$Slot[i]) & !Data_Slots$Timeseries[i]) {
-      isNumeric <- Data_Slots$Numeric[i]
-      Name <- Data_Slots$Name[i]
-      Slot <- Data_Slots$Slot[i]
+  # loop over DataSlots and populate slots in Data object with imported values
+  for(i in 1:nrow(DataSlots)) {
+    if (!is.na(DataSlots$Slot[i]) & !DataSlots$Timeseries[i]) {
+      isNumeric <- DataSlots$Numeric[i]
+      Name <- DataSlots$Name[i]
+      Slot <- DataSlots$Slot[i]
       slot(Data, Slot) <- import_convert(Name, datasheet, isNumeric)
     }
   }
@@ -242,9 +241,9 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
       temp <- datasheet[row, columns]
     }
 
-    ind <- which(Data_Slots$Name == Name)
-    Slot <- Data_Slots$Slot[ind]
-    isNumeric <- Data_Slots$Numeric[ind]
+    ind <- which(DataSlots$Name == Name)
+    Slot <- DataSlots$Slot[ind]
+    isNumeric <- DataSlots$Numeric[ind]
     if (isNumeric) temp <- suppressWarnings(as.numeric(temp))
 
     if (grepl('CV', Name)) {
@@ -276,16 +275,13 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
     stop("`Year` must be sequential and include all years")
   Nyears <- length(Data@Year)
 
-
   # Catch time-series
   Data <- import_convert_ts('Catch', datasheet, Data)
   Data <- import_convert_ts('CV Catch', datasheet, Data)
 
-
   # Effort time-series
   Data <- import_convert_ts('Effort', datasheet, Data)
   Data <- import_convert_ts('CV Effort', datasheet, Data)
-
 
   # Total abundance index - fishery dependant
   Data <- import_convert_ts('Abundance index', datasheet, Data)
@@ -307,7 +303,8 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
   n_cv <- sum(sub(" .*$", "", index_text) == "CV")
   n_vuln <- sum(sub(" .*$", "", index_text) == "Vuln")
   if (n_cv != n_indices) stop("CV missing for some or all additional indices", call. = FALSE)
-  if (n_vuln != n_indices) stop("Vulnerability-at-age schedule missing for some or all additional indices", call. = FALSE)
+  if (n_vuln != n_indices)
+    stop("Vulnerability-at-age schedule missing for some or all additional indices", call. = FALSE)
 
   if (!all(is.na(datasheet[which(datasheet$Name == "Index 1"),2:(Nyears+1)]))) {
     indexexist <- TRUE
@@ -333,9 +330,15 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
       Data@CV_AddInd[1,x,] <- suppressWarnings(datasheet[ind, 2:(Nyears+1)] %>% as.numeric())
       ind <- which(datasheet$Name == paste("Vuln Index", x))
       Data@AddIndV[1,x,] <- suppressWarnings(datasheet[ind, 2:(Data@MaxAge+2)] %>% as.numeric())
-      if (any(is.na(Data@AddIndV[1,x,])))
-        warning("Vuln Index must be length `Maximum age`+1 and contain only numeric values (no NA)")
+      # if (any(is.na(Data@AddIndV[1,x,])))
+        # warning("Vuln Index must be length `Maximum age`+1 and contain only numeric values (no NA)")
     }
+
+    ind <- which(datasheet$Name == 'AddIndType')
+    Data@AddIndType <- suppressWarnings(as.numeric(datasheet[ind,2:(n_indices+1)]))
+
+    ind <- which(datasheet$Name == 'AddIunits')
+    Data@AddIunits <- suppressWarnings(as.numeric(datasheet[ind,2:(n_indices+1)]))
   }
 
 
