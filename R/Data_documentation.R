@@ -147,6 +147,14 @@ NULL
 #' avail("Imp")
 NULL
 
+#'  DataSlots 
+#'
+#'  Dataframe with details of slots in Dat object
+#'
+#'
+"DataSlots"
+
+
 #' @rdname Data-class-objects 
 "Atlantic_mackerel"
 
