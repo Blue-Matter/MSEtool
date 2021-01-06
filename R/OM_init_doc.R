@@ -627,6 +627,7 @@ OMdoc <- function(OM=NULL, rmd.source=NULL, overwrite=FALSE, out.file=NULL,
       if (OM2@nsim > 48) {
         message("nsim too high for documentation purposes. Running here with nsim=48")
         OM2@nsim <- 48
+        OM2 <- SubCpars(OM2, 1:48)
       }
       out<- Simulate(OM2, parallel = FALSE, silent=TRUE, ...)
       Pars <- c(out@AtAge, out@TSdata, out@Ref, out@SampPars)

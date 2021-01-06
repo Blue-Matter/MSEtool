@@ -929,6 +929,7 @@ COSEWIC_Hplot<-function(MSEobj,syear=2017,qcol=rgb(0.4,0.8,0.95), quants=c(0.05,
 #' @author T. Carruthers, Q. Huynh
 #' @export SubCpars
 SubCpars<-function(OM, sims = 1:OM@nsim) {
+  if(!length(OM@cpars)) return(OM)
   
   if(is.numeric(sims)) {
     sims2 <- logical(OM@nsim)
