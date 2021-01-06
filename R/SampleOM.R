@@ -1614,6 +1614,7 @@ SampleImpPars <- function(Imp, nsim=NULL, cpars=NULL, nyears=NULL, proyears=NULL
 validcpars <- function(type=c("all", "Stock", "Fleet", "Obs", "Imp", "internal"),
                        valid=TRUE) {
 
+  Var <- Desc <- NULL # checks
   type <- match.arg(type, choices=c("all", "Stock", "Fleet", "Obs", "Imp", "internal"),
                     several.ok = TRUE )
   if ('all' %in% type) type <- c("Stock", "Fleet", "Obs", "Imp", "internal")
