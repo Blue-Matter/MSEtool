@@ -11,12 +11,6 @@ Hist <- Simulate(OM)
 
 testthat::expect_s4_class(Hist, 'Hist')
 
-curEref <- function(x, Data, ...) {
-  Rec <- new('Rec')
-  Rec@Effort <- 1
-  Rec
-}
-class(curEref) <- 'MP'
 
 MSE <- Project(Hist, MPs=c('FMSYref', 'curEref'))
 

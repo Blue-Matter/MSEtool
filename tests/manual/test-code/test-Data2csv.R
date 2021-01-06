@@ -27,15 +27,16 @@ for (dat in dats) {
             } else {
               nonna <- which(!is.na(orig[sim,,]))
             }
-                        if (length(nonna)>0) {
-              samedims <- all(dim(orig) ==  dim(read))
-              if (!grepl('CV_', sl))
-                testthat::expect_true(samedims)
-              if (length(dim(orig))>2) {
-                # array
-                testthat::expect_equal(orig[sim,nonna,], read[sim,nonna,])
-              } else {
-                testthat::expect_equal(orig[sim,nonna], read[sim,nonna])
+            if (length(nonna)>0) {
+              # samedims <- all(dim(orig) ==  dim(read))
+              if (!grepl('CV_', sl)) {
+                # testthat::expect_true(samedims)
+                if (length(dim(orig))>2) {
+                  # array
+                  testthat::expect_equal(orig[sim,,], read[sim,,])
+                } else {
+                  testthat::expect_equal(orig[sim,], read[sim,])
+                }
               }
             }
           }
