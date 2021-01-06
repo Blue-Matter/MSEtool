@@ -28,7 +28,7 @@ SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1) {
   if(replist$SRRtype == 3 || replist$SRRtype == 6) { # Beverton-Holt SR
     SRrel <- 1L
     par <- replist$parameters[grepl("steep", rownames(replist$parameters)), ]
-    
+
     h <- par$Value
     hsd <- ifelse(is.na(par$Parm_StDev), 0, par$Parm_StDev)
     if(mean_h) {
@@ -40,7 +40,7 @@ SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1) {
   } else if(replist$SRRtype == 2) {
     SRrel <- 2L
     par <- replist$parameters[grepl("SR_Ricker", rownames(replist$parameters)), ]
-    
+
     h <- par$Value
     hsd <- ifelse(is.na(par$Parm_StDev), 0, par$Parm_StDev)
     if(mean_h) {
@@ -61,7 +61,7 @@ SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1) {
 
     h <- 0.2 * exp(z0 * s_frac * (1 - 0.2 ^ Beta))
     hsd <- 0
-    
+
     h_out <- rep(h, nsim)
   } else {
     if(packageVersion("r4ss") == 1.24) {
@@ -77,17 +77,17 @@ SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1) {
 
     rec <- replist$recruit$pred_recr[SR_ind] # recruits to age 0
     SpR0 <- SSB0/(R0 * ifelse(season_as_years, nseas, 1))
-    
+
     if(mean_h) {
       h_out <- SRopt(1, SSB, rec, SpR0, plot = FALSE, type = ifelse(SRrel == 1, "BH", "Ricker")) %>% rep(nsim)
     } else {
       h_out <- SRopt(1:nsim, SSB, rec, SpR0, plot = FALSE, type = ifelse(SRrel == 1, "BH", "Ricker"))
     }
   }
-  
+
   h_out[h_out < 0.2] <- 0.2
   if(SRrel == 1) h_out[h_out > 0.999] <- 0.999
-  
+
   return(list(SRrel = SRrel, h = h_out))
 }
 
@@ -421,8 +421,10 @@ getGpars_r4ss_134 <- function(replist, seas = 1) {
 
 # i = 1 (female)
 # i = 2 (male)
-SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = TRUE, partition = 2, 
+SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = TRUE, partition = 2,
                      age_M = NULL, mean_h = TRUE, seed = 1) {
+
+  Morph <- Morph2 <- Seas <- BirthSeas <- Settlement <- NULL # checks
 
   allyears <- nyears + proyears
 
@@ -436,14 +438,14 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
   ###### R0 - in multiple season models, the i-th morph recruits appear in the i-th season
   ###### Males are indexed morphs 5-8 in a 4-season model. Morph2 re-maps to 1-4
   N_at_age <- dplyr::filter(replist$natage, Sex == i, `Beg/Mid` == "B", Era == "VIRG") %>%
-    dplyr::mutate(Morph2 = Morph - (i - 1) * replist$nseasons) %>% dplyr::filter(Morph2 == Seas) 
+    dplyr::mutate(Morph2 = Morph - (i - 1) * replist$nseasons) %>% dplyr::filter(Morph2 == Seas)
   Stock@R0 <- N_at_age$`0` %>% sum(na.rm = TRUE)
-  
+
   ###### maxage
   Stock@maxage <- suppressWarnings(colnames(N_at_age) %>% as.numeric()) %>% max(na.rm = TRUE)
-  
+
   n_age <- Stock@maxage + 1 # include age-0
-  
+
   ###### Biological parameters
   endgrowth <- dplyr::filter(replist$endgrowth, Sex == i, Seas == 1)
   if(!is.null(endgrowth$BirthSeas)) endgrowth <- dplyr::filter(endgrowth, BirthSeas == 1)
@@ -459,7 +461,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
   }
   M_age <- suppressWarnings(lapply(0:Stock@maxage, function(x) parse(text = paste0("M_at_age$`", x, "`")) %>% eval() %>% as.numeric()))
   M_age <- do.call(rbind, M_age)
-  if(all(is.na(M_age[nrow(M_age), ]))) M_age[nrow(M_age), ] <- endgrowth$M[Stock@maxage] 
+  if(all(is.na(M_age[nrow(M_age), ]))) M_age[nrow(M_age), ] <- endgrowth$M[Stock@maxage]
   if(ncol(M_age) == (nyears - 1)) M_age <- cbind(M_age, endgrowth$M)
   if(proyears > 0) {
     M_age_pro <- matrix(M_age[, nyears], n_age, proyears)
@@ -503,10 +505,10 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
     Len_age <- cbind(Len_age, Len_age_pro)
   }
   cpars_bio$Len_age <- array(Len_age, c(n_age, allyears, nsim)) %>% aperm(c(3, 1, 2))
-  
+
   Stock@LenCV <- mean(endgrowth$SD_Beg[-1]/endgrowth$Len_Beg[-1]) %>% rep(2)
   cpars_bio$LatASD <- array(endgrowth$SD_Beg, c(n_age, allyears, nsim)) %>% aperm(c(3, 1, 2))
-  
+
   if(!all(is.na(replist$Growth_Parameters[i, ]))) {
     # Length parameters to avoid re-fitting vb curve in SampleStockPars
     Stock@Linf <- replist$Growth_Parameters[i, ]$Linf %>% rep(2)
@@ -515,12 +517,12 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
     cpars_bio$Linf <- rep(Stock@Linf[1], nsim)
     cpars_bio$K <- rep(Stock@K[1], nsim)
     cpars_bio$t0 <- rep(Stock@t0[1], nsim)
-    
+
     # Weight at age
     Stock@a <- replist$Growth_Parameters[i, ]$WtLen1
     Stock@b <- replist$Growth_Parameters[i, ]$WtLen2
   }
-  
+
   if(replist$SS_versionNumeric == 3.30) {
     Wt_age_df <- replist$mean_body_wt[replist$mean_body_wt$Morph == i, ]
     Wt_age_df <- Wt_age_df[vapply(mainyrs, match, numeric(1), table = Wt_age_df$Yr, nomatch = 0), ]
@@ -532,9 +534,9 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
   if(proyears > 0) {
     Wt_age_pro <- matrix(Wt_age[, nyears], n_age, proyears)
     Wt_age <- cbind(Wt_age, Wt_age_pro)
-  }  
+  }
   cpars_bio$Wt_age <- array(Wt_age, c(n_age, allyears, nsim)) %>% aperm(c(3, 1, 2))
-  
+
   # cpars_bio$plusgroup <- rep(1, nsim) not needed anymore
 
   # Maturity at age - technically fecundity = 0 for males in SS.
@@ -546,28 +548,28 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
   # initial Depletion
   sb0 <- replist$timeseries %>% dplyr::filter(Era == "VIRG") %>% getElement("SpawnBio") %>% sum(na.rm = TRUE)
   sb1 <- replist$timeseries %>% dplyr::filter(Yr == mainyrs[1]) %>% getElement("SpawnBio") %>% sum(na.rm = TRUE)
-  
+
   if (sb1 != sb0) {
     # initD <- sb1$SpawnBio/sb0$SpawnBio
     # cpars_bio$initD <- rep(initD, nsim)
     # Modify rec devs so N-at-age 1 is correct
-    
+
     # numbers-at-age in initial year
     n_init <- replist$natage %>% dplyr::filter(Sex==i, Yr==mainyrs[1], `Beg/Mid`=='B', Seas == 1)
     cols <- which(colnames(n_init) %in% 0:Stock@maxage)
     n_init <- n_init %>% dplyr::select(dplyr::all_of(cols)) %>% colSums()
-    
-    n_virg <- replist$natage %>% 
-      dplyr::filter(Sex == i, Era == "VIRG", `Beg/Mid` == 'B', Seas == 1) %>% 
+
+    n_virg <- replist$natage %>%
+      dplyr::filter(Sex == i, Era == "VIRG", `Beg/Mid` == 'B', Seas == 1) %>%
       dplyr::select(dplyr::all_of(cols)) %>% colSums()
 
     adjust <- as.numeric(n_init/n_virg)# *  cpars_bio$Perr_y[1,n_age:1])
     cpars_bio$Perr_y[, n_age:1] <- matrix(adjust, nrow = nsim, ncol = n_age, byrow = TRUE)
   }
-  
+
   # Depletion
   if(i == 1) { # In 3.24, SSB = NA in seasons 1-3 out of 4, so I chose to take the mean
-    sb_curr <- replist$timeseries %>% dplyr::filter(Yr == max(mainyrs)) %>% getElement("SpawnBio") %>% 
+    sb_curr <- replist$timeseries %>% dplyr::filter(Yr == max(mainyrs)) %>% getElement("SpawnBio") %>%
       mean(na.rm = TRUE)
     Stock@D <- rep(sb_curr/sb0, 2)
   } else {
@@ -577,7 +579,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
       N_virg[, parse(text = paste0("\"", x, "\"")) %>% eval()] %>% sum(), numeric(1))
 
     N_now <- dplyr::filter(replist$natage, Sex == i, Yr == max(mainyrs), `Beg/Mid` == "B", BirthSeas == Seas)
-    N_now2 <- vapply(0:Stock@maxage, function(x) 
+    N_now2 <- vapply(0:Stock@maxage, function(x)
       N_now[, parse(text = paste0("\"", x, "\"")) %>% eval()] %>% sum(), numeric(1))
 
     Stock@D <- rep(sum(N_now2 * Mat_age * Wt_age[, nyears])/sum(N_virg2 * Mat_age * Wt_age[, 1]), 2)
@@ -598,15 +600,17 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
   return(list(Stock = Stock, Fleet = Fleet, cpars = cpars))
 }
 
-SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, single_sex = TRUE, 
+SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, single_sex = TRUE,
                      partition = 2, cpars_bio, age_M = NULL) {
-  
+
+  Factor <- Seas <- Morph <- Use <- SE <- Obs <- Nsamp_adj <- NULL # variable declaration for binding check
+
   allyears <- nyears + proyears
   n_age <- Stock@maxage + 1
 
   #### Selectivity (Asel2 incorporates time-varying length selectivity, Asel age-based assumed constant)
   V <- get_V_from_Asel2(ff, i, replist, mainyrs, Stock@maxage)
-  
+
   #### Retention and selectivity-at-length - loop over years for time-varying quantities
   loop_over_change_points <- function(yy, df) {
     sched <- df[df$Yr == yy, ]
@@ -620,12 +624,12 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
                  df = replist$sizeselex[replist$sizeselex$Fleet == ff & replist$sizeselex$Sex == i &
                                           replist$sizeselex$Factor == "Keep", ])
   retLpro <- retL[, nyears] %>% matrix(nrow(retL), proyears)
-  
+
   SLarray <- vapply(mainyrs, loop_over_change_points, numeric(replist$nlbinspop),
                     df = replist$sizeselex[replist$sizeselex$Fleet == ff & replist$sizeselex$Sex == i &
                                              replist$sizeselex$Factor == "Dead", ])
   SLarraypro <- SLarray[, nyears] %>% matrix(nrow(SLarray), proyears)
-  
+
   #### Discard mortality
   disc_mort <- replist$sizeselex[replist$sizeselex$Fleet == ff & replist$sizeselex$Sex == i &
                                    replist$sizeselex$Factor == "Mort" & replist$sizeselex$Yr == max(mainyrs), -c(1:5)] %>% unlist() %>%
@@ -646,7 +650,7 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
     #Find <- parse(text = paste0("replist$timeseries$`F:_", ff, "`")) %>% eval()
     #Find <- Find[match(mainyrs, replist$timeseries$Yr)]
   }
-  
+
 
   #### Sex-specific catches: predicted retained catch for fleet ff for stock (sex) i
   ALK_dim_match <- paste0("Seas: 1 Sub_Seas: 2 Morph: ", i) %in% dimnames(replist$ALK)[[3]] %>% any()
@@ -656,10 +660,10 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
     ALK <- replist$ALK[, , paste0("Seas: 1 Morph: ", (i - 1) * replist$nseasons + 1)]
   }
   ALK <- ALK[match(replist$lbinspop, dimnames(ALK)$Length), match(0:Stock@maxage, dimnames(ALK)$TrueAge)]
-  
+
   wt <- dplyr::filter(replist$ageselex, Fleet == ff, Sex == i, Factor == "bodywt", Seas == 1, Morph == 1)
   wt <- vapply(0:Stock@maxage, function(x) wt[match(mainyrs, wt$Yr), parse(text = paste0("\"", x, "\"")) %>% eval()], numeric(length(mainyrs)))
-  
+
   meanN <- dplyr::filter(replist$natage, Sex == i, `Beg/Mid` == "M", Seas == 1)
   meanN <- meanN[match(mainyrs, meanN$Yr), ]
   meanN <- vapply(0:Stock@maxage, function(x) meanN[, parse(text = paste0("\"", x, "\"")) %>% eval()], numeric(length(mainyrs)))
@@ -696,22 +700,22 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   cpars_fleet$SLarray <- replicate(nsim, cbind(SLarray, SLarraypro)) %>% aperm(c(3, 1, 2))
   cpars_fleet$DR <- rep(0, nsim) # Should be zero since we have retention in cpars$retL
   cpars_fleet$Find <- Find %>% matrix(nsim, length(mainyrs), byrow = TRUE)
-  
+
   #### Data object
   cpars_fleet$Data <- new("Data")
   cpars_fleet$Data@Year <- mainyrs
   cpars_fleet$Data@Cat <- matrix(Cat, nrow = 1)
   cpars_fleet$Data@CV_Cat <- matrix(0.2, nrow = 1, ncol = ncol(cpars_fleet$Data@Cat)) # Default value
-  
+
   cpars_fleet$Data@Name <- paste0(Stock@Name, ", ", replist$FleetNames[ff])
   cpars_fleet$Data@LHYear <- max(mainyrs)
   cpars_fleet$Data@nareas <- replist$nareas
-  
+
   # Biological and fleet parameters
   cpars_fleet$Data@MaxAge <- Stock@maxage
   if(is.null(age_M)) age_M <- 0:Stock@maxage
   cpars_fleet$Data@Mort <- cpars_bio$M_ageArray[1, age_M + 1, nyears] %>% mean()
-  
+
   GP <- replist$Growth_Parameters[i, ]
   if(all(is.na(GP))) GP <- replist$Growth_Parameters[1, ]
   cpars_fleet$Data@vbLinf <- GP$Linf
@@ -719,47 +723,47 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   cpars_fleet$Data@vbt0 <- GP$A_a_L0
   cpars_fleet$Data@wla <- GP$WtLen1
   cpars_fleet$Data@wlb <- GP$WtLen2
-  
+
   cpars_fleet$Data@steep <- unique(Stock@h)
   cpars_fleet$Data@sigmaR <- unique(Stock@Perr)
-  
+
   cpars_fleet$Data@L50 <- LinInterp(cpars_bio$Mat_age[1,,nyears], cpars_bio$Len_age[1,,nyears], 0.5 + 1e-4)
   cpars_fleet$Data@L95 <- LinInterp(cpars_bio$Mat_age[1,,nyears], cpars_bio$Len_age[1,,nyears], 0.95)
   cpars_fleet$Data@LenCV <- GP$CVmax
-  
+
   cpars_fleet$Data@LFC <- LinInterp(V[, nyears], cpars_bio$Len_age[1,,nyears], 0.05)
   cpars_fleet$Data@LFS <- LinInterp(V[, nyears], cpars_bio$Len_age[1,,nyears], 0.95)
   cpars_fleet$Data@Vmaxlen <- V[n_age, nyears]
-  
+
   cpars_fleet$Data@Dep <- unique(Stock@D)
-  
+
   # In 3.24, SpawnBio = NA for seasons 1 - 3 (out of 4). I decide to take the mean
   ts_Yr <- which(replist$timeseries$Yr == max(mainyrs))
   cpars_fleet$Data@SpAbun <- replist$timeseries$SpawnBio[ts_Yr] %>% mean(na.rm = TRUE)
   cpars_fleet$Data@Abun <- parse(text = paste0("replist$timeseries$`sel(B):_", ff, "`[ts_Yr]")) %>% eval() %>% mean(na.rm = TRUE)
-  
+
   cpars_fleet$Data@FMSY_M <- replist$derived_quants$Value[replist$derived_quants$Label == "Fstd_MSY"]/cpars_fleet$Data@Mort
-  
+
   BMSY_B0 <- replist$derived_quants$Value[replist$derived_quants$Label == "B_MSY/SSB_unfished"]
   if(!length(BMSY_B0)) {
     BMSY_B0 <- replist$derived_quants$Value[replist$derived_quants$Label == "SSB_MSY"]/
       replist$derived_quants$Value[replist$derived_quants$Label == "SSB_Unfished"]
   }
   cpars_fleet$Data@BMSY_B0 <- BMSY_B0
-  
+
   Cref <- replist$derived_quants$Value[replist$derived_quants$Label == "Ret_Catch_MSY"]
   if(!length(Cref)) replist$derived_quants$Value[replist$derived_quants$Label == "RetYield_MSY"]
   cpars_fleet$Data@Cref <- Cref
-  
+
   cpars_fleet$Data@t <- length(mainyrs)
   cpars_fleet$Data@AvC <- mean(Cat, na.rm = TRUE)
   cpars_fleet$Data@Dt <- replist$derived_quants$Value[replist$derived_quants$Label == paste0("SSB_", mainyrs[nyears])]/
     replist$derived_quants$Value[replist$derived_quants$Label == paste0("SSB_", mainyrs[1])]
-  
+
   if(single_sex) { # Add Index if model is a single sex population
-    
+
     get_index <- function(ff) { # Get index function
-      Ind <- replist$cpue %>% dplyr::filter(Fleet == ff, Use == 1) %>% group_by(Yr) %>% 
+      Ind <- replist$cpue %>% dplyr::filter(Fleet == ff, Use == 1) %>% group_by(Yr) %>%
         summarise(Obs = mean(Obs, na.rm = TRUE), SE = mean(SE, na.rm = TRUE))
       if(nrow(Ind) > 0) {
         Obs <- Ind$Obs[match(mainyrs, Ind$Yr)] %>% matrix(1)
@@ -770,68 +774,68 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
       }
       return(list(Obs = Obs, CV = CV))
     }
-    
+
     Index <- get_index(ff) # Add fleet CPUE
     cpars_fleet$Data@VInd <- Index$Obs
     cpars_fleet$Data@CV_VInd <- Index$CV
-    
-    if(ff == 1) { # Add extra surveys 
+
+    if(ff == 1) { # Add extra surveys
       survey_ind <- which(!replist$IsFishFleet)
       if(length(survey_ind) > 0) {
         cpars_fleet$Data@AddInd <- lapply(survey_ind, get_index) %>% lapply(getElement, "Obs") %>% unlist() %>%
           array(c(nyears, length(survey_ind), 1)) %>% aperm(3:1)
-        
+
         cpars_fleet$Data@CV_AddInd <- lapply(survey_ind, get_index) %>% lapply(getElement, "CV") %>% unlist() %>%
           array(c(nyears, length(survey_ind), 1)) %>% aperm(3:1)
-        
-        cpars_fleet$Data@AddIndV <- lapply(survey_ind, get_V_from_Asel2, i = 1, replist = replist, mainyrs = mainyrs, 
-                                           maxage = Stock@maxage,rescale = TRUE) %>% lapply(function(x) x[, nyears]) %>% 
+
+        cpars_fleet$Data@AddIndV <- lapply(survey_ind, get_V_from_Asel2, i = 1, replist = replist, mainyrs = mainyrs,
+                                           maxage = Stock@maxage,rescale = TRUE) %>% lapply(function(x) x[, nyears]) %>%
           unlist() %>% array(c(n_age, length(survey_ind), 1)) %>% aperm(3:1)
-        
+
         cpars_fleet$Data@AddIndType <- rep(1, length(survey_ind))
-        
+
         cpars_fleet$Data@AddIunits <- replist$survey_units[survey_ind]
-        cpars_fleet$Data@AddIunits[cpars_fleet$Data@AddIunits > 1] <- 0 
+        cpars_fleet$Data@AddIunits[cpars_fleet$Data@AddIunits > 1] <- 0
       }
     }
   }
-  
+
   CAA <- lapply(partition, function(x) {
-    replist$agedbase[replist$agedbase$Fleet == ff & replist$agedbase$Sex == i & 
+    replist$agedbase[replist$agedbase$Fleet == ff & replist$agedbase$Sex == i &
                        replist$agedbase$Used == "yes" & replist$agedbase$Part == x, ]
   })
   CAA <- do.call(rbind, CAA)
-  
+
   if(nrow(CAA) > 0) {
     CAA <- CAA %>% dplyr::mutate(Nout = Obs * Nsamp_adj) %>% reshape2::acast(list("Yr", "Bin"), value.var = "Nout", fun.aggregate = sum)
-    
+
     CAAout <- matrix(NA, nyears, n_age)
     CAAout[match(as.numeric(rownames(CAA)), mainyrs), match(as.numeric(colnames(CAA)), 0:Stock@maxage)] <- CAA
     CAA2 <- apply(CAAout, 1, function(x) {x[is.na(x)] <- 0; return(x)})
     cpars_fleet$Data@CAA <- CAA %>% array(c(n_age, nyears, 1)) %>% aperm(3:1)
   }
-  
+
   CAL <- lapply(partition, function(x) {
-    replist$lendbase[replist$lendbase$Fleet == ff & replist$lendbase$Sex == i & 
-                       replist$lendbase$Used == "yes" & replist$lendbase$Part == x, ] # Retained CAL 
-  }) 
+    replist$lendbase[replist$lendbase$Fleet == ff & replist$lendbase$Sex == i &
+                       replist$lendbase$Used == "yes" & replist$lendbase$Part == x, ] # Retained CAL
+  })
   CAL <- do.call(rbind, CAL)
-  
+
   if(nrow(CAL) > 0) {
     cpars_fleet$Data@CAL_bins <- cpars_fleet$CAL_bins
     cpars_fleet$Data@CAL_mids <- cpars_fleet$CAL_binsmid # Optional
-    
+
     CAL <- CAL %>% dplyr::mutate(Nout = Obs * Nsamp_adj) %>% reshape2::acast(list("Yr", "Bin"), value.var = "Nout", fun.aggregate = sum)
-    
+
     CALout <- matrix(NA, nyears, length(cpars_fleet$CAL_binsmid))
-    CALout[match(as.numeric(rownames(CAL)), mainyrs), 
+    CALout[match(as.numeric(rownames(CAL)), mainyrs),
            match(as.numeric(colnames(CAL)), cpars_fleet$CAL_bins[-length(cpars_fleet$CAL_bins)])] <- CAL
     CAL2 <- apply(CALout, 1, function(x) {x[is.na(x)] <- 0; return(x)})
     cpars_fleet$Data@CAL <- CAL2 %>% array(c(length(cpars_fleet$CAL_binsmid), nyears, 1)) %>% aperm(3:1)
-    
+
     cpars_fleet$Data@ML <- apply(CAL2, 2, function(xx) weighted.mean(x = cpars_fleet$CAL_binsmid, w = xx)) %>% matrix(1)
   }
-  
+
   return(list(Fleet = Fleet, cpars_fleet = cpars_fleet))
 }
 
@@ -852,6 +856,7 @@ sample_recruitment <- function(Perr_hist, proyears, procsd, AC, seed) {
 }
 
 get_V_from_Asel2 <- function(ff, i, replist, mainyrs, maxage, rescale = FALSE) {
+  Fleet <- Factor <- NULL # checks
   # Note for surveys in 3.24 Asel2 does not exist
   Asel2 <- dplyr::filter(replist$ageselex, Fleet == ff, Sex %in% i, Factor == "Asel2", Yr %in% mainyrs)
   V2 <- vapply(0:maxage, function(x) {
@@ -865,12 +870,12 @@ get_V_from_Asel2 <- function(ff, i, replist, mainyrs, maxage, rescale = FALSE) {
       return(out)
     }
   }, numeric(length(mainyrs))) %>% t()
-  
+
   # Assume Asel is time-invariant
   Asel <- dplyr::filter(replist$ageselex, Fleet == ff, Sex %in% i, Factor == "Asel")
   V <- vapply(0:maxage, function(x) Asel[1, parse(text = paste0("\"", x, "\"")) %>% eval()], numeric(1))
   Vout <- V2 * V
-  
+
   if(rescale) {
     Vapical <- apply(Vout, 2, max) %>% matrix(nrow(Vout), ncol(Vout), byrow = TRUE)
     Vout <- Vout/Vapical
@@ -879,43 +884,43 @@ get_V_from_Asel2 <- function(ff, i, replist, mainyrs, maxage, rescale = FALSE) {
 }
 
 
-SS_seasonalyears_to_annual <- function(OM, SSdir) {
-  
+SS_seasonalyears_to_annual <- function(OM, SSdir, ...) {
+  age <- NULL # binding check
   if(is.list(SSdir)) {
     replist <- SSdir
   } else {
-    replist <- SS_import(SSdir, silent, ...)
+    replist <- SS_import(SSdir, silent=F, ...)
   }
-  
+
   nseas <- 1/replist$seasdurations
   mainyrs <- replist$startyr:replist$endyr
-  year_frac <- data.frame(mainyrs = mainyrs, seas = rep(1:nseas, length(mainyrs)/nseas), 
+  year_frac <- data.frame(mainyrs = mainyrs, seas = rep(1:nseas, length(mainyrs)/nseas),
                           true_year = rep(1:(length(mainyrs)/nseas), each = nseas))
-  
+
   age_frac <- data.frame(age = 0:OM@maxage) %>% mutate(true_age = floor(age/nseas))
-  
+
   OM2 <- OM
   OM2@nyears <- OM2@CurrentYr <- max(year_frac$true_year)
   OM2@maxage <- max(age_frac$true_age)
-  
+
   avg <- c("M_ageArray", "Wt_age", "Len_age", "LatASD", "Mat_age", "V")
-  OM2@cpars[match(avg, names(OM2@cpars))] <- 
+  OM2@cpars[match(avg, names(OM2@cpars))] <-
     lapply(avg, function(xx) parse(text = paste0("OM@cpars$", xx)) %>% eval() %>%
              cpars_season(FUN = mean, year_frac = year_frac, age_frac = age_frac, proyears = OM2@proyears))
-  
+
   OM2@cpars$M_ageArray <- OM2@cpars$M_ageArray * nseas
-  
+
   OM2@cpars$V <- apply(OM2@cpars$V, c(1, 3), function(x) x/max(x)) %>% aperm(c(2, 1, 3))
   OM2@cpars$Find <- cpars_season_Find(OM@cpars$Find, year_frac)
   OM2@EffYears <- year_frac$true_year
   OM2@EffLower <- OM2@EffUpper <- OM2@cpars$Find[1, ]
-  
+
   OM2@cpars$Perr_y <- cpars_season_Perr(OM@cpars$Perr_y, year_frac, age_frac, OM2@proyears)
   if(!is.null(OM@cpars$mov)) {
     OM2@cpars$mov <- cpars_season_mov(OM@cpars$mov, age_frac)
   }
   OM2@R0 <- OM@R0 * nseas
-  
+
   return(OM2)
 }
 
@@ -923,28 +928,28 @@ cpars_season <- function(x, FUN, year_frac, age_frac, proyears) {
   nsim <- dim(x)[1]
   nyears <- max(year_frac$true_year)
   n_age <- length(unique(age_frac$true_age))
-  
-  hist_x <- x[1, , 1:nrow(year_frac)] %>% 
+
+  hist_x <- x[1, , 1:nrow(year_frac)] %>%
     apply(2, function(xx) aggregate(xx, by = list(Age = age_frac$true_age), FUN)$x) %>%
     apply(1, function(xx) aggregate(xx, by = list(Yr = year_frac$true_year), FUN)$x)
-  
+
   proj_x <- hist_x[nrow(hist_x), ] %>% matrix(proyears, n_age, byrow = TRUE)
-  
+
   rbind(hist_x, proj_x) %>% array(c(nyears + proyears, n_age, nsim)) %>% aperm(3:1)
 }
 
 cpars_season_Find <- function(x, year_frac) {
-  aggregate(x[1, ], by = list(Yr = year_frac$true_year), mean) %>% getElement("x") %>% 
+  aggregate(x[1, ], by = list(Yr = year_frac$true_year), mean) %>% getElement("x") %>%
     matrix(nrow(x), max(year_frac$true_year), byrow = TRUE)
 }
 
 cpars_season_Perr <- function(x, year_frac, age_frac, proyears) {
-  init_p <- x[, 2:nrow(age_frac)-1] %>% 
+  init_p <- x[, 2:nrow(age_frac)-1] %>%
     apply(1, function(xx) aggregate(xx, by = list(Age = age_frac$true_age[2:nrow(age_frac)-1]), mean)$x)
-  
-  hist_p <- x[, nrow(age_frac):(nrow(age_frac) + nrow(year_frac) - 1)]  %>% 
+
+  hist_p <- x[, nrow(age_frac):(nrow(age_frac) + nrow(year_frac) - 1)]  %>%
     apply(1, function(xx) aggregate(xx, by = list(Yr = year_frac$true_year), mean)$x)
-  
+
   rbind(init_p, hist_p) %>% t() %>% cbind(x[, (nrow(age_frac) + nrow(year_frac)):ncol(x)])
 }
 
