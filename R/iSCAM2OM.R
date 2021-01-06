@@ -16,7 +16,6 @@
 #' @param length_timestep How long is a model time step in years
 #' (e.g. a quarterly model is 0.25, a monthly model 1/12)
 #' @param nyr_par_mu integer, the number of recent years to estimate vulnerability over for future projections
-#' @param LowerTri Integer. The number of recent years for which model estimates of recruitment are ignored (not reliably estimated by the assessment)
 #' @param Author Who did the assessment
 #' @param report logical should a numbers at age reconstruction plot be produced?
 #' @param silent logical should progress reporting be printed to the console?
