@@ -297,8 +297,6 @@ importslot <- function(name, length=2, Data, Names, numeric=TRUE, essential=TRUE
 #' An operating model component that specifies the parameters of the population
 #' dynamics model
 #'
-
-#' @name Stock-class
 #' @docType class
 #'
 #' @slot Name The name of the Stock object. Single value. Character string
@@ -428,7 +426,8 @@ setClassUnion(name="char.log", members=c("character", "logical"))
 #'
 setClass("Fleet", slots = c(Name = "character",
                             nyears = "numeric",
-                            Spat_targ = "numeric",
+                            CurrentYr="numeric",
+
                             EffYears = "numeric",
                             EffLower = "numeric",
                             EffUpper = "numeric",
@@ -443,7 +442,7 @@ setClass("Fleet", slots = c(Name = "character",
                             LFR = "numeric",
                             Rmaxlen = "numeric",
                             DR = "numeric",
-                            CurrentYr="numeric",
+                            Spat_targ = "numeric",
                             MPA='char.log',
                             Misc='list')
                             )
