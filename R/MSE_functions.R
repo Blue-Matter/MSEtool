@@ -1179,8 +1179,19 @@ joinMSE <- function(MSEobjs = NULL) {
     for (obj in 1:length(Allobjs)) {
       temp[[obj]] <-RefPoint_List[[obj]][[nm]]
     }
-
-    RefPoint[[nm]] <- abind::abind(temp, along = 1)
+    if (class(temp[[1]]) == 'list') {
+      nms2 <- names(temp[[1]])
+      for (j in seq_along(nms2)) {
+        temp2 <- list()
+        for (k in 1:length(temp)) {
+          temp2[[k]] <- temp[[k]][[j]]
+        }
+        nm2 <- nms2[j]
+        RefPoint[[nm]][[nm2]] <- abind::abind(temp2, along = 1)
+        }
+    } else {
+      RefPoint[[nm]] <- abind::abind(temp, along = 1)
+    }
   }
 
   CB_hist <- abind::abind(lapply(Allobjs, slot, name = 'CB_hist'), along = 1)
