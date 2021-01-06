@@ -873,9 +873,6 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
                                                                   lst.err=log(ObsPars$Ierr[,yr.ind]))
     }
 
-
-
-
     ObsPars$Ind_Stat <- I_Err
   }
 
@@ -971,7 +968,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
       type <- TypeTab$type[match(AddIndType[i], TypeTab$n)]
 
       if(msg) message("Additional index ", i, ' - ', type, ' stock', paste0(' (', units, ')'))
-      nyrs <- length(RealData@AddInd[1,i,])
+      nyrs <- min(length(RealData@AddInd[1,i,]), nyears)
       ind <- RealData@AddInd[1,i,1:nyrs]
       cv_ind <- RealData@CV_AddInd[1,i,1:nyrs]
       if (nyrs < nyears) {
