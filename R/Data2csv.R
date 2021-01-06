@@ -68,7 +68,7 @@ Data2csv<-function(Data, file=NULL, simno = 1, overwrite=F, keepNAs=T) {
     }
   }
 
-  lexicon <- as.matrix(DataSlots[,1:2])
+  lexicon <- as.matrix(MSEtool::DataSlots[,1:2])
 
   nsim <- length(Data@Mort)
   addInd <- FALSE
