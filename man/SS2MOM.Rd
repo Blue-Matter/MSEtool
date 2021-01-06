@@ -33,8 +33,8 @@ SS2OM(
   seed = 1,
   interval = 1,
   pstar = 0.5,
-  Obs = Generic_Obs,
-  Imp = Perfect_Imp,
+  Obs = MSEtool::Generic_Obs,
+  Imp = MSEtool::Perfect_Imp,
   import_mov = TRUE,
   gender = 1:2,
   seasons_to_years = TRUE,
@@ -91,6 +91,8 @@ plot_SS2OM(
 
 \item{...}{Arguments to pass to \link[r4ss]{SS_output}.}
 
+\item{import_mov}{Logical. Import movement matrix?}
+
 \item{gender}{An integer that indexes the sex for importing life history parameters (1 = usually female, 2 = usually male, 1:2 = mean across both sexes).
 Only used for \code{SS2OM} only in a 2-sex model.}
 
@@ -106,6 +108,8 @@ to compare against SS output. A markdown report will be generated.}
 \item{dir}{If \code{report = TRUE}, the directory in which the markdown and HTML files will be saved.}
 
 \item{open_file}{If \code{report = TRUE}, whether the HTML document is opened after it is rendered.}
+
+\item{MOM}{MOM object}
 
 \item{x}{For \code{plot_SS2OM}, an object of either class \linkS4class{OM} or \linkS4class{Hist}.}
 }

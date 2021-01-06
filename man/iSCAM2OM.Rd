@@ -42,8 +42,6 @@ uncertainty (for OM@cpars custom parameters)}
 \item{report}{logical should a numbers at age reconstruction plot be produced?}
 
 \item{silent}{logical should progress reporting be printed to the console?}
-
-\item{LowerTri}{Integer. The number of recent years for which model estimates of recruitment are ignored (not reliably estimated by the assessment)}
 }
 \description{
 A function that uses the file location of a fitted iSCAM

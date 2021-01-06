@@ -15,6 +15,8 @@ Currently, the Data object supports a single value of M for all ages. By default
 \item{comp_partition}{Integer vector for selecting length/age observations that are retained (2), discarded (1), or both (0). By default, only retained
 comps are used. If multiple codes are used, then comp matrix is the sum over all codes.}
 
+\item{silent}{Logical. Suppress messages?}
+
 \item{...}{Arguments to pass to \link[r4ss]{SS_output}}
 }
 \value{

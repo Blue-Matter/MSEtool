@@ -49,8 +49,16 @@ bounds. Non-negative real numbers}
 \item{\code{Linf}}{Maximum length. Uniform distribution lower and upper bounds.
 Positive real numbers}
 
+\item{\code{Linfsd}}{Inter-annual variability in maximum length expressed as a
+coefficient of variation. Uniform distribution lower and upper bounds.
+Non-negative real numbers}
+
 \item{\code{K}}{von Bertalanffy growth parameter k. Uniform distribution lower and
 upper bounds. Positive real numbers}
+
+\item{\code{Ksd}}{Inter-annual variability in growth parameter k expressed as
+coefficient of variation. Uniform distribution lower and upper bounds.
+Non-negative real numbers}
 
 \item{\code{t0}}{von Bertalanffy theoretical age at length zero. Uniform
 distribution lower and upper bounds. Non-positive real numbers}
@@ -58,14 +66,6 @@ distribution lower and upper bounds. Non-positive real numbers}
 \item{\code{LenCV}}{Coefficient of variation of length-at-age (assumed constant for
 all age classes). Uniform distribution lower and upper bounds. Positive real
 numbers}
-
-\item{\code{Ksd}}{Inter-annual variability in growth parameter k expressed as
-coefficient of variation. Uniform distribution lower and upper bounds.
-Non-negative real numbers}
-
-\item{\code{Linfsd}}{Inter-annual variability in maximum length expressed as a
-coefficient of variation. Uniform distribution lower and upper bounds.
-Non-negative real numbers}
 
 \item{\code{L50}}{Length at 50 percent maturity. Uniform distribution lower and
 upper bounds. Positive real numbers}
