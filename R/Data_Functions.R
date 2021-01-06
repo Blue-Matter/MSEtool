@@ -203,7 +203,7 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
     temp
   }
 
-  # DataSlots <- MSEtool:::DataSlots #
+  DataSlots <- MSEtool::DataSlots
 
   # loop over DataSlots and populate slots in Data object with imported values
   for(i in 1:nrow(DataSlots)) {
@@ -225,9 +225,7 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
     stop("Last Historical Year must be specified (single numeric value)")
   Data@LHYear <- tryLHyear
 
-
   # ---- Time-Series ----
-
   import_convert_ts <- function(Name, datasheet, Data, matrix=TRUE,
                                 checkLength=TRUE) {
     row <- which(datasheet$Name==Name)
@@ -240,7 +238,7 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
       columns <- 2:(length(Data@Year)+1)
       temp <- datasheet[row, columns]
     }
-
+    DataSlots <- MSEtool::DataSlots
     ind <- which(DataSlots$Name == Name)
     Slot <- DataSlots$Slot[ind]
     isNumeric <- DataSlots$Numeric[ind]
@@ -306,7 +304,9 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
   if (n_vuln != n_indices)
     stop("Vulnerability-at-age schedule missing for some or all additional indices", call. = FALSE)
 
-  if (!all(is.na(datasheet[which(datasheet$Name == "Index 1"),2:(Nyears+1)]))) {
+  addInd <- datasheet[which(datasheet$Name == "Index 3"),2:(Nyears+1)] %>% unlist()
+
+  if (!(any(nchar(addInd) == 0) | any(is.na(addInd)) | length(addInd)<1)) {
     indexexist <- TRUE
   } else {
     indexexist <- FALSE
@@ -341,11 +341,9 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
     Data@AddIunits <- suppressWarnings(as.numeric(datasheet[ind,2:(n_indices+1)]))
   }
 
-
   # Recruitment index
   Data <- import_convert_ts('Recruitment index', datasheet, Data)
   Data <- import_convert_ts('CV Recruitment index', datasheet, Data)
-
 
   # Mean length
   Data <- import_convert_ts('Mean length', datasheet, Data)
@@ -354,8 +352,8 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
 
   # ---- Catch-at-Age ----
   ind <- which(datasheet$Name == "Vuln CAA")
-  if (length(ind>0)) {
-    VulnCAA <- datasheet[which(datasheet$Name == "Vuln CAA"), 2:(Data@MaxAge+2)]
+  if (length(ind>0) && !is.na(datasheet[ind, 2])) {
+    VulnCAA <- datasheet[ind, 2:(Data@MaxAge+2)]
     VulnCAA <- suppressWarnings(as.numeric(VulnCAA))
     if (!all(is.na(VulnCAA))) {
       if (any(is.na(VulnCAA)))
@@ -400,9 +398,9 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
   }
 
   # ---- Catch-at-Length ----
-  ind <- which(datasheet$Name == "Vuln CAA")
-  if (length(ind>0)) {
-    VulnCAL <- datasheet[which(datasheet$Name == "Vuln CAL"), 2:(Data@MaxAge+2)]
+  ind <- which(datasheet$Name == "Vuln CAL")
+  if (length(ind>0) && !is.na(datasheet[ind, 2])) {
+    VulnCAL <- datasheet[ind, 2:(Data@MaxAge+2)]
     VulnCAL <- suppressWarnings(as.numeric(VulnCAL))
     if (!all(is.na(VulnCAL))) {
       if (any(is.na(VulnCAL)))
