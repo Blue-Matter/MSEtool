@@ -633,7 +633,6 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   #     Mage[sim, ] <- MatLen[sim, ind]
   #   }
   #   stop()
-  #   # TODO check
   # }
 
   # ---- M-at-age in cpars -----
