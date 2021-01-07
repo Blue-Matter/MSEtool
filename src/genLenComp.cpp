@@ -164,7 +164,6 @@ NumericMatrix  genSizeComp2(NumericMatrix VulnN, NumericVector CAL_binsmid, Nume
   double width = CAL_binsmid(1) - CAL_binsmid(0);
   double origin = CAL_binsmid(0) - 0.5* width;
   for (int yr=0; yr < nyears; yr++) {
-
     NumericVector Nage = (VulnN.row(yr)); // numbers of catch-at-age this year
     List Lens(Nage);
     double Ncatch = sum(Nage); // total catch this year
