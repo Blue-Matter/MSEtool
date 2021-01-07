@@ -922,29 +922,57 @@ COSEWIC_Hplot<-function(MSEobj,syear=2017,qcol=rgb(0.4,0.8,0.95), quants=c(0.05,
 #'
 #' Subset the custom parameters of an operating model
 #'
-#' @param OM An object of class OM
-#' @param sims A logical vector OM@nsim long of simulations to either retain (TRUE) or remove (FALSE)
+#' @param OM An object of class OM 
+#' @param sims A logical vector of length \code{OM@@nsim} to either retain (TRUE) or remove (FALSE).
+#' Alternatively, a numeric vector indicating which simulations (from 1 to nsim) to keep.
 #' @return An object of class OM
-#' @author T. Carruthers
+#' @author T. Carruthers, Q. Huynh
 #' @export SubCpars
-SubCpars<-function(OM,sims){
-
-  for(i in 1:length(OM@cpars)){
-
-    OM@nsim<-sum(sims)
-
-    if(class(OM@cpars[[i]])=="matrix"){
-      OM@cpars[[i]]<-OM@cpars[[i]][sims,]
-    }else if(class(OM@cpars[[i]])=="array"){
-      OM@cpars[[i]]<-OM@cpars[[i]][sims,,]
-    }else{
-      OM@cpars[[i]]<-OM@cpars[[i]][sims]
+SubCpars<-function(OM, sims = 1:OM@nsim) {
+  if(!length(OM@cpars)) return(OM)
+  
+  if(is.numeric(sims)) {
+    sims2 <- logical(OM@nsim)
+    sims2[sims] <- TRUE
+  } else if(is.logical(sims) && length(sims) == OM@nsim) {
+    sims2 <- sims
+  } else stop("Logical vector sims need to be of length ", OM@nsim)
+  
+  if(any(!sims2)) {
+    message("Removing simulations: ", paste0(which(!sims2), collapse = " "))
+    cpars <- OM@cpars
+    
+    subset_Data <- function(xx, Data, sims) {
+      z <- slot(Data, xx)
+      if(!all(is.na(z))) z <- z[sims, , , drop = FALSE]
+      return(z)
     }
-
+    subset_function <- function(xx, sims, cpars) {
+      x <- cpars$xx
+      if(xx %in% c("CAL_bins", "MPA", "plusgroup", "CAL_binsmid", "binWidth", "AddIunits")) {
+        return(x)
+      } else if(is.matrix(x)) {
+        return(x[sims, , drop = FALSE])
+      } else if(is.array(x)) {
+        if(length(dim(x)) == 3) return(x[sims, , , drop = FALSE])
+        if(length(dim(x)) == 4) return(x[sims, , , , drop = FALSE])
+        if(length(dim(x)) == 5) return(x[sims, , , , , drop = FALSE])
+      } else if(class(x)[[1]] == "Data") {
+        s_names <- c("AddIndV", "AddInd", "CV_AddInd")
+        update_slots <- lapply(s_names, subset_Data, Data = x, sims = sims)
+        for(i in 1:length(s_names)) slot(x, s_names[i]) <- update_slots[[i]]
+        return(x)
+      } else if(length(x) == OM@nsim) {
+        return(x[sims])
+      } else return(x)
+    }
+    OM@cpars <- lapply(names(cpars), subset_function, sims = sims2, cpars = cpars)
+    OM@nsim <- sum(sims2)
+    
+    message("Set OM@nsim = ", OM@nsim)
   }
-
-  OM
-
+  
+  return(OM)
 }
 
 
