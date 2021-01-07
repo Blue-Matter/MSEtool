@@ -1,5 +1,5 @@
 Package: MSEtool
-Title: What the Package Does (One Line, Title Case)
+Title: Management Strategy Evaluation Toolkit
 Version: 3.0.0
 Authors@R: c(
   person("Adrian", "Hordyk", email = "adrian@bluematterscience.com", role = c("aut", "cre")),
@@ -18,15 +18,12 @@ Depends:
     snowfall
 Imports:
     abind,
-    coda,
     dplyr,
     methods,
     grDevices,
     ggplot2,
     parallel,
-    r4ss,
     Rcpp,
-    reshape2,
     stats,
     utils
 Suggests:
@@ -43,10 +40,13 @@ Suggests:
     MASS,
     openxlsx,
     purrr,
+    r4ss,
     readxl,
+    reshape2,
     rfishbase,
     rmarkdown,
     shiny,
     testthat,
     tidyr
 LinkingTo: Rcpp, RcppArmadillo
+BugReports: https://github.com/Blue-Matter/MSEtool/issues
