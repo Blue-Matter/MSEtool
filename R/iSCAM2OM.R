@@ -20,10 +20,6 @@
 #' @param report logical should a numbers at age reconstruction plot be produced?
 #' @param silent logical should progress reporting be printed to the console?
 #' @author T. Carruthers
-#' @importFrom grDevices dev.off gray jpeg png
-#' @importFrom coda mcmc
-#' @importFrom graphics arrows contour
-#' @importFrom stats acf aggregate qnorm window
 #' @export iSCAM2OM
 iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=F, Name=NULL,
                    Source="No source provided", length_timestep=1,
@@ -1408,11 +1404,7 @@ LinInt<-function(x){
 #' (e.g. a quarterly model is 0.25, a monthly model 1/12)
 #' @param Author Who did the assessment
 #' @author T. Carruthers
-#' @importFrom grDevices dev.off gray jpeg png
-#' @importFrom coda mcmc
-#' @importFrom graphics arrows contour
-#' @importFrom stats acf aggregate qnorm window
-#' @export iSCAM2Data
+#' @export
 iSCAM2Data<-function(iSCAMdir,Name=NULL,Source="No source provided",
                      length_timestep=1,Author="No author provided"){
 
