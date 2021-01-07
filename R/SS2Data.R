@@ -653,3 +653,229 @@ SS2Data_get_index <- function(replist, mainyrs, season_as_years = FALSE, nseas =
               Iname = cpue_name))
 }
 
+# #' Extracts growth parameters from a SS3 r4ss replist
+# #'
+# #' @param replist the list output of the r4ss SS_output function (a list of assessment inputs / outputs)
+# #' @param seas The reference season for the growth (not actually sure what this does yet)
+# #' @author T. Carruthers
+# #' @export getGpars
+getGpars <- function(replist, seas = 1) { # This is a rip-off of SSPlotBiology
+  
+  if(packageVersion("r4ss") == 1.24) {
+    res <- getGpars_r4ss_124(replist, seas)
+  } else res <- getGpars_r4ss_134(replist, seas)
+  #if(nrow(res) == 0) warning("No growth parameters were retrieved from r4ss output.")
+  return(res)
+}
+
+getGpars_r4ss_124 <- function(replist, seas = 1) {
+  
+  nseasons <- replist$nseasons
+  growdat <- replist$endgrowth[replist$endgrowth$Seas == seas, ]
+  growdat$CV_Beg <- growdat$SD_Beg/growdat$Len_Beg
+  growthCVtype <- replist$growthCVtype
+  biology <- replist$biology
+  startyr <- replist$startyr
+  FecType <- replist$FecType
+  FecPar1name <- replist$FecPar1name
+  FecPar2name <- replist$FecPar2name
+  FecPar1 <- replist$FecPar1
+  FecPar2 <- replist$FecPar2
+  parameters <- replist$parameters
+  nsexes <- replist$nsexes
+  mainmorphs <- replist$mainmorphs
+  accuage <- replist$accuage
+  startyr <- replist$startyr
+  endyr <- replist$endyr
+  growthvaries <- replist$growthvaries
+  growthseries <- replist$growthseries
+  ageselex <- replist$ageselex
+  MGparmAdj <- replist$MGparmAdj
+  wtatage <- replist$wtatage
+  Growth_Parameters <- replist$Growth_Parameters
+  Grow_std <- replist$derived_quants[grep("Grow_std_", replist$derived_quants$LABEL), ]
+  if (nrow(Grow_std) == 0) {
+    Grow_std <- NULL
+  }  else {
+    Grow_std$pattern <- NA
+    Grow_std$sex_char <- NA
+    Grow_std$sex <- NA
+    Grow_std$age <- NA
+    for (irow in 1:nrow(Grow_std)) {
+      tmp <- strsplit(Grow_std$LABEL[irow], split = "_")[[1]]
+      Grow_std$pattern[irow] <- as.numeric(tmp[3])
+      Grow_std$sex_char[irow] <- tmp[4]
+      Grow_std$age[irow] <- as.numeric(tmp[6])
+    }
+    Grow_std$sex[Grow_std$sex_char == "Fem"] <- 1
+    Grow_std$sex[Grow_std$sex_char == "Mal"] <- 2
+  }
+  if (!is.null(replist$wtatage_switch)) {
+    wtatage_switch <- replist$wtatage_switch
+  } else{ stop("SSplotBiology function doesn't match SS_output function. Update one or both functions.")
+  }
+  if (wtatage_switch)
+    cat("Note: this model uses the empirical weight-at-age input.\n",
+        "     Therefore many of the parametric biology quantities which are plotted\n",
+        "     are not used in the model.\n")
+  if (!seas %in% 1:nseasons)
+    stop("'seas' input should be within 1:nseasons")
+  
+  if (length(mainmorphs) > nsexes) {
+    cat("!Error with morph indexing in SSplotBiology function.\n",
+        " Code is not set up to handle multiple growth patterns or birth seasons.\n")
+  }
+  #if (FecType == 1) {
+  #  fec_ylab <- "Eggs per kg"
+  #  FecX <- biology$Wt_len_F
+  #  FecY <- FecPar1 + FecPar2 * FecX
+  #}
+  
+  growdatF <- growdat[growdat$Gender == 1 & growdat$Morph ==
+                        mainmorphs[1], ]
+  growdatF$Sd_Size <- growdatF$SD_Beg
+  
+  if (growthCVtype == "logSD=f(A)") {
+    growdatF$high <- qlnorm(0.975, meanlog = log(growdatF$Len_Beg),
+                            sdlog = growdatF$Sd_Size)
+    growdatF$low <- qlnorm(0.025, meanlog = log(growdatF$Len_Beg),
+                           sdlog = growdatF$Sd_Size)
+  }  else {
+    growdatF$high <- qnorm(0.975, mean = growdatF$Len_Beg,
+                           sd = growdatF$Sd_Size)
+    growdatF$low <- qnorm(0.025, mean = growdatF$Len_Beg,
+                          sd = growdatF$Sd_Size)
+  }
+  if (nsexes > 1) {
+    growdatM <- growdat[growdat$Gender == 2 & growdat$Morph ==
+                          mainmorphs[2], ]
+    xm <- growdatM$Age_Beg
+    growdatM$Sd_Size <- growdatM$SD_Beg
+    if (growthCVtype == "logSD=f(A)") {
+      growdatM$high <- qlnorm(0.975, meanlog = log(growdatM$Len_Beg),
+                              sdlog = growdatM$Sd_Size)
+      growdatM$low <- qlnorm(0.025, meanlog = log(growdatM$Len_Beg),
+                             sdlog = growdatM$Sd_Size)
+    }    else {
+      growdatM$high <- qnorm(0.975, mean = growdatM$Len_Beg,
+                             sd = growdatM$Sd_Size)
+      growdatM$low <- qnorm(0.025, mean = growdatM$Len_Beg,
+                            sd = growdatM$Sd_Size)
+    }
+  } else growdatM <- NULL
+  
+  list(Female = growdatF, Male = growdatM)
+  
+}
+
+getGpars_r4ss_134 <- function(replist, seas = 1) {
+  nseasons <- replist$nseasons
+  growdat <- replist$endgrowth[replist$endgrowth$Seas == seas,
+  ]
+  growdat$CV_Beg <- growdat$SD_Beg/growdat$Len_Beg
+  growthCVtype <- replist$growthCVtype
+  biology <- replist$biology
+  startyr <- replist$startyr
+  FecType <- replist$FecType
+  FecPar1name <- replist$FecPar1name
+  FecPar2name <- replist$FecPar2name
+  FecPar1 <- replist$FecPar1
+  FecPar2 <- replist$FecPar2
+  parameters <- replist$parameters
+  nsexes <- replist$nsexes
+  accuage <- replist$accuage
+  startyr <- replist$startyr
+  endyr <- replist$endyr
+  growthvaries <- replist$growthvaries
+  growthseries <- replist$growthseries
+  ageselex <- replist$ageselex
+  MGparmAdj <- replist$MGparmAdj
+  wtatage <- replist$wtatage
+  if ("comment" %in% names(wtatage)) {
+    wtatage <- wtatage[, -grep("comment", names(wtatage))]
+  }
+  M_at_age <- replist$M_at_age
+  Growth_Parameters <- replist$Growth_Parameters
+  #if (is.null(morphs)) {
+  morphs <- replist$mainmorphs
+  #}
+  Grow_std <- replist$derived_quants[grep("Grow_std_", replist$derived_quants$Label), ]
+  if (nrow(Grow_std) == 0) {
+    Grow_std <- NULL
+  } else {
+    Grow_std$pattern <- NA
+    Grow_std$sex_char <- NA
+    Grow_std$sex <- NA
+    Grow_std$age <- NA
+    for (irow in 1:nrow(Grow_std)) {
+      tmp <- strsplit(Grow_std$Label[irow], split = "_")[[1]]
+      Grow_std$pattern[irow] <- as.numeric(tmp[3])
+      Grow_std$sex_char[irow] <- tmp[4]
+      Grow_std$age[irow] <- as.numeric(tmp[6])
+    }
+    Grow_std$sex[Grow_std$sex_char == "Fem"] <- 1
+    Grow_std$sex[Grow_std$sex_char == "Mal"] <- 2
+  }
+  if (!is.null(replist$wtatage_switch)) {
+    wtatage_switch <- replist$wtatage_switch
+  } else {
+    stop("SSplotBiology function doesn't match SS_output function.",
+         "Update one or both functions.")
+  }
+  #if (wtatage_switch) {
+  #  cat("Note: this model uses the empirical weight-at-age input.\n",
+  #      "      Plots of many quantities related to growth are skipped.\n")
+  #}
+  if (!seas %in% 1:nseasons)
+    stop("'seas' input should be within 1:nseasons")
+  #if (nseasons > 1) {
+  #  labels[6] <- gsub("beginning of the year", paste("beginning of season",
+  #                                                   seas), labels[6])
+  #}
+  
+  if (length(morphs) > nsexes) {
+    cat("!Error with morph indexing in SSplotBiology function.\n",
+        " Code is not set up to handle multiple growth patterns or birth seasons.\n")
+  }
+  #if (FecType == 1) {
+  #  fec_ylab <- "Eggs per kg"
+  #  fec_xlab <- labels[8]
+  #  FecX <- biology$Wt_len_F
+  #  FecY <- FecPar1 + FecPar2 * FecX
+  #}
+  #if (labels[11] != "Default fecundity label")
+  #  fec_ylab <- labels[11]
+  growdatF <- growdat[growdat$Sex == 1 & growdat$Morph == morphs[1], ]
+  growdatF$Sd_Size <- growdatF$SD_Beg
+  if (growthCVtype == "logSD=f(A)") {
+    growdatF$high <- qlnorm(0.975, meanlog = log(growdatF$Len_Beg),
+                            sdlog = growdatF$Sd_Size)
+    growdatF$low <- qlnorm(0.025, meanlog = log(growdatF$Len_Beg),
+                           sdlog = growdatF$Sd_Size)
+  } else {
+    growdatF$high <- qnorm(0.975, mean = growdatF$Len_Beg,
+                           sd = growdatF$Sd_Size)
+    growdatF$low <- qnorm(0.025, mean = growdatF$Len_Beg,
+                          sd = growdatF$Sd_Size)
+  }
+  if (nsexes > 1) {
+    growdatM <- growdat[growdat$Sex == 2 & growdat$Morph == morphs[2], ]
+    xm <- growdatM$Age_Beg
+    growdatM$Sd_Size <- growdatM$SD_Beg
+    if (growthCVtype == "logSD=f(A)") {
+      growdatM$high <- qlnorm(0.975, meanlog = log(growdatM$Len_Beg),
+                              sdlog = growdatM$Sd_Size)
+      growdatM$low <- qlnorm(0.025, meanlog = log(growdatM$Len_Beg),
+                             sdlog = growdatM$Sd_Size)
+    } else {
+      growdatM$high <- qnorm(0.975, mean = growdatM$Len_Beg,
+                             sd = growdatM$Sd_Size)
+      growdatM$low <- qnorm(0.025, mean = growdatM$Len_Beg,
+                            sd = growdatM$Sd_Size)
+    }
+  } else growdatM <- NULL
+  
+  list(Female = growdatF, Male = growdatM)
+  
+}
+
