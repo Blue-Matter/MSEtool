@@ -344,14 +344,13 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
     AddInd <- array(NA, dim=c(nsim, n.ind, nyears+y-1))
     CV_AddInd  <- array(NA, dim=c(nsim, n.ind, nyears+y-1))
     for (i in 1:n.ind) {
-      if (is.na(RealData@AddIndV[1,, ])) {
-        Ind_V <- NA
+      if (all(is.na(RealData@AddIndV[1, , ]))) {
+        Ind_V <- rep(1, Data@MaxAge+1)
       } else {
         Ind_V <- RealData@AddIndV[1,i, ]
       }
-      if (is.na(Ind_V)) Ind_V <- rep(1, Data@MaxAge+1)
       Ind_V <- matrix(Ind_V, nrow=Data@MaxAge+1, ncol= nyears+proyears)
-      Ind_V <- replicate(nsim, Ind_V) %>% aperm(., c(3,1,2))
+      Ind_V <- replicate(nsim, Ind_V) %>% aperm(c(3,1,2))
 
       yr.ind <- max(which(!is.na(ObsPars$AddIerr[1,i, 1:nyears])))
 
@@ -979,14 +978,12 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
       Data_out@CV_AddInd[,i,] <- matrix(cv_ind, nrow=nsim, ncol=nyears, byrow=TRUE)
 
       # Calculate observation error for future projections
-      if (is.na(RealData@AddIndV[1,, ])) {
+      if (all(is.na(RealData@AddIndV[1,, ]))) {
         # no vulnerability-at-age included
-        Ind_V <- NA
+        Ind_V <- rep(1, Data_out@MaxAge+1)
       } else {
         Ind_V <- RealData@AddIndV[1,i, ]
       }
-
-      if (is.na(Ind_V)) Ind_V <- rep(1, Data_out@MaxAge+1)
 
       # check dimensions
       if (!length(Ind_V) == Data_out@MaxAge+1)
