@@ -30,7 +30,7 @@
 #' @describeIn runCOSEWIC Calls `runMSE` with number of projection years for 6x maximum age and
 #' uses `NFref`, `FMSYref`, and `curE` MPs.
 #' @references
-#' \url{http://cosewic.ca/index.php/en-ca/}
+#' \url{https://cosewic.ca/index.php/en-ca/}
 #' @export runCOSEWIC
 runCOSEWIC<-function(OM, ...){
 
