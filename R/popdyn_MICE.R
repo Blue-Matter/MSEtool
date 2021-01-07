@@ -122,7 +122,7 @@ popdynMICE<-function(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
       Nx[,,y,]<-out$Nnext
       Wt_agey[,,y]<-out$Wt_age
       M_ageArrayx[,,y]<-out$M_agecurx
-      Ky[,y]<-out$Kx; Linfy[,y]<-out$Linfx; t0y[,y]<-out$t0x; My[,y]<-out$Mx;
+      Ky[,y]<-out$Kx; Linfy[,y]<-out$Linfx; t0y[,y]<-out$t0x; My[,y]<-out$Mx
       hsy[,y]<-out$hsx; ay[,y]<-out$ax; by[,y]<-out$bx
       VBx[,,y,]<-out$VBt
       #VBfx[,,,y,]<-out$VBft
