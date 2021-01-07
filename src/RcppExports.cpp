@@ -49,14 +49,16 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// which_maxC
-double which_maxC(NumericVector x);
-RcppExport SEXP _MSEtool_which_maxC(SEXP xSEXP) {
+// get_freq2
+NumericVector get_freq2(NumericVector x, NumericVector CAL_bins, int outlen);
+RcppExport SEXP _MSEtool_get_freq2(SEXP xSEXP, SEXP CAL_binsSEXP, SEXP outlenSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(which_maxC(x));
+    Rcpp::traits::input_parameter< NumericVector >::type CAL_bins(CAL_binsSEXP);
+    Rcpp::traits::input_parameter< int >::type outlen(outlenSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_freq2(x, CAL_bins, outlen));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -87,13 +89,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // genSizeComp
-NumericMatrix genSizeComp(NumericMatrix VulnN, NumericVector CAL_binsmid, NumericMatrix selCurve, double CAL_ESS, double CAL_nsamp, NumericVector Linfs, NumericVector Ks, NumericVector t0s, double LenCV, double truncSD);
-RcppExport SEXP _MSEtool_genSizeComp(SEXP VulnNSEXP, SEXP CAL_binsmidSEXP, SEXP selCurveSEXP, SEXP CAL_ESSSEXP, SEXP CAL_nsampSEXP, SEXP LinfsSEXP, SEXP KsSEXP, SEXP t0sSEXP, SEXP LenCVSEXP, SEXP truncSDSEXP) {
+NumericMatrix genSizeComp(NumericMatrix VulnN, NumericVector CAL_binsmid, NumericVector CAL_bins, NumericMatrix selCurve, double CAL_ESS, double CAL_nsamp, NumericVector Linfs, NumericVector Ks, NumericVector t0s, double LenCV, double truncSD);
+RcppExport SEXP _MSEtool_genSizeComp(SEXP VulnNSEXP, SEXP CAL_binsmidSEXP, SEXP CAL_binsSEXP, SEXP selCurveSEXP, SEXP CAL_ESSSEXP, SEXP CAL_nsampSEXP, SEXP LinfsSEXP, SEXP KsSEXP, SEXP t0sSEXP, SEXP LenCVSEXP, SEXP truncSDSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericMatrix >::type VulnN(VulnNSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type CAL_binsmid(CAL_binsmidSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type CAL_bins(CAL_binsSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type selCurve(selCurveSEXP);
     Rcpp::traits::input_parameter< double >::type CAL_ESS(CAL_ESSSEXP);
     Rcpp::traits::input_parameter< double >::type CAL_nsamp(CAL_nsampSEXP);
@@ -102,18 +105,19 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type t0s(t0sSEXP);
     Rcpp::traits::input_parameter< double >::type LenCV(LenCVSEXP);
     Rcpp::traits::input_parameter< double >::type truncSD(truncSDSEXP);
-    rcpp_result_gen = Rcpp::wrap(genSizeComp(VulnN, CAL_binsmid, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD));
+    rcpp_result_gen = Rcpp::wrap(genSizeComp(VulnN, CAL_binsmid, CAL_bins, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD));
     return rcpp_result_gen;
 END_RCPP
 }
 // genSizeComp2
-NumericMatrix genSizeComp2(NumericMatrix VulnN, NumericVector CAL_binsmid, NumericMatrix selCurve, double CAL_ESS, double CAL_nsamp, NumericVector Linfs, NumericVector Ks, NumericVector t0s, double LenCV, double truncSD);
-RcppExport SEXP _MSEtool_genSizeComp2(SEXP VulnNSEXP, SEXP CAL_binsmidSEXP, SEXP selCurveSEXP, SEXP CAL_ESSSEXP, SEXP CAL_nsampSEXP, SEXP LinfsSEXP, SEXP KsSEXP, SEXP t0sSEXP, SEXP LenCVSEXP, SEXP truncSDSEXP) {
+NumericMatrix genSizeComp2(NumericMatrix VulnN, NumericVector CAL_binsmid, NumericVector CAL_bins, NumericMatrix selCurve, double CAL_ESS, double CAL_nsamp, NumericVector Linfs, NumericVector Ks, NumericVector t0s, double LenCV, double truncSD);
+RcppExport SEXP _MSEtool_genSizeComp2(SEXP VulnNSEXP, SEXP CAL_binsmidSEXP, SEXP CAL_binsSEXP, SEXP selCurveSEXP, SEXP CAL_ESSSEXP, SEXP CAL_nsampSEXP, SEXP LinfsSEXP, SEXP KsSEXP, SEXP t0sSEXP, SEXP LenCVSEXP, SEXP truncSDSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericMatrix >::type VulnN(VulnNSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type CAL_binsmid(CAL_binsmidSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type CAL_bins(CAL_binsSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type selCurve(selCurveSEXP);
     Rcpp::traits::input_parameter< double >::type CAL_ESS(CAL_ESSSEXP);
     Rcpp::traits::input_parameter< double >::type CAL_nsamp(CAL_nsampSEXP);
@@ -122,7 +126,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type t0s(t0sSEXP);
     Rcpp::traits::input_parameter< double >::type LenCV(LenCVSEXP);
     Rcpp::traits::input_parameter< double >::type truncSD(truncSDSEXP);
-    rcpp_result_gen = Rcpp::wrap(genSizeComp2(VulnN, CAL_binsmid, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD));
+    rcpp_result_gen = Rcpp::wrap(genSizeComp2(VulnN, CAL_binsmid, CAL_bins, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -224,11 +228,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_bhnoneq_LL", (DL_FUNC) &_MSEtool_bhnoneq_LL, 8},
     {"_MSEtool_combine", (DL_FUNC) &_MSEtool_combine, 1},
     {"_MSEtool_get_freq", (DL_FUNC) &_MSEtool_get_freq, 4},
-    {"_MSEtool_which_maxC", (DL_FUNC) &_MSEtool_which_maxC, 1},
+    {"_MSEtool_get_freq2", (DL_FUNC) &_MSEtool_get_freq2, 3},
     {"_MSEtool_rnormSelect2", (DL_FUNC) &_MSEtool_rnormSelect2, 3},
     {"_MSEtool_tdnorm", (DL_FUNC) &_MSEtool_tdnorm, 3},
-    {"_MSEtool_genSizeComp", (DL_FUNC) &_MSEtool_genSizeComp, 10},
-    {"_MSEtool_genSizeComp2", (DL_FUNC) &_MSEtool_genSizeComp2, 10},
+    {"_MSEtool_genSizeComp", (DL_FUNC) &_MSEtool_genSizeComp, 11},
+    {"_MSEtool_genSizeComp2", (DL_FUNC) &_MSEtool_genSizeComp2, 11},
     {"_MSEtool_grav", (DL_FUNC) &_MSEtool_grav, 4},
     {"_MSEtool_movfit_Rcpp", (DL_FUNC) &_MSEtool_movfit_Rcpp, 3},
     {"_MSEtool_popdynOneTScpp", (DL_FUNC) &_MSEtool_popdynOneTScpp, 5},

@@ -118,9 +118,9 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
   # cpars for the first gender, first fleet
   .cpars <- cpars[[1]][[1]]
   cpars_out$hs <- .cpars$hs
-  cpars_out$binWidth <- .cpars$binWidth
+  #cpars_out$binWidth <- .cpars$binWidth
   cpars_out$CAL_bins <- .cpars$CAL_bins
-  cpars_out$CAL_binsmid <- .cpars$CAL_binsmid
+  #cpars_out$CAL_binsmid <- .cpars$CAL_binsmid
   cpars_out$Mat_age <- .cpars$Mat_age
 
   # Sample recruitment deviations

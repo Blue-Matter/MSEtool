@@ -468,9 +468,12 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
 
   #### cpars
   cpars_fleet <- list()
-  cpars_fleet$binWidth <- replist$lbinspop[2] - replist$lbinspop[1]
-  cpars_fleet$CAL_bins <- replist$lbinspop %>% c(max(replist$lbinspop) + cpars_fleet$binWidth)
-  cpars_fleet$CAL_binsmid <- replist$lbinspop + 0.5 * cpars_fleet$binWidth
+  #cpars_fleet$binWidth <- replist$lbinspop[2] - replist$lbinspop[1]
+  #cpars_fleet$CAL_bins <- replist$lbinspop %>% c(max(replist$lbinspop) + cpars_fleet$binWidth)
+  #cpars_fleet$CAL_binsmid <- replist$lbinspop + 0.5 * cpars_fleet$binWidth
+  upper_boundary_last_bin <- max(replist$lbinspop) + 
+    2 * (suppressWarnings(max(as.numeric(colnames(replist$sizeselex)), na.rm = TRUE)) - max(replist$lbinspop))
+  cpars_fleet$CAL_bins <- c(replist$lbinspop, upper_boundary_last_bin)
   cpars_fleet$Fdisc <- rep(mean(disc_mort), nsim)
   #cpars_fleet$V <- cbind(V2, V2_proj) %>% array(c(n_age, allyears, nsim)) %>% aperm(c(3, 1, 2))
   cpars_fleet$retL <- replicate(nsim, cbind(retL, retLpro)) %>% aperm(c(3, 1, 2))

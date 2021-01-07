@@ -51,14 +51,34 @@ NumericVector get_freq(NumericVector x, double width, double origin = 0,
   return wrap(out);
 }
 
-
 // [[Rcpp::export]]
-double which_maxC(NumericVector x){
-  int out;
-  out = std::distance(x.begin(),std::max_element(x.begin(),x.end()));
-  out++;
-  return out;
+NumericVector get_freq2(NumericVector x, NumericVector CAL_bins, int outlen=0) {
+  std::vector<int> out(outlen);
+  for(int i=0;i<x.size();i++) {
+    double val = x(i);
+    int bin = 0;
+    if (!ISNAN(val)) {
+      for(int j=1;j<=outlen;j++) {
+        if(val > CAL_bins(j)) {
+          bin += 1;
+        } else {
+          break;
+        }
+      }
+      out[bin] += 1;
+    }
+  }
+  return wrap(out);
 }
+
+
+//// [[Rcpp::export]]
+//int which_maxC(NumericVector x){
+//  //int out;
+//  //out = std::distance(x.begin(),std::max_element(x.begin(),x.end()));
+//  //out++;
+//  return out;
+//}
 
 
 
@@ -83,7 +103,7 @@ NumericVector tdnorm(NumericVector x, double mi, double ma) {
   NumericVector cdist = pnorm(x, 0.0, 1.0);
   LogicalVector ind = (cdist < R::pnorm(mi, 0.0, 1.0,1,0)) | (cdist >R::pnorm(ma, 0.0, 1.0,1,0));
   double sz = dist.size();
-  int maxind = which_maxC(dist);
+  int maxind = which_max(dist);
   NumericVector Y = dist;
   for (int i=0; (i<sz); i++) { // truncate
     if (ind[i]) Y(i) = 0;
@@ -96,7 +116,7 @@ NumericVector tdnorm(NumericVector x, double mi, double ma) {
 
 
 // [[Rcpp::export]]
-NumericMatrix  genSizeComp(NumericMatrix VulnN, NumericVector CAL_binsmid, NumericMatrix selCurve,
+NumericMatrix  genSizeComp(NumericMatrix VulnN, NumericVector CAL_binsmid, NumericVector CAL_bins, NumericMatrix selCurve,
                            double CAL_ESS, double CAL_nsamp,
                            NumericVector Linfs, NumericVector Ks, NumericVector t0s,
                            double LenCV, double truncSD) {
@@ -104,8 +124,8 @@ NumericMatrix  genSizeComp(NumericMatrix VulnN, NumericVector CAL_binsmid, Numer
   int k = VulnN.ncol();
   int nbins = CAL_binsmid.size();
   NumericMatrix CAL(nyears, nbins);
-  double width = CAL_binsmid(1) - CAL_binsmid(0);
-  double origin = CAL_binsmid(0) - 0.5* width;
+  //double width = CAL_binsmid(1) - CAL_binsmid(0);
+  //double origin = CAL_binsmid(0) - 0.5* width;
   NumericVector temp(k);
   NumericVector varAges = NumericVector::create(-0.6, -0.5, -0.4, -0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5); // monthly ages
   for (int yr=0; yr < nyears; yr++) {
@@ -140,7 +160,7 @@ NumericMatrix  genSizeComp(NumericMatrix VulnN, NumericVector CAL_binsmid, Numer
         }
       }
       NumericVector LenVals = combine(Lens); // unlist
-      NumericVector templens = get_freq(LenVals, width, origin, nbins); // calculate frequencies
+      NumericVector templens = get_freq2(LenVals, CAL_bins, nbins); // calculate frequencies
       double rat = CAL_nsamp/sum(templens);
       templens =  templens * rat; // scale to CAL_nsamp
       CAL(yr,_) = templens;
@@ -153,7 +173,7 @@ NumericMatrix  genSizeComp(NumericMatrix VulnN, NumericVector CAL_binsmid, Numer
 }
 
 // [[Rcpp::export]]
-NumericMatrix  genSizeComp2(NumericMatrix VulnN, NumericVector CAL_binsmid, NumericMatrix selCurve,
+NumericMatrix  genSizeComp2(NumericMatrix VulnN, NumericVector CAL_binsmid, NumericVector CAL_bins, NumericMatrix selCurve,
                            double CAL_ESS, double CAL_nsamp,
                            NumericVector Linfs, NumericVector Ks, NumericVector t0s,
                            double LenCV, double truncSD) {
@@ -161,8 +181,8 @@ NumericMatrix  genSizeComp2(NumericMatrix VulnN, NumericVector CAL_binsmid, Nume
   int k = VulnN.ncol();
   int nbins = CAL_binsmid.size();
   NumericMatrix CAL(nyears, nbins);
-  double width = CAL_binsmid(1) - CAL_binsmid(0);
-  double origin = CAL_binsmid(0) - 0.5* width;
+  //double width = CAL_binsmid(1) - CAL_binsmid(0);
+  //double origin = CAL_binsmid(0) - 0.5 * width;
   for (int yr=0; yr < nyears; yr++) {
 
     NumericVector Nage = (VulnN.row(yr)); // numbers of catch-at-age this year
@@ -184,7 +204,7 @@ NumericMatrix  genSizeComp2(NumericMatrix VulnN, NumericVector CAL_binsmid, Nume
       }
 
       NumericVector LenVals = combine(Lens); // unlist
-      NumericVector templens = get_freq(LenVals, width, origin, nbins); // calculate frequencies
+      NumericVector templens = get_freq2(LenVals, CAL_bins, nbins); // calculate frequencies
       double rat = CAL_nsamp/sum(templens);
       templens =  templens * rat; // scale to CAL_nsamp
       CAL(yr,_) = templens;

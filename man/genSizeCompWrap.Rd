@@ -9,6 +9,7 @@ genSizeCompWrap(
   i,
   vn,
   CAL_binsmid,
+  CAL_bins,
   retL,
   CAL_ESS,
   CAL_nsamp,
@@ -27,6 +28,8 @@ getfifth(lenvec, CAL_binsmid)
 \item{vn}{Array of vulnerable numbers}
 
 \item{CAL_binsmid}{Mid-points of CAL bins}
+
+\item{CAL_bins}{Boundary of length bins}
 
 \item{retL}{Array of retention-at-length}
 
