@@ -1,21 +1,22 @@
 #' @importFrom abind abind
-#' @importFrom dplyr %>%  arrange filter group_by left_join mutate select summarize
+#' @importFrom dplyr %>%  arrange filter group_by left_join mutate pull select summarize
+#' summarise
 #' @importFrom ggplot2 aes element_blank expand_limits facet_wrap geom_boxplot
 #' ggplot ggplotGrob geom_rect geom_point labs theme theme_classic xlim ylim xlab ylab
 #' @importFrom graphics abline arrows axis axTicks barplot boxplot contour hist
 #' identify layout legend
 #'  lines matplot mtext par plot plot.new points polygon segments text title text
-#' @importFrom grDevices col2rgb colorRampPalette dev.off jpeg rainbow rgb xy.coords
+#' @importFrom grDevices col2rgb colorRampPalette dev.off jpeg gray png rainbow rgb xy.coords
 #' @importFrom grid unit.c unit grid.newpage grid.draw
 #' @importFrom methods getClassDef getSlots .hasSlot new show slot slot<- slotNames
 #' @importFrom parallel detectCores
 #' @importFrom Rcpp evalCpp
 #' @importFrom snowfall sfClusterEval sfInit sfExportAll sfIsRunning sfExport
 #' sfSapply sfLibrary
-#' @importFrom stats acf approx coef cor dbeta density dnorm dlnorm lm loess
+#' @importFrom stats acf aggregate approx coef cor dbeta density dnorm dlnorm lm loess
 #' loess.smooth nls setNames simulate SSasympOff weighted.mean
-#' median nlm nlminb optim optimise optimize plogis pnorm predict qlnorm quantile rbeta
-#' rlnorm rmultinom rnorm runif sd
+#' median nlm nlminb optim optimise optimize plogis pnorm predict qnorm qlnorm quantile rbeta
+#' rlnorm rmultinom rnorm runif sd window
 #' @importFrom utils  browseURL capture.output combn flush.console packageVersion
 #' ls.str lsf.str read.csv read.csv2
 #'
