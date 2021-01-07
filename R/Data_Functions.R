@@ -2250,7 +2250,7 @@ ts_plots <- function(Data, i=1, fignum=1) {
 
     p3 <- ggplot2::ggplot(DF, ggplot2::aes(x=Year, y=value, linetype=key)) +
       ggplot2::geom_line(size=1.1) +
-      ggplot2::expand_limits(y=c(0)) +
+      ggplot2::expand_limits(y=0) +
       ggplot2::labs(y="Length", linetype="Legend",
                     title=paste0('\n\nFigure ', fignum, '. Mean Length Time-Series')) +
       ggplot2::theme_minimal()
