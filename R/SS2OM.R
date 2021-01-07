@@ -2,9 +2,6 @@
 #' @rdname SS2MOM
 #' @param import_mov Logical. Import movement matrix?
 #' @export
-#' @importFrom stats acf
-#' @importFrom reshape2 melt
-#' @importFrom dplyr summarise group_by pull left_join
 SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1, interval = 1, pstar = 0.5,
                   Obs = MSEtool::Generic_Obs, Imp = MSEtool::Perfect_Imp,
                   import_mov = TRUE, gender = 1:2, seasons_to_years = TRUE, silent = FALSE,
@@ -42,6 +39,11 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1,
 #' @export
 SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, silent = FALSE) {
   Factor <- NULL # variable for binding check
+
+  if(!requireNamespace("reshape2", quietly = TRUE)) {
+    stop("Package `reshape2` is required for this function. Install with `install.packages('reshape2')`", call. = FALSE)
+  }
+
   if(is.list(SSdir)) {
     replist <- SSdir
   } else {
