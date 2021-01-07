@@ -190,7 +190,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   # [sim, stock, maxage] Defaults to all 1s if length(SexPars$Herm)==0
   HermFrac <- expandHerm(SexPars$Herm,maxage=n_age,np=np,nsim=nsim)
 
-  ## TODO - CHECK HERM ----
   Unfished_Equilibrium <- list()
   for(p in 1:np){ # loop over stocks
     #  --- Pre Equilibrium calcs ----
@@ -322,7 +321,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     aR <- matrix(exp(bR * SSB0a)/SSBpR, nrow=nsim)  # Ricker SR params
 
     # --- Optimize for Initial Depletion ----
-    # TODO - currently done in SS2MOM
+    # currently done in SS2MOM
 
     # initD <- SampCpars[[p]][[1]]$initD #
     # if (!is.null(initD)) { # initial depletion is not unfished
@@ -407,7 +406,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   } # end of loop over stocks
 
   # ---- SexPars - Update SSB0 and SRR parameters for male stock ----
-  ## TODO -- TEST ----
   if(length(SexPars)>0){
     message("You have specified sex-specific dynamics, unfished spawning biomass",
             " and specified stock depletion will be mirrored across sex types according ",
@@ -444,7 +442,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
   # --- Optimize catchability (q) to fit depletion ----
   bounds <- c(0.0001, 15) # q bounds for optimizer
-  # TODO - and update getq_multi to match Calculate q ----
   if(snowfall::sfIsRunning() & parallel){
     exp.time <- (np * nf)/(9*ncpus) * nsim
     exp.time <- round(exp.time,2)
