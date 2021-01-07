@@ -133,7 +133,7 @@ color coded by thresholds.
 }}
 
 \references{
-\url{http://cosewic.ca/index.php/en-ca/}
+\url{https://cosewic.ca/index.php/en-ca/}
 }
 \author{
 T. Carruthers
