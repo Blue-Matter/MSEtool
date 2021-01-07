@@ -8,7 +8,7 @@
 An object of class \code{list} of length 3.
 }
 \source{
-\url{https://github.com/James-Thorson/FishLife/}
+\url{https://github.com/James-Thorson-NOAA/FishLife/}
 }
 \usage{
 LHdatabase
