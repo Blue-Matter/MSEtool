@@ -884,7 +884,7 @@ calcF <- function(x, TACusedE, V_P, Biomass_P, fishdist, Asize, maxage, nareas,
     dct <- sum(Omat/Zmat - ((Fmat * Omat)/Zmat^2) + Fmat/Zmat * exp(-Zmat) * Biomass_P[x,,y,])
     ft <-  ft - (pct - ct)/dct
 
-    if (abs(pct - ct)<1E-6) break;
+    if (abs(pct - ct)<1E-6) break
   }
 
   ft
@@ -962,7 +962,7 @@ runInMP <- function(Data, MPs = NA, reps = 100) {
       returnList[[ff]] <- recList
     }
   } else {
-    sfExport(list = c("Data"))
+    sfExport(list = "Data")
     for (ff in 1:nMPs) {
       temp <- sfSapply(1:nsims, MPs[ff], Data = Data, reps = reps)
       slots <- slotNames(temp[[1]])
