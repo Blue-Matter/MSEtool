@@ -13,8 +13,8 @@ get_freq <- function(x, width, origin = 0, outlen = 0L) {
     .Call('_MSEtool_get_freq', PACKAGE = 'MSEtool', x, width, origin, outlen)
 }
 
-which_maxC <- function(x) {
-    .Call('_MSEtool_which_maxC', PACKAGE = 'MSEtool', x)
+get_freq2 <- function(x, CAL_bins, outlen = 0L) {
+    .Call('_MSEtool_get_freq2', PACKAGE = 'MSEtool', x, CAL_bins, outlen)
 }
 
 rnormSelect2 <- function(N, mi, ma) {
@@ -25,12 +25,12 @@ tdnorm <- function(x, mi, ma) {
     .Call('_MSEtool_tdnorm', PACKAGE = 'MSEtool', x, mi, ma)
 }
 
-genSizeComp <- function(VulnN, CAL_binsmid, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD) {
-    .Call('_MSEtool_genSizeComp', PACKAGE = 'MSEtool', VulnN, CAL_binsmid, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD)
+genSizeComp <- function(VulnN, CAL_binsmid, CAL_bins, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD) {
+    .Call('_MSEtool_genSizeComp', PACKAGE = 'MSEtool', VulnN, CAL_binsmid, CAL_bins, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD)
 }
 
-genSizeComp2 <- function(VulnN, CAL_binsmid, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD) {
-    .Call('_MSEtool_genSizeComp2', PACKAGE = 'MSEtool', VulnN, CAL_binsmid, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD)
+genSizeComp2 <- function(VulnN, CAL_binsmid, CAL_bins, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD) {
+    .Call('_MSEtool_genSizeComp2', PACKAGE = 'MSEtool', VulnN, CAL_binsmid, CAL_bins, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD)
 }
 
 grav <- function(log_visc, log_grav, fracs, nareas) {

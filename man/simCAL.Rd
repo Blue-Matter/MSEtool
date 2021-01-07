@@ -12,6 +12,7 @@ simCAL(
   CAL_nsamp,
   nCALbins,
   CAL_binsmid,
+  CAL_bins,
   vn,
   retL,
   Linfarray,
@@ -34,6 +35,8 @@ simCAL(
 \item{nCALbins}{number of CAL bins}
 
 \item{CAL_binsmid}{mid-points of CAL bins}
+
+\item{CAL_bins}{Boundary of CAL bins}
 
 \item{vn}{Vulnerable numbers-at-age}
 

@@ -134,7 +134,7 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
   vn <- aperm(vn, c(1,3, 2))
 
   CALdat <- simCAL(nsim, nyears, StockPars$maxage, ObsPars$CAL_ESS,
-                   ObsPars$CAL_nsamp, StockPars$nCALbins, StockPars$CAL_binsmid,
+                   ObsPars$CAL_nsamp, StockPars$nCALbins, StockPars$CAL_binsmid, StockPars$CAL_bins,
                    vn, FleetPars$retL, StockPars$Linfarray,
                    StockPars$Karray, StockPars$t0array, StockPars$LenCV)
 
@@ -487,7 +487,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   vn <- aperm(vn, c(1,3,2))
 
   CALdat <- simCAL(nsim, nyears=length(yind), StockPars$maxage, ObsPars$CAL_ESS,
-                   ObsPars$CAL_nsamp, StockPars$nCALbins, StockPars$CAL_binsmid,
+                   ObsPars$CAL_nsamp, StockPars$nCALbins, StockPars$CAL_binsmid, StockPars$CAL_bins,
                    vn=vn[,yind,, drop=FALSE], retL=retL_P[,,nyears+yind, drop=FALSE],
                    Linfarray=StockPars$Linfarray[,nyears + yind, drop=FALSE],
                    Karray=StockPars$Karray[,nyears + yind, drop=FALSE],
@@ -558,6 +558,7 @@ simCAA <- function(nsim, yrs, n_age, Cret, CAA_ESS, CAA_nsamp) {
 #' @param CAL_nsamp CAA sample size
 #' @param nCALbins number of CAL bins
 #' @param CAL_binsmid mid-points of CAL bins
+#' @param CAL_bins Boundary of CAL bins
 #' @param vn Vulnerable numbers-at-age
 #' @param retL Retention at length curve
 #' @param Linfarray Array of Linf values by simulation and year
@@ -565,7 +566,7 @@ simCAA <- function(nsim, yrs, n_age, Cret, CAA_ESS, CAA_nsamp) {
 #' @param t0array Array of t0 values by simulation and year
 #' @param LenCV CV of length-at-age#'
 #' @return named list with CAL array and LFC, ML, & Lc vectors
-simCAL <- function(nsim, nyears, maxage,  CAL_ESS, CAL_nsamp, nCALbins, CAL_binsmid,
+simCAL <- function(nsim, nyears, maxage,  CAL_ESS, CAL_nsamp, nCALbins, CAL_binsmid, CAL_bins,
                    vn, retL, Linfarray, Karray, t0array, LenCV) {
   # a multinomial observation model for catch-at-length data
   # assumed normally-distributed length-at-age truncated at 2 standard deviations from the mean
@@ -574,11 +575,11 @@ simCAL <- function(nsim, nyears, maxage,  CAL_ESS, CAL_nsamp, nCALbins, CAL_bins
   # Generate size comp data with variability in age
   runParallel <- snowfall::sfIsRunning()
   if (runParallel) {
-    tempSize <- snowfall::sfLapply(1:nsim, genSizeCompWrap, vn, CAL_binsmid,
+    tempSize <- snowfall::sfLapply(1:nsim, genSizeCompWrap, vn, CAL_binsmid, CAL_bins,
                                    retL, CAL_ESS, CAL_nsamp,
                                    Linfarray, Karray, t0array, LenCV, truncSD=2)
   } else {
-    tempSize <- lapply(1:nsim, genSizeCompWrap, vn, CAL_binsmid, retL, CAL_ESS,
+    tempSize <- lapply(1:nsim, genSizeCompWrap, vn, CAL_binsmid, CAL_bins, retL, CAL_ESS,
                        CAL_nsamp,
                        Linfarray, Karray, t0array, LenCV, truncSD=2)
   }
@@ -629,6 +630,7 @@ simCAL <- function(nsim, nyears, maxage,  CAL_ESS, CAL_nsamp, nCALbins, CAL_bins
 #' @param i Simulation number
 #' @param vn Array of vulnerable numbers
 #' @param CAL_binsmid Mid-points of CAL bins
+#' @param CAL_bins Boundary of length bins
 #' @param retL Array of retention-at-length
 #' @param CAL_ESS CAL effective sample size
 #' @param CAL_nsamp CAL sample size
@@ -642,7 +644,7 @@ simCAL <- function(nsim, nyears, maxage,  CAL_ESS, CAL_nsamp, nCALbins, CAL_bins
 #' @return Generated length composition from `genSizeComp`
 #'
 #' @keywords internal
-genSizeCompWrap <- function(i, vn, CAL_binsmid, retL,
+genSizeCompWrap <- function(i, vn, CAL_binsmid, CAL_bins, retL,
                             CAL_ESS, CAL_nsamp,
                             Linfarray, Karray, t0array,
                             LenCV, truncSD=2) {
@@ -659,13 +661,13 @@ genSizeCompWrap <- function(i, vn, CAL_binsmid, retL,
   retLa <- as.matrix(retL[i,,])
 
   # assumes lengths sampled throughout years
-  # lens <- genSizeComp(VulnN, CAL_binsmid, retLa,
+  # lens <- genSizeComp(VulnN, CAL_binsmid, CAL_bins, retLa,
   #                     CAL_ESS=CAL_ESS[i], CAL_nsamp=CAL_nsamp[i],
   #                     Linfs=Linfarray[i,], Ks=Karray[i,], t0s=t0array[i,],
   #                     LenCV=LenCV[i], truncSD)
 
   # snapshot length comp
-  lens <- genSizeComp2(VulnN, CAL_binsmid, retLa,
+  lens <- genSizeComp2(VulnN, CAL_binsmid, CAL_bins, retLa,
                       CAL_ESS=CAL_ESS[i], CAL_nsamp=CAL_nsamp[i],
                       Linfs=Linfarray[i,], Ks=Karray[i,], t0s=t0array[i,],
                       LenCV=LenCV[i], truncSD)

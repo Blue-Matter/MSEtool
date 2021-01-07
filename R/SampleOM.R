@@ -89,7 +89,7 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
   sampCpars <- list()
 
   # ---- Non-stochastic parameters ----
-  Names <- c('CAL_bins', 'CAL_binsmid', 'binWidth', 'nCALbins',
+  Names <- c('CAL_bins', #'CAL_binsmid', 'binWidth', 'nCALbins',
              'maxage', 'n_age', 'CurrentYr',
              'plusgroup', 'control', 'AddIUnits', 'Data', 'MPA',
              'nareas', 'a', 'b', 'maxF', 'Sample_Area', 'Asize')
@@ -431,31 +431,31 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
     stop("Dimensions of 'LatASD' must match dimensions of 'Len_age'", .call=FALSE)
 
   if (!is.null(cpars$CAL_bins)) {
-    binWidth <- cpars$CAL_bins[2] - cpars$CAL_bins[1]
     CAL_bins <- cpars$CAL_bins
+    binWidth <- CAL_bins[2:length(CAL_bins)] - CAL_bins[2:length(CAL_bins) - 1]
   }
-  if (!is.null(cpars$CAL_binsmid)) {
-    binWidth <- cpars$CAL_binsmid[2] - cpars$CAL_binsmid[1]
-    CAL_binsmid <- cpars$CAL_binsmid
-  }
+  #if (!is.null(cpars$CAL_binsmid)) {
+  #  binWidth <- cpars$CAL_binsmid[2] - cpars$CAL_binsmid[1]
+  #  CAL_binsmid <- cpars$CAL_binsmid
+  #}
 
   MaxBin <- ceiling(max(Linfarray) + 2 * max(Linfarray) * max(LenCV))
-  if (!exists("binWidth", inherits=FALSE)) binWidth <- ceiling(0.03 * MaxBin)
-
-  if (!exists("CAL_bins", inherits=FALSE))
+  if (!exists("CAL_bins", inherits=FALSE)) {
+    binWidth <- ceiling(0.03 * MaxBin)
     CAL_bins <- seq(from = 0, to = MaxBin + binWidth, by = binWidth)
-  if (!exists("CAL_binsmid", inherits=FALSE))
-    CAL_binsmid <- seq(from = 0.5 * binWidth, by = binWidth, length = length(CAL_bins) - 1)
+    binWidth <- rep(binWidth, length(CAL_bins) - 1)
+  }
+  CAL_binsmid <- CAL_bins[2:length(CAL_bins)] - 0.5 * binWidth
   if (length(CAL_bins) != length(CAL_binsmid)+1)
     stop("Length of 'CAL_bins' must be length(CAL_binsmid)+1", .call=FALSE)
 
-  binWidth <- CAL_binsmid[2] - CAL_binsmid[1] # should be unchanged if passed in cpars anyway
+  #binWidth <- CAL_binsmid[2] - CAL_binsmid[1] # should be unchanged if passed in cpars anyway
 
   # Check bin width - in case both CAL_bins or CAL_binsmid AND binWidth have been passed in with cpars
-  if (!all(diff(CAL_bins) == binWidth))
-    stop("width of CAL_bins != binWidth", call.=FALSE)
-  if (!all(diff(CAL_binsmid) == binWidth))
-    stop("width of CAL_binsmid != binWidth", call.=FALSE)
+  #if (!all(diff(CAL_bins) == binWidth))
+  #  stop("width of CAL_bins != binWidth", call.=FALSE)
+  #if (!all(diff(CAL_binsmid) == binWidth))
+  #  stop("width of CAL_binsmid != binWidth", call.=FALSE)
   nCALbins <- length(CAL_binsmid)
 
   if (max(Linfarray) > max(CAL_bins))
@@ -819,6 +819,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   StockOut$LatASD <- LatASD
   StockOut$CAL_binsmid <- CAL_binsmid
   StockOut$CAL_bins <- CAL_bins
+  StockOut$binWidth <- binWidth
   StockOut$nCALbins <- nCALbins
   StockOut$initdist <- initdist
   StockOut$mov <- mov
