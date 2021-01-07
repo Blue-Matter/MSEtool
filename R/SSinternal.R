@@ -377,6 +377,10 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
 SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, single_sex = TRUE,
                      partition = 2, cpars_bio, age_M = NULL) {
 
+  if(!requireNamespace("reshape2", quietly = TRUE)) {
+    stop("Package `reshape2` is required for this function. Install with `install.packages('reshape2')`", call. = FALSE)
+  }
+
   Factor <- Seas <- Morph <- Use <- SE <- Obs <- Nsamp_adj <- NULL # variable declaration for binding check
 
   allyears <- nyears + proyears
@@ -537,9 +541,9 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
 
     get_index <- function(ff) { # Get index function
 
-      Ind <- replist$cpue %>% dplyr::filter(Fleet == ff) 
-      if(!is.null(Ind$Use)) Ind <- dplyr::filter(Ind, Use == 1) 
-      Ind <- Ind %>% group_by(Yr) %>% 
+      Ind <- replist$cpue %>% dplyr::filter(Fleet == ff)
+      if(!is.null(Ind$Use)) Ind <- dplyr::filter(Ind, Use == 1)
+      Ind <- Ind %>% group_by(Yr) %>%
         summarise(Obs = mean(Obs, na.rm = TRUE), SE = mean(SE, na.rm = TRUE))
       if(nrow(Ind) > 0) {
         Obs <- Ind$Obs[match(mainyrs, Ind$Yr)] %>% matrix(1)
