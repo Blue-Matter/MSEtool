@@ -115,7 +115,7 @@ VPA2OM<-function(Name="A fishery made by VPA2OM",
 
   # Sampled parameters
 
-  OM<-simup(h,OM);
+  OM<-simup(h,OM)
   Size_area_1<-Frac_area_1<-Prob_staying<-0.5
   OM<-simup(Size_area_1,OM); OM<-simup(Frac_area_1,OM); OM<-simup(Prob_staying,OM)
   OM<-simup(D,OM); OM<-simup(R0,OM)
@@ -217,7 +217,7 @@ VPA2OM<-function(Name="A fishery made by VPA2OM",
   if(fixq1) OM@cpars$qs<-rep(1,nsim) # Overrides q estimation to fix q at 1 for VPA for which F history is
 
   OM@maxF<-10
-  
+
   OM@Linf<-rep(1,2)
   OM@K<-rep(0.3,2)
   OM@t0<-rep(0,2)
