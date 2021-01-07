@@ -250,7 +250,7 @@ Replace <- function(OM, from,Sub=c("Stock", "Fleet", "Obs", "Imp"),  Name=NULL, 
 #' @author A. Hordyk
 #' @references Thorson, J. T., S. B. Munch, J. M. Cope, and J. Gao. 2017.
 #' Predicting life history parameters for all fishes worldwide. Ecological Applications. 27(8): 2262--2276
-#' @source \url{https://github.com/James-Thorson/FishLife/}
+#' @source \url{https://github.com/James-Thorson-NOAA/FishLife}
 #' @export
 #' @examples
 #' myOM<-LH2OM(MSEtool::testOM)
