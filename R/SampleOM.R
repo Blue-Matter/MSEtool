@@ -1061,12 +1061,12 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
     V <- aperm(array(as.numeric(unlist(VList, use.names=FALSE)), dim=c(n_age, nyears+proyears, nsim)), c(3,1,2))
   }
 
-
   # ---- Retention Curve ----
   LR5 <- sample_unif('LR5', cpars, Fleet, nsim) * multi
   LFR <- sample_unif('LFR', cpars, Fleet, nsim) * multi
   Rmaxlen <- sample_unif('Rmaxlen', cpars, Fleet, nsim)
   DR <- sample_unif('DR', cpars, Fleet, nsim)
+  if (all(is.na(DR))) DR <- rep(0, nsim)
 
   LR5_y <- matrix(LR5, nrow = nsim, ncol = nyears + proyears, byrow = FALSE)
   LFR_y <- matrix(LFR, nrow = nsim, ncol = nyears + proyears, byrow = FALSE)
@@ -1155,7 +1155,7 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
   if (chk > 0) stop("LR5 is greater than LFR in ", chk, ' simulations')
 
   if (!exists("retA", inherits = FALSE)) {
-    # calculate selectivity-at-age from selectivity-at-length
+    # calculate retention-at-age from retention-at-length
     VList <- lapply(1:nsim, calcV, Len_age=StockPars$Len_age,
                     LatASD=StockPars$LatASD, SLarray=retL,
                     n_age=n_age, nyears=nyears, proyears=proyears,
