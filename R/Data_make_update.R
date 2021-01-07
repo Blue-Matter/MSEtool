@@ -1125,8 +1125,6 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
   Data_out@CV_Iref <- UpdateSlot('CV_Iref', RealData, SimData, msg)
   ObsPars$Irefbias <- rep(NA, nsim) # not calculated
 
-
-  # TODO - not currently updated
   NotUpdated <- function(RealData, sl, msg) {
     if (!all(is.na(slot(RealData, sl)))) {
       if (msg)
