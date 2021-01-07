@@ -922,7 +922,7 @@ COSEWIC_Hplot<-function(MSEobj,syear=2017,qcol=rgb(0.4,0.8,0.95), quants=c(0.05,
 #'
 #' Subset the custom parameters of an operating model
 #'
-#' @param OM An object of class OM 
+#' @param OM An object of class OM
 #' @param sims A logical vector of length \code{OM@@nsim} to either retain (TRUE) or remove (FALSE).
 #' Alternatively, a numeric vector indicating which simulations (from 1 to nsim) to keep.
 #' @return An object of class OM
@@ -930,18 +930,18 @@ COSEWIC_Hplot<-function(MSEobj,syear=2017,qcol=rgb(0.4,0.8,0.95), quants=c(0.05,
 #' @export SubCpars
 SubCpars<-function(OM, sims = 1:OM@nsim) {
   if(!length(OM@cpars)) return(OM)
-  
+
   if(is.numeric(sims)) {
     sims2 <- logical(OM@nsim)
     sims2[sims] <- TRUE
   } else if(is.logical(sims) && length(sims) == OM@nsim) {
     sims2 <- sims
   } else stop("Logical vector sims need to be of length ", OM@nsim)
-  
+
   if(any(!sims2)) {
     message("Removing simulations: ", paste0(which(!sims2), collapse = " "))
     cpars <- OM@cpars
-    
+
     subset_Data <- function(xx, Data, sims) {
       z <- slot(Data, xx)
       if(!all(is.na(z))) z <- z[sims, , , drop = FALSE]
@@ -960,7 +960,7 @@ SubCpars<-function(OM, sims = 1:OM@nsim) {
       } else if(class(x)[[1]] == "Data") {
         s_names <- c("AddIndV", "AddInd", "CV_AddInd")
         update_slots <- lapply(s_names, subset_Data, Data = x, sims = sims)
-        for(i in 1:length(s_names)) slot(x, s_names[i]) <- update_slots[[i]]
+        for(i in seq_along(s_names)) slot(x, s_names[i]) <- update_slots[[i]]
         return(x)
       } else if(length(x) == OM@nsim) {
         return(x[sims])
@@ -968,10 +968,10 @@ SubCpars<-function(OM, sims = 1:OM@nsim) {
     }
     OM@cpars <- lapply(names(cpars), subset_function, sims = sims2, cpars = cpars)
     OM@nsim <- sum(sims2)
-    
+
     message("Set OM@nsim = ", OM@nsim)
   }
-  
+
   return(OM)
 }
 
