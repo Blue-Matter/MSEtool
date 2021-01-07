@@ -5,7 +5,7 @@
 \alias{predictLH}
 \title{Predict missing life-history parameters}
 \source{
-\url{https://github.com/James-Thorson/FishLife/}
+\url{https://github.com/James-Thorson-NOAA/FishLife}
 }
 \usage{
 LH2OM(
