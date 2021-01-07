@@ -1550,11 +1550,10 @@ runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
   }
 
   # check MPs
-  if (checkMPs)
+  if (checkMPs & !Hist)
     MPs <- CheckMPs(MPs=MPs, silent=silent)
 
   HistSims <- Simulate(OM, parallel, silent)
-
 
   if (Hist) {
     if(!silent) message("Returning historical simulations")
