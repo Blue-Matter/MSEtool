@@ -12,9 +12,8 @@ sed -i -r "s/\x1b/''/g" test.xml   ## get rid of escape symbol
 
 # build test report
 
-test.file <- '2020-06-12DLMtool_V5.4.5.xml'
-test.file <- 'test.xml'
-rmarkdown::render(input='tests/manual/Test_Report.Rmd', params=list(results.file=test.file))
+rmarkdown::render(input='tests/manual/Test_Report.Rmd',
+                  params=list(results.file=file.path('test-code',test.results)))
 
 
 
