@@ -45,7 +45,7 @@ CalcMPDynamics(
 }
 \arguments{
 \item{MPRecs}{A named list of MP recommendations. The names are the same as \code{slotNames('Rec')}, except
-for \code{Misc}. Each element in the list is a matrix. With the expection of \code{Spatial}, all elements in list
+for \code{Misc}. Each element in the list is a matrix. With the exception of \code{Spatial}, all elements in list
 have \code{nrow=1} and \code{ncol=nsim}. \code{Spatial} has \code{nrow=nareas}. Matrices can be empty matrix, populated with all NAs
 (both mean no change in management with respect to this element (e.g. \code{Effort})), or populated with a recommendation.
 MPs must either return a recommendation or no recommendation for every simulation for a particular slot (i.e. cannot have some NA and some values).}

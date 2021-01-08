@@ -27,7 +27,7 @@
 
 
 #' @author A. Hordyk
-#' @return Invisibily returns a list with summary table of MP performance and
+#' @return Invisibly returns a list with summary table of MP performance and
 #' the ggplot objects for the plots
 #' @export
 #'

@@ -70,7 +70,7 @@ optQ(
 
 \item{Effind}{Historical fishing effort}
 
-\item{Spat_targc}{Spatial targetting}
+\item{Spat_targc}{Spatial targeting}
 
 \item{hc}{Steepness}
 

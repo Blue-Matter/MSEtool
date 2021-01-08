@@ -52,7 +52,7 @@ optYield(
 
 \item{WtAge}{Weight-at-age}
 
-\item{Vuln}{Vulnerablity-at-age}
+\item{Vuln}{Vulnerability-at-age}
 
 \item{Retc}{Retention-at-age}
 

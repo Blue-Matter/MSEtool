@@ -37,7 +37,7 @@ minimum age for calculating the mean of age-dependent M from the SS assessment.}
 \item{gender}{An integer index for the sex for importing biological parameters (1 = female, 2 = male).}
 
 \item{comp_fleet}{A vector of indices corresponding to fleets in the assessment over which to aggregate the composition
-(catch-at-length and catch-at-age) data. By default, characer string \code{"all"} will aggregate across all fleets.}
+(catch-at-length and catch-at-age) data. By default, character string \code{"all"} will aggregate across all fleets.}
 
 \item{comp_season}{Integer, for seasonal models, the season for which the value of the index will be used. By default, \code{"mean"}
 will take the average across seasons.}

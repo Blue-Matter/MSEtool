@@ -12,7 +12,7 @@
 #' minimum age for calculating the mean of age-dependent M from the SS assessment.
 #' @param gender An integer index for the sex for importing biological parameters (1 = female, 2 = male).
 #' @param comp_fleet A vector of indices corresponding to fleets in the assessment over which to aggregate the composition
-#' (catch-at-length and catch-at-age) data. By default, characer string \code{"all"} will aggregate across all fleets.
+#' (catch-at-length and catch-at-age) data. By default, character string \code{"all"} will aggregate across all fleets.
 #' @param comp_season Integer, for seasonal models, the season for which the value of the index will be used. By default, \code{"mean"}
 #' will take the average across seasons.
 #' @param comp_partition Integer vector for selecting length/age observations that are retained (2), discarded (1), or both (0). By default, \code{"all"}
@@ -660,7 +660,7 @@ SS2Data_get_index <- function(replist, mainyrs, season_as_years = FALSE, nseas =
 # #' @author T. Carruthers
 # #' @export getGpars
 getGpars <- function(replist, seas = 1) { # This is a rip-off of SSPlotBiology
-  
+
   if(packageVersion("r4ss") == 1.24) {
     res <- getGpars_r4ss_124(replist, seas)
   } else res <- getGpars_r4ss_134(replist, seas)
@@ -669,7 +669,7 @@ getGpars <- function(replist, seas = 1) { # This is a rip-off of SSPlotBiology
 }
 
 getGpars_r4ss_124 <- function(replist, seas = 1) {
-  
+
   nseasons <- replist$nseasons
   growdat <- replist$endgrowth[replist$endgrowth$Seas == seas, ]
   growdat$CV_Beg <- growdat$SD_Beg/growdat$Len_Beg
@@ -720,7 +720,7 @@ getGpars_r4ss_124 <- function(replist, seas = 1) {
         "     are not used in the model.\n")
   if (!seas %in% 1:nseasons)
     stop("'seas' input should be within 1:nseasons")
-  
+
   if (length(mainmorphs) > nsexes) {
     cat("!Error with morph indexing in SSplotBiology function.\n",
         " Code is not set up to handle multiple growth patterns or birth seasons.\n")
@@ -730,11 +730,11 @@ getGpars_r4ss_124 <- function(replist, seas = 1) {
   #  FecX <- biology$Wt_len_F
   #  FecY <- FecPar1 + FecPar2 * FecX
   #}
-  
+
   growdatF <- growdat[growdat$Gender == 1 & growdat$Morph ==
                         mainmorphs[1], ]
   growdatF$Sd_Size <- growdatF$SD_Beg
-  
+
   if (growthCVtype == "logSD=f(A)") {
     growdatF$high <- qlnorm(0.975, meanlog = log(growdatF$Len_Beg),
                             sdlog = growdatF$Sd_Size)
@@ -763,9 +763,9 @@ getGpars_r4ss_124 <- function(replist, seas = 1) {
                             sd = growdatM$Sd_Size)
     }
   } else growdatM <- NULL
-  
+
   list(Female = growdatF, Male = growdatM)
-  
+
 }
 
 getGpars_r4ss_134 <- function(replist, seas = 1) {
@@ -832,7 +832,7 @@ getGpars_r4ss_134 <- function(replist, seas = 1) {
   #  labels[6] <- gsub("beginning of the year", paste("beginning of season",
   #                                                   seas), labels[6])
   #}
-  
+
   if (length(morphs) > nsexes) {
     cat("!Error with morph indexing in SSplotBiology function.\n",
         " Code is not set up to handle multiple growth patterns or birth seasons.\n")
@@ -874,8 +874,8 @@ getGpars_r4ss_134 <- function(replist, seas = 1) {
                             sd = growdatM$Sd_Size)
     }
   } else growdatM <- NULL
-  
+
   list(Female = growdatF, Male = growdatM)
-  
+
 }
 

@@ -69,7 +69,7 @@
 #' @slot Recbiascv Log-normal coefficient of variation for sampling persistent
 #'  bias in recent recruitment strength. Uniform distribution lower and upper
 #'  bounds. Positive real numbers
-#' @slot sigmaRbiascv Log-normal coefficeint of variation for sampling
+#' @slot sigmaRbiascv Log-normal coefficient of variation for sampling
 #'  persistent bias in recruitment variability.  Single value. Positive real number
 #' @slot Eobs Log-normal effort observation error expressed as a coefficient of
 #'  variation. Uniform distribution lower and upper bounds. Non-negative real

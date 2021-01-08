@@ -2,7 +2,7 @@
 % Please edit documentation in R/DFO.R
 \name{DFO_proj}
 \alias{DFO_proj}
-\title{Deparment of Fisheries and Oceans projection plot}
+\title{Department of Fisheries and Oceans projection plot}
 \usage{
 DFO_proj(MSEobj, maxplot = 6)
 }

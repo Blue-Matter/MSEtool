@@ -41,7 +41,7 @@ by \code{runMSE(Hist=TRUE)}
 \item \code{joinHist}: Join objects of class \code{Hist}
 
 \item \code{updateMSE}: Updates an existing MSE object (class MSE) from a previous version of the
-DLMtool to include slots new to the lastest version. Also works with Stock,
+DLMtool to include slots new to the latest version. Also works with Stock,
 Fleet, Obs, Imp, and Data objects. The new slots will be empty,
 but avoids the 'slot doesn't exist' error that sometimes occurs.
 Returns an object of class matching class(MSEobj)

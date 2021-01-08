@@ -82,7 +82,7 @@ then the MP labels are colored (no color legend).}
 \item{Yrs}{An optional named list (matching the PM names) with numeric values to override the default \code{Yrs} values. See examples.}
 }
 \value{
-Invisibily returns a list with summary table of MP performance and
+Invisibly returns a list with summary table of MP performance and
 the ggplot objects for the plots
 }
 \description{

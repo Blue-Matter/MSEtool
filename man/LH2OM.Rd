@@ -63,7 +63,7 @@ that all four life history parameters are unknown and need to be estimated. See 
 \item{Genus}{Character string specifying the Genus name. Optional. Default is 'predictive'}
 
 \item{Species}{Character string specifying the Species name. Optional. Default is 'predictive'. If full species name
-(Genus + Species) is not found if FishLife database (based on FishBase) higher order taxonomony will be used (e.g., Family)
+(Genus + Species) is not found if FishLife database (based on FishBase) higher order taxonomy will be used (e.g., Family)
 for the predictions.}
 
 \item{nsamp}{The number of samples to return}

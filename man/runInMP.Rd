@@ -11,7 +11,7 @@ runInMP(Data, MPs = NA, reps = 100)
 
 \item{MPs}{A vector of MPs of class 'Input'}
 
-\item{reps}{Number of stochastic repititions - often not used in input
+\item{reps}{Number of stochastic repetitions - often not used in input
 control MPs.}
 }
 \description{

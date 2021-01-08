@@ -2,7 +2,7 @@
 % Please edit documentation in R/DFO.R
 \name{Cos_thresh_tab}
 \alias{Cos_thresh_tab}
-\title{Current default thresholds for COSEWIC satificing}
+\title{Current default thresholds for COSEWIC satisficing}
 \usage{
 Cos_thresh_tab(Ptab1)
 }
@@ -10,7 +10,7 @@ Cos_thresh_tab(Ptab1)
 \item{Ptab1}{A COSEWIC performance table made by COSEWIC_tab()}
 }
 \description{
-Current default thresholds for COSEWIC satificing
+Current default thresholds for COSEWIC satisficing
 }
 \author{
 T. Carruthers

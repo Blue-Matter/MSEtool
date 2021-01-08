@@ -54,7 +54,7 @@ CSRAfunc(
 
 \item{bc}{Length-weight conversion parameter b (W=aL^b)}
 
-\item{vulnc}{A vector (nage long) of the vulnerabilty at age (max 1) to
+\item{vulnc}{A vector (nage long) of the vulnerability at age (max 1) to
 fishing.}
 
 \item{matc}{A vector (nage long) of the maturity at age (max 1)}
@@ -70,7 +70,7 @@ fishing.}
 \item{meth}{Are we fitting to mean length or catch composition?}
 }
 \description{
-What depletion level and corresponding equlibrium F arise from data
+What depletion level and corresponding equilibrium F arise from data
 regarding mean length of current catches, natural mortality rate, steepness
 of the stock recruitment curve, maximum length, maximum growth rate, age at
 maturity, age based vulnerability, maturity at age, maximum age and number

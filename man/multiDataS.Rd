@@ -7,7 +7,7 @@
 multiDataS(MSElist, StockPars, np, mm, nf, realVB)
 }
 \arguments{
-\item{MSElist}{A hierarcical list of data objects stock then fleet then MP}
+\item{MSElist}{A hierarchical list of data objects stock then fleet then MP}
 
 \item{StockPars}{A list of stock parameters}
 

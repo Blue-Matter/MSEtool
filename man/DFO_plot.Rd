@@ -2,7 +2,7 @@
 % Please edit documentation in R/DFO.R
 \name{DFO_plot}
 \alias{DFO_plot}
-\title{Deparment of Fisheries and Oceans trade-off plot}
+\title{Department of Fisheries and Oceans trade-off plot}
 \usage{
 DFO_plot(MSEobj, zero_origin = T)
 }

@@ -596,7 +596,7 @@ RepmissingVal <- function(object, name, vals=NA) {
 }
 
 #' @describeIn checkMSE Updates an existing MSE object (class MSE) from a previous version of the
-#' DLMtool to include slots new to the lastest version. Also works with Stock,
+#' DLMtool to include slots new to the latest version. Also works with Stock,
 #' Fleet, Obs, Imp, and Data objects. The new slots will be empty,
 #' but avoids the 'slot doesn't exist' error that sometimes occurs.
 #' Returns an object of class matching class(MSEobj)
@@ -810,7 +810,7 @@ ML2D <- function(OM, ML, nsim = 100, ploty = T, Dlim = c(0.05, 0.6)) {
 
 #' Catch at size reduction analysis
 #'
-#' What depletion level and corresponding equlibrium F arise from data
+#' What depletion level and corresponding equilibrium F arise from data
 #' regarding mean length of current catches, natural mortality rate, steepness
 #' of the stock recruitment curve, maximum length, maximum growth rate, age at
 #' maturity, age based vulnerability, maturity at age, maximum age and number
@@ -826,7 +826,7 @@ ML2D <- function(OM, ML, nsim = 100, ploty = T, Dlim = c(0.05, 0.6)) {
 #' @param AM A vector of age at maturity
 #' @param a Length-weight conversion parameter a (W=aL^b)
 #' @param b Length-weight conversion parameter b (W=aL^b)
-#' @param vuln A matrix nsim x nage of the vulnerabilty at age (max 1) to
+#' @param vuln A matrix nsim x nage of the vulnerability at age (max 1) to
 #' fishing.
 #' @param mat A matrix nsim x nage of the maturity at age (max 1)
 #' @param ML A vector of current mean length estimates
@@ -866,7 +866,7 @@ CSRA <- function(M, h, Linf, K, t0, AM, a, b, vuln, mat, ML, CAL, CAA,
 
 #' Optimization function for CSRA
 #'
-#' What depletion level and corresponding equlibrium F arise from data
+#' What depletion level and corresponding equilibrium F arise from data
 #' regarding mean length of current catches, natural mortality rate, steepness
 #' of the stock recruitment curve, maximum length, maximum growth rate, age at
 #' maturity, age based vulnerability, maturity at age, maximum age and number
@@ -886,7 +886,7 @@ CSRA <- function(M, h, Linf, K, t0, AM, a, b, vuln, mat, ML, CAL, CAA,
 #' @param AMc Age at maturity
 #' @param ac Length-weight conversion parameter a (W=aL^b)
 #' @param bc Length-weight conversion parameter b (W=aL^b)
-#' @param vulnc A vector (nage long) of the vulnerabilty at age (max 1) to
+#' @param vulnc A vector (nage long) of the vulnerability at age (max 1) to
 #' fishing.
 #' @param matc A vector (nage long) of the maturity at age (max 1)
 #' @param MLc A current mean length estimates

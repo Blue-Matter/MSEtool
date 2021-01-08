@@ -2,7 +2,7 @@
 % Please edit documentation in R/DFO.R
 \name{Thresh_tab}
 \alias{Thresh_tab}
-\title{Current default thresholds for DFO satificing}
+\title{Current default thresholds for DFO satisficing}
 \usage{
 Thresh_tab(Ptab1)
 }

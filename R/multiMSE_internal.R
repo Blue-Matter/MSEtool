@@ -188,7 +188,7 @@ ldim<-function(x){
 #'
 #' Catches, CAA, CAL are summed. LFC and LFS are weighted averages. ML, Lc and Lbar are recalculated from summed CAL. All other observations are for fleet 1 (indicative)
 #'
-#' @param MSElist A hierarcical list of data objects stock then fleet then MP
+#' @param MSElist A hierarchical list of data objects stock then fleet then MP
 #' @param StockPars A list of stock parameters
 #' @param np The number of stocks
 #' @param mm Integer the MP number
@@ -314,7 +314,7 @@ MPCalcsNAs<-function(MPCalcs){
 #'
 #' Catches, CAA, CAL are summed. LFC and LFS are weighted averages. ML, Lc and Lbar are recalculated from summed CAL. All other observations are for fleet 1 (indicative)
 #'
-#' @param MSElist A hierarcical list of data objects stock then fleet then MP
+#' @param MSElist A hierarchical list of data objects stock then fleet then MP
 #' @param StockPars A list of stock parameters
 #' @param p Integer the Stock number
 #' @param mm Integer the MP number

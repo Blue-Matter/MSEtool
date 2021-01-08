@@ -716,7 +716,7 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
 #'
 #' @param Data A MSEtool Data object
 #' @param MPs The name of the MP to run (or a vector or names)
-#' @param reps Number of repititions
+#' @param reps Number of repetitions
 #' @param perc Percentile to summarize reps (default is median)
 #' @param chkMPs Logical. Should the MPs be checked before attempting to run them?
 #' @param silent Logical. Should messages by suppressed?
@@ -1325,7 +1325,7 @@ Sense <- function(Data, MP, nsense = 6, reps = 100, perc = c(0.05, 0.5, 0.95), p
 #'
 #' @param Data A data-limited methods data object
 #' @param MPs optional vector of MP names
-#' @param reps Number of repititions
+#' @param reps Number of repetitions
 #' @param timelimit The maximum time (seconds) taken to complete 10 reps
 #' @param checkMP Logical. Check if the MP can be run first?
 #' @param silent Logical. Suppress messages?
@@ -1601,7 +1601,7 @@ Uses <- function(slot, silent=FALSE) {
 #'
 #' @param Data Either an object of class `Data` or the file path to a valid
 #' file to be imported with `XL2Data`
-#' @param md Full file path to a valid text file documentating the Data
+#' @param md Full file path to a valid text file documenting the Data
 #' @param name Optional. Name of the output file
 #' @param title Title for the Report. Title in the markdown file will override this value
 #' @param author Author of the Report. Author in the markdown file will override this value

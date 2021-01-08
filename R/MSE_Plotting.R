@@ -288,7 +288,7 @@ join_plots <- function(plots, ncol = length(plots), nrow = 1, position = c("righ
 # #' Options are \code{'SSB_SSB0', 'B_BMSY', 'F_FMSY', 'AAVE', 'AAVY'}
 # #' @param lastYrs Last number of years in projection to calculate statistics
 # #' @param cex.lab Size of axis label text
-# #' @param cex.PM Size of performacne metric text
+# #' @param cex.PM Size of performance metric text
 # #' @param canMPs Optional character vector of MPs that can be applied (plotted
 # #' in different colour)
 # #' @param cols Optional vector of colours
@@ -2729,9 +2729,9 @@ VOIplot <- function(MSEobj, MPs = NA, nvars = 5, nMP = 4,
 #' @param MSEobj Object of class MSE, output of the runMSE function
 #' @param Bref The reference fraction of BMSY (to evaluate the probability of
 #' exceeding this level)
-#' @param LB The lower bound probability that seperates red (bad) and yellow
+#' @param LB The lower bound probability that separates red (bad) and yellow
 #' (O.K.) colored segments
-#' @param UB The upper bound probability that seperates yellow (O.K.) and green
+#' @param UB The upper bound probability that separates yellow (O.K.) and green
 #' (good) colored segments
 #' @author T. Carruthers
 #' @export wormplot
@@ -3319,7 +3319,7 @@ tradeoffplot4 <- function(x, y, xlab, ylab, labs, cex, vl, hl, ShowLabs = FALSE,
 
 }
 
-#' Plot Spawnign stock biomass and reference points for both historical and projected period
+#' Plot Spawning stock biomass and reference points for both historical and projected period
 #'
 #'
 #' @param MSE An object of class 'MSE' produced by from runMSE()

@@ -47,7 +47,7 @@ simulation conditions and performance of MPs for a multi-stock, multi-fleet oper
 
 \item{\code{Obs}}{A table of sampled parameters of the observation model. Data frame of nsim rows.}
 
-\item{\code{SB_SBMSY}}{Simulated spawing biomass relative to SBMSY over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers}
+\item{\code{SB_SBMSY}}{Simulated spawning biomass relative to SBMSY over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers}
 
 \item{\code{F_FMSY}}{Simulated fishing mortality rate relative to FMSY over the projection. An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers}
 

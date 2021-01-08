@@ -106,7 +106,7 @@ bias in steepness. Single value. Positive real number}
 bias in recent recruitment strength. Uniform distribution lower and upper
 bounds. Positive real numbers}
 
-\item{\code{sigmaRbiascv}}{Log-normal coefficeint of variation for sampling
+\item{\code{sigmaRbiascv}}{Log-normal coefficient of variation for sampling
 persistent bias in recruitment variability.  Single value. Positive real number}
 
 \item{\code{Eobs}}{Log-normal effort observation error expressed as a coefficient of

@@ -24,7 +24,7 @@ growth)}
 
 \item{b}{Length-weight conversion parameter b (W=aL^b)}
 
-\item{vuln}{A matrix nsim x nage of the vulnerabilty at age (max 1) to
+\item{vuln}{A matrix nsim x nage of the vulnerability at age (max 1) to
 fishing.}
 
 \item{mat}{A matrix nsim x nage of the maturity at age (max 1)}
@@ -40,7 +40,7 @@ fishing.}
 \item{nyears}{Number of historical years of fishing}
 }
 \description{
-What depletion level and corresponding equlibrium F arise from data
+What depletion level and corresponding equilibrium F arise from data
 regarding mean length of current catches, natural mortality rate, steepness
 of the stock recruitment curve, maximum length, maximum growth rate, age at
 maturity, age based vulnerability, maturity at age, maximum age and number

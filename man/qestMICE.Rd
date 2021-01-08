@@ -73,7 +73,7 @@ qestMICE(
 
 \item{movx}{Array \verb{[stock,age,area,area]} of movement transitions}
 
-\item{Spat_targ}{Matrix \verb{[stock, fleet]} of spatial targetting parameter (0 evenly spatial distributed, 1 proportional to vulnerable biomass)}
+\item{Spat_targ}{Matrix \verb{[stock, fleet]} of spatial targeting parameter (0 evenly spatial distributed, 1 proportional to vulnerable biomass)}
 
 \item{M_ageArrayx}{Array \verb{[stock, age,year]} of Natural mortality rate at age}
 

@@ -11,7 +11,7 @@ TAC(Data, MPs = NA, reps = 100, timelimit = 1, checkMP = TRUE, silent = FALSE)
 
 \item{MPs}{optional vector of MP names}
 
-\item{reps}{Number of repititions}
+\item{reps}{Number of repetitions}
 
 \item{timelimit}{The maximum time (seconds) taken to complete 10 reps}
 

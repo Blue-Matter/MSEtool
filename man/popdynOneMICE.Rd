@@ -65,7 +65,7 @@ recruitment strength}
 
 \item{movy}{Array \verb{[stock,age,area,area]} of movement transitions}
 
-\item{Spat_targ}{Matrix \verb{[stock, fleet]} of spatial targetting parameter
+\item{Spat_targ}{Matrix \verb{[stock, fleet]} of spatial targeting parameter
 (0 evenly spatial distributed, 1 proportional to vulnerable biomass)}
 
 \item{SRrelx}{Integer vector \verb{[stock]} the form of the stock recruitment

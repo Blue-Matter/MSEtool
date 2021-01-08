@@ -934,7 +934,7 @@ setMethod("initialize", "OM", function(.Object, Stock=NULL, Fleet=MSEtool::Gener
 #'      \item FMSY: Fishing mortality corresponding with asymptotic MSY
 #'      \item SSBMSY: Spawning stock biomass corresponding with asymptotic MSY
 #'      \item BMSY: total biomass corresponding with asymptotic MSY
-#'      \item VBMSY: Vulneralbe biomass corresponding with asymptotic MSY
+#'      \item VBMSY: Vulnerable biomass corresponding with asymptotic MSY
 #'    }
 #'    \item Dynamic_Unfished: A named list with dynamic unfished reference points for each simulation and year:
 #'    \itemize{
@@ -1053,7 +1053,7 @@ setMethod("initialize", "MSE", function(.Object, Name, nyears, proyears,
 
 #' An object for storing data for analysis using data-limited methods
 #'
-#' Used interally
+#' Used internally
 #'
 #' @name PMobj-class
 #' @docType class

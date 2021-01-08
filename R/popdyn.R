@@ -53,7 +53,7 @@ CalculateQ <- function(x, StockPars, FleetPars, pyears,
 #' @param movc movement matrix
 #' @param SRrelc SR parameter
 #' @param Effind Historical fishing effort
-#' @param Spat_targc Spatial targetting
+#' @param Spat_targc Spatial targeting
 #' @param hc Steepness
 #' @param R0c Unfished recruitment by area
 #' @param SSBpRc Unfished spawning biomass per recruit by area
@@ -295,7 +295,7 @@ calcRefYield <- function(x, StockPars, FleetPars, pyears, Ncurr, nyears, proyear
 #' @param M_age M-at-age
 #' @param MatAge Maturity-at-age
 #' @param WtAge Weight-at-age
-#' @param Vuln Vulnerablity-at-age
+#' @param Vuln Vulnerability-at-age
 #' @param Retc Retention-at-age
 #' @param Prec Recruitment error
 #' @param movc Movement matrix
@@ -348,7 +348,7 @@ optYield <- function(logFa, Asize_c, nareas, maxage, Ncurr, pyears, M_age,
 #' step based on the recent MP recommendation
 #'
 #' @param MPRecs A named list of MP recommendations. The names are the same as `slotNames('Rec')`, except
-#' for `Misc`. Each element in the list is a matrix. With the expection of `Spatial`, all elements in list
+#' for `Misc`. Each element in the list is a matrix. With the exception of `Spatial`, all elements in list
 #' have `nrow=1` and `ncol=nsim`. `Spatial` has `nrow=nareas`. Matrices can be empty matrix, populated with all NAs
 #' (both mean no change in management with respect to this element (e.g. `Effort`)), or populated with a recommendation.
 #' MPs must either return a recommendation or no recommendation for every simulation for a particular slot (i.e. cannot have some NA and some values).
@@ -601,7 +601,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
 
     # calculate new retention curve
     yr <- y+nyears
-    allyrs <- (y+nyears):(nyears+proyears)  # update vulnerabilty for all future years
+    allyrs <- (y+nyears):(nyears+proyears)  # update vulnerability for all future years
 
     srs <- (StockPars$Linf - LFR_P[,yr]) / ((-log(Rmaxlen_P[,yr],2))^0.5) # retention parameters are constant for all years
     srs[!is.finite(srs)] <- Inf
@@ -923,7 +923,7 @@ optDfunwrap <- function(x, initD, Nfrac, R0, initdist, Perr_y, surv,
 #'
 #' @param Data A object of class Data
 #' @param MPs A vector of MPs of class 'Input'
-#' @param reps Number of stochastic repititions - often not used in input
+#' @param reps Number of stochastic repetitions - often not used in input
 #' control MPs.
 #' @author A. Hordyk
 #' @export

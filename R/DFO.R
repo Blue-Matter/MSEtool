@@ -45,14 +45,14 @@ runCOSEWIC<-function(OM, ...){
 
 
 
-#' Deparment of Fisheries and Oceans historical plot
+#' Department of Fisheries and Oceans historical plot
 #'
 #' A plot of current and historical stock status by simulation according to the
 #' stock status zones and reference points of DFO.
 #' http://www.dfo-mpo.gc.ca/reports-rapports/regs/sff-cpd/precaution-eng.htm
 #'
 #' @param OM An operating model object of class OM
-#' @param panel should the plots be seperate or in two panels?
+#' @param panel should the plots be separate or in two panels?
 #' @param nsim how many simulations should be plotted (over-ridden
 #' by OM@nsim where cpars is specified)
 #' @author T. Carruthers
@@ -84,7 +84,7 @@ DFO_hist <- function(OM, panel= T,nsim=48) {
 
 }
 
-#' Deparment of Fisheries and Oceans projection plot
+#' Department of Fisheries and Oceans projection plot
 #'
 #' A projection plot of MP performance by simulation according to the
 #' stock status zones and reference points of DFO.
@@ -124,7 +124,7 @@ DFO_proj <- function(MSEobj,maxplot=6) {
 
 }
 
-#' Deparment of Fisheries and Oceans trade-off plot
+#' Department of Fisheries and Oceans trade-off plot
 #'
 #' A plot of mean biomass relative to BMSY and fishing mortality rate relative to FMSY
 #' over the final 5 years of the projection
@@ -161,7 +161,7 @@ DFO_plot<-function(MSEobj,zero_origin=T){
 
 }
 
-#' Deparment of Fisheries and Oceans stock status bar plot
+#' Department of Fisheries and Oceans stock status bar plot
 #'
 #' A plot of biomass relative to BMSY over projected years
 #'
@@ -459,7 +459,7 @@ encircle<-function(x,y,col="red",perc=0.05,xrange=NA,yrange=NA,log=F,lty=1,lwd=1
 
 }
 
-#' Deparment of Fisheries and Oceans default plot 2
+#' Department of Fisheries and Oceans default plot 2
 #'
 #' A preliminary plot for returning trade-offs plots and performance table for
 #' probability of obtaining half reference (FMSY) yield and probability of biomass
@@ -547,7 +547,7 @@ DFO_plot2 <- function(MSEobj, nam = NA,panel = T,Bcut=50, Ycut=50) {
 }
 
 
-#' Deparment of Fisheries and Oceans biomass quantile plot
+#' Department of Fisheries and Oceans biomass quantile plot
 #'
 #' A plot of biomass relative to BMSY quantiles over projected years
 #'
@@ -980,7 +980,7 @@ SubCpars<-function(OM, sims = 1:OM@nsim) {
 
 #' Create a standard DFO MSE report
 #'
-#' Provides performacne plots typical in the assessment of Canadian fish stocks.
+#' Provides performance plots typical in the assessment of Canadian fish stocks.
 #'
 #' @param MSEobj An object of class MSE
 #' @param output_file The directory and filename you wish to use for the report e.g. "C:/temp/myMSEreport.html"
@@ -1278,7 +1278,7 @@ DFO_spider<-function(MSEobj){
 
 
 
-#' Current default thresholds for DFO satificing
+#' Current default thresholds for DFO satisficing
 #'
 #' Crit_S is the probability of being in the critical zone in the first 10 projected years
 #' Caut_S is the probability of being in the cautious zone in the first 10 projected years
@@ -1499,7 +1499,7 @@ COSEWIC_tab_formatted<-function(Ptab1,thresh=c(20,     40,     40,    20,       
 }
 
 
-#' Current default thresholds for COSEWIC satificing
+#' Current default thresholds for COSEWIC satisficing
 #'
 #' @param Ptab1 A COSEWIC performance table made by COSEWIC_tab()
 #' @author T. Carruthers

@@ -143,7 +143,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage,
 #' @param FretAx Array `[fleet, age, year, area]` of the retention curve
 #' @param Effind Array `[fleet, year]` of effort
 #' @param movx Array `[stock,age,area,area]` of movement transitions
-#' @param Spat_targ Matrix `[stock, fleet]` of spatial targetting parameter (0 evenly spatial distributed, 1 proportional to vulnerable biomass)
+#' @param Spat_targ Matrix `[stock, fleet]` of spatial targeting parameter (0 evenly spatial distributed, 1 proportional to vulnerable biomass)
 #' @param M_ageArrayx Array `[stock, age,year]` of Natural mortality rate at age
 #' @param Mat_agex Array `[stock, age, year]` of maturity (spawning fraction) age age
 #' @param Asizex Matrix `[stock, area]` Area size

@@ -65,7 +65,7 @@ matrix dimensions \code{c(nsim, nyears+proyears+maxage)}
 \item FMSY: Fishing mortality corresponding with asymptotic MSY
 \item SSBMSY: Spawning stock biomass corresponding with asymptotic MSY
 \item BMSY: total biomass corresponding with asymptotic MSY
-\item VBMSY: Vulneralbe biomass corresponding with asymptotic MSY
+\item VBMSY: Vulnerable biomass corresponding with asymptotic MSY
 }
 \item Dynamic_Unfished: A named list with dynamic unfished reference points for each simulation and year:
 \itemize{

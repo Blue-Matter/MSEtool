@@ -1,9 +1,9 @@
 #' Check Convergence
 #'
 #' Have I undertaken enough simulations (nsim)? Has my MSE converged on stable
-#' (reliable) peformance metrics?
+#' (reliable) performance metrics?
 #'
-#' Performance metrics are plotted against the number of simulations. Convergence diagonostics
+#' Performance metrics are plotted against the number of simulations. Convergence diagnostics
 #' are calculated over the last `ref.it` (default = 20) iterations. The convergence diagnostics are:
 #' \enumerate{
 #'   \item Is the order of the MPs stable over the last `ref.it` iterations?

@@ -31,14 +31,14 @@ is that the file is 'OM@Name.Rmd'}
 \item{inc.plot}{Logical. Should the plots be included?}
 
 \item{render}{Logical. Should the document be compiled? May be useful to turn off if
-there are problems with compililing the Rmd file.}
+there are problems with compiling the Rmd file.}
 
 \item{output}{Character. Output file type. Default is 'html_document'. 'pdf_document' is available
 but may require additional software and have some formatting issues.}
 
 \item{openFile}{Logical. Should the compiled file be opened in web browser?}
 
-\item{quiet}{TRUE to supress printing of the pandoc command line.}
+\item{quiet}{TRUE to suppress printing of the pandoc command line.}
 
 \item{dir}{Optional file path to read the xlsx and rmd files. Default is \code{getwd()}}
 

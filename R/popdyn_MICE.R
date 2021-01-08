@@ -169,7 +169,7 @@ popdynMICE<-function(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
 #' @param aRx Vector `[stock]` stock recruitment parameter alpha (for Ricker curve)
 #' @param bRx Vector `[stock]` stock recruitment parameter beta (for Ricker curve)
 #' @param movy Array `[stock,age,area,area]` of movement transitions
-#' @param Spat_targ Matrix `[stock, fleet]` of spatial targetting parameter
+#' @param Spat_targ Matrix `[stock, fleet]` of spatial targeting parameter
 #' (0 evenly spatial distributed, 1 proportional to vulnerable biomass)
 #' @param SRrelx Integer vector `[stock]` the form of the stock recruitment
 #'  relationship (1 = Beverton-Holt, 2= Ricker)

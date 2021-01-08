@@ -371,11 +371,11 @@ XL2OM <- function(name=NULL, cpars=NULL, msg=TRUE) {
 #' @param out.file Optional. Character. Name of the output file. Default is the same as the text file.
 #' @param inc.plot Logical. Should the plots be included?
 #' @param render Logical. Should the document be compiled? May be useful to turn off if
-#' there are problems with compililing the Rmd file.
+#' there are problems with compiling the Rmd file.
 #' @param output Character. Output file type. Default is 'html_document'. 'pdf_document' is available
 #' but may require additional software and have some formatting issues.
 #' @param openFile Logical. Should the compiled file be opened in web browser?
-#' @param quiet TRUE to supress printing of the pandoc command line.
+#' @param quiet TRUE to suppress printing of the pandoc command line.
 #' @param dir Optional file path to read the xlsx and rmd files. Default is `getwd()`
 #' @param ... Optional additional named arguments provided to `runMSE`
 #'

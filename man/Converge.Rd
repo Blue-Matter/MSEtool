@@ -44,10 +44,10 @@ A table of convergence results for each MP
 }
 \description{
 Have I undertaken enough simulations (nsim)? Has my MSE converged on stable
-(reliable) peformance metrics?
+(reliable) performance metrics?
 }
 \details{
-Performance metrics are plotted against the number of simulations. Convergence diagonostics
+Performance metrics are plotted against the number of simulations. Convergence diagnostics
 are calculated over the last \code{ref.it} (default = 20) iterations. The convergence diagnostics are:
 \enumerate{
 \item Is the order of the MPs stable over the last \code{ref.it} iterations?
