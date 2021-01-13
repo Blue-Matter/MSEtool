@@ -948,7 +948,7 @@ SubCpars<-function(OM, sims = 1:OM@nsim) {
       return(z)
     }
     subset_function <- function(xx, sims, cpars) {
-      x <- cpars$xx
+      x <- cpars[[xx]]
       if(xx %in% c("CAL_bins", "MPA", "plusgroup", "CAL_binsmid", "binWidth", "AddIunits")) {
         return(x)
       } else if(is.matrix(x)) {
@@ -966,7 +966,7 @@ SubCpars<-function(OM, sims = 1:OM@nsim) {
         return(x[sims])
       } else return(x)
     }
-    OM@cpars <- lapply(names(cpars), subset_function, sims = sims2, cpars = cpars)
+    OM@cpars <- lapply(names(cpars), subset_function, sims = sims2, cpars = cpars) %>% structure(names = names(cpars))
     OM@nsim <- sum(sims2)
 
     message("Set OM@nsim = ", OM@nsim)
