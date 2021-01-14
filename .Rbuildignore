@@ -30,3 +30,4 @@ src\*.dll
 
 ^cran-comments\.md$
 ^revdep$
+^CRAN-RELEASE$
