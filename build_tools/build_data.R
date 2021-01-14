@@ -488,9 +488,9 @@ cpars_Stock <- openxlsx::read.xlsx("build_tools/Class_definitions/Class_definiti
 cpars_Fleet <- openxlsx::read.xlsx("build_tools/Class_definitions/Class_definitions.xlsx",
                                    sheet="Fleet") %>%
   makeDF(., 'Fleet')
-# cpars_Obs <- openxlsx::read.xlsx("build_tools/Class_definitions/Class_definitions.xlsx",
-#                                  sheet="Obs") %>%
-#   makeDF(., 'Obs')
+cpars_Obs <- openxlsx::read.xlsx("build_tools/Class_definitions/Class_definitions.xlsx",
+                                 sheet="Obs") %>%
+  makeDF(., 'Obs')
 cpars_Imp <- openxlsx::read.xlsx("build_tools/Class_definitions/Class_definitions.xlsx",
                                  sheet="Imp")%>%
   makeDF(., 'Imp')
@@ -500,6 +500,6 @@ cpars_internal <- openxlsx::read.xlsx("build_tools/Class_definitions/Class_defin
                                       sheet="cpars")
 
 
-cpars_info <- dplyr::bind_rows(cpars_Stock,cpars_Fleet,cpars_Imp,cpars_internal)
+cpars_info <- dplyr::bind_rows(cpars_Stock,cpars_Fleet,cpars_Obs, cpars_Imp,cpars_internal)
 
 usethis::use_data(cpars_info, internal = TRUE, overwrite = TRUE)
