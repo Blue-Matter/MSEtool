@@ -237,7 +237,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
   M_age <- do.call(rbind, M_age)
   if(all(is.na(M_age[nrow(M_age), ]))) M_age[nrow(M_age), ] <- endgrowth$M[Stock@maxage]
   if(ncol(M_age) == (nyears - 1)) M_age <- cbind(M_age, endgrowth$M)
-  if(proyears > 0) {
+  if(proyears) {
     M_age_pro <- matrix(M_age[, nyears], n_age, proyears)
     M_age <- cbind(M_age, M_age_pro)
   }
@@ -274,7 +274,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
   } else {
     Len_age <- endgrowth$Len_Beg %>% matrix(n_age, nyears) # No time-varying
   }
-  if(proyears > 0) {
+  if(proyears) {
     Len_age_pro <- matrix(Len_age[, nyears], n_age, proyears)
     Len_age <- cbind(Len_age, Len_age_pro)
   }
@@ -305,7 +305,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
   } else {
     Wt_age <- endgrowth$Wt_Beg %>% matrix(n_age, nyears)
   }
-  if(proyears > 0) {
+  if(proyears) {
     Wt_age_pro <- matrix(Wt_age[, nyears], n_age, proyears)
     Wt_age <- cbind(Wt_age, Wt_age_pro)
   }
@@ -401,12 +401,18 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   retL <- vapply(mainyrs, loop_over_change_points, numeric(replist$nlbinspop),
                  df = replist$sizeselex[replist$sizeselex$Fleet == ff & replist$sizeselex$Sex == i &
                                           replist$sizeselex$Factor == "Keep", ])
-  retLpro <- retL[, nyears] %>% matrix(nrow(retL), proyears)
+  if(proyears) {
+    retLpro <- retL[, nyears] %>% matrix(nrow(retL), proyears)
+    retL <- cbind(retL, retLpro)
+  }
 
   SLarray <- vapply(mainyrs, loop_over_change_points, numeric(replist$nlbinspop),
                     df = replist$sizeselex[replist$sizeselex$Fleet == ff & replist$sizeselex$Sex == i &
                                              replist$sizeselex$Factor == "Dead", ])
-  SLarraypro <- SLarray[, nyears] %>% matrix(nrow(SLarray), proyears)
+  if(proyears) {
+    SLarraypro <- SLarray[, nyears] %>% matrix(nrow(SLarray), proyears)
+    SLarray <- cbind(SLarray, SLarraypro)
+  }
 
   #### Discard mortality
   disc_mort <- replist$sizeselex[replist$sizeselex$Fleet == ff & replist$sizeselex$Sex == i &
@@ -476,8 +482,8 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   cpars_fleet$CAL_bins <- c(replist$lbinspop, upper_boundary_last_bin)
   cpars_fleet$Fdisc <- rep(mean(disc_mort), nsim)
   #cpars_fleet$V <- cbind(V2, V2_proj) %>% array(c(n_age, allyears, nsim)) %>% aperm(c(3, 1, 2))
-  cpars_fleet$retL <- replicate(nsim, cbind(retL, retLpro)) %>% aperm(c(3, 1, 2))
-  cpars_fleet$SLarray <- replicate(nsim, cbind(SLarray, SLarraypro)) %>% aperm(c(3, 1, 2))
+  cpars_fleet$retL <- replicate(nsim, retL) %>% aperm(c(3, 1, 2))
+  cpars_fleet$SLarray <- replicate(nsim, SLarray) %>% aperm(c(3, 1, 2))
   cpars_fleet$DR <- rep(0, nsim) # Should be zero since we have retention in cpars$retL
   cpars_fleet$Find <- Find %>% matrix(nsim, length(mainyrs), byrow = TRUE)
 
@@ -606,17 +612,21 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
 
   if(nrow(CAL) > 0) {
     cpars_fleet$Data@CAL_bins <- cpars_fleet$CAL_bins
-    cpars_fleet$Data@CAL_mids <- cpars_fleet$CAL_binsmid # Optional
+    binWidth <- cpars_fleet$CAL_bins[2:length(cpars_fleet$CAL_bins)] - cpars_fleet$CAL_bins[2:length(cpars_fleet$CAL_bins) - 1]
+    cpars_fleet$Data@CAL_mids <- cpars_fleet$CAL_bins[2:length(cpars_fleet$CAL_bins)] - 0.5 * binWidth
 
     CAL <- CAL %>% dplyr::mutate(Nout = Obs * Nsamp_adj) %>% reshape2::acast(list("Yr", "Bin"), value.var = "Nout", fun.aggregate = sum)
 
-    CALout <- matrix(NA, nyears, length(cpars_fleet$CAL_binsmid))
-    CALout[match(as.numeric(rownames(CAL)), mainyrs),
-           match(as.numeric(colnames(CAL)), cpars_fleet$CAL_bins[-length(cpars_fleet$CAL_bins)])] <- CAL
-    CAL2 <- apply(CALout, 1, function(x) {x[is.na(x)] <- 0; return(x)})
-    cpars_fleet$Data@CAL <- CAL2 %>% array(c(length(cpars_fleet$CAL_binsmid), nyears, 1)) %>% aperm(3:1)
+    CALout <- matrix(NA_real_, nyears, length(cpars_fleet$Data@CAL_mids))
+    CALout[mainyrs %in% as.numeric(rownames(CAL)) %in% mainyrs,
+           cpars_fleet$CAL_bins[-length(cpars_fleet$CAL_bins)] %in% as.numeric(colnames(CAL))] <- CAL
+    CAL2 <- apply(CALout, 1, function(x) {
+      if(!all(is.na(x))) x[is.na(x)] <- 0
+      return(x)
+    })
+    cpars_fleet$Data@CAL <- CAL2 %>% array(c(length(cpars_fleet$Data@CAL_mids), nyears, 1)) %>% aperm(3:1)
 
-    cpars_fleet$Data@ML <- apply(CAL2, 2, function(xx) weighted.mean(x = cpars_fleet$CAL_binsmid, w = xx)) %>% matrix(1)
+    cpars_fleet$Data@ML <- apply(CAL2, 2, function(xx) weighted.mean(x = cpars_fleet$Data@CAL_mids, w = xx)) %>% matrix(1)
   }
 
   return(list(Fleet = Fleet, cpars_fleet = cpars_fleet))
