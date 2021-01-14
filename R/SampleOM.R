@@ -89,7 +89,7 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
   sampCpars <- list()
 
   # ---- Non-stochastic parameters ----
-  Names <- c('CAL_bins', #'CAL_binsmid', 'binWidth', 'nCALbins',
+  Names <- c('CAL_bins', 'CAL_binsmid', 'binWidth', 'nCALbins',
              'maxage', 'n_age', 'CurrentYr',
              'plusgroup', 'control', 'AddIUnits', 'Data', 'MPA',
              'nareas', 'a', 'b', 'maxF', 'Sample_Area', 'Asize')
@@ -1323,6 +1323,8 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
 
   # ---- Index Observation Error -----
   betas <- cpars$betas
+  if (is.null(betas)) betas <- cpars$beta
+
   if (is.null(betas))
     betas <- exp(myrunif(nsim, log(Obs@beta[1]), log(Obs@beta[2])))  # the sampled hyperstability /
   ObsOut$betas <- betas
