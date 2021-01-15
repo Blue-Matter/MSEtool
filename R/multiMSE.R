@@ -86,7 +86,10 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     if(!silent) message(Stocks[[p]]@Name)
     for(f in 1:nf){
       # --- Sample custom parameters ----
+
       if(length(cpars)>0 && length(cpars[[p]][[f]])>0){
+        if(!silent)
+          message('Sampling custom parameters for ', Fleets[[p]][[f]]@Name)
         SampCpars[[p]][[f]] <- SampleCpars(cpars[[p]][[f]], nsim,
                                            silent=silent)
       }else{
