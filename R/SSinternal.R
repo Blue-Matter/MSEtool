@@ -444,7 +444,9 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   }
   ALK <- ALK[match(replist$lbinspop, dimnames(ALK)$Length), match(0:Stock@maxage, dimnames(ALK)$TrueAge)]
 
-  wt <- dplyr::filter(replist$ageselex, Fleet == ff, Sex == i, Factor == "bodywt", Seas == 1, Morph == 1)
+  wt <- dplyr::filter(replist$ageselex, Fleet == ff, Sex == i, Factor == "bodywt", Seas == 1)
+  wt_morphs <- wt$Morph %>% table()
+  if(length(wt_morphs) > 1) wt <- dplyr::filter(wt, Morph = wt_morphs[1])
   wt <- vapply(0:Stock@maxage, function(x) wt[match(mainyrs, wt$Yr), parse(text = paste0("\"", x, "\"")) %>% eval()], numeric(length(mainyrs)))
 
   meanN <- dplyr::filter(replist$natage, Sex == i, `Beg/Mid` == "M", Seas == 1)
