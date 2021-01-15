@@ -112,7 +112,7 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
     invdf <- data.frame(not_used_cpars=invalid, stringsAsFactors = FALSE)
 
     if(!silent) {
-      message("invalid names found in custom parameters (OM@cpars):")
+      message("Invalid names found in custom parameters:")
       base::message(paste0(capture.output(invdf), collapse = "\n"))
     }
   }
@@ -120,12 +120,12 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
   valid <- which(CNames %in% ValNames)
   cpars <- cpars[valid]
   if (length(valid) == 0) {
-    message("No valid names found in custompars (OM@cpars). Ignoring `OM@cpars`")
+    message("No valid names found in custompars. Ignoring `OM@cpars`")
     return(list())
   }
   CNames <- names(cpars)
   outNames <- paste(CNames, "")
-  if(!silent) message("valid custom parameters (OM@cpars) found: \n", paste0(outNames, collapse="\n"))
+  if(!silent) message("Valid custom parameters found: \n", paste0(outNames, collapse="\n"))
 
   # ---- Sample custom pars ----
 
