@@ -31,3 +31,6 @@ src\*.dll
 ^cran-comments\.md$
 ^revdep$
 ^CRAN-RELEASE$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
