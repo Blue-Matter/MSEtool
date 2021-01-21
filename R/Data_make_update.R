@@ -166,12 +166,12 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
   imp <- as.data.frame(ImpPars[ind])
   refs <- RefPoints[!names(RefPoints) %in% names(stock)]
 
-  OMtable <- data.frame(stock, fleet, imp, refs, ageM=StockPars$ageM[,nyears],
-                        L5=FleetPars$L5[,nyears ], LFS=FleetPars$LFS[,nyears ],
-                        Vmaxlen=FleetPars$Vmaxlen[,nyears ],
-                        LR5=FleetPars$LR5[,nyears], LFR=FleetPars$LFR[,nyears],
-                        Rmaxlen=FleetPars$Rmaxlen[,nyears],
-                        DR=FleetPars$DR[,nyears], OFLreal, maxF=StockPars$maxF,
+  OMtable <- data.frame(stock, fleet, imp, refs, ageM=StockPars$ageMarray[,nyears],
+                        L5=FleetPars$L5_y[,nyears ], LFS=FleetPars$LFS_y[,nyears ],
+                        Vmaxlen=FleetPars$Vmaxlen_y[,nyears ],
+                        LR5=FleetPars$LR5_y[,nyears], LFR=FleetPars$LFR_y[,nyears],
+                        Rmaxlen=FleetPars$Rmaxlen_y[,nyears],
+                        DR=FleetPars$DR_y[,nyears], OFLreal, maxF=StockPars$maxF,
                         A=A, Asp=Asp, CurrentYr=CurrentYr)
 
   OMtable <- OMtable[,order(names(OMtable))]
@@ -202,7 +202,7 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
 updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret,
                        N_P, SSB, SSB_P, VBiomass, VBiomass_P, RefPoints,
                        retA_P,
-                       retL_P, StockPars, FleetPars, ObsPars,
+                       retL_P, StockPars, FleetPars, ObsPars, ImpPars,
                        V_P,
                        upyrs, interval, y=2,
                        mm=1, Misc, RealData, Sample_Area) {
@@ -510,6 +510,32 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
     Data@MPeff <- Effort[, mm, y-1] # last recommended effort
   }
 
+  # --- Store OM Parameters ----
+  # put all the operating model parameters in one table
+  ind <- which(lapply(StockPars, length) == nsim)
+  stock <- as.data.frame(StockPars[ind])
+  stock$Fdisc <- NULL
+  stock$CAL_bins <- NULL
+  stock$CAL_binsmid <- NULL
+  ind <- which(lapply(FleetPars, length) == nsim)
+  fleet <- as.data.frame(FleetPars[ind])
+
+  ind <- which(lapply(ImpPars, length) == nsim)
+  imp <- as.data.frame(ImpPars[ind])
+  refs <- RefPoints# [!names(RefPoints) %in% names(stock)]
+
+  OFLreal <- A * (1-exp(-RefPoints$FMSY))  # the true simulated Over Fishing Limit
+
+  OMtable <- data.frame(stock, fleet, imp, refs, ageM=StockPars$ageMarray[,nyears+y],
+                        L5=FleetPars$L5_y[,nyears+y], LFS=FleetPars$LFS_y[,nyears+y],
+                        Vmaxlen=FleetPars$Vmaxlen_y[,nyears+y],
+                        LR5=FleetPars$LR5_y[,nyears], LFR=FleetPars$LFR_y[,nyears+y],
+                        Rmaxlen=FleetPars$Rmaxlen_y[,nyears+y],
+                        DR=FleetPars$DR_y[,nyears+y], OFLreal, maxF=StockPars$maxF,
+                        A=A, Asp=Asp, CurrentYr=OM@CurrentYr)
+
+  OMtable <- OMtable[,order(names(OMtable))]
+  Data@OM <- OMtable
 
   Data@Misc <- Misc
 
