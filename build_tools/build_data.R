@@ -474,7 +474,6 @@ getDescription("Data", Outloc=Outloc)
 getDescription("OM", Outloc=Outloc)
 getDescription("MSE", Outloc=Outloc)
 
-
 ### Add cpars_info to sysdata.rdata ####
 makeDF <- function(df_in, type=NULL) {
   df_in$ValidCpars[is.na(df_in$ValidCpars)] <- TRUE
