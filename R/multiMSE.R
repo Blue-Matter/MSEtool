@@ -1855,6 +1855,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                                   StockPars=StockPars[[p]],
                                                   FleetPars=FleetPars[[p]][[f]],
                                                   ObsPars=ObsPars[[p]][[f]],
+                                                  ImpPars=ImpPars[[p]][[f]],
                                                   V_P=FleetPars[[p]][[f]]$V_P,
                                                   upyrs=upyrs,
                                                   interval=interval,
@@ -1975,6 +1976,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             } # end of MPcond conditional
           } # end of stock loop
         } # end of MMP
+
         for(p in 1:np){
           for(f in 1:nf){
             # calculate pstar quantile of TAC recommendation dist
@@ -2175,7 +2177,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     }
   }
   Misc <- list()
-  Misc$Data <-MSElist
+  # Misc$Data <-MSElist
   Misc[['MOM']]<-MOM
 
   # need to reformat MMP and complex mode to work with MSEout slot
