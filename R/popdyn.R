@@ -174,7 +174,7 @@ optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, V, maxage, R0, SRrel, hs,
 #'
 #' @keywords internal
 MSYCalcs <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age,
-                     maxage, R0x, SRrelx, hx, opt=1, plusgroup=0) {
+                     maxage, R0x, SRrelx, hx, opt=1, plusgroup=1) {
   # Box 3.1 Walters & Martell 2004
   n_age <- maxage + 1
   FF <- exp(logF)
