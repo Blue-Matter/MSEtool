@@ -21,50 +21,15 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
 ```{r, echo=FALSE, results="asis"}
 if (params$tabs) {
   cat('### Catch Observations {.tabset .tabset-fade .tabset-pills}' )
 } else {
   cat('### Catch Observations')
 }
-
 Pars <- params$Pars
 nsim <- Pars$Obs$Csd %>% length()
-
-# ErrList <- list()
-# ErrList$Cbiasa <- array(Pars$Obs$Cbias, c(nsim, nyears + proyears))  # Catch bias array
-#  
-# # composite of bias and observation error
-# ErrList$Cerr <- array(rlnorm((nyears + proyears) * nsim, 
-#                      mconv(1, rep(Pars$Obs$Csd, (nyears + proyears))), 
-#                      sdconv(1, rep(Pars$Obs$Csd, nyears + proyears))), 
-#               c(nsim, nyears + proyears))  
-# # Index error
-# ErrList$Ierr <- array(rlnorm((nyears + proyears) * nsim, 
-#                      mconv(1, rep(Pars$Obs$Isd, nyears + proyears)), 
-#                      sdconv(1, rep(Pars$Obs$Isd, nyears + proyears))), 
-#               c(nsim, nyears + proyears))
-# 
-# # Simulate error in observed recruitment index 
-# ErrList$Recerr <- array(rlnorm((nyears + proyears) * nsim, 
-#                                mconv(1, rep(Pars$Obs$Recsd, (nyears + proyears))),
-#                                sdconv(1, rep(Pars$Obs$Recsd, nyears + proyears))),
-#                         c(nsim, nyears + proyears))
-#   
-# # Simulate error in observed depletion 
-# ErrList$Derr <- array(rlnorm((nyears + proyears) * nsim, 
-#                                mconv(1, rep(Pars$Obs$Derr, (nyears + proyears))),
-#                                sdconv(1, rep(Pars$Obs$Derr, nyears + proyears))),
-#                         c(nsim, nyears + proyears))
-# ErrList$Dbiasa <- array(Pars$Obs$Dbias, c(nsim, nyears + proyears))  # Catch bias array
-# 
-# # Simulate error in observed abundance 
-# ErrList$Aerr <- array(rlnorm((nyears + proyears) * nsim, 
-#                                mconv(1, rep(Pars$Aerr, (nyears + proyears))),
-#                                sdconv(1, rep(Pars$Aerr, nyears + proyears))),
-#                         c(nsim, nyears + proyears))
-# ErrList$Abiasa <- array(Pars$Obs$Abias, c(nsim, nyears + proyears))  # Catch bias array
-
 ```
 
 
