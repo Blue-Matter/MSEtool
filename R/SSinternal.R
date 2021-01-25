@@ -348,11 +348,11 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
     Stock@D <- rep(sb_curr/sb0, 2)
   } else {
     # Calculate 'SSB' for males because it is always 0 for males in SS
-    N_virg <- N_at_age %>% dplyr::filter(Era == "VIRG", `Beg/Mid` == "B", BirthSeas == Seas)
+    N_virg <- N_at_age %>% dplyr::filter(Era == "VIRG", `Beg/Mid` == "B", Seas == 1)
     N_virg2 <- vapply(0:Stock@maxage, function(x)
       N_virg[, parse(text = paste0("\"", x, "\"")) %>% eval()] %>% sum(), numeric(1))
 
-    N_now <- dplyr::filter(replist$natage, Sex == i, Yr == max(mainyrs), `Beg/Mid` == "B", BirthSeas == Seas)
+    N_now <- dplyr::filter(replist$natage, Sex == i, Yr == max(mainyrs), `Beg/Mid` == "B", Seas == 1)
     N_now2 <- vapply(0:Stock@maxage, function(x)
       N_now[, parse(text = paste0("\"", x, "\"")) %>% eval()] %>% sum(), numeric(1))
 
@@ -479,7 +479,7 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   #cpars_fleet$binWidth <- replist$lbinspop[2] - replist$lbinspop[1]
   #cpars_fleet$CAL_bins <- replist$lbinspop %>% c(max(replist$lbinspop) + cpars_fleet$binWidth)
   #cpars_fleet$CAL_binsmid <- replist$lbinspop + 0.5 * cpars_fleet$binWidth
-  upper_boundary_last_bin <- max(replist$lbinspop) + 
+  upper_boundary_last_bin <- max(replist$lbinspop) +
     2 * (suppressWarnings(max(as.numeric(colnames(replist$sizeselex)), na.rm = TRUE)) - max(replist$lbinspop))
   cpars_fleet$CAL_bins <- c(replist$lbinspop, upper_boundary_last_bin)
   cpars_fleet$Fdisc <- rep(mean(disc_mort), nsim)
