@@ -5,6 +5,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 ### Fixes
 - fix issue with importing composition data with `new('Data',..)` (issue #33)
 - fix `cpars$beta` and `cpars$Esd` issue (issue #34)
+- fix issue with importing Data files from csv
 
 ## MSEtool 3.0.0
 This is a new major release of the `MSEtool` package. It is not backwards compatible with previous versions of `MSEtool` or `DLMtool`.

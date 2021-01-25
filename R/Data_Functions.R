@@ -116,14 +116,15 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
     Ncol <- max(unlist(lapply(strsplit(readLines(file.path(dir,name)), ","), length)))
     col.names <- paste0("V", 1:Ncol)
     if (dec == ".") {
-      datasheet <- read.csv(file.path(dir,name), header = F,
+      datasheet <- read.csv(file.path(dir,name), header = T,
                             colClasses = "character", col.names=col.names,
                             stringsAsFactors = FALSE)
     } else {
-      datasheet <- read.csv2(file.path(dir,name), header = F,
+      datasheet <- read.csv2(file.path(dir,name), header = T,
                              colClasses = "character", col.names=col.names,
                              stringsAsFactors = FALSE)
     }
+
   } else if(tools::file_ext(name) %in% c("xls", "xlsx")) {
     datasheet <- readxl::read_excel(file.path(dir,name), sheet = sheet,
                                     col_names = TRUE, .name_repair = "minimal")
@@ -352,7 +353,7 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
 
   # ---- Catch-at-Age ----
   ind <- which(datasheet$Name == "Vuln CAA")
-  if (length(ind>0) && !is.na(datasheet[ind, 2])) {
+  if (length(ind)>0 && !is.na(datasheet[ind, 2])) {
     VulnCAA <- datasheet[ind, 2:(Data@MaxAge+2)]
     VulnCAA <- suppressWarnings(as.numeric(VulnCAA))
     if (!all(is.na(VulnCAA))) {
@@ -398,9 +399,15 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
   }
 
   # ---- Catch-at-Length ----
+  CAL_bins <- suppressWarnings(datasheet[which(datasheet$Name == "CAL_bins"),] %>% as.numeric())
+  CAL_bins <- CAL_bins[!is.na(CAL_bins)]
+
+  CAL_mids <- suppressWarnings(datasheet[which(datasheet$Name == "CAL_mids"),] %>% as.numeric())
+  CAL_mids <- CAL_mids[!is.na(CAL_mids)]
+
   ind <- which(datasheet$Name == "Vuln CAL")
-  if (length(ind>0) && !is.na(datasheet[ind, 2])) {
-    VulnCAL <- datasheet[ind, 2:(Data@MaxAge+2)]
+  if (length(ind)>0 && !is.na(datasheet[ind, 2])) {
+    VulnCAL <- datasheet[ind, 2:(length(CAL_mids)+2)]
     VulnCAL <- suppressWarnings(as.numeric(VulnCAL))
     if (!all(is.na(VulnCAL))) {
       if (any(is.na(VulnCAL)))
@@ -408,12 +415,6 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
     }
     Data@Vuln_CAL <- matrix(VulnCAL, nrow=1)
   }
-
-  CAL_bins <- suppressWarnings(datasheet[which(datasheet$Name == "CAL_bins"),] %>% as.numeric())
-  CAL_bins <- CAL_bins[!is.na(CAL_bins)]
-
-  CAL_mids <- suppressWarnings(datasheet[which(datasheet$Name == "CAL_mids"),] %>% as.numeric())
-  CAL_mids <- CAL_mids[!is.na(CAL_mids)]
 
   ind <- which(grepl('CAL', datasheet$Name) & !grepl('CAL_bins', datasheet$Name) &
                  !grepl('Vuln CAL', datasheet$Name) &
