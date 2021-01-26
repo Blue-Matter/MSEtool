@@ -77,7 +77,7 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
 
   # cpars
   cpars_out <- list()
-  
+
   # This function grabs array tt from the cpars of the first fleet of each stock, and averages across genders
   mean_array <- function(tt) {
     lapply(cpars[gender], function(x) parse(text = paste0("x[[1]]$", tt)) %>% eval()) %>%
@@ -193,13 +193,13 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
   }
   V <- vapply(1:ncol(V_temp), function(x) { # Grab selectivity from neighboring years if all zeros
     x <- min(x, ncol(V_temp))
-    if(!sum(V[, x], na.rm = TRUE) && x < ncol(V_temp)) {
+    if(!sum(V_temp[, x], na.rm = TRUE) && x < ncol(V_temp)) {
       Recall(x+1)
     } else {
       return(V_temp[, x])
     }
   }, numeric(nrow(V_temp)))
-  
+
   Vpro <- V[, ncol(V)] %>% matrix(nrow(V), proyears)
   cpars_out$V <- cbind(V, Vpro) %>% array(c(Stock@maxage + 1, nyears + proyears, nsim)) %>% aperm(c(3, 1 ,2))
 
