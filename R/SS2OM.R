@@ -77,7 +77,7 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
 
   # cpars
   cpars_out <- list()
-
+  
   # This function grabs array tt from the cpars of the first fleet of each stock, and averages across genders
   mean_array <- function(tt) {
     lapply(cpars[gender], function(x) parse(text = paste0("x[[1]]$", tt)) %>% eval()) %>%
@@ -171,9 +171,9 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
       reshape2::melt(list("Fleet", "Yr", "Sex"), variable.name = "Age", value.name = "F") %>%
       group_by(Yr, Sex, Age) %>% summarise(F = sum(F)) %>% # Sum over fleets
       group_by(Yr, Age) %>% summarise(F = mean(F)) %>% # Mean over sexes
-      group_by(Yr) %>% mutate(V = F/max(F)) # Get vulnerability
+      group_by(Yr) %>% mutate(F_denom = pmax(F, 1e-8), V = F/max(F_denom)) # Get vulnerability, F_denom avoids divide-by-zero
     Find <- group_by(FF, Yr) %>% summarise(F = max(F)) %>% getElement("F")
-    V <- reshape2::acast(FF, Age ~ Yr, value.var = "V")
+    V_temp <- reshape2::acast(FF, Age ~ Yr, value.var = "V")
   } else {
     # Selectivity = All mortality
     Vfleet <- lapply(c(1:replist$nfleets)[replist$IsFishFleet], get_V_from_Asel2, i = gender,
@@ -188,8 +188,18 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
       simplify2array() %>% apply(1:2, sum)
 
     Find <- apply(F_at_age, 1, max)
-    V <- t(F_at_age/Find)
+    F_denom <- pmax(Find, 1e-8)
+    V_temp <- t(F_at_age/F_denom)
   }
+  V <- vapply(1:ncol(V_temp), function(x) { # Grab selectivity from neighboring years if all zeros
+    x <- min(x, ncol(V_temp))
+    if(!sum(V[, x], na.rm = TRUE) && x < ncol(V_temp)) {
+      Recall(x+1)
+    } else {
+      return(V_temp[, x])
+    }
+  }, numeric(nrow(V_temp)))
+  
   Vpro <- V[, ncol(V)] %>% matrix(nrow(V), proyears)
   cpars_out$V <- cbind(V, Vpro) %>% array(c(Stock@maxage + 1, nyears + proyears, nsim)) %>% aperm(c(3, 1 ,2))
 
