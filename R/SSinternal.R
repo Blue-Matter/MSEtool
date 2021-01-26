@@ -348,7 +348,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
     Stock@D <- rep(sb_curr/sb0, 2)
   } else {
     # Calculate 'SSB' for males because it is always 0 for males in SS
-    N_virg <- N_at_age %>% dplyr::filter(Era == "VIRG", `Beg/Mid` == "B", Seas == 1)
+    N_virg <- dplyr::filter(replist$natage, Sex == i, Era == "VIRG", `Beg/Mid` == "B", Seas == 1)
     N_virg2 <- vapply(0:Stock@maxage, function(x)
       N_virg[, parse(text = paste0("\"", x, "\"")) %>% eval()] %>% sum(), numeric(1))
 
@@ -391,6 +391,7 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
 
   #### Retention and selectivity-at-length - loop over years for time-varying quantities
   loop_over_change_points <- function(yy, df) {
+    yy <- ifelse(yy < mainyrs[1], min(dd$Yr), yy) # Check to avoid infinite loop
     sched <- df[df$Yr == yy, ]
     if(nrow(sched) == 1) {
       return(sched[1, -c(1:5)] %>% unlist())
@@ -446,7 +447,7 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
 
   wt <- dplyr::filter(replist$ageselex, Fleet == ff, Sex == i, Factor == "bodywt", Seas == 1)
   wt_morphs <- wt$Morph %>% table()
-  if(length(wt_morphs) > 1) wt <- dplyr::filter(wt, Morph = wt_morphs[1])
+  if(length(wt_morphs) > 1) wt <- dplyr::filter(wt, Morph == wt_morphs[1])
   wt <- vapply(0:Stock@maxage, function(x) wt[match(mainyrs, wt$Yr), parse(text = paste0("\"", x, "\"")) %>% eval()], numeric(length(mainyrs)))
 
   meanN <- dplyr::filter(replist$natage, Sex == i, `Beg/Mid` == "M", Seas == 1)

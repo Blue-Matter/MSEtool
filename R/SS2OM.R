@@ -162,8 +162,9 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
   Fleet@DR <- Stock@Fdisc <- c(0, 0) # No discards
   Fleet@MPA <- FALSE
 
-
-  if(replist$SS_versionNumeric == 3.30) { # Need to average over seasons
+  FF <- dplyr::filter(replist$ageselex, Factor == "F", Yr %in% mainyrs)
+  if(nrow(FF)) { # Search for F-at-age in replist$ageselex otherwise go to replist$exploitation
+    # Need to average over seasons
     # Selectivity = all dead catch
     # No discards are modeled
     FF <- dplyr::filter(replist$ageselex, Factor == "F", Yr %in% mainyrs)[, -c(1, 4, 6, 7)] %>%
