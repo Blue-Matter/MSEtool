@@ -817,15 +817,6 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
   totalCatch <- apply(CB_P[,,y,], 1, sum)
 
-  print('Catch')
-  print(CB_P[,,y,1])
-
-  print('FM_P')
-  print(FM_P[,,y,1])
-
-  print('Biomass_P')
-  print(Biomass_P[,,y,1])
-
   Ftot <- sapply(1:nsim, calcF, totalCatch, V_P, Biomass_P, fishdist,
                  Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
                  M_ageArray=StockPars$M_ageArray,nyears, y) # update if effort has changed
