@@ -1,8 +1,9 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
-## MSEtool 3.0.9000 - Development Version
+## MSEtool 3.0.9003 - Development Version
 
 ### Fixes
+- fix randomly occurring bug in C++ code that was causing crashes
 - fix issue with importing composition data with `new('Data',..)` (issue #33)
 - fix `cpars$beta` and `cpars$Esd` issue (issue #34)
 - fix issue with importing Data files from csv
