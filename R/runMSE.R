@@ -1233,6 +1233,10 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                        plusgroup=StockPars$plusgroup))
 
       N_P[,,y,] <- aperm(array(unlist(NextYrN), dim=c(n_age, nareas, nsim, 1)), c(3,1,4,2))
+
+      print('N_P1')
+      print(N_P[,,y,1])
+
       Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAYt]  # Calculate biomass
       SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAYt]  # Calculate spawning stock numbers
       SSB_P[SAYR] <- SSN_P[SAYR] * StockPars$Wt_age[SAYt]  # Calculate spawning stock biomass
@@ -1248,9 +1252,6 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
       N_P[,1,y,] <- t(rec_area)
 
-      print('N_P1')
-      print(N_P[,,y,1])
-
       # movement this year
       Ntemp <- lapply(1:nsim, function(x)
         movestockCPP(nareas,  StockPars$maxage,
@@ -1258,9 +1259,6 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                      N_P[x,,y,])
       )
       N_P[,,y,] <- array(unlist(Ntemp), dim=c(n_age, nareas, nsim)) %>% aperm(c(3,1,2))
-
-      print('N_P2')
-      print(N_P[,,y,1])
 
       Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAY1]  # Calculate biomass
       VBiomass_P[SAYR] <- Biomass_P[SAYR] * V_P[SAYt]  # Calculate vulnerable biomass
@@ -1299,9 +1297,6 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       }
 
       # ----- Calc stock dynamics ----
-      print('Biomass_P')
-      print(Biomass_P[,,y,1])
-
       MPCalcs <- CalcMPDynamics(MPRecs, y, nyears, proyears, nsim, Biomass_P,
                                 VBiomass_P, LastTAE, histTAE, LastSpatial, LastAllocat,
                                 LastTAC, TACused, maxF,LR5_P, LFR_P, Rmaxlen_P,
