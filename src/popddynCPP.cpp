@@ -23,7 +23,9 @@ arma::mat popdynOneTScpp(double nareas, double maxage,
   int n_age = maxage + 1;
   arma::mat Nnext(n_age, nareas);
 
+
   for (int A=0; A < nareas; A++) {
+    Nnext(0, A) = 0; // Recruitment calculated later
     // Mortality
     for (int age=1; age<n_age; age++) {
       Nnext(age, A) = Ncurr(age-1, A) * exp(-Zcurr(age-1, A)); // Total mortality
