@@ -82,6 +82,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage,
 
   CF<-t(matrix(unlist(lapply(CatchFrac,function(dat)dat[x,])),nrow=nf))
   Fdist<-CF/Effind[,,nyears] # Catch divided by effort (q proxy)
+  Fdist[!is.finite(Fdist)] <- tiny
   Fdist<-Fdist/apply(Fdist[,,drop=F],1,sum)    # q ratio proxy (real space)
 
   if(nf==1){
@@ -217,6 +218,8 @@ qestMICE<-function(par,depc,CFc,mode='opt',np,nf,nyears,nareas,maxage,Nx,VFx,
   Cpred<-Ctot/apply(Ctot,1,sum)
 
   depOBJ<-sum((log(depc) - log(deppred))^2)
+  CFc[CFc==0] <- tiny
+  Cpred[Cpred==0] <- tiny
   cOBJ<-sum(log(CFc/Cpred)^2) # Lazy - should be: sum(log(CFc[,2:nf]/Cpred[,2:nf])^2) but this doesn't work for single fleets and it makes no difference anyway
 
   if(mode=='opt'){
