@@ -704,6 +704,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     TACused[is.na(TACused)] <- LastTAC[is.na(TACused)]
     TACusedE <-  TAC_Imp_Error[,y]*TACused   # TAC taken after implementation error
 
+    print(TACusedE)
     # Calculate total vulnerable biomass available mid-year accounting for any changes in selectivity &/or spatial closures
     M_array <- array(0.5*StockPars$M_ageArray[,,nyears+y], dim=c(nsim, n_age, StockPars$nareas))
     Atemp <- apply(CurrentVB * exp(-M_array), c(1,3), sum) # mid-year before fishing
