@@ -1226,6 +1226,9 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       SA1YR <- as.matrix(expand.grid(1:nsim, 1:(n_age - 1), y -1, 1:nareas))
 
       # --- Age & Growth ----
+      print('N_P1')
+      print(N_P[,,y-1,1])
+
       NextYrN <- lapply(1:nsim, function(x)
         popdynOneTScpp(nareas, StockPars$maxage,
                        Ncurr=N_P[x,,y-1,],
@@ -1234,7 +1237,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
       N_P[,,y,] <- aperm(array(unlist(NextYrN), dim=c(n_age, nareas, nsim, 1)), c(3,1,4,2))
 
-      print('N_P1')
+      print('N_P2')
       print(N_P[,,y,1])
 
       Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAYt]  # Calculate biomass
