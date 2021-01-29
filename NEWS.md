@@ -3,6 +3,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 ## MSEtool 3.0.9003 - Development Version
 
 ### Fixes
+- fix error with incorrect beta values when conditioning with real index (ie cpars$Data@Ind)
 - fix randomly occurring bug in C++ code that was causing crashes
 - fix issue with importing composition data with `new('Data',..)` (issue #33)
 - fix `cpars$beta` and `cpars$Esd` issue (issue #34)
