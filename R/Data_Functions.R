@@ -2052,6 +2052,8 @@ select_plots <- function(Data, i=1, n=20000, fignum=1) {
   }
 
   plist <- do.call("rbind", lout)
+
+
   df <- plist %>% group_by(Var) %>% dplyr::distinct(mean, cv)
   df$x <- df$mean
   # df$mean[df$mean>0.01] <-round(df$mean[df$mean>0.01],)
@@ -2069,22 +2071,26 @@ select_plots <- function(Data, i=1, n=20000, fignum=1) {
     addText <- TRUE
   }
 
+  inc <- 0
+  if (!all(is.na(plist$mean))) {
+    inc <- 1
+    p3 <- ggplot2::ggplot(plist, ggplot2::aes(x=val, y=..scaled..)) +
+      ggplot2::geom_density(show.legend = F, fill="lightgray") +
+      ggplot2::facet_wrap(~Var, scales="free") +
+      ggplot2::theme_minimal() + ggplot2::theme(axis.title.y = ggplot2::element_blank(),
+                                                axis.text.y = ggplot2::element_blank(),
+                                                axis.title.x=ggplot2::element_blank()) +
+      ggplot2::geom_text(data=df, ggplot2::aes(x=x, y=1.3), parse=TRUE, label=lab) +
+      ggplot2::geom_text(data=df, ggplot2::aes(x=x, y=1.1), parse=TRUE, label=lab2) +
 
-  p3 <- ggplot2::ggplot(plist, ggplot2::aes(x=val, y=..scaled..)) +
-    ggplot2::geom_density(show.legend = F, fill="lightgray") +
-    ggplot2::facet_wrap(~Var, scales="free") +
-    ggplot2::theme_minimal() + ggplot2::theme(axis.title.y = ggplot2::element_blank(),
-                                              axis.text.y = ggplot2::element_blank(),
-                                              axis.title.x=ggplot2::element_blank()) +
-    ggplot2::geom_text(data=df, ggplot2::aes(x=x, y=1.3), parse=TRUE, label=lab) +
-    ggplot2::geom_text(data=df, ggplot2::aes(x=x, y=1.1), parse=TRUE, label=lab2) +
+      ggplot2::labs(title=paste0('Figure ', fignum, '. Density plots of selectivity parameters')) +
+      ggplot2::expand_limits(y=1.4) +
+      ggplot2::theme(strip.text = ggplot2::element_text(size=14))
+    if (addText) p3 <- p3 + ggplot2::geom_text(data=textdf, ggplot2::aes(x=0, y=3, label=Text) )
 
-    ggplot2::labs(title=paste0('Figure ', fignum, '. Density plots of selectivity parameters')) +
-    ggplot2::expand_limits(y=1.4) +
-    ggplot2::theme(strip.text = ggplot2::element_text(size=14))
-  if (addText) p3 <- p3 + ggplot2::geom_text(data=textdf, ggplot2::aes(x=0, y=3, label=Text) )
+    suppressWarnings(plot(p3))
+  }
 
-  suppressWarnings(plot(p3))
 
   if (all(!is.na(df$mean)) && all(df$mean >0) ) {
     if(!is.na(Data@MaxAge)) {
@@ -2104,7 +2110,7 @@ select_plots <- function(Data, i=1, n=20000, fignum=1) {
 
       DF <- data.frame(Age=Age[Age>0], Select=SelA)
 
-      fignum <- fignum +1
+      fignum <- fignum +inc
       p4 <- ggplot2::ggplot(DF, ggplot2::aes(x=Age, y=Select)) +
         ggplot2::geom_line(size=1.2) +
         ggplot2::expand_limits(y=c(0,1), x=0) +
@@ -2544,21 +2550,24 @@ ref_plots <- function(Data, i=1, n=20000, fignum=1) {
     addText <- TRUE
   }
 
-  p1 <- ggplot2::ggplot(plist, ggplot2::aes(x=val, y=..scaled..)) +
-    ggplot2::geom_density(show.legend = F, fill="lightgray") +
-    ggplot2::facet_wrap(~Var, scales="free") +
-    ggplot2::theme_minimal() + ggplot2::theme(axis.title.y = ggplot2::element_blank(),
-                                              axis.text.y = ggplot2::element_blank(),
-                                              axis.title.x=ggplot2::element_blank()) +
-    ggplot2::geom_text(data=df, ggplot2::aes(x=x, y=1.3), parse=TRUE, label=lab) +
-    ggplot2::geom_text(data=df, ggplot2::aes(x=x, y=1.1), parse=TRUE, label=lab2) +
+  if (!all(is.na(plist$mean))) {
+    p1 <- ggplot2::ggplot(plist, ggplot2::aes(x=val, y=..scaled..)) +
+      ggplot2::geom_density(show.legend = F, fill="lightgray") +
+      ggplot2::facet_wrap(~Var, scales="free") +
+      ggplot2::theme_minimal() + ggplot2::theme(axis.title.y = ggplot2::element_blank(),
+                                                axis.text.y = ggplot2::element_blank(),
+                                                axis.title.x=ggplot2::element_blank()) +
+      ggplot2::geom_text(data=df, ggplot2::aes(x=x, y=1.3), parse=TRUE, label=lab) +
+      ggplot2::geom_text(data=df, ggplot2::aes(x=x, y=1.1), parse=TRUE, label=lab2) +
 
-    ggplot2::labs(title=paste0('Figure ', fignum, '. Density plots of Reference parameters')) +
-    ggplot2::expand_limits(y=1.4) +
-    ggplot2::theme(strip.text = ggplot2::element_text(size=14))
-  if (addText) p1 <- p1 + ggplot2::geom_text(data=textdf, ggplot2::aes(x=0, y=3, label=Text) )
+      ggplot2::labs(title=paste0('Figure ', fignum, '. Density plots of Reference parameters')) +
+      ggplot2::expand_limits(y=1.4) +
+      ggplot2::theme(strip.text = ggplot2::element_text(size=14))
+    if (addText) p1 <- p1 + ggplot2::geom_text(data=textdf, ggplot2::aes(x=0, y=3, label=Text) )
 
-  suppressWarnings(plot(p1))
+    suppressWarnings(plot(p1))
+  }
+
 
   fignum
 
