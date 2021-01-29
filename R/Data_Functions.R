@@ -2233,7 +2233,7 @@ ts_plots <- function(Data, i=1, fignum=1) {
     fignum <- fignum+1
     vDF$Ind <- factor(vDF$Ind)
     nind <- length(levels(vDF$Ind))
-    vDF$X <- rep(1:Data@MaxAge, nind)
+    vDF$X <- rep(1:(Data@MaxAge+1), nind)
     p2 <- ggplot2::ggplot(vDF, ggplot2::aes(x=X, y=V, linetype=Ind)) +
       ggplot2::geom_line() +
       ggplot2::expand_limits(y=c(0,1)) +
