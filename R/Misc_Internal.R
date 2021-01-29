@@ -329,6 +329,7 @@ getclass <- function(x, classy) {
 
 indfit <- function(sim.index,obs.ind, Year, plot=FALSE, lcex=0.8){
 
+  if (plot) Year <- Year[!is.na(obs.ind)]
   sim.index <- lcs(sim.index[!is.na(obs.ind)]) # log space conversion of standardized simulated index
   obs.ind <- lcs(obs.ind[!is.na(obs.ind)]) # log space conversion of standardized observed ind
 
