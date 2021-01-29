@@ -305,9 +305,10 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
   if (n_vuln != n_indices)
     stop("Vulnerability-at-age schedule missing for some or all additional indices", call. = FALSE)
 
-  addInd <- datasheet[which(datasheet$Name == "Index 3"),2:(Nyears+1)] %>% unlist()
+  addInd <- datasheet[which(datasheet$Name == "Index 1"),2:(Nyears+1)] %>% unlist()
+  n.temp <- nchar(addInd)
 
-  if (!(any(nchar(addInd) == 0) | any(is.na(addInd)) | length(addInd)<1)) {
+  if (!(all(n.temp[!is.na(n.temp)]==0)) | all(is.na(addInd)) | (length(addInd)<1)) {
     indexexist <- TRUE
   } else {
     indexexist <- FALSE
@@ -326,13 +327,16 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
   if (indexexist) {
     for (x in 1:n_indices) {
       ind <- which(datasheet$Name == paste("Index", x))
+      if (length(ind)>1)
+        stop('Additional indices must be uniquely numbered.',
+             paste(" Index", x), ' appears ', length(ind), ' times', call.=FALSE)
       Data@AddInd[1,x,] <- suppressWarnings(datasheet[ind, 2:(Nyears+1)] %>% as.numeric())
       ind <- which(datasheet$Name == paste("CV Index", x))
       Data@CV_AddInd[1,x,] <- suppressWarnings(datasheet[ind, 2:(Nyears+1)] %>% as.numeric())
       ind <- which(datasheet$Name == paste("Vuln Index", x))
       Data@AddIndV[1,x,] <- suppressWarnings(datasheet[ind, 2:(Data@MaxAge+2)] %>% as.numeric())
-      # if (any(is.na(Data@AddIndV[1,x,])))
-        # warning("Vuln Index must be length `Maximum age`+1 and contain only numeric values (no NA)")
+      if (!all(is.na(Data@AddIndV[1,x,])) & any(is.na(Data@AddIndV[1,x,])))
+        warning("Vuln Index ", x, " must be length `Maximum age`+1 and contain only numeric values (no NA)")
     }
 
     ind <- which(datasheet$Name == 'AddIndType')

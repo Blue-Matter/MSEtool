@@ -2,6 +2,11 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 ## MSEtool 3.0.9003 - Development Version
 
+### Minor Changes
+- Add `I_beta`, `SpI_beta`, and `VI_beta` for the individual indices. Defaults to use `OM@beta` for all, unless a real
+index is supplied, e.g., `OM@cpars$Data@Ind`, `OM@cpars$Data@SpInd`, or `OM@cpars$Data@VInd`, or if supplied in cpars, 
+e.g., `OM@cpars$I_beta`
+
 ### Fixes
 - fix error with incorrect beta values when conditioning with real index (ie cpars$Data@Ind)
 - fix randomly occurring bug in C++ code that was causing crashes
