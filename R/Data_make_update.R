@@ -776,6 +776,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
   Data_out@MPrec <- SimData@MPrec
   Data_out@MPeff <- SimData@MPeff
   Data_out@nareas <- SimData@nareas
+  Data_out@LHYear <- SimData@LHYear
 
   # ---- Update Life-history parameters ----
   Data_out@Mort <- UpdateSlot('Mort', RealData, SimData, msg)
