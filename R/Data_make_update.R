@@ -252,6 +252,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
 
   # standardize, apply  beta & obs error
   I2 <- exp(lcs(I2))^ObsPars$betas * ObsPars$Ierr_y[,yr.ind:(nyears + (y - 1))]
+  # I2 <- exp(lcs(I2)) * ObsPars$Ierr_y[,yr.ind:(nyears + (y - 1))]
   year.ind <- max(which(!is.na(Data@Ind[1,1:nyears])))
   scaler <- Data@Ind[,year.ind]/I2[,1]
   scaler <- matrix(scaler, nrow=nsim, ncol=ncol(I2))
@@ -867,7 +868,8 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     Cerr <- cbind(Cerr, Cerr_proj)
 
     ObsPars$Cbias <- Cbias[,1]
-    ObsPars$Cerr_y <- Cerr * Cbias
+    ObsPars$Cerr_y <- Cerr
+    ObsPars$Cobs_y <- Cerr * Cbias
 
   }
 
@@ -889,6 +891,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
 
     Ierr <- exp(lcs(Data_out@Ind))/exp(lcs(SimBiomass))^I_Err$beta
 
+    ObsPars$betas <- I_Err$beta
     if (!is.null(SampCpars$Ierr_y)) {
       if (msg) message('Total Index Observation Error found (cpars$Ierr_y) - not updating observation error')
     } else {
@@ -896,7 +899,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
       ObsPars$Ierr_y[, 1:nyears] <- Ierr # update Obs Error
       # Sample for projection years
       yr.ind <- max(which(!is.na(RealData@Ind[1,1:nyears])))
-      ObsPars$Ierr[, (nyears+1):(nyears+proyears)] <- generateRes(df=I_Err,
+      ObsPars$Ierr_y[, (nyears+1):(nyears+proyears)] <- generateRes(df=I_Err,
                                                                   nsim, proyears,
                                                                   lst.err=log(ObsPars$Ierr[,yr.ind]))
     }
@@ -918,11 +921,12 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
 
     Ierr <- exp(lcs(Data_out@SpInd))/exp(lcs(SimBiomass))^I_Err$beta
 
-    ObsPars$SpIerr[,1:nyears] <- Ierr
+    ObsPars$SpIerr_y[,1:nyears] <- Ierr
+    ObsPars$betas <- I_Err$beta
 
     # Sample for projection years
     yr.ind <- max(which(!is.na(RealData@SpInd[1,1:nyears])))
-    ObsPars$SpIerr[, (nyears+1):(nyears+proyears)] <- generateRes(df=I_Err, nsim, proyears, lst.err=log(ObsPars$SpIerr[,yr.ind]))
+    ObsPars$SpIerr_y[, (nyears+1):(nyears+proyears)] <- generateRes(df=I_Err, nsim, proyears, lst.err=log(ObsPars$SpIerr[,yr.ind]))
     ObsPars$SpInd_Stat <- I_Err # return index statistics
   }
 
@@ -940,11 +944,12 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
 
     Ierr <- exp(lcs(Data_out@VInd))/exp(lcs(SimBiomass))^I_Err$beta
 
-    ObsPars$VIerr[,1:nyears] <- Ierr
+    ObsPars$VIerr_y[,1:nyears] <- Ierr
+    ObsPars$betas <- I_Err$beta
 
     # Sample for projection years
     yr.ind <- max(which(!is.na(RealData@VInd[1,1:nyears])))
-    ObsPars$VIerr[, (nyears+1):(nyears+proyears)] <- generateRes(df=I_Err, nsim, proyears, lst.err=log(ObsPars$VIerr[,yr.ind]))
+    ObsPars$VIerr_y[, (nyears+1):(nyears+proyears)] <- generateRes(df=I_Err, nsim, proyears, lst.err=log(ObsPars$VIerr[,yr.ind]))
     ObsPars$VInd_Stat <- I_Err # return index statistics
   }
 
