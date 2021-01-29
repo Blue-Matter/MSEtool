@@ -165,16 +165,43 @@ if (params$tabs) {
 Histograms of `r nsim` simulations of inter-annual variability in index observations (`Iobs`) and hyper-stability/depletion in observed index (`beta`), with vertical colored lines indicating `r nsamp` randomly drawn values used in other plots:
 
 ```{r, echo=FALSE}
-par(mfrow=c(1,2))
+if (!is.null(Pars$Obs$betas)) {
+  par(mfrow=c(1,2))  
+}
+
+if (!is.null(Pars$Obs$I_beta)) {
+  par(mfrow=c(1,4))  
+}
+
 hist2(Pars$Obs$Isd, main="Iobs", col=params$plotPars$col, axes=params$plotPars$axes,
       breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
 abline(v=Pars$Obs$Isd[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
 axis(side=1) 
 
-hist2(Pars$Obs$betas, main="beta", col=params$plotPars$col, axes=params$plotPars$axes,
+if (!is.null(Pars$Obs$betas)) {
+  hist2(Pars$Obs$betas, main="beta", col=params$plotPars$col, axes=params$plotPars$axes,
       breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
 abline(v=Pars$Obs$betas[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
 axis(side=1) 
+}
+
+if (!is.null(Pars$Obs$I_beta)) {
+  hist2(Pars$Obs$I_beta, main="I_beta", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+  abline(v=Pars$Obs$I_beta[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+  axis(side=1) 
+  
+  hist2(Pars$Obs$SpI_beta, main="SpI_beta", col=params$plotPars$col, axes=params$plotPars$axes,
+      breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+  abline(v=Pars$Obs$SpI_beta[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+  axis(side=1) 
+  
+  hist2(Pars$Obs$VI_beta, main="VI_beta", col=params$plotPars$col, axes=params$plotPars$axes,
+     breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
+  abline(v=Pars$Obs$VI_beta[params$its], col=1:nsamp, lwd=params$plotPars$lwd)
+  axis(side=1) 
+}
+
 
 ```
 

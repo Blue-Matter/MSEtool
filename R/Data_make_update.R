@@ -29,7 +29,7 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
   # --- Index of total abundance ----
   # Index of abundance from total biomass - beginning of year before fishing
   # apply hyperstability / hyperdepletion
-  II <- (apply(Biomass*Sample_Area$BInd[,,1:nyears,], c(1, 3), sum)^ObsPars$betas) *
+  II <- (apply(Biomass*Sample_Area$BInd[,,1:nyears,], c(1, 3), sum)^ObsPars$I_beta) *
     ObsPars$Ierr_y[, 1:nyears]
   II <- II/apply(II, 1, mean)  # normalize
   Data@Ind <- II # index of total abundance
@@ -38,7 +38,7 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
   # --- Index of spawning abundance ----
   # Index of abundance from total biomass - beginning of year before fishing
   # apply hyperstability / hyperdepletion
-  II <- (apply(SSB*Sample_Area$SBInd[,,1:nyears,], c(1, 3), sum)^ObsPars$betas) *
+  II <- (apply(SSB*Sample_Area$SBInd[,,1:nyears,], c(1, 3), sum)^ObsPars$SpI_beta) *
     ObsPars$SpIerr_y[, 1:nyears]
   II <- II/apply(II, 1, mean)  # normalize
   Data@SpInd <- II # index of spawning abundance
@@ -47,7 +47,7 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
   # --- Index of vulnerable abundance ----
   # Index of abundance from vulnerable biomass - beginning of year before fishing
   # apply hyperstability / hyperdepletion
-  II <- (apply(VBiomass*Sample_Area$VInd[,,1:nyears,], c(1, 3), sum)^ObsPars$betas) *
+  II <- (apply(VBiomass*Sample_Area$VInd[,,1:nyears,], c(1, 3), sum)^ObsPars$VI_beta) *
     ObsPars$VIerr_y[, 1:nyears]
   II <- II/apply(II, 1, mean)  # normalize
   Data@VInd <- II # index of vulnerable abundance
@@ -99,7 +99,7 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
 
   # Generate values for reference SBMSY/SB0
   # should be calculated from unfished - won't be correct if initD is set
-  I3 <- apply(Biomass, c(1, 3), sum)^ObsPars$betas  # apply hyperstability / hyperdepletion
+  I3 <- apply(Biomass, c(1, 3), sum)^ObsPars$I_beta  # apply hyperstability / hyperdepletion
   I3 <- I3/apply(I3, 1, mean)  # normalize index to mean 1
   if (!is.null(initD)) {
     b1 <- apply(Biomass, c(1, 3), sum)
@@ -251,7 +251,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
               apply(Biomass_P*Sample_Area$BInd[,,(nyears+1):(nyears+proyears),], c(1, 3), sum)[, 1:(y - 1)])
 
   # standardize, apply  beta & obs error
-  I2 <- exp(lcs(I2))^ObsPars$betas * ObsPars$Ierr_y[,yr.ind:(nyears + (y - 1))]
+  I2 <- exp(lcs(I2))^ObsPars$I_beta * ObsPars$Ierr_y[,yr.ind:(nyears + (y - 1))]
   # I2 <- exp(lcs(I2)) * ObsPars$Ierr_y[,yr.ind:(nyears + (y - 1))]
   year.ind <- max(which(!is.na(Data@Ind[1,1:nyears])))
   scaler <- Data@Ind[,year.ind]/I2[,1]
@@ -282,7 +282,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
               apply(SSB_P*Sample_Area$SBInd[,,(nyears+1):(nyears+proyears),], c(1, 3), sum)[, 1:(y - 1)])
 
   # standardize, apply  beta & obs error
-  I2 <- exp(lcs(I2))^ObsPars$betas * ObsPars$SpIerr_y[,yr.ind:(nyears + (y - 1))]
+  I2 <- exp(lcs(I2))^ObsPars$SpI_beta * ObsPars$SpIerr_y[,yr.ind:(nyears + (y - 1))]
   year.ind <- max(which(!is.na(Data@SpInd[1,1:nyears])))
   scaler <- Data@SpInd[,year.ind]/I2[,1]
   scaler <- matrix(scaler, nrow=nsim, ncol=ncol(I2))
@@ -312,7 +312,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
               apply(VBiomass_P*Sample_Area$VInd[,,(nyears+1):(nyears+proyears),], c(1, 3), sum)[, 1:(y - 1)])
 
   # standardize, apply  beta & obs error
-  I2 <- exp(lcs(I2))^ObsPars$betas * ObsPars$VIerr_y[,yr.ind:(nyears + (y - 1))]
+  I2 <- exp(lcs(I2))^ObsPars$VI_beta * ObsPars$VIerr_y[,yr.ind:(nyears + (y - 1))]
   year.ind <- max(which(!is.na(Data@VInd[1,1:nyears])))
   scaler <- Data@VInd[,year.ind]/I2[,1]
   scaler <- matrix(scaler, nrow=nsim, ncol=ncol(I2))
@@ -886,12 +886,15 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
 
     # Calculate Error
     SimBiomass <- apply(StockPars$Biomass, c(1, 3), sum)
-    I_Err <- lapply(1:nsim, function(i) indfit(SimBiomass[i,],  Data_out@Ind[i,]))
+    I_Err <- lapply(1:nsim, function(i) indfit(sim.index=SimBiomass[i,], obs.ind=Data_out@Ind[i,]))
     I_Err <- do.call('rbind', I_Err)
 
-    Ierr <- exp(lcs(Data_out@Ind))/exp(lcs(SimBiomass))^I_Err$beta
+    ind <- is.na(Data_out@Ind[1,])
+    Ierr_temp <- exp(lcs(Data_out@Ind[,!ind]))/exp(lcs(SimBiomass[,!ind]))^I_Err$beta
+    Ierr <- array(NA, dim(Data_out@Ind))
+    Ierr[,!ind] <- Ierr_temp
 
-    ObsPars$betas <- I_Err$beta
+    ObsPars$I_beta <- I_Err$beta
     if (!is.null(SampCpars$Ierr_y)) {
       if (msg) message('Total Index Observation Error found (cpars$Ierr_y) - not updating observation error')
     } else {
@@ -919,10 +922,13 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     I_Err <- lapply(1:nsim, function(i) indfit(SimBiomass[i,],  Data_out@SpInd[i,]))
     I_Err <- do.call('rbind', I_Err)
 
-    Ierr <- exp(lcs(Data_out@SpInd))/exp(lcs(SimBiomass))^I_Err$beta
+    ind <- is.na(Data_out@SpInd[1,])
+    Ierr_temp <- exp(lcs(Data_out@SpInd[,!ind]))/exp(lcs(SimBiomass[,!ind]))^I_Err$beta
+    Ierr <- array(NA, dim(Data_out@SpInd))
+    Ierr[,!ind] <- Ierr_temp
 
     ObsPars$SpIerr_y[,1:nyears] <- Ierr
-    ObsPars$betas <- I_Err$beta
+    ObsPars$SpI_beta <- I_Err$beta
 
     # Sample for projection years
     yr.ind <- max(which(!is.na(RealData@SpInd[1,1:nyears])))
@@ -942,10 +948,13 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     I_Err <- lapply(1:nsim, function(i) indfit(SimBiomass[i,],  Data_out@VInd[i,]))
     I_Err <- do.call('rbind', I_Err)
 
-    Ierr <- exp(lcs(Data_out@VInd))/exp(lcs(SimBiomass))^I_Err$beta
+    ind <- is.na(Data_out@VInd[1,])
+    Ierr_temp <- exp(lcs(Data_out@VInd[,!ind]))/exp(lcs(SimBiomass[,!ind]))^I_Err$beta
+    Ierr <- array(NA, dim(Data_out@VInd))
+    Ierr[,!ind] <- Ierr_temp
 
     ObsPars$VIerr_y[,1:nyears] <- Ierr
-    ObsPars$betas <- I_Err$beta
+    ObsPars$VI_beta <- I_Err$beta
 
     # Sample for projection years
     yr.ind <- max(which(!is.na(RealData@VInd[1,1:nyears])))

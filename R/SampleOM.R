@@ -1327,7 +1327,25 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
 
   if (is.null(betas))
     betas <- exp(myrunif(nsim, log(Obs@beta[1]), log(Obs@beta[2])))  # the sampled hyperstability /
-  ObsOut$betas <- betas
+
+  if (!is.null(cpars$I_beta)) {
+    ObsOut$I_beta <- cpars$I_beta
+  } else {
+    ObsOut$I_beta <- betas
+  }
+
+  if (!is.null(cpars$SpI_beta)) {
+    ObsOut$SpI_beta <- cpars$SpI_beta
+  } else {
+    ObsOut$SpI_beta <- betas
+  }
+
+  if (!is.null(cpars$VI_beta)) {
+    ObsOut$VI_beta <- cpars$VI_beta
+  } else {
+    ObsOut$VI_beta <- betas
+  }
+
 
   # Sampled index observation error (lognormal sd)
   Isd <- sample_unif('Isd', cpars, Obs, nsim, 'Iobs')
