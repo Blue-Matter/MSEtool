@@ -336,7 +336,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
     Karray <- cpars$Karray
   } else {
     Karray <- GenerateRandomWalk(K, Ksd, nyears + proyears,
-                                 nsim, Linfrand)
+                                 nsim, Krand)
   }
   if (!is.null(cpars$Agearray)) {
     Agearray <- cpars$Agearray
