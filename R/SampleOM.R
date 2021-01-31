@@ -265,17 +265,22 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   D <- sample_unif('D', cpars, Stock, nsim)
 
   # ---- Recruitment Deviations ----
-
   # have rec devs been passed in cpars?
   if (is.null(cpars$Perr_y)) { # no - sample recruitment deviations
+
+    if (!is.null(cpars[['Perr']])) cpars$procsd <- cpars[['Perr']]
     procsd <-  sample_unif('procsd', cpars, Stock, nsim, 'Perr')
+
     AC <- sample_unif('AC', cpars, Stock, nsim)
     # adjusted log normal mean http://dx.doi.org/10.1139/cjfas-2016-0167
     procmu <- -0.5 * procsd^2  * (1 - AC)/sqrt(1 - AC^2)
+
+    procsd[procsd==0] <- tiny # for reproducibility in rnorm
     Perr_y <- array(rnorm((nyears + proyears+maxage) * nsim,
                           rep(procmu, nyears + proyears+maxage),
                           rep(procsd, nyears + proyears+maxage)),
                     c(nsim, nyears + proyears+maxage))
+
     # add auto-correlation
     for (y in 2:(nyears + proyears+maxage))
       Perr_y[, y] <- AC * Perr_y[, y - 1] + Perr_y[, y] * (1 - AC * AC)^0.5

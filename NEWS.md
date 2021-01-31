@@ -8,7 +8,7 @@ index is supplied, e.g., `OM@cpars$Data@Ind`, `OM@cpars$Data@SpInd`, or `OM@cpar
 e.g., `OM@cpars$I_beta`
 
 ### Fixes
-- fix bug where variability in von Bert *K* with `OM@Ksd` was not implemented correctly.
+- fix bug where variability in von Bert *K* with `OM@Ksd` was not implemented correctly (5e6e8c6).
 - fix error with incorrect beta values when conditioning with real index (ie cpars$Data@Ind)
 - fix randomly occurring bug in C++ code that was causing crashes
 - fix issue with importing composition data with `new('Data',..)` (issue #33)
