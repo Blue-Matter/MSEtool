@@ -1791,12 +1791,12 @@ Report <- function(Data=NULL, md=NULL, name="Data-Report",
   cat("ts_data <- ts_plots(Data,fignum=fignum+1)\n", file = rmdfile, sep = " ", append = TRUE)
   cat("DF <- ts_data[[1]] \n", file = rmdfile, sep = " ", append = TRUE)
   cat("p1 <- ts_data[[2]] \n", file = rmdfile, sep = " ", append = TRUE)
-  cat("height <- length(levels(DF$Data))/2 *1.5\n", file = rmdfile, sep = " ", append = TRUE)
+  cat("height <- length(levels(DF$Data))/2 *2\n", file = rmdfile, sep = " ", append = TRUE)
   cat("fignum <- ts_data[[3]] \n", file = rmdfile, sep = " ", append = TRUE)
   cat("```\n\n", file = rmdfile, sep = " ", append = TRUE)
 
   cat("```{r, echo=FALSE, out.width='90%', fig.height=height} \n", file = rmdfile, sep = " ", append = TRUE)
-  cat("suppressWarnings(plot(p1)) \n", file = rmdfile, sep = " ", append = TRUE)
+  cat("suppressWarnings(suppressMessages(plot(p1))) \n", file = rmdfile, sep = " ", append = TRUE)
   cat("```\n\n", file = rmdfile, sep = " ", append = TRUE)
 
   cat("```{r, echo=FALSE, out.width='90%'} \n", file = rmdfile, sep = " ", append = TRUE)
@@ -2218,6 +2218,7 @@ ts_plots <- function(Data, i=1, fignum=1) {
   }
   Year <- y <- dw <- up <- X <- Ind <- value <- key <- NA
   DF <- makeDF(Data, "Cat", i)
+  DF <- rbind(DF, makeDF(Data, "Effort", i))
   DF <- rbind(DF, makeDF(Data, "Ind", i))
   DF <- rbind(DF, makeDF(Data, "VInd", i))
   DF <- rbind(DF, makeDF(Data, "SpInd", i))
@@ -2239,15 +2240,25 @@ ts_plots <- function(Data, i=1, fignum=1) {
   DF$Data <- factor(DF$Data, ordered = TRUE,
                     levels=unique(DF$Data))
 
+  # drop NAs
+  Range <- suppressWarnings(
+    DF %>% dplyr::group_by(Data) %>% dplyr::summarise(Range=range(y, na.rm=T), .groups="keep")
+  )
+  Groups <- Range %>% dplyr::filter(is.finite(Range)==TRUE)
+  DF <- DF %>% dplyr::filter(DF$Data %in% unique(Groups$Data))
+
   p1 <- ggplot2::ggplot(DF, ggplot2::aes(x=Year, y=y, ymin=dw, ymax=up)) +
     ggplot2::facet_wrap(~Data, scales="free", ncol=2) +
     ggplot2::expand_limits(y=0) +
     ggplot2::geom_ribbon(fill='lightgray') + ggplot2::geom_line(size=1.1) +
+    ggplot2::geom_point() +
     ggplot2::labs(x="Year", y="Mean (95% intervals)",
                   title=paste0('Figure ', fignum, '. Time-Series Data')) +
     ggplot2::theme_minimal() +
     ggplot2::theme(strip.text = ggplot2::element_text(size=14))
 
+
+  p1
 
   list(DF, p1, fignum+1)
 }
