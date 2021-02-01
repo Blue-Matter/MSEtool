@@ -47,12 +47,13 @@ if (params$tabs) {
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
 Depletion <- apply(Pars@TSdata$SBiomass, 1:2, sum)/matrix(Pars@Ref$ReferencePoints$SSB0, nrow=nsim, ncol=nyears)
-ylim <- c(0, max(Depletion))
+ylim <- c(0, max(c(1, max(Depletion))))
 matplot(Years, t(Depletion),
         type="l", lty=1, bty="l", main="", 
          lwd=params$plotPars$lwd, ylab="Depletion (spawning biomass)", xlab="Historical Years", las=1, xpd=NA,
-        ylim=ylim)
-abline(h=1, lty=2, lwd=2, col="darkgray")
+        ylim=ylim, yaxs = 'i')
+maxL <- ceiling(max(ylim/0.2))*0.2
+abline(h=seq(0.2, maxL, by=0.2), lwd=1, col="lightgray")
 ```
 
 
@@ -66,7 +67,7 @@ ylim <- c(0, max(SSB))
 matplot(Years, t(SSB),
         type="l", lty=1, bty="l", main="", 
          lwd=params$plotPars$lwd, ylab="SSB", xlab="Historical Years", las=1, xpd=NA,
-        ylim=ylim)
+        ylim=ylim, yaxs = 'i')
 ```
 
 
@@ -84,12 +85,13 @@ if (params$tabs) {
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
 Depletion <- apply(Pars@TSdata$VBiomass, 1:2, sum)/matrix(Pars@Ref$ReferencePoints$VB0, nrow=nsim, ncol=nyears)
-ylim <- c(0, max(Depletion))
+ylim <- c(0, max(c(1, max(Depletion))))
 matplot(Years, t(Depletion),
         type="l", lty=1, bty="l", main="", 
          lwd=params$plotPars$lwd, ylab="Depletion (vulnerable biomass)", xlab="Historical Years", las=1, xpd=NA,
-        ylim=ylim)
-abline(h=1, lty=2, lwd=2, col="darkgray")
+        ylim=ylim, yaxs = 'i')
+maxL <- ceiling(max(ylim/0.2))*0.2
+abline(h=seq(0.2, maxL, by=0.2), lwd=1, col="lightgray")
 ```
 
 
@@ -102,7 +104,7 @@ ylim <- c(0, max(Vb))
 matplot(Years, t(Vb),
         type="l", lty=1, bty="l", main="", 
          lwd=params$plotPars$lwd, ylab="Vuln. Biomass", xlab="Historical Years", las=1, xpd=NA,
-        ylim=ylim)
+        ylim=ylim, yaxs = 'i')
 ```
 
 
@@ -119,12 +121,13 @@ if (params$tabs) {
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
 Depletion <- apply(Pars@TSdata$Biomass, 1:2, sum)/matrix(Pars@Ref$ReferencePoints$B0, nrow=nsim, ncol=nyears)
-ylim <- c(0, max(Depletion))
+ylim <- c(0, max(c(1, max(Depletion))))
 matplot(Years, t(Depletion),
         type="l", lty=1, bty="l", main="", 
          lwd=params$plotPars$lwd, ylab="Depletion (total biomass)", xlab="Historical Years", las=1, xpd=NA,
-        ylim=ylim)
-abline(h=1, lty=2, lwd=2, col="darkgray")
+        ylim=ylim, yaxs = 'i')
+maxL <- ceiling(max(ylim/0.2))*0.2
+abline(h=seq(0.2, maxL, by=0.2), lwd=1, col="lightgray")
 ```
 
 #### Absolute
@@ -137,7 +140,7 @@ ylim <- c(0, max(B))
 matplot(Years, t(B),
         type="l", lty=1, bty="l", main="", 
          lwd=params$plotPars$lwd, ylab="Total Biomass", xlab="Historical Years", las=1, xpd=NA,
-        ylim=ylim)
+        ylim=ylim, yaxs = 'i')
 
 ```
 
@@ -156,12 +159,13 @@ par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
 
 Depletion <- apply(Pars@AtAge$Number[,1,,], 1:2, sum)/matrix( Pars@SampPars$Stock$R0, nrow=nsim, ncol=nyears)
-ylim <- c(0, max(Depletion))
+ylim <- c(0, max(c(1,Depletion)))
 matplot(Years, t(Depletion),
         type="l", lty=1, bty="l", main="", 
          lwd=params$plotPars$lwd, ylab="Recruitment (relative to R0)", xlab="Historical Years", las=1, xpd=NA,
-        ylim=ylim)
-abline(h=1, lty=2, lwd=2, col="darkgray")
+        ylim=ylim, yaxs = 'i')
+maxL <- ceiling(max(ylim/0.2))*0.2
+abline(h=seq(0.2, maxL, by=0.2), lwd=1, col="lightgray")
 ```
 
 #### Absolute
@@ -173,7 +177,7 @@ ylim <- c(0, max(Rec))
 matplot(Years, t(Rec),
         type="l", lty=1, bty="l", main="", 
          lwd=params$plotPars$lwd, ylab="Recruitment", xlab="Historical Years", las=1, xpd=NA,
-        ylim=ylim)
+        ylim=ylim, yaxs = 'i')
 
 ```
 
@@ -191,12 +195,16 @@ if (params$tabs) {
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
 Depletion <- apply(Pars@TSdata$Landings, 1:2, sum)/matrix(apply(Pars@TSdata$Landings[,nyears,], 1, sum), nrow=nsim, ncol=nyears)
-ylim <- c(0, max(Depletion))
+ylim <- c(0, max(c(1,max(Depletion))))
 matplot(Years, t(Depletion),
         type="l", lty=1, bty="l", main="", 
          lwd=params$plotPars$lwd, ylab="Catch (relative to current year)", xlab="Historical Years", las=1, xpd=NA,
-        ylim=ylim)
-abline(h=1, lty=2, lwd=2, col="darkgray")
+        ylim=ylim, yaxs = 'i', axes=F)
+axis(side=1)
+maxL <- ceiling(max(ylim/0.5))*0.5
+axis(side=2, at=seq(0, maxL, by=0.5), las=1)
+
+abline(h=seq(0.5, maxL, by=0.5), lwd=1, col="lightgray")
 ```
 
 #### Absolute 
@@ -208,7 +216,7 @@ ylim <- c(0, max(Catch))
 matplot(Years, t(Catch),
         type="l", lty=1, bty="l", main="", 
          lwd=params$plotPars$lwd, ylab="Catch", xlab="Historical Years", las=1, xpd=NA,
-        ylim=ylim)
+        ylim=ylim, yaxs = 'i')
 
 ```
 
@@ -227,11 +235,12 @@ if (params$tabs) {
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
 Find <- Pars@TSdata$Find * Pars@SampPars$Fleet$qs
-ylim <- c(0, max(Find))
+ylim <- c(0, max(c(1, max(Find))))
 matplot(Years, t(Find),
         type="l", lty=1, bty="l", main="", 
          lwd=params$plotPars$lwd, ylab="Fishing mortality rate (apical)", xlab="Historical Years", las=1, xpd=NA,
-        ylim=ylim)
-abline(h=1, lty=2, lwd=2, col="darkgray")
+        ylim=ylim, yaxs = 'i')
+maxL <- ceiling(max(ylim/0.2))*0.2
+abline(h=seq(0.2, maxL, by=0.2), lwd=1, col="lightgray")
 ```
 
