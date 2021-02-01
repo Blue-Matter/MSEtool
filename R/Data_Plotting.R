@@ -13,7 +13,7 @@ plot.Data <- function(x, upq=0.9, lwq=0.1, outline = FALSE, ...) {
 }
 
 #' Boxplot of TAC recommendations
-#' 
+#'
 #' @param x An object of class MSE
 #' @param upq Upper quantile of TACs for max ylim
 #' @param lwq Lower quantile of TACs for min ylim
@@ -28,8 +28,13 @@ plot.Data <- function(x, upq=0.9, lwq=0.1, outline = FALSE, ...) {
 boxplot.Data <- function(x, upq=0.9, lwq=0.1, ylim=NULL, outline = FALSE, col = NULL, ...) {
   Data <- updateMSE(x)
   if (class(Data) != "Data")  stop("Object must be of class 'Data'")
+
+  if (all(is.na(Data@TAC))) {
+    stop('Cannot plot TACs because nothing found in `Data@TAC`.\nUse `Report(Data)` to generate Data report', call. = FALSE)
+  }
+
   tacs <- t(Data@TAC[, , 1])
-  
+
   if (all(is.na(tacs))) {
     message("Nothing found in TAC slot")
     return(invisible(NULL))
@@ -42,17 +47,17 @@ boxplot.Data <- function(x, upq=0.9, lwq=0.1, ylim=NULL, outline = FALSE, col = 
     tacs <- tacs[, -ind, drop=FALSE]
     MPs <- MPs[-ind]
   }
-  
-  # exclude NAs 
+
+  # exclude NAs
   nMPs <- dim(Data@TAC)[1]
-  
+
   if (nMPs>1){
     allNAs <- colSums(apply(tacs, 2, is.na)) == nrow(tacs)
     tacs <- tacs[,!allNAs, drop=FALSE]
     MPs <- MPs[!allNAs]
     nMPs<-length(MPs)
   }
-  
+
   if (nMPs>1) {
     if (is.null(col)) col <- rainbow(30)
     ord <- order(apply(tacs, 2, median, na.rm = TRUE))
@@ -70,26 +75,26 @@ boxplot.Data <- function(x, upq=0.9, lwq=0.1, ylim=NULL, outline = FALSE, col = 
     tacs <- as.numeric(tacs)
     if (is.null(col)) col <- "darkgray"
   }
-  
+
   par(mfrow = c(1, 1), oma = c(2, 4, 1, 0), mar = c(3, 3, 0, 0))
   if (nMPs>1) {
-    boxplot(tacs, names = MPs, las = 1, col = col, outline = outline, 
+    boxplot(tacs, names = MPs, las = 1, col = col, outline = outline,
           frame = FALSE, ylim = ylim, horizontal = TRUE, ...)
-    if (units) mtext(paste("TAC (", Data@Units, ")", sep = ""), side = 1, outer = T, 
+    if (units) mtext(paste("TAC (", Data@Units, ")", sep = ""), side = 1, outer = T,
                      line = 0.5, cex = 1.25)
-    if (!units) mtext("TAC (no units supplied)", side = 1, outer = T, 
+    if (!units) mtext("TAC (no units supplied)", side = 1, outer = T,
                       line = 0.5, cex = 1.25)
     mtext(side = 2, "Management Procedures", outer = TRUE, line = 3, cex = 1.25)
   } else {
-    boxplot(tacs, names = MPs, las = 1, col = col, outline = outline, 
+    boxplot(tacs, names = MPs, las = 1, col = col, outline = outline,
             frame = FALSE, ylim = ylim, horizontal = FALSE, ...)
-    if (units) mtext(paste("TAC (", Data@Units, ")", sep = ""), side = 2, outer = T, 
+    if (units) mtext(paste("TAC (", Data@Units, ")", sep = ""), side = 2, outer = T,
                      line = 0.5, cex = 1.25)
-    if (!units) mtext("TAC (no units supplied)", side = 2, outer = T, 
+    if (!units) mtext("TAC (no units supplied)", side = 2, outer = T,
                       line = 0.5, cex = 1.25)
     mtext(side = 3, MPs, outer = TRUE, line=-1, cex = 1.25, xpd=NA)
   }
- 
+
   if (units) {
       data.frame(MP = MPs, Median = Median, SD = SD, Units = Data@Units)
   } else {

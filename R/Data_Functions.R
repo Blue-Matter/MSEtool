@@ -1785,9 +1785,25 @@ Report <- function(Data=NULL, md=NULL, name="Data-Report",
 
   }
 
-  cat("```{r, echo=FALSE, out.width='90%'} \n", file = rmdfile, sep = " ", append = TRUE)
-  cat("fignum <- ts_plots(Data,fignum=fignum+1)\n", file = rmdfile, sep = " ", append = TRUE)
+
+
+  cat("```{r, echo=FALSE} \n", file = rmdfile, sep = " ", append = TRUE)
+  cat("ts_data <- ts_plots(Data,fignum=fignum+1)\n", file = rmdfile, sep = " ", append = TRUE)
+  cat("DF <- ts_data[[1]] \n", file = rmdfile, sep = " ", append = TRUE)
+  cat("p1 <- ts_data[[2]] \n", file = rmdfile, sep = " ", append = TRUE)
+  cat("height <- length(levels(DF$Data))/2 *1.5\n", file = rmdfile, sep = " ", append = TRUE)
+  cat("fignum <- ts_data[[3]] \n", file = rmdfile, sep = " ", append = TRUE)
   cat("```\n\n", file = rmdfile, sep = " ", append = TRUE)
+
+  cat("```{r, echo=FALSE, out.width='90%', fig.height=height} \n", file = rmdfile, sep = " ", append = TRUE)
+  cat("suppressWarnings(plot(p1)) \n", file = rmdfile, sep = " ", append = TRUE)
+  cat("```\n\n", file = rmdfile, sep = " ", append = TRUE)
+
+  cat("```{r, echo=FALSE, out.width='90%'} \n", file = rmdfile, sep = " ", append = TRUE)
+  cat("fignum <- vuln_addInd_plot(Data,fignum=fignum)\n", file = rmdfile, sep = " ", append = TRUE)
+  cat("fignum <- meanLen_plot(Data,fignum=fignum)\n", file = rmdfile, sep = " ", append = TRUE)
+  cat("```\n\n", file = rmdfile, sep = " ", append = TRUE)
+
 
 
   # Catch-at-Age section
@@ -2203,6 +2219,8 @@ ts_plots <- function(Data, i=1, fignum=1) {
   Year <- y <- dw <- up <- X <- Ind <- value <- key <- NA
   DF <- makeDF(Data, "Cat", i)
   DF <- rbind(DF, makeDF(Data, "Ind", i))
+  DF <- rbind(DF, makeDF(Data, "VInd", i))
+  DF <- rbind(DF, makeDF(Data, "SpInd", i))
 
   AddInd <- makeDF(Data, "AddInd", i)
   vDF <- NULL
@@ -2215,6 +2233,8 @@ ts_plots <- function(Data, i=1, fignum=1) {
 
   DF$Data[DF$Data == "Cat"] <- paste0("Catch (", Data@Units, ")")
   DF$Data[DF$Data == "Ind"] <- "Index"
+  DF$Data[DF$Data == "VInd"] <- "Vulnerable Index"
+  DF$Data[DF$Data == "SpInd"] <- "Spawning Index"
   DF$Data[DF$Data == "Rec"] <- "Recruitment"
   DF$Data <- factor(DF$Data, ordered = TRUE,
                     levels=unique(DF$Data))
@@ -2228,6 +2248,19 @@ ts_plots <- function(Data, i=1, fignum=1) {
     ggplot2::theme_minimal() +
     ggplot2::theme(strip.text = ggplot2::element_text(size=14))
 
+
+  list(DF, p1, fignum+1)
+}
+
+
+vuln_addInd_plot <- function(Data, i=1, fignum=1) {
+
+  AddInd <- makeDF(Data, "AddInd", i)
+  vDF <- NULL
+  if (!is.null(AddInd)) {
+    vDF <- AddInd[[2]]
+  }
+
   p2 <- NULL
   if (!is.null(vDF)) {
     fignum <- fignum+1
@@ -2238,18 +2271,24 @@ ts_plots <- function(Data, i=1, fignum=1) {
       ggplot2::geom_line() +
       ggplot2::expand_limits(y=c(0,1)) +
       ggplot2::labs(x="Age", y="Vulnerability",
-                    title=paste0('\n\nFigure ', fignum, '. Vulnerability-at-age schedules for Additional Indices'),
+                    title=paste0('\n\nFigure ',
+                                 fignum, '. Vulnerability-at-age schedules for Additional Indices'),
                     linetype="Additional Index") +
       ggplot2::theme_minimal()
 
   }
 
+  if (!is.null(p2)) suppressWarnings(plot(p2))
+  fignum
+}
+
+
+meanLen_plot <- function(Data, i=1, fignum=1) {
 
   DF <- data.frame(Year=Data@Year, ML=Data@ML[i,], Lc=Data@Lc[i,], Lbar=Data@Lbar[i,])
   p3 <- NULL
   if (!all(is.na(DF[,2:4]))) {
     fignum <- fignum+1
-
     DF <- tidyr::gather(DF, "key", "value", 2:4)
     DF$key[DF$key == "ML"] <- "Mean length"
     DF$key[DF$key == "Lc"] <- "Modal length (Lc)"
@@ -2268,14 +2307,12 @@ ts_plots <- function(Data, i=1, fignum=1) {
 
   }
 
-
-  suppressWarnings(plot(p1))
-  if (!is.null(p2)) suppressWarnings(plot(p2))
   if (!is.null(p3)) suppressWarnings(plot(p3))
-
 
   fignum
 }
+
+
 
 
 caa_plot <- function(Data, i=1, fignum=1) {
