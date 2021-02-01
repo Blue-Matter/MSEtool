@@ -227,7 +227,16 @@ Plot showing an example true abundance index (blue) with `r nsamp` samples of in
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(4,1,3,1))
 ind<-seq(1,0.1,length.out=nyears)
 
-Imu<-array(rep(ind,each=nsamp)^rep(Pars$Obs$betas[params$its],nyears),
+
+if (!is.null(Pars$Obs$betas)) {
+  beta <- Pars$Obs$betas[params$its]
+}
+
+if (!is.null(Pars$Obs$I_beta)) {
+  beta <- Pars$Obs$I_beta[params$its]
+}
+
+Imu<-array(rep(ind,each=nsamp)^rep(beta,nyears),
            c(nsamp,nyears))*Pars$Obs$Ierr_y[params$its, 1:nyears]
 Imu<-Imu/apply(Imu,1,mean)
 ind <- ind/mean(ind)
