@@ -2265,7 +2265,7 @@ ts_plots <- function(Data, i=1, fignum=1) {
 
 
 vuln_addInd_plot <- function(Data, i=1, fignum=1) {
-
+  Year <- y <- dw <- up <- X <- Ind <- value <- key <- NA
   AddInd <- makeDF(Data, "AddInd", i)
   vDF <- NULL
   if (!is.null(AddInd)) {
@@ -2295,7 +2295,7 @@ vuln_addInd_plot <- function(Data, i=1, fignum=1) {
 
 
 meanLen_plot <- function(Data, i=1, fignum=1) {
-
+  Year <- y <- dw <- up <- X <- Ind <- value <- key <- NA
   DF <- data.frame(Year=Data@Year, ML=Data@ML[i,], Lc=Data@Lc[i,], Lbar=Data@Lbar[i,])
   p3 <- NULL
   if (!all(is.na(DF[,2:4]))) {

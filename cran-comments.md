@@ -1,10 +1,5 @@
 ## Note to CRAN Maintainers
-* This is a new major update for the `MSEtool` package
-* In order to better align package contents with the package names, most of the core 
-  functions in the `DLMtool` package have now been moved to this package (`MSEtool`)
-* A new version of `DLMtool` package, with `MSEtool` as a dependency, will 
-  be released as soon as this version of `MSEtool` is on CRAN
-* The Maintainer email address has been changed. 
+* This is a patch that fixes a C++ memory leak in the previous major release
 
 ## Test environments
 * local - Windows 4.0.3
