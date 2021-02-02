@@ -1,6 +1,6 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
-## MSEtool 3.0.9003 - Development Version
+## MSEtool 3.0.1 
 
 ### Minor Changes
 - Add `I_beta`, `SpI_beta`, and `VI_beta` for the individual indices. Defaults to use `OM@beta` for all, unless a real

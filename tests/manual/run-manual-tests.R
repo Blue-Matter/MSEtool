@@ -7,7 +7,7 @@ options(testthat.output_file = test.results)
 testthat::test_dir('tests/manual/test-code', reporter = "junit")
 
 # remove ESC symbol from xml
-sed -i -r "s/\x1b/''/g" test.xml   ## get rid of escape symbol
+# sed -i -r "s/\x1b/''/g" test.xml   ## get rid of escape symbol - no longer needed
 
 
 # build test report
