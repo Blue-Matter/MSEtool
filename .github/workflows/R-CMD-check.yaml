@@ -82,3 +82,9 @@ jobs:
         with:
           name: ${{ runner.os }}-r${{ matrix.config.r }}-results
           path: check
+          
+      - name: Send to codecov
+        if: success() && runner.os == 'Linux'
+        run: covr::codecov(type = "examples")
+        shell: Rscript {0}
+        

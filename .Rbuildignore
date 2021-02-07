@@ -35,3 +35,4 @@ src\*.dll
 ^docs$
 ^pkgdown$
 ^README\.Rmd$
+^codecov\.yml$

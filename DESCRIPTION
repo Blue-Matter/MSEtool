@@ -29,6 +29,7 @@ Imports:
 Suggests:
     boot,
     broom,
+    covr,
     crayon,
     devtools,
     DT,
