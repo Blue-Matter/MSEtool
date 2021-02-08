@@ -8,7 +8,7 @@ shell(paste0("R CMD check ../", nm))
 # Check downstream dependencies
 # currently none
 
-# usethis::use_revdep()
+usethis::use_revdep()
 # revdepcheck::revdep_check(num_workers = 4)
 
 tt = devtools::spell_check()
