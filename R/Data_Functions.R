@@ -308,7 +308,7 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
   addInd <- datasheet[which(datasheet$Name == "Index 1"),2:(Nyears+1)] %>% unlist()
   n.temp <- nchar(addInd)
 
-  if (!(all(n.temp[!is.na(n.temp)]==0)) | all(is.na(addInd)) | (length(addInd)<1)) {
+  if (!(all(n.temp[!is.na(n.temp)]==0)) | !all(is.na(addInd)) | !(length(addInd)<1)) {
     indexexist <- TRUE
   } else {
     indexexist <- FALSE

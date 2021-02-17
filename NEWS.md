@@ -1,5 +1,13 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
+## MSEtool 3.0.1.9999 - Development Version
+
+### Updates
+- Help description has been updated for `Stock` object (many thanks to Sarah Valencia).
+
+### Fixes
+- fix minor bugs in `XL2Data`
+
 ## MSEtool 3.0.1 
 
 ### Minor Changes
