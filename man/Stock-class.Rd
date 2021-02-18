@@ -44,11 +44,11 @@ Non-negative real numbers.}
 \item{\code{Msd}}{Inter-annual variation in \code{M} expressed as a coefficient of
 variation of a log-normal distribution. For each simulation a single value is
 drawn from a uniform distribution specified by the upper and lower bounds
-provided. If this parameter has a positive value, yearly \code{M} is drawn from a
-log-normal distribution with a mean specified by \code{log(M)} drawn for that
-simulation and a standard deviation in log space specified by the value of
-\code{Msd} drawn for that simulation.  Uniform distribution lower and upper bounds.
-Non-negative real numbers}
+provided. If this parameter is positive, yearly \code{M} is drawn from a log-normal
+distribution with a mean specified by \code{log(M)} drawn for that simulation and a
+standard deviation in log space specified by the value of \code{Msd} drawn for that
+simulation.  Uniform distribution lower and upper bounds. Non-negative real
+numbers}
 
 \item{\code{h}}{Steepness of the stock recruit relationship. Steepness governs the
 proportion of unfished recruits produced when the stock is at 20\% of the
