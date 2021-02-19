@@ -10,8 +10,8 @@
 #' @slot maxage The maximum age of individuals that is simulated. There are
 #'  `maxage+1` (recruitment to age-0) age classes in the storage matrices.
 #'  `maxage` is the 'plus group' where all age-classes > `maxage` are grouped,
-#'  unless option switched off with `OM@cpars$plusgroup=0`. Single value. Positive
-#'  integer.
+#'  unless option switched off with \code{OM@cpars$plusgroup=0}. Single value.
+#'  Positive integer.
 #' @slot R0 Initial number of unfished recruits to age-0. This number is used
 #'  to scale the size of the population to match catch or data, but does not affect
 #'  any of the population dynamics unless the OM has been conditioned with data. As

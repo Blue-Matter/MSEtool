@@ -11,8 +11,6 @@ dynamics model
 \section{Slots}{
 
 \describe{
-\item{\code{Name}}{The name of the Stock object. Single value. Character string}
-
 \item{\code{Name}}{An identifying name for the Stock object. Single value. Character
 string.}
 
@@ -24,8 +22,8 @@ Character string.}
 \item{\code{maxage}}{The maximum age of individuals that is simulated. There are
 \code{maxage+1} (recruitment to age-0) age classes in the storage matrices.
 \code{maxage} is the 'plus group' where all age-classes > \code{maxage} are grouped,
-unless option switched off with \code{OM@cpars$plusgroup=0}. Single value. Positive
-integer.}
+unless option switched off with \code{OM@cpars$plusgroup=0}. Single value.
+Positive integer.}
 
 \item{\code{R0}}{Initial number of unfished recruits to age-0. This number is used
 to scale the size of the population to match catch or data, but does not affect

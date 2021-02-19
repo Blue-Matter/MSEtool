@@ -404,7 +404,7 @@ slot_ripper<-function(filenam,slots){
 
     if(!(nt==0|substr(test[1],1,1)=="_"|k)){ # text, not a header, after slot text starts
 
-      if(test[1]%in%slots[sind]){
+      if(test[1]%in%slots[sind] & substr(test[2],1,1) == toupper(substr(test[2],1,1))){
         sind[match(test[1],slots)]=FALSE
         out2[ss,1]<-test[1]
         out2[ss,2]<-paste(test[2:nt],collapse=" ")

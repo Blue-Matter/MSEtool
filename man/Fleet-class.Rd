@@ -10,66 +10,137 @@ The component of the operating model that controls fishing dynamics
 \section{Slots}{
 
 \describe{
-\item{\code{Name}}{Name of the Fleet object. Single value. Character string.}
+\item{\code{Name}}{Identifying name for the fleet. Usually includes location and
+gear type.}
 
-\item{\code{Name}}{Name of the Fleet object. Single value. Character string.}
+\item{\code{nyears}}{The number of years for the historical simulation. Single
+value. For example, if the simulated population is assumed to be unfished in
+1975 and this is the year you want to start your historical simulations, and
+the most recent year for which there is data available is 2019, then nyears
+equals 45.}
 
-\item{\code{nyears}}{The number of years for the historical 'spool-up' simulation.
-Single value. Positive integer}
+\item{\code{CurrentYr}}{The last historical year simulated before projections begin.
+Single value. Note that this should match the last historical year specified in
+the \code{Data} object, which is usually the last historical year for which data is
+available.}
 
-\item{\code{CurrentYr}}{The current calendar year (final year) of the historical
-simulations (eg 2011). Single value. Positive integer}
+\item{\code{EffYears}}{Vector indicating the historical years where there is
+information available to infer the relative fishing effort expended.This vector
+is specified in terms of the position of the year in the vector rather than the
+calendar year. For example, say our simulation starts with an unfished stock in
+1975,and the current year (the last year for which there is data available) is
+2019. Then there are 45 historical years simulated, and EffYears should include
+numbers between 1 and 45. Note that there may not be information available for
+every historical year, especially for data poor fisheries. In these situations,
+the EffYears vector should include only the positions of the years for which
+there is information, and the vector may be shorter than the total number of
+simulated historical years (nyears).}
 
-\item{\code{EffYears}}{Years representing join-points (vertices) of time-varying
-effort. Vector. Non-negative real numbers}
+\item{\code{EffLower}}{Lower bound on relative fishing effort corresponding to
+EffYears. EffLower must be a vector that is the same length as EffYears
+describing how fishing effort has changed over time. Information on relative
+fishing effort can be entered in any units provided they are consistent across
+the entire vector because the data provided will be scaled to 1 (divided by the
+maximum number provided).}
 
-\item{\code{EffLower}}{Lower bound on relative effort corresponding to EffYears.
-Vector. Non-negative real numbers}
+\item{\code{EffUpper}}{Upper bound on relative fishing effort corresponding to
+EffYears. EffUpper must be a vector that is the same length as EffYears
+describing how fishing effort has changed over time. Information on relative
+fishing effort can be entered in any units provided they are consistent across
+the entire vector because the data provided will be scaled to 1 (divided by the
+maximum number provided).}
 
-\item{\code{EffUpper}}{Upper bound on relative effort corresponding to EffYears.
-Vector. Non-negative real numbers}
+\item{\code{Esd}}{Additional inter-annual variability in fishing mortality rate. For
+each historical simulation a single value is drawn from a uniform distribution
+specified by the upper and lower bounds provided. If this parameter has a
+positive (non-zero) value, the yearly fishing mortality rate is drawn from a
+log-normal distribution with a standard deviation (in log space) specified by
+the value of \code{Esd} drawn for that simulation. This parameter applies only to
+historical projections.}
 
-\item{\code{Esd}}{Additional inter-annual variability in fishing mortality rate.
-Uniform distribution lower and upper bounds. Non-negative real numbers}
+\item{\code{qinc}}{Mean temporal trend in catchability (also though of as the
+efficiency of fishing gear) parameter, expressed as a percentage change in
+catchability (q) per year. For each simulation a single value is drawn from a
+uniform distribution specified by the upper and lower bounds provided. Positive
+numbers indicate an increase and negative numbers indicate a decrease. q then
+changes by this amount for in each year of the simulation This parameter
+applies only to forward projections.}
 
-\item{\code{qinc}}{Average percentage change in fishing efficiency (applicable only
-to forward projection and input controls). Uniform distribution lower and upper
-bounds. Non-negative real numbers}
+\item{\code{qcv}}{Inter-annual variability in catchability expressed as a
+coefficient of variation. For each simulation a single value is drawn from a
+uniform distribution specified by the upper and lower bounds provided. This
+parameter applies only to forward projections.}
 
-\item{\code{qcv}}{Inter-annual variability in fishing efficiency (applicable only to
-forward projection and input controls). Uniform distribution lower and upper
-bounds. Non-negative real numbers}
+\item{\code{L5}}{Shortest length at which 5\% of the population is vulnerable to
+selection by the gear used in this fleet. Values can either be specified as
+lengths (in the same units used for the maturity and growth parameters in the
+stock object) or as a percentage of the size of maturity (see the parameter
+isRel for more information). For each simulation a single value is drawn from a
+uniform distribution specified by the upper and lower bounds provided. This
+value is the same in all years unless cpars is used to provide time-varying
+selection.}
 
-\item{\code{L5}}{Shortest length corresponding to 5 percent vulnerability. Uniform
-distribution lower and upper bounds. Positive real numbers}
+\item{\code{LFS}}{Shortest length at which 100\% of the population is vulnerable to
+selection by the gear used by this fleet. Values can either be specified as
+lengths (in the same units used for the maturity and growth parameters in the
+stock object) or as a percentage of the size of maturity (see the parameter
+isRel for more information). For each simulation a single value is drawn from a
+uniform distribution specified by the upper and lower bounds provided. This
+value is the same in all years unless cpars is used to provide time-varying
+selection.}
 
-\item{\code{LFS}}{Shortest length that is fully vulnerable to fishing. Uniform
-distribution lower and upper bounds. Positive real numbers}
+\item{\code{Vmaxlen}}{Proportion of fish selected by the gear at the asymptotic
+length (\code{Stock@Linf}). Upper and Lower bounds between 0 and 1.  A value of
+1 indicates that 100\% of fish are selected at the asymptotic length, and the
+selection curve is logistic. If \code{Vmaxlen} is less than 1 the selection curve is
+dome shaped. For example, if \code{Vmaxlen} is 0.4, then only 40\% of fish are
+vulnerable to the fishing gear at the asymptotic length.}
 
-\item{\code{Vmaxlen}}{The vulnerability of fish at \code{Stock@Linf}. Uniform
-distribution lower and upper bounds. Fraction}
+\item{\code{isRel}}{Specify whether selection and retention parameters use absolute
+lengths or relative to the size of maturity. Single logical value (TRUE or
+FALSE).}
 
-\item{\code{isRel}}{Selectivity parameters in units of size-of-maturity (or absolute
-eg cm). Single value. Boolean}
+\item{\code{LR5}}{Shortest length at which 5\% of the population is vulnerable to
+retention by the fleet. Values can either be specified as lengths (in the same
+units used for the maturity and growth parameters in the stock object) or as a
+percentage of the size of maturity (see the parameter isRel for more
+information). For each simulation a single value is drawn from a uniform
+distribution specified by the upper and lower bounds provided. This value is
+the same in all years unless cpars is used to provide time-varying selection.}
 
-\item{\code{LR5}}{Shortest length corresponding at 5 percent retention. Uniform
-distribution lower and upper bounds. Non-negative real numbers}
+\item{\code{LFR}}{Shortest length where 100\% of the population is vulnerable to
+retention by the fleet. Values can either be specified as lengths (in the same
+units used for the maturity and growth parameters in the stock object) or as a
+percentage of the size of maturity (see the parameter \code{isRel} for more
+information). For each simulation a single value is drawn from a uniform
+distribution specified by the upper and lower bounds provided. This value is
+the same in all years unless cpars is used to provide time-varying selection.}
 
-\item{\code{LFR}}{Shortest length that is fully retained. Uniform distribution lower
-and upper bounds. Non-negative real numbers}
+\item{\code{Rmaxlen}}{Proportion of fish retained at the asymptotic length
+(\code{Stock@Linf}). Upper and Lower bounds between 0 and 1.  A value of 1
+indicates that 100\% of fish are retained at the asymptotic length, and the
+selection curve is logistic. If \code{Rmaxlen} is less than 1 the retention curve is
+dome shaped. For example, if \code{Rmaxlen} is 0.4, then only 40\% of fish at the
+asymptotic length are retained.}
 
-\item{\code{Rmaxlen}}{The retention of fish at \code{Stock@Linf}. Uniform
-distribution lower and upper bounds. Non-negative real numbers}
+\item{\code{DR}}{Discard rate, defined as the proportion of fully selected fish that
+are discarded by the fleet. Upper and Lower bounds between 0 and 1, with a
+value of 1 indicates that 100\% of selected fish are discarded. For each
+simulation a single value is drawn from a uniform distribution specified by the
+upper and lower bounds provided.}
 
-\item{\code{DR}}{Discard rate - the fraction of caught fish that are discarded.
-Uniform distribution lower and upper bounds. Fraction}
+\item{\code{Spat_targ}}{Distribution of fishing in relation to vulnerable biomass
+(VB) across areas. The distribution of fishing effort is proportional to
+VB^Spat_targ. Upper and lower bounds of a uniform distribution. For each
+simulation a single value is drawn from a uniform distribution specified by the
+upper and lower bounds provided. This parameter allows the user to model either
+avoidance or spatial targeting behavior by the fleet. If the parameter value is
+1, fishing effort is allocated across areas in proportion to the population
+density of that area. Values below 1 simulate an avoidance behavior and values
+above 1 simulate a targeting behavior.}
 
-\item{\code{Spat_targ}}{Distribution of fishing in relation to spatial biomass:
-fishing distribution is proportional to B^Spat_targ. Uniform distribution lower
-and upper bounds. Real numbers}
-
-\item{\code{MPA}}{Is Area 1 currently closed (TRUE) or open (FALSE)? Defaults to
-FALSE}
+\item{\code{MPA}}{Logical argument (TRUE or FALSE). Creates an MPA in Area 1 for all
+years if true is selected. Defaults to FALSE.}
 
 \item{\code{Misc}}{Miscellaneous list for bio-economic parameters}
 }}
