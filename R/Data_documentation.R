@@ -291,3 +291,10 @@ NULL
 "MSEDescription"
 
 
+#'  HistDescription 
+#'
+#'  A data.frame with description of slots for class Hist
+#'
+"HistDescription"
+
+

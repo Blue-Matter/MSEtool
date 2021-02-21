@@ -432,7 +432,7 @@ slot_ripper<-function(filenam,slots){
 
 }
 
-getDescription <- function(class=c("Stock", "Fleet", "Obs", "Imp", "Data", "OM", "MSE"),
+getDescription <- function(class=c("Stock", "Fleet", "Obs", "Imp", "Hist", "Data", "OM", "MSE"),
                            Rdloc='man',
                            Outloc=NULL) {
   class <- match.arg(class)
@@ -470,6 +470,7 @@ getDescription("Stock", Outloc=Outloc)
 getDescription("Fleet", Outloc=Outloc)
 getDescription("Obs", Outloc=Outloc)
 getDescription("Imp", Outloc=Outloc)
+getDescription("Hist", Outloc=Outloc)
 getDescription("Data", Outloc=Outloc)
 getDescription("OM", Outloc=Outloc)
 getDescription("MSE", Outloc=Outloc)
