@@ -113,16 +113,18 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
     name <- c(xl.fname1, xl.fname2)[fls]
   }
   if (tools::file_ext(name) == "csv") {
-    Ncol <- max(unlist(lapply(strsplit(readLines(file.path(dir,name)), ","), length)))
+    tempin <- strsplit(readLines(file.path(dir,name)), ",")
+    somechar <- function(x) sum(nchar(x) > 0)
+    Ncol <- max(unlist(lapply(tempin, somechar)))
     col.names <- paste0("V", 1:Ncol)
     if (dec == ".") {
       datasheet <- read.csv(file.path(dir,name), header = T,
                             colClasses = "character", col.names=col.names,
-                            stringsAsFactors = FALSE)
+                            stringsAsFactors = FALSE, row.names = NULL)
     } else {
       datasheet <- read.csv2(file.path(dir,name), header = T,
                              colClasses = "character", col.names=col.names,
-                             stringsAsFactors = FALSE)
+                             stringsAsFactors = FALSE, row.names = NULL)
     }
 
   } else if(tools::file_ext(name) %in% c("xls", "xlsx")) {
