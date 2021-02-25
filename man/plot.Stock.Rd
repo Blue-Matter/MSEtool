@@ -25,6 +25,7 @@
   title = NULL,
   date = NULL,
   plotPars = NULL,
+  html = FALSE,
   open = TRUE,
   dev = FALSE,
   ...
@@ -177,6 +178,8 @@ and "Selectivity".}
 \item cex.main - numeric. Size of main title in plots.
 \item lwd - numeric. Line width for time-series plots.
 }}
+
+\item{html}{Logical. Compile to a HTML report (TRUE) or print plots in R console (FALSE)}
 
 \item{open}{Logical. Open the html file?}
 
