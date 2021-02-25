@@ -34,8 +34,11 @@ render_plot <- function(Object, Class, Stock=NULL, RMD=NULL, nsamp=3, nsim=200, 
     Pars <- list()
     Pars$Stock <- SampleStockPars(Object, nsim, nyears, proyears, SampCpars,
                             msg=FALSE)
-    Pars$Name <- gsub(" ", "_", Object@Name)
+    name <- Object@Name
+    name <- gsub(' ', '_', name)
+    name <- gsub(':', '_', name)
 
+    Pars$Name <- gsub(" ", "_", name)
   } else if (Class == "Fleet") {
     if (is.null(title)) title <- "Fleet Object Plots"
     if (class(Stock)!="Stock")
@@ -100,9 +103,11 @@ render_plot <- function(Object, Class, Stock=NULL, RMD=NULL, nsamp=3, nsim=200, 
     stop("Object must be class 'Stock', 'Fleet', 'Obs', or 'Imp'", call.=FALSE)
   }
 
-
   if (Class !="Hist" & Class !="OM") {
-    Pars$Name <- gsub(" ", "_", Object@Name)
+    name <- Object@Name
+    name <- gsub(' ', '_', name)
+    name <- gsub(':', '_', name)
+    Pars$Name <- gsub(" ", "_", name)
   }
   its <- sample(1:nsim, nsamp)
   # Pars <<- Pars
@@ -116,6 +121,7 @@ render_plot <- function(Object, Class, Stock=NULL, RMD=NULL, nsamp=3, nsim=200, 
     proyears=proyears,
     date=NULL
   )
+
 
   outname <- paste0("_", RMD, ".html")
   if (Class !="Hist" & Class !="OM") {
@@ -161,7 +167,7 @@ plot.character <- function(x, Object, ...) {
 plot.pars <- function(x, Object, Stock=NULL, nsamp=3, nsim=200, nyears=50,
                       proyears=28, output_file=NULL, output_dir=getwd(),
                       quiet=TRUE, tabs=TRUE, title=NULL, date=NULL,
-                      plotPars =NULL, open=TRUE, dev=FALSE, ...) {
+                      plotPars =NULL, html=FALSE, open=TRUE, dev=FALSE, ...) {
 
   StockDF <- data.frame(chr=c("M",
                               "Growth",
@@ -185,17 +191,24 @@ plot.pars <- function(x, Object, Stock=NULL, nsamp=3, nsim=200, nyears=50,
     stop("Invalid argument. Valid arguments are: ", paste0(DF[,1], sep=" "), call.=FALSE)
 
   Class <- DF$Class[match(x, DF[,1])]
-  if (class(Object) !="OM" & class(Object) != Class)
+  if (class(Object) !="OM" & class(Object) != Class & class(Object)!="Hist")
     stop("Incorrect class object for this parameter", call.=FALSE)
 
 
   if (x == "M") x <- "NaturalMortality"
 
-  render_plot(Object=Object, Class=Class, Stock=Stock, RMD=x, nsamp=nsamp, nsim=nsim,
-              nyears=nyears, proyears=proyears,
-              output_file=output_file, output_dir=output_dir, quiet=quiet,
-              tabs=tabs, title=title, date=date,
-              plotPars=plotPars, open=open, dev=dev)
+  if (!html) {
+    fun <- paste0('plot.', x)
+    do.call(fun, list(Object=Object, nsamp=nsamp, plotPars=plotPars, ...))
+  } else {
+    render_plot(Object=Object, Class=Class, Stock=Stock, RMD=x, nsamp=nsamp, nsim=nsim,
+                nyears=nyears, proyears=proyears,
+                output_file=output_file, output_dir=output_dir, quiet=quiet,
+                tabs=tabs, title=title, date=date,
+                plotPars=plotPars, open=open, dev=dev)
+  }
+
+
 }
 
 
@@ -230,6 +243,7 @@ plot.pars <- function(x, Object, Stock=NULL, nsamp=3, nsim=200, nyears=50,
 #'   \item cex.main - numeric. Size of main title in plots.
 #'   \item lwd - numeric. Line width for time-series plots.
 #' }
+#' @param html Logical. Compile to a HTML report (TRUE) or print plots in R console (FALSE)
 #' @param open Logical. Open the html file?
 #' @param dev Logical. For development use only.
 #' @param ... Not used
