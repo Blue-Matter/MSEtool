@@ -37,6 +37,20 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   # ---- Custom Parameters (cpars) Options ----
   control <- OM@cpars$control; OM@cpars$control <- NULL
 
+  # Shiny progress bar
+  inc.progress <- FALSE
+  if("progress"%in%names(control)) {
+    if(control$progress) {
+      if (requireNamespace("shiny", quietly = TRUE)) {
+        inc.progress <- TRUE
+      } else {
+        warning('package `shiny` needs to be installed for progress bar')
+      }
+    }
+  }
+  if (inc.progress)
+    shiny::incProgress(0.2, detail = 'Sampling OM Parameters')
+
   # plusgroup
   plusgroup <- 1 # default now is to use plusgroup
   if(!is.null(OM@cpars$plusgroup) && !OM@cpars$plusgroup) {
@@ -284,6 +298,9 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   FleetPars$MPA <- MPA
 
   # --- Optimize catchability (q) to fit depletion ----
+  if (inc.progress)
+    shiny::incProgress(0.2, detail = 'Optimizing for Depletion')
+
   bounds <- c(0.0001, 15) # q bounds for optimizer
   # find the q that gives current stock depletion - optVB = depletion for vulnerable biomass else SB
   if (!is.null(SampCpars$qs)) {
@@ -383,6 +400,9 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
 
   # --- Simulate historical years ----
   if(!silent) message("Calculating historical stock and fishing dynamics")  # Print a progress update
+
+  if (inc.progress)
+    shiny::incProgress(0.2, detail = 'Simulating Historical Dynamics')
 
   if(!is.null(control$unfished)) { # generate unfished historical simulations
     if(!silent) message("Simulating unfished historical period")
@@ -505,6 +525,9 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   }
 
   # --- MSY reference points ----
+  if (inc.progress)
+    shiny::incProgress(0.2, detail = 'Calculating Reference Points')
+
   MSYRefPoints <- sapply(1:nsim, CalcMSYRefs, MSY_y=MSY_y, FMSY_y=FMSY_y,
                          SSBMSY_y=SSBMSY_y, BMSY_y=BMSY_y, VBMSY_y=VBMSY_y,
                          ageM=StockPars$ageM, nyears=nyears)
@@ -742,6 +765,9 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   # -- TODO --
   # add to ObsPars
   ObsPars$Sample_Area <- Sample_Area
+
+  if (inc.progress)
+    shiny::incProgress(0.2, detail = 'Simulating Data')
 
   # --- Populate Data object with Historical Data ----
   Data <- makeData(Biomass,
