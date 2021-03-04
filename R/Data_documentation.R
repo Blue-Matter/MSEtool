@@ -270,6 +270,13 @@ NULL
 "ImpDescription"
 
 
+#'  HistDescription 
+#'
+#'  A data.frame with description of slots for class Hist
+#'
+"HistDescription"
+
+
 #'  DataDescription 
 #'
 #'  A data.frame with description of slots for class Data
@@ -289,12 +296,5 @@ NULL
 #'  A data.frame with description of slots for class MSE
 #'
 "MSEDescription"
-
-
-#'  HistDescription 
-#'
-#'  A data.frame with description of slots for class Hist
-#'
-"HistDescription"
 
 
