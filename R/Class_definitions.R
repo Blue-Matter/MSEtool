@@ -557,7 +557,6 @@ NULL
 #' An operating model component that controls the observation model
 #'
 #'
-#' @name Obs-class
 #' @docType class
 #' @note Its questionable whether the hyperstability/hyperdepletion should be
 #' categorised as an observation model characteristic as it is most often
