@@ -600,9 +600,60 @@ RepmissingVal <- function(object, name, vals=NA) {
 #' Fleet, Obs, Imp, and Data objects. The new slots will be empty,
 #' but avoids the 'slot doesn't exist' error that sometimes occurs.
 #' Returns an object of class matching class(MSEobj)
+#' @param save.name Character string. Optional file name to save the updated MSE object to disk.
 #' @export
-updateMSE <- function(MSEobj) {
+updateMSE <- function(MSEobj, save.name=NULL) {
+  if (class(MSEobj) !='MSE')
+    stop("Object must be class `MSE`")
   slots <- slotNames(MSEobj)
+
+  if (length(slots)<1) {
+    # incompatible version
+    message('Updating MSE object from earlier version of DLMtool')
+    nMSE <- new("MSE",
+                Name=MSEobj@Name,
+                nyears=MSEobj@nyears,
+                proyears=MSEobj@proyears,
+                nMPs=MSEobj@nMPs,
+                MPs=MSEobj@MPs,
+                nsim=MSEobj@nsim,
+                OM=MSEobj@OM,
+                Obs=MSEobj@Obs,
+                SB_SBMSY=MSEobj@B_BMSY,
+                F_FMSY=MSEobj@F_FMSY,
+                N=array(),
+                B=MSEobj@B,
+                SSB=MSEobj@SSB,
+                VB=MSEobj@VB,
+                FM=MSEobj@FM,
+                SPR=list(),
+                Catch=MSEobj@C,
+                Removals=array(),
+                Effort=MSEobj@Effort,
+                TAC=MSEobj@TAC,
+                TAE=array(),
+                BioEco=list(),
+                RefPoint=list(MSEobj@Misc$MSYRefs),
+                CB_hist=MSEobj@CB_hist,
+                FM_hist=MSEobj@FM_hist,
+                SSB_hist=MSEobj@SSB_hist,
+                Hist=new('Hist'),
+                PPD=MSEobj@Misc$Data,
+                Misc=MSEobj@Misc
+                )
+
+  }
+  if (!is.null(save.name)) {
+
+    message('Saving updated MSE object to: ', save.name)
+    saveRDS(nMSE, save.name)
+    message('Restart R session and load with `MyMSE <- readRDS(', save.name, ")`")
+    return(invisible(nMSE))
+  } else {
+    return(nMSE)
+  }
+
+
   for (X in seq_along(slots)) {
     classDef <- getClassDef(class(MSEobj))
     slotTypes <- classDef@slots
