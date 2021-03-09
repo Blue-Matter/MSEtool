@@ -603,11 +603,10 @@ RepmissingVal <- function(object, name, vals=NA) {
 #' @param save.name Character string. Optional file name to save the updated MSE object to disk.
 #' @export
 updateMSE <- function(MSEobj, save.name=NULL) {
-  if (class(MSEobj) !='MSE')
-    stop("Object must be class `MSE`")
+
   slots <- slotNames(MSEobj)
 
-  if (length(slots)<1) {
+  if (length(slots)<1 & class(MSEobj)=='MSE') {
     # incompatible version
     message('Updating MSE object from earlier version of DLMtool')
     nMSE <- new("MSE",
@@ -641,16 +640,16 @@ updateMSE <- function(MSEobj, save.name=NULL) {
                 PPD=MSEobj@Misc$Data,
                 Misc=MSEobj@Misc
                 )
+    if (!is.null(save.name)) {
 
-  }
-  if (!is.null(save.name)) {
+      message('Saving updated MSE object to: ', save.name)
+      saveRDS(nMSE, save.name)
+      message('Restart R session and load with `MyMSE <- readRDS(', save.name, ")`")
+      return(invisible(nMSE))
+    } else {
+      return(nMSE)
+    }
 
-    message('Saving updated MSE object to: ', save.name)
-    saveRDS(nMSE, save.name)
-    message('Restart R session and load with `MyMSE <- readRDS(', save.name, ")`")
-    return(invisible(nMSE))
-  } else {
-    return(nMSE)
   }
 
 
