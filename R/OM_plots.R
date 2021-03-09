@@ -324,6 +324,7 @@ plot.NaturalMortality <- function(Object, nsamp=3, nsim=200,
 
   if (4 %in% plot.num) {
     par(mfrow=c(1,3))
+    Pars <- List$Pars
     lims <- range(Pars$Stock$M_ageArray[its,, ])
     xlims <- range(Pars$Stock$Len_age[its,,])
     matplot(t(Pars$Stock$Len_age[its,,1]), t(Pars$Stock$M_ageArray[its,,1]), type="l",
