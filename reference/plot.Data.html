@@ -47,7 +47,7 @@
 
 
 <meta property="og:title" content="Plot Data object — plot.Data" />
-<meta property="og:description" content="Plot Data object" />
+<meta property="og:description" content="Creates plots of the Data object in the R console. Wrapper for summary(Data)" />
 <meta property="og:image" content="/logo.png" />
 
 
@@ -125,7 +125,7 @@
     </div>
 
     <div class="ref-description">
-    <p>Plot Data object</p>
+    <p>Creates plots of the Data object in the R console. Wrapper for <code><a href='https://rdrr.io/r/base/summary.html'>summary(Data)</a></code></p>
     </div>
 
     <pre class="usage"><span class='co'># S3 method for Data</span>
@@ -136,23 +136,33 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>x</th>
-      <td><p>object of class Data</p></td>
-    </tr>
-    <tr>
-      <th>upq</th>
-      <td><p>Upper quantile of TACs for max ylim</p></td>
-    </tr>
-    <tr>
-      <th>lwq</th>
-      <td><p>Lower quantile of TACs for min ylim</p></td>
-    </tr>
-    <tr>
-      <th>outline</th>
-      <td><p>Logical. Include outliers in plot?</p></td>
+      <td><p>iteration number for the Data object.</p></td>
     </tr>
     <tr>
       <th>...</th>
       <td><p>Optional additional arguments passed to <code>boxplot</code></p></td>
+    </tr>
+    <tr>
+      <th>wait</th>
+      <td><p>Logical. Wait for key press before next plot?</p></td>
+    </tr>
+    <tr>
+      <th>plots</th>
+      <td><p>Character. What plots to show? <code>all</code>, <code>TS</code>, <code>CAA</code>, <code>CAL</code>, <code>PD</code>
+for all plots, time-series, catch-at-age, catch-at-length, and
+probability distributions respectively</p></td>
+    </tr>
+    <tr>
+      <th>rmd</th>
+      <td><p>Logical. Used in a rmd file?</p></td>
+    </tr>
+    <tr>
+      <th>head</th>
+      <td><p>Character. Heading for rmd file. Default is '##' (second level heading)</p></td>
+    </tr>
+    <tr>
+      <th>tplot</th>
+      <td><p>Integer. Number of plots per page. Default 25</p></td>
     </tr>
     </table>
 
