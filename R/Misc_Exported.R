@@ -84,7 +84,7 @@ avail <- function(classy, package=NULL, msg=TRUE) {
 }
 
 
-#' Directory of the installed package on your computer
+#' Directory of the data in the installed package on your computer
 #'
 #' A way of locating where the package was installed so you can find example
 #' data files and code etc.
@@ -101,9 +101,9 @@ avail <- function(classy, package=NULL, msg=TRUE) {
 #' @export DataDir
 DataDir <- function(stock = NA) {
   if (is.na(stock)) {
-    system.file(package = "MSEtool")
+    file.path(system.file(package = "MSEtool"), "Data")
   } else {
-    system.file(paste0(stock, ".csv"), package = "MSEtool", mustWork = TRUE)
+    system.file(paste0('Data/', stock, ".csv"), package = "MSEtool", mustWork = TRUE)
   }
 }
 
