@@ -199,7 +199,10 @@ plot.pars <- function(x, Object, Stock=NULL, nsamp=3, nsim=200, nyears=50,
 
   if (!html) {
     fun <- paste0('plot.', x)
-    do.call(fun, list(Object=Object, nsamp=nsamp, plotPars=plotPars, ...))
+    if (class(Object)=='Stock')
+      do.call(fun, list(Object=Object, nsamp=nsamp, plotPars=plotPars, ...))
+    if (class(Object)=='Fleet')
+      do.call(fun, list(Object=Object, Stock=Stock, nsamp=nsamp, plotPars=plotPars, ...))
   } else {
     render_plot(Object=Object, Class=Class, Stock=Stock, RMD=x, nsamp=nsamp, nsim=nsim,
                 nyears=nyears, proyears=proyears,
