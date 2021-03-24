@@ -2,7 +2,7 @@
 % Please edit documentation in R/Misc_Exported.R
 \name{DataDir}
 \alias{DataDir}
-\title{Directory of the installed package on your computer}
+\title{Directory of the data in the installed package on your computer}
 \usage{
 DataDir(stock = NA)
 }
