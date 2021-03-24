@@ -1437,7 +1437,8 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
   # Abundance bias
   Abias <- cpars$Abias
   if (is.null(Abias))
-    Abias <- exp(myrunif(nsim, log(Obs@Btbiascv[1]), log(Obs@Btbiascv[2])))
+    Abias <-  sample_lnorm('Btbiascv', cpars, Obs, nsim, 'Btbiascv')
+  # exp(myrunif(nsim, log(Obs@Btbiascv[1]), log(Obs@Btbiascv[2])))
 
   ObsOut$Abias <- Abias
 
