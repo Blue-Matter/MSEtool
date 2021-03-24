@@ -183,27 +183,36 @@ dnormal<-function(lens,lfs,sl,sr){
   sel
 }
 
+# calcV <- function(x, Len_age, LatASD, SLarray, n_age, nyears, proyears, CAL_binsmid) {
+#   len_at_age <- Len_age[x,,]
+#   len_aa_sd <- LatASD[x,,]
+#
+#   sel_at_length <- SLarray[x,,]
+#   v <- matrix(tiny, n_age, nyears+proyears)
+#
+#   for (yr in 1:(nyears+proyears)) {
+#     ALK <- mapply(dnorm, mean=len_at_age[,yr], sd=len_aa_sd[,yr], MoreArgs=list(x=CAL_binsmid))
+#     ALK[ALK<=0] <- tiny
+#
+#     if (all(ALK[,1]==tiny)) {
+#       ALK[,1] <- 0
+#       ALK[1,1] <- 1
+#     }
+#     ALK_t <- matrix(colSums(ALK), nrow=nrow(ALK), ncol=ncol(ALK), byrow = TRUE)
+#     ALK <- t(ALK/ALK_t)
+#     sela <- ALK %*% sel_at_length[,yr]
+#     v[,yr] <- sela[,1]
+#   }
+#   v
+# }
+
 calcV <- function(x, Len_age, LatASD, SLarray, n_age, nyears, proyears, CAL_binsmid) {
   len_at_age <- Len_age[x,,]
   len_aa_sd <- LatASD[x,,]
-
   sel_at_length <- SLarray[x,,]
-  v <- matrix(tiny, n_age, nyears+proyears)
-  for (yr in 1:(nyears+proyears)) {
-    ALK <- mapply(dnorm, mean=len_at_age[,yr], sd=len_aa_sd[,yr], MoreArgs=list(x=CAL_binsmid))
-    ALK[ALK<=0] <- tiny
-
-    if (all(ALK[,1]==tiny)) {
-      ALK[,1] <- 0
-      ALK[1,1] <- 1
-    }
-    ALK_t <- matrix(colSums(ALK), nrow=nrow(ALK), ncol=ncol(ALK), byrow = TRUE)
-    ALK <- t(ALK/ALK_t)
-    sela <- ALK %*% sel_at_length[,yr]
-    v[,yr] <- sela[,1]
-  }
-  v
+  calcVatAge(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid)
 }
+
 
 # calculate average unfished ref points over first A50 years
 CalcUnfishedRefs <- function(x, ageM, N0_a, SSN0_a, SSB0_a, B0_a, VB0_a, SSBpRa, SSB0a_a) {

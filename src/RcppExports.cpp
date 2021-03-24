@@ -6,6 +6,23 @@
 
 using namespace Rcpp;
 
+// calcVatAge
+NumericMatrix calcVatAge(NumericMatrix len_at_age, NumericMatrix len_aa_sd, NumericMatrix sel_at_length, int n_age, int nyears, int proyears, NumericVector CAL_binsmid);
+RcppExport SEXP _MSEtool_calcVatAge(SEXP len_at_ageSEXP, SEXP len_aa_sdSEXP, SEXP sel_at_lengthSEXP, SEXP n_ageSEXP, SEXP nyearsSEXP, SEXP proyearsSEXP, SEXP CAL_binsmidSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type len_at_age(len_at_ageSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type len_aa_sd(len_aa_sdSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type sel_at_length(sel_at_lengthSEXP);
+    Rcpp::traits::input_parameter< int >::type n_age(n_ageSEXP);
+    Rcpp::traits::input_parameter< int >::type nyears(nyearsSEXP);
+    Rcpp::traits::input_parameter< int >::type proyears(proyearsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type CAL_binsmid(CAL_binsmidSEXP);
+    rcpp_result_gen = Rcpp::wrap(calcVatAge(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid));
+    return rcpp_result_gen;
+END_RCPP
+}
 // combine
 NumericVector combine(const List& list);
 RcppExport SEXP _MSEtool_combine(SEXP listSEXP) {
@@ -207,6 +224,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_MSEtool_calcVatAge", (DL_FUNC) &_MSEtool_calcVatAge, 7},
     {"_MSEtool_combine", (DL_FUNC) &_MSEtool_combine, 1},
     {"_MSEtool_get_freq", (DL_FUNC) &_MSEtool_get_freq, 4},
     {"_MSEtool_get_freq2", (DL_FUNC) &_MSEtool_get_freq2, 3},
