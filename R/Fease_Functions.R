@@ -52,6 +52,7 @@ Fease <- function(Data=NULL, TAC=TRUE, TAE=TRUE, SL=TRUE, Spatial=TRUE, names.on
   if (!TAC) isfease[grepl("TAC", mprecs)] <- FALSE
   if (!TAE) isfease[grepl("TAE", mprecs)] <- FALSE
   if (!SL) isfease[grepl("SL", mprecs)] <- FALSE
+  if (!SL) isfease[grepl("Retention", mprecs)] <- FALSE
   if (!Spatial) isfease[grepl("Spatial", mprecs)] <- FALSE
 
 
