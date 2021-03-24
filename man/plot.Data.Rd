@@ -7,16 +7,22 @@
 \method{plot}{Data}(x, upq = 0.9, lwq = 0.1, outline = FALSE, ...)
 }
 \arguments{
-\item{x}{object of class Data}
-
-\item{upq}{Upper quantile of TACs for max ylim}
-
-\item{lwq}{Lower quantile of TACs for min ylim}
-
-\item{outline}{Logical. Include outliers in plot?}
+\item{x}{iteration number for the Data object.}
 
 \item{...}{Optional additional arguments passed to \code{boxplot}}
+
+\item{wait}{Logical. Wait for key press before next plot?}
+
+\item{plots}{Character. What plots to show? \code{all}, \code{TS}, \code{CAA}, \code{CAL}, \code{PD}
+for all plots, time-series, catch-at-age, catch-at-length, and
+probability distributions respectively}
+
+\item{rmd}{Logical. Used in a rmd file?}
+
+\item{head}{Character. Heading for rmd file. Default is '##' (second level heading)}
+
+\item{tplot}{Integer. Number of plots per page. Default 25}
 }
 \description{
-Plot Data object
+Creates plots of the Data object in the R console. Wrapper for \code{summary(Data)}
 }
