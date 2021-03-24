@@ -1,15 +1,22 @@
 # ---- Plot Data Object -----
 #' Plot Data object
 #'
-#' @param x object of class Data
-#' @param upq Upper quantile of TACs for max ylim
-#' @param lwq Lower quantile of TACs for min ylim
-#' @param outline Logical. Include outliers in plot?
-#' @param ...  Optional additional arguments passed to \code{boxplot}
+#' Creates plots of the Data object in the R console. Wrapper for `summary(Data)`
+#'
+#' @param x An object of class Data
+#' @param wait Logical. Wait for key press before next plot?
+#' @param i iteration number for the Data object.
+#' @param plots Character. What plots to show? `all`, `TS`, `CAA`, `CAL`, `PD`
+#' for all plots, time-series, catch-at-age, catch-at-length, and
+#' probability distributions respectively
+#' @param rmd Logical. Used in a rmd file?
+#' @param head Character. Heading for rmd file. Default is '##' (second level heading)
+#' @param tplot Integer. Number of plots per page. Default 25
+#' @param ...  Not used
 #' @method plot Data
 #' @export
-plot.Data <- function(x, upq=0.9, lwq=0.1, outline = FALSE, ...) {
-  boxplot.Data(x, upq, lwq, outline = FALSE, ...)
+plot.Data <- function(x, wait=TRUE, i=1, plots='all', rmd=FALSE, head="##", tplot=25, ...) {
+  summary(x, wait, i, plots, rmd, head, tplot)
 }
 
 #' Boxplot of TAC recommendations
