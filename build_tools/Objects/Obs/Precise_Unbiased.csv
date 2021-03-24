@@ -24,7 +24,7 @@ Fgaincv,0.2,
 A50cv,0.2,
 Dbiascv,0.2,
 Dobs,0.025,0.1
-Btbiascv,0.333,3
+Btbiascv,0.05,
 Btobs,0.05,0.2
 Fcurbiascv,0.2,
 Fcurcv,0.1,0.5
