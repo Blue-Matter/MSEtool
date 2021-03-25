@@ -964,7 +964,9 @@ DLMdiag <- function(Data, command = c("available", "not available", "needed"), r
         good[y] <- FALSE
       } else if (inherits(test[[y]], "Rec")) {
         # Rec_test <- vapply(slotNames("Rec"), function(x) NAor0(slot(test[[y]], x)), logical(1))
-        Rec_test <- vapply(slotNames("Rec"), function(x) all(is.na(slot(test[[y]], x))), logical(1))
+        slots <- slotNames("Rec")
+        slots <- slots[slots!="Misc"]
+        Rec_test <- vapply(slots, function(x) all(is.na(slot(test[[y]], x))), logical(1))
         if(all(Rec_test)) { # If all NAor0
           report[y] <- "Produced all NA scores. Check MP function and/or Data object."
           good[y] <- FALSE

@@ -6,13 +6,16 @@
 \usage{
 validcpars(
   type = c("all", "Stock", "Fleet", "Obs", "Imp", "internal"),
-  valid = TRUE
+  valid = TRUE,
+  show = TRUE
 )
 }
 \arguments{
 \item{type}{What cpars to show? 'all', 'Stock', 'Fleet', 'Obs', 'Imp', or 'internal'}
 
 \item{valid}{Logical. Show valid cpars?}
+
+\item{show}{Logical. Display the table in the Viewer?}
 }
 \value{
 a HTML datatable with variable name, description and type of valid cpars

@@ -868,7 +868,8 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
     nsim <- Fleet@nsim
     nyears <- Fleet@nyears
     proyears <- Fleet@proyears
-    StockPars <- SampleStockPars(Fleet, nsim, nyears, proyears, cpars, msg=msg)
+    if (class(Stock)!='list')
+      StockPars <- SampleStockPars(Fleet, nsim, nyears, proyears, cpars, msg=msg)
   }
 
   if (class(Stock) == "Stock") {
@@ -1558,7 +1559,11 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
 SampleImpPars <- function(Imp, nsim=NULL, cpars=NULL, nyears=NULL, proyears=NULL) {
   if (class(Imp) != "Imp" & class(Imp) != "OM")
     stop("First argument must be class 'Imp' or 'OM'")
-  if (class(Imp) == "OM") nsim <- Imp@nsim
+  if (class(Imp) == "OM") {
+    nsim <- Imp@nsim
+    proyears <- Imp@proyears
+    nyears <- Imp@nyears
+  }
 
   # Get custom pars if they exist
   if (class(Imp) == "OM" && length(Imp@cpars) > 0 && is.null(cpars))
@@ -1626,6 +1631,7 @@ SampleImpPars <- function(Imp, nsim=NULL, cpars=NULL, nyears=NULL, proyears=NULL
 #'
 #' @param type What cpars to show? 'all', 'Stock', 'Fleet', 'Obs', 'Imp', or 'internal'
 #' @param valid Logical. Show valid cpars?
+#' @param show Logical. Display the table in the Viewer?
 #'
 #' @return a HTML datatable with variable name, description and type of valid cpars
 #' @export
@@ -1638,7 +1644,7 @@ SampleImpPars <- function(Imp, nsim=NULL, cpars=NULL, nyears=NULL, proyears=NULL
 #' }
 #'
 validcpars <- function(type=c("all", "Stock", "Fleet", "Obs", "Imp", "internal"),
-                       valid=TRUE) {
+                       valid=TRUE, show=TRUE) {
 
   Var <- Desc <- NULL # checks
   type <- match.arg(type, choices=c("all", "Stock", "Fleet", "Obs", "Imp", "internal"),
@@ -1687,14 +1693,20 @@ validcpars <- function(type=c("all", "Stock", "Fleet", "Obs", "Imp", "internal")
 
   dfout$Type <- as.factor(dfout$Type)
   dfout$Var. <- as.factor(dfout$Var.)
-  if (requireNamespace("DT", quietly = TRUE)) {
-    return(DT::datatable(dfout, filter = 'top', options = list(
-      columnDefs = list(list(searchable = FALSE, targets = c(2,3))),
-      pageLength = 25, autoWidth = TRUE)))
-  } else {
-    message("Install package `DT` to display dataframe as HTML table")
-    return(dfout)
+  if (show) {
+    if (requireNamespace("DT", quietly = TRUE)) {
+      return(DT::datatable(dfout,
+                           filter = 'top',
+                           options = list(
+                             pageLength = 25, autoWidth = TRUE))
+      )
+    } else {
+      message("Install package `DT` to display dataframe as HTML table")
+      return(dfout)
+    }
   }
+
+  invisible(dfout)
 }
 
 

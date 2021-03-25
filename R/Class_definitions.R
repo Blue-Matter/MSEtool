@@ -1089,11 +1089,11 @@ setMethod("show", signature = (object="PMobj"), function(object) {
     for (sl in sls) {
       r <- match(sl, sls)
       slval <- slot(object, sl)
-      if (class(slval) == "array" & length(slval)>0) {
+      if ('array' %in% class(slval) & length(slval)>0 & length(dim(slval))>2) {
         df[r,2] <- 'array'
-      } else if (class(slval) == "matrix" & length(slval)>0) {
+      } else if ('matrix' %in% class(slval) & length(slval)>0) {
         df[r,2] <- 'matrix'
-      } else if (length(slval) > 0 & class(slval) != "call") {
+      } else if (length(slval) > 0 & ! 'call' %in% class(slval)) {
         df[r,2] <- slval
       } else {
         df[r, 2] <- 'not defined'

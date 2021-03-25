@@ -52,7 +52,7 @@ NOAA_plot2(MSEobj)
 
 \item{Satisficed}{Logical. Show only the MPs that meet minimum acceptable thresholds (specified in \code{Lims})}
 
-\item{Show}{Character. Show the plots ('plots'), results table ('table')  or 'both' (default)}
+\item{Show}{Character. Show the plots ('plots'), results table ('table'), 'both' (default), or invisibly return objects only ('none')}
 
 \item{point.size}{Numeric. Size of the MP points}
 

@@ -9,7 +9,7 @@
 #' @param Title Optional title for each plot. Character vector of `length(PMs)`/2. Recycled.
 #' @param Labels Optional named list specifying new labels for MPs. For example: `Labels = list(AvC="Average Catch", CC1="Constant Catch")`
 #' @param Satisficed Logical. Show only the MPs that meet minimum acceptable thresholds (specified in `Lims`)
-#' @param Show Character. Show the plots ('plots'), results table ('table')  or 'both' (default)
+#' @param Show Character. Show the plots ('plots'), results table ('table'), 'both' (default), or invisibly return objects only ('none')
 #' @param point.size Numeric. Size of the MP points
 #' @param lab.size Numeric. Size of MP label. Set to NULL to remove MP labels.
 #' @param axis.title.size Numeric. Size of axis titles
@@ -245,18 +245,18 @@ TradePlot <- function(MSEobj, ..., Lims=c(0.2, 0.2, 0.8, 0.8),
     Results <- 'Summary table of results only available for objects of class `MSE`'
   }
 
+  out <- list(Results=Results, Plots=plots)
   if (Show == "plots") {
     join_plots(plots, n.col, n.row,  position = position, legend=legend)
   } else if (Show == "table") {
     print(Results)
+  } else if (Show == "none") {
+    return(invisible(out))
   } else {
     join_plots(plots, n.col, n.row,  position = position, legend=legend)
     if (class(MSEobj) =='MSE') print(Results)
   }
-  out <- list(Results=Results, Plots=plots)
-
   invisible(out)
-
 }
 
 
