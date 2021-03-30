@@ -953,30 +953,34 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   }
 
   # ---- Condition Simulated Data on input Data object (if it exists) & calculate error stats ----
-  # TODO - cpars$Data should be by stock and fleet - currently it is combined when using SS2MOM
+  for (p in 1:np) {
+    for (f in 1:nf) {
+      if (class(SampCpars[[p]][[f]]$Data)=="Data") {
 
-  # for (p in 1:np) {
-  #   for (f in 1:nf) {
-  #     if (class(SampCpars[[p]][[f]]$Data)=="Data") {
-  #
-  #       # real data has been passed in cpars
-  #       updatedData <- AddRealData(SimData= DataList[[p]][[f]],
-  #                                  RealData=SampCpars[[p]][[f]]$Data,
-  #                                  ObsPars[[p]][[f]],
-  #                                  StockPars[[p]],
-  #                                  FleetPars[[p]][[f]],
-  #                                  nsim,
-  #                                  nyears,
-  #                                  proyears,
-  #                                  SampCpars,
-  #                                  msg=!silent)
-  #       DataList[[p]][[f]] <- updatedData$Data
-  #       ObsPars[[p]][[f]] <- updatedData$ObsPars
-  #
-  #     }
-  #
-  #   }
-  # }
+        StockPars2 <- StockPars[[p]]
+        StockPars2$Biomass <- Biomass[,p,,,]
+        StockPars2$SSB <- SSB[,p,,,]
+        StockPars2$VBiomass <- VBiomass[,p,,,]
+        StockPars2$N <- N[,p,,,]
+        StockPars2$CBret <- CBret[,p,f,,,]
+
+        # real data has been passed in cpars
+        updatedData <- AddRealData(SimData= DataList[[p]][[f]],
+                                   RealData=SampCpars[[p]][[f]]$Data,
+                                   ObsPars[[p]][[f]],
+                                   StockPars2,
+                                   FleetPars[[p]][[f]],
+                                   nsim,
+                                   nyears,
+                                   proyears,
+                                   SampCpars[[p]][[f]],
+                                   msg=!silent)
+        DataList[[p]][[f]] <- updatedData$Data
+        ObsPars[[p]][[f]] <- updatedData$ObsPars
+
+      }
+    }
+  }
 
   multiHist <- vector('list', np)
 
@@ -1874,6 +1878,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
           } # end of fleet
         } # end of stock
+
 
         if(MPcond=="MMP"){
           # returns a hierarchical list object stock then fleet of Data objects
