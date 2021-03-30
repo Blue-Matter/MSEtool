@@ -473,6 +473,7 @@ plot.Catchability <- function(Object, Stock=NULL, nsamp=3, nsim=100,
   plotPars <- defaultplotPars(plotPars)
 
   List <- getFleetPars(Object,Stock, nsim, nyears, proyears, seed)
+
   Pars <- List$Pars
   nsim <- List$nsim
   set.seed(List$seed)
@@ -492,12 +493,12 @@ plot.Catchability <- function(Object, Stock=NULL, nsamp=3, nsim=100,
   }
 
   if (2 %in% plot.num) {
-    ind <- as.matrix(expand.grid(its, 1:proyears, 1:nsim))
-    Qfuture <- matrix(NA, nrow=proyears, ncol=nsim)
+    ind <- as.matrix(expand.grid(its, 1:List$proyears, 1:nsim))
+    Qfuture <- matrix(NA, nrow=List$proyears, ncol=nsim)
     X <- 0
     for (sim in 1:nsim) {
       X <- X + 1
-      Qfuture[,X] <- Pars$Fleet$qvar[sim,] * (1 + Pars$Fleet$qinc[sim]/100)^(1:proyears)
+      Qfuture[,X] <- Pars$Fleet$qvar[sim,] * (1 + Pars$Fleet$qinc[sim]/100)^(1:List$proyears)
       Qfuture[,X] <- Qfuture[,X]/Qfuture[1,X]
     }
     List$Pars$Fleet$Qfuture <- t(Qfuture)
@@ -633,7 +634,7 @@ plot.Selectivity <- function(Object, Stock=NULL, nsamp=3, nsim=100,
     Pars <- List$Pars
     par(mfrow=c(3,3), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
-    yr.vert <- c(1, nyears, nyears+proyears)
+    yr.vert <- c(1, List$nyears, List$nyears+List$proyears)
     YrText <- list()
     YrText[yr.vert[1]] <- "First Historical Year"
     YrText[yr.vert[2]] <- "Last Historical Year"
@@ -684,7 +685,7 @@ plot.Selectivity <- function(Object, Stock=NULL, nsamp=3, nsim=100,
     Pars <- List$Pars
     par(mfrow=c(3,3), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
-    yr.vert <- c(1, nyears, nyears+proyears)
+    yr.vert <- c(1, List$nyears, List$nyears+List$proyears)
     YrText <- list()
     YrText[yr.vert[1]] <- "First Historical Year"
     YrText[yr.vert[2]] <- "Last Historical Year"
