@@ -851,7 +851,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
   # ---- Update Catch ----
   if (!all(is.na(RealData@Cat[1,]))) {
     if (msg)
-      message('Updating Simulated Catch from `OM@cpars$Data@Cat` (OM Catch observation parameters also updated)')
+      message('Updating Simulated Catch from `OM@cpars$Data@Cat`')
 
     Data_out@Cat <- matrix(RealData@Cat[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
     Data_out@CV_Cat <- matrix(RealData@CV_Cat[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
@@ -870,10 +870,25 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     }
     Cerr <- cbind(Cerr, Cerr_proj)
 
-    ObsPars$Cbias <- Cbias[,1]
-    ObsPars$Cerr_y <- Cerr
-    ObsPars$Cobs_y <- Cerr * Cbias
 
+    if(!is.null(SampCpars$Cobs_y)) {
+      if (msg) message('Catch observation error detected in cpars (`cpars$Cobs_y`). Not updating catch obs error')
+    } else {
+      if(!is.null(SampCpars$Cbias)) {
+        if (msg) message('Catch Cbias detected in cpars (`cpars$Cbias`). Not updating catch bias')
+      } else {
+        if (msg) message('Updating Catch bias from `OM@cpars$Data@Cat`')
+        ObsPars$Cbias <- Cbias[,1]
+      }
+      if(!is.null(SampCpars$Cerr_y)) {
+        if (msg) message('Catch variability detected in cpars (`cpars$Cerr_y`). Not updating catch error')
+      } else {
+        if (msg) message('Updating Catch variability from `OM@cpars$Data@Cat`')
+        ObsPars$Cerr_y <- Cerr
+      }
+      if (msg)  message('Updating catch observation error from `OM@cpars$Data@Cat`')
+      ObsPars$Cobs_y <- Cerr * Cbias
+    }
   }
 
 
@@ -883,7 +898,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
   # ---- Update Index (total biomass) ----
   if (!all(is.na(RealData@Ind[1,]))) { # Index exists
     if (msg)
-      message('Updating Simulated Total Index from `OM@cpars$Data@Ind` (OM Index observation parameters are ignored).')
+      message('Updating Simulated Total Index from `OM@cpars$Data@Ind`')
     Data_out@Ind <- matrix(RealData@Ind[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
     Data_out@CV_Ind <- matrix(RealData@CV_Ind[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
 
@@ -895,6 +910,8 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     if (!is.null(SampCpars$I_beta)) {
       if (msg) message('Total Index beta found (cpars$I_beta) - not updating observation beta parameter')
       I_Err$beta <- SampCpars$I_beta
+    } else {
+      if (msg) message('Updating Obs@I_beta from real index')
     }
 
     ind <- is.na(Data_out@Ind[1,])
@@ -921,7 +938,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
   # ---- Update Index (spawning biomass) ----
   if (!all(is.na(RealData@SpInd[1,]))) { # Index exists
     if (msg)
-      message('Updating Simulated Spawning Index from `OM@cpars$Data@SpInd` (OM Index observation parameters are ignored).')
+      message('Updating Simulated Spawning Index from `OM@cpars$Data@SpInd`')
     Data_out@SpInd <- matrix(RealData@SpInd[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
     Data_out@CV_SpInd <- matrix(RealData@CV_SpInd[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
 
@@ -933,6 +950,8 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     if (!is.null(SampCpars$SpI_beta)) {
       if (msg) message('Spawning Index beta found (cpars$SpI_beta) - not updating observation beta parameter')
       I_Err$beta <- SampCpars$SpI_beta
+    } else {
+      if (msg) message('Updating Obs@SpI_beta from real index')
     }
 
     ind <- is.na(Data_out@SpInd[1,])
@@ -940,7 +959,6 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     Ierr <- array(NA, dim(Data_out@SpInd))
     Ierr[,!ind] <- Ierr_temp
 
-    ObsPars$SpIerr_y[,1:nyears] <- Ierr
     ObsPars$SpI_beta <- I_Err$beta
 
     if (!is.null(SampCpars$SpIerr_y)) {
@@ -972,7 +990,10 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     if (!is.null(SampCpars$VI_beta)) {
       if (msg) message('Vulnerable Index beta found (cpars$VI_beta) - not updating observation beta parameter')
       I_Err$beta <- SampCpars$VI_beta
+    } else {
+      if (msg) message('Updating Obs@VI_beta from real index')
     }
+
 
 
     ind <- is.na(Data_out@VInd[1,])
@@ -980,7 +1001,6 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     Ierr <- array(NA, dim(Data_out@VInd))
     Ierr[,!ind] <- Ierr_temp
 
-    ObsPars$VIerr_y[,1:nyears] <- Ierr
     ObsPars$VI_beta <- I_Err$beta
 
     if (!is.null(SampCpars$VIerr_y)) {
@@ -1009,18 +1029,22 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     if (!is.null(SampCpars$AddIbeta)) {
       if (any(dim(SampCpars$AddIbeta) != c(nsim, n.ind)))
         stop("cpars$AddIbeta must be dimensions c(nsim, n.ind)")
+      if (msg) message('cpars$AddIbeta detected. Not updating beta for additional indices')
       ObsPars$AddIbeta <- SampCpars$AddIbeta
       fitbeta <- FALSE
     } else {
+      if (msg) message('Updating beta for additional indices from real data')
       ObsPars$AddIbeta <- matrix(NA, nsim, n.ind)
     }
 
     if (!is.null(SampCpars$AddIerr)) {
       if (any(dim(SampCpars$AddIerr) != c(nsim, n.ind, nyears+proyears)))
         stop("cpars$AddIerr must be dimensions c(nsim, n.ind, nyears+proyears)")
+      if (msg) message('cpars$AddIerr detected. Not updating observation variability for additional indices')
       ObsPars$AddIerr <- SampCpars$AddIerr
       fitIerr <- FALSE
     } else {
+      if (msg) message('Updating observation variability (AddIerr) for additional indices from real data')
       ObsPars$AddIerr <- array(NA, dim=c(nsim, n.ind, nyears+proyears))
     }
 
