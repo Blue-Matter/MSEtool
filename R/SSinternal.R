@@ -392,11 +392,11 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   #### Retention and selectivity-at-length - loop over years for time-varying quantities
   loop_over_change_points <- function(yy, df) {
     yy <- ifelse(yy < mainyrs[1], min(df$Yr), yy) # Check to avoid infinite loop
-    sched <- df[df$Yr == yy, ]
+    sched <- df[findInterval(yy, df$Yr), ]
     if(nrow(sched) == 1) {
       return(sched[1, -c(1:5)] %>% unlist())
     } else {
-      Recall(yy - 1, df)
+      stop("Could not find selectivity/retention function for year: ", yy)
     }
   }
   retL <- vapply(mainyrs, loop_over_change_points, numeric(replist$nlbinspop),
