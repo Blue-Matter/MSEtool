@@ -1,5 +1,11 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
+## MSEtool 3.0.2.9999 Development Version
+
+### Minor changes
+- add more informative messages when conditioning on real data
+- add conditioning on real data for `multiMSE`
+
 ## MSEtool 3.0.2
 
 ### Updates

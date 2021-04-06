@@ -838,7 +838,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
   ObsPars$LFSbias <- UpdateObs('LFS', ObsPars$LFSbias, FleetPars$LFS_y[,nyears],
                                RealData, SimData, msg)
 
-  Data_out@Vmaxlen <- UpdateSlot('Vmaxlen',  RealData, SimData, msg)
+  # Data_out@Vmaxlen <- UpdateSlot('Vmaxlen',  RealData, SimData, msg)
 
   if (length(RealData@Year)>1) {
     # check years
@@ -1064,6 +1064,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
 
     UnitsTab <- data.frame(n=1:0, units=c('biomass', 'numbers'))
     TypeTab <- data.frame(n=1:3, type=c('total', 'spawning', 'vuln.'))
+    Data_out@AddIndV <- array(NA, dim=c(nsim, n.ind, Data_out@MaxAge+1))
     for (i in 1:n.ind) {
       units <- UnitsTab$units[match(AddIunits[i], UnitsTab$n)]
       type <- TypeTab$type[match(AddIndType[i], TypeTab$n)]
@@ -1087,6 +1088,8 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
         Ind_V <- RealData@AddIndV[1,i, ]
       }
 
+      Data_out@AddIndV[,i,] <- t(replicate(nsim,Ind_V))
+
       # check dimensions
       if (!length(Ind_V) == Data_out@MaxAge+1)
         stop('Vulnerability-at-age for additional index ', i, ' is not length `maxage`+1' )
@@ -1103,6 +1106,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
 
       Ind_V <- matrix(Ind_V, nrow=SimData@MaxAge+1, ncol= nyears)
       Ind_V <- replicate(nsim, Ind_V) %>% aperm(., c(3,1,2))
+
       SimIndex <- apply(SimIndex*Ind_V, c(1,3), sum) # apply vuln curve
 
       I_Err <- lapply(1:nsim, function(i) indfit(SimIndex[i,],  ind))

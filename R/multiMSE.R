@@ -912,7 +912,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
 
   # --- Populate Data object with Historical Data ----
-  CurrentYr <- nyears
+  CurrentYr <- MOM@Fleets[[1]][[1]]@CurrentYr
   DataList <- new('list')
   for (p in 1:np) {
     DataList[[p]] <- vector('list', nf)
@@ -956,7 +956,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   for (p in 1:np) {
     for (f in 1:nf) {
       if (class(SampCpars[[p]][[f]]$Data)=="Data") {
-
         StockPars2 <- StockPars[[p]]
         StockPars2$Biomass <- Biomass[,p,,,]
         StockPars2$SSB <- SSB[,p,,,]
@@ -967,13 +966,13 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
         # real data has been passed in cpars
         updatedData <- AddRealData(SimData= DataList[[p]][[f]],
                                    RealData=SampCpars[[p]][[f]]$Data,
-                                   ObsPars[[p]][[f]],
-                                   StockPars2,
-                                   FleetPars[[p]][[f]],
+                                   ObsPars=ObsPars[[p]][[f]],
+                                   StockPars=StockPars2,
+                                   FleetPars=FleetPars[[p]][[f]],
                                    nsim,
                                    nyears,
                                    proyears,
-                                   SampCpars[[p]][[f]],
+                                   SampCpars=SampCpars[[p]][[f]],
                                    msg=!silent)
         DataList[[p]][[f]] <- updatedData$Data
         ObsPars[[p]][[f]] <- updatedData$ObsPars
@@ -1866,7 +1865,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                                   y=y,
                                                   mm=mm,
                                                   Misc=MSElist[[p]][[f]][[mm]]@Misc,
-                                                  RealData=NULL, #TODO
+                                                  RealData=multiHist[[p]][[f]]@Data,
                                                   Sample_Area=ObsPars[[p]][[f]]$Sample_Area)
 
             # ---- Update true abundance ----

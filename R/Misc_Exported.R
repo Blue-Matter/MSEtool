@@ -1211,7 +1211,7 @@ optCPU <- function(nsim=96, thresh=5, plot=TRUE, msg=TRUE, maxn=NULL) {
 #' @export
 #'
 #' @keywords internal
-MPurl <- function(topic, url='https://blue-matter.github.io/DLMtool/reference/',
+MPurl <- function(topic, url='https://dlmtool.openmse.com/reference/',
                   nameonly=FALSE) {
 
   paths <- file.path(.libPaths()[1], "DLMtool")
