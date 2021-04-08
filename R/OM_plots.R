@@ -64,7 +64,8 @@ getFleetPars <- function(Object, Stock=NULL, nsim, nyears, proyears, seed) {
     CurrentYr <- Object@CurrentYr
     SampCpars <- if(length(Object@cpars)>0) SampCpars <- SampleCpars(Object@cpars, nsim, silent=TRUE)
     seed <- Object@seed
-    Pars$Fleet <- SampleFleetPars(Object, nsim, nyears, proyears, SampCpars,
+    Pars$Stock <- SampleStockPars(Object, nsim, nyears, proyears, SampCpars, FALSE)
+    Pars$Fleet <- SampleFleetPars(Object, Pars$Stock, nsim, nyears, proyears, SampCpars,
                                   msg=FALSE)
   } else if (class(Object) =='Fleet') {
     if (!is.null(Stock))
