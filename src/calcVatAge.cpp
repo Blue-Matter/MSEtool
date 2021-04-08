@@ -28,7 +28,9 @@ NumericMatrix calcVatAge(NumericMatrix len_at_age,
 
     NumericVector sela(n_age);
     for (int age=0; age<n_age; age++) {
-      ALKs(age,_) = ALK(age,_)/page(age);
+      if (page(age)>0) {
+        ALKs(age,_) = ALK(age,_)/page(age);
+      }
       for (int len=0; len<nbins; len++) {
         sela(age) += ALKs(age,len)*sel_at_length(len,yr);
       }
