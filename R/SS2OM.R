@@ -25,6 +25,8 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1,
   if(!silent) message("Converting MOM to OM...")
   OM <- SSMOM2OM(MOM, replist, gender, import_mov, seed, silent)
 
+
+
   if(replist$nseasons == 1 && replist$seasduration < 1 && seasons_to_years) {
     message("Model with season as years found. Will convert to annual time step.")
     OM <- SS_seasonalyears_to_annual(OM, replist)
@@ -80,8 +82,8 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
 
   # This function grabs array tt from the cpars of the first fleet of each stock, and averages across genders
   mean_array <- function(tt) {
-    lapply(cpars[gender], function(x) parse(text = paste0("x[[1]]$", tt)) %>% eval()) %>%
-      simplify2array() %>% apply(1:3, mean)
+    xx <- lapply(cpars[gender], function(x) parse(text = paste0("x[[1]]$", tt)) %>% eval())
+    Reduce("+", xx) / length(xx)
   }
 
   cpars_out$M_ageArray <- mean_array("M_ageArray")
