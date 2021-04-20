@@ -146,12 +146,10 @@ optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, V, maxage, R0, SRrel, hs,
                     V_at_Age, maxage, R0x=R0[x], SRrelx=SRrel[x], hx=hs[x], opt=1,
                     plusgroup=plusgroup)
 
-  #UMSY <- exp(doopt$minimum)
-
   MSYs <- MSYCalcs(doopt$minimum, M_at_Age, Wt_at_Age, Mat_at_Age,
                    V_at_Age, maxage, R0x=R0[x], SRrelx=SRrel[x], hx=hs[x], opt=2,
                    plusgroup=plusgroup)
-
+  
   return(MSYs)
 }
 
@@ -202,23 +200,27 @@ MSYCalcs <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age,
 
   B0 <- sum(l0 * Wt_at_Age) # biomass-per-recruit
   BF <- sum(lx * Wt_at_Age)
-
-  hx[hx>0.999] <- 0.999
-  recK <- (4*hx)/(1-hx) # Goodyear compensation ratio
-  reca <- recK/Egg0
-
-  SPR <- EggF/Egg0
+  
+  SPR <- EggF/Egg0 
   # Calculate equilibrium recruitment at this SPR
   if (SRrelx ==1) { # BH SRR
-    recb <- (reca * Egg0 - 1)/(R0x*Egg0)
-    RelRec <- (reca * EggF-1)/(recb*EggF)
+    if(hx == 1 && R0x == 1) {
+      RelRec <- R0x
+    } else {
+      hx[hx>0.999] <- 0.999
+      recK <- (4*hx)/(1-hx) # Goodyear compensation ratio
+      reca <- recK/Egg0
+      
+      recb <- (reca * Egg0 - 1)/(R0x*Egg0)
+      RelRec <- (reca * EggF-1)/(recb*EggF)
+    }
   }
   if (SRrelx ==2) { # Ricker
     bR <- (log(5*hx)/(0.8*SB0))
     aR <- exp(bR*SB0)/(SB0/R0x)
     RelRec <- (log(aR*EggF/R0x))/(bR*EggF/R0x)
   }
-
+  
   RelRec[RelRec<0] <- 0
 
   Z_at_Age <- FF * V_at_Age + M_at_Age
@@ -240,6 +242,70 @@ MSYCalcs <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age,
              B0=B0 * R0x)
     return(out)
   }
+}
+
+#' @importFrom numDeriv grad
+YPRCalc <- function(M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup, boundsF) {
+  dYPR_logF0 <- numDeriv::grad(YPR_int, -10, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, 
+                               Mat_at_Age = Mat_at_Age, V_at_Age = V_at_Age, maxage = maxage, 
+                               plusgroup = plusgroup)
+  dYPR_F0 <- dYPR_logF0/exp(-10) # Chain rule to calculate derivative near origin, F = exp(-10)
+  
+  log_F01 <- uniroot(F01_solve, interval = log(boundsF), 
+                     M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
+                     V_at_Age = V_at_Age, maxage = maxage, plusgroup = plusgroup, dYPR_F0 = dYPR_F0)
+  
+  log_Fmax <- optimize(YPR_int, interval = log(boundsF), maximum = TRUE,
+                       M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
+                       V_at_Age = V_at_Age, maxage = maxage, plusgroup = plusgroup)
+  
+  c(YPR_F01 = exp(log_F01$root), YPR_Fmax = exp(log_Fmax$maximum))
+}
+
+YPR_int <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup) {
+  out <- MSYCalcs(logF, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
+                  V_at_Age = V_at_Age, maxage = maxage, R0x = 1, SRrelx = 1, hx = 1, opt = 2, plusgroup = plusgroup)
+  out["Yield"]
+}
+
+F01_solve <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup, dYPR_F0) {
+  dYPR_logF <- numDeriv::grad(YPR_int, logF, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
+                              V_at_Age = V_at_Age, maxage = maxage, plusgroup = plusgroup)
+  dYPR_F <- dYPR_logF/exp(logF) # Chain rule
+  dYPR_F - 0.1 * dYPR_F0
+}
+
+SPR_int <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup, SPR_target) {
+  out <- MSYCalcs(logF, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
+                  V_at_Age = V_at_Age, maxage = maxage, R0x = 1, SRrelx = 1, hx = 1, opt = 2, plusgroup = plusgroup)
+  out["SB_SB0"] - SPR_target
+}
+
+per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, V, maxage, 
+                               yr.ind=1, plusgroup=0, SPR_target = seq(0.2, 0.6, 0.05)) {
+  if (length(yr.ind)==1) {
+    M_at_Age <- M_ageArray[x,,yr.ind]
+    Wt_at_Age <- Wt_age[x,, yr.ind]
+    Mat_at_Age <- Mat_age[x,, yr.ind]
+    V_at_Age <- V[x,, yr.ind]
+  } else {
+    M_at_Age <- apply(M_ageArray[x,,yr.ind], 1, mean)
+    Wt_at_Age <- apply(Wt_age[x,, yr.ind], 1, mean)
+    Mat_at_Age <- apply(Mat_age[x,, yr.ind], 1, mean)
+    V_at_Age <- apply(V[x,, yr.ind], 1, mean)
+  }
+  
+  boundsF <- c(1E-8, 3)
+  
+  FSPR <- vapply(SPR_target, function(x) {
+    r <- uniroot(SPR_int, interval = log(boundsF), 
+                 M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
+                 V_at_Age = V_at_Age, maxage = maxage, plusgroup = plusgroup, SPR_target = x)
+    exp(r$root)
+  }, numeric(1))
+
+  FYPR <- YPRCalc(M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup, boundsF)   
+  return(list(FSPR, FYPR))
 }
 
 #' Calculate Reference Yield
