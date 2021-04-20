@@ -471,7 +471,13 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
     ind <- ind[!ind == ind2]
 
   CAL_Yrs <- sapply(strsplit(datasheet$Name[ind], " "), function(x) unlist(strsplit(x[2], " ")))
-  if(!all(CAL_Yrs %in% Data@Year)) stop("All CAL Years must be included in `Year`")
+
+  if(!all(CAL_Yrs %in% Data@Year)) {
+    CAL_Yrs <- sapply(strsplit(datasheet$Name[ind], "_"), function(x) unlist(strsplit(x[2], " ")))
+  }
+  if(!all(CAL_Yrs %in% Data@Year)) {
+    stop("All CAL Years must be included in `Year`. Entries must be formatted 'CAL YEAR' or 'CAL_YEAR'")
+  }
 
   NMids <- length(CAL_mids)
   Data@CAL <- array(NA, dim=c(1, Nyears, NMids))
