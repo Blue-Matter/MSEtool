@@ -1493,7 +1493,7 @@ setMethod("summary",
 
               df1$Year <- as.numeric(df1$Year)
 
-              yr.n <- df1 %>% dplyr::group_by(Year) %>% dplyr::summarise(n=sum(Freq))
+              yr.n <- df1 %>% dplyr::group_by(Year) %>% dplyr::summarise(n=sum(Freq, na.rm=T))
               yr.ind <- yr.n %>% dplyr::filter(n>0) %>% dplyr::select(Year)
 
               Years <- object@Year
