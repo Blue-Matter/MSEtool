@@ -501,8 +501,9 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   SSBMSY_y <- MSY_y # store SSBMSY for each sim, and year
   BMSY_y <- MSY_y # store BMSY for each sim, and year
   VBMSY_y <- MSY_y # store VBMSY for each sim, and year
-  F01_YPR_y <- MSY_y # store VBMSY for each sim, and year
-  Fmax_YPR_y <- MSY_y # store VBMSY for each sim, and year
+  F01_YPR_y <- MSY_y # store F01 for each sim, and year
+  Fmax_YPR_y <- MSY_y # store Fmax for each sim, and year
+  Fcrash_y <- MSY_y # store Fcrash for each sim, and year
   
   SPR_target <- seq(0.2, 0.6, 0.05) 
   F_SPR_y <- array(0, dim = c(nsim, length(SPR_target), nyears + proyears)) %>%
@@ -542,6 +543,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     F_SPR_y[,,y] <- sapply(per_recruit_F, getElement, 1) %>% t()
     F01_YPR_y[,y] <- sapply(per_recruit_F, function(x) x[[2]][1])
     Fmax_YPR_y[,y] <- sapply(per_recruit_F, function(x) x[[2]][2])
+    
+    Fcrash_y[,y] <- sapply(1:nsim, FcrashCalc, StockPars = StockPars, FleetPars = FleetPars, y = y) %>% t()
   }
 
   # --- MSY reference points ----
@@ -709,7 +712,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
       VBMSY=VBMSY_y,
       F01_YPR=F01_YPR_y,
       Fmax_YPR=Fmax_YPR_y,
-      F_SPR=F_SPR_y
+      F_SPR=F_SPR_y,
+      Fcrash=Fcrash_y
     ),
     Dynamic_Unfished=list(
       N0=apply(N_unfished, c(1,3), sum),
@@ -1519,7 +1523,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     # Hist@Ref <- list()
     # Hist@SampPars <- list()
   }
-
+  
   MSEout <- new("MSE",
                 Name = OM@Name,
                 nyears=nyears, proyears=proyears, nMPs=nMP,
