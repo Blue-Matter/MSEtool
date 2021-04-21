@@ -327,6 +327,24 @@ FcrashCalc <- function(x, StockPars, FleetPars, y) {
   exp(opt$minimum)
 }
 
+FmedCalc <- function(x, StockPars, FleetPars, y) {
+  SSB <- apply(StockPars$SSB[x,,,], 2, sum)
+  R <- apply(StockPars$N[x, 1, , ], 1, sum)
+  
+  RpS <- median(R/SSB)
+  
+  boundsF <- c(1e-8, 5)
+  opt <- optimize(optFreplacement, interval = log(boundsF), 
+                  M_at_Age = StockPars$M_ageArray[x,,y], 
+                  Wt_at_Age = StockPars$Wt_age[x,,y], 
+                  Mat_at_Age = StockPars$Mat_age[x,,y], 
+                  V_at_Age = FleetPars$V[x,,y],
+                  maxage = StockPars$maxage, 
+                  RpS_slope = RpS,
+                  plusgroup = StockPars$plusgroup)
+  exp(opt$minimum)
+}
+
 optFreplacement <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age,
                             maxage, RpS_slope, opt=1, plusgroup=0) {
   # Box 3.1 Walters & Martell 2004

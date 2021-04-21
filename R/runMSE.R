@@ -504,6 +504,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   F01_YPR_y <- MSY_y # store F01 for each sim, and year
   Fmax_YPR_y <- MSY_y # store Fmax for each sim, and year
   Fcrash_y <- MSY_y # store Fcrash for each sim, and year
+  Fmed_y <- MSY_y # store Fmed (F that generates the median historical SSB/R) for each sim, and year
   
   SPR_target <- seq(0.2, 0.6, 0.05) 
   F_SPR_y <- array(0, dim = c(nsim, length(SPR_target), nyears + proyears)) %>%
@@ -545,6 +546,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     Fmax_YPR_y[,y] <- sapply(per_recruit_F, function(x) x[[2]][2])
     
     Fcrash_y[,y] <- sapply(1:nsim, FcrashCalc, StockPars = StockPars, FleetPars = FleetPars, y = y) %>% t()
+    Fmed_y[,y] <- sapply(1:nsim, FmedCalc, StockPars = StockPars, FleetPars = FleetPars, y = y) %>% t()
   }
 
   # --- MSY reference points ----
@@ -713,7 +715,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
       F01_YPR=F01_YPR_y,
       Fmax_YPR=Fmax_YPR_y,
       F_SPR=F_SPR_y,
-      Fcrash=Fcrash_y
+      Fcrash=Fcrash_y,
+      Fmed=Fmed_y
     ),
     Dynamic_Unfished=list(
       N0=apply(N_unfished, c(1,3), sum),
@@ -988,7 +991,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   F01_YPR_y <- Hist@Ref$ByYear$F01_YPR
   Fmax_YPR_y <- Hist@Ref$ByYear$Fmax_YPR
   F_SPR_y <- Hist@Ref$ByYear$F_SPR
-  SPR_target <- F_SPR_y %>% dimnames() %>% getElement(2) %>% substr(3,4) %>% as.numeric() %>% `/`(100)
+  SPR_target <- F_SPR_y %>% dimnames() %>% getElement(2) %>% substr(3,4) %>% as.numeric()
+  SPR_target <- SPR_target/100
   
   # store MSY for each sim, MP and year
   MSY_y <- array(MSY_y, dim=c(nsim, nyears+proyears, nMP)) %>% aperm(c(1,3,2))
