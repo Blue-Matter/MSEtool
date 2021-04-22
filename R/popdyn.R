@@ -163,7 +163,7 @@ optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, V, maxage, R0, SRrel, hs,
 #' @param V_at_Age Vector of selectivity-at-age
 #' @param maxage Maximum age
 #' @param R0x R0 for this simulation
-#' @param SRrelx SRR type for this simulation
+#' @param SRrelx SRR type for this simulation. Use NA for per-recruit calculations, i.e. constant recruitment.
 #' @param hx numeric. Steepness value for this simulation
 #' @param opt Option. 1 = return -Yield, 2= return all MSY calcs
 #' @param plusgroup Integer. Default = 0 = no plus-group. Use 1 to include a plus-group
@@ -203,24 +203,23 @@ MSYCalcs <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age,
   
   SPR <- EggF/Egg0 
   # Calculate equilibrium recruitment at this SPR
-  if (SRrelx ==1) { # BH SRR
-    if(hx == 1 && R0x == 1) {
-      RelRec <- R0x
-    } else {
-      hx[hx>0.999] <- 0.999
+  if (is.na(SRrelx)) {
+    RelRec <- R0x
+  } else {
+    hx[hx>0.999] <- 0.999
+    if (SRrelx ==1) { # BH SRR
       recK <- (4*hx)/(1-hx) # Goodyear compensation ratio
       reca <- recK/Egg0
       
       recb <- (reca * Egg0 - 1)/(R0x*Egg0)
       RelRec <- (reca * EggF-1)/(recb*EggF)
     }
+    if (SRrelx ==2) { # Ricker
+      bR <- (log(5*hx)/(0.8*SB0))
+      aR <- exp(bR*SB0)/(SB0/R0x)
+      RelRec <- (log(aR*EggF/R0x))/(bR*EggF/R0x)
+    }
   }
-  if (SRrelx ==2) { # Ricker
-    bR <- (log(5*hx)/(0.8*SB0))
-    aR <- exp(bR*SB0)/(SB0/R0x)
-    RelRec <- (log(aR*EggF/R0x))/(bR*EggF/R0x)
-  }
-  
   RelRec[RelRec<0] <- 0
 
   Z_at_Age <- FF * V_at_Age + M_at_Age
@@ -264,7 +263,7 @@ YPRCalc <- function(M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup
 
 YPR_int <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup) {
   out <- MSYCalcs(logF, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
-                  V_at_Age = V_at_Age, maxage = maxage, R0x = 1, SRrelx = 1, hx = 1, opt = 2, plusgroup = plusgroup)
+                  V_at_Age = V_at_Age, maxage = maxage, R0x = 1, SRrelx = NA, hx = 1, opt = 2, plusgroup = plusgroup)
   out["Yield"]
 }
 
@@ -277,7 +276,7 @@ F01_solve <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, p
 
 SPR_int <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup, SPR_target) {
   out <- MSYCalcs(logF, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
-                  V_at_Age = V_at_Age, maxage = maxage, R0x = 1, SRrelx = 1, hx = 1, opt = 2, plusgroup = plusgroup)
+                  V_at_Age = V_at_Age, maxage = maxage, R0x = 1, SRrelx = NA, hx = 1, opt = 2, plusgroup = plusgroup)
   (out["SB_SB0"] - SPR_target)^2
 }
 
