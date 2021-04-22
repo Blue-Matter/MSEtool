@@ -214,8 +214,8 @@ plot.Growth <- function(Object, nsamp=3, nsim=100,
   if (3 %in% plot.num) {
     par(mfrow=c(1,3), oma=c(2,3,1,1), mar=c(3,2,1,1))
     fstYr <- Pars$Stock$Len_age[its,,1]
-    curYr <- Pars$Stock$Len_age[its,,nyears]
-    lstYr <- Pars$Stock$Len_age[its,,proyears+nyears]
+    curYr <- Pars$Stock$Len_age[its,,List$nyears]
+    lstYr <- Pars$Stock$Len_age[its,,List$proyears+List$nyears]
     MaxL <- max(Pars$Stock$Len_age)
     maxage <- Pars$Stock$maxage
     matplot(0:maxage, t(fstYr), type="l", bty="l", main="First historical year", ylim=c(0, MaxL),
@@ -279,7 +279,7 @@ plot.Maturity <- function(Object, nsamp=3, nsim=100,
             lwd=plotPars$lwd, lty=1,
             ylab="Probability", xlab="", ylim=c(0,1), xpd=NA, cex.lab=plotPars$cex.lab, las=1)
 
-    matplot(0:maxage, t(Pars$Stock$Mat_age[its,,nyears]), type="l", bty="l",
+    matplot(0:maxage, t(Pars$Stock$Mat_age[its,,List$nyears]), type="l", bty="l",
             main="First Year", lwd=plotPars$lwd,
             lty=1, axes=FALSE, xlim=c(0, max(Pars$Stock$maxage)), ylab="",
             xlab="", ylim=c(0,1), xpd=NA, cex.lab=plotPars$cex.lab, las=1)
@@ -287,7 +287,7 @@ plot.Maturity <- function(Object, nsamp=3, nsim=100,
     axis(side=2, labels=FALSE)
 
     # last historical year
-    yr <- nyears
+    yr <- List$nyears
     slope <- log(19)/(Pars$Stock$L95array[,yr]-Pars$Stock$L50array[,yr])
     Ls <- seq(0, to=max(Pars$Stock$Linfarray[its,]), length.out=200)
     maxage <- Pars$Stock$maxage
@@ -298,7 +298,7 @@ plot.Maturity <- function(Object, nsamp=3, nsim=100,
             ylab="Probability", xlab="", ylim=c(0,1), xpd=NA,
             cex.lab=plotPars$cex.lab, las=1)
 
-    matplot(0:maxage, t(Pars$Stock$Mat_age[its,,nyears]), type="l", bty="l",
+    matplot(0:maxage, t(Pars$Stock$Mat_age[its,,List$nyears]), type="l", bty="l",
             main="Last Historical Year", lwd=plotPars$lwd,
             lty=1, axes=FALSE, xlim=c(0, max(Pars$Stock$maxage)), ylab="",
             xlab="", ylim=c(0,1), xpd=NA, cex.lab=plotPars$cex.lab, las=1)
@@ -306,7 +306,7 @@ plot.Maturity <- function(Object, nsamp=3, nsim=100,
     axis(side=2, labels=FALSE)
 
     # last projection year
-    yr <- nyears + proyears
+    yr <- List$nyears + List$proyears
     slope <- log(19)/(Pars$Stock$L95array[,yr]-Pars$Stock$L50array[,yr])
     Ls <- seq(0, to=max(Pars$Stock$Linfarray[its,]), length.out=200)
     maxage <- Pars$Stock$maxage
@@ -365,13 +365,13 @@ plot.NaturalMortality <- function(Object, nsamp=3, nsim=100,
     mtext(side=3, "First historical year", cex=0.8, line=-1)
     mtext(side=1, "Age", line=2, cex=plotPars$cex.lab)
 
-    matplot(0:maxage, t(Pars$Stock$M_ageArray[its,,nyears]), type="l", lty=1, bty="l",
+    matplot(0:maxage, t(Pars$Stock$M_ageArray[its,,List$nyears]), type="l", lty=1, bty="l",
             main="M-at-age", lwd=plotPars$lwd, ylim=lims, axes=FALSE,
             ylab="", xlab='', cex.lab=plotPars$cex.lab)
     mtext(side=3, "Last historical year", cex=0.8, line=-1)
     axis(side=1)
     mtext(side=1, "Age", line=2, cex=plotPars$cex.lab)
-    matplot(0:maxage, t(Pars$Stock$M_ageArray[its,,nyears+proyears]), type="l", lty=1,
+    matplot(0:maxage, t(Pars$Stock$M_ageArray[its,,List$nyears+List$proyears]), type="l", lty=1,
             bty="l", lwd=plotPars$lwd, ylim=lims, axes=FALSE,
             ylab="", xlab='', cex.lab=plotPars$cex.lab)
     mtext(side=3, "Last projected year", cex=0.8, line=-1)
@@ -390,15 +390,15 @@ plot.NaturalMortality <- function(Object, nsamp=3, nsim=100,
     mtext(side=3, "First historical year", cex=0.8, line=-1)
     mtext(side=1, "Length", line=2, cex=plotPars$cex.lab)
 
-    matplot(t(Pars$Stock$Len_age[its,,nyears]), t(Pars$Stock$M_ageArray[its,,nyears]),
+    matplot(t(Pars$Stock$Len_age[its,,List$nyears]), t(Pars$Stock$M_ageArray[its,,List$nyears]),
             type="l", lty=1, bty="l", main="M-at-length", lwd=plotPars$lwd, ylim=lims,
             xlim=xlims, axes=FALSE, ylab="", xlab="", cex.lab=plotPars$cex.lab)
     axis(side=1)
     mtext(side=1, "Length", line=2, cex=plotPars$cex.lab)
     mtext(side=3, "Last historical year", cex=0.8, line=-1)
 
-    matplot(t(Pars$Stock$Len_age[its,,nyears+proyears]),
-            t(Pars$Stock$M_ageArray[its,,nyears+proyears]),
+    matplot(t(Pars$Stock$Len_age[its,,List$nyears+List$proyears]),
+            t(Pars$Stock$M_ageArray[its,,List$nyears+List$proyears]),
             type="l", lty=1, bty="l", lwd=plotPars$lwd, ylim=lims,
             axes=FALSE, xlim=xlims, ylab="", xlab="", cex.lab=plotPars$cex.lab)
 
