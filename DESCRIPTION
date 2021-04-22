@@ -22,6 +22,7 @@ Imports:
     methods,
     grDevices,
     ggplot2,
+    numDeriv,
     parallel,
     Rcpp,
     stats,

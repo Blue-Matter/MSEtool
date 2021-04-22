@@ -66,6 +66,11 @@ matrix dimensions \code{c(nsim, nyears+proyears+maxage)}
 \item SSBMSY: Spawning stock biomass corresponding with asymptotic MSY
 \item BMSY: total biomass corresponding with asymptotic MSY
 \item VBMSY: Vulnerable biomass corresponding with asymptotic MSY
+\item F01: Fishing mortality where the change in yield per recruit is 10\% of that at F = 0
+\item Fmax: Fishing mortality that maximizes yield per recruit
+\item F_SPR: Fishing mortality corresponding to spawning potential ratio of 20 - 60\% in increments of 5\%; array dimensions \code{c(nsim, 9, nyears+proyears)}
+\item Fcrash: Fishing mortality corresponding to the recruits-per-spawner at the origin of the stock-recruit relationship
+\item Fmed: Fishing mortality corresponding to the median recruits-per-spawner in the historical period
 }
 \item Dynamic_Unfished: A named list with dynamic unfished reference points for each simulation and year:
 \itemize{
