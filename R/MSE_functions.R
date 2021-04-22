@@ -517,10 +517,28 @@ Sub <- function(MSEobj, MPs = NULL, sims = NULL, years = NULL) {
   SubRefPoint <- MSEobj@RefPoint
   for (i in 1:length(SubRefPoint)) {
     if ('array' %in% class(SubRefPoint[[i]])) {
-      SubRefPoint[[i]] <- SubRefPoint[[i]][SubIts, SubMPs, c(1:MSEobj@nyears, MSEobj@nyears+Years), drop=FALSE]
+      DD <- dim(SubRefPoint[[i]])
+      if (length(DD) ==3) {
+        SubRefPoint[[i]] <- SubRefPoint[[i]][SubIts, SubMPs, c(1:MSEobj@nyears, MSEobj@nyears+Years), drop=FALSE]
+      } else if (length(DD) ==4) {
+        SubRefPoint[[i]] <- SubRefPoint[[i]][SubIts, SubMPs, , c(1:MSEobj@nyears, MSEobj@nyears+Years), drop=FALSE]
+      } else {
+        warning('Cannot subset MSEobj@RefPoint$', names( MSEobj@RefPoint)[[i]])
+        SubRefPoint[[i]] <- SubRefPoint[[i]]
+      }
+
     } else if ('list' %in% class(SubRefPoint[[i]])) {
         for (j in names(SubRefPoint[[i]])) {
-          SubRefPoint[[i]][[j]] <- SubRefPoint[[i]][[j]][SubIts, c(1:MSEobj@nyears, MSEobj@nyears+Years), drop=FALSE]
+          DD <- dim(SubRefPoint[[i]][[j]])
+          if (length(DD)==2) {
+            SubRefPoint[[i]][[j]] <- SubRefPoint[[i]][[j]][SubIts, c(1:MSEobj@nyears, MSEobj@nyears+Years), drop=FALSE]
+          } else if (length(DD)==3) {
+            SubRefPoint[[i]][[j]] <- SubRefPoint[[i]][[j]][SubIts, , c(1:MSEobj@nyears, MSEobj@nyears+Years), drop=FALSE]
+          } else {
+            warning('Cannot subset MSEobj@RefPoint$', names( MSEobj@RefPoint)[[i]], '$', j)
+            SubRefPoint[[i]][[j]] <- SubRefPoint[[i]][[j]]
+          }
+
         }
     }
 
