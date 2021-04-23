@@ -505,11 +505,11 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   Fmax_YPR_y <- MSY_y # store Fmax for each sim, and year
   Fcrash_y <- MSY_y # store Fcrash for each sim, and year
   Fmed_y <- MSY_y # store Fmed (F that generates the median historical SSB/R) for each sim, and year
-  
-  SPR_target <- seq(0.2, 0.6, 0.05) 
+
+  SPR_target <- seq(0.2, 0.6, 0.05)
   F_SPR_y <- array(0, dim = c(nsim, length(SPR_target), nyears + proyears)) %>%
     structure(dimnames = list(NULL, paste0("F_", 100*SPR_target, "%"), NULL)) #array of F-SPR% by sim, SPR%, year
-  
+
   if(!silent) message("Calculating MSY reference points for each year")
   # average life-history parameters over ageM years
 
@@ -530,8 +530,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     SSBMSY_y[,y] <- MSYrefsYr[3,]
     BMSY_y[,y] <- MSYrefsYr[6,]
     VBMSY_y[,y] <- MSYrefsYr[7,]
-    
-    per_recruit_F <- lapply(1:nsim, per_recruit_F_calc, 
+
+    per_recruit_F <- lapply(1:nsim, per_recruit_F_calc,
                             StockPars$M_ageArray,
                             StockPars$Wt_age,
                             StockPars$Mat_age,
@@ -540,11 +540,11 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                             yr.ind=y,
                             plusgroup=StockPars$plusgroup,
                             SPR_target=SPR_target)
-    
+
     F_SPR_y[,,y] <- sapply(per_recruit_F, getElement, 1) %>% t()
     F01_YPR_y[,y] <- sapply(per_recruit_F, function(x) x[[2]][1])
     Fmax_YPR_y[,y] <- sapply(per_recruit_F, function(x) x[[2]][2])
-    
+
     Fcrash_y[,y] <- sapply(1:nsim, FcrashCalc, StockPars = StockPars, FleetPars = FleetPars, y = y) %>% t()
     Fmed_y[,y] <- sapply(1:nsim, FmedCalc, StockPars = StockPars, FleetPars = FleetPars, y = y) %>% t()
   }
@@ -993,7 +993,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   F_SPR_y <- Hist@Ref$ByYear$F_SPR
   SPR_target <- F_SPR_y %>% dimnames() %>% getElement(2) %>% substr(3,4) %>% as.numeric()
   SPR_target <- SPR_target/100
-  
+
   # store MSY for each sim, MP and year
   MSY_y <- array(MSY_y, dim=c(nsim, nyears+proyears, nMP)) %>% aperm(c(1,3,2))
   FMSY_y <- array(FMSY_y, dim=c(nsim, nyears+proyears, nMP)) %>% aperm(c(1,3,2))
@@ -1272,12 +1272,12 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         MSY_y[,mm,y1] <- MSYrefsYr[1, ]
         FMSY_y[,mm,y1] <- MSYrefsYr[2,]
         SSBMSY_y[,mm,y1] <- MSYrefsYr[3,]
-        
+
         per_recruit_F <- lapply(1:nsim, per_recruit_F_calc, StockPars$M_ageArray, StockPars$Wt_age,
-                                StockPars$Mat_age, V_P, StockPars$maxage, 
+                                StockPars$Mat_age, V_P, StockPars$maxage,
                                 yr.ind=y1, plusgroup=StockPars$plusgroup,
                                 SPR_target=SPR_target)
-        F_SPR_y[,,mm,y1] <- sapply(per_recruit_F, getElement, 1) %>% t()
+        F_SPR_y[,mm,,y1] <- sapply(per_recruit_F, getElement, 1) %>% t()
         F01_YPR_y[,mm,y1] <- sapply(per_recruit_F, function(x) x[[2]][1])
         Fmax_YPR_y[,mm,y1] <- sapply(per_recruit_F, function(x) x[[2]][2])
       }
@@ -1527,7 +1527,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     # Hist@Ref <- list()
     # Hist@SampPars <- list()
   }
-  
+
   MSEout <- new("MSE",
                 Name = OM@Name,
                 nyears=nyears, proyears=proyears, nMPs=nMP,
