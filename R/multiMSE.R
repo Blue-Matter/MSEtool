@@ -444,47 +444,68 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   } # end of SexPars loop
 
   # --- Optimize catchability (q) to fit depletion ----
-  bounds <- c(0.0001, 15) # q bounds for optimizer
-  if(snowfall::sfIsRunning() & parallel){
-    exp.time <- (np * nf)/(9*ncpus) * nsim
-    exp.time <- round(exp.time,2)
+  optD <- TRUE
 
-    if(!silent)
-      message("Optimizing for user-specified depletion ",
-              'using parallel processing',
-              "(takes approximately [(nstocks x nfleets)/(9 x number of cores in cluster)]",
-              " minutes per simulation): about", exp.time, 'minutes')
+  # skip optimization if qs are provided in cpars
+  qs <- matrix(NA, nrow=nsim, ncol=np)
+  qfrac <- array(1, dim=c(nsim, np, nf))
+  for (p in 1:np) {
+    for (f in 1:nf) {
+      if(!is.null(SampCpars[[p]][[f]]$qs)) {
+        if (nf>1) stop('cpars$qs currently only working for one fleet')
+        optD <- FALSE
+        qs[,p] <- SampCpars[[p]][[f]]$qs
+        FleetPars[[p]][[f]]$qs<-qs[,p]*qfrac[,p,f]
 
-    out<-snowfall::sfLapply(1:nsim, getq_multi_MICE, StockPars, FleetPars,
-                            np,nf, nareas, maxage, nyears, N, VF, FretA,
-                            maxF=MOM@maxF, MPA, CatchFrac, bounds=bounds,
-                            tol=1E-6,Rel,SexPars, plusgroup=plusgroup, optVB=optVB)
-
-  }else{
-    exp.time <- (np * nf)/(9) * nsim
-    exp.time <- round(exp.time,2)
-
-    if(!silent)
-      message("Optimizing for user-specified depletion ",
-              'using single core',
-              "(takes approximately [(nstocks x nfleets)/9]",
-              " minutes per simulation): about", exp.time, 'minutes')
-
-    out<-lapply(1:nsim,getq_multi_MICE, StockPars, FleetPars, np, nf, nareas,
-                maxage, nyears, N, VF, FretA, maxF=MOM@maxF,
-                MPA,CatchFrac, bounds=bounds,tol=1E-6,Rel,SexPars,
-                plusgroup=plusgroup, optVB=optVB)
-
-  }
-
-  qs <- t(matrix(NIL(out,"qtot"),nrow=np))
-  qfrac <- aperm(array(NIL(out,"qfrac"),c(np,nf,nsim)),c(3,1,2))
-
-  for(p in 1:np){
-    for(f in 1:nf){
-      FleetPars[[p]][[f]]$qs<-qs[,p]*qfrac[,p,f]
+      }
     }
   }
+
+
+  bounds <- c(0.0001, 15) # q bounds for optimizer
+  if (optD) {
+    if(snowfall::sfIsRunning() & parallel){
+      exp.time <- (np * nf)/(9*ncpus) * nsim
+      exp.time <- round(exp.time,2)
+
+      if(!silent)
+        message("Optimizing for user-specified depletion ",
+                'using parallel processing',
+                "(takes approximately [(nstocks x nfleets)/(9 x number of cores in cluster)]",
+                " minutes per simulation): about", exp.time, 'minutes')
+
+      out<-snowfall::sfLapply(1:nsim, getq_multi_MICE, StockPars, FleetPars,
+                              np,nf, nareas, maxage, nyears, N, VF, FretA,
+                              maxF=MOM@maxF, MPA, CatchFrac, bounds=bounds,
+                              tol=1E-6,Rel,SexPars, plusgroup=plusgroup, optVB=optVB)
+
+    }else{
+      exp.time <- (np * nf)/(9) * nsim
+      exp.time <- round(exp.time,2)
+
+      if(!silent)
+        message("Optimizing for user-specified depletion ",
+                'using single core',
+                "(takes approximately [(nstocks x nfleets)/9]",
+                " minutes per simulation): about", exp.time, 'minutes')
+
+      out<-lapply(1:nsim,getq_multi_MICE, StockPars, FleetPars, np, nf, nareas,
+                  maxage, nyears, N, VF, FretA, maxF=MOM@maxF,
+                  MPA,CatchFrac, bounds=bounds,tol=1E-6,Rel,SexPars,
+                  plusgroup=plusgroup, optVB=optVB)
+
+    }
+
+    qs <- t(matrix(NIL(out,"qtot"),nrow=np))
+    qfrac <- aperm(array(NIL(out,"qfrac"),c(np,nf,nsim)),c(3,1,2))
+
+    for(p in 1:np){
+      for(f in 1:nf){
+        FleetPars[[p]][[f]]$qs<-qs[,p]*qfrac[,p,f]
+      }
+    }
+  }
+
 
   # --- Check that q optimizer has converged ----
   # bounds for q (catchability). Flag if bounded optimizer hits the bounds
@@ -1198,7 +1219,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   if (nMP < 1) stop("No valid MPs found", call.=FALSE)
 
   # ---- Check MPs ----
-  if (checkMPs)
+  if (checkMPs & class(MPs)!='MMP')
     CheckMPs(MPs=allMPs, silent=silent)
 
   # ---- Set Management Interval for each MP ----
@@ -1507,7 +1528,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     # - Combined MP -
     if(MPcond=="MMP"){
       # returns a hierarchical list object stock then fleet of Data objects
-      DataList<-getDataList(MSElist,mm)
+      # DataList<-getDataList(MSElist,mm)
+      DataList<-getDataList(MSElist,mm, StockPars, FleetPars)
       # returns a hierarchical list object stock then fleet then slot type of Rec
       MPRecs_A <- applyMMP(DataList, MP = MPs[mm], reps = 1, silent=TRUE)
       Data_p_A <- MPrecs_A_blank
