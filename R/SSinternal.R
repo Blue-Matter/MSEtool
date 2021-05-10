@@ -204,7 +204,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
 
   Stock <- new("Stock")
   Stock@Name <- ifelse(i == 1, "Female", "Male")
-  if(nrow(replist$movement) > 0) warning("Movement detected in SS model but not imported right now.")
+  if(!is.null(replist$movement) && nrow(replist$movement) > 0) warning("Movement detected in SS model but not imported right now.")
   Stock@Size_area_1 <- Stock@Frac_area_1 <- Stock@Prob_staying <- rep(0.5, 2)
 
   cpars_bio <- list()
@@ -268,7 +268,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
   if (any(!is.finite(Stock@AC))) Stock@AC <- c(0,0)
 
   # Length at age
-  if(replist$SS_versionNumeric == 3.30) { # Would do time-varying
+  if(replist$SS_versionNumeric != 3.30) { # Would do time-varying # AH set to != for Swordfish - not sure if this affects others
     Len_age_df <- dplyr::filter(replist$growthseries, Morph == i, Yr %in% mainyrs)
     Len_age <- do.call(rbind, lapply(0:Stock@maxage, function(x) parse(text = paste0("Len_age_df$`", x, "`")) %>% eval()))
     if(ncol(Len_age) == (nyears - 1)) Len_age <- cbind(Len_age, endgrowth$Len_Beg)
@@ -298,7 +298,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
     Stock@b <- replist$Growth_Parameters[i, ]$WtLen2
   }
 
-  if(replist$SS_versionNumeric == 3.30) {
+  if(replist$SS_versionNumeric != 3.30) { # changed to != for swordfish 2021
     Wt_age_df <- replist$mean_body_wt[replist$mean_body_wt$Morph == i, ]
     Wt_age_df <- Wt_age_df[vapply(mainyrs, match, numeric(1), table = Wt_age_df$Yr, nomatch = 0), ]
     Wt_age <- do.call(rbind, lapply(0:n_age, function(x) parse(text = paste0("Wt_age_df$`", x, "`")) %>% eval()))
@@ -420,6 +420,7 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   disc_mort <- replist$sizeselex[replist$sizeselex$Fleet == ff & replist$sizeselex$Sex == i &
                                    replist$sizeselex$Factor == "Mort" & replist$sizeselex$Yr == max(mainyrs), -c(1:5)] %>% unlist() %>%
     as.numeric() %>% unique()
+  disc_mort <- mean(disc_mort)
   if(length(disc_mort) > 1) warning("Discard mortality at age not supported.")
 
   #### Apical F
