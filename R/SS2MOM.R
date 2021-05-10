@@ -20,18 +20,8 @@
 #' @param Obs The observation model (class Obs). These functions do not update implementation parameters.
 #' @param Imp The implementation model (class Imp). These functions do not update implementation parameters.
 #' @param silent Whether to silence messages to the console.
-#' @param seasons_to_years Logical, when season is the time step, whether to convert OM from a seasonal model to annual model.
 #' @param Name The name of the operating model
 #' @param Source Reference to assessment documentation e.g. a url
-#' @param Author Who did the assessment
-#' @param report Logical, if TRUE, the function will run \link{runMSE} to generate the Hist object from the operating model
-#' to compare against SS output. A markdown report will be generated.
-#' @param filename If \code{report = TRUE}, character string for the name of the markdown and HTML files.
-#' @param dir If \code{report = TRUE}, the directory in which the markdown and HTML files will be saved.
-#' @param open_file If \code{report = TRUE}, whether the HTML document is opened after it is rendered.
-#' @param gender An integer that indexes the sex for importing life history parameters (1 = usually female, 2 = usually male, 1:2 = mean across both sexes).
-#' Only used for \code{SS2OM} only in a 2-sex model.
-#' @param x For \code{plot_SS2OM}, an object of either class \linkS4class{OM} or \linkS4class{Hist}.
 #' @param ... Arguments to pass to \link[r4ss]{SS_output}.
 #' @note Currently tested on r4ss version 1.38.1-40.0 and SS 3.30.14.
 #' @return SS2MOM returns an object of class \linkS4class{MOM}. SS2OM returns an object of class \linkS4class{OM}.

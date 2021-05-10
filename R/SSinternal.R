@@ -710,14 +710,19 @@ SS_seasonalyears_to_annual <- function(OM, SSdir, ...) {
   OM2@nyears <- OM2@CurrentYr <- max(year_frac$true_year)
   OM2@maxage <- max(age_frac$true_age)
 
-  avg <- c("M_ageArray", "Wt_age", "Len_age", "LatASD", "Mat_age", "V")
+  avg <- c("M_ageArray", "Wt_age", "Len_age", "LatASD", "Mat_age", "V", "SLarray", "retL", "Fdisc")
   OM2@cpars[match(avg, names(OM2@cpars))] <-
     lapply(avg, function(xx) parse(text = paste0("OM@cpars$", xx)) %>% eval() %>%
              cpars_season(FUN = mean, year_frac = year_frac, age_frac = age_frac, proyears = OM2@proyears))
 
   OM2@cpars$M_ageArray <- OM2@cpars$M_ageArray * nseas
-
-  OM2@cpars$V <- apply(OM2@cpars$V, c(1, 3), function(x) x/max(x)) %>% aperm(c(2, 1, 3))
+  
+  if(!is.null(OM2@cpars$V)) {
+    OM2@cpars$V <- apply(OM2@cpars$V, c(1, 3), function(x) x/max(x)) %>% aperm(c(2, 1, 3))
+  }
+  if(!is.null(OM2@cpars$SLarray)) {
+    OM2@cpars$SLarray <- apply(OM2@cpars$SLarray, c(1, 3), function(x) x/max(x)) %>% aperm(c(2, 1, 3))
+  }
   OM2@cpars$Find <- cpars_season_Find(OM@cpars$Find, year_frac)
   OM2@EffYears <- year_frac$true_year
   OM2@EffLower <- OM2@EffUpper <- OM2@cpars$Find[1, ]
