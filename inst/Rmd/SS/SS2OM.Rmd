@@ -86,6 +86,8 @@ if(replist$SS_versionNumeric == 3.30) {
                              list("Area", "Bio_Pattern", "Sex", "BirthSeas", "Settlement", "Platoon", "Morph", "Yr"),
                              variable.name = "Age", value.name = "N") %>% 
     dplyr::filter(Yr %in% mainyrs, Sex %in% gender)
+  N_at_age <- summarise(group_by(N_at_age, Yr, Age), N = sum(N)) # Sum over area, morphs, platoons, sex, etc.
+  N_at_age <- reshape2::acast(N_at_age, list("Yr", "Age"), value.var = "N")
 } else {
   
   R_main <- replist$timeseries$Yr %in% mainyrs
