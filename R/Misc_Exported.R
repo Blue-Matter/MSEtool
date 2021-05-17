@@ -78,6 +78,15 @@ avail <- function(classy, package=NULL, msg=TRUE) {
       MSEextra_funs <- get_funcs('MSEextra', classy, msg)
       temp <- c(temp, MSEextra_funs)
     }
+    
+    packagex <- package[!package %in% packages]
+    if (length(packagex)>0) {
+      other <- sapply(1:length(packagex), function(i)
+        get_funcs(packagex[i], classy, msg))  
+      other <- unlist(other)
+      temp <- c(temp, other)
+    }
+    
     if (length(temp) < 1) stop("No objects of class '", classy, "' found", call. = FALSE)
     return(unique(temp))
   }
