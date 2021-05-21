@@ -620,7 +620,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     lines(c(-10,10),c(-10,10))
   }
 
-  # --- Calculate per-recruit reference points
+  # ---- Calculate per-recruit reference points ----
   if (!silent) message("Calculating per-recruit reference points")
   for (y in 1:(nyears+proyears)) {
     per_recruit_F <- lapply(1:nsim, per_recruit_F_calc,
