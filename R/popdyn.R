@@ -254,41 +254,16 @@ MSYCalcs <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age,
   }
 }
 
-#' @importFrom numDeriv grad
-YPRCalc <- function(M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup, boundsF) {
-  dYPR_logF0 <- numDeriv::grad(YPR_int, -10, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age,
-                               Mat_at_Age = Mat_at_Age, V_at_Age = V_at_Age, maxage = maxage,
-                               plusgroup = plusgroup)
-  dYPR_F0 <- dYPR_logF0/exp(-10) # Chain rule to calculate derivative near origin, F = exp(-10)
-
-  log_F01 <- optimize(F01_solve, interval = log(boundsF),
-                      M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
-                      V_at_Age = V_at_Age, maxage = maxage, plusgroup = plusgroup, dYPR_F0 = dYPR_F0)
-
-  log_Fmax <- optimize(YPR_int, interval = log(boundsF), maximum = TRUE,
-                       M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
-                       V_at_Age = V_at_Age, maxage = maxage, plusgroup = plusgroup)
-
-  c(YPR_F01 = exp(log_F01$minimum), YPR_Fmax = exp(log_Fmax$maximum))
-}
-
 YPR_int <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup) {
   out <- MSYCalcs(logF, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
                   V_at_Age = V_at_Age, maxage = maxage, R0x = 1, SRrelx = NA, hx = 1, opt = 2, plusgroup = plusgroup)
   out["Yield"]
 }
 
-F01_solve <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup, dYPR_F0) {
-  dYPR_logF <- numDeriv::grad(YPR_int, logF, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
-                              V_at_Age = V_at_Age, maxage = maxage, plusgroup = plusgroup)
-  dYPR_F <- dYPR_logF/exp(logF) # Chain rule
-  (dYPR_F - 0.1 * dYPR_F0)^2
-}
-
-SPR_int <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup, SPR_target) {
+SPR_int <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup) {
   out <- MSYCalcs(logF, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
                   V_at_Age = V_at_Age, maxage = maxage, R0x = 1, SRrelx = NA, hx = 1, opt = 2, plusgroup = plusgroup)
-  (out["SB_SB0"] - SPR_target)^2
+  out["SB_SB0"]
 }
 
 per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, V, maxage,
@@ -306,16 +281,21 @@ per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, V, maxage,
   }
 
   boundsF <- c(1E-8, 3)
-
-  FSPR <- vapply(SPR_target, function(x) {
-    r <- optimize(SPR_int, interval = log(boundsF),
-                  M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
-                  V_at_Age = V_at_Age, maxage = maxage, plusgroup = plusgroup, SPR_target = x)
-    exp(r$minimum)
-  }, numeric(1))
-
-  FYPR <- YPRCalc(M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup, boundsF)
-  return(list(FSPR, FYPR))
+  F_search <- seq(min(boundsF), max(boundsF), length.out = 50)
+  
+  SPR_search <- vapply(log(F_search), SPR_int, numeric(1),
+                       M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
+                       V_at_Age = V_at_Age, maxage = maxage, plusgroup = plusgroup)
+  FSPR <- vapply(SPR_target, function(xx) LinInterp(SPR_search, F_search, xlev = xx), numeric(1))
+  
+  YPR_search <- vapply(log(F_search), YPR_int, numeric(1),
+                       M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age, V_at_Age = V_at_Age, 
+                       maxage = maxage, plusgroup = plusgroup)
+  dYPR_dF <- (YPR_search[-1] - YPR_search[-length(YPR_search)])/(F_search[-1] - F_search[-length(F_search)])
+  F01 <- LinInterp(dYPR_dF, F_search[-length(YPR_search)], xlev = 0.1 * dYPR_dF[1])
+  Fmax <- F_search[which.max(YPR_search)]
+  
+  return(list(FSPR, FYPR = c(YPR_F01 = F01, YPR_Fmax = Fmax)))
 }
 
 FcrashCalc <- function(x, StockPars, FleetPars, y) {
