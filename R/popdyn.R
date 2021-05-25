@@ -336,40 +336,17 @@ FmedCalc <- function(x, StockPars, FleetPars, y) {
 }
 
 optFreplacement <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age,
-                            maxage, RpS_slope, opt=1, plusgroup=0) {
-  # Box 3.1 Walters & Martell 2004
-  n_age <- maxage + 1
-  FF <- exp(logF)
-  lx <- rep(1, n_age)
-  l0 <- c(1, exp(cumsum(-M_at_Age[1:(n_age-1)]))) # unfished survival
-
-  surv <- exp(-M_at_Age - FF * V_at_Age)
-  for (a in 2:n_age) {
-    lx[a] <- lx[a-1] * surv[a-1] # fished survival
-  }
-
-  if (plusgroup == 1) {
-    l0[length(l0)] <- l0[length(l0)]+l0[length(l0)]*exp(-M_at_Age[length(l0)])/(1-exp(-M_at_Age[length(l0)]))
-    lx[length(lx)] <- lx[length(lx)]+lx[length(lx)]*exp(-M_at_Age[length(lx)])/(1-exp(-M_at_Age[length(lx)]))
-  }
-
-  Egg0 <- sum(l0 * Wt_at_Age * Mat_at_Age) # unfished egg-per-recruit (assuming fecundity proportional to weight)
-  EggF <- sum(lx * Wt_at_Age * Mat_at_Age) # fished egg-per-recruit (assuming fecundity proportional to weight)
-
-  vB0 <- sum(l0 * Wt_at_Age * V_at_Age) # unfished and fished vuln. biomass per-recruit
-  vBF <- sum(lx * Wt_at_Age * V_at_Age)
-
-  SB0 <- sum(l0 * Wt_at_Age * Mat_at_Age) # spawning biomas per-recruit - same as eggs atm
-  SBF <- sum(lx * Wt_at_Age * Mat_at_Age)
-
-  B0 <- sum(l0 * Wt_at_Age) # biomass-per-recruit
-  BF <- sum(lx * Wt_at_Age)
-
-  SPR <- EggF/Egg0
+                            maxage, RpS_slope, opt = 1, plusgroup=0) {
+  
+  out <- MSYCalcs(logF, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
+                  V_at_Age = V_at_Age, maxage = maxage, R0x = 1, SRrelx = NA, hx = 1,
+                  opt = 2, plusgroup = plusgroup)
+  RpS_F <- out["RelRec"]/out["SB"]
+  
   if(opt==1) {
-    return((1/EggF - RpS_slope)^2)
+    return((RpS_F - RpS_slope)^2)
   } else {
-    return(SPR)
+    return(RpS_F)
   }
 }
 
