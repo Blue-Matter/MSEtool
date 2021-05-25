@@ -189,15 +189,17 @@ MSYCalcs <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age,
   FF <- exp(logF)
   lx <- rep(1, n_age)
   l0 <- c(1, exp(cumsum(-M_at_Age[1:(n_age-1)]))) # unfished survival
-
-  surv <- exp(-M_at_Age - FF * V_at_Age)
+  
+  F_at_Age <- FF * V_at_Age
+  Z_at_Age <- M_at_Age + F_at_Age
+  surv <- exp(-Z_at_Age)
   for (a in 2:n_age) {
     lx[a] <- lx[a-1] * surv[a-1] # fished survival
   }
 
   if (plusgroup == 1) {
-    l0[length(l0)] <- l0[length(l0)]+l0[length(l0)]*exp(-M_at_Age[length(l0)])/(1-exp(-M_at_Age[length(l0)]))
-    lx[length(lx)] <- lx[length(lx)]+lx[length(lx)]*exp(-M_at_Age[length(lx)])/(1-exp(-M_at_Age[length(lx)]))
+    l0[n_age] <- l0[n_age]+l0[n_age]*exp(-M_at_Age[n_age])/(1-exp(-M_at_Age[n_age]))
+    lx[n_age] <- lx[n_age]+lx[n_age]*exp(-Z_at_Age[n_age])/(1-exp(-Z_at_Age[n_age]))
   }
 
   Egg0 <- sum(l0 * Wt_at_Age * Mat_at_Age) # unfished egg-per-recruit (assuming fecundity proportional to weight)
@@ -233,8 +235,7 @@ MSYCalcs <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age,
   }
   RelRec[RelRec<0] <- 0
 
-  Z_at_Age <- FF * V_at_Age + M_at_Age
-  YPR <- sum(lx * Wt_at_Age * FF * V_at_Age * (1 - exp(-Z_at_Age))/Z_at_Age)
+  YPR <- sum(lx * Wt_at_Age * F_at_Age * (1 - exp(-Z_at_Age))/Z_at_Age)
   Yield <- YPR * RelRec
 
   if (opt == 1)  return(-Yield)
