@@ -2,6 +2,9 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 ## MSEtool 3.0.3.9999 Development Version
 
+### Fixes
+- fix the plus-group calculations in `popdynOneTScpp`
+
 ### New additions
 - F_crash, F_med, and other reference points have been added to `Hist@Ref$ByYear`
 - can now optimize for depletion in terms of SB/SBMSY with `control$D <- 'SBMSY'`
