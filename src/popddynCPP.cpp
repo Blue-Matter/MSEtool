@@ -18,7 +18,7 @@ using namespace Rcpp;
 //[[Rcpp::export]]
 arma::mat popdynOneTScpp(double nareas, double maxage,
                          NumericMatrix Ncurr,  Rcpp::NumericMatrix Zcurr,
-                         int plusgroup=0) {
+                         int plusgroup=1) {
 
   int n_age = maxage + 1;
   arma::mat Nnext(n_age, nareas);
@@ -32,9 +32,8 @@ arma::mat popdynOneTScpp(double nareas, double maxage,
     }
 
     if (plusgroup > 0) {
-      Nnext(maxage, A) += Nnext(maxage, A) * exp(-Zcurr(maxage, A))/(1-exp(-Zcurr(maxage, A))); // Total mortality
+      Nnext(maxage, A) += Ncurr(maxage, A) * exp(-Zcurr(maxage, A)); // Total mortality
     }
-
   }
 
   return Nnext;
