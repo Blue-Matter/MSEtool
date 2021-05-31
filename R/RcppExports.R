@@ -73,7 +73,7 @@ movfit_Rcpp <- function(par, prb, frac) {
 #' @author A. Hordyk
 #'
 #' @keywords internal
-popdynOneTScpp <- function(nareas, maxage, Ncurr, Zcurr, plusgroup = 0L) {
+popdynOneTScpp <- function(nareas, maxage, Ncurr, Zcurr, plusgroup = 1L) {
     .Call('_MSEtool_popdynOneTScpp', PACKAGE = 'MSEtool', nareas, maxage, Ncurr, Zcurr, plusgroup)
 }
 
