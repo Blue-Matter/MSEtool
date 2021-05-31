@@ -189,15 +189,17 @@ MSYCalcs <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age,
   FF <- exp(logF)
   lx <- rep(1, n_age)
   l0 <- c(1, exp(cumsum(-M_at_Age[1:(n_age-1)]))) # unfished survival
-
-  surv <- exp(-M_at_Age - FF * V_at_Age)
+  
+  F_at_Age <- FF * V_at_Age
+  Z_at_Age <- M_at_Age + F_at_Age
+  surv <- exp(-Z_at_Age)
   for (a in 2:n_age) {
     lx[a] <- lx[a-1] * surv[a-1] # fished survival
   }
 
   if (plusgroup == 1) {
-    l0[length(l0)] <- l0[length(l0)]+l0[length(l0)]*exp(-M_at_Age[length(l0)])/(1-exp(-M_at_Age[length(l0)]))
-    lx[length(lx)] <- lx[length(lx)]+lx[length(lx)]*exp(-M_at_Age[length(lx)])/(1-exp(-M_at_Age[length(lx)]))
+    l0[n_age] <- l0[n_age]+l0[n_age]*exp(-M_at_Age[n_age])/(1-exp(-M_at_Age[n_age]))
+    lx[n_age] <- lx[n_age]+lx[n_age]*exp(-Z_at_Age[n_age])/(1-exp(-Z_at_Age[n_age]))
   }
 
   Egg0 <- sum(l0 * Wt_at_Age * Mat_at_Age) # unfished egg-per-recruit (assuming fecundity proportional to weight)
@@ -233,8 +235,7 @@ MSYCalcs <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age,
   }
   RelRec[RelRec<0] <- 0
 
-  Z_at_Age <- FF * V_at_Age + M_at_Age
-  YPR <- sum(lx * Wt_at_Age * FF * V_at_Age * (1 - exp(-Z_at_Age))/Z_at_Age)
+  YPR <- sum(lx * Wt_at_Age * F_at_Age * (1 - exp(-Z_at_Age))/Z_at_Age)
   Yield <- YPR * RelRec
 
   if (opt == 1)  return(-Yield)
@@ -254,41 +255,16 @@ MSYCalcs <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age,
   }
 }
 
-#' @importFrom numDeriv grad
-YPRCalc <- function(M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup, boundsF) {
-  dYPR_logF0 <- numDeriv::grad(YPR_int, -10, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age,
-                               Mat_at_Age = Mat_at_Age, V_at_Age = V_at_Age, maxage = maxage,
-                               plusgroup = plusgroup)
-  dYPR_F0 <- dYPR_logF0/exp(-10) # Chain rule to calculate derivative near origin, F = exp(-10)
-
-  log_F01 <- optimize(F01_solve, interval = log(boundsF),
-                      M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
-                      V_at_Age = V_at_Age, maxage = maxage, plusgroup = plusgroup, dYPR_F0 = dYPR_F0)
-
-  log_Fmax <- optimize(YPR_int, interval = log(boundsF), maximum = TRUE,
-                       M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
-                       V_at_Age = V_at_Age, maxage = maxage, plusgroup = plusgroup)
-
-  c(YPR_F01 = exp(log_F01$minimum), YPR_Fmax = exp(log_Fmax$maximum))
-}
-
 YPR_int <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup) {
   out <- MSYCalcs(logF, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
                   V_at_Age = V_at_Age, maxage = maxage, R0x = 1, SRrelx = NA, hx = 1, opt = 2, plusgroup = plusgroup)
   out["Yield"]
 }
 
-F01_solve <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup, dYPR_F0) {
-  dYPR_logF <- numDeriv::grad(YPR_int, logF, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
-                              V_at_Age = V_at_Age, maxage = maxage, plusgroup = plusgroup)
-  dYPR_F <- dYPR_logF/exp(logF) # Chain rule
-  (dYPR_F - 0.1 * dYPR_F0)^2
-}
-
-SPR_int <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup, SPR_target) {
+SPR_int <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup) {
   out <- MSYCalcs(logF, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
                   V_at_Age = V_at_Age, maxage = maxage, R0x = 1, SRrelx = NA, hx = 1, opt = 2, plusgroup = plusgroup)
-  (out["SB_SB0"] - SPR_target)^2
+  out["SB_SB0"]
 }
 
 per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, V, maxage,
@@ -306,16 +282,21 @@ per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, V, maxage,
   }
 
   boundsF <- c(1E-8, 3)
-
-  FSPR <- vapply(SPR_target, function(x) {
-    r <- optimize(SPR_int, interval = log(boundsF),
-                  M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
-                  V_at_Age = V_at_Age, maxage = maxage, plusgroup = plusgroup, SPR_target = x)
-    exp(r$minimum)
-  }, numeric(1))
-
-  FYPR <- YPRCalc(M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup, boundsF)
-  return(list(FSPR, FYPR))
+  F_search <- seq(min(boundsF), max(boundsF), length.out = 50)
+  
+  SPR_search <- vapply(log(F_search), SPR_int, numeric(1),
+                       M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
+                       V_at_Age = V_at_Age, maxage = maxage, plusgroup = plusgroup)
+  FSPR <- vapply(SPR_target, function(xx) LinInterp(SPR_search, F_search, xlev = xx), numeric(1))
+  
+  YPR_search <- vapply(log(F_search), YPR_int, numeric(1),
+                       M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age, V_at_Age = V_at_Age, 
+                       maxage = maxage, plusgroup = plusgroup)
+  dYPR_dF <- (YPR_search[-1] - YPR_search[-length(YPR_search)])/(F_search[-1] - F_search[-length(F_search)])
+  F01 <- LinInterp(dYPR_dF, F_search[-length(YPR_search)], xlev = 0.1 * dYPR_dF[1])
+  Fmax <- F_search[which.max(YPR_search)]
+  
+  return(list(FSPR, FYPR = c(YPR_F01 = F01, YPR_Fmax = Fmax)))
 }
 
 FcrashCalc <- function(x, StockPars, FleetPars, y) {
@@ -356,40 +337,17 @@ FmedCalc <- function(x, StockPars, FleetPars, y) {
 }
 
 optFreplacement <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age,
-                            maxage, RpS_slope, opt=1, plusgroup=0) {
-  # Box 3.1 Walters & Martell 2004
-  n_age <- maxage + 1
-  FF <- exp(logF)
-  lx <- rep(1, n_age)
-  l0 <- c(1, exp(cumsum(-M_at_Age[1:(n_age-1)]))) # unfished survival
-
-  surv <- exp(-M_at_Age - FF * V_at_Age)
-  for (a in 2:n_age) {
-    lx[a] <- lx[a-1] * surv[a-1] # fished survival
-  }
-
-  if (plusgroup == 1) {
-    l0[length(l0)] <- l0[length(l0)]+l0[length(l0)]*exp(-M_at_Age[length(l0)])/(1-exp(-M_at_Age[length(l0)]))
-    lx[length(lx)] <- lx[length(lx)]+lx[length(lx)]*exp(-M_at_Age[length(lx)])/(1-exp(-M_at_Age[length(lx)]))
-  }
-
-  Egg0 <- sum(l0 * Wt_at_Age * Mat_at_Age) # unfished egg-per-recruit (assuming fecundity proportional to weight)
-  EggF <- sum(lx * Wt_at_Age * Mat_at_Age) # fished egg-per-recruit (assuming fecundity proportional to weight)
-
-  vB0 <- sum(l0 * Wt_at_Age * V_at_Age) # unfished and fished vuln. biomass per-recruit
-  vBF <- sum(lx * Wt_at_Age * V_at_Age)
-
-  SB0 <- sum(l0 * Wt_at_Age * Mat_at_Age) # spawning biomas per-recruit - same as eggs atm
-  SBF <- sum(lx * Wt_at_Age * Mat_at_Age)
-
-  B0 <- sum(l0 * Wt_at_Age) # biomass-per-recruit
-  BF <- sum(lx * Wt_at_Age)
-
-  SPR <- EggF/Egg0
+                            maxage, RpS_slope, opt = 1, plusgroup=0) {
+  
+  out <- MSYCalcs(logF, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
+                  V_at_Age = V_at_Age, maxage = maxage, R0x = 1, SRrelx = NA, hx = 1,
+                  opt = 2, plusgroup = plusgroup)
+  RpS_F <- out["RelRec"]/out["SB"]
+  
   if(opt==1) {
-    return((1/EggF - RpS_slope)^2)
+    return((RpS_F - RpS_slope)^2)
   } else {
-    return(SPR)
+    return(RpS_F)
   }
 }
 
