@@ -81,7 +81,7 @@ OM with one from another object." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.0.3.9993</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.0.3.9994</span>
       </span>
     </div>
 
@@ -176,19 +176,19 @@ OM with one from another object.</p>
 <span class='va'>OM</span> <span class='op'>&lt;-</span> <span class='fu'>MSEtool</span><span class='fu'>::</span><span class='va'><a href='testOM.html'>testOM</a></span>
 <span class='va'>OM2</span> <span class='op'>&lt;-</span> <span class='fu'>Replace</span><span class='op'>(</span><span class='va'>OM</span>, <span class='va'>Blue_shark</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>Replacing sub-model: Stock </span>
-#&gt; <span class='message'></span><span></span></div><div class='input'>
+#&gt; <span class='message'></span></span></div><div class='input'>
 <span class='co'># Replace Fleet</span>
 <span class='va'>OM</span> <span class='op'>&lt;-</span> <span class='fu'>MSEtool</span><span class='fu'>::</span><span class='va'><a href='testOM.html'>testOM</a></span>
 <span class='va'>OM2</span> <span class='op'>&lt;-</span> <span class='fu'>Replace</span><span class='op'>(</span><span class='va'>OM</span>, <span class='va'>Generic_DecE</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Replacing sub-model: Fleet </span>
-#&gt; <span class='message'></span><span></span></div><div class='input'>
+</div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>Replacing sub-model: Fleet </span>
+#&gt; <span class='message'></span></span></div><div class='input'>
 <span class='co'># Replace Fleet from another OM</span>
 <span class='va'>OM1</span> <span class='op'>&lt;-</span> <span class='fu'>new</span><span class='op'>(</span><span class='st'>"OM"</span>, <span class='va'>Albacore</span>, <span class='va'>Generic_DecE</span>, <span class='va'>Perfect_Info</span>, <span class='va'>Overages</span><span class='op'>)</span>
 <span class='va'>OM2</span> <span class='op'>&lt;-</span> <span class='fu'>new</span><span class='op'>(</span><span class='st'>"OM"</span>, <span class='va'>Blue_shark</span>, <span class='va'>Generic_IncE</span>, <span class='va'>Generic_Obs</span>, <span class='va'>Perfect_Imp</span><span class='op'>)</span>
 <span class='va'>OM1a</span> <span class='op'>&lt;-</span> <span class='fu'>Replace</span><span class='op'>(</span><span class='va'>OM1</span>, <span class='va'>OM2</span>, <span class='st'>"Fleet"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'></span><span style='color: #0000BB;'>Replacing sub-models: Fleet </span>
-#&gt; <span class='message'></span><span></span></div><div class='input'>
-</div></span></pre>
+</div><div class='output co'>#&gt; <span class='message'><span style='color: #0000BB;'>Replacing sub-models: Fleet </span>
+#&gt; <span class='message'></span></span></div><div class='input'>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
