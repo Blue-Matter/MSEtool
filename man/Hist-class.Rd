@@ -71,6 +71,7 @@ matrix dimensions \code{c(nsim, nyears+proyears+maxage)}
 \item F_SPR: Fishing mortality corresponding to spawning potential ratio of 20 - 60\% in increments of 5\%; array dimensions \code{c(nsim, 9, nyears+proyears)}
 \item Fcrash: Fishing mortality corresponding to the recruits-per-spawner at the origin of the stock-recruit relationship
 \item Fmed: Fishing mortality corresponding to the median recruits-per-spawner in the historical period
+\item SPRcrash: SPR corresponding to the recruits-per-spawner at the origin of the stock-recruit relationship
 }
 \item Dynamic_Unfished: A named list with dynamic unfished reference points for each simulation and year:
 \itemize{

@@ -6,6 +6,69 @@
 
 using namespace Rcpp;
 
+// vecminInd
+int vecminInd(NumericVector x);
+RcppExport SEXP _MSEtool_vecminInd(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(vecminInd(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// LinInterp_cpp
+double LinInterp_cpp(NumericVector x, NumericVector y, double xlev);
+RcppExport SEXP _MSEtool_LinInterp_cpp(SEXP xSEXP, SEXP ySEXP, SEXP xlevSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
+    Rcpp::traits::input_parameter< double >::type xlev(xlevSEXP);
+    rcpp_result_gen = Rcpp::wrap(LinInterp_cpp(x, y, xlev));
+    return rcpp_result_gen;
+END_RCPP
+}
+// MSYCalcs
+NumericVector MSYCalcs(double logF, NumericVector M_at_Age, NumericVector Wt_at_Age, NumericVector Mat_at_Age, NumericVector V_at_Age, int maxage, double R0x, int SRrelx, double hx, int opt, int plusgroup);
+RcppExport SEXP _MSEtool_MSYCalcs(SEXP logFSEXP, SEXP M_at_AgeSEXP, SEXP Wt_at_AgeSEXP, SEXP Mat_at_AgeSEXP, SEXP V_at_AgeSEXP, SEXP maxageSEXP, SEXP R0xSEXP, SEXP SRrelxSEXP, SEXP hxSEXP, SEXP optSEXP, SEXP plusgroupSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type logF(logFSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type M_at_Age(M_at_AgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Wt_at_Age(Wt_at_AgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Mat_at_Age(Mat_at_AgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type V_at_Age(V_at_AgeSEXP);
+    Rcpp::traits::input_parameter< int >::type maxage(maxageSEXP);
+    Rcpp::traits::input_parameter< double >::type R0x(R0xSEXP);
+    Rcpp::traits::input_parameter< int >::type SRrelx(SRrelxSEXP);
+    Rcpp::traits::input_parameter< double >::type hx(hxSEXP);
+    Rcpp::traits::input_parameter< int >::type opt(optSEXP);
+    Rcpp::traits::input_parameter< int >::type plusgroup(plusgroupSEXP);
+    rcpp_result_gen = Rcpp::wrap(MSYCalcs(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, R0x, SRrelx, hx, opt, plusgroup));
+    return rcpp_result_gen;
+END_RCPP
+}
+// Ref_int_cpp
+NumericMatrix Ref_int_cpp(NumericVector F_search, NumericVector M_at_Age, NumericVector Wt_at_Age, NumericVector Mat_at_Age, NumericVector V_at_Age, int SRrelx, int maxage, int plusgroup);
+RcppExport SEXP _MSEtool_Ref_int_cpp(SEXP F_searchSEXP, SEXP M_at_AgeSEXP, SEXP Wt_at_AgeSEXP, SEXP Mat_at_AgeSEXP, SEXP V_at_AgeSEXP, SEXP SRrelxSEXP, SEXP maxageSEXP, SEXP plusgroupSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type F_search(F_searchSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type M_at_Age(M_at_AgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Wt_at_Age(Wt_at_AgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Mat_at_Age(Mat_at_AgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type V_at_Age(V_at_AgeSEXP);
+    Rcpp::traits::input_parameter< int >::type SRrelx(SRrelxSEXP);
+    Rcpp::traits::input_parameter< int >::type maxage(maxageSEXP);
+    Rcpp::traits::input_parameter< int >::type plusgroup(plusgroupSEXP);
+    rcpp_result_gen = Rcpp::wrap(Ref_int_cpp(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, SRrelx, maxage, plusgroup));
+    return rcpp_result_gen;
+END_RCPP
+}
 // calcVatAge
 NumericMatrix calcVatAge(NumericMatrix len_at_age, NumericMatrix len_aa_sd, NumericMatrix sel_at_length, int n_age, int nyears, int proyears, NumericVector CAL_binsmid);
 RcppExport SEXP _MSEtool_calcVatAge(SEXP len_at_ageSEXP, SEXP len_aa_sdSEXP, SEXP sel_at_lengthSEXP, SEXP n_ageSEXP, SEXP nyearsSEXP, SEXP proyearsSEXP, SEXP CAL_binsmidSEXP) {
@@ -224,6 +287,10 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_MSEtool_vecminInd", (DL_FUNC) &_MSEtool_vecminInd, 1},
+    {"_MSEtool_LinInterp_cpp", (DL_FUNC) &_MSEtool_LinInterp_cpp, 3},
+    {"_MSEtool_MSYCalcs", (DL_FUNC) &_MSEtool_MSYCalcs, 11},
+    {"_MSEtool_Ref_int_cpp", (DL_FUNC) &_MSEtool_Ref_int_cpp, 8},
     {"_MSEtool_calcVatAge", (DL_FUNC) &_MSEtool_calcVatAge, 7},
     {"_MSEtool_combine", (DL_FUNC) &_MSEtool_combine, 1},
     {"_MSEtool_get_freq", (DL_FUNC) &_MSEtool_get_freq, 4},

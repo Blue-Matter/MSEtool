@@ -1,6 +1,6 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
-## MSEtool 3.0.3.9999 Development Version
+## MSEtool 3.0.3.9994 Development Version
 
 ### Fixes
 - fix the plus-group calculations in `popdynOneTScpp`
@@ -12,6 +12,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 ### Minor changes
 - add more informative messages when conditioning on real data
 - add conditioning on real data for `multiMSE`
+- MSY calculations now in  C++ for significant speed increase
 
 ## MSEtool 3.0.2
 

@@ -32,6 +32,7 @@ optQ(
   MPA,
   plusgroup,
   VB0c,
+  SBMSYc,
   control
 )
 }
@@ -89,6 +90,8 @@ optQ(
 \item{plusgroup}{Integer. Default = 0 = no plus-group. Use 1 to include a plus-group}
 
 \item{VB0c}{Unfished vulnerable biomass}
+
+\item{SBMSYc}{Spawning biomass at MSY for simulation x}
 
 \item{control}{List. Control parameters including \code{optVB=TRUE} to optimize
 for vulnerable biomass instead of SSB?}

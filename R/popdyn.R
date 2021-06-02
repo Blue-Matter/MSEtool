@@ -120,7 +120,7 @@ split.along.dim <- function(a, n) {
 }
 
 
-#' Internal wrapper function to calculate MSY reference points
+#' Internal wrapper function to calculate MSY reference points (now using MSYCalcs)
 #'
 #' @param x Simulation number
 #' @param M_ageArray Array of M-at-age
@@ -151,124 +151,29 @@ optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, V, maxage, R0, SRrel, hs,
     V_at_Age <- apply(V[x,, yr.ind], 1, mean)
   }
 
-  boundsF <- c(1E-8, 3)
+  boundsF <- c(1E-4, 3)
 
   doopt <- optimise(MSYCalcs, log(boundsF), M_at_Age, Wt_at_Age, Mat_at_Age,
-                    V_at_Age, maxage, R0x=R0[x], SRrelx=SRrel[x], hx=hs[x], opt=1,
-                    plusgroup=plusgroup)
+                     V_at_Age, maxage, R0[x], SRrel[x], hs[x], opt=1,
+                     plusgroup=plusgroup)
 
   MSYs <- MSYCalcs(doopt$minimum, M_at_Age, Wt_at_Age, Mat_at_Age,
-                   V_at_Age, maxage, R0x=R0[x], SRrelx=SRrel[x], hx=hs[x], opt=2,
+                   V_at_Age, maxage, R0[x], SRrel[x], hs[x], opt=2,
                    plusgroup=plusgroup)
 
   return(MSYs)
 }
 
 
-#' Internal function to calculate MSY Reference Points
-#'
-#' @param logF log fishing mortality
-#' @param M_at_Age Vector of M-at-age
-#' @param Wt_at_Age Vector of weight-at-age
-#' @param Mat_at_Age Vector of maturity-at-age
-#' @param V_at_Age Vector of selectivity-at-age
-#' @param maxage Maximum age
-#' @param R0x R0 for this simulation
-#' @param SRrelx SRR type for this simulation. Use NA for per-recruit calculations, i.e. constant recruitment.
-#' @param hx numeric. Steepness value for this simulation
-#' @param opt Option. 1 = return -Yield, 2= return all MSY calcs
-#' @param plusgroup Integer. Default = 0 = no plus-group. Use 1 to include a plus-group
-#' @return See `opt`
-#' @export
-#'
-#' @keywords internal
-MSYCalcs <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age,
-                     maxage, R0x, SRrelx, hx, opt=1, plusgroup=0) {
-  # Box 3.1 Walters & Martell 2004
-  n_age <- maxage + 1
-  FF <- exp(logF)
-  lx <- rep(1, n_age)
-  l0 <- c(1, exp(cumsum(-M_at_Age[1:(n_age-1)]))) # unfished survival
-  
-  F_at_Age <- FF * V_at_Age
-  Z_at_Age <- M_at_Age + F_at_Age
-  surv <- exp(-Z_at_Age)
-  for (a in 2:n_age) {
-    lx[a] <- lx[a-1] * surv[a-1] # fished survival
-  }
-
-  if (plusgroup == 1) {
-    l0[n_age] <- l0[n_age]+l0[n_age]*exp(-M_at_Age[n_age])/(1-exp(-M_at_Age[n_age]))
-    lx[n_age] <- lx[n_age]+lx[n_age]*exp(-Z_at_Age[n_age])/(1-exp(-Z_at_Age[n_age]))
-  }
-
-  Egg0 <- sum(l0 * Wt_at_Age * Mat_at_Age) # unfished egg-per-recruit (assuming fecundity proportional to weight)
-  EggF <- sum(lx * Wt_at_Age * Mat_at_Age) # fished egg-per-recruit (assuming fecundity proportional to weight)
-
-  vB0 <- sum(l0 * Wt_at_Age * V_at_Age) # unfished and fished vuln. biomass per-recruit
-  vBF <- sum(lx * Wt_at_Age * V_at_Age)
-
-  SB0 <- sum(l0 * Wt_at_Age * Mat_at_Age) # spawning biomas per-recruit - same as eggs atm
-  SBF <- sum(lx * Wt_at_Age * Mat_at_Age)
-
-  B0 <- sum(l0 * Wt_at_Age) # biomass-per-recruit
-  BF <- sum(lx * Wt_at_Age)
-
-  SPR <- EggF/Egg0
-  # Calculate equilibrium recruitment at this SPR
-  if (is.na(SRrelx)) {
-    RelRec <- R0x
-  } else {
-    hx[hx>0.999] <- 0.999
-    if (SRrelx ==1) { # BH SRR
-      recK <- (4*hx)/(1-hx) # Goodyear compensation ratio
-      reca <- recK/Egg0
-
-      recb <- (reca * Egg0 - 1)/(R0x*Egg0)
-      RelRec <- (reca * EggF-1)/(recb*EggF)
-    }
-    if (SRrelx ==2) { # Ricker
-      bR <- (log(5*hx)/(0.8*SB0))
-      aR <- exp(bR*SB0)/(SB0/R0x)
-      RelRec <- (log(aR*EggF/R0x))/(bR*EggF/R0x)
-    }
-  }
-  RelRec[RelRec<0] <- 0
-
-  YPR <- sum(lx * Wt_at_Age * F_at_Age * (1 - exp(-Z_at_Age))/Z_at_Age)
-  Yield <- YPR * RelRec
-
-  if (opt == 1)  return(-Yield)
-  if (opt == 2) {
-    out <- c(Yield=Yield,
-             F= FF,
-             SB = SBF * RelRec,
-             SB_SB0 = (SBF * RelRec)/(SB0 * R0x),
-             B_B0 = (BF * RelRec)/(B0 * R0x),
-             B = BF * RelRec,
-             VB = vBF * RelRec,
-             VB_VB0 = (vBF * RelRec)/(vB0 * R0x),
-             RelRec=RelRec,
-             SB0 = SB0 * R0x,
-             B0=B0 * R0x)
-    return(out)
-  }
-}
-
-YPR_int <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup) {
+Ref_int <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup) {
   out <- MSYCalcs(logF, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
-                  V_at_Age = V_at_Age, maxage = maxage, R0x = 1, SRrelx = NA, hx = 1, opt = 2, plusgroup = plusgroup)
-  out["Yield"]
-}
-
-SPR_int <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup) {
-  out <- MSYCalcs(logF, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
-                  V_at_Age = V_at_Age, maxage = maxage, R0x = 1, SRrelx = NA, hx = 1, opt = 2, plusgroup = plusgroup)
-  out["SB_SB0"]
+                  V_at_Age = V_at_Age, maxage = maxage, R0x = 1, SRrelx = 3, hx = 1, opt = 2, plusgroup = plusgroup)
+  out[c(1,4)]
 }
 
 per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, V, maxage,
-                               yr.ind=1, plusgroup=0, SPR_target = seq(0.2, 0.6, 0.05)) {
+                               yr.ind=1, plusgroup=0, SPR_target = seq(0.2, 0.6, 0.05),
+                               StockPars) {
   if (length(yr.ind)==1) {
     M_at_Age <- M_ageArray[x,,yr.ind]
     Wt_at_Age <- Wt_age[x,, yr.ind]
@@ -281,23 +186,81 @@ per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, V, maxage,
     V_at_Age <- apply(V[x,, yr.ind], 1, mean)
   }
 
-  boundsF <- c(1E-8, 3)
-  F_search <- seq(min(boundsF), max(boundsF), length.out = 50)
-  
-  SPR_search <- vapply(log(F_search), SPR_int, numeric(1),
-                       M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
-                       V_at_Age = V_at_Age, maxage = maxage, plusgroup = plusgroup)
-  FSPR <- vapply(SPR_target, function(xx) LinInterp(SPR_search, F_search, xlev = xx), numeric(1))
-  
-  YPR_search <- vapply(log(F_search), YPR_int, numeric(1),
-                       M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age, V_at_Age = V_at_Age, 
-                       maxage = maxage, plusgroup = plusgroup)
+  boundsF <- c(1E-3, 2)
+
+  F_search <- exp(seq(log(min(boundsF)), log(max(boundsF)), length.out = 50))
+
+  Ref_search <- Ref_int_cpp(F_search, M_at_Age = M_at_Age,
+                            Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
+                            V_at_Age = V_at_Age,
+                            StockPars$SRrel[x],
+                            maxage = maxage,
+                            plusgroup = plusgroup)
+
+  YPR_search <- Ref_search[1,]
+  SPR_search <- Ref_search[2,]
+  RPS <- Ref_search[3,]
+
+  FSPR <- vapply(SPR_target, function(xx)
+    LinInterp_cpp(SPR_search, F_search, xlev = xx), numeric(1))
+
   dYPR_dF <- (YPR_search[-1] - YPR_search[-length(YPR_search)])/(F_search[-1] - F_search[-length(F_search)])
-  F01 <- LinInterp(dYPR_dF, F_search[-length(YPR_search)], xlev = 0.1 * dYPR_dF[1])
+  F01 <- LinInterp_cpp(dYPR_dF, F_search[-length(YPR_search)], xlev = 0.1 * dYPR_dF[1])
   Fmax <- F_search[which.max(YPR_search)]
-  
-  return(list(FSPR, FYPR = c(YPR_F01 = F01, YPR_Fmax = Fmax)))
+
+  alpha <- 4 * StockPars$hs[x]/(1 - StockPars$hs[x])
+  SPRcrash <- alpha^-1
+
+  Fcrash <- LinInterp_cpp(SPR_search, F_search, xlev = SPRcrash)
+
+  SSB <- apply(StockPars$SSB[x,,,], 2, sum)
+  R <- apply(StockPars$N[x, 1, , ], 1, sum)
+
+  RpS <- median(R/SSB)
+  Fmed <- LinInterp_cpp(RPS, F_search, xlev = RpS)
+
+
+  return(list(FSPR, FYPR = c(YPR_F01 = F01, YPR_Fmax = Fmax,
+                             SPRcrash=SPRcrash, Fcrash=Fcrash,
+                             Fmed=Fmed)))
 }
+
+
+FmedCalc <- function(x, StockPars, FleetPars, y) {
+  SSB <- apply(StockPars$SSB[x,,,], 2, sum)
+  R <- apply(StockPars$N[x, 1, , ], 1, sum)
+
+  RpS <- median(R/SSB)
+
+  boundsF <- c(1e-3, 3)
+  opt <- optimize(optFreplacement, interval = log(boundsF),
+                  M_at_Age = StockPars$M_ageArray[x,,y],
+                  Wt_at_Age = StockPars$Wt_age[x,,y],
+                  Mat_at_Age = StockPars$Mat_age[x,,y],
+                  V_at_Age = FleetPars$V[x,,y],
+                  maxage = StockPars$maxage,
+                  RpS_slope = RpS,
+                  plusgroup = StockPars$plusgroup)
+  exp(opt$minimum)
+}
+
+optFreplacement <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age,
+                            maxage, RpS_slope, opt = 1, plusgroup=0) {
+
+  out <- MSYCalcs(logF, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age,
+                      Mat_at_Age = Mat_at_Age,
+                      V_at_Age = V_at_Age, maxage = maxage, R0x = 1,
+                      SRrelx = 1, hx = 1,
+                      opt = 2, plusgroup = plusgroup)
+  RpS_F <- out["RelRec"]/out["SB"]
+
+  if(opt==1) {
+    return((RpS_F - RpS_slope)^2)
+  } else {
+    return(RpS_F)
+  }
+}
+
 
 FcrashCalc <- function(x, StockPars, FleetPars, y) {
   boundsF <- c(1e-8, 5)
@@ -316,39 +279,6 @@ FcrashCalc <- function(x, StockPars, FleetPars, y) {
                   RpS_slope = alpha,
                   plusgroup = StockPars$plusgroup)
   exp(opt$minimum)
-}
-
-FmedCalc <- function(x, StockPars, FleetPars, y) {
-  SSB <- apply(StockPars$SSB[x,,,], 2, sum)
-  R <- apply(StockPars$N[x, 1, , ], 1, sum)
-
-  RpS <- median(R/SSB)
-
-  boundsF <- c(1e-8, 5)
-  opt <- optimize(optFreplacement, interval = log(boundsF),
-                  M_at_Age = StockPars$M_ageArray[x,,y],
-                  Wt_at_Age = StockPars$Wt_age[x,,y],
-                  Mat_at_Age = StockPars$Mat_age[x,,y],
-                  V_at_Age = FleetPars$V[x,,y],
-                  maxage = StockPars$maxage,
-                  RpS_slope = RpS,
-                  plusgroup = StockPars$plusgroup)
-  exp(opt$minimum)
-}
-
-optFreplacement <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age,
-                            maxage, RpS_slope, opt = 1, plusgroup=0) {
-  
-  out <- MSYCalcs(logF, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
-                  V_at_Age = V_at_Age, maxage = maxage, R0x = 1, SRrelx = NA, hx = 1,
-                  opt = 2, plusgroup = plusgroup)
-  RpS_F <- out["RelRec"]/out["SB"]
-  
-  if(opt==1) {
-    return((RpS_F - RpS_slope)^2)
-  } else {
-    return(RpS_F)
-  }
 }
 
 #' Calculate Reference Yield

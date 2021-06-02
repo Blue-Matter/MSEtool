@@ -2,7 +2,7 @@
 % Please edit documentation in R/popdyn.R
 \name{optMSY_eq}
 \alias{optMSY_eq}
-\title{Internal wrapper function to calculate MSY reference points}
+\title{Internal wrapper function to calculate MSY reference points (now using MSYCalcs)}
 \usage{
 optMSY_eq(
   x,
@@ -45,6 +45,6 @@ optMSY_eq(
 Results from \code{MSYCalcs}
 }
 \description{
-Internal wrapper function to calculate MSY reference points
+Internal wrapper function to calculate MSY reference points (now using MSYCalcs)
 }
 \keyword{internal}

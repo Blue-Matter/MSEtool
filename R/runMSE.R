@@ -316,6 +316,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   F01_YPR_y <- MSY_y # store F01 for each sim, and year
   Fmax_YPR_y <- MSY_y # store Fmax for each sim, and year
   Fcrash_y <- MSY_y # store Fcrash for each sim, and year
+  SPRcrash_y  <- MSY_y # store SPRcrash for each sim, and year
   Fmed_y <- MSY_y # store Fmed (F that generates the median historical SSB/R) for each sim, and year
 
   SPR_target <- seq(0.2, 0.6, 0.05)
@@ -327,14 +328,14 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
 
   for (y in 1:(nyears+proyears)) {
     MSYrefsYr <- sapply(1:nsim, optMSY_eq,
-                        StockPars$M_ageArray,
-                        StockPars$Wt_age,
-                        StockPars$Mat_age,
-                        FleetPars$V,
-                        StockPars$maxage,
-                        StockPars$R0,
-                        StockPars$SRrel,
-                        StockPars$hs,
+                        M_ageArray=StockPars$M_ageArray,
+                        Wt_age=StockPars$Wt_age,
+                        Mat_age=StockPars$Mat_age,
+                        V=FleetPars$V,
+                        maxage=StockPars$maxage,
+                        R0=StockPars$R0,
+                        SRrel=StockPars$SRrel,
+                        hs=StockPars$hs,
                         yr.ind=y,
                         plusgroup=StockPars$plusgroup)
     MSY_y[,y] <- MSYrefsYr[1, ]
@@ -342,7 +343,6 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     SSBMSY_y[,y] <- MSYrefsYr[3,]
     BMSY_y[,y] <- MSYrefsYr[6,]
     VBMSY_y[,y] <- MSYrefsYr[7,]
-
   }
 
   # --- MSY reference points ----
@@ -624,23 +624,23 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   if (!silent) message("Calculating per-recruit reference points")
   for (y in 1:(nyears+proyears)) {
     per_recruit_F <- lapply(1:nsim, per_recruit_F_calc,
-                            StockPars$M_ageArray,
-                            StockPars$Wt_age,
-                            StockPars$Mat_age,
-                            FleetPars$V,
-                            StockPars$maxage,
+                            M_ageArray=StockPars$M_ageArray,
+                            Wt_age=StockPars$Wt_age,
+                            Mat_age=StockPars$Mat_age,
+                            V=FleetPars$V,
+                            maxage=StockPars$maxage,
                             yr.ind=y,
                             plusgroup=StockPars$plusgroup,
-                            SPR_target=SPR_target)
+                            SPR_target=SPR_target,
+                            StockPars=StockPars)
 
     F_SPR_y[,,y] <- sapply(per_recruit_F, getElement, 1) %>% t()
     F01_YPR_y[,y] <- sapply(per_recruit_F, function(x) x[[2]][1])
     Fmax_YPR_y[,y] <- sapply(per_recruit_F, function(x) x[[2]][2])
-
-    Fcrash_y[,y] <- sapply(1:nsim, FcrashCalc, StockPars = StockPars, FleetPars = FleetPars, y = y) %>% t()
-    Fmed_y[,y] <- sapply(1:nsim, FmedCalc, StockPars = StockPars, FleetPars = FleetPars, y = y) %>% t()
+    SPRcrash_y[,y] <- sapply(per_recruit_F, function(x) x[[2]][3])
+    Fcrash_y[,y] <- sapply(per_recruit_F, function(x) x[[2]][4])
+    Fmed_y[,y] <- sapply(per_recruit_F, function(x) x[[2]][5])
   }
-
 
   # ---- Calculate Mean Generation Time ----
   MarrayArea <- replicate(nareas, StockPars$M_ageArray[,,1:nyears])
@@ -727,7 +727,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
       Fmax_YPR=Fmax_YPR_y,
       F_SPR=F_SPR_y,
       Fcrash=Fcrash_y,
-      Fmed=Fmed_y
+      Fmed=Fmed_y,
+      SPRcrash=SPRcrash_y
     ),
     Dynamic_Unfished=list(
       N0=apply(N_unfished, c(1,3), sum),
