@@ -8,6 +8,8 @@ The current version of the `MSEtool` package is available for download from [CRA
 ### New additions
 - F_crash, F_med, and other reference points have been added to `Hist@Ref$ByYear`
 - can now optimize for depletion in terms of SB/SBMSY with `control$D <- 'SBMSY'`
+- option to simulate CAL data including removals (retained + discards) with `OM@cpars$control$CAL="removals"`. 
+Default is to simulate only retained catch-at-length (default).
 
 ### Minor changes
 - add more informative messages when conditioning on real data
