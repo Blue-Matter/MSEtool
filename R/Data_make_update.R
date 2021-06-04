@@ -10,7 +10,8 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
                      nareas,
                      reps,
                      CurrentYr,
-                     silent=FALSE) {
+                     silent=FALSE,
+                     control=list()) {
 
   if(!silent) message("Simulating observed data")
 
@@ -129,18 +130,38 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
   Data@CAA <- simCAA(nsim, nyears, StockPars$maxage+1, Cret2, ObsPars$CAA_ESS, ObsPars$CAA_nsamp)
 
   # --- Catch-at-length ----
-  vn <- apply(N*Sample_Area$CAL[,,1:nyears,], c(1,2,3), sum) * FleetPars$retA[,,1:nyears]
-  # numbers at age in population that would be retained
-  vn <- aperm(vn, c(1,3, 2))
+  CALdone <- FALSE
+  if (!is.null(control$CAL)) {
+    if (control$CAL == 'removals') {
+      vn <- apply(N*Sample_Area$CAL[,,1:nyears,], c(1,2,3), sum) * FleetPars$V[,,1:nyears]
+      # numbers at age in population that would be removed
+      vn <- aperm(vn, c(1,3, 2))
 
-  CALdat <- simCAL(nsim, nyears, StockPars$maxage, ObsPars$CAL_ESS,
-                   ObsPars$CAL_nsamp, StockPars$nCALbins, StockPars$CAL_binsmid, StockPars$CAL_bins,
-                   vn, FleetPars$retL, StockPars$Linfarray,
-                   StockPars$Karray, StockPars$t0array, StockPars$LenCV)
+      CALdat <- simCAL(nsim, nyears, StockPars$maxage, ObsPars$CAL_ESS,
+                       ObsPars$CAL_nsamp, StockPars$nCALbins, StockPars$CAL_binsmid, StockPars$CAL_bins,
+                       vn, FleetPars$SLarray, StockPars$Linfarray,
+                       StockPars$Karray, StockPars$t0array, StockPars$LenCV)
+      CALdone <- TRUE
+    } else {
+      warning('Invalid entry in OM@cpars$control$CAL (use OM@cpars$control$CAL="removals")\nSimulating CAL from retained catch')
+    }
+
+  }
+  if (!CALdone) {
+    vn <- apply(N*Sample_Area$CAL[,,1:nyears,], c(1,2,3), sum) * FleetPars$retA[,,1:nyears]
+    # numbers at age in population that would be retained
+    vn <- aperm(vn, c(1,3, 2))
+
+    CALdat <- simCAL(nsim, nyears, StockPars$maxage, ObsPars$CAL_ESS,
+                     ObsPars$CAL_nsamp, StockPars$nCALbins, StockPars$CAL_binsmid, StockPars$CAL_bins,
+                     vn, FleetPars$retL, StockPars$Linfarray,
+                     StockPars$Karray, StockPars$t0array, StockPars$LenCV)
+  }
 
   Data@CAL_bins <- StockPars$CAL_bins
   Data@CAL_mids <- StockPars$CAL_binsmid
   Data@CAL <- CALdat$CAL # observed catch-at-length
+
   Data@ML <- CALdat$ML # mean length
   Data@Lc <- CALdat$Lc # modal length
   Data@Lbar <- CALdat$Lbar # mean length above Lc
@@ -748,7 +769,7 @@ UpdateSlot <- function(sl, RealData, SimData, msg) {
 
 
 AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
-                        nyears, proyears, SampCpars, msg) {
+                        nyears, proyears, SampCpars, msg, control, Sample_Area) {
   Data_out <- SimData
 
   if (msg)
@@ -891,7 +912,6 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     }
   }
 
-
   # ---- Update Effort -----
   # TODO
 
@@ -911,7 +931,8 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
       if (msg) message('Total Index beta found (cpars$I_beta) - not updating observation beta parameter')
       I_Err$beta <- SampCpars$I_beta
     } else {
-      if (msg) message('Updating Obs@I_beta from real index')
+      if (msg) message('Updating Obs@I_beta from real index. Range:',
+                       paste0(range(round(I_Err$beta,2)), collapse = "-"), "Use `cpars$I_beta` to override")
     }
 
     ind <- is.na(Data_out@Ind[1,])
@@ -931,7 +952,6 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
                                                                   nsim, proyears,
                                                                   lst.err=log(ObsPars$Ierr_y[,yr.ind]))
     }
-
     ObsPars$Ind_Stat <- I_Err
   }
 
@@ -1199,7 +1219,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
       warning('cpars$Data@CAL_bins cannot be matched with Simulated Data@CAL_bins. Add cpars$Data@CAL_bins to cpars$CAL_bins. cpars$Data@CAL are NOT being used')
     } else {
       if (msg)
-        message('Updating Simulated Catch-at-Length Data from `OM@cpars$Data@CAL`. Note: CAL_ESS is currently NOT updated')
+        message('Updating Simulated Catch-at-Length Data, Obs@CAL_nsamp, and Obs@CAL_ESS from `OM@cpars$Data@CAL`')
 
       # match length bins
       ind <- match(RealData@CAL_mids, StockPars$CAL_binsmid)
@@ -1214,17 +1234,40 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
       # Get average sample size
       nsamp <- ceiling(mean(apply(RealData@CAL[1,1:nyears,], 1, sum, na.rm=TRUE), na.rm=TRUE))
       ObsPars$CAL_nsamp <- rep(nsamp, nsim)
+
+
+      # calculate effective sample size for projections
+      # vuln N-at-age in last year with length data
+      nas <- !apply(CAL[1,,], 2, is.na)
+      yr.ind <- max(which(apply(nas, 1, prod)>0))
+
+      if (!is.null(control$CAL) && control$CAL == 'removals') {
+        vn <- apply(StockPars$N[,,yr.ind,, drop=FALSE]*
+                      Sample_Area$CAL[,,yr.ind,, drop=FALSE], c(1,2,3), sum) *
+          FleetPars$V[,,yr.ind, drop=FALSE]
+        # numbers at age in population that would be removed
+        vn <- aperm(vn, c(1,3, 2))
+        doopt <- optimise(optESS, c(10, 10000), vn, StockPars,
+                          FleetPars$SLarray[1,,yr.ind, drop=FALSE], yr.ind, ObsPars, Data_out, CAL)
+        ObsPars$CAL_ESS <- rep(doopt$minimum, nsim)
+      } else {
+        vn <- apply(StockPars$N[,,yr.ind,, drop=FALSE]*
+                      Sample_Area$CAL[,,yr.ind,, drop=FALSE], c(1,2,3), sum) *
+          FleetPars$retA[,,yr.ind, drop=FALSE]
+        # numbers at age in population that would be removed
+        vn <- aperm(vn, c(1,3, 2))
+        doopt <- optimise(optESS, c(10, 10000), vn, StockPars,
+                          FleetPars$retL[1,,yr.ind, drop=FALSE], yr.ind, ObsPars, Data_out, CAL)
+        ObsPars$CAL_ESS <- rep(doopt$minimum, nsim)
+      }
     }
   }
-
-
 
   # ---- Depletion ----
   Data_out@Dep <- UpdateSlot('Dep', RealData, SimData, msg)
   Data_out@CV_Dep <- UpdateSlot('CV_Dep', RealData, SimData, msg)
   ObsPars$Dbias <- UpdateObs('Dep', ObsPars$Dbias, StockPars$Depletion,
                              RealData, SimData, msg)
-
 
   # ---- Index Reference -----
   Data_out@Iref <- UpdateSlot('Iref', RealData, SimData, msg)
@@ -1237,7 +1280,6 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
         message(paste0('Data detected in `OM@cpars$Data@', sl, '` but is NOT being used.'))
     }
   }
-
 
   NotUpdated(RealData, 'ML', msg)
   NotUpdated(RealData, 'Lc', msg)
@@ -1257,3 +1299,16 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
 }
 
 
+optESS <- function(CAL_ESS, vn, StockPars, sel_ret, yr.ind, ObsPars, Data_out, CAL) {
+  set.seed(101)
+  tempSize <- genSizeCompWrap(1, vn, StockPars$CAL_binsmid, StockPars$CAL_bins,
+                              sel_ret, CAL_ESS,
+                              ObsPars$CAL_nsamp,
+                              StockPars$Linfarray[1, yr.ind, drop=FALSE],
+                              StockPars$Karray[1, yr.ind, drop=FALSE],
+                              StockPars$t0array[1, yr.ind, drop=FALSE],StockPars$LenCV, truncSD=2)
+  tempSize <- tempSize/sum(tempSize)
+  obsSize <- Data_out@CAL[1,yr.ind,]/sum(Data_out@CAL[1,yr.ind,])
+
+  sum((obsSize-tempSize)^2)
+}
