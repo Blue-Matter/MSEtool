@@ -101,7 +101,7 @@ setClassUnion(name="prob.class", members=c("matrix", "numeric", "data.frame"))
 #' with dimensions `nsim` x `length(CAL_mids)`.
 #' @slot CAL_bins The values delimiting the length bins for the catch-at-length data. Vector. Non-negative real numbers
 #' @slot CAL_mids The values of the mid-points of the length bins. Optional, calculated from `CAL_bins` if not entered. Vector. Non-negative real numbers.
-#' @slot CAL Catch-at-length data. An array with dimensions nsim x nyears x length(CAL_mids). Non-negative integers
+#' @slot CAL Catch-at-length data. An array with dimensions nsim x nyears x length(CAL_mids). Non-negative integers. By default the CAL data will be the retained lengths (i.e, not including discards). If `OM@control$CAL =="removals"` then the CAL data will include all removals (retained + discards).
 #'
 #' @slot Dep Stock depletion SSB(current)/SSB(unfished). Vector nsim long. Fraction.
 #' @slot CV_Dep Coefficient of variation in current stock depletion. Vector nsim long. Positive real numbers
