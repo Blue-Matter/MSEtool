@@ -146,7 +146,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   surv[, 2:n_age] <- t(exp(-apply(StockPars$M_ageArray[,,1], 1, cumsum)))[, 1:(n_age-1)]  # Survival array
 
   if (plusgroup) {
-    surv[,n_age] <- surv[,n_age]+surv[,n_age]*exp(-StockPars$M_ageArray[,n_age,1])/(1-exp(-StockPars$M_ageArray[,n_age,1])) # indefinite integral
+    surv[,n_age] <- surv[,n_age]/(1-exp(-StockPars$M_ageArray[,n_age,1])) # indefinite integral
   }
   Nfrac <- surv * StockPars$Mat_age[,,1]  # predicted Numbers of mature ages in first year
 
@@ -175,8 +175,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   surv <- array(1, dim=c(nsim, n_age, nyears+proyears)) # unfished survival for every year
   surv[, 2:n_age, ] <- aperm(exp(-apply(StockPars$M_ageArray, c(1,3), cumsum))[1:(n_age-1), ,], c(2,1,3)) # Survival array
   if (plusgroup) {
-    surv[,n_age, ] <- surv[,n_age,]+surv[,n_age,]*
-      apply(-StockPars$M_ageArray[,n_age,], 2, exp)/(1-apply(-StockPars$M_ageArray[,n_age,], 2, exp))
+    surv[,n_age, ] <- surv[,n_age,]/(1-apply(-StockPars$M_ageArray[,n_age,], 2, exp))
   }
   Nfrac <- surv * StockPars$Mat_age  # predicted numbers of mature ages in all years
 
@@ -1225,7 +1224,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                               retL_P, retA_P, L5_P, LFS_P, Vmaxlen_P,
                               SLarray_P, V_P, Fdisc_P, DR_P, FM_P,
                               FM_Pret, Z_P, CB_P, CB_Pret, Effort_pot,
-                              StockPars, FleetPars, ImpPars)
+                              StockPars, FleetPars, ImpPars, control=control)
 
     TACa[, mm, y] <- MPCalcs$TACrec # recommended TAC
     LastSpatial <- MPCalcs$Si
@@ -1395,7 +1394,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                 retL_P, retA_P, L5_P, LFS_P, Vmaxlen_P,
                                 SLarray_P, V_P, Fdisc_P, DR_P, FM_P,
                                 FM_Pret, Z_P, CB_P, CB_Pret, Effort_pot,
-                                StockPars, FleetPars, ImpPars)
+                                StockPars, FleetPars, ImpPars, control=control)
       LastSpatial <- MPCalcs$Si
       LastAllocat <- MPCalcs$Ai
       LastTAE <- MPCalcs$TAE # adjustment to TAE

@@ -1676,7 +1676,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                   Effort_pot=Effort_pot[,p,f],
                                   StockPars=StockPars[[p]],
                                   FleetPars=FleetPars[[p]][[f]],
-                                  ImpPars=ImpPars[[p]][[f]])
+                                  ImpPars=ImpPars[[p]][[f]], control=control)
 
 
         if(length(SexPars)>0) MPCalcs<- MPCalcsNAs(MPCalcs) # Zeros caused by SexPars
@@ -2044,7 +2044,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                       Effort_pot=Effort_pot[,p,f],
                                       StockPars=StockPars[[p]],
                                       FleetPars=FleetPars[[p]][[f]],
-                                      ImpPars=ImpPars[[p]][[f]])
+                                      ImpPars=ImpPars[[p]][[f]], control=control)
             # Zeros caused by SexPars
             if(length(SexPars)>0) MPCalcs<-MPCalcsNAs(MPCalcs)
 
@@ -2111,7 +2111,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                       Effort_pot=Effort_pot[,p,f],
                                       StockPars=StockPars[[p]],
                                       FleetPars=FleetPars[[p]][[f]],
-                                      ImpPars=ImpPars[[p]][[f]])
+                                      ImpPars=ImpPars[[p]][[f]], control=control)
 
             if(length(SexPars)>0)
               MPCalcs <- MPCalcsNAs(MPCalcs) # Zeros caused by SexPars

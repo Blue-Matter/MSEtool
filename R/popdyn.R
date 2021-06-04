@@ -452,7 +452,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
                            Fdisc_P, DR_P,
                            FM_P, FM_Pret, Z_P, CB_P, CB_Pret, Effort_pot,
                            StockPars, FleetPars, ImpPars,
-                           checks=FALSE) {
+                           checks=FALSE, control) {
 
   n_age <- StockPars$maxage + 1 # include age-0
 
@@ -752,11 +752,12 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     expC <- TACusedE
     expC[TACusedE> availB] <- availB[TACusedE> availB] * 0.99
 
-    Ftot <- sapply(1:nsim, calcF, expC, V_P, Biomass_P, fishdist,
+    Ftot <- sapply(1:nsim, calcF, expC, V_P, retA_P, Biomass_P, fishdist,
                    StockPars$Asize,
                    StockPars$maxage,
                    StockPars$nareas,
-                   StockPars$M_ageArray,nyears, y)
+                   StockPars$M_ageArray,nyears, y,
+                   control)
 
     # apply max F constraint
     Ftot[Ftot<0] <- maxF
@@ -769,50 +770,18 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     Z_P[SAYR] <- FM_P[SAYR] + StockPars$M_ageArray[SAYt] # calculate total mortality
 
     # Calculate total and retained catch
-    CB_P[SAYR] <- FM_P[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR]
-    CB_Pret[SAYR] <- FM_Pret[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR]
+    CB_P[SAYR] <- FM_P[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR] # removals
+    CB_Pret[SAYR] <- FM_Pret[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR] # retained
 
-    # Calculate total removals when CB_Pret == TAC - total removal > retained when discarding
-    actualremovals <- apply(CB_P[,,y,], 1, sum)
-    retained <- apply(CB_Pret[,,y,], 1, sum)
-    ratio <- actualremovals/retained # ratio of actual removals to retained catch
-    ratio[!is.finite(ratio)] <- 0
-    ratio[ratio>1E5] <- 1E5
-
-    temp <- CB_Pret[,,y,]/apply(CB_Pret[,,y,], 1, sum) # distribution by age & area of retained fish
-    Catch_retain <- TACusedE * temp  # retained catch
-    Catch_tot <- CB_P[,,y,]/apply(CB_P[,,y,], 1, sum) # distribution by age & area of caught fish
-    temp <- Catch_tot/apply(Catch_tot, 1, sum) # distribution of removals
-    Catch_tot <- TACusedE * ratio * temp # scale up total removals (if applicable)
-
-    # total removals can't be more than available biomass
-    chk <- apply(Catch_tot, 1, sum) > availB
-    if (sum(chk)>0) {
-      c_temp <- apply(Catch_tot[chk,,, drop=FALSE], 1, sum)
-      ratio_temp <- (availB[chk]/c_temp) * 0.99
-      # scale total catches to 0.99 available biomass
-      if (sum(chk)>1) Catch_tot[chk,, ] <- Catch_tot[chk,,] * array(ratio_temp, dim=c(sum(chk), n_age, StockPars$nareas))
-      if (sum(chk)==1) Catch_tot[chk,, ] <- Catch_tot[chk,,] * array(ratio_temp, dim=c(n_age, StockPars$nareas))
-    }
-
-    # check where actual catches are higher than TAC due to discarding (with imp error)
-    ind <- which(apply(Catch_tot, 1, sum) > TACusedE)
-    if (length(ind)>0) {
-      # update Ftot calcs
-      Ftot[ind] <- sapply(ind, calcF, TACusedE, V_P, Biomass_P, fishdist, StockPars$Asize,
-                          StockPars$maxage, StockPars$nareas, StockPars$M_ageArray,nyears, y)
-    }
+    # for debugging info:
+    # actualremovals <- apply(CB_P[,,y,], 1, sum)
+    # retained <- apply(CB_Pret[,,y,], 1, sum)
+    # ratio <- actualremovals/retained # ratio of actual removals to retained catch
 
     # Effort relative to last historical with this catch
     Effort_req <- Ftot/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]*
                           (1 + FleetPars$qinc/100)^y) * apply(fracE2, 1, sum) # effort required
-
     Effort_req[Ftot<=1E-3] <- tiny
-
-    # Calculate F & Z by age class
-    FM_P[SAYR] <- Ftot[S] * V_P[SAYt] * fishdist[SR]/StockPars$Asize[SR]
-    FM_Pret[SAYR] <- Ftot[S] * retA_P[SAYt] * fishdist[SR]/StockPars$Asize[SR]
-    Z_P[SAYR] <- FM_P[SAYR] + StockPars$M_ageArray[SAYt] # calculate total mortality
   }
 
   # Effort_req - effort required to catch TAC
@@ -854,11 +823,11 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   CB_Pret[SAYR] <- FM_Pret[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR]
 
   # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
-  totalCatch <- apply(CB_P[,,y,], 1, sum)
+  retainedCatch <- apply(CB_Pret[,,y,], 1, sum)
 
-  Ftot <- sapply(1:nsim, calcF, totalCatch, V_P, Biomass_P, fishdist,
+  Ftot <- sapply(1:nsim, calcF, retainedCatch, V_P, retA_P, Biomass_P, fishdist,
                  Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
-                 M_ageArray=StockPars$M_ageArray,nyears, y) # update if effort has changed
+                 M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed
 
   # Effort relative to last historical with this catch
   Effort_act <- Ftot/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]*
@@ -902,32 +871,46 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
 
 
 
-calcF <- function(x, TACusedE, V_P, Biomass_P, fishdist, Asize, maxage, nareas,
-                  M_ageArray, nyears, y) {
+calcF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, Asize, maxage, nareas,
+                  M_ageArray, nyears, y, control) {
   ct <- TACusedE[x]
   ft <- ct/sum(Biomass_P[x,,y,] * V_P[x,,y+nyears]) # initial guess
-
   fishdist[x,] <- fishdist[x,]/sum(fishdist[x,])
 
   if (ft <= 1E-3) return(tiny)
-  for (i in 1:50) {
+  for (i in 1:100) {
     Fmat <- ft * matrix(V_P[x,,y+nyears], nrow=maxage+1, ncol=nareas) *
       matrix(fishdist[x,], maxage+1, nareas, byrow=TRUE)/
       matrix(Asize[x,], maxage+1, nareas, byrow=TRUE) # distribute F over age and areas
-    Zmat <- Fmat + matrix(M_ageArray[x,,y+nyears], nrow=maxage+1, ncol=nareas, byrow=FALSE)
-    predC <- Fmat/Zmat * (1-exp(-Zmat)) * Biomass_P[x,,y,] # predicted catch
-    pct <- sum(predC)
 
+    Fmat_ret <- ft * matrix(retA_P[x,,y+nyears], nrow=maxage+1, ncol=nareas) *
+      matrix(fishdist[x,], maxage+1, nareas, byrow=TRUE)/
+      matrix(Asize[x,], maxage+1, nareas, byrow=TRUE) # distribute F over age and areas
+
+    Zmat <- Fmat + matrix(M_ageArray[x,,y+nyears], nrow=maxage+1, ncol=nareas, byrow=FALSE) # total mortality
+    if (is.null(control$TAC)) {
+      predC <- Fmat_ret/Zmat * (1-exp(-Zmat)) * Biomass_P[x,,y,] # predicted retained catch
+    } else {
+      if (control$TAC == 'removals') {
+        predC <- Fmat/Zmat * (1-exp(-Zmat)) * Biomass_P[x,,y,] # TAC applied to predicted removals
+      }
+      else {
+        stop('invalid entry for `OM@cpars$control$TAC`. Must be `OM@cpars$control$TAC="removals"`')
+      }
+    }
+    pct <- sum(predC)
     Omat <- (1-exp(-Zmat)) * Biomass_P[x,,y,]
     # derivative of catch wrt ft
     dct <- sum(Omat/Zmat - ((Fmat * Omat)/Zmat^2) + Fmat/Zmat * exp(-Zmat) * Biomass_P[x,,y,])
     ft <-  ft - (pct - ct)/dct
-
-    if (abs(pct - ct)<1E-6) break
+    if (abs(pct - ct)/ct<1E-4) break
   }
-
   ft
 }
+
+
+
+
 
 
 optDfun <- function(Perrmulti, x, initD, Nfrac, R0, Perr_y, surv,

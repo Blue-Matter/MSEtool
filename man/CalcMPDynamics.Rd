@@ -40,7 +40,8 @@ CalcMPDynamics(
   StockPars,
   FleetPars,
   ImpPars,
-  checks = FALSE
+  checks = FALSE,
+  control
 )
 }
 \arguments{

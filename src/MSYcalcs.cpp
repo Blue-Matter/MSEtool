@@ -47,8 +47,8 @@ NumericVector MSYCalcs(double logF,
   lx[idx] = surv[idx2];
 
   if (plusgroup>0) {
-    l0[n_age-1] = l0[n_age-1]+l0[n_age-1]*exp(-M_at_Age[n_age-1])/(1-exp(-M_at_Age[n_age-1]));
-    lx[n_age-1] = lx[n_age-1]+lx[n_age-1]*exp(-Z_at_Age[n_age-1])/(1-exp(-Z_at_Age[n_age-1]));
+    l0[n_age-1] = l0[n_age-1]/(1-exp(-M_at_Age[n_age-1]));
+    lx[n_age-1] = lx[n_age-1]/(1-exp(-Z_at_Age[n_age-1]));
   }
 
   double Egg0 = sum(l0 * Wt_at_Age * Mat_at_Age);
