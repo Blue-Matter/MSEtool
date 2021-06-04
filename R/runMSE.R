@@ -794,7 +794,6 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     }
   }
 
-
   nms <- c("Catch", "BInd", "SBInd", "VInd", "CAA", "CAL")
   for (nm in nms) {
     dd <- dim(Sample_Area[[nm]])
@@ -833,7 +832,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                    nareas=StockPars$nareas,
                    reps,
                    CurrentYr=OM@CurrentYr,
-                   silent=silent)
+                   silent=silent,
+                   control)
 
   # --- Condition Simulated Data on input Data object (if it exists) & calculate error stats ----
   StockPars$CBret <- CBret
@@ -853,7 +853,9 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                                nyears,
                                proyears,
                                SampCpars,
-                               msg=!silent)
+                               msg=!silent,
+                               control,
+                               Sample_Area)
     Data <- updatedData$Data
     ObsPars <- updatedData$ObsPars
   }
@@ -1285,10 +1287,17 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         FMSY_y[,mm,y1] <- MSYrefsYr[2,]
         SSBMSY_y[,mm,y1] <- MSYrefsYr[3,]
 
-        per_recruit_F <- lapply(1:nsim, per_recruit_F_calc, StockPars$M_ageArray, StockPars$Wt_age,
-                                StockPars$Mat_age, V_P, StockPars$maxage,
-                                yr.ind=y1, plusgroup=StockPars$plusgroup,
-                                SPR_target=SPR_target)
+        per_recruit_F <- lapply(1:nsim, per_recruit_F_calc,
+                                M_ageArray=StockPars$M_ageArray,
+                                Wt_age=StockPars$Wt_age,
+                                Mat_age=StockPars$Mat_age,
+                                V=FleetPars$V,
+                                maxage=StockPars$maxage,
+                                yr.ind=y1,
+                                plusgroup=StockPars$plusgroup,
+                                SPR_target=SPR_target,
+                                StockPars=StockPars)
+
         F_SPR_y[,mm,,y1] <- sapply(per_recruit_F, getElement, 1) %>% t()
         F01_YPR_y[,mm,y1] <- sapply(per_recruit_F, function(x) x[[2]][1])
         Fmax_YPR_y[,mm,y1] <- sapply(per_recruit_F, function(x) x[[2]][2])
@@ -1360,6 +1369,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                               upyrs, interval, y, mm,
                               Misc=Data_p@Misc, RealData,
                               Sample_Area=ObsPars$Sample_Area)
+
 
         # --- apply MP ----
         runMP <- applyMP(Data=Data_MP, MPs = MPs[mm], reps = reps, silent=TRUE)  # Apply MP
