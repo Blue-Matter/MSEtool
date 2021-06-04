@@ -38,9 +38,9 @@ testthat::test_file("tests/manual/test-code/test-MSE_Plotting.R") # cosewic and 
 
 testthat::test_file("tests/manual/test-code/test-OM_functions.R") # ok
 
-testthat::test_file("tests/manual/test-code/test-OM_init_doc.R") # ok
+testthat::test_file("tests/manual/test-code/test-OM_init_doc.R") #
 
-testthat::test_file("tests/manual/test-code/test-OM_Plotting.R") # fix errors
+testthat::test_file("tests/manual/test-code/test-OM_Plotting.R") # ok
 
 testthat::test_file("tests/manual/test-code/test-PMobjects.R") # ok
 
