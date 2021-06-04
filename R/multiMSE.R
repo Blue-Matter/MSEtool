@@ -961,7 +961,8 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                        nareas,
                        MOM@reps,
                        CurrentYr,
-                       silent=TRUE)
+                       silent=TRUE,
+                       control)
 
       # ---- Add Stock & Fleet Dynamics to Data ----
       Data@Misc$StockPars <- StockPars[[p]]
@@ -994,7 +995,9 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                                    nyears,
                                    proyears,
                                    SampCpars=SampCpars[[p]][[f]],
-                                   msg=!silent)
+                                   msg=!silent,
+                                   control,
+                                   Sample_Area)
         DataList[[p]][[f]] <- updatedData$Data
         ObsPars[[p]][[f]] <- updatedData$ObsPars
 
