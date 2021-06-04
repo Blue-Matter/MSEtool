@@ -266,7 +266,7 @@ with dimensions <code>nsim</code> x <code><a href='https://rdrr.io/r/base/length
 
 <dt><code>CAL_mids</code></dt><dd><p>The values of the mid-points of the length bins. Optional, calculated from <code>CAL_bins</code> if not entered. Vector. Non-negative real numbers.</p></dd>
 
-<dt><code>CAL</code></dt><dd><p>Catch-at-length data. An array with dimensions nsim x nyears x length(CAL_mids). Non-negative integers</p></dd>
+<dt><code>CAL</code></dt><dd><p>Catch-at-length data. An array with dimensions nsim x nyears x length(CAL_mids). Non-negative integers. By default the CAL data will be the retained lengths (i.e, not including discards). If <code>OM@control$CAL =="removals"</code> then the CAL data will include all removals (retained + discards).</p></dd>
 
 <dt><code>Dep</code></dt><dd><p>Stock depletion SSB(current)/SSB(unfished). Vector nsim long. Fraction.</p></dd>
 

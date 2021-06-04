@@ -141,6 +141,8 @@
 </li>
 <li>can now optimize for depletion in terms of SB/SBMSY with <code>control$D &lt;- 'SBMSY'</code>
 </li>
+<li>option to simulate CAL data including removals (retained + discards) with <code>OM@cpars$control$CAL="removals"</code>. Default is to simulate only retained catch-at-length.</li>
+<li>option to apply TAC to all removals with <code>OM@cpars$control$TAC="removals"</code>. Default is to for TAC to refer to retained catch (i.e., removals will be greater than TAC if there are discards)</li>
 </ul>
 </div>
 <div id="minor-changes" class="section level3">
