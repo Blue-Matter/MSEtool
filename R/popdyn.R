@@ -207,79 +207,25 @@ per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, V, maxage,
   dYPR_dF <- (YPR_search[-1] - YPR_search[-length(YPR_search)])/(F_search[-1] - F_search[-length(F_search)])
   F01 <- LinInterp_cpp(dYPR_dF, F_search[-length(YPR_search)], xlev = 0.1 * dYPR_dF[1])
   Fmax <- F_search[which.max(YPR_search)]
-
-  alpha <- 4 * StockPars$hs[x]/(1 - StockPars$hs[x])
-  SPRcrash <- alpha^-1
+  
+  if(StockPars$SRrel[x] == 1) {
+    CR <- 4 * StockPars$hs[x]/(1 - StockPars$hs[x])
+  } else if(StockPars$SRrel[x] == 2) {
+    CR <- (5 * StockPars$hs[x])^1.25
+  }
+  SPRcrash <- CR^-1
 
   Fcrash <- LinInterp_cpp(SPR_search, F_search, xlev = SPRcrash)
 
   SSB <- apply(StockPars$SSB[x,,,], 2, sum)
   R <- apply(StockPars$N[x, 1, , ], 1, sum)
-
-  RpS <- median(R/SSB)
-  Fmed <- LinInterp_cpp(RPS, F_search, xlev = RpS)
-
+  Fmed <- LinInterp_cpp(RPS, F_search, xlev = median(R/SSB))
 
   return(list(FSPR, FYPR = c(YPR_F01 = F01, YPR_Fmax = Fmax,
                              SPRcrash=SPRcrash, Fcrash=Fcrash,
                              Fmed=Fmed)))
 }
 
-
-FmedCalc <- function(x, StockPars, FleetPars, y) {
-  SSB <- apply(StockPars$SSB[x,,,], 2, sum)
-  R <- apply(StockPars$N[x, 1, , ], 1, sum)
-
-  RpS <- median(R/SSB)
-
-  boundsF <- c(1e-3, 3)
-  opt <- optimize(optFreplacement, interval = log(boundsF),
-                  M_at_Age = StockPars$M_ageArray[x,,y],
-                  Wt_at_Age = StockPars$Wt_age[x,,y],
-                  Mat_at_Age = StockPars$Mat_age[x,,y],
-                  V_at_Age = FleetPars$V[x,,y],
-                  maxage = StockPars$maxage,
-                  RpS_slope = RpS,
-                  plusgroup = StockPars$plusgroup)
-  exp(opt$minimum)
-}
-
-optFreplacement <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age,
-                            maxage, RpS_slope, opt = 1, plusgroup=0) {
-
-  out <- MSYCalcs(logF, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age,
-                      Mat_at_Age = Mat_at_Age,
-                      V_at_Age = V_at_Age, maxage = maxage, R0x = 1,
-                      SRrelx = 1, hx = 1,
-                      opt = 2, plusgroup = plusgroup)
-  RpS_F <- out["RelRec"]/out["SB"]
-
-  if(opt==1) {
-    return((RpS_F - RpS_slope)^2)
-  } else {
-    return(RpS_F)
-  }
-}
-
-
-FcrashCalc <- function(x, StockPars, FleetPars, y) {
-  boundsF <- c(1e-8, 5)
-
-  if(StockPars$SRrel[x] == 1) {
-    alpha <- 4 * StockPars$hs[x]/(1 - StockPars$hs[x])/StockPars$SSBpR[x, 1]
-  } else {
-    alpha <- StockPars$aR[x, 1]
-  }
-  opt <- optimize(optFreplacement, interval = log(boundsF),
-                  M_at_Age = StockPars$M_ageArray[x,,y],
-                  Wt_at_Age = StockPars$Wt_age[x,,y],
-                  Mat_at_Age = StockPars$Mat_age[x,,y],
-                  V_at_Age = FleetPars$V[x,,y],
-                  maxage = StockPars$maxage,
-                  RpS_slope = alpha,
-                  plusgroup = StockPars$plusgroup)
-  exp(opt$minimum)
-}
 
 #' Calculate Reference Yield
 #'
