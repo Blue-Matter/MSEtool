@@ -13,7 +13,7 @@ for (dat in Dat) {
     mptype <- MPtype(MP)
     outputMPs <- mptype[mptype[,2] == "Output",1]
     datobj <- TAC(datobj, outputMPs, checkMP=FALSE, silent=TRUE)
-    testthat::expect_error(plot(datobj), NA)
+    testthat::expect_error(plot(datobj, wait=FALSE), NA)
   })
 }
 
