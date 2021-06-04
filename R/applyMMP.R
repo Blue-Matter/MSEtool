@@ -4,7 +4,7 @@
 #' @param mm integer the MP number
 #'
 #' @return a sublist of MSElist for a specific MP
-getDataList<-function(MSElist,mm, StockPars, FleetPars){
+getDataList<-function(MSElist,mm){
   DataList<-new('list')
   for(ss in 1:length(MSElist)){
     DataList[[ss]]<-new('list')

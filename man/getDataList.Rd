@@ -4,7 +4,7 @@
 \alias{getDataList}
 \title{Get part of an MP specific data-list}
 \usage{
-getDataList(MSElist, mm, StockPars, FleetPars)
+getDataList(MSElist, mm)
 }
 \arguments{
 \item{MSElist}{A hierarchical list [Stock][Fleet][MP]}

@@ -1532,7 +1532,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     if(MPcond=="MMP"){
       # returns a hierarchical list object stock then fleet of Data objects
       # DataList<-getDataList(MSElist,mm)
-      DataList<-getDataList(MSElist,mm, StockPars, FleetPars)
+      DataList<-getDataList(MSElist,mm)
       # returns a hierarchical list object stock then fleet then slot type of Rec
       MPRecs_A <- applyMMP(DataList, MP = MPs[mm], reps = 1, silent=TRUE)
       Data_p_A <- MPrecs_A_blank
