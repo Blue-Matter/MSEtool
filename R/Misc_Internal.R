@@ -338,7 +338,10 @@ getclass <- function(x, classy) {
 }
 
 indfit <- function(sim.index,obs.ind, Year, plot=FALSE, lcex=0.8){
-
+  if (any(obs.ind<0, na.rm=TRUE)) {
+    obs.ind <- obs.ind+1-min(obs.ind, na.rm=TRUE)
+  }
+  
   if (plot) Year <- Year[!is.na(obs.ind)]
   sim.index <- lcs(sim.index[!is.na(obs.ind)]) # log space conversion of standardized simulated index
   obs.ind <- lcs(obs.ind[!is.na(obs.ind)]) # log space conversion of standardized observed ind
@@ -372,9 +375,10 @@ indfit <- function(sim.index,obs.ind, Year, plot=FALSE, lcex=0.8){
     legend('topright',legend=c("Model estimate","Index"),text.col=c("black","red"),bty='n',cex=lcex)
   }
 
-  data.frame(beta=opt$minimum,AC=ac,sd=sd(exp(obs.ind)/(exp(sim.index)^opt$minimum)),
+  df <- data.frame(beta=opt$minimum,AC=ac,sd=sd(exp(obs.ind)/(exp(sim.index)^opt$minimum)),
              cor=stats::cor(sim.index,obs.ind),AC2=ac2,sd2=sd(obs.ind-sim.index))
 
+  df
   # list(stats=data.frame(beta=opt$minimum,AC=ac,sd=sd(exp(obs.ind)/(exp(sim.index)^opt$minimum)),
   #                       cor=cor(sim.index,obs.ind),AC2=ac2,sd2=sd(obs.ind-sim.index)),
   #      mult=exp(obs.ind)/(exp(sim.index)^opt$minimum))
