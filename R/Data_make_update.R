@@ -1129,7 +1129,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
 
       SimIndex <- apply(SimIndex*Ind_V, c(1,3), sum) # apply vuln curve
 
-      I_Err <- lapply(1:nsim, function(i) indfit(SimIndex[i,],  ind))
+      I_Err <- lapply(1:nsim, function(i) indfit(sim.index=SimIndex[i,],  obs.ind=ind))
       I_Err <- do.call('rbind', I_Err)
       ind <- matrix(ind, nrow=nsim, ncol=nyears, byrow=TRUE)
       Ierr <- exp(lcs(ind))/exp(lcs(SimIndex))^I_Err$beta
