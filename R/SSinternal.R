@@ -294,8 +294,8 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
     cpars_bio$t0 <- rep(Stock@t0[1], nsim)
 
     # Weight at age
-    Stock@a <- replist$Growth_Parameters[i, ]$WtLen1
-    Stock@b <- replist$Growth_Parameters[i, ]$WtLen2
+    Stock@a <- cpars_bio$Wa <- replist$Growth_Parameters[i, ]$WtLen1
+    Stock@b <- cpars_bio$Wb <- replist$Growth_Parameters[i, ]$WtLen2
   }
 
   if(replist$SS_versionNumeric != 3.30) { # changed to != for swordfish 2021
