@@ -92,7 +92,7 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
   Names <- c('CAL_bins', 'CAL_binsmid', 'binWidth', 'nCALbins',
              'maxage', 'n_age', 'CurrentYr',
              'plusgroup', 'control', 'AddIUnits', 'Data', 'MPA',
-             'nareas', 'a', 'b', 'maxF', 'Sample_Area', 'Asize')
+             'nareas', 'Wa', 'Wb', 'maxF', 'Sample_Area', 'Asize')
 
   cpars2 <- cpars
   cpars2[Names] <- NULL
@@ -480,9 +480,9 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
            paste0(c(nsim, maxage+1, nyears + proyears), collapse=","), "; but has dimensions: ",
            paste0(dim(Wt_age), collapse=","))
     # check if length-weight pars in cpars
-    if (all(c('a', 'b') %in% names(cpars))) {
-      Wa <- cpars$a
-      Wb <- cpars$b
+    if (all(c('Wa', 'Wb') %in% names(cpars))) {
+      Wa <- cpars$Wa
+      Wb <- cpars$Wb
     } else {
       # Estimate length-weight parameters from the Wt_age data
       logL <- log(as.numeric(Len_age)+tiny)
