@@ -1133,10 +1133,11 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
 
       SimIndex <- apply(SimIndex*Ind_V, c(1,3), sum) # apply vuln curve
 
-      I_Err <- lapply(1:nsim, function(i) indfit(sim.index=SimIndex[i,],  obs.ind=ind))
+      I_Err <- lapply(1:nsim, function(x) indfit(sim.index=SimIndex[x,], obs.ind=ind))
       I_Err <- do.call('rbind', I_Err)
-      ind <- matrix(ind, nrow=nsim, ncol=nyears, byrow=TRUE)
-      Ierr <- exp(lcs(ind))/exp(lcs(SimIndex))^I_Err$beta
+      ind2 <- matrix(ind, nrow=nsim, ncol=nyears, byrow=TRUE)
+      Ierr <- matrix(NA, nrow=nsim, ncol=nyears)
+      Ierr[,!is.na(ind)] <- exp(lcs(ind2[,!is.na(ind)]))/(exp(lcs(SimIndex[,!is.na(ind)]))^I_Err$beta)
       if (fitIerr) ObsPars$AddIerr[,i, 1:nyears] <- Ierr
       if (fitbeta) ObsPars$AddIbeta[,i] <- I_Err$beta
 
@@ -1144,10 +1145,10 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
       if (fitIerr) {
         yr.ind <- max(which(!is.na(RealData@AddInd[1,i,1:nyrs])))
         diff <- nyears-nyrs
-
-        ObsPars$AddIerr[,i, (nyrs+1):(nyears+proyears)] <- generateRes(df=I_Err, nsim, proyears+diff, lst.err=log(ObsPars$AddIerr[,i,yr.ind]))
+        ObsPars$AddIerr[,i, (nyrs+1):(nyears+proyears)] <- generateRes(df=I_Err, nsim, proyears+diff, 
+                                                                       lst.err=log(ObsPars$AddIerr[,i,yr.ind]))
       }
-
+      
       if (nyrs < nyears) {
         # add simulated index for missing years
         tempI <- SimIndex
