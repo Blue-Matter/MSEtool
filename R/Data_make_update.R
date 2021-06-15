@@ -878,6 +878,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     Data_out@CV_Cat <- matrix(RealData@CV_Cat[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
 
     simcatch <- apply(StockPars$CBret, c(1,3), sum)
+    simcatch[simcatch==0] <- tiny
 
     Cbias <- matrix(apply(Data_out@Cat, 1, mean)/apply(simcatch, 1, mean),
                     nrow=nsim, ncol=nyears+proyears)
@@ -886,11 +887,14 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     t1<-  Cerr[,max(nyears-10, 1):nyears]/apply(Cerr[,max(nyears-10, 1):nyears],1,mean)
     SDs <- apply(log(t1), 1, sd)
     Cerr_proj <- matrix(NA, nsim, proyears)
-    for (i in 1:nsim) {
-      Cerr_proj[i,] <- exp(rnorm(proyears, -((SDs[i]^2)/2), SDs[i]))
+    nas <- which(is.na(SDs))
+    Cerr_proj[nas,] <- tiny # no catch
+    if (!all(is.na(SDs))) {
+      for (i in (1:nsim)[!is.na(SDs)]) {
+        Cerr_proj[i,] <- exp(rnorm(proyears, -((SDs[i]^2)/2), SDs[i]))
+      }
     }
     Cerr <- cbind(Cerr, Cerr_proj)
-
 
     if(!is.null(SampCpars$Cobs_y)) {
       if (msg) message('Catch observation error detected in cpars (`cpars$Cobs_y`). Not updating catch obs error')
