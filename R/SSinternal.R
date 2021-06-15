@@ -371,7 +371,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
 
   Fleet <- lapply(fleet_output, getElement, "Fleet") %>% structure(names = replist$FleetNames[replist$IsFishFleet])
   cpars <- lapply(fleet_output, function(x) c(cpars_bio, x$cpars_fleet)) %>% structure(names = replist$FleetNames[replist$IsFishFleet])
-
+  
   return(list(Stock = Stock, Fleet = Fleet, cpars = cpars))
 }
 
@@ -420,22 +420,21 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   disc_mort <- replist$sizeselex[replist$sizeselex$Fleet == ff & replist$sizeselex$Sex == i &
                                    replist$sizeselex$Factor == "Mort" & replist$sizeselex$Yr == max(mainyrs), -c(1:5)] %>% unlist() %>%
     as.numeric() %>% unique()
-  disc_mort <- mean(disc_mort)
-  if(length(disc_mort) > 1) warning("Discard mortality at age not supported.")
-
+  retN <- replist$catch %>% dplyr::filter(Fleet==ff, Yr==max(mainyrs)) %>% dplyr::select(N=ret_num)
+  if (retN$N<=0) disc_mort<- NA # no discard mortality if fleet no longer in operation
+  
+  disc_mort <- mean(disc_mort, na.rm=TRUE)
+  
   #### Apical F
-  FF <- replist$ageselex[replist$ageselex$Fleet == ff & replist$ageselex$Sex == i &
-                           replist$ageselex$Factor == "F", ]
-  if(nrow(FF)) {
+  FF <- replist$exploitation[, match(replist$FleetNames[ff], colnames(replist$exploitation))] %>%
+    aggregate(by = list(Yr = replist$exploitation$Yr), sum)
+  Find <- FF$x[FF$Yr %in% mainyrs]
+  
+  if (length(Find)<1 | all(is.na(Find))) {
+    # above method more accurate (for swordfish at least)
     FF <- FF[match(mainyrs, FF$Yr), ]
     F2 <- vapply(0:Stock@maxage, function(x) FF[, parse(text = paste0("\"", x, "\"")) %>% eval()], numeric(length(mainyrs)))
     Find <- apply(F2, 1, max)
-  } else {
-    FF <- replist$exploitation[, match(replist$FleetNames[ff], colnames(replist$exploitation))] %>%
-      aggregate(by = list(Yr = replist$exploitation$Yr), sum)
-    Find <- FF$x[FF$Yr %in% mainyrs]
-    #Find <- parse(text = paste0("replist$timeseries$`F:_", ff, "`")) %>% eval()
-    #Find <- Find[match(mainyrs, replist$timeseries$Yr)]
   }
 
   #### Sex-specific catches: predicted retained catch for fleet ff for stock (sex) i
@@ -491,6 +490,7 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
     2 * (suppressWarnings(max(as.numeric(colnames(replist$sizeselex)), na.rm = TRUE)) - max(replist$lbinspop))
   cpars_fleet$CAL_bins <- c(replist$lbinspop, upper_boundary_last_bin)
   cpars_fleet$Fdisc <- rep(mean(disc_mort), nsim)
+  cpars_fleet$qs <- rep(1, nsim)
   #cpars_fleet$V <- cbind(V2, V2_proj) %>% array(c(n_age, allyears, nsim)) %>% aperm(c(3, 1, 2))
   cpars_fleet$retL <- replicate(nsim, retL) %>% aperm(c(3, 1, 2))
   cpars_fleet$SLarray <- replicate(nsim, SLarray) %>% aperm(c(3, 1, 2))
