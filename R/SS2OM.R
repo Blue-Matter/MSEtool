@@ -50,7 +50,7 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1,
 #' @rdname SS2MOM
 #' @param MOM MOM object
 #' @export
-SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, silent = FALSE, model_discards = FALSE) {
+SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, silent = FALSE, model_discards = TRUE) {
   Factor <- NULL # variable for binding check
 
   if(!requireNamespace("reshape2", quietly = TRUE)) {
@@ -107,7 +107,7 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
     if(length(out) == 2 && is.null(out[[2]])) {
       res <- out[[1]]
     } else {
-      res <- simplify2array(out) %>% apply(1, mean)
+      res <- simplify2array(out) %>% apply(1, mean,na.rm=TRUE)
     }
     return(res)
   }
@@ -178,10 +178,10 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
   if(model_discards) { # Grab sel and retention (averaged over all fleets) and take the mean between sexes
     sel_par <- lapply(cpars[gender], calculate_single_fleet_dynamics)
     
-    cpars_out$Find <- lapply(sel_par, getElement, "Find") %>% simplify2array() %>% apply(1:2, mean)
-    cpars_out$Fdisc <- lapply(sel_par, getElement, "Fdisc") %>% simplify2array() %>% apply(1, mean)
-    cpars_out$retL <- lapply(sel_par, getElement, "retL") %>% simplify2array() %>% apply(1:3, mean)
-    cpars_out$SLarray <- lapply(sel_par, getElement, "SLarray") %>% simplify2array() %>% apply(1:3, mean)
+    cpars_out$Find <- lapply(sel_par, getElement, "Find") %>% simplify2array() %>% apply(1:2, mean, na.rm=TRUE)
+    cpars_out$Fdisc <- lapply(sel_par, getElement, "Fdisc") %>% simplify2array() %>% apply(1, mean, na.rm=TRUE)
+    cpars_out$retL <- lapply(sel_par, getElement, "retL") %>% simplify2array() %>% apply(1:3, mean, na.rm=TRUE)
+    cpars_out$SLarray <- lapply(sel_par, getElement, "SLarray") %>% simplify2array() %>% apply(1:3, mean, na.rm=TRUE)
     
   } else { # Calc V from the F-at-age matrix (no discards modeled in the OM object)
     
@@ -301,7 +301,7 @@ calculate_single_fleet_dynamics <- function(x) {
     
     SL_avg <- retL_avg <- array(NA, dim(SLarray)[1:3])
     Find_out <- matrix(NA_real_, nsim, nyears)
-    Fdisc_avg <- lapply(x, getElement, "Fdisc") %>% simplify2array() %>% apply(1, mean)
+    Fdisc_avg <- lapply(x, getElement, "Fdisc") %>% simplify2array() %>% apply(1, mean, na.rm=TRUE)
     
     for(i in 1:nsim) {
       for(j in 1:nyears) {
