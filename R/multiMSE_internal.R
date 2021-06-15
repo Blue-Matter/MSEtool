@@ -67,6 +67,17 @@ TEG<-function(vec){ # make index for list calculation
   as.matrix(expand.grid(dim))
 }
 
+
+getLHpars <- function(x, name, StockPars, nyears) {
+  suppressMessages(purrr::map_dfc(lapply(StockPars,function(dat)
+    dat[[name]]), unpackList, cols=1:nyears,x=x, name=name)) %>% t()
+}
+unpackList <- function(list, cols,x, name) {
+  df <- data.frame(list[x,cols])
+  names(df)[1] <- name
+  df
+}
+
 #' Reconstruct historical dynamics
 #'
 #' Function that reconstructs historical stock trends from fitted qs and all other parameters including MICE components
@@ -101,14 +112,17 @@ HistMICE<-function(x,StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, VF,
   FretAx<-array(FretA[x,,,,],dim(VF)[2:5])
   #NIL(StockPars,"K")
 
-  Kx<-matrix(unlist(lapply(StockPars,function(dat)dat['K'])),ncol=np)[x,]
-  Linfx<-matrix(unlist(lapply(StockPars,function(dat)dat['Linf'])),ncol=np)[x,]
-  t0x<-matrix(unlist(lapply(StockPars,function(dat)dat['t0'])),ncol=np)[x,]
-  Mx<-matrix(unlist(lapply(StockPars,function(dat)dat['M'])),ncol=np)[x,]
+  Karrayx <- getLHpars(x, 'Karray', StockPars, nyears)
+  Linfarrayx <- getLHpars(x, 'Linfarray', StockPars, nyears) 
+  t0arrayx <- getLHpars(x, 't0array', StockPars, nyears) 
+  Marrayx <- getLHpars(x, 'Marray', StockPars, nyears) 
+  
+  # Kx<-matrix(unlist(lapply(StockPars,function(dat)dat['K'])),ncol=np)[x,]
+  # Linfx<-matrix(unlist(lapply(StockPars,function(dat)dat['Linf'])),ncol=np)[x,]
+  # t0x<-matrix(unlist(lapply(StockPars,function(dat)dat['t0'])),ncol=np)[x,]
+  # Mx<-matrix(unlist(lapply(StockPars,function(dat)dat['M'])),ncol=np)[x,]
   R0x<-matrix(unlist(lapply(StockPars,function(dat)dat['R0'])),ncol=np)[x,]
-
   SSB0x<-matrix(unlist(lapply(StockPars,function(dat)dat['SSB0'])),ncol=np)[x,]
-
   hsx<-matrix(unlist(lapply(StockPars,function(dat)dat['hs'])),ncol=np)[x,]
   ax<-matrix(unlist(lapply(StockPars,function(dat)dat['a'])),ncol=np)[1,]
   bx<-matrix(unlist(lapply(StockPars,function(dat)dat['b'])),ncol=np)[1,]
@@ -129,12 +143,14 @@ HistMICE<-function(x,StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, VF,
     bRx[p,]<-StockPars[[p]]$bR[x,]
   }
 
-  M_ageArrayx<-Mat_agex<-array(NA,c(np,n_age,nyears))
+  M_ageArrayx<-Mat_agex<-WatAgex<-Len_agex <- array(NA,c(np,n_age,nyears))
   Effind<-array(NA,c(np,nf,nyears))
   Spat_targ<-array(NA,c(np,nf))
 
   for(p in 1:np){
     Mat_agex[p,,]<-StockPars[[p]]$Mat_age[x,,1:nyears]
+    WatAgex[p,,]<-StockPars[[p]]$Wt_age[x,,1:nyears]
+    Len_agex[p,,]<-StockPars[[p]]$Len_age[x,,1:nyears]
     M_ageArrayx[p,,]<-StockPars[[p]]$M_ageArray[x,,1:nyears]
     Effind[p,,]<-t(matrix(unlist(lapply(FleetPars[[p]],function(dat,x)dat['Find'][[1]][x,],x=x)),ncol=nf))
     Spat_targ[p,]<-unlist(lapply(FleetPars[[p]],function(dat,x)dat['Spat_targ'][[1]][x],x=x))
@@ -144,7 +160,10 @@ HistMICE<-function(x,StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, VF,
   qfracx<-matrix(qfrac[x,,],c(np,nf))
 
   popdynMICE(qsx=qsx,qfracx=qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
-             movx,Spat_targ,M_ageArrayx,Mat_agex,Asizex,Kx,Linfx,t0x,Mx,R0x,R0ax,
+             movx,Spat_targ,M_ageArrayx,Mat_agex,Asizex, 
+             WatAgex, Len_agex, Karrayx,
+             Linfarrayx,t0arrayx,Marrayx,
+             R0x,R0ax,
              SSBpRx,hsx,aRx, bRx,ax,bx,Perrx,SRrelx,Rel,SexPars,x,
              plusgroup, maxF, SSB0x)
 
