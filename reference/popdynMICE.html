@@ -145,10 +145,12 @@
   <span class='va'>M_ageArrayx</span>,
   <span class='va'>Mat_agex</span>,
   <span class='va'>Asizex</span>,
-  <span class='va'>Kx</span>,
-  <span class='va'>Linfx</span>,
-  <span class='va'>t0x</span>,
-  <span class='va'>Mx</span>,
+  <span class='va'>WatAgex</span>,
+  <span class='va'>Len_agex</span>,
+  <span class='va'>Karrayx</span>,
+  <span class='va'>Linfarrayx</span>,
+  <span class='va'>t0arrayx</span>,
+  <span class='va'>Marrayx</span>,
   <span class='va'>R0x</span>,
   <span class='va'>R0ax</span>,
   <span class='va'>SSBpRx</span>,
@@ -236,12 +238,28 @@
       <td><p>Array <code>[stock, area]</code> Area size</p></td>
     </tr>
     <tr>
-      <th>Kx</th>
-      <td><p>Vector <code>[stock]</code> of von B growth parameter K</p></td>
+      <th>WatAgex</th>
+      <td><p>Array of weight-at-age</p></td>
     </tr>
     <tr>
-      <th>Mx</th>
-      <td><p>Vector <code>[stock]</code> mature natural mortality rate</p></td>
+      <th>Len_agex</th>
+      <td><p>Array of length-at-age</p></td>
+    </tr>
+    <tr>
+      <th>Karrayx</th>
+      <td><p>Array of von B growth parameter K</p></td>
+    </tr>
+    <tr>
+      <th>Linfarrayx</th>
+      <td><p>Array of von B asymptotic length parameter Linf</p></td>
+    </tr>
+    <tr>
+      <th>t0arrayx</th>
+      <td><p>Array ofvon B theoretical age at zero length (t0)</p></td>
+    </tr>
+    <tr>
+      <th>Marrayx</th>
+      <td><p>Array of mature natural mortality rate</p></td>
     </tr>
     <tr>
       <th>R0x</th>
@@ -297,12 +315,16 @@ relationship (1 = Beverton-Holt, 2= Ricker)</p></td>
       <td><p>Integer the simulation number</p></td>
     </tr>
     <tr>
-      <th>Linf</th>
-      <td><p>Vector <code>[stock]</code> of von B asymptotic length parameter Linf</p></td>
+      <th>plusgroup</th>
+      <td><p>Numeric vector. Use plus-group (1) or not (0)</p></td>
     </tr>
     <tr>
-      <th>t0</th>
-      <td><p>Vector <code>[stock]</code> of von B theoretical age at zero length (t0)</p></td>
+      <th>maxF</th>
+      <td><p>maximum F</p></td>
+    </tr>
+    <tr>
+      <th>SSB0x</th>
+      <td><p>SSB0 for this simulation</p></td>
     </tr>
     </table>
 
