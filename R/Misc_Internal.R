@@ -401,7 +401,7 @@ generateRes <- function(df, nsim, proyears, lst.err) {
 applyAC <- function(x, res, ac, max.years, lst.err) {
   for (y in 1:max.years) {
     if (y == 1) {
-      res[y,x] <- ac[x] * lst.err[x] + lst.err[x] * (1-ac[x] * ac[x])^0.5
+      res[y,x] <- ac[x] * lst.err[x] + res[y,x] * (1-ac[x] * ac[x])^0.5
     } else {
       res[y,x] <- ac[x] * res[y-1,x] + res[y,x] * (1-ac[x] * ac[x])^0.5
     }
