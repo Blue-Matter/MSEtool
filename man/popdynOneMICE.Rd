@@ -36,7 +36,9 @@ popdynOneMICE(
   SexPars,
   x,
   plusgroup,
-  SSB0x
+  SSB0x,
+  Len_age,
+  Wt_age
 )
 }
 \arguments{
@@ -100,6 +102,10 @@ relationship (1 = Beverton-Holt, 2= Ricker)}
 \item{plusgroup}{Numeric vector. Use plus-group (1) or not (0)}
 
 \item{SSB0x}{Unfished SSB0, Vector nstock length.}
+
+\item{Len_age}{Length-at-age this year}
+
+\item{Wt_age}{Weight-at-age this year}
 
 \item{nyears}{Integer, number of historical years (unfished til today)}
 

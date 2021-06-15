@@ -24,10 +24,12 @@ qestMICE(
   M_ageArrayx,
   Mat_agex,
   Asizex,
-  Kx,
-  Linfx,
-  t0x,
-  Mx,
+  WatAgex,
+  Len_agex,
+  Karrayx,
+  Linfarrayx,
+  t0arrayx,
+  Marrayx,
   R0x,
   R0ax,
   SSBpRx,
@@ -81,9 +83,13 @@ qestMICE(
 
 \item{Asizex}{Matrix \verb{[stock, area]} Area size}
 
-\item{Kx}{Vector \verb{[stock]} of von B growth parameter K}
+\item{Karrayx}{Array of von B growth parameter K}
 
-\item{Mx}{Vector \verb{[stock]} mature natural mortality rate}
+\item{Linfarrayx}{Array of von B asymptotic length parameter Linf}
+
+\item{t0arrayx}{Array ofvon B theoretical age at zero length (t0)}
+
+\item{Marrayx}{Array of mature natural mortality rate}
 
 \item{R0x}{Vector \verb{[stock]} unfished recruitment}
 
@@ -114,10 +120,6 @@ qestMICE(
 \item{x}{Integer. The simulation number}
 
 \item{mod}{Character if 'opt' qestMICE returns the objective function otherwise the fitted values in a list}
-
-\item{Linf}{Vector \verb{[stock]} of von B asymptotic length parameter Linf}
-
-\item{t0}{Vector \verb{[stock]} of von B theoretical age at zero length (t0)}
 }
 \description{
 Function returns objective function that fits both stock depletion and catch fraction among fleets

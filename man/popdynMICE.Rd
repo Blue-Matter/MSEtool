@@ -21,10 +21,12 @@ popdynMICE(
   M_ageArrayx,
   Mat_agex,
   Asizex,
-  Kx,
-  Linfx,
-  t0x,
-  Mx,
+  WatAgex,
+  Len_agex,
+  Karrayx,
+  Linfarrayx,
+  t0arrayx,
+  Marrayx,
   R0x,
   R0ax,
   SSBpRx,
@@ -77,9 +79,17 @@ popdynMICE(
 
 \item{Asizex}{Array \verb{[stock, area]} Area size}
 
-\item{Kx}{Vector \verb{[stock]} of von B growth parameter K}
+\item{WatAgex}{Array of weight-at-age}
 
-\item{Mx}{Vector \verb{[stock]} mature natural mortality rate}
+\item{Len_agex}{Array of length-at-age}
+
+\item{Karrayx}{Array of von B growth parameter K}
+
+\item{Linfarrayx}{Array of von B asymptotic length parameter Linf}
+
+\item{t0arrayx}{Array ofvon B theoretical age at zero length (t0)}
+
+\item{Marrayx}{Array of mature natural mortality rate}
 
 \item{R0x}{Vector \verb{[stock]} unfished recruitment}
 
@@ -108,9 +118,11 @@ relationship (1 = Beverton-Holt, 2= Ricker)}
 
 \item{x}{Integer the simulation number}
 
-\item{Linf}{Vector \verb{[stock]} of von B asymptotic length parameter Linf}
+\item{plusgroup}{Numeric vector. Use plus-group (1) or not (0)}
 
-\item{t0}{Vector \verb{[stock]} of von B theoretical age at zero length (t0)}
+\item{maxF}{maximum F}
+
+\item{SSB0x}{SSB0 for this simulation}
 }
 \description{
 Calls popdynOneMICE iteratively to reconstruct a time series given MICE model inputs
