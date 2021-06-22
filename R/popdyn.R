@@ -973,3 +973,140 @@ projectEq <- function(x, Asize, nareas, maxage, N, pyears, M_ageArray, Mat_age, 
   simpop[[1]][,Nyrs,]
 
 }
+
+
+
+CalcSPReq <- function(FM, StockPars, n_age, nareas, nyears, proyears, nsim, Hist = FALSE) {
+  if(Hist) {
+    yind <- 1:nyears
+  } else {
+    yind <- 1:proyears + nyears
+  }
+  n_y <- length(yind)
+  M <- replicate(nareas, StockPars$M_ageArray[, , yind])
+  Wt_age <- replicate(nareas, StockPars$Wt_age[, , yind])
+  Mat_age <- replicate(nareas, StockPars$Mat_age[, , yind])
+  Z <- FM + M
+  
+  initdist <- replicate(n_y, StockPars$initdist[, 1, ]) %>% aperm(c(1, 3, 2))
+  NPR_M <- NPR_F <- array(NA_real_, c(nsim, n_age, n_y, nareas))
+  NPR_M[, 1, , ] <- NPR_F[, 1, , ] <- initdist
+  
+  for(a in 2:n_age) {
+    NPR_M[, a, , ] <- NPR_M[, a-1, , ] * exp(-M[, a-1, , ])
+    NPR_F[, a, , ] <- NPR_F[, a-1, , ] * exp(-Z[, a-1, , ])
+  }
+  if(StockPars$plusgroup) {
+    NPR_M[, n_age, , ] <- NPR_M[, n_age, , ]/(1 - exp(-M[, n_age, , ]))
+    NPR_F[, n_age, , ] <- NPR_F[, n_age, , ]/(1 - exp(-Z[, n_age, , ]))
+  }
+  SPReq <- apply(NPR_F * Wt_age * Mat_age, c(1, 3), sum)/apply(NPR_M * Wt_age * Mat_age, c(1, 3), sum)
+  return(SPReq = SPReq)
+}
+
+CalcSPRdyn <- function(FM, StockPars, n_age, nareas, nyears, proyears, nsim, Hist = FALSE) {
+  if(Hist) {
+    yind <- 1:nyears
+  } else {
+    yind <- 1:(proyears + nyears)
+  }
+  n_y <- length(yind)
+  M <- replicate(nareas, StockPars$M_ageArray[, , yind])
+  Wt_age <- replicate(nareas, StockPars$Wt_age[, , yind])
+  Mat_age <- replicate(nareas, StockPars$Mat_age[, , yind])
+  Z <- FM + M
+  
+  initdist <- replicate(n_y, StockPars$initdist[, 1, ]) %>% aperm(c(1, 3, 2))
+  cumsurv_F <- cumsurv_M <- array(NA_real_, c(nsim, n_age, n_y, nareas))
+  cumsurv_F[, 1, , ] <- cumsurv_M[, 1, , ] <- initdist
+  
+  #### Dynamic SPR
+  # Boundary condition (first historical year) - assume unfished in cumsurv_F in first year
+  for(a in 2:n_age) {
+    Msum <- replicate(nareas, apply(StockPars$M_ageArray[, 2:a - 1, 1, drop = FALSE], 1, sum))
+    cumsurv_M[, a, 1, ] <- StockPars$initdist[, 1, ] * exp(-Msum)
+  }
+  if(StockPars$plusgroup) {
+    cumsurv_M[, n_age, 1, ] <- cumsurv_M[, n_age, 1, ]/
+      (1 - exp(-StockPars$M_ageArray[, n_age, 1]))
+  }
+  cumsurv_F[, , 1, ] <- cumsurv_M[, , 1, ]
+  
+  for(y in 2:n_y) {
+    for(a in 2:n_age) {
+      cumsurv_M[, a, y, ] <- cumsurv_M[, a-1, y-1, ] * exp(-M[, a-1, y-1, ])
+      cumsurv_F[, a, y, ] <- cumsurv_F[, a-1, y-1, ] * exp(-Z[, a-1, y-1, ])
+      if(a == n_age && StockPars$plusgroup) {
+        cumsurv_M[, a, y, ] <- cumsurv_M[, a, y, ] + cumsurv_M[, a, y-1, ] * exp(-M[, a, y-1, ])
+        cumsurv_F[, a, y, ] <- cumsurv_F[, a, y, ] + cumsurv_F[, a, y-1, ] * exp(-Z[, a, y-1, ])
+      }
+      stockmovM <- vapply(1:nsim, function(x) cumsurv_M[x, a, y, ] %*% StockPars$mov[x, a, , , y],
+                          numeric(nareas))
+      stockmovF <- vapply(1:nsim, function(x) cumsurv_F[x, a, y, ] %*% StockPars$mov[x, a, , , y],
+                          numeric(nareas))
+      cumsurv_M[, a, y, ] <- t(stockmovM)
+      cumsurv_F[, a, y, ] <- t(stockmovF)
+    }
+  }
+  SPRdyn <- apply(cumsurv_F * Wt_age * Mat_age, c(1, 3), sum)/apply(cumsurv_M * Wt_age * Mat_age, c(1, 3), sum)
+  if(!Hist) SPRdyn <- SPRdyn[, 1:proyears + nyears]
+  return(SPRdyn)
+}
+
+#CalcSPR <- function(FM_P, StockPars, n_age, nareas, nyears, proyears, nsim) {
+#  M <- replicate(nareas, StockPars$M_ageArray[, , 1:proyears + nyears])
+#  Wt_age <- replicate(nareas, StockPars$Wt_age[, , 1:proyears + nyears])
+#  Mat_age <- replicate(nareas, StockPars$Mat_age[, , 1:proyears + nyears])
+#  Z <- FM_P + M
+#  
+#  initdist <- replicate(proyears, StockPars$initdist[, 1, ]) %>% aperm(c(1, 3, 2))
+#  NPR_M <- NPR_F <- cumsurv_F <- cumsurv_M <- array(NA_real_, c(nsim, n_age, proyears, nareas))
+#  
+#  NPR_M[, 1, , ] <- NPR_F[, 1, , ] <- cumsurv_F[, 1, , ] <- cumsurv_M[, 1, , ] <- initdist
+#
+#  # Equilibrium SPR
+#  for(a in 2:n_age) {
+#    NPR_M[, a, , ] <- NPR_M[, a-1, , ] * exp(-M[, a-1, , ])
+#    NPR_F[, a, , ] <- NPR_F[, a-1, , ] * exp(-Z[, a-1, , ])
+#  }
+#  if(StockPars$plusgroup) {
+#    NPR_M[, n_age, , ] <- NPR_M[, n_age, , ]/(1 - exp(-M[, n_age, , ]))
+#    NPR_F[, n_age, , ] <- NPR_F[, n_age, , ]/(1 - exp(-Z[, n_age, , ]))
+#  }
+#  SPReq <- apply(NPR_F * Wt_age * Mat_age, c(1, 3), sum)/apply(NPR_M * Wt_age * Mat_age, c(1, 3), sum)
+#  
+#  #### Dynamic SPR
+#  # Boundary condition
+#  # No plusgroup in boundary condition for now - cumsurv_F[, n_age, 1, ]
+#  # Ideally, calculate cumsurv_F from historical period and continue to projection
+#  for(a in 2:n_age) {
+#    Msum <- replicate(nareas, StockPars$M_ageArray[, 2:a - 1, nyears:(nyears - a + 2), drop = FALSE])
+#    Zsum <- StockPars$FM[, 2:a - 1, nyears:(nyears - a + 2), , drop = FALSE] + Msum
+#    
+#    Msum <- apply(Msum, c(1, 4), function(x) sum(diag(x)))
+#    Zsum <- apply(Zsum, c(1, 4), function(x) sum(diag(x)))
+#    
+#    cumsurv_M[, a, 1, ] <- StockPars$initdist[, 1, ] * exp(-Msum)
+#    cumsurv_F[, a, 1, ] <- StockPars$initdist[, 1, ] * exp(-Zsum)
+#  }
+#  for(y in 2:proyears) {
+#    for(a in 2:n_age) {
+#      cumsurv_M[, a, y, ] <- cumsurv_M[, a-1, y-1, ] * exp(-M[, a-1, y-1, ])
+#      cumsurv_F[, a, y, ] <- cumsurv_F[, a-1, y-1, ] * exp(-Z[, a-1, y-1, ])
+#      if(a == n_age && StockPars$plusgroup) {
+#        cumsurv_M[, a, y, ] <- cumsurv_M[, a, y, ] + cumsurv_M[, a, y-1, ] * exp(-M[, a, y-1, ])
+#        cumsurv_F[, a, y, ] <- cumsurv_F[, a, y, ] + cumsurv_F[, a, y-1, ] * exp(-Z[, a, y-1, ])
+#      }
+#      stockmovM <- vapply(1:nsim, function(x) cumsurv_M[x, a, y, ] %*% StockPars$mov[x, a, , , nyears + y],
+#                          numeric(nareas))
+#      stockmovF <- vapply(1:nsim, function(x) cumsurv_F[x, a, y, ] %*% StockPars$mov[x, a, , , nyears + y],
+#                          numeric(nareas))
+#      cumsurv_M[, a, y, ] <- t(stockmovM)
+#      cumsurv_F[, a, y, ] <- t(stockmovF)
+#    }
+#  }
+#  SPRdyn <- apply(cumsurv_F * Wt_age * Mat_age, c(1, 3), sum)/apply(cumsurv_M * Wt_age * Mat_age, c(1, 3), sum)
+#  return(list(SPReq = SPReq, SPRdyn = SPRdyn))
+#}
+
+

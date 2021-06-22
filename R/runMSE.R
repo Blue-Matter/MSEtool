@@ -640,6 +640,11 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     Fcrash_y[,y] <- sapply(per_recruit_F, function(x) x[[2]][4])
     Fmed_y[,y] <- sapply(per_recruit_F, function(x) x[[2]][5])
   }
+  
+  # ---- Calculate annual SPR ----
+  SPR_hist <- list()
+  SPR_hist$Equilibrium <- CalcSPReq(StockPars$FM, StockPars, n_age, nareas, nyears, proyears, nsim, Hist = TRUE)
+  SPR_hist$Dynamic <- CalcSPRdyn(StockPars$FM, StockPars, n_age, nareas, nyears, proyears, nsim, Hist = TRUE)
 
   # ---- Calculate Mean Generation Time ----
   MarrayArea <- replicate(nareas, StockPars$M_ageArray[,,1:nyears])
@@ -907,6 +912,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     Discards=apply(CB-CBret,c(1,3,4), sum),
     Find=FleetPars$Find,
     RecDev=StockPars$Perr_y,
+    SPR=SPR_hist,
     Unfished_Equilibrium=Unfished_Equilibrium
   )
 
@@ -1039,7 +1045,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   # PAAout <- array(NA, dim = c(nsim, nMP, maxage))  # store the population-at-age in last projection year
   # CAAout <- array(NA, dim = c(nsim, nMP, maxage))  # store the catch-at-age in last projection year
   # CALout <- array(NA, dim = c(nsim, nMP, nCALbins))  # store the population-at-length in last projection year
-  # SPRa <- array(NA,dim=c(nsim,nMP,proyears)) # store the Spawning Potential Ratio
+  SPReqa <- array(NA,dim=c(nsim,nMP,proyears)) # store the equilibrium Spawning Potential Ratio
+  SPRdyna <- array(NA,dim=c(nsim,nMP,proyears)) # store the dynamic Spawning Potential Ratio
 
   Cost_out <- array(NA, dim = c(nsim, nMP, proyears))  # store Total Cost
   Rev_out <- array(NA, dim = c(nsim, nMP, proyears))  # store Total Revenue
@@ -1457,6 +1464,10 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
     Ca[, mm, ] <- apply(CB_P, c(1, 3), sum, na.rm=TRUE) # removed
     CaRet[, mm, ] <- apply(CB_Pret, c(1, 3), sum, na.rm=TRUE) # retained catch
+    
+    SPReqa[, mm, ] <- CalcSPReq(FM_P, StockPars, n_age, nareas, nyears, proyears, nsim)
+    SPRdyna[, mm, ] <- CalcSPRdyn(abind::abind(StockPars$FM, FM_P, along = 3), 
+                                  StockPars, n_age, nareas, nyears, proyears, nsim)
 
     if (!silent) {
       cat("\n")
@@ -1562,7 +1573,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                 SSB=SSBa,
                 VB=VBa,
                 FM=FMa,
-                SPR=list(),
+                SPR=list(Equilibrium = SPReqa, Dynamic = SPRdyna),
                 Catch=CaRet,
                 Removals=Ca,
                 Effort=Effort,
