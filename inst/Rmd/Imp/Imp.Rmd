@@ -72,6 +72,7 @@ axis(side=1)
 ```
 
 #### Time-Series
+Time-series plots of `r nsim` samples of TAC implementation error by year:
 
 ```{r, echo=FALSE}
 
@@ -116,13 +117,14 @@ axis(side=1)
 ```
 
 #### Time-Series
+Time-series plots of `r nsim` samples of TAE implementation error by year:
 
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 years <- seq(nyears+1, to=nyears+proyears,1)
 
-ylim <- c(0, max(Pars$Imp$E_y))
-matplot(years, t(Pars$Imp$E_y),
+ylim <- c(0, max(Pars$Imp$E_y[params$its, ]))
+matplot(years, t(Pars$Imp$E_y[params$its, ]),
         type="l", lty=1, bty="l", main="TAE discrepancy by Year", 
         lwd=params$plotPars$lwd, ylab="Observed/Real", xlab="Years", las=1, xpd=NA,
         ylim=ylim)
@@ -158,14 +160,15 @@ axis(side=1)
 ```
 
 #### Time-Series
+Time-series plots of `r nsim` samples of Size Limit implementation error by year:
 
 ```{r, echo=FALSE}
 
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 years <- seq(nyears+1, to=nyears+proyears,1)
 
-ylim <- c(0, max(Pars$Imp$SizeLim_y))
-matplot(years, t(Pars$Imp$SizeLim_y),
+ylim <- c(0, max(Pars$Imp$SizeLim_y[params$its, ]))
+matplot(years, t(Pars$Imp$SizeLim_y[params$its, ]),
         type="l", lty=1, bty="l", main="Size Limit discrepancy by Year", 
         lwd=params$plotPars$lwd, ylab="Observed/Real", xlab="Years", las=1, xpd=NA,
         ylim=ylim)

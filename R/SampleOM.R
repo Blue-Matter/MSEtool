@@ -1258,7 +1258,7 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
 sample_lnorm <- function(par, cpars, Obj, nsim, altpar=NULL) {
   if (!is.null(cpars[[par]])) return(cpars[[par]])
   if (!is.null(altpar)) par <- altpar
-  val <- slot(Obj, par)
+  val <- slot(Obj, par)[1]
   rlnorm(nsim, mconv(1, val), sdconv(1, val))
 
 }
