@@ -1217,6 +1217,13 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
 
   }
 
+  # ---- Empirical weight-at-age ----- (optional)
+  if (!is.null(cpars$Wt_age_C)) {
+    Fleetout$Wt_age_C <- cpars$Wt_age_C
+  } else {
+    Fleetout$Wt_age_C <- Stock$Wt_age
+  }
+  
   Fleetout$Fdisc <- Fdisc
   Fleetout$Fdisc_array1 <- Fdisc_array1
   Fleetout$Fdisc_array2 <- Fdisc_array2
