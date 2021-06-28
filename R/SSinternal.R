@@ -393,7 +393,7 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   Vout <- cbind(V, V_proj) %>% array(c(n_age, allyears, nsim)) %>% aperm(c(3, 1, 2))
   
   #### Retention and selectivity-at-length - loop over years for time-varying quantities
-  # not currently used - age-based used instead 
+
   loop_over_change_points <- function(yy, df) {
     yy <- ifelse(yy < mainyrs[1], min(df$Yr), yy) # Check to avoid infinite loop
     sched <- df[findInterval(yy, df$Yr), ]
@@ -428,7 +428,7 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   if (retN$N<=0) disc_mort<- NA # no discard mortality if fleet no longer in operation
   
   disc_mort <- mean(disc_mort, na.rm=TRUE)
-  
+
   #### Apical F
   FF <- replist$exploitation[, match(replist$FleetNames[ff], colnames(replist$exploitation))] %>%
     aggregate(by = list(Yr = replist$exploitation$Yr), sum)
@@ -483,7 +483,17 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
     }  
   }
   
+  
+  # ---- empirical weight-at-age for catches ----
+  wt_at_age_c <- replist$wtatage %>% dplyr::filter(Yr %in% mainyrs, Sex==i, Fleet==ff)
+  sel_cols <- which(colnames(wt_at_age_c)=='0'):ncol(wt_at_age_c)
+  wt_at_age_c <- wt_at_age_c[,sel_cols] %>% t()
 
+  lst <- wt_at_age_c[,ncol(wt_at_age_c)]  
+  wt_at_age_c <- cbind(wt_at_age_c, replicate(proyears, lst))
+  wt_at_age_c <- replicate(nsim, wt_at_age_c)
+  wt_at_age_c <- aperm(wt_at_age_c, c(3,1,2))
+  
   #### Fleet object
   Fleet <- new("Fleet")
   Fleet@Name <- replist$FleetNames[ff]
@@ -514,7 +524,9 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   # cpars_fleet$SLarray <- replicate(nsim, SLarray) %>% aperm(c(3, 1, 2))
   cpars_fleet$DR <- rep(0, nsim) # Should be zero since we have retention in cpars$retL
   cpars_fleet$Find <- Find %>% matrix(nsim, length(mainyrs), byrow = TRUE)
-
+  
+  cpars_fleet$Wt_age_C <- wt_at_age_c
+  
   #### Data object
   cpars_fleet$Data <- new("Data")
   cpars_fleet$Data@Year <- mainyrs
