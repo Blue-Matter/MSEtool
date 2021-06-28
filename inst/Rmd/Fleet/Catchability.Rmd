@@ -39,6 +39,7 @@ plot.Catchability(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=1
 
 #### Time-Series
 Time-series plot showing `r nsamp` trends in future fishing efficiency (catchability):
+
 ```{r q_time-series, echo=FALSE}
 plot.Catchability(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=2)
 ```
