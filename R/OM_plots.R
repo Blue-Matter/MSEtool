@@ -133,7 +133,7 @@ plot_sample_ts <- function(Vars, Pars, element="Stock", plotPars, its, nsamp,
   } else {
     if (!is.null(proyears)) CurrentYr <- 0
   }
-  par(mfrow=c(nrow,ncol), oma=c(2,3,1,1), mar=c(3,2,2,2))
+  par(mfrow=c(nrow,ncol), oma=c(3,3,1,1), mar=c(1,1,1,1))
   for (i in 1:nrow(Vars))
     matplot(years, t(Pars[[element]][[Vars$Slot[i]]][its,]), type="l", bty="l",
             main=Vars$Title[i], lwd=plotPars$lwd, lty=1, ylab=Vars$Name[i], xlab="Year",
