@@ -42,6 +42,7 @@ if (params$tabs) {
 ```
 
 #### Depletion 
+Time-series plots of SB/SB0:
 
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
@@ -58,6 +59,7 @@ abline(h=seq(0.2, maxL, by=0.2), lwd=1, col="lightgray")
 
 
 #### Absolute
+Time-series plots of absolute SB:
 
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
@@ -81,6 +83,8 @@ if (params$tabs) {
 ```
 
 #### Depletion 
+Time-series plots of VB/VB0:
+
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
@@ -96,6 +100,8 @@ abline(h=seq(0.2, maxL, by=0.2), lwd=1, col="lightgray")
 
 
 #### Absolute
+Time-series plots of absolute VB:
+
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
@@ -117,6 +123,8 @@ if (params$tabs) {
 ```
 
 #### Depletion
+Time-series plots of B/B0:
+
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
@@ -131,6 +139,8 @@ abline(h=seq(0.2, maxL, by=0.2), lwd=1, col="lightgray")
 ```
 
 #### Absolute
+Time-series plots of absolute B:
+
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
@@ -154,6 +164,8 @@ if (params$tabs) {
 ```
 
 #### Relative
+Time-series plot of recruitment relative to R0:
+
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
@@ -169,6 +181,8 @@ abline(h=seq(0.2, maxL, by=0.2), lwd=1, col="lightgray")
 ```
 
 #### Absolute
+Time-series plot of absolute recruitment:
+
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
@@ -191,6 +205,8 @@ if (params$tabs) {
 ```
 
 #### Relative
+Time-series of catch relative to the current year:
+
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
@@ -209,6 +225,8 @@ abline(h=seq(0.5, maxL, length.out=10), lwd=1, col="lightgray")
 ```
 
 #### Absolute 
+Time-series of absolute catch:
+
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
@@ -232,6 +250,8 @@ if (params$tabs) {
 ```
 
 #### Historical Time-Series
+Time-series of historical fishing mortality:
+
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
