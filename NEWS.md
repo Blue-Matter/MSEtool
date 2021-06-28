@@ -7,6 +7,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 - fix issue with simulated index in `AddInd` in the projection years
 
 ### New additions
+- add option to include empirical weight-at-age for the catches with `cpars$Wt_age_C`
 - F_crash, F_med, and other reference points have been added to `Hist@Ref$ByYear`
 - can now optimize for depletion in terms of SB/SBMSY with `control$D <- 'SBMSY'`
 - option to simulate CAL data including removals (retained + discards) with `OM@cpars$control$CAL="removals"`. 
