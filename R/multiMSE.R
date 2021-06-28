@@ -909,10 +909,22 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
   # --- Calculate Historical Catch ----
   # Calculate catch-at-age
+  # empirical weight-at-age for the catch
+  Wt_age_C <- array(NA,c(nsim,np,nf,n_age,nyears,nareas))
+  for (p in 1:np) {
+    for (f in 1:nf){
+      Wt_age_C[,p,f,,,] <- replicate(nareas, FleetPars[[p]][[f]]$Wt_age_C[,,1:nyears])
+    }
+  }
   Ctemp <- array(NA,c(nsim,np,nf,n_age,nyears,nareas))
+  
   CNind <- TEG(dim(Ctemp))
   Nind<-CNind[,c(1,2,4,5,6)]  # sim, stock, n_age, nyears, nareas
-  Ctemp[CNind]<-Biomass[Nind]*(1-exp(-Z[Nind]))*(FM[CNind]/Z[Nind])
+
+  Biomass_C <- array(0, dim=dim(FMret))
+  Biomass_C[CNind] <- N[Nind] * Wt_age_C[CNind]
+  
+  Ctemp[CNind] <- Biomass_C[CNind]*(1-exp(-Z[Nind]))*(FM[CNind]/Z[Nind])
   CB <- Ctemp
 
   # Calculate retained-at-age
@@ -920,7 +932,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   Cret <- Ctemp # apply(Ctemp,1:5,sum)
   Cret[is.na(Cret)] <- 0
 
-  Ctemp[CNind] <- Biomass[Nind] * (1-exp(-Z[Nind])) * (FMret[CNind]/Z[Nind])
+  Ctemp[CNind] <- Biomass_C[CNind] * (1-exp(-Z[Nind])) * (FMret[CNind]/Z[Nind])
   CBret <- Ctemp
 
   # Add to FleetPars
