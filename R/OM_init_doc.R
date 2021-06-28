@@ -754,8 +754,15 @@ OMdoc <- function(OM=NULL, rmd.source=NULL, overwrite=FALSE, out.file=NULL,
 
     message("\n\nRendering markdown document as ", RMDfileout)
 
-    EffYears <- seq(from=(OM@CurrentYr -  OM@nyears + 1), to=OM@CurrentYr, length.out=length(OM@EffYears))
-    EffYears <- round(EffYears,0)
+    if (all(OM@EffYears<2000)) {
+      fstYr <- (OM@CurrentYr -  OM@nyears + 1)
+      lstYr <- OM@CurrentYr
+      EffYears <-(fstYr:lstYr)[OM@EffYears]
+      EffYears <- round(EffYears,0)
+    } else {
+      EffYears <- OM@EffYears
+    }
+
     if (length(OM@cpars$Find)>0) {
       lower <- as.numeric(signif(apply(OM@cpars$Find, 2, min),3))
       upper <- as.numeric(signif(apply(OM@cpars$Find, 2, max),3))
@@ -952,7 +959,7 @@ writeSection <- function(class=c("Intro", "Stock", "Fleet", "Obs", "Imp", "Refer
             } else {
               val <- range(OM@cpars[[sl]])
             }
-            val <- round(val,2)
+            val <- round(val,3)
             used <- TRUE
             val <- gsub('"', "", paste(val, collapse="\", \""))
             valtext <- paste0("Specified in cpars: ", "<span style='color:", color, "'>", " ", trimws(val), "</span>", "\n\n")
@@ -1542,7 +1549,8 @@ plotGrowth <- function(OM, Pars=NULL, nsim=48, nyears=50, proyears=50, nsamp=3, 
 }
 
 
-plotRec <- function(OM, Pars=NULL, nsim=48, nyears=50, proyears=50, nsamp=3, col="darkgray", breaks=10, lwd=2) {
+plotRec <- function(OM, Pars=NULL, nsim=48, nyears=50, proyears=50, nsamp=3,
+                    col="darkgray", breaks=10, lwd=2) {
   if (class(OM) != "OM") stop("Must supply object of class 'OM'")
 
   if (is.finite(OM@nyears)) nyears <- OM@nyears
