@@ -1188,6 +1188,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAY1]  # Calculate spawning stock numbers
     SSB_P[SAYR] <- SSN_P[SAYR] * StockPars$Wt_age[SAY1]
 
+    StockPars$N_P <- N_P
     # -- Apply MP in initial projection year ----
     runMP <- applyMP(Data=Data_MP, MPs = MPs[mm], reps = reps, silent=TRUE)  # Apply MP
 

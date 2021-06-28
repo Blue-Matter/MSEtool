@@ -632,6 +632,9 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     V_P <- V_P2
   }
 
+  # ---- over-write biomass - with fleet-specific weight-at-age
+  Biomass_P <- StockPars$N_P * replicate(StockPars$nareas, FleetPars$Wt_age_C[,,(nyears+1):((nyears)+proyears)])
+  
   CurrentB <- Biomass_P[,,y,] # biomass at the beginning of year
   CurrentVB <- array(NA, dim=dim(CurrentB))
   Catch_tot <- Catch_retain <- array(NA, dim=dim(CurrentB)) # catch this year arrays
