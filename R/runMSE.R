@@ -938,6 +938,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   Hist@OM <- OM
   Hist@Misc <- list()
 
+  Hist@Misc$BioEco <- data.frame(RevCurr, CostCurr, Response, CostInc, RevInc, LatentEff)
+
   attr(Hist, "version") <- packageVersion("MSEtool")
   attr(Hist, "date") <- date()
   attr(Hist, "R.version") <- R.version
@@ -1071,7 +1073,13 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
   # Add to Hist - TODO -----
   # Bio-economic parameters - and add to model
-  LatentEff <- RevCurr <- CostCurr <- Response <- CostInc <-  RevInc <- rep(NA, nsim)
+
+  LatentEff <- Hist@Misc$BioEco$LatentEff
+  RevCurr <- Hist@Misc$BioEco$RevCurr
+  CostCurr <- Hist@Misc$BioEco$CostCurr
+  Response <- Hist@Misc$BioEco$Response
+  CostInc <- Hist@Misc$BioEco$CostInc
+  RevInc <- Hist@Misc$BioEco$RevInc
 
   # projection arrays for storing all info (by simulation, age, MP, years, areas)
   N_P_mp <- array(NA, dim = c(nsim, n_age, nMP, proyears, nareas))
@@ -1548,6 +1556,11 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     # Hist@Ref <- list()
     # Hist@SampPars <- list()
   }
+
+  Misc$LatEffort <- LatEffort_out
+  Misc$Revenue <- Rev_out
+  Misc$Cost <- Cost_out
+  Misc$TAE <- TAE_out
 
   MSEout <- new("MSE",
                 Name = OM@Name,
