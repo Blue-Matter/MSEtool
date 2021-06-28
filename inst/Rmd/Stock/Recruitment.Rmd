@@ -33,7 +33,8 @@ if (Pars$Stock$SRrel[1] == 2) SR <- "Ricker"
 
 ```
 
-#### Sampled Parameters 
+#### Sampled Parameters
+
 Histograms of `r nsim` simulations of steepness (`h`), recruitment process error (`Perr`) and auto-correlation (`AC`) for the `r SR` stock-recruitment relationship, with vertical colored lines indicating `r nsamp` randomly drawn values used in other plots:
 
 ```{r, echo=FALSE}
@@ -41,8 +42,11 @@ plot.Recruitment(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=1)
 ```
 
 #### Time-Series
+Time-series plot showing `r nsamp` samples of recruitment deviations for historical and projection years:
 
 ```{r, echo=FALSE}
+
 plot.Recruitment(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=2)
+
 ```
 
