@@ -51,6 +51,7 @@ axis(side=1)
 ```
 
 #### Time-Series
+Time-series plots of catch observation error for historical and projection years:
 
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
@@ -94,6 +95,7 @@ axis(side=1)
 ```
 
 #### Time-Series
+Time-series plots of depletion observation error for historical and projection years:
 
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
@@ -136,12 +138,13 @@ axis(side=1)
 ```
 
 #### Time-Series
+Time-series plots of abundance observation error for historical and projection years:
 
 ```{r, echo=FALSE}
 
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 years <- c(seq(-nyears+1, 0, by=1), seq(1, proyears,1))
-ylim <- c(0, max(Pars$Obs$Aerr_y))
+ylim <- c(0, max(Pars$Obs$Aerr_y[params$its,]))
 matplot(years, t(Pars$Obs$Aerr_y[params$its, ]),
         type="l", lty=1, bty="l", main="Abundance discrepancy by Year", 
         lwd=params$plotPars$lwd, ylab="Observed/Real", xlab="Years", las=1, xpd=NA,
@@ -274,6 +277,7 @@ axis(side=1)
 <!-- # to add hbiascv -->
 
 #### Time-Series
+Timeseries plots of observeration error for recruitment:
 
 ```{r, echo=FALSE}
 
@@ -337,10 +341,6 @@ if (params$tabs) {
 Histograms of `r nsim` simulations of bias in observed natural mortality (`Mbias`), von Bertalanffy growth function parameters (`Linfbias`, `Kbias`, and `t0bias`), length-at-maturity (`lenMbias`), and bias in observed length at first capture (`LFCbias`) and first length at full capture (`LFSbias`) with vertical colored lines indicating `r nsamp` randomly drawn values:
 
 ```{r, echo=FALSE}
-
-
-
-
 par(mfrow=c(2,2))
 hist2(Pars$Obs$Mbias, main="Mbias", col=params$plotPars$col, axes=params$plotPars$axes,
       breaks=params$plotPars$breaks, cex.main=params$plotPars$cex.main)
