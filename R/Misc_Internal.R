@@ -122,7 +122,7 @@ getEffhist <- function(Esd, nyears, EffYears, EffLower, EffUpper) {
 
     if (!all(effort == mean(effort))) effort <- range01(effort)
 
-    effort[effort == 0] <- 0.01
+    effort[effort == 0] <- tiny
 
     Emu <- -0.5 * Esd^2
     Eerr <- array(exp(rnorm(nyears * nsim, rep(Emu, nyears), rep(Esd, nyears))), c(nsim, nyears))  # calc error
@@ -341,7 +341,7 @@ indfit <- function(sim.index,obs.ind, Year, plot=FALSE, lcex=0.8){
   if (any(obs.ind<0, na.rm=TRUE)) {
     obs.ind <- obs.ind+1-min(obs.ind, na.rm=TRUE)
   }
-  
+
   if (plot) Year <- Year[!is.na(obs.ind)]
   sim.index <- lcs(sim.index[!is.na(obs.ind)]) # log space conversion of standardized simulated index
   obs.ind <- lcs(obs.ind[!is.na(obs.ind)]) # log space conversion of standardized observed ind
