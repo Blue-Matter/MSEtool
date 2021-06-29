@@ -74,7 +74,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
     Data@Year <- mainyrs
   }
   Data@LHYear <- Data@Year[length(Data@Year)]
-  message(paste("Detected", nyears, "years in the assessment model."))
+  message("Detected", nyears, "years in the assessment model.")
   message(paste0("First year: ", Data@Year[1], ", Last year: ", Data@Year[length(Data@Year)], "\n"))
 
   ##### Life history
@@ -196,7 +196,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
       plus_one <- CAL_bins[length(CAL_bins)] + width_bin
 
       Data@CAL_bins <- c(CAL_bins, plus_one)
-      Data@CAL_mids <- Data@CAL_bins[1:(length(Data@CAL_bins)-1)] + Data@CAL_bins[2:length(Data@CAL_bins)]
+      Data@CAL_mids <- seq(CAL_bins[1]+0.5*width_bin, by=width_bin, length.out=length(Data@CAL_bins)-1)
 
       ML <- rowSums(CAL * rep(Data@CAL_mids, each = nyears), na.rm = TRUE)/rowSums(CAL, na.rm = TRUE)
       ML[ML <= 0 | ML=="NaN"] <- NA
@@ -798,6 +798,7 @@ getGpars_r4ss_134 <- function(replist, seas = 1) {
   Growth_Parameters <- replist$Growth_Parameters
   #if (is.null(morphs)) {
   morphs <- replist$mainmorphs
+  if (any(!is.finite(morphs))) morphs <- 1:length(morphs)
   #}
   Grow_std <- replist$derived_quants[grep("Grow_std_", replist$derived_quants$Label), ]
   if (nrow(Grow_std) == 0) {
