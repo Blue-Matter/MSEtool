@@ -1060,10 +1060,18 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
 
   if (!exists("V", inherits = FALSE)) {
     # calculate selectivity-at-age from selectivity-at-length
-    VList <- lapply(1:nsim, calcV, Len_age=StockPars$Len_age,
-                    LatASD=StockPars$LatASD, SLarray=SLarray,
-                    n_age=n_age, nyears=nyears, proyears=proyears,
-                    CAL_binsmid=StockPars$CAL_binsmid)
+    if (snowfall::sfIsRunning()) {
+      VList <- snowfall::sfLapply(1:nsim, calcV, Len_age=StockPars$Len_age,
+                                  LatASD=StockPars$LatASD, SLarray=SLarray,
+                                  n_age=n_age, nyears=nyears, proyears=proyears,
+                                  CAL_binsmid=StockPars$CAL_binsmid)
+    } else {
+      VList <- lapply(1:nsim, calcV, Len_age=StockPars$Len_age,
+                      LatASD=StockPars$LatASD, SLarray=SLarray,
+                      n_age=n_age, nyears=nyears, proyears=proyears,
+                      CAL_binsmid=StockPars$CAL_binsmid)
+
+    }
     V <- aperm(array(as.numeric(unlist(VList, use.names=FALSE)), dim=c(n_age, nyears+proyears, nsim)), c(3,1,2))
   }
 
@@ -1162,10 +1170,18 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
 
   if (!exists("retA", inherits = FALSE)) {
     # calculate retention-at-age from retention-at-length
-    VList <- lapply(1:nsim, calcV, Len_age=StockPars$Len_age,
-                    LatASD=StockPars$LatASD, SLarray=retL,
-                    n_age=n_age, nyears=nyears, proyears=proyears,
-                    CAL_binsmid=StockPars$CAL_binsmid)
+    if (snowfall::sfIsRunning()) {
+      VList <- snowfall::sfLapply(1:nsim, calcV, Len_age=StockPars$Len_age,
+                                  LatASD=StockPars$LatASD, SLarray=retL,
+                                  n_age=n_age, nyears=nyears, proyears=proyears,
+                                  CAL_binsmid=StockPars$CAL_binsmid)
+    } else {
+      VList <- lapply(1:nsim, calcV, Len_age=StockPars$Len_age,
+                      LatASD=StockPars$LatASD, SLarray=retL,
+                      n_age=n_age, nyears=nyears, proyears=proyears,
+                      CAL_binsmid=StockPars$CAL_binsmid)
+    }
+
     retA <- aperm(array(as.numeric(unlist(VList, use.names=FALSE)), dim=c(n_age, nyears+proyears, nsim)), c(3,1,2))
   }
 
@@ -1223,7 +1239,7 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
   } else {
     Fleetout$Wt_age_C <- Stock$Wt_age
   }
-  
+
   Fleetout$Fdisc <- Fdisc
   Fleetout$Fdisc_array1 <- Fdisc_array1
   Fleetout$Fdisc_array2 <- Fdisc_array2
