@@ -104,7 +104,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
     StockPars[[p]] <- SampleStockPars(MOM@Stocks[[p]], nsim, nyears,
                                       proyears, SampCpars[[p]][[1]],
-                                      msg=silent)
+                                      msg=!silent)
     StockPars[[p]]$plusgroup <- plusgroup[p]
     StockPars[[p]]$maxF <- MOM@maxF
 
@@ -116,6 +116,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                                              nsim, nyears, proyears,
                                              cpars=SampCpars[[p]][[f]])
     }
+
 
     # --- Sample Obs Parameters ----
     for(f in 1:nf) {
@@ -464,7 +465,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     if(snowfall::sfIsRunning() & parallel){
       exp.time <- (np * nf)/(9*ncpus) * nsim
       exp.time <- round(exp.time,2)
-# 
+#
 #       message("Optimizing for user-specified depletion ",
 #               'using parallel processing',
 #               "(takes approximately [(nstocks x nfleets)/(9 x number of cores in cluster)]",
@@ -474,7 +475,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
               'using parallel processing',
               'for ', nsim, 'simulations,', np, ' stocks, and ', nf, 'fleets',
               "(could take a while!)")
-      
+
       out<-snowfall::sfLapply(1:nsim, getq_multi_MICE, StockPars, FleetPars,
                               np,nf, nareas, maxage, nyears, N, VF, FretA,
                               maxF=MOM@maxF, MPA, CatchFrac, bounds=bounds,
@@ -519,7 +520,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   fracD <- 0.05; ntrials <- 50
   if (!is.null(control$ntrials)) ntrials <- control$ntrials
   if (!is.null(control$ntrials)) fracD <- control$fracD
-  
+
   if (length(probQ) > 0) {
     Err <- TRUE
     if(!silent) message(Nprob,
@@ -640,13 +641,13 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                     maxF=MOM@maxF,MPA=MPA,Rel=Rel,SexPars=SexPars,qs=qs,
                     qfrac=qfrac,
                     plusgroup=plusgroup)
-  
+
   N <- aperm(array(as.numeric(unlist(histYrs[1,], use.names=FALSE)),
                    dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
-  
+
   Biomass <- aperm(array(as.numeric(unlist(histYrs[2,], use.names=FALSE)),
                          dim=c(np ,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
-  
+
   SSN <- aperm(array(as.numeric(unlist(histYrs[3,], use.names=FALSE)),
                      dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
   SSB <- aperm(array(as.numeric(unlist(histYrs[4,], use.names=FALSE)),
@@ -660,19 +661,19 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
   Linfarray <- aperm(array(as.numeric(unlist(histYrs[8,], use.names=FALSE)),
                            dim=c(np, nyears, nsim)), c(3,1,2))
-  
+
   Karray <- aperm(array(as.numeric(unlist(histYrs[9,], use.names=FALSE)),
                         dim=c(np, nyears, nsim)), c(3,1,2))
-  
+
   t0array <- aperm(array(as.numeric(unlist(histYrs[10,], use.names=FALSE)),
                          dim=c(np, nyears, nsim)), c(3,1,2))
-  
+
   Len_age <- aperm(array(as.numeric(unlist(histYrs[11,], use.names=FALSE)),
                          dim=c(np, n_age, nyears, nsim)), c(4,1,2,3))
-  
+
   Wt_age <- aperm(array(as.numeric(unlist(histYrs[12,], use.names=FALSE)),
                         dim=c(np, n_age, nyears, nsim)), c(4,1,2,3))
-  
+
   VBF <- aperm(array(as.numeric(unlist(histYrs[17,], use.names=FALSE)),
                      dim=c(np,nf,n_age, nyears, nareas, nsim)), c(6,1,2,3,4,5))
   Z <- aperm(array(as.numeric(unlist(histYrs[18,], use.names=FALSE)),
@@ -681,8 +682,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                    dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
   M_ageArray <- aperm(array(as.numeric(unlist(histYrs[20,], use.names=FALSE)),
                             dim=c(np, n_age, nyears, nsim)), c(4,1,2,3))
-  
-  
+
   # update StockPars
   for (p in 1:np) {
     StockPars[[p]]$Linfarray[,1:nyears] <- Linfarray[,p, ]
@@ -692,7 +692,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     StockPars[[p]]$Wt_age[,,1:nyears] <- Wt_age[,p,, ]
     StockPars[[p]]$M_ageArray[,,1:nyears] <- M_ageArray[,p,, ]
   }
-  
+
   # TODO - selectivity-at-age should update if growth changes
   # Depletion check
   SSB0_specified <- array(NIL(StockPars,'SSB0'),c(nsim,np))
@@ -917,13 +917,13 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     }
   }
   Ctemp <- array(NA,c(nsim,np,nf,n_age,nyears,nareas))
-  
+
   CNind <- TEG(dim(Ctemp))
   Nind<-CNind[,c(1,2,4,5,6)]  # sim, stock, n_age, nyears, nareas
 
   Biomass_C <- array(0, dim=dim(FMret))
   Biomass_C[CNind] <- N[Nind] * Wt_age_C[CNind]
-  
+
   Ctemp[CNind] <- Biomass_C[CNind]*(1-exp(-Z[Nind]))*(FM[CNind]/Z[Nind])
   CB <- Ctemp
 
@@ -1552,20 +1552,20 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                      dim=c(np,n_age, nareas, nsim)), c(4,1,2,3))
     FML <- apply(array(FM[, ,,, nyears, ],c(nsim,np,nf,n_age,nareas)),
                  c(1, 3), max)
-    
+
     Len_age <- aperm(array(as.numeric(unlist(NextYrN[14,], use.names=FALSE)),
                            dim=c(np, n_age, nsim)), c(3,1,2))
-    
+
     Wt_age <- aperm(array(as.numeric(unlist(NextYrN[15,], use.names=FALSE)),
                           dim=c(np, n_age, nsim)), c(3,1,2))
-    
+
     for(p in 1:np) {
       StockPars[[p]]$N_P<-N_P[,p,,,]
       StockPars[[p]]$Biomass_P<-Biomass_P[,p,,,]
       StockPars[[p]]$SSN_P<-SSN_P[,p,,,]
       StockPars[[p]]$SSB_P<-SSB_P[,p,,,]
       StockPars[[p]]$VBiomass_P<-VBiomass_P[,p,,,]
-    
+
       StockPars[[p]]$Len_age[,,nyears+y] <- Len_age[,p,]
       StockPars[[p]]$Wt_age[,,nyears+y] <- Wt_age[,p,]
     }
@@ -1849,7 +1849,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         K[,p]<-StockPars[[p]]$Karray[,nyears+y]
         Linf[,p]<-StockPars[[p]]$Linfarray[,nyears+y]
         t0[,p]<-StockPars[[p]]$t0array[,nyears+y]
-        
+
         Len_age[,p,]<-StockPars[[p]]$Len_age[,,nyears+y]
         WatAge[,p,]<-StockPars[[p]]$Wt_age[,,nyears+y]
         SSB0array[,np] <-StockPars[[p]]$SSB0
@@ -1900,10 +1900,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
       Len_age <- aperm(array(as.numeric(unlist(NextYrN[14,], use.names=FALSE)),
                              dim=c(np, n_age, nsim)), c(3,1,2))
-      
+
       Wt_age <- aperm(array(as.numeric(unlist(NextYrN[15,], use.names=FALSE)),
                             dim=c(np, n_age, nsim)), c(3,1,2))
-      
+
       for(p in 1:np){
         StockPars[[p]]$N_P<-N_P[,p,,,]
         StockPars[[p]]$Biomass_P<-Biomass_P[,p,,,]
@@ -1911,7 +1911,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         StockPars[[p]]$SSB_P<-SSB_P[,p,,,]
         StockPars[[p]]$VBiomass_P<-VBiomass_P[,p,,,]
         #for(f in 1:nf)FleetPars[[p]][[f]]$FML<-FML[]
-        
+
         StockPars[[p]]$Len_age[,,nyears+y] <- Len_age[,p,]
         StockPars[[p]]$Wt_age[,,nyears+y] <- Wt_age[,p,]
       }
