@@ -111,10 +111,11 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     # --- Sample Fleet Parameters ----
     FleetPars[[p]]<-ObsPars[[p]]<-ImpPars[[p]]<-list()
     for(f in 1:nf){
-      FleetPars[[p]][[f]] <- SampleFleetPars(MOM@Fleets[[p]][[f]],
+      FleetPars[[p]][[f]] <- SampleFleetPars(Fleet=MOM@Fleets[[p]][[f]],
                                              Stock=StockPars[[p]],
                                              nsim, nyears, proyears,
                                              cpars=SampCpars[[p]][[f]])
+
     }
 
 
