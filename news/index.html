@@ -125,27 +125,17 @@
     <div id="msetool-3039995-development-version" class="section level2">
 <h2 class="hasAnchor">
 <a href="#msetool-3039995-development-version" class="anchor"></a>MSEtool 3.0.3.9995 Development Version</h2>
-<div id="fixes" class="section level3">
-<h3 class="hasAnchor">
-<a href="#fixes" class="anchor"></a>Fixes</h3>
-<ul>
-<li>fix the plus-group calculations in <code>popdynOneTScpp</code>
-</li>
-<li>fix issue with simulated index in <code>AddInd</code> in the projection years</li>
-</ul>
-</div>
 <div id="new-additions" class="section level3">
 <h3 class="hasAnchor">
 <a href="#new-additions" class="anchor"></a>New additions</h3>
 <ul>
-<li>add option to include empirical weight-at-age for the catches with <code>cpars$Wt_age_C</code>
-</li>
-<li>F_crash, F_med, and other reference points have been added to <code>Hist@Ref$ByYear</code>
-</li>
-<li>can now optimize for depletion in terms of SB/SBMSY with <code>control$D &lt;- 'SBMSY'</code>
-</li>
-<li>option to simulate CAL data including removals (retained + discards) with <code>OM@cpars$control$CAL="removals"</code>. Default is to simulate only retained catch-at-length.</li>
-<li>option to apply TAC to all removals with <code>OM@cpars$control$TAC="removals"</code>. Default is to for TAC to refer to retained catch (i.e., removals will be greater than TAC if there are discards)</li>
+<li><p>bio-economic model</p></li>
+<li><p>Dynamic and equilibrium spawning potential ratio (SPR) are now calculated for the historical and projection years.</p></li>
+<li><p>add option to include empirical weight-at-age for the catches with <code>cpars$Wt_age_C</code></p></li>
+<li><p>F_crash, F_med, and other reference points have been added to <code>Hist@Ref$ByYear</code></p></li>
+<li><p>can now optimize for depletion in terms of SB/SBMSY with <code>control$D &lt;- 'SBMSY'</code></p></li>
+<li><p>option to simulate CAL data including removals (retained + discards) with <code>OM@cpars$control$CAL="removals"</code>. Default is to simulate only retained catch-at-length.</p></li>
+<li><p>option to apply TAC to all removals with <code>OM@cpars$control$TAC="removals"</code>. Default is to for TAC to refer to retained catch (i.e., removals will be greater than TAC if there are discards)</p></li>
 </ul>
 </div>
 <div id="minor-changes" class="section level3">
@@ -156,6 +146,15 @@
 <li>add conditioning on real data for <code>multiMSE</code>
 </li>
 <li>MSY calculations now in C++ for significant speed increase</li>
+</ul>
+</div>
+<div id="fixes" class="section level3">
+<h3 class="hasAnchor">
+<a href="#fixes" class="anchor"></a>Fixes</h3>
+<ul>
+<li>fix the plus-group calculations in <code>popdynOneTScpp</code>
+</li>
+<li>fix issue with simulated index in <code>AddInd</code> in the projection years</li>
 </ul>
 </div>
 </div>
