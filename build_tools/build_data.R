@@ -483,17 +483,16 @@ makeDF <- function(df_in, type=NULL) {
 }
 
 cpars_Stock <- openxlsx::read.xlsx("build_tools/Class_definitions/Class_definitions.xlsx",
-                                   sheet="Stock") %>%
-  makeDF(., 'Stock')
+                                   sheet="Stock") %>%  makeDF(., 'Stock')
+
 cpars_Fleet <- openxlsx::read.xlsx("build_tools/Class_definitions/Class_definitions.xlsx",
-                                   sheet="Fleet") %>%
-  makeDF(., 'Fleet')
+                                   sheet="Fleet") %>%  makeDF(., 'Fleet')
+
 cpars_Obs <- openxlsx::read.xlsx("build_tools/Class_definitions/Class_definitions.xlsx",
-                                 sheet="Obs") %>%
-  makeDF(., 'Obs')
+                                 sheet="Obs") %>%  makeDF(., 'Obs')
+
 cpars_Imp <- openxlsx::read.xlsx("build_tools/Class_definitions/Class_definitions.xlsx",
-                                 sheet="Imp")%>%
-  makeDF(., 'Imp')
+                                 sheet="Imp")%>%  makeDF(., 'Imp')
 
 
 cpars_internal <- openxlsx::read.xlsx("build_tools/Class_definitions/Class_definitions.xlsx",
