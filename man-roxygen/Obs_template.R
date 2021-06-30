@@ -27,7 +27,10 @@
 #' @slot CAA_ESS Effective sample size of catch-at-age observations collected
 #'  per time step. For each time step a single value is drawn from a uniform
 #'  distribution specified by the upper and lower bounds provided. CAA_ESS should
-#'  not exceed CAA_nsamp. Positive integers.
+#'  not exceed CAA_nsamp. If greater than 1, then this is the multinomial
+#'  distribution sample size. If less than 1, this is the coefficient of variation
+#'  for the logistic normal distribution (see help doucmentation for simCAA for
+#'  details).
 #' @slot CAL_nsamp Number of catch-at-length observations collected per time
 #'  step. For each time step a single value is drawn from a uniform distribution
 #'  specified by the upper and lower bounds provided. Positive integers.

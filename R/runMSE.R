@@ -646,6 +646,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   SPR_hist$Equilibrium <- CalcSPReq(StockPars$FM, StockPars, n_age, nareas, nyears, proyears, nsim, Hist = TRUE)
   SPR_hist$Dynamic <- CalcSPRdyn(StockPars$FM, StockPars, n_age, nareas, nyears, proyears, nsim, Hist = TRUE)
 
+  
   # ---- Calculate Mean Generation Time ----
   MarrayArea <- replicate(nareas, StockPars$M_ageArray[,,1:nyears])
   Mnow<-apply(MarrayArea[,,nyears,]*N[,,nyears,],1:2,sum)/apply(N[,,nyears,],1:2,sum)
@@ -916,9 +917,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     Unfished_Equilibrium=Unfished_Equilibrium
   )
 
-
   Hist@Ref <- ReferencePoints
-
   Hist@SampPars <- list()
 
   # cpars_Stock <- StockPars[which(lapply(StockPars, length) != nsim)]
@@ -1077,9 +1076,6 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   RealData <- Hist@OM@cpars$Data
 
   ReferencePoints <- Hist@Ref$ReferencePoints
-
-  # Add to Hist - TODO -----
-  # Bio-economic parameters - and add to model
 
   LatentEff <- Hist@Misc$BioEco$LatentEff
   RevCurr <- Hist@Misc$BioEco$RevCurr
@@ -1371,6 +1367,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAYt]  # Calculate spawning stock numbers
       SSB_P[SAYR] <- SSN_P[SAYR] * StockPars$Wt_age[SAYt]  # Calculate spawning stock biomass
 
+      StockPars$N_P <- N_P
       # --- An update year - update data and run MP ----
       if (y %in% upyrs) {
         # --- Update Data object ----
@@ -1569,9 +1566,6 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     # Hist@SampPars <- list()
   }
 
-  Misc$LatEffort <- LatEffort_out
-  Misc$Revenue <- Rev_out
-  Misc$Cost <- Cost_out
   Misc$TAE <- TAE_out
 
   MSEout <- new("MSE",

@@ -47,8 +47,8 @@ simulation, age, year and area
 \item Landings: Landings (biomass); array dimensions \code{c(nsim, nyears, nareas)}
 \item Discards: Discards (biomass); array dimensions \code{c(nsim, nyears, nareas)}
 \item Find: Historical fishing mortality (scale-free); matrix dimensions \code{c(nsim, nyears)}
-\item RecDev: Recruitment deviations (historical and projection);
-matrix dimensions \code{c(nsim, nyears+proyears+maxage)}
+\item RecDev: Recruitment deviations (historical and projection); matrix dimensions \code{c(nsim, nyears+proyears+maxage)}
+\item SPR: Named list with Equilibrium and Dynamic SPR (both matrices iwth dimensions \code{c(nsim, nyears)})
 \item Unfished_Equilibrium: A named list with unfished equilibrium numbers and biomass-at-age
 }}
 

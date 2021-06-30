@@ -2,11 +2,12 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 ## MSEtool 3.0.3.9995 Development Version
 
-### Fixes
-- fix the plus-group calculations in `popdynOneTScpp`
-- fix issue with simulated index in `AddInd` in the projection years
 
 ### New additions
+- bio-economic model
+
+
+- Dynamic and equilibrium spawning potential ratio (SPR) are now calculated for the historical and projection years.
 - add option to include empirical weight-at-age for the catches with `cpars$Wt_age_C`
 - F_crash, F_med, and other reference points have been added to `Hist@Ref$ByYear`
 - can now optimize for depletion in terms of SB/SBMSY with `control$D <- 'SBMSY'`
@@ -19,6 +20,11 @@ Default is to for TAC to refer to retained catch (i.e., removals will be greater
 - add more informative messages when conditioning on real data
 - add conditioning on real data for `multiMSE`
 - MSY calculations now in  C++ for significant speed increase
+
+### Fixes
+- fix the plus-group calculations in `popdynOneTScpp`
+- fix issue with simulated index in `AddInd` in the projection years
+
 
 ## MSEtool 3.0.2
 

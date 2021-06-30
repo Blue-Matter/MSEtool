@@ -32,7 +32,8 @@
 #'  dimensions: nsim, nMPs, proyears. Non-negative real numbers
 #' @slot FM Simulated fishing mortality rate over the projection. An array with
 #'  dimensions: nsim, nMPs, proyears. Non-negative real numbers
-#' @slot SPR Currently not used.
+#' @slot SPR Named list with equilibrium and dynamic SPR. Each element is an
+#'  array with dimensions: nsim, nMPs, proyears. Non-negative real numbers.
 #' @slot Catch Simulated catches (landings) over the projection. An array with
 #'  dimensions: nsim, nMPs, proyears. Non-negative real numbers
 #' @slot Removals Simulated removals (catch + discards) over the projection. An
