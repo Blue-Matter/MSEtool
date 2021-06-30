@@ -47,8 +47,8 @@
 
 
 <meta property="og:title" content="Simulate Catch-at-Age Data — simCAA" />
-<meta property="og:description" content="CAA generated with a multinomial observation model from retained catch-at-age
-data" />
+<meta property="og:description" content="CAA generated with either a multinomial or logistic normal observation model from retained catch-at-age
+array" />
 <meta property="og:image" content="/logo.png" />
 
 
@@ -126,8 +126,8 @@ data" />
     </div>
 
     <div class="ref-description">
-    <p>CAA generated with a multinomial observation model from retained catch-at-age
-data</p>
+    <p>CAA generated with either a multinomial or logistic normal observation model from retained catch-at-age
+array</p>
     </div>
 
     <pre class="usage"><span class='fu'>simCAA</span><span class='op'>(</span><span class='va'>nsim</span>, <span class='va'>yrs</span>, <span class='va'>n_age</span>, <span class='va'>Cret</span>, <span class='va'>CAA_ESS</span>, <span class='va'>CAA_nsamp</span><span class='op'>)</span></pre>
@@ -153,7 +153,8 @@ data</p>
     </tr>
     <tr>
       <th>CAA_ESS</th>
-      <td><p>CAA effective sample size</p></td>
+      <td><p>CAA effective sample size. If greater than 1, then this is the multinomial distribution sample size.
+If less than 1, this is the coefficient of variation for the logistic normal distribution (see details).</p></td>
     </tr>
     <tr>
       <th>CAA_nsamp</th>
@@ -164,6 +165,13 @@ data</p>
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>CAA array</p>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>The logistic normal generates the catch-at-age sample by first sampling once from a multivariate normal distribution
+with the mean vector equal to the logarithm of the proportions-at-age and the diagonal of the covariance matrix is the square of the
+product of the CV and the log proportions (all off-diagonals are zero). The sampled vector is then converted to proportions
+with the softmax function and expanded to numbers (CAA_nsamp). This method allows for simulating fractional values in the
+catch-at-age matrix.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
