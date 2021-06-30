@@ -269,14 +269,14 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
 
   # Length at age
   Len_age_df <- dplyr::filter(replist$growthseries, Morph == i, Yr %in% mainyrs)
-  if(nrow(Len_age_df)>0) { # Would do time-varying 
+  if(nrow(Len_age_df)>0) { # Would do time-varying
     Len_age_df <- dplyr::filter(replist$growthseries, Morph == i, Yr %in% mainyrs)
     Len_age <- do.call(rbind, lapply(0:Stock@maxage, function(x) parse(text = paste0("Len_age_df$`", x, "`")) %>% eval()))
     if(ncol(Len_age) == (nyears - 1)) Len_age <- cbind(Len_age, endgrowth$Len_Beg)
   } else {
     Len_age <- endgrowth$Len_Beg %>% matrix(n_age, nyears) # No time-varying
   }
-  
+
   if(proyears) {
     Len_age_pro <- matrix(Len_age[, nyears], n_age, proyears)
     Len_age <- cbind(Len_age, Len_age_pro)
@@ -371,7 +371,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
 
   Fleet <- lapply(fleet_output, getElement, "Fleet") %>% structure(names = replist$FleetNames[replist$IsFishFleet])
   cpars <- lapply(fleet_output, function(x) c(cpars_bio, x$cpars_fleet)) %>% structure(names = replist$FleetNames[replist$IsFishFleet])
-  
+
   return(list(Stock = Stock, Fleet = Fleet, cpars = cpars))
 }
 
@@ -391,7 +391,7 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   V <- get_V_from_Asel2(ff, i, replist, mainyrs, Stock@maxage)
   V_proj <- array(V[,ncol(V)], dim=c(Stock@maxage+1, proyears))
   Vout <- cbind(V, V_proj) %>% array(c(n_age, allyears, nsim)) %>% aperm(c(3, 1, 2))
-  
+
   #### Retention and selectivity-at-length - loop over years for time-varying quantities
 
   loop_over_change_points <- function(yy, df) {
@@ -419,21 +419,21 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
     SLarray <- cbind(SLarray, SLarraypro)
   }
 
-  
+
   #### Discard mortality
   disc_mort <- replist$sizeselex[replist$sizeselex$Fleet == ff & replist$sizeselex$Sex == i &
                                    replist$sizeselex$Factor == "Mort" & replist$sizeselex$Yr == max(mainyrs), -c(1:5)] %>% unlist() %>%
     as.numeric() %>% unique()
   retN <- replist$catch %>% dplyr::filter(Fleet==ff, Yr==max(mainyrs)) %>% dplyr::select(N=ret_num)
   if (retN$N<=0) disc_mort<- NA # no discard mortality if fleet no longer in operation
-  
+
   disc_mort <- mean(disc_mort, na.rm=TRUE)
 
   #### Apical F
   FF <- replist$exploitation[, match(replist$FleetNames[ff], colnames(replist$exploitation))] %>%
     aggregate(by = list(Yr = replist$exploitation$Yr), sum)
   Find <- FF$x[FF$Yr %in% mainyrs]
-  
+
   if (length(Find)<1 | all(is.na(Find))) {
     # above method more accurate (for swordfish at least)
     FF <- FF[match(mainyrs, FF$Yr), ]
@@ -471,29 +471,29 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
     if(!is.numeric(retA[n_age,yy])) retA[n_age,yy] <- retA[n_age-1]
     Cat[yy] <- sum(meanN[yy, ] * Find[yy] * wt[yy, ] * retA[,yy] * V[, yy])
   }
-  
+
   retA_proj <- array(retA[,ncol(retA)], dim=c(Stock@maxage+1, proyears))
   retAout <- cbind(retA, retA_proj) %>% array(c(n_age, allyears, nsim)) %>% aperm(c(3, 1, 2))
-  
+
   # ---- Update Realized Selectivity Curve with Retention and discard mortality ----
   # assumes same discard mortality for all years
   if (is.finite(disc_mort)) {
     for(yy in 1:allyears) {
       Vout[,,yy] <- retAout[,,yy] + ((Vout[,,yy] -retAout[,,yy]) * disc_mort)
-    }  
+    }
   }
-  
-  
+
+
   # ---- empirical weight-at-age for catches ----
   wt_at_age_c <- replist$wtatage %>% dplyr::filter(Yr %in% mainyrs, Sex==i, Fleet==ff)
   sel_cols <- which(colnames(wt_at_age_c)=='0'):ncol(wt_at_age_c)
   wt_at_age_c <- wt_at_age_c[,sel_cols] %>% t()
 
-  lst <- wt_at_age_c[,ncol(wt_at_age_c)]  
+  lst <- wt_at_age_c[,ncol(wt_at_age_c)]
   wt_at_age_c <- cbind(wt_at_age_c, replicate(proyears, lst))
   wt_at_age_c <- replicate(nsim, wt_at_age_c)
   wt_at_age_c <- aperm(wt_at_age_c, c(3,1,2))
-  
+
   #### Fleet object
   Fleet <- new("Fleet")
   Fleet@Name <- replist$FleetNames[ff]
@@ -519,14 +519,14 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   cpars_fleet$Fdisc <- rep(mean(disc_mort), nsim)
   cpars_fleet$qs <- rep(1, nsim)
   cpars_fleet$V <- Vout
-  cpars_fleet$retA <- retAout 
-  # cpars_fleet$retL <- replicate(nsim, retL) %>% aperm(c(3, 1, 2))
-  # cpars_fleet$SLarray <- replicate(nsim, SLarray) %>% aperm(c(3, 1, 2))
+  cpars_fleet$retA <- retAout
+  cpars_fleet$retL <- replicate(nsim, retL) %>% aperm(c(3, 1, 2))
+  cpars_fleet$SLarray <- replicate(nsim, SLarray) %>% aperm(c(3, 1, 2))
   cpars_fleet$DR <- rep(0, nsim) # Should be zero since we have retention in cpars$retL
   cpars_fleet$Find <- Find %>% matrix(nsim, length(mainyrs), byrow = TRUE)
-  
+
   cpars_fleet$Wt_age_C <- wt_at_age_c
-  
+
   #### Data object
   cpars_fleet$Data <- new("Data")
   cpars_fleet$Data@Year <- mainyrs
@@ -746,7 +746,7 @@ SS_seasonalyears_to_annual <- function(OM, SSdir, ...) {
              cpars_season(FUN = mean, year_frac = year_frac, age_frac = age_frac, proyears = OM2@proyears))
 
   OM2@cpars$M_ageArray <- OM2@cpars$M_ageArray * nseas
-  
+
   if(!is.null(OM2@cpars$V)) {
     OM2@cpars$V <- apply(OM2@cpars$V, c(1, 3), function(x) x/max(x)) %>% aperm(c(2, 1, 3))
   }
