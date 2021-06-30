@@ -325,12 +325,13 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   if(!silent) message("Calculating MSY reference points for each year")
   # average life-history parameters over ageM years
 
+  # Assuming all vulnerable fish are kept; ie MSY is total removals
   for (y in 1:(nyears+proyears)) {
     MSYrefsYr <- sapply(1:nsim, optMSY_eq,
                         M_ageArray=StockPars$M_ageArray,
                         Wt_age=StockPars$Wt_age,
                         Mat_age=StockPars$Mat_age,
-                        V=FleetPars$V,
+                        V=FleetPars$V *(FleetPars$retA+(1-FleetPars$retA)*FleetPars$Fdisc_array1),
                         maxage=StockPars$maxage,
                         R0=StockPars$R0,
                         SRrel=StockPars$SRrel,
@@ -528,6 +529,15 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   }
   FleetPars$qs <- qs
 
+  
+  # realized vulnerability schedule - accounting for discard mortality on discards
+  FleetPars$retA_real <- FleetPars$V * FleetPars$retA # realized retention curve (prob of retention x prob of selection)
+  FleetPars$V_real <- FleetPars$retA_real + ((FleetPars$V-FleetPars$retA_real) * FleetPars$Fdisc_array1)
+  
+  FleetPars$retL_real <- FleetPars$SLarray * FleetPars$retL # realized retention-at-length curve (prob of retention x prob of selection)
+  FleetPars$SLarray_real <- FleetPars$retL_real + ((FleetPars$SLarray-FleetPars$retL_real) * FleetPars$Fdisc_array2)
+    
+  
   histYrs <- sapply(1:nsim, function(x)
     popdynCPP(nareas, StockPars$maxage,
               Ncurr=StockPars$N[x,,1,],
@@ -536,8 +546,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
               Asize_c=StockPars$Asize[x,],
               MatAge=StockPars$Mat_age[x,,],
               WtAge=StockPars$Wt_age[x,,],
-              Vuln=FleetPars$V[x,,],
-              Retc=FleetPars$retA[x,,],
+              Vuln=FleetPars$V_real[x,,],
+              Retc=FleetPars$retA_real[x,,],
               Prec=StockPars$Perr_y[x,],
               movc=split.along.dim(StockPars$mov[x,,,,],4),
               SRrelc=StockPars$SRrel[x],
@@ -626,7 +636,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                             M_ageArray=StockPars$M_ageArray,
                             Wt_age=StockPars$Wt_age,
                             Mat_age=StockPars$Mat_age,
-                            V=FleetPars$V,
+                            V=FleetPars$V_real,
                             maxage=StockPars$maxage,
                             yr.ind=y,
                             plusgroup=StockPars$plusgroup,
@@ -669,7 +679,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                  FleetPars$MPA,
                  StockPars$SSB0,
                  StockPars$nareas,
-                 FleetPars$retA,
+                 FleetPars$retA_real,
                  MGThorizon,
                  FleetPars$Find,
                  StockPars$Perr_y,
@@ -678,7 +688,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                  StockPars$Mat_age,
                  StockPars$Wt_age,
                  StockPars$R0a,
-                 FleetPars$V,
+                 FleetPars$V_real,
                  nyears,
                  StockPars$maxage,
                  StockPars$mov,
@@ -887,8 +897,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   Hist@OMPars <- OMPars
   Hist@AtAge <- list(Length=StockPars$Len_age,
                      Weight=StockPars$Wt_age,
-                     Select=FleetPars$V,
-                     Retention=FleetPars$retA,
+                     Select=FleetPars$V_real,
+                     Retention=FleetPars$retA_real,
                      Maturity=StockPars$Mat_age,
                      N.Mortality=StockPars$M_ageArray,
                      Z.Mortality=StockPars$Z,
@@ -1110,15 +1120,16 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     L5_P <- FleetPars$L5_y
     LFS_P <- FleetPars$LFS_y
     Vmaxlen_P <- FleetPars$Vmaxlen_y
-    SLarray_P <- FleetPars$SLarray # selectivity at length array - projections
-    V_P <- FleetPars$V  #  selectivity at age array - projections
+    # updated to use the realized selectivity/retention curves
+    SLarray_P <- FleetPars$SLarray_real # selectivity at length array - projections
+    V_P <- FleetPars$V_real  #  selectivity at age array - projections
     LR5_P <- FleetPars$LR5_y
     LFR_P <- FleetPars$LFR_y
     Rmaxlen_P <- FleetPars$Rmaxlen_y
-    retA_P <- FleetPars$retA # retention at age array - projections
-    retL_P <- FleetPars$retL # retention at length array - projections
-    Fdisc_P <- FleetPars$Fdisc # Discard mortality for projections
-    DR_P <- FleetPars$DR # Discard ratio for projections
+    retA_P <- FleetPars$retA_real # retention at age array - projections
+    retL_P <- FleetPars$retL_real # retention at length array - projections
+    Fdisc_P <- FleetPars$Fdisc_array1 # Discard mortality for projections - by age and year
+    DR_P <- FleetPars$DR_y # Discard ratio for projections by year
     LatentEff_MP <- LatentEff # Historical latent effort
 
     # projection arrays

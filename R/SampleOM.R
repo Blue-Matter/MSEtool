@@ -1,3 +1,5 @@
+VB <- function(Linf, K, t0, age) Linf * (1-exp(-K*(age-t0)))
+
 myrunif <- function(n, val1, val2) {
   min <- min(c(val1, val2))
   max <- max(c(val1, val2))
@@ -985,7 +987,30 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
   if (!is.null(cpars$SLarray) & !is.null(cpars[['V']])) {# both selectivity-at-length and -at-age in cpars
     SLarray <- cpars$SLarray
     V <- cpars[['V']]
-  } else if (!is.null(cpars$SLarray) & is.null(cpars[['V']])) { # SLarray in cpars
+    
+    if (!all(c('L5_y', 'LFS_y', 'Vmaxlen_y') %in% names(cpars))) {
+      # need to calculate these
+      for (yr in 1:(nyears+proyears)) {
+        b_ind <- rep(NA, nsim)
+        for (i in 1:nsim) {
+          temp <- min(which(SLarray[i,,yr]>=0.05))
+          if (length(temp)<1) temp <- 1
+          if (is.na(temp)) temp <- 1
+          b_ind[i] <- temp
+        }
+        
+        L5_y[,yr] <- StockPars$CAL_binsmid[b_ind]
+        b_ind <- apply(SLarray[,,yr], 1, which.max)
+        LFS_y[,yr] <- StockPars$CAL_binsmid[b_ind]
+        temp <- abs(replicate(nsim, StockPars$CAL_binsmid) - StockPars$Linf)
+        b_ind <- apply(temp, 2, which.min)
+        Vmaxlen_y[,yr] <- SLarray[,b_ind,yr][1,]
+      }
+    } # end calculate L5_y etc
+    
+  }
+  
+  if (!is.null(cpars$SLarray) & is.null(cpars[['V']])) { # SLarray in cpars
     # Calculate selectivity parameters
     SLarray <- cpars$SLarray
     nbins <- length(StockPars$CAL_binsmid)
@@ -1022,7 +1047,7 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
       stop('V must be dimensions: nsim, n_age, nyears + proyears')
     if (!all(c('L5_y', 'LFS_y', 'Vmaxlen_y') %in% names(cpars))) {
       # need to calculate these from V
-      VB <- function(Linf, K, t0, age) Linf * (1-exp(-K*(age-t0)))
+     
       for (yr in 1:(nyears+proyears)) {
         for (s in 1:nsim) {
           xout <- seq(1, n_age, by=0.1)
@@ -1097,7 +1122,29 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
   if (!is.null(cpars$retL) & !is.null(cpars$retA)) {# both retention-at-length and -at-age in cpars
     retL <- cpars$retL
     retA <- cpars$retA
-  } else if (!is.null(cpars$retL) & is.null(cpars$retA)) { # retL in cpars
+    
+    if (!all(c('LR5_y', 'LFR_y', 'Rmaxlen_y') %in% names(cpars))) {
+      # need to calculate these
+      for (yr in 1:(nyears+proyears)) {
+        b_ind <- rep(NA, nsim)
+        for (i in 1:nsim) {
+          temp <- min(which(SLarray[i,,yr]>=0.05))
+          if (length(temp)<1) temp <- 1
+          if (is.na(temp)) temp <- 1
+          b_ind[i] <- temp
+        }
+        LR5_y[,yr] <- StockPars$CAL_binsmid[b_ind]
+        b_ind <- apply(retL[,,yr], 1, which.max)
+        LFR_y[,yr] <- StockPars$CAL_binsmid[b_ind]
+        temp <- abs(replicate(nsim, StockPars$CAL_binsmid) - StockPars$Linf)
+        b_ind <- apply(temp, 2, which.min)
+        Rmaxlen_y[,yr] <- retL[,b_ind,yr][1,]
+      }
+      LFR_y[LFR_y<=LR5_y] <- LR5_y[LFR_y<=LR5_y]  +1
+    } # end calculate LR5_y etc
+  } 
+  
+  if (!is.null(cpars$retL) & is.null(cpars$retA)) { # retL in cpars
     # Calculate retention parameters
     retL <- cpars$retL
     nbins <- length(StockPars$CAL_binsmid)
@@ -1189,11 +1236,6 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
     retA <- aperm(array(as.numeric(unlist(VList, use.names=FALSE)), dim=c(n_age, nyears+proyears, nsim)), c(3,1,2))
   }
 
-  V2 <- cpars$V2
-  SLarray2 <- cpars$SLarray2
-  if (is.null(V2)) V2 <- V
-  if (is.null(SLarray2)) SLarray2 <- SLarray
-
   # Apply general discard rate
   if (is.null(cpars$retA)) {
     dr <- aperm(abind::abind(rep(list(DR_y), n_age), along=3), c(1,3,2))
@@ -1208,25 +1250,10 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
 
   Fdisc_array1 <- cpars$Fdisc_array1
   if (is.null(Fdisc_array1)) Fdisc_array1 <- array(Fdisc, dim=c(nsim, n_age, nyears+proyears))
-  if (is.null(cpars$V) & is.null(cpars$SLarray)) {
-    # update realized vulnerability curve with retention and dead discarded fish
-    V <- V * (retA + (1-retA)*Fdisc_array1) # Realised selection at age
-  }
-
+  
   Fdisc_array2 <- cpars$Fdisc_array2
   if (is.null(Fdisc_array2)) Fdisc_array2 <- array(Fdisc, dim=c(nsim, StockPars$nCALbins, nyears+proyears))
-  if (is.null(cpars$SLarray)) {
-    SLarray <- SLarray2 * (retL + (1-retL)*Fdisc_array2) # Realised selection at length
-  }
-
-  # Realised Retention curves
-  if (is.null(cpars$retA) & is.null(cpars$retL)) {
-    retA <- retA * V2
-  }
-  if (is.null(cpars$retL)) {
-    retL <- retL * SLarray2
-  }
-
+  
   # ---- Existing MPA ----
   if (inherits(Fleet@MPA, 'matrix')) {
     warning('This OM is from a previous version. OM@MPA is now a logical instead of matrix. Assuming no existing MPA')
@@ -1256,10 +1283,8 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
   Fleetout$L5_y <- L5_y
   Fleetout$LFS_y <- LFS_y
   Fleetout$Vmaxlen_y <- Vmaxlen_y
-  Fleetout$V <- V  # realized vulnerability-at-age
-  Fleetout$SLarray <- SLarray # realized vulnerability-at-length
-  Fleetout$V2 <- V2 # original vulnerablity-at-age curve
-  Fleetout$SLarray2 <- SLarray2 # original vulnerablity-at-length curve
+  Fleetout$V <- V  # vulnerability-at-age
+  Fleetout$SLarray <- SLarray # vulnerability-at-length
   Fleetout$MPA <- MPA
 
   # check V

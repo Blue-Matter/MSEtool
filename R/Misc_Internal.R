@@ -210,6 +210,15 @@ calcV <- function(x, Len_age, LatASD, SLarray, n_age, nyears, proyears, CAL_bins
   len_at_age <- Len_age[x,,]
   len_aa_sd <- LatASD[x,,]
   sel_at_length <- SLarray[x,,]
+  
+  if (!'matrix' %in% class(len_aa_sd)) {
+    nrow <- length(len_at_age)
+    len_at_age <- matrix(len_at_age, nrow, 1)
+    len_aa_sd <- matrix(len_aa_sd, nrow, 1)
+    sel_at_length <- matrix(sel_at_length, length(sel_at_length), 1)
+  }
+  
+  
   calcVatAge(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid)
 }
 

@@ -133,7 +133,7 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
   CALdone <- FALSE
   if (!is.null(control$CAL)) {
     if (control$CAL == 'removals') {
-      vn <- apply(N*Sample_Area$CAL[,,1:nyears,], c(1,2,3), sum) * FleetPars$V[,,1:nyears]
+      vn <- apply(N*Sample_Area$CAL[,,1:nyears,], c(1,2,3), sum) * FleetPars$V_real[,,1:nyears]
       # numbers at age in population that would be removed
       vn <- aperm(vn, c(1,3, 2))
 
@@ -1140,7 +1140,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
       } else {
         if (AddIndType[i]==1) SimIndex <- apply(StockPars$N, c(1, 2, 3), sum) # Total Abundance-based index
         if (AddIndType[i]==2) SimIndex <- apply(StockPars$N, c(1, 2, 3), sum) * StockPars$Mat_age[,,1:nyears] # Spawning abundance-based index
-        if (AddIndType[i]==3) SimIndex <- apply(StockPars$N, c(1, 2, 3), sum) * FleetPars$V[,,1:nyears] # Spawning abundance-based index
+        if (AddIndType[i]==3) SimIndex <- apply(StockPars$N, c(1, 2, 3), sum) * FleetPars$V_real[,,1:nyears] # Vulnerable abundance-based index
       }
 
       Ind_V <- matrix(Ind_V, nrow=SimData@MaxAge+1, ncol= nyears)
@@ -1264,7 +1264,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
       if (!is.null(control$CAL) && control$CAL == 'removals') {
         vn <- apply(StockPars$N[,,yr.ind,, drop=FALSE]*
                       Sample_Area$CAL[,,yr.ind,, drop=FALSE], c(1,2,3), sum) *
-          FleetPars$V[,,yr.ind, drop=FALSE]
+          FleetPars$V_real[,,yr.ind, drop=FALSE]
         # numbers at age in population that would be removed
         vn <- aperm(vn, c(1,3, 2))
         doopt <- optimise(optESS, c(10, 10000), vn, StockPars,
