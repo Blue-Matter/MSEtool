@@ -57,7 +57,7 @@ SSMOM2OM(
   import_mov = TRUE,
   seed = 1,
   silent = FALSE,
-  model_discards = FALSE
+  model_discards = TRUE
 )
 
 plot_SS2OM(
