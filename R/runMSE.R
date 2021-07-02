@@ -205,7 +205,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   SSB0_a <- apply(SSB_a, c(1,3), sum) # unfished spawning biomass for each year
   SSB0a_a <- apply(SSB_a, c(1, 3,4), sum)  # Calculate unfished spawning stock biomass by area for each year
   B0_a <- apply(Biomass_a, c(1,3), sum) # unfished biomass for each year
-  VB0_a <- apply(apply(Biomass_a, c(1,2,3), sum) * FleetPars$V, c(1,3), sum) # unfished vulnerable biomass for each year
+  VB0_a <- apply(apply(Biomass_a, c(1,2,3), sum) * FleetPars$V_real, c(1,3), sum) # unfished vulnerable biomass for each year
 
   # ---- Unfished Reference Points ----
   SSBpRa <- array(SSB0_a/matrix(StockPars$R0, nrow=nsim, ncol=nyears+proyears),
@@ -224,7 +224,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     B_at_age=Biomass_a,
     SSB_at_age=SSB_a,
     SSN_at_age=SSN_a,
-    VB_at_age=Biomass_a * replicate(nareas, FleetPars$V)
+    VB_at_age=Biomass_a * replicate(nareas, FleetPars$V_real)
   )
 
   # average spawning stock biomass per recruit
@@ -253,7 +253,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   N[SAYR] <- StockPars$R0[S] * surv[SAY] * StockPars$initdist[SAR]*StockPars$Perr_y[Sa]  # Calculate initial stock numbers
   Biomass[SAYR] <- N[SAYR] * StockPars$Wt_age[SAY]  # Calculate initial stock biomass
   SSB[SAYR] <- SSN[SAYR] * StockPars$Wt_age[SAY]    # Calculate spawning stock biomass
-  VBiomass[SAYR] <- Biomass[SAYR] * FleetPars$V[SAY]  # Calculate vulnerable biomass
+  VBiomass[SAYR] <- Biomass[SAYR] * FleetPars$V_real[SAY]  # Calculate vulnerable biomass
 
   StockPars$aR <- aR
   StockPars$bR <- bR
@@ -331,7 +331,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                         M_ageArray=StockPars$M_ageArray,
                         Wt_age=StockPars$Wt_age,
                         Mat_age=StockPars$Mat_age,
-                        V=FleetPars$V *(FleetPars$retA+(1-FleetPars$retA)*FleetPars$Fdisc_array1),
+                        V=FleetPars$V_real,
                         maxage=StockPars$maxage,
                         R0=StockPars$R0,
                         SRrel=StockPars$SRrel,
@@ -370,8 +370,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
               Asize_c=StockPars$Asize[x,],
               MatAge=StockPars$Mat_age[x,,],
               WtAge=StockPars$Wt_age[x,,],
-              Vuln=FleetPars$V[x,,],
-              Retc=FleetPars$retA[x,,],
+              Vuln=FleetPars$V_real[x,,],
+              Retc=FleetPars$retA_real[x,,],
               Prec=StockPars$Perr_y[x,],
               movc=split.along.dim(StockPars$mov[x,,,,],4),
               SRrelc=StockPars$SRrel[x],
@@ -529,14 +529,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   }
   FleetPars$qs <- qs
 
-  
-  # realized vulnerability schedule - accounting for discard mortality on discards
-  FleetPars$retA_real <- FleetPars$V * FleetPars$retA # realized retention curve (prob of retention x prob of selection)
-  FleetPars$V_real <- FleetPars$retA_real + ((FleetPars$V-FleetPars$retA_real) * FleetPars$Fdisc_array1)
-  
-  FleetPars$retL_real <- FleetPars$SLarray * FleetPars$retL # realized retention-at-length curve (prob of retention x prob of selection)
-  FleetPars$SLarray_real <- FleetPars$retL_real + ((FleetPars$SLarray-FleetPars$retL_real) * FleetPars$Fdisc_array2)
-    
+
   
   histYrs <- sapply(1:nsim, function(x)
     popdynCPP(nareas, StockPars$maxage,
@@ -1295,8 +1288,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       }
 
       SelectChanged <- FALSE
-      if (any(range(retA_P[,,nyears+y] -  FleetPars$retA[,,nyears+y]) !=0)) SelectChanged <- TRUE
-      if (any(range(V_P[,,nyears+y] - FleetPars$V[,,nyears+y]) !=0))  SelectChanged <- TRUE
+      if (any(range(retA_P[,,nyears+y] -  FleetPars$retA_real[,,nyears+y]) !=0)) SelectChanged <- TRUE
+      if (any(range(V_P[,,nyears+y] - FleetPars$V_real[,,nyears+y]) !=0))  SelectChanged <- TRUE
 
       # -- Calculate MSY stats for this year ----
       if (SelectChanged) { #
@@ -1313,7 +1306,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                 M_ageArray=StockPars$M_ageArray,
                                 Wt_age=StockPars$Wt_age,
                                 Mat_age=StockPars$Mat_age,
-                                V=FleetPars$V,
+                                V=FleetPars$V_real,
                                 maxage=StockPars$maxage,
                                 yr.ind=y1,
                                 plusgroup=StockPars$plusgroup,
