@@ -468,22 +468,16 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   retA <- matrix(NA, nrow=n_age, ncol=nyears)
   Cat <- numeric(nyears)
   for(yy in 1:nyears) {
-    retA[,yy] <- colSums(retL[, yy] * ALK)
+    retA[,yy] <- colSums(retL[, yy] * ALK) # realized retention at-age
     if(!is.numeric(retA[n_age,yy])) retA[n_age,yy] <- retA[n_age-1]
     Cat[yy] <- sum(meanN[yy, ] * Find[yy] * wt[yy, ] * retA[,yy] * V[, yy])
+    
+    # back-calculate retention probability curve
+    retA[,yy] <- retA[,yy]/V[,yy]
   }
 
   retA_proj <- array(retA[,ncol(retA)], dim=c(Stock@maxage+1, proyears))
   retAout <- cbind(retA, retA_proj) %>% array(c(n_age, allyears, nsim)) %>% aperm(c(3, 1, 2))
-
-  # ---- Update Realized Selectivity Curve with Retention and discard mortality ----
-  # assumes same discard mortality for all years
-  if (is.finite(disc_mort)) {
-    for(yy in 1:allyears) {
-      Vout[,,yy] <- retAout[,,yy] + ((Vout[,,yy] -retAout[,,yy]) * disc_mort)
-    }
-  }
-
 
   # ---- empirical weight-at-age for catches ----
   wt_at_age_c <- replist$wtatage %>% dplyr::filter(Yr %in% mainyrs, Sex==i, Fleet==ff)
