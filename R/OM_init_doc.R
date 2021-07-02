@@ -584,6 +584,8 @@ OMdoc <- function(OM=NULL, rmd.source=NULL, overwrite=FALSE, out.file=NULL,
 
             oldOM <- slot(OM, slotNames(OM)[sl])
             newOM <- slot(testOM, slotNames(OM)[sl])
+            oldOM <- oldOM[!is.na(oldOM)]
+            newOM <- newOM[!is.na(newOM)]
             if (class(oldOM) !='character') {
               if (class(oldOM) != 'list') {
                 if (length(oldOM)<1 || !is.finite(oldOM)) oldOM <- 0
