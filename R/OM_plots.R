@@ -34,13 +34,13 @@ getStockPars <- function(Object, nsim, nyears, proyears, seed) {
     nsim <- Object@OM@nsim
     Pars <- Object@SampPars
     CurrentYr <- Object@OM@CurrentYr
-    nyears <- nrow(Object@SampPars$Fleet$Find)
+    nyears <- ncol(Object@SampPars$Fleet$Find)
     proyears <- ncol(Object@SampPars$Stock$Linfarray) - nyears
   } else if (class(Object) =='list') {
     Pars <- Object
     nsim <- length(Pars$Stock$D)
     if (!is.null(Pars$Fleet)) {
-      nyears <- nrow(Pars$Fleet$Find)
+      nyears <- ncol(Pars$Fleet$Find)
       proyears <- ncol(Pars$Stock$Linfarray) - nyears
     }
 
