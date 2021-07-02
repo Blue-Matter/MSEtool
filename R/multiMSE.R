@@ -118,7 +118,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
     }
 
-
     # --- Sample Obs Parameters ----
     for(f in 1:nf) {
       ObsPars[[p]][[f]] <- SampleObsPars(MOM@Obs[[p]][[f]], nsim,
@@ -275,11 +274,11 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     SSB0a_a <- apply(SSB_a, c(1, 3,4), sum)  # Calculate unfished spawning stock biomass by area for each year
     B0_a <- apply(Biomass_a, c(1,3), sum) # unfished biomass for each year
 
-    Vraw <- array(NIL(listy=FleetPars[[p]],namey="V"),c(nsim,n_age,allyears,nf))
+    Vraw <- array(NIL(listy=FleetPars[[p]],namey="V_real"),c(nsim,n_age,allyears,nf))
     Vind <- as.matrix(expand.grid(1:nsim,p,1:nf,1:n_age,1:allyears))
     VF[Vind] <- Vraw[Vind[,c(1,4,5,3)]]
 
-    Fretraw <- array(NIL(listy=FleetPars[[p]],namey="retA"),c(nsim,n_age,allyears,nf))
+    Fretraw <- array(NIL(listy=FleetPars[[p]],namey="retA_real"),c(nsim,n_age,allyears,nf))
     FretA[Vind] <- Fretraw[Vind[,c(1,4,5,3)]]
 
     if(nf==1){
@@ -374,7 +373,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
     # loop over fleets
     for(f in 1:nf) {
-      FleetPars[[p]][[f]]$V<-VF[,p,f,,] # update fleet vulnerability for this stock
+      FleetPars[[p]][[f]]$V_real<-VF[,p,f,,] # update fleet vulnerability for this stock
 
       # --- Historical Spatial closures ----
       if (!is.null(SampCpars[[p]][[f]]$MPA)) {
@@ -823,8 +822,8 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                 Asize_c=StockPars[[p]]$Asize[x,],
                 MatAge=StockPars[[p]]$Mat_age[x,,],
                 WtAge=StockPars[[p]]$Wt_age[x,,],
-                Vuln=FleetPars[[p]][[1]]$V[x,,],
-                Retc=FleetPars[[p]][[1]]$retA[x,,],
+                Vuln=FleetPars[[p]][[1]]$V_real[x,,],
+                Retc=FleetPars[[p]][[1]]$retA_real[x,,],
                 Prec=StockPars[[p]]$Perr_y[x,],
                 movc=split.along.dim(StockPars[[p]]$mov[x,,,,],4),
                 SRrelc=StockPars[[p]]$SRrel[x],
@@ -1070,8 +1069,8 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       Hist@OMPars <- OMPars
       Hist@AtAge <- list(Length=StockPars[[p]]$Len_age,
                          Weight=StockPars[[p]]$Wt_age,
-                         Select=FleetPars[[p]][[f]]$V,
-                         Retention=FleetPars[[p]][[f]]$retA,
+                         Select=FleetPars[[p]][[f]]$V_real,
+                         Retention=FleetPars[[p]][[f]]$retA_real,
                          Maturity=StockPars[[p]]$Mat_age,
                          N.Mortality=StockPars[[p]]$M_ageArray,
                          Z.Mortality=Z[,p,,,],
@@ -1356,7 +1355,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     for (f in 1:nf) {
       FM[,p,f,,,] <- multiHist[[p]][[f]]@AtAge$F.Mortality
       FMret[,p,f,,,] <- multiHist[[p]][[f]]@AtAge$Fret.Mortality
-      VF[,p,f,,] <- FleetPars[[p]][[f]]$V
+      VF[,p,f,,] <- FleetPars[[p]][[f]]$V_real
       MPA[p,f,,] <- FleetPars[[p]][[f]]$MPA
       CB[,p,f,,,] <- multiHist[[p]][[f]]@AtAge$Removals
       CB_ret[,p,f,,,] <- multiHist[[p]][[f]]@AtAge$Landings
@@ -1402,18 +1401,18 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         FleetPars[[p]][[f]]$LFS_P <- HistFleetPars[[p]][[f]]$LFS
         FleetPars[[p]][[f]]$Vmaxlen_P <- HistFleetPars[[p]][[f]]$Vmaxlen
         # selectivity at length array - projections
-        FleetPars[[p]][[f]]$SLarray_P <- HistFleetPars[[p]][[f]]$SLarray
+        FleetPars[[p]][[f]]$SLarray_P <- HistFleetPars[[p]][[f]]$SLarray_real
         #  selectivity at age array - projections
-        FleetPars[[p]][[f]]$V_P <- HistFleetPars[[p]][[f]]$V
+        FleetPars[[p]][[f]]$V_P <- HistFleetPars[[p]][[f]]$V_real
 
         # reset retention parameters for projections
         FleetPars[[p]][[f]]$LR5_P <- HistFleetPars[[p]][[f]]$LR5
         FleetPars[[p]][[f]]$LFR_P <- HistFleetPars[[p]][[f]]$LFR
         FleetPars[[p]][[f]]$Rmaxlen_P <- HistFleetPars[[p]][[f]]$Rmaxlen
         # retention at age array - projections
-        FleetPars[[p]][[f]]$retA_P <- HistFleetPars[[p]][[f]]$retA
+        FleetPars[[p]][[f]]$retA_P <- HistFleetPars[[p]][[f]]$retA_real
         # retention at length array - projections
-        FleetPars[[p]][[f]]$retL_P <- HistFleetPars[[p]][[f]]$retL
+        FleetPars[[p]][[f]]$retL_P <- HistFleetPars[[p]][[f]]$retL_real
         # Discard ratio for projections
         FleetPars[[p]][[f]]$DR_P <- HistFleetPars[[p]][[f]]$DR
 
@@ -1606,7 +1605,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
       curdat<-multiDataS(MSElist,StockPars,np,mm,nf,realVB)
       runMP <- applyMP(curdat, MPs = MPs[mm], reps = 1, silent=TRUE)  # Apply MP
-
+      
       Stock_Alloc<-realVB[,,nyears, drop=FALSE]/apply(realVB[,,nyears, drop=FALSE],1,sum)
 
       for(p in 1:np)  for(f in 1:nf){
@@ -1791,11 +1790,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         for (f in 1:nf) {
           SelectChanged <- FALSE
           if (any(
-            FleetPars[[p]][[f]]$retA_P[,,nyears+y] -
-            FleetPars[[p]][[f]]$retA_P[,,nyears+y] !=0))  SelectChanged <- TRUE
+            FleetPars[[p]][[f]]$retA_P[,,nyears+y] - FleetPars[[p]][[f]]$retA_P[,,nyears+y] !=0))  SelectChanged <- TRUE
           if (any(
-            FleetPars[[p]][[f]]$V_P[,,nyears+y] -
-            FleetPars[[p]][[f]]$V[,,nyears+y] !=0))  SelectChanged <- TRUE
+            FleetPars[[p]][[f]]$V_P[,,nyears+y] - FleetPars[[p]][[f]]$V_real[,,nyears+y] !=0))  SelectChanged <- TRUE
 
 
           # recalculate MSY ref points because selectivity has changed
@@ -1928,7 +1925,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             OM@nyears <- nyears
             OM@hbiascv <- MOM@Obs[[p]][[f]]@hbiascv
             OM@maxF <- MOM@maxF
-            OM@CurrentYr <- nyears ## TODO - add currentyear to MOM
+            OM@CurrentYr <- MSElist[[1]][[1]][[1]]@LHYear
             OM@reps <- MOM@reps
             OM@nsim <- nsim
             OM@BMSY_B0biascv <- MOM@Obs[[p]][[f]]@BMSY_B0biascv
@@ -1949,7 +1946,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                                   VBiomass_P=VBiomass_P[,p,,,],
                                                   RefPoints=StockPars[[p]]$ReferencePoints$ReferencePoints,
 
-                                                  retA_P=FleetPars[[p]][[f]]$retA,
+                                                  retA_P=FleetPars[[p]][[f]]$retA_real,
                                                   retL_P=FleetPars[[p]][[f]]$retL_P,
                                                   StockPars=StockPars[[p]],
                                                   FleetPars=FleetPars[[p]][[f]],
