@@ -1,5 +1,4 @@
 ## Note to CRAN Maintainers
-* This is a patch that fixes a few minor but important issues
 
 ## Test environments
 * local - Windows 4.0.3
