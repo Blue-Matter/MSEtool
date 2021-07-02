@@ -255,6 +255,16 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
   # Len_age<-matrix(Linfx*(1-exp(-(rep(0:maxage,each=np)-t0x)*(Kx))),nrow=np)
   # Len_age[Len_age<0] <- tiny
   # Wt_age<-ax*Len_age^bx
+  
+  if (is.null(dim(Len_age))) {
+    # convert back to matrix - only one p
+    Len_age <- matrix(Len_age, ncol=length(Len_age), nrow=1)
+  }
+  if (is.null(dim(Wt_age))) {
+    # convert back to matrix - only one p
+    Wt_age <- matrix(Wt_age, ncol=length(Wt_age), nrow=1)
+  }
+
   Bcur[Nind]<-Ncur[Nind]*Wt_age[Nind[,1:2]]
   SSBcur[Nind]<-Bcur[Nind]*Mat_agecur[Nind[,1:2]]
   SSNcur[Nind]<-Ncur[Nind]*Mat_agecur[Nind[,1:2]]
