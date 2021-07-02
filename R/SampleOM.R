@@ -1247,12 +1247,21 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
   }
 
   Fdisc <- StockPars$Fdisc
+  if (!all(is.finite(Fdisc))) Fdisc <- 0
 
   Fdisc_array1 <- cpars$Fdisc_array1
   if (is.null(Fdisc_array1)) Fdisc_array1 <- array(Fdisc, dim=c(nsim, n_age, nyears+proyears))
   
   Fdisc_array2 <- cpars$Fdisc_array2
   if (is.null(Fdisc_array2)) Fdisc_array2 <- array(Fdisc, dim=c(nsim, StockPars$nCALbins, nyears+proyears))
+  
+  
+  # realized vulnerability schedule - accounting for discard mortality on discards
+  Fleetout$retA_real <- V * retA # realized retention curve (prob of retention x prob of selection)
+  Fleetout$V_real <- Fleetout$retA_real + ((V-Fleetout$retA_real) * Fdisc_array1)
+  
+  Fleetout$retL_real <- SLarray * retL # realized retention-at-length curve (prob of retention x prob of selection)
+  Fleetout$SLarray_real <- Fleetout$retL_real + ((SLarray-Fleetout$retL_real) * Fdisc_array2)
   
   # ---- Existing MPA ----
   if (inherits(Fleet@MPA, 'matrix')) {
@@ -1270,6 +1279,7 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
   } else {
     Fleetout$Wt_age_C <- Stock$Wt_age
   }
+  
 
   Fleetout$Fdisc <- Fdisc
   Fleetout$Fdisc_array1 <- Fdisc_array1
