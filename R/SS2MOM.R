@@ -131,3 +131,43 @@ SS2DataMOM <- function(SSdir, age_M = NULL, comp_partition = 2, silent = FALSE, 
 }
 
 
+#' @rdname SS2MOM
+#' @param x For \code{plot_SS2MOM}, an object of either class \linkS4class{MOM} or `multiHist`.
+#' @export
+plot_SS2MOM <- function(x, SSdir, gender = 1:2,
+                       filename = "SS2MOM", dir = tempdir(), open_file = TRUE, silent = FALSE, ...) {
+  if(missing(SSdir)) stop("SSdir not found.")
+  
+  if(inherits(x, "MOM")) {
+    if(!silent) message("Generating multiHist object from MOM...")
+    MOM <- x
+    multiHist <- SimulateMOM(MOM, silent = silent)
+  } else if(inherits(x, "multiHist")) {
+    multiHist <- x
+  } else {
+    stop("Neither multiHist nor MOM object was found.", call. = FALSE)
+  }
+  
+  if(is.list(SSdir)) {
+    replist <- SSdir
+  } else {
+    replist <- SS_import(SSdir, silent, ...)
+  }
+  
+  if(replist$nsexes == 1) gender <- 1
+  
+  rmd_file <- file.path(system.file(package = "MSEtool"), "Rmd", "SS", "SS2MOM.Rmd")
+  rmd <- readLines(rmd_file)
+  
+  write(rmd, file = file.path(dir, paste0(filename, ".rmd")))
+  
+  if(!silent) message("Rendering markdown file to HTML: ", file.path(dir, paste0(filename, ".html")))
+  
+  out <- rmarkdown::render(file.path(dir, paste0(filename, ".rmd")), "html_document", paste0(filename, ".html"), dir,
+                           output_options = list(df_print = "paged"), quiet = TRUE)
+  message("Rendering complete.")
+  
+  if(open_file) browseURL(out)
+  return(invisible(out))
+}
+
