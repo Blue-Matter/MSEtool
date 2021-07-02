@@ -577,8 +577,8 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, nyears, maxF, plus
   }
 
   # Not used but make the arrays anyway
-  retAp <- array(FleetPars$retA[,,1], dim=c(dim(FleetPars$retA)[1:2], Nyrs))
-  Vp <- array(FleetPars$V[,,1], dim=c(dim(FleetPars$V)[1:2], Nyrs))
+  retAp <- array(FleetPars$retA_real[,,1], dim=c(dim(FleetPars$retA_real)[1:2], Nyrs))
+  Vp <- array(FleetPars$V_real[,,1], dim=c(dim(FleetPars$V_real)[1:2], Nyrs))
   noMPA <- matrix(1, nrow=Nyrs, ncol=nareas)
 
   runProj <- lapply(1:nsim, projectEq, StockPars$Asize, nareas=nareas,
