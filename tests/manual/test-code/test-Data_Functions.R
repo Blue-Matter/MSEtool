@@ -24,6 +24,3 @@ for (dat in Dat) {
   })
 }
 
-
-
-runMP(datobj, silent=TRUE)
