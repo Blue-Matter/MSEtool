@@ -237,9 +237,8 @@ multiDataS<-function(MSElist,StockPars,np,mm,nf,realVB){
     }
   }
 
-
   Dataout<-DBF[[1]]
-
+  
   Cat<-array(SIL(DBF,"Cat"),c(nsim,nyears,ni))
   CAA<-array(SIL(DBF,"CAA"),c(nsim,nyears,na,ni))
   CAL<-array(SIL(DBF,"CAL"),c(nsim,nyears,nl,ni))
@@ -312,6 +311,13 @@ multiDataS<-function(MSElist,StockPars,np,mm,nf,realVB){
   Bref<-array(SIL(DBF,'Bref'),c(nsim,ni))
   Dataout@Bref<-apply(Bref,1,sum)
 
+  # last historical F 
+  FinF <- rep(0,nsim)
+  for (fl in 1:nf) {
+    FinF <- FinF + DBF[[fl]]@OM$FinF
+  }
+  Dataout@OM$FinF <- FinF
+  
   Dataout
 }
 
