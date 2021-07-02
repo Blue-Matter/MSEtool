@@ -425,9 +425,10 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
                                    replist$sizeselex$Factor == "Mort" & replist$sizeselex$Yr == max(mainyrs), -c(1:5)] %>% unlist() %>%
     as.numeric() %>% unique()
   retN <- replist$catch %>% dplyr::filter(Fleet==ff, Yr==max(mainyrs)) %>% dplyr::select(N=ret_num)
-  if (retN$N<=0) disc_mort<- NA # no discard mortality if fleet no longer in operation
+  if (retN$N<=0) disc_mort <- NA # no discard mortality if fleet no longer in operation
 
   disc_mort <- mean(disc_mort, na.rm=TRUE)
+
 
   #### Apical F
   FF <- replist$exploitation[, match(replist$FleetNames[ff], colnames(replist$exploitation))] %>%
@@ -516,7 +517,9 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   upper_boundary_last_bin <- max(replist$lbinspop) +
     2 * (suppressWarnings(max(as.numeric(colnames(replist$sizeselex)), na.rm = TRUE)) - max(replist$lbinspop))
   cpars_fleet$CAL_bins <- c(replist$lbinspop, upper_boundary_last_bin)
-  cpars_fleet$Fdisc <- rep(mean(disc_mort), nsim)
+  Fdisc <- rep(mean(disc_mort), nsim)
+  if (!all(is.finite(Fdisc))) Fdisc <- rep(0, nsim)
+  cpars_fleet$Fdisc <- Fdisc
   cpars_fleet$qs <- rep(1, nsim)
   cpars_fleet$V <- Vout
   cpars_fleet$retA <- retAout
