@@ -14,5 +14,5 @@ There were no ERRORs or WARNINGs.
 There was 1 NOTE:
   - installed size is 8.4Mb
 
-## Downstream dependencies
-There are currently no downstream dependencies for this package
+## Reverse Dependencies
+All dependent packages work without errors with this release.

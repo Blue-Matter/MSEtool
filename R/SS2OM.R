@@ -345,7 +345,7 @@ calculate_single_fleet_dynamics <- function(x) {
     out <- list(Find = Find_out, V = V_avg, retA = retA_avg, Fdisc = Fdisc_avg, SLarray = SL_avg, retL = retL_avg)
 
   } else {
-    out <- lapply(c("Find", "V", "retA", "Fdisc", 'SLarray', 'retL', ), function(xx) getElement(x[[1]], xx)) %>%
+    out <- lapply(c("Find", "V", "retA", "Fdisc", 'SLarray', 'retL'), function(xx) getElement(x[[1]], xx)) %>%
       structure(names = c("Find", "V", "retA", "Fdisc", 'SLarray', 'retL'))
   }
   return(out)
