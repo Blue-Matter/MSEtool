@@ -14,6 +14,7 @@ COSEWICobj <- runCOSEWIC(testOM, silent=TRUE)
 funs <- plotFun(msg=FALSE)
 funs <- funs[!funs == "plotOM"]
 funs <- funs[!funs == "plot_SS2OM"]
+funs <- funs[!funs == "plot_SS2MOM"]
 funs <- funs[!funs == "plotmulti"]
 
 for (ff in funs) {

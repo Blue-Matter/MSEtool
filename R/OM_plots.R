@@ -718,12 +718,12 @@ plot.Selectivity <- function(Object, Stock=NULL, nsamp=3, nsim=100,
         if (yr != yr.vert[1]) axis(side=2, labels=FALSE)
 
         polygon(x=c(0:Pars$Stock$maxage, rev(0:Pars$Stock$maxage)),
-                y=c(Pars$Fleet$V[sim,, yr], rev(Pars$Fleet$retA[sim,, yr])), col="gray", border=FALSE)
-        lines(0:Pars$Stock$maxage, Pars$Fleet$V[sim,, yr], col=2, lwd=plotPars$lwd, lty=2, type='l')
-        lines(0:Pars$Stock$maxage, Pars$Fleet$retA[sim,, yr], col=4, lwd=plotPars$lwd, lty=3, type='l')
+                y=c(Pars$Fleet$V_real[sim,, yr], rev(Pars$Fleet$retA_real[sim,, yr])), col="gray", border=FALSE)
+        lines(0:Pars$Stock$maxage, Pars$Fleet$V_real[sim,, yr], col=2, lwd=plotPars$lwd, lty=2, type='l')
+        lines(0:Pars$Stock$maxage, Pars$Fleet$retA_real[sim,, yr], col=4, lwd=plotPars$lwd, lty=3, type='l')
 
         if (yr == max(yr.vert) & sim == its[1]) {
-          minval <- min(c(Pars$Fleet$V[sim,Pars$Stock$maxage+1, yr],  Pars$Fleet$retA[sim,Pars$Stock$maxage+1, yr]))
+          minval <- min(c(Pars$Fleet$V_real[sim,Pars$Stock$maxage+1, yr],  Pars$Fleet$retA_real[sim,Pars$Stock$maxage+1, yr]))
           if (minval >= 0.5) loc <- "bottomright"
           if (minval < 0.5) loc <- "topright"
           legend(loc, legend = c("Vulnerability", "Realized Selection", "Retention"),

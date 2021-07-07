@@ -16,16 +16,12 @@
 CalculateQ <- function(x, StockPars, FleetPars, pyears,
                   bounds = c(1e-05, 15), control) {
 
-  # realized vulnerability schedule - accounting for discard mortality on discards
-  V_real <- FleetPars$V *(FleetPars$retA+(1-FleetPars$retA)*FleetPars$Fdisc_array1)
-  ret_real <- V_real * FleetPars$retA # realized retention curve (prob of retention x prob of selection)
-  
   opt <- optimize(optQ, log(bounds), depc=StockPars$D[x], SSB0c=StockPars$SSB0[x],
                   StockPars$nareas, StockPars$maxage, Ncurr=StockPars$N[x,,1,],
                   pyears, M_age=StockPars$M_ageArray[x,,],
                   MatAge=StockPars$Mat_age[x,,], Asize_c=StockPars$Asize[x,],
-                  WtAge=StockPars$Wt_age[x,,], Vuln=V_real[x,,],
-                  Retc=ret_real[x,,], Prec=StockPars$Perr_y[x,],
+                  WtAge=StockPars$Wt_age[x,,], Vuln=FleetPars$V_real[x,,],
+                  Retc=FleetPars$retA_real[x,,], Prec=StockPars$Perr_y[x,],
                   movc=split.along.dim(StockPars$mov[x,,,,],4),
                   SRrelc=StockPars$SRrel[x], Effind=FleetPars$Find[x,],
                   Spat_targc=FleetPars$Spat_targ[x], hc=StockPars$hs[x],
@@ -599,14 +595,6 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     newV <- aperm(array(as.numeric(unlist(VList, use.names=FALSE)), dim=c(n_age, length(allyrs), nsim)), c(3,1,2))
     V_P[ , , allyrs] <- newV
     
-
- 
-    # sim <- 3
-    # plot(StockPars$CAL_binsmid, selLen[sim,], type="b")
-    # lines(c(L5_P[sim,yr], L5_P[sim,yr]), c(0, 0.05), lty=2)
-    # lines(c(LFS_P[sim,yr], LFS_P[sim,yr]), c(0, 1), lty=2)
-    # lines(c(StockPars$Linf[sim], StockPars$Linf[sim]), c(0, Vmaxlen_P[sim,yr]), lty=2)
-
     # calculate new retention curve
     yr <- y+nyears
     allyrs <- (y+nyears):(nyears+proyears)  # update vulnerability for all future years
@@ -741,7 +729,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
                    StockPars$nareas,
                    StockPars$M_ageArray,nyears, y,
                    control)
-
+    
     # apply max F constraint
     Ftot[Ftot<0] <- maxF
     Ftot[!is.finite(Ftot)] <- maxF
@@ -764,7 +752,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     # Effort relative to last historical with this catch
     Effort_req <- Ftot/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]*
                           (1 + FleetPars$qinc/100)^y) * apply(fracE2, 1, sum) # effort required
-    Effort_req[Ftot<=1E-3] <- tiny
+    Effort_req[Ftot<=tiny] <- tiny
   }
 
   # Effort_req - effort required to catch TAC
@@ -854,13 +842,14 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
 
 
 
+
 calcF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, Asize, maxage, nareas,
                   M_ageArray, nyears, y, control) {
   ct <- TACusedE[x]
   ft <- ct/sum(Biomass_P[x,,y,] * V_P[x,,y+nyears]) # initial guess
   fishdist[x,] <- fishdist[x,]/sum(fishdist[x,])
 
-  if (ft <= 1E-3) return(tiny)
+  if (ft <= 1E-9) return(tiny)
   for (i in 1:100) {
     Fmat <- ft * matrix(V_P[x,,y+nyears], nrow=maxage+1, ncol=nareas) *
       matrix(fishdist[x,], maxage+1, nareas, byrow=TRUE)/
@@ -885,7 +874,7 @@ calcF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, Asize, maxage, 
     Omat <- (1-exp(-Zmat)) * Biomass_P[x,,y,]
     # derivative of catch wrt ft
     dct <- sum(Omat/Zmat - ((Fmat * Omat)/Zmat^2) + Fmat/Zmat * exp(-Zmat) * Biomass_P[x,,y,])
-    ft <-  ft - (pct - ct)/dct
+    ft <-  ft - (pct - ct)/(0.5*dct)
     if (abs(pct - ct)/ct<1E-4) break
   }
   ft

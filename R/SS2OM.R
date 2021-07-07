@@ -180,7 +180,7 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
 
   if(model_discards) { # Grab sel and retention (averaged over all fleets) and take the mean between sexes
     sel_par <- lapply(cpars[gender], calculate_single_fleet_dynamics)
-
+    
     cpars_out$Find <- lapply(sel_par, getElement, "Find") %>% simplify2array() %>% apply(1:2, mean, na.rm=TRUE)
     cpars_out$Fdisc <- lapply(sel_par, getElement, "Fdisc") %>% simplify2array() %>% apply(1, mean, na.rm=TRUE)
     cpars_out$retA <- lapply(sel_par, getElement, "retA") %>% simplify2array() %>% apply(1:3, mean, na.rm=TRUE)
@@ -252,6 +252,7 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
 
 #' @rdname SS2MOM
 #' @param x For \code{plot_SS2OM}, an object of either class \linkS4class{OM} or \linkS4class{Hist}.
+#'  For \code{plot_SS2MOM}, an object of either class \linkS4class{MOM} or `multiHist`.
 #' @export
 plot_SS2OM <- function(x, SSdir, gender = 1:2,
                        filename = "SS2OM", dir = tempdir(), open_file = TRUE, silent = FALSE, ...) {
@@ -337,6 +338,7 @@ calculate_single_fleet_dynamics <- function(x) {
 
         V_avg[i, , j] <- F_at_age/Find_out[i, j]
         retA_avg[i, , j] <- ret_at_age/Find_out[i, j]
+        retA_avg[i, , j] <- retA_avg[i, , j]/max(retA_avg[i, , j])
       }
     }
 
