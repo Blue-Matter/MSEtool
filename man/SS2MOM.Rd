@@ -112,7 +112,8 @@ plot_SS2OM(
 
 \item{...}{Arguments to pass to \link[r4ss]{SS_output}.}
 
-\item{x}{For \code{plot_SS2OM}, an object of either class \linkS4class{OM} or \linkS4class{Hist}.}
+\item{x}{For \code{plot_SS2OM}, an object of either class \linkS4class{OM} or \linkS4class{Hist}.
+For \code{plot_SS2MOM}, an object of either class \linkS4class{MOM} or \code{multiHist}.}
 
 \item{gender}{An integer that indexes the sex for importing life history parameters (1 = usually female, 2 = usually male, 1:2 = mean across both sexes).
 Only used for \code{SS2OM} only in a 2-sex model.}

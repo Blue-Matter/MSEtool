@@ -280,7 +280,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
     Fretraw <- array(NIL(listy=FleetPars[[p]],namey="retA_real"),c(nsim,n_age,allyears,nf))
     FretA[Vind] <- Fretraw[Vind[,c(1,4,5,3)]]
-
+    
     if(nf==1){
       V <- VF[,p,1,,] #<-SOL(FleetPars[[p]],"V")
     }else{
@@ -985,18 +985,18 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     message('Generating historical data for ', Snames[p])
     for (f in 1:nf) {
       ObsPars[[p]][[f]]$Sample_Area <- Sample_Area # add to Obs Pars
-      Data <- makeData(Biomass[,p,,,],
-                       CBret[,p,f,,,],
-                       Cret[,p,f,,,],
-                       N[,p,,,],
-                       SSB[,p,,,],
-                       VBiomass[,p,,,],
+      Data <- makeData(Biomass=Biomass[,p,,,],
+                       CBret=CBret[,p,f,,,],
+                       Cret=Cret[,p,f,,,],
+                       N=N[,p,,,],
+                       SSB=SSB[,p,,,],
+                       VBiomass=VBiomass[,p,,,],
                        StockPars=StockPars[[p]],
                        FleetPars=FleetPars[[p]][[f]],
-                       ObsPars[[p]][[f]],
-                       ImpPars[[p]][[f]],
+                       ObsPars=ObsPars[[p]][[f]],
+                       ImpPars=ImpPars[[p]][[f]],
                        RefPoints=StockPars[[p]]$ReferencePoints$ReferencePoints,
-                       SampCpars[[p]][[f]],
+                       SampCpars=SampCpars[[p]][[f]],
                        StockPars[[p]]$initD,
                        Sample_Area,
                        Name=MOM@Name,
@@ -1018,6 +1018,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
     }
   }
+  
 
   # ---- Condition Simulated Data on input Data object (if it exists) & calculate error stats ----
   for (p in 1:np) {

@@ -474,20 +474,27 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
     
     # back-calculate retention probability curve
     retA[,yy] <- retA[,yy]/V[,yy]
+    isZero <- which(V[,yy]==0)
+    if (length(isZero)>0) retA[isZero,yy] <- 0
   }
 
   retA_proj <- array(retA[,ncol(retA)], dim=c(Stock@maxage+1, proyears))
   retAout <- cbind(retA, retA_proj) %>% array(c(n_age, allyears, nsim)) %>% aperm(c(3, 1, 2))
 
   # ---- empirical weight-at-age for catches ----
-  wt_at_age_c <- replist$wtatage %>% dplyr::filter(Yr %in% mainyrs, Sex==i, Fleet==ff)
-  sel_cols <- which(colnames(wt_at_age_c)=='0'):ncol(wt_at_age_c)
-  wt_at_age_c <- wt_at_age_c[,sel_cols] %>% t()
-
-  lst <- wt_at_age_c[,ncol(wt_at_age_c)]
-  wt_at_age_c <- cbind(wt_at_age_c, replicate(proyears, lst))
-  wt_at_age_c <- replicate(nsim, wt_at_age_c)
-  wt_at_age_c <- aperm(wt_at_age_c, c(3,1,2))
+  if (class(replist$wtatage) != 'logical') {
+    wt_at_age_c <- replist$wtatage %>% dplyr::filter(Yr %in% mainyrs, Sex==i, Fleet==ff)
+    sel_cols <- which(colnames(wt_at_age_c)=='0'):ncol(wt_at_age_c)
+    wt_at_age_c <- wt_at_age_c[,sel_cols] %>% t()
+    
+    lst <- wt_at_age_c[,ncol(wt_at_age_c)]
+    wt_at_age_c <- cbind(wt_at_age_c, replicate(proyears, lst))
+    wt_at_age_c <- replicate(nsim, wt_at_age_c)
+    wt_at_age_c <- aperm(wt_at_age_c, c(3,1,2))
+    
+  } else {
+    wt_at_age_c <- NULL
+  }
 
   #### Fleet object
   Fleet <- new("Fleet")

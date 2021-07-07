@@ -364,10 +364,19 @@ indfit <- function(sim.index,obs.ind, Year, plot=FALSE, lcex=0.8){
 
   opt<-optimize(getbeta,x=exp(sim.index),y=exp(obs.ind),interval=c(0.1,10))
   res<-exp(obs.ind)-(exp(sim.index)^opt$minimum)
-  ac<-acf(res,plot=F)$acf[2,1,1] # lag-1 autocorrelation
-
+  if (length(res)<2) {
+    ac <- 0
+  } else {
+    ac<-acf(res,plot=F)$acf[2,1,1] # lag-1 autocorrelation  
+  }
+  
   res2<-obs.ind-sim.index                  # linear, without hyperdepletion / hyperstability
-  ac2<-acf(res2,plot=F)$acf[2,1,1] # linear AC
+  if (length(res2)<2) {
+    ac2 <- 0
+  } else {
+    ac2<-acf(res2,plot=F)$acf[2,1,1] # linear AC 
+  }
+  
 
   if(plot){
     SSBseq<-seq(min(exp(sim.index)),max(exp(sim.index)),length.out=1000)

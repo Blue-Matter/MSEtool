@@ -139,7 +139,7 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
 
       CALdat <- simCAL(nsim, nyears, StockPars$maxage, ObsPars$CAL_ESS,
                        ObsPars$CAL_nsamp, StockPars$nCALbins, StockPars$CAL_binsmid, StockPars$CAL_bins,
-                       vn, FleetPars$SLarray, StockPars$Linfarray,
+                       vn, FleetPars$SLarray_real, StockPars$Linfarray,
                        StockPars$Karray, StockPars$t0array, StockPars$LenCV)
       CALdone <- TRUE
     } else {
@@ -148,13 +148,13 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
 
   }
   if (!CALdone) {
-    vn <- apply(N*Sample_Area$CAL[,,1:nyears,], c(1,2,3), sum) * FleetPars$retA[,,1:nyears]
+    vn <- apply(N*Sample_Area$CAL[,,1:nyears,], c(1,2,3), sum) * FleetPars$retA_real[,,1:nyears]
     # numbers at age in population that would be retained
     vn <- aperm(vn, c(1,3, 2))
 
     CALdat <- simCAL(nsim, nyears, StockPars$maxage, ObsPars$CAL_ESS,
                      ObsPars$CAL_nsamp, StockPars$nCALbins, StockPars$CAL_binsmid, StockPars$CAL_bins,
-                     vn, FleetPars$retL, StockPars$Linfarray,
+                     vn, FleetPars$retL_real, StockPars$Linfarray,
                      StockPars$Karray, StockPars$t0array, StockPars$LenCV)
   }
 
@@ -632,6 +632,8 @@ simCAA <- function(nsim, yrs, n_age, Cret, CAA_ESS, CAA_nsamp) {
 #' @param t0array Array of t0 values by simulation and year
 #' @param LenCV CV of length-at-age#'
 #' @return named list with CAL array and LFC, ML, & Lc vectors
+#' 
+#'     CALdat <- simCAL(nsim, nyears, StockPars$maxage, ObsPars$CAL_ESS,
 simCAL <- function(nsim, nyears, maxage,  CAL_ESS, CAL_nsamp, nCALbins, CAL_binsmid, CAL_bins,
                    vn, retL, Linfarray, Karray, t0array, LenCV) {
   # a multinomial observation model for catch-at-length data
@@ -1023,7 +1025,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
 
     # Calculate Error
     SimBiomass <- apply(StockPars$VBiomass, c(1, 3), sum)
-    I_Err <- lapply(1:nsim, function(i) indfit(SimBiomass[i,],  Data_out@VInd[i,]))
+    I_Err <- lapply(1:nsim, function(i) indfit(sim.index=SimBiomass[i,],  obs.ind=Data_out@VInd[i,]))
     I_Err <- do.call('rbind', I_Err)
 
     if (!is.null(SampCpars$VI_beta)) {
@@ -1268,16 +1270,16 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
         # numbers at age in population that would be removed
         vn <- aperm(vn, c(1,3, 2))
         doopt <- optimise(optESS, c(10, 10000), vn, StockPars,
-                          FleetPars$SLarray[1,,yr.ind, drop=FALSE], yr.ind, ObsPars, Data_out, CAL)
+                          FleetPars$SLarray_real[1,,yr.ind, drop=FALSE], yr.ind, ObsPars, Data_out, CAL)
         ObsPars$CAL_ESS <- rep(doopt$minimum, nsim)
       } else {
         vn <- apply(StockPars$N[,,yr.ind,, drop=FALSE]*
                       Sample_Area$CAL[,,yr.ind,, drop=FALSE], c(1,2,3), sum) *
-          FleetPars$retA[,,yr.ind, drop=FALSE]
+          FleetPars$retA_real[,,yr.ind, drop=FALSE]
         # numbers at age in population that would be removed
         vn <- aperm(vn, c(1,3, 2))
         doopt <- optimise(optESS, c(10, 10000), vn, StockPars,
-                          FleetPars$retL[1,,yr.ind, drop=FALSE], yr.ind, ObsPars, Data_out, CAL)
+                          FleetPars$retL_real[1,,yr.ind, drop=FALSE], yr.ind, ObsPars, Data_out, CAL)
         ObsPars$CAL_ESS <- rep(doopt$minimum, nsim)
       }
     }

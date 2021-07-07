@@ -132,7 +132,6 @@ SS2DataMOM <- function(SSdir, age_M = NULL, comp_partition = 2, silent = FALSE, 
 
 
 #' @rdname SS2MOM
-#' @param x For \code{plot_SS2MOM}, an object of either class \linkS4class{MOM} or `multiHist`.
 #' @export
 plot_SS2MOM <- function(x, SSdir, gender = 1:2,
                        filename = "SS2MOM", dir = tempdir(), open_file = TRUE, silent = FALSE, ...) {

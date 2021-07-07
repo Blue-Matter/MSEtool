@@ -1,12 +1,16 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
-## MSEtool 3.0.3.9995 Development Version
+## MSEtool 3.1.9999 - Development Version
 
+### Fixes
+- patch bug in generation of size composition data (introduced in v3.1.0)
 
 ### New additions
-- bio-economic model
+- added `plot_SS2MOM` to compare MOM dynamics with SS3 predictions
 
+## MSEtool 3.1.0
 
+### New additions
 - Dynamic and equilibrium spawning potential ratio (SPR) are now calculated for the historical and projection years.
 - add option to include empirical weight-at-age for the catches with `cpars$Wt_age_C`
 - F_crash, F_med, and other reference points have been added to `Hist@Ref$ByYear`
