@@ -1,6 +1,6 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
-## MSEtool 3.1.9999 - Development Version
+## MSEtool 3.1.1 
 
 ### Fixes
 - patch bug in generation of size composition data (introduced in v3.1.0)
