@@ -194,7 +194,7 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
   Zarray.subcube(0,0, 0, maxage, 0, nareas-1) = Marray.subcube(0,0, 0, maxage, 0, nareas-1) + FMarray.subcube(0,0, 0, maxage, 0, nareas-1);
 
   for (int yr=0; yr<(pyears-1); yr++) { //
-    Rcpp::Rcout << "yr = " << yr << std::endl;
+    // Rcpp::Rcout << "yr = " << yr << std::endl;
     arma::vec SB(nareas);
 
     for (int A=0; A<nareas; A++) SB(A) = accu(SBarray.subcube(0, yr, A, maxage, yr, A));
