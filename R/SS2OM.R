@@ -139,10 +139,7 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
   #cpars_out$CAL_binsmid <- .cpars$CAL_binsmid
   cpars_out$Mat_age <- .cpars$Mat_age
 
-  # Sample recruitment deviations
-  Perr_proj <- exp(sample_recruitment(log(.cpars$Perr_y), proyears,
-                                      replist$sigma_R_in, Stocks[[1]]@AC[1], seed))
-  cpars_out$Perr_y <- cbind(.cpars$Perr_y, Perr_proj)
+  cpars_out$Perr_y <- .cpars$Perr_y
 
   # Do movement
   if(import_mov && !is.null(replist$movement) && nrow(replist$movement)) {

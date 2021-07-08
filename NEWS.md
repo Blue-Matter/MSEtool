@@ -4,6 +4,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 ### Fixes
 - patch bug in generation of size composition data (introduced in v3.1.0)
+- fix minor issue with `SSMOM2OM` where it was generating redundant rec devs
 
 ### New additions
 - added `plot_SS2MOM` to compare MOM dynamics with SS3 predictions

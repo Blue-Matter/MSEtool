@@ -1,4 +1,6 @@
 ## Note to CRAN Maintainers
+Fixed partial match in Description Author field.
+
 This is a patch for a bug that was introduced in the last release.
 Apologies for the short interval between submissions. 
 
