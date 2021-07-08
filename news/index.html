@@ -79,7 +79,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.1.1.9999</span>
       </span>
     </div>
 
@@ -122,12 +122,32 @@
       <small>Source: <a href='https://github.com/Blue-Matter/MSEtool/blob/master/NEWS.md'><code>NEWS.md</code></a></small>
     </div>
 
-    <div id="msetool-311" class="section level2">
+    <div id="msetool-3119999---dev-version" class="section level2">
 <h2 class="hasAnchor">
-<a href="#msetool-311" class="anchor"></a>MSEtool 3.1.1</h2>
+<a href="#msetool-3119999---dev-version" class="anchor"></a>MSEtool 3.1.1.9999 - Dev Version</h2>
 <div id="fixes" class="section level3">
 <h3 class="hasAnchor">
 <a href="#fixes" class="anchor"></a>Fixes</h3>
+<ul>
+<li>fix issue in <code>SSMOM2OM</code> where selectivity was NA when fishing mortality was 0</li>
+<li>remove debugging message that was stupidly left in last release</li>
+</ul>
+</div>
+<div id="minor-changes" class="section level3">
+<h3 class="hasAnchor">
+<a href="#minor-changes" class="anchor"></a>Minor changes</h3>
+<ul>
+<li>add <code>silent</code> option to <code>SS2Data</code>
+</li>
+</ul>
+</div>
+</div>
+    <div id="msetool-311" class="section level2">
+<h2 class="hasAnchor">
+<a href="#msetool-311" class="anchor"></a>MSEtool 3.1.1</h2>
+<div id="fixes-1" class="section level3">
+<h3 class="hasAnchor">
+<a href="#fixes-1" class="anchor"></a>Fixes</h3>
 <ul>
 <li>patch bug in generation of size composition data (introduced in v3.1.0)</li>
 <li>fix minor issue with <code>SSMOM2OM</code> where it was generating redundant rec devs</li>
@@ -159,9 +179,9 @@
 <li>option to apply TAC to all removals with <code>OM@cpars$control$TAC="removals"</code>. Default is to for TAC to refer to retained catch (i.e., removals will be greater than TAC if there are discards)</li>
 </ul>
 </div>
-<div id="minor-changes" class="section level3">
+<div id="minor-changes-1" class="section level3">
 <h3 class="hasAnchor">
-<a href="#minor-changes" class="anchor"></a>Minor changes</h3>
+<a href="#minor-changes-1" class="anchor"></a>Minor changes</h3>
 <ul>
 <li>add more informative messages when conditioning on real data</li>
 <li>add conditioning on real data for <code>multiMSE</code>
@@ -169,9 +189,9 @@
 <li>MSY calculations now in C++ for significant speed increase</li>
 </ul>
 </div>
-<div id="fixes-1" class="section level3">
+<div id="fixes-2" class="section level3">
 <h3 class="hasAnchor">
-<a href="#fixes-1" class="anchor"></a>Fixes</h3>
+<a href="#fixes-2" class="anchor"></a>Fixes</h3>
 <ul>
 <li>fix the plus-group calculations in <code>popdynOneTScpp</code>
 </li>
@@ -189,9 +209,9 @@
 <li>Help description has been updated for <code>Stock</code>, <code>Fleet</code>, and <code>Obs</code> objects (many thanks to Sarah Valencia).</li>
 </ul>
 </div>
-<div id="fixes-2" class="section level3">
+<div id="fixes-3" class="section level3">
 <h3 class="hasAnchor">
-<a href="#fixes-2" class="anchor"></a>Fixes</h3>
+<a href="#fixes-3" class="anchor"></a>Fixes</h3>
 <ul>
 <li>fix minor bugs in <code>XL2Data</code> for importing data from CSV</li>
 </ul>
@@ -200,17 +220,17 @@
     <div id="msetool-301" class="section level2">
 <h2 class="hasAnchor">
 <a href="#msetool-301" class="anchor"></a>MSEtool 3.0.1</h2>
-<div id="minor-changes-1" class="section level3">
+<div id="minor-changes-2" class="section level3">
 <h3 class="hasAnchor">
-<a href="#minor-changes-1" class="anchor"></a>Minor Changes</h3>
+<a href="#minor-changes-2" class="anchor"></a>Minor Changes</h3>
 <ul>
 <li>Add <code>I_beta</code>, <code>SpI_beta</code>, and <code>VI_beta</code> for the individual indices. Defaults to use <code>OM@beta</code> for all, unless a real index is supplied, e.g., <code>OM@cpars$Data@Ind</code>, <code>OM@cpars$Data@SpInd</code>, or <code>OM@cpars$Data@VInd</code>, or if supplied in cpars, e.g., <code>OM@cpars$I_beta</code>
 </li>
 </ul>
 </div>
-<div id="fixes-3" class="section level3">
+<div id="fixes-4" class="section level3">
 <h3 class="hasAnchor">
-<a href="#fixes-3" class="anchor"></a>Fixes</h3>
+<a href="#fixes-4" class="anchor"></a>Fixes</h3>
 <ul>
 <li>fix bug where variability in von Bert <em>K</em> with <code>OM@Ksd</code> was not implemented correctly (5e6e8c6).</li>
 <li>fix error with incorrect beta values when conditioning with real index (ie <a href="mailto:cpars%24Data@Ind" class="email">cpars$Data@Ind</a>)</li>

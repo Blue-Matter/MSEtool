@@ -81,7 +81,7 @@ the various slots of an Data object." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">3.1.1.9999</span>
       </span>
     </div>
 
@@ -143,6 +143,7 @@ the various slots of an Data object.</p>
   comp_partition <span class='op'>=</span> <span class='st'>"all"</span>,
   comp_gender <span class='op'>=</span> <span class='st'>"all"</span>,
   index_season <span class='op'>=</span> <span class='st'>"mean"</span>,
+  silent <span class='op'>=</span> <span class='cn'>FALSE</span>,
   <span class='va'>...</span>
 <span class='op'>)</span></pre>
 
@@ -202,6 +203,10 @@ By default, <code>"all"</code> sums over all gender codes.</p></td>
       <th>index_season</th>
       <td><p>Integer, for seasonal models, the season for which the value of the index will be used. By default, <code>"mean"</code>
 will take the average across seasons.</p></td>
+    </tr>
+    <tr>
+      <th>silent</th>
+      <td><p>Logical. Suppress all messages?</p></td>
     </tr>
     <tr>
       <th>...</th>
