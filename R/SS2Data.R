@@ -21,6 +21,7 @@
 #' By default, \code{"all"} sums over all gender codes.
 #' @param index_season Integer, for seasonal models, the season for which the value of the index will be used. By default, \code{"mean"}
 #' will take the average across seasons.
+#' @param silent Logical. Suppress all messages?
 #' @param ... Arguments to pass to \link[r4ss]{SS_output}
 #' @return An object of class Data.
 #' @note Currently supports the version of r4ss on CRAN (v.1.24) and Github (v.1.34-40). Function may be incompatible with other versions of r4ss.
@@ -30,20 +31,20 @@
 SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Species = "", Region = "",
                     min_age_M = 1, gender = 1,
                     comp_fleet = "all", comp_season = "sum", comp_partition = "all", comp_gender = "all",
-                    index_season = "mean", ...) {
+                    index_season = "mean", silent=FALSE, ...) {
 
   replist <- SS_import(SSdir, ...)
 
   season_as_years <- FALSE
   if(replist$nseasons == 1 && replist$seasduration < 1) {
-    message(paste("Season-as-years detected in SS model. There is one season in the year with duration of", replist$seasduration, "year."))
+    if (!silent) message(paste("Season-as-years detected in SS model. There is one season in the year with duration of", replist$seasduration, "year."))
     season_as_years <- TRUE
     nseas <- 1/replist$seasduration
-    message("MSEtool operates on annual basis. Since the SS model is seasonal, we need to aggregate over seasons.\n")
+    if (!silent) message("MSEtool operates on annual basis. Since the SS model is seasonal, we need to aggregate over seasons.\n")
   } else {
     nseas <- replist$nseasons
     if(nseas > 1) {
-      message("MSEtool operating model is an annual model. Since the SS model is seasonal, we need to aggregate over seasons.\n")
+      if (!silent) message("MSEtool operating model is an annual model. Since the SS model is seasonal, we need to aggregate over seasons.\n")
     }
   }
 
@@ -74,8 +75,8 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
     Data@Year <- mainyrs
   }
   Data@LHYear <- Data@Year[length(Data@Year)]
-  message("Detected", nyears, "years in the assessment model.")
-  message(paste0("First year: ", Data@Year[1], ", Last year: ", Data@Year[length(Data@Year)], "\n"))
+  if (!silent) message("Detected", nyears, "years in the assessment model.")
+  if (!silent) message(paste0("First year: ", Data@Year[1], ", Last year: ", Data@Year[length(Data@Year)], "\n"))
 
   ##### Life history
   #### Growth --------------------------------------
@@ -100,9 +101,11 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
 
   GP <- replist$Growth_Parameters   # Some growth parameters (presumably in endyr)
   if(nrow(GP)>1) {
-    message(nrow(GP)," rows of growth parameters were reported by r4ss:")
-    print(GP)
-    message("Row ", gender, " will be used (see gender argument in SS2Data).\n")
+    if (!silent) {
+      message(nrow(GP)," rows of growth parameters were reported by r4ss:")
+      print(GP)
+    }
+    if (!silent) message("Row ", gender, " will be used (see gender argument in SS2Data).\n")
     GP <- GP[gender, ]
   }
 
@@ -115,24 +118,24 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   Data@vbt0 <- t0
   muK <- GP$K[1]
   if(muK <= 0) { #Estimate K from Len_age if K < 0 (e.g., age-varying K with negative deviations in K).
-    message("Negative K value was detected. Attempting to re-estimate K based on mean length-at-age...")
+    if (!silent) message("Negative K value was detected. Attempting to re-estimate K based on mean length-at-age...")
     get_K <- function(K, Lens, Linf, t0, ages) sum((Lens - (Linf * (1 - exp(-K * (ages - t0)))))^2)
     muK <- optimize(get_K, c(0, 2), Lens = Len_age, Linf = GP$Linf[1], t0 = t0, ages = 1:maxage)$minimum
   }
   Data@vbK <- muK
 
-  message("Von Bertalanffy parameters: Linf = ", Data@vbLinf, ", K = ", muK, ", t0 = ", t0)
+  if (!silent) message("Von Bertalanffy parameters: Linf = ", Data@vbLinf, ", K = ", muK, ", t0 = ", t0)
 
   LenCV <- GP$CVmax[1]
   if(LenCV > 1) LenCV <- LenCV/Data@vbLinf
   Data@LenCV <- LenCV
-  message(paste0("Data@LenCV = ", Data@LenCV, "\n"))
+  if (!silent) message(paste0("Data@LenCV = ", Data@LenCV, "\n"))
 
   #### Weight
   Data@wla <- GP$WtLen1[1]
   Data@wlb <- GP$WtLen2[1]
 
-  message(paste0("Length-weight parameters: a = ", Data@wla, ", b = ", Data@wlb))
+  if (!silent) message(paste0("Length-weight parameters: a = ", Data@wla, ", b = ", Data@wlb))
 
   #### Maturity --------------------------------------
   if(min(growdat$Len_Mat < 1)) {                    # Condition to check for length-based maturity
@@ -146,7 +149,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   Data@L50 <- LinInterp(Mat, Len_age, 0.5+1e-6)
   Data@L95 <- LinInterp(Mat, Len_age, 0.95)
 
-  message(paste0("Lengths at 50% and 95% maturity: ", paste(round(Data@L50, 2), round(Data@L95, 2), collapse = " "), "\n"))
+  if (!silent) message(paste0("Lengths at 50% and 95% maturity: ", paste(round(Data@L50, 2), round(Data@L95, 2), collapse = " "), "\n"))
 
   #### M --------------------------------------
   M <- growdat$M
@@ -158,11 +161,11 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
     } else {
       Data@Mort <- mean(M[growdat$Age >= min_age_M])
     }
-    message("Age-dependent natural mortality detected, but only a single value of M is currently supported for the Data object.")
-    message(paste0("Using mean from age ", min_age_M, " and up. Data@Mort = ", Data@Mort, ".\n"))
+    if (!silent) message("Age-dependent natural mortality detected, but only a single value of M is currently supported for the Data object.")
+    if (!silent) message(paste0("Using mean from age ", min_age_M, " and up. Data@Mort = ", Data@Mort, ".\n"))
   } else {
     Data@Mort <- unique(M)
-    message(paste0("Natural mortality Data@Mort = ", Data@Mort, "\n"))
+    if (!silent) message(paste0("Natural mortality Data@Mort = ", Data@Mort, "\n"))
   }
 
   #### Composition data -------------------------
@@ -170,26 +173,26 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   #### CAA
   if(nrow(replist$agedbase) > 0) {
     CAA <- SS2Data_get_comps(replist, mainyrs, maxage, season_as_years, nseas, comp_gender, comp_fleet, comp_partition, comp_season,
-                             type = "age") %>% as.matrix()
+                             type = "age", silent=silent) %>% as.matrix()
     if(!is.null(CAA)) {
       Data@CAA <- array(CAA, c(1, nyears, ncol(CAA)))
-      message("Collected age comps.")
+      if (!silent) message("Collected age comps.")
     } else {
-      message("Could not find age comps that matched these filtering criteria.")
+      if (!silent) message("Could not find age comps that matched these filtering criteria.")
     }
   } else {
-    message("No age comps found in SS assessment.")
+    if (!silent)  message("No age comps found in SS assessment.")
     Data@CAA <- array(NA, c(1, 1, 1))
   }
 
   #### CAL
-  message("\n")
+  if (!silent) message("\n")
   if(nrow(replist$lendbase) > 0) {
     CAL <- SS2Data_get_comps(replist, mainyrs, maxage, season_as_years, nseas, comp_gender, comp_fleet, comp_partition, comp_season,
-                             type = "length") %>% as.matrix()
+                             type = "length", silent=silent) %>% as.matrix()
     if(!is.null(CAL)) {
       Data@CAL <- array(CAL, c(1, nyears, ncol(CAL)))
-      message("Collected length comps.")
+      if (!silent) message("Collected length comps.")
 
       CAL_bins <- replist$lbins # add one more length bin
       width_bin <- CAL_bins[length(CAL_bins)] - CAL_bins[length(CAL_bins)-1]
@@ -201,7 +204,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
       ML <- rowSums(CAL * rep(Data@CAL_mids, each = nyears), na.rm = TRUE)/rowSums(CAL, na.rm = TRUE)
       ML[ML <= 0 | ML=="NaN"] <- NA
       Data@ML <- matrix(ML, nrow = 1)
-      message("Calculated mean lengths.")
+      if (!silent) message("Calculated mean lengths.")
 
       lcpos <- apply(CAL, 1, function(x) if(all(is.na(x))) return(NA) else which.max(x))
       Data@Lc <- matrix(CAL_bins[lcpos], nrow = 1)
@@ -216,7 +219,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
       }
 
     } else {
-      message("Could not find length comps that matched these filtering criteria.")
+      if (!silent) message("Could not find length comps that matched these filtering criteria.")
     }
   } else {
     message("No length comps found in SS assessment.")
@@ -224,7 +227,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   }
 
   #### Catch -------------------------
-  message("\nAdding total catch in weight across all fleets...")
+  if (!silent) message("\nAdding total catch in weight across all fleets...")
   cat_yr_ind <- !is.na(match(replist$timeseries$Yr, mainyrs))
   ts <- replist$timeseries[cat_yr_ind, ]
 
@@ -237,8 +240,8 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   cat_numbers <- cat[, !is_weight]
   if(ncol(cat_numbers) > 0) {
     fleet_in_numbers <- which(replist$catch_units == 2)
-    message(paste0("Catch in numbers was detected for Fleets: \n", paste(paste(fleet_in_numbers, replist$FleetNames[fleet_in_numbers]), collapse = "\n")))
-    message("Will use estimated assessment output for catch in weight (dead biomass) for these Fleets.")
+    if (!silent)  message(paste0("Catch in numbers was detected for Fleets: \n", paste(paste(fleet_in_numbers, replist$FleetNames[fleet_in_numbers]), collapse = "\n")))
+    if (!silent) message("Will use estimated assessment output for catch in weight (dead biomass) for these Fleets.")
 
     cat_col2 <- grepl("dead\\(B", colnames(ts))
     cat2 <- ts[, cat_col2]
@@ -251,10 +254,10 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   if(season_as_years) {
     total_catch2 <- aggregate(total_catch_vec, list(Yr = seas1_yind_full$true_year), sum, na.rm = TRUE)
     total_catch_vec <- total_catch2$x
-    message("Summing catch across seasons.")
+    if (!silent) message("Summing catch across seasons.")
   }
   Data@Cat <- matrix(total_catch_vec, nrow = 1)
-  message(paste0(sum(!is.na(Data@Cat[1, ])), " years of catch in Data@Cat."))
+  if (!silent) message(paste0(sum(!is.na(Data@Cat[1, ])), " years of catch in Data@Cat."))
 
   CSD <- replist$catch_error
   if(is.null(CSD) && packageVersion("r4ss") > 1.34) CSD <- replist$catch_se
@@ -264,28 +267,28 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
     if(packageVersion("DLMtool") < 5.4) {
       Csd_weighted <- stats::weighted.mean(CSD, colSums(cbind(cat_weight, cat_numbers)), na.rm = TRUE)
       Data@CV_Cat <- sqrt(exp(Csd_weighted^2) - 1)
-      message(paste0("CV of Catch (weighted by catch of individual fleets), Data@CV_Cat = ", round(Data@CV_Cat, 2)))
+      if (!silent) message(paste0("CV of Catch (weighted by catch of individual fleets), Data@CV_Cat = ", round(Data@CV_Cat, 2)))
     } else {
       Csd_weighted <- colSums(t(cbind(cat_weight, cat_numbers)) * CSD, na.rm = TRUE)/rowSums(cbind(cat_weight, cat_numbers))
       Data@CV_Cat <- matrix(sqrt(exp(Csd_weighted^2) - 1), 1)
-      message("Annual CV of Catch (Data@CV_Cat) is weighted by catch of individual fleets. Range: ",
+      if (!silent) message("Annual CV of Catch (Data@CV_Cat) is weighted by catch of individual fleets. Range: ",
               paste(signif(range(Data@CV_Cat, na.rm = TRUE), 3), collapse = " - "))
     }
   }
   Data@AvC <- mean(total_catch_vec)
-  message("Mean catch, Data@AvC = ", round(Data@AvC, 2), "\n")
+  if (!silent) message("Mean catch, Data@AvC = ", round(Data@AvC, 2), "\n")
 
   #### Index -------------------------
   Ind <- SS2Data_get_index(replist, mainyrs, season_as_years, nseas, index_season)
 
   if(is.null(Ind)) {
-    message("No indices found.")
+    if (!silent) message("No indices found.")
     if(packageVersion("DLMtool") >= 5.4) {
       Data@AddInd <- Data@CV_AddInd <- Data@AddIndV <- array(NA, c(1, 1, 1))
     }
   } else {
-    message(length(Ind$Iname), " indices of abundance found:")
-    message(paste(Ind$Iname, collapse = "\n"))
+    if (!silent) message(length(Ind$Iname), " indices of abundance found:")
+    if (!silent) message(paste(Ind$Iname, collapse = "\n"))
 
     if(packageVersion("DLMtool") >= "5.4.4") {
 
@@ -305,15 +308,15 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
       }
       Data@AddIndV <- array(AddIndV, c(1, dim(AddIndV)))
 
-      message("Updated Data@AddInd, Data@CV_AddInd, Data@AddIndV.")
+      if (!silent) message("Updated Data@AddInd, Data@CV_AddInd, Data@AddIndV.")
     } else {
-      message("\n\n *** Update DLMtool to latest version (5.4.4+) in order to add indices to Data object. *** \n\n")
+      if (!silent) message("\n\n *** Update DLMtool to latest version (5.4.4+) in order to add indices to Data object. *** \n\n")
     }
 
   }
 
   #### Recruitment
-  message("\n")
+  if (!silent) message("\n")
   if(packageVersion("r4ss") == 1.24) {
     rec_ind <- match(mainyrs, replist$recruit$year)
   } else rec_ind <- match(mainyrs, replist$recruit$Yr)
@@ -322,11 +325,11 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   if(season_as_years) {
     rec2 <- aggregate(rec, by = list(Yr = seas1_yind_full$true_year), mean, na.rm = TRUE)$x
     rec <- rec2
-    message("Summing recruitment across seasons.")
+    if (!silent) message("Summing recruitment across seasons.")
   }
 
   Data@Rec <- matrix(rec/mean(rec), nrow = 1)
-  message("Relative recruitment strength to Data@Rec obtained from assessment.")
+  if (!silent) message("Relative recruitment strength to Data@Rec obtained from assessment.")
 
   #### Depletion
   if(packageVersion("r4ss") == 1.24) {
@@ -334,15 +337,15 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   } else SSB <- replist$recruit$SpawnBio[rec_ind]
 
   Data@Dt <- SSB[length(SSB)]/SSB[1]
-  message("Depletion since year ", mainyrs[1], " (Data@Dt) = ", round(Data@Dt, 2))
+  if (!silent) message("Depletion since year ", mainyrs[1], " (Data@Dt) = ", round(Data@Dt, 2))
 
   Data@Dep <- replist$current_depletion
-  message("Depletion from unfished conditions (Data@Dep) = ", round(Data@Dep, 2))
+  if (!silent) message("Depletion from unfished conditions (Data@Dep) = ", round(Data@Dep, 2))
 
   Data@t <- length(Data@Year)
 
   #### Reference points ----------------------
-  message("\n")
+  if (!silent) message("\n")
   if(packageVersion("r4ss") == 1.24) {
     Data@Cref <- replist$derived_quants$Value[replist$derived_quants$LABEL == "TotYield_MSY"] * ifelse(season_as_years, nseas, 1)
     FMSY <- replist$derived_quants$Value[replist$derived_quants$LABEL == "Fstd_MSY"] * ifelse(season_as_years, nseas, 1)
@@ -358,14 +361,14 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
     SSB0 <- replist$derived_quants$Value[replist$derived_quants$Label == "SSB_Unfished"]
     if(length(SSB0) == 0) SSB0 <- replist$derived_quants$Value[replist$derived_quants$Label == "SSB_unfished"]
   }
-  message("Reference catch set to MSY, Data@Cref = ", Data@Cref)
-  message("Reference biomass set to spawning biomass at MSY, Data@Bref = ", Data@Bref)
+  if (!silent) message("Reference catch set to MSY, Data@Cref = ", Data@Cref)
+  if (!silent) message("Reference biomass set to spawning biomass at MSY, Data@Bref = ", Data@Bref)
 
   Data@FMSY_M <- FMSY/Data@Mort
-  message("FMSY = ", FMSY, ", Data@FMSY_M = ", round(Data@FMSY_M, 2))
+  if (!silent) message("FMSY = ", FMSY, ", Data@FMSY_M = ", round(Data@FMSY_M, 2))
 
   Data@BMSY_B0 <- Data@Bref/SSB0
-  message("Data@BMSY_B0 = ", Data@BMSY_B0)
+  if (!silent) message("Data@BMSY_B0 = ", Data@BMSY_B0)
 
   Data@Units <- "metric tonnes"
   if(packageVersion("r4ss") == 1.24) {
@@ -378,7 +381,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   if(is.na(OFL_terminal)) {
     Data@Ref <- Data@Cat[1, ncol(Data@Cat)]
     Data@Ref_type <- paste("Catch in Year", Data@Year[length(Data@Year)])
-    message("No OFL detected from SS Assessment.")
+    if (!silent) message("No OFL detected from SS Assessment.")
   } else {
     Data@Ref <- OFL_terminal
     if(packageVersion("r4ss") == 1.24) {
@@ -400,20 +403,20 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
     }
   }
 
-  message("Data@Ref = ", Data@Ref, " (", Data@Ref_type, ")")
+  if (!silent)  message("Data@Ref = ", Data@Ref, " (", Data@Ref_type, ")")
 
   #### Steepness --------------------------------------
-  message("\n")
+  if (!silent) message("\n")
   if(replist$SRRtype == 3 || replist$SRRtype == 6) { # Beverton-Holt SR
     steep <- replist$parameters[grepl("steep", rownames(replist$parameters)), ]
     Data@steep <- steep$Value
 
-    message("Beverton-Holt steepness = ", Data@steep)
+    if (!silent) message("Beverton-Holt steepness = ", Data@steep)
   } else if(replist$SRRtype == 2) { # Ricker
     steep <- replist$parameters[grepl("SR_Ricker", rownames(replist$parameters)), ]
     Data@steep <- steep$Value
 
-    message("Ricker steepness = ", Data@steep)
+    if (!silent) message("Ricker steepness = ", Data@steep)
   } else if(replist$SRRtype == 7) {
 
     if(packageVersion("r4ss") == 1.24) {
@@ -435,9 +438,9 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
 
     hs <- 0.2 * exp(z0 * s_frac * (1 - 0.2 ^ Beta))
     Data@steep <- hs
-    message("Survival-based stock-recruit relationship with implied steepness = ", round(hs, 2))
+    if (!silent)  message("Survival-based stock-recruit relationship with implied steepness = ", round(hs, 2))
 
-  } else message("No steepness value found.")
+  } else if (!silent) message("No steepness value found.")
 
   if(packageVersion("r4ss") == 1.24) {
     SpAbun_ind <- match(replist$endyr+1, replist$recruit$year)
@@ -446,7 +449,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
     SpAbun_ind <- match(replist$endyr+1, replist$recruit$Yr)
     Data@SpAbun <- replist$recruit$SpawnBio[SpAbun_ind]
   }
-  message("Data@SpAbun = ", Data@SpAbun)
+  if (!silent) message("Data@SpAbun = ", Data@SpAbun)
 
 
   #### Selectivity
@@ -483,14 +486,14 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   Data@LFS <- Len_age[which.min((exp(V_terminal)-exp(1.05))^2 * 1:length(V_terminal))] %>% round(2)
   if(Data@LFS > Data@vbLinf) warning("Data@LFS > Data@vbLinf")
   Data@Vmaxlen <- V_terminal[length(V_terminal)] %>% round(2)
-  message(paste0("\nData@LFC = ", Data@LFC, ", Data@LFS = ", Data@LFS, ", Data@Vmaxlen = ", Data@Vmaxlen))
+  if (!silent) message(paste0("\nData@LFC = ", Data@LFC, ", Data@LFS = ", Data@LFS, ", Data@Vmaxlen = ", Data@Vmaxlen))
   if("sigma_R_in" %in% names(replist)) {
     Data@sigmaR <- replist$sigma_R_in
-    message("Data@sigmaR = ", Data@sigmaR)
+    if (!silent) message("Data@sigmaR = ", Data@sigmaR)
   }
   Data@Log <- Data@Misc <- list(note = paste("SS2Data function from MSEtool", packageVersion("MSEtool")))
 
-  message("\nImport was successful.")
+  if (!silent) message("\nImport was successful.")
 
   Data
 
@@ -502,7 +505,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
 # Get age or length comps
 SS2Data_get_comps <- function(replist, mainyrs, maxage, season_as_years = FALSE, nseas = 1,
                       comp_gender = "all", comp_fleet = "all", comp_partition = "all", comp_season = "sum",
-                      type = c("length", "age")) {
+                      type = c("length", "age"), silent=FALSE) {
 
   if(!requireNamespace("reshape2", quietly = TRUE)) {
     stop("Package `reshape2` is required for this function. Install with `install.packages('reshape2')`", call. = FALSE)
@@ -514,7 +517,7 @@ SS2Data_get_comps <- function(replist, mainyrs, maxage, season_as_years = FALSE,
   if(is.character(comp_fleet) && comp_fleet == "all") comp_fleet <- unique(dbase$Fleet)
 
   if(comp_partition != "all") dbase <- dbase[dbase$Part %in% comp_partition, ]
-  message("For ", type, " comps, using partition codes: ", paste(unique(dbase$Part), collapse = " "))
+  if (!silent) message("For ", type, " comps, using partition codes: ", paste(unique(dbase$Part), collapse = " "))
 
   if(comp_gender != "all") {
     if(!is.null(dbase$Gender)) {
@@ -524,14 +527,14 @@ SS2Data_get_comps <- function(replist, mainyrs, maxage, season_as_years = FALSE,
     }
   }
   if(!is.null(dbase$Gender)) {
-    message("For ", type, " comps, using gender codes: ", paste(unique(dbase$Gender), collapse = " "))
+    if (!silent) message("For ", type, " comps, using gender codes: ", paste(unique(dbase$Gender), collapse = " "))
   } else {
-    message("For ", type, " comps, using gender codes: ", paste(unique(dbase$Sex), collapse = " "))
+    if (!silent) message("For ", type, " comps, using gender codes: ", paste(unique(dbase$Sex), collapse = " "))
   }
 
   if(!season_as_years && nseas > 1 && is.numeric(comp_season)) { # Only if !season_as_years & nseas > 1
     dbase <- dbase[dbase$Seas == comp_season, ]
-    message("For ", type, " comps, using season ", comp_season)
+    if (!silent) message("For ", type, " comps, using season ", comp_season)
   }
 
   dbase_ind <- match(dbase$Yr, mainyrs) # Match years
@@ -565,12 +568,12 @@ SS2Data_get_comps <- function(replist, mainyrs, maxage, season_as_years = FALSE,
     seas1_yind_full <- get("seas1_yind_full", envir = parent.frame(), inherits = FALSE)
     if(is.numeric(comp_season) && comp_season <= nseas) {
       comp_res <- comp_res[seas1_yind_full$nseas == comp_season, ]
-      message("For ", type, " comps, using season ", comp_season)
+      if (!silent) message("For ", type, " comps, using season ", comp_season)
     } else if(is.character(comp_season) && comp_season == "sum") {
       comp_res_list <- split(comp_res, seas1_yind_full$true_year)
       comp_res_list <- lapply(comp_res_list, colSums, na.rm = TRUE)
       comp_res <- do.call(rbind, comp_res_list)
-      message(type, "comps summed across seasons.")
+      if (!silent) message(type, "comps summed across seasons.")
     }
   }
   comp_res[comp_res == 0] <- NA
