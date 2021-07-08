@@ -315,30 +315,36 @@ calculate_single_fleet_dynamics <- function(x) {
         F_at_length <- colSums(t(SLarray[i, , j, ]) * Find[i, j, ])
         Find_out[i, j] <- max(F_at_length)
         ret_at_length <- colSums(t(retL[i, , j, ]) * Find[i, j, ])
+        if (Find_out[i, j] == 0) {
+          SL_avg[i, , j] <- 0
+          retL_avg[i, , j] <- 0
+        } else {
+          SL_avg[i, , j] <- F_at_length/Find_out[i, j]
+          retL_avg[i, , j] <- ret_at_length/Find_out[i, j]  
+        }
 
-        SL_avg[i, , j] <- F_at_length/Find_out[i, j]
-        retL_avg[i, , j] <- ret_at_length/Find_out[i, j]
       }
     }
 
     SL_avg[, , nyears + 1:proyears] <- SL_avg[, , nyears]
     retL_avg[, , nyears + 1:proyears] <- retL_avg[, , nyears]
-
-    #
-    # out <- list(Find = Find_out, SLarray = SL_avg, retL = retL_avg, Fdisc = Fdisc_avg)
-
+    
     for(i in 1:nsim) {
       for(j in 1:nyears) {
         F_at_age<- colSums(t(V[i, , j, ]) * Find[i, j, ])
         Find_out[i, j] <- max(F_at_age)
         ret_at_age <- colSums(t(retA[i, , j, ]) * Find[i, j, ])
-
-        V_avg[i, , j] <- F_at_age/Find_out[i, j]
-        retA_avg[i, , j] <- ret_at_age/Find_out[i, j]
+        
+        if (Find_out[i, j] == 0) {
+          V_avg[i, , j] <- 0
+          retA_avg[i, , j] <- 0
+        } else {
+          V_avg[i, , j] <- F_at_age/Find_out[i, j]
+          retA_avg[i, , j] <- ret_at_age/Find_out[i, j]
+        }
         retA_avg[i, , j] <- retA_avg[i, , j]/max(retA_avg[i, , j])
       }
     }
-
     V_avg[, , nyears + 1:proyears] <- V_avg[, , nyears]
     retA_avg[, , nyears + 1:proyears] <- retA_avg[, , nyears]
     out <- list(Find = Find_out, V = V_avg, retA = retA_avg, Fdisc = Fdisc_avg, SLarray = SL_avg, retL = retL_avg)
