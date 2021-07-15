@@ -626,26 +626,6 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
     }
   }
 
-  # # ---- Calculate M-at-Age from M-at-Length (if provided in cpars) ----
-  # if (exists("M_at_Length", inherits=FALSE)) {  # M-at-length data.frame has been provided in cpars
-  #   MatLen <- matrix(NA, nsim, nrow(M_at_Length))
-  #   MatLen[,1] <- runif(nsim, min(M_at_Length[1,2:3]), max(M_at_Length[1,2:3]))
-  #   for (k in 1:nsim) {
-  #     for (X in 2:nrow(M_at_Length)) {
-  #       val <- (MatLen[k,1] - min(M_at_Length[1,2:3]))/ diff(t(M_at_Length[1,2:3]))
-  #       MatLen[k,X] <- min(M_at_Length[X,2:3]) + diff(t(M_at_Length[X,2:3]))*val
-  #     }
-  #   }
-  #
-  #   # Calculate M at age
-  #   Mage <- matrix(NA, nsim, n_age)
-  #   for (sim in 1:nsim) {
-  #     ind <- findInterval(Len_age[sim,,nyears], M_at_Length[,1])
-  #     Mage[sim, ] <- MatLen[sim, ind]
-  #   }
-  #   stop()
-  # }
-
   # ---- M-at-age in cpars -----
   if (!is.null(cpars$M_ageArray)) {
     M_ageArray <- cpars$M_ageArray
@@ -723,8 +703,13 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   if (is.null(cpars$mov)) { # movement matrix has not been passed in cpars
     if(msg) message("Optimizing for user-specified movement")
     nareas <- 2 # default is a 2 area model
-    mov1 <- array(t(sapply(1:nsim, getmov2, Frac_area_1 = Frac_area_1,
-                           Prob_staying = Prob_staying)), dim = c(nsim, nareas, nareas))
+    if(snowfall::sfIsRunning()) {
+      mov1 <- array(t(snowfall::sfSapply(1:nsim, getmov2, Frac_area_1 = Frac_area_1,
+                             Prob_staying = Prob_staying)), dim = c(nsim, nareas, nareas))
+    } else {
+      mov1 <- array(t(sapply(1:nsim, getmov2, Frac_area_1 = Frac_area_1,
+                             Prob_staying = Prob_staying)), dim = c(nsim, nareas, nareas))
+    }
     mov <- array(NA,c(nsim,n_age,nareas,nareas))
     mind <- as.matrix(expand.grid(1:nsim,1:n_age,1:nareas,1:nareas))
     mov[mind] <- mov1[mind[,c(1,3,4)]]
