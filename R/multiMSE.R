@@ -33,10 +33,10 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   nf <- length(Fleets[[1]])
 
   if(np==1 & nf==1){
-    message("You have specified only a single stock and fleet. ",
+    if (!silent) message("You have specified only a single stock and fleet. ",
             "You should really be using the function MSEtool::runMSE()")
   } else if(np>1 & length(MOM@Rel)==0 & length(MOM@SexPars)==0) {
-    message("You have specified more than one stock but no MICE relationships ",
+    if (!silent) message("You have specified more than one stock but no MICE relationships ",
             "(slot MOM@Rel) or sex-specific relationships (slot MOM@SexPars) among these. ",
             "As they are independent, consider doing MSE for one stock at a time for ",
             "computational efficiency.")
@@ -57,21 +57,21 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   # Allocation
   if(length(MOM@Allocation)==0){
     MOM@Allocation <- CatchFrac
-    message("Slot @Allocation of MOM object not specified. Setting slot ",
+    if (!silent) message("Slot @Allocation of MOM object not specified. Setting slot ",
             "@Allocation equal to slot @CatchFrac - current catch fractions")
   }
 
   if(length(MOM@Efactor)==0){
     MOM@Efactor <- list()
     for(p in 1:np) MOM@Efactor[[p]]<- array(1,c(nsim,nf))
-    message("Slot @Efactor of MOM object not specified. Setting slot @Efactor ",
+    if (!silent) message("Slot @Efactor of MOM object not specified. Setting slot @Efactor ",
             "to current effort for all fleets")
   }
 
   # All stocks and sampled parameters must have compatible array sizes (maxage)
   maxage_s <- unique(SIL(MOM@Stocks,"maxage"))
   if (length(maxage_s)>1)
-    message(paste("Stocks of varying maximum ages have been specified,",
+    if (!silent) message(paste("Stocks of varying maximum ages have been specified,",
                   "all simulations will run to",max(maxage_s),"ages"))
   maxage <- max(maxage_s)
   for(p in 1:np) MOM@Stocks[[p]]@maxage<-maxage
@@ -102,8 +102,8 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     if(!is.null(SampCpars[[p]][[1]]$plusgroup) & all(SampCpars[[p]][[1]]$plusgroup==0))
       plusgroup[p] <- 0
 
-    StockPars[[p]] <- SampleStockPars(MOM@Stocks[[p]], nsim, nyears,
-                                      proyears, SampCpars[[p]][[1]],
+    StockPars[[p]] <- SampleStockPars(Stock=MOM@Stocks[[p]], nsim, nyears,
+                                      proyears, cpars=SampCpars[[p]][[1]],
                                       msg=!silent)
     StockPars[[p]]$plusgroup <- plusgroup[p]
     StockPars[[p]]$maxF <- MOM@maxF
@@ -117,7 +117,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                                              cpars=SampCpars[[p]][[f]])
 
     }
-
+    
     # --- Sample Obs Parameters ----
     for(f in 1:nf) {
       ObsPars[[p]][[f]] <- SampleObsPars(MOM@Obs[[p]][[f]], nsim,
@@ -404,14 +404,14 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       }
       FleetPars[[p]][[f]]$MPA <- MPA
       if (any(MPA!=1))
-        message('NOTE: MPA detected for Fleet ', f, ' but currently NOT implemented in multiMSE')
+        if (!silent)  message('NOTE: MPA detected for Fleet ', f, ' but currently NOT implemented in multiMSE')
 
     } # end of loop over fleets
   } # end of loop over stocks
 
   # ---- SexPars - Update SSB0 and SRR parameters for male stock ----
   if(length(SexPars)>0){
-    message("You have specified sex-specific dynamics, unfished spawning biomass",
+    if (!silent)  message("You have specified sex-specific dynamics, unfished spawning biomass",
             " and specified stock depletion will be mirrored across sex types according ",
             "to SexPars$SSBfrom")
 
@@ -438,7 +438,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
     }
     if(length(SexPars$Herm)>0){
-      message("You have specified sequential hermaphroditism (SexPars$Herm).",
+      if (!silent) message("You have specified sequential hermaphroditism (SexPars$Herm).",
               "Unfished stock numbers will be calculated from this vector of fractions ",
               "at age. Population dynamics will move individuals from one sex to another.")
     }
@@ -610,9 +610,9 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       prErr <- length(probQ)/nsim
       if (prErr > fracD & length(probQ) >= 1) {
         if (length(tooLow) > 0)
-          message(tooLow, " sims can't get down to the lower bound on depletion")
+          if (!silent) message(tooLow, " sims can't get down to the lower bound on depletion")
         if (length(tooHigh) > 0)
-          message(tooHigh, " sims can't get to the upper bound on depletion")
+          if (!silent) message(tooHigh, " sims can't get to the upper bound on depletion")
         if(!silent)
           message("More than ", fracD*100, "% of simulations can't get to the ",
                   "specified level of depletion with these Operating Model parameters")
@@ -620,9 +620,9 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
              "input parameters, or increase ntrials")
       } else {
         if (length(tooLow) > 0)
-          message(tooLow, " sims can't get down to the lower bound on depletion")
+          if (!silent) message(tooLow, " sims can't get down to the lower bound on depletion")
         if (length(tooHigh) > 0)
-          message(tooHigh, " sims can't get to the upper bound on depletion")
+          if (!silent) message(tooHigh, " sims can't get to the upper bound on depletion")
         if(!silent)
           message("More than ", 100-fracD*100, "% simulations can get to the ",
                   "sampled depletion.\nContinuing")
@@ -982,7 +982,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   DataList <- new('list')
   for (p in 1:np) {
     DataList[[p]] <- vector('list', nf)
-    message('Generating historical data for ', Snames[p])
+    if (!silent) message('Generating historical data for ', Snames[p])
     for (f in 1:nf) {
       ObsPars[[p]][[f]]$Sample_Area <- Sample_Area # add to Obs Pars
       Data <- makeData(Biomass=Biomass[,p,,,],
