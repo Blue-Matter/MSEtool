@@ -171,7 +171,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   #### Composition data -------------------------
 
   #### CAA
-  if(nrow(replist$agedbase) > 0) {
+  if(!is.null(replist$agebase) && nrow(replist$agedbase) > 0) {
     CAA <- SS2Data_get_comps(replist, mainyrs, maxage, season_as_years, nseas, comp_gender, comp_fleet, comp_partition, comp_season,
                              type = "age", silent=silent) %>% as.matrix()
     if(!is.null(CAA)) {
@@ -187,7 +187,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
 
   #### CAL
   if (!silent) message("\n")
-  if(nrow(replist$lendbase) > 0) {
+  if(!is.null(replist$lendbase) && nrow(replist$lendbase) > 0) {
     CAL <- SS2Data_get_comps(replist, mainyrs, maxage, season_as_years, nseas, comp_gender, comp_fleet, comp_partition, comp_season,
                              type = "length", silent=silent) %>% as.matrix()
     if(!is.null(CAL)) {
@@ -222,7 +222,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
       if (!silent) message("Could not find length comps that matched these filtering criteria.")
     }
   } else {
-    message("No length comps found in SS assessment.")
+    if (!silent) message("No length comps found in SS assessment.")
     Data@CAL <- array(NA, c(1, 1, 1))
   }
 
