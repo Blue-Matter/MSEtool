@@ -626,6 +626,13 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
     }
   }
 
+  # ---- Add Fecundity-at-Age - used for female SSB ----
+  if (!is.null(cpars$Fec_age)) {
+    Fec_Age <- cpars$Fec_age
+  } else {
+    Fec_Age <- Wt_age * Mat_age
+  }
+  
   # ---- M-at-age in cpars -----
   if (!is.null(cpars$M_ageArray)) {
     M_ageArray <- cpars$M_ageArray
@@ -822,6 +829,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   StockOut$Pinitdist <- Pinitdist
   StockOut$Asize <- Asize
   StockOut$nareas <- nareas
+  StockOut$Fec_Age <- Fec_Age
   StockOut
 }
 

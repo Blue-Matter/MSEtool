@@ -198,8 +198,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   SSN_a[SAYR_a] <- Nfrac[SAY_a] * StockPars$R0[S_a] * StockPars$initdist[SAR_a]
   N_a[SAYR_a] <- StockPars$R0[S_a] * surv[SAY_a] * StockPars$initdist[SAR_a] # Calculate initial stock numbers for all years
   Biomass_a[SAYR_a] <- N_a[SAYR_a] * StockPars$Wt_age[SAY_a]  # Calculate initial stock biomass
-  SSB_a[SAYR_a] <- SSN_a[SAYR_a] * StockPars$Wt_age[SAY_a]    # Calculate spawning stock biomass
-
+  SSB_a[SAYR_a] <- N_a[SAYR_a] * StockPars$Fec_Age[SAY_a]    # Calculate spawning stock biomass
+  
   SSN0_a <- apply(SSN_a, c(1,3), sum) # unfished spawning numbers for each year
   N0_a <- apply(N_a, c(1,3), sum) # unfished numbers for each year)
   SSB0_a <- apply(SSB_a, c(1,3), sum) # unfished spawning biomass for each year
@@ -238,10 +238,9 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   initD <- SampCpars$initD #
   if (!is.null(initD)) { # initial depletion is not unfished
     if (!silent) message("Optimizing for user-specified depletion in first historical year")
-    Perrmulti <- sapply(1:nsim, optDfunwrap, initD=initD, Nfrac=Nfrac[,,1],
-                        R0=StockPars$R0,
+    Perrmulti <- sapply(1:nsim, optDfunwrap, initD=initD, R0=StockPars$R0,
                         StockPars$initdist,
-                        Perr_y=StockPars$Perr_y, surv=surv[,,1], Wt_age=StockPars$Wt_age,
+                        Perr_y=StockPars$Perr_y, surv=surv[,,1], Fec_age=StockPars$Fec_Age,
                         SSB0=SSB0,
                         StockPars$n_age)
     StockPars$Perr_y[,1:StockPars$maxage] <- StockPars$Perr_y[, 1:StockPars$maxage] * Perrmulti
@@ -252,7 +251,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     StockPars$initdist[SAR]*StockPars$Perr_y[Sa]  # Calculate initial spawning stock numbers
   N[SAYR] <- StockPars$R0[S] * surv[SAY] * StockPars$initdist[SAR]*StockPars$Perr_y[Sa]  # Calculate initial stock numbers
   Biomass[SAYR] <- N[SAYR] * StockPars$Wt_age[SAY]  # Calculate initial stock biomass
-  SSB[SAYR] <- SSN[SAYR] * StockPars$Wt_age[SAY]    # Calculate spawning stock biomass
+  SSB[SAYR] <- SSN[SAYR] * StockPars$Fec_Age[SAY]    # Calculate spawning stock biomass
   VBiomass[SAYR] <- Biomass[SAYR] * FleetPars$V_real[SAY]  # Calculate vulnerable biomass
 
   StockPars$aR <- aR
@@ -331,6 +330,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                         M_ageArray=StockPars$M_ageArray,
                         Wt_age=StockPars$Wt_age,
                         Mat_age=StockPars$Mat_age,
+                        Fec_age=StockPars$Fec_Age,
                         V=FleetPars$V_real,
                         maxage=StockPars$maxage,
                         R0=StockPars$R0,
@@ -369,6 +369,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
               M_age=StockPars$M_ageArray[x,,],
               Asize_c=StockPars$Asize[x,],
               MatAge=StockPars$Mat_age[x,,],
+              FecAge=StockPars$Fec_Age[x,,],
               WtAge=StockPars$Wt_age[x,,],
               Vuln=FleetPars$V_real[x,,],
               Retc=FleetPars$retA_real[x,,],
@@ -539,6 +540,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
               Asize_c=StockPars$Asize[x,],
               MatAge=StockPars$Mat_age[x,,],
               WtAge=StockPars$Wt_age[x,,],
+              FecAge=StockPars$Fec_Age[x,,],
               Vuln=FleetPars$V_real[x,,],
               Retc=FleetPars$retA_real[x,,],
               Prec=StockPars$Perr_y[x,],
@@ -558,8 +560,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
               control=1,
               SSB0c=StockPars$SSB0[x],
               plusgroup=StockPars$plusgroup))
-
-
+  
   # Number at the beginning of each year
   N <- aperm(array(as.numeric(unlist(histYrs[1,], use.names=FALSE)),
                    dim=c(n_age, nyears, nareas, nsim)), c(4,1,2,3))
@@ -629,6 +630,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                             M_ageArray=StockPars$M_ageArray,
                             Wt_age=StockPars$Wt_age,
                             Mat_age=StockPars$Mat_age,
+                            Fec_age=StockPars$Fec_Age,
                             V=FleetPars$V_real,
                             maxage=StockPars$maxage,
                             yr.ind=y,
@@ -680,6 +682,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                  StockPars$hs,
                  StockPars$Mat_age,
                  StockPars$Wt_age,
+                 StockPars$Fec_Age,
                  StockPars$R0a,
                  FleetPars$V_real,
                  nyears,
@@ -1306,6 +1309,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                 M_ageArray=StockPars$M_ageArray,
                                 Wt_age=StockPars$Wt_age,
                                 Mat_age=StockPars$Mat_age,
+                                Fec_age=StockPars$Fec_Age,
                                 V=FleetPars$V_real,
                                 maxage=StockPars$maxage,
                                 yr.ind=y1,
@@ -1345,7 +1349,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
       Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAYt]  # Calculate biomass
       SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAYt]  # Calculate spawning stock numbers
-      SSB_P[SAYR] <- SSN_P[SAYR] * StockPars$Wt_age[SAYt]  # Calculate spawning stock biomass
+      SSB_P[SAYR] <- N_P[SAYR] * StockPars$Fec_Age[SAYt]  # Calculate spawning stock biomass
 
       # recruitment in this year
       SSBcurr <- apply(SSB_P[,,y,],c(1,3), sum)
@@ -1369,7 +1373,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAY1]  # Calculate biomass
       VBiomass_P[SAYR] <- Biomass_P[SAYR] * V_P[SAYt]  # Calculate vulnerable biomass
       SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAYt]  # Calculate spawning stock numbers
-      SSB_P[SAYR] <- SSN_P[SAYR] * StockPars$Wt_age[SAYt]  # Calculate spawning stock biomass
+      SSB_P[SAYR] <- N_P[SAYR] * StockPars$Fec_Age[SAYt]  # Calculate spawning stock biomass
 
       StockPars$N_P <- N_P
       # --- An update year - update data and run MP ----

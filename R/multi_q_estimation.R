@@ -67,12 +67,13 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage,
     Asizex[p,]<-StockPars[[p]]$Asize[x,]
   }
 
-  M_ageArrayx<-Mat_agex<-WatAgex<-Len_agex <- array(NA,c(np,n_age,nyears))
+  M_ageArrayx<-Mat_agex<-WatAgex<-Len_agex <- Fec_agex <- array(NA,c(np,n_age,nyears))
   Effind<-array(NA,c(np,nf,nyears))
   Spat_targ<-array(NA,c(np,nf))
 
   for(p in 1:np){
     Mat_agex[p,,]<-StockPars[[p]]$Mat_age[x,,1:nyears]
+    Fec_agex[p,,]<-StockPars[[p]]$Fec_Age[x,,1:nyears]
     M_ageArrayx[p,,]<-StockPars[[p]]$M_ageArray[x,,1:nyears]
     Effind[p,,]<-t(matrix(unlist(lapply(FleetPars[[p]], function(dat,x)
       dat['Find'][[1]][x,],x=x)),ncol=nf))
@@ -112,7 +113,9 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage,
              depc=depc, CFc=CFc, mode='opt', np=np, nf=nf, nyears=nyears,
              nareas=nareas, maxage=maxage, Nx=Nx, VFx=VFx, FretAx=FretAx,
              Effind=Effind, distx=distx, movx=movx, Spat_targ=Spat_targ,
-             M_ageArrayx=M_ageArrayx, Mat_agex=Mat_agex, Asizex=Asizex,
+             M_ageArrayx=M_ageArrayx, Mat_agex=Mat_agex, 
+             Fec_agex=Fec_agex,
+             Asizex=Asizex,
              WatAgex=WatAgex, Len_agex=Len_agex,
              Karrayx=Karrayx,Linfarrayx=Linfarrayx, t0arrayx=t0arrayx,Marrayx=Marrayx,
              R0x=R0x, R0ax=R0ax, SSBpRx=SSBpRx,
@@ -125,6 +128,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage,
                 nyears=nyears, nareas=nareas, maxage=maxage, Nx=Nx, VFx=VFx,
                 FretAx=FretAx, Effind=Effind, distx=distx, movx=movx,
                 Spat_targ=Spat_targ, M_ageArrayx=M_ageArrayx, Mat_agex=Mat_agex,
+                Fec_agex=Fec_agex,
                 Asizex=Asizex, 
                 WatAgex=WatAgex, Len_agex=Len_agex,
                 Karrayx=Karrayx,Linfarrayx=Linfarrayx, t0arrayx=t0arrayx,Marrayx=Marrayx,
@@ -158,7 +162,8 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage,
 #' @param movx Array `[stock,age,area,area]` of movement transitions
 #' @param Spat_targ Matrix `[stock, fleet]` of spatial targeting parameter (0 evenly spatial distributed, 1 proportional to vulnerable biomass)
 #' @param M_ageArrayx Array `[stock, age,year]` of Natural mortality rate at age
-#' @param Mat_agex Array `[stock, age, year]` of maturity (spawning fraction) age age
+#' @param Mat_agex Array `[stock, age, year]` of maturity (spawning fraction) at age
+#' @param Fec_agex Array `[stock, age, year]` of mature spawning weight at age
 #' @param Asizex Matrix `[stock, area]` Area size
 #' @param Karrayx Array of von B growth parameter K
 #' @param Linfarrayx Array of von B asymptotic length parameter Linf
@@ -182,6 +187,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage,
 #' @keywords internal
 qestMICE<-function(par,depc,CFc,mode='opt',np,nf,nyears,nareas,maxage,Nx,VFx,
                    FretAx,Effind,distx,movx,Spat_targ,M_ageArrayx,Mat_agex,
+                   Fec_agex,
                    Asizex,
                    WatAgex, Len_agex,
                    Karrayx,Linfarrayx, t0arrayx,Marrayx,
@@ -200,7 +206,8 @@ qestMICE<-function(par,depc,CFc,mode='opt',np,nf,nyears,nareas,maxage,Nx,VFx,
   }
 
   HistVars<-popdynMICE(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,
-                       Effind,movx,Spat_targ,M_ageArrayx, Mat_agex,Asizex,
+                       Effind,movx,Spat_targ,M_ageArrayx, Mat_agex, Fec_agex, 
+                       Asizex,
                        WatAgex, Len_agex,
                        Karrayx,Linfarrayx, t0arrayx,Marrayx,
                        R0x,R0ax,SSBpRx,hsx,aRx, bRx,ax,bx,Perrx,

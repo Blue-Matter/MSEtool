@@ -13,6 +13,7 @@ popdynCPP(
   Asize_c,
   MatAge,
   WtAge,
+  FecAge,
   Vuln,
   Retc,
   Prec,
@@ -50,6 +51,8 @@ popdynCPP(
 \item{MatAge}{Numeric vector with proportion mature by age}
 
 \item{WtAge}{Numeric matrix (maxage+1, pyears) with weight by age and year}
+
+\item{FecAge}{Numeric matrix (maxage+1, pyears) with mature female weight by age and year}
 
 \item{Vuln}{Numeric matrix (maxage+1, pyears) with vulnerability by age and year}
 

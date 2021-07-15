@@ -37,13 +37,14 @@
 #' @author T. Carruthers with modifications by A. Hordyk
 #' @keywords internal
 getBlow<-function(x, N, Asize, SSBMSY, SSBpR, MPA, SSB0, nareas, retA,MGThorizon,Find,
-                  Perr,M_ageArray,hs,Mat_age,Wt_age,R0a,V,nyears,maxage,mov,Spat_targ,SRrel,
+                  Perr,M_ageArray,hs,Mat_age,Wt_age, Fec_age, R0a,V,nyears,maxage,mov,Spat_targ,SRrel,
                   aR,bR,Bfrac=0.5, maxF, ploty=F, plusgroup=0){
 
   opt <-optimize(Blow_opt,log(c(0.0075,15)),N=N[x,,1,], Asize_c =Asize[x,], SSBMSYc=SSBMSY[x],
                  SSBpRc=SSBpR[x,], MPA=MPA, SSB0c=SSB0[x], nareas, retAc=retA[x,,],
                  MGThorizonc=MGThorizon[x], Fc=Find[x,],Perrc=Perr[x,], Mc=M_ageArray[x,,],
-                 hc=hs[x], Mac=Mat_age[x,,], Wac=Wt_age[x,,], R0c=R0a[x,], Vc=V[x,,],
+                 hc=hs[x], Mac=Mat_age[x,,], Wac=Wt_age[x,,], Fecac=Fec_age[x,,],
+                 R0c=R0a[x,], Vc=V[x,,],
                  nyears=nyears, maxage=maxage, movc=mov[x,,,,], Spat_targc=Spat_targ[x],
                  SRrelc=SRrel[x], aRc=aR[x,], bRc=bR[x,], Bfrac, maxF, mode=1,
                  plusgroup=plusgroup)
@@ -52,7 +53,7 @@ getBlow<-function(x, N, Asize, SSBMSY, SSBpR, MPA, SSB0, nareas, retA,MGThorizon
     Blow_opt(opt$minimum,N=N[x,,1,], Asize_c =Asize[x,], SSBMSYc=SSBMSY[x],
              SSBpRc=SSBpR[x,], MPA=MPA, SSB0c=SSB0[x], nareas, retAc=retA[x,,],
              MGThorizonc=MGThorizon[x], Fc=Find[x,],Perrc=Perr[x,], Mc=M_ageArray[x,,],
-             hc=hs[x], Mac=Mat_age[x,,], Wac=Wt_age[x,,], R0c=R0a[x,], Vc=V[x,,],
+             hc=hs[x], Mac=Mat_age[x,,], Wac=Wt_age[x,,], Fecac=Fec_age[x,,],, R0c=R0a[x,], Vc=V[x,,],
              nyears=nyears, maxage=maxage, movc=mov[x,,,,], Spat_targc=Spat_targ[x],
              SRrelc=SRrel[x], aRc=aR[x,], bRc=bR[x,], Bfrac, maxF, mode=3,
              plusgroup=plusgroup)
@@ -61,7 +62,8 @@ getBlow<-function(x, N, Asize, SSBMSY, SSBpR, MPA, SSB0, nareas, retA,MGThorizon
   Blow_opt(opt$minimum,N=N[x,,1,], Asize_c =Asize[x,], SSBMSYc=SSBMSY[x],
            SSBpRc=SSBpR[x,], MPA=MPA, SSB0c=SSB0[x], nareas, retAc=retA[x,,],
            MGThorizonc=MGThorizon[x], Fc=Find[x,],Perrc=Perr[x,], Mc=M_ageArray[x,,],
-           hc=hs[x], Mac=Mat_age[x,,], Wac=Wt_age[x,,], R0c=R0a[x,], Vc=V[x,,],
+           hc=hs[x], Mac=Mat_age[x,,], Wac=Wt_age[x,,], Fecac=Fec_age[x,,],
+           R0c=R0a[x,], Vc=V[x,,],
            nyears=nyears, maxage=maxage, movc=mov[x,,,,], Spat_targc=Spat_targ[x],
            SRrelc=SRrel[x], aRc=aR[x,], bRc=bR[x,], Bfrac, maxF, mode=2,
            plusgroup=plusgroup)
@@ -91,6 +93,7 @@ getBlow<-function(x, N, Asize, SSBMSY, SSBpR, MPA, SSB0, nareas, retA,MGThorizon
 #' @param hc number: steepness values
 #' @param Mac matrix nages by nyears+proyears of maturity at age
 #' @param Wac vector nages long  of weight at age
+#' @param Fecac vector nages long  of mature weight at age
 #' @param R0c number: unfished recruitment
 #' @param Vc matrix of vulnerability maxage x nyears
 #' @param nyears integer: number of historical years
@@ -107,7 +110,7 @@ getBlow<-function(x, N, Asize, SSBMSY, SSBpR, MPA, SSB0, nareas, retA,MGThorizon
 #' @author T. Carruthers with modifications by A. Hordyk
 #' @keywords internal
 Blow_opt<-function(lnq, N, Asize_c, SSBMSYc,SSBpRc, MPA, SSB0c, nareas, retAc,
-                   MGThorizonc,Fc,Perrc,Mc,hc,Mac,Wac,R0c,Vc,nyears,maxage,movc,Spat_targc,
+                   MGThorizonc,Fc,Perrc,Mc,hc,Mac,Wac, Fecac, R0c,Vc,nyears,maxage,movc,Spat_targc,
                    SRrelc,aRc,bRc,Bfrac,maxF, mode=1, plusgroup=0){
 
   pyears <- nyears + MGThorizonc
@@ -117,7 +120,7 @@ Blow_opt<-function(lnq, N, Asize_c, SSBMSYc,SSBpRc, MPA, SSB0c, nareas, retAc,
   M_age <- Mc[,c(1:nyears, rep(nyears, MGThorizonc))]
   MatAge <- Mac[,c(1:nyears, rep(nyears, MGThorizonc))]
   WtAge <- Wac[,c(1:nyears, rep(nyears, MGThorizonc))]
-
+  FecAge <- Fecac[,c(1:nyears, rep(nyears, MGThorizonc))]
   Prec <- c(Perrc[1:(nyears+maxage+1)], rep(1, MGThorizonc)) # no recruitment variability in projection
   Effind <- c(Fc, rep(0, MGThorizonc)) # no fishing mortality in futute
 
@@ -129,7 +132,7 @@ Blow_opt<-function(lnq, N, Asize_c, SSBMSYc,SSBpRc, MPA, SSB0c, nareas, retAc,
   movcx <- array(movc[,,,nyears], dim=c(n_age, nareas, nareas, pyears)) # current movement pattern
 
   simpop <- popdynCPP(nareas, maxage, N, pyears, M_age, Asize_c,
-                      MatAge, WtAge, Vuln, Retc, Prec, split.along.dim(movcx,4),
+                      MatAge, WtAge, FecAge, Vuln, Retc, Prec, split.along.dim(movcx,4),
                       SRrelc, Effind, Spat_targc, hc,
                       R0c=R0c, SSBpRc=SSBpRc, aRc=aRc, bRc=bRc, Qc=exp(lnq), Fapic=0,
                       maxF=maxF, MPA=MPA, control=1, SSB0c=SSB0c,

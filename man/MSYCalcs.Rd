@@ -9,6 +9,7 @@ MSYCalcs(
   M_at_Age,
   Wt_at_Age,
   Mat_at_Age,
+  Fec_at_Age,
   V_at_Age,
   maxage,
   R0x,
@@ -26,6 +27,8 @@ MSYCalcs(
 \item{Wt_at_Age}{Vector of weight-at-age}
 
 \item{Mat_at_Age}{Vector of maturity-at-age}
+
+\item{Fec_at_Age}{Vector of mature weight-at-age}
 
 \item{V_at_Age}{Vector of selectivity-at-age}
 

@@ -20,6 +20,7 @@ popdynMICE(
   Spat_targ,
   M_ageArrayx,
   Mat_agex,
+  Fec_agex,
   Asizex,
   WatAgex,
   Len_agex,
@@ -75,7 +76,9 @@ popdynMICE(
 
 \item{M_ageArrayx}{Array \verb{[stock, age,year]} of Natural mortality rate at age}
 
-\item{Mat_agex}{Array \verb{[stock, age, year]} of maturity (spawning fraction) age}
+\item{Mat_agex}{Array \verb{[stock, age, year]} of maturity (spawning fraction) at age}
+
+\item{Fec_agex}{Array \verb{[stock, age, year]} of female spawning weight (fecundity) at age}
 
 \item{Asizex}{Array \verb{[stock, area]} Area size}
 

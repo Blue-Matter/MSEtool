@@ -266,8 +266,9 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     SSN_a[SAYR_a] <- Nfrac[SAY_a] * StockPars[[p]]$R0[S_a] * StockPars[[p]]$initdist[SAR_a]
     N_a[SAYR_a] <- StockPars[[p]]$R0[S_a] * surv[SAY_a] * StockPars[[p]]$initdist[SAR_a]
     Biomass_a[SAYR_a] <- N_a[SAYR_a] * StockPars[[p]]$Wt_age[SAY_a]  # Calculate initial stock biomass
-    SSB_a[SAYR_a] <- SSN_a[SAYR_a] * StockPars[[p]]$Wt_age[SAY_a]    # Calculate spawning stock biomass
-
+    # SSB_a[SAYR_a] <- SSN_a[SAYR_a] * StockPars[[p]]$Wt_age[SAY_a]    # Calculate spawning stock biomass
+    SSB_a[SAYR_a] <- N_a[SAYR_a] * StockPars[[p]]$Fec_Age[SAY_a]    # Calculate spawning stock biomass
+    
     SSN0_a <- apply(SSN_a, c(1,3), sum) # unfished spawning numbers for each year
     N0_a <- apply(N_a, c(1,3), sum) # unfished numbers for each year)
     SSB0_a <- apply(SSB_a, c(1,3), sum) # unfished spawning biomass for each year
@@ -327,23 +328,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     # --- Optimize for Initial Depletion ----
     # currently done in SS2MOM
 
-    # initD <- SampCpars[[p]][[1]]$initD #
-    # if (!is.null(initD)) { # initial depletion is not unfished
-    #   if (!silent)
-    #     message("Optimizing for user-specified depletion in first historical year for ", Snames[p])
-    #   Perrmulti <- sapply(1:nsim, optDfunwrap,
-    #                       initD=initD,
-    #                       Nfrac=Nfrac,
-    #                       R0=R0,
-    #                       Perr_y=StockPars[[p]]$Perr_y,
-    #                       surv=surv,
-    #                       Wt_age=StockPars[[p]]$Wt_age,
-    #                       SSB0=SSB0,
-    #                       n_age=n_age)
-    #
-    #   StockPars[[p]]$Perr_y[,1:n_age] <- StockPars[[p]]$Perr_y[, 1:n_age] * Perrmulti
-    # }
-    #
 
     #  --- Non-equilibrium Initial Year ----
     SSN[SPAYR] <- Nfrac[SAY] * StockPars[[p]]$R0[S] * StockPars[[p]]$initdist[SAR] *
@@ -355,7 +339,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     # Calculate initial stock biomass
     Biomass[SPAYR] <- N[SPAYR] * StockPars[[p]]$Wt_age[SAY]
     # Calculate spawning stock biomass
-    SSB[SPAYR] <- SSN[SPAYR] * StockPars[[p]]$Wt_age[SAY]
+    SSB[SPAYR] <- N[SPAYR] * StockPars[[p]]$Fec_Age[SAY]
     # Calculate vunerable biomass
     VBiomass[SPAYR] <- Biomass[SPAYR] * V[SAY]
 
@@ -652,6 +636,11 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                      dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
   SSB <- aperm(array(as.numeric(unlist(histYrs[4,], use.names=FALSE)),
                      dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
+  
+  ssb = apply(SSB[1,1,,,], 2, sum)
+  ssb
+  
+  
   VBiomass <- aperm(array(as.numeric(unlist(histYrs[5,], use.names=FALSE)),
                           dim=c(np, n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
   FM <- aperm(array(as.numeric(unlist(histYrs[6,], use.names=FALSE)),
@@ -764,6 +753,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                           StockPars[[p]]$M_ageArray,
                           StockPars[[p]]$Wt_age,
                           StockPars[[p]]$Mat_age,
+                          StockPars[[p]]$Fec_Age,
                           V,
                           StockPars[[p]]$maxage,
                           StockPars[[p]]$R0,
@@ -822,6 +812,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                 Asize_c=StockPars[[p]]$Asize[x,],
                 MatAge=StockPars[[p]]$Mat_age[x,,],
                 WtAge=StockPars[[p]]$Wt_age[x,,],
+                FecAge=StockPars[[p]]$Fec_Age[x,,],
                 Vuln=FleetPars[[p]][[1]]$V_real[x,,],
                 Retc=FleetPars[[p]][[1]]$retA_real[x,,],
                 Prec=StockPars[[p]]$Perr_y[x,],
@@ -1484,9 +1475,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     aR<-bR<-R0a<-SSBpR<-Asize<-array(NA,c(nsim,np,nareas))
     mov<-array(NA,c(nsim,np,n_age,nareas,nareas,nyears+proyears))
     Spat_targ_y<-array(NA,c(nsim,np,nf))
-    M_agecur_y<-Mat_agecur_y<-array(NA,c(nsim,np,n_age))
+    M_agecur_y<-Mat_agecur_y<- Fec_agecur_y<- array(NA,c(nsim,np,n_age))
     a_y<-b_y<-rep(NA,np)
-    WatAge <- Len_age <- array(NA,c(nsim, np,n_age))
+    WatAge <- Len_age  <- array(NA,c(nsim, np,n_age))
+    
     SSB0array <- array(NA, c(nsim, np))
     for(p in 1:np){
       Perr[,p]<-StockPars[[p]]$Perr_y[,nyears+n_age]
@@ -1498,6 +1490,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       SRrel[,p]<-StockPars[[p]]$SRrel
       M_agecur_y[,p,]<-StockPars[[p]]$M_ageArray[,,nyears]
       Mat_agecur_y[,p,]<-StockPars[[p]]$Mat_age[,,nyears]
+      Fec_agecur_y[,p,]<-StockPars[[p]]$Fec_Age[,,nyears]
       K[,p]<-StockPars[[p]]$Karray[,nyears]
       Linf[,p]<-StockPars[[p]]$Linfarray[,nyears]
       t0[,p]<-StockPars[[p]]$t0array[,nyears]
@@ -1529,6 +1522,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                     Spat_targ=array(Spat_targ_y[x,,],c(np,nf)), SRrelx=SRrel[x,],
                     M_agecur=matrix(M_agecur_y[x,,],nrow=np),
                     Mat_agecur=matrix(Mat_agecur_y[x,,],nrow=np),
+                    Fec_agecur=matrix(Fec_agecur_y[x,,],nrow=np),
                     Asizex=matrix(Asize[x,,],ncol=nareas),Kx =K[x,],
                     Linfx=Linf[x,],t0x=t0[x,],Mx=M[x,],
                     R0x=R0[x,],R0ax=matrix(R0a[x,,],nrow=np),
@@ -1569,6 +1563,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
       StockPars[[p]]$Len_age[,,nyears+y] <- Len_age[,p,]
       StockPars[[p]]$Wt_age[,,nyears+y] <- Wt_age[,p,]
+      StockPars[[p]]$Fec_Age[,,nyears+y] <- Wt_age[,p,]
     }
 
     # ---- Update true abundance ----
@@ -1808,6 +1803,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                               M_ageArray=StockPars[[p]]$M_ageArray,
                               Wt_age=StockPars[[p]]$Wt_age,
                               Mat_age=StockPars[[p]]$Mat_age,
+                              Fec_age=StockPars[[p]]$Fec_Age,
                               V=V_P,
                               maxage=StockPars[[p]]$maxage,
                               R0=StockPars[[p]]$R0,
@@ -1845,6 +1841,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         Perr[,p]<-StockPars[[p]]$Perr_y[,y+nyears+n_age-1]
         M_agecur_y[,p,]<-StockPars[[p]]$M_ageArray[,,nyears+y]
         Mat_agecur_y[,p,]<-StockPars[[p]]$Mat_age[,,nyears+y]
+        Fec_agecur_y[,p,]<-StockPars[[p]]$Fec_Age[,,nyears+y]
         K[,p]<-StockPars[[p]]$Karray[,nyears+y]
         Linf[,p]<-StockPars[[p]]$Linfarray[,nyears+y]
         t0[,p]<-StockPars[[p]]$t0array[,nyears+y]
@@ -1871,6 +1868,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                       SRrelx=SRrel[x,],
                       M_agecur=matrix(M_agecur_y[x,,],nrow=np),
                       Mat_agecur=matrix(Mat_agecur_y[x,,],nrow=np),
+                      Fec_agecur=matrix(Fec_agecur_y[x,,],nrow=np),
                       Asizex=matrix(Asize[x,,],ncol=nareas), Kx =K[x,],
                       Linfx=Linf[x,],t0x=t0[x,],Mx=M[x,],
                       R0x=R0[x,],R0ax=matrix(R0a[x,,],nrow=np),

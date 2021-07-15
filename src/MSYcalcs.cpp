@@ -7,6 +7,7 @@ using namespace Rcpp;
 //' @param M_at_Age Vector of M-at-age
 //' @param Wt_at_Age Vector of weight-at-age
 //' @param Mat_at_Age Vector of maturity-at-age
+//' @param Fec_at_Age Vector of mature weight-at-age
 //' @param V_at_Age Vector of selectivity-at-age
 //' @param maxage Maximum age
 //' @param R0x R0 for this simulation
@@ -20,6 +21,7 @@ NumericVector MSYCalcs(double logF,
                   NumericVector M_at_Age,
                   NumericVector Wt_at_Age,
                   NumericVector Mat_at_Age,
+                  NumericVector Fec_at_Age,
                   NumericVector V_at_Age,
                   int maxage,
                   double R0x,
@@ -51,12 +53,12 @@ NumericVector MSYCalcs(double logF,
     lx[n_age-1] = lx[n_age-1]/(1-exp(-Z_at_Age[n_age-1]));
   }
 
-  double Egg0 = sum(l0 * Wt_at_Age * Mat_at_Age);
-  double EggF = sum(lx * Wt_at_Age * Mat_at_Age);
+  double Egg0 = sum(l0 * Fec_at_Age);
+  double EggF = sum(lx * Fec_at_Age);
   double vB0 = sum(l0 * Wt_at_Age * V_at_Age); // unfished and fished vuln. biomass per-recruit
   double vBF = sum(lx * Wt_at_Age * V_at_Age);
-  double SB0 = sum(l0 * Wt_at_Age * Mat_at_Age); // spawning biomas per-recruit - same as eggs atm
-  double SBF = sum(lx * Wt_at_Age * Mat_at_Age);
+  double SB0 = sum(l0 * Fec_at_Age); // spawning biomass per-recruit - same as eggs atm
+  double SBF = sum(lx * Fec_at_Age);
   double B0 = sum(l0 * Wt_at_Age); // biomass-per-recruit
   double BF = sum(lx * Wt_at_Age);
 
@@ -114,6 +116,7 @@ NumericMatrix Ref_int_cpp(NumericVector F_search,
               NumericVector M_at_Age,
               NumericVector Wt_at_Age,
               NumericVector Mat_at_Age,
+              NumericVector Fec_at_Age,
               NumericVector V_at_Age,
               int SRrelx,
               int maxage,
@@ -124,7 +127,7 @@ NumericMatrix Ref_int_cpp(NumericVector F_search,
 
   for (int i=0; i<ncol; i++) {
     double logF = log(F_search[i]);
-    NumericVector msys = MSYCalcs(logF, M_at_Age, Wt_at_Age, Mat_at_Age,
+    NumericVector msys = MSYCalcs(logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age,
                                       V_at_Age, maxage, 1, SRrelx, 1,2,plusgroup);
     out(0,i) = msys[0];
     out(1,i) = msys[3];

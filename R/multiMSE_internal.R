@@ -143,12 +143,13 @@ HistMICE<-function(x,StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, VF,
     bRx[p,]<-StockPars[[p]]$bR[x,]
   }
 
-  M_ageArrayx<-Mat_agex<-WatAgex<-Len_agex <- array(NA,c(np,n_age,nyears))
+  M_ageArrayx<-Mat_agex<-WatAgex<-Len_agex <- Fec_agex <- array(NA,c(np,n_age,nyears))
   Effind<-array(NA,c(np,nf,nyears))
   Spat_targ<-array(NA,c(np,nf))
 
   for(p in 1:np){
     Mat_agex[p,,]<-StockPars[[p]]$Mat_age[x,,1:nyears]
+    Fec_agex[p,,]<-StockPars[[p]]$Fec_Age[x,,1:nyears]
     WatAgex[p,,]<-StockPars[[p]]$Wt_age[x,,1:nyears]
     Len_agex[p,,]<-StockPars[[p]]$Len_age[x,,1:nyears]
     M_ageArrayx[p,,]<-StockPars[[p]]$M_ageArray[x,,1:nyears]
@@ -160,7 +161,8 @@ HistMICE<-function(x,StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, VF,
   qfracx<-matrix(qfrac[x,,],c(np,nf))
 
   popdynMICE(qsx=qsx,qfracx=qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
-             movx,Spat_targ,M_ageArrayx,Mat_agex,Asizex, 
+             movx,Spat_targ,M_ageArrayx,Mat_agex,Fec_agex,
+             Asizex, 
              WatAgex, Len_agex, Karrayx,
              Linfarrayx,t0arrayx,Marrayx,
              R0x,R0ax,

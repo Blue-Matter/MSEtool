@@ -23,6 +23,7 @@ qestMICE(
   Spat_targ,
   M_ageArrayx,
   Mat_agex,
+  Fec_agex,
   Asizex,
   WatAgex,
   Len_agex,
@@ -79,7 +80,9 @@ qestMICE(
 
 \item{M_ageArrayx}{Array \verb{[stock, age,year]} of Natural mortality rate at age}
 
-\item{Mat_agex}{Array \verb{[stock, age, year]} of maturity (spawning fraction) age age}
+\item{Mat_agex}{Array \verb{[stock, age, year]} of maturity (spawning fraction) at age}
+
+\item{Fec_agex}{Array \verb{[stock, age, year]} of mature spawning weight at age}
 
 \item{Asizex}{Matrix \verb{[stock, area]} Area size}
 

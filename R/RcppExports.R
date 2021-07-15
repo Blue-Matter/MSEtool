@@ -15,6 +15,7 @@ LinInterp_cpp <- function(x, y, xlev) {
 #' @param M_at_Age Vector of M-at-age
 #' @param Wt_at_Age Vector of weight-at-age
 #' @param Mat_at_Age Vector of maturity-at-age
+#' @param Fec_at_Age Vector of mature weight-at-age
 #' @param V_at_Age Vector of selectivity-at-age
 #' @param maxage Maximum age
 #' @param R0x R0 for this simulation
@@ -23,12 +24,12 @@ LinInterp_cpp <- function(x, y, xlev) {
 #' @param opt Option. 1 = return -Yield, 2= return all MSY calcs
 #' @param plusgroup Integer. Default = 0 = no plus-group. Use 1 to include a plus-group
 #' @return See `opt`
-MSYCalcs <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, R0x, SRrelx, hx, opt = 1L, plusgroup = 1L) {
-    .Call('_MSEtool_MSYCalcs', PACKAGE = 'MSEtool', logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, R0x, SRrelx, hx, opt, plusgroup)
+MSYCalcs <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, maxage, R0x, SRrelx, hx, opt = 1L, plusgroup = 1L) {
+    .Call('_MSEtool_MSYCalcs', PACKAGE = 'MSEtool', logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, maxage, R0x, SRrelx, hx, opt, plusgroup)
 }
 
-Ref_int_cpp <- function(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, SRrelx, maxage, plusgroup = 1L) {
-    .Call('_MSEtool_Ref_int_cpp', PACKAGE = 'MSEtool', F_search, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, SRrelx, maxage, plusgroup)
+Ref_int_cpp <- function(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, SRrelx, maxage, plusgroup = 1L) {
+    .Call('_MSEtool_Ref_int_cpp', PACKAGE = 'MSEtool', F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, SRrelx, maxage, plusgroup)
 }
 
 calcVatAge <- function(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid) {
@@ -137,6 +138,7 @@ movestockCPP <- function(nareas, maxage, mov, Number) {
 #' @param Asize_c Numeric vector (length nareas) with size of each area
 #' @param MatAge Numeric vector with proportion mature by age
 #' @param WtAge Numeric matrix (maxage+1, pyears) with weight by age and year
+#' @param FecAge Numeric matrix (maxage+1, pyears) with mature female weight by age and year
 #' @param Vuln Numeric matrix (maxage+1, pyears) with vulnerability by age and year
 #' @param Retc Numeric matrix (maxage+1, pyears) with retention by age and year
 #' @param Prec Numeric vector (pyears) with recruitment error
@@ -159,7 +161,7 @@ movestockCPP <- function(nareas, maxage, mov, Number) {
 #'
 #' @author A. Hordyk
 #' @keywords internal
-popdynCPP <- function(nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, plusgroup = 0L) {
-    .Call('_MSEtool_popdynCPP', PACKAGE = 'MSEtool', nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, plusgroup)
+popdynCPP <- function(nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, plusgroup = 0L) {
+    .Call('_MSEtool_popdynCPP', PACKAGE = 'MSEtool', nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, plusgroup)
 }
 

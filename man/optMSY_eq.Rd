@@ -9,6 +9,7 @@ optMSY_eq(
   M_ageArray,
   Wt_age,
   Mat_age,
+  Fec_age,
   V,
   maxage,
   R0,
@@ -26,6 +27,8 @@ optMSY_eq(
 \item{Wt_age}{Array of weight-at-age}
 
 \item{Mat_age}{Array of maturity-at-age}
+
+\item{Fec_age}{Array of relative fecundity-at-age (spawning biomass weight)}
 
 \item{V}{Array of selectivity-at-age}
 

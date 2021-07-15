@@ -22,6 +22,7 @@ popdynOneMICE(
   SRrelx,
   M_agecur,
   Mat_agecur,
+  Fec_agecur,
   Asizex,
   Kx,
   Linfx,
@@ -75,7 +76,9 @@ relationship (1 = Beverton-Holt, 2= Ricker)}
 
 \item{M_agecur}{Matrix \verb{[stock, age]} of Natural mortality rate at age}
 
-\item{Mat_agecur}{Matrix \verb{[stock, age]} of maturity (spawning fraction) age age}
+\item{Mat_agecur}{Matrix \verb{[stock, age]} of maturity (spawning fraction) at age}
+
+\item{Fec_agecur}{Matrix \verb{[stock, age]} of spawning weight (fecundity) at age}
 
 \item{Asizex}{Matrix \verb{[stock, area]} of relative area sizes}
 

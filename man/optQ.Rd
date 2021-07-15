@@ -16,6 +16,7 @@ optQ(
   Asize_c,
   MatAge,
   WtAge,
+  FecAge,
   Vuln,
   Retc,
   Prec,
@@ -58,6 +59,8 @@ optQ(
 \item{MatAge}{Maturity-at-age}
 
 \item{WtAge}{Weight-at-age}
+
+\item{FecAge}{Mature weight-at-age (relative fecundity)}
 
 \item{Vuln}{Vulnerability-at-age}
 

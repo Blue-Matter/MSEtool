@@ -9,6 +9,9 @@ The current version of the `MSEtool` package is available for download from [CRA
 ### Minor changes
 - add `silent` option to `SS2Data`
 
+### New additions
+- add option to include fecundity-at-age used to calculate spawning biomass (`cpars$Fec_age`)
+
 ## MSEtool 3.1.1 
 
 ### Fixes

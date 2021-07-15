@@ -31,8 +31,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // MSYCalcs
-NumericVector MSYCalcs(double logF, NumericVector M_at_Age, NumericVector Wt_at_Age, NumericVector Mat_at_Age, NumericVector V_at_Age, int maxage, double R0x, int SRrelx, double hx, int opt, int plusgroup);
-RcppExport SEXP _MSEtool_MSYCalcs(SEXP logFSEXP, SEXP M_at_AgeSEXP, SEXP Wt_at_AgeSEXP, SEXP Mat_at_AgeSEXP, SEXP V_at_AgeSEXP, SEXP maxageSEXP, SEXP R0xSEXP, SEXP SRrelxSEXP, SEXP hxSEXP, SEXP optSEXP, SEXP plusgroupSEXP) {
+NumericVector MSYCalcs(double logF, NumericVector M_at_Age, NumericVector Wt_at_Age, NumericVector Mat_at_Age, NumericVector Fec_at_Age, NumericVector V_at_Age, int maxage, double R0x, int SRrelx, double hx, int opt, int plusgroup);
+RcppExport SEXP _MSEtool_MSYCalcs(SEXP logFSEXP, SEXP M_at_AgeSEXP, SEXP Wt_at_AgeSEXP, SEXP Mat_at_AgeSEXP, SEXP Fec_at_AgeSEXP, SEXP V_at_AgeSEXP, SEXP maxageSEXP, SEXP R0xSEXP, SEXP SRrelxSEXP, SEXP hxSEXP, SEXP optSEXP, SEXP plusgroupSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -40,6 +40,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type M_at_Age(M_at_AgeSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type Wt_at_Age(Wt_at_AgeSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type Mat_at_Age(Mat_at_AgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Fec_at_Age(Fec_at_AgeSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type V_at_Age(V_at_AgeSEXP);
     Rcpp::traits::input_parameter< int >::type maxage(maxageSEXP);
     Rcpp::traits::input_parameter< double >::type R0x(R0xSEXP);
@@ -47,13 +48,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type hx(hxSEXP);
     Rcpp::traits::input_parameter< int >::type opt(optSEXP);
     Rcpp::traits::input_parameter< int >::type plusgroup(plusgroupSEXP);
-    rcpp_result_gen = Rcpp::wrap(MSYCalcs(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, R0x, SRrelx, hx, opt, plusgroup));
+    rcpp_result_gen = Rcpp::wrap(MSYCalcs(logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, maxage, R0x, SRrelx, hx, opt, plusgroup));
     return rcpp_result_gen;
 END_RCPP
 }
 // Ref_int_cpp
-NumericMatrix Ref_int_cpp(NumericVector F_search, NumericVector M_at_Age, NumericVector Wt_at_Age, NumericVector Mat_at_Age, NumericVector V_at_Age, int SRrelx, int maxage, int plusgroup);
-RcppExport SEXP _MSEtool_Ref_int_cpp(SEXP F_searchSEXP, SEXP M_at_AgeSEXP, SEXP Wt_at_AgeSEXP, SEXP Mat_at_AgeSEXP, SEXP V_at_AgeSEXP, SEXP SRrelxSEXP, SEXP maxageSEXP, SEXP plusgroupSEXP) {
+NumericMatrix Ref_int_cpp(NumericVector F_search, NumericVector M_at_Age, NumericVector Wt_at_Age, NumericVector Mat_at_Age, NumericVector Fec_at_Age, NumericVector V_at_Age, int SRrelx, int maxage, int plusgroup);
+RcppExport SEXP _MSEtool_Ref_int_cpp(SEXP F_searchSEXP, SEXP M_at_AgeSEXP, SEXP Wt_at_AgeSEXP, SEXP Mat_at_AgeSEXP, SEXP Fec_at_AgeSEXP, SEXP V_at_AgeSEXP, SEXP SRrelxSEXP, SEXP maxageSEXP, SEXP plusgroupSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -61,11 +62,12 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type M_at_Age(M_at_AgeSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type Wt_at_Age(Wt_at_AgeSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type Mat_at_Age(Mat_at_AgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Fec_at_Age(Fec_at_AgeSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type V_at_Age(V_at_AgeSEXP);
     Rcpp::traits::input_parameter< int >::type SRrelx(SRrelxSEXP);
     Rcpp::traits::input_parameter< int >::type maxage(maxageSEXP);
     Rcpp::traits::input_parameter< int >::type plusgroup(plusgroupSEXP);
-    rcpp_result_gen = Rcpp::wrap(Ref_int_cpp(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, SRrelx, maxage, plusgroup));
+    rcpp_result_gen = Rcpp::wrap(Ref_int_cpp(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, SRrelx, maxage, plusgroup));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -249,8 +251,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // popdynCPP
-List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears, arma::mat M_age, arma::vec Asize_c, arma::mat MatAge, arma::mat WtAge, arma::mat Vuln, arma::mat Retc, arma::vec Prec, List movc, double SRrelc, arma::vec Effind, double Spat_targc, double hc, NumericVector R0c, NumericVector SSBpRc, NumericVector aRc, NumericVector bRc, double Qc, double Fapic, double maxF, arma::mat MPA, int control, double SSB0c, int plusgroup);
-RcppExport SEXP _MSEtool_popdynCPP(SEXP nareasSEXP, SEXP maxageSEXP, SEXP NcurrSEXP, SEXP pyearsSEXP, SEXP M_ageSEXP, SEXP Asize_cSEXP, SEXP MatAgeSEXP, SEXP WtAgeSEXP, SEXP VulnSEXP, SEXP RetcSEXP, SEXP PrecSEXP, SEXP movcSEXP, SEXP SRrelcSEXP, SEXP EffindSEXP, SEXP Spat_targcSEXP, SEXP hcSEXP, SEXP R0cSEXP, SEXP SSBpRcSEXP, SEXP aRcSEXP, SEXP bRcSEXP, SEXP QcSEXP, SEXP FapicSEXP, SEXP maxFSEXP, SEXP MPASEXP, SEXP controlSEXP, SEXP SSB0cSEXP, SEXP plusgroupSEXP) {
+List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears, arma::mat M_age, arma::vec Asize_c, arma::mat MatAge, arma::mat WtAge, arma::mat FecAge, arma::mat Vuln, arma::mat Retc, arma::vec Prec, List movc, double SRrelc, arma::vec Effind, double Spat_targc, double hc, NumericVector R0c, NumericVector SSBpRc, NumericVector aRc, NumericVector bRc, double Qc, double Fapic, double maxF, arma::mat MPA, int control, double SSB0c, int plusgroup);
+RcppExport SEXP _MSEtool_popdynCPP(SEXP nareasSEXP, SEXP maxageSEXP, SEXP NcurrSEXP, SEXP pyearsSEXP, SEXP M_ageSEXP, SEXP Asize_cSEXP, SEXP MatAgeSEXP, SEXP WtAgeSEXP, SEXP FecAgeSEXP, SEXP VulnSEXP, SEXP RetcSEXP, SEXP PrecSEXP, SEXP movcSEXP, SEXP SRrelcSEXP, SEXP EffindSEXP, SEXP Spat_targcSEXP, SEXP hcSEXP, SEXP R0cSEXP, SEXP SSBpRcSEXP, SEXP aRcSEXP, SEXP bRcSEXP, SEXP QcSEXP, SEXP FapicSEXP, SEXP maxFSEXP, SEXP MPASEXP, SEXP controlSEXP, SEXP SSB0cSEXP, SEXP plusgroupSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -262,6 +264,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type Asize_c(Asize_cSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type MatAge(MatAgeSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type WtAge(WtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type FecAge(FecAgeSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Vuln(VulnSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Retc(RetcSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type Prec(PrecSEXP);
@@ -281,7 +284,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type control(controlSEXP);
     Rcpp::traits::input_parameter< double >::type SSB0c(SSB0cSEXP);
     Rcpp::traits::input_parameter< int >::type plusgroup(plusgroupSEXP);
-    rcpp_result_gen = Rcpp::wrap(popdynCPP(nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, plusgroup));
+    rcpp_result_gen = Rcpp::wrap(popdynCPP(nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, plusgroup));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -289,8 +292,8 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_vecminInd", (DL_FUNC) &_MSEtool_vecminInd, 1},
     {"_MSEtool_LinInterp_cpp", (DL_FUNC) &_MSEtool_LinInterp_cpp, 3},
-    {"_MSEtool_MSYCalcs", (DL_FUNC) &_MSEtool_MSYCalcs, 11},
-    {"_MSEtool_Ref_int_cpp", (DL_FUNC) &_MSEtool_Ref_int_cpp, 8},
+    {"_MSEtool_MSYCalcs", (DL_FUNC) &_MSEtool_MSYCalcs, 12},
+    {"_MSEtool_Ref_int_cpp", (DL_FUNC) &_MSEtool_Ref_int_cpp, 9},
     {"_MSEtool_calcVatAge", (DL_FUNC) &_MSEtool_calcVatAge, 7},
     {"_MSEtool_combine", (DL_FUNC) &_MSEtool_combine, 1},
     {"_MSEtool_get_freq", (DL_FUNC) &_MSEtool_get_freq, 4},
@@ -303,7 +306,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_movfit_Rcpp", (DL_FUNC) &_MSEtool_movfit_Rcpp, 3},
     {"_MSEtool_popdynOneTScpp", (DL_FUNC) &_MSEtool_popdynOneTScpp, 5},
     {"_MSEtool_movestockCPP", (DL_FUNC) &_MSEtool_movestockCPP, 4},
-    {"_MSEtool_popdynCPP", (DL_FUNC) &_MSEtool_popdynCPP, 27},
+    {"_MSEtool_popdynCPP", (DL_FUNC) &_MSEtool_popdynCPP, 28},
     {NULL, NULL, 0}
 };
 

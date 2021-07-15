@@ -20,7 +20,9 @@ CalculateQ <- function(x, StockPars, FleetPars, pyears,
                   StockPars$nareas, StockPars$maxage, Ncurr=StockPars$N[x,,1,],
                   pyears, M_age=StockPars$M_ageArray[x,,],
                   MatAge=StockPars$Mat_age[x,,], Asize_c=StockPars$Asize[x,],
-                  WtAge=StockPars$Wt_age[x,,], Vuln=FleetPars$V_real[x,,],
+                  WtAge=StockPars$Wt_age[x,,], 
+                  FecAge=StockPars$Fec_Age[x,,], 
+                  Vuln=FleetPars$V_real[x,,],
                   Retc=FleetPars$retA_real[x,,], Prec=StockPars$Perr_y[x,],
                   movc=split.along.dim(StockPars$mov[x,,,,],4),
                   SRrelc=StockPars$SRrel[x], Effind=FleetPars$Find[x,],
@@ -49,6 +51,7 @@ CalculateQ <- function(x, StockPars, FleetPars, pyears,
 #' @param Asize_c Numeric vector (length nareas) with size of each area
 #' @param MatAge Maturity-at-age
 #' @param WtAge Weight-at-age
+#' @param FecAge Mature weight-at-age (relative fecundity)
 #' @param Vuln Vulnerability-at-age
 #' @param Retc Retention-at-age
 #' @param Prec Recruitment error by year
@@ -71,11 +74,11 @@ CalculateQ <- function(x, StockPars, FleetPars, pyears,
 #' @author A. Hordyk
 #' @keywords internal
 optQ <- function(logQ, depc, SSB0c, nareas, maxage, Ncurr, pyears, M_age, Asize_c,
-                 MatAge, WtAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc,
+                 MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc,
                  R0c, SSBpRc, aRc, bRc, maxF, MPA, plusgroup, VB0c, SBMSYc, control) {
 
   simpop <- popdynCPP(nareas, maxage, Ncurr, pyears, M_age, Asize_c,
-                      MatAge, WtAge, Vuln, Retc, Prec, movc, SRrelc, Effind,
+                      MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind,
                       Spat_targc, hc, R0c=R0c, SSBpRc=SSBpRc, aRc=aRc, bRc=bRc,
                       Qc=exp(logQ), Fapic=0, maxF=maxF, MPA=MPA, control=1,
                       SSB0c=SSB0c, plusgroup=plusgroup)
@@ -126,6 +129,7 @@ split.along.dim <- function(a, n) {
 #' @param M_ageArray Array of M-at-age
 #' @param Wt_age Array of weight-at-age
 #' @param Mat_age Array of maturity-at-age
+#' @param Fec_age Array of relative fecundity-at-age (spawning biomass weight)
 #' @param V Array of selectivity-at-age
 #' @param maxage Vector of maximum age
 #' @param R0 Vector of R0s
@@ -137,16 +141,18 @@ split.along.dim <- function(a, n) {
 #' @export
 #'
 #' @keywords internal
-optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, V, maxage, R0, SRrel, hs,
+optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxage, R0, SRrel, hs,
                       yr.ind=1, plusgroup=0) {
   if (length(yr.ind)==1) {
     M_at_Age <- M_ageArray[x,,yr.ind]
     Wt_at_Age <- Wt_age[x,, yr.ind]
+    Fec_at_Age <- Fec_age[x,, yr.ind]
     Mat_at_Age <- Mat_age[x,, yr.ind]
     V_at_Age <- V[x,, yr.ind]
   } else {
     M_at_Age <- apply(M_ageArray[x,,yr.ind], 1, mean)
     Wt_at_Age <- apply(Wt_age[x,, yr.ind], 1, mean)
+    Fec_at_Age <- apply(Fec_age[x,, yr.ind], 1, mean)
     Mat_at_Age <- apply(Mat_age[x,, yr.ind], 1, mean)
     V_at_Age <- apply(V[x,, yr.ind], 1, mean)
   }
@@ -154,10 +160,10 @@ optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, V, maxage, R0, SRrel, hs,
   boundsF <- c(1E-4, 3)
 
   doopt <- optimise(MSYCalcs, log(boundsF), M_at_Age, Wt_at_Age, Mat_at_Age,
-                     V_at_Age, maxage, R0[x], SRrel[x], hs[x], opt=1,
+                    Fec_at_Age, V_at_Age, maxage, R0[x], SRrel[x], hs[x], opt=1,
                      plusgroup=plusgroup)
 
-  MSYs <- MSYCalcs(doopt$minimum, M_at_Age, Wt_at_Age, Mat_at_Age,
+  MSYs <- MSYCalcs(doopt$minimum, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age,
                    V_at_Age, maxage, R0[x], SRrel[x], hs[x], opt=2,
                    plusgroup=plusgroup)
 
@@ -171,18 +177,20 @@ Ref_int <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plu
   out[c(1,4)]
 }
 
-per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, V, maxage,
+per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxage,
                                yr.ind=1, plusgroup=0, SPR_target = seq(0.2, 0.6, 0.05),
                                StockPars) {
   if (length(yr.ind)==1) {
     M_at_Age <- M_ageArray[x,,yr.ind]
     Wt_at_Age <- Wt_age[x,, yr.ind]
     Mat_at_Age <- Mat_age[x,, yr.ind]
+    Fec_at_Age <- Fec_age[x,, yr.ind]
     V_at_Age <- V[x,, yr.ind]
   } else {
     M_at_Age <- apply(M_ageArray[x,,yr.ind], 1, mean)
     Wt_at_Age <- apply(Wt_age[x,, yr.ind], 1, mean)
     Mat_at_Age <- apply(Mat_age[x,, yr.ind], 1, mean)
+    Fec_at_Age <- apply(Fec_age[x,, yr.ind], 1, mean)
     V_at_Age <- apply(V[x,, yr.ind], 1, mean)
   }
 
@@ -192,6 +200,7 @@ per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, V, maxage,
 
   Ref_search <- Ref_int_cpp(F_search, M_at_Age = M_at_Age,
                             Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
+                            Fec_at_Age=Fec_at_Age,
                             V_at_Age = V_at_Age,
                             StockPars$SRrel[x],
                             maxage = maxage,
@@ -248,6 +257,7 @@ calcRefYield <- function(x, StockPars, FleetPars, pyears, Ncurr, nyears, proyear
                   M_age=StockPars$M_ageArray[x,,(nyears):(nyears+proyears)],
                   MatAge=StockPars$Mat_age[x,,(nyears):(nyears+proyears)],
                   WtAge=StockPars$Wt_age[x,,(nyears):(nyears+proyears)],
+                  FecAge=StockPars$Fec_Age[x,,(nyears):(nyears+proyears)],
                   Vuln=FleetPars$V_real[x,,(nyears):(nyears+proyears)],
                   Retc=FleetPars$retA_real[x,,(nyears):(nyears+proyears)],
                   Prec=StockPars$Perr_y[x,(nyears):(nyears+proyears+StockPars$maxage)],
@@ -280,6 +290,7 @@ calcRefYield <- function(x, StockPars, FleetPars, pyears, Ncurr, nyears, proyear
 #' @param M_age M-at-age
 #' @param MatAge Maturity-at-age
 #' @param WtAge Weight-at-age
+#' @param FecAge Mature-weight-at-age
 #' @param Vuln Vulnerability-at-age
 #' @param Retc Retention-at-age
 #' @param Prec Recruitment error
@@ -302,14 +313,14 @@ calcRefYield <- function(x, StockPars, FleetPars, pyears, Ncurr, nyears, proyear
 #' @author A. Hordyk
 #'
 optYield <- function(logFa, Asize_c, nareas, maxage, Ncurr, pyears, M_age,
-                   MatAge, WtAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc,
+                   MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc,
                    R0c, SSBpRc, aRc, bRc, Qc, MPA, maxF, SSB0c,
                    plusgroup=0) {
 
   FMSYc <- exp(logFa)
 
   simpop <- popdynCPP(nareas, maxage, Ncurr, pyears, M_age, Asize_c,
-                      MatAge, WtAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc,
+                      MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc,
                       R0c, SSBpRc, aRc, bRc, Qc=0, Fapic=FMSYc, MPA=MPA, maxF=maxF, control=2,
                       SSB0c=SSB0c, plusgroup = plusgroup)
 
@@ -885,24 +896,24 @@ calcF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, Asize, maxage, 
 
 
 
-optDfun <- function(Perrmulti, x, initD, Nfrac, R0, Perr_y, surv,
-                    Wt_age, SSB0, n_age) {
+optDfun <- function(Perrmulti, x, initD, R0, Perr_y, surv,
+                    Fec_age, SSB0, n_age) {
 
   initRecs <- rev(Perr_y[x,1:n_age]) * exp(Perrmulti)
 
-  SSN <- Nfrac[x,] * R0[x] *  initRecs # Calculate initial spawning stock numbers
-  SSB <- SSN * Wt_age[x,,1]    # Calculate spawning stock biomass
+  N <- R0[x] *  initRecs # Calculate initial spawning stock numbers
+  SSB <- N * Fec_age[x,,1]    # Calculate spawning stock biomass
 
   (sum(SSB)/SSB0[x] - initD[x])^2
 }
 
-optDfunwrap <- function(x, initD, Nfrac, R0, initdist, Perr_y, surv,
-                        Wt_age, SSB0, n_age) {
+optDfunwrap <- function(x, initD, R0, initdist, Perr_y, surv,
+                        Fec_age, SSB0, n_age) {
   interval <- log(c(0.01, 10))
 
-  optD <- optimise(optDfun, interval=interval, x=x, initD=initD, Nfrac=Nfrac,
+  optD <- optimise(optDfun, interval=interval, x=x, initD=initD,
                    R0=R0, Perr_y=Perr_y, surv=surv,
-                   Wt_age=Wt_age, SSB0=SSB0, n_age=n_age)
+                   Fec_age, SSB0=SSB0, n_age=n_age)
   exp(optD$minimum)
 }
 
@@ -1012,6 +1023,7 @@ CalcSPReq <- function(FM, StockPars, n_age, nareas, nyears, proyears, nsim, Hist
   M <- replicate(nareas, StockPars$M_ageArray[, , yind])
   Wt_age <- replicate(nareas, StockPars$Wt_age[, , yind])
   Mat_age <- replicate(nareas, StockPars$Mat_age[, , yind])
+  Fec_age <- replicate(nareas, StockPars$Fec_Age[, , yind])
   Z <- FM + M
   
   initdist <- replicate(n_y, StockPars$initdist[, 1, ]) %>% aperm(c(1, 3, 2))
@@ -1026,7 +1038,7 @@ CalcSPReq <- function(FM, StockPars, n_age, nareas, nyears, proyears, nsim, Hist
     NPR_M[, n_age, , ] <- NPR_M[, n_age, , ]/(1 - exp(-M[, n_age, , ]))
     NPR_F[, n_age, , ] <- NPR_F[, n_age, , ]/(1 - exp(-Z[, n_age, , ]))
   }
-  SPReq <- apply(NPR_F * Wt_age * Mat_age, c(1, 3), sum)/apply(NPR_M * Wt_age * Mat_age, c(1, 3), sum)
+  SPReq <- apply(NPR_F * Fec_age, c(1, 3), sum)/apply(NPR_M * Fec_age, c(1, 3), sum)
   return(SPReq = SPReq)
 }
 
@@ -1040,6 +1052,7 @@ CalcSPRdyn <- function(FM, StockPars, n_age, nareas, nyears, proyears, nsim, His
   M <- replicate(nareas, StockPars$M_ageArray[, , yind])
   Wt_age <- replicate(nareas, StockPars$Wt_age[, , yind])
   Mat_age <- replicate(nareas, StockPars$Mat_age[, , yind])
+  Fec_age <- replicate(nareas, StockPars$Fec_Age[, , yind])
   Z <- FM + M
   
   initdist <- replicate(n_y, StockPars$initdist[, 1, ]) %>% aperm(c(1, 3, 2))
@@ -1074,7 +1087,7 @@ CalcSPRdyn <- function(FM, StockPars, n_age, nareas, nyears, proyears, nsim, His
       cumsurv_F[, a, y, ] <- t(stockmovF)
     }
   }
-  SPRdyn <- apply(cumsurv_F * Wt_age * Mat_age, c(1, 3), sum)/apply(cumsurv_M * Wt_age * Mat_age, c(1, 3), sum)
+  SPRdyn <- apply(cumsurv_F * Fec_age, c(1, 3), sum)/apply(cumsurv_M * Fec_age, c(1, 3), sum)
   if(!Hist) SPRdyn <- SPRdyn[, 1:proyears + nyears]
   return(SPRdyn)
 }

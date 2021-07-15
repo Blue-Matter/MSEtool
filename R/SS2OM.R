@@ -112,6 +112,7 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
   cpars_out$Wt_age <- mean_array("Wt_age", cpars, gender)
   cpars_out$Len_age <- mean_array("Len_age", cpars, gender)
   cpars_out$LatASD <- mean_array("LatASD", cpars, gender)
+  cpars_out$Fec_age <- mean_array("Fec_age", cpars, gender=1)
 
   cpars_out$Linf <- mean_vector("Linf", cpars, gender)
   cpars_out$K <- mean_vector("K", cpars, gender)

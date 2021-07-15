@@ -17,7 +17,8 @@
 #' @param Spat_targ Matrix `[stock, fleet]` of spatial targeting parameter
 #' (0 evenly spatial distributed, 1 proportional to vulnerable biomass)
 #' @param M_ageArrayx Array `[stock, age,year]` of Natural mortality rate at age
-#' @param Mat_agex Array `[stock, age, year]` of maturity (spawning fraction) age
+#' @param Mat_agex Array `[stock, age, year]` of maturity (spawning fraction) at age
+#' @param Fec_agex Array `[stock, age, year]` of female spawning weight (fecundity) at age
 #' @param Asizex  Array `[stock, area]` Area size
 #' @param WatAgex Array of weight-at-age
 #' @param Len_agex Array of length-at-age
@@ -45,7 +46,8 @@
 #' @author T.Carruthers
 #' @keywords internal
 popdynMICE<-function(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
-                     movx,Spat_targ, M_ageArrayx,Mat_agex,Asizex,WatAgex, Len_agex,
+                     movx,Spat_targ, M_ageArrayx,Mat_agex, Fec_agex, 
+                     Asizex,WatAgex, Len_agex,
                      Karrayx,Linfarrayx, t0arrayx,Marrayx,
                      R0x,R0ax,SSBpRx,hsx,aRx,
                      bRx,ax,bx,Perrx,SRrelx,Rel,SexPars,x, plusgroup, maxF, SSB0x) {
@@ -72,7 +74,8 @@ popdynMICE<-function(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
   Ecur<-array(NA,c(np,nf))
   Vcur<-Retcur<-array(NA,c(np,nf,n_age))
 
-  SSBx[Nind]<-Nx[Nind]*Wt_agey[Nind[,1:3]]*Mat_agex[Nind[,1:3]]
+  # SSBx[Nind]<-Nx[Nind]*Wt_agey[Nind[,1:3]]*Mat_agex[Nind[,1:3]]
+  SSBx[Nind]<-Nx[Nind]*Fec_agex[Nind[,1:3]]
   
   for(y in 2:(nyears+1)){
 
@@ -118,6 +121,7 @@ popdynMICE<-function(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
                        Spat_targ=Spat_targ, SRrelx=SRrelx,
                        M_agecur=array(M_ageArrayx[,,y-1],dim(M_ageArrayx)[1:2]),
                        Mat_agecur=array(Mat_agex[,,y-1],dim(Mat_agex)[1:2]),
+                       Fec_agecur=array(Fec_agex[,,y-1],dim(Mat_agex)[1:2]),
                        Asizex=Asizex,
                        Kx=Karrayx[,y-1], 
                        Linfx=Linfarrayx[,y-1], 
@@ -218,7 +222,8 @@ popdynMICE<-function(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
 #' @param SRrelx Integer vector `[stock]` the form of the stock recruitment
 #'  relationship (1 = Beverton-Holt, 2= Ricker)
 #' @param M_agecur Matrix `[stock, age]` of Natural mortality rate at age
-#' @param Mat_agecur Matrix `[stock, age]` of maturity (spawning fraction) age age
+#' @param Mat_agecur Matrix `[stock, age]` of maturity (spawning fraction) at age
+#' @param Fec_agecur Matrix `[stock, age]` of spawning weight (fecundity) at age
 #' @param Asizex Matrix `[stock, area]` of relative area sizes
 #' @param Kx Vector `[stock]` of von B growth parameter K
 #' @param Linf Vector `[stock]` of von B asymptotic length parameter Linf
@@ -242,7 +247,8 @@ popdynMICE<-function(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
 
 popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
                         hsx, aRx, bRx, movy,Spat_targ,
-                        SRrelx,M_agecur,Mat_agecur,Asizex,
+                        SRrelx,M_agecur,Mat_agecur, Fec_agecur,
+                        Asizex,
                         Kx,Linfx,t0x,Mx,R0x,R0ax,SSBpRx,ax,bx,Rel,SexPars,x,
                         plusgroup, SSB0x,
                         Len_age, Wt_age){
@@ -266,7 +272,8 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
   }
 
   Bcur[Nind]<-Ncur[Nind]*Wt_age[Nind[,1:2]]
-  SSBcur[Nind]<-Bcur[Nind]*Mat_agecur[Nind[,1:2]]
+  # SSBcur[Nind]<-Bcur[Nind]*Mat_agecur[Nind[,1:2]]
+  SSBcur[Nind]<-Ncur[Nind]*Fec_agecur[Nind[,1:2]]
   SSNcur[Nind]<-Ncur[Nind]*Mat_agecur[Nind[,1:2]]
   
   # old surv
@@ -275,6 +282,9 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
                 c(np,n_age))  # Survival array
   oldM<-apply(M_agecur*Mat_agecur,1,sum)/apply(Mat_agecur,1,sum)
   M_agecurx<-M_agecur*Mx/oldM
+  
+  Fec_per_weight <- array(NA, dim=dim(Fec_agecur))
+  Fec_per_weight[Nind[,1:2]] <- Fec_agecur[Nind[,1:2]]/Wt_age[Nind[,1:2]]
   
   if(np>1 & length(Rel)>0){ # If there are MICE relationships
     
@@ -290,7 +300,11 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
     # Parameters that could have changed: M, K, Linf, t0, a, b, hs
     # Recalc B SSB, SSN, M_age ------------------
     Bcur[Nind]<-Ncur[Nind]*Wt_age[Nind[,1:2]]
-    SSBcur[Nind]<-Bcur[Nind]*Mat_agecur[Nind[,1:2]]
+    # SSBcur[Nind]<-Bcur[Nind]*Mat_agecur[Nind[,1:2]]
+    
+    # update relative fecundity-at-age
+    Fec_agecur[Nind[,1:2]] <- Fec_per_weight[Nind[,1:2]]* Wt_age[Nind[,1:2]]
+    SSBcur[Nind]<-Ncur[Nind]*Fec_agecur[Nind[,1:2]] 
     SSNcur[Nind]<-Ncur[Nind]*Mat_agecur[Nind[,1:2]]
     M_agecurx<-M_agecur*Mx/oldM  # updated M
     
@@ -347,7 +361,8 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
     }
   }
   
-  SSBcur[Nind]<-Nnext[Nind]*Wt_age[Nind[,1:2]]*Mat_agecur[Nind[,1:2]]
+  # SSBcur[Nind]<-Nnext[Nind]*Wt_age[Nind[,1:2]]*Mat_agecur[Nind[,1:2]]
+  SSBcur[Nind]<-Nnext[Nind]*Fec_agecur[Nind[,1:2]]
   
   if(length(SexPars$SSBfrom)>0){
     SSBs<-SSBcur
@@ -388,7 +403,8 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
   }
   
   Bcur[Nind]<-Nnext[Nind]*Wt_age[Nind[,1:2]]
-  SSBcur[Nind]<-Bcur[Nind]*Mat_agecur[Nind[,1:2]]
+  # SSBcur[Nind]<-Bcur[Nind]*Mat_agecur[Nind[,1:2]]
+  SSBcur[Nind]<-Nnext[Nind]*Fec_agecur[Nind[,1:2]]
   SSNcur[Nind]<-Nnext[Nind]*Mat_agecur[Nind[,1:2]]
   
   # returns new N and any updated parameters:

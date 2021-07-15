@@ -96,6 +96,7 @@ arma::mat movestockCPP(double nareas, double maxage, arma::cube mov, NumericMatr
 //' @param Asize_c Numeric vector (length nareas) with size of each area
 //' @param MatAge Numeric vector with proportion mature by age
 //' @param WtAge Numeric matrix (maxage+1, pyears) with weight by age and year
+//' @param FecAge Numeric matrix (maxage+1, pyears) with mature female weight by age and year
 //' @param Vuln Numeric matrix (maxage+1, pyears) with vulnerability by age and year
 //' @param Retc Numeric matrix (maxage+1, pyears) with retention by age and year
 //' @param Prec Numeric vector (pyears) with recruitment error
@@ -121,6 +122,7 @@ arma::mat movestockCPP(double nareas, double maxage, arma::cube mov, NumericMatr
 //[[Rcpp::export]]
 List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
                arma::mat M_age, arma::vec Asize_c, arma::mat MatAge, arma::mat WtAge,
+               arma::mat FecAge,
                arma::mat Vuln, arma::mat Retc, arma::vec Prec,
                List movc, double SRrelc, arma::vec Effind,
                double Spat_targc, double hc, NumericVector R0c, NumericVector SSBpRc,
@@ -157,7 +159,7 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
   for (int A=0; A<nareas; A++) {
     Barray.subcube(0, 0, A, maxage, 0, A) = Ncurr.col(A) % WtAge.col(0);
     SSNarray.subcube(0, 0, A, maxage, 0, A) = Ncurr.col(A) % MatAge.col(0);
-    SBarray.subcube(0, 0, A, maxage, 0, A) = Ncurr.col(A) % WtAge.col(0) % MatAge.col(0);
+    SBarray.subcube(0, 0, A, maxage, 0, A) = Ncurr.col(A) % FecAge.col(0);
     VBarray.subcube(0, 0, A, maxage, 0, A) = Ncurr.col(A) % WtAge.col(0) % Vuln.col(0);
     Marray.subcube(0, 0, A, maxage, 0, A) = M_age.col(0);
     tempVec(A) = accu(VBarray.slice(A));
@@ -215,7 +217,8 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
     // Spawning biomass before recruitment (age-0 doesn't contribute to SB)
     for (int A=0; A<nareas; A++) {
       // Spawning biomass before recruitment (age-0 doesn't contribute to SB)
-      SBarray.subcube(0, yr+1, A, maxage, yr+1, A) = Nnext.col(A) % WtAge.col(yr+1) % MatAge.col(yr+1);
+      // SBarray.subcube(0, yr+1, A, maxage, yr+1, A) = Nnext.col(A) % WtAge.col(yr+1) % MatAge.col(yr+1);
+      SBarray.subcube(0, yr+1, A, maxage, yr+1, A) = Nnext.col(A) % FecAge.col(yr+1);
       SB(A) = accu(SBarray.subcube(1, yr+1, A, maxage, yr+1, A)); // total spawning biomass
       SBtot += SB(A);
     }
