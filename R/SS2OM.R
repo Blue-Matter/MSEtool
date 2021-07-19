@@ -64,6 +64,10 @@ mean_array <- function(tt, cpars, gender) {
   Reduce("+", xx) / length(xx)
 }
 
+mean_array2 <- function(list) {
+  Reduce("+", list) / length(list)
+}
+
 #' @rdname SS2MOM
 #' @param MOM MOM object
 #' @export
@@ -119,6 +123,7 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
   cpars_out$t0 <- mean_vector("t0", cpars, gender)
 
   cpars_out$Wt_age_C <- mean_array('Wt_age_C', cpars, gender) # empirical weight-at-age for catch
+  if(length(cpars_out$Wt_age_C)==0) cpars_out$Wt_age_C <- NULL
 
   # Stock placeholders (overriden by cpars mean_arrays or mean_vectors above)
   Stock@M <- vapply(Stocks[gender], slot, numeric(2), "M") %>% apply(1, mean)
@@ -137,7 +142,7 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
   cpars_out$hs <- .cpars$hs
   #cpars_out$binWidth <- .cpars$binWidth
   cpars_out$CAL_bins <- .cpars$CAL_bins
-  #cpars_out$CAL_binsmid <- .cpars$CAL_binsmid
+  cpars_out$CAL_binsmid <- .cpars$CAL_binsmid
   cpars_out$Mat_age <- .cpars$Mat_age
 
   cpars_out$Perr_y <- .cpars$Perr_y
@@ -179,13 +184,19 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
   if(model_discards) { # Grab sel and retention (averaged over all fleets) and take the mean between sexes
     sel_par <- lapply(cpars[gender], calculate_single_fleet_dynamics)
     
-    cpars_out$Find <- lapply(sel_par, getElement, "Find") %>% simplify2array() %>% apply(1:2, mean, na.rm=TRUE)
-    cpars_out$Fdisc <- lapply(sel_par, getElement, "Fdisc") %>% simplify2array() %>% apply(1, mean, na.rm=TRUE)
-    cpars_out$retA <- lapply(sel_par, getElement, "retA") %>% simplify2array() %>% apply(1:3, mean, na.rm=TRUE)
-    cpars_out$V <- lapply(sel_par, getElement, "V") %>% simplify2array() %>% apply(1:3, mean, na.rm=TRUE)
-    #
-    cpars_out$retL <- lapply(sel_par, getElement, "retL") %>% simplify2array() %>% apply(1:3, mean, na.rm=TRUE)
-    cpars_out$SLarray <- lapply(sel_par, getElement, "SLarray") %>% simplify2array() %>% apply(1:3, mean, na.rm=TRUE)
+    cpars_out$Find <- lapply(sel_par, getElement, "Find") %>% mean_array2()
+    cpars_out$Fdisc <- lapply(sel_par, getElement, "Fdisc") %>% mean_array2()
+  
+    # cpars_out$retA <- lapply(sel_par, getElement, "retA") %>% simplify2array() %>% apply(1:3, mean, na.rm=TRUE)
+    # cpars_out$V <- lapply(sel_par, getElement, "V") %>% simplify2array() %>% apply(1:3, mean, na.rm=TRUE)
+    # cpars_out$retL <- lapply(sel_par, getElement, "retL") %>% simplify2array() %>% apply(1:3, mean, na.rm=TRUE)
+    # cpars_out$SLarray <- lapply(sel_par, getElement, "SLarray") %>% simplify2array() %>% apply(1:3, mean, na.rm=TRUE)
+    
+    cpars_out$retA <- lapply(sel_par, getElement, "retA") %>% mean_array2()
+    cpars_out$V <- lapply(sel_par, getElement, "V") %>% mean_array2()
+    cpars_out$retL <- lapply(sel_par, getElement, "retL") %>% mean_array2()
+    cpars_out$SLarray <- lapply(sel_par, getElement, "SLarray") %>% mean_array2()
+    
     #
   } else { # Calc V from the F-at-age matrix (no discards modeled in the OM object)
 
