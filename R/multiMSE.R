@@ -637,10 +637,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   SSB <- aperm(array(as.numeric(unlist(histYrs[4,], use.names=FALSE)),
                      dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
   
-  ssb = apply(SSB[1,1,,,], 2, sum)
-  ssb
-  
-  
   VBiomass <- aperm(array(as.numeric(unlist(histYrs[5,], use.names=FALSE)),
                           dim=c(np, n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
   FM <- aperm(array(as.numeric(unlist(histYrs[6,], use.names=FALSE)),
@@ -1001,6 +997,9 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                        control)
 
       # ---- Add Stock & Fleet Dynamics to Data ----
+      StockPars[[p]]$N <- N
+      StockPars[[p]]$SSB <- SSB
+      StockPars[[p]]$Biomass <- Biomass
       Data@Misc$StockPars <- StockPars[[p]]
       Data@Misc$FleetPars <- FleetPars[[p]][[f]]
       Data@Misc$ReferencePoints <- StockPars[[p]]$ReferencePoints
