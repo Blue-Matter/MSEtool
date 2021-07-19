@@ -533,6 +533,16 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   upper_boundary_last_bin <- max(replist$lbinspop) +
     2 * (suppressWarnings(max(as.numeric(colnames(replist$sizeselex)), na.rm = TRUE)) - max(replist$lbinspop))
   cpars_fleet$CAL_bins <- c(replist$lbinspop, upper_boundary_last_bin)
+  if(!all(is.finite(cpars_fleet$CAL_bins))) {
+    # alternative method to get length bins
+    cpars_fleet$CAL_binsmid <- colnames(replist$sizeselex[,6:ncol(replist$sizeselex)]) %>% as.numeric()
+    by <- cpars_fleet$CAL_binsmid[2] - cpars_fleet$CAL_binsmid[1]
+    cpars_fleet$CAL_bins <- seq(cpars_fleet$CAL_binsmid[1]-0.5*by, by=by, length.out=length(cpars_fleet$CAL_binsmid)+1)
+  } else {
+    by <- cpars_fleet$CAL_bins[2] - cpars_fleet$CAL_bins[1]
+    cpars_fleet$CAL_binsmid <- seq(cpars_fleet$CAL_bins[1]+0.5*by, by=by, length.out=length(cpars_fleet$CAL_bins)-1)
+  }
+  
   Fdisc <- rep(mean(disc_mort), nsim)
   if (!all(is.finite(Fdisc))) Fdisc <- rep(0, nsim)
   cpars_fleet$Fdisc <- Fdisc
