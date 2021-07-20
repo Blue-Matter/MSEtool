@@ -1,191 +1,307 @@
 # === OM specification using iSCAM stock assessment ====================
 
-#' Reads MLE estimates from iSCAM file structure into an operating model
-#'
-#' @description A function that uses the file location of a fitted iSCAM
-#' model including input files to population the various slots of an
-#' operating model parameter estimates. iSCAM2OM relies on several
-#' functions written by Chris Grandin (DFO PBS).
-#' @param iSCAMdir A folder with iSCAM input and output files in it
+#' @name iSCAM2OM
+#' @title Reads MPD and MCMC estimates and data from iSCAM file structure into an operating model
+#' @aliases iSCAM2Data
+#' @description Functions for importing an iSCAM assessment. From a fitted model, \code{iSCAM2OM}
+#' populates the various slots of an operating model and \code{iSCAM2Data} generates a Data object.
+#' These functions rely on several functions written by Chris Grandin (DFO PBS).
+#' @param iSCAMdir A folder with iSCAM input and output files in it. Alternatively, a list returned by
+#' \link{load.iscam.files}.
 #' @param nsim The number of simulations to take for parameters with
 #' uncertainty (for OM@cpars custom parameters)
 #' @param proyears The number of MSE projection years
-#' @param mcmc Whether to use mcmc samples to create custom parameters cpars
+#' @param mcmc Logical, whether to use mcmc samples to create custom parameters cpars. Alternatively, a list
+#' returned by \link{read.mcmc}. Currently, only used for delay difference iSCAM assessments.
+#' Set the seed for the function to sub-sample the mcmc samples.
 #' @param Name The name of the operating model
 #' @param Source Reference to assessment documentation e.g. a url
 #' @param length_timestep How long is a model time step in years
-#' (e.g. a quarterly model is 0.25, a monthly model 1/12)
+#' (e.g. a quarterly model is 0.25, a monthly model 1/12) (currently only uses annual time step)
 #' @param nyr_par_mu integer, the number of recent years to estimate vulnerability over for future projections
 #' @param Author Who did the assessment
 #' @param report logical should a numbers at age reconstruction plot be produced?
 #' @param silent logical should progress reporting be printed to the console?
-#' @author T. Carruthers
-#' @export iSCAM2OM
-iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=F, Name=NULL,
+#' @section Historical reconstruction:
+#' The function calls \code{model <- load.iscam.files(iSCAMdir)} and then grabs the following matrices:
+#' 
+#' \itemize{
+#' \item \code{model$mpd$N} - abundance at age
+#' \item \code{model$mpd$F} - fishing mortality at age
+#' \item \code{model$mpd$M} - natural mortality at age
+#' \item \code{model$mpd$d3_weight_mat} - fecundity (product of weight and maturity at age)
+#' \item \code{model$mpd$ma} - maturity at age
+#' }
+#' 
+#' If a delay-difference model is recognized, then the following is used instead:
+#' \itemize{
+#' \item \code{model$mpd$F_dd} - fishing mortality at age
+#' \item \code{model$mpd$M_dd} - natural mortality at age
+#' }
+#' 
+#' Abundance at age is reconstructed using \code{model$mpd$rt} (recruitment) and projected with \code{F_dd} and
+#' \code{M_dd} to match \code{model$mpd$numbers}.
+#' 
+#' While the iSCAM start age can be greater than zero, abundance at age is back-calculated to age zero using the M
+#' at the start age.
+#' 
+#' These arrays are then passed to \code{VPA2OM} to generate the operating model.
+#' 
+#' @section Reference points:
+#' iSCAM calculates the stock-recruit relationship and subsequently a single set of MSY and unfished reference 
+#' points using R0, steepness, and unfished spawners per recruit from the mean M, fecundity, and growth (mean with 
+#' respect to time).
+#' 
+#' R0 and h are recalculated for the operating model by obtaining the stock-recruit alpha and beta from the 
+#' iSCAM parameters and the mean unfished spawners per recruit in the first \code{ageM} (age of 50% maturity) years.
+#' R0 is also back calculated to age zero. 
+#' 
+#' @author T. Carruthers, Q. Huynh
+#' @export
+iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=FALSE, Name="iSCAM model",
                    Source="No source provided", length_timestep=1,
-                   nyr_par_mu=2, Author="No author provided", report=F, silent=F){
-
-   nseas<-1/length_timestep # defaults to an annual model
-   message("-- Using function of Chris Grandin (DFO PBS) to extract data from iSCAM file structure --")
-
-   replist<-load.iscam.files(iSCAMdir)
-
-   message("-- End of iSCAM extraction operations --")
-
-   # get dimensions
-   nyears<-(replist$dat$end.yr-replist$dat$start.yr+1)
-   maxage<-replist$dat$end.age
-   sage<-replist$dat$start.age
-
-   # filling dimensions
-   aind<-sage:maxage # for filling all quantities (that do not include age zero)
-   nafill<-length(aind)
-
-   ageArray<-array(rep(1:maxage,each=nsim),c(nsim,maxage,nyears))
-
-   # make matrices
-   naa<-Mataa<-laa<-array(NA,c(nsim,maxage,nyears))
-   faa<-Maa<-waa<-array(0,c(nsim,maxage,nyears))
-
-   # growth parameters
-   Linf=replist$dat$linf[1]
-   K=replist$dat$k[1]
-   t0<-replist$dat$to[1]
-
-
-   #ageM<-replist$dat$age.at.50.mat
-   #ageMsd<-replist$dat$sd.at.50.mat
-
-   # rip F, N and wt matrices
-   faat<-t(replist$mpd$F) # maxage-1 x nyears-1
-   naat<-t(replist$mpd$N) # maxage-1 x nyears
-   naat<-rbind(c(naat[1,2:(nyears+1)],NA)*exp(replist$mpd$m),naat)
-   naat<-naat[,1:nyears]
-   waat<-t(replist$mpd$d3_wt_mat)[,1:nyears]#  maxage-1 x nyears
-
-   # Numbers
-   naa<-array(rep(naat,each=nsim),c(nsim,maxage,nyears)) # !
-
-   # Mat at age
-   Maa[,aind,]<-rep(t(replist$mpd$M),each=nsim)   # !
-
-   # Weight at age
-   waa[,aind,]<-array(rep(waat,each=nsim),c(nsim,nafill,nyears)) # !
-
-   # Fishing mortality rate  for F = 0 years
-   Vtemp<-apply(faat,1,mean)
-   Vtemp<-Vtemp/max(Vtemp)*1E-5 #fill with a very low typical vulnerability
-   tofill<-apply(faat,2,function(x)all(x==0))
-   faat[,tofill]<-rep(Vtemp,sum(tofill))
-
-   faa[,aind,]<-array(rep(faat,each=nsim),c(nsim,nafill,nyears))
-   #faa[,aind,1]<-rep(Vtemp,each=nsim)
-
-   #Mataa<- 1/(1 + exp((ageM - ageArray)/ageMsd))
-   Mataat<-c(0,replist$mpd$ma)
-   Mataa[]<-rep(Mataat,each=nsim)
-   laa<-Linf*(1-exp(-K*(ageArray-t0)))
-   h<-rep(replist$mpd$steepness,nsim)
-
-   # make the OM
-   OM<-VPA2OM(Name="A fishery made by VPA2OM",
-              proyears=50, interval=2, CurrentYr=2019,
-              h=h,
-              Obs = MSEtool::Imprecise_Unbiased, Imp=MSEtool::Perfect_Imp,
-              naa, faa, waa, Mataa, Maa, laa,
-              nyr_par_mu = nyr_par_mu, LowerTri=1,
-              recind=2, plusgroup=TRUE, altinit=2, fixq1=TRUE,
-              report=report, silent=FALSE)
-
-#   # Observation model parameters ==============================================================================
-
-#   dat<-iSCAM2Data
-#
-#   # --- mcmc functionality ------------------------------------
-#
-#   if(mcmc){
-#
-#     message("Attempting to read mcmc file to assign posterior samples to custom parameters")
-#
-#     model.dir=iSCAMdir
-#
-#     if(!file.exists(model.dir))stop(paste("Could not find the mcmc subfolder:",model.dir))
-#
-#     tmp<-read.mcmc(model.dir)
-#     nmcmc<-nrow(tmp$params)
-#
-#     if(nsim<nmcmc){
-#       samp<-sample(1:nmcmc,size=nsim)
-#     }else{
-#       message("You requested a greater number of simulations than the number of mcmc samples that are available - sampling with replacement")
-#       samp<-sample(1:nmcmc,size=nsim,replace=T)
-#     }
-#
-#     #@nyears<-nyears<-ncol(tmp$sbt[[1]])
-#     #M<-tmp$params$m_gs1[samp]
-#     #OM@M<-quantile(M,c(0.05,0.95))
-#     hs<-tmp$params$h_gr1[samp]
-#     #OM@h<-quantile(hs,c(0.05,0.95))
-#     R0<-(1E6)*tmp$params$ro_gr1[samp]
-#     #OM@R0<-quantile(R0, c(0.05,0.95))
-#
-#     #ssb_r <-tmp$params$sbo[samp]/R0
-#     D<-tmp$sbt[[1]][samp,nyears]/tmp$params$sbo[samp]#*ssb_r
-#     #OM@D<-quantile(D,c(0.05,0.95))
-#
-#     #recdevs<-tmp$rdev[[1]][samp,]
-#
-#     #procsd<-apply(recdevs,1,sd)
-#     #OM@Perr<-quantile(procsd,c(0.05,0.95))
-#
-#     #nrecs<-ncol(recdevs)
-#     #AC<-apply(recdevs,1,function(x)acf(x)$acf[2,1,1])
-#     #OM@AC<-quantile(AC,c(0.05,0.95))
-#
-#     #procmu <- -0.5 * (procsd)^2  # adjusted log normal mean
-#
-#     Perr<-matrix(rnorm(nsim*(maxage+nyears+proyears-1),rep(procmu,maxage+nyears+proyears-1),rep(procsd,maxage+nyears+proyears-1)),nrow=nsim)
-#     Perr[,(maxage-1)+(1:nrecs)]<-as.matrix(recdevs) # generate a bunch of simulations with uncertainty
-#
-#     for (y in c(2:(maxage-1),(-1:(proyears-1))+(maxage+nyears))) Perr[, y] <- AC * Perr[, y - 1] +   Perr[, y] * (1 - AC * AC)^0.5
-#     Perr<-exp(Perr)
-#
-#     agesind<-ncol(replist$mpd$d3_wt_mat)
-#     surv<-exp(cumsum(c(rep(-replist$mpd$m,maxage))))[maxage-((agesind-1):0)]
-#
-#     agearr<-maxage-((agesind-1):0)
-#     survarr<-exp(-array(rep(M,agesind)*rep(agearr,each=nsim),c(nsim,agesind)))
-#     N0vec<-array(rep(R0,agesind)*rep(surv,each=nsim),c(nsim,agesind))
-#     N0pred<-array(rep(replist$mpd$N[1,],each=nsim)*1E6,dim(N0vec))
-#
-#     RecDev0<-log(N0pred/N0vec)
-#     Perr[,ncol(N0vec):1]<-RecDev0
-#
-#     nfleet<-length(tmp$ft[[1]])
-#     FM<-tmp$ft[[1]][[1]][samp,1:nyears]
-#     for(ff in 2:nfleet)FM<-FM+tmp$ft[[1]][[ff]][samp,1:nyears]
-#     Find<-as.matrix(FM/apply(FM,1,mean))
-#
-#     OM@cpars<-list(V=V,Perr=Perr,Wt_age=Wt_age2,K=K,Linf=Linf,hs=hs,Find=Find,D=D,M=M,R0=R0,AC=AC)
-#
-#   }
-
-  OM
-
+                   nyr_par_mu=2, Author="No author provided", report=FALSE, silent=FALSE) {
+  
+  nseas<-1/length_timestep # defaults to an annual model
+  
+  message("-- Using function of Chris Grandin (DFO PBS) to extract data from iSCAM file structure --")
+  if(is.character(iSCAMdir)) {
+    replist <- load.iscam.files(iSCAMdir)
+  } else {
+    replist <- iSCAMdir
+  }
+  if(is.logical(mcmc) && mcmc) {
+    message("-- Reading MCMC files --")
+    mcmc_model <- read.mcmc(iSCAMdir)
+  } else if(is.character(mcmc)) {
+    mcmc_model <- mcmc
+  }
+  message("-- End of iSCAM extraction operations --")
+  
+  do_mcmc <- exists("mcmc_model", inherits = FALSE)
+  if(do_mcmc) {
+    n_mcmc <- nrow(mcmc_model$params)
+    if(nsim < n_mcmc) {
+      mcmc_samp <- sample(1:n_mcmc, nsim)
+    } else {
+      message("You requested a greater number of simulations than the number of mcmc samples that are available - sampling with replacement")
+      mcmc_samp <- sample(1:n_mcmc, nsim, replace = TRUE)
+    }
+  }
+  
+  delay_diff <- !is.null(replist$mpd$F_dd)
+  
+  # get dimensions
+  nyears<-(replist$dat$end.yr-replist$dat$start.yr+1)
+  maxage<-replist$dat$end.age
+  sage<-replist$dat$start.age
+  n_age <- maxage + 1
+  
+  # filling dimensions
+  aind <- sage:maxage # for filling all quantities (that do not include age zero)
+  nafill <- length(aind)
+  
+  # growth parameters
+  Linf <- replist$dat$linf[1]
+  K <- replist$dat$k[1]
+  t0 <- replist$dat$to[1]
+  
+  ageArray <- array(rep(0:maxage,each=nsim),c(nsim,n_age,nyears))
+  
+  # make matrices
+  Mataa<-laa<-array(NA,c(nsim,n_age,nyears)) # Maturity, length-at-age
+  faa<-Maa<-waa<-array(0,c(nsim,n_age,nyears)) # N, F, M, weight-at-age
+  naa <- array(NA_real_, c(nsim, n_age, nyears + 1))
+  
+  # F and selectivity
+  if(do_mcmc && delay_diff) {
+    faat <- lapply(mcmc_model$ft[[1]], function(x) as.matrix(x)[mcmc_samp, ]) %>% 
+      simplify2array() %>% apply(1:2, sum)
+    faa[, aind+1, ] <- array(faat, c(nsim, nyears, nafill)) %>% aperm(c(1, 3, 2))
+  } else {
+    
+    if(delay_diff) {
+      faat <- matrix(replist$mpd$F_dd, length(aind), nyears, byrow = TRUE)
+    } else {
+      faat <- t(replist$mpd$F) # age x nyears
+    }
+    
+    # Fishing mortality rate for F = 0 years
+    tofill<-apply(faat,2,function(x)all(x==0))
+    if(any(tofill)) {
+      Vtemp<-apply(faat,1,mean)
+      Vtemp<-Vtemp/max(Vtemp)*1E-5 #fill with a very low typical vulnerability
+      faat[,tofill]<-rep(Vtemp,sum(tofill))
+    }
+    
+    faa[,aind+1,]<-array(rep(faat,each=nsim),c(nsim,nafill,nyears))
+  }
+  
+  # M
+  if(do_mcmc && delay_diff) {
+    Maa[, aind + 1, ] <- array(mcmc_model$params$m_gs1[mcmc_samp], c(nsim, nafill, nyears))
+  } else if(delay_diff) {
+    Maa[, aind + 1, ] <- array(replist$mpd$M_dd, c(nyears, length(aind), nsim)) %>% aperm(3:1)
+  } else {
+    Maa[, aind + 1, ] <- rep(t(replist$mpd$M),each=nsim)
+  }
+  
+  # Abundance
+  if(do_mcmc && delay_diff) {
+    naa[, aind + 1, 1] <- vapply(mcmc_samp, get_Ninit_DD, numeric(length(aind)), 
+                                 n_age = length(aind), mcmc_model = mcmc_model, replist = replist,
+                                 ctl = replist$ctl$misc[, 1]["unfishedfirstyear"] < 2) %>% t()
+    naa[, sage + 1, 2:sage] <- naa[, sage + 1, 1]
+    naa[, sage + 1, (sage + 1):nyears] <- mcmc_model$rt[[1]][mcmc_samp, ] %>% as.matrix()
+    
+    for(y in 1:nyears) {
+      naa[, (sage+2):n_age, y+1] <- naa[, (sage+1):(n_age-1), y] * 
+        exp(-faa[, (sage+1):(n_age-1), y] - Maa[, (sage+1):(n_age-1), y])
+      naa[, n_age, y+1] <- naa[, n_age, y+1] + naa[, n_age, y] * exp(-faa[, n_age, y] - Maa[, n_age, y])
+    }
+    naa[, sage + 1, nyears + 1] <- mcmc_model$params$rbar[mcmc_samp]
+  } else {
+    
+    naat <- matrix(NA_real_, n_age, nyears + 1)
+    
+    if(delay_diff) {
+      NPR <- NPR_DD(replist$mpd$M_dd[1], 
+                    FF = ifelse(replist$ctl$misc[, 1]["unfishedfirstyear"] < 2, 0, replist$mpd$F_dd[1]),
+                    n_age = length(aind))
+      
+      Rinit <- replist$mpd$numbers[1]/sum(NPR)
+      naat[sage:maxage + 1, 1] <- Rinit * NPR
+      naat[sage + 1, 2:sage] <- replist$mpd$rbar * exp(replist$par$log_rec_devs[2:sage])
+      naat[sage + 1, (sage + 1):nyears] <- replist$mpd$rt
+      for(y in 1:nyears) {
+        naat[(sage+2):n_age, y+1] <- naat[(sage+1):(n_age-1), y] * exp(-replist$mpd$F_dd[y] - replist$mpd$M_dd[y])
+        naat[n_age, y+1] <- naat[n_age, y+1] + naat[n_age, y] * exp(-replist$mpd$F_dd[y] - replist$mpd$M_dd[y])
+      }
+      naat[sage + 1, nyears + 1] <- replist$mpd$rbar
+    } else {
+      naat[(sage+1):n_age, ] <- t(replist$mpd$N) # age x nyears
+    }
+    naa <- array(rep(naat, each = nsim), c(nsim, n_age, nyears + 1))
+  }
+  
+  if(sage > 0) { # Missing cohorts to be filled in by VPA2OM
+    aind_missing <- sage:1
+    Maa[, aind_missing, ] <- Maa[, max(aind_missing) + 1, ]
+    for(i in 1:length(aind_missing)) {
+      Maa[, aind_missing[i], ] <- Maa[, max(aind_missing) + 1, ]
+      naa[, aind_missing[i], 1:(nyears+1-i)] <- naa[, aind_missing[i]+1, 2:(nyears+2-i)] * 
+        exp(Maa[, aind_missing[i], 1:(nyears+1-i)])
+    }
+  }
+  
+  # Weight at age
+  waat<-t(replist$mpd$d3_wt_mat)[,1:nyears]/replist$mpd$ma # age x nyears
+  waa[,aind+1,]<-array(rep(waat,each=nsim),c(nsim,nafill,nyears)) # !
+  
+  # Maturity
+  if(sage > 0) {
+    Mataat <- c(rep(0, sage), replist$mpd$ma)
+  } else {
+    Mataat <- replist$mpd$ma
+  }
+  
+  Mataa[]<-rep(Mataat,each=nsim)
+  laa<-Linf*(1-exp(-K*(ageArray-t0)))
+  
+  # steepness and sigmaR
+  if(do_mcmc && delay_diff) {
+    h <- mcmc_model$params$h[mcmc_samp]
+    Perr <- sqrt((1 - mcmc_model$params$rho)/mcmc_model$params$vartheta)[mcmc_samp]
+  } else {
+    h <- replist$mpd$steepness
+    Perr <- sqrt((1 - replist$par$theta6)/replist$par$theta7)
+  }
+  
+  new_SR <- local({ # Get unfished spawners per recruit from mean M and back-calculate R0 to age 0
+    wt <- apply(waat, 1, mean)
+    fec <- apply(replist$mpd$d3_wt_mat, 2, mean)
+    
+    if(do_mcmc && delay_diff) {
+      Mbar <- vapply(1:nsim, function(x) apply(Maa[x, , ], 1, mean), numeric(n_age))
+      
+      out <- vapply(1:nsim, function(x) {
+        MSYCalcs(logF = log(1e-8), M_at_Age = Mbar[, x], 
+                 Wt_at_Age = c(rep(0, sage), wt), Mat_at_Age = c(rep(0, sage), replist$mpd$ma), 
+                 Fec_at_Age = c(rep(0, sage), fec), V_at_Age = rep(0, n_age), 
+                 maxage = n_age - 1, R0x = 1, 
+                 SRrelx = replist$ctl$misc[, 1]["rectype"], hx = h[x], 
+                 opt = 0, plusgroup = 1)["SB"] %>% as.numeric()
+      }, numeric(1))
+      
+      R0 <- vapply(1:nsim, function(x) mcmc_model$params$ro[mcmc_samp[x]] * exp(sum(Mbar[1:sage, x])), numeric(1))
+    } else {
+      Mbar <- apply(Maa[1, , ], 1, mean)
+      out <- MSYCalcs(logF = log(1e-8), M_at_Age = Mbar, 
+                      Wt_at_Age = c(rep(0, sage), wt), Mat_at_Age = c(rep(0, sage), replist$mpd$ma), 
+                      Fec_at_Age = c(rep(0, sage), fec), V_at_Age = rep(0, n_age), 
+                      maxage = n_age - 1, R0x = 1, 
+                      SRrelx = replist$ctl$misc[, 1]["rectype"], hx = h, 
+                      opt = 0, plusgroup = 1)["SB"] %>% as.numeric()
+      R0 <- replist$mpd$ro * exp(sum(Mbar[1:sage]))
+    }
+    list(phi0 = out, R0 = R0)
+  })
+  phi0 <- new_SR$phi0
+  R0 <- new_SR$R0
+  
+  # make the OM
+  OM<-VPA2OM(Name=Name,
+             proyears=proyears, interval=2, CurrentYr=replist$dat$end.yr, h=h,
+             Obs = MSEtool::Imprecise_Unbiased, Imp=MSEtool::Perfect_Imp,
+             naa[, , 1:nyears], faa, waa, Mataa, Maa, laa,
+             nyr_par_mu = nyr_par_mu, LowerTri=sage,
+             recind=0, plusgroup=TRUE, altinit=0, fixq1=TRUE,
+             report=report, silent=FALSE, R0 = R0, phi0 = phi0, Perr = Perr)
+  
+  # growth parameters
+  OM@cpars$Linf <- rep(Linf, nsim)
+  OM@cpars$K <- rep(K, nsim)
+  OM@cpars$t0 <- rep(t0, nsim)
+  
+  OM@CurrentYr <- max(replist$mpd$yr)
+  
+  # Observation model parameters ==============================================================================
+  OM@cpars$Data <- iSCAM2Data(replist, Name = Name, Source = Source, length_timestep = length_timestep,
+                              Author = Author)
+  
+  return(OM)
 }
 
 
-#' Reads iSCAM files into a hierarchical R list object
-#'
-#' @description A function for reading iSCAM input and output files
+NPR_DD <- function(M, FF = 0, n_age) {
+  NPR <- exp(-(FF + M) * c(1:n_age - 1))
+  NPR[length(NPR)] <- NPR[length(NPR)]/(1 - exp(-FF - M))
+  return(NPR)
+}
+
+get_Ninit_DD <- function(i, n_age, mcmc_model, replist, ctl) {
+  FF <- ifelse(ctl, 0, mcmc_model$ft[[1]][[1]][i, 1])
+  NPR <- NPR_DD(mcmc_model$params$m_gs1[i], FF, n_age)
+  SSBPR <- sum(NPR * replist$mpd$d3_wt_mat[1, ])
+  Rinit <- mcmc_model$sbt[[1]][i, 1]/SSBPR
+  Rinit * NPR
+}
+
+#' @name iSCAM
+#' @title Reads iSCAM files into a hierarchical R list object
+#' @seealso \link{iSCAM2OM}
+#' @description Internal functions for reading iSCAM input and output files
 #' into R
+#' @author Chris Grandin (DFO PBS)
+NULL
+
+#' @describeIn iSCAM Wrapper function to generate R list
 #' @param model.dir An iSCAM directory
 #' @param burnin The initial mcmc samples to be discarded
 #' @param thin The degree of chain thinning 1 in every thin
 #' iterations is kept
 #' @param verbose Should detailed outputs be provided.
-#' @author Chris Grandin (DFO PBS)
-#' @export load.iscam.files
+#' @export
 load.iscam.files <- function(model.dir,
                              burnin = 1000,
                              thin = 1,
@@ -246,14 +362,11 @@ load.iscam.files <- function(model.dir,
   model
 }
 
-#' Reads iSCAM Data, Control and Projection files
-#'
-#' @description A function for returning the three types of
-#' iSCAM input and output files
+
+#' @describeIn iSCAM A function for returning the three types of iSCAM input and output files
 #' @param path File path
 #' @param filename The filename
-#' @author Chris Grandin (DFO PBS)
-#' @export fetch.file.names
+#' @export
 fetch.file.names <- function(path, ## Full path to the file
                              filename){
   ## Read the starter file and return a list with 3 elements:
@@ -273,13 +386,10 @@ fetch.file.names <- function(path, ## Full path to the file
 }
 
 
-#' Reads iSCAM Rep file
-#'
-#' @description A function for returning the results of the
-#' .rep iscam file
+
+#' @describeIn iSCAM A function for returning the results of the .rep iscam file
 #' @param fn File location
-#' @author Chris Grandin (DFO PBS)
-#' @export read.report.file
+#' @export
 read.report.file <- function(fn){
   # Read in the data from the REP file given as 'fn'.
   # File structure:
@@ -356,14 +466,10 @@ read.report.file <- function(fn){
 
 
 
-#' Reads iSCAM dat file
-#'
-#' @description A function for returning the results of the
-#' .dat iscam file
+#' @describeIn iSCAM A function for returning the results of the .dat iscam file
 #' @param file File location
 #' @param verbose should detailed results be printed to console
-#' @author Chris Grandin (DFO PBS)
-#' @export read.data.file
+#' @export
 read.data.file <- function(file = NULL,
                            verbose = FALSE){
   ## Read in the iscam datafile given by 'file'
@@ -577,16 +683,12 @@ read.data.file <- function(file = NULL,
 }
 
 
-#' Reads iSCAM control file
-#'
-#' @description A function for returning the results of the
-#' iscam control file
+#' @describeIn iSCAM A function for returning the results of the iscam control file
 #' @param file File location
 #' @param num.gears The number of gears
 #' @param num.age.gears The number age-gears
 #' @param verbose should detailed results be printed to console
-#' @author Chris Grandin (DFO PBS)
-#' @export read.control.file
+#' @export
 read.control.file <- function(file = NULL,
                               num.gears = NULL,
                               num.age.gears = NULL,
@@ -772,14 +874,11 @@ read.control.file <- function(file = NULL,
 }
 
 
-#' Reads iSCAM projection file
-#'
-#' @description A function for returning the results of the
-#' iscam projection file
+
+#' @describeIn iSCAM A function for returning the results of the iscam projection file
 #' @param file File location
 #' @param verbose should detailed results be printed to console
-#' @author Chris Grandin (DFO PBS)
-#' @export read.projection.file
+#' @export
 read.projection.file <- function(file = NULL,
                                  verbose = FALSE){
   ## Read in the projection file given by 'file'
@@ -847,14 +946,11 @@ read.projection.file <- function(file = NULL,
   tmp
 }
 
-#' Reads iSCAM parameter file
-#'
-#' @description A function for returning the results of the
-#' iscam .par file
+
+#' @describeIn iSCAM A function for returning the results of the iscam .par file
 #' @param file File location
 #' @param verbose should detailed results be printed to console
-#' @author Chris Grandin (DFO PBS)
-#' @export read.par.file
+#' @export
 read.par.file <- function(file = NULL,
                           verbose = FALSE){
   ## Read in the parameter estimates file given by 'file'
@@ -925,14 +1021,11 @@ read.par.file <- function(file = NULL,
   tmp
 }
 
-#' Reads iSCAM mcmc output files
-#'
-#' @description A function for returning the results of the
-#' iscam mcmc files
+
+#' @describeIn iSCAM A function for returning the results of the iscam mcmc files
 #' @param model.dir Folder name
 #' @param verbose should detailed results be printed to console
-#' @author Chris Grandin (DFO PBS)
-#' @export read.mcmc
+#' @export
 read.mcmc <- function(model.dir = NULL,
                       verbose = TRUE){
   ## Read in the MCMC results from an iscam model run found in the directory
@@ -1305,7 +1398,7 @@ strip.static.params <- function(model, dat){
 }
 
 
-#' Combines indices into a single index using linear modelling
+#' Combines indices into a single index using linear modelling (** Deprecated **)
 #'
 #' @description iSCAM assessments often make use of multiple indices of abundance.
 #' The data object and MPs currently only make use of a single index.
@@ -1320,7 +1413,9 @@ strip.static.params <- function(model, dat){
 #' @author T. Carruthers
 #' @export iSCAMinds
 iSCAMinds<-function(idata,Year,fleeteffect=T){
-
+  
+  .Deprecated(msg = "This function is no longer needed as the Data object now supports multiple indices.")
+  
   ind<-NULL
   for(i in 1:length(idata)){
 
@@ -1361,127 +1456,153 @@ iSCAMinds<-function(idata,Year,fleeteffect=T){
 #' @export iSCAMcomps
 iSCAMcomps<-function(replist,Year){
 
-  ny<-length(Year)
-  na<-replist$dat$end.age
-  CAA<-array(0,c(ny,na))
-  compdat<-replist$dat$age.comps
-  compN<-replist$dat$age.gears.n
-
-  for(i in 1:length(compdat)){
-    comp<-as.data.frame(compdat[[i]])
-    cN<-as.numeric(compN[[i]])
-    ind<-match(comp$year,Year)
-    aind<-match(1:na,names(comp))
-    compind<-as.matrix(expand.grid(1:length(ind),aind))
-    CAAind<-as.matrix(expand.grid(ind,1:na))
-    cNind<-rep(1:length(ind),na)
-    CAA[CAAind]<-CAA[CAAind]+ceiling(comp[compind]*cN[cNind])
-  }
-
-  CAA
+  ny <- length(Year)
+  na <- replist$dat$end.age
+  
+  compN <- replist$dat$age.gears.n
+  
+  CAA_out <- lapply(replist$dat$age.comps, function(x) {
+    CAA <- matrix(0, ny, na + 1)
+    yind <- match(x[, "year"], Year)
+    aind <- match(replist$dat$start.age:na, dimnames(x)[[2]])
+    
+    CAA[yind, replist$dat$start.age:na + 1] <- x[, aind]
+    return(CAA)
+  }) %>% simplify2array() %>% apply(1:2, sum, na.rm = TRUE)
+  
+  array(CAA_out, c(1, ny, na + 1))
 }
 
-LinInt<-function(x){
 
-  nas<-is.na(x)
-  ind0<-(1:length(x))[nas]
-  ind1<-ind0-1
-  ind2<-ind0+1
-  x[ind0]<-apply(cbind(x[ind1],x[ind2]),1,mean)
-  x
-}
-
-#' Reads data from iSCAM file structure into a Data object
-#'
-#' @description A function that uses the file location of a fitted iSCAM
-#' model including input files to population the various slots of an
-#' data object. iSCAM2OM relies on several functions written by Chris
-#' Grandin (DFO PBS).
-#' @param iSCAMdir A folder with iSCAM input and output files in it
-#' @param Name The name of the operating model
-#' @param Source Reference to assessment documentation e.g. a url
-#' @param length_timestep How long is a model time step in years
-#' (e.g. a quarterly model is 0.25, a monthly model 1/12)
-#' @param Author Who did the assessment
-#' @author T. Carruthers
+#' @rdname iSCAM2OM 
 #' @export
-iSCAM2Data<-function(iSCAMdir,Name=NULL,Source="No source provided",
+iSCAM2Data<-function(iSCAMdir,Name="iSCAM assessment",Source="No source provided",
                      length_timestep=1,Author="No author provided"){
-
-  message("-- Using function of Chris Grandin (DFO PBS) to extract data from iSCAM file structure --")
-
-  replist<-load.iscam.files(iSCAMdir)
-
-  message("-- End of iSCAM extraction operations --")
+  
+  if (is.character(iSCAMdir)) {
+    message("-- Using function of Chris Grandin (DFO PBS) to extract data from iSCAM file structure --")
+    replist <- load.iscam.files(iSCAMdir)
+    message("-- End of iSCAM extraction operations --")
+  } else {
+    replist <- iSCAMdir
+  }
 
   Data <- new("Data")
-  if(!is.null(Name)){
-    Data@Name<-Name
-  }else{
-    Data@Name<-replist$path
+  Data@Name <- Name
+  Data@Year <- replist$mpd$yr
+  
+  ny <- length(Data@Year)
+  final3y <- -2:0 + ny
+  
+  Catch <- split(as.data.frame(replist$dat$catch), replist$dat$catch[, "gear"]) %>% 
+    vapply(function(x) {
+      out <- numeric(ny); out[match(x$year, Data@Year)] <- x$value
+      return(out)
+    }, numeric(ny)) %>% rowSums()
+  Data@Cat <- ifelse(Catch < 1e-8, 1e-8, Catch) %>% matrix(1)
+  Data@CV_Cat <- matrix(replist$ctl$misc["sdobscatchlastphase", 1], 1, ny)
+  
+  # AddInd, CV_AddInd, AddIndV, AddIndType, AddIunits
+  n_index <- replist$dat$num.indices
+  Data@AddInd <- vapply(replist$dat$indices, function(x) {
+    out <- rep(NA_real_, ny)
+    out[match(x[, "iyr"], Data@Year)] <- x[, "it"]
+    return(out)
+  }, numeric(ny)) %>% array(c(1, n_index, ny))
+  
+  Data@CV_AddInd <- vapply(replist$dat$indices, function(x) {
+    out <- rep(NA_real_, ny)
+    out[match(x[, "iyr"], Data@Year)] <- x[, "wt"]
+    return(replist$ctl$weight.sig/out)
+  }, numeric(ny)) %>% array(c(1, n_index, ny))
+  
+  Data@AddIunits <- ifelse(replist$dat$survey.type == 1, 0, 1)
+  Data@AddIndType <- ifelse(replist$dat$survey.type == 3, 2, 3)
+  
+  #Data@AddIndV <- vapply(replist$dat$indices, function(x) {
+  #  out <- rep(NA_real_, ny)
+  #  out[match(x[, "iyr"], Data@Year)] <- x[, "wt"]
+  #  return(replist$ctl$weight.sig/out)
+  #}, numeric(ny)) %>% array(c(1, n_index, ny))
+  
+  Data@t <- length(Data@Year)
+  Data@AvC <- mean(Data@Cat)
+  
+  Data@Dt <- replist$mpd$sbt[ny]/replist$mpd$sbt[1]
+  if(!is.null(replist$mpd$M)) {
+    Data@Mort <- apply(replist$mpd$M[final3y, ], 1, mean) %>% mean()
+  } else {
+    Data@Mort <- replist$mpd$M_dd[ny]
   }
+  
+  UMSY <- replist$mpd$msy/(replist$mpd$msy+replist$mpd$bmsy)
+  FMSY <- replist$mpd$fmsy
+  BMSY <- replist$mpd$bmsy
+  MSY <- replist$mpd$msy
+  
+  Data@FMSY_M <- FMSY/Data@Mort
+  Data@BMSY_B0 <- BMSY/replist$mpd$bo
+  Data@Cref <- MSY
+  Data@Bref <- BMSY
+  
+  Data@vbLinf <- replist$dat$linf[1]
+  Data@vbK <- replist$dat$k[1]
+  Data@vbt0 <- replist$dat$to[1]
+  
+  if(all(!diff(replist$mpd$ma))) {
+    A50 <- replist$dat$age.at.50.mat
+    A95 <- -(replist$dat$sd.at.50.mat*log(1/0.95-1)-replist$dat$age.at.50.mat)
+  } else {
+    A50 <- LinInterp(replist$mpd$ma, replist$dat$start.age:replist$dat$end.age, 0.5)
+    A95 <- LinInterp(replist$mpd$ma, replist$dat$start.age:replist$dat$end.age, 0.95)
+  }
+  Data@L50 <- vB(c(Data@vbLinf, Data@vbK, Data@vbt0), A50)
+  Data@L95 <- vB(c(Data@vbLinf, Data@vbK, Data@vbt0), A95)
 
-  catdat<-as.data.frame(replist$dat$catch)
-  Data@Cat<-matrix(catdat$value,nrow=1)
-  Data@Year<-catdat$year
-  ny<-length(Data@Year)
-  final3y<-(-2:0)+ny
-
-  inddat<-iSCAMinds(replist$dat$indices,Data@Year,fleeteffect=F) # use linear modelling to get year effect (naive)
-  inddat$ind<-LinInt(inddat$ind) # Interpolate NAs
-  Data@Ind<-matrix(inddat$ind,nrow=1)
-  Data@t<-length(Data@Year)
-  Data@AvC<-mean(Data@Cat)
-  Data@Dt<-mean(Data@Ind[,final3y])/mean(Data@Ind[,1:3])
-  Data@Mort<-replist$mpd$m
-  UMSY<-replist$mpd$msy/(replist$mpd$msy+replist$mpd$bmsy)
-  FMSY<--log(1-UMSY)
-  BMSY<-replist$mpd$bmsy
-  MSY<-replist$mpd$msy
-  Data@FMSY_M<-FMSY/Data@Mort
-  Data@BMSY_B0<-BMSY/replist$mpd$bo
-  Data@Cref<-MSY
-  Data@Bref<-BMSY
-  SSB<-replist$mpd$sbt
-  B<-replist$mpd$bt
-
-  SSB0<-replist$mpd$sbo
-  depletion<-SSB[length(SSB)-((ny-1):0)]/SSB0
-  mult<-mean(inddat$ind/depletion)
-  Data@Iref<-Data@BMSY_B0*mult
-
-  Data@vbLinf=replist$dat$linf[1]
-  Data@vbK=replist$dat$k[1]
-  Data@vbt0=replist$dat$to[1]
-  Data@L50= Data@vbLinf*(1-exp(-Data@vbK*(replist$dat$age.at.50.mat-Data@vbt0)))
-  A95= -(replist$dat$sd.at.50.mat*log(1/0.95-1)-replist$dat$age.at.50.mat)
-  Data@L95=Data@vbLinf*(1-exp(-Data@vbK*(A95-Data@vbt0)))
-
-  Data@MaxAge<-replist$dat$end.age
-  FF<-replist$mpd$F
-  sel<-FF/apply(FF,1,max)
-  selfinal<-apply(sel[final3y,],2,mean)
-  AFC<-LinInterp(x=selfinal,y=1:Data@MaxAge,0.05)
-  AFS<-LinInterp(x=selfinal,y=1:Data@MaxAge,0.95)
-  Data@LFC<-Data@vbLinf*(1-exp(-Data@vbK*(AFC-Data@vbt0)))
-  Data@LFS<-Data@vbLinf*(1-exp(-Data@vbK*(AFS-Data@vbt0)))
-  Data@CAA<-iSCAMcomps(replist,Data@Year)
-  Data@Dep<-mean(depletion[final3y])
-  Data@Abun<-mean(B[final3y])
-  Data@SpAbun<-mean(SSB[final3y])
-  Data@wla=replist$dat$lw.alpha
-  Data@wlb=replist$dat$lw.beta
-  rec<-replist$mpd$rbar *exp(replist$mpd$delta)*1E6
-  SSB<-(replist$mpd$sbt*1000)[1:length(rec)]
-  SSBpR<-SSB0/replist$mpd$rbar
-  Data@steep<-mean(SRopt(100,SSB,rec,SSBpR,plot=F,type="BH")) # will create a reproducible 1 sample version
-  Data@Ref<-Data@Cat[1,ny]
-  Data@Ref_type<-"Most recent catches"
-  Data@MPrec<-Data@Cat[1,ny]
-  Data@MPeff<-1
-  Data@LHYear<-ny
-  Data@Misc<-list(WARNING="!! this dataset was created automatically using an alpha version of iSCAM2Data and should be treated with caution !!")
-
+  Data@MaxAge <- replist$dat$end.age
+  
+  if(!is.null(replist$mpd$F)) {
+    FF <- replist$mpd$F
+    sel <- FF/apply(FF, 1, max)
+    selfinal <- apply(sel[final3y, ], 2, mean, na.rm = TRUE)
+    if(all(is.na(selfinal))) {
+      selfinal <- apply(sel, 2, mean, na.rm = TRUE)
+    }
+    
+    AFC <- LinInterp(selfinal, replist$dat$start.age:replist$dat$end.age, 0.05, ascending = TRUE)
+    AFS <- LinInterp(selfinal, replist$dat$start.age:replist$dat$end.age, 0.95, ascending = TRUE)
+  } else { # Delay difference
+    AFC <- replist$dat$start.age
+    AFS <- AFC + 0.1
+  }
+  Data@LFC <- vB(c(Data@vbLinf, Data@vbK, Data@vbt0), AFC)
+  Data@LFS <- vB(c(Data@vbLinf, Data@vbK, Data@vbt0), AFS)
+  
+  if(!is.null(replist$dat$age.comps)) Data@CAA <- iSCAMcomps(replist, Data@Year)
+  
+  SSB <- replist$mpd$sbt
+  #B <- replist$mpd$bt
+  SSB0 <- replist$mpd$sbo
+  
+  depletion <- SSB/SSB0
+  
+  Data@Dep <- depletion[ny]
+  
+  Data@SpAbun <- SSB[ny]
+  if(!is.null(replist$mpd$F_dd)) {
+    Data@Abun <- Data@SpAbun
+  }
+  
+  Data@wla <- replist$dat$lw.alpha
+  Data@wlb <- replist$dat$lw.beta
+  
+  Data@steep <- replist$mpd$steepness
+  Data@Ref <- Data@Cat[1, ny]
+  Data@Ref_type <- paste(max(Data@Year), "Catch")
+  Data@MPrec <- Data@Cat[1, ny]
+  Data@MPeff <- 1
+  Data@LHYear <- max(Data@Year)
+  
   Data
 
 }
