@@ -387,23 +387,17 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
 
     # Estimate vB parameters for each year and each sim if growth parameters are not in cpars
     if (!all(c("Linf", "K", "t0") %in% names(cpars))) {
-      if (msg)
+      if (msg) {
         message('Mean length-at-age array are in cpars, but von Bert. growth parameters are not.',
                 'Estimating von Bert. growth parameters for each simulation and year from ',
                 'cpars$Len_age')
+        pb <- txtProgressBar(min = 0, max = nsim, style = 3, width = min(getOption("width"), 40))
+      }
 
       # loop over simulations
-      cnt <- 0
       for (ss in 1:nsim) {
         if(msg) { # print status update
-          cnt <- cnt + 1
-          cat(".")
-          flush.console()
-          if (cnt >80) {
-            cat("\n")
-            flush.console()
-            cnt <- 0
-          }
+          setTxtProgressBar(pb, ss)
         }
         estpars <- sapply(1:(nyears + proyears), function(X) {
           starts  <- c(log(max(Len_age[ss,,X])), log(0.2), 0)
@@ -416,7 +410,10 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
         t0[ss] <- mean(pars[3,])
         t0array <- matrix(t0, nrow=nsim, ncol=proyears+nyears)
       } # end loop over sims for vB estimation
-      if(msg) cat("\n")
+      if(msg) {
+        close(pb)
+        cat("\n")
+      }
       # Add Linf, K, t0 to StockPars (current yr)
       Linf <- Linfarray[,nyears]
       K <- Karray[,nyears]

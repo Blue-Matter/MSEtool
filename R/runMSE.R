@@ -39,7 +39,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
 
   # Shiny progress bar
   inc.progress <- FALSE
-  if("progress"%in%names(control)) {
+  if("progress" %in% names(control)) {
     if(control$progress) {
       if (requireNamespace("shiny", quietly = TRUE)) {
         inc.progress <- TRUE
@@ -1160,7 +1160,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     # -- First projection year ----
     y <- 1
     if(!silent) {
-      cat("."); flush.console()
+      pb <- txtProgressBar(min = 1, max = proyears, style = 3, width = min(getOption("width"), 50))
     }
     # Mortality in first year
     NextYrN <- lapply(1:nsim, function(x)
@@ -1287,7 +1287,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     # ---- Begin projection years ----
     for (y in 2:proyears) {
       if(!silent) {
-        cat("."); flush.console()
+        setTxtProgressBar(pb, y)
       }
 
       SelectChanged <- FALSE
@@ -1452,8 +1452,22 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       Effort_pot[Effort_pot<0] <- tiny #
       LatEffort_out[,mm,y] <- LastTAE - Effort[, mm, y]  # store the Latent Effort
       TAE_out[,mm,y] <- LastTAE # store the TAE
+      
+      if ("progress" %in% names(control)) {
+        if (control$progress) {
+          if (requireNamespace("shiny", quietly = TRUE)) {
+            shiny::setProgress((mm - 1 + y/proyears)/nMP, 
+                               detail = paste0(round((mm - 1 + y/proyears)/nMP * 100), 
+                                               "% \n Management procedure ", mm, "/", nMP, " (", MPs[mm], ")"))
+          } else {
+            warning('package `shiny` needs to be installed for progress bar')
+          }
+        }
+      }
 
     }  # end of year loop
+    
+    if(!silent) close(pb)
 
     if (max(upyrs) < proyears) { # One more call to complete Data object
       Data_MP <- updateData(Data=Data_MP, OM, MPCalcs, Effort,
@@ -1493,15 +1507,6 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         message('Used TAC_y = TAC_y-1')
       }
     }
-
-    if("progress"%in%names(control))
-      if(control$progress) {
-        if (requireNamespace("shiny", quietly = TRUE)) {
-          shiny::incProgress(1/nMP, detail = round(mm*100/nMP))
-        } else {
-          warning('package `shiny` needs to be installed for progress bar')
-        }
-      }
 
     # Store all info (return if argument `extended=TRUE`)
     N_P_mp[,,mm,,] <- N_P
