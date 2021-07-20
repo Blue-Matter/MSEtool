@@ -949,7 +949,7 @@ SubCpars<-function(OM, sims = 1:OM@nsim) {
     }
     subset_function <- function(xx, sims, cpars) {
       x <- cpars[[xx]]
-      if(xx %in% c("CAL_bins", "MPA", "plusgroup", "CAL_binsmid", "binWidth", "AddIunits")) {
+      if(xx %in% c("CAL_bins", "MPA", "plusgroup", "CAL_binsmid", "binWidth", "AddIunits", "Wa", "Wb")) {
         return(x)
       } else if(is.matrix(x)) {
         return(x[sims, , drop = FALSE])
