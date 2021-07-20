@@ -266,32 +266,34 @@ CalcMSYRefs <- function(x, MSY_y, FMSY_y, SSBMSY_y, BMSY_y, VBMSY_y, ageM, nyear
 #'
 #' @param x A vector of x values
 #' @param y A vector of y values (identical length to x)
-#' @param xlev A the target level of x from which to guess y
+#' @param xlev A the target level of x from which to guess y. Can be either a numeric or vector.
 #' @param ascending Are the the x values supposed to be ordered before interpolation
 #' @param zeroint is there a zero-zero x-y intercept?
+#' @details As of version 3.2, this function uses \link[stats]{approx}.
 #' @author T. Carruthers
+#' @importFrom stats approx 
 #' @keywords internal
-LinInterp<-function(x,y,xlev,ascending=F,zeroint=F){
-
-  if(zeroint){
-    x<-c(0,x)
-    y<-c(0,y)
+LinInterp<-function(x, y, xlev, ascending = FALSE, zeroint = FALSE) {
+  
+  if (zeroint) {
+    x <- c(0, x)
+    y <- c(0, y)
   }
-
-  if(ascending){
-    cond<-(1:length(x))<which.max(x)
-  }else{
-    cond<-rep(TRUE,length(x))
+  
+  if (ascending) {
+    x_out <- x[1:which.max(x)]
+    y_out <- y[1:which.max(x)]
+  } else {
+    x_out <- x
+    y_out <- y
   }
+  
+  if (any(xlev < min(x_out))) warning("There are xlev values less than min(x).")
+  if (any(xlev > max(x_out))) warning("There are xlev values greater than max(x).")
 
-  close<-which.min((x[cond]-xlev)^2)
-  ind<-c(close,close+(x[close]<xlev)*2-1)
-  ind <- ind[ind <= length(x)]
-  if (length(ind)==1) ind <- c(ind, ind-1)
-  ind<-ind[order(ind)]
-  pos<-(xlev-x[ind[1]])/(x[ind[2]]-x[ind[1]])
-  y[ind[1]]+pos*(y[ind[2]]-y[ind[1]])
-
+  out <- approx(x_out, y_out, xlev, rule = 2, ties = "ordered")$y
+  
+  return(out)
 }
 
 

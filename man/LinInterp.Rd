@@ -4,14 +4,14 @@
 \alias{LinInterp}
 \title{Linear interpolation of a y value at level xlev based on a vector x and y}
 \usage{
-LinInterp(x, y, xlev, ascending = F, zeroint = F)
+LinInterp(x, y, xlev, ascending = FALSE, zeroint = FALSE)
 }
 \arguments{
 \item{x}{A vector of x values}
 
 \item{y}{A vector of y values (identical length to x)}
 
-\item{xlev}{A the target level of x from which to guess y}
+\item{xlev}{A the target level of x from which to guess y. Can be either a numeric or vector.}
 
 \item{ascending}{Are the the x values supposed to be ordered before interpolation}
 
@@ -19,6 +19,9 @@ LinInterp(x, y, xlev, ascending = F, zeroint = F)
 }
 \description{
 Linear interpolation of a y value at level xlev based on a vector x and y
+}
+\details{
+As of version 3.2, this function uses \link[stats]{approx}.
 }
 \author{
 T. Carruthers
