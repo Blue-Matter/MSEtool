@@ -216,6 +216,7 @@ ldim<-function(x){
 #' @param nf The number of fleets
 #' @param realVB A matrix of real vulnerable biomass `[nsim,np, year]`
 #' @author T. Carruthers
+#' @export
 multiDataS<-function(MSElist,StockPars,np,mm,nf,realVB){
 
   nsim<-dim(MSElist[[1]][[1]][[mm]]@Cat)[1]
@@ -319,6 +320,15 @@ multiDataS<-function(MSElist,StockPars,np,mm,nf,realVB){
     FinF <- FinF + DBF[[fl]]@OM$FinF
   }
   Dataout@OM$FinF <- FinF
+  
+  # add Misc for each stock and fleet
+  Dataout@Misc <- list()
+  for(p in 1:np){
+    Dataout@Misc[[p]] <- list()
+    for(f in 1:nf){
+      Dataout@Misc[[p]][[f]] <- MSElist[[p]][[f]][[mm]]@Misc
+    }
+  }
   
   Dataout
 }
