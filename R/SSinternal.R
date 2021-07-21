@@ -586,8 +586,9 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   cpars_fleet$Data@L95 <- LinInterp(cpars_bio$Mat_age[1,,nyears], cpars_bio$Len_age[1,,nyears], 0.95)
   cpars_fleet$Data@LenCV <- GP$CVmax
 
-  cpars_fleet$Data@LFC <- LinInterp(V[, nyears], cpars_bio$Len_age[1,,nyears], 0.05)
-  cpars_fleet$Data@LFS <- LinInterp(V[, nyears], cpars_bio$Len_age[1,,nyears], 0.95)
+  vrel <- V[,nyears]/max(V[,nyears], na.rm=T)
+  cpars_fleet$Data@LFC <- LinInterp(vrel, cpars_bio$Len_age[1,,nyears], 0.05, ascending=TRUE)
+  cpars_fleet$Data@LFS <- LinInterp(vrel, cpars_bio$Len_age[1,,nyears], 0.999, ascending=TRUE)
   cpars_fleet$Data@Vmaxlen <- V[n_age, nyears]
 
   cpars_fleet$Data@Dep <- unique(Stock@D)

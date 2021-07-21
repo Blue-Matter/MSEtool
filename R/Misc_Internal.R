@@ -290,11 +290,10 @@ LinInterp<-function(x, y, xlev, ascending = FALSE, zeroint = FALSE) {
   
   if (any(xlev < min(x_out))) warning("There are xlev values less than min(x).")
   if (any(xlev > max(x_out))) warning("There are xlev values greater than max(x).")
+  approx(x_out, y_out, xlev, rule = 2, ties = "ordered")$y
 
-  out <- approx(x_out, y_out, xlev, rule = 2, ties = "ordered")$y
-  
-  return(out)
 }
+
 
 
 
