@@ -2687,7 +2687,7 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE) {
 
     if (class(temp)=='try-error') {
       if (!silent)
-        message("Method ", MPs[mp], " failed with error: ", temp)
+        warning("Method ", MPs[mp], " failed with error: ", temp)
     } else {
       slots <- slotNames(temp[[1]])
       for (X in slots) { # sequence along recommendation slots
