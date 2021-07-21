@@ -28,10 +28,18 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   SexPars <- MOM@SexPars
   Complexes <- MOM@Complexes
   CatchFrac <- MOM@CatchFrac
-
   np <- length(Stocks)
   nf <- length(Fleets[[1]])
+  
+  if (MOM@CatchFrac[[1]] %>% nrow() != nsim) {
+    # re-calculate CatchFrac
+    for (p in 1:np) {
+      CatchFrac[[p]] <- MOM@CatchFrac[[p]][1:nsim,, drop=FALSE]
+    }
+    MOM@CatchFrac <-CatchFrac
+  }
 
+  
   if(np==1 & nf==1){
     if (!silent) message("You have specified only a single stock and fleet. ",
             "You should really be using the function MSEtool::runMSE()")
@@ -725,6 +733,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   }
 
   # --- Calculate MSY statistics for each year ----
+  SPR_hist <- list()
   # ignores spatial closures
   # assumes all vulnerable fish are caught - ie no discarding
   if(!silent) message("Calculating MSY reference points for each year")
@@ -844,6 +853,53 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     VBiomass_unfished <- aperm(array(as.numeric(unlist(Unfished[5,], use.names=FALSE)),
                                      dim=c(n_age, nyears+proyears, nareas, nsim)), c(4,1,2,3))
 
+    
+    # ---- Calculate per-recruit reference points ----
+    StockPars[[p]]$SSB <- SSB[,p,,,]
+    StockPars[[p]]$N <- N[,p,,,]
+    
+    F01_YPR_y <- array(0, dim=c(nsim, nyears+proyears)) # store F01 for each sim, and year
+    Fmax_YPR_y <- F01_YPR_y # store Fmax for each sim, and year
+    Fcrash_y <- F01_YPR_y # store Fcrash for each sim, and year
+    SPRcrash_y  <- F01_YPR_y # store SPRcrash for each sim, and year
+    Fmed_y <- F01_YPR_y # store Fmed (F that generates the median historical SSB/R) for each sim, and year
+    
+    SPR_target <- seq(0.2, 0.6, 0.05)
+    F_SPR_y <- array(0, dim = c(nsim, length(SPR_target), nyears + proyears)) %>%
+      structure(dimnames = list(NULL, paste0("F_", 100*SPR_target, "%"), NULL)) #array of F-SPR% by sim, SPR%, year
+    
+    # if (!silent) message("Calculating per-recruit reference points")
+    for (y in 1:(nyears+proyears)) {
+      per_recruit_F <- lapply(1:nsim, per_recruit_F_calc,
+                              M_ageArray=StockPars[[p]]$M_ageArray,
+                              Wt_age=StockPars[[p]]$Wt_age,
+                              Mat_age=StockPars[[p]]$Mat_age,
+                              Fec_age=StockPars[[p]]$Fec_Age,
+                              V=V,
+                              maxage=StockPars[[p]]$maxage,
+                              yr.ind=y,
+                              plusgroup=StockPars[[p]]$plusgroup,
+                              SPR_target=SPR_target,
+                              StockPars=StockPars[[p]])
+      
+      F_SPR_y[,,y] <- sapply(per_recruit_F, getElement, 1) %>% t()
+      F01_YPR_y[,y] <- sapply(per_recruit_F, function(x) x[[2]][1])
+      Fmax_YPR_y[,y] <- sapply(per_recruit_F, function(x) x[[2]][2])
+      SPRcrash_y[,y] <- sapply(per_recruit_F, function(x) x[[2]][3])
+      Fcrash_y[,y] <- sapply(per_recruit_F, function(x) x[[2]][4])
+      Fmed_y[,y] <- sapply(per_recruit_F, function(x) x[[2]][5])
+    }
+    
+    # ---- Calculate annual SPR ----
+    SPR_hist[[p]] <- list()
+    
+    SPR_hist[[p]]$Equilibrium <- CalcSPReq(FMt[,p,,,], StockPars[[p]], 
+                                      n_age, nareas, nyears, proyears, nsim, 
+                                      Hist = TRUE)
+
+    SPR_hist[[p]]$Dynamic <- CalcSPRdyn(FMt[,p,,,], StockPars[[p]], 
+                                   n_age, nareas, nyears, proyears, nsim, Hist = TRUE)
+    
     # ---- Calculate Mean Generation Time ----
     MarrayArea <- replicate(nareas, StockPars[[p]]$M_ageArray[,,1:nyears])
     Mnow<-apply(MarrayArea[,,nyears,]*N[,p,,nyears,],1:2,sum)/apply(N[,p,,nyears,],1:2,sum)
@@ -862,8 +918,15 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
         FMSY=StockPars[[p]]$FMSY_y,
         SSBMSY=StockPars[[p]]$SSBMSY_y,
         BMSY=StockPars[[p]]$BMSY_y,
-        VBMSY=StockPars[[p]]$VBMSY_y
+        VBMSY=StockPars[[p]]$VBMSY_y,
+        F01_YPR=F01_YPR_y,
+        Fmax_YPR=Fmax_YPR_y,
+        F_SPR=F_SPR_y,
+        Fcrash=Fcrash_y,
+        Fmed=Fmed_y,
+        SPRcrash=SPRcrash_y
       ),
+      
       Dynamic_Unfished=list(
         N0=apply(N_unfished, c(1,3), sum),
         B0=apply(Biomass_unfished, c(1,3), sum),
@@ -1086,6 +1149,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
         Discards=apply(CB[,p,f,,,]-CBret[,p,f,,,],c(1,3,4), sum),
         Find=FleetPars[[p]][[f]]$Find,
         RecDev=StockPars[[p]]$Perr_y,
+        SPR=SPR_hist[[p]],
         Unfished_Equilibrium=Unfished_Equilibrium[[p]]
       )
 
