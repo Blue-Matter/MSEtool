@@ -207,7 +207,8 @@ ldim<-function(x){
 
 #' Combine data among stocks
 #'
-#' Catches, CAA, CAL are summed. LFC and LFS are weighted averages. ML, Lc and Lbar are recalculated from summed CAL. All other observations are for fleet 1 (indicative)
+#' Catches, CAA, CAL are summed. Indices, LFC and LFS are weighted averages. ML, Lc and Lbar are recalculated from summed CAL. 
+#' All other observations are for fleet 1 and weighted average across stocks 
 #'
 #' @param MSElist A hierarchical list of data objects stock then fleet then MP
 #' @param StockPars A list of stock parameters
