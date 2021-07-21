@@ -14,6 +14,7 @@ optYield(
   M_age,
   MatAge,
   WtAge,
+  FecAge,
   Vuln,
   Retc,
   Prec,
@@ -51,6 +52,8 @@ optYield(
 \item{MatAge}{Maturity-at-age}
 
 \item{WtAge}{Weight-at-age}
+
+\item{FecAge}{Mature-weight-at-age}
 
 \item{Vuln}{Vulnerability-at-age}
 

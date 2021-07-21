@@ -21,6 +21,7 @@ Blow_opt(
   hc,
   Mac,
   Wac,
+  Fecac,
   R0c,
   Vc,
   nyears,
@@ -68,6 +69,8 @@ Blow_opt(
 \item{Mac}{matrix nages by nyears+proyears of maturity at age}
 
 \item{Wac}{vector nages long  of weight at age}
+
+\item{Fecac}{vector nages long  of mature weight at age}
 
 \item{R0c}{number: unfished recruitment}
 

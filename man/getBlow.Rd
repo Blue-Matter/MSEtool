@@ -21,6 +21,7 @@ getBlow(
   hs,
   Mat_age,
   Wt_age,
+  Fec_age,
   R0a,
   V,
   nyears,
