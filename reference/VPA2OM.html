@@ -148,12 +148,13 @@ needs to parameterize most of the observation and implementation portions of the
   <span class='va'>laa</span>,
   nyr_par_mu <span class='op'>=</span> <span class='fl'>3</span>,
   LowerTri <span class='op'>=</span> <span class='fl'>1</span>,
-  recind <span class='op'>=</span> <span class='fl'>2</span>,
+  recind <span class='op'>=</span> <span class='fl'>0</span>,
   plusgroup <span class='op'>=</span> <span class='cn'>TRUE</span>,
   altinit <span class='op'>=</span> <span class='fl'>0</span>,
   fixq1 <span class='op'>=</span> <span class='cn'>TRUE</span>,
   report <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  silent <span class='op'>=</span> <span class='cn'>FALSE</span>
+  silent <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  <span class='va'>...</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -177,7 +178,8 @@ needs to parameterize most of the observation and implementation portions of the
     </tr>
     <tr>
       <th>h</th>
-      <td><p>Numeric value greater than 0.2 and less than 1. The steepness of the stock-recruitment curve (assumed to be close to 1 to match VPA assumption).</p></td>
+      <td><p>The steepness of the stock-recruitment curve (greater than 0.2 and less than 1, assumed to be close to 1 to match VPA assumption).
+Either a single numeric or a length nsim vector.</p></td>
     </tr>
     <tr>
       <th>Obs</th>
@@ -221,11 +223,11 @@ needs to parameterize most of the observation and implementation portions of the
     </tr>
     <tr>
       <th>recind</th>
-      <td><p>Positive integer. The first age class that fish 'recruit to the fishery'. The default is 2 - ie the first position in the age dimension of naa is age zero</p></td>
+      <td><p>Positive integer. The first age class that fish 'recruit to the fishery'. The default is 0 - ie the first position in the age dimension of naa is age zero</p></td>
     </tr>
     <tr>
       <th>plusgroup</th>
-      <td><p>Logical. Does the VPA assume that the oldes age class is a plusgroup?</p></td>
+      <td><p>Logical. Does the VPA assume that the oldest age class is a plusgroup?</p></td>
     </tr>
     <tr>
       <th>altinit</th>
@@ -243,11 +245,19 @@ needs to parameterize most of the observation and implementation portions of the
       <th>silent</th>
       <td><p>Whether to silence messages to the console.</p></td>
     </tr>
+    <tr>
+      <th>...</th>
+      <td><p>Additional arguments, including R0 (unfished recruitment), phi0 (unfished spawners per recruit associated with R0 and h for calculating stock recruit parameters),
+Perr (recruitment standard deviation for sampling future recruitment), and AC (autocorrelation in future recruitment deviates). For all, either a numeric or a length nsim vector.</p></td>
+    </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>An object of class <a href='OM-class.html'>OM</a>.</p>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>Use a seed for the random number generator to sample future recruitment.</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
     <div class='dont-index'><p><a href='SS2MOM.html'>SS2OM</a></p></div>

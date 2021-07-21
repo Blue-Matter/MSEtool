@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Reads MPD and MCMC estimates and data from iSCAM file structure into an operating model — iSCAM2OM • MSEtool Functions</title>
+<title>Reads iSCAM files into a hierarchical R list object — iSCAM • MSEtool Functions</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -46,10 +46,9 @@
 
 
 
-<meta property="og:title" content="Reads MPD and MCMC estimates and data from iSCAM file structure into an operating model — iSCAM2OM" />
-<meta property="og:description" content="Functions for importing an iSCAM assessment. From a fitted model, iSCAM2OM
-populates the various slots of an operating model and iSCAM2Data generates a Data object.
-These functions rely on several functions written by Chris Grandin (DFO PBS)." />
+<meta property="og:title" content="Reads iSCAM files into a hierarchical R list object — iSCAM" />
+<meta property="og:description" content="Internal functions for reading iSCAM input and output files
+into R" />
 <meta property="og:image" content="/logo.png" />
 
 
@@ -121,129 +120,102 @@ These functions rely on several functions written by Chris Grandin (DFO PBS)." /
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Reads MPD and MCMC estimates and data from iSCAM file structure into an operating model</h1>
+    <h1>Reads iSCAM files into a hierarchical R list object</h1>
     <small class="dont-index">Source: <a href='https://github.com/Blue-Matter/MSEtool/blob/master/R/iSCAM2OM.R'><code>R/iSCAM2OM.R</code></a></small>
-    <div class="hidden name"><code>iSCAM2OM.Rd</code></div>
+    <div class="hidden name"><code>iSCAM.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Functions for importing an iSCAM assessment. From a fitted model, <code>iSCAM2OM</code>
-populates the various slots of an operating model and <code>iSCAM2Data</code> generates a Data object.
-These functions rely on several functions written by Chris Grandin (DFO PBS).</p>
+    <p>Internal functions for reading iSCAM input and output files
+into R</p>
     </div>
 
-    <pre class="usage"><span class='fu'>iSCAM2OM</span><span class='op'>(</span>
-  <span class='va'>iSCAMdir</span>,
-  nsim <span class='op'>=</span> <span class='fl'>48</span>,
-  proyears <span class='op'>=</span> <span class='fl'>50</span>,
-  mcmc <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  Name <span class='op'>=</span> <span class='st'>"iSCAM model"</span>,
-  Source <span class='op'>=</span> <span class='st'>"No source provided"</span>,
-  length_timestep <span class='op'>=</span> <span class='fl'>1</span>,
-  nyr_par_mu <span class='op'>=</span> <span class='fl'>2</span>,
-  Author <span class='op'>=</span> <span class='st'>"No author provided"</span>,
-  report <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  silent <span class='op'>=</span> <span class='cn'>FALSE</span>
+    <pre class="usage"><span class='fu'>load.iscam.files</span><span class='op'>(</span><span class='va'>model.dir</span>, burnin <span class='op'>=</span> <span class='fl'>1000</span>, thin <span class='op'>=</span> <span class='fl'>1</span>, verbose <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span>
+
+<span class='fu'>fetch.file.names</span><span class='op'>(</span><span class='va'>path</span>, <span class='va'>filename</span><span class='op'>)</span>
+
+<span class='fu'>read.report.file</span><span class='op'>(</span><span class='va'>fn</span><span class='op'>)</span>
+
+<span class='fu'>read.data.file</span><span class='op'>(</span>file <span class='op'>=</span> <span class='cn'>NULL</span>, verbose <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span>
+
+<span class='fu'>read.control.file</span><span class='op'>(</span>
+  file <span class='op'>=</span> <span class='cn'>NULL</span>,
+  num.gears <span class='op'>=</span> <span class='cn'>NULL</span>,
+  num.age.gears <span class='op'>=</span> <span class='cn'>NULL</span>,
+  verbose <span class='op'>=</span> <span class='cn'>FALSE</span>
 <span class='op'>)</span>
 
-<span class='fu'>iSCAM2Data</span><span class='op'>(</span>
-  <span class='va'>iSCAMdir</span>,
-  Name <span class='op'>=</span> <span class='st'>"iSCAM assessment"</span>,
-  Source <span class='op'>=</span> <span class='st'>"No source provided"</span>,
-  length_timestep <span class='op'>=</span> <span class='fl'>1</span>,
-  Author <span class='op'>=</span> <span class='st'>"No author provided"</span>
-<span class='op'>)</span></pre>
+<span class='fu'>read.projection.file</span><span class='op'>(</span>file <span class='op'>=</span> <span class='cn'>NULL</span>, verbose <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span>
+
+<span class='fu'>read.par.file</span><span class='op'>(</span>file <span class='op'>=</span> <span class='cn'>NULL</span>, verbose <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span>
+
+<span class='fu'>read.mcmc</span><span class='op'>(</span>model.dir <span class='op'>=</span> <span class='cn'>NULL</span>, verbose <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>iSCAMdir</th>
-      <td><p>A folder with iSCAM input and output files in it. Alternatively, a list returned by
-<a href='iSCAM.html'>load.iscam.files</a>.</p></td>
+      <th>model.dir</th>
+      <td><p>Folder name</p></td>
     </tr>
     <tr>
-      <th>nsim</th>
-      <td><p>The number of simulations to take for parameters with
-uncertainty (for OM@cpars custom parameters)</p></td>
+      <th>burnin</th>
+      <td><p>The initial mcmc samples to be discarded</p></td>
     </tr>
     <tr>
-      <th>proyears</th>
-      <td><p>The number of MSE projection years</p></td>
+      <th>thin</th>
+      <td><p>The degree of chain thinning 1 in every thin
+iterations is kept</p></td>
     </tr>
     <tr>
-      <th>mcmc</th>
-      <td><p>Logical, whether to use mcmc samples to create custom parameters cpars. Alternatively, a list
-returned by <a href='iSCAM.html'>read.mcmc</a>. Currently, only used for delay difference iSCAM assessments.
-Set the seed for the function to sub-sample the mcmc samples.</p></td>
+      <th>verbose</th>
+      <td><p>should detailed results be printed to console</p></td>
     </tr>
     <tr>
-      <th>Name</th>
-      <td><p>The name of the operating model</p></td>
+      <th>path</th>
+      <td><p>File path</p></td>
     </tr>
     <tr>
-      <th>Source</th>
-      <td><p>Reference to assessment documentation e.g. a url</p></td>
+      <th>filename</th>
+      <td><p>The filename</p></td>
     </tr>
     <tr>
-      <th>length_timestep</th>
-      <td><p>How long is a model time step in years
-(e.g. a quarterly model is 0.25, a monthly model 1/12) (currently only uses annual time step)</p></td>
+      <th>fn</th>
+      <td><p>File location</p></td>
     </tr>
     <tr>
-      <th>nyr_par_mu</th>
-      <td><p>integer, the number of recent years to estimate vulnerability over for future projections</p></td>
+      <th>file</th>
+      <td><p>File location</p></td>
     </tr>
     <tr>
-      <th>Author</th>
-      <td><p>Who did the assessment</p></td>
+      <th>num.gears</th>
+      <td><p>The number of gears</p></td>
     </tr>
     <tr>
-      <th>report</th>
-      <td><p>logical should a numbers at age reconstruction plot be produced?</p></td>
-    </tr>
-    <tr>
-      <th>silent</th>
-      <td><p>logical should progress reporting be printed to the console?</p></td>
+      <th>num.age.gears</th>
+      <td><p>The number age-gears</p></td>
     </tr>
     </table>
 
-    <h2 class="hasAnchor" id="historical-reconstruction"><a class="anchor" href="#historical-reconstruction"></a>Historical reconstruction</h2>
+    <h2 class="hasAnchor" id="functions"><a class="anchor" href="#functions"></a>Functions</h2>
 
     
-
-<p>The function calls <code>model &lt;- load.iscam.files(iSCAMdir)</code> and then grabs the following matrices:</p>
 <ul>
-<li><p><code>model$mpd$N</code> - abundance at age</p></li>
-<li><p><code>model$mpd$F</code> - fishing mortality at age</p></li>
-<li><p><code>model$mpd$M</code> - natural mortality at age</p></li>
-<li><p><code>model$mpd$d3_weight_mat</code> - fecundity (product of weight and maturity at age)</p></li>
-<li><p><code>model$mpd$ma</code> - maturity at age</p></li>
+<li><p><code>load.iscam.files</code>: Wrapper function to generate R list</p></li>
+<li><p><code>fetch.file.names</code>: A function for returning the three types of iSCAM input and output files</p></li>
+<li><p><code>read.report.file</code>: A function for returning the results of the .rep iscam file</p></li>
+<li><p><code>read.data.file</code>: A function for returning the results of the .dat iscam file</p></li>
+<li><p><code>read.control.file</code>: A function for returning the results of the iscam control file</p></li>
+<li><p><code>read.projection.file</code>: A function for returning the results of the iscam projection file</p></li>
+<li><p><code>read.par.file</code>: A function for returning the results of the iscam .par file</p></li>
+<li><p><code>read.mcmc</code>: A function for returning the results of the iscam mcmc files</p></li>
 </ul>
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-<p>If a delay-difference model is recognized, then the following is used instead:</p><ul>
-<li><p><code>model$mpd$F_dd</code> - fishing mortality at age</p></li>
-<li><p><code>model$mpd$M_dd</code> - natural mortality at age</p></li>
-</ul>
-
-<p>Abundance at age is reconstructed using <code>model$mpd$rt</code> (recruitment) and projected with <code>F_dd</code> and
-<code>M_dd</code> to match <code>model$mpd$numbers</code>.</p>
-<p>While the iSCAM start age can be greater than zero, abundance at age is back-calculated to age zero using the M
-at the start age.</p>
-<p>These arrays are then passed to <code>VPA2OM</code> to generate the operating model.</p>
-    <h2 class="hasAnchor" id="reference-points"><a class="anchor" href="#reference-points"></a>Reference points</h2>
-
-    
-
-<p>iSCAM calculates the stock-recruit relationship and subsequently a single set of MSY and unfished reference
-points using R0, steepness, and unfished spawners per recruit from the mean M, fecundity, and growth (mean with
-respect to time).</p>
-<p>R0 and h are recalculated for the operating model by obtaining the stock-recruit alpha and beta from the
-iSCAM parameters and the mean unfished spawners per recruit in the first <code>ageM</code> (age of 50% maturity) years.
-R0 is also back calculated to age zero.</p>
+    <div class='dont-index'><p><a href='iSCAM2OM.html'>iSCAM2OM</a></p></div>
     <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
 
-    <p>T. Carruthers, Q. Huynh</p>
+    <p>Chris Grandin (DFO PBS)</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
