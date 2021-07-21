@@ -1539,7 +1539,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     # -- First projection year ----
     y <- 1
     if(!silent) {
-      cat("."); flush.console()
+      pb <- txtProgressBar(min = 1, max = proyears, style = 3, width = min(getOption("width"), 50))
     }
 
     Perr<-hs<-R0<-SRrel<-K<-Linf<-t0<-M<-array(NA,c(nsim,np))
@@ -1838,16 +1838,11 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
     # the years in which there are updates
     upyrs <- 1 + (0:(floor(proyears/interval[mm]) - 1)) * interval[mm]
-    if(!silent) {
-      cat(".")
-      flush.console()
-    }
 
     # --- Begin projection years ----
     for (y in 2:proyears) {
       if(!silent) {
-        cat(".")
-        flush.console()
+        setTxtProgressBar(pb, y)
       }
 
       # -- Calculate MSY stats for this year ----
@@ -2286,6 +2281,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         } # end of stocks
       } # end of not update year
     } # end of projection years
+    
+    if(!silent) close(pb)
 
     # SSB relative to SSBMSY
     SB_SBMSYa[, ,mm, ] <- apply(SSB_P, c(1,2, 4), sum, na.rm=TRUE)/array(SSBMSY_y[,,mm,],

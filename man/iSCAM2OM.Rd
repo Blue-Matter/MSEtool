@@ -2,38 +2,50 @@
 % Please edit documentation in R/iSCAM2OM.R
 \name{iSCAM2OM}
 \alias{iSCAM2OM}
-\title{Reads MLE estimates from iSCAM file structure into an operating model}
+\alias{iSCAM2Data}
+\title{Reads MPD and MCMC estimates and data from iSCAM file structure into an operating model}
 \usage{
 iSCAM2OM(
   iSCAMdir,
   nsim = 48,
   proyears = 50,
-  mcmc = F,
-  Name = NULL,
+  mcmc = FALSE,
+  Name = "iSCAM model",
   Source = "No source provided",
   length_timestep = 1,
   nyr_par_mu = 2,
   Author = "No author provided",
-  report = F,
-  silent = F
+  report = FALSE,
+  silent = FALSE
+)
+
+iSCAM2Data(
+  iSCAMdir,
+  Name = "iSCAM assessment",
+  Source = "No source provided",
+  length_timestep = 1,
+  Author = "No author provided"
 )
 }
 \arguments{
-\item{iSCAMdir}{A folder with iSCAM input and output files in it}
+\item{iSCAMdir}{A folder with iSCAM input and output files in it. Alternatively, a list returned by
+\link{load.iscam.files}.}
 
 \item{nsim}{The number of simulations to take for parameters with
 uncertainty (for OM@cpars custom parameters)}
 
 \item{proyears}{The number of MSE projection years}
 
-\item{mcmc}{Whether to use mcmc samples to create custom parameters cpars}
+\item{mcmc}{Logical, whether to use mcmc samples to create custom parameters cpars. Alternatively, a list
+returned by \link{read.mcmc}. Currently, only used for delay difference iSCAM assessments.
+Set the seed for the function to sub-sample the mcmc samples.}
 
 \item{Name}{The name of the operating model}
 
 \item{Source}{Reference to assessment documentation e.g. a url}
 
 \item{length_timestep}{How long is a model time step in years
-(e.g. a quarterly model is 0.25, a monthly model 1/12)}
+(e.g. a quarterly model is 0.25, a monthly model 1/12) (currently only uses annual time step)}
 
 \item{nyr_par_mu}{integer, the number of recent years to estimate vulnerability over for future projections}
 
@@ -44,11 +56,48 @@ uncertainty (for OM@cpars custom parameters)}
 \item{silent}{logical should progress reporting be printed to the console?}
 }
 \description{
-A function that uses the file location of a fitted iSCAM
-model including input files to population the various slots of an
-operating model parameter estimates. iSCAM2OM relies on several
-functions written by Chris Grandin (DFO PBS).
+Functions for importing an iSCAM assessment. From a fitted model, \code{iSCAM2OM}
+populates the various slots of an operating model and \code{iSCAM2Data} generates a Data object.
+These functions rely on several functions written by Chris Grandin (DFO PBS).
 }
+\section{Historical reconstruction}{
+
+The function calls \code{model <- load.iscam.files(iSCAMdir)} and then grabs the following matrices:
+
+\itemize{
+\item \code{model$mpd$N} - abundance at age
+\item \code{model$mpd$F} - fishing mortality at age
+\item \code{model$mpd$M} - natural mortality at age
+\item \code{model$mpd$d3_weight_mat} - fecundity (product of weight and maturity at age)
+\item \code{model$mpd$ma} - maturity at age
+}
+
+If a delay-difference model is recognized, then the following is used instead:
+\itemize{
+\item \code{model$mpd$F_dd} - fishing mortality at age
+\item \code{model$mpd$M_dd} - natural mortality at age
+}
+
+Abundance at age is reconstructed using \code{model$mpd$rt} (recruitment) and projected with \code{F_dd} and
+\code{M_dd} to match \code{model$mpd$numbers}.
+
+While the iSCAM start age can be greater than zero, abundance at age is back-calculated to age zero using the M
+at the start age.
+
+These arrays are then passed to \code{VPA2OM} to generate the operating model.
+}
+
+\section{Reference points}{
+
+iSCAM calculates the stock-recruit relationship and subsequently a single set of MSY and unfished reference
+points using R0, steepness, and unfished spawners per recruit from the mean M, fecundity, and growth (mean with
+respect to time).
+
+R0 and h are recalculated for the operating model by obtaining the stock-recruit alpha and beta from the
+iSCAM parameters and the mean unfished spawners per recruit in the first \code{ageM} (age of 50\% maturity) years.
+R0 is also back calculated to age zero.
+}
+
 \author{
-T. Carruthers
+T. Carruthers, Q. Huynh
 }

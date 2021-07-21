@@ -20,12 +20,13 @@ VPA2OM(
   laa,
   nyr_par_mu = 3,
   LowerTri = 1,
-  recind = 2,
+  recind = 0,
   plusgroup = TRUE,
   altinit = 0,
   fixq1 = TRUE,
   report = FALSE,
-  silent = FALSE
+  silent = FALSE,
+  ...
 )
 }
 \arguments{
@@ -37,7 +38,8 @@ VPA2OM(
 
 \item{CurrentYr}{Positive integer. The current year (final year of VPA fitting to data)}
 
-\item{h}{Numeric value greater than 0.2 and less than 1. The steepness of the stock-recruitment curve (assumed to be close to 1 to match VPA assumption).}
+\item{h}{The steepness of the stock-recruitment curve (greater than 0.2 and less than 1, assumed to be close to 1 to match VPA assumption).
+Either a single numeric or a length nsim vector.}
 
 \item{Obs}{The observation model (class Obs). This function only updates the catch and index observation error.}
 
@@ -59,9 +61,9 @@ VPA2OM(
 
 \item{LowerTri}{Integer. The number of recent years for which model estimates of recruitment are ignored (not reliably estimated by the VPA)}
 
-\item{recind}{Positive integer. The first age class that fish 'recruit to the fishery'. The default is 2 - ie the first position in the age dimension of naa is age zero}
+\item{recind}{Positive integer. The first age class that fish 'recruit to the fishery'. The default is 0 - ie the first position in the age dimension of naa is age zero}
 
-\item{plusgroup}{Logical. Does the VPA assume that the oldes age class is a plusgroup?}
+\item{plusgroup}{Logical. Does the VPA assume that the oldest age class is a plusgroup?}
 
 \item{altinit}{Integer. Various assumptions for how VPAs set up the initial numbers. 0: standard, 1: no plus group, 2: temporary fix for MSEtool plus group initialization}
 
@@ -70,6 +72,9 @@ VPA2OM(
 \item{report}{Logical, if TRUE, a diagnostic will be reported showing the matching of the OM reconstructed numbers at age vs the VPA assessment.}
 
 \item{silent}{Whether to silence messages to the console.}
+
+\item{...}{Additional arguments, including R0 (unfished recruitment), phi0 (unfished spawners per recruit associated with R0 and h for calculating stock recruit parameters),
+Perr (recruitment standard deviation for sampling future recruitment), and AC (autocorrelation in future recruitment deviates). For all, either a numeric or a length nsim vector.}
 }
 \value{
 An object of class \linkS4class{OM}.
@@ -78,6 +83,9 @@ An object of class \linkS4class{OM}.
 A function that uses a set of VPA bootstrap estimates of numbers-at-age, fishing mortality rate-at-age, M-at-age,
 weight-at-age, length-at-age and Maturity-at-age to define a fully described MSEtool operating model. The user still
 needs to parameterize most of the observation and implementation portions of the operating model.
+}
+\details{
+Use a seed for the random number generator to sample future recruitment.
 }
 \seealso{
 \link{SS2OM}
