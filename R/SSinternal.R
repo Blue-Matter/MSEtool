@@ -583,7 +583,12 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   cpars_fleet$Data@sigmaR <- unique(Stock@Perr)
 
   cpars_fleet$Data@L50 <- LinInterp(cpars_bio$Mat_age[1,,nyears], cpars_bio$Len_age[1,,nyears], 0.5 + 1e-4)
-  cpars_fleet$Data@L95 <- LinInterp(cpars_bio$Mat_age[1,,nyears], cpars_bio$Len_age[1,,nyears], 0.95)
+  if (max(cpars_bio$Mat_age[1,,nyears])>=0.95) {
+    cpars_fleet$Data@L95 <- LinInterp(cpars_bio$Mat_age[1,,nyears], cpars_bio$Len_age[1,,nyears], 0.95)  
+  } else {
+    cpars_fleet$Data@L95 <- max(cpars_bio$Mat_age[1,,nyears])
+  }
+  
   cpars_fleet$Data@LenCV <- GP$CVmax
 
   vrel <- V[,nyears]/max(V[,nyears], na.rm=T)
