@@ -1256,20 +1256,26 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     if (class(tt) == 'try-error')
       stop('Error in the MPs -', strsplit(tt,':')[[1]][2])
     MP_classes <- sapply(tt, class)
-    if (!all(MP_classes == MP_classes[1]))
-      stop('All MPs must be same class (`MP` or `MMP`)')
+    
+    if (any(!MP_classes %in% c('MP', 'MMP'))) {
+      inval <- unique(MP_classes[!MP_classes %in% c('MP', 'MMP')])
+      stop('Cannot mix MPs of class ', paste0(inval, collapse=","), ' with MPs of class `MP` and `MMP`')
+    }
+    
     MP_class <- unique(MP_classes)
+    MPcond <- rep(NA, length(MPs))
 
-    if(MP_class=="MMP"){
+    if('MMP' %in% MP_class){
       message("MMP mode: you have specified multi-fleet, multi-stock MPs of ",
               "class MMP. This class of MP accepts all data objects (stocks x fleets) ",
               "to simultaneously make a recommendation specific to each stock and fleet")
-      MPcond <- "MMP"
+      
+      MPcond[which(MP_class == 'MMP')] <- "MMP"
       nMP <- length(MPs)
       MPrefs <- array(NA,c(nMP,nf,np))
       MPrefs[] <- MPs
     }
-    if(MP_class=="MP"){
+    if('MP' %in% MP_class){
       message("Complex mode: you have specified a vector of MPs rather than a ",
               "list of MPs, one list position for MP type. The same MP will ",
               "be applied to the aggregate data for all stocks and fleets. ",
@@ -1277,7 +1283,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
               "stocks and fleets combined. This will be allocated among fleets ",
               "according to recent catches and among stocks according to ",
               "available, vulnerable biomass")
-      MPcond <- "complex"
+      MPcond[which(MP_class == 'MP')] <- "complex"
       MPtemp <- MPs
       nMP <- length(MPs)
       MPrefs <- array(NA,c(nMP,nf,np))
@@ -1285,7 +1291,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     }
   }
 
-  if (class(MPs) == 'list' & MPcond=='unknown') {
+  if (class(MPs) == 'list' & 'unknown' %in% MPcond) {
 
     if(identical(ldim(MPs), ldim(Fleets))){
       message("Byfleet mode: you have specified an MP for each stock and fleet. ",
@@ -1311,9 +1317,11 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     }
   }
 
-  if (MPcond == 'unknown')
+  if ('unknown' %in% MPcond)
     stop('`MPs` is not a vector or list with correct dimensions. See `?multiMSE`')
 
+  if (length(MPcond) != nMP) MPcond <- rep(MPcond, nMP)
+  
   if(class(MPs)=="list"){
     allMPs<-unlist(MPs)
   }else{
@@ -1644,7 +1652,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
     # --- Apply MP in initial projection year ----
     # - Combined MP -
-    if(MPcond=="MMP"){
+    if(MPcond[mm]=="MMP"){
       # returns a hierarchical list object stock then fleet of Data objects
       # DataList<-getDataList(MSElist,mm)
       DataList<-getDataList(MSElist,mm)
@@ -1656,7 +1664,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         Data_p_A[[p]][[f]]@TAC<-MPRecs_A[[p]][[f]]$TAC # record TAC rec in Data
       }
 
-    }else if(MPcond=="complex"){
+    }else if(MPcond[mm]=="complex"){
       # A temporary blank hierarchical list object stock by fleet
       MPRecs_A <- Data_p_A <- MPrecs_A_blank
       # need this for aggregating data and distributing TACs over stocks
@@ -1695,7 +1703,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       # A temporary blank hierarchical list object stock by fleet
       MPRecs_A <- Data_p_A <- MPrecs_A_blank
       for(p in 1:np){
-        if(MPcond=="bystock"){
+        if(MPcond[mm]=="bystock"){
           if(nf>1){
             curdat<-multiData(MSElist,StockPars,p,mm,nf)
           }else{
@@ -1732,7 +1740,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             Data_p_A[[p]][[f]]<-runMP[[2]]
             Data_p_A[[p]][[f]]@TAC<-MPRecs_A[[p]][[f]]$TAC   # copy allocated tAC
           }
-        }else if(MPcond=="byfleet"){
+        }else if(MPcond[mm]=="byfleet"){
           for(f in 1:nf){
             curdat<-MSElist[[p]][[f]][[mm]]
             runMP <- MSEtool::applyMP(curdat, MPs = MPrefs[mm,f,p], reps = 1, silent=TRUE)  # Apply MP
@@ -2034,7 +2042,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         } # end of stock
 
 
-        if(MPcond=="MMP"){
+        if(MPcond[mm]=="MMP"){
           # returns a hierarchical list object stock then fleet of Data objects
           DataList <- getDataList(MSElist,mm)
           # # returns a hierarchical list object stock then fleet then slot type of Rec
@@ -2044,7 +2052,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             Data_p_A[[p]][[f]]<-MSElist[[p]][[f]][[mm]]
             Data_p_A[[p]][[f]]@TAC<-MPRecs_A[[p]][[f]]$TAC # record TAC rec in Data
           }
-        }else if(MPcond=="complex"){
+        }else if(MPcond[mm]=="complex"){
           # A temporary blank hierarchical list object stock by fleet
           MPRecs_A <- Data_p_A <- MPrecs_A_blank
           # need this for aggregating data and distributing TACs over stocks
@@ -2090,7 +2098,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
           for(p in 1:np){
 
-            if(MPcond=="bystock"){
+            if(MPcond[mm]=="bystock"){
               if(nf>1){
                 curdat<-multiData(MSElist,StockPars,p,mm,nf)
               }else{
@@ -2123,7 +2131,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                 Data_p_A[[p]][[f]]<-runMP[[2]]
                 Data_p_A[[p]][[f]]@TAC<-MPRecs_A[[p]][[f]]$TAC # Copy the allocated TAC
               }
-            } else if(MPcond=="byfleet"){
+            } else if(MPcond[mm]=="byfleet"){
               for(f in 1:nf){
                 curdat<-MSElist[[p]][[f]][[mm]]
                 runMP <- MSEtool::applyMP(curdat, MPs = MPrefs[mm,f,p],
