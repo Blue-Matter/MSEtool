@@ -113,10 +113,10 @@ HistMICE<-function(x,StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, VF,
   #NIL(StockPars,"K")
 
   Karrayx <- getLHpars(x, 'Karray', StockPars, nyears)
-  Linfarrayx <- getLHpars(x, 'Linfarray', StockPars, nyears) 
-  t0arrayx <- getLHpars(x, 't0array', StockPars, nyears) 
-  Marrayx <- getLHpars(x, 'Marray', StockPars, nyears) 
-  
+  Linfarrayx <- getLHpars(x, 'Linfarray', StockPars, nyears)
+  t0arrayx <- getLHpars(x, 't0array', StockPars, nyears)
+  Marrayx <- getLHpars(x, 'Marray', StockPars, nyears)
+
   # Kx<-matrix(unlist(lapply(StockPars,function(dat)dat['K'])),ncol=np)[x,]
   # Linfx<-matrix(unlist(lapply(StockPars,function(dat)dat['Linf'])),ncol=np)[x,]
   # t0x<-matrix(unlist(lapply(StockPars,function(dat)dat['t0'])),ncol=np)[x,]
@@ -162,7 +162,7 @@ HistMICE<-function(x,StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, VF,
 
   popdynMICE(qsx=qsx,qfracx=qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
              movx,Spat_targ,M_ageArrayx,Mat_agex,Fec_agex,
-             Asizex, 
+             Asizex,
              WatAgex, Len_agex, Karrayx,
              Linfarrayx,t0arrayx,Marrayx,
              R0x,R0ax,
@@ -207,8 +207,8 @@ ldim<-function(x){
 
 #' Combine data among stocks
 #'
-#' Catches, CAA, CAL are summed. Indices, LFC and LFS are weighted averages. ML, Lc and Lbar are recalculated from summed CAL. 
-#' All other observations are for fleet 1 and weighted average across stocks 
+#' Catches, CAA, CAL are summed. Indices, LFC and LFS are weighted averages. ML, Lc and Lbar are recalculated from summed CAL.
+#' All other observations are for fleet 1 and weighted average across stocks
 #'
 #' @param MSElist A hierarchical list of data objects stock then fleet then MP
 #' @param StockPars A list of stock parameters
@@ -242,7 +242,7 @@ multiDataS<-function(MSElist,StockPars,np,mm,nf,realVB){
   }
 
   Dataout<-DBF[[1]]
-  
+
   Cat<-array(SIL(DBF,"Cat"),c(nsim,nyears,ni))
   CAA<-array(SIL(DBF,"CAA"),c(nsim,nyears,na,ni))
   CAL<-array(SIL(DBF,"CAL"),c(nsim,nyears,nl,ni))
@@ -315,22 +315,23 @@ multiDataS<-function(MSElist,StockPars,np,mm,nf,realVB){
   Bref<-array(SIL(DBF,'Bref'),c(nsim,ni))
   Dataout@Bref<-apply(Bref,1,sum)
 
-  # last historical F 
+  # last historical F
   FinF <- rep(0,nsim)
   for (fl in 1:nf) {
     FinF <- FinF + DBF[[fl]]@OM$FinF
   }
   Dataout@OM$FinF <- FinF
-  
+
   # add Misc for each stock and fleet
+  # this makes the object way too big
   Dataout@Misc <- list()
-  for(p in 1:np){
-    Dataout@Misc[[p]] <- list()
-    for(f in 1:nf){
-      Dataout@Misc[[p]][[f]] <- MSElist[[p]][[f]][[mm]]@Misc
-    }
-  }
-  
+  # for(p in 1:np){
+  #   Dataout@Misc[[p]] <- list()
+  #   for(f in 1:nf){
+  #     Dataout@Misc[[p]][[f]] <- MSElist[[p]][[f]][[mm]]@Misc
+  #   }
+  # }
+
   Dataout
 }
 
