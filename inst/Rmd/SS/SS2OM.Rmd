@@ -54,7 +54,7 @@ abline(h = 0, col = "grey")
 ## Catch
 
 ```{r, fig.cap = "Catch from the operating model (black lines and dots) and Stock Synthesis (red lines)."}
-C_SS <- cbind(replist$timeseries[, 1:4], rowSums(replist$timeseries[, startsWith(names(replist$timeseries), "dead(B):")], na.rm = TRUE))
+C_SS <- cbind(replist$timeseries[, 1:4], rowSums(replist$timeseries[, startsWith(names(replist$timeseries), "dead(B):"), drop = FALSE], na.rm = TRUE))
 C_SS <- aggregate(C_SS[, 5], list(Year = C_SS$Yr), sum)
 C_SS <- C_SS[C_SS$Year %in% OM_years, 2]
 
