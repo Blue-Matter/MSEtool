@@ -30,7 +30,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   CatchFrac <- MOM@CatchFrac
   np <- length(Stocks)
   nf <- length(Fleets[[1]])
-  
+
   if (MOM@CatchFrac[[1]] %>% nrow() != nsim) {
     # re-calculate CatchFrac
     for (p in 1:np) {
@@ -39,7 +39,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     MOM@CatchFrac <-CatchFrac
   }
 
-  
+
   if(np==1 & nf==1){
     if (!silent) message("You have specified only a single stock and fleet. ",
             "You should really be using the function MSEtool::runMSE()")
@@ -125,7 +125,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                                              cpars=SampCpars[[p]][[f]])
 
     }
-    
+
     # --- Sample Obs Parameters ----
     for(f in 1:nf) {
       ObsPars[[p]][[f]] <- SampleObsPars(MOM@Obs[[p]][[f]], nsim,
@@ -276,7 +276,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     Biomass_a[SAYR_a] <- N_a[SAYR_a] * StockPars[[p]]$Wt_age[SAY_a]  # Calculate initial stock biomass
     # SSB_a[SAYR_a] <- SSN_a[SAYR_a] * StockPars[[p]]$Wt_age[SAY_a]    # Calculate spawning stock biomass
     SSB_a[SAYR_a] <- N_a[SAYR_a] * StockPars[[p]]$Fec_Age[SAY_a]    # Calculate spawning stock biomass
-    
+
     SSN0_a <- apply(SSN_a, c(1,3), sum) # unfished spawning numbers for each year
     N0_a <- apply(N_a, c(1,3), sum) # unfished numbers for each year)
     SSB0_a <- apply(SSB_a, c(1,3), sum) # unfished spawning biomass for each year
@@ -289,7 +289,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
     Fretraw <- array(NIL(listy=FleetPars[[p]],namey="retA_real"),c(nsim,n_age,allyears,nf))
     FretA[Vind] <- Fretraw[Vind[,c(1,4,5,3)]]
-    
+
     if(nf==1){
       V <- VF[,p,1,,] #<-SOL(FleetPars[[p]],"V")
     }else{
@@ -644,7 +644,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                      dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
   SSB <- aperm(array(as.numeric(unlist(histYrs[4,], use.names=FALSE)),
                      dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
-  
+
   VBiomass <- aperm(array(as.numeric(unlist(histYrs[5,], use.names=FALSE)),
                           dim=c(np, n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
   FM <- aperm(array(as.numeric(unlist(histYrs[6,], use.names=FALSE)),
@@ -853,21 +853,21 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     VBiomass_unfished <- aperm(array(as.numeric(unlist(Unfished[5,], use.names=FALSE)),
                                      dim=c(n_age, nyears+proyears, nareas, nsim)), c(4,1,2,3))
 
-    
+
     # ---- Calculate per-recruit reference points ----
     StockPars[[p]]$SSB <- SSB[,p,,,]
     StockPars[[p]]$N <- N[,p,,,]
-    
+
     F01_YPR_y <- array(0, dim=c(nsim, nyears+proyears)) # store F01 for each sim, and year
     Fmax_YPR_y <- F01_YPR_y # store Fmax for each sim, and year
     Fcrash_y <- F01_YPR_y # store Fcrash for each sim, and year
     SPRcrash_y  <- F01_YPR_y # store SPRcrash for each sim, and year
     Fmed_y <- F01_YPR_y # store Fmed (F that generates the median historical SSB/R) for each sim, and year
-    
+
     SPR_target <- seq(0.2, 0.6, 0.05)
     F_SPR_y <- array(0, dim = c(nsim, length(SPR_target), nyears + proyears)) %>%
       structure(dimnames = list(NULL, paste0("F_", 100*SPR_target, "%"), NULL)) #array of F-SPR% by sim, SPR%, year
-    
+
     # if (!silent) message("Calculating per-recruit reference points")
     for (y in 1:(nyears+proyears)) {
       per_recruit_F <- lapply(1:nsim, per_recruit_F_calc,
@@ -881,7 +881,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                               plusgroup=StockPars[[p]]$plusgroup,
                               SPR_target=SPR_target,
                               StockPars=StockPars[[p]])
-      
+
       F_SPR_y[,,y] <- sapply(per_recruit_F, getElement, 1) %>% t()
       F01_YPR_y[,y] <- sapply(per_recruit_F, function(x) x[[2]][1])
       Fmax_YPR_y[,y] <- sapply(per_recruit_F, function(x) x[[2]][2])
@@ -889,17 +889,17 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       Fcrash_y[,y] <- sapply(per_recruit_F, function(x) x[[2]][4])
       Fmed_y[,y] <- sapply(per_recruit_F, function(x) x[[2]][5])
     }
-    
+
     # ---- Calculate annual SPR ----
     SPR_hist[[p]] <- list()
-    
-    SPR_hist[[p]]$Equilibrium <- CalcSPReq(FMt[,p,,,], StockPars[[p]], 
-                                      n_age, nareas, nyears, proyears, nsim, 
+
+    SPR_hist[[p]]$Equilibrium <- CalcSPReq(FMt[,p,,,], StockPars[[p]],
+                                      n_age, nareas, nyears, proyears, nsim,
                                       Hist = TRUE)
 
-    SPR_hist[[p]]$Dynamic <- CalcSPRdyn(FMt[,p,,,], StockPars[[p]], 
+    SPR_hist[[p]]$Dynamic <- CalcSPRdyn(FMt[,p,,,], StockPars[[p]],
                                    n_age, nareas, nyears, proyears, nsim, Hist = TRUE)
-    
+
     # ---- Calculate Mean Generation Time ----
     MarrayArea <- replicate(nareas, StockPars[[p]]$M_ageArray[,,1:nyears])
     Mnow<-apply(MarrayArea[,,nyears,]*N[,p,,nyears,],1:2,sum)/apply(N[,p,,nyears,],1:2,sum)
@@ -926,7 +926,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
         Fmed=Fmed_y,
         SPRcrash=SPRcrash_y
       ),
-      
+
       Dynamic_Unfished=list(
         N0=apply(N_unfished, c(1,3), sum),
         B0=apply(Biomass_unfished, c(1,3), sum),
@@ -1071,7 +1071,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
     }
   }
-  
+
 
   # ---- Condition Simulated Data on input Data object (if it exists) & calculate error stats ----
   for (p in 1:np) {
@@ -1256,12 +1256,12 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     if (class(tt) == 'try-error')
       stop('Error in the MPs -', strsplit(tt,':')[[1]][2])
     MP_classes <- sapply(tt, class)
-    
+
     if (any(!MP_classes %in% c('MP', 'MMP'))) {
       inval <- unique(MP_classes[!MP_classes %in% c('MP', 'MMP')])
       stop('Cannot mix MPs of class ', paste0(inval, collapse=","), ' with MPs of class `MP` and `MMP`')
     }
-    
+
     MP_class <- unique(MP_classes)
     MPcond <- rep(NA, length(MPs))
 
@@ -1269,8 +1269,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       message("MMP mode: you have specified multi-fleet, multi-stock MPs of ",
               "class MMP. This class of MP accepts all data objects (stocks x fleets) ",
               "to simultaneously make a recommendation specific to each stock and fleet")
-      
-      MPcond[which(MP_class == 'MMP')] <- "MMP"
+
+      MPcond[which(MP_classes == 'MMP')] <- "MMP"
       nMP <- length(MPs)
       MPrefs <- array(NA,c(nMP,nf,np))
       MPrefs[] <- MPs
@@ -1283,7 +1283,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
               "stocks and fleets combined. This will be allocated among fleets ",
               "according to recent catches and among stocks according to ",
               "available, vulnerable biomass")
-      MPcond[which(MP_class == 'MP')] <- "complex"
+      MPcond[which(MP_classes == 'MP')] <- "complex"
       MPtemp <- MPs
       nMP <- length(MPs)
       MPrefs <- array(NA,c(nMP,nf,np))
@@ -1321,7 +1321,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     stop('`MPs` is not a vector or list with correct dimensions. See `?multiMSE`')
 
   if (length(MPcond) != nMP) MPcond <- rep(MPcond, nMP)
-  
+
   if(class(MPs)=="list"){
     allMPs<-unlist(MPs)
   }else{
@@ -1330,7 +1330,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   if (nMP < 1) stop("No valid MPs found", call.=FALSE)
 
   # ---- Check MPs ----
-  if (checkMPs & class(MPs)!='MMP')
+  if (checkMPs & all(MP_classes=='MP'))
     CheckMPs(MPs=allMPs, silent=silent)
 
   # ---- Set Management Interval for each MP ----
@@ -1549,7 +1549,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     M_agecur_y<-Mat_agecur_y<- Fec_agecur_y<- array(NA,c(nsim,np,n_age))
     a_y<-b_y<-rep(NA,np)
     WatAge <- Len_age  <- array(NA,c(nsim, np,n_age))
-    
+
     SSB0array <- array(NA, c(nsim, np))
     for(p in 1:np){
       Perr[,p]<-StockPars[[p]]$Perr_y[,nyears+n_age]
@@ -1672,7 +1672,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
       curdat<-multiDataS(MSElist,StockPars,np,mm,nf,realVB)
       runMP <- applyMP(curdat, MPs = MPs[mm], reps = 1, silent=TRUE)  # Apply MP
-      
+
       Stock_Alloc<-realVB[,,nyears, drop=FALSE]/apply(realVB[,,nyears, drop=FALSE],1,sum)
 
       for(p in 1:np)  for(f in 1:nf){
@@ -2281,7 +2281,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         } # end of stocks
       } # end of not update year
     } # end of projection years
-    
+
     if(!silent) close(pb)
 
     # SSB relative to SSBMSY
