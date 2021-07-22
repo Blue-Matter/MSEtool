@@ -168,7 +168,7 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
 
   Data@LFC <- FleetPars$L5_y[,nyears] * ObsPars$LFCbias # length at first capture
   Data@LFS <- FleetPars$LFS_y[,nyears] * ObsPars$LFSbias # length at full selection
-
+  Data@Vmaxlen <- FleetPars$Vmaxlen_y[,nyears]
   # --- Previous Management Recommendations ----
   Data@MPrec <- apply(CBret, c(1, 3), sum)[,nyears] # catch in last year
   Data@MPeff <- rep(1, nsim) # effort in last year = 1
@@ -526,7 +526,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
 
   Data@LFC <- FleetPars$L5_y[,nyears+y] * ObsPars$LFCbias # length at first capture
   Data@LFS <- FleetPars$LFS_y[,nyears+y] * ObsPars$LFSbias # length at full selection
-
+  Data@Vmaxlen <- FleetPars$Vmaxlen_y[,nyears+y]
   # --- Previous Management Recommendations ----
   Data@MPrec <- MPCalcs$TACrec # last MP  TAC recommendation
   if (length(dim(Effort)) == 5) {
@@ -579,10 +579,10 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
 #' @param CAA_ESS CAA effective sample size. If greater than 1, then this is the multinomial distribution sample size.
 #' If less than 1, this is the coefficient of variation for the logistic normal distribution (see details).
 #' @param CAA_nsamp CAA sample size
-#' @details The logistic normal generates the catch-at-age sample by first sampling once from a multivariate normal distribution 
+#' @details The logistic normal generates the catch-at-age sample by first sampling once from a multivariate normal distribution
 #' with the mean vector equal to the logarithm of the proportions-at-age and the diagonal of the covariance matrix is the square of the
-#' product of the CV and the log proportions (all off-diagonals are zero). The sampled vector is then converted to proportions 
-#' with the softmax function and expanded to numbers (CAA_nsamp). This method allows for simulating fractional values in the 
+#' product of the CV and the log proportions (all off-diagonals are zero). The sampled vector is then converted to proportions
+#' with the softmax function and expanded to numbers (CAA_nsamp). This method allows for simulating fractional values in the
 #' catch-at-age matrix.
 #' @return CAA array
 simCAA <- function(nsim, yrs, n_age, Cret, CAA_ESS, CAA_nsamp) {
@@ -600,7 +600,7 @@ simCAA <- function(nsim, yrs, n_age, Cret, CAA_ESS, CAA_nsamp) {
         if(CAA_ESS[i] < 1) {
           log_PAA <- log(Cret[i, , j]/sum(Cret[i, , j]))
           vcov_PAA <- (CAA_ESS[i] * log_PAA)^2 * diag(length(log_PAA))
-          
+
           samp_PAA <- mvtnorm::rmvnorm(1, log_PAA, vcov_PAA) %>% ilogitm()
           CAA[i, j, ] <- CAA_nsamp[i] * samp_PAA
         } else {
@@ -632,7 +632,7 @@ simCAA <- function(nsim, yrs, n_age, Cret, CAA_ESS, CAA_nsamp) {
 #' @param t0array Array of t0 values by simulation and year
 #' @param LenCV CV of length-at-age#'
 #' @return named list with CAL array and LFC, ML, & Lc vectors
-#' 
+#'
 #'     CALdat <- simCAL(nsim, nyears, StockPars$maxage, ObsPars$CAL_ESS,
 simCAL <- function(nsim, nyears, maxage,  CAL_ESS, CAL_nsamp, nCALbins, CAL_binsmid, CAL_bins,
                    vn, retL, Linfarray, Karray, t0array, LenCV) {
@@ -1162,10 +1162,10 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
       if (fitIerr) {
         yr.ind <- max(which(!is.na(RealData@AddInd[1,i,1:nyrs])))
         diff <- nyears-nyrs
-        ObsPars$AddIerr[,i, (nyrs+1):(nyears+proyears)] <- generateRes(df=I_Err, nsim, proyears+diff, 
+        ObsPars$AddIerr[,i, (nyrs+1):(nyears+proyears)] <- generateRes(df=I_Err, nsim, proyears+diff,
                                                                        lst.err=log(ObsPars$AddIerr[,i,yr.ind]))
       }
-      
+
       if (nyrs < nyears) {
         # add simulated index for missing years
         tempI <- SimIndex
