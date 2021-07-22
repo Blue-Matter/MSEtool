@@ -33,6 +33,10 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
                     comp_fleet = "all", comp_season = "sum", comp_partition = "all", comp_gender = "all",
                     index_season = "mean", silent=FALSE, ...) {
 
+  if(!requireNamespace("reshape2", quietly = TRUE)) {
+    stop("Package `reshape2` is required for this function. Install with `install.packages('reshape2')`", call. = FALSE)
+  }
+
   replist <- SS_import(SSdir, ...)
 
   season_as_years <- FALSE
@@ -506,10 +510,6 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
 SS2Data_get_comps <- function(replist, mainyrs, maxage, season_as_years = FALSE, nseas = 1,
                       comp_gender = "all", comp_fleet = "all", comp_partition = "all", comp_season = "sum",
                       type = c("length", "age"), silent=FALSE) {
-
-  if(!requireNamespace("reshape2", quietly = TRUE)) {
-    stop("Package `reshape2` is required for this function. Install with `install.packages('reshape2')`", call. = FALSE)
-  }
 
   type <- match.arg(type)
   if(type == "length") dbase <- replist$lendbase else dbase <- replist$agedbase
