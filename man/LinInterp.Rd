@@ -21,7 +21,7 @@ LinInterp(x, y, xlev, ascending = FALSE, zeroint = FALSE)
 Linear interpolation of a y value at level xlev based on a vector x and y
 }
 \details{
-As of version 3.2, this function uses \link[stats]{approx}.
+As of version 3.2, this function uses \code{stats::approx}
 }
 \author{
 T. Carruthers
