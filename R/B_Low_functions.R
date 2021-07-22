@@ -53,7 +53,7 @@ getBlow<-function(x, N, Asize, SSBMSY, SSBpR, MPA, SSB0, nareas, retA,MGThorizon
     Blow_opt(opt$minimum,N=N[x,,1,], Asize_c =Asize[x,], SSBMSYc=SSBMSY[x],
              SSBpRc=SSBpR[x,], MPA=MPA, SSB0c=SSB0[x], nareas, retAc=retA[x,,],
              MGThorizonc=MGThorizon[x], Fc=Find[x,],Perrc=Perr[x,], Mc=M_ageArray[x,,],
-             hc=hs[x], Mac=Mat_age[x,,], Wac=Wt_age[x,,], Fecac=Fec_age[x,,],, R0c=R0a[x,], Vc=V[x,,],
+             hc=hs[x], Mac=Mat_age[x,,], Wac=Wt_age[x,,], Fecac=Fec_age[x,,], R0c=R0a[x,], Vc=V[x,,],
              nyears=nyears, maxage=maxage, movc=mov[x,,,,], Spat_targc=Spat_targ[x],
              SRrelc=SRrel[x], aRc=aR[x,], bRc=bR[x,], Bfrac, maxF, mode=3,
              plusgroup=plusgroup)
