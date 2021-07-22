@@ -246,16 +246,16 @@ VPA2OM<-function(Name="A fishery made by VPA2OM",
   # Initial naa initialization options (VPAs apparently do this differently...)
   if(altinit < 2) {       # normal assumption with or without plusgroup
     
-    Perr[, maxage:1] <- log(naa[, 2:n_age, 1]/(R0 * surv[, 2:n_age, 1]))
+    Perr[, n_age:1] <- log(naa[, , 1]/(R0 * surv[, , 1]))
     
   } else if(altinit==2) { # temporary fix for DLMtool initialization of plusgroup
-    Perr[, maxage:2] <- log(naa[, 2:(n_age-1), 1]/(R0 * surv[, 1:(n_age-2), 1]))
+    Perr[, n_age:2] <- log(naa[, 1:(n_age-1), 1]/(R0 * surv[, 1:(n_age-1), 1]))
     survDLMtool<-aperm(exp(-apply(Maa[,,1],1,cumsum)),c(2,1))
     fac<-surv[, n_age, 1]/survDLMtool[, n_age]
-    Perr[, 1] <- log(naa[, n_age,1]/(R0 * surv[, n_age - 1, 1] * fac))
+    Perr[, 1] <- log(naa[, n_age, 1]/(R0 * surv[, n_age, 1] * fac))
   }
   
-  Perr[,maxage + 1:(nyears - LowerTri)] <- recdevs[, 1:(nyears - LowerTri)]
+  Perr[, maxage + 2:(nyears - LowerTri)] <- recdevs[, 2:(nyears - LowerTri)]
   for (y in 1:(LowerTri + proyears)) {
     Perr[, maxage + nyears - LowerTri + y] <- 
       AC * Perr[, maxage + nyears - LowerTri + y - 1] + delta[, y] * sqrt(1 - AC^2)  # apply process error
@@ -274,6 +274,8 @@ VPA2OM<-function(Name="A fishery made by VPA2OM",
   OM@t0 <- rep(0,2)
   OM@DR <- rep(0,2)
   OM@MPA<-FALSE
+  
+  if(!plusgroup) OM@cpars$plusgroup <- 0L
 
   if(report){ # Produce a quick diagnostic plot of OM vs VPA numbers at age
 
