@@ -210,15 +210,15 @@ calcV <- function(x, Len_age, LatASD, SLarray, n_age, nyears, proyears, CAL_bins
   len_at_age <- Len_age[x,,]
   len_aa_sd <- LatASD[x,,]
   sel_at_length <- SLarray[x,,]
-  
+
   if (!'matrix' %in% class(len_aa_sd)) {
     nrow <- length(len_at_age)
     len_at_age <- matrix(len_at_age, nrow, 1)
     len_aa_sd <- matrix(len_aa_sd, nrow, 1)
     sel_at_length <- matrix(sel_at_length, length(sel_at_length), 1)
   }
-  
-  
+
+
   calcVatAge(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid)
 }
 
@@ -269,17 +269,16 @@ CalcMSYRefs <- function(x, MSY_y, FMSY_y, SSBMSY_y, BMSY_y, VBMSY_y, ageM, nyear
 #' @param xlev A the target level of x from which to guess y. Can be either a numeric or vector.
 #' @param ascending Are the the x values supposed to be ordered before interpolation
 #' @param zeroint is there a zero-zero x-y intercept?
-#' @details As of version 3.2, this function uses \link[stats]{approx}.
+#' @details As of version 3.2, this function uses `stats::approx`
 #' @author T. Carruthers
-#' @importFrom stats approx 
 #' @keywords internal
 LinInterp<-function(x, y, xlev, ascending = FALSE, zeroint = FALSE) {
-  
+
   if (zeroint) {
     x <- c(0, x)
     y <- c(0, y)
   }
-  
+
   if (ascending) {
     x_out <- x[1:which.max(x)]
     y_out <- y[1:which.max(x)]
@@ -287,7 +286,7 @@ LinInterp<-function(x, y, xlev, ascending = FALSE, zeroint = FALSE) {
     x_out <- x
     y_out <- y
   }
-  
+
   if (any(xlev < min(x_out))) warning("There are xlev values less than min(x).")
   if (any(xlev > max(x_out))) warning("There are xlev values greater than max(x).")
   approx(x_out, y_out, xlev, rule = 2, ties = "ordered")$y
@@ -368,16 +367,16 @@ indfit <- function(sim.index,obs.ind, Year, plot=FALSE, lcex=0.8){
   if (length(res)<2) {
     ac <- 0
   } else {
-    ac<-acf(res,plot=F)$acf[2,1,1] # lag-1 autocorrelation  
+    ac<-acf(res,plot=F)$acf[2,1,1] # lag-1 autocorrelation
   }
-  
+
   res2<-obs.ind-sim.index                  # linear, without hyperdepletion / hyperstability
   if (length(res2)<2) {
     ac2 <- 0
   } else {
-    ac2<-acf(res2,plot=F)$acf[2,1,1] # linear AC 
+    ac2<-acf(res2,plot=F)$acf[2,1,1] # linear AC
   }
-  
+
 
   if(plot){
     SSBseq<-seq(min(exp(sim.index)),max(exp(sim.index)),length.out=1000)
