@@ -942,14 +942,9 @@ SubCpars<-function(OM, sims = 1:OM@nsim) {
     message("Removing simulations: ", paste0(which(!sims2), collapse = " "))
     cpars <- OM@cpars
 
-    subset_Data <- function(xx, Data, sims) {
-      z <- slot(Data, xx)
-      if(!all(is.na(z))) z <- z[sims, , , drop = FALSE]
-      return(z)
-    }
     subset_function <- function(xx, sims, cpars) {
       x <- cpars[[xx]]
-      if(xx %in% c("CAL_bins", "MPA", "plusgroup", "CAL_binsmid", "binWidth", "AddIunits", "Wa", "Wb")) {
+      if(any(xx == c("CAL_bins", "MPA", "plusgroup", "CAL_binsmid", "binWidth", "AddIunits", "Wa", "Wb", "Data"))) {
         return(x)
       } else if(is.matrix(x)) {
         return(x[sims, , drop = FALSE])
@@ -957,11 +952,6 @@ SubCpars<-function(OM, sims = 1:OM@nsim) {
         if(length(dim(x)) == 3) return(x[sims, , , drop = FALSE])
         if(length(dim(x)) == 4) return(x[sims, , , , drop = FALSE])
         if(length(dim(x)) == 5) return(x[sims, , , , , drop = FALSE])
-      } else if(class(x)[[1]] == "Data") {
-        s_names <- c("AddIndV", "AddInd", "CV_AddInd")
-        update_slots <- lapply(s_names, subset_Data, Data = x, sims = sims)
-        for(i in seq_along(s_names)) slot(x, s_names[i]) <- update_slots[[i]]
-        return(x)
       } else if(length(x) == OM@nsim) {
         return(x[sims])
       } else return(x)
