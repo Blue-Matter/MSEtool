@@ -1266,7 +1266,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     MPcond <- rep(NA, length(MPs))
 
     if('MMP' %in% MP_class){
-      message("MMP mode: you have specified multi-fleet, multi-stock MPs of ",
+      if (!silent) message("MMP mode: you have specified multi-fleet, multi-stock MPs of ",
               "class MMP. This class of MP accepts all data objects (stocks x fleets) ",
               "to simultaneously make a recommendation specific to each stock and fleet")
 
@@ -1276,7 +1276,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       MPrefs[] <- MPs
     }
     if('MP' %in% MP_class){
-      message("Complex mode: you have specified a vector of MPs rather than a ",
+      if (!silent) message("Complex mode: you have specified a vector of MPs rather than a ",
               "list of MPs, one list position for MP type. The same MP will ",
               "be applied to the aggregate data for all stocks and fleets. ",
               "The MP will, for example, be used to set a single TAC for all ",
@@ -1294,7 +1294,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   if (class(MPs) == 'list' & 'unknown' %in% MPcond) {
 
     if(identical(ldim(MPs), ldim(Fleets))){
-      message("Byfleet mode: you have specified an MP for each stock and fleet. ",
+      if (!silent) message("Byfleet mode: you have specified an MP for each stock and fleet. ",
               "Only fleet-specific data (e.g. catches and indices) will be used to set ",
               "advice for each fleet for each stock")
       MPcond <- "byfleet"
@@ -1302,7 +1302,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       MPrefs <- array(NA,c(nMP,nf,np))
       MPrefs[]<-unlist(MPs)
     } else if (ldim(MPs)==ldim(Fleets)[1]){ # not a two-tier list
-      message("Bystock mode: you have specified a vector of MPs for each stock, ",
+      if (!silent) message("Bystock mode: you have specified a vector of MPs for each stock, ",
               "but not a vector of MPs for each stock and fleet. The catch data for these",
               " fleets will be combined, a single MP will be used to set a single TAC ",
               "for all fleets combined that will be allocated between the fleets ",
@@ -1340,7 +1340,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     if (!silent) message("Variable management intervals:")
     df <- data.frame(MP=MPs,interval=interval)
     for (i in 1:nrow(df)) {
-      message(df$MP[i], 'has management interval:', df$interval[i])
+      if (!silent) message(df$MP[i], 'has management interval:', df$interval[i])
     }
   }
 
@@ -2319,9 +2319,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         totyrs <- sum(checkNA[,,upyrs] >0)
         nfrac <- round(ntot/(length(upyrs)*nsim),2)*100
 
-        message(totyrs, ' years had TAC = NA for some simulations (',
+        if (!silent) message(totyrs, ' years had TAC = NA for some simulations (',
                 nfrac, "% of total simulations)")
-        message('Used TAC_y = TAC_y-1')
+        if (!silent) message('Used TAC_y = TAC_y-1')
       }
 
       if("progress"%in%names(control))
