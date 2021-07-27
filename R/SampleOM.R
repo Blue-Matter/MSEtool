@@ -1151,11 +1151,23 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
           b_ind[i] <- temp
         }
         LR5_y[,yr] <- StockPars$CAL_binsmid[b_ind]
-        b_ind <- apply(retL[,,yr], 1, which.max)
+        dd <- dim(retL)
+        if (dd[1]==1) {
+          # only 1 sim
+          b_ind <- which.max(retL[1,,yr])
+        } else {
+          b_ind <- apply(retL[,,yr], 1, which.max)  
+        }
+        
         LFR_y[,yr] <- StockPars$CAL_binsmid[b_ind]
         temp <- abs(replicate(nsim, StockPars$CAL_binsmid) - StockPars$Linf)
         b_ind <- apply(temp, 2, which.min)
-        Rmaxlen_y[,yr] <- retL[,b_ind,yr][1,]
+        if (dd[1]==1) {
+          Rmaxlen_y[,yr] <- retL[,b_ind,yr]
+        } else {
+          Rmaxlen_y[,yr] <- retL[,b_ind,yr][1,]  
+        }
+        
       }
       LFR_y[LFR_y<=LR5_y] <- LR5_y[LFR_y<=LR5_y]  +1
     } # end calculate LR5_y etc
