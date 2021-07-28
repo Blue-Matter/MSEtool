@@ -1304,7 +1304,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     V_P <- MPCalcs$V_P  # vulnerable-at-age
     SLarray_P <- MPCalcs$SLarray_P # vulnerable-at-length
     FMa[,mm,y] <- MPCalcs$Ftot
-
+    
     LR5_P <- MPCalcs$LR5_P
     LFR_P <- MPCalcs$LFR_P
     Rmaxlen_P <- MPCalcs$Rmaxlen_P
@@ -1339,8 +1339,10 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       # -- Calculate MSY stats for this year ----
       if (SelectChanged) { #
         y1 <- nyears + y
-        MSYrefsYr <- sapply(1:nsim, optMSY_eq, StockPars$M_ageArray, StockPars$Wt_age,
+        MSYrefsYr <- sapply(1:nsim, optMSY_eq, 
+                            StockPars$M_ageArray, StockPars$Wt_age,
                             StockPars$Mat_age,
+                            Fec_age=StockPars$Fec_Age,
                             V_P, StockPars$maxage,StockPars$R0, StockPars$SRrel,
                             StockPars$hs, yr.ind=y1, plusgroup=StockPars$plusgroup)
         MSY_y[,mm,y1] <- MSYrefsYr[1, ]
