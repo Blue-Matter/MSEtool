@@ -551,8 +551,6 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   }
   FleetPars$qs <- qs
 
-
-  
   histYrs <- sapply(1:nsim, function(x)
     popdynCPP(nareas, StockPars$maxage,
               Ncurr=StockPars$N[x,,1,],
@@ -708,42 +706,77 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   if(!silent) message("Calculating B-low reference points")
 
   MGThorizon<-floor(HZN*MGT)
-  Blow <- sapply(1:nsim,getBlow,
-                 StockPars$N,
-                 StockPars$Asize,
-                 StockPars$SSBMSY,
-                 StockPars$SSBpR,
-                 FleetPars$MPA,
-                 StockPars$SSB0,
-                 StockPars$nareas,
-                 FleetPars$retA_real,
-                 MGThorizon,
-                 FleetPars$Find,
-                 StockPars$Perr_y,
-                 StockPars$M_ageArray,
-                 StockPars$hs,
-                 StockPars$Mat_age,
-                 StockPars$Wt_age,
-                 StockPars$Fec_Age,
-                 StockPars$R0a,
-                 FleetPars$V_real,
-                 nyears,
-                 StockPars$maxage,
-                 StockPars$mov,
-                 FleetPars$Spat_targ,
-                 StockPars$SRrel,
-                 StockPars$aR,
-                 StockPars$bR,
-                 Bfrac,
-                 maxF)
-
+  if (!snowfall::sfIsRunning()) {
+    Blow <- sapply(1:nsim,getBlow,
+                   StockPars$N,
+                   StockPars$Asize,
+                   StockPars$SSBMSY,
+                   StockPars$SSBpR,
+                   FleetPars$MPA,
+                   StockPars$SSB0,
+                   StockPars$nareas,
+                   FleetPars$retA_real,
+                   MGThorizon,
+                   FleetPars$Find,
+                   StockPars$Perr_y,
+                   StockPars$M_ageArray,
+                   StockPars$hs,
+                   StockPars$Mat_age,
+                   StockPars$Wt_age,
+                   StockPars$Fec_Age,
+                   StockPars$R0a,
+                   FleetPars$V_real,
+                   nyears,
+                   StockPars$maxage,
+                   StockPars$mov,
+                   FleetPars$Spat_targ,
+                   StockPars$SRrel,
+                   StockPars$aR,
+                   StockPars$bR,
+                   Bfrac,
+                   maxF)
+  } else {
+    Blow <- sfSapply(1:nsim,getBlow,
+                   StockPars$N,
+                   StockPars$Asize,
+                   StockPars$SSBMSY,
+                   StockPars$SSBpR,
+                   FleetPars$MPA,
+                   StockPars$SSB0,
+                   StockPars$nareas,
+                   FleetPars$retA_real,
+                   MGThorizon,
+                   FleetPars$Find,
+                   StockPars$Perr_y,
+                   StockPars$M_ageArray,
+                   StockPars$hs,
+                   StockPars$Mat_age,
+                   StockPars$Wt_age,
+                   StockPars$Fec_Age,
+                   StockPars$R0a,
+                   FleetPars$V_real,
+                   nyears,
+                   StockPars$maxage,
+                   StockPars$mov,
+                   FleetPars$Spat_targ,
+                   StockPars$SRrel,
+                   StockPars$aR,
+                   StockPars$bR,
+                   Bfrac,
+                   maxF)
+  }
 
   StockPars$Blow <- Blow
   # --- Calculate Reference Yield ----
   if(!silent) message("Calculating reference yield - best fixed F strategy")
-  RefY <- sapply(1:nsim, calcRefYield, StockPars, FleetPars, proyears,
-                 Ncurr=StockPars$N[,,nyears,], nyears, proyears)
-
+  if (!snowfall::sfIsRunning()) {
+    RefY <- sapply(1:nsim, calcRefYield, StockPars, FleetPars, proyears,
+                   Ncurr=StockPars$N[,,nyears,], nyears, proyears)
+  } else {
+    RefY <- sfSapply(1:nsim, calcRefYield, StockPars, FleetPars, proyears,
+                   Ncurr=StockPars$N[,,nyears,], nyears, proyears)
+  }
+  
   # ---- Store Reference Points ----
   # arrays for unfished biomass for all years
   SSN_a <- array(NA, dim = c(nsim, n_age, nyears+proyears, nareas))
@@ -1313,7 +1346,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     Vmaxlen_P <- MPCalcs$Vmaxlen_P
     Fdisc_P <- MPCalcs$Fdisc_P
     DR_P <- MPCalcs$DR_P
-
+   
     # ---- Bio-economics ----
     RetainCatch <- apply(CB_Pret[,,y,], 1, sum) # retained catch this year
     RetainCatch[RetainCatch<=0] <- tiny
