@@ -2679,7 +2679,13 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE) {
 
   for (mp in 1:nMPs) {
     if (!silent)  message(MPs[mp])
-    if (runParallel) {
+    
+    mp_ns <- find(MPs[mp])
+    dlmmp <- grepl('DLMtool', mp_ns)
+    # don't run DLMtool MPs in parallel (slower if you do)
+    if (length(dlmmp)<1) dlmmp <- FALSE
+    
+    if (runParallel && !dlmmp) {
       temp <- try(snowfall::sfLapply(1:nsims, MPs[mp], Data = Data, reps = reps), silent=TRUE)
     } else {
       temp <- try(lapply(1:nsims, MPs[mp], Data = Data, reps = reps), silent=TRUE)

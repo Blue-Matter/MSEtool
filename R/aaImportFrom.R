@@ -17,7 +17,7 @@
 #' loess.smooth nls setNames simulate SSasympOff weighted.mean
 #' median nlm nlminb optim optimise optimize plogis pnorm predict qnorm qlnorm quantile rbeta
 #' rlnorm rmultinom rnorm runif sd window
-#' @importFrom utils  browseURL capture.output combn flush.console packageVersion txtProgressBar setTxtProgressBar
+#' @importFrom utils  browseURL capture.output combn find flush.console packageVersion txtProgressBar setTxtProgressBar
 #' ls.str lsf.str read.csv read.csv2
 #'
 NULL
