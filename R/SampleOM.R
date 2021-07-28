@@ -1118,7 +1118,7 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
       for (yr in 1:(nyears+proyears)) {
         b_ind <- rep(NA, nsim)
         for (i in 1:nsim) {
-          temp <- min(which(SLarray[i,,yr]>=0.05))
+          temp <- min(which(retL[i,,yr]>=0.05))
           if (length(temp)<1) temp <- 1
           if (is.na(temp)) temp <- 1
           b_ind[i] <- temp
@@ -1145,7 +1145,7 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
       for (yr in 1:(nyears+proyears)) {
         b_ind <- rep(NA, nsim)
         for (i in 1:nsim) {
-          temp <- min(which(SLarray[i,,yr]>=0.05))
+          temp <- min(which(retL[i,,yr]>=0.05))
           if (length(temp)<1) temp <- 1
           if (is.na(temp)) temp <- 1
           b_ind[i] <- temp
@@ -1239,14 +1239,20 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
   }
 
   # Apply general discard rate
-  if (is.null(cpars$retA)) {
-    dr <- aperm(abind::abind(rep(list(DR_y), n_age), along=3), c(1,3,2))
-    retA <- (1-dr) * retA
-  }
-  if (is.null(cpars$retL)) {
-    dr <- aperm(abind::abind(rep(list(DR_y), StockPars$nCALbins), along=3), c(1,3,2))
-    retL <- (1-dr) * retL
-  }
+  # if (is.null(cpars$retA)) {
+  #   dr <- aperm(abind::abind(rep(list(DR_y), n_age), along=3), c(1,3,2))
+  #   retA <- (1-dr) * retA
+  # }
+  # if (is.null(cpars$retL)) {
+  #   dr <- aperm(abind::abind(rep(list(DR_y), StockPars$nCALbins), along=3), c(1,3,2))
+  #   retL <- (1-dr) * retL
+  # }
+  
+  dr <- aperm(abind::abind(rep(list(DR_y), n_age), along=3), c(1,3,2))
+  retA <- (1-dr) * retA
+  
+  dr <- aperm(abind::abind(rep(list(DR_y), StockPars$nCALbins), along=3), c(1,3,2))
+  retL <- (1-dr) * retL
 
   Fdisc <- StockPars$Fdisc
   if (!all(is.finite(Fdisc))) Fdisc <- 0
