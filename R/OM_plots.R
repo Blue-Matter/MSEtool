@@ -646,7 +646,7 @@ plot.Selectivity <- function(Object, Stock=NULL, nsamp=3, nsim=100,
       for (yr in yr.vert) {
 
         # plot vulnerability & selection at length
-        plot(Pars$Stock$CAL_binsmid, Pars$Fleet$SLarray2[sim,, yr], type='l', ylim=c(0,1), lwd=plotPars$lwd,
+        plot(Pars$Stock$CAL_binsmid, Pars$Fleet$SLarray[sim,, yr], type='l', ylim=c(0,1), lwd=plotPars$lwd,
              axes=FALSE, ylab="", xlab="")
         if (sim == its[1]) {
           mtext(side=3, YrText[[yr]])
@@ -667,9 +667,9 @@ plot.Selectivity <- function(Object, Stock=NULL, nsamp=3, nsim=100,
         if (yr != yr.vert[1]) axis(side=2, labels=FALSE)
 
         polygon(x=c(Pars$Stock$CAL_binsmid, rev(Pars$Stock$CAL_binsmid)),
-                y=c(Pars$Fleet$SLarray[sim,, yr], rev(Pars$Fleet$retL[sim,, yr])), col="gray", border=FALSE)
-        lines(Pars$Stock$CAL_binsmid, Pars$Fleet$SLarray[sim,, yr], col=2, lwd=plotPars$lwd, lty=2, type='l')
-        lines(Pars$Stock$CAL_binsmid, Pars$Fleet$retL[sim,, yr], col=4, lwd=plotPars$lwd, lty=3, type='l')
+                y=c(Pars$Fleet$SLarray_real[sim,, yr], rev(Pars$Fleet$retL_real[sim,, yr])), col="gray", border=FALSE)
+        lines(Pars$Stock$CAL_binsmid, Pars$Fleet$SLarray_real[sim,, yr], col=2, lwd=plotPars$lwd, lty=2, type='l')
+        lines(Pars$Stock$CAL_binsmid, Pars$Fleet$retL_real[sim,, yr], col=4, lwd=plotPars$lwd, lty=3, type='l')
 
         if (yr == max(yr.vert) & sim == its[1]) {
           minval <- min(c(Pars$Fleet$V[sim,Pars$Stock$maxage+1, yr],  Pars$Fleet$retA[sim,Pars$Stock$maxage+1, yr]))
@@ -697,7 +697,7 @@ plot.Selectivity <- function(Object, Stock=NULL, nsamp=3, nsim=100,
       for (yr in yr.vert) {
 
         # plot vulnerability & selection at length
-        plot(0:Pars$Stock$maxage, Pars$Fleet$V2[sim,, yr], type='l', ylim=c(0,1), lwd=plotPars$lwd,
+        plot(0:Pars$Stock$maxage, Pars$Fleet$V[sim,, yr], type='l', ylim=c(0,1), lwd=plotPars$lwd,
              axes=FALSE, ylab="", xlab="")
         if (sim == its[1]) {
           mtext(side=3, YrText[[yr]])
