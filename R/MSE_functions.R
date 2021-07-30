@@ -570,9 +570,9 @@ Sub <- function(MSEobj, MPs = NULL, sims = NULL, years = NULL) {
                 TAE=MSEobj@TAE[SubIts, SubMPs,  Years, drop=FALSE],
                 BioEco=SubBioEco,
                 RefPoint=SubRefPoint,
-                CB_hist=MSEobj@CB_hist[SubIts,  MSEobj@nyears, drop=FALSE],
-                FM_hist=MSEobj@FM_hist[SubIts,  MSEobj@nyears, drop=FALSE],
-                SSB_hist=MSEobj@SSB_hist[SubIts,  MSEobj@nyears, drop=FALSE],
+                CB_hist=MSEobj@CB_hist[SubIts,  Years, drop=FALSE],
+                FM_hist=MSEobj@FM_hist[SubIts,  Years, drop=FALSE],
+                SSB_hist=MSEobj@SSB_hist[SubIts, Years, drop=FALSE],
                 Hist=MSEobj@Hist,
                 PPD=subMSElist,
                 Misc=MSEobj@Misc)
