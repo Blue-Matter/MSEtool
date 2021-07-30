@@ -641,7 +641,12 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
 
     # set M to mean M for mature age-classes in year=nyears
     ageatMaturity <- ceiling(ageMarray[,nyears] + 1 )
-    M <- apply(M_ageArray[,ageatMaturity,nyears], 1, mean)
+    if (nsim>1) {
+      M <- apply(M_ageArray[,ageatMaturity,nyears], 1, mean)  
+    } else {
+      M <- mean(M_ageArray[1,ageatMaturity,nyears])
+    }
+    
   }
 
   # ---- Mean Natural mortality by simulation and year ----
