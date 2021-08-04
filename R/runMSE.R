@@ -1493,6 +1493,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                 SLarray_P, V_P, Fdisc_P, DR_P, FM_P,
                                 FM_Pret, Z_P, CB_P, CB_Pret, Effort_pot,
                                 StockPars, FleetPars, ImpPars, control=control)
+     
       LastSpatial <- MPCalcs$Si
       LastAllocat <- MPCalcs$Ai
       LastTAE <- MPCalcs$TAE # adjustment to TAE
@@ -1741,15 +1742,15 @@ runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
   } else if (class(OM) == 'Hist') {
     if (!silent) message("Using `Hist` object to reproduce historical dynamics")
 
-    # --- Extract cpars from Hist object ----
-    cpars <- list()
-    cpars <- c(OM@SampPars$Stock, OM@SampPars$Fleet, OM@SampPars$Obs,
-               OM@SampPars$Imp, OM@OMPars, OM@OM@cpars)
-
-    # --- Populate a new OM object ----
-    newOM <- OM@OM
-    newOM@cpars <- cpars
-    OM <- newOM
+    # # --- Extract cpars from Hist object ----
+    # cpars <- list()
+    # cpars <- c(OM@SampPars$Stock, OM@SampPars$Fleet, OM@SampPars$Obs,
+    #            OM@SampPars$Imp, OM@OMPars, OM@OM@cpars)
+    # 
+    # # --- Populate a new OM object ----
+    # newOM <- OM@OM
+    # newOM@cpars <- cpars
+    # OM <- newOM
   } else {
     stop("You must specify an operating model")
   }
@@ -1758,7 +1759,12 @@ runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
   if (checkMPs & !Hist)
     MPs <- CheckMPs(MPs=MPs, silent=silent)
 
-  HistSims <- Simulate(OM, parallel, silent)
+  if (class(OM)=='OM') {
+    HistSims <- Simulate(OM, parallel, silent)  
+  } else {
+    HistSims <- OM
+  }
+  
 
   if (Hist) {
     if(!silent) message("Returning historical simulations")
