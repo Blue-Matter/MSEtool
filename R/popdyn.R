@@ -471,10 +471,14 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   } else if (length(MPRecs$LR5) != nsim) {
     stop("LR5 recommmendation is not 'nsim' long.\n Does MP return LR5 recommendation under all conditions?")
   } else {
-    LR5_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$LR5 *  SL_Imp_Error[,y],
-                                                     ncol=(length((y + nyears):(nyears+proyears))),
-                                                     nrow=nsim, byrow=FALSE) # recommendation with implementation error
-    RetentFlag <- TRUE; RetParsFlag <- TRUE
+    lr5 <- replicate(length(y:proyears), MPRecs$LR5[1,])
+    if (!prod(LR5_P[,(y + nyears):(nyears+proyears)]==lr5 *  SL_Imp_Error[,y:proyears])) {
+      # LR5 has changed 
+      LR5_P[,(y + nyears):(nyears+proyears)] <- matrix(lr5 *  SL_Imp_Error[,y:proyears],
+                                                       ncol=(length((y + nyears):(nyears+proyears))),
+                                                       nrow=nsim, byrow=FALSE) # recommendation with implementation error
+      RetentFlag <- TRUE; RetParsFlag <- TRUE
+    }
   }
   # LFR
   if (length(MPRecs$LFR) == 0) { # no  recommendation
@@ -484,10 +488,14 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   } else if (length(MPRecs$LFR) != nsim) {
     stop("LFR recommmendation is not 'nsim' long.\n Does MP return LFR recommendation under all conditions?")
   } else {
-    LFR_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$LFR *  SL_Imp_Error[,y],
-                                                     ncol=(length((y + nyears):(nyears+proyears))),
+    lrr <- replicate(length(y:proyears), MPRecs$LFR[1,])
+    if (!prod(LFR_P[,(y + nyears):(nyears+proyears)]==lrr *  SL_Imp_Error[,y:proyears])) {
+      # LFR has changed 
+      LFR_P[,(y + nyears):(nyears+proyears)] <- matrix(lrr *  SL_Imp_Error[,y],
+                                                       ncol=(length((y + nyears):(nyears+proyears))),
                                                      nrow=nsim, byrow=FALSE) # recommendation with implementation error
-    RetentFlag <- TRUE; RetParsFlag <- TRUE
+      RetentFlag <- TRUE; RetParsFlag <- TRUE
+    }
   }
   # Rmaxlen
   if (length(MPRecs$Rmaxlen) == 0) { # no  recommendation
@@ -498,10 +506,13 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   } else if (length(MPRecs$Rmaxlen) != nsim) {
     stop("Rmaxlen recommmendation is not 'nsim' long.\n Does MP return Rmaxlen recommendation under all conditions?")
   } else {
-    Rmaxlen_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$Rmaxlen,
-                                                         ncol=(length((y + nyears):(nyears+proyears))),
-                                                         nrow=nsim, byrow=FALSE) # recommendation
-    RetentFlag <- TRUE; RetParsFlag <- TRUE
+    if (!all(Rmaxlen_P[,(y + nyears):(nyears+proyears)]  ==MPRecs$Rmaxlen[1,])) {
+      Rmaxlen_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$Rmaxlen,
+                                                           ncol=(length((y + nyears):(nyears+proyears))),
+                                                           nrow=nsim, byrow=FALSE) # recommendation
+      RetentFlag <- TRUE; RetParsFlag <- TRUE  
+    }
+    
   }
 
   # HS - harvest slot
@@ -526,10 +537,16 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   } else if (length(MPRecs$L5) != nsim) {
     stop("L5 recommmendation is not 'nsim' long.\n Does MP return L5 recommendation under all conditions?")
   } else {
-    L5_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$L5 *  SL_Imp_Error[,y],
-                                                    ncol=(length((y + nyears):(nyears+proyears))),
-                                                    nrow=nsim, byrow=FALSE) # recommendation with implementation error
-    SelectFlag <- TRUE; SelectParsFlag <- TRUE
+    l5 <- replicate(length(y:proyears), MPRecs$L5[1,])
+    if (!prod(L5_P[,(y + nyears):(nyears+proyears)]==l5 *  SL_Imp_Error[,y:proyears])) {
+     #L5 has changed 
+      L5_P[,(y + nyears):(nyears+proyears)] <- matrix(l5 *  SL_Imp_Error[,y:proyears],
+                                                      ncol=(length((y + nyears):(nyears+proyears))),
+                                                      nrow=nsim, byrow=FALSE) # recommendation with implementation error
+      SelectFlag <- TRUE; SelectParsFlag <- TRUE
+    }
+    
+    
   }
   # LFS
   if (length(MPRecs$LFS) == 0) { # no  recommendation
@@ -539,10 +556,15 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   } else if (length(MPRecs$LFS) != nsim) {
     stop("LFS recommmendation is not 'nsim' long.\n Does MP return LFS recommendation under all conditions?")
   } else {
-    LFS_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$LFS *  SL_Imp_Error[,y],
-                                                     ncol=(length((y + nyears):(nyears+proyears))),
-                                                     nrow=nsim, byrow=FALSE) # recommendation with implementation error
-    SelectFlag <- TRUE; SelectParsFlag <- TRUE
+    lfs <- replicate(length(y:proyears), MPRecs$LFS[1,])
+    if (!prod(LFS_P[,(y + nyears):(nyears+proyears)]==lfs *  SL_Imp_Error[,y:proyears])) {
+     # LFS has changed 
+      LFS_P[,(y + nyears):(nyears+proyears)] <- matrix(lfs *  SL_Imp_Error[,y:proyears],
+                                                       ncol=(length((y + nyears):(nyears+proyears))),
+                                                       nrow=nsim, byrow=FALSE) # recommendation with implementation error
+      SelectFlag <- TRUE; SelectParsFlag <- TRUE
+    }
+   
   }
   # Vmaxlen
   if (length(MPRecs$Vmaxlen) == 0) { # no  recommendation
@@ -807,9 +829,12 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
   retainedCatch <- apply(CB_Pret[,,y,], 1, sum)
 
+  
   Ftot <- sapply(1:nsim, calcF, retainedCatch, V_P, retA_P, Biomass_P, fishdist,
                  Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
-                 M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed
+                 M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed  
+  
+
 
   # Effort relative to last historical with this catch
   Effort_act <- Ftot/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]*
