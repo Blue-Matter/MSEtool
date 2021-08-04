@@ -218,9 +218,10 @@ matplot(Years, t(Depletion),
         ylim=ylim, yaxs = 'i', axes=F)
 axis(side=1)
 maxL <- ceiling(max(ylim/0.5))*0.5
-axis(side=2, at=seq(0, maxL, length.out=10), las=1)
+yax <- seq(0, maxL, by=0.25)
+axis(side=2, at=yax, las=1)
 
-abline(h=seq(0.5, maxL, length.out=10), lwd=1, col="lightgray")
+abline(h=yax, lwd=1, col="lightgray")
 
 ```
 
