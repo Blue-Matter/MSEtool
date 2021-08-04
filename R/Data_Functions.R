@@ -2684,8 +2684,16 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE) {
     dlmmp <- grepl('DLMtool', mp_ns)
     # don't run DLMtool MPs in parallel (slower if you do)
     if (length(dlmmp)<1) dlmmp <- FALSE
+    msemmp <- grepl('MSEtool', mp_ns)
+    # don't run MSEtool MPs in parallel (slower if you do)
+    if (length(msemmp)<1) msemmp <- FALSE
     
-    if (runParallel && !dlmmp) {
+    # exceptions
+    if (MPs[mp] %in% c('LBSPR', 'LBSPR_MLL')) dlmmp <- FALSE
+    
+    if (dlmmp |msemmp) runParallel <- FALSE
+    
+    if (runParallel) {
       temp <- try(snowfall::sfLapply(1:nsims, MPs[mp], Data = Data, reps = reps), silent=TRUE)
     } else {
       temp <- try(lapply(1:nsims, MPs[mp], Data = Data, reps = reps), silent=TRUE)
