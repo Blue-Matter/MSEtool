@@ -343,7 +343,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
       })
     })
   } else {
-    MSYrefsYr <- sfLapply(1:nsim, function(x) {
+    MSYrefsYr <- snowfall::sfLapply(1:nsim, function(x) {
       sapply(1:(nyears+proyears), function(y) {
         optMSY_eq(x, 
                   M_ageArray=StockPars$M_ageArray, 
@@ -661,7 +661,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
       })
     })
   } else {
-    per_recruit_F <- sfLapply(1:nsim, function(x) {
+    per_recruit_F <- snowfall::sfLapply(1:nsim, function(x) {
       lapply(1:(nyears+proyears), function(y) {
         per_recruit_F_calc(x, 
                            M_ageArray=StockPars$M_ageArray,

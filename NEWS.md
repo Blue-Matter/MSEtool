@@ -1,6 +1,6 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
-## MSEtool 3.1.1.9999 - Dev Version 
+## MSEtool 3.2.0
 
 ### Fixes 
 - fix issue in `SSMOM2OM` where selectivity was NA when fishing mortality was 0

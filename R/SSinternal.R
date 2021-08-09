@@ -198,7 +198,7 @@ SRopt <- function(nsim, SSB, rec, SSBpR, plot = FALSE, type = c("BH", "Ricker"))
 SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = TRUE, partition = 2,
                      age_M = NULL, mean_h = TRUE, seed = 1) {
 
-  Morph <- Morph2 <- Seas <- BirthSeas <- Settlement <- NULL # checks
+  Morph <- Morph2 <- Seas <- BirthSeas <- Settlement <- Age_Beg <- Mat_F_wtatage <- NULL # checks
 
   allyears <- nyears + proyears
 
