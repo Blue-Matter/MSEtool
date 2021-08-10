@@ -627,13 +627,24 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     message("Calculating historical stock and fishing dynamics")
 
   # ---- Run Historical Simulations ----
-  histYrs <- sapply(1:nsim, HistMICE, StockPars=StockPars,
-                    FleetPars=FleetPars,np=np,nf=nf,nareas=nareas,
-                    maxage=maxage,nyears=nyears,N=N,VF=VF,FretA=FretA,
-                    maxF=MOM@maxF,MPA=MPA,Rel=Rel,SexPars=SexPars,qs=qs,
-                    qfrac=qfrac,
-                    plusgroup=plusgroup)
-
+  if (snowfall::sfIsRunning()) {
+    histYrs <- snowfall::sfSapply(1:nsim, HistMICE, StockPars=StockPars,
+                                  FleetPars=FleetPars,np=np,nf=nf,nareas=nareas,
+                                  maxage=maxage,nyears=nyears,N=N,VF=VF,FretA=FretA,
+                                  maxF=MOM@maxF,MPA=MPA,Rel=Rel,SexPars=SexPars,qs=qs,
+                                  qfrac=qfrac,
+                                  plusgroup=plusgroup)
+    
+  } else {
+    histYrs <- sapply(1:nsim, HistMICE, StockPars=StockPars,
+                      FleetPars=FleetPars,np=np,nf=nf,nareas=nareas,
+                      maxage=maxage,nyears=nyears,N=N,VF=VF,FretA=FretA,
+                      maxF=MOM@maxF,MPA=MPA,Rel=Rel,SexPars=SexPars,qs=qs,
+                      qfrac=qfrac,
+                      plusgroup=plusgroup)
+    
+  }
+  
   N <- aperm(array(as.numeric(unlist(histYrs[1,], use.names=FALSE)),
                    dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
 
