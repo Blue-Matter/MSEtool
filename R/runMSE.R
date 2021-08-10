@@ -1657,8 +1657,6 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     # Hist@SampPars <- list()
   }
 
-  Misc$TAE <- TAE_out
-
   MSEout <- new("MSE",
                 Name = OM@Name,
                 nyears=nyears, proyears=proyears, nMPs=nMP,
