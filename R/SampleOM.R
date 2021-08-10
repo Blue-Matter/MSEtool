@@ -547,9 +547,9 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
       for (yr in 1:(nyears+proyears)) { # loop over years
         # check that Mat_age < 0.5 values exist
         if (nsim == 1) {
-          oksims <- which(min(Mat_age[1,,yr]) < 0.5)
+          oksims <- which(min(Mat_age[1,,yr]) < 0.5 & max(Mat_age[1,,yr]) > 0)
         } else {
-          oksims <- which(apply(Mat_age[,,yr], 1, min) < 0.5)
+          oksims <- which(apply(Mat_age[,,yr], 1, min) < 0.5 & apply(Mat_age[,,yr], 1, max) > 0)
         }
         if (length(oksims)<1) {
           ageMarray[,yr] <- 1 # set to 1 if < 1
@@ -563,10 +563,22 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
             LinInterp(Mat_age[x,,yr], y=Len_age[x, , nyears], 0.5)))
           L50array[noksims,yr] <- 1 # set to 1
         }
-        age95array[,yr] <- unlist(sapply(1:nsim, function(x)
-          LinInterp(Mat_age[x,, yr], y=1:n_age, 0.95)))
-        L95array[,yr]<- unlist(sapply(1:nsim, function(x)
-          LinInterp(Mat_age[x,,yr], y=Len_age[x, , nyears], 0.95)))
+        
+        if (nsim == 1) {
+          oksims <- which(max(Mat_age[1,,yr]) >0.95)
+        } else {
+          oksims <- which(apply(Mat_age[,,yr], 1, max) > 0.95)
+        }
+        
+        if (length(oksims)<1) {
+          age95array[,yr] <- 1.5 # set to 1.5 if < 1
+        } else {
+          age95array[,yr] <- unlist(sapply(1:nsim, function(x)
+            LinInterp(Mat_age[x,, yr], y=1:n_age, 0.95)))
+          L95array[,yr]<- unlist(sapply(1:nsim, function(x)
+            LinInterp(Mat_age[x,,yr], y=Len_age[x, , nyears], 0.95)))
+        }
+      
       } # end loop over years
 
       L50array[!is.finite(L50array)] <- 0.8*Linfarray[!is.finite(L50array)]
