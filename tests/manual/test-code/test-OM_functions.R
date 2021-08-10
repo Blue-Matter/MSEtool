@@ -20,11 +20,11 @@ for (type in types) {
     for (nm in nms) {
       chk <- is.na(slot(OM2, nm))
       if (!'logical' %in% class(slot(OM2, nm))) {
-        slot(OM2, nm)[chk] <- rep(0, length(chk))
+        slot(OM2, nm)[chk] <- rep(0, sum(chk))
       }
       chk <- is.na(slot(newobj, nm))
       if (!'logical' %in% class(slot(OM2, nm))) {
-        slot(newobj, nm)[chk] <- rep(0, length(chk))
+        slot(newobj, nm)[chk] <- rep(0, sum(chk))
       }
       testthat::expect_equal(slot(newobj, nm), slot(OM2, nm))
     }
