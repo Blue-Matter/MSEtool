@@ -382,7 +382,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
   fleet_output <- lapply(seq_len(replist$nfleets)[replist$IsFishFleet], SS_fleet, i = i, replist = replist,
                          Stock = Stock, mainyrs = mainyrs, nyears = nyears, proyears = proyears, nsim = nsim,
                          single_sex = single_sex, partition = partition, cpars_bio = cpars_bio, age_M = age_M)
-
+  
   Fleet <- lapply(fleet_output, getElement, "Fleet") %>% structure(names = replist$FleetNames[replist$IsFishFleet])
   cpars <- lapply(fleet_output, function(x) c(cpars_bio, x$cpars_fleet)) %>% structure(names = replist$FleetNames[replist$IsFishFleet])
 
@@ -582,18 +582,26 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   cpars_fleet$Data@steep <- unique(Stock@h)
   cpars_fleet$Data@sigmaR <- unique(Stock@Perr)
 
-  cpars_fleet$Data@L50 <- LinInterp(cpars_bio$Mat_age[1,,nyears], cpars_bio$Len_age[1,,nyears], 0.5 + 1e-4)
-  if (max(cpars_bio$Mat_age[1,,nyears])>=0.95) {
-    cpars_fleet$Data@L95 <- LinInterp(cpars_bio$Mat_age[1,,nyears], cpars_bio$Len_age[1,,nyears], 0.95)  
-  } else {
-    cpars_fleet$Data@L95 <- max(cpars_bio$Mat_age[1,,nyears])
+  if (max(cpars_bio$Mat_age[1,,nyears])>0.5) {
+    cpars_fleet$Data@L50 <- LinInterp(cpars_bio$Mat_age[1,,nyears], cpars_bio$Len_age[1,,nyears], 0.5 + 1e-4)
+    if (max(cpars_bio$Mat_age[1,,nyears])>=0.95) {
+      cpars_fleet$Data@L95 <- LinInterp(cpars_bio$Mat_age[1,,nyears], cpars_bio$Len_age[1,,nyears], 0.95)  
+    } else {
+      cpars_fleet$Data@L95 <- max(cpars_bio$Mat_age[1,,nyears])
+    }  
   }
   
   cpars_fleet$Data@LenCV <- GP$CVmax
 
   vrel <- V[,nyears]/max(V[,nyears], na.rm=T)
-  cpars_fleet$Data@LFC <- LinInterp(vrel, cpars_bio$Len_age[1,,nyears], 0.05, ascending=TRUE)
-  cpars_fleet$Data@LFS <- LinInterp(vrel, cpars_bio$Len_age[1,,nyears], 0.999, ascending=TRUE)
+  
+  if (min(vrel[1:which.max(vrel)])<0.05) {
+    cpars_fleet$Data@LFC <- LinInterp(vrel, cpars_bio$Len_age[1,,nyears], 0.05, ascending=TRUE)  
+  } 
+  if (max(vrel)>0.999) {
+    cpars_fleet$Data@LFS <- LinInterp(vrel, cpars_bio$Len_age[1,,nyears], 0.999, ascending=TRUE)
+  } 
+  
   cpars_fleet$Data@Vmaxlen <- V[n_age, nyears]
 
   cpars_fleet$Data@Dep <- unique(Stock@D)
