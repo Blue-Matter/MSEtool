@@ -222,7 +222,7 @@ TradePlot <- function(MSEobj, ..., Lims=c(0.2, 0.2, 0.8, 0.8),
     if (Col == "Class") {
       plots[[pp]] <-  plots[[pp]] +  ggplot2::scale_colour_manual(values=cols)
     } else if (Col == "MP") {
-      plots[[pp]] <-  plots[[pp]] +  ggplot2::scale_colour_manual(values=cols) +  ggplot2::guides(color=FALSE)
+      plots[[pp]] <-  plots[[pp]] +  ggplot2::scale_colour_manual(values=cols) +  ggplot2::guides(color='none')
     }
 
     if (!is.null(Title))
