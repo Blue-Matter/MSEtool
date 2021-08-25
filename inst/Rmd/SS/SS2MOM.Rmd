@@ -18,7 +18,7 @@ h1 { /* Header 1 */
 
 # {.tabset}
 
-## Number-at-Age 
+## Total Numbers
 
 ```{r, fig.cap = "Comparision of total numbers from the multi-stock/fleet operating model (solid lines) and Stock Synthesis (dashed lines)."}
 compareNmulti(replist, multiHist)
