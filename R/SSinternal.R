@@ -719,12 +719,18 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   return(list(Fleet = Fleet, cpars_fleet = cpars_fleet))
 }
 
-
+#' Perr_hist A matrix with nsim years and nyear rows
+#' proyears Integer, number of projection years
+#' procsd Standard deviation, can be a vector of length 1 or nsim
+#' AC Autocorrelation, can be a vector of length 1 or nsim
+#' seed Integer for random number generator
 sample_recruitment <- function(Perr_hist, proyears, procsd, AC, seed) {
-  set.seed(seed)
+  if(!missing(seed)) set.seed(seed)
   nsim <- nrow(Perr_hist)
+  if(length(procsd) == 1) procsd <- rep(procsd, nsim)
+  if(length(AC) == 1) AC <- rep(AC, nsim)
   procmu <- -0.5 * procsd^2 * (1 - AC/sqrt(1 - AC^2)) # adjusted log normal mean with AC
-  Perr_delta <- rnorm(proyears * nsim, rep(procmu, each = nsim), rep(procsd, each = nsim)) %>%
+  Perr_delta <- rnorm(nsim * proyears, procmu, procsd) %>%
     matrix(nrow = nsim, ncol = proyears) # Sample recruitment for projection
   Perr_proj <- matrix(NA_real_, nsim, proyears)
 
