@@ -16,9 +16,9 @@ h1 { /* Header 1 */
 
 # {.tabset}
 
-## Spawning biomass
+## Total numbers
 
-```{r, fig.cap = "Spawning biomass from the operating model (black lines and dots) and Stock Synthesis (red lines)."}
+```{r, fig.cap = "Total abundance from the operating model (black lines and dots) and Stock Synthesis (red lines)."}
 year_lab <- "Year"
 mainyrs <- replist$startyr:replist$endyr
 if(Hist@OM@nyears == length(mainyrs)) {
@@ -31,6 +31,24 @@ if(Hist@OM@nyears == length(mainyrs)) {
   OM_years <- dplyr::filter(year_frac, seas == 1) %>% getElement("mainyrs")
 }
 
+
+N_SS <- replist$natage %>% filter(Yr %in% OM_years, `Beg/Mid`=="B")
+cols <- which(colnames(N_SS)=='0'):ncol(replist$natage)
+N_SS <- N_SS %>% 
+    tidyr::pivot_longer(cols=all_of(cols)) %>%
+    group_by(Yr) %>%
+    summarize(N=sum(value), .groups = 'keep')
+N_OM <- apply(Hist@AtAge$Number, c(1, 3), sum)
+ylim_N <- c(0, 1.1 * max(c(N_SS$N, N_OM)))
+matplot(OM_years, t(N_OM), xlab = year_lab, ylab = "Numbers", ylim = ylim_N, pch = 1, col = "black", typ = "o")
+lines(OM_years, N_SS$N, col = "red", lwd = 3)
+abline(h = 0, col = "grey")
+
+```
+
+## Spawning biomass
+
+```{r, fig.cap = "Spawning biomass from the operating model (black lines and dots) and Stock Synthesis (red lines)."}
 SSB_SS <- replist$timeseries %>% filter(Yr %in% OM_years) %>% group_by(Yr, Area) %>% 
   summarise(SpawnBio = mean(SpawnBio, na.rm = TRUE)) %>% group_by(Yr) %>% 
   summarise(SpawnBio = sum(SpawnBio, na.rm = TRUE)) %>% getElement("SpawnBio")
