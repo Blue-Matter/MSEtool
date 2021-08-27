@@ -1249,7 +1249,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAY1]  # Calculate biomass
     VBiomass_P[SAYR] <- Biomass_P[SAYR] * V_P[SAYt]  # Calculate vulnerable biomass
     SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAY1]  # Calculate spawning stock numbers
-    SSB_P[SAYR] <- SSN_P[SAYR] * StockPars$Wt_age[SAY1]
+    SSB_P[SAYR] <- N_P[SAYR] * StockPars$Fec_Age[SAY1]
 
     # recruitment in first projection year
     SSBcurr <- apply(SSB_P[,,1,],c(1,3), sum)
@@ -1271,7 +1271,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAY1]  # Calculate biomass
     VBiomass_P[SAYR] <- Biomass_P[SAYR] * V_P[SAYt]  # Calculate vulnerable biomass
     SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAY1]  # Calculate spawning stock numbers
-    SSB_P[SAYR] <- SSN_P[SAYR] * StockPars$Wt_age[SAY1]
+    SSB_P[SAYR] <- N_P[SAYR] * StockPars$Fec_Age[SAY1]
 
     StockPars$N_P <- N_P
     # -- Apply MP in initial projection year ----

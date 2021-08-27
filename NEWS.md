@@ -1,5 +1,10 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
+## MSEtool 3.2.9999 - Development Version 
+
+### Fixes
+- fix minor bug in calculating SSB in first year when using OMs imported from SS3
+
 ## MSEtool 3.2.0
 
 ### Fixes 
