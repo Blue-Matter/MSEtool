@@ -575,6 +575,7 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, nyears, maxF, plus
   # Set up projection arrays
   M_ageArrayp <- array(StockPars$M_ageArray[,,1], dim=c(dim(StockPars$M_ageArray)[1:2], Nyrs))
   Wt_agep <- array(StockPars$Wt_age[,,1], dim=c(dim(StockPars$Wt_age)[1:2], Nyrs))
+  Fec_Agep <- array(StockPars$Fec_Age[,,1], dim=c(dim(StockPars$Fec_Age)[1:2], Nyrs))
   Mat_agep <- array(StockPars$Mat_age[,,1], dim=c(dim(StockPars$Mat_age)[1:2], Nyrs))
   Perr_yp <- array(1, dim=c(dim(StockPars$Perr_y)[1], Nyrs+StockPars$maxage)) # no process error
 
@@ -593,7 +594,7 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, nyears, maxF, plus
   runProj <- lapply(1:nsim, projectEq, StockPars$Asize, nareas=nareas,
                     maxage=StockPars$maxage, N=N, pyears=Nyrs,
                     M_ageArray=M_ageArrayp, Mat_age=Mat_agep,
-                    Wt_age=Wt_agep, V=Vp, retA=retAp,
+                    Wt_age=Wt_agep, Fec_Age = Fec_Agep, V=Vp, retA=retAp,
                     Perr=Perr_yp, mov=movp, SRrel=StockPars$SRrel,
                     Find=FleetPars$Find, Spat_targ=FleetPars$Spat_targ,
                     hs=StockPars$hs,
