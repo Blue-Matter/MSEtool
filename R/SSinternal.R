@@ -719,11 +719,11 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   return(list(Fleet = Fleet, cpars_fleet = cpars_fleet))
 }
 
-#' Perr_hist A matrix with nsim years and nyear rows
-#' proyears Integer, number of projection years
-#' procsd Standard deviation, can be a vector of length 1 or nsim
-#' AC Autocorrelation, can be a vector of length 1 or nsim
-#' seed Integer for random number generator
+# #' Perr_hist A matrix with nsim years and nyear rows
+# #' proyears Integer, number of projection years
+# #' procsd Standard deviation, can be a vector of length 1 or nsim
+# #' AC Autocorrelation, can be a vector of length 1 or nsim
+# #' seed Integer for random number generator
 sample_recruitment <- function(Perr_hist, proyears, procsd, AC, seed) {
   if(!missing(seed)) set.seed(seed)
   nsim <- nrow(Perr_hist)
