@@ -142,7 +142,7 @@ staying in the area in each time step.</p>
   figure <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span>
 
-<span class='fu'>plot_mov</span><span class='op'>(</span><span class='va'>mov</span>, age <span class='op'>=</span> <span class='fl'>1</span>, type <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"matrix"</span>, <span class='st'>"all"</span><span class='op'>)</span><span class='op'>)</span></pre>
+<span class='fu'>plot_mov</span><span class='op'>(</span><span class='va'>mov</span>, age <span class='op'>=</span> <span class='fl'>1</span>, type <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"matrix"</span>, <span class='st'>"all"</span><span class='op'>)</span>, year <span class='op'>=</span> <span class='fl'>1</span>, qval <span class='op'>=</span> <span class='fl'>0.9</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -182,8 +182,9 @@ across <code>OM@nsim</code> simulations.)</p></td>
     </tr>
     <tr>
       <th>mov</th>
-      <td><p>A four-dimensional array of dimension <code><a href='https://rdrr.io/r/base/c.html'>c(nsim, maxage, nareas, nareas)</a></code>
-specifying movement in the operating model.</p></td>
+      <td><p>A four-dimensional array of dimension <code><a href='https://rdrr.io/r/base/c.html'>c(nsim, maxage, nareas, nareas)</a></code> or a five-dimensional
+array of dimension <code><a href='https://rdrr.io/r/base/c.html'>c(nsim, maxage, nareas, nareas, nyears + proyears)</a></code> specifying movement
+in the operating model.</p></td>
     </tr>
     <tr>
       <th>age</th>
@@ -193,6 +194,15 @@ specifying movement in the operating model.</p></td>
       <th>type</th>
       <td><p>Whether to plot a movement matrix for a single age (<code>"matrix"</code>) or the
 full movement versus age figure (<code>"all"</code>)</p></td>
+    </tr>
+    <tr>
+      <th>year</th>
+      <td><p>If <code>mov</code> is a 5-dimensional array, the year (from 1 to nyears + proyears) for which
+to plot movement.</p></td>
+    </tr>
+    <tr>
+      <th>qval</th>
+      <td><p>The quantile to plot the range of values among simulations.</p></td>
     </tr>
     </table>
 
@@ -221,6 +231,7 @@ independent of age.</p>
 <span class='va'>movOM_5areas</span><span class='op'>@</span><span class='va'>cpars</span><span class='op'>$</span><span class='va'>mov</span><span class='op'>[</span><span class='fl'>1</span>, <span class='fl'>1</span>, , <span class='op'>]</span> <span class='co'># sim 1, age 1, movement from areas in column i to areas in row j</span>
 <span class='fu'>plot_mov</span><span class='op'>(</span><span class='va'>movOM_5areas</span><span class='op'>@</span><span class='va'>cpars</span><span class='op'>$</span><span class='va'>mov</span><span class='op'>)</span>
 <span class='fu'>plot_mov</span><span class='op'>(</span><span class='va'>movOM_5areas</span><span class='op'>@</span><span class='va'>cpars</span><span class='op'>$</span><span class='va'>mov</span>, type <span class='op'>=</span> <span class='st'>"all"</span><span class='op'>)</span>
+
 <span class='op'>}</span>
 </div></pre>
   </div>
