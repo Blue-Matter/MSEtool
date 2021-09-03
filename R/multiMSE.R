@@ -775,6 +775,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                           StockPars[[p]]$R0,
                           StockPars[[p]]$SRrel,
                           StockPars[[p]]$hs,
+                          StockPars[[p]]$SSBpR,
                           yr.ind=y,
                           plusgroup=plusgroup[p])
 
@@ -1886,6 +1887,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                               R0=StockPars[[p]]$R0,
                               SRrel=StockPars[[p]]$SRrel,
                               hs=StockPars[[p]]$hs,
+                              SSBpR=StockPars[[p]]$SSBpR,
                               yr.ind=y1,
                               plusgroup=StockPars[[p]]$plusgroup)
           MSY_y[,p,mm,y1] <- MSYrefsYr[1,]

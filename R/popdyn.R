@@ -135,6 +135,7 @@ split.along.dim <- function(a, n) {
 #' @param R0 Vector of R0s
 #' @param SRrel SRR type
 #' @param hs Vector of steepness
+#' @param SSBpR Vector of unfished spawners per recruit
 #' @param yr.ind Year index used in calculations
 #' @param plusgroup Integer. Default = 0 = no plus-group. Use 1 to include a plus-group
 #' @return Results from `MSYCalcs`
@@ -142,7 +143,7 @@ split.along.dim <- function(a, n) {
 #'
 #' @keywords internal
 optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxage, R0, SRrel, hs,
-                      yr.ind=1, plusgroup=0) {
+                      SSBpR, yr.ind=1, plusgroup=0) {
   if (length(yr.ind)==1) {
     M_at_Age <- M_ageArray[x,,yr.ind]
     Wt_at_Age <- Wt_age[x,, yr.ind]
@@ -160,12 +161,14 @@ optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxage, R0, SR
   boundsF <- c(1E-4, 3)
 
   doopt <- optimise(MSYCalcs, log(boundsF), M_at_Age, Wt_at_Age, Mat_at_Age,
-                    Fec_at_Age, V_at_Age, maxage, R0[x], SRrel[x], hs[x], opt=1,
-                     plusgroup=plusgroup)
+                    Fec_at_Age, V_at_Age, maxage, R0[x], SRrel[x], hs[x], SSBpR[x, 1], opt=1,
+                    plusgroup=plusgroup)
 
   MSYs <- MSYCalcs(doopt$minimum, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age,
-                   V_at_Age, maxage, R0[x], SRrel[x], hs[x], opt=2,
+                   V_at_Age, maxage, R0[x], SRrel[x], hs[x], SSBpR[x, 1], opt=2,
                    plusgroup=plusgroup)
+  
+  if(!doopt$objective) MSYs[] <- 0 # Assume stock crashes regardless of F
 
   return(MSYs)
 }
@@ -173,7 +176,7 @@ optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxage, R0, SR
 
 Ref_int <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup) {
   out <- MSYCalcs(logF, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
-                  V_at_Age = V_at_Age, maxage = maxage, R0x = 1, SRrelx = 3, hx = 1, opt = 2, plusgroup = plusgroup)
+                  V_at_Age = V_at_Age, maxage = maxage, opt = 2, plusgroup = plusgroup)
   out[c(1,4)]
 }
 
@@ -194,7 +197,7 @@ per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxag
     V_at_Age <- apply(V[x,, yr.ind], 1, mean)
   }
 
-  boundsF <- c(1E-3, 2)
+  boundsF <- c(1E-3, 3)
 
   F_search <- exp(seq(log(min(boundsF)), log(max(boundsF)), length.out = 50))
 
@@ -221,9 +224,14 @@ per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxag
   } else if(StockPars$SRrel[x] == 2) {
     CR <- (5 * StockPars$hs[x])^1.25
   }
-  SPRcrash <- CR^-1
-  
-  Fcrash <- LinInterp_cpp(SPR_search, F_search, xlev = SPRcrash)
+  alpha <- CR/StockPars$SSBpR[x, 1]
+  if(min(RPS) >= alpha) { # Unfished RPS is steeper than alpha
+    SPRcrash <- min(1, RPS[1]/alpha) # Should be 1
+    Fcrash <- 0 # Line 233 should return 0 anyway
+  } else {
+    SPRcrash <- LinInterp_cpp(RPS, SPR_search, xlev = alpha)
+    Fcrash <- LinInterp_cpp(RPS, F_search, xlev = alpha)
+  }
 
   SSB <- apply(StockPars$SSB[x,,,], 2, sum)
   R <- apply(StockPars$N[x, 1, , ], 1, sum)
@@ -1061,7 +1069,7 @@ CalcSPReq <- function(FM, StockPars, n_age, nareas, nyears, proyears, nsim, Hist
     NPR_F[, n_age, , ] <- NPR_F[, n_age, , ]/(1 - exp(-Z[, n_age, , ]))
   }
   SPReq <- apply(NPR_F * Fec_age, c(1, 3), sum)/apply(NPR_M * Fec_age, c(1, 3), sum)
-  return(SPReq = SPReq)
+  return(SPReq)
 }
 
 CalcSPRdyn <- function(FM, StockPars, n_age, nareas, nyears, proyears, nsim, Hist = FALSE) {

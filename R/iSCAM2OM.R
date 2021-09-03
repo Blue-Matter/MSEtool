@@ -229,7 +229,7 @@ iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=FALSE, Name="iSCAM model
                  Wt_at_Age = c(rep(0, sage), wt), Mat_at_Age = c(rep(0, sage), replist$mpd$ma), 
                  Fec_at_Age = c(rep(0, sage), fec), V_at_Age = rep(0, n_age), 
                  maxage = n_age - 1, R0x = 1, 
-                 SRrelx = replist$ctl$misc[, 1]["rectype"], hx = h[x], 
+                 SRrelx = 3, hx = h[x],
                  opt = 0, plusgroup = 1)["SB"] %>% as.numeric()
       }, numeric(1))
       
@@ -240,7 +240,7 @@ iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=FALSE, Name="iSCAM model
                       Wt_at_Age = c(rep(0, sage), wt), Mat_at_Age = c(rep(0, sage), replist$mpd$ma), 
                       Fec_at_Age = c(rep(0, sage), fec), V_at_Age = rep(0, n_age), 
                       maxage = n_age - 1, R0x = 1, 
-                      SRrelx = replist$ctl$misc[, 1]["rectype"], hx = h, 
+                      SRrelx = 3, hx = h, 
                       opt = 0, plusgroup = 1)["SB"] %>% as.numeric()
       R0 <- replist$mpd$ro * exp(sum(Mbar[1:sage]))
     }

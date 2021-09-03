@@ -138,7 +138,6 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   FM <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # fishing mortality rate array
   FMret <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # fishing mortality rate array for retained fish
   Z <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # total mortality rate array
-  SPR <- array(NA, dim = c(nsim, n_age, nyears)) # store the Spawning Potential Ratio
   Agearray <- array(rep(0:StockPars$maxage, each = nsim), dim = c(nsim, n_age))  # Age array
 
   #  ---- Pre Equilibrium calcs ----
@@ -311,6 +310,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   SSBMSY_y <- MSY_y # store SSBMSY for each sim, and year
   BMSY_y <- MSY_y # store BMSY for each sim, and year
   VBMSY_y <- MSY_y # store VBMSY for each sim, and year
+  R0_y <- MSY_y # store R0 for each sim, and year
+  h_y <- MSY_y # store h for each sim, and year
   F01_YPR_y <- MSY_y # store F01 for each sim, and year
   Fmax_YPR_y <- MSY_y # store Fmax for each sim, and year
   Fcrash_y <- MSY_y # store Fcrash for each sim, and year
@@ -338,6 +339,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                   R0=StockPars$R0,
                   SRrel=StockPars$SRrel, 
                   hs=StockPars$hs, 
+                  SSBpR=StockPars$SSBpR,
                   yr.ind=y, 
                   plusgroup=StockPars$plusgroup)
       })
@@ -355,6 +357,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                   R0=StockPars$R0,
                   SRrel=StockPars$SRrel, 
                   hs=StockPars$hs, 
+                  SSBpR=StockPars$SSBpR,
                   yr.ind=y, 
                   plusgroup=StockPars$plusgroup)
       })
@@ -365,6 +368,9 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   SSBMSY_y[] <- sapply(MSYrefsYr, function(x) x["SB", ]) %>% t()
   BMSY_y[] <- sapply(MSYrefsYr, function(x) x["B", ]) %>% t()
   VBMSY_y[] <- sapply(MSYrefsYr, function(x) x["VB", ]) %>% t()
+  R0_y[] <- sapply(MSYrefsYr, function(x) x["R0", ]) %>% t()
+  h_y[] <- sapply(MSYrefsYr, function(x) x["h", ]) %>% t()
+  
 
   # --- MSY reference points ----
   MSYRefPoints <- sapply(1:nsim, CalcMSYRefs, MSY_y=MSY_y, FMSY_y=FMSY_y,
@@ -804,6 +810,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
       B0=B0_a,
       SSB0=SSB0_a,
       VB0=VB0_a,
+      R0=R0_y,
+      h=h_y,
       MSY=MSY_y,
       FMSY=FMSY_y,
       SSBMSY=SSBMSY_y,
@@ -1376,7 +1384,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                             StockPars$M_ageArray, StockPars$Wt_age,
                             StockPars$Mat_age,
                             Fec_age=StockPars$Fec_Age,
-                            V_P, StockPars$maxage,StockPars$R0, StockPars$SRrel,
+                            V_P, StockPars$maxage,StockPars$R0, StockPars$SRrel, StockPars$SSBpR,
                             StockPars$hs, yr.ind=y1, plusgroup=StockPars$plusgroup)
         MSY_y[,mm,y1] <- MSYrefsYr[1, ]
         FMSY_y[,mm,y1] <- MSYrefsYr[2,]
