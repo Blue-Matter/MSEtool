@@ -118,7 +118,6 @@ NumericMatrix Ref_int_cpp(NumericVector F_search,
               NumericVector Mat_at_Age,
               NumericVector Fec_at_Age,
               NumericVector V_at_Age,
-              int SRrelx,
               int maxage,
               int plusgroup=1) {
 
@@ -128,7 +127,7 @@ NumericMatrix Ref_int_cpp(NumericVector F_search,
   for (int i=0; i<ncol; i++) {
     double logF = log(F_search[i]);
     NumericVector msys = MSYCalcs(logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age,
-                                      V_at_Age, maxage, 1, SRrelx, 1,2,plusgroup);
+                                      V_at_Age, maxage, 1, 3, 1,2,plusgroup);
     out(0,i) = msys[0];
     out(1,i) = msys[3];
     out(2,i) = msys[8]/msys[2];

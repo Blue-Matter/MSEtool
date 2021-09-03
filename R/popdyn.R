@@ -202,7 +202,6 @@ per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxag
                             Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
                             Fec_at_Age=Fec_at_Age,
                             V_at_Age = V_at_Age,
-                            StockPars$SRrel[x],
                             maxage = maxage,
                             plusgroup = plusgroup)
 
