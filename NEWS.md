@@ -4,6 +4,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 ### Fixes
 - fix minor bug in calculating SSB in first year when using OMs imported from SS3
+- fix minor bug when passing movement matrix in with cpars
 
 ## MSEtool 3.2.0
 
