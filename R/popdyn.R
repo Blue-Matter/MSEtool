@@ -829,12 +829,9 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
   retainedCatch <- apply(CB_Pret[,,y,], 1, sum)
 
-  
   Ftot <- sapply(1:nsim, calcF, retainedCatch, V_P, retA_P, Biomass_P, fishdist,
                  Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
                  M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed  
-  
-
 
   # Effort relative to last historical with this catch
   Effort_act <- Ftot/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]*
@@ -877,8 +874,6 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
 }
 
 
-
-
 calcF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, Asize, maxage, nareas,
                   M_ageArray, nyears, y, control) {
   ct <- TACusedE[x]
@@ -907,9 +902,12 @@ calcF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, Asize, maxage, 
       }
     }
     pct <- sum(predC)
+    
     Omat <- (1-exp(-Zmat)) * Biomass_P[x,,y,]
     # derivative of catch wrt ft
     dct <- sum(Omat/Zmat - ((Fmat * Omat)/Zmat^2) + Fmat/Zmat * exp(-Zmat) * Biomass_P[x,,y,])
+    if (dct<0) break
+    
     ft <-  ft - (pct - ct)/(0.5*dct)
     if (abs(pct - ct)/ct<1E-4) break
   }
@@ -1018,14 +1016,14 @@ runInMP <- function(Data, MPs = NA, reps = 100) {
 }
 
 
-projectEq <- function(x, Asize, nareas, maxage, N, pyears, M_ageArray, Mat_age, Wt_age,
+projectEq <- function(x, Asize, nareas, maxage, N, pyears, M_ageArray, Mat_age, Wt_age, FecAge,
                       V, retA, Perr, mov, SRrel, Find, Spat_targ, hs, R0a, SSBpR, aR, bR,
                       SSB0, MPA, maxF, Nyrs, plusgroup, Pinitdist) {
 
   simpop <- popdynCPP(nareas, maxage, Ncurr=N[x,,1,],
                       pyears, M_age=M_ageArray[x,,], Asize_c=Asize[x,],
                       MatAge=Mat_age[x,,],
-                      WtAge=Wt_age[x,,], Vuln=V[x,,], Retc=retA[x,,], Prec=Perr[x,],
+                      WtAge=Wt_age[x,,], FecAge=FecAge[x,,], Vuln=V[x,,], Retc=retA[x,,], Prec=Perr[x,],
                       movc=split.along.dim(mov[x,,,,],4), SRrelc=SRrel[x],
                       Effind=Find[x,],  Spat_targc=Spat_targ[x], hc=hs[x], R0c=R0a[x,],
                       SSBpRc=SSBpR[x,], aRc=aR[x,], bRc=bR[x,], Qc=0, Fapic=0,
