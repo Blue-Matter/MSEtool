@@ -28,8 +28,8 @@ MSYCalcs <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age
     .Call('_MSEtool_MSYCalcs', PACKAGE = 'MSEtool', logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, maxage, R0x, SRrelx, hx, opt, plusgroup)
 }
 
-Ref_int_cpp <- function(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, SRrelx, maxage, plusgroup = 1L) {
-    .Call('_MSEtool_Ref_int_cpp', PACKAGE = 'MSEtool', F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, SRrelx, maxage, plusgroup)
+Ref_int_cpp <- function(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, maxage, plusgroup = 1L) {
+    .Call('_MSEtool_Ref_int_cpp', PACKAGE = 'MSEtool', F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, maxage, plusgroup)
 }
 
 calcVatAge <- function(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid) {

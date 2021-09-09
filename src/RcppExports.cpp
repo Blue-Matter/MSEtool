@@ -58,8 +58,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // Ref_int_cpp
-NumericMatrix Ref_int_cpp(NumericVector F_search, NumericVector M_at_Age, NumericVector Wt_at_Age, NumericVector Mat_at_Age, NumericVector Fec_at_Age, NumericVector V_at_Age, int SRrelx, int maxage, int plusgroup);
-RcppExport SEXP _MSEtool_Ref_int_cpp(SEXP F_searchSEXP, SEXP M_at_AgeSEXP, SEXP Wt_at_AgeSEXP, SEXP Mat_at_AgeSEXP, SEXP Fec_at_AgeSEXP, SEXP V_at_AgeSEXP, SEXP SRrelxSEXP, SEXP maxageSEXP, SEXP plusgroupSEXP) {
+NumericMatrix Ref_int_cpp(NumericVector F_search, NumericVector M_at_Age, NumericVector Wt_at_Age, NumericVector Mat_at_Age, NumericVector Fec_at_Age, NumericVector V_at_Age, int maxage, int plusgroup);
+RcppExport SEXP _MSEtool_Ref_int_cpp(SEXP F_searchSEXP, SEXP M_at_AgeSEXP, SEXP Wt_at_AgeSEXP, SEXP Mat_at_AgeSEXP, SEXP Fec_at_AgeSEXP, SEXP V_at_AgeSEXP, SEXP maxageSEXP, SEXP plusgroupSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -69,10 +69,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type Mat_at_Age(Mat_at_AgeSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type Fec_at_Age(Fec_at_AgeSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type V_at_Age(V_at_AgeSEXP);
-    Rcpp::traits::input_parameter< int >::type SRrelx(SRrelxSEXP);
     Rcpp::traits::input_parameter< int >::type maxage(maxageSEXP);
     Rcpp::traits::input_parameter< int >::type plusgroup(plusgroupSEXP);
-    rcpp_result_gen = Rcpp::wrap(Ref_int_cpp(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, SRrelx, maxage, plusgroup));
+    rcpp_result_gen = Rcpp::wrap(Ref_int_cpp(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, maxage, plusgroup));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -298,7 +297,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_vecminInd", (DL_FUNC) &_MSEtool_vecminInd, 1},
     {"_MSEtool_LinInterp_cpp", (DL_FUNC) &_MSEtool_LinInterp_cpp, 3},
     {"_MSEtool_MSYCalcs", (DL_FUNC) &_MSEtool_MSYCalcs, 12},
-    {"_MSEtool_Ref_int_cpp", (DL_FUNC) &_MSEtool_Ref_int_cpp, 9},
+    {"_MSEtool_Ref_int_cpp", (DL_FUNC) &_MSEtool_Ref_int_cpp, 8},
     {"_MSEtool_calcVatAge", (DL_FUNC) &_MSEtool_calcVatAge, 7},
     {"_MSEtool_combine", (DL_FUNC) &_MSEtool_combine, 1},
     {"_MSEtool_get_freq", (DL_FUNC) &_MSEtool_get_freq, 4},

@@ -15,7 +15,7 @@ simmov(
   figure = TRUE
 )
 
-plot_mov(mov, age = 1, type = c("matrix", "all"))
+plot_mov(mov, age = 1, type = c("matrix", "all"), year = 1, qval = 0.9)
 }
 \arguments{
 \item{OM}{Operating model, an object of class \linkS4class{OM}.}
@@ -37,13 +37,19 @@ probability of staying, lower bound is prob.}
 \item{figure}{Logical to indicate if the movement matrix will be plotted (mean values and range
 across \code{OM@nsim} simulations.)}
 
-\item{mov}{A four-dimensional array of dimension \code{c(nsim, maxage, nareas, nareas)}
-specifying movement in the operating model.}
+\item{mov}{A four-dimensional array of dimension \code{c(nsim, maxage, nareas, nareas)} or a five-dimensional
+array of dimension \code{c(nsim, maxage, nareas, nareas, nyears + proyears)} specifying movement
+in the operating model.}
 
 \item{age}{An age from 0 to maxage for the movement-at-age matrix figure when \code{type = "matrix"}.}
 
 \item{type}{Whether to plot a movement matrix for a single age (\code{"matrix"}) or the
 full movement versus age figure (\code{"all"})}
+
+\item{year}{If \code{mov} is a 5-dimensional array, the year (from 1 to nyears + proyears) for which
+to plot movement.}
+
+\item{qval}{The quantile to plot the range of values among simulations.}
 }
 \value{
 The operating model \code{OM} with movement parameters in slot \code{cpars}.
@@ -71,6 +77,7 @@ movOM_5areas <- simmov(testOM, dist = c(0.01,0.1,0.2,0.3,0.39), prob = c(0.1,0.6
 movOM_5areas@cpars$mov[1, 1, , ] # sim 1, age 1, movement from areas in column i to areas in row j
 plot_mov(movOM_5areas@cpars$mov)
 plot_mov(movOM_5areas@cpars$mov, type = "all")
+
 }
 }
 \author{

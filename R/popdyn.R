@@ -202,7 +202,6 @@ per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxag
                             Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
                             Fec_at_Age=Fec_at_Age,
                             V_at_Age = V_at_Age,
-                            StockPars$SRrel[x],
                             maxage = maxage,
                             plusgroup = plusgroup)
 
@@ -223,7 +222,7 @@ per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxag
     CR <- (5 * StockPars$hs[x])^1.25
   }
   SPRcrash <- CR^-1
-
+  
   Fcrash <- LinInterp_cpp(SPR_search, F_search, xlev = SPRcrash)
 
   SSB <- apply(StockPars$SSB[x,,,], 2, sum)
@@ -1016,14 +1015,14 @@ runInMP <- function(Data, MPs = NA, reps = 100) {
 }
 
 
-projectEq <- function(x, Asize, nareas, maxage, N, pyears, M_ageArray, Mat_age, Wt_age, FecAge,
+projectEq <- function(x, Asize, nareas, maxage, N, pyears, M_ageArray, Mat_age, Wt_age, Fec_Age,
                       V, retA, Perr, mov, SRrel, Find, Spat_targ, hs, R0a, SSBpR, aR, bR,
                       SSB0, MPA, maxF, Nyrs, plusgroup, Pinitdist) {
 
   simpop <- popdynCPP(nareas, maxage, Ncurr=N[x,,1,],
                       pyears, M_age=M_ageArray[x,,], Asize_c=Asize[x,],
                       MatAge=Mat_age[x,,],
-                      WtAge=Wt_age[x,,], FecAge=FecAge[x,,], Vuln=V[x,,], Retc=retA[x,,], Prec=Perr[x,],
+                      WtAge=Wt_age[x,,], FecAge=Fec_Age[x,,], Vuln=V[x,,], Retc=retA[x,,], Prec=Perr[x,],
                       movc=split.along.dim(mov[x,,,,],4), SRrelc=SRrel[x],
                       Effind=Find[x,],  Spat_targc=Spat_targ[x], hc=hs[x], R0c=R0a[x,],
                       SSBpRc=SSBpR[x,], aRc=aR[x,], bRc=bR[x,], Qc=0, Fapic=0,
