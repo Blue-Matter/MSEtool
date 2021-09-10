@@ -729,7 +729,7 @@ sample_recruitment <- function(Perr_hist, proyears, procsd, AC, seed) {
   nsim <- nrow(Perr_hist)
   if(length(procsd) == 1) procsd <- rep(procsd, nsim)
   if(length(AC) == 1) AC <- rep(AC, nsim)
-  procmu <- -0.5 * procsd^2 * (1 - AC/sqrt(1 - AC^2)) # adjusted log normal mean with AC
+  procmu <- -0.5 * procsd^2 * (1 - AC)/sqrt(1 - AC^2) # adjusted log normal mean with AC
   Perr_delta <- rnorm(nsim * proyears, procmu, procsd) %>%
     matrix(nrow = nsim, ncol = proyears) # Sample recruitment for projection
   Perr_proj <- matrix(NA_real_, nsim, proyears)
