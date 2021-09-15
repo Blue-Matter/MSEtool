@@ -64,6 +64,9 @@ NumericVector MSYCalcs(double logF,
   double B0 = sum(l0 * Wt_at_Age); // biomass-per-recruit
   double BF = sum(lx * Wt_at_Age);
   
+  double N0 = sum(l0); // numbers per recruit
+  double SN0 = sum(l0 * Fec_at_Age); // spawning numbers per recruit
+  
   double R0 = 0;  // The 'new' R0 associated with Egg0, reca, recb
   double R20 = 0; // The recruitment at 20% of R0 with reca, recb, Egg0
   double h = 1;   // The steepness associated with Egg0, new R0, reca, recb
@@ -106,7 +109,7 @@ NumericVector MSYCalcs(double logF,
   } else {
     
 
-    NumericVector out(13);
+    NumericVector out(15);
     out[0] = Yield;
     out[1] = FF;
     out[2] = SBF * RelRec;
@@ -120,7 +123,9 @@ NumericVector MSYCalcs(double logF,
     out[10] = B0*R0;
     out[11] = R0;
     out[12] = h;
-    out.names() = CharacterVector::create("Yield", "F", "SB", "SB_SB0", "B_B0", "B", "VB", "VB_VB0", "RelRec", "SB0", "B0", "R0", "h");
+    out[13] = N0 * R0;
+    out[14] = SN0 * R0;
+    out.names() = CharacterVector::create("Yield", "F", "SB", "SB_SB0", "B_B0", "B", "VB", "VB_VB0", "RelRec", "SB0", "B0", "R0", "h", "N0", "SN0");
 
     return(out);
   }
