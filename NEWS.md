@@ -5,6 +5,14 @@ The current version of the `MSEtool` package is available for download from [CRA
 ### Fixes
 - fix minor bug in calculating SSB in first year when using OMs imported from SS3
 - fix minor bug when passing movement matrix in with cpars
+- fix minor bug so that the mean of sampled recruitment deviations in `SS2MOM` and `SS2OM` is one. The issue was noticeable when the autocorrelation is high.
+
+### Minor changes
+- update `plot_mov` for plotting movement matrices.
+
+### New additions
+- added `Awatea2OM` to import MCMC output from an Awatea assessment model to openMSE
+- reference points are now calculated assuming constant stock-recruit alpha and beta parameters. Previously, constant R0 and steepness was assumed. See (https://openmse.com/tutorial-reference-points/) for more details.
 
 ## MSEtool 3.2.0
 
