@@ -155,7 +155,7 @@ VPA2OM<-function(Name="A fishery made by VPA2OM",
   LenCV=0.1
   OM<-simup(LenCV,OM)
   OM@SRrel <- 1 # 1 = BevHolt, 2 = Ricker
-  OM@isRel<-F  # absolute selectivity relative to maturity - no used here
+  OM@isRel<-FALSE  # absolute selectivity relative to maturity - no used here
   OM@CurrentYr<-CurrentYr
 
   # Time varying terms

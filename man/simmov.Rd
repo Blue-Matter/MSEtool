@@ -49,7 +49,7 @@ full movement versus age figure (\code{"all"})}
 \item{year}{If \code{mov} is a 5-dimensional array, the year (from 1 to nyears + proyears) for which
 to plot movement.}
 
-\item{qval}{The quantile to plot the range of values among simulations.}
+\item{qval}{The quantile to plot or report the range of values among simulations.}
 }
 \value{
 The operating model \code{OM} with movement parameters in slot \code{cpars}.
