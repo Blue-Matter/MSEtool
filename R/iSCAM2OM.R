@@ -268,6 +268,9 @@ iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=FALSE, Name="iSCAM model
   # Observation model parameters ==============================================================================
   OM@cpars$Data <- iSCAM2Data(replist, Name = Name, Source = Source, length_timestep = length_timestep,
                               Author = Author)
+  if(length(OM@cpars$Data@AddInd)) {
+    OM@cpars$AddIbeta <- matrix(1, nsim, dim(OM@cpars$Data@AddInd)[2])
+  }
   
   return(OM)
 }
