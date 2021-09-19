@@ -178,6 +178,7 @@ Awatea2OM <- function(AwateaDir, nsim = 48, proyears = 50, Name = "OM made by Aw
   OM@cpars$Data <- new("Data")
   OM@cpars$Data@Cat <- matrix(Apar$Catch, 1, nyears)
   OM@cpars$Data@CV_Cat <- matrix(0.01, 1, nyears)
+  OM@cpars$Data@Year <- years
   
   OM@cpars$Data@CAA <- local({
     Age <- unique(Aenv$currentRes$CAc$Age)
@@ -188,6 +189,7 @@ Awatea2OM <- function(AwateaDir, nsim = 48, proyears = 50, Name = "OM made by Aw
     CAA_out[1, match(Year, years), match(Age, 0:maxage)] <- CAA
     CAA_out
   })
+  OM@cpars$Data@MaxAge <- maxage
   
   # surveys
   if(nrow(Aenv$currentRes$Survey) > 0) {

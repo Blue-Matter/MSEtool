@@ -72,7 +72,7 @@ Turing <- function(OM, Data, wait=TRUE) {
   OM@cpars$maxage <- Data@MaxAge
 
   nsamp <- 5
-  OM@nsim <- nsamp +2
+  OM <- SubCpars(OM, seq_len(nsamp + 2))
   SimDat <- runMSE(OM, Hist=TRUE, silent = TRUE)@Data
   # if(!all(SimDat@CAL_bins == Data@CAL_bins)) stop("CAL_bins not correct length")
 
