@@ -15,6 +15,7 @@ optMSY_eq(
   R0,
   SRrel,
   hs,
+  SSBpR,
   yr.ind = 1,
   plusgroup = 0
 )
@@ -39,6 +40,8 @@ optMSY_eq(
 \item{SRrel}{SRR type}
 
 \item{hs}{Vector of steepness}
+
+\item{SSBpR}{Vector of unfished spawners per recruit}
 
 \item{yr.ind}{Year index used in calculations}
 

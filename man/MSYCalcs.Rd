@@ -12,9 +12,10 @@ MSYCalcs(
   Fec_at_Age,
   V_at_Age,
   maxage,
-  R0x,
-  SRrelx,
-  hx,
+  R0x = 1,
+  SRrelx = 3L,
+  hx = 1,
+  SSBpR = 0,
   opt = 1L,
   plusgroup = 1L
 )
@@ -34,11 +35,13 @@ MSYCalcs(
 
 \item{maxage}{Maximum age}
 
-\item{R0x}{R0 for this simulation}
+\item{R0x}{R0 for this simulation. Set = 1 if SRrelx = 3 for per-recruit calculations}
 
 \item{SRrelx}{SRR type for this simulation. Use 3 for per-recruit calculations, i.e. constant recruitment.}
 
-\item{hx}{numeric. Steepness value for this simulation}
+\item{hx}{numeric. Steepness value for this simulation. Not used if SRrelx = 3.}
+
+\item{SSBpR}{numeric. Unfished spawners per recruit for this simulation. Not used if SRrelx = 3.}
 
 \item{opt}{Option. 1 = return -Yield, 2= return all MSY calcs}
 

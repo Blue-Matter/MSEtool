@@ -165,7 +165,7 @@ Awatea2OM <- function(AwateaDir, nsim = 48, proyears = 50, Name = "OM made by Aw
   if(verbose) message("Sending arrays to VPA2OM...")
   
   OM <- VPA2OM(Name = Name, proyears = proyears, CurrentYr = CurrentYr, h = h_new, naa = naa, faa = FAA, waa = wataa, 
-               Mataa = Mataa, M = M, laa = laa, LowerTri = age[1], Perr = Perr, AC = AC, R0 = R0_new, phi0 = phi0_age0,
+               Mataa = Mataa, Maa = M, laa = laa, LowerTri = age[1], Perr = Perr, AC = AC, R0 = R0_new, phi0 = phi0_age0,
                silent = !verbose)
   
   OM@cpars$Linf <- rep(mean(Apar$Linf), nsim)
@@ -183,7 +183,8 @@ Awatea2OM <- function(AwateaDir, nsim = 48, proyears = 50, Name = "OM made by Aw
   OM@cpars$Data@CAA <- local({
     Age <- unique(Aenv$currentRes$CAc$Age)
     Year <- unique(Aenv$currentRes$CAc$Year)
-    CAA <- Aenv$currentRes$CAc %>% group_by(Year, Age) %>% summarise(Nobs = sum(SS * Obs)) %>% 
+    SS <- Obs <- NULL # cran checks
+    CAA <- Aenv$currentRes$CAc %>% group_by(Year, Age) %>% summarise(Nobs = sum(SS * Obs, na.rm = TRUE)) %>% 
       reshape2::acast(Year ~ Age, value.var = "Nobs")
     CAA_out <- array(0, c(1, nyears, n_age))
     CAA_out[1, match(Year, years), match(Age, 0:maxage)] <- CAA
