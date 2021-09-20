@@ -136,9 +136,10 @@
   <span class='va'>Fec_at_Age</span>,
   <span class='va'>V_at_Age</span>,
   <span class='va'>maxage</span>,
-  <span class='va'>R0x</span>,
-  <span class='va'>SRrelx</span>,
-  <span class='va'>hx</span>,
+  R0x <span class='op'>=</span> <span class='fl'>1</span>,
+  SRrelx <span class='op'>=</span> <span class='fl'>3L</span>,
+  hx <span class='op'>=</span> <span class='fl'>1</span>,
+  SSBpR <span class='op'>=</span> <span class='fl'>0</span>,
   opt <span class='op'>=</span> <span class='fl'>1L</span>,
   plusgroup <span class='op'>=</span> <span class='fl'>1L</span>
 <span class='op'>)</span></pre>
@@ -176,7 +177,7 @@
     </tr>
     <tr>
       <th>R0x</th>
-      <td><p>R0 for this simulation</p></td>
+      <td><p>R0 for this simulation. Set = 1 if SRrelx = 3 for per-recruit calculations</p></td>
     </tr>
     <tr>
       <th>SRrelx</th>
@@ -184,7 +185,11 @@
     </tr>
     <tr>
       <th>hx</th>
-      <td><p>numeric. Steepness value for this simulation</p></td>
+      <td><p>numeric. Steepness value for this simulation. Not used if SRrelx = 3.</p></td>
+    </tr>
+    <tr>
+      <th>SSBpR</th>
+      <td><p>numeric. Unfished spawners per recruit for this simulation. Not used if SRrelx = 3.</p></td>
     </tr>
     <tr>
       <th>opt</th>
