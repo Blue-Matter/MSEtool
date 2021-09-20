@@ -131,6 +131,22 @@
 <ul>
 <li>fix minor bug in calculating SSB in first year when using OMs imported from SS3</li>
 <li>fix minor bug when passing movement matrix in with cpars</li>
+<li>fix minor bug so that the mean of sampled recruitment deviations in <code>SS2MOM</code> and <code>SS2OM</code> is one. The issue was noticeable when the autocorrelation is high.</li>
+</ul>
+</div>
+<div id="minor-changes" class="section level3">
+<h3 class="hasAnchor">
+<a href="#minor-changes" class="anchor"></a>Minor changes</h3>
+<ul>
+<li>update <code>plot_mov</code> for plotting movement matrices.</li>
+</ul>
+</div>
+<div id="new-additions" class="section level3">
+<h3 class="hasAnchor">
+<a href="#new-additions" class="anchor"></a>New additions</h3>
+<ul>
+<li>added <code>Awatea2OM</code> to import MCMC output from an Awatea assessment model to openMSE</li>
+<li>reference points are now calculated assuming constant stock-recruit alpha and beta parameters. Previously, constant R0 and steepness was assumed. See (<a href="https://openmse.com/tutorial-reference-points/" class="uri">https://openmse.com/tutorial-reference-points/</a>) for more details.</li>
 </ul>
 </div>
 </div>
@@ -145,17 +161,17 @@
 <li>remove debugging message that was stupidly left in last release</li>
 </ul>
 </div>
-<div id="minor-changes" class="section level3">
+<div id="minor-changes-1" class="section level3">
 <h3 class="hasAnchor">
-<a href="#minor-changes" class="anchor"></a>Minor changes</h3>
+<a href="#minor-changes-1" class="anchor"></a>Minor changes</h3>
 <ul>
 <li>add <code>silent</code> option to <code>SS2Data</code>
 </li>
 </ul>
 </div>
-<div id="new-additions" class="section level3">
+<div id="new-additions-1" class="section level3">
 <h3 class="hasAnchor">
-<a href="#new-additions" class="anchor"></a>New additions</h3>
+<a href="#new-additions-1" class="anchor"></a>New additions</h3>
 <ul>
 <li>add option to include fecundity-at-age used to calculate spawning biomass (<code>cpars$Fec_age</code>)</li>
 </ul>
@@ -172,9 +188,9 @@
 <li>fix minor issue with <code>SSMOM2OM</code> where it was generating redundant rec devs</li>
 </ul>
 </div>
-<div id="new-additions-1" class="section level3">
+<div id="new-additions-2" class="section level3">
 <h3 class="hasAnchor">
-<a href="#new-additions-1" class="anchor"></a>New additions</h3>
+<a href="#new-additions-2" class="anchor"></a>New additions</h3>
 <ul>
 <li>added <code>plot_SS2MOM</code> to compare MOM dynamics with SS3 predictions</li>
 </ul>
@@ -183,9 +199,9 @@
     <div id="msetool-310" class="section level2">
 <h2 class="hasAnchor">
 <a href="#msetool-310" class="anchor"></a>MSEtool 3.1.0</h2>
-<div id="new-additions-2" class="section level3">
+<div id="new-additions-3" class="section level3">
 <h3 class="hasAnchor">
-<a href="#new-additions-2" class="anchor"></a>New additions</h3>
+<a href="#new-additions-3" class="anchor"></a>New additions</h3>
 <ul>
 <li>Dynamic and equilibrium spawning potential ratio (SPR) are now calculated for the historical and projection years.</li>
 <li>add option to include empirical weight-at-age for the catches with <code>cpars$Wt_age_C</code>
@@ -198,9 +214,9 @@
 <li>option to apply TAC to all removals with <code>OM@cpars$control$TAC="removals"</code>. Default is to for TAC to refer to retained catch (i.e., removals will be greater than TAC if there are discards)</li>
 </ul>
 </div>
-<div id="minor-changes-1" class="section level3">
+<div id="minor-changes-2" class="section level3">
 <h3 class="hasAnchor">
-<a href="#minor-changes-1" class="anchor"></a>Minor changes</h3>
+<a href="#minor-changes-2" class="anchor"></a>Minor changes</h3>
 <ul>
 <li>add more informative messages when conditioning on real data</li>
 <li>add conditioning on real data for <code>multiMSE</code>
@@ -239,9 +255,9 @@
     <div id="msetool-301" class="section level2">
 <h2 class="hasAnchor">
 <a href="#msetool-301" class="anchor"></a>MSEtool 3.0.1</h2>
-<div id="minor-changes-2" class="section level3">
+<div id="minor-changes-3" class="section level3">
 <h3 class="hasAnchor">
-<a href="#minor-changes-2" class="anchor"></a>Minor Changes</h3>
+<a href="#minor-changes-3" class="anchor"></a>Minor Changes</h3>
 <ul>
 <li>Add <code>I_beta</code>, <code>SpI_beta</code>, and <code>VI_beta</code> for the individual indices. Defaults to use <code>OM@beta</code> for all, unless a real index is supplied, e.g., <code>OM@cpars$Data@Ind</code>, <code>OM@cpars$Data@SpInd</code>, or <code>OM@cpars$Data@VInd</code>, or if supplied in cpars, e.g., <code>OM@cpars$I_beta</code>
 </li>
