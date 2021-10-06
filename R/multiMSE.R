@@ -744,6 +744,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   }
 
   # --- Calculate MSY statistics for each year ----
+  SPR_hist <- list()
   # ignores spatial closures
   # assumes all vulnerable fish are caught - ie no discarding
   if(!silent) message("Calculating MSY reference points for each year")
@@ -1228,7 +1229,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 #' @param multiHist An Historical Simulation object (class `multiHist`)
 #' @export
 ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
-                        checkMPs=TRUE) {
+                        checkMPs=TRUE, dropHist=TRUE) {
 
   # ---- Setup ----
   if (! 'multiHist' %in% class(multiHist))
@@ -2376,6 +2377,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     for(f in 1:nf) {
       OM[[p]][[f]]<-MSElist[[p]][[f]][[1]]@OM
       Obsout[[p]][[f]]<-MSElist[[p]][[f]][[1]]@Obs
+      
+      # remove MSElist Misc
+      for (mm in 1:nMP)
+        MSElist[[p]][[f]][[mm]]@Misc <- list()
     }
   }
   Misc <- list()
@@ -2386,6 +2391,55 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   if(class(MPs)=="character") MPs<-list(MPs)
 
   # ---- Create MMSE Object ----
+  
+  # add all reference points from multiHist to MMSE@RefPoint
+  # and remove from multiHist
+  # this is done so MMSE@multiHist can be dropped to save a ton of memory
+  # while still preserving ref points in the MMSE object
+  
+  RefPoint <- list()
+  RefPoint$ByYear <- list(MSY=MSY_y,
+                          FMSY=FMSY_y,
+                          SSBMSY=SSBMSY_y,
+                          BMSY=BMSY_y,
+                          VBMSY=VBMSY_y)
+  # add other ref points 
+  nms <- names(multiHist[[1]][[1]]@Ref$ByYear)
+  nms <- nms[!nms %in% names( RefPoint$ByYear)]
+  # drop SPR, Fcrash etc - not updated in projection and could change if selectivity changes
+  nms <- c(nms[grepl('0', nms)], 'h')
+  nms <- nms[!nms=="F01_YPR"]
+  
+  for (nm in nms) {
+    RefPoint$ByYear[[nm]] <- array(NA, dim=c(nsim, np, nMP, proyears+nyears))
+    for (p in 1:np) {
+      for(mm in 1:nMP) {
+        RefPoint$ByYear[[nm]][,p,mm,] <- multiHist[[p]][[f]]@Ref$ByYear[[nm]]
+        }
+    }
+  }
+  
+  
+  RefPoint$Dynamic_Unfished <- list()
+  nms <- names(multiHist[[1]][[1]]@Ref$Dynamic_Unfished)
+  # add Dynamic_Unfished
+  for (nm in nms) {
+    RefPoint$Dynamic_Unfished[[nm]] <- array(NA, dim=c(nsim, np, nf, proyears+nyears))
+    for (p in 1:np) {
+      for(f in 1:nf) {
+        RefPoint$Dynamic_Unfished[[nm]][,p,f,] <- multiHist[[p]][[f]]@Ref$Dynamic_Unfished[[nm]]
+      }
+    }
+  }
+  # remove Ref from MultiHist
+  for (p in 1:np) {
+    for(f in 1:nf) {
+      multiHist[[p]][[f]]@Ref <- list('Now in MMSE@Ref')
+    }
+  }
+  
+  if (dropHist) multiHist <- list('multiHist dropped (dropHist=TRUE). Reference points available in MMSE@Ref')
+  
   MSEout <- new("MMSE",
                 Name = MOM@Name,
                 nyears,
@@ -2419,9 +2473,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                 TAC=TACa,
                 TAE=TAE_out,
                 BioEco=list(),
-                RefPoint=list(MSY=MSY_y,
-                              FMSY=FMSY_y,
-                              SSBMSY=SSBMSY_y),
+                RefPoint=RefPoint,
                 multiHist=multiHist,
                 PPD=MSElist,
                 Misc=Misc)
@@ -2442,6 +2494,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #' @param silent Should messages be printed out to the console?
 #' @param parallel Logical. Should the MSE be run using parallel processing?
 #' @param checkMPs Logical. Check if the specified MPs exist and can be run on `SimulatedData`?
+#' @param dropHist Logical. Drop the (very large) `multiHist` object from the returned `MMSE` object? 
+#' The `multiHist` object can be (re-)created using `SimulateMOM` or kept in `MMSE@multiHist` if 
+#' `dropHist=FALSE`
 #' @describeIn multiMSE Run a multi-stock, multi-fleet MSE
 #' @return  Functions return objects of class `MMSE` and `multiHist`
 #' #' \itemize{
@@ -2456,7 +2511,8 @@ multiMSE <- function(MOM=MSEtool::Albacore_TwoFleet,
                      Hist=FALSE,
                      silent=FALSE,
                      parallel=TRUE,
-                     checkMPs=TRUE) {
+                     checkMPs=TRUE,
+                     dropHist=TRUE) {
 
   # ---- Initial Checks and Setup ----
   if (class(MOM) == 'MOM') {
@@ -2508,7 +2564,8 @@ multiMSE <- function(MOM=MSEtool::Albacore_TwoFleet,
 
   if(!silent) message("Running forward projections")
 
-  MSEout <- try(ProjectMOM(multiHist=multiHist, MPs, parallel, silent, checkMPs=FALSE), silent=TRUE)
+  MSEout <- try(ProjectMOM(multiHist=multiHist, MPs, parallel, silent, checkMPs=FALSE,
+                           dropHist=dropHist), silent=TRUE)
 
   if (class(MSEout) == 'try-error') {
     message('The following error occured when running the forward projections: ',
