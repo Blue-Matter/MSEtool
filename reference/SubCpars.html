@@ -47,7 +47,7 @@
 
 
 <meta property="og:title" content="Subset an OM cpars slot — SubCpars" />
-<meta property="og:description" content="Subset the custom parameters of an operating model" />
+<meta property="og:description" content="Subset the custom parameters of an operating model by simulation and projection years" />
 <meta property="og:image" content="/logo.png" />
 
 
@@ -125,10 +125,10 @@
     </div>
 
     <div class="ref-description">
-    <p>Subset the custom parameters of an operating model</p>
+    <p>Subset the custom parameters of an operating model by simulation and projection years</p>
     </div>
 
-    <pre class="usage"><span class='fu'>SubCpars</span><span class='op'>(</span><span class='va'>OM</span>, sims <span class='op'>=</span> <span class='fl'>1</span><span class='op'>:</span><span class='va'>OM</span><span class='op'>@</span><span class='va'>nsim</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>SubCpars</span><span class='op'>(</span><span class='va'>OM</span>, sims <span class='op'>=</span> <span class='fl'>1</span><span class='op'>:</span><span class='va'>OM</span><span class='op'>@</span><span class='va'>nsim</span>, <span class='va'>proyears</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -142,11 +142,18 @@
       <td><p>A logical vector of length <code>OM@nsim</code> to either retain (TRUE) or remove (FALSE).
 Alternatively, a numeric vector indicating which simulations (from 1 to nsim) to keep.</p></td>
     </tr>
+    <tr>
+      <th>proyears</th>
+      <td><p>If provided, a numeric to reduce the number of projection years (must be less than <code>OM@proyears</code>).</p></td>
+    </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>An object of class OM</p>
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
+
+    <div class='dont-index'><p><a href='Sub.html'>Sub</a> for MSE objects, <a href='SubOM.html'>SubOM</a> for OM components.</p></div>
     <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
 
     <p>T. Carruthers, Q. Huynh</p>
