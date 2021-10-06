@@ -63,8 +63,10 @@ These functions rely on several functions written by Chris Grandin (DFO PBS).
 
 The function calls \code{model <- load.iscam.files(iSCAMdir)} and grabs the following matrices:
 
+\itemize{
 \item \code{model$mpd$d3_weight_mat} - fecundity (product of weight and maturity at age)
 \item \code{model$mpd$ma} - maturity at age
+}
 }
 
 \section{MPD historical reconstruction}{
