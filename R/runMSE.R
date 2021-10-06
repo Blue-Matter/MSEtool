@@ -28,12 +28,29 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   set.seed(OM@seed) # set seed for reproducibility
   nsim <- OM@nsim # number of simulations
   nyears <- OM@nyears # number of historical years
+  if (length(nyears)<1) stop('OM@nyears is missing')
   proyears <- OM@proyears # number of projection years
+  if (length(proyears)<1) stop('OM@proyears is missing')
   interval <- OM@interval # management interval (annual)
+  if (length(interval)<1) {
+    warning('OM@interval missing. Assuming OM@interval=1')
+    OM@interval <- interval <- 1
+  }
   maxF <- OM@maxF # maximum apical F
+  if (length(maxF)<1) {
+    warning('OM@maxF missing. Assuming OM@maxF=3')
+    OM@maxF <- maxF <- 3
+  }
   pstar <- OM@pstar # Percentile of the sample of the TAC for each MP
+  if (length(pstar)<1) {
+    warning('OM@pstar missing. Assuming OM@pstar=0.5')
+    OM@pstar <- pstar <- 0.5
+  }
   reps <- OM@reps # Number of samples of the management recommendation for each MP
-
+  if (length(reps)<1) {
+    warning('OM@reps missing. Assuming OM@reps=1')
+    OM@reps <- reps <- 1
+  }
   # ---- Custom Parameters (cpars) Options ----
   control <- OM@cpars$control; OM@cpars$control <- NULL
 

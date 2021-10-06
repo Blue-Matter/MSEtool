@@ -6,6 +6,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 - fix minor bug in calculating SSB in first year when using OMs imported from SS3
 - fix minor bug when passing movement matrix in with cpars
 - fix minor bug so that the mean of sampled recruitment deviations in `SS2MOM` and `SS2OM` is one. The issue was noticeable when the autocorrelation is high.
+- add check for missing OM slots such as interval, pstar, nyears, etc
 
 ### Minor changes
 - update `plot_mov` for plotting movement matrices.
