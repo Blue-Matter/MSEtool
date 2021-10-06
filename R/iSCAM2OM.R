@@ -1,7 +1,7 @@
 # === OM specification using iSCAM stock assessment ====================
 
 #' @name iSCAM2OM
-#' @title Reads MPD and MCMC estimates and data from iSCAM file structure into an operating model
+#' @title Reads MPD or MCMC estimates and data from iSCAM file structure into an operating model
 #' @aliases iSCAM2Data
 #' @description Functions for importing an iSCAM assessment. From a fitted model, \code{iSCAM2OM}
 #' populates the various slots of an operating model and \code{iSCAM2Data} generates a Data object.
@@ -12,8 +12,7 @@
 #' uncertainty (for OM@cpars custom parameters)
 #' @param proyears The number of MSE projection years
 #' @param mcmc Logical, whether to use mcmc samples to create custom parameters cpars. Alternatively, a list
-#' returned by \link{read.mcmc}. Currently, only used for delay difference iSCAM assessments.
-#' Set the seed for the function to sub-sample the mcmc samples.
+#' returned by \link{read.mcmc}. Set the seed for the function to sub-sample the mcmc samples.
 #' @param Name The name of the operating model
 #' @param Source Reference to assessment documentation e.g. a url
 #' @param length_timestep How long is a model time step in years
@@ -22,15 +21,19 @@
 #' @param Author Who did the assessment
 #' @param report logical should a numbers at age reconstruction plot be produced?
 #' @param silent logical should progress reporting be printed to the console?
-#' @section Historical reconstruction:
+#' @section Biological parameters:
+#' The function calls \code{model <- load.iscam.files(iSCAMdir)} and grabs the following matrices:
+#' 
+#' \item \code{model$mpd$d3_weight_mat} - fecundity (product of weight and maturity at age)
+#' \item \code{model$mpd$ma} - maturity at age
+#' 
+#' @section MPD historical reconstruction:
 #' The function calls \code{model <- load.iscam.files(iSCAMdir)} and then grabs the following matrices:
 #' 
 #' \itemize{
 #' \item \code{model$mpd$N} - abundance at age
 #' \item \code{model$mpd$F} - fishing mortality at age
 #' \item \code{model$mpd$M} - natural mortality at age
-#' \item \code{model$mpd$d3_weight_mat} - fecundity (product of weight and maturity at age)
-#' \item \code{model$mpd$ma} - maturity at age
 #' }
 #' 
 #' If a delay-difference model is recognized, then the following is used instead:
@@ -41,7 +44,18 @@
 #' 
 #' Abundance at age is reconstructed using \code{model$mpd$rt} (recruitment) and projected with \code{F_dd} and
 #' \code{M_dd} to match \code{model$mpd$numbers}.
+#'   
+#' @section MCMC historical reconstruction:
+#' If \code{mcmc = TRUE} the function calls \code{mcmc_model <- read.mcmc(iSCAMdir)}, and grabs \code{nsim} sub-samples of the MCMC output 
+#' through the following arrays:
 #' 
+#' \itemize{
+#' \item \code{mcmc_model$params} and \code{mcmc_model$ft} - fishing mortality at age from the fleet selectivity parameters and apical F's
+#' \item \code{mcmc_model$m} - year-specific natural mortality at age
+#' \item \code{mcmc_model$params$rinit} and \code{mcmc_model$rt} - recruitment and abundance
+#' }
+#' 
+#' @section Start age:
 #' While the iSCAM start age can be greater than zero, abundance at age is back-calculated to age zero using the M
 #' at the start age.
 #' 
@@ -73,7 +87,7 @@ iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=FALSE, Name="iSCAM model
   if(is.logical(mcmc) && mcmc) {
     message("-- Reading MCMC files --")
     mcmc_model <- read.mcmc(iSCAMdir)
-  } else if(is.character(mcmc)) {
+  } else if(is.list(mcmc)) {
     mcmc_model <- mcmc
   }
   message("-- End of iSCAM extraction operations --")
@@ -114,83 +128,72 @@ iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=FALSE, Name="iSCAM model
   naa <- array(NA_real_, c(nsim, n_age, nyears + 1))
   
   # F and selectivity
-  if(do_mcmc && delay_diff) {
-    faat <- lapply(mcmc_model$ft[[1]], function(x) as.matrix(x)[mcmc_samp, ]) %>% 
-      simplify2array() %>% apply(1:2, sum)
-    faa[, aind+1, ] <- array(faat, c(nsim, nyears, nafill)) %>% aperm(c(1, 3, 2))
-  } else {
-    
-    if(delay_diff) {
+  if(delay_diff) {
+    if(do_mcmc) {
+      faat <- lapply(mcmc_model$ft[[1]], function(x) as.matrix(x)[mcmc_samp, ]) %>% 
+        simplify2array() %>% apply(1:2, sum)
+      faa[, aind+1, ] <- array(faat, c(nsim, nyears, nafill)) %>% aperm(c(1, 3, 2))
+    } else {
       faat <- matrix(replist$mpd$F_dd, length(aind), nyears, byrow = TRUE)
+      faa[, aind+1, ]<-array(rep(faat,each=nsim),c(nsim,nafill,nyears))
+    }
+  } else {
+    if(do_mcmc) {
+      faat <- local({
+        iseltype <- replist$ctl$sel["iseltype", ] # includes surveys
+        nfleet <- length(iseltype)
+        apicalF <- lapply(mcmc_model$ft[[1]], function(x) x[mcmc_samp, ])
+        sel <- lapply(1:nfleet, function(x) {
+          a <- matrix(0:maxage, nsim, n_age, byrow = TRUE)
+          if(iseltype[x] == 1 || iseltype[x] == 6) {
+            sel_g <- mcmc_model$params[[paste0("sel_g", x)]][mcmc_samp]
+            sel_sd <- mcmc_model$params[[paste0("sel_sd", x)]][mcmc_samp]
+            return(1/(1 + exp(-(a - sel_g)/sel_sd)))
+          } else {
+            stop("selectivity type not expected.")
+          }
+        })
+        F_at_age <- lapply(1:nfleet, function(x) {
+          lapply(1:nsim, function(xx) outer(as.numeric(apicalF[[x]][xx, ]), sel[[x]][xx, ])) %>% simplify2array()
+        }) %>% simplify2array() # array of year x n_age x nsim x nfleet
+        apply(F_at_age, 1:3, sum)
+      })
+      faa[, aind+1, ] <- faat[, aind+1, ] %>% aperm(3:1)
     } else {
       faat <- t(replist$mpd$F) # age x nyears
+      faa[,aind+1,]<-array(rep(faat,each=nsim),c(nsim,nafill,nyears))
     }
     
     # Fishing mortality rate for F = 0 years
-    tofill<-apply(faat,2,function(x)all(x==0))
-    if(any(tofill)) {
-      Vtemp<-apply(faat,1,mean)
-      Vtemp<-Vtemp/max(Vtemp)*1E-5 #fill with a very low typical vulnerability
-      faat[,tofill]<-rep(Vtemp,sum(tofill))
-    }
-    
-    faa[,aind+1,]<-array(rep(faat,each=nsim),c(nsim,nafill,nyears))
+    fout <- lapply(1:nsim, function(x) {
+      fout <- faa[x, , ]
+      tofill <- apply(fout, 2, function(x) all(x == 0))
+      if(any(tofill)) {
+        Vtemp <- apply(fout, 1, mean)
+        Vtemp <- Vtemp/max(Vtemp)
+        fout[, tofill] <- rep(Vtemp, sum(tofill))
+      }
+      return(fout)
+    })
+    faa <- simplify2array(fout) %>% aperm(c(3, 1, 2))
   }
   
   # M
-  if(do_mcmc && delay_diff) {
-    Maa[, aind + 1, ] <- array(mcmc_model$params$m_gs1[mcmc_samp], c(nsim, nafill, nyears))
-  } else if(delay_diff) {
-    Maa[, aind + 1, ] <- array(replist$mpd$M_dd, c(nyears, length(aind), nsim)) %>% aperm(3:1)
-  } else {
-    Maa[, aind + 1, ] <- rep(t(replist$mpd$M),each=nsim)
-  }
-  
-  # Abundance
-  if(do_mcmc && delay_diff) {
-    naa[, aind + 1, 1] <- vapply(mcmc_samp, get_Ninit_DD, numeric(length(aind)), 
-                                 n_age = length(aind), mcmc_model = mcmc_model, replist = replist,
-                                 ctl = replist$ctl$misc[, 1]["unfishedfirstyear"] < 2) %>% t()
-    naa[, sage + 1, 2:sage] <- naa[, sage + 1, 1]
-    naa[, sage + 1, (sage + 1):nyears] <- mcmc_model$rt[[1]][mcmc_samp, ] %>% as.matrix()
-    
-    for(y in 1:nyears) {
-      naa[, (sage+2):n_age, y+1] <- naa[, (sage+1):(n_age-1), y] * 
-        exp(-faa[, (sage+1):(n_age-1), y] - Maa[, (sage+1):(n_age-1), y])
-      naa[, n_age, y+1] <- naa[, n_age, y+1] + naa[, n_age, y] * exp(-faa[, n_age, y] - Maa[, n_age, y])
-    }
-    naa[, sage + 1, nyears + 1] <- mcmc_model$params$rbar[mcmc_samp]
-  } else {
-    
-    naat <- matrix(NA_real_, n_age, nyears + 1)
-    
-    if(delay_diff) {
-      NPR <- NPR_DD(replist$mpd$M_dd[1], 
-                    FF = ifelse(replist$ctl$misc[, 1]["unfishedfirstyear"] < 2, 0, replist$mpd$F_dd[1]),
-                    n_age = length(aind))
-      
-      Rinit <- replist$mpd$numbers[1]/sum(NPR)
-      naat[sage:maxage + 1, 1] <- Rinit * NPR
-      naat[sage + 1, 2:sage] <- replist$mpd$rbar * exp(replist$par$log_rec_devs[2:sage])
-      naat[sage + 1, (sage + 1):nyears] <- replist$mpd$rt
-      for(y in 1:nyears) {
-        naat[(sage+2):n_age, y+1] <- naat[(sage+1):(n_age-1), y] * exp(-replist$mpd$F_dd[y] - replist$mpd$M_dd[y])
-        naat[n_age, y+1] <- naat[n_age, y+1] + naat[n_age, y] * exp(-replist$mpd$F_dd[y] - replist$mpd$M_dd[y])
-      }
-      naat[sage + 1, nyears + 1] <- replist$mpd$rbar
+  if(delay_diff) {
+    if(do_mcmc) {
+      Maa[, aind + 1, ] <- array(mcmc_model$params$m_gs1[mcmc_samp], c(nsim, nafill, nyears))
     } else {
-      naat[(sage+1):n_age, ] <- t(replist$mpd$N) # age x nyears
+      Maa[, aind + 1, ] <- array(replist$mpd$M_dd, c(nyears, length(aind), nsim)) %>% aperm(3:1)
     }
-    naa <- array(rep(naat, each = nsim), c(nsim, n_age, nyears + 1))
-  }
-  
-  if(sage > 0) { # Missing cohorts to be filled in by VPA2OM
-    aind_missing <- sage:1
-    Maa[, aind_missing, ] <- Maa[, max(aind_missing) + 1, ]
-    for(i in 1:length(aind_missing)) {
-      Maa[, aind_missing[i], ] <- Maa[, max(aind_missing) + 1, ]
-      naa[, aind_missing[i], 1:(nyears+1-i)] <- naa[, aind_missing[i]+1, 2:(nyears+2-i)] * 
-        exp(Maa[, aind_missing[i], 1:(nyears+1-i)])
+  } else {
+    if(do_mcmc) {
+      if(is.null(mcmc_model$m)) { # Assume constant M over time
+        Maa[, aind + 1, ] <- mcmc_model$params$m_gs1[mcmc_samp]
+      } else {
+        Maa[, aind + 1, ] <- mcmc_model$m[mcmc_samp, ] %>% as.matrix() %>% array(c(nsim, nyears, nafill)) %>% aperm(c(1, 3, 2))
+      }
+    } else {
+      Maa[, aind + 1, ] <- rep(t(replist$mpd$M),each=nsim)
     }
   }
   
@@ -208,43 +211,102 @@ iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=FALSE, Name="iSCAM model
   Mataa[]<-rep(Mataat,each=nsim)
   laa<-Linf*(1-exp(-K*(ageArray-t0)))
   
+  # Abundance
+  if(delay_diff) {
+    if(do_mcmc) {
+      naa[, aind + 1, 1] <- vapply(mcmc_samp, get_Ninit_DD, numeric(length(aind)), 
+                                   n_age = length(aind), mcmc_model = mcmc_model, replist = replist,
+                                   ctl = replist$ctl$misc[, 1]["unfishedfirstyear"] < 2) %>% t()
+      naa[, sage + 1, 2:sage] <- naa[, sage + 1, 1]
+      naa[, sage + 1, (sage + 1):nyears] <- mcmc_model$rt[[1]][mcmc_samp, ] %>% as.matrix()
+      
+      for(y in 1:nyears) {
+        naa[, (sage+2):n_age, y+1] <- naa[, (sage+1):(n_age-1), y] * 
+          exp(-faa[, (sage+1):(n_age-1), y] - Maa[, (sage+1):(n_age-1), y])
+        naa[, n_age, y+1] <- naa[, n_age, y+1] + naa[, n_age, y] * exp(-faa[, n_age, y] - Maa[, n_age, y])
+      }
+      naa[, sage + 1, nyears + 1] <- mcmc_model$params$rbar[mcmc_samp]
+    } else {
+      
+      naat <- matrix(NA_real_, n_age, nyears + 1)
+      NPR <- NPR_DD(replist$mpd$M_dd[1], 
+                    FF = ifelse(replist$ctl$misc[, 1]["unfishedfirstyear"] < 2, 0, replist$mpd$F_dd[1]),
+                    n_age = length(aind))
+      
+      Rinit <- replist$mpd$numbers[1]/sum(NPR)
+      naat[sage:maxage + 1, 1] <- Rinit * NPR
+      naat[sage + 1, 2:sage] <- replist$mpd$rbar * exp(replist$par$log_rec_devs[2:sage])
+      naat[sage + 1, (sage + 1):nyears] <- replist$mpd$rt
+      for(y in 1:nyears) {
+        naat[(sage+2):n_age, y+1] <- naat[(sage+1):(n_age-1), y] * exp(-replist$mpd$F_dd[y] - replist$mpd$M_dd[y])
+        naat[n_age, y+1] <- naat[n_age, y+1] + naat[n_age, y] * exp(-replist$mpd$F_dd[y] - replist$mpd$M_dd[y])
+      }
+      naat[sage + 1, nyears + 1] <- replist$mpd$rbar
+      naa <- array(rep(naat, each = nsim), c(nsim, n_age, nyears + 1))
+    }
+  } else {
+    if(do_mcmc) {
+      rmcmc_yr <- as.numeric(colnames(mcmc_model$rt[[1]]))
+      rmcmc_ind <- match(rmcmc_yr, replist$dat$start.yr:replist$dat$end.yr)
+      naa[, sage + 1, rmcmc_ind] <- mcmc_model$rt[[1]][mcmc_samp, ] %>% as.matrix()
+      
+      NPR <- vapply(1:nsim, function(x) NPR_DD(Maa[x, sage + 1, 1], n_age = length(aind)), numeric(length(aind))) %>% t()
+      
+      naa[, sage:maxage + 1, 1] <- mcmc_model$params$rinit[mcmc_samp] * NPR
+      if(min(rmcmc_ind) > 2) naa[, sage+1, 2:(min(rmcmc_ind) - 1)] <- naa[, sage+1, 1]
+      for(y in 2:nyears) {
+        for(a in (sage + 2):n_age) naa[, a, y] <- naa[, a-1, y-1] * exp(-faa[, a-1, y-1] - Maa[, a-1, y-1]) 
+        naa[, n_age, y] <- naa[, n_age, y] + naa[, n_age, y-1] * exp(-faa[, n_age, y-1] - Maa[, n_age, y-1]) 
+      }
+    } else {
+      naat <- matrix(NA_real_, n_age, nyears + 1)
+      naat[(sage+1):n_age, ] <- t(replist$mpd$N) # age x nyears
+      naa <- array(rep(naat, each = nsim), c(nsim, n_age, nyears + 1))
+    }
+  }
+  
+  if(sage > 0) { # Missing cohorts to be filled in by VPA2OM
+    aind_missing <- sage:1
+    Maa[, aind_missing, ] <- Maa[, max(aind_missing) + 1, ]
+    for(i in 1:length(aind_missing)) {
+      Maa[, aind_missing[i], ] <- Maa[, max(aind_missing) + 1, ]
+      naa[, aind_missing[i], 1:(nyears+1-i)] <- naa[, aind_missing[i]+1, 2:(nyears+2-i)] * 
+        exp(Maa[, aind_missing[i], 1:(nyears+1-i)])
+    }
+  }
+  
+  
   # steepness and sigmaR
-  if(do_mcmc && delay_diff) {
+  if(do_mcmc) {
     h <- mcmc_model$params$h[mcmc_samp]
     Perr <- sqrt((1 - mcmc_model$params$rho)/mcmc_model$params$vartheta)[mcmc_samp]
   } else {
-    h <- replist$mpd$steepness
-    Perr <- sqrt((1 - replist$par$theta6)/replist$par$theta7)
+    h <- rep(replist$mpd$steepness, nsim)
+    Perr <- rep(sqrt((1 - replist$par$theta6)/replist$par$theta7), nsim)
   }
   
   new_SR <- local({ # Get unfished spawners per recruit from mean M and back-calculate R0 to age 0
     wt <- apply(waat, 1, mean)
     fec <- apply(replist$mpd$d3_wt_mat, 2, mean)
     
-    if(do_mcmc && delay_diff) {
-      Mbar <- vapply(1:nsim, function(x) apply(Maa[x, , ], 1, mean), numeric(n_age))
-      
-      out <- vapply(1:nsim, function(x) {
-        MSYCalcs(logF = log(1e-8), M_at_Age = Mbar[, x], 
+    if(do_mcmc) {
+      Mbar <- apply(Maa, 1:2, mean)
+      phi0 <- vapply(1:nsim, function(x) {
+        MSYCalcs(logF = log(1e-8), M_at_Age = Mbar[x, ], 
                  Wt_at_Age = c(rep(0, sage), wt), Mat_at_Age = c(rep(0, sage), replist$mpd$ma), 
                  Fec_at_Age = c(rep(0, sage), fec), V_at_Age = rep(0, n_age), 
-                 maxage = n_age - 1, R0x = 1, 
-                 SRrelx = 3, hx = h[x],
-                 opt = 0, plusgroup = 1)["SB"] %>% as.numeric()
+                 maxage = n_age - 1, SRrelx = 3, opt = 0, plusgroup = 1)["SB"] %>% as.numeric()
       }, numeric(1))
-      
-      R0 <- vapply(1:nsim, function(x) mcmc_model$params$ro[mcmc_samp[x]] * exp(sum(Mbar[1:sage, x])), numeric(1))
+      R0 <- vapply(1:nsim, function(x) mcmc_model$params$ro[mcmc_samp[x]] * exp(sum(Mbar[x, 1:sage])), numeric(1))
     } else {
       Mbar <- apply(Maa[1, , ], 1, mean)
-      out <- MSYCalcs(logF = log(1e-8), M_at_Age = Mbar, 
-                      Wt_at_Age = c(rep(0, sage), wt), Mat_at_Age = c(rep(0, sage), replist$mpd$ma), 
-                      Fec_at_Age = c(rep(0, sage), fec), V_at_Age = rep(0, n_age), 
-                      maxage = n_age - 1, R0x = 1, 
-                      SRrelx = 3, hx = h, 
-                      opt = 0, plusgroup = 1)["SB"] %>% as.numeric()
+      phi0 <- MSYCalcs(logF = log(1e-8), M_at_Age = Mbar, 
+                       Wt_at_Age = c(rep(0, sage), wt), Mat_at_Age = c(rep(0, sage), replist$mpd$ma), 
+                       Fec_at_Age = c(rep(0, sage), fec), V_at_Age = rep(0, n_age), 
+                       maxage = n_age - 1, SRrelx = 3, opt = 0, plusgroup = 1)["SB"] %>% as.numeric()
       R0 <- replist$mpd$ro * exp(sum(Mbar[1:sage]))
     }
-    list(phi0 = out, R0 = R0)
+    list(phi0 = phi0, R0 = R0)
   })
   phi0 <- new_SR$phi0
   R0 <- new_SR$R0

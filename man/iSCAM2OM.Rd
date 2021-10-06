@@ -3,7 +3,7 @@
 \name{iSCAM2OM}
 \alias{iSCAM2OM}
 \alias{iSCAM2Data}
-\title{Reads MPD and MCMC estimates and data from iSCAM file structure into an operating model}
+\title{Reads MPD or MCMC estimates and data from iSCAM file structure into an operating model}
 \usage{
 iSCAM2OM(
   iSCAMdir,
@@ -37,8 +37,7 @@ uncertainty (for OM@cpars custom parameters)}
 \item{proyears}{The number of MSE projection years}
 
 \item{mcmc}{Logical, whether to use mcmc samples to create custom parameters cpars. Alternatively, a list
-returned by \link{read.mcmc}. Currently, only used for delay difference iSCAM assessments.
-Set the seed for the function to sub-sample the mcmc samples.}
+returned by \link{read.mcmc}. Set the seed for the function to sub-sample the mcmc samples.}
 
 \item{Name}{The name of the operating model}
 
@@ -60,7 +59,15 @@ Functions for importing an iSCAM assessment. From a fitted model, \code{iSCAM2OM
 populates the various slots of an operating model and \code{iSCAM2Data} generates a Data object.
 These functions rely on several functions written by Chris Grandin (DFO PBS).
 }
-\section{Historical reconstruction}{
+\section{Biological parameters}{
+
+The function calls \code{model <- load.iscam.files(iSCAMdir)} and grabs the following matrices:
+
+\item \code{model$mpd$d3_weight_mat} - fecundity (product of weight and maturity at age)
+\item \code{model$mpd$ma} - maturity at age
+}
+
+\section{MPD historical reconstruction}{
 
 The function calls \code{model <- load.iscam.files(iSCAMdir)} and then grabs the following matrices:
 
@@ -68,8 +75,6 @@ The function calls \code{model <- load.iscam.files(iSCAMdir)} and then grabs the
 \item \code{model$mpd$N} - abundance at age
 \item \code{model$mpd$F} - fishing mortality at age
 \item \code{model$mpd$M} - natural mortality at age
-\item \code{model$mpd$d3_weight_mat} - fecundity (product of weight and maturity at age)
-\item \code{model$mpd$ma} - maturity at age
 }
 
 If a delay-difference model is recognized, then the following is used instead:
@@ -80,6 +85,21 @@ If a delay-difference model is recognized, then the following is used instead:
 
 Abundance at age is reconstructed using \code{model$mpd$rt} (recruitment) and projected with \code{F_dd} and
 \code{M_dd} to match \code{model$mpd$numbers}.
+}
+
+\section{MCMC historical reconstruction}{
+
+If \code{mcmc = TRUE} the function calls \code{mcmc_model <- read.mcmc(iSCAMdir)}, and grabs \code{nsim} sub-samples of the MCMC output
+through the following arrays:
+
+\itemize{
+\item \code{mcmc_model$params} and \code{mcmc_model$ft} - fishing mortality at age from the fleet selectivity parameters and apical F's
+\item \code{mcmc_model$m} - year-specific natural mortality at age
+\item \code{mcmc_model$params$rinit} and \code{mcmc_model$rt} - recruitment and abundance
+}
+}
+
+\section{Start age}{
 
 While the iSCAM start age can be greater than zero, abundance at age is back-calculated to age zero using the M
 at the start age.
