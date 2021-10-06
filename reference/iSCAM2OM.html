@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Reads MPD and MCMC estimates and data from iSCAM file structure into an operating model — iSCAM2OM • MSEtool Functions</title>
+<title>Reads MPD or MCMC estimates and data from iSCAM file structure into an operating model — iSCAM2OM • MSEtool Functions</title>
 
 <!-- favicons -->
 <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
@@ -46,7 +46,7 @@
 
 
 
-<meta property="og:title" content="Reads MPD and MCMC estimates and data from iSCAM file structure into an operating model — iSCAM2OM" />
+<meta property="og:title" content="Reads MPD or MCMC estimates and data from iSCAM file structure into an operating model — iSCAM2OM" />
 <meta property="og:description" content="Functions for importing an iSCAM assessment. From a fitted model, iSCAM2OM
 populates the various slots of an operating model and iSCAM2Data generates a Data object.
 These functions rely on several functions written by Chris Grandin (DFO PBS)." />
@@ -121,7 +121,7 @@ These functions rely on several functions written by Chris Grandin (DFO PBS)." /
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Reads MPD and MCMC estimates and data from iSCAM file structure into an operating model</h1>
+    <h1>Reads MPD or MCMC estimates and data from iSCAM file structure into an operating model</h1>
     <small class="dont-index">Source: <a href='https://github.com/Blue-Matter/MSEtool/blob/master/R/iSCAM2OM.R'><code>R/iSCAM2OM.R</code></a></small>
     <div class="hidden name"><code>iSCAM2OM.Rd</code></div>
     </div>
@@ -174,8 +174,7 @@ uncertainty (for OM@cpars custom parameters)</p></td>
     <tr>
       <th>mcmc</th>
       <td><p>Logical, whether to use mcmc samples to create custom parameters cpars. Alternatively, a list
-returned by <a href='iSCAM.html'>read.mcmc</a>. Currently, only used for delay difference iSCAM assessments.
-Set the seed for the function to sub-sample the mcmc samples.</p></td>
+returned by <a href='iSCAM.html'>read.mcmc</a>. Set the seed for the function to sub-sample the mcmc samples.</p></td>
     </tr>
     <tr>
       <th>Name</th>
@@ -208,7 +207,14 @@ Set the seed for the function to sub-sample the mcmc samples.</p></td>
     </tr>
     </table>
 
-    <h2 class="hasAnchor" id="historical-reconstruction"><a class="anchor" href="#historical-reconstruction"></a>Historical reconstruction</h2>
+    <h2 class="hasAnchor" id="biological-parameters"><a class="anchor" href="#biological-parameters"></a>Biological parameters</h2>
+
+    
+
+<p>The function calls <code>model &lt;- load.iscam.files(iSCAMdir)</code> and grabs the following matrices:</p>
+<p><code>model$mpd$d3_weight_mat</code> - fecundity (product of weight and maturity at age)
+ <code>model$mpd$ma</code> - maturity at age</p>
+    <h2 class="hasAnchor" id="mpd-historical-reconstruction"><a class="anchor" href="#mpd-historical-reconstruction"></a>MPD historical reconstruction</h2>
 
     
 
@@ -217,8 +223,6 @@ Set the seed for the function to sub-sample the mcmc samples.</p></td>
 <li><p><code>model$mpd$N</code> - abundance at age</p></li>
 <li><p><code>model$mpd$F</code> - fishing mortality at age</p></li>
 <li><p><code>model$mpd$M</code> - natural mortality at age</p></li>
-<li><p><code>model$mpd$d3_weight_mat</code> - fecundity (product of weight and maturity at age)</p></li>
-<li><p><code>model$mpd$ma</code> - maturity at age</p></li>
 </ul>
 
 <p>If a delay-difference model is recognized, then the following is used instead:</p><ul>
@@ -228,6 +232,22 @@ Set the seed for the function to sub-sample the mcmc samples.</p></td>
 
 <p>Abundance at age is reconstructed using <code>model$mpd$rt</code> (recruitment) and projected with <code>F_dd</code> and
 <code>M_dd</code> to match <code>model$mpd$numbers</code>.</p>
+    <h2 class="hasAnchor" id="mcmc-historical-reconstruction"><a class="anchor" href="#mcmc-historical-reconstruction"></a>MCMC historical reconstruction</h2>
+
+    
+
+<p>If <code>mcmc = TRUE</code> the function calls <code>mcmc_model &lt;- read.mcmc(iSCAMdir)</code>, and grabs <code>nsim</code> sub-samples of the MCMC output
+through the following arrays:</p>
+<ul>
+<li><p><code>mcmc_model$params</code> and <code>mcmc_model$ft</code> - fishing mortality at age from the fleet selectivity parameters and apical F's</p></li>
+<li><p><code>mcmc_model$m</code> - year-specific natural mortality at age</p></li>
+<li><p><code>mcmc_model$params$rinit</code> and <code>mcmc_model$rt</code> - recruitment and abundance</p></li>
+</ul>
+
+    <h2 class="hasAnchor" id="start-age"><a class="anchor" href="#start-age"></a>Start age</h2>
+
+    
+
 <p>While the iSCAM start age can be greater than zero, abundance at age is back-calculated to age zero using the M
 at the start age.</p>
 <p>These arrays are then passed to <code>VPA2OM</code> to generate the operating model.</p>
