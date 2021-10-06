@@ -227,8 +227,16 @@ per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxag
   alpha <- CR/StockPars$SSBpR[x, 1]
   if(min(RPS) >= alpha) { # Unfished RPS is steeper than alpha
     SPRcrash <- min(1, RPS[1]/alpha) # Should be 1
-    Fcrash <- 0 # Line 233 should return 0 anyway
-  } else {
+    Fcrash <- 0
+  } else if(max(RPS) <= alpha) { # Extrapolate
+    SPRcrash <- local({ 
+      slope <- (SPR_search[length(SPR_search)] - SPR_search[length(SPR_search) - 1])/
+        (RPS[length(SPR_search)] - RPS[length(SPR_search) - 1])
+      out <- SPR_search[length(SPR_search)] - slope * (RPS[length(SPR_search)] - alpha)
+      max(out, 0.01)
+    })
+    Fcrash <- max(F_search)
+  } else {  
     SPRcrash <- LinInterp_cpp(RPS, SPR_search, xlev = alpha)
     Fcrash <- LinInterp_cpp(RPS, F_search, xlev = alpha)
   }
