@@ -11,6 +11,7 @@
 #' @examples
 #' Stock <- SubOM(testOM, "Stock")
 #' class(Stock)
+#' @seealso \link{Sub} for subsetting MSE output and \link{SubCpars} for subsetting by simulation and projection years.
 #' @export
 SubOM <- function(OM, Sub=c("Stock", "Fleet", "Obs", "Imp")) {
   if (class(OM) !="OM") stop("OM must be of class OM ", call.=FALSE)

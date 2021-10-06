@@ -453,6 +453,7 @@ checkMSE <- function(MSEobj) {
 #' MSE_2 <- Sub(MSE, sims=1:10)
 #' MSE_2@nsim
 #' }
+#' @seealso \link{SubOM} for OM components and \link{SubCpars} for subsetting by simulation and projection years.
 #' @export Sub
 Sub <- function(MSEobj, MPs = NULL, sims = NULL, years = NULL) {
 

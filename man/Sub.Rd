@@ -33,6 +33,9 @@ MSE_2 <- Sub(MSE, sims=1:10)
 MSE_2@nsim
 }
 }
+\seealso{
+\link{SubOM} for OM components and \link{SubCpars} for subsetting by simulation and projection years.
+}
 \author{
 A. Hordyk
 }
