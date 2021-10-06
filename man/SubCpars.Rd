@@ -4,7 +4,7 @@
 \alias{SubCpars}
 \title{Subset an OM cpars slot}
 \usage{
-SubCpars(OM, sims = 1:OM@nsim, proyears)
+SubCpars(OM, sims = 1:OM@nsim, proyears = OM@proyears)
 }
 \arguments{
 \item{OM}{An object of class OM}

@@ -930,7 +930,7 @@ COSEWIC_Hplot<-function(MSEobj,syear=2017,qcol=rgb(0.4,0.8,0.95), quants=c(0.05,
 #' @seealso \link{Sub} for MSE objects, \link{SubOM} for OM components.
 #' @author T. Carruthers, Q. Huynh
 #' @export SubCpars
-SubCpars<-function(OM, sims = 1:OM@nsim, proyears) {
+SubCpars<-function(OM, sims = 1:OM@nsim, proyears = OM@proyears) {
   
   # Reduce the number of simulations
   nsim_full <- OM@nsim
@@ -970,7 +970,7 @@ SubCpars<-function(OM, sims = 1:OM@nsim, proyears) {
   
   # Reduce the number of projection years
   proyears_full <- OM@proyears
-  if(!missing(proyears) && proyears < proyears_full) {
+  if(proyears < proyears_full) {
     message("Reducing the number of projection years from ", proyears_full, " to ", proyears)
     OM@proyears <- proyears
     
