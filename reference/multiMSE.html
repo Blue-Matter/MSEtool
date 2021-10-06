@@ -137,7 +137,8 @@ Strategy Evaluation (closed-loop simulation) for a specified operating model</p>
   MPs <span class='op'>=</span> <span class='cn'>NA</span>,
   parallel <span class='op'>=</span> <span class='cn'>FALSE</span>,
   silent <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  checkMPs <span class='op'>=</span> <span class='cn'>TRUE</span>
+  checkMPs <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  dropHist <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span>
 
 <span class='fu'>multiMSE</span><span class='op'>(</span>
@@ -146,7 +147,8 @@ Strategy Evaluation (closed-loop simulation) for a specified operating model</p>
   Hist <span class='op'>=</span> <span class='cn'>FALSE</span>,
   silent <span class='op'>=</span> <span class='cn'>FALSE</span>,
   parallel <span class='op'>=</span> <span class='cn'>TRUE</span>,
-  checkMPs <span class='op'>=</span> <span class='cn'>TRUE</span>
+  checkMPs <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  dropHist <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -175,6 +177,12 @@ Strategy Evaluation (closed-loop simulation) for a specified operating model</p>
     <tr>
       <th>checkMPs</th>
       <td><p>Logical. Check if the specified MPs exist and can be run on <code>SimulatedData</code>?</p></td>
+    </tr>
+    <tr>
+      <th>dropHist</th>
+      <td><p>Logical. Drop the (very large) <code>multiHist</code> object from the returned <code>MMSE</code> object?
+The <code>multiHist</code> object can be (re-)created using <code>SimulateMOM</code> or kept in <code>MMSE@multiHist</code> if
+<code>dropHist=FALSE</code></p></td>
     </tr>
     <tr>
       <th>Hist</th>

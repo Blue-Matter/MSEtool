@@ -125,6 +125,14 @@
     <div id="msetool-329999---development-version" class="section level2">
 <h2 class="hasAnchor">
 <a href="#msetool-329999---development-version" class="anchor"></a>MSEtool 3.2.9999 - Development Version</h2>
+<div id="new-additions" class="section level3">
+<h3 class="hasAnchor">
+<a href="#new-additions" class="anchor"></a>New additions</h3>
+<ul>
+<li>added <code>Awatea2OM</code> to import MCMC output from an Awatea assessment model to openMSE</li>
+<li>reference points are now calculated assuming constant stock-recruit alpha and beta parameters. Previously, constant R0 and steepness was assumed. See (<a href="https://openmse.com/tutorial-reference-points/" class="uri">https://openmse.com/tutorial-reference-points/</a>) for more details.</li>
+</ul>
+</div>
 <div id="fixes" class="section level3">
 <h3 class="hasAnchor">
 <a href="#fixes" class="anchor"></a>Fixes</h3>
@@ -140,14 +148,9 @@
 <a href="#minor-changes" class="anchor"></a>Minor changes</h3>
 <ul>
 <li>update <code>plot_mov</code> for plotting movement matrices.</li>
-</ul>
-</div>
-<div id="new-additions" class="section level3">
-<h3 class="hasAnchor">
-<a href="#new-additions" class="anchor"></a>New additions</h3>
-<ul>
-<li>added <code>Awatea2OM</code> to import MCMC output from an Awatea assessment model to openMSE</li>
-<li>reference points are now calculated assuming constant stock-recruit alpha and beta parameters. Previously, constant R0 and steepness was assumed. See (<a href="https://openmse.com/tutorial-reference-points/" class="uri">https://openmse.com/tutorial-reference-points/</a>) for more details.</li>
+<li>
+<code>ProjectMOM</code> and <code>multiMSE</code> now drop the <code>multiHist</code> object from the <code>MMSE</code> object unless argument <code>dropHist=FALSE</code>
+</li>
 </ul>
 </div>
 </div>
