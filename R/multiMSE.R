@@ -2429,11 +2429,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   nms <- names(multiHist[[1]][[1]]@Ref$Dynamic_Unfished)
   # add Dynamic_Unfished
   for (nm in nms) {
-    RefPoint$Dynamic_Unfished[[nm]] <- array(NA, dim=c(nsim, np, nf, proyears+nyears))
+    RefPoint$Dynamic_Unfished[[nm]] <- array(NA, dim=c(nsim, np,  proyears+nyears))
     for (p in 1:np) {
-      for(f in 1:nf) {
-        RefPoint$Dynamic_Unfished[[nm]][,p,f,] <- multiHist[[p]][[f]]@Ref$Dynamic_Unfished[[nm]]
-      }
+      RefPoint$Dynamic_Unfished[[nm]][,p,] <- multiHist[[p]][[1]]@Ref$Dynamic_Unfished[[nm]]
     }
   }
   # remove Ref from MultiHist
