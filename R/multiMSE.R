@@ -1339,6 +1339,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       nMP <- length(MPs[[1]][[1]])
       MPrefs <- array(NA,c(nMP,nf,np))
       MPrefs[]<-unlist(MPs)
+    
     } else if (ldim(MPs)==ldim(Fleets)[1]){ # not a two-tier list
       if (!silent) message("Bystock mode: you have specified a vector of MPs for each stock, ",
               "but not a vector of MPs for each stock and fleet. The catch data for these",
@@ -1353,6 +1354,11 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       MPrefs<-array(NA,c(nMP,nf,np))
       for(p in 1:np)MPrefs[,,p]<-MPs[[p]]
     }
+    
+    tt <- try(sapply(unlist(MPs), get), silent=TRUE)
+    if (class(tt) == 'try-error')
+      stop('Error in the MPs -', strsplit(tt,':')[[1]][2])
+    MP_classes <- sapply(tt, class)
   }
 
   if ('unknown' %in% MPcond)
@@ -1838,8 +1844,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                   StockPars=StockPars[[p]],
                                   FleetPars=FleetPars[[p]][[f]],
                                   ImpPars=ImpPars[[p]][[f]], control=control)
-
-
+        
         if(length(SexPars)>0) MPCalcs<- MPCalcsNAs(MPCalcs) # Zeros caused by SexPars
 
         TACa[,p,f, mm, y] <- TACused[,p,f]#MPCalcs$TACrec # recommended TAC
