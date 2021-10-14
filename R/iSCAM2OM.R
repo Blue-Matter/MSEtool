@@ -1575,13 +1575,13 @@ iSCAM2Data<-function(iSCAMdir,Name="iSCAM assessment",Source="No source provided
     out <- rep(NA_real_, ny)
     out[match(x[, "iyr"], Data@Year)] <- x[, "it"]
     return(out)
-  }, numeric(ny)) %>% array(c(1, n_index, ny))
+  }, numeric(ny)) %>% array(c(1, ny, n_index)) %>% aperm(c(1, 3, 2))
   
   Data@CV_AddInd <- vapply(replist$dat$indices, function(x) {
     out <- rep(NA_real_, ny)
     out[match(x[, "iyr"], Data@Year)] <- x[, "wt"]
     return(replist$ctl$weight.sig/out)
-  }, numeric(ny)) %>% array(c(1, n_index, ny))
+  }, numeric(ny)) %>% array(c(1, ny, n_index)) %>% aperm(c(1, 3, 2))
   
   Data@AddIunits <- ifelse(replist$dat$survey.type == 1, 0, 1)
   Data@AddIndType <- ifelse(replist$dat$survey.type == 3, 2, 3)
