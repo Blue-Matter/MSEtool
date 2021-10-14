@@ -1099,13 +1099,14 @@ read.mcmc <- function(model.dir = NULL,
   ##  model.dir.
   ## Returns a list of the mcmc outputs, or NULL if there was a problem or
   ##  there are no MCMC outputs.
-
+  ## Adding M file 10.14.2021
 
   mcmc.file <- "iscam_mcmc.csv"
   mcmc.biomass.file <- "iscam_sbt_mcmc.csv"
   mcmc.recr.file <- "iscam_rt_mcmc.csv"
   mcmc.recr.devs.file <- "iscam_rdev_mcmc.csv"
   mcmc.fishing.mort.file <- "iscam_ft_mcmc.csv"
+  mcmc.natural.mort.file <- "iscam_m_mcmc.csv"
   mcmc.fishing.mort.u.file <- "iscam_ut_mcmc.csv"
   mcmc.vuln.biomass.file <- "iscam_vbt_mcmc.csv"
   mcmc.proj.file <- "iscammcmc_proj_Gear1.csv"
@@ -1121,6 +1122,7 @@ read.mcmc <- function(model.dir = NULL,
   mcmcrtfn   <- file.path(model.dir, mcmc.recr.file)
   mcmcrdevfn <- file.path(model.dir, mcmc.recr.devs.file)
   mcmcftfn   <- file.path(model.dir, mcmc.fishing.mort.file)
+  mcmcmfn    <- file.path(model.dir, mcmc.natural.mort.file)
   mcmcutfn   <- file.path(model.dir, mcmc.fishing.mort.u.file)
   mcmcvbtfn  <- file.path(model.dir, mcmc.vuln.biomass.file)
   mcmcprojfn <- file.path(model.dir, mcmc.proj.file)
@@ -1140,6 +1142,9 @@ read.mcmc <- function(model.dir = NULL,
   if(file.exists(mcmcftfn)){
     ft         <- read.csv(mcmcftfn)
     tmp$ft     <- extract.area.sex.matrices(ft, prefix = "ft")
+  }
+  if(file.exists(mcmcmfn)) {
+    tmp$m <- read.csv(mcmcmfn)
   }
   if(file.exists(mcmcutfn)){
     ut         <- read.csv(mcmcutfn)
