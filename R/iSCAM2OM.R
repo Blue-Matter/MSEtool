@@ -172,8 +172,7 @@ iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=FALSE, Name="iSCAM model
       tofill <- apply(fout, 2, function(x) all(x == 0))
       if(any(tofill)) {
         Vtemp <- apply(fout, 1, mean)
-        Vtemp <- Vtemp/max(Vtemp)
-        fout[, tofill] <- rep(Vtemp, sum(tofill))
+        fout[, tofill] <- 1e-8 * Vtemp/max(Vtemp)
       }
       return(fout)
     })
@@ -269,11 +268,9 @@ iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=FALSE, Name="iSCAM model
   
   if(sage > 0) { # Missing cohorts to be filled in by VPA2OM
     aind_missing <- sage:1
-    Maa[, aind_missing, ] <- Maa[, max(aind_missing) + 1, ]
     for(i in 1:length(aind_missing)) {
-      Maa[, aind_missing[i], ] <- Maa[, max(aind_missing) + 1, ]
-      naa[, aind_missing[i], 1:(nyears+1-i)] <- naa[, aind_missing[i]+1, 2:(nyears+2-i)] * 
-        exp(Maa[, aind_missing[i], 1:(nyears+1-i)])
+      Maa[, aind_missing[i], ] <- Maa[, sage + 1, ]
+      naa[, aind_missing[i], 2:nyears - 1] <- naa[, aind_missing[i] + 1, 2:nyears] * exp(Maa[, aind_missing[i], 2:nyears - 1])
     }
   }
   
