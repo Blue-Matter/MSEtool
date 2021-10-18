@@ -5,6 +5,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 ### New additions
 - new functions `makeRel` and `makeMOM` with methods for developing MICE relationships, e.g., density-dependent M.
 - depletion optimization in `multiMSE` uses `Wt_age_C` for catch fraction calculations.
+- argument `parallel` in `runMSE` can now be MP-specific by specifying a logical vector of length(MPs). This is useful to apply slow-running MPs in parallel, while avoiding the parallel overhead time for fast-running MPs.
 
 ### Fixes
 - fix bug in re-calculation of MSY refs points when selectivity parameters change (introduced in last version)

@@ -616,7 +616,7 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, nyears, maxF, plus
 }
 
 set_parallel <- function(parallel) {
-  if (parallel) {
+  if (any(parallel)) {
     if (snowfall::sfIsRunning()) {
       ncpus <- snowfall::sfCpus()
     } else {

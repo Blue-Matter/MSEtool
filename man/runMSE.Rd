@@ -30,7 +30,7 @@ runMSE(
 \arguments{
 \item{OM}{An operating model object (class \code{OM} or class \code{Hist})}
 
-\item{parallel}{Logical. Should the MSE be run using parallel processing?}
+\item{parallel}{Logical. Should the MSE be run using parallel processing? Can be a vector of length(MPs)}
 
 \item{silent}{Should messages be printed out to the console?}
 

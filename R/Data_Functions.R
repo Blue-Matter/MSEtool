@@ -2648,12 +2648,13 @@ ref_plots <- function(Data, i=1, n=20000, fignum=1) {
 #' @param reps Number of samples
 #' @param nsims Optional. Number of simulations.
 #' @param silent Logical. Should messages be suppressed?
+#' @param parallel Logical. Whether to run MPs in parallel. Can be a vector of length(MPs)
 #'
 #' @return A list with the first element a list of management recommendations,
 #' and the second the updated Data object
 #' @export
 #'
-applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE) {
+applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE, parallel = snowfall::sfIsRunning()) {
   if (class(Data) != "Data") stop("First argument must be object of class 'Data'", call.=FALSE)
   Dataout <- Data
   if (is.na(nsims)) nsims <- nrow(Data@Cat)
@@ -2670,7 +2671,15 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE) {
 
   # refMPs <- avail('MP', 'MSEtool', msg=FALSE)
   refMPs <- c("FMSYref", "FMSYref50", "FMSYref75", "NFref")#  refMPs[grepl('ref', refMPs)]
-
+  
+  if (length(parallel) < length(MPs)) {
+    if (length(parallel) > 1) {
+      stop("length(parallel) must be equal to length(MPs)")
+    } else {
+      parallel <- rep(parallel, length(MPs))
+    }
+  }
+  
   runParallel <- snowfall::sfIsRunning()
   # if (nMPs < 8 & nsims < 8) runParallel <- FALSE
 
@@ -2680,20 +2689,20 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE) {
   for (mp in 1:nMPs) {
     if (!silent)  message(MPs[mp])
     
-    mp_ns <- find(MPs[mp])
-    dlmmp <- grepl('DLMtool', mp_ns)
-    # don't run DLMtool MPs in parallel (slower if you do)
-    if (length(dlmmp)<1) dlmmp <- FALSE
-    msemmp <- grepl('MSEtool', mp_ns)
-    # don't run MSEtool MPs in parallel (slower if you do)
-    if (length(msemmp)<1) msemmp <- FALSE
+    #mp_ns <- find(MPs[mp])
+    #dlmmp <- grepl('DLMtool', mp_ns)
+    ## don't run DLMtool MPs in parallel (slower if you do)
+    #if (length(dlmmp)<1) dlmmp <- FALSE
+    #msemmp <- grepl('MSEtool', mp_ns)
+    ## don't run MSEtool MPs in parallel (slower if you do)
+    #if (length(msemmp)<1) msemmp <- FALSE
+    #
+    ## exceptions
+    #if (MPs[mp] %in% c('LBSPR', 'LBSPR_MLL')) dlmmp <- FALSE
+    #
+    #if (dlmmp |msemmp) runParallel <- FALSE
     
-    # exceptions
-    if (MPs[mp] %in% c('LBSPR', 'LBSPR_MLL')) dlmmp <- FALSE
-    
-    if (dlmmp |msemmp) runParallel <- FALSE
-    
-    if (runParallel) {
+    if (runParallel && parallel[mp]) {
       temp <- try(snowfall::sfLapply(1:nsims, MPs[mp], Data = Data, reps = reps), silent=TRUE)
     } else {
       temp <- try(lapply(1:nsims, MPs[mp], Data = Data, reps = reps), silent=TRUE)
