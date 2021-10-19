@@ -226,7 +226,6 @@ multiDataS<-function(MSElist,StockPars,np,mm,nf,realVB){
   nl<-dim(MSElist[[1]][[1]][[mm]]@CAL)[3]
   ni<-np*nf
 
-
   if(realVB[1,1,1]==0)realVB[,,1]<-realVB[,,2] # impute vulnerable biomass for year 1 if missing (a negligible issue to be fixed in popdyn_MICE)
 
   DBF<-list()
@@ -325,13 +324,13 @@ multiDataS<-function(MSElist,StockPars,np,mm,nf,realVB){
   # add Misc for each stock and fleet
   # this makes the object way too big
   Dataout@Misc <- list()
-  # for(p in 1:np){
-  #   Dataout@Misc[[p]] <- list()
-  #   for(f in 1:nf){
-  #     Dataout@Misc[[p]][[f]] <- MSElist[[p]][[f]][[mm]]@Misc
-  #   }
-  # }
-
+  for(p in 1:np){
+    Dataout@Misc[[p]] <- list()
+    for(f in 1:nf){
+      Dataout@Misc[[p]][[f]] <- MSElist[[p]][[f]][[mm]]@Misc
+    }
+  }
+  
   Dataout
 }
 

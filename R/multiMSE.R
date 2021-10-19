@@ -1716,7 +1716,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
       curdat<-multiDataS(MSElist,StockPars,np,mm,nf,realVB)
       runMP <- applyMP(curdat, MPs = MPs[mm], reps = 1, silent=TRUE)  # Apply MP
-
+    
       Stock_Alloc<-realVB[,,nyears, drop=FALSE]/apply(realVB[,,nyears, drop=FALSE],1,sum)
 
       for(p in 1:np)  for(f in 1:nf){
@@ -1794,6 +1794,14 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
           }
         }
       } # end of stocks
+    }
+    
+    # Update Misc slot in Data
+    for (p in 1:np) {
+      for (f in 1:nf) {
+        
+        MSElist[[p]][[f]][[mm]]@Misc <- Data_p_A[[p]][[f]]@Misc
+      } 
     }
 
     MPCalcs_list <- vector('list', np)
@@ -1890,7 +1898,6 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
       # -- Calculate MSY stats for this year ----
       # if selectivity has changed
-
       for (p in 1:np) {
         for (f in 1:nf) {
           SelectChanged <- FALSE
@@ -2069,7 +2076,6 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                                   Misc=MSElist[[p]][[f]][[mm]]@Misc,
                                                   RealData=multiHist[[p]][[f]]@Data,
                                                   Sample_Area=ObsPars[[p]][[f]]$Sample_Area)
-
             # ---- Update true abundance ----
             M_array <- array(0.5*StockPars[[p]]$M_ageArray[,,nyears+y],
                              dim=c(nsim, n_age, nareas))
@@ -2099,10 +2105,12 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                apply(VBiomass_P[,,,1:(y-1), , drop=FALSE],c(1,2,4),sum,na.rm=T),
                                along=3)
 
-
           curdat<-multiDataS(MSElist,StockPars,np,mm,nf,realVB)
-          runMP <- MSEtool::applyMP(curdat, MPs = MPs[mm], reps = 1, silent=TRUE)  # Apply MP
-
+          
+          curdat@Misc[[1]][[1]] %>% length()
+     
+          runMP <- applyMP(curdat, MPs = MPs[mm], reps = 1, silent=TRUE)  # Apply MP
+          
           Stock_Alloc <- realVB[,,nyears, drop=FALSE]/
             apply(realVB[,,nyears, drop=FALSE],1,sum)
 
@@ -2182,6 +2190,15 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             } # end of MPcond conditional
           } # end of stock loop
         } # end of MMP
+        
+        
+        # Update Misc slot in Data
+        for (p in 1:np) {
+          for (f in 1:nf) {
+            MSElist[[p]][[f]][[mm]]@Misc <- Data_p_A[[p]][[f]]@Misc
+          } 
+        }
+        
 
         for(p in 1:np){
           for(f in 1:nf){
@@ -2324,6 +2341,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
           } # end of fleets
         } # end of stocks
       } # end of not update year
+ 
+      
     } # end of projection years
 
     if(!silent) close(pb)
