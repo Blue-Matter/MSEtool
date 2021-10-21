@@ -1716,7 +1716,6 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
       curdat<-multiDataS(MSElist,StockPars,np,mm,nf,realVB)
       runMP <- applyMP(curdat, MPs = MPs[mm], reps = 1, silent=TRUE)  # Apply MP
-    
       Stock_Alloc<-realVB[,,nyears, drop=FALSE]/apply(realVB[,,nyears, drop=FALSE],1,sum)
 
       for(p in 1:np)  for(f in 1:nf){
@@ -1795,11 +1794,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         }
       } # end of stocks
     }
-    
+   
     # Update Misc slot in Data
     for (p in 1:np) {
       for (f in 1:nf) {
-        
         MSElist[[p]][[f]][[mm]]@Misc <- Data_p_A[[p]][[f]]@Misc
       } 
     }
@@ -2107,8 +2105,6 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
           curdat<-multiDataS(MSElist,StockPars,np,mm,nf,realVB)
           
-          curdat@Misc[[1]][[1]] %>% length()
-     
           runMP <- applyMP(curdat, MPs = MPs[mm], reps = 1, silent=TRUE)  # Apply MP
           
           Stock_Alloc <- realVB[,,nyears, drop=FALSE]/
