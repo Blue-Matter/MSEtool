@@ -2698,9 +2698,8 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE) {
     } else {
       temp <- try(lapply(1:nsims, MPs[mp], Data = Data, reps = reps), silent=TRUE)
     }
-
+   
     if (class(temp)=='try-error') {
-      if (!silent)
         warning("Method ", MPs[mp], " failed with error: ", temp)
     } else {
       slots <- slotNames(temp[[1]])
@@ -2737,4 +2736,70 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE) {
   Dataout@Misc[nms] <- Data@Misc[nms]
 
   list(returnList, Dataout)
+}
+
+
+SubData_sim <- function(x, Data) {
+  if(class(Data) !='Data') stop('Object must be class `Data`')
+  subdata <- new("Data")
+  sltType <- getSlots('Data')
+  slts <- slotNames(Data)
+  
+  for (i in seq_along(slts)) {
+    if (sltType[i] == "character")
+      slot(subdata, slts[i]) <- slot(Data, slts[i])
+    if (sltType[i] == "numeric")
+      slot(subdata, slts[i]) <- slot(Data, slts[i])
+    if (sltType[i] == "vector")
+      if (slts[i]=='Year') {
+        slot(subdata, slts[i]) <- slot(Data, slts[i])
+      } else {
+        slot(subdata, slts[i]) <- slot(Data, slts[i])[x]  
+      }
+      
+    if (sltType[i] == "matrix")
+      slot(subdata, slts[i]) <- matrix(slot(Data, slts[i])[x,], nrow=1)
+    if (sltType[i] == "array") {
+      tt <- slot(Data, slts[i])
+      dd <- dim(tt)
+      ll <- length(dd)
+      if (ll ==2) {
+        slot(subdata, slts[i]) <- array(slot(Data, slts[i])[x,], dim=c(1,dd[2:length(dd)]))
+      }
+      if (ll ==3) {
+        slot(subdata, slts[i]) <- array(slot(Data, slts[i])[x,,], dim=c(1,dd[2:length(dd)]))
+      }
+      
+    }
+    if (sltType[i] == "list") {
+      tt <- slot(Data, slts[i])
+      newlist <- list()
+      if (length(tt)>0) {
+        if (slts[i] == 'Misc') {
+          np <- length(tt)
+          nf <- length(tt[[1]])
+          n_sim <- length(tt[[1]][[1]])
+          for (p in 1:np) {
+            newlist[[p]] <- list()
+            for (f in 1:nf) {
+              newlist[[p]][[f]] <- list()  
+              newlist[[p]][[f]][[1]] <- tt[[1]][[1]][[x]]
+            }
+          }
+        }
+        
+      }
+      slot(subdata, slts[i]) <- newlist
+    }
+    if (sltType[i] == "data.frame") {
+      slot(subdata, slts[i]) <- slot(Data, slts[i])[x,]
+    }
+  }
+  subdata
+}
+
+MP_wrapper <- function(x, Data, MP, ...) {
+  subdat <- SubData_sim(x, Data)
+  fun <- get(MP)
+  fun(1, subdat, ...)
 }
