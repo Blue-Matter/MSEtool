@@ -1343,6 +1343,13 @@ sample_lnorm <- function(par, cpars, Obj, nsim, altpar=NULL) {
 
 }
 
+sample_norm <- function(par, cpars, Obj, nsim, altpar=NULL) {
+  if (!is.null(cpars[[par]])) return(cpars[[par]])
+  if (!is.null(altpar)) par <- altpar
+  val <- slot(Obj, par)[1]
+  rnorm(nsim, 0, val)
+}
+
 #' Sample Observation Parameters
 #'
 #' @param Obs An object of class 'Obs' or class 'OM'
@@ -1543,7 +1550,8 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
   Kbias <- sample_lnorm('Kbias', cpars, Obs, nsim, 'Kbiascv')
   ObsOut$Kbias <- Kbias
 
-  t0bias <- sample_lnorm('t0bias', cpars, Obs, nsim, 't0biascv')
+  t0bias <- sample_norm('t0bias', cpars, Obs, nsim, 't0biascv')
+
   ObsOut$t0bias <- t0bias
 
   Linfbias <- sample_lnorm('Linfbias', cpars, Obs, nsim, 'Linfbiascv')

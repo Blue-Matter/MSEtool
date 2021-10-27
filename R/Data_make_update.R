@@ -71,7 +71,7 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
   # --- Life-history parameters ----
   Data@vbLinf <- StockPars$Linfarray[,nyears] * ObsPars$Linfbias # observed vB Linf
   Data@vbK <- StockPars$Karray[,nyears] * ObsPars$Kbias # observed vB K
-  Data@vbt0 <- StockPars$t0array[,nyears] * ObsPars$t0bias # observed vB t0
+  Data@vbt0 <- StockPars$t0array[,nyears] + ObsPars$t0bias # observed vB t0
   Data@Mort <- StockPars$Marray[,nyears] * ObsPars$Mbias # natural mortality
   Data@L50 <- StockPars$L50array[,nyears] * ObsPars$lenMbias # observed length at 50% maturity
   Data@L95 <- StockPars$L95array[,nyears] * ObsPars$lenMbias # observed length at 95% maturity
@@ -475,7 +475,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   # --- Update life-history parameter estimates for current year ----
   Data@vbLinf <- StockPars$Linfarray[,nyears+y] * ObsPars$Linfbias # observed vB Linf
   Data@vbK <- StockPars$Karray[,nyears+y] * ObsPars$Kbias # observed vB K
-  Data@vbt0 <- StockPars$t0array[,nyears+y] * ObsPars$t0bias # observed vB t0
+  Data@vbt0 <- StockPars$t0array[,nyears+y] + ObsPars$t0bias # observed vB t0
   Data@Mort <- StockPars$Marray[,nyears+y] * ObsPars$Mbias # natural mortality
   Data@L50 <- StockPars$L50array[,nyears+y] * ObsPars$lenMbias # observed length at 50% maturity
   Data@L95 <- StockPars$L95array[,nyears+y] * ObsPars$lenMbias # observed length at 95% maturity
@@ -767,9 +767,13 @@ UpdateObs <- function(sl, obsval, OMval, RealData, SimData, msg){
   if (!is.na(RealVal) & !all(SimVal == tiny)) {
     if (msg)
       message(paste0('Updating Observation Error for `OM@cpars$Data@', sl, '`'))
-
+    
     # bias
-    calcBias <- RealVal/OMval
+    if (sl == 'vbt0') {
+      calcBias <- RealVal-OMval
+    } else {
+      calcBias <- RealVal/OMval  
+    }
     return(calcBias)
   } else {
     return(obsval)
@@ -841,7 +845,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
   Data_out@vbt0 <- UpdateSlot('vbt0', RealData, SimData, msg)
   ObsPars$t0bias <- UpdateObs('vbt0', ObsPars$t0bias, StockPars$t0array[, nyears],
                               RealData, SimData, msg)
-
+  
   Data_out@CV_Mort <- UpdateSlot('CV_Mort', RealData, SimData, msg)
   Data_out@CV_vbLinf <- UpdateSlot('CV_vbLinf', RealData, SimData, msg)
   Data_out@CV_vbK <- UpdateSlot('CV_vbK', RealData, SimData, msg)
