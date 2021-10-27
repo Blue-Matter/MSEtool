@@ -189,6 +189,13 @@ sample_unif <- function(par, cpars, Obj, nsim, altpar=NULL) {
     tt <- myrunif(nsim, 0,1) # call to runif to increment RNG
     return(cpars[[par]])
   }
+  if ((!is.null(altpar))) {
+    if (!is.null(cpars[[altpar]])) {
+      tt <- myrunif(nsim, 0,1) # call to runif to increment RNG
+      return(cpars[[altpar]])
+    }  
+  }
+  
   if (!is.null(altpar)) par <- altpar
   vals <- slot(Obj, par)
   if (length(vals)<1) stop('slot ', par, ' in object class ', class(Obj), ' is missing values')
