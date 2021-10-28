@@ -50,7 +50,7 @@ VPA2OM<-function(Name="A fishery made by VPA2OM",
                  recind=0, plusgroup=TRUE, altinit=0, fixq1=TRUE,
                  report=FALSE, silent=FALSE, ...) {
 
-  simup<-function(param,OM){   # Generic function for converting VPA outputs to an OM
+  simup<-function(param, OM, do_slot = TRUE){   # Generic function for converting VPA outputs to an OM
     paramnam<-deparse(substitute(param))
     if(length(param)==1){
       OM@cpars[[paramnam]]<-rep(param,nsim)
@@ -59,7 +59,7 @@ VPA2OM<-function(Name="A fishery made by VPA2OM",
     }else{
       OM@cpars[[paramnam]]<-param
     }
-    slot(OM,paramnam)<-rep(param[1],2)
+    if(do_slot) slot(OM,paramnam)<-rep(param[1],2)
     OM
   }
   
@@ -148,7 +148,8 @@ VPA2OM<-function(Name="A fishery made by VPA2OM",
   
   OM <- simup(D, OM)
   hs <- h
-  OM <- simup(hs, OM)
+  OM <- simup(hs, OM, do_slot = FALSE)
+  OM@h <- rep(hs[1], 2)
   OM <- simup(R0, OM)
   OM@Size_area_1 <- OM@Frac_area_1 <- OM@Prob_staying <- rep(0.5, 2)
   
