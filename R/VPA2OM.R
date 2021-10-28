@@ -147,7 +147,8 @@ VPA2OM<-function(Name="A fishery made by VPA2OM",
   OM@interval<-interval
   
   OM <- simup(D, OM)
-  OM <- simup(h, OM)
+  hs <- h
+  OM <- simup(hs, OM)
   OM <- simup(R0, OM)
   OM@Size_area_1 <- OM@Frac_area_1 <- OM@Prob_staying <- rep(0.5, 2)
   
