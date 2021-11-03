@@ -13,7 +13,7 @@ compareNmulti <- function(replist, multiHist) {
     age_frac <- data.frame(age = 0:maxage) %>% mutate(true_age = floor(age/nseas))
     OM_years <- dplyr::filter(year_frac, seas == 1) %>% getElement("mainyrs")
   }
-  N_SS <- replist$natage  %>% filter(Yr %in% OM_years, `Beg/Mid`=="B")
+  N_SS <- replist$natage  %>% filter(Yr %in% OM_years, Seas == 1, `Beg/Mid`=="B")
   cols <- which(colnames(N_SS)=='0'):ncol(replist$natage)
   N_SS <- N_SS %>% 
     tidyr::pivot_longer(cols=all_of(cols)) %>%
@@ -42,7 +42,7 @@ compareNmulti <- function(replist, multiHist) {
 
 compareSBmulti <- function(replist, multiHist) {
   mainyrs <- replist$startyr:replist$endyr
-  SB_SS <- replist$timeseries %>% dplyr::filter(Yr %in% mainyrs) %>% dplyr::select(Year=Yr, SB=SpawnBio)
+  SB_SS <- replist$timeseries %>% dplyr::filter(Yr %in% mainyrs, Seas == 1) %>% dplyr::select(Year=Yr, SB=SpawnBio)
   
   n.yrs <- dim(multiHist[[1]][[1]]@TSdata$Number)[2]
   nsim <- dim(multiHist[[1]][[1]]@TSdata$Number)[1]
@@ -62,8 +62,8 @@ compareSBmulti <- function(replist, multiHist) {
 
 compareSB_depmulti <- function(replist, multiHist) {
   mainyrs <- replist$startyr:replist$endyr
-  SB_SS <- replist$timeseries %>% dplyr::filter(Yr %in% mainyrs) %>% dplyr::select(Year=Yr, SB=SpawnBio)
-  SB_SS$SB <- SB_SS$SB/replist$SBzero
+  SB_SS <- replist$timeseries %>% dplyr::filter(Yr %in% mainyrs, Seas == 1) %>% dplyr::select(Year=Yr, SB=SpawnBio)
+  SB_SS$SB <- SB_SS$SB/replist$SBzero # See also replist$derived_quants$Value[rownames(replist$derived_quants) == "SSB_Virgin"]
   
   n.yrs <- dim(multiHist[[1]][[1]]@TSdata$Number)[2]
   nsim <- dim(multiHist[[1]][[1]]@TSdata$Number)[1]
@@ -89,7 +89,7 @@ compareSB_depmulti <- function(replist, multiHist) {
 
 compareBmulti <- function(replist, multiHist) {
   mainyrs <- replist$startyr:replist$endyr
-  B_SS <- replist$timeseries %>% dplyr::filter(Yr %in% mainyrs) %>% dplyr::select(Year=Yr, B=Bio_all)
+  B_SS <- replist$timeseries %>% dplyr::filter(Yr %in% mainyrs, Seas == 1) %>% dplyr::select(Year=Yr, B=Bio_all)
   
   n.p <- length(multiHist)
   n.yrs <- dim(multiHist[[1]][[1]]@TSdata$Number)[2]
@@ -119,7 +119,9 @@ compareCmulti <- function(replist, multiHist) {
   # removals 
   mainyrs <- replist$startyr:replist$endyr
   C_SS <- replist$catch %>% dplyr::filter(Yr %in% mainyrs) %>%
-    dplyr::select(Year=Yr, Fleet=Fleet, C=Exp)
+    dplyr::select(Year=Yr, Fleet=Fleet, C=Exp, Seas = Seas) %>%
+    dplyr::group_by(Year, Fleet) %>% 
+    dplyr::summarise(C = sum(C))
   
   n.p <- length(multiHist)
   n.f <- length(multiHist[[1]])
@@ -152,7 +154,25 @@ compareCmulti <- function(replist, multiHist) {
     facet_wrap(~Fleet, scales="free") +
     theme_bw() + 
     labs(x="Year", y="Catch (removals) by Fleet")
- 
+  
+  # break into groups of 8 fleets
+  fleets <- C_dat$Fleet %>% unique()
+  fleet_groups <- split(fleets, ceiling(seq_along(fleets)/8))
+  pout <- list()
+  for (i in seq_along(fleet_groups)) {
+    C_dat2 <- C_dat %>% dplyr::filter(Fleet %in% fleet_groups[[i]]) %>% 
+      mutate(Fleet2 = factor(replist$FleetNames[Fleet], levels = replist$FleetNames[fleet_groups[[i]]]))
+    pout[[i]] <- ggplot(C_dat2, aes(x=Year, y=C, color=Model, linetype=Model)) +
+      geom_line() +
+      facet_wrap(~Fleet2, scales="free") +
+      theme_bw() + 
+      labs(x="Year", y="Catch (removals) by Fleet")
+  }
+  
+  for (i in seq_along(fleet_groups)) {
+    print(pout[[i]]) 
+  }
+  
 }
 
 compareC_overallmulti <- function(replist, multiHist) {
@@ -253,11 +273,13 @@ compareAmulti <- function(replist, multiHist) {
     age_frac <- data.frame(age = 0:maxage) %>% mutate(true_age = floor(age/nseas))
     OM_years <- dplyr::filter(year_frac, seas == 1) %>% getElement("mainyrs")
   }
-  N_SS <- replist$natage  %>% filter(Yr %in% OM_years, `Beg/Mid`=="B")
+  N_SS <- replist$natage  %>% filter(Yr %in% OM_years, Seas == 1, `Beg/Mid`=="B") # More recruits show up in later seasons within year
   cols <- which(colnames(N_SS)=='0'):ncol(replist$natage)
   N_SS <- N_SS %>% 
     tidyr::pivot_longer(cols=all_of(cols)) %>%
-    mutate(Age=as.numeric(name), N=value)
+    mutate(Age=as.numeric(name), N=value) %>% 
+    group_by(Age, Yr, Sex) %>% 
+    summarise(N = sum(N))
 
   np <- length(multiHist)
   N_OMlist <- list()
@@ -284,7 +306,7 @@ compareAmulti <- function(replist, multiHist) {
       facet_wrap(~Yr, ncol=4) +
       geom_line() +
       theme_bw() + 
-      labs(x="Year", y="Numbers-at-Age")
+      labs(x="Age", y="Numbers-at-Age")
   }
   
   for (i in seq_along(yr_groups)) {
