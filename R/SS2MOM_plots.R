@@ -13,12 +13,37 @@ compareNmulti <- function(replist, multiHist) {
     age_frac <- data.frame(age = 0:maxage) %>% mutate(true_age = floor(age/nseas))
     OM_years <- dplyr::filter(year_frac, seas == 1) %>% getElement("mainyrs")
   }
-  N_SS <- replist$natage  %>% filter(Yr %in% OM_years, Seas == 1, `Beg/Mid`=="B")
-  cols <- which(colnames(N_SS)=='0'):ncol(replist$natage)
-  N_SS <- N_SS %>% 
-    tidyr::pivot_longer(cols=all_of(cols)) %>%
-    group_by(Yr, Sex) %>%
-    summarize(N=sum(value), .groups = 'keep')
+  
+  if(replist$nsexes == 1 && length(replist$seasdurations) > 1) { # Multi-season, single sex models
+    N_SS <- local({
+      N_SS_1 <- replist$natage  %>% filter(Yr %in% OM_years, Seas == 1, `Beg/Mid`=="B") # Age 1+ at beginning of year
+      cols <- which(colnames(N_SS_1)=='1'):ncol(replist$natage)
+      N_SS_1 <- N_SS_1 %>% 
+        tidyr::pivot_longer(cols=all_of(cols)) %>%
+        group_by(Yr, Sex) %>%
+        summarize(N=sum(value), .groups = 'keep') %>% 
+        mutate(Age = "1+")
+      
+      N_SS_0 <- replist$natage %>% filter(Yr %in% OM_years, `Beg/Mid`=="B", Seas == Morph) # Recruits (age-0) that show up during the year
+      cols <- which(colnames(N_SS_0)=='0')
+      N_SS_0 %>%
+        tidyr::pivot_longer(cols=all_of(cols)) %>%
+        group_by(Yr, Sex) %>%
+        summarize(N=sum(value), .groups = 'keep') %>%
+        mutate(Age = "0")
+      
+      rbind(N_SS_1, N_SS_0) %>% 
+        group_by(Yr, Sex) %>% 
+        summarise(N = sum(N))
+    })
+  } else {
+    N_SS <- replist$natage  %>% filter(Yr %in% OM_years, Seas == 1, `Beg/Mid`=="B")
+    cols <- which(colnames(N_SS)=='0'):ncol(replist$natage)
+    N_SS <- N_SS %>% 
+      tidyr::pivot_longer(cols=all_of(cols)) %>%
+      group_by(Yr, Sex) %>%
+      summarize(N=sum(value), .groups = 'keep')
+  }
   
   np <- length(multiHist)
   N_OMlist <- list()
@@ -231,7 +256,7 @@ compareRecmulti <- function(replist, multiHist) {
     age_frac <- data.frame(age = 0:maxage) %>% mutate(true_age = floor(age/nseas))
     OM_years <- dplyr::filter(year_frac, seas == 1) %>% getElement("mainyrs")
   }
-  N_SS <- replist$natage  %>% filter(Yr %in% OM_years, `Beg/Mid`=="B")
+  N_SS <- replist$natage  %>% filter(Yr %in% OM_years, `Beg/Mid`=="B", Morph == Seas)
   cols <- which(colnames(N_SS)=='0')
   N_SS <- N_SS %>% 
     tidyr::pivot_longer(cols=all_of(cols)) %>%
