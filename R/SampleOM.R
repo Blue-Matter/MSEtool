@@ -671,12 +671,13 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   # ---- Mean Natural mortality by simulation and year ----
   if (is.null(cpars$Marray) & !is.null(cpars$M_ageArray)) {
     # Mean M-at-age needs to be calculated
-    Marray <- matrix(NA, nsim, nyears+proyears)
-    for (yr in 1:(nyears+proyears)) {
-      for (sim in 1:nsim) {
-        Marray[sim, yr] <- mean(M_ageArray[sim, (ageMarray[sim,yr]+1):n_age,yr])
-      }
-    }
+    Marray <- apply(M_ageArray * Mat_age, c(1,3), sum)/apply(Mat_age,c(1,3),sum)
+  
+    # for (yr in 1:(nyears+proyears)) {
+    #   for (sim in 1:nsim) {
+    #     Marray[sim, yr] <- mean(M_ageArray[sim, (ageMarray[sim,yr]+1):n_age,yr])
+    #   }
+    # }
   } else {
     Marray <- cpars$Marray
   }
@@ -684,6 +685,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
     # M by sim and year according to gradient and inter annual variability
     Marray <- GenerateRandomWalk(M, Msd, nyears + proyears, nsim, Mrand)
   }
+ 
 
   # ---- Natural mortality by simulation, age and year ----
   if (!exists("M_ageArray", inherits=FALSE)) { # only calculate M_ageArray if it hasn't been specified in cpars
