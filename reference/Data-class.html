@@ -260,7 +260,7 @@ with dimensions <code>nsim</code> x <code>MaxAge+1</code>.</p></dd>
 
 <dt><code>Vuln_CAL</code></dt><dd><p>Optional vulnerability-at-length schedule for catch-at-length samples. Used to condition OM for closed-loop
 simulation testing. Replaces the fleet selectivity schedule in the OM used to generate CAL samples. Matrix
-with dimensions <code>nsim</code> x <code><a href='https://rdrr.io/r/base/length.html'>length(CAL_mids)</a></code>.</p></dd>
+with dimensions <code>nsim</code> x <code>length(CAL_mids)</code>.</p></dd>
 
 <dt><code>CAL_bins</code></dt><dd><p>The values delimiting the length bins for the catch-at-length data. Vector. Non-negative real numbers</p></dd>
 
@@ -342,10 +342,10 @@ with dimensions <code>nsim</code> x <code><a href='https://rdrr.io/r/base/length
     <p>T. Carruthers and A. Hordyk</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'>
-<span class='va'>newdata</span><span class='op'>&lt;-</span><span class='fu'>new</span><span class='op'>(</span><span class='st'>'Data'</span><span class='op'>)</span>
-
-</div></pre>
+    <pre class="examples"><span class='r-in'></span>
+<span class='r-in'><span class='va'>newdata</span><span class='op'>&lt;-</span><span class='fu'>new</span><span class='op'>(</span><span class='st'>'Data'</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+</pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

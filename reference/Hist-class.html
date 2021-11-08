@@ -140,8 +140,8 @@
 <dt><code>OMPars</code></dt><dd><p>A numeric data.frame with nsim rows with sampled Stock, Fleet,
 Obs, and Imp parameters.</p></dd>
 
-<dt><code>AtAge</code></dt><dd><p>A named list with arrays of dimensions: <code><a href='https://rdrr.io/r/base/c.html'>c(nsim, maxage+1, nyears+proyears)</a></code> or
-<code><a href='https://rdrr.io/r/base/c.html'>c(nsim, maxage+1, nyears, nareas)</a></code>
+<dt><code>AtAge</code></dt><dd><p>A named list with arrays of dimensions: <code>c(nsim, maxage+1, nyears+proyears)</code> or
+<code>c(nsim, maxage+1, nyears, nareas)</code>
 <ul>
 <li><p>Length: Length-at-age for each simulation, age, and year</p></li>
 <li><p>Weight: Weight-at-age for each simulation, age, and year</p></li>
@@ -164,16 +164,16 @@ simulation, age, year and area</p></li>
 
 <dt><code>TSdata</code></dt><dd><p>A named list with population and fleet dynamics:
 <ul>
-<li><p>Number: Total numbers; array dimensions <code><a href='https://rdrr.io/r/base/c.html'>c(nsim, nyears, nareas)</a></code></p></li>
-<li><p>Biomass: Total biomass; array dimensions <code><a href='https://rdrr.io/r/base/c.html'>c(nsim, nyears, nareas)</a></code></p></li>
-<li><p>VBiomass: Vulnerable biomass; array dimensions <code><a href='https://rdrr.io/r/base/c.html'>c(nsim, nyears, nareas)</a></code></p></li>
-<li><p>SBiomass: Spawning Biomass; array dimensions <code><a href='https://rdrr.io/r/base/c.html'>c(nsim, nyears, nareas)</a></code></p></li>
-<li><p>Removals: Removals (biomass); array dimensions <code><a href='https://rdrr.io/r/base/c.html'>c(nsim, nyears, nareas)</a></code></p></li>
-<li><p>Landings: Landings (biomass); array dimensions <code><a href='https://rdrr.io/r/base/c.html'>c(nsim, nyears, nareas)</a></code></p></li>
-<li><p>Discards: Discards (biomass); array dimensions <code><a href='https://rdrr.io/r/base/c.html'>c(nsim, nyears, nareas)</a></code></p></li>
-<li><p>Find: Historical fishing mortality (scale-free); matrix dimensions <code><a href='https://rdrr.io/r/base/c.html'>c(nsim, nyears)</a></code></p></li>
-<li><p>RecDev: Recruitment deviations (historical and projection); matrix dimensions <code><a href='https://rdrr.io/r/base/c.html'>c(nsim, nyears+proyears+maxage)</a></code></p></li>
-<li><p>SPR: Named list with Equilibrium and Dynamic SPR (both matrices iwth dimensions <code><a href='https://rdrr.io/r/base/c.html'>c(nsim, nyears)</a></code>)</p></li>
+<li><p>Number: Total numbers; array dimensions <code>c(nsim, nyears, nareas)</code></p></li>
+<li><p>Biomass: Total biomass; array dimensions <code>c(nsim, nyears, nareas)</code></p></li>
+<li><p>VBiomass: Vulnerable biomass; array dimensions <code>c(nsim, nyears, nareas)</code></p></li>
+<li><p>SBiomass: Spawning Biomass; array dimensions <code>c(nsim, nyears, nareas)</code></p></li>
+<li><p>Removals: Removals (biomass); array dimensions <code>c(nsim, nyears, nareas)</code></p></li>
+<li><p>Landings: Landings (biomass); array dimensions <code>c(nsim, nyears, nareas)</code></p></li>
+<li><p>Discards: Discards (biomass); array dimensions <code>c(nsim, nyears, nareas)</code></p></li>
+<li><p>Find: Historical fishing mortality (scale-free); matrix dimensions <code>c(nsim, nyears)</code></p></li>
+<li><p>RecDev: Recruitment deviations (historical and projection); matrix dimensions <code>c(nsim, nyears+proyears+maxage)</code></p></li>
+<li><p>SPR: Named list with Equilibrium and Dynamic SPR (both matrices iwth dimensions <code>c(nsim, nyears)</code>)</p></li>
 <li><p>Unfished_Equilibrium: A named list with unfished equilibrium numbers and biomass-at-age</p></li>
 </ul></p></dd>
 
@@ -192,7 +192,7 @@ simulation, age, year and area</p></li>
 <li><p>VBMSY: Vulnerable biomass corresponding with asymptotic MSY</p></li>
 <li><p>F01: Fishing mortality where the change in yield per recruit is 10% of that at F = 0</p></li>
 <li><p>Fmax: Fishing mortality that maximizes yield per recruit</p></li>
-<li><p>F_SPR: Fishing mortality corresponding to spawning potential ratio of 20 - 60% in increments of 5%; array dimensions <code><a href='https://rdrr.io/r/base/c.html'>c(nsim, 9, nyears+proyears)</a></code></p></li>
+<li><p>F_SPR: Fishing mortality corresponding to spawning potential ratio of 20 - 60% in increments of 5%; array dimensions <code>c(nsim, 9, nyears+proyears)</code></p></li>
 <li><p>Fcrash: Fishing mortality corresponding to the recruits-per-spawner at the origin of the stock-recruit relationship</p></li>
 <li><p>Fmed: Fishing mortality corresponding to the median recruits-per-spawner in the historical period</p></li>
 <li><p>SPRcrash: SPR corresponding to the recruits-per-spawner at the origin of the stock-recruit relationship</p></li>

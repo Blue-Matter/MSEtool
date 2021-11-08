@@ -359,48 +359,48 @@ and "Selectivity".</p></td>
 
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
-<span class='co'># Plot Stock Object:</span>
-<span class='va'>Stock</span> <span class='op'>&lt;-</span> <span class='fu'>MSEtool</span><span class='fu'>::</span><span class='va'><a href='Albacore.html'>Albacore</a></span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>Stock</span><span class='op'>)</span>
-
-<span class='co'># Individual plots:</span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='st'>"M"</span>, <span class='va'>Stock</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='st'>"Growth"</span>, <span class='va'>Stock</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='st'>"Maturity"</span>, <span class='va'>Stock</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='st'>"Recruitment"</span>, <span class='va'>Stock</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='st'>"Spatial"</span>, <span class='va'>Stock</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='st'>"Depletion"</span>, <span class='va'>Stock</span><span class='op'>)</span>
-
-<span class='co'># Plot Fleet Object</span>
-<span class='va'>Fleet</span> <span class='op'>&lt;-</span> <span class='fu'>MSEtool</span><span class='fu'>::</span><span class='va'><a href='DecE_Dom.html'>Generic_DecE</a></span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>Fleet</span>, <span class='va'>Stock</span><span class='op'>)</span>
-
-<span class='co'># Individual plots:</span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='st'>"Effort"</span>, <span class='va'>Fleet</span>, <span class='va'>Stock</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='st'>"Catchability"</span>, <span class='va'>Fleet</span>, <span class='va'>Stock</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='st'>"MPA"</span>, <span class='va'>Fleet</span>, <span class='va'>Stock</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='st'>"Selectivity"</span>, <span class='va'>Fleet</span>, <span class='va'>Stock</span><span class='op'>)</span>
-
-
-<span class='co'># Plot Obs Object</span>
-<span class='va'>Obs</span> <span class='op'>&lt;-</span> <span class='fu'>MSEtool</span><span class='fu'>::</span><span class='va'><a href='Generic_Obs.html'>Imprecise_Unbiased</a></span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>Obs</span><span class='op'>)</span>
-
-<span class='co'># Plot Imp Object</span>
-<span class='va'>Imp</span> <span class='op'>&lt;-</span> <span class='fu'>MSEtool</span><span class='fu'>::</span><span class='va'><a href='Overages.html'>Overages</a></span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>Imp</span><span class='op'>)</span>
-
-
-<span class='co'># Plot Hist Object</span>
-<span class='va'>OM</span> <span class='op'>&lt;-</span> <span class='fu'>MSEtool</span><span class='fu'>::</span><span class='va'><a href='testOM.html'>testOM</a></span>
-<span class='va'>Hist</span> <span class='op'>&lt;-</span> <span class='fu'><a href='Simulate.html'>Simulate</a></span><span class='op'>(</span><span class='va'>OM</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>Hist</span><span class='op'>)</span>
-
-<span class='co'># Plot OM Object</span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>OM</span><span class='op'>)</span>
-<span class='op'>}</span>
-</div></pre>
+    <pre class="examples"><span class='r-in'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span></span>
+<span class='r-in'><span class='co'># Plot Stock Object:</span></span>
+<span class='r-in'><span class='va'>Stock</span> <span class='op'>&lt;-</span> <span class='fu'>MSEtool</span><span class='fu'>::</span><span class='va'><a href='Albacore.html'>Albacore</a></span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>Stock</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Individual plots:</span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='st'>"M"</span>, <span class='va'>Stock</span><span class='op'>)</span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='st'>"Growth"</span>, <span class='va'>Stock</span><span class='op'>)</span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='st'>"Maturity"</span>, <span class='va'>Stock</span><span class='op'>)</span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='st'>"Recruitment"</span>, <span class='va'>Stock</span><span class='op'>)</span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='st'>"Spatial"</span>, <span class='va'>Stock</span><span class='op'>)</span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='st'>"Depletion"</span>, <span class='va'>Stock</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Plot Fleet Object</span></span>
+<span class='r-in'><span class='va'>Fleet</span> <span class='op'>&lt;-</span> <span class='fu'>MSEtool</span><span class='fu'>::</span><span class='va'><a href='DecE_Dom.html'>Generic_DecE</a></span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>Fleet</span>, <span class='va'>Stock</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Individual plots:</span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='st'>"Effort"</span>, <span class='va'>Fleet</span>, <span class='va'>Stock</span><span class='op'>)</span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='st'>"Catchability"</span>, <span class='va'>Fleet</span>, <span class='va'>Stock</span><span class='op'>)</span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='st'>"MPA"</span>, <span class='va'>Fleet</span>, <span class='va'>Stock</span><span class='op'>)</span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='st'>"Selectivity"</span>, <span class='va'>Fleet</span>, <span class='va'>Stock</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Plot Obs Object</span></span>
+<span class='r-in'><span class='va'>Obs</span> <span class='op'>&lt;-</span> <span class='fu'>MSEtool</span><span class='fu'>::</span><span class='va'><a href='Generic_Obs.html'>Imprecise_Unbiased</a></span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>Obs</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Plot Imp Object</span></span>
+<span class='r-in'><span class='va'>Imp</span> <span class='op'>&lt;-</span> <span class='fu'>MSEtool</span><span class='fu'>::</span><span class='va'><a href='Overages.html'>Overages</a></span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>Imp</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Plot Hist Object</span></span>
+<span class='r-in'><span class='va'>OM</span> <span class='op'>&lt;-</span> <span class='fu'>MSEtool</span><span class='fu'>::</span><span class='va'><a href='testOM.html'>testOM</a></span></span>
+<span class='r-in'><span class='va'>Hist</span> <span class='op'>&lt;-</span> <span class='fu'><a href='Simulate.html'>Simulate</a></span><span class='op'>(</span><span class='va'>OM</span><span class='op'>)</span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>Hist</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Plot OM Object</span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>OM</span><span class='op'>)</span></span>
+<span class='r-in'><span class='op'>}</span></span>
+</pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

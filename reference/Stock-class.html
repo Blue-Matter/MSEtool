@@ -169,7 +169,7 @@ Non-negative real numbers.</p></dd>
 variation of a log-normal distribution. For each simulation a single value is
 drawn from a uniform distribution specified by the upper and lower bounds
 provided. If this parameter is positive, yearly <code>M</code> is drawn from a log-normal
-distribution with a mean specified by <code><a href='https://rdrr.io/r/base/Log.html'>log(M)</a></code> drawn for that simulation and a
+distribution with a mean specified by <code>log(M)</code> drawn for that simulation and a
 standard deviation in log space specified by the value of <code>Msd</code> drawn for that
 simulation.  Uniform distribution lower and upper bounds. Non-negative real
 numbers</p></dd>
@@ -327,32 +327,33 @@ taken to define the stock object. Single value. Character string.</p></dd>
     <p>T. Carruthers and A. Hordyk</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'>
-<span class='fu'>showClass</span><span class='op'>(</span><span class='st'>'Stock'</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; Class "Stock" [package "MSEtool"]
-#&gt; 
-#&gt; Slots:
-#&gt;                                                                        
-#&gt; Name:          Name  Common_Name      Species       maxage           R0
-#&gt; Class:    character    character    character      numeric      numeric
-#&gt;                                                                        
-#&gt; Name:             M          Msd            h        SRrel         Perr
-#&gt; Class:      numeric      numeric      numeric      numeric      numeric
-#&gt;                                                                        
-#&gt; Name:            AC         Linf       Linfsd            K          Ksd
-#&gt; Class:      numeric      numeric      numeric      numeric      numeric
-#&gt;                                                                        
-#&gt; Name:            t0        LenCV          L50       L50_95            D
-#&gt; Class:      numeric      numeric      numeric      numeric      numeric
-#&gt;                                                                        
-#&gt; Name:             a            b  Size_area_1  Frac_area_1 Prob_staying
-#&gt; Class:      numeric      numeric      numeric      numeric      numeric
-#&gt;                                 
-#&gt; Name:         Fdisc       Source
-#&gt; Class:      numeric    character
-#&gt; 
-#&gt; Known Subclasses: "OM"</div><div class='input'>
-</div></pre>
+    <pre class="examples"><span class='r-in'></span>
+<span class='r-in'><span class='fu'>showClass</span><span class='op'>(</span><span class='st'>'Stock'</span><span class='op'>)</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Class "Stock" [package "MSEtool"]</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Slots:</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>                                                                        </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Name:          Name  Common_Name      Species       maxage           R0</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Class:    character    character    character      numeric      numeric</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>                                                                        </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Name:             M          Msd            h        SRrel         Perr</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Class:      numeric      numeric      numeric      numeric      numeric</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>                                                                        </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Name:            AC         Linf       Linfsd            K          Ksd</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Class:      numeric      numeric      numeric      numeric      numeric</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>                                                                        </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Name:            t0        LenCV          L50       L50_95            D</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Class:      numeric      numeric      numeric      numeric      numeric</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>                                                                        </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Name:             a            b  Size_area_1  Frac_area_1 Prob_staying</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Class:      numeric      numeric      numeric      numeric      numeric</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>                                 </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Name:         Fdisc       Source</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Class:      numeric    character</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> Known Subclasses: "OM"</span>
+<span class='r-in'></span>
+</pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

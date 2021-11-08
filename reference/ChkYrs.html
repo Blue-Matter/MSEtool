@@ -151,16 +151,16 @@ if negative the last <code>Yrs</code> of the projection period.</p></td>
     <p>A numeric vector of length 2 with year indices to summarize performance</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
-<span class='va'>MSE</span> <span class='op'>&lt;-</span> <span class='fu'><a href='Simulate.html'>runMSE</a></span><span class='op'>(</span><span class='op'>)</span>
-<span class='fu'>ChkYrs</span><span class='op'>(</span><span class='cn'>NULL</span>, <span class='va'>MSE</span><span class='op'>)</span> <span class='co'># returns c(1, MSE@proyears)</span>
-<span class='fu'>ChkYrs</span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>2</span>,<span class='fl'>5</span><span class='op'>)</span>, <span class='va'>MSE</span><span class='op'>)</span> <span class='co'># returns c(2,5)</span>
-<span class='fu'>ChkYrs</span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>70</span>,<span class='fl'>80</span><span class='op'>)</span>, <span class='va'>MSE</span><span class='op'>)</span> <span class='co'># returns c(MSE@proyears-10,MSE@proyears)</span>
-<span class='fu'>ChkYrs</span><span class='op'>(</span><span class='fl'>5</span>, <span class='va'>MSE</span><span class='op'>)</span> <span class='co'># returns c(1,5)</span>
-<span class='fu'>ChkYrs</span><span class='op'>(</span><span class='op'>-</span><span class='fl'>5</span>, <span class='va'>MSE</span><span class='op'>)</span> <span class='co'># returns c(46,50)</span>
-<span class='op'>}</span>
-
-</div></pre>
+    <pre class="examples"><span class='r-in'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span></span>
+<span class='r-in'><span class='va'>MSE</span> <span class='op'>&lt;-</span> <span class='fu'><a href='Simulate.html'>runMSE</a></span><span class='op'>(</span><span class='op'>)</span></span>
+<span class='r-in'><span class='fu'>ChkYrs</span><span class='op'>(</span><span class='cn'>NULL</span>, <span class='va'>MSE</span><span class='op'>)</span> <span class='co'># returns c(1, MSE@proyears)</span></span>
+<span class='r-in'><span class='fu'>ChkYrs</span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>2</span>,<span class='fl'>5</span><span class='op'>)</span>, <span class='va'>MSE</span><span class='op'>)</span> <span class='co'># returns c(2,5)</span></span>
+<span class='r-in'><span class='fu'>ChkYrs</span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>70</span>,<span class='fl'>80</span><span class='op'>)</span>, <span class='va'>MSE</span><span class='op'>)</span> <span class='co'># returns c(MSE@proyears-10,MSE@proyears)</span></span>
+<span class='r-in'><span class='fu'>ChkYrs</span><span class='op'>(</span><span class='fl'>5</span>, <span class='va'>MSE</span><span class='op'>)</span> <span class='co'># returns c(1,5)</span></span>
+<span class='r-in'><span class='fu'>ChkYrs</span><span class='op'>(</span><span class='op'>-</span><span class='fl'>5</span>, <span class='va'>MSE</span><span class='op'>)</span> <span class='co'># returns c(46,50)</span></span>
+<span class='r-in'><span class='op'>}</span></span>
+<span class='r-in'></span>
+</pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

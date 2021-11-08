@@ -182,8 +182,8 @@ across <code>OM@nsim</code> simulations.)</p></td>
     </tr>
     <tr>
       <th>mov</th>
-      <td><p>A four-dimensional array of dimension <code><a href='https://rdrr.io/r/base/c.html'>c(nsim, maxage, nareas, nareas)</a></code> or a five-dimensional
-array of dimension <code><a href='https://rdrr.io/r/base/c.html'>c(nsim, maxage, nareas, nareas, nyears + proyears)</a></code> specifying movement
+      <td><p>A four-dimensional array of dimension <code>c(nsim, maxage, nareas, nareas)</code> or a five-dimensional
+array of dimension <code>c(nsim, maxage, nareas, nareas, nyears + proyears)</code> specifying movement
 in the operating model.</p></td>
     </tr>
     <tr>
@@ -226,14 +226,14 @@ independent of age.</p>
     <p>T. Carruthers and Q. Huynh</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
-<span class='va'>movOM_5areas</span> <span class='op'>&lt;-</span> <span class='fu'>simmov</span><span class='op'>(</span><span class='va'>testOM</span>, dist <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>0.01</span>,<span class='fl'>0.1</span>,<span class='fl'>0.2</span>,<span class='fl'>0.3</span>,<span class='fl'>0.39</span><span class='op'>)</span>, prob <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>0.1</span>,<span class='fl'>0.6</span>,<span class='fl'>0.6</span>,<span class='fl'>0.7</span>,<span class='fl'>0.9</span><span class='op'>)</span><span class='op'>)</span>
-<span class='va'>movOM_5areas</span><span class='op'>@</span><span class='va'>cpars</span><span class='op'>$</span><span class='va'>mov</span><span class='op'>[</span><span class='fl'>1</span>, <span class='fl'>1</span>, , <span class='op'>]</span> <span class='co'># sim 1, age 1, movement from areas in column i to areas in row j</span>
-<span class='fu'>plot_mov</span><span class='op'>(</span><span class='va'>movOM_5areas</span><span class='op'>@</span><span class='va'>cpars</span><span class='op'>$</span><span class='va'>mov</span><span class='op'>)</span>
-<span class='fu'>plot_mov</span><span class='op'>(</span><span class='va'>movOM_5areas</span><span class='op'>@</span><span class='va'>cpars</span><span class='op'>$</span><span class='va'>mov</span>, type <span class='op'>=</span> <span class='st'>"all"</span><span class='op'>)</span>
-
-<span class='op'>}</span>
-</div></pre>
+    <pre class="examples"><span class='r-in'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span></span>
+<span class='r-in'><span class='va'>movOM_5areas</span> <span class='op'>&lt;-</span> <span class='fu'>simmov</span><span class='op'>(</span><span class='va'>testOM</span>, dist <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>0.01</span>,<span class='fl'>0.1</span>,<span class='fl'>0.2</span>,<span class='fl'>0.3</span>,<span class='fl'>0.39</span><span class='op'>)</span>, prob <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>0.1</span>,<span class='fl'>0.6</span>,<span class='fl'>0.6</span>,<span class='fl'>0.7</span>,<span class='fl'>0.9</span><span class='op'>)</span><span class='op'>)</span></span>
+<span class='r-in'><span class='va'>movOM_5areas</span><span class='op'>@</span><span class='va'>cpars</span><span class='op'>$</span><span class='va'>mov</span><span class='op'>[</span><span class='fl'>1</span>, <span class='fl'>1</span>, , <span class='op'>]</span> <span class='co'># sim 1, age 1, movement from areas in column i to areas in row j</span></span>
+<span class='r-in'><span class='fu'>plot_mov</span><span class='op'>(</span><span class='va'>movOM_5areas</span><span class='op'>@</span><span class='va'>cpars</span><span class='op'>$</span><span class='va'>mov</span><span class='op'>)</span></span>
+<span class='r-in'><span class='fu'>plot_mov</span><span class='op'>(</span><span class='va'>movOM_5areas</span><span class='op'>@</span><span class='va'>cpars</span><span class='op'>$</span><span class='va'>mov</span>, type <span class='op'>=</span> <span class='st'>"all"</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='op'>}</span></span>
+</pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
