@@ -6,12 +6,13 @@
 #' @param listy A list of objects
 #' @param sloty A character vector representing the slot name
 #' @author T. Carruthers
-SIL<-function(listy,sloty) {
-  if(class(listy[[1]])=="list"){
-    out<-NULL
-    for(i in 1:length(listy))out<-c(out,unlist(lapply(listy[[i]],function(x)slot(x,sloty))))
-  }else{
-    out<-unlist(lapply(listy,function(x)slot(x,sloty)))
+SIL <- function(listy, sloty) {
+  if (class(listy[[1]]) == "list") {
+    out <- list()
+    for(i in 1:length(listy)) out[[i]] <- sapply(listy[[i]], slot, sloty)
+    out <- do.call(c, out)
+  } else {
+    out <- sapply(listy, slot, sloty)
   }
   out
 }
@@ -25,11 +26,12 @@ SIL<-function(listy,sloty) {
 #' @param lev1 Logical, should NIL default to the first level of the list?
 #' @author T. Carruthers
 NIL<-function(listy,namey,lev1=T){
-  if(class(listy[[1]])=="list"&!lev1){
-    out<-NULL
-    for(i in 1:length(listy))out<-c(out,unlist(lapply(listy[[i]],function(x)x[namey])))
+  if(class(listy[[1]]) == "list" && !lev1) {
+    out <- list()
+    for(i in 1:length(listy)) out[[i]] <- sapply(listy[[i]], getElement, namey)
+    out <- do.call(c, out)
   }else{
-    out<-unlist(lapply(listy,function(x)x[namey]))
+    out <- sapply(listy, getElement, namey)
   }
   out
 }
@@ -61,21 +63,13 @@ expandHerm<-function(Herm,maxage,np,nsim){
 #' @param vec A vector of maximum array sizes
 #' @author T. Carruthers
 TEG<-function(vec){ # make index for list calculation
-  dim<-new('list')
   ndims<-length(vec)
-  for(i in 1:ndims)dim[[i]]<-1:vec[i]
+  dim <- lapply(1:ndims, function(i) 1:vec[i])
   as.matrix(expand.grid(dim))
 }
 
-
 getLHpars <- function(x, name, StockPars, nyears) {
-  suppressMessages(purrr::map_dfc(lapply(StockPars,function(dat)
-    dat[[name]]), unpackList, cols=1:nyears,x=x, name=name)) %>% t()
-}
-unpackList <- function(list, cols,x, name) {
-  df <- data.frame(list[x,cols])
-  names(df)[1] <- name
-  df
+  sapply(StockPars, function(y) getElement(y, name)[x, 1:nyears], simplify = "array") %>% t()
 }
 
 #' Reconstruct historical dynamics

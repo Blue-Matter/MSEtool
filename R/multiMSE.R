@@ -31,19 +31,15 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   np <- length(Stocks)
   nf <- length(Fleets[[1]])
 
-  if (MOM@CatchFrac[[1]] %>% nrow() != nsim) {
-    # re-calculate CatchFrac
-    for (p in 1:np) {
-      CatchFrac[[p]] <- MOM@CatchFrac[[p]][1:nsim,, drop=FALSE]
-    }
-    MOM@CatchFrac <-CatchFrac
+  if (MOM@CatchFrac[[1]] %>% nrow() != nsim) { # re-calculate CatchFrac
+    CatchFrac <- lapply(MOM@CatchFrac, function(x) x[1:nsim, , drop = FALSE])
+    MOM@CatchFrac <- CatchFrac
   }
 
-
-  if(np==1 & nf==1){
+  if (np == 1 && nf == 1) {
     if (!silent) message("You have specified only a single stock and fleet. ",
             "You should really be using the function MSEtool::runMSE()")
-  } else if(np>1 & length(MOM@Rel)==0 & length(MOM@SexPars)==0) {
+  } else if(np > 1 && !length(MOM@Rel) && !length(MOM@SexPars)) {
     if (!silent) message("You have specified more than one stock but no MICE relationships ",
             "(slot MOM@Rel) or sex-specific relationships (slot MOM@SexPars) among these. ",
             "As they are independent, consider doing MSE for one stock at a time for ",
@@ -51,8 +47,8 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   }
 
   maxF <- MOM@maxF
-  Snames <- SIL(Stocks,"Name")
-  Fnames <- matrix(make.unique(SIL(Fleets,"Name")),nrow=nf)
+  Snames <- SIL(Stocks, "Name")
+  Fnames <- SIL(Fleets, "Name") %>% make.unique() %>% matrix(nrow = nf)
   cpars <- MOM@cpars
 
   # ---- Custom Parameters (cpars) Options ----
@@ -63,124 +59,107 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   if (!is.null(control$D) && control$D == "VB") optVB <- TRUE
 
   # Allocation
-  if(length(MOM@Allocation)==0){
+  if(!length(MOM@Allocation)) {
     MOM@Allocation <- CatchFrac
     if (!silent) message("Slot @Allocation of MOM object not specified. Setting slot ",
             "@Allocation equal to slot @CatchFrac - current catch fractions")
   }
 
-  if(length(MOM@Efactor)==0){
-    MOM@Efactor <- list()
-    for(p in 1:np) MOM@Efactor[[p]]<- array(1,c(nsim,nf))
+  if(!length(MOM@Efactor)) {
+    MOM@Efactor <- lapply(1:np, function(x) matrix(1, nsim, nf))
     if (!silent) message("Slot @Efactor of MOM object not specified. Setting slot @Efactor ",
             "to current effort for all fleets")
   }
 
   # All stocks and sampled parameters must have compatible array sizes (maxage)
-  maxage_s <- unique(SIL(MOM@Stocks,"maxage"))
-  if (length(maxage_s)>1)
-    if (!silent) message(paste("Stocks of varying maximum ages have been specified,",
-                  "all simulations will run to",max(maxage_s),"ages"))
+  maxage_s <- unique(SIL(Stocks, "maxage"))
   maxage <- max(maxage_s)
-  for(p in 1:np) MOM@Stocks[[p]]@maxage<-maxage
-
-  if(!silent) message("Loading operating model")
-  StockPars<-FleetPars<-ObsPars<-ImpPars<- SampCpars<-new('list')
+  if (length(maxage_s) > 1) {
+    if (!silent) message(paste("Stocks of varying maximum ages have been specified,",
+                               "all simulations will run to",max(maxage_s),"ages"))
+    Stocks <- lapply(Stocks, function(x) {
+      x@maxage <- max(maxage)
+      return(x)
+    })
+  }
+  
+  if (!silent) message("Loading operating model")
+  StockPars <- FleetPars <- ObsPars <- ImpPars <- SampCpars <- new('list')
 
   plusgroup <- rep(1, np)
-
-  for(p in 1:np){
-    SampCpars[[p]]<-list()
-    if(!silent) message(Stocks[[p]]@Name)
-    for(f in 1:nf){
-      # --- Sample custom parameters ----
-
-      if(length(cpars)>0 && length(cpars[[p]][[f]])>0){
-        if(!silent)
-          message('Sampling custom parameters for ', Fleets[[p]][[f]]@Name)
-        SampCpars[[p]][[f]] <- SampleCpars(cpars[[p]][[f]], nsim,
-                                           silent=silent)
-      }else{
-        SampCpars[[p]][[f]] <-list()
+  for (p in 1:np) {
+    SampCpars[[p]] <- lapply(1:nf, function(f) {
+      if (length(cpars) && length(cpars[[p]][[f]])) {
+        if (!silent) message("Sampling custom parameters for ", Fnames[f, p])
+        SampleCpars(cpars[[p]][[f]], nsim, silent=silent)
+      } else {
+        list()
       }
-    }
-
+    })
+    
     set.seed(MOM@seed) # set seed again after cpars has been sampled
     # --- Sample Stock Parameters ----
-    if(!is.null(SampCpars[[p]][[1]]$plusgroup) & all(SampCpars[[p]][[1]]$plusgroup==0))
-      plusgroup[p] <- 0
-
-    StockPars[[p]] <- SampleStockPars(Stock=MOM@Stocks[[p]], nsim, nyears,
-                                      proyears, cpars=SampCpars[[p]][[1]],
-                                      msg=!silent)
+    if (!is.null(SampCpars[[p]][[1]]$plusgroup) && all(!SampCpars[[p]][[1]]$plusgroup)) plusgroup[p] <- 0
+    
+    StockPars[[p]] <- SampleStockPars(Stock = Stocks[[p]], nsim, nyears,
+                                      proyears, cpars = SampCpars[[p]][[1]],
+                                      msg = !silent)
     StockPars[[p]]$plusgroup <- plusgroup[p]
     StockPars[[p]]$maxF <- MOM@maxF
-
+    
     # --- Sample Fleet Parameters ----
-    FleetPars[[p]]<-ObsPars[[p]]<-ImpPars[[p]]<-list()
-    for(f in 1:nf){
-      FleetPars[[p]][[f]] <- SampleFleetPars(Fleet=MOM@Fleets[[p]][[f]],
-                                             Stock=StockPars[[p]],
-                                             nsim, nyears, proyears,
-                                             cpars=SampCpars[[p]][[f]])
-
-    }
-
+    FleetPars[[p]] <- lapply(1:nf, function(f) {
+      SampleFleetPars(Fleet = Fleets[[p]][[f]],
+                      Stock = StockPars[[p]],
+                      nsim, nyears, proyears,
+                      cpars = SampCpars[[p]][[f]])
+    })
+    
     # --- Sample Obs Parameters ----
-    for(f in 1:nf) {
-      ObsPars[[p]][[f]] <- SampleObsPars(MOM@Obs[[p]][[f]], nsim,
-                                         cpars=SampCpars[[p]][[f]],
-                                         Stock=StockPars[[p]],
-                                         nyears, proyears)
-    }
-
+    ObsPars[[p]] <- lapply(1:nf, function(f) {
+      SampleObsPars(MOM@Obs[[p]][[f]], nsim,
+                    cpars = SampCpars[[p]][[f]],
+                    Stock = StockPars[[p]],
+                    nyears, proyears)
+    })
+    
     # --- Sample Imp Parameters ----
-    for(f in 1:nf) {
-      ImpPars[[p]][[f]] <- SampleImpPars(MOM@Imps[[p]][[f]], nsim,
-                                         cpars=SampCpars[[p]][[f]],
-                                         nyears, proyears)
-    }
+    ImpPars[[p]] <- lapply(1:nf, function(f) {
+      SampleImpPars(MOM@Imps[[p]][[f]], nsim,
+                    cpars = SampCpars[[p]][[f]],
+                    nyears, proyears)
+    })
   }
 
   # --- Update Parameters for two-sex stocks ----
   # Depletion, stock-recruit parameters, recdevs, Fleet, Obs, and Imp copied
   # from females to males
-  if(length(SexPars)>0){
-    sexmatches <- sapply(1:nrow(SexPars$SSBfrom), function(x,mat)
-      paste(mat[x,],collapse="_"), mat=SexPars$SSBfrom)
-    parcopy<-match(sexmatches,sexmatches)
-    StockPars_t<-StockPars # need to store a temporary object for copying to/from
+  if (length(SexPars)) {
+    sexmatches <- sapply(1:nrow(SexPars$SSBfrom), function(x) paste(SexPars$SSBfrom[x, ], collapse = "_"))
+    parcopy <- match(sexmatches, sexmatches)
+    StockPars_t <- StockPars
     FleetPars_t <- FleetPars
-
-    for(p in 1:np){
-      # copied parameters
-      StockPars[[p]]$D<-StockPars_t[[parcopy[p]]]$D
-      StockPars[[p]]$hs<-StockPars_t[[parcopy[p]]]$hs
-      StockPars[[p]]$AC<-StockPars_t[[parcopy[p]]]$AC
-      StockPars[[p]]$R0<-StockPars_t[[parcopy[p]]]$R0
-      StockPars[[p]]$R0a<-StockPars_t[[parcopy[p]]]$R0a
-      StockPars[[p]]$Perr_y<-StockPars_t[[parcopy[p]]]$Perr_y
+    
+    slot_s <- c("D", "hs", "AC", "R0", "R0a", "Perr_y")
+    slot_f <- c("Esd", "Find", "dFFinal", "Spat_targ", "qinc", "qcv", "qvar", "FinF")
+    
+    for (p in 1:np) {
+      StockPars[[p]][slot_s] <- StockPars_t[[parcopy[p]]][slot_s]
       for (f in 1:nf) {
-        # copy over Fleet, Obs and Imps pars
-        FleetPars[[p]][[f]]$Esd <- FleetPars_t[[parcopy[p]]][[f]]$Esd
-        FleetPars[[p]][[f]]$Find <- FleetPars_t[[parcopy[p]]][[f]]$Find
-        FleetPars[[p]][[f]]$dFFinal <- FleetPars_t[[parcopy[p]]][[f]]$dFFinal
-        FleetPars[[p]][[f]]$Spat_targ <- FleetPars_t[[parcopy[p]]][[f]]$Spat_targ
-        FleetPars[[p]][[f]]$qinc <- FleetPars_t[[parcopy[p]]][[f]]$qinc
-        FleetPars[[p]][[f]]$qcv <- FleetPars_t[[parcopy[p]]][[f]]$qcv
-        FleetPars[[p]][[f]]$qvar <- FleetPars_t[[parcopy[p]]][[f]]$qvar
-        FleetPars[[p]][[f]]$FinF <- FleetPars_t[[parcopy[p]]][[f]]$FinF
+        FleetPars[[p]][[f]][slot_f] <- FleetPars_t[[parcopy[p]]][[f]][slot_f]
         ObsPars[[p]][[f]] <- ObsPars[[parcopy[p]]][[f]]
         ImpPars[[p]][[f]] <- ImpPars[[parcopy[p]]][[f]]
       }
     }
+    
   } # end of sexpars
 
-  nareas_s <- NIL(StockPars,"nareas",lev1=T)
-  if(length(unique(nareas_s))!=1)
+  nareas_s <- NIL(StockPars, "nareas", lev1 = TRUE)
+  nareas <- unique(nareas_s)
+  if(length(unique(nareas_s)) != 1) {
     stop("Stocks must have the same specified number of areas - check cpars$mov",
          " for each stock object")
-  nareas <- as.numeric(nareas_s[1])
+  }
 
   # ---- Bio-Economic Parameters ----
   # TODO
@@ -200,10 +179,10 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   # (this is the fraction to be kept (after sex change))
   # E.g. protygynous (Female to male) is H_1_2 where 1 is female 2 is male
   # [sim, stock, maxage] Defaults to all 1s if length(SexPars$Herm)==0
-  HermFrac <- expandHerm(SexPars$Herm,maxage=n_age,np=np,nsim=nsim)
+  HermFrac <- expandHerm(SexPars$Herm, maxage = n_age, np = np, nsim = nsim)
 
   Unfished_Equilibrium <- list()
-  for(p in 1:np){ # loop over stocks
+  for(p in 1:np){
     #  --- Pre Equilibrium calcs ----
     surv <- matrix(1, nsim, n_age)
     surv[, 2:n_age] <- t(exp(-apply(StockPars[[p]]$M_ageArray[,,1], 1, cumsum)))[, 1:(n_age-1)]
@@ -371,65 +350,59 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       if (!is.null(SampCpars[[p]][[f]]$MPA)) {
         MPA <- SampCpars[[p]][[f]]$MPA
         if (any(dim(MPA) != c(nyears+proyears, nareas))) {
-          stop('cpars$MPA must be a matrix with `nyears+proyears` rows and `nareas` columns', .call=FALSE)
+          stop('cpars$MPA must be a matrix with `nyears+proyears` rows and `nareas` columns', .call = FALSE)
         }
-        if (any(MPA !=1 & MPA!=0))
-          stop('values in cpars$MPA must be either 0 (closed) or open (1)', .call=FALSE)
-        if (any(MPA!=1)) {
+        if (any(MPA != 1 & MPA != 0)) {
+          stop('values in cpars$MPA must be either 0 (closed) or open (1)', .call = FALSE)
+        }
+        if (any(MPA != 1)) {
           for (a in 1:nareas) {
-            yrs <- which(MPA[,a] == 0)
-            if (length(yrs)>0) {
-              if (!silent)
+            yrs <- which(MPA[, a] == 0)
+            if (length(yrs)) {
+              if (!silent) {
                 message('Spatial closure detected in area ', a, ' in years ',
                         paste(findIntRuns(yrs), collapse=", "))
+              }
             }
           }
         }
       } else {
         MPA <- matrix(1, nrow=nyears+proyears, ncol=nareas)
-        if (!is.na(FleetPars[[p]][[f]]$MPA) && all(FleetPars[[p]][[f]]$MPA==TRUE)) {
-          MPA[,1] <- 0
+        if (!is.na(FleetPars[[p]][[f]]$MPA) && all(FleetPars[[p]][[f]]$MPA)) {
+          MPA[, 1] <- 0
           if (!silent) message('Historical MPA in Area 1 for all years')
-
         }
-
       }
       FleetPars[[p]][[f]]$MPA <- MPA
-      if (any(MPA!=1))
+      if (any(MPA != 1)) {
         if (!silent)  message('NOTE: MPA detected for Fleet ', f, ' but currently NOT implemented in multiMSE')
-
+      }
     } # end of loop over fleets
   } # end of loop over stocks
 
   # ---- SexPars - Update SSB0 and SRR parameters for male stock ----
-  if(length(SexPars)>0){
+  if(length(SexPars)) {
     if (!silent)  message("You have specified sex-specific dynamics, unfished spawning biomass",
             " and specified stock depletion will be mirrored across sex types according ",
             "to SexPars$SSBfrom")
 
-    SSB0s<-matrix(NIL(StockPars,"SSB0"),nrow=nsim) # sim, p
-    sexmatches<-sapply(1:nrow(SexPars$SSBfrom),function(x,mat)paste(mat[x,],collapse="_"), mat=SexPars$SSBfrom)
-    parcopy<-match(sexmatches,sexmatches)
-    StockPars_t<-StockPars # need to store a temporary object for copying to/from
-
-    for(p in 1:np){
-
-      SSB0<-apply(matrix(rep(SexPars$SSBfrom[p,],each=nsim),nrow=nsim)*SSB0s,1,sum)
-      StockPars[[p]]$SSB0 <- SSB0
-      # !!!!!!!!!!! SSBpR hardwired to be the same among areas !!!!
-      StockPars[[p]]$SSBpR <- array(SSB0/StockPars[[p]]$R0,c(nsim,nareas))
-
-      idist<-StockPars[[p]]$R0a/apply(StockPars[[p]]$R0a,1,sum)
-      SSB0a<-SSB0*idist
-
+    SSB0s <- matrix(NIL(StockPars,"SSB0"),nrow=nsim) # sim, p
+    sexmatches <- sapply(1:nrow(SexPars$SSBfrom), function(x) paste(SexPars$SSBfrom[x, ], collapse = "_"))
+    parcopy <- match(sexmatches,sexmatches)
+    StockPars_t <- StockPars # need to store a temporary object for copying to/from
+    FleetPars_t <- FleetPars
+    
+    for (p in 1:np) {
+      StockPars[[p]]$SSB0 <- apply(matrix(rep(SexPars$SSBfrom[p, ],each=nsim),nrow=nsim)*SSB0s, 1, sum)
+      StockPars[[p]]$SSBpR <- array(SSB0/StockPars[[p]]$R0,c(nsim,nareas)) # SSBpR hardwired to be the same among areas !!!!
+      
       # Ricker SR params
-      StockPars[[p]]$bR <- matrix(log(5 * StockPars[[p]]$hs)/(0.8 * SSB0a),
-                                  nrow=nsim)
-      StockPars[[p]]$aR <- matrix(exp(StockPars[[p]]$bR * SSB0a)/StockPars[[p]]$SSBpR,
-                                  nrow=nsim)
-
+      SSB0a <- StockPars[[p]]$SSB0 * StockPars[[p]]$R0a/apply(StockPars[[p]]$R0a, 1, sum)
+      StockPars[[p]]$bR <- matrix(log(5 * StockPars[[p]]$hs)/(0.8 * SSB0a), nrow=nsim)
+      StockPars[[p]]$aR <- matrix(exp(StockPars[[p]]$bR * SSB0a)/StockPars[[p]]$SSBpR, nrow=nsim)
     }
-    if(length(SexPars$Herm)>0){
+    
+    if(length(SexPars$Herm)){
       if (!silent) message("You have specified sequential hermaphroditism (SexPars$Herm).",
               "Unfished stock numbers will be calculated from this vector of fractions ",
               "at age. Population dynamics will move individuals from one sex to another.")
@@ -440,21 +413,21 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   optD <- TRUE
 
   # skip optimization if qs are provided in cpars
-  qs <- matrix(NA, nrow=nsim, ncol=np)
-  qfrac <- array(1, dim=c(nsim, np, nf))
+  qs <- matrix(NA, nrow = nsim, ncol = np)
+  qfrac <- array(1, dim = c(nsim, np, nf))
   for (p in 1:np) {
     for (f in 1:nf) {
-      if(!is.null(SampCpars[[p]][[f]]$qs)) {
+      if (!is.null(SampCpars[[p]][[f]]$qs)) {
         optD <- FALSE
         qs[,p] <- SampCpars[[p]][[f]]$qs
-        FleetPars[[p]][[f]]$qs<-qs[,p]*qfrac[,p,f]
+        FleetPars[[p]][[f]]$qs <- qs[, p] * qfrac[, p, f]
       }
     }
   }
 
   bounds <- c(0.0001, 15) # q bounds for optimizer
   if (optD) {
-    if(snowfall::sfIsRunning() & parallel){
+    if (snowfall::sfIsRunning() && parallel) {
       exp.time <- (np * nf)/(9*ncpus) * nsim
       exp.time <- round(exp.time,2)
 #
@@ -473,7 +446,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                               maxF=MOM@maxF, MPA, CatchFrac, bounds=bounds,
                               tol=1E-6,Rel,SexPars, plusgroup=plusgroup, optVB=optVB)
 
-    }else{
+    } else {
       exp.time <- (np * nf)/(9) * nsim
       exp.time <- round(exp.time,2)
 
@@ -483,19 +456,19 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                 'for ', nsim, 'simulations,', np, ' stocks, and ', nf, 'fleets',
                 "(could take a while!)")
 
-      out<-lapply(1:nsim,getq_multi_MICE, StockPars, FleetPars, np, nf, nareas,
+      out<-lapply(1:nsim, getq_multi_MICE, StockPars, FleetPars, np, nf, nareas,
                   maxage, nyears, N, VF, FretA, maxF=MOM@maxF,
                   MPA,CatchFrac, bounds=bounds,tol=1E-6,Rel,SexPars,
                   plusgroup=plusgroup, optVB=optVB)
 
     }
 
-    qs <- t(matrix(NIL(out,"qtot"),nrow=np))
-    qfrac <- aperm(array(NIL(out,"qfrac"),c(np,nf,nsim)),c(3,1,2))
+    qs <- NIL(out,"qtot") %>% matrix(nsim, np, byrow = TRUE)
+    qfrac <- NIL(out,"qfrac") %>% array(c(np, nf, nsim)) %>% aperm(c(3, 1, 2))
 
-    for(p in 1:np){
-      for(f in 1:nf){
-        FleetPars[[p]][[f]]$qs<-qs[,p]*qfrac[,p,f]
+    for (p in 1:np) {
+      for (f in 1:nf) {
+        FleetPars[[p]][[f]]$qs <- qs[, p] * qfrac[, p, f]
       }
     }
   }
@@ -687,89 +660,75 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   M_ageArray <- aperm(array(as.numeric(unlist(histYrs[20,], use.names=FALSE)),
                             dim=c(np, n_age, nyears, nsim)), c(4,1,2,3))
 
-  # update StockPars
+  # update StockPars (MICE)
   for (p in 1:np) {
-    StockPars[[p]]$Linfarray[,1:nyears] <- Linfarray[,p, ]
-    StockPars[[p]]$Karray[,1:nyears] <- Karray[,p, ]
-    StockPars[[p]]$t0array[,1:nyears] <- t0array[,p, ]
-    StockPars[[p]]$Len_age[,,1:nyears] <- Len_age[,p,, ]
-    StockPars[[p]]$Wt_age[,,1:nyears] <- Wt_age[,p,, ]
-    StockPars[[p]]$M_ageArray[,,1:nyears] <- M_ageArray[,p,, ]
+    StockPars[[p]]$Linfarray[, 1:nyears] <- Linfarray[, p, ]
+    StockPars[[p]]$Karray[, 1:nyears] <- Karray[, p, ]
+    StockPars[[p]]$t0array[, 1:nyears] <- t0array[, p, ]
+    StockPars[[p]]$Len_age[, , 1:nyears] <- Len_age[,p, , ]
+    StockPars[[p]]$Wt_age[, , 1:nyears] <- Wt_age[,p, , ]
+    StockPars[[p]]$M_ageArray[, , 1:nyears] <- M_ageArray[, p, , ]
   }
 
   # TODO - selectivity-at-age should update if growth changes
   # Depletion check
-  SSB0_specified <- array(NIL(StockPars,'SSB0'),c(nsim,np))
-  D_specified <- array(NIL(StockPars,'D'),c(nsim,np))
+  SSB0_specified <- array(NIL(StockPars,'SSB0'),c(nsim, np))
+  D_specified <- array(NIL(StockPars,'D'), c(nsim, np))
   if (optVB) {
     VB0_specified <- array(NIL(StockPars,'VB0'),c(nsim,np))
-    Depletion <- apply(VBiomass[,,,nyears,,drop=F],1:2,sum)/ VB0_specified
+    Depletion <- apply(VBiomass[,,,nyears,,drop = FALSE], 1:2, sum)/ VB0_specified
   } else {
-    Depletion <- apply(SSB[,,,nyears,,drop=F],1:2,sum)/ SSB0_specified
+    Depletion <- apply(SSB[,,,nyears,,drop = FALSE], 1:2, sum)/ SSB0_specified
   }
 
-  if(length(SexPars)>0){ # need to copy over depletion for a sex-specific model
-    sexmatches<-sapply(1:nrow(SexPars$SSBfrom), function(x,mat)
-      paste(mat[x,],collapse="_"), mat=SexPars$SSBfrom)
-    parcopy<-match(sexmatches,sexmatches)
-    StockPars_t<-StockPars # need to store a temporary object for copying to/from
-    Depletion[,1:np]<-Depletion[,parcopy]
+  if (length(SexPars)) { # need to copy over depletion for a sex-specific model
+    sexmatches <- sapply(1:nrow(SexPars$SSBfrom), function(x) paste(SexPars$SSBfrom[x, ], collapse = "_"))
+    parcopy <- match(sexmatches, sexmatches)
+    Depletion[, 1:np]<-Depletion[, parcopy]
   }
 
-  for(p in 1:np)
-    StockPars[[p]]$Depletion<-Depletion[,p]  # add actual Depletion to StockPars
+  for(p in 1:np) StockPars[[p]]$Depletion <- Depletion[, p]  # add actual Depletion to StockPars
 
-  if(!is.null(control$checks)){
-    Cpred<-array(NA,c(nsim,np,nf,maxage,nareas))
-    Cind<-as.matrix(expand.grid(1:nsim,1:np,1:nf,1:maxage,nyears,1:nareas))
-    Cpred[Cind[,c(1:4,6)]]<-Biomass[Cind[,c(1,2,4,5,6)]]*(1-exp(-FM[Cind]))
-    Cpred<-apply(Cpred,1:3,sum,na.rm=T)
+  if(!is.null(control$checks)) {
+    Cind <- TEG(c(nsim, np, nf, n_age, 1, nareas))
+    Cind[, 5] <- nyears
+    Cpred <- apply(Biomass[Cind[, c(1,2,4,5,6)]] * (1 - exp(-Z[Cind[, c(1,2,4,5,6)]]))/FM[Cind] * Z[Cind[, c(1,2,4,5,6)]],
+                   1:3, sum, na.rm = TRUE)
 
     for(p in 1:np){
-      Cp<-array(Cpred[,p,],c(nsim,nf))/apply(Cpred[,p,],1,sum)
+      Cp <- array(Cpred[, p, ], c(nsim, nf))/apply(Cpred[, p, , drop = FALSE], 1, sum)
 
-      if(prod(round(CatchFrac[[p]],4)/round(Cp,4))!=1){
-        print(Snames[p])
-        print(cbind(CatchFrac[[p]],rep(NaN,nsim),round(Cp,4)))
+      if(prod(round(CatchFrac[[p]], 4)/round(Cp, 4)) != 1) {
         warning("Possible problem in catch fraction calculations")
+        print("Possible problem in catch fraction calculations")
+        print(Snames[p])
+        print(cbind(CatchFrac[[p]], round(Cp, 4)) %>% 
+                structure(dimnames = list(Sim = 1:nsim, CatchFrac = c("Specified", "Estimated"))))
       }
-
     }
   }
   if (!is.null(control$checks)) {
     if (prod(round(Depletion,2)/ round(D_specified,2)) != 1) {
-      print(cbind(round(Depletion,4),rep(NaN,nsim), round(D_specified,4)))
+      print(cbind(round(Depletion, 4), round(D_specified, 4)) %>%
+              structure(dimnames = list(Sim = 1:nsim, Depletion = c("Specified", "Estimated"))))
       warning("Possible problem in depletion calculations")
     }
   }
 
   # --- Calculate MSY statistics for each year ----
-  SPR_hist <- list()
   # ignores spatial closures
   # assumes all vulnerable fish are caught - ie no discarding
   if(!silent) message("Calculating MSY reference points for each year")
   # average life-history parameters over ageM years
-  for(p in 1:np){
-    MSY_y <- array(0, dim=c(nsim, nyears+proyears)) # store MSY for each sim and year
-    StockPars[[p]]$MSY_y <- MSY_y # store MSY for each sim and year
-    StockPars[[p]]$FMSY_y <- MSY_y # store FMSY for each sim, and year
-    StockPars[[p]]$SSBMSY_y <- MSY_y # store SSBMSY for each sim, and year
-    StockPars[[p]]$BMSY_y <- MSY_y # store BMSY for each sim, and year
-    StockPars[[p]]$VBMSY_y <- MSY_y # store VBMSY for each sim, and year
-    StockPars[[p]]$R0_y <- MSY_y # store R0 for each sim, and year
-    StockPars[[p]]$h_y <- MSY_y # store h for each sim, and year
-    StockPars[[p]]$N0_y <- MSY_y
-    StockPars[[p]]$SN0_y <- MSY_y
-    StockPars[[p]]$B0_y <- MSY_y
-    StockPars[[p]]$SSB0_y <- MSY_y
-    StockPars[[p]]$VB0_y <- MSY_y
-
-    FMt_future <- aperm(replicate(proyears, FMt[,,,nyears,, drop=FALSE]), c(1,2,3,4,6,5))
-    FMt_all <- abind::abind(FMt[,p,,,], FMt_future[,p,,1,,], along=3)
-
-    V <- apply(FMt_all,1:3,sum)
-    V[V<=0] <- tiny
-    V <- nlz(V,c(1,3),"max")
+  for (p in 1:np) {
+    
+    V <- local({
+      FMt_future <- aperm(replicate(proyears, FMt[,,,nyears,, drop = FALSE]), c(1,2,3,4,6,5)) # Terminal year sel
+      FMt_all <- abind::abind(FMt[,p,,,], FMt_future[,p,,1,,], along = 3)
+      V <- apply(FMt_all, 1:3, sum) # sum across years and areas, works if areas are evenly distributed
+      V[V<=0] <- tiny
+      nlz(V, c(1, 3), "max")
+    })
 
     MSYrefsYr <- lapply(1:nsim, function(x) {
       sapply(1:(nyears+proyears), function(y) {
@@ -788,20 +747,21 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                   plusgroup=plusgroup[p])
       })
     })
+    
+    # --- Annual reference points ----
+    StockPars[[p]]$MSY_y <- sapply(MSYrefsYr, function(x) x["Yield", ]) %>% t()
+    StockPars[[p]]$FMSY_y <- sapply(MSYrefsYr, function(x) x["F", ]) %>% t()
+    StockPars[[p]]$SSBMSY_y <- sapply(MSYrefsYr, function(x) x["SB", ]) %>% t()
+    StockPars[[p]]$BMSY_y <- sapply(MSYrefsYr, function(x) x["B", ]) %>% t()
+    StockPars[[p]]$VBMSY_y <- sapply(MSYrefsYr, function(x) x["VB", ]) %>% t()
 
-    StockPars[[p]]$MSY_y[] <- sapply(MSYrefsYr, function(x) x["Yield", ]) %>% t()
-    StockPars[[p]]$FMSY_y[] <- sapply(MSYrefsYr, function(x) x["F", ]) %>% t()
-    StockPars[[p]]$SSBMSY_y[] <- sapply(MSYrefsYr, function(x) x["SB", ]) %>% t()
-    StockPars[[p]]$BMSY_y[] <- sapply(MSYrefsYr, function(x) x["B", ]) %>% t()
-    StockPars[[p]]$VBMSY_y[] <- sapply(MSYrefsYr, function(x) x["VB", ]) %>% t()
-
-    StockPars[[p]]$R0_y[] <- sapply(MSYrefsYr, function(x) x["R0", ]) %>% t()
-    StockPars[[p]]$h_y[] <- sapply(MSYrefsYr, function(x) x["h", ]) %>% t()
-    StockPars[[p]]$N0_y[] <- sapply(MSYrefsYr, function(x) x["N0", ]) %>% t()
-    StockPars[[p]]$SN0_y[] <- sapply(MSYrefsYr, function(x) x["SN0", ]) %>% t()
-    StockPars[[p]]$B0_y[] <- sapply(MSYrefsYr, function(x) x["B0", ]) %>% t()
-    StockPars[[p]]$SSB0_y[] <- sapply(MSYrefsYr, function(x) x["SB0", ]) %>% t()
-    StockPars[[p]]$VB0_y[] <- sapply(MSYrefsYr, function(x) x["VB", ]/x["VB_VB0", ]) %>% t()
+    StockPars[[p]]$R0_y <- sapply(MSYrefsYr, function(x) x["R0", ]) %>% t()
+    StockPars[[p]]$h_y <- sapply(MSYrefsYr, function(x) x["h", ]) %>% t()
+    StockPars[[p]]$N0_y <- sapply(MSYrefsYr, function(x) x["N0", ]) %>% t()
+    StockPars[[p]]$SN0_y <- sapply(MSYrefsYr, function(x) x["SN0", ]) %>% t()
+    StockPars[[p]]$B0_y <- sapply(MSYrefsYr, function(x) x["B0", ]) %>% t()
+    StockPars[[p]]$SSB0_y <- sapply(MSYrefsYr, function(x) x["SB0", ]) %>% t()
+    StockPars[[p]]$VB0_y <- sapply(MSYrefsYr, function(x) x["VB", ]/x["VB_VB0", ]) %>% t()
 
     # --- MSY reference points ----
     MSYRefPoints <- sapply(1:nsim, CalcMSYRefs,
@@ -922,6 +882,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     Fmed_y[] <- sapply(per_recruit_F, function(x) sapply(x, function(y) y$FYPR["Fmed"])) %>% t()
 
     # ---- Calculate annual SPR ----
+    SPR_hist <- list()
     SPR_hist[[p]] <- list()
 
     SPR_hist[[p]]$Equilibrium <- CalcSPReq(FMt[,p,,,], StockPars[[p]],
@@ -940,7 +901,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     # ---- Calculate Reference Yield ----
     # if(!silent) message("Calculating reference yield - best fixed F strategy")
     ## TODO - add RefY calcs
-    StockPars[[p]]$RefY <-StockPars[[p]]$MSY
+    StockPars[[p]]$RefY <- StockPars[[p]]$MSY
 
     # ---- Store Reference Points ----
     StockPars[[p]]$ReferencePoints <- list(

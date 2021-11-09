@@ -41,7 +41,6 @@ Suggests:
     MASS,
     mvtnorm,
     openxlsx,
-    purrr,
     r4ss,
     readxl,
     reshape2,

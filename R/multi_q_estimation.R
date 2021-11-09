@@ -29,100 +29,122 @@
 #' @param SexPars A list of sex-specific dynamics SSBfrom stock_age
 #' @author T.Carruthers
 #' @keywords internal
-getq_multi_MICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage,
-                            nyears, N, VF, FretA, maxF=0.9, MPA,CatchFrac,
-                            bounds= c(1e-05, 15),tol=1E-6,Rel,SexPars, plusgroup,
-                            optVB=FALSE) {
+getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
+                            nyears, N, VF, FretA, maxF = 0.9, MPA, CatchFrac,
+                            bounds= c(1e-05, 15), tol = 1E-6, Rel, SexPars, plusgroup,
+                            optVB = FALSE) {
 
-  n_age <- maxage +1 # include age-0
-  Nx <- array(N[x,,,,],dim(N)[2:5])
-  VFx <- array(VF[x,,,,],dim(VF)[2:5])
-  FretAx <- array(FretA[x,,,,],dim(VF)[2:5])
-
-  Kx<-matrix(unlist(lapply(StockPars,function(dat)dat['K'])),ncol=np)[x,]
-  Linfx<-matrix(unlist(lapply(StockPars,function(dat)dat['Linf'])),ncol=np)[x,]
-  t0x<-matrix(unlist(lapply(StockPars,function(dat)dat['t0'])),ncol=np)[x,]
-  Mx<-matrix(unlist(lapply(StockPars,function(dat)dat['M'])),ncol=np)[x,]
-  R0x<-matrix(unlist(lapply(StockPars,function(dat)dat['R0'])),ncol=np)[x,]
-  SSB0x<-matrix(unlist(lapply(StockPars,function(dat)dat['SSB0'])),ncol=np)[x,]
-  VB0x<-matrix(unlist(lapply(StockPars,function(dat)dat['VB0'])),ncol=np)[x,]
-
-  hsx<-matrix(unlist(lapply(StockPars,function(dat)dat['hs'])),ncol=np)[x,]
-  ax<-matrix(unlist(lapply(StockPars,function(dat)dat['a'])),ncol=np)[1,]
-  bx<-matrix(unlist(lapply(StockPars,function(dat)dat['b'])),ncol=np)[1,]
-  SRrelx<-matrix(unlist(lapply(StockPars,function(dat)dat['SRrel'])),ncol=np)[x,]
-
-  distx<-Asizex<-SSBpRx<-R0ax<-aRx<-bRx<-array(NA,c(np,nareas))
-  Perrx<-array(NA,c(np,nyears+n_age))
-  movx<-array(NA,c(np,n_age,nareas,nareas,nyears))
-
-  for(p in 1:np){
-    distx[p,]<-StockPars[[p]]$R0a[x,]/sum(StockPars[[p]]$R0a[x,])
-    Perrx[p,]<-StockPars[[p]]$Perr_y[x,1:(nyears+n_age)]
-    movx[p,,,,]<-StockPars[[p]]$mov[x,,,,1:nyears]
-    SSBpRx[p,]<-StockPars[[p]]$SSBpR[x,]
-    R0ax[p,]<-StockPars[[p]]$R0a[x,]
-    aRx[p,]<-StockPars[[p]]$aR[x,]
-    bRx[p,]<-StockPars[[p]]$bR[x,]
-    Asizex[p,]<-StockPars[[p]]$Asize[x,]
-  }
-
-  M_ageArrayx<-Mat_agex<-WatAgex<-Len_agex <- Fec_agex <- array(NA,c(np,n_age,nyears))
-  Effind<-array(NA,c(np,nf,nyears))
-  Spat_targ<-array(NA,c(np,nf))
-
-  for(p in 1:np){
-    Mat_agex[p,,]<-StockPars[[p]]$Mat_age[x,,1:nyears]
-    Fec_agex[p,,]<-StockPars[[p]]$Fec_Age[x,,1:nyears]
-    M_ageArrayx[p,,]<-StockPars[[p]]$M_ageArray[x,,1:nyears]
-    Effind[p,,]<-t(matrix(unlist(lapply(FleetPars[[p]], function(dat,x)
-      dat['Find'][[1]][x,],x=x)),ncol=nf))
-    Spat_targ[p,]<-unlist(lapply(FleetPars[[p]], function(dat,x)
-      dat['Spat_targ'][[1]][x],x=x))
-    WatAgex[p,,]<-StockPars[[p]]$Wt_age[x,,1:nyears]
-    Len_agex[p,,]<-StockPars[[p]]$Len_age[x,,1:nyears]
-  }
+  n_age <- maxage + 1 # include age-0
+  Nx <- array(N[x,,,,], c(np, n_age, nyears, nareas))
+  VFx <- array(VF[x,,,,], c(np, nf, n_age, nyears))
+  FretAx <- array(FretA[x,,,,] , c(np, nf, n_age, nyears))
+  
+  # Vectors of length np
+  Kx <- sapply(StockPars, getElement, "K")[x, ]
+  Linfx <- sapply(StockPars, getElement, "Linf")[x, ]
+  t0x <- sapply(StockPars, getElement, "t0")[x, ]
+  Mx <- sapply(StockPars, getElement, "M")[x, ]
+  R0x <- sapply(StockPars, getElement, "R0")[x, ]
+  SSB0x <- sapply(StockPars, getElement, "SSB0")[x, ]
+  VB0x <- sapply(StockPars, getElement, "VB0")[x, ]
+  
+  hsx <- sapply(StockPars, getElement, "hs")[x, ]
+  ax <- sapply(StockPars, getElement, "a")
+  bx <- sapply(StockPars, getElement, "b")
+  SRrelx <- sapply(StockPars, getElement, "SRrel")[x, ]
+  
+  # Matrix np x nyears + nage
+  Perrx <- sapply(1:np, function(p) StockPars[[p]]$Perr_y[x, 1:(nyears + n_age)]) %>% t()
+  
+  # Matrix np x nage x areas x areas x nyears
+  movx <- sapply(1:np, function(p) StockPars[[p]]$mov[x, , , , 1:nyears], simplify = "array") %>% aperm(c(5, 1:4))
+  
+  # Matrix np x nareas
+  distx <- sapply(1:np, function(p) StockPars[[p]]$R0a[x, ]/sum(StockPars[[p]]$R0a[x, ])) %>% t()
+  SSBpRx <- sapply(1:np, function(p) StockPars[[p]]$SSBpR[x, ]) %>% t()
+  R0ax <- sapply(1:np, function(p) StockPars[[p]]$R0a[x, ]) %>% t()
+  aRx <- sapply(1:np, function(p) StockPars[[p]]$aR[x, ]) %>% t()
+  bRx <- sapply(1:np, function(p) StockPars[[p]]$bR[x, ]) %>% t()
+  Asizex <- sapply(1:np, function(p) StockPars[[p]]$Asize[x, ]) %>% t()
+  
+  # Arrays np x nage x nyears
+  Mat_agex <- sapply(1:np, function(p) StockPars[[p]]$Mat_age[x, , 1:nyears], simplify = "array") %>%
+    aperm(c(3, 1:2))
+  Fec_agex <- sapply(1:np, function(p) StockPars[[p]]$Fec_Age[x, , 1:nyears], simplify = "array") %>%
+    aperm(c(3, 1:2))
+  M_ageArrayx <- sapply(1:np, function(p) StockPars[[p]]$M_ageArray[x, , 1:nyears], simplify = "array") %>%
+    aperm(c(3, 1:2))
+  WatAgex <- sapply(1:np, function(p) StockPars[[p]]$Wt_age[x, , 1:nyears], simplify = "array") %>%
+    aperm(c(3, 1:2))
+  Len_agex <- sapply(1:np, function(p) StockPars[[p]]$Len_age[x, , 1:nyears], simplify = "array") %>%
+    aperm(c(3, 1:2))
+  
+  # Array np x nf x nyears
+  Effind <- sapply(1:np, function(p) {
+    sapply(1:nf, function(f) FleetPars[[p]][[f]][["Find"]][x, ]) %>% matrix(ncol = nf)
+  }, simplify = "array") %>% aperm(3:1)
+  
+  # Matrix np x nf
+  Spat_targ <- sapply(1:np, function(p) {
+    sapply(1:nf, function(f) FleetPars[[p]][[f]][["Spat_targ"]][x])
+  }) %>% matrix(nf, np) %>% t()
   
   Karrayx <- getLHpars(x, 'Karray', StockPars, nyears)
   Linfarrayx <- getLHpars(x, 'Linfarray', StockPars, nyears) 
   t0arrayx <- getLHpars(x, 't0array', StockPars, nyears) 
   Marrayx <- getLHpars(x, 'Marray', StockPars, nyears) 
-
-  CF<-t(matrix(unlist(lapply(CatchFrac,function(dat)dat[x,])),nrow=nf))
-  Fdist<-CF/Effind[,,nyears] # Catch divided by effort (q proxy)
+  
+  CF <- sapply(CatchFrac, function(xx) xx[x, ]) %>% matrix(nrow = nf) %>% t() # np x nf
+  Fdist <- CF/Effind[,,nyears] # Catch divided by effort (q proxy)
   Fdist[!is.finite(Fdist)] <- tiny
-  Fdist<-Fdist/apply(Fdist[,,drop=F],1,sum)    # q ratio proxy (real space)
+  Fdist <- Fdist/apply(Fdist[, , drop = FALSE], 1, sum)    # q ratio proxy (real space)
 
-  if(nf==1){
-    par<-rep(-5,np)
-  }else{
+  if (nf == 1) {
+    par <- rep(-5, np)
+  } else {
     # low initial F followed by logit guess at fraction based on Fdist
     # according to catch fraction in recent year
-    par<-c(rep(-5,np),log(Fdist[,2:nf]/(1-Fdist[,2:nf])))
+    par <- c(rep(-5,np), logit(Fdist[, 2:nf]))
   }
-
-  depc <- matrix(unlist(lapply(StockPars,function(dat)dat['D'])),ncol=np)[x,]
-  CFc<-array(NA,c(np,nf))
-  for(p in 1:np)CFc[p,]=CatchFrac[[p]][x,]
-  factr<-tol/.Machine$double.eps
-
-  opt<-optim(par,qestMICE,
-             method="L-BFGS-B",
-             lower=c(rep(log(bounds[1]),np),rep(-5,np*(nf-1))),
-             upper=c(rep(log(bounds[2]),np),rep(5,np*(nf-1))),
-             depc=depc, CFc=CFc, mode='opt', np=np, nf=nf, nyears=nyears,
-             nareas=nareas, maxage=maxage, Nx=Nx, VFx=VFx, FretAx=FretAx,
-             Effind=Effind, distx=distx, movx=movx, Spat_targ=Spat_targ,
-             M_ageArrayx=M_ageArrayx, Mat_agex=Mat_agex, 
-             Fec_agex=Fec_agex,
-             Asizex=Asizex,
-             WatAgex=WatAgex, Len_agex=Len_agex,
-             Karrayx=Karrayx,Linfarrayx=Linfarrayx, t0arrayx=t0arrayx,Marrayx=Marrayx,
-             R0x=R0x, R0ax=R0ax, SSBpRx=SSBpRx,
-             SSB0x=SSB0x, hsx=hsx, ax=ax, bx=bx, aRx=aRx, bRx=bRx, Perrx=Perrx,
-             SRrelx=SRrelx, Rel=Rel, SexPars=SexPars, x=x, plusgroup=plusgroup,
-             optVB=optVB, VB0x=VB0x, maxF=maxF,
-             control=list(trace=1,factr=factr))
+  
+  depc <- sapply(1:np, function(p) StockPars[[p]][["D"]])[x, ]
+  CFc <- sapply(1:np, function(p) CatchFrac[[p]][x, ]) %>% matrix(nf, np) %>% t()
+  
+  opt <- optim(par, qestMICE,
+               method = "L-BFGS-B",
+               lower = c(rep(log(bounds[1]), np), rep(-5, np * (nf-1))),
+               upper = c(rep(log(bounds[2]), np), rep(5, np*(nf-1))),
+               depc = depc, CFc = CFc, mode = "opt", np = np, nf = nf, nyears = nyears,
+               nareas = nareas, maxage = maxage, Nx = Nx, VFx = VFx, FretAx = FretAx,
+               Effind = Effind, distx = distx, movx = movx, Spat_targ = Spat_targ,
+               M_ageArrayx = M_ageArrayx, Mat_agex = Mat_agex, 
+               Fec_agex = Fec_agex,
+               Asizex = Asizex,
+               WatAgex = WatAgex, Len_agex = Len_agex,
+               Karrayx = Karrayx, Linfarrayx = Linfarrayx, t0arrayx = t0arrayx, Marrayx = Marrayx,
+               R0x = R0x, R0ax = R0ax, SSBpRx = SSBpRx,
+               SSB0x = SSB0x, hsx = hsx, ax = ax, bx = bx, aRx = aRx, bRx = bRx, Perrx = Perrx,
+               SRrelx = SRrelx, Rel = Rel, SexPars = SexPars, x = x, plusgroup = plusgroup,
+               optVB = optVB, VB0x = VB0x, maxF = maxF,
+               control = list(trace = 1, factr = tol/.Machine$double.eps))
+  
+  #opt2<-nlminb(par,qestMICE,
+  #           #method="L-BFGS-B",
+  #           lower=c(rep(log(bounds[1]),np),rep(-5,np*(nf-1))),
+  #           upper=c(rep(log(bounds[2]),np),rep(5,np*(nf-1))),
+  #           depc=depc, CFc=CFc, mode='opt', np=np, nf=nf, nyears=nyears,
+  #           nareas=nareas, maxage=maxage, Nx=Nx, VFx=VFx, FretAx=FretAx,
+  #           Effind=Effind, distx=distx, movx=movx, Spat_targ=Spat_targ,
+  #           M_ageArrayx=M_ageArrayx, Mat_agex=Mat_agex, 
+  #           Fec_agex=Fec_agex,
+  #           Asizex=Asizex,
+  #           WatAgex=WatAgex, Len_agex=Len_agex,
+  #           Karrayx=Karrayx,Linfarrayx=Linfarrayx, t0arrayx=t0arrayx,Marrayx=Marrayx,
+  #           R0x=R0x, R0ax=R0ax, SSBpRx=SSBpRx,
+  #           SSB0x=SSB0x, hsx=hsx, ax=ax, bx=bx, aRx=aRx, bRx=bRx, Perrx=Perrx,
+  #           SRrelx=SRrelx, Rel=Rel, SexPars=SexPars, x=x, plusgroup=plusgroup,
+  #           optVB=optVB, VB0x=VB0x, maxF=maxF
+  #           )
 
   out<-qestMICE(par=opt$par, depc=depc,CFc=CFc,mode='calc', np=np, nf=nf,
                 nyears=nyears, nareas=nareas, maxage=maxage, Nx=Nx, VFx=VFx,
@@ -185,66 +207,63 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage,
 #' @param x Integer. The simulation number
 #' @author T.Carruthers
 #' @keywords internal
-qestMICE<-function(par,depc,CFc,mode='opt',np,nf,nyears,nareas,maxage,Nx,VFx,
-                   FretAx,Effind,distx,movx,Spat_targ,M_ageArrayx,Mat_agex,
+qestMICE<-function(par, depc, CFc, mode='opt', np, nf, nyears, nareas, maxage, Nx, VFx,
+                   FretAx, Effind, distx, movx, Spat_targ, M_ageArrayx, Mat_agex,
                    Fec_agex,
                    Asizex,
                    WatAgex, Len_agex,
-                   Karrayx,Linfarrayx, t0arrayx,Marrayx,
-                   R0x,R0ax,SSBpRx,SSB0x,hsx,aRx, bRx,
-                   ax,bx,Perrx,SRrelx,Rel,SexPars,x, plusgroup, optVB, VB0x,
-                   maxF){
+                   Karrayx, Linfarrayx, t0arrayx, Marrayx,
+                   R0x, R0ax, SSBpRx, SSB0x, hsx, aRx, bRx,
+                   ax, bx, Perrx, SRrelx, Rel, SexPars, x, plusgroup, optVB, VB0x,
+                   maxF) {
 
   n_age <- maxage + 1 # include age-0
-  qsx<-exp(par[1:np])
-  if(nf==1){
-    qfracx<-matrix(1,nrow=np)
-  }else{
-    qlogit<-array(0,c(np,nf))
-    qlogit[,2:nf]<-par[(np+1):length(par)]
-    qfracx<-exp(qlogit)/apply(exp(qlogit),1,sum)
+  qsx <- exp(par[1:np])
+  if (nf == 1) {
+    qfracx <- matrix(1, nrow = np, 1)
+  } else {
+    qlogit <- matrix(0, np, nf)
+    qlogit[, 2:nf] <- par[(np+1):length(par)]
+    qfracx <- ilogitm(qlogit)
   }
 
-  HistVars<-popdynMICE(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,
-                       Effind,movx,Spat_targ,M_ageArrayx, Mat_agex, Fec_agex, 
-                       Asizex,
-                       WatAgex, Len_agex,
-                       Karrayx,Linfarrayx, t0arrayx,Marrayx,
-                       R0x,R0ax,SSBpRx,hsx,aRx, bRx,ax,bx,Perrx,
-                       SRrelx,Rel,SexPars,x, plusgroup, maxF, SSB0x)
+  HistVars <- popdynMICE(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, FretAx,
+                         Effind, movx, Spat_targ, M_ageArrayx, Mat_agex, Fec_agex, 
+                         Asizex,
+                         WatAgex, Len_agex,
+                         Karrayx, Linfarrayx, t0arrayx, Marrayx,
+                         R0x, R0ax, SSBpRx, hsx, aRx, bRx, ax, bx, Perrx,
+                         SRrelx, Rel, SexPars, x, plusgroup, maxF, SSB0x)
 
   if (optVB) {
-    VBest<-apply(HistVars$VBx,c(1,3),sum)
-    deppred<-VBest[,nyears]/VB0x
+    VBest <- apply(HistVars$VBx, c(1, 3), sum)
+    deppred <- VBest[, nyears]/VB0x
   } else {
-    SSBest<-apply(HistVars$SSBx,c(1,3),sum)
-    deppred<-SSBest[,nyears]/SSB0x
+    SSBest <- apply(HistVars$SSBx, c(1, 3), sum)
+    deppred <- SSBest[, nyears]/SSB0x
   }
 
-
-  if(length(SexPars)>0){ # you need to make depletion just one variable for all components of a sex-specific model
-
-    sexmatches<-sapply(1:nrow(SexPars$SSBfrom),function(x,mat)
-      paste(mat[x,],collapse="_"), mat=SexPars$SSBfrom)
-    parcopy<-match(sexmatches,sexmatches)
-    deppred<-deppred[parcopy]
-
+  if (length(SexPars)) { # you need to make depletion just one variable for all components of a sex-specific model
+    sexmatches <- sapply(1:nrow(SexPars$SSBfrom), function(x) paste(SexPars$SSBfrom[x, ], collapse = "_"))
+    parcopy <- match(sexmatches, sexmatches)
+    deppred <- deppred[parcopy]
     qsx <- qsx[parcopy] # copy female q to males
-
   }
 
-  Cpred0<-array(NA,c(np,nf,n_age,nareas))
-  Cind<-TEG(dim(Cpred0))
-  Find<-cbind(Cind[,1:3],nyears,Cind[,4]) # p f age y area
-  Bind<-Find[,c(1,3:5)]
-  Cpred0[Cind]<-HistVars$Bx[Bind]*(1-exp(-HistVars$FMy[Find]))
-  Ctot<-apply(Cpred0,1:2,sum)
-  Cpred<-Ctot/apply(Ctot,1,sum)
+  Cfracpred <- local({
+    Cpred0 <- array(NA, c(np, nf, n_age, nareas))
+    Cind <- TEG(dim(Cpred0))
+    Find <- cbind(Cind[, 1:3], nyears, Cind[, 4]) # p f age y area
+    Bind <- Find[, c(1, 3:5)]
+    Cpred0[Cind] <- HistVars$Bx[Bind] * (1 - exp(-HistVars$Zx[Bind]))/HistVars$FMy[Find] * HistVars$Zx[Bind] # Baranov eq.
+    Ctot <- apply(Cpred0, 1:2, sum)
+    Ctot/apply(Ctot, 1, sum)
+  })
 
-  depOBJ<-sum((log(depc) - log(deppred))^2)
-  CFc[CFc==0] <- tiny
-  Cpred[Cpred==0] <- tiny
-  cOBJ<-sum(log(CFc/Cpred)^2) # Lazy - should be: sum(log(CFc[,2:nf]/Cpred[,2:nf])^2) but this doesn't work for single fleets and it makes no difference anyway
+  depOBJ <- sum(log(depc/deppred)^2)
+  CFc[CFc == 0] <- tiny
+  Cfracpred[Cfracpred == 0] <- tiny
+  cOBJ <- sum(log(CFc/Cfracpred)^2) # Lazy - should be: sum(log(CFc[,2:nf]/Cpred[,2:nf])^2) but this doesn't work for single fleets and it makes no difference anyway
 
   if(mode=='opt'){
     return(depOBJ+cOBJ)
@@ -252,7 +271,7 @@ qestMICE<-function(par,depc,CFc,mode='opt',np,nf,nyears,nareas,maxage,Nx,VFx,
     return(list(qtot=qsx,
                 qfrac=qfracx,
                 CFc=CFc,
-                Cpred=Cpred,
+                Cfracpred=Cfracpred,
                 depc=depc,
                 deppred=deppred))#,Vulnf=Vulnf,Retf=Retf,MPAf=MPAf))
   }
