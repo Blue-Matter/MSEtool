@@ -346,12 +346,11 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
   if(!is.null(replist$endgrowth$Mat_F_wtatage)) {
     fec_age <- replist$endgrowth %>% dplyr::filter(Morph == 1, Seas == 1, Sex==i) %>%
       dplyr::select(Age_Beg, Mat_F_wtatage)
-    Fec_age = replicate(nsim, fec_age$Mat_F_wtatage)
-    Fec_age = replicate(nyears+proyears,Fec_age)
-    Fec_age <- aperm(Fec_age, c(2,1,3))
-    if (i==1) {
-      # only for females
-      cpars_bio$Fec_age <- Fec_age
+    if (nrow(fec_age)>0) {
+      Fec_age = replicate(nsim, fec_age$Mat_F_wtatage)
+      Fec_age = replicate(nyears+proyears,Fec_age)
+      Fec_age <- aperm(Fec_age, c(2,1,3))
+      cpars_bio$Fec_age <- Fec_age # only for females
     } else {
       cpars_bio$Fec_age <- NULL
     }
