@@ -1,6 +1,6 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
-## MSEtool 3.2.9999 - Development Version 
+## MSEtool 3.3.0 
 
 ### New additions
 - added `Awatea2OM` to import MCMC output from an Awatea assessment model to openMSE
@@ -15,7 +15,6 @@ The current version of the `MSEtool` package is available for download from [CRA
 ### Minor changes
 - update `plot_mov` for plotting movement matrices.
 - `ProjectMOM` and `multiMSE` now drop the `multiHist` object from the `MMSE` object unless argument `dropHist=FALSE`
-
 
 ## MSEtool 3.2.0
 
