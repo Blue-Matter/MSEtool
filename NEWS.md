@@ -5,6 +5,8 @@ The current version of the `MSEtool` package is available for download from [CRA
 ### Fixes
 - fix bug in re-calculation of MSY refs points when selectivity parameters change (introduced in last version)
 
+### Minor changes
+- add progress bar when knitting OM.rmd in Shiny
 
 ## MSEtool 3.3.0 
 
