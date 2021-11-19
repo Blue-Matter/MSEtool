@@ -132,6 +132,13 @@
 <li>fix bug in re-calculation of MSY refs points when selectivity parameters change (introduced in last version)</li>
 </ul>
 </div>
+<div id="minor-changes" class="section level3">
+<h3 class="hasAnchor">
+<a href="#minor-changes" class="anchor"></a>Minor changes</h3>
+<ul>
+<li>add progress bar when knitting OM.rmd in Shiny</li>
+</ul>
+</div>
 </div>
     <div id="msetool-330" class="section level2">
 <h2 class="hasAnchor">
@@ -154,9 +161,9 @@
 <li>add check for missing OM slots such as interval, pstar, nyears, etc</li>
 </ul>
 </div>
-<div id="minor-changes" class="section level3">
+<div id="minor-changes-1" class="section level3">
 <h3 class="hasAnchor">
-<a href="#minor-changes" class="anchor"></a>Minor changes</h3>
+<a href="#minor-changes-1" class="anchor"></a>Minor changes</h3>
 <ul>
 <li>update <code>plot_mov</code> for plotting movement matrices.</li>
 <li>
@@ -176,9 +183,9 @@
 <li>remove debugging message that was stupidly left in last release</li>
 </ul>
 </div>
-<div id="minor-changes-1" class="section level3">
+<div id="minor-changes-2" class="section level3">
 <h3 class="hasAnchor">
-<a href="#minor-changes-1" class="anchor"></a>Minor changes</h3>
+<a href="#minor-changes-2" class="anchor"></a>Minor changes</h3>
 <ul>
 <li>add <code>silent</code> option to <code>SS2Data</code>
 </li>
@@ -229,9 +236,9 @@
 <li>option to apply TAC to all removals with <code>OM@cpars$control$TAC="removals"</code>. Default is to for TAC to refer to retained catch (i.e., removals will be greater than TAC if there are discards)</li>
 </ul>
 </div>
-<div id="minor-changes-2" class="section level3">
+<div id="minor-changes-3" class="section level3">
 <h3 class="hasAnchor">
-<a href="#minor-changes-2" class="anchor"></a>Minor changes</h3>
+<a href="#minor-changes-3" class="anchor"></a>Minor changes</h3>
 <ul>
 <li>add more informative messages when conditioning on real data</li>
 <li>add conditioning on real data for <code>multiMSE</code>
@@ -270,9 +277,9 @@
     <div id="msetool-301" class="section level2">
 <h2 class="hasAnchor">
 <a href="#msetool-301" class="anchor"></a>MSEtool 3.0.1</h2>
-<div id="minor-changes-3" class="section level3">
+<div id="minor-changes-4" class="section level3">
 <h3 class="hasAnchor">
-<a href="#minor-changes-3" class="anchor"></a>Minor Changes</h3>
+<a href="#minor-changes-4" class="anchor"></a>Minor Changes</h3>
 <ul>
 <li>Add <code>I_beta</code>, <code>SpI_beta</code>, and <code>VI_beta</code> for the individual indices. Defaults to use <code>OM@beta</code> for all, unless a real index is supplied, e.g., <code>OM@cpars$Data@Ind</code>, <code>OM@cpars$Data@SpInd</code>, or <code>OM@cpars$Data@VInd</code>, or if supplied in cpars, e.g., <code>OM@cpars$I_beta</code>
 </li>
