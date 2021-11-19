@@ -37,7 +37,7 @@ out <- NULL
 i <- 0
 for (rmd in rmd.files) {
   i <- i + 1
-  if (identical(rmarkdown::metadata$runtime, "shiny"))
+  if (shiny::isRunning())
     shiny::setProgress(i/length(rmd.files))
   out <- c(out, knitr::knit_child(rmd))
 }
