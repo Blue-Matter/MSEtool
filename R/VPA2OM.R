@@ -1,20 +1,14 @@
-# =======================================================================================================================================
-# === VPA2OM ============================================================================================================================
-# =======================================================================================================================================
-
-# T. Carruthers
-# A function for converting stochastic (bootstrap VPA) outputs to a MSEtool operating model
-
-#' Reads bootstrap estimates from a VPA stock assessment into an operating model.
+#' Reads bootstrap estimates from a stock assessment model (including VPA) into an operating model. \code{Assess2OM}
+#' is identical to \code{VPA2OM}.
 #'
 #'
-#' @description A function that uses a set of VPA bootstrap estimates of numbers-at-age, fishing mortality rate-at-age, M-at-age,
+#' @description A function that uses a set of bootstrap estimates of numbers-at-age, fishing mortality rate-at-age, M-at-age,
 #' weight-at-age, length-at-age and Maturity-at-age to define a fully described MSEtool operating model. The user still
 #' needs to parameterize most of the observation and implementation portions of the operating model.
 #' @param Name Character string. The name of the operating model.
 #' @param proyears Positive integer. The number of projection years for MSE.
 #' @param interval Positive integer. The interval at which management procedures will update the management advice in \link[MSEtool]{runMSE}, e.g., 1 = annual updates.
-#' @param CurrentYr Positive integer. The current year (final year of VPA fitting to data)
+#' @param CurrentYr Positive integer. The current year (final year of fitting to data)
 #' @param h The steepness of the stock-recruitment curve (greater than 0.2 and less than 1, assumed to be close to 1 to match VPA assumption).
 #' Either a single numeric or a length nsim vector.
 #' @param Obs The observation model (class Obs). This function only updates the catch and index observation error.
@@ -26,29 +20,29 @@
 #' @param Maa Numeric array `[sim, ages, year]`. Natural mortality rate-at-age `[first age is age zero]`.
 #' @param laa Numeric array `[sim, ages, year]`. Length-at-age `[first age is age zero]`.
 #' @param nyr_par_mu Positive integer. The number of recent years that natural mortality, age vulnerability, weight, length and maturity parameters are averaged over for defining future projection conditions.
-#' @param LowerTri Integer. The number of recent years for which model estimates of recruitment are ignored (not reliably estimated by the VPA)
+#' @param LowerTri Integer. The number of recent years for which model estimates of recruitment are ignored (not reliably estimated by the assessment)
 #' @param recind Positive integer. The first age class that fish 'recruit to the fishery'. The default is 0 - ie the first position in the age dimension of naa is age zero
-#' @param plusgroup Logical. Does the VPA assume that the oldest age class is a plusgroup?
-#' @param altinit Integer. Various assumptions for how VPAs set up the initial numbers. 0: standard, 1: no plus group, 2: temporary fix for MSEtool plus group initialization
+#' @param plusgroup Logical. Does the assessment assume that the oldest age class is a plusgroup?
+#' @param altinit Integer. Various assumptions for how to set up the initial numbers. 0: standard, 1: no plus group, 2: temporary fix for MSEtool plus group initialization
 #' @param fixq1 Logical. Should q be fixed (ie assume the F-at-age array faa is accurate?
-#' @param report Logical, if TRUE, a diagnostic will be reported showing the matching of the OM reconstructed numbers at age vs the VPA assessment.
+#' @param report Logical, if TRUE, a diagnostic will be reported showing the matching of the OM reconstructed numbers at age vs the assessment.
 #' @param silent Whether to silence messages to the console.
 #' @param ... Additional arguments, including R0 (unfished recruitment), phi0 (unfished spawners per recruit associated with R0 and h for calculating stock recruit parameters),
 #' Perr (recruitment standard deviation for sampling future recruitment), and AC (autocorrelation in future recruitment deviates). For all, either a numeric or a length nsim vector.
 #' @details Use a seed for the random number generator to sample future recruitment.
 #' @return An object of class \linkS4class{OM}.
 #' @author T. Carruthers
+#' @aliases VPA2OM
 #' @export
 #' @seealso \link{SS2OM}
-
-VPA2OM<-function(Name="A fishery made by VPA2OM",
-                 proyears=50, interval=2, CurrentYr=2019,
-                 h=0.999,
-                 Obs = MSEtool::Imprecise_Unbiased, Imp=MSEtool::Perfect_Imp,
-                 naa, faa, waa, Mataa, Maa, laa,
-                 nyr_par_mu = 3, LowerTri=1,
-                 recind=0, plusgroup=TRUE, altinit=0, fixq1=TRUE,
-                 report=FALSE, silent=FALSE, ...) {
+Assess2OM <- function(Name="A fishery made by VPA2OM",
+                      proyears=50, interval=2, CurrentYr=as.numeric(format(Sys.Date(), "%Y")),
+                      h=0.999,
+                      Obs = MSEtool::Imprecise_Unbiased, Imp=MSEtool::Perfect_Imp,
+                      naa, faa, waa, Mataa, Maa, laa,
+                      nyr_par_mu = 3, LowerTri=1,
+                      recind=0, plusgroup=TRUE, altinit=0, fixq1=TRUE,
+                      report=FALSE, silent=FALSE, ...) {
 
   simup<-function(param, OM, do_slot = TRUE){   # Generic function for converting VPA outputs to an OM
     paramnam<-deparse(substitute(param))
@@ -313,3 +307,8 @@ VPA2OM<-function(Name="A fishery made by VPA2OM",
   return(OM)
 
 }
+
+#' @rdname Assess2OM
+#' @export
+VPA2OM <- Assess2OM
+

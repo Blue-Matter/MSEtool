@@ -731,6 +731,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   Mnow<-apply(MarrayArea[,,nyears,]*N[,,nyears,],1:2,sum)/apply(N[,,nyears,],1:2,sum)
   MGTsurv<-t(exp(-apply(Mnow,1,cumsum)))
   MGT<-apply(Agearray*(StockPars$Mat_age[,,nyears]*MGTsurv),1,sum)/apply(StockPars$Mat_age[,,nyears]*MGTsurv,1,sum)
+  if(all(is.na(MGT))) MGT <- StockPars$ageMarray[, nyears]
 
   # --- Calculate B-low ----
   Blow <- rep(NA,nsim)
