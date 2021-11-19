@@ -36,7 +36,7 @@ proyears <- params$proyears
 Histograms of `r nsim` simulations of `M`, and `Msd` parameters, with vertical colored lines indicating `r nsamp` randomly drawn values used in other plots:
 
 ```{r, echo=FALSE}
-plot.NaturalMortality(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=1)
+MSEtool:::plot.NaturalMortality(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=1)
 ```
 
 
@@ -44,7 +44,7 @@ plot.NaturalMortality(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.n
 The average natural mortality rate by year for adult fish for `r nsamp` simulations. The vertical dashed line indicates the end of the historical period:
 
 ```{r, echo=FALSE}
-plot.NaturalMortality(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=2)
+MSEtool:::plot.NaturalMortality(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=2)
 ```
 
 
@@ -54,7 +54,7 @@ Natural mortality-at-age for `r nsamp` simulations in the first historical year,
 and the last projected year:
 
 ```{r, echo=FALSE}
-plot.NaturalMortality(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=3)
+MSEtool:::plot.NaturalMortality(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=3)
 ```
 
 #### M-at-Length
@@ -62,6 +62,6 @@ Natural mortality-at-length for `r nsamp` simulations in the first historical ye
 and the last projected year:
 
 ```{r, echo=FALSE}
-plot.NaturalMortality(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=4)
+MSEtool:::plot.NaturalMortality(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=4)
 ```
 

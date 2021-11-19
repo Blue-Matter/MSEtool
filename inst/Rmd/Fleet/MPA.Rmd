@@ -97,7 +97,7 @@ CURRENTLY NOT IMPLEMENTED !
 Histograms of `r nsim` simulations of spatial targeting parameter (`Spat_targ`), with vertical colored lines indicating `r nsamp` randomly drawn values:
 
 ```{r spatial_targeting, echo=FALSE}
-plot.MPA(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=1)
+MSEtool:::plot.MPA(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=1)
 
 ```
 

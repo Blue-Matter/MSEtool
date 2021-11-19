@@ -49,7 +49,7 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1,
 
 
 mean_vector <- function(tt, cpars, gender) {
-  out <- lapply(cpars[gender], function(x) parse(text = paste0("x[[1]]$", tt)) %>% eval())
+  out <- lapply(cpars[gender], function(x) x[[1]][[tt]])
   if(length(out) == 2 && is.null(out[[2]])) {
     res <- out[[1]]
   } else {
@@ -60,7 +60,7 @@ mean_vector <- function(tt, cpars, gender) {
 
 # This function grabs array tt from the cpars of the first fleet of each stock, and averages across genders
 mean_array <- function(tt, cpars, gender) {
-  xx <- lapply(cpars[gender], function(x) parse(text = paste0("x[[1]]$", tt)) %>% eval())
+  xx <- lapply(cpars[gender], function(x) x[[1]][[tt]])
   Reduce("+", xx) / length(xx)
 }
 
@@ -117,6 +117,7 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
   cpars_out$Len_age <- mean_array("Len_age", cpars, gender)
   cpars_out$LatASD <- mean_array("LatASD", cpars, gender)
   cpars_out$Fec_age <- mean_array("Fec_age", cpars, gender=1)
+  if(!length(cpars_out$Fec_age)) cpars_out$Fec_age <- NULL
 
   cpars_out$Linf <- mean_vector("Linf", cpars, gender)
   cpars_out$K <- mean_vector("K", cpars, gender)
@@ -186,18 +187,14 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
     
     cpars_out$Find <- lapply(sel_par, getElement, "Find") %>% mean_array2()
     cpars_out$Fdisc <- lapply(sel_par, getElement, "Fdisc") %>% mean_array2()
+    cpars_out$Fdisc_array1 <- lapply(sel_par, getElement, "Fdisc_array1") %>% mean_array2()
+    cpars_out$Fdisc_array2 <- lapply(sel_par, getElement, "Fdisc_array2") %>% mean_array2()
   
-    # cpars_out$retA <- lapply(sel_par, getElement, "retA") %>% simplify2array() %>% apply(1:3, mean, na.rm=TRUE)
-    # cpars_out$V <- lapply(sel_par, getElement, "V") %>% simplify2array() %>% apply(1:3, mean, na.rm=TRUE)
-    # cpars_out$retL <- lapply(sel_par, getElement, "retL") %>% simplify2array() %>% apply(1:3, mean, na.rm=TRUE)
-    # cpars_out$SLarray <- lapply(sel_par, getElement, "SLarray") %>% simplify2array() %>% apply(1:3, mean, na.rm=TRUE)
-    
     cpars_out$retA <- lapply(sel_par, getElement, "retA") %>% mean_array2()
     cpars_out$V <- lapply(sel_par, getElement, "V") %>% mean_array2()
     cpars_out$retL <- lapply(sel_par, getElement, "retL") %>% mean_array2()
     cpars_out$SLarray <- lapply(sel_par, getElement, "SLarray") %>% mean_array2()
     
-    #
   } else { # Calc V from the F-at-age matrix (no discards modeled in the OM object)
 
     FF <- dplyr::filter(replist$ageselex, Factor == "F", Yr %in% mainyrs)
@@ -311,59 +308,144 @@ calculate_single_fleet_dynamics <- function(x) {
     retL <- lapply(x, getElement, "retL") %>% simplify2array()
     V <- lapply(x, getElement, "V") %>% simplify2array()
     retA <- lapply(x, getElement, "retA") %>% simplify2array()
-    Find <- lapply(x, getElement, "Find") %>% simplify2array()
+    Find <- lapply(x, function(xx) xx$qs * xx$Find) %>% simplify2array()
+    Fdisc1 <- lapply(x, getElement, "Fdisc_array1") %>% simplify2array()
+    Fdisc2 <- lapply(x, getElement, "Fdisc_array2") %>% simplify2array()
 
     nsim <- dim(Find)[1]
     nyears <- dim(Find)[2]
     proyears <- dim(V)[3] - nyears
 
-    SL_avg <- retL_avg <- array(NA, dim(SLarray)[1:3])
-    V_avg <- retA_avg <- array(NA, dim(V)[1:3])
-    Find_out <- matrix(NA_real_, nsim, nyears)
     Fdisc_avg <- lapply(x, getElement, "Fdisc") %>% simplify2array() %>% apply(1, mean, na.rm=TRUE)
-
-    for(i in 1:nsim) {
-      for(j in 1:nyears) {
-        F_at_length <- colSums(t(SLarray[i, , j, ]) * Find[i, j, ])
-        Find_out[i, j] <- max(F_at_length)
-        ret_at_length <- colSums(t(retL[i, , j, ]) * Find[i, j, ])
-        if (Find_out[i, j] == 0) {
-          SL_avg[i, , j] <- 0
-          retL_avg[i, , j] <- 0
-        } else {
-          SL_avg[i, , j] <- F_at_length/Find_out[i, j]
-          retL_avg[i, , j] <- ret_at_length/Find_out[i, j]  
-        }
-
-      }
-    }
-
-    SL_avg[, , nyears + 1:proyears] <- SL_avg[, , nyears]
-    retL_avg[, , nyears + 1:proyears] <- retL_avg[, , nyears]
     
-    for(i in 1:nsim) {
-      for(j in 1:nyears) {
-        F_at_age<- colSums(t(V[i, , j, ]) * Find[i, j, ])
-        Find_out[i, j] <- max(F_at_age)
-        ret_at_age <- colSums(t(retA[i, , j, ]) * Find[i, j, ])
-        
-        if (Find_out[i, j] == 0) {
-          V_avg[i, , j] <- 0
-          retA_avg[i, , j] <- 0
-        } else {
-          V_avg[i, , j] <- F_at_age/Find_out[i, j]
-          retA_avg[i, , j] <- ret_at_age/Find_out[i, j]
-        }
-        retA_avg[i, , j] <- retA_avg[i, , j]/max(retA_avg[i, , j])
-      }
-    }
-    V_avg[, , nyears + 1:proyears] <- V_avg[, , nyears]
-    retA_avg[, , nyears + 1:proyears] <- retA_avg[, , nyears]
-    out <- list(Find = Find_out, V = V_avg, retA = retA_avg, Fdisc = Fdisc_avg, SLarray = SL_avg, retL = retL_avg)
+    # Age-based arrays
+    F_at_age <- lapply(1:nsim, function(i) { # Sum across fleets in sim i, year j
+      sapply(1:nyears, function(j) { 
+        Fretain <- Find[i, j, ] * t(V[i, , j, ] * retA[i, , j, ])
+        Fdiscard <- Find[i, j, ] * t(V[i, , j, ] * (1 - retA[i, , j, ]) * Fdisc1[i, , j, ])
+        colSums(Fretain + Fdiscard)
+      })
+    }) %>% simplify2array() %>% aperm(c(3, 1, 2))
+    
+    Fdisc1_avg <- lapply(1:nsim, function(i) { # Weighted mean across fleets in sim i, year j
+      sapply(1:nyears, function(j) { 
+        num <- Find[i, j, ] * t(V[i, , j, ] * (1 - retA[i, , j, ]) * Fdisc1[i, , j, ])
+        den <- Find[i, j, ] * t(V[i, , j, ] * (1 - retA[i, , j, ]))
+        out <- colSums(num)/colSums(den)
+        out[is.na(out)] <- mean(out, na.rm = TRUE) # Denominator is zero because retention = 1
+        return(out)
+      })
+    }) %>% simplify2array() %>% aperm(c(3, 1, 2))
+    
+    retA_avg <- local({
+      Fretain <- lapply(1:nsim, function(i) {
+        sapply(1:nyears, function(j) colSums(Find[i, j, ] * t(V[i, , j, ] * retA[i, , j, ])))
+      }) %>% simplify2array() %>% aperm(c(3, 1, 2))
+      Fdiscard <- F_at_age - Fretain
+      
+      lapply(1:nsim, function(i) {
+        sapply(1:nyears, function(j) {
+          out <- Fretain[i, , j] * Fdisc1_avg[i, , j]/(Fdiscard[i, , j] + Fretain[i, , j] * Fdisc1_avg[i, , j])
+          out[is.na(out)] <- mean(out, na.rm = TRUE) # Denominator is zero because F = 0, should ensure that: all(out > 0)
+          return(out)
+        })
+      }) %>% simplify2array() %>% aperm(c(3, 1, 2))
+    })
+    
+    Find_out <- apply(F_at_age/retA_avg, c(1, 3), max)
+    V_avg <- lapply(1:nsim, function(i) t(F_at_age[i, , ]/retA_avg[i, , ])/Find_out[i, ]) %>% 
+      simplify2array() %>% aperm(3:1)
+    
+    # Length-based arrays
+    F_at_length <- lapply(1:nsim, function(i) {
+      sapply(1:nyears, function(j) { # Sum across fleets in sim i, year j
+        Fretain <- Find[i, j, ] * t(SLarray[i, , j, ] * retL[i, , j, ])
+        Fdiscard <- Find[i, j, ] * t(SLarray[i, , j, ] * (1 - retL[i, , j, ]) * Fdisc2[i, , j, ])
+        colSums(Fretain + Fdiscard)
+      })
+    }) %>% simplify2array() %>% aperm(c(3, 1, 2))
+    
+    Fdisc2_avg <- lapply(1:nsim, function(i) {
+      sapply(1:nyears, function(j) { # Weighted mean across fleets in sim i, year j
+        num <- Find[i, j, ] * t(SLarray[i, , j, ] * (1 - retL[i, , j, ]) * Fdisc2[i, , j, ])
+        den <- Find[i, j, ] * t(SLarray[i, , j, ] * (1 - retL[i, , j, ]))
+        out <- colSums(num)/colSums(den)
+        out[is.na(out)] <- mean(out, na.rm = TRUE) # Denominator is zero because retention = 1
+        return(out)
+      })
+    }) %>% simplify2array() %>% aperm(c(3, 1, 2))
+    
+    retL_avg <- local({
+      Fretain <- lapply(1:nsim, function(i) {
+        sapply(1:nyears, function(j) colSums(Find[i, j, ] * t(SLarray[i, , j, ] * retL[i, , j, ])))
+      }) %>% simplify2array() %>% aperm(c(3, 1, 2))
+      Fdiscard <- F_at_length - Fretain
+      
+      lapply(1:nsim, function(i) {
+        sapply(1:nyears, function(j) {
+          out <- Fretain[i, , j] * Fdisc2_avg[i, , j]/(Fdiscard[i, , j] + Fretain[i, , j] * Fdisc2_avg[i, , j])
+          out[is.na(out)] <- mean(out, na.rm = TRUE) # Denominator is zero because F = 0, ensure: all(out > 0)
+          return(out)
+        })
+      }) %>% simplify2array() %>% aperm(c(3, 1, 2))
+    })
+    
+    SL_avg <- local({
+      Find_out_L <- apply(F_at_length/retL_avg, c(1, 3), max) # Should be almost identical to Find_out
+      lapply(1:nsim, function(i) t(F_at_length[i, , ]/retL_avg[i, , ])/Find_out_L[i, ]) %>% 
+        simplify2array() %>% aperm(3:1)
+    })
+    
+    #for(i in 1:nsim) {
+    #  for(j in 1:nyears) {
+    #    F_at_length <- colSums(t(SLarray[i, , j, ]) * Find[i, j, ])
+    #    Find_out[i, j] <- max(F_at_length)
+    #    ret_at_length <- colSums(t(retL[i, , j, ]) * Find[i, j, ])
+    #    if (Find_out[i, j] == 0) {
+    #      SL_avg[i, , j] <- 0
+    #      retL_avg[i, , j] <- 0
+    #    } else {
+    #      SL_avg[i, , j] <- F_at_length/Find_out[i, j]
+    #      retL_avg[i, , j] <- ret_at_length/Find_out[i, j]  
+    #    }
+    #  }
+    #}
+
+    #SL_avg[, , nyears + 1:proyears] <- SL_avg[, , nyears]
+    #retL_avg[, , nyears + 1:proyears] <- retL_avg[, , nyears]
+    
+    #for(i in 1:nsim) {
+    #  for(j in 1:nyears) {
+    #    F_at_age<- colSums(t(V[i, , j, ]) * Find[i, j, ])
+    #    Find_out[i, j] <- max(F_at_age)
+    #    ret_at_age <- colSums(t(retA[i, , j, ]) * Find[i, j, ])
+    #    
+    #    if (Find_out[i, j] == 0) {
+    #      V_avg[i, , j] <- 0
+    #      retA_avg[i, , j] <- 0
+    #    } else {
+    #      V_avg[i, , j] <- F_at_age/Find_out[i, j]
+    #      retA_avg[i, , j] <- ret_at_age/Find_out[i, j]
+    #    }
+    #    retA_avg[i, , j] <- retA_avg[i, , j]/max(retA_avg[i, , j])
+    #  }
+    #}
+    #V_avg[, , nyears + 1:proyears] <- V_avg[, , nyears]
+    #retA_avg[, , nyears + 1:proyears] <- retA_avg[, , nyears]
+    #out <- list(Find = Find_out, V = V_avg, retA = retA_avg, Fdisc = Fdisc_avg, SLarray = SL_avg, retL = retL_avg)
+    out <- list(Find = Find_out, 
+                V = abind::abind(V_avg, replicate(proyears, V_avg[, , nyears]), along = 3),
+                retA = abind::abind(retA_avg, replicate(proyears, retA_avg[, , nyears]), along = 3),
+                Fdisc = Fdisc_avg,
+                SLarray = abind::abind(SL_avg, replicate(proyears, SL_avg[, , nyears]), along = 3),
+                retL = abind::abind(retL_avg, replicate(proyears, retL_avg[, , nyears]), along = 3),
+                Fdisc_array1 = abind::abind(Fdisc1_avg, replicate(proyears, Fdisc1_avg[, , nyears]), along = 3),
+                Fdisc_array2 = abind::abind(Fdisc2_avg, replicate(proyears, Fdisc2_avg[, , nyears]), along = 3))
 
   } else {
-    out <- lapply(c("Find", "V", "retA", "Fdisc", 'SLarray', 'retL'), function(xx) getElement(x[[1]], xx)) %>%
-      structure(names = c("Find", "V", "retA", "Fdisc", 'SLarray', 'retL'))
+    fvar <- c("Find", "V", "retA", "Fdisc", "SLarray", "retL", "Fdisc_array1", "Fdisc_array2")
+    out <- lapply(fvar, function(xx) getElement(x[[1]], xx)) %>% structure(names = fvar)
   }
   return(out)
 }
+

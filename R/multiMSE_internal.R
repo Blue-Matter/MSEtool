@@ -321,15 +321,15 @@ multiDataS<-function(MSElist,StockPars,np,mm,nf,realVB){
   }
   Dataout@OM$FinF <- FinF
 
-  # add Misc for each stock and fleet
-  # this makes the object way too big
-  Dataout@Misc <- list()
-  for(p in 1:np){
-    Dataout@Misc[[p]] <- list()
-    for(f in 1:nf){
-      Dataout@Misc[[p]][[f]] <- MSElist[[p]][[f]][[mm]]@Misc
-    }
-  }
+
+  # add Misc slot from first stock and fleet
+  Dataout@Misc <- MSElist[[1]][[1]][[mm]]@Misc
+  # for(p in 1:np){
+  #   Dataout@Misc[[p]] <- list()
+  #   for(f in 1:nf){
+  #     Dataout@Misc[[p]][[f]] <- MSElist[[p]][[f]][[mm]]@Misc
+  #   }
+  # }
   
   Dataout
 }

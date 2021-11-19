@@ -131,6 +131,7 @@ popdynMICE<-function(qsx,qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
                        bx=by[,y-1],Rel=Rel, SexPars=SexPars, x=x,
                        plusgroup=plusgroup, SSB0x=SSB0x,
                        Len_age=Len_age[,,y-1], Wt_age=Wt_agey[,,y-1])
+
     if(y<=nyears){
       # update arrays 
       gc <- FALSE # growth changed?
@@ -287,7 +288,6 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
   Fec_per_weight[Nind[,1:2]] <- Fec_agecur[Nind[,1:2]]/Wt_age[Nind[,1:2]]
   
   if(np>1 & length(Rel)>0){ # If there are MICE relationships
-    
     Responses<-ResFromRel(Rel,Bcur,SSBcur,Ncur,seed=1)
     for(rr in 1:nrow(Responses))
       eval(parse(text=paste0(Responses[rr,4],"[",Responses[rr,3],"]<-",
@@ -326,8 +326,10 @@ popdynOneMICE<-function(np,nf,nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
   VBind<-TEG(dim(VBft))
   VBft[VBind]<-Vcur[VBind[,1:3]]*Bcur[VBind[,c(1,3:4)]]
   Ft<-array(apply(FMx,c(1,3,4),sum),c(np,n_age,nareas))#FMx[VBind]+M_agecur[VBind[,c(1,3)]]
-  Zcur<-Ft+array(rep(M_agecur[VBind[,c(1,3)]],nareas),c(np,n_age,nareas))
-  
+ 
+  # Zcur<-Ft+array(rep(M_agecur[VBind[,c(1,3)]],nareas),c(np,n_age,nareas)) # not sure why it was done this way
+  Zcur<-Ft+ replicate(nareas, M_agecur) # keep M-at-age
+
   Nnext<-array(NA,c(np,n_age,nareas))
   
   # just for vulnerable biomass calculation

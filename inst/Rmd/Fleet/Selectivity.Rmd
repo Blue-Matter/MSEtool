@@ -33,7 +33,7 @@ nsamp <- length(params$its)
 Histograms of `r nsim` simulations of length at 5% selection (`L5`), first length at full selection (`LFS`), and vulnerability of animals at mean asymptotic length (`Vmaxlen`) for the first historical year, the last historical year, and the last projection year, wtih vertical colored lines indicating `r nsamp` randomly drawn values used in the other plots:
 
 ```{r selectivity_parameters, echo=FALSE}
-plot.Selectivity(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=1)
+MSEtool:::plot.Selectivity(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=1)
 
 ```
 
@@ -42,19 +42,19 @@ plot.Selectivity(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=1)
 Histograms of `r nsim` simulations of length at 5% retention (`LR5`), first length at full retention (`LFR`), and retention of animals at mean asymptotic length (`Rmaxlen`) for the first historical year, the last historical year, and the last projection year, wtih vertical colored lines indicating `r nsamp` randomly drawn values used in the other plots:
 
 ```{r retention_parameters, echo=FALSE}
-plot.Selectivity(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=2) 
+MSEtool:::plot.Selectivity(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=2) 
 ```
 
 #### Selectivity & Retention at Length
 
 ```{r SR_at_length, echo=FALSE}
-plot.Selectivity(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=3)
+MSEtool:::plot.Selectivity(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=3)
 
 ```
 
 #### Selectivity & Retention at Age
 ```{r SR_at_age, echo=FALSE}
-plot.Selectivity(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=4)
+MSEtool:::plot.Selectivity(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=4)
 ```
 
 

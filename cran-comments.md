@@ -1,5 +1,4 @@
 ## Note to CRAN Maintainers
-Reduced tarball to less than 5 MB
 
 ## Test environments
 * local - Windows 4.1.0

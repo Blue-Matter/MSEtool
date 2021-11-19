@@ -1,6 +1,6 @@
 Package: MSEtool
 Title: Management Strategy Evaluation Toolkit
-Version: 3.2.909
+Version: 3.3.9999
 Authors@R: c(
   person("Adrian", "Hordyk", email = "adrian@bluematterscience.com", role = c("aut", "cre")),
   person("Quang", "Huynh", email = "quang@bluematterscience.com", role = "aut"), 
@@ -12,7 +12,7 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Depends: 
     R (>= 3.5.0),
     snowfall

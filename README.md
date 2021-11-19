@@ -9,7 +9,7 @@
 status](https://www.r-pkg.org/badges/version/MSEtool)](https://CRAN.R-project.org/package=MSEtool)
 [![R build
 status](https://github.com/Blue-Matter/MSEtool/workflows/R-CMD-check/badge.svg)](https://github.com/Blue-Matter/MSEtool/actions)
-[![](https://img.shields.io/badge/devel%20version-3.0.1-blue.svg)](https://github.com/blue-matter/MSEtool)
+[![](https://img.shields.io/badge/devel%20version-3.3.0-blue.svg)](https://github.com/blue-matter/MSEtool)
 
 <!-- badges: end -->
 

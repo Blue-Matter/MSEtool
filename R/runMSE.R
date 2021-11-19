@@ -731,6 +731,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   Mnow<-apply(MarrayArea[,,nyears,]*N[,,nyears,],1:2,sum)/apply(N[,,nyears,],1:2,sum)
   MGTsurv<-t(exp(-apply(Mnow,1,cumsum)))
   MGT<-apply(Agearray*(StockPars$Mat_age[,,nyears]*MGTsurv),1,sum)/apply(StockPars$Mat_age[,,nyears]*MGTsurv,1,sum)
+  if(all(is.na(MGT))) MGT <- StockPars$ageMarray[, nyears]
 
   # --- Calculate B-low ----
   Blow <- rep(NA,nsim)
@@ -1412,8 +1413,9 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                             StockPars$M_ageArray, StockPars$Wt_age,
                             StockPars$Mat_age,
                             Fec_age=StockPars$Fec_Age,
-                            V_P, StockPars$maxage,StockPars$R0, StockPars$SRrel, StockPars$SSBpR,
-                            StockPars$hs, yr.ind=y1, plusgroup=StockPars$plusgroup)
+                            V_P, StockPars$maxage,StockPars$R0, StockPars$SRrel, 
+                            StockPars$hs, StockPars$SSBpR,
+                            yr.ind=y1, plusgroup=StockPars$plusgroup)
         MSY_y[,mm,y1] <- MSYrefsYr[1, ]
         FMSY_y[,mm,y1] <- MSYrefsYr[2,]
         SSBMSY_y[,mm,y1] <- MSYrefsYr[3,]

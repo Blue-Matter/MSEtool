@@ -1706,8 +1706,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       for(p in 1:np)for(f in 1:nf){
         Data_p_A[[p]][[f]]<-MSElist[[p]][[f]][[mm]]
         Data_p_A[[p]][[f]]@TAC<-MPRecs_A[[p]][[f]]$TAC # record TAC rec in Data
+        Data_p_A[[p]][[f]]@Misc <- MPRecs_A[[p]][[f]]$Misc
       }
-
     }else if(MPcond[mm]=="complex"){
       # A temporary blank hierarchical list object stock by fleet
       MPRecs_A <- Data_p_A <- MPrecs_A_blank
@@ -2094,7 +2094,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
           for(p in 1:np)for(f in 1:nf){
             Data_p_A[[p]][[f]]<-MSElist[[p]][[f]][[mm]]
             Data_p_A[[p]][[f]]@TAC<-MPRecs_A[[p]][[f]]$TAC # record TAC rec in Data
+            Data_p_A[[p]][[f]]@Misc <- MPRecs_A[[p]][[f]]$Misc
           }
+          
         }else if(MPcond[mm]=="complex"){
           # A temporary blank hierarchical list object stock by fleet
           MPRecs_A <- Data_p_A <- MPrecs_A_blank

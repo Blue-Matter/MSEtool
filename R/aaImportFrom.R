@@ -51,7 +51,7 @@ Names <- c("maxage", "R0", "Mexp", "Msd", "dep", "D", "Mgrad", "SRrel", "hs", "p
            'true_Age', 'true_Year', 'true_Yr', 'exp_recr', 'pred_recr', 'Z',
            'season_as_years', 'nseas', 'SR', 'ReqData',
            'Bio_all', 'B', 'C', 'Catch', 'Exp', 'Fleet', 'Model', 'N', 'R', 'SB',
-           'SB0', 'Sim', 'age', 'name', 'seas', 'value'
+           'SB0', 'Sim', 'age', 'name', 'seas', 'Seas', 'Morph', 'value'
 )
 
 if(getRversion() >= "2.15.1") utils::globalVariables(Names)
