@@ -634,7 +634,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                                   maxF=MOM@maxF,MPA=MPA,Rel=Rel,SexPars=SexPars,qs=qs,
                                   qfrac=qfrac,
                                   plusgroup=plusgroup)
-    
+
   } else {
     histYrs <- sapply(1:nsim, HistMICE, StockPars=StockPars,
                       FleetPars=FleetPars,np=np,nf=nf,nareas=nareas,
@@ -642,9 +642,9 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                       maxF=MOM@maxF,MPA=MPA,Rel=Rel,SexPars=SexPars,qs=qs,
                       qfrac=qfrac,
                       plusgroup=plusgroup)
-    
+
   }
-  
+
   N <- aperm(array(as.numeric(unlist(histYrs[1,], use.names=FALSE)),
                    dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
 
@@ -770,31 +770,31 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     V <- apply(FMt_all,1:3,sum)
     V[V<=0] <- tiny
     V <- nlz(V,c(1,3),"max")
-    
+
     MSYrefsYr <- lapply(1:nsim, function(x) {
       sapply(1:(nyears+proyears), function(y) {
-        optMSY_eq(x, 
-                  M_ageArray=StockPars[[p]]$M_ageArray, 
-                  Wt_age=StockPars[[p]]$Wt_age, 
+        optMSY_eq(x,
+                  M_ageArray=StockPars[[p]]$M_ageArray,
+                  Wt_age=StockPars[[p]]$Wt_age,
                   Mat_age=StockPars[[p]]$Mat_age,
-                  Fec_age=StockPars[[p]]$Fec_Age, 
-                  V=V, 
-                  maxage=StockPars[[p]]$maxage, 
+                  Fec_age=StockPars[[p]]$Fec_Age,
+                  V=V,
+                  maxage=StockPars[[p]]$maxage,
                   R0=StockPars[[p]]$R0,
-                  SRrel=StockPars[[p]]$SRrel, 
-                  hs=StockPars[[p]]$hs, 
+                  SRrel=StockPars[[p]]$SRrel,
+                  hs=StockPars[[p]]$hs,
                   SSBpR=StockPars[[p]]$SSBpR,
-                  yr.ind=y, 
+                  yr.ind=y,
                   plusgroup=plusgroup[p])
       })
     })
-    
+
     StockPars[[p]]$MSY_y[] <- sapply(MSYrefsYr, function(x) x["Yield", ]) %>% t()
     StockPars[[p]]$FMSY_y[] <- sapply(MSYrefsYr, function(x) x["F", ]) %>% t()
     StockPars[[p]]$SSBMSY_y[] <- sapply(MSYrefsYr, function(x) x["SB", ]) %>% t()
     StockPars[[p]]$BMSY_y[] <- sapply(MSYrefsYr, function(x) x["B", ]) %>% t()
     StockPars[[p]]$VBMSY_y[] <- sapply(MSYrefsYr, function(x) x["VB", ]) %>% t()
-    
+
     StockPars[[p]]$R0_y[] <- sapply(MSYrefsYr, function(x) x["R0", ]) %>% t()
     StockPars[[p]]$h_y[] <- sapply(MSYrefsYr, function(x) x["h", ]) %>% t()
     StockPars[[p]]$N0_y[] <- sapply(MSYrefsYr, function(x) x["N0", ]) %>% t()
@@ -900,7 +900,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     if (!silent) message("Calculating per-recruit reference points")
     per_recruit_F <- lapply(1:nsim, function(x) {
       lapply(1:(nyears+proyears), function(y) {
-        per_recruit_F_calc(x, 
+        per_recruit_F_calc(x,
                            M_ageArray=StockPars[[p]]$M_ageArray,
                            Wt_age=StockPars[[p]]$Wt_age,
                            Mat_age=StockPars[[p]]$Mat_age,
@@ -1339,7 +1339,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       nMP <- length(MPs[[1]][[1]])
       MPrefs <- array(NA,c(nMP,nf,np))
       MPrefs[]<-unlist(MPs)
-    
+
     } else if (ldim(MPs)==ldim(Fleets)[1]){ # not a two-tier list
       if (!silent) message("Bystock mode: you have specified a vector of MPs for each stock, ",
               "but not a vector of MPs for each stock and fleet. The catch data for these",
@@ -1354,7 +1354,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       MPrefs<-array(NA,c(nMP,nf,np))
       for(p in 1:np)MPrefs[,,p]<-MPs[[p]]
     }
-    
+
     tt <- try(sapply(unlist(MPs), get), silent=TRUE)
     if (class(tt) == 'try-error')
       stop('Error in the MPs -', strsplit(tt,':')[[1]][2])
@@ -1794,12 +1794,12 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         }
       } # end of stocks
     }
-   
+
     # Update Misc slot in Data
     for (p in 1:np) {
       for (f in 1:nf) {
         MSElist[[p]][[f]][[mm]]@Misc <- Data_p_A[[p]][[f]]@Misc
-      } 
+      }
     }
 
     MPCalcs_list <- vector('list', np)
@@ -1850,7 +1850,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                   StockPars=StockPars[[p]],
                                   FleetPars=FleetPars[[p]][[f]],
                                   ImpPars=ImpPars[[p]][[f]], control=control)
-        
+
         if(length(SexPars)>0) MPCalcs<- MPCalcsNAs(MPCalcs) # Zeros caused by SexPars
 
         TACa[,p,f, mm, y] <- TACused[,p,f]#MPCalcs$TACrec # recommended TAC
@@ -2104,9 +2104,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                along=3)
 
           curdat<-multiDataS(MSElist,StockPars,np,mm,nf,realVB)
-          
+
           runMP <- applyMP(curdat, MPs = MPs[mm], reps = 1, silent=TRUE)  # Apply MP
-          
+
           Stock_Alloc <- realVB[,,nyears, drop=FALSE]/
             apply(realVB[,,nyears, drop=FALSE],1,sum)
 
@@ -2186,15 +2186,15 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             } # end of MPcond conditional
           } # end of stock loop
         } # end of MMP
-        
-        
+
+
         # Update Misc slot in Data
         for (p in 1:np) {
           for (f in 1:nf) {
             MSElist[[p]][[f]][[mm]]@Misc <- Data_p_A[[p]][[f]]@Misc
-          } 
+          }
         }
-        
+
 
         for(p in 1:np){
           for(f in 1:nf){
@@ -2337,8 +2337,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
           } # end of fleets
         } # end of stocks
       } # end of not update year
- 
-      
+
+
     } # end of projection years
 
     if(!silent) close(pb)
@@ -2397,7 +2397,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     for(f in 1:nf) {
       OM[[p]][[f]]<-MSElist[[p]][[f]][[1]]@OM
       Obsout[[p]][[f]]<-MSElist[[p]][[f]][[1]]@Obs
-      
+
       # remove MSElist Misc
       for (mm in 1:nMP)
         MSElist[[p]][[f]][[mm]]@Misc <- list()
@@ -2411,25 +2411,25 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   if(class(MPs)=="character") MPs<-list(MPs)
 
   # ---- Create MMSE Object ----
-  
+
   # add all reference points from multiHist to MMSE@RefPoint
   # and remove from multiHist
   # this is done so MMSE@multiHist can be dropped to save a ton of memory
   # while still preserving ref points in the MMSE object
-  
+
   RefPoint <- list()
   RefPoint$ByYear <- list(MSY=MSY_y,
                           FMSY=FMSY_y,
                           SSBMSY=SSBMSY_y,
                           BMSY=BMSY_y,
                           VBMSY=VBMSY_y)
-  # add other ref points 
+  # add other ref points
   nms <- names(multiHist[[1]][[1]]@Ref$ByYear)
   nms <- nms[!nms %in% names( RefPoint$ByYear)]
   # drop SPR, Fcrash etc - not updated in projection and could change if selectivity changes
   nms <- c(nms[grepl('0', nms)], 'h')
   nms <- nms[!nms=="F01_YPR"]
-  
+
   for (nm in nms) {
     RefPoint$ByYear[[nm]] <- array(NA, dim=c(nsim, np, nMP, proyears+nyears))
     for (p in 1:np) {
@@ -2438,8 +2438,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         }
     }
   }
-  
-  
+
+
   RefPoint$Dynamic_Unfished <- list()
   nms <- names(multiHist[[1]][[1]]@Ref$Dynamic_Unfished)
   # add Dynamic_Unfished
@@ -2455,9 +2455,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       multiHist[[p]][[f]]@Ref <- list('Now in MMSE@Ref')
     }
   }
-  
+
   if (dropHist) multiHist <- list('multiHist dropped (dropHist=TRUE). Reference points available in MMSE@Ref')
-  
+
   MSEout <- new("MMSE",
                 Name = MOM@Name,
                 nyears,
@@ -2512,8 +2512,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #' @param silent Should messages be printed out to the console?
 #' @param parallel Logical. Should the MSE be run using parallel processing?
 #' @param checkMPs Logical. Check if the specified MPs exist and can be run on `SimulatedData`?
-#' @param dropHist Logical. Drop the (very large) `multiHist` object from the returned `MMSE` object? 
-#' The `multiHist` object can be (re-)created using `SimulateMOM` or kept in `MMSE@multiHist` if 
+#' @param dropHist Logical. Drop the (very large) `multiHist` object from the returned `MMSE` object?
+#' The `multiHist` object can be (re-)created using `SimulateMOM` or kept in `MMSE@multiHist` if
 #' `dropHist=FALSE`
 #' @describeIn multiMSE Run a multi-stock, multi-fleet MSE
 #' @return  Functions return objects of class `MMSE` and `multiHist`
