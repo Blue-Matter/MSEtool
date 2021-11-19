@@ -33,20 +33,20 @@ nsamp <- length(params$its)
 Histograms of `r nsim` simulations of von Bertalanffy growth parameters `Linf`, `K`, and `t0`, and inter-annual variability in Linf and K (`Linfsd` and `Ksd`), with vertical colored lines indicating `r nsamp` randomly drawn values used in other plots:
 
 ```{r, echo=FALSE}
-plot.Growth(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=1)
+MSEtool:::plot.Growth(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=1)
 ```
 
 #### Time-Series
 The Linf and K parameters in each year for `r nsamp` simulations. The vertical dashed line indicates the end of the historical period:
 
 ```{r, echo=FALSE}
-plot.Growth(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=2)
+MSEtool:::plot.Growth(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=2)
 ```
 
 #### Growth Curves
 Sampled length-at-age curves for `r nsamp` simulations in the first historical year, the last historical year, and the last projection year.
 
 ```{r, echo=FALSE}
- plot.Growth(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=3)
+MSEtool:::plot.Growth(params$Pars, nsamp=nsamp, plotPars=params$plotPars, plot.num=3)
 ```
 

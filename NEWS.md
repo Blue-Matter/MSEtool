@@ -1,5 +1,11 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
+## MSEtool 3.3.9999 - Development Version 
+
+### Fixes
+- fix bug in re-calculation of MSY refs points when selectivity parameters change (introduced in last version)
+
+
 ## MSEtool 3.3.0 
 
 ### New additions

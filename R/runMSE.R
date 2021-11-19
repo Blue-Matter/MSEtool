@@ -1412,8 +1412,9 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                             StockPars$M_ageArray, StockPars$Wt_age,
                             StockPars$Mat_age,
                             Fec_age=StockPars$Fec_Age,
-                            V_P, StockPars$maxage,StockPars$R0, StockPars$SRrel, StockPars$SSBpR,
-                            StockPars$hs, yr.ind=y1, plusgroup=StockPars$plusgroup)
+                            V_P, StockPars$maxage,StockPars$R0, StockPars$SRrel, 
+                            StockPars$hs, StockPars$SSBpR,
+                            yr.ind=y1, plusgroup=StockPars$plusgroup)
         MSY_y[,mm,y1] <- MSYrefsYr[1, ]
         FMSY_y[,mm,y1] <- MSYrefsYr[2,]
         SSBMSY_y[,mm,y1] <- MSYrefsYr[3,]
