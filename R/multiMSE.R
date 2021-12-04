@@ -188,8 +188,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     surv[, 2:n_age] <- t(exp(-apply(StockPars[[p]]$M_ageArray[,,1], 1, cumsum)))[, 1:(n_age-1)]
 
     if (plusgroup[p]) {
-      surv[,n_age] <- surv[,n_age]+surv[,n_age]*
-        exp(-StockPars[[p]]$M_ageArray[,n_age,1])/(1-exp(-StockPars[[p]]$M_ageArray[,n_age,1]))
+      surv[,n_age] <- surv[,n_age]/(1-exp(-StockPars[[p]]$M_ageArray[,n_age,1]))
     }
 
     # predicted Numbers of mature ages in first year
@@ -228,9 +227,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     surv[, 2:n_age, ] <- aperm(exp(-apply(StockPars[[p]]$M_ageArray, c(1,3), cumsum))[1:(n_age-1), ,],
                                c(2,1,3))
     if (plusgroup[p]) {
-      surv[,n_age, ] <- surv[,n_age,]+surv[,n_age,]*
-        apply(-StockPars[[p]]$M_ageArray[,n_age,], 2, exp)/(1-apply(-StockPars[[p]]$M_ageArray[,n_age,],
-                                                                    2, exp))
+      surv[,n_age, ] <- surv[,n_age,]/(1-apply(-StockPars[[p]]$M_ageArray[,n_age,], 2, exp))
     }
     Nfrac <- surv * StockPars[[p]]$Mat_age  # predicted numbers of mature ages in all years
 
@@ -637,19 +634,22 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                        dim=c(np,nf,n_age, nyears, nareas, nsim)), c(6,1,2,3,4,5))
 
   Linfarray <- aperm(array(as.numeric(unlist(histYrs[8,], use.names=FALSE)),
-                           dim=c(np, nyears, nsim)), c(3,1,2))
+                           dim=c(np, nyears+1, nsim)), c(3,1,2))
 
   Karray <- aperm(array(as.numeric(unlist(histYrs[9,], use.names=FALSE)),
-                        dim=c(np, nyears, nsim)), c(3,1,2))
+                        dim=c(np, nyears+1, nsim)), c(3,1,2))
 
   t0array <- aperm(array(as.numeric(unlist(histYrs[10,], use.names=FALSE)),
-                         dim=c(np, nyears, nsim)), c(3,1,2))
+                         dim=c(np, nyears+1, nsim)), c(3,1,2))
 
   Len_age <- aperm(array(as.numeric(unlist(histYrs[11,], use.names=FALSE)),
-                         dim=c(np, n_age, nyears, nsim)), c(4,1,2,3))
+                         dim=c(np, n_age, nyears+1, nsim)), c(4,1,2,3))
 
   Wt_age <- aperm(array(as.numeric(unlist(histYrs[12,], use.names=FALSE)),
-                        dim=c(np, n_age, nyears, nsim)), c(4,1,2,3))
+                        dim=c(np, n_age, nyears+1, nsim)), c(4,1,2,3))
+  
+  Fec_Age <- aperm(array(as.numeric(unlist(histYrs[21,], use.names=FALSE)),
+                        dim=c(np, n_age, nyears+1, nsim)), c(4,1,2,3))
 
   VBF <- aperm(array(as.numeric(unlist(histYrs[17,], use.names=FALSE)),
                      dim=c(np,nf,n_age, nyears, nareas, nsim)), c(6,1,2,3,4,5))
@@ -658,16 +658,20 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   FMt<-aperm(array(as.numeric(unlist(histYrs[19,], use.names=FALSE)),
                    dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
   M_ageArray <- aperm(array(as.numeric(unlist(histYrs[20,], use.names=FALSE)),
-                            dim=c(np, n_age, nyears, nsim)), c(4,1,2,3))
+                            dim=c(np, n_age, nyears+1, nsim)), c(4,1,2,3))
+  Marray <- aperm(array(as.numeric(unlist(histYrs[13, ], use.names=FALSE)),
+                        dim=c(np, nyears+1, nsim)), c(3,1,2))
 
   # update StockPars (MICE)
   for (p in 1:np) {
-    StockPars[[p]]$Linfarray[, 1:nyears] <- Linfarray[, p, ]
-    StockPars[[p]]$Karray[, 1:nyears] <- Karray[, p, ]
-    StockPars[[p]]$t0array[, 1:nyears] <- t0array[, p, ]
-    StockPars[[p]]$Len_age[, , 1:nyears] <- Len_age[,p, , ]
-    StockPars[[p]]$Wt_age[, , 1:nyears] <- Wt_age[,p, , ]
-    StockPars[[p]]$M_ageArray[, , 1:nyears] <- M_ageArray[, p, , ]
+    StockPars[[p]]$Linfarray[, 1:nyears] <- Linfarray[, p, 1:nyears]
+    StockPars[[p]]$Karray[, 1:nyears] <- Karray[, p, 1:nyears]
+    StockPars[[p]]$t0array[, 1:nyears] <- t0array[, p, 1:nyears]
+    StockPars[[p]]$Len_age[, , 1:nyears] <- Len_age[, p, , 1:nyears]
+    StockPars[[p]]$Wt_age[, , 1:nyears] <- Wt_age[, p, , 1:nyears]
+    StockPars[[p]]$Fec_Age[, , 1:nyears] <- Fec_Age[, p, , 1:nyears]
+    StockPars[[p]]$M_ageArray[, , 1:nyears] <- M_ageArray[, p, , 1:nyears]
+    StockPars[[p]]$Marray[, 1:nyears] <- Marray[, p, 1:nyears]
   }
 
   # TODO - selectivity-at-age should update if growth changes
@@ -797,7 +801,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     StockPars[[p]]$VBMSY_VB0 <- VBMSY_VB0
 
 
-    # --- Dynamic Unfished Reference Points ----
+    # --- Dynamic Unfished Reference Points ---- assumes no MICE rel
     Unfished <- sapply(1:nsim, function(x)
       popdynCPP(nareas, StockPars[[p]]$maxage,
                 Ncurr=N[x,p,,1,],
@@ -965,24 +969,21 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       Wt_age_C[,p,f,,,] <- replicate(nareas, FleetPars[[p]][[f]]$Wt_age_C[,,1:nyears])
     }
   }
-  Ctemp <- array(NA,c(nsim,np,nf,n_age,nyears,nareas))
+  CB <- CBret <- Cret <- array(NA,c(nsim,np,nf,n_age,nyears,nareas))
 
-  CNind <- TEG(dim(Ctemp))
+  CNind <- TEG(dim(CB))
   Nind<-CNind[,c(1,2,4,5,6)]  # sim, stock, n_age, nyears, nareas
 
   Biomass_C <- array(0, dim=dim(FMret))
   Biomass_C[CNind] <- N[Nind] * Wt_age_C[CNind]
 
-  Ctemp[CNind] <- Biomass_C[CNind]*(1-exp(-Z[Nind]))*(FM[CNind]/Z[Nind])
-  CB <- Ctemp
+  CB[CNind] <- Biomass_C[CNind]*(1-exp(-Z[Nind]))*(FM[CNind]/Z[Nind])
 
   # Calculate retained-at-age
-  Ctemp[CNind] <- N[Nind] * (1-exp(-Z[Nind])) * (FMret[CNind]/Z[Nind])
-  Cret <- Ctemp # apply(Ctemp,1:5,sum)
+  Cret[CNind] <- N[Nind] * (1-exp(-Z[Nind])) * (FMret[CNind]/Z[Nind]) #apply(Cret,1:5,sum)
   Cret[is.na(Cret)] <- 0
 
-  Ctemp[CNind] <- Biomass_C[CNind] * (1-exp(-Z[Nind])) * (FMret[CNind]/Z[Nind])
-  CBret <- Ctemp
+  CBret[CNind] <- Biomass_C[CNind] * (1-exp(-Z[Nind])) * (FMret[CNind]/Z[Nind])
 
   # Add to FleetPars
   for (p in 1:np) {

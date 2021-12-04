@@ -53,34 +53,35 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
                        bRx, ax, bx, Perrx, SRrelx, Rel, SexPars, x, plusgroup, maxF, SSB0x) {
 
   n_age <- maxage + 1 # include age-0
-  Bx <- SSNx <- SSBx <- VBx <- Zx <- array(NA_real_, dim(Nx)) # np x n_age x nyear x nareas
-  #VBfx <- array(NA, c(np, nf, n_age, nyears, nareas)) # initial year calculation
+  Bx <- SSNx <- SSBx <- VBx <- Zx <- array(NA_real_, c(np, n_age, nyears, nareas))
+  
   Fy <- array(NA_real_, c(np, nf, nyears))
   Fty <- array(NA_real_, c(np, n_age, nyears, nareas))
   FMy <- FMrety <- VBfx <- array(NA_real_, c(np, nf, n_age, nyears, nareas))
   
-  hsy <- ay <- by <- array(NA_real_, c(np, nyears))
+  hsy <- ay <- by <- array(NA_real_, c(np, nyears+1))
   hsy[] <- hsx
   ay[] <- ax
   by[] <- bx
-
-  Wt_agey <- WatAgex 
-  Len_age <- Len_agex
   
-  VBfind <- as.matrix(expand.grid(1:np, 1:nf, 1:n_age, 1, 1:nareas))
-  Nind <- as.matrix(expand.grid(1:np, 1:n_age, 1, 1:nareas))
-  FMx <- FMretx <- Fdist <- array(NA_real_ ,c(np, nf, n_age, nareas))
+  # Array and array indices for first year
+  VBfind <- TEG(c(np, nf, n_age, 1, nareas))
+  Nind <- TEG(c(np, n_age, 1, nareas))
+  
+  FMx <- FMretx <- Fdist <- array(NA_real_, c(np, nf, n_age, nareas))
   Find <- TEG(dim(Fdist))
   
   VBcur <- array(NA, dim(VBfx)[-4]) # np x nfleet x nage x nareas
   Ecur <- array(NA, c(np, nf))
   Vcur <- Retcur <- array(NA_real_, c(np, nf, n_age))
 
-  SSBx[Nind] <- Nx[Nind] * Fec_agex[Nind[, 1:3]] # Year 1 calcs
+  # Year 1 calcs
+  SSBx[Nind] <- Nx[Nind] * Fec_agex[Nind[, 1:3]]
+  SSNx[Nind] <- Nx[Nind] * Mat_agex[Nind[, 1:3]]
+  Bx[Nind] <- Nx[Nind] * WatAgex[Nind[, 1:3]]
   
-  for(y in 1:nyears + 1) { # Start at y = 2
+  for(y in 1:nyears + 1) { # Start loop at y = 2
     Nind[, 3] <- VBfind[, 4] <- y-1
-    Bx[Nind] <- Nx[Nind] * Wt_agey[Nind[, 1:3]]
     
     #    p f a r                  p a y r                   p f a y
     VBfx[VBfind] <- Bx[VBfind[, c(1,3,4,5)]] * VFx[VBfind[, 1:4]]
@@ -91,7 +92,7 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
     Fdist[is.na(Fdist)] <- 0 # This is an NA catch for hermaphroditism
     
     Ecur[] <- Effind[, , y-1] #matrix(Effind[, , y-1], np, nf)
-    Vcur[] <- VFx[, , , y-1] #array(VFx[, , , y-1],c(np, nf, n_age))
+    Vcur[] <- VFx[, , , y-1] #array(VFx[, , , y-1], c(np, nf, n_age))
     
     FMx[Find] <- qsx[Find[, 1]] * qfracx[Find[, 1:2]] * Ecur[Find[, 1:2]] * Fdist[Find] *
       Vcur[Find[, 1:3]]/Asizex[Find[, c(1, 4)]]
@@ -104,64 +105,58 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
     
     out <- popdynOneMICE(np, nf, nareas, maxage,
                          Ncur = array(Nx[, , y-1, ], dim(Nx)[c(1:2, 4)]),
+                         Bcur = array(Bx[, , y-1, ], dim(Nx)[c(1:2, 4)]),
+                         SSBcur = array(SSBx[, , y-1, ], dim(Nx)[c(1:2, 4)]),
                          Vcur = Vcur,
                          FMretx = FMretx,
                          FMx = FMx,
                          PerrYrp = Perrx[, y+n_age-1],
-                         hsx = hsy[, y-1], aRx = aRx, bRx = bRx,
-                         movy = array(movx[, , , , y-1], c(np, n_age, nareas, nareas)),
+                         hsx = hsy[, y], aRx = aRx, bRx = bRx,
+                         movy = array(movx[, , , , y], c(np, n_age, nareas, nareas)),
                          Spat_targ = Spat_targ, SRrelx = SRrelx,
                          M_agecur = array(M_ageArrayx[, , y-1], c(np, n_age)),
-                         Mat_agecur = array(Mat_agex[, , y-1], c(np, n_age)),
-                         Fec_agecur = array(Fec_agex[, , y-1], c(np, n_age)),
+                         Mat_agenext = array(Mat_agex[, , y], c(np, n_age)),
+                         Fec_agenext = array(Fec_agex[, , y], c(np, n_age)),
                          Asizex = Asizex,
-                         Kx = Karrayx[, y-1], 
-                         Linfx = Linfarrayx[, y-1], 
-                         t0x = t0arrayx[, y-1],
+                         Kx = Karrayx[, y], 
+                         Linfx = Linfarrayx[, y], 
+                         t0x = t0arrayx[, y],
                          Mx = Marrayx[, y-1],
-                         R0x = R0x, R0ax = R0ax, SSBpRx = SSBpRx, ax = ay[, y-1],
-                         bx = by[, y-1], Rel = Rel, SexPars = SexPars, x = x,
+                         R0x = R0x, R0ax = R0ax, SSBpRx = SSBpRx, ax = ay[, y],
+                         bx = by[, y], Rel = Rel, SexPars = SexPars, x = x,
                          plusgroup = plusgroup, SSB0x = SSB0x,
-                         Len_age = array(Len_age[, , y-1], c(np, n_age)),
-                         Wt_age = array(Wt_agey[, , y-1], c(np, n_age)))
+                         Len_agenext = array(Len_agex[, , y], c(np, n_age)),
+                         Wt_agenext = array(WatAgex[, , y], c(np, n_age)))
     
     # update arrays 
-    # keep the Len_age, Wt_age arrays unchanged unless MICE relationship exists to change them
-    if (length(Rel)) {
-      gc <- FALSE # growth changed?
-      if (any(Linfarrayx[, y-1] != out$Linfx)) {
-        Linfarrayx[, y-1] <- out$Linfx; gc <- TRUE
-      }
-      if (any(Karrayx[, y-1] != out$Kx)) {
-        Karrayx[, y-1] <- out$Kx; gc <- TRUE
-      } 
-      if (any(t0arrayx[, y-1] != out$t0x)) {
-        t0arrayx[, y-1] <- out$t0x; gc <- TRUE
-      }
-      if (any(ay[, y-1] != out$ax)) {
-        ay[, y-1] <- out$ax; gc <- TRUE
-      }
-      if (any(by[, y-1] != out$bx)) {
-        by[, y-1] <- out$bx; gc <- TRUE
-      }
-      #hsy[,y]<-out$hsx; ay[,y]<-out$ax; by[,y]<-out$bx
-      
-      if (gc) {
-        Len_age[, , y-1] <- out$Len_age
-        Wt_agey[, , y-1] <- out$Wt_age
-      }
-      
-      M_ageArrayx[, , y-1] <- out$M_agecurx
-      Marrayx[, y-1] <- out$Mx
-    }
-      
     if (y <= nyears) {
+      if (length(Rel) && y <= nyears) { # Update Len_age, Wt_age, Fec_age when MICE relationship exists
+        gc <- FALSE # growth changed?
+        if (any(Linfarrayx[, y] != out$Linfx)) Linfarrayx[, y] <- out$Linfx; gc <- TRUE
+        if (any(Karrayx[, y] != out$Kx)) Karrayx[, y] <- out$Kx; gc <- TRUE
+        if (any(t0arrayx[, y] != out$t0x)) t0arrayx[, y] <- out$t0x; gc <- TRUE
+        if (any(ay[, y] != out$ax)) ay[, y] <- out$ax; gc <- TRUE
+        if (any(by[, y] != out$bx)) by[, y] <- out$bx; gc <- TRUE
+        #hsy[,y]<-out$hsx; ay[,y]<-out$ax; by[,y]<-out$bx
+        
+        if (gc) {
+          Len_agex[, , y] <- out$Len_agenext
+          WatAgex[, , y] <- out$Wt_agenext
+          Fec_agex[, , y] <- out$Fec_agenext
+        }
+      }
+    
       Nx[, , y, ] <- out$Nnext
+      Bx[, , y, ] <- out$Bnext
       SSNx[, , y, ] <- out$SSNnext
       SSBx[, , y, ] <- out$SSBnext
     }
+    
+    M_ageArrayx[, , y-1] <- out$M_agecur
+    Marrayx[, y-1] <- out$Mx
       
     VBx[, , y-1, ] <- out$VBt
+    VBfx[, , , y-1, ] <- out$VBft
       
     Zx[, , y-1, ] <- out$Zt
     Fty[, , y-1, ] <- out$Ft
@@ -179,8 +174,8 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
        Linfarrayx=Linfarrayx, #8
        Karrayx=Karrayx, #9
        t0array=t0arrayx, #10
-       Len_age=Len_age, #11
-       Wt_age=Wt_agey, #12
+       Len_age=Len_agex, #11
+       Wt_age=WatAgex, #12
        My=Marrayx, #13
        hsy=hsy, #14
        ay=ay, #15
@@ -188,7 +183,8 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
        VBfx=VBfx, #17
        Zx=Zx, #18
        Fty=Fty, #19
-       M_ageArrayx=M_ageArrayx) #20
+       M_ageArrayx=M_ageArrayx, #20
+       Fec_Agex=Fec_agex) #21
 }
 
 
@@ -203,27 +199,30 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
 #' @param nyears Integer, number of historical years (unfished til today)
 #' @param maxage Integer, maximum modelled age
 #' @param Ncur Array `[stock, age, area]` of stock numbers
+#' @param Bcur Array `[stock, age, area]` of stock biomass
+#' @param SSBcur Array `[stock, age, area]` of spawning biomass
 #' @param Vcur Array `[fleet, age, area]` of the vulnerability curve
 #' @param FMretx Array `[stock, fleet, age, area]` of the retention curve
 #' @param FMx Array `[stock, fleet, age, area]` fishing mortality rate
 #' @param PerrYrp Vector `[stock]` process error - the lognormal factor for
-#' recruitment strength
+#' recruitment strength (for next year)
 #' @param hsx Vector `[stock]` steepness of the stock recruitment curve
 #' @param aRx Vector `[stock]` stock recruitment parameter alpha (for Ricker curve)
 #' @param bRx Vector `[stock]` stock recruitment parameter beta (for Ricker curve)
-#' @param movy Array `[stock,age,area,area]` of movement transitions
+#' @param movy Array `[stock,age,area,area]` of movement transitions (for next year)
 #' @param Spat_targ Matrix `[stock, fleet]` of spatial targeting parameter
 #' (0 evenly spatial distributed, 1 proportional to vulnerable biomass)
 #' @param SRrelx Integer vector `[stock]` the form of the stock recruitment
 #'  relationship (1 = Beverton-Holt, 2= Ricker)
 #' @param M_agecur Matrix `[stock, age]` of Natural mortality rate at age
-#' @param Mat_agecur Matrix `[stock, age]` of maturity (spawning fraction) at age
-#' @param Fec_agecur Matrix `[stock, age]` of spawning weight (fecundity) at age
+#' @param Mat_agecur Matrix `[stock, age]` of maturity (spawning fraction) at age (current year)
+#' @param Mat_agenext Matrix `[stock, age]` of maturity (spawning fraction) at age (next year)
+#' @param Fec_agenext Matrix `[stock, age]` of spawning weight (fecundity) at age (next year)
 #' @param Asizex Matrix `[stock, area]` of relative area sizes
-#' @param Kx Vector `[stock]` of von B growth parameter K
-#' @param Linf Vector `[stock]` of von B asymptotic length parameter Linf
-#' @param t0 Vector `[stock]` of von B theoretical age at zero length (t0)
-#' @param Mx Vector `[stock]` mature natural mortality rate
+#' @param Kx Vector `[stock]` of von B growth parameter K (next year)
+#' @param Linfx Vector `[stock]` of von B asymptotic length parameter Linf (next year)
+#' @param t0x Vector `[stock]` of von B theoretical age at zero length (t0) (next year)
+#' @param Mx Vector `[stock]` mature natural mortality rate (this year)
 #' @param R0x Vector `[stock]` unfished recruitment
 #' @param R0ax Matrix `[stock, area]` unfished recruitment by area
 #' @param SSBpRx Matrix `[stock, area]` spawning biomass per recruit by area
@@ -234,81 +233,64 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
 #' @param x Integer. The simulation number
 #' @param plusgroup Numeric vector. Use plus-group (1) or not (0)
 #' @param SSB0x Unfished SSB0, Vector nstock length.
-#' @param Len_age Length-at-age this year
-#' @param Wt_age Weight-at-age this year
+#' @param Len_agenext Length-at-age next year
+#' @param Wt_agenext Weight-at-age next year
 #' @author T.Carruthers
 #' @keywords internal
-popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrYrp,
+popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMretx, FMx, PerrYrp,
                           hsx, aRx, bRx, movy, Spat_targ,
-                          SRrelx, M_agecur, Mat_agecur, Fec_agecur,
+                          SRrelx, M_agecur, Mat_agecur, Mat_agenext, Fec_agenext,
                           Asizex,
                           Kx, Linfx, t0x, Mx, R0x, R0ax, SSBpRx, ax, bx, Rel, SexPars, x,
                           plusgroup, SSB0x,
-                          Len_age, Wt_age) {
+                          Len_agenext, Wt_agenext) {
   
   n_age <- maxage + 1
-  # ----Initial Bcur calc (before any weight at age recalculation change) ----
-  Bcur <- SSBcur <- SSNcur <- array(NA_real_, dim(Ncur)) # np x n_age x nareas
   Nind <- TEG(dim(Ncur)) # p, age, area
-  # Len_age<-matrix(Linfx*(1-exp(-(rep(0:maxage,each=np)-t0x)*(Kx))),nrow=np)
-  # Len_age[Len_age<0] <- tiny
-  # Wt_age<-ax*Len_age^bx
   
-  if (is.null(dim(Len_age))) { # convert back to matrix - only one p
-    Len_age <- matrix(Len_age, ncol = length(Len_age), nrow = 1)
-  }
-  if (is.null(dim(Wt_age))) { # convert back to matrix - only one p
-    Wt_age <- matrix(Wt_age, ncol = length(Wt_age), nrow = 1)
-  }
-
-  Bcur[Nind] <- Ncur[Nind] * Wt_age[Nind[, 1:2]]
-  SSBcur[Nind] <- Ncur[Nind] * Fec_agecur[Nind[, 1:2]]
-  SSNcur[Nind] <- Ncur[Nind] * Mat_agecur[Nind[, 1:2]]
-  
-  Fec_per_weight <- array(NA, dim = dim(Fec_agecur))
-  Fec_per_weight[Nind[, 1:2]] <- Fec_agecur[Nind[, 1:2]]/Wt_age[Nind[ ,1:2]]
-  
+  # Survival this year
   surv <- array(c(rep(1,np), t(exp(-apply(M_agecur, 1, cumsum)))[, 1:(n_age-1)]), c(np, n_age))  # Survival array
   surv[plusgroup, n_age] <- surv[plusgroup, n_age]/(1 - exp(-M_agecur[plusgroup, n_age])) # plusgroup
   
-  oldMx <- apply(M_agecur * Mat_agecur, 1, sum)/apply(Mat_agecur, 1, sum) # M of mature animals
-  M_agecurx <- M_agecur
+  # These could change, these are values previous to MICE rel
+  oldMx <- Mx # M of mature animals
+  oldM_agecur <- M_agecur
   
-  if (length(Rel)) { # MICE relationships
+  oldLen_agenext <- Len_agenext
+  oldWt_agenext <- Wt_agenext
+  oldFec_agenext <- Fec_agenext
+  
+  if (length(Rel)) { # MICE relationships, parameters that could change: M, K, Linf, t0, a, b, hs
     Responses <- ResFromRel(Rel, Bcur, SSBcur, Ncur, seed = 1)
     DV <- sapply(Responses, function(xx) xx[4])
     
     for (r in 1:length(Responses)) { # e.g., Mx[1] <- 0.4 - operations are sequential
       eval(parse(text = paste0(DV[r], "[", Responses[[r]][3], "]<-", Responses[[r]][1])))
     }
-    # Parameters that could have changed: M, K, Linf, t0, a, b, hs
-    # only updates Len_age and Wt_age if MICE response is used
-    if (any(DV %in% c("Linfx", "Kx", "t0x"))) {
-      Len_age <- matrix(Linfx * (1 - exp(-Kx * (rep(0:maxage, each = np) - t0x))), nrow = np)
-      Len_age[Len_age < 0] <- tiny
+    
+    if (any(DV %in% c("Linfx", "Kx", "t0x"))) { # only update Len_age for next year if MICE response is used
+      Len_agenext <- matrix(Linfx * (1 - exp(-Kx * (rep(0:maxage, each = np) - t0x))), nrow = np)
+      Len_agenext[Len_agenext < 0] <- tiny
     } 
-    if (any(DV %in% c("Linfx", "Kx", "t0x", "ax", "bx"))) {
-      Wt_age <- ax * Len_age ^ bx
-      
-      # Recalc B, SSB, SSN
-      Bcur[Nind] <- Ncur[Nind] * Wt_age[Nind[, 1:2]]
-      
+    if (any(DV %in% c("Linfx", "Kx", "t0x", "ax", "bx"))) { # only update Len_age/Wt_age for next year if MICE response
       # update relative fecundity-at-age for SSB
-      Fec_agecur[Nind[,1:2]] <- Fec_per_weight[Nind[, 1:2]] * Wt_age[Nind[, 1:2]]
-      SSBcur[Nind] <- Ncur[Nind] * Fec_agecur[Nind[, 1:2]] 
-      SSNcur[Nind] <- Ncur[Nind] * Mat_agecur[Nind[, 1:2]]
+      Fec_per_weight <- array(NA, dim = dim(Fec_agenext))
+      Fec_per_weight[Nind[, 1:2]] <- Fec_agenext[Nind[, 1:2]]/Wt_agenext[Nind[ ,1:2]]
+      
+      Wt_agenext <- ax * Len_agenext ^ bx # New weight-at-age
+      Fec_agenext[Nind[, 1:2]] <- Fec_per_weight[Nind[, 1:2]] * Wt_agenext[Nind[, 1:2]]
     }
     
-    # Recalc M_age ------------------
+    # Recalc M_age for this year ------------------
     if (any(DV == "Mx")) {
-      M_agecurx <- M_agecur * Mx/oldMx
-      surv <- array(c(rep(1,np), t(exp(-apply(M_agecurx, 1, cumsum)))[, 1:(n_age-1)]), 
+      M_agecur <- M_agecur * Mx/oldMx
+      surv <- array(c(rep(1,np), t(exp(-apply(M_agecur, 1, cumsum)))[, 1:(n_age-1)]), 
                     c(np, n_age))
-      surv[plusgroup, n_age] <- surv[plusgroup, n_age]/(1 - exp(-M_agecurx[plusgroup, n_age])) # plusgroup
+      surv[plusgroup, n_age] <- surv[plusgroup, n_age]/(1 - exp(-M_agecur[plusgroup, n_age])) # plusgroup
     }
     
     # --- This is redundant code for updating parameters when R0 changes -----
-    # surv <- cbind(rep(1,np),t(exp(-apply(M_agecurx, 1, cumsum)))[, 1:(maxage-1)])  # Survival array
+    # surv <- cbind(rep(1,np),t(exp(-apply(M_agecur, 1, cumsum)))[, 1:(maxage-1)])  # Survival array
     # SSB0x<-apply(R0x*surv*Mat_agecur*Wt_age,1,sum)
     #SSBpRx<-SSB0x/R0x
     #SSBpRax<-SSBpRx*distx
@@ -320,12 +302,12 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrY
     
   } # end of MICE
   
-  # Vulnerable biomass calculation --------------------------------------------------
+  # Vulnerable biomass calculation (current year) -------------
   VBft <- Fdist <- array(NA, c(np, nf, n_age, nareas))
   VBind <- TEG(dim(VBft))
   VBft[VBind] <- Vcur[VBind[, 1:3]] * Bcur[VBind[, c(1,3:4)]]
-  Ft <- apply(FMx, c(1, 3, 4), sum) %>% array(c(np, n_age, nareas)) #FMx[VBind]+M_agecur[VBind[,c(1,3)]]
-  Zcur <- Ft + replicate(nareas, M_agecur) # keep M-at-age
+  Ft <- apply(FMx, c(1, 3, 4), sum) %>% array(c(np, n_age, nareas))
+  Zcur <- Ft + replicate(nareas, M_agecur)
   
   SumF <- apply(FMx, c(1, 3, 4), sum, na.rm = TRUE)
   Fapic <- apply(SumF, c(1, 3), max)     # get apical F
@@ -333,12 +315,15 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrY
   Selx[Nind] <- SumF[Nind]/Fapic[Nind[, c(1, 3)]]
   VBt <- Bcur * Selx
   
+  # ----------- Next year's abundance -----------
+  # Mortality
   Nnext <- sapply(1:np, function(p) {
     popdynOneTScpp(nareas, maxage, Ncurr = Ncur[p, , ], Zcurr = Zcur[p, , ], plusgroup = plusgroup[p])
   }, simplify = "array") %>% aperm(c(3, 1, 2)) # np x n_age x nareas
   Nnext[, 1, ] <- 0
   
-  if (length(SexPars$Herm)) { # Hermaphroditic mode
+  # Re-assign abundance due to hermaphroditism
+  if (length(SexPars$Herm)) {
     Nnext[is.na(Nnext)] <- 0 # catch for NAs
     for (i in 1:length(SexPars$Herm)) {
       ps <- as.numeric(strsplit(names(SexPars$Herm)[i], "_")[[1]][2:3])
@@ -354,54 +339,40 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrY
     }
   }
   
-  SSBcur[Nind] <- Nnext[Nind] * Fec_agecur[Nind[, 1:2]]
-  
-  if (length(SexPars$SSBfrom)) {
-    SSBs<-SSBcur
-    for (p in 1:np) { # use SSB from another stock to predict recruitment
-      SSBcur[p, , ] <- apply(SexPars$SSBfrom[p, ] * SSBs, 2:3, sum)
-    }
-  }
-  
-  #SSBcurr <- apply(SSBcur, c(1, 3), sum)
-  
-  # this year's recruitment
-  for (p in 1:np) {
-    recdist <- R0ax[p, ]/sum(R0ax[p, ]) # distribute recruitment over areas
+  # Calculate SSB for S-R relationship
+  SSB_SR <- local({
+    SSBtemp <- array(NA_real_, dim(Nnext)) # np x n_age x nareas
+    SSBtemp[Nind] <- Nnext[Nind] * Fec_agenext[Nind[, 1:2]]
     
-    # global recruitment
-    SSBtot <- sum(SSBcur[p, , ])
-    if (SRrelx[p]== 1) { # BH rec
-      rec_A <- PerrYrp[p] * (4*R0x[p] * hsx[p] * SSBtot)/
-        (SSBpRx[p,1] * R0x[p] * (1-hsx[p]) + (5*hsx[p]-1) *SSBtot)
+    if (length(SexPars$SSBfrom)) { # use SSB from another stock to predict recruitment
+      sapply(1:np, function(p) apply(SexPars$SSBfrom[p, ] * SSBtemp, 2:3, sum), simplify = "array") %>%
+        aperm(c(3, 1, 2))
     } else {
-      bR <- log(5*hsx[p])/(0.8*SSB0x[p])
-      rec_A <- PerrYrp[p] * aRx[p,1] * SSBtot * exp(-bR*SSBtot)
+      SSBtemp
     }
-    Nnext[p, 1, ] <- rec_A * recdist
-    
-    # if (SRrelx[p]== 1) { # BH rec
-    #   rec_A <- PerrYrp[p] * (4*R0ax[p,] * hsx[p] * SSBcurr[p,])/
-    #     (SSBpRx[p,] * R0ax[p,] * (1-hsx[p]) + (5*hsx[p]-1) *SSBcurr[p,])
-    # } else {
-    #   rec_A <- PerrYrp[p] * aRx[p,] * SSBcurr[p,] * exp(-bRx[p,]*SSBcurr[p,])
-    # }
-    # Nnext[p,1,] <- rec_A
-  }
+  })
   
-  for (p in 1:np) { # movement this year
+  # Generate next year's recruitment
+  Nnext[, 1, ] <- sapply(1:np, function(p) {
+    calcRecruitment_int(SRrel = SRrelx[p], SSBcurr = SSB_SR[p, , ], recdev = PerrYrp[p], hs = hsx[p], 
+                        aR = aRx[p, 1], bR = 1/sum(1/bRx[p, ]), R0a = R0ax[p, ], SSBpR = SSBpRx[p, 1])
+  }) %>% t()
+  
+  # Movement
+  for (p in 1:np) {
     Nnext[p,,] <- movestockCPP(nareas, maxage, mov=movy[p,,,], Nnext[p,,])
   }
   
+  # Calculate biomass at beginning of next year
   Bnext <- SSBnext <- SSNnext <- array(NA_real_, dim(Nnext)) # np x n_age x nareas
   
-  Bnext[Nind] <- Nnext[Nind] * Wt_age[Nind[, 1:2]]
-  SSBnext[Nind] <- Nnext[Nind] * Fec_agecur[Nind[, 1:2]]
-  SSNnext[Nind] <- Nnext[Nind] * Mat_agecur[Nind[, 1:2]]
+  Bnext[Nind] <- Nnext[Nind] * Wt_agenext[Nind[, 1:2]]
+  SSBnext[Nind] <- Nnext[Nind] * Fec_agenext[Nind[, 1:2]]
+  SSNnext[Nind] <- Nnext[Nind] * Mat_agenext[Nind[, 1:2]]
   
   # returns new N and any updated parameters:
   list(Nnext=Nnext, #1
-       M_agecurx=M_agecurx, #2
+       M_agecur=M_agecur, #2
        R0x=R0x, #3
        R0ax=R0ax, #4
        hsx=hsx, #5
@@ -413,8 +384,8 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrY
        Mx=Mx, #11
        ax=ax, #12
        bx=bx, #13
-       Len_age=Len_age, #14
-       Wt_age=Wt_age, #15
+       Len_agenext=Len_agenext, #14
+       Wt_agenext=Wt_agenext, #15
        surv=surv, #16
        FMx=FMx, #17
        FMretx=FMretx, #18
@@ -424,7 +395,8 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Vcur, FMretx, FMx, PerrY
        Ft=Ft, #22
        Bnext=Bnext, #23
        SSNnext=SSNnext, #24
-       SSBnext=SSBnext) #25
+       SSBnext=SSBnext,#25
+       Fec_agenext=Fec_agenext) #26
   
 }
 

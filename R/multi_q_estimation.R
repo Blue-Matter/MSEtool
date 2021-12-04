@@ -34,6 +34,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
                             bounds= c(1e-05, 15), tol = 1E-6, Rel, SexPars, plusgroup,
                             optVB = FALSE) {
 
+  # Ensure this code matches HistMICE
   n_age <- maxage + 1 # include age-0
   Nx <- array(N[x,,,,], c(np, n_age, nyears, nareas))
   VFx <- array(VF[x,,,,], c(np, nf, n_age, nyears))
@@ -56,8 +57,8 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
   # Matrix np x nyears + nage
   Perrx <- sapply(1:np, function(p) StockPars[[p]]$Perr_y[x, 1:(nyears + n_age)]) %>% t()
   
-  # Matrix np x nage x areas x areas x nyears
-  movx <- sapply(1:np, function(p) StockPars[[p]]$mov[x, , , , 1:nyears], simplify = "array") %>% aperm(c(5, 1:4))
+  # Matrix np x nage x areas x areas x nyears+1
+  movx <- sapply(1:np, function(p) StockPars[[p]]$mov[x, , , , 0:nyears + 1], simplify = "array") %>% aperm(c(5, 1:4))
   
   # Matrix np x nareas
   distx <- sapply(1:np, function(p) StockPars[[p]]$R0a[x, ]/sum(StockPars[[p]]$R0a[x, ])) %>% t()
@@ -67,16 +68,16 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
   bRx <- sapply(1:np, function(p) StockPars[[p]]$bR[x, ]) %>% t()
   Asizex <- sapply(1:np, function(p) StockPars[[p]]$Asize[x, ]) %>% t()
   
-  # Arrays np x nage x nyears
-  Mat_agex <- sapply(1:np, function(p) StockPars[[p]]$Mat_age[x, , 1:nyears], simplify = "array") %>%
+  # Arrays np x nage x nyears + 1
+  Mat_agex <- sapply(1:np, function(p) StockPars[[p]]$Mat_age[x, , 0:nyears + 1], simplify = "array") %>%
     aperm(c(3, 1:2))
-  Fec_agex <- sapply(1:np, function(p) StockPars[[p]]$Fec_Age[x, , 1:nyears], simplify = "array") %>%
+  Fec_agex <- sapply(1:np, function(p) StockPars[[p]]$Fec_Age[x, , 0:nyears + 1], simplify = "array") %>%
     aperm(c(3, 1:2))
-  M_ageArrayx <- sapply(1:np, function(p) StockPars[[p]]$M_ageArray[x, , 1:nyears], simplify = "array") %>%
+  M_ageArrayx <- sapply(1:np, function(p) StockPars[[p]]$M_ageArray[x, , 0:nyears + 1], simplify = "array") %>%
     aperm(c(3, 1:2))
-  WatAgex <- sapply(1:np, function(p) StockPars[[p]]$Wt_age[x, , 1:nyears], simplify = "array") %>%
+  WatAgex <- sapply(1:np, function(p) StockPars[[p]]$Wt_age[x, , 0:nyears + 1], simplify = "array") %>%
     aperm(c(3, 1:2))
-  Len_agex <- sapply(1:np, function(p) StockPars[[p]]$Len_age[x, , 1:nyears], simplify = "array") %>%
+  Len_agex <- sapply(1:np, function(p) StockPars[[p]]$Len_age[x, , 0:nyears + 1], simplify = "array") %>%
     aperm(c(3, 1:2))
   
   # Array np x nf x nyears
@@ -89,10 +90,11 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
     sapply(1:nf, function(f) FleetPars[[p]][[f]][["Spat_targ"]][x])
   }) %>% matrix(nf, np) %>% t()
   
-  Karrayx <- getLHpars(x, 'Karray', StockPars, nyears)
-  Linfarrayx <- getLHpars(x, 'Linfarray', StockPars, nyears) 
-  t0arrayx <- getLHpars(x, 't0array', StockPars, nyears) 
-  Marrayx <- getLHpars(x, 'Marray', StockPars, nyears) 
+  # Matrix np x nyears + 1 
+  Karrayx <- getLHpars(x, 'Karray', StockPars, nyears + 1)
+  Linfarrayx <- getLHpars(x, 'Linfarray', StockPars, nyears + 1) 
+  t0arrayx <- getLHpars(x, 't0array', StockPars, nyears + 1) 
+  Marrayx <- getLHpars(x, 'Marray', StockPars, nyears + 1) 
   
   CF <- sapply(CatchFrac, function(xx) xx[x, ]) %>% matrix(nrow = nf) %>% t() # np x nf
   Fdist <- CF/Effind[,,nyears] # Catch divided by effort (q proxy)
@@ -127,38 +129,20 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
                SRrelx = SRrelx, Rel = Rel, SexPars = SexPars, x = x, plusgroup = plusgroup,
                optVB = optVB, VB0x = VB0x, maxF = maxF,
                control = list(trace = 1, factr = tol/.Machine$double.eps))
-  
-  #opt2<-nlminb(par,qestMICE,
-  #           #method="L-BFGS-B",
-  #           lower=c(rep(log(bounds[1]),np),rep(-5,np*(nf-1))),
-  #           upper=c(rep(log(bounds[2]),np),rep(5,np*(nf-1))),
-  #           depc=depc, CFc=CFc, mode='opt', np=np, nf=nf, nyears=nyears,
-  #           nareas=nareas, maxage=maxage, Nx=Nx, VFx=VFx, FretAx=FretAx,
-  #           Effind=Effind, distx=distx, movx=movx, Spat_targ=Spat_targ,
-  #           M_ageArrayx=M_ageArrayx, Mat_agex=Mat_agex, 
-  #           Fec_agex=Fec_agex,
-  #           Asizex=Asizex,
-  #           WatAgex=WatAgex, Len_agex=Len_agex,
-  #           Karrayx=Karrayx,Linfarrayx=Linfarrayx, t0arrayx=t0arrayx,Marrayx=Marrayx,
-  #           R0x=R0x, R0ax=R0ax, SSBpRx=SSBpRx,
-  #           SSB0x=SSB0x, hsx=hsx, ax=ax, bx=bx, aRx=aRx, bRx=bRx, Perrx=Perrx,
-  #           SRrelx=SRrelx, Rel=Rel, SexPars=SexPars, x=x, plusgroup=plusgroup,
-  #           optVB=optVB, VB0x=VB0x, maxF=maxF
-  #           )
 
-  out<-qestMICE(par=opt$par, depc=depc,CFc=CFc,mode='calc', np=np, nf=nf,
-                nyears=nyears, nareas=nareas, maxage=maxage, Nx=Nx, VFx=VFx,
-                FretAx=FretAx, Effind=Effind, distx=distx, movx=movx,
-                Spat_targ=Spat_targ, M_ageArrayx=M_ageArrayx, Mat_agex=Mat_agex,
-                Fec_agex=Fec_agex,
-                Asizex=Asizex, 
-                WatAgex=WatAgex, Len_agex=Len_agex,
-                Karrayx=Karrayx,Linfarrayx=Linfarrayx, t0arrayx=t0arrayx,Marrayx=Marrayx,
-                R0x=R0x,
-                R0ax=R0ax, SSBpRx=SSBpRx, SSB0x=SSB0x, hsx=hsx, aRx=aRx, bRx=bRx,
-                ax=ax, bx=bx, Perrx=Perrx, SRrelx=SRrelx,
-                Rel=Rel,SexPars=SexPars,x=x, plusgroup=plusgroup,
-                optVB=optVB, VB0x=VB0x, maxF=maxF)
+  out <- qestMICE(par = opt$par, depc = depc,CFc = CFc, mode = 'calc', np = np, nf = nf,
+                  nyears = nyears, nareas = nareas, maxage = maxage, Nx = Nx, VFx = VFx,
+                  FretAx = FretAx, Effind = Effind, distx = distx, movx = movx,
+                  Spat_targ = Spat_targ, M_ageArrayx = M_ageArrayx, Mat_agex = Mat_agex,
+                  Fec_agex = Fec_agex,
+                  Asizex = Asizex, 
+                  WatAgex = WatAgex, Len_agex = Len_agex,
+                  Karrayx = Karrayx, Linfarrayx = Linfarrayx, t0arrayx = t0arrayx, Marrayx = Marrayx,
+                  R0x = R0x,
+                  R0ax = R0ax, SSBpRx = SSBpRx, SSB0x = SSB0x, hsx = hsx, aRx = aRx, bRx = bRx,
+                  ax = ax, bx = bx, Perrx = Perrx, SRrelx = SRrelx,
+                  Rel = Rel,SexPars = SexPars, x = x, plusgroup = plusgroup,
+                  optVB = optVB, VB0x = VB0x, maxF = maxF)
 
   out
 }
@@ -207,15 +191,15 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
 #' @param x Integer. The simulation number
 #' @author T.Carruthers
 #' @keywords internal
-qestMICE<-function(par, depc, CFc, mode='opt', np, nf, nyears, nareas, maxage, Nx, VFx,
-                   FretAx, Effind, distx, movx, Spat_targ, M_ageArrayx, Mat_agex,
-                   Fec_agex,
-                   Asizex,
-                   WatAgex, Len_agex,
-                   Karrayx, Linfarrayx, t0arrayx, Marrayx,
-                   R0x, R0ax, SSBpRx, SSB0x, hsx, aRx, bRx,
-                   ax, bx, Perrx, SRrelx, Rel, SexPars, x, plusgroup, optVB, VB0x,
-                   maxF) {
+qestMICE <- function(par, depc, CFc, mode='opt', np, nf, nyears, nareas, maxage, Nx, VFx,
+                     FretAx, Effind, distx, movx, Spat_targ, M_ageArrayx, Mat_agex,
+                     Fec_agex,
+                     Asizex,
+                     WatAgex, Len_agex,
+                     Karrayx, Linfarrayx, t0arrayx, Marrayx,
+                     R0x, R0ax, SSBpRx, SSB0x, hsx, aRx, bRx,
+                     ax, bx, Perrx, SRrelx, Rel, SexPars, x, plusgroup, optVB, VB0x,
+                     maxF) {
 
   n_age <- maxage + 1 # include age-0
   qsx <- exp(par[1:np])
