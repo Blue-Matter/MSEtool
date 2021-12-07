@@ -92,12 +92,12 @@ getLHpars <- function(x, name, StockPars, nyears) {
 #' @param SexPars A list of sex-specific relationships (SSBfrom, stock_age)
 #' @param qs Vector of q values
 #' @param qfrac Array of qfrac
-#' @param plusgroup Plusgroup
+#' @param plusgroup Plusgroup - np-length vector
 #' @author T.Carruthers
 #' @keywords internal
-HistMICE<-function(x,StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, VF,
-                   FretA, maxF=0.9, MPA,Rel,SexPars,qs,qfrac,
-                   plusgroup) {
+HistMICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, VF,
+                     FretA, maxF = 0.9, MPA, Rel, SexPars, qs, qfrac,
+                     plusgroup) {
   
   # Ensure this code matches getq_multi_MICE()
   n_age <- maxage + 1 # include age-0

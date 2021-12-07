@@ -664,12 +664,12 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
   # update StockPars (MICE)
   for (p in 1:np) {
-    StockPars[[p]]$Linfarray[, 1:nyears] <- Linfarray[, p, 1:nyears]
-    StockPars[[p]]$Karray[, 1:nyears] <- Karray[, p, 1:nyears]
-    StockPars[[p]]$t0array[, 1:nyears] <- t0array[, p, 1:nyears]
-    StockPars[[p]]$Len_age[, , 1:nyears] <- Len_age[, p, , 1:nyears]
-    StockPars[[p]]$Wt_age[, , 1:nyears] <- Wt_age[, p, , 1:nyears]
-    StockPars[[p]]$Fec_Age[, , 1:nyears] <- Fec_Age[, p, , 1:nyears]
+    StockPars[[p]]$Linfarray[, 0:nyears + 1] <- Linfarray[, p, ]
+    StockPars[[p]]$Karray[, 0:nyears + 1] <- Karray[, p, ]
+    StockPars[[p]]$t0array[, 0:nyears + 1] <- t0array[, p, ]
+    StockPars[[p]]$Len_age[, , 0:nyears + 1] <- Len_age[, p, , ]
+    StockPars[[p]]$Wt_age[, , 0:nyears + 1] <- Wt_age[, p, , ]
+    StockPars[[p]]$Fec_Age[, , 0:nyears + 1] <- Fec_Age[, p, , ]
     StockPars[[p]]$M_ageArray[, , 1:nyears] <- M_ageArray[, p, , 1:nyears]
     StockPars[[p]]$Marray[, 1:nyears] <- Marray[, p, 1:nyears]
   }
@@ -1227,7 +1227,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
   # ---- Detect MP Specification ----
   MPcond <- "unknown"
-  if(np==1&nf==1){
+  if (np == 1 && nf == 1) {
     if (!silent)
       message("runMSE checking: you have specified a single stock and fleet. ",
               "For analysis you should be using runMSE(). Use this only for debugging ",
@@ -1250,7 +1250,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       stop('All MPs must be same class (`MP`)')
   }
 
-  if(class(MPs) == 'character' & MPcond=='unknown') {
+  if (class(MPs) == 'character' && MPcond == 'unknown') {
     # check class of MPs
     tt <- try(sapply(MPs, get), silent=TRUE)
     if (class(tt) == 'try-error')
@@ -1265,7 +1265,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     MP_class <- unique(MP_classes)
     MPcond <- rep(NA, length(MPs))
 
-    if('MMP' %in% MP_class){
+    if ('MMP' %in% MP_class) {
       if (!silent) message("MMP mode: you have specified multi-fleet, multi-stock MPs of ",
               "class MMP. This class of MP accepts all data objects (stocks x fleets) ",
               "to simultaneously make a recommendation specific to each stock and fleet")
@@ -1275,7 +1275,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       MPrefs <- array(NA,c(nMP,nf,np))
       MPrefs[] <- MPs
     }
-    if('MP' %in% MP_class){
+    if ('MP' %in% MP_class) {
       if (!silent) message("Complex mode: you have specified a vector of MPs rather than a ",
               "list of MPs, one list position for MP type. The same MP will ",
               "be applied to the aggregate data for all stocks and fleets. ",
@@ -1291,7 +1291,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     }
   }
 
-  if (class(MPs) == 'list' & 'unknown' %in% MPcond) {
+  if (class(MPs) == 'list' && 'unknown' %in% MPcond) {
 
     if(identical(ldim(MPs), ldim(Fleets))){
       if (!silent) message("Byfleet mode: you have specified an MP for each stock and fleet. ",
@@ -1302,7 +1302,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       MPrefs <- array(NA,c(nMP,nf,np))
       MPrefs[]<-unlist(MPs)
 
-    } else if (ldim(MPs)==ldim(Fleets)[1]){ # not a two-tier list
+    } else if (ldim(MPs)==ldim(Fleets)[1]) { # not a two-tier list
       if (!silent) message("Bystock mode: you have specified a vector of MPs for each stock, ",
               "but not a vector of MPs for each stock and fleet. The catch data for these",
               " fleets will be combined, a single MP will be used to set a single TAC ",
@@ -1328,7 +1328,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
   if (length(MPcond) != nMP) MPcond <- rep(MPcond, nMP)
 
-  if(class(MPs)=="list"){
+  if (class(MPs) == "list") {
     allMPs<-unlist(MPs)
   }else{
     allMPs<-MPs
@@ -1336,9 +1336,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   if (nMP < 1) stop("No valid MPs found", call.=FALSE)
 
   # ---- Check MPs ----
-  if (checkMPs & all(MP_classes=='MP'))
+  if (checkMPs && all(MP_classes=='MP')) {
     CheckMPs(MPs=allMPs, silent=silent)
-
+  }
+  
   # ---- Set Management Interval for each MP ----
   # TODO - make same structure as MPs argument
   if (length(interval) != nMP) interval <- rep(interval, nMP)[1:nMP]
@@ -1365,13 +1366,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   # create a data object for each method
   # (they have identical historical data and branch in projected years)
   MSElist <- list('list')
-  for(p in 1:np){
-    MSElist[[p]] <- new('list')
-    for(f in 1:nf){
-      Data <- multiHist[[p]][[f]]@Data # Historical data for this stock and fleet
-      MSElist[[p]][[f]] <- list(Data)[rep(1, nMP)]
-    }
+  for (p in 1:np) {
+    MSElist[[p]] <- lapply(1:nf, function(f) list(multiHist[[p]][[f]]@Data)[rep(1, nMP)]) # Historical data for this stock and fleet
   }
+  
   # TODO - update names of stored values
   SB_SBMSYa <- array(NA, dim = c(nsim, np, nMP, proyears))  # store the projected SB_SBMSY
   Ba <- array(NA, dim = c(nsim, np, nMP, proyears))  # store the projected Biomass
@@ -1388,20 +1386,17 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
   # ---- Grab Stock, Fleet, Obs and Imp values from Hist ----
   StockPars <- FleetPars <- ObsPars <- ImpPars <- list()
-  for(p in 1:np){
-    FleetPars[[p]] <- ObsPars[[p]] <- ImpPars[[p]] <- new('list')
-    for(f in 1:nf){
-      StockPars[[p]] <- multiHist[[p]][[1]]@SampPars$Stock
-      FleetPars[[p]][[f]] <- multiHist[[p]][[f]]@SampPars$Fleet
-      ObsPars[[p]][[f]] <- multiHist[[p]][[f]]@SampPars$Obs
-      ImpPars[[p]][[f]] <- multiHist[[p]][[f]]@SampPars$Imp
-    }
+  for(p in 1:np) {
+    StockPars[[p]] <- multiHist[[p]][[1]]@SampPars$Stock
+    FleetPars[[p]] <- lapply(1:nf, function(f) multiHist[[p]][[f]]@SampPars$Fleet)
+    ObsPars[[p]] <- lapply(1:nf, function(f) multiHist[[p]][[f]]@SampPars$Obs)
+    ImpPars[[p]] <- lapply(1:nf, function(f) multiHist[[p]][[f]]@SampPars$Imp)
   }
 
   nareas <- StockPars[[1]]$nareas
   maxage <- StockPars[[1]]$maxage
   n_age <- maxage + 1
-  plusgroup <- multiHist[[1]][[1]]@SampPars$Stock$plusgroup
+  plusgroup <- sapply(1:np, function(p) StockPars[[p]]$plusgroup) # a vector
 
   # projection arrays for storing all info (by simulation, stock, age, MP, years, areas)
   N_P_mp <- array(NA, dim = c(nsim, np, n_age, nMP, proyears, nareas))
@@ -1547,66 +1542,79 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     if(!silent) {
       pb <- txtProgressBar(min = 1, max = proyears, style = 3, width = min(getOption("width"), 50))
     }
-
-    Perr<-hs<-R0<-SRrel<-K<-Linf<-t0<-M<-array(NA,c(nsim,np))
-    aR<-bR<-R0a<-SSBpR<-Asize<-array(NA,c(nsim,np,nareas))
-    mov<-array(NA,c(nsim,np,n_age,nareas,nareas,nyears+proyears))
-    Spat_targ_y<-array(NA,c(nsim,np,nf))
-    M_agecur_y<-Mat_agecur_y<- Fec_agecur_y<- array(NA,c(nsim,np,n_age))
-    a_y<-b_y<-rep(NA,np)
-    WatAge <- Len_age  <- array(NA,c(nsim, np,n_age))
-
-    SSB0array <- array(NA, c(nsim, np))
-    for(p in 1:np){
-      Perr[,p]<-StockPars[[p]]$Perr_y[,nyears+n_age]
-      hs[,p]<-StockPars[[p]]$hs
-      aR[,p,]<-StockPars[[p]]$aR
-      bR[,p,]<-StockPars[[p]]$bR
-      mov[,p,,,,]<-StockPars[[p]]$mov
-      for(f in 1:nf)Spat_targ_y[,p,f]<-FleetPars[[p]][[f]]$Spat_targ
-      SRrel[,p]<-StockPars[[p]]$SRrel
-      M_agecur_y[,p,]<-StockPars[[p]]$M_ageArray[,,nyears]
-      Mat_agecur_y[,p,]<-StockPars[[p]]$Mat_age[,,nyears]
-      Fec_agecur_y[,p,]<-StockPars[[p]]$Fec_Age[,,nyears]
-      K[,p]<-StockPars[[p]]$Karray[,nyears]
-      Linf[,p]<-StockPars[[p]]$Linfarray[,nyears]
-      t0[,p]<-StockPars[[p]]$t0array[,nyears]
-      M[,p]<-StockPars[[p]]$M
-      R0[,p]<-StockPars[[p]]$R0
-      R0a[,p,]<-StockPars[[p]]$R0a
-      SSBpR[,p,]<-StockPars[[p]]$SSBpR
-      a_y[p]<-StockPars[[p]]$a
-      b_y[p]<-StockPars[[p]]$b
-      Asize[,p,]<-StockPars[[p]]$Asize
-      Len_age[,p,]<-StockPars[[p]]$Len_age[,,nyears]
-      WatAge[,p,]<-StockPars[[p]]$Wt_age[,,nyears]
-      SSB0array[,np] <-StockPars[[p]]$SSB0
-    }
-
+    
+    #### Time-invariant parameters to project one-time step forward. Potential time-varying parameters inside local() call 
+    # Matrix nsim x np
+    hs <- sapply(1:np, function(p) StockPars[[p]]$hs)
+    SRrel <- sapply(1:np, function(p) StockPars[[p]]$SRrel)
+    R0 <- sapply(1:np, function(p) StockPars[[p]]$R0)
+    SSB0array <- sapply(1:np, function(p) StockPars[[p]]$SSB0)
+    
+    # Vector length p
+    a_y <- sapply(1:np, function(p) StockPars[[p]]$a)
+    b_y <- sapply(1:np, function(p) StockPars[[p]]$b)
+    
+    # Array nsim x np x nareas
+    aR <- sapply(1:np, function(p) StockPars[[p]]$aR, simplify = "array") %>% aperm(c(1, 3, 2))
+    bR <- sapply(1:np, function(p) StockPars[[p]]$bR, simplify = "array") %>% aperm(c(1, 3, 2))
+    R0a <- sapply(1:np, function(p) StockPars[[p]]$R0a, simplify = "array") %>% aperm(c(1, 3, 2))
+    SSBpR <- sapply(1:np, function(p) StockPars[[p]]$SSBpR, simplify = "array") %>% aperm(c(1, 3, 2))
+    Asize <- sapply(1:np, function(p) StockPars[[p]]$Asize, simplify = "array") %>% aperm(c(1, 3, 2))
+    
+    # Array nsim x np x n_age x nareas x nareas x allyears
+    mov <- sapply(1:np, function(p) StockPars[[p]]$mov, simplify = "array") %>% aperm(c(1, 6, 2:5))
+    
+    # Array nsim x np x nf
+    Spat_targ <- sapply(1:np, function(p) {
+      sapply(1:nf, function(f) HistFleetPars[[p]][[f]]$Spat_targ)
+    }, simplify = "array") %>% aperm(c(1, 3, 2))
+    
     # note that Fcur is apical F but, in popdynOneMICE it is DIVIDED in future
     # years between the two areas depending on vulnerable biomass.
     # So to get Fcur you need to sum over areas (a bit weird)
-    NextYrN <- sapply(1:nsim, function(x)
-      popdynOneMICE(np,nf,nareas, maxage,
-                    Ncur=array(N[x,,,nyears,],
-                               c(np,n_age,nareas)),
-                    Vcur=array(VF[x,,,,nyears],c(np,nf,n_age)),
-                    FMretx=array(FMret[x,,,,nyears,],c(np,nf,n_age,nareas)),
-                    FMx=array(FM[x,,,,nyears,],c(np,nf,n_age,nareas)),
-                    PerrYrp=Perr[x,], hsx=hs[x,], aRx=matrix(aR[x,,],nrow=np),
-                    bRx=matrix(bR[x,,],nrow=np),
-                    movy=array(mov[x,,,,,nyears],c(np,n_age,nareas,nareas)),
-                    Spat_targ=array(Spat_targ_y[x,,],c(np,nf)), SRrelx=SRrel[x,],
-                    M_agecur=matrix(M_agecur_y[x,,],nrow=np),
-                    Mat_agecur=matrix(Mat_agecur_y[x,,],nrow=np),
-                    Fec_agecur=matrix(Fec_agecur_y[x,,],nrow=np),
-                    Asizex=matrix(Asize[x,,],ncol=nareas),Kx =K[x,],
-                    Linfx=Linf[x,],t0x=t0[x,],Mx=M[x,],
-                    R0x=R0[x,],R0ax=matrix(R0a[x,,],nrow=np),
-                    SSBpRx=matrix(SSBpR[x,,],nrow=np),ax=a_y,
-                    bx=b_y,Rel=Rel,SexPars=SexPars,x=x,
-                    plusgroup=plusgroup, SSB0x =SSB0array[x,],
-                    Len_age=Len_age[x,,], Wt_age=WatAge[x,,]))
+    NextYrN <- local({
+      # Matrix nsim x np
+      Perr <- sapply(1:np, function(p) StockPars[[p]]$Perr_y[, nyears + maxage + 1])
+      Knext <- sapply(1:np, function(p) StockPars[[p]]$Karray[, nyears + 1])
+      Linfnext <- sapply(1:np, function(p) StockPars[[p]]$Linfarray[, nyears + 1])
+      t0next <- sapply(1:np, function(p) StockPars[[p]]$t0array[, nyears + 1])
+      
+      M <- sapply(1:np, function(p) StockPars[[p]]$Marray[, nyears])
+      
+      # Array nsim x np x n_age
+      M_agecur <- sapply(1:np, function(p) StockPars[[p]]$M_ageArray[, , nyears], simplify = "array") %>% aperm(c(1, 3, 2))
+      Mat_agenext <- sapply(1:np, function(p) StockPars[[p]]$Mat_age[, , nyears + 1], simplify = "array") %>% aperm(c(1, 3, 2))
+      Fec_agenext <- sapply(1:np, function(p) StockPars[[p]]$Fec_Age[, , nyears + 1], simplify = "array") %>% aperm(c(1, 3, 2))
+      Len_agenext <- sapply(1:np, function(p) StockPars[[p]]$Len_age[, , nyears + 1], simplify = "array") %>% aperm(c(1, 3, 2))
+      Wt_agenext <- sapply(1:np, function(p) StockPars[[p]]$Wt_age[, , nyears + 1], simplify = "array") %>% aperm(c(1, 3, 2))
+      
+      sapply(1:nsim, function(x) {
+        popdynOneMICE(np = np, nf = nf, nareas = nareas, maxage = maxage,
+                      Ncur = array(N[x,,,nyears,], c(np, n_age, nareas)),
+                      Bcur = array(Biomass[x,,,nyears,], c(np, n_age, nareas)),
+                      SSBcur = array(SSB[x,,,nyears,], c(np, n_age, nareas)),
+                      Vcur = array(VF[x,,,,nyears],c(np, nf, n_age)),
+                      FMretx = array(FMret[x,,,,nyears,],c(np,nf,n_age,nareas)),
+                      FMx = array(FM[x,,,,nyears,], c(np, nf, n_age, nareas)),
+                      PerrYrp = Perr[x, ], hsx = hs[x, ], 
+                      aRx = array(aR[x, , ], c(np, nareas)),
+                      bRx = array(bR[x, , ], c(np, nareas)),
+                      movy = array(mov[x,,,,,nyears+1], c(np, n_age, nareas, nareas)),
+                      Spat_targ = array(Spat_targ[x, , ], c(np, nf)), SRrelx = SRrel[x, ],
+                      M_agecur = array(M_agecur[x, , ], c(np, n_age)),
+                      Mat_agenext = array(Mat_agenext[x, , ], c(np, n_age)),
+                      Fec_agenext = array(Fec_agenext[x, , ], c(np, n_age)),
+                      Asizex = array(Asize[x, , ], c(np, nareas)), 
+                      Kx = Knext[x, ], Linfx = Linfnext[x, ], t0x = t0next[x, ], Mx = M[x, ],
+                      R0x = R0[x, ], R0ax = array(R0a[x, , ], c(np, nareas)),
+                      SSBpRx = array(SSBpR[x, , ], c(np, nareas)), ax = a_y, bx = b_y,
+                      Rel = list(), # Do not use MICE. Parameters were updated in last time step of SimulateMOM!
+                      SexPars = SexPars, x = x,
+                      plusgroup = plusgroup, SSB0x = SSB0array[x, ],
+                      Len_agenext = array(Len_agenext[x, , ], c(np, n_age)),
+                      Wt_agenext = array(Wt_agenext[x, , ], c(np, n_age)))
+      })
+    })
 
     N_P[,,,1,] <- aperm(array(as.numeric(unlist(NextYrN[1,], use.names=FALSE)),
                               dim=c(np,n_age, nareas, nsim)), c(4,1,2,3))
@@ -1624,23 +1632,13 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                      dim=c(np,n_age, nareas, nsim)), c(4,1,2,3))
     FML <- apply(array(FM[, ,,, nyears, ],c(nsim,np,nf,n_age,nareas)),
                  c(1, 3), max)
-
-    Len_age <- aperm(array(as.numeric(unlist(NextYrN[14,], use.names=FALSE)),
-                           dim=c(np, n_age, nsim)), c(3,1,2))
-
-    Wt_age <- aperm(array(as.numeric(unlist(NextYrN[15,], use.names=FALSE)),
-                          dim=c(np, n_age, nsim)), c(3,1,2))
-
-    for(p in 1:np) {
-      StockPars[[p]]$N_P<-N_P[,p,,,]
-      StockPars[[p]]$Biomass_P<-Biomass_P[,p,,,]
-      StockPars[[p]]$SSN_P<-SSN_P[,p,,,]
-      StockPars[[p]]$SSB_P<-SSB_P[,p,,,]
-      StockPars[[p]]$VBiomass_P<-VBiomass_P[,p,,,]
-
-      StockPars[[p]]$Len_age[,,nyears+y] <- Len_age[,p,]
-      StockPars[[p]]$Wt_age[,,nyears+y] <- Wt_age[,p,]
-      StockPars[[p]]$Fec_Age[,,nyears+y] <- Wt_age[,p,]
+    
+    for (p in 1:np) {
+      StockPars[[p]]$N_P <- N_P[,p,,,]
+      StockPars[[p]]$Biomass_P <- Biomass_P[,p,,,]
+      StockPars[[p]]$SSN_P <- SSN_P[,p,,,]
+      StockPars[[p]]$SSB_P <- SSB_P[,p,,,]
+      StockPars[[p]]$VBiomass_P <- VBiomass_P[,p,,,]
     }
 
     # ---- Update true abundance ----
@@ -1913,81 +1911,107 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       SR <- SAYR[, c(1, 4)]
       SA2YR <- as.matrix(expand.grid(1:nsim, 2:n_age, y, 1:nareas))
       SA1YR <- as.matrix(expand.grid(1:nsim, 1:(n_age - 1), y -1, 1:nareas))
-
-      for(p in 1:np){
-        Perr[,p]<-StockPars[[p]]$Perr_y[,y+nyears+n_age-1]
-        M_agecur_y[,p,]<-StockPars[[p]]$M_ageArray[,,nyears+y]
-        Mat_agecur_y[,p,]<-StockPars[[p]]$Mat_age[,,nyears+y]
-        Fec_agecur_y[,p,]<-StockPars[[p]]$Fec_Age[,,nyears+y]
-        K[,p]<-StockPars[[p]]$Karray[,nyears+y]
-        Linf[,p]<-StockPars[[p]]$Linfarray[,nyears+y]
-        t0[,p]<-StockPars[[p]]$t0array[,nyears+y]
-
-        Len_age[,p,]<-StockPars[[p]]$Len_age[,,nyears+y]
-        WatAge[,p,]<-StockPars[[p]]$Wt_age[,,nyears+y]
-        SSB0array[,np] <-StockPars[[p]]$SSB0
-      }
-
+      
       # note that Fcur is apical F but, in popdynOneMICE it is DIVIDED in future
       # years between the two areas depending on vulnerabile biomass. So to get
       # Fcur you need to sum over areas (a bit weird)
-      NextYrN <- sapply(1:nsim, function(x)
-        popdynOneMICE(np,nf,nareas, maxage,
-                      Ncur=array(N_P[x,,,y-1,],c(np,n_age,nareas)),
-                      Vcur=array(VF[x,,,,nyears+y-1],c(np,nf,n_age)),
-
-                      FMretx=array(FMret_P[x,,,,y-1,],c(np,nf,n_age,nareas)),
-                      FMx=array(FM_P[x,,,,y-1,],c(np,nf,n_age,nareas)),
-                      PerrYrp=Perr[x,], hsx=hs[x,], aRx=matrix(aR[x,,],nrow=np),
-                      bRx=matrix(bR[x,,],nrow=np),
-                      movy=array(mov[x,,,,,nyears+y],c(np,n_age,nareas,nareas)),
-                      Spat_targ=array(Spat_targ_y[x,,],c(np,nf)),
-                      SRrelx=SRrel[x,],
-                      M_agecur=matrix(M_agecur_y[x,,],nrow=np),
-                      Mat_agecur=matrix(Mat_agecur_y[x,,],nrow=np),
-                      Fec_agecur=matrix(Fec_agecur_y[x,,],nrow=np),
-                      Asizex=matrix(Asize[x,,],ncol=nareas), Kx =K[x,],
-                      Linfx=Linf[x,],t0x=t0[x,],Mx=M[x,],
-                      R0x=R0[x,],R0ax=matrix(R0a[x,,],nrow=np),
-                      SSBpRx=matrix(SSBpR[x,,],nrow=np),ax=a_y,
-                      bx=b_y,Rel=Rel,SexPars=SexPars,x=x,
-                      plusgroup=plusgroup, SSB0x=SSB0array[x,],
-                      Len_age=Len_age[x,,], Wt_age=WatAge[x,,]))
+      NextYrN <- local({
+        # Matrix nsim x np
+        Perr <- sapply(1:np, function(p) StockPars[[p]]$Perr_y[, nyears + maxage + y])
+        Knext <- sapply(1:np, function(p) StockPars[[p]]$Karray[, nyears + y])
+        Linfnext <- sapply(1:np, function(p) StockPars[[p]]$Linfarray[, nyears + y])
+        t0next <- sapply(1:np, function(p) StockPars[[p]]$t0array[, nyears + y])
+        
+        M <- sapply(1:np, function(p) StockPars[[p]]$Marray[, nyears + y - 1])
+        
+        # Array nsim x np x n_age
+        M_agecur <- sapply(1:np, function(p) StockPars[[p]]$M_ageArray[, , nyears + y - 1], simplify = "array") %>% aperm(c(1, 3, 2))
+        Mat_agenext <- sapply(1:np, function(p) StockPars[[p]]$Mat_age[, , nyears + y], simplify = "array") %>% aperm(c(1, 3, 2))
+        Fec_agenext <- sapply(1:np, function(p) StockPars[[p]]$Fec_Age[, , nyears + y], simplify = "array") %>% aperm(c(1, 3, 2))
+        Len_agenext <- sapply(1:np, function(p) StockPars[[p]]$Len_age[, , nyears + y], simplify = "array") %>% aperm(c(1, 3, 2))
+        Wt_agenext <- sapply(1:np, function(p) StockPars[[p]]$Wt_age[, , nyears + y], simplify = "array") %>% aperm(c(1, 3, 2))
+        
+        sapply(1:nsim, function(x) {
+          popdynOneMICE(np = np, nf = nf, nareas = nareas, maxage = maxage,
+                        Ncur = array(N_P[x,,,y-1,], c(np, n_age, nareas)),
+                        Bcur = array(Biomass_P[x,,,y-1,], c(np, n_age, nareas)),
+                        SSBcur = array(SSB_P[x,,,nyears,], c(np, n_age, nareas)),
+                        Vcur = array(VF[x,,,,nyears+y-1],c(np, nf, n_age)),
+                        FMretx = array(FMret_P[x,,,,y-1,],c(np,nf,n_age,nareas)),
+                        FMx = array(FM_P[x,,,,y-1,], c(np, nf, n_age, nareas)),
+                        PerrYrp = Perr[x, ], hsx = hs[x, ], 
+                        aRx = array(aR[x, , ], c(np, nareas)),
+                        bRx = array(bR[x, , ], c(np, nareas)),
+                        movy = array(mov[x,,,,,nyears+y], c(np, n_age, nareas, nareas)),
+                        Spat_targ = array(Spat_targ[x, , ], c(np, nf)), SRrelx = SRrel[x, ],
+                        M_agecur = array(M_agecur[x, , ], c(np, n_age)),
+                        Mat_agenext = array(Mat_agenext[x, , ], c(np, n_age)),
+                        Fec_agenext = array(Fec_agenext[x, , ], c(np, n_age)),
+                        Asizex = array(Asize[x, , ], c(np, nareas)), 
+                        Kx = Knext[x, ], Linfx = Linfnext[x, ], t0x = t0next[x, ], Mx = M[x, ],
+                        R0x = R0[x, ], R0ax = array(R0a[x, , ], c(np, nareas)),
+                        SSBpRx = array(SSBpR[x, , ], c(np, nareas)), ax = a_y, bx = b_y,
+                        Rel = Rel,
+                        SexPars = SexPars, x = x,
+                        plusgroup = plusgroup, SSB0x = SSB0array[x, ],
+                        Len_agenext = array(Len_agenext[x, , ], c(np, n_age)),
+                        Wt_agenext = array(Wt_agenext[x, , ], c(np, n_age)))
+        })
+      })
 
       N_P[,,,y,]<-aperm(array(as.numeric(unlist(NextYrN[1,], use.names=FALSE)),
                               dim=c(np,n_age, nareas, nsim)), c(4,1,2,3))
-      Biomass_P[,,,y,]<-aperm(array(as.numeric(unlist(NextYrN[23,],
-                                                      use.names=FALSE)),
+      Biomass_P[,,,y,]<-aperm(array(as.numeric(unlist(NextYrN[23,], use.names=FALSE)),
                                     dim=c(np,n_age, nareas, nsim)), c(4,1,2,3))
-      SSN_P[,,,y,]<-aperm(array(as.numeric(unlist(NextYrN[24,],
-                                                  use.names=FALSE)),
+      SSN_P[,,,y,]<-aperm(array(as.numeric(unlist(NextYrN[24,], use.names=FALSE)),
                                 dim=c(np,n_age, nareas, nsim)), c(4,1,2,3))
-      SSB_P[,,,y,]<-aperm(array(as.numeric(unlist(NextYrN[25,],
-                                                  use.names=FALSE)),
+      SSB_P[,,,y,]<-aperm(array(as.numeric(unlist(NextYrN[25,], use.names=FALSE)),
                                 dim=c(np,n_age, nareas, nsim)), c(4,1,2,3))
 
-      VBiomass_P[,,,y,]<-aperm(array(as.numeric(unlist(NextYrN[19,],
-                                                       use.names=FALSE)),
+      VBiomass_P[,,,y,]<-aperm(array(as.numeric(unlist(NextYrN[19,], use.names=FALSE)),
                                      dim=c(np,n_age, nareas, nsim)), c(4,1,2,3))
       FML <- apply(array(FM_P[, ,,, y-1, ],c(nsim,np,nf,n_age,nareas)),
                    c(1, 3), max)
 
+      Linfarray <- aperm(array(as.numeric(unlist(NextYrN[8,], use.names=FALSE)),
+                               dim=c(np, nsim)), c(2,1))
+      
+      Karray <- aperm(array(as.numeric(unlist(NextYrN[9,], use.names=FALSE)),
+                            dim=c(np, nsim)), c(2,1))
+      
+      t0array <- aperm(array(as.numeric(unlist(NextYrN[10,], use.names=FALSE)),
+                             dim=c(np, nsim)), c(2,1))
+      
       Len_age <- aperm(array(as.numeric(unlist(NextYrN[14,], use.names=FALSE)),
                              dim=c(np, n_age, nsim)), c(3,1,2))
-
+      
       Wt_age <- aperm(array(as.numeric(unlist(NextYrN[15,], use.names=FALSE)),
                             dim=c(np, n_age, nsim)), c(3,1,2))
+      
+      Fec_Age <- aperm(array(as.numeric(unlist(NextYrN[26,], use.names=FALSE)),
+                             dim=c(np, n_age, nsim)), c(3,1,2))
+      
+      M_ageArray <- aperm(array(as.numeric(unlist(NextYrN[2,], use.names=FALSE)),
+                                dim=c(np, n_age, nsim)), c(3,1,2))
+      Marray <- aperm(array(as.numeric(unlist(NextYrN[11, ], use.names=FALSE)),
+                            dim=c(np, nsim)), c(2,1))
 
-      for(p in 1:np){
-        StockPars[[p]]$N_P<-N_P[,p,,,]
-        StockPars[[p]]$Biomass_P<-Biomass_P[,p,,,]
-        StockPars[[p]]$SSN_P<-SSN_P[,p,,,]
-        StockPars[[p]]$SSB_P<-SSB_P[,p,,,]
-        StockPars[[p]]$VBiomass_P<-VBiomass_P[,p,,,]
+      for (p in 1:np) {
+        StockPars[[p]]$N_P <- N_P[,p,,,]
+        StockPars[[p]]$Biomass_P <- Biomass_P[,p,,,]
+        StockPars[[p]]$SSN_P <- SSN_P[,p,,,]
+        StockPars[[p]]$SSB_P <- SSB_P[,p,,,]
+        StockPars[[p]]$VBiomass_P <- VBiomass_P[,p,,,]
         #for(f in 1:nf)FleetPars[[p]][[f]]$FML<-FML[]
-
-        StockPars[[p]]$Len_age[,,nyears+y] <- Len_age[,p,]
-        StockPars[[p]]$Wt_age[,,nyears+y] <- Wt_age[,p,]
+        
+        StockPars[[p]]$Linfarray[, nyears + y - 1] <- Linfarray[, p]
+        StockPars[[p]]$Karray[, nyears + y - 1] <- Karray[, p]
+        StockPars[[p]]$t0array[, nyears + y - 1] <- t0array[, p]
+        StockPars[[p]]$Len_age[, , nyears + y] <- Len_age[, p, ]
+        StockPars[[p]]$Wt_age[, , nyears + y] <- Wt_age[, p, ]
+        StockPars[[p]]$Fec_Age[, , nyears + y] <- Fec_Age[, p, ]
+        StockPars[[p]]$M_ageArray[, , nyears + y - 1] <- M_ageArray[, p, ]
+        StockPars[[p]]$Marray[, nyears + y - 1] <- Marray[, p]
       }
 
       # --- An update year ----
@@ -2111,8 +2135,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
               }else{
                 curdat<-MSElist[[p]][[f]][[mm]]
               }
-              runMP <- MSEtool::applyMP(curdat, MPs = MPs[[p]][mm],
-                                       reps = MOM@reps, silent=TRUE)  # Apply MP
+              runMP <- applyMP(curdat, MPs = MPs[[p]][mm], reps = MOM@reps, silent=TRUE)  # Apply MP
+              
               # Do allocation calcs
               TAC_A[,p,]<-array(as.vector(unlist(runMP[[1]][[1]]$TAC))*MOM@Allocation[[p]],c(nsim,nf))
               TAE_A[,p,]<-array(as.vector(unlist(runMP[[1]][[1]]$Effort))*MOM@Efactor[[p]],c(nsim,nf))
