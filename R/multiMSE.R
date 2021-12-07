@@ -693,24 +693,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
   for(p in 1:np) StockPars[[p]]$Depletion <- Depletion[, p]  # add actual Depletion to StockPars
 
-  if(!is.null(control$checks)) {
-    Cind <- TEG(c(nsim, np, nf, n_age, 1, nareas))
-    Cind[, 5] <- nyears
-    Cpred <- apply(Biomass[Cind[, c(1,2,4,5,6)]] * (1 - exp(-Z[Cind[, c(1,2,4,5,6)]]))/FM[Cind] * Z[Cind[, c(1,2,4,5,6)]],
-                   1:3, sum, na.rm = TRUE)
-
-    for(p in 1:np){
-      Cp <- array(Cpred[, p, ], c(nsim, nf))/apply(Cpred[, p, , drop = FALSE], 1, sum)
-
-      if(prod(round(CatchFrac[[p]], 4)/round(Cp, 4)) != 1) {
-        warning("Possible problem in catch fraction calculations")
-        print("Possible problem in catch fraction calculations")
-        print(Snames[p])
-        print(cbind(CatchFrac[[p]], round(Cp, 4)) %>% 
-                structure(dimnames = list(Sim = 1:nsim, CatchFrac = c("Specified", "Estimated"))))
-      }
-    }
-  }
   if (!is.null(control$checks)) {
     if (prod(round(Depletion,2)/ round(D_specified,2)) != 1) {
       print(cbind(round(Depletion, 4), round(D_specified, 4)) %>%
@@ -978,7 +960,23 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   Biomass_C[CNind] <- N[Nind] * Wt_age_C[CNind]
 
   CB[CNind] <- Biomass_C[CNind]*(1-exp(-Z[Nind]))*(FM[CNind]/Z[Nind])
-
+  
+  if(!is.null(control$checks)) {
+    for(p in 1:np){
+      Cp <- local({
+        num <- apply(CB[, p, , , nyears, , drop = FALSE], c(1, 3), sum) # nsim x nf
+        num/rowSums(num)
+      })
+      if(prod(round(CatchFrac[[p]], 4)/round(Cp, 4)) != 1) {
+        warning("Possible problem in catch fraction calculations")
+        print("Possible problem in catch fraction calculations")
+        print(Snames[p])
+        print(cbind(CatchFrac[[p]], round(Cp, 4)) %>% 
+                structure(dimnames = list(Sim = 1:nsim, CatchFrac = c("Specified", "Estimated"))))
+      }
+    }
+  }
+  
   # Calculate retained-at-age
   Cret[CNind] <- N[Nind] * (1-exp(-Z[Nind])) * (FMret[CNind]/Z[Nind]) #apply(Cret,1:5,sum)
   Cret[is.na(Cret)] <- 0

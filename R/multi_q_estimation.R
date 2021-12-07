@@ -100,7 +100,11 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
   Fdist <- CF/Effind[,,nyears] # Catch divided by effort (q proxy)
   Fdist[!is.finite(Fdist)] <- tiny
   Fdist <- Fdist/apply(Fdist[, , drop = FALSE], 1, sum)    # q ratio proxy (real space)
-
+  
+  WtCx <- sapply(1:np, function(p) { # array np x nf x n_age
+    sapply(1:nf, function(f) FleetPars[[p]][[f]]$Wt_age_C[x, , nyears])
+  }, simplify = "array") %>% aperm(3:1)
+  
   if (nf == 1) {
     par <- rep(-5, np)
   } else {
@@ -127,7 +131,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
                R0x = R0x, R0ax = R0ax, SSBpRx = SSBpRx,
                SSB0x = SSB0x, hsx = hsx, ax = ax, bx = bx, aRx = aRx, bRx = bRx, Perrx = Perrx,
                SRrelx = SRrelx, Rel = Rel, SexPars = SexPars, x = x, plusgroup = plusgroup,
-               optVB = optVB, VB0x = VB0x, maxF = maxF,
+               optVB = optVB, VB0x = VB0x, WtCx = WtCx, maxF = maxF,
                control = list(trace = 1, factr = tol/.Machine$double.eps))
 
   out <- qestMICE(par = opt$par, depc = depc,CFc = CFc, mode = 'calc', np = np, nf = nf,
@@ -142,7 +146,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
                   R0ax = R0ax, SSBpRx = SSBpRx, SSB0x = SSB0x, hsx = hsx, aRx = aRx, bRx = bRx,
                   ax = ax, bx = bx, Perrx = Perrx, SRrelx = SRrelx,
                   Rel = Rel,SexPars = SexPars, x = x, plusgroup = plusgroup,
-                  optVB = optVB, VB0x = VB0x, maxF = maxF)
+                  optVB = optVB, VB0x = VB0x, WtCx = WtCx, maxF = maxF)
 
   out
 }
@@ -189,6 +193,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
 #' @param Rel A list of inter-stock relationships see slot Rel of MOM object class
 #' @param SexPars A list of sex-specific dynamics (SSBfrom, stcck_age)
 #' @param x Integer. The simulation number
+#' @param WtC Array `[stock, fleet, n_age]` of weight at age in catch in the last historical year
 #' @author T.Carruthers
 #' @keywords internal
 qestMICE <- function(par, depc, CFc, mode='opt', np, nf, nyears, nareas, maxage, Nx, VFx,
@@ -198,7 +203,7 @@ qestMICE <- function(par, depc, CFc, mode='opt', np, nf, nyears, nareas, maxage,
                      WatAgex, Len_agex,
                      Karrayx, Linfarrayx, t0arrayx, Marrayx,
                      R0x, R0ax, SSBpRx, SSB0x, hsx, aRx, bRx,
-                     ax, bx, Perrx, SRrelx, Rel, SexPars, x, plusgroup, optVB, VB0x,
+                     ax, bx, Perrx, SRrelx, Rel, SexPars, x, plusgroup, optVB, VB0x, WtCx,
                      maxF) {
 
   n_age <- maxage + 1 # include age-0
@@ -235,12 +240,14 @@ qestMICE <- function(par, depc, CFc, mode='opt', np, nf, nyears, nareas, maxage,
   }
 
   Cfracpred <- local({
-    Cpred0 <- array(NA, c(np, nf, n_age, nareas))
-    Cind <- TEG(dim(Cpred0))
+    Cpred <- CBpred <- array(NA, c(np, nf, n_age, nareas))
+    Cind <- TEG(dim(Cpred))
     Find <- cbind(Cind[, 1:3], nyears, Cind[, 4]) # p f age y area
-    Bind <- Find[, c(1, 3:5)]
-    Cpred0[Cind] <- HistVars$Bx[Bind] * (1 - exp(-HistVars$Zx[Bind]))/HistVars$FMy[Find] * HistVars$Zx[Bind] # Baranov eq.
-    Ctot <- apply(Cpred0, 1:2, sum)
+    Nind <- Find[, c(1, 3:5)]
+    
+    Cpred[Cind] <- HistVars$Nx[Nind] * (1 - exp(-HistVars$Zx[Nind])) * HistVars$FMy[Find] / HistVars$Zx[Nind]
+    CBpred[Cind] <- Cpred[Cind] * WtCx[Cind[, 1:3]]
+    Ctot <- apply(CBpred, 1:2, sum)
     Ctot/apply(Ctot, 1, sum)
   })
 
