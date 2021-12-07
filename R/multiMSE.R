@@ -1913,7 +1913,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       # note that Fcur is apical F but, in popdynOneMICE it is DIVIDED in future
       # years between the two areas depending on vulnerabile biomass. So to get
       # Fcur you need to sum over areas (a bit weird)
-      NextYrN <- local({
+      NextYrN <- local({ # Calculate SSB in year y from abundance and mortality in y-1
         # Matrix nsim x np
         Perr <- sapply(1:np, function(p) StockPars[[p]]$Perr_y[, nyears + maxage + y])
         Knext <- sapply(1:np, function(p) StockPars[[p]]$Karray[, nyears + y])
@@ -1933,7 +1933,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
           popdynOneMICE(np = np, nf = nf, nareas = nareas, maxage = maxage,
                         Ncur = array(N_P[x,,,y-1,], c(np, n_age, nareas)),
                         Bcur = array(Biomass_P[x,,,y-1,], c(np, n_age, nareas)),
-                        SSBcur = array(SSB_P[x,,,nyears,], c(np, n_age, nareas)),
+                        SSBcur = array(SSB_P[x,,,y-1,], c(np, n_age, nareas)),
                         Vcur = array(VF[x,,,,nyears+y-1],c(np, nf, n_age)),
                         FMretx = array(FMret_P[x,,,,y-1,],c(np,nf,n_age,nareas)),
                         FMx = array(FM_P[x,,,,y-1,], c(np, nf, n_age, nareas)),
@@ -2002,9 +2002,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         StockPars[[p]]$VBiomass_P <- VBiomass_P[,p,,,]
         #for(f in 1:nf)FleetPars[[p]][[f]]$FML<-FML[]
         
-        StockPars[[p]]$Linfarray[, nyears + y - 1] <- Linfarray[, p]
-        StockPars[[p]]$Karray[, nyears + y - 1] <- Karray[, p]
-        StockPars[[p]]$t0array[, nyears + y - 1] <- t0array[, p]
+        StockPars[[p]]$Linfarray[, nyears + y] <- Linfarray[, p]
+        StockPars[[p]]$Karray[, nyears + y] <- Karray[, p]
+        StockPars[[p]]$t0array[, nyears + y] <- t0array[, p]
         StockPars[[p]]$Len_age[, , nyears + y] <- Len_age[, p, ]
         StockPars[[p]]$Wt_age[, , nyears + y] <- Wt_age[, p, ]
         StockPars[[p]]$Fec_Age[, , nyears + y] <- Fec_Age[, p, ]

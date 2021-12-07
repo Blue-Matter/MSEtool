@@ -6,6 +6,7 @@ library(dplyr)
 
 OM <- MSEtool::testOM
 OM@interval <- 1
+OM@qinc <- OM@qcv <- rep(0, 2)
 MOM <- new("MOM", 
            nsim = OM@nsim,
            proyears = OM@proyears,
@@ -47,20 +48,20 @@ testthat::expect_lte(round(r["Number"], 2), 1) # Less than 1% discrepancy betwee
 #fleetvars <- names(Hist@SampPars$Fleet)
 #sapply(fleetvars, function(i) abs(multiHist[[1]][[1]]@SampPars$Fleet[[i]] - Hist@SampPars$Fleet[[i]]) %>% max()) %>%
 #  structure(names = fleetvars)
-
+#
 #stockvars <- names(Hist@SampPars$Stock)
 #sapply(stockvars, function(i) {
 #  dif <- multiHist[[1]][[1]]@SampPars$Stock[[i]] - Hist@SampPars$Stock[[i]]
 #  dif[!is.infinite(dif)] %>% abs() %>% max(na.rm = TRUE)
 #}) %>% structure(names = stockvars)
-
+#
 #refpt <- names(Hist@Ref$ByYear)[-15]
 #sapply(refpt, function(i) {
 #  dif <- multiHist[[1]][[1]]@Ref$ByYear[[i]][, 1:OM@nyears] - Hist@Ref$ByYear[[i]][, 1:OM@nyears]
 #  dif[!is.infinite(dif)] %>% abs() %>% max(na.rm = TRUE)
 #}) %>% structure(names = refpt)
-
-
+#
+#
 #refpt2 <- names(Hist@Ref$ReferencePoints)
 #sapply(refpt2, function(i) {
 #  dif <- multiHist[[1]][[1]]@Ref$ReferencePoints[[i]] - Hist@Ref$ReferencePoints[[i]]
@@ -103,5 +104,6 @@ testthat::expect_equal(MMSE@F_FMSY[,1,1,2,] %>% round(2), array(1, c(MMSE@nsim, 
 #
 ## Maximum discrepancy (%) between MMSE and MSE objects
 #lapply(1:length(MSE@MPs), function(i) { 
-#  lapply(vars, compare_MMSE, MPind = i) %>% sapply(max) %>% round(4) %>% structure(names = vars)
+#  lapply(vars, compare_MMSE, MPind = i, rel = FALSE) %>% sapply(max) %>% round(4) %>% structure(names = vars)
 #}) %>% structure(names = MSE@MPs)
+
