@@ -1760,6 +1760,30 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         MSElist[[p]][[f]][[mm]]@Misc <- Data_p_A[[p]][[f]]@Misc
       }
     }
+    
+    # Update M if there is a MICE rel for CalcMPDynamics
+    StockPars_MPCalc <- StockPars
+    if (length(Rel)) {
+      M_MICE <- sapply(1:nsim, function(x) {
+        Responses <- ResFromRel(Rel, 
+                                Bcur = array(Biomass_P[x, , , 1, ], c(np, n_age, nareas)),
+                                SSBcur = array(SSB_P[x, , , 1, ], c(np, n_age, nareas)),
+                                Ncur = array(N_P[x, , , 1, ], c(np, n_age, nareas)),
+                                SSB0 = SSB0array[x, ], B0 = B0array[x, ],
+                                seed = 1, x = x)
+        DV <- sapply(Responses, getElement, 4)
+        M_ageArray <- sapply(1:np, function(p) StockPars[[p]]$M_ageArray[x, , nyears + 1]) %>% t()
+        if (any(DV == "Mx")) { # Update M_ageArray
+          Mx <- Marray <- sapply(1:np, function(p) StockPars[[p]]$Marray[x, nyears + 1])
+          for(i in Responses[DV == "Mx"]) eval(parse(text = paste0(i[4], "[", i[3], "] <- ", i[1])))
+          M_ageArray * Mx/Marray
+        } else {
+          M_ageArray
+        }
+      }, simplify = "array")
+      
+      for(p in 1:np) StockPars_MPCalc[[p]]$M_ageArray[, , nyears + 1] <- t(M_MICE[p, , ])
+    }
 
     MPCalcs_list <- vector('list', np)
 
@@ -1806,7 +1830,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                   CB_P=FleetPars[[p]][[f]]$CB_P,
                                   CB_Pret=FleetPars[[p]][[f]]$CB_Pret,
                                   Effort_pot=Effort_pot[,p,f],
-                                  StockPars=StockPars[[p]],
+                                  StockPars=StockPars_MPCalc[[p]],
                                   FleetPars=FleetPars[[p]][[f]],
                                   ImpPars=ImpPars[[p]][[f]], control=control)
 
@@ -2012,6 +2036,30 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         StockPars[[p]]$M_ageArray[, , nyears + y - 1] <- M_ageArray[, p, ]
         StockPars[[p]]$Marray[, nyears + y - 1] <- Marray[, p]
       }
+      
+      # Update M in year y if there is a MICE rel for CalcMPDynamics (not used in updateData)
+      StockPars_MPCalc <- StockPars
+      if (length(Rel)) {
+        M_MICE <- sapply(1:nsim, function(x) {
+          Responses <- ResFromRel(Rel, 
+                                  Bcur = array(Biomass_P[x, , , y, ], c(np, n_age, nareas)),
+                                  SSBcur = array(SSB_P[x, , , y, ], c(np, n_age, nareas)),
+                                  Ncur = array(N_P[x, , , y, ], c(np, n_age, nareas)),
+                                  SSB0 = SSB0array[x, ], B0 = B0array[x, ],
+                                  seed = 1, x = x)
+          DV <- sapply(Responses, getElement, 4)
+          M_ageArray <- sapply(1:np, function(p) StockPars[[p]]$M_ageArray[x, , nyears + y]) %>% t()
+          if (any(DV == "Mx")) { # Update M_ageArray
+            Mx <- Marray <- sapply(1:np, function(p) StockPars[[p]]$Marray[x, nyears + y])
+            for(i in Responses[DV == "Mx"]) eval(parse(text = paste0(i[4], "[", i[3], "] <- ", i[1])))
+            M_ageArray * Mx/Marray
+          } else {
+            M_ageArray
+          }
+        }, simplify = "array")
+        
+        for(p in 1:np) StockPars_MPCalc[[p]]$M_ageArray[, , nyears + y] <- t(M_MICE[p, , ])
+      }
 
       # --- An update year ----
       if (y %in% upyrs) {
@@ -2182,7 +2230,6 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
           }
         }
 
-
         for(p in 1:np){
           for(f in 1:nf){
             # calculate pstar quantile of TAC recommendation dist
@@ -2219,7 +2266,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                       CB_P=FleetPars[[p]][[f]]$CB_P,
                                       CB_Pret=FleetPars[[p]][[f]]$CB_Pret,
                                       Effort_pot=Effort_pot[,p,f],
-                                      StockPars=StockPars[[p]],
+                                      StockPars=StockPars_MPCalc[[p]],
                                       FleetPars=FleetPars[[p]][[f]],
                                       ImpPars=ImpPars[[p]][[f]], control=control)
             # Zeros caused by SexPars
@@ -2286,7 +2333,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                       CB_P=FleetPars[[p]][[f]]$CB_P,
                                       CB_Pret=FleetPars[[p]][[f]]$CB_Pret,
                                       Effort_pot=Effort_pot[,p,f],
-                                      StockPars=StockPars[[p]],
+                                      StockPars=StockPars_MPCalc[[p]],
                                       FleetPars=FleetPars[[p]][[f]],
                                       ImpPars=ImpPars[[p]][[f]], control=control)
 
@@ -2422,7 +2469,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     for (p in 1:np) {
       for(mm in 1:nMP) {
         RefPoint$ByYear[[nm]][,p,mm,] <- multiHist[[p]][[f]]@Ref$ByYear[[nm]]
-        }
+      }
     }
   }
 
@@ -2443,7 +2490,17 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     }
   }
 
-  if (dropHist) multiHist <- list('multiHist dropped (dropHist=TRUE). Reference points available in MMSE@Ref')
+  if (dropHist) {
+    multiHist <- list('multiHist dropped (dropHist=TRUE). Reference points available in MMSE@Ref')
+  } else if (length(Rel)) { # Update for potential values updated by MICE
+    for (p in 1:np) {
+      for(f in 1:nf) {
+        multiHist[[p]][[f]]@AtAge[c("Length", "Weight", "N.Mortality")] <- 
+          StockPars[[p]][c("Len_age", "Wt_age", "M_ageArray")]
+        multiHist[[p]][[f]]@SampPars$Stock <- StockPars[[p]]
+      }
+    }
+  }
 
   MSEout <- new("MMSE",
                 Name = MOM@Name,
