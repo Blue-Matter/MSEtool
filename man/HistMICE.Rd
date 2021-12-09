@@ -60,7 +60,7 @@ HistMICE(
 
 \item{qfrac}{Array of qfrac}
 
-\item{plusgroup}{Plusgroup}
+\item{plusgroup}{Plusgroup - np-length vector}
 }
 \description{
 Function that reconstructs historical stock trends from fitted qs and all other parameters including MICE components

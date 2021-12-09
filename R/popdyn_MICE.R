@@ -43,6 +43,7 @@
 #' @param plusgroup Numeric vector. Use plus-group (1) or not (0)
 #' @param maxF maximum F
 #' @param SSB0x SSB0 for this simulation
+#' @param B0x B0 for this simulation
 #' @author T.Carruthers
 #' @keywords internal
 popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, FretAx, Effind,
@@ -50,7 +51,7 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
                        Asizex, WatAgex, Len_agex,
                        Karrayx, Linfarrayx, t0arrayx, Marrayx,
                        R0x, R0ax, SSBpRx, hsx, aRx,
-                       bRx, ax, bx, Perrx, SRrelx, Rel, SexPars, x, plusgroup, maxF, SSB0x) {
+                       bRx, ax, bx, Perrx, SRrelx, Rel, SexPars, x, plusgroup, maxF, SSB0x, B0x) {
 
   n_age <- maxage + 1 # include age-0
   Bx <- SSNx <- SSBx <- VBx <- Zx <- array(NA_real_, c(np, n_age, nyears, nareas))
@@ -124,7 +125,7 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
                          Mx = Marrayx[, y-1],
                          R0x = R0x, R0ax = R0ax, SSBpRx = SSBpRx, ax = ay[, y],
                          bx = by[, y], Rel = Rel, SexPars = SexPars, x = x,
-                         plusgroup = plusgroup, SSB0x = SSB0x,
+                         plusgroup = plusgroup, SSB0x = SSB0x, B0x = B0x,
                          Len_agenext = array(Len_agex[, , y], c(np, n_age)),
                          Wt_agenext = array(WatAgex[, , y], c(np, n_age)))
     
@@ -232,9 +233,10 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
 #' @param SexPars A list of sex-specific relationships (SSBfrom, stock_age)
 #' @param x Integer. The simulation number
 #' @param plusgroup Numeric vector. Use plus-group (1) or not (0)
-#' @param SSB0x Unfished SSB0, Vector nstock length.
-#' @param Len_agenext Length-at-age next year
-#' @param Wt_agenext Weight-at-age next year
+#' @param SSB0x Unfished SSB0, Vector `[stock]` length.
+#' @param B0x Unfished B0, Vector `[stock]` length.
+#' @param Len_agenext Matrix `[stock, age]` of next year's length-at-age
+#' @param Wt_agenext Matrix `[stock, age]` of next year's weight-at-age
 #' @author T.Carruthers
 #' @keywords internal
 popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMretx, FMx, PerrYrp,
@@ -242,7 +244,7 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
                           SRrelx, M_agecur, Mat_agecur, Mat_agenext, Fec_agenext,
                           Asizex,
                           Kx, Linfx, t0x, Mx, R0x, R0ax, SSBpRx, ax, bx, Rel, SexPars, x,
-                          plusgroup, SSB0x,
+                          plusgroup, SSB0x, B0x,
                           Len_agenext, Wt_agenext) {
   
   n_age <- maxage + 1
@@ -261,7 +263,7 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
   oldFec_agenext <- Fec_agenext
   
   if (length(Rel)) { # MICE relationships, parameters that could change: M, K, Linf, t0, a, b, hs
-    Responses <- ResFromRel(Rel, Bcur, SSBcur, Ncur, seed = 1)
+    Responses <- ResFromRel(Rel, Bcur, SSBcur, Ncur, SSB0x, B0x, seed = 1, x)
     DV <- sapply(Responses, function(xx) xx[4])
     
     for (r in 1:length(Responses)) { # e.g., Mx[1] <- 0.4 - operations are sequential
@@ -410,34 +412,41 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
 #' @param Bcur An array of current stock biomass `[stock, age, area]`
 #' @param SSBcur An array of current spawning stock biomass `[stock, age, area]`
 #' @param Ncur An array of current stock numbers `[stock, age, area]`
+#' @param SSB0 A vector of unfished spawning biomass `[stock]`
+#' @param B0 A vector of unfished biomass `[stock]`
 #' @param seed Seed for sampling.
+#' @param x The simulation number.
 #' @author T.Carruthers
 #' @keywords internal
-ResFromRel <- function(Rel, Bcur, SSBcur, Ncur, seed) {
+ResFromRel <- function(Rel, Bcur, SSBcur, Ncur, SSB0, B0, seed, x) {
 
-  IVnams <- c("B", "SSB", "N")
-  IVcode <- c("Bcur", "SSBcur", "Ncur")
+  IVnams <- c("B", "SSB", "N", "SSB0", "B0", "x")
+  IVcode <- c("Bcur", "SSBcur", "Ncur", "SSB0", "B0", "x")
+  B <- apply(Bcur, 1, sum)
+  SSB <- apply(SSBcur, 1, sum)
+  N <- apply(Ncur, 1, sum)
 
   DVnam <- c("M", "a", "b", "R0", "hs", "K", "Linf", "t0")
   modnam <- c("Mx", "ax", "bx", "R0x", "hsx", "Kx", "Linfx", "t0x")
 
   nRel <- length(Rel)
   
-  out <- lapply(1:length(Rel), function(r) {
-    fnams <- names(attr(Rel[[r]]$terms, "dataClasses"))
+  out <- lapply(1:nRel, function(r) {
+    fnams <- names(Rel[[r]]$model)
     DV <- fnams[1]
     Dp <- unlist(strsplit(DV, "_"))[2]
     Dnam <- unlist(strsplit(DV, "_"))[1]
-    IV <- fnams[2:length(fnams)]
+    IV <- fnams[-1]
     nIV <- length(IV)
-    IVs <- matrix(unlist(strsplit(IV, "_")), ncol = nIV)
     
-    newdat <- sapply(1:nIV, function(iv, B, SSB, N) { # Get independent variables from OM
-      p <- as.numeric(IVs[2, iv])
-      sum(get(IVs[1, iv], inherits = FALSE)[p, , ])
-    }, B = Bcur, SSB = SSBcur, N = Ncur) %>% as.data.frame() %>% structure(names = IV)
+    newdata <- sapply(IV, function(iv, B, SSB, N, SSB0, B0, x)  {
+      IVs <- unlist(strsplit(iv, "_"))
+      p <- ifelse(length(IVs) == 1, 1, as.numeric(IVs[2]))
+      get(IVs[1], inherits = FALSE)[p] # Get independent variables from OM
+    }, B = B, SSB = SSB, N = N, SSB0 = SSB0, B0 = B0, x = x) %>% 
+      matrix(nrow = 1) %>% as.data.frame() %>% structure(names = IV)
     
-    ys <- predict(Rel[[r]], newdat = newdat)
+    ys <- predict(Rel[[r]], newdata = newdata)
     templm <- Rel[[r]]
     templm$fitted.values <- ys
     ysamp <- stats::simulate(templm, nsim = 1, seed = seed) %>% unlist()

@@ -36,8 +36,8 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     MOM@CatchFrac <- CatchFrac
   }
 
-  if (np == 1 && nf == 1) {
-    if (!silent) message("You have specified only a single stock and fleet. ",
+  if (!length(Rel) && np == 1 && nf == 1) {
+    if (!silent) message("You have specified only a single stock and fleet with no MICE relationships. ",
             "You should really be using the function MSEtool::runMSE()")
   } else if(np > 1 && !length(MOM@Rel) && !length(MOM@SexPars)) {
     if (!silent) message("You have specified more than one stock but no MICE relationships ",
@@ -1225,9 +1225,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
   # ---- Detect MP Specification ----
   MPcond <- "unknown"
-  if (np == 1 && nf == 1) {
+  if (!length(Rel) && np == 1 && nf == 1) {
     if (!silent)
-      message("runMSE checking: you have specified a single stock and fleet. ",
+      message("runMSE checking: you have specified a single stock and fleet with no MICE relationships. ",
               "For analysis you should be using runMSE(). Use this only for debugging ",
               "against runMSE.")
     if (class(MPs) !="character") {
@@ -1547,6 +1547,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     SRrel <- sapply(1:np, function(p) StockPars[[p]]$SRrel)
     R0 <- sapply(1:np, function(p) StockPars[[p]]$R0)
     SSB0array <- sapply(1:np, function(p) StockPars[[p]]$SSB0)
+    B0array <- sapply(1:np, function(p) StockPars[[p]]$B0)
     
     # Vector length p
     a_y <- sapply(1:np, function(p) StockPars[[p]]$a)
@@ -1608,7 +1609,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                       SSBpRx = array(SSBpR[x, , ], c(np, nareas)), ax = a_y, bx = b_y,
                       Rel = list(), # Do not use MICE. Parameters were updated in last time step of SimulateMOM!
                       SexPars = SexPars, x = x,
-                      plusgroup = plusgroup, SSB0x = SSB0array[x, ],
+                      plusgroup = plusgroup, SSB0x = SSB0array[x, ], B0x = B0array[x, ],
                       Len_agenext = array(Len_agenext[x, , ], c(np, n_age)),
                       Wt_agenext = array(Wt_agenext[x, , ], c(np, n_age)))
       })
@@ -1951,7 +1952,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                         SSBpRx = array(SSBpR[x, , ], c(np, nareas)), ax = a_y, bx = b_y,
                         Rel = Rel,
                         SexPars = SexPars, x = x,
-                        plusgroup = plusgroup, SSB0x = SSB0array[x, ],
+                        plusgroup = plusgroup, SSB0x = SSB0array[x, ], B0x = B0array[x, ],
                         Len_agenext = array(Len_agenext[x, , ], c(np, n_age)),
                         Wt_agenext = array(Wt_agenext[x, , ], c(np, n_age)))
         })

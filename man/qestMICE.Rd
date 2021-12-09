@@ -48,6 +48,8 @@ qestMICE(
   plusgroup,
   optVB,
   VB0x,
+  B0x,
+  WtCx,
   maxF
 )
 }
@@ -122,7 +124,17 @@ qestMICE(
 
 \item{x}{Integer. The simulation number}
 
+\item{optVB}{Logical, whether to optimize to vulnerable biomass (or spawning biomass otherwise)}
+
+\item{VB0x}{Vector \verb{[stock]} unfished vulnerable biomass}
+
+\item{B0x}{Vector \verb{[stock]} unfished total biomass}
+
 \item{mod}{Character if 'opt' qestMICE returns the objective function otherwise the fitted values in a list}
+
+\item{plusgroup.}{Integer vector \verb{[stock]} indicating if a plus group is used}
+
+\item{WtC}{Array \verb{[stock, fleet, n_age]} of weight at age in catch in the last historical year}
 }
 \description{
 Function returns objective function that fits both stock depletion and catch fraction among fleets

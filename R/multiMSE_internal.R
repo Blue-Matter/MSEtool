@@ -112,7 +112,7 @@ HistMICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, 
   Mx <- sapply(StockPars, getElement, "M")[x, ]
   R0x <- sapply(StockPars, getElement, "R0")[x, ]
   SSB0x <- sapply(StockPars, getElement, "SSB0")[x, ]
-  VB0x <- sapply(StockPars, getElement, "VB0")[x, ]
+  B0x <- sapply(StockPars, getElement, "B0")[x, ]
   
   hsx <- sapply(StockPars, getElement, "hs")[x, ]
   ax <- sapply(StockPars, getElement, "a")
@@ -171,7 +171,7 @@ HistMICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, 
              Linfarrayx = Linfarrayx, t0arrayx = t0arrayx, Marrayx = Marrayx,
              R0x = R0x, R0ax = R0ax, SSBpRx = SSBpRx, hsx = hsx, aRx = aRx, bRx = bRx,
              ax = ax, bx = bx, Perrx = Perrx, SRrelx = SRrelx, Rel = Rel, SexPars = SexPars, x = x,
-             plusgroup = plusgroup, maxF = maxF, SSB0x = SSB0x)
+             plusgroup = plusgroup, maxF = maxF, SSB0x = SSB0x, B0x = B0x)
 
 }
 

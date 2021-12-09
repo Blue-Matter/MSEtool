@@ -47,7 +47,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
   Mx <- sapply(StockPars, getElement, "M")[x, ]
   R0x <- sapply(StockPars, getElement, "R0")[x, ]
   SSB0x <- sapply(StockPars, getElement, "SSB0")[x, ]
-  VB0x <- sapply(StockPars, getElement, "VB0")[x, ]
+  B0x <- sapply(StockPars, getElement, "B0")[x, ]
   
   hsx <- sapply(StockPars, getElement, "hs")[x, ]
   ax <- sapply(StockPars, getElement, "a")
@@ -96,10 +96,13 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
   t0arrayx <- getLHpars(x, 't0array', StockPars, nyears + 1) 
   Marrayx <- getLHpars(x, 'Marray', StockPars, nyears + 1) 
   
+  # Variables needed for q optim
   CF <- sapply(CatchFrac, function(xx) xx[x, ]) %>% matrix(nrow = nf) %>% t() # np x nf
   Fdist <- CF/Effind[,,nyears] # Catch divided by effort (q proxy)
   Fdist[!is.finite(Fdist)] <- tiny
   Fdist <- Fdist/apply(Fdist[, , drop = FALSE], 1, sum)    # q ratio proxy (real space)
+  
+  VB0x <- sapply(StockPars, getElement, "VB0")[x, ] # vector length np
   
   WtCx <- sapply(1:np, function(p) { # array np x nf x n_age
     sapply(1:nf, function(f) FleetPars[[p]][[f]]$Wt_age_C[x, , nyears])
@@ -116,6 +119,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
   depc <- sapply(1:np, function(p) StockPars[[p]][["D"]])[x, ]
   CFc <- sapply(1:np, function(p) CatchFrac[[p]][x, ]) %>% matrix(nf, np) %>% t()
   
+  cat("Simulation", x, "objective function:\n")
   opt <- optim(par, qestMICE,
                method = "L-BFGS-B",
                lower = c(rep(log(bounds[1]), np), rep(-5, np * (nf-1))),
@@ -133,6 +137,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
                SRrelx = SRrelx, Rel = Rel, SexPars = SexPars, x = x, plusgroup = plusgroup,
                optVB = optVB, VB0x = VB0x, WtCx = WtCx, maxF = maxF,
                control = list(trace = 1, factr = tol/.Machine$double.eps))
+  cat("\n")
 
   out <- qestMICE(par = opt$par, depc = depc,CFc = CFc, mode = 'calc', np = np, nf = nf,
                   nyears = nyears, nareas = nareas, maxage = maxage, Nx = Nx, VFx = VFx,
@@ -146,7 +151,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
                   R0ax = R0ax, SSBpRx = SSBpRx, SSB0x = SSB0x, hsx = hsx, aRx = aRx, bRx = bRx,
                   ax = ax, bx = bx, Perrx = Perrx, SRrelx = SRrelx,
                   Rel = Rel,SexPars = SexPars, x = x, plusgroup = plusgroup,
-                  optVB = optVB, VB0x = VB0x, WtCx = WtCx, maxF = maxF)
+                  optVB = optVB, VB0x = VB0x, B0x = B0x, WtCx = WtCx, maxF = maxF)
 
   out
 }
@@ -193,6 +198,10 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
 #' @param Rel A list of inter-stock relationships see slot Rel of MOM object class
 #' @param SexPars A list of sex-specific dynamics (SSBfrom, stcck_age)
 #' @param x Integer. The simulation number
+#' @param plusgroup. Integer vector `[stock]` indicating if a plus group is used
+#' @param optVB Logical, whether to optimize to vulnerable biomass (or spawning biomass otherwise)
+#' @param VB0x Vector `[stock]` unfished vulnerable biomass
+#' @param B0x Vector `[stock]` unfished total biomass
 #' @param WtC Array `[stock, fleet, n_age]` of weight at age in catch in the last historical year
 #' @author T.Carruthers
 #' @keywords internal
@@ -203,7 +212,7 @@ qestMICE <- function(par, depc, CFc, mode='opt', np, nf, nyears, nareas, maxage,
                      WatAgex, Len_agex,
                      Karrayx, Linfarrayx, t0arrayx, Marrayx,
                      R0x, R0ax, SSBpRx, SSB0x, hsx, aRx, bRx,
-                     ax, bx, Perrx, SRrelx, Rel, SexPars, x, plusgroup, optVB, VB0x, WtCx,
+                     ax, bx, Perrx, SRrelx, Rel, SexPars, x, plusgroup, optVB, VB0x, B0x, WtCx,
                      maxF) {
 
   n_age <- maxage + 1 # include age-0
@@ -222,7 +231,7 @@ qestMICE <- function(par, depc, CFc, mode='opt', np, nf, nyears, nareas, maxage,
                          WatAgex, Len_agex,
                          Karrayx, Linfarrayx, t0arrayx, Marrayx,
                          R0x, R0ax, SSBpRx, hsx, aRx, bRx, ax, bx, Perrx,
-                         SRrelx, Rel, SexPars, x, plusgroup, maxF, SSB0x)
+                         SRrelx, Rel, SexPars, x, plusgroup, maxF, SSB0x, B0x)
 
   if (optVB) {
     VBest <- apply(HistVars$VBx, c(1, 3), sum)
@@ -264,7 +273,7 @@ qestMICE <- function(par, depc, CFc, mode='opt', np, nf, nyears, nareas, maxage,
                 CFc=CFc,
                 Cfracpred=Cfracpred,
                 depc=depc,
-                deppred=deppred))#,Vulnf=Vulnf,Retf=Retf,MPAf=MPAf))
+                deppred=deppred)) #,Vulnf=Vulnf,Retf=Retf,MPAf=MPAf))
   }
 
 }
