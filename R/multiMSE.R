@@ -1381,7 +1381,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   TACa <- array(NA, dim = c(nsim, np, nf, nMP, proyears))  # store the projected TAC recommendation
   TAE_out <- array(NA, dim = c(nsim, np, nf, nMP, proyears))  # store the projected TAE recommendation
   Effort <- array(NA, dim = c(nsim, np, nf, nMP, proyears))  # store the Effort
-
+  
   # ---- Grab Stock, Fleet, Obs and Imp values from Hist ----
   StockPars <- FleetPars <- ObsPars <- ImpPars <- list()
   for(p in 1:np) {
@@ -1398,6 +1398,12 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
   # projection arrays for storing all info (by simulation, stock, age, MP, years, areas)
   N_P_mp <- array(NA, dim = c(nsim, np, n_age, nMP, proyears, nareas))
+  
+  # store M, growth, length at age by MP due to MICE rel.
+  if (length(Rel)) {
+    StockPars_MICE <- lapply(rep(NA_real_, 3), array, dim = c(nsim, np, n_age, nMP, proyears)) %>%
+      structure(names = c("M_ageArray", "Wt_age", "Len_age"))
+  }
 
   # ---- Grab Historical N-at-age etc ----
   N <- array(NA, dim=c(nsim, np, n_age, nyears, nareas))
@@ -1455,9 +1461,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
     checkNA <- array(0,c(np,nf,proyears)) # save number of NAs
 
-    # reset selectivity & retention parameters for projections
-    for(p in 1:np){
-      for(f in 1:nf){
+    # reset StockPars (MICE), selectivity & retention parameters for projections
+    for (p in 1:np) {
+      for (f in 1:nf) {
         # reset selectivity parameters for projections
         FleetPars[[p]][[f]]$L5_P <- HistFleetPars[[p]][[f]]$L5
         FleetPars[[p]][[f]]$LFS_P <- HistFleetPars[[p]][[f]]$LFS
@@ -1497,6 +1503,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                              dim = c(nsim,n_age, proyears, nareas))
 
       }
+      
+      StockPars[[p]] <- multiHist[[p]][[1]]@SampPars$Stock
+      
       # Discard mortality for projections
       StockPars[[p]]$Fdisc_P <- StockPars[[p]]$Fdisc
       StockPars[[p]]$N_P <- array(NA, dim = c(nsim, n_age, proyears, nareas))
@@ -2371,8 +2380,6 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
           } # end of fleets
         } # end of stocks
       } # end of not update year
-
-
     } # end of projection years
 
     if(!silent) close(pb)
@@ -2421,6 +2428,20 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         if(control$progress)
           shiny::incProgress(1/nMP, detail = round(mm*100/nMP))
     }
+    
+    if (length(Rel)) {
+      StockPars_MICE$M_ageArray[, , , mm, ] <- sapply(1:np, function(p) {
+        StockPars[[p]]$M_ageArray[, , nyears + 1:proyears]
+      }, simplify = "array") %>% aperm(c(1, 4, 2, 3)) 
+      
+      StockPars_MICE$Wt_age[, , , mm, ] <- sapply(1:np, function(p) {
+        StockPars[[p]]$Wt_age[, , nyears + 1:proyears]
+      }, simplify = "array") %>% aperm(c(1, 4, 2, 3)) 
+      
+      StockPars_MICE$Len_age[, , , mm, ] <- sapply(1:np, function(p) {
+        StockPars[[p]]$Len_age[, , nyears + 1:proyears]
+      }, simplify = "array") %>% aperm(c(1, 4, 2, 3)) 
+    }
 
   } # end of MP loop
 
@@ -2440,6 +2461,12 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   Misc <- list()
   # Misc$Data <-MSElist
   Misc[['MOM']]<-MOM
+  
+  if (length(Rel)) { # Update for potential values updated by MICE
+    Misc[["MICE"]] <- StockPars_MICE
+  } else {
+    Misc[["MICE"]] <- "No MICE relationships were used."
+  }
 
   # need to reformat MMP and complex mode to work with MSEout slot
   if(class(MPs)=="character") MPs<-list(MPs)
@@ -2492,14 +2519,6 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
   if (dropHist) {
     multiHist <- list('multiHist dropped (dropHist=TRUE). Reference points available in MMSE@Ref')
-  } else if (length(Rel)) { # Update for potential values updated by MICE
-    for (p in 1:np) {
-      for(f in 1:nf) {
-        multiHist[[p]][[f]]@AtAge[c("Length", "Weight", "N.Mortality")] <- 
-          StockPars[[p]][c("Len_age", "Wt_age", "M_ageArray")]
-        multiHist[[p]][[f]]@SampPars$Stock <- StockPars[[p]]
-      }
-    }
   }
 
   MSEout <- new("MMSE",
