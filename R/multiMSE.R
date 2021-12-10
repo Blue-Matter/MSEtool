@@ -2438,7 +2438,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     
     if (length(Rel)) {
       StockPars_MICE$M_ageArray[, , , mm, ] <- sapply(1:np, function(p) {
-        StockPars[[p]]$M_ageArray[, , nyears + 1:proyears]
+        StockPars_MPCalc[[p]]$M_ageArray[, , nyears + 1:proyears]
       }, simplify = "array") %>% aperm(c(1, 4, 2, 3)) 
       
       StockPars_MICE$Wt_age[, , , mm, ] <- sapply(1:np, function(p) {
