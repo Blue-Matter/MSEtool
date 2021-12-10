@@ -53,6 +53,13 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
   # ---- Custom Parameters (cpars) Options ----
   control <- cpars$control; cpars$control <- NULL
+  
+  # Ignore MICE in historical period
+  if (!is.null(control$HistRel) && !control$HistRel) {
+    HistRel <- list()
+  } else {
+    HistRel <- Rel
+  }
 
   # Option to optimize depletion for vulnerable biomass instead of spawning biomass
   optVB <- FALSE
@@ -441,7 +448,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       out<-snowfall::sfLapply(1:nsim, getq_multi_MICE, StockPars, FleetPars,
                               np,nf, nareas, maxage, nyears, N, VF, FretA,
                               maxF=MOM@maxF, MPA, CatchFrac, bounds=bounds,
-                              tol=1E-6,Rel,SexPars, plusgroup=plusgroup, optVB=optVB)
+                              tol=1E-6,HistRel,SexPars, plusgroup=plusgroup, optVB=optVB)
 
     } else {
       exp.time <- (np * nf)/(9) * nsim
@@ -455,7 +462,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
       out<-lapply(1:nsim, getq_multi_MICE, StockPars, FleetPars, np, nf, nareas,
                   maxage, nyears, N, VF, FretA, maxF=MOM@maxF,
-                  MPA,CatchFrac, bounds=bounds,tol=1E-6,Rel,SexPars,
+                  MPA,CatchFrac, bounds=bounds,tol=1E-6,HistRel,SexPars,
                   plusgroup=plusgroup, optVB=optVB)
 
     }
@@ -543,12 +550,12 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
         out2<-snowfall::sfLapply(probQ,getq_multi_MICE,StockPars, FleetPars,
                                  np,nf, nareas, maxage, nyears, N, VF, FretA,
                                  maxF=MOM@maxF, MPA,CatchFrac, bounds=bounds,
-                                 tol=1E-6,Rel,SexPars,
+                                 tol=1E-6,HistRel,SexPars,
                                  plusgroup=plusgroup, optVB=optVB)
       }else{
         out2<-lapply(probQ,getq_multi_MICE,StockPars, FleetPars, np,nf, nareas,
                      maxage, nyears, N, VF, FretA, maxF=MOM@maxF,
-                     MPA,CatchFrac, bounds= bounds,tol=1E-6,Rel,SexPars,
+                     MPA,CatchFrac, bounds= bounds,tol=1E-6,HistRel,SexPars,
                      plusgroup=plusgroup, optVB=optVB)
       }
 
@@ -601,7 +608,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     histYrs <- snowfall::sfSapply(1:nsim, HistMICE, StockPars=StockPars,
                                   FleetPars=FleetPars,np=np,nf=nf,nareas=nareas,
                                   maxage=maxage,nyears=nyears,N=N,VF=VF,FretA=FretA,
-                                  maxF=MOM@maxF,MPA=MPA,Rel=Rel,SexPars=SexPars,qs=qs,
+                                  maxF=MOM@maxF,MPA=MPA,Rel=HistRel,SexPars=SexPars,qs=qs,
                                   qfrac=qfrac,
                                   plusgroup=plusgroup)
 
@@ -609,7 +616,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     histYrs <- sapply(1:nsim, HistMICE, StockPars=StockPars,
                       FleetPars=FleetPars,np=np,nf=nf,nareas=nareas,
                       maxage=maxage,nyears=nyears,N=N,VF=VF,FretA=FretA,
-                      maxF=MOM@maxF,MPA=MPA,Rel=Rel,SexPars=SexPars,qs=qs,
+                      maxF=MOM@maxF,MPA=MPA,Rel=HistRel,SexPars=SexPars,qs=qs,
                       qfrac=qfrac,
                       plusgroup=plusgroup)
 
