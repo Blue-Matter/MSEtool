@@ -52,14 +52,17 @@ OM2MOM <- function(OM) {
 #' @return A class "Rel" object to pass to \code{MOM@@Rel}.
 #' 
 #' @section Density-dependent M ("DDM"):
-#' Natural mortality is a linear function of stock depletion (total biomass; Forrest et al. 2018):
+#' Natural mortality (M) is a linear function of stock depletion in terms to total biomass (B) in year y 
+#' (Forrest et al. 2018):
 #' \deqn{M_y = M_0 + (M_1 + M_0) (1 - B_y/B_0)}{M_y = M_0 + (M_1 + M_0) (1 - B_y/B_0)}
-#' with an additional constraint that M_y = M_0 if B_y > B_0
+#' with a constraint that \eqn{M_y = M_0} if \eqn{B_y > B_0}
 #' 
 #' Provide the following arguments:
 #' \itemize{
 #' \item \code{M0}: Natural mortality as B approaches B0. Vector `[nsim]`
-#' \item \code{M1}: Natural mortality as B approaches zero. Vecotr `[nsim]`
+#' \item \code{M1}: Natural mortality as B approaches zero. Vector `[nsim]`
+#' \item Optional \code{B0}: Unfished biomass. Calculated from stock-recruit \code{alpha} and \code{beta} and unfished 
+#' biomass per recruit at M = M0. Vector `[nsim]`
 #' }
 #'  
 #' @examples
@@ -92,21 +95,34 @@ makeRel <- function(type = "DDM", stock = 1, CV = 0, ...) {
     if(length(dots$M0) != length(dots$M1)) {
       stop("M0 and M1 need to be equal length vectors")
     }
-    f <- function(B = seq(0, 1, 0.1), B0 = 1, M0 = dots$M0, M1 = dots$M1, x = 1) {
-      dep <- pmin(B/B0, 1)
+    if(!is.null(dots$B0)) {
+      if(length(dots$B0) != length(dots$M0)) {
+        stop("M0 and B0 need to be equal length vectors")
+      }
+      B0_OM <- FALSE
+    } else {
+      B0_OM <- TRUE
+      dots$B0 <- 1
+    }
+    f <- function(B, B0 = dots$B0, M0 = dots$M0, M1 = dots$M1, x = 1) {
+      dep <- pmin(B/B0[x], 1)
       M0[x] + (M1[x] - M0[x]) * (1 - dep)
     }
-    terms <- paste0(c("M", "B", "B0"), "_", stock)
-    model <- data.frame(f(), seq(0, 1, 0.1), 1)
-    
-    if(length(dots$M0) > 1 && length(dots$M1) > 1) {
+    model <- data.frame(M = f(seq(0, 1, 0.1) * dots$B0[1], x = 1),
+                        B = seq(0, 1, 0.1) * dots$B0[1])
+    terms <- paste0(c("M", "B"), "_", stock)
+    if(B0_OM) {
+      terms <- c(terms, paste0("B0", "_", stock))
+      model$B0 <- dots$B0[1]
+    }
+    if(length(dots$M0) > 1) {
       terms <- c(terms, "x")
       model$x <- 1
     }
     
     out <- list(f = f,
                 model = structure(model, names = terms),
-                fitted.values = f(),
+                fitted.values = model$M,
                 CV = CV,
                 terms = terms,
                 type = type,
@@ -123,8 +139,9 @@ makeRel <- function(type = "DDM", stock = 1, CV = 0, ...) {
 print.Rel <- function(x, ...) {
   cat("MOM Rel:", x$Rel, "\n\n")
   
-  cat("Predictor variables:", paste(x$terms[-1], collapse = ", "), "\n")
+  cat("Predictor variables from MOM:", paste(x$terms[-1], collapse = ", "), "\n")
   if("x" %in% x$terms) cat("(x is the simulation number)\n\n")
+  
   cat("Response variable:", x$terms[1], "\n")
   
   invisible(x)

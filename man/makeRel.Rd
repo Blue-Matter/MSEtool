@@ -46,14 +46,17 @@ Currently implements intra-stock dynamics via density-dependent processes.
 }
 \section{Density-dependent M ("DDM")}{
 
-Natural mortality is a linear function of stock depletion (total biomass; Forrest et al. 2018):
+Natural mortality (M) is a linear function of stock depletion in terms to total biomass (B) in year y
+(Forrest et al. 2018):
 \deqn{M_y = M_0 + (M_1 + M_0) (1 - B_y/B_0)}{M_y = M_0 + (M_1 + M_0) (1 - B_y/B_0)}
-with an additional constraint that M_y = M_0 if B_y > B_0
+with a constraint that \eqn{M_y = M_0} if \eqn{B_y > B_0}
 
 Provide the following arguments:
 \itemize{
 \item \code{M0}: Natural mortality as B approaches B0. Vector \verb{[nsim]}
-\item \code{M1}: Natural mortality as B approaches zero. Vecotr \verb{[nsim]}
+\item \code{M1}: Natural mortality as B approaches zero. Vector \verb{[nsim]}
+\item Optional \code{B0}: Unfished biomass. Calculated from stock-recruit \code{alpha} and \code{beta} and unfished
+biomass per recruit at M = M0. Vector \verb{[nsim]}
 }
 }
 
