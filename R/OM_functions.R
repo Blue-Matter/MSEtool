@@ -254,10 +254,12 @@ Replace <- function(OM, from,Sub=c("Stock", "Fleet", "Obs", "Imp"),  Name=NULL, 
 #' @source \url{https://github.com/James-Thorson-NOAA/FishLife}
 #' @export
 #' @examples
+#' \dontrun{
 #' myOM<-LH2OM(MSEtool::testOM)
 #'
 #' # drawing known parameters from normal distribution
 #' myOM <- LH2OM(MSEtool::testOM, dist='norm')
+#' }
 #'
 LH2OM <- function(OM, dist=c("unif", "norm"), filterMK=FALSE, plot=TRUE,
                   Class = "predictive", Order = "predictive",
