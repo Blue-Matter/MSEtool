@@ -2,8 +2,13 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 ## MSEtool 3.3.9999 - Development Version 
 
+### New additions
+- new functions `makeRel` and `makeMOM` with methods for developing MICE relationships, e.g., density-dependent M.
+- depletion optimization in `multiMSE` uses `Wt_age_C` for catch fraction calculations.
+
 ### Fixes
 - fix bug in re-calculation of MSY refs points when selectivity parameters change (introduced in last version)
+- fix indexing in `multiMSE` when growth and natural mortality are time-varying. Internal code in `HistMICE`, `qestMICE`, `popdynMICE` and `popdynOneMICE` was updated for better readability, i.e., removing obsolete/redundant code and better references for array dimensions.
 
 ### Minor changes
 - add progress bar when knitting OM.rmd in Shiny

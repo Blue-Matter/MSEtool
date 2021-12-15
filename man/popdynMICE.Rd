@@ -43,7 +43,8 @@ popdynMICE(
   x,
   plusgroup,
   maxF,
-  SSB0x
+  SSB0x,
+  B0x
 )
 }
 \arguments{
@@ -126,6 +127,8 @@ relationship (1 = Beverton-Holt, 2= Ricker)}
 \item{maxF}{maximum F}
 
 \item{SSB0x}{SSB0 for this simulation}
+
+\item{B0x}{B0 for this simulation}
 }
 \description{
 Calls popdynOneMICE iteratively to reconstruct a time series given MICE model inputs

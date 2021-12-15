@@ -1294,7 +1294,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     rec_area <- sapply(1:nsim, calcRecruitment, SRrel=StockPars$SRrel, SSBcurr=SSBcurr,
                        recdev=recdev, hs=StockPars$hs,
                        aR= StockPars$aR, bR=StockPars$bR, R0a=StockPars$R0a,
-                       SSBpR=StockPars$SSBpR, SSB0=StockPars$SSB0)
+                       SSBpR=StockPars$SSBpR)
 
     N_P[,1,y,] <- t(rec_area)
 
@@ -1472,8 +1472,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       rec_area <- sapply(1:nsim, calcRecruitment, SRrel=StockPars$SRrel,
                          SSBcurr=SSBcurr,
                          recdev=recdev, hs=StockPars$hs, aR=StockPars$aR,
-                         bR=StockPars$bR, R0a=StockPars$R0a, SSBpR=StockPars$SSBpR,
-                         SSB0=StockPars$SSB0)
+                         bR=StockPars$bR, R0a=StockPars$R0a, SSBpR=StockPars$SSBpR)
 
       N_P[,1,y,] <- t(rec_area)
 
