@@ -621,18 +621,26 @@ gettaxa <- function(Class = "predictive", Order = "predictive",
     stop("Package \"rfishbase\" needed for this function to work. Please install it.",
          call. = FALSE)
   }
-  Match = 1:nrow(rfishbase::fishbase)
+  
+  if (msg)
+    message('Loading FishBase database')
+  Taxa_Table <- suppressMessages(rfishbase::load_taxa())
+  Species2 <- strsplit(Taxa_Table$Species, " ")
+  
+  Match = 1:nrow(Taxa_Table)
   if (Class != "predictive")
-    Match = Match[which(tolower(rfishbase::fishbase$Class[Match]) == tolower(Class))]
+    Match = Match[which(tolower(Taxa_Table$Class[Match]) == tolower(Class))]
   if (Order != "predictive")
-    Match = Match[which(tolower(rfishbase::fishbase$Order[Match]) == tolower(Order))]
+    Match = Match[which(tolower(Taxa_Table$Order[Match]) == tolower(Order))]
   if (Family != "predictive")
-    Match = Match[which(tolower(rfishbase::fishbase$Family[Match]) == tolower(Family))]
+    Match = Match[which(tolower(Taxa_Table$Family[Match]) == tolower(Family))]
   if (Genus != "predictive")
-    Match = Match[which(tolower(rfishbase::fishbase$Genus[Match]) == tolower(Genus))]
-  if (Species != "predictive")
-    Match = Match[which(tolower(rfishbase::fishbase$Species[Match]) == tolower(Species))]
-
+    Match = Match[which(tolower(Taxa_Table$Genus[Match]) == tolower(Genus))]
+  if (Species != "predictive") {
+    Species2 <- paste(Genus, Species)
+    Match = Match[which(tolower(Taxa_Table$Species[Match]) == tolower(Species2))]
+  }
+  
   full_taxonomy <- c(Class, Order, Family, Genus, Species)
   spIn <- trimws(paste(gsub("predictive", "", full_taxonomy), collapse=" "))
   if (length(Match) == 0) {
@@ -642,50 +650,43 @@ gettaxa <- function(Class = "predictive", Order = "predictive",
   full_taxonomy <- c(Class, Order, Family, Genus, Species)
 
   if (!all(Species == "predictive")) {
-    if (length(unique(rfishbase::fishbase[Match, "Species"])) != 1)
+    if (length(unique(Taxa_Table$Species[Match])) != 1)
       stop("inputs are not unique")
-    if (length(unique(rfishbase::fishbase[Match, "Species"])) == 1)
-      full_taxonomy[5] = unique(rfishbase::fishbase[Match, "Species"])[1]
-  }
-  if (!all(c(Species, Genus) == "predictive")) {
-    if (length(unique(rfishbase::fishbase[Match, "Genus"])) != 1)
-      stop("inputs are not unique")
-    if (length(unique(rfishbase::fishbase[Match, "Genus"])) == 1)
-      full_taxonomy[4] = unique(rfishbase::fishbase[Match, "Genus"])[1]
-  }
-  if (!all(c(Species, Genus, Family) == "predictive")) {
-    if (length(unique(rfishbase::fishbase[Match, "Family"])) != 1)
-      stop("inputs are not unique")
-    if (length(unique(rfishbase::fishbase[Match, "Family"])) == 1)
-      full_taxonomy[3] = unique(rfishbase::fishbase[Match, "Family"])[1]
-  }
-  if (!all(c(Species, Genus, Family, Order) == "predictive")) {
-    if (length(unique(rfishbase::fishbase[Match, "Order"])) != 1)
-      stop("inputs are not unique")
-    if (length(unique(rfishbase::fishbase[Match, "Order"])) == 1)
-      full_taxonomy[2] = unique(rfishbase::fishbase[Match, "Order"])[1]
-  }
-  if (!all(c(Species, Genus, Family, Order, Class) == "predictive")) {
-    if (length(unique(rfishbase::fishbase[Match, "Class"])) != 1)
-      stop("inputs are not unique")
-    if (length(unique(rfishbase::fishbase[Match, "Class"])) == 1)
-      full_taxonomy[1] = unique(rfishbase::fishbase[Match,
-                                                    "Class"])[1]
-  }
-  match_taxonomy = full_taxonomy
-  Count = 1
-  Group = NA
-  while (is.na(Group)) {
-    Group = match(paste(tolower(match_taxonomy), collapse = "_"),
-                  tolower(ParentChild_gz[, "ChildName"]))
-    if (is.na(Group)) {
-      match_taxonomy[length(match_taxonomy) - Count +
-                       1] = "predictive"
-      Count = Count + 1
+    if (length(unique(Taxa_Table$Species[Match])) == 1) {
+    tmp = unique(Taxa_Table$Species[Match])[1]
+    full_taxonomy[5] <- strsplit(tmp, ' ')[[1]][2]
     }
   }
-
-  fullname <- gsub("_", " ", ParentChild_gz[Group,  "ChildName"])
+  if (!all(c(Species, Genus) == "predictive")) {
+    if (length(unique(Taxa_Table$Genus[Match])) != 1)
+      stop("inputs are not unique")
+    if (length(unique(Taxa_Table$Genus[Match])) == 1)
+      full_taxonomy[4] = unique(Taxa_Table$Genus[Match])[1]
+  }
+  if (!all(c(Species, Genus, Family) == "predictive")) {
+    if (length(unique(Taxa_Table$Family[Match])) != 1)
+      stop("inputs are not unique")
+    if (length(unique(Taxa_Table$Family[Match])) == 1)
+      full_taxonomy[3] = unique(Taxa_Table$Family[Match])[1]
+  }
+  if (!all(c(Species, Genus, Family, Order) == "predictive")) {
+    if (length(unique(Taxa_Table$Order[Match])) != 1)
+      stop("inputs are not unique")
+    if (length(unique(Taxa_Table$Order[Match])) == 1)
+      full_taxonomy[2] = unique(Taxa_Table$Order[Match])[1]
+  }
+  if (!all(c(Species, Genus, Family, Order, Class) == "predictive")) {
+    if (length(unique(Taxa_Table$Class[Match])) != 1)
+      stop("inputs are not unique")
+    if (length(unique(Taxa_Table$Class[Match])) == 1)
+      full_taxonomy[1] = unique(Taxa_Table$Class[Match])[1]
+  }
+  match_taxonomy = full_taxonomy
+  
+  fam_gen_sp <- tolower(paste(match_taxonomy[3:5], collapse = '_'))
+  nm_ind <- which(grepl(fam_gen_sp, tolower(ParentChild_gz$ChildName)))
+  fullname <- gsub("_", " ", ParentChild_gz$ChildName[nm_ind])
+  
   ind <- !grepl("predictive", strsplit(fullname, " ")[[1]])
   if (all(!ind)) {
     if (msg) message("Predicting from all species in FishBase")
@@ -694,9 +695,7 @@ gettaxa <- function(Class = "predictive", Order = "predictive",
   } else {
     if (msg) message("Species match: ", fullname)
   }
-
-
-  match_taxonomy = unique(as.character(Add_predictive(ParentChild_gz[Group, "ChildName"])))
+  match_taxonomy = unique(as.character(Add_predictive(ParentChild_gz$ChildName[nm_ind])))
   match_taxonomy
 }
 
