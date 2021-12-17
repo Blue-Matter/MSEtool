@@ -13,6 +13,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 ## Minor changes
 - add progress bar when knitting OM.rmd in Shiny
+- edits to make compatible with latest version of `rfishbase`
 
 # MSEtool 3.3.0 
 
