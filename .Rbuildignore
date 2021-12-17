@@ -36,3 +36,4 @@ src\*.dll
 ^pkgdown$
 ^README\.Rmd$
 ^codecov\.yml$
+^CRAN-SUBMISSION$
