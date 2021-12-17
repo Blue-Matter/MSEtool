@@ -1,6 +1,6 @@
 ## Note to CRAN Maintainers
-
-Update to fix reported errors from CRAN checks, due to changes in the latest release of `rfishbase`
+* Re-submission: removed long-running example
+* Update to fix reported errors from CRAN checks, due to changes in the latest release of `rfishbase`
 
 ## Test environments
 * local - Windows 4.1.2
