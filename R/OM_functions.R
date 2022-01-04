@@ -335,22 +335,6 @@ LH2OM <- function(OM, dist=c("unif", "norm"), filterMK=FALSE, plot=TRUE,
 #' @return predictLH: A data.frame with `nsamp` rows with `Linf`, `L50`, `K`, and `M` values.
 #' @export
 #'
-#' @examples
-#' # predict life-history parameters and return a data frame
-#'
-#' # predict all life-history parameters
-#' Predicts <- predictLH(list(), "Katsuwonus", "pelamis")
-#' head(Predicts)
-#'
-#' # predict L50 from Linf, and M and K
-#' Predicts <- predictLH(list(Linf=c(90, 95)), "Katsuwonus", "pelamis")
-#'
-#' # predict L50 and K
-#' Predicts <- predictLH(list(Linf=c(90, 95), M=c(0.8, 0.9)), "Katsuwonus", "pelamis")
-#'
-#' # predict L50 and K sampling Linf and M from normal distribution
-#' Predicts <- predictLH(list(Linf=c(90, 95), M=c(0.8, 0.9)), "Katsuwonus", "pelamis", dist='norm')
-#'
 predictLH <- function(inpars=list(), Genus="predictive", Species="predictive", nsamp=100,
                       db=MSEtool::LHdatabase, dist=c("unif", "norm"),
                       filterMK=TRUE, plot=TRUE, Class = "predictive", Order = "predictive",
