@@ -94,13 +94,6 @@ hierachical model fitted to FishBase life-history parameters
 }}
 
 \examples{
-\dontrun{
-myOM<-LH2OM(MSEtool::testOM)
-
-# drawing known parameters from normal distribution
-myOM <- LH2OM(MSEtool::testOM, dist='norm')
-}
-
 # predict life-history parameters and return a data frame
 
 # predict all life-history parameters

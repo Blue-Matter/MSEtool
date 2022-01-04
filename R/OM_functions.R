@@ -253,14 +253,6 @@ Replace <- function(OM, from,Sub=c("Stock", "Fleet", "Obs", "Imp"),  Name=NULL, 
 #' Predicting life history parameters for all fishes worldwide. Ecological Applications. 27(8): 2262--2276
 #' @source \url{https://github.com/James-Thorson-NOAA/FishLife}
 #' @export
-#' @examples
-#' \dontrun{
-#' myOM<-LH2OM(MSEtool::testOM)
-#'
-#' # drawing known parameters from normal distribution
-#' myOM <- LH2OM(MSEtool::testOM, dist='norm')
-#' }
-#'
 LH2OM <- function(OM, dist=c("unif", "norm"), filterMK=FALSE, plot=TRUE,
                   Class = "predictive", Order = "predictive",
                   Family = "predictive", msg=TRUE, db=MSEtool::LHdatabase) {
