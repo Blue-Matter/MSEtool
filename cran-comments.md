@@ -1,7 +1,9 @@
 ## Note to CRAN Maintainers
+* Re-submission: removed long-running example
+* Update to fix reported errors from CRAN checks, due to changes in the latest release of `rfishbase`
 
 ## Test environments
-* local - Windows 4.1.0
+* local - Windows 4.1.2
 * Github actions - windows-latest (release)
 * Github actions - macOS-latest (release)
 * Github actions - ubuntu-20.04 (release)
