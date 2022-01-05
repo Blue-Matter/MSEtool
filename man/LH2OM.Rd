@@ -90,26 +90,9 @@ or \code{OM@L50} are ignored.
 \item \code{LH2OM}: Predict missing life-history and populate \code{OM@cpars}
 
 \item \code{predictLH}: Predict missing life-history based on taxonomic information and
-hierachical model fitted to FishBase life-history parameters
+hierarchical model fitted to FishBase life-history parameters
 }}
 
-\examples{
-# predict life-history parameters and return a data frame
-
-# predict all life-history parameters
-Predicts <- predictLH(list(), "Katsuwonus", "pelamis")
-head(Predicts)
-
-# predict L50 from Linf, and M and K
-Predicts <- predictLH(list(Linf=c(90, 95)), "Katsuwonus", "pelamis")
-
-# predict L50 and K
-Predicts <- predictLH(list(Linf=c(90, 95), M=c(0.8, 0.9)), "Katsuwonus", "pelamis")
-
-# predict L50 and K sampling Linf and M from normal distribution
-Predicts <- predictLH(list(Linf=c(90, 95), M=c(0.8, 0.9)), "Katsuwonus", "pelamis", dist='norm')
-
-}
 \references{
 Thorson, J. T., S. B. Munch, J. M. Cope, and J. Gao. 2017.
 Predicting life history parameters for all fishes worldwide. Ecological Applications. 27(8): 2262--2276

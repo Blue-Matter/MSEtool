@@ -314,7 +314,7 @@ LH2OM <- function(OM, dist=c("unif", "norm"), filterMK=FALSE, plot=TRUE,
 }
 
 #' @describeIn LH2OM Predict missing life-history based on taxonomic information and
-#' hierachical model fitted to FishBase life-history parameters
+#' hierarchical model fitted to FishBase life-history parameters
 #' @param inpars A named list with lower and upper bounds of provided parameters: *Linf*, *L50*,
 #' *K* and *M* (must be length 2). Unknown or missing parameters should not be included. For example, an empty list assumes
 #' that all four life history parameters are unknown and need to be estimated. See Details below for more information.
