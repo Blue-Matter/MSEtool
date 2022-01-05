@@ -140,7 +140,7 @@ or <code>OM@L50</code> are ignored.</p>
     
 <ul><li><p><code>LH2OM</code>: Predict missing life-history and populate <code>OM@cpars</code></p></li>
 <li><p><code>predictLH</code>: Predict missing life-history based on taxonomic information and
-hierachical model fitted to FishBase life-history parameters</p></li>
+hierarchical model fitted to FishBase life-history parameters</p></li>
 </ul></div>
     <div id="references">
     <h2>References</h2>
@@ -152,74 +152,6 @@ Predicting life history parameters for all fishes worldwide. Ecological Applicat
     <p>A. Hordyk</p>
     </div>
 
-    <div id="ref-examples">
-    <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co"># predict life-history parameters and return a data frame</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># predict all life-history parameters</span></span>
-<span class="r-in"><span class="va">Predicts</span> <span class="op">&lt;-</span> <span class="fu">predictLH</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"Katsuwonus"</span>, <span class="st">"pelamis"</span><span class="op">)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Predicting Linf </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Predicting L50 </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Predicting K </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Predicting M </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loading FishBase database </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Species match: Actinopterygii Perciformes Scombridae Katsuwonus pelamis </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-plt img"><img src="LH2OM-1.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">Predicts</span><span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       Linf      L50         K         M</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 91.17328 62.29419 0.5261728 0.9680549</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 88.69051 51.76415 0.5635464 0.7860197</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 91.41605 55.11156 0.4997994 0.8094962</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 85.79259 33.28065 0.5552583 1.0948288</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 94.28324 56.08885 0.4921677 0.8989604</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 91.15118 51.88807 0.4749638 0.6727248</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># predict L50 from Linf, and M and K</span></span>
-<span class="r-in"><span class="va">Predicts</span> <span class="op">&lt;-</span> <span class="fu">predictLH</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Linf<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">90</span>, <span class="fl">95</span><span class="op">)</span><span class="op">)</span>, <span class="st">"Katsuwonus"</span>, <span class="st">"pelamis"</span><span class="op">)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Predicting L50 </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Predicting K </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Predicting M </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loading FishBase database </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Species match: Actinopterygii Perciformes Scombridae Katsuwonus pelamis </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-plt img"><img src="LH2OM-2.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># predict L50 and K</span></span>
-<span class="r-in"><span class="va">Predicts</span> <span class="op">&lt;-</span> <span class="fu">predictLH</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Linf<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">90</span>, <span class="fl">95</span><span class="op">)</span>, M<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.8</span>, <span class="fl">0.9</span><span class="op">)</span><span class="op">)</span>, <span class="st">"Katsuwonus"</span>, <span class="st">"pelamis"</span><span class="op">)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Predicting L50 </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Predicting K </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loading FishBase database </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Species match: Actinopterygii Perciformes Scombridae Katsuwonus pelamis </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-plt img"><img src="LH2OM-3.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># predict L50 and K sampling Linf and M from normal distribution</span></span>
-<span class="r-in"><span class="va">Predicts</span> <span class="op">&lt;-</span> <span class="fu">predictLH</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Linf<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">90</span>, <span class="fl">95</span><span class="op">)</span>, M<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.8</span>, <span class="fl">0.9</span><span class="op">)</span><span class="op">)</span>, <span class="st">"Katsuwonus"</span>, <span class="st">"pelamis"</span>, dist<span class="op">=</span><span class="st">'norm'</span><span class="op">)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Predicting L50 </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Predicting K </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loading FishBase database </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Species match: Actinopterygii Perciformes Scombridae Katsuwonus pelamis </span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-plt img"><img src="LH2OM-4.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-</code></pre></div>
-    </div>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top"><h2 data-toc-skip>Contents</h2>
