@@ -2,18 +2,20 @@
 % Please edit documentation in R/popdyn.R
 \name{optMSY_eq}
 \alias{optMSY_eq}
-\title{Internal wrapper function to calculate MSY reference points}
+\title{Internal wrapper function to calculate MSY reference points (now using MSYCalcs)}
 \usage{
 optMSY_eq(
   x,
   M_ageArray,
   Wt_age,
   Mat_age,
+  Fec_age,
   V,
   maxage,
   R0,
   SRrel,
   hs,
+  SSBpR,
   yr.ind = 1,
   plusgroup = 0
 )
@@ -27,6 +29,8 @@ optMSY_eq(
 
 \item{Mat_age}{Array of maturity-at-age}
 
+\item{Fec_age}{Array of relative fecundity-at-age (spawning biomass weight)}
+
 \item{V}{Array of selectivity-at-age}
 
 \item{maxage}{Vector of maximum age}
@@ -37,6 +41,8 @@ optMSY_eq(
 
 \item{hs}{Vector of steepness}
 
+\item{SSBpR}{Vector of unfished spawners per recruit}
+
 \item{yr.ind}{Year index used in calculations}
 
 \item{plusgroup}{Integer. Default = 0 = no plus-group. Use 1 to include a plus-group}
@@ -45,6 +51,6 @@ optMSY_eq(
 Results from \code{MSYCalcs}
 }
 \description{
-Internal wrapper function to calculate MSY reference points
+Internal wrapper function to calculate MSY reference points (now using MSYCalcs)
 }
 \keyword{internal}

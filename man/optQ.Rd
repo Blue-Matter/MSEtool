@@ -16,6 +16,7 @@ optQ(
   Asize_c,
   MatAge,
   WtAge,
+  FecAge,
   Vuln,
   Retc,
   Prec,
@@ -32,6 +33,7 @@ optQ(
   MPA,
   plusgroup,
   VB0c,
+  SBMSYc,
   control
 )
 }
@@ -58,6 +60,8 @@ optQ(
 
 \item{WtAge}{Weight-at-age}
 
+\item{FecAge}{Mature weight-at-age (relative fecundity)}
+
 \item{Vuln}{Vulnerability-at-age}
 
 \item{Retc}{Retention-at-age}
@@ -70,7 +74,7 @@ optQ(
 
 \item{Effind}{Historical fishing effort}
 
-\item{Spat_targc}{Spatial targetting}
+\item{Spat_targc}{Spatial targeting}
 
 \item{hc}{Steepness}
 
@@ -89,6 +93,8 @@ optQ(
 \item{plusgroup}{Integer. Default = 0 = no plus-group. Use 1 to include a plus-group}
 
 \item{VB0c}{Unfished vulnerable biomass}
+
+\item{SBMSYc}{Spawning biomass at MSY for simulation x}
 
 \item{control}{List. Control parameters including \code{optVB=TRUE} to optimize
 for vulnerable biomass instead of SSB?}

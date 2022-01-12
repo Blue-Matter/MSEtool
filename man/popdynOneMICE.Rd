@@ -10,6 +10,8 @@ popdynOneMICE(
   nareas,
   maxage,
   Ncur,
+  Bcur,
+  SSBcur,
   Vcur,
   FMretx,
   FMx,
@@ -22,6 +24,8 @@ popdynOneMICE(
   SRrelx,
   M_agecur,
   Mat_agecur,
+  Mat_agenext,
+  Fec_agenext,
   Asizex,
   Kx,
   Linfx,
@@ -36,7 +40,10 @@ popdynOneMICE(
   SexPars,
   x,
   plusgroup,
-  SSB0x
+  SSB0x,
+  B0x,
+  Len_agenext,
+  Wt_agenext
 )
 }
 \arguments{
@@ -48,6 +55,10 @@ popdynOneMICE(
 
 \item{Ncur}{Array \verb{[stock, age, area]} of stock numbers}
 
+\item{Bcur}{Array \verb{[stock, age, area]} of stock biomass}
+
+\item{SSBcur}{Array \verb{[stock, age, area]} of spawning biomass}
+
 \item{Vcur}{Array \verb{[fleet, age, area]} of the vulnerability curve}
 
 \item{FMretx}{Array \verb{[stock, fleet, age, area]} of the retention curve}
@@ -55,7 +66,7 @@ popdynOneMICE(
 \item{FMx}{Array \verb{[stock, fleet, age, area]} fishing mortality rate}
 
 \item{PerrYrp}{Vector \verb{[stock]} process error - the lognormal factor for
-recruitment strength}
+recruitment strength (for next year)}
 
 \item{hsx}{Vector \verb{[stock]} steepness of the stock recruitment curve}
 
@@ -63,9 +74,9 @@ recruitment strength}
 
 \item{bRx}{Vector \verb{[stock]} stock recruitment parameter beta (for Ricker curve)}
 
-\item{movy}{Array \verb{[stock,age,area,area]} of movement transitions}
+\item{movy}{Array \verb{[stock,age,area,area]} of movement transitions (for next year)}
 
-\item{Spat_targ}{Matrix \verb{[stock, fleet]} of spatial targetting parameter
+\item{Spat_targ}{Matrix \verb{[stock, fleet]} of spatial targeting parameter
 (0 evenly spatial distributed, 1 proportional to vulnerable biomass)}
 
 \item{SRrelx}{Integer vector \verb{[stock]} the form of the stock recruitment
@@ -73,13 +84,21 @@ relationship (1 = Beverton-Holt, 2= Ricker)}
 
 \item{M_agecur}{Matrix \verb{[stock, age]} of Natural mortality rate at age}
 
-\item{Mat_agecur}{Matrix \verb{[stock, age]} of maturity (spawning fraction) age age}
+\item{Mat_agecur}{Matrix \verb{[stock, age]} of maturity (spawning fraction) at age (current year)}
+
+\item{Mat_agenext}{Matrix \verb{[stock, age]} of maturity (spawning fraction) at age (next year)}
+
+\item{Fec_agenext}{Matrix \verb{[stock, age]} of spawning weight (fecundity) at age (next year)}
 
 \item{Asizex}{Matrix \verb{[stock, area]} of relative area sizes}
 
-\item{Kx}{Vector \verb{[stock]} of von B growth parameter K}
+\item{Kx}{Vector \verb{[stock]} of von B growth parameter K (next year)}
 
-\item{Mx}{Vector \verb{[stock]} mature natural mortality rate}
+\item{Linfx}{Vector \verb{[stock]} of von B asymptotic length parameter Linf (next year)}
+
+\item{t0x}{Vector \verb{[stock]} of von B theoretical age at zero length (t0) (next year)}
+
+\item{Mx}{Vector \verb{[stock]} mature natural mortality rate (this year)}
 
 \item{R0x}{Vector \verb{[stock]} unfished recruitment}
 
@@ -99,13 +118,15 @@ relationship (1 = Beverton-Holt, 2= Ricker)}
 
 \item{plusgroup}{Numeric vector. Use plus-group (1) or not (0)}
 
-\item{SSB0x}{Unfished SSB0, Vector nstock length.}
+\item{SSB0x}{Unfished SSB0, Vector \verb{[stock]} length.}
+
+\item{B0x}{Unfished B0, Vector \verb{[stock]} length.}
+
+\item{Len_agenext}{Matrix \verb{[stock, age]} of next year's length-at-age}
+
+\item{Wt_agenext}{Matrix \verb{[stock, age]} of next year's weight-at-age}
 
 \item{nyears}{Integer, number of historical years (unfished til today)}
-
-\item{Linf}{Vector \verb{[stock]} of von B asymptotic length parameter Linf}
-
-\item{t0}{Vector \verb{[stock]} of von B theoretical age at zero length (t0)}
 }
 \description{
 Completes a single iteration of recruitment, mortality, fishing and

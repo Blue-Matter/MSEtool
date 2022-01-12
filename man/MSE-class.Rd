@@ -56,7 +56,8 @@ dimensions: nsim, nMPs, proyears. Non-negative real numbers}
 \item{\code{FM}}{Simulated fishing mortality rate over the projection. An array with
 dimensions: nsim, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{SPR}}{Currently not used.}
+\item{\code{SPR}}{Named list with equilibrium and dynamic SPR. Each element is an
+array with dimensions: nsim, nMPs, proyears. Non-negative real numbers.}
 
 \item{\code{Catch}}{Simulated catches (landings) over the projection. An array with
 dimensions: nsim, nMPs, proyears. Non-negative real numbers}

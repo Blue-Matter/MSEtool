@@ -7,7 +7,7 @@
 multiDataS(MSElist, StockPars, np, mm, nf, realVB)
 }
 \arguments{
-\item{MSElist}{A hierarcical list of data objects stock then fleet then MP}
+\item{MSElist}{A hierarchical list of data objects stock then fleet then MP}
 
 \item{StockPars}{A list of stock parameters}
 
@@ -20,7 +20,8 @@ multiDataS(MSElist, StockPars, np, mm, nf, realVB)
 \item{realVB}{A matrix of real vulnerable biomass \verb{[nsim,np, year]}}
 }
 \description{
-Catches, CAA, CAL are summed. LFC and LFS are weighted averages. ML, Lc and Lbar are recalculated from summed CAL. All other observations are for fleet 1 (indicative)
+Catches, CAA, CAL are summed. Indices, LFC and LFS are weighted averages. ML, Lc and Lbar are recalculated from summed CAL.
+All other observations are for fleet 1 and weighted average across stocks
 }
 \author{
 T. Carruthers

@@ -22,7 +22,7 @@ Report(
 \item{Data}{Either an object of class \code{Data} or the file path to a valid
 file to be imported with \code{XL2Data}}
 
-\item{md}{Full file path to a valid text file documentating the Data}
+\item{md}{Full file path to a valid text file documenting the Data}
 
 \item{name}{Optional. Name of the output file}
 

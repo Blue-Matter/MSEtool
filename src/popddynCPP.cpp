@@ -18,21 +18,22 @@ using namespace Rcpp;
 //[[Rcpp::export]]
 arma::mat popdynOneTScpp(double nareas, double maxage,
                          NumericMatrix Ncurr,  Rcpp::NumericMatrix Zcurr,
-                         int plusgroup=0) {
+                         int plusgroup=1) {
 
   int n_age = maxage + 1;
   arma::mat Nnext(n_age, nareas);
 
+
   for (int A=0; A < nareas; A++) {
+    Nnext(0, A) = 0; // Recruitment calculated later
     // Mortality
     for (int age=1; age<n_age; age++) {
       Nnext(age, A) = Ncurr(age-1, A) * exp(-Zcurr(age-1, A)); // Total mortality
     }
 
     if (plusgroup > 0) {
-      Nnext(maxage, A) += Nnext(maxage, A) * exp(-Zcurr(maxage, A))/(1-exp(-Zcurr(maxage, A))); // Total mortality
+      Nnext(maxage, A) += Ncurr(maxage, A) * exp(-Zcurr(maxage, A)); // Total mortality
     }
-
   }
 
   return Nnext;
@@ -95,6 +96,7 @@ arma::mat movestockCPP(double nareas, double maxage, arma::cube mov, NumericMatr
 //' @param Asize_c Numeric vector (length nareas) with size of each area
 //' @param MatAge Numeric vector with proportion mature by age
 //' @param WtAge Numeric matrix (maxage+1, pyears) with weight by age and year
+//' @param FecAge Numeric matrix (maxage+1, pyears) with mature female weight by age and year
 //' @param Vuln Numeric matrix (maxage+1, pyears) with vulnerability by age and year
 //' @param Retc Numeric matrix (maxage+1, pyears) with retention by age and year
 //' @param Prec Numeric vector (pyears) with recruitment error
@@ -120,6 +122,7 @@ arma::mat movestockCPP(double nareas, double maxage, arma::cube mov, NumericMatr
 //[[Rcpp::export]]
 List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
                arma::mat M_age, arma::vec Asize_c, arma::mat MatAge, arma::mat WtAge,
+               arma::mat FecAge,
                arma::mat Vuln, arma::mat Retc, arma::vec Prec,
                List movc, double SRrelc, arma::vec Effind,
                double Spat_targc, double hc, NumericVector R0c, NumericVector SSBpRc,
@@ -156,7 +159,7 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
   for (int A=0; A<nareas; A++) {
     Barray.subcube(0, 0, A, maxage, 0, A) = Ncurr.col(A) % WtAge.col(0);
     SSNarray.subcube(0, 0, A, maxage, 0, A) = Ncurr.col(A) % MatAge.col(0);
-    SBarray.subcube(0, 0, A, maxage, 0, A) = Ncurr.col(A) % WtAge.col(0) % MatAge.col(0);
+    SBarray.subcube(0, 0, A, maxage, 0, A) = Ncurr.col(A) % FecAge.col(0);
     VBarray.subcube(0, 0, A, maxage, 0, A) = Ncurr.col(A) % WtAge.col(0) % Vuln.col(0);
     Marray.subcube(0, 0, A, maxage, 0, A) = M_age.col(0);
     tempVec(A) = accu(VBarray.slice(A));
@@ -200,12 +203,13 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
     if ((yr >0) & (control==3)) SB = SSB0a;
     arma::mat Ncurr2 = Narray.subcube(0, yr, 0, maxage, yr, nareas-1);
     arma::mat Zcurr = Zarray.subcube(0, yr, 0, maxage, yr, nareas-1);
-
+   
     // Mortality & aging
     arma::mat Nnext = popdynOneTScpp(nareas, maxage,
                              wrap(Ncurr2), wrap(Zcurr),
                              plusgroup);
     // recruitment
+    // Rcpp::Rcout << "here 1"<< std::endl;
     double PerrYr = Prec(yr+maxage+1); // rec dev
     double SBtot = 0; // Total spawning biomass this year
     arma::vec rec(1); // Total recruitment this year
@@ -213,11 +217,12 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
     // Spawning biomass before recruitment (age-0 doesn't contribute to SB)
     for (int A=0; A<nareas; A++) {
       // Spawning biomass before recruitment (age-0 doesn't contribute to SB)
-      SBarray.subcube(0, yr+1, A, maxage, yr+1, A) = Nnext.col(A) % WtAge.col(yr+1) % MatAge.col(yr+1);
+      // SBarray.subcube(0, yr+1, A, maxage, yr+1, A) = Nnext.col(A) % WtAge.col(yr+1) % MatAge.col(yr+1);
+      SBarray.subcube(0, yr+1, A, maxage, yr+1, A) = Nnext.col(A) % FecAge.col(yr+1);
       SB(A) = accu(SBarray.subcube(1, yr+1, A, maxage, yr+1, A)); // total spawning biomass
       SBtot += SB(A);
     }
-
+    // Rcpp::Rcout << "here 2"<< std::endl;
     if (SRrelc == 1) {
       // BH SRR
       rec(0) =  PerrYr * (4*R0 * hc * SBtot)/(SSBpRc(0) * R0 * (1-hc) + (5*hc-1) * SBtot); // global recruitment
@@ -233,7 +238,7 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
     for (int A=0; A<nareas; A++) {
       Nnext(0, A) = rec(0) * recdist(A);
     }
-
+  
     // for (int A=0; A<nareas; A++) {
     //   // Spawning biomass before recruitment (age-0 doesn't contribute to SB)
     //   SBarray.subcube(0, yr+1, A, maxage, yr+1, A) = Nnext.col(A) % WtAge.col(yr+1) % MatAge.col(yr+1);
@@ -254,10 +259,12 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
     //   rec = rec+ Nnext(0, A);
     // }
 
+   
     // Move stock - ages 1+
     arma::cube movcy = movc(yr+1);
     arma::mat NextYrN = movestockCPP(nareas, maxage,
                                      movcy, wrap(Nnext));
+
 
     // Calculate biomass after recruitment and movement
     for (int A=0; A<nareas; A++) {
@@ -270,7 +277,7 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
     }
 
     Narray.subcube(0, yr+1, 0, maxage, yr+1, nareas-1) = NextYrN;
-
+   
     // fishdist = (pow(tempVec, Spat_targc))/mean((pow(tempVec, Spat_targc)));
     fishdist = (pow(tempVec, Spat_targc))/sum((pow(tempVec, Spat_targc)));
 
@@ -284,7 +291,7 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
       fracE2(A) = d1(A) * (fracE + (1-fracE))/fracE;
     }
     fishdist = fracE2;
-
+  
     // calculate F at age for next year
     if (control == 1) {
       for (int A=0; A<nareas; A++) {
@@ -333,7 +340,6 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
       Zarray.subcube(0,yr+1, 0, maxage, yr+1, nareas-1) = Marray.subcube(0,yr+1, 0, maxage, yr+1, nareas-1) + FMarray.subcube(0,yr+1, 0, maxage, yr+1, nareas-1);
 
     }
-
   }
 
   List out(8);

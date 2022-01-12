@@ -21,6 +21,7 @@ Blow_opt(
   hc,
   Mac,
   Wac,
+  Fecac,
   R0c,
   Vc,
   nyears,
@@ -39,7 +40,7 @@ Blow_opt(
 \arguments{
 \item{lnq}{number: estimate of log catchability}
 
-\item{N}{marix maxage by nareas with initial numbers at age}
+\item{N}{matrix maxage by nareas with initial numbers at age}
 
 \item{Asize_c}{vector length nareas with size of each area}
 
@@ -59,7 +60,7 @@ Blow_opt(
 
 \item{Fc}{vector nyears long of fishing mortality rate}
 
-\item{Perrc}{vector nyears+maxage-1 long of recruitment devitions}
+\item{Perrc}{vector nyears+maxage-1 long of recruitment deviations}
 
 \item{Mc}{matrix maxage by nyears+proyears of natural mortality rate}
 
@@ -68,6 +69,8 @@ Blow_opt(
 \item{Mac}{matrix nages by nyears+proyears of maturity at age}
 
 \item{Wac}{vector nages long  of weight at age}
+
+\item{Fecac}{vector nages long  of mature weight at age}
 
 \item{R0c}{number: unfished recruitment}
 
@@ -79,9 +82,9 @@ Blow_opt(
 
 \item{movc}{matrix of movement 2 x 2}
 
-\item{Spat_targc}{number: spatial targetting parameters}
+\item{Spat_targc}{number: spatial targeting parameters}
 
-\item{SRrelc}{integer representing recruitmetn dynamics type 1: Bev Holt 2: Ricker}
+\item{SRrelc}{integer representing recruitment dynamics type 1: Bev Holt 2: Ricker}
 
 \item{aRc}{number: recruitment parameter}
 

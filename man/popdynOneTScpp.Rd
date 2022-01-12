@@ -4,7 +4,7 @@
 \alias{popdynOneTScpp}
 \title{Aging and Mortality for one time-step}
 \usage{
-popdynOneTScpp(nareas, maxage, Ncurr, Zcurr, plusgroup = 0L)
+popdynOneTScpp(nareas, maxage, Ncurr, Zcurr, plusgroup = 1L)
 }
 \arguments{
 \item{nareas}{The number of spatial areas}

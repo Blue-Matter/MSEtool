@@ -11,7 +11,7 @@ man-roxygen
 ^\_pkgdown\.yml$
 docs
 
-# Ignore tests 
+# Ignore tests
 tests\*.*
 
 # Ignore DLL
@@ -26,3 +26,14 @@ src\*.dll
 \.ini$
 ^index\.md$
 ^LICENSE\.md$
+^\.github$
+
+^cran-comments\.md$
+^revdep$
+^CRAN-RELEASE$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^README\.Rmd$
+^codecov\.yml$
+^CRAN-SUBMISSION$

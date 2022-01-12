@@ -7,9 +7,9 @@
 \alias{Needed}
 \title{Identify management procedures (MPs) based on data availability}
 \usage{
-Can(Data, timelimit = 1, MPs = NA, dev = FALSE)
+Can(Data, timelimit = 1, MPs = NA, dev = FALSE, silent = FALSE)
 
-Cant(Data, timelimit = 1)
+Cant(Data, timelimit = 1, silent = FALSE)
 
 DLMdiag(
   Data,
@@ -17,10 +17,11 @@ DLMdiag(
   reps = 5,
   timelimit = 1,
   funcs1 = NA,
-  dev = FALSE
+  dev = FALSE,
+  silent = FALSE
 )
 
-Needed(Data, timelimit = 1)
+Needed(Data, timelimit = 1, silent = FALSE)
 }
 \arguments{
 \item{Data}{A data-limited methods data object (class Data)}
@@ -31,6 +32,8 @@ Needed(Data, timelimit = 1)
 \item{MPs}{Optional list of MP names}
 
 \item{dev}{Logical. Run in development mode?}
+
+\item{silent}{Logical Display messages?}
 
 \item{command}{What to calculate? Character. Options = c("available", "not available", "needed")}
 

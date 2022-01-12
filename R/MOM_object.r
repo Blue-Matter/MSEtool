@@ -27,7 +27,7 @@
 #' @slot maxF Maximum instantaneous fishing mortality rate that may be simulated for any given age class
 #' @slot reps Number of samples of the management recommendation for each method. Note that when this is set to 1, the mean value of
 #' the data inputs is used.
-#' @slot cpars A hierarcical list nstock then nfleet long of custom parameters. Time series are a matrix nsim rows by nyears columns. Single parameters are a vector nsim long
+#' @slot cpars A hierarchical list nstock then nfleet long of custom parameters. Time series are a matrix nsim rows by nyears columns. Single parameters are a vector nsim long
 #' @slot seed A random seed to ensure users can reproduce results exactly
 #' @slot Source A reference to a website or article from which parameters were taken to define the operating model
 #' @slot Stocks List of stock objects
@@ -173,19 +173,19 @@ setMethod("initialize", "MOM", function(.Object, Stocks=NULL, Fleets=NULL,
 # setMethod("tinyErr", signature(x = "MOM"),
 #           function(x, obs = TRUE, imp = TRUE, proc = TRUE, grad = TRUE, silent = FALSE) {
 #             MOM <- x
-# 
+#
 #             MOMout <- MOM
-# 
+#
 #             np<-length(MOM@Stocks)
 #             nf<-length(MOM@Fleets[[1]])
-# 
+#
 #             if (obs) {
 #               if (!silent)
 #                 message("Removing all Observation Error")
 #               for(p in 1:np){for(f in 1:nf){
 #                 MOMout@Obs[[p]][[f]]<-DLMtool::Perfect_Info
 #               }}
-# 
+#
 #             }
 #             if (imp) {
 #               if (!silent)
@@ -197,26 +197,26 @@ setMethod("initialize", "MOM", function(.Object, Stocks=NULL, Fleets=NULL,
 #             if (proc) {
 #               if (!silent)
 #                 message("Removing all Process Error")
-# 
+#
 #               vars <- c("cv", "sd", "Perr")
-# 
+#
 #               # Stock P error
 #               nms <- c(slotNames("Stock"))
 #               ind <- unique(grep(paste(vars, collapse = "|"), nms,
 #                                  value = FALSE))
 #               for(p in 1:np){
-# 
+#
 #                 for (X in seq_along(ind)) {
 #                   n <- length(slot(MOMout@Stocks[[p]], nms[ind[X]]))
 #                   if (n == 0)
 #                     n <- 2
 #                   slot(MOMout@Stocks[[p]], nms[ind[X]]) <- rep(0, n)
 #                 }
-# 
+#
 #               }
-# 
+#
 #               # Fleet P error
-# 
+#
 #               nms <- c(slotNames("Fleet"))
 #               ind <- unique(grep(paste(vars, collapse = "|"), nms,
 #                                  value = FALSE))
@@ -228,32 +228,32 @@ setMethod("initialize", "MOM", function(.Object, Stocks=NULL, Fleets=NULL,
 #                       n <- 2
 #                     slot(MOMout@Fleets[[p]][[f]], nms[ind[X]]) <- rep(0, n)
 #                   }
-# 
+#
 #                 }
 #               }
-# 
+#
 #             }
-# 
+#
 #             if (grad) {
 #               if (!silent)
 #                 message("Removing all Gradients")
 #               vars <- c("grad", "inc")
-# 
+#
 #               # Stock grad
 #               nms <- c(slotNames("Stock"))
 #               ind <- unique(grep(paste(vars, collapse = "|"), nms,
 #                                  value = FALSE))
 #               for(p in 1:np){
-# 
+#
 #                 for (X in seq_along(ind)) {
 #                   n <- length(slot(MOMout@Stocks[[p]], nms[ind[X]]))
 #                   if (n == 0)
 #                     n <- 2
 #                   slot(MOMout@Stocks[[p]], nms[ind[X]]) <- rep(0, n)
 #                 }
-# 
+#
 #               }
-# 
+#
 #               nms <- c(slotNames("Fleet"))
 #               ind <- unique(grep(paste(vars, collapse = "|"), nms,
 #                                  value = FALSE))
@@ -265,12 +265,12 @@ setMethod("initialize", "MOM", function(.Object, Stocks=NULL, Fleets=NULL,
 #                       n <- 2
 #                     slot(MOMout@Fleets[[p]][[f]], nms[ind[X]]) <- rep(0, n)
 #                   }
-# 
+#
 #                 }
 #               }
-# 
-# 
+#
+#
 #             }
 #             MOMout
 #             })
-# 
+#

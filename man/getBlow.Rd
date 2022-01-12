@@ -21,6 +21,7 @@ getBlow(
   hs,
   Mat_age,
   Wt_age,
+  Fec_age,
   R0a,
   V,
   nyears,
@@ -59,7 +60,7 @@ getBlow(
 
 \item{Find}{matrix of fishing mortality rate nsim x nyears}
 
-\item{Perr}{matrix of recruitment devitions nsim x nyears + maxage -1}
+\item{Perr}{matrix of recruitment deviations nsim x nyears + maxage -1}
 
 \item{M_ageArray}{array of natural mortality rate nsim x maxage x nyears + proyears}
 
@@ -79,9 +80,9 @@ getBlow(
 
 \item{mov}{array of movement nsim x 2 x 2}
 
-\item{Spat_targ}{vector of spatial targetting parameters}
+\item{Spat_targ}{vector of spatial targeting parameters}
 
-\item{SRrel}{integer representing recruitmetn dynamics type 1: Bev Holt 2: Ricker}
+\item{SRrel}{integer representing recruitment dynamics type 1: Bev Holt 2: Ricker}
 
 \item{aR}{vector of recruitment parameters}
 

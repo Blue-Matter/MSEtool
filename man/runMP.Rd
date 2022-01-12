@@ -4,14 +4,14 @@
 \alias{runMP}
 \title{Run a Management Procedure}
 \usage{
-runMP(Data, MPs = NA, reps = 100, perc = 0.5, chkMPs = TRUE, silent = FALSE)
+runMP(Data, MPs = NA, reps = 100, perc = 0.5, chkMPs = FALSE, silent = FALSE)
 }
 \arguments{
 \item{Data}{A MSEtool Data object}
 
 \item{MPs}{The name of the MP to run (or a vector or names)}
 
-\item{reps}{Number of repititions}
+\item{reps}{Number of repetitions}
 
 \item{perc}{Percentile to summarize reps (default is median)}
 

@@ -47,8 +47,8 @@ simulation, age, year and area
 \item Landings: Landings (biomass); array dimensions \code{c(nsim, nyears, nareas)}
 \item Discards: Discards (biomass); array dimensions \code{c(nsim, nyears, nareas)}
 \item Find: Historical fishing mortality (scale-free); matrix dimensions \code{c(nsim, nyears)}
-\item RecDev: Recruitment deviations (historical and projection);
-matrix dimensions \code{c(nsim, nyears+proyears+maxage)}
+\item RecDev: Recruitment deviations (historical and projection); matrix dimensions \code{c(nsim, nyears+proyears+maxage)}
+\item SPR: Named list with Equilibrium and Dynamic SPR (both matrices iwth dimensions \code{c(nsim, nyears)})
 \item Unfished_Equilibrium: A named list with unfished equilibrium numbers and biomass-at-age
 }}
 
@@ -65,7 +65,13 @@ matrix dimensions \code{c(nsim, nyears+proyears+maxage)}
 \item FMSY: Fishing mortality corresponding with asymptotic MSY
 \item SSBMSY: Spawning stock biomass corresponding with asymptotic MSY
 \item BMSY: total biomass corresponding with asymptotic MSY
-\item VBMSY: Vulneralbe biomass corresponding with asymptotic MSY
+\item VBMSY: Vulnerable biomass corresponding with asymptotic MSY
+\item F01: Fishing mortality where the change in yield per recruit is 10\% of that at F = 0
+\item Fmax: Fishing mortality that maximizes yield per recruit
+\item F_SPR: Fishing mortality corresponding to spawning potential ratio of 20 - 60\% in increments of 5\%; array dimensions \code{c(nsim, 9, nyears+proyears)}
+\item Fcrash: Fishing mortality corresponding to the recruits-per-spawner at the origin of the stock-recruit relationship
+\item Fmed: Fishing mortality corresponding to the median recruits-per-spawner in the historical period
+\item SPRcrash: SPR corresponding to the recruits-per-spawner at the origin of the stock-recruit relationship
 }
 \item Dynamic_Unfished: A named list with dynamic unfished reference points for each simulation and year:
 \itemize{

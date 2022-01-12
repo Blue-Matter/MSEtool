@@ -8,7 +8,14 @@ getDataList<-function(MSElist,mm){
   DataList<-new('list')
   for(ss in 1:length(MSElist)){
     DataList[[ss]]<-new('list')
-    for(ff in 1:length(MSElist[[ss]]))DataList[[ss]][[ff]]<-MSElist[[ss]][[ff]][[mm]]
+    for (ff in 1:length(MSElist[[ss]])) {
+      DataList[[ss]][[ff]] <-MSElist[[ss]][[ff]][[mm]]
+      
+      # drop stockpars etc from Misc slot
+      DataList[[ss]][[ff]]@Misc$StockPars <- NULL
+      DataList[[ss]][[ff]]@Misc$FleetPars <- NULL
+      DataList[[ss]][[ff]]@Misc$ReferencePoints <- NULL
+    }
   }
   DataList
 }
@@ -35,11 +42,12 @@ applyMMP <- function(DataList, MP = NA, reps = 1, nsims=NA, silent=FALSE) {
 
   DataList_F <-DataList  # formatted data list
 
-  for(ss in 1:length(DataList)){
-    for(ff in 1:length(DataList[[ss]])){
-      DataList_F[[ss]][[ff]] <- updateMSE(DataList[[ss]][[ff]])
-    }
-  }
+  # don't think this is needed anymore - AH May 2021
+  # for(ss in 1:length(DataList)){
+  #   for(ff in 1:length(DataList[[ss]])){
+  #     DataList_F[[ss]][[ff]] <- updateMSE(DataList[[ss]][[ff]])
+  #   }
+  # }
 
   temp <- lapply(1:nsims, MP, DataList = DataList, reps = reps)
   recList<-
@@ -59,24 +67,24 @@ applyMMP <- function(DataList, MP = NA, reps = 1, nsims=NA, silent=FALSE) {
 #' @param nareas The number of areas.
 #' @author T. Carruthers
 CombineMMP<-function(temp,nareas){
-  
+
   slots <- slotNames(temp[[1]][[1]][[1]]) # sim stock fleet
   nsim<-length(temp)
   np<-length(temp[[1]])
   nf<-length(temp[[1]][[1]])
-  
+
   recList<-new('list')
-  
+
   for(pp in 1:np){
-    
+
     recList[[pp]]<-new('list')
-    
+
     for(ff in 1:nf){
-      
+
       recList[[pp]][[ff]]<-new('list')
-      
+
       for (X in slots) { # sequence along recommendation slots
-        
+
         if (X == "Misc") { # convert to a list nsim by nareas
           rec <- lapply(temp,getfirstlev,name=X,pp=pp,ff=ff)
         } else {
@@ -87,19 +95,19 @@ CombineMMP<-function(temp,nareas){
         }
         recList[[pp]][[ff]][[X]] <- rec
         recList$Misc <- NULL
-        
+
       } # end of Rec slots
-      
+
     } # end of fleets
-    
+
   } # end of stocks
-  
+
   recList
-  
+
 }
 
 #' Extract the first dimension of a hierarchical list of recommendation objects
-#' 
+#'
 #' @param x Simulation number
 #' @param name Character. The slot name to extract.
 #' @param pp Integer. The stock number (second level list)

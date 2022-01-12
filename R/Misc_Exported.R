@@ -43,7 +43,7 @@ avail <- function(classy, package=NULL, msg=TRUE) {
   if (temp == "function") classy <- deparse(substitute(classy))
 
   if (classy %in% c('Output', 'Input', "Mixed", "Reference")) {
-    MPs <- avail('MP')
+    MPs <- avail('MP', msg=msg)
     gettype <- MPtype(MPs)
     temp <- gettype[gettype[,2] %in% classy,1]
     if (length(temp) < 1) stop("No MPs of type '", classy, "' found", call. = FALSE)
@@ -51,7 +51,7 @@ avail <- function(classy, package=NULL, msg=TRUE) {
 
   } else {
 
-    packages <- c('MSEtool', 'SAMtool', 'DLMtool', 'DLMextra')
+    packages <- c('MSEtool', 'SAMtool', 'DLMtool', 'MSEextra')
     if (is.null(package)) {
       package <- packages
       pkgs <- search()
@@ -74,17 +74,26 @@ avail <- function(classy, package=NULL, msg=TRUE) {
       DLMtool_funs <- get_funcs('DLMtool', classy, msg)
       temp <- c(temp, DLMtool_funs)
     }
-    if ('DLMextra' %in% package) {
-      DLMextra_funs <- get_funcs('DLMextra', classy)
-      temp <- c(temp, DLMextra_funs)
+    if ('MSEextra' %in% package) {
+      MSEextra_funs <- get_funcs('MSEextra', classy, msg)
+      temp <- c(temp, MSEextra_funs)
     }
+    
+    packagex <- package[!package %in% packages]
+    if (length(packagex)>0) {
+      other <- sapply(1:length(packagex), function(i)
+        get_funcs(packagex[i], classy, msg))  
+      other <- unlist(other)
+      temp <- c(temp, other)
+    }
+    
     if (length(temp) < 1) stop("No objects of class '", classy, "' found", call. = FALSE)
     return(unique(temp))
   }
 }
 
 
-#' Directory of the installed package on your computer
+#' Directory of the data in the installed package on your computer
 #'
 #' A way of locating where the package was installed so you can find example
 #' data files and code etc.
@@ -101,9 +110,9 @@ avail <- function(classy, package=NULL, msg=TRUE) {
 #' @export DataDir
 DataDir <- function(stock = NA) {
   if (is.na(stock)) {
-    system.file(package = "MSEtool")
+    file.path(system.file(package = "MSEtool"), "Data")
   } else {
-    system.file(paste0(stock, ".csv"), package = "MSEtool", mustWork = TRUE)
+    system.file(paste0('Data/', stock, ".csv"), package = "MSEtool", mustWork = TRUE)
   }
 }
 
@@ -122,33 +131,23 @@ DLMDataDir <- function(stock = NA) {
 }
 
 
-#' Load more data from DLMextra package
+#' Load more data from MSEextra package
 #'
-#' Downloads the DLMextra package from GitHub
+#' Downloads the MSEextra package from GitHub
 #' @param silent Logical. Should messages to printed?
 #' @param force Logical. For install from github if package is up-to-date?
 #' @export
 #'
-DLMextra <- function(silent=FALSE, force=FALSE) {
+MSEextra <- function(silent=FALSE, force=FALSE) {
   if (!requireNamespace("devtools", quietly = TRUE)) {
     stop("devtools is needed for this function to work. Please install it.",
          call. = FALSE)
   }
 
-  if (!silent) message("\nDownloading 'DLMextra' from GitHub")
-  devtools::install_github("DLMtool/DLMextra", quiet=FALSE, force=force)
-  if (!silent) message("Use 'library(DLMextra)' to load additional data into workspace")
+  if (!silent) message("\nDownloading 'MSEextra' from GitHub")
+  devtools::install_github("blue-matter/MSEextra", quiet=FALSE, force=force)
+  if (!silent) message("Use 'library(MSEextra)' to load additional data into workspace")
 
-  ver <- packageVersion("DLMextra")
-  if (ver <= '0.1.3') stop("This version of DLMextra is not compatible with DLMtool V",
-                           packageVersion('DLMtool'), '. Please install DLMextra V0.1.4+')
-
-  # if (tt) {
-  #
-  # } else {
-  #   if (!silent) message("Package 'DLMextra' already up to date\n Use 'library(DLMextra)' to load additional data into workspace")
-  # }
-  #
 }
 
 
@@ -362,7 +361,7 @@ plotFun <- function(class = c("MSE", "Data"), msg = TRUE) {
                          'plotGrowth', 'plotMat','plotRec', 'plot.OM')]
 
   if (class == "MSE") {
-    out <- c(out, "barplot", "VOI", "VOI2", "DFO_proj",
+    out <- c(out, "VOI", "VOI2", "DFO_proj",
              "PWhisker")
     out <- sort(out)
   }
@@ -423,7 +422,7 @@ Required <- function(funcs = NA, noCV=FALSE) {
 
   temp <- lapply(funcs1, function(x) paste(format(match.fun(x)), collapse = " "))
   repp <- vapply(temp, match_slots, character(1))
-  #repp[!nzchar(repp)] <- "No data needed for this MP."
+  repp[!nzchar(repp)] <- "No data detected in this MP."
 
   df2 <- data.frame(MP=funcs1, Data=repp, stringsAsFactors = FALSE)
 
@@ -457,11 +456,6 @@ Required <- function(funcs = NA, noCV=FALSE) {
     # Index
     if (grepl("Ind", dfout$Data[i])) {
       DataClass <- c(DataClass, 'Index of Abundance')
-    }
-
-    # Rec
-    if (grepl("Rec", dfout$Data[i])) {
-      DataClass <- c(DataClass, 'Recruitment Index')
     }
 
     # Rec
@@ -530,7 +524,9 @@ Required <- function(funcs = NA, noCV=FALSE) {
 
   }
 
-  as.matrix(dfout)
+  rownames(dfout) <- NULL
+
+  data.frame(dfout)
 }
 
 
@@ -571,30 +567,30 @@ setup <- function(cpus=NULL, logical=FALSE, ...) {
 
 
 
-#' Open the DLMtool User Guide
-#'
-#' Opens the DLMtool User Guide website (requires internet connection)
-#'
-#' @export
-#' @examples
-#' \dontrun{
-#' userguide()
-#' }
-userguide <- function() {
-  utils::browseURL("https://dlmtool.github.io/DLMtool/userguide/introduction.html")
-}
-
-#' Opens the DLMtool Cheat-Sheets (requires internet connection)
-#'
-#' @export
-#' @examples
-#' \dontrun{
-#' cheatsheets()
-#' }
-cheatsheets <- function() {
-  # utils::browseURL("https://dlmtool.github.io/DLMtool/cheat_sheets/DLMtool_CheatSheets.pdf")
-  utils::browseURL("https://dlmtool.github.io/DLMtool/cheat_sheets/CheatSheets.html")
-}
+# #' Open the DLMtool User Guide
+# #'
+# #' Opens the DLMtool User Guide website (requires internet connection)
+# #'
+# #' @export
+# #' @examples
+# #' \dontrun{
+# #' userguide()
+# #' }
+# userguide <- function() {
+#   utils::browseURL("https://dlmtool.github.io/DLMtool/userguide/introduction.html")
+# }
+#
+# #' Opens the DLMtool Cheat-Sheets (requires internet connection)
+# #'
+# #' @export
+# #' @examples
+# #' \dontrun{
+# #' cheatsheets()
+# #' }
+# cheatsheets <- function() {
+#   # utils::browseURL("https://dlmtool.github.io/DLMtool/cheat_sheets/DLMtool_CheatSheets# .pdf")
+#   utils::browseURL("https://dlmtool.github.io/DLMtool/cheat_sheets/CheatSheets.html")
+# }
 
 RepmissingVal <- function(object, name, vals=NA) {
   miss <- FALSE
@@ -609,13 +605,63 @@ RepmissingVal <- function(object, name, vals=NA) {
 }
 
 #' @describeIn checkMSE Updates an existing MSE object (class MSE) from a previous version of the
-#' DLMtool to include slots new to the lastest version. Also works with Stock,
+#' DLMtool to include slots new to the latest version. Also works with Stock,
 #' Fleet, Obs, Imp, and Data objects. The new slots will be empty,
 #' but avoids the 'slot doesn't exist' error that sometimes occurs.
 #' Returns an object of class matching class(MSEobj)
+#' @param save.name Character string. Optional file name to save the updated MSE object to disk.
 #' @export
-updateMSE <- function(MSEobj) {
+updateMSE <- function(MSEobj, save.name=NULL) {
+
   slots <- slotNames(MSEobj)
+
+  if (length(slots)<1 & class(MSEobj)=='MSE') {
+    # incompatible version
+    message('Updating MSE object from earlier version of DLMtool')
+    nMSE <- new("MSE",
+                Name=MSEobj@Name,
+                nyears=MSEobj@nyears,
+                proyears=MSEobj@proyears,
+                nMPs=MSEobj@nMPs,
+                MPs=MSEobj@MPs,
+                nsim=MSEobj@nsim,
+                OM=MSEobj@OM,
+                Obs=MSEobj@Obs,
+                SB_SBMSY=MSEobj@B_BMSY,
+                F_FMSY=MSEobj@F_FMSY,
+                N=array(),
+                B=MSEobj@B,
+                SSB=MSEobj@SSB,
+                VB=MSEobj@VB,
+                FM=MSEobj@FM,
+                SPR=list(),
+                Catch=MSEobj@C,
+                Removals=array(),
+                Effort=MSEobj@Effort,
+                TAC=MSEobj@TAC,
+                TAE=array(),
+                BioEco=list(),
+                RefPoint=list(MSEobj@Misc$MSYRefs),
+                CB_hist=MSEobj@CB_hist,
+                FM_hist=MSEobj@FM_hist,
+                SSB_hist=MSEobj@SSB_hist,
+                Hist=new('Hist'),
+                PPD=MSEobj@Misc$Data,
+                Misc=MSEobj@Misc
+                )
+    if (!is.null(save.name)) {
+
+      message('Saving updated MSE object to: ', save.name)
+      saveRDS(nMSE, save.name)
+      message('Restart R session and load with `MyMSE <- readRDS(', save.name, ")`")
+      return(invisible(nMSE))
+    } else {
+      return(nMSE)
+    }
+
+  }
+
+
   for (X in seq_along(slots)) {
     classDef <- getClassDef(class(MSEobj))
     slotTypes <- classDef@slots
@@ -823,7 +869,7 @@ ML2D <- function(OM, ML, nsim = 100, ploty = T, Dlim = c(0.05, 0.6)) {
 
 #' Catch at size reduction analysis
 #'
-#' What depletion level and corresponding equlibrium F arise from data
+#' What depletion level and corresponding equilibrium F arise from data
 #' regarding mean length of current catches, natural mortality rate, steepness
 #' of the stock recruitment curve, maximum length, maximum growth rate, age at
 #' maturity, age based vulnerability, maturity at age, maximum age and number
@@ -839,7 +885,7 @@ ML2D <- function(OM, ML, nsim = 100, ploty = T, Dlim = c(0.05, 0.6)) {
 #' @param AM A vector of age at maturity
 #' @param a Length-weight conversion parameter a (W=aL^b)
 #' @param b Length-weight conversion parameter b (W=aL^b)
-#' @param vuln A matrix nsim x nage of the vulnerabilty at age (max 1) to
+#' @param vuln A matrix nsim x nage of the vulnerability at age (max 1) to
 #' fishing.
 #' @param mat A matrix nsim x nage of the maturity at age (max 1)
 #' @param ML A vector of current mean length estimates
@@ -879,7 +925,7 @@ CSRA <- function(M, h, Linf, K, t0, AM, a, b, vuln, mat, ML, CAL, CAA,
 
 #' Optimization function for CSRA
 #'
-#' What depletion level and corresponding equlibrium F arise from data
+#' What depletion level and corresponding equilibrium F arise from data
 #' regarding mean length of current catches, natural mortality rate, steepness
 #' of the stock recruitment curve, maximum length, maximum growth rate, age at
 #' maturity, age based vulnerability, maturity at age, maximum age and number
@@ -899,7 +945,7 @@ CSRA <- function(M, h, Linf, K, t0, AM, a, b, vuln, mat, ML, CAL, CAA,
 #' @param AMc Age at maturity
 #' @param ac Length-weight conversion parameter a (W=aL^b)
 #' @param bc Length-weight conversion parameter b (W=aL^b)
-#' @param vulnc A vector (nage long) of the vulnerabilty at age (max 1) to
+#' @param vulnc A vector (nage long) of the vulnerability at age (max 1) to
 #' fishing.
 #' @param matc A vector (nage long) of the maturity at age (max 1)
 #' @param MLc A current mean length estimates
@@ -1174,7 +1220,7 @@ optCPU <- function(nsim=96, thresh=5, plot=TRUE, msg=TRUE, maxn=NULL) {
 #' @export
 #'
 #' @keywords internal
-MPurl <- function(topic, url='https://blue-matter.github.io/DLMtool/reference/',
+MPurl <- function(topic, url='https://dlmtool.openmse.com/reference/',
                   nameonly=FALSE) {
 
   paths <- file.path(.libPaths()[1], "DLMtool")

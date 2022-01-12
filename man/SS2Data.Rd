@@ -17,6 +17,7 @@ SS2Data(
   comp_partition = "all",
   comp_gender = "all",
   index_season = "mean",
+  silent = FALSE,
   ...
 )
 }
@@ -37,7 +38,7 @@ minimum age for calculating the mean of age-dependent M from the SS assessment.}
 \item{gender}{An integer index for the sex for importing biological parameters (1 = female, 2 = male).}
 
 \item{comp_fleet}{A vector of indices corresponding to fleets in the assessment over which to aggregate the composition
-(catch-at-length and catch-at-age) data. By default, characer string \code{"all"} will aggregate across all fleets.}
+(catch-at-length and catch-at-age) data. By default, character string \code{"all"} will aggregate across all fleets.}
 
 \item{comp_season}{Integer, for seasonal models, the season for which the value of the index will be used. By default, \code{"mean"}
 will take the average across seasons.}
@@ -50,6 +51,8 @@ By default, \code{"all"} sums over all gender codes.}
 
 \item{index_season}{Integer, for seasonal models, the season for which the value of the index will be used. By default, \code{"mean"}
 will take the average across seasons.}
+
+\item{silent}{Logical. Suppress all messages?}
 
 \item{...}{Arguments to pass to \link[r4ss]{SS_output}}
 }

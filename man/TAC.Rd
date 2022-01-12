@@ -4,16 +4,20 @@
 \alias{TAC}
 \title{Calculate TAC recommendations for more than one MP}
 \usage{
-TAC(Data, MPs = NA, reps = 100, timelimit = 1)
+TAC(Data, MPs = NA, reps = 100, timelimit = 1, checkMP = TRUE, silent = FALSE)
 }
 \arguments{
 \item{Data}{A data-limited methods data object}
 
 \item{MPs}{optional vector of MP names}
 
-\item{reps}{Number of repititions}
+\item{reps}{Number of repetitions}
 
 \item{timelimit}{The maximum time (seconds) taken to complete 10 reps}
+
+\item{checkMP}{Logical. Check if the MP can be run first?}
+
+\item{silent}{Logical. Suppress messages?}
 }
 \description{
 A function that returns the stochastic TAC recommendations from a vector of

@@ -122,7 +122,7 @@ getEffhist <- function(Esd, nyears, EffYears, EffLower, EffUpper) {
 
     if (!all(effort == mean(effort))) effort <- range01(effort)
 
-    effort[effort == 0] <- 0.01
+    effort[effort == 0] <- tiny
 
     Emu <- -0.5 * Esd^2
     Eerr <- array(exp(rnorm(nyears * nsim, rep(Emu, nyears), rep(Esd, nyears))), c(nsim, nyears))  # calc error
@@ -183,27 +183,45 @@ dnormal<-function(lens,lfs,sl,sr){
   sel
 }
 
+# calcV <- function(x, Len_age, LatASD, SLarray, n_age, nyears, proyears, CAL_binsmid) {
+#   len_at_age <- Len_age[x,,]
+#   len_aa_sd <- LatASD[x,,]
+#
+#   sel_at_length <- SLarray[x,,]
+#   v <- matrix(tiny, n_age, nyears+proyears)
+#
+#   for (yr in 1:(nyears+proyears)) {
+#     ALK <- mapply(dnorm, mean=len_at_age[,yr], sd=len_aa_sd[,yr], MoreArgs=list(x=CAL_binsmid))
+#     ALK[ALK<=0] <- tiny
+#
+#     if (all(ALK[,1]==tiny)) {
+#       ALK[,1] <- 0
+#       ALK[1,1] <- 1
+#     }
+#     ALK_t <- matrix(colSums(ALK), nrow=nrow(ALK), ncol=ncol(ALK), byrow = TRUE)
+#     ALK <- t(ALK/ALK_t)
+#     sela <- ALK %*% sel_at_length[,yr]
+#     v[,yr] <- sela[,1]
+#   }
+#   v
+# }
+
 calcV <- function(x, Len_age, LatASD, SLarray, n_age, nyears, proyears, CAL_binsmid) {
   len_at_age <- Len_age[x,,]
   len_aa_sd <- LatASD[x,,]
-
   sel_at_length <- SLarray[x,,]
-  v <- matrix(tiny, n_age, nyears+proyears)
-  for (yr in 1:(nyears+proyears)) {
-    ALK <- mapply(dnorm, mean=len_at_age[,yr], sd=len_aa_sd[,yr], MoreArgs=list(x=CAL_binsmid))
-    ALK[ALK<=0] <- tiny
 
-    if (all(ALK[,1]==tiny)) {
-      ALK[,1] <- 0
-      ALK[1,1] <- 1
-    }
-    ALK_t <- matrix(colSums(ALK), nrow=nrow(ALK), ncol=ncol(ALK), byrow = TRUE)
-    ALK <- t(ALK/ALK_t)
-    sela <- ALK %*% sel_at_length[,yr]
-    v[,yr] <- sela[,1]
+  if (!'matrix' %in% class(len_aa_sd)) {
+    nrow <- length(len_at_age)
+    len_at_age <- matrix(len_at_age, nrow, 1)
+    len_aa_sd <- matrix(len_aa_sd, nrow, 1)
+    sel_at_length <- matrix(sel_at_length, length(sel_at_length), 1)
   }
-  v
+
+
+  calcVatAge(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid)
 }
+
 
 # calculate average unfished ref points over first A50 years
 CalcUnfishedRefs <- function(x, ageM, N0_a, SSN0_a, SSB0_a, B0_a, VB0_a, SSBpRa, SSB0a_a) {
@@ -248,52 +266,48 @@ CalcMSYRefs <- function(x, MSY_y, FMSY_y, SSBMSY_y, BMSY_y, VBMSY_y, ageM, nyear
 #'
 #' @param x A vector of x values
 #' @param y A vector of y values (identical length to x)
-#' @param xlev A the target level of x from which to guess y
+#' @param xlev A the target level of x from which to guess y. Can be either a numeric or vector.
 #' @param ascending Are the the x values supposed to be ordered before interpolation
 #' @param zeroint is there a zero-zero x-y intercept?
+#' @details As of version 3.2, this function uses `stats::approx`
 #' @author T. Carruthers
 #' @keywords internal
-LinInterp<-function(x,y,xlev,ascending=F,zeroint=F){
+LinInterp<-function(x, y, xlev, ascending = FALSE, zeroint = FALSE) {
 
-  if(zeroint){
-    x<-c(0,x)
-    y<-c(0,y)
+  if (zeroint) {
+    x <- c(0, x)
+    y <- c(0, y)
   }
 
-  if(ascending){
-    cond<-(1:length(x))<which.max(x)
-  }else{
-    cond<-rep(TRUE,length(x))
+  if (ascending) {
+    x_out <- x[1:which.max(x)]
+    y_out <- y[1:which.max(x)]
+  } else {
+    x_out <- x
+    y_out <- y
   }
 
-  close<-which.min((x[cond]-xlev)^2)
-  ind<-c(close,close+(x[close]<xlev)*2-1)
-  ind <- ind[ind <= length(x)]
-  if (length(ind)==1) ind <- c(ind, ind-1)
-  ind<-ind[order(ind)]
-  pos<-(xlev-x[ind[1]])/(x[ind[2]]-x[ind[1]])
-  y[ind[1]]+pos*(y[ind[2]]-y[ind[1]])
+  if (any(xlev < min(x_out))) warning("There are xlev values less than min(x).")
+  if (any(xlev > max(x_out))) warning("There are xlev values greater than max(x).")
+  approx(x_out, y_out, xlev, rule = 2, ties = "ordered")$y
 
 }
 
+calcRecruitment <- function(x, SRrel, SSBcurr, recdev, hs, aR, bR, R0a, SSBpR) {
+  calcRecruitment_int(SRrel = SRrel[x], SSBcurr = SSBcurr[x, ], recdev = recdev[x], hs = hs[x],
+                      aR = aR[x, 1], bR = 1/sum(1/bR[x, ]), R0a = R0a[x, ], SSBpR = SSBpR[x, 1])
+}
 
-
-calcRecruitment <- function(x, SRrel, SSBcurr, recdev, hs, aR, bR, R0a, SSBpR, SSB0) {
-
-  # calculate global recruitment and distribute according to R0a
-  R0 <- sum(R0a[x,])
-  SBtot <- sum(SSBcurr[x,])
-  rdist <- R0a[x,]/R0
-
-  bR <- log(5*hs[x])/(0.8*SSB0[x])
-  if (SRrel[x] == 1) { # BH rec
-    rec <- recdev[x] * (4*R0 * hs[x] * SBtot)/(SSBpR[x,1] * R0 * (1-hs[x]) + (5*hs[x]-1) * SBtot)
+calcRecruitment_int <- function(SRrel, SSBcurr, recdev, hs, aR, bR, R0a, SSBpR) {
+  R0 <- sum(R0a) # calculate global recruitment and distribute according to R0a
+  rdist <- R0a/R0
+  SBtot <- sum(SSBcurr)
+  if (SRrel == 1) { # BH rec
+    rec <- recdev * (4 * R0 * hs * SBtot)/(SSBpR * R0 * (1-hs) + (5*hs-1) * SBtot)
   } else { # Ricker rec
-    rec <-  recdev[x]  * aR[x,1] * SBtot * exp(-bR *SBtot)
-    # rec_A <- recdev[x] * aR[x,] * SSBcurr[x,] * exp(-bR[x,]*SSBcurr[x,])
+    rec <- recdev * aR * SBtot * exp(-bR * SBtot)
   }
-  rec * rdist
-
+  return(rec * rdist)
 }
 
 lcs<-function(x){
@@ -328,7 +342,11 @@ getclass <- function(x, classy) {
 }
 
 indfit <- function(sim.index,obs.ind, Year, plot=FALSE, lcex=0.8){
+  if (any(obs.ind<0, na.rm=TRUE)) {
+    obs.ind <- obs.ind+1-min(obs.ind, na.rm=TRUE)
+  }
 
+  if (plot) Year <- Year[!is.na(obs.ind)]
   sim.index <- lcs(sim.index[!is.na(obs.ind)]) # log space conversion of standardized simulated index
   obs.ind <- lcs(obs.ind[!is.na(obs.ind)]) # log space conversion of standardized observed ind
 
@@ -341,10 +359,19 @@ indfit <- function(sim.index,obs.ind, Year, plot=FALSE, lcex=0.8){
 
   opt<-optimize(getbeta,x=exp(sim.index),y=exp(obs.ind),interval=c(0.1,10))
   res<-exp(obs.ind)-(exp(sim.index)^opt$minimum)
-  ac<-acf(res,plot=F)$acf[2,1,1] # lag-1 autocorrelation
+  if (length(res)<2) {
+    ac <- 0
+  } else {
+    ac<-acf(res,plot=F)$acf[2,1,1] # lag-1 autocorrelation
+  }
 
   res2<-obs.ind-sim.index                  # linear, without hyperdepletion / hyperstability
-  ac2<-acf(res2,plot=F)$acf[2,1,1] # linear AC
+  if (length(res2)<2) {
+    ac2 <- 0
+  } else {
+    ac2<-acf(res2,plot=F)$acf[2,1,1] # linear AC
+  }
+
 
   if(plot){
     SSBseq<-seq(min(exp(sim.index)),max(exp(sim.index)),length.out=1000)
@@ -361,9 +388,10 @@ indfit <- function(sim.index,obs.ind, Year, plot=FALSE, lcex=0.8){
     legend('topright',legend=c("Model estimate","Index"),text.col=c("black","red"),bty='n',cex=lcex)
   }
 
-  data.frame(beta=opt$minimum,AC=ac,sd=sd(exp(obs.ind)/(exp(sim.index)^opt$minimum)),
+  df <- data.frame(beta=opt$minimum,AC=ac,sd=sd(exp(obs.ind)/(exp(sim.index)^opt$minimum)),
              cor=stats::cor(sim.index,obs.ind),AC2=ac2,sd2=sd(obs.ind-sim.index))
 
+  df
   # list(stats=data.frame(beta=opt$minimum,AC=ac,sd=sd(exp(obs.ind)/(exp(sim.index)^opt$minimum)),
   #                       cor=cor(sim.index,obs.ind),AC2=ac2,sd2=sd(obs.ind-sim.index)),
   #      mult=exp(obs.ind)/(exp(sim.index)^opt$minimum))
@@ -386,7 +414,7 @@ generateRes <- function(df, nsim, proyears, lst.err) {
 applyAC <- function(x, res, ac, max.years, lst.err) {
   for (y in 1:max.years) {
     if (y == 1) {
-      res[y,x] <- ac[x] * lst.err[x] + lst.err[x] * (1-ac[x] * ac[x])^0.5
+      res[y,x] <- ac[x] * lst.err[x] + res[y,x] * (1-ac[x] * ac[x])^0.5
     } else {
       res[y,x] <- ac[x] * res[y-1,x] + res[y,x] * (1-ac[x] * ac[x])^0.5
     }
@@ -444,7 +472,7 @@ CheckDuplicate <- function(MPs) {
 CheckMPs <- function(MPs=NA, silent=FALSE) {
   if (all(is.na(MPs))) {
     if (!silent) message('Argument `MPs=NA`, using all example MPs in `MSEtool`')
-    MPs <- avail("MP", 'MSEtool')
+    MPs <- avail("MP", 'MSEtool', msg=!silent)
   }
 
   # Check for custom MPs with same name as built-it MPs
@@ -542,6 +570,7 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, nyears, maxF, plus
   # Set up projection arrays
   M_ageArrayp <- array(StockPars$M_ageArray[,,1], dim=c(dim(StockPars$M_ageArray)[1:2], Nyrs))
   Wt_agep <- array(StockPars$Wt_age[,,1], dim=c(dim(StockPars$Wt_age)[1:2], Nyrs))
+  Fec_Agep <- array(StockPars$Fec_Age[,,1], dim=c(dim(StockPars$Fec_Age)[1:2], Nyrs))
   Mat_agep <- array(StockPars$Mat_age[,,1], dim=c(dim(StockPars$Mat_age)[1:2], Nyrs))
   Perr_yp <- array(1, dim=c(dim(StockPars$Perr_y)[1], Nyrs+StockPars$maxage)) # no process error
 
@@ -553,14 +582,14 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, nyears, maxF, plus
   }
 
   # Not used but make the arrays anyway
-  retAp <- array(FleetPars$retA[,,1], dim=c(dim(FleetPars$retA)[1:2], Nyrs))
-  Vp <- array(FleetPars$V[,,1], dim=c(dim(FleetPars$V)[1:2], Nyrs))
+  retAp <- array(FleetPars$retA_real[,,1], dim=c(dim(FleetPars$retA_real)[1:2], Nyrs))
+  Vp <- array(FleetPars$V_real[,,1], dim=c(dim(FleetPars$V_real)[1:2], Nyrs))
   noMPA <- matrix(1, nrow=Nyrs, ncol=nareas)
 
   runProj <- lapply(1:nsim, projectEq, StockPars$Asize, nareas=nareas,
                     maxage=StockPars$maxage, N=N, pyears=Nyrs,
                     M_ageArray=M_ageArrayp, Mat_age=Mat_agep,
-                    Wt_age=Wt_agep, V=Vp, retA=retAp,
+                    Wt_age=Wt_agep, Fec_Age = Fec_Agep, V=Vp, retA=retAp,
                     Perr=Perr_yp, mov=movp, SRrel=StockPars$SRrel,
                     Find=FleetPars$Find, Spat_targ=FleetPars$Spat_targ,
                     hs=StockPars$hs,
@@ -587,7 +616,7 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, nyears, maxF, plus
 }
 
 set_parallel <- function(parallel) {
-  if (parallel) {
+  if (any(parallel)) {
     if (snowfall::sfIsRunning()) {
       ncpus <- snowfall::sfCpus()
     } else {

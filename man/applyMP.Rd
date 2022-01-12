@@ -4,7 +4,14 @@
 \alias{applyMP}
 \title{Apply Management Procedures to an object of class Data}
 \usage{
-applyMP(Data, MPs = NA, reps = 100, nsims = NA, silent = FALSE)
+applyMP(
+  Data,
+  MPs = NA,
+  reps = 100,
+  nsims = NA,
+  silent = FALSE,
+  parallel = snowfall::sfIsRunning()
+)
 }
 \arguments{
 \item{Data}{An object of class Data}
@@ -16,6 +23,8 @@ applyMP(Data, MPs = NA, reps = 100, nsims = NA, silent = FALSE)
 \item{nsims}{Optional. Number of simulations.}
 
 \item{silent}{Logical. Should messages be suppressed?}
+
+\item{parallel}{Logical. Whether to run MPs in parallel. Can be a vector of length(MPs)}
 }
 \value{
 A list with the first element a list of management recommendations,

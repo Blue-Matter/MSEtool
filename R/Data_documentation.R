@@ -147,6 +147,14 @@ NULL
 #' avail("Imp")
 NULL
 
+#'  DataSlots 
+#'
+#'  Dataframe with details of slots in Dat object
+#'
+#'
+"DataSlots"
+
+
 #' @rdname Data-class-objects 
 "Atlantic_mackerel"
 
@@ -220,5 +228,73 @@ NULL
 #'
 #'
 "ReqData"
+
+
+#'  LHdatabase 
+#'
+#'  Database from the FishLife package with predicted life-history parameters for all species on FishBase
+#' 
+#' @references Thorson, J. T., S. B. Munch, J. M. Cope, and J. Gao. 2017. 
+#' Predicting life history parameters for all fishes worldwide. Ecological Applications. 27(8): 2262--2276  
+#' @source \url{https://github.com/James-Thorson-NOAA/FishLife/} 
+#'
+#'
+"LHdatabase"
+
+
+#'  StockDescription 
+#'
+#'  A data.frame with description of slots for class Stock
+#'
+"StockDescription"
+
+
+#'  FleetDescription 
+#'
+#'  A data.frame with description of slots for class Fleet
+#'
+"FleetDescription"
+
+
+#'  ObsDescription 
+#'
+#'  A data.frame with description of slots for class Obs
+#'
+"ObsDescription"
+
+
+#'  ImpDescription 
+#'
+#'  A data.frame with description of slots for class Imp
+#'
+"ImpDescription"
+
+
+#'  HistDescription 
+#'
+#'  A data.frame with description of slots for class Hist
+#'
+"HistDescription"
+
+
+#'  DataDescription 
+#'
+#'  A data.frame with description of slots for class Data
+#'
+"DataDescription"
+
+
+#'  OMDescription 
+#'
+#'  A data.frame with description of slots for class OM
+#'
+"OMDescription"
+
+
+#'  MSEDescription 
+#'
+#'  A data.frame with description of slots for class MSE
+#'
+"MSEDescription"
 
 

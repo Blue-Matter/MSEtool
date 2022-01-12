@@ -5,7 +5,7 @@
 \alias{PMobj-class}
 \title{An object for storing data for analysis using data-limited methods}
 \description{
-Used interally
+Used internally
 }
 \section{Slots}{
 

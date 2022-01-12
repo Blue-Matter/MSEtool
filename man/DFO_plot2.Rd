@@ -2,7 +2,7 @@
 % Please edit documentation in R/DFO.R
 \name{DFO_plot2}
 \alias{DFO_plot2}
-\title{Deparment of Fisheries and Oceans default plot 2}
+\title{Department of Fisheries and Oceans default plot 2}
 \usage{
 DFO_plot2(MSEobj, nam = NA, panel = T, Bcut = 50, Ycut = 50)
 }

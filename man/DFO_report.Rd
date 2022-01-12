@@ -24,7 +24,7 @@ DFO_report(
 \item{maxMPs}{Maximum number of MPs to plot}
 }
 \description{
-Provides performacne plots typical in the assessment of Canadian fish stocks.
+Provides performance plots typical in the assessment of Canadian fish stocks.
 }
 \author{
 T. Carruthers

@@ -1,37 +1,35 @@
 Package: MSEtool
-Title: What the Package Does (One Line, Title Case)
-Version: 3.0.0
+Title: Management Strategy Evaluation Toolkit
+Version: 3.4.0
 Authors@R: c(
   person("Adrian", "Hordyk", email = "adrian@bluematterscience.com", role = c("aut", "cre")),
   person("Quang", "Huynh", email = "quang@bluematterscience.com", role = "aut"), 
   person("Tom", "Carruthers", email = "tom@bluematterscience.com", role = c("aut")),
-  person("Chris", "Grandin", rol = "ctb", comment = "iSCAM functions"))
+  person("Chris", "Grandin", role = "ctb", comment = "iSCAM functions"))
 Description: Development, simulation testing, and implementation of management procedures for fisheries 
     (see Carruthers & Hordyk (2018) <doi:10.1111/2041-210X.13081>).
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Depends: 
     R (>= 3.5.0),
     snowfall
 Imports:
     abind,
-    coda,
     dplyr,
     methods,
     grDevices,
     ggplot2,
     parallel,
-    r4ss,
     Rcpp,
-    reshape2,
     stats,
     utils
 Suggests:
     boot,
     broom,
+    covr,
     crayon,
     devtools,
     DT,
@@ -41,12 +39,15 @@ Suggests:
     kableExtra,
     knitr,
     MASS,
+    mvtnorm,
     openxlsx,
-    purrr,
+    r4ss,
     readxl,
+    reshape2,
     rfishbase,
     rmarkdown,
     shiny,
     testthat,
     tidyr
 LinkingTo: Rcpp, RcppArmadillo
+BugReports: https://github.com/Blue-Matter/MSEtool/issues

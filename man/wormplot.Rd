@@ -12,10 +12,10 @@ wormplot(MSEobj, Bref = 0.5, LB = 0.25, UB = 0.75)
 \item{Bref}{The reference fraction of BMSY (to evaluate the probability of
 exceeding this level)}
 
-\item{LB}{The lower bound probability that seperates red (bad) and yellow
+\item{LB}{The lower bound probability that separates red (bad) and yellow
 (O.K.) colored segments}
 
-\item{UB}{The upper bound probability that seperates yellow (O.K.) and green
+\item{UB}{The upper bound probability that separates yellow (O.K.) and green
 (good) colored segments}
 }
 \description{

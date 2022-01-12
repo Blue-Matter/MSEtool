@@ -11,87 +11,182 @@ dynamics model
 \section{Slots}{
 
 \describe{
-\item{\code{Name}}{The name of the Stock object. Single value. Character string}
+\item{\code{Name}}{An identifying name for the Stock object. Single value. Character
+string.}
 
-\item{\code{Name}}{The name of the Stock object. Single value. Character string}
-
-\item{\code{Common_Name}}{Common name of the species. Character string}
+\item{\code{Common_Name}}{Common name of the species. Character string.}
 
 \item{\code{Species}}{Scientific name of the species. Genus and species name.
-Character string}
+Character string.}
 
-\item{\code{maxage}}{The maximum age of individuals that is simulated (there is no
-'plus group'). Single value. Positive integer}
+\item{\code{maxage}}{The maximum age of individuals that is simulated. There are
+\code{maxage+1} (recruitment to age-0) age classes in the storage matrices.
+\code{maxage} is the 'plus group' where all age-classes > \code{maxage} are grouped,
+unless option switched off with \code{OM@cpars$plusgroup=0}. Single value.
+Positive integer.}
 
-\item{\code{R0}}{The magnitude of unfished recruitment. Single value. Positive real
-number}
+\item{\code{R0}}{Initial number of unfished recruits to age-0. This number is used
+to scale the size of the population to match catch or data, but does not affect
+any of the population dynamics unless the OM has been conditioned with data. As
+a result, for a data-limited fishery any number can be used for \code{R0}. In
+data-rich stocks \code{R0} may be estimated as part of a stock assessment, but for
+data limited stocks users can choose either an arbitrary number (say, 1000) or
+choose a number that produces simulated catches in recent historical years that
+are similar to real world catch data. Single value. Positive real number.}
 
-\item{\code{M}}{Natural mortality rate. Uniform distribution lower and upper bounds.
-Positive real number}
+\item{\code{M}}{The instantaneous rate of natural mortality. For each simulation a
+single value is drawn from a uniform distribution specified by the upper and
+lower bounds provided. Uniform distribution lower and upper bounds.
+Non-negative real numbers.}
 
-\item{\code{Msd}}{Inter-annual variability in natural mortality rate expressed as a
-coefficient of variation. Uniform distribution lower and upper bounds.
-Non-negative real numbers}
-
-\item{\code{h}}{Steepness of the stock recruit relationship. Uniform distribution
-lower and upper bounds. Values from 1/5 to 1}
-
-\item{\code{SRrel}}{Type of stock-recruit relationship. Single value, switch (1)
-Beverton-Holt (2) Ricker. Integer}
-
-\item{\code{Perr}}{Process error, the CV of log-normal recruitment deviations.
-Uniform distribution lower and upper bounds. Non-negative real numbers}
-
-\item{\code{AC}}{Auto-correlation in recruitment deviations
-rec(t)=AC*rec(t-1)+(1-AC)*sigma(t). Uniform distribution lower and upper
-bounds. Non-negative real numbers}
-
-\item{\code{Linf}}{Maximum length. Uniform distribution lower and upper bounds.
-Positive real numbers}
-
-\item{\code{K}}{von Bertalanffy growth parameter k. Uniform distribution lower and
-upper bounds. Positive real numbers}
-
-\item{\code{t0}}{von Bertalanffy theoretical age at length zero. Uniform
-distribution lower and upper bounds. Non-positive real numbers}
-
-\item{\code{LenCV}}{Coefficient of variation of length-at-age (assumed constant for
-all age classes). Uniform distribution lower and upper bounds. Positive real
+\item{\code{Msd}}{Inter-annual variation in \code{M} expressed as a coefficient of
+variation of a log-normal distribution. For each simulation a single value is
+drawn from a uniform distribution specified by the upper and lower bounds
+provided. If this parameter is positive, yearly \code{M} is drawn from a log-normal
+distribution with a mean specified by \code{log(M)} drawn for that simulation and a
+standard deviation in log space specified by the value of \code{Msd} drawn for that
+simulation.  Uniform distribution lower and upper bounds. Non-negative real
 numbers}
 
-\item{\code{Ksd}}{Inter-annual variability in growth parameter k expressed as
-coefficient of variation. Uniform distribution lower and upper bounds.
-Non-negative real numbers}
+\item{\code{h}}{Steepness of the stock recruit relationship. Steepness governs the
+proportion of unfished recruits produced when the stock is at 20\% of the
+unfished population size. For each simulation a single value is drawn from a
+uniform distribution specified by the upper and lower bounds provided. This
+value is the same in all years of a given simulation. Uniform distribution
+lower and upper bounds. Values from 1/5 to 1.}
 
-\item{\code{Linfsd}}{Inter-annual variability in maximum length expressed as a
-coefficient of variation. Uniform distribution lower and upper bounds.
-Non-negative real numbers}
+\item{\code{SRrel}}{Type of stock-recruit relationship. Use 1 to select a Beverton
+Holt relationship, 2 to select a Ricker relationship. Single value. Integer}
 
-\item{\code{L50}}{Length at 50 percent maturity. Uniform distribution lower and
-upper bounds. Positive real numbers}
+\item{\code{Perr}}{Recruitment process error, which is defined as the standard
+deviation of the recruitment deviations in log space. For each simulation a
+single value is drawn from a uniform distribution specified by the upper and
+lower bounds provided. Uniform distribution lower and upper bounds.
+Non-negative real numbers.}
 
-\item{\code{L50_95}}{Length increment from 50 percent to 95 percent maturity.
-Uniform distribution lower and upper bounds. Positive real numbers}
+\item{\code{AC}}{Autocorrelation in the recruitment deviations in log space. For
+each simulation a single value is drawn from a uniform distribution specified
+by the upper and lower bounds provided, and used to add lag-1 auto-correlation
+to the log recruitment deviations. Uniform distribution lower and upper bounds.
+Non-negative real numbers.}
 
-\item{\code{D}}{Current level of stock depletion SSB(current)/SSB(unfished). Uniform
-distribution lower and upper bounds. Fraction}
+\item{\code{Linf}}{The von Bertalanffy growth parameter Linf, which specifies the
+average maximum size that would reached by adult fish if they lived
+indefinitely. For each simulation a single value is drawn from a uniform
+distribution specified by the upper and lower bounds provided. This value is
+the same in all years unless \code{Linfsd} is a positive number. Uniform
+distribution lower and upper bounds. Positive real numbers.}
 
-\item{\code{a}}{Length-weight parameter alpha. Single value. Positive real number}
+\item{\code{Linfsd}}{Inter-annual variation in Linf. For each simulation a single
+value is drawn from a uniform distribution specified by the upper and lower
+bounds provided. If this parameter has a positive value, yearly Linf is drawn
+from a log-normal distribution with a mean specified by the value of \code{Linf}
+drawn for that simulation and a standard deviation (in log space) specified by
+the value of \code{Linfsd} drawn for that simulation. Uniform distribution lower and
+upper bounds. Non-negative real numbers.}
 
-\item{\code{b}}{Length-weight parameter beta. Single value. Positive real number}
+\item{\code{K}}{The von Bertalanffy growth parameter k, which specifies the average
+rate of growth. For each simulation a single value is drawn from a uniform
+distribution specified by the upper and lower bounds provided. This value is
+the same in all years unless \code{Ksd} is a positive number. Uniform distribution
+lower and upper bounds. Positive real numbers.}
 
-\item{\code{Size_area_1}}{The size of area 1 relative to area 2. Uniform
-distribution lower and upper bounds. Positive real numbers}
+\item{\code{Ksd}}{Inter-annual variation in K. For each simulation a single value is
+drawn from a uniform distribution specified by the upper and lower bounds
+provided. If this parameter has a positive value, yearly K is drawn from a
+log-normal distribution with a mean specified by the value of \code{K} drawn for
+that simulation and a standard deviation (in log space) specified by the value
+of \code{Ksd} drawn for that simulation. Uniform distribution lower and upper
+bounds. Non-negative real numbers.}
 
-\item{\code{Frac_area_1}}{The fraction of the unfished biomass in stock 1. Uniform
-distribution lower and upper bounds. Positive real numbers}
+\item{\code{t0}}{The von Bertalanffy growth parameter t0, which specifies the
+theoretical age at a size 0. For each simulation a single value is drawn from a
+uniform distribution specified by the upper and lower bounds provided. Uniform
+distribution lower and upper bounds. Non-positive real numbers.}
+
+\item{\code{LenCV}}{The coefficient of variation (defined as the standard deviation
+divided by mean) of the length-at-age.  For each simulation a single value is
+drawn from a uniform distribution specified by the upper and lower bounds
+provided to specify the distribution of observed length-at-age, and the CV of
+this distribution is constant for all age classes (i.e, standard deviation
+increases proportionally with the mean). Uniform distribution lower and upper
+bounds. Positive real numbers.}
+
+\item{\code{L50}}{Length at 50\% maturity. For each simulation a single value is
+drawn from a uniform distribution specified by the upper and lower bounds
+provided. The \code{L50} and \code{L50_95} parameters are converted to ages using the
+growth parameters provided and used to construct a logistic curve to determine
+the proportion of the population that is mature in each age class. Uniform
+distribution lower and upper bounds. Positive real numbers.}
+
+\item{\code{L50_95}}{Difference in lengths between 50\% and 95\% maturity. For each
+simulation a single value is drawn from a uniform distribution specified by the
+upper and lower bounds provided. The value drawn is then added to the length at
+50\% maturity to determine the length at 95\% maturity. This parameterization is
+used \code{instead} of specifying the size at 95 percent maturity to avoid
+situations where the value drawn for the size at 95\% maturity is smaller than
+that at 50\% maturity. The \code{L50} and \code{L50_95} parameters are converted to ages
+using the growth parameters provided and used to construct a logistic curve to
+determine the proportion of the population that is mature in each age class.
+Uniform distribution lower and upper bounds. Positive real numbers.}
+
+\item{\code{D}}{Estimated current level of stock depletion, which is defined as the
+current spawning stock biomass divided by the unfished spawning stock biomass.
+For each simulation a single value is drawn from a uniform distribution
+specified by the upper and lower bounds provided. This parameter is used during
+model initialization to select a series of yearly historical recruitment values
+and fishing mortality rates that, based on the information provided, could have
+resulted in the specified depletion level in the simulated last historical
+year. Uniform distribution lower and upper bounds. Positive real numbers
+(typically < 1)}
+
+\item{\code{a}}{The alpha parameter in allometric length-weight relationship. Single
+value. Weight parameters are used to determine catch-at-age and
+population-at-age from the number of individuals in each age class and the
+length of each individual, which is drawn from a normal distribution determined
+by the \code{Linf}, \code{K}, \code{t0}, and \code{LenCV} parameters. As a result, they function as
+a way to scale between numbers at age and biomass, and are not stochastic
+parameters. Single value. Positive real number.}
+
+\item{\code{b}}{The beta parameter in allometric length-weight relationship. Single
+value. Weight parameters are used to determine catch-at-age and
+population-at-age from the number of individuals in each age class and the
+length of each individual, which is drawn from a normal distribution determine
+by the \code{Linf}, \code{K}, \code{t0}, and \code{LenCV} parameters. As a result, they function as
+a way to scale between numbers at age and biomass, and are not stochastic
+parameters. Single value. Positive real number.}
+
+\item{\code{Size_area_1}}{The size of area 1 relative to area 2. The fraction of the
+unfished biomass in area 1. Please specify numbers between 0 and 1. For each
+simulation a single value is drawn from a uniform distribution specified by the
+upper and lower bounds provided. For example, if Size_area_1 is 0.2, then 20\%
+of the total area is allocated to area 1. Fishing can occur in both areas, or
+can be turned off in one area to simulate the effects of a no take marine
+reserve. Uniform distribution lower and upper bounds. Positive real numbers.}
+
+\item{\code{Frac_area_1}}{The fraction of the unfished biomass in area 1. Please
+specify numbers between 0 and 1. For each simulation a single value is drawn
+from a uniform distribution specified by the upper and lower bounds provided.
+For example, if Frac_area_1 is 0.5, then 50\% of the unfished biomass is
+allocated to area 1, regardless of the size of area 1 (i.e, size and fraction
+in each area determine the density of fish, which may impact fishing spatial
+targeting). In each time step recruits are allocated to each area based on the
+proportion specified in Frac_area_1. Uniform distribution lower and upper
+bounds. Positive real numbers.}
 
 \item{\code{Prob_staying}}{The probability of individuals in area 1 remaining in
-area 1 over the course of one year. Uniform distribution lower and upper
-bounds. Positive fraction.}
+area 1 over the course of one year. Please specify numbers between 0 and 1. For
+each simulation a single value is drawn from a uniform distribution specified
+by the upper and lower bounds provided. For example, in an area with a
+Prob_staying value of 0.95 each fish has a 95\% probability of staying in that
+area in each time step, and a 5\% probability of moving to the other area.
+Uniform distribution lower and upper bounds. Positive fraction.}
 
-\item{\code{Fdisc}}{Fraction of discarded fish that die. Uniform distribution lower
-and upper bounds. Non-negative real numbers}
+\item{\code{Fdisc}}{The instantaneous discard mortality rate the stock experiences
+when fished using the gear type specified in the corresponding fleet object and
+discarded. For each simulation a single value is drawn from a uniform
+distribution specified by the upper and lower bounds provided. Uniform
+distribution lower and upper bounds. Non-negative real numbers.}
 
 \item{\code{Source}}{A reference to a website or article from which parameters were
 taken to define the stock object. Single value. Character string.}

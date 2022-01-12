@@ -113,27 +113,32 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
     name <- c(xl.fname1, xl.fname2)[fls]
   }
   if (tools::file_ext(name) == "csv") {
-    Ncol <- max(unlist(lapply(strsplit(readLines(file.path(dir,name)), ","), length)))
+    tempin <- strsplit(readLines(file.path(dir,name)), ",")
+    # detect header
+    header <- ifelse(tempin[[2]][1] == 'Name', TRUE, FALSE)
+    somechar <- function(x) sum(nchar(x) > 0)
+    Ncol <- max(unlist(lapply(tempin, somechar)))
     col.names <- paste0("V", 1:Ncol)
     if (dec == ".") {
-      datasheet <- read.csv(file.path(dir,name), header = F,
+      datasheet <- read.csv(file.path(dir,name), header = header,
                             colClasses = "character", col.names=col.names,
-                            stringsAsFactors = FALSE)
+                            stringsAsFactors = FALSE, row.names = NULL)
     } else {
-      datasheet <- read.csv2(file.path(dir,name), header = F,
+      datasheet <- read.csv2(file.path(dir,name), header = header,
                              colClasses = "character", col.names=col.names,
-                             stringsAsFactors = FALSE)
+                             stringsAsFactors = FALSE, row.names = NULL)
     }
+
   } else if(tools::file_ext(name) %in% c("xls", "xlsx")) {
     datasheet <- readxl::read_excel(file.path(dir,name), sheet = sheet,
                                     col_names = TRUE, .name_repair = "minimal")
+
+    if (datasheet[1,1] == "Common Name") { # no header in data file
+      datasheet <- readxl::read_excel(file.path(dir,name), sheet = sheet,
+                                      col_names = FALSE, .name_repair = "minimal")
+    }
   } else {
     stop("File extension must be .csv, .xls, or .xlsx")
-  }
-
-  if (datasheet[1,1] == "Common Name") { # no header in data file
-    datasheet <- readxl::read_excel(file.path(dir,name), sheet = sheet,
-                                    col_names = FALSE, .name_repair = "minimal")
   }
 
   if (ncol(datasheet) == 1)  stop("Data file has no data") # no data in data file
@@ -186,7 +191,6 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
   datasheet$Name[datasheet$Name == "Recruitment"] <- 'Recruitment Index'
   datasheet$Name[datasheet$Name == "LenCV"] <- 'CV of length-at-age'
 
-
   Data <- new("Data")
 
   # ---- Main ----
@@ -204,14 +208,14 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
     temp
   }
 
-  # Data_Slots <- MSEtool:::Data_Slots # internal data object (in sysdata.rda)
+  DataSlots <- MSEtool::DataSlots
 
-  # loop over Data_Slots and populate slots in Data object with imported values
-  for(i in 1:nrow(Data_Slots)) {
-    if (!is.na(Data_Slots$Slot[i]) & !Data_Slots$Timeseries[i]) {
-      isNumeric <- Data_Slots$Numeric[i]
-      Name <- Data_Slots$Name[i]
-      Slot <- Data_Slots$Slot[i]
+  # loop over DataSlots and populate slots in Data object with imported values
+  for(i in 1:nrow(DataSlots)) {
+    if (!is.na(DataSlots$Slot[i]) & !DataSlots$Timeseries[i]) {
+      isNumeric <- DataSlots$Numeric[i]
+      Name <- DataSlots$Name[i]
+      Slot <- DataSlots$Slot[i]
       slot(Data, Slot) <- import_convert(Name, datasheet, isNumeric)
     }
   }
@@ -226,9 +230,7 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
     stop("Last Historical Year must be specified (single numeric value)")
   Data@LHYear <- tryLHyear
 
-
   # ---- Time-Series ----
-
   import_convert_ts <- function(Name, datasheet, Data, matrix=TRUE,
                                 checkLength=TRUE) {
     row <- which(datasheet$Name==Name)
@@ -241,10 +243,10 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
       columns <- 2:(length(Data@Year)+1)
       temp <- datasheet[row, columns]
     }
-
-    ind <- which(Data_Slots$Name == Name)
-    Slot <- Data_Slots$Slot[ind]
-    isNumeric <- Data_Slots$Numeric[ind]
+    DataSlots <- MSEtool::DataSlots
+    ind <- which(DataSlots$Name == Name)
+    Slot <- DataSlots$Slot[ind]
+    isNumeric <- DataSlots$Numeric[ind]
     if (isNumeric) temp <- suppressWarnings(as.numeric(temp))
 
     if (grepl('CV', Name)) {
@@ -276,16 +278,13 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
     stop("`Year` must be sequential and include all years")
   Nyears <- length(Data@Year)
 
-
   # Catch time-series
   Data <- import_convert_ts('Catch', datasheet, Data)
   Data <- import_convert_ts('CV Catch', datasheet, Data)
 
-
   # Effort time-series
   Data <- import_convert_ts('Effort', datasheet, Data)
   Data <- import_convert_ts('CV Effort', datasheet, Data)
-
 
   # Total abundance index - fishery dependant
   Data <- import_convert_ts('Abundance index', datasheet, Data)
@@ -307,9 +306,13 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
   n_cv <- sum(sub(" .*$", "", index_text) == "CV")
   n_vuln <- sum(sub(" .*$", "", index_text) == "Vuln")
   if (n_cv != n_indices) stop("CV missing for some or all additional indices", call. = FALSE)
-  if (n_vuln != n_indices) stop("Vulnerability-at-age schedule missing for some or all additional indices", call. = FALSE)
+  if (n_vuln != n_indices)
+    stop("Vulnerability-at-age schedule missing for some or all additional indices", call. = FALSE)
 
-  if (!all(is.na(datasheet[which(datasheet$Name == "Index 1"),2:(Nyears+1)]))) {
+  addInd <- datasheet[which(datasheet$Name == "Index 1"),2:(Nyears+1)] %>% unlist()
+  n.temp <- nchar(addInd)
+
+  if (!(all(n.temp[!is.na(n.temp)]==0)) & !all(is.na(addInd)) & !(length(addInd)<1)) {
     indexexist <- TRUE
   } else {
     indexexist <- FALSE
@@ -328,21 +331,28 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
   if (indexexist) {
     for (x in 1:n_indices) {
       ind <- which(datasheet$Name == paste("Index", x))
+      if (length(ind)>1)
+        stop('Additional indices must be uniquely numbered.',
+             paste(" Index", x), ' appears ', length(ind), ' times', call.=FALSE)
       Data@AddInd[1,x,] <- suppressWarnings(datasheet[ind, 2:(Nyears+1)] %>% as.numeric())
       ind <- which(datasheet$Name == paste("CV Index", x))
       Data@CV_AddInd[1,x,] <- suppressWarnings(datasheet[ind, 2:(Nyears+1)] %>% as.numeric())
       ind <- which(datasheet$Name == paste("Vuln Index", x))
       Data@AddIndV[1,x,] <- suppressWarnings(datasheet[ind, 2:(Data@MaxAge+2)] %>% as.numeric())
-      if (any(is.na(Data@AddIndV[1,x,])))
-        warning("Vuln Index must be length `Maximum age`+1 and contain only numeric values (no NA)")
+      if (!all(is.na(Data@AddIndV[1,x,])) & any(is.na(Data@AddIndV[1,x,])))
+        warning("Vuln Index ", x, " must be length `Maximum age`+1 and contain only numeric values (no NA)")
     }
-  }
 
+    ind <- which(datasheet$Name == 'AddIndType')
+    Data@AddIndType <- suppressWarnings(as.numeric(datasheet[ind,2:(n_indices+1)]))
+
+    ind <- which(datasheet$Name == 'AddIunits')
+    Data@AddIunits <- suppressWarnings(as.numeric(datasheet[ind,2:(n_indices+1)]))
+  }
 
   # Recruitment index
   Data <- import_convert_ts('Recruitment index', datasheet, Data)
   Data <- import_convert_ts('CV Recruitment index', datasheet, Data)
-
 
   # Mean length
   Data <- import_convert_ts('Mean length', datasheet, Data)
@@ -351,8 +361,8 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
 
   # ---- Catch-at-Age ----
   ind <- which(datasheet$Name == "Vuln CAA")
-  if (length(ind>0)) {
-    VulnCAA <- datasheet[which(datasheet$Name == "Vuln CAA"), 2:(Data@MaxAge+2)]
+  if (length(ind)>0 && !is.na(datasheet[ind, 2])) {
+    VulnCAA <- datasheet[ind, 2:(Data@MaxAge+2)]
     VulnCAA <- suppressWarnings(as.numeric(VulnCAA))
     if (!all(is.na(VulnCAA))) {
       if (any(is.na(VulnCAA)))
@@ -397,9 +407,15 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
   }
 
   # ---- Catch-at-Length ----
-  ind <- which(datasheet$Name == "Vuln CAA")
-  if (length(ind>0)) {
-    VulnCAL <- datasheet[which(datasheet$Name == "Vuln CAL"), 2:(Data@MaxAge+2)]
+  CAL_bins <- suppressWarnings(datasheet[which(datasheet$Name == "CAL_bins"),] %>% as.numeric())
+  CAL_bins <- CAL_bins[!is.na(CAL_bins)]
+
+  CAL_mids <- suppressWarnings(datasheet[which(datasheet$Name == "CAL_mids"),] %>% as.numeric())
+  CAL_mids <- CAL_mids[!is.na(CAL_mids)]
+
+  ind <- which(datasheet$Name == "Vuln CAL")
+  if (length(ind)>0 && !is.na(datasheet[ind, 2])) {
+    VulnCAL <- datasheet[ind, 2:(length(CAL_mids)+2)]
     VulnCAL <- suppressWarnings(as.numeric(VulnCAL))
     if (!all(is.na(VulnCAL))) {
       if (any(is.na(VulnCAL)))
@@ -407,12 +423,6 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
     }
     Data@Vuln_CAL <- matrix(VulnCAL, nrow=1)
   }
-
-  CAL_bins <- suppressWarnings(datasheet[which(datasheet$Name == "CAL_bins"),] %>% as.numeric())
-  CAL_bins <- CAL_bins[!is.na(CAL_bins)]
-
-  CAL_mids <- suppressWarnings(datasheet[which(datasheet$Name == "CAL_mids"),] %>% as.numeric())
-  CAL_mids <- CAL_mids[!is.na(CAL_mids)]
 
   ind <- which(grepl('CAL', datasheet$Name) & !grepl('CAL_bins', datasheet$Name) &
                  !grepl('Vuln CAL', datasheet$Name) &
@@ -461,7 +471,13 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
     ind <- ind[!ind == ind2]
 
   CAL_Yrs <- sapply(strsplit(datasheet$Name[ind], " "), function(x) unlist(strsplit(x[2], " ")))
-  if(!all(CAL_Yrs %in% Data@Year)) stop("All CAL Years must be included in `Year`")
+
+  if(!all(CAL_Yrs %in% Data@Year)) {
+    CAL_Yrs <- sapply(strsplit(datasheet$Name[ind], "_"), function(x) unlist(strsplit(x[2], " ")))
+  }
+  if(!all(CAL_Yrs %in% Data@Year)) {
+    stop("All CAL Years must be included in `Year`. Entries must be formatted 'CAL YEAR' or 'CAL_YEAR'")
+  }
 
   NMids <- length(CAL_mids)
   Data@CAL <- array(NA, dim=c(1, Nyears, NMids))
@@ -715,7 +731,7 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
 #'
 #' @param Data A MSEtool Data object
 #' @param MPs The name of the MP to run (or a vector or names)
-#' @param reps Number of repititions
+#' @param reps Number of repetitions
 #' @param perc Percentile to summarize reps (default is median)
 #' @param chkMPs Logical. Should the MPs be checked before attempting to run them?
 #' @param silent Logical. Should messages by suppressed?
@@ -725,15 +741,15 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
 #' Data_TAc <- runMP(MSEtool::Cobia)
 #' @return invisibly returns the Data object
 #'
-runMP <- function(Data, MPs = NA, reps = 100, perc=0.5, chkMPs=TRUE, silent=FALSE) {
+runMP <- function(Data, MPs = NA, reps = 100, perc=0.5, chkMPs=FALSE, silent=FALSE) {
   if (class(MPs) != 'character' && !all(is.na(MPs))) stop('MPs must be character string', call.=FALSE)
   if (class(Data) != 'Data') stop("Data must be class 'Data'", call.=FALSE)
   if (all(is.na(MPs))) {
-    MPs <- avail("MP")
+    MPs <- avail("MP", msg = !silent)
     if (!silent) message("running all available MPs")
   }
   if (chkMPs) {
-    cans <- Can(Data, MPs=MPs)
+    cans <- Can(Data, MPs=MPs, silent=silent)
     MPs <- MPs[MPs %in% cans]
   }
   if (length(MPs) <1) stop("No MPs possible")
@@ -864,25 +880,26 @@ runMP <- function(Data, MPs = NA, reps = 100, perc=0.5, chkMPs=TRUE, silent=FALS
 #' @describeIn Can Identifies MPs that have the correct data, do not produce errors,
 #' and run within the time limit.
 #' @export
-Can <- function(Data, timelimit = 1, MPs=NA, dev=FALSE) {
-  DLMdiag(Data, "available",  timelimit = timelimit, funcs1=MPs, dev=dev)
+Can <- function(Data, timelimit = 1, MPs=NA, dev=FALSE, silent=FALSE) {
+  DLMdiag(Data, "available",  timelimit = timelimit, funcs1=MPs, dev=dev, silent=silent)
 }
 
 
 #' @describeIn Can Identifies MPs that don't have sufficient data, lead to errors, or don't run in
 #' time along with a list of their data requirements.
 #' @export Cant
-Cant <- function(Data, timelimit = 1) {
-  DLMdiag(Data, "not available", timelimit = timelimit)
+Cant <- function(Data, timelimit = 1, silent=FALSE) {
+  DLMdiag(Data, "not available", timelimit = timelimit, silent=silent)
 }
 
 #' @describeIn Can Internal function called by `Can` and `Cant`
 #' @param command What to calculate? Character. Options = c("available", "not available", "needed")
 #' @param reps The number of replicates for the MP
 #' @param funcs1 A character vector of the MP names (optional)
+#' @param silent Logical Display messages?
 #' @export
 DLMdiag <- function(Data, command = c("available", "not available", "needed"), reps = 5,
-                    timelimit = 1, funcs1=NA, dev=FALSE) {
+                    timelimit = 1, funcs1=NA, dev=FALSE, silent=FALSE) {
   command <- match.arg(command)
   if (class(Data) != "Data") stop("First argument must be object of class 'Data'", call.=FALSE)
   set.seed(101)
@@ -933,6 +950,7 @@ DLMdiag <- function(Data, command = c("available", "not available", "needed"), r
   good[chk_needed] <- FALSE
 
   for (y in 1:length(funcs1)) {
+    if (!silent) message('Checking ', funcs1[y], ' (', y, '/', length(funcs1), ')')
     if(!chk_needed[y]) {
       setTimeLimit(timelimit * 1.5)
       time1 <- Sys.time()
@@ -952,7 +970,9 @@ DLMdiag <- function(Data, command = c("available", "not available", "needed"), r
         good[y] <- FALSE
       } else if (inherits(test[[y]], "Rec")) {
         # Rec_test <- vapply(slotNames("Rec"), function(x) NAor0(slot(test[[y]], x)), logical(1))
-        Rec_test <- vapply(slotNames("Rec"), function(x) all(is.na(slot(test[[y]], x))), logical(1))
+        slots <- slotNames("Rec")
+        slots <- slots[slots!="Misc"]
+        Rec_test <- vapply(slots, function(x) all(is.na(slot(test[[y]], x))), logical(1))
         if(all(Rec_test)) { # If all NAor0
           report[y] <- "Produced all NA scores. Check MP function and/or Data object."
           good[y] <- FALSE
@@ -1065,8 +1085,8 @@ match_slots <- function(func, slotnams = paste0("Data@", slotNames("Data")),
 #' the MPs that are currently not able to run given a Data
 #' object
 #' @export Needed
-Needed <- function(Data, timelimit = 1) {
-  DLMdiag(Data, "needed", timelimit = timelimit)
+Needed <- function(Data, timelimit = 1, silent=FALSE) {
+  DLMdiag(Data, "needed", timelimit = timelimit, silent=silent)
 }
 
 
@@ -1223,14 +1243,14 @@ Sense <- function(Data, MP, nsense = 6, reps = 100, perc = c(0.05, 0.5, 0.95), p
 
   Data <- DLM_data2
   reqs <- Required(MP)  #read.csv(paste(getwd(),'/Data/Data requirements.csv',sep=''),header=T)
-  ind <- (1:nrow(reqs))[reqs[, match(MP, names(reqs))] == "Y"]
+  # ind <- (1:nrow(reqs))[reqs[, match(MP, names(reqs))] == "Y"]
   # for(i in 1:length(reqs))
 
   slotsCV <- slotNames("Data")[grep("CV_", slotNames("Data"))]
   slots <- rep("", length(slotsCV))
   for (i in 1:length(slotsCV)) slots[i] <- substr(slotsCV[i], 4, nchar(slotsCV[i]))
 
-  ind <- slots %in% unlist(strsplit(reqs[2], ", "))
+  ind <- slots %in% unlist(strsplit(reqs[1,2], ", "))
   slots <- slots[ind]
   slotsCV <- slotsCV[ind]
   sname <- slots
@@ -1245,7 +1265,7 @@ Sense <- function(Data, MP, nsense = 6, reps = 100, perc = c(0.05, 0.5, 0.95), p
     ind <- (((i - 1) * nsense + 1):(i * nsense))
     mn <- attr(Data, slots[i])[1]
     cv <- attr(Data, slotsCV[i])[1] * 2  # twice the CV of the variable specified in the DLM object
-    if (class(attr(Data, slots[i])) == "numeric") {
+    if ('numeric' %in% class(attr(Data, slots[i]))) {
       if (mn > 0) {
         attr(Data, slots[i])[ind] <- qlnorm(pss, mconv(mn,
                                                        cv * mn), sdconv(mn, cv * mn))
@@ -1322,8 +1342,10 @@ Sense <- function(Data, MP, nsense = 6, reps = 100, perc = c(0.05, 0.5, 0.95), p
 #'
 #' @param Data A data-limited methods data object
 #' @param MPs optional vector of MP names
-#' @param reps Number of repititions
+#' @param reps Number of repetitions
 #' @param timelimit The maximum time (seconds) taken to complete 10 reps
+#' @param checkMP Logical. Check if the MP can be run first?
+#' @param silent Logical. Suppress messages?
 #' @author T. Carruthers
 #' @examples
 #' \dontrun{
@@ -1332,11 +1354,16 @@ Sense <- function(Data, MP, nsense = 6, reps = 100, perc = c(0.05, 0.5, 0.95), p
 #' plot(Data)
 #' }
 #' @export
-TAC <- function(Data, MPs = NA, reps = 100, timelimit = 1) {
+TAC <- function(Data, MPs = NA, reps = 100, timelimit = 1, checkMP=TRUE, silent=FALSE) {
   if (class(Data) != "Data") stop("First argument must be object of class 'Data'", call.=FALSE)
   Data <- updateMSE(Data)
   nm <- deparse(substitute(Data))
-  PosMPs <- Can(Data, timelimit = timelimit)
+  if (checkMP) {
+    PosMPs <- Can(Data, timelimit = timelimit, silent = silent)
+  } else {
+    PosMPs <- avail("Output", msg=!silent)
+  }
+
   PosMPs <- PosMPs[PosMPs %in% avail("Output", msg=FALSE)]
   Data@PosMPs <- PosMPs
   if (!is.na(MPs[1])) Data@MPs <- MPs[MPs %in% PosMPs]
@@ -1346,7 +1373,7 @@ TAC <- function(Data, MPs = NA, reps = 100, timelimit = 1) {
   if (length(funcs) == 0) {
     stop("None of the methods 'MPs' are possible given the data available")
   } else {
-    Data <- applyMP(Data, MPs = funcs, reps)[[2]]
+    Data <- applyMP(Data, MPs = funcs, reps, silent = silent)[[2]]
     return(Data)
   }
 
@@ -1591,7 +1618,7 @@ Uses <- function(slot, silent=FALSE) {
 #'
 #' @param Data Either an object of class `Data` or the file path to a valid
 #' file to be imported with `XL2Data`
-#' @param md Full file path to a valid text file documentating the Data
+#' @param md Full file path to a valid text file documenting the Data
 #' @param name Optional. Name of the output file
 #' @param title Title for the Report. Title in the markdown file will override this value
 #' @param author Author of the Report. Author in the markdown file will override this value
@@ -1749,7 +1776,7 @@ Report <- function(Data=NULL, md=NULL, name="Data-Report",
 
   }
 
-  cat("```{r, echo=FALSE, out.width='90%'} \n", file = rmdfile, sep = " ", append = TRUE)
+  cat("```{r, echo=FALSE, out.width='90%', tidy=FALSE, fig.align='center', fig.show='asis'} \n", file = rmdfile, sep = " ", append = TRUE)
   cat("fignum <- select_plots(Data, fignum=fignum+1)\n", file = rmdfile, sep = " ", append = TRUE)
   cat("```\n\n", file = rmdfile, sep = " ", append = TRUE)
 
@@ -1770,9 +1797,25 @@ Report <- function(Data=NULL, md=NULL, name="Data-Report",
 
   }
 
-  cat("```{r, echo=FALSE, out.width='90%'} \n", file = rmdfile, sep = " ", append = TRUE)
-  cat("fignum <- ts_plots(Data,fignum=fignum+1)\n", file = rmdfile, sep = " ", append = TRUE)
+
+
+  cat("```{r, echo=FALSE} \n", file = rmdfile, sep = " ", append = TRUE)
+  cat("ts_data <- ts_plots(Data,fignum=fignum+1)\n", file = rmdfile, sep = " ", append = TRUE)
+  cat("DF <- ts_data[[1]] \n", file = rmdfile, sep = " ", append = TRUE)
+  cat("p1 <- ts_data[[2]] \n", file = rmdfile, sep = " ", append = TRUE)
+  cat("height <- length(levels(DF$Data))/2 *2\n", file = rmdfile, sep = " ", append = TRUE)
+  cat("fignum <- ts_data[[3]] \n", file = rmdfile, sep = " ", append = TRUE)
   cat("```\n\n", file = rmdfile, sep = " ", append = TRUE)
+
+  cat("```{r, echo=FALSE, out.width='90%', fig.height=height} \n", file = rmdfile, sep = " ", append = TRUE)
+  cat("suppressWarnings(suppressMessages(plot(p1))) \n", file = rmdfile, sep = " ", append = TRUE)
+  cat("```\n\n", file = rmdfile, sep = " ", append = TRUE)
+
+  cat("```{r, echo=FALSE, out.width='90%'} \n", file = rmdfile, sep = " ", append = TRUE)
+  cat("fignum <- vuln_addInd_plot(Data,fignum=fignum)\n", file = rmdfile, sep = " ", append = TRUE)
+  cat("fignum <- meanLen_plot(Data,fignum=fignum)\n", file = rmdfile, sep = " ", append = TRUE)
+  cat("```\n\n", file = rmdfile, sep = " ", append = TRUE)
+
 
 
   # Catch-at-Age section
@@ -1855,7 +1898,7 @@ Report <- function(Data=NULL, md=NULL, name="Data-Report",
     output_file <- file.path(dir, paste0(name, '.pdf'))
   rmarkdown::render(rmdfile, output_format =output_format,
                     output_file=output_file,
-                    output_dir = dir, params=Data, quiet = quiet)
+                    output_dir = dir, params=Data, quiet = quiet, clean=FALSE)
 
   if (open) browseURL(output_file)
 
@@ -1946,6 +1989,7 @@ biology_plots <- function(Data, i=1, n=20000) {
   lab2 <- sprintf("CV ==%G", df$cv)
 
   plist <- dplyr::distinct(plist)
+  if (all(is.na(plist$mean))) return(0)
 
   addText <- FALSE
   textdf <- plist %>% filter(is.na(val))
@@ -2041,6 +2085,8 @@ select_plots <- function(Data, i=1, n=20000, fignum=1) {
   }
 
   plist <- do.call("rbind", lout)
+
+
   df <- plist %>% group_by(Var) %>% dplyr::distinct(mean, cv)
   df$x <- df$mean
   # df$mean[df$mean>0.01] <-round(df$mean[df$mean>0.01],)
@@ -2058,25 +2104,29 @@ select_plots <- function(Data, i=1, n=20000, fignum=1) {
     addText <- TRUE
   }
 
+  inc <- 0
+  if (!all(is.na(plist$mean))) {
+    inc <- 1
+    p3 <- ggplot2::ggplot(plist, ggplot2::aes(x=val, y=..scaled..)) +
+      ggplot2::geom_density(show.legend = F, fill="lightgray") +
+      ggplot2::facet_wrap(~Var, scales="free") +
+      ggplot2::theme_minimal() + ggplot2::theme(axis.title.y = ggplot2::element_blank(),
+                                                axis.text.y = ggplot2::element_blank(),
+                                                axis.title.x=ggplot2::element_blank()) +
+      ggplot2::geom_text(data=df, ggplot2::aes(x=x, y=1.3), parse=TRUE, label=lab) +
+      ggplot2::geom_text(data=df, ggplot2::aes(x=x, y=1.1), parse=TRUE, label=lab2) +
 
-  p3 <- ggplot2::ggplot(plist, ggplot2::aes(x=val, y=..scaled..)) +
-    ggplot2::geom_density(show.legend = F, fill="lightgray") +
-    ggplot2::facet_wrap(~Var, scales="free") +
-    ggplot2::theme_minimal() + ggplot2::theme(axis.title.y = ggplot2::element_blank(),
-                                              axis.text.y = ggplot2::element_blank(),
-                                              axis.title.x=ggplot2::element_blank()) +
-    ggplot2::geom_text(data=df, ggplot2::aes(x=x, y=1.3), parse=TRUE, label=lab) +
-    ggplot2::geom_text(data=df, ggplot2::aes(x=x, y=1.1), parse=TRUE, label=lab2) +
+      ggplot2::labs(title=paste0('Figure ', fignum, '. Density plots of selectivity parameters')) +
+      ggplot2::expand_limits(y=1.4) +
+      ggplot2::theme(strip.text = ggplot2::element_text(size=14))
+    if (addText) p3 <- p3 + ggplot2::geom_text(data=textdf, ggplot2::aes(x=0, y=3, label=Text) )
 
-    ggplot2::labs(title=paste0('Figure ', fignum, '. Density plots of selectivity parameters')) +
-    ggplot2::expand_limits(y=1.4) +
-    ggplot2::theme(strip.text = ggplot2::element_text(size=14))
-  if (addText) p3 <- p3 + ggplot2::geom_text(data=textdf, ggplot2::aes(x=0, y=3, label=Text) )
+    suppressWarnings(plot(p3))
+  }
 
-  suppressWarnings(plot(p3))
 
   if (all(!is.na(df$mean)) && all(df$mean >0) ) {
-    if(!is.na(Data@MaxAge)) {
+    if(!is.na(Data@MaxAge) & !is.na(Data@vbLinf[i])) {
       # selectivity-at-age
 
       Lens <- 0:Data@vbLinf[i]
@@ -2093,7 +2143,7 @@ select_plots <- function(Data, i=1, n=20000, fignum=1) {
 
       DF <- data.frame(Age=Age[Age>0], Select=SelA)
 
-      fignum <- fignum +1
+      fignum <- fignum +inc
       p4 <- ggplot2::ggplot(DF, ggplot2::aes(x=Age, y=Select)) +
         ggplot2::geom_line(size=1.2) +
         ggplot2::expand_limits(y=c(0,1), x=0) +
@@ -2181,7 +2231,10 @@ ts_plots <- function(Data, i=1, fignum=1) {
   }
   Year <- y <- dw <- up <- X <- Ind <- value <- key <- NA
   DF <- makeDF(Data, "Cat", i)
+  DF <- rbind(DF, makeDF(Data, "Effort", i))
   DF <- rbind(DF, makeDF(Data, "Ind", i))
+  DF <- rbind(DF, makeDF(Data, "VInd", i))
+  DF <- rbind(DF, makeDF(Data, "SpInd", i))
 
   AddInd <- makeDF(Data, "AddInd", i)
   vDF <- NULL
@@ -2194,41 +2247,72 @@ ts_plots <- function(Data, i=1, fignum=1) {
 
   DF$Data[DF$Data == "Cat"] <- paste0("Catch (", Data@Units, ")")
   DF$Data[DF$Data == "Ind"] <- "Index"
+  DF$Data[DF$Data == "VInd"] <- "Vulnerable Index"
+  DF$Data[DF$Data == "SpInd"] <- "Spawning Index"
   DF$Data[DF$Data == "Rec"] <- "Recruitment"
   DF$Data <- factor(DF$Data, ordered = TRUE,
                     levels=unique(DF$Data))
+
+  # drop NAs
+  Range <- suppressWarnings(
+    DF %>% dplyr::group_by(Data) %>% dplyr::summarise(Range=range(y, na.rm=T), .groups="keep")
+  )
+  Groups <- Range %>% dplyr::filter(is.finite(Range)==TRUE)
+  DF <- DF %>% dplyr::filter(DF$Data %in% unique(Groups$Data))
 
   p1 <- ggplot2::ggplot(DF, ggplot2::aes(x=Year, y=y, ymin=dw, ymax=up)) +
     ggplot2::facet_wrap(~Data, scales="free", ncol=2) +
     ggplot2::expand_limits(y=0) +
     ggplot2::geom_ribbon(fill='lightgray') + ggplot2::geom_line(size=1.1) +
+    ggplot2::geom_point() +
     ggplot2::labs(x="Year", y="Mean (95% intervals)",
                   title=paste0('Figure ', fignum, '. Time-Series Data')) +
     ggplot2::theme_minimal() +
     ggplot2::theme(strip.text = ggplot2::element_text(size=14))
+
+
+  p1
+
+  list(DF, p1, fignum+1)
+}
+
+
+vuln_addInd_plot <- function(Data, i=1, fignum=1) {
+  Year <- y <- dw <- up <- X <- Ind <- value <- key <- NA
+  AddInd <- makeDF(Data, "AddInd", i)
+  vDF <- NULL
+  if (!is.null(AddInd)) {
+    vDF <- AddInd[[2]]
+  }
 
   p2 <- NULL
   if (!is.null(vDF)) {
     fignum <- fignum+1
     vDF$Ind <- factor(vDF$Ind)
     nind <- length(levels(vDF$Ind))
-    vDF$X <- rep(1:Data@MaxAge, nind)
+    vDF$X <- rep(1:(Data@MaxAge+1), nind)
     p2 <- ggplot2::ggplot(vDF, ggplot2::aes(x=X, y=V, linetype=Ind)) +
       ggplot2::geom_line() +
       ggplot2::expand_limits(y=c(0,1)) +
       ggplot2::labs(x="Age", y="Vulnerability",
-                    title=paste0('\n\nFigure ', fignum, '. Vulnerability-at-age schedules for Additional Indices'),
+                    title=paste0('\n\nFigure ',
+                                 fignum, '. Vulnerability-at-age schedules for Additional Indices'),
                     linetype="Additional Index") +
       ggplot2::theme_minimal()
 
   }
 
+  if (!is.null(p2)) suppressWarnings(plot(p2))
+  fignum
+}
 
+
+meanLen_plot <- function(Data, i=1, fignum=1) {
+  Year <- y <- dw <- up <- X <- Ind <- value <- key <- NA
   DF <- data.frame(Year=Data@Year, ML=Data@ML[i,], Lc=Data@Lc[i,], Lbar=Data@Lbar[i,])
   p3 <- NULL
   if (!all(is.na(DF[,2:4]))) {
     fignum <- fignum+1
-
     DF <- tidyr::gather(DF, "key", "value", 2:4)
     DF$key[DF$key == "ML"] <- "Mean length"
     DF$key[DF$key == "Lc"] <- "Modal length (Lc)"
@@ -2240,21 +2324,19 @@ ts_plots <- function(Data, i=1, fignum=1) {
 
     p3 <- ggplot2::ggplot(DF, ggplot2::aes(x=Year, y=value, linetype=key)) +
       ggplot2::geom_line(size=1.1) +
-      ggplot2::expand_limits(y=c(0)) +
+      ggplot2::expand_limits(y=0) +
       ggplot2::labs(y="Length", linetype="Legend",
                     title=paste0('\n\nFigure ', fignum, '. Mean Length Time-Series')) +
       ggplot2::theme_minimal()
 
   }
 
-
-  suppressWarnings(plot(p1))
-  if (!is.null(p2)) suppressWarnings(plot(p2))
   if (!is.null(p3)) suppressWarnings(plot(p3))
-
 
   fignum
 }
+
+
 
 
 caa_plot <- function(Data, i=1, fignum=1) {
@@ -2533,21 +2615,24 @@ ref_plots <- function(Data, i=1, n=20000, fignum=1) {
     addText <- TRUE
   }
 
-  p1 <- ggplot2::ggplot(plist, ggplot2::aes(x=val, y=..scaled..)) +
-    ggplot2::geom_density(show.legend = F, fill="lightgray") +
-    ggplot2::facet_wrap(~Var, scales="free") +
-    ggplot2::theme_minimal() + ggplot2::theme(axis.title.y = ggplot2::element_blank(),
-                                              axis.text.y = ggplot2::element_blank(),
-                                              axis.title.x=ggplot2::element_blank()) +
-    ggplot2::geom_text(data=df, ggplot2::aes(x=x, y=1.3), parse=TRUE, label=lab) +
-    ggplot2::geom_text(data=df, ggplot2::aes(x=x, y=1.1), parse=TRUE, label=lab2) +
+  if (!all(is.na(plist$mean))) {
+    p1 <- ggplot2::ggplot(plist, ggplot2::aes(x=val, y=..scaled..)) +
+      ggplot2::geom_density(show.legend = F, fill="lightgray") +
+      ggplot2::facet_wrap(~Var, scales="free") +
+      ggplot2::theme_minimal() + ggplot2::theme(axis.title.y = ggplot2::element_blank(),
+                                                axis.text.y = ggplot2::element_blank(),
+                                                axis.title.x=ggplot2::element_blank()) +
+      ggplot2::geom_text(data=df, ggplot2::aes(x=x, y=1.3), parse=TRUE, label=lab) +
+      ggplot2::geom_text(data=df, ggplot2::aes(x=x, y=1.1), parse=TRUE, label=lab2) +
 
-    ggplot2::labs(title=paste0('Figure ', fignum, '. Density plots of Reference parameters')) +
-    ggplot2::expand_limits(y=1.4) +
-    ggplot2::theme(strip.text = ggplot2::element_text(size=14))
-  if (addText) p1 <- p1 + ggplot2::geom_text(data=textdf, ggplot2::aes(x=0, y=3, label=Text) )
+      ggplot2::labs(title=paste0('Figure ', fignum, '. Density plots of Reference parameters')) +
+      ggplot2::expand_limits(y=1.4) +
+      ggplot2::theme(strip.text = ggplot2::element_text(size=14))
+    if (addText) p1 <- p1 + ggplot2::geom_text(data=textdf, ggplot2::aes(x=0, y=3, label=Text) )
 
-  suppressWarnings(plot(p1))
+    suppressWarnings(plot(p1))
+  }
+
 
   fignum
 
@@ -2563,12 +2648,13 @@ ref_plots <- function(Data, i=1, n=20000, fignum=1) {
 #' @param reps Number of samples
 #' @param nsims Optional. Number of simulations.
 #' @param silent Logical. Should messages be suppressed?
+#' @param parallel Logical. Whether to run MPs in parallel. Can be a vector of length(MPs)
 #'
 #' @return A list with the first element a list of management recommendations,
 #' and the second the updated Data object
 #' @export
 #'
-applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE) {
+applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE, parallel = snowfall::sfIsRunning()) {
   if (class(Data) != "Data") stop("First argument must be object of class 'Data'", call.=FALSE)
   Dataout <- Data
   if (is.na(nsims)) nsims <- nrow(Data@Cat)
@@ -2585,40 +2671,71 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE) {
 
   # refMPs <- avail('MP', 'MSEtool', msg=FALSE)
   refMPs <- c("FMSYref", "FMSYref50", "FMSYref75", "NFref")#  refMPs[grepl('ref', refMPs)]
-
+  
+  if (length(parallel) < length(MPs)) {
+    if (length(parallel) > 1) {
+      stop("length(parallel) must be equal to length(MPs)")
+    } else {
+      parallel <- rep(parallel, length(MPs))
+    }
+  }
+  
   runParallel <- snowfall::sfIsRunning()
   # if (nMPs < 8 & nsims < 8) runParallel <- FALSE
 
-  for (mp in 1:nMPs) {
-    if (runParallel) {
-      temp <- snowfall::sfLapply(1:nsims, MPs[mp], Data = Data, reps = reps)
-    } else {
-      temp <- lapply(1:nsims, MPs[mp], Data = Data, reps = reps)
-    }
-    slots <- slotNames(temp[[1]])
-    for (X in slots) { # sequence along recommendation slots
-      if (X == "Misc") { # convert to a list nsim by nareas
-        rec <- lapply(temp, slot, name=X)
-      } else {
-        rec <- do.call("cbind", lapply(temp, slot, name=X)) # unlist(lapply(temp, slot, name=X))
-      }
-      if (X == "Spatial") { # convert to a matrix nsim by nareas
-        rec <- matrix(rec, nareas, nsims, byrow=FALSE)
-      }
-      recList[[X]] <- rec
-      for (x in 1:nsims) Dataout@Misc[[x]] <- recList$Misc[[x]]
-      recList$Misc <- NULL
+  if (!silent)
+    message('Attempting to run ', length(MPs), ' MPs:')
 
-      if (MPs[mp] %in% refMPs) {
-        recList$type <- 'reference'
-      } else {
-        recList$type <- 'mp'
-      }
+  for (mp in 1:nMPs) {
+    if (!silent)  message(MPs[mp])
+    
+    #mp_ns <- find(MPs[mp])
+    #dlmmp <- grepl('DLMtool', mp_ns)
+    ## don't run DLMtool MPs in parallel (slower if you do)
+    #if (length(dlmmp)<1) dlmmp <- FALSE
+    #msemmp <- grepl('MSEtool', mp_ns)
+    ## don't run MSEtool MPs in parallel (slower if you do)
+    #if (length(msemmp)<1) msemmp <- FALSE
+    #
+    ## exceptions
+    #if (MPs[mp] %in% c('LBSPR', 'LBSPR_MLL')) dlmmp <- FALSE
+    #
+    #if (dlmmp |msemmp) runParallel <- FALSE
+    
+    if (runParallel && parallel[mp]) {
+      temp <- try(snowfall::sfLapply(1:nsims, MPs[mp], Data = Data, reps = reps), silent=TRUE)
+    } else {
+      temp <- try(lapply(1:nsims, MPs[mp], Data = Data, reps = reps), silent=TRUE)
     }
-    if (length(recList$TAC)>0)  TACout[mp,,] <- recList$TAC
-    returnList[[mp]] <- recList
-    if (!silent && any(apply(is.na(recList$TAC), 2, sum) > rep(0.5 * reps, nsims)))
-      message("Method ", MPs[mp], " produced greater than 50% NA values")
+   
+    if (class(temp)=='try-error') {
+        warning("Method ", MPs[mp], " failed with error: ", temp)
+    } else {
+      slots <- slotNames(temp[[1]])
+      for (X in slots) { # sequence along recommendation slots
+        if (X == "Misc") { # convert to a list nsim by nareas
+          rec <- lapply(temp, slot, name=X)
+        } else {
+          rec <- do.call("cbind", lapply(temp, slot, name=X)) # unlist(lapply(temp, slot, name=X))
+        }
+        if (X == "Spatial") { # convert to a matrix nsim by nareas
+          rec <- matrix(rec, nareas, nsims, byrow=FALSE)
+        }
+        recList[[X]] <- rec
+        for (x in 1:nsims) Dataout@Misc[[x]] <- recList$Misc[[x]]
+        recList$Misc <- NULL
+
+        if (MPs[mp] %in% refMPs) {
+          recList$type <- 'reference'
+        } else {
+          recList$type <- 'mp'
+        }
+      }
+      if (length(recList$TAC)>0)  TACout[mp,,] <- recList$TAC
+      returnList[[mp]] <- recList
+      if (!silent && any(apply(is.na(recList$TAC), 2, sum) > rep(0.5 * reps, nsims)))
+        message("Method ", MPs[mp], " produced greater than 50% NA values")
+    }
   }
 
   Dataout@TAC <- TACout
@@ -2628,4 +2745,70 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE) {
   Dataout@Misc[nms] <- Data@Misc[nms]
 
   list(returnList, Dataout)
+}
+
+
+SubData_sim <- function(x, Data) {
+  if(class(Data) !='Data') stop('Object must be class `Data`')
+  subdata <- new("Data")
+  sltType <- getSlots('Data')
+  slts <- slotNames(Data)
+  
+  for (i in seq_along(slts)) {
+    if (sltType[i] == "character")
+      slot(subdata, slts[i]) <- slot(Data, slts[i])
+    if (sltType[i] == "numeric")
+      slot(subdata, slts[i]) <- slot(Data, slts[i])
+    if (sltType[i] == "vector")
+      if (slts[i]=='Year') {
+        slot(subdata, slts[i]) <- slot(Data, slts[i])
+      } else {
+        slot(subdata, slts[i]) <- slot(Data, slts[i])[x]  
+      }
+      
+    if (sltType[i] == "matrix")
+      slot(subdata, slts[i]) <- matrix(slot(Data, slts[i])[x,], nrow=1)
+    if (sltType[i] == "array") {
+      tt <- slot(Data, slts[i])
+      dd <- dim(tt)
+      ll <- length(dd)
+      if (ll ==2) {
+        slot(subdata, slts[i]) <- array(slot(Data, slts[i])[x,], dim=c(1,dd[2:length(dd)]))
+      }
+      if (ll ==3) {
+        slot(subdata, slts[i]) <- array(slot(Data, slts[i])[x,,], dim=c(1,dd[2:length(dd)]))
+      }
+      
+    }
+    if (sltType[i] == "list") {
+      tt <- slot(Data, slts[i])
+      newlist <- list()
+      if (length(tt)>0) {
+        if (slts[i] == 'Misc') {
+          np <- length(tt)
+          nf <- length(tt[[1]])
+          n_sim <- length(tt[[1]][[1]])
+          for (p in 1:np) {
+            newlist[[p]] <- list()
+            for (f in 1:nf) {
+              newlist[[p]][[f]] <- list()  
+              newlist[[p]][[f]][[1]] <- tt[[1]][[1]][[x]]
+            }
+          }
+        }
+        
+      }
+      slot(subdata, slts[i]) <- newlist
+    }
+    if (sltType[i] == "data.frame") {
+      slot(subdata, slts[i]) <- slot(Data, slts[i])[x,]
+    }
+  }
+  subdata
+}
+
+MP_wrapper <- function(x, Data, MP, ...) {
+  subdat <- SubData_sim(x, Data)
+  fun <- get(MP)
+  fun(1, subdat, ...)
 }

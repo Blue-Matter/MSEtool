@@ -4,7 +4,7 @@
 \alias{ResFromRel}
 \title{Returns Results of a set of MICE relationships}
 \usage{
-ResFromRel(Rel, Bcur, SSBcur, Ncur, seed)
+ResFromRel(Rel, Bcur, SSBcur, Ncur, SSB0, B0, seed, x)
 }
 \arguments{
 \item{Rel}{A list of inter-stock relationships see slot Rel of MOM object class}
@@ -14,6 +14,14 @@ ResFromRel(Rel, Bcur, SSBcur, Ncur, seed)
 \item{SSBcur}{An array of current spawning stock biomass \verb{[stock, age, area]}}
 
 \item{Ncur}{An array of current stock numbers \verb{[stock, age, area]}}
+
+\item{SSB0}{A vector of unfished spawning biomass \verb{[stock]}}
+
+\item{B0}{A vector of unfished biomass \verb{[stock]}}
+
+\item{seed}{Seed for sampling.}
+
+\item{x}{The simulation number.}
 }
 \description{
 Predicts stock-specific parameters from another stocks biomass, spawning biomass or numbers

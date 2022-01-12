@@ -1,10 +1,12 @@
+VB <- function(Linf, K, t0, age) Linf * (1-exp(-K*(age-t0)))
+
 myrunif <- function(n, val1, val2) {
   min <- min(c(val1, val2))
   max <- max(c(val1, val2))
 
   if (is.na(n)) stop("First argument is NA")
-  if (is.na(val1)) stop('Second argument is NA')
-  if (is.na(val2)) stop('Third argument is NA')
+  # if (is.na(val1)) stop('Second argument is NA')
+  # if (is.na(val2)) stop('Third argument is NA')
 
   if (all(is.na(c(min, max)))) return(rep(NA,n))
   if (all(min == max)) {
@@ -92,7 +94,7 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
   Names <- c('CAL_bins', 'CAL_binsmid', 'binWidth', 'nCALbins',
              'maxage', 'n_age', 'CurrentYr',
              'plusgroup', 'control', 'AddIUnits', 'Data', 'MPA',
-             'nareas', 'a', 'b', 'maxF', 'Sample_Area', 'Asize')
+             'nareas', 'Wa', 'Wb', 'maxF', 'Sample_Area', 'Asize')
 
   cpars2 <- cpars
   cpars2[Names] <- NULL
@@ -100,39 +102,32 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
   ncparsim <- cparscheck(cpars2)
 
   # --- Check for Invalid Cpars ----
-  # TODO
-  # CparsInfo <- cpars_info # get internal data from sysdata
-  #
-  #
-  # Names <- names(cpars)
-  # ValNames <- c(CparsInfo$Slot[which(CparsInfo$Valid>0)], CparsInfo$Legacy[which(CparsInfo$Valid>0)])
-  # ValNames <- ValNames[!is.na(ValNames)]
-  # InvalNames <- c(CparsInfo$Slot[!which(CparsInfo$Valid>0)], CparsInfo$Legacy[!which(CparsInfo$Valid>0)])
-  # InvalNames <- unique(InvalNames[!is.na(InvalNames)])
-  # report invalid names
-  # invalid <- Names[!Names %in% ValNames]
-  # if (length(invalid)>0) {
-  #   invdf <- data.frame(name=invalid, action='ignoring', alt="", stringsAsFactors = FALSE)
-  #   alt_inval <- invalid[invalid %in% InvalNames]
-  #   if (length(alt_inval)>0) {
-  #     alt <- CparsInfo$Description[match(alt_inval, CparsInfo$Slot)]
-  #     invdf$alt[match(alt_inval, invdf$name)] <-alt
-  #   }
-  #   if(!silent) {
-  #     message("invalid names found in custom parameters (OM@cpars)")
-  #     message(paste0(capture.output(invdf), collapse = "\n"))
-  #   }
-  # }
+
+  # CparsInfo <- MSEtool:::cpars_info # get internal data from sysdata
+  CparsInfo <- cpars_info # get internal data from sysdata - above for debugging
+
+  CNames <- names(cpars)
+  ValNames <- CparsInfo$Var
+
+  invalid <- CNames[!CNames %in% ValNames]
+  if (length(invalid)>0) {
+    invdf <- data.frame(not_used_cpars=invalid, stringsAsFactors = FALSE)
+
+    if(!silent) {
+      message("Invalid names found in custom parameters:")
+      base::message(paste0(capture.output(invdf), collapse = "\n"))
+    }
+  }
   # # report found names
-  # valid <- which(Names %in% ValNames)
-  # cpars <- cpars[valid]
-  # if (length(valid) == 0) {
-  #   message("No valid names found in custompars (OM@cpars). Ignoring `OM@cpars`")
-  #   return(list())
-  # }
-  # Names <- names(cpars)
-  # outNames <- paste(Names, "")
-  # if(!silent) message("valid custom parameters (OM@cpars) found: \n", paste0(outNames, collapse="\n"))
+  valid <- which(CNames %in% ValNames)
+  cpars <- cpars[valid]
+  if (length(valid) == 0) {
+    message("No valid names found in custompars. Ignoring `OM@cpars`")
+    return(list())
+  }
+  CNames <- names(cpars)
+  outNames <- paste(CNames, "")
+  if(!silent) message("Valid custom parameters found: \n", paste0(outNames, collapse="\n"))
 
   # ---- Sample custom pars ----
 
@@ -194,6 +189,13 @@ sample_unif <- function(par, cpars, Obj, nsim, altpar=NULL) {
     tt <- myrunif(nsim, 0,1) # call to runif to increment RNG
     return(cpars[[par]])
   }
+  if ((!is.null(altpar))) {
+    if (!is.null(cpars[[altpar]])) {
+      tt <- myrunif(nsim, 0,1) # call to runif to increment RNG
+      return(cpars[[altpar]])
+    }  
+  }
+  
   if (!is.null(altpar)) par <- altpar
   vals <- slot(Obj, par)
   if (length(vals)<1) stop('slot ', par, ' in object class ', class(Obj), ' is missing values')
@@ -272,17 +274,22 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   D <- sample_unif('D', cpars, Stock, nsim)
 
   # ---- Recruitment Deviations ----
-
   # have rec devs been passed in cpars?
   if (is.null(cpars$Perr_y)) { # no - sample recruitment deviations
+
+    if (!is.null(cpars[['Perr']])) cpars$procsd <- cpars[['Perr']]
     procsd <-  sample_unif('procsd', cpars, Stock, nsim, 'Perr')
+
     AC <- sample_unif('AC', cpars, Stock, nsim)
     # adjusted log normal mean http://dx.doi.org/10.1139/cjfas-2016-0167
     procmu <- -0.5 * procsd^2  * (1 - AC)/sqrt(1 - AC^2)
+
+    procsd[procsd==0] <- tiny # for reproducibility in rnorm
     Perr_y <- array(rnorm((nyears + proyears+maxage) * nsim,
                           rep(procmu, nyears + proyears+maxage),
                           rep(procsd, nyears + proyears+maxage)),
                     c(nsim, nyears + proyears+maxage))
+
     # add auto-correlation
     for (y in 2:(nyears + proyears+maxage))
       Perr_y[, y] <- AC * Perr_y[, y - 1] + Perr_y[, y] * (1 - AC * AC)^0.5
@@ -343,7 +350,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
     Karray <- cpars$Karray
   } else {
     Karray <- GenerateRandomWalk(K, Ksd, nyears + proyears,
-                                 nsim, Linfrand)
+                                 nsim, Krand)
   }
   if (!is.null(cpars$Agearray)) {
     Agearray <- cpars$Agearray
@@ -387,23 +394,17 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
 
     # Estimate vB parameters for each year and each sim if growth parameters are not in cpars
     if (!all(c("Linf", "K", "t0") %in% names(cpars))) {
-      if (msg)
+      if (msg) {
         message('Mean length-at-age array are in cpars, but von Bert. growth parameters are not.',
                 'Estimating von Bert. growth parameters for each simulation and year from ',
                 'cpars$Len_age')
+        pb <- txtProgressBar(min = 0, max = nsim, style = 3, width = min(getOption("width"), 40))
+      }
 
       # loop over simulations
-      cnt <- 0
       for (ss in 1:nsim) {
         if(msg) { # print status update
-          cnt <- cnt + 1
-          cat(".")
-          flush.console()
-          if (cnt >80) {
-            cat("\n")
-            flush.console()
-            cnt <- 0
-          }
+          setTxtProgressBar(pb, ss)
         }
         estpars <- sapply(1:(nyears + proyears), function(X) {
           starts  <- c(log(max(Len_age[ss,,X])), log(0.2), 0)
@@ -416,7 +417,10 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
         t0[ss] <- mean(pars[3,])
         t0array <- matrix(t0, nrow=nsim, ncol=proyears+nyears)
       } # end loop over sims for vB estimation
-      if(msg) cat("\n")
+      if(msg) {
+        close(pb)
+        cat("\n")
+      }
       # Add Linf, K, t0 to StockPars (current yr)
       Linf <- Linfarray[,nyears]
       K <- Karray[,nyears]
@@ -437,32 +441,36 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   if (any(dim(LatASD) != dim(Len_age)))
     stop("Dimensions of 'LatASD' must match dimensions of 'Len_age'", .call=FALSE)
 
-  if (!is.null(cpars$CAL_bins)) {
-    binWidth <- cpars$CAL_bins[2] - cpars$CAL_bins[1]
-    CAL_bins <- cpars$CAL_bins
+  if (!is.null(cpars[["CAL_bins"]])) {
+    CAL_bins <- cpars[['CAL_bins']]
+    binWidth <- CAL_bins[2:length(CAL_bins)] - CAL_bins[2:length(CAL_bins) - 1]
   }
-  if (!is.null(cpars$CAL_binsmid)) {
-    binWidth <- cpars$CAL_binsmid[2] - cpars$CAL_binsmid[1]
-    CAL_binsmid <- cpars$CAL_binsmid
+  if (!is.null(cpars[['CAL_binsmid']])) {
+   binWidth <- cpars$CAL_binsmid[2] - cpars$CAL_binsmid[1]
+   CAL_binsmid <- cpars$CAL_binsmid
   }
 
   MaxBin <- ceiling(max(Linfarray) + 2 * max(Linfarray) * max(LenCV))
-  if (!exists("binWidth", inherits=FALSE)) binWidth <- ceiling(0.03 * MaxBin)
-
-  if (!exists("CAL_bins", inherits=FALSE))
+  if (!exists("CAL_bins", inherits=FALSE) & !exists('CAL_binsmid', inherits = FALSE)) {
+    binWidth <- ceiling(0.03 * MaxBin)
     CAL_bins <- seq(from = 0, to = MaxBin + binWidth, by = binWidth)
-  if (!exists("CAL_binsmid", inherits=FALSE))
-    CAL_binsmid <- seq(from = 0.5 * binWidth, by = binWidth, length = length(CAL_bins) - 1)
+    binWidth <- rep(binWidth, length(CAL_bins) - 1)
+  } else {
+    if (exists("CAL_binsmid", inherits=FALSE)) {
+      CAL_bins <- seq(CAL_binsmid[1]-0.5*binWidth, by=binWidth, length.out=length(CAL_binsmid)+1)
+    }
+  }
+  CAL_binsmid <- CAL_bins[2:length(CAL_bins)] - 0.5 * binWidth
   if (length(CAL_bins) != length(CAL_binsmid)+1)
     stop("Length of 'CAL_bins' must be length(CAL_binsmid)+1", .call=FALSE)
 
-  binWidth <- CAL_binsmid[2] - CAL_binsmid[1] # should be unchanged if passed in cpars anyway
+  #binWidth <- CAL_binsmid[2] - CAL_binsmid[1] # should be unchanged if passed in cpars anyway
 
   # Check bin width - in case both CAL_bins or CAL_binsmid AND binWidth have been passed in with cpars
-  if (!all(diff(CAL_bins) == binWidth))
-    stop("width of CAL_bins != binWidth", call.=FALSE)
-  if (!all(diff(CAL_binsmid) == binWidth))
-    stop("width of CAL_binsmid != binWidth", call.=FALSE)
+  #if (!all(diff(CAL_bins) == binWidth))
+  #  stop("width of CAL_bins != binWidth", call.=FALSE)
+  #if (!all(diff(CAL_binsmid) == binWidth))
+  #  stop("width of CAL_binsmid != binWidth", call.=FALSE)
   nCALbins <- length(CAL_binsmid)
 
   if (max(Linfarray) > max(CAL_bins))
@@ -482,9 +490,9 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
            paste0(c(nsim, maxage+1, nyears + proyears), collapse=","), "; but has dimensions: ",
            paste0(dim(Wt_age), collapse=","))
     # check if length-weight pars in cpars
-    if (all(c('a', 'b') %in% names(cpars))) {
-      Wa <- cpars$a
-      Wb <- cpars$b
+    if (all(c('Wa', 'Wb') %in% names(cpars))) {
+      Wa <- cpars$Wa
+      Wb <- cpars$Wb
     } else {
       # Estimate length-weight parameters from the Wt_age data
       logL <- log(as.numeric(Len_age)+tiny)
@@ -546,9 +554,9 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
       for (yr in 1:(nyears+proyears)) { # loop over years
         # check that Mat_age < 0.5 values exist
         if (nsim == 1) {
-          oksims <- which(min(Mat_age[1,,yr]) < 0.5)
+          oksims <- which(min(Mat_age[1,,yr]) < 0.5 & max(Mat_age[1,,yr]) > 0)
         } else {
-          oksims <- which(apply(Mat_age[,,yr], 1, min) < 0.5)
+          oksims <- which(apply(Mat_age[,,yr], 1, min) < 0.5 & apply(Mat_age[,,yr], 1, max) > 0)
         }
         if (length(oksims)<1) {
           ageMarray[,yr] <- 1 # set to 1 if < 1
@@ -562,10 +570,22 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
             LinInterp(Mat_age[x,,yr], y=Len_age[x, , nyears], 0.5)))
           L50array[noksims,yr] <- 1 # set to 1
         }
-        age95array[,yr] <- unlist(sapply(1:nsim, function(x)
-          LinInterp(Mat_age[x,, yr], y=1:n_age, 0.95)))
-        L95array[,yr]<- unlist(sapply(1:nsim, function(x)
-          LinInterp(Mat_age[x,,yr], y=Len_age[x, , nyears], 0.95)))
+        
+        if (nsim == 1) {
+          oksims <- which(max(Mat_age[1,,yr]) >0.95)
+        } else {
+          oksims <- which(apply(Mat_age[,,yr], 1, max) > 0.95)
+        }
+        
+        if (length(oksims)<1) {
+          age95array[,yr] <- 1.5 # set to 1.5 if < 1
+        } else {
+          age95array[,yr] <- unlist(sapply(1:nsim, function(x)
+            LinInterp(Mat_age[x,, yr], y=1:n_age, 0.95)))
+          L95array[,yr]<- unlist(sapply(1:nsim, function(x)
+            LinInterp(Mat_age[x,,yr], y=Len_age[x, , nyears], 0.95)))
+        }
+      
       } # end loop over years
 
       L50array[!is.finite(L50array)] <- 0.8*Linfarray[!is.finite(L50array)]
@@ -622,27 +642,13 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
     }
   }
 
-  # # ---- Calculate M-at-Age from M-at-Length (if provided in cpars) ----
-  # if (exists("M_at_Length", inherits=FALSE)) {  # M-at-length data.frame has been provided in cpars
-  #   MatLen <- matrix(NA, nsim, nrow(M_at_Length))
-  #   MatLen[,1] <- runif(nsim, min(M_at_Length[1,2:3]), max(M_at_Length[1,2:3]))
-  #   for (k in 1:nsim) {
-  #     for (X in 2:nrow(M_at_Length)) {
-  #       val <- (MatLen[k,1] - min(M_at_Length[1,2:3]))/ diff(t(M_at_Length[1,2:3]))
-  #       MatLen[k,X] <- min(M_at_Length[X,2:3]) + diff(t(M_at_Length[X,2:3]))*val
-  #     }
-  #   }
-  #
-  #   # Calculate M at age
-  #   Mage <- matrix(NA, nsim, n_age)
-  #   for (sim in 1:nsim) {
-  #     ind <- findInterval(Len_age[sim,,nyears], M_at_Length[,1])
-  #     Mage[sim, ] <- MatLen[sim, ind]
-  #   }
-  #   stop()
-  #   # TODO check
-  # }
-
+  # ---- Add Fecundity-at-Age - used for female SSB ----
+  if (!is.null(cpars$Fec_age)) {
+    Fec_Age <- cpars$Fec_age
+  } else {
+    Fec_Age <- Wt_age * Mat_age
+  }
+  
   # ---- M-at-age in cpars -----
   if (!is.null(cpars$M_ageArray)) {
     M_ageArray <- cpars$M_ageArray
@@ -654,18 +660,24 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
 
     # set M to mean M for mature age-classes in year=nyears
     ageatMaturity <- ceiling(ageMarray[,nyears] + 1 )
-    M <- apply(M_ageArray[,ageatMaturity,nyears], 1, mean)
+    if (nsim>1) {
+      M <- apply(M_ageArray[,ageatMaturity,nyears], 1, mean)  
+    } else {
+      M <- mean(M_ageArray[1,ageatMaturity,nyears])
+    }
+    
   }
 
   # ---- Mean Natural mortality by simulation and year ----
   if (is.null(cpars$Marray) & !is.null(cpars$M_ageArray)) {
     # Mean M-at-age needs to be calculated
-    Marray <- matrix(NA, nsim, nyears+proyears)
-    for (yr in 1:(nyears+proyears)) {
-      for (sim in 1:nsim) {
-        Marray[sim, yr] <- mean(M_ageArray[sim, (ageMarray[sim,yr]+1):n_age,yr])
-      }
-    }
+    Marray <- apply(M_ageArray * Mat_age, c(1,3), sum)/apply(Mat_age,c(1,3),sum)
+  
+    # for (yr in 1:(nyears+proyears)) {
+    #   for (sim in 1:nsim) {
+    #     Marray[sim, yr] <- mean(M_ageArray[sim, (ageMarray[sim,yr]+1):n_age,yr])
+    #   }
+    # }
   } else {
     Marray <- cpars$Marray
   }
@@ -673,6 +685,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
     # M by sim and year according to gradient and inter annual variability
     Marray <- GenerateRandomWalk(M, Msd, nyears + proyears, nsim, Mrand)
   }
+ 
 
   # ---- Natural mortality by simulation, age and year ----
   if (!exists("M_ageArray", inherits=FALSE)) { # only calculate M_ageArray if it hasn't been specified in cpars
@@ -689,11 +702,11 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   if (all(M_ageArray[1,,1] == mean(M_ageArray[1,,1])) & all(M !=0)) { # constant M at age
     calcMax <- ceiling(-log(0.01)/(min(M)))        # Age at which 1% of cohort survives
     if (maxage < 0.95*calcMax && msg) {
-      message("Note: Maximum age (",
+      message("Note: Maximum age", paste0("(",
               maxage,
-              ") is lower than assuming 1% of cohort survives to maximum age (",
-              calcMax,
-              ")")
+              ")"), "is lower than assuming 1% of cohort survives to maximum age",
+              paste0("(",
+              calcMax,")"))
     }
   }
 
@@ -720,8 +733,13 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   if (is.null(cpars$mov)) { # movement matrix has not been passed in cpars
     if(msg) message("Optimizing for user-specified movement")
     nareas <- 2 # default is a 2 area model
-    mov1 <- array(t(sapply(1:nsim, getmov2, Frac_area_1 = Frac_area_1,
-                           Prob_staying = Prob_staying)), dim = c(nsim, nareas, nareas))
+    if(snowfall::sfIsRunning()) {
+      mov1 <- array(t(snowfall::sfSapply(1:nsim, getmov2, Frac_area_1 = Frac_area_1,
+                             Prob_staying = Prob_staying)), dim = c(nsim, nareas, nareas))
+    } else {
+      mov1 <- array(t(sapply(1:nsim, getmov2, Frac_area_1 = Frac_area_1,
+                             Prob_staying = Prob_staying)), dim = c(nsim, nareas, nareas))
+    }
     mov <- array(NA,c(nsim,n_age,nareas,nareas))
     mind <- as.matrix(expand.grid(1:nsim,1:n_age,1:nareas,1:nareas))
     mov[mind] <- mov1[mind[,c(1,3,4)]]
@@ -778,11 +796,6 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   if (any(dim(mov) != c(nsim,n_age,nareas,nareas, nyears+proyears)))
     stop('cpars$mov must be array with dimensions: \nc(nsim, maxage+1, nareas, nareas) \nOR \nc(nsim, maxage+1, nareas, nareas, nyears+proyears)', call.=FALSE)
 
-
-
-
-
-
   StockOut <- list()
   StockOut$maxage <- maxage
   StockOut$R0 <- R0
@@ -832,12 +845,14 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   StockOut$LatASD <- LatASD
   StockOut$CAL_binsmid <- CAL_binsmid
   StockOut$CAL_bins <- CAL_bins
+  StockOut$binWidth <- binWidth
   StockOut$nCALbins <- nCALbins
   StockOut$initdist <- initdist
   StockOut$mov <- mov
   StockOut$Pinitdist <- Pinitdist
   StockOut$Asize <- Asize
   StockOut$nareas <- nareas
+  StockOut$Fec_Age <- Fec_Age
   StockOut
 }
 
@@ -875,7 +890,8 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
     nsim <- Fleet@nsim
     nyears <- Fleet@nyears
     proyears <- Fleet@proyears
-    StockPars <- SampleStockPars(Fleet, nsim, nyears, proyears, cpars, msg=msg)
+    if (class(Stock)!='list')
+      StockPars <- SampleStockPars(Fleet, nsim, nyears, proyears, cpars, msg=msg)
   }
 
   if (class(Stock) == "Stock") {
@@ -964,7 +980,12 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
     if (!Fleet@isRel) multi <- 1
   }
 
-  if (!any(is.null(c(cpars$L5, cpars$LFS, cpars$Vmaxlen, cpars$LR5, cpars$LFR, cpars$Rmaxlen))) & all(multi!=1))
+  if (!any(is.null(c(cpars[['L5']],
+                     cpars[['LFS']],
+                     cpars[['Vmaxlen']],
+                     cpars[['LR5']],
+                     cpars[['LFR']],
+                     cpars[['Rmaxlen']]))) & all(multi!=1))
     stop("Selectivity parameters provided in cpars must be absolute values. Is Fleet@isRel == 'FALSE'?")
 
   L5 <- sample_unif('L5', cpars, Fleet, nsim) * multi
@@ -982,7 +1003,30 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
   if (!is.null(cpars$SLarray) & !is.null(cpars[['V']])) {# both selectivity-at-length and -at-age in cpars
     SLarray <- cpars$SLarray
     V <- cpars[['V']]
-  } else if (!is.null(cpars$SLarray) & is.null(cpars[['V']])) { # SLarray in cpars
+    
+    if (!all(c('L5_y', 'LFS_y', 'Vmaxlen_y') %in% names(cpars))) {
+      # need to calculate these
+      for (yr in 1:(nyears+proyears)) {
+        b_ind <- rep(NA, nsim)
+        for (i in 1:nsim) {
+          temp <- min(which(SLarray[i,,yr]>=0.05))
+          if (length(temp)<1) temp <- 1
+          if (is.na(temp)) temp <- 1
+          b_ind[i] <- temp
+        }
+        
+        L5_y[,yr] <- StockPars$CAL_binsmid[b_ind]
+        b_ind <- apply(SLarray[,,yr], 1, which.max)
+        LFS_y[,yr] <- StockPars$CAL_binsmid[b_ind]
+        temp <- abs(replicate(nsim, StockPars$CAL_binsmid) - StockPars$Linf)
+        b_ind <- apply(temp, 2, which.min)
+        Vmaxlen_y[,yr] <- SLarray[,b_ind,yr][1,]
+      }
+    } # end calculate L5_y etc
+    
+  }
+  
+  if (!is.null(cpars$SLarray) & is.null(cpars[['V']])) { # SLarray in cpars
     # Calculate selectivity parameters
     SLarray <- cpars$SLarray
     nbins <- length(StockPars$CAL_binsmid)
@@ -1019,7 +1063,7 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
       stop('V must be dimensions: nsim, n_age, nyears + proyears')
     if (!all(c('L5_y', 'LFS_y', 'Vmaxlen_y') %in% names(cpars))) {
       # need to calculate these from V
-      VB <- function(Linf, K, t0, age) Linf * (1-exp(-K*(age-t0)))
+     
       for (yr in 1:(nyears+proyears)) {
         for (s in 1:nsim) {
           xout <- seq(1, n_age, by=0.1)
@@ -1061,19 +1105,27 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
 
   if (!exists("V", inherits = FALSE)) {
     # calculate selectivity-at-age from selectivity-at-length
-    VList <- lapply(1:nsim, calcV, Len_age=StockPars$Len_age,
-                    LatASD=StockPars$LatASD, SLarray=SLarray,
-                    n_age=n_age, nyears=nyears, proyears=proyears,
-                    CAL_binsmid=StockPars$CAL_binsmid)
+    if (snowfall::sfIsRunning()) {
+      VList <- snowfall::sfLapply(1:nsim, calcV, Len_age=StockPars$Len_age,
+                                  LatASD=StockPars$LatASD, SLarray=SLarray,
+                                  n_age=n_age, nyears=nyears, proyears=proyears,
+                                  CAL_binsmid=StockPars$CAL_binsmid)
+    } else {
+      VList <- lapply(1:nsim, calcV, Len_age=StockPars$Len_age,
+                      LatASD=StockPars$LatASD, SLarray=SLarray,
+                      n_age=n_age, nyears=nyears, proyears=proyears,
+                      CAL_binsmid=StockPars$CAL_binsmid)
+
+    }
     V <- aperm(array(as.numeric(unlist(VList, use.names=FALSE)), dim=c(n_age, nyears+proyears, nsim)), c(3,1,2))
   }
-
 
   # ---- Retention Curve ----
   LR5 <- sample_unif('LR5', cpars, Fleet, nsim) * multi
   LFR <- sample_unif('LFR', cpars, Fleet, nsim) * multi
   Rmaxlen <- sample_unif('Rmaxlen', cpars, Fleet, nsim)
   DR <- sample_unif('DR', cpars, Fleet, nsim)
+  if (all(is.na(DR))) DR <- rep(0, nsim)
 
   LR5_y <- matrix(LR5, nrow = nsim, ncol = nyears + proyears, byrow = FALSE)
   LFR_y <- matrix(LFR, nrow = nsim, ncol = nyears + proyears, byrow = FALSE)
@@ -1086,18 +1138,13 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
   if (!is.null(cpars$retL) & !is.null(cpars$retA)) {# both retention-at-length and -at-age in cpars
     retL <- cpars$retL
     retA <- cpars$retA
-  } else if (!is.null(cpars$retL) & is.null(cpars$retA)) { # retL in cpars
-    # Calculate retention parameters
-    retL <- cpars$retL
-    nbins <- length(StockPars$CAL_binsmid)
-    if (any(dim(retL) != c(nsim, nbins, nyears+proyears)))
-      stop("retL must be dimensions c(nsim, length(CAL_binsmid), nyears+proyears)")
+    
     if (!all(c('LR5_y', 'LFR_y', 'Rmaxlen_y') %in% names(cpars))) {
       # need to calculate these
       for (yr in 1:(nyears+proyears)) {
         b_ind <- rep(NA, nsim)
         for (i in 1:nsim) {
-          temp <- min(which(SLarray[i,,yr]>=0.05))
+          temp <- min(which(retL[i,,yr]>=0.05))
           if (length(temp)<1) temp <- 1
           if (is.na(temp)) temp <- 1
           b_ind[i] <- temp
@@ -1108,6 +1155,45 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
         temp <- abs(replicate(nsim, StockPars$CAL_binsmid) - StockPars$Linf)
         b_ind <- apply(temp, 2, which.min)
         Rmaxlen_y[,yr] <- retL[,b_ind,yr][1,]
+      }
+      LFR_y[LFR_y<=LR5_y] <- LR5_y[LFR_y<=LR5_y]  +1
+    } # end calculate LR5_y etc
+  } 
+  
+  if (!is.null(cpars$retL) & is.null(cpars$retA)) { # retL in cpars
+    # Calculate retention parameters
+    retL <- cpars$retL
+    nbins <- length(StockPars$CAL_binsmid)
+    if (any(dim(retL) != c(nsim, nbins, nyears+proyears)))
+      stop("retL must be dimensions c(nsim, length(CAL_binsmid), nyears+proyears)")
+    if (!all(c('LR5_y', 'LFR_y', 'Rmaxlen_y') %in% names(cpars))) {
+      # need to calculate these
+      for (yr in 1:(nyears+proyears)) {
+        b_ind <- rep(NA, nsim)
+        for (i in 1:nsim) {
+          temp <- min(which(retL[i,,yr]>=0.05))
+          if (length(temp)<1) temp <- 1
+          if (is.na(temp)) temp <- 1
+          b_ind[i] <- temp
+        }
+        LR5_y[,yr] <- StockPars$CAL_binsmid[b_ind]
+        dd <- dim(retL)
+        if (dd[1]==1) {
+          # only 1 sim
+          b_ind <- which.max(retL[1,,yr])
+        } else {
+          b_ind <- apply(retL[,,yr], 1, which.max)  
+        }
+        
+        LFR_y[,yr] <- StockPars$CAL_binsmid[b_ind]
+        temp <- abs(replicate(nsim, StockPars$CAL_binsmid) - StockPars$Linf)
+        b_ind <- apply(temp, 2, which.min)
+        if (dd[1]==1) {
+          Rmaxlen_y[,yr] <- retL[,b_ind,yr]
+        } else {
+          Rmaxlen_y[,yr] <- retL[,b_ind,yr][1,]  
+        }
+        
       }
       LFR_y[LFR_y<=LR5_y] <- LR5_y[LFR_y<=LR5_y]  +1
     } # end calculate LR5_y etc
@@ -1162,52 +1248,55 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
   if (chk > 0) stop("LR5 is greater than LFR in ", chk, ' simulations')
 
   if (!exists("retA", inherits = FALSE)) {
-    # calculate selectivity-at-age from selectivity-at-length
-    VList <- lapply(1:nsim, calcV, Len_age=StockPars$Len_age,
-                    LatASD=StockPars$LatASD, SLarray=retL,
-                    n_age=n_age, nyears=nyears, proyears=proyears,
-                    CAL_binsmid=StockPars$CAL_binsmid)
+    # calculate retention-at-age from retention-at-length
+    if (snowfall::sfIsRunning()) {
+      VList <- snowfall::sfLapply(1:nsim, calcV, Len_age=StockPars$Len_age,
+                                  LatASD=StockPars$LatASD, SLarray=retL,
+                                  n_age=n_age, nyears=nyears, proyears=proyears,
+                                  CAL_binsmid=StockPars$CAL_binsmid)
+    } else {
+      VList <- lapply(1:nsim, calcV, Len_age=StockPars$Len_age,
+                      LatASD=StockPars$LatASD, SLarray=retL,
+                      n_age=n_age, nyears=nyears, proyears=proyears,
+                      CAL_binsmid=StockPars$CAL_binsmid)
+    }
+
     retA <- aperm(array(as.numeric(unlist(VList, use.names=FALSE)), dim=c(n_age, nyears+proyears, nsim)), c(3,1,2))
   }
 
-  V2 <- cpars$V2
-  SLarray2 <- cpars$SLarray2
-  if (is.null(V2)) V2 <- V
-  if (is.null(SLarray2)) SLarray2 <- SLarray
-
   # Apply general discard rate
-  if (is.null(cpars$retA)) {
-    dr <- aperm(abind::abind(rep(list(DR_y), n_age), along=3), c(1,3,2))
-    retA <- (1-dr) * retA
-  }
-  if (is.null(cpars$retL)) {
-    dr <- aperm(abind::abind(rep(list(DR_y), StockPars$nCALbins), along=3), c(1,3,2))
-    retL <- (1-dr) * retL
-  }
+  # if (is.null(cpars$retA)) {
+  #   dr <- aperm(abind::abind(rep(list(DR_y), n_age), along=3), c(1,3,2))
+  #   retA <- (1-dr) * retA
+  # }
+  # if (is.null(cpars$retL)) {
+  #   dr <- aperm(abind::abind(rep(list(DR_y), StockPars$nCALbins), along=3), c(1,3,2))
+  #   retL <- (1-dr) * retL
+  # }
+  
+  dr <- aperm(abind::abind(rep(list(DR_y), n_age), along=3), c(1,3,2))
+  retA <- (1-dr) * retA
+  
+  dr <- aperm(abind::abind(rep(list(DR_y), StockPars$nCALbins), along=3), c(1,3,2))
+  retL <- (1-dr) * retL
 
   Fdisc <- StockPars$Fdisc
+  if (!all(is.finite(Fdisc))) Fdisc <- 0
 
   Fdisc_array1 <- cpars$Fdisc_array1
   if (is.null(Fdisc_array1)) Fdisc_array1 <- array(Fdisc, dim=c(nsim, n_age, nyears+proyears))
-  if (is.null(cpars$V) & is.null(cpars$SLarray)) {
-    # update realized vulnerability curve with retention and dead discarded fish
-    V <- V * (retA + (1-retA)*Fdisc_array1) # Realised selection at age
-  }
-
+  
   Fdisc_array2 <- cpars$Fdisc_array2
   if (is.null(Fdisc_array2)) Fdisc_array2 <- array(Fdisc, dim=c(nsim, StockPars$nCALbins, nyears+proyears))
-  if (is.null(cpars$SLarray)) {
-    SLarray <- SLarray2 * (retL + (1-retL)*Fdisc_array2) # Realised selection at length
-  }
-
-  # Realised Retention curves
-  if (is.null(cpars$retA) & is.null(cpars$retL)) {
-    retA <- retA * V2
-  }
-  if (is.null(cpars$retL)) {
-    retL <- retL * SLarray2
-  }
-
+  
+  
+  # realized vulnerability schedule - accounting for discard mortality on discards
+  Fleetout$retA_real <- V * retA # realized retention curve (prob of retention x prob of selection)
+  Fleetout$V_real <- Fleetout$retA_real + ((V-Fleetout$retA_real) * Fdisc_array1)
+  
+  Fleetout$retL_real <- SLarray * retL # realized retention-at-length curve (prob of retention x prob of selection)
+  Fleetout$SLarray_real <- Fleetout$retL_real + ((SLarray-Fleetout$retL_real) * Fdisc_array2)
+  
   # ---- Existing MPA ----
   if (inherits(Fleet@MPA, 'matrix')) {
     warning('This OM is from a previous version. OM@MPA is now a logical instead of matrix. Assuming no existing MPA')
@@ -1217,6 +1306,14 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
     MPA <- as.logical(Fleet@MPA)
 
   }
+
+  # ---- Empirical weight-at-age ----- (optional)
+  if (!is.null(cpars$Wt_age_C)) {
+    Fleetout$Wt_age_C <- cpars$Wt_age_C
+  } else {
+    Fleetout$Wt_age_C <- Stock$Wt_age
+  }
+  
 
   Fleetout$Fdisc <- Fdisc
   Fleetout$Fdisc_array1 <- Fdisc_array1
@@ -1230,10 +1327,8 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
   Fleetout$L5_y <- L5_y
   Fleetout$LFS_y <- LFS_y
   Fleetout$Vmaxlen_y <- Vmaxlen_y
-  Fleetout$V <- V  # realized vulnerability-at-age
-  Fleetout$SLarray <- SLarray # realized vulnerability-at-length
-  Fleetout$V2 <- V2 # original vulnerablity-at-age curve
-  Fleetout$SLarray2 <- SLarray2 # original vulnerablity-at-length curve
+  Fleetout$V <- V  # vulnerability-at-age
+  Fleetout$SLarray <- SLarray # vulnerability-at-length
   Fleetout$MPA <- MPA
 
   # check V
@@ -1252,9 +1347,16 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
 sample_lnorm <- function(par, cpars, Obj, nsim, altpar=NULL) {
   if (!is.null(cpars[[par]])) return(cpars[[par]])
   if (!is.null(altpar)) par <- altpar
-  val <- slot(Obj, par)
+  val <- slot(Obj, par)[1]
   rlnorm(nsim, mconv(1, val), sdconv(1, val))
 
+}
+
+sample_norm <- function(par, cpars, Obj, nsim, altpar=NULL) {
+  if (!is.null(cpars[[par]])) return(cpars[[par]])
+  if (!is.null(altpar)) par <- altpar
+  val <- slot(Obj, par)[1]
+  rnorm(nsim, 0, val)
 }
 
 #' Sample Observation Parameters
@@ -1330,9 +1432,29 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
 
   # ---- Index Observation Error -----
   betas <- cpars$betas
+  if (is.null(betas)) betas <- cpars$beta
+
   if (is.null(betas))
     betas <- exp(myrunif(nsim, log(Obs@beta[1]), log(Obs@beta[2])))  # the sampled hyperstability /
-  ObsOut$betas <- betas
+
+  if (!is.null(cpars$I_beta)) {
+    ObsOut$I_beta <- cpars$I_beta
+  } else {
+    ObsOut$I_beta <- betas
+  }
+
+  if (!is.null(cpars$SpI_beta)) {
+    ObsOut$SpI_beta <- cpars$SpI_beta
+  } else {
+    ObsOut$SpI_beta <- betas
+  }
+
+  if (!is.null(cpars$VI_beta)) {
+    ObsOut$VI_beta <- cpars$VI_beta
+  } else {
+    ObsOut$VI_beta <- betas
+  }
+
 
   # Sampled index observation error (lognormal sd)
   Isd <- sample_unif('Isd', cpars, Obs, nsim, 'Iobs')
@@ -1373,10 +1495,15 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
   Dbias <- sample_lnorm('Dbias', cpars, Obs, nsim, 'Dbiascv')
   ObsOut$Dbias <- Dbias
 
-  ObsOut$Derr_y <- array(rlnorm((nyears + proyears) * nsim,
-                                mconv(1, rep(ObsOut$Derr, nyears + proyears)),
-                                sdconv(1, rep(ObsOut$Derr, nyears + proyears))),
-                         c(nsim, nyears + proyears)) * Dbias
+  Derr_y <- cpars$Derr_y
+  if (is.null(Derr_y)) {
+    Derr_y <- array(rlnorm((nyears + proyears) * nsim,
+                           mconv(1, rep(ObsOut$Derr, nyears + proyears)),
+                           sdconv(1, rep(ObsOut$Derr, nyears + proyears))),
+                    c(nsim, nyears + proyears)) * Dbias
+  }
+
+  ObsOut$Derr_y <- Derr_y
 
   # ---- M bias ----
   Mbias <- sample_lnorm('Mbias', cpars, Obs, nsim, 'Mbiascv')
@@ -1414,7 +1541,8 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
   # Abundance bias
   Abias <- cpars$Abias
   if (is.null(Abias))
-    Abias <- exp(myrunif(nsim, log(Obs@Btbiascv[1]), log(Obs@Btbiascv[2])))
+    Abias <-  sample_lnorm('Btbiascv', cpars, Obs, nsim, 'Btbiascv')
+  # exp(myrunif(nsim, log(Obs@Btbiascv[1]), log(Obs@Btbiascv[2])))
 
   ObsOut$Abias <- Abias
 
@@ -1431,7 +1559,8 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
   Kbias <- sample_lnorm('Kbias', cpars, Obs, nsim, 'Kbiascv')
   ObsOut$Kbias <- Kbias
 
-  t0bias <- sample_lnorm('t0bias', cpars, Obs, nsim, 't0biascv')
+  t0bias <- sample_norm('t0bias', cpars, Obs, nsim, 't0biascv')
+
   ObsOut$t0bias <- t0bias
 
   Linfbias <- sample_lnorm('Linfbias', cpars, Obs, nsim, 'Linfbiascv')
@@ -1488,12 +1617,12 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
 
   # ---- Effort Obs Error -----
   # Sampled effort observation error (lognormal sd)
-  if (length(Obs@Eobs)<2 && is.null(cpars$Eerr_y)) {
+  if (length(Obs@Eobs)<2 | all(is.na(Obs@Eobs)) && is.null(cpars$Eerr_y)) {
     message('OM@Eobs not specified. Assuming no observation error on Effort')
     Obs@Eobs <- rep(0,2)
     Obs@Ebiascv <- 0
   }
-  Evar <- sample_unif('Esd', cpars, Obs, nsim, 'Eobs')
+  Evar <- sample_unif('Eobs', cpars, Obs, nsim)
 
   ObsOut$Evar <- Evar
 
@@ -1534,7 +1663,11 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
 SampleImpPars <- function(Imp, nsim=NULL, cpars=NULL, nyears=NULL, proyears=NULL) {
   if (class(Imp) != "Imp" & class(Imp) != "OM")
     stop("First argument must be class 'Imp' or 'OM'")
-  if (class(Imp) == "OM") nsim <- Imp@nsim
+  if (class(Imp) == "OM") {
+    nsim <- Imp@nsim
+    proyears <- Imp@proyears
+    nyears <- Imp@nyears
+  }
 
   # Get custom pars if they exist
   if (class(Imp) == "OM" && length(Imp@cpars) > 0 && is.null(cpars))
@@ -1602,6 +1735,7 @@ SampleImpPars <- function(Imp, nsim=NULL, cpars=NULL, nyears=NULL, proyears=NULL
 #'
 #' @param type What cpars to show? 'all', 'Stock', 'Fleet', 'Obs', 'Imp', or 'internal'
 #' @param valid Logical. Show valid cpars?
+#' @param show Logical. Display the table in the Viewer?
 #'
 #' @return a HTML datatable with variable name, description and type of valid cpars
 #' @export
@@ -1614,8 +1748,9 @@ SampleImpPars <- function(Imp, nsim=NULL, cpars=NULL, nyears=NULL, proyears=NULL
 #' }
 #'
 validcpars <- function(type=c("all", "Stock", "Fleet", "Obs", "Imp", "internal"),
-                       valid=TRUE) {
+                       valid=TRUE, show=TRUE) {
 
+  Var <- Desc <- NULL # checks
   type <- match.arg(type, choices=c("all", "Stock", "Fleet", "Obs", "Imp", "internal"),
                     several.ok = TRUE )
   if ('all' %in% type) type <- c("Stock", "Fleet", "Obs", "Imp", "internal")
@@ -1623,13 +1758,13 @@ validcpars <- function(type=c("all", "Stock", "Fleet", "Obs", "Imp", "internal")
   Valid <- Slot <- Dim <- Description <- NULL
 
   # cpars_info <- MSEtool:::cpars_info
-  cpars_info <- cpars_info[!duplicated(cpars_info$Slot),] # remove duplicated 'Name'
+  # cpars_info <- cpars_info[!duplicated(cpars_info$Slot),] # remove duplicated 'Name'
 
   cpars_info$type <- NA
-  stock_ind <- match(slotNames("Stock"), cpars_info$Slot)
-  fleet_ind <- match(slotNames("Fleet"), cpars_info$Slot)
-  obs_ind <- match(slotNames("Obs"), cpars_info$Slot)
-  imp_ind <- match(slotNames("Imp"), cpars_info$Slot)
+  stock_ind <- match(slotNames("Stock"), cpars_info$Var)
+  fleet_ind <- match(slotNames("Fleet"), cpars_info$Var)
+  obs_ind <- match(slotNames("Obs"), cpars_info$Var)
+  imp_ind <- match(slotNames("Imp"), cpars_info$Var)
   int_ind <- (1:nrow(cpars_info))[!1:nrow(cpars_info) %in%
                                     c(stock_ind, fleet_ind, obs_ind, imp_ind)]
 
@@ -1642,8 +1777,8 @@ validcpars <- function(type=c("all", "Stock", "Fleet", "Obs", "Imp", "internal")
   dflist <- list(); count <- 0
   for (ss in type) {
     count <- count + 1
-    df <- cpars_info %>% dplyr::filter(Valid==valid, cpars_info$type %in% ss) %>%
-      dplyr::select(Slot, Dim, Description, type)
+    df <- cpars_info %>% dplyr::filter(cpars_info$type %in% ss) %>%
+      dplyr::select(Var, Dim, Desc, type)
     names(df) <- c("Var.", "Dim.", "Desc.", "Type")
     if (nrow(df)> 0) {
       if (nrow(df)>1) {
@@ -1662,14 +1797,20 @@ validcpars <- function(type=c("all", "Stock", "Fleet", "Obs", "Imp", "internal")
 
   dfout$Type <- as.factor(dfout$Type)
   dfout$Var. <- as.factor(dfout$Var.)
-  if (requireNamespace("DT", quietly = TRUE)) {
-    return(DT::datatable(dfout, filter = 'top', options = list(
-      columnDefs = list(list(searchable = FALSE, targets = c(2,3))),
-      pageLength = 25, autoWidth = TRUE)))
-  } else {
-    message("Install package `DT` to display dataframe as HTML table")
-    return(dfout)
+  if (show) {
+    if (requireNamespace("DT", quietly = TRUE)) {
+      return(DT::datatable(dfout,
+                           filter = 'top',
+                           options = list(
+                             pageLength = 25, autoWidth = TRUE))
+      )
+    } else {
+      message("Install package `DT` to display dataframe as HTML table")
+      return(dfout)
+    }
   }
+
+  invisible(dfout)
 }
 
 

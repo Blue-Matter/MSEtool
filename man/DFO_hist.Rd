@@ -2,14 +2,14 @@
 % Please edit documentation in R/DFO.R
 \name{DFO_hist}
 \alias{DFO_hist}
-\title{Deparment of Fisheries and Oceans historical plot}
+\title{Department of Fisheries and Oceans historical plot}
 \usage{
 DFO_hist(OM, panel = T, nsim = 48)
 }
 \arguments{
 \item{OM}{An operating model object of class OM}
 
-\item{panel}{should the plots be seperate or in two panels?}
+\item{panel}{should the plots be separate or in two panels?}
 
 \item{nsim}{how many simulations should be plotted (over-ridden
 by OM@nsim where cpars is specified)}

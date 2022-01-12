@@ -4,19 +4,50 @@
 
 #' @slot Name The name of the Implementation error object. Single value.
 #'  Character string.
-#' @slot TACFrac Mean fraction of TAC taken. Uniform distribution lower and
-#'  upper bounds. Positive real number.
-#' @slot TACSD Log-normal coefficient of variation in the fraction of Total
-#'  Allowable Catch (TAC) taken. Uniform distribution lower and upper bounds.
-#'  Non-negative real numbers.
-#' @slot TAEFrac Mean fraction of TAE taken. Uniform distribution lower and
-#'  upper bounds. Positive real number.
-#' @slot TAESD Log-normal coefficient of variation in the fraction of Total
-#'  Allowable Effort (TAE) taken. Uniform distribution lower and upper bounds.
-#'  Non-negative real numbers.
-#' @slot SizeLimFrac The real minimum size that is retained expressed as a
-#'  fraction of the size of retention. Uniform distribution lower and upper bounds.
-#'  Positive real number.
-#' @slot SizeLimSD Log-normal coefficient of variation controlling mismatch
-#'  between a minimum size limit and the real minimum size retained. Uniform
-#'  distribution lower and upper bounds. Non-negative real numbers.
+#' @slot TACFrac Mean fraction of recommended TAC that is actually taken. For
+#'  each historical simulation a single value is drawn from a uniform distribution
+#'  specified by the upper and lower bounds provided. This value is the mean TAC
+#'  fraction obtained across all years of that simulation, and a yearly TAC frac is
+#'  drawn from a log-normal distribution with the simulation mean and a coefficient
+#'  of variation specified by the value of `TACSD` drawn for that simulation. If
+#'  the value drawn is greater than 1 the amount of catch taken is greater than
+#'  that recommended by the TAC, and if it is less than 1 the amount of catch taken
+#'  is less than that recommended by the TAC. Positive real numbers.
+#' @slot TACSD Log-normal coefficient of variation in the fraction of
+#'  recommended TAC that is actually taken. For each historical simulation a single
+#'  value is drawn from a uniform distribution specified by the upper and lower
+#'  bounds provided. This value is used, along with the `TACFrac` drawn for that
+#'  simulation, to create a log-normal distribution that yearly values specifying
+#'  the actual amount of catch taken are drawn from. Positive real numbers.
+#' @slot TAEFrac Mean fraction of recommended TAE that is actually taken. For
+#'  each historical simulation a single value is drawn from a uniform distribution
+#'  specified by the upper and lower bounds provided. This value is the mean TAE
+#'  fraction obtained across all years of that simulation, and a yearly TAE frac is
+#'  drawn from a log-normal distribution with the simulation mean and a coefficient
+#'  of variation specified by the value of `TAESD` drawn for that simulation. If
+#'  the value drawn is greater than 1 the amount of effort employed is greater than
+#'  that recommended by the TAE, and if it is less than 1 the amount of effort
+#'  employed is less than that recommended by the TAE. Positive real numbers.
+#' @slot TAESD Log-normal coefficient of variation in the fraction of
+#'  recommended TAE that is actually taken. For each historical simulation a single
+#'  value is drawn from a uniform distribution specified by the upper and lower
+#'  bounds provided. This value is used, along with the `TAEFrac` drawn for that
+#'  simulation, to create a log-normal distribution that yearly values speciying
+#'  the actual amount of efort employed are drawn from. Positive real numbers.
+#' @slot SizeLimFrac Mean fraction of recommended size limit that is actually
+#'  retained. For each historical simulation a single value is drawn from a uniform
+#'  distribution specified by the upper and lower bounds provided. This value is
+#'  the mean size limit fraction obtained across all years of that simulation, and
+#'  a yearly size limit fraction is drawn from a log-normal distribution with the
+#'  simulation mean and a coefficient of variation specified by the value of
+#'  `SizeLimSD` drawn for that simulation. If the value drawn is greater than 1 the
+#'  size of fish retained is greater than that recommended by the size limit, and
+#'  if it is less than 1 the amount of size of fish retained is less than that
+#'  recommended by the size limit. Positive real numbers.
+#' @slot SizeLimSD Log-normal coefficient of variation in the fraction of
+#'  recommended size limit that is actually retained. For each historical
+#'  simulation a single value is drawn from a uniform distribution specified by the
+#'  upper and lower bounds provided. This value is used, along with the
+#'  `SizeLimFrac` drawn for that simulation, to create a log-normal distribution
+#'  that yearly values speciying the actual fraction of the size limit retained are
+#'  drawn from. Positive real numbers.

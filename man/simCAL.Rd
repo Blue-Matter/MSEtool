@@ -12,6 +12,7 @@ simCAL(
   CAL_nsamp,
   nCALbins,
   CAL_binsmid,
+  CAL_bins,
   vn,
   retL,
   Linfarray,
@@ -35,6 +36,8 @@ simCAL(
 
 \item{CAL_binsmid}{mid-points of CAL bins}
 
+\item{CAL_bins}{Boundary of CAL bins}
+
 \item{vn}{Vulnerable numbers-at-age}
 
 \item{retL}{Retention at length curve}
@@ -48,7 +51,8 @@ simCAL(
 \item{LenCV}{CV of length-at-age#'}
 }
 \value{
-named list with CAL array and LFC, ML, & Lc vectors
+named list with CAL array and LFC, ML, & Lc vectors\preformatted{CALdat <- simCAL(nsim, nyears, StockPars$maxage, ObsPars$CAL_ESS,
+}
 }
 \description{
 Simulate CAL and calculate length-at-first capture (LFC),

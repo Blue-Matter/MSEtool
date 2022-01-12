@@ -2,7 +2,7 @@
 % Please edit documentation in R/iSCAM2OM.R
 \name{iSCAMinds}
 \alias{iSCAMinds}
-\title{Combines indices into a single index using linear modelling}
+\title{Combines indices into a single index using linear modelling (** Deprecated **)}
 \usage{
 iSCAMinds(idata, Year, fleeteffect = T)
 }

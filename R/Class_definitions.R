@@ -101,7 +101,7 @@ setClassUnion(name="prob.class", members=c("matrix", "numeric", "data.frame"))
 #' with dimensions `nsim` x `length(CAL_mids)`.
 #' @slot CAL_bins The values delimiting the length bins for the catch-at-length data. Vector. Non-negative real numbers
 #' @slot CAL_mids The values of the mid-points of the length bins. Optional, calculated from `CAL_bins` if not entered. Vector. Non-negative real numbers.
-#' @slot CAL Catch-at-length data. An array with dimensions nsim x nyears x length(CAL_mids). Non-negative integers
+#' @slot CAL Catch-at-length data. An array with dimensions nsim x nyears x length(CAL_mids). Non-negative integers. By default the CAL data will be the retained lengths (i.e, not including discards). If `OM@control$CAL =="removals"` then the CAL data will include all removals (retained + discards).
 #'
 #' @slot Dep Stock depletion SSB(current)/SSB(unfished). Vector nsim long. Fraction.
 #' @slot CV_Dep Coefficient of variation in current stock depletion. Vector nsim long. Positive real numbers
@@ -150,7 +150,6 @@ setClass("Data",
                         LHYear = "numeric", MPrec = "vector",
                         Units = "character", MPeff = "vector",
                         nareas = "numeric",
-
                         MaxAge = "vector", Mort = "vector", CV_Mort = "vector",
                         vbLinf = "vector", CV_vbLinf = "vector",
                         vbK = "vector", CV_vbK = "vector",
@@ -162,11 +161,9 @@ setClass("Data",
                         L50 = "vector",  CV_L50 = "vector",
                         L95 = "vector",
                         LenCV="vector",
-
                         LFC = "vector", CV_LFC = "vector",
                         LFS = "vector", CV_LFS = "vector",
                         Vmaxlen = 'vector',
-
                         Year = "vector",
                         Cat = "matrix", CV_Cat = "matrix",
                         Effort = 'matrix', CV_Effort = 'matrix',
@@ -265,13 +262,13 @@ setMethod("initialize", "Data", function(.Object, stock="nada", ...) {
   if (NAor0(.Object@CV_steep)) .Object@CV_steep <- 0.2
   if (NAor0(.Object@nareas)) .Object@nareas <- 2
 
-  if (NAor0(.Object@CAA)) .Object@CAA <- array(NA, c(1, 1, 1))
-  if (NAor0(.Object@CAL)) .Object@CAL <- array(NA, c(1, 1, 1))
+  if (all(is.na(.Object@CAL))) .Object@CAA <- array(NA, c(1, 1, 1))
+  if (all(is.na(.Object@CAL))) .Object@CAL <- array(NA, c(1, 1, 1))
   if (length(.Object@CAL_bins) == 0) .Object@CAL_bins <- 1
 
-  if (NAor0(.Object@AddInd)) .Object@AddInd <- array(NA, c(1, 1, 1))
-  if (NAor0(.Object@CV_AddInd)) .Object@CV_AddInd <- array(NA, c(1, 1, 1))
-  if (NAor0(.Object@AddIndV)) .Object@AddIndV <- array(NA, c(1, 1, 1))
+  if (all(is.na(.Object@CAL))) .Object@AddInd <- array(NA, c(1, 1, 1))
+  if (all(is.na(.Object@CAL))) .Object@CV_AddInd <- array(NA, c(1, 1, 1))
+  if (all(is.na(.Object@CAL))) .Object@AddIndV <- array(NA, c(1, 1, 1))
 
   if (length(.Object@TAC) == 0) .Object@TAC <- array(1, c(1, 1))
   # if (length(.Object@TACbias) == 0) .Object@TACbias <- array(1, c(1, 1))
@@ -288,8 +285,8 @@ importslot <- function(name, length=2, Data, Names, numeric=TRUE, essential=TRUE
   x <- Data[match(name, Names), 1:length]
   if (numeric) x <- as.numeric(x)
   if (essential) {
-    if (any(is.na(x))) stop('NAs in ', name, '. Should be length ', length)
-    if (length(x)<length) stop(name, ' is missing')
+    if (any(is.na(x))) warning('NAs in ', name, '. Should be length ', length)
+    if (length(x)<length) warning(name, ' is missing')
   }
   x
 }
@@ -300,11 +297,8 @@ importslot <- function(name, length=2, Data, Names, numeric=TRUE, essential=TRUE
 #' An operating model component that specifies the parameters of the population
 #' dynamics model
 #'
-
-#' @name Stock-class
 #' @docType class
 #'
-#' @slot Name The name of the Stock object. Single value. Character string
 #' @template Stock_template
 #'
 #' @section Objects from the Class: Objects can be created by calls of the form
@@ -417,7 +411,6 @@ setClassUnion(name="char.log", members=c("character", "logical"))
 #'
 #' @name Fleet-class
 #' @docType class
-#' @slot Name Name of the Fleet object. Single value. Character string.
 #' @template Fleet_template
 #'
 #' @section Creating Object:
@@ -431,7 +424,8 @@ setClassUnion(name="char.log", members=c("character", "logical"))
 #'
 setClass("Fleet", slots = c(Name = "character",
                             nyears = "numeric",
-                            Spat_targ = "numeric",
+                            CurrentYr="numeric",
+
                             EffYears = "numeric",
                             EffLower = "numeric",
                             EffUpper = "numeric",
@@ -446,7 +440,7 @@ setClass("Fleet", slots = c(Name = "character",
                             LFR = "numeric",
                             Rmaxlen = "numeric",
                             DR = "numeric",
-                            CurrentYr="numeric",
+                            Spat_targ = "numeric",
                             MPA='char.log',
                             Misc='list')
                             )
@@ -494,9 +488,12 @@ setMethod("initialize", "Fleet", function(.Object, file = NA, dec=c(".", ",")) {
       .Object@L5 <- importslot("L5", 2, Data, Names)
       .Object@LFS <- importslot("LFS", 2, Data, Names)
       .Object@Vmaxlen <- importslot("Vmaxlen", 2, Data, Names)
-      .Object@LR5 <- importslot("LR5", 2, Data, Names)
-      .Object@LFR <- importslot("LFR", 2, Data, Names)
-      .Object@Rmaxlen <- importslot("Rmaxlen", 2, Data, Names)
+      .Object@LR5 <- importslot("LR5", 2, Data, Names, essential = FALSE)
+      if (all(is.na(.Object@LR5))) .Object@LR5 <- c(0,0)
+      .Object@LFR <- importslot("LFR", 2, Data, Names, essential = FALSE)
+      if (all(is.na(.Object@LFR))) .Object@LFR <- c(0.001,0.001)
+      .Object@Rmaxlen <- importslot("Rmaxlen", 2, Data, Names, essential=FALSE)
+      if (all(is.na(.Object@Rmaxlen))) .Object@Rmaxlen <- c(1,1)
       .Object@DR <- importslot("DR", 2, Data, Names)
 
       .Object@isRel <- importslot("isRel", 1, Data, Names, FALSE, FALSE)
@@ -560,7 +557,6 @@ NULL
 #' An operating model component that controls the observation model
 #'
 #'
-#' @name Obs-class
 #' @docType class
 #' @note Its questionable whether the hyperstability/hyperdepletion should be
 #' categorised as an observation model characteristic as it is most often
@@ -917,8 +913,8 @@ setMethod("initialize", "OM", function(.Object, Stock=NULL, Fleet=MSEtool::Gener
 #'  \item Landings: Landings (biomass); array dimensions `c(nsim, nyears, nareas)`
 #'  \item Discards: Discards (biomass); array dimensions `c(nsim, nyears, nareas)`
 #'  \item Find: Historical fishing mortality (scale-free); matrix dimensions `c(nsim, nyears)`
-#'  \item RecDev: Recruitment deviations (historical and projection);
-#'  matrix dimensions `c(nsim, nyears+proyears+maxage)`
+#'  \item RecDev: Recruitment deviations (historical and projection); matrix dimensions `c(nsim, nyears+proyears+maxage)`
+#'  \item SPR: Named list with Equilibrium and Dynamic SPR (both matrices iwth dimensions `c(nsim, nyears)`)
 #'  \item Unfished_Equilibrium: A named list with unfished equilibrium numbers and biomass-at-age
 #' }
 #'
@@ -935,7 +931,13 @@ setMethod("initialize", "OM", function(.Object, Stock=NULL, Fleet=MSEtool::Gener
 #'      \item FMSY: Fishing mortality corresponding with asymptotic MSY
 #'      \item SSBMSY: Spawning stock biomass corresponding with asymptotic MSY
 #'      \item BMSY: total biomass corresponding with asymptotic MSY
-#'      \item VBMSY: Vulneralbe biomass corresponding with asymptotic MSY
+#'      \item VBMSY: Vulnerable biomass corresponding with asymptotic MSY
+#'      \item F01: Fishing mortality where the change in yield per recruit is 10% of that at F = 0
+#'      \item Fmax: Fishing mortality that maximizes yield per recruit
+#'      \item F_SPR: Fishing mortality corresponding to spawning potential ratio of 20 - 60% in increments of 5%; array dimensions \code{c(nsim, 9, nyears+proyears)}
+#'      \item Fcrash: Fishing mortality corresponding to the recruits-per-spawner at the origin of the stock-recruit relationship
+#'      \item Fmed: Fishing mortality corresponding to the median recruits-per-spawner in the historical period
+#'      \item SPRcrash: SPR corresponding to the recruits-per-spawner at the origin of the stock-recruit relationship
 #'    }
 #'    \item Dynamic_Unfished: A named list with dynamic unfished reference points for each simulation and year:
 #'    \itemize{
@@ -1054,7 +1056,7 @@ setMethod("initialize", "MSE", function(.Object, Name, nyears, proyears,
 
 #' An object for storing data for analysis using data-limited methods
 #'
-#' Used interally
+#' Used internally
 #'
 #' @name PMobj-class
 #' @docType class
@@ -1093,11 +1095,11 @@ setMethod("show", signature = (object="PMobj"), function(object) {
     for (sl in sls) {
       r <- match(sl, sls)
       slval <- slot(object, sl)
-      if (class(slval) == "array" & length(slval)>0) {
+      if ('array' %in% class(slval) & length(slval)>0 & length(dim(slval))>2) {
         df[r,2] <- 'array'
-      } else if (class(slval) == "matrix" & length(slval)>0) {
+      } else if ('matrix' %in% class(slval) & length(slval)>0) {
         df[r,2] <- 'matrix'
-      } else if (length(slval) > 0 & class(slval) != "call") {
+      } else if (length(slval) > 0 & ! 'call' %in% class(slval)) {
         df[r,2] <- slval
       } else {
         df[r, 2] <- 'not defined'
@@ -1497,7 +1499,7 @@ setMethod("summary",
 
               df1$Year <- as.numeric(df1$Year)
 
-              yr.n <- df1 %>% dplyr::group_by(Year) %>% dplyr::summarise(n=sum(Freq))
+              yr.n <- df1 %>% dplyr::group_by(Year) %>% dplyr::summarise(n=sum(Freq, na.rm=T))
               yr.ind <- yr.n %>% dplyr::filter(n>0) %>% dplyr::select(Year)
 
               Years <- object@Year

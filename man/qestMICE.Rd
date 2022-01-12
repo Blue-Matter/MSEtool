@@ -23,11 +23,14 @@ qestMICE(
   Spat_targ,
   M_ageArrayx,
   Mat_agex,
+  Fec_agex,
   Asizex,
-  Kx,
-  Linfx,
-  t0x,
-  Mx,
+  WatAgex,
+  Len_agex,
+  Karrayx,
+  Linfarrayx,
+  t0arrayx,
+  Marrayx,
   R0x,
   R0ax,
   SSBpRx,
@@ -45,6 +48,8 @@ qestMICE(
   plusgroup,
   optVB,
   VB0x,
+  B0x,
+  WtCx,
   maxF
 )
 }
@@ -73,17 +78,23 @@ qestMICE(
 
 \item{movx}{Array \verb{[stock,age,area,area]} of movement transitions}
 
-\item{Spat_targ}{Matrix \verb{[stock, fleet]} of spatial targetting parameter (0 evenly spatial distributed, 1 proportional to vulnerable biomass)}
+\item{Spat_targ}{Matrix \verb{[stock, fleet]} of spatial targeting parameter (0 evenly spatial distributed, 1 proportional to vulnerable biomass)}
 
 \item{M_ageArrayx}{Array \verb{[stock, age,year]} of Natural mortality rate at age}
 
-\item{Mat_agex}{Array \verb{[stock, age, year]} of maturity (spawning fraction) age age}
+\item{Mat_agex}{Array \verb{[stock, age, year]} of maturity (spawning fraction) at age}
+
+\item{Fec_agex}{Array \verb{[stock, age, year]} of mature spawning weight at age}
 
 \item{Asizex}{Matrix \verb{[stock, area]} Area size}
 
-\item{Kx}{Vector \verb{[stock]} of von B growth parameter K}
+\item{Karrayx}{Array of von B growth parameter K}
 
-\item{Mx}{Vector \verb{[stock]} mature natural mortality rate}
+\item{Linfarrayx}{Array of von B asymptotic length parameter Linf}
+
+\item{t0arrayx}{Array ofvon B theoretical age at zero length (t0)}
+
+\item{Marrayx}{Array of mature natural mortality rate}
 
 \item{R0x}{Vector \verb{[stock]} unfished recruitment}
 
@@ -113,11 +124,17 @@ qestMICE(
 
 \item{x}{Integer. The simulation number}
 
+\item{optVB}{Logical, whether to optimize to vulnerable biomass (or spawning biomass otherwise)}
+
+\item{VB0x}{Vector \verb{[stock]} unfished vulnerable biomass}
+
+\item{B0x}{Vector \verb{[stock]} unfished total biomass}
+
 \item{mod}{Character if 'opt' qestMICE returns the objective function otherwise the fitted values in a list}
 
-\item{Linf}{Vector \verb{[stock]} of von B asymptotic length parameter Linf}
+\item{plusgroup.}{Integer vector \verb{[stock]} indicating if a plus group is used}
 
-\item{t0}{Vector \verb{[stock]} of von B theoretical age at zero length (t0)}
+\item{WtC}{Array \verb{[stock, fleet, n_age]} of weight at age in catch in the last historical year}
 }
 \description{
 Function returns objective function that fits both stock depletion and catch fraction among fleets

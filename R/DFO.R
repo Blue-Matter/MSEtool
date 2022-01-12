@@ -30,7 +30,7 @@
 #' @describeIn runCOSEWIC Calls `runMSE` with number of projection years for 6x maximum age and
 #' uses `NFref`, `FMSYref`, and `curE` MPs.
 #' @references
-#' \url{http://cosewic.ca/index.php/en-ca/}
+#' \url{https://cosewic.ca/index.php/en-ca/}
 #' @export runCOSEWIC
 runCOSEWIC<-function(OM, ...){
 
@@ -45,14 +45,14 @@ runCOSEWIC<-function(OM, ...){
 
 
 
-#' Deparment of Fisheries and Oceans historical plot
+#' Department of Fisheries and Oceans historical plot
 #'
 #' A plot of current and historical stock status by simulation according to the
 #' stock status zones and reference points of DFO.
 #' http://www.dfo-mpo.gc.ca/reports-rapports/regs/sff-cpd/precaution-eng.htm
 #'
 #' @param OM An operating model object of class OM
-#' @param panel should the plots be seperate or in two panels?
+#' @param panel should the plots be separate or in two panels?
 #' @param nsim how many simulations should be plotted (over-ridden
 #' by OM@nsim where cpars is specified)
 #' @author T. Carruthers
@@ -84,7 +84,7 @@ DFO_hist <- function(OM, panel= T,nsim=48) {
 
 }
 
-#' Deparment of Fisheries and Oceans projection plot
+#' Department of Fisheries and Oceans projection plot
 #'
 #' A projection plot of MP performance by simulation according to the
 #' stock status zones and reference points of DFO.
@@ -124,7 +124,7 @@ DFO_proj <- function(MSEobj,maxplot=6) {
 
 }
 
-#' Deparment of Fisheries and Oceans trade-off plot
+#' Department of Fisheries and Oceans trade-off plot
 #'
 #' A plot of mean biomass relative to BMSY and fishing mortality rate relative to FMSY
 #' over the final 5 years of the projection
@@ -161,7 +161,7 @@ DFO_plot<-function(MSEobj,zero_origin=T){
 
 }
 
-#' Deparment of Fisheries and Oceans stock status bar plot
+#' Department of Fisheries and Oceans stock status bar plot
 #'
 #' A plot of biomass relative to BMSY over projected years
 #'
@@ -459,7 +459,7 @@ encircle<-function(x,y,col="red",perc=0.05,xrange=NA,yrange=NA,log=F,lty=1,lwd=1
 
 }
 
-#' Deparment of Fisheries and Oceans default plot 2
+#' Department of Fisheries and Oceans default plot 2
 #'
 #' A preliminary plot for returning trade-offs plots and performance table for
 #' probability of obtaining half reference (FMSY) yield and probability of biomass
@@ -547,7 +547,7 @@ DFO_plot2 <- function(MSEobj, nam = NA,panel = T,Bcut=50, Ycut=50) {
 }
 
 
-#' Deparment of Fisheries and Oceans biomass quantile plot
+#' Department of Fisheries and Oceans biomass quantile plot
 #'
 #' A plot of biomass relative to BMSY quantiles over projected years
 #'
@@ -742,11 +742,14 @@ COSEWIC_Pplot<-function(MSEobj,syear=2017,qcol='#FFCB62', quants=c(0.05,0.25,0.5
 
   op<-par(mfrow=c(3,2),mai=c(0.6,0.6,0.05,0.05),omi=c(0.05,0.05,0.3,0.05))
   #layout(matrix(1:4,ncol=2),heights=c(2.5,1))
-  proyears<-dim(MSEobj@SB_SBMSY)[3]
-  nyears<-dim(MSEobj@SSB_hist)[3]
+  proyears<-MSEobj@proyears
+  nyears<-MSEobj@nyears
+  nsim<-MSEobj@nsim
+  maxage<- MSEobj@PPD[[1]]@MaxAge
+
   yrs<-syear+((1:proyears)-1)
-  maxage<-dim(MSEobj@CAA)[3]
   MGT<-ceiling(MSEobj@OM$MGT)
+
   if(proyears<maxage*3)message("This function requires a suitably long time horizon for projections. Please create a COSEWIC class MSE object using the function runCOSEWIC()")
   timehorizon<-MGT*3
 
@@ -786,11 +789,11 @@ COSEWIC_Dplot<-function(MSEobj,syear=2017,qcol='#79F48D', quants=c(0.05,0.25,0.5
 
   op<-par(mfrow=c(3,1),mai=c(0.6,0.8,0.05,0.05),omi=c(0.05,0.05,0.3,0.05))
   #layout(matrix(1:4,ncol=2),heights=c(2.5,1))
-  proyears<-dim(MSEobj@SB_SBMSY)[3]
-  nyears<-dim(MSEobj@SSB_hist)[3]
-  nsim<-dim(MSEobj@SSB_hist)[1]
+  proyears<-MSEobj@proyears
+  nyears<-MSEobj@nyears
+  nsim<-MSEobj@nsim
   yrs<-syear+((-nyears+1):proyears)
-  maxage<-dim(MSEobj@CAA)[3]
+  maxage<- MSEobj@PPD[[1]]@MaxAge
   MGT<-ceiling(MSEobj@OM$MGT)
   mMGT<-max(MGT)
   if(proyears<maxage*nGT)stop("This function requires a suitably long time horizon for projections. Please create a COSEWIC class MSE object using the function runCOSEWIC()")
@@ -805,7 +808,7 @@ COSEWIC_Dplot<-function(MSEobj,syear=2017,qcol='#79F48D', quants=c(0.05,0.25,0.5
   i<-0
   for(MP in ord){
     i<-i+1
-    SSBh<-apply(MSEobj@SSB_hist,c(1,3),sum)
+    SSBh<-MSEobj@SSB_hist
     SSBd<-SSB<-cbind(matrix(rep(SSBh[,1],mMGT*nGT),nrow=nsim),SSBh,MSEobj@SSB[,MP,])
     SSBd[ind2]<-SSB[ind2]/SSB[ind1] * 100
     SSBd<-SSBd[,(mMGT*3)+(1:(nyears+proyears)-1)]
@@ -831,13 +834,16 @@ COSEWIC_Blow<-function(MSEobj,syear=2017,qcol=rgb(0.4,0.8,0.95), quants=c(0.05,0
 
   op<-par(mai=c(0.6,0.8,0.05,0.05),omi=c(0.05,0.05,0.3,0.05))
   #layout(matrix(1:4,ncol=2),heights=c(2.5,1))
-  proyears<-dim(MSEobj@SB_SBMSY)[3]
-  nyears<-dim(MSEobj@SSB_hist)[3]
-  nsim<-dim(MSEobj@SSB_hist)[1]
+
+  proyears<-MSEobj@proyears
+  nyears<-MSEobj@nyears
+  nsim<-MSEobj@nsim
+  yrs<-syear+((-nyears+1):proyears)
+  maxage<- MSEobj@PPD[[1]]@MaxAge
+
   allyrs<-syear+((-nyears+1):proyears)
   pyrs<-syear+((1:proyears)-1)
   hyrs<-syear-((nyears:1)-1)
-  maxage<-dim(MSEobj@CAA)[3]
   MGT<-ceiling(MSEobj@OM$MGT)
   mMGT<-max(MGT)
   if(proyears<maxage*nGT)stop("This function requires a suitably long time horizon for projections. Please create a COSEWIC class MSE object using the function runCOSEWIC()")
@@ -850,6 +856,8 @@ COSEWIC_Blow<-function(MSEobj,syear=2017,qcol=rgb(0.4,0.8,0.95), quants=c(0.05,0
   Blow=MSEobj@OM$Blow
 
   histSSB<-apply(apply(MSEobj@SSB_hist,c(1,3),sum)/Blow < 1,2,mean)*100
+  histSSB<-apply(MSEobj@SSB_hist/Blow < 1,2,mean)*100
+
   NFrefSSB<-apply(MSEobj@SSB[,match("NFref",MSEobj@MPs),]/Blow < 1,2,mean)*100
   FMSYrefSSB<-apply(MSEobj@SSB[,match("FMSYref",MSEobj@MPs),]/Blow < 1,2,mean)*100
   curESSB<-apply(MSEobj@SSB[,match("curE",MSEobj@MPs),]/Blow < 1,2,mean)*100
@@ -878,16 +886,19 @@ COSEWIC_Hplot<-function(MSEobj,syear=2017,qcol=rgb(0.4,0.8,0.95), quants=c(0.05,
   lcol<-makeTransparent(qcol,85)
   op<-par(mai=c(0.6,0.6,0.05,0.05),omi=c(0.05,0.05,0.3,0.05))
   layout(matrix(1:4,ncol=2),heights=c(2.5,1))
-  proyears<-dim(MSEobj@SB_SBMSY)[3]
-  nyears<-dim(MSEobj@SSB_hist)[3]
-  yrs<-syear-((nyears:1)-1)
-  maxage<-dim(MSEobj@CAA)[3]
+  proyears<-MSEobj@proyears
+  nyears<-MSEobj@nyears
+  nsim<-MSEobj@nsim
+  yrs<-syear+((-nyears+1):proyears)
+  maxage<- MSEobj@PPD[[1]]@MaxAge
+
   MGT<-ceiling(MSEobj@OM$MGT)
   if(proyears<maxage*3)message("This function requires a suitably long time horizon for projections. Please create a COSEWIC class MSE object using the function runCOSEWIC()")
   timehorizon<-MGT*3
 
   #Spawning biomass extraction
-  SSB<-apply(MSEobj@SSB_hist,c(1,3),sum)
+  # SSB<-apply(MSEobj@SSB_hist,c(1,3),sum)
+  SSB <-MSEobj@SSB_hist
 
   # Depletion plot relative to B0
   D<-SSB/MSEobj@OM$SSB0
@@ -909,31 +920,94 @@ COSEWIC_Hplot<-function(MSEobj,syear=2017,qcol=rgb(0.4,0.8,0.95), quants=c(0.05,
 
 #' Subset an OM cpars slot
 #'
-#' Subset the custom parameters of an operating model
+#' Subset the custom parameters of an operating model by simulation and projection years 
 #'
 #' @param OM An object of class OM
-#' @param sims A logical vector OM@nsim long of simulations to either retain (TRUE) or remove (FALSE)
+#' @param sims A logical vector of length \code{OM@@nsim} to either retain (TRUE) or remove (FALSE).
+#' Alternatively, a numeric vector indicating which simulations (from 1 to nsim) to keep.
+#' @param proyears If provided, a numeric to reduce the number of projection years (must be less than \code{OM@@proyears}).
 #' @return An object of class OM
-#' @author T. Carruthers
+#' @seealso \link{Sub} for MSE objects, \link{SubOM} for OM components.
+#' @author T. Carruthers, Q. Huynh
 #' @export SubCpars
-SubCpars<-function(OM,sims){
-
-  for(i in 1:length(OM@cpars)){
-
-    OM@nsim<-sum(sims)
-
-    if(class(OM@cpars[[i]])=="matrix"){
-      OM@cpars[[i]]<-OM@cpars[[i]][sims,]
-    }else if(class(OM@cpars[[i]])=="array"){
-      OM@cpars[[i]]<-OM@cpars[[i]][sims,,]
-    }else{
-      OM@cpars[[i]]<-OM@cpars[[i]][sims]
+SubCpars<-function(OM, sims = 1:OM@nsim, proyears = OM@proyears) {
+  
+  # Reduce the number of simulations
+  nsim_full <- OM@nsim
+  if(is.numeric(sims)) {
+    sims2 <- logical(nsim_full)
+    sims2[sims] <- TRUE
+  } else if(is.logical(sims) && length(sims) == nsim_full) {
+    sims2 <- sims
+  } else stop("Logical vector sims need to be of length ", nsim_full)
+  
+  if(any(!sims2) && sum(sims2) < nsim_full) {
+    message("Removing simulations: ", paste0(which(!sims2), collapse = " "))
+    OM@nsim <- sum(sims2)      
+    message("Set OM@nsim = ", OM@nsim)
+    
+    if(length(OM@cpars)) {
+      cpars <- OM@cpars
+      
+      subset_function <- function(xx, sims, cpars) {
+        x <- cpars[[xx]]
+        if(any(xx == c("CAL_bins", "MPA", "plusgroup", "CAL_binsmid", "binWidth", "AddIunits", "Wa", "Wb", "Data"))) {
+          return(x)
+        } else if(is.matrix(x)) {
+          return(x[sims, , drop = FALSE])
+        } else if(is.array(x)) {
+          if(length(dim(x)) == 3) return(x[sims, , , drop = FALSE])
+          if(length(dim(x)) == 4) return(x[sims, , , , drop = FALSE])
+          if(length(dim(x)) == 5) return(x[sims, , , , , drop = FALSE])
+        } else if(length(x) == length(sims)) {
+          return(x[sims])
+        } else return(x)
+      }
+      
+      OM@cpars <- lapply(names(cpars), subset_function, sims = sims2, cpars = cpars) %>% structure(names = names(cpars))
     }
-
+  }
+  
+  # Reduce the number of projection years
+  proyears_full <- OM@proyears
+  if(proyears < proyears_full) {
+    message("Reducing the number of projection years from ", proyears_full, " to ", proyears)
+    OM@proyears <- proyears
+    
+    if(length(OM@cpars)) {
+      cpars_p <- OM@cpars
+      yr_diff <- proyears_full - proyears
+      
+      subset_proyears_function <- function(xx, yr_diff, cpars) {
+        x <- cpars[[xx]]
+        if(xx %in% c("Asize", "Find", "AddIbeta", "Data")) { # Matrices or arrays without projection year dimensions
+          return(x)
+        } else if(xx == "MPA") {
+          yr_remove <- (nrow(x) - yr_diff + 1):nrow(x)
+          return(x[-yr_remove, ])
+        } else if(is.matrix(x)) {
+          yr_remove <- (ncol(x) - yr_diff + 1):ncol(x)
+          return(x[, -yr_remove])
+        } else if(is.array(x)) {
+          
+          ldim <- length(dim(x))
+          yr_remove <- (dim(x)[ldim] - yr_diff + 1):dim(x)[ldim]
+          
+          if(ldim == 3) return(x[, , -yr_remove, drop = FALSE])
+          if(ldim == 4) return(x[, , , -yr_remove, drop = FALSE])
+          if(ldim == 5) return(x[, , , , -yr_remove, drop = FALSE])
+        } else {
+          return(x)
+        }
+      }
+      
+      OM@cpars <- lapply(names(cpars_p), subset_proyears_function, yr_diff = yr_diff, cpars = cpars_p) %>% structure(names = names(cpars_p))
+    }
+  } else if(proyears > proyears_full) {
+    message("Number of specified projection years is greater than OM@proyears. Nothing done.")
   }
 
-  OM
-
+  return(OM)
 }
 
 
@@ -941,7 +1015,7 @@ SubCpars<-function(OM,sims){
 
 #' Create a standard DFO MSE report
 #'
-#' Provides performacne plots typical in the assessment of Canadian fish stocks.
+#' Provides performance plots typical in the assessment of Canadian fish stocks.
 #'
 #' @param MSEobj An object of class MSE
 #' @param output_file The directory and filename you wish to use for the report e.g. "C:/temp/myMSEreport.html"
@@ -1239,7 +1313,7 @@ DFO_spider<-function(MSEobj){
 
 
 
-#' Current default thresholds for DFO satificing
+#' Current default thresholds for DFO satisficing
 #'
 #' Crit_S is the probability of being in the critical zone in the first 10 projected years
 #' Caut_S is the probability of being in the cautious zone in the first 10 projected years
@@ -1460,7 +1534,7 @@ COSEWIC_tab_formatted<-function(Ptab1,thresh=c(20,     40,     40,    20,       
 }
 
 
-#' Current default thresholds for COSEWIC satificing
+#' Current default thresholds for COSEWIC satisficing
 #'
 #' @param Ptab1 A COSEWIC performance table made by COSEWIC_tab()
 #' @author T. Carruthers

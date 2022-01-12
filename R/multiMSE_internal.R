@@ -6,12 +6,13 @@
 #' @param listy A list of objects
 #' @param sloty A character vector representing the slot name
 #' @author T. Carruthers
-SIL<-function(listy,sloty) {
-  if(class(listy[[1]])=="list"){
-    out<-NULL
-    for(i in 1:length(listy))out<-c(out,unlist(lapply(listy[[i]],function(x)slot(x,sloty))))
-  }else{
-    out<-unlist(lapply(listy,function(x)slot(x,sloty)))
+SIL <- function(listy, sloty) {
+  if (class(listy[[1]]) == "list") {
+    out <- list()
+    for(i in 1:length(listy)) out[[i]] <- sapply(listy[[i]], slot, sloty)
+    out <- do.call(c, out)
+  } else {
+    out <- sapply(listy, slot, sloty)
   }
   out
 }
@@ -25,11 +26,12 @@ SIL<-function(listy,sloty) {
 #' @param lev1 Logical, should NIL default to the first level of the list?
 #' @author T. Carruthers
 NIL<-function(listy,namey,lev1=T){
-  if(class(listy[[1]])=="list"&!lev1){
-    out<-NULL
-    for(i in 1:length(listy))out<-c(out,unlist(lapply(listy[[i]],function(x)x[namey])))
+  if(class(listy[[1]]) == "list" && !lev1) {
+    out <- list()
+    for(i in 1:length(listy)) out[[i]] <- sapply(listy[[i]], getElement, namey)
+    out <- do.call(c, out)
   }else{
-    out<-unlist(lapply(listy,function(x)x[namey]))
+    out <- sapply(listy, getElement, namey)
   }
   out
 }
@@ -60,11 +62,13 @@ expandHerm<-function(Herm,maxage,np,nsim){
 #'
 #' @param vec A vector of maximum array sizes
 #' @author T. Carruthers
-TEG<-function(vec){ # make index for list calculation
-  dim<-new('list')
-  ndims<-length(vec)
-  for(i in 1:ndims)dim[[i]]<-1:vec[i]
-  as.matrix(expand.grid(dim))
+TEG <- function(vec) { # make index for list calculation
+  dims <- lapply(vec, seq_len)
+  as.matrix(expand.grid(dims))
+}
+
+getLHpars <- function(x, name, StockPars, nyears) {
+  sapply(StockPars, function(y) getElement(y, name)[x, 1:nyears], simplify = "array") %>% t()
 }
 
 #' Reconstruct historical dynamics
@@ -88,65 +92,86 @@ TEG<-function(vec){ # make index for list calculation
 #' @param SexPars A list of sex-specific relationships (SSBfrom, stock_age)
 #' @param qs Vector of q values
 #' @param qfrac Array of qfrac
-#' @param plusgroup Plusgroup
+#' @param plusgroup Plusgroup - np-length vector
 #' @author T.Carruthers
 #' @keywords internal
-HistMICE<-function(x,StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, VF,
-                   FretA, maxF=0.9, MPA,Rel,SexPars,qs,qfrac,
-                   plusgroup){
+HistMICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, VF,
+                     FretA, maxF = 0.9, MPA, Rel, SexPars, qs, qfrac,
+                     plusgroup) {
+  
+  # Ensure this code matches getq_multi_MICE()
+  n_age <- maxage + 1 # include age-0
+  Nx <- array(N[x,,,,], c(np, n_age, nyears, nareas))
+  VFx <- array(VF[x,,,,], c(np, nf, n_age, nyears))
+  FretAx <- array(FretA[x,,,,] , c(np, nf, n_age, nyears))
+  
+  # Vectors of length np
+  Kx <- sapply(StockPars, getElement, "K")[x, ]
+  Linfx <- sapply(StockPars, getElement, "Linf")[x, ]
+  t0x <- sapply(StockPars, getElement, "t0")[x, ]
+  Mx <- sapply(StockPars, getElement, "M")[x, ]
+  R0x <- sapply(StockPars, getElement, "R0")[x, ]
+  SSB0x <- sapply(StockPars, getElement, "SSB0")[x, ]
+  B0x <- sapply(StockPars, getElement, "B0")[x, ]
+  
+  hsx <- sapply(StockPars, getElement, "hs")[x, ]
+  ax <- sapply(StockPars, getElement, "a")
+  bx <- sapply(StockPars, getElement, "b")
+  SRrelx <- sapply(StockPars, getElement, "SRrel")[x, ]
+  
+  # Matrix np x nyears + nage
+  Perrx <- sapply(1:np, function(p) StockPars[[p]]$Perr_y[x, 1:(nyears + n_age)]) %>% t()
+  
+  # Matrix np x nage x areas x areas x nyears+1
+  movx <- sapply(1:np, function(p) StockPars[[p]]$mov[x, , , , 0:nyears + 1], simplify = "array") %>% aperm(c(5, 1:4))
+  
+  # Matrix np x nareas
+  distx <- sapply(1:np, function(p) StockPars[[p]]$R0a[x, ]/sum(StockPars[[p]]$R0a[x, ])) %>% t()
+  SSBpRx <- sapply(1:np, function(p) StockPars[[p]]$SSBpR[x, ]) %>% t()
+  R0ax <- sapply(1:np, function(p) StockPars[[p]]$R0a[x, ]) %>% t()
+  aRx <- sapply(1:np, function(p) StockPars[[p]]$aR[x, ]) %>% t()
+  bRx <- sapply(1:np, function(p) StockPars[[p]]$bR[x, ]) %>% t()
+  Asizex <- sapply(1:np, function(p) StockPars[[p]]$Asize[x, ]) %>% t()
+  
+  # Arrays np x nage x nyears + 1
+  Mat_agex <- sapply(1:np, function(p) StockPars[[p]]$Mat_age[x, , 0:nyears + 1], simplify = "array") %>%
+    aperm(c(3, 1:2))
+  Fec_agex <- sapply(1:np, function(p) StockPars[[p]]$Fec_Age[x, , 0:nyears + 1], simplify = "array") %>%
+    aperm(c(3, 1:2))
+  M_ageArrayx <- sapply(1:np, function(p) StockPars[[p]]$M_ageArray[x, , 0:nyears + 1], simplify = "array") %>%
+    aperm(c(3, 1:2))
+  WatAgex <- sapply(1:np, function(p) StockPars[[p]]$Wt_age[x, , 0:nyears + 1], simplify = "array") %>%
+    aperm(c(3, 1:2))
+  Len_agex <- sapply(1:np, function(p) StockPars[[p]]$Len_age[x, , 0:nyears + 1], simplify = "array") %>%
+    aperm(c(3, 1:2))
+  
+  # Array np x nf x nyears
+  Effind <- sapply(1:np, function(p) {
+    sapply(1:nf, function(f) FleetPars[[p]][[f]][["Find"]][x, ]) %>% matrix(ncol = nf)
+  }, simplify = "array") %>% aperm(3:1)
+  
+  # Matrix np x nf
+  Spat_targ <- sapply(1:np, function(p) {
+    sapply(1:nf, function(f) FleetPars[[p]][[f]][["Spat_targ"]][x])
+  }) %>% matrix(nf, np) %>% t()
+  
+  # Matrix np x nyears + 1 
+  Karrayx <- getLHpars(x, 'Karray', StockPars, nyears + 1)
+  Linfarrayx <- getLHpars(x, 'Linfarray', StockPars, nyears + 1) 
+  t0arrayx <- getLHpars(x, 't0array', StockPars, nyears + 1) 
+  Marrayx <- getLHpars(x, 'Marray', StockPars, nyears + 1) 
 
-  n_age <- maxage+1 # including age-0
-  Nx<-array(N[x,,,,],dim(N)[2:5])
-  VFx<-array(VF[x,,,,],dim(VF)[2:5])
-  FretAx<-array(FretA[x,,,,],dim(VF)[2:5])
-  #NIL(StockPars,"K")
+  qsx <- qs[x, ]
+  qfracx <- array(qfrac[x,,], c(np, nf))
 
-  Kx<-matrix(unlist(lapply(StockPars,function(dat)dat['K'])),ncol=np)[x,]
-  Linfx<-matrix(unlist(lapply(StockPars,function(dat)dat['Linf'])),ncol=np)[x,]
-  t0x<-matrix(unlist(lapply(StockPars,function(dat)dat['t0'])),ncol=np)[x,]
-  Mx<-matrix(unlist(lapply(StockPars,function(dat)dat['M'])),ncol=np)[x,]
-  R0x<-matrix(unlist(lapply(StockPars,function(dat)dat['R0'])),ncol=np)[x,]
-
-  SSB0x<-matrix(unlist(lapply(StockPars,function(dat)dat['SSB0'])),ncol=np)[x,]
-
-  hsx<-matrix(unlist(lapply(StockPars,function(dat)dat['hs'])),ncol=np)[x,]
-  ax<-matrix(unlist(lapply(StockPars,function(dat)dat['a'])),ncol=np)[1,]
-  bx<-matrix(unlist(lapply(StockPars,function(dat)dat['b'])),ncol=np)[1,]
-  SRrelx<-matrix(unlist(lapply(StockPars,function(dat)dat['SRrel'])),ncol=np)[x,]
-
-  distx<-Asizex<-SSBpRx<-R0ax<-aRx<-bRx<-array(NA,c(np,nareas))
-  Perrx<-array(NA,c(np,nyears+n_age))
-  movx<-array(NA,c(np,n_age,nareas,nareas,nyears))
-
-  for(p in 1:np){
-    distx[p,]<-StockPars[[p]]$R0a[x,]/sum(StockPars[[p]]$R0a[x,])
-    Perrx[p,]<-StockPars[[p]]$Perr_y[x,1:(nyears+n_age)]
-    Asizex[p,]<-StockPars[[p]]$Asize[x,]
-    movx[p,,,,]<-StockPars[[p]]$mov[x,,,,1:nyears]
-    SSBpRx[p,]<-StockPars[[p]]$SSBpR[x,]
-    R0ax[p,]<-StockPars[[p]]$R0a[x,]
-    aRx[p,]<-StockPars[[p]]$aR[x,]
-    bRx[p,]<-StockPars[[p]]$bR[x,]
-  }
-
-  M_ageArrayx<-Mat_agex<-array(NA,c(np,n_age,nyears))
-  Effind<-array(NA,c(np,nf,nyears))
-  Spat_targ<-array(NA,c(np,nf))
-
-  for(p in 1:np){
-    Mat_agex[p,,]<-StockPars[[p]]$Mat_age[x,,1:nyears]
-    M_ageArrayx[p,,]<-StockPars[[p]]$M_ageArray[x,,1:nyears]
-    Effind[p,,]<-t(matrix(unlist(lapply(FleetPars[[p]],function(dat,x)dat['Find'][[1]][x,],x=x)),ncol=nf))
-    Spat_targ[p,]<-unlist(lapply(FleetPars[[p]],function(dat,x)dat['Spat_targ'][[1]][x],x=x))
-  }
-
-  qsx<-qs[x,]
-  qfracx<-matrix(qfrac[x,,],c(np,nf))
-
-  popdynMICE(qsx=qsx,qfracx=qfracx,np,nf,nyears,nareas,maxage,Nx,VFx,FretAx,Effind,
-             movx,Spat_targ,M_ageArrayx,Mat_agex,Asizex,Kx,Linfx,t0x,Mx,R0x,R0ax,
-             SSBpRx,hsx,aRx, bRx,ax,bx,Perrx,SRrelx,Rel,SexPars,x,
-             plusgroup, maxF, SSB0x)
+  popdynMICE(qsx = qsx, qfracx = qfracx, np = np, nf = nf, nyears = nyears, nareas = nareas, maxage = maxage, 
+             Nx = Nx, VFx = VFx, FretAx = FretAx, Effind = Effind,
+             movx = movx, Spat_targ = Spat_targ, M_ageArrayx = M_ageArrayx, Mat_agex = Mat_agex, Fec_agex = Fec_agex,
+             Asizex = Asizex, WatAgex = WatAgex, Len_agex = Len_agex, Karrayx = Karrayx,
+             Linfarrayx = Linfarrayx, t0arrayx = t0arrayx, Marrayx = Marrayx,
+             R0x = R0x, R0ax = R0ax, SSBpRx = SSBpRx, hsx = hsx, aRx = aRx, bRx = bRx,
+             ax = ax, bx = bx, Perrx = Perrx, SRrelx = SRrelx, Rel = Rel, SexPars = SexPars, x = x,
+             plusgroup = plusgroup, maxF = maxF, SSB0x = SSB0x, B0x = B0x)
 
 }
 
@@ -186,15 +211,17 @@ ldim<-function(x){
 
 #' Combine data among stocks
 #'
-#' Catches, CAA, CAL are summed. LFC and LFS are weighted averages. ML, Lc and Lbar are recalculated from summed CAL. All other observations are for fleet 1 (indicative)
+#' Catches, CAA, CAL are summed. Indices, LFC and LFS are weighted averages. ML, Lc and Lbar are recalculated from summed CAL.
+#' All other observations are for fleet 1 and weighted average across stocks
 #'
-#' @param MSElist A hierarcical list of data objects stock then fleet then MP
+#' @param MSElist A hierarchical list of data objects stock then fleet then MP
 #' @param StockPars A list of stock parameters
 #' @param np The number of stocks
 #' @param mm Integer the MP number
 #' @param nf The number of fleets
 #' @param realVB A matrix of real vulnerable biomass `[nsim,np, year]`
 #' @author T. Carruthers
+#' @export
 multiDataS<-function(MSElist,StockPars,np,mm,nf,realVB){
 
   nsim<-dim(MSElist[[1]][[1]][[mm]]@Cat)[1]
@@ -202,7 +229,6 @@ multiDataS<-function(MSElist,StockPars,np,mm,nf,realVB){
   na<-dim(MSElist[[1]][[1]][[mm]]@CAA)[3]
   nl<-dim(MSElist[[1]][[1]][[mm]]@CAL)[3]
   ni<-np*nf
-
 
   if(realVB[1,1,1]==0)realVB[,,1]<-realVB[,,2] # impute vulnerable biomass for year 1 if missing (a negligible issue to be fixed in popdyn_MICE)
 
@@ -217,7 +243,6 @@ multiDataS<-function(MSElist,StockPars,np,mm,nf,realVB){
       realVBi[,,i]<-realVB[,p,]
     }
   }
-
 
   Dataout<-DBF[[1]]
 
@@ -293,6 +318,23 @@ multiDataS<-function(MSElist,StockPars,np,mm,nf,realVB){
   Bref<-array(SIL(DBF,'Bref'),c(nsim,ni))
   Dataout@Bref<-apply(Bref,1,sum)
 
+  # last historical F
+  FinF <- rep(0,nsim)
+  for (fl in 1:nf) {
+    FinF <- FinF + DBF[[fl]]@OM$FinF
+  }
+  Dataout@OM$FinF <- FinF
+
+
+  # add Misc slot from first stock and fleet
+  Dataout@Misc <- MSElist[[1]][[1]][[mm]]@Misc
+  # for(p in 1:np){
+  #   Dataout@Misc[[p]] <- list()
+  #   for(f in 1:nf){
+  #     Dataout@Misc[[p]][[f]] <- MSElist[[p]][[f]][[mm]]@Misc
+  #   }
+  # }
+  
   Dataout
 }
 
@@ -314,7 +356,7 @@ MPCalcsNAs<-function(MPCalcs){
 #'
 #' Catches, CAA, CAL are summed. LFC and LFS are weighted averages. ML, Lc and Lbar are recalculated from summed CAL. All other observations are for fleet 1 (indicative)
 #'
-#' @param MSElist A hierarcical list of data objects stock then fleet then MP
+#' @param MSElist A hierarchical list of data objects stock then fleet then MP
 #' @param StockPars A list of stock parameters
 #' @param p Integer the Stock number
 #' @param mm Integer the MP number

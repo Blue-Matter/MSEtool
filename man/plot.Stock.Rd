@@ -25,6 +25,7 @@
   title = NULL,
   date = NULL,
   plotPars = NULL,
+  html = FALSE,
   open = TRUE,
   dev = FALSE,
   ...
@@ -178,6 +179,8 @@ and "Selectivity".}
 \item lwd - numeric. Line width for time-series plots.
 }}
 
+\item{html}{Logical. Compile to a HTML report (TRUE) or print plots in R console (FALSE)}
+
 \item{open}{Logical. Open the html file?}
 
 \item{dev}{Logical. For development use only.}
@@ -226,8 +229,8 @@ plot(Imp)
 
 
 # Plot Hist Object
-OM <- MSEtool::testOM 
-Hist <- runMSE(OM, Hist=TRUE)
+OM <- MSEtool::testOM
+Hist <- Simulate(OM)
 plot(Hist)
 
 # Plot OM Object

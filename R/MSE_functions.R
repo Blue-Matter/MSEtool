@@ -1,9 +1,9 @@
 #' Check Convergence
 #'
 #' Have I undertaken enough simulations (nsim)? Has my MSE converged on stable
-#' (reliable) peformance metrics?
+#' (reliable) performance metrics?
 #'
-#' Performance metrics are plotted against the number of simulations. Convergence diagonostics
+#' Performance metrics are plotted against the number of simulations. Convergence diagnostics
 #' are calculated over the last `ref.it` (default = 20) iterations. The convergence diagnostics are:
 #' \enumerate{
 #'   \item Is the order of the MPs stable over the last `ref.it` iterations?
@@ -415,7 +415,7 @@ checkMSE <- function(MSEobj) {
   errs <- NULL
   for (x in seq_along(nms)) {
     chk <- try(slot(MSEobj, nms[x]), silent=TRUE)
-    if (class(chk) == "try-error") errs <- c(errs, x)
+    if ("try-error" %in% class(chk)) errs <- c(errs, x)
   }
   if (length(errs) > 0) {
     message("MSE object slots not found: ", paste(nms[errs], ""))
@@ -453,6 +453,7 @@ checkMSE <- function(MSEobj) {
 #' MSE_2 <- Sub(MSE, sims=1:10)
 #' MSE_2@nsim
 #' }
+#' @seealso \link{SubOM} for OM components and \link{SubCpars} for subsetting by simulation and projection years.
 #' @export Sub
 Sub <- function(MSEobj, MPs = NULL, sims = NULL, years = NULL) {
 
@@ -516,7 +517,32 @@ Sub <- function(MSEobj, MPs = NULL, sims = NULL, years = NULL) {
 
   SubRefPoint <- MSEobj@RefPoint
   for (i in 1:length(SubRefPoint)) {
-    SubRefPoint[[i]] <- SubRefPoint[[i]] [SubIts, SubMPs, c(1:MSEobj@nyears, MSEobj@nyears+Years), drop=FALSE]
+    if ('array' %in% class(SubRefPoint[[i]])) {
+      DD <- dim(SubRefPoint[[i]])
+      if (length(DD) ==3) {
+        SubRefPoint[[i]] <- SubRefPoint[[i]][SubIts, SubMPs, c(1:MSEobj@nyears, MSEobj@nyears+Years), drop=FALSE]
+      } else if (length(DD) ==4) {
+        SubRefPoint[[i]] <- SubRefPoint[[i]][SubIts, SubMPs, , c(1:MSEobj@nyears, MSEobj@nyears+Years), drop=FALSE]
+      } else {
+        warning('Cannot subset MSEobj@RefPoint$', names( MSEobj@RefPoint)[[i]])
+        SubRefPoint[[i]] <- SubRefPoint[[i]]
+      }
+
+    } else if ('list' %in% class(SubRefPoint[[i]])) {
+        for (j in names(SubRefPoint[[i]])) {
+          DD <- dim(SubRefPoint[[i]][[j]])
+          if (length(DD)==2) {
+            SubRefPoint[[i]][[j]] <- SubRefPoint[[i]][[j]][SubIts, c(1:MSEobj@nyears, MSEobj@nyears+Years), drop=FALSE]
+          } else if (length(DD)==3) {
+            SubRefPoint[[i]][[j]] <- SubRefPoint[[i]][[j]][SubIts, , c(1:MSEobj@nyears, MSEobj@nyears+Years), drop=FALSE]
+          } else {
+            warning('Cannot subset MSEobj@RefPoint$', names( MSEobj@RefPoint)[[i]], '$', j)
+            SubRefPoint[[i]][[j]] <- SubRefPoint[[i]][[j]]
+          }
+
+        }
+    }
+
   }
 
   subMSElist <- MSEobj@PPD[SubMPs] # doesn't subset Data by years or simulations
@@ -545,6 +571,9 @@ Sub <- function(MSEobj, MPs = NULL, sims = NULL, years = NULL) {
                 TAE=MSEobj@TAE[SubIts, SubMPs,  Years, drop=FALSE],
                 BioEco=SubBioEco,
                 RefPoint=SubRefPoint,
+                CB_hist=MSEobj@CB_hist[SubIts,  , drop=FALSE],
+                FM_hist=MSEobj@FM_hist[SubIts,  , drop=FALSE],
+                SSB_hist=MSEobj@SSB_hist[SubIts, , drop=FALSE],
                 Hist=MSEobj@Hist,
                 PPD=subMSElist,
                 Misc=MSEobj@Misc)
@@ -1169,9 +1198,24 @@ joinMSE <- function(MSEobjs = NULL) {
     for (obj in 1:length(Allobjs)) {
       temp[[obj]] <-RefPoint_List[[obj]][[nm]]
     }
-
-    RefPoint[[nm]] <- abind::abind(temp, along = 1)
+    if (class(temp[[1]]) == 'list') {
+      nms2 <- names(temp[[1]])
+      for (j in seq_along(nms2)) {
+        temp2 <- list()
+        for (k in 1:length(temp)) {
+          temp2[[k]] <- temp[[k]][[j]]
+        }
+        nm2 <- nms2[j]
+        RefPoint[[nm]][[nm2]] <- abind::abind(temp2, along = 1)
+        }
+    } else {
+      RefPoint[[nm]] <- abind::abind(temp, along = 1)
+    }
   }
+
+  CB_hist <- abind::abind(lapply(Allobjs, slot, name = 'CB_hist'), along = 1)
+  FM_hist <- abind::abind(lapply(Allobjs, slot, name = 'FM_hist'), along = 1)
+  SSB_hist <- abind::abind(lapply(Allobjs, slot, name = 'SSB_hist'), along = 1)
 
   Hist_List <- lapply(Allobjs, slot, name = 'Hist')
   Hist <- joinHist(Hist_List)
@@ -1194,7 +1238,9 @@ joinMSE <- function(MSEobjs = NULL) {
 
   MSE <- new('MSE', Name, nyears, proyears, nMPs, MPs, nsim, OM, Obs,
              SB_SBMSY, F_FMSY, N, B, SSB, VB, FM, SPR, Catch, Removals, Effort,
-             TAC, TAE, BioEco, RefPoint, Hist, PPD, Misc)
+             TAC, TAE, BioEco, RefPoint,
+             CB_hist, FM_hist, SSB_hist,
+             Hist, PPD, Misc)
   MSE
 }
 

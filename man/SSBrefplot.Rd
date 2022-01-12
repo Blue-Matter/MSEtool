@@ -2,7 +2,7 @@
 % Please edit documentation in R/MSE_Plotting.R
 \name{SSBrefplot}
 \alias{SSBrefplot}
-\title{Plot Spawnign stock biomass and reference points for both historical and projected period}
+\title{Plot Spawning stock biomass and reference points for both historical and projected period}
 \usage{
 SSBrefplot(MSE, simno = 1, ystart = 1, log = F, leg = T)
 }
@@ -18,7 +18,7 @@ SSBrefplot(MSE, simno = 1, ystart = 1, log = F, leg = T)
 \item{leg}{Boolean, should a legend be included in the plot?}
 }
 \description{
-Plot Spawnign stock biomass and reference points for both historical and projected period
+Plot Spawning stock biomass and reference points for both historical and projected period
 }
 \author{
 T. Carruthers

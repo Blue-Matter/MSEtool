@@ -13,7 +13,8 @@ ProjectMOM(
   MPs = NA,
   parallel = FALSE,
   silent = FALSE,
-  checkMPs = TRUE
+  checkMPs = TRUE,
+  dropHist = TRUE
 )
 
 multiMSE(
@@ -22,7 +23,8 @@ multiMSE(
   Hist = FALSE,
   silent = FALSE,
   parallel = TRUE,
-  checkMPs = TRUE
+  checkMPs = TRUE,
+  dropHist = TRUE
 )
 }
 \arguments{
@@ -37,6 +39,10 @@ multiMSE(
 \item{MPs}{A matrix of methods (nstock x nfleet) (character string) of class MP}
 
 \item{checkMPs}{Logical. Check if the specified MPs exist and can be run on \code{SimulatedData}?}
+
+\item{dropHist}{Logical. Drop the (very large) \code{multiHist} object from the returned \code{MMSE} object?
+The \code{multiHist} object can be (re-)created using \code{SimulateMOM} or kept in \code{MMSE@multiHist} if
+\code{dropHist=FALSE}}
 
 \item{Hist}{Should model stop after historical simulations? Returns a list
 containing all historical data}

@@ -34,7 +34,11 @@ rmd.files <- c("../Stock/Stock.Rmd",
                "../Hist/Hist.Rmd")
 
 out <- NULL
+i <- 0
 for (rmd in rmd.files) {
+  i <- i + 1
+  if (shiny::isRunning())
+    shiny::setProgress(i/length(rmd.files))
   out <- c(out, knitr::knit_child(rmd))
 }
 ```

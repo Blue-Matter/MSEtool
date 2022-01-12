@@ -2,7 +2,7 @@
 % Please edit documentation in R/DFO.R
 \name{DFO_quant}
 \alias{DFO_quant}
-\title{Deparment of Fisheries and Oceans biomass quantile plot}
+\title{Department of Fisheries and Oceans biomass quantile plot}
 \usage{
 DFO_quant(
   MSEobj,

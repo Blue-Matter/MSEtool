@@ -23,6 +23,9 @@ complete OM object. Mainly used for internal functions.
 Stock <- SubOM(testOM, "Stock")
 class(Stock)
 }
+\seealso{
+\link{Sub} for subsetting MSE output and \link{SubCpars} for subsetting by simulation and projection years.
+}
 \author{
 A. Hordyk
 }

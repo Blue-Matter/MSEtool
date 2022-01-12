@@ -4,19 +4,25 @@
 \alias{SubCpars}
 \title{Subset an OM cpars slot}
 \usage{
-SubCpars(OM, sims)
+SubCpars(OM, sims = 1:OM@nsim, proyears = OM@proyears)
 }
 \arguments{
 \item{OM}{An object of class OM}
 
-\item{sims}{A logical vector OM@nsim long of simulations to either retain (TRUE) or remove (FALSE)}
+\item{sims}{A logical vector of length \code{OM@nsim} to either retain (TRUE) or remove (FALSE).
+Alternatively, a numeric vector indicating which simulations (from 1 to nsim) to keep.}
+
+\item{proyears}{If provided, a numeric to reduce the number of projection years (must be less than \code{OM@proyears}).}
 }
 \value{
 An object of class OM
 }
 \description{
-Subset the custom parameters of an operating model
+Subset the custom parameters of an operating model by simulation and projection years
+}
+\seealso{
+\link{Sub} for MSE objects, \link{SubOM} for OM components.
 }
 \author{
-T. Carruthers
+T. Carruthers, Q. Huynh
 }

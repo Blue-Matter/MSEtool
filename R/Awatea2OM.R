@@ -1,169 +1,239 @@
-# # === OM specification using SS3 (Methot 2012) stock assessments ====================
-# 
-# #' Reads MCMC estimates from Awatea (Paul Starr) processed r file structure into an operating model
-# #'
-# #' @description A function that uses the file location of a fitted Awatea model post-processed into a set of rmd files
-# #' @param AwateaDir A folder with Awatea files
-# #' @param nsim The number of simulations to take for parameters with uncertainty (for OM@cpars custom parameters)
-# #' @param proyears The number of projection years for MSE
-# #' @param Name The name of the operating model
-# #' @param Source Reference to assessment documentation e.g. a url
-# #' @param Author Who did the assessment
-# #' @param verbose Should the r4ss function SS_ouput return detailed messages?
-# #' @author T. Carruthers
-# #' @export Awatea2OM
-# Awatea2OM<-function(AwateaDir,nsim=48,proyears=50,Name=NULL,Source="No source provided",
-#                  Author="No author provided",verbose=T){
-# 
-#   currentRes <- Bmcmc <- currentMCMC <- NULL # hacks for CRAN checks (objects must be seen to exist)
-#   bmcmc_file<-list.files(AwateaDir)[grep("Bmcmc",list.files(AwateaDir))]
-#   Awateatxt<-paste0(AwateaDir,"/",list.files(AwateaDir)[grep(".txt",list.files(AwateaDir))])
-# 
-#   load(paste0(AwateaDir,"/",bmcmc_file))
-#   load(paste0(AwateaDir,"/currentMCMC.rda"))
-#   #load(paste0(AwateaDir,"/currentMSY.rda"))
-#   #load(paste0(AwateaDir,"/currentProj.rda"))
-#   load(paste0(AwateaDir,"/currentRes.rda"))
-# 
-#   bmcmc<-Bmcmc[[1]][[1]] # Second tier list is the outputs
-# 
-# 
-#   #  ---------- Create new OM and set ranges ------------------------------
-#   OM<-new('OM',DLMtool::Albacore, DLMtool::Generic_Fleet, DLMtool::Generic_Obs, DLMtool::Perfect_Imp)
-#   OM@nsim<-nsim
-#   OM@proyears<-proyears
-#   OM@nyears<-nyears<-ncol(currentMCMC$U)
-#   OM@CurrentYr<-as.integer(substr(names(currentMCMC$U)[nyears],1,4))
-#   OM@maxage<-maxage<-max(currentRes$Sel$Age)
-#   OM@Fdisc<-rep(0.5,2)
-#   OM@DR<-rep(0.1,2)
-#   OM@Mgrad<-OM@Kgrad<-OM@Linfgrad<-rep(0,2)
-# 
-# 
-#   # Select posterior samples
-#   nmcmc<-nrow(currentMCMC$P)
-#   if(nsim<nmcmc){
-#     samp<-sample(1:nmcmc,nsim)
-#   }else{
-#     samp<-sample(1:nmcmc,nsim,replace=T)
-#     message(paste0("nsim (",nsim,") > nmcmc (",nmcmc,"), sampling posterior with replacement"))
-#   }
-# 
-# 
-#   # Awatea inputs to growth parameters -----------------------------------
-#   out<-AwateaRead(Awateatxt)
-#   OM@a<-out$a[1]
-#   OM@b<-out$b[1]
-#   OM@Linf<-rep(out$Linf[1],2)
-#   OM@K<-rep(out$K[1],2)
-#   OM@t0<-rep(out$t0[1],2)
-#   OM@LenCV<-rep(out$Lsd[1]/out$Linf[1],2)
-#   OM@isRel<-"FALSE"
-#   OM@L50<-2/3*OM@Linf
-# 
-#   # ------------ Custom Parameters --------------------------------------
-# 
-#   # ----- R0 ------------------------------------------
-#   R0<-currentMCMC$P$R_0[samp]
-#   OM@R0<-range(R0)
-# 
-#   # ----- Steepness -----------------------------------
-#   hs<-currentMCMC$P$h[samp]
-#   OM@h<-range(hs)
-# 
-#   # ----- Depletion -----------------------------------
-#   B0<-bmcmc$B0.MCMC[samp]
-#   D<-currentMCMC$B[samp,nyears]/B0
-#   OM@D<-range(D)
-# 
-#   # ----- F index -------------------------------------
-#   Find<-(-log(1-currentMCMC$U[samp,]))
-#   Find<-Find/apply(Find,1,mean)
-#   Find<-as.matrix(Find)
-#   OM@EffLower<-apply(Find,2,quantile,0.1)
-#   OM@EffUpper<-apply(Find,2,quantile,0.9)
-#   OM@EffYears<-1:nyears
-# 
-#   # ----- M -------------------------------------------
-#   M<-currentMCMC$P[samp,grep("M",names(currentMCMC$P))[1]]
-#   OM@M<-range(M)
-# 
-#   # ----- Process error recruitment calcs -------------
-#   Recs<-bmcmc$R.MCMC[samp,]
-#   B<-currentMCMC$B[samp,1:ncol(Recs)]
-#   SSBpR<-B0/R0
-#   predR<-(4*R0 * hs * B)/(SSBpR * R0 * (1-hs) + (5*hs-1) * B)
-# 
-#   inInd<-1:(maxage-1)
-#   histInd<-maxage+(1:nyears)-1
-#   projInd<-maxage+nyears+(0:(proyears-1))
-# 
-#   recdevs<-log(Recs/predR)
-#   ACfunc<-function(x)acf(x,plot=F)$acf[2,1,1]
-#   AC<-apply(recdevs,1,ACfunc)
-#   OM@AC<-range(AC)
-#   procsd<-apply(recdevs,1,sd,na.rm=T)
-#   OM@Perr<-range(procsd)
-#   OM@Perr<-quantile(procsd,c(0.025,0.975)) # uniform range is a point estimate from assessment MLE
-#   procmu <- -0.5 * (procsd)^2  # adjusted log normal mean
-#   Perr<-matrix(rnorm(nsim*(proyears+nyears+maxage-1),procmu,procsd),nrow=nsim)
-#   Perr[,histInd]<-as.matrix(recdevs)
-#   for (y in c(inInd[2:(maxage-1)],projInd)) Perr[, y] <- AC * Perr[, y - 1] +   Perr[, y] * (1 - AC * AC)^0.5
-#   Perr<-exp(Perr)
-# 
-# 
-#   # ----- Selectivity --------------------------------
-#   Sel<-currentRes$Sel
-# 
-#   if(length(unique(Sel$Sex))>1){
-#     Sel<-Sel[Sel$Sex=="Female",]
-#     message("Two sex assessment: using selectivity for females only")
-#   }
-# 
-#   GSel<-Sel[grep("Gear",Sel$Series),]
-#   Gnames<-unique(GSel$Series)
-# 
-#   if(length(GSel)>1){
-#     GSel<-GSel[GSel$Series==GSel[1],]
-#     message(paste("More than one gear selected, using selectivity for",Gnames[1]))
-#   }
-# 
-#   Selectivity<-GSel[,4]
-#   V <- array(rep(Selectivity,each=nsim), dim = c(nsim, maxage, nyears + proyears))
-# 
-#   # ----- Maturity ------------------------------------
-#   Mat<-Sel[Sel$Series=="Maturity",4]
-#   #plot(Mat,type='l',xlab="Age",ylab="Female fraction mature")
-#   Mat_age <- array(rep(Mat,each=nsim), dim=c(nsim, maxage, nyears+proyears))
-#   OM@L50<-2/3*OM@Linf
-#   OM@L50_95<-0.05*OM@Linf
-# 
-#   # ----- populate cpars ------------------------------
-#   OM@cpars<-list(M=M, R0=R0, D=D, Find=Find, hs=hs, Perr=Perr, Mat_age=Mat_age, V=V)
-# 
-#   OM@seed <- 1
-# 
-#   message("Awatea .txt input file (growth parameters) and process R output files read successfully")
-#   OM
-# 
-# }
-# 
-# 
-# AwateaRead<-function(Awateatxt,quiet=T){
-# 
-#   out<-list()
-#   uniquetext<-c("Bi-scalar","bii exponent","L-infinity","k of the von","t0 of the von","S.d. of length at age of oldest")
-#   param<-c("a","b","Linf","K","t0","Lsd")
-#   alltext<-readLines(Awateatxt)
-# 
-#   for(i in 1:length(param)){
-#     loc<-grep(uniquetext[i],alltext)
-#     out[[i]]<-scan(Awateatxt,skip=loc,nlines=1,quiet=quiet)
-#   }
-# 
-#   names(out)<-param
-#   out
-# 
-# }
-# 
-# 
+#' Reads MCMC estimates from Awatea (Paul Starr) processed r file structure into an operating model
+#'
+#' @description A function that generates an operating model from the MCMC samples of an Awatea model.
+#' Code optimized for the BC Pacific ocean perch assessment (Haigh et al. 2018).
+#' @param AwateaDir A folder with Awatea files
+#' @param nsim The number of simulations
+#' @param proyears The number of projection years for the MSE
+#' @param Name The name of the operating model
+#' @param Source Reference to assessment documentation e.g. a url
+#' @param Author Who did the assessment
+#' @param verbose Return detailed messages?
+#' @details
+#' This function averages biological parameters across sex and then sends arrays to \link{VPA2OM}, assumes
+#' unfished status (B/B0 = 1) in the first year, and assumes a single fishing fleet.
+#' @references
+#' Haigh, R., et al. 2018. Stock assessment for Pacific Ocean Perch (\emph{Sebastes alutus}) in Queen Charlotte Sound, British Columbia in 2017.
+#' Canadian Science Advisory Secretariat (CSAS) Research Document 2018/038. 232 pp. 
+#' \url{https://www.dfo-mpo.gc.ca/csas-sccs/Publications/ResDocs-DocRech/2018/2018_038-eng.html}
+#' 
+#' @author Q. Huynh and T. Carruthers
+#' @export
+Awatea2OM <- function(AwateaDir, nsim = 48, proyears = 50, Name = "OM made by Awatea2OM",
+                      Source = "No source provided", Author = "No author provided", verbose = TRUE) {
+
+  Aenv <- new.env()
+  
+  #bmcmc_file <- list.files(AwateaDir)[grep("Bmcmc", list.files(AwateaDir))]
+  #load(file.path(AwateaDir, bmcmc_file), envir = Aenv)
+  #bmcmc <- Aenv$Bmcmc[[1]][[1]] # Second tier list is the outputs
+  
+  Awateatxt <- file.path(AwateaDir, list.files(AwateaDir)[grep(".txt",list.files(AwateaDir))])
+  Apar <- AwateaRead(Awateatxt)
+  
+  if(verbose) message("Searching for currentMCMC.rda...")
+  load(file.path(AwateaDir, "currentMCMC.rda"), envir = Aenv)
+  if(verbose) message("Searching for currentRes.rda...")
+  load(file.path(AwateaDir, "currentRes.rda"), envir = Aenv)
+  
+  if(verbose) message("Awatea .txt input file (growth parameters) and process R output files read successfully.")
+  
+  # Select posterior samples
+  nmcmc <- nrow(Aenv$currentMCMC$P)
+  samp <- sample(1:nmcmc, nsim, replace = nsim > nmcmc)
+  if(verbose && nsim > nmcmc) {
+    message("The number of simulations (", nsim, ") is greater than the number of MCMC samples (",
+            nmcmc,"). Posterior will be sampled with replacement.")
+  }
+  
+  years <- Aenv$currentRes$extra$general$StartYear:Aenv$currentRes$extra$general$EndYear
+  nyears <- length(years)
+  CurrentYr <-  Aenv$currentRes$extra$general$EndYear
+  
+  #### Assume constant biological parameters
+  age <- min(Aenv$currentRes$Sel$Age):max(Aenv$currentRes$Sel$Age)
+  maxage <- max(age)
+  n_age <- maxage + 1
+  
+  ## Female maturity only
+  Mataa <- local({
+    out <- array(0, c(n_age, nyears, nsim))
+    out[age + 1, , ] <- Aenv$currentRes$Sel$P[Aenv$currentRes$Sel$Series == "Maturity" & Aenv$currentRes$Sel$Sex == "Female"]
+    aperm(out, c(3, 1, 2))
+  })
+  
+  ## Take the average between male and female. Constant with time and age
+  M <- Aenv$currentMCMC$P[grepl("M", names(Aenv$currentMCMC$P))][samp, ] %>% apply(1, mean) %>%
+    array(c(nsim, n_age, nyears))
+  
+  # Awatea inputs to growth parameters -----------------------------------
+  laa <- local({
+    out <- matrix(0:maxage, 2, n_age, byrow = TRUE)
+    apply(Apar$Linf * (1 - exp(-Apar$K * (out - Apar$t0))), 2, mean) %>% array(c(n_age, nsim, nyears)) %>%
+      aperm(c(2, 1, 3))
+  })
+  
+  wataa <- local({
+    out <- matrix(0:maxage, 2, n_age, byrow = TRUE)
+    laa <- Apar$Linf * (1 - exp(-Apar$K * (out - Apar$t0)))
+    apply(Apar$a * laa ^ Apar$b, 2, mean) %>% array(c(n_age, nsim, nyears)) %>%
+      aperm(c(2, 1, 3))
+  })
+  
+  # Fleets. Using harvest rate, nfleet should be 1
+  nfleet <- substr(colnames(Aenv$currentMCMC$U), 6, 6) %>% unique() %>% length()
+  if(!verbose && nfleet > 1) warning("Number of fishing fleets > 1")
+  
+  FAA <- local({
+    mu <- Aenv$currentMCMC$P[grepl("mu", names(Aenv$currentMCMC$P))][samp, 1]
+    Delta <- Aenv$currentMCMC$P[grepl("Delta", names(Aenv$currentMCMC$P))][samp, 1]
+    log_nu <- Aenv$currentMCMC$P[grepl("log v", names(Aenv$currentMCMC$P))][samp, 1]
+    
+    # sim x year
+    U <- Aenv$currentMCMC$U[samp, ]
+    U_F <- lapply(1:length(samp), function(x) {
+      sapply(1:nyears, function(y) U[x, y] * AwateaSel(0:maxage, mu[x], nu = exp(log_nu[x])))
+    })
+    U_M <- lapply(1:length(samp), function(x) {
+      sapply(1:nyears, function(y) U[x, y] * AwateaSel(0:maxage, mu[x] + Delta[x], nu = exp(log_nu[x])))
+    })
+    
+    U_mean <- lapply(1:length(samp), function(x) c(U_F[x], U_M[x]) %>% simplify2array() %>% apply(1:2, mean))
+    F_mean <- -log(1 - simplify2array(U_mean))
+    aperm(F_mean, c(3, 1, 2))
+  })
+  
+  # Numbers at age
+  naa <- local({
+    out <- array(NA_real_, c(nsim, n_age, nyears))
+    out[, age[1] + 1, ] <- Aenv$currentMCMC$R[samp, ] %>% as.matrix() # Year-1 recruitment does not match R0
+    out[, age[1] + 1, 1] <- Aenv$currentMCMC$P$R_0[samp] 
+    
+    # Calc abundance for ages younger than the age of recruitment
+    if(age[1] > 0) {
+      aind_missing <- age[1]:1
+      for(i in 1:length(aind_missing)) {
+        out[, aind_missing[i], 1:(nyears-i)] <- out[, aind_missing[i]+1, 2:(nyears+1-i)] * 
+          exp(M[, aind_missing[i], 1:(nyears-i)])
+      }
+    }
+    
+    # Assume unfished in year one
+    for(a in age[2]:maxage + 1) out[, a, 1] <- out[, a-1, 1] * exp(-M[, a-1, 1])
+    out[, n_age, 1] <- out[, n_age, 1]/(1 - exp(-M[, n_age, 1]))
+    
+    for(y in 2:nyears) {
+      for(a in age[2]:maxage + 1) out[, a, y] <- out[, a-1, y-1] * exp(-FAA[, a-1, y-1] - M[, a-1, y-1])
+      out[, n_age, y] <- out[, n_age, y] + out[, n_age, y-1] * exp(-FAA[, n_age, y-1] - M[, n_age, y-1])
+    }
+    out
+  })
+  
+  # Steepness R0 based on phi0 from age-one only
+  # Adjust with new phi0 starting from age-zero so that alpha and beta are same
+  # Beverton-Holt
+  R0 <- Aenv$currentMCMC$P$R_0[samp]
+  h <- Aenv$currentMCMC$P$h[samp]
+  B0 <- rowSums(naa[, -c(1:age[1]), 1] * Mataa[, -c(1:age[1]), 1] * wataa[, -c(1:age[1]), 1]) # Different than in Awatea B0 (female only)
+  #SSB <- apply(naa * Mataa * wataa, c(1, 3), sum)
+  #B0 <- Aenv$Bmcmc[[1]][[1]]$B0.MCMC[samp]
+  phi0 <- B0/R0 # Should be through variability in M
+  alpha <- (4*h)/(1-h)/phi0
+  beta <- (alpha - 1/phi0)/R0
+  phi0_age0 <- local({
+    NPR <- matrix(1, nsim, n_age)
+    for(a in 2:n_age) NPR[, a] <- NPR[, a-1] * exp(-M[, a-1, 1])
+    NPR[, n_age] <- NPR[, n_age]/(1 - exp(-M[, n_age, 1]))
+    rowSums(NPR * Mataa[, , 1] * wataa[, , 1])
+  })
+  mu <- exp(apply(M[, , 1][, 1:age[1], drop = FALSE], 1, cumsum))
+  h_new <- h
+  R0_new <- R0 * mu
+  
+  # Identical to lines above, this is the general solution
+  #h_new <- mu * alpha * phi0_age0/(4 + mu * alpha * phi0_age0)
+  #R0_new <- (mu * alpha - 1/phi0_age0)/beta
+  
+  ## Process error
+  SSB <- apply(naa * Mataa * wataa, c(1, 3), sum)
+  Rpred <- 4 * h_new * R0_new * SSB/((1 - h_new) * SSB[, 1] + (5 * h_new - 1) * SSB)
+  Dev <- naa[, 1, ]/Rpred
+  
+  Perr <- apply(log(Dev), 1, sd, na.rm = TRUE)
+  AC <- apply(log(Dev), 1, function(x) acf(x[!is.na(x)], plot = FALSE, lag.max = 1)$acf[2])
+  
+  if(verbose) message("Sending arrays to VPA2OM...")
+  
+  OM <- VPA2OM(Name = Name, proyears = proyears, CurrentYr = CurrentYr, h = h_new, naa = naa, faa = FAA, waa = wataa, 
+               Mataa = Mataa, Maa = M, laa = laa, LowerTri = age[1], Perr = Perr, AC = AC, R0 = R0_new, phi0 = phi0_age0,
+               silent = !verbose)
+  
+  OM@cpars$Linf <- rep(mean(Apar$Linf), nsim)
+  OM@cpars$K <- rep(mean(Apar$K), nsim)
+  OM@cpars$t0 <- rep(mean(Apar$t0), nsim)
+  
+  OM@LenCV <- rep(mean(Apar$Lsd/Apar$Linf), 2)
+  
+  # Add catch
+  OM@cpars$Data <- new("Data")
+  OM@cpars$Data@Cat <- matrix(Apar$Catch, 1, nyears)
+  OM@cpars$Data@CV_Cat <- matrix(0.01, 1, nyears)
+  OM@cpars$Data@Year <- years
+  
+  OM@cpars$Data@CAA <- local({
+    Age <- unique(Aenv$currentRes$CAc$Age)
+    Year <- unique(Aenv$currentRes$CAc$Year)
+    SS <- Obs <- NULL # cran checks
+    CAA <- Aenv$currentRes$CAc %>% group_by(Year, Age) %>% summarise(Nobs = sum(SS * Obs, na.rm = TRUE)) %>% 
+      reshape2::acast(Year ~ Age, value.var = "Nobs")
+    CAA_out <- array(0, c(1, nyears, n_age))
+    CAA_out[1, match(Year, years), match(Age, 0:maxage)] <- CAA
+    CAA_out
+  })
+  OM@cpars$Data@MaxAge <- maxage
+  
+  # surveys
+  if(nrow(Aenv$currentRes$Survey) > 0) {
+    
+    survey <- split(Aenv$currentRes$Survey, Aenv$currentRes$Survey$Series)
+    nsurvey <- length(survey)
+    OM@cpars$Data@AddInd <- sapply(survey, function(x) x$Obs[match(years, x$Year)]) %>% 
+      array(c(1, nsurvey, nyears))
+    OM@cpars$Data@CV_AddInd <- sapply(survey, function(x) x$CV[match(years, x$Year)]) %>% 
+      array(c(1, nsurvey, nyears))
+    
+    OM@cpars$Data@AddIunits <- ifelse(Apar$Iunits == 1, 1, 0) # 1 = Biomass, not 1 = abundance
+    OM@cpars$Data@AddIndType <- rep(1, nsurvey)
+    
+    OM@cpars$Data@AddIndV <- local({ # -1 assumes that there is a single fleet
+      mu <- Aenv$currentMCMC$P[grepl("mu", names(Aenv$currentMCMC$P))][samp, -1, drop = FALSE]
+      Delta <- Aenv$currentMCMC$P[grepl("Delta", names(Aenv$currentMCMC$P))][samp, -1, drop = FALSE]
+      log_nu <- Aenv$currentMCMC$P[grepl("log v", names(Aenv$currentMCMC$P))][samp, -1, drop = FALSE]
+      
+      sel_mean_over_sex <- lapply(1:nsurvey, function(s) {
+        sapply(1:length(samp), function(x) {
+          sel_F <- AwateaSel(0:maxage, mu[x, s], exp(log_nu[x, s]))
+          sel_M <- AwateaSel(0:maxage, mu[x, s] + Delta[x, s], exp(log_nu[x, s]))
+          rbind(sel_F, sel_M) %>% apply(2, mean)
+        })
+      })
+      
+      simplify2array(sel_mean_over_sex) %>% aperm(c(2, 3, 1))
+    })
+    OM@cpars$AddIbeta <- matrix(1, nsim, nsurvey)
+  }
+  
+  return(OM)
+}
+
+
+AwateaRead <- function(Awateatxt, quiet = TRUE) {
+  uniquetext <- c("Bi-scalar", "bii exponent", "L-infinity", "k of the von", "t0 of the von", "S.d. of length at age of oldest",
+                  "Survey abundance units", "Catch")
+  param <- c("a", "b", "Linf", "K", "t0", "Lsd", "Iunits", "Catch")
+  alltext <- readLines(Awateatxt)
+  out <- lapply(uniquetext, function(x) scan(Awateatxt, skip = grep(x, alltext), nlines = 1, quiet = quiet))
+  structure(out, names = param)
+}
+
+AwateaSel <- function(age, mu, nu) ifelse(age > mu, 1, exp(-(age - mu)^2/nu))

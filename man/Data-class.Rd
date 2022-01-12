@@ -141,7 +141,7 @@ with dimensions \code{nsim} x \code{length(CAL_mids)}.}
 
 \item{\code{CAL_mids}}{The values of the mid-points of the length bins. Optional, calculated from \code{CAL_bins} if not entered. Vector. Non-negative real numbers.}
 
-\item{\code{CAL}}{Catch-at-length data. An array with dimensions nsim x nyears x length(CAL_mids). Non-negative integers}
+\item{\code{CAL}}{Catch-at-length data. An array with dimensions nsim x nyears x length(CAL_mids). Non-negative integers. By default the CAL data will be the retained lengths (i.e, not including discards). If \code{OM@control$CAL =="removals"} then the CAL data will include all removals (retained + discards).}
 
 \item{\code{Dep}}{Stock depletion SSB(current)/SSB(unfished). Vector nsim long. Fraction.}
 

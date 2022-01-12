@@ -2,7 +2,7 @@
 % Please edit documentation in R/DFO.R
 \name{DFO_bar}
 \alias{DFO_bar}
-\title{Deparment of Fisheries and Oceans stock status bar plot}
+\title{Department of Fisheries and Oceans stock status bar plot}
 \usage{
 DFO_bar(MSEobj, yres = 10)
 }

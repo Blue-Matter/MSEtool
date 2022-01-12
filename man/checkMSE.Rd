@@ -13,7 +13,7 @@ joinMSE(MSEobjs = NULL)
 
 joinHist(Hist_List)
 
-updateMSE(MSEobj)
+updateMSE(MSEobj, save.name = NULL)
 }
 \arguments{
 \item{MSEobj}{A \code{MSE} object}
@@ -21,6 +21,8 @@ updateMSE(MSEobj)
 \item{MSEobjs}{A list of MSE objects}
 
 \item{Hist_List}{A list of objects of class \code{Hist}}
+
+\item{save.name}{Character string. Optional file name to save the updated MSE object to disk.}
 }
 \value{
 An object of class \code{MSE}
@@ -41,7 +43,7 @@ by \code{runMSE(Hist=TRUE)}
 \item \code{joinHist}: Join objects of class \code{Hist}
 
 \item \code{updateMSE}: Updates an existing MSE object (class MSE) from a previous version of the
-DLMtool to include slots new to the lastest version. Also works with Stock,
+DLMtool to include slots new to the latest version. Also works with Stock,
 Fleet, Obs, Imp, and Data objects. The new slots will be empty,
 but avoids the 'slot doesn't exist' error that sometimes occurs.
 Returns an object of class matching class(MSEobj)
