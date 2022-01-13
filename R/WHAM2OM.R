@@ -56,7 +56,7 @@ WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=
   faa<-aperm(array(unlist(lapply(output,FUN=function(x)x$FAA)),c(ny,na,nsim)),c(3,2,1))  
   Maa<-aperm(array(unlist(lapply(output,FUN=function(x)x$MAA)),c(ny,na,nsim)),c(3,2,1)) 
   Mataa<-aperm(array(obj$input$data$mature,c(ny,na,nsim)),c(3,2,1))
-  waa<-aperm(array(obj$input$data$waa[WAAindCa,,],c(ny,na,nsim)),c(3,2,1))
+  waa<-aperm(array(obj$input$data$waa[WAAind,,],c(ny,na,nsim)),c(3,2,1))
   laa<-(waa/WLa)^(1/WLb)
   
   if(obj$input$data$recruit_model%in%c(1,2)){
