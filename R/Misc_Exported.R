@@ -759,7 +759,84 @@ trlnorm <- function(reps, mu, cv) {
 tdlnorm <- function(x, mu, cv) dlnorm(x, mconv(mu, mu * cv), sdconv(mu, mu * cv))
 
 
+#' Stock recruit parameterization
+#' 
+#' Convert stock recruit parameters from steepness parameterization to alpha/beta (and vice versa)
+#' 
+#' @param alpha Alpha parameter
+#' @param beta Beta parameter
+#' @param h Steepness parameter
+#' @param R0 Unfished recruitment parameter
+#' @param phi0 Unfished spawners per recruit
+#' @param SR Stock-recruit function: (1) Beverton-Holt, or (2) Ricker
+#' @param type The parameterization of the Beverton-Holt function with respect to \code{alpha} 
+#' and \code{beta}. See details.
+#' @details
+#' The Type 1 Beverton-Holt equation is
+#' \deqn{R = \alpha S/(1 + \beta S)}
+#' 
+#' The Type 2 Beverton-Holt equation is
+#' \deqn{R = S/(\alpha + \beta S)}
+#'  
+#' The Ricker equation is
+#' \deqn{R = \alpha S \exp(-\beta S)}
+#' @return A numeric.
+#' @author Q. Huynh
+#' @describeIn hconv Returns steepness (h) from \code{alpha} and \code{phi0}
+#' @export
+hconv <- function(alpha, phi0, SR = 1, type = 1) {
+  if(SR == 1) {
+    type <- match.arg(as.character(type), choices = as.character(1:2))
+    h <- switch(type,
+                "1" = alpha*phi0/(4 + alpha*phi0),
+                "2" = phi0/(4*alpha + phi0))
+  } else {
+    h <- 0.2 * (alpha*phi0)^0.8
+  }
+  return(h)
+}
 
+#' @describeIn hconv Returns unfished recruitment (R0) from \code{alpha}, \code{beta}, and \code{phi0}
+#' @export
+R0conv <- function(alpha, beta, phi0, SR = 1, type = 1) {
+  if(SR == 1) {
+    type <- match.arg(as.character(type), choices = as.character(1:2))
+    R0 <- switch(type,
+                "1" = (alpha*phi0 - 1)/beta/phi0,
+                "2" = (phi0 - alpha)/beta/phi0)
+  } else {
+    R0 <- log(alpha*phi0)/beta/phi0
+  }
+  return(R0)
+}
+
+#' @describeIn hconv Returns \code{alpha} from \code{h} and \code{phi0}
+#' @export
+SRalphaconv <- function(h, phi0, SR = 1, type = 1) {
+  if(SR == 1) {
+    type <- match.arg(as.character(type), choices = as.character(1:2))
+    alpha <- switch(type,
+                    "1" = 4*h/(1-h)/phi0,
+                    "2" = phi0*(1-h)/(4*h))
+  } else {
+    alpha <- (5*h)^1.25/phi0
+  }
+  return(alpha)
+}
+
+#' @describeIn hconv Returns \code{beta} from \code{h}, \code{R0}, and \code{phi0}
+#' @export
+SRbetaconv <- function(h, R0, phi0, SR = 1, type = 1) {
+  if(SR == 1) {
+    type <- match.arg(as.character(type), choices = as.character(1:2))
+    beta <- switch(type,
+                   "1" = (5*h-1)/(1-h)/phi0/R0,
+                   "2" = (5*h-1)/(4*h)/R0)
+  } else {
+    beta <- log((5*h)^1.25)/phi0/R0
+  }
+  return(beta)
+}
 
 #' Depletion and F estimation from mean length of catches
 #'
