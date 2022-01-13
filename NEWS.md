@@ -1,5 +1,10 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
+# MSEtool 3.4.9999 - Development Version
+
+## Minor changes
+- add message showing range of estimated von Bert. parameters when `OM@cpars$Len_age` is provided.
+
 # MSEtool 3.4.0 
 
 ## New additions
