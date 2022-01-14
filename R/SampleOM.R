@@ -420,6 +420,11 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
       if(msg) {
         close(pb)
         cat("\n")
+        message('Range (across years and sims) of von Bert. parameters estimated from `OM@cpars$Len_age`:')
+        message('Linf:', paste0(range(Linfarray), collapse=" - "))
+        message('K:', paste0(range(Karray), collapse=" - "))
+        message('t0:', paste0(range(t0array), collapse=" - "))
+        
       }
       # Add Linf, K, t0 to StockPars (current yr)
       Linf <- Linfarray[,nyears]
