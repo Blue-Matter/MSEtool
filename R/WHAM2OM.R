@@ -40,7 +40,25 @@ WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=
   mu <- c(SD$par.fixed, SD$par.random)
   covm <- solve(SD$jointPrecision)
   
-  samps <- mvtnorm::rmvnorm(nsim, mu, covm)
+  
+  # clumsy and ugly reordering of mu to match covnams
+  numu<-rep(NA,length(mu))
+  munams<-names(mu)
+  nams<-unique(munams)
+  ni<-length(nams)
+  covnams<-rownames(covm)
+  ind<-1:length(mu)
+  
+  # reorder rows
+  for(i in 1:ni){
+    indto<-ind[covnams == nams[i]]
+    indfrom<-ind[munams == nams[i]]
+    numu[indto]<-mu[indfrom]
+  }
+  names(numu)<-covnams
+  
+  # multivariate normal sampling of pars
+  samps <- mvtnorm::rmvnorm(nsim, numu, covm)
   
   report_internal_fn <- function(x, samps, obj) {
     obj$report(samps[x, ])
@@ -48,15 +66,17 @@ WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=
   
   output <- lapply(1:nsim, report_internal_fn, samps = samps, obj = obj) # List of model output for each simulation
 
-  dims<-dim(output[[1]]$NAA)
+  yind<-obj$years_full %in% obj$years  
+  
+  dims<-dim(output[[1]]$NAA[yind,])
   ny<-dims[1]
   na<-dims[2]
   
-  naa<-aperm(array(unlist(lapply(output,FUN=function(x)x$NAA)),c(ny,na,nsim)),c(3,2,1))   
-  faa<-aperm(array(unlist(lapply(output,FUN=function(x)x$FAA)),c(ny,na,nsim)),c(3,2,1))  
-  Maa<-aperm(array(unlist(lapply(output,FUN=function(x)x$MAA)),c(ny,na,nsim)),c(3,2,1)) 
-  Mataa<-aperm(array(obj$input$data$mature,c(ny,na,nsim)),c(3,2,1))
-  waa<-aperm(array(obj$input$data$waa[WAAind,,],c(ny,na,nsim)),c(3,2,1))
+  naa<-aperm(array(unlist(lapply(output,FUN=function(x)x$NAA[yind,])),c(ny,na,nsim)),c(3,2,1))   
+  faa<-aperm(array(unlist(lapply(output,FUN=function(x)x$FAA[yind,1,])),c(ny,na,nsim)),c(3,2,1))  
+  Maa<-aperm(array(unlist(lapply(output,FUN=function(x)x$MAA[yind,])),c(ny,na,nsim)),c(3,2,1)) 
+  Mataa<-aperm(array(obj$input$data$mature[yind,],c(ny,na,nsim)),c(3,2,1))
+  waa<-aperm(array(obj$input$data$waa[WAAind,yind,],c(ny,na,nsim)),c(3,2,1))
   laa<-(waa/WLa)^(1/WLb)
   
   if(obj$input$data$recruit_model%in%c(1,2)){
@@ -80,12 +100,23 @@ WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=
   }
            
   CurrentYr<-obj$years[length(obj$years)]   
-  if(is.null(Name))Name=obj$model_name
+  if(is.null(Name)) Name=obj$model_name
   
-  VPA2OM(Name, proyears, interval, CurrentYr, h=h, Obs, Imp, 
+  OM<-VPA2OM(Name, proyears, interval, CurrentYr, h=h, Obs, Imp, 
            naa, faa, waa, Mataa, Maa, laa,
            nyr_par_mu, LowerTri,
            recind=0, plusgroup, altinit=0, fixq1=TRUE,
-           report=report, silent=silent, ...) 
+           report=report, silent=silent) 
   
+ 
+  # Sample some selectivities potentially for use later and put these in a WHAM Misc slot
+  WHAM = list()
+  nsel<-length(output[[1]]$selAA)
+  selfunc<-function(x){
+    sapply(x$selAA, function(y)c(0,y[nrow(y),])/max(y[nrow(y),]))
+  }
+  WHAM$AddIndV<- aperm(array(unlist(lapply(output,FUN=selfunc)),c(na+1,nsel,nsim)),c(3,2,1))
+  OM@Misc$WHAM <- WHAM
+  
+  OM
 }
