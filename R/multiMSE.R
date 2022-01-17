@@ -384,25 +384,25 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     } # end of loop over fleets
   } # end of loop over stocks
 
-  # ---- SexPars - Update SSB0 and SRR parameters for male stock ----
+  # ---- SexPars - Update SSB0 and Ricker SRR parameters for male stock ----
+  # Other parameters have been updated (R0, h, rec devs) earlier
   if(length(SexPars)) {
     if (!silent)  message("You have specified sex-specific dynamics, unfished spawning biomass",
             " and specified stock depletion will be mirrored across sex types according ",
             "to SexPars$SSBfrom")
 
-    SSB0s <- matrix(NIL(StockPars,"SSB0"),nrow=nsim) # sim, p
     sexmatches <- sapply(1:nrow(SexPars$SSBfrom), function(x) paste(SexPars$SSBfrom[x, ], collapse = "_"))
-    parcopy <- match(sexmatches,sexmatches)
+    parcopy <- match(sexmatches, sexmatches)
     StockPars_t <- StockPars # need to store a temporary object for copying to/from
-    FleetPars_t <- FleetPars
     
+    SSB0s <- matrix(NIL(StockPars_t, "SSB0"), nsim, np) # sim, p
     for (p in 1:np) {
-      StockPars[[p]]$SSB0 <- apply(matrix(rep(SexPars$SSBfrom[p, ],each=nsim),nrow=nsim)*SSB0s, 1, sum)
-      StockPars[[p]]$SSBpR <- array(SSB0/StockPars[[p]]$R0,c(nsim,nareas)) # SSBpR hardwired to be the same among areas !!!!
+      StockPars[[p]]$SSB0 <- apply(matrix(SexPars$SSBfrom[p, ], nsim, np, byrow = TRUE) * SSB0s, 1, sum)
+      StockPars[[p]]$SSBpR <- array(StockPars[[p]]$SSB0/StockPars_t[[p]]$R0,c(nsim,nareas)) # SSBpR hardwired to be the same among areas !!!!
       
       # Ricker SR params
-      SSB0a <- StockPars[[p]]$SSB0 * StockPars[[p]]$R0a/apply(StockPars[[p]]$R0a, 1, sum)
-      StockPars[[p]]$bR <- matrix(log(5 * StockPars[[p]]$hs)/(0.8 * SSB0a), nrow=nsim)
+      SSB0a <- StockPars[[p]]$SSB0 * StockPars_t[[p]]$R0a/apply(StockPars_t[[p]]$R0a, 1, sum)
+      StockPars[[p]]$bR <- matrix(log(5 * StockPars_t[[p]]$hs)/(0.8 * SSB0a), nrow=nsim)
       StockPars[[p]]$aR <- matrix(exp(StockPars[[p]]$bR * SSB0a)/StockPars[[p]]$SSBpR, nrow=nsim)
     }
     
