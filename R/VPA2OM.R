@@ -64,14 +64,19 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
     stop('One or more of the following arrays do not have the same shape: naa, faa, waa, Mataa, Maa, Laa')
   }
 
+  nyears<-dim(naa)[3]
+  nsim<-dim(naa)[1]
+  
   if(recind==1) {  # create a dummy age 0 dimension to the various arrays
     
     ageind<-1:dim(naa)[2]
-    dims<-c(dim(naa)[1],1,dim(naa)[3])
+    dims<-c(nsim,1,nyears)
     zeros<-array(0,dims)
     
     # N0 back inputed
-    N0<-array(naa[,1,]*exp(Maa[,1,]),dims)
+    R0<-naa[,1,2:nyears]*exp(Maa[,1,2:nyears])
+    muR0<-apply(R0,1,mean) # mean R0 is assumed for most recent N0 - will be filled anyway using LowerTri argument
+    N0<-array(cbind(R0,muR0),dims)
     naa<-abind(N0,naa,along=2) 
     
     # F, weight, length and maturity assumed to be zero
@@ -83,16 +88,15 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
     # M copied from first year to age zero
     Maa<-abind(Maa[,1,],Maa,along=2)
     
-    message("Age zero positions for arrays were created with the following assumptions: N(0) = N(1) * exp(M(1)), F(0) = weight(0) = maturity(0) = length(0) = 0, M(0) = M(1)")
+    message("Age zero positions for arrays were created with the following assumptions: N(0) = N(1) * exp(M(1)), N0 in most recent year is mean(R0), F(0) = weight(0) = maturity(0) = length(0) = 0, M(0) = M(1)")
     
   }
 
   # Dimensions
-  nsim<-dim(naa)[1]
+  
   n_age <- dim(naa)[2]
   maxage<-dim(naa)[2] - 1
-  nyears<-dim(naa)[3]
-
+ 
   # Mine values to spec-out the OM
   if(!is.null(dots$R0)) {
     if(length(dots$R0) == 1) {
@@ -281,8 +285,8 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
 
     Hist <- runMSE(OM, Hist = TRUE, silent = TRUE)
     
-    nc<-ceiling(maxage/3)
-    nr<-ceiling(maxage/nc)
+    nc<-ceiling((maxage+1)/3)
+    nr<-ceiling((maxage+1)/nc)
     
     old_par <- par(no.readonly = TRUE)
     on.exit(par(old_par))

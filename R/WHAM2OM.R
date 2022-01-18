@@ -108,11 +108,10 @@ WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=
   OM<-VPA2OM(Name, proyears, interval, CurrentYr, h=h, Obs, Imp, 
            naa, faa, waa, Mataa, Maa, laa,
            nyr_par_mu, LowerTri,
-           recind=0, plusgroup, altinit=0, fixq1=TRUE,
-           report=report, silent=silent) 
+           recind=recind, plusgroup, altinit=0, fixq1=fixq1,
+           report=report, silent=silent, R0 = apply(naa[,1,],1,mean)) 
   
-  OM@maxage<-9
- 
+  
   # Sample some selectivities potentially for use later and put these in a WHAM Misc slot
   WHAM = list()
   nsel<-length(output[[1]]$selAA)
