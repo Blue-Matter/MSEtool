@@ -470,7 +470,7 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   }
 
   wt <- dplyr::filter(replist$ageselex, Fleet == ff, Sex == i, Factor == "bodywt", Seas == 1)
-  wt_morphs <- wt$Morph %>% table()
+  wt_morphs <- wt$Morph %>% unique()
   if(length(wt_morphs) > 1) wt <- dplyr::filter(wt, Morph == wt_morphs[1])
   wt <- vapply(0:Stock@maxage, function(x) wt[match(mainyrs, wt$Yr), parse(text = paste0("\"", x, "\"")) %>% eval()], numeric(length(mainyrs)))
 
