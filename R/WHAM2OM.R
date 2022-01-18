@@ -36,12 +36,12 @@ WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=
                   nyr_par_mu = 3, LowerTri=2, recind=0, plusgroup=T, altinit=0, 
                   fixq1 = T, report = FALSE, silent = FALSE, ...){
 
+  # Do a TMB sd report and get means / invert Hessian
   SD <- TMB::sdreport(obj, getJointPrecision = TRUE)
   mu <- c(SD$par.fixed, SD$par.random)
   covm <- solve(SD$jointPrecision)
   
-  
-  # clumsy and ugly reordering of mu to match covnams
+  # clumsy and ugly reordering of mu to match covnams (sorry, more coffee needed!)
   numu<-rep(NA,length(mu))
   munams<-names(mu)
   nams<-unique(munams)
@@ -83,19 +83,22 @@ WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=
     h=0.999
   }else{
     stop("OM NOT MADE: Currently coded for recruit_model types 1 and 2 that either model recruitment as a fixed effect with no SR relationship or model deviations from mean recruitment")
-   # if(obj$input$data$use_steepness){
-      #h=obj$input$data$recruit_pars[1]
-      #R0=obj$input$data$recruit_pars[2]
-    #}else{
-    #  h=NULL # reconfigure
-    #  R0=NULL # reconfigure
-    #}
     
-    #if(obj$input$data$recruit_model == 3){ # Beverton-Holt
+    # if(obj$input$data$use_steepness){
+    #  h=obj$input$data$recruit_pars[1]
+      #R0=obj$input$data$recruit_pars[2]
       
-    #}else{ # Ricker
+    #}else{
       
-    #} 
+     # phi0<-apply(exp(t(-apply(Maa[,,ny],1,cumsum)))*Mataa[,,ny]*waa[,,ny],1,sum) # unfished spawning biomass per recruit in final year
+   
+      #if(obj$input$data$recruit_model == 3){ # Beverton-Holt
+        
+        
+      #}else{ # Ricker
+        
+      #}
+    #}
     
   }
            
@@ -108,6 +111,7 @@ WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=
            recind=0, plusgroup, altinit=0, fixq1=TRUE,
            report=report, silent=silent) 
   
+  OM@maxage<-9
  
   # Sample some selectivities potentially for use later and put these in a WHAM Misc slot
   WHAM = list()

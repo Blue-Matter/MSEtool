@@ -64,14 +64,27 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
     stop('One or more of the following arrays do not have the same shape: naa, faa, waa, Mataa, Maa, Laa')
   }
 
-  if(recind) {
-    ageind<-(recind+1):dim(naa)[2]
-    naa<-naa[,ageind,]
-    faa<-faa[,ageind,]
-    waa<-waa[,ageind,]
-    Mataa<-Mataa[,ageind,]
-    Maa<-Maa[,ageind,]
-    laa<-laa[,ageind,]
+  if(recind==1) {  # create a dummy age 0 dimension to the various arrays
+    
+    ageind<-1:dim(naa)[2]
+    dims<-c(dim(naa)[1],1,dim(naa)[3])
+    zeros<-array(0,dims)
+    
+    # N0 back inputed
+    N0<-array(naa[,1,]*exp(Maa[,1,]),dims)
+    naa<-abind(N0,naa,along=2) 
+    
+    # F, weight, length and maturity assumed to be zero
+    faa<-abind(zeros,faa,along=2) 
+    waa<-abind(zeros,waa,along=2)
+    Mataa<-abind(zeros,Mataa,along=2)
+    laa<-abind(zeros,laa,along=2)
+    
+    # M copied from first year to age zero
+    Maa<-abind(Maa[,1,],Maa,along=2)
+    
+    message("Age zero positions for arrays were created with the following assumptions: N(0) = N(1) * exp(M(1)), F(0) = weight(0) = maturity(0) = length(0) = 0, M(0) = M(1)")
+    
   }
 
   # Dimensions
