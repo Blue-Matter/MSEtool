@@ -304,97 +304,36 @@ calculate_single_fleet_dynamics <- function(x) {
   # Use mean discard mortality
 
   if(length(x) > 1) {
-    SLarray <- lapply(x, getElement, "SLarray") %>% simplify2array()
-    retL <- lapply(x, getElement, "retL") %>% simplify2array()
-    V <- lapply(x, getElement, "V") %>% simplify2array()
-    retA <- lapply(x, getElement, "retA") %>% simplify2array()
-    Find <- lapply(x, function(xx) xx$qs * xx$Find) %>% simplify2array()
-    Fdisc1 <- lapply(x, getElement, "Fdisc_array1") %>% simplify2array()
-    Fdisc2 <- lapply(x, getElement, "Fdisc_array2") %>% simplify2array()
+    SLarray <- sapply(x, getElement, "SLarray", simplify = "array")
+    retL <- sapply(x, getElement, "retL", simplify = "array")
+    V <- sapply(x, getElement, "V", simplify = "array")
+    retA <- sapply(x, getElement, "retA", simplify = "array")
+    Find <- sapply(x, function(xx) xx$qs * xx$Find, simplify = "array")
+    Fdisc1 <- sapply(x, getElement, "Fdisc_array1", simplify = "array")
+    Fdisc2 <- sapply(x, getElement, "Fdisc_array2", simplify = "array")
 
     nsim <- dim(Find)[1]
     nyears <- dim(Find)[2]
     proyears <- dim(V)[3] - nyears
 
-    Fdisc_avg <- lapply(x, getElement, "Fdisc") %>% simplify2array() %>% apply(1, mean, na.rm=TRUE)
+    Fdisc_avg <- sapply(x, getElement, "Fdisc", simplify = "array") %>% apply(1, mean, na.rm = TRUE)
     
     # Age-based arrays
-    F_at_age <- lapply(1:nsim, function(i) { # Sum across fleets in sim i, year j
-      sapply(1:nyears, function(j) { 
-        Fretain <- Find[i, j, ] * t(V[i, , j, ] * retA[i, , j, ])
-        Fdiscard <- Find[i, j, ] * t(V[i, , j, ] * (1 - retA[i, , j, ]) * Fdisc1[i, , j, ])
-        colSums(Fretain + Fdiscard)
-      })
-    }) %>% simplify2array() %>% aperm(c(3, 1, 2))
+    F_at_age <- single_fleet_F_at_age(Find, V, retA, Fdisc1, nsim, nyears)
+    Fdisc1_avg <- single_fleet_Fdisc(Find, V, retA, Fdisc1, nsim, nyears)
+    retA_avg <- single_fleet_retA(Find, V, retA, Fdisc1_avg, F_at_age, nsim, nyears) 
     
-    Fdisc1_avg <- lapply(1:nsim, function(i) { # Weighted mean across fleets in sim i, year j
-      sapply(1:nyears, function(j) { 
-        num <- Find[i, j, ] * t(V[i, , j, ] * (1 - retA[i, , j, ]) * Fdisc1[i, , j, ])
-        den <- Find[i, j, ] * t(V[i, , j, ] * (1 - retA[i, , j, ]))
-        out <- colSums(num)/colSums(den)
-        out[is.na(out)] <- mean(out, na.rm = TRUE) # Denominator is zero because retention = 1
-        return(out)
-      })
-    }) %>% simplify2array() %>% aperm(c(3, 1, 2))
-    
-    retA_avg <- local({
-      Fretain <- lapply(1:nsim, function(i) {
-        sapply(1:nyears, function(j) colSums(Find[i, j, ] * t(V[i, , j, ] * retA[i, , j, ])))
-      }) %>% simplify2array() %>% aperm(c(3, 1, 2))
-      Fdiscard <- F_at_age - Fretain
-      
-      lapply(1:nsim, function(i) {
-        sapply(1:nyears, function(j) {
-          out <- Fretain[i, , j] * Fdisc1_avg[i, , j]/(Fdiscard[i, , j] + Fretain[i, , j] * Fdisc1_avg[i, , j])
-          out[is.na(out)] <- mean(out, na.rm = TRUE) # Denominator is zero because F = 0, should ensure that: all(out > 0)
-          return(out)
-        })
-      }) %>% simplify2array() %>% aperm(c(3, 1, 2))
-    })
-    
-    Find_out <- apply(F_at_age/retA_avg, c(1, 3), max)
-    V_avg <- lapply(1:nsim, function(i) t(F_at_age[i, , ]/retA_avg[i, , ])/Find_out[i, ]) %>% 
-      simplify2array() %>% aperm(3:1)
+    Find_out <- apply(F_at_age[, -1, ]/retA_avg[, -1, ], c(1, 3), max) # Ignore age-0 to avoid likely outliers for apical Find
+    V_avg <- single_fleet_V(F_at_age, retA = retA_avg, Find = Find_out, nsim = nsim)
     
     # Length-based arrays
-    F_at_length <- lapply(1:nsim, function(i) {
-      sapply(1:nyears, function(j) { # Sum across fleets in sim i, year j
-        Fretain <- Find[i, j, ] * t(SLarray[i, , j, ] * retL[i, , j, ])
-        Fdiscard <- Find[i, j, ] * t(SLarray[i, , j, ] * (1 - retL[i, , j, ]) * Fdisc2[i, , j, ])
-        colSums(Fretain + Fdiscard)
-      })
-    }) %>% simplify2array() %>% aperm(c(3, 1, 2))
+    F_at_length <- single_fleet_F_at_age(Find, V = SLarray, retA = retL, Fdisc1 = Fdisc2, nsim = nsim, nyears = nyears)
+    Fdisc2_avg <- single_fleet_Fdisc(Find = Find, V = SLarray, retA = retL, Fdisc1 = Fdisc2, nsim = nsim, nyears = nyears) 
+    retL_avg <- single_fleet_retA(Find = Find, V = SLarray, retA = retL, Fdisc1_avg = Fdisc2_avg, 
+                                  F_at_age = F_at_length, nsim = nsim, nyears = nyears)
     
-    Fdisc2_avg <- lapply(1:nsim, function(i) {
-      sapply(1:nyears, function(j) { # Weighted mean across fleets in sim i, year j
-        num <- Find[i, j, ] * t(SLarray[i, , j, ] * (1 - retL[i, , j, ]) * Fdisc2[i, , j, ])
-        den <- Find[i, j, ] * t(SLarray[i, , j, ] * (1 - retL[i, , j, ]))
-        out <- colSums(num)/colSums(den)
-        out[is.na(out)] <- mean(out, na.rm = TRUE) # Denominator is zero because retention = 1
-        return(out)
-      })
-    }) %>% simplify2array() %>% aperm(c(3, 1, 2))
-    
-    retL_avg <- local({
-      Fretain <- lapply(1:nsim, function(i) {
-        sapply(1:nyears, function(j) colSums(Find[i, j, ] * t(SLarray[i, , j, ] * retL[i, , j, ])))
-      }) %>% simplify2array() %>% aperm(c(3, 1, 2))
-      Fdiscard <- F_at_length - Fretain
-      
-      lapply(1:nsim, function(i) {
-        sapply(1:nyears, function(j) {
-          out <- Fretain[i, , j] * Fdisc2_avg[i, , j]/(Fdiscard[i, , j] + Fretain[i, , j] * Fdisc2_avg[i, , j])
-          out[is.na(out)] <- mean(out, na.rm = TRUE) # Denominator is zero because F = 0, ensure: all(out > 0)
-          return(out)
-        })
-      }) %>% simplify2array() %>% aperm(c(3, 1, 2))
-    })
-    
-    SL_avg <- local({
-      Find_out_L <- apply(F_at_length/retL_avg, c(1, 3), max) # Should be almost identical to Find_out
-      lapply(1:nsim, function(i) t(F_at_length[i, , ]/retL_avg[i, , ])/Find_out_L[i, ]) %>% 
-        simplify2array() %>% aperm(3:1)
-    })
+    Find_out_L <- apply(F_at_length/retL_avg, c(1, 3), max) # Should be almost identical to Find_out
+    SL_avg <- single_fleet_V(F_at_age = F_at_length, retA = retL_avg, Find = Find_out_L, nsim = nsim)
     
     #for(i in 1:nsim) {
     #  for(j in 1:nyears) {
@@ -447,5 +386,87 @@ calculate_single_fleet_dynamics <- function(x) {
     out <- lapply(fvar, function(xx) getElement(x[[1]], xx)) %>% structure(names = fvar)
   }
   return(out)
+}
+
+single_fleet_F_at_age <- function(Find, V, retA, Fdisc1, nsim, nyears) {
+  sapply(1:nsim, function(i) { # Sum across fleets in sim i, year j
+    sapply(1:nyears, function(j) { 
+      Fretain <- Find[i, j, ] * t(V[i, , j, ] * retA[i, , j, ])
+      Fdiscard <- Find[i, j, ] * t(V[i, , j, ] * (1 - retA[i, , j, ]) * Fdisc1[i, , j, ])
+      colSums(Fretain + Fdiscard)
+    })
+  }, simplify = "array") %>% aperm(c(3, 1, 2))
+}
+
+single_fleet_Fdisc <- function(Find, V, retA, Fdisc1, nsim, nyears) {
+  sapply(1:nsim, function(i) { # Weighted mean across fleets in sim i, year j
+    res <- sapply(1:nyears, function(j) {
+      num <- Find[i, j, ] * t(V[i, , j, ] * (1 - retA[i, , j, ]) * Fdisc1[i, , j, ])
+      den <- Find[i, j, ] * t(V[i, , j, ] * (1 - retA[i, , j, ]))
+      out <- colSums(num)/colSums(den)
+      out[is.na(out)] <- mean(out, na.rm = TRUE) # Denominator is zero because retention = 1
+      return(out)
+    })
+    if(any(is.na(res))) { # There are years with entirely NA vectors, return mean of time series
+      m <- apply(res, 1, mean, na.rm = TRUE)
+      res <- apply(res, 2, function(jj) {
+        if(all(is.na(jj))) {
+          m
+        } else {
+          jj
+        }
+      })
+    }
+    return(res)
+  }, simplify = "array") %>% aperm(c(3, 1, 2))
+}
+
+single_fleet_retA <- function(Find, V, retA, Fdisc1_avg, F_at_age, nsim, nyears) {
+  
+  Fretain <- sapply(1:nsim, function(i) {
+    sapply(1:nyears, function(j) colSums(Find[i, j, ] * t(V[i, , j, ] * retA[i, , j, ])))
+  }, simplify = "array") %>% aperm(c(3, 1, 2))
+  Fdiscard <- F_at_age - Fretain
+  
+  sapply(1:nsim, function(i) {
+    res <- sapply(1:nyears, function(j) {
+      out <- Fretain[i, , j] * Fdisc1_avg[i, , j]/(Fdiscard[i, , j] + Fretain[i, , j] * Fdisc1_avg[i, , j])
+      out[is.na(out)] <- mean(out, na.rm = TRUE) # Denominator is zero because F = 0, should ensure that: all(out > 0)
+      return(out)
+    })
+    if(any(is.na(res))) { # There are years with entirely NA vectors, return mean of time series
+      m <- apply(res, 1, mean, na.rm = TRUE)
+      res <- apply(res, 2, function(jj) {
+        if(all(is.na(jj))) {
+          return(m)
+        } else {
+          return(jj)
+        }
+      })
+    }
+    return(res)
+  }, simplify = "array") %>% aperm(c(3, 1, 2))
+  
+}
+
+single_fleet_V <- function(F_at_age, retA, Find, nsim) {
+  sapply(1:nsim, function(i) {
+    res <- t(F_at_age[i, , ]/retA[i, , ])/Find[i, ]
+    if(any(is.na(res))) { # There are years with entirely NA vectors (Find = 0), return mean of time series
+      m <- apply(res, 2, mean, na.rm = TRUE)
+      res <- apply(res, 1, function(jj) {
+        if(all(is.na(jj))) {
+          return(m)
+        } else {
+          return(jj)
+        }
+      }) %>% t()
+    }
+    # Make robust by fixing ratio of V in age-0/age-1 to that in F_at_age (see BET example)
+    Fratio <- F_at_age[i, 1, ] / F_at_age[i, 2, ]
+    Fratio[is.na(Fratio)] <- mean(Fratio, na.rm = TRUE)
+    res[, 1] <- res[, 2] * Fratio
+    return(res)
+  }, simplify = "array") %>% aperm(3:1)
 }
 

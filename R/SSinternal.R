@@ -539,6 +539,7 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   Fleet <- new("Fleet")
   Fleet@Name <- replist$FleetNames[ff]
   Fleet@nyears <- length(mainyrs)
+  Fleet@DR <- rep(0, 2) # Should be zero since we have retention in cpars$retA and cpars$retL
   Fleet@Spat_targ <- rep(1, 2)
   Fleet@EffYears <- 1:nyears
   Fleet@EffLower <- Fleet@EffUpper <- Find
@@ -574,7 +575,6 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   cpars_fleet$retA <- retAout
   cpars_fleet$retL <- replicate(nsim, retL) %>% aperm(c(3, 1, 2))
   cpars_fleet$SLarray <- replicate(nsim, SLarray) %>% aperm(c(3, 1, 2))
-  cpars_fleet$DR <- rep(0, nsim) # Should be zero since we have retention in cpars$retL
   cpars_fleet$Find <- Find %>% matrix(nsim, length(mainyrs), byrow = TRUE)
 
   cpars_fleet$Wt_age_C <- wt_at_age_c
