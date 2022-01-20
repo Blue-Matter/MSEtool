@@ -35,6 +35,10 @@ WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=
                   Obs = MSEtool::Imprecise_Unbiased, Imp=MSEtool::Perfect_Imp,
                   nyr_par_mu = 3, LowerTri=2, recind=0, plusgroup=T, altinit=0, 
                   fixq1 = T, report = FALSE, silent = FALSE, ...){
+  
+  if(!requireNamespace("TMB", quietly = TRUE) || !requireNamespace("mvtnorm", quietly = TRUE)) {
+    stop("Install the TMB and mvtnorm packages to use WHAM2OM.")
+  }
 
   # Do a TMB sd report and get means / invert Hessian
   SD <- TMB::sdreport(obj, getJointPrecision = TRUE)

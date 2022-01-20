@@ -48,6 +48,7 @@ Suggests:
     rmarkdown,
     shiny,
     testthat,
-    tidyr
+    tidyr,
+    TMB
 LinkingTo: Rcpp, RcppArmadillo
 BugReports: https://github.com/Blue-Matter/MSEtool/issues
