@@ -100,8 +100,15 @@ Either a single numeric or a length nsim vector.}
 
 \item{silent}{Whether to silence messages to the console.}
 
-\item{...}{Additional arguments, including R0 (unfished recruitment), phi0 (unfished spawners per recruit associated with R0 and h for calculating stock recruit parameters),
-Perr (recruitment standard deviation for sampling future recruitment), and AC (autocorrelation in future recruitment deviates). For all, either a numeric or a length nsim vector.}
+\item{...}{Additional arguments (for all, either a numeric or a length nsim vector):
+\itemize{
+\item \code{R0} unfished recruitment
+\item \code{phi0} unfished spawners per recruit associated with R0 and h. With time-varying parameters, openMSE uses the mean phi0
+in the first \code{ageM} (age of 50 percent maturity) years for the stock-recruit relationship. \code{Assess2OM} will re-calculate R0 and h
+in the operating model such that the stock-recruit \code{alpha} and \code{beta} parameters match values implied in the input.
+\item \code{Perr} recruitment standard deviation (lognormal distribution) for sampling future recruitment
+\item \code{AC} autocorrelation in future recruitment deviates.
+}}
 }
 \value{
 An object of class \linkS4class{OM}.

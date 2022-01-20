@@ -27,8 +27,15 @@
 #' @param fixq1 Logical. Should q be fixed (ie assume the F-at-age array faa is accurate?
 #' @param report Logical, if TRUE, a diagnostic will be reported showing the matching of the OM reconstructed numbers at age vs the assessment.
 #' @param silent Whether to silence messages to the console.
-#' @param ... Additional arguments, including R0 (unfished recruitment), phi0 (unfished spawners per recruit associated with R0 and h for calculating stock recruit parameters),
-#' Perr (recruitment standard deviation for sampling future recruitment), and AC (autocorrelation in future recruitment deviates). For all, either a numeric or a length nsim vector.
+#' @param ... Additional arguments (for all, either a numeric or a length nsim vector):
+#' \itemize{
+#' \item \code{R0} unfished recruitment
+#' \item \code{phi0} unfished spawners per recruit associated with R0 and h. With time-varying parameters, openMSE uses the mean phi0 
+#' in the first \code{ageM} (age of 50 percent maturity) years for the stock-recruit relationship. \code{Assess2OM} will re-calculate R0 and h
+#' in the operating model such that the stock-recruit \code{alpha} and \code{beta} parameters match values implied in the input. 
+#' \item \code{Perr} recruitment standard deviation (lognormal distribution) for sampling future recruitment
+#' \item \code{AC} autocorrelation in future recruitment deviates. 
+#' }
 #' @details Use a seed for the random number generator to sample future recruitment.
 #' @return An object of class \linkS4class{OM}.
 #' @author T. Carruthers
