@@ -122,7 +122,7 @@ needs to parameterize most of the observation and implementation portions of the
 Use a seed for the random number generator to sample future recruitment.
 }
 \seealso{
-\link{SS2OM}
+\link{SS2OM} \link{iSCAM2OM} \link{WHAM2OM} \link{ASAP2OM}
 }
 \author{
 T. Carruthers

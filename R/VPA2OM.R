@@ -41,7 +41,7 @@
 #' @author T. Carruthers
 #' @aliases VPA2OM
 #' @export
-#' @seealso \link{SS2OM}
+#' @seealso \link{SS2OM} \link{iSCAM2OM} \link{WHAM2OM} \link{ASAP2OM}
 Assess2OM <- function(Name="A fishery made by VPA2OM",
                       proyears=50, interval=2, CurrentYr=as.numeric(format(Sys.Date(), "%Y")),
                       h=0.999,
