@@ -81,7 +81,7 @@ Maturity-at-age-year, Mortality-at-age-year and weight-at-age-year are identical
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>obj</dt>
-<dd><p>a list object created by fit_wham().</p></dd>
+<dd><p>a list object created by <code>fit_wham()</code>.</p></dd>
 <dt>nsim</dt>
 <dd><p>Positive integer. The number of simulations.</p></dd>
 <dt>proyears</dt>
@@ -117,10 +117,7 @@ Maturity-at-age-year, Mortality-at-age-year and weight-at-age-year are identical
 <dt>silent</dt>
 <dd><p>Whether to silence messages to the console.</p></dd>
 <dt>...</dt>
-<dd><p>Additional arguments, including R0 (unfished recruitment), phi0 (unfished spawners per recruit associated with R0 and h for calculating stock recruit parameters),
-Perr (recruitment standard deviation for sampling future recruitment), and AC (autocorrelation in future recruitment deviates). For all, either a numeric or a length nsim vector.</p></dd>
-<dt>h</dt>
-<dd><p>The steepness of the stock-recruitment curve (greater than 0.2 and less than 1, assumed to be close to 1 to match VPA assumption).</p></dd>
+<dd><p>Additional arguments, not currently used.</p></dd>
 </dl></div>
     <div id="value">
     <h2>Value</h2>
@@ -129,6 +126,7 @@ Perr (recruitment standard deviation for sampling future recruitment), and AC (a
     <div id="details">
     <h2>Details</h2>
     <p>Use a seed for the random number generator to sample future recruitment.</p>
+<p>This function uses steepness of 0.999 with unfished recruitment equal to the time series mean.</p>
     </div>
     <div id="see-also">
     <h2>See also</h2>
