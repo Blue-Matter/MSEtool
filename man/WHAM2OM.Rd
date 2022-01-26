@@ -27,7 +27,7 @@ WHAM2OM(
 )
 }
 \arguments{
-\item{obj}{a list object created by fit_wham().}
+\item{obj}{a list object created by \code{fit_wham()}.}
 
 \item{nsim}{Positive integer. The number of simulations.}
 
@@ -63,10 +63,7 @@ WHAM2OM(
 
 \item{silent}{Whether to silence messages to the console.}
 
-\item{...}{Additional arguments, including R0 (unfished recruitment), phi0 (unfished spawners per recruit associated with R0 and h for calculating stock recruit parameters),
-Perr (recruitment standard deviation for sampling future recruitment), and AC (autocorrelation in future recruitment deviates). For all, either a numeric or a length nsim vector.}
-
-\item{h}{The steepness of the stock-recruitment curve (greater than 0.2 and less than 1, assumed to be close to 1 to match VPA assumption).}
+\item{...}{Additional arguments, not currently used.}
 }
 \value{
 An object of class \linkS4class{OM}.
@@ -77,6 +74,8 @@ Maturity-at-age-year, Mortality-at-age-year and weight-at-age-year are identical
 }
 \details{
 Use a seed for the random number generator to sample future recruitment.
+
+This function uses steepness of 0.999 with unfished recruitment equal to the time series mean.
 }
 \seealso{
 \link{Assess2OM}

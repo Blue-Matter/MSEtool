@@ -3,12 +3,11 @@
 #'
 #' @description Takes a fitted WHAM (Wood's Hole Assessment Model) and samples historical population and fishing dynamics from the MLE fit and variance-covariance matrix. 
 #' Maturity-at-age-year, Mortality-at-age-year and weight-at-age-year are identical among simulations and are a direct copy of the matrices in the WHAM fitting object. 
-#' @param obj a list object created by fit_wham(). 
+#' @param obj a list object created by \code{fit_wham()}. 
 #' @param nsim Positive integer. The number of simulations. 
 #' @param proyears Positive integer. The number of projection years for MSE.
 #' @param interval Positive integer. The interval at which management procedures will update the management advice in \link[MSEtool]{runMSE}, e.g., 1 = annual updates.
 #' @param Name Character string. The name of the operating model.
-#' @param h The steepness of the stock-recruitment curve (greater than 0.2 and less than 1, assumed to be close to 1 to match VPA assumption).
 #' @param WLa positive real number or array `[sim, ages, year]`. The default weight-length parameter a (W=aL^b)
 #' @param WLb positive real number or array `[sim, ages, year]`. The default weight-length parameter b (W=aL^b)
 #' @param WAAind positive integer. The index of the WHAM weight-at-age array input$data$waa to be assumed as the weight-at-age for the operating model
@@ -22,14 +21,14 @@
 #' @param fixq1 Logical. Should q be fixed (ie assume the F-at-age array faa is accurate?
 #' @param report Logical, if TRUE, a diagnostic will be reported showing the matching of the OM reconstructed numbers at age vs the assessment.
 #' @param silent Whether to silence messages to the console.
-#' @param ... Additional arguments, including R0 (unfished recruitment), phi0 (unfished spawners per recruit associated with R0 and h for calculating stock recruit parameters),
-#' Perr (recruitment standard deviation for sampling future recruitment), and AC (autocorrelation in future recruitment deviates). For all, either a numeric or a length nsim vector.
+#' @param ... Additional arguments, not currently used.
 #' @details Use a seed for the random number generator to sample future recruitment.
+#' 
+#' This function uses steepness of 0.999 with unfished recruitment equal to the time series mean.
 #' @return An object of class \linkS4class{OM}.
 #' @author T. Carruthers
 #' @export
 #' @seealso \link{Assess2OM}
-
 WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=3,
                   WAAind = 1,
                   Obs = MSEtool::Imprecise_Unbiased, Imp=MSEtool::Perfect_Imp,
