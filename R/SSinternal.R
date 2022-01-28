@@ -317,6 +317,8 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
   # Maturity at age - technically fecundity = 0 for males in SS.
   # We will set male maturity equal to female maturity
   # but MOM@SexPars will also effectively set male maturity = 0.
+  if(any(endgrowth$Age_Mat < 0)) endgrowth$Age_Mat <- abs(endgrowth$Age_Mat) # Should all be 1's
+  if(any(endgrowth$Len_Mat < 0)) endgrowth$Len_Mat <- abs(endgrowth$Len_Mat)
   Mat_age <- endgrowth$Len_Mat * endgrowth$Age_Mat
   cpars_bio$Mat_age <- array(Mat_age, c(n_age, allyears, nsim)) %>% aperm(c(3, 1, 2))
 
