@@ -16,14 +16,12 @@
 #' @param Imp The implementation model (class Imp). This function does not update implementation parameters.
 #' @param nyr_par_mu Positive integer. The number of recent years that natural mortality, age vulnerability, weight, length and maturity parameters are averaged over for defining future projection conditions.
 #' @param LowerTri Integer. The number of recent years for which model estimates of recruitment are ignored (not reliably estimated by the assessment)
-#' @param recind Positive integer. The first age class that fish 'recruit to the fishery'. The default is 0 - ie the first position in the age dimension of naa is age zero
 #' @param plusgroup Logical. Does the assessment assume that the oldest age class is a plusgroup?
 #' @param altinit Integer. Various assumptions for how to set up the initial numbers. 0: standard, 1: no plus group, 2: temporary fix for MSEtool plus group initialization
 #' @param fixq1 Logical. Should q be fixed (ie assume the F-at-age array faa is accurate?
 #' @param report Logical, if TRUE, a diagnostic will be reported showing the matching of the OM reconstructed numbers at age vs the assessment.
 #' @param silent Whether to silence messages to the console.
 #' @param ... Additional arguments, including R0 (unfished recruitment), phi0 (unfished spawners per recruit associated with R0 and h for calculating stock recruit parameters),
-#' Perr (recruitment standard deviation for sampling future recruitment), and AC (autocorrelation in future recruitment deviates). For all, either a numeric or a length nsim vector.
 #' @details Use a seed for the random number generator to sample future recruitment.
 #' @return An object of class \linkS4class{OM}.
 #' @author T. Carruthers
@@ -33,8 +31,10 @@
 WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=3,
                   WAAind = 1,
                   Obs = MSEtool::Imprecise_Unbiased, Imp=MSEtool::Perfect_Imp,
-                  nyr_par_mu = 3, LowerTri=2, recind=0, plusgroup=T, altinit=0, 
+                  nyr_par_mu = 3, LowerTri=2, plusgroup=T, altinit=0, 
                   fixq1 = T, report = FALSE, silent = FALSE, ...){
+  
+  # nsim=3; proyears=30; interval=2; Name = NULL; WLa=1; WLb=3; WAAind = 1;  Obs = MSEtool::Imprecise_Unbiased; Imp=MSEtool::Perfect_Imp; nyr_par_mu = 3; LowerTri=2; recind=1; plusgroup=T; altinit=0; fixq1 = T; report = TRUE; silent = FALSE
   
   if(!requireNamespace("TMB", quietly = TRUE) || !requireNamespace("mvtnorm", quietly = TRUE)) {
     stop("Install the TMB and mvtnorm packages to use WHAM2OM.")
@@ -105,23 +105,21 @@ WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=
     #}
     
   }
-           
+  
   CurrentYr<-obj$years[length(obj$years)]   
   if(is.null(Name)) Name=obj$model_name
   
   OM<-VPA2OM(Name, proyears, interval, CurrentYr, h=h, Obs, Imp, 
            naa, faa, waa, Mataa, Maa, laa,
            nyr_par_mu, LowerTri,
-           recind=recind, plusgroup, altinit=0, fixq1=fixq1,
-           report=report, silent=silent, R0 = apply(naa[,1,],1,mean)) 
+           recind=1, plusgroup, altinit=0, fixq1=fixq1,# recind = 1 because WHAM models report at age arrays starting second year of life ie not age zero
+           report=report, silent=silent, R0 = apply(naa[,1,]*exp(Maa[,1,]),1,mean)) 
   
   
   # Sample some selectivities potentially for use later and put these in a WHAM Misc slot
   WHAM = list()
   nsel<-length(output[[1]]$selAA)
-  selfunc<-function(x){
-    sapply(x$selAA, function(y)c(0,y[nrow(y),])/max(y[nrow(y),]))
-  }
+  selfunc<-function(x)    sapply(x$selAA, function(y)c(0,y[nrow(y),])/max(y[nrow(y),])) # takes most recent selectivity at age for each block
   WHAM$AddIndV<- aperm(array(unlist(lapply(output,FUN=selfunc)),c(na+1,nsel,nsim)),c(3,2,1))
   OM@Misc$WHAM <- WHAM
   
