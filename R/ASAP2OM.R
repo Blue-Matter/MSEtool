@@ -57,7 +57,7 @@ ASAP2OM <- function(asap, nsim = 48, proyears = 50, mcmc = FALSE, Name = "ASAP M
   Len_age <- Wt_age^(1/3) # Placeholder
   
   # SPR
-  h <- asap$SR.parms$SR.steepness
+  h <- min(0.999, asap$SR.parms$SR.steepness)
   R0 <- asap$SR.parms$SR.R0
   phi0 <- asap$SR.parms$SR.SPR0
   
@@ -72,7 +72,7 @@ ASAP2OM <- function(asap, nsim = 48, proyears = 50, mcmc = FALSE, Name = "ASAP M
   
   # Wt_age C
   OM@cpars$Wt_age_C <- local({
-    Whist <- replicate(nsim, asap$WAA.mat$WAA.catch.all) %>% aperm(3:1)
+    Whist <- replicate(nsim, asap$WAA.mats$WAA.catch.all) %>% aperm(3:1)
     Wpro <- replicate(proyears, Whist[, , nyears])
     abind::abind(Whist, Wpro, along = 3)
   })
