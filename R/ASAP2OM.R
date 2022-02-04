@@ -45,7 +45,7 @@ ASAP2OM <- function(asap, nsim = 48, proyears = 50, mcmc = FALSE, Name = "ASAP M
   Wt_age[, sage:maxage + 1, ] <- replicate(nsim, asap$WAA.mats$WAA.jan1) %>% aperm(3:1) # Set age-0 wt to zero
   
   if(sage > 0) {
-    M[, 1:sage, ] <- MSEtool:::tiny + .Machine$double.eps
+    M[, 1:sage, ] <- tiny + .Machine$double.eps
     FM[, 1:sage, ] <- Mat_age[, 1:sage, ] <- Fec_age[, 1:sage, ] <- Wt_age[, 1:sage, ] <- 0
     
     aind_missing <- sage:1 # Missing cohorts to be filled in
@@ -81,7 +81,7 @@ ASAP2OM <- function(asap, nsim = 48, proyears = 50, mcmc = FALSE, Name = "ASAP M
   Lestpars <- local({
     L <- apply(Wt_age[1, , ]^(1/3), 1, mean)
     starts  <- c(log(max(L)), log(0.2), 0)
-    optim(starts, MSEtool:::fitVB, LatAge = L, ages=0:maxage)$par
+    optim(starts, fitVB, LatAge = L, ages=0:maxage)$par
   })
   OM@cpars$Linf <- rep(exp(Lestpars[1]), nsim)
   OM@cpars$K <- rep(exp(Lestpars[2]), nsim)
