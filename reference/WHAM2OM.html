@@ -68,7 +68,6 @@ Maturity-at-age-year, Mortality-at-age-year and weight-at-age-year are identical
   Imp <span class="op">=</span> <span class="fu">MSEtool</span><span class="fu">::</span><span class="va"><a href="Imp-class-objects.html">Perfect_Imp</a></span>,
   nyr_par_mu <span class="op">=</span> <span class="fl">3</span>,
   LowerTri <span class="op">=</span> <span class="fl">2</span>,
-  recind <span class="op">=</span> <span class="fl">0</span>,
   plusgroup <span class="op">=</span> <span class="cn">T</span>,
   altinit <span class="op">=</span> <span class="fl">0</span>,
   fixq1 <span class="op">=</span> <span class="cn">T</span>,
@@ -104,8 +103,6 @@ Maturity-at-age-year, Mortality-at-age-year and weight-at-age-year are identical
 <dd><p>Positive integer. The number of recent years that natural mortality, age vulnerability, weight, length and maturity parameters are averaged over for defining future projection conditions.</p></dd>
 <dt>LowerTri</dt>
 <dd><p>Integer. The number of recent years for which model estimates of recruitment are ignored (not reliably estimated by the assessment)</p></dd>
-<dt>recind</dt>
-<dd><p>Positive integer. The first age class that fish 'recruit to the fishery'. The default is 0 - ie the first position in the age dimension of naa is age zero</p></dd>
 <dt>plusgroup</dt>
 <dd><p>Logical. Does the assessment assume that the oldest age class is a plusgroup?</p></dd>
 <dt>altinit</dt>
@@ -117,7 +114,7 @@ Maturity-at-age-year, Mortality-at-age-year and weight-at-age-year are identical
 <dt>silent</dt>
 <dd><p>Whether to silence messages to the console.</p></dd>
 <dt>...</dt>
-<dd><p>Additional arguments, not currently used.</p></dd>
+<dd><p>Additional arguments, including R0 (unfished recruitment), phi0 (unfished spawners per recruit associated with R0 and h for calculating stock recruit parameters),</p></dd>
 </dl></div>
     <div id="value">
     <h2>Value</h2>
@@ -126,7 +123,6 @@ Maturity-at-age-year, Mortality-at-age-year and weight-at-age-year are identical
     <div id="details">
     <h2>Details</h2>
     <p>Use a seed for the random number generator to sample future recruitment.</p>
-<p>This function uses steepness of 0.999 with unfished recruitment equal to the time series mean.</p>
     </div>
     <div id="see-also">
     <h2>See also</h2>
