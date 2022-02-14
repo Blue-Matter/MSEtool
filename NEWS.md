@@ -3,6 +3,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 # MSEtool 3.4.9999 - Development Version
 
 ## New additions
+- argument `parallel` in `runMSE` can takes a named list of MPs
 - two new functions `WHAM2OM` and `ASAP2OM` to import assessments into operating models
 
 ## Minor changes
