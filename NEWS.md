@@ -4,6 +4,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 ## New additions
 - two new functions `WHAM2OM` and `ASAP2OM` to import assessments into operating models
+- `Assess2MOM` to generate a multi-fleet operating model, either for a 2-sex population where recruitment is predicted from female spawning output, or a single-sex population.
 
 ## Minor changes
 - add message showing range of estimated von Bert. parameters when `OM@cpars$Len_age` is provided.
