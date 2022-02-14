@@ -82,7 +82,7 @@ simulation) for a specified operating model</p>
     <dl><dt>OM</dt>
 <dd><p>An operating model object (class <code>OM</code> or class <code>Hist</code>)</p></dd>
 <dt>parallel</dt>
-<dd><p>Logical. Should the MSE be run using parallel processing? Can be a vector of length(MPs)</p></dd>
+<dd><p>Logical. Should the MSE be run using parallel processing? See Details for more information.</p></dd>
 <dt>silent</dt>
 <dd><p>Should messages be printed out to the console?</p></dd>
 <dt>Hist</dt>
@@ -104,6 +104,20 @@ is returned.</p></dd>
 <li><p>Project - An object of class <a href="MSE-class.html">MSE</a></p></li>
 <li><p>runMSE - An object of class <a href="MSE-class.html">MSE</a></p></li>
 </ul></div>
+    <div id="details">
+    <h2>Details</h2>
+    
+<div class="section">
+<h3 id="running-in-parallel">Running in Parallel<a class="anchor" aria-label="anchor" href="#running-in-parallel"></a></h3>
+
+
+<p>For simple MPs, running in parallel can actually lead to an increase in computation time, due to the overhead in sending the
+information over to the cores. Consequently, the data-limied MPs in DLMtool and the reference MPs in MSEtool are not run using parallel processing.
+All other MPs, including custom MPs, will be run in parallel if argument is TRUE.
+To individually control which MPs run in parallel, <code>parallel</code> can be a named list of logical values, e.g., <code>parallel=list(AvC=TRUE)</code>.</p>
+</div>
+
+    </div>
     <div id="functions">
     <h2>Functions</h2>
     
