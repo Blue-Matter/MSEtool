@@ -382,10 +382,9 @@ VPA2OM <- Assess2OM
 #' @details Use a seed for the random number generator to sample future recruitment.
 #' @return An object of class \linkS4class{MOM}.
 #' @author Q. Huynh
-#' @aliases VPA2OM
 #' @export
 #' @seealso \link{SS2MOM} \link{multiMSE} \link{Assess2OM}
-Assess2MOM <- function(Name = "MOM created by Assess2OM",
+Assess2MOM <- function(Name = "MOM created by Assess2MOM",
                        proyears = 50, interval = 2, CurrentYr = as.numeric(format(Sys.Date(), "%Y")),
                        h = 0.999,
                        Obs = MSEtool::Imprecise_Unbiased, Imp = MSEtool::Perfect_Imp,

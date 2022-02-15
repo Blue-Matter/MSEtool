@@ -2,11 +2,10 @@
 % Please edit documentation in R/VPA2OM.R
 \name{Assess2MOM}
 \alias{Assess2MOM}
-\alias{VPA2OM}
 \title{Reads bootstrap estimates from a stock assessment model into a multi-fleet operating model.}
 \usage{
 Assess2MOM(
-  Name = "MOM created by Assess2OM",
+  Name = "MOM created by Assess2MOM",
   proyears = 50,
   interval = 2,
   CurrentYr = as.numeric(format(Sys.Date(), "\%Y")),
