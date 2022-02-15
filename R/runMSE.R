@@ -1336,9 +1336,15 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     VBiomass_P[SAYR] <- Biomass_P[SAYR] * V_P[SAYt]  # Calculate vulnerable biomass
     SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAY1]  # Calculate spawning stock numbers
     SSB_P[SAYR] <- N_P[SAYR] * StockPars$Fec_Age[SAY1]
-
+    
     StockPars$N_P <- N_P
     # -- Apply MP in initial projection year ----
+    Data_MP@Misc$StockPars <- StockPars
+    Data_MP@Misc$StockPars$CB_Pret <- CB_Pret
+    Data_MP@Misc$StockPars$Biomass_P <- Biomass_P
+    Data_MP@Misc$StockPars$SSB_P <- SSB_P
+    Data_MP@Misc$StockPars$VBiomass_P <- VBiomass_P
+    Data_MP@Misc$StockPars$N_P <- N_P
     runMP <- applyMP(Data=Data_MP, MPs = MPs[mm], reps = reps, silent=TRUE, parallel = parallel[mm])  # Apply MP
 
     MPRecs <- runMP[[1]][[1]] # MP recommendations
@@ -1515,7 +1521,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       VBiomass_P[SAYR] <- Biomass_P[SAYR] * V_P[SAYt]  # Calculate vulnerable biomass
       SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAYt]  # Calculate spawning stock numbers
       SSB_P[SAYR] <- N_P[SAYR] * StockPars$Fec_Age[SAYt]  # Calculate spawning stock biomass
-
+      
       StockPars$N_P <- N_P
       # --- An update year - update data and run MP ----
       if (y %in% upyrs) {
@@ -1530,7 +1536,12 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                               upyrs, interval, y, mm,
                               Misc=Data_p@Misc, RealData,
                               Sample_Area=ObsPars$Sample_Area)
-
+        
+        Data_MP@Misc$StockPars$CB_Pret <- CB_Pret
+        Data_MP@Misc$StockPars$Biomass_P <- Biomass_P
+        Data_MP@Misc$StockPars$SSB_P <- SSB_P
+        Data_MP@Misc$StockPars$VBiomass_P <- VBiomass_P
+        Data_MP@Misc$StockPars$N_P <- N_P
 
         # --- apply MP ----
         runMP <- applyMP(Data=Data_MP, MPs = MPs[mm], reps = reps, silent=TRUE, parallel = parallel[mm])  # Apply MP
