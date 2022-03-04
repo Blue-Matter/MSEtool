@@ -33,7 +33,6 @@
 #' @export
 #' @seealso \link{Assess2OM}
 WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=3,
-                  WAAind = 1,
                   Obs = MSEtool::Imprecise_Unbiased, Imp=MSEtool::Perfect_Imp,
                   nyr_par_mu = 3, LowerTri=2, plusgroup=T, altinit=0, 
                   fixq1 = T, report = FALSE, silent = FALSE, ...){
@@ -84,7 +83,8 @@ WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=
   faa<-aperm(array(unlist(lapply(output,FUN=function(x)x$FAA[yind,1,])),c(ny,na,nsim)),c(3,2,1))  
   Maa<-aperm(array(unlist(lapply(output,FUN=function(x)x$MAA[yind,])),c(ny,na,nsim)),c(3,2,1)) 
   Mataa<-aperm(array(obj$input$data$mature[yind,],c(ny,na,nsim)),c(3,2,1))
-  waa<-aperm(array(obj$input$data$waa[WAAind,yind,],c(ny,na,nsim)),c(3,2,1))
+  waa<-aperm(array(obj$input$data$waa[obj$input$data$waa_pointer_ssb,yind,],c(ny,na,nsim)),c(3,2,1))
+  waac <- aperm(array(obj$input$data$waa[obj$input$data$waa_pointer_totcatch,yind,],c(ny,na,nsim)),c(3,2,1))
   laa<-(waa/WLa)^(1/WLb)
   
   if(obj$input$data$recruit_model%in%c(1,2)){
@@ -119,7 +119,7 @@ WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=
            recind=1, plusgroup, altinit=0, fixq1=fixq1,# recind = 1 because WHAM models report at age arrays starting second year of life ie not age zero
            report=report, silent=silent, R0 = apply(naa[,1,]*exp(Maa[,1,]),1,mean)) 
   
-  
+  OM@cpars$Wt_age_C<-array(,c(nsim, maxage+1,nyears+proyears))
   # Sample some selectivities potentially for use later and put these in a WHAM Misc slot
   WHAM = list()
   nsel<-length(output[[1]]$selAA)
