@@ -336,3 +336,143 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
 #' @export
 VPA2OM <- Assess2OM
 
+
+
+
+
+
+#' Reads bootstrap estimates from a stock assessment model into a multi-fleet operating model.
+#'
+#' @description A function that develops a multiple fleet operating model (\linkS4class{MOM}) and either models a unisex or 2-sex
+#' stock from arrays of abundance, fishing mortality, and biological parameters. The user still
+#' needs to parameterize most of the observation and implementation portions of the operating model.
+#' @param Name Character string. The name of the multi-OM.
+#' @param proyears Positive integer. The number of projection years for MSE.
+#' @param interval Positive integer. The interval at which management procedures will update the management advice in \link[MSEtool]{multiMSE}, e.g., 1 = annual updates.
+#' @param CurrentYr Positive integer. The current year (e.g., final year of fitting to data)
+#' @param h The steepness of the stock-recruitment curve. Either a single numeric or a length nsim vector.
+#' @param Obs Either a single observation model to be used for all sexes and populations (class \linkS4class{Obs}), or a list where
+#' \code{Obs[[f]]} is the \linkS4class{Obs} object for fleet `f` (identical between sexes).
+#' @param Imp Either a single implementation model to be used for all sexes and populations (class \linkS4class{Imp}), or a list where
+#' \code{Imp[[f]]} is the \linkS4class{Obs} object for fleet `f` (identical between sexes).
+#' @param naa Numbers-at-age by sex `[first age is age zero]`. Four-dimensional numeric array `[sim, ages, year, p]`. `[p]` indexes the population, where
+#' `[p = 1]` for females and `[p = 2]` for males.
+#' @param faa Fishing mortality rate-at-age by sex and fleet `[first age is age zero]`. Five-dimensional numeric array `[sim, ages, year, p, f]` where `[f]` indexes fishery fleet.
+#' @param waa Weight-at-age `[first age is age zero]`. Four-dimensional numeric array `[sim, ages, year, p]`. 
+#' @param Mataa  Maturity (spawning fraction)-at-age `[first age is age zero]`. Four-dimensional numeric array  `[sim, ages, year, p]`.
+#' @param Maa Natural mortality rate-at-age `[first age is age zero]`. Four-dimensional numeric array `[sim, ages, year, p]`. 
+#' @param laa Length-at-age `[first age is age zero]`. Four-dimensional numeric array `[sim, ages, year, p]`.
+#' @param nyr_par_mu Positive integer. The number of recent years that natural mortality, age vulnerability, weight, length and maturity parameters are averaged over for defining future projection conditions.
+#' @param LowerTri Integer. The number of recent years for which model estimates of recruitment are ignored (not reliably estimated by the assessment)
+#' @param recind Positive integer. The first age class that fish 'recruit to the fishery'. The default is 0 - ie the first position in the age dimension of naa is age zero
+#' @param plusgroup Logical. Does the assessment assume that the oldest age class is a plusgroup?
+#' @param altinit Integer. Various assumptions for how to set up the initial numbers. 0: standard, 1: no plus group, 2: temporary fix for MSEtool plus group initialization
+#' @param fixq1 Logical. Should q be fixed (ie assume the F-at-age array faa is accurate?
+#' @param report Logical, if TRUE, a diagnostic will be reported showing the matching of the OM reconstructed numbers at age vs the assessment.
+#' @param silent Whether to silence messages to the console.
+#' @param ... Additional arguments (for all, either a numeric or a length nsim vector):
+#' \itemize{
+#' \item \code{R0} unfished recruitment
+#' \item \code{phi0} unfished spawners per recruit associated with R0 and h. With time-varying parameters, openMSE uses the mean phi0 
+#' in the first \code{ageM} (age of 50 percent maturity) years for the stock-recruit relationship. \code{Assess2OM} will re-calculate R0 and h
+#' in the operating model such that the stock-recruit \code{alpha} and \code{beta} parameters match values implied in the input. 
+#' \item \code{Perr} recruitment standard deviation (lognormal distribution) for sampling future recruitment
+#' \item \code{AC} autocorrelation in future recruitment deviates. 
+#' }
+#' @details Use a seed for the random number generator to sample future recruitment.
+#' @return An object of class \linkS4class{MOM}.
+#' @author Q. Huynh
+#' @export
+#' @seealso \link{SS2MOM} \link{multiMSE} \link{Assess2OM}
+Assess2MOM <- function(Name = "MOM created by Assess2MOM",
+                       proyears = 50, interval = 2, CurrentYr = as.numeric(format(Sys.Date(), "%Y")),
+                       h = 0.999,
+                       Obs = MSEtool::Imprecise_Unbiased, Imp = MSEtool::Perfect_Imp,
+                       naa, faa, waa, Mataa, Maa, laa,
+                       nyr_par_mu = 3, LowerTri = 1,
+                       recind = 0, plusgroup = TRUE, altinit = 0, fixq1 = TRUE,
+                       report = FALSE, silent = FALSE, ...) {
+  np <- dim(naa)[4]
+  ny <- dim(naa)[3]
+  nf <- dim(faa)[5]
+  if (!silent) message("A ", np, "-sex MOM will be created with ", nf, " fishing fleets and ", ny, " historical years.")
+  
+  if (inherits(Obs, "Obs")) Obs <- replicate(nf, Obs)
+  if (inherits(Imp, "Imp")) Imp <- replicate(nf, Imp)
+  
+  OMs <- lapply(1:np, function(p) {
+    lapply(1:nf, function(f) {
+      Assess2OM(Name="A fishery made by VPA2OM",
+                proyears = proyears, interval = interval, CurrentYr = CurrentYr,
+                h = h, Obs = Obs[[f]], Imp = Imp[[f]],
+                naa = naa[, , , p], 
+                faa = faa[, , , p, f], 
+                waa = waa[, , , p], 
+                Mataa = Mataa[, , , p], 
+                Maa = Maa[, , , p], 
+                laa = laa[, , , p],
+                nyr_par_mu = nyr_par_mu, 
+                LowerTri = LowerTri,
+                recind = recind, 
+                plusgroup = plusgroup, 
+                altinit = altinit, 
+                fixq1 = fixq1,
+                report = FALSE, # Plots will be in-accurate anyway
+                silent = TRUE, ...) 
+    })
+  })
+  
+  MOM <- suppressMessages(new("MOM"))
+  
+  slot_intersect <- intersect(slotNames("MOM"), slotNames("OM"))
+  for(i in slot_intersect) slot(MOM, i) <- slot(OMs[[1]][[1]], i)
+  MOM@Name <- Name
+  MOM@cpars <- list()
+  MOM@cpars <- lapply(1:np, function(p) {
+    lapply(1:nf, function(f) {
+      cp <- OMs[[p]][[f]]@cpars
+      cp$Perr_y <- OMs[[1]][[1]]@cpars$Perr_y
+      cp$D <- rep(1, length(cp$D))
+      return(cp)
+    })
+  })
+  
+  MOM@Stocks <- lapply(1:np, function(p) {
+    ss <- SubOM(OMs[[p]][[1]], "Stock")
+    if (np == 1) {
+      ss@Name <- "Unisex"
+    } else if (p == 1) {
+      ss@Name <- "Female"
+    } else {
+      ss@Name <- "Male"
+    }
+    return(ss)
+  })
+    
+  MOM@Fleets <- lapply(1:np, function(p) {
+    lapply(1:nf, function(f) {
+      ff <- SubOM(OMs[[p]][[f]], "Fleet")
+      ff@Name <- paste("Fleet", f)
+      return(ff)
+    })
+  })
+  
+  MOM@Obs <- lapply(1:np, function(p) Obs)
+  MOM@Imps <- lapply(1:np, function(p) Imp)
+  
+  MOM@CatchFrac <- lapply(1:np, function(p) {
+    Z <- apply(faa[, , ny, p, ], 1:2, sum) + Maa[, , ny, p] # nsim x n_age
+    CAA <- sapply(1:nf, function(f) naa[, , ny, p] * faa[, , ny, p, f] * (1 - exp(-Z))/Z, 
+                  simplify = "array") # nsim x n_age x nf
+    CB <- apply(CAA * replicate(nf, waa[, , ny, p]), c(1, 3), sum)
+    apply(CB, 1, function(x) x/sum(x))
+  })
+  
+  if (np == 2) {
+    if (!silent) message("Stock recruit parameters based on female biology and recruitment predicted by female SSB.")
+    MOM@SexPars <- list(SSBfrom = matrix(c(1, 0), 2, 2, byrow = TRUE))
+    MOM@Complexes <- list(c(1, 2))
+  }
+  return(MOM)
+}
+

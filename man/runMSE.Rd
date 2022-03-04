@@ -30,7 +30,7 @@ runMSE(
 \arguments{
 \item{OM}{An operating model object (class \code{OM} or class \code{Hist})}
 
-\item{parallel}{Logical. Should the MSE be run using parallel processing? Can be a vector of length(MPs)}
+\item{parallel}{Logical. Should the MSE be run using parallel processing? See Details for more information.}
 
 \item{silent}{Should messages be printed out to the console?}
 
@@ -57,6 +57,15 @@ Functions return objects of class \linkS4class{Hist} or \linkS4class{MSE}
 \description{
 Functions to run the Management Strategy Evaluation (closed-loop
 simulation) for a specified operating model
+}
+\details{
+\subsection{Running in Parallel}{
+
+For simple MPs, running in parallel can actually lead to an increase in computation time, due to the overhead in sending the
+information over to the cores. Consequently, the data-limied MPs in DLMtool and the reference MPs in MSEtool are not run using parallel processing.
+All other MPs, including custom MPs, will be run in parallel if argument is TRUE.
+To individually control which MPs run in parallel, \code{parallel} can be a named list of logical values, e.g., \code{parallel=list(AvC=TRUE)}.
+}
 }
 \section{Functions}{
 \itemize{

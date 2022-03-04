@@ -20,14 +20,8 @@
 #' @param fixq1 Logical. Should q be fixed (ie assume the F-at-age array faa is accurate?
 #' @param report Logical, if TRUE, a diagnostic will be reported showing the matching of the OM reconstructed numbers at age vs the assessment.
 #' @param silent Whether to silence messages to the console.
-<<<<<<< HEAD
 #' @param ... Additional arguments, including R0 (unfished recruitment), phi0 (unfished spawners per recruit associated with R0 and h for calculating stock recruit parameters),
-=======
-#' @param ... Additional arguments, not currently used.
->>>>>>> ede182bad428c48c40e5964ca8a11deac249ead1
 #' @details Use a seed for the random number generator to sample future recruitment.
-#' 
-#' This function uses steepness of 0.999 with unfished recruitment equal to the time series mean.
 #' @return An object of class \linkS4class{OM}.
 #' @author T. Carruthers
 #' @export

@@ -97,7 +97,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   for (p in 1:np) {
     SampCpars[[p]] <- lapply(1:nf, function(f) {
       if (length(cpars) && length(cpars[[p]][[f]])) {
-        if (!silent) message("Sampling custom parameters for ", Fnames[f, p])
+        if (!silent) message("Sampling custom parameters for ", Snames[p], Fnames[f, p])
         SampleCpars(cpars[[p]][[f]], nsim, silent=silent)
       } else {
         list()
@@ -1054,7 +1054,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                        SampCpars=SampCpars[[p]][[f]],
                        StockPars[[p]]$initD,
                        Sample_Area,
-                       Name=MOM@Name,
+                       Name=paste(Snames[p], Fnames[f, p]),
                        nyears,
                        proyears,
                        nsim,

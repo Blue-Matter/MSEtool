@@ -17,7 +17,6 @@ WHAM2OM(
   Imp = MSEtool::Perfect_Imp,
   nyr_par_mu = 3,
   LowerTri = 2,
-  recind = 0,
   plusgroup = T,
   altinit = 0,
   fixq1 = T,
@@ -51,8 +50,6 @@ WHAM2OM(
 
 \item{LowerTri}{Integer. The number of recent years for which model estimates of recruitment are ignored (not reliably estimated by the assessment)}
 
-\item{recind}{Positive integer. The first age class that fish 'recruit to the fishery'. The default is 0 - ie the first position in the age dimension of naa is age zero}
-
 \item{plusgroup}{Logical. Does the assessment assume that the oldest age class is a plusgroup?}
 
 \item{altinit}{Integer. Various assumptions for how to set up the initial numbers. 0: standard, 1: no plus group, 2: temporary fix for MSEtool plus group initialization}
@@ -63,7 +60,7 @@ WHAM2OM(
 
 \item{silent}{Whether to silence messages to the console.}
 
-\item{...}{Additional arguments, not currently used.}
+\item{...}{Additional arguments, including R0 (unfished recruitment), phi0 (unfished spawners per recruit associated with R0 and h for calculating stock recruit parameters),}
 }
 \value{
 An object of class \linkS4class{OM}.
@@ -74,8 +71,6 @@ Maturity-at-age-year, Mortality-at-age-year and weight-at-age-year are identical
 }
 \details{
 Use a seed for the random number generator to sample future recruitment.
-
-This function uses steepness of 0.999 with unfished recruitment equal to the time series mean.
 }
 \seealso{
 \link{Assess2OM}

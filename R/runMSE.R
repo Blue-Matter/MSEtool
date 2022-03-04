@@ -23,8 +23,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   }
 
   # ---- Set up parallel processing ----
-  ncpus <- set_parallel(any(parallel))
-
+  ncpus <- set_parallel(any(unlist(parallel)))
+  
   set.seed(OM@seed) # set seed for reproducibility
   nsim <- OM@nsim # number of simulations
   nyears <- OM@nyears # number of historical years
@@ -1082,14 +1082,6 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   if (class(Hist) !='Hist')
     stop('Must provide an object of class `Hist`')
   
-  if (length(parallel) < length(MPs)) {
-    if (length(parallel) > 1) {
-      stop("length(parallel) must be equal to length(MPs)")
-    } else {
-      parallel <- rep(parallel, length(MPs))
-    }
-  }
-
   OM <- Hist@OM
   set.seed(OM@seed) # set seed for reproducibility
   nsim <- OM@nsim # number of simulations
@@ -1106,17 +1098,44 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   if (checkMPs)
     MPs <- CheckMPs(MPs=MPs, silent=silent)
 
+  # ---- Set up parallel processing of MPs ---
+  runparallel <- FALSE 
+  if (any(parallel==TRUE)) runparallel <- TRUE
+  if (class(parallel)=='list') runparallel <- TRUE
+
   nMP <- length(MPs)  # the total number of methods used
   if (nMP < 1) stop("No valid MPs found", call.=FALSE)
 
   isrunning <- snowfall::sfIsRunning()
-  if (all(!parallel) & isrunning) snowfall::sfStop()
+  if (!runparallel & isrunning) snowfall::sfStop()
 
-  if (any(parallel)) {
+  if (runparallel) {
     if (!isrunning) setup()
     Export_customMPs(MPs)
   }
+  
+  parallel_in <- parallel
+  if (runparallel) parallel <- rep(TRUE, nMP)
+  if (!runparallel) parallel <- rep(FALSE, nMP)
+  
+  # Don't run MSEtool MPs in parallel
+  mp_ns <- sapply(MPs, find)
+  msemmp <- grep('MSEtool', mp_ns)
+  parallel[msemmp] <- FALSE
+  
+  # Don't run DLMtool MPs in parallel except LBSPR
+  dlmmp <- grep('DLMtool', mp_ns)
+  parallel[dlmmp] <- FALSE
+  parallel[grep('LBSPR', MPs)] <- TRUE
 
+  
+  # Manually specified MPs
+  if (class(parallel_in)=='list') {
+    parallel_in <- data.frame(parallel_in)
+    par_mps <- names(parallel_in)
+    parallel[match(par_mps, MPs)] <- unlist(parallel_in[1,])
+  }  
+  
   # ---- Set Management Interval for each MP ----
   if (length(interval) != nMP) interval <- rep(interval, nMP)[1:nMP]
   if (!all(interval == interval[1])) {
@@ -1317,9 +1336,15 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     VBiomass_P[SAYR] <- Biomass_P[SAYR] * V_P[SAYt]  # Calculate vulnerable biomass
     SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAY1]  # Calculate spawning stock numbers
     SSB_P[SAYR] <- N_P[SAYR] * StockPars$Fec_Age[SAY1]
-
+    
     StockPars$N_P <- N_P
     # -- Apply MP in initial projection year ----
+    Data_MP@Misc$StockPars <- StockPars
+    Data_MP@Misc$StockPars$CB_Pret <- CB_Pret
+    Data_MP@Misc$StockPars$Biomass_P <- Biomass_P
+    Data_MP@Misc$StockPars$SSB_P <- SSB_P
+    Data_MP@Misc$StockPars$VBiomass_P <- VBiomass_P
+    Data_MP@Misc$StockPars$N_P <- N_P
     runMP <- applyMP(Data=Data_MP, MPs = MPs[mm], reps = reps, silent=TRUE, parallel = parallel[mm])  # Apply MP
 
     MPRecs <- runMP[[1]][[1]] # MP recommendations
@@ -1496,7 +1521,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       VBiomass_P[SAYR] <- Biomass_P[SAYR] * V_P[SAYt]  # Calculate vulnerable biomass
       SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAYt]  # Calculate spawning stock numbers
       SSB_P[SAYR] <- N_P[SAYR] * StockPars$Fec_Age[SAYt]  # Calculate spawning stock biomass
-
+      
       StockPars$N_P <- N_P
       # --- An update year - update data and run MP ----
       if (y %in% upyrs) {
@@ -1511,7 +1536,12 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                               upyrs, interval, y, mm,
                               Misc=Data_p@Misc, RealData,
                               Sample_Area=ObsPars$Sample_Area)
-
+        
+        Data_MP@Misc$StockPars$CB_Pret <- CB_Pret
+        Data_MP@Misc$StockPars$Biomass_P <- Biomass_P
+        Data_MP@Misc$StockPars$SSB_P <- SSB_P
+        Data_MP@Misc$StockPars$VBiomass_P <- VBiomass_P
+        Data_MP@Misc$StockPars$N_P <- N_P
 
         # --- apply MP ----
         runMP <- applyMP(Data=Data_MP, MPs = MPs[mm], reps = reps, silent=TRUE, parallel = parallel[mm])  # Apply MP
@@ -1758,7 +1788,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #' @param Hist Should model stop after historical simulations? Returns an object of
 #' class 'Hist' containing all historical data
 #' @param silent Should messages be printed out to the console?
-#' @param parallel Logical. Should the MSE be run using parallel processing? Can be a vector of length(MPs)
+#' @param parallel Logical. Should the MSE be run using parallel processing? See Details for more information. 
 #' @param extended Logical. Return extended projection results?
 #' if TRUE, `MSE@Misc$extended` is a named list with extended data
 #' (including historical and projection by area), and extended version of `MSE@Hist`
@@ -1767,6 +1797,13 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #'
 #' @describeIn runMSE Run the Historical Simulations and Forward Projections
 #'  from an object of class `OM
+#' @details 
+#' ## Running in Parallel
+#' For simple MPs, running in parallel can actually lead to an increase in computation time, due to the overhead in sending the 
+#' information over to the cores. Consequently, the data-limied MPs in DLMtool and the reference MPs in MSEtool are not run using parallel processing. 
+#' All other MPs, including custom MPs, will be run in parallel if argument is TRUE.
+#' To individually control which MPs run in parallel, `parallel` can be a named list of logical values, e.g., `parallel=list(AvC=TRUE)`.
+#' 
 #'
 #' @return Functions return objects of class \linkS4class{Hist} or \linkS4class{MSE}
 #' \itemize{
@@ -1797,16 +1834,6 @@ runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
   } else {
     stop("You must specify an operating model")
   }
-  
-  # check parallel
-  if (length(parallel) < length(MPs)) {
-    if (length(parallel) > 1) {
-      stop("length(parallel) must be equal to length(MPs)")
-    } else {
-      parallel <- rep(parallel, length(MPs))
-    }
-  }
-  
 
   # check MPs
   if (checkMPs & !Hist)
