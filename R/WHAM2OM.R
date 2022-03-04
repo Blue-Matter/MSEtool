@@ -113,7 +113,12 @@ WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=
            recind=1, plusgroup, altinit=0, fixq1=fixq1,# recind = 1 because WHAM models report at age arrays starting second year of life ie not age zero
            report=report, silent=silent, R0 = apply(naa[,1,]*exp(Maa[,1,]),1,mean)) 
   
-  OM@cpars$Wt_age_C<-array(,c(nsim, maxage+1,nyears+proyears))
+  WtCarr<-array(NA,c(nsim,OM@maxage+1,OM@nyears+OM@proyears))
+  WtCarr[,,1:OM@nyears]<- abind(array(0,c(nsim,1,dim(waac)[3])),waac,along=2)
+  muCC<-array(apply(WtCarr[,,OM@nyears-((nyr_par_mu-1):0)],1:2,mean),c(nsim,OM@maxage+1,OM@proyears))
+  WtCarr[,,OM@nyears+(1:OM@proyears)]<-muCC
+  
+  OM@cpars$Wt_age_C<-WtCarr
   # Sample some selectivities potentially for use later and put these in a WHAM Misc slot
   WHAM = list()
   nsel<-length(output[[1]]$selAA)
