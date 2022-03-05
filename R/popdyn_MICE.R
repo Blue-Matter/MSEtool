@@ -313,6 +313,7 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
   
   SumF <- apply(FMx, c(1, 3, 4), sum, na.rm = TRUE)
   Fapic <- apply(SumF, c(1, 3), max)     # get apical F
+  Fapic[Fapic < tiny] <- tiny
   Selx <- array(NA, dim(SumF))
   Selx[Nind] <- SumF[Nind]/Fapic[Nind[, c(1, 3)]]
   VBt <- Bcur * Selx
