@@ -29,6 +29,7 @@
 #' @param silent Whether to silence messages to the console.
 #' @param ... Additional arguments (for all, either a numeric or a length nsim vector):
 #' \itemize{
+#' \item \code{SRrel} Stock-recruit relationship. (\code{1} for Beverton-Holt (default), \code{2} for Ricker)
 #' \item \code{R0} unfished recruitment
 #' \item \code{phi0} unfished spawners per recruit associated with R0 and h. With time-varying parameters, openMSE uses the mean phi0 
 #' in the first \code{ageM} (age of 50 percent maturity) years for the stock-recruit relationship. \code{Assess2OM} will re-calculate R0 and h
@@ -100,9 +101,15 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   }
 
   # Dimensions
-  
   n_age <- dim(naa)[2]
   maxage<-dim(naa)[2] - 1
+  
+  # Stock-recruit relationship
+  if(!is.null(dots$SRrel)) {
+    SRrel <- dots$SRrel
+  } else {
+    SRrel <- 1
+  }
  
   # Mine values to spec-out the OM
   if(!is.null(dots$R0)) {
@@ -138,12 +145,22 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
       } else {
         phi0 <- dots$phi0
       }
-      Arec <- 4*h/(1-h)/phi0
-      Brec <- (5*h-1)/(1-h)/R0/phi0
       
-      K <- Arec * SSBpR_out
-      h_out <- K/(4 + K)
-      R0_out <- (5*h_out-1)/(1-h_out)/Brec/SSBpR_out
+      if(SRrel == 1) {
+        Arec <- 4*h/(1-h)/phi0
+        Brec <- (5*h-1)/(1-h)/R0/phi0
+        
+        K <- Arec * SSBpR_out
+        h_out <- K/(4 + K)
+        R0_out <- (5*h_out-1)/(1-h_out)/Brec/SSBpR_out
+      } else {
+        Arec <- (5*h)^1.25/phi0
+        Brec <- 1.25 * log(5*h)/R0/phi0
+        
+        h_out <- 0.2 * (Arec * SSBpR_out)^0.8
+        R0_out <- 1.25 * log(5 * h_out)/Brec/SSBpR_out
+      }
+      
       list(h = h_out, R0 = R0_out)
     })
     R0 <- new_SR$R0
@@ -174,7 +191,7 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   # 'Contant terms'
   LenCV=0.1
   OM<-simup(LenCV,OM)
-  OM@SRrel <- 1 # 1 = BevHolt, 2 = Ricker
+  OM@SRrel <- SRrel # 1 = BevHolt, 2 = Ricker
   OM@isRel<-FALSE  # absolute selectivity relative to maturity - no used here
   OM@CurrentYr<-CurrentYr
 
