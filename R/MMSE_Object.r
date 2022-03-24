@@ -101,6 +101,7 @@ setMethod("initialize", "MMSE", function(.Object, Name, nyears, proyears,
   .Object@SSB <- SSB
   .Object@VB <- VB
   .Object@FM <- FM
+  .Object@SPR <- SPR
   .Object@Catch <- Catch
   .Object@Removals <- Removals
   .Object@Effort <- Effort

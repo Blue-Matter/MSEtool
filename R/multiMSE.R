@@ -1389,6 +1389,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   TAE_out <- array(NA, dim = c(nsim, np, nf, nMP, proyears))  # store the projected TAE recommendation
   Effort <- array(NA, dim = c(nsim, np, nf, nMP, proyears))  # store the Effort
   
+  SPReqa <- array(NA, dim = c(nsim, np, nMP, proyears)) # store the equilibrium Spawning Potential Ratio
+  SPRdyna <- array(NA, dim = c(nsim, np, nMP, proyears)) # store the dynamic Spawning Potential Ratio
+  
   # ---- Grab Stock, Fleet, Obs and Imp values from Hist ----
   StockPars <- FleetPars <- ObsPars <- ImpPars <- list()
   for(p in 1:np) {
@@ -2415,6 +2418,18 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     for(p in 1:np) for(f in 1:nf)
       CaRet[, p,f,mm, ] <- apply(FleetPars[[p]][[f]]$CB_Pret, c(1, 3),
                                  sum, na.rm=TRUE) # retained catch
+    
+    for(p in 1:np) {
+      SPReqa[, p, mm, ] <- CalcSPReq(FM = sapply(FleetPars[[p]], getElement, "FM_P", simplify = "array") %>% apply(1:4, sum),
+                                     StockPars_MPCalc[[p]], n_age, nareas, nyears, proyears, nsim)
+      SPRdyna[, p, mm, ] <- local({
+        FMh <- array(FM[, p, , , , ], c(nsim, nf, n_age, nyears, nareas)) %>% apply(c(1, 3:5), sum)
+        FMp <- sapply(FleetPars[[p]], getElement, "FM_P", simplify = "array") %>% apply(1:4, sum)
+        
+        CalcSPRdyn(abind::abind(FMh, FMp, along = 3), 
+                   StockPars_MPCalc[[p]], n_age, nareas, nyears, proyears, nsim)
+      })
+    }
 
     if (!silent) {
       cat("\n")
@@ -2527,7 +2542,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   if (dropHist) {
     multiHist <- list('multiHist dropped (dropHist=TRUE). Reference points available in MMSE@Ref')
   }
-
+  
   MSEout <- new("MMSE",
                 Name = MOM@Name,
                 nyears,
@@ -2554,7 +2569,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                 SSB=SSBa,
                 VB=VBa,
                 FM=FMa,
-                SPR=list(),
+                SPR=list(Equilibrium = SPReqa, Dynamic = SPRdyna),
                 Catch=CaRet,
                 Removals=Ca,
                 Effort = Effort,
