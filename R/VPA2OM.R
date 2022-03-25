@@ -248,8 +248,16 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   OM@cpars$Find <- Find
 
   # Deterministic Recruitment
-  recd <- vapply(1:nsim, function(x) (0.8*R0[x]*h[x]*SSB[x, ])/(0.2*SSB0[x]*(1-h[x]) + (h[x]-0.2)*SSB[x, ]), 
-                 numeric(nyears)) %>% t()
+  if(SRrel == 1) {
+    recd <- vapply(1:nsim, function(x) (0.8*R0[x]*h[x]*SSB[x, ])/(0.2*SSB0[x]*(1-h[x]) + (h[x]-0.2)*SSB[x, ]), 
+           numeric(nyears)) %>% t()
+  } else {
+    recd <- local({
+      a <- (5 * h)^1.25/SSBpR_out
+      b <- 1.25 * log(5 * h)/SSBpR_out/R0
+      vapply(1:nsim, function(x) a[x] * SSB[x, ] * exp(-b[x] * SSB[x, ]), numeric(nyears)) %>% t()
+    })
+  }
 
   recdevs <- log(naa[, 1, ]/recd) # age zero
   recdevs[is.na(recdevs)] <- 0

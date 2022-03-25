@@ -711,7 +711,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   # --- Calculate MSY statistics for each year ----
   # ignores spatial closures
   # assumes all vulnerable fish are caught - ie no discarding
-  if(!silent) message("Calculating MSY reference points for each year")
+  if(!silent) message("Calculating MSY and per-recruit reference points for each year")
   # average life-history parameters over ageM years
   for (p in 1:np) {
     
@@ -850,7 +850,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     F_SPR_y <- array(0, dim = c(nsim, length(SPR_target), nyears + proyears)) %>%
       structure(dimnames = list(NULL, paste0("F_", 100*SPR_target, "%"), NULL)) #array of F-SPR% by sim, SPR%, year
 
-    if (!silent) message("Calculating per-recruit reference points")
     per_recruit_F <- lapply(1:nsim, function(x) {
       lapply(1:(nyears+proyears), function(y) {
         per_recruit_F_calc(x,
