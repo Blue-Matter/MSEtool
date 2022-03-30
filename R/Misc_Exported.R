@@ -151,6 +151,166 @@ MSEextra <- function(silent=FALSE, force=FALSE) {
 }
 
 
+
+#' @rdname SubCpars
+#' @export
+setGeneric("SubCpars", function(x, ...) standardGeneric("SubCpars"))
+
+#' @name SubCpars
+#' @aliases SubCpars,OM-method
+#' @title Subset the cpars slot in an operating model
+#'
+#' @description Subset the custom parameters of an operating model by simulation and projection years 
+#'
+#' @param x An object of class \linkS4class{OM} or \linkS4class{MOM}
+#' @param sims A logical vector of length \code{x@@nsim} to either retain (TRUE) or remove (FALSE).
+#' Alternatively, a numeric vector indicating which simulations (from 1 to nsim) to keep.
+#' @param proyears If provided, a numeric to reduce the number of projection years (must be less than \code{x@@proyears}).
+#' @param ... Arguments for method.
+#' @details Useful function for running \link{multiMSE} in batches if running into memory constraints.
+#' @return An object of class \linkS4class{OM} or \linkS4class{MOM} (same class as \code{x}).
+#' @seealso \link{Sub} for MSE objects, \link{SubOM} for OM components.
+#' @author T. Carruthers, Q. Huynh
+#' @export
+setMethod("SubCpars", signature(x = "OM"),
+          function(x, sims = 1:x@nsim, proyears = x@proyears) {
+            OM <- x
+            # Reduce the number of simulations
+            nsim_full <- OM@nsim
+            if(is.numeric(sims)) {
+              sims2 <- logical(nsim_full)
+              sims2[sims] <- TRUE
+            } else if(is.logical(sims) && length(sims) == nsim_full) {
+              sims2 <- sims
+            } else stop("Logical vector sims need to be of length ", nsim_full)
+            
+            if(any(!sims2) && sum(sims2) < nsim_full) {
+              message("Removing simulations: ", paste0(which(!sims2), collapse = " "))
+              OM@nsim <- sum(sims2)      
+              message("Set OM@nsim = ", OM@nsim)
+              
+              if(length(OM@cpars)) {
+                cpars <- OM@cpars
+                OM@cpars <- lapply(names(cpars), SubCpars_sim, sims = sims2, cpars = cpars) %>% 
+                  structure(names = names(cpars))
+              }
+            }
+            
+            # Reduce the number of projection years
+            proyears_full <- OM@proyears
+            if(proyears < proyears_full) {
+              message("Reducing the number of projection years from ", proyears_full, " to ", proyears)
+              OM@proyears <- proyears
+              
+              if(length(OM@cpars)) {
+                cpars_p <- OM@cpars
+                yr_diff <- proyears_full - proyears
+                OM@cpars <- lapply(names(cpars_p), SubCpars_proyears, yr_diff = yr_diff, cpars = cpars_p) %>% 
+                  structure(names = names(cpars_p))
+              }
+            } else if(proyears > proyears_full) {
+              message("Number of specified projection years is greater than OM@proyears. Nothing done.")
+            }
+            
+            return(OM)
+          })
+
+#' @name SubCpars
+#' @aliases SubCpars,MOM-method
+#' @export
+setMethod("SubCpars", signature(x = "MOM"),
+          function(x, sims = 1:x@nsim, proyears = x@proyears) {
+            MOM <- x
+            # Reduce the number of simulations
+            nsim_full <- MOM@nsim
+            if(is.numeric(sims)) {
+              sims2 <- logical(nsim_full)
+              sims2[sims] <- TRUE
+            } else if(is.logical(sims) && length(sims) == nsim_full) {
+              sims2 <- sims
+            } else stop("Logical vector sims need to be of length ", nsim_full)
+            
+            if(any(!sims2) && sum(sims2) < nsim_full) {
+              message("Removing simulations: ", paste0(which(!sims2), collapse = " "))
+              MOM@nsim <- sum(sims2)      
+              message("Set MOM@nsim = ", MOM@nsim)
+              
+              if(length(MOM@cpars)) {
+                for(p in 1:length(MOM@cpars)) {
+                  for(f in 1:length(MOM@cpars[[p]])) {
+                    cpars <- MOM@cpars[[p]][[f]]
+                    MOM@cpars[[p]][[f]] <- lapply(names(cpars), SubCpars_sim, sims = sims2, cpars = cpars) %>% 
+                      structure(names = names(cpars))
+                  }
+                }
+              }
+            }
+            
+            # Reduce the number of projection years
+            proyears_full <- MOM@proyears
+            if(proyears < proyears_full) {
+              message("Reducing the number of projection years from ", proyears_full, " to ", proyears)
+              MOM@proyears <- proyears
+              
+              if(length(MOM@cpars)) {
+                yr_diff <- proyears_full - proyears
+                for(p in 1:length(MOM@cpars)) {
+                  for(f in 1:length(MOM@cpars[[p]])) {
+                    cpars_p <- MOM@cpars[[p]][[f]]
+                    MOM@cpars[[p]][[f]] <- lapply(names(cpars_p), SubCpars_proyears, yr_diff = yr_diff, cpars = cpars_p) %>% 
+                      structure(names = names(cpars_p))
+                  }
+                }
+              }
+            } else if(proyears > proyears_full) {
+              message("Number of specified projection years is greater than MOM@proyears. Nothing done.")
+            }
+            
+            return(MOM)
+          })
+
+SubCpars_sim <- function(xx, sims, cpars) {
+  x <- cpars[[xx]]
+  if(any(xx == c("CAL_bins", "MPA", "plusgroup", "CAL_binsmid", "binWidth", "AddIunits", "Wa", "Wb", "Data"))) {
+    return(x)
+  } else if(is.matrix(x)) {
+    return(x[sims, , drop = FALSE])
+  } else if(is.array(x)) {
+    if(length(dim(x)) == 3) return(x[sims, , , drop = FALSE])
+    if(length(dim(x)) == 4) return(x[sims, , , , drop = FALSE])
+    if(length(dim(x)) == 5) return(x[sims, , , , , drop = FALSE])
+  } else if(length(x) == length(sims)) {
+    return(x[sims])
+  } else return(x)
+}
+
+
+SubCpars_proyears <- function(xx, yr_diff, cpars) {
+  x <- cpars[[xx]]
+  if(xx %in% c("Asize", "Find", "AddIbeta", "Data")) { # Matrices or arrays without projection year dimensions
+    return(x)
+  } else if(xx == "MPA") {
+    yr_remove <- (nrow(x) - yr_diff + 1):nrow(x)
+    return(x[-yr_remove, ])
+  } else if(is.matrix(x)) {
+    yr_remove <- (ncol(x) - yr_diff + 1):ncol(x)
+    return(x[, -yr_remove])
+  } else if(is.array(x)) {
+    
+    ldim <- length(dim(x))
+    yr_remove <- (dim(x)[ldim] - yr_diff + 1):dim(x)[ldim]
+    
+    if(ldim == 3) return(x[, , -yr_remove, drop = FALSE])
+    if(ldim == 4) return(x[, , , -yr_remove, drop = FALSE])
+    if(ldim == 5) return(x[, , , , -yr_remove, drop = FALSE])
+  } else {
+    return(x)
+  }
+}
+          
+
+
+
 #' @rdname tinyErr
 #' @export
 setGeneric("tinyErr", function(x, ...) standardGeneric("tinyErr"))
