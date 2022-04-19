@@ -1115,6 +1115,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     UnitsTab <- data.frame(n=1:0, units=c('biomass', 'numbers'))
     TypeTab <- data.frame(n=1:3, type=c('total', 'spawning', 'vuln.'))
     Data_out@AddIndV <- array(NA, dim=c(nsim, n.ind, Data_out@MaxAge+1))
+    # loop over additional indices
     for (i in 1:n.ind) {
       units <- UnitsTab$units[match(AddIunits[i], UnitsTab$n)]
       type <- TypeTab$type[match(AddIndType[i], TypeTab$n)]
@@ -1130,7 +1131,6 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
       Data_out@AddInd[,i,] <- matrix(ind, nrow=nsim, ncol=nyears, byrow=TRUE)
       Data_out@CV_AddInd[,i,] <- matrix(cv_ind, nrow=nsim, ncol=nyears, byrow=TRUE)
 
-      # Calculate observation error for future projections
       if (all(is.na(RealData@AddIndV[1,, ]))) {
         # no vulnerability-at-age included
         Ind_V <- rep(1, Data_out@MaxAge+1)
@@ -1144,6 +1144,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
       if (!length(Ind_V) == Data_out@MaxAge+1)
         stop('Vulnerability-at-age for additional index ', i, ' is not length `maxage`+1' )
 
+      # calculate simulated index 
       if (AddIunits[i]) {
         if (AddIndType[i]==1) SimIndex <- apply(StockPars$Biomass, c(1, 2, 3), sum) # Total Biomass-based index
         if (AddIndType[i]==2) SimIndex <- apply(StockPars$SSB, c(1, 2, 3), sum) # Spawning Biomass-based index
@@ -1157,40 +1158,31 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
       Ind_V <- matrix(Ind_V, nrow=SimData@MaxAge+1, ncol= nyears)
       Ind_V <- replicate(nsim, Ind_V) %>% aperm(., c(3,1,2))
 
-      SimIndex <- apply(SimIndex*Ind_V, c(1,3), sum) # apply vuln curve
-
-      I_Err <- lapply(1:nsim, function(x) indfit(sim.index=SimIndex[x,], obs.ind=ind))
-      I_Err <- do.call('rbind', I_Err)
-      ind2 <- matrix(ind, nrow=nsim, ncol=nyears, byrow=TRUE)
-      Ierr <- matrix(NA, nrow=nsim, ncol=nyears)
-      if (all(is.na(ind))) {
-        # nothing
+      # apply vulnerablity-at-age and sum over age-classes
+      SimIndex <- apply(SimIndex*Ind_V, c(1,3), sum) 
+      
+      
+      # Fit to observed index and generate residuals for projections
+      if (fitbeta) {
+        beta <- rep(NA, nsim)
       } else {
-        
-        Ierr[,!is.na(ind)] <- exp(lcs(ind2[,!is.na(ind)]))/(exp(lcs(SimIndex[,!is.na(ind)]))^I_Err$beta)
-        if (fitIerr) ObsPars$AddIerr[,i, 1:nyears] <- Ierr
-        if (fitbeta) ObsPars$AddIbeta[,i] <- I_Err$beta
-        
-        # Sample for projection years
-        if (fitIerr) {
-          yr.ind <- max(which(!is.na(RealData@AddInd[1,i,1:nyrs])))
-          diff <- nyears-nyrs
-          ObsPars$AddIerr[,i, (nyrs+1):(nyears+proyears)] <- generateRes(df=I_Err, nsim, proyears+diff,
-                                                                         lst.err=log(ObsPars$AddIerr[,i,yr.ind]))
-        }
-        
-        if (nyrs < nyears) {
-          # add simulated index for missing years
-          tempI <- SimIndex
-          
-          # standardize, apply  beta & obs error
-          tempI <- exp(lcs(tempI))^ObsPars$AddIbeta[,i] * ObsPars$AddIerr[,i,1:nyears]
-          year.ind <- 1 #  max(which(!is.na(Data_out@AddInd[1,i,1:nyears])))
-          scaler <- Data_out@AddInd[1,i,year.ind]/tempI[,1]
-          scaler <- matrix(scaler, nrow=nsim, ncol=ncol(tempI))
-          tempI <- tempI * scaler # convert back to historical index scale
-          Data_out@AddInd[,i,1:nyears] <- tempI
-        }
+        beta <-  ObsPars$AddIbeta[,i]
+      }
+      I_ErrList <- lapply(1:nsim, function(x) Index_Fit(sim.index=SimIndex[x,], 
+                                                    obs.ind=ind,
+                                                    beta=beta[x],
+                                                    proyears=proyears))
+      
+      I_Err <- do.call('rbind', I_ErrList) 
+      
+      # index error 
+      Ierr <- matrix(NA, nrow=nsim, ncol=nyears+proyears)
+
+      if (!all(is.na(ind))) {
+        Ierr[, 1:nyears] <- do.call('rbind', I_Err[,1]) # obs error (normal space) historical years
+        Ierr[,(nyears+1):(nyears+proyears)] <- do.call('rbind', I_Err[,2]) # obs error (normal space) projection years
+        if (fitIerr) ObsPars$AddIerr[,i, ] <- Ierr
+        if (fitbeta) ObsPars$AddIbeta[,i] <- do.call('rbind', I_Err[,5])
       }
       ObsPars$AddInd_Stat[[i]] <- I_Err # index fit statistics
     }
