@@ -12,7 +12,6 @@ WHAM2OM(
   Name = NULL,
   WLa = 1,
   WLb = 3,
-  WAAind = 1,
   Obs = MSEtool::Imprecise_Unbiased,
   Imp = MSEtool::Perfect_Imp,
   nyr_par_mu = 3,
@@ -40,8 +39,6 @@ WHAM2OM(
 
 \item{WLb}{positive real number or array \verb{[sim, ages, year]}. The default weight-length parameter b (W=aL^b)}
 
-\item{WAAind}{positive integer. The index of the WHAM weight-at-age array input$data$waa to be assumed as the weight-at-age for the operating model}
-
 \item{Obs}{The observation model (class Obs). This function only updates the catch and index observation error.}
 
 \item{Imp}{The implementation model (class Imp). This function does not update implementation parameters.}
@@ -61,6 +58,8 @@ WHAM2OM(
 \item{silent}{Whether to silence messages to the console.}
 
 \item{...}{Additional arguments, including R0 (unfished recruitment), phi0 (unfished spawners per recruit associated with R0 and h for calculating stock recruit parameters),}
+
+\item{WAAind}{positive integer. The index of the WHAM weight-at-age array input$data$waa to be assumed as the weight-at-age for the operating model}
 }
 \value{
 An object of class \linkS4class{OM}.
