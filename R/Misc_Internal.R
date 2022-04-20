@@ -400,38 +400,9 @@ indfit <- function(sim.index,obs.ind, Year, plot=FALSE, lcex=0.8){
 
 getbeta<-function(beta,x,y)sum((y-x^beta)^2, na.rm=TRUE)
 
-generateRes <- function(df, nsim, proyears, lst.err) {
-  sd <- df$sd
-  ac <- df$AC
-  if (all(is.na(sd))) return(rep(NA, nsim))
-  mu <- -0.5 * (sd)^2 * (1 - ac)/sqrt(1 - ac^2)
-  Res <- matrix(rnorm(proyears*nsim, mu, sd), nrow=proyears, ncol=nsim, byrow=TRUE)
-  # apply a pseudo AR1 autocorrelation
-  Res <- sapply(1:nsim, applyAC, res=Res, ac=ac, max.years=proyears, lst.err=lst.err) # log-space
-  exp(t(Res))
-}
 
-applyAC <- function(res, ac, max.years, lst.err) {
-  for (y in 1:max.years) {
-    if (y == 1) {
-      res[y] <- ac * lst.err + res[y] * (1-ac* ac)^0.5
-    } else {
-      res[y] <- ac * res[y-1] + res[y] * (1-ac * ac)^0.5
-    }
-  }
-  res
-}
 
-# applyAC <- function(x, res, ac, max.years, lst.err) {
-#   for (y in 1:max.years) {
-#     if (y == 1) {
-#       res[y,x] <- ac[x] * lst.err[x] + res[y,x] * (1-ac[x] * ac[x])^0.5
-#     } else {
-#       res[y,x] <- ac[x] * res[y-1,x] + res[y,x] * (1-ac[x] * ac[x])^0.5
-#     }
-#   }
-#   res[,x]
-# }
+
 
 
 

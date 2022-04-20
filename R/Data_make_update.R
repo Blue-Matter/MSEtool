@@ -818,8 +818,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
   }
 
   # update static slots
-  slts <- c('Name', 'Common_Name', 'Species', 'Region', 'LHYear',
-            'Units')
+  slts <- c('Name', 'Common_Name', 'Species', 'Region', 'LHYear', 'Units')
   for (sl in slts)
     slot(Data_out, sl) <- slot(RealData, sl)
 
@@ -947,127 +946,28 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
 
   # ---- Update Index (total biomass) ----
   if (!all(is.na(RealData@Ind[1,]))) { # Index exists
-    if (msg)
-      message('Updating Simulated Total Index from `OM@cpars$Data@Ind`')
-    Data_out@Ind <- matrix(RealData@Ind[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
-    Data_out@CV_Ind <- matrix(RealData@CV_Ind[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
-
-    # Calculate Error
-    SimBiomass <- apply(StockPars$Biomass, c(1, 3), sum)
-    I_Err <- lapply(1:nsim, function(i) indfit(sim.index=SimBiomass[i,], obs.ind=Data_out@Ind[i,]))
-    I_Err <- do.call('rbind', I_Err)
-
-    if (!is.null(SampCpars$I_beta)) {
-      if (msg) message('Total Index beta found (cpars$I_beta) - not updating observation beta parameter')
-      I_Err$beta <- SampCpars$I_beta
-    } else {
-      if (msg) message('Updating Obs@I_beta from real index. Range:',
-                       paste0(range(round(I_Err$beta,2)), collapse = "-"), "Use `cpars$I_beta` to override")
-    }
-
-    ind <- is.na(Data_out@Ind[1,])
-    Ierr_temp <- exp(lcs(Data_out@Ind[,!ind]))/exp(lcs(SimBiomass[,!ind]))^I_Err$beta
-    Ierr <- array(NA, dim(Data_out@Ind))
-    Ierr[,!ind] <- Ierr_temp
-
-    ObsPars$I_beta <- I_Err$beta
-    if (!is.null(SampCpars$Ierr_y)) {
-      if (msg) message('Total Index Observation Error found (cpars$Ierr_y) - not updating observation error')
-    } else {
-      if (msg) message('Updating Total Index Observation Error based on Observed Data')
-      ObsPars$Ierr_y[, 1:nyears] <- Ierr # update Obs Error
-      # Sample for projection years
-      yr.ind <- max(which(!is.na(RealData@Ind[1,1:nyears])))
-      ObsPars$Ierr_y[, (nyears+1):(nyears+proyears)] <- generateRes(df=I_Err,
-                                                                  nsim, proyears,
-                                                                  lst.err=log(ObsPars$Ierr_y[,yr.ind]))
-    }
-    ObsPars$Ind_Stat <- I_Err
+    fit_ind <- Fit_Index(ind_slot='Ind', indcv_slot="CV_Ind", Data_out,
+                         RealData, StockPars, ObsPars, SampCpars, nsim, nyears, proyears, msg=msg) 
+    Data_out <- fit_ind$Data_out
+    ObsPars <- fit_ind$ObsPars
   }
 
   # ---- Update Index (spawning biomass) ----
   if (!all(is.na(RealData@SpInd[1,]))) { # Index exists
-    if (msg)
-      message('Updating Simulated Spawning Index from `OM@cpars$Data@SpInd`')
-    Data_out@SpInd <- matrix(RealData@SpInd[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
-    Data_out@CV_SpInd <- matrix(RealData@CV_SpInd[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
-
-    # Calculate Error
-    SimBiomass <- apply(StockPars$SSB, c(1, 3), sum)
-    I_Err <- lapply(1:nsim, function(i) indfit(SimBiomass[i,],  Data_out@SpInd[i,]))
-    I_Err <- do.call('rbind', I_Err)
-
-    if (!is.null(SampCpars$SpI_beta)) {
-      if (msg) message('Spawning Index beta found (cpars$SpI_beta) - not updating observation beta parameter')
-      I_Err$beta <- SampCpars$SpI_beta
-    } else {
-      if (msg) message('Updating Obs@SpI_beta from real index')
-    }
-
-    ind <- is.na(Data_out@SpInd[1,])
-    Ierr_temp <- exp(lcs(Data_out@SpInd[,!ind]))/exp(lcs(SimBiomass[,!ind]))^I_Err$beta
-    Ierr <- array(NA, dim(Data_out@SpInd))
-    Ierr[,!ind] <- Ierr_temp
-
-    ObsPars$SpI_beta <- I_Err$beta
-
-    if (!is.null(SampCpars$SpIerr_y)) {
-      if (msg) message('Spawning Index Observation Error found (cpars$SpIerr_y) - not updating observation error')
-    } else {
-      if (msg) message('Updating Spawning Index Observation Error based on Observed Data')
-      ObsPars$SpIerr_y[, 1:nyears] <- Ierr # update Obs Error
-      # Sample for projection years
-      yr.ind <- max(which(!is.na(RealData@SpInd[1,1:nyears])))
-      ObsPars$SpIerr_y[, (nyears+1):(nyears+proyears)] <- generateRes(df=I_Err,
-                                                                    nsim, proyears,
-                                                                    lst.err=log(ObsPars$SpIerr_y[,yr.ind]))
-    }
-    ObsPars$SpInd_Stat <- I_Err # return index statistics
+    fit_ind <- Fit_Index(ind_slot='SpInd', indcv_slot="CV_SpInd", Data_out,
+                         RealData, StockPars, ObsPars, SampCpars, nsim, nyears, proyears, msg=msg) 
+    Data_out <- fit_ind$Data_out
+    ObsPars <- fit_ind$ObsPars
   }
 
   # ---- Index (vulnerable biomass) ----
   if (!all(is.na(RealData@VInd[1,]))) { # Index exists
-    if (msg)
-      message('Updating Simulated Vulnerable Index from `OM@cpars$Data@VInd` (OM Index observation parameters are ignored).')
-    Data_out@VInd <- matrix(RealData@VInd[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
-    Data_out@CV_VInd <- matrix(RealData@CV_VInd[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
-
-    # Calculate Error
-    SimBiomass <- apply(StockPars$VBiomass, c(1, 3), sum)
-    I_Err <- lapply(1:nsim, function(i) indfit(sim.index=SimBiomass[i,],  obs.ind=Data_out@VInd[i,]))
-    I_Err <- do.call('rbind', I_Err)
-
-    if (!is.null(SampCpars$VI_beta)) {
-      if (msg) message('Vulnerable Index beta found (cpars$VI_beta) - not updating observation beta parameter')
-      I_Err$beta <- SampCpars$VI_beta
-    } else {
-      if (msg) message('Updating Obs@VI_beta from real index')
-    }
-
-
-
-    ind <- is.na(Data_out@VInd[1,])
-    Ierr_temp <- exp(lcs(Data_out@VInd[,!ind]))/exp(lcs(SimBiomass[,!ind]))^I_Err$beta
-    Ierr <- array(NA, dim(Data_out@VInd))
-    Ierr[,!ind] <- Ierr_temp
-
-    ObsPars$VI_beta <- I_Err$beta
-
-    if (!is.null(SampCpars$VIerr_y)) {
-      if (msg) message('Vulnerable Index Observation Error found (cpars$SpIerr_y) - not updating observation error')
-    } else {
-      if (msg) message('Updating Vulnerable Index Observation Error based on Observed Data')
-      ObsPars$VIerr_y[, 1:nyears] <- Ierr # update Obs Error
-      # Sample for projection years
-      yr.ind <- max(which(!is.na(RealData@VInd[1,1:nyears])))
-      ObsPars$VIerr_y[, (nyears+1):(nyears+proyears)] <- generateRes(df=I_Err,
-                                                                      nsim, proyears,
-                                                                      lst.err=log(ObsPars$VIerr_y[,yr.ind]))
-    }
-    ObsPars$VInd_Stat <- I_Err # return index statistics
+    fit_ind <- Fit_Index(ind_slot='VInd', indcv_slot="CV_VInd", Data_out,
+                         RealData, StockPars, ObsPars, SampCpars, nsim, nyears, proyears, msg=msg) 
+    Data_out <- fit_ind$Data_out
+    ObsPars <- fit_ind$ObsPars
   }
-
-
+   
   # ---- Add Additional Indices ----
   if (!all(is.na(RealData@AddInd))) {
     if (msg)
@@ -1158,9 +1058,8 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
       Ind_V <- matrix(Ind_V, nrow=SimData@MaxAge+1, ncol= nyears)
       Ind_V <- replicate(nsim, Ind_V) %>% aperm(., c(3,1,2))
 
-      # apply vulnerablity-at-age and sum over age-classes
+      # apply vulnerability-at-age and sum over age-classes
       SimIndex <- apply(SimIndex*Ind_V, c(1,3), sum) 
-      
       
       # Fit to observed index and generate residuals for projections
       if (fitbeta) {
@@ -1168,23 +1067,30 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
       } else {
         beta <-  ObsPars$AddIbeta[,i]
       }
-      I_ErrList <- lapply(1:nsim, function(x) Index_Fit(sim.index=SimIndex[x,], 
-                                                    obs.ind=ind,
-                                                    beta=beta[x],
-                                                    proyears=proyears))
       
-      I_Err <- do.call('rbind', I_ErrList) 
+      # Calculate residuals (with or without estimated beta)
+      Res_List <- lapply(1:nsim, function(x) Calc_Residuals(sim.index=SimIndex[x,], 
+                                                            obs.ind=ind,
+                                                            beta=beta[x]))
+      lResids_Hist <- do.call('rbind', lapply(Res_List, '[[', 1))
+      if (fitbeta)
+        ObsPars$AddIbeta[,i] <- as.vector(do.call('cbind', lapply(Res_List, '[[', 2)))
       
-      # index error 
-      Ierr <- matrix(NA, nrow=nsim, ncol=nyears+proyears)
-
-      if (!all(is.na(ind))) {
-        Ierr[, 1:nyears] <- do.call('rbind', I_Err[,1]) # obs error (normal space) historical years
-        Ierr[,(nyears+1):(nyears+proyears)] <- do.call('rbind', I_Err[,2]) # obs error (normal space) projection years
-        if (fitIerr) ObsPars$AddIerr[,i, ] <- Ierr
-        if (fitbeta) ObsPars$AddIbeta[,i] <- do.call('rbind', I_Err[,5])
-      }
-      ObsPars$AddInd_Stat[[i]] <- I_Err # index fit statistics
+      if (msg & fitbeta)
+        message(paste0('Estimated beta for Additional Index ', i, ':'),
+                paste0(range(round(ObsPars$AddIbeta[,i],2)), collapse = "-"),
+                "Use `cpars$AddIbeta` to override")
+      
+      # Calculate statistics
+      Stats_List <- lapply(1:nsim, function(x) Calc_Stats(lResids_Hist[x,]))
+      Stats <- do.call('rbind', Stats_List)
+      
+      # Generate residuals for projections
+      Resid_Hist <- exp(lResids_Hist) # historical residuals in normal space
+      Resid_Proj <- Gen_Residuals(Stats, nsim, proyears)
+    
+      if (fitIerr) ObsPars$AddIerr[,i, ] <- cbind(Resid_Hist, Resid_Proj)
+      ObsPars$AddInd_Stat[[i]] <- Stats[,1:2] # index fit statistics
     }
   }
 

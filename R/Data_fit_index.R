@@ -1,17 +1,95 @@
 
+Fit_Index <- function(ind_slot='Ind', indcv_slot="CV_Ind", Data_out,
+                      RealData, StockPars, ObsPars, SampCpars, nsim, nyears, proyears, msg=TRUE) {
+  
+  ind_type <- switch(ind_slot,
+                     Ind = 'Total Index',
+                     SpInd = 'Spawning Index',
+                     VInd = 'Vulnerable Index')
+  text <- paste0("`OM@cpars$Data@", ind_slot, '`')
+  
+  slot(Data_out, ind_slot) <- matrix(slot(RealData, ind_slot)[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
+  slot(Data_out, indcv_slot) <- matrix(slot(RealData, indcv_slot)[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
+  
+  if (msg)
+    message('Updating Simulated' ,ind_type, 'from', text)
+  
+  obs_err_var <- switch(ind_slot,
+                        Ind = 'Ierr_y',
+                        SpInd = 'SpIerr_y',
+                        VInd = 'VIerr_y')
+  
+  if (!is.null(SampCpars[[obs_err_var]])) {
+    if (msg) message(paste0(ind_type, ' Observation Error found (cpars$', obs_err_var, ').'), 
+                     'Not updating observation error.')
+    return(list(Data_out=Data_out, ObsPars=ObsPars))
+  } 
+  # calculate observation error 
+  fitbeta <- TRUE
+  
+  beta_var <- switch(ind_slot,
+                     Ind = 'I_beta',
+                     SpInd = 'SpI_beta',
+                     VInd = 'VI_beta')
+  
+  if (!is.null(SampCpars[[beta_var]])) {
+    if (msg) message(paste0(ind_type, ' beta found (cpars$', beta_var, ').'),
+                     'Not updating observation beta parameter')
+    ObsPars[[beta_var]] <- SampCpars[[beta_var]]
+    fitbeta <- FALSE
+  } else {
+    ObsPars[[beta_var]] <- rep(NA, sim)
+  }
+  
+  biomass_var <- switch(ind_slot,
+                        Ind = 'Biomass',
+                        SpInd = 'SSB',
+                        VInd = 'VBiomass')
+  
+  # Calculate Error
+  SimBiomass <- apply(StockPars[[biomass_var]], c(1, 3), sum)
+  
+  
+  # Fit to observed index and generate residuals for projections
+  # Calculate residuals (with or without estimated beta)
+  Res_List <- lapply(1:nsim, function(x) Calc_Residuals(sim.index=SimBiomass[x,], 
+                                                        obs.ind=slot(Data_out, ind_slot)[x,],
+                                                        beta=ObsPars[[beta_var]][x]))
+  
+  lResids_Hist <- do.call('rbind', lapply(Res_List, '[[', 1))
+  if (fitbeta)
+    ObsPars[[beta_var]] <- as.vector(do.call('cbind', lapply(Res_List, '[[', 2)))
+  
+  if (msg & fitbeta)
+    message(paste0('Updating Obs@', beta_var), 'from real index. Range:',
+            paste0(range(round(ObsPars[[beta_var]],2)), collapse = "-"),
+            paste0("Use `cpars$", beta_var, "` to override"))
+  
+  # Calculate statistics
+  Stats_List <- lapply(1:nsim, function(x) Calc_Stats(lResids_Hist[x,]))
+  Stats <- do.call('rbind', Stats_List)
+  
+  # Generate residuals for projections
+  Resid_Hist <- exp(lResids_Hist) # historical residuals in normal space
+  Resid_Proj <- Gen_Residuals(Stats, nsim, proyears)
+  
+  ObsPars[[obs_err_var]][, 1:nyears] <- Resid_Hist # update Obs Error
+  ObsPars[[obs_err_var]][, (nyears+1):(nyears+proyears)] <- Resid_Proj
+  
+  stat_var <- switch(ind_slot,
+                     Ind = 'Ind_Stat',
+                     SpInd = 'SpInd_Stat',
+                     VInd = 'VInd_Stat')
+  
+  
+  ObsPars[[stat_var]] <- Stats[,1:2]
+  list(Data_out=Data_out, ObsPars=ObsPars)
+  
+  
+}
 
-#' Fit an observed index to simulated biomass and generate residuals
-#'
-#' @param sim.index A numeric vector with simulated biomass by year (all historical years) 
-#' @param obs.ind A numeric vector with the observed index by year (all historical years, NAs for missing values)
-#' @param beta Optional beta value for hyper-stability/depletion. Otherwise it is estimated
-#' @param proyears Number of projection years
-#'
-#' @return
-#' @export
-#'
-#' @examples
-Index_Fit <- function(sim.index, obs.ind, beta=NA, proyears=50) {
+
+Calc_Residuals <- function(sim.index, obs.ind, beta=NA) {
   
   if (any(obs.ind<0, na.rm=TRUE)) 
     stop('Observed index cannot have negative values', call.=FALSE)
@@ -40,8 +118,15 @@ Index_Fit <- function(sim.index, obs.ind, beta=NA, proyears=50) {
   l.sim.index <- log((exp(l.sim.index)^beta))
   
   # calculate residuals (log-space) 
-  res <- l.sim.index - l.obs.index
+  res <- l.obs.index - l.sim.index
   
+  out <- list()
+  out$res <- res 
+  out$beta <- beta
+  out
+}
+
+Calc_Stats <- function(res) {
   non.nas <- which(!is.na(res))
   res.groups <- split(non.nas, cumsum(c(1, diff(non.nas) != 1)))
   
@@ -64,23 +149,34 @@ Index_Fit <- function(sim.index, obs.ind, beta=NA, proyears=50) {
   # standard deviation & correlation
   sd <- sd(res, na.rm=TRUE)
   
-  # generate residuals for future projections space 
-  mu <- -0.5 * (sd)^2 * (1 - ac)/sqrt(1 - ac^2)
-  Res <- rnorm(proyears, mu, sd)
-  
-  # apply a pseudo AR1 autocorrelation
+  # return statistics 
   non.na.res <- res[!is.na(res)]
-  lst.err <- non.na.res[length(non.na.res)] # most recent obs error
-  Res <- applyAC(res=Res, ac=ac, max.years=proyears, 
-                 lst.err=lst.err) # log-space
+  lst.err <- non.na.res[length(non.na.res)] # most recent obs error 
   
-  out <- list()
-  out$Res.Hist <- exp(res) # residuals from historical years
-  out$Res.Project <- exp(Res) # residuals for projection years
-  out$ac <- ac # log residuals
-  out$sd <- sd # log residuals
-  out$beta <- beta
-  out$obs.index <- obs.ind
-  out$sim.index <- sim.index
-  out
+  data.frame(AC=ac, SD=sd, lst.err=lst.err) # log-space residuals
 }
+
+Gen_Residuals <- function(df, nsim, proyears) {
+  sd <- df$SD
+  ac <- df$AC
+  lst.err <- df$lst.err
+  if (all(is.na(sd))) return(rep(NA, nsim))
+  mu <- -0.5 * (sd)^2 * (1 - ac)/sqrt(1 - ac^2)
+  Res <- matrix(rnorm(proyears*nsim, mu, sd), nrow=proyears, ncol=nsim, byrow=TRUE)
+  # apply a pseudo AR1 autocorrelation
+  Res <- sapply(1:nsim, applyAC, res=Res, ac=ac, max.years=proyears, lst.err=lst.err) # log-space
+  exp(t(Res))
+}
+
+applyAC <- function(x, res, ac, max.years, lst.err) {
+  for (y in 1:max.years) {
+    if (y == 1) {
+      res[y,x] <- ac[x] * lst.err[x] + res[y,x] * (1-ac[x] * ac[x])^0.5
+    } else {
+      res[y,x] <- ac[x] * res[y-1,x] + res[y,x] * (1-ac[x] * ac[x])^0.5
+    }
+  }
+  res[,x]
+}
+
+
