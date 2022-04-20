@@ -63,7 +63,6 @@ Maturity-at-age-year, Mortality-at-age-year and weight-at-age-year are identical
   Name <span class="op">=</span> <span class="cn">NULL</span>,
   WLa <span class="op">=</span> <span class="fl">1</span>,
   WLb <span class="op">=</span> <span class="fl">3</span>,
-  WAAind <span class="op">=</span> <span class="fl">1</span>,
   Obs <span class="op">=</span> <span class="fu">MSEtool</span><span class="fu">::</span><span class="va"><a href="Obs-class-objects.html">Imprecise_Unbiased</a></span>,
   Imp <span class="op">=</span> <span class="fu">MSEtool</span><span class="fu">::</span><span class="va"><a href="Imp-class-objects.html">Perfect_Imp</a></span>,
   nyr_par_mu <span class="op">=</span> <span class="fl">3</span>,
@@ -93,8 +92,6 @@ Maturity-at-age-year, Mortality-at-age-year and weight-at-age-year are identical
 <dd><p>positive real number or array <code>[sim, ages, year]</code>. The default weight-length parameter a (W=aL^b)</p></dd>
 <dt>WLb</dt>
 <dd><p>positive real number or array <code>[sim, ages, year]</code>. The default weight-length parameter b (W=aL^b)</p></dd>
-<dt>WAAind</dt>
-<dd><p>positive integer. The index of the WHAM weight-at-age array input$data$waa to be assumed as the weight-at-age for the operating model</p></dd>
 <dt>Obs</dt>
 <dd><p>The observation model (class Obs). This function only updates the catch and index observation error.</p></dd>
 <dt>Imp</dt>
@@ -115,6 +112,8 @@ Maturity-at-age-year, Mortality-at-age-year and weight-at-age-year are identical
 <dd><p>Whether to silence messages to the console.</p></dd>
 <dt>...</dt>
 <dd><p>Additional arguments, including R0 (unfished recruitment), phi0 (unfished spawners per recruit associated with R0 and h for calculating stock recruit parameters),</p></dd>
+<dt>WAAind</dt>
+<dd><p>positive integer. The index of the WHAM weight-at-age array input$data$waa to be assumed as the weight-at-age for the operating model</p></dd>
 </dl></div>
     <div id="value">
     <h2>Value</h2>
