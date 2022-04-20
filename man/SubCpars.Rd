@@ -28,6 +28,9 @@ An object of class \linkS4class{OM} or \linkS4class{MOM} (same class as \code{x}
 \description{
 Subset the custom parameters of an operating model by simulation and projection years
 }
+\details{
+Useful function for running \link{multiMSE} in batches if running into memory constraints.
+}
 \seealso{
 \link{Sub} for MSE objects, \link{SubOM} for OM components.
 }
