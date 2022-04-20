@@ -10,7 +10,6 @@
 #' @param Name Character string. The name of the operating model.
 #' @param WLa positive real number or array `[sim, ages, year]`. The default weight-length parameter a (W=aL^b)
 #' @param WLb positive real number or array `[sim, ages, year]`. The default weight-length parameter b (W=aL^b)
-#' @param WAAind positive integer. The index of the WHAM weight-at-age array input$data$waa to be assumed as the weight-at-age for the operating model
 #' @param Obs The observation model (class Obs). This function only updates the catch and index observation error.
 #' @param Imp The implementation model (class Imp). This function does not update implementation parameters.
 #' @param nyr_par_mu Positive integer. The number of recent years that natural mortality, age vulnerability, weight, length and maturity parameters are averaged over for defining future projection conditions.

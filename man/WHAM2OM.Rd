@@ -58,8 +58,6 @@ WHAM2OM(
 \item{silent}{Whether to silence messages to the console.}
 
 \item{...}{Additional arguments, including R0 (unfished recruitment), phi0 (unfished spawners per recruit associated with R0 and h for calculating stock recruit parameters),}
-
-\item{WAAind}{positive integer. The index of the WHAM weight-at-age array input$data$waa to be assumed as the weight-at-age for the operating model}
 }
 \value{
 An object of class \linkS4class{OM}.
