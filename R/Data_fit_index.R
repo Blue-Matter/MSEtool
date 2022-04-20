@@ -38,7 +38,7 @@ Fit_Index <- function(ind_slot='Ind', indcv_slot="CV_Ind", Data_out,
     ObsPars[[beta_var]] <- SampCpars[[beta_var]]
     fitbeta <- FALSE
   } else {
-    ObsPars[[beta_var]] <- rep(NA, sim)
+    ObsPars[[beta_var]] <- rep(NA, nsim)
   }
   
   biomass_var <- switch(ind_slot,
