@@ -1126,8 +1126,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   # Don't run DLMtool MPs in parallel except LBSPR
   dlmmp <- grep('DLMtool', mp_ns)
   parallel[dlmmp] <- FALSE
-  parallel[grep('LBSPR', MPs)] <- TRUE
-
+  if (any(as.logical(parallel_in)) )
+    parallel[grep('LBSPR', MPs)] <- TRUE
   
   # Manually specified MPs
   if (class(parallel_in)=='list') {
