@@ -76,7 +76,7 @@ setMethod("plot", signature(x = "MOM", y = "missing"),
                 if(length(cpars[[p]][[f]])>0){
                   message(paste(Stocks[[p]]@Name," - ",Fleets[[p]][[f]]@Name))
                   ncparsim<-cparscheck(cpars[[p]][[f]])   # check each list object has the same length and if not stop and error report
-                  SampCpars[[p]][[f]] <- SampleCpars(cpars[[p]][[f]], nsim, msg=!silent)
+                  SampCpars[[p]][[f]] <- SampleCpars(cpars[[p]][[f]], nsim, silent=silent)
                 }else{
                   SampCpars[[p]][[f]] <-list()
                 }                
