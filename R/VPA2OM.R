@@ -82,7 +82,7 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
     zeros<-array(0,dims)
     
     # N0 back inputed
-    rec<-naa[,1,2:nyears]*exp(Maa[,1,2:nyears])
+    rec<-naa[,1,2:nyears]#*exp(Maa[,1,2:nyears])
     muR0<-apply(rec,1,mean) # mean R0 is assumed for most recent N0 - will be filled anyway using LowerTri argument
     N0<-array(cbind(rec,muR0),dims)
     naa<-abind(N0,naa,along=2) 
