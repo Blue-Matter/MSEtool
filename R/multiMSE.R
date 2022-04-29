@@ -660,6 +660,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
   VBF <- aperm(array(as.numeric(unlist(histYrs[17,], use.names=FALSE)),
                      dim=c(np,nf,n_age, nyears, nareas, nsim)), c(6,1,2,3,4,5))
+  
   Z <- aperm(array(as.numeric(unlist(histYrs[18,], use.names=FALSE)),
                    dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
   FMt<-aperm(array(as.numeric(unlist(histYrs[19,], use.names=FALSE)),
@@ -1044,7 +1045,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                        Cret=Cret[,p,f,,,],
                        N=N[,p,,,],
                        SSB=SSB[,p,,,],
-                       VBiomass=VBiomass[,p,,,],
+                       VBiomass=VBF[,p,f,,,],
                        StockPars=StockPars[[p]],
                        FleetPars=FleetPars[[p]][[f]],
                        ObsPars=ObsPars[[p]][[f]],
@@ -1084,7 +1085,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
         StockPars2 <- StockPars[[p]]
         StockPars2$Biomass <- Biomass[,p,,,]
         StockPars2$SSB <- SSB[,p,,,]
-        StockPars2$VBiomass <- VBiomass[,p,,,]
+        StockPars2$VBiomass <- VBF[,p,f,,,]
         StockPars2$N <- N[,p,,,]
         StockPars2$CBret <- CBret[,p,f,,,]
 
@@ -1136,7 +1137,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                          Fret.Mortality=FMret[,p,f,,,],
                          Number=N[,p,,,],
                          Biomass=Biomass[,p,,,],
-                         VBiomass=VBiomass[,p,,,],
+                         VBiomass=VBF[,p,f,,,],
                          SBiomass=SSB[,p,,,],
                          Removals=CB[,p,f,,,],
                          Landings=CBret[,p,f,,,],
@@ -1146,7 +1147,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       Hist@TSdata <- list(
         Number=apply(N[,p,,,],c(1,3,4), sum),
         Biomass=apply(Biomass[,p,,,],c(1,3,4), sum),
-        VBiomass=apply(VBiomass[,p,,,],c(1,3,4), sum),
+        VBiomass=apply(VBF[,p,f,,,],c(1,3,4), sum),
         SBiomass=apply(SSB[,p,,,],c(1,3,4), sum),
         Removals=apply(CB[,p,f,,,], c(1,3,4), sum),
         Landings=apply(CBret[,p,f,,,],c(1,3,4), sum),
@@ -1419,7 +1420,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   Biomass <- SSB <- VBiomass <- N
 
   FM <- FMret <- array(NA, dim=c(nsim, np, nf, n_age, nyears, nareas))
-  VF<- array(NA, dim=c(nsim, np, nf, n_age, nyears+proyears))
+  VBF <-  array(NA, dim=c(nsim, np, nf, n_age, nyears, nareas))
+  VF<-  array(NA, dim=c(nsim, np, nf, n_age, nyears+proyears))
   CB <- CB_ret <- FM
   MPA <- array(NA, dim=c(np, nf, nyears+proyears, nareas))
 
@@ -1433,11 +1435,14 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       FM[,p,f,,,] <- multiHist[[p]][[f]]@AtAge$F.Mortality
       FMret[,p,f,,,] <- multiHist[[p]][[f]]@AtAge$Fret.Mortality
       VF[,p,f,,] <- FleetPars[[p]][[f]]$V_real
+      VBF[,p,f,,,] <- multiHist[[p]][[f]]@AtAge$VBiomass
       MPA[p,f,,] <- FleetPars[[p]][[f]]$MPA
       CB[,p,f,,,] <- multiHist[[p]][[f]]@AtAge$Removals
       CB_ret[,p,f,,,] <- multiHist[[p]][[f]]@AtAge$Landings
     }
   }
+  
+
   # need to make a copy because R is doing weird things with elements with similar names
   HistFleetPars <- FleetPars
   Snames <- SIL(Stocks,"Name")
@@ -1647,6 +1652,11 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     VBiomass_P[,,,1,] <- aperm(array(as.numeric(unlist(NextYrN[19,],
                                                        use.names=FALSE)),
                                      dim=c(np,n_age, nareas, nsim)), c(4,1,2,3))
+    
+    VBF_P[,,,,1,] <- aperm(array(as.numeric(unlist(NextYrN[20,], use.names=FALSE)),
+                                 dim=c(np, nf, n_age, nareas, nsim)), c(5,1,2,3,4))
+    
+    
     FML <- apply(array(FM[, ,,, nyears, ],c(nsim,np,nf,n_age,nareas)),
                  c(1, 3), max)
     
@@ -1822,7 +1832,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         MPCalcs <- CalcMPDynamics(MPRecs=MPRecs_A[[p]][[f]], y,
                                   nyears, proyears, nsim,
                                   Biomass_P=StockPars[[p]]$Biomass_P,
-                                  VBiomass_P=StockPars[[p]]$VBiomass_P,
+                                  VBiomass_P=VBF_P[, p, f, , , ],
                                   LastTAE=LastTAE[,p,f],
                                   histTAE=histTAE[,p,f],
                                   LastSpatial=LastSpatial[,p,f,],
@@ -1888,7 +1898,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
     # the years in which there are updates
     upyrs <- 1 + (0:(floor(proyears/interval[mm]) - 1)) * interval[mm]
-
+   
     # --- Begin projection years ----
     for (y in 2:proyears) {
       if(!silent) {
@@ -2011,6 +2021,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
       VBiomass_P[,,,y,]<-aperm(array(as.numeric(unlist(NextYrN[19,], use.names=FALSE)),
                                      dim=c(np,n_age, nareas, nsim)), c(4,1,2,3))
+      
+      VBF_P[,,,,y,]<-aperm(array(as.numeric(unlist(NextYrN[20,], use.names=FALSE)),
+                                 dim=c(np, nf, n_age, nareas, nsim)), c(5,1,2,3,4))
+      
       FML <- apply(array(FM_P[, ,,, y-1, ],c(nsim,np,nf,n_age,nareas)),
                    c(1, 3), max)
 
@@ -2107,8 +2121,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                                   N_P=N_P[,p,,,],
                                                   SSB=SSB[,p,,,],
                                                   SSB_P=SSB_P[,p,,,],
-                                                  VBiomass=VBiomass[,p,,,],
-                                                  VBiomass_P=VBiomass_P[,p,,,],
+                                                  VBiomass=VBF[,p,f,,,],
+                                                  VBiomass_P=VBF_P[,p,f,,,],
                                                   RefPoints=StockPars[[p]]$ReferencePoints$ReferencePoints,
 
                                                   retA_P=FleetPars[[p]][[f]]$retA_real,
@@ -2119,7 +2133,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                                   ImpPars=ImpPars[[p]][[f]],
                                                   V_P=FleetPars[[p]][[f]]$V_P,
                                                   upyrs=upyrs,
-                                                  interval=interval,
+                                                  interval=interval[mm],
                                                   y=y,
                                                   mm=mm,
                                                   Misc=MSElist[[p]][[f]][[mm]]@Misc,
@@ -2258,7 +2272,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             MPCalcs <- CalcMPDynamics(MPRecs=MPRecs_A[[p]][[f]], y,
                                       nyears, proyears, nsim,
                                       Biomass_P=StockPars[[p]]$Biomass_P,
-                                      VBiomass_P=StockPars[[p]]$VBiomass_P,
+                                      VBiomass_P=VBF_P[,p,f,,,],
                                       LastTAE=LastTAE[,p,f],
                                       histTAE=histTAE[,p,f],
                                       LastSpatial=LastSpatial[,p,f,],
@@ -2325,7 +2339,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             MPCalcs <- CalcMPDynamics(MPRecs=NoMPRecs, y,
                                       nyears, proyears, nsim,
                                       Biomass_P=StockPars[[p]]$Biomass_P,
-                                      VBiomass_P=StockPars[[p]]$VBiomass_P,
+                                      VBiomass_P=VBF_P[,p,f,,,],
                                       LastTAE=LastTAE[,p,f],
                                       histTAE=histTAE[,p,f],
                                       LastSpatial=LastSpatial[,p,f,],
@@ -2392,7 +2406,62 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     } # end of projection years
 
     if(!silent) close(pb)
-
+    
+    if (max(upyrs) < proyears) { # One more call to complete Data object
+      # --- Update Data object ----
+      upyrs2 <- upyrs[upyrs>0] 
+      if (length(upyrs2) ==1) upyrs2 <- c(upyrs2, proyears)
+      interval[mm] <- proyears
+      for (p in 1:np) {
+        for (f in 1:nf) {
+          OM <- suppressMessages(new('OM')) 
+          OM@nyears <- nyears
+          OM@hbiascv <- MOM@Obs[[p]][[f]]@hbiascv
+          OM@maxF <- MOM@maxF
+          OM@CurrentYr <- MSElist[[1]][[1]][[1]]@LHYear
+          OM@reps <- MOM@reps
+          OM@nsim <- nsim
+          OM@BMSY_B0biascv <- MOM@Obs[[p]][[f]]@BMSY_B0biascv
+          OM@proyears <- proyears
+          MSElist[[p]][[f]][[mm]] <- updateData(Data=MSElist[[p]][[f]][[mm]],
+                                                OM,
+                                                MPCalcs=MPCalcs_list[[p]][[f]],
+                                                Effort=Effort[,p,f,, ,drop=FALSE],
+                                                Biomass=Biomass[,p,,,],
+                                                N=N[,p,,,],
+                                                Biomass_P=Biomass_P[,p,,,],
+                                                CB_Pret=FleetPars[[p]][[f]]$CB_Pret,
+                                                N_P=N_P[,p,,,],
+                                                SSB=SSB[,p,,,],
+                                                SSB_P=SSB_P[,p,,,],
+                                                VBiomass=VBF[,p,f,,,],
+                                                VBiomass_P=VBF_P[,p,f,,,],
+                                                RefPoints=StockPars[[p]]$ReferencePoints$ReferencePoints,
+                                                
+                                                retA_P=FleetPars[[p]][[f]]$retA_real,
+                                                retL_P=FleetPars[[p]][[f]]$retL_P,
+                                                StockPars=StockPars[[p]],
+                                                FleetPars=FleetPars[[p]][[f]],
+                                                ObsPars=ObsPars[[p]][[f]],
+                                                ImpPars=ImpPars[[p]][[f]],
+                                                V_P=FleetPars[[p]][[f]]$V_P,
+                                                upyrs=upyrs2,
+                                                interval=interval[mm],
+                                                y=y,
+                                                mm=mm,
+                                                Misc=MSElist[[p]][[f]][[mm]]@Misc,
+                                                RealData=multiHist[[p]][[f]]@Data,
+                                                Sample_Area=ObsPars[[p]][[f]]$Sample_Area)
+          # ---- Update true abundance ----
+          M_array <- array(0.5*StockPars[[p]]$M_ageArray[,,nyears+y],
+                           dim=c(nsim, n_age, nareas))
+          Atemp <- apply(StockPars[[p]]$VBiomass_P[, , y, ] *
+                           exp(-M_array), 1, sum) # Abundance (mid-year before fishing)
+          MSElist[[p]][[f]][[mm]]@OM$A <- Atemp
+        } # end of fleet
+      } # end of stock
+    }
+  
     # SSB relative to SSBMSY
     SB_SBMSYa[, ,mm, ] <- apply(SSB_P, c(1,2, 4), sum, na.rm=TRUE)/array(SSBMSY_y[,,mm,],
                                                                        c(nsim,np,proyears))

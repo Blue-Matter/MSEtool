@@ -457,7 +457,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   # --- Index of recruitment ----
   Recobs <- ObsPars$Recerr_y[, nyears + yind] * apply(array(N_P[, 1, yind, ] *
                                                             Sample_Area$RecInd[,nyears+yind,],
-                                                          c(nsim, interval[mm], nareas)),
+                                                          c(nsim, length(yind), nareas)),
                                                     c(1, 2), sum)
 
 

@@ -2,7 +2,8 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 # MSEtool 3.4.9999 - Development Version
 
-
+## Fixes
+- fix to fleet-specific vulnerable biomass provided to `MMPs`
 
 ## New additions
 - argument `parallel` in `runMSE` can takes a named list of MPs
