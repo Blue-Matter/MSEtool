@@ -472,6 +472,9 @@
     <loc>/reference/getmov2.html</loc>
   </url>
   <url>
+    <loc>/reference/getnIVs.html</loc>
+  </url>
+  <url>
     <loc>/reference/getq_multi_MICE.html</loc>
   </url>
   <url>
@@ -565,6 +568,9 @@
     <loc>/reference/plot.MMSE.html</loc>
   </url>
   <url>
+    <loc>/reference/plot.MOM.html</loc>
+  </url>
+  <url>
     <loc>/reference/plot.MSE.html</loc>
   </url>
   <url>
@@ -575,6 +581,9 @@
   </url>
   <url>
     <loc>/reference/plotOFL.html</loc>
+  </url>
+  <url>
+    <loc>/reference/plotRel.html</loc>
   </url>
   <url>
     <loc>/reference/plotmulti.html</loc>
