@@ -10,6 +10,7 @@
 #' @param Name Character string. The name of the operating model.
 #' @param WLa positive real number or array `[sim, ages, year]`. The default weight-length parameter a (W=aL^b)
 #' @param WLb positive real number or array `[sim, ages, year]`. The default weight-length parameter b (W=aL^b)
+#' @param WAAind positive integer. The index of the WHAM weight-at-age array input$data$waa to be assumed as the weight-at-age for the operating model
 #' @param Obs The observation model (class Obs). This function only updates the catch and index observation error.
 #' @param Imp The implementation model (class Imp). This function does not update implementation parameters.
 #' @param nyr_par_mu Positive integer. The number of recent years that natural mortality, age vulnerability, weight, length and maturity parameters are averaged over for defining future projection conditions.
@@ -26,12 +27,13 @@
 #' @export
 #' @seealso \link{Assess2OM}
 WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=3,
+                  WAAind = 1,
                   Obs = MSEtool::Imprecise_Unbiased, Imp=MSEtool::Perfect_Imp,
                   nyr_par_mu = 3, LowerTri=2, plusgroup=T, altinit=0, 
                   fixq1 = T, report = FALSE, silent = FALSE, ...){
   
   # nsim=3; proyears=30; interval=2; Name = NULL; WLa=1; WLb=3; WAAind = 1;  Obs = MSEtool::Imprecise_Unbiased; Imp=MSEtool::Perfect_Imp; nyr_par_mu = 3; LowerTri=2; recind=1; plusgroup=T; altinit=0; fixq1 = T; report = TRUE; silent = FALSE
-  
+  # devtools::load_all("C:/Users/tcarruth/Documents/R/win-library/4.1/MSEtool")
   if(!requireNamespace("TMB", quietly = TRUE) || !requireNamespace("mvtnorm", quietly = TRUE)) {
     stop("Install the TMB and mvtnorm packages to use WHAM2OM.")
   }
@@ -75,9 +77,10 @@ WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=
   naa<-aperm(array(unlist(lapply(output,FUN=function(x)x$NAA[yind,])),c(ny,na,nsim)),c(3,2,1))   
   faa<-aperm(array(unlist(lapply(output,FUN=function(x)x$FAA[yind,1,])),c(ny,na,nsim)),c(3,2,1))  
   Maa<-aperm(array(unlist(lapply(output,FUN=function(x)x$MAA[yind,])),c(ny,na,nsim)),c(3,2,1)) 
+  
+  
   Mataa<-aperm(array(obj$input$data$mature[yind,],c(ny,na,nsim)),c(3,2,1))
-  waa<-aperm(array(obj$input$data$waa[obj$input$data$waa_pointer_ssb,yind,],c(ny,na,nsim)),c(3,2,1))
-  waac <- aperm(array(obj$input$data$waa[obj$input$data$waa_pointer_totcatch,yind,],c(ny,na,nsim)),c(3,2,1))
+  waa<-aperm(array(obj$input$data$waa[WAAind,yind,],c(ny,na,nsim)),c(3,2,1))
   laa<-(waa/WLa)^(1/WLb)
   
   if(obj$input$data$recruit_model%in%c(1,2)){
@@ -112,12 +115,7 @@ WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=
            recind=1, plusgroup, altinit=0, fixq1=fixq1,# recind = 1 because WHAM models report at age arrays starting second year of life ie not age zero
            report=report, silent=silent, R0 = apply(naa[,1,]*exp(Maa[,1,]),1,mean)) 
   
-  WtCarr<-array(NA,c(nsim,OM@maxage+1,OM@nyears+OM@proyears))
-  WtCarr[,,1:OM@nyears]<- abind(array(0,c(nsim,1,dim(waac)[3])),waac,along=2)
-  muCC<-array(apply(WtCarr[,,OM@nyears-((nyr_par_mu-1):0)],1:2,mean),c(nsim,OM@maxage+1,OM@proyears))
-  WtCarr[,,OM@nyears+(1:OM@proyears)]<-muCC
   
-  OM@cpars$Wt_age_C<-WtCarr
   # Sample some selectivities potentially for use later and put these in a WHAM Misc slot
   WHAM = list()
   nsel<-length(output[[1]]$selAA)
