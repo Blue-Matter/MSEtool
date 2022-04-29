@@ -114,8 +114,9 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
     invdf <- data.frame(not_used_cpars=invalid, stringsAsFactors = FALSE)
 
     if(!silent) {
-      message("Invalid names found in custom parameters:")
-      base::message(paste0(capture.output(invdf), collapse = "\n"))
+      message_oops("Invalid names found in custom parameters:")
+      message_oops(capture.output(invdf))
+      # base::message(paste0(capture.output(invdf), collapse = "\n"))
     }
   }
   # # report found names
