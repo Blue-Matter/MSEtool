@@ -16,6 +16,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 - add message showing range of estimated von Bert. parameters when `OM@cpars$Len_age` is provided.
 - fix bug in SSBpR for 2-sex `MOM` (introduced in 3.4.0)
 - pass projected OM abundance and SSB arrays to `Data@Misc$StockPars` (slot `N_P`, `SSB_P`, etc.) during closed-loop
+- now use `usethis` for console messages
 
 # MSEtool 3.4.0 
 
