@@ -113,7 +113,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                                       msg = !silent)
     StockPars[[p]]$plusgroup <- plusgroup[p]
     StockPars[[p]]$maxF <- MOM@maxF
-    
+  
     # --- Sample Fleet Parameters ----
     FleetPars[[p]] <- lapply(1:nf, function(f) {
       SampleFleetPars(Fleet = Fleets[[p]][[f]],

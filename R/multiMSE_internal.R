@@ -223,6 +223,20 @@ ldim<-function(x){
 #' @author T. Carruthers
 #' @export
 multiDataS<-function(MSElist,StockPars,np,mm,nf,realVB){
+  
+  # check dimensions of CAL - need to be the same for all stocks/fleets
+  nL <- matrix(NA, np,nf)
+  # nA <- matrix(NA, np,nf)
+  for (p in 1:np) {
+    for(f in 1:nf) {
+      nL[p,f]<-dim(MSElist[[p]][[f]][[mm]]@CAL)[3]
+      # nA[p,f]<-dim(MSElist[[p]][[f]][[mm]]@CAA)[3]
+    }
+  }
+  
+  if (length(unique(as.numeric(nL)))>1) {
+    stop('All stocks/fleets must have the same length bins if using Complex mode. Use `cpars$CAL_bins` or `cpars$CAL_binsmid`')
+  }
 
   nsim<-dim(MSElist[[1]][[1]][[mm]]@Cat)[1]
   nyears<-dim(MSElist[[1]][[1]][[mm]]@Cat)[2]
@@ -243,6 +257,30 @@ multiDataS<-function(MSElist,StockPars,np,mm,nf,realVB){
       realVBi[,,i]<-realVB[,p,]
     }
   }
+  
+ 
+  DBF[[1]]@CAL %>% class()
+  
+  for (sim in 1:2) {
+    for( y in 1:64) {
+      for (i in 1:6) {
+        print('*-------------*')
+        print(c(sim, y, i))
+        print(class(CAA[sim,y,,i]))
+        print('*-------------*')
+      }
+    }
+  }
+  
+  class(CAL[1,1,])
+  tt <- apply(CAL,1:3,sum)
+  
+  
+  
+  
+  SIL(DBF,"CAL")
+  
+  
 
   Dataout<-DBF[[1]]
 
@@ -404,3 +442,4 @@ multiData<-function(MSElist,StockPars,p,mm,nf){
 
   Dataout
 }
+
