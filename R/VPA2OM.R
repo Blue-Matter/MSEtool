@@ -94,7 +94,7 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
     laa<-abind(zeros,laa,along=2)
     
     # M copied from first year to age zero
-    Maa<-abind(Maa[,1,],Maa,along=2)
+    Maa<-abind(array(1E-10 + .Machine$double.eps,dim(Maa[,1,])),Maa,along=2)
     
     message("Age zero positions for arrays were created with the following assumptions: N(0) = N(1) * exp(M(1)), N0 in most recent year is mean(R0), F(0) = weight(0) = maturity(0) = length(0) = 0, M(0) = M(1)")
     
