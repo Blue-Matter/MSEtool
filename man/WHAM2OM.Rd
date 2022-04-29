@@ -12,6 +12,7 @@ WHAM2OM(
   Name = NULL,
   WLa = 1,
   WLb = 3,
+  WAAind = 1,
   Obs = MSEtool::Imprecise_Unbiased,
   Imp = MSEtool::Perfect_Imp,
   nyr_par_mu = 3,
@@ -38,6 +39,8 @@ WHAM2OM(
 \item{WLa}{positive real number or array \verb{[sim, ages, year]}. The default weight-length parameter a (W=aL^b)}
 
 \item{WLb}{positive real number or array \verb{[sim, ages, year]}. The default weight-length parameter b (W=aL^b)}
+
+\item{WAAind}{positive integer. The index of the WHAM weight-at-age array input$data$waa to be assumed as the weight-at-age for the operating model}
 
 \item{Obs}{The observation model (class Obs). This function only updates the catch and index observation error.}
 
