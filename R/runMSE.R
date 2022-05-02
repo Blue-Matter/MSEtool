@@ -399,6 +399,10 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   B0_y[] <- sapply(MSYrefsYr, function(x) x["B0", ]) %>% t()
   SSB0_y[] <- sapply(MSYrefsYr, function(x) x["SB0", ]) %>% t()
   VB0_y[] <- sapply(MSYrefsYr, function(x) x["VB", ]/x["VB_VB0", ]) %>% t()
+  
+  if (any(FMSY_y == 0)) {
+    message_warn("FMSY = 0 for some simulations and years.")
+  }
 
   # --- MSY reference points ----
   MSYRefPoints <- sapply(1:nsim, CalcMSYRefs, MSY_y=MSY_y, FMSY_y=FMSY_y,
