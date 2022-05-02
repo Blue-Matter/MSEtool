@@ -273,6 +273,7 @@ calcRefYield <- function(x, StockPars, FleetPars, pyears, Ncurr, nyears, proyear
                   MatAge=StockPars$Mat_age[x,,(nyears):(nyears+proyears)],
                   WtAge=StockPars$Wt_age[x,,(nyears):(nyears+proyears)],
                   FecAge=StockPars$Fec_Age[x,,(nyears):(nyears+proyears)],
+                  WtAgeC=FleetPars$Wt_age_C[x,,(nyears):(nyears+proyears)],
                   Vuln=FleetPars$V_real[x,,(nyears):(nyears+proyears)],
                   Retc=FleetPars$retA_real[x,,(nyears):(nyears+proyears)],
                   Prec=StockPars$Perr_y[x,(nyears):(nyears+proyears+StockPars$maxage)],
@@ -304,8 +305,9 @@ calcRefYield <- function(x, StockPars, FleetPars, pyears, Ncurr, nyears, proyear
 #' @param pyears Number of projection years
 #' @param M_age M-at-age
 #' @param MatAge Maturity-at-age
-#' @param WtAge Weight-at-age
+#' @param WtAge Weight-at-age (stock)
 #' @param FecAge Mature-weight-at-age
+#' @param WtAgeC Weight-at-age (fishery)
 #' @param Vuln Vulnerability-at-age
 #' @param Retc Retention-at-age
 #' @param Prec Recruitment error
@@ -328,7 +330,7 @@ calcRefYield <- function(x, StockPars, FleetPars, pyears, Ncurr, nyears, proyear
 #' @author A. Hordyk
 #'
 optYield <- function(logFa, Asize_c, nareas, maxage, Ncurr, pyears, M_age,
-                   MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc,
+                   MatAge, WtAge, FecAge, WtAgeC, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc,
                    R0c, SSBpRc, aRc, bRc, Qc, MPA, maxF, SSB0c,
                    plusgroup=0) {
 
@@ -344,9 +346,9 @@ optYield <- function(logFa, Asize_c, nareas, maxage, Ncurr, pyears, M_age,
   Cn <- simpop[[6]]/simpop[[8]] * simpop[[1]] * (1-exp(-simpop[[8]])) # removals
   # Cb <- Cn[,pyears,] * WtAge[,pyears]
   # -sum(Cb)
-  Cb <- Cn[,(pyears-4):pyears,] * array(WtAge[,(pyears-4):pyears], dim=dim(Cn[,(pyears-4):pyears,]))
+  Cb <- Cn[,(pyears-4):pyears,] * array(WtAgeC[,(pyears-4):pyears], dim=dim(Cn[,(pyears-4):pyears,]))
 
-  -mean(apply(Cb,2,sum))
+  -mean(apply(Cb,2,sum, na.rm = TRUE))
 
 
 }
