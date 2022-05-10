@@ -166,7 +166,7 @@ iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=FALSE, Name="iSCAM model
       faa[,aind+1,]<-array(rep(faat,each=nsim),c(nsim,nafill,nyears))
     }
     
-    # Fishing mortality rate for F = 0 years
+    # Fishing mortality rate for years with F = 0
     fout <- lapply(1:nsim, function(x) {
       fout <- faa[x, , ]
       tofill <- apply(fout, 2, function(x) all(x == 0))
@@ -211,6 +211,7 @@ iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=FALSE, Name="iSCAM model
   
   Mataa[]<-rep(Mataat,each=nsim)
   laa<-Linf*(1-exp(-K*(ageArray-t0)))
+  laa[1:sage] <- 0
   
   # Abundance
   if(delay_diff) {
@@ -269,7 +270,7 @@ iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=FALSE, Name="iSCAM model
   if(sage > 0) { # Missing cohorts to be filled in by VPA2OM
     aind_missing <- sage:1
     for(i in 1:length(aind_missing)) {
-      Maa[, aind_missing[i], ] <- Maa[, sage + 1, ]
+      Maa[, aind_missing[i], ] <- tiny + .Machine$double.eps
       naa[, aind_missing[i], 2:nyears - 1] <- naa[, aind_missing[i] + 1, 2:nyears] * exp(Maa[, aind_missing[i], 2:nyears - 1])
     }
   }
@@ -279,45 +280,41 @@ iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=FALSE, Name="iSCAM model
   if(do_mcmc) {
     h <- mcmc_model$params$h[mcmc_samp]
     Perr <- sqrt((1 - mcmc_model$params$rho)/mcmc_model$params$vartheta)[mcmc_samp]
+    R0 <- mcmc_model$params$ro[mcmc_samp]
   } else {
     h <- rep(replist$mpd$steepness, nsim)
     Perr <- rep(sqrt((1 - replist$par$theta6)/replist$par$theta7), nsim)
+    R0 <- rep(replist$mpd$ro, nsim)
   }
   
-  new_SR <- local({ # Get unfished spawners per recruit from mean M and back-calculate R0 to age 0
+  phi0 <- local({ # Get unfished spawners per recruit from mean M 
     wt <- apply(waat, 1, mean)
     fec <- apply(replist$mpd$d3_wt_mat, 2, mean)
-    
     if(do_mcmc) {
       Mbar <- apply(Maa, 1:2, mean)
-      phi0 <- vapply(1:nsim, function(x) {
+      vapply(1:nsim, function(x) {
         MSYCalcs(logF = log(1e-8), M_at_Age = Mbar[x, ], 
                  Wt_at_Age = c(rep(0, sage), wt), Mat_at_Age = c(rep(0, sage), replist$mpd$ma), 
                  Fec_at_Age = c(rep(0, sage), fec), V_at_Age = rep(0, n_age), 
                  maxage = n_age - 1, SRrelx = 3, opt = 0, plusgroup = 1)["SB"] %>% as.numeric()
       }, numeric(1))
-      R0 <- vapply(1:nsim, function(x) mcmc_model$params$ro[mcmc_samp[x]] * exp(sum(Mbar[x, 1:sage])), numeric(1))
     } else {
       Mbar <- apply(Maa[1, , ], 1, mean)
-      phi0 <- MSYCalcs(logF = log(1e-8), M_at_Age = Mbar, 
-                       Wt_at_Age = c(rep(0, sage), wt), Mat_at_Age = c(rep(0, sage), replist$mpd$ma), 
-                       Fec_at_Age = c(rep(0, sage), fec), V_at_Age = rep(0, n_age), 
-                       maxage = n_age - 1, SRrelx = 3, opt = 0, plusgroup = 1)["SB"] %>% as.numeric()
-      R0 <- replist$mpd$ro * exp(sum(Mbar[1:sage]))
+      MSYCalcs(logF = log(1e-8), M_at_Age = Mbar,
+               Wt_at_Age = c(rep(0, sage), wt), Mat_at_Age = c(rep(0, sage), replist$mpd$ma), 
+               Fec_at_Age = c(rep(0, sage), fec), V_at_Age = rep(0, n_age),
+               maxage = n_age - 1, SRrelx = 3, opt = 0, plusgroup = 1)["SB"] %>% as.numeric()
     }
-    list(phi0 = phi0, R0 = R0)
   })
-  phi0 <- new_SR$phi0
-  R0 <- new_SR$R0
   
   # make the OM
-  OM<-VPA2OM(Name=Name,
-             proyears=proyears, interval=2, CurrentYr=replist$dat$end.yr, h=h,
-             Obs = MSEtool::Imprecise_Unbiased, Imp=MSEtool::Perfect_Imp,
-             naa[, , 1:nyears], faa, waa, Mataa, Maa, laa,
-             nyr_par_mu = nyr_par_mu, LowerTri=sage,
-             recind=0, plusgroup=TRUE, altinit=0, fixq1=TRUE,
-             report=report, silent=FALSE, R0 = R0, phi0 = phi0, Perr = Perr)
+  OM <- Assess2OM(Name=Name,
+                  proyears=proyears, interval=2, CurrentYr=replist$dat$end.yr, h=h,
+                  Obs = MSEtool::Imprecise_Unbiased, Imp=MSEtool::Perfect_Imp,
+                  naa[, , 1:nyears], faa, waa, Mataa, Maa, laa,
+                  nyr_par_mu = nyr_par_mu, LowerTri=sage,
+                  recind=0, plusgroup=TRUE, altinit=0, fixq1=TRUE,
+                  report=report, silent=FALSE, R0 = R0, phi0 = phi0, Perr = Perr)
   
   # growth parameters
   OM@cpars$Linf <- rep(Linf, nsim)
