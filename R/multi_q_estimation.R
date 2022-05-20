@@ -19,7 +19,7 @@
 #' @param FretA An array of retention `[nsim,np,nf,maxage,nyears+proyears]`
 #' @param maxF A numeric value specifying the maximum fishing mortality for any
 #' single age class
-#' @param MPA An of spatial closures by year `[np,nf,nyears+proyears,nareas]`
+#' @param MPA An array of spatial closures by year `[np,nf,nyears+proyears,nareas]`
 #' @param CatchFrac A list of stock-specific fleet fractions of current catch
 #' list`[[stock]][nsim, nf]`
 #' @param bounds Bounds for total q estimation
@@ -119,7 +119,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
   depc <- sapply(1:np, function(p) StockPars[[p]][["D"]])[x, ]
   CFc <- sapply(1:np, function(p) CatchFrac[[p]][x, ]) %>% matrix(nf, np) %>% t()
   
-  cat("Simulation", x, "objective function:\n")
+  message_info("Simulation ", x, " objective function:\n")
   opt <- optim(par, qestMICE,
                method = "L-BFGS-B",
                lower = c(rep(log(bounds[1]), np), rep(-5, np * (nf-1))),
@@ -136,6 +136,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
                SSB0x = SSB0x, hsx = hsx, ax = ax, bx = bx, aRx = aRx, bRx = bRx, Perrx = Perrx,
                SRrelx = SRrelx, Rel = Rel, SexPars = SexPars, x = x, plusgroup = plusgroup,
                optVB = optVB, VB0x = VB0x, WtCx = WtCx, maxF = maxF,
+               MPA=MPA,
                control = list(trace = 1, factr = tol/.Machine$double.eps))
   cat("\n")
 
@@ -151,7 +152,8 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
                   R0ax = R0ax, SSBpRx = SSBpRx, SSB0x = SSB0x, hsx = hsx, aRx = aRx, bRx = bRx,
                   ax = ax, bx = bx, Perrx = Perrx, SRrelx = SRrelx,
                   Rel = Rel,SexPars = SexPars, x = x, plusgroup = plusgroup,
-                  optVB = optVB, VB0x = VB0x, B0x = B0x, WtCx = WtCx, maxF = maxF)
+                  optVB = optVB, VB0x = VB0x, B0x = B0x, WtCx = WtCx, maxF = maxF,
+                  MPA=MPA)
 
   out
 }
@@ -203,6 +205,9 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
 #' @param VB0x Vector `[stock]` unfished vulnerable biomass
 #' @param B0x Vector `[stock]` unfished total biomass
 #' @param WtC Array `[stock, fleet, n_age]` of weight at age in catch in the last historical year
+#' @param maxF A numeric value specifying the maximum fishing mortality for any
+#' single age class
+#' @param MPA An array of spatial closures by year `[np,nf,nyears+proyears,nareas]`
 #' @author T.Carruthers
 #' @keywords internal
 qestMICE <- function(par, depc, CFc, mode='opt', np, nf, nyears, nareas, maxage, Nx, VFx,
@@ -213,7 +218,7 @@ qestMICE <- function(par, depc, CFc, mode='opt', np, nf, nyears, nareas, maxage,
                      Karrayx, Linfarrayx, t0arrayx, Marrayx,
                      R0x, R0ax, SSBpRx, SSB0x, hsx, aRx, bRx,
                      ax, bx, Perrx, SRrelx, Rel, SexPars, x, plusgroup, optVB, VB0x, B0x, WtCx,
-                     maxF) {
+                     maxF, MPA) {
 
   n_age <- maxage + 1 # include age-0
   qsx <- exp(par[1:np])
@@ -231,7 +236,8 @@ qestMICE <- function(par, depc, CFc, mode='opt', np, nf, nyears, nareas, maxage,
                          WatAgex, Len_agex,
                          Karrayx, Linfarrayx, t0arrayx, Marrayx,
                          R0x, R0ax, SSBpRx, hsx, aRx, bRx, ax, bx, Perrx,
-                         SRrelx, Rel, SexPars, x, plusgroup, maxF, SSB0x, B0x)
+                         SRrelx, Rel, SexPars, x, plusgroup, maxF, SSB0x, B0x,
+                         MPA)
 
   if (optVB) {
     VBest <- apply(HistVars$VBx, c(1, 3), sum)
