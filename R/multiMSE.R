@@ -37,10 +37,10 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   }
 
   if (!length(Rel) && np == 1 && nf == 1) {
-    if (!silent) message("You have specified only a single stock and fleet with no MICE relationships. ",
+    if (!silent) message_info("You have specified only a single stock and fleet with no MICE relationships. ",
             "You should really be using the function MSEtool::runMSE()")
   } else if(np > 1 && !length(MOM@Rel) && !length(MOM@SexPars)) {
-    if (!silent) message("You have specified more than one stock but no MICE relationships ",
+    if (!silent) message_info("You have specified more than one stock but no MICE relationships ",
             "(slot MOM@Rel) or sex-specific relationships (slot MOM@SexPars) among these. ",
             "As they are independent, consider doing MSE for one stock at a time for ",
             "computational efficiency.")
@@ -68,13 +68,13 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   # Allocation
   if(!length(MOM@Allocation)) {
     MOM@Allocation <- CatchFrac
-    if (!silent) message("Slot @Allocation of MOM object not specified. Setting slot ",
+    if (!silent) message_info("Slot @Allocation of MOM object not specified. Setting slot ",
             "@Allocation equal to slot @CatchFrac - current catch fractions")
   }
 
   if(!length(MOM@Efactor)) {
     MOM@Efactor <- lapply(1:np, function(x) matrix(1, nsim, nf))
-    if (!silent) message("Slot @Efactor of MOM object not specified. Setting slot @Efactor ",
+    if (!silent) message_info("Slot @Efactor of MOM object not specified. Setting slot @Efactor ",
             "to current effort for all fleets")
   }
 
@@ -82,7 +82,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   maxage_s <- unique(SIL(Stocks, "maxage"))
   maxage <- max(maxage_s)
   if (length(maxage_s) > 1) {
-    if (!silent) message(paste("Stocks of varying maximum ages have been specified,",
+    if (!silent) message_info(paste("Stocks of varying maximum ages have been specified,",
                                "all simulations will run to",max(maxage_s),"ages"))
     Stocks <- lapply(Stocks, function(x) {
       x@maxage <- max(maxage)
@@ -349,41 +349,40 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     # loop over fleets
     for(f in 1:nf) {
       FleetPars[[p]][[f]]$V_real<-VF[,p,f,,] # update fleet vulnerability for this stock
-
+      
       # --- Historical Spatial closures ----
       if (!is.null(SampCpars[[p]][[f]]$MPA)) {
-        MPA <- SampCpars[[p]][[f]]$MPA
-        if (any(dim(MPA) != c(nyears+proyears, nareas))) {
-          stop('cpars$MPA must be a matrix with `nyears+proyears` rows and `nareas` columns', .call = FALSE)
+        thisMPA <- SampCpars[[p]][[f]]$MPA
+        if (any(dim(thisMPA) != c(nyears+proyears, nareas))) {
+          stop('cpars$MPA must be a matrix with dimensions `nyears+proyears, nareas`', .call = FALSE)
         }
-        if (any(MPA != 1 & MPA != 0)) {
+        if (any(thisMPA != 1 & thisMPA != 0)) {
           stop('values in cpars$MPA must be either 0 (closed) or open (1)', .call = FALSE)
         }
-        if (any(MPA != 1)) {
+        if (any(thisMPA != 1)) {
           for (a in 1:nareas) {
-            yrs <- which(MPA[, a] == 0)
+            yrs <- which(thisMPA[, a] == 0)
             if (length(yrs)) {
               if (!silent) {
-                message('Spatial closure detected in area ', a, ' in years ',
-                        paste(findIntRuns(yrs), collapse=", "))
+                message_info('Spatial closure detected for Stock ' , p, ' and Fleet ', f, 
+                             ' in area ', a, ' in years ',
+                             paste(findIntRuns(yrs), collapse=", "))
               }
             }
           }
         }
+        MPA[p, f,, ] <- thisMPA
       } else {
-        MPA <- matrix(1, nrow=nyears+proyears, ncol=nareas)
-        if (!is.na(FleetPars[[p]][[f]]$MPA) && all(FleetPars[[p]][[f]]$MPA)) {
-          MPA[, 1] <- 0
-          if (!silent) message('Historical MPA in Area 1 for all years')
+        if (!is.na(FleetPars[[p]][[f]]$MPA) && all(FleetPars[[p]][[f]]$MPA==TRUE)) {
+          MPA[p, f,, 1] <- 0
+          if (!silent) message_info('Historical MPA in Area 1 for all years')
         }
       }
-      FleetPars[[p]][[f]]$MPA <- MPA
-      if (any(MPA != 1)) {
-        if (!silent)  message('NOTE: MPA detected for Fleet ', f, ' but currently NOT implemented in multiMSE')
-      }
+      # FleetPars[[p]][[f]]$MPA <- MPA
+      
     } # end of loop over fleets
   } # end of loop over stocks
-
+  
   # ---- SexPars - Update SSB0 and Ricker SRR parameters for male stock ----
   # Other parameters have been updated (R0, h, rec devs) earlier
   if(length(SexPars)) {
@@ -440,7 +439,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 #               "(takes approximately [(nstocks x nfleets)/(9 x number of cores in cluster)]",
 #               " minutes per simulation): about", exp.time, 'minutes')
       if(!silent)
-        message("Optimizing for user-specified depletion ",
+        message_info("Optimizing for user-specified depletion ",
               'using parallel processing',
               'for ', nsim, 'simulations,', np, ' stocks, and ', nf, 'fleets',
               "(could take a while!)")
@@ -455,7 +454,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       exp.time <- round(exp.time,2)
 
       if(!silent)
-        message("Optimizing for user-specified depletion ",
+        message_info("Optimizing for user-specified depletion ",
                 'using a single core',
                 'for ', nsim, 'simulations,', np, ' stocks, and ', nf, 'fleets',
                 "(could take a while!)")
@@ -815,7 +814,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                 bRc=StockPars[[p]]$bR[x,],
                 Qc=0,
                 Fapic=0,
-                MPA=FleetPars[[p]][[1]]$MPA,
+                MPA=MPA[p,f,,],
                 maxF=maxF,
                 control=1,
                 SSB0c=StockPars[[p]]$SSB0[x],
@@ -2410,7 +2409,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     if (max(upyrs) < proyears) { # One more call to complete Data object
       # --- Update Data object ----
       upyrs2 <- upyrs[upyrs>0] 
-      if (length(upyrs2) ==1) upyrs2 <- c(upyrs2, proyears)
+      upyrs2 <- c(upyrs2, proyears)
       interval[mm] <- proyears
       for (p in 1:np) {
         for (f in 1:nf) {

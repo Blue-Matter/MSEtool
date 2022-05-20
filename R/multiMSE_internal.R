@@ -171,7 +171,7 @@ HistMICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, 
              Linfarrayx = Linfarrayx, t0arrayx = t0arrayx, Marrayx = Marrayx,
              R0x = R0x, R0ax = R0ax, SSBpRx = SSBpRx, hsx = hsx, aRx = aRx, bRx = bRx,
              ax = ax, bx = bx, Perrx = Perrx, SRrelx = SRrelx, Rel = Rel, SexPars = SexPars, x = x,
-             plusgroup = plusgroup, maxF = maxF, SSB0x = SSB0x, B0x = B0x)
+             plusgroup = plusgroup, maxF = maxF, SSB0x = SSB0x, B0x = B0x, MPA)
 
 }
 
@@ -257,30 +257,6 @@ multiDataS<-function(MSElist,StockPars,np,mm,nf,realVB){
       realVBi[,,i]<-realVB[,p,]
     }
   }
-  
- 
-  DBF[[1]]@CAL %>% class()
-  
-  for (sim in 1:2) {
-    for( y in 1:64) {
-      for (i in 1:6) {
-        print('*-------------*')
-        print(c(sim, y, i))
-        print(class(CAA[sim,y,,i]))
-        print('*-------------*')
-      }
-    }
-  }
-  
-  class(CAL[1,1,])
-  tt <- apply(CAL,1:3,sum)
-  
-  
-  
-  
-  SIL(DBF,"CAL")
-  
-  
 
   Dataout<-DBF[[1]]
 

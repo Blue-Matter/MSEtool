@@ -44,6 +44,7 @@
 #' @param maxF maximum F
 #' @param SSB0x SSB0 for this simulation
 #' @param B0x B0 for this simulation
+#' @param MPA An array of spatial closures by year `[np,nf,nyears+proyears,nareas]`
 #' @author T.Carruthers
 #' @keywords internal
 popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, FretAx, Effind,
@@ -51,7 +52,8 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
                        Asizex, WatAgex, Len_agex,
                        Karrayx, Linfarrayx, t0arrayx, Marrayx,
                        R0x, R0ax, SSBpRx, hsx, aRx,
-                       bRx, ax, bx, Perrx, SRrelx, Rel, SexPars, x, plusgroup, maxF, SSB0x, B0x) {
+                       bRx, ax, bx, Perrx, SRrelx, Rel, SexPars, x, plusgroup, maxF, SSB0x, B0x,
+                       MPA) {
 
   n_age <- maxage + 1 # include age-0
   Bx <- SSNx <- SSBx <- VBx <- Zx <- array(NA_real_, c(np, n_age, nyears, nareas))
@@ -82,13 +84,17 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
   Bx[Nind] <- Nx[Nind] * WatAgex[Nind[, 1:3]]
   
   for(y in 1:nyears + 1) { # Start loop at y = 2
+    MPAthisyr <- MPA[,,y-1,, drop=FALSE]
+    MPAthisyr <- abind::adrop(MPAthisyr, 3) # drop year dimension
     Nind[, 3] <- VBfind[, 4] <- y-1
     
     #    p f a r                  p a y r                   p f a y
     VBfx[VBfind] <- Bx[VBfind[, c(1,3,4,5)]] * VFx[VBfind[, 1:4]]
     VBcur[] <- VBfx[, , , y-1, ] # array(VBfx[,,,y-1,], c(np, nf, n_age, nareas))
     
-    Fdist[Find] <- VBcur[Find]^Spat_targ[Find[, 1:2]]
+    
+    
+    Fdist[Find] <- VBcur[Find]*MPAthisyr[Find[,c(1,2,4)]]^Spat_targ[Find[, 1:2]]
     Fdist[Find] <- Fdist[Find]/apply(Fdist,1:3,sum)[Find[,1:3]]
     Fdist[is.na(Fdist)] <- 0 # This is an NA catch for hermaphroditism
     

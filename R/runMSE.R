@@ -483,7 +483,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   # find the q that gives current stock depletion - optVB = depletion for vulnerable biomass else SB
   if (!is.null(SampCpars$qs)) {
     if(!silent)
-      message("Skipping optimization for depletion - using catchability (q) from OM@cpars.")
+      message_info("Skipping optimization for depletion - using catchability (q) from OM@cpars.")
     qs <- SampCpars$qs
   } else {
     if(!silent)
@@ -515,8 +515,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   # If q has hit bound, re-sample depletion and try again. Tries 'ntrials' times and then alerts user
   if (length(probQ) > 0) {
     Err <- TRUE
-    if(!silent) message(Nprob,' simulations have final biomass that is not close to sampled depletion')
-    if(!silent) message('Re-sampling depletion, recruitment error, and fishing effort')
+    if(!silent) message_info(Nprob,' simulations have final biomass that is not close to sampled depletion')
+    if(!silent) message_info('Re-sampling depletion, recruitment error, and fishing effort')
 
     count <- 0
     OM2 <- OM
@@ -564,14 +564,14 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
       tooHigh <- length(which(qs < min(LimBound)))
       prErr <- length(probQ)/nsim
       if (prErr > fracD & length(probQ) > 1) {
-        if (length(tooLow) > 0) message(tooLow, " sims can't get down to the lower bound on depletion")
-        if (length(tooHigh) > 0) message(tooHigh, " sims can't get to the upper bound on depletion")
-        if(!silent) message("More than ", fracD*100, "% of simulations can't get to the specified level of depletion with these Operating Model parameters")
+        if (length(tooLow) > 0) message_info(tooLow, " sims can't get down to the lower bound on depletion")
+        if (length(tooHigh) > 0) message_info(tooHigh, " sims can't get to the upper bound on depletion")
+        if(!silent) message_info("More than ", fracD*100, "% of simulations can't get to the specified level of depletion with these Operating Model parameters")
         stop("Change OM@seed and try again for a complete new sample, modify the input parameters, or increase OM@cpars$control$ntrials (default 50)")
       } else {
-        if (length(tooLow) > 0) message(tooLow, " sims can't get down to the lower bound on depletion")
-        if (length(tooHigh) > 0) message(tooHigh, " sims can't get to the upper bound on depletion")
-        if(!silent) message("More than ", 100-fracD*100, "% simulations can get to the sampled depletion.\nContinuing")
+        if (length(tooLow) > 0) message_info(tooLow, " sims can't get down to the lower bound on depletion")
+        if (length(tooHigh) > 0) message_info(tooHigh, " sims can't get to the upper bound on depletion")
+        if(!silent) message_info("More than ", 100-fracD*100, "% simulations can get to the sampled depletion.\nContinuing")
       }
     }
   }
