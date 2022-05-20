@@ -283,7 +283,7 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
 
     arma::vec d1(nareas);
     for (int A=0; A<nareas; A++) {
-      d1(A) = MPA(yr,A) * fishdist(A);// historical closures
+      d1(A) = MPA(yr+1,A) * fishdist(A);// historical closures
     }
     double fracE = sum(d1); // fraction of current effort in open areas
     arma::vec fracE2(nareas);
