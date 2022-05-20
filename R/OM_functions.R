@@ -235,7 +235,7 @@ Replace <- function(OM, from,Sub=c("Stock", "Fleet", "Obs", "Imp"),  Name=NULL, 
 #' @param OM An object of class 'OM'
 #' @param dist Character. Should parameters be sampled from a uniform (`unif`) or
 #' normal (`norm`) distribution?
-#' @param filterMK Logical. Should the predicted M and K parameters be filtered within the range specified in `inpars`or `OM`?
+#' @param filterMK Logical or numeric specifying percentiles. See Details. 
 #' e.g. `OM@M` and `OM@K`. Empty slots or slots with all values of 0 are considered unknown.
 #' @param plot Logical. Should the plot be produced?
 #' @param Class Optional higher order taxonomic information
@@ -252,6 +252,14 @@ Replace <- function(OM, from,Sub=c("Stock", "Fleet", "Obs", "Imp"),  Name=NULL, 
 #' @references Thorson, J. T., S. B. Munch, J. M. Cope, and J. Gao. 2017.
 #' Predicting life history parameters for all fishes worldwide. Ecological Applications. 27(8): 2262--2276
 #' @source \url{https://github.com/James-Thorson-NOAA/FishLife}
+#' 
+#' @details 
+#' ## filterMK
+#' If filterMK is logical: Should the predicted M and K parameters be filtered within the range specified in `inpars`or `OM`?
+#' 
+#' Otherwise, filterMK must be numeric vector of length(2) specifying lower and upper percentiles that will be applied 
+#' to the predicted M or K values
+#' 
 #' @export
 LH2OM <- function(OM, dist=c("unif", "norm"), filterMK=FALSE, plot=TRUE,
                   Class = "predictive", Order = "predictive",
@@ -409,18 +417,38 @@ predictLH <- function(inpars=list(), Genus="predictive", Species="predictive", n
     }
   }
   multi <- 100
-  filterM <- filterK <- FALSE
-  if (prod(c("K", "M") %in% names) & filterMK & !(all(is.na(inpars_1$K)) || all(is.na(inpars_1$M)))) {
+  if (is.logical(filterMK)) {
+    filter <- 'OM'
+    # filter M or K by bounds specified in OM
+    filterM <- filterK <- FALSE
+    if (prod(c("K", "M") %in% names) & filterMK & !(all(is.na(inpars_1$K)) || all(is.na(inpars_1$M)))) {
+      if (all(is.na(inpars$M))) {
+        filterM <- TRUE
+        if (msg) message_info("Filtering predicted M within bounds:", paste0(inpars_1$M, collapse = '-'))
+      }
+      if (all(is.na(inpars$K))) {
+        filterK <- TRUE
+        if (msg) message_info("Filtering predicted K within bounds:", paste0(inpars_1$K, collapse = '-'))
+      }
+      multi <- 500
+    }
+  }
+  if (is.numeric(filterMK)) {
+    # filter by percentile range
+    filter <- 'perc'
+    if (length(filterMK) !=2) 
+      stop('filterMK must be numeric values of length 2 (lower and upper percentiles) OR logical')
     if (all(is.na(inpars$M))) {
       filterM <- TRUE
-      if (msg) message("Filtering predicted M within bounds: ", paste0(inpars_1$M, " "))
+      if (msg) message_info("Filtering predicted M within percentiles:", paste0(filterMK, collapse = '-'))
     }
     if (all(is.na(inpars$K))) {
       filterK <- TRUE
-      if (msg) message("Filtering predicted K within bounds: ", paste0(inpars_1$K, " "))
+      if (msg) message_info("Filtering predicted K within percentiles:", paste0(filterMK, collapse = '-'))
     }
     multi <- 500
   }
+
 
   # get predictions from FishLife
   taxa <- gettaxa(Class, Order, Family, Genus, Species, msg=msg)
@@ -485,25 +513,38 @@ predictLH <- function(inpars=list(), Genus="predictive", Species="predictive", n
   ind <- Out$L50 > 0.95*Out$Linf
   Out <- Out[!ind,]
 
-  if(filterK) {
-    ind <- Out$K > min(inpars_1$K) & Out$K < max(inpars_1$K)
-    if (sum(ind)<2) {
-      warning('No samples of K within bounds: ', paste(as.character(inpars_1$K), collapse=" "),
-              "\nIgnoring bounds on K")
-    } else {
+  if (filter=='OM') {
+    if(filterK) {
+      ind <- Out$K > min(inpars_1$K) & Out$K < max(inpars_1$K)
+      if (sum(ind)<2) {
+        warning('No samples of K within bounds: ', paste(as.character(inpars_1$K), collapse=" "),
+                "\nIgnoring bounds on K")
+      } else {
+        Out <- Out[ind,]
+      }
+      
+    }
+    if (filterM) {
+      ind <- Out$M > min(inpars_1$M) & Out$M < max(inpars_1$M)
+      if (sum(ind)<2) {
+        warning('No samples of M within bounds: ', paste(as.character(inpars_1$M), collapse=" "),
+                "\nIgnoring bounds on M")
+      } else {
+        Out <- Out[ind,]
+      }
+    }
+  }
+  if (filter=='perc') {
+    if(filterK) {
+      ind <- Out$K > quantile(Out$K, filterMK[1]) & Out$K < quantile(Out$K, filterMK[2])
       Out <- Out[ind,]
     }
+    if (filterM) {
+      ind <- Out$M > quantile(Out$M, filterMK[1]) & Out$M < quantile(Out$M, filterMK[2])
+      Out <- Out[ind,]
+    }
+  }
 
-  }
-  if (filterM) {
-    ind <- Out$M > min(inpars_1$M) & Out$M < max(inpars_1$M)
-    if (sum(ind)<2) {
-      warning('No samples of M within bounds: ', paste(as.character(inpars_1$M), collapse=" "),
-              "\nIgnoring bounds on M")
-    } else {
-      Out <- Out[ind,]
-    }
-  }
 
   if(nrow(Out) < nsamp) {
     warning("Could not generate ", nsamp, ' samples within specified bounds. Sampling with replacement')
@@ -601,7 +642,7 @@ gettaxa <- function(Class = "predictive", Order = "predictive",
   }
   
   if (msg)
-    message('Loading FishBase database')
+    message_info('Loading FishBase database')
   Taxa_Table <- suppressMessages(rfishbase::load_taxa())
   Species2 <- strsplit(Taxa_Table$Species, " ")
   
@@ -664,16 +705,20 @@ gettaxa <- function(Class = "predictive", Order = "predictive",
   fam_gen_sp <- tolower(paste(match_taxonomy[3:5], collapse = '_'))
   nm_ind <- which(grepl(fam_gen_sp, tolower(ParentChild_gz$ChildName)))
   fullname <- gsub("_", " ", ParentChild_gz$ChildName[nm_ind])
+  if (length(fullname)>1)
+    fullname <- fullname[length(fullname)]
   
   ind <- !grepl("predictive", strsplit(fullname, " ")[[1]])
   if (all(!ind)) {
-    if (msg) message("Predicting from all species in FishBase")
+    if (msg) message_info("Predicting from all species in FishBase")
   } else if (any(!ind)) {
-    if (msg) message("Closest match: ", fullname)
+    if (msg) message_info("Closest match: ", fullname)
   } else {
-    if (msg) message("Species match: ", fullname)
+    if (msg) message_info("Species match: ", fullname)
   }
   match_taxonomy = unique(as.character(Add_predictive(ParentChild_gz$ChildName[nm_ind])))
+  if (length(match_taxonomy)>1)
+    match_taxonomy <- match_taxonomy[length(match_taxonomy)]
   match_taxonomy
 }
 
