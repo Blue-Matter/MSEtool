@@ -95,7 +95,7 @@ hierarchical model fitted to FishBase life-history parameters</p>
 <dd><p>Character. Should parameters be sampled from a uniform (<code>unif</code>) or
 normal (<code>norm</code>) distribution?</p></dd>
 <dt>filterMK</dt>
-<dd><p>Logical. Should the predicted M and K parameters be filtered within the range specified in <code>inpars</code>or <code>OM</code>?
+<dd><p>Logical or numeric specifying percentiles. See Details.
 e.g. <code>OM@M</code> and <code>OM@K</code>. Empty slots or slots with all values of 0 are considered unknown.</p></dd>
 <dt>plot</dt>
 <dd><p>Logical. Should the plot be produced?</p></dd>
@@ -129,7 +129,17 @@ predictLH: A data.frame with <code>nsamp</code> rows with <code>Linf</code>, <co
     </div>
     <div id="details">
     <h2>Details</h2>
-    <p>The model predicts missing life-history parameters based on provided parameters and taxonomic information.
+    
+<div class="section">
+<h3 id="filtermk">filterMK<a class="anchor" aria-label="anchor" href="#filtermk"></a></h3>
+
+
+<p>If filterMK is logical: Should the predicted M and K parameters be filtered within the range specified in <code>inpars</code>or <code>OM</code>?</p>
+<p>Otherwise, filterMK must be numeric vector of length(2) specifying lower and upper percentiles that will be applied
+to the predicted M or K values</p>
+</div>
+
+<p>The model predicts missing life-history parameters based on provided parameters and taxonomic information.
 If both <em>M</em> and <em>K</em> are provided in <code>inpars</code> or  <code>OM</code>, <em>K</em> values are predicted and predictions filtered
 so that resulting <em>K</em> values are within bounds specified in <code>inpars$K</code> or <code>OM@K</code> (see <code>filterMK</code>).</p>
 <p>If both <em>Linf</em> and <em>L50</em> are provided in <code>inpars</code> or <code>OM</code>, <em>L50</em> values are predicted and values in <code>inpars$L50</code>
