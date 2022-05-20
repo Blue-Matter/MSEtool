@@ -50,7 +50,8 @@ qestMICE(
   VB0x,
   B0x,
   WtCx,
-  maxF
+  maxF,
+  MPA
 )
 }
 \arguments{
@@ -129,6 +130,11 @@ qestMICE(
 \item{VB0x}{Vector \verb{[stock]} unfished vulnerable biomass}
 
 \item{B0x}{Vector \verb{[stock]} unfished total biomass}
+
+\item{maxF}{A numeric value specifying the maximum fishing mortality for any
+single age class}
+
+\item{MPA}{An array of spatial closures by year \verb{[np,nf,nyears+proyears,nareas]}}
 
 \item{mod}{Character if 'opt' qestMICE returns the objective function otherwise the fitted values in a list}
 

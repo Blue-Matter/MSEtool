@@ -55,7 +55,7 @@ only the values from the first year are used}
 \item{maxF}{A numeric value specifying the maximum fishing mortality for any
 single age class}
 
-\item{MPA}{An of spatial closures by year \verb{[np,nf,nyears+proyears,nareas]}}
+\item{MPA}{An array of spatial closures by year \verb{[np,nf,nyears+proyears,nareas]}}
 
 \item{CatchFrac}{A list of stock-specific fleet fractions of current catch
 list\verb{[[stock]][nsim, nf]}}

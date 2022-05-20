@@ -41,7 +41,7 @@ predictLH(
 \item{dist}{Character. Should parameters be sampled from a uniform (\code{unif}) or
 normal (\code{norm}) distribution?}
 
-\item{filterMK}{Logical. Should the predicted M and K parameters be filtered within the range specified in \code{inpars}or \code{OM}?
+\item{filterMK}{Logical or numeric specifying percentiles. See Details.
 e.g. \code{OM@M} and \code{OM@K}. Empty slots or slots with all values of 0 are considered unknown.}
 
 \item{plot}{Logical. Should the plot be produced?}
@@ -78,6 +78,14 @@ Predict missing life-history based on taxonomic information and
 hierarchical model fitted to FishBase life-history parameters
 }
 \details{
+\subsection{filterMK}{
+
+If filterMK is logical: Should the predicted M and K parameters be filtered within the range specified in \code{inpars}or \code{OM}?
+
+Otherwise, filterMK must be numeric vector of length(2) specifying lower and upper percentiles that will be applied
+to the predicted M or K values
+}
+
 The model predicts missing life-history parameters based on provided parameters and taxonomic information.
 If both \emph{M} and \emph{K} are provided in \code{inpars} or  \code{OM}, \emph{K} values are predicted and predictions filtered
 so that resulting \emph{K} values are within bounds specified in \code{inpars$K} or \code{OM@K} (see \code{filterMK}).

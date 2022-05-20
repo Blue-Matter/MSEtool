@@ -44,7 +44,8 @@ popdynMICE(
   plusgroup,
   maxF,
   SSB0x,
-  B0x
+  B0x,
+  MPA
 )
 }
 \arguments{
@@ -129,6 +130,8 @@ relationship (1 = Beverton-Holt, 2= Ricker)}
 \item{SSB0x}{SSB0 for this simulation}
 
 \item{B0x}{B0 for this simulation}
+
+\item{MPA}{An array of spatial closures by year \verb{[np,nf,nyears+proyears,nareas]}}
 }
 \description{
 Calls popdynOneMICE iteratively to reconstruct a time series given MICE model inputs
