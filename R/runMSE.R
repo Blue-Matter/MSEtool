@@ -5,6 +5,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   # ---- Initial Checks and Setup ----
   if (class(OM) == 'OM') {
     if (OM@nsim <=1) stop("OM@nsim must be > 1", call.=FALSE)
+    OM <- CheckOM(OM, msg=!silent)
 
   } else if (class(OM) == 'Hist') {
     if (!silent) message("Using `Hist` object to reproduce historical dynamics")

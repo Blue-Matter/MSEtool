@@ -105,7 +105,7 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
 
   # CparsInfo <- MSEtool:::cpars_info # get internal data from sysdata
   CparsInfo <- cpars_info # get internal data from sysdata - above for debugging
-
+  CparsInfo <- CparsInfo[CparsInfo$ValidCpars==TRUE,]
   CNames <- names(cpars)
   ValNames <- CparsInfo$Var
 
@@ -123,12 +123,12 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
   valid <- which(CNames %in% ValNames)
   cpars <- cpars[valid]
   if (length(valid) == 0) {
-    message("No valid names found in custompars. Ignoring `OM@cpars`")
+    message_info("No valid names found in custompars. Ignoring `OM@cpars`")
     return(list())
   }
   CNames <- names(cpars)
   outNames <- paste(CNames, "")
-  if(!silent) message("Valid custom parameters found: \n", paste0(outNames, collapse="\n"))
+  if(!silent) message_info("Valid custom parameters found: \n", paste0(outNames, collapse="\n"))
 
   # ---- Sample custom pars ----
 
@@ -1766,6 +1766,8 @@ validcpars <- function(type=c("all", "Stock", "Fleet", "Obs", "Imp", "internal")
   # cpars_info <- MSEtool:::cpars_info
   # cpars_info <- cpars_info[!duplicated(cpars_info$Slot),] # remove duplicated 'Name'
 
+  cpars_info <- cpars_info[cpars_info$ValidCpars==TRUE,]
+  
   cpars_info$type <- NA
   stock_ind <- match(slotNames("Stock"), cpars_info$Var)
   fleet_ind <- match(slotNames("Fleet"), cpars_info$Var)
@@ -1797,8 +1799,8 @@ validcpars <- function(type=c("all", "Stock", "Fleet", "Obs", "Imp", "internal")
 
   dfout <- do.call("rbind", dflist)
   if (is.null(dfout)) {
-    if (valid) message("No valid  parameters")
-    if (!valid) message("No invalid parameters")
+    if (valid) message_info("No valid  parameters")
+    if (!valid) message_info("No invalid parameters")
   }
 
   dfout$Type <- as.factor(dfout$Type)
@@ -1811,7 +1813,7 @@ validcpars <- function(type=c("all", "Stock", "Fleet", "Obs", "Imp", "internal")
                              pageLength = 25, autoWidth = TRUE))
       )
     } else {
-      message("Install package `DT` to display dataframe as HTML table")
+      message_info("Install package `DT` to display dataframe as HTML table")
       return(dfout)
     }
   }

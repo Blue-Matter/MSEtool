@@ -735,3 +735,126 @@ Add_predictive = function(char_vec) {
 
 
 
+
+#' Check OM object is complete
+#'
+#' @param OM An object of class `OM` 
+#' @param msg Logical. Display messages?
+#' @param stop_if_missing Logical. Stop with error is values are missing and there is no default?
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' testOM <- CheckOM(testOM)
+CheckOM <- function(OM, msg=TRUE, stop_if_missing=TRUE) {
+  if (msg)
+    message_info('Checking OM for completeness')
+  
+  nms <- slotNames('OM')
+  not_needed <-c("Name", "Agency", "Region", "Sponsor", "Latitude", 'Longitude', 'cpars',
+                 'Source', 'Common_Name', 'Species', 'Misc')
+  nms <- nms[!nms%in%not_needed]
+  
+  for (slot in nms) {
+    OM <- checkSlot(slot, OM, msg=msg, stop_if_missing=stop_if_missing) 
+  }
+  OM
+}
+
+
+checkSlot <- function(slot, OM, msg=TRUE, stop_if_missing=TRUE) {
+  
+  # additional
+  df2 <- data.frame(Var=c('nsim', 'interval', 'proyears', 'reps', 'pstar',
+                          'maxF', 'seed'),
+                    Dim=NA,
+                    Desc=NA,
+                    Type=NA,
+                    DimOM=c(1,1, 1,1, 1,1,1),
+                    Default=c('48', '1', '50', '1', '0.5','0.8', '101'),
+                    Comment=NA)
+  df <- dplyr::bind_rows(cpars_info, df2)
+  df <- dplyr::filter(df, Var==slot)
+  if (nrow(df)>1) df <- df[1,]
+  
+  val <- methods::slot(OM, slot)
+  if(length(val)==0) {
+    # slot is missing value - check cpars
+    cpars_val <- OM@cpars[[slot]]
+    if (!is.null(cpars_val)) {
+      # values in cpars
+      methods::slot(OM, slot) <- range(cpars_val)
+    } else {
+      # missing - check for default
+      OM <- checkDefault(OM, slot, df, msg, stop_if_missing)  
+    }
+    
+  }
+  # check length 
+  val <- methods::slot(OM, slot)
+  
+  if (length(val)==0) return(OM) # will have stopped with error unless stop_if_missing=FALSE
+  
+  if (!is.na(df$DimOM)) {
+    if (length(val) != df$DimOM) {
+      if (length(val)==1 & df$DimOM==2) {
+        if (msg) 
+          message_info(
+            'slot', slot, 'has only one value', paste0('(', val, '). Using this value for both lower and upper bounds.')
+          )
+        methods::slot(OM, slot) <- rep(val, 2)
+      }
+      if (length(val)==2 & df$DimOM==1) {
+        if (msg) 
+          message_info(
+            'slot', slot, 'has only two values, but only one required. Using first value', paste0('(', val[1], ').')
+          )
+        methods::slot(OM, slot) <- val
+      }
+      if (length(val)>2 & df$DimOM<=2) {
+        n <- df$DimOM
+        if (msg) 
+          message_info(
+            'slot', slot, 'has more than', n, 'values. Using first ', n, 'value(s)', paste0('(', val[1:n], ').')
+          )
+        methods::slot(OM, slot) <- val[1:n]
+      }
+    }
+  }
+    
+
+  OM
+}
+
+
+checkDefault <- function(OM,slot, df, msg=TRUE, stop_if_missing=TRUE) {
+  if (nrow(df)>1) df <- df[1,]
+  default <- df$Default
+  if (length(default)<1) default <- NA
+  
+  if (nrow(df)==0 | is.na(default)) {
+    # no default
+    if (stop_if_missing)
+      stop('Slot ', slot, ' is missing required value(s)', call.=FALSE)
+    
+    
+  } else if (grepl('`', default)) {
+    # it's code
+    
+  } else if (grepl('TRUE', default) | grepl('FALSE', default)) {
+    # it's a logical
+  } else {
+    # it's numeric
+    default <- as.numeric(default)
+    methods::slot(OM, slot) <- rep(default, df$DimOM)
+    if (msg) 
+      message_info(
+        'slot', slot, 'is missing value(s). Using default value of:', default
+      )
+  }
+  OM
+}
+
+
+

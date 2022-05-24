@@ -478,8 +478,18 @@ getDescription("MSE", Outloc=Outloc)
 ### Add cpars_info to sysdata.rdata ####
 makeDF <- function(df_in, type=NULL) {
   df_in$ValidCpars[is.na(df_in$ValidCpars)] <- TRUE
-  df_in <- df_in %>% dplyr::filter(ValidCpars!=FALSE)
-  data.frame(Var=df_in$Slot, Dim=df_in$Cpars_dim, Desc=df_in$Cpars_desc, Type=type)
+  # df_in <- df_in %>% dplyr::filter(ValidCpars!=FALSE)
+  df_out <- data.frame(Var=df_in$Slot, Dim=df_in$Cpars_dim, Desc=df_in$Cpars_desc, Type=type,
+                       DimOM=df_in$Dim,
+                       ValidCpars=df_in$ValidCpars)
+  if (!is.null(df_in$Default)) {
+    df_out$Default <- as.character(df_in$Default)
+    df_out$Comment <- as.character(df_in$Comment)
+  } else {
+    df_out$Default <- as.character(NA)
+    df_out$Comment <- as.character(NA)
+  }
+  df_out
 }
 
 cpars_Stock <- openxlsx::read.xlsx("build_tools/Class_definitions/Class_definitions.xlsx",

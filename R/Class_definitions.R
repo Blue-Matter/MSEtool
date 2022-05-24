@@ -790,7 +790,9 @@ setMethod("initialize", "OM", function(.Object, Stock=NULL, Fleet=MSEtool::Gener
                                        interval=4, pstar=0.5, maxF=0.8, reps=1, nsim=48, proyears=50) {
   if (is.null(Stock)) {
     # message("No Stock object found. Returning a blank OM object")
-    .Object@seed <- 1
+    
+    # Check and add defaults
+    .Object <- CheckOM(.Object, msg=FALSE, stop_if_missing=FALSE)
     return(.Object)
   }
 
@@ -843,30 +845,33 @@ setMethod("initialize", "OM", function(.Object, Stock=NULL, Fleet=MSEtool::Gener
   if (.hasSlot(.Object, "maxF")) .Object@maxF <- maxF
   if (.hasSlot(.Object, "reps")) .Object@reps <- reps
 
-  if(length(.Object@LenCV) < 2) .Object@LenCV <- c(0.08,0.15)
-  if(length(.Object@CurrentYr)==0).Object@CurrentYr=.Object@nyears
-
-  # if(length(.Object@FecB) < 2) .Object@FecB <- c(3,3)
-  # if(all(is.na(.Object@FecB))) .Object@FecB <- c(3,3)
-  if(all(is.na(.Object@LenCV))) .Object@LenCV <- c(0.08,0.15)
-  if(all(is.na(.Object@CurrentYr))) .Object@CurrentYr=.Object@nyears
-
-  if(length(.Object@LR5) < 2) .Object@LR5 <- c(0,0)
-  if(length(.Object@LFR) < 2) .Object@LFR <- c(0,0)
-  if(length(.Object@Rmaxlen) < 2) .Object@Rmaxlen <- c(1,1)
-  if(length(.Object@Fdisc) < 2) .Object@Fdisc <- c(0,0)
-
-  if(all(is.na(.Object@LR5))) .Object@LR5 <- c(0,0)
-  if(all(is.na(.Object@LFR))) .Object@LFR <- c(0,0)
-  if(all(is.na(.Object@Rmaxlen))) .Object@Rmaxlen <- c(1,1)
-  if(all(is.na(.Object@Fdisc))) .Object@Fdisc <- c(0,0)
-
-  if (.hasSlot(.Object, "Size_area_1")) {
-    if (length(.Object@Size_area_1)==0) .Object@Size_area_1 <- .Object@Frac_area_1
-    if (all(is.na(.Object@Size_area_1))) .Object@Size_area_1 <- .Object@Frac_area_1
-  }
-
-  .Object@seed=1
+  # Check and add defaults
+  .Object <- CheckOM(.Object, msg=FALSE, stop_if_missing=FALSE)
+  
+  # if(length(.Object@LenCV) < 2) .Object@LenCV <- c(0.08,0.15)
+  # if(length(.Object@CurrentYr)==0).Object@CurrentYr=.Object@nyears
+  # 
+  # # if(length(.Object@FecB) < 2) .Object@FecB <- c(3,3)
+  # # if(all(is.na(.Object@FecB))) .Object@FecB <- c(3,3)
+  # if(all(is.na(.Object@LenCV))) .Object@LenCV <- c(0.08,0.15)
+  # if(all(is.na(.Object@CurrentYr))) .Object@CurrentYr=.Object@nyears
+  # 
+  # if(length(.Object@LR5) < 2) .Object@LR5 <- c(0,0)
+  # if(length(.Object@LFR) < 2) .Object@LFR <- c(0,0)
+  # if(length(.Object@Rmaxlen) < 2) .Object@Rmaxlen <- c(1,1)
+  # if(length(.Object@Fdisc) < 2) .Object@Fdisc <- c(0,0)
+  # 
+  # if(all(is.na(.Object@LR5))) .Object@LR5 <- c(0,0)
+  # if(all(is.na(.Object@LFR))) .Object@LFR <- c(0,0)
+  # if(all(is.na(.Object@Rmaxlen))) .Object@Rmaxlen <- c(1,1)
+  # if(all(is.na(.Object@Fdisc))) .Object@Fdisc <- c(0,0)
+  # 
+  # if (.hasSlot(.Object, "Size_area_1")) {
+  #   if (length(.Object@Size_area_1)==0) .Object@Size_area_1 <- .Object@Frac_area_1
+  #   if (all(is.na(.Object@Size_area_1))) .Object@Size_area_1 <- .Object@Frac_area_1
+  # }
+  # 
+  # .Object@seed=1
   .Object
 })
 
