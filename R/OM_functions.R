@@ -742,7 +742,7 @@ Add_predictive = function(char_vec) {
 #' @param msg Logical. Display messages?
 #' @param stop_if_missing Logical. Stop with error is values are missing and there is no default?
 #'
-#' @return
+#' @return The OM object with default values (if needed)
 #' @export
 #'
 #' @examples
@@ -766,6 +766,7 @@ CheckOM <- function(OM, msg=TRUE, stop_if_missing=TRUE) {
 checkSlot <- function(slot, OM, msg=TRUE, stop_if_missing=TRUE) {
   
   # additional
+  Var <- NULL # CRAN check hack
   df2 <- data.frame(Var=c('nsim', 'interval', 'proyears', 'reps', 'pstar',
                           'maxF', 'seed'),
                     Dim=NA,
