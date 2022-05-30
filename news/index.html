@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.4.9999</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.0</span>
       </span>
     </div>
 
@@ -48,14 +48,11 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="3.4.9999" id="msetool-349999---development-version">MSEtool 3.4.9999 - Development Version<a class="anchor" aria-label="anchor" href="#msetool-349999---development-version"></a></h2>
+<h2 class="page-header" data-toc-text="3.5.0" id="msetool-350">MSEtool 3.5.0<a class="anchor" aria-label="anchor" href="#msetool-350"></a></h2>
 <div class="section level3">
-<h3 id="fixes-3-4-9999">Fixes<a class="anchor" aria-label="anchor" href="#fixes-3-4-9999"></a></h3>
-<ul><li>fix to fleet-specific vulnerable biomass provided to <code>MMPs</code>
-</li></ul></div>
-<div class="section level3">
-<h3 id="new-additions-3-4-9999">New additions<a class="anchor" aria-label="anchor" href="#new-additions-3-4-9999"></a></h3>
-<ul><li>historical MPAs now work in <code>multiMSE</code>
+<h3 id="new-additions-3-5-0">New additions<a class="anchor" aria-label="anchor" href="#new-additions-3-5-0"></a></h3>
+<ul><li>added check for <code>OM</code> completeness and default values for some parameters</li>
+<li>historical MPAs now work in <code>multiMSE</code>
 </li>
 <li>argument <code>parallel</code> in <code>runMSE</code> can takes a named list of MPs</li>
 <li>two new functions <code>WHAM2OM</code> and <code>ASAP2OM</code> to import assessments into operating models</li>
@@ -65,8 +62,10 @@
 <code>Assess2OM</code> supports Ricker stock-recruit relationship.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="minor-changes-3-4-9999">Minor changes<a class="anchor" aria-label="anchor" href="#minor-changes-3-4-9999"></a></h3>
-<ul><li>updated code for conditioning observation parameters on observed indices</li>
+<h3 id="minor-changes-3-5-0">Minor changes<a class="anchor" aria-label="anchor" href="#minor-changes-3-5-0"></a></h3>
+<ul><li>fix to fleet-specific vulnerable biomass provided to <code>MMPs</code>
+</li>
+<li>updated code for conditioning observation parameters on observed indices</li>
 <li>add message showing range of estimated von Bert. parameters when <code>OM@cpars$Len_age</code> is provided.</li>
 <li>fix bug in SSBpR for 2-sex <code>MOM</code> (introduced in 3.4.0)</li>
 <li>pass projected OM abundance and SSB arrays to <code>Data@Misc$StockPars</code> (slot <code>N_P</code>, <code>SSB_P</code>, etc.) during closed-loop</li>
