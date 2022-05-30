@@ -14,7 +14,7 @@ CheckOM(OM, msg = TRUE, stop_if_missing = TRUE)
 \item{stop_if_missing}{Logical. Stop with error is values are missing and there is no default?}
 }
 \value{
-
+The OM object with default values (if needed)
 }
 \description{
 Check OM object is complete
