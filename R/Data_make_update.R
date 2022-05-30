@@ -603,11 +603,15 @@ simCAA <- function(nsim, yrs, n_age, Cret, CAA_ESS, CAA_nsamp) {
         CAA[i, j, ] <- 0
       } else {
         if(CAA_ESS[i] < 1) {
-          log_PAA <- log(Cret[i, , j]/sum(Cret[i, , j]))
-          vcov_PAA <- (CAA_ESS[i] * log_PAA)^2 * diag(length(log_PAA))
-
-          samp_PAA <- mvtnorm::rmvnorm(1, log_PAA, vcov_PAA) %>% ilogitm()
-          CAA[i, j, ] <- CAA_nsamp[i] * samp_PAA
+          if(CAA_ESS[i] <= 0) {
+            CAA[i, j, ] <- 0
+          } else {
+            log_PAA <- log(Cret[i, , j]/sum(Cret[i, , j]))
+            vcov_PAA <- (CAA_ESS[i] * log_PAA)^2 * diag(length(log_PAA))
+            
+            samp_PAA <- mvtnorm::rmvnorm(1, log_PAA, vcov_PAA) %>% ilogitm()
+            CAA[i, j, ] <- CAA_nsamp[i] * samp_PAA
+          }
         } else {
           CAA[i, j, ] <- ceiling(-0.5 + rmultinom(1, CAA_ESS[i], Cret[i, ,j]) * CAA_nsamp[i]/CAA_ESS[i])
         }

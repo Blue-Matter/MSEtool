@@ -797,7 +797,7 @@ checkSlot <- function(slot, OM, msg=TRUE, stop_if_missing=TRUE) {
   if (length(val)==0) return(OM) # will have stopped with error unless stop_if_missing=FALSE
   
   if (!is.na(df$DimOM)) {
-    if (length(val) != df$DimOM) {
+    if (length(val) != df$DimOM) { # check for correct length
       if (length(val)==1 & df$DimOM==2) {
         if (msg) 
           message_info(
@@ -808,7 +808,7 @@ checkSlot <- function(slot, OM, msg=TRUE, stop_if_missing=TRUE) {
       if (length(val)==2 & df$DimOM==1) {
         if (msg) 
           message_info(
-            'slot', slot, 'has only two values, but only one required. Using first value', paste0('(', val[1], ').')
+            'slot', slot, 'has two values, but only one required. Using first value', paste0('(', val[1], ').')
           )
         methods::slot(OM, slot) <- val
       }
@@ -822,7 +822,20 @@ checkSlot <- function(slot, OM, msg=TRUE, stop_if_missing=TRUE) {
       }
     }
   }
-    
+  
+  # check for NAs
+  if (any(is.na(val))) {
+    # slot is missing value - check cpars
+    cpars_val <- OM@cpars[[slot]]
+    if (!is.null(cpars_val)) {
+      # values in cpars
+      methods::slot(OM, slot) <- range(cpars_val)
+    } else {
+      # missing - check for default
+      OM <- checkDefault(OM, slot, df, msg, stop_if_missing)  
+    }
+  }
+  
 
   OM
 }
@@ -834,16 +847,34 @@ checkDefault <- function(OM,slot, df, msg=TRUE, stop_if_missing=TRUE) {
   if (length(default)<1) default <- NA
   
   if (nrow(df)==0 | is.na(default)) {
-    # no default
-    if (stop_if_missing)
-      stop('Slot ', slot, ' is missing required value(s)', call.=FALSE)
     
+    # parameter calculated internally
+    growth_pars <- c('Linf', 'K', 't0')
+    if (slot %in% growth_pars & !is.null(OM@cpars$Len_age)) {
+      if (msg) {
+        message_info(
+        'slot', slot, 'is missing value(s). Will be calculated from `OM@cpars$Len_age`'
+        )
+      }
+      
+    } else {
+      # no default
+      if (stop_if_missing)
+        stop('Slot ', slot, ' is missing required value(s)', call.=FALSE)
+      
+    }
     
   } else if (grepl('`', default)) {
     # it's code
-    
+    code <- gsub('`', '', default)
+    methods::slot(OM, slot) <- as.numeric(eval(parse(text=code)))
+    if (msg) 
+      message_info(
+        'slot', slot, 'is missing value(s). Using default value of:', methods::slot(OM, slot)
+      )
   } else if (grepl('TRUE', default) | grepl('FALSE', default)) {
     # it's a logical
+    methods::slot(OM, slot) <- as.logical(default)
   } else {
     # it's numeric
     default <- as.numeric(default)

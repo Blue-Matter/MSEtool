@@ -629,7 +629,7 @@ setMethod("initialize", "Obs", function(.Object, file = NA, dec=c(".", ",")) {
       .Object@CAL_ESS <- as.numeric(dat[match("CAL_ESS", dname), 1:2])
       .Object@Iobs <- as.numeric(dat[match("Iobs", dname), 1:2])
       .Object@Btobs <- as.numeric(dat[match("Btobs", dname), 1:2])
-      .Object@Btbiascv <- as.numeric(dat[match("Btbiascv", dname), 1:2])
+      .Object@Btbiascv <- as.numeric(dat[match("Btbiascv", dname), 1])
       .Object@beta <- as.numeric(dat[match("beta", dname), 1:2])
       .Object@LenMbiascv <- as.numeric(dat[match("LenMbiascv", dname), 1])
       .Object@Mbiascv <- as.numeric(dat[match("Mbiascv", dname), 1])

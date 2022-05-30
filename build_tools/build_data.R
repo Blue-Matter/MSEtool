@@ -307,11 +307,11 @@ for (sl in slts) {
   cls <- class(slot(tData, sl) )
 
   if ("matrix" %in% cls) {
-    slot(tData, sl) <-  get(cls)(NA)
+    slot(tData, sl) <-  matrix(NA)
   } else if ("integer" %in% cls) {
-    slot(tData, sl) <-  get(cls)(0)
+    slot(tData, sl) <-  0
   } else if ("array" %in% cls){
-    slot(tData, sl) <-  get(cls)(0)
+    slot(tData, sl) <-  array(0)
   } else{
     slot(tData, sl) <- as.numeric(NA)
   }

@@ -118,6 +118,9 @@ XL2OM <- function(name=NULL, cpars=NULL, msg=TRUE) {
       stop("'cpars' must be a list", call.=FALSE)
     }
   }
+  
+  OM <- CheckOM(OM)
+  
   # tt <- ChkObj(OM, FALSE)
   if (msg) {
     message('OM successfully imported\n')

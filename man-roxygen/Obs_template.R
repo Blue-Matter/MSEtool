@@ -77,7 +77,7 @@
 #'  drawn from this distribution, and that bias is applied across all years.
 #'  Positive real numbers.
 #' @slot Mbiascv Log-normal coefficient of variation for sampling bias in
-#'  observed natural mortality rate. Uniform distribution lower and upper bounds.
+#'  observed natural mortality rate. 
 #'  Mbiascv is a single value specifying the standard deviation of a log-normal
 #'  distribution with a mean of 1 and a standard deviation equal to the sampled CV.
 #'  For each simulation a bias value is drawn from this distribution, and that bias
