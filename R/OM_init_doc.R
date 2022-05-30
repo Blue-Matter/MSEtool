@@ -445,7 +445,7 @@ OMdoc <- function(OM=NULL, rmd.source=NULL, overwrite=FALSE, out.file=NULL,
     } else if (tools::file_ext(rmd.source) != "rmd") stop("rmd.source extension must be rmd", call.=FALSE)
 
     if (!file.exists(file.path(dir,rmd.source))) stop(rmd.source, " not found in ", dir, call.=FALSE)
-    message("Reading ", file.path(dir,rmd.source))
+    message_info("Reading ", file.path(dir,rmd.source))
     textIn <- readLines(file.path(dir,rmd.source))
   }
 
@@ -596,7 +596,7 @@ OMdoc <- function(OM=NULL, rmd.source=NULL, overwrite=FALSE, out.file=NULL,
                   changed[sl] <- TRUE
                 } else if (length(oldOM)>0){
                   for (xx in 1:length(oldOM)) {
-                    if (class(oldOM[[xx]])!='Data')
+                    if (!inherits(oldOM[[xx]], 'Data'))
                       if(any(oldOM[[xx]] != newOM[[xx]]))changed[sl] <- TRUE
 
                   }
@@ -767,6 +767,9 @@ OMdoc <- function(OM=NULL, rmd.source=NULL, overwrite=FALSE, out.file=NULL,
     }
 
     if (length(OM@cpars$Find)>0) {
+      fstYr <- (OM@CurrentYr -  OM@nyears + 1)
+      lstYr <- OM@CurrentYr
+      EffYears <-fstYr:lstYr
       lower <- as.numeric(signif(apply(OM@cpars$Find, 2, min),3))
       upper <- as.numeric(signif(apply(OM@cpars$Find, 2, max),3))
       Effvals <- data.frame(EffYears=EffYears, EffLower=lower, EffUpper=upper)
