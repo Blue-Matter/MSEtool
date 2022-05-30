@@ -172,7 +172,8 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   D <- SSB[,nyears]/SSB0
 
   OM@Name <- Name
-  OM@M<-OM@L50<-OM@L50_95<-OM@a<-OM@b<-OM@L5<-OM@LFS<-OM@Vmaxlen <-c(1,1)
+  OM@M<-OM@L50<-OM@L50_95<-OM@L5<-OM@LFS<-OM@Vmaxlen <-c(1,1)
+  OM@a<-OM@b<-1
 
   # Dimensions
   OM@nsim<-nsim

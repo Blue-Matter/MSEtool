@@ -444,7 +444,7 @@ OMdoc <- function(OM=NULL, rmd.source=NULL, overwrite=FALSE, out.file=NULL,
       rmd.source <- paste0(rmd.source, ".rmd")
     } else if (tools::file_ext(rmd.source) != "rmd") stop("rmd.source extension must be rmd", call.=FALSE)
 
-    if (!file.exists(rmd.source)) stop(rmd.source, " not found in ", dir, call.=FALSE)
+    if (!file.exists(file.path(dir,rmd.source))) stop(rmd.source, " not found in ", dir, call.=FALSE)
     message("Reading ", file.path(dir,rmd.source))
     textIn <- readLines(file.path(dir,rmd.source))
   }
@@ -596,7 +596,8 @@ OMdoc <- function(OM=NULL, rmd.source=NULL, overwrite=FALSE, out.file=NULL,
                   changed[sl] <- TRUE
                 } else if (length(oldOM)>0){
                   for (xx in 1:length(oldOM)) {
-                    if(any(oldOM[[xx]] != newOM[[xx]]))changed[sl] <- TRUE
+                    if (class(oldOM[[xx]])!='Data')
+                      if(any(oldOM[[xx]] != newOM[[xx]]))changed[sl] <- TRUE
 
                   }
                 }

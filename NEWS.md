@@ -1,12 +1,6 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
-# MSEtool 3.4.9999 - Development Version
-
-
-
-
-## Fixes
-- fix to fleet-specific vulnerable biomass provided to `MMPs`
+# MSEtool 3.5.0
 
 ## New additions
 - added check for `OM` completeness and default values for some parameters
@@ -17,6 +11,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 - `Assess2OM` supports Ricker stock-recruit relationship.
 
 ## Minor changes
+- fix to fleet-specific vulnerable biomass provided to `MMPs`
 - updated code for conditioning observation parameters on observed indices
 - add message showing range of estimated von Bert. parameters when `OM@cpars$Len_age` is provided.
 - fix bug in SSBpR for 2-sex `MOM` (introduced in 3.4.0)

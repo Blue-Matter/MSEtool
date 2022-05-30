@@ -159,6 +159,7 @@ Calc_Stats <- function(res) {
 Gen_Residuals <- function(df, nsim, proyears) {
   sd <- df$SD
   ac <- df$AC
+  ac[!is.finite(ac)] <- 0
   lst.err <- df$lst.err
   if (all(is.na(sd))) return(rep(NA, nsim))
   mu <- -0.5 * (sd)^2 * (1 - ac)/sqrt(1 - ac^2)

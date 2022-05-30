@@ -766,7 +766,7 @@ UpdateObs <- function(sl, obsval, OMval, RealData, SimData, msg){
   SimVal <- slot(SimData, sl)
   if (!is.na(RealVal) & !all(SimVal == tiny)) {
     if (msg)
-      message(paste0('Updating Observation Error for `OM@cpars$Data@', sl, '`'))
+      message_info(paste0('Updating Observation Error for `OM@cpars$Data@', sl, '`'))
     
     # bias
     if (sl == 'vbt0') {
@@ -785,7 +785,7 @@ UpdateSlot <- function(sl, RealData, SimData, msg) {
   SimVal <- slot(SimData, sl)
   if (!is.na(RealVal) & !all(SimVal == tiny)) {
     if (msg)
-      message(paste0('Using `OM@cpars$Data@', sl, '` (', RealVal, ')'))
+      message_info(paste0('Using `OM@cpars$Data@', sl, '` (', RealVal, ')'))
     nrep <- length(slot(SimData, sl))
 
     return(rep(RealVal, nrep))
@@ -922,21 +922,21 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     Cerr <- cbind(Cerr, Cerr_proj)
 
     if(!is.null(SampCpars$Cobs_y)) {
-      if (msg) message('Catch observation error detected in cpars (`cpars$Cobs_y`). Not updating catch obs error')
+      if (msg) message_info('Catch observation error detected in cpars (`cpars$Cobs_y`). Not updating catch obs error')
     } else {
       if(!is.null(SampCpars$Cbias)) {
-        if (msg) message('Catch Cbias detected in cpars (`cpars$Cbias`). Not updating catch bias')
+        if (msg) message_info('Catch Cbias detected in cpars (`cpars$Cbias`). Not updating catch bias')
       } else {
-        if (msg) message('Updating Catch bias from `OM@cpars$Data@Cat`')
+        if (msg) message_info('Updating Catch bias from `OM@cpars$Data@Cat`')
         ObsPars$Cbias <- Cbias[,1]
       }
       if(!is.null(SampCpars$Cerr_y)) {
-        if (msg) message('Catch variability detected in cpars (`cpars$Cerr_y`). Not updating catch error')
+        if (msg) message_info('Catch variability detected in cpars (`cpars$Cerr_y`). Not updating catch error')
       } else {
-        if (msg) message('Updating Catch variability from `OM@cpars$Data@Cat`')
+        if (msg) message_info('Updating Catch variability from `OM@cpars$Data@Cat`')
         ObsPars$Cerr_y <- Cerr
       }
-      if (msg)  message('Updating catch observation error from `OM@cpars$Data@Cat`')
+      if (msg)  message_info('Updating catch observation error from `OM@cpars$Data@Cat`')
       ObsPars$Cobs_y <- Cerr * Cbias
     }
   }
@@ -979,22 +979,22 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     if (!is.null(SampCpars$AddIbeta)) {
       if (any(dim(SampCpars$AddIbeta) != c(nsim, n.ind)))
         stop("cpars$AddIbeta must be dimensions c(nsim, n.ind)")
-      if (msg) message('cpars$AddIbeta detected. Not updating beta for additional indices')
+      if (msg) message_info('cpars$AddIbeta detected. Not updating beta for additional indices')
       ObsPars$AddIbeta <- SampCpars$AddIbeta
       fitbeta <- FALSE
     } else {
-      if (msg) message('Updating beta for additional indices from real data')
+      if (msg) message_info('Updating beta for additional indices from real data')
       ObsPars$AddIbeta <- matrix(NA, nsim, n.ind)
     }
 
     if (!is.null(SampCpars$AddIerr)) {
       if (any(dim(SampCpars$AddIerr) != c(nsim, n.ind, nyears+proyears)))
         stop("cpars$AddIerr must be dimensions c(nsim, n.ind, nyears+proyears)")
-      if (msg) message('cpars$AddIerr detected. Not updating observation variability for additional indices')
+      if (msg) message_info('cpars$AddIerr detected. Not updating observation variability for additional indices')
       ObsPars$AddIerr <- SampCpars$AddIerr
       fitIerr <- FALSE
     } else {
-      if (msg) message('Updating observation variability (AddIerr) for additional indices from real data')
+      if (msg) message_info('Updating observation variability (AddIerr) for additional indices from real data')
       ObsPars$AddIerr <- array(NA, dim=c(nsim, n.ind, nyears+proyears))
     }
 
@@ -1020,7 +1020,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
       units <- UnitsTab$units[match(AddIunits[i], UnitsTab$n)]
       type <- TypeTab$type[match(AddIndType[i], TypeTab$n)]
 
-      if(msg) message("Additional index ", i, ' - ', type, ' stock', paste0(' (', units, ')'))
+      if(msg) message_info("Additional index ", i, ' - ', type, ' stock', paste0(' (', units, ')'))
       nyrs <- min(length(RealData@AddInd[1,i,]), nyears)
       ind <- RealData@AddInd[1,i,1:nyrs]
       cv_ind <- RealData@CV_AddInd[1,i,1:nyrs]
@@ -1077,7 +1077,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
         ObsPars$AddIbeta[,i] <- as.vector(do.call('cbind', lapply(Res_List, '[[', 2)))
       
       if (msg & fitbeta)
-        message(paste0('Estimated beta for Additional Index ', i, ':'),
+        message_info(paste0('Estimated beta for Additional Index ', i, ':'),
                 paste0(range(round(ObsPars$AddIbeta[,i],2)), collapse = "-"),
                 "Use `cpars$AddIbeta` to override")
       
@@ -1210,7 +1210,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
   NotUpdated <- function(RealData, sl, msg) {
     if (!all(is.na(slot(RealData, sl)))) {
       if (msg)
-        message(paste0('Data detected in `OM@cpars$Data@', sl, '` but is NOT being used.'))
+        message_info(paste0('Data detected in `OM@cpars$Data@', sl, '` but is NOT being used.'))
     }
   }
 

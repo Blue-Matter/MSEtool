@@ -378,7 +378,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
           if (!silent) message_info('Historical MPA in Area 1 for all years')
         }
       }
-      # FleetPars[[p]][[f]]$MPA <- MPA
+      FleetPars[[p]][[f]]$MPA <- MPA
       
     } # end of loop over fleets
   } # end of loop over stocks
@@ -1233,8 +1233,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   MPcond <- "unknown"
   if (!length(Rel) && np == 1 && nf == 1) {
     if (!silent)
-      message("runMSE checking: you have specified a single stock and fleet with no MICE relationships. ",
-              "For analysis you should be using runMSE(). Use this only for debugging ",
+      message_info("runMSE checking: you have specified a single stock and fleet with no MICE relationships.",
+              "For analysis you should be using runMSE(). Use this only for debugging",
               "against runMSE.")
     if (class(MPs) !="character") {
       stop('`MPs` must be specified as a vector of character names if there is only',
@@ -2132,7 +2132,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                                   ImpPars=ImpPars[[p]][[f]],
                                                   V_P=FleetPars[[p]][[f]]$V_P,
                                                   upyrs=upyrs,
-                                                  interval=interval[mm],
+                                                  interval=interval,
                                                   y=y,
                                                   mm=mm,
                                                   Misc=MSElist[[p]][[f]][[mm]]@Misc,
@@ -2445,7 +2445,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                                 ImpPars=ImpPars[[p]][[f]],
                                                 V_P=FleetPars[[p]][[f]]$V_P,
                                                 upyrs=upyrs2,
-                                                interval=interval[mm],
+                                                interval=interval,
                                                 y=y,
                                                 mm=mm,
                                                 Misc=MSElist[[p]][[f]][[mm]]@Misc,

@@ -105,6 +105,7 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
 
   # CparsInfo <- MSEtool:::cpars_info # get internal data from sysdata
   CparsInfo <- cpars_info # get internal data from sysdata - above for debugging
+  CparsInfo$ValidCpars[is.na(CparsInfo$ValidCpars)] <- TRUE
   CparsInfo <- CparsInfo[CparsInfo$ValidCpars==TRUE,]
   CNames <- names(cpars)
   ValNames <- CparsInfo$Var
@@ -661,7 +662,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
     if (!all(dim(M_ageArray) == c(nsim, n_age, proyears+nyears)))
       stop("'M_ageArray' must be array with dimensions: nsim, maxage+1, nyears + proyears but has dimensions: ",
            paste(dim(M_ageArray), collapse=" "))
-    if(msg & is.null(cpars$M)) message("M_ageArray has been provided in OM@cpars. Ignoring OM@M and OM@Msd")
+    if(msg & is.null(cpars$M)) message_info("M_ageArray has been provided in OM@cpars. Ignoring OM@M and OM@Msd")
     Msd <- rep(0, nsim)
 
     # set M to mean M for mature age-classes in year=nyears
@@ -1766,7 +1767,8 @@ validcpars <- function(type=c("all", "Stock", "Fleet", "Obs", "Imp", "internal")
   # cpars_info <- MSEtool:::cpars_info
   # cpars_info <- cpars_info[!duplicated(cpars_info$Slot),] # remove duplicated 'Name'
 
-  cpars_info <- cpars_info[cpars_info$ValidCpars==TRUE,]
+  cpars_info$ValidCpars[is.na(cpars_info$ValidCpars)] <- TRUE
+  cpars_info <- cpars_info[cpars_info$ValidCpars!=FALSE,]
   
   cpars_info$type <- NA
   stock_ind <- match(slotNames("Stock"), cpars_info$Var)

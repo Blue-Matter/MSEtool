@@ -19,9 +19,9 @@ testthat::expect_s4_class(MSE, 'MSE')
 histF <- array(MSE@FM_hist[,OM@nyears], dim=dim(MSE@FM[,2,]))
 
 # curEref should result in projection Fs = last historical F
-testthat::expect_equal(MSE@FM[,2,], histF)
+testthat::expect_equal(round(MSE@FM[,2,],2), round(histF,2))
 
 # FMSYref should result in F/FMSY = 1
-testthat::expect_equal(MSE@F_FMSY[,1,], array(1, dim=dim(MSE@F_FMSY[,1,])))
+testthat::expect_equal(round(MSE@F_FMSY[,1,],2), round(array(1, dim=dim(MSE@F_FMSY[,1,])),2))
 
 

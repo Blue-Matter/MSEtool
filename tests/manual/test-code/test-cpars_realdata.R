@@ -14,6 +14,8 @@ baseOM@nsim <- 5
 OM <- baseOM
 sim <- sample(1:OM@nsim, 1)
 
+Hist <- Simulate(OM)
+
 Data <- new("Data")
 Data@Cat<- matrix(rowSums(Hist@TSdata$Landings[sim,,]),nrow=1)
 Data@CV_Cat <- array(0.1, dim=dim(Data@Cat))

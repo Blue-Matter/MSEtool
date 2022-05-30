@@ -807,6 +807,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   }
 
   StockPars$Blow <- Blow
+  
   # --- Calculate Reference Yield ----
   if(!silent) message("Calculating reference yield - best fixed F strategy")
   if (!snowfall::sfIsRunning()) {
