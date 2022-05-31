@@ -825,7 +825,7 @@ checkSlot <- function(slot, OM, msg=TRUE, stop_if_missing=TRUE) {
   }
   
   # check for NAs
-  if (any(is.na(val))) {
+  if (all(is.na(val))) {
     # slot is missing value - check cpars
     cpars_val <- OM@cpars[[slot]]
     if (!is.null(cpars_val)) {
@@ -837,7 +837,18 @@ checkSlot <- function(slot, OM, msg=TRUE, stop_if_missing=TRUE) {
     }
   }
   
-
+  if (any(is.na(val))) {
+    # is it a biascv slot?
+    if (grepl('biascv',slot)) {
+      # always length 1
+      methods::slot(OM, slot) <- val[1]
+    } else {
+      # otherwise - repeat the same value 
+      methods::slot(OM, slot) <- val[!is.na(val)]
+    }
+  }
+    
+  
   OM
 }
 
