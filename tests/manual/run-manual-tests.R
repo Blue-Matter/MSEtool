@@ -18,17 +18,26 @@ rmarkdown::render(input='tests/manual/Test_Report.Rmd',
 
 
 options(testthat.output_file = NULL)
-testthat::test_file("tests/manual/test-code/test-checkPopDynamics.R") # ok
 
-testthat::test_file("tests/manual/test-code/test-Data2csv.R") # ok
+testthat::test_file("tests/manual/test-code/test-checkPopDynamics.R") # test not finished
+
+testthat::test_file("tests/manual/test-code/test-cpars_realdata.R") # ok
 
 testthat::test_file("tests/manual/test-code/test-Data_Functions.R") # ok
 
+testthat::test_file("tests/manual/test-code/test-Data_indices.R") # ok
+
 testthat::test_file("tests/manual/test-code/test-Data_Plotting.R") # ok
 
-testthat::test_file("tests/manual/test-code/test-Fease_Functions.R") #ok  
+testthat::test_file("tests/manual/test-code/test-Data-Conditioning.R") # ok
+
+testthat::test_file("tests/manual/test-code/test-Data2csv.R") # ok
+
+testthat::test_file("tests/manual/test-code/test-Fease_Functions.R") #  ok
 
 testthat::test_file("tests/manual/test-code/test-Import_Data.R") # ok
+
+testthat::test_file("tests/manual/test-code/test-MOM.R") # ok
 
 testthat::test_file("tests/manual/test-code/test-MPs.R") # ok
 
@@ -45,6 +54,8 @@ testthat::test_file("tests/manual/test-code/test-OM_Plotting.R") # takes ages!
 testthat::test_file("tests/manual/test-code/test-PMobjects.R") #   ok
 
 testthat::test_file("tests/manual/test-code/test-RealIndices.R") # ok
+
+testthat::test_file("tests/manual/test-code/test-ReferencePoints") 
 
 testthat::test_file("tests/manual/test-code/test-runMSE.R") # ok
 
