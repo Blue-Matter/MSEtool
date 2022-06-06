@@ -7,7 +7,7 @@
 #' @param sloty A character vector representing the slot name
 #' @author T. Carruthers
 SIL <- function(listy, sloty) {
-  if (class(listy[[1]]) == "list") {
+  if (methods::is(listy[[1]], "list")) {
     out <- list()
     for(i in 1:length(listy)) out[[i]] <- sapply(listy[[i]], slot, sloty)
     out <- do.call(c, out)
