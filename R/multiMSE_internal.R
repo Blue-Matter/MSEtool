@@ -26,7 +26,7 @@ SIL <- function(listy, sloty) {
 #' @param lev1 Logical, should NIL default to the first level of the list?
 #' @author T. Carruthers
 NIL<-function(listy,namey,lev1=T){
-  if(class(listy[[1]]) == "list" && !lev1) {
+  if(!methods::is(listy[[1]], "list") && !lev1) {
     out <- list()
     for(i in 1:length(listy)) out[[i]] <- sapply(listy[[i]], getElement, namey)
     out <- do.call(c, out)
@@ -193,7 +193,7 @@ nlz<-function(arr,dims=NULL,func="max"){
 #' @param x A list
 #' @author T. Carruthers
 ldim<-function(x){
-  if(class(x)!='list'){
+  if(!methods::is(x,'list')){
     #message(paste(deparse(substitute(x))," is not a list - ldim operates on hieracical list objects"))
     return(0)
   }else{
@@ -201,7 +201,7 @@ ldim<-function(x){
     cond=TRUE
     while(cond){
       dim=c(dim,length(x))
-      cond=(class(x[[1]])=='list')
+      cond=methods::is(x[[1]], 'list')
       if(cond)x=x[[1]]
     }
     return(dim)

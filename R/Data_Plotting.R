@@ -34,7 +34,7 @@ plot.Data <- function(x, wait=TRUE, i=1, plots='all', rmd=FALSE, head="##", tplo
 #' @export
 boxplot.Data <- function(x, upq=0.9, lwq=0.1, ylim=NULL, outline = FALSE, col = NULL, ...) {
   Data <- updateMSE(x)
-  if (class(Data) != "Data")  stop("Object must be of class 'Data'")
+  if (!methods::is(Data,"Data"))  stop("Object must be of class 'Data'")
 
   if (all(is.na(Data@TAC))) {
     stop('Cannot plot TACs because nothing found in `Data@TAC`.\nUse `Report(Data)` to generate Data report', call. = FALSE)

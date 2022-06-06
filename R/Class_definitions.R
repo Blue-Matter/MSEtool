@@ -1169,7 +1169,7 @@ setMethod('summary', signature="MSE", function(object, ..., silent=FALSE, Refs=N
   if (!methods::is(PMlist,'character')) stop("Must provide names of PM methods")
   # check
   for (X in seq_along(PMlist))
-    if (class(get(PMlist[X])) != "PM") stop(PMlist[X], " is not a valid PM method")
+    if (!methods::is(get(PMlist[X]), "PM")) stop(PMlist[X], " is not a valid PM method")
 
   if (!silent) message("Calculating Performance Metrics")
   storeMean <- vector('list', length(PMlist))
