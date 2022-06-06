@@ -742,8 +742,8 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
 #' @return invisibly returns the Data object
 #'
 runMP <- function(Data, MPs = NA, reps = 100, perc=0.5, chkMPs=FALSE, silent=FALSE) {
-  if (class(MPs) != 'character' && !all(is.na(MPs))) stop('MPs must be character string', call.=FALSE)
-  if (class(Data) != 'Data') stop("Data must be class 'Data'", call.=FALSE)
+  if (!methods::is(MPs, 'character') && !all(is.na(MPs))) stop('MPs must be character string', call.=FALSE)
+  if (!methods::is(Data, 'Data')) stop("Data must be class 'Data'", call.=FALSE)
   if (all(is.na(MPs))) {
     MPs <- avail("MP", msg = !silent)
     if (!silent) message("running all available MPs")
@@ -901,7 +901,7 @@ Cant <- function(Data, timelimit = 1, silent=FALSE) {
 DLMdiag <- function(Data, command = c("available", "not available", "needed"), reps = 5,
                     timelimit = 1, funcs1=NA, dev=FALSE, silent=FALSE) {
   command <- match.arg(command)
-  if (class(Data) != "Data") stop("First argument must be object of class 'Data'", call.=FALSE)
+  if (!meethod::is(Data,"Data")) stop("First argument must be object of class 'Data'", call.=FALSE)
   set.seed(101)
   Data <- updateMSE(Data)
   if (all(is.na(funcs1))) funcs1 <- avail("MP", msg=FALSE)
@@ -1011,7 +1011,7 @@ DLMdiag <- function(Data, command = c("available", "not available", "needed"), r
 #' @export
 Input <- function(Data, MPs = NA, reps = 100, timelimit = 10, CheckMPs = TRUE,
                   msg=TRUE) {
-  if (class(Data) != "Data") stop("First argument must be object of class 'Data'", call.=FALSE)
+  if (!methods::is(Data, "Data")) stop("First argument must be object of class 'Data'", call.=FALSE)
   Data <- updateMSE(Data)
   if (msg) message("Checking which MPs can be run")
 
@@ -1099,7 +1099,7 @@ Needed <- function(Data, timelimit = 1, silent=FALSE) {
 #' @export
 #' @keywords internal
 OneRep <- function(Data) {
-  if (class(Data) != "Data") stop("First argument must be object of class 'Data'", call.=FALSE)
+  if (!methods::is(Data,"Data")) stop("First argument must be object of class 'Data'", call.=FALSE)
   Data <- updateMSE(Data)
   Data@CV_Cat =  Data@CV_Ind = Data@CV_Rec = matrix(tiny, nrow=1, ncol=1)
   Data@CV_Dt = Data@CV_AvC = Data@CV_Mort = Data@CV_FMSY_M = Data@CV_BMSY_B0 =
@@ -1123,7 +1123,7 @@ OneRep <- function(Data) {
 #' @author T. Carruthers
 #' @export
 plotOFL <- function(Data, xlims = NA, perc = 0.5) {
-  if (class(Data) != "Data") stop("First argument must be object of class 'Data'", call.=FALSE)
+  if (!methods::is(Data, "Data")) stop("First argument must be object of class 'Data'", call.=FALSE)
   Data <- updateMSE(Data)
   cols <- rep(c("black", "red", "green", "blue", "orange", "brown", "purple",
                 "dark grey", "violet", "dark red", "pink", "dark blue", "grey"),  4)
@@ -1233,7 +1233,7 @@ replic8 <- function(Data, nrep) {
 #' Data <- Sense(MSEtool::Cobia, "AvC")
 #' }
 Sense <- function(Data, MP, nsense = 6, reps = 100, perc = c(0.05, 0.5, 0.95), ploty = T) {
-  if (class(Data) != "Data") stop("First argument must be object of class 'Data'", call.=FALSE)
+  if (!methods::is(Data, "Data")) stop("First argument must be object of class 'Data'", call.=FALSE)
   Data <- updateMSE(Data)
 
   DLM_data2 <- Data
@@ -1355,7 +1355,7 @@ Sense <- function(Data, MP, nsense = 6, reps = 100, perc = c(0.05, 0.5, 0.95), p
 #' }
 #' @export
 TAC <- function(Data, MPs = NA, reps = 100, timelimit = 1, checkMP=TRUE, silent=FALSE) {
-  if (class(Data) != "Data") stop("First argument must be object of class 'Data'", call.=FALSE)
+  if (!methods::is(Data, "Data")) stop("First argument must be object of class 'Data'", call.=FALSE)
   Data <- updateMSE(Data)
   nm <- deparse(substitute(Data))
   if (checkMP) {
@@ -1390,7 +1390,7 @@ TAC <- function(Data, MPs = NA, reps = 100, timelimit = 1, checkMP=TRUE, silent=
 #' @export
 joinData<-function(DataList){
 
-  if (class(DataList) != "list") stop("DataList must be a list")
+  if (!methods::is(DataList,"list")) stop("DataList must be a list")
   if (length(DataList) < 2) stop("DataList list doesn't contain multiple MSE objects")
 
   Data<-DataList[[1]]
@@ -1477,7 +1477,7 @@ joinData<-function(DataList){
 #' @examples
 #' Uses("Mort")
 Uses <- function(slot, silent=FALSE) {
-  if (class(slot) !="character") stop("Slot must be character", call. = FALSE)
+  if (!methods::is(slot, "character")) stop("Slot must be character", call. = FALSE)
   if(length(slot)>1) stop("Slot must be length 1", call. = FALSE)
   if (!slot %in% slotNames('Data')) stop("Slot is not a valid slot in Data object. Use slotNames('Data')", call.=FALSE)
   MPs <- avail("MP", msg=FALSE)
@@ -1646,10 +1646,10 @@ Report <- function(Data=NULL, md=NULL, name="Data-Report",
                    dir=NULL,
                    overwrite=FALSE) {
   output_format <- match.arg(output_format)
-  if (class(Data) != "Data" & class(Data) != "character")
+  if (!methods::is(Data, "Data") & !methods::is(Data,"character"))
     stop("Must provide a Data object or file path to import a Data Object")
 
-  if (class(Data) == "character") {
+  if (methods::is(Data,"character")) {
     Data <- XL2Data(Data)
   }
 
@@ -2655,7 +2655,7 @@ ref_plots <- function(Data, i=1, n=20000, fignum=1) {
 #' @export
 #'
 applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE, parallel = snowfall::sfIsRunning()) {
-  if (class(Data) != "Data") stop("First argument must be object of class 'Data'", call.=FALSE)
+  if (!methods::is(Data, "Data")) stop("First argument must be object of class 'Data'", call.=FALSE)
   Dataout <- Data
   if (is.na(nsims)) nsims <- nrow(Data@Cat)
   nMPs <- length(MPs)
@@ -2695,7 +2695,7 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE, parallel
       temp <- try(lapply(1:nsims, MPs[mp], Data = Data, reps = reps), silent=TRUE)
     }
    
-    if (class(temp)=='try-error') {
+    if (methods::is(temp, 'try-error')) {
         warning("Method ", MPs[mp], " failed with error: ", temp)
     } else {
       slots <- slotNames(temp[[1]])
@@ -2736,7 +2736,7 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE, parallel
 
 
 SubData_sim <- function(x, Data) {
-  if(class(Data) !='Data') stop('Object must be class `Data`')
+  if(!methods::is(Data, 'Data')) stop('Object must be class `Data`')
   subdata <- new("Data")
   sltType <- getSlots('Data')
   slts <- slotNames(Data)

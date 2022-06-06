@@ -51,10 +51,10 @@
 #' }
 #'
 Turing <- function(OM, Data, wait=TRUE) {
-  if (class(OM) == "multiHist")
+  if (methods::is(OM, "multiHist"))
     return(TuringMOM (OM, Data, wait))
-  if (class(OM) != "OM") stop("OM must be class 'OM'")
-  if (class(Data) != "Data") stop("Data must be class 'Data'")
+  if (!methods::is(OM,"OM")) stop("OM must be class 'OM'")
+  if (!methods::is(Data,"Data")) stop("Data must be class 'Data'")
 
   # Generate Historical Data
   message("Simulating Data")
@@ -127,13 +127,13 @@ Turing <- function(OM, Data, wait=TRUE) {
 TuringMOM <- function(multiHist, Data, wait=TRUE) {
 
   if (!'multiHist' %in% class(multiHist)) stop("multiHist must be class multiHist`")
-  if (class(Data) !='list') stop("Data must be list")
+  if (!methods::is(Data,'list')) stop("Data must be list")
   np <- length(multiHist)
   nf <- length(multiHist[[1]])
 
   if (any(ldim(Data) != c(np, nf)))
     stop('Data must be a nested list of length `nstocks` each with `nfleets')
-  if (class(Data[[1]][[1]]) !='Data')
+  if (!methods::is(Data[[1]][[1]],'Data'))
     stop('Data is not a nested list of objects of class `Data`')
 
   nsim <- nrow(multiHist[[1]][[1]]@OMPars)

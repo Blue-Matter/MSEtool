@@ -74,7 +74,7 @@ plotquant<-function(x,p=c(0.05,0.25,0.75,0.95),yrs,qcol,lcol,addline=T,ablines=N
 plot.MMSE <- function(x=NULL, maxcol = 6, qcol = rgb(0.4, 0.8, 0.95), lcol = "dodgerblue4",
                       quants = c(0.05, 0.25, 0.75, 0.95), curyr = 2018, addline = FALSE, ...) {
   MMSE <- x
-  if (class(MMSE)!='MMSE') stop('Object must be class `MMSE`')
+  if (!methods::is(MMSE, 'MMSE')) stop('Object must be class `MMSE`')
   if(is.na(maxcol))maxcol=ceiling(length(MMSE@MPs)/0.5) # defaults to portrait 1:2
   MPs<-MMSE@MPs
   MPrefs<-MMSE@MPrefs

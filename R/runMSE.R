@@ -3,11 +3,11 @@
 #
 Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   # ---- Initial Checks and Setup ----
-  if (class(OM) == 'OM') {
+  if (methods::is(OM,'OM')) {
     if (OM@nsim <=1) stop("OM@nsim must be > 1", call.=FALSE)
     OM <- CheckOM(OM, msg=!silent)
 
-  } else if (class(OM) == 'Hist') {
+  } else if (methods::is(OM,'Hist')) {
     if (!silent) message("Using `Hist` object to reproduce historical dynamics")
 
     # --- Extract cpars from Hist object ----
@@ -971,7 +971,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   StockPars$VBiomass <- VBiomass
   StockPars$N <- N
 
-  if (class(SampCpars$Data)=="Data") {
+  if (methods::is(SampCpars$Data, "Data")) {
     # real data has been passed in cpars
     updatedData <- AddRealData(SimData=Data,
                                RealData=SampCpars$Data,
@@ -1085,7 +1085,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                      extended=FALSE, checkMPs=TRUE) {
 
   # ---- Setup ----
-  if (class(Hist) !='Hist')
+  if (!methods::is(Hist,'Hist'))
     stop('Must provide an object of class `Hist`')
   
   OM <- Hist@OM
@@ -1107,7 +1107,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   # ---- Set up parallel processing of MPs ---
   runparallel <- FALSE 
   if (any(parallel==TRUE)) runparallel <- TRUE
-  if (class(parallel)=='list') runparallel <- TRUE
+  if (methods::is(parallel, 'list')) runparallel <- TRUE
 
   nMP <- length(MPs)  # the total number of methods used
   if (nMP < 1) stop("No valid MPs found", call.=FALSE)
@@ -1136,7 +1136,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     parallel[grep('LBSPR', MPs)] <- TRUE
   
   # Manually specified MPs
-  if (class(parallel_in)=='list') {
+  if (methods::is(parallel_in, 'list')) {
     parallel_in <- data.frame(parallel_in)
     par_mps <- names(parallel_in)
     parallel[match(par_mps, MPs)] <- unlist(parallel_in[1,])
@@ -1822,10 +1822,10 @@ runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
                    parallel=FALSE, extended=FALSE, checkMPs=TRUE) {
 
   # ---- Initial Checks and Setup ----
-  if (class(OM) == 'OM') {
+  if (methods::is(OM,'OM')) {
     if (OM@nsim <=1) stop("OM@nsim must be > 1", call.=FALSE)
 
-  } else if (class(OM) == 'Hist') {
+  } else if (methods::is(OM,'Hist')) {
     if (!silent) message("Using `Hist` object to reproduce historical dynamics")
 
     # # --- Extract cpars from Hist object ----
@@ -1845,7 +1845,7 @@ runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
   if (checkMPs & !Hist)
     MPs <- CheckMPs(MPs=MPs, silent=silent)
 
-  if (class(OM)=='OM') {
+  if (methods::is(OM,'OM')) {
     HistSims <- Simulate(OM, parallel, silent)  
   } else {
     HistSims <- OM
@@ -1859,7 +1859,7 @@ runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
 
   if(!silent) message("Running forward projections")
   MSEout <- try(Project(Hist=HistSims, MPs, parallel, silent, extended = extended, checkMPs=FALSE), silent=TRUE)
-  if (class(MSEout) == 'try-error') {
+  if (methods::is(MSEout, 'try-error')) {
     message('The following error occured when running the forward projections: ',
             crayon::red(attributes(MSEout)$condition))
     message('Returning the historical simulations (class `Hist`). To avoid re-running spool up, ',

@@ -16,7 +16,7 @@ defaultplotPars <- function(plotPars=NULL) {
 getStockPars <- function(Object, nsim, nyears, proyears, seed) {
   Pars <- list()
   SampCpars <- list()
-  if (class(Object) == 'OM') {
+  if (methods::is(Object, 'OM')) {
     nsim <- Object@nsim
     nyears <- Object@nyears
     proyears <- Object@proyears
@@ -25,18 +25,18 @@ getStockPars <- function(Object, nsim, nyears, proyears, seed) {
     seed <- Object@seed
     Pars$Stock <- SampleStockPars(Object, nsim, nyears, proyears, SampCpars,
                                   msg=FALSE)
-  } else if (class(Object) =='Stock') {
+  } else if (methods::is(Object, 'Stock')) {
     Pars$Stock <- SampleStockPars(Object, nsim, nyears, proyears, SampCpars,
                                   msg=FALSE)
     Pars$Name <- gsub(" ", "_", Object@Name)
     CurrentYr <- nyears
-  } else if (class(Object) =='Hist') {
+  } else if (methods::is(Object, 'Hist')) {
     nsim <- Object@OM@nsim
     Pars <- Object@SampPars
     CurrentYr <- Object@OM@CurrentYr
     nyears <- ncol(Object@SampPars$Fleet$Find)
     proyears <- ncol(Object@SampPars$Stock$Linfarray) - nyears
-  } else if (class(Object) =='list') {
+  } else if (methods::is(Object, 'list')) {
     Pars <- Object
     nsim <- length(Pars$Stock$D)
     if (!is.null(Pars$Fleet)) {
@@ -57,7 +57,7 @@ getStockPars <- function(Object, nsim, nyears, proyears, seed) {
 getFleetPars <- function(Object, Stock=NULL, nsim, nyears, proyears, seed) {
   Pars <- list()
   SampCpars <- list()
-  if (class(Object) == 'OM') {
+  if (methods::is(Object, 'OM')) {
     nsim <- Object@nsim
     nyears <- Object@nyears
     proyears <- Object@proyears
@@ -67,20 +67,20 @@ getFleetPars <- function(Object, Stock=NULL, nsim, nyears, proyears, seed) {
     Pars$Stock <- SampleStockPars(Object, nsim, nyears, proyears, SampCpars, FALSE)
     Pars$Fleet <- SampleFleetPars(Object, Pars$Stock, nsim, nyears, proyears, SampCpars,
                                   msg=FALSE)
-  } else if (class(Object) =='Fleet') {
+  } else if (methods::is(Object,'Fleet')) {
     if (!is.null(Stock))
       Pars$Stock <- SampleStockPars(Stock, nsim, nyears, proyears, SampCpars, FALSE)
     Pars$Fleet <- SampleFleetPars(Object, Pars$Stock, nsim, nyears, proyears, SampCpars,
                                   msg=FALSE)
     Pars$Name <- gsub(" ", "_", Object@Name)
     CurrentYr <- nyears
-  } else if (class(Object) =='Hist') {
+  } else if (methods::is(Object, 'Hist')) {
     nsim <- Object@OM@nsim
     Pars <- Object@SampPars
     CurrentYr <- Object@OM@CurrentYr
     nyears <- ncol(Object@SampPars$Fleet$Find)
     proyears <- ncol(Object@SampPars$Stock$Linfarray) - nyears
-  } else if (class(Object) =='list') {
+  } else if (methods::is(Object, 'list')) {
     Pars <- Object
     nsim <- length(Pars$Stock$D)
     if (!is.null(Pars$Fleet)) {

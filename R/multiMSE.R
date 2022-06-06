@@ -5,7 +5,7 @@
 #'
 SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FALSE) {
   # ---- Initial Checks and Setup ----
-  if (class(MOM) == 'MOM') {
+  if (methods::is(MOM,'MOM')) {
     if (MOM@nsim <=1) stop("MOM@nsim must be > 1", call.=FALSE)
 
   } else {
@@ -1080,7 +1080,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   # ---- Condition Simulated Data on input Data object (if it exists) & calculate error stats ----
   for (p in 1:np) {
     for (f in 1:nf) {
-      if (class(SampCpars[[p]][[f]]$Data)=="Data") {
+      if (methods::is(SampCpars[[p]][[f]]$Data,"Data")) {
         StockPars2 <- StockPars[[p]]
         StockPars2$Biomass <- Biomass[,p,,,]
         StockPars2$SSB <- SSB[,p,,,]
@@ -1236,7 +1236,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       message_info("runMSE checking: you have specified a single stock and fleet with no MICE relationships.",
               "For analysis you should be using runMSE(). Use this only for debugging",
               "against runMSE.")
-    if (class(MPs) !="character") {
+    if (!methods::is(MPs,"character")) {
       stop('`MPs` must be specified as a vector of character names if there is only',
            ' 1 stock and 1 fleet. `MPs` is currently a ', class(MPs))
     }
@@ -1247,17 +1247,17 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
     # check class of MPs
     tt <- try(sapply(MPs, get), silent=TRUE)
-    if (class(tt) == 'try-error')
+    if (methods::is(tt,'try-error'))
       stop('Error in the MPs -', strsplit(tt,':')[[1]][2])
     MP_classes <- sapply(tt, class)
     if (!all(MP_classes == MP_classes[1]))
       stop('All MPs must be same class (`MP`)')
   }
 
-  if (class(MPs) == 'character' && MPcond == 'unknown') {
+  if (methods::is(MPs,'character') && MPcond == 'unknown') {
     # check class of MPs
     tt <- try(sapply(MPs, get), silent=TRUE)
-    if (class(tt) == 'try-error')
+    if (methods::is(tt,'try-error'))
       stop('Error in the MPs -', strsplit(tt,':')[[1]][2])
     MP_classes <- sapply(tt, class)
 
@@ -1295,7 +1295,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     }
   }
 
-  if (class(MPs) == 'list' && 'unknown' %in% MPcond) {
+  if (methods::is(MPs,'list') && 'unknown' %in% MPcond) {
 
     if(identical(ldim(MPs), ldim(Fleets))){
       if (!silent) message("Byfleet mode: you have specified an MP for each stock and fleet. ",
@@ -1322,7 +1322,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     }
 
     tt <- try(sapply(unlist(MPs), get), silent=TRUE)
-    if (class(tt) == 'try-error')
+    if (methods::is(tt,'try-error'))
       stop('Error in the MPs -', strsplit(tt,':')[[1]][2])
     MP_classes <- sapply(tt, class)
   }
@@ -1332,7 +1332,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
   if (length(MPcond) != nMP) MPcond <- rep(MPcond, nMP)
 
-  if (class(MPs) == "list") {
+  if (methods::is(MPs,"list")) {
     allMPs<-unlist(MPs)
   }else{
     allMPs<-MPs
@@ -2558,7 +2558,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   }
 
   # need to reformat MMP and complex mode to work with MSEout slot
-  if(class(MPs)=="character") MPs<-list(MPs)
+  if(methods::is(MPs,"character")) MPs<-list(MPs)
 
   # ---- Create MMSE Object ----
 
@@ -2685,7 +2685,7 @@ multiMSE <- function(MOM=MSEtool::Albacore_TwoFleet,
                      dropHist=TRUE) {
 
   # ---- Initial Checks and Setup ----
-  if (class(MOM) == 'MOM') {
+  if (methods::is(MOM,'MOM')) {
     if (MOM@nsim <=1) stop("MOM@nsim must be > 1", call.=FALSE)
 
   } else if ('multiHist' %in% class(MOM)) {
@@ -2737,7 +2737,7 @@ multiMSE <- function(MOM=MSEtool::Albacore_TwoFleet,
   MSEout <- try(ProjectMOM(multiHist=multiHist, MPs, parallel, silent, checkMPs=FALSE,
                            dropHist=dropHist), silent=TRUE)
 
-  if (class(MSEout) == 'try-error') {
+  if (methods::is(MSEout,'try-error')) {
     message('The following error occured when running the forward projections: ',
             crayon::red(attributes(MSEout)$condition))
     message('Returning the historical simulations (class `multiHist`). To avoid re-running spool up, ',

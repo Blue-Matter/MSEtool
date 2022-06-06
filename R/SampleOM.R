@@ -227,16 +227,16 @@ fitVB <- function(pars, LatAge, ages) {
 #' @export
 #'
 SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, msg=TRUE) {
-  if (class(Stock) != "Stock" & class(Stock) != "OM")
+  if (!methods::is(Stock, "Stock") & !methods::is(Stock, "OM"))
     stop("First argument must be class 'Stock' or 'OM'")
 
-  if (class(Stock) == "OM") {
+  if (methods::is(Stock,"OM")) {
     nsim <- Stock@nsim
     nyears <- Stock@nyears
     proyears <- Stock@proyears
   }
   # Get custom pars if they exist
-  if (class(Stock) == "OM" && length(Stock@cpars) > 0 && is.null(cpars))
+  if (methods::is(Stock, "OM") && length(Stock@cpars) > 0 && is.null(cpars))
     cpars <- SampleCpars(Stock@cpars, nsim)  # custom parameters exist in Stock/OM object
 
   # ---- Maximum age ----
@@ -883,29 +883,29 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
 #'
 SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
                             proyears=NULL, cpars=NULL, msg=TRUE) {
-  if (class(Fleet) != "Fleet" & class(Fleet) != "OM")
+  if (!methods::is(Fleet, "Fleet") & !methods::is(Fleet,"OM"))
     stop("First argument must be class 'Fleet' or 'OM'")
 
-  if (class(Fleet) != "OM" & class(Stock) != "Stock" & class(Stock) != "list")
+  if (!methods::is(Fleet, "OM") & !methods::is(Stock, "Stock") & !methods::is(Stock, "list"))
     stop("Must provide 'Stock' object", call.=FALSE)
 
   # Get custom pars if they exist
-  if (class(Fleet) == "OM" && length(Fleet@cpars) > 0 && is.null(cpars))
+  if (methods::is(Fleet,"OM") && length(Fleet@cpars) > 0 && is.null(cpars))
     cpars <- SampleCpars(Fleet@cpars, Fleet@nsim, silent=!msg)  # custom parameters exist in Stock/OM object
 
-  if (class(Fleet) == "OM") {
+  if (methods::is(Fleet, "OM")) {
     nsim <- Fleet@nsim
     nyears <- Fleet@nyears
     proyears <- Fleet@proyears
-    if (class(Stock)!='list')
+    if (!methods::is(Stock,'list'))
       StockPars <- SampleStockPars(Fleet, nsim, nyears, proyears, cpars, msg=msg)
   }
 
-  if (class(Stock) == "Stock") {
+  if (methods::is(Stock,"Stock")) {
     # Sample Stock Pars - need some to calculate selectivity at age and length
     StockPars <- SampleStockPars(Stock, nsim, nyears, proyears, cpars, msg=msg)
   }
-  if (class(Stock) == 'list') StockPars <- Stock
+  if (methods::is(Stock,'list')) StockPars <- Stock
 
   maxage <- StockPars$maxage
   Fleetout <- list()
@@ -1380,23 +1380,23 @@ sample_norm <- function(par, cpars, Obj, nsim, altpar=NULL) {
 #'
 SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
                           nyears=NULL, proyears=NULL){
-  if (class(Obs) != "Obs" & class(Obs) != "OM")
+  if (!methods::is(Obs, "Obs") & !methods::is(Obs, "OM"))
     stop("First argument must be class 'Obs' or 'OM'")
-  if (class(Obs) == "OM") {
+  if (methods::is(Obs,"OM")) {
     nsim <- Obs@nsim
     nyears <- Obs@nyears
     proyears <- Obs@proyears
   }
 
   # Get custom pars if they exist
-  if (class(Obs) == "OM" && length(Obs@cpars) > 0 && is.null(cpars))
+  if (methods::is(Obs, "OM") && length(Obs@cpars) > 0 && is.null(cpars))
     cpars <- SampleCpars(Obs@cpars, Obs@nsim)  # custom parameters exist in OM object
 
-  if (class(Stock) == "Stock") {
+  if (methods::is(Stock, "Stock")) {
     # Sample Stock Pars - need some to calculate selectivity at age and length
     StockPars <- SampleStockPars(Stock, nsim, nyears, proyears, cpars, msg=FALSE)
   } else if (is.null(Stock)) StockPars <- NULL
-  if (class(Stock) == 'list') StockPars <- Stock
+  if (methods::is(Stock, 'list')) StockPars <- Stock
 
   ObsOut <- list()
 
@@ -1668,16 +1668,16 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
 #' @export
 #'
 SampleImpPars <- function(Imp, nsim=NULL, cpars=NULL, nyears=NULL, proyears=NULL) {
-  if (class(Imp) != "Imp" & class(Imp) != "OM")
+  if (!methods::is(Imp, "Imp") & !methods::is(Imp, "OM"))
     stop("First argument must be class 'Imp' or 'OM'")
-  if (class(Imp) == "OM") {
+  if (methods::is(Imp,"OM")) {
     nsim <- Imp@nsim
     proyears <- Imp@proyears
     nyears <- Imp@nyears
   }
 
   # Get custom pars if they exist
-  if (class(Imp) == "OM" && length(Imp@cpars) > 0 && is.null(cpars))
+  if (methods::is(Imp, "OM") && length(Imp@cpars) > 0 && is.null(cpars))
     cpars <- SampleCpars(Imp@cpars, Imp@nsim)  # custom parameters exist in OM object
   if (length(cpars) > 0) { # custom pars exist - assign to function environment
     Names <- names(cpars)

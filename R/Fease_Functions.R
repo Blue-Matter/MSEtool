@@ -36,7 +36,7 @@ Fease <- function(Data=NULL, TAC=TRUE, TAE=TRUE, SL=TRUE, Spatial=TRUE, names.on
   if (!(TAC | TAE | SL | Spatial)) stop("No feasible management options!", call.=FALSE)
   MPs <- avail('MP', msg=msg)
 
-  if (class(Data) == "Data") {
+  if (methods::is(Data, "Data")) {
     if (msg) message("Data object provided. Returning feasible and available MPs")
     canMPs <- Can(Data, silent = !msg)
   } else {
@@ -80,7 +80,7 @@ Fease <- function(Data=NULL, TAC=TRUE, TAE=TRUE, SL=TRUE, Spatial=TRUE, names.on
 #' @export
 RealFease <- function(Data=NULL){
   if(is.null(Data))stop('no data provided')
-  if(class(Data)!="Data")stop('object not of class Data')
+  if(!methods::is(Data, "Data"))stop('object not of class Data')
   MPs <- avail('MP')
   nMPs<-length(MPs)
   Err<-rep(TRUE,nMPs)

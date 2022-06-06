@@ -28,7 +28,7 @@ XL2Stock <- function(name=NULL, cpars=NULL, msg=TRUE) {
     name <- fls
   }
   
-  if (class(name) != 'character') stop("file name must be provided", call.=FALSE)
+  if (!methods::is(name, 'character')) stop("file name must be provided", call.=FALSE)
   
   if (nchar(tools::file_ext(name)) == 0) {
     xl.fname1 <- paste0(name, ".xlsx")
@@ -95,7 +95,7 @@ XL2Fleet <- function(name=NULL, cpars=NULL, msg=TRUE) {
     name <- fls
   }
   
-  if (class(name) != 'character') stop("file name must be provided", call.=FALSE)
+  if (!methods::is(name, 'character')) stop("file name must be provided", call.=FALSE)
   
   if (nchar(tools::file_ext(name)) == 0) {
     xl.fname1 <- paste0(name, ".xlsx")

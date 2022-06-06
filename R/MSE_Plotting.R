@@ -2491,7 +2491,7 @@ VOIplot <- function(MSEobj, MPs = NA, nvars = 5, nMP = 4,
   nMPs <- MSEobj@nMPs  # Number of MPs
   # Subset to specified MPs
   if (any(is.na(MPs))) MPs <- MSEobj@MPs
-  if (class(MPs) == "numeric" | class(MPs) == "integer")   MPs <- MSEobj@MPs[MPs]
+  if (methods::is(MPs, "numeric") | methods::is(MPs, "integer"))   MPs <- MSEobj@MPs[MPs]
   if (length(MPs) < 1)   stop("No MPs found")
   nMPss <- length(MPs)
   if (nMP > nMPs)     nMP <- nMPs
@@ -2997,8 +2997,8 @@ calcMSESense <- function(MP = 1, MSEobj, YVar = c("Y", "B"), Par = c("Obs","OM")
   if (length(MP) > 1) stop("Only one MP")
   nMPs <- MSEobj@nMPs
   MPs <- MSEobj@MPs
-  if (class(MP) == "character") mm <- which(MPs %in% MP)
-  if (class(MP) == "numeric" | class(MP) == "integer") {
+  if (methods::is(MP,"character")) mm <- which(MPs %in% MP)
+  if (methods::is(MP, "numeric") | methods::is(MP,"integer")) {
     mm <- MP
     MP <- MPs[mm]
   }

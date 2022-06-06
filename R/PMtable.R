@@ -56,7 +56,7 @@ PMLimit <- function(MSE, ..., Prob=NULL, Labels=NULL, FeaseMPs=NULL,
          call. = FALSE)
   }
   MP <- prob <- Feasible <- NULL # hacks for cran checks
-  if (class(MSE) != 'MSE') stop("Object is not class 'MSE'", call. = FALSE)
+  if (!methods::is(MSE, 'MSE')) stop("Object is not class 'MSE'", call. = FALSE)
   nMPs <- MSE@nMPs
   if (is.null(Prob)) stop("Must specify 'Prob'", call. = FALSE)
 
@@ -91,7 +91,7 @@ PMLimit <- function(MSE, ..., Prob=NULL, Labels=NULL, FeaseMPs=NULL,
   df$Type <- types[ind,2]
   
   labels <- MSE@MPs
-  if (class(Labels) == "list") {
+  if (methods::is(Labels, "list")) {
     repnames <- names(Labels)
     invalid <- repnames[!repnames %in% labels]
     if (length(invalid >0)) {
@@ -105,7 +105,7 @@ PMLimit <- function(MSE, ..., Prob=NULL, Labels=NULL, FeaseMPs=NULL,
   
   df$Feasible <- NA
   if(!is.null(FeaseMPs)) {
-    if(!class(FeaseMPs) == "character") stop("FeaseMPs must be character vector", call.=FALSE)
+    if(!methods::is(FeaseMPs, "character")) stop("FeaseMPs must be character vector", call.=FALSE)
     # df$Feasible <- rep(MSE@MPs %in% FeaseMPs, each=2)
     df$Feasible <- df$MP %in% FeaseMPs
     df$Feasible[is.na(df$Feasible)] <- FALSE
@@ -197,7 +197,7 @@ PMObj <- function(MSE, ..., Labels=NULL, out.file=NULL,
     stop("Package \"tidyr\" needed for this function to work. Please install it.",
          call. = FALSE)
   }
-  if (class(MSE) != 'MSE') stop("Object is not class 'MSE'", call. = FALSE)
+  if (!methods::is(MSE, 'MSE')) stop("Object is not class 'MSE'", call. = FALSE)
   nMPs <- MSE@nMPs
 
   # Calculate prob of performace limits
@@ -231,7 +231,7 @@ PMObj <- function(MSE, ..., Labels=NULL, out.file=NULL,
   df$Type <- types[ind,2]
   
   labels <- MSE@MPs
-  if (class(Labels) == "list") {
+  if (methods::is(Labels, "list")) {
     repnames <- names(Labels)
     invalid <- repnames[!repnames %in% labels]
     if (length(invalid >0)) {

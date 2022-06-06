@@ -174,7 +174,7 @@ identifyPch <- function(x, y = NULL, n = length(x), pch = 19, ...) {
 ChooseM <- function(OM, type=c("age", "length"), x=NULL, y=NULL) {
   
   type <- match.arg(type)
-  if (class(OM) != "OM") stop("First argument must be object of class 'OM'", call.=FALSE)
+  if (methods::is(OM,"OM")) stop("First argument must be object of class 'OM'", call.=FALSE)
   
   ylab <- "Natural mortality (M)"
   if (is.null(y)) y <- seq(0, 1, 0.05)
@@ -276,8 +276,8 @@ ChooseSelect <- function(Fleet, Stock, FstYr = NULL, SelYears = NULL) {
   # if (Fleet@isRel == 1) isRel <- TRUE
   # if (Fleet@isRel == 0) isRel <- FALSE
   # }
-  if (class(Fleet) != "Fleet") stop("First argument must be object of class 'Fleet'", call.=FALSE)
-  if (class(Stock) != "Stock") stop("First argument must be object of class 'Stock'", call.=FALSE)
+  if (!methods::is(Fleet,"Fleet")) stop("First argument must be object of class 'Fleet'", call.=FALSE)
+  if (!methods::is(Stock,"Stock")) stop("First argument must be object of class 'Stock'", call.=FALSE)
   # if ((!isRel) & is.null(Stock))  stop("Require Stock object")
   Fleet@isRel <- 'FALSE'
   isRel <- FALSE
@@ -390,7 +390,7 @@ BlankSelPlot <- function(Stock = NULL, Yr = NULL, N = NULL, isRel) {
     axis(side = 1, at = c(2, Max), labels = c("", "Lmax"), xpd = NA)
     mtext(side = 1, line = 3.5, "Relative Length", cex = AxCex)
     axis(side = 1, at = 1, line = 1.5, labels = "L50")
-    if (!is.null(Stock) & class(Stock) == "Stock") {
+    if (!is.null(Stock) & methods::is(Stock,"Stock")) {
       L50 <- mean(Stock@L50)  # mean length at maturity
       MatAx <- L50 * Xax
       axis(side = 1, line = 5.5, at = Xax, labels = MatAx)

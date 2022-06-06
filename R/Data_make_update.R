@@ -761,7 +761,7 @@ getfifth <- function(lenvec, CAL_binsmid) {
   temp <- rep(CAL_binsmid, lenvec)
   if(sum(lenvec)==0) return(NA)
   dens <- try(density(temp), silent=TRUE)
-  if(class(dens)!="density") return(NA)
+  if(!methods::is(dens, "density")) return(NA)
   dens$x[min(which(cumsum(dens$y/sum(dens$y)) >0.05))]
 }
 

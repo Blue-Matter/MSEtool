@@ -59,7 +59,7 @@ runCOSEWIC<-function(OM, ...){
 #' @export DFO_hist
 
 DFO_hist <- function(OM, panel= T,nsim=48) {
-  if (class(OM) != "OM") stop("Object must be class `OM`", call.=FALSE)
+  if (!methods::is(OM,"OM")) stop("Object must be class `OM`", call.=FALSE)
   if(length(OM@cpars)>0){
     message("cpars slot is specified, OM@nsim used for historical simulations")
     nsim<-OM@nsim
@@ -95,7 +95,7 @@ DFO_hist <- function(OM, panel= T,nsim=48) {
 #' @author T. Carruthers
 #' @export DFO_proj
 DFO_proj <- function(MSEobj,maxplot=6) {
-  if (class(MSEobj) != "MSE") stop("Object must be class `MSE`", call.=FALSE)
+  if (!methods::is(MSEobj,"MSE")) stop("Object must be class `MSE`", call.=FALSE)
   maxplot<-min(maxplot,MSEobj@nMPs)
   nsim<-MSEobj@nsim
   nMPs<-MSEobj@nMPs
@@ -135,7 +135,7 @@ DFO_proj <- function(MSEobj,maxplot=6) {
 #' @author T. Carruthers
 #' @export DFO_plot
 DFO_plot<-function(MSEobj,zero_origin=T){
-  if (class(MSEobj) != "MSE") stop("Object must be class `MSE`", call.=FALSE)
+  if (!methods::is(MSEobj, "MSE")) stop("Object must be class `MSE`", call.=FALSE)
   op<-par(mai=c(1,1,0.02,0.02))
   yend <- max(MSEobj@proyears - 4, 1):MSEobj@proyears
   POF<-apply(MSEobj@F_FMSY[,,yend],2,mean,na.rm=T)
@@ -170,7 +170,7 @@ DFO_plot<-function(MSEobj,zero_origin=T){
 #' @author T. Carruthers
 #' @export DFO_bar
 DFO_bar<-function(MSEobj,yres=10){
-  if (class(MSEobj) != "MSE") stop("Object must be class `MSE`", call.=FALSE)
+  if (!methods::is(MSEobj, "MSE")) stop("Object must be class `MSE`", call.=FALSE)
   sections<-(0:floor(MSEobj@proyears/yres))*yres
   nsec<-length(sections)-1
   op<-par(mfrow=c(nsec,1),mai=c(0.05,0.7,0.02,0.02),omi=c(0.6,0.35,0.01,0.01))
@@ -735,7 +735,7 @@ DFO_cosplot<-function(SSBd,qcol,lcol,Blims,yrs,quants=c(0.05,0.25,0.5,0.75,0.95)
 #' @export COSEWIC_Pplot
 COSEWIC_Pplot<-function(MSEobj,syear=2017,qcol='#FFCB62', quants=c(0.05,0.25,0.5,0.75,0.95)){
   lcol<-makeTransparent(qcol,85)
-  if(class(MSEobj)!="COSEWIC")stop("The MSE object you have provided is not of class COSEWIC,
+  if(!methods::is(MSEobj,"COSEWIC"))stop("The MSE object you have provided is not of class COSEWIC,
                                       please create a COSEWIC class MSE object using the function runCOSEWIC()")
   if(sum(MSEobj@MPs%in%c("NFref","FMSYref","curE"))<3) stop("This function requires an MSE for three specific MPs:
                                                                NFref,FMSYref and curE. Please create a COSEWIC class MSE object using the function runCOSEWIC()")
@@ -782,7 +782,7 @@ COSEWIC_Pplot<-function(MSEobj,syear=2017,qcol='#FFCB62', quants=c(0.05,0.25,0.5
 COSEWIC_Dplot<-function(MSEobj,syear=2017,qcol='#79F48D', quants=c(0.05,0.25,0.5,0.75,0.95),nGT=3){
 
   lcol<-makeTransparent(qcol,85)
-  if(class(MSEobj)!="COSEWIC")stop("The MSE object you have provided is not of class COSEWIC,
+  if(!methods::is(MSEobj, "COSEWIC")) stop("The MSE object you have provided is not of class COSEWIC,
                                       please create a COSEWIC class MSE object using the function runCOSEWIC()")
   if(sum(MSEobj@MPs%in%c("NFref","FMSYref","curE"))<2) stop("This function requires an MSE for three specific MPs:
                                                             NFref, FMSYref and curE. Please create a COSEWIC class MSE object using the function runCOSEWIC()")
@@ -827,7 +827,7 @@ COSEWIC_Dplot<-function(MSEobj,syear=2017,qcol='#79F48D', quants=c(0.05,0.25,0.5
 COSEWIC_Blow<-function(MSEobj,syear=2017,qcol=rgb(0.4,0.8,0.95), quants=c(0.05,0.25,0.5,0.75,0.95),nGT=3){
 
   lcol<-makeTransparent(qcol,85)
-  if(class(MSEobj)!="COSEWIC")stop("The MSE object you have provided is not of class COSEWIC,
+  if(!methods::is(MSEobj, "COSEWIC")) stop("The MSE object you have provided is not of class COSEWIC,
                                    please create a COSEWIC class MSE object using the function runCOSEWIC()")
   if(sum(MSEobj@MPs%in%c("NFref","FMSYref","curE"))<2) stop("This function requires an MSE for three specific MPs:
                                                             NFref, FMSYref and curE. Please create a COSEWIC class MSE object using the function runCOSEWIC()")
@@ -1298,7 +1298,7 @@ Thresh_tab<-function(Ptab1){
 #' @export
 COSEWIC_tab<-function(MSEobj,rnd=0,GTs=c(3,6),syear=2017,nGT=3){
 
-  if(class(MSEobj)!="COSEWIC")stop("The MSE object you have provided is not of class COSEWIC,
+  if(!methods::is(MSEobj,"COSEWIC"))stop("The MSE object you have provided is not of class COSEWIC,
                                       please create a COSEWIC class MSE object using the function runCOSEWIC()")
   if(sum(MSEobj@MPs%in%c("NFref","FMSYref","curE"))<2) stop("This function requires an MSE for three specific MPs:
                                                             NFref, FMSYref and curE. Please create a COSEWIC class MSE object using the function runCOSEWIC()")

@@ -533,7 +533,7 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
   Fdisc <- mean(Fdisc2[, 1:nyears], na.rm = TRUE)
  
   # ---- empirical weight-at-age for catches ----
-  if (class(replist$wtatage) != 'logical') {
+  if (!methods::is(replist$wtatage, 'logical')) {
     wt_at_age_c_df <- replist$wtatage %>% dplyr::filter(abs(Yr) %in% mainyrs, Sex==i, Fleet==ff)
     
     if(nrow(wt_at_age_c_df)) {

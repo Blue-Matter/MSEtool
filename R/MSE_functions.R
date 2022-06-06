@@ -48,7 +48,7 @@ Converge <- function(MSEobj, PMs=c('Yield', 'P10', 'AAVY'), maxMP=15, thresh=0.5
                      inc.leg=FALSE, all.its=FALSE, nrow=NULL, ncol=NULL, silent=FALSE) {
 
 
-  if(class(MSEobj) != "MSE") stop("MSEobj must be object of class 'MSE'", call.=FALSE)
+  if(!methods::is(MSEobj, "MSE")) stop("MSEobj must be object of class 'MSE'", call.=FALSE)
   if(MSEobj@nMPs <2) stop("Converge requires more than 1 MP in the MSE object", call.=FALSE)
 
   if (!requireNamespace("ggrepel", quietly = TRUE)) {
@@ -963,14 +963,14 @@ Sub <- function(MSEobj, MPs = NULL, sims = NULL, years = NULL) {
 #' }
 #'
 Dom <- function(MSEobj, ..., PMlist=NULL, Refs=NULL, Yrs=NULL) {
-  if (class(MSEobj) != 'MSE') stop("Object must be class `MSE`", call.=FALSE)
+  if (!methods::is(MSEobj, 'MSE')) stop("Object must be class `MSE`", call.=FALSE)
   if (is.null(PMlist)) {
     PMlist <- unlist(list(...))
   } else {
     PMlist <- unlist(PMlist)
   }
 
-  if (class(PMlist) != 'character') stop("Must provide names of PM methods")
+  if (!methods::is(PMlist,'character')) stop("Must provide names of PM methods")
 
   runPM <- vector("list", length(PMlist))
   for (X in 1:length(PMlist)) {
@@ -1079,7 +1079,7 @@ Dom <- function(MSEobj, ..., PMlist=NULL, Refs=NULL, Yrs=NULL) {
 #   MSEout <- addmp('C', MSEobjs, MSEout)
 #   MSEout <- addmp('TAC', MSEobjs, MSEout)
 #   MSEout <- addmp('Effort', MSEobjs, MSEout)
-#   MSEout <- addmp('PAA', MSEobjs, MSEout)
+class#   MSEout <- addmp('PAA', MSEobjs, MSEout)
 #   MSEout <- addmp('CAA', MSEobjs, MSEout)
 #   MSEout <- addmp('CAL', MSEobjs, MSEout)
 #
@@ -1097,7 +1097,7 @@ Dom <- function(MSEobj, ..., PMlist=NULL, Refs=NULL, Yrs=NULL) {
 #' @export
 joinMSE <- function(MSEobjs = NULL) {
   # join two or more MSE objects
-  if (class(MSEobjs) != "list") stop("MSEobjs must be a list")
+  if (!methods::is(MSEobjs, "list")) stop("MSEobjs must be a list")
   if (length(MSEobjs) < 2) stop("MSEobjs list doesn't contain multiple MSE objects")
 
   lapply(MSEobjs, checkMSE) # check that MSE objects contains all slots
@@ -1198,7 +1198,7 @@ joinMSE <- function(MSEobjs = NULL) {
     for (obj in 1:length(Allobjs)) {
       temp[[obj]] <-RefPoint_List[[obj]][[nm]]
     }
-    if (class(temp[[1]]) == 'list') {
+    if (methods::is(temp[[1]], 'list')) {
       nms2 <- names(temp[[1]])
       for (j in seq_along(nms2)) {
         temp2 <- list()

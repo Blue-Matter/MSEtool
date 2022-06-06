@@ -39,7 +39,7 @@ get_funcs <- function(package, classy , msg) {
 #' @export
 avail <- function(classy, package=NULL, msg=TRUE) {
   temp <- try(class(classy), silent=TRUE)
-  if (class(temp) == "try-error") classy <- deparse(substitute(classy))
+  if (methods::is(temp, "try-error")) classy <- deparse(substitute(classy))
   if (temp == "function") classy <- deparse(substitute(classy))
 
   if (classy %in% c('Output', 'Input', "Mixed", "Reference")) {
@@ -402,10 +402,10 @@ setMethod("tinyErr", signature(x = "OM"),
 #' MPtype(c("AvC", "curE", "matlenlim", "MRreal", "FMSYref"))
 #'
 MPtype <- function(MPs=NA) {
-  if(class(MPs) == "MP") stop("MPs must be characters")
+  if(methods::is(MPs, "MP")) stop("MPs must be characters")
   availMPs <- avail("MP", msg=FALSE)
   if (any(is.na(MPs))) MPs <- availMPs
-  if (class(MPs) != 'character') stop("MPs must be characters")
+  if (!methods::is(MPs, 'character')) stop("MPs must be characters")
 
   existMPs <- MPs %in% availMPs
 
@@ -563,13 +563,13 @@ plotFun <- function(class = c("MSE", "Data"), msg = TRUE) {
 #' @export
 Required <- function(funcs = NA, noCV=FALSE) {
 
-  if (class(funcs) != 'logical' & class(funcs) != "character")
+  if (!methods::is(funcs, 'logical') & !methods::is(funcs, "character"))
     stop("first argument must be character with MP name")
 
   if (all(is.na(funcs))) funcs <- avail("MP", msg=FALSE)
   for (x in 1:length(funcs)) {
     tt <- try(get(funcs[x]))
-    if (class(tt) != "MP") stop(funcs[x], " is not class 'MP'")
+    if (!methods::is(tt,"MP")) stop(funcs[x], " is not class 'MP'")
   }
 
   ReqData <- MSEtool::ReqData
@@ -775,7 +775,7 @@ updateMSE <- function(MSEobj, save.name=NULL) {
 
   slots <- slotNames(MSEobj)
 
-  if (length(slots)<1 & class(MSEobj)=='MSE') {
+  if (length(slots)<1 & methods::is(MSEobj,'MSE')) {
     # incompatible version
     message('Updating MSE object from earlier version of DLMtool')
     nMSE <- new("MSE",

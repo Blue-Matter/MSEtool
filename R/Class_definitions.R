@@ -796,15 +796,15 @@ setMethod("initialize", "OM", function(.Object, Stock=NULL, Fleet=MSEtool::Gener
     return(.Object)
   }
 
-  if (class(Stock) != "Stock")
+  if (!methods::is(Stock, "Stock"))
     print(paste("Could not build operating model:", deparse(substitute(Stock)), "not of class Stock"))
-  if (class(Fleet) != "Fleet")
+  if (!methods::is(Fleet, "Fleet")) 
     print(paste("Could not build operating model:", deparse(substitute(Fleet)), "not of class Fleet"))
-  if (class(Obs) != "Obs")
+  if (!methods::is(Obs, "Obs"))
     print(paste("Could not build operating model:", deparse(substitute(Obs)), "not of class Obs"))
-  if (class(Imp) != "Imp")
+  if (!methods::is(Imp, "Imp"))
     print(paste("Could not build operating model:", deparse(substitute(Imp)), "not of class Imp"))
-  if (class(Stock) != "Stock" | class(Fleet) != "Fleet" | class(Obs) != "Obs"  | class(Imp) != "Imp") stop()
+
   .Object@Name <- paste("Stock:", Stock@Name, "  Fleet:", Fleet@Name, "  Obs model:",
                         Obs@Name, "  Imp model:", Imp@Name, sep = "")
 
@@ -1166,7 +1166,7 @@ setMethod('summary', signature="MSE", function(object, ..., silent=FALSE, Refs=N
   PMlist <- unlist(list(...))
 
   if(length(PMlist) == 0) PMlist <- c("PNOF", "P50", "AAVY", "LTY")
-  if (class(PMlist) != 'character') stop("Must provide names of PM methods")
+  if (!methods::is(PMlist,'character')) stop("Must provide names of PM methods")
   # check
   for (X in seq_along(PMlist))
     if (class(get(PMlist[X])) != "PM") stop(PMlist[X], " is not a valid PM method")
@@ -1333,7 +1333,7 @@ setMethod("summary",
             if ('all' %in% plots) plots <- c('TS', 'CAA', 'CAL', 'PD')
 
             Freq <- n <- Var2 <- NULL # cran check
-            if (class(object) != "Data") stop("Object must be class `Data`", call.=FALSE)
+            if (!methods::is(object, "Data")) stop("Object must be class `Data`", call.=FALSE)
 
             # Time-Series
             Year <- object@Year

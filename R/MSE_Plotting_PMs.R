@@ -50,10 +50,10 @@ TradePlot <- function(MSEobj, ..., Lims=c(0.2, 0.2, 0.8, 0.8),
                       Refs=NULL,
                       Yrs=NULL
                       ) {
-  if (class(MSEobj) != 'MSE' & class(MSEobj) !='MMSE')
+  if (!methods::is(MSEobj, 'MSE') & !methods::is(MSEobj,'MMSE'))
     stop("Object must be class `MSE` or class `MMSE`", call.=FALSE)
 
-  if (class(MSEobj)=='MMSE') legend <- FALSE
+  if (methods::is(MSEobj,'MMSE')) legend <- FALSE
   if (!requireNamespace("ggrepel", quietly = TRUE)) {
     stop("Package \"ggrepel\" needed for this function to work. Please install it.",
          call. = FALSE)
@@ -67,7 +67,7 @@ TradePlot <- function(MSEobj, ..., Lims=c(0.2, 0.2, 0.8, 0.8),
   position <- match.arg(position)
 
   if(length(PMlist) == 0) PMlist <- c("STY", "LTY", "P10", "AAVY")
-  if (class(PMlist) != 'character') stop("Must provide names of PM methods")
+  if (!methods::is(PMlist, 'character')) stop("Must provide names of PM methods")
   # check
 
   # for (X in seq_along(PMlist))
@@ -157,9 +157,9 @@ TradePlot <- function(MSEobj, ..., Lims=c(0.2, 0.2, 0.8, 0.8),
       Class <- rep('', MSEobj@nMPs)
     }
 
-    if (class(MSEobj) =='MSE') {
+    if (methods::is(MSEobj,'MSE')) {
       labels <- MSEobj@MPs
-      if (class(Labels) == "list") {
+      if (methods::is(Labels,"list")) {
         repnames <- names(Labels)
         invalid <- repnames[!repnames %in% labels]
         if (length(invalid >0)) {
@@ -236,7 +236,7 @@ TradePlot <- function(MSEobj, ..., Lims=c(0.2, 0.2, 0.8, 0.8),
   out <- do.call("rbind", listout)
   tab <- table(out$label, out$pass)
   passall <- rownames(tab)[tab[,ncol(tab)] == nplots]
-  if (class(MSEobj)=='MSE') {
+  if (methods::is(MSEobj,'MSE')) {
     Results <- summary(MSEobj, PMlist, silent=TRUE, Refs=Refs)
     Results$Satisificed <- FALSE
     Results$Satisificed[match(passall, Results$MP)] <- TRUE
@@ -254,7 +254,7 @@ TradePlot <- function(MSEobj, ..., Lims=c(0.2, 0.2, 0.8, 0.8),
     return(invisible(out))
   } else {
     join_plots(plots, n.col, n.row,  position = position, legend=legend)
-    if (class(MSEobj) =='MSE') print(Results)
+    if (methods::is(MSEobj,'MSE')) print(Results)
   }
   invisible(out)
 }
@@ -270,7 +270,7 @@ TradePlot <- function(MSEobj, ..., Lims=c(0.2, 0.2, 0.8, 0.8),
 #'
 #' @export
 Tplot <- function(MSEobj, Lims=c(0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5), ...) {
-  if (class(Lims)!="numeric") stop("Second argument must be numeric")
+  if (!methods::is(Lims,"numeric")) stop("Second argument must be numeric")
   TradePlot(MSEobj, Lims=Lims, PMlist=list("PNOF", "LTY", "P100", "LTY", "P50", "LTY", "P10", "LTY"),  ...)
 }
 
@@ -282,7 +282,7 @@ Tplot <- function(MSEobj, Lims=c(0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5), ...) {
 #'
 #' @export
 Tplot2 <- function(MSEobj, Lims=c(0.2, 0.2, 0.8, 0.8), ...) {
-  if (class(Lims)!="numeric") stop("Second argument must be numeric")
+  if (!methods::is(Lims,"numeric"))stop("Second argument must be numeric")
   TradePlot(MSEobj, Lims=Lims, PMlist=list("STY", "LTY", "P10", "AAVY"), ...)
 }
 
@@ -294,7 +294,7 @@ Tplot2 <- function(MSEobj, Lims=c(0.2, 0.2, 0.8, 0.8), ...) {
 #'
 #' @export
 Tplot3 <- function(MSEobj, Lims=c(0.5, 0.5, 0.8, 0.5), ...) {
-  if (class(Lims)!="numeric") stop("Second argument must be numeric")
+  if (!methods::is(Lims,"numeric")) stop("Second argument must be numeric")
   TradePlot(MSEobj, Lims=Lims, PMlist=list("PNOF", "LTY", "P50", "AAVY"), ...)
 }
 

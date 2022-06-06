@@ -424,7 +424,7 @@ PackageFuns <- function() {
 CheckDuplicate <- function(MPs) {
   # check if custom MP names already exist in DLMtool
   tt <- suppressWarnings(try(lsf.str(envir=globalenv()), silent=TRUE))
-  if (class(tt)!="try-error") {
+  if (!methods::is(tt, "try-error")) {
     gl.funs <- as.vector(tt)
     pkg.funs <- PackageFuns()
 

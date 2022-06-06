@@ -83,7 +83,7 @@ NULL
 #' @keywords internal
 #' @export
 ChkYrs <- function(Yrs, MSEobj) {
-   if (class(MSEobj) != "MSE" & class(MSEobj) != "MMSE")
+   if (!methods::is(MSEobj, "MSE") & !methods::is(MSEobj, "MMSE"))
       stop("Require object of class `MSE` or class `MMSE`", call. = FALSE)
 
  if (is.null(Yrs)) {

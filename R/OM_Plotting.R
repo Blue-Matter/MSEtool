@@ -18,7 +18,7 @@ render_plot <- function(Object, Class, Stock=NULL, RMD=NULL, nsamp=3, nsim=200, 
   if (is.null(plotPars)) plotPars <- list(breaks=10, col="darkgray", axes=FALSE,
                                           cex.main=1, lwd=2)
 
-  if (class(Object) == "OM") {
+  if (methods::is(Object, "OM")) {
     nsim <- Object@nsim
     nyears <- Object@nyears
     proyears <- Object@proyears
@@ -41,7 +41,7 @@ render_plot <- function(Object, Class, Stock=NULL, RMD=NULL, nsamp=3, nsim=200, 
     Pars$Name <- gsub(" ", "_", name)
   } else if (Class == "Fleet") {
     if (is.null(title)) title <- "Fleet Object Plots"
-    if (class(Stock)!="Stock")
+    if (!methods::is(Stock, "Stock"))
       stop("Must provide object of class 'Stock'", call. = FALSE)
     StockPars <- SampleStockPars(Stock, nsim, nyears, proyears, SampCpars,
                                  msg=FALSE)
@@ -143,7 +143,7 @@ render_plot <- function(Object, Class, Stock=NULL, RMD=NULL, nsamp=3, nsim=200, 
                                 output_file=output_file,
                                 output_dir=output_dir,
                                 quiet=quiet), silent=TRUE)
-  if (class(rend) == "try-error") {
+  if (methods::is(rend,"try-error")) {
     print(rend)
   } else {
     message("Rendered ", output_file, " in ", output_dir)
@@ -191,7 +191,7 @@ plot.pars <- function(x, Object, Stock=NULL, nsamp=3, nsim=200, nyears=50,
     stop("Invalid argument. Valid arguments are: ", paste0(DF[,1], sep=" "), call.=FALSE)
 
   Class <- DF$Class[match(x, DF[,1])]
-  if (class(Object) !="OM" & class(Object) != Class & class(Object)!="Hist")
+  if (!methods::is(Object, "OM") & !methods::is(Object, Class) & !methods::is(Object, "Hist"))
     stop("Incorrect class object for this parameter", call.=FALSE)
 
 
@@ -315,7 +315,7 @@ plot.Fleet <- function(x, Stock=NULL, nsamp=3, nsim=200, nyears=50,
                        proyears=28, output_file=NULL, output_dir=getwd(),
                        quiet=TRUE, tabs=TRUE, title=NULL, date=NULL,
                        plotPars =NULL, open=TRUE, dev=FALSE, ...){
-  if (class(Stock) !="Stock" & class(x) !="OM")
+  if (!methods::is(Stock, "Stock") & !methods::is(x, "OM"))
     stop("Must provide object of class 'Stock'")
 
   render_plot(Object=x, Class="Fleet", Stock=Stock, RMD='Fleet', nsamp=nsamp, nsim=nsim,

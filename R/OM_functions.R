@@ -14,7 +14,7 @@
 #' @seealso \link{Sub} for subsetting MSE output and \link{SubCpars} for subsetting by simulation and projection years.
 #' @export
 SubOM <- function(OM, Sub=c("Stock", "Fleet", "Obs", "Imp")) {
-  if (class(OM) !="OM") stop("OM must be of class OM ", call.=FALSE)
+  if (!methods:is(OM,"OM")) stop("OM must be of class OM ", call.=FALSE)
   Sub <- match.arg(Sub)
   temp <- new(Sub)
 
@@ -71,9 +71,9 @@ SubOM <- function(OM, Sub=c("Stock", "Fleet", "Obs", "Imp")) {
 #'
 #' @export
 Replace <- function(OM, from,Sub=c("Stock", "Fleet", "Obs", "Imp"),  Name=NULL, silent=FALSE) {
-  if (class(OM) =="character") OM <- get(OM)
-  if (class(OM) !="OM") stop("OM must be of class OM ", call.=FALSE)
-  if (class(from) =="character") from <- get(from)
+  if (methods::is(OM, "character")) OM <- get(OM)
+  if (!methods::is(OM, "OM")) stop("OM must be of class OM ", call.=FALSE)
+  if (methods::is(from,"character")) from <- get(from)
   if (!class(from) %in% c("OM", "Stock", "Fleet", "Obs", "Imp"))
     stop("from must be class `OM`, `Stock`, `Fleet`, `Obs`, `Imp`", call.=FALSE)
 
@@ -82,7 +82,7 @@ Replace <- function(OM, from,Sub=c("Stock", "Fleet", "Obs", "Imp"),  Name=NULL, 
   Obs <- SubOM(OM, "Obs")
   Imp <- SubOM(OM, "Imp")
 
-  if (class(from) == "OM") {
+  if (methods::is(from, "OM")) {
     Sub <- match.arg(Sub, several.ok=TRUE)
     if (length(Sub)==4) warning("Replacing all OM components. Probably not what you want to do ...")
 
@@ -264,7 +264,7 @@ Replace <- function(OM, from,Sub=c("Stock", "Fleet", "Obs", "Imp"),  Name=NULL, 
 LH2OM <- function(OM, dist=c("unif", "norm"), filterMK=FALSE, plot=TRUE,
                   Class = "predictive", Order = "predictive",
                   Family = "predictive", msg=TRUE, db=MSEtool::LHdatabase) {
-  if (class(OM) != 'OM') stop("OM must be class 'OM'")
+  if (!methods::is(OM, 'OM')) stop("OM must be class 'OM'")
   dist <- match.arg(dist)
   set.seed(OM@seed)
   if (length(OM@nsim)<1) OM@nsim <- 48
@@ -453,7 +453,7 @@ predictLH <- function(inpars=list(), Genus="predictive", Species="predictive", n
   # get predictions from FishLife
   taxa <- gettaxa(Class, Order, Family, Genus, Species, msg=msg)
   if (is.null(taxa)) return(NULL)
-  if (class(db) != "list") stop("db must be database list from FishLife", call.=FALSE)
+  if (!methods::is(db, "list")) stop("db must be database list from FishLife", call.=FALSE)
   Which <- grep(taxa, db$ParentChild_gz[,'ChildName'])
   mu <- db$ParHat$beta_gj[Which,]
   covar <- db$Cov_gjj[Which,,]

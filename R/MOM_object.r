@@ -83,10 +83,10 @@ setMethod("initialize", "MOM", function(.Object, Stocks=NULL, Fleets=NULL,
   # Known issues:
   # Check for same nareas in cpars$mov
 
-  for(i in 1:length(Stocks))if (class(Stocks[[i]]) != "Stock")  stop(paste("Could not build operating model:", deparse(substitute(Stocks[[i]])), "not of class Stock"))
-  for(i in 1:length(Fleets))for(j in 1:length(Fleets[[i]]))if (class(Fleets[[i]][[j]]) != "Fleet")  stop(paste("Could not build operating model:", deparse(substitute(Fleets[[i]][[j]])), "not of class Fleet"))
-  for(i in 1:length(Obs))for(j in 1:length(Obs[[i]]))  if (class(Obs[[i]][[j]]) != "Obs") stop(paste("Could not build operating model:", deparse(substitute(Obs[[i]][[j]])), "not of class Obs"))
-  for(i in 1:length(Imps))for(j in 1:length(Imps[[i]])) if (class(Imps[[i]][[j]]) != "Imp") stop(paste("Could not build operating model:", deparse(substitute(Imp)), "not of class Imp"))
+  for(i in 1:length(Stocks))if (!methods::is(Stocks[[i]],"Stock"))  stop(paste("Could not build operating model:", deparse(substitute(Stocks[[i]])), "not of class Stock"))
+  for(i in 1:length(Fleets))for(j in 1:length(Fleets[[i]]))if (!methods::is(Fleets[[i]][[j]], "Fleet"))  stop(paste("Could not build operating model:", deparse(substitute(Fleets[[i]][[j]])), "not of class Fleet"))
+  for(i in 1:length(Obs))for(j in 1:length(Obs[[i]]))  if (!methods::is(Obs[[i]][[j]],"Obs")) stop(paste("Could not build operating model:", deparse(substitute(Obs[[i]][[j]])), "not of class Obs"))
+  for(i in 1:length(Imps))for(j in 1:length(Imps[[i]])) if (!methods::is(Imps[[i]][[j]],"Imp")) stop(paste("Could not build operating model:", deparse(substitute(Imp)), "not of class Imp"))
   .Object@Name <- paste(c("MultiOM:",SIL(Stocks,"Name"),SIL(Fleets,"Name")),collapse=" - ")
 
   if( length(unique(SIL(Fleets,"nyears")))>1)stop("Fleet objects must have the same historical duration (nyears)")
