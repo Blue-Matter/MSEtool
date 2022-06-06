@@ -901,7 +901,7 @@ Cant <- function(Data, timelimit = 1, silent=FALSE) {
 DLMdiag <- function(Data, command = c("available", "not available", "needed"), reps = 5,
                     timelimit = 1, funcs1=NA, dev=FALSE, silent=FALSE) {
   command <- match.arg(command)
-  if (!meethod::is(Data,"Data")) stop("First argument must be object of class 'Data'", call.=FALSE)
+  if (!methods::is(Data,"Data")) stop("First argument must be object of class 'Data'", call.=FALSE)
   set.seed(101)
   Data <- updateMSE(Data)
   if (all(is.na(funcs1))) funcs1 <- avail("MP", msg=FALSE)
