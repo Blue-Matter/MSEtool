@@ -92,18 +92,18 @@ OM with one from another object.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co"># Replace Stock</span></span>
 <span class="r-in"><span class="va">OM</span> <span class="op">&lt;-</span> <span class="fu">MSEtool</span><span class="fu">::</span><span class="va"><a href="OM-class-objects.html">testOM</a></span></span>
 <span class="r-in"><span class="va">OM2</span> <span class="op">&lt;-</span> <span class="fu">Replace</span><span class="op">(</span><span class="va">OM</span>, <span class="va">Blue_shark</span><span class="op">)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Replacing sub-model:  Stock</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in methods:is(OM, "OM"):</span> NA/NaN argument</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># Replace Fleet</span></span>
 <span class="r-in"><span class="va">OM</span> <span class="op">&lt;-</span> <span class="fu">MSEtool</span><span class="fu">::</span><span class="va"><a href="OM-class-objects.html">testOM</a></span></span>
 <span class="r-in"><span class="va">OM2</span> <span class="op">&lt;-</span> <span class="fu">Replace</span><span class="op">(</span><span class="va">OM</span>, <span class="va">Generic_DecE</span><span class="op">)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Replacing sub-model:  Fleet</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in methods:is(OM, "OM"):</span> NA/NaN argument</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># Replace Fleet from another OM</span></span>
 <span class="r-in"><span class="va">OM1</span> <span class="op">&lt;-</span> <span class="fu">new</span><span class="op">(</span><span class="st">"OM"</span>, <span class="va">Albacore</span>, <span class="va">Generic_DecE</span>, <span class="va">Perfect_Info</span>, <span class="va">Overages</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">OM2</span> <span class="op">&lt;-</span> <span class="fu">new</span><span class="op">(</span><span class="st">"OM"</span>, <span class="va">Blue_shark</span>, <span class="va">Generic_IncE</span>, <span class="va">Generic_Obs</span>, <span class="va">Perfect_Imp</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">OM1a</span> <span class="op">&lt;-</span> <span class="fu">Replace</span><span class="op">(</span><span class="va">OM1</span>, <span class="va">OM2</span>, <span class="st">"Fleet"</span><span class="op">)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Replacing sub-models:  Fleet</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in methods:is(OM, "OM"):</span> NA/NaN argument</span>
 <span class="r-in"></span>
 </code></pre></div>
     </div>
