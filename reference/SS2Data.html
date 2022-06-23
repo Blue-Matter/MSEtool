@@ -18,7 +18,7 @@ the various slots of an Data object."><meta property="og:image" content="/logo.p
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.1</span>
       </span>
     </div>
 
@@ -77,42 +77,71 @@ the various slots of an Data object.</p>
     <h2>Arguments</h2>
     <dl><dt>SSdir</dt>
 <dd><p>A folder with Stock Synthesis input and output files in it</p></dd>
+
+
 <dt>Name</dt>
 <dd><p>The name for the Data object</p></dd>
+
+
 <dt>Common_Name</dt>
 <dd><p>Character string for the common name of the stock.</p></dd>
+
+
 <dt>Species</dt>
 <dd><p>Scientific name of the species</p></dd>
+
+
 <dt>Region</dt>
 <dd><p>Geographic region of the stock or fishery.</p></dd>
+
+
 <dt>min_age_M</dt>
 <dd><p>Currently, the Data object supports a single value of M for all ages. The argument selects the
 minimum age for calculating the mean of age-dependent M from the SS assessment.</p></dd>
+
+
 <dt>gender</dt>
 <dd><p>An integer index for the sex for importing biological parameters (1 = female, 2 = male).</p></dd>
+
+
 <dt>comp_fleet</dt>
 <dd><p>A vector of indices corresponding to fleets in the assessment over which to aggregate the composition
 (catch-at-length and catch-at-age) data. By default, character string <code>"all"</code> will aggregate across all fleets.</p></dd>
+
+
 <dt>comp_season</dt>
 <dd><p>Integer, for seasonal models, the season for which the value of the index will be used. By default, <code>"mean"</code>
 will take the average across seasons.</p></dd>
+
+
 <dt>comp_partition</dt>
 <dd><p>Integer vector for selecting length/age observations that are retained (2), discarded (1), or both (0). By default, <code>"all"</code>
 sums over all available partitions.</p></dd>
+
+
 <dt>comp_gender</dt>
 <dd><p>Integer vector for selecting length/age observations that are female (1), male (2), or both (0), or both scaled to sum to one (3).
 By default, <code>"all"</code> sums over all gender codes.</p></dd>
+
+
 <dt>index_season</dt>
 <dd><p>Integer, for seasonal models, the season for which the value of the index will be used. By default, <code>"mean"</code>
 will take the average across seasons.</p></dd>
+
+
 <dt>silent</dt>
 <dd><p>Logical. Suppress all messages?</p></dd>
+
+
 <dt>...</dt>
 <dd><p>Arguments to pass to <a href="https://rdrr.io/pkg/r4ss/man/SS_output.html" class="external-link">SS_output</a></p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>An object of class Data.</p>
+    
+
+<p>An object of class Data.</p>
     </div>
     <div id="note">
     <h2>Note</h2>
@@ -139,7 +168,7 @@ will take the average across seasons.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

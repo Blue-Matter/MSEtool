@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.1</span>
       </span>
     </div>
 
@@ -89,49 +89,90 @@
     <h2>Arguments</h2>
     <dl><dt>MSEobj</dt>
 <dd><p>An object of class <code>MSE</code></p></dd>
+
+
 <dt>...</dt>
 <dd><p>Names of Performance Metrics (PMs), or other arguments to <code>TradePlot</code>. First PM is recycled if number of PMs is not even</p></dd>
+
+
 <dt>Lims</dt>
 <dd><p>A numeric vector of acceptable risk/minimum probability thresholds. Recycled if not equal to number of PMs.</p></dd>
+
+
 <dt>Title</dt>
 <dd><p>Optional title for each plot. Character vector of <code>length(PMs)</code>/2. Recycled.</p></dd>
+
+
 <dt>Labels</dt>
 <dd><p>Optional named list specifying new labels for MPs. For example: <code>Labels = list(AvC="Average Catch", CC1="Constant Catch")</code></p></dd>
+
+
 <dt>Satisficed</dt>
 <dd><p>Logical. Show only the MPs that meet minimum acceptable thresholds (specified in <code>Lims</code>)</p></dd>
+
+
 <dt>Show</dt>
 <dd><p>Character. Show the plots ('plots'), results table ('table'), 'both' (default), or invisibly return objects only ('none')</p></dd>
+
+
 <dt>point.size</dt>
 <dd><p>Numeric. Size of the MP points</p></dd>
+
+
 <dt>lab.size</dt>
 <dd><p>Numeric. Size of MP label. Set to NULL to remove MP labels.</p></dd>
+
+
 <dt>axis.title.size</dt>
 <dd><p>Numeric. Size of axis titles</p></dd>
+
+
 <dt>axis.text.size</dt>
 <dd><p>Numeric. Size of axis text</p></dd>
+
+
 <dt>legend</dt>
 <dd><p>Logical. Include legend?</p></dd>
+
+
 <dt>legend.title.size</dt>
 <dd><p>Numeric. Size of legend title text</p></dd>
+
+
 <dt>position</dt>
 <dd><p>Character. Position of legend - 'right' or 'bottom'</p></dd>
+
+
 <dt>cols</dt>
 <dd><p>Optional character vector of colors for the legend (MP Types) or if <code>cols</code> is a character vector of length <code>MSEobj@nMPs</code>,
 then the MP labels are colored (no color legend).</p></dd>
+
+
 <dt>fill</dt>
 <dd><p>Character. Color of the fill</p></dd>
+
+
 <dt>alpha</dt>
 <dd><p>Numeric. Transparency of fill</p></dd>
+
+
 <dt>PMlist</dt>
 <dd><p>Optional list of PM names. Overrides any supplied in ... above</p></dd>
+
+
 <dt>Refs</dt>
 <dd><p>An optional named list (matching the PM names) with numeric values to override the default <code>Ref</code> values. See examples.</p></dd>
+
+
 <dt>Yrs</dt>
 <dd><p>An optional named list (matching the PM names) with numeric values to override the default <code>Yrs</code> values. See examples.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>Invisibly returns a list with summary table of MP performance and
+    
+
+<p>Invisibly returns a list with summary table of MP performance and
 the ggplot objects for the plots</p>
     </div>
     <div id="functions">
@@ -169,7 +210,7 @@ the ggplot objects for the plots</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

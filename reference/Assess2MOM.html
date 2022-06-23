@@ -19,7 +19,7 @@ needs to parameterize most of the observation and implementation portions of the
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.1</span>
       </span>
     </div>
 
@@ -87,49 +87,91 @@ needs to parameterize most of the observation and implementation portions of the
     <h2>Arguments</h2>
     <dl><dt>Name</dt>
 <dd><p>Character string. The name of the multi-OM.</p></dd>
+
+
 <dt>proyears</dt>
 <dd><p>Positive integer. The number of projection years for MSE.</p></dd>
+
+
 <dt>interval</dt>
 <dd><p>Positive integer. The interval at which management procedures will update the management advice in <a href="multiMSE.html">multiMSE</a>, e.g., 1 = annual updates.</p></dd>
+
+
 <dt>CurrentYr</dt>
 <dd><p>Positive integer. The current year (e.g., final year of fitting to data)</p></dd>
+
+
 <dt>h</dt>
 <dd><p>The steepness of the stock-recruitment curve. Either a single numeric or a length nsim vector.</p></dd>
+
+
 <dt>Obs</dt>
 <dd><p>Either a single observation model to be used for all sexes and populations (class <a href="Obs-class.html">Obs</a>), or a list where
 <code>Obs[[f]]</code> is the <a href="Obs-class.html">Obs</a> object for fleet <code>f</code> (identical between sexes).</p></dd>
+
+
 <dt>Imp</dt>
 <dd><p>Either a single implementation model to be used for all sexes and populations (class <a href="Imp-class.html">Imp</a>), or a list where
 <code>Imp[[f]]</code> is the <a href="Obs-class.html">Obs</a> object for fleet <code>f</code> (identical between sexes).</p></dd>
+
+
 <dt>naa</dt>
 <dd><p>Numbers-at-age by sex <code>[first age is age zero]</code>. Four-dimensional numeric array <code>[sim, ages, year, p]</code>. <code>[p]</code> indexes the population, where
 <code>[p = 1]</code> for females and <code>[p = 2]</code> for males.</p></dd>
+
+
 <dt>faa</dt>
 <dd><p>Fishing mortality rate-at-age by sex and fleet <code>[first age is age zero]</code>. Five-dimensional numeric array <code>[sim, ages, year, p, f]</code> where <code>[f]</code> indexes fishery fleet.</p></dd>
+
+
 <dt>waa</dt>
 <dd><p>Weight-at-age <code>[first age is age zero]</code>. Four-dimensional numeric array <code>[sim, ages, year, p]</code>.</p></dd>
+
+
 <dt>Mataa</dt>
 <dd><p>Maturity (spawning fraction)-at-age <code>[first age is age zero]</code>. Four-dimensional numeric array  <code>[sim, ages, year, p]</code>.</p></dd>
+
+
 <dt>Maa</dt>
 <dd><p>Natural mortality rate-at-age <code>[first age is age zero]</code>. Four-dimensional numeric array <code>[sim, ages, year, p]</code>.</p></dd>
+
+
 <dt>laa</dt>
 <dd><p>Length-at-age <code>[first age is age zero]</code>. Four-dimensional numeric array <code>[sim, ages, year, p]</code>.</p></dd>
+
+
 <dt>nyr_par_mu</dt>
 <dd><p>Positive integer. The number of recent years that natural mortality, age vulnerability, weight, length and maturity parameters are averaged over for defining future projection conditions.</p></dd>
+
+
 <dt>LowerTri</dt>
 <dd><p>Integer. The number of recent years for which model estimates of recruitment are ignored (not reliably estimated by the assessment)</p></dd>
+
+
 <dt>recind</dt>
 <dd><p>Positive integer. The first age class that fish 'recruit to the fishery'. The default is 0 - ie the first position in the age dimension of naa is age zero</p></dd>
+
+
 <dt>plusgroup</dt>
 <dd><p>Logical. Does the assessment assume that the oldest age class is a plusgroup?</p></dd>
+
+
 <dt>altinit</dt>
 <dd><p>Integer. Various assumptions for how to set up the initial numbers. 0: standard, 1: no plus group, 2: temporary fix for MSEtool plus group initialization</p></dd>
+
+
 <dt>fixq1</dt>
 <dd><p>Logical. Should q be fixed (ie assume the F-at-age array faa is accurate?</p></dd>
+
+
 <dt>report</dt>
 <dd><p>Logical, if TRUE, a diagnostic will be reported showing the matching of the OM reconstructed numbers at age vs the assessment.</p></dd>
+
+
 <dt>silent</dt>
 <dd><p>Whether to silence messages to the console.</p></dd>
+
+
 <dt>...</dt>
 <dd><p>Additional arguments (for all, either a numeric or a length nsim vector):</p><ul><li><p><code>R0</code> unfished recruitment</p></li>
 <li><p><code>phi0</code> unfished spawners per recruit associated with R0 and h. With time-varying parameters, openMSE uses the mean phi0
@@ -138,10 +180,13 @@ in the operating model such that the stock-recruit <code>alpha</code> and <code>
 <li><p><code>Perr</code> recruitment standard deviation (lognormal distribution) for sampling future recruitment</p></li>
 <li><p><code>AC</code> autocorrelation in future recruitment deviates.</p></li>
 </ul></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>An object of class <a href="MOM-class.html">MOM</a>.</p>
+    
+
+<p>An object of class <a href="MOM-class.html">MOM</a>.</p>
     </div>
     <div id="details">
     <h2>Details</h2>
@@ -168,7 +213,7 @@ in the operating model such that the stock-recruit <code>alpha</code> and <code>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

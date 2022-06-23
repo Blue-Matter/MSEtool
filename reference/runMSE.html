@@ -18,7 +18,7 @@ simulation) for a specified operating model"><meta property="og:image" content="
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.1</span>
       </span>
     </div>
 
@@ -81,26 +81,44 @@ simulation) for a specified operating model</p>
     <h2>Arguments</h2>
     <dl><dt>OM</dt>
 <dd><p>An operating model object (class <code>OM</code> or class <code>Hist</code>)</p></dd>
+
+
 <dt>parallel</dt>
 <dd><p>Logical. Should the MSE be run using parallel processing? See Details for more information.</p></dd>
+
+
 <dt>silent</dt>
 <dd><p>Should messages be printed out to the console?</p></dd>
+
+
 <dt>Hist</dt>
 <dd><p>Should model stop after historical simulations? Returns an object of
 class 'Hist' containing all historical data</p></dd>
+
+
 <dt>MPs</dt>
 <dd><p>A vector of methods (character string) of class MP</p></dd>
+
+
 <dt>extended</dt>
 <dd><p>Logical. Return extended projection results?
 if TRUE, <code>MSE@Misc$extended</code> is a named list with extended data
 (including historical and projection by area), and extended version of <code>MSE@Hist</code>
 is returned.</p></dd>
+
+
 <dt>checkMPs</dt>
 <dd><p>Logical. Check if the specified MPs exist and can be run on <code>SimulatedData</code>?</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>Functions return objects of class <a href="Hist-class.html">Hist</a> or <a href="MSE-class.html">MSE</a></p><ul><li><p>Simulate - An object of class <a href="Hist-class.html">Hist</a></p></li>
+    
+
+<p>Functions return objects of class <a href="Hist-class.html">Hist</a> or <a href="MSE-class.html">MSE</a></p>
+
+
+<ul><li><p>Simulate - An object of class <a href="Hist-class.html">Hist</a></p></li>
 <li><p>Project - An object of class <a href="MSE-class.html">MSE</a></p></li>
 <li><p>runMSE - An object of class <a href="MSE-class.html">MSE</a></p></li>
 </ul></div>
@@ -139,7 +157,7 @@ from an object of class `OM</p></li>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

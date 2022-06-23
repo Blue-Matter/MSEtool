@@ -18,7 +18,7 @@ step based on the recent MP recommendation"><meta property="og:image" content="/
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.1</span>
       </span>
     </div>
 
@@ -104,104 +104,201 @@ for <code>Misc</code>. Each element in the list is a matrix. With the exception 
 have <code>nrow=1</code> and <code>ncol=nsim</code>. <code>Spatial</code> has <code>nrow=nareas</code>. Matrices can be empty matrix, populated with all NAs
 (both mean no change in management with respect to this element (e.g. <code>Effort</code>)), or populated with a recommendation.
 MPs must either return a recommendation or no recommendation for every simulation for a particular slot (i.e. cannot have some NA and some values).</p></dd>
+
+
 <dt>y</dt>
 <dd><p>The projection year</p></dd>
+
+
 <dt>nyears</dt>
 <dd><p>The number of historical years</p></dd>
+
+
 <dt>proyears</dt>
 <dd><p>The number of projection years</p></dd>
+
+
 <dt>nsim</dt>
 <dd><p>The number of simulations</p></dd>
+
+
 <dt>Biomass_P</dt>
 <dd><p>An array with dimensions <code>nsim</code>, <code>maxage</code>, <code>proyears</code>, and <code>nareas</code> with total biomass in the projection years</p></dd>
+
+
 <dt>VBiomass_P</dt>
 <dd><p>An array with dimensions <code>nsim</code>, <code>maxage</code>, <code>proyears</code>, and <code>nareas</code> with vulnerable biomass in the projection years</p></dd>
+
+
 <dt>LastTAE</dt>
 <dd><p>A vector of length <code>nsim</code> with the most recent TAE</p></dd>
+
+
 <dt>LastSpatial</dt>
 <dd><p>A matrix of <code>nrow=nareas</code> and <code>ncol=nsim</code> with the most recent spatial management arrangements</p></dd>
+
+
 <dt>LastAllocat</dt>
 <dd><p>A vector of length <code>nsim</code> with the most recent allocation</p></dd>
+
+
 <dt>LastTAC</dt>
 <dd><p>A vector of length <code>nsim</code> with the most recent TAC</p></dd>
+
+
 <dt>TACused</dt>
 <dd><p>A vector of length <code>nsim</code> with the most recent TAC</p></dd>
+
+
 <dt>maxF</dt>
 <dd><p>A numeric value with maximum allowed F. From <code>OM@maxF</code></p></dd>
+
+
 <dt>LR5_P</dt>
 <dd><p>A matrix with <code>nyears+proyears</code> rows and <code>nsim</code> columns with the first length at 5 percent retention.</p></dd>
+
+
 <dt>LFR_P</dt>
 <dd><p>A matrix with <code>nyears+proyears</code> rows and <code>nsim</code> columns with the first length at full retention.</p></dd>
+
+
 <dt>Rmaxlen_P</dt>
 <dd><p>A matrix with <code>nyears+proyears</code> rows and <code>nsim</code> columns with the retention at maximum length.</p></dd>
+
+
 <dt>retL_P</dt>
 <dd><p>An array with dimensions <code>nsim</code>, <code>nCALbins</code> and <code>nyears+proyears</code> with retention at length</p></dd>
+
+
 <dt>retA_P</dt>
 <dd><p>An array with dimensions <code>nsim</code>, <code>maxage</code> and <code>nyears+proyears</code> with retention at age</p></dd>
+
+
 <dt>L5_P</dt>
 <dd><p>A matrix with <code>nyears+proyears</code> rows and <code>nsim</code> columns with the first length at 5 percent selectivity</p></dd>
+
+
 <dt>LFS_P</dt>
 <dd><p>A matrix with <code>nyears+proyears</code> rows and <code>nsim</code> columns with the first length at full selectivity</p></dd>
+
+
 <dt>Vmaxlen_P</dt>
 <dd><p>A matrix with <code>nyears+proyears</code> rows and <code>nsim</code> columns with the selectivity at maximum length.</p></dd>
+
+
 <dt>SLarray_P</dt>
 <dd><p>An array with dimensions <code>nsim</code>, <code>nCALbins</code> and <code>nyears+proyears</code> with selectivity at length</p></dd>
+
+
 <dt>V_P</dt>
 <dd><p>An array with dimensions <code>nsim</code>, <code>maxage</code> and <code>nyears+proyears</code> with selectivity at age</p></dd>
+
+
 <dt>Fdisc_P</dt>
 <dd><p>vector of length <code>nsim</code> with discard mortality. From <code>OM@Fdisc</code> but can be updated by MP (<code>Rec@Fdisc</code>)</p></dd>
+
+
 <dt>DR_P</dt>
 <dd><p>A matrix with <code>nyears+proyears</code> rows and <code>nsim</code> columns with the fraction discarded.</p></dd>
+
+
 <dt>FM_P</dt>
 <dd><p>An array with dimensions <code>nsim</code>, <code>maxage</code>, <code>proyears</code>, and <code>nareas</code> with total fishing mortality</p></dd>
+
+
 <dt>FM_Pret</dt>
 <dd><p>An array with dimensions <code>nsim</code>, <code>maxage</code>, <code>proyears</code>, and <code>nareas</code> with fishing mortality of the retained fish</p></dd>
+
+
 <dt>Z_P</dt>
 <dd><p>An array with dimensions <code>nsim</code>, <code>maxage</code>, <code>proyears</code>, and <code>nareas</code> with total mortality</p></dd>
+
+
 <dt>CB_P</dt>
 <dd><p>An array with dimensions <code>nsim</code>, <code>maxage</code>, <code>proyears</code>, and <code>nareas</code> with total catch</p></dd>
+
+
 <dt>CB_Pret</dt>
 <dd><p>An array with dimensions <code>nsim</code>, <code>maxage</code>, <code>proyears</code>, and <code>nareas</code> with retained catch</p></dd>
+
+
 <dt>Effort_pot</dt>
 <dd><p>A numeric vector of potential effort</p></dd>
+
+
 <dt>checks</dt>
 <dd><p>Logical. Run internal checks? Currently not used.</p></dd>
+
+
 <dt>M_ageArray</dt>
 <dd><p>An array with dimensions <code>nsim</code>, <code>maxage</code> and <code>nyears+proyears</code> with natural mortality at age</p></dd>
+
+
 <dt>TAC_f</dt>
 <dd><p>A matrix with <code>nsim</code> rows and <code>proyears</code> columns with the TAC implementation error</p></dd>
+
+
 <dt>E_f</dt>
 <dd><p>A matrix with <code>nsim</code> rows and <code>proyears</code> columns with the effort implementation error</p></dd>
+
+
 <dt>SizeLim_f</dt>
 <dd><p>A matrix with <code>nsim</code> rows and <code>proyears</code> columns with the size limit implementation error</p></dd>
+
+
 <dt>FinF</dt>
 <dd><p>A numeric vector of length <code>nsim</code> with fishing mortality in the last historical year</p></dd>
+
+
 <dt>Spat_targ</dt>
 <dd><p>A numeric vector of length <code>nsim</code> with spatial targeting</p></dd>
+
+
 <dt>CAL_binsmid</dt>
 <dd><p>A numeric vector of length <code>nCALbins</code> with mid-points of the CAL bins</p></dd>
+
+
 <dt>Linf</dt>
 <dd><p>A numeric vector of length <code>nsim</code> with Linf (from <code>Stock@Linf</code>)</p></dd>
+
+
 <dt>Len_age</dt>
 <dd><p>An array with dimensions <code>nsim</code>, <code>maxage</code>, and <code>nyears+proyears</code> with length-at-age</p></dd>
+
+
 <dt>maxage</dt>
 <dd><p>A numeric value with maximum age from <code>Stock@maxage</code></p></dd>
+
+
 <dt>nareas</dt>
 <dd><p>A numeric value with number of areas</p></dd>
+
+
 <dt>Asize</dt>
 <dd><p>A matrix with <code>nsim</code> rows and <code>nareas</code> columns with the relative size of each area</p></dd>
+
+
 <dt>nCALbins</dt>
 <dd><p>The number of CAL bins. Should be the same as <code>length(CAL_binsmid)</code></p></dd>
+
+
 <dt>qs</dt>
 <dd><p>A numeric vector of length <code>nsim</code> with catchability coefficient</p></dd>
+
+
 <dt>qvar</dt>
 <dd><p>A matrix with <code>nsim</code> rows and <code>proyears</code> columns with catchability variability</p></dd>
+
+
 <dt>qinc</dt>
 <dd><p>A numeric vector of length <code>nsim</code> with average annual change in catchability</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A named list with updated population dynamics</p>
+    
+
+<p>A named list with updated population dynamics</p>
     </div>
     <div id="author">
     <h2>Author</h2>
@@ -220,7 +317,7 @@ MPs must either return a recommendation or no recommendation for every simulatio
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

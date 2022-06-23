@@ -19,7 +19,7 @@ staying in the area in each time step."><meta property="og:image" content="/logo
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.1</span>
       </span>
     </div>
 
@@ -74,41 +74,66 @@ staying in the area in each time step.</p>
     <h2>Arguments</h2>
     <dl><dt>OM</dt>
 <dd><p>Operating model, an object of class <a href="OM-class.html">OM</a>.</p></dd>
+
+
 <dt>dist</dt>
 <dd><p>A vector of fractions of unfished stock in each area. The length of this vector will determine the
 number of areas (<code>nareas</code>) in the OM.</p></dd>
+
+
 <dt>prob</dt>
 <dd><p>Mean probability of staying across all areas (single value) or a vector of the probability of
 individuals staying in each area (same length as dist).</p></dd>
+
+
 <dt>distE</dt>
 <dd><p>Logit (normal) St.Dev error for sampling stock fractions from the fracs vector</p></dd>
+
+
 <dt>probE</dt>
 <dd><p>Logit (normal) St.Dev error for sampling desired probability of staying either by area
 (prob is same length as dist) or the mean probability of staying (prob is a single number).</p></dd>
+
+
 <dt>prob2</dt>
 <dd><p>Optional vector as long as prob and dist. Upper bounds on uniform sampling of
 probability of staying, lower bound is prob.</p></dd>
+
+
 <dt>figure</dt>
 <dd><p>Logical to indicate if the movement matrix will be plotted (mean values and range
 across <code>OM@nsim</code> simulations.)</p></dd>
+
+
 <dt>mov</dt>
 <dd><p>A four-dimensional array of dimension <code>c(nsim, maxage, nareas, nareas)</code> or a five-dimensional
 array of dimension <code>c(nsim, maxage, nareas, nareas, nyears + proyears)</code> specifying movement
 in the operating model.</p></dd>
+
+
 <dt>age</dt>
 <dd><p>An age from 0 to maxage for the movement-at-age matrix figure when <code>type = "matrix"</code>.</p></dd>
+
+
 <dt>type</dt>
 <dd><p>Whether to plot a movement matrix for a single age (<code>"matrix"</code>) or the
 full movement versus age figure (<code>"all"</code>)</p></dd>
+
+
 <dt>year</dt>
 <dd><p>If <code>mov</code> is a 5-dimensional array, the year (from 1 to nyears + proyears) for which
 to plot movement.</p></dd>
+
+
 <dt>qval</dt>
 <dd><p>The quantile to plot or report the range of values among simulations.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>The operating model <code>OM</code> with movement parameters in slot <code>cpars</code>.
+    
+
+<p>The operating model <code>OM</code> with movement parameters in slot <code>cpars</code>.
 The <code>mov</code> array is of dimension <code>nsim</code>, <code>maxage</code>, <code>nareas</code>, <code>nareas</code>.</p>
     </div>
     <div id="functions">
@@ -150,7 +175,7 @@ independent of age.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

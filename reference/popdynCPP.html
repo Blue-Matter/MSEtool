@@ -18,7 +18,7 @@ for the future years"><meta property="og:image" content="/logo.png"><!-- mathjax
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.1</span>
       </span>
     </div>
 
@@ -91,61 +91,116 @@ for the future years</p>
     <h2>Arguments</h2>
     <dl><dt>nareas</dt>
 <dd><p>The number of spatial areas</p></dd>
+
+
 <dt>maxage</dt>
 <dd><p>The maximum age</p></dd>
+
+
 <dt>Ncurr</dt>
 <dd><p>A numeric matrix (maxage+1, nareas) with current numbers-at-age in each area</p></dd>
+
+
 <dt>pyears</dt>
 <dd><p>The number of years to project the population forward</p></dd>
+
+
 <dt>M_age</dt>
 <dd><p>Numeric matrix (maxage+1, pyears) with natural mortality by age and year</p></dd>
+
+
 <dt>Asize_c</dt>
 <dd><p>Numeric vector (length nareas) with size of each area</p></dd>
+
+
 <dt>MatAge</dt>
 <dd><p>Numeric vector with proportion mature by age</p></dd>
+
+
 <dt>WtAge</dt>
 <dd><p>Numeric matrix (maxage+1, pyears) with weight by age and year</p></dd>
+
+
 <dt>FecAge</dt>
 <dd><p>Numeric matrix (maxage+1, pyears) with mature female weight by age and year</p></dd>
+
+
 <dt>Vuln</dt>
 <dd><p>Numeric matrix (maxage+1, pyears) with vulnerability by age and year</p></dd>
+
+
 <dt>Retc</dt>
 <dd><p>Numeric matrix (maxage+1, pyears) with retention by age and year</p></dd>
+
+
 <dt>Prec</dt>
 <dd><p>Numeric vector (pyears) with recruitment error</p></dd>
+
+
 <dt>movc</dt>
 <dd><p>Numeric array (nareas by nareas) with the movement matrix</p></dd>
+
+
 <dt>SRrelc</dt>
 <dd><p>Integer indicating the stock-recruitment relationship to use (1 for Beverton-Holt, 2 for Ricker)</p></dd>
+
+
 <dt>Effind</dt>
 <dd><p>Numeric vector (length pyears) with the fishing effort by year</p></dd>
+
+
 <dt>Spat_targc</dt>
 <dd><p>Integer. Spatial targeting</p></dd>
+
+
 <dt>hc</dt>
 <dd><p>Numeric. Steepness of stock-recruit relationship</p></dd>
+
+
 <dt>R0c</dt>
 <dd><p>Numeric vector of length nareas with unfished recruitment by area</p></dd>
+
+
 <dt>SSBpRc</dt>
 <dd><p>Numeric vector of length nareas with unfished spawning per recruit by area</p></dd>
+
+
 <dt>aRc</dt>
 <dd><p>Numeric. Ricker SRR a value by area</p></dd>
+
+
 <dt>bRc</dt>
 <dd><p>Numeric. Ricker SRR b value by area</p></dd>
+
+
 <dt>Qc</dt>
 <dd><p>Numeric. Catchability coefficient</p></dd>
+
+
 <dt>Fapic</dt>
 <dd><p>Numeric. Apical F value</p></dd>
+
+
 <dt>maxF</dt>
 <dd><p>A numeric value specifying the maximum fishing mortality for any single age class</p></dd>
+
+
 <dt>MPA</dt>
 <dd><p>Spatial closure by year and area</p></dd>
+
+
 <dt>control</dt>
 <dd><p>Integer. 1 to use q and effort to calculate F, 2 to use Fapic (apical F) and
 vulnerability to calculate F.</p></dd>
+
+
 <dt>plusgroup</dt>
 <dd><p>Integer. Include a plus-group (1) or not (0)?</p></dd>
+
+
 <dt>SSBcurr</dt>
 <dd><p>A numeric vector of length nareas with the current spawning biomass in each area</p></dd>
+
 </dl></div>
     <div id="author">
     <h2>Author</h2>
@@ -164,7 +219,7 @@ vulnerability to calculate F.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

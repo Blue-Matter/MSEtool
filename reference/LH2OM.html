@@ -18,7 +18,7 @@ hierarchical model fitted to FishBase life-history parameters"><meta property="o
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.1</span>
       </span>
     </div>
 
@@ -91,41 +91,70 @@ hierarchical model fitted to FishBase life-history parameters</p>
     <h2>Arguments</h2>
     <dl><dt>OM</dt>
 <dd><p>An object of class 'OM'</p></dd>
+
+
 <dt>dist</dt>
 <dd><p>Character. Should parameters be sampled from a uniform (<code>unif</code>) or
 normal (<code>norm</code>) distribution?</p></dd>
+
+
 <dt>filterMK</dt>
 <dd><p>Logical or numeric specifying percentiles. See Details.
 e.g. <code>OM@M</code> and <code>OM@K</code>. Empty slots or slots with all values of 0 are considered unknown.</p></dd>
+
+
 <dt>plot</dt>
 <dd><p>Logical. Should the plot be produced?</p></dd>
+
+
 <dt>Class</dt>
 <dd><p>Optional higher order taxonomic information</p></dd>
+
+
 <dt>Order</dt>
 <dd><p>Optional higher order taxonomic information</p></dd>
+
+
 <dt>Family</dt>
 <dd><p>Optional higher order taxonomic information</p></dd>
+
+
 <dt>msg</dt>
 <dd><p>Logical. Should messages be printed?</p></dd>
+
+
 <dt>db</dt>
 <dd><p>Database from FishLife model with fitted model results</p></dd>
+
+
 <dt>inpars</dt>
 <dd><p>A named list with lower and upper bounds of provided parameters: <em>Linf</em>, <em>L50</em>,
 <em>K</em> and <em>M</em> (must be length 2). Unknown or missing parameters should not be included. For example, an empty list assumes
 that all four life history parameters are unknown and need to be estimated. See Details below for more information.</p></dd>
+
+
 <dt>Genus</dt>
 <dd><p>Character string specifying the Genus name. Optional. Default is 'predictive'</p></dd>
+
+
 <dt>Species</dt>
 <dd><p>Character string specifying the Species name. Optional. Default is 'predictive'. If full species name
 (Genus + Species) is not found if FishLife database (based on FishBase) higher order taxonomy will be used (e.g., Family)
 for the predictions.</p></dd>
+
+
 <dt>nsamp</dt>
 <dd><p>The number of samples to return</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>LH2OM: An OM with <code>OM@cpars</code> populated with <code>OM@nsim</code> samples of M, K, Linf and L50
-predictLH: A data.frame with <code>nsamp</code> rows with <code>Linf</code>, <code>L50</code>, <code>K</code>, and <code>M</code> values.</p>
+    
+
+<p>LH2OM: An OM with <code>OM@cpars</code> populated with <code>OM@nsim</code> samples of M, K, Linf and L50</p>
+
+
+<p>predictLH: A data.frame with <code>nsamp</code> rows with <code>Linf</code>, <code>L50</code>, <code>K</code>, and <code>M</code> values.</p>
     </div>
     <div id="details">
     <h2>Details</h2>
@@ -174,7 +203,7 @@ Predicting life history parameters for all fishes worldwide. Ecological Applicat
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

@@ -23,7 +23,7 @@ plot_SS2OM generates a markdown report to compare the OM and SS output."><meta p
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.1</span>
       </span>
     </div>
 
@@ -145,63 +145,114 @@ implementation portions. <code>SSMOM2OM</code> is the internal function that sim
     <h2>Arguments</h2>
     <dl><dt>SSdir</dt>
 <dd><p>A folder with Stock Synthesis input and output files in it.</p></dd>
+
+
 <dt>nsim</dt>
 <dd><p>The number of simulations to take for parameters with uncertainty (for OM@cpars custom parameters).</p></dd>
+
+
 <dt>proyears</dt>
 <dd><p>The number of projection years for MSE</p></dd>
+
+
 <dt>reps</dt>
 <dd><p>The number of stochastic replicates within each simulation in the operating model.</p></dd>
+
+
 <dt>maxF</dt>
 <dd><p>The maximum allowable F in the operating model.</p></dd>
+
+
 <dt>seed</dt>
 <dd><p>The random seed for the operating model.</p></dd>
+
+
 <dt>interval</dt>
 <dd><p>The interval at which management procedures will update the management advice in <a href="multiMSE.html">multiMSE</a>, e.g., 1 = annual updates.</p></dd>
+
+
 <dt>pstar</dt>
 <dd><p>The percentile of the sample of the management recommendation for the MP/MMP.</p></dd>
+
+
 <dt>Obs</dt>
 <dd><p>The observation model (class Obs). These functions do not update implementation parameters.</p></dd>
+
+
 <dt>Imp</dt>
 <dd><p>The implementation model (class Imp). These functions do not update implementation parameters.</p></dd>
+
+
 <dt>silent</dt>
 <dd><p>Whether to silence messages to the console.</p></dd>
+
+
 <dt>Name</dt>
 <dd><p>The name of the operating model</p></dd>
+
+
 <dt>Source</dt>
 <dd><p>Reference to assessment documentation e.g. a url</p></dd>
+
+
 <dt>...</dt>
 <dd><p>Arguments to pass to <a href="https://rdrr.io/pkg/r4ss/man/SS_output.html" class="external-link">SS_output</a>.</p></dd>
+
+
 <dt>x</dt>
 <dd><p>For <code>plot_SS2OM</code>, an object of either class <a href="OM-class.html">OM</a> or <a href="Hist-class.html">Hist</a>.
 For <code>plot_SS2MOM</code>, an object of either class <a href="MOM-class.html">MOM</a> or <code>multiHist</code>.</p></dd>
+
+
 <dt>gender</dt>
 <dd><p>An integer that indexes the sex for importing life history parameters (1 = usually female, 2 = usually male, 1:2 = mean across both sexes).
 Only used for <code>SS2OM</code> only in a 2-sex model.</p></dd>
+
+
 <dt>filename</dt>
 <dd><p>If <code>report = TRUE</code>, character string for the name of the markdown and HTML files.</p></dd>
+
+
 <dt>dir</dt>
 <dd><p>If <code>report = TRUE</code>, the directory in which the markdown and HTML files will be saved.</p></dd>
+
+
 <dt>open_file</dt>
 <dd><p>If <code>report = TRUE</code>, whether the HTML document is opened after it is rendered.</p></dd>
+
+
 <dt>import_mov</dt>
 <dd><p>Logical. Import movement matrix?</p></dd>
+
+
 <dt>seasons_to_years</dt>
 <dd><p>Logical, when season is the time step, whether to convert OM from a seasonal model to annual model.</p></dd>
+
+
 <dt>model_discards</dt>
 <dd><p>Logical, how to simplify a multi-fleet SS model to an OM object. If TRUE, OM will still model discards using
 the mean retention across fleets (weighted by fleet F). Otherwise, no discards are modeled and all fishing removals are calculated in the OM
 from the SS F-at-age matrix.</p></dd>
+
+
 <dt>Author</dt>
 <dd><p>Who did the assessment</p></dd>
+
+
 <dt>report</dt>
 <dd><p>Logical, if TRUE, the function will run <a href="runMSE.html">runMSE</a> to generate the Hist object from the operating model
 to compare against SS output. A markdown report will be generated.</p></dd>
+
+
 <dt>MOM</dt>
 <dd><p>MOM object</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>SS2MOM returns an object of class <a href="MOM-class.html">MOM</a>. SS2OM returns an object of class <a href="OM-class.html">OM</a>.</p>
+    
+
+<p>SS2MOM returns an object of class <a href="MOM-class.html">MOM</a>. SS2OM returns an object of class <a href="OM-class.html">OM</a>.</p>
     </div>
     <div id="note">
     <h2>Note</h2>
@@ -228,7 +279,7 @@ to compare against SS output. A markdown report will be generated.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

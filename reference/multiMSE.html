@@ -18,7 +18,7 @@ Strategy Evaluation (closed-loop simulation) for a specified operating model"><m
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.1</span>
       </span>
     </div>
 
@@ -81,27 +81,47 @@ Strategy Evaluation (closed-loop simulation) for a specified operating model</p>
     <h2>Arguments</h2>
     <dl><dt>MOM</dt>
 <dd><p>A multi-fleet multi-stock operating model (class 'MOM')</p></dd>
+
+
 <dt>parallel</dt>
 <dd><p>Logical. Should the MSE be run using parallel processing?</p></dd>
+
+
 <dt>silent</dt>
 <dd><p>Should messages be printed out to the console?</p></dd>
+
+
 <dt>multiHist</dt>
 <dd><p>An Historical Simulation object (class <code>multiHist</code>)</p></dd>
+
+
 <dt>MPs</dt>
 <dd><p>A matrix of methods (nstock x nfleet) (character string) of class MP</p></dd>
+
+
 <dt>checkMPs</dt>
 <dd><p>Logical. Check if the specified MPs exist and can be run on <code>SimulatedData</code>?</p></dd>
+
+
 <dt>dropHist</dt>
 <dd><p>Logical. Drop the (very large) <code>multiHist</code> object from the returned <code>MMSE</code> object?
 The <code>multiHist</code> object can be (re-)created using <code>SimulateMOM</code> or kept in <code>MMSE@multiHist</code> if
 <code>dropHist=FALSE</code></p></dd>
+
+
 <dt>Hist</dt>
 <dd><p>Should model stop after historical simulations? Returns a list
 containing all historical data</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>Functions return objects of class <code>MMSE</code> and <code>multiHist</code>#'</p><ul><li><p>SimulateMOM - An object of class <code>multiHist</code></p></li>
+    
+
+<p>Functions return objects of class <code>MMSE</code> and <code>multiHist</code></p>
+
+
+<p>#'</p><ul><li><p>SimulateMOM - An object of class <code>multiHist</code></p></li>
 <li><p>ProjectMOM - An object of class <code>MMSE</code></p></li>
 <li><p>multiMSE - An object of class <code>MMSE</code></p></li>
 </ul></div>
@@ -129,7 +149,7 @@ containing all historical data</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

@@ -21,7 +21,7 @@ needs to parameterize most of the observation and implementation portions of the
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.1</span>
       </span>
     </div>
 
@@ -115,47 +115,89 @@ needs to parameterize most of the observation and implementation portions of the
     <h2>Arguments</h2>
     <dl><dt>Name</dt>
 <dd><p>Character string. The name of the operating model.</p></dd>
+
+
 <dt>proyears</dt>
 <dd><p>Positive integer. The number of projection years for MSE.</p></dd>
+
+
 <dt>interval</dt>
 <dd><p>Positive integer. The interval at which management procedures will update the management advice in <a href="runMSE.html">runMSE</a>, e.g., 1 = annual updates.</p></dd>
+
+
 <dt>CurrentYr</dt>
 <dd><p>Positive integer. The current year (final year of fitting to data)</p></dd>
+
+
 <dt>h</dt>
 <dd><p>The steepness of the stock-recruitment curve (greater than 0.2 and less than 1, assumed to be close to 1 to match VPA assumption).
 Either a single numeric or a length nsim vector.</p></dd>
+
+
 <dt>Obs</dt>
 <dd><p>The observation model (class Obs). This function only updates the catch and index observation error.</p></dd>
+
+
 <dt>Imp</dt>
 <dd><p>The implementation model (class Imp). This function does not update implementation parameters.</p></dd>
+
+
 <dt>naa</dt>
 <dd><p>Numeric array <code>[sim, ages, year]</code>. Numbers-at-age <code>[first age is age zero]</code>.</p></dd>
+
+
 <dt>faa</dt>
 <dd><p>Numeric array <code>[sim, ages, year]</code>. Fishing mortality rate-at-age <code>[first age is age zero]</code>.</p></dd>
+
+
 <dt>waa</dt>
 <dd><p>Numeric array <code>[sim, ages, year]</code>. Weight-at-age <code>[first age is age zero]</code>.</p></dd>
+
+
 <dt>Mataa</dt>
 <dd><p>Numeric array <code>[sim, ages, year]</code>. Maturity (spawning fraction)-at-age <code>[first age is age zero]</code>.</p></dd>
+
+
 <dt>Maa</dt>
 <dd><p>Numeric array <code>[sim, ages, year]</code>. Natural mortality rate-at-age <code>[first age is age zero]</code>.</p></dd>
+
+
 <dt>laa</dt>
 <dd><p>Numeric array <code>[sim, ages, year]</code>. Length-at-age <code>[first age is age zero]</code>.</p></dd>
+
+
 <dt>nyr_par_mu</dt>
 <dd><p>Positive integer. The number of recent years that natural mortality, age vulnerability, weight, length and maturity parameters are averaged over for defining future projection conditions.</p></dd>
+
+
 <dt>LowerTri</dt>
 <dd><p>Integer. The number of recent years for which model estimates of recruitment are ignored (not reliably estimated by the assessment)</p></dd>
+
+
 <dt>recind</dt>
 <dd><p>Positive integer. The first age class that fish 'recruit to the fishery'. The default is 0 - ie the first position in the age dimension of naa is age zero</p></dd>
+
+
 <dt>plusgroup</dt>
 <dd><p>Logical. Does the assessment assume that the oldest age class is a plusgroup?</p></dd>
+
+
 <dt>altinit</dt>
 <dd><p>Integer. Various assumptions for how to set up the initial numbers. 0: standard, 1: no plus group, 2: temporary fix for MSEtool plus group initialization</p></dd>
+
+
 <dt>fixq1</dt>
 <dd><p>Logical. Should q be fixed (ie assume the F-at-age array faa is accurate?</p></dd>
+
+
 <dt>report</dt>
 <dd><p>Logical, if TRUE, a diagnostic will be reported showing the matching of the OM reconstructed numbers at age vs the assessment.</p></dd>
+
+
 <dt>silent</dt>
 <dd><p>Whether to silence messages to the console.</p></dd>
+
+
 <dt>...</dt>
 <dd><p>Additional arguments (for all, either a numeric or a length nsim vector):</p><ul><li><p><code>SRrel</code> Stock-recruit relationship. (<code>1</code> for Beverton-Holt (default), <code>2</code> for Ricker)</p></li>
 <li><p><code>R0</code> unfished recruitment</p></li>
@@ -165,10 +207,13 @@ in the operating model such that the stock-recruit <code>alpha</code> and <code>
 <li><p><code>Perr</code> recruitment standard deviation (lognormal distribution) for sampling future recruitment</p></li>
 <li><p><code>AC</code> autocorrelation in future recruitment deviates.</p></li>
 </ul></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>An object of class <a href="OM-class.html">OM</a>.</p>
+    
+
+<p>An object of class <a href="OM-class.html">OM</a>.</p>
     </div>
     <div id="details">
     <h2>Details</h2>
@@ -195,7 +240,7 @@ in the operating model such that the stock-recruit <code>alpha</code> and <code>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

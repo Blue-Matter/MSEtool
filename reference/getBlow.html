@@ -18,7 +18,7 @@ to reach Bfrac x SSBMSY biomass level given zero catches"><meta property="og:ima
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.1</span>
       </span>
     </div>
 
@@ -93,62 +93,119 @@ to reach Bfrac x SSBMSY biomass level given zero catches</p>
     <h2>Arguments</h2>
     <dl><dt>x</dt>
 <dd><p>position in a vector</p></dd>
+
+
 <dt>N</dt>
 <dd><p>array of numbers at age by sim and area (dims nsim, maxage, nyears, nareas)</p></dd>
+
+
 <dt>Asize</dt>
 <dd><p>matrix of area size (nsim by nareas)</p></dd>
+
+
 <dt>SSBMSY</dt>
 <dd><p>vector nsim long of spawning biomass at MSY</p></dd>
+
+
 <dt>SSBpR</dt>
 <dd><p>matrix nsim by nareas with SSB per recruit</p></dd>
+
+
 <dt>MPA</dt>
 <dd><p>matrix nyears + proyears by nareas of spatial closures</p></dd>
+
+
 <dt>SSB0</dt>
 <dd><p>vector of SSB0 length nsim</p></dd>
+
+
 <dt>nareas</dt>
 <dd><p>numeric. number of areas</p></dd>
+
+
 <dt>retA</dt>
 <dd><p>array of retention nsim x maxage x nyears</p></dd>
+
+
 <dt>MGThorizon</dt>
 <dd><p>vector nsim long of MGT x HZN</p></dd>
+
+
 <dt>Find</dt>
 <dd><p>matrix of fishing mortality rate nsim x nyears</p></dd>
+
+
 <dt>Perr</dt>
 <dd><p>matrix of recruitment deviations nsim x nyears + maxage -1</p></dd>
+
+
 <dt>M_ageArray</dt>
 <dd><p>array of natural mortality rate nsim x maxage x nyears + proyears</p></dd>
+
+
 <dt>hs</dt>
 <dd><p>vector nsim long of steepness values</p></dd>
+
+
 <dt>Mat_age</dt>
 <dd><p>array nsim x nages x nyears+proyears of maturity at age</p></dd>
+
+
 <dt>Wt_age</dt>
 <dd><p>matrix nsim x nages of weight at age</p></dd>
+
+
 <dt>R0a</dt>
 <dd><p>matrix nsim by nareas of unfished recruitment</p></dd>
+
+
 <dt>V</dt>
 <dd><p>array of vulnerability nsim x maxage x nyears</p></dd>
+
+
 <dt>nyears</dt>
 <dd><p>integer: number of historical years</p></dd>
+
+
 <dt>maxage</dt>
 <dd><p>integer: maximum age</p></dd>
+
+
 <dt>mov</dt>
 <dd><p>array of movement nsim x 2 x 2</p></dd>
+
+
 <dt>Spat_targ</dt>
 <dd><p>vector of spatial targeting parameters</p></dd>
+
+
 <dt>SRrel</dt>
 <dd><p>integer representing recruitment dynamics type 1: Bev Holt 2: Ricker</p></dd>
+
+
 <dt>aR</dt>
 <dd><p>vector of recruitment parameters</p></dd>
+
+
 <dt>bR</dt>
 <dd><p>vector of recruitment parameters</p></dd>
+
+
 <dt>Bfrac</dt>
 <dd><p>fraction of SSBMSY that is the target</p></dd>
+
+
 <dt>maxF</dt>
 <dd><p>maximum apical fishing mortality</p></dd>
+
+
 <dt>ploty</dt>
 <dd><p>logical: should a plot be produced</p></dd>
+
+
 <dt>plusgroup</dt>
 <dd><p>Integer. Default = 0 = no plus-group. Use 1 to include a plus-group</p></dd>
+
 </dl></div>
     <div id="author">
     <h2>Author</h2>
@@ -167,7 +224,7 @@ to reach Bfrac x SSBMSY biomass level given zero catches</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

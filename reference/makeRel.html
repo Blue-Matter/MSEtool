@@ -18,7 +18,7 @@ Currently implements intra-stock dynamics via density-dependent processes."><met
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.1</span>
       </span>
     </div>
 
@@ -72,28 +72,47 @@ Currently implements intra-stock dynamics via density-dependent processes.</p>
     <dl><dt>type</dt>
 <dd><p>String to indicate the type of stock interaction. <code>"DDM"</code> for
 density-dependent natural mortality.</p></dd>
+
+
 <dt>stock</dt>
 <dd><p>The index position of the stock in the MOM.</p></dd>
+
+
 <dt>CV</dt>
 <dd><p>Coefficient of variation of the predicted value for <code>simulate</code>. Used to pass
 values to the operating model.</p></dd>
+
+
 <dt>...</dt>
 <dd><p>Additional arguments depending on <code>type</code>. See details below.</p></dd>
+
+
 <dt>x</dt>
 <dd><p>For <code>print.Rel</code>, a <code>Rel</code> class object from <code>make_Rel</code>.</p></dd>
+
+
 <dt>object</dt>
 <dd><p>A <code>Rel</code> class object from <code>make_Rel</code>.</p></dd>
+
+
 <dt>newdata</dt>
 <dd><p>A data frame to provide values of predictor variables with which to calculate the
 response variable.</p></dd>
+
+
 <dt>nsim</dt>
 <dd><p>The number of simulations.</p></dd>
+
+
 <dt>seed</dt>
 <dd><p>Integer to specify the seed for the random number generator.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A class "Rel" object to pass to <code>MOM@Rel</code>.</p>
+    
+
+<p>A class "Rel" object to pass to <code>MOM@Rel</code>.</p>
     </div>
     <div id="density-dependent-m-ddm-">
     <h2>Density-dependent M ("DDM")</h2>
@@ -152,7 +171,7 @@ Fisheries Research 206: 259–286. <a href="https://doi.org/10.1016/j.fishres.20
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

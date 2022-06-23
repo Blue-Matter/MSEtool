@@ -18,7 +18,7 @@ the various slots of an Data object."><meta property="og:image" content="/logo.p
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.1</span>
       </span>
     </div>
 
@@ -62,20 +62,31 @@ the various slots of an Data object.</p>
     <h2>Arguments</h2>
     <dl><dt>SSdir</dt>
 <dd><p>A folder with Stock Synthesis input and output files in it. Alternatively,</p></dd>
+
+
 <dt>age_M</dt>
 <dd><p>A vector of ages to average across to calculate a single value of natural mortality.
 Currently, the Data object supports a single value of M for all ages. By default, <code>NULL</code> averages over all ages.</p></dd>
+
+
 <dt>comp_partition</dt>
 <dd><p>Integer vector for selecting length/age observations that are retained (2), discarded (1), or both (0). By default, only retained
 comps are used. If multiple codes are used, then comp matrix is the sum over all codes.</p></dd>
+
+
 <dt>silent</dt>
 <dd><p>Logical. Suppress messages?</p></dd>
+
+
 <dt>...</dt>
 <dd><p>Arguments to pass to <a href="https://rdrr.io/pkg/r4ss/man/SS_output.html" class="external-link">SS_output</a></p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A nested list of Data objects, with the first index by stock/sex and the second index by fleet.</p>
+    
+
+<p>A nested list of Data objects, with the first index by stock/sex and the second index by fleet.</p>
     </div>
     <div id="note">
     <h2>Note</h2>
@@ -103,7 +114,7 @@ comps are used. If multiple codes are used, then comp matrix is the sum over all
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

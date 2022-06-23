@@ -18,7 +18,7 @@ scenarios and management constraints?"><meta property="og:image" content="/logo.
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.1</span>
       </span>
     </div>
 
@@ -72,25 +72,42 @@ scenarios and management constraints?</p>
     <dl><dt>Data</dt>
 <dd><p>An object of class 'Data'. Optional. If Data object is included, the returned MPs are both feasible (in terms of management)
 and possible (sufficient data to run MP)</p></dd>
+
+
 <dt>TAC</dt>
 <dd><p>Logical. Are catch limits feasible for this fishery?</p></dd>
+
+
 <dt>TAE</dt>
 <dd><p>Logical. Are effort controls feasible for this fishery?</p></dd>
+
+
 <dt>SL</dt>
 <dd><p>Logical. Are size-selectivity regulations (either gear changes or size-retention regulations) feasible for this fishery?</p></dd>
+
+
 <dt>Spatial</dt>
 <dd><p>Logical. Are spatial closures feasible for this fishery?</p></dd>
+
+
 <dt>names.only</dt>
 <dd><p>Logical. Should only the names of the feasible MPs be returned (default)? If FALSE, a data frame with MP name, and two columns
 of logical values: Can (possible given data) and Fease (feasible given management constraints) is returned</p></dd>
+
+
 <dt>msg</dt>
 <dd><p>Logical. Should messages be printed to the console?</p></dd>
+
+
 <dt>include.ref</dt>
 <dd><p>Logical. Should reference MPs (e.g. FMSYref) be included as feasible methods? Default is FALSE</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>Either a vector of MP names that are feasible for the fishery (default) or a 3 column data frame (<code>names.only=FALSE</code>).</p>
+    
+
+<p>Either a vector of MP names that are feasible for the fishery (default) or a 3 column data frame (<code>names.only=FALSE</code>).</p>
     </div>
     <div id="author">
     <h2>Author</h2>
@@ -118,7 +135,7 @@ of logical values: Can (possible given data) and Fease (feasible given managemen
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

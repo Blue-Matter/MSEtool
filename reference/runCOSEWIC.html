@@ -19,7 +19,7 @@ management procedures."><meta property="og:image" content="/logo.png"><!-- mathj
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.1</span>
       </span>
     </div>
 
@@ -109,35 +109,64 @@ management procedures.</p>
     <h2>Arguments</h2>
     <dl><dt>OM</dt>
 <dd><p>An operating model object of class OM</p></dd>
+
+
 <dt>...</dt>
 <dd><p>Other named arguments to pass to <code>runMSE</code></p></dd>
+
+
 <dt>MSEobj</dt>
 <dd><p>An object of class MSE with <code>MPs = c("NFref", "FMSYref", "curE")</code></p></dd>
+
+
 <dt>syear</dt>
 <dd><p>Current year, starting year for projections (e.g. 2017)</p></dd>
+
+
 <dt>qcol</dt>
 <dd><p>Color of shaded regions (bars, quantiles)</p></dd>
+
+
 <dt>quants</dt>
 <dd><p>Quantiles of the shaded regions (vector 5 long e.g. 0.1, 0.2, 0.5, 0.8, 0.9)</p></dd>
+
+
 <dt>nGT</dt>
 <dd><p>Number of generation times. For <code>COSEWIC_tab</code>, for moving window of SSB chance (metrics A1 and A2). For
 <code>COSEWIC_Blow</code> and <code>COSEWIC_Dplot</code>, used for projections (the number of projection years should be greater than <code>MaxAge * nGT</code>).</p></dd>
+
+
 <dt>output_file</dt>
 <dd><p>The directory and filename you wish to use for the report e.g. "C:/temp/myMSEreport.html"</p></dd>
+
+
 <dt>author</dt>
 <dd><p>The person who made this report</p></dd>
+
+
 <dt>title</dt>
 <dd><p>The title of the report</p></dd>
+
+
 <dt>rnd</dt>
 <dd><p>The number of significant figures for rounding.</p></dd>
+
+
 <dt>GTs</dt>
 <dd><p>A vector of mean generation times to evaluate performance metrics over</p></dd>
+
+
 <dt>Ptab1</dt>
 <dd><p>A COSEWIC performance table made by <code>COSEWIC_tab</code></p></dd>
+
+
 <dt>thresh</dt>
 <dd><p>A vector of thresholds for each column Health, Yield and Reb are 'greater than threshold' conditions</p></dd>
+
+
 <dt>ret_thresh</dt>
 <dd><p>Logical: if true just the threshold levels are returned</p></dd>
+
 </dl></div>
     <div id="functions">
     <h2>Functions</h2>
@@ -188,7 +217,7 @@ color coded by thresholds.</p></li>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

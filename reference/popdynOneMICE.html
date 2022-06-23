@@ -18,7 +18,7 @@ movement given MICE model inputs"><meta property="og:image" content="/logo.png">
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.1</span>
       </span>
     </div>
 
@@ -102,85 +102,162 @@ movement given MICE model inputs</p>
     <h2>Arguments</h2>
     <dl><dt>np</dt>
 <dd><p>Integer, the number of stocks</p></dd>
+
+
 <dt>nf</dt>
 <dd><p>Integer, number of fleets</p></dd>
+
+
 <dt>maxage</dt>
 <dd><p>Integer, maximum modelled age</p></dd>
+
+
 <dt>Ncur</dt>
 <dd><p>Array <code>[stock, age, area]</code> of stock numbers</p></dd>
+
+
 <dt>Bcur</dt>
 <dd><p>Array <code>[stock, age, area]</code> of stock biomass</p></dd>
+
+
 <dt>SSBcur</dt>
 <dd><p>Array <code>[stock, age, area]</code> of spawning biomass</p></dd>
+
+
 <dt>Vcur</dt>
 <dd><p>Array <code>[fleet, age, area]</code> of the vulnerability curve</p></dd>
+
+
 <dt>FMretx</dt>
 <dd><p>Array <code>[stock, fleet, age, area]</code> of the retention curve</p></dd>
+
+
 <dt>FMx</dt>
 <dd><p>Array <code>[stock, fleet, age, area]</code> fishing mortality rate</p></dd>
+
+
 <dt>PerrYrp</dt>
 <dd><p>Vector <code>[stock]</code> process error - the lognormal factor for
 recruitment strength (for next year)</p></dd>
+
+
 <dt>hsx</dt>
 <dd><p>Vector <code>[stock]</code> steepness of the stock recruitment curve</p></dd>
+
+
 <dt>aRx</dt>
 <dd><p>Vector <code>[stock]</code> stock recruitment parameter alpha (for Ricker curve)</p></dd>
+
+
 <dt>bRx</dt>
 <dd><p>Vector <code>[stock]</code> stock recruitment parameter beta (for Ricker curve)</p></dd>
+
+
 <dt>movy</dt>
 <dd><p>Array <code>[stock,age,area,area]</code> of movement transitions (for next year)</p></dd>
+
+
 <dt>Spat_targ</dt>
 <dd><p>Matrix <code>[stock, fleet]</code> of spatial targeting parameter
 (0 evenly spatial distributed, 1 proportional to vulnerable biomass)</p></dd>
+
+
 <dt>SRrelx</dt>
 <dd><p>Integer vector <code>[stock]</code> the form of the stock recruitment
 relationship (1 = Beverton-Holt, 2= Ricker)</p></dd>
+
+
 <dt>M_agecur</dt>
 <dd><p>Matrix <code>[stock, age]</code> of Natural mortality rate at age</p></dd>
+
+
 <dt>Mat_agecur</dt>
 <dd><p>Matrix <code>[stock, age]</code> of maturity (spawning fraction) at age (current year)</p></dd>
+
+
 <dt>Mat_agenext</dt>
 <dd><p>Matrix <code>[stock, age]</code> of maturity (spawning fraction) at age (next year)</p></dd>
+
+
 <dt>Fec_agenext</dt>
 <dd><p>Matrix <code>[stock, age]</code> of spawning weight (fecundity) at age (next year)</p></dd>
+
+
 <dt>Asizex</dt>
 <dd><p>Matrix <code>[stock, area]</code> of relative area sizes</p></dd>
+
+
 <dt>Kx</dt>
 <dd><p>Vector <code>[stock]</code> of von B growth parameter K (next year)</p></dd>
+
+
 <dt>Linfx</dt>
 <dd><p>Vector <code>[stock]</code> of von B asymptotic length parameter Linf (next year)</p></dd>
+
+
 <dt>t0x</dt>
 <dd><p>Vector <code>[stock]</code> of von B theoretical age at zero length (t0) (next year)</p></dd>
+
+
 <dt>Mx</dt>
 <dd><p>Vector <code>[stock]</code> mature natural mortality rate (this year)</p></dd>
+
+
 <dt>R0x</dt>
 <dd><p>Vector <code>[stock]</code> unfished recruitment</p></dd>
+
+
 <dt>R0ax</dt>
 <dd><p>Matrix <code>[stock, area]</code> unfished recruitment by area</p></dd>
+
+
 <dt>SSBpRx</dt>
 <dd><p>Matrix <code>[stock, area]</code> spawning biomass per recruit by area</p></dd>
+
+
 <dt>ax</dt>
 <dd><p>Vector <code>[stock]</code> weight-length parameter a W=aL^b</p></dd>
+
+
 <dt>bx</dt>
 <dd><p>Vector <code>[stock]</code> weight-length parameter b W=aL^b</p></dd>
+
+
 <dt>Rel</dt>
 <dd><p>A list of inter-stock relationships see slot Rel of MOM object class</p></dd>
+
+
 <dt>SexPars</dt>
 <dd><p>A list of sex-specific relationships (SSBfrom, stock_age)</p></dd>
+
+
 <dt>x</dt>
 <dd><p>Integer. The simulation number</p></dd>
+
+
 <dt>plusgroup</dt>
 <dd><p>Numeric vector. Use plus-group (1) or not (0)</p></dd>
+
+
 <dt>SSB0x</dt>
 <dd><p>Unfished SSB0, Vector <code>[stock]</code> length.</p></dd>
+
+
 <dt>B0x</dt>
 <dd><p>Unfished B0, Vector <code>[stock]</code> length.</p></dd>
+
+
 <dt>Len_agenext</dt>
 <dd><p>Matrix <code>[stock, age]</code> of next year's length-at-age</p></dd>
+
+
 <dt>Wt_agenext</dt>
 <dd><p>Matrix <code>[stock, age]</code> of next year's weight-at-age</p></dd>
+
+
 <dt>nyears</dt>
 <dd><p>Integer, number of historical years (unfished til today)</p></dd>
+
 </dl></div>
     <div id="author">
     <h2>Author</h2>
@@ -199,7 +276,7 @@ relationship (1 = Beverton-Holt, 2= Ricker)</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

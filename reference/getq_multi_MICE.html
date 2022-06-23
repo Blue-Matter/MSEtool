@@ -18,7 +18,7 @@ depletion across stocks and fleets if there are relationships among stocks"><met
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.1</span>
       </span>
     </div>
 
@@ -83,45 +83,80 @@ depletion across stocks and fleets if there are relationships among stocks</p>
     <h2>Arguments</h2>
     <dl><dt>x</dt>
 <dd><p>Integer, the simulation number</p></dd>
+
+
 <dt>StockPars</dt>
 <dd><p>A list of sampled stock parameters, one list element per stock</p></dd>
+
+
 <dt>FleetPars</dt>
 <dd><p>A hierarchical list of sampled fleet parameters,
 first list level is stock, second is fleet</p></dd>
+
+
 <dt>np</dt>
 <dd><p>The number of stocks</p></dd>
+
+
 <dt>nf</dt>
 <dd><p>The number of fleets</p></dd>
+
+
 <dt>nareas</dt>
 <dd><p>The number of areas</p></dd>
+
+
 <dt>maxage</dt>
 <dd><p>The maximum number of modeled ages</p></dd>
+
+
 <dt>nyears</dt>
 <dd><p>The number of historical 'spool-up' years (from unfished to now)</p></dd>
+
+
 <dt>N</dt>
 <dd><p>An array of stock numbers <code>[nsim,np,maxage,nyears,nareas]</code> -
 only the values from the first year are used</p></dd>
+
+
 <dt>VF</dt>
 <dd><p>An array of vulnerability <code>[nsim,np,nf,maxage,nyears+proyears]</code></p></dd>
+
+
 <dt>FretA</dt>
 <dd><p>An array of retention <code>[nsim,np,nf,maxage,nyears+proyears]</code></p></dd>
+
+
 <dt>maxF</dt>
 <dd><p>A numeric value specifying the maximum fishing mortality for any
 single age class</p></dd>
+
+
 <dt>MPA</dt>
 <dd><p>An array of spatial closures by year <code>[np,nf,nyears+proyears,nareas]</code></p></dd>
+
+
 <dt>CatchFrac</dt>
 <dd><p>A list of stock-specific fleet fractions of current catch
 list<code>[[stock]][nsim, nf]</code></p></dd>
+
+
 <dt>bounds</dt>
 <dd><p>Bounds for total q estimation</p></dd>
+
+
 <dt>tol</dt>
 <dd><p>A numeric value that is the fraction of machine tolerance
 (once reduction in objective function steps below this, optimization ends)</p></dd>
+
+
 <dt>Rel</dt>
 <dd><p>A list of inter-stock relationships see slot Rel of MOM object class</p></dd>
+
+
 <dt>SexPars</dt>
 <dd><p>A list of sex-specific dynamics SSBfrom stock_age</p></dd>
+
 </dl></div>
     <div id="author">
     <h2>Author</h2>
@@ -140,7 +175,7 @@ list<code>[[stock]][nsim, nf]</code></p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

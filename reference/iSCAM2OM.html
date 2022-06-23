@@ -19,7 +19,7 @@ These functions rely on several functions written by Chris Grandin (DFO PBS)."><
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.1</span>
       </span>
     </div>
 
@@ -85,29 +85,50 @@ These functions rely on several functions written by Chris Grandin (DFO PBS).</p
     <dl><dt>iSCAMdir</dt>
 <dd><p>A folder with iSCAM input and output files in it. Alternatively, a list returned by
 <a href="iSCAM.html">load.iscam.files</a>.</p></dd>
+
+
 <dt>nsim</dt>
 <dd><p>The number of simulations to take for parameters with
 uncertainty (for OM@cpars custom parameters)</p></dd>
+
+
 <dt>proyears</dt>
 <dd><p>The number of MSE projection years</p></dd>
+
+
 <dt>mcmc</dt>
 <dd><p>Logical, whether to use mcmc samples to create custom parameters cpars. Alternatively, a list
 returned by <a href="iSCAM.html">read.mcmc</a>. Set the seed for the function to sub-sample the mcmc samples.</p></dd>
+
+
 <dt>Name</dt>
 <dd><p>The name of the operating model</p></dd>
+
+
 <dt>Source</dt>
 <dd><p>Reference to assessment documentation e.g. a url</p></dd>
+
+
 <dt>length_timestep</dt>
 <dd><p>How long is a model time step in years
 (e.g. a quarterly model is 0.25, a monthly model 1/12) (currently only uses annual time step)</p></dd>
+
+
 <dt>nyr_par_mu</dt>
 <dd><p>integer, the number of recent years to estimate vulnerability over for future projections</p></dd>
+
+
 <dt>Author</dt>
 <dd><p>Who did the assessment</p></dd>
+
+
 <dt>report</dt>
 <dd><p>logical should a numbers at age reconstruction plot be produced?</p></dd>
+
+
 <dt>silent</dt>
 <dd><p>logical should progress reporting be printed to the console?</p></dd>
+
 </dl></div>
     <div id="biological-parameters">
     <h2>Biological parameters</h2>
@@ -176,7 +197,7 @@ R0 is also back calculated to age zero.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

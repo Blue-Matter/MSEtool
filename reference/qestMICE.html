@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.1</span>
       </span>
     </div>
 
@@ -108,91 +108,176 @@
     <h2>Arguments</h2>
     <dl><dt>par</dt>
 <dd><p>Integer, the simulation number</p></dd>
+
+
 <dt>depc</dt>
 <dd><p>Numeric vector, nstock long of specified stock depletion (SSB now / SSB0)</p></dd>
+
+
 <dt>CFc</dt>
 <dd><p>Matrix <code>[nstock, nfleet]</code>, a catch fraction among fleets (sums to 1 for each stock (row))</p></dd>
+
+
 <dt>nf</dt>
 <dd><p>Integer, number of fleets</p></dd>
+
+
 <dt>nyears</dt>
 <dd><p>Integer, number of historical years (unfished til today)</p></dd>
+
+
 <dt>nareas</dt>
 <dd><p>Integer, number of areas (default is 2)</p></dd>
+
+
 <dt>maxage</dt>
 <dd><p>Integer, maximum number of age classes for calculation</p></dd>
+
+
 <dt>Nx</dt>
 <dd><p>Array <code>[stock, age, year, area]</code> of stock numbers</p></dd>
+
+
 <dt>VFx</dt>
 <dd><p>Array <code>[fleet, age, year, area]</code> of the vulnerability curve</p></dd>
+
+
 <dt>FretAx</dt>
 <dd><p>Array <code>[fleet, age, year, area]</code> of the retention curve</p></dd>
+
+
 <dt>Effind</dt>
 <dd><p>Array <code>[fleet, year]</code> of effort</p></dd>
+
+
 <dt>movx</dt>
 <dd><p>Array <code>[stock,age,area,area]</code> of movement transitions</p></dd>
+
+
 <dt>Spat_targ</dt>
 <dd><p>Matrix <code>[stock, fleet]</code> of spatial targeting parameter (0 evenly spatial distributed, 1 proportional to vulnerable biomass)</p></dd>
+
+
 <dt>M_ageArrayx</dt>
 <dd><p>Array <code>[stock, age,year]</code> of Natural mortality rate at age</p></dd>
+
+
 <dt>Mat_agex</dt>
 <dd><p>Array <code>[stock, age, year]</code> of maturity (spawning fraction) at age</p></dd>
+
+
 <dt>Fec_agex</dt>
 <dd><p>Array <code>[stock, age, year]</code> of mature spawning weight at age</p></dd>
+
+
 <dt>Asizex</dt>
 <dd><p>Matrix <code>[stock, area]</code> Area size</p></dd>
+
+
 <dt>Karrayx</dt>
 <dd><p>Array of von B growth parameter K</p></dd>
+
+
 <dt>Linfarrayx</dt>
 <dd><p>Array of von B asymptotic length parameter Linf</p></dd>
+
+
 <dt>t0arrayx</dt>
 <dd><p>Array ofvon B theoretical age at zero length (t0)</p></dd>
+
+
 <dt>Marrayx</dt>
 <dd><p>Array of mature natural mortality rate</p></dd>
+
+
 <dt>R0x</dt>
 <dd><p>Vector <code>[stock]</code> unfished recruitment</p></dd>
+
+
 <dt>R0ax</dt>
 <dd><p>Matrix <code>[stock, area]</code> unfished recruitment by area</p></dd>
+
+
 <dt>SSBpRx</dt>
 <dd><p>Matrix <code>[stock, area]</code> spawning biomass per recruit by area</p></dd>
+
+
 <dt>SSB0x</dt>
 <dd><p>Vector <code>[stock]</code> Unfished spawning stock biomass</p></dd>
+
+
 <dt>hsx</dt>
 <dd><p>Vector <code>[stock]</code> steepness of the stock recruitment curve</p></dd>
+
+
 <dt>aRx</dt>
 <dd><p>Vector <code>[stock]</code> stock recruitment parameter alpha (for Ricker curve)</p></dd>
+
+
 <dt>bRx</dt>
 <dd><p>Vector <code>[stock]</code> stock recruitment parameter beta (for Ricker curve)</p></dd>
+
+
 <dt>ax</dt>
 <dd><p>Vector <code>[stock]</code> weight-length parameter a W=aL^b</p></dd>
+
+
 <dt>bx</dt>
 <dd><p>Vector <code>[stock]</code> weight-length parameter b W=aL^b</p></dd>
+
+
 <dt>Perrx</dt>
 <dd><p>Matrix <code>[stock, year]</code> process error - the lognormal factor for recruitment strength</p></dd>
+
+
 <dt>SRrelx</dt>
 <dd><p>Integer vector <code>[stock]</code> the form of the stock recruitment relationship (1 = Beverton-Holt, 2= Ricker)</p></dd>
+
+
 <dt>Rel</dt>
 <dd><p>A list of inter-stock relationships see slot Rel of MOM object class</p></dd>
+
+
 <dt>SexPars</dt>
 <dd><p>A list of sex-specific dynamics (SSBfrom, stcck_age)</p></dd>
+
+
 <dt>x</dt>
 <dd><p>Integer. The simulation number</p></dd>
+
+
 <dt>optVB</dt>
 <dd><p>Logical, whether to optimize to vulnerable biomass (or spawning biomass otherwise)</p></dd>
+
+
 <dt>VB0x</dt>
 <dd><p>Vector <code>[stock]</code> unfished vulnerable biomass</p></dd>
+
+
 <dt>B0x</dt>
 <dd><p>Vector <code>[stock]</code> unfished total biomass</p></dd>
+
+
 <dt>maxF</dt>
 <dd><p>A numeric value specifying the maximum fishing mortality for any
 single age class</p></dd>
+
+
 <dt>MPA</dt>
 <dd><p>An array of spatial closures by year <code>[np,nf,nyears+proyears,nareas]</code></p></dd>
+
+
 <dt>mod</dt>
 <dd><p>Character if 'opt' qestMICE returns the objective function otherwise the fitted values in a list</p></dd>
+
+
 <dt>plusgroup.</dt>
 <dd><p>Integer vector <code>[stock]</code> indicating if a plus group is used</p></dd>
+
+
 <dt>WtC</dt>
 <dd><p>Array <code>[stock, fleet, n_age]</code> of weight at age in catch in the last historical year</p></dd>
+
 </dl></div>
     <div id="author">
     <h2>Author</h2>
@@ -211,7 +296,7 @@ single age class</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>
