@@ -1,5 +1,10 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
+# MSEtool 3.5.1
+
+## Minor changes 
+- patch to `gettaxa` function for species that are found in FishBase database but not in FishLife database
+
 # MSEtool 3.5.0
 
 ## New additions

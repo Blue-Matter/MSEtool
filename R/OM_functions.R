@@ -704,6 +704,22 @@ gettaxa <- function(Class = "predictive", Order = "predictive",
   
   fam_gen_sp <- tolower(paste(match_taxonomy[3:5], collapse = '_'))
   nm_ind <- which(grepl(fam_gen_sp, tolower(ParentChild_gz$ChildName)))
+  if (length(nm_ind)==0) {
+    # species not found in FishLife
+    temp <- strsplit(fam_gen_sp,'_')[[1]]
+    temp[3] <- 'predictive'
+    fam_gen_sp <- paste0(temp, collapse="_")
+    nm_ind <- which(grepl(fam_gen_sp, tolower(ParentChild_gz$ChildName)))
+  }
+  
+  if (length(nm_ind)==0) {
+    # family & species not found in FishLife
+    temp <- strsplit(fam_gen_sp,'_')[[1]]
+    temp[2] <- 'predictive'
+    fam_gen_sp <- paste0(temp, collapse="_")
+    nm_ind <- which(grepl(fam_gen_sp, tolower(ParentChild_gz$ChildName)))
+  }
+  
   fullname <- gsub("_", " ", ParentChild_gz$ChildName[nm_ind])
   if (length(fullname)>1)
     fullname <- fullname[length(fullname)]
