@@ -40,7 +40,7 @@ Utility functions for MSE objects
 number of historical years, and projection years. Also works for Hist objects returned
 by \code{runMSE(Hist=TRUE)}
 
-\item \code{joinHist}: Join objects of class \code{Hist}
+\item \code{joinHist}: Join objects of class \code{Hist}. Does not join slot \code{OM}
 
 \item \code{updateMSE}: Updates an existing MSE object (class MSE) from a previous version of the
 DLMtool to include slots new to the latest version. Also works with Stock,
@@ -49,6 +49,9 @@ but avoids the 'slot doesn't exist' error that sometimes occurs.
 Returns an object of class matching class(MSEobj)
 }}
 
+\seealso{
+\link{joinData}
+}
 \author{
 A. Hordyk
 }

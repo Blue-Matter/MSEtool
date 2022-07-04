@@ -1792,7 +1792,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #' @param Hist Should model stop after historical simulations? Returns an object of
 #' class 'Hist' containing all historical data
 #' @param silent Should messages be printed out to the console?
-#' @param parallel Logical. Should the MSE be run using parallel processing? See Details for more information. 
+#' @param parallel Logical. Should MPs be run using parallel processing? For \code{runMSE}, can also be \code{"sac"} to run the entire MSE in parallel
+#' using the split-apply-combine technique. See Details for more information. 
 #' @param extended Logical. Return extended projection results?
 #' if TRUE, `MSE@Misc$extended` is a named list with extended data
 #' (including historical and projection by area), and extended version of `MSE@Hist`
@@ -1802,18 +1803,38 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #' @describeIn runMSE Run the Historical Simulations and Forward Projections
 #'  from an object of class `OM
 #' @details 
-#' ## Running in Parallel
-#' For simple MPs, running in parallel can actually lead to an increase in computation time, due to the overhead in sending the 
-#' information over to the cores. Consequently, the data-limied MPs in DLMtool and the reference MPs in MSEtool are not run using parallel processing. 
-#' All other MPs, including custom MPs, will be run in parallel if argument is TRUE.
-#' To individually control which MPs run in parallel, `parallel` can be a named list of logical values, e.g., `parallel=list(AvC=TRUE)`.
+#' ## Running MPs in parallel
 #' 
+#' For simple MPs, running in parallel can actually lead to an increase in computation time, due to the overhead in sending the 
+#' information over to the cores. Consequently, the data-limited MPs in DLMtool and the reference MPs in MSEtool are not run using parallel processing. 
+#' All other MPs, including custom MPs, will be run if `parallel = TRUE`.
+#' 
+#' To individually control which MPs run in parallel, `parallel` can be a named list of logical values, e.g., `parallel=list(AvC=TRUE)`.
+#'  
+#' ## Split-apply-combine MSE in parallel
+#' 
+#' Additional savings in computation time can be achieved by running the entire simulation in batches. Individual simulations of the operating model 
+#' are divided into separate cores using \link{SubCpars}, `runMSE` is applied independently for each core via `snowfall::sfClusterApplyLB`, and the 
+#' output (a list of MSE objects) is stitched back together into a single MSE object using \link{joinMSE}. 
+#' 
+#' The ideal number of cores will be determined based on the number of simulations and available cores.
+#'  
+#' There are several issues to look out for when using this split-apply-combine technique:
+#' 
+#' \itemize{
+#' \item Numerical optimization for depletion may fail in individual cores when \code{OM@cpars$qs} is not specified.
+#' \item Length bins should be specified in the operating model in \code{OM@cpars$CAL_bins}. Otherwise, length bins can vary by core and
+#' create problems when combining into a single object.
+#' \item Compared to non-parallel runs, sampled parameters in the operating model will vary despite the same value in \code{OM@seed}.
+#' \item When individual cores fail, the entire simulation breaks due to the error catch in `snow::checkForRemoteErrors()`. 
+#' \item If there is an error while combining the parallel output into a single Hist or MSE object, the list of individual objects will be returned.
+#' }
 #'
 #' @return Functions return objects of class \linkS4class{Hist} or \linkS4class{MSE}
 #' \itemize{
 #'   \item Simulate - An object of class \linkS4class{Hist}
 #'   \item Project - An object of class \linkS4class{MSE}
-#'   \item runMSE - An object of class \linkS4class{MSE}
+#'   \item runMSE - An object of class \linkS4class{MSE} if \code{Hist = TRUE} otherwise a class \linkS4class{Hist} object
 #' }
 #' @export
 runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
@@ -1842,6 +1863,11 @@ runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
   # check MPs
   if (checkMPs & !Hist)
     MPs <- CheckMPs(MPs=MPs, silent=silent)
+  
+  if (is.character(parallel) && parallel == "sac") {
+    MSEout <- runMSE_sac(OM, MPs, Hist = Hist, silent = silent, extended = extended)
+    return(MSEout)
+  }
 
   if (methods::is(OM,'OM')) {
     HistSims <- Simulate(OM, parallel, silent)  
@@ -1849,7 +1875,6 @@ runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
     HistSims <- OM
   }
   
-
   if (Hist) {
     if(!silent) message("Returning historical simulations")
     return(HistSims)
@@ -1872,20 +1897,78 @@ runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+runMSE_sac <- function(OM, MPs, Hist = FALSE, silent = FALSE, extended = FALSE) {
+  
+  if (OM@nsim <= 48) stop("OM@nsim should be greater than 48 to effectively use split-apply-combine.")
+  if (is.null(OM@cpars$CAL_bins)) warning("OM@cpars$CAL_bins was not provided which can create issues with parallel = \"sac\"")
+  ncpus <- set_parallel(TRUE)
+  
+  nsim <- OM@nsim
+  nits <- ceiling(nsim/48)
+  itsim <- rep(48,nits)
+  if (nits < ncpus) {
+    if (nits < 4) {
+      nits <- 4
+      itsim <- rep(ceiling(nsim/4), 4)
+    } else{
+      nits <- ncpus
+      itsim <- rep(ceiling(nsim/ncpus), ncpus)
+    }
+  }
+  cnt <- 1
+  while (sum(itsim) != nsim | any(itsim<2)) {
+    diff <-  nsim - sum(itsim)
+    if (diff >0) {
+      itsim[cnt] <- itsim[cnt]+1
+    }
+    if(diff < 0) {
+      itsim[cnt] <- itsim[cnt]-1
+    }
+    cnt <- cnt+1
+    if (cnt > length(itsim)) cnt <- 1
+  }
+  
+  #### Split
+  if (!silent) {
+    message("Running MSE using split-apply-combine on ", length(itsim), " cores with these number of simulations:\n",
+            paste0(itsim, collapse = ", "))
+  }
+  sims <- lapply(1:length(itsim), function(i) {
+    if (i > 1) {
+      (sum(itsim[1:(i-1)]) + 1): sum(itsim[1:i])
+    } else {
+      1:itsim[i]
+    }
+  })
+  
+  #### Apply Simulate() in parallel
+  if(!silent) message("Running Simulate() in parallel..")
+  HistList <- snowfall::sfClusterApplyLB(1:nits, function(i, OM, iter) {
+    OM@seed <- OM@seed + i
+    Simulate(SubCpars(OM, sims = iter[[i]]), silent = TRUE)
+  }, OM = OM, iter = sims)
+  
+  # Combine Hist objects and exit
+  if(Hist) {
+    Histout <- try(joinHist(HistList), silent = TRUE)
+    if(methods::is(Histout, "try-error")) {
+      warning("Error in joinHist() for combining Hist objects. Returning list of Hist objects.")
+      Histout <- HistList
+    }
+    return(Histout)
+  }
+  
+  #### Apply Project() in parallel
+  Export_customMPs(MPs)
+  if(!silent) message("Running Project() in parallel..")
+  MSElist <- snowfall::sfClusterApplyLB(HistList, Project, MPs = MPs, parallel = FALSE, silent = TRUE, 
+                                        extended = extended, checkMPs = FALSE)
+  
+  #### Combine MSE objects
+  MSEout <- try(joinMSE(MSElist), silent = TRUE)
+  if(methods::is(MSEout, "try-error")) {
+    warning("Error in joinMSE() for combining MSE objects. Returning list of MSE objects.")
+    MSEout <- MSElist
+  }
+  return(MSEout)
+}

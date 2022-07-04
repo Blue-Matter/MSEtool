@@ -630,7 +630,7 @@ Export_customMPs <- function(MPs) {
     extra_package <- unique(extra_package)
   }
   if (!is.null(globalMP)) {
-    message("Exporting custom MPs in global environment")
+    message("Exporting custom MPs in global environment:", paste0(globalMP, collapse = ", "))
     snowfall::sfExport(list=globalMP)
   }
   if (!is.null(extra_package)) {
@@ -638,4 +638,159 @@ Export_customMPs <- function(MPs) {
     for (pk in extra_package)
       snowfall::sfLibrary(pk, character.only = TRUE, verbose=FALSE)
   }
+}
+
+
+# Join functions for joinMSE, joinData, joinHist
+join_rows <- function(x, name) lapply(x, getElement, name) %>% bind_rows()
+join_vectors <- function(x, name) do.call(c, lapply(x, getElement, name))
+join_arrays <- function(x, name) lapply(x, getElement, name) %>% abind::abind(along = 1)
+
+join_list_of_vectors <- function(x) {
+  lname <- names(x[[1]])
+  varout <- lapply(lname, function(name) join_vectors(x = x, name = name))
+  structure(varout, names = lname)
+}
+
+join_list_of_arrays <- function(x) {
+  lname <- names(x[[1]])
+  varout <- lapply(lname, function(name) join_arrays(x = x, name = name))
+  structure(varout, names = lname)
+}
+
+join_PPD <- function(MSEList) {
+  PPD <- lapply(1:MSEList[[1]]@nMPs, function(mm) {
+    DataList <- lapply(MSEList, function(x) x@PPD[[mm]])
+    Data <- try(joinData(DataList), silent = TRUE)
+    return(Data)
+  })
+  return(PPD)
+}
+
+join_MSERefPoint <- function(MSEList) {
+  RefPoint <- lapply(MSEList, slot, "RefPoint")
+  
+  MSY <- join_arrays(RefPoint, "MSY")
+  FMSY <- join_arrays(RefPoint, "FMSY")
+  SSBMSY <- join_arrays(RefPoint, "SSBMSY")
+  F_SPR <- join_arrays(RefPoint, "F_SPR")
+  
+  Dynamic_Unfished <- lapply(RefPoint, getElement, "Dynamic_Unfished") %>% join_list_of_arrays()
+  ByYear <- lapply(RefPoint, getElement, "ByYear") %>% join_list_of_arrays()
+  
+  list(MSY = MSY, FMSY = FMSY, SSBMSY = SSBMSY, F_SPR = F_SPR,
+       Dynamic_Unfished = Dynamic_Unfished, ByYear = ByYear)
+}
+
+join_HistTSdata <- function(Hist_List) {
+  TSdata <- lapply(Hist_List, slot, "TSdata")
+  
+  array_names <- c("Number", "Biomass", "VBiomass", "SBiomass", "Removals", "Landings", "Discards", "Find", "RecDev")
+  
+  TSout <- array_names %>%
+    lapply(function(name) join_arrays(TSdata, name)) %>%
+    structure(names = array_names)
+  
+  TSout$SPR <- lapply(TSdata, getElement, "SPR") %>% join_list_of_arrays()
+  TSout$Unfished_Equilibrium <- lapply(TSdata, getElement, "Unfished_Equilibrium") %>% join_list_of_arrays()
+  
+  return(TSout)
+}
+
+join_HistRef <- function(Hist_List) {
+  Ref <- lapply(Hist_List, slot, "Ref")
+  
+  ByYear <- lapply(Ref, getElement, "ByYear")
+  Dynamic_Unfished <- lapply(Ref, getElement, "Dynamic_Unfished")
+  ReferencePoints <- lapply(Ref, getElement, "ReferencePoints")
+  
+  list(ByYear = join_list_of_arrays(ByYear),
+       Dynamic_Unfished = join_list_of_arrays(Dynamic_Unfished),
+       ReferencePoints = join_list_of_vectors(ReferencePoints))
+  
+}
+
+join_HistSampPars <- function(Hist_List) {
+  SampPars <- lapply(Hist_List, slot, "SampPars")
+  
+  Stock <- lapply(SampPars, getElement, "Stock")
+  unique_s <- c("maxage", "a", "b", "nCALbins", "nareas", "n_age", "plusgroup", "maxF")
+  Stock_names <- names(Stock[[1]])
+  Stockout <- lapply(Stock_names, function(name, x) {
+    if (name %in% unique_s) {
+      
+      identical_test <- length(unique(sapply(x, getElement, name))) == 1
+      if (!identical_test) {
+        warning(paste0("joinHist() found different values of Hist@SampPars$Stock$", name, ". Returning value from the first object in the list."))
+      }
+      return(x[[1]][[name]])
+      
+    } else if (name %in% c("CAL_binsmid", "CAL_bins", "binWidth")) {
+      
+      templist <- lapply(x, getElement, name)
+      
+      for(X in 2:length(templist)) {
+        if(length(templist[[X]]) != length(templist[[X - 1]]) || any(templist[[X]] != templist[[X - 1]])) {
+          warning(paste0("joinHist() found different values of Hist@SampPars$Stock$", name, ". Returning value from the first object in the list."))
+        }
+      }
+      return(x[[1]][[name]])
+      
+    } else if (is.array(x[[1]][[name]])) {
+      return(join_arrays(x, name))
+    } else {
+      return(join_vectors(x, name))
+    }
+  }, x = Stock) %>% structure(names = Stock_names)
+  
+  Fleet <- lapply(SampPars, getElement, "Fleet")
+  Fleet_names <- names(Fleet[[1]])
+  arr_len <- c("retL_real", "retL", "SLarray_real", "SLarray", "Fdisc_array2")
+  Fleetout <- lapply(Fleet_names, function(name, x) {
+    if (name == "MPA") {
+      return(x[[1]][["MPA"]])
+    } else if(name %in% arr_len) {
+      
+      out <- try(join_arrays(x, name), silent = TRUE)
+      if (inherits(out, "try-error")) {
+        warning(paste0("joinHist() could not join Hist@SampPars$Fleet$", name, ". Returning NULL."))
+        return(NULL)
+      } else {
+        return(out)
+      }
+      
+    } else if(is.array(x[[1]][[name]])) {
+      return(join_arrays(x, name))
+    } else {
+      return(join_vectors(x, name))
+    }
+  }, x = Fleet) %>% structure(names = Fleet_names)
+  
+  Obs <- lapply(SampPars, getElement, "Obs")
+  Obs_names <- names(Obs[[1]])
+  Obsout <- lapply(Obs_names, function(name, x) {
+    
+    if (name == "Sample_Area") {
+      return(lapply(x, getElement, "Sample_Area") %>% join_list_of_arrays())
+    } else if (is.array(x[[1]][[name]])) {
+      return(join_arrays(x, name))
+    } else {
+      return(join_vectors(x, name))
+    }
+    
+  }, x = Obs) %>% structure(names = Obs_names)
+  
+  Imp <- lapply(SampPars, getElement, "Imp")
+  Imp_names <- names(Imp[[1]])
+  Impout <- lapply(Imp_names, function(name, x) {
+    
+    if (is.array(x[[1]][[name]])) {
+      return(join_arrays(x, name))
+    } else {
+      return(join_vectors(x, name))
+    }
+    
+  }, x = Imp) %>% structure(names = Imp_names)
+  
+  list(Stock = Stockout, Fleet = Fleetout, Obs = Obsout, Imp = Impout)
 }

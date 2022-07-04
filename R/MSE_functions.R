@@ -581,270 +581,8 @@ Sub <- function(MSEobj, MPs = NULL, sims = NULL, years = NULL) {
   subMSE
 }
 
-# NOT YET WORKING FOR NEW VERSION OF MSETOOL
 
-# #' @describeIn checkMSE Joins two or more MSE objects together. MSE objects must have identical
-# #' number of historical years, and projection years. Also works for Hist objects returned
-# #' by `runMSE(Hist=TRUE)`
-# #' @export
-# joinMSE <- function(MSEobjs = NULL) {
-#   # join two or more MSE objects
-#   if (class(MSEobjs) != "list") stop("MSEobjs must be a list")
-#   if (length(MSEobjs) < 2) stop("MSEobjs list doesn't contain multiple MSE objects")
-#
-#   lapply(MSEobjs, checkMSE) # check that MSE objects contains all slots
-#
-#   ishist <- all(lapply(MSEobjs, slotNames) %>% unlist() %>% unique() %in% slotNames('Hist'))
-#
-#   if (ishist) {
-#     out <- new("Hist")
-#     sls <- slotNames('Hist')
-#     nsim <- MSEobjs[[1]]@Ref$B0 %>% length()
-#     for (sl in sls) {
-#       obj <-lapply(MSEobjs, slot, name=sl)
-#       if (sl == "Data") {
-#         out@Data <- joinData(obj)
-#       } else {
-#         if (class(obj[[1]]) == "data.frame") {
-#           slot(out, sl) <- do.call('rbind', obj)
-#         }
-#         if (class(obj[[1]]) == "list") {
-#           out.list <- list()
-#           for (nm in names(obj[[1]])) {
-#             obj2 <- lapply(obj, '[[', nm)
-#             ind <- which(dim(obj2[[1]]) == nsim)
-#             if (length(ind)>1) ind <- ind[1]
-#             if (length(ind) >0) {
-#               if (class(obj2[[1]]) == "array") {
-#                 tempVal <- lapply(obj2, dim)
-#                 # check all dimensions the same (hack for different CAL bins)
-#                 tdf <- lapply(obj2, dim) %>% unlist() %>%
-#                   matrix(nrow=length(obj2), ncol=length(dim(obj2[[1]])),byrow=TRUE)
-#                 nBins <- tdf[,2]
-#                 Max <- max(nBins)
-#                 nyrs <- max(tdf[,3])
-#                 nsims <- sapply(tempVal, function(x) x[1])
-#                 if (!mean(nBins) == max(nBins)) { # not all same size
-#                   index <- which(nBins < Max)
-#                   for (kk in index) {
-#                     dif <- Max - dim(obj2[[kk]])[2]
-#                     obj2[[kk]] <- abind::abind(obj2[[kk]], array(0, dim=c(nsims[kk], dif, nyrs)), along=2)
-#                   }
-#                 }
-#               }
-#               out.list[[nm]] <- abind::abind(obj2, along=ind)
-#             } else {
-#               out.list[[nm]] <- unlist(obj2) #  %>% unique()
-#             }
-#           }
-#           slot(out, sl) <- out.list
-#         }
-#       }
-#     }
-#     return(out)
-#   }
-#
-#   MPNames <- lapply(MSEobjs, getElement, name = "MPs")  # MPs in each object
-#   allsame <- length(unique(lapply(MPNames, unique))) == 1
-#
-#   if (!allsame) {
-#     # drop the MPs that don't appear in all MSEobjs
-#     mpnames <- unlist(MPNames)
-#     npack <- length(MSEobjs)
-#     tab <- table(mpnames)
-#     ind <- tab == npack
-#     commonMPs <- names(tab)[ind]
-#     if (length(commonMPs)<1) stop("No common MPs in MSE objects", call.=FALSE)
-#     MSEobjs <- lapply(MSEobjs, Sub, MPs = commonMPs)
-#     message("MPs not in all MSE objects:")
-#     message(paste(names(tab)[!ind], ""))
-#     message("Dropped from final MSE object.")
-#   }
-#
-#   Nobjs <- length(MSEobjs)
-#   for (X in 1:Nobjs) {
-#     tt <- MSEobjs[[X]]
-#     assign(paste0("obj", X), tt)
-#     if (X > 1) {
-#       tt <- MSEobjs[[X]]
-#       tt2 <- MSEobjs[[X - 1]]
-#       if (!all(slotNames(tt) == slotNames(tt2)))
-#         stop("The MSE objects don't have the same slots")
-#       if (any(tt@MPs != tt2@MPs))
-#         stop("MPs must be the same for all MSE objects")
-#     }
-#   }
-#
-#   # Check that nyears and proyears are the same for all
-#   chkmat <- matrix(NA, nrow = Nobjs, ncol = 2)
-#   nms <- NULL
-#   for (X in 1:Nobjs) {
-#     tt <- get(paste0("obj", X))
-#     chkmat[X, ] <- c(tt@nyears, tt@proyears)
-#     if (X > 1)
-#       if (!any(grepl(tt@Name, nms)))
-#         stop("MSE objects have different names")
-#     nms <- append(nms, tt@Name)
-#   }
-#   chk <- all(colSums(chkmat) == chkmat[1, ] * Nobjs)
-#   if (!chk) stop("The MSE objects have different number of nyears or proyears")
-#
-#   # Join them together
-#   Allobjs <- mget(paste0("obj", 1:Nobjs))
-#   sns <- slotNames(Allobjs[[1]])
-#   sns<-sns[sns!="Misc"] # ignore the Misc slot
-#   outlist <- vector("list", length(sns))
-#   for (sn in 1:length(sns)) {
-#     templs <- lapply(Allobjs, slot, name = sns[sn])
-#     if (class(templs[[1]]) == "character") {
-#       outlist[[sn]] <- templs[[1]]
-#     }
-#     if (class(templs[[1]]) == "numeric" | class(templs[[1]]) == "integer") {
-#       if (sns[sn] == "CALbins") {
-#         tempInd <- which.max(unlist(lapply(templs, length)))
-#         CALbins <- templs[[tempInd]]
-#       } else {
-#         outlist[[sn]] <- do.call(c, templs)
-#       }
-#     }
-#     if (class(templs[[1]]) == "matrix" | class(templs[[1]]) == "data.frame") {
-#       outlist[[sn]] <- do.call(rbind, templs)
-#     }
-#     if (class(templs[[1]]) == "array") {
-#       if (sns[sn] == "CAL") { # hack for different sized CAL arrays
-#         tempVal <- lapply(templs, dim)
-#         if (all(unlist(lapply(tempVal, length)) == 3)) {
-#           nBins <- sapply(tempVal, function(x) x[3])
-#           nsims <- sapply(tempVal, function(x) x[1])
-#           nMPs <- sapply(tempVal, function(x) x[2])
-#           if (!mean(nBins) == max(nBins)) { # not all same size
-#             Max <- max(nBins)
-#             index <- which(nBins < Max)
-#             for (kk in index) {
-#               dif <- Max - dim(templs[[kk]])[3]
-#               templs[[kk]] <- abind::abind(templs[[kk]], array(0, dim=c(nsims[kk], nMPs[kk], dif)), along=3)
-#             }
-#           }
-#           outlist[[sn]] <- abind::abind(templs, along = 1)
-#         } else {
-#           outlist[[sn]] <- templs[[1]]
-#         }
-#       } else {
-#         outlist[[sn]] <- abind::abind(templs, along = 1)
-#       }
-#
-#     }
-#   }
-#
-#   names(outlist) <- sns
-#
-#   Misc<-list()
-#   if (length(MSEobjs[[1]]@Misc)>0) {
-#     if (!is.null(MSEobjs[[1]]@Misc$Data)) {
-#       Misc$Data <- list()
-#       # Posterior predicted data joining
-#       for(i in 1:length(MSEobjs[[1]]@Misc$Data))
-#         Misc$Data[[i]]<-joinData(lapply(MSEobjs,function(x)slot(x,"Misc")$Data[[i]]))
-#     }
-#
-#     if (!is.null(MSEobjs[[1]]@Misc$RInd.stats)) {
-#       # Error from real indices
-#       nms <- unique(MSEobjs[[1]]@Misc$RInd.stats$Index) %>% as.character()
-#       temp <- list()
-#       for (nm in seq_along(nms)) {
-#         temp1 <- list()
-#         for(i in 1:length(MSEobjs)) {
-#           temp1[[i]] <- MSEobjs[[i]]@Misc$RInd.stats %>% dplyr::filter(Index==nms[nm])
-#         }
-#         temp[[nm]] <- do.call('rbind', temp1)
-#       }
-#       Misc$RInd.stats <- do.call('rbind', temp)
-#     }
-#
-#     if (!is.null(MSEobjs[[1]]@Misc$TryMP)) {
-#       temp1 <- list()
-#       for(i in 1:length(MSEobjs)) {
-#         temp1[[i]] <- MSEobjs[[i]]@Misc$TryMP
-#       }
-#       Misc$TryMP <- do.call('rbind', temp1)
-#     }
-#
-#     if (!is.null(MSEobjs[[1]]@Misc$Unfished)) {
-#       Misc$Unfished <- list()
-#       temp1 <- temp2 <- list()
-#       for(i in 1:length(MSEobjs)) {
-#         temp1[[i]] <- MSEobjs[[i]]@Misc$Unfished$Refs
-#         temp2[[i]] <- MSEobjs[[i]]@Misc$Unfished$ByYear
-#       }
-#       Misc$Unfished$Refs <- do.call('cbind', temp1)
-#       for (nm in names(temp2[[1]])) {
-#         tt = lapply(temp2, "[[", nm)
-#         tt <- do.call('rbind',tt)
-#         Misc$Unfished$ByYear[[nm]] <- tt
-#       }
-#     }
-#     if (!is.null(MSEobjs[[1]]@Misc$MSYRefs)) {
-#       Misc$MSYRefs <- list()
-#       temp1 <- temp2 <- list()
-#       for(i in 1:length(MSEobjs)) {
-#         temp1[[i]] <- MSEobjs[[i]]@Misc$MSYRefs$Refs
-#         temp2[[i]] <- MSEobjs[[i]]@Misc$MSYRefs$ByYear
-#       }
-#       Misc$MSYRefs$Refs <- do.call('rbind', temp1)
-#       for (nm in names(temp2[[1]])) {
-#         tt <- lapply(temp2, "[[", nm)
-#         if (length(dim(tt[[1]])) == 3) {
-#           tt <- abind::abind(tt, along=1)
-#         } else {
-#           tt <- do.call('rbind',tt)
-#         }
-#         Misc$MSYRefs$ByYear[[nm]] <- tt
-#       }
-#     }
-#     temp <- list()
-#     nsim <- ncol(Misc$Unfished$Ref)
-#     dims <- dim(MSEobjs[[1]]@Misc$LatEffort)
-#     Misc$LatEffort <- array(NA, dim=c(nsim, dims[2], dims[3]))
-#     Misc$Revenue <- array(NA, dim=c(nsim, dims[2], dims[3]))
-#     Misc$Cost <- array(NA, dim=c(nsim, dims[2], dims[3]))
-#     Misc$TAE <- array(NA, dim=c(nsim, dims[2], dims[3]))
-#     st <- 1
-#     for (i in 1:length(MSEobjs)) {
-#       dims <- dim(MSEobjs[[i]]@Misc$LatEffort)
-#       indvec <- st:(st+dims[1]-1)
-#       st <- indvec[length(indvec)] + 1
-#       Misc$LatEffort[indvec,,] <- MSEobjs[[i]]@Misc$LatEffort
-#       Misc$Cost[indvec,,] <- MSEobjs[[i]]@Misc$Cost
-#       Misc$Revenue[indvec,,] <- MSEobjs[[i]]@Misc$Revenue
-#       Misc$TAE[indvec,,] <- MSEobjs[[i]]@Misc$TAE
-#     }
-#
-#   }
-#
-#   # ErrList
-#   nms <- names(MSEobjs[[1]]@Misc$ErrList)
-#   for (nm in nms) {
-#     t1 <- lapply(1:length(MSEobjs), function(i) MSEobjs[[i]]@Misc$ErrList[[nm]])
-#     Misc$ErrList[[nm]] <- do.call('rbind', t1)
-#   }
-#
-#   # Removals
-#   t1 <- lapply(1:length(MSEobjs), function(i) MSEobjs[[i]]@Misc$Removals)
-#   Misc$Removals <- abind::abind(t1, along=1)
-#
-#
-#   newMSE <- new("MSE", Name = outlist$Name, nyears = unique(outlist$nyears),
-#                 proyears = unique(outlist$proyears), nMP = unique(outlist$nMP),
-#                 MPs = unique(outlist$MPs), nsim = sum(outlist$nsim), OM = outlist$OM,
-#                 Obs = outlist$Obs, SB_SBMSY = outlist$B_BMSY, F_FMSY = outlist$F_FMSY,
-#                 outlist$B, outlist$SSB, outlist$VB,
-#                 outlist$FM, outlist$C, outlist$TAC, outlist$SSB_hist,
-#                 outlist$CB_hist, outlist$FM_hist, outlist$Effort, outlist$PAA,
-#                 outlist$CAA, outlist$CAL, CALbins, Misc=Misc)
-#
-#   newMSE
-# }
-#
+
 # Evaluate Peformance of MPs
 # --------------------------------------------------- Function examines
 # how consistently an MP outperforms another.
@@ -1079,7 +817,7 @@ Dom <- function(MSEobj, ..., PMlist=NULL, Refs=NULL, Yrs=NULL) {
 #   MSEout <- addmp('C', MSEobjs, MSEout)
 #   MSEout <- addmp('TAC', MSEobjs, MSEout)
 #   MSEout <- addmp('Effort', MSEobjs, MSEout)
-class#   MSEout <- addmp('PAA', MSEobjs, MSEout)
+#   MSEout <- addmp('PAA', MSEobjs, MSEout)
 #   MSEout <- addmp('CAA', MSEobjs, MSEout)
 #   MSEout <- addmp('CAL', MSEobjs, MSEout)
 #
@@ -1091,8 +829,7 @@ class#   MSEout <- addmp('PAA', MSEobjs, MSEout)
 #
 
 #' @describeIn checkMSE Joins two or more MSE objects together. MSE objects must have identical
-#' number of historical years, and projection years. Also works for Hist objects returned
-#' by `runMSE(Hist=TRUE)`
+#' number of historical years, and projection years.
 #' @param MSEobjs A list of MSE objects
 #' @export
 joinMSE <- function(MSEobjs = NULL) {
@@ -1123,125 +860,66 @@ joinMSE <- function(MSEobjs = NULL) {
   }
 
   Nobjs <- length(MSEobjs)
-  for (X in 1:Nobjs) {
-    tt <- MSEobjs[[X]]
-    assign(paste0("obj", X), tt)
-    if (X > 1) {
-      tt <- MSEobjs[[X]]
-      tt2 <- MSEobjs[[X - 1]]
-      if (!all(slotNames(tt) == slotNames(tt2)))
-        stop("The MSE objects don't have the same slots")
-      if (any(tt@MPs != tt2@MPs))
-        stop("MPs must be the same for all MSE objects")
-    }
+  for (X in 2:Nobjs) {
+    if (!all(slotNames(MSEobjs[[X]]) == slotNames(MSEobjs[[X - 1]])))
+      stop("The MSE objects don't have the same slots")
+    if (any(MSEobjs[[X]]@MPs != MSEobjs[[X - 1]]@MPs))
+      stop("MPs must be the same for all MSE objects")
   }
 
   # Check that nyears and proyears are the same for all
   chkmat <- matrix(NA, nrow = Nobjs, ncol = 2)
-  nms <- NULL
   for (X in 1:Nobjs) {
-    tt <- get(paste0("obj", X))
-    chkmat[X, ] <- c(tt@nyears, tt@proyears)
-    if (X > 1)
-      if (!any(grepl(tt@Name, nms)))
-        stop("MSE objects have different names")
-    nms <- append(nms, tt@Name)
+    chkmat[X, ] <- c(MSEobjs[[X]]@nyears, MSEobjs[[X]]@proyears)
   }
+  
   chk <- all(colSums(chkmat) == chkmat[1, ] * Nobjs)
   if (!chk) stop("The MSE objects have different number of nyears or proyears")
-
+  
+  # Check that MSE names are identical
+  nms <- length(unique(sapply(MSEobjs, slot, "Name"))) == 1
+  if (!nms) stop("MSE objects have different names")
+  
   # Join them together
-  Allobjs <- mget(paste0("obj", 1:Nobjs))
-
-  Name <- Allobjs[[1]]@Name
-  nyears <- Allobjs[[1]]@nyears
-  proyears <- Allobjs[[1]]@proyears
-  nMPs <- length(MPNames[[1]])
-  MPs <- MPNames[[1]]
-  nsim <- sum(sapply(Allobjs, slot, name = 'nsim'))
-
-  OM <- do.call('rbind', lapply(Allobjs, slot, name = 'OM'))
-  Obs <- do.call('rbind', lapply(Allobjs, slot, name = 'Obs'))
-
-
-  SB_SBMSY <- abind::abind(lapply(Allobjs, slot, name = 'SB_SBMSY'), along = 1)
-  F_FMSY <- abind::abind(lapply(Allobjs, slot, name = 'F_FMSY'), along = 1)
-  N <- abind::abind(lapply(Allobjs, slot, name = 'N'), along = 1)
-  B <- abind::abind(lapply(Allobjs, slot, name = 'B'), along = 1)
-  SSB <- abind::abind(lapply(Allobjs, slot, name = 'SSB'), along = 1)
-  VB <- abind::abind(lapply(Allobjs, slot, name = 'VB'), along = 1)
-  FM <- abind::abind(lapply(Allobjs, slot, name = 'FM'), along = 1)
-  SPR <- list() # not currently returned in MSE
-  Catch <- abind::abind(lapply(Allobjs, slot, name = 'Catch'), along = 1)
-  Removals <- abind::abind(lapply(Allobjs, slot, name = 'Removals'), along = 1)
-  Effort <- abind::abind(lapply(Allobjs, slot, name = 'Effort'), along = 1)
-  TAC <- abind::abind(lapply(Allobjs, slot, name = 'TAC'), along = 1)
-  TAE <- abind::abind(lapply(Allobjs, slot, name = 'TAE'), along = 1)
-
-  BioEco <- list()
-  BioEco_List <- lapply(Allobjs, slot, name = 'BioEco')
-  nms <- names(Allobjs[[1]]@BioEco)
-  for (nm in nms) {
-    temp <- list()
-    for (obj in 1:length(Allobjs)) {
-      temp[[obj]] <-BioEco_List[[obj]][[nm]]
-    }
-
-    BioEco[[nm]] <- abind::abind(temp, along = 1)
+  MSE <- new("MSE",
+             Name = MSEobjs[[1]]@Name,
+             nyears = MSEobjs[[1]]@nyears,
+             proyears = MSEobjs[[1]]@proyears,
+             nMPs = length(MPNames[[1]]),
+             MPs = MPNames[[1]],
+             nsim = sapply(MSEobjs, slot, "nsim") %>% sum(),
+             OM = join_rows(MSEobjs, "OM"),
+             Obs = join_rows(MSEobjs, "Obs"),
+             SB_SBMSY = join_arrays(MSEobjs, "SB_SBMSY"),
+             F_FMSY = join_arrays(MSEobjs, "F_FMSY"),
+             N = join_arrays(MSEobjs, "N"),
+             B = join_arrays(MSEobjs, "B"),
+             SSB = join_arrays(MSEobjs, "SSB"),
+             VB = join_arrays(MSEobjs, "VB"),
+             FM = join_arrays(MSEobjs, "FM"),
+             SPR = lapply(MSEobjs, slot, "SPR") %>% join_list_of_arrays(),
+             Catch = join_arrays(MSEobjs, "Catch"),
+             Removals = join_arrays(MSEobjs, "Removals"),
+             Effort = join_arrays(MSEobjs, "Effort"),
+             TAC = join_arrays(MSEobjs, "TAC"),
+             TAE = join_arrays(MSEobjs, "TAE"),
+             BioEco = lapply(MSEobjs, slot, "BioEco") %>% join_list_of_arrays(),
+             RefPoint = join_MSERefPoint(MSEobjs),
+             CB_hist = join_arrays(MSEobjs, "CB_hist"),
+             FM_hist = join_arrays(MSEobjs, "FM_hist"),
+             SSB_hist = join_arrays(MSEobjs, "SSB_hist"),
+             Hist = new("Hist"),
+             PPD = join_PPD(MSEobjs),
+             Misc = list()
+  )
+  
+  MSE@Hist <- lapply(MSEobjs, slot, "Hist") %>% joinHist()
+  
+  if (length(MSEobjs[[1]]@Misc$extended)) {
+    MSE@Misc$extended <- lapply(MSEobjs, function(x) x@Misc$extended) %>% join_list_of_arrays()
   }
-
-  RefPoint <- list()
-  RefPoint_List <- lapply(Allobjs, slot, name = 'RefPoint')
-  nms <- names(Allobjs[[1]]@RefPoint)
-  for (nm in nms) {
-    temp <- list()
-    for (obj in 1:length(Allobjs)) {
-      temp[[obj]] <-RefPoint_List[[obj]][[nm]]
-    }
-    if (methods::is(temp[[1]], 'list')) {
-      nms2 <- names(temp[[1]])
-      for (j in seq_along(nms2)) {
-        temp2 <- list()
-        for (k in 1:length(temp)) {
-          temp2[[k]] <- temp[[k]][[j]]
-        }
-        nm2 <- nms2[j]
-        RefPoint[[nm]][[nm2]] <- abind::abind(temp2, along = 1)
-        }
-    } else {
-      RefPoint[[nm]] <- abind::abind(temp, along = 1)
-    }
-  }
-
-  CB_hist <- abind::abind(lapply(Allobjs, slot, name = 'CB_hist'), along = 1)
-  FM_hist <- abind::abind(lapply(Allobjs, slot, name = 'FM_hist'), along = 1)
-  SSB_hist <- abind::abind(lapply(Allobjs, slot, name = 'SSB_hist'), along = 1)
-
-  Hist_List <- lapply(Allobjs, slot, name = 'Hist')
-  Hist <- joinHist(Hist_List)
-
-  # PPD
-  PPD <- list()
-  for (m in 1:nMPs) {
-    temp <- list()
-    for (obj in 1:length(Allobjs)) {
-      temp[[obj]] <- Allobjs[[obj]]@PPD[[m]]
-    }
-    if (length(temp)>0)
-      PPD[[m]] <- joinData(temp)
-  }
-
-
-  # Misc
-  # TODO
-  Misc <- list()
-
-  MSE <- new('MSE', Name, nyears, proyears, nMPs, MPs, nsim, OM, Obs,
-             SB_SBMSY, F_FMSY, N, B, SSB, VB, FM, SPR, Catch, Removals, Effort,
-             TAC, TAE, BioEco, RefPoint,
-             CB_hist, FM_hist, SSB_hist,
-             Hist, PPD, Misc)
-  MSE
+  
+  return(MSE)
 }
 
 
@@ -1250,89 +928,37 @@ joinMSE <- function(MSEobjs = NULL) {
 #'
 #' @return A new object of class `Hist`
 #' @export
-#' @describeIn checkMSE Join objects of class `Hist`
+#' @describeIn checkMSE Join objects of class `Hist`. Does not join slot `OM`
+#' @seealso \link{joinData}
 joinHist <- function(Hist_List) {
-  # TODO
-  # DataList <- lapply(Hist_List, slot, name = 'Data')
-  # Data <- joinData(DataList)
-  Data <- new('Data')
-  OMPars <- abind::abind(lapply(Hist_List, slot, name = 'OMPars'), along = 1)
-  OMPars <- data.frame(OMPars)
-
-  AtAge <- list()
-  AtAge_List <- lapply(Hist_List, slot, name = 'AtAge')
-  nms <- names(Hist_List[[1]]@AtAge)
-  for (nm in nms) {
-    temp <- list()
-    for (obj in 1:length(Hist_List)) {
-      temp[[obj]] <-AtAge_List[[obj]][[nm]]
+  
+  OMPars <- join_rows(Hist_List, "OMPars")
+  
+  if (nrow(OMPars)) {
+    Hist <- new("Hist",
+                Data = new("Data"), 
+                OMPars = OMPars,
+                AtAge = lapply(Hist_List, slot, "AtAge") %>% join_list_of_arrays(),
+                TSdata = join_HistTSdata(Hist_List),
+                Ref = join_HistRef(Hist_List),
+                SampPars = join_HistSampPars(Hist_List),
+                Misc = list(),
+                OM = new("OM")
+    )
+    
+    DataList <- lapply(Hist_List, slot, "Data")
+    Data <- try(joinData(DataList), silent = TRUE)
+    
+    if (inherits(Data, "try-error")) {
+      warning("joinHist() could not join Data objects.")
+    } else {
+      Hist@Data <- Data
     }
-
-    AtAge[[nm]] <- abind::abind(temp, along = 1)
+    
+    Hist@Misc$BioEco <- lapply(Hist_List, function(x) x@Misc$BioEco) %>% bind_rows()
+    
+  } else {
+    Hist <- new("Hist")
   }
-
-  TSdata <- list()
-  TSdata_List <- lapply(Hist_List, slot, name = 'TSdata')
-  nms <- names(Hist_List[[1]]@TSdata)
-  nms <- nms[nms!='Unfished_Equilibrium']
-
-  for (nm in nms) {
-    temp <- list()
-    for (obj in 1:length(Hist_List)) {
-      temp[[obj]] <- TSdata_List[[obj]][[nm]]
-    }
-    TSdata[[nm]] <- abind::abind(temp, along = 1)
-  }
-
-  TSdata$Unfished_Equilibrium <- list()
-  nms <- names(Hist_List[[1]]@TSdata$Unfished_Equilibrium)
-  for (nm in nms) {
-    temp <- list()
-    for (obj in 1:length(Hist_List)) {
-      temp[[obj]] <- TSdata_List[[obj]]$Unfished_Equilibrium[[nm]]
-    }
-    TSdata$Unfished_Equilibrium[[nm]] <- abind::abind(temp, along = 1)
-  }
-
-  Ref <- list()
-  Ref_List <- lapply(Hist_List, slot, name = 'Ref')
-  Ref$ByYear <- list()
-  nms <- names(Hist_List[[1]]@Ref$ByYear)[1:2]
-  for (nm in nms) {
-    temp <- list()
-    for (obj in 1:length(Hist_List)) {
-      temp[[obj]] <- Ref_List[[obj]]$ByYear[[nm]]
-    }
-    Ref$ByYear[[nm]] <- abind::abind(temp, along = 1)
-  }
-
-  Ref$Dynamic_Unfished <- list()
-  nms <- names(Hist_List[[1]]@Ref$Dynamic_Unfished)[1:2]
-  for (nm in nms) {
-    temp <- list()
-    for (obj in 1:length(Hist_List)) {
-      temp[[obj]] <- Ref_List[[obj]]$Dynamic_Unfished[[nm]]
-    }
-    Ref$Dynamic_Unfished[[nm]] <- abind::abind(temp, along = 1)
-  }
-
-  temp <- list()
-  for (obj in 1:length(Hist_List)) {
-    temp[[obj]] <- Ref_List[[obj]]$ReferencePoints
-  }
-  Ref$ReferencePoints <- abind::abind(temp, along = 1)
-
-
-  SampPars <- list()
-  # TO DO
-
-  Misc <- list()
-  OM <- new("OM")
-
-  sls <- slotNames("Hist")
-  Hist <- new("Hist")
-  for (sl in sls) {
-    slot(Hist, sl) <- get(sl)
-  }
-  Hist
+  return(Hist)
 }

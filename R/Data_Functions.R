@@ -1387,49 +1387,48 @@ TAC <- function(Data, MPs = NA, reps = 100, timelimit = 1, checkMP=TRUE, silent=
 #'
 #' @param DataList A list of data objects of identical dimension (except for simulation)
 #' @author T. Carruthers
+#' @seealso \link{joinMSE} \link{joinHist}
 #' @export
 joinData<-function(DataList){
 
   if (!methods::is(DataList,"list")) stop("DataList must be a list")
   if (length(DataList) < 2) stop("DataList list doesn't contain multiple MSE objects")
 
-  Data<-DataList[[1]]
-  nD<-length(DataList)
+  Data <- new("Data")
+  #Data<-DataList[[1]]
+  nD <- length(DataList)
 
-  slots<-slotNames(Data)
-  slots_identical <- c("Name", "Common_Name", "Species", "Region", "Year", "MaxAge", "Units", "Ref_type", "PosMPs", "MPs", "nareas", "LHYear")
-  #slots <- slots[!slots%in%c("Name","Ref","OM","MaxAge","CAL_bins","Year","Units","Ref","Ref_type","Log","params","PosMPs","MPs","Obs","Misc","nareas","LHYear")]
+  slots <- slotNames(Data)
+  slots_identical <- c("Name", "Common_Name", "Species", "Region", "Year", "MaxAge", "Units", "Ref_type", "PosMPs", "MPs", "nareas", "LHYear",
+                       "AddIunits", "AddIndType")
   slots <- slots[!slots %in% slots_identical]
 
-  nslots<-length(slots)
-  getslot<-function(obj,name)slot(obj,name) # weird issue with namespace conflict and the @Cat slot
-  getslotclass<-function(obj,name)class(slot(obj,name))
-  sclass<-sapply(1:nslots,function(x,obj,slots)getslotclass(obj,slots[x]),obj=DataList[[1]],slots=slots)
-  #getdim<-function(x){
-  #  dim<-dim(x)
-  #  if(is.null(dim))dim=length(x)
-  #  dim
-  #}
-  #sdims<-sapply(1:nslots,function(x,obj,slots)getdim(getslot(obj,slots[x])),obj=DataList[[1]],slots=slots)
-  #nsims<-sapply(1:nD,function(x,DataList)length(DataList[[x]]@Dt),DataList)
+  nslots <- length(slots)
+  getslot <- function(obj, name) slot(obj, name) # weird issue with namespace conflict and the @Cat slot
+  #getslotclass<-function(obj,name)class(slot(obj,name))
+  #sclass<-sapply(1:nslots,function(x,obj,slots) getslotclass(obj,slots[x]),obj=DataList[[1]],slots=slots)
 
-  for (sn in 1:nslots){
-    templist<-lapply(DataList,getslot,name=slots[sn])
+  for (sn in slots) {
+    templist <- lapply(DataList, getslot, name = sn)
     tempval <- templist[[1]]
 
-    if (inherits(tempval,"numeric")| inherits(tempval,"integer")) {
-      if (slots[sn] == "CAL_bins") {
+    if (inherits(tempval, "numeric") || inherits(tempval, "integer")) {
+      
+      if (sn == "CAL_bins" || sn == "CAL_mids") {
         nbin <- vapply(templist, length, numeric(1))
-        attr(Data, slots[sn]) <- templist[[which.max(nbin)]]
-      } else if (slots[sn] == "CAL_mids") {
-        nbin <- vapply(templist, length, numeric(1))
-        attr(Data, slots[sn]) <- templist[[which.max(nbin)]]
+        slot(Data, sn) <- templist[[which.max(nbin)]]
+        
+        if (length(unique(nbin)) > 1) {
+          warning(paste0("joinData() found Data@", sn, " of various lengths. Using the vector in DataList[[", which.max(nbin), "]]."))
+        }
       } else {
-        attr(Data, slots[sn]) <- unlist(templist)
+        slot(Data, sn) <- unlist(templist)
       }
-    } else if (inherits(tempval,"matrix")| inherits(tempval,"array")) {
+      
+    } else if (is.array(tempval) || is.matrix(tempval)) {
 
-      if(slots[sn] == "CAL") {
+      if (sn == "CAL") {
+        
         nbin <- vapply(templist, function(x) dim(x)[3], numeric(1))
         templist2 <- vector("list", nD)
         for (i in 1:nD) {
@@ -1438,30 +1437,35 @@ joinData<-function(DataList){
         }
         if (all(diff(do.call("rbind", lapply(templist2, dim))[,2]) == 0)) {
           # arrays may be different dimensions if MPs fail
-          attr(Data, slots[sn]) <- abind::abind(templist2, along=1)
+          slot(Data, sn) <- abind::abind(templist2, along=1)
         }
+        
       } else {
+        
         if (all(diff(do.call("rbind", lapply(templist, dim))[,2]) == 0)) {
           # arrays may be different dimensions if MPs fail
-          attr(Data, slots[sn]) <- abind::abind(templist, along=1)
+          attr(Data, sn) <- abind::abind(templist, along=1)
         }
       }
 
-    } else if (inherits(tempval,"list")) {
-      attr(Data, slots[sn]) <- do.call(c, templist)
-    } else if (inherits(tempval,"data.frame")) {
-      attr(Data, slots[sn]) <- do.call(rbind, templist)
+    } else if (inherits(tempval, "list")) {
+      if (sn == "Misc") { # Ignore StockPars, FleetPars, ReferencePoints from Hist object
+        slot(Data, sn) <- do.call(c, lapply(templist, function(x) x[names(x) == ""]))
+      } else {
+        slot(Data, sn) <- do.call(c, templist)
+      }
+      
+    } else if (inherits(tempval, "data.frame")) {
+      slot(Data, sn) <- bind_rows(templist)
     }
   }
 
-  for (sn in 1:length(slots_identical)) {
-    templist <- lapply(DataList, getslot, name = slots_identical[sn])
-    attr(Data, slots_identical[sn]) <- unique(do.call(c, templist))
+  for (sn in slots_identical) {
+    templist <- lapply(DataList, slot, name = sn) # debugging
+    slot(Data, sn) <- templist[[1]]
   }
 
-  #checkdims<-sapply(1:nslots,function(x,obj,slots)getdim(getslot(obj,slots[x])),obj=Data,slots=slots)
-  Data
-
+  return(Data)
 }
 
 

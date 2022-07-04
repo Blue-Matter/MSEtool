@@ -12,6 +12,9 @@ joinData(DataList)
 \description{
 A function that combined a list of data objects into a single data object (same dimensions but can have different numbers of simulations)
 }
+\seealso{
+\link{joinMSE} \link{joinHist}
+}
 \author{
 T. Carruthers
 }
