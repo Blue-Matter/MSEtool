@@ -1004,9 +1004,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
 
   ind <- which(lapply(ObsPars, length) == nsim)
   obs <- data.frame(ObsPars[ind])
-  ind <- which(lapply(ImpPars, length) == nsim)
-  imp <- data.frame(ImpPars[ind])
-  OMPars <- data.frame(OMPars, obs, imp)
+  OMPars <- data.frame(OMPars, obs)
 
   Hist@OMPars <- OMPars
   Hist@AtAge <- list(Length=StockPars$Len_age,
