@@ -72,7 +72,7 @@ To individually control which MPs run in parallel, \code{parallel} can be a name
 \subsection{Split-apply-combine MSE in parallel}{
 
 Additional savings in computation time can be achieved by running the entire simulation in batches. Individual simulations of the operating model
-are divided into separate cores using \link{SubCpars}, \code{runMSE} is applied independently for each core via \code{snowfall::sfClusterApplyLB}, and the
+are divided into separate cores using \link{SubCpars}, \code{Simulate} and \code{Project} are applied independently for each core via \code{snowfall::sfClusterApplyLB}, and the
 output (a list of MSE objects) is stitched back together into a single MSE object using \link{joinMSE}.
 
 The ideal number of cores will be determined based on the number of simulations and available cores.
@@ -84,8 +84,7 @@ There are several issues to look out for when using this split-apply-combine tec
 \item Length bins should be specified in the operating model in \code{OM@cpars$CAL_bins}. Otherwise, length bins can vary by core and
 create problems when combining into a single object.
 \item Compared to non-parallel runs, sampled parameters in the operating model will vary despite the same value in \code{OM@seed}.
-\item When individual cores fail, the entire simulation breaks due to the error catch in \code{snow::checkForRemoteErrors()}.
-\item If there is an error while combining the parallel output into a single Hist or MSE object, the list of individual objects will be returned.
+\item If there is an error in individual cores or while combining the parallel output into a single Hist or MSE object, the list of output (from the cores) will be returned.
 }
 }
 }

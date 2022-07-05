@@ -1814,7 +1814,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #' ## Split-apply-combine MSE in parallel
 #' 
 #' Additional savings in computation time can be achieved by running the entire simulation in batches. Individual simulations of the operating model 
-#' are divided into separate cores using \link{SubCpars}, `runMSE` is applied independently for each core via `snowfall::sfClusterApplyLB`, and the 
+#' are divided into separate cores using \link{SubCpars}, `Simulate` and `Project` are applied independently for each core via `snowfall::sfClusterApplyLB`, and the 
 #' output (a list of MSE objects) is stitched back together into a single MSE object using \link{joinMSE}. 
 #' 
 #' The ideal number of cores will be determined based on the number of simulations and available cores.
@@ -1826,8 +1826,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #' \item Length bins should be specified in the operating model in \code{OM@cpars$CAL_bins}. Otherwise, length bins can vary by core and
 #' create problems when combining into a single object.
 #' \item Compared to non-parallel runs, sampled parameters in the operating model will vary despite the same value in \code{OM@seed}.
-#' \item When individual cores fail, the entire simulation breaks due to the error catch in `snow::checkForRemoteErrors()`. 
-#' \item If there is an error while combining the parallel output into a single Hist or MSE object, the list of individual objects will be returned.
+#' \item If there is an error in individual cores or while combining the parallel output into a single Hist or MSE object, the list of output (from the cores) will be returned.
 #' }
 #'
 #' @return Functions return objects of class \linkS4class{Hist} or \linkS4class{MSE}
@@ -1942,16 +1941,23 @@ runMSE_sac <- function(OM, MPs, Hist = FALSE, silent = FALSE, extended = FALSE) 
   })
   
   #### Apply Simulate() in parallel
-  if(!silent) message("Running Simulate() in parallel..")
+  if (!silent) message("Running Simulate() in parallel..")
   HistList <- snowfall::sfClusterApplyLB(1:nits, function(i, OM, iter) {
     OM@seed <- OM@seed + i
-    Simulate(SubCpars(OM, sims = iter[[i]]), silent = TRUE)
+    tryCatch(Simulate(SubCpars(OM, sims = iter[[i]]), silent = TRUE), error = function(e) as.character(e))
   }, OM = OM, iter = sims)
   
+  # Error check Hist objects
+  HistErr <- sapply(HistList, function(x) !inherits(x, "Hist"))
+  if (any(HistErr)) {
+    warning("Returning list of Hist objects. There was an error when running Simulate() for core(s): ", paste0(c(1:length(HistErr))[HistErr], collapse = ", "))
+    return(HistList)
+  }
+  
   # Combine Hist objects and exit
-  if(Hist) {
+  if (Hist) {
     Histout <- try(joinHist(HistList), silent = TRUE)
-    if(methods::is(Histout, "try-error")) {
+    if (methods::is(Histout, "try-error")) {
       warning("Error in joinHist() for combining Hist objects. Returning list of Hist objects.")
       Histout <- HistList
     }
@@ -1960,13 +1966,15 @@ runMSE_sac <- function(OM, MPs, Hist = FALSE, silent = FALSE, extended = FALSE) 
   
   #### Apply Project() in parallel
   Export_customMPs(MPs)
-  if(!silent) message("Running Project() in parallel..")
-  MSElist <- snowfall::sfClusterApplyLB(HistList, Project, MPs = MPs, parallel = FALSE, silent = TRUE, 
-                                        extended = extended, checkMPs = FALSE)
+  if (!silent) message("Running Project() in parallel with ", length(MPs), " MPs..")
+  MSElist <- snowfall::sfClusterApplyLB(HistList, function(i, MPs, extended) {
+    tryCatch(Project(i, MPs = MPs, parallel = FALSE, silent = TRUE, extended = extended, checkMPs = FALSE),
+             error = function(e) as.character(e))
+  }, MPs = MPs, extended = extended)
   
   #### Combine MSE objects
   MSEout <- try(joinMSE(MSElist), silent = TRUE)
-  if(methods::is(MSEout, "try-error")) {
+  if (methods::is(MSEout, "try-error")) {
     warning("Error in joinMSE() for combining MSE objects. Returning list of MSE objects.")
     MSEout <- MSElist
   }
