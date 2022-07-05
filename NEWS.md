@@ -2,8 +2,12 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 # MSEtool 3.5.1
 
+## New additions
+- `runMSE` can use the split-apply-combine technique to run projections in parallel with argument `parallel = "sac"`. Implementation details and notable issues are documented in the help doc `?runMSE`. This is the fastest method for running simulations but may not be suitable for all operating models and it may be more difficult to troubleshoot errors.
+
 ## Minor changes 
 - patch to `gettaxa` function for species that are found in FishBase database but not in FishLife database
+- update `joinData`, `joinHist`, `joinMSE`, and `addMPs` functions
 
 # MSEtool 3.5.0
 

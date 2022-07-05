@@ -2,12 +2,15 @@
 % Please edit documentation in R/MSE_functions.R, R/Misc_Exported.R
 \name{checkMSE}
 \alias{checkMSE}
+\alias{addMPs}
 \alias{joinMSE}
 \alias{joinHist}
 \alias{updateMSE}
 \title{Utility functions for MSE objects}
 \usage{
 checkMSE(MSEobj)
+
+addMPs(MSEobjs)
 
 joinMSE(MSEobjs = NULL)
 
@@ -36,9 +39,12 @@ Utility functions for MSE objects
 \itemize{
 \item \code{checkMSE}: Check that an MSE object includes all slots in the latest version of DLMtool
 
+\item \code{addMPs}: Adds additional MPs to an MSE object by combining
+multiple MSE objects that have identical historical OM values but different
+MPs.
+
 \item \code{joinMSE}: Joins two or more MSE objects together. MSE objects must have identical
-number of historical years, and projection years. Also works for Hist objects returned
-by \code{runMSE(Hist=TRUE)}
+number of historical years, and projection years.
 
 \item \code{joinHist}: Join objects of class \code{Hist}. Does not join slot \code{OM}
 

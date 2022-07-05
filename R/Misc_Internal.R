@@ -644,7 +644,7 @@ Export_customMPs <- function(MPs) {
 # Join functions for joinMSE, joinData, joinHist
 join_rows <- function(x, name) lapply(x, getElement, name) %>% bind_rows()
 join_vectors <- function(x, name) do.call(c, lapply(x, getElement, name))
-join_arrays <- function(x, name) lapply(x, getElement, name) %>% abind::abind(along = 1)
+join_arrays <- function(x, name, along = 1) lapply(x, getElement, name) %>% abind::abind(along = along)
 
 join_list_of_vectors <- function(x) {
   lname <- names(x[[1]])
@@ -652,9 +652,9 @@ join_list_of_vectors <- function(x) {
   structure(varout, names = lname)
 }
 
-join_list_of_arrays <- function(x) {
+join_list_of_arrays <- function(x, along = 1) {
   lname <- names(x[[1]])
-  varout <- lapply(lname, function(name) join_arrays(x = x, name = name))
+  varout <- lapply(lname, function(name) join_arrays(x = x, name = name, along = along))
   structure(varout, names = lname)
 }
 
