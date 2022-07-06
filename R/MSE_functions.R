@@ -783,7 +783,7 @@ Dom <- function(MSEobj, ..., PMlist=NULL, Refs=NULL, Yrs=NULL) {
 #' @export
 addMPs <- function(MSEobjs) {
   # join two or more MSE objects
-  if (class(MSEobjs) != "list") stop("MSEobjs must be a list")
+  if (!inherits(MSEobjs, "list")) stop("MSEobjs must be a list")
   if (length(MSEobjs) < 2) stop("MSEobjs list doesn't contain multiple MSE objects")
   if (!all(sapply(MSEobjs, inherits, "MSE"))) stop('MSEobjs must be a list of objects of class `MSE`', call.=FALSE)
 
