@@ -19,7 +19,7 @@ Generic class finder
 }
 \details{
 Finds objects of the specified class in the global environment or the
-DLMtool package.
+openMSE packages.
 }
 \examples{
 avail("OM", msg=FALSE)

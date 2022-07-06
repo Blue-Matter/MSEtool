@@ -7,7 +7,7 @@
 DFO_plot(MSEobj, zero_origin = T)
 }
 \arguments{
-\item{MSEobj}{An MSE object of class MSE produced by DLMtool function runMSE}
+\item{MSEobj}{An MSE object of class MSE produced by MSEtool function runMSE}
 
 \item{zero_origin}{Logical: should plots have a zero-zero origin?}
 }

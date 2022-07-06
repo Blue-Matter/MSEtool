@@ -18,7 +18,7 @@ Data2csv(Data, file = NULL, simno = 1, overwrite = F, keepNAs = T)
 \item{keepNAs}{Boolean. Should slots with NAs still be written to the data file.}
 }
 \description{
-A function that writes a correctly formatted .csv file from a DLMtool / MSEtool Data object
+A function that writes a correctly formatted .csv file from a MSEtool Data object
 }
 \author{
 T. Carruthers

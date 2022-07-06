@@ -1349,7 +1349,7 @@ Sense <- function(Data, MP, nsense = 6, reps = 100, perc = c(0.05, 0.5, 0.95), p
 #' @author T. Carruthers
 #' @examples
 #' \dontrun{
-#' library(DLMtool)
+#' library(MSEtool)
 #' Data <- TAC(MSEtool::Cobia)
 #' plot(Data)
 #' }

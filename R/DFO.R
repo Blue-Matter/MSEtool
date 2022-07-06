@@ -130,7 +130,7 @@ DFO_proj <- function(MSEobj,maxplot=6) {
 #' over the final 5 years of the projection
 #' http://www.dfo-mpo.gc.ca/reports-rapports/regs/sff-cpd/precaution-eng.htm
 #'
-#' @param MSEobj An MSE object of class MSE produced by DLMtool function runMSE
+#' @param MSEobj An MSE object of class MSE produced by MSEtool function runMSE
 #' @param zero_origin Logical: should plots have a zero-zero origin?
 #' @author T. Carruthers
 #' @export DFO_plot
@@ -948,7 +948,7 @@ DFO_report<-function(MSEobj,output_file=NA,author="Author not specified",title=N
   params$author<-author
   params$MSEobj<-MSEobj
   params$maxMPs<-maxMPs
-  rmarkdown::render(input=system.file("DFO_generic.Rmd", package="DLMtool"), output_file=output_file,params=params)
+  rmarkdown::render(input=system.file("DFO_generic.Rmd", package="MSEtool"), output_file=output_file,params=params)
 
 }
 
@@ -970,7 +970,7 @@ COSEWIC_report<-function(MSEobj,output_file=NA,author="Author not specified",tit
   params$subtitle<-"A prototype COSEWIC risk assessment"
   params$author<-author
   params$MSEobj<-MSEobj
-  rmarkdown::render(input=system.file("DFO_cosewic.Rmd", package="DLMtool"), output_file=output_file,params=params)
+  rmarkdown::render(input=system.file("DFO_cosewic.Rmd", package="MSEtool"), output_file=output_file,params=params)
 
 }
 
@@ -1164,7 +1164,7 @@ DFO_tab_formatted<-function(Ptab1,thresh=c(30,     50,     40,    60,    50,  20
 
 #' DFO performance spider plot (top three MPs)
 #'
-#' @param MSEobj An object of class MSE produced by DLMtool::runMSE()
+#' @param MSEobj An object of class MSE produced by MSEtool::runMSE()
 #' @author T. Carruthers
 #'
 #' @export

@@ -7,7 +7,7 @@
 DFO_spider(MSEobj)
 }
 \arguments{
-\item{MSEobj}{An object of class MSE produced by DLMtool::runMSE()}
+\item{MSEobj}{An object of class MSE produced by MSEtool::runMSE()}
 }
 \description{
 DFO performance spider plot (top three MPs)

@@ -25,7 +25,7 @@ output control MPs given a data object Data
 }
 \examples{
 \dontrun{
-library(DLMtool)
+library(MSEtool)
 Data <- TAC(MSEtool::Cobia)
 plot(Data)
 }

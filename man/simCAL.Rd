@@ -51,8 +51,10 @@ simCAL(
 \item{LenCV}{CV of length-at-age#'}
 }
 \value{
-named list with CAL array and LFC, ML, & Lc vectors\preformatted{CALdat <- simCAL(nsim, nyears, StockPars$maxage, ObsPars$CAL_ESS,
-}
+named list with CAL array and LFC, ML, & Lc vectors
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{CALdat <- simCAL(nsim, nyears, StockPars$maxage, ObsPars$CAL_ESS,
+}\if{html}{\out{</div>}}
 }
 \description{
 Simulate CAL and calculate length-at-first capture (LFC),

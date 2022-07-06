@@ -2,7 +2,7 @@
 
 #' Converts a Data object into a .csv data file
 #'
-#' @description A function that writes a correctly formatted .csv file from a DLMtool / MSEtool Data object
+#' @description A function that writes a correctly formatted .csv file from a MSEtool Data object
 #' @param Data An object of class 'Data'.
 #' @param file Character string. The name of the location and file you wish to create (e.g. "C:/temp/mydata.csv")
 #' @param simno Integer. An optional argument to specify the simulation number if writing simulated data

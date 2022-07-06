@@ -22,7 +22,7 @@ get_funcs <- function(package, classy , msg) {
 #' Generic class finder
 #'
 #' Finds objects of the specified class in the global environment or the
-#' DLMtool package.
+#' openMSE packages.
 #'
 #' @param classy A class of object (character string, e.g. 'Fleet')
 #' @param package Optional. Names(s) of the package to search for object of class `classy`. String
@@ -553,12 +553,6 @@ plotFun <- function(class = c("MSE", "Data"), msg = TRUE) {
 #' @author T. Carruthers
 #' @return A matrix of MPs and their required data in terms of `slotnames('Data')`,
 #' and broad Data classes for each MP
-#' @examples
-#' \dontrun{
-#' library(DLMtool) # load Data-Limited MPs
-#' Required(c("DCAC", "AvC"))
-#' Required() # For all MPs
-#' }
 #' @seealso \link{Can} \link{Cant} \link{Needed} \link{MPtype} \linkS4class{Data}
 #' @export
 Required <- function(funcs = NA, noCV=FALSE) {
@@ -765,7 +759,7 @@ RepmissingVal <- function(object, name, vals=NA) {
 }
 
 #' @describeIn checkMSE Updates an existing MSE object (class MSE) from a previous version of the
-#' DLMtool to include slots new to the latest version. Also works with Stock,
+#' MSEtool to include slots new to the latest version. Also works with Stock,
 #' Fleet, Obs, Imp, and Data objects. The new slots will be empty,
 #' but avoids the 'slot doesn't exist' error that sometimes occurs.
 #' Returns an object of class matching class(MSEobj)
@@ -777,7 +771,7 @@ updateMSE <- function(MSEobj, save.name=NULL) {
 
   if (length(slots)<1 & methods::is(MSEobj,'MSE')) {
     # incompatible version
-    message('Updating MSE object from earlier version of DLMtool')
+    message('Updating MSE object from earlier version of MSEtool')
     nMSE <- new("MSE",
                 Name=MSEobj@Name,
                 nyears=MSEobj@nyears,
@@ -892,7 +886,7 @@ alphaconv <- function(m, sd) m * (((m * (1 - m))/(sd^2)) - 1)
 #' @export
 betaconv <- function(m, sd) (1 - m) * (((m * (1 - m))/(sd^2)) - 1)
 
-#' Lognormal distribution for DLMtool
+#' Lognormal distribution 
 #'
 #' Variant of rlnorm which returns the mean when reps = 1.
 #'
