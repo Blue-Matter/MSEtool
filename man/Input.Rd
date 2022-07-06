@@ -24,7 +24,7 @@ Runs a set of input control methods are returns the output in a single table
 }
 \examples{
 \dontrun{
-library(DLMtool)
+library(MSEtool)
 Input(MSEtool::Cobia)
 }
 
