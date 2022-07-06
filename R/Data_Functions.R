@@ -1004,7 +1004,7 @@ DLMdiag <- function(Data, command = c("available", "not available", "needed"), r
 #' @author A. Hordyk
 #' @examples
 #' \dontrun{
-#' library(DLMtool)
+#' library(MSEtool)
 #' Input(MSEtool::Cobia)
 #' }
 #'
