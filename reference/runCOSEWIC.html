@@ -57,52 +57,52 @@ management procedures.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">runCOSEWIC</span><span class="op">(</span><span class="va">OM</span>, <span class="va">...</span><span class="op">)</span>
-
-<span class="fu">COSEWIC_Pplot</span><span class="op">(</span>
-  <span class="va">MSEobj</span>,
-  syear <span class="op">=</span> <span class="fl">2017</span>,
-  qcol <span class="op">=</span> <span class="st">"#FFCB62"</span>,
-  quants <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">0.95</span><span class="op">)</span>
-<span class="op">)</span>
-
-<span class="fu">COSEWIC_Dplot</span><span class="op">(</span>
-  <span class="va">MSEobj</span>,
-  syear <span class="op">=</span> <span class="fl">2017</span>,
-  qcol <span class="op">=</span> <span class="st">"#79F48D"</span>,
-  quants <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">0.95</span><span class="op">)</span>,
-  nGT <span class="op">=</span> <span class="fl">3</span>
-<span class="op">)</span>
-
-<span class="fu">COSEWIC_Blow</span><span class="op">(</span>
-  <span class="va">MSEobj</span>,
-  syear <span class="op">=</span> <span class="fl">2017</span>,
-  qcol <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/rgb.html" class="external-link">rgb</a></span><span class="op">(</span><span class="fl">0.4</span>, <span class="fl">0.8</span>, <span class="fl">0.95</span><span class="op">)</span>,
-  quants <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">0.95</span><span class="op">)</span>,
-  nGT <span class="op">=</span> <span class="fl">3</span>
-<span class="op">)</span>
-
-<span class="fu">COSEWIC_Hplot</span><span class="op">(</span>
-  <span class="va">MSEobj</span>,
-  syear <span class="op">=</span> <span class="fl">2017</span>,
-  qcol <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/rgb.html" class="external-link">rgb</a></span><span class="op">(</span><span class="fl">0.4</span>, <span class="fl">0.8</span>, <span class="fl">0.95</span><span class="op">)</span>,
-  quants <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">0.95</span><span class="op">)</span>
-<span class="op">)</span>
-
-<span class="fu">COSEWIC_report</span><span class="op">(</span>
-  <span class="va">MSEobj</span>,
-  output_file <span class="op">=</span> <span class="cn">NA</span>,
-  author <span class="op">=</span> <span class="st">"Author not specified"</span>,
-  title <span class="op">=</span> <span class="cn">NA</span>
-<span class="op">)</span>
-
-<span class="fu">COSEWIC_tab</span><span class="op">(</span><span class="va">MSEobj</span>, rnd <span class="op">=</span> <span class="fl">0</span>, GTs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">6</span><span class="op">)</span>, syear <span class="op">=</span> <span class="fl">2017</span>, nGT <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>
-
-<span class="fu">COSEWIC_tab_formatted</span><span class="op">(</span>
-  <span class="va">Ptab1</span>,
-  thresh <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">40</span>, <span class="fl">40</span>, <span class="fl">20</span>, <span class="fl">40</span>, <span class="fl">40</span>, <span class="fl">40</span>, <span class="fl">30</span>, <span class="fl">5</span><span class="op">)</span>,
-  ret_thresh <span class="op">=</span> <span class="cn">F</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">runCOSEWIC</span><span class="op">(</span><span class="va">OM</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">COSEWIC_Pplot</span><span class="op">(</span></span>
+<span>  <span class="va">MSEobj</span>,</span>
+<span>  syear <span class="op">=</span> <span class="fl">2017</span>,</span>
+<span>  qcol <span class="op">=</span> <span class="st">"#FFCB62"</span>,</span>
+<span>  quants <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">0.95</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">COSEWIC_Dplot</span><span class="op">(</span></span>
+<span>  <span class="va">MSEobj</span>,</span>
+<span>  syear <span class="op">=</span> <span class="fl">2017</span>,</span>
+<span>  qcol <span class="op">=</span> <span class="st">"#79F48D"</span>,</span>
+<span>  quants <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">0.95</span><span class="op">)</span>,</span>
+<span>  nGT <span class="op">=</span> <span class="fl">3</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">COSEWIC_Blow</span><span class="op">(</span></span>
+<span>  <span class="va">MSEobj</span>,</span>
+<span>  syear <span class="op">=</span> <span class="fl">2017</span>,</span>
+<span>  qcol <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/rgb.html" class="external-link">rgb</a></span><span class="op">(</span><span class="fl">0.4</span>, <span class="fl">0.8</span>, <span class="fl">0.95</span><span class="op">)</span>,</span>
+<span>  quants <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">0.95</span><span class="op">)</span>,</span>
+<span>  nGT <span class="op">=</span> <span class="fl">3</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">COSEWIC_Hplot</span><span class="op">(</span></span>
+<span>  <span class="va">MSEobj</span>,</span>
+<span>  syear <span class="op">=</span> <span class="fl">2017</span>,</span>
+<span>  qcol <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/rgb.html" class="external-link">rgb</a></span><span class="op">(</span><span class="fl">0.4</span>, <span class="fl">0.8</span>, <span class="fl">0.95</span><span class="op">)</span>,</span>
+<span>  quants <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">0.95</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">COSEWIC_report</span><span class="op">(</span></span>
+<span>  <span class="va">MSEobj</span>,</span>
+<span>  output_file <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  author <span class="op">=</span> <span class="st">"Author not specified"</span>,</span>
+<span>  title <span class="op">=</span> <span class="cn">NA</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">COSEWIC_tab</span><span class="op">(</span><span class="va">MSEobj</span>, rnd <span class="op">=</span> <span class="fl">0</span>, GTs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">6</span><span class="op">)</span>, syear <span class="op">=</span> <span class="fl">2017</span>, nGT <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">COSEWIC_tab_formatted</span><span class="op">(</span></span>
+<span>  <span class="va">Ptab1</span>,</span>
+<span>  thresh <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">40</span>, <span class="fl">40</span>, <span class="fl">20</span>, <span class="fl">40</span>, <span class="fl">40</span>, <span class="fl">40</span>, <span class="fl">30</span>, <span class="fl">5</span><span class="op">)</span>,</span>
+<span>  ret_thresh <span class="op">=</span> <span class="cn">F</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -217,7 +217,7 @@ color coded by thresholds.</p></li>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>

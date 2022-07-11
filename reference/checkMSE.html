@@ -53,13 +53,15 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">checkMSE</span><span class="op">(</span><span class="va">MSEobj</span><span class="op">)</span>
-
-<span class="fu">joinMSE</span><span class="op">(</span>MSEobjs <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span>
-
-<span class="fu">joinHist</span><span class="op">(</span><span class="va">Hist_List</span><span class="op">)</span>
-
-<span class="fu">updateMSE</span><span class="op">(</span><span class="va">MSEobj</span>, save.name <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">checkMSE</span><span class="op">(</span><span class="va">MSEobj</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">addMPs</span><span class="op">(</span><span class="va">MSEobjs</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">joinMSE</span><span class="op">(</span>MSEobjs <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">joinHist</span><span class="op">(</span><span class="va">Hist_List</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">updateMSE</span><span class="op">(</span><span class="va">MSEobj</span>, save.name <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -96,16 +98,22 @@
     <h2>Functions</h2>
     
 <ul><li><p><code>checkMSE</code>: Check that an MSE object includes all slots in the latest version of DLMtool</p></li>
+<li><p><code>addMPs</code>: Adds additional MPs to an MSE object by combining
+multiple MSE objects that have identical historical OM values but different
+MPs.</p></li>
 <li><p><code>joinMSE</code>: Joins two or more MSE objects together. MSE objects must have identical
-number of historical years, and projection years. Also works for Hist objects returned
-by <code>runMSE(Hist=TRUE)</code></p></li>
-<li><p><code>joinHist</code>: Join objects of class <code>Hist</code></p></li>
+number of historical years, and projection years.</p></li>
+<li><p><code>joinHist</code>: Join objects of class <code>Hist</code>. Does not join slot <code>OM</code></p></li>
 <li><p><code>updateMSE</code>: Updates an existing MSE object (class MSE) from a previous version of the
-DLMtool to include slots new to the latest version. Also works with Stock,
+MSEtool to include slots new to the latest version. Also works with Stock,
 Fleet, Obs, Imp, and Data objects. The new slots will be empty,
 but avoids the 'slot doesn't exist' error that sometimes occurs.
 Returns an object of class matching class(MSEobj)</p></li>
 </ul></div>
+    <div id="see-also">
+    <h2>See also</h2>
+    <div class="dont-index"><p><a href="joinData.html">joinData</a></p></div>
+    </div>
     <div id="author">
     <h2>Author</h2>
     <p>A. Hordyk</p>
@@ -123,7 +131,7 @@ Returns an object of class matching class(MSEobj)</p></li>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>

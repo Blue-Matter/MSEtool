@@ -55,26 +55,26 @@ simulation) for a specified operating model</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">Simulate</span><span class="op">(</span>OM <span class="op">=</span> <span class="fu">MSEtool</span><span class="fu">::</span><span class="va"><a href="OM-class-objects.html">testOM</a></span>, parallel <span class="op">=</span> <span class="cn">FALSE</span>, silent <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>
-
-<span class="fu">Project</span><span class="op">(</span>
-  Hist <span class="op">=</span> <span class="cn">NULL</span>,
-  MPs <span class="op">=</span> <span class="cn">NA</span>,
-  parallel <span class="op">=</span> <span class="cn">FALSE</span>,
-  silent <span class="op">=</span> <span class="cn">FALSE</span>,
-  extended <span class="op">=</span> <span class="cn">FALSE</span>,
-  checkMPs <span class="op">=</span> <span class="cn">TRUE</span>
-<span class="op">)</span>
-
-<span class="fu">runMSE</span><span class="op">(</span>
-  OM <span class="op">=</span> <span class="fu">MSEtool</span><span class="fu">::</span><span class="va"><a href="OM-class-objects.html">testOM</a></span>,
-  MPs <span class="op">=</span> <span class="cn">NA</span>,
-  Hist <span class="op">=</span> <span class="cn">FALSE</span>,
-  silent <span class="op">=</span> <span class="cn">FALSE</span>,
-  parallel <span class="op">=</span> <span class="cn">FALSE</span>,
-  extended <span class="op">=</span> <span class="cn">FALSE</span>,
-  checkMPs <span class="op">=</span> <span class="cn">TRUE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">Simulate</span><span class="op">(</span>OM <span class="op">=</span> <span class="fu">MSEtool</span><span class="fu">::</span><span class="va"><a href="OM-class-objects.html">testOM</a></span>, parallel <span class="op">=</span> <span class="cn">FALSE</span>, silent <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">Project</span><span class="op">(</span></span>
+<span>  Hist <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  MPs <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  silent <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  extended <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  checkMPs <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">runMSE</span><span class="op">(</span></span>
+<span>  OM <span class="op">=</span> <span class="fu">MSEtool</span><span class="fu">::</span><span class="va"><a href="OM-class-objects.html">testOM</a></span>,</span>
+<span>  MPs <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  Hist <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  silent <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  extended <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  checkMPs <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -84,7 +84,8 @@ simulation) for a specified operating model</p>
 
 
 <dt>parallel</dt>
-<dd><p>Logical. Should the MSE be run using parallel processing? See Details for more information.</p></dd>
+<dd><p>Logical. Should MPs be run using parallel processing? For <code>runMSE</code>, can also be <code>"sac"</code> to run the entire MSE in parallel
+using the split-apply-combine technique. See Details for more information.</p></dd>
 
 
 <dt>silent</dt>
@@ -120,20 +121,36 @@ is returned.</p></dd>
 
 <ul><li><p>Simulate - An object of class <a href="Hist-class.html">Hist</a></p></li>
 <li><p>Project - An object of class <a href="MSE-class.html">MSE</a></p></li>
-<li><p>runMSE - An object of class <a href="MSE-class.html">MSE</a></p></li>
+<li><p>runMSE - An object of class <a href="MSE-class.html">MSE</a> if <code>Hist = TRUE</code> otherwise a class <a href="Hist-class.html">Hist</a> object</p></li>
 </ul></div>
     <div id="details">
     <h2>Details</h2>
     
 <div class="section">
-<h3 id="running-in-parallel">Running in Parallel<a class="anchor" aria-label="anchor" href="#running-in-parallel"></a></h3>
+<h3 id="running-mps-in-parallel">Running MPs in parallel<a class="anchor" aria-label="anchor" href="#running-mps-in-parallel"></a></h3>
 
 
 <p>For simple MPs, running in parallel can actually lead to an increase in computation time, due to the overhead in sending the
-information over to the cores. Consequently, the data-limied MPs in DLMtool and the reference MPs in MSEtool are not run using parallel processing.
-All other MPs, including custom MPs, will be run in parallel if argument is TRUE.
-To individually control which MPs run in parallel, <code>parallel</code> can be a named list of logical values, e.g., <code>parallel=list(AvC=TRUE)</code>.</p>
+information over to the cores. Consequently, the data-limited MPs in DLMtool and the reference MPs in MSEtool are not run using parallel processing.
+All other MPs, including custom MPs, will be run if <code>parallel = TRUE</code>.</p>
+<p>To individually control which MPs run in parallel, <code>parallel</code> can be a named list of logical values, e.g., <code>parallel=list(AvC=TRUE)</code>.</p>
 </div>
+
+<div class="section">
+<h3 id="split-apply-combine-mse-in-parallel">Split-apply-combine MSE in parallel<a class="anchor" aria-label="anchor" href="#split-apply-combine-mse-in-parallel"></a></h3>
+
+
+<p>Additional savings in computation time can be achieved by running the entire simulation in batches. Individual simulations of the operating model
+are divided into separate cores using <a href="SubCpars.html">SubCpars</a>, <code>Simulate</code> and <code>Project</code> are applied independently for each core via <code><a href="https://rdrr.io/pkg/snowfall/man/snowfall-c-calculation.html" class="external-link">snowfall::sfClusterApplyLB</a></code>, and the
+output (a list of MSE objects) is stitched back together into a single MSE object using <a href="checkMSE.html">joinMSE</a>.</p>
+<p>The ideal number of cores will be determined based on the number of simulations and available cores.</p>
+<p>There are several issues to look out for when using this split-apply-combine technique:</p>
+<ul><li><p>Numerical optimization for depletion may fail in individual cores when <code>OM@cpars$qs</code> is not specified.</p></li>
+<li><p>Length bins should be specified in the operating model in <code>OM@cpars$CAL_bins</code>. Otherwise, length bins can vary by core and
+create problems when combining into a single object.</p></li>
+<li><p>Compared to non-parallel runs, sampled parameters in the operating model will vary despite the same value in <code>OM@seed</code>.</p></li>
+<li><p>If there is an error in individual cores or while combining the parallel output into a single Hist or MSE object, the list of output (from the cores) will be returned.</p></li>
+</ul></div>
 
     </div>
     <div id="functions">
@@ -157,7 +174,7 @@ from an object of class `OM</p></li>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>

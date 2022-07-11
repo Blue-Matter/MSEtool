@@ -53,37 +53,37 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">Pplot2</span><span class="op">(</span>
-  <span class="va">MSEobj</span>,
-  YVar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"F_FMSY"</span>, <span class="st">"SSB_SSBMSY"</span><span class="op">)</span>,
-  MPs <span class="op">=</span> <span class="cn">NA</span>,
-  sims <span class="op">=</span> <span class="cn">NULL</span>,
-  traj <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"all"</span>, <span class="st">"quant"</span>, <span class="st">"both"</span><span class="op">)</span>,
-  quants <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.9</span><span class="op">)</span>,
-  incquant <span class="op">=</span> <span class="cn">TRUE</span>,
-  quantcol <span class="op">=</span> <span class="st">"lightgray"</span>,
-  RefYield <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lto"</span>, <span class="st">"curr"</span><span class="op">)</span>,
-  LastYr <span class="op">=</span> <span class="cn">TRUE</span>,
-  ref.lines <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">1</span>, <span class="fl">1.5</span><span class="op">)</span>,
-  maxMP <span class="op">=</span> <span class="fl">6</span>,
-  alpha <span class="op">=</span> <span class="fl">60</span>,
-  cex.axis <span class="op">=</span> <span class="fl">1</span>,
-  cex.lab <span class="op">=</span> <span class="fl">1</span>,
-  YLab <span class="op">=</span> <span class="cn">NULL</span>,
-  incMP <span class="op">=</span> <span class="cn">TRUE</span>,
-  MPcex <span class="op">=</span> <span class="fl">1</span>,
-  MPcol <span class="op">=</span> <span class="st">"black"</span>,
-  incLeg <span class="op">=</span> <span class="cn">TRUE</span>,
-  cex.leg <span class="op">=</span> <span class="fl">1.5</span>,
-  legPos <span class="op">=</span> <span class="st">"topleft"</span>,
-  yline <span class="op">=</span> <span class="cn">NULL</span>,
-  xline <span class="op">=</span> <span class="cn">NULL</span>,
-  parOR <span class="op">=</span> <span class="cn">FALSE</span>,
-  xaxis <span class="op">=</span> <span class="cn">TRUE</span>,
-  yaxis <span class="op">=</span> <span class="cn">TRUE</span>,
-  oneIt <span class="op">=</span> <span class="cn">TRUE</span>,
-  <span class="va">...</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">Pplot2</span><span class="op">(</span></span>
+<span>  <span class="va">MSEobj</span>,</span>
+<span>  YVar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"F_FMSY"</span>, <span class="st">"SSB_SSBMSY"</span><span class="op">)</span>,</span>
+<span>  MPs <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  sims <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  traj <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"all"</span>, <span class="st">"quant"</span>, <span class="st">"both"</span><span class="op">)</span>,</span>
+<span>  quants <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.9</span><span class="op">)</span>,</span>
+<span>  incquant <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  quantcol <span class="op">=</span> <span class="st">"lightgray"</span>,</span>
+<span>  RefYield <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lto"</span>, <span class="st">"curr"</span><span class="op">)</span>,</span>
+<span>  LastYr <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  ref.lines <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">1</span>, <span class="fl">1.5</span><span class="op">)</span>,</span>
+<span>  maxMP <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>  alpha <span class="op">=</span> <span class="fl">60</span>,</span>
+<span>  cex.axis <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  cex.lab <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  YLab <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  incMP <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  MPcex <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  MPcol <span class="op">=</span> <span class="st">"black"</span>,</span>
+<span>  incLeg <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  cex.leg <span class="op">=</span> <span class="fl">1.5</span>,</span>
+<span>  legPos <span class="op">=</span> <span class="st">"topleft"</span>,</span>
+<span>  yline <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  xline <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  parOR <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  xaxis <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  yaxis <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  oneIt <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -226,7 +226,7 @@ projections?</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>

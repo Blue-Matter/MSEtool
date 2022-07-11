@@ -55,13 +55,13 @@ OM with one from another object.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">Replace</span><span class="op">(</span>
-  <span class="va">OM</span>,
-  <span class="va">from</span>,
-  Sub <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Stock"</span>, <span class="st">"Fleet"</span>, <span class="st">"Obs"</span>, <span class="st">"Imp"</span><span class="op">)</span>,
-  Name <span class="op">=</span> <span class="cn">NULL</span>,
-  silent <span class="op">=</span> <span class="cn">FALSE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">Replace</span><span class="op">(</span></span>
+<span>  <span class="va">OM</span>,</span>
+<span>  <span class="va">from</span>,</span>
+<span>  Sub <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Stock"</span>, <span class="st">"Fleet"</span>, <span class="st">"Obs"</span>, <span class="st">"Imp"</span><span class="op">)</span>,</span>
+<span>  Name <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  silent <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -100,22 +100,22 @@ OM with one from another object.</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co"># Replace Stock</span></span>
-<span class="r-in"><span class="va">OM</span> <span class="op">&lt;-</span> <span class="fu">MSEtool</span><span class="fu">::</span><span class="va"><a href="OM-class-objects.html">testOM</a></span></span>
-<span class="r-in"><span class="va">OM2</span> <span class="op">&lt;-</span> <span class="fu">Replace</span><span class="op">(</span><span class="va">OM</span>, <span class="va">Blue_shark</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Replace Stock</span></span></span>
+<span class="r-in"><span><span class="va">OM</span> <span class="op">&lt;-</span> <span class="fu">MSEtool</span><span class="fu">::</span><span class="va"><a href="OM-class-objects.html">testOM</a></span></span></span>
+<span class="r-in"><span><span class="va">OM2</span> <span class="op">&lt;-</span> <span class="fu">Replace</span><span class="op">(</span><span class="va">OM</span>, <span class="va">Blue_shark</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Replacing sub-model:  Stock</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Replace Fleet</span></span>
-<span class="r-in"><span class="va">OM</span> <span class="op">&lt;-</span> <span class="fu">MSEtool</span><span class="fu">::</span><span class="va"><a href="OM-class-objects.html">testOM</a></span></span>
-<span class="r-in"><span class="va">OM2</span> <span class="op">&lt;-</span> <span class="fu">Replace</span><span class="op">(</span><span class="va">OM</span>, <span class="va">Generic_DecE</span><span class="op">)</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Replace Fleet</span></span></span>
+<span class="r-in"><span><span class="va">OM</span> <span class="op">&lt;-</span> <span class="fu">MSEtool</span><span class="fu">::</span><span class="va"><a href="OM-class-objects.html">testOM</a></span></span></span>
+<span class="r-in"><span><span class="va">OM2</span> <span class="op">&lt;-</span> <span class="fu">Replace</span><span class="op">(</span><span class="va">OM</span>, <span class="va">Generic_DecE</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Replacing sub-model:  Fleet</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Replace Fleet from another OM</span></span>
-<span class="r-in"><span class="va">OM1</span> <span class="op">&lt;-</span> <span class="fu">new</span><span class="op">(</span><span class="st">"OM"</span>, <span class="va">Albacore</span>, <span class="va">Generic_DecE</span>, <span class="va">Perfect_Info</span>, <span class="va">Overages</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">OM2</span> <span class="op">&lt;-</span> <span class="fu">new</span><span class="op">(</span><span class="st">"OM"</span>, <span class="va">Blue_shark</span>, <span class="va">Generic_IncE</span>, <span class="va">Generic_Obs</span>, <span class="va">Perfect_Imp</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">OM1a</span> <span class="op">&lt;-</span> <span class="fu">Replace</span><span class="op">(</span><span class="va">OM1</span>, <span class="va">OM2</span>, <span class="st">"Fleet"</span><span class="op">)</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Replace Fleet from another OM</span></span></span>
+<span class="r-in"><span><span class="va">OM1</span> <span class="op">&lt;-</span> <span class="fu">new</span><span class="op">(</span><span class="st">"OM"</span>, <span class="va">Albacore</span>, <span class="va">Generic_DecE</span>, <span class="va">Perfect_Info</span>, <span class="va">Overages</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">OM2</span> <span class="op">&lt;-</span> <span class="fu">new</span><span class="op">(</span><span class="st">"OM"</span>, <span class="va">Blue_shark</span>, <span class="va">Generic_IncE</span>, <span class="va">Generic_Obs</span>, <span class="va">Perfect_Imp</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">OM1a</span> <span class="op">&lt;-</span> <span class="fu">Replace</span><span class="op">(</span><span class="va">OM1</span>, <span class="va">OM2</span>, <span class="st">"Fleet"</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Replacing sub-models:  Fleet</span>
-<span class="r-in"></span>
+<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -130,7 +130,7 @@ OM with one from another object.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>

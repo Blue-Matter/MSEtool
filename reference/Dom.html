@@ -55,7 +55,7 @@ other options are always preferable.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">Dom</span><span class="op">(</span><span class="va">MSEobj</span>, <span class="va">...</span>, PMlist <span class="op">=</span> <span class="cn">NULL</span>, Refs <span class="op">=</span> <span class="cn">NULL</span>, Yrs <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">Dom</span><span class="op">(</span><span class="va">MSEobj</span>, <span class="va">...</span>, PMlist <span class="op">=</span> <span class="cn">NULL</span>, Refs <span class="op">=</span> <span class="cn">NULL</span>, Yrs <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -105,17 +105,17 @@ Consequently, it is important that all <code>PM</code> functions are constructed
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span>
-<span class="r-in"><span class="va">MSE</span> <span class="op">&lt;-</span> <span class="fu"><a href="runMSE.html">runMSE</a></span><span class="op">(</span>MPs<span class="op">=</span><span class="cn">NA</span><span class="op">)</span> <span class="co"># run all MPs</span></span>
-<span class="r-in"><span class="va">Nondom</span> <span class="op">&lt;-</span> <span class="fu">Dom</span><span class="op">(</span><span class="va">MSE</span>, <span class="st">"P10"</span>, <span class="st">"LTY"</span>, <span class="st">"PNOF"</span><span class="op">)</span></span>
-<span class="r-in"><span class="co"># Non-dominated MPs</span></span>
-<span class="r-in"><span class="va">Nondom</span><span class="op">$</span><span class="va">MPs</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Dominated MPs</span></span>
-<span class="r-in"><span class="va">Nondom</span><span class="op">$</span><span class="va">DomMPs</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="op">}</span></span>
-<span class="r-in"></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="va">MSE</span> <span class="op">&lt;-</span> <span class="fu"><a href="runMSE.html">runMSE</a></span><span class="op">(</span>MPs<span class="op">=</span><span class="cn">NA</span><span class="op">)</span> <span class="co"># run all MPs</span></span></span>
+<span class="r-in"><span><span class="va">Nondom</span> <span class="op">&lt;-</span> <span class="fu">Dom</span><span class="op">(</span><span class="va">MSE</span>, <span class="st">"P10"</span>, <span class="st">"LTY"</span>, <span class="st">"PNOF"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Non-dominated MPs</span></span></span>
+<span class="r-in"><span><span class="va">Nondom</span><span class="op">$</span><span class="va">MPs</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Dominated MPs</span></span></span>
+<span class="r-in"><span><span class="va">Nondom</span><span class="op">$</span><span class="va">DomMPs</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -130,7 +130,7 @@ Consequently, it is important that all <code>PM</code> functions are constructed
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>

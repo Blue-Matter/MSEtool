@@ -55,16 +55,16 @@ Currently implements intra-stock dynamics via density-dependent processes.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">makeRel</span><span class="op">(</span>type <span class="op">=</span> <span class="st">"DDM"</span>, stock <span class="op">=</span> <span class="fl">1</span>, CV <span class="op">=</span> <span class="fl">0</span>, <span class="va">...</span><span class="op">)</span>
-
-<span class="co"># S3 method for Rel</span>
-<span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span>
-
-<span class="co"># S3 method for Rel</span>
-<span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">newdata</span>, <span class="va">...</span><span class="op">)</span>
-
-<span class="co"># S3 method for Rel</span>
-<span class="fu"><a href="https://rdrr.io/r/stats/simulate.html" class="external-link">simulate</a></span><span class="op">(</span><span class="va">object</span>, nsim <span class="op">=</span> <span class="fl">1</span>, seed <span class="op">=</span> <span class="fl">1</span>, <span class="va">...</span><span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">makeRel</span><span class="op">(</span>type <span class="op">=</span> <span class="st">"DDM"</span>, stock <span class="op">=</span> <span class="fl">1</span>, CV <span class="op">=</span> <span class="fl">0</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for Rel</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for Rel</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">newdata</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for Rel</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/simulate.html" class="external-link">simulate</a></span><span class="op">(</span><span class="va">object</span>, nsim <span class="op">=</span> <span class="fl">1</span>, seed <span class="op">=</span> <span class="fl">1</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -140,23 +140,23 @@ Fisheries Research 206: 259–286. <a href="https://doi.org/10.1016/j.fishres.20
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co"># Depensatory natural mortality</span></span>
-<span class="r-in"><span class="va">Rel</span> <span class="op">&lt;-</span> <span class="fu">makeRel</span><span class="op">(</span>type <span class="op">=</span> <span class="st">"DDM"</span>, M0 <span class="op">=</span> <span class="fl">0.8</span>, M1 <span class="op">=</span> <span class="fl">0.2</span>, CV <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Predict M when B/B0 = 0.1</span></span>
-<span class="r-in"><span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">Rel</span>, newdata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>B_1 <span class="op">=</span> <span class="fl">0.1</span>, B0_1 <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Simulate values of M with CV = 0.1</span></span>
-<span class="r-in"><span class="va">Rel</span><span class="op">$</span><span class="va">fitted.values</span> <span class="op">&lt;-</span> <span class="va">pred</span></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/stats/simulate.html" class="external-link">simulate</a></span><span class="op">(</span><span class="va">Rel</span>, nsim <span class="op">=</span> <span class="fl">10</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Depensatory natural mortality</span></span></span>
+<span class="r-in"><span><span class="va">Rel</span> <span class="op">&lt;-</span> <span class="fu">makeRel</span><span class="op">(</span>type <span class="op">=</span> <span class="st">"DDM"</span>, M0 <span class="op">=</span> <span class="fl">0.8</span>, M1 <span class="op">=</span> <span class="fl">0.2</span>, CV <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Predict M when B/B0 = 0.1</span></span></span>
+<span class="r-in"><span><span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">Rel</span>, newdata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>B_1 <span class="op">=</span> <span class="fl">0.1</span>, B0_1 <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Simulate values of M with CV = 0.1</span></span></span>
+<span class="r-in"><span><span class="va">Rel</span><span class="op">$</span><span class="va">fitted.values</span> <span class="op">&lt;-</span> <span class="va">pred</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/simulate.html" class="external-link">simulate</a></span><span class="op">(</span><span class="va">Rel</span>, nsim <span class="op">=</span> <span class="fl">10</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       sim_1     sim_2     sim_3    sim_4     sim_5     sim_6     sim_7</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.2430378 0.2634926 0.2380192 0.303335 0.2673545 0.2383794 0.2715994</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       sim_8     sim_9    sim_10</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.2784825 0.2740037 0.2509475</span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Add Rel to MOM</span></span>
-<span class="r-in"><span class="va">MOM</span> <span class="op">&lt;-</span> <span class="fu"><a href="makeMOM.html">makeMOM</a></span><span class="op">(</span><span class="va">testOM</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">MOM</span><span class="op">@</span><span class="va">Rel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">Rel</span><span class="op">)</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Add Rel to MOM</span></span></span>
+<span class="r-in"><span><span class="va">MOM</span> <span class="op">&lt;-</span> <span class="fu"><a href="makeMOM.html">makeMOM</a></span><span class="op">(</span><span class="va">testOM</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">MOM</span><span class="op">@</span><span class="va">Rel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">Rel</span><span class="op">)</span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -171,7 +171,7 @@ Fisheries Research 206: 259–286. <a href="https://doi.org/10.1016/j.fishres.20
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>

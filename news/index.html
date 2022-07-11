@@ -50,8 +50,17 @@
     <div class="section level2">
 <h2 class="page-header" data-toc-text="3.5.1" id="msetool-351">MSEtool 3.5.1<a class="anchor" aria-label="anchor" href="#msetool-351"></a></h2>
 <div class="section level3">
+<h3 id="new-additions-3-5-1">New additions<a class="anchor" aria-label="anchor" href="#new-additions-3-5-1"></a></h3>
+<ul><li>
+<code>runMSE</code> can use the split-apply-combine technique to run projections in parallel with argument <code>parallel = "sac"</code>. Implementation details and notable issues are documented in the help doc <code><a href="../reference/runMSE.html">?runMSE</a></code>. This is the fastest method for running simulations but may not be suitable for all operating models and it may be more difficult to troubleshoot errors.</li></ul></div>
+<div class="section level3">
 <h3 id="minor-changes-3-5-1">Minor changes<a class="anchor" aria-label="anchor" href="#minor-changes-3-5-1"></a></h3>
-<ul><li>patch to <code>gettaxa</code> function for species that are found in FishBase database but not in FishLife database</li></ul></div>
+<ul><li>patch to <code>gettaxa</code> function for species that are found in FishBase database but not in FishLife database</li>
+<li>update <code>joinData</code>, <code>joinHist</code>, <code>joinMSE</code>, and <code>addMPs</code> functions</li>
+<li>
+<code>runMSE</code> calculates vulnerable biomass from fishery weight at age <code>cpars$Wt_age_C</code> if provided.</li>
+<li>the realized catch from TAC is no longer constrained <code>0.5 * VBiomass</code> (a legacy feature which is now removed). The constraint is updated to <code>0.999 * Biomass</code>.</li>
+</ul></div>
 </div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="3.5.0" id="msetool-350">MSEtool 3.5.0<small>2022-06-07</small><a class="anchor" aria-label="anchor" href="#msetool-350"></a></h2>
@@ -226,7 +235,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>

@@ -55,22 +55,22 @@ mean length (ML), modal length (Lc), and mean length over modal length (Lbar)</p
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">simCAL</span><span class="op">(</span>
-  <span class="va">nsim</span>,
-  <span class="va">nyears</span>,
-  <span class="va">maxage</span>,
-  <span class="va">CAL_ESS</span>,
-  <span class="va">CAL_nsamp</span>,
-  <span class="va">nCALbins</span>,
-  <span class="va">CAL_binsmid</span>,
-  <span class="va">CAL_bins</span>,
-  <span class="va">vn</span>,
-  <span class="va">retL</span>,
-  <span class="va">Linfarray</span>,
-  <span class="va">Karray</span>,
-  <span class="va">t0array</span>,
-  <span class="va">LenCV</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">simCAL</span><span class="op">(</span></span>
+<span>  <span class="va">nsim</span>,</span>
+<span>  <span class="va">nyears</span>,</span>
+<span>  <span class="va">maxage</span>,</span>
+<span>  <span class="va">CAL_ESS</span>,</span>
+<span>  <span class="va">CAL_nsamp</span>,</span>
+<span>  <span class="va">nCALbins</span>,</span>
+<span>  <span class="va">CAL_binsmid</span>,</span>
+<span>  <span class="va">CAL_bins</span>,</span>
+<span>  <span class="va">vn</span>,</span>
+<span>  <span class="va">retL</span>,</span>
+<span>  <span class="va">Linfarray</span>,</span>
+<span>  <span class="va">Karray</span>,</span>
+<span>  <span class="va">t0array</span>,</span>
+<span>  <span class="va">LenCV</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -135,8 +135,10 @@ mean length (ML), modal length (Lc), and mean length over modal length (Lbar)</p
     <h2>Value</h2>
     
 
-<p>named list with CAL array and LFC, ML, &amp; Lc vectors</p><div class="sourceCode"><pre><code>CALdat &lt;- simCAL(nsim, nyears, StockPars$maxage, ObsPars$CAL_ESS,
-</code></pre></div>
+<p>named list with CAL array and LFC, ML, &amp; Lc vectors</p>
+
+
+<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1"></a>CALdat &lt;-<span class="st"> </span><span class="kw">simCAL</span>(nsim, nyears, StockPars<span class="op">$</span>maxage, ObsPars<span class="op">$</span>CAL_ESS,</span></code></pre><p></p></div>
 
 
     </div>
@@ -153,7 +155,7 @@ mean length (ML), modal length (Lc), and mean length over modal length (Lbar)</p
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>

@@ -55,26 +55,26 @@ Strategy Evaluation (closed-loop simulation) for a specified operating model</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">SimulateMOM</span><span class="op">(</span>MOM <span class="op">=</span> <span class="fu">MSEtool</span><span class="fu">::</span><span class="va"><a href="MOM-class-objects.html">Albacore_TwoFleet</a></span>, parallel <span class="op">=</span> <span class="cn">TRUE</span>, silent <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>
-
-<span class="fu">ProjectMOM</span><span class="op">(</span>
-  multiHist <span class="op">=</span> <span class="cn">NULL</span>,
-  MPs <span class="op">=</span> <span class="cn">NA</span>,
-  parallel <span class="op">=</span> <span class="cn">FALSE</span>,
-  silent <span class="op">=</span> <span class="cn">FALSE</span>,
-  checkMPs <span class="op">=</span> <span class="cn">TRUE</span>,
-  dropHist <span class="op">=</span> <span class="cn">TRUE</span>
-<span class="op">)</span>
-
-<span class="fu">multiMSE</span><span class="op">(</span>
-  MOM <span class="op">=</span> <span class="fu">MSEtool</span><span class="fu">::</span><span class="va"><a href="MOM-class-objects.html">Albacore_TwoFleet</a></span>,
-  MPs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AvC"</span>, <span class="st">"DCAC"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"FMSYref"</span>, <span class="st">"curE"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,
-  Hist <span class="op">=</span> <span class="cn">FALSE</span>,
-  silent <span class="op">=</span> <span class="cn">FALSE</span>,
-  parallel <span class="op">=</span> <span class="cn">TRUE</span>,
-  checkMPs <span class="op">=</span> <span class="cn">TRUE</span>,
-  dropHist <span class="op">=</span> <span class="cn">TRUE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">SimulateMOM</span><span class="op">(</span>MOM <span class="op">=</span> <span class="fu">MSEtool</span><span class="fu">::</span><span class="va"><a href="MOM-class-objects.html">Albacore_TwoFleet</a></span>, parallel <span class="op">=</span> <span class="cn">TRUE</span>, silent <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ProjectMOM</span><span class="op">(</span></span>
+<span>  multiHist <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  MPs <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  silent <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  checkMPs <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  dropHist <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">multiMSE</span><span class="op">(</span></span>
+<span>  MOM <span class="op">=</span> <span class="fu">MSEtool</span><span class="fu">::</span><span class="va"><a href="MOM-class-objects.html">Albacore_TwoFleet</a></span>,</span>
+<span>  MPs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AvC"</span>, <span class="st">"DCAC"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"FMSYref"</span>, <span class="st">"curE"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  Hist <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  silent <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  parallel <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  checkMPs <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  dropHist <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -149,7 +149,7 @@ containing all historical data</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>

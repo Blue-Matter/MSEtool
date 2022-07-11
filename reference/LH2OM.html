@@ -55,32 +55,32 @@ hierarchical model fitted to FishBase life-history parameters</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">LH2OM</span><span class="op">(</span>
-  <span class="va">OM</span>,
-  dist <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"unif"</span>, <span class="st">"norm"</span><span class="op">)</span>,
-  filterMK <span class="op">=</span> <span class="cn">FALSE</span>,
-  plot <span class="op">=</span> <span class="cn">TRUE</span>,
-  Class <span class="op">=</span> <span class="st">"predictive"</span>,
-  Order <span class="op">=</span> <span class="st">"predictive"</span>,
-  Family <span class="op">=</span> <span class="st">"predictive"</span>,
-  msg <span class="op">=</span> <span class="cn">TRUE</span>,
-  db <span class="op">=</span> <span class="fu">MSEtool</span><span class="fu">::</span><span class="va"><a href="LHdatabase.html">LHdatabase</a></span>
-<span class="op">)</span>
-
-<span class="fu">predictLH</span><span class="op">(</span>
-  inpars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,
-  Genus <span class="op">=</span> <span class="st">"predictive"</span>,
-  Species <span class="op">=</span> <span class="st">"predictive"</span>,
-  nsamp <span class="op">=</span> <span class="fl">100</span>,
-  db <span class="op">=</span> <span class="fu">MSEtool</span><span class="fu">::</span><span class="va"><a href="LHdatabase.html">LHdatabase</a></span>,
-  dist <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"unif"</span>, <span class="st">"norm"</span><span class="op">)</span>,
-  filterMK <span class="op">=</span> <span class="cn">TRUE</span>,
-  plot <span class="op">=</span> <span class="cn">TRUE</span>,
-  Class <span class="op">=</span> <span class="st">"predictive"</span>,
-  Order <span class="op">=</span> <span class="st">"predictive"</span>,
-  Family <span class="op">=</span> <span class="st">"predictive"</span>,
-  msg <span class="op">=</span> <span class="cn">TRUE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">LH2OM</span><span class="op">(</span></span>
+<span>  <span class="va">OM</span>,</span>
+<span>  dist <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"unif"</span>, <span class="st">"norm"</span><span class="op">)</span>,</span>
+<span>  filterMK <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  plot <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  Class <span class="op">=</span> <span class="st">"predictive"</span>,</span>
+<span>  Order <span class="op">=</span> <span class="st">"predictive"</span>,</span>
+<span>  Family <span class="op">=</span> <span class="st">"predictive"</span>,</span>
+<span>  msg <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  db <span class="op">=</span> <span class="fu">MSEtool</span><span class="fu">::</span><span class="va"><a href="LHdatabase.html">LHdatabase</a></span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">predictLH</span><span class="op">(</span></span>
+<span>  inpars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  Genus <span class="op">=</span> <span class="st">"predictive"</span>,</span>
+<span>  Species <span class="op">=</span> <span class="st">"predictive"</span>,</span>
+<span>  nsamp <span class="op">=</span> <span class="fl">100</span>,</span>
+<span>  db <span class="op">=</span> <span class="fu">MSEtool</span><span class="fu">::</span><span class="va"><a href="LHdatabase.html">LHdatabase</a></span>,</span>
+<span>  dist <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"unif"</span>, <span class="st">"norm"</span><span class="op">)</span>,</span>
+<span>  filterMK <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  plot <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  Class <span class="op">=</span> <span class="st">"predictive"</span>,</span>
+<span>  Order <span class="op">=</span> <span class="st">"predictive"</span>,</span>
+<span>  Family <span class="op">=</span> <span class="st">"predictive"</span>,</span>
+<span>  msg <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="source">
@@ -203,7 +203,7 @@ Predicting life history parameters for all fishes worldwide. Ecological Applicat
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>
