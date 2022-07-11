@@ -269,7 +269,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   N[SAYR] <- StockPars$R0[S] * surv[SAY] * StockPars$initdist[SAR]*StockPars$Perr_y[Sa]  # Calculate initial stock numbers
   Biomass[SAYR] <- N[SAYR] * StockPars$Wt_age[SAY]  # Calculate initial stock biomass
   SSB[SAYR] <- SSN[SAYR] * StockPars$Fec_Age[SAY]    # Calculate spawning stock biomass
-  VBiomass[SAYR] <- Biomass[SAYR] * FleetPars$V_real[SAY]  # Calculate vulnerable biomass
+  VBiomass[SAYR] <- N[SAYR] * FleetPars$Wt_age_C[SAY] * FleetPars$V_real[SAY]  # Calculate vulnerable biomass
 
   StockPars$aR <- aR
   StockPars$bR <- bR
@@ -1315,7 +1315,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     # The stock at the beginning of projection period
     N_P[,,1,] <- aperm(array(unlist(NextYrN), dim=c(n_age, nareas, nsim, 1)), c(3,1,4,2))
     Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAY1]  # Calculate biomass
-    VBiomass_P[SAYR] <- Biomass_P[SAYR] * V_P[SAYt]  # Calculate vulnerable biomass
+    VBiomass_P[SAYR] <- N_P[SAYR] * FleetPars$Wt_age_C[SAY1] * V_P[SAYt]  # Calculate vulnerable biomass
     SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAY1]  # Calculate spawning stock numbers
     SSB_P[SAYR] <- N_P[SAYR] * StockPars$Fec_Age[SAY1]
 
@@ -1337,7 +1337,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     )
     N_P[,,y,] <- array(unlist(Ntemp), dim=c(n_age, nareas, nsim)) %>% aperm(c(3,1,2))
     Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAY1]  # Calculate biomass
-    VBiomass_P[SAYR] <- Biomass_P[SAYR] * V_P[SAYt]  # Calculate vulnerable biomass
+    VBiomass_P[SAYR] <- N_P[SAYR] * FleetPars$Wt_age_C[SAY1] * V_P[SAYt]  # Calculate vulnerable biomass
     SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAY1]  # Calculate spawning stock numbers
     SSB_P[SAYR] <- N_P[SAYR] * StockPars$Fec_Age[SAY1]
     
@@ -1522,7 +1522,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       N_P[,,y,] <- array(unlist(Ntemp), dim=c(n_age, nareas, nsim)) %>% aperm(c(3,1,2))
 
       Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAYt]  # Calculate biomass
-      VBiomass_P[SAYR] <- Biomass_P[SAYR] * V_P[SAYt]  # Calculate vulnerable biomass
+      VBiomass_P[SAYR] <- N_P[SAYR] * FleetPars$Wt_age_C[SAYt] * V_P[SAYt]  # Calculate vulnerable biomass
       SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAYt]  # Calculate spawning stock numbers
       SSB_P[SAYR] <- N_P[SAYR] * StockPars$Fec_Age[SAYt]  # Calculate spawning stock biomass
       
