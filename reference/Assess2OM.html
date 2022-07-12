@@ -199,7 +199,8 @@ Either a single numeric or a length nsim vector.</p></dd>
 
 
 <dt>...</dt>
-<dd><p>Additional arguments (for all, either a numeric or a length nsim vector):</p><ul><li><p><code>SRrel</code> Stock-recruit relationship. (<code>1</code> for Beverton-Holt (default), <code>2</code> for Ricker)</p></li>
+<dd><p>Additional arguments (for all, either a numeric or a length nsim vector):</p><ul><li><p><code>fecaa</code> Fecundity at age. Default fecundity is the product of maturity and weight at age.</p></li>
+<li><p><code>SRrel</code> Stock-recruit relationship. (<code>1</code> for Beverton-Holt (default), <code>2</code> for Ricker)</p></li>
 <li><p><code>R0</code> unfished recruitment</p></li>
 <li><p><code>phi0</code> unfished spawners per recruit associated with R0 and h. With time-varying parameters, openMSE uses the mean phi0
 in the first <code>ageM</code> (age of 50 percent maturity) years for the stock-recruit relationship. <code>Assess2OM</code> will re-calculate R0 and h

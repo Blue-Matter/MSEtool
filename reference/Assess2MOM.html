@@ -71,6 +71,7 @@ needs to parameterize most of the observation and implementation portions of the
 <span>  <span class="va">Mataa</span>,</span>
 <span>  <span class="va">Maa</span>,</span>
 <span>  <span class="va">laa</span>,</span>
+<span>  <span class="va">fecaa</span>,</span>
 <span>  nyr_par_mu <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  LowerTri <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  recind <span class="op">=</span> <span class="fl">0</span>,</span>
@@ -140,6 +141,10 @@ needs to parameterize most of the observation and implementation portions of the
 <dd><p>Length-at-age <code>[first age is age zero]</code>. Four-dimensional numeric array <code>[sim, ages, year, p]</code>.</p></dd>
 
 
+<dt>fecaa</dt>
+<dd><p>Fecundity at age <code>[first age is age zero]</code>. If missing, default fecundity is the product of maturity and weight at age.</p></dd>
+
+
 <dt>nyr_par_mu</dt>
 <dd><p>Positive integer. The number of recent years that natural mortality, age vulnerability, weight, length and maturity parameters are averaged over for defining future projection conditions.</p></dd>
 
@@ -173,7 +178,8 @@ needs to parameterize most of the observation and implementation portions of the
 
 
 <dt>...</dt>
-<dd><p>Additional arguments (for all, either a numeric or a length nsim vector):</p><ul><li><p><code>R0</code> unfished recruitment</p></li>
+<dd><p>Additional arguments (for all, either a numeric or a length nsim vector):</p><ul><li><p><code>SRrel</code> Stock-recruit relationship. (<code>1</code> for Beverton-Holt (default), <code>2</code> for Ricker)</p></li>
+<li><p><code>R0</code> unfished recruitment</p></li>
 <li><p><code>phi0</code> unfished spawners per recruit associated with R0 and h. With time-varying parameters, openMSE uses the mean phi0
 in the first <code>ageM</code> (age of 50 percent maturity) years for the stock-recruit relationship. <code>Assess2OM</code> will re-calculate R0 and h
 in the operating model such that the stock-recruit <code>alpha</code> and <code>beta</code> parameters match values implied in the input.</p></li>
