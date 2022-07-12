@@ -102,6 +102,7 @@ Either a single numeric or a length nsim vector.}
 
 \item{...}{Additional arguments (for all, either a numeric or a length nsim vector):
 \itemize{
+\item \code{fecaa} Fecundity at age. Default fecundity is the product of maturity and weight at age.
 \item \code{SRrel} Stock-recruit relationship. (\code{1} for Beverton-Holt (default), \code{2} for Ricker)
 \item \code{R0} unfished recruitment
 \item \code{phi0} unfished spawners per recruit associated with R0 and h. With time-varying parameters, openMSE uses the mean phi0

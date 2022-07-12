@@ -29,6 +29,7 @@
 #' @param silent Whether to silence messages to the console.
 #' @param ... Additional arguments (for all, either a numeric or a length nsim vector):
 #' \itemize{
+#' \item \code{fecaa} Fecundity at age. Default fecundity is the product of maturity and weight at age.
 #' \item \code{SRrel} Stock-recruit relationship. (\code{1} for Beverton-Holt (default), \code{2} for Ricker)
 #' \item \code{R0} unfished recruitment
 #' \item \code{phi0} unfished spawners per recruit associated with R0 and h. With time-varying parameters, openMSE uses the mean phi0 
@@ -71,6 +72,13 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   if(!length(cond) || any(is.na(cond)) || any(!cond)) {
     stop('One or more of the following arrays do not have the same shape: naa, faa, waa, Mataa, Maa, Laa')
   }
+  
+  if(!is.null(dots$fecaa)) {
+    fecaa <- dots$fecaa
+    if(!all(dim(naa) == dim(fecaa))) stop("Dimension of fecaa not equal to that for naa")
+  } else {
+    fecaa <- waa * Mataa
+  }
 
   nyears<-dim(naa)[3]
   nsim<-dim(naa)[1]
@@ -94,7 +102,7 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
     laa<-abind(zeros,laa,along=2)
     
     # M copied from first year to age zero
-    Maa<-abind(array(1E-10 + .Machine$double.eps,dim(Maa[,1,])),Maa,along=2)
+    Maa<-abind(array(tiny + .Machine$double.eps,dim(Maa[,1,])),Maa,along=2)
     
     message("Age zero positions for arrays were created with the following assumptions: N(0) = N(1) * exp(M(1)), N0 in most recent year is mean(R0), F(0) = weight(0) = maturity(0) = length(0) = 0, M(0) = M(1)")
     
@@ -130,7 +138,7 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   if(plusgroup) {
     surv[, n_age, ] <- surv[, n_age, ]/(1 - exp(-Maa[, n_age, ]))
   }
-  SSBpR <- apply(surv * Mataa * waa, c(1, 3), sum)
+  SSBpR <- apply(surv * fecaa, c(1, 3), sum)
   
   SSBpR_out <- vapply(1:nsim, function(x) {
     ageM <- min(LinInterp(Mataa[x,, 1], y = 1:n_age, 0.5), maxage - 1)
@@ -168,7 +176,7 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   }
   SSB0 <- R0 * SSBpR_out
   
-  SSB <- apply(naa*Mataa*waa, c(1, 3), sum, na.rm = TRUE)
+  SSB <- apply(naa * fecaa, c(1, 3), sum, na.rm = TRUE)
   D <- SSB[,nyears]/SSB0
 
   OM@Name <- Name
@@ -217,7 +225,7 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   OM<-suppressMessages(Replace(OM, Imp, Sub = "Imp"))
 
   # Custom parameter arrays
-  Wt_age <- M_ageArray <- Len_age <- Mat_age <- V <- array(NA, c(nsim, n_age, nyears + proyears))
+  Wt_age <- M_ageArray <- Len_age <- Mat_age <- V <- Fec_age <- array(NA, c(nsim, n_age, nyears + proyears))
 
   # Historical filling
   Find<-apply(faa,c(1,3),max)
@@ -247,11 +255,16 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   OM@cpars$Mat_age <- Mat_age
   OM@cpars$V <- V
   OM@cpars$Find <- Find
+  
+  if(!is.null(dots$fecaa)) {
+    Fec_age[,,1:nyears] <- fecaa
+    OM@cpars$Fec_age <- parmu(Fec_age,nyears,proyears,nyr_par_mu)
+  }
 
   # Deterministic Recruitment
   if(SRrel == 1) {
     recd <- vapply(1:nsim, function(x) (0.8*R0[x]*h[x]*SSB[x, ])/(0.2*SSB0[x]*(1-h[x]) + (h[x]-0.2)*SSB[x, ]), 
-           numeric(nyears)) %>% t()
+                   numeric(nyears)) %>% t()
   } else {
     recd <- local({
       a <- (5 * h)^1.25/SSBpR_out
@@ -388,6 +401,7 @@ VPA2OM <- Assess2OM
 #' @param Mataa  Maturity (spawning fraction)-at-age `[first age is age zero]`. Four-dimensional numeric array  `[sim, ages, year, p]`.
 #' @param Maa Natural mortality rate-at-age `[first age is age zero]`. Four-dimensional numeric array `[sim, ages, year, p]`. 
 #' @param laa Length-at-age `[first age is age zero]`. Four-dimensional numeric array `[sim, ages, year, p]`.
+#' @param fecaa Fecundity at age `[first age is age zero]`. If missing, default fecundity is the product of maturity and weight at age.
 #' @param nyr_par_mu Positive integer. The number of recent years that natural mortality, age vulnerability, weight, length and maturity parameters are averaged over for defining future projection conditions.
 #' @param LowerTri Integer. The number of recent years for which model estimates of recruitment are ignored (not reliably estimated by the assessment)
 #' @param recind Positive integer. The first age class that fish 'recruit to the fishery'. The default is 0 - ie the first position in the age dimension of naa is age zero
@@ -398,6 +412,7 @@ VPA2OM <- Assess2OM
 #' @param silent Whether to silence messages to the console.
 #' @param ... Additional arguments (for all, either a numeric or a length nsim vector):
 #' \itemize{
+#' \item \code{SRrel} Stock-recruit relationship. (\code{1} for Beverton-Holt (default), \code{2} for Ricker)
 #' \item \code{R0} unfished recruitment
 #' \item \code{phi0} unfished spawners per recruit associated with R0 and h. With time-varying parameters, openMSE uses the mean phi0 
 #' in the first \code{ageM} (age of 50 percent maturity) years for the stock-recruit relationship. \code{Assess2OM} will re-calculate R0 and h
@@ -414,7 +429,7 @@ Assess2MOM <- function(Name = "MOM created by Assess2MOM",
                        proyears = 50, interval = 2, CurrentYr = as.numeric(format(Sys.Date(), "%Y")),
                        h = 0.999,
                        Obs = MSEtool::Imprecise_Unbiased, Imp = MSEtool::Perfect_Imp,
-                       naa, faa, waa, Mataa, Maa, laa,
+                       naa, faa, waa, Mataa, Maa, laa, fecaa,
                        nyr_par_mu = 3, LowerTri = 1,
                        recind = 0, plusgroup = TRUE, altinit = 0, fixq1 = TRUE,
                        report = FALSE, silent = FALSE, ...) {
@@ -425,6 +440,8 @@ Assess2MOM <- function(Name = "MOM created by Assess2MOM",
   
   if (inherits(Obs, "Obs")) Obs <- replicate(nf, Obs)
   if (inherits(Imp, "Imp")) Imp <- replicate(nf, Imp)
+  
+  if (missing(fecaa)) fecaa <- Mataa * waa
   
   OMs <- lapply(1:np, function(p) {
     lapply(1:nf, function(f) {
@@ -443,8 +460,10 @@ Assess2MOM <- function(Name = "MOM created by Assess2MOM",
                 plusgroup = plusgroup, 
                 altinit = altinit, 
                 fixq1 = fixq1,
-                report = FALSE, # Plots will be in-accurate anyway
-                silent = TRUE, ...) 
+                report = FALSE, # Plots will be inaccurate anyway
+                silent = TRUE, 
+                fecaa = fecaa[, , , p], 
+                ...) 
     })
   })
   
