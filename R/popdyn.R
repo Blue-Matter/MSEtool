@@ -764,14 +764,14 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     TACused[is.na(TACused)] <- LastTAC[is.na(TACused)]
     TACusedE <-  TAC_Imp_Error[,y]*TACused   # TAC taken after implementation error
 
-    # Calculate total vulnerable biomass available mid-year accounting for any changes in selectivity &/or spatial closures
-    M_array <- array(0.5*StockPars$M_ageArray[,,nyears+y], dim=c(nsim, n_age, StockPars$nareas))
-    Atemp <- apply(CurrentVB * exp(-M_array), c(1,3), sum) # mid-year before fishing
+    # Calculate total biomass available accounting for any changes in selectivity &/or spatial closures
+    # Note vulnerable biomass is not used. With Baranov equation, catch can exceed VB with high F
+    Atemp <- apply(CurrentB, c(1,3), sum)
     availB <- apply(Atemp * t(Si), 1, sum) # adjust for spatial closures
 
     # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
     expC <- TACusedE
-    expC[TACusedE> availB] <- availB[TACusedE> availB] * 0.99
+    expC[TACusedE> availB] <- availB[TACusedE> availB] * 0.999
 
     Ftot <- sapply(1:nsim, calcF, expC, V_P, retA_P, Biomass_P, fishdist,
                    StockPars$Asize,

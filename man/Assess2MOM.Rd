@@ -18,6 +18,7 @@ Assess2MOM(
   Mataa,
   Maa,
   laa,
+  fecaa,
   nyr_par_mu = 3,
   LowerTri = 1,
   recind = 0,
@@ -59,6 +60,8 @@ Assess2MOM(
 
 \item{laa}{Length-at-age \verb{[first age is age zero]}. Four-dimensional numeric array \verb{[sim, ages, year, p]}.}
 
+\item{fecaa}{Fecundity at age \verb{[first age is age zero]}. If missing, default fecundity is the product of maturity and weight at age.}
+
 \item{nyr_par_mu}{Positive integer. The number of recent years that natural mortality, age vulnerability, weight, length and maturity parameters are averaged over for defining future projection conditions.}
 
 \item{LowerTri}{Integer. The number of recent years for which model estimates of recruitment are ignored (not reliably estimated by the assessment)}
@@ -77,6 +80,7 @@ Assess2MOM(
 
 \item{...}{Additional arguments (for all, either a numeric or a length nsim vector):
 \itemize{
+\item \code{SRrel} Stock-recruit relationship. (\code{1} for Beverton-Holt (default), \code{2} for Ricker)
 \item \code{R0} unfished recruitment
 \item \code{phi0} unfished spawners per recruit associated with R0 and h. With time-varying parameters, openMSE uses the mean phi0
 in the first \code{ageM} (age of 50 percent maturity) years for the stock-recruit relationship. \code{Assess2OM} will re-calculate R0 and h

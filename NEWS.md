@@ -8,6 +8,8 @@ The current version of the `MSEtool` package is available for download from [CRA
 ## Minor changes 
 - patch to `gettaxa` function for species that are found in FishBase database but not in FishLife database
 - update `joinData`, `joinHist`, `joinMSE`, and `addMPs` functions
+- `runMSE` calculates vulnerable biomass from fishery weight at age `cpars$Wt_age_C` if provided.
+- the realized catch from TAC is no longer constrained `0.5 * VBiomass` (a legacy feature which is now removed). The constraint is updated to `0.999 * Biomass`.
 
 # MSEtool 3.5.0
 
