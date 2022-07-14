@@ -298,3 +298,15 @@ NULL
 "MSEDescription"
 
 
+#'  Taxa_Table 
+#'
+#'  Database from rfishbase 
+#' 
+#' @references Carl Boettiger and Duncan Temple Lang and Peter Wainwright
+#' 2012. Journal of Fish Biology 
+#' @source \url{https://doi.org/10.1111/j.1095-8649.2012.03464.x} 
+#'
+#'
+"Taxa_Table"
+
+

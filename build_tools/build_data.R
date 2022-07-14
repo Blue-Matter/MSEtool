@@ -512,3 +512,24 @@ cpars_internal <- openxlsx::read.xlsx("build_tools/Class_definitions/Class_defin
 cpars_info <- dplyr::bind_rows(cpars_Stock,cpars_Fleet,cpars_Obs, cpars_Imp,cpars_internal)
 
 usethis::use_data(cpars_info, internal = TRUE, overwrite = TRUE)
+
+
+# Add FishBase Database 
+library(rfishbase)
+Taxa_Table <- suppressMessages(rfishbase::load_taxa())
+usethis::use_data(Taxa_Table, overwrite = TRUE)
+
+# Write roxygen
+clss <- class(Taxa_Table)
+name <- "Taxa_Table"
+cat("#'  ", name, " ",
+    "\n#'",
+    "\n#'  Database from rfishbase ",
+    "\n#' ",
+    "\n#' @references Carl Boettiger and Duncan Temple Lang and Peter Wainwright",
+    "\n#' 2012. Journal of Fish Biology ",
+    "\n#' @source \\url{https://doi.org/10.1111/j.1095-8649.2012.03464.x} ",
+    "\n#'",
+    "\n#'\n",
+    '"', name, '"\n\n\n', sep="", append=TRUE,
+    file=file.path('R/', RoxygenFile))

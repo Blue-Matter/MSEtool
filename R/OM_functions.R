@@ -636,14 +636,15 @@ gettaxa <- function(Class = "predictive", Order = "predictive",
                     ParentChild_gz=MSEtool::LHdatabase$ParentChild_gz,
                     msg=TRUE) {
 
-  if (!requireNamespace("rfishbase", quietly = TRUE)) {
-    stop("Package \"rfishbase\" needed for this function to work. Please install it.",
-         call. = FALSE)
-  }
-  
-  if (msg)
-    message_info('Loading FishBase database')
-  Taxa_Table <- suppressMessages(rfishbase::load_taxa())
+  # if (!requireNamespace("rfishbase", quietly = TRUE)) {
+  #   stop("Package \"rfishbase\" needed for this function to work. Please install it.",
+  #        call. = FALSE)
+  # }
+  # 
+  # if (msg)
+  #   message_info('Loading FishBase database')
+  # # Taxa_Table <- suppressMessages(rfishbase::load_taxa())
+  Taxa_Table <-MSEtool::Taxa_Table
   Species2 <- strsplit(Taxa_Table$Species, " ")
   
   Match = 1:nrow(Taxa_Table)
