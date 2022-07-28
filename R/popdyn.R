@@ -898,7 +898,7 @@ calcF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, Asize, maxage, 
   fishdist[x,] <- fishdist[x,]/sum(fishdist[x,])
 
   if (ft <= 1E-9) return(tiny)
-  for (i in 1:100) {
+  for (i in 1:300) {
     Fmat <- ft * matrix(V_P[x,,y+nyears], nrow=maxage+1, ncol=nareas) *
       matrix(fishdist[x,], maxage+1, nareas, byrow=TRUE)/
       matrix(Asize[x,], maxage+1, nareas, byrow=TRUE) # distribute F over age and areas
