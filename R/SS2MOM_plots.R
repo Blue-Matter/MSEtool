@@ -203,8 +203,11 @@ compareCmulti <- function(replist, multiHist) {
 compareC_overallmulti <- function(replist, multiHist) {
   # removals 
   mainyrs <- replist$startyr:replist$endyr
+  # C_SS <- replist$catch %>% dplyr::filter(Yr %in% mainyrs) %>%
+  #   dplyr::select(Year=Yr, Fleet=Fleet, C=Exp)
+  
   C_SS <- replist$catch %>% dplyr::filter(Yr %in% mainyrs) %>%
-    dplyr::select(Year=Yr, Fleet=Fleet, C=Exp)
+    dplyr::select(Year=Yr, Fleet=Fleet, C=kill_bio)
   
   n.p <- length(multiHist)
   n.f <- length(multiHist[[1]])
