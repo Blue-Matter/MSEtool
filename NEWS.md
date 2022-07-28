@@ -11,6 +11,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 - update `joinData`, `joinHist`, `joinMSE`, and `addMPs` functions
 - `runMSE` calculates vulnerable biomass from fishery weight at age `cpars$Wt_age_C` if provided.
 - the realized catch from TAC is no longer constrained `0.5 * VBiomass` (a legacy feature which is now removed). The constraint is updated to `0.999 * Biomass`.
+- increase iteration limit to 300 when solving for Baranov F during the MP projections.
 
 # MSEtool 3.5.0
 
