@@ -6,6 +6,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 - `runMSE` can use the split-apply-combine technique to run projections in parallel with argument `parallel = "sac"`. Implementation details and notable issues are documented in the help doc `?runMSE`. This is the fastest method for running simulations but may not be suitable for all operating models and it may be more difficult to troubleshoot errors.
 
 ## Minor changes 
+- removed duplicated information in `multiHist` object (now only returns biological information for fleet=1)
 - patch to `gettaxa` function for species that are found in FishBase database but not in FishLife database
 - update `joinData`, `joinHist`, `joinMSE`, and `addMPs` functions
 - `runMSE` calculates vulnerable biomass from fishery weight at age `cpars$Wt_age_C` if provided.

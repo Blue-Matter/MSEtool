@@ -1125,51 +1125,87 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       OMPars <- DataList[[p]][[f]]@OM
       OMPars <- data.frame(OMPars, obs, imp)
       Hist@OMPars <- OMPars
-      Hist@AtAge <- list(Length=StockPars[[p]]$Len_age,
-                         Weight=StockPars[[p]]$Wt_age,
-                         Select=FleetPars[[p]][[f]]$V_real,
-                         Retention=FleetPars[[p]][[f]]$retA_real,
-                         Maturity=StockPars[[p]]$Mat_age,
-                         N.Mortality=StockPars[[p]]$M_ageArray,
-                         Z.Mortality=Z[,p,,,],
-                         F.Mortality=FM[,p,f,,,],
-                         Fret.Mortality=FMret[,p,f,,,],
-                         Number=N[,p,,,],
-                         Biomass=Biomass[,p,,,],
-                         VBiomass=VBF[,p,f,,,],
-                         SBiomass=SSB[,p,,,],
-                         Removals=CB[,p,f,,,],
-                         Landings=CBret[,p,f,,,],
-                         Discards=CB[,p,f,,,]-CBret[,p,f,,,]
-      )
-
-      Hist@TSdata <- list(
-        Number=apply(N[,p,,,],c(1,3,4), sum),
-        Biomass=apply(Biomass[,p,,,],c(1,3,4), sum),
-        VBiomass=apply(VBF[,p,f,,,],c(1,3,4), sum),
-        SBiomass=apply(SSB[,p,,,],c(1,3,4), sum),
-        Removals=apply(CB[,p,f,,,], c(1,3,4), sum),
-        Landings=apply(CBret[,p,f,,,],c(1,3,4), sum),
-        Discards=apply(CB[,p,f,,,]-CBret[,p,f,,,],c(1,3,4), sum),
-        Find=FleetPars[[p]][[f]]$Find,
-        RecDev=StockPars[[p]]$Perr_y,
-        SPR=SPR_hist[[p]],
-        Unfished_Equilibrium=Unfished_Equilibrium[[p]]
-      )
-
-      Hist@Ref <- StockPars[[p]]$ReferencePoints
-
-      Hist@SampPars <- list(
-        Stock=StockPars[[p]],
-        Fleet=FleetPars[[p]][[f]],
-        Obs=ObsPars[[p]][[f]],
-        Imp=ImpPars[[p]][[f]]
-      )
-
-      temp <- MOM@cpars$Data
-      MOM@cpars <- list()
-      MOM@cpars$control <- control
-      MOM@cpars$Data <- temp
+      if (f==1) {
+        Hist@AtAge <- list(Length=StockPars[[p]]$Len_age,
+                           Weight=StockPars[[p]]$Wt_age,
+                           Select=FleetPars[[p]][[f]]$V_real,
+                           Retention=FleetPars[[p]][[f]]$retA_real,
+                           Maturity=StockPars[[p]]$Mat_age,
+                           N.Mortality=StockPars[[p]]$M_ageArray,
+                           Z.Mortality=Z[,p,,,],
+                           F.Mortality=FM[,p,f,,,],
+                           Fret.Mortality=FMret[,p,f,,,],
+                           Number=N[,p,,,],
+                           Biomass=Biomass[,p,,,],
+                           VBiomass=VBF[,p,f,,,],
+                           SBiomass=SSB[,p,,,],
+                           Removals=CB[,p,f,,,],
+                           Landings=CBret[,p,f,,,],
+                           Discards=CB[,p,f,,,]-CBret[,p,f,,,]
+        )
+      } else {
+        Hist@AtAge <- list(Select=FleetPars[[p]][[f]]$V_real,
+                           Retention=FleetPars[[p]][[f]]$retA_real,
+                           Z.Mortality=Z[,p,,,],
+                           F.Mortality=FM[,p,f,,,],
+                           Fret.Mortality=FMret[,p,f,,,],
+                           VBiomass=VBF[,p,f,,,],
+                           Removals=CB[,p,f,,,],
+                           Landings=CBret[,p,f,,,],
+                           Discards=CB[,p,f,,,]-CBret[,p,f,,,]
+        )
+      }
+      if (f==1) {
+        Hist@TSdata <- list(
+          Number=apply(N[,p,,,],c(1,3,4), sum),
+          Biomass=apply(Biomass[,p,,,],c(1,3,4), sum),
+          VBiomass=apply(VBF[,p,f,,,],c(1,3,4), sum),
+          SBiomass=apply(SSB[,p,,,],c(1,3,4), sum),
+          Removals=apply(CB[,p,f,,,], c(1,3,4), sum),
+          Landings=apply(CBret[,p,f,,,],c(1,3,4), sum),
+          Discards=apply(CB[,p,f,,,]-CBret[,p,f,,,],c(1,3,4), sum),
+          Find=FleetPars[[p]][[f]]$Find,
+          RecDev=StockPars[[p]]$Perr_y,
+          SPR=SPR_hist[[p]],
+          Unfished_Equilibrium=Unfished_Equilibrium[[p]]
+        )
+      } else {
+        Hist@TSdata <- list(
+          VBiomass=apply(VBF[,p,f,,,],c(1,3,4), sum),
+          Removals=apply(CB[,p,f,,,], c(1,3,4), sum),
+          Landings=apply(CBret[,p,f,,,],c(1,3,4), sum),
+          Discards=apply(CB[,p,f,,,]-CBret[,p,f,,,],c(1,3,4), sum),
+          Find=FleetPars[[p]][[f]]$Find
+        )
+      }
+      
+      if (f==1) {
+        Hist@Ref <- StockPars[[p]]$ReferencePoints  
+      }
+      
+      if (f==1) {
+        Hist@SampPars <- list(
+          Stock=StockPars[[p]],
+          Fleet=FleetPars[[p]][[f]],
+          Obs=ObsPars[[p]][[f]],
+          Imp=ImpPars[[p]][[f]]
+        )
+      } else {
+        Hist@SampPars <- list(
+          Fleet=FleetPars[[p]][[f]],
+          Obs=ObsPars[[p]][[f]],
+          Imp=ImpPars[[p]][[f]]
+        )
+      }
+      
+      if (f==1) {
+        temp <- MOM@cpars$Data
+        MOM@cpars <- list()
+        MOM@cpars$control <- control
+        MOM@cpars$Data <- temp  
+      } else {
+        MOM@cpars <- list()
+      }
 
       Hist@Misc <- list(
         MOM=MOM
