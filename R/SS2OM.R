@@ -394,19 +394,10 @@ single_fleet_Fdisc <- function(Find, V, retA, Fdisc1, nsim, nyears) {
 
 single_fleet_retA <- function(Find, V, retA, Fdisc1_avg, F_at_age, nsim, nyears) {
   
-  # Fretain <- sapply(1:nsim, function(i) {
-  #   sapply(1:nyears, function(j) colSums(Find[i, j, ] * t(V[i, , j, ] * retA[i, , j, ])))
-  # }, simplify = "array") %>% aperm(c(3, 1, 2))
-  # 
   Fretain <- sapply(1:nsim, function(i) {
-    sapply(1:nyears, function(j) {
-      retA_real <- V[i, , j, ] * retA[i, , j, ]
-      V_real <- retA_real + ((V[i, , j, ]-retA_real)*Fdisc1_avg[i,,j])
-      colSums(Find[i, j, ] * t(V_real))
-    })
+  sapply(1:nyears, function(j) colSums(Find[i, j, ] * t(V[i, , j, ] * retA[i, , j, ])))
   }, simplify = "array") %>% aperm(c(3, 1, 2))
-  
-  
+
   Fdiscard <- F_at_age - Fretain
   
   sapply(1:nsim, function(i) {
