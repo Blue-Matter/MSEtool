@@ -92,8 +92,6 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
     VBfx[VBfind] <- Bx[VBfind[, c(1,3,4,5)]] * VFx[VBfind[, 1:4]]
     VBcur[] <- VBfx[, , , y-1, ] # array(VBfx[,,,y-1,], c(np, nf, n_age, nareas))
     
-    
-    
     Fdist[Find] <- VBcur[Find]*MPAthisyr[Find[,c(1,2,4)]]^Spat_targ[Find[, 1:2]]
     Fdist[Find] <- Fdist[Find]/apply(Fdist,1:3,sum)[Find[,1:3]]
     Fdist[is.na(Fdist)] <- 0 # This is an NA catch for hermaphroditism
