@@ -496,3 +496,33 @@ calc_weightedmean_c <- function(l) {
   wt <- array(wdf$W, dim=c(nage, totyears,nsim))
   aperm(wt, c(3,1,2))
 }
+
+#' @describeIn SS2MOM Aggregate all fleets in an MOM object.
+#' @export
+MOM_agg_fleets <- function(MOM) {
+  MOM_aggfleet <- MOM
+  sel_par <- lapply(MOM@cpars, calculate_single_fleet_dynamics)
+  fleet <- MOM@Fleets[[1]][[1]]
+  MOM_aggfleet@Fleets[[1]] <- list()
+  MOM_aggfleet@Fleets[[2]] <- list()
+  MOM_aggfleet@Fleets[[1]][[1]] <- fleet
+  MOM_aggfleet@Fleets[[1]][[1]]@Name <- 'Aggregated Female'
+  MOM_aggfleet@Fleets[[2]][[1]] <- fleet
+  MOM_aggfleet@Fleets[[2]][[1]]@Name <- 'Aggregated Male'
+  MOM_aggfleet@cpars[[1]] <- list()
+  MOM_aggfleet@cpars[[2]] <- list()
+  
+  MOM_aggfleet@cpars[[1]][[1]] <- MOM@cpars[[1]][[1]]
+  MOM_aggfleet@cpars[[2]][[1]] <- MOM@cpars[[2]][[1]]
+  
+  # update cpars 
+  for (st in 1:2) {
+    # update aggegrated selectivity
+    for (nm in names(sel_par[[st]])) {
+      MOM_aggfleet@cpars[[st]][[1]][[nm]] <- sel_par[[st]][[nm]]
+    }
+    # weighted average empirical catch-weight over fleets
+    MOM_aggfleet@cpars[[st]][[1]]$Wt_age_C  <- calc_weightedmean_c(MOM@cpars[[st]])
+  }
+  MOM_aggfleet
+}

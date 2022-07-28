@@ -6,6 +6,7 @@
 \alias{SSMOM2OM}
 \alias{plot_SS2MOM}
 \alias{plot_SS2OM}
+\alias{MOM_agg_fleets}
 \title{Import Stock Synthesis to MOM (2-sex multi-fleet) or OM (single-sex, single-fleet)}
 \usage{
 SS2MOM(
@@ -82,6 +83,8 @@ plot_SS2OM(
   silent = FALSE,
   ...
 )
+
+MOM_agg_fleets(MOM)
 }
 \arguments{
 \item{SSdir}{A folder with Stock Synthesis input and output files in it.}
@@ -151,6 +154,11 @@ no explicit discarding modeled). For either, the user still needs to parameteriz
 implementation portions. \code{SSMOM2OM} is the internal function that simplifies the MOM object to an OM object.
 \code{plot_SS2OM} generates a markdown report to compare the OM and SS output.
 }
+\section{Functions}{
+\itemize{
+\item \code{MOM_agg_fleets}: Aggregate all fleets in an MOM object.
+}}
+
 \note{
 Currently tested on r4ss version 1.38.1-40.0 and SS 3.30.14.
 }
