@@ -61,6 +61,7 @@
 <li>
 <code>runMSE</code> calculates vulnerable biomass from fishery weight at age <code>cpars$Wt_age_C</code> if provided.</li>
 <li>the realized catch from TAC is no longer constrained <code>0.5 * VBiomass</code> (a legacy feature which is now removed). The constraint is updated to <code>0.999 * Biomass</code>.</li>
+<li>increase iteration limit to 300 when solving for Baranov F during the MP projections.</li>
 </ul></div>
 </div>
     <div class="section level2">
