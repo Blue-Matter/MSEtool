@@ -140,11 +140,16 @@ compareBmulti <- function(replist, multiHist) {
     labs(x="Year", y="Total Biomass")
 }
 
-compareCmulti <- function(replist, multiHist) {
+compareCmulti <- function(replist, multiHist, type=c('removals', 'retained')) {
+  type <- match.arg(type)
+  
+  ssvar <- switch(type,
+                  removals='kill_bio',
+                  retained='ret_bio')
   # removals 
   mainyrs <- replist$startyr:replist$endyr
   C_SS <- replist$catch %>% dplyr::filter(Yr %in% mainyrs) %>%
-    dplyr::select(Year=Yr, Fleet=Fleet, C=Exp, Seas = Seas) %>%
+    dplyr::select(Year=Yr, Fleet=Fleet, C=all_of(ssvar), Seas = Seas) %>%
     dplyr::group_by(Year, Fleet) %>% 
     dplyr::summarise(C = sum(C))
   
@@ -153,6 +158,9 @@ compareCmulti <- function(replist, multiHist) {
   n.yrs <- dim(multiHist[[1]][[1]]@TSdata$Number)[2]
   nsim <- dim(multiHist[[1]][[1]]@TSdata$Number)[1]
   
+  momvar <- switch(type,
+                   removals='Removals',
+                   retained='Landings')
   C_OMlist <- list()
   cnt <- 0
   for (p in 1:n.p) {
@@ -162,7 +170,7 @@ compareCmulti <- function(replist, multiHist) {
                                     Year=rep(mainyrs, each=nsim), 
                                     Sex=p,
                                     Fleet=fl,
-                                    C=c(as.vector(apply(multiHist[[p]][[fl]]@TSdata$Removals, 1:2, sum))),
+                                    C=c(as.vector(apply(multiHist[[p]][[fl]]@TSdata[[momvar]], 1:2, sum))),
                                     R=c(as.vector(apply(multiHist[[p]][[fl]]@TSdata$Landings, 1:2, sum))))
       
     }
@@ -178,7 +186,7 @@ compareCmulti <- function(replist, multiHist) {
     geom_line() +
     facet_wrap(~Fleet, scales="free") +
     theme_bw() + 
-    labs(x="Year", y="Catch (removals) by Fleet")
+    labs(x="Year", y=paste0("Catch (", type, ") by Fleet"))
   
   # break into groups of 8 fleets
   fleets <- C_dat$Fleet %>% unique()
@@ -191,7 +199,7 @@ compareCmulti <- function(replist, multiHist) {
       geom_line() +
       facet_wrap(~Fleet2, scales="free") +
       theme_bw() + 
-      labs(x="Year", y="Catch (removals) by Fleet")
+      labs(x="Year", y=paste0("Catch (", type, ") by Fleet"))
   }
   
   for (i in seq_along(fleet_groups)) {
