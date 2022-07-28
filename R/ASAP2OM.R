@@ -35,9 +35,11 @@ ASAP2OM <- function(asap, nsim = 48, proyears = 50, mcmc = FALSE, Name = "ASAP M
   n_age <- maxage + 1
   nfleet <- asap$nfleets
   
-  M <- N <- FM <- Mat_age <- Fec_age <- Wt_age <- array(NA_real_, c(nsim, n_age, nyears))
+  M <- N <- array(NA_real_, c(nsim, n_age, nyears))
   M[, sage:maxage + 1, ] <- replicate(nsim, asap$M.age) %>% aperm(3:1)
   N[, sage:maxage + 1, ] <- replicate(nsim, asap$N.age) %>% aperm(3:1) # Back calculate age-0
+  
+  FM <- Mat_age <- Fec_age <- Wt_age <- array(0, c(nsim, n_age, nyears))
   FM[, sage:maxage + 1, ] <- replicate(nsim, asap$F.age) %>% aperm(3:1) # Set age-0 F to zero
   
   Mat_age[, sage:maxage + 1, ] <- replicate(nsim, asap$maturity) %>% aperm(3:1) # Set age-0 mat to zero
@@ -72,9 +74,11 @@ ASAP2OM <- function(asap, nsim = 48, proyears = 50, mcmc = FALSE, Name = "ASAP M
   
   # Wt_age C
   OM@cpars$Wt_age_C <- local({
+    Wt <- array(0, c(nsim, n_age, nyears + proyears))
     Whist <- replicate(nsim, asap$WAA.mats$WAA.catch.all) %>% aperm(3:1)
     Wpro <- replicate(proyears, Whist[, , nyears])
-    abind::abind(Whist, Wpro, along = 3)
+    Wt[, sage:maxage + 1, ] <- abind::abind(Whist, Wpro, along = 3)
+    Wt
   })
   
   # growth parameters - placeholders to avoid fitting in MSEtool::SampleStockPars
