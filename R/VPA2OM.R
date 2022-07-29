@@ -32,11 +32,11 @@
 #' \item \code{fecaa} Fecundity at age. Default fecundity is the product of maturity and weight at age.
 #' \item \code{SRrel} Stock-recruit relationship. (\code{1} for Beverton-Holt (default), \code{2} for Ricker)
 #' \item \code{R0} unfished recruitment
-#' \item \code{phi0} unfished spawners per recruit associated with R0 and h. With time-varying parameters, openMSE uses the mean phi0 
+#' \item \code{phi0} unfished spawners per recruit associated with R0 and h. With time-varying parameters, openMSE uses the mean phi0
 #' in the first \code{ageM} (age of 50 percent maturity) years for the stock-recruit relationship. \code{Assess2OM} will re-calculate R0 and h
-#' in the operating model such that the stock-recruit \code{alpha} and \code{beta} parameters match values implied in the input. 
+#' in the operating model such that the stock-recruit \code{alpha} and \code{beta} parameters match values implied in the input.
 #' \item \code{Perr} recruitment standard deviation (lognormal distribution) for sampling future recruitment
-#' \item \code{AC} autocorrelation in future recruitment deviates. 
+#' \item \code{AC} autocorrelation in future recruitment deviates.
 #' }
 #' @details Use a seed for the random number generator to sample future recruitment.
 #' @return An object of class \linkS4class{OM}.
@@ -65,14 +65,14 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
     if(do_slot) slot(OM,paramnam)<-rep(param[1],2)
     OM
   }
-  
+
   dots <- list(...) #R0, phi0
 
   cond <- vapply(list(faa, waa, Mataa, Maa, laa), function(x) all(dim(naa) == dim(x)), logical(1))
   if(!length(cond) || any(is.na(cond)) || any(!cond)) {
     stop('One or more of the following arrays do not have the same shape: naa, faa, waa, Mataa, Maa, Laa')
   }
-  
+
   if(!is.null(dots$fecaa)) {
     fecaa <- dots$fecaa
     if(!all(dim(naa) == dim(fecaa))) stop("Dimension of fecaa not equal to that for naa")
@@ -82,43 +82,44 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
 
   nyears<-dim(naa)[3]
   nsim<-dim(naa)[1]
-  
+
   if(recind==1) {  # create a dummy age 0 dimension to the various arrays
-    
+
     ageind<-1:dim(naa)[2]
     dims<-c(nsim,1,nyears)
     zeros<-array(0,dims)
-    
+
     # N0 back inputed
     rec<-naa[,1,2:nyears]#*exp(Maa[,1,2:nyears])
     muR0<-apply(rec,1,mean) # mean R0 is assumed for most recent N0 - will be filled anyway using LowerTri argument
     N0<-array(cbind(rec,muR0),dims)
-    naa<-abind(N0,naa,along=2) 
-    
+    naa<-abind(N0,naa,along=2)
+
     # F, weight, length and maturity assumed to be zero
-    faa<-abind(zeros,faa,along=2) 
+    faa<-abind(zeros,faa,along=2)
     waa<-abind(zeros,waa,along=2)
     Mataa<-abind(zeros,Mataa,along=2)
     laa<-abind(zeros,laa,along=2)
-    
+    fecaa<-abind(zeros,waa,along=2)
+
     # M copied from first year to age zero
     Maa<-abind(array(tiny + .Machine$double.eps,dim(Maa[,1,])),Maa,along=2)
-    
+
     message("Age zero positions for arrays were created with the following assumptions: N(0) = N(1) * exp(M(1)), N0 in most recent year is mean(R0), F(0) = weight(0) = maturity(0) = length(0) = 0, M(0) = M(1)")
-    
+
   }
 
   # Dimensions
   n_age <- dim(naa)[2]
   maxage<-dim(naa)[2] - 1
-  
+
   # Stock-recruit relationship
   if(!is.null(dots$SRrel)) {
     SRrel <- dots$SRrel
   } else {
     SRrel <- 1
   }
- 
+
   # Mine values to spec-out the OM
   if(!is.null(dots$R0)) {
     if(length(dots$R0) == 1) {
@@ -132,19 +133,19 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   if(length(h) == 1) h <- rep(h, nsim)
 
   OM<-new('OM')
-  
+
   surv <- array(1, dim(Maa))
   surv[, -1, ] <- exp(-apply(Maa[, -n_age, ], c(1,3), cumsum)) %>% aperm(c(2,1,3))
   if(plusgroup) {
     surv[, n_age, ] <- surv[, n_age, ]/(1 - exp(-Maa[, n_age, ]))
   }
   SSBpR <- apply(surv * fecaa, c(1, 3), sum)
-  
+
   SSBpR_out <- vapply(1:nsim, function(x) {
     ageM <- min(LinInterp(Mataa[x,, 1], y = 1:n_age, 0.5), maxage - 1)
     SSBpR[x, 1:(ceiling(ageM) + 1)] %>% mean()
   }, numeric(1))
-  
+
   # Recalculate R0 and h based on phi0 to match openMSE
   if(!is.null(dots$phi0)) {
     new_SR <- local({ # BH only
@@ -153,29 +154,29 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
       } else {
         phi0 <- dots$phi0
       }
-      
+
       if(SRrel == 1) {
         Arec <- 4*h/(1-h)/phi0
         Brec <- (5*h-1)/(1-h)/R0/phi0
-        
+
         K <- Arec * SSBpR_out
         h_out <- K/(4 + K)
         R0_out <- (5*h_out-1)/(1-h_out)/Brec/SSBpR_out
       } else {
         Arec <- (5*h)^1.25/phi0
         Brec <- 1.25 * log(5*h)/R0/phi0
-        
+
         h_out <- 0.2 * (Arec * SSBpR_out)^0.8
         R0_out <- 1.25 * log(5 * h_out)/Brec/SSBpR_out
       }
-      
+
       list(h = h_out, R0 = R0_out)
     })
     R0 <- new_SR$R0
     h <- new_SR$h
   }
   SSB0 <- R0 * SSBpR_out
-  
+
   SSB <- apply(naa * fecaa, c(1, 3), sum, na.rm = TRUE)
   D <- SSB[,nyears]/SSB0
 
@@ -189,14 +190,14 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   OM@maxage<-maxage
   OM@proyears<-proyears
   OM@interval<-interval
-  
+
   OM <- simup(D, OM)
   hs <- h
   OM <- simup(hs, OM, do_slot = FALSE)
   OM@h <- rep(hs[1], 2)
   OM <- simup(R0, OM)
   OM@Size_area_1 <- OM@Frac_area_1 <- OM@Prob_staying <- rep(0.5, 2)
-  
+
   # 'Contant terms'
   LenCV=0.1
   OM<-simup(LenCV,OM)
@@ -255,7 +256,7 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   OM@cpars$Mat_age <- Mat_age
   OM@cpars$V <- V
   OM@cpars$Find <- Find
-  
+
   if(!is.null(dots$fecaa)) {
     Fec_age[,,1:nyears] <- fecaa
     OM@cpars$Fec_age <- parmu(Fec_age,nyears,proyears,nyr_par_mu)
@@ -263,7 +264,7 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
 
   # Deterministic Recruitment
   if(SRrel == 1) {
-    recd <- vapply(1:nsim, function(x) (0.8*R0[x]*h[x]*SSB[x, ])/(0.2*SSB0[x]*(1-h[x]) + (h[x]-0.2)*SSB[x, ]), 
+    recd <- vapply(1:nsim, function(x) (0.8*R0[x]*h[x]*SSB[x, ])/(0.2*SSB0[x]*(1-h[x]) + (h[x]-0.2)*SSB[x, ]),
                    numeric(nyears)) %>% t()
   } else {
     recd <- local({
@@ -275,7 +276,7 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
 
   recdevs <- log(naa[, 1, ]/recd) # age zero
   recdevs[is.na(recdevs)] <- 0
-  
+
   if(!is.null(dots$Perr)) {
     if(length(dots$Perr) == 1) {
       procsd <- rep(dots$Perr, nsim)
@@ -285,7 +286,7 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   } else {
     procsd <- apply(recdevs, 1, sd)
   }
-  
+
   if(!is.null(dots$AC)) {
     if(length(dots$AC) == 1) {
       AC <- rep(dots$AC, nsim)
@@ -308,7 +309,7 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   }
   Perr[, maxage + 2:(nyears - LowerTri)] <- recdevs[, 2:(nyears - LowerTri)]
   Perr_pro <- sample_recruitment(Perr_hist = Perr, proyears = proyears + LowerTri, procsd = procsd, AC = AC)
-  
+
   OM@cpars$Perr_y <- exp(cbind(Perr, Perr_pro))
   OM@Perr <- rep(mean(procsd),2)
   OM@AC <- rep(mean(AC), 2)
@@ -322,7 +323,7 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   OM@t0 <- rep(0,2)
   OM@DR <- rep(0,2)
   OM@MPA<-FALSE
-  
+
   if(!plusgroup) OM@cpars$plusgroup <- 0L
 
   if(report){ # Produce a quick diagnostic plot of OM vs VPA numbers at age
@@ -330,10 +331,10 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
     if(!silent) message("\nRunning historical simulations to compare VPA output and OM conditioning...\n")
 
     Hist <- runMSE(OM, Hist = TRUE, silent = TRUE)
-    
+
     nc<-ceiling((maxage+1)/3)
     nr<-ceiling((maxage+1)/nc)
-    
+
     old_par <- par(no.readonly = TRUE)
     on.exit(par(old_par))
     par(mfrow=c(nr,nc),mai=c(0.4,0.4,0.3,0.05),omi=c(0.25,0.25,0.01,0.01))
@@ -397,9 +398,9 @@ VPA2OM <- Assess2OM
 #' @param naa Numbers-at-age by sex `[first age is age zero]`. Four-dimensional numeric array `[sim, ages, year, p]`. `[p]` indexes the population, where
 #' `[p = 1]` for females and `[p = 2]` for males.
 #' @param faa Fishing mortality rate-at-age by sex and fleet `[first age is age zero]`. Five-dimensional numeric array `[sim, ages, year, p, f]` where `[f]` indexes fishery fleet.
-#' @param waa Weight-at-age `[first age is age zero]`. Four-dimensional numeric array `[sim, ages, year, p]`. 
+#' @param waa Weight-at-age `[first age is age zero]`. Four-dimensional numeric array `[sim, ages, year, p]`.
 #' @param Mataa  Maturity (spawning fraction)-at-age `[first age is age zero]`. Four-dimensional numeric array  `[sim, ages, year, p]`.
-#' @param Maa Natural mortality rate-at-age `[first age is age zero]`. Four-dimensional numeric array `[sim, ages, year, p]`. 
+#' @param Maa Natural mortality rate-at-age `[first age is age zero]`. Four-dimensional numeric array `[sim, ages, year, p]`.
 #' @param laa Length-at-age `[first age is age zero]`. Four-dimensional numeric array `[sim, ages, year, p]`.
 #' @param fecaa Fecundity at age `[first age is age zero]`. If missing, default fecundity is the product of maturity and weight at age.
 #' @param nyr_par_mu Positive integer. The number of recent years that natural mortality, age vulnerability, weight, length and maturity parameters are averaged over for defining future projection conditions.
@@ -414,11 +415,11 @@ VPA2OM <- Assess2OM
 #' \itemize{
 #' \item \code{SRrel} Stock-recruit relationship. (\code{1} for Beverton-Holt (default), \code{2} for Ricker)
 #' \item \code{R0} unfished recruitment
-#' \item \code{phi0} unfished spawners per recruit associated with R0 and h. With time-varying parameters, openMSE uses the mean phi0 
+#' \item \code{phi0} unfished spawners per recruit associated with R0 and h. With time-varying parameters, openMSE uses the mean phi0
 #' in the first \code{ageM} (age of 50 percent maturity) years for the stock-recruit relationship. \code{Assess2OM} will re-calculate R0 and h
-#' in the operating model such that the stock-recruit \code{alpha} and \code{beta} parameters match values implied in the input. 
+#' in the operating model such that the stock-recruit \code{alpha} and \code{beta} parameters match values implied in the input.
 #' \item \code{Perr} recruitment standard deviation (lognormal distribution) for sampling future recruitment
-#' \item \code{AC} autocorrelation in future recruitment deviates. 
+#' \item \code{AC} autocorrelation in future recruitment deviates.
 #' }
 #' @details Use a seed for the random number generator to sample future recruitment.
 #' @return An object of class \linkS4class{MOM}.
@@ -437,38 +438,38 @@ Assess2MOM <- function(Name = "MOM created by Assess2MOM",
   ny <- dim(naa)[3]
   nf <- dim(faa)[5]
   if (!silent) message("A ", np, "-sex MOM will be created with ", nf, " fishing fleets and ", ny, " historical years.")
-  
+
   if (inherits(Obs, "Obs")) Obs <- replicate(nf, Obs)
   if (inherits(Imp, "Imp")) Imp <- replicate(nf, Imp)
-  
+
   if (missing(fecaa)) fecaa <- Mataa * waa
-  
+
   OMs <- lapply(1:np, function(p) {
     lapply(1:nf, function(f) {
       Assess2OM(Name="A fishery made by VPA2OM",
                 proyears = proyears, interval = interval, CurrentYr = CurrentYr,
                 h = h, Obs = Obs[[f]], Imp = Imp[[f]],
-                naa = naa[, , , p], 
-                faa = faa[, , , p, f], 
-                waa = waa[, , , p], 
-                Mataa = Mataa[, , , p], 
-                Maa = Maa[, , , p], 
+                naa = naa[, , , p],
+                faa = faa[, , , p, f],
+                waa = waa[, , , p],
+                Mataa = Mataa[, , , p],
+                Maa = Maa[, , , p],
                 laa = laa[, , , p],
-                nyr_par_mu = nyr_par_mu, 
+                nyr_par_mu = nyr_par_mu,
                 LowerTri = LowerTri,
-                recind = recind, 
-                plusgroup = plusgroup, 
-                altinit = altinit, 
+                recind = recind,
+                plusgroup = plusgroup,
+                altinit = altinit,
                 fixq1 = fixq1,
                 report = FALSE, # Plots will be inaccurate anyway
-                silent = TRUE, 
-                fecaa = fecaa[, , , p], 
-                ...) 
+                silent = TRUE,
+                fecaa = fecaa[, , , p],
+                ...)
     })
   })
-  
+
   MOM <- suppressMessages(new("MOM"))
-  
+
   slot_intersect <- intersect(slotNames("MOM"), slotNames("OM"))
   for(i in slot_intersect) slot(MOM, i) <- slot(OMs[[1]][[1]], i)
   MOM@Name <- Name
@@ -481,7 +482,7 @@ Assess2MOM <- function(Name = "MOM created by Assess2MOM",
       return(cp)
     })
   })
-  
+
   MOM@Stocks <- lapply(1:np, function(p) {
     ss <- SubOM(OMs[[p]][[1]], "Stock")
     if (np == 1) {
@@ -493,7 +494,7 @@ Assess2MOM <- function(Name = "MOM created by Assess2MOM",
     }
     return(ss)
   })
-    
+
   MOM@Fleets <- lapply(1:np, function(p) {
     lapply(1:nf, function(f) {
       ff <- SubOM(OMs[[p]][[f]], "Fleet")
@@ -501,18 +502,18 @@ Assess2MOM <- function(Name = "MOM created by Assess2MOM",
       return(ff)
     })
   })
-  
+
   MOM@Obs <- lapply(1:np, function(p) Obs)
   MOM@Imps <- lapply(1:np, function(p) Imp)
-  
+
   MOM@CatchFrac <- lapply(1:np, function(p) {
     Z <- apply(faa[, , ny, p, ], 1:2, sum) + Maa[, , ny, p] # nsim x n_age
-    CAA <- sapply(1:nf, function(f) naa[, , ny, p] * faa[, , ny, p, f] * (1 - exp(-Z))/Z, 
+    CAA <- sapply(1:nf, function(f) naa[, , ny, p] * faa[, , ny, p, f] * (1 - exp(-Z))/Z,
                   simplify = "array") # nsim x n_age x nf
     CB <- apply(CAA * replicate(nf, waa[, , ny, p]), c(1, 3), sum)
     apply(CB, 1, function(x) x/sum(x))
   })
-  
+
   if (np == 2) {
     if (!silent) message("Stock recruit parameters based on female biology and recruitment predicted by female SSB.")
     MOM@SexPars <- list(SSBfrom = matrix(c(1, 0), 2, 2, byrow = TRUE))
