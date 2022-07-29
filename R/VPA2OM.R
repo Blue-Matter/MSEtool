@@ -100,7 +100,7 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
     waa<-abind(zeros,waa,along=2)
     Mataa<-abind(zeros,Mataa,along=2)
     laa<-abind(zeros,laa,along=2)
-    fecaa<-abind(zeros,waa,along=2)
+    fecaa<-abind(zeros,fecaa,along=2)
 
     # M copied from first year to age zero
     Maa<-abind(array(tiny + .Machine$double.eps,dim(Maa[,1,])),Maa,along=2)
