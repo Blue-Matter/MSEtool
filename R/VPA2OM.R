@@ -234,9 +234,20 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   M_ageArray[,,1:nyears]<-Maa
   Len_age[,,1:nyears]<-laa
   Mat_age[,,1:nyears]<-Mataa
-  Fmax<-aperm(array(rep(Find,n_age),c(nsim,nyears,n_age)),c(1,3,2))
+  Fmax <-aperm(array(rep(Find,n_age),c(nsim,nyears,n_age)),c(1,3,2))
   V[,,1:nyears]<-faa/Fmax
-
+  
+  adjustV <- function(Vi) {
+    nan.ind <- apply(Vi, 2, max) %>% is.nan() %>%  which()
+    if (length(nan.ind)>0) {
+      non.nan.ind <- max(nan.ind)+1
+      Vi[, nan.ind] <- Vi[, non.nan.ind]  
+    }
+    Vi
+  }
+  V <- sapply(1:nsim, function(i) adjustV(V[i,,]), simplify = 'array') %>% 
+    aperm(., c(3,1,2))
+  
   # Future filling
   parmu<-function(arr,nyears,proyears,nyr_par_mu){ # function for calculation mean values over last nyr_par_mu years
     arr[,,nyears+(1:proyears)]<-array(rep(apply(arr[,,nyears-(0:(nyr_par_mu-1))],1:2,mean),proyears),c(dim(arr)[1:2],proyears))
@@ -467,7 +478,8 @@ Assess2MOM <- function(Name = "MOM created by Assess2MOM",
                 ...)
     })
   })
-
+  
+  
   MOM <- suppressMessages(new("MOM"))
 
   slot_intersect <- intersect(slotNames("MOM"), slotNames("OM"))
@@ -511,7 +523,7 @@ Assess2MOM <- function(Name = "MOM created by Assess2MOM",
     CAA <- sapply(1:nf, function(f) naa[, , ny, p] * faa[, , ny, p, f] * (1 - exp(-Z))/Z,
                   simplify = "array") # nsim x n_age x nf
     CB <- apply(CAA * replicate(nf, waa[, , ny, p]), c(1, 3), sum)
-    apply(CB, 1, function(x) x/sum(x))
+    t(apply(CB, 1, function(x) x/sum(x)))
   })
 
   if (np == 2) {
