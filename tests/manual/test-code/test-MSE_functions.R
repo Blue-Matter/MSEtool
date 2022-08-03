@@ -39,6 +39,10 @@ testthat::test_that("joinMSE", {
   testthat::expect_error(newMSE <<- joinMSE(list(t1, t2)), NA)
 })
 
+testthat::test_that("addMPs", {
+  testthat::expect_error(addMPs(list(MSE, MSE)), NA)
+})
+
 testthat::test_that("joinMSE returns same object", {
   testthat::expect_true(all(summary(newMSE, silent=TRUE) == summary(MSE, silent=TRUE)))
 })
