@@ -55,7 +55,9 @@
 <code>runMSE</code> can use the split-apply-combine technique to run projections in parallel with argument <code>parallel = "sac"</code>. Implementation details and notable issues are documented in the help doc <code><a href="../reference/runMSE.html">?runMSE</a></code>. This is the fastest method for running simulations but may not be suitable for all operating models and it may be more difficult to troubleshoot errors.</li></ul></div>
 <div class="section level3">
 <h3 id="minor-changes-3-5-1">Minor changes<a class="anchor" aria-label="anchor" href="#minor-changes-3-5-1"></a></h3>
-<ul><li>removed duplicated information in <code>multiHist</code> object (now only returns biological information for fleet=1)</li>
+<ul><li>minor patch in <code>Assess2OM</code>
+</li>
+<li>removed duplicated information in <code>multiHist</code> object (now only returns biological information for fleet=1)</li>
 <li>patch to <code>gettaxa</code> function for species that are found in FishBase database but not in FishLife database</li>
 <li>update <code>joinData</code>, <code>joinHist</code>, <code>joinMSE</code>, and <code>addMPs</code> functions</li>
 <li>
