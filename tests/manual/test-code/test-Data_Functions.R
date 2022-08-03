@@ -9,7 +9,7 @@ Dat <- avail('Data')
 Dat <- Dat[!Dat %in% c("SimulatedData", "Simulation_1")]
 
 for (dat in Dat) {
-  testthat::test_that(paste("runMP, Can, Cant, Needed, Sense, TAC, work with ", dat), {
+  testthat::test_that(paste("runMP, Can, Cant, Needed, Sense, TAC, and joinData work with ", dat), {
     datobj <- get(dat)
     cans <- Can(datobj)
     cants <- Cant(datobj)
@@ -21,6 +21,7 @@ for (dat in Dat) {
     # num <- which(MPtype(out@MPs)[,2]=='Output')
     # testthat::expect_error(Sense(out, out@MPs[num[1]]), NA)
     testthat::expect_error(TAC(datobj), NA)
+    testthat::expect_error(joinData(list(datobj, datobj)), NA)
   })
 }
 

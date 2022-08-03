@@ -3,8 +3,12 @@ context("Test MSE_functions")
 library(openMSE)
 MPs <- avail("MP", 'DLMtool')
 
+Hist <- runMSE(testOM, Hist = TRUE, silent = TRUE)
 MSE <- runMSE(testOM, MPs=MPs, checkMPs = FALSE)
 
+testthat::test_that("joinHist", {
+  testthat::expect_error(joinHist(list(Hist, Hist)), NA)
+})
 
 testthat::test_that("Converge", {
   testthat::expect_error(Converge(MSE), NA)
