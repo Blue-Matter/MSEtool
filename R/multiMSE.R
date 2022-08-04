@@ -487,7 +487,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   # Tries 'ntrials' times and then alerts user
   fracD <- 0.05; ntrials <- 50
   if (!is.null(control$ntrials)) ntrials <- control$ntrials
-  if (!is.null(control$ntrials)) fracD <- control$fracD
+  if (!is.null(control$fracD)) fracD <- control$fracD
 
   if (length(probQ) > 0) {
     Err <- TRUE

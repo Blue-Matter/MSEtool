@@ -511,7 +511,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
 
   fracD <- 0.05; ntrials <- 50
   if (!is.null(control$ntrials)) ntrials <- control$ntrials
-  if (!is.null(control$ntrials)) fracD <- control$fracD
+  if (!is.null(control$fracD)) fracD <- control$fracD
 
   # If q has hit bound, re-sample depletion and try again. Tries 'ntrials' times and then alerts user
   if (length(probQ) > 0) {
