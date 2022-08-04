@@ -893,12 +893,19 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
 
 calcF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, Asize, maxage, nareas,
                   M_ageArray, nyears, y, control) {
+  
+  maxiterF <- 300
+  if(!is.null(control$maxiterF) && is.numeric(control$maxiterF)) maxiterF <- as.integer(control$maxiterF)
+  
+  tolF <- 1e-4
+  if(!is.null(control$tolF) && is.numeric(control$tolF)) tolF <- control$tolF
+  
   ct <- TACusedE[x]
   ft <- ct/sum(Biomass_P[x,,y,] * V_P[x,,y+nyears]) # initial guess
   fishdist[x,] <- fishdist[x,]/sum(fishdist[x,])
 
   if (ft <= 1E-9) return(tiny)
-  for (i in 1:300) {
+  for (i in 1:maxiterF) {
     Fmat <- ft * matrix(V_P[x,,y+nyears], nrow=maxage+1, ncol=nareas) *
       matrix(fishdist[x,], maxage+1, nareas, byrow=TRUE)/
       matrix(Asize[x,], maxage+1, nareas, byrow=TRUE) # distribute F over age and areas
@@ -926,7 +933,7 @@ calcF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, Asize, maxage, 
     if (dct<0) break
     
     ft <-  ft - (pct - ct)/(0.5*dct)
-    if (abs(pct - ct)/ct<1E-4) break
+    if (abs(pct - ct)/ct < tolF) break
   }
   ft
 }
