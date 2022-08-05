@@ -544,9 +544,21 @@ Sub <- function(MSEobj, MPs = NULL, sims = NULL, years = NULL) {
     }
 
   }
-
+  
+  SubSPR <- lapply(MSEobj@SPR, function(x) x[SubIts, SubMPs, Years, drop=FALSE])
+  
   subMSElist <- MSEobj@PPD[SubMPs] # doesn't subset Data by years or simulations
+  
+  if(length(MSEobj@Misc$extended)) {
+    
+    Subextended <- lapply(MSEobj@Misc$extended, function(x) {
+      x[SubIts, , SubMPs, c(1:MSEobj@nyears, MSEobj@nyears+Years), , drop=FALSE]
+    })
 
+  } else {
+    Subextended <- list()
+  }
+  
   subMSE <- new("MSE",
                 Name = MSEobj@Name,
                 nyears=MSEobj@nyears,
@@ -563,7 +575,7 @@ Sub <- function(MSEobj, MPs = NULL, sims = NULL, years = NULL) {
                 SSB=MSEobj@SSB[SubIts, SubMPs,  Years, drop=FALSE],
                 VB=MSEobj@VB[SubIts, SubMPs,  Years, drop=FALSE],
                 FM=MSEobj@FM[SubIts, SubMPs,  Years, drop=FALSE],
-                SPR=list(),
+                SPR=SubSPR,
                 Catch=MSEobj@Catch[SubIts, SubMPs,  Years, drop=FALSE],
                 Removals=MSEobj@Removals[SubIts, SubMPs,  Years, drop=FALSE],
                 Effort=MSEobj@Effort[SubIts, SubMPs,  Years, drop=FALSE],
@@ -576,8 +588,12 @@ Sub <- function(MSEobj, MPs = NULL, sims = NULL, years = NULL) {
                 SSB_hist=MSEobj@SSB_hist[SubIts, , drop=FALSE],
                 Hist=MSEobj@Hist,
                 PPD=subMSElist,
-                Misc=MSEobj@Misc)
-
+                Misc=list(extended = Subextended))
+  
+  attr(subMSE, "version") <- packageVersion("MSEtool")
+  attr(subMSE, "date") <- date()
+  attr(subMSE, "R.version") <- R.version
+  
   subMSE
 }
 
