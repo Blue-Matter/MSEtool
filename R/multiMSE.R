@@ -1050,7 +1050,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   DataList <- new('list')
   for (p in 1:np) {
     DataList[[p]] <- vector('list', nf)
-    if (!silent) message('Generating historical data for ', Snames[p])
+    if (!silent) message('Generating historical data for', Snames[p])
     for (f in 1:nf) {
       ObsPars[[p]][[f]]$Sample_Area <- Sample_Area # add to Obs Pars
       Data <- makeData(Biomass=Biomass[,p,,,],
