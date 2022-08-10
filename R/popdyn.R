@@ -159,6 +159,17 @@ optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxage, R0, SR
   }
 
   boundsF <- c(1E-4, 3)
+  
+  # check for M = 0 in MOMs where maxage isn't the same for each stock
+  if (max(which(M_at_Age!=0)) != (maxage+1)) {
+    ind <- which(M_at_Age>0)
+    M_at_Age <- M_at_Age[ind]
+    Wt_at_Age <- Wt_at_Age[ind]
+    Mat_at_Age <- Mat_at_Age[ind]
+    Fec_at_Age <- Fec_at_Age[ind]
+    V_at_Age <- V_at_Age[ind]
+    maxage <- length(ind)-1
+  }
 
   doopt <- optimise(MSYCalcs, log(boundsF), M_at_Age, Wt_at_Age, Mat_at_Age,
                     Fec_at_Age, V_at_Age, maxage, R0[x], SRrel[x], hs[x], SSBpR[x, 1], opt=1,
@@ -197,6 +208,17 @@ per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxag
     V_at_Age <- apply(V[x,, yr.ind], 1, mean)
   }
 
+  # check for M = 0 in MOMs where maxage isn't the same for each stock
+  if (max(which(M_at_Age!=0)) != (maxage+1)) {
+    ind <- which(M_at_Age>0)
+    M_at_Age <- M_at_Age[ind]
+    Wt_at_Age <- Wt_at_Age[ind]
+    Mat_at_Age <- Mat_at_Age[ind]
+    Fec_at_Age <- Fec_at_Age[ind]
+    V_at_Age <- V_at_Age[ind]
+    maxage <- length(ind)-1
+  }
+  
   boundsF <- c(1E-3, 3)
 
   F_search <- exp(seq(log(min(boundsF)), log(max(boundsF)), length.out = 50))
@@ -1071,6 +1093,18 @@ CalcSPReq <- function(FM, StockPars, n_age, nareas, nyears, proyears, nsim, Hist
   Wt_age <- replicate(nareas, StockPars$Wt_age[, , yind])
   Mat_age <- replicate(nareas, StockPars$Mat_age[, , yind])
   Fec_age <- replicate(nareas, StockPars$Fec_Age[, , yind])
+
+  # check for M == 0 in MOMs with different maxage 
+  ind <- which(M[1,,1,1]==0)
+  if (length(ind)>0) {
+    ind2 <- which(M[1,,1,1]!=0)
+    M <- M[,ind2,,]
+    Wt_age <- Wt_age[,ind2,,]
+    Mat_age <- Mat_age[,ind2,,]
+    Fec_age <-Fec_age[,ind2,,]
+    FM <- FM[,ind2,,]
+    n_age <- dim(M)[2]
+  }
   Z <- FM + M
   
   initdist <- replicate(n_y, StockPars$initdist[, 1, ]) %>% aperm(c(1, 3, 2))
@@ -1100,6 +1134,18 @@ CalcSPRdyn <- function(FM, StockPars, n_age, nareas, nyears, proyears, nsim, His
   Wt_age <- replicate(nareas, StockPars$Wt_age[, , yind])
   Mat_age <- replicate(nareas, StockPars$Mat_age[, , yind])
   Fec_age <- replicate(nareas, StockPars$Fec_Age[, , yind])
+  
+  # check for M == 0 in MOMs with different maxage 
+  ind <- which(M[1,,1,1]==0)
+  if (length(ind)>0) {
+    ind2 <- which(M[1,,1,1]!=0)
+    M <- M[,ind2,,]
+    Wt_age <- Wt_age[,ind2,,]
+    Mat_age <- Mat_age[,ind2,,]
+    Fec_age <-Fec_age[,ind2,,]
+    FM <- FM[,ind2,,]
+    n_age <- dim(M)[2]
+  }
   Z <- FM + M
   
   initdist <- replicate(n_y, StockPars$initdist[, 1, ]) %>% aperm(c(1, 3, 2))

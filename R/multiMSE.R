@@ -194,10 +194,13 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     surv <- matrix(1, nsim, n_age)
     surv[, 2:n_age] <- t(exp(-apply(StockPars[[p]]$M_ageArray[,,1], 1, cumsum)))[, 1:(n_age-1)]
 
+    lst.age <- max(which(StockPars[[p]]$M_ageArray[1,,1]>0))
     if (plusgroup[p]) {
-      surv[,n_age] <- surv[,n_age]/(1-exp(-StockPars[[p]]$M_ageArray[,n_age,1]))
+      surv[,lst.age] <- surv[,lst.age]/(1-exp(-StockPars[[p]]$M_ageArray[,lst.age,1]))
     }
-
+    if (lst.age<n_age) 
+      surv[, (lst.age+1):n_age] <-0  
+    
     # predicted Numbers of mature ages in first year
     Nfrac <- surv * StockPars[[p]]$Mat_age[,,1] * HermFrac[,p,]
 
@@ -233,9 +236,13 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     surv <- array(1, dim=c(nsim, n_age, nyears+proyears))
     surv[, 2:n_age, ] <- aperm(exp(-apply(StockPars[[p]]$M_ageArray, c(1,3), cumsum))[1:(n_age-1), ,],
                                c(2,1,3))
+    
+    lst.age <- max(which(StockPars[[p]]$M_ageArray[1,,1]>0))
     if (plusgroup[p]) {
-      surv[,n_age, ] <- surv[,n_age,]/(1-apply(-StockPars[[p]]$M_ageArray[,n_age,], 2, exp))
+      surv[,lst.age, ] <- surv[,lst.age,]/(1-apply(-StockPars[[p]]$M_ageArray[,lst.age,], 2, exp))
     }
+    if (lst.age<n_age) 
+      surv[,(lst.age+1):n_age,] <- 0
     Nfrac <- surv * StockPars[[p]]$Mat_age  # predicted numbers of mature ages in all years
 
     # indices for all years
@@ -423,10 +430,12 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       if (!is.null(SampCpars[[p]][[f]]$qs)) {
         optD <- FALSE
         qs[,p] <- SampCpars[[p]][[f]]$qs
+        if (all(SampCpars[[p]][[f]]$qs==0)) qfrac[, p, f] <- 0
         FleetPars[[p]][[f]]$qs <- qs[, p] * qfrac[, p, f]
       }
     }
   }
+  qs[qs==0] <- 1
 
   bounds <- c(0.0001, 15) # q bounds for optimizer
   if (optD) {
@@ -489,7 +498,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   if (!is.null(control$ntrials)) ntrials <- control$ntrials
   if (!is.null(control$fracD)) fracD <- control$fracD
 
-  if (length(probQ) > 0) {
+  if (length(probQ) > 0 & optD) {
     Err <- TRUE
     if(!silent) message(Nprob,
                         ' simulations have final biomass that is not ',
@@ -620,25 +629,28 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                       plusgroup=plusgroup)
 
   }
-
+  
   N <- aperm(array(as.numeric(unlist(histYrs[1,], use.names=FALSE)),
                    dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
-
+  
   Biomass <- aperm(array(as.numeric(unlist(histYrs[2,], use.names=FALSE)),
                          dim=c(np ,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
 
   SSN <- aperm(array(as.numeric(unlist(histYrs[3,], use.names=FALSE)),
                      dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
+  
   SSB <- aperm(array(as.numeric(unlist(histYrs[4,], use.names=FALSE)),
                      dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
 
   VBiomass <- aperm(array(as.numeric(unlist(histYrs[5,], use.names=FALSE)),
                           dim=c(np, n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
+  
   FM <- aperm(array(as.numeric(unlist(histYrs[6,], use.names=FALSE)),
                     dim=c(np,nf,n_age, nyears, nareas, nsim)), c(6,1,2,3,4,5))
+  
   FMret <- aperm(array(as.numeric(unlist(histYrs[7,], use.names=FALSE)),
                        dim=c(np,nf,n_age, nyears, nareas, nsim)), c(6,1,2,3,4,5))
-
+  
   Linfarray <- aperm(array(as.numeric(unlist(histYrs[8,], use.names=FALSE)),
                            dim=c(np, nyears+1, nsim)), c(3,1,2))
 
@@ -966,7 +978,8 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   Biomass_C[CNind] <- N[Nind] * Wt_age_C[CNind]
 
   CB[CNind] <- Biomass_C[CNind]*(1-exp(-Z[Nind]))*(FM[CNind]/Z[Nind])
-  
+  CB[!is.finite(CB)] <- 0 # fix for Z=0
+
   if(!is.null(control$checks)) {
     for(p in 1:np){
       Cp <- local({
@@ -985,9 +998,10 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   
   # Calculate retained-at-age
   Cret[CNind] <- N[Nind] * (1-exp(-Z[Nind])) * (FMret[CNind]/Z[Nind]) #apply(Cret,1:5,sum)
-  Cret[is.na(Cret)] <- 0
+  Cret[!is.finite(Cret)] <- 0
 
   CBret[CNind] <- Biomass_C[CNind] * (1-exp(-Z[Nind])) * (FMret[CNind]/Z[Nind])
+  CBret[!is.finite(CBret)] <- 0
 
   # Add to FleetPars
   for (p in 1:np) {

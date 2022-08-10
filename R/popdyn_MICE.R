@@ -327,7 +327,18 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
   Nnext <- sapply(1:np, function(p) {
     popdynOneTScpp(nareas, maxage, Ncurr = Ncur[p, , ], Zcurr = Zcur[p, , ], plusgroup = plusgroup[p])
   }, simplify = "array") %>% aperm(c(3, 1, 2)) # np x n_age x nareas
+
   Nnext[, 1, ] <- 0
+  
+  # hack for 0-filled M-at-age
+  for (p in 1:np) {
+    zero.m.ind <- which(M_agecur[p,]==0)
+    if (length(zero.m.ind)>0) {
+      # set N above maxage for this stock to zero
+      Nnext[p,min(zero.m.ind)-1,] <- Nnext[p,min(zero.m.ind)-1,] + apply(Nnext[p,zero.m.ind,], 2, sum)
+      Nnext[p,zero.m.ind,] <- 0 
+    }
+  }
   
   # Re-assign abundance due to hermaphroditism
   if (length(SexPars$Herm)) {
