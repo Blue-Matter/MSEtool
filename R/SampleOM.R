@@ -1075,10 +1075,16 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
         for (s in 1:nsim) {
           xout <- seq(1, n_age, by=0.1)
           tt <- approx(V[s,,yr], xout=xout)
-          age5 <- tt$x[min(which(tt$y >=0.05))]-1
-          L5_y[s,yr] <- VB(StockPars$Linfarray[s,yr],
-                           StockPars$Karray[s,yr],
-                           StockPars$t0array[s,yr], age5)
+          if (all(tt$y<0.05)) {
+            age5 <- 0
+            L5_y[s,yr] <- tiny
+          } else {
+            age5 <- tt$x[min(which(tt$y >=0.05))]-1
+            L5_y[s,yr] <- VB(StockPars$Linfarray[s,yr],
+                             StockPars$Karray[s,yr],
+                             StockPars$t0array[s,yr], age5)
+          }
+    
           ageFS <- tt$x[which.max(tt$y)]-1
           if (ageFS == age5) ageFS <- age5 + 1
           LFS_y[s, yr] <- VB(StockPars$Linfarray[s,yr],
@@ -1221,10 +1227,16 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
         for (s in 1:nsim) {
           xout <- seq(1, n_age, by=0.1)
           tt <- approx(retA[s,,yr], xout=xout)
-          age5 <- tt$x[min(which(tt$y >=0.05))]-1
-          LR5_y[s,yr] <- VB(StockPars$Linfarray[s,yr],
-                            StockPars$Karray[s,yr],
-                            StockPars$t0array[s,yr], age5)
+          tt <- approx(V[s,,yr], xout=xout)
+          if (all(tt$y<0.05)) {
+            age5 <- 0
+            LR5_y[s,yr] <- tiny
+          } else {
+            age5 <- tt$x[min(which(tt$y >=0.05))]-1
+            LR5_y[s,yr] <- VB(StockPars$Linfarray[s,yr],
+                             StockPars$Karray[s,yr],
+                             StockPars$t0array[s,yr], age5)
+          }
           ageFS <- tt$x[which.max(tt$y)]-1
           if (ageFS == age5) ageFS <- age5 + 1
           LFR_y[s, yr] <- VB(StockPars$Linfarray[s,yr],
@@ -1351,8 +1363,7 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
     fails <- which(maxV < 0.01, arr.ind = TRUE)
     sims <- unique(fails[,1])
     yrs <- unique(fails[,2])
-    warning("Vulnerability (V) is <0.01 for all ages in:\nsims:", sims, "\nyears:", yrs, "\n", call. = FALSE)
-    # warning('Check selectivity parameters. Is Fleet@isRel set correctly?', call.=FALSE)
+    message_info("Vulnerability (V) is <0.01 for all ages in years:", paste0(yrs, collapse=','), 'in some simulations') 
   }
   Fleetout
 }
