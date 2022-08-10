@@ -393,8 +393,8 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   # ---- SexPars - Update SSB0 and Ricker SRR parameters for male stock ----
   # Other parameters have been updated (R0, h, rec devs) earlier
   if(length(SexPars)) {
-    if (!silent)  message("You have specified sex-specific dynamics, unfished spawning biomass",
-            " and specified stock depletion will be mirrored across sex types according ",
+    if (!silent)  message_info("You have specified sex-specific dynamics, unfished spawning biomass",
+            "and specified stock depletion will be mirrored across sex types according ",
             "to SexPars$SSBfrom")
 
     sexmatches <- sapply(1:nrow(SexPars$SSBfrom), function(x) paste(SexPars$SSBfrom[x, ], collapse = "_"))
@@ -413,7 +413,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     }
     
     if(length(SexPars$Herm)){
-      if (!silent) message("You have specified sequential hermaphroditism (SexPars$Herm).",
+      if (!silent) message_info("You have specified sequential hermaphroditism (SexPars$Herm).",
               "Unfished stock numbers will be calculated from this vector of fractions ",
               "at age. Population dynamics will move individuals from one sex to another.")
     }
@@ -448,7 +448,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 #               "(takes approximately [(nstocks x nfleets)/(9 x number of cores in cluster)]",
 #               " minutes per simulation): about", exp.time, 'minutes')
       if(!silent)
-        message_info("Optimizing for user-specified depletion ",
+        message("Optimizing for user-specified depletion ",
               'using parallel processing',
               'for ', nsim, 'simulations,', np, ' stocks, and ', nf, 'fleets',
               "(could take a while!)")
@@ -463,7 +463,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       exp.time <- round(exp.time,2)
 
       if(!silent)
-        message_info("Optimizing for user-specified depletion ",
+        message("Optimizing for user-specified depletion ",
                 'using a single core',
                 'for ', nsim, 'simulations,', np, ' stocks, and ', nf, 'fleets',
                 "(could take a while!)")
