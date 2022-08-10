@@ -1024,7 +1024,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
       units <- UnitsTab$units[match(AddIunits[i], UnitsTab$n)]
       type <- TypeTab$type[match(AddIndType[i], TypeTab$n)]
 
-      if(msg) message_info("Additional index ", i, ' - ', type, ' stock', paste0(' (', units, ')'))
+      if(msg) message_info("Additional index", i, '-', type, 'stock', paste0('(', units, ')'))
       nyrs <- min(length(RealData@AddInd[1,i,]), nyears)
       ind <- RealData@AddInd[1,i,1:nyrs]
       cv_ind <- RealData@CV_AddInd[1,i,1:nyrs]
@@ -1043,58 +1043,62 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
       }
 
       Data_out@AddIndV[,i,] <- t(replicate(nsim,Ind_V))
-
-      # check dimensions
-      if (!length(Ind_V) == Data_out@MaxAge+1)
-        stop('Vulnerability-at-age for additional index ', i, ' is not length `maxage`+1' )
-
-      # calculate simulated index 
-      if (AddIunits[i]) {
-        if (AddIndType[i]==1) SimIndex <- apply(StockPars$Biomass, c(1, 2, 3), sum) # Total Biomass-based index
-        if (AddIndType[i]==2) SimIndex <- apply(StockPars$SSB, c(1, 2, 3), sum) # Spawning Biomass-based index
-        if (AddIndType[i]==3) SimIndex <- apply(StockPars$VBiomass, c(1, 2, 3), sum) # vuln Biomass-based index
-      } else {
-        if (AddIndType[i]==1) SimIndex <- apply(StockPars$N, c(1, 2, 3), sum) # Total Abundance-based index
-        if (AddIndType[i]==2) SimIndex <- apply(StockPars$N, c(1, 2, 3), sum) * StockPars$Mat_age[,,1:nyears] # Spawning abundance-based index
-        if (AddIndType[i]==3) SimIndex <- apply(StockPars$N, c(1, 2, 3), sum) * FleetPars$V_real[,,1:nyears] # Vulnerable abundance-based index
+      
+      if (!all(is.na(ind))) {
+        # check dimensions
+        if (!length(Ind_V) == Data_out@MaxAge+1)
+          stop('Vulnerability-at-age for additional index ', i, ' is not length `maxage`+1' )
+        
+        # calculate simulated index 
+        if (AddIunits[i]) {
+          if (AddIndType[i]==1) SimIndex <- apply(StockPars$Biomass, c(1, 2, 3), sum) # Total Biomass-based index
+          if (AddIndType[i]==2) SimIndex <- apply(StockPars$SSB, c(1, 2, 3), sum) # Spawning Biomass-based index
+          if (AddIndType[i]==3) SimIndex <- apply(StockPars$VBiomass, c(1, 2, 3), sum) # vuln Biomass-based index
+        } else {
+          if (AddIndType[i]==1) SimIndex <- apply(StockPars$N, c(1, 2, 3), sum) # Total Abundance-based index
+          if (AddIndType[i]==2) SimIndex <- apply(StockPars$N, c(1, 2, 3), sum) * StockPars$Mat_age[,,1:nyears] # Spawning abundance-based index
+          if (AddIndType[i]==3) SimIndex <- apply(StockPars$N, c(1, 2, 3), sum) * FleetPars$V_real[,,1:nyears] # Vulnerable abundance-based index
+        }
+        
+        Ind_V <- matrix(Ind_V, nrow=SimData@MaxAge+1, ncol= nyears)
+        Ind_V <- replicate(nsim, Ind_V) %>% aperm(., c(3,1,2))
+        
+        # apply vulnerability-at-age and sum over age-classes
+        SimIndex <- apply(SimIndex*Ind_V, c(1,3), sum) 
+        
+        # Fit to observed index and generate residuals for projections
+        if (fitbeta) {
+          beta <- rep(NA, nsim)
+        } else {
+          beta <-  ObsPars$AddIbeta[,i]
+        }
+        
+        # Calculate residuals (with or without estimated beta)
+        Res_List <- lapply(1:nsim, function(x) Calc_Residuals(sim.index=SimIndex[x,], 
+                                                              obs.ind=ind,
+                                                              beta=beta[x]))
+        lResids_Hist <- do.call('rbind', lapply(Res_List, '[[', 1))
+        if (fitbeta)
+          ObsPars$AddIbeta[,i] <- as.vector(do.call('cbind', lapply(Res_List, '[[', 2)))
+        
+        if (msg & fitbeta)
+          message_info(paste0('Estimated beta for Additional Index ', i, ':'),
+                       paste0(range(round(ObsPars$AddIbeta[,i],2)), collapse = "-"),
+                       "Use `cpars$AddIbeta` to override")
+        
+        # Calculate statistics
+        Stats_List <- lapply(1:nsim, function(x) Calc_Stats(lResids_Hist[x,]))
+        Stats <- do.call('rbind', Stats_List)
+        
+        # Generate residuals for projections
+        Resid_Hist <- exp(lResids_Hist) # historical residuals in normal space
+        Resid_Proj <- Gen_Residuals(Stats, nsim, proyears)
+        
+        if (fitIerr) ObsPars$AddIerr[,i, ] <- cbind(Resid_Hist, Resid_Proj)
+        ObsPars$AddInd_Stat[[i]] <- Stats[,1:2] # index fit statistics
       }
 
-      Ind_V <- matrix(Ind_V, nrow=SimData@MaxAge+1, ncol= nyears)
-      Ind_V <- replicate(nsim, Ind_V) %>% aperm(., c(3,1,2))
 
-      # apply vulnerability-at-age and sum over age-classes
-      SimIndex <- apply(SimIndex*Ind_V, c(1,3), sum) 
-      
-      # Fit to observed index and generate residuals for projections
-      if (fitbeta) {
-        beta <- rep(NA, nsim)
-      } else {
-        beta <-  ObsPars$AddIbeta[,i]
-      }
-      
-      # Calculate residuals (with or without estimated beta)
-      Res_List <- lapply(1:nsim, function(x) Calc_Residuals(sim.index=SimIndex[x,], 
-                                                            obs.ind=ind,
-                                                            beta=beta[x]))
-      lResids_Hist <- do.call('rbind', lapply(Res_List, '[[', 1))
-      if (fitbeta)
-        ObsPars$AddIbeta[,i] <- as.vector(do.call('cbind', lapply(Res_List, '[[', 2)))
-      
-      if (msg & fitbeta)
-        message_info(paste0('Estimated beta for Additional Index ', i, ':'),
-                paste0(range(round(ObsPars$AddIbeta[,i],2)), collapse = "-"),
-                "Use `cpars$AddIbeta` to override")
-      
-      # Calculate statistics
-      Stats_List <- lapply(1:nsim, function(x) Calc_Stats(lResids_Hist[x,]))
-      Stats <- do.call('rbind', Stats_List)
-      
-      # Generate residuals for projections
-      Resid_Hist <- exp(lResids_Hist) # historical residuals in normal space
-      Resid_Proj <- Gen_Residuals(Stats, nsim, proyears)
-    
-      if (fitIerr) ObsPars$AddIerr[,i, ] <- cbind(Resid_Hist, Resid_Proj)
-      ObsPars$AddInd_Stat[[i]] <- Stats[,1:2] # index fit statistics
     }
   }
 
