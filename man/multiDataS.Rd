@@ -4,12 +4,12 @@
 \alias{multiDataS}
 \title{Combine data among stocks}
 \usage{
-multiDataS(MSElist, StockPars, np, mm, nf, realVB)
+multiDataS(MSElist, Real.Data.Map, np, mm, nf, realVB)
 }
 \arguments{
 \item{MSElist}{A hierarchical list of data objects stock then fleet then MP}
 
-\item{StockPars}{A list of stock parameters}
+\item{Real.Data.Map}{Matrix describing which data are mapped across stocks}
 
 \item{np}{The number of stocks}
 
