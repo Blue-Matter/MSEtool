@@ -794,3 +794,13 @@ join_HistSampPars <- function(Hist_List) {
   
   list(Stock = Stockout, Fleet = Fleetout, Obs = Obsout, Imp = Impout)
 }
+
+
+agg_data <- function(array, out.dim, map.stocks) {
+  # way faster than apply ...
+  out <- array(0, dim=out.dim)
+  for (pp in seq_along(map.stocks)) {
+    out <- out + array[,map.stocks[pp],,,]
+  }
+  out 
+}
