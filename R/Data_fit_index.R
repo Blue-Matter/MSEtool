@@ -20,7 +20,7 @@ Fit_Index <- function(ind_slot='Ind', indcv_slot="CV_Ind", Data_out,
                         VInd = 'VIerr_y')
   
   if (!is.null(SampCpars[[obs_err_var]])) {
-    if (msg) message(paste0(ind_type, ' Observation Error found (cpars$', obs_err_var, ').'), 
+    if (msg) message_info(paste0(ind_type, ' Observation Error found (cpars$', obs_err_var, ').'), 
                      'Not updating observation error.')
     return(list(Data_out=Data_out, ObsPars=ObsPars))
   } 
@@ -48,8 +48,7 @@ Fit_Index <- function(ind_slot='Ind', indcv_slot="CV_Ind", Data_out,
   
   # Calculate Error
   SimBiomass <- apply(StockPars[[biomass_var]], c(1, 3), sum)
-  
-  
+
   # Fit to observed index and generate residuals for projections
   # Calculate residuals (with or without estimated beta)
   Res_List <- lapply(1:nsim, function(x) Calc_Residuals(sim.index=SimBiomass[x,], 
@@ -61,7 +60,7 @@ Fit_Index <- function(ind_slot='Ind', indcv_slot="CV_Ind", Data_out,
     ObsPars[[beta_var]] <- as.vector(do.call('cbind', lapply(Res_List, '[[', 2)))
   
   if (msg & fitbeta)
-    message(paste0('Updating Obs@', beta_var), 'from real index. Range:',
+    message_info(paste0('Updating Obs@', beta_var), 'from real index. Range:',
             paste0(range(round(ObsPars[[beta_var]],2)), collapse = "-"),
             paste0("Use `cpars$", beta_var, "` to override"))
   
