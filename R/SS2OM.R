@@ -501,7 +501,9 @@ calc_weightedmean_c <- function(l) {
 #' @export
 MOM_agg_fleets <- function(MOM) {
   MOM_aggfleet <- MOM
+  n.stock <- length(MOM@Stocks)
   sel_par <- lapply(MOM@cpars, calculate_single_fleet_dynamics)
+  
   fleet <- MOM@Fleets[[1]][[1]]
   MOM_aggfleet@Fleets[[1]] <- list()
   MOM_aggfleet@Fleets[[2]] <- list()
@@ -515,6 +517,7 @@ MOM_agg_fleets <- function(MOM) {
   MOM_aggfleet@cpars[[1]][[1]] <- MOM@cpars[[1]][[1]]
   MOM_aggfleet@cpars[[2]][[1]] <- MOM@cpars[[2]][[1]]
   
+  MOM_aggfleet@CatchFrac <- vector('list', 2)
   # update cpars 
   for (st in 1:2) {
     # update aggegrated selectivity
@@ -523,6 +526,9 @@ MOM_agg_fleets <- function(MOM) {
     }
     # weighted average empirical catch-weight over fleets
     MOM_aggfleet@cpars[[st]][[1]]$Wt_age_C  <- calc_weightedmean_c(MOM@cpars[[st]])
+    MOM_aggfleet@CatchFrac[[st]] <- matrix(apply(MOM@CatchFrac[[st]], 1, sum), nrow=nsim, ncol=1)
+    
   }
+  
   MOM_aggfleet
 }

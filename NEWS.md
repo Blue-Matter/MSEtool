@@ -4,6 +4,8 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 ## New additions
 - `runMSE` can use the split-apply-combine technique to run projections in parallel with argument `parallel = "sac"`. Implementation details and notable issues are documented in the help doc `?runMSE`. This is the fastest method for running simulations but may not be suitable for all operating models and it may be more difficult to troubleshoot errors.
+- added `Real.Data.Map` to `cpars`. This allows mapping of simulated data across stocks in `MOMs` where the real data
+  is not stock-specific; e.g., cases where `MOM` includes male and female stocks but the real data in `cpars$Data` is not sex-specific 
 
 ## Minor changes 
 - minor patch in `Assess2OM`

@@ -215,19 +215,23 @@ ldim<-function(x){
 #' All other observations are for fleet 1 and weighted average across stocks
 #'
 #' @param MSElist A hierarchical list of data objects stock then fleet then MP
-#' @param StockPars A list of stock parameters
+#' @param Real.Data.Map Matrix describing which data are mapped across stocks
 #' @param np The number of stocks
 #' @param mm Integer the MP number
 #' @param nf The number of fleets
 #' @param realVB A matrix of real vulnerable biomass `[nsim,np, year]`
 #' @author T. Carruthers
 #' @export
-multiDataS<-function(MSElist,StockPars,np,mm,nf,realVB){
+multiDataS<-function(MSElist,Real.Data.Map,np,mm,nf,realVB){
+  
+  # check Data mirroring
+  unique.data <- unique(Real.Data.Map[1,]) # currently only works for single fleet 
+  np <- length(unique.data)
   
   # check dimensions of CAL - need to be the same for all stocks/fleets
   nL <- matrix(NA, np,nf)
   # nA <- matrix(NA, np,nf)
-  for (p in 1:np) {
+  for (p in unique.data) {
     for(f in 1:nf) {
       nL[p,f]<-dim(MSElist[[p]][[f]][[mm]]@CAL)[3]
       # nA[p,f]<-dim(MSElist[[p]][[f]][[mm]]@CAA)[3]
@@ -250,7 +254,7 @@ multiDataS<-function(MSElist,StockPars,np,mm,nf,realVB){
   realVBi<-array(NA,c(nsim,nyears,nf*np))
 
   for(f in 1:nf){
-    for(p in 1:np){
+    for(p in unique.data){
       i<-p+(np*(f-1))
 
       DBF[[i]]<-MSElist[[p]][[f]][[mm]]
