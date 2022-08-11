@@ -248,7 +248,6 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   newCV_Cat <- matrix(Data@CV_Cat[,yr.index], nrow=nsim, ncol=length(yind))
   Data@CV_Cat <- cbind(Data@CV_Cat, newCV_Cat)
 
-
   # --- Observed catch ----
   # Simulated observed retained catch (biomass)
   Cobs <- ObsPars$Cobs_y[,nyears + yind] * apply(CBtemp, c(1, 3), sum, na.rm = TRUE)
@@ -379,8 +378,6 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
 
       nas <- which(!is.na(ObsPars$AddIerr[1,i, 1:nyears]))
       if (length(nas)>0) {
-        
-      
         yr.ind <- max(nas)
         
         if (AddIunits[i]) { # Biomass-based index
@@ -453,7 +450,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
     Data@AddInd <- AddInd
     Data@CV_AddInd <- CV_AddInd
   }
-
+  
   # --- Index of recruitment ----
   Recobs <- ObsPars$Recerr_y[, nyears + yind] * apply(array(N_P[, 1, yind, ] *
                                                             Sample_Area$RecInd[,nyears+yind,],
