@@ -52,7 +52,9 @@
 <div class="section level3">
 <h3 id="new-additions-3-5-1">New additions<a class="anchor" aria-label="anchor" href="#new-additions-3-5-1"></a></h3>
 <ul><li>
-<code>runMSE</code> can use the split-apply-combine technique to run projections in parallel with argument <code>parallel = "sac"</code>. Implementation details and notable issues are documented in the help doc <code><a href="../reference/runMSE.html">?runMSE</a></code>. This is the fastest method for running simulations but may not be suitable for all operating models and it may be more difficult to troubleshoot errors.</li></ul></div>
+<code>runMSE</code> can use the split-apply-combine technique to run projections in parallel with argument <code>parallel = "sac"</code>. Implementation details and notable issues are documented in the help doc <code><a href="../reference/runMSE.html">?runMSE</a></code>. This is the fastest method for running simulations but may not be suitable for all operating models and it may be more difficult to troubleshoot errors.</li>
+<li>added <code>Real.Data.Map</code> to <code>cpars</code>. This allows mapping of simulated data across stocks in <code>MOMs</code> where the real data is not stock-specific; e.g., cases where <code>MOM</code> includes male and female stocks but the real data in <code>cpars$Data</code> is not sex-specific</li>
+</ul></div>
 <div class="section level3">
 <h3 id="minor-changes-3-5-1">Minor changes<a class="anchor" aria-label="anchor" href="#minor-changes-3-5-1"></a></h3>
 <ul><li>minor patch in <code>Assess2OM</code>
