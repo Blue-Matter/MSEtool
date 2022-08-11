@@ -464,6 +464,7 @@ single_fleet_V <- function(F_at_age, retA, Find, nsim) {
 }
 
 calc_weightedmean_c <- function(l) {
+  W <- fm <- NUL
   Wt_age_C <- lapply(l, function(x) x$Wt_age_C)
   Find <- lapply(l, function(x) x$Find)
   nyears <- ncol(Find[[1]])
@@ -500,6 +501,7 @@ calc_weightedmean_c <- function(l) {
 #' @describeIn SS2MOM Aggregate all fleets in an MOM object.
 #' @export
 MOM_agg_fleets <- function(MOM) {
+  nsim <- MOM@nsim
   MOM_aggfleet <- MOM
   n.stock <- length(MOM@Stocks)
   sel_par <- lapply(MOM@cpars, calculate_single_fleet_dynamics)
