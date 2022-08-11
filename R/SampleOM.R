@@ -94,7 +94,8 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
   Names <- c('CAL_bins', 'CAL_binsmid', 'binWidth', 'nCALbins',
              'maxage', 'n_age', 'CurrentYr',
              'plusgroup', 'control', 'AddIUnits', 'Data', 'MPA',
-             'nareas', 'Wa', 'Wb', 'maxF', 'Sample_Area', 'Asize')
+             'nareas', 'Wa', 'Wb', 'maxF', 'Sample_Area', 'Asize',
+             'Real.Data.Map')
 
   cpars2 <- cpars
   cpars2[Names] <- NULL
@@ -583,8 +584,14 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
         } else {
           oksims <- which(apply(Mat_age[,,yr], 1, max) > 0.95)
         }
+        if (nsim == 1) {
+          oksims2 <- which(max(Mat_age[1,,yr]) <0.95)
+        } else {
+          oksims2 <- which(apply(Mat_age[,,yr], 1, max) < 0.95)
+        }
         
-        if (length(oksims)<1) {
+        
+        if (length(oksims)<1 | length(oksims2)<1) {
           age95array[,yr] <- 1.5 # set to 1.5 if < 1
         } else {
           age95array[,yr] <- unlist(sapply(1:nsim, function(x)
