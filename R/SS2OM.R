@@ -464,7 +464,7 @@ single_fleet_V <- function(F_at_age, retA, Find, nsim) {
 }
 
 calc_weightedmean_c <- function(l) {
-  W <- fm <- NUL
+  W <- fm <- NULL
   Wt_age_C <- lapply(l, function(x) x$Wt_age_C)
   Find <- lapply(l, function(x) x$Find)
   nyears <- ncol(Find[[1]])
