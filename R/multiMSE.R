@@ -1371,7 +1371,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       MPrefs[] <- MPs
     }
     if ('MP' %in% MP_class) {
-      if (!silent) message_info("Complex mode:\nYou have specified a vector of MPs rather than a ",
+      if (!silent) message_info("Complex mode:\nYou have specified a vector of MPs rather than a",
               "list of MPs, one list position for MP type. The same MP will",
               "be applied to the aggregate data for all stocks and fleets.",
               "The MP will, for example, be used to set a single TAC for all",
@@ -1389,8 +1389,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   if (methods::is(MPs,'list') && 'unknown' %in% MPcond) {
 
     if(identical(ldim(MPs), ldim(Fleets))){
-      if (!silent) message("Byfleet mode: you have specified an MP for each stock and fleet. ",
-              "Only fleet-specific data (e.g. catches and indices) will be used to set ",
+      if (!silent) message_info("Byfleet mode: you have specified an MP for each stock and fleet.",
+              "Only fleet-specific data (e.g. catches and indices) will be used to set",
               "advice for each fleet for each stock")
       MPcond <- "byfleet"
       nMP <- length(MPs[[1]][[1]])
@@ -1398,10 +1398,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       MPrefs[]<-unlist(MPs)
 
     } else if (ldim(MPs)==ldim(Fleets)[1]) { # not a two-tier list
-      if (!silent) message("Bystock mode: you have specified a vector of MPs for each stock, ",
+      if (!silent) message_info("Bystock mode: you have specified a vector of MPs for each stock,",
               "but not a vector of MPs for each stock and fleet. The catch data for these",
-              " fleets will be combined, a single MP will be used to set a single TAC ",
-              "for all fleets combined that will be allocated between the fleets ",
+              " fleets will be combined, a single MP will be used to set a single TAC",
+              "for all fleets combined that will be allocated between the fleets",
               "according to recent catches")
       MPcond<-"bystock"
       checkN <- unlist(lapply(MPs, length))
@@ -2199,9 +2199,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         # --- Update Data object ----
         for (p in 1:np) {
           for (f in 1:nf) {
-
-            # TODO - remove this
-            OM <- suppressMessages(new('OM')) # temporary while MSEtool::makeData requires this
+            OM <- suppressMessages(new('OM', docheck=FALSE)) # temporary while MSEtool::makeData requires this
             OM@nyears <- nyears
             OM@hbiascv <- MOM@Obs[[p]][[f]]@hbiascv
             OM@maxF <- MOM@maxF
@@ -2548,7 +2546,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       interval[mm] <- proyears
       for (p in 1:np) {
         for (f in 1:nf) {
-          OM <- suppressMessages(new('OM')) 
+          OM <- suppressMessages(new('OM', docheck=FALSE)) 
           OM@nyears <- nyears
           OM@hbiascv <- MOM@Obs[[p]][[f]]@hbiascv
           OM@maxF <- MOM@maxF
