@@ -864,6 +864,8 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   # Update catches after maxF constraint
   CB_P[SAYR] <- FM_P[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR]
   CB_Pret[SAYR] <- FM_Pret[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR]
+  CB_P[!is.finite(CB_P)] <- 0 
+  CB_Pret[!is.finite(CB_Pret)] <- 0 
 
   # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
   retainedCatch <- apply(CB_Pret[,,y,], 1, sum)
@@ -947,11 +949,14 @@ calcF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, Asize, maxage, 
         stop('invalid entry for `OM@cpars$control$TAC`. Must be `OM@cpars$control$TAC="removals"`')
       }
     }
+    predC[!is.finite(predC)] <- 0 
     pct <- sum(predC)
     
     Omat <- (1-exp(-Zmat)) * Biomass_P[x,,y,]
+    Zmat[Zmat==0] <- tiny
     # derivative of catch wrt ft
     dct <- sum(Omat/Zmat - ((Fmat * Omat)/Zmat^2) + Fmat/Zmat * exp(-Zmat) * Biomass_P[x,,y,])
+    
     if (dct<0) break
     
     ft <-  ft - (pct - ct)/(0.5*dct)
