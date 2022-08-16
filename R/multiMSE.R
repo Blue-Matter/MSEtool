@@ -1159,9 +1159,17 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   }
   
   multiHist <- vector('list', np)
+  
+  stock.names <- names(MOM@Stocks)
+  fleet.names <- names(MOM@Fleets[[1]])
+  
+  if (is.null(stock.names)) stock.names <- paste('Stock', rep(1:length(MOM@Stocks)))
+  if (is.null(fleet.names)) fleet.names <- paste('Fleet', rep(1:length(MOM@Fleets[[1]])))
 
   for (p in 1:np) {
     multiHist[[p]] <- vector('list', nf)
+    names(multiHist) <- stock.names
+    
     for (f in 1:nf) {
       Hist <- new("Hist")
       Data@Misc <- list()
@@ -1258,11 +1266,16 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       }
 
       Hist@Misc <- list(
-        MOM=MOM
+        MOM=MOM,
+        Stock=stock.names[p],
+        Fleet=fleet.names[f]
       )
 
       multiHist[[p]][[f]] <- Hist
+     
+
     }
+    names(multiHist[[p]]) <- fleet.names
   }
 
   class(multiHist) <- c('list', 'multiHist')
@@ -1270,6 +1283,8 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   attr(multiHist, "version") <- packageVersion("MSEtool")
   attr(multiHist, "date") <- date()
   attr(multiHist, "R.version") <- R.version
+  attr(multiHist, "Stocks") <- stock.names
+  attr(multiHist, "Fleets") <- fleet.names
 
   multiHist[[1]][[1]]@Misc$Real.Data.Map <- Real.Data.Map
   multiHist
