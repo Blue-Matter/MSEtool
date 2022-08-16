@@ -1953,7 +1953,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                   Effort_pot=Effort_pot[,p,f],
                                   StockPars=StockPars_MPCalc[[p]],
                                   FleetPars=FleetPars[[p]][[f]],
-                                  ImpPars=ImpPars[[p]][[f]], control=control)
+                                  ImpPars=ImpPars[[p]][[f]], 
+                                  control=control)
 
         if(length(SexPars)>0) MPCalcs<- MPCalcsNAs(MPCalcs) # Zeros caused by SexPars
 
@@ -2752,12 +2753,11 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     RefPoint$ByYear[[nm]] <- array(NA, dim=c(nsim, np, nMP, proyears+nyears))
     for (p in 1:np) {
       for(mm in 1:nMP) {
-        RefPoint$ByYear[[nm]][,p,mm,] <- multiHist[[p]][[f]]@Ref$ByYear[[nm]]
+        RefPoint$ByYear[[nm]][,p,mm,] <- multiHist[[p]][[1]]@Ref$ByYear[[nm]]
       }
     }
   }
-
-
+  
   RefPoint$Dynamic_Unfished <- list()
   nms <- names(multiHist[[1]][[1]]@Ref$Dynamic_Unfished)
   # add Dynamic_Unfished
