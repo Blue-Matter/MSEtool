@@ -957,7 +957,7 @@ calcF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, Asize, maxage, 
     # derivative of catch wrt ft
     dct <- sum(Omat/Zmat - ((Fmat * Omat)/Zmat^2) + Fmat/Zmat * exp(-Zmat) * Biomass_P[x,,y,])
     
-    if (dct<0) break
+    if (dct<1E-15) break
     
     ft <-  ft - (pct - ct)/(0.5*dct)
     if (abs(pct - ct)/ct < tolF) break
