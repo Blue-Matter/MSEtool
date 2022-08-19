@@ -2552,7 +2552,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         } # end of stocks
       } # end of not update year
     } # end of projection years
-
+    
     if(!silent) close(pb)
     
     if (max(upyrs) < proyears) { # One more call to complete Data object
@@ -2785,13 +2785,16 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   # remove Ref from MultiHist
   for (p in 1:np) {
     for(f in 1:nf) {
-      multiHist[[p]][[f]]@Ref <- list('Now in MMSE@Ref')
+      multiHist[[p]][[f]]@Ref <- list('Now in MMSE@RefPoint')
     }
   }
 
   if (dropHist) {
-    multiHist <- list('multiHist dropped (dropHist=TRUE). Reference points available in MMSE@Ref')
+    multiHist <- list('multiHist dropped (dropHist=TRUE). Reference points available in MMSE@RefPoint')
   }
+  
+
+  
   
   MSEout <- new("MMSE",
                 Name = MOM@Name,
