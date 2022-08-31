@@ -10,6 +10,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 
 ## Minor changes 
+- minor patch to `ASAP2Data` 
 - minor patch in `Assess2OM`
 - removed duplicated information in `multiHist` object (now only returns biological information for fleet=1)
 - patch to `gettaxa` function for species that are found in FishBase database but not in FishLife database
