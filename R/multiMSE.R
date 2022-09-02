@@ -1157,8 +1157,13 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                                      control,
                                      Sample_Area)
           
-          if (!is.null(MPrec))
-            updatedData$Data@MPrec <- MPrec
+          if (!is.null(MPrec)) {
+            if (is.na(SampCpars[[p]][[f]]$Data@MPrec)) {
+              # don't update if MPrec provided in real data
+              updatedData$Data@MPrec <- MPrec
+            }
+          }
+            
           DataList[[p]][[f]] <- updatedData$Data
           ObsPars[[p]][[f]] <- updatedData$ObsPars
         }
