@@ -824,7 +824,12 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     slot(Data_out, sl) <- slot(RealData, sl)
 
   Data_out@MaxAge <- SimData@MaxAge
-  Data_out@MPrec <- SimData@MPrec
+  if (!is.na(RealData@MPrec)) {
+    Data_out@MPrec <- rep(RealData@MPrec, nsim)
+  } else {
+    Data_out@MPrec <- SimData@MPrec  
+  }
+  
   Data_out@MPeff <- SimData@MPeff
   Data_out@nareas <- SimData@nareas
   Data_out@LHYear <- SimData@LHYear
