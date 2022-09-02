@@ -2815,7 +2815,7 @@ lag_slot <- function(sl, lag, n_yr, Data) {
   }
   if (length(dd)==3) {
     # array
-    ind <- ifelse(sl%in% c('AddInd', 'V_AddInd'), 3, 2)
+    ind <- ifelse(sl%in% c('AddInd', 'CV_AddInd'), 3, 2)
     if (ind ==2) {
       val <- val[,lag_ind,, drop=FALSE]
     }
@@ -2827,7 +2827,6 @@ lag_slot <- function(sl, lag, n_yr, Data) {
   
   Data
 }
-
 
 #' Lag the time-series slots in a `Data` object by a specified number of time-steps
 #' 
