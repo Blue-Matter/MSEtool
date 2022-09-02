@@ -1127,7 +1127,15 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
             StockPars2$N <- agg_data(N, dim(N[,1,,,]), map.stocks)
             StockPars2$CBret <- agg_data(CBret[,,f,,,], dim(CBret[,1,1,,,]), map.stocks)
             # doesn't include CAA and CAL comps
+            
+            # update MPrec (map last catch across mapped stock)
+            MPrec <- rep(0, nsim)
+            for (i in map.stocks) {
+              MPrec <- MPrec+ DataList[[i]][[f]]@MPrec
+            }
+            
           } else {
+            MPrec <- NULL
             StockPars2$Biomass <- Biomass[,p,,,]
             StockPars2$SSB <- SSB[,p,,,]
             StockPars2$VBiomass <- VBF[,p,f,,,]
@@ -1148,12 +1156,12 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                                      msg=!silent,
                                      control,
                                      Sample_Area)
+          
+          if (!is.null(MPrec))
+            updatedData$Data@MPrec <- MPrec
           DataList[[p]][[f]] <- updatedData$Data
           ObsPars[[p]][[f]] <- updatedData$ObsPars
         }
-        
-
-
       }
     }
   }
@@ -1805,7 +1813,6 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       realVB<-apply(VBiomass[,,,1:nyears,, drop=FALSE],c(1,2,4),sum,na.rm=T)
 
       curdat<-multiDataS(MSElist,Real.Data.Map,np,mm,nf,realVB)
-
       runMP <- applyMP(curdat, MPs = MPs[mm], reps = 1, silent=TRUE)  # Apply MP
       Stock_Alloc<-realVB[,,nyears, drop=FALSE]/apply(realVB[,,nyears, drop=FALSE],1,sum)
 
@@ -2009,7 +2016,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     upyrs <- 1 + (0:(floor(proyears/interval[mm]) - 1)) * interval[mm]
    
     # --- Begin projection years ----
-    for (y in 2:proyears) {
+    for (y in 3:4) {
       if(!silent) {
         setTxtProgressBar(pb, y)
       }
@@ -2246,7 +2253,15 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                 n <- agg_data(N, dim(N[,1,,,]), map.stocks)
                 n_p <- agg_data(N_P, dim(N_P[,1,,,]), map.stocks)
                 cbret_p <- agg_data(CBret_P[,,f,,,], dim(CBret_P[,1,1,,,]), map.stocks)
+                
+                # update MPrec (map last catch across mapped stock)
+                MPrec <- rep(0, nsim)
+                for (i in map.stocks) {
+                  MPrec <- MPrec+ MPCalcs_list[[p]][[f]]$TACrec
+                }
+                
               } else {
+                MPrec <- NULL
                 b <- Biomass[,p,,,]
                 b_p <- Biomass_P[,p,,,]
                 ssb <- SSB[,p,,,]
@@ -2294,7 +2309,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             Atemp <- apply(StockPars[[p]]$VBiomass_P[, , y, ] *
                              exp(-M_array), 1, sum) # Abundance (mid-year before fishing)
             MSElist[[p]][[f]][[mm]]@OM$A <- Atemp
-            
+            MSElist[[p]][[f]][[mm]]@MPrec <- MPrec
+          
           } # end of fleet
         } # end of stock
         
@@ -2318,10 +2334,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                apply(VBiomass_P[,,,1:(y-1), , drop=FALSE],c(1,2,4),sum,na.rm=T),
                                along=3)
 
-          curdat<-multiDataS(MSElist,Real.Data.Map,np,mm,nf,realVB)
-          
+          curdat <- multiDataS(MSElist,Real.Data.Map,np,mm,nf,realVB)
           runMP <- applyMP(curdat, MPs = MPs[mm], reps = 1, silent=TRUE)  # Apply MP
-
+          
           Stock_Alloc <- realVB[,,nyears, drop=FALSE]/
             apply(realVB[,,nyears, drop=FALSE],1,sum)
 
