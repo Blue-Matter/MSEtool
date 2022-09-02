@@ -3,6 +3,8 @@ The current version of the `MSEtool` package is available for download from [CRA
 # MSEtool 3.5.1
 
 ## New additions
+
+- added `Lag_Data` function to be used internally in custom MPs to lag all time-series data by specified number of time-steps (or optionally only some data slots). See `?Lag_Data` for more information.
 - added stock and fleet names (if provided in `MOM`) to `(multiHist)`
 - added `Real.Data.Map` to `cpars`. This allows mapping of simulated data across stocks in `MOMs` where the real data
   is not stock-specific; e.g., cases where `MOM` includes male and female stocks but the real data in `cpars$Data` is not sex-specific 

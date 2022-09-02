@@ -2803,3 +2803,125 @@ MP_wrapper <- function(x, Data, MP, ...) {
   fun <- get(MP)
   fun(1, subdat, ...)
 }
+
+
+lag_slot <- function(sl, lag, n_yr, Data) {
+  lag_ind <- 1:(n_yr-lag)
+  val <- slot(Data, sl)
+  dd <- dim(val)
+  if (length(dd)==2) {
+    # matrix
+    val <- val[,lag_ind, drop=FALSE]
+  }
+  if (length(dd)==3) {
+    # array
+    ind <- ifelse(sl%in% c('AddInd', 'V_AddInd'), 3, 2)
+    if (ind ==2) {
+      val <- val[,lag_ind,, drop=FALSE]
+    }
+    if (ind ==3) {
+      val <- val[,,lag_ind, drop=FALSE]
+    }
+  }
+  slot(Data, sl) <- val
+  
+  Data
+}
+
+
+#' Lag the time-series slots in a `Data` object by a specified number of time-steps
+#' 
+#' 
+#'
+#' @param Data An object of class `Data`
+#' @param Data_Lag Either a numeric vector of length 1 with a positive number 
+#' specifying the number of time-steps to lag all time-series data, or a named 
+#' list with numeric values (length 1). See details for more information.
+#' @param msg Logical. Display the messages?
+#'
+#' @return An object of class `Data` with time-series slots lagged. 
+#' @export
+#' 
+#' @details 
+#' By default, all simulated data in the forward projections are provided up to the
+#' previous time-step. That is, in projection year `t`, the simulated data are up to
+#' and including `t-1`.
+#' This function will lag the time-series values by the specified value. For example, 
+#' `Data_Lag=5` will mean in projection time-step `t` the data will be up to and 
+#' including `t-6`. 
+#' 
+#' *Note*: The `Data@Year` slot is *not* lagged by this function. 
+#' Many built-in MPs use the length of `Data@Year` to determine the number of
+#' years of data for smoothing over recent years etc. This may not be appropriate
+#' so check the MP is behaving as you expect if you use `Lag_Data`.
+#'
+#' @examples
+#' # Lag all time-series slots by 2 time-steps (usually years)
+#' Data <- Example_datafile
+#' Lagged_1 <- Lag_Data(Data, 2)
+#' length(Data@Year)
+#' length(Lagged_1@Year)
+#' length(Data@Cat[1,])
+#' length(Lagged_1@Cat[1,])
+#' length(Data@Ind[1,])
+#' length(Lagged_1@Ind[1,])
+#' 
+#' # Lag CAA by 5 and Ind by 3 time-steps
+#' Lagged_2 <- Lag_Data(Data, Data_Lag=list(CAA=5, Ind=3))
+#' length(Lagged_2@Year)
+#' length(Lagged_2@Cat[1,])
+#' dim(Data@CAA[1,,])
+#' dim(Lagged_2@CAA[1,,])
+#' 
+#' length(Data@Ind[1,])
+#' length(Lagged_2@Ind[1,])
+Lag_Data <- function(Data, Data_Lag=0, msg=TRUE) {
+  if(!inherits(Data, 'Data'))
+    stop('Object must be class `Data`')
+  n_yr <- length(Data@Year)
+  
+  # Data slots with a year index
+  data_slots <- slotNames('Data')
+  slot_vals <- sapply(data_slots, function(x) slot(Data, x))
+  slot_dims <- lapply(slot_vals, dim)
+  slot_yr <- slot_vals[grepl(n_yr, slot_dims)]
+  slot_yr_nms <- names(slot_yr)
+  
+  if (inherits(Data_Lag, 'list')) {
+    slots <- names(Data_Lag)
+  } else {
+    slots <- slotNames('Data')[grepl(n_yr, slot_dims)]
+    if (!inherits(Data_Lag, 'numeric'))
+      stop('`Data_Lag` must be numeric of length 1 or a named list.')
+    List <- vector('list', length(slots))
+    names(List) <- slot_yr_nms
+    List[] <- Data_Lag
+    Data_Lag <- List
+  }
+  
+  slot_dims <- slot_dims[grepl(n_yr, slot_dims)]
+  # check if slots in Data_Lag list have data
+  not_data <- !slots %in% slot_yr_nms
+  if (sum(not_data)) {
+    if (msg)
+      message_info('Data lag specified for slots:',
+                   paste(slots[not_data], collapse=', '),
+                   'but these slots do not have any data. Ignoring.')
+    
+    slots <- slots[!not_data]
+  }
+  
+  for (sl in slots) {
+    if (Data_Lag[[sl]]<0 & msg) 
+        message_info('Data lag specified for slot:', sl, 'is negative. Ignoring.')
+    
+    if (length(Data_Lag[[sl]])>1 & msg) 
+      message_info('`Data_Lag` is numeric vector > length 1. Only using the first value.')
+    
+    if (Data_Lag[[sl]]>0) {
+      Data <- lag_slot(sl, Data_Lag[[sl]], n_yr, Data)
+    }
+  }
+  Data
+}
+
