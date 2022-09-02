@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.5.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.6.0</span>
       </span>
     </div>
 
@@ -51,7 +51,8 @@
 <h2 class="page-header" data-toc-text="3.5.1" id="msetool-351">MSEtool 3.5.1<a class="anchor" aria-label="anchor" href="#msetool-351"></a></h2>
 <div class="section level3">
 <h3 id="new-additions-3-5-1">New additions<a class="anchor" aria-label="anchor" href="#new-additions-3-5-1"></a></h3>
-<ul><li>added stock and fleet names (if provided in <code>MOM</code>) to <code>(multiHist)</code>
+<ul><li>added <code>Lag_Data</code> function to be used internally in custom MPs to lag all time-series data by specified number of time-steps (or optionally only some data slots). See <code><a href="../reference/Lag_Data.html">?Lag_Data</a></code> for more information.</li>
+<li>added stock and fleet names (if provided in <code>MOM</code>) to <code>(multiHist)</code>
 </li>
 <li>added <code>Real.Data.Map</code> to <code>cpars</code>. This allows mapping of simulated data across stocks in <code>MOMs</code> where the real data is not stock-specific; e.g., cases where <code>MOM</code> includes male and female stocks but the real data in <code>cpars$Data</code> is not sex-specific</li>
 <li>
@@ -59,7 +60,9 @@
 </ul></div>
 <div class="section level3">
 <h3 id="minor-changes-3-5-1">Minor changes<a class="anchor" aria-label="anchor" href="#minor-changes-3-5-1"></a></h3>
-<ul><li>minor patch in <code>Assess2OM</code>
+<ul><li>minor patch to <code>ASAP2Data</code>
+</li>
+<li>minor patch in <code>Assess2OM</code>
 </li>
 <li>removed duplicated information in <code>multiHist</code> object (now only returns biological information for fleet=1)</li>
 <li>patch to <code>gettaxa</code> function for species that are found in FishBase database but not in FishLife database</li>
