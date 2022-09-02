@@ -2016,7 +2016,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     upyrs <- 1 + (0:(floor(proyears/interval[mm]) - 1)) * interval[mm]
    
     # --- Begin projection years ----
-    for (y in 3:4) {
+    for (y in 2:proyears) {
       if(!silent) {
         setTxtProgressBar(pb, y)
       }
