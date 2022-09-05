@@ -2016,7 +2016,6 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       }
     }
 
-
     # the years in which there are updates
     upyrs <- 1 + (0:(floor(proyears/interval[mm]) - 1)) * interval[mm]
    
@@ -2262,7 +2261,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                 # update MPrec (map last catch across mapped stock)
                 MPrec <- rep(0, nsim)
                 for (i in map.stocks) {
-                  MPrec <- MPrec+ MPCalcs_list[[p]][[f]]$TACrec
+                  MPrec <- MPrec+ MPCalcs_list[[i]][[f]]$TACrec
                 }
                 
               } else {
@@ -2493,6 +2492,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             VF[,p,f,,]<- MPCalcs$V_P
             FleetPars[[p]][[f]]$SLarray_P <- MPCalcs$SLarray_P # vulnerable-at-length
             FMa[,p,f,mm,y] <- MPCalcs$Ftot # Total fishing mortality (by stock & fleet)
+            
+            MPCalcs_list[[p]][[f]] <- MPCalcs
+            
           } # end of fleets
         } # end of stocks
 
