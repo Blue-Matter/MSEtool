@@ -2778,16 +2778,22 @@ SubData_sim <- function(x, Data) {
         if (slts[i] == 'Misc') {
           np <- length(tt)
           nf <- length(tt[[1]])
-          n_sim <- length(tt[[1]][[1]])
-          for (p in 1:np) {
-            newlist[[p]] <- list()
-            for (f in 1:nf) {
-              newlist[[p]][[f]] <- list()  
-              newlist[[p]][[f]][[1]] <- tt[[1]][[1]][[x]]
+          if (nf>0) {
+            # from MMSE
+            n_sim <- length(tt[[1]][[1]])
+            for (p in 1:np) {
+              newlist[[p]] <- list()
+              for (f in 1:nf) {
+                newlist[[p]][[f]] <- list()  
+                newlist[[p]][[f]][[1]] <- tt[[1]][[1]][[x]]
+              }
             }
+          } else {
+            # from MSE
+            # not currently implemented
+            
           }
         }
-        
       }
       slot(subdata, slts[i]) <- newlist
     }
