@@ -1610,7 +1610,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         names(MPrep)=Snames[p]
         print(MPrep)
       }
-      cat(" --------------------------------- ")
+      message(" --------------------------------- ")
     }
 
     checkNA <- array(0,c(np,nf,proyears)) # save number of NAs
