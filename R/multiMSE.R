@@ -1345,9 +1345,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   Real.Data.Map <- multiHist[[1]][[1]]@Misc$Real.Data.Map
   if (is.null(Real.Data.Map)) 
     Real.Data.Map <- matrix(rep(1:np), nrow=nf, ncol=np, byrow=TRUE)
-
-  ncpus <- set_parallel(parallel)
-
+  
   # ---- Detect MP Specification ----
   MPcond <- "unknown"
   if (!length(Rel) && np == 1 && nf == 1) {
@@ -1457,6 +1455,31 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     allMPs<-MPs
   }
   if (nMP < 1) stop("No valid MPs found", call.=FALSE)
+
+  # ---- Set up parallel processing of MPs ---
+  runparallel <- FALSE 
+  if (any(parallel==TRUE)) runparallel <- TRUE
+  if (methods::is(parallel, 'list')) runparallel <- TRUE
+  
+  isrunning <- snowfall::sfIsRunning()
+  if (!runparallel & isrunning) snowfall::sfStop()
+  
+  # Don't run MPs in parallel unless specified
+  parallel_MPs <-  rep(FALSE, nMP) 
+  if (methods::is(parallel, 'list')) {
+    parallel <- parallel[parallel==TRUE]
+    ind <- match(names(parallel), allMPs)
+    ind <- ind[!is.na(ind)]
+    parallel_MPs[ind] <- TRUE
+    names(parallel_MPs) <- allMPs
+  }
+  
+  if (runparallel & any(parallel_MPs)) {
+    if (!isrunning) setup()
+    Export_customMPs(allMPs)
+  }
+  
+  ncpus <- set_parallel(runparallel, msg=!silent)
 
   # ---- Check MPs ----
   if (checkMPs && all(MP_classes=='MP')) {
@@ -1587,7 +1610,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         names(MPrep)=Snames[p]
         print(MPrep)
       }
-      message(" --------------------------------- ")
+      cat(" --------------------------------- ")
     }
 
     checkNA <- array(0,c(np,nf,proyears)) # save number of NAs
@@ -1816,9 +1839,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       MPRecs_A <- Data_p_A <- MPrecs_A_blank
       # need this for aggregating data and distributing TACs over stocks
       realVB<-apply(VBiomass[,,,1:nyears,, drop=FALSE],c(1,2,4),sum,na.rm=T)
-
       curdat<-multiDataS(MSElist,Real.Data.Map,np,mm,nf,realVB)
-      runMP <- applyMP(curdat, MPs = MPs[mm], reps = 1, silent=TRUE)  # Apply MP
+      runMP <- applyMP(curdat, MPs = MPs[mm], parallel=parallel_MPs[mm],
+                       reps = 1, silent=TRUE)  # Apply MP
       Stock_Alloc<-realVB[,,nyears, drop=FALSE]/apply(realVB[,,nyears, drop=FALSE],1,sum)
 
       for(p in 1:np)  {
@@ -1859,8 +1882,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
           }else{
             curdat<-MSElist[[p]][[f]][[mm]]
           }
+          
           runMP <- applyMP(curdat, MPs = MPs[[p]][mm], reps = 1,
-                                   silent=TRUE)  # Apply MP
+                           parallel = parallel_MPs[match(MPs[[p]][mm], names(parallel_MPs))],
+                           silent=TRUE)  # Apply MP
 
           # Do allocation calcs
           TAC_A[,p,] <- array(as.vector(unlist(runMP[[1]][[1]]$TAC))*
@@ -1893,7 +1918,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         }else if(MPcond[mm]=="byfleet"){
           for(f in 1:nf){
             curdat<-MSElist[[p]][[f]][[mm]]
-            runMP <- MSEtool::applyMP(curdat, MPs = MPrefs[mm,f,p], reps = 1, silent=TRUE)  # Apply MP
+            runMP <- applyMP(curdat, MPs = MPrefs[mm,f,p], reps = 1, 
+                                      parallel = parallel_MPs[match(MPrefs[mm,f,p], names(parallel_MPs))],
+                                      silent=TRUE)  # Apply MP
             MPRecs_A[[p]][[f]]<-runMP[[1]][[1]]
             Data_p_A[[p]][[f]]<-runMP[[2]]
             Data_p_A[[p]][[f]]@TAC <- MPRecs_A[[p]][[f]]$TAC
@@ -2339,7 +2366,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                along=3)
 
           curdat <- multiDataS(MSElist,Real.Data.Map,np,mm,nf,realVB)
-          runMP <- applyMP(curdat, MPs = MPs[mm], reps = 1, silent=TRUE)  # Apply MP
+          runMP <- applyMP(curdat, MPs = MPs[mm], reps = 1, parallel=parallel_MPs[mm], silent=TRUE)  # Apply MP
           
           Stock_Alloc <- realVB[,,nyears, drop=FALSE]/
             apply(realVB[,,nyears, drop=FALSE],1,sum)
@@ -2381,7 +2408,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
               }else{
                 curdat<-MSElist[[p]][[f]][[mm]]
               }
-              runMP <- applyMP(curdat, MPs = MPs[[p]][mm], reps = MOM@reps, silent=TRUE)  # Apply MP
+              runMP <- applyMP(curdat, MPs = MPs[[p]][mm], reps = MOM@reps, 
+                               parallel = parallel_MPs[match(MPs[[p]][mm], names(parallel_MPs))],
+                               silent=TRUE)  # Apply MP
               
               # Do allocation calcs
               TAC_A[,p,]<-array(as.vector(unlist(runMP[[1]][[1]]$TAC))*MOM@Allocation[[p]],c(nsim,nf))
@@ -2411,8 +2440,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             } else if(MPcond[mm]=="byfleet"){
               for(f in 1:nf){
                 curdat<-MSElist[[p]][[f]][[mm]]
-                runMP <- MSEtool::applyMP(curdat, MPs = MPrefs[mm,f,p],
-                                         reps = MOM@reps, silent=TRUE)  # Apply MP
+                runMP <- applyMP(curdat, MPs = MPrefs[mm,f,p],
+                                 parallel = parallel_MPs[match(MPrefs[mm,f,p], names(parallel_MPs))],
+                                 reps = MOM@reps, silent=TRUE)  # Apply MP
                 MPRecs_A[[p]][[f]]<-runMP[[1]][[1]]
                 Data_p_A[[p]][[f]]<-runMP[[2]]
                 Data_p_A[[p]][[f]]@TAC <- MPRecs_A[[p]][[f]]$TAC
@@ -2870,12 +2900,23 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #' @param Hist Should model stop after historical simulations? Returns a list
 #' containing all historical data
 #' @param silent Should messages be printed out to the console?
-#' @param parallel Logical. Should the MSE be run using parallel processing?
+#' @param parallel Logical or a named list. Should MPs be run using parallel processing?  See Details for more information.  
 #' @param checkMPs Logical. Check if the specified MPs exist and can be run on `SimulatedData`?
 #' @param dropHist Logical. Drop the (very large) `multiHist` object from the returned `MMSE` object?
 #' The `multiHist` object can be (re-)created using `SimulateMOM` or kept in `MMSE@multiHist` if
 #' `dropHist=FALSE`
 #' @describeIn multiMSE Run a multi-stock, multi-fleet MSE
+#' 
+#' @details 
+#' ## Running MPs in parallel
+#' 
+#' For most MPs, running in parallel can actually lead to an increase in computation time, due to the overhead in sending the 
+#' information over to the cores. Consequently, by default the MPs will not be run in parallel if `parallel=TRUE` 
+#' (although other internal code will be run in parallel mode).
+#' 
+#' To run MPs in parallel, specify a named list with the name of the MP(s) assigned as TRUE. For example,`parallel=list(AvC=TRUE`)
+#' will run the `AvC` MP in parallel mode.
+#
 #' @return  Functions return objects of class `MMSE` and `multiHist`
 #' #' \itemize{
 #'   \item SimulateMOM - An object of class `multiHist`

@@ -1113,32 +1113,19 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   isrunning <- snowfall::sfIsRunning()
   if (!runparallel & isrunning) snowfall::sfStop()
 
-  if (runparallel) {
+  # Don't run MPs in parallel unless specified
+  parallel_MPs <-  rep(FALSE, nMP) 
+  if (methods::is(parallel, 'list')) {
+    parallel <- parallel[parallel==TRUE]
+    ind <- match(names(parallel), MPs)
+    ind <- ind[!is.na(ind)]
+    parallel_MPs[ind] <- TRUE
+  }
+
+  if (runparallel & any(parallel_MPs)) {
     if (!isrunning) setup()
     Export_customMPs(MPs)
   }
-  
-  parallel_in <- parallel
-  if (runparallel) parallel <- rep(TRUE, nMP)
-  if (!runparallel) parallel <- rep(FALSE, nMP)
-  
-  # Don't run MSEtool MPs in parallel
-  mp_ns <- sapply(MPs, find)
-  msemmp <- grep('MSEtool', mp_ns)
-  parallel[msemmp] <- FALSE
-  
-  # Don't run DLMtool MPs in parallel except LBSPR
-  dlmmp <- grep('DLMtool', mp_ns)
-  parallel[dlmmp] <- FALSE
-  if (any(as.logical(parallel_in)) )
-    parallel[grep('LBSPR', MPs)] <- TRUE
-  
-  # Manually specified MPs
-  if (methods::is(parallel_in, 'list')) {
-    parallel_in <- data.frame(parallel_in)
-    par_mps <- names(parallel_in)
-    parallel[match(par_mps, MPs)] <- unlist(parallel_in[1,])
-  }  
   
   # ---- Set Management Interval for each MP ----
   if (length(interval) != nMP) interval <- rep(interval, nMP)[1:nMP]
@@ -1250,7 +1237,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     Data_MP <- MSElist[[mm]]
     Data_MP@Misc <- Data_Misc # add StockPars etc back to Data object
 
-    if(!silent) message(mm, "/", nMP, " Running MSE for ", MPs[mm], ifelse(parallel[mm], " in parallel", ""))
+    if(!silent) message(mm, "/", nMP, " Running MSE for", MPs[mm], ifelse(parallel_MPs[mm], "in parallel", ""))
     checkNA <- rep(0, OM@proyears) # save number of NAs
     # years management is updated
     upyrs <- seq(from=1, to=proyears, by=interval[mm])
@@ -1349,7 +1336,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     Data_MP@Misc$StockPars$SSB_P <- SSB_P
     Data_MP@Misc$StockPars$VBiomass_P <- VBiomass_P
     Data_MP@Misc$StockPars$N_P <- N_P
-    runMP <- applyMP(Data=Data_MP, MPs = MPs[mm], reps = reps, silent=TRUE, parallel = parallel[mm])  # Apply MP
+    runMP <- applyMP(Data=Data_MP, MPs = MPs[mm], reps = reps, silent=TRUE, 
+                     parallel = parallel_MPs[mm])  # Apply MP
 
     MPRecs <- runMP[[1]][[1]] # MP recommendations
     Data_p <- runMP[[2]] # Data object object with saved info from MP
@@ -1548,7 +1536,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         Data_MP@Misc$StockPars$N_P <- N_P
 
         # --- apply MP ----
-        runMP <- applyMP(Data=Data_MP, MPs = MPs[mm], reps = reps, silent=TRUE, parallel = parallel[mm])  # Apply MP
+        runMP <- applyMP(Data=Data_MP, MPs = MPs[mm], reps = reps, silent=TRUE, 
+                         parallel = parallel_MPs[mm])  # Apply MP
         MPRecs <- runMP[[1]][[1]] # MP recommendations
         Data_p <- runMP[[2]] # Data object object with saved info from MP
         Data_p@TAC <- MPRecs$TAC
@@ -1792,7 +1781,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #' @param Hist Should model stop after historical simulations? Returns an object of
 #' class 'Hist' containing all historical data
 #' @param silent Should messages be printed out to the console?
-#' @param parallel Logical. Should MPs be run using parallel processing? For \code{runMSE}, can also be \code{"sac"} to run the entire MSE in parallel
+#' @param parallel Logical or a named list. Should MPs be run using parallel processing? 
+#' For \code{runMSE}, can also be \code{"sac"} to run the entire MSE in parallel
 #' using the split-apply-combine technique. See Details for more information. 
 #' @param extended Logical. Return extended projection results?
 #' if TRUE, `MSE@Misc$extended` is a named list with extended data
@@ -1805,12 +1795,13 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #' @details 
 #' ## Running MPs in parallel
 #' 
-#' For simple MPs, running in parallel can actually lead to an increase in computation time, due to the overhead in sending the 
-#' information over to the cores. Consequently, the data-limited MPs in DLMtool and the reference MPs in MSEtool are not run using parallel processing. 
-#' All other MPs, including custom MPs, will be run if `parallel = TRUE`.
+#' For most MPs, running in parallel can actually lead to an increase in computation time, due to the overhead in sending the 
+#' information over to the cores. Consequently, by default the MPs will not be run in parallel if `parallel=TRUE` 
+#' (although other internal code will be run in parallel mode).
 #' 
-#' To individually control which MPs run in parallel, `parallel` can be a named list of logical values, e.g., `parallel=list(AvC=TRUE)`.
-#'  
+#' To run MPs in parallel, specify a named list with the name of the MP(s) assigned as TRUE. For example,`parallel=list(AvC=TRUE`)
+#' will run the `AvC` MP in parallel mode.
+#' 
 #' ## Split-apply-combine MSE in parallel
 #' 
 #' Additional savings in computation time can be achieved by running the entire simulation in batches. Individual simulations of the operating model 

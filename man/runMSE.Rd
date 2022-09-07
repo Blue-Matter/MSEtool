@@ -30,7 +30,8 @@ runMSE(
 \arguments{
 \item{OM}{An operating model object (class \code{OM} or class \code{Hist})}
 
-\item{parallel}{Logical. Should MPs be run using parallel processing? For \code{runMSE}, can also be \code{"sac"} to run the entire MSE in parallel
+\item{parallel}{Logical or a named list. Should MPs be run using parallel processing?
+For \code{runMSE}, can also be \code{"sac"} to run the entire MSE in parallel
 using the split-apply-combine technique. See Details for more information.}
 
 \item{silent}{Should messages be printed out to the console?}
@@ -62,11 +63,12 @@ simulation) for a specified operating model
 \details{
 \subsection{Running MPs in parallel}{
 
-For simple MPs, running in parallel can actually lead to an increase in computation time, due to the overhead in sending the
-information over to the cores. Consequently, the data-limited MPs in DLMtool and the reference MPs in MSEtool are not run using parallel processing.
-All other MPs, including custom MPs, will be run if \code{parallel = TRUE}.
+For most MPs, running in parallel can actually lead to an increase in computation time, due to the overhead in sending the
+information over to the cores. Consequently, by default the MPs will not be run in parallel if \code{parallel=TRUE}
+(although other internal code will be run in parallel mode).
 
-To individually control which MPs run in parallel, \code{parallel} can be a named list of logical values, e.g., \code{parallel=list(AvC=TRUE)}.
+To run MPs in parallel, specify a named list with the name of the MP(s) assigned as TRUE. For example,\verb{parallel=list(AvC=TRUE})
+will run the \code{AvC} MP in parallel mode.
 }
 
 \subsection{Split-apply-combine MSE in parallel}{

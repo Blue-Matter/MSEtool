@@ -598,16 +598,22 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, nyears, maxF, plus
   initdist
 }
 
-set_parallel <- function(parallel) {
+set_parallel <- function(parallel, msg=TRUE) {
   if (any(parallel)) {
     if (snowfall::sfIsRunning()) {
       ncpus <- snowfall::sfCpus()
     } else {
+      if (msg)
+        message_info('Setting up parallel processing')
       setup()
       ncpus <- snowfall::sfCpus()
     }
   } else {
-    if (snowfall::sfIsRunning()) snowfall::sfStop()
+    if (snowfall::sfIsRunning()) {
+      if (msg)
+        message_info('Stopping parallel processing')
+      snowfall::sfStop()
+    }
     ncpus <- 1
   }
   ncpus
