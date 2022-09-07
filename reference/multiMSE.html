@@ -84,7 +84,7 @@ Strategy Evaluation (closed-loop simulation) for a specified operating model</p>
 
 
 <dt>parallel</dt>
-<dd><p>Logical. Should the MSE be run using parallel processing?</p></dd>
+<dd><p>Logical or a named list. Should MPs be run using parallel processing?  See Details for more information.</p></dd>
 
 
 <dt>silent</dt>
@@ -125,6 +125,21 @@ containing all historical data</p></dd>
 <li><p>ProjectMOM - An object of class <code>MMSE</code></p></li>
 <li><p>multiMSE - An object of class <code>MMSE</code></p></li>
 </ul></div>
+    <div id="details">
+    <h2>Details</h2>
+    
+<div class="section">
+<h3 id="running-mps-in-parallel">Running MPs in parallel<a class="anchor" aria-label="anchor" href="#running-mps-in-parallel"></a></h3>
+
+
+<p>For most MPs, running in parallel can actually lead to an increase in computation time, due to the overhead in sending the
+information over to the cores. Consequently, by default the MPs will not be run in parallel if <code>parallel=TRUE</code>
+(although other internal code will be run in parallel mode).</p>
+<p>To run MPs in parallel, specify a named list with the name of the MP(s) assigned as TRUE. For example,<code>parallel=list(AvC=TRUE</code>)
+will run the <code>AvC</code> MP in parallel mode.</p>
+</div>
+
+    </div>
     <div id="functions">
     <h2>Functions</h2>
     

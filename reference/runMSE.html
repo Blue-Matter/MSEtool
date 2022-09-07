@@ -84,7 +84,8 @@ simulation) for a specified operating model</p>
 
 
 <dt>parallel</dt>
-<dd><p>Logical. Should MPs be run using parallel processing? For <code>runMSE</code>, can also be <code>"sac"</code> to run the entire MSE in parallel
+<dd><p>Logical or a named list. Should MPs be run using parallel processing?
+For <code>runMSE</code>, can also be <code>"sac"</code> to run the entire MSE in parallel
 using the split-apply-combine technique. See Details for more information.</p></dd>
 
 
@@ -130,10 +131,11 @@ is returned.</p></dd>
 <h3 id="running-mps-in-parallel">Running MPs in parallel<a class="anchor" aria-label="anchor" href="#running-mps-in-parallel"></a></h3>
 
 
-<p>For simple MPs, running in parallel can actually lead to an increase in computation time, due to the overhead in sending the
-information over to the cores. Consequently, the data-limited MPs in DLMtool and the reference MPs in MSEtool are not run using parallel processing.
-All other MPs, including custom MPs, will be run if <code>parallel = TRUE</code>.</p>
-<p>To individually control which MPs run in parallel, <code>parallel</code> can be a named list of logical values, e.g., <code>parallel=list(AvC=TRUE)</code>.</p>
+<p>For most MPs, running in parallel can actually lead to an increase in computation time, due to the overhead in sending the
+information over to the cores. Consequently, by default the MPs will not be run in parallel if <code>parallel=TRUE</code>
+(although other internal code will be run in parallel mode).</p>
+<p>To run MPs in parallel, specify a named list with the name of the MP(s) assigned as TRUE. For example,<code>parallel=list(AvC=TRUE</code>)
+will run the <code>AvC</code> MP in parallel mode.</p>
 </div>
 
 <div class="section">

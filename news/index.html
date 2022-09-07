@@ -48,9 +48,12 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="3.5.1" id="msetool-351">MSEtool 3.5.1<a class="anchor" aria-label="anchor" href="#msetool-351"></a></h2>
+<h2 class="page-header" data-toc-text="3.6.0" id="msetool-360">MSEtool 3.6.0<a class="anchor" aria-label="anchor" href="#msetool-360"></a></h2>
 <div class="section level3">
-<h3 id="new-additions-3-5-1">New additions<a class="anchor" aria-label="anchor" href="#new-additions-3-5-1"></a></h3>
+<h3 id="major-changes-3-6-0">Major changes<a class="anchor" aria-label="anchor" href="#major-changes-3-6-0"></a></h3>
+<ul><li>By default, MPs are now no longer run in parallel mode when <code>parallel=TRUE</code> in <code>runMSE</code> and <code>multiMSE</code>. To run MPs in parallel, specify a named list with the name of the MP(s) assigned as TRUE. For example,<code>parallel=list(AvC=TRUE</code>).</li></ul></div>
+<div class="section level3">
+<h3 id="new-additions-3-6-0">New additions<a class="anchor" aria-label="anchor" href="#new-additions-3-6-0"></a></h3>
 <ul><li>added <code>Lag_Data</code> function to be used internally in custom MPs to lag all time-series data by specified number of time-steps (or optionally only some data slots). See <code><a href="../reference/Lag_Data.html">?Lag_Data</a></code> for more information.</li>
 <li>added stock and fleet names (if provided in <code>MOM</code>) to <code>(multiHist)</code>
 </li>
@@ -59,7 +62,7 @@
 <code>runMSE</code> can use the split-apply-combine technique to run projections in parallel with argument <code>parallel = "sac"</code>. Implementation details and notable issues are documented in the help doc <code><a href="../reference/runMSE.html">?runMSE</a></code>. This is the fastest method for running simulations but may not be suitable for all operating models and it may be more difficult to troubleshoot errors.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="minor-changes-3-5-1">Minor changes<a class="anchor" aria-label="anchor" href="#minor-changes-3-5-1"></a></h3>
+<h3 id="minor-changes-3-6-0">Minor changes<a class="anchor" aria-label="anchor" href="#minor-changes-3-6-0"></a></h3>
 <ul><li>minor patch to <code>ASAP2Data</code>
 </li>
 <li>minor patch in <code>Assess2OM</code>
