@@ -2880,7 +2880,7 @@ lag_slot <- function(sl, lag, n_yr, Data) {
 #' 
 #' length(Data@Ind[1,])
 #' length(Lagged_2@Ind[1,])
-Lag_Data <- function(Data, Data_Lag=0, msg=TRUE) {
+Lag_Data <- function(Data, Data_Lag=0, msg=FALSE) {
   if(!inherits(Data, 'Data'))
     stop('Object must be class `Data`')
   n_yr <- length(Data@Year)

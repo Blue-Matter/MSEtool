@@ -4,7 +4,7 @@
 \alias{Lag_Data}
 \title{Lag the time-series slots in a \code{Data} object by a specified number of time-steps}
 \usage{
-Lag_Data(Data, Data_Lag = 0, msg = TRUE)
+Lag_Data(Data, Data_Lag = 0, msg = FALSE)
 }
 \arguments{
 \item{Data}{An object of class \code{Data}}
