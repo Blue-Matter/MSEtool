@@ -1207,7 +1207,6 @@ setMethod('summary', signature="MSE", function(object, ..., silent=FALSE, Refs=N
 
 })
 
-
 # # ---- Plot Data Object -----
 # #' Plot Data object
 # #'

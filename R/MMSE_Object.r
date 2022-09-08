@@ -115,3 +115,59 @@ setMethod("initialize", "MMSE", function(.Object, Name, nyears, proyears,
 
   .Object
 })
+
+
+
+# ---- Summary of MMSE object ----
+
+#' Summary of MMSE object
+#'
+#' @param object object of class `MMSE`
+#' @param ... a list of names of PM methods
+#' @param silent Should summary be printed to console? Logical.
+#' @param Refs An optional named list (matching the PM names) with numeric values to override the default `Ref` values. See examples.
+#' @rdname summary-MMSE
+#' @export
+setMethod('summary', signature="MMSE", function(object, ..., silent=FALSE, Refs=NULL) {
+  PMlist <- unlist(list(...))
+  
+  if(length(PMlist) == 0) PMlist <- c("PNOF", "P50", "AAVY", "LTY")
+  if (!methods::is(PMlist,'character')) stop("Must provide names of PM methods")
+  # check
+  for (X in seq_along(PMlist))
+    if (!methods::is(get(PMlist[X]), "PM")) stop(PMlist[X], " is not a valid PM method")
+  
+  if (!silent) message("Calculating Performance Metrics")
+  storeMean <- vector('list', length(PMlist))
+  storeName <- vector('list', length(PMlist))
+  storeCap <- vector('list', length(PMlist))
+  storeHeading <- vector('list', length(PMlist))
+  storeMP <- vector('list', length(PMlist))
+  for (X in 1:length(PMlist)) {
+    ref <- Refs[[PMlist[X]]]
+    if (is.null(ref)) {
+      runPM <- eval(call(PMlist[X], object))
+    } else {
+      runPM <- eval(call(PMlist[X], object, Ref=ref))
+    }
+    storeMean[[X]] <- runPM@Mean
+    storeName[[X]] <- runPM@Name
+    storeCap[[X]] <- runPM@Caption
+    storeMP[[X]] <- runPM@MPs
+  }
+  
+  df <- data.frame('MP'=storeMP[[1]], signif(do.call('cbind', storeMean),2), stringsAsFactors = FALSE)
+  # heading <- do.call('rbind', storeHeading)
+  colnames(df)[2:(length(PMlist)+1)] <- PMlist #caps # gsub(" ", "", caps)
+  if (!silent) {
+    dfprint <- data.frame('Performance Metrics' = do.call('rbind', storeName), gap="", do.call('rbind', storeCap))
+    names(dfprint)[2:3] <- ''
+    print(dfprint)
+    cat("\n")
+    cat("\nPerformance Statistics:\n")
+    print(df)
+  }
+  
+  invisible(df)
+  
+})

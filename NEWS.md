@@ -6,6 +6,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 - By default, MPs are now no longer run in parallel mode when `parallel=TRUE` in `runMSE` and `multiMSE`. To run MPs in parallel, specify a named list with the name of the MP(s) assigned as TRUE. For example,`parallel=list(AvC=TRUE`).
 
 ## New additions
+- added `summary.MMSE` generic function
 - added `Lag_Data` function to be used internally in custom MPs to lag all time-series data by specified number of time-steps (or optionally only some data slots). See `?Lag_Data` for more information.
 - added stock and fleet names (if provided in `MOM`) to `(multiHist)`
 - added `Real.Data.Map` to `cpars`. This allows mapping of simulated data across stocks in `MOMs` where the real data
