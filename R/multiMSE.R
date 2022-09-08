@@ -2340,7 +2340,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             Atemp <- apply(StockPars[[p]]$VBiomass_P[, , y, ] *
                              exp(-M_array), 1, sum) # Abundance (mid-year before fishing)
             MSElist[[p]][[f]][[mm]]@OM$A <- Atemp
-            MSElist[[p]][[f]][[mm]]@MPrec <- MPrec
+            if (!is.null(MPrec)) MSElist[[p]][[f]][[mm]]@MPrec <- MPrec
           
           } # end of fleet
         } # end of stock
