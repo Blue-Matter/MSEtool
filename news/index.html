@@ -54,7 +54,8 @@
 <ul><li>By default, MPs are now no longer run in parallel mode when <code>parallel=TRUE</code> in <code>runMSE</code> and <code>multiMSE</code>. To run MPs in parallel, specify a named list with the name of the MP(s) assigned as TRUE. For example,<code>parallel=list(AvC=TRUE</code>).</li></ul></div>
 <div class="section level3">
 <h3 id="new-additions-3-6-0">New additions<a class="anchor" aria-label="anchor" href="#new-additions-3-6-0"></a></h3>
-<ul><li>added <code>Lag_Data</code> function to be used internally in custom MPs to lag all time-series data by specified number of time-steps (or optionally only some data slots). See <code><a href="../reference/Lag_Data.html">?Lag_Data</a></code> for more information.</li>
+<ul><li>added <code>summary.MMSE</code> generic function</li>
+<li>added <code>Lag_Data</code> function to be used internally in custom MPs to lag all time-series data by specified number of time-steps (or optionally only some data slots). See <code><a href="../reference/Lag_Data.html">?Lag_Data</a></code> for more information.</li>
 <li>added stock and fleet names (if provided in <code>MOM</code>) to <code>(multiHist)</code>
 </li>
 <li>added <code>Real.Data.Map</code> to <code>cpars</code>. This allows mapping of simulated data across stocks in <code>MOMs</code> where the real data is not stock-specific; e.g., cases where <code>MOM</code> includes male and female stocks but the real data in <code>cpars$Data</code> is not sex-specific</li>
