@@ -2688,7 +2688,7 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE, parallel
   # if (nMPs < 8 & nsims < 8) runParallel <- FALSE
 
   if (!silent)
-    message('Attempting to run ', length(MPs), ' MPs:')
+    message_info('Attempting to run ', length(MPs), ' MPs:')
 
   for (mp in 1:nMPs) {
     if (!silent)  message(MPs[mp])
