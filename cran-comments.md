@@ -1,7 +1,7 @@
 ## Note to CRAN Maintainers
 
 ## Test environments
-* local - Windows 4.1.3
+* local - Windows 4.2.1
 * Github actions - windows-latest (release)
 * Github actions - macOS-latest (release)
 * Github actions - ubuntu-20.04 (release)
