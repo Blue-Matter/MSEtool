@@ -171,18 +171,18 @@ management procedures.</p>
     <div id="functions">
     <h2>Functions</h2>
     
-<ul><li><p><code>runCOSEWIC</code>: Calls <code>runMSE</code> with number of projection years for 6x maximum age and
+<ul><li><p><code>runCOSEWIC()</code>: Calls <code>runMSE</code> with number of projection years for 6x maximum age and
 uses <code>NFref</code>, <code>FMSYref</code>, and <code>curE</code> MPs.</p></li>
-<li><p><code>COSEWIC_Pplot</code>: Projection plots of spawning stock biomass under three scenarios:
+<li><p><code>COSEWIC_Pplot()</code>: Projection plots of spawning stock biomass under three scenarios:
 no catch, FMSY fishing and status quo fishing effort.</p></li>
-<li><p><code>COSEWIC_Dplot</code>: Depletion plots evaluate whether significant declines have
+<li><p><code>COSEWIC_Dplot()</code>: Depletion plots evaluate whether significant declines have
 occurred over three generation times in both historical and projection years.</p></li>
-<li><p><code>COSEWIC_Blow</code>: Plots that evaluate the likelihood of declining below <code>Blow</code>,
+<li><p><code>COSEWIC_Blow()</code>: Plots that evaluate the likelihood of declining below <code>Blow</code>,
 by default, biomass that takes 3 generation times to reach half BMSY with zero fishing</p></li>
-<li><p><code>COSEWIC_Hplot</code>: Plots of historical spawning stock  relative to unfished and MSY levels.</p></li>
-<li><p><code>COSEWIC_report</code>: Create a standard DFO COSEWIC report (provides performance plots
+<li><p><code>COSEWIC_Hplot()</code>: Plots of historical spawning stock  relative to unfished and MSY levels.</p></li>
+<li><p><code>COSEWIC_report()</code>: Create a standard DFO COSEWIC report (provides performance plots
 to inform COSEWIC processes in Canadian fish stocks).</p></li>
-<li><p><code>COSEWIC_tab</code>: Creates a standard COSEWIC performance table:</p><ul><li><p><code>P_Cr</code> is the probability of being in the critical zone (less than 20% depletion)</p></li>
+<li><p><code>COSEWIC_tab()</code>: Creates a standard COSEWIC performance table:</p><ul><li><p><code>P_Cr</code> is the probability of being in the critical zone (less than 20% depletion)</p></li>
 <li><p><code>P_Ct</code> is the probability of being in the cautious zone (between 20% and 40% depletion)</p></li>
 <li><p><code>P_H</code> is the probability of being in the healthy zone (above 40% depletion)</p></li>
 <li><p><code>P_Cr_MSY</code> is the probability of being in the critical zone (less than 40% BMSY)</p></li>
@@ -193,7 +193,7 @@ to inform COSEWIC processes in Canadian fish stocks).</p></li>
 <li><p><code>P_A2</code> is the probability of being designated threatened according to COSEWIC Indicator A2 (Spawning biomass less than 50% that three generation times previously)</p></li>
 <li><p><code>Blow</code> is the probability that the stock is below the biomass for which it takes 3 generation times to reach 50% BMSY with zero fishing</p></li>
 </ul></li>
-<li><p><code>COSEWIC_tab_formatted</code>: A formatted version of the standard COSEWIC performance plot,
+<li><p><code>COSEWIC_tab_formatted()</code>: A formatted version of the standard COSEWIC performance plot,
 color coded by thresholds.</p></li>
 </ul></div>
     <div id="references">

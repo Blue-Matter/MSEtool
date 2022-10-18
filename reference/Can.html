@@ -110,12 +110,12 @@ compares to the data available in the Data object.</p>
     <div id="functions">
     <h2>Functions</h2>
     
-<ul><li><p><code>Can</code>: Identifies MPs that have the correct data, do not produce errors,
+<ul><li><p><code>Can()</code>: Identifies MPs that have the correct data, do not produce errors,
 and run within the time limit.</p></li>
-<li><p><code>Cant</code>: Identifies MPs that don't have sufficient data, lead to errors, or don't run in
+<li><p><code>Cant()</code>: Identifies MPs that don't have sufficient data, lead to errors, or don't run in
 time along with a list of their data requirements.</p></li>
-<li><p><code>DLMdiag</code>: Internal function called by <code>Can</code> and <code>Cant</code></p></li>
-<li><p><code>Needed</code>: Identifies what data are needed to run
+<li><p><code>DLMdiag()</code>: Internal function called by <code>Can</code> and <code>Cant</code></p></li>
+<li><p><code>Needed()</code>: Identifies what data are needed to run
 the MPs that are currently not able to run given a Data
 object</p></li>
 </ul></div>
