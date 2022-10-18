@@ -269,7 +269,8 @@ SimulatedData@AddIndType <- rep(1, n.ind)
 SimulatedData@AddIunits <- rep(1, n.ind)
 SimulatedData@CV_AddInd <- array(0.1, dim=c(dims[1],n.ind,dims[2]))
 
-usethis::use_data(SimulatedData, overwrite = TRUE)
+usethis::use_data(SimulatedData, overwrite = TRUE,
+                  compress='xz')
 
 clss <- 'Data'
 name <- 'SimulatedData'
@@ -356,7 +357,8 @@ db <- FishLife::FishBase
 LHdatabase <- list(Cov_gjj=db$Cov_gvv, ParentChild_gz=db$ParentChild_gz,
                    ParHat=db$ParHat)
 
-usethis::use_data(LHdatabase, internal = FALSE, overwrite = TRUE)
+usethis::use_data(LHdatabase, internal = FALSE, overwrite = TRUE,
+                  compress='xz')
 
 # Write roxygen
 chk <- file.exists(file.path('R/', RoxygenFile))

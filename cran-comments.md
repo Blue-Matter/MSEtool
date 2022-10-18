@@ -1,5 +1,9 @@
 ## Note to CRAN Maintainers
 
+Re-submission:
+- reduced size of the tarball to <5 MB
+- fixed the URL with DOI
+
 ## Test environments
 * local - Windows 4.2.1
 * Github actions - windows-latest (release)

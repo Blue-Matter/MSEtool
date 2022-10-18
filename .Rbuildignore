@@ -9,10 +9,11 @@ man-roxygen
 ## Ignore travis config file
 ^\.travis\.yml$
 ^\_pkgdown\.yml$
-docs
+^docs$
 
 # Ignore tests
 tests\*.*
+^tests$
 
 # Ignore DLL
 src\*.o
