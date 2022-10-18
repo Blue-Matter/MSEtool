@@ -95,12 +95,12 @@ or \code{OM@L50} are ignored.
 }
 \section{Functions}{
 \itemize{
-\item \code{LH2OM}: Predict missing life-history and populate \code{OM@cpars}
+\item \code{LH2OM()}: Predict missing life-history and populate \code{OM@cpars}
 
-\item \code{predictLH}: Predict missing life-history based on taxonomic information and
+\item \code{predictLH()}: Predict missing life-history based on taxonomic information and
 hierarchical model fitted to FishBase life-history parameters
-}}
 
+}}
 \references{
 Thorson, J. T., S. B. Munch, J. M. Cope, and J. Gao. 2017.
 Predicting life history parameters for all fishes worldwide. Ecological Applications. 27(8): 2262--2276

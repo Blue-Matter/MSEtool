@@ -24,11 +24,11 @@ space
 }
 \section{Functions}{
 \itemize{
-\item \code{sdconv}: Returns sigma of lognormal distribution
+\item \code{sdconv()}: Returns sigma of lognormal distribution
 
-\item \code{mconv}: Returns mu of lognormal distribution
+\item \code{mconv()}: Returns mu of lognormal distribution
+
 }}
-
 \author{
 T. Carruthers
 }

@@ -61,23 +61,23 @@ into R
 }
 \section{Functions}{
 \itemize{
-\item \code{load.iscam.files}: Wrapper function to generate R list
+\item \code{load.iscam.files()}: Wrapper function to generate R list
 
-\item \code{fetch.file.names}: A function for returning the three types of iSCAM input and output files
+\item \code{fetch.file.names()}: A function for returning the three types of iSCAM input and output files
 
-\item \code{read.report.file}: A function for returning the results of the .rep iscam file
+\item \code{read.report.file()}: A function for returning the results of the .rep iscam file
 
-\item \code{read.data.file}: A function for returning the results of the .dat iscam file
+\item \code{read.data.file()}: A function for returning the results of the .dat iscam file
 
-\item \code{read.control.file}: A function for returning the results of the iscam control file
+\item \code{read.control.file()}: A function for returning the results of the iscam control file
 
-\item \code{read.projection.file}: A function for returning the results of the iscam projection file
+\item \code{read.projection.file()}: A function for returning the results of the iscam projection file
 
-\item \code{read.par.file}: A function for returning the results of the iscam .par file
+\item \code{read.par.file()}: A function for returning the results of the iscam .par file
 
-\item \code{read.mcmc}: A function for returning the results of the iscam mcmc files
+\item \code{read.mcmc()}: A function for returning the results of the iscam mcmc files
+
 }}
-
 \seealso{
 \link{iSCAM2OM}
 }

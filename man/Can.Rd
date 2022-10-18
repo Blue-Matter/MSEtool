@@ -47,19 +47,19 @@ compares to the data available in the Data object.
 }
 \section{Functions}{
 \itemize{
-\item \code{Can}: Identifies MPs that have the correct data, do not produce errors,
+\item \code{Can()}: Identifies MPs that have the correct data, do not produce errors,
 and run within the time limit.
 
-\item \code{Cant}: Identifies MPs that don't have sufficient data, lead to errors, or don't run in
+\item \code{Cant()}: Identifies MPs that don't have sufficient data, lead to errors, or don't run in
 time along with a list of their data requirements.
 
-\item \code{DLMdiag}: Internal function called by \code{Can} and \code{Cant}
+\item \code{DLMdiag()}: Internal function called by \code{Can} and \code{Cant}
 
-\item \code{Needed}: Identifies what data are needed to run
+\item \code{Needed()}: Identifies what data are needed to run
 the MPs that are currently not able to run given a Data
 object
-}}
 
+}}
 \examples{
 CanMPs <- Can(MSEtool::Cobia)
 CantMPs <- Cant(MSEtool::Cobia)

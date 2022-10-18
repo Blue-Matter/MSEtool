@@ -24,11 +24,11 @@ normal space
 }
 \section{Functions}{
 \itemize{
-\item \code{alphaconv}: Returns alpha of beta distribution
+\item \code{alphaconv()}: Returns alpha of beta distribution
 
-\item \code{betaconv}: Returns beta of beta distribution
+\item \code{betaconv()}: Returns beta of beta distribution
+
 }}
-
 \author{
 T. Carruthers
 }

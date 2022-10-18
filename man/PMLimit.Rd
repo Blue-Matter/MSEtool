@@ -100,11 +100,11 @@ Create a table of Performance Limits and Performance Objectives
 }
 \section{Functions}{
 \itemize{
-\item \code{PMLimit}: Create a table of Performance Limits
+\item \code{PMLimit()}: Create a table of Performance Limits
 
-\item \code{PMObj}: Create a table of Performance Objectives.
+\item \code{PMObj()}: Create a table of Performance Objectives.
+
 }}
-
 \examples{
 \dontrun{
 MSE <- runMSE()

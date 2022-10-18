@@ -49,15 +49,15 @@ The Ricker equation is
 }
 \section{Functions}{
 \itemize{
-\item \code{hconv}: Returns steepness (h) from \code{alpha} and \code{phi0}
+\item \code{hconv()}: Returns steepness (h) from \code{alpha} and \code{phi0}
 
-\item \code{R0conv}: Returns unfished recruitment (R0) from \code{alpha}, \code{beta}, and \code{phi0}
+\item \code{R0conv()}: Returns unfished recruitment (R0) from \code{alpha}, \code{beta}, and \code{phi0}
 
-\item \code{SRalphaconv}: Returns \code{alpha} from \code{h} and \code{phi0}
+\item \code{SRalphaconv()}: Returns \code{alpha} from \code{h} and \code{phi0}
 
-\item \code{SRbetaconv}: Returns \code{beta} from \code{h}, \code{R0}, and \code{phi0}
+\item \code{SRbetaconv()}: Returns \code{beta} from \code{h}, \code{R0}, and \code{phi0}
+
 }}
-
 \author{
 Q. Huynh
 }

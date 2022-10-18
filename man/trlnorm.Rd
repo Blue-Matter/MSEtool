@@ -26,11 +26,11 @@ Variant of rlnorm which returns the mean when reps = 1.
 }
 \section{Functions}{
 \itemize{
-\item \code{trlnorm}: Generate log-normally distributed random numbers
+\item \code{trlnorm()}: Generate log-normally distributed random numbers
 
-\item \code{tdlnorm}: Calculate density of log-normally distributed random numbers
+\item \code{tdlnorm()}: Calculate density of log-normally distributed random numbers
+
 }}
-
 \author{
 T. Carruthers
 }

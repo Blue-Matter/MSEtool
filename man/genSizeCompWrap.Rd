@@ -58,7 +58,7 @@ And other internal related functions
 }
 \section{Functions}{
 \itemize{
-\item \code{getfifth}: Internal function to calculate fifth percentile of size composition
-}}
+\item \code{getfifth()}: Internal function to calculate fifth percentile of size composition
 
+}}
 \keyword{internal}

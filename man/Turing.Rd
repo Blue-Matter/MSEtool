@@ -38,9 +38,9 @@ of the 6 data samples look like they are all samples from the same underlying di
 }
 \section{Functions}{
 \itemize{
-\item \code{TuringMOM}: Turing function for multi-stock, multi-fleet MOMs
-}}
+\item \code{TuringMOM()}: Turing function for multi-stock, multi-fleet MOMs
 
+}}
 \note{
 The Turing function was suggested by Andre Punt in his review of one of our
 recent projects. It is named after the Turing test, developed by Alan Turing in

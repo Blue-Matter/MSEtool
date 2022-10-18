@@ -156,9 +156,9 @@ implementation portions. \code{SSMOM2OM} is the internal function that simplifie
 }
 \section{Functions}{
 \itemize{
-\item \code{MOM_agg_fleets}: Aggregate all fleets in an MOM object.
-}}
+\item \code{MOM_agg_fleets()}: Aggregate all fleets in an MOM object.
 
+}}
 \note{
 Currently tested on r4ss version 1.38.1-40.0 and SS 3.30.14.
 }

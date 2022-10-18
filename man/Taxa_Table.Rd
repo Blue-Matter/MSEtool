@@ -8,7 +8,7 @@
 An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 34721 rows and 8 columns.
 }
 \source{
-\url{https://doi.org/10.1111/j.1095-8649.2012.03464.x}
+\doi{10.1111/j.1095-8649.2012.03464.x}
 }
 \usage{
 Taxa_Table

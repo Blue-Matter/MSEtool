@@ -92,11 +92,11 @@ create problems when combining into a single object.
 }
 \section{Functions}{
 \itemize{
-\item \code{Simulate}: Run the Historical Simulations from an object of class \code{OM}
+\item \code{Simulate()}: Run the Historical Simulations from an object of class \code{OM}
 
-\item \code{Project}: Run the Forward Projections
+\item \code{Project()}: Run the Forward Projections
 
-\item \code{runMSE}: Run the Historical Simulations and Forward Projections
+\item \code{runMSE()}: Run the Historical Simulations and Forward Projections
 from an object of class `OM
-}}
 
+}}

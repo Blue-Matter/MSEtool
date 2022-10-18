@@ -97,24 +97,24 @@ management procedures.
 }
 \section{Functions}{
 \itemize{
-\item \code{runCOSEWIC}: Calls \code{runMSE} with number of projection years for 6x maximum age and
+\item \code{runCOSEWIC()}: Calls \code{runMSE} with number of projection years for 6x maximum age and
 uses \code{NFref}, \code{FMSYref}, and \code{curE} MPs.
 
-\item \code{COSEWIC_Pplot}: Projection plots of spawning stock biomass under three scenarios:
+\item \code{COSEWIC_Pplot()}: Projection plots of spawning stock biomass under three scenarios:
 no catch, FMSY fishing and status quo fishing effort.
 
-\item \code{COSEWIC_Dplot}: Depletion plots evaluate whether significant declines have
+\item \code{COSEWIC_Dplot()}: Depletion plots evaluate whether significant declines have
 occurred over three generation times in both historical and projection years.
 
-\item \code{COSEWIC_Blow}: Plots that evaluate the likelihood of declining below \code{Blow},
+\item \code{COSEWIC_Blow()}: Plots that evaluate the likelihood of declining below \code{Blow},
 by default, biomass that takes 3 generation times to reach half BMSY with zero fishing
 
-\item \code{COSEWIC_Hplot}: Plots of historical spawning stock  relative to unfished and MSY levels.
+\item \code{COSEWIC_Hplot()}: Plots of historical spawning stock  relative to unfished and MSY levels.
 
-\item \code{COSEWIC_report}: Create a standard DFO COSEWIC report (provides performance plots
+\item \code{COSEWIC_report()}: Create a standard DFO COSEWIC report (provides performance plots
 to inform COSEWIC processes in Canadian fish stocks).
 
-\item \code{COSEWIC_tab}: Creates a standard COSEWIC performance table:
+\item \code{COSEWIC_tab()}: Creates a standard COSEWIC performance table:
 \itemize{
 \item \code{P_Cr} is the probability of being in the critical zone (less than 20\% depletion)
 \item \code{P_Ct} is the probability of being in the cautious zone (between 20\% and 40\% depletion)
@@ -128,10 +128,10 @@ to inform COSEWIC processes in Canadian fish stocks).
 \item \code{Blow} is the probability that the stock is below the biomass for which it takes 3 generation times to reach 50\% BMSY with zero fishing
 }
 
-\item \code{COSEWIC_tab_formatted}: A formatted version of the standard COSEWIC performance plot,
+\item \code{COSEWIC_tab_formatted()}: A formatted version of the standard COSEWIC performance plot,
 color coded by thresholds.
-}}
 
+}}
 \references{
 \url{https://cosewic.ca/index.php/en-ca/}
 }

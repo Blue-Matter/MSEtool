@@ -72,13 +72,13 @@ will run the \code{AvC} MP in parallel mode.
 }
 \section{Functions}{
 \itemize{
-\item \code{SimulateMOM}: Simulate historical dynamics for multi-OM
+\item \code{SimulateMOM()}: Simulate historical dynamics for multi-OM
 
-\item \code{ProjectMOM}: Run Forward Projections for a \code{MOM} object
+\item \code{ProjectMOM()}: Run Forward Projections for a \code{MOM} object
 
-\item \code{multiMSE}: Run a multi-stock, multi-fleet MSE
+\item \code{multiMSE()}: Run a multi-stock, multi-fleet MSE
+
 }}
-
 \author{
 T. Carruthers and A. Hordyk
 }

@@ -25,11 +25,11 @@ This function reduces the CV by 5 per cent until steepness values can be sampled
 }
 \section{Functions}{
 \itemize{
-\item \code{sample_steepness2}: sample steepness values
+\item \code{sample_steepness2()}: sample steepness values
 
-\item \code{derive_beta_par}: derive beta parameter
+\item \code{derive_beta_par()}: derive beta parameter
+
 }}
-
 \author{
 Q. Huynh
 }
