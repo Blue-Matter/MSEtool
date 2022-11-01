@@ -2778,6 +2778,13 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       OM[[p]][[f]]<-MSElist[[p]][[f]][[1]]@OM
       Obsout[[p]][[f]]<-MSElist[[p]][[f]][[1]]@Obs
 
+      # remove MSElist Misc
+      for (mm in 1:nMP) {
+        MSElist[[p]][[f]][[mm]]@Misc$StockPars <- NULL
+        MSElist[[p]][[f]][[mm]]@Misc$FleetPars <- NULL
+        MSElist[[p]][[f]][[mm]]@Misc$ReferencePoints <- NULL
+      }
+        
     }
   }
   Misc <- list()
