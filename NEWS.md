@@ -1,5 +1,10 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
+# MSEtool 3.6.1
+
+## Minor changes 
+- Add `Misc` information to `PPD` for `MMSE`
+
 # MSEtool 3.6.0
 
 ## Major changes
