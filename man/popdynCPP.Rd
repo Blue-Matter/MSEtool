@@ -32,6 +32,8 @@ popdynCPP(
   MPA,
   control,
   SSB0c,
+  SRRfun,
+  SRRpars,
   plusgroup = 0L
 )
 }
