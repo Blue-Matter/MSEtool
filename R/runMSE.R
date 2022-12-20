@@ -449,6 +449,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
               maxF=StockPars$maxF,
               control=1,
               SSB0c=StockPars$SSB0[x],
+              SRRfun=SRRfun,
+              SRRpars = SRRpars,
               plusgroup=StockPars$plusgroup))
 
   N_unfished <- aperm(array(as.numeric(unlist(Unfished[1,], use.names=FALSE)),
