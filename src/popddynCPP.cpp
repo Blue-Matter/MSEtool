@@ -127,7 +127,8 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
                List movc, double SRrelc, arma::vec Effind,
                double Spat_targc, double hc, NumericVector R0c, NumericVector SSBpRc,
                NumericVector aRc, NumericVector bRc, double Qc, double Fapic, double maxF,
-               arma::mat MPA, int control, double SSB0c, int plusgroup=0) {
+               arma::mat MPA, int control, double SSB0c, Function SRRfun, List SRRpars,
+               int plusgroup=0) {
 
   int n_age =maxage+1; // number of age classes (including age 0)
   arma::cube Narray(n_age, pyears, nareas, arma::fill::zeros);
@@ -231,6 +232,11 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
     if (SRrelc == 2) {
       // most transparent form of the Ricker uses alpha and beta params
       rec(0) = PerrYr * aRc2(0) * SBtot * exp(-bR *SBtot);
+    }
+    
+    if (SRrelc == 3) {
+      double rec_val = as<double>(SRRfun(SBtot, R0, SSBpRc, SRRpars));
+      rec(0) = PerrYr * rec_val;
     }
 
     // Distribute recruitment across areas
