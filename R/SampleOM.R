@@ -238,7 +238,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   }
   # Get custom pars if they exist
   if (methods::is(Stock, "OM") && length(Stock@cpars) > 0 && is.null(cpars))
-    cpars <- SampleCpars(Stock@cpars, nsim)  # custom parameters exist in Stock/OM object
+    cpars <- SampleCpars(Stock@cpars, nsim, silent=!msg)  # custom parameters exist in Stock/OM object
 
   # ---- Maximum age ----
   if(!is.null(cpars$maxage)) {
