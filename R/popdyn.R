@@ -33,6 +33,8 @@ CalculateQ <- function(x, StockPars, FleetPars, pyears,
                   plusgroup=StockPars$plusgroup,
                   StockPars$VB0[x],
                   SBMSYc=StockPars$SSBMSY[x],
+                  SRRfun=StockPars$SRRfun,
+                  SRRpars=StockPars$SRRpars[[x]],
                   control)
 
   return(exp(opt$minimum))
@@ -75,13 +77,17 @@ CalculateQ <- function(x, StockPars, FleetPars, pyears,
 #' @keywords internal
 optQ <- function(logQ, depc, SSB0c, nareas, maxage, Ncurr, pyears, M_age, Asize_c,
                  MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc,
-                 R0c, SSBpRc, aRc, bRc, maxF, MPA, plusgroup, VB0c, SBMSYc, control) {
+                 R0c, SSBpRc, aRc, bRc, maxF, MPA, plusgroup, VB0c, SBMSYc, SRRfun, SRRpars,
+                 control) {
 
   simpop <- popdynCPP(nareas, maxage, Ncurr, pyears, M_age, Asize_c,
                       MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind,
                       Spat_targc, hc, R0c=R0c, SSBpRc=SSBpRc, aRc=aRc, bRc=bRc,
                       Qc=exp(logQ), Fapic=0, maxF=maxF, MPA=MPA, control=1,
-                      SSB0c=SSB0c, plusgroup=plusgroup)
+                      SSB0c=SSB0c,
+                      SRRfun=SRRfun,
+                      SRRpars =SRRpars,
+                      plusgroup=plusgroup)
 
   if (!is.null(control$Depletion) && control$Depletion == 'end') {
     # Calculate depletion using biomass at the end of the last projection year
@@ -311,7 +317,9 @@ calcRefYield <- function(x, StockPars, FleetPars, pyears, Ncurr, nyears, proyear
                   MPA=FleetPars$MPA,
                   maxF=StockPars$maxF,
                   SSB0c=StockPars$SSB0[x],
-                  plusgroup=StockPars$plusgroup)
+                  plusgroup=StockPars$plusgroup,
+                  SRRfun=StockPars$SRRfun,
+                  SRRpars=StockPars$SRRpars[[x]])
 
   -opt$objective
 
@@ -354,14 +362,17 @@ calcRefYield <- function(x, StockPars, FleetPars, pyears, Ncurr, nyears, proyear
 optYield <- function(logFa, Asize_c, nareas, maxage, Ncurr, pyears, M_age,
                    MatAge, WtAge, FecAge, WtAgeC, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc,
                    R0c, SSBpRc, aRc, bRc, Qc, MPA, maxF, SSB0c,
-                   plusgroup=0) {
+                   plusgroup=0, SRRfun, SRRpars) {
 
   FMSYc <- exp(logFa)
 
   simpop <- popdynCPP(nareas, maxage, Ncurr, pyears, M_age, Asize_c,
                       MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc,
                       R0c, SSBpRc, aRc, bRc, Qc=0, Fapic=FMSYc, MPA=MPA, maxF=maxF, control=2,
-                      SSB0c=SSB0c, plusgroup = plusgroup)
+                      SSB0c=SSB0c, 
+                      SRRfun=SRRfun,
+                      SRRpars=SRRpars,
+                      plusgroup = plusgroup)
 
   # Yield
   # Cn <- simpop[[7]]/simpop[[8]] * simpop[[1]] * (1-exp(-simpop[[8]])) # retained catch

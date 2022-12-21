@@ -115,6 +115,8 @@ arma::mat movestockCPP(double nareas, double maxage, arma::cube mov, NumericMatr
 //' @param MPA Spatial closure by year and area
 //' @param control Integer. 1 to use q and effort to calculate F, 2 to use Fapic (apical F) and
 //' vulnerability to calculate F.
+//' @param SRRfun Optional. A stock-recruit function used if `SRrelc =3` 
+//' @param SRRpars Optional. A named list of arguments for `SRRfun`
 //' @param plusgroup Integer. Include a plus-group (1) or not (0)?
 //'
 //' @author A. Hordyk
@@ -235,7 +237,7 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
     }
     
     if (SRrelc == 3) {
-      double rec_val = as<double>(SRRfun(SBtot, R0, SSBpRc, SRRpars));
+      double rec_val = as<double>(SRRfun(SBtot, R0, SSBpRc(0), SRRpars));
       rec(0) = PerrYr * rec_val;
     }
 

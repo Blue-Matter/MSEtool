@@ -158,6 +158,8 @@ movestockCPP <- function(nareas, maxage, mov, Number) {
 #' @param MPA Spatial closure by year and area
 #' @param control Integer. 1 to use q and effort to calculate F, 2 to use Fapic (apical F) and
 #' vulnerability to calculate F.
+#' @param SRRfun Optional. A stock-recruit function used if `SRrelc =3` 
+#' @param SRRpars Optional. A named list of arguments for `SRRfun`
 #' @param plusgroup Integer. Include a plus-group (1) or not (0)?
 #'
 #' @author A. Hordyk

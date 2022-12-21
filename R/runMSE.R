@@ -102,6 +102,33 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                                cpars=SampCpars,
                                msg=!silent)
 
+  # Check for custom stock-recruit function
+  if (!is.null(SampCpars$SRR)) {
+    req_names <- c('SRRfun', 'SRRpars')
+    if (any(!(names(SampCpars$SRR) %in% req_names)))
+      stop('`cpars$SRR` must be a list with names: ', paste(req_names, collapse=", "))
+    
+    if (!inherits(SampCpars$SRR$SRRfun, 'function'))
+      stop('`cpars$SRR$SRRfun` must be a function')
+    
+    if (!inherits(SampCpars$SRR$SRRpars, 'data.frame'))
+      stop('`cpars$SRR$SRRpars` must be a data.frame with `nsim` rows')
+    
+    if (nrow(SampCpars$SRR$SRRpars)!=nsim)
+      stop('`cpars$SRR$SRRpars` must be a data.frame with `nsim` rows')
+     
+    req_args <- c("SB", "R0", "SSBpR", "SRRpars")
+    fun_args <- formalArgs(SampCpars$SRR$SRRfun)
+    if (any(fun_args!=req_args)) 
+      stop('Arguments for `cpars$SRR$SRRfun` must be: ', paste(req_args, collapse=', '))
+    StockPars$SRRfun <- SampCpars$SRR$SRRfun
+    StockPars$SRRpars <- split(SampCpars$SRR$SRRpars, seq(nrow(SampCpars$SRR$SRRpars)))
+    StockPars$SRrel <- rep(3, nsim)
+  } else {
+    StockPars$SRRfun <- function() NULL
+    StockPars$SRRpars <- vector('list', nsim)
+  } 
+  
   # Checks
   if (any(range(StockPars$M_ageArray) <=tiny))
     stop("range of StockPars$M_ageArray is: ", paste0(range(StockPars$M_ageArray), collapse="-"))
@@ -449,8 +476,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
               maxF=StockPars$maxF,
               control=1,
               SSB0c=StockPars$SSB0[x],
-              SRRfun=SRRfun,
-              SRRpars = SRRpars,
+              SRRfun=StockPars$SRRfun,
+              SRRpars = StockPars$SRRpars[[x]],
               plusgroup=StockPars$plusgroup))
 
   N_unfished <- aperm(array(as.numeric(unlist(Unfished[1,], use.names=FALSE)),
@@ -619,6 +646,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
               maxF=StockPars$maxF,
               control=1,
               SSB0c=StockPars$SSB0[x],
+              SRRfun=StockPars$SRRfun,
+              SRRpars = StockPars$SRRpars[[x]],
               plusgroup=StockPars$plusgroup))
   
   # Number at the beginning of each year
@@ -732,7 +761,6 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   SPR_hist$Equilibrium <- CalcSPReq(StockPars$FM, StockPars, n_age, nareas, nyears, proyears, nsim, Hist = TRUE)
   SPR_hist$Dynamic <- CalcSPRdyn(StockPars$FM, StockPars, n_age, nareas, nyears, proyears, nsim, Hist = TRUE)
 
-  
   # ---- Calculate Mean Generation Time ----
   MarrayArea <- replicate(nareas, StockPars$M_ageArray[,,1:nyears])
   Mnow<-apply(MarrayArea[,,nyears,]*N[,,nyears,],1:2,sum)/apply(N[,,nyears,],1:2,sum)
@@ -776,7 +804,9 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                    StockPars$aR,
                    StockPars$bR,
                    Bfrac,
-                   maxF)
+                   maxF,
+                   SRRfun=StockPars$SRRfun, 
+                   SRRpars=StockPars$SRRpars)
   } else {
     Blow <- sfSapply(1:nsim,getBlow,
                    StockPars$N,
@@ -805,7 +835,9 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                    StockPars$aR,
                    StockPars$bR,
                    Bfrac,
-                   maxF)
+                   maxF,
+                   SRRfun=StockPars$SRRfun, 
+                   SRRpars=StockPars$SRRpars)
   }
 
   StockPars$Blow <- Blow
