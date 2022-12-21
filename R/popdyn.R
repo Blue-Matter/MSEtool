@@ -144,12 +144,13 @@ split.along.dim <- function(a, n) {
 #' @param SSBpR Vector of unfished spawners per recruit
 #' @param yr.ind Year index used in calculations
 #' @param plusgroup Integer. Default = 0 = no plus-group. Use 1 to include a plus-group
+#' @param StockPars A list of stock parameters
 #' @return Results from `MSYCalcs`
 #' @export
 #'
 #' @keywords internal
 optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxage, R0, SRrel, hs,
-                      SSBpR, yr.ind=1, plusgroup=0) {
+                      SSBpR, yr.ind=1, plusgroup=0, StockPars=NULL) {
   if (length(yr.ind)==1) {
     M_at_Age <- M_ageArray[x,,yr.ind]
     Wt_at_Age <- Wt_age[x,, yr.ind]
@@ -163,8 +164,6 @@ optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxage, R0, SR
     Mat_at_Age <- apply(Mat_age[x,, yr.ind], 1, mean)
     V_at_Age <- apply(V[x,, yr.ind], 1, mean)
   }
-
-  boundsF <- c(1E-4, 3)
   
   # check for M = 0 in MOMs where maxage isn't the same for each stock
   if (max(which(M_at_Age!=0)) != (maxage+1)) {
@@ -176,16 +175,56 @@ optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxage, R0, SR
     V_at_Age <- V_at_Age[ind]
     maxage <- length(ind)-1
   }
-
-  doopt <- optimise(MSYCalcs, log(boundsF), M_at_Age, Wt_at_Age, Mat_at_Age,
-                    Fec_at_Age, V_at_Age, maxage, R0[x], SRrel[x], hs[x], SSBpR[x, 1], opt=1,
-                    plusgroup=plusgroup)
-
-  MSYs <- MSYCalcs(doopt$minimum, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age,
-                   V_at_Age, maxage, R0[x], SRrel[x], hs[x], SSBpR[x, 1], opt=2,
-                   plusgroup=plusgroup)
   
-  if(!doopt$objective) MSYs[] <- 0 # Assume stock crashes regardless of F
+  boundsF <- c(1E-4, 3)
+  
+  if (SRrel[x]!=3) {
+    doopt <- optimise(MSYCalcs, log(boundsF), M_at_Age, Wt_at_Age, Mat_at_Age,
+                      Fec_at_Age, V_at_Age, maxage, R0[x], SRrel[x], hs[x], SSBpR[x, 1], opt=1,
+                      plusgroup=plusgroup)
+    
+    MSYs <- MSYCalcs(doopt$minimum, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age,
+                     V_at_Age, maxage, R0[x], SRrel[x], hs[x], SSBpR[x, 1], opt=2,
+                     plusgroup=plusgroup) 
+    if(!doopt$objective) MSYs[] <- 0 # Assume stock crashes regardless of F
+  } else {
+    
+    # Project forward and optimize for F
+    stop()
+    opt <- optimize(optYield, log(c(0.001, 10)),
+                    Asize_c=StockPars$Asize[x,],
+                    StockPars$nareas,
+                    StockPars$maxage,
+                    Ncurr=Ncurr[x,,],
+                    pyears=pyears,
+                    M_age=StockPars$M_ageArray[x,,(nyears):(nyears+proyears)],
+                    MatAge=StockPars$Mat_age[x,,(nyears):(nyears+proyears)],
+                    WtAge=StockPars$Wt_age[x,,(nyears):(nyears+proyears)],
+                    FecAge=StockPars$Fec_Age[x,,(nyears):(nyears+proyears)],
+                    WtAgeC=FleetPars$Wt_age_C[x,,(nyears):(nyears+proyears)],
+                    Vuln=FleetPars$V_real[x,,(nyears):(nyears+proyears)],
+                    Retc=FleetPars$retA_real[x,,(nyears):(nyears+proyears)],
+                    Prec=StockPars$Perr_y[x,(nyears):(nyears+proyears+StockPars$maxage)],
+                    movc=split.along.dim(StockPars$mov[x,,,,(nyears):(nyears+proyears)],4),
+                    SRrelc=StockPars$SRrel[x],
+                    Effind=FleetPars$Find[x,],
+                    Spat_targc=FleetPars$Spat_targ[x],
+                    hc=StockPars$hs[x],
+                    R0c=StockPars$R0a[x,],
+                    SSBpRc=StockPars$SSBpR[x,],
+                    aRc=StockPars$aR[x,],
+                    bRc=StockPars$bR[x,],
+                    MPA=FleetPars$MPA,
+                    maxF=StockPars$maxF,
+                    SSB0c=StockPars$SSB0[x],
+                    plusgroup=StockPars$plusgroup,
+                    SRRfun=StockPars$SRRfun,
+                    SRRpars=StockPars$SRRpars[[x]])
+    
+    
+  }
+  
+  
 
   return(MSYs)
 }
