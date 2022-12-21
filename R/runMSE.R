@@ -128,6 +128,9 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     StockPars$SRRfun <- function() NULL
     StockPars$SRRpars <- vector('list', nsim)
   } 
+
+  if (StockPars$SRrel[1]==3 & is.null(formalArgs(StockPars$SRRfun)))
+    stop('If `SRrel=3`, a custom stock-recruit function must be provided in `cpars$SRR`')
   
   # Checks
   if (any(range(StockPars$M_ageArray) <=tiny))
@@ -392,7 +395,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                   hs=StockPars$hs, 
                   SSBpR=StockPars$SSBpR,
                   yr.ind=y, 
-                  plusgroup=StockPars$plusgroup)
+                  plusgroup=StockPars$plusgroup,
+                  StockPars=StockPars)
       })
     })
   } else {
@@ -410,7 +414,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                   hs=StockPars$hs, 
                   SSBpR=StockPars$SSBpR,
                   yr.ind=y, 
-                  plusgroup=StockPars$plusgroup)
+                  plusgroup=StockPars$plusgroup,
+                  StockPars=StockPars)
       })
     })
   }
