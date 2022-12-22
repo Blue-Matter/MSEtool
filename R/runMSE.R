@@ -381,24 +381,46 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
 
   # Assuming all vulnerable fish are kept; ie MSY is total removals
   if (!snowfall::sfIsRunning()) {
-    MSYrefsYr <- lapply(1:nsim, function(x) {
-      sapply(1:(nyears+proyears), function(y) {
-        optMSY_eq(x, 
-                  M_ageArray=StockPars$M_ageArray, 
-                  Wt_age=StockPars$Wt_age, 
-                  Mat_age=StockPars$Mat_age,
-                  Fec_age=StockPars$Fec_Age, 
-                  V=FleetPars$V_real, 
-                  maxage=StockPars$maxage, 
-                  R0=StockPars$R0,
-                  SRrel=StockPars$SRrel, 
-                  hs=StockPars$hs, 
-                  SSBpR=StockPars$SSBpR,
-                  yr.ind=y, 
-                  plusgroup=StockPars$plusgroup,
-                  StockPars=StockPars)
+    
+    MSYrefsYr <- if (requireNamespace("pbapply", quietly = TRUE)) {
+      pbapply::pblapply(1:nsim, function(x) {
+        sapply(1:(nyears+proyears), function(y) {
+          optMSY_eq(x, 
+                    M_ageArray=StockPars$M_ageArray, 
+                    Wt_age=StockPars$Wt_age, 
+                    Mat_age=StockPars$Mat_age,
+                    Fec_age=StockPars$Fec_Age, 
+                    V=FleetPars$V_real, 
+                    maxage=StockPars$maxage, 
+                    R0=StockPars$R0,
+                    SRrel=StockPars$SRrel, 
+                    hs=StockPars$hs, 
+                    SSBpR=StockPars$SSBpR,
+                    yr.ind=y, 
+                    plusgroup=StockPars$plusgroup,
+                    StockPars=StockPars)
+        })
       })
-    })
+    } else {
+      lapply(1:nsim, function(x) {
+        sapply(1:(nyears+proyears), function(y) {
+          optMSY_eq(x, 
+                    M_ageArray=StockPars$M_ageArray, 
+                    Wt_age=StockPars$Wt_age, 
+                    Mat_age=StockPars$Mat_age,
+                    Fec_age=StockPars$Fec_Age, 
+                    V=FleetPars$V_real, 
+                    maxage=StockPars$maxage, 
+                    R0=StockPars$R0,
+                    SRrel=StockPars$SRrel, 
+                    hs=StockPars$hs, 
+                    SSBpR=StockPars$SSBpR,
+                    yr.ind=y, 
+                    plusgroup=StockPars$plusgroup,
+                    StockPars=StockPars)
+        })
+      })
+    }
   } else {
     MSYrefsYr <- snowfall::sfLapply(1:nsim, function(x) {
       sapply(1:(nyears+proyears), function(y) {
@@ -1348,10 +1370,13 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     # recruitment in first projection year
     SSBcurr <- apply(SSB_P[,,1,],c(1,3), sum)
     recdev <- StockPars$Perr_y[, nyears+n_age]
-    rec_area <- sapply(1:nsim, calcRecruitment, SRrel=StockPars$SRrel, SSBcurr=SSBcurr,
+    rec_area <- sapply(1:nsim, calcRecruitment, SRrel=StockPars$SRrel, 
+                       SSBcurr=SSBcurr,
                        recdev=recdev, hs=StockPars$hs,
                        aR= StockPars$aR, bR=StockPars$bR, R0a=StockPars$R0a,
-                       SSBpR=StockPars$SSBpR)
+                       SSBpR=StockPars$SSBpR,
+                       SRRfun=StockPars$SRRfun,
+                       SRRpars=StockPars$SRRpars)
 
     N_P[,1,y,] <- t(rec_area)
 
@@ -1479,7 +1504,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                             Fec_age=StockPars$Fec_Age,
                             V_P, StockPars$maxage,StockPars$R0, StockPars$SRrel, 
                             StockPars$hs, StockPars$SSBpR,
-                            yr.ind=y1, plusgroup=StockPars$plusgroup)
+                            yr.ind=y1, plusgroup=StockPars$plusgroup,
+                            StockPars=StockPars)
         MSY_y[,mm,y1] <- MSYrefsYr[1, ]
         FMSY_y[,mm,y1] <- MSYrefsYr[2,]
         SSBMSY_y[,mm,y1] <- MSYrefsYr[3,]
@@ -1536,7 +1562,10 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       rec_area <- sapply(1:nsim, calcRecruitment, SRrel=StockPars$SRrel,
                          SSBcurr=SSBcurr,
                          recdev=recdev, hs=StockPars$hs, aR=StockPars$aR,
-                         bR=StockPars$bR, R0a=StockPars$R0a, SSBpR=StockPars$SSBpR)
+                         bR=StockPars$bR, R0a=StockPars$R0a, 
+                         SSBpR=StockPars$SSBpR,
+                         SRRfun=StockPars$SRRfun,
+                         SRRpars=StockPars$SRRpars)
 
       N_P[,1,y,] <- t(rec_area)
 
