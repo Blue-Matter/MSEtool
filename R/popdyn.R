@@ -188,44 +188,103 @@ optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxage, R0, SR
                      plusgroup=plusgroup) 
     if(!doopt$objective) MSYs[] <- 0 # Assume stock crashes regardless of F
   } else {
+    # Optimize for maximum yield
+    nareas <- StockPars$nareas
+    n_age <- StockPars$n_age
+    pyears <- n_age*10
+    Asize <- rep(1/nareas, nareas)
     
-    # Project forward and optimize for F
-    stop()
+    surv <- rep(1, n_age) 
+    surv[2:n_age] <- exp(-cumsum(M_at_Age[1:(n_age-1)]))
+    if (plusgroup) {
+      surv[n_age] <- surv[n_age]/(1-exp(-M_at_Age[n_age]))
+    }
+    # Unfished N
+    R0 <- StockPars$R0[x]
+    R0a <- rep(R0/nareas, nareas)
+    Ninit <- R0 * surv
+    Ncurr <- matrix(Ninit*1/nareas, n_age, nareas)
+    M_age <- replicate(pyears,M_at_Age)
+    MatAge <- replicate(pyears,Mat_at_Age)
+    WtAge <- replicate(pyears,Wt_at_Age)
+    FecAge <- replicate(pyears,Fec_at_Age)
+    WtAgeC <- replicate(pyears,Wt_at_Age)
+    Vuln <- replicate(pyears, V_at_Age)
+    Retc <- array(1, dim=dim(Vuln))
+    Perr_y <- rep(1, pyears+n_age)
+    
+    mov <- array(1/nareas, dim=c(n_age, nareas, nareas))
+    movl <- list()
+    movl[[1]] <- mov
+    movl <- rep(movl, pyears)
+    MPA <- matrix(1, pyears, nareas)
+    
     opt <- optimize(optYield, log(c(0.001, 10)),
-                    Asize_c=StockPars$Asize[x,],
+                    Asize_c=Asize,
                     StockPars$nareas,
                     StockPars$maxage,
-                    Ncurr=Ncurr[x,,],
+                    Ncurr=Ncurr,
                     pyears=pyears,
-                    M_age=StockPars$M_ageArray[x,,(nyears):(nyears+proyears)],
-                    MatAge=StockPars$Mat_age[x,,(nyears):(nyears+proyears)],
-                    WtAge=StockPars$Wt_age[x,,(nyears):(nyears+proyears)],
-                    FecAge=StockPars$Fec_Age[x,,(nyears):(nyears+proyears)],
-                    WtAgeC=FleetPars$Wt_age_C[x,,(nyears):(nyears+proyears)],
-                    Vuln=FleetPars$V_real[x,,(nyears):(nyears+proyears)],
-                    Retc=FleetPars$retA_real[x,,(nyears):(nyears+proyears)],
-                    Prec=StockPars$Perr_y[x,(nyears):(nyears+proyears+StockPars$maxage)],
-                    movc=split.along.dim(StockPars$mov[x,,,,(nyears):(nyears+proyears)],4),
+                    M_age=M_age,
+                    MatAge=MatAge,
+                    WtAge=WtAge,
+                    FecAge=FecAge,
+                    WtAgeC=WtAgeC,
+                    Vuln=Vuln,
+                    Retc=Retc,
+                    Prec=Perr_y,
+                    movc=movl,
                     SRrelc=StockPars$SRrel[x],
-                    Effind=FleetPars$Find[x,],
-                    Spat_targc=FleetPars$Spat_targ[x],
+                    Effind=rep(1, pyears),
+                    Spat_targc=1,
                     hc=StockPars$hs[x],
-                    R0c=StockPars$R0a[x,],
+                    R0c=R0a,
                     SSBpRc=StockPars$SSBpR[x,],
                     aRc=StockPars$aR[x,],
                     bRc=StockPars$bR[x,],
-                    MPA=FleetPars$MPA,
+                    MPA=MPA,
                     maxF=StockPars$maxF,
                     SSB0c=StockPars$SSB0[x],
                     plusgroup=StockPars$plusgroup,
                     SRRfun=StockPars$SRRfun,
                     SRRpars=StockPars$SRRpars[[x]])
-    
-    
-  }
-  
-  
 
+    FMSYc <- exp(opt$minimum)
+    
+    simpop <- popdynCPP(nareas, maxage, Ncurr, pyears, M_age, Asize,
+                        MatAge, WtAge, FecAge, Vuln, Retc, Perr_y, movl, 3, 
+                        rep(1, pyears), 1, StockPars$hs[x],
+                        R0a, StockPars$SSBpR[x,],
+                        StockPars$aR[x,], StockPars$bR[x,], Qc=0,
+                        Fapic=FMSYc, MPA=MPA, maxF=maxF, control=2,
+                        SSB0c=StockPars$SSB0[x], 
+                        SRRfun=StockPars$SRRfun,
+                        SRRpars=StockPars$SRRpars[[x]],
+                        plusgroup = StockPars$plusgroup)
+    
+    Yield <- -opt$objective
+    F <- FMSYc
+    SB <- sum(simpop[[4]][,pyears,])
+    SB0 <- sum(simpop[[4]][,1,])
+    SB_SB0 <- SB/SB0
+    B <- sum(simpop[[2]][,pyears,])
+    B0 <- sum(simpop[[2]][,1,])
+    B_B0 <- B/B0
+    VB <- sum(simpop[[5]][,pyears,])
+    VB0 <- sum(simpop[[5]][,1,])
+    VB_VB0 <- VB/VB0
+    RelRec <- sum(simpop[[1]][1,pyears,])
+    N0 <- sum(simpop[[1]][,1,])
+    SN0 <- sum(simpop[[3]][,1,])
+    
+    MSYs <- c(Yield, F, SB, SB_SB0, B_B0, B, VB, VB_VB0, RelRec, SB0, B0, R0,
+              NA, N0, SN0)
+    names(MSYs) <- c("Yield", "F", "SB", "SB_SB0", "B_B0", "B", "VB", "VB_VB0",
+                      "RelRec", "SB0", "B0", "R0", "h", "N0", "SN0")
+ 
+    if(!opt$objective) MSYs[] <- 0 # Assume stock crashes regardless of F
+    }
+  
   return(MSYs)
 }
 
