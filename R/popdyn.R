@@ -191,7 +191,7 @@ optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxage, R0, SR
     # Optimize for maximum yield
     nareas <- StockPars$nareas
     n_age <- StockPars$n_age
-    pyears <- n_age*10
+    pyears <- n_age*4
     Asize <- rep(1/nareas, nareas)
     
     surv <- rep(1, n_age) 
@@ -345,6 +345,11 @@ per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxag
   F01 <- LinInterp_cpp(dYPR_dF, F_search[-length(YPR_search)], xlev = 0.1 * dYPR_dF[1])
   Fmax <- F_search[which.max(YPR_search)]
   
+  if (StockPars$SRrel[x] == 3) {
+    return(list(FSPR, FYPR = c(YPR_F01 = F01, YPR_Fmax = Fmax,
+                               SPRcrash=NA, Fcrash=NA,
+                               Fmed=NA)))
+  }
   if(StockPars$SRrel[x] == 1) {
     CR <- 4 * StockPars$hs[x]/(1 - StockPars$hs[x])
   } else if(StockPars$SRrel[x] == 2) {
