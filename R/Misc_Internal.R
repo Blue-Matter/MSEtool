@@ -293,19 +293,24 @@ LinInterp<-function(x, y, xlev, ascending = FALSE, zeroint = FALSE) {
 
 }
 
-calcRecruitment <- function(x, SRrel, SSBcurr, recdev, hs, aR, bR, R0a, SSBpR) {
+calcRecruitment <- function(x, SRrel, SSBcurr, recdev, hs, aR, bR, R0a, SSBpR, 
+                            SRRfun, SRRpars) {
   calcRecruitment_int(SRrel = SRrel[x], SSBcurr = SSBcurr[x, ], recdev = recdev[x], hs = hs[x],
-                      aR = aR[x, 1], bR = 1/sum(1/bR[x, ]), R0a = R0a[x, ], SSBpR = SSBpR[x, 1])
+                      aR = aR[x, 1], bR = 1/sum(1/bR[x, ]), R0a = R0a[x, ],
+                      SSBpR = SSBpR[x, 1], SRRfun, SRRpars[[x]])
 }
 
-calcRecruitment_int <- function(SRrel, SSBcurr, recdev, hs, aR, bR, R0a, SSBpR) {
+calcRecruitment_int <- function(SRrel, SSBcurr, recdev, hs, aR, bR, R0a, SSBpR,
+                                SRRfun, SRRpars) {
   R0 <- sum(R0a) # calculate global recruitment and distribute according to R0a
   rdist <- R0a/R0
   SBtot <- sum(SSBcurr)
   if (SRrel == 1) { # BH rec
     rec <- recdev * (4 * R0 * hs * SBtot)/(SSBpR * R0 * (1-hs) + (5*hs-1) * SBtot)
-  } else { # Ricker rec
+  } else if (SRrel == 2) { # Ricker rec
     rec <- recdev * aR * SBtot * exp(-bR * SBtot)
+  } else {
+    rec <- recdev * SRRfun(SBtot, R0, SSBpR, SRRpars)
   }
   return(rec * rdist)
 }
