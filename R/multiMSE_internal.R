@@ -172,7 +172,7 @@ HistMICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, 
              R0x = R0x, R0ax = R0ax, SSBpRx = SSBpRx, hsx = hsx, aRx = aRx, bRx = bRx,
              ax = ax, bx = bx, Perrx = Perrx, SRrelx = SRrelx, Rel = Rel, SexPars = SexPars, x = x,
              plusgroup = plusgroup, maxF = maxF, SSB0x = SSB0x, B0x = B0x, MPA,
-             SRRfun=StockPars[[p]]$SRRfun, SRRpars=StockPars[[p]]$SRRpars[[x]])
+             SRRfun=StockPars[[1]]$SRRfun, SRRpars=StockPars[[1]]$SRRpars[[x]])
 
 }
 
