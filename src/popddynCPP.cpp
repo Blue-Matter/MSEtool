@@ -237,7 +237,7 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
     }
     
     if (SRrelc == 3) {
-      double rec_val = as<double>(SRRfun(SBtot, R0, SSBpRc(0), SRRpars));
+      double rec_val = as<double>(SRRfun(SBtot, SRRpars));
       rec(0) = PerrYr * rec_val;
     }
 
