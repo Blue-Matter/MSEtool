@@ -97,7 +97,7 @@ NumericVector MSYCalcs(double logF,
     h = R20/R0;
   }
   if (SRrelx==3) {
-    RelRec = as<double>(relRfun(SRRpars, EggF));
+    RelRec = as<double>(relRfun(EggF, SRRpars));
     R0 = R0x;
   }
   
