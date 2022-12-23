@@ -583,7 +583,8 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, nyears, maxF, plus
                     hs=StockPars$hs,
                     R0a=R0a, SSBpR=SSBpR, aR=aR, bR=bR, SSB0=SSB0,
                     MPA=noMPA, maxF=maxF,
-                    Nyrs, plusgroup)
+                    Nyrs, plusgroup,
+                    StockPars$SRRfun, StockPars$SRRpars)
 
   Neq1 <- aperm(array(as.numeric(unlist(runProj)), dim=c(n_age, nareas, nsim)), c(3,1,2))  # unpack the list
 
