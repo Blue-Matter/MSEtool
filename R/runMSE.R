@@ -138,10 +138,10 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
       if (!inherits(SampCpars$SRR$relRfun, 'function'))
         stop('`cpars$SRR$SRRfun` must be a function')
       StockPars$relRfun <- SampCpars$SRR$relRfun
-      req_args <- c('SRRpars', 'SSBpR', 'opt')
+      req_args <- c('SRRpars', 'SSBpR')
       fun_args <- formalArgs(SampCpars$SRR$relRfun)
-      if (length(fun_args)!=3)
-        stop('`cpars$SRR$SRRfun` must have 3 arguments: ', paste(req_args, collapse=", "))
+      if (length(fun_args)!=2)
+        stop('`cpars$SRR$SRRfun` must have 2 arguments: ', paste(req_args, collapse=", "))
       if (any(fun_args!=req_args)) 
         stop('Arguments for `cpars$SRR$relRfun` must be: ', paste(req_args, collapse=', '))
       
