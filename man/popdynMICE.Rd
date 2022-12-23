@@ -45,7 +45,9 @@ popdynMICE(
   maxF,
   SSB0x,
   B0x,
-  MPA
+  MPA,
+  SRRfun,
+  SRRpars
 )
 }
 \arguments{
