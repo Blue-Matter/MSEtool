@@ -182,21 +182,21 @@ optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxage, R0, SR
   if (SRrel[x] <3) do_eq_per_recruit <- TRUE
   if (SRrel[x] == 3) {
     # Check for function
-    if (!is.null(formals(StockPars$SRRRefPfun)))
+    if (!is.null(formals(StockPars$relRfun)))
       do_eq_per_recruit <- TRUE
   }
   
   if (do_eq_per_recruit) {
     doopt <- optimise(MSYCalcs, log(boundsF), M_at_Age, Wt_at_Age, Mat_at_Age,
                       Fec_at_Age, V_at_Age, maxage,
-                      SRRRefPfun = StockPars$SRRRefPfun, 
+                      relRfun = StockPars$relRfun, 
                       SRRpars=StockPars$SRRpars[[x]],
                       R0[x], SRrel[x], hs[x], SSBpR[x, 1], opt=1,
                       plusgroup=plusgroup)
     
     MSYs <- MSYCalcs(doopt$minimum, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age,
                      V_at_Age, maxage, 
-                     SRRRefPfun = StockPars$SRRRefPfun, 
+                     relRfun = StockPars$relRfun, 
                      SRRpars=StockPars$SRRpars[[x]],
                      R0[x], SRrel[x], hs[x], SSBpR[x, 1], opt=2,
                      plusgroup=plusgroup)
@@ -347,7 +347,7 @@ per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxag
                             Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
                             Fec_at_Age=Fec_at_Age,
                             V_at_Age = V_at_Age,
-                            StockPars$SRRRefPfun,
+                            StockPars$relRfun,
                             StockPars$SRRpars[[x]],
                             maxage = maxage,
                             plusgroup = plusgroup)
