@@ -296,14 +296,14 @@ iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=FALSE, Name="iSCAM model
         MSYCalcs(logF = log(1e-8), M_at_Age = Mbar[x, ], 
                  Wt_at_Age = c(rep(0, sage), wt), Mat_at_Age = c(rep(0, sage), replist$mpd$ma), 
                  Fec_at_Age = c(rep(0, sage), fec), V_at_Age = rep(0, n_age), 
-                 maxage = n_age - 1, SRrelx = 3, opt = 0, plusgroup = 1)["SB"] %>% as.numeric()
+                 maxage = n_age - 1, SRrelx = 4, opt = 0, plusgroup = 1)["SB"] %>% as.numeric()
       }, numeric(1))
     } else {
       Mbar <- apply(Maa[1, , ], 1, mean)
       MSYCalcs(logF = log(1e-8), M_at_Age = Mbar,
                Wt_at_Age = c(rep(0, sage), wt), Mat_at_Age = c(rep(0, sage), replist$mpd$ma), 
                Fec_at_Age = c(rep(0, sage), fec), V_at_Age = rep(0, n_age),
-               maxage = n_age - 1, SRrelx = 3, opt = 0, plusgroup = 1)["SB"] %>% as.numeric()
+               maxage = n_age - 1, SRrelx = 4, opt = 0, plusgroup = 1)["SB"] %>% as.numeric()
     }
   })
   
