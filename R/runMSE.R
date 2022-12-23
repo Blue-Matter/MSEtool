@@ -117,7 +117,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     if (nrow(SampCpars$SRR$SRRpars)!=nsim)
       stop('`cpars$SRR$SRRpars` must be a data.frame with `nsim` rows')
      
-    req_args <- c("SB", "R0", "SSBpR", "SRRpars")
+    req_args <- c("SB", "SRRpars")
     fun_args <- formalArgs(SampCpars$SRR$SRRfun)
     if (any(fun_args!=req_args)) 
       stop('Arguments for `cpars$SRR$SRRfun` must be: ', paste(req_args, collapse=', '))
@@ -547,8 +547,13 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
       message("Optimizing for user-specified depletion in last historical year")
 
     if (!snowfall::sfIsRunning()) {
-      qs <- sapply(1:nsim, CalculateQ, StockPars, FleetPars,
-                   pyears=nyears, bounds, control=control)
+      qs <- if (requireNamespace("pbapply", quietly = TRUE)) {
+        pbapply::pbsapply(1:nsim, CalculateQ, StockPars, FleetPars,
+                          pyears=nyears, bounds, control=control)
+      } else {
+        sapply(1:nsim, CalculateQ, StockPars, FleetPars,
+               pyears=nyears, bounds, control=control)
+      }
     } else {
       qs <- snowfall::sfSapply(1:nsim, CalculateQ, StockPars, FleetPars,
                                pyears=nyears, bounds, control=control)
