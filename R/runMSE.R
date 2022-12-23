@@ -138,14 +138,14 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
       if (!inherits(SampCpars$SRR$relRfun, 'function'))
         stop('`cpars$SRR$SRRfun` must be a function')
       StockPars$relRfun <- SampCpars$SRR$relRfun
-      req_args <- c('SRRpars', 'SSBpR')
+      req_args <- c('SSBpR', 'SRRpars')
       fun_args <- formalArgs(SampCpars$SRR$relRfun)
       if (length(fun_args)!=2)
         stop('`cpars$SRR$SRRfun` must have 2 arguments: ', paste(req_args, collapse=", "))
       if (any(fun_args!=req_args)) 
         stop('Arguments for `cpars$SRR$relRfun` must be: ', paste(req_args, collapse=', '))
       
-      test <- try(StockPars$relRfun(StockPars$SRRpars[[1]], 0.1), silent=TRUE)
+      test <- try(StockPars$relRfun(100, StockPars$SRRpars[[1]]), silent=TRUE)
       if (inherits(test, 'try-error')) {
         stop( test, .call=FALSE)
       }
