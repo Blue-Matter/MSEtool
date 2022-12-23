@@ -178,14 +178,30 @@ optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxage, R0, SR
   
   boundsF <- c(1E-4, 3)
   
-  if (SRrel[x]!=3) {
+  do_eq_per_recruit <- FALSE
+  if (SRrel[x] <3) do_eq_per_recruit <- TRUE
+  if (SRrel[x] == 3) {
+    # Check for function
+    if (!is.null(formals(StockPars$SRRRefPfun)))
+      do_eq_per_recruit <- TRUE
+  }
+  
+  if (do_eq_per_recruit) {
     doopt <- optimise(MSYCalcs, log(boundsF), M_at_Age, Wt_at_Age, Mat_at_Age,
-                      Fec_at_Age, V_at_Age, maxage, R0[x], SRrel[x], hs[x], SSBpR[x, 1], opt=1,
+                      Fec_at_Age, V_at_Age, maxage,
+                      SRRRefPfun = StockPars$SRRRefPfun, 
+                      SRRpars=StockPars$SRRpars[[x]],
+                      R0[x], SRrel[x], hs[x], SSBpR[x, 1], opt=1,
                       plusgroup=plusgroup)
     
     MSYs <- MSYCalcs(doopt$minimum, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age,
-                     V_at_Age, maxage, R0[x], SRrel[x], hs[x], SSBpR[x, 1], opt=2,
-                     plusgroup=plusgroup) 
+                     V_at_Age, maxage, 
+                     SRRRefPfun = StockPars$SRRRefPfun, 
+                     SRRpars=StockPars$SRRpars[[x]],
+                     R0[x], SRrel[x], hs[x], SSBpR[x, 1], opt=2,
+                     plusgroup=plusgroup)
+                     
+    
     if(!doopt$objective) MSYs[] <- 0 # Assume stock crashes regardless of F
   } else {
     # Optimize for maximum yield
@@ -289,11 +305,11 @@ optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxage, R0, SR
 }
 
 
-Ref_int <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup) {
-  out <- MSYCalcs(logF, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
-                  V_at_Age = V_at_Age, maxage = maxage, opt = 2, plusgroup = plusgroup)
-  out[c(1,4)]
-}
+# Ref_int <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, V_at_Age, maxage, plusgroup) {
+#   out <- MSYCalcs(logF, M_at_Age = M_at_Age, Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
+#                   V_at_Age = V_at_Age, maxage = maxage, opt = 2, plusgroup = plusgroup)
+#   out[c(1,4)]
+# }
 
 per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxage,
                                yr.ind=1, plusgroup=0, SPR_target = seq(0.2, 0.6, 0.05),
@@ -331,6 +347,8 @@ per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxag
                             Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
                             Fec_at_Age=Fec_at_Age,
                             V_at_Age = V_at_Age,
+                            StockPars$SRRRefPfun,
+                            StockPars$SRRpars[[x]],
                             maxage = maxage,
                             plusgroup = plusgroup)
 
@@ -346,6 +364,9 @@ per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxag
   Fmax <- F_search[which.max(YPR_search)]
   
   if (StockPars$SRrel[x] == 3) {
+    
+    # Calculate 
+    
     return(list(FSPR, FYPR = c(YPR_F01 = F01, YPR_Fmax = Fmax,
                                SPRcrash=NA, Fcrash=NA,
                                Fmed=NA)))
