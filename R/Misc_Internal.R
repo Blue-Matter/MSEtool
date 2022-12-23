@@ -819,7 +819,7 @@ agg_data <- function(array, out.dim, map.stocks) {
 
 
 
-Check_custom_SRR <- function(StockPars, SampCpars) {
+Check_custom_SRR <- function(StockPars, SampCpars, nsim) {
   if (!is.null(SampCpars$SRR)) {
     req_names <- c('SRRfun', 'SRRpars')
     if (any(!(req_names %in% names(SampCpars$SRR))))
