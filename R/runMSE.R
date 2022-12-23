@@ -738,20 +738,21 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
       })
     } else {
       lapply(1:nsim, function(x) {
-      lapply(1:(nyears+proyears), function(y) {
-        per_recruit_F_calc(x, 
-                           M_ageArray=StockPars$M_ageArray,
-                           Wt_age=StockPars$Wt_age,
-                           Mat_age=StockPars$Mat_age,
-                           Fec_age=StockPars$Fec_Age,
-                           V=FleetPars$V_real,
-                           maxage=StockPars$maxage,
-                           yr.ind=y,
-                           plusgroup=StockPars$plusgroup,
-                           SPR_target=SPR_target,
-                           StockPars=StockPars)
+        lapply(1:(nyears+proyears), function(y) {
+          per_recruit_F_calc(x, 
+                             M_ageArray=StockPars$M_ageArray,
+                             Wt_age=StockPars$Wt_age,
+                             Mat_age=StockPars$Mat_age,
+                             Fec_age=StockPars$Fec_Age,
+                             V=FleetPars$V_real,
+                             maxage=StockPars$maxage,
+                             yr.ind=y,
+                             plusgroup=StockPars$plusgroup,
+                             SPR_target=SPR_target,
+                             StockPars=StockPars)
+        })
       })
-    })
+    }
   } else {
     per_recruit_F <- snowfall::sfLapply(1:nsim, function(x) {
       lapply(1:(nyears+proyears), function(y) {
