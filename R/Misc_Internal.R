@@ -310,7 +310,7 @@ calcRecruitment_int <- function(SRrel, SSBcurr, recdev, hs, aR, bR, R0a, SSBpR,
   } else if (SRrel == 2) { # Ricker rec
     rec <- recdev * aR * SBtot * exp(-bR * SBtot)
   } else {
-    rec <- recdev * SRRfun(SBtot, R0, SSBpR, SRRpars)
+    rec <- recdev * SRRfun(SBtot, SRRpars)
   }
   return(rec * rdist)
 }
