@@ -75,7 +75,7 @@ NumericVector MSYCalcs(double logF,
   double R20 = 0; // The recruitment at 20% of R0 with reca, recb, Egg0
   double h = 1;   // The steepness associated with Egg0, new R0, reca, recb
 
-  double SPR = EggF/Egg0;
+  // double SPR = EggF/Egg0;
   double RelRec = 0;
   if (hx >0.999) hx = 0.999;
 
