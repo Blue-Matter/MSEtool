@@ -363,13 +363,25 @@ per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxag
   F01 <- LinInterp_cpp(dYPR_dF, F_search[-length(YPR_search)], xlev = 0.1 * dYPR_dF[1])
   Fmax <- F_search[which.max(YPR_search)]
   
+  SSB <- apply(StockPars$SSB[x,,,], 2, sum)
+  R <- apply(StockPars$N[x, 1, , ], 1, sum)
+  Fmed <- LinInterp_cpp(RPS, F_search, xlev = median(R/SSB))
+  
   if (StockPars$SRrel[x] == 3) {
-    
-    # Calculate 
+    if (!is.null(StockPars$SPRcrashfun)) {
+      if (!is.null(formals(StockPars$SPRcrashfun))) {
+        SPRcrash <- StockPars$SPRcrashfun(SSBpR0=StockPars$SSBpR[x,1], StockPars$SRRpars[[x]])
+        Fcrash <- LinInterp_cpp(SPR_search, F_search, xlev = SPRcrash)
+      } else {
+        SPRcrash <- Fcrash <- NA
+      }
+    } else {
+      SPRcrash <- Fcrash <- NA
+    }
     
     return(list(FSPR, FYPR = c(YPR_F01 = F01, YPR_Fmax = Fmax,
-                               SPRcrash=NA, Fcrash=NA,
-                               Fmed=NA)))
+                               SPRcrash=SPRcrash, Fcrash=Fcrash,
+                               Fmed=Fmed)))
   }
   if(StockPars$SRrel[x] == 1) {
     CR <- 4 * StockPars$hs[x]/(1 - StockPars$hs[x])
@@ -393,9 +405,7 @@ per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxag
     Fcrash <- LinInterp_cpp(RPS, F_search, xlev = alpha)
   }
 
-  SSB <- apply(StockPars$SSB[x,,,], 2, sum)
-  R <- apply(StockPars$N[x, 1, , ], 1, sum)
-  Fmed <- LinInterp_cpp(RPS, F_search, xlev = median(R/SSB))
+
 
   return(list(FSPR, FYPR = c(YPR_F01 = F01, YPR_Fmax = Fmax,
                              SPRcrash=SPRcrash, Fcrash=Fcrash,
