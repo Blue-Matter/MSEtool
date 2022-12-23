@@ -10,7 +10,7 @@ using namespace Rcpp;
 //' @param Fec_at_Age Vector of mature weight-at-age
 //' @param V_at_Age Vector of selectivity-at-age
 //' @param maxage Maximum age
-//' @param SRRRefPfun Optional. A function used to calculate reference points if `SRrelc =3` 
+//' @param relRfun Optional. A function used to calculate reference points if `SRrelc =3` 
 //' @param SRRpars Optional. A named list of arguments for `SRRfun`
 //' @param R0x R0 for this simulation. Set = 1 if SRrelx = 4 for per-recruit calculations
 //' @param SRrelx SRR type for this simulation. Use 4 for per-recruit calculations, i.e. constant recruitment.
@@ -27,7 +27,7 @@ NumericVector MSYCalcs(double logF,
                   NumericVector Fec_at_Age,
                   NumericVector V_at_Age,
                   int maxage,
-                  Function SRRRefPfun, 
+                  Function relRfun, 
                   List SRRpars,
                   double R0x = 1,
                   int SRrelx = 3,
@@ -97,7 +97,7 @@ NumericVector MSYCalcs(double logF,
     h = R20/R0;
   }
   if (SRrelx==3) {
-    RelRec = as<double>(SRRRefPfun(SRRpars, EggF));
+    RelRec = as<double>(relRfun(SRRpars, EggF));
     R0 = R0x;
   }
   
@@ -149,7 +149,7 @@ NumericMatrix Ref_int_cpp(NumericVector F_search,
               NumericVector Mat_at_Age,
               NumericVector Fec_at_Age,
               NumericVector V_at_Age,
-              Function SRRRefPfun, 
+              Function relRfun, 
               List SRRpars,
               int maxage,
               int plusgroup=1) {
@@ -161,7 +161,7 @@ NumericMatrix Ref_int_cpp(NumericVector F_search,
     double logF = log(F_search[i]);
     NumericVector msys = MSYCalcs(logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age,
                                   V_at_Age, maxage,
-                                  SRRRefPfun, SRRpars,
+                                  relRfun, SRRpars,
                                   1, 4, 1, 0, 2, plusgroup);
     out(0,i) = msys[0];
     out(1,i) = msys[3];
