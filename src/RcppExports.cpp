@@ -36,8 +36,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // MSYCalcs
-NumericVector MSYCalcs(double logF, NumericVector M_at_Age, NumericVector Wt_at_Age, NumericVector Mat_at_Age, NumericVector Fec_at_Age, NumericVector V_at_Age, int maxage, Function SRRRefPfun, List SRRpars, double R0x, int SRrelx, double hx, double SSBpR, int opt, int plusgroup);
-RcppExport SEXP _MSEtool_MSYCalcs(SEXP logFSEXP, SEXP M_at_AgeSEXP, SEXP Wt_at_AgeSEXP, SEXP Mat_at_AgeSEXP, SEXP Fec_at_AgeSEXP, SEXP V_at_AgeSEXP, SEXP maxageSEXP, SEXP SRRRefPfunSEXP, SEXP SRRparsSEXP, SEXP R0xSEXP, SEXP SRrelxSEXP, SEXP hxSEXP, SEXP SSBpRSEXP, SEXP optSEXP, SEXP plusgroupSEXP) {
+NumericVector MSYCalcs(double logF, NumericVector M_at_Age, NumericVector Wt_at_Age, NumericVector Mat_at_Age, NumericVector Fec_at_Age, NumericVector V_at_Age, int maxage, Function relRfun, List SRRpars, double R0x, int SRrelx, double hx, double SSBpR, int opt, int plusgroup);
+RcppExport SEXP _MSEtool_MSYCalcs(SEXP logFSEXP, SEXP M_at_AgeSEXP, SEXP Wt_at_AgeSEXP, SEXP Mat_at_AgeSEXP, SEXP Fec_at_AgeSEXP, SEXP V_at_AgeSEXP, SEXP maxageSEXP, SEXP relRfunSEXP, SEXP SRRparsSEXP, SEXP R0xSEXP, SEXP SRrelxSEXP, SEXP hxSEXP, SEXP SSBpRSEXP, SEXP optSEXP, SEXP plusgroupSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -48,7 +48,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type Fec_at_Age(Fec_at_AgeSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type V_at_Age(V_at_AgeSEXP);
     Rcpp::traits::input_parameter< int >::type maxage(maxageSEXP);
-    Rcpp::traits::input_parameter< Function >::type SRRRefPfun(SRRRefPfunSEXP);
+    Rcpp::traits::input_parameter< Function >::type relRfun(relRfunSEXP);
     Rcpp::traits::input_parameter< List >::type SRRpars(SRRparsSEXP);
     Rcpp::traits::input_parameter< double >::type R0x(R0xSEXP);
     Rcpp::traits::input_parameter< int >::type SRrelx(SRrelxSEXP);
@@ -56,13 +56,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type SSBpR(SSBpRSEXP);
     Rcpp::traits::input_parameter< int >::type opt(optSEXP);
     Rcpp::traits::input_parameter< int >::type plusgroup(plusgroupSEXP);
-    rcpp_result_gen = Rcpp::wrap(MSYCalcs(logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, maxage, SRRRefPfun, SRRpars, R0x, SRrelx, hx, SSBpR, opt, plusgroup));
+    rcpp_result_gen = Rcpp::wrap(MSYCalcs(logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, maxage, relRfun, SRRpars, R0x, SRrelx, hx, SSBpR, opt, plusgroup));
     return rcpp_result_gen;
 END_RCPP
 }
 // Ref_int_cpp
-NumericMatrix Ref_int_cpp(NumericVector F_search, NumericVector M_at_Age, NumericVector Wt_at_Age, NumericVector Mat_at_Age, NumericVector Fec_at_Age, NumericVector V_at_Age, Function SRRRefPfun, List SRRpars, int maxage, int plusgroup);
-RcppExport SEXP _MSEtool_Ref_int_cpp(SEXP F_searchSEXP, SEXP M_at_AgeSEXP, SEXP Wt_at_AgeSEXP, SEXP Mat_at_AgeSEXP, SEXP Fec_at_AgeSEXP, SEXP V_at_AgeSEXP, SEXP SRRRefPfunSEXP, SEXP SRRparsSEXP, SEXP maxageSEXP, SEXP plusgroupSEXP) {
+NumericMatrix Ref_int_cpp(NumericVector F_search, NumericVector M_at_Age, NumericVector Wt_at_Age, NumericVector Mat_at_Age, NumericVector Fec_at_Age, NumericVector V_at_Age, Function relRfun, List SRRpars, int maxage, int plusgroup);
+RcppExport SEXP _MSEtool_Ref_int_cpp(SEXP F_searchSEXP, SEXP M_at_AgeSEXP, SEXP Wt_at_AgeSEXP, SEXP Mat_at_AgeSEXP, SEXP Fec_at_AgeSEXP, SEXP V_at_AgeSEXP, SEXP relRfunSEXP, SEXP SRRparsSEXP, SEXP maxageSEXP, SEXP plusgroupSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -72,11 +72,11 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type Mat_at_Age(Mat_at_AgeSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type Fec_at_Age(Fec_at_AgeSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type V_at_Age(V_at_AgeSEXP);
-    Rcpp::traits::input_parameter< Function >::type SRRRefPfun(SRRRefPfunSEXP);
+    Rcpp::traits::input_parameter< Function >::type relRfun(relRfunSEXP);
     Rcpp::traits::input_parameter< List >::type SRRpars(SRRparsSEXP);
     Rcpp::traits::input_parameter< int >::type maxage(maxageSEXP);
     Rcpp::traits::input_parameter< int >::type plusgroup(plusgroupSEXP);
-    rcpp_result_gen = Rcpp::wrap(Ref_int_cpp(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, SRRRefPfun, SRRpars, maxage, plusgroup));
+    rcpp_result_gen = Rcpp::wrap(Ref_int_cpp(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, relRfun, SRRpars, maxage, plusgroup));
     return rcpp_result_gen;
 END_RCPP
 }
