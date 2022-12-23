@@ -256,7 +256,7 @@ optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxage, R0, SR
                         rep(1, pyears), 1, StockPars$hs[x],
                         R0a, StockPars$SSBpR[x,],
                         StockPars$aR[x,], StockPars$bR[x,], Qc=0,
-                        Fapic=FMSYc, MPA=MPA, maxF=maxF, control=2,
+                        Fapic=FMSYc, MPA=MPA, maxF=StockPars$maxF, control=2,
                         SSB0c=StockPars$SSB0[x], 
                         SRRfun=StockPars$SRRfun,
                         SRRpars=StockPars$SRRpars[[x]],
