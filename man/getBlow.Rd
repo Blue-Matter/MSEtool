@@ -34,7 +34,9 @@ getBlow(
   Bfrac = 0.5,
   maxF,
   ploty = F,
-  plusgroup = 0
+  plusgroup = 0,
+  SRRfun,
+  SRRpars
 )
 }
 \arguments{
