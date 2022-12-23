@@ -105,7 +105,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   # Check for custom stock-recruit function
   if (!is.null(SampCpars$SRR)) {
     req_names <- c('SRRfun', 'SRRpars')
-    if (any(!(names(SampCpars$SRR) %in% req_names)))
+    if (any(!(req_names %in% names(SampCpars$SRR))))
       stop('`cpars$SRR` must be a list with names: ', paste(req_names, collapse=", "))
     
     if (!inherits(SampCpars$SRR$SRRfun, 'function'))
@@ -124,9 +124,38 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     StockPars$SRRfun <- SampCpars$SRR$SRRfun
     StockPars$SRRpars <- split(SampCpars$SRR$SRRpars, seq(nrow(SampCpars$SRR$SRRpars)))
     StockPars$SRrel <- rep(3, nsim)
+    
+    # Test the function
+    test <- try(StockPars$SRRfun(100, StockPars$SRRpars[[1]]), silent=TRUE)
+    if (inherits(test, 'try-error')) {
+      stop( test, .call=FALSE)
+    }
+    if (!is.finite(test))
+      stop("`OM@cpars$SRR$SRRfun did not return a finite value for first set of parameters")
+    
+    # Check if ref point function exists and test
+    if(!is.null(SampCpars$SRR$SRRRefPfun)) {
+      if (!inherits(SampCpars$SRR$SRRRefPfun, 'function'))
+        stop('`cpars$SRR$SRRfun` must be a function')
+      StockPars$SRRRefPfun <- SampCpars$SRR$SRRRefPfun
+      req_args <- c('SRRpars', 'SSBpR', 'opt')
+      fun_args <- formalArgs(SampCpars$SRR$SRRRefPfun)
+      if (length(fun_args)!=3)
+        stop('`cpars$SRR$SRRfun` must have 3 arguments: ', paste(req_args, collapse=", "))
+      if (any(fun_args!=req_args)) 
+        stop('Arguments for `cpars$SRR$SRRRefPfun` must be: ', paste(req_args, collapse=', '))
+      
+      test <- try(StockPars$SRRRefPfun(StockPars$SRRpars[[1]], 0.1), silent=TRUE)
+      if (inherits(test, 'try-error')) {
+        stop( test, .call=FALSE)
+      }
+      if (!is.finite(test))
+        stop("`OM@cpars$SRR$SRRRefPfun did not return a finite value for first set of parameters")
+    }
   } else {
     StockPars$SRRfun <- function() NULL
     StockPars$SRRpars <- vector('list', nsim)
+    StockPars$SRRRefPfun <- function() NULL
   } 
 
   if (StockPars$SRrel[1]==3 & is.null(formalArgs(StockPars$SRRfun)))
