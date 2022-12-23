@@ -134,28 +134,28 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
       stop("`OM@cpars$SRR$SRRfun did not return a finite value for first set of parameters")
     
     # Check if ref point function exists and test
-    if(!is.null(SampCpars$SRR$SRRRefPfun)) {
-      if (!inherits(SampCpars$SRR$SRRRefPfun, 'function'))
+    if(!is.null(SampCpars$SRR$relRfun)) {
+      if (!inherits(SampCpars$SRR$relRfun, 'function'))
         stop('`cpars$SRR$SRRfun` must be a function')
-      StockPars$SRRRefPfun <- SampCpars$SRR$SRRRefPfun
+      StockPars$relRfun <- SampCpars$SRR$relRfun
       req_args <- c('SRRpars', 'SSBpR', 'opt')
-      fun_args <- formalArgs(SampCpars$SRR$SRRRefPfun)
+      fun_args <- formalArgs(SampCpars$SRR$relRfun)
       if (length(fun_args)!=3)
         stop('`cpars$SRR$SRRfun` must have 3 arguments: ', paste(req_args, collapse=", "))
       if (any(fun_args!=req_args)) 
-        stop('Arguments for `cpars$SRR$SRRRefPfun` must be: ', paste(req_args, collapse=', '))
+        stop('Arguments for `cpars$SRR$relRfun` must be: ', paste(req_args, collapse=', '))
       
-      test <- try(StockPars$SRRRefPfun(StockPars$SRRpars[[1]], 0.1), silent=TRUE)
+      test <- try(StockPars$relRfun(StockPars$SRRpars[[1]], 0.1), silent=TRUE)
       if (inherits(test, 'try-error')) {
         stop( test, .call=FALSE)
       }
       if (!is.finite(test))
-        stop("`OM@cpars$SRR$SRRRefPfun did not return a finite value for first set of parameters")
+        stop("`OM@cpars$SRR$relRfun did not return a finite value for first set of parameters")
     }
   } else {
     StockPars$SRRfun <- function() NULL
     StockPars$SRRpars <- vector('list', nsim)
-    StockPars$SRRRefPfun <- function() NULL
+    StockPars$relRfun <- function() NULL
   } 
 
   if (StockPars$SRrel[1]==3 & is.null(formalArgs(StockPars$SRRfun)))
