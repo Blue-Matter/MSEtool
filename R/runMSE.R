@@ -103,7 +103,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                                msg=!silent)
 
   # Check for custom stock-recruit function
-  StockPars <- Check_custom_SRR(StockPars, SampCpars)
+  StockPars <- Check_custom_SRR(StockPars, SampCpars, nsim)
   
   # Checks
   if (any(range(StockPars$M_ageArray) <=tiny))
