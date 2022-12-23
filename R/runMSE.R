@@ -151,6 +151,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
       }
       if (!is.finite(test))
         stop("`OM@cpars$SRR$relRfun did not return a finite value for first set of parameters")
+    } else {
+      StockPars$relRfun <- function() NULL
     }
   } else {
     StockPars$SRRfun <- function() NULL
