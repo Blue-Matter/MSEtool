@@ -155,7 +155,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
                   Rel = Rel,SexPars = SexPars, x = x, plusgroup = plusgroup,
                   optVB = optVB, VB0x = VB0x, B0x = B0x, WtCx = WtCx, maxF = maxF,
                   MPA=MPA,
-                  SRRfun=StockPars[[p]]$SRRfun, SRRpars=StockPars[[p]]$SRRpars[[x]])
+                  SRRfun=StockPars[[1]]$SRRfun, SRRpars=StockPars[[1]]$SRRpars[[x]])
 
   out
 }
