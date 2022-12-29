@@ -92,6 +92,10 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   } else {
     ages <- unique(growdat$Age)
   }
+  
+  if(!"Age" %in% names(growdat)) {
+    growdat$Age <- growdat$int_Age
+  }
 
   # Max age
   Data@MaxAge <- maxage <- floor(max(ages)/ifelse(season_as_years, nseas, 1))
@@ -142,7 +146,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   if (!silent) message(paste0("Length-weight parameters: a = ", Data@wla, ", b = ", Data@wlb))
 
   #### Maturity --------------------------------------
-  if(min(growdat$Len_Mat < 1)) {                    # Condition to check for length-based maturity
+  if(min(growdat$Len_Mat) < 1) {                    # Condition to check for length-based maturity
     Mat <- growdat$Len_Mat/max(growdat$Len_Mat)
   } else {                                          # Use age-based maturity
     Mat <- growdat$Age_Mat/max(growdat$Age_Mat)
@@ -191,8 +195,9 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
 
   #### CAL
   if (!silent) message("\n")
-  if(!is.null(replist$lendbase) && nrow(replist$lendbase) > 0) {
-    CAL <- SS2Data_get_comps(replist, mainyrs, maxage, season_as_years, nseas, comp_gender, comp_fleet, comp_partition, comp_season,
+  if (!is.null(replist$lendbase) && nrow(replist$lendbase) > 0) {
+    CAL <- SS2Data_get_comps(replist, mainyrs, maxage, season_as_years, nseas, 
+                             comp_gender, comp_fleet, comp_partition, comp_season,
                              type = "length", silent=silent) %>% as.matrix()
     if(!is.null(CAL)) {
       Data@CAL <- array(CAL, c(1, nyears, ncol(CAL)))
@@ -539,6 +544,8 @@ SS2Data_get_comps <- function(replist, mainyrs, maxage, season_as_years = FALSE,
 
   dbase_ind <- match(dbase$Yr, mainyrs) # Match years
   dbase <- dbase[!is.na(dbase_ind), ]
+  if (is.null(dbase$N))
+    dbase$N <- dbase$Nsamp_adj
   dbase$Obs2 <- dbase$Obs * dbase$N # Expand comp proportions to numbers
 
   comp_mat <- split(dbase, dbase$Fleet) %>% lapply(reshape2::acast, formula = list("Yr", "Bin"), fun.aggregate = sum, value.var = "Obs2", fill = 0) # Convert to matrix
