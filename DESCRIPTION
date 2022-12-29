@@ -33,7 +33,7 @@ Suggests:
     broom,
     covr,
     crayon,
-    devtools,
+    remotes,
     DT,
     fmsb,
     kableExtra,
