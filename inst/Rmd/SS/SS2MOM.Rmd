@@ -20,35 +20,35 @@ h1 { /* Header 1 */
 
 ## Total Numbers
 
-```{r, fig.cap = "Comparision of total numbers from the multi-stock/fleet operating model (solid lines) and Stock Synthesis (dashed lines)."}
+```{r, fig.cap = "Comparision of total numbers from the multi-stock/fleet operating model (solid lines) and Stock Synthesis (points)."}
 compareNmulti(replist, multiHist)
 ```
 
 ## Spawning biomass
 
-```{r, fig.cap = "Comparision of spawning biomass (female) from the multi-stock/fleet operating model (solid lines) and Stock Synthesis (dashed lines)."}
+```{r, fig.cap = "Comparision of spawning biomass (female) from the multi-stock/fleet operating model (solid lines) and Stock Synthesis (points)."}
 compareSBmulti(replist, multiHist)
 ```
 
 
-```{r, fig.cap = "Comparision of spawning depletion (female) from the multi-stock/fleet operating model (solid lines) and Stock Synthesis (dashed lines)."}
+```{r, fig.cap = "Comparision of spawning depletion (female) from the multi-stock/fleet operating model (solid lines) and Stock Synthesis (points)."}
 compareSB_depmulti(replist, multiHist)
 ```
 
 ## Total Biomass
 
-```{r, fig.cap = "Comparision of total biomass from the multi-stock/fleet operating model (solid lines) and Stock Synthesis (dashed lines)."}
+```{r, fig.cap = "Comparision of total biomass from the multi-stock/fleet operating model (solid lines) and Stock Synthesis (points)."}
 compareBmulti(replist, multiHist)
 ```
 
 
 ## Catch
 
-```{r, fig.cap = "Comparision of catch (removals) by fleet from the multi-stock/fleet operating model (solid lines) and Stock Synthesis (dashed lines)."}
+```{r, fig.cap = "Comparision of catch (removals) by fleet from the multi-stock/fleet operating model (solid lines) and Stock Synthesis (points)."}
 compareCmulti(replist, multiHist)
 ```
 
-```{r, fig.cap = "Comparision of total catch (removals) from the multi-stock/fleet operating model (solid lines) and Stock Synthesis (dashed lines)."}
+```{r, fig.cap = "Comparision of total catch (removals) from the multi-stock/fleet operating model (solid lines) and Stock Synthesis (points)."}
 compareC_overallmulti(replist, multiHist)
 ```
 
@@ -56,14 +56,14 @@ compareC_overallmulti(replist, multiHist)
 
 ### Recruitment 
 
-```{r, fig.cap = "Comparision of recruitment from the multi-stock/fleet operating model (solid lines) and Stock Synthesis (dashed lines)."}
+```{r, fig.cap = "Comparision of recruitment from the multi-stock/fleet operating model (solid lines) and Stock Synthesis (points)."}
 compareRecmulti(replist, multiHist)
 ```
 
 ### Absolute abundance
 
 
-```{r, fig.cap = "Comparision of annual numbers-at-age from the multi-stock/fleet operating model (solid lines) and Stock Synthesis (dashed lines)."}
+```{r, fig.cap = "Comparision of annual numbers-at-age from the multi-stock/fleet operating model (solid lines) and Stock Synthesis (points)."}
 compareAmulti(replist, multiHist)
 ```
 

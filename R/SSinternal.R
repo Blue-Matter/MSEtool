@@ -1,7 +1,7 @@
 
 SS_import <- function(SSdir, silent = FALSE, ...) {
   if(!requireNamespace("r4ss", quietly = TRUE)) {
-    stop("Download the r4ss package to use this function. It is recommended to install the Github version with: devtools::install_github(\"r4ss/r4ss\")", call. = FALSE)
+    stop("Download the r4ss package to use this function. It is recommended to install the Github version with: remotes::install_github(\"r4ss/r4ss\")", call. = FALSE)
   }
 
   dots <- list(dir = SSdir, ...)
@@ -364,16 +364,28 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
   }
   
   # Fecundity-at-age (weight used to calculate SB0 (females))
-  if(!is.null(replist$endgrowth$Mat_F_wtatage)) {
+  if(!is.null(replist$endgrowth$`Mat*Fecund`)) {
     fec_age <- replist$endgrowth %>% dplyr::filter(Morph == 1, Seas == 1, Sex==i) %>%
-      dplyr::select(Age_Beg, Mat_F_wtatage)
+      dplyr::select(Age_Beg, `Mat*Fecund`)
     if (nrow(fec_age)>0) {
-      Fec_age = replicate(nsim, fec_age$Mat_F_wtatage)
+      Fec_age = replicate(nsim, fec_age$`Mat*Fecund`)
       Fec_age = replicate(nyears+proyears,Fec_age)
       Fec_age <- aperm(Fec_age, c(2,1,3))
       cpars_bio$Fec_age <- Fec_age # only for females
     }
+  } else {
+    if(!is.null(replist$endgrowth$Mat_F_wtatage)) {
+      fec_age <- replist$endgrowth %>% dplyr::filter(Morph == 1, Seas == 1, Sex==i) %>%
+        dplyr::select(Age_Beg, Mat_F_wtatage)
+      if (nrow(fec_age)>0) {
+        Fec_age = replicate(nsim, fec_age$Mat_F_wtatage)
+        Fec_age = replicate(nyears+proyears,Fec_age)
+        Fec_age <- aperm(Fec_age, c(2,1,3))
+        cpars_bio$Fec_age <- Fec_age # only for females
+      }
+    }
   }
+
 
   # Depletion
   if(i == 1) { # In 3.24, SSB = NA in seasons 1-3 out of 4, so I chose to take the mean

@@ -33,7 +33,6 @@ WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=
                   fixq1 = T, report = FALSE, silent = FALSE, ...){
   
   # nsim=3; proyears=30; interval=2; Name = NULL; WLa=1; WLb=3; WAAind = 1;  Obs = MSEtool::Imprecise_Unbiased; Imp=MSEtool::Perfect_Imp; nyr_par_mu = 3; LowerTri=2; recind=1; plusgroup=T; altinit=0; fixq1 = T; report = TRUE; silent = FALSE
-  # devtools::load_all("C:/Users/tcarruth/Documents/R/win-library/4.1/MSEtool")
   if(!requireNamespace("TMB", quietly = TRUE) || !requireNamespace("mvtnorm", quietly = TRUE)) {
     stop("Install the TMB and mvtnorm packages to use WHAM2OM.")
   }

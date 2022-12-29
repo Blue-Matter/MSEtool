@@ -349,7 +349,7 @@ cat("#'  ", name, " ",
 
 # ---- Add life-history data-base as data object  ----
 
-# devtools::install_github("james-thorson/FishLife")
+# remotes::install_github("james-thorson/FishLife")
 library(FishLife)
 
 db <- FishLife::FishBase

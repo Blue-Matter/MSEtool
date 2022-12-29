@@ -58,11 +58,14 @@ compareNmulti <- function(replist, multiHist) {
   N_SS$Model <- 'SS'
   N_dat <- dplyr::bind_rows(N_OM, N_SS)
   
-  ggplot(N_dat, aes(x=Yr, y=N, color=Model, linetype=Model)) +
+  ggplot(N_dat, aes(x=Yr, y=N)) +
     facet_wrap(~Sex) +
-    geom_line() +
+    geom_line(data=N_OM, aes(color=Model)) +
+    geom_point(data=N_SS, size=2, aes(color=Model)) +
     theme_bw() + 
-    labs(x="Year", y="Total number")
+    labs(x="Year", y="Total number") +
+    guides(color = guide_legend(override.aes = list(linetype = 0)))
+
 }
 
 compareSBmulti <- function(replist, multiHist) {
@@ -79,10 +82,14 @@ compareSBmulti <- function(replist, multiHist) {
   SB_SS$Model <- 'SS'
   SB_dat <- bind_rows(SB_OM, SB_SS)
   
-  ggplot(SB_dat, aes(x=Year, y=SB, color=Model, linetype=Model)) +
-    geom_line() +
+  ggplot(SB_dat, aes(x=Year, y=SB)) +
+    geom_line(data=SB_OM, aes(color=Model)) +
+    geom_point(data=SB_dat, size=2, aes(color=Model)) +
     theme_bw() + 
-    labs(x="Year", y="Spawning Biomass")
+    expand_limits(y=0) + 
+    labs(x="Year", y="Spawning Biomass") +
+    guides(color = guide_legend(override.aes = list(linetype = 0)))
+  
 }
 
 compareSB_depmulti <- function(replist, multiHist) {
@@ -105,11 +112,14 @@ compareSB_depmulti <- function(replist, multiHist) {
   SB_SS$Model <- 'SS'
   SB_dat <- bind_rows(SB_OM, SB_SS)
   
-  ggplot(SB_dat, aes(x=Year, y=SB, color=Model, linetype=Model)) +
-    geom_line() +
+  ggplot(SB_dat, aes(x=Year, y=SB)) +
+    geom_line(data=SB_OM, aes(color=Model)) +
+    geom_point(data=SB_dat, size=2, aes(color=Model)) +
     theme_bw() + 
-    ylim(0,1) +
-    labs(x="Year", y="Spawning Depletion")
+    labs(x="Year", y="Spawning Biomass") +
+    expand_limits(y=0) + 
+    guides(color = guide_legend(override.aes = list(linetype = 0)))
+
 }
 
 compareBmulti <- function(replist, multiHist) {
@@ -134,10 +144,14 @@ compareBmulti <- function(replist, multiHist) {
   B_SS$Model <- 'SS'
   B_dat <- bind_rows(B_OM, B_SS)
   
-  ggplot(B_dat, aes(x=Year, y=B, color=Model, linetype=Model)) +
-    geom_line() +
+  ggplot(B_dat, aes(x=Year, y=B)) +
+    geom_line(data=B_OM, aes(color=Model)) +
+    geom_point(data=B_SS, size=2, aes(color=Model)) +
     theme_bw() + 
-    labs(x="Year", y="Total Biomass")
+    labs(x="Year", y="Total Biomass") +
+    expand_limits(y=0) + 
+    guides(color = guide_legend(override.aes = list(linetype = 0)))
+  
 }
 
 compareCmulti <- function(replist, multiHist, type=c('removals', 'retained')) {
@@ -182,11 +196,15 @@ compareCmulti <- function(replist, multiHist, type=c('removals', 'retained')) {
   C_SS$Model <- 'SS'
   C_dat <- bind_rows(C_OM, C_SS)
   
-  ggplot(C_dat, aes(x=Year, y=C, color=Model, linetype=Model)) +
-    geom_line() +
+  ggplot(C_dat, aes(x=Year, y=C)) +
+    geom_line(data=C_OM, aes(color=Model)) +
+    geom_point(data=C_SS, size=2, aes(color=Model)) +
     facet_wrap(~Fleet, scales="free") +
     theme_bw() + 
-    labs(x="Year", y=paste0("Catch (", type, ") by Fleet"))
+    labs(x="Year", y=paste0("Catch (", type, ") by Fleet")) +
+    expand_limits(y=0) + 
+    guides(color = guide_legend(override.aes = list(linetype = 0)))
+  
   
   # break into groups of 8 fleets
   fleets <- C_dat$Fleet %>% unique()
@@ -195,11 +213,14 @@ compareCmulti <- function(replist, multiHist, type=c('removals', 'retained')) {
   for (i in seq_along(fleet_groups)) {
     C_dat2 <- C_dat %>% dplyr::filter(Fleet %in% fleet_groups[[i]]) %>% 
       mutate(Fleet2 = factor(replist$FleetNames[Fleet], levels = replist$FleetNames[fleet_groups[[i]]]))
-    pout[[i]] <- ggplot(C_dat2, aes(x=Year, y=C, color=Model, linetype=Model)) +
-      geom_line() +
+    pout[[i]] <-  ggplot(C_dat2, aes(x=Year, y=C)) +
+      geom_line(data=C_dat2 %>% filter(Model=='MOM'), aes(color=Model)) +
+      geom_point(data=C_dat2 %>% filter(Model=='SS'), size=2, aes(color=Model)) +
       facet_wrap(~Fleet2, scales="free") +
       theme_bw() + 
-      labs(x="Year", y=paste0("Catch (", type, ") by Fleet"))
+      labs(x="Year", y=paste0("Catch (", type, ") by Fleet")) +
+      expand_limits(y=0) + 
+      guides(color = guide_legend(override.aes = list(linetype = 0)))
   }
   
   for (i in seq_along(fleet_groups)) {
@@ -245,11 +266,17 @@ compareC_overallmulti <- function(replist, multiHist) {
   C_dat <- bind_rows(C_OM, C_SS)
   # Overall
   C_dat_total <- C_dat %>% group_by(Year, Model, Sim) %>% summarise(Catch=sum(C), .groups = 'keep')
-  
-  ggplot(C_dat_total, aes(x=Year, y=Catch, color=Model, linetype=Model)) +
-    geom_line() +
+  C_OM  <- C_OM %>% group_by(Year, Model, Sim) %>% summarise(Catch=sum(C), .groups = 'keep')
+  C_SS  <- C_SS %>% group_by(Year, Model) %>% summarise(Catch=sum(C), .groups = 'keep')
+ 
+  ggplot(C_dat_total, aes(x=Year, y=Catch)) +
+    geom_line(data=C_OM, aes(color=Model)) +
+    geom_point(data=C_SS, size=2, aes(color=Model)) +
     theme_bw() + 
-    labs(x="Year", y="Total Catch (removals)")
+    labs(x="Year", y="Total Catch (removals)") +
+    expand_limits(y=0) + 
+    guides(color = guide_legend(override.aes = list(linetype = 0)))
+  
   
 }
 
@@ -268,7 +295,7 @@ compareRecmulti <- function(replist, multiHist) {
     age_frac <- data.frame(age = 0:maxage) %>% mutate(true_age = floor(age/nseas))
     OM_years <- dplyr::filter(year_frac, seas == 1) %>% getElement("mainyrs")
   }
-  N_SS <- replist$natage  %>% filter(Yr %in% OM_years, `Beg/Mid`=="B", Morph == Seas)
+  N_SS <- replist$natage  %>% filter(Yr %in% OM_years, `Beg/Mid`=="B")
   cols <- which(colnames(N_SS)=='0')
   N_SS <- N_SS %>% 
     tidyr::pivot_longer(cols=all_of(cols)) %>%
@@ -288,11 +315,15 @@ compareRecmulti <- function(replist, multiHist) {
   N_SS$Model <- 'SS'
   N_dat <- dplyr::bind_rows(N_OM, N_SS)
   
-  ggplot(N_dat, aes(x=Yr, y=N, color=Model, linetype=Model)) +
+  ggplot(N_dat, aes(x=Yr, y=N)) +
     facet_wrap(~Sex) +
-    geom_line() +
+    geom_line(data=N_OM, aes(color=Model)) +
+    geom_point(data=N_SS, size=2, aes(color=Model)) +
     theme_bw() + 
-    labs(x="Year", y="Recruitment (age 0)")
+    labs(x="Year", y="Recruitment (age 0)") +
+    expand_limits(y=0) + 
+    guides(color = guide_legend(override.aes = list(linetype = 0)))
+
 }
 
 compareAmulti <- function(replist, multiHist) {
@@ -339,11 +370,14 @@ compareAmulti <- function(replist, multiHist) {
   for (i in seq_along(yr_groups)) {
     N_dat2 <- N_dat %>% dplyr::filter(Yr %in% yr_groups[[i]])
     N_dat2$Sex <- as.factor(N_dat2$Sex)
-    pout[[i]] <- ggplot(N_dat2, aes(x=Age, y=N, color=Sex, linetype=Model)) +
+    pout[[i]] <-  ggplot(N_dat2, aes(x=Age, y=N,color=Sex)) +
       facet_wrap(~Yr, ncol=4) +
-      geom_line() +
+      geom_line(data=N_dat2 %>% filter(Model=='MOM'), aes(color=Model)) +
+      geom_point(data=N_dat2 %>% filter(Model=='SS'), size=2, aes(color=Model)) +
       theme_bw() + 
-      labs(x="Age", y="Numbers-at-Age")
+      labs(x="Year", y="Numbers-at-Age") +
+      expand_limits(y=0) + 
+      guides(color = guide_legend(override.aes = list(linetype = 0)))
   }
   
   for (i in seq_along(yr_groups)) {

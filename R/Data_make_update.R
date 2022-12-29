@@ -75,8 +75,8 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
   Data@Mort <- StockPars$Marray[,nyears] * ObsPars$Mbias # natural mortality
   Data@L50 <- StockPars$L50array[,nyears] * ObsPars$lenMbias # observed length at 50% maturity
   Data@L95 <- StockPars$L95array[,nyears] * ObsPars$lenMbias # observed length at 95% maturity
-  Data@L95[Data@L95 > 0.9 * Data@vbLinf] <- 0.9 * Data@vbLinf[Data@L95 > 0.9 * Data@vbLinf]  # Set a hard limit on ratio of L95 to Linf
-  Data@L50[Data@L50 > 0.9 * Data@L95] <- 0.9 * Data@L95[Data@L50 > 0.9 * Data@L95]  # Set a hard limit on ratio of L95 to Linf
+  Data@L95[Data@L95 > 0.95 * Data@vbLinf] <- 0.95 * Data@vbLinf[Data@L95 > 0.95 * Data@vbLinf]  # Set a hard limit on ratio of L95 to Linf
+  Data@L50[Data@L50 > 0.95 * Data@L95] <- 0.95 * Data@L95[Data@L50 > 0.95 * Data@L95]  # Set a hard limit on ratio of L95 to Linf
   Data@LenCV <- StockPars$LenCV # variability in length-at-age - no error at this time
   Data@sigmaR <- StockPars$procsd * ObsPars$sigmaRbias # observed sigmaR -
   Data@MaxAge <- StockPars$maxage # maximum age - no error - used for setting up matrices only
