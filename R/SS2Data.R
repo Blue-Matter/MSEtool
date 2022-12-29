@@ -312,19 +312,15 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
       AddIndV <- apply(Ind$AddIndV, 1, function(x) {
         xx <- data.frame(assess_age = as.numeric(names(x)), sel = x) %>% left_join(seas1_aind_full[, -1], by = "assess_age")
         xx_agg <- aggregate(xx$sel, by = list(age = xx$true_age), mean, na.rm = TRUE)
-        xx_agg$x[xx_agg$age >= 1]
+        
       }) %>% t()
     } else {
-      AddIndV <- Ind$AddIndV[ , -1]
+      AddIndV <- Ind$AddIndV
     }
     Data@AddIndV <- array(AddIndV, c(1, dim(AddIndV)))
     
     if (!silent) message("Updated Data@AddInd, Data@CV_AddInd, Data@AddIndV.")
-   
-
-
   
-
   }
 
   #### Recruitment
