@@ -139,13 +139,13 @@ DLMDataDir <- function(stock = NA) {
 #' @export
 #'
 MSEextra <- function(silent=FALSE, force=FALSE) {
-  if (!requireNamespace("devtools", quietly = TRUE)) {
-    stop("devtools is needed for this function to work. Please install it.",
+  if (!requireNamespace("remotes", quietly = TRUE)) {
+    stop("remotes is needed for this function to work. Please install it.",
          call. = FALSE)
   }
 
   if (!silent) message("\nDownloading 'MSEextra' from GitHub")
-  devtools::install_github("blue-matter/MSEextra", quiet=FALSE, force=force)
+  remotes::install_github("blue-matter/MSEextra", quiet=FALSE, force=force)
   if (!silent) message("Use 'library(MSEextra)' to load additional data into workspace")
 
 }
