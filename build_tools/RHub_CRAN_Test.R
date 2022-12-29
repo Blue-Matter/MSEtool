@@ -1,6 +1,6 @@
 # R-hub Checks 
 # Check on fedora dist
- devtools::install_github('r-hub/rhub')
+ remotes::install_github('r-hub/rhub')
 library(rhub)
 
 validate_email()
