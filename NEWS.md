@@ -2,6 +2,9 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 # MSEtool 3.6.1
 
+## New additions
+- add additional indices to `plot.Data`
+
 ## Minor changes 
 - Add `Misc` information to `PPD` for `MMSE`
 - remove `devtools` from Suggests and replace with `remotes`
