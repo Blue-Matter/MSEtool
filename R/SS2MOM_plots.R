@@ -268,7 +268,7 @@ compareRecmulti <- function(replist, multiHist) {
     age_frac <- data.frame(age = 0:maxage) %>% mutate(true_age = floor(age/nseas))
     OM_years <- dplyr::filter(year_frac, seas == 1) %>% getElement("mainyrs")
   }
-  N_SS <- replist$natage  %>% filter(Yr %in% OM_years, `Beg/Mid`=="B", Morph == Seas)
+  N_SS <- replist$natage  %>% filter(Yr %in% OM_years, `Beg/Mid`=="B")
   cols <- which(colnames(N_SS)=='0')
   N_SS <- N_SS %>% 
     tidyr::pivot_longer(cols=all_of(cols)) %>%
