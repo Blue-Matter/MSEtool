@@ -1349,7 +1349,7 @@ setMethod("summary",
             Val <- c(Cat, Ind, SpInd, VInd, Rec, ML, Lc)
             Var <- rep(c("Catch", "Total Index", "Spawning Index",
                          "Vuln. Index", "Recruitment", "Mean Length", "Mean Length above Lc"), each=length(Year))
-            ts.df <- data.frame(Year=Year, Val=Val, Var=Var, stringsAsFactors = TRUE)
+            ts.df <- data.frame(Year=object@Year, Val=Val, Var=Var, stringsAsFactors = TRUE)
             # ts.df$Year <- as.factor(ts.df$Year)
             ts.df$Var <- factor(ts.df$Var, levels=
                                   c("Catch", "Total Index", "Spawning Index",
@@ -1357,7 +1357,7 @@ setMethod("summary",
             ts.df <- subset(ts.df, !is.na(Val))
             if (nrow(ts.df)>0 && 'TS' %in% plots) {
               P1 <- ggplot2::ggplot(ts.df, ggplot2::aes(x=Year, y=Val, group = Var)) +
-                ggplot2::facet_wrap(~Var, scales='free_y') + ggplot2::geom_line(size=1.25) +
+                ggplot2::facet_wrap(~Var, scales='free_y') + ggplot2::geom_line(linewidth=1.25) +
                 ggplot2::theme_classic() +
                 ggplot2::expand_limits(y=0) +
                 ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1)) +
@@ -1378,9 +1378,58 @@ setMethod("summary",
               }
               print(P1)
             }
-
+            
             if (interactive() & wait & !is.null(P1))
               invisible(readline(prompt="Press [enter] to continue..."))
+            
+            # Additional indices 
+            if(sum(dim(object@AddInd))>3) {
+              # additional indices exist
+              dd <- dim(object@AddInd[1,,])
+              nind <- dd[1]
+              nyears <- dd[2]
+              
+              if (!is.null(dimnames(object@AddInd))) {
+                ind_names <- as.character(dimnames(object@AddInd)[[2]])
+              } else {
+                ind_names <- 1:nind
+              }
+                
+              add.ind <- data.frame(Year=rep(Year, each=nind),
+                                    Index=ind_names,
+                                    Value=as.vector(object@AddInd[1,,]),
+                                    stringsAsFactors = TRUE)
+              
+              if(nrow(add.ind)>0 && 'TS' %in% plots) {
+                P1a <- ggplot2::ggplot(add.ind, ggplot2::aes(x=Year, y=Value)) +
+                    ggplot2::facet_wrap(~Index, scales='free_y') + ggplot2::geom_line(linewidth=1.25) +
+                    ggplot2::theme_classic() +
+                    ggplot2::expand_limits(y=0) +
+                    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1)) +
+                    ggplot2::scale_x_continuous(breaks=pretty(rev(Year), length(Year)/5)) +
+                    ggplot2::labs(y="Index")
+                
+                } else {
+                  P1a <- NULL
+                }
+                if (!is.null(P1a)) {
+                  if (rmd) {
+                    cat('\n')
+                    cat('\n')
+                    cat(head, 'Additional Indices')
+                    cat('\n')
+                  } else {
+                    message('Plotting Additional Indices')
+                  }
+                  print(P1a)
+                }
+              }
+            
+            
+            if (interactive() & wait & !is.null(P1a))
+              invisible(readline(prompt="Press [enter] to continue..."))
+
+          
 
             # CAA
             if (all(is.na(object@CAA))) {
