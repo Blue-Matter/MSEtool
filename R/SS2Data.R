@@ -284,7 +284,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
               paste(signif(range(Data@CV_Cat, na.rm = TRUE), 3), collapse = " - "))
     }
   }
-  Data@CV_Cat <- matrix(Data@CV_Cat[1,1], nrow=1, ncol=length(Year))
+  Data@CV_Cat <- matrix(Data@CV_Cat[1,1], nrow=1, ncol=length(Data@Year))
   Data@AvC <- mean(total_catch_vec)
   if (!silent) message("Mean catch, Data@AvC = ", round(Data@AvC, 2), "\n")
 
