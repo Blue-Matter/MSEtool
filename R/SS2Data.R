@@ -292,35 +292,37 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
 
   if(is.null(Ind)) {
     if (!silent) message("No indices found.")
-    if(packageVersion("DLMtool") >= 5.4) {
-      Data@AddInd <- Data@CV_AddInd <- Data@AddIndV <- array(NA, c(1, 1, 1))
-    }
+    Data@AddInd <- Data@CV_AddInd <- Data@AddIndV <- array(NA, c(1, 1, 1))
+    
   } else {
     if (!silent) message(length(Ind$Iname), " indices of abundance found:")
     if (!silent) message(paste(Ind$Iname, collapse = "\n"))
-
-    if(packageVersion("DLMtool") >= "5.4.4") {
-
-      Data@AddInd <- Ind$AddInd
-      Data@CV_AddInd <- sqrt(exp(Ind$SE_AddInd^2) - 1)
-      Data@AddIunits <- Ind$AddIunits
-      Data@AddIndType <- Ind$AddIndType
-
-      if(season_as_years) {
-        AddIndV <- apply(Ind$AddIndV, 1, function(x) {
-          xx <- data.frame(assess_age = as.numeric(names(x)), sel = x) %>% left_join(seas1_aind_full[, -1], by = "assess_age")
-          xx_agg <- aggregate(xx$sel, by = list(age = xx$true_age), mean, na.rm = TRUE)
-          xx_agg$x[xx_agg$age >= 1]
-        }) %>% t()
-      } else {
-        AddIndV <- Ind$AddIndV[ , -1]
-      }
-      Data@AddIndV <- array(AddIndV, c(1, dim(AddIndV)))
-
-      if (!silent) message("Updated Data@AddInd, Data@CV_AddInd, Data@AddIndV.")
+    
+    Data@AddInd <- Ind$AddInd
+    Data@CV_AddInd <- sqrt(exp(Ind$SE_AddInd^2) - 1)
+    Data@AddIunits <- Ind$AddIunits
+    Data@AddIndType <- Ind$AddIndType
+    
+    dimnames(Data@AddInd)[[1]] <- 1
+    dimnames(Data@AddInd)[[2]] <- Ind$Iname
+    dimnames(Data@AddInd)[[3]] <- Data@Year
+    
+    if(season_as_years) {
+      AddIndV <- apply(Ind$AddIndV, 1, function(x) {
+        xx <- data.frame(assess_age = as.numeric(names(x)), sel = x) %>% left_join(seas1_aind_full[, -1], by = "assess_age")
+        xx_agg <- aggregate(xx$sel, by = list(age = xx$true_age), mean, na.rm = TRUE)
+        xx_agg$x[xx_agg$age >= 1]
+      }) %>% t()
     } else {
-      if (!silent) message("\n\n *** Update DLMtool to latest version (5.4.4+) in order to add indices to Data object. *** \n\n")
+      AddIndV <- Ind$AddIndV[ , -1]
     }
+    Data@AddIndV <- array(AddIndV, c(1, dim(AddIndV)))
+    
+    if (!silent) message("Updated Data@AddInd, Data@CV_AddInd, Data@AddIndV.")
+   
+
+
+  
 
   }
 
