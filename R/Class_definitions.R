@@ -794,6 +794,16 @@ setMethod("initialize", "OM", function(.Object, Stock=NULL, Fleet=MSEtool::Gener
     # Check and add defaults
     if (docheck) 
       .Object <- CheckOM(.Object, msg=FALSE, stop_if_missing=FALSE)
+    # Default MSE parameters
+    if (.hasSlot(.Object, "nsim")) .Object@nsim <- nsim
+    if (.hasSlot(.Object, "proyears")) .Object@proyears <- proyears
+    
+    # interval, pstar, maxF, reps
+    if (.hasSlot(.Object, "interval")) .Object@interval <- interval
+    if (.hasSlot(.Object, "pstar")) .Object@pstar <- pstar
+    if (.hasSlot(.Object, "maxF")) .Object@maxF <- maxF
+    if (.hasSlot(.Object, "reps")) .Object@reps <- reps
+    
     return(.Object)
   }
 
