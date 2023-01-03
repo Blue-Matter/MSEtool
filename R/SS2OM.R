@@ -37,12 +37,12 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1,
 
   if(!silent) message("Converting MOM to OM...")
   OM <- SSMOM2OM(MOM, replist, gender, import_mov, seed, silent, model_discards)
-
+  
   if(replist$nseasons == 1 && replist$seasduration < 1 && seasons_to_years) {
     message("Model with season as years found. Will convert to annual time step.")
     OM <- SS_seasonalyears_to_annual(OM, replist)
   }
-  if(report) plot_SS2OM(OM, replist, filename, dir, open_file, silent)
+  if(report) plot_SS2OM(OM, replist, gender, filename, dir, open_file, silent)
 
   return(OM)
 }
@@ -196,10 +196,10 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
     cpars_out$Fdisc_array1 <- lapply(sel_par, getElement, "Fdisc_array1") %>% mean_array2()
     cpars_out$Fdisc_array2 <- lapply(sel_par, getElement, "Fdisc_array2") %>% mean_array2()
   
-    cpars_out$retA <- lapply(sel_par, getElement, "retA") %>% mean_array2()
-    cpars_out$V <- lapply(sel_par, getElement, "V") %>% mean_array2()
-    cpars_out$retL <- lapply(sel_par, getElement, "retL") %>% mean_array2()
-    cpars_out$SLarray <- lapply(sel_par, getElement, "SLarray") %>% mean_array2()
+    cpars_out$retA <- lapply(sel_par, getElement, "retA_real") %>% mean_array2()
+    cpars_out$V <- lapply(sel_par, getElement, "V_real") %>% mean_array2()
+    cpars_out$retL <- lapply(sel_par, getElement, "retL_real") %>% mean_array2()
+    cpars_out$SLarray <- lapply(sel_par, getElement, "SLarray_real") %>% mean_array2()
     
   } else { # Calc V from the F-at-age matrix (no discards modeled in the OM object)
 
@@ -251,6 +251,7 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
   Fleet@EffLower <- Fleet@EffUpper <- apply(cpars_out$Find, 2, mean)
 
   OM <- suppressMessages(new("OM", Stock = Stock, Fleet = Fleet, Obs = Obs, Imp = Imp))
+  OM@Name <- MOM@Name
   OM@nsim <- MOM@nsim
   OM@proyears <- MOM@proyears
   OM@reps <- MOM@reps

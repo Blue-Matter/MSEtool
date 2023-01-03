@@ -92,6 +92,10 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   } else {
     ages <- unique(growdat$Age)
   }
+  
+  if(!"Age" %in% names(growdat)) {
+    growdat$Age <- growdat$int_Age
+  }
 
   # Max age
   Data@MaxAge <- maxage <- floor(max(ages)/ifelse(season_as_years, nseas, 1))
@@ -142,7 +146,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   if (!silent) message(paste0("Length-weight parameters: a = ", Data@wla, ", b = ", Data@wlb))
 
   #### Maturity --------------------------------------
-  if(min(growdat$Len_Mat < 1)) {                    # Condition to check for length-based maturity
+  if(min(growdat$Len_Mat) < 1) {                    # Condition to check for length-based maturity
     Mat <- growdat$Len_Mat/max(growdat$Len_Mat)
   } else {                                          # Use age-based maturity
     Mat <- growdat$Age_Mat/max(growdat$Age_Mat)
@@ -191,8 +195,9 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
 
   #### CAL
   if (!silent) message("\n")
-  if(!is.null(replist$lendbase) && nrow(replist$lendbase) > 0) {
-    CAL <- SS2Data_get_comps(replist, mainyrs, maxage, season_as_years, nseas, comp_gender, comp_fleet, comp_partition, comp_season,
+  if (!is.null(replist$lendbase) && nrow(replist$lendbase) > 0) {
+    CAL <- SS2Data_get_comps(replist, mainyrs, maxage, season_as_years, nseas, 
+                             comp_gender, comp_fleet, comp_partition, comp_season,
                              type = "length", silent=silent) %>% as.matrix()
     if(!is.null(CAL)) {
       Data@CAL <- array(CAL, c(1, nyears, ncol(CAL)))
@@ -279,6 +284,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
               paste(signif(range(Data@CV_Cat, na.rm = TRUE), 3), collapse = " - "))
     }
   }
+  Data@CV_Cat <- matrix(Data@CV_Cat[1,1], nrow=1, ncol=length(Data@Year))
   Data@AvC <- mean(total_catch_vec)
   if (!silent) message("Mean catch, Data@AvC = ", round(Data@AvC, 2), "\n")
 
@@ -287,36 +293,34 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
 
   if(is.null(Ind)) {
     if (!silent) message("No indices found.")
-    if(packageVersion("DLMtool") >= 5.4) {
-      Data@AddInd <- Data@CV_AddInd <- Data@AddIndV <- array(NA, c(1, 1, 1))
-    }
+    Data@AddInd <- Data@CV_AddInd <- Data@AddIndV <- array(NA, c(1, 1, 1))
+    
   } else {
     if (!silent) message(length(Ind$Iname), " indices of abundance found:")
     if (!silent) message(paste(Ind$Iname, collapse = "\n"))
-
-    if(packageVersion("DLMtool") >= "5.4.4") {
-
-      Data@AddInd <- Ind$AddInd
-      Data@CV_AddInd <- sqrt(exp(Ind$SE_AddInd^2) - 1)
-      Data@AddIunits <- Ind$AddIunits
-      Data@AddIndType <- Ind$AddIndType
-
-      if(season_as_years) {
-        AddIndV <- apply(Ind$AddIndV, 1, function(x) {
-          xx <- data.frame(assess_age = as.numeric(names(x)), sel = x) %>% left_join(seas1_aind_full[, -1], by = "assess_age")
-          xx_agg <- aggregate(xx$sel, by = list(age = xx$true_age), mean, na.rm = TRUE)
-          xx_agg$x[xx_agg$age >= 1]
-        }) %>% t()
-      } else {
-        AddIndV <- Ind$AddIndV[ , -1]
-      }
-      Data@AddIndV <- array(AddIndV, c(1, dim(AddIndV)))
-
-      if (!silent) message("Updated Data@AddInd, Data@CV_AddInd, Data@AddIndV.")
+    
+    Data@AddInd <- Ind$AddInd
+    Data@CV_AddInd <- sqrt(exp(Ind$SE_AddInd^2) - 1)
+    Data@AddIunits <- Ind$AddIunits
+    Data@AddIndType <- Ind$AddIndType
+    
+    dimnames(Data@AddInd)[[1]] <- 1
+    dimnames(Data@AddInd)[[2]] <- Ind$Iname
+    dimnames(Data@AddInd)[[3]] <- Data@Year
+    
+    if(season_as_years) {
+      AddIndV <- apply(Ind$AddIndV, 1, function(x) {
+        xx <- data.frame(assess_age = as.numeric(names(x)), sel = x) %>% left_join(seas1_aind_full[, -1], by = "assess_age")
+        xx_agg <- aggregate(xx$sel, by = list(age = xx$true_age), mean, na.rm = TRUE)
+        
+      }) %>% t()
     } else {
-      if (!silent) message("\n\n *** Update DLMtool to latest version (5.4.4+) in order to add indices to Data object. *** \n\n")
+      AddIndV <- Ind$AddIndV
     }
-
+    Data@AddIndV <- array(AddIndV, c(1, dim(AddIndV)))
+    
+    if (!silent) message("Updated Data@AddInd, Data@CV_AddInd, Data@AddIndV.")
+  
   }
 
   #### Recruitment
@@ -539,6 +543,8 @@ SS2Data_get_comps <- function(replist, mainyrs, maxage, season_as_years = FALSE,
 
   dbase_ind <- match(dbase$Yr, mainyrs) # Match years
   dbase <- dbase[!is.na(dbase_ind), ]
+  if (is.null(dbase$N))
+    dbase$N <- dbase$Nsamp_adj
   dbase$Obs2 <- dbase$Obs * dbase$N # Expand comp proportions to numbers
 
   comp_mat <- split(dbase, dbase$Fleet) %>% lapply(reshape2::acast, formula = list("Yr", "Bin"), fun.aggregate = sum, value.var = "Obs2", fill = 0) # Convert to matrix

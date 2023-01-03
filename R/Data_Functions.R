@@ -377,7 +377,7 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
     ind <- ind[!ind ==ind2]
   CAAexists <- grepl('CAA', datasheet$Name[ind])
   if (length(CAAexists) < 1) CAAexists <- FALSE
-  if (length(ind) <=1 || !CAAexists) {
+  if (length(ind) <=1 || !all(CAAexists)) {
     CAA_Yrs <- numeric(0)
   } else {
     CAA_Yrs <- sapply(strsplit(datasheet$Name[ind], " "), function(x) unlist(strsplit(x[2], " ")))
