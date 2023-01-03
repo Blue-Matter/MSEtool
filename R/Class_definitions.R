@@ -1383,6 +1383,7 @@ setMethod("summary",
               invisible(readline(prompt="Press [enter] to continue..."))
             
             # Additional indices 
+            P1a <- NULL
             if(sum(dim(object@AddInd))>3) {
               # additional indices exist
               dd <- dim(object@AddInd[1,,])
