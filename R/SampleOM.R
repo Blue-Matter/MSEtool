@@ -572,7 +572,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
         } else {
           noksims <- (1:nsim)[-oksims]
           ageMarray[oksims,yr] <- unlist(sapply(oksims, function(x)
-            LinInterp(Mat_age[x,, yr], y=1:n_age, 0.5)))
+            LinInterp(Mat_age[x,, yr], y=0:(n_age-1), 0.5)))
           ageMarray[noksims,yr] <- 1 # set to 1
           L50array[oksims,yr] <- unlist(sapply(oksims, function(x)
             LinInterp(Mat_age[x,,yr], y=Len_age[x, , nyears], 0.5)))
@@ -599,7 +599,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
           
         } else {
           age95array[,yr] <- unlist(sapply(1:nsim, function(x)
-            LinInterp(Mat_age[x,, yr], y=1:n_age, 0.95)))
+            LinInterp(Mat_age[x,, yr], y=0:(n_age-1), 0.95)))
           L95array[,yr]<- unlist(sapply(1:nsim, function(x)
             LinInterp(Mat_age[x,,yr], y=Len_age[x, , nyears], 0.95)))
         }
