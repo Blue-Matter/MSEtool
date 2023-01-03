@@ -61,6 +61,8 @@
 <span>  <span class="va">Fec_at_Age</span>,</span>
 <span>  <span class="va">V_at_Age</span>,</span>
 <span>  <span class="va">maxage</span>,</span>
+<span>  <span class="va">relRfun</span>,</span>
+<span>  <span class="va">SRRpars</span>,</span>
 <span>  R0x <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  SRrelx <span class="op">=</span> <span class="fl">3L</span>,</span>
 <span>  hx <span class="op">=</span> <span class="fl">1</span>,</span>
@@ -100,20 +102,28 @@
 <dd><p>Maximum age</p></dd>
 
 
+<dt>relRfun</dt>
+<dd><p>Optional. A function used to calculate reference points if <code>SRrelc =3</code></p></dd>
+
+
+<dt>SRRpars</dt>
+<dd><p>Optional. A named list of arguments for <code>SRRfun</code></p></dd>
+
+
 <dt>R0x</dt>
-<dd><p>R0 for this simulation. Set = 1 if SRrelx = 3 for per-recruit calculations</p></dd>
+<dd><p>R0 for this simulation. Set = 1 if SRrelx = 4 for per-recruit calculations</p></dd>
 
 
 <dt>SRrelx</dt>
-<dd><p>SRR type for this simulation. Use 3 for per-recruit calculations, i.e. constant recruitment.</p></dd>
+<dd><p>SRR type for this simulation. Use 4 for per-recruit calculations, i.e. constant recruitment.</p></dd>
 
 
 <dt>hx</dt>
-<dd><p>numeric. Steepness value for this simulation. Not used if SRrelx = 3.</p></dd>
+<dd><p>numeric. Steepness value for this simulation. Not used if SRrelx = 4.</p></dd>
 
 
 <dt>SSBpR</dt>
-<dd><p>numeric. Unfished spawners per recruit for this simulation. Not used if SRrelx = 3.</p></dd>
+<dd><p>numeric. Unfished spawners per recruit for this simulation. Not used if SRrelx = 4.</p></dd>
 
 
 <dt>opt</dt>
