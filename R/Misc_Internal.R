@@ -293,19 +293,24 @@ LinInterp<-function(x, y, xlev, ascending = FALSE, zeroint = FALSE) {
 
 }
 
-calcRecruitment <- function(x, SRrel, SSBcurr, recdev, hs, aR, bR, R0a, SSBpR) {
+calcRecruitment <- function(x, SRrel, SSBcurr, recdev, hs, aR, bR, R0a, SSBpR, 
+                            SRRfun, SRRpars) {
   calcRecruitment_int(SRrel = SRrel[x], SSBcurr = SSBcurr[x, ], recdev = recdev[x], hs = hs[x],
-                      aR = aR[x, 1], bR = 1/sum(1/bR[x, ]), R0a = R0a[x, ], SSBpR = SSBpR[x, 1])
+                      aR = aR[x, 1], bR = 1/sum(1/bR[x, ]), R0a = R0a[x, ],
+                      SSBpR = SSBpR[x, 1], SRRfun, SRRpars[[x]])
 }
 
-calcRecruitment_int <- function(SRrel, SSBcurr, recdev, hs, aR, bR, R0a, SSBpR) {
+calcRecruitment_int <- function(SRrel, SSBcurr, recdev, hs, aR, bR, R0a, SSBpR,
+                                SRRfun, SRRpars) {
   R0 <- sum(R0a) # calculate global recruitment and distribute according to R0a
   rdist <- R0a/R0
   SBtot <- sum(SSBcurr)
   if (SRrel == 1) { # BH rec
     rec <- recdev * (4 * R0 * hs * SBtot)/(SSBpR * R0 * (1-hs) + (5*hs-1) * SBtot)
-  } else { # Ricker rec
+  } else if (SRrel == 2) { # Ricker rec
     rec <- recdev * aR * SBtot * exp(-bR * SBtot)
+  } else {
+    rec <- recdev * SRRfun(SBtot, SRRpars)
   }
   return(rec * rdist)
 }
@@ -578,7 +583,8 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, nyears, maxF, plus
                     hs=StockPars$hs,
                     R0a=R0a, SSBpR=SSBpR, aR=aR, bR=bR, SSB0=SSB0,
                     MPA=noMPA, maxF=maxF,
-                    Nyrs, plusgroup)
+                    Nyrs, plusgroup,
+                    StockPars$SRRfun, StockPars$SRRpars)
 
   Neq1 <- aperm(array(as.numeric(unlist(runProj)), dim=c(n_age, nareas, nsim)), c(3,1,2))  # unpack the list
 
@@ -809,4 +815,94 @@ agg_data <- function(array, out.dim, map.stocks) {
     out <- out + array[,map.stocks[pp],,,]
   }
   out 
+}
+
+
+
+Check_custom_SRR <- function(StockPars, SampCpars, nsim) {
+  if (!is.null(SampCpars$SRR)) {
+    req_names <- c('SRRfun', 'SRRpars')
+    if (any(!(req_names %in% names(SampCpars$SRR))))
+      stop('`cpars$SRR` must be a list with names: ', paste(req_names, collapse=", "))
+    
+    if (!inherits(SampCpars$SRR$SRRfun, 'function'))
+      stop('`cpars$SRR$SRRfun` must be a function')
+    
+    if (!inherits(SampCpars$SRR$SRRpars, 'data.frame'))
+      stop('`cpars$SRR$SRRpars` must be a data.frame with `nsim` rows')
+    
+    if (nrow(SampCpars$SRR$SRRpars)!=nsim)
+      stop('`cpars$SRR$SRRpars` must be a data.frame with `nsim` rows')
+    
+    req_args <- c("SB", "SRRpars")
+    fun_args <- formalArgs(SampCpars$SRR$SRRfun)
+    if (any(fun_args!=req_args)) 
+      stop('Arguments for `cpars$SRR$SRRfun` must be: ', paste(req_args, collapse=', '))
+    StockPars$SRRfun <- SampCpars$SRR$SRRfun
+    StockPars$SRRpars <- split(SampCpars$SRR$SRRpars, seq(nrow(SampCpars$SRR$SRRpars)))
+    StockPars$SRrel <- rep(3, nsim)
+    
+    # Test the function
+    test <- try(StockPars$SRRfun(100, StockPars$SRRpars[[1]]), silent=TRUE)
+    if (inherits(test, 'try-error')) {
+      stop( test, .call=FALSE)
+    }
+    if (!is.finite(test))
+      stop("`OM@cpars$SRR$SRRfun did not return a finite value for first set of parameters")
+    
+    # Check if rel Rec function exists and test
+    if(!is.null(SampCpars$SRR$relRfun)) {
+      if (!inherits(SampCpars$SRR$relRfun, 'function'))
+        stop('`cpars$SRR$relRfun` must be a function')
+      StockPars$relRfun <- SampCpars$SRR$relRfun
+      req_args <- c('SSBpR', 'SRRpars')
+      fun_args <- formalArgs(SampCpars$SRR$relRfun)
+      if (length(fun_args)!=2)
+        stop('`cpars$SRR$relRfun` must have 2 arguments: ', paste(req_args, collapse=", "))
+      if (any(fun_args!=req_args)) 
+        stop('Arguments for `cpars$SRR$relRfun` must be: ', paste(req_args, collapse=', '))
+      
+      test <- try(StockPars$relRfun(100, StockPars$SRRpars[[1]]), silent=TRUE)
+      if (inherits(test, 'try-error')) {
+        stop( test, .call=FALSE)
+      }
+      if (!is.finite(test))
+        stop("`OM@cpars$SRR$relRfun did not return a finite value for first set of parameters")
+    } else {
+      StockPars$relRfun <- function() NULL
+    }
+    
+    # Check if SPRcrash function exists and test
+    if(!is.null(SampCpars$SRR$SPRcrashfun)) {
+      if (!inherits(SampCpars$SRR$SPRcrashfun, 'function'))
+        stop('`cpars$SRR$SPRcrashfun` must be a function')
+      StockPars$SPRcrashfun <- SampCpars$SRR$SPRcrashfun
+      req_args <- c('SSBpR0', 'SRRpars')
+      fun_args <- formalArgs(SampCpars$SRR$SPRcrashfun)
+      if (length(fun_args)!=2)
+        stop('`cpars$SRR$SPRcrashfun` must have 2 arguments: ', paste(req_args, collapse=", "))
+      if (any(fun_args!=req_args)) 
+        stop('Arguments for `cpars$SRR$SPRcrashfun` must be: ', paste(req_args, collapse=', '))
+      
+      test <- try(StockPars$SPRcrashfun(100, StockPars$SRRpars[[1]]), silent=TRUE)
+      if (inherits(test, 'try-error')) {
+        stop( test, .call=FALSE)
+      }
+      if (!is.finite(test))
+        stop("`OM@cpars$SRR$SPRcrashfun did not return a finite value for first set of parameters")
+    } else {
+      StockPars$SPRcrashfun <- function() NULL
+    }
+    
+  } else {
+    StockPars$SRRfun <- function() NULL
+    StockPars$SRRpars <- vector('list', nsim)
+    StockPars$relRfun <- function() NULL
+    StockPars$SPRcrashfun <- function() NULL
+  } 
+  
+  if (StockPars$SRrel[1]==3 & is.null(formalArgs(StockPars$SRRfun)))
+    stop('If `SRrel=3`, a custom stock-recruit function must be provided in `cpars$SRR`')
+  
+  StockPars
 }

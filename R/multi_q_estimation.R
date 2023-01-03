@@ -137,6 +137,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
                SRrelx = SRrelx, Rel = Rel, SexPars = SexPars, x = x, plusgroup = plusgroup,
                optVB = optVB, VB0x = VB0x, WtCx = WtCx, maxF = maxF,
                MPA=MPA,
+               SRRfun=StockPars[[1]]$SRRfun, SRRpars=StockPars[[1]]$SRRpars[[x]],
                control = list(trace = 1, factr = tol/.Machine$double.eps))
   cat("\n")
 
@@ -153,7 +154,8 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
                   ax = ax, bx = bx, Perrx = Perrx, SRrelx = SRrelx,
                   Rel = Rel,SexPars = SexPars, x = x, plusgroup = plusgroup,
                   optVB = optVB, VB0x = VB0x, B0x = B0x, WtCx = WtCx, maxF = maxF,
-                  MPA=MPA)
+                  MPA=MPA,
+                  SRRfun=StockPars[[1]]$SRRfun, SRRpars=StockPars[[1]]$SRRpars[[x]])
 
   out
 }
@@ -218,7 +220,8 @@ qestMICE <- function(par, depc, CFc, mode='opt', np, nf, nyears, nareas, maxage,
                      Karrayx, Linfarrayx, t0arrayx, Marrayx,
                      R0x, R0ax, SSBpRx, SSB0x, hsx, aRx, bRx,
                      ax, bx, Perrx, SRrelx, Rel, SexPars, x, plusgroup, optVB, VB0x, B0x, WtCx,
-                     maxF, MPA) {
+                     maxF, MPA,
+                     SRRfun, SRRpars) {
 
   n_age <- maxage + 1 # include age-0
   qsx <- exp(par[1:np])
@@ -237,7 +240,8 @@ qestMICE <- function(par, depc, CFc, mode='opt', np, nf, nyears, nareas, maxage,
                          Karrayx, Linfarrayx, t0arrayx, Marrayx,
                          R0x, R0ax, SSBpRx, hsx, aRx, bRx, ax, bx, Perrx,
                          SRrelx, Rel, SexPars, x, plusgroup, maxF, SSB0x, B0x,
-                         MPA)
+                         MPA,
+                         SRRfun=SRRfun, SRRpars=SRRpars)
 
   if (optVB) {
     VBest <- apply(HistVars$VBx, c(1, 3), sum)

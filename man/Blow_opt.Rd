@@ -34,7 +34,9 @@ Blow_opt(
   Bfrac,
   maxF,
   mode = 1,
-  plusgroup = 0
+  plusgroup = 0,
+  SRRfun,
+  SRRpars
 )
 }
 \arguments{

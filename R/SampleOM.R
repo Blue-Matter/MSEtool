@@ -95,7 +95,7 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
              'maxage', 'n_age', 'CurrentYr',
              'plusgroup', 'control', 'AddIUnits', 'Data', 'MPA',
              'nareas', 'Wa', 'Wb', 'maxF', 'Sample_Area', 'Asize',
-             'Real.Data.Map')
+             'Real.Data.Map', 'SRR')
 
   cpars2 <- cpars
   cpars2[Names] <- NULL

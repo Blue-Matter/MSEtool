@@ -34,6 +34,8 @@ optQ(
   plusgroup,
   VB0c,
   SBMSYc,
+  SRRfun,
+  SRRpars,
   control
 )
 }

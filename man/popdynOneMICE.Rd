@@ -43,7 +43,9 @@ popdynOneMICE(
   SSB0x,
   B0x,
   Len_agenext,
-  Wt_agenext
+  Wt_agenext,
+  SRRfun,
+  SRRpars
 )
 }
 \arguments{

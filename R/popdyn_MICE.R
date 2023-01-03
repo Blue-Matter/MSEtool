@@ -53,7 +53,8 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
                        Karrayx, Linfarrayx, t0arrayx, Marrayx,
                        R0x, R0ax, SSBpRx, hsx, aRx,
                        bRx, ax, bx, Perrx, SRrelx, Rel, SexPars, x, plusgroup, maxF, SSB0x, B0x,
-                       MPA) {
+                       MPA,
+                       SRRfun, SRRpars) {
 
   n_age <- maxage + 1 # include age-0
   Bx <- SSNx <- SSBx <- VBx <- Zx <- array(NA_real_, c(np, n_age, nyears, nareas))
@@ -131,7 +132,8 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
                          bx = by[, y], Rel = Rel, SexPars = SexPars, x = x,
                          plusgroup = plusgroup, SSB0x = SSB0x, B0x = B0x,
                          Len_agenext = array(Len_agex[, , y], c(np, n_age)),
-                         Wt_agenext = array(WatAgex[, , y], c(np, n_age)))
+                         Wt_agenext = array(WatAgex[, , y], c(np, n_age)),
+                         SRRfun=SRRfun, SRRpars=SRRpars)
     
     # update arrays 
     if (y <= nyears) {
@@ -249,7 +251,8 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
                           Asizex,
                           Kx, Linfx, t0x, Mx, R0x, R0ax, SSBpRx, ax, bx, Rel, SexPars, x,
                           plusgroup, SSB0x, B0x,
-                          Len_agenext, Wt_agenext) {
+                          Len_agenext, Wt_agenext,
+                          SRRfun, SRRpars) {
   
   n_age <- maxage + 1
   Nind <- TEG(dim(Ncur)) # p, age, area
@@ -373,7 +376,8 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
   # Generate next year's recruitment
   Nnext[, 1, ] <- sapply(1:np, function(p) {
     calcRecruitment_int(SRrel = SRrelx[p], SSBcurr = SSB_SR[p, , ], recdev = PerrYrp[p], hs = hsx[p], 
-                        aR = aRx[p, 1], bR = 1/sum(1/bRx[p, ]), R0a = R0ax[p, ], SSBpR = SSBpRx[p, 1])
+                        aR = aRx[p, 1], bR = 1/sum(1/bRx[p, ]), R0a = R0ax[p, ], SSBpR = SSBpRx[p, 1],
+                        SRRfun, SRRpars)
   }) %>% t()
   
   # Movement

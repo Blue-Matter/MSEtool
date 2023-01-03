@@ -6,9 +6,9 @@
 #' @importFrom graphics abline arrows axis axTicks barplot boxplot contour hist
 #' identify layout legend
 #'  lines matplot mtext par plot plot.new points polygon segments text title text
-#' @importFrom grDevices col2rgb colorRampPalette dev.off jpeg gray png rainbow rgb xy.coords
+#' @importFrom grDevices col2rgb colorRampPalette dev.new dev.off jpeg gray png rainbow rgb xy.coords
 #' @importFrom grid unit.c unit grid.newpage grid.draw
-#' @importFrom methods getClassDef getSlots .hasSlot is new show slot slot<- slotNames
+#' @importFrom methods formalArgs getClassDef getSlots .hasSlot is new show slot slot<- slotNames
 #' @importFrom parallel detectCores
 #' @importFrom Rcpp evalCpp
 #' @importFrom snowfall sfClusterEval sfInit sfExportAll sfIsRunning sfExport

@@ -38,7 +38,7 @@
 #' @keywords internal
 getBlow<-function(x, N, Asize, SSBMSY, SSBpR, MPA, SSB0, nareas, retA,MGThorizon,Find,
                   Perr,M_ageArray,hs,Mat_age,Wt_age, Fec_age, R0a,V,nyears,maxage,mov,Spat_targ,SRrel,
-                  aR,bR,Bfrac=0.5, maxF, ploty=F, plusgroup=0){
+                  aR,bR,Bfrac=0.5, maxF, ploty=F, plusgroup=0, SRRfun, SRRpars){
   
   if (SSBMSY[x] > 0) {
     opt <- optimize(Blow_opt,log(c(0.0075,15)),N=N[x,,1,], Asize_c =Asize[x,], SSBMSYc=SSBMSY[x],
@@ -48,7 +48,7 @@ getBlow<-function(x, N, Asize, SSBMSY, SSBpR, MPA, SSB0, nareas, retA,MGThorizon
                     R0c=R0a[x,], Vc=V[x,,],
                     nyears=nyears, maxage=maxage, movc=mov[x,,,,], Spat_targc=Spat_targ[x],
                     SRrelc=SRrel[x], aRc=aR[x,], bRc=bR[x,], Bfrac, maxF, mode=1,
-                    plusgroup=plusgroup)
+                    plusgroup=plusgroup, SRRfun, SRRpars[[x]])
     
     if (ploty) {
       Blow_opt(opt$minimum,N=N[x,,1,], Asize_c =Asize[x,], SSBMSYc=SSBMSY[x],
@@ -57,7 +57,7 @@ getBlow<-function(x, N, Asize, SSBMSY, SSBpR, MPA, SSB0, nareas, retA,MGThorizon
                hc=hs[x], Mac=Mat_age[x,,], Wac=Wt_age[x,,], Fecac=Fec_age[x,,], R0c=R0a[x,], Vc=V[x,,],
                nyears=nyears, maxage=maxage, movc=mov[x,,,,], Spat_targc=Spat_targ[x],
                SRrelc=SRrel[x], aRc=aR[x,], bRc=bR[x,], Bfrac, maxF, mode=3,
-               plusgroup=plusgroup)
+               plusgroup=plusgroup, SRRfun, SRRpars[[x]])
     }
     
     Blow <- Blow_opt(opt$minimum,N=N[x,,1,], Asize_c =Asize[x,], SSBMSYc=SSBMSY[x],
@@ -67,7 +67,7 @@ getBlow<-function(x, N, Asize, SSBMSY, SSBpR, MPA, SSB0, nareas, retA,MGThorizon
                      R0c=R0a[x,], Vc=V[x,,],
                      nyears=nyears, maxage=maxage, movc=mov[x,,,,], Spat_targc=Spat_targ[x],
                      SRrelc=SRrel[x], aRc=aR[x,], bRc=bR[x,], Bfrac, maxF, mode=2,
-                     plusgroup=plusgroup)
+                     plusgroup=plusgroup, SRRfun, SRRpars[[x]])
   } else {
     Blow <- 0
   }
@@ -115,7 +115,8 @@ getBlow<-function(x, N, Asize, SSBMSY, SSBpR, MPA, SSB0, nareas, retA,MGThorizon
 #' @keywords internal
 Blow_opt<-function(lnq, N, Asize_c, SSBMSYc,SSBpRc, MPA, SSB0c, nareas, retAc,
                    MGThorizonc,Fc,Perrc,Mc,hc,Mac,Wac, Fecac, R0c,Vc,nyears,maxage,movc,Spat_targc,
-                   SRrelc,aRc,bRc,Bfrac,maxF, mode=1, plusgroup=0){
+                   SRrelc,aRc,bRc,Bfrac,maxF, mode=1, plusgroup=0,
+                   SRRfun, SRRpars){
 
   pyears <- nyears + MGThorizonc
   n_age <- maxage + 1
@@ -140,6 +141,8 @@ Blow_opt<-function(lnq, N, Asize_c, SSBMSYc,SSBpRc, MPA, SSB0c, nareas, retAc,
                       SRrelc, Effind, Spat_targc, hc,
                       R0c=R0c, SSBpRc=SSBpRc, aRc=aRc, bRc=bRc, Qc=exp(lnq), Fapic=0,
                       maxF=maxF, MPA=MPA, control=1, SSB0c=SSB0c,
+                      SRRfun=SRRfun,
+                      SRRpars =SRRpars,
                       plusgroup = plusgroup)
 
   SSBstore <- apply(simpop[[4]],2, sum)

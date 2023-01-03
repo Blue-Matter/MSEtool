@@ -32,7 +32,9 @@ optYield(
   MPA,
   maxF,
   SSB0c,
-  plusgroup = 0
+  plusgroup = 0,
+  SRRfun,
+  SRRpars
 )
 }
 \arguments{

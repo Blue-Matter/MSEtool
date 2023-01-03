@@ -17,7 +17,8 @@ optMSY_eq(
   hs,
   SSBpR,
   yr.ind = 1,
-  plusgroup = 0
+  plusgroup = 0,
+  StockPars = NULL
 )
 }
 \arguments{
@@ -46,6 +47,8 @@ optMSY_eq(
 \item{yr.ind}{Year index used in calculations}
 
 \item{plusgroup}{Integer. Default = 0 = no plus-group. Use 1 to include a plus-group}
+
+\item{StockPars}{A list of stock parameters}
 }
 \value{
 Results from \code{MSYCalcs}

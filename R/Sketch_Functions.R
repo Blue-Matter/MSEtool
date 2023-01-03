@@ -89,7 +89,7 @@ SketchFun <- function(nyears = NULL, Years = NULL) {
   Xs <- grd3[, 1]
   Ys <- grd3[, 2]
   
-  win.graph()
+  dev.new()
   plot(grd1[, 1], grd1[, 2], col = "black", pch = 19, cex = 0.2, xlab = "Years", 
        ylab = "Relative Fishing Effort", cex.lab = 1.5)
   points(grd2[, 1], grd2[, 2], col = "darkgrey", pch = 19, cex = 0.2)
@@ -211,7 +211,7 @@ SketchM <- function(x, y, xlab, ylab) {
   Ys <- grd3[, 2]
   
   op <- par(mfrow=c(1,1), las=1, oma=c(1,2,1,2))
-  win.graph()
+  dev.new()
   plot(range(x), range(y), type="n", xlab = xlab, ylab = ylab, cex.lab = 1.5)
   points(grd1[, 1], grd1[, 2], col = "black", pch = 19, cex = 0.2)
   points(grd2[, 1], grd2[, 2], col = "darkgrey", pch = 19, cex = 0.2)
@@ -383,7 +383,7 @@ BlankSelPlot <- function(Stock = NULL, Yr = NULL, N = NULL, isRel) {
     AxCex <- 1.3
     By <- 0.05
     par(mfrow = c(1, 1), mai = c(2, 1, 0.5, 0.3), oma = c(1, 1, 1, 1))
-    win.graph()
+    dev.new()
     plot(c(0, 3), c(0, 1), type = "n", xlab = "", ylab = "", axes = FALSE)
     mtext(side = 2, line = 3, "Selectivity", cex = AxCex)
     axis(side = 2)
@@ -406,7 +406,7 @@ BlankSelPlot <- function(Stock = NULL, Yr = NULL, N = NULL, isRel) {
     AxCex <- 1.3
     By <- 2.5
     par(mfrow = c(1, 1), mai = c(2, 1, 0.5, 0.3), oma = c(1, 1, 1, 1))
-    win.graph()
+    dev.new()
     plot(c(0, Max), c(0, 1), type = "n", xlab = "", ylab = "", axes = FALSE)
     mtext(side = 2, line = 3, "Selectivity", cex = AxCex)
     axis(side = 2)

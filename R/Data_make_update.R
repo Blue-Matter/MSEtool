@@ -175,7 +175,10 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
 
   # --- Store OM Parameters ----
   # put all the operating model parameters in one table
+  
   ind <- which(lapply(StockPars, length) == nsim)
+  drop_srr <- which(names(ind)=='SRRpars')
+  ind <- ind[-drop_srr]
   stock <- as.data.frame(StockPars[ind])
   stock$Fdisc <- NULL
   stock$CAL_bins <- NULL
@@ -540,6 +543,8 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   # --- Store OM Parameters ----
   # put all the operating model parameters in one table
   ind <- which(lapply(StockPars, length) == nsim)
+  drop_srr <- which(names(ind)=='SRRpars')
+  ind <- ind[-drop_srr]
   stock <- as.data.frame(StockPars[ind])
   stock$Fdisc <- NULL
   stock$CAL_bins <- NULL

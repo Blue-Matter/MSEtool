@@ -10,10 +10,12 @@ using namespace Rcpp;
 //' @param Fec_at_Age Vector of mature weight-at-age
 //' @param V_at_Age Vector of selectivity-at-age
 //' @param maxage Maximum age
-//' @param R0x R0 for this simulation. Set = 1 if SRrelx = 3 for per-recruit calculations
-//' @param SRrelx SRR type for this simulation. Use 3 for per-recruit calculations, i.e. constant recruitment.
-//' @param hx numeric. Steepness value for this simulation. Not used if SRrelx = 3.
-//' @param SSBpR numeric. Unfished spawners per recruit for this simulation. Not used if SRrelx = 3.
+//' @param relRfun Optional. A function used to calculate reference points if `SRrelc =3` 
+//' @param SRRpars Optional. A named list of arguments for `SRRfun`
+//' @param R0x R0 for this simulation. Set = 1 if SRrelx = 4 for per-recruit calculations
+//' @param SRrelx SRR type for this simulation. Use 4 for per-recruit calculations, i.e. constant recruitment.
+//' @param hx numeric. Steepness value for this simulation. Not used if SRrelx = 4.
+//' @param SSBpR numeric. Unfished spawners per recruit for this simulation. Not used if SRrelx = 4.
 //' @param opt Option. 1 = return -Yield, 2= return all MSY calcs
 //' @param plusgroup Integer. Default = 0 = no plus-group. Use 1 to include a plus-group
 //' @return See `opt`
@@ -25,6 +27,8 @@ NumericVector MSYCalcs(double logF,
                   NumericVector Fec_at_Age,
                   NumericVector V_at_Age,
                   int maxage,
+                  Function relRfun, 
+                  List SRRpars,
                   double R0x = 1,
                   int SRrelx = 3,
                   double hx = 1,
@@ -93,6 +97,11 @@ NumericVector MSYCalcs(double logF,
     h = R20/R0;
   }
   if (SRrelx==3) {
+    RelRec = as<double>(relRfun(EggF, SRRpars));
+    R0 = R0x;
+  }
+  
+  if (SRrelx==4) {
     RelRec = R0x;
     R0 = RelRec;
     h = 1;
@@ -140,6 +149,8 @@ NumericMatrix Ref_int_cpp(NumericVector F_search,
               NumericVector Mat_at_Age,
               NumericVector Fec_at_Age,
               NumericVector V_at_Age,
+              Function relRfun, 
+              List SRRpars,
               int maxage,
               int plusgroup=1) {
 
@@ -149,7 +160,9 @@ NumericMatrix Ref_int_cpp(NumericVector F_search,
   for (int i=0; i<ncol; i++) {
     double logF = log(F_search[i]);
     NumericVector msys = MSYCalcs(logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age,
-                                  V_at_Age, maxage, 1, 3, 1, 0, 2, plusgroup);
+                                  V_at_Age, maxage,
+                                  relRfun, SRRpars,
+                                  1, 4, 1, 0, 2, plusgroup);
     out(0,i) = msys[0];
     out(1,i) = msys[3];
     out(2,i) = msys[8]/msys[2];

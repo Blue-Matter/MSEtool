@@ -113,7 +113,13 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                                       msg = !silent)
     StockPars[[p]]$plusgroup <- plusgroup[p]
     StockPars[[p]]$maxF <- MOM@maxF
-  
+    
+    # --- custom SRR function ---
+    # not implemented
+    StockPars[[p]] <- Check_custom_SRR(StockPars[[p]], SampCpars[[p]][[1]], nsim)
+    if (any(StockPars[[p]]$SRrel>2))
+      stop('Custom stock recruit function not supported in `multiMSE`')
+    
     # --- Sample Fleet Parameters ----
     FleetPars[[p]] <- lapply(1:nf, function(f) {
       SampleFleetPars(Fleet = Fleets[[p]][[f]],
@@ -749,7 +755,8 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                   hs=StockPars[[p]]$hs,
                   SSBpR=StockPars[[p]]$SSBpR,
                   yr.ind=y,
-                  plusgroup=plusgroup[p])
+                  plusgroup=plusgroup[p],
+                  StockPars=StockPars[[p]])
       })
     })
     
@@ -830,6 +837,8 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                 maxF=maxF,
                 control=1,
                 SSB0c=StockPars[[p]]$SSB0[x],
+                SRRfun=StockPars[[p]]$SRRfun,
+                SRRpars=StockPars[[p]]$SRRpars[[x]],
                 plusgroup=StockPars[[p]]$plusgroup))
 
     N_unfished <- aperm(array(as.numeric(unlist(Unfished[1,], use.names=FALSE)),
@@ -1774,7 +1783,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                       SexPars = SexPars, x = x,
                       plusgroup = plusgroup, SSB0x = SSB0array[x, ], B0x = B0array[x, ],
                       Len_agenext = array(Len_agenext[x, , ], c(np, n_age)),
-                      Wt_agenext = array(Wt_agenext[x, , ], c(np, n_age)))
+                      Wt_agenext = array(Wt_agenext[x, , ], c(np, n_age)),
+                      SRRfun=StockPars[[p]]$SRRfun, SRRpars=StockPars[[p]]$SRRpars[[x]])
       })
     })
 
@@ -2083,7 +2093,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                               hs=StockPars[[p]]$hs,
                               SSBpR=StockPars[[p]]$SSBpR,
                               yr.ind=y1,
-                              plusgroup=StockPars[[p]]$plusgroup)
+                              plusgroup=StockPars[[p]]$plusgroup,
+                              StockPars=StockPars[[p]])
           MSY_y[,p,mm,y1] <- MSYrefsYr[1,]
           FMSY_y[,p,mm,y1] <- MSYrefsYr[2,]
           SSBMSY_y[,p,mm,y1] <- MSYrefsYr[3,]
@@ -2153,7 +2164,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                         SexPars = SexPars, x = x,
                         plusgroup = plusgroup, SSB0x = SSB0array[x, ], B0x = B0array[x, ],
                         Len_agenext = array(Len_agenext[x, , ], c(np, n_age)),
-                        Wt_agenext = array(Wt_agenext[x, , ], c(np, n_age)))
+                        Wt_agenext = array(Wt_agenext[x, , ], c(np, n_age)),
+                        SRRfun=StockPars[[p]]$SRRfun, SRRpars=StockPars[[p]]$SRRpars[[x]])
         })
       })
 

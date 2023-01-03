@@ -51,7 +51,9 @@ qestMICE(
   B0x,
   WtCx,
   maxF,
-  MPA
+  MPA,
+  SRRfun,
+  SRRpars
 )
 }
 \arguments{

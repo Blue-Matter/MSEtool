@@ -32,6 +32,8 @@ popdynCPP(
   MPA,
   control,
   SSB0c,
+  SRRfun,
+  SRRpars,
   plusgroup = 0L
 )
 }
@@ -88,6 +90,10 @@ popdynCPP(
 
 \item{control}{Integer. 1 to use q and effort to calculate F, 2 to use Fapic (apical F) and
 vulnerability to calculate F.}
+
+\item{SRRfun}{Optional. A stock-recruit function used if \code{SRrelc =3}}
+
+\item{SRRpars}{Optional. A named list of arguments for \code{SRRfun}}
 
 \item{plusgroup}{Integer. Include a plus-group (1) or not (0)?}
 
