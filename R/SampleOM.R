@@ -591,16 +591,11 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
         }
         
         
-        if (length(oksims)<1 | length(oksims2)<1) {
+        if (length(oksims)<1 ) {
           if (length(oksims)<1) {
             # no maturity-at-age >= 0.95
             age95array[,yr] <- maxage # set to 1.5 if < 1
           }
-          if (length(oksims2)<1) {
-            # no maturity-at-age < 0.95
-            age95array[,yr] <- 1.5 # set to 1.5 if < 1
-          }
-          
           
         } else {
           age95array[,yr] <- unlist(sapply(1:nsim, function(x)
