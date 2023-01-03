@@ -251,6 +251,7 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
   Fleet@EffLower <- Fleet@EffUpper <- apply(cpars_out$Find, 2, mean)
 
   OM <- suppressMessages(new("OM", Stock = Stock, Fleet = Fleet, Obs = Obs, Imp = Imp))
+  OM@Name <- MOM@Name
   OM@nsim <- MOM@nsim
   OM@proyears <- MOM@proyears
   OM@reps <- MOM@reps
