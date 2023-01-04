@@ -355,7 +355,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   # Assuming all vulnerable fish are kept; ie MSY is total removals
   if (!snowfall::sfIsRunning()) {
     
-    MSYrefsYr <- if (requireNamespace("pbapply", quietly = TRUE)) {
+    MSYrefsYr <- if (requireNamespace("pbapply", quietly = TRUE) & !silent) {
       pbapply::pblapply(1:nsim, function(x) {
         sapply(1:(nyears+proyears), function(y) {
           optMSY_eq(x, 
@@ -520,7 +520,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
       message("Optimizing for user-specified depletion in last historical year")
 
     if (!snowfall::sfIsRunning()) {
-      qs <- if (requireNamespace("pbapply", quietly = TRUE)) {
+      qs <- if (requireNamespace("pbapply", quietly = TRUE) & !silent) {
         pbapply::pbsapply(1:nsim, CalculateQ, StockPars, FleetPars,
                           pyears=nyears, bounds, control=control)
       } else {
@@ -720,7 +720,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   # ---- Calculate per-recruit reference points ----
   if (!silent) message("Calculating per-recruit reference points")
   if (!snowfall::sfIsRunning()) {
-    per_recruit_F <- if (requireNamespace("pbapply", quietly = TRUE)) {
+    per_recruit_F <- if (requireNamespace("pbapply", quietly = TRUE) & !silent) {
       pbapply::pblapply(1:nsim, function(x) {
         lapply(1:(nyears+proyears), function(y) {
           per_recruit_F_calc(x, 
