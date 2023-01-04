@@ -1,14 +1,11 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
-# MSEtool 3.6.9999
-
-## Major changes
-- added option for custom stock-recruitment function TODO
 
 # MSEtool 3.6.1
 
 ## New additions
-- add additional indices to `plot.Data`
+- added additional indices to `plot.Data`
+- added option for custom stock-recruitment function (in development/testing)
 
 ## Minor changes 
 - Add `Misc` information to `PPD` for `MMSE`
