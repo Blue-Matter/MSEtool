@@ -163,6 +163,7 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
     Barray.subcube(0, 0, A, maxage, 0, A) = Ncurr.col(A) % WtAge.col(0);
     SSNarray.subcube(0, 0, A, maxage, 0, A) = Ncurr.col(A) % MatAge.col(0);
     SBarray.subcube(0, 0, A, maxage, 0, A) = Ncurr.col(A) % FecAge.col(0);
+    SBarray.subcube(0, 0, A, 0, 0, A) = 0; // first age class (recruits) is always immature
     VBarray.subcube(0, 0, A, maxage, 0, A) = Ncurr.col(A) % WtAge.col(0) % Vuln.col(0);
     Marray.subcube(0, 0, A, maxage, 0, A) = M_age.col(0);
     tempVec(A) = accu(VBarray.slice(A));
