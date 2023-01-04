@@ -220,16 +220,6 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
     }
   }
 
-  # extra check for LHYear (used multiple names in CSV in the past)
-  tryLHyear <- datasheet$Data[which(datasheet$Name=="LHYear")]
-  if (length(tryLHyear)<1) {
-    tryLHyear <- datasheet$Data[which(datasheet$Name=="Last Historical Year")]
-  }
-  tryLHyear <- as.numeric(tryLHyear)
-  if (length(tryLHyear)<1 | is.na(tryLHyear))
-    stop("Last Historical Year must be specified (single numeric value)")
-  Data@LHYear <- tryLHyear
-
   # ---- Time-Series ----
   import_convert_ts <- function(Name, datasheet, Data, matrix=TRUE,
                                 checkLength=TRUE) {
@@ -251,7 +241,7 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
 
     if (grepl('CV', Name)) {
       if (!is.na(temp[1]) & all(is.na(temp[2:length(temp)]))) {
-        message('Only one value found for ', paste0(Name, '.'), 'Assuming this value for all years')
+        message_info('Only one value found for ', paste0(Name, '.'), 'Assuming this value for all years')
         temp <- rep(temp[1], length(Data@Year))
       }
     }
@@ -272,6 +262,22 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
   # Year index
   Data <- import_convert_ts('Year', datasheet, Data, FALSE, FALSE)
 
+  # extra check for LHYear (used multiple names in CSV in the past)
+  tryLHyear <- datasheet$Data[which(datasheet$Name=="LHYear")]
+  if (length(tryLHyear)<1) {
+    tryLHyear <- datasheet$Data[which(datasheet$Name=="Last Historical Year")]
+  }
+  tryLHyear <- as.numeric(tryLHyear)
+  Data@LHYear <- tryLHyear
+  if (length(tryLHyear)<1 | is.na(tryLHyear)) {
+    if (is.finite(max(Data@Year, na.rm=TRUE))) {
+      message_info(paste0('Last Historical Year (`LHYear`) missing, assuming it is maximum value in `Year` (', max(Data@Year, na.rm=TRUE), ')'))
+      Data@LHYear <- max(Data@Year, na.rm=TRUE)
+    } else {
+      stop("Last Historical Year must be specified (single numeric value) if no values in `Year`")
+    }
+  }
+    
   if (!Data@LHYear %in% Data@Year)
     stop("`Year` must include Last Historical Year", call. = FALSE)
   if (!all(seq(Data@Year[1], Data@Year[length(Data@Year)], 1) == Data@Year))
@@ -1448,7 +1454,7 @@ joinData<-function(DataList){
         }
       }
 
-    } else if (inherits(tempval, "list")) {
+    } else if (inherits(tempval, "list") & !inherits(tempval, "data.frame")) {
       if (sn == "Misc") { # Ignore StockPars, FleetPars, ReferencePoints from Hist object
         slot(Data, sn) <- do.call(c, lapply(templist, function(x) x[names(x) == ""]))
       } else {
