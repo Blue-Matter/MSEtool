@@ -187,7 +187,7 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
   sampCpars
 }
 
-sample_unif <- function(par, cpars, Obj, nsim, altpar=NULL) {
+sample_unif <- function(par, cpars, Obj, nsim, altpar=NULL, req=TRUE) {
   if (!is.null(cpars[[par]])) {
     tt <- myrunif(nsim, 0,1) # call to runif to increment RNG
     return(cpars[[par]])
@@ -201,7 +201,8 @@ sample_unif <- function(par, cpars, Obj, nsim, altpar=NULL) {
   
   if (!is.null(altpar)) par <- altpar
   vals <- slot(Obj, par)
-  if (length(vals)<1) stop('slot ', par, ' in object class ', class(Obj), ' is missing values')
+  if (req)
+    if (length(vals)<1) stop('slot ', par, ' in object class ', class(Obj), ' is missing values')
   myrunif(nsim, vals[1], vals[2])
 }
 
@@ -318,22 +319,13 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   }
 
   # ---- Growth Parameters ----
+
+  Linf <- sample_unif('Linf', cpars, Stock, nsim, req=FALSE)
+  Linfsd <- sample_unif('Linfsd', cpars, Stock, nsim)
+  K <- sample_unif('K', cpars, Stock, nsim, req=FALSE)
+  Ksd <- sample_unif('Ksd', cpars, Stock, nsim)
+  t0 <- sample_unif('t0', cpars, Stock, nsim, req=FALSE)
   
-  # check if Len_age in cpars
-  if (is.null(cpars$Len_age)) {
-    Linf <- sample_unif('Linf', cpars, Stock, nsim)
-    Linfsd <- sample_unif('Linfsd', cpars, Stock, nsim)
-    K <- sample_unif('K', cpars, Stock, nsim)
-    Ksd <- sample_unif('Ksd', cpars, Stock, nsim)
-    t0 <- sample_unif('t0', cpars, Stock, nsim)
-  } else {
-    # temp values: VB parameters will be calculate from cpars$Len_age
-    Linf <- rep(0, nsim)
-    Linfsd <- rep(0, nsim)
-    K <- rep(0, nsim)
-    Ksd <- rep(0, nsim)
-    t0 <- rep(0, nsim)
-  }
 
   # Generate random numbers for random walk
   if (!is.null(cpars$Mrand)) {
