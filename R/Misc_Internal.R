@@ -836,7 +836,7 @@ Check_custom_SRR <- function(StockPars, SampCpars, nsim) {
     
     req_args <- c("SB", "SRRpars")
     fun_args <- formalArgs(SampCpars$SRR$SRRfun)
-    if (any(fun_args!=req_args)) 
+    if (any(!fun_args%in%req_args)) 
       stop('Arguments for `cpars$SRR$SRRfun` must be: ', paste(req_args, collapse=', '))
     StockPars$SRRfun <- SampCpars$SRR$SRRfun
     StockPars$SRRpars <- split(SampCpars$SRR$SRRpars, seq(nrow(SampCpars$SRR$SRRpars)))
