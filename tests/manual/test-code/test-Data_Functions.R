@@ -24,4 +24,3 @@ for (dat in Dat) {
     testthat::expect_error(joinData(list(datobj, datobj)), NA)
   })
 }
-

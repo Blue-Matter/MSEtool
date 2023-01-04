@@ -63,7 +63,7 @@ OM@cpars$Data <- Data
 Hist <- Simulate(OM)
 
 testthat::expect_equal(round(sd(Cerr_y[1:OM@nyears]),2),
-                       round(sd(Hist@SampPars$Obs$Cerr_y[sim,]),2))
+                       round(sd(Hist@SampPars$Obs$Cerr_y[sim,1:OM@nyears]),2))
 
 
 # Add error and bias

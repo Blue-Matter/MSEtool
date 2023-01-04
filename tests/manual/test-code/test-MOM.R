@@ -18,8 +18,11 @@ MOM <- new("MOM",
            cpars = list(list(OM@cpars)),
            maxF = OM@maxF)
 
+MOM@seed <- OM@seed
+
 Hist <- Simulate(OM, silent = TRUE)
 multiHist <- SimulateMOM(MOM, silent = TRUE, parallel = FALSE)
+
 
 ####### Compare Hist vs multiHist
 compare_MOM <- function(x = "SBiomass", type = c("TSdata", "AtAge"), rel = FALSE) {
@@ -77,8 +80,8 @@ testthat::expect_s4_class(MMSE, 'MMSE')
 
 
 # curEref should result in projection Fs = last historical F
-#histF <- array(MSE@FM_hist[,OM@nyears], dim=dim(MSE@FM[,2,]))
-#testthat::expect_equal(MMSE@FM[,1,1,3,], histF)
+histF <- array(MSE@FM_hist[,OM@nyears], dim=dim(MSE@FM[,2,]))
+testthat::expect_equal(prod(round(MMSE@FM[,1,1,3,]/histF,2)), 1)
 
 # FMSYref should result in F/FMSY = 1
 testthat::expect_equal(MMSE@F_FMSY[,1,1,2,] %>% round(2), array(1, c(MMSE@nsim, MMSE@proyears)))
