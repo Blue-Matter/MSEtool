@@ -354,9 +354,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
 
   # Assuming all vulnerable fish are kept; ie MSY is total removals
   if (!snowfall::sfIsRunning()) {
-    
-    MSYrefsYr <- if (requireNamespace("pbapply", quietly = TRUE) & !silent) {
-      pbapply::pblapply(1:nsim, function(x) {
+    if (requireNamespace("pbapply", quietly = TRUE) & !silent) {
+    MSYrefsYr <- pbapply::pblapply(1:nsim, function(x) {
         sapply(1:(nyears+proyears), function(y) {
           optMSY_eq(x, 
                     M_ageArray=StockPars$M_ageArray, 
@@ -375,7 +374,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
         })
       })
     } else {
-      lapply(1:nsim, function(x) {
+      MSYrefsYr <- lapply(1:nsim, function(x) {
         sapply(1:(nyears+proyears), function(y) {
           optMSY_eq(x, 
                     M_ageArray=StockPars$M_ageArray, 
@@ -520,11 +519,11 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
       message("Optimizing for user-specified depletion in last historical year")
 
     if (!snowfall::sfIsRunning()) {
-      qs <- if (requireNamespace("pbapply", quietly = TRUE) & !silent) {
-        pbapply::pbsapply(1:nsim, CalculateQ, StockPars, FleetPars,
+      if (requireNamespace("pbapply", quietly = TRUE) & !silent) {
+        qs <- pbapply::pbsapply(1:nsim, CalculateQ, StockPars, FleetPars,
                           pyears=nyears, bounds, control=control)
       } else {
-        sapply(1:nsim, CalculateQ, StockPars, FleetPars,
+        qs <- sapply(1:nsim, CalculateQ, StockPars, FleetPars,
                pyears=nyears, bounds, control=control)
       }
     } else {
@@ -720,8 +719,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   # ---- Calculate per-recruit reference points ----
   if (!silent) message("Calculating per-recruit reference points")
   if (!snowfall::sfIsRunning()) {
-    per_recruit_F <- if (requireNamespace("pbapply", quietly = TRUE) & !silent) {
-      pbapply::pblapply(1:nsim, function(x) {
+    if (requireNamespace("pbapply", quietly = TRUE) & !silent) {
+      per_recruit_F <- pbapply::pblapply(1:nsim, function(x) {
         lapply(1:(nyears+proyears), function(y) {
           per_recruit_F_calc(x, 
                              M_ageArray=StockPars$M_ageArray,
@@ -737,7 +736,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
         })
       })
     } else {
-      lapply(1:nsim, function(x) {
+      per_recruit_F <- lapply(1:nsim, function(x) {
         lapply(1:(nyears+proyears), function(y) {
           per_recruit_F_calc(x, 
                              M_ageArray=StockPars$M_ageArray,
