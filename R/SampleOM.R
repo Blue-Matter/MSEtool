@@ -318,11 +318,22 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   }
 
   # ---- Growth Parameters ----
-  Linf <- sample_unif('Linf', cpars, Stock, nsim)
-  Linfsd <- sample_unif('Linfsd', cpars, Stock, nsim)
-  K <- sample_unif('K', cpars, Stock, nsim)
-  Ksd <- sample_unif('Ksd', cpars, Stock, nsim)
-  t0 <- sample_unif('t0', cpars, Stock, nsim)
+  
+  # check if Len_age in cpars
+  if (is.null(cpars$Len_age)) {
+    Linf <- sample_unif('Linf', cpars, Stock, nsim)
+    Linfsd <- sample_unif('Linfsd', cpars, Stock, nsim)
+    K <- sample_unif('K', cpars, Stock, nsim)
+    Ksd <- sample_unif('Ksd', cpars, Stock, nsim)
+    t0 <- sample_unif('t0', cpars, Stock, nsim)
+  } else {
+    # temp values: VB parameters will be calculate from cpars$Len_age
+    Linf <- rep(0, nsim)
+    Linfsd <- rep(0, nsim)
+    K <- rep(0, nsim)
+    Ksd <- rep(0, nsim)
+    t0 <- rep(0, nsim)
+  }
 
   # Generate random numbers for random walk
   if (!is.null(cpars$Mrand)) {
@@ -355,6 +366,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
     Karray <- GenerateRandomWalk(K, Ksd, nyears + proyears,
                                  nsim, Krand)
   }
+  
   if (!is.null(cpars$Agearray)) {
     Agearray <- cpars$Agearray
   } else {
