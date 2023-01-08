@@ -38,9 +38,18 @@
 #' @slot Allocation  A list nstock long, of matrices nsim x nfleet representing the fraction of future TACs of the various fleets to each stock (each matrix is nsim by nfleet long and rows sum to 1 for each stock).
 #' @slot Efactor A list nstock long, of current effort factors by fleet (default is 1 - same as current effort)
 #' @slot Complexes A list of stock complexes. Each position is a vector of stock numbers (as they appear in StockPars) for which data should be aggregated and TAC recommendations split among stocks according to vulnerable biomass
-#' @slot SexPars A list of slots that control sex-specific dynamics
-#' @slot Rel A list of biological / ecological relationships among stocks
+#' @slot SexPars A list of slots that control sex-specific dynamics, i.e., sex-specific spawning and hermaphroditism. More generally, controls spawning and moving abundance between stocks. See details.
+#' #' @slot Rel A list of biological / ecological relationships among stocks
 #' over-ridden if an MP of class 'MP_F" is supplied that is a multi-fleet MP.
+#' @section SexPars:
+#' \itemize{
+#' \item \code{SSBfrom} A nstock x nstock matrix that specifies the proportion of the spawning output of the row p stock for the column p' stock. A diagonal matrix means each stock is
+#' responsible for its own recruitment.
+#' \item \code{Herm} A list with each entry containing a matrix (nsim x maxage + 1) that specifies the proportion at age that moves from stock p to p' (sequential hermaphroditism).
+#' The names of the list should be of the form "H_p'_p" where p and p' are integers that identify the stock. 
+#' \item \code{share_par} Optional. Logical to indicate whether stock-recruit, depletion, and observation/implementation parameters are mirrored between stocks. By default, TRUE.
+#' }
+#' @seealso Article on \code{MOM} and \code{multiMSE}: \url{https://openmse.com/features-multimse/}
 #' @author T. Carruthers and A. Hordyk
 #' @export
 #' @keywords classes

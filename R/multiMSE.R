@@ -148,23 +148,29 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   # Depletion, stock-recruit parameters, recdevs, Fleet, Obs, and Imp copied
   # from females to males
   if (length(SexPars)) {
-    sexmatches <- sapply(1:nrow(SexPars$SSBfrom), function(x) paste(SexPars$SSBfrom[x, ], collapse = "_"))
-    parcopy <- match(sexmatches, sexmatches)
-    StockPars_t <- StockPars
-    FleetPars_t <- FleetPars
-    
-    slot_s <- c("D", "hs", "AC", "R0", "R0a", "Perr_y")
-    slot_f <- c("Esd", "Find", "dFFinal", "Spat_targ", "qinc", "qcv", "qvar", "FinF")
-    
-    for (p in 1:np) {
-      StockPars[[p]][slot_s] <- StockPars_t[[parcopy[p]]][slot_s]
-      for (f in 1:nf) {
-        FleetPars[[p]][[f]][slot_f] <- FleetPars_t[[parcopy[p]]][[f]][slot_f]
-        ObsPars[[p]][[f]] <- ObsPars[[parcopy[p]]][[f]]
-        ImpPars[[p]][[f]] <- ImpPars[[parcopy[p]]][[f]]
+    if (is.null(SexPars$share_par) || SexPars$share_par == TRUE) {
+      sexmatches <- sapply(1:nrow(SexPars$SSBfrom), function(x) paste(SexPars$SSBfrom[x, ], collapse = "_"))
+      parcopy <- match(sexmatches, sexmatches)
+      StockPars_t <- StockPars
+      FleetPars_t <- FleetPars
+      
+      slot_s <- c("D", "hs", "AC", "R0", "R0a", "Perr_y")
+      slot_f <- c("Esd", "Find", "dFFinal", "Spat_targ", "qinc", "qcv", "qvar", "FinF")
+      
+      if (!silent)  message_info("You have specified sex-specific dynamics,",
+                                 "these parameters will be mirrored across sex types according to SexPars$SSBfrom:\n",
+                                 paste(c(slot_s, slot_f), collapse = ", "),
+                                 ", all observation and implementation parameters")
+      
+      for (p in 1:np) {
+        StockPars[[p]][slot_s] <- StockPars_t[[parcopy[p]]][slot_s]
+        for (f in 1:nf) {
+          FleetPars[[p]][[f]][slot_f] <- FleetPars_t[[parcopy[p]]][[f]][slot_f]
+          ObsPars[[p]][[f]] <- ObsPars[[parcopy[p]]][[f]]
+          ImpPars[[p]][[f]] <- ImpPars[[parcopy[p]]][[f]]
+        }
       }
     }
-    
   } # end of sexpars
 
   nareas_s <- NIL(StockPars, "nareas", lev1 = TRUE)
@@ -398,27 +404,27 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   
   # ---- SexPars - Update SSB0 and Ricker SRR parameters for male stock ----
   # Other parameters have been updated (R0, h, rec devs) earlier
-  if(length(SexPars)) {
-    if (!silent)  message_info("You have specified sex-specific dynamics, unfished spawning biomass",
-            "and specified stock depletion will be mirrored across sex types according ",
-            "to SexPars$SSBfrom")
-
-    sexmatches <- sapply(1:nrow(SexPars$SSBfrom), function(x) paste(SexPars$SSBfrom[x, ], collapse = "_"))
-    parcopy <- match(sexmatches, sexmatches)
-    StockPars_t <- StockPars # need to store a temporary object for copying to/from
-    
-    SSB0s <- matrix(NIL(StockPars_t, "SSB0"), nsim, np) # sim, p
-    for (p in 1:np) {
-      StockPars[[p]]$SSB0 <- apply(matrix(SexPars$SSBfrom[p, ], nsim, np, byrow = TRUE) * SSB0s, 1, sum)
-      StockPars[[p]]$SSBpR <- array(StockPars[[p]]$SSB0/StockPars_t[[p]]$R0,c(nsim,nareas)) # SSBpR hardwired to be the same among areas !!!!
+  if (length(SexPars)) {
+    if (is.null(SexPars$share_par) || SexPars$share_par == TRUE) {
+      if (!silent)  message_info("You have specified sex-specific dynamics, unfished spawning biomass",
+                                 "and specified stock depletion will be mirrored across sex types according ",
+                                 "to SexPars$SSBfrom")
+      sexmatches <- sapply(1:nrow(SexPars$SSBfrom), function(x) paste(SexPars$SSBfrom[x, ], collapse = "_"))
+      parcopy <- match(sexmatches, sexmatches)
+      StockPars_t <- StockPars # need to store a temporary object for copying to/from
       
-      # Ricker SR params
-      SSB0a <- StockPars[[p]]$SSB0 * StockPars_t[[p]]$R0a/apply(StockPars_t[[p]]$R0a, 1, sum)
-      StockPars[[p]]$bR <- matrix(log(5 * StockPars_t[[p]]$hs)/(0.8 * SSB0a), nrow=nsim)
-      StockPars[[p]]$aR <- matrix(exp(StockPars[[p]]$bR * SSB0a)/StockPars[[p]]$SSBpR, nrow=nsim)
+      SSB0s <- matrix(NIL(StockPars_t, "SSB0"), nsim, np) # sim, p
+      for (p in 1:np) {
+        StockPars[[p]]$SSB0 <- apply(matrix(SexPars$SSBfrom[p, ], nsim, np, byrow = TRUE) * SSB0s, 1, sum)
+        StockPars[[p]]$SSBpR <- array(StockPars[[p]]$SSB0/StockPars_t[[p]]$R0,c(nsim,nareas)) # SSBpR hardwired to be the same among areas !!!!
+        
+        # Ricker SR params
+        SSB0a <- StockPars[[p]]$SSB0 * StockPars_t[[p]]$R0a/apply(StockPars_t[[p]]$R0a, 1, sum)
+        StockPars[[p]]$bR <- matrix(log(5 * StockPars_t[[p]]$hs)/(0.8 * SSB0a), nrow=nsim)
+        StockPars[[p]]$aR <- matrix(exp(StockPars[[p]]$bR * SSB0a)/StockPars[[p]]$SSBpR, nrow=nsim)
+      }
     }
-    
-    if(length(SexPars$Herm)){
+    if (length(SexPars$Herm)) {
       if (!silent) message_info("You have specified sequential hermaphroditism (SexPars$Herm).",
               "Unfished stock numbers will be calculated from this vector of fractions ",
               "at age. Population dynamics will move individuals from one sex to another.")
@@ -710,10 +716,12 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     Depletion <- apply(SSB[,,,nyears,,drop = FALSE], 1:2, sum)/ SSB0_specified
   }
 
-  if (length(SexPars)) { # need to copy over depletion for a sex-specific model
-    sexmatches <- sapply(1:nrow(SexPars$SSBfrom), function(x) paste(SexPars$SSBfrom[x, ], collapse = "_"))
-    parcopy <- match(sexmatches, sexmatches)
-    Depletion[, 1:np]<-Depletion[, parcopy]
+  if (length(SexPars)) {
+    if (is.null(SexPars$share_par) || SexPars$share_par == TRUE) { # need to copy over depletion for a sex-specific model
+      sexmatches <- sapply(1:nrow(SexPars$SSBfrom), function(x) paste(SexPars$SSBfrom[x, ], collapse = "_"))
+      parcopy <- match(sexmatches, sexmatches)
+      Depletion[, 1:np] <- Depletion[, parcopy]
+    }
   }
 
   for(p in 1:np) StockPars[[p]]$Depletion <- Depletion[, p]  # add actual Depletion to StockPars
