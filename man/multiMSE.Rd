@@ -48,7 +48,7 @@ The \code{multiHist} object can be (re-)created using \code{SimulateMOM} or kept
 
 \item{extended}{Logical. Return extended projection results?
 if TRUE, \code{MMSE@Misc$extended} is a named list with extended data
-(including historical and projected abundance and by area).}
+(including historical and projected abundance by area).}
 
 \item{Hist}{Should model stop after historical simulations? Returns a list
 containing all historical data}
