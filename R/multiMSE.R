@@ -1327,7 +1327,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 #' @param multiHist An Historical Simulation object (class `multiHist`)
 #' @export
 ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
-                        checkMPs=TRUE, dropHist=TRUE) {
+                        checkMPs=TRUE, dropHist=TRUE, extended=FALSE) {
 
   # ---- Setup ----
   if (! 'multiHist' %in% class(multiHist))
@@ -2811,10 +2811,15 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   # Misc$Data <-MSElist
   Misc[['MOM']]<-MOM
   
-  if (length(Rel)) { # Update for potential values updated by MICE
-    Misc[["MICE"]] <- StockPars_MICE
-  } else {
-    Misc[["MICE"]] <- "No MICE relationships were used."
+  if (length(Rel)) Misc[["MICE"]] <- StockPars_MICE # Update for potential values updated by MICE
+  
+  if (extended) {
+    Misc[["extended"]] <- list(
+      N = local({
+        histN <- replicate(nMP, StockPars[[1]]$N) %>% aperm(c(1,2,3,6,4,5)) # nsim x np x n_age x nyears x nareas x nMP
+        abind::abind(histN, N_P_mp, along=5) # nsim x np x n_age x nMP x proyears x nareas
+      })
+    )
   }
 
   # need to reformat MMP and complex mode to work with MSEout slot
@@ -2929,6 +2934,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #' @param dropHist Logical. Drop the (very large) `multiHist` object from the returned `MMSE` object?
 #' The `multiHist` object can be (re-)created using `SimulateMOM` or kept in `MMSE@multiHist` if
 #' `dropHist=FALSE`
+#' @param extended Logical. Return extended projection results?
+#' if TRUE, `MMSE@Misc$extended` is a named list with extended data
+#' (including historical and projected abundance by area).
 #' @describeIn multiMSE Run a multi-stock, multi-fleet MSE
 #' 
 #' @details 
@@ -2955,7 +2963,8 @@ multiMSE <- function(MOM=MSEtool::Albacore_TwoFleet,
                      silent=FALSE,
                      parallel=TRUE,
                      checkMPs=TRUE,
-                     dropHist=TRUE) {
+                     dropHist=TRUE,
+                     extended=FALSE) {
 
   # ---- Initial Checks and Setup ----
   if (methods::is(MOM,'MOM')) {
@@ -3008,7 +3017,7 @@ multiMSE <- function(MOM=MSEtool::Albacore_TwoFleet,
   if(!silent) message("Running forward projections")
 
   MSEout <- try(ProjectMOM(multiHist=multiHist, MPs, parallel, silent, checkMPs=FALSE,
-                           dropHist=dropHist), silent=TRUE)
+                           dropHist=dropHist,extended=extended), silent=TRUE)
 
   if (methods::is(MSEout,'try-error')) {
     message('The following error occured when running the forward projections: ',

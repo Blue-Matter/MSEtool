@@ -14,7 +14,8 @@ ProjectMOM(
   parallel = FALSE,
   silent = FALSE,
   checkMPs = TRUE,
-  dropHist = TRUE
+  dropHist = TRUE,
+  extended = FALSE
 )
 
 multiMSE(
@@ -24,7 +25,8 @@ multiMSE(
   silent = FALSE,
   parallel = TRUE,
   checkMPs = TRUE,
-  dropHist = TRUE
+  dropHist = TRUE,
+  extended = FALSE
 )
 }
 \arguments{
@@ -43,6 +45,10 @@ multiMSE(
 \item{dropHist}{Logical. Drop the (very large) \code{multiHist} object from the returned \code{MMSE} object?
 The \code{multiHist} object can be (re-)created using \code{SimulateMOM} or kept in \code{MMSE@multiHist} if
 \code{dropHist=FALSE}}
+
+\item{extended}{Logical. Return extended projection results?
+if TRUE, \code{MMSE@Misc$extended} is a named list with extended data
+(including historical and projected abundance and by area).}
 
 \item{Hist}{Should model stop after historical simulations? Returns a list
 containing all historical data}
