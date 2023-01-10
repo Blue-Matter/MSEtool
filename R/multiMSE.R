@@ -14,6 +14,21 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
   # ---- Set up parallel processing ----
   ncpus <- set_parallel(parallel)
+  
+  # ---- Set pbapply functions ----
+  if (requireNamespace("pbapply", quietly = TRUE) && !silent) {
+    .lapply <- pbapply::pblapply
+    .sapply <- pbapply::pbsapply
+    
+    # Argument to pass parallel cluster (if running)
+    formals(.lapply)$cl <- formals(.sapply)$cl <- substitute(if (snowfall::sfIsRunning()) snowfall::sfGetCluster() else NULL)
+  } else if (snowfall::sfIsRunning()) {
+    .lapply <- snowfall::sfLapply
+    .sapply <- snowfall::sfSapply
+  } else {
+    .lapply <- base::lapply
+    .sapply <- base::sapply
+  }
 
   set.seed(MOM@seed) # set seed for reproducibility
   nsim <- MOM@nsim
@@ -451,41 +466,18 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
   bounds <- c(0.0001, 15) # q bounds for optimizer
   if (optD) {
-    if (snowfall::sfIsRunning() && parallel) {
-      exp.time <- (np * nf)/(9*ncpus) * nsim
-      exp.time <- round(exp.time,2)
-#
-#       message("Optimizing for user-specified depletion ",
-#               'using parallel processing',
-#               "(takes approximately [(nstocks x nfleets)/(9 x number of cores in cluster)]",
-#               " minutes per simulation): about", exp.time, 'minutes')
-      if(!silent)
-        message("Optimizing for user-specified depletion ",
-              'using parallel processing',
+    exp.time <- (np * nf)/(9*ncpus) * nsim
+    exp.time <- round(exp.time,2)
+    
+    if(!silent)
+      message("Optimizing for user-specified depletion ",
               'for ', nsim, 'simulations,', np, ' stocks, and ', nf, 'fleets',
               "(could take a while!)")
-
-      out<-snowfall::sfLapply(1:nsim, getq_multi_MICE, StockPars, FleetPars,
-                              np,nf, nareas, maxage, nyears, N, VF, FretA,
-                              maxF=MOM@maxF, MPA, CatchFrac, bounds=bounds,
-                              tol=1E-6,HistRel,SexPars, plusgroup=plusgroup, optVB=optVB)
-
-    } else {
-      exp.time <- (np * nf)/(9) * nsim
-      exp.time <- round(exp.time,2)
-
-      if(!silent)
-        message("Optimizing for user-specified depletion ",
-                'using a single core',
-                'for ', nsim, 'simulations,', np, ' stocks, and ', nf, 'fleets',
-                "(could take a while!)")
-
-      out<-lapply(1:nsim, getq_multi_MICE, StockPars, FleetPars, np, nf, nareas,
-                  maxage, nyears, N, VF, FretA, maxF=MOM@maxF,
-                  MPA,CatchFrac, bounds=bounds,tol=1E-6,HistRel,SexPars,
-                  plusgroup=plusgroup, optVB=optVB)
-
-    }
+    
+    out <- .lapply(1:nsim, getq_multi_MICE, StockPars, FleetPars, np, nf, nareas,
+                   maxage, nyears, N, VF, FretA, maxF=MOM@maxF,
+                   MPA,CatchFrac, bounds=bounds,tol=1E-6,HistRel,SexPars,
+                   plusgroup=plusgroup, optVB=optVB)
 
     qs <- NIL(out,"qtot") %>% matrix(nsim, np, byrow = TRUE)
     qfrac <- NIL(out,"qfrac") %>% array(c(np, nf, nsim)) %>% aperm(c(3, 1, 2))
@@ -566,18 +558,10 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
         }
       }
 
-      if(snowfall::sfIsRunning() & parallel){
-        out2<-snowfall::sfLapply(probQ,getq_multi_MICE,StockPars, FleetPars,
-                                 np,nf, nareas, maxage, nyears, N, VF, FretA,
-                                 maxF=MOM@maxF, MPA,CatchFrac, bounds=bounds,
-                                 tol=1E-6,HistRel,SexPars,
-                                 plusgroup=plusgroup, optVB=optVB)
-      }else{
-        out2<-lapply(probQ,getq_multi_MICE,StockPars, FleetPars, np,nf, nareas,
-                     maxage, nyears, N, VF, FretA, maxF=MOM@maxF,
-                     MPA,CatchFrac, bounds= bounds,tol=1E-6,HistRel,SexPars,
-                     plusgroup=plusgroup, optVB=optVB)
-      }
+      out2 <- .lapply(probQ,getq_multi_MICE,StockPars, FleetPars, np,nf, nareas,
+                      maxage, nyears, N, VF, FretA, maxF=MOM@maxF,
+                      MPA,CatchFrac, bounds= bounds,tol=1E-6,HistRel,SexPars,
+                      plusgroup=plusgroup, optVB=optVB)
 
       qs2<-t(matrix(NIL(out2,"qtot"),nrow=np))
       qout2<-array(NIL(out2,"qfrac"),c(np,nf,nsim))
@@ -624,23 +608,12 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     message("Calculating historical stock and fishing dynamics")
 
   # ---- Run Historical Simulations ----
-  if (snowfall::sfIsRunning()) {
-    histYrs <- snowfall::sfSapply(1:nsim, HistMICE, StockPars=StockPars,
-                                  FleetPars=FleetPars,np=np,nf=nf,nareas=nareas,
-                                  maxage=maxage,nyears=nyears,N=N,VF=VF,FretA=FretA,
-                                  maxF=MOM@maxF,MPA=MPA,Rel=HistRel,SexPars=SexPars,qs=qs,
-                                  qfrac=qfrac,
-                                  plusgroup=plusgroup)
-
-  } else {
-    histYrs <- sapply(1:nsim, HistMICE, StockPars=StockPars,
-                      FleetPars=FleetPars,np=np,nf=nf,nareas=nareas,
-                      maxage=maxage,nyears=nyears,N=N,VF=VF,FretA=FretA,
-                      maxF=MOM@maxF,MPA=MPA,Rel=HistRel,SexPars=SexPars,qs=qs,
-                      qfrac=qfrac,
-                      plusgroup=plusgroup)
-
-  }
+  histYrs <- .sapply(1:nsim, HistMICE, StockPars=StockPars,
+                     FleetPars=FleetPars,np=np,nf=nf,nareas=nareas,
+                     maxage=maxage,nyears=nyears,N=N,VF=VF,FretA=FretA,
+                     maxF=MOM@maxF,MPA=MPA,Rel=HistRel,SexPars=SexPars,qs=qs,
+                     qfrac=qfrac,
+                     plusgroup=plusgroup)
   
   N <- aperm(array(as.numeric(unlist(histYrs[1,], use.names=FALSE)),
                    dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
@@ -1717,8 +1690,12 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
     # -- First projection year ----
     y <- 1
-    if(!silent) {
-      pb <- txtProgressBar(min = 1, max = proyears, style = 3, width = min(getOption("width"), 50))
+    if (!silent) {
+      if (requireNamespace("pbapply", quietly = TRUE)) {
+        pb <- pbapply::timerProgressBar(min = 1, max = proyears, style = 3, width = min(getOption("width"), 50))
+      } else {
+        pb <- txtProgressBar(min = 1, max = proyears, style = 3, width = min(getOption("width"), 50))
+      }
     }
     
     #### Time-invariant parameters to project one-time step forward. Potential time-varying parameters inside local() call 
@@ -2066,9 +2043,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
    
     # --- Begin projection years ----
     for (y in 2:proyears) {
-      if(!silent) {
-        setTxtProgressBar(pb, y)
-      }
+      if (!silent) setTxtProgressBar(pb, y) # Works with pbapply
 
       # -- Calculate MSY stats for this year ----
       # if selectivity has changed
@@ -2625,7 +2600,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       } # end of not update year
     } # end of projection years
     
-    if(!silent) close(pb)
+    if(!silent) close(pb) # use pbapply::closepb(pb) for shiny related stuff
     
     if (max(upyrs) < proyears) { # One more call to complete Data object
       # --- Update Data object ----

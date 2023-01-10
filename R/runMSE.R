@@ -26,6 +26,21 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   # ---- Set up parallel processing ----
   ncpus <- set_parallel(any(unlist(parallel)))
   
+  # ---- Set pbapply functions ----
+  if (requireNamespace("pbapply", quietly = TRUE) && !silent) {
+    .lapply <- pbapply::pblapply
+    .sapply <- pbapply::pbsapply
+    
+    # Argument to pass parallel cluster (if running)
+    formals(.lapply)$cl <- formals(.sapply)$cl <- substitute(if (snowfall::sfIsRunning()) snowfall::sfGetCluster() else NULL)
+  } else if (snowfall::sfIsRunning()) {
+    .lapply <- snowfall::sfLapply
+    .sapply <- snowfall::sfSapply
+  } else {
+    .lapply <- base::lapply
+    .sapply <- base::sapply
+  }
+  
   set.seed(OM@seed) # set seed for reproducibility
   nsim <- OM@nsim # number of simulations
   nyears <- OM@nyears # number of historical years
@@ -353,66 +368,24 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   # average life-history parameters over ageM years
 
   # Assuming all vulnerable fish are kept; ie MSY is total removals
-  if (!snowfall::sfIsRunning()) {
-    if (requireNamespace("pbapply", quietly = TRUE) & !silent) {
-    MSYrefsYr <- pbapply::pblapply(1:nsim, function(x) {
-        sapply(1:(nyears+proyears), function(y) {
-          optMSY_eq(x, 
-                    M_ageArray=StockPars$M_ageArray, 
-                    Wt_age=StockPars$Wt_age, 
-                    Mat_age=StockPars$Mat_age,
-                    Fec_age=StockPars$Fec_Age, 
-                    V=FleetPars$V_real, 
-                    maxage=StockPars$maxage, 
-                    R0=StockPars$R0,
-                    SRrel=StockPars$SRrel, 
-                    hs=StockPars$hs, 
-                    SSBpR=StockPars$SSBpR,
-                    yr.ind=y, 
-                    plusgroup=StockPars$plusgroup,
-                    StockPars=StockPars)
-        })
-      })
-    } else {
-      MSYrefsYr <- lapply(1:nsim, function(x) {
-        sapply(1:(nyears+proyears), function(y) {
-          optMSY_eq(x, 
-                    M_ageArray=StockPars$M_ageArray, 
-                    Wt_age=StockPars$Wt_age, 
-                    Mat_age=StockPars$Mat_age,
-                    Fec_age=StockPars$Fec_Age, 
-                    V=FleetPars$V_real, 
-                    maxage=StockPars$maxage, 
-                    R0=StockPars$R0,
-                    SRrel=StockPars$SRrel, 
-                    hs=StockPars$hs, 
-                    SSBpR=StockPars$SSBpR,
-                    yr.ind=y, 
-                    plusgroup=StockPars$plusgroup,
-                    StockPars=StockPars)
-        })
-      })
-    }
-  } else {
-    MSYrefsYr <- snowfall::sfLapply(1:nsim, function(x) {
-      sapply(1:(nyears+proyears), function(y) {
-        optMSY_eq(x, 
-                  M_ageArray=StockPars$M_ageArray, 
-                  Wt_age=StockPars$Wt_age, 
-                  Mat_age=StockPars$Mat_age,
-                  Fec_age=StockPars$Fec_Age, 
-                  V=FleetPars$V_real, 
-                  maxage=StockPars$maxage, 
-                  R0=StockPars$R0,
-                  SRrel=StockPars$SRrel, 
-                  hs=StockPars$hs, 
-                  SSBpR=StockPars$SSBpR,
-                  yr.ind=y, 
-                  plusgroup=StockPars$plusgroup,
-                  StockPars=StockPars)
-      })
+  MSYrefsYr <- .lapply(1:nsim, function(x) {
+    sapply(1:(nyears+proyears), function(y) {
+      optMSY_eq(x, 
+                M_ageArray=StockPars$M_ageArray, 
+                Wt_age=StockPars$Wt_age, 
+                Mat_age=StockPars$Mat_age,
+                Fec_age=StockPars$Fec_Age, 
+                V=FleetPars$V_real, 
+                maxage=StockPars$maxage, 
+                R0=StockPars$R0,
+                SRrel=StockPars$SRrel, 
+                hs=StockPars$hs, 
+                SSBpR=StockPars$SSBpR,
+                yr.ind=y, 
+                plusgroup=StockPars$plusgroup,
+                StockPars=StockPars)
     })
-  }
+  })
   MSY_y[] <- sapply(MSYrefsYr, function(x) x["Yield", ]) %>% t()
   FMSY_y[] <- sapply(MSYrefsYr, function(x) x["F", ]) %>% t()
   SSBMSY_y[] <- sapply(MSYrefsYr, function(x) x["SB", ]) %>% t()
@@ -517,19 +490,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   } else {
     if(!silent)
       message("Optimizing for user-specified depletion in last historical year")
-
-    if (!snowfall::sfIsRunning()) {
-      if (requireNamespace("pbapply", quietly = TRUE) & !silent) {
-        qs <- pbapply::pbsapply(1:nsim, CalculateQ, StockPars, FleetPars,
-                          pyears=nyears, bounds, control=control)
-      } else {
-        qs <- sapply(1:nsim, CalculateQ, StockPars, FleetPars,
-               pyears=nyears, bounds, control=control)
-      }
-    } else {
-      qs <- snowfall::sfSapply(1:nsim, CalculateQ, StockPars, FleetPars,
-                               pyears=nyears, bounds, control=control)
-    }
+    
+    qs <- .sapply(1:nsim, CalculateQ, StockPars, FleetPars, pyears=nyears, bounds, control=control)
   }
 
   # --- Check that q optimizer has converged ----
@@ -718,58 +680,21 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
 
   # ---- Calculate per-recruit reference points ----
   if (!silent) message("Calculating per-recruit reference points")
-  if (!snowfall::sfIsRunning()) {
-    if (requireNamespace("pbapply", quietly = TRUE) & !silent) {
-      per_recruit_F <- pbapply::pblapply(1:nsim, function(x) {
-        lapply(1:(nyears+proyears), function(y) {
-          per_recruit_F_calc(x, 
-                             M_ageArray=StockPars$M_ageArray,
-                             Wt_age=StockPars$Wt_age,
-                             Mat_age=StockPars$Mat_age,
-                             Fec_age=StockPars$Fec_Age,
-                             V=FleetPars$V_real,
-                             maxage=StockPars$maxage,
-                             yr.ind=y,
-                             plusgroup=StockPars$plusgroup,
-                             SPR_target=SPR_target,
-                             StockPars=StockPars)
-        })
-      })
-    } else {
-      per_recruit_F <- lapply(1:nsim, function(x) {
-        lapply(1:(nyears+proyears), function(y) {
-          per_recruit_F_calc(x, 
-                             M_ageArray=StockPars$M_ageArray,
-                             Wt_age=StockPars$Wt_age,
-                             Mat_age=StockPars$Mat_age,
-                             Fec_age=StockPars$Fec_Age,
-                             V=FleetPars$V_real,
-                             maxage=StockPars$maxage,
-                             yr.ind=y,
-                             plusgroup=StockPars$plusgroup,
-                             SPR_target=SPR_target,
-                             StockPars=StockPars)
-        })
-      })
-    }
-  } else {
-    per_recruit_F <- snowfall::sfLapply(1:nsim, function(x) {
-      lapply(1:(nyears+proyears), function(y) {
-        per_recruit_F_calc(x, 
-                           M_ageArray=StockPars$M_ageArray,
-                           Wt_age=StockPars$Wt_age,
-                           Mat_age=StockPars$Mat_age,
-                           Fec_age=StockPars$Fec_Age,
-                           V=FleetPars$V_real,
-                           maxage=StockPars$maxage,
-                           yr.ind=y,
-                           plusgroup=StockPars$plusgroup,
-                           SPR_target=SPR_target,
-                           StockPars=StockPars)
-      })
+  per_recruit_F <- .lapply(1:nsim, function(x) {
+    lapply(1:(nyears+proyears), function(y) {
+      per_recruit_F_calc(x, 
+                         M_ageArray=StockPars$M_ageArray,
+                         Wt_age=StockPars$Wt_age,
+                         Mat_age=StockPars$Mat_age,
+                         Fec_age=StockPars$Fec_Age,
+                         V=FleetPars$V_real,
+                         maxage=StockPars$maxage,
+                         yr.ind=y,
+                         plusgroup=StockPars$plusgroup,
+                         SPR_target=SPR_target,
+                         StockPars=StockPars)
     })
-  }
-  
+  })
   F_SPR_y[] <- lapply(per_recruit_F, function(x) sapply(x, getElement, 1)) %>%
     simplify2array() %>% aperm(c(3, 1, 2))
   F01_YPR_y[] <- sapply(per_recruit_F, function(x) sapply(x, function(y) y$FYPR["YPR_F01"])) %>% t()
@@ -1345,7 +1270,9 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
     # -- First projection year ----
     y <- 1
-    if(!silent) {
+    if (requireNamespace("pbapply", quietly = TRUE)) {
+      pb <- pbapply::timerProgressBar(min = 1, max = proyears, style = 3, width = min(getOption("width"), 50))
+    } else {
       pb <- txtProgressBar(min = 1, max = proyears, style = 3, width = min(getOption("width"), 50))
     }
     # Mortality in first year
@@ -1482,9 +1409,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
     # ---- Begin projection years ----
     for (y in 2:proyears) {
-      if(!silent) {
-        setTxtProgressBar(pb, y)
-      }
+      if (!silent) setTxtProgressBar(pb, y) # Works with pbapply
 
       SelectChanged <- FALSE
       if (any(range(retA_P[,,nyears+y] -  FleetPars$retA_real[,,nyears+y]) !=0)) SelectChanged <- TRUE
@@ -1676,7 +1601,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
     }  # end of year loop
     
-    if(!silent) close(pb)
+    if (!silent) close(pb) # use pbapply::closepb(pb) for shiny related stuff
 
     if (max(upyrs) < proyears) { # One more call to complete Data object
       Data_MP <- updateData(Data=Data_MP, OM, MPCalcs, Effort,

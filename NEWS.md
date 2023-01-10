@@ -4,6 +4,8 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 ## New additions
 - implemented `Data@Vuln_CAL` in generating CAL samples. `Data@Vuln_CAA` is not currently implemented
+- added `extended` argument to `multiMSE` to report N-at-age in `MMSE@Misc$extended$N`
+- added optional `MOM@SexPars$share_par = FALSE` argument that turns off parameter mirroring of stock-recruit, depletion parameters; fleet parameters related to effort trends; and all observation/implementation parameters. This can be used to generalize a 2-sex MOM to a multi-stock model with shared spawning output (`SexPars$SSBfrom`) and/or movement-at-age between stocks (`SexPars$Herm`).
 
 ## Fixes
 - minor fix to `SS2OM` when empirical weight-at-age is not available
