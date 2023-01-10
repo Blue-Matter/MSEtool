@@ -2,6 +2,9 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 # MSEtool 3.6.999 - Development
 
+## New additions
+- implemented `Data@Vuln_CAL` in generating CAL samples. `Data@Vuln_CAA` is not currently implemented
+
 ## Fixes
 - minor fix to `SS2OM` when empirical weight-at-age is not available
 - minor fix to `L95` calculation when all age classes are mature (defaults to 1.5)

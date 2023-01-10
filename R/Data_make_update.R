@@ -513,17 +513,47 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   Data@CAL[, 1:(nyears + y - interval[mm] - 1), ] <- oldCAL[, 1:(nyears + y - interval[mm] - 1), ]
 
   CAL <- array(NA, dim = c(nsim, interval[mm], StockPars$nCALbins))
-  vn <- (apply(N_P*Sample_Area$CAL[,,(nyears+1):(nyears+proyears),], c(1,2,3), sum) * retA_P[,,(nyears+1):(nyears+proyears)]) # numbers at age that would be retained
-  vn <- aperm(vn, c(1,3,2))
-
-  CALdat <- simCAL(nsim, nyears=length(yind), StockPars$maxage, ObsPars$CAL_ESS,
-                   ObsPars$CAL_nsamp, StockPars$nCALbins, StockPars$CAL_binsmid, StockPars$CAL_bins,
-                   vn=vn[,yind,, drop=FALSE], retL=retL_P[,,nyears+yind, drop=FALSE],
-                   Linfarray=StockPars$Linfarray[,nyears + yind, drop=FALSE],
-                   Karray=StockPars$Karray[,nyears + yind, drop=FALSE],
-                   t0array=StockPars$t0array[,nyears + yind,drop=FALSE],
-                   LenCV=StockPars$LenCV)
-
+  
+  if (!all(is.na(Data@Vuln_CAL))) {
+ 
+    Vuln_CAL <- replicate(nsim,Data@Vuln_CAL[1,])
+    Vuln_CAL <- replicate(length(yind),Vuln_CAL)
+    Vuln_CAL <- aperm(Vuln_CAL, c(2,1,3))
+    
+    VList_dat <- lapply(1:nsim, calcV, 
+                  Len_age=StockPars$Len_age[,,nyears+yind, drop=FALSE],
+                  LatASD=StockPars$LatASD[,,nyears+yind, drop=FALSE],
+                  SLarray=Vuln_CAL, 
+                  n_age=StockPars$maxage+1,
+                  nyears=length(yind), proyears = 0, 
+                  CAL_binsmid=StockPars$CAL_binsmid)
+ 
+    V_data <- aperm(array(as.numeric(unlist(VList_dat, use.names=FALSE)), dim=c(StockPars$maxage+1, length(yind), nsim)), c(3,1,2))
+    
+    vn <- (apply(N_P[,,yind,, drop=FALSE]*Sample_Area$CAL[,,(nyears+yind),, drop=FALSE], c(1,2,3), sum) * V_data) 
+    vn <- aperm(vn, c(1,3,2))
+    
+    CALdat <- simCAL(nsim, nyears=length(yind), StockPars$maxage, ObsPars$CAL_ESS,
+                     ObsPars$CAL_nsamp, StockPars$nCALbins, StockPars$CAL_binsmid, StockPars$CAL_bins,
+                     vn=vn, retL=Vuln_CAL,
+                     Linfarray=StockPars$Linfarray[,nyears + yind, drop=FALSE],
+                     Karray=StockPars$Karray[,nyears + yind, drop=FALSE],
+                     t0array=StockPars$t0array[,nyears + yind,drop=FALSE],
+                     LenCV=StockPars$LenCV)
+    
+    
+  } else {
+    vn <- (apply(N_P*Sample_Area$CAL[,,(nyears+1):(nyears+proyears),], c(1,2,3), sum) * retA_P[,,(nyears+1):(nyears+proyears)]) # numbers at age that would be retained
+    vn <- aperm(vn, c(1,3,2))
+    CALdat <- simCAL(nsim, nyears=length(yind), StockPars$maxage, ObsPars$CAL_ESS,
+                     ObsPars$CAL_nsamp, StockPars$nCALbins, StockPars$CAL_binsmid, StockPars$CAL_bins,
+                     vn=vn[,yind,, drop=FALSE], retL=retL_P[,,nyears+yind, drop=FALSE],
+                     Linfarray=StockPars$Linfarray[,nyears + yind, drop=FALSE],
+                     Karray=StockPars$Karray[,nyears + yind, drop=FALSE],
+                     t0array=StockPars$t0array[,nyears + yind,drop=FALSE],
+                     LenCV=StockPars$LenCV)
+  }
+  
   Data@CAL[, nyears + yind, ] <- CALdat$CAL # observed catch-at-length
   Data@ML <- cbind(Data@ML, CALdat$ML) # mean length
   Data@Lc <- cbind(Data@Lc, CALdat$Lc) # modal length
