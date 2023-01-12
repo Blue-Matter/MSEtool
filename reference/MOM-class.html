@@ -158,7 +158,7 @@ the data inputs is used.</p></dd>
 
 
 <dt><code>SexPars</code></dt>
-<dd><p>A list of slots that control sex-specific dynamics</p></dd>
+<dd><p>A list of slots that control sex-specific dynamics, i.e., sex-specific spawning and hermaphroditism. More generally, controls spawning and moving abundance between stocks. See details.</p></dd>
 
 
 <dt><code>Rel</code></dt>
@@ -171,6 +171,20 @@ over-ridden if an MP of class 'MP_F" is supplied that is a multi-fleet MP.</p></
     <h2>Objects from the Class</h2>
     <p>Objects can be created by calls of the form
 <code>new('MOM', Stock_list, Fleet_list, Obs_list, Imp_list)</code>.</p>
+    </div>
+    <div id="sexpars">
+    <h2>SexPars</h2>
+    
+
+<ul><li><p><code>SSBfrom</code> A nstock x nstock matrix that specifies the proportion of the spawning output of the row p stock for the column p' stock. A diagonal matrix means each stock is
+responsible for its own recruitment.</p></li>
+<li><p><code>Herm</code> A list with each entry containing a matrix (nsim x maxage + 1) that specifies the proportion at age that moves from stock p to p' (sequential hermaphroditism).
+The names of the list should be of the form "H_p'_p" where p and p' are integers that identify the stock.</p></li>
+<li><p><code>share_par</code> Optional. Logical to indicate whether stock-recruit, depletion, and observation/implementation parameters are mirrored between stocks. By default, TRUE.</p></li>
+</ul></div>
+    <div id="see-also">
+    <h2>See also</h2>
+    <div class="dont-index"><p>Article on <code>MOM</code> and <code>multiMSE</code>: <a href="https://openmse.com/features-multimse/" class="external-link">https://openmse.com/features-multimse/</a></p></div>
     </div>
     <div id="author">
     <h2>Author</h2>
