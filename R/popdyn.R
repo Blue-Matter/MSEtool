@@ -150,7 +150,7 @@ split.along.dim <- function(a, n) {
 #'
 #' @keywords internal
 optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxage, R0, SRrel, hs,
-                      SSBpR, yr.ind=1, plusgroup=0, StockPars=NULL) {
+                      SSBpR, yr.ind=1, plusgroup=0, StockPars=list()) {
   if (length(yr.ind)==1) {
     M_at_Age <- M_ageArray[x,,yr.ind]
     Wt_at_Age <- Wt_age[x,, yr.ind]
@@ -179,7 +179,11 @@ optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxage, R0, SR
   boundsF <- c(1E-4, 3)
   
   do_eq_per_recruit <- FALSE
-  if (SRrel[x] <3) do_eq_per_recruit <- TRUE
+  if (SRrel[x] < 3) {
+    do_eq_per_recruit <- TRUE
+    if (is.null(StockPars$relRfun)) StockPars$relRfun <- function(...) NULL
+    if (is.null(StockPars$SRRpars)) StockPars$SRRpars <- lapply(1:x, function(...) NULL)
+  }
   if (SRrel[x] == 3) {
     # Check for function
     if (!is.null(formals(StockPars$relRfun)))

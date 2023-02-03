@@ -18,7 +18,7 @@ optMSY_eq(
   SSBpR,
   yr.ind = 1,
   plusgroup = 0,
-  StockPars = NULL
+  StockPars = list()
 )
 }
 \arguments{
