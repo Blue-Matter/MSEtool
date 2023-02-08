@@ -8,9 +8,9 @@
 \usage{
 SubCpars(x, ...)
 
-\S4method{SubCpars}{OM}(x, sims = 1:x@nsim, proyears = x@proyears)
+\S4method{SubCpars}{OM}(x, sims = 1:x@nsim, proyears = x@proyears, silent = FALSE)
 
-\S4method{SubCpars}{MOM}(x, sims = 1:x@nsim, proyears = x@proyears)
+\S4method{SubCpars}{MOM}(x, sims = 1:x@nsim, proyears = x@proyears, silent = FALSE)
 }
 \arguments{
 \item{x}{An object of class \linkS4class{OM} or \linkS4class{MOM}}
@@ -21,6 +21,8 @@ SubCpars(x, ...)
 Alternatively, a numeric vector indicating which simulations (from 1 to nsim) to keep.}
 
 \item{proyears}{If provided, a numeric to reduce the number of projection years (must be less than \code{x@proyears}).}
+
+\item{silent}{Logical to indicate if messages will be reported to console.}
 }
 \value{
 An object of class \linkS4class{OM} or \linkS4class{MOM} (same class as \code{x}).
