@@ -56,10 +56,10 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">SubCpars</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for OM</span></span>
-<span><span class="fu">SubCpars</span><span class="op">(</span><span class="va">x</span>, sims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="va">x</span><span class="op">@</span><span class="va">nsim</span>, proyears <span class="op">=</span> <span class="va">x</span><span class="op">@</span><span class="va">proyears</span><span class="op">)</span></span>
+<span><span class="fu">SubCpars</span><span class="op">(</span><span class="va">x</span>, sims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="va">x</span><span class="op">@</span><span class="va">nsim</span>, proyears <span class="op">=</span> <span class="va">x</span><span class="op">@</span><span class="va">proyears</span>, silent <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for MOM</span></span>
-<span><span class="fu">SubCpars</span><span class="op">(</span><span class="va">x</span>, sims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="va">x</span><span class="op">@</span><span class="va">nsim</span>, proyears <span class="op">=</span> <span class="va">x</span><span class="op">@</span><span class="va">proyears</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">SubCpars</span><span class="op">(</span><span class="va">x</span>, sims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="va">x</span><span class="op">@</span><span class="va">nsim</span>, proyears <span class="op">=</span> <span class="va">x</span><span class="op">@</span><span class="va">proyears</span>, silent <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -79,6 +79,10 @@ Alternatively, a numeric vector indicating which simulations (from 1 to nsim) to
 
 <dt>proyears</dt>
 <dd><p>If provided, a numeric to reduce the number of projection years (must be less than <code>x@proyears</code>).</p></dd>
+
+
+<dt>silent</dt>
+<dd><p>Logical to indicate if messages will be reported to console.</p></dd>
 
 </dl></div>
     <div id="value">
