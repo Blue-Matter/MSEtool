@@ -33,10 +33,10 @@
 #'
 #' @slot OM A table of sampled parameters of the operating model. Data frame of nsim rows.
 #' @slot Obs A table of sampled parameters of the observation model. Data frame of nsim rows.
-#'
+#' 
 #' @slot SB_SBMSY Simulated spawning biomass relative to SBMSY over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers
 #' @slot F_FMSY Simulated fishing mortality rate relative to FMSY over the projection. An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers
-#' @slot N Simulated stock numbers over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers
+#' @slot N Simulated stock numbers over the projection. An array with dimensions: nsim, nStocks, `maxage`+1, nMPs, proyears, nareas. Non-negative real numbers
 #' @slot B Simulated stock biomass over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers
 #' @slot SSB Simulated spawning stock biomass over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers
 #' @slot VB Simulated vulnerable biomass over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers
