@@ -101,6 +101,13 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                                proyears,
                                cpars=SampCpars,
                                msg=!silent)
+  
+  # Timing of Spawning (fraction of year)
+  if (!is.null(SampCpars$spawn_time_frac)) {
+    StockPars$spawn_time_frac <- SampCpars$spawn_time_frac
+  } else {
+    StockPars$spawn_time_frac <- rep(0, nsim) # default: beginning of year
+  }
 
   # Check for custom stock-recruit function
   StockPars <- Check_custom_SRR(StockPars, SampCpars, nsim)
@@ -192,12 +199,17 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   StockPars$R0a <- matrix(StockPars$R0, nrow=nsim, ncol=nareas, byrow=FALSE) * StockPars$initdist[,1,] #
 
   # ---- Unfished Equilibrium calcs ----
-  surv <- array(1, dim=c(nsim, n_age, nyears+proyears)) # unfished survival for every year
-  surv[, 2:n_age, ] <- aperm(exp(-apply(StockPars$M_ageArray, c(1,3), cumsum))[1:(n_age-1), ,], c(2,1,3)) # Survival array
-  if (plusgroup) {
-    surv[,n_age, ] <- surv[,n_age,]/(1-apply(-StockPars$M_ageArray[,n_age,], 2, exp))
-  }
-  Nfrac <- surv * StockPars$Mat_age  # predicted numbers of mature ages in all years
+  # unfished survival 
+  surv <- lapply(1:nsim, calc_survival, StockPars=StockPars, 
+                 plusgroup=plusgroup, inc_spawn_time=FALSE) %>% 
+    abind(., along=3) %>% aperm(., c(3,1,2))
+  
+  # unfished survival (spawning)
+  SBsurv <- lapply(1:nsim, calc_survival, StockPars=StockPars, 
+                 plusgroup=plusgroup, inc_spawn_time=TRUE) %>% 
+    abind(., along=3) %>% aperm(., c(3,1,2))
+
+  Nfrac <- SBsurv * StockPars$Mat_age  # predicted numbers of mature ages in all years (accounting for `spawn_time_frac`)
 
   # indices for all years
   SAYR_a <- as.matrix(expand.grid(1:nareas, 1:(nyears+proyears), 1:n_age, 1:nsim)[4:1])
@@ -216,9 +228,9 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
 
   # Calculate initial spawning stock numbers for all years
   SSN_a[SAYR_a] <- Nfrac[SAY_a] * StockPars$R0[S_a] * StockPars$initdist[SAR_a]
-  N_a[SAYR_a] <- StockPars$R0[S_a] * surv[SAY_a] * StockPars$initdist[SAR_a] # Calculate initial stock numbers for all years
-  Biomass_a[SAYR_a] <- N_a[SAYR_a] * StockPars$Wt_age[SAY_a]  # Calculate initial stock biomass
-  SSB_a[SAYR_a] <- N_a[SAYR_a] * StockPars$Fec_Age[SAY_a]    # Calculate spawning stock biomass
+  N_a[SAYR_a] <- StockPars$R0[S_a] * surv[SAY_a] * StockPars$initdist[SAR_a] 
+  Biomass_a[SAYR_a] <- N_a[SAYR_a] * StockPars$Wt_age[SAY_a] 
+  SSB_a[SAYR_a] <- SSN_a[SAYR_a] * StockPars$Fec_Age[SAY_a]   
   
   SSN0_a <- apply(SSN_a, c(1,3), sum) # unfished spawning numbers for each year
   N0_a <- apply(N_a, c(1,3), sum) # unfished numbers for each year)
@@ -358,19 +370,9 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     MSYrefsYr <- pbapply::pblapply(1:nsim, function(x) {
         sapply(1:(nyears+proyears), function(y) {
           optMSY_eq(x, 
-                    M_ageArray=StockPars$M_ageArray, 
-                    Wt_age=StockPars$Wt_age, 
-                    Mat_age=StockPars$Mat_age,
-                    Fec_age=StockPars$Fec_Age, 
-                    V=FleetPars$V_real, 
-                    maxage=StockPars$maxage, 
-                    R0=StockPars$R0,
-                    SRrel=StockPars$SRrel, 
-                    hs=StockPars$hs, 
-                    SSBpR=StockPars$SSBpR,
-                    yr.ind=y, 
-                    plusgroup=StockPars$plusgroup,
-                    StockPars=StockPars)
+                    yr.ind=y,
+                    StockPars,
+                    FleetPars)
         })
       })
     } else {
