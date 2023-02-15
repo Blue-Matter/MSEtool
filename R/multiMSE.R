@@ -1112,7 +1112,20 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     }
     Real.Data.Map <- Real.Data.Map.t
   }
-
+  
+  # Aggregate comp effective and sample size
+  # (only used if fleet/stock data are mapped to each other)
+  CAA_ESS_array <- array(0, dim=c(nsim, np, nf))
+  CAL_ESS_array <- CAA_nsamp_array <- CAL_nsamp_array <- CAA_ESS_array
+  for (p in 1:np) {
+    for (f in 1:nf) {
+      CAA_ESS_array[,p,f] <- ObsPars[[p]][[f]]$CAA_ESS
+      CAL_ESS_array[,p,f] <- ObsPars[[p]][[f]]$CAL_ESS
+      CAA_nsamp_array[,p,f] <- ObsPars[[p]][[f]]$CAA_nsamp
+      CAL_nsamp_array[,p,f] <- ObsPars[[p]][[f]]$CAL_nsamp
+    }
+  }
+  
   for (p in 1:np) {
     for (f in 1:nf) {
       if (methods::is(SampCpars[[p]][[f]]$Data,"Data")) {
@@ -1135,7 +1148,11 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
             StockPars2$VBiomass <- agg_data(VBF[,,f,,,], dim(VBF[,1,1,,,]), map.stocks)
             StockPars2$N <- agg_data(N, dim(N[,1,,,]), map.stocks)
             StockPars2$CBret <- agg_data(CBret[,,f,,,], dim(CBret[,1,1,,,]), map.stocks)
-            # doesn't include CAA and CAL comps
+            
+            ObsPars[[p]][[f]]$CAA_ESS <- apply(CAA_ESS_array[,map.stocks,], 1, sum)
+            ObsPars[[p]][[f]]$CAL_ESS <- apply(CAL_ESS_array[,map.stocks,], 1, sum)
+            ObsPars[[p]][[f]]$CAA_nsamp <- apply(CAA_nsamp_array[,map.stocks,], 1, sum)
+            ObsPars[[p]][[f]]$CAL_nsamp <- apply(CAL_nsamp_array[,map.stocks,], 1, sum)
             
             # update MPrec (map last catch across mapped stock)
             MPrec <- rep(0, nsim)
@@ -2885,7 +2902,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                 Obs=Obsout,
                 SB_SBMSY=SB_SBMSYa,
                 F_FMSY=F_FMSYa,
-                N=apply(N_P_mp, c(1,2,4,5), sum),
+                N=N_P_mp, # apply(N_P_mp, c(1,2,4,5), sum),
                 B=Ba,
                 SSB=SSBa,
                 VB=VBa,
