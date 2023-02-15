@@ -132,6 +132,9 @@ split.along.dim <- function(a, n) {
 #' Internal wrapper function to calculate MSY reference points (now using MSYCalcs)
 #'
 #' @param x Simulation number
+#' @param yr.ind Year index used in calculations
+#' @param StockPars A list of stock parameters
+#' @param FleetPars A list of fleet parameters
 #' @param M_ageArray Array of M-at-age
 #' @param Wt_age Array of weight-at-age
 #' @param Mat_age Array of maturity-at-age
@@ -142,27 +145,36 @@ split.along.dim <- function(a, n) {
 #' @param SRrel SRR type
 #' @param hs Vector of steepness
 #' @param SSBpR Vector of unfished spawners per recruit
-#' @param yr.ind Year index used in calculations
+
+
 #' @param plusgroup Integer. Default = 0 = no plus-group. Use 1 to include a plus-group
-#' @param StockPars A list of stock parameters
+
 #' @return Results from `MSYCalcs`
 #' @export
 #'
 #' @keywords internal
-optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxage, R0, SRrel, hs,
-                      SSBpR, yr.ind=1, plusgroup=0, StockPars=NULL) {
+optMSY_eq <- function(x, yr.ind=1, StockPars, FleetPars) {
+                     
+  maxage <- StockPars$maxage
+  plusgroup <- StockPars$plusgroup
+  hs <- StockPars$hs
+  SSBpR <- StockPars$SSBpR
+  spawn_time_frac <- StockPars$spawn_time_frac
+  SRrel <- StockPars$SRrel
+  R0 <- StockPars$R0
+  
   if (length(yr.ind)==1) {
-    M_at_Age <- M_ageArray[x,,yr.ind]
-    Wt_at_Age <- Wt_age[x,, yr.ind]
-    Fec_at_Age <- Fec_age[x,, yr.ind]
-    Mat_at_Age <- Mat_age[x,, yr.ind]
-    V_at_Age <- V[x,, yr.ind]
+    M_at_Age <- StockPars$M_ageArray[x,,yr.ind]
+    Wt_at_Age <- StockPars$Wt_age[x,, yr.ind]
+    Fec_at_Age <- StockPars$Fec_age[x,, yr.ind]
+    Mat_at_Age <- StockPars$Mat_age[x,, yr.ind]
+    V_at_Age <- FleetPars$V[x,, yr.ind]
   } else {
-    M_at_Age <- apply(M_ageArray[x,,yr.ind], 1, mean)
-    Wt_at_Age <- apply(Wt_age[x,, yr.ind], 1, mean)
-    Fec_at_Age <- apply(Fec_age[x,, yr.ind], 1, mean)
-    Mat_at_Age <- apply(Mat_age[x,, yr.ind], 1, mean)
-    V_at_Age <- apply(V[x,, yr.ind], 1, mean)
+    M_at_Age <- apply(StockPars$M_ageArray[x,,yr.ind], 1, mean)
+    Wt_at_Age <- apply(StockPars$Wt_age[x,, yr.ind], 1, mean)
+    Fec_at_Age <- apply(StockPars$Fec_age[x,, yr.ind], 1, mean)
+    Mat_at_Age <- apply(StockPars$Mat_age[x,, yr.ind], 1, mean)
+    V_at_Age <- apply(FleetPars$V[x,, yr.ind], 1, mean)
   }
   
   # check for M = 0 in MOMs where maxage isn't the same for each stock
@@ -178,6 +190,30 @@ optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxage, R0, SR
   
   boundsF <- c(1E-4, 3)
   
+  # -------------------------------------- #
+  library(callr)
+  myfun <- function() {
+    MSYCalcs(log(0.1),
+             M_at_Age, 
+             Wt_at_Age, 
+             Mat_at_Age,
+             Fec_at_Age, 
+             V_at_Age, 
+             maxage,
+             relRfun = StockPars$relRfun, 
+             SRRpars=StockPars$SRRpars[[x]],
+             R0[x], SRrel[x], hs[x], SSBpR[x, 1], opt=1,
+             plusgroup=plusgroup,
+             spawn_time_frac=spawn_time_frac[x])
+  }
+
+  callr::r_safe(myfun)
+  
+  
+  
+  # -------------------------------------- #
+  
+  
   do_eq_per_recruit <- FALSE
   if (SRrel[x] <3) do_eq_per_recruit <- TRUE
   if (SRrel[x] == 3) {
@@ -187,21 +223,32 @@ optMSY_eq <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxage, R0, SR
   }
   
   if (do_eq_per_recruit) {
-    doopt <- optimise(MSYCalcs, log(boundsF), M_at_Age, Wt_at_Age, Mat_at_Age,
-                      Fec_at_Age, V_at_Age, maxage,
+    doopt <- optimise(MSYCalcs, log(boundsF),
+                      M_at_Age, 
+                      Wt_at_Age, 
+                      Mat_at_Age,
+                      Fec_at_Age, 
+                      V_at_Age, 
+                      maxage,
                       relRfun = StockPars$relRfun, 
                       SRRpars=StockPars$SRRpars[[x]],
                       R0[x], SRrel[x], hs[x], SSBpR[x, 1], opt=1,
-                      plusgroup=plusgroup)
+                      plusgroup=plusgroup,
+                      spawn_time_frac=spawn_time_frac[x])
     
-    MSYs <- MSYCalcs(doopt$minimum, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age,
-                     V_at_Age, maxage, 
+    MSYs <- MSYCalcs(doopt$minimum, 
+                     M_at_Age, 
+                     Wt_at_Age, 
+                     Mat_at_Age, 
+                     Fec_at_Age,
+                     V_at_Age, 
+                     maxage, 
                      relRfun = StockPars$relRfun, 
                      SRRpars=StockPars$SRRpars[[x]],
                      R0[x], SRrel[x], hs[x], SSBpR[x, 1], opt=2,
-                     plusgroup=plusgroup)
+                     plusgroup=plusgroup,
+                     spawn_time_frac=spawn_time_frac[x])
                      
-    
     if(!doopt$objective) MSYs[] <- 0 # Assume stock crashes regardless of F
   } else {
     # Optimize for maximum yield
@@ -1011,13 +1058,14 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   CB_Pret[SAYR] <- FM_Pret[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR]
   CB_P[!is.finite(CB_P)] <- 0 
   CB_Pret[!is.finite(CB_Pret)] <- 0 
-
+  
   # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
   retainedCatch <- apply(CB_Pret[,,y,], 1, sum)
 
   Ftot <- sapply(1:nsim, calcF, retainedCatch, V_P, retA_P, Biomass_P, fishdist,
                  Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
-                 M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed  
+                 M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed 
+
 
   # Effort relative to last historical with this catch
   Effort_act <- Ftot/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]*
