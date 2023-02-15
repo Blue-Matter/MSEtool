@@ -906,3 +906,33 @@ Check_custom_SRR <- function(StockPars, SampCpars, nsim) {
   
   StockPars
 }
+
+
+
+calc_survival <- function(x, StockPars, plusgroup=TRUE, inc_spawn_time=FALSE) {
+  dd <- dim(StockPars$M_ageArray)
+  all_years <- dd[3]
+  sapply(1:all_years, calc_survival_yr, x=x, StockPars=StockPars, 
+         plusgroup=plusgroup, inc_spawn_time=inc_spawn_time)
+}
+
+
+calc_survival_yr <- function(yr, x, StockPars, plusgroup=TRUE, inc_spawn_time=FALSE) {
+  n_age <- StockPars$n_age
+  
+  if (inc_spawn_time) {
+    spawn_time_frac <- StockPars$spawn_time_frac[x]  
+  } else {
+    spawn_time_frac <- 0 
+  }
+  surv <- (rep(NA, n_age))
+  surv[1] <- 1 * exp(-StockPars$M_ageArray[x,1,yr]*spawn_time_frac)
+  for (a in 2:n_age) {
+    surv[a] <- surv[a-1]*exp(-(StockPars$M_ageArray[x,a-1,yr]*(1-spawn_time_frac)+StockPars$M_ageArray[x,a,yr]*(spawn_time_frac)))
+  }
+  if (plusgroup)
+    surv[n_age] <- surv[n_age]/(1-exp(-StockPars$M_ageArray[x,n_age,yr]))
+  
+  surv
+}
+
