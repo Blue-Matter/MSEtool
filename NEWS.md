@@ -2,8 +2,18 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 # MSEtool 3.6.999 - Development
 
+TODO: 
+- add cpars$spawn_time_frac to cpars 
+
 ## New additions
+- add ability to control timing of spawning with `cpars$spawn_time_frac`
 - implemented `Data@Vuln_CAL` in generating CAL samples. `Data@Vuln_CAA` is not currently implemented
+- add ability to map `CAL_nsamp` and other sample size data across stocks in `MOM`
+
+
+## Minor changes 
+- changed `MMSE@N` slot to include age and area dimensions.
+
 
 ## Fixes
 - minor fix to `SS2OM` when empirical weight-at-age is not available
