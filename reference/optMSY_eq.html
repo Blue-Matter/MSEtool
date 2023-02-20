@@ -53,22 +53,7 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">optMSY_eq</span><span class="op">(</span></span>
-<span>  <span class="va">x</span>,</span>
-<span>  <span class="va">M_ageArray</span>,</span>
-<span>  <span class="va">Wt_age</span>,</span>
-<span>  <span class="va">Mat_age</span>,</span>
-<span>  <span class="va">Fec_age</span>,</span>
-<span>  <span class="va">V</span>,</span>
-<span>  <span class="va">maxage</span>,</span>
-<span>  <span class="va">R0</span>,</span>
-<span>  <span class="va">SRrel</span>,</span>
-<span>  <span class="va">hs</span>,</span>
-<span>  <span class="va">SSBpR</span>,</span>
-<span>  yr.ind <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  plusgroup <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  StockPars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">optMSY_eq</span><span class="op">(</span><span class="va">x</span>, yr.ind <span class="op">=</span> <span class="fl">1</span>, <span class="va">StockPars</span>, <span class="va">V</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -77,56 +62,16 @@
 <dd><p>Simulation number</p></dd>
 
 
-<dt>M_ageArray</dt>
-<dd><p>Array of M-at-age</p></dd>
-
-
-<dt>Wt_age</dt>
-<dd><p>Array of weight-at-age</p></dd>
-
-
-<dt>Mat_age</dt>
-<dd><p>Array of maturity-at-age</p></dd>
-
-
-<dt>Fec_age</dt>
-<dd><p>Array of relative fecundity-at-age (spawning biomass weight)</p></dd>
-
-
-<dt>V</dt>
-<dd><p>Array of selectivity-at-age</p></dd>
-
-
-<dt>maxage</dt>
-<dd><p>Vector of maximum age</p></dd>
-
-
-<dt>R0</dt>
-<dd><p>Vector of R0s</p></dd>
-
-
-<dt>SRrel</dt>
-<dd><p>SRR type</p></dd>
-
-
-<dt>hs</dt>
-<dd><p>Vector of steepness</p></dd>
-
-
-<dt>SSBpR</dt>
-<dd><p>Vector of unfished spawners per recruit</p></dd>
-
-
 <dt>yr.ind</dt>
 <dd><p>Year index used in calculations</p></dd>
 
 
-<dt>plusgroup</dt>
-<dd><p>Integer. Default = 0 = no plus-group. Use 1 to include a plus-group</p></dd>
-
-
 <dt>StockPars</dt>
 <dd><p>A list of stock parameters</p></dd>
+
+
+<dt>V</dt>
+<dd><p>Array of selectivity-at-age</p></dd>
 
 </dl></div>
     <div id="value">

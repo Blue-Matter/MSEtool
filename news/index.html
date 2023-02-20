@@ -51,7 +51,14 @@
 <h2 class="page-header" data-toc-text="3.6.999" id="msetool-36999---development">MSEtool 3.6.999 - Development<a class="anchor" aria-label="anchor" href="#msetool-36999---development"></a></h2>
 <div class="section level3">
 <h3 id="new-additions-3-6-999">New additions<a class="anchor" aria-label="anchor" href="#new-additions-3-6-999"></a></h3>
-<ul><li>implemented <code>Data@Vuln_CAL</code> in generating CAL samples. <code>Data@Vuln_CAA</code> is not currently implemented</li>
+<ul><li>add ability to control timing of spawning with <code>cpars$spawn_time_frac</code> (default is beginning of year <code>spawn_time_frac=0</code>). Need to check timing on order of operations if this is used together with MICE features!</li>
+<li>implemented <code>Data@Vuln_CAL</code> in generating CAL samples. <code>Data@Vuln_CAA</code> is not currently implemented</li>
+<li>add ability to map <code>CAL_nsamp</code> and other sample size data across stocks in <code>MOM</code>
+</li>
+</ul></div>
+<div class="section level3">
+<h3 id="minor-changes-3-6-999">Minor changes<a class="anchor" aria-label="anchor" href="#minor-changes-3-6-999"></a></h3>
+<ul><li>changed <code>MMSE@N</code> slot to include age and area dimensions.</li>
 <li>added <code>extended</code> argument to <code>multiMSE</code> to report N-at-age in <code>MMSE@Misc$extended$N</code>
 </li>
 <li>added optional <code>MOM@SexPars$share_par = FALSE</code> argument that turns off parameter mirroring of stock-recruit, depletion parameters; fleet parameters related to effort trends; and all observation/implementation parameters. This can be used to generalize a 2-sex MOM to a multi-stock model with shared spawning output (<code>SexPars$SSBfrom</code>) and/or movement-at-age between stocks (<code>SexPars$Herm</code>).</li>
