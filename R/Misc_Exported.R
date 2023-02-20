@@ -166,6 +166,7 @@ setGeneric("SubCpars", function(x, ...) standardGeneric("SubCpars"))
 #' @param sims A logical vector of length \code{x@@nsim} to either retain (TRUE) or remove (FALSE).
 #' Alternatively, a numeric vector indicating which simulations (from 1 to nsim) to keep.
 #' @param proyears If provided, a numeric to reduce the number of projection years (must be less than \code{x@@proyears}).
+#' @param silent Logical to indicate if messages will be reported to console.
 #' @param ... Arguments for method.
 #' @details Useful function for running \link{multiMSE} in batches if running into memory constraints.
 #' @return An object of class \linkS4class{OM} or \linkS4class{MOM} (same class as \code{x}).
@@ -173,7 +174,7 @@ setGeneric("SubCpars", function(x, ...) standardGeneric("SubCpars"))
 #' @author T. Carruthers, Q. Huynh
 #' @export
 setMethod("SubCpars", signature(x = "OM"),
-          function(x, sims = 1:x@nsim, proyears = x@proyears) {
+          function(x, sims = 1:x@nsim, proyears = x@proyears, silent = FALSE) {
             OM <- x
             # Reduce the number of simulations
             nsim_full <- OM@nsim
@@ -185,9 +186,9 @@ setMethod("SubCpars", signature(x = "OM"),
             } else stop("Logical vector sims need to be of length ", nsim_full)
             
             if(any(!sims2) && sum(sims2) < nsim_full) {
-              message("Removing simulations: ", paste0(which(!sims2), collapse = " "))
+              if (!silent) message("Removing simulations: ", paste0(which(!sims2), collapse = " "))
               OM@nsim <- sum(sims2)      
-              message("Set OM@nsim = ", OM@nsim)
+              if (!silent) message("Set OM@nsim = ", OM@nsim)
               
               if(length(OM@cpars)) {
                 cpars <- OM@cpars
@@ -199,7 +200,7 @@ setMethod("SubCpars", signature(x = "OM"),
             # Reduce the number of projection years
             proyears_full <- OM@proyears
             if(proyears < proyears_full) {
-              message("Reducing the number of projection years from ", proyears_full, " to ", proyears)
+              if (!silent) message("Reducing the number of projection years from ", proyears_full, " to ", proyears)
               OM@proyears <- proyears
               
               if(length(OM@cpars)) {
@@ -209,7 +210,7 @@ setMethod("SubCpars", signature(x = "OM"),
                   structure(names = names(cpars_p))
               }
             } else if(proyears > proyears_full) {
-              message("Number of specified projection years is greater than OM@proyears. Nothing done.")
+              if (!silent) message("Number of specified projection years is greater than OM@proyears. Nothing done.")
             }
             
             return(OM)
@@ -219,7 +220,7 @@ setMethod("SubCpars", signature(x = "OM"),
 #' @aliases SubCpars,MOM-method
 #' @export
 setMethod("SubCpars", signature(x = "MOM"),
-          function(x, sims = 1:x@nsim, proyears = x@proyears) {
+          function(x, sims = 1:x@nsim, proyears = x@proyears, silent = FALSE) {
             MOM <- x
             # Reduce the number of simulations
             nsim_full <- MOM@nsim
@@ -231,9 +232,9 @@ setMethod("SubCpars", signature(x = "MOM"),
             } else stop("Logical vector sims need to be of length ", nsim_full)
             
             if(any(!sims2) && sum(sims2) < nsim_full) {
-              message("Removing simulations: ", paste0(which(!sims2), collapse = " "))
+              if (!silent) message("Removing simulations: ", paste0(which(!sims2), collapse = " "))
               MOM@nsim <- sum(sims2)      
-              message("Set MOM@nsim = ", MOM@nsim)
+              if (!silent) message("Set MOM@nsim = ", MOM@nsim)
               
               if(length(MOM@cpars)) {
                 for(p in 1:length(MOM@cpars)) {
@@ -249,7 +250,7 @@ setMethod("SubCpars", signature(x = "MOM"),
             # Reduce the number of projection years
             proyears_full <- MOM@proyears
             if(proyears < proyears_full) {
-              message("Reducing the number of projection years from ", proyears_full, " to ", proyears)
+              if (!silent) message("Reducing the number of projection years from ", proyears_full, " to ", proyears)
               MOM@proyears <- proyears
               
               if(length(MOM@cpars)) {
@@ -263,7 +264,7 @@ setMethod("SubCpars", signature(x = "MOM"),
                 }
               }
             } else if(proyears > proyears_full) {
-              message("Number of specified projection years is greater than MOM@proyears. Nothing done.")
+              if (!silent) message("Number of specified projection years is greater than MOM@proyears. Nothing done.")
             }
             
             return(MOM)
@@ -271,7 +272,11 @@ setMethod("SubCpars", signature(x = "MOM"),
 
 SubCpars_sim <- function(xx, sims, cpars) {
   x <- cpars[[xx]]
-  if(any(xx == c("CAL_bins", "MPA", "plusgroup", "CAL_binsmid", "binWidth", "AddIunits", "Wa", "Wb", "Data"))) {
+  vars_nosim <- c("CAL_bins", "MPA", "plusgroup", "CAL_binsmid", "binWidth", "AddIunits", "Wa", "Wb", "Data")
+  if(any(xx == vars_nosim)) {
+    return(x)
+  } else if(xx == "SRR") {
+    x$SRRpars <- x$SRRpars[sims, ] # data.frame
     return(x)
   } else if(is.matrix(x)) {
     return(x[sims, , drop = FALSE])
@@ -287,7 +292,8 @@ SubCpars_sim <- function(xx, sims, cpars) {
 
 SubCpars_proyears <- function(xx, yr_diff, cpars) {
   x <- cpars[[xx]]
-  if(xx %in% c("Asize", "Find", "AddIbeta", "Data")) { # Matrices or arrays without projection year dimensions
+  vars_noproyears <-  c("Asize", "Find", "AddIbeta", "Data", "SRR")
+  if(xx %in% vars_noproyears) { # Matrices or arrays without projection year dimensions
     return(x)
   } else if(xx == "MPA") {
     yr_remove <- (nrow(x) - yr_diff + 1):nrow(x)
