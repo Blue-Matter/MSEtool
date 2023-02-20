@@ -34,7 +34,8 @@ popdynCPP(
   SSB0c,
   SRRfun,
   SRRpars,
-  plusgroup = 0L
+  plusgroup = 0L,
+  spawn_time_frac = 0
 )
 }
 \arguments{
@@ -96,6 +97,8 @@ vulnerability to calculate F.}
 \item{SRRpars}{Optional. A named list of arguments for \code{SRRfun}}
 
 \item{plusgroup}{Integer. Include a plus-group (1) or not (0)?}
+
+\item{spawn_time_frac}{Numeric. Fraction of the year when spawning occurs. Default = 0.}
 
 \item{SSBcurr}{A numeric vector of length nareas with the current spawning biomass in each area}
 }
