@@ -919,6 +919,7 @@ calc_survival <- function(x, StockPars, plusgroup=TRUE, inc_spawn_time=FALSE) {
 
 calc_survival_yr <- function(yr, x, StockPars, plusgroup=TRUE, inc_spawn_time=FALSE) {
   n_age <- StockPars$n_age
+  lst.age <- max(which(StockPars$M_ageArray[1,,1]>0))
   
   if (inc_spawn_time) {
     spawn_time_frac <- StockPars$spawn_time_frac[x]  
@@ -928,10 +929,13 @@ calc_survival_yr <- function(yr, x, StockPars, plusgroup=TRUE, inc_spawn_time=FA
   surv <- (rep(NA, n_age))
   surv[1] <- 1 * exp(-StockPars$M_ageArray[x,1,yr]*spawn_time_frac)
   for (a in 2:n_age) {
-    surv[a] <- surv[a-1]*exp(-(StockPars$M_ageArray[x,a-1,yr]*(1-spawn_time_frac)+StockPars$M_ageArray[x,a,yr]*(spawn_time_frac)))
+    surv[a] <- surv[a-1]*exp(-(StockPars$M_ageArray[x,a-1,yr]*(1-spawn_time_frac)+StockPars$M_ageArray[x,a,yr]*spawn_time_frac))
   }
   if (plusgroup)
-    surv[n_age] <- surv[n_age]/(1-exp(-StockPars$M_ageArray[x,n_age,yr]))
+    surv[lst.age] <- surv[n_age]/(1-exp(-StockPars$M_ageArray[x,lst.age,yr]))
+  
+  if (lst.age<n_age) 
+    surv[(lst.age+1):n_age] <- 0
   
   surv
 }

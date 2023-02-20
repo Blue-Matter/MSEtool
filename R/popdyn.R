@@ -35,7 +35,8 @@ CalculateQ <- function(x, StockPars, FleetPars, pyears,
                   SBMSYc=StockPars$SSBMSY[x],
                   SRRfun=StockPars$SRRfun,
                   SRRpars=StockPars$SRRpars[[x]],
-                  control)
+                  control,
+                  spawn_time_frac=StockPars$spawn_time_frac[x])
 
   return(exp(opt$minimum))
 }
@@ -73,12 +74,13 @@ CalculateQ <- function(x, StockPars, FleetPars, pyears,
 #' @param SBMSYc  Spawning biomass at MSY for simulation x
 #' @param control List. Control parameters including `optVB=TRUE` to optimize
 #' for vulnerable biomass instead of SSB?
+#' @param spawn_time_frac Fraction of the year when spawning occurs. Default = 0.
 #' @author A. Hordyk
 #' @keywords internal
 optQ <- function(logQ, depc, SSB0c, nareas, maxage, Ncurr, pyears, M_age, Asize_c,
                  MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc,
                  R0c, SSBpRc, aRc, bRc, maxF, MPA, plusgroup, VB0c, SBMSYc, SRRfun, SRRpars,
-                 control) {
+                 control, spawn_time_frac=0) {
 
   simpop <- popdynCPP(nareas, maxage, Ncurr, pyears, M_age, Asize_c,
                       MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind,
@@ -87,7 +89,8 @@ optQ <- function(logQ, depc, SSB0c, nareas, maxage, Ncurr, pyears, M_age, Asize_
                       SSB0c=SSB0c,
                       SRRfun=SRRfun,
                       SRRpars =SRRpars,
-                      plusgroup=plusgroup)
+                      plusgroup=plusgroup,
+                      spawn_time_frac=spawn_time_frac)
 
   if (!is.null(control$Depletion) && control$Depletion == 'end') {
     # Calculate depletion using biomass at the end of the last projection year
@@ -134,26 +137,12 @@ split.along.dim <- function(a, n) {
 #' @param x Simulation number
 #' @param yr.ind Year index used in calculations
 #' @param StockPars A list of stock parameters
-#' @param FleetPars A list of fleet parameters
-#' @param M_ageArray Array of M-at-age
-#' @param Wt_age Array of weight-at-age
-#' @param Mat_age Array of maturity-at-age
-#' @param Fec_age Array of relative fecundity-at-age (spawning biomass weight)
 #' @param V Array of selectivity-at-age
-#' @param maxage Vector of maximum age
-#' @param R0 Vector of R0s
-#' @param SRrel SRR type
-#' @param hs Vector of steepness
-#' @param SSBpR Vector of unfished spawners per recruit
-
-
-#' @param plusgroup Integer. Default = 0 = no plus-group. Use 1 to include a plus-group
-
 #' @return Results from `MSYCalcs`
 #' @export
 #'
 #' @keywords internal
-optMSY_eq <- function(x, yr.ind=1, StockPars, FleetPars) {
+optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
                      
   maxage <- StockPars$maxage
   plusgroup <- StockPars$plusgroup
@@ -166,15 +155,15 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, FleetPars) {
   if (length(yr.ind)==1) {
     M_at_Age <- StockPars$M_ageArray[x,,yr.ind]
     Wt_at_Age <- StockPars$Wt_age[x,, yr.ind]
-    Fec_at_Age <- StockPars$Fec_age[x,, yr.ind]
+    Fec_at_Age <- StockPars$Fec_Age[x,, yr.ind]
     Mat_at_Age <- StockPars$Mat_age[x,, yr.ind]
-    V_at_Age <- FleetPars$V[x,, yr.ind]
+    V_at_Age <- V[x,, yr.ind]
   } else {
     M_at_Age <- apply(StockPars$M_ageArray[x,,yr.ind], 1, mean)
     Wt_at_Age <- apply(StockPars$Wt_age[x,, yr.ind], 1, mean)
-    Fec_at_Age <- apply(StockPars$Fec_age[x,, yr.ind], 1, mean)
+    Fec_at_Age <- apply(StockPars$Fec_Age[x,, yr.ind], 1, mean)
     Mat_at_Age <- apply(StockPars$Mat_age[x,, yr.ind], 1, mean)
-    V_at_Age <- apply(FleetPars$V[x,, yr.ind], 1, mean)
+    V_at_Age <- apply(V[x,, yr.ind], 1, mean)
   }
   
   # check for M = 0 in MOMs where maxage isn't the same for each stock
@@ -189,33 +178,13 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, FleetPars) {
   }
   
   boundsF <- c(1E-4, 3)
-  
-  # -------------------------------------- #
-  library(callr)
-  myfun <- function() {
-    MSYCalcs(log(0.1),
-             M_at_Age, 
-             Wt_at_Age, 
-             Mat_at_Age,
-             Fec_at_Age, 
-             V_at_Age, 
-             maxage,
-             relRfun = StockPars$relRfun, 
-             SRRpars=StockPars$SRRpars[[x]],
-             R0[x], SRrel[x], hs[x], SSBpR[x, 1], opt=1,
-             plusgroup=plusgroup,
-             spawn_time_frac=spawn_time_frac[x])
-  }
-
-  callr::r_safe(myfun)
-  
-  
-  
-  # -------------------------------------- #
-  
-  
+ 
   do_eq_per_recruit <- FALSE
-  if (SRrel[x] <3) do_eq_per_recruit <- TRUE
+  if (SRrel[x] < 3) {
+    do_eq_per_recruit <- TRUE
+    if (is.null(StockPars$relRfun)) StockPars$relRfun <- function(...) NULL
+    if (is.null(StockPars$SRRpars)) StockPars$SRRpars <- lapply(1:x, function(...) NULL)
+  }
   if (SRrel[x] == 3) {
     # Check for function
     if (!is.null(formals(StockPars$relRfun)))
@@ -251,6 +220,7 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, FleetPars) {
                      
     if(!doopt$objective) MSYs[] <- 0 # Assume stock crashes regardless of F
   } else {
+      
     # Optimize for maximum yield
     nareas <- StockPars$nareas
     n_age <- StockPars$n_age
@@ -310,7 +280,8 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, FleetPars) {
                     SSB0c=StockPars$SSB0[x],
                     plusgroup=StockPars$plusgroup,
                     SRRfun=StockPars$SRRfun,
-                    SRRpars=StockPars$SRRpars[[x]])
+                    SRRpars=StockPars$SRRpars[[x]],
+                    spawn_time_frac=StockPars$spawn_time_frac[x])
 
     FMSYc <- exp(opt$minimum)
     
@@ -323,7 +294,8 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, FleetPars) {
                         SSB0c=StockPars$SSB0[x], 
                         SRRfun=StockPars$SRRfun,
                         SRRpars=StockPars$SRRpars[[x]],
-                        plusgroup = StockPars$plusgroup)
+                        plusgroup = StockPars$plusgroup,
+                        spawn_time_frac=StockPars$spawn_time_frac[x])
     
     Yield <- -opt$objective
     F <- FMSYc
@@ -358,20 +330,21 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, FleetPars) {
 #   out[c(1,4)]
 # }
 
-per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxage,
-                               yr.ind=1, plusgroup=0, SPR_target = seq(0.2, 0.6, 0.05),
-                               StockPars) {
+per_recruit_F_calc <- function(x, yr.ind=1, StockPars, V, SPR_target = seq(0.2, 0.6, 0.05)) {
+  maxage <- StockPars$maxage
+  plusgroup <- StockPars$plusgroup
+  
   if (length(yr.ind)==1) {
-    M_at_Age <- M_ageArray[x,,yr.ind]
-    Wt_at_Age <- Wt_age[x,, yr.ind]
-    Mat_at_Age <- Mat_age[x,, yr.ind]
-    Fec_at_Age <- Fec_age[x,, yr.ind]
+    M_at_Age <- StockPars$M_ageArray[x,,yr.ind]
+    Wt_at_Age <- StockPars$Wt_age[x,, yr.ind]
+    Mat_at_Age <- StockPars$Mat_age[x,, yr.ind]
+    Fec_at_Age <- StockPars$Fec_Age[x,, yr.ind]
     V_at_Age <- V[x,, yr.ind]
   } else {
-    M_at_Age <- apply(M_ageArray[x,,yr.ind], 1, mean)
-    Wt_at_Age <- apply(Wt_age[x,, yr.ind], 1, mean)
-    Mat_at_Age <- apply(Mat_age[x,, yr.ind], 1, mean)
-    Fec_at_Age <- apply(Fec_age[x,, yr.ind], 1, mean)
+    M_at_Age <- apply(StockPars$M_ageArray[x,,yr.ind], 1, mean)
+    Wt_at_Age <- apply(StockPars$Wt_age[x,, yr.ind], 1, mean)
+    Mat_at_Age <- apply(StockPars$Mat_age[x,, yr.ind], 1, mean)
+    Fec_at_Age <- apply(StockPars$Fec_Age[x,, yr.ind], 1, mean)
     V_at_Age <- apply(V[x,, yr.ind], 1, mean)
   }
 
@@ -390,14 +363,17 @@ per_recruit_F_calc <- function(x, M_ageArray, Wt_age, Mat_age, Fec_age, V, maxag
 
   F_search <- exp(seq(log(min(boundsF)), log(max(boundsF)), length.out = 50))
 
-  Ref_search <- Ref_int_cpp(F_search, M_at_Age = M_at_Age,
-                            Wt_at_Age = Wt_at_Age, Mat_at_Age = Mat_at_Age,
+  Ref_search <- Ref_int_cpp(F_search, 
+                            M_at_Age = M_at_Age,
+                            Wt_at_Age = Wt_at_Age, 
+                            Mat_at_Age = Mat_at_Age,
                             Fec_at_Age=Fec_at_Age,
                             V_at_Age = V_at_Age,
                             StockPars$relRfun,
                             StockPars$SRRpars[[x]],
                             maxage = maxage,
-                            plusgroup = plusgroup)
+                            plusgroup = plusgroup,
+                            spawn_time_frac=StockPars$spawn_time_frac[x])
 
   YPR_search <- Ref_search[1,]
   SPR_search <- Ref_search[2,]
@@ -500,7 +476,8 @@ calcRefYield <- function(x, StockPars, FleetPars, pyears, Ncurr, nyears, proyear
                   SSB0c=StockPars$SSB0[x],
                   plusgroup=StockPars$plusgroup,
                   SRRfun=StockPars$SRRfun,
-                  SRRpars=StockPars$SRRpars[[x]])
+                  SRRpars=StockPars$SRRpars[[x]],
+                  spawn_time_frac=StockPars$spawn_time_frac[x])
 
   -opt$objective
 
@@ -536,6 +513,7 @@ calcRefYield <- function(x, StockPars, FleetPars, pyears, Ncurr, nyears, proyear
 #' @param maxF A numeric value specifying the maximum fishing mortality for any single age class
 #' @param SSB0c SSB0
 #' @param plusgroup Integer. Default = 0 = no plus-group. Use 1 to include a plus-group
+#' @param spawn_time_frac Numeric. Fraction of the year when spawning occurs. Default = 0. 
 #' @keywords internal
 #'
 #' @author A. Hordyk
@@ -543,7 +521,8 @@ calcRefYield <- function(x, StockPars, FleetPars, pyears, Ncurr, nyears, proyear
 optYield <- function(logFa, Asize_c, nareas, maxage, Ncurr, pyears, M_age,
                    MatAge, WtAge, FecAge, WtAgeC, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc,
                    R0c, SSBpRc, aRc, bRc, Qc, MPA, maxF, SSB0c,
-                   plusgroup=0, SRRfun, SRRpars) {
+                   plusgroup=0, SRRfun, SRRpars,
+                   spawn_time_frac=0) {
 
   FMSYc <- exp(logFa)
 
@@ -553,7 +532,8 @@ optYield <- function(logFa, Asize_c, nareas, maxage, Ncurr, pyears, M_age,
                       SSB0c=SSB0c, 
                       SRRfun=SRRfun,
                       SRRpars=SRRpars,
-                      plusgroup = plusgroup)
+                      plusgroup = plusgroup,
+                      spawn_time_frac=spawn_time_frac)
 
   # Yield
   # Cn <- simpop[[7]]/simpop[[8]] * simpop[[1]] * (1-exp(-simpop[[8]])) # retained catch
@@ -1295,6 +1275,11 @@ CalcSPReq <- function(FM, StockPars, n_age, nareas, nyears, proyears, nsim, Hist
   Wt_age <- replicate(nareas, StockPars$Wt_age[, , yind])
   Mat_age <- replicate(nareas, StockPars$Mat_age[, , yind])
   Fec_age <- replicate(nareas, StockPars$Fec_Age[, , yind])
+  
+  spawn_time_frac <- StockPars$spawn_time_frac
+  spawn_time_frac <- replicate(StockPars$maxage+1, spawn_time_frac)
+  spawn_time_frac <- replicate(n_y, spawn_time_frac)
+  spawn_time_frac <- replicate(nareas, spawn_time_frac)
 
   # check for M == 0 in MOMs with different maxage 
   ind <- which(M[1,,1,1]==0)
@@ -1312,11 +1297,15 @@ CalcSPReq <- function(FM, StockPars, n_age, nareas, nyears, proyears, nsim, Hist
   initdist <- replicate(n_y, StockPars$initdist[, 1, ]) %>% aperm(c(1, 3, 2))
   NPR_M <- NPR_F <- array(NA_real_, c(nsim, n_age, n_y, nareas))
   NPR_M[, 1, , ] <- NPR_F[, 1, , ] <- initdist
+  NPR_M[, 1, , ] <- NPR_M[, 1, , ] * exp(-M[,1,,] * spawn_time_frac[,1,,])
+  NPR_F[, 1, , ] <- NPR_F[, 1, , ] * exp(-M[,1,,] * spawn_time_frac[,1,,])
+  
   
   for(a in 2:n_age) {
-    NPR_M[, a, , ] <- NPR_M[, a-1, , ] * exp(-M[, a-1, , ])
-    NPR_F[, a, , ] <- NPR_F[, a-1, , ] * exp(-Z[, a-1, , ])
+    NPR_M[, a, , ] <- NPR_M[, a-1, , ] * exp(-((M[, a-1, , ]*(1-spawn_time_frac[,a,,]))+M[, a, , ]*spawn_time_frac[,a,,]))
+    NPR_F[, a, , ] <- NPR_F[, a-1, , ] * exp(-((Z[, a-1, , ]*(1-spawn_time_frac[,a,,]))+Z[, a, , ]*spawn_time_frac[,a,,]))
   }
+
   if(StockPars$plusgroup) {
     NPR_M[, n_age, , ] <- NPR_M[, n_age, , ]/(1 - exp(-M[, n_age, , ]))
     NPR_F[, n_age, , ] <- NPR_F[, n_age, , ]/(1 - exp(-Z[, n_age, , ]))
@@ -1337,6 +1326,11 @@ CalcSPRdyn <- function(FM, StockPars, n_age, nareas, nyears, proyears, nsim, His
   Mat_age <- replicate(nareas, StockPars$Mat_age[, , yind])
   Fec_age <- replicate(nareas, StockPars$Fec_Age[, , yind])
   
+  spawn_time_frac <- StockPars$spawn_time_frac
+  spawn_time_frac <- replicate(StockPars$maxage+1, spawn_time_frac)
+  spawn_time_frac <- replicate(n_y, spawn_time_frac)
+  spawn_time_frac <- replicate(nareas, spawn_time_frac)
+  
   # check for M == 0 in MOMs with different maxage 
   ind <- which(M[1,,1,1]==0)
   if (length(ind)>0) {
@@ -1353,22 +1347,25 @@ CalcSPRdyn <- function(FM, StockPars, n_age, nareas, nyears, proyears, nsim, His
   initdist <- replicate(n_y, StockPars$initdist[, 1, ]) %>% aperm(c(1, 3, 2))
   cumsurv_F <- cumsurv_M <- array(NA_real_, c(nsim, n_age, n_y, nareas))
   cumsurv_F[, 1, , ] <- cumsurv_M[, 1, , ] <- initdist
+  cumsurv_M[, 1, , ] <- cumsurv_M[, 1, , ] * exp(-M[,1,,] * spawn_time_frac[,1,,])
+  cumsurv_F[, 1, , ] <- cumsurv_F[, 1, , ] * exp(-M[,1,,] * spawn_time_frac[,1,,])
+  
   
   #### Dynamic SPR
   # Boundary condition (first historical year) - assume unfished in cumsurv_F in first year
   for(a in 2:n_age) {
-    Msum <- replicate(nareas, apply(StockPars$M_ageArray[, 2:a - 1, 1, drop = FALSE], 1, sum))
-    cumsurv_M[, a, 1, ] <- StockPars$initdist[, 1, ] * exp(-Msum)
+    cumsurv_M[, a, , ] <- cumsurv_M[, a-1, , ] * exp(-((M[, a-1, , ]*(1-spawn_time_frac[,a,,]))+M[, a, , ]*spawn_time_frac[,a,,]))
   }
   if(StockPars$plusgroup) {
     cumsurv_M[, n_age, 1, ] <- cumsurv_M[, n_age, 1, ]/(1 - exp(-StockPars$M_ageArray[, n_age, 1]))
   }
   cumsurv_F[, , 1, ] <- cumsurv_M[, , 1, ]
   
+  
   for(y in 2:n_y) {
     for(a in 2:n_age) {
-      cumsurv_M[, a, y, ] <- cumsurv_M[, a-1, y-1, ] * exp(-M[, a-1, y-1, ])
-      cumsurv_F[, a, y, ] <- cumsurv_F[, a-1, y-1, ] * exp(-Z[, a-1, y-1, ])
+      cumsurv_M[, a, y, ] <- cumsurv_M[, a-1, y-1, ] * exp(-(M[, a-1, y-1, ]*(1-spawn_time_frac[,a-1,y-1,])+(M[, a, y, ]*spawn_time_frac[,a,y,])))
+      cumsurv_F[, a, y, ] <- cumsurv_F[, a-1, y-1, ] * exp(-(Z[, a-1, y-1, ]*(1-spawn_time_frac[,a-1,y-1,])+(Z[, a, y, ]*spawn_time_frac[,a,y,]))) 
       if(a == n_age && StockPars$plusgroup) {
         cumsurv_M[, a, y, ] <- cumsurv_M[, a, y, ] + cumsurv_M[, a, y-1, ] * exp(-M[, a, y-1, ])
         cumsurv_F[, a, y, ] <- cumsurv_F[, a, y, ] + cumsurv_F[, a, y-1, ] * exp(-Z[, a, y-1, ])
@@ -1384,3 +1381,4 @@ CalcSPRdyn <- function(FM, StockPars, n_age, nareas, nyears, proyears, nsim, His
   if(!Hist) SPRdyn <- SPRdyn[, 1:proyears + nyears]
   return(SPRdyn)
 }
+

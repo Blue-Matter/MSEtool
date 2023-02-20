@@ -119,6 +119,11 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
   depc <- sapply(1:np, function(p) StockPars[[p]][["D"]])[x, ]
   CFc <- sapply(1:np, function(p) CatchFrac[[p]][x, ]) %>% matrix(nf, np) %>% t()
   
+  spawn_time_frac <- rep(0, np)
+  for (p in 1:np) {
+    spawn_time_frac[p] <- StockPars[[p]]$spawn_time_frac[x]
+  }
+  
   message_info("Simulation ", x, " objective function:\n")
   opt <- optim(par, qestMICE,
                method = "L-BFGS-B",
@@ -138,7 +143,8 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
                optVB = optVB, VB0x = VB0x, WtCx = WtCx, maxF = maxF,
                MPA=MPA,
                SRRfun=StockPars[[1]]$SRRfun, SRRpars=StockPars[[1]]$SRRpars[[x]],
-               control = list(trace = 1, factr = tol/.Machine$double.eps))
+               control = list(trace = 1, factr = tol/.Machine$double.eps),
+               spawn_time_frac=spawn_time_frac)
   cat("\n")
 
   out <- qestMICE(par = opt$par, depc = depc,CFc = CFc, mode = 'calc', np = np, nf = nf,
@@ -155,7 +161,8 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
                   Rel = Rel,SexPars = SexPars, x = x, plusgroup = plusgroup,
                   optVB = optVB, VB0x = VB0x, B0x = B0x, WtCx = WtCx, maxF = maxF,
                   MPA=MPA,
-                  SRRfun=StockPars[[1]]$SRRfun, SRRpars=StockPars[[1]]$SRRpars[[x]])
+                  SRRfun=StockPars[[1]]$SRRfun, SRRpars=StockPars[[1]]$SRRpars[[x]],
+                  spawn_time_frac=spawn_time_frac)
 
   out
 }
@@ -221,7 +228,8 @@ qestMICE <- function(par, depc, CFc, mode='opt', np, nf, nyears, nareas, maxage,
                      R0x, R0ax, SSBpRx, SSB0x, hsx, aRx, bRx,
                      ax, bx, Perrx, SRrelx, Rel, SexPars, x, plusgroup, optVB, VB0x, B0x, WtCx,
                      maxF, MPA,
-                     SRRfun, SRRpars) {
+                     SRRfun, SRRpars,
+                     spawn_time_frac=rep(0, np)) {
 
   n_age <- maxage + 1 # include age-0
   qsx <- exp(par[1:np])
@@ -241,7 +249,8 @@ qestMICE <- function(par, depc, CFc, mode='opt', np, nf, nyears, nareas, maxage,
                          R0x, R0ax, SSBpRx, hsx, aRx, bRx, ax, bx, Perrx,
                          SRrelx, Rel, SexPars, x, plusgroup, maxF, SSB0x, B0x,
                          MPA,
-                         SRRfun=SRRfun, SRRpars=SRRpars)
+                         SRRfun=SRRfun, SRRpars=SRRpars,
+                         spawn_time_frac=spawn_time_frac)
 
   if (optVB) {
     VBest <- apply(HistVars$VBx, c(1, 3), sum)
