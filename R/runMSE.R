@@ -1710,6 +1710,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     Hist_out <- Hist
   } else {
     Hist_out <- new("Hist")
+    Hist_out@AtAge <- Hist@AtAge
+    Hist_out@TSdata <- Hist@TSdata
     # Hist@Data <- new('Data')
     # Hist@OMPars <- data.frame()
     # Hist@AtAge <- list()
