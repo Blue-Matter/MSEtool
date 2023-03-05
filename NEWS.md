@@ -9,6 +9,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 ## Minor changes 
 - `MSE@Hist` now includes slots `AtAge` and `TSdata` when `extended=FALSE`
+- changed `MSE@N` slot to include age and area dimensions.
 - changed `MMSE@N` slot to include age and area dimensions.
 - added `extended` argument to `multiMSE` to report N-at-age in `MMSE@Misc$extended$N`
 - added optional `MOM@SexPars$share_par = FALSE` argument that turns off parameter mirroring of stock-recruit, depletion parameters; fleet parameters related to effort trends; and all observation/implementation parameters. This can be used to generalize a 2-sex MOM to a multi-stock model with shared spawning output (`SexPars$SSBfrom`) and/or movement-at-age between stocks (`SexPars$Herm`).
