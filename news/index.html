@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.6.999</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.6.2</span>
       </span>
     </div>
 
@@ -48,16 +48,16 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="3.6.999" id="msetool-36999---development">MSEtool 3.6.999 - Development<a class="anchor" aria-label="anchor" href="#msetool-36999---development"></a></h2>
+<h2 class="page-header" data-toc-text="3.6.2" id="msetool-362---development">MSEtool 3.6.2 - Development<a class="anchor" aria-label="anchor" href="#msetool-362---development"></a></h2>
 <div class="section level3">
-<h3 id="new-additions-3-6-999">New additions<a class="anchor" aria-label="anchor" href="#new-additions-3-6-999"></a></h3>
+<h3 id="new-additions-3-6-2">New additions<a class="anchor" aria-label="anchor" href="#new-additions-3-6-2"></a></h3>
 <ul><li>add ability to control timing of spawning with <code>cpars$spawn_time_frac</code> (default is beginning of year <code>spawn_time_frac=0</code>). Need to check timing on order of operations if this is used together with MICE features!</li>
 <li>implemented <code>Data@Vuln_CAL</code> in generating CAL samples. <code>Data@Vuln_CAA</code> is not currently implemented</li>
 <li>add ability to map <code>CAL_nsamp</code> and other sample size data across stocks in <code>MOM</code>
 </li>
 </ul></div>
 <div class="section level3">
-<h3 id="minor-changes-3-6-999">Minor changes<a class="anchor" aria-label="anchor" href="#minor-changes-3-6-999"></a></h3>
+<h3 id="minor-changes-3-6-2">Minor changes<a class="anchor" aria-label="anchor" href="#minor-changes-3-6-2"></a></h3>
 <ul><li>
 <code>MSE@Hist</code> now includes slots <code>AtAge</code> and <code>TSdata</code> when <code>extended=FALSE</code>
 </li>
@@ -68,9 +68,11 @@
 <li>added optional <code>MOM@SexPars$share_par = FALSE</code> argument that turns off parameter mirroring of stock-recruit, depletion parameters; fleet parameters related to effort trends; and all observation/implementation parameters. This can be used to generalize a 2-sex MOM to a multi-stock model with shared spawning output (<code>SexPars$SSBfrom</code>) and/or movement-at-age between stocks (<code>SexPars$Herm</code>).</li>
 </ul></div>
 <div class="section level3">
-<h3 id="fixes-3-6-999">Fixes<a class="anchor" aria-label="anchor" href="#fixes-3-6-999"></a></h3>
+<h3 id="fixes-3-6-2">Fixes<a class="anchor" aria-label="anchor" href="#fixes-3-6-2"></a></h3>
 <ul><li>minor fix to <code>SS2OM</code> when empirical weight-at-age is not available</li>
 <li>minor fix to <code>L95</code> calculation when all age classes are mature (defaults to 1.5)</li>
+<li>minor fix to <code>OM.Rmd</code>
+</li>
 </ul></div>
 </div>
     <div class="section level2">
