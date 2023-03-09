@@ -241,10 +241,12 @@ if (!is.null(Pars$Obs$I_beta)) {
 
 Imu<-array(rep(ind,each=nsamp)^rep(beta,nyears),
            c(nsamp,nyears))*Pars$Obs$Ierr_y[params$its, 1:nyears]
-Imu<-Imu/apply(Imu,1,mean)
-ind <- ind/mean(ind)
+Imu<-Imu/apply(Imu,1,mean, na.rm=TRUE)
+not_nas <- !is.na(Pars$Obs$Ierr_y[1, 1:nyears])
 
-ylim <- range(c(ind,Imu))
+ind <- ind/mean(ind[not_nas])
+
+ylim <- range(c(ind,Imu), na.rm=TRUE)
 plot(1:nyears, ind, type="l", ylim=ylim, bty="l", las=1, xlab="Years", 
      ylab="Relative Abundance", lwd=2, col="blue", xpd=NA,
      main="Observed Index with beta parameter")
