@@ -2,7 +2,7 @@
 render_plot <- function(Object, Class, Stock=NULL, RMD=NULL, nsamp=3, nsim=200, nyears=50,
                         proyears=28, output_file=NULL, output_dir=getwd(),
                         quiet=TRUE, tabs=TRUE, title=NULL, date=NULL,
-                        plotPars=NULL, open=TRUE, dev=FALSE, parallel=TRUE) {
+                        plotPars=NULL, open=TRUE, dev=FALSE, parallel=FALSE) {
 
   SampCpars <- list() # empty list
 
