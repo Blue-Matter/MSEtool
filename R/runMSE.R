@@ -1710,6 +1710,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     Hist_out <- Hist
   } else {
     Hist_out <- new("Hist")
+    Hist_out@AtAge <- Hist@AtAge
+    Hist_out@TSdata <- Hist@TSdata
     # Hist@Data <- new('Data')
     # Hist@OMPars <- data.frame()
     # Hist@AtAge <- list()
@@ -1725,7 +1727,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                 Obs=Data@Obs,
                 SB_SBMSY=SB_SBMSY_a,
                 F_FMSY=F_FMSYa,
-                N=apply(N_P_mp, c(1,3,4), sum),
+                N=N_P_mp, # apply(N_P_mp, c(1,3,4), sum),
                 B=Ba,
                 SSB=SSBa,
                 VB=VBa,
