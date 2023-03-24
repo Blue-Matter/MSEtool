@@ -357,7 +357,8 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
   Nnext <- sapply(1:np, function(p) {
     popdynOneTScpp(nareas, maxage, Ncurr = Ncur[p, , ], Zcurr = Zcur[p, , ], plusgroup = plusgroup[p])
   }, simplify = "array") %>% aperm(c(3, 1, 2)) # np x n_age x nareas
-
+  
+  # Recruitment to be calculated in SimulateMOM and ProjectMOM based on next year's F and spawn timing
   Nnext[, 1, ] <- 0
   
   # hack for 0-filled M-at-age
@@ -387,12 +388,11 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
     }
   }
   
+  # Recruitment to be re-calculated in SimulateMOM and ProjectMOM based on next year's F and spawn timing
   # Calculate SSB for S-R relationship
   SSB_SR <- local({
     SSBtemp <- array(NA_real_, dim(Nnext)) # np x n_age x nareas
-
     SSBtemp[Nind] <- Nnext[Nind] * Fec_agenext[Nind[, 1:2]]
-
     if (length(SexPars$SSBfrom)) { # use SSB from another stock to predict recruitment
       sapply(1:np, function(p) apply(SexPars$SSBfrom[p, ] * SSBtemp, 2:3, sum), simplify = "array") %>%
         aperm(c(3, 1, 2))
