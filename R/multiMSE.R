@@ -2050,6 +2050,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     }
    
     # use SSB from another stock to predict recruitment
+    stop('Error here')
     if (length(SexPars$SSBfrom)) { 
       SSB_P[,, ,y, ] <- sapply(1:np, function(p) apply(SexPars$SSBfrom[p, ] *  SSB_P[,, ,y, ], c(1,3,4), sum), simplify = "array") %>%
         aperm(c(1, 3, 2, 4))
@@ -2652,6 +2653,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       }
       
       # use SSB from another stock to predict recruitment
+      stop('Error here')
       if (length(SexPars$SSBfrom)) { 
         SSB_P[,, ,y, ] <- sapply(1:np, function(p) apply(SexPars$SSBfrom[p, ] *  SSB_P[,, ,y, ], c(1,3,4), sum), simplify = "array") %>%
           aperm(c(1, 3, 2, 4))
