@@ -15,6 +15,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 - added optional `MOM@SexPars$share_par = FALSE` argument that turns off parameter mirroring of stock-recruit, depletion parameters; fleet parameters related to effort trends; and all observation/implementation parameters. This can be used to generalize a 2-sex MOM to a multi-stock model with shared spawning output (`SexPars$SSBfrom`) and/or movement-at-age between stocks (`SexPars$Herm`).
 
 ## Fixes
+- fix issue with calculation of indices in projections when there are NAs in the real data
 - minor fix to `SS2OM` when empirical weight-at-age is not available
 - minor fix to `L95` calculation when all age classes are mature (defaults to 1.5)
 - minor fix to `OM.Rmd`

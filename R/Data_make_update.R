@@ -1114,6 +1114,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
         Res_List <- lapply(1:nsim, function(x) Calc_Residuals(sim.index=SimIndex[x,], 
                                                               obs.ind=ind,
                                                               beta=beta[x]))
+
         lResids_Hist <- do.call('rbind', lapply(Res_List, '[[', 1))
         if (fitbeta)
           ObsPars$AddIbeta[,i] <- as.vector(do.call('cbind', lapply(Res_List, '[[', 2)))

@@ -2068,7 +2068,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                          SSBpR=StockPars[[p]]$SSBpR,
                          SRRfun=StockPars[[p]]$SRRfun,
                          SRRpars=StockPars[[p]]$SRRpars)
-      
+
       StockPars[[p]]$N_P[,1,y,] <- N_P[,p,1,y,] <- t(rec_area)
     }
 

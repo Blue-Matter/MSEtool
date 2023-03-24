@@ -94,18 +94,18 @@ Calc_Residuals <- function(sim.index, obs.ind, beta=NA) {
     stop('Observed index cannot have negative values', call.=FALSE)
   
   # standardize index and biomass to mean 1 
-  s.sim.index <- sim.index/mean(sim.index, na.rm=TRUE)
   s.obs.ind <- obs.ind/mean(obs.ind, na.rm=TRUE)
+  notnas <- !is.na(s.obs.ind)
+  s.sim.index <- sim.index/mean(sim.index[notnas], na.rm=TRUE)
   
   # convert to log space
   l.sim.index <- log(s.sim.index)
   l.obs.index <- log(s.obs.ind)
   
   # mean 0 
-  l.sim.index <- l.sim.index-mean(l.sim.index, na.rm = TRUE)
+  l.sim.index <- l.sim.index-mean(l.sim.index[notnas], na.rm = TRUE)
   l.obs.index <- l.obs.index-mean(l.obs.index, na.rm = TRUE)
-  
-  
+
   # estimate beta (if not provided)
   if (is.na(beta)) {
     opt<-optimize(getbeta,x=exp(l.sim.index),y=exp(l.obs.index),
