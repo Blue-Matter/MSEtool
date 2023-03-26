@@ -115,26 +115,33 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
     M_agecur <- replicate(nareas, M_agecur)
     ZMx_all <- Foverall + M_agecur
 
+    
     SSBx[Nind] <- Nx[Nind] * exp(-ZMx_all[Nind[,c(1,2,4)]] * spawn_time_frac[Nind[,1]]) * Fec_agex[Nind[, 1:3]]
     SSNx[Nind] <- Nx[Nind] * exp(-ZMx_all[Nind[,c(1,2,4)]] * spawn_time_frac[Nind[,1]]) * Mat_agex[Nind[, 1:3]]
-    
-    # use SSB from another stock to predict recruitment
-    if (length(SexPars$SSBfrom)) { 
-      SSBx[, ,y-1, ] <- sapply(1:np, function(p) apply(SexPars$SSBfrom[p, ] * SSBx[,,y-1,], 2:3, sum), simplify = "array") %>%
-        aperm(c(3, 1, 2))
-    } 
-    
+  
+      
+    # Calculate SSB for S-R relationship
+    SSB_SR <- local({
+      SSBtemp <- array(NA_real_, dim(SSBx[,,y-1,])) # np x n_age x nareas
+      SSBtemp[] <- SSBx[,,y-1,]
+      if (length(SexPars$SSBfrom)) { # use SSB from another stock to predict recruitment
+        sapply(1:np, function(p) apply(SexPars$SSBfrom[p, ] * SSBtemp, 2:3, sum), simplify = "array") %>%
+          aperm(c(3, 1, 2))
+      } else {
+        SSBtemp
+      }
+    })
+ 
     # Recruitment for last year
     if (y>2) {
       Nx[, 1, y-1, ] <- sapply(1:np, function(p) {
-        calcRecruitment_int(SRrel = SRrelx[p], SSBcurr = SSBx[p, ,y-1, ], recdev = Perrx[p, y-1+n_age-1], hs = hsx[p], 
+        calcRecruitment_int(SRrel = SRrelx[p], SSBcurr = SSB_SR[p, , ], recdev = Perrx[p, y-1+n_age-1], hs = hsx[p], 
                             aR = aRx[p, 1], bR = 1/sum(1/bRx[p, ]), R0a = R0ax[p, ], SSBpR = SSBpRx[p, 1],
                             SRRfun, SRRpars)
       }) %>% t()
       # update biomass with recruitment
       Bx[, , y-1, ] <- Nx[, , y-1, ] * replicate(nareas,WatAgex[,,y-1])
     }
-    
     
     out <- popdynOneMICE(np, nf, nareas, maxage,
                          Ncur = array(Nx[, , y-1, ], dim(Nx)[c(1:2, 4)]),
