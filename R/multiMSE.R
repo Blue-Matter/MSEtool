@@ -407,6 +407,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     } # end of loop over fleets
   } # end of loop over stocks
   
+  
   # ---- SexPars - Update SSB0 and Ricker SRR parameters for male stock ----
   # Other parameters have been updated (R0, h, rec devs) earlier
   if (length(SexPars)) {
@@ -607,7 +608,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   
   N <- aperm(array(as.numeric(unlist(histYrs[1,], use.names=FALSE)),
                    dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
-
+  
   Biomass <- aperm(array(as.numeric(unlist(histYrs[2,], use.names=FALSE)),
                          dim=c(np ,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
   
@@ -616,7 +617,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   
   SSB <- aperm(array(as.numeric(unlist(histYrs[4,], use.names=FALSE)),
                      dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
-
+  
   VBiomass <- aperm(array(as.numeric(unlist(histYrs[5,], use.names=FALSE)),
                           dim=c(np, n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
   
@@ -1777,6 +1778,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                 dim=c(np,n_age, nareas, nsim)), c(4,1,2,3))
     SSB_P[,,,1,] <- aperm(array(as.numeric(unlist(NextYrN[25,], use.names=FALSE)),
                                 dim=c(np,n_age, nareas, nsim)), c(4,1,2,3))
+  
     VBiomass_P[,,,1,] <- aperm(array(as.numeric(unlist(NextYrN[19,],
                                                        use.names=FALSE)),
                                      dim=c(np,n_age, nareas, nsim)), c(4,1,2,3))
@@ -2048,7 +2050,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       SSB_P[,p,,y,] <- N_Psp * replicate(nareas,StockPars[[p]]$Fec_Age[,,nyears+y])
       SSN_P[,p,,y,] <- N_Psp * replicate(nareas,StockPars[[p]]$Mat_age[,,nyears+y])
     }
-   
+    
     # recruitment
     for (p in 1:np) {
       StockPars[[p]]$SSN_P <- SSN_P[,p,,,]
@@ -2062,7 +2064,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       } else {
         SSBcurr <- apply(SSB_P[, p, , y, ], c(1, 3), sum) # nsim x nareas
       }
-      recdev <- StockPars[[p]]$Perr_y[, nyears+n_age]
+      recdev <- StockPars[[p]]$Perr_y[, y+nyears+n_age-1]
       rec_area <- sapply(1:nsim, calcRecruitment, SRrel=StockPars[[p]]$SRrel, 
                          SSBcurr=SSBcurr,
                          recdev=recdev, hs=StockPars[[p]]$hs,
@@ -2666,7 +2668,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         } else {
           SSBcurr <- apply(SSB_P[, p, , y, ], c(1, 3), sum) # nsim x nareas
         }
-        recdev <- StockPars[[p]]$Perr_y[, nyears+n_age]
+        recdev <- StockPars[[p]]$Perr_y[, y+nyears+n_age-1]
         rec_area <- sapply(1:nsim, calcRecruitment, SRrel=StockPars[[p]]$SRrel, 
                            SSBcurr=SSBcurr,
                            recdev=recdev, hs=StockPars[[p]]$hs,
