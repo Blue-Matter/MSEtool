@@ -1,6 +1,13 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
-# MSEtool 3.6.2 - Development
+# MSEtool 3.6.2
+
+## Fixes
+- important fix to a bug for projected indices when real indices are provided with NA values
+- fix issue with calculation of indices in projections when there are NAs in the real data
+- minor fix to `SS2OM` when empirical weight-at-age is not available
+- minor fix to `L95` calculation when all age classes are mature (defaults to 1.5)
+- minor fix to `OM.Rmd`
 
 ## New additions
 - add ability to control timing of spawning with `cpars$spawn_time_frac` (default is beginning of year `spawn_time_frac=0`). Need to check timing on order of operations if this is used together with MICE features!
