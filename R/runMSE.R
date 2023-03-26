@@ -1384,7 +1384,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     }
     SSN_P[SAYR] <- N_Psp[SAYR] * StockPars$Mat_age[SAY1] # update spawning stock numbers
     SSB_P[SAYR] <- N_Psp[SAYR] * StockPars$Fec_Age[SAY1] # update spawning biomass
-    
+
     # recruitment in first projection year
     SSBcurr <- apply(SSB_P[,,1,],c(1,3), sum)
     recdev <- StockPars$Perr_y[, nyears+n_age]
@@ -1397,6 +1397,9 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                        SRRpars=StockPars$SRRpars)
     
     N_P[,1,y,] <- t(rec_area)
+    # update to include recruitment
+    Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAY1]  # Calculate biomass
+    VBiomass_P[SAYR] <- N_P[SAYR] * FleetPars$Wt_age_C[SAY1] * V_P[SAYt]  # Calculate vulnerable biomass
     
     StockPars$N_P <- N_P
   
@@ -1578,7 +1581,12 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                          SRRpars=StockPars$SRRpars)
       
       N_P[,1,y,] <- t(rec_area)
+
       StockPars$N_P <- N_P
+      
+      # update to include recruitment
+      Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAYt]  # Calculate biomass
+      VBiomass_P[SAYR] <- N_P[SAYR] * FleetPars$Wt_age_C[SAYt] * V_P[SAYt]  # Calculate vulnerable biomass
 
       # ---- Bio-economics ----
       RetainCatch <- apply(CB_Pret[,,y,], 1, sum) # retained catch this year
