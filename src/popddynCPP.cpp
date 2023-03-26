@@ -329,6 +329,7 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
     arma::vec recdist = R0c2/sum(R0c2); // distribution of R0
     for (int A=0; A<nareas; A++) {
       Narray(0, yr+1, A) = rec(0) * recdist(A);
+      Barray(0,yr+1,A) = Narray(0, yr+1, A) *  WtAge(0,yr+1); 
     }
   }
 
