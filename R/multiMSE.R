@@ -2049,18 +2049,19 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       SSN_P[,p,,y,] <- N_Psp * replicate(nareas,StockPars[[p]]$Mat_age[,,nyears+y])
     }
    
-    # use SSB from another stock to predict recruitment
-    stop('Error here')
-    if (length(SexPars$SSBfrom)) { 
-      SSB_P[,, ,y, ] <- sapply(1:np, function(p) apply(SexPars$SSBfrom[p, ] *  SSB_P[,, ,y, ], c(1,3,4), sum), simplify = "array") %>%
-        aperm(c(1, 3, 2, 4))
-    } 
-    
-    # recruitment in first projection year
+    # recruitment
     for (p in 1:np) {
       StockPars[[p]]$SSN_P <- SSN_P[,p,,,]
       StockPars[[p]]$SSB_P <- SSB_P[,p,,,]
-      SSBcurr <- apply(SSB_P[,p,,y,],c(1,3), sum)
+      if (length(SexPars$SSBfrom)) {  # use SSB from another stock to predict recruitment
+        SSBcurr <- local({
+          SSBfrom <- array(SexPars$SSBfrom[p, ], c(np, nsim, n_age, nareas)) %>% 
+            aperm(c(2, 1, 3, 4))
+          apply(SSBfrom * SSB_P[,,,y,], c(1, 2), sum) # nsim x np; contribution of each stock p' to p
+        })
+      } else {
+        SSBcurr <- apply(SSB_P[, p, , y, ], c(1, 3), sum) # nsim x nareas
+      }
       recdev <- StockPars[[p]]$Perr_y[, nyears+n_age]
       rec_area <- sapply(1:nsim, calcRecruitment, SRrel=StockPars[[p]]$SRrel, 
                          SSBcurr=SSBcurr,
@@ -2069,7 +2070,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                          SSBpR=StockPars[[p]]$SSBpR,
                          SRRfun=StockPars[[p]]$SRRfun,
                          SRRpars=StockPars[[p]]$SRRpars)
-
+      
       StockPars[[p]]$N_P[,1,y,] <- N_P[,p,1,y,] <- t(rec_area)
     }
 
@@ -2652,19 +2653,19 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         SSN_P[,p,,y,] <- N_Psp * replicate(nareas,StockPars[[p]]$Mat_age[,,nyears+y])
       }
       
-      # use SSB from another stock to predict recruitment
-      stop('Error here')
-      if (length(SexPars$SSBfrom)) { 
-        SSB_P[,, ,y, ] <- sapply(1:np, function(p) apply(SexPars$SSBfrom[p, ] *  SSB_P[,, ,y, ], c(1,3,4), sum), simplify = "array") %>%
-          aperm(c(1, 3, 2, 4))
-       
-      }
-      
+      # recruitment
       for (p in 1:np) {
         StockPars[[p]]$SSN_P <- SSN_P[,p,,,]
         StockPars[[p]]$SSB_P <- SSB_P[,p,,,]
-        # recruitment
-        SSBcurr <- apply(SSB_P[,p,,y,],c(1,3), sum)
+        if (length(SexPars$SSBfrom)) {  # use SSB from another stock to predict recruitment
+          SSBcurr <- local({
+            SSBfrom <- array(SexPars$SSBfrom[p, ], c(np, nsim, n_age, nareas)) %>% 
+              aperm(c(2, 1, 3, 4))
+            apply(SSBfrom * SSB_P[,,,y,], c(1, 2), sum) # nsim x np; contribution of each stock p' to p
+          })
+        } else {
+          SSBcurr <- apply(SSB_P[, p, , y, ], c(1, 3), sum) # nsim x nareas
+        }
         recdev <- StockPars[[p]]$Perr_y[, nyears+n_age]
         rec_area <- sapply(1:nsim, calcRecruitment, SRrel=StockPars[[p]]$SRrel, 
                            SSBcurr=SSBcurr,
