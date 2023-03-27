@@ -132,11 +132,20 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
  
     # Recruitment for last year
     if (y>2) {
-      Nx[, 1, y-1, ] <- sapply(1:np, function(p) {
-        calcRecruitment_int(SRrel = SRrelx[p], SSBcurr = SSB_SR[p, , ], recdev = Perrx[p, y-1+n_age-1], hs = hsx[p], 
-                            aR = aRx[p, 1], bR = 1/sum(1/bRx[p, ]), R0a = R0ax[p, ], SSBpR = SSBpRx[p, 1],
-                            SRRfun, SRRpars)
-      }) %>% t()
+      if (length(dim(SSB_SR))==2) {
+        Nx[, 1, y-1, ] <- sapply(1:np, function(p) {
+          calcRecruitment_int(SRrel = SRrelx[p], SSBcurr = SSB_SR, recdev = Perrx[p, y-1+n_age-1], hs = hsx[p], 
+                              aR = aRx[p, 1], bR = 1/sum(1/bRx[p, ]), R0a = R0ax[p, ], SSBpR = SSBpRx[p, 1],
+                              SRRfun, SRRpars)
+        }) %>% t()
+      } else {
+        Nx[, 1, y-1, ] <- sapply(1:np, function(p) {
+          calcRecruitment_int(SRrel = SRrelx[p], SSBcurr = SSB_SR[p, , ], recdev = Perrx[p, y-1+n_age-1], hs = hsx[p], 
+                              aR = aRx[p, 1], bR = 1/sum(1/bRx[p, ]), R0a = R0ax[p, ], SSBpR = SSBpRx[p, 1],
+                              SRRfun, SRRpars)
+        }) %>% t()
+      }
+   
       # update biomass with recruitment
       Bx[, , y-1, ] <- Nx[, , y-1, ] * replicate(nareas,WatAgex[,,y-1])
     }
