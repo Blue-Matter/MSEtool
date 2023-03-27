@@ -830,6 +830,22 @@ UpdateSlot <- function(sl, RealData, SimData, msg) {
 }
 
 
+check_Index_Fit <- function(Stats, index=1) {
+  ac_err <- sum(!is.finite(Stats$AC))
+  sd_err <- sum(!is.finite(Stats$SD))
+  if (ac_err | sd_err) {
+    if (is.numeric(index)) {
+      warning('An error occurred in calculating statistical properties of fit to Additional Index ', index, 
+              ' (possibly because there was only one observed data point). \nUsing the index observation error for slot `Ind` from `OM@Obs` (or possibly conditioned if `cpars$Data@Ind` was provided.\nUse `cpars$AddIerr` to manually set the observation error.')  
+    } else {
+      warning('An error occurred in calculating statistical properties of fit to Index ', index, 
+              ' (possibly because there was only one observed data point). \nUsing the index observation error for slot `Ind` from `OM@Obs` (or possibly conditioned if `cpars$Data@Ind` was provided.\nUse `cpars$AddIerr` to manually set the observation error.') 
+    }
+    return(FALSE)
+  }
+  TRUE
+}
+
 AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
                         nyears, proyears, SampCpars, msg, control, Sample_Area) {
   Data_out <- SimData
@@ -1127,16 +1143,19 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
         # Calculate statistics
         Stats_List <- lapply(1:nsim, function(x) Calc_Stats(lResids_Hist[x,]))
         Stats <- do.call('rbind', Stats_List)
-        
-        # Generate residuals for projections
-        Resid_Hist <- exp(lResids_Hist) # historical residuals in normal space
-        Resid_Proj <- Gen_Residuals(Stats, nsim, proyears)
-        
-        if (fitIerr) ObsPars$AddIerr[,i, ] <- cbind(Resid_Hist, Resid_Proj)
-        ObsPars$AddInd_Stat[[i]] <- Stats[,1:2] # index fit statistics
+        check_Index <- check_Index_Fit(Stats, i)
+        if (check_Index) {
+          # Generate residuals for projections
+          Resid_Hist <- exp(lResids_Hist) # historical residuals in normal space
+          Resid_Proj <- Gen_Residuals(Stats, nsim, proyears)
+          
+          if (fitIerr) ObsPars$AddIerr[,i, ] <- cbind(Resid_Hist, Resid_Proj)
+          
+        } else {
+          ObsPars$AddIerr[,i, ] <-  ObsPars$Ierr_y
+          ObsPars$AddInd_Stat[[i]] <- Stats[,1:2] # index fit statistics
+        }
       }
-
-
     }
   }
 
