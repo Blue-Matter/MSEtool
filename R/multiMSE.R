@@ -1449,7 +1449,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   if (!runparallel & isrunning) snowfall::sfStop()
   
   # Don't run MPs in parallel unless specified
-  parallel_MPs <-  rep(FALSE, nMP) 
+  parallel_MPs <-  rep(FALSE, length(allMPs)) 
+  names(parallel_MPs) <- allMPs
   if (methods::is(parallel, 'list')) {
     parallel <- parallel[parallel==TRUE]
     ind <- match(names(parallel), allMPs)
