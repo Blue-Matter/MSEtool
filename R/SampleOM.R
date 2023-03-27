@@ -1642,15 +1642,15 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
     cond <- StockPars$hs > 0.6
     hsim[cond] <- 0.2 + rbeta(sum(StockPars$hs > 0.6),
                               alphaconv((StockPars$hs[cond] - 0.2)/0.8,
-                                        (1 - (StockPars$hs[cond] - 0.2)/0.8) * Obs@hbiascv),
+                                        (1 - (StockPars$hs[cond] - 0.2)/0.8) * Obs@hbiascv[1]),
                               betaconv((StockPars$hs[cond] - 0.2)/0.8,
-                                       (1 - (StockPars$hs[cond] - 0.2)/0.8) * Obs@hbiascv)) * 0.8
+                                       (1 - (StockPars$hs[cond] - 0.2)/0.8) * Obs@hbiascv[1])) * 0.8
 
     hsim[!cond] <- 0.2 + rbeta(sum(StockPars$hs <= 0.6),
                                alphaconv((StockPars$hs[!cond] - 0.2)/0.8,
-                                         (StockPars$hs[!cond] - 0.2)/0.8 * Obs@hbiascv),
+                                         (StockPars$hs[!cond] - 0.2)/0.8 * Obs@hbiascv[1]),
                                betaconv((StockPars$hs[!cond] - 0.2)/0.8,
-                                        (StockPars$hs[!cond] - 0.2)/0.8 * Obs@hbiascv)) * 0.8
+                                        (StockPars$hs[!cond] - 0.2)/0.8 * Obs@hbiascv[1])) * 0.8
     hbias <- hsim/StockPars$hs  # back calculate the simulated bias
   } else {
     hbias <- hsim/StockPars$hs  # back calculate the simulated bias
