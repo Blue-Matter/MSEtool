@@ -836,10 +836,10 @@ check_Index_Fit <- function(Stats, index=1) {
   if (ac_err | sd_err) {
     if (is.numeric(index)) {
       warning('An error occurred in calculating statistical properties of fit to Additional Index ', index, 
-              ' (possibly because there was only one observed data point). \nUsing the index observation error for slot `Ind` from `OM@Obs` (or possibly conditioned if `cpars$Data@Ind` was provided.\nUse `cpars$AddIerr` to manually set the observation error.')  
+              ' (possibly because there was only one observed data point). \nUsing the index observation error for slot `Ind` from `Obs` object (or possibly conditioned if `cpars$Data@Ind` was provided).\nUse `cpars$AddIerr` to manually set the observation error.')  
     } else {
       warning('An error occurred in calculating statistical properties of fit to Index ', index, 
-              ' (possibly because there was only one observed data point). \nUsing the index observation error for slot `Ind` from `OM@Obs` (or possibly conditioned if `cpars$Data@Ind` was provided.\nUse `cpars$AddIerr` to manually set the observation error.') 
+              ' (possibly because there was only one observed data point). \nUsing the index observation error for slot `Ind` from `Obs` object (or possibly conditioned if `cpars$Data@Ind` was provided).\nUse `cpars$AddIerr` to manually set the observation error.') 
     }
     return(FALSE)
   }
