@@ -20,6 +20,21 @@ MSE <- Project(Hist, MPs='NFref', extended = TRUE)
 testthat::expect_equal(round(MSE@RefPoint$Dynamic_Unfished$SSB0,0),
                        round(cbind(apply(MSE@Hist@TSdata$SBiomass, 1:2, sum), MSE@SSB[,1,]),0))
 
+
+MOM <- Albacore_TwoFleet
+MOM@nsim <- 5
+MOM@cpars[[1]][[1]]$qs <- rep(0, MOM@nsim)
+MOM@cpars[[1]][[2]]$qs <- rep(0, MOM@nsim)
+MMSE <- multiMSE(MOM, extended = TRUE, MPs='NFref', dropHist = FALSE)
+
+dynssb0 <- MMSE@RefPoint$Dynamic_Unfished$SSB0[,1,]
+ssb <- cbind(apply(MMSE@multiHist[[1]][[1]]@TSdata$SBiomass, 1:2, sum), MMSE@SSB[,1,1,])
+
+testthat::expect_equal(max(abs(round(dynssb0/ssb,0))), 1)
+testthat::expect_equal(min(abs(round(dynssb0/ssb,0))), 1)
+
+
+
 # 
 # calcB <- MSE@RefPoint$Dynamic_Unfished$SSB0
 # simB <- cbind(apply(MSE@Hist@TSdata$SBiomass, 1:2, sum), MSE@SSB[,1,])
