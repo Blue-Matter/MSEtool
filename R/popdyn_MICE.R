@@ -120,8 +120,8 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
   
     # Calculate SSB for S-R relationship
     SSB_SR <- local({
-      SSBtemp <- array(NA_real_, dim(SSBx[,,y-1,, drop=F])) # np x n_age x nareas
-      SSBtemp[] <- SSBx[,,y-1,]
+      SSBtemp <- array(NA_real_, dim(SSBx[,,y-1,])) # np x n_age x nareas
+      SSBtemp[] <- SSBx[,,y-1,, drop=FALSE]
       if (length(SexPars$SSBfrom)) { # use SSB from another stock to predict recruitment
         sapply(1:np, function(p) apply(SexPars$SSBfrom[p, ] * SSBtemp, 2:3, sum), simplify = "array") %>%
           aperm(c(3, 1, 2))
@@ -133,7 +133,7 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
     # Recruitment for last year
     if (y>2) {
       Nx[, 1, y-1, ] <- sapply(1:np, function(p) {
-        calcRecruitment_int(SRrel = SRrelx[p], SSBcurr = SSB_SR[p, ,1, ], recdev = Perrx[p, y-1+n_age-1], hs = hsx[p], 
+        calcRecruitment_int(SRrel = SRrelx[p], SSBcurr = SSB_SR[p, , ], recdev = Perrx[p, y-1+n_age-1], hs = hsx[p], 
                             aR = aRx[p, 1], bR = 1/sum(1/bRx[p, ]), R0a = R0ax[p, ], SSBpR = SSBpRx[p, 1],
                             SRRfun, SRRpars)
       }) %>% t()
