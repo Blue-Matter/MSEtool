@@ -4,7 +4,6 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 ## Fixes
 - important fix to a bug for projected indices when real indices are provided with NA values
-- fix issue with calculation of indices in projections when there are NAs in the real data
 - minor fix to `SS2OM` when empirical weight-at-age is not available
 - minor fix to `L95` calculation when all age classes are mature (defaults to 1.5)
 - minor fix to `OM.Rmd`
