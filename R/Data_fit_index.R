@@ -67,20 +67,21 @@ Fit_Index <- function(ind_slot='Ind', indcv_slot="CV_Ind", Data_out,
   # Calculate statistics
   Stats_List <- lapply(1:nsim, function(x) Calc_Stats(lResids_Hist[x,]))
   Stats <- do.call('rbind', Stats_List)
+  check_Index <-check_Index_Fit(Stats, ind_slot)
   
-  # Generate residuals for projections
-  Resid_Hist <- exp(lResids_Hist) # historical residuals in normal space
-  Resid_Proj <- Gen_Residuals(Stats, nsim, proyears)
-  
-  ObsPars[[obs_err_var]][, 1:nyears] <- Resid_Hist # update Obs Error
-  ObsPars[[obs_err_var]][, (nyears+1):(nyears+proyears)] <- Resid_Proj
-  
-  stat_var <- switch(ind_slot,
-                     Ind = 'Ind_Stat',
-                     SpInd = 'SpInd_Stat',
-                     VInd = 'VInd_Stat')
-  
-  
+  if (check_Index) {
+    # Generate residuals for projections
+    Resid_Hist <- exp(lResids_Hist) # historical residuals in normal space
+    Resid_Proj <- Gen_Residuals(Stats, nsim, proyears)
+    
+    ObsPars[[obs_err_var]][, 1:nyears] <- Resid_Hist # update Obs Error
+    ObsPars[[obs_err_var]][, (nyears+1):(nyears+proyears)] <- Resid_Proj
+    
+    stat_var <- switch(ind_slot,
+                       Ind = 'Ind_Stat',
+                       SpInd = 'SpInd_Stat',
+                       VInd = 'VInd_Stat')
+  }
   ObsPars[[stat_var]] <- Stats[,1:2]
   list(Data_out=Data_out, ObsPars=ObsPars)
   
