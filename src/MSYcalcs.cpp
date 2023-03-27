@@ -173,7 +173,7 @@ using namespace Rcpp;
                                    V_at_Age, maxage,
                                    relRfun, SRRpars,
                                    1, 4, 1, 0, 2, plusgroup,
-                                   spawn_time_frac=spawn_time_frac);
+                                   spawn_time_frac);
      out(0,i) = msys[0];
      out(1,i) = msys[3];
      out(2,i) = msys[8]/msys[2];
