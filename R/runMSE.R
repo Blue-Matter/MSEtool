@@ -1566,8 +1566,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       for (a in 1:n_age) {
         N_Psp[,a,y,] <- N_Psp[,a,y,] * exp(-(Z_P[,a,y,]*spawn_time_frac[,a,y,]))
       }
-      SSN_P[SAYR] <- N_Psp[SAYR] * StockPars$Mat_age[SAY1] # update spawning stock numbers
-      SSB_P[SAYR] <- N_Psp[SAYR] * StockPars$Fec_Age[SAY1] # update spawning biomass
+      SSN_P[SAYR] <- N_Psp[SAYR] * StockPars$Mat_age[SAYt] # update spawning stock numbers
+      SSB_P[SAYR] <- N_Psp[SAYR] * StockPars$Fec_Age[SAYt] # update spawning biomass
       
       # recruitment in this year
       SSBcurr <- apply(SSB_P[,,y,],c(1,3), sum)
