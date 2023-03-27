@@ -45,7 +45,11 @@ Catch <- apply(MSE@Misc$extended$Catch[sim,,1,,], 2, sum)
 
 testthat::expect_equal(mean(MSE@PPD[[1]]@Cat[sim,]/Catch[1:(OM@nyears+OM@proyears-1)]), bias)
 
+
 # Add error
+OM <- testOM
+OM@nsim <- 5
+Hist <- Simulate(OM)
 Csd <- 0.3
 Cerr_y <- array(rlnorm(OM@nyears + OM@proyears,
                        MSEtool:::mconv(1, rep(Csd, OM@nyears + OM@proyears)),
