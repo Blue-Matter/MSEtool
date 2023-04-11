@@ -703,6 +703,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   # assumes all vulnerable fish are caught - ie no discarding
   if(!silent) message("Calculating MSY and per-recruit reference points for each year")
   # average life-history parameters over ageM years
+  SPR_hist <- list()
   for (p in 1:np) {
     
     V <- local({
@@ -853,7 +854,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     Fmed_y[] <- sapply(per_recruit_F, function(x) sapply(x, function(y) y$FYPR["Fmed"])) %>% t()
 
     # ---- Calculate annual SPR ----
-    SPR_hist <- list()
     SPR_hist[[p]] <- list()
 
     SPR_hist[[p]]$Equilibrium <- CalcSPReq(FMt[,p,,,], StockPars[[p]],

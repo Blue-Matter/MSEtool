@@ -1,5 +1,11 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
+# MSEtool 3.6.2.9999 - Development
+
+## Fixes 
+- fix SPR reporting for multiMSE
+
+
 # MSEtool 3.6.2
 
 ## Fixes
