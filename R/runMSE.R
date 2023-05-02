@@ -971,8 +971,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   Hist <- new("Hist")
   # Data@Misc <- list()
   Hist@Data <- Data
-
-  ind <- which(lapply(ObsPars, length) == nsim)
+  
+  ind <- vapply(ObsPars, function(x) is.atomic(x) && length(x) == nsim, logical(1))
   obs <- data.frame(ObsPars[ind])
   OMPars <- data.frame(OMPars, obs)
 
