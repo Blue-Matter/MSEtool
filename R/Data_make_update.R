@@ -1067,7 +1067,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     if (all(is.na(AddIndType))) AddIndType <- rep(1, n.ind)
     Data_out@AddIndType <- AddIndType
 
-    ObsPars$AddInd_Stat <- list()
+    ObsPars$AddInd_Stat <- vector(mode = "list", length = n.ind)
 
     UnitsTab <- data.frame(n=1:0, units=c('biomass', 'numbers'))
     TypeTab <- data.frame(n=1:3, type=c('total', 'spawning', 'vuln.'))
