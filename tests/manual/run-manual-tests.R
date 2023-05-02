@@ -55,7 +55,7 @@ testthat::test_file("tests/manual/test-code/test-PMobjects.R") #   ok
 
 testthat::test_file("tests/manual/test-code/test-RealIndices.R") # ok
 
-testthat::test_file("tests/manual/test-code/test-ReferencePoints") 
+testthat::test_file("tests/manual/test-code/test-ReferencePoints.R") 
 
 testthat::test_file("tests/manual/test-code/test-runMSE.R") # ok
 

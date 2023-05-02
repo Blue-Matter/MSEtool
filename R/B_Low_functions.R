@@ -34,11 +34,13 @@
 #' @param maxF maximum apical fishing mortality
 #' @param ploty logical: should a plot be produced
 #' @param plusgroup Integer. Default = 0 = no plus-group. Use 1 to include a plus-group
+#' @param spawn_time_frac Numeric. Fraction of the year when spawning occurs. Default = 0.
 #' @author T. Carruthers with modifications by A. Hordyk
 #' @keywords internal
 getBlow<-function(x, N, Asize, SSBMSY, SSBpR, MPA, SSB0, nareas, retA,MGThorizon,Find,
                   Perr,M_ageArray,hs,Mat_age,Wt_age, Fec_age, R0a,V,nyears,maxage,mov,Spat_targ,SRrel,
-                  aR,bR,Bfrac=0.5, maxF, ploty=F, plusgroup=0, SRRfun, SRRpars){
+                  aR,bR,Bfrac=0.5, maxF, ploty=F, plusgroup=0, SRRfun, SRRpars,
+                  spawn_time_frac){
   
   if (SSBMSY[x] > 0) {
     opt <- optimize(Blow_opt,log(c(0.0075,15)),N=N[x,,1,], Asize_c =Asize[x,], SSBMSYc=SSBMSY[x],
@@ -48,7 +50,8 @@ getBlow<-function(x, N, Asize, SSBMSY, SSBpR, MPA, SSB0, nareas, retA,MGThorizon
                     R0c=R0a[x,], Vc=V[x,,],
                     nyears=nyears, maxage=maxage, movc=mov[x,,,,], Spat_targc=Spat_targ[x],
                     SRrelc=SRrel[x], aRc=aR[x,], bRc=bR[x,], Bfrac, maxF, mode=1,
-                    plusgroup=plusgroup, SRRfun, SRRpars[[x]])
+                    plusgroup=plusgroup, SRRfun, SRRpars[[x]],
+                    spawn_time_frac=spawn_time_frac[x])
     
     if (ploty) {
       Blow_opt(opt$minimum,N=N[x,,1,], Asize_c =Asize[x,], SSBMSYc=SSBMSY[x],
@@ -57,7 +60,8 @@ getBlow<-function(x, N, Asize, SSBMSY, SSBpR, MPA, SSB0, nareas, retA,MGThorizon
                hc=hs[x], Mac=Mat_age[x,,], Wac=Wt_age[x,,], Fecac=Fec_age[x,,], R0c=R0a[x,], Vc=V[x,,],
                nyears=nyears, maxage=maxage, movc=mov[x,,,,], Spat_targc=Spat_targ[x],
                SRrelc=SRrel[x], aRc=aR[x,], bRc=bR[x,], Bfrac, maxF, mode=3,
-               plusgroup=plusgroup, SRRfun, SRRpars[[x]])
+               plusgroup=plusgroup, SRRfun, SRRpars[[x]],
+               spawn_time_frac=spawn_time_frac[x])
     }
     
     Blow <- Blow_opt(opt$minimum,N=N[x,,1,], Asize_c =Asize[x,], SSBMSYc=SSBMSY[x],
@@ -67,7 +71,8 @@ getBlow<-function(x, N, Asize, SSBMSY, SSBpR, MPA, SSB0, nareas, retA,MGThorizon
                      R0c=R0a[x,], Vc=V[x,,],
                      nyears=nyears, maxage=maxage, movc=mov[x,,,,], Spat_targc=Spat_targ[x],
                      SRrelc=SRrel[x], aRc=aR[x,], bRc=bR[x,], Bfrac, maxF, mode=2,
-                     plusgroup=plusgroup, SRRfun, SRRpars[[x]])
+                     plusgroup=plusgroup, SRRfun, SRRpars[[x]],
+                     spawn_time_frac=spawn_time_frac[x])
   } else {
     Blow <- 0
   }
@@ -111,12 +116,13 @@ getBlow<-function(x, N, Asize, SSBMSY, SSBpR, MPA, SSB0, nareas, retA,MGThorizon
 #' @param maxF maximum apical fishing mortality
 #' @param mode 1: find Blow 2:report blow  3:plot results
 #' @param plusgroup Integer. Default = 0 = no plus-group. Use 1 to include a plus-group
+#' @param spawn_time_frac Numeric. Fraction of the year when spawning occurs. Default = 0.
 #' @author T. Carruthers with modifications by A. Hordyk
 #' @keywords internal
 Blow_opt<-function(lnq, N, Asize_c, SSBMSYc,SSBpRc, MPA, SSB0c, nareas, retAc,
                    MGThorizonc,Fc,Perrc,Mc,hc,Mac,Wac, Fecac, R0c,Vc,nyears,maxage,movc,Spat_targc,
                    SRrelc,aRc,bRc,Bfrac,maxF, mode=1, plusgroup=0,
-                   SRRfun, SRRpars){
+                   SRRfun, SRRpars, spawn_time_frac=0){
 
   pyears <- nyears + MGThorizonc
   n_age <- maxage + 1
@@ -143,7 +149,8 @@ Blow_opt<-function(lnq, N, Asize_c, SSBMSYc,SSBpRc, MPA, SSB0c, nareas, retAc,
                       maxF=maxF, MPA=MPA, control=1, SSB0c=SSB0c,
                       SRRfun=SRRfun,
                       SRRpars =SRRpars,
-                      plusgroup = plusgroup)
+                      plusgroup = plusgroup,
+                      spawn_time_frac = spawn_time_frac)
 
   SSBstore <- apply(simpop[[4]],2, sum)
   SBiomass <- SSBstore[pyears]

@@ -4,51 +4,16 @@
 \alias{optMSY_eq}
 \title{Internal wrapper function to calculate MSY reference points (now using MSYCalcs)}
 \usage{
-optMSY_eq(
-  x,
-  M_ageArray,
-  Wt_age,
-  Mat_age,
-  Fec_age,
-  V,
-  maxage,
-  R0,
-  SRrel,
-  hs,
-  SSBpR,
-  yr.ind = 1,
-  plusgroup = 0,
-  StockPars = NULL
-)
+optMSY_eq(x, yr.ind = 1, StockPars, V)
 }
 \arguments{
 \item{x}{Simulation number}
 
-\item{M_ageArray}{Array of M-at-age}
-
-\item{Wt_age}{Array of weight-at-age}
-
-\item{Mat_age}{Array of maturity-at-age}
-
-\item{Fec_age}{Array of relative fecundity-at-age (spawning biomass weight)}
-
-\item{V}{Array of selectivity-at-age}
-
-\item{maxage}{Vector of maximum age}
-
-\item{R0}{Vector of R0s}
-
-\item{SRrel}{SRR type}
-
-\item{hs}{Vector of steepness}
-
-\item{SSBpR}{Vector of unfished spawners per recruit}
-
 \item{yr.ind}{Year index used in calculations}
 
-\item{plusgroup}{Integer. Default = 0 = no plus-group. Use 1 to include a plus-group}
-
 \item{StockPars}{A list of stock parameters}
+
+\item{V}{Array of selectivity-at-age}
 }
 \value{
 Results from \code{MSYCalcs}

@@ -56,7 +56,7 @@ Time-series plots of catch observation error for historical and projection years
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 years <- c(seq(-nyears+1, 0, by=1), seq(1, proyears,1))
-ylim <- c(0, max(Pars$Obs$Cobs_y[params$its, ]))
+ylim <- c(0, max(Pars$Obs$Cobs_y[params$its, ], na.rm=TRUE))
 matplot(years, t(Pars$Obs$Cobs_y[params$its, ]),
         type="l", lty=1, bty="l", main="Catch discrepancy by Year", 
         lwd=params$plotPars$lwd, ylab="Observed/Real", xlab="Years", las=1, xpd=NA,
@@ -100,7 +100,7 @@ Time-series plots of depletion observation error for historical and projection y
 ```{r, echo=FALSE}
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 years <- c(seq(-nyears+1, 0, by=1), seq(1, proyears,1))
-ylim <- c(0, max(Pars$Obs$Derr_y))
+ylim <- c(0, max(Pars$Obs$Derr_y, na.rm=TRUE))
 matplot(years, t(Pars$Obs$Derr_y[params$its, ]),
         type="l", lty=1, bty="l", main="Depletion discrepancy by Year", 
         lwd=params$plotPars$lwd, ylab="Observed/Real", xlab="Years", las=1, xpd=NA,
@@ -144,7 +144,7 @@ Time-series plots of abundance observation error for historical and projection y
 
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 years <- c(seq(-nyears+1, 0, by=1), seq(1, proyears,1))
-ylim <- c(0, max(Pars$Obs$Aerr_y[params$its,]))
+ylim <- c(0, max(Pars$Obs$Aerr_y[params$its,], na.rm=TRUE))
 matplot(years, t(Pars$Obs$Aerr_y[params$its, ]),
         type="l", lty=1, bty="l", main="Abundance discrepancy by Year", 
         lwd=params$plotPars$lwd, ylab="Observed/Real", xlab="Years", las=1, xpd=NA,
@@ -215,7 +215,7 @@ Time-series plot of `r nsamp` samples of index observation error:
 
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(4,1,3,1))
 years <- c(seq(-nyears+1, 0, by=1), seq(1, proyears,1))
-ylim <- c(0, max(Pars$Obs$Ierr_y[params$its, ]))
+ylim <- c(0, max(Pars$Obs$Ierr_y[params$its, ], na.rm=TRUE))
 matplot(years, t(Pars$Obs$Ierr_y[params$its, ]),
         type="l", lty=1, bty="l", main="Index observation error by Year", 
         lwd=params$plotPars$lwd, ylab="Observed/Real", xlab="Years", las=1, xpd=NA,
@@ -241,10 +241,12 @@ if (!is.null(Pars$Obs$I_beta)) {
 
 Imu<-array(rep(ind,each=nsamp)^rep(beta,nyears),
            c(nsamp,nyears))*Pars$Obs$Ierr_y[params$its, 1:nyears]
-Imu<-Imu/apply(Imu,1,mean)
-ind <- ind/mean(ind)
+Imu<-Imu/apply(Imu,1,mean, na.rm=TRUE)
+not_nas <- !is.na(Pars$Obs$Ierr_y[1, 1:nyears])
 
-ylim <- range(c(ind,Imu))
+ind <- ind/mean(ind[not_nas])
+
+ylim <- range(c(ind,Imu), na.rm=TRUE)
 plot(1:nyears, ind, type="l", ylim=ylim, bty="l", las=1, xlab="Years", 
      ylab="Relative Abundance", lwd=2, col="blue", xpd=NA,
      main="Observed Index with beta parameter")
@@ -283,7 +285,7 @@ Timeseries plots of observeration error for recruitment:
 
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 years <- c(seq(-nyears+1, 0, by=1), seq(1, proyears,1))
-ylim <- c(0, max(Pars$Obs$Recerr_y[params$its, ]))
+ylim <- c(0, max(Pars$Obs$Recerr_y[params$its, ], na.rm=TRUE))
 matplot(years, t(Pars$Obs$Recerr_y[params$its, ]),
         type="l", lty=1, bty="l", main="Recruitment index discrepancy by Year", 
         lwd=params$plotPars$lwd, ylab="Observed/Real", xlab="Years", las=1, xpd=NA,

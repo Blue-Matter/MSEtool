@@ -26,6 +26,21 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   # ---- Set up parallel processing ----
   ncpus <- set_parallel(any(unlist(parallel)))
   
+  # ---- Set pbapply functions ----
+  if (requireNamespace("pbapply", quietly = TRUE) && !silent) {
+    .lapply <- pbapply::pblapply
+    .sapply <- pbapply::pbsapply
+    
+    # Argument to pass parallel cluster (if running)
+    formals(.lapply)$cl <- formals(.sapply)$cl <- substitute(if (snowfall::sfIsRunning()) snowfall::sfGetCluster() else NULL)
+  } else if (snowfall::sfIsRunning()) {
+    .lapply <- snowfall::sfLapply
+    .sapply <- snowfall::sfSapply
+  } else {
+    .lapply <- base::lapply
+    .sapply <- base::sapply
+  }
+  
   set.seed(OM@seed) # set seed for reproducibility
   nsim <- OM@nsim # number of simulations
   nyears <- OM@nyears # number of historical years
@@ -101,6 +116,13 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                                proyears,
                                cpars=SampCpars,
                                msg=!silent)
+  
+  # Timing of Spawning (fraction of year)
+  if (!is.null(SampCpars$spawn_time_frac)) {
+    StockPars$spawn_time_frac <- SampCpars$spawn_time_frac
+  } else {
+    StockPars$spawn_time_frac <- rep(0, nsim) # default: beginning of year
+  }
 
   # Check for custom stock-recruit function
   StockPars <- Check_custom_SRR(StockPars, SampCpars, nsim)
@@ -162,14 +184,6 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   Agearray <- array(rep(0:StockPars$maxage, each = nsim), dim = c(nsim, n_age))  # Age array
 
   #  ---- Pre Equilibrium calcs ----
-  surv <- matrix(1, nsim, n_age)
-  surv[, 2:n_age] <- t(exp(-apply(StockPars$M_ageArray[,,1], 1, cumsum)))[, 1:(n_age-1)]  # Survival array
-
-  if (plusgroup) {
-    surv[,n_age] <- surv[,n_age]/(1-exp(-StockPars$M_ageArray[,n_age,1])) # indefinite integral
-  }
-  Nfrac <- surv * StockPars$Mat_age[,,1]  # predicted Numbers of mature ages in first year
-
   # Set up array indexes sim (S) age (A) year (Y) region/area (R)
   SAYR <- as.matrix(expand.grid(1:nareas, 1, 1:n_age, 1:nsim)[4:1])
   SAY <- SAYR[, 1:3]
@@ -192,12 +206,17 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   StockPars$R0a <- matrix(StockPars$R0, nrow=nsim, ncol=nareas, byrow=FALSE) * StockPars$initdist[,1,] #
 
   # ---- Unfished Equilibrium calcs ----
-  surv <- array(1, dim=c(nsim, n_age, nyears+proyears)) # unfished survival for every year
-  surv[, 2:n_age, ] <- aperm(exp(-apply(StockPars$M_ageArray, c(1,3), cumsum))[1:(n_age-1), ,], c(2,1,3)) # Survival array
-  if (plusgroup) {
-    surv[,n_age, ] <- surv[,n_age,]/(1-apply(-StockPars$M_ageArray[,n_age,], 2, exp))
-  }
-  Nfrac <- surv * StockPars$Mat_age  # predicted numbers of mature ages in all years
+  # unfished survival 
+  surv <- lapply(1:nsim, calc_survival, StockPars=StockPars, 
+                 plusgroup=plusgroup, inc_spawn_time=FALSE) %>% 
+    abind(., along=3) %>% aperm(., c(3,1,2))
+  
+  # unfished survival (spawning)
+  SBsurv <- lapply(1:nsim, calc_survival, StockPars=StockPars, 
+                 plusgroup=plusgroup, inc_spawn_time=TRUE) %>% 
+    abind(., along=3) %>% aperm(., c(3,1,2))
+
+  Nfrac <- SBsurv * StockPars$Mat_age  # predicted numbers of mature ages in all years (accounting for `spawn_time_frac`)
 
   # indices for all years
   SAYR_a <- as.matrix(expand.grid(1:nareas, 1:(nyears+proyears), 1:n_age, 1:nsim)[4:1])
@@ -216,9 +235,9 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
 
   # Calculate initial spawning stock numbers for all years
   SSN_a[SAYR_a] <- Nfrac[SAY_a] * StockPars$R0[S_a] * StockPars$initdist[SAR_a]
-  N_a[SAYR_a] <- StockPars$R0[S_a] * surv[SAY_a] * StockPars$initdist[SAR_a] # Calculate initial stock numbers for all years
-  Biomass_a[SAYR_a] <- N_a[SAYR_a] * StockPars$Wt_age[SAY_a]  # Calculate initial stock biomass
-  SSB_a[SAYR_a] <- N_a[SAYR_a] * StockPars$Fec_Age[SAY_a]    # Calculate spawning stock biomass
+  N_a[SAYR_a] <- StockPars$R0[S_a] * surv[SAY_a] * StockPars$initdist[SAR_a] 
+  Biomass_a[SAYR_a] <- N_a[SAYR_a] * StockPars$Wt_age[SAY_a] 
+  SSB_a[SAYR_a] <- SBsurv[SAY_a]  * StockPars$R0[S_a] * StockPars$initdist[SAR_a] * StockPars$Fec_Age[SAY_a]   
   
   SSN0_a <- apply(SSN_a, c(1,3), sum) # unfished spawning numbers for each year
   N0_a <- apply(N_a, c(1,3), sum) # unfished numbers for each year)
@@ -271,7 +290,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     StockPars$initdist[SAR]*StockPars$Perr_y[Sa]  # Calculate initial spawning stock numbers
   N[SAYR] <- StockPars$R0[S] * surv[SAY] * StockPars$initdist[SAR]*StockPars$Perr_y[Sa]  # Calculate initial stock numbers
   Biomass[SAYR] <- N[SAYR] * StockPars$Wt_age[SAY]  # Calculate initial stock biomass
-  SSB[SAYR] <- SSN[SAYR] * StockPars$Fec_Age[SAY]    # Calculate spawning stock biomass
+  SSB[SAYR] <- SBsurv[SAY] * StockPars$R0[S] *  StockPars$initdist[SAR]*StockPars$Perr_y[Sa] * StockPars$Fec_Age[SAY]    # Calculate spawning stock biomass
   VBiomass[SAYR] <- N[SAYR] * FleetPars$Wt_age_C[SAY] * FleetPars$V_real[SAY]  # Calculate vulnerable biomass
 
   StockPars$aR <- aR
@@ -306,8 +325,6 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
             message('Spatial closure detected in area ', a, ' in years ',
                     paste(findIntRuns(yrs), collapse=", "))
         }
-
-
       }
     }
   } else {
@@ -318,7 +335,6 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     }
   }
   FleetPars$MPA <- MPA
-
 
   # --- Calculate MSY statistics for each year ----
   if (inc.progress)
@@ -353,67 +369,15 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   # average life-history parameters over ageM years
 
   # Assuming all vulnerable fish are kept; ie MSY is total removals
-  if (!snowfall::sfIsRunning()) {
-    
-    MSYrefsYr <- if (requireNamespace("pbapply", quietly = TRUE)) {
-      pbapply::pblapply(1:nsim, function(x) {
-        sapply(1:(nyears+proyears), function(y) {
-          optMSY_eq(x, 
-                    M_ageArray=StockPars$M_ageArray, 
-                    Wt_age=StockPars$Wt_age, 
-                    Mat_age=StockPars$Mat_age,
-                    Fec_age=StockPars$Fec_Age, 
-                    V=FleetPars$V_real, 
-                    maxage=StockPars$maxage, 
-                    R0=StockPars$R0,
-                    SRrel=StockPars$SRrel, 
-                    hs=StockPars$hs, 
-                    SSBpR=StockPars$SSBpR,
-                    yr.ind=y, 
-                    plusgroup=StockPars$plusgroup,
-                    StockPars=StockPars)
-        })
-      })
-    } else {
-      lapply(1:nsim, function(x) {
-        sapply(1:(nyears+proyears), function(y) {
-          optMSY_eq(x, 
-                    M_ageArray=StockPars$M_ageArray, 
-                    Wt_age=StockPars$Wt_age, 
-                    Mat_age=StockPars$Mat_age,
-                    Fec_age=StockPars$Fec_Age, 
-                    V=FleetPars$V_real, 
-                    maxage=StockPars$maxage, 
-                    R0=StockPars$R0,
-                    SRrel=StockPars$SRrel, 
-                    hs=StockPars$hs, 
-                    SSBpR=StockPars$SSBpR,
-                    yr.ind=y, 
-                    plusgroup=StockPars$plusgroup,
-                    StockPars=StockPars)
-        })
-      })
-    }
-  } else {
-    MSYrefsYr <- snowfall::sfLapply(1:nsim, function(x) {
-      sapply(1:(nyears+proyears), function(y) {
-        optMSY_eq(x, 
-                  M_ageArray=StockPars$M_ageArray, 
-                  Wt_age=StockPars$Wt_age, 
-                  Mat_age=StockPars$Mat_age,
-                  Fec_age=StockPars$Fec_Age, 
-                  V=FleetPars$V_real, 
-                  maxage=StockPars$maxage, 
-                  R0=StockPars$R0,
-                  SRrel=StockPars$SRrel, 
-                  hs=StockPars$hs, 
-                  SSBpR=StockPars$SSBpR,
-                  yr.ind=y, 
-                  plusgroup=StockPars$plusgroup,
-                  StockPars=StockPars)
-      })
+  MSYrefsYr <- .lapply(1:nsim, function(x) {
+    sapply(1:(nyears+proyears), function(y) {
+      optMSY_eq(x, 
+                yr.ind=y,
+                StockPars,
+                FleetPars$V_real)
     })
-  }
+  })
+  
   MSY_y[] <- sapply(MSYrefsYr, function(x) x["Yield", ]) %>% t()
   FMSY_y[] <- sapply(MSYrefsYr, function(x) x["F", ]) %>% t()
   SSBMSY_y[] <- sapply(MSYrefsYr, function(x) x["SB", ]) %>% t()
@@ -478,7 +442,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
               SSB0c=StockPars$SSB0[x],
               SRRfun=StockPars$SRRfun,
               SRRpars = StockPars$SRRpars[[x]],
-              plusgroup=StockPars$plusgroup))
+              plusgroup=StockPars$plusgroup,
+              spawn_time_frac=StockPars$spawn_time_frac[x]))
 
   N_unfished <- aperm(array(as.numeric(unlist(Unfished[1,], use.names=FALSE)),
                             dim=c(n_age, nyears+proyears, nareas, nsim)), c(4,1,2,3))
@@ -494,6 +459,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
 
   VBiomass_unfished <- aperm(array(as.numeric(unlist(Unfished[5,], use.names=FALSE)),
                                    dim=c(n_age, nyears+proyears, nareas, nsim)), c(4,1,2,3))
+  
   StockPars$MSY <- MSY
   StockPars$FMSY <- FMSY
   StockPars$SSBMSY <- SSBMSY
@@ -518,19 +484,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   } else {
     if(!silent)
       message("Optimizing for user-specified depletion in last historical year")
-
-    if (!snowfall::sfIsRunning()) {
-      qs <- if (requireNamespace("pbapply", quietly = TRUE)) {
-        pbapply::pbsapply(1:nsim, CalculateQ, StockPars, FleetPars,
-                          pyears=nyears, bounds, control=control)
-      } else {
-        sapply(1:nsim, CalculateQ, StockPars, FleetPars,
-               pyears=nyears, bounds, control=control)
-      }
-    } else {
-      qs <- snowfall::sfSapply(1:nsim, CalculateQ, StockPars, FleetPars,
-                               pyears=nyears, bounds, control=control)
-    }
+    
+    qs <- .sapply(1:nsim, CalculateQ, StockPars, FleetPars, pyears=nyears, bounds, control=control)
   }
 
   # --- Check that q optimizer has converged ----
@@ -647,13 +602,14 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
               bRc=StockPars$bR[x,],
               Qc=FleetPars$qs[x],
               Fapic=0,
-              MPA=FleetPars$MPA,
               maxF=StockPars$maxF,
+              MPA=FleetPars$MPA,
               control=1,
               SSB0c=StockPars$SSB0[x],
               SRRfun=StockPars$SRRfun,
               SRRpars = StockPars$SRRpars[[x]],
-              plusgroup=StockPars$plusgroup))
+              plusgroup=StockPars$plusgroup,
+              spawn_time_frac = StockPars$spawn_time_frac[x]))
   
   # Number at the beginning of each year
   N <- aperm(array(as.numeric(unlist(histYrs[1,], use.names=FALSE)),
@@ -708,7 +664,6 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
     }
   }
 
-
   if (!is.null(control$checks)) {
     Btemp <- apply(StockPars$SSB, c(1,3), sum)
     x <- Btemp[,nyears]/StockPars$SSBMSY
@@ -719,58 +674,14 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
 
   # ---- Calculate per-recruit reference points ----
   if (!silent) message("Calculating per-recruit reference points")
-  if (!snowfall::sfIsRunning()) {
-    per_recruit_F <- if (requireNamespace("pbapply", quietly = TRUE)) {
-      pbapply::pblapply(1:nsim, function(x) {
-        lapply(1:(nyears+proyears), function(y) {
-          per_recruit_F_calc(x, 
-                             M_ageArray=StockPars$M_ageArray,
-                             Wt_age=StockPars$Wt_age,
-                             Mat_age=StockPars$Mat_age,
-                             Fec_age=StockPars$Fec_Age,
-                             V=FleetPars$V_real,
-                             maxage=StockPars$maxage,
-                             yr.ind=y,
-                             plusgroup=StockPars$plusgroup,
-                             SPR_target=SPR_target,
-                             StockPars=StockPars)
-        })
-      })
-    } else {
-      lapply(1:nsim, function(x) {
-        lapply(1:(nyears+proyears), function(y) {
-          per_recruit_F_calc(x, 
-                             M_ageArray=StockPars$M_ageArray,
-                             Wt_age=StockPars$Wt_age,
-                             Mat_age=StockPars$Mat_age,
-                             Fec_age=StockPars$Fec_Age,
-                             V=FleetPars$V_real,
-                             maxage=StockPars$maxage,
-                             yr.ind=y,
-                             plusgroup=StockPars$plusgroup,
-                             SPR_target=SPR_target,
-                             StockPars=StockPars)
-        })
-      })
-    }
-  } else {
-    per_recruit_F <- snowfall::sfLapply(1:nsim, function(x) {
-      lapply(1:(nyears+proyears), function(y) {
-        per_recruit_F_calc(x, 
-                           M_ageArray=StockPars$M_ageArray,
-                           Wt_age=StockPars$Wt_age,
-                           Mat_age=StockPars$Mat_age,
-                           Fec_age=StockPars$Fec_Age,
-                           V=FleetPars$V_real,
-                           maxage=StockPars$maxage,
-                           yr.ind=y,
-                           plusgroup=StockPars$plusgroup,
-                           SPR_target=SPR_target,
-                           StockPars=StockPars)
-      })
+  per_recruit_F <- .lapply(1:nsim, function(x) {
+    lapply(1:(nyears+proyears), function(y) {
+      per_recruit_F_calc(x, yr.ind=y, 
+                         StockPars=StockPars,
+                         V=FleetPars$V_real,
+                         SPR_target=SPR_target)
     })
-  }
-  
+  })
   F_SPR_y[] <- lapply(per_recruit_F, function(x) sapply(x, getElement, 1)) %>%
     simplify2array() %>% aperm(c(3, 1, 2))
   F01_YPR_y[] <- sapply(per_recruit_F, function(x) sapply(x, function(y) y$FYPR["YPR_F01"])) %>% t()
@@ -829,7 +740,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                    Bfrac,
                    maxF,
                    SRRfun=StockPars$SRRfun, 
-                   SRRpars=StockPars$SRRpars)
+                   SRRpars=StockPars$SRRpars,
+                   spawn_time_frac=StockPars$spawn_time_frac)
   } else {
     Blow <- sfSapply(1:nsim,getBlow,
                    StockPars$N,
@@ -860,7 +772,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                    Bfrac,
                    maxF,
                    SRRfun=StockPars$SRRfun, 
-                   SRRpars=StockPars$SRRpars)
+                   SRRpars=StockPars$SRRpars,
+                   spawn_time_frac=StockPars$spawn_time_frac)
   }
 
   StockPars$Blow <- Blow
@@ -1262,7 +1175,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   StockPars$Biomass <- Hist@AtAge$Biomass
   StockPars$SSB <- Hist@AtAge$SBiomass
   StockPars$VBiomass <- Hist@AtAge$VBiomass
-
+  
   n_age <- StockPars$n_age
   nareas <- StockPars$nareas
 
@@ -1287,6 +1200,11 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   FM_P_mp <- array(NA, dim = c(nsim, n_age, nMP, proyears, nareas))
   FMret_P_mp <- array(NA, dim = c(nsim, n_age, nMP, proyears, nareas))
 
+  spawn_time_frac <- StockPars$spawn_time_frac
+  spawn_time_frac <- replicate(StockPars$maxage+1, spawn_time_frac)
+  spawn_time_frac <- replicate(proyears, spawn_time_frac)
+  spawn_time_frac <- replicate(nareas, spawn_time_frac)
+ 
   # ---- Begin loop over MPs ----
   mm <- 1 # for debugging
 
@@ -1346,7 +1264,9 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
     # -- First projection year ----
     y <- 1
-    if(!silent) {
+    if (requireNamespace("pbapply", quietly = TRUE)) {
+      pb <- pbapply::timerProgressBar(min = 1, max = proyears, style = 3, width = min(getOption("width"), 50))
+    } else {
       pb <- txtProgressBar(min = 1, max = proyears, style = 3, width = min(getOption("width"), 50))
     }
     # Mortality in first year
@@ -1355,26 +1275,13 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                      Ncurr=StockPars$N[x,,nyears,],
                      Zcurr=StockPars$Z[x,,nyears,],
                      plusgroup = StockPars$plusgroup))
-
+ 
     # The stock at the beginning of projection period
     N_P[,,1,] <- aperm(array(unlist(NextYrN), dim=c(n_age, nareas, nsim, 1)), c(3,1,4,2))
     Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAY1]  # Calculate biomass
     VBiomass_P[SAYR] <- N_P[SAYR] * FleetPars$Wt_age_C[SAY1] * V_P[SAYt]  # Calculate vulnerable biomass
     SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAY1]  # Calculate spawning stock numbers
     SSB_P[SAYR] <- N_P[SAYR] * StockPars$Fec_Age[SAY1]
-
-    # recruitment in first projection year
-    SSBcurr <- apply(SSB_P[,,1,],c(1,3), sum)
-    recdev <- StockPars$Perr_y[, nyears+n_age]
-    rec_area <- sapply(1:nsim, calcRecruitment, SRrel=StockPars$SRrel, 
-                       SSBcurr=SSBcurr,
-                       recdev=recdev, hs=StockPars$hs,
-                       aR= StockPars$aR, bR=StockPars$bR, R0a=StockPars$R0a,
-                       SSBpR=StockPars$SSBpR,
-                       SRRfun=StockPars$SRRfun,
-                       SRRpars=StockPars$SRRpars)
-
-    N_P[,1,y,] <- t(rec_area)
 
     # Movement of stock at beginning of first projection year
     Ntemp <- lapply(1:nsim, function(x)
@@ -1389,6 +1296,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     SSB_P[SAYR] <- N_P[SAYR] * StockPars$Fec_Age[SAY1]
     
     StockPars$N_P <- N_P
+    
     # -- Apply MP in initial projection year ----
     Data_MP@Misc$StockPars <- StockPars
     Data_MP@Misc$StockPars$CB_Pret <- CB_Pret
@@ -1468,7 +1376,33 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     Vmaxlen_P <- MPCalcs$Vmaxlen_P
     Fdisc_P <- MPCalcs$Fdisc_P
     DR_P <- MPCalcs$DR_P
-   
+    
+    # ---- Account for timing of spawning (if spawn_time_frac >0) ----
+    N_Psp <- N_P
+    for (a in 1:n_age) {
+      N_Psp[,a,1,] <- N_Psp[,a,1,] * exp(-(Z_P[,a,1,]*spawn_time_frac[,a,1,]))
+    }
+    SSN_P[SAYR] <- N_Psp[SAYR] * StockPars$Mat_age[SAY1] # update spawning stock numbers
+    SSB_P[SAYR] <- N_Psp[SAYR] * StockPars$Fec_Age[SAY1] # update spawning biomass
+
+    # recruitment in first projection year
+    SSBcurr <- apply(SSB_P[,,1,],c(1,3), sum)
+    recdev <- StockPars$Perr_y[, nyears+n_age]
+    rec_area <- sapply(1:nsim, calcRecruitment, SRrel=StockPars$SRrel, 
+                       SSBcurr=SSBcurr,
+                       recdev=recdev, hs=StockPars$hs,
+                       aR= StockPars$aR, bR=StockPars$bR, R0a=StockPars$R0a,
+                       SSBpR=StockPars$SSBpR,
+                       SRRfun=StockPars$SRRfun,
+                       SRRpars=StockPars$SRRpars)
+    
+    N_P[,1,y,] <- t(rec_area)
+    # update to include recruitment
+    Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAY1]  # Calculate biomass
+    VBiomass_P[SAYR] <- N_P[SAYR] * FleetPars$Wt_age_C[SAY1] * V_P[SAYt]  # Calculate vulnerable biomass
+    
+    StockPars$N_P <- N_P
+  
     # ---- Bio-economics ----
     RetainCatch <- apply(CB_Pret[,,y,], 1, sum) # retained catch this year
     RetainCatch[RetainCatch<=0] <- tiny
@@ -1483,9 +1417,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
     # ---- Begin projection years ----
     for (y in 2:proyears) {
-      if(!silent) {
-        setTxtProgressBar(pb, y)
-      }
+      if (!silent) setTxtProgressBar(pb, y) # Works with pbapply
 
       SelectChanged <- FALSE
       if (any(range(retA_P[,,nyears+y] -  FleetPars$retA_real[,,nyears+y]) !=0)) SelectChanged <- TRUE
@@ -1495,28 +1427,17 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       if (SelectChanged) { #
         y1 <- nyears + y
         MSYrefsYr <- sapply(1:nsim, optMSY_eq, 
-                            StockPars$M_ageArray, StockPars$Wt_age,
-                            StockPars$Mat_age,
-                            Fec_age=StockPars$Fec_Age,
-                            V_P, StockPars$maxage,StockPars$R0, StockPars$SRrel, 
-                            StockPars$hs, StockPars$SSBpR,
-                            yr.ind=y1, plusgroup=StockPars$plusgroup,
-                            StockPars=StockPars)
+                            yr.ind=y1, StockPars,
+                            V_P)
         MSY_y[,mm,y1] <- MSYrefsYr[1, ]
         FMSY_y[,mm,y1] <- MSYrefsYr[2,]
         SSBMSY_y[,mm,y1] <- MSYrefsYr[3,]
 
         per_recruit_F <- lapply(1:nsim, per_recruit_F_calc,
-                                M_ageArray=StockPars$M_ageArray,
-                                Wt_age=StockPars$Wt_age,
-                                Mat_age=StockPars$Mat_age,
-                                Fec_age=StockPars$Fec_Age,
-                                V=FleetPars$V_real,
-                                maxage=StockPars$maxage,
                                 yr.ind=y1,
-                                plusgroup=StockPars$plusgroup,
-                                SPR_target=SPR_target,
-                                StockPars=StockPars)
+                                StockPars=StockPars,
+                                V=V_P,
+                                SPR_target=SPR_target)
 
         F_SPR_y[,mm,,y1] <- sapply(per_recruit_F, getElement, 1) %>% t()
         F01_YPR_y[,mm,y1] <- sapply(per_recruit_F, function(x) x[[2]][1])
@@ -1549,21 +1470,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       N_P[,,y,] <- aperm(array(unlist(NextYrN), dim=c(n_age, nareas, nsim, 1)), c(3,1,4,2))
 
       Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAYt]  # Calculate biomass
-      SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAYt]  # Calculate spawning stock numbers
-      SSB_P[SAYR] <- N_P[SAYR] * StockPars$Fec_Age[SAYt]  # Calculate spawning stock biomass
-
-      # recruitment in this year
-      SSBcurr <- apply(SSB_P[,,y,],c(1,3), sum)
-      recdev <- StockPars$Perr_y[, y+nyears+n_age-1]
-      rec_area <- sapply(1:nsim, calcRecruitment, SRrel=StockPars$SRrel,
-                         SSBcurr=SSBcurr,
-                         recdev=recdev, hs=StockPars$hs, aR=StockPars$aR,
-                         bR=StockPars$bR, R0a=StockPars$R0a, 
-                         SSBpR=StockPars$SSBpR,
-                         SRRfun=StockPars$SRRfun,
-                         SRRpars=StockPars$SRRpars)
-
-      N_P[,1,y,] <- t(rec_area)
+      SSN_P[SAYR] <- N_P[SAYR] * StockPars$Mat_age[SAYt]  # Calculate spawning stock numbers (beginning of year)
+      SSB_P[SAYR] <- N_P[SAYR] * StockPars$Fec_Age[SAYt]  # Calculate spawning stock biomass (beginning of year)
 
       # movement this year
       Ntemp <- lapply(1:nsim, function(x)
@@ -1651,6 +1559,34 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       Vmaxlen_P <- MPCalcs$Vmaxlen_P
       Fdisc_P <- MPCalcs$Fdisc_P
       DR_P <- MPCalcs$DR_P
+      
+      
+      # ---- Account for timing of spawning (if spawn_time_frac >0) ----
+      N_Psp <- N_P
+      for (a in 1:n_age) {
+        N_Psp[,a,y,] <- N_Psp[,a,y,] * exp(-(Z_P[,a,y,]*spawn_time_frac[,a,y,]))
+      }
+      SSN_P[SAYR] <- N_Psp[SAYR] * StockPars$Mat_age[SAYt] # update spawning stock numbers
+      SSB_P[SAYR] <- N_Psp[SAYR] * StockPars$Fec_Age[SAYt] # update spawning biomass
+      
+      # recruitment in this year
+      SSBcurr <- apply(SSB_P[,,y,],c(1,3), sum)
+      recdev <- StockPars$Perr_y[, y+nyears+n_age-1]
+      rec_area <- sapply(1:nsim, calcRecruitment, SRrel=StockPars$SRrel,
+                         SSBcurr=SSBcurr,
+                         recdev=recdev, hs=StockPars$hs, aR=StockPars$aR,
+                         bR=StockPars$bR, R0a=StockPars$R0a, 
+                         SSBpR=StockPars$SSBpR,
+                         SRRfun=StockPars$SRRfun,
+                         SRRpars=StockPars$SRRpars)
+      
+      N_P[,1,y,] <- t(rec_area)
+
+      StockPars$N_P <- N_P
+      
+      # update to include recruitment
+      Biomass_P[SAYR] <- N_P[SAYR] * StockPars$Wt_age[SAYt]  # Calculate biomass
+      VBiomass_P[SAYR] <- N_P[SAYR] * FleetPars$Wt_age_C[SAYt] * V_P[SAYt]  # Calculate vulnerable biomass
 
       # ---- Bio-economics ----
       RetainCatch <- apply(CB_Pret[,,y,], 1, sum) # retained catch this year
@@ -1677,7 +1613,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
     }  # end of year loop
     
-    if(!silent) close(pb)
+    if (!silent) close(pb) # use pbapply::closepb(pb) for shiny related stuff
 
     if (max(upyrs) < proyears) { # One more call to complete Data object
       Data_MP <- updateData(Data=Data_MP, OM, MPCalcs, Effort,
@@ -1782,6 +1718,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     Hist_out <- Hist
   } else {
     Hist_out <- new("Hist")
+    Hist_out@AtAge <- Hist@AtAge
+    Hist_out@TSdata <- Hist@TSdata
     # Hist@Data <- new('Data')
     # Hist@OMPars <- data.frame()
     # Hist@AtAge <- list()
@@ -1797,7 +1735,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                 Obs=Data@Obs,
                 SB_SBMSY=SB_SBMSY_a,
                 F_FMSY=F_FMSYa,
-                N=apply(N_P_mp, c(1,3,4), sum),
+                N=N_P_mp, # apply(N_P_mp, c(1,3,4), sum),
                 B=Ba,
                 SSB=SSBa,
                 VB=VBa,

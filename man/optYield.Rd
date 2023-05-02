@@ -34,7 +34,8 @@ optYield(
   SSB0c,
   plusgroup = 0,
   SRRfun,
-  SRRpars
+  SRRpars,
+  spawn_time_frac = 0
 )
 }
 \arguments{
@@ -93,6 +94,8 @@ optYield(
 \item{SSB0c}{SSB0}
 
 \item{plusgroup}{Integer. Default = 0 = no plus-group. Use 1 to include a plus-group}
+
+\item{spawn_time_frac}{Numeric. Fraction of the year when spawning occurs. Default = 0.}
 }
 \description{
 Optimize yield for a single simulation

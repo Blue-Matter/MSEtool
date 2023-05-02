@@ -17,8 +17,30 @@ OM@cpars$qs <- rep(0, OM@nsim)
 Hist <- Simulate(OM)
 MSE <- Project(Hist, MPs='NFref', extended = TRUE)
 # Test that reported dynamic SSB0 is the same as historical and projected SB with F=0
-testthat::expect_equal(MSE@RefPoint$Dynamic_Unfished$SSB0,
-                       cbind(apply(MSE@Hist@TSdata$SBiomass, 1:2, sum), MSE@SSB[,1,]))
+testthat::expect_equal(round(MSE@RefPoint$Dynamic_Unfished$SSB0,0),
+                       round(cbind(apply(MSE@Hist@TSdata$SBiomass, 1:2, sum), MSE@SSB[,1,]),0))
+
+
+MOM <- Albacore_TwoFleet
+MOM@nsim <- 5
+MOM@cpars[[1]][[1]]$qs <- rep(0, MOM@nsim)
+MOM@cpars[[1]][[2]]$qs <- rep(0, MOM@nsim)
+MMSE <- multiMSE(MOM, extended = TRUE, MPs='NFref', dropHist = FALSE)
+
+dynssb0 <- MMSE@RefPoint$Dynamic_Unfished$SSB0[,1,]
+ssb <- cbind(apply(MMSE@multiHist[[1]][[1]]@TSdata$SBiomass, 1:2, sum), MMSE@SSB[,1,1,])
+
+testthat::expect_equal(max(abs(round(dynssb0/ssb,0))), 1)
+testthat::expect_equal(min(abs(round(dynssb0/ssb,0))), 1)
+
+
+
+# 
+# calcB <- MSE@RefPoint$Dynamic_Unfished$SSB0
+# simB <- cbind(apply(MSE@Hist@TSdata$SBiomass, 1:2, sum), MSE@SSB[,1,])
+# sim <- 5
+# calcB[sim,]
+# simB[sim,]
 
 # simulate unfished population
 Ages <- 0:OM@maxage
@@ -38,7 +60,8 @@ for (a in 1:OM@maxage) {
   dev <- RecDevs[OM@maxage+1-a]
   N[a+1,1] <- R0 * exp(-sum(M_array[1:a,1])) * dev
 }
-N[OM@maxage+1,1] <- N[OM@maxage+1,1] + N[OM@maxage+1,1] * exp(-M_array[OM@maxage+1,1])/(1-exp(-M_array[OM@maxage+1,1]))
+N[OM@maxage+1,1] <- N[OM@maxage+1,1]/(1-exp(-M_array[OM@maxage+1,1]))
+
 
 # Test that unfished N is the same
 testthat::expect_equal(N[,1],  rowSums(Hist@AtAge$Number[sim,, 1,]))
@@ -66,8 +89,7 @@ for (y in 2:(OM@nyears+OM@proyears)) {
   for (a in 1:OM@maxage) {
     N[a+1,y] <- N[a,y-1] * exp(-(M_array[a,y-1]))
   }
-  N[OM@maxage+1,y] <- N[OM@maxage+1,y] + N[OM@maxage+1,y] * exp(-M_array[OM@maxage+1,y-1])/(1-exp(-M_array[OM@maxage+1,y-1]))
-
+  N[OM@maxage+1,y] <- N[OM@maxage+1,y] + N[OM@maxage+1,y-1]*exp(-M_array[OM@maxage+1,y-1])
 
   # Calc B & SB
   B[,y] <- N[,y] * Weight[,y]

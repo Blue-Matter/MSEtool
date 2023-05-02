@@ -163,7 +163,12 @@ HistMICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, 
 
   qsx <- qs[x, ]
   qfracx <- array(qfrac[x,,], c(np, nf))
-
+  
+  spawn_time_frac <- rep(0, np)
+  for (p in 1:np) {
+    spawn_time_frac[p] <- StockPars[[p]]$spawn_time_frac[x]
+  }
+  
   popdynMICE(qsx = qsx, qfracx = qfracx, np = np, nf = nf, nyears = nyears, nareas = nareas, maxage = maxage, 
              Nx = Nx, VFx = VFx, FretAx = FretAx, Effind = Effind,
              movx = movx, Spat_targ = Spat_targ, M_ageArrayx = M_ageArrayx, Mat_agex = Mat_agex, Fec_agex = Fec_agex,
@@ -172,7 +177,8 @@ HistMICE <- function(x, StockPars, FleetPars, np,nf, nareas, maxage, nyears, N, 
              R0x = R0x, R0ax = R0ax, SSBpRx = SSBpRx, hsx = hsx, aRx = aRx, bRx = bRx,
              ax = ax, bx = bx, Perrx = Perrx, SRrelx = SRrelx, Rel = Rel, SexPars = SexPars, x = x,
              plusgroup = plusgroup, maxF = maxF, SSB0x = SSB0x, B0x = B0x, MPA,
-             SRRfun=StockPars[[1]]$SRRfun, SRRpars=StockPars[[1]]$SRRpars[[x]])
+             SRRfun=StockPars[[1]]$SRRfun, SRRpars=StockPars[[1]]$SRRpars[[x]],
+             spawn_time_frac=spawn_time_frac)
 
 }
 

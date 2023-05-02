@@ -1484,7 +1484,7 @@ PWhisker<-function(MSEobj){#},Pnames=c("POF","C30","D30","LD","DNC","LDNC","PGK"
 
   }
 
-  par(mfrow=c(nperf,1),mai=c(0.1,0.3,0.01,0.05),omi=c(1.2,0.4,0.05,0.01))
+  op <- par(mfrow=c(nperf,1),mai=c(0.1,0.3,0.01,0.05),omi=c(1.2,0.4,0.05,0.01))
 
   for(i in 1:nperf){
 
@@ -1496,6 +1496,7 @@ PWhisker<-function(MSEobj){#},Pnames=c("POF","C30","D30","LD","DNC","LDNC","PGK"
   }
 
   mtext("Management Procedure",1,line=6.8,font=2,outer=T)
+  on.exit(par(op))
 
 }
 

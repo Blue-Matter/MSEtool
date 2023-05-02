@@ -1,11 +1,42 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
-# MSEtool 3.6.9999
+# MSEtool 3.6.2.9999 - Development
 
-## Major changes
-- added option for custom stock-recruitment function TODO
+## Fixes 
+- fix SPR reporting for multiMSE
+
+
+# MSEtool 3.6.2
+
+## Fixes
+- important fix to a bug for projected indices when real indices are provided with NA values
+- minor fix to `SS2OM` when empirical weight-at-age is not available
+- minor fix to `L95` calculation when all age classes are mature (defaults to 1.5)
+- minor fix to `OM.Rmd`
+
+## New additions
+- add ability to control timing of spawning with `cpars$spawn_time_frac` (default is beginning of year `spawn_time_frac=0`). Need to check timing on order of operations if this is used together with MICE features!
+- implemented `Data@Vuln_CAL` in generating CAL samples. `Data@Vuln_CAA` is not currently implemented
+- add ability to map `CAL_nsamp` and other sample size data across stocks in `MOM`
+
+## Minor changes 
+- `MSE@Hist` now includes slots `AtAge` and `TSdata` when `extended=FALSE`
+- changed `MSE@N` slot to include age and area dimensions.
+- changed `MMSE@N` slot to include age and area dimensions.
+- added `extended` argument to `multiMSE` to report N-at-age in `MMSE@Misc$extended$N`
+- added optional `MOM@SexPars$share_par = FALSE` argument that turns off parameter mirroring of stock-recruit, depletion parameters; fleet parameters related to effort trends; and all observation/implementation parameters. This can be used to generalize a 2-sex MOM to a multi-stock model with shared spawning output (`SexPars$SSBfrom`) and/or movement-at-age between stocks (`SexPars$Herm`).
+
+## Fixes
+- fix issue with calculation of indices in projections when there are NAs in the real data
+- minor fix to `SS2OM` when empirical weight-at-age is not available
+- minor fix to `L95` calculation when all age classes are mature (defaults to 1.5)
+- minor fix to `OM.Rmd`
 
 # MSEtool 3.6.1
+
+## New additions
+- added additional indices to `plot.Data`
+- added option for custom stock-recruitment function (in development/testing)
 
 ## Minor changes 
 - Add `Misc` information to `PPD` for `MMSE`

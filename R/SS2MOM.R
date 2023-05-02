@@ -46,7 +46,7 @@ SS2MOM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1
   MOM@reps <- reps
   MOM@seed <- seed
   MOM@maxF <- maxF
-  MOM@interval <- 1
+  MOM@interval <- interval
 
   if(!silent) message(replist$nsexes, "- sex and ", replist$nfishfleets, "- fleet model detected.")
 

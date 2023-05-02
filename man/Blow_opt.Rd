@@ -36,7 +36,8 @@ Blow_opt(
   mode = 1,
   plusgroup = 0,
   SRRfun,
-  SRRpars
+  SRRpars,
+  spawn_time_frac = 0
 )
 }
 \arguments{
@@ -99,6 +100,8 @@ Blow_opt(
 \item{mode}{1: find Blow 2:report blow  3:plot results}
 
 \item{plusgroup}{Integer. Default = 0 = no plus-group. Use 1 to include a plus-group}
+
+\item{spawn_time_frac}{Numeric. Fraction of the year when spawning occurs. Default = 0.}
 }
 \description{
 Find the current biomass at which it would take HZN mean generation times

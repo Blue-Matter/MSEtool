@@ -51,7 +51,7 @@ simulation conditions and performance of MPs for a multi-stock, multi-fleet oper
 
 \item{\code{F_FMSY}}{Simulated fishing mortality rate relative to FMSY over the projection. An array with dimensions: nsim, nStocks, nFleets, nMPs, proyears. Non-negative real numbers}
 
-\item{\code{N}}{Simulated stock numbers over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers}
+\item{\code{N}}{Simulated stock numbers over the projection. An array with dimensions: nsim, nStocks, \code{maxage}+1, nMPs, proyears, nareas. Non-negative real numbers}
 
 \item{\code{B}}{Simulated stock biomass over the projection. An array with dimensions: nsim, nStocks, nMPs, proyears. Non-negative real numbers}
 

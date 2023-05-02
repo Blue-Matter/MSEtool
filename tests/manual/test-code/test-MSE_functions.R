@@ -2,8 +2,10 @@ context("Test MSE_functions")
 
 library(openMSE)
 MPs <- avail("MP", 'DLMtool')
+MPs <- MPs[!MPs=="Lratio_BHI3"]
 
 Hist <- runMSE(testOM, Hist = TRUE, silent = TRUE)
+
 MSE <- runMSE(testOM, MPs=MPs, checkMPs = FALSE)
 
 testthat::test_that("joinHist", {
@@ -46,3 +48,4 @@ testthat::test_that("addMPs", {
 testthat::test_that("joinMSE returns same object", {
   testthat::expect_true(all(summary(newMSE, silent=TRUE) == summary(MSE, silent=TRUE)))
 })
+

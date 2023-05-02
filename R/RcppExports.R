@@ -10,29 +10,14 @@ LinInterp_cpp <- function(x, y, xlev) {
 }
 
 #'  Internal function to calculate MSY Reference Points
-#'
-#' @param logF log fishing mortality
-#' @param M_at_Age Vector of M-at-age
-#' @param Wt_at_Age Vector of weight-at-age
-#' @param Mat_at_Age Vector of maturity-at-age
-#' @param Fec_at_Age Vector of mature weight-at-age
-#' @param V_at_Age Vector of selectivity-at-age
-#' @param maxage Maximum age
-#' @param relRfun Optional. A function used to calculate reference points if `SRrelc =3` 
-#' @param SRRpars Optional. A named list of arguments for `SRRfun`
-#' @param R0x R0 for this simulation. Set = 1 if SRrelx = 4 for per-recruit calculations
-#' @param SRrelx SRR type for this simulation. Use 4 for per-recruit calculations, i.e. constant recruitment.
-#' @param hx numeric. Steepness value for this simulation. Not used if SRrelx = 4.
-#' @param SSBpR numeric. Unfished spawners per recruit for this simulation. Not used if SRrelx = 4.
-#' @param opt Option. 1 = return -Yield, 2= return all MSY calcs
-#' @param plusgroup Integer. Default = 0 = no plus-group. Use 1 to include a plus-group
-#' @return See `opt`
-MSYCalcs <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, maxage, relRfun, SRRpars, R0x = 1, SRrelx = 3L, hx = 1, SSBpR = 0, opt = 1L, plusgroup = 1L) {
-    .Call('_MSEtool_MSYCalcs', PACKAGE = 'MSEtool', logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, maxage, relRfun, SRRpars, R0x, SRrelx, hx, SSBpR, opt, plusgroup)
+NULL
+
+MSYCalcs <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, maxage, relRfun, SRRpars, R0x = 1, SRrelx = 3L, hx = 1, SSBpR = 0, opt = 1L, plusgroup = 1L, spawn_time_frac = 0) {
+    .Call('_MSEtool_MSYCalcs', PACKAGE = 'MSEtool', logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, maxage, relRfun, SRRpars, R0x, SRrelx, hx, SSBpR, opt, plusgroup, spawn_time_frac)
 }
 
-Ref_int_cpp <- function(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, relRfun, SRRpars, maxage, plusgroup = 1L) {
-    .Call('_MSEtool_Ref_int_cpp', PACKAGE = 'MSEtool', F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, relRfun, SRRpars, maxage, plusgroup)
+Ref_int_cpp <- function(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, relRfun, SRRpars, maxage, plusgroup = 1L, spawn_time_frac = 0) {
+    .Call('_MSEtool_Ref_int_cpp', PACKAGE = 'MSEtool', F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, relRfun, SRRpars, maxage, plusgroup, spawn_time_frac)
 }
 
 calcVatAge <- function(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid) {
@@ -163,10 +148,11 @@ movestockCPP <- function(nareas, maxage, mov, Number) {
 #' @param SRRfun Optional. A stock-recruit function used if `SRrelc =3` 
 #' @param SRRpars Optional. A named list of arguments for `SRRfun`
 #' @param plusgroup Integer. Include a plus-group (1) or not (0)?
+#' @param spawn_time_frac Numeric. Fraction of the year when spawning occurs. Default = 0.
 #'
 #' @author A. Hordyk
 #' @keywords internal
-popdynCPP <- function(nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, SRRfun, SRRpars, plusgroup = 0L) {
-    .Call('_MSEtool_popdynCPP', PACKAGE = 'MSEtool', nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, SRRfun, SRRpars, plusgroup)
+popdynCPP <- function(nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, SRRfun, SRRpars, plusgroup = 0L, spawn_time_frac = 0) {
+    .Call('_MSEtool_popdynCPP', PACKAGE = 'MSEtool', nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, SRRfun, SRRpars, plusgroup, spawn_time_frac)
 }
 

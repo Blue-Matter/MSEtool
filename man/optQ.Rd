@@ -36,7 +36,8 @@ optQ(
   SBMSYc,
   SRRfun,
   SRRpars,
-  control
+  control,
+  spawn_time_frac = 0
 )
 }
 \arguments{
@@ -100,6 +101,8 @@ optQ(
 
 \item{control}{List. Control parameters including \code{optVB=TRUE} to optimize
 for vulnerable biomass instead of SSB?}
+
+\item{spawn_time_frac}{Fraction of the year when spawning occurs. Default = 0.}
 }
 \description{
 Optimize q for a single simulation

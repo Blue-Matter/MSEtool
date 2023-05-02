@@ -47,7 +47,8 @@ popdynMICE(
   B0x,
   MPA,
   SRRfun,
-  SRRpars
+  SRRpars,
+  spawn_time_frac = rep(0, np)
 )
 }
 \arguments{

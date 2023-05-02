@@ -513,17 +513,47 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   Data@CAL[, 1:(nyears + y - interval[mm] - 1), ] <- oldCAL[, 1:(nyears + y - interval[mm] - 1), ]
 
   CAL <- array(NA, dim = c(nsim, interval[mm], StockPars$nCALbins))
-  vn <- (apply(N_P*Sample_Area$CAL[,,(nyears+1):(nyears+proyears),], c(1,2,3), sum) * retA_P[,,(nyears+1):(nyears+proyears)]) # numbers at age that would be retained
-  vn <- aperm(vn, c(1,3,2))
-
-  CALdat <- simCAL(nsim, nyears=length(yind), StockPars$maxage, ObsPars$CAL_ESS,
-                   ObsPars$CAL_nsamp, StockPars$nCALbins, StockPars$CAL_binsmid, StockPars$CAL_bins,
-                   vn=vn[,yind,, drop=FALSE], retL=retL_P[,,nyears+yind, drop=FALSE],
-                   Linfarray=StockPars$Linfarray[,nyears + yind, drop=FALSE],
-                   Karray=StockPars$Karray[,nyears + yind, drop=FALSE],
-                   t0array=StockPars$t0array[,nyears + yind,drop=FALSE],
-                   LenCV=StockPars$LenCV)
-
+  
+  if (!all(is.na(Data@Vuln_CAL))) {
+ 
+    Vuln_CAL <- replicate(nsim,Data@Vuln_CAL[1,])
+    Vuln_CAL <- replicate(length(yind),Vuln_CAL)
+    Vuln_CAL <- aperm(Vuln_CAL, c(2,1,3))
+    
+    VList_dat <- lapply(1:nsim, calcV, 
+                  Len_age=StockPars$Len_age[,,nyears+yind, drop=FALSE],
+                  LatASD=StockPars$LatASD[,,nyears+yind, drop=FALSE],
+                  SLarray=Vuln_CAL, 
+                  n_age=StockPars$maxage+1,
+                  nyears=length(yind), proyears = 0, 
+                  CAL_binsmid=StockPars$CAL_binsmid)
+ 
+    V_data <- aperm(array(as.numeric(unlist(VList_dat, use.names=FALSE)), dim=c(StockPars$maxage+1, length(yind), nsim)), c(3,1,2))
+    
+    vn <- (apply(N_P[,,yind,, drop=FALSE]*Sample_Area$CAL[,,(nyears+yind),, drop=FALSE], c(1,2,3), sum) * V_data) 
+    vn <- aperm(vn, c(1,3,2))
+    
+    CALdat <- simCAL(nsim, nyears=length(yind), StockPars$maxage, ObsPars$CAL_ESS,
+                     ObsPars$CAL_nsamp, StockPars$nCALbins, StockPars$CAL_binsmid, StockPars$CAL_bins,
+                     vn=vn, retL=Vuln_CAL,
+                     Linfarray=StockPars$Linfarray[,nyears + yind, drop=FALSE],
+                     Karray=StockPars$Karray[,nyears + yind, drop=FALSE],
+                     t0array=StockPars$t0array[,nyears + yind,drop=FALSE],
+                     LenCV=StockPars$LenCV)
+    
+    
+  } else {
+    vn <- (apply(N_P*Sample_Area$CAL[,,(nyears+1):(nyears+proyears),], c(1,2,3), sum) * retA_P[,,(nyears+1):(nyears+proyears)]) # numbers at age that would be retained
+    vn <- aperm(vn, c(1,3,2))
+    CALdat <- simCAL(nsim, nyears=length(yind), StockPars$maxage, ObsPars$CAL_ESS,
+                     ObsPars$CAL_nsamp, StockPars$nCALbins, StockPars$CAL_binsmid, StockPars$CAL_bins,
+                     vn=vn[,yind,, drop=FALSE], retL=retL_P[,,nyears+yind, drop=FALSE],
+                     Linfarray=StockPars$Linfarray[,nyears + yind, drop=FALSE],
+                     Karray=StockPars$Karray[,nyears + yind, drop=FALSE],
+                     t0array=StockPars$t0array[,nyears + yind,drop=FALSE],
+                     LenCV=StockPars$LenCV)
+  }
+  
   Data@CAL[, nyears + yind, ] <- CALdat$CAL # observed catch-at-length
   Data@ML <- cbind(Data@ML, CALdat$ML) # mean length
   Data@Lc <- cbind(Data@Lc, CALdat$Lc) # modal length
@@ -799,6 +829,22 @@ UpdateSlot <- function(sl, RealData, SimData, msg) {
   return(slot(SimData, sl))
 }
 
+
+check_Index_Fit <- function(Stats, index=1) {
+  ac_err <- sum(!is.finite(Stats$AC))
+  sd_err <- sum(!is.finite(Stats$SD))
+  if (ac_err | sd_err) {
+    if (is.numeric(index)) {
+      warning('An error occurred in calculating statistical properties of fit to Additional Index ', index, 
+              ' (possibly because there was only one observed data point). \nUsing the index observation error for slot `Ind` from `Obs` object (or possibly conditioned if `cpars$Data@Ind` was provided).\nUse `cpars$AddIerr` to manually set the observation error.')  
+    } else {
+      warning('An error occurred in calculating statistical properties of fit to Index ', index, 
+              ' (possibly because there was only one observed data point). \nUsing the index observation error for slot `Ind` from `Obs` object (or possibly conditioned if `cpars$Data@Ind` was provided).\nUse `cpars$AddIerr` to manually set the observation error.') 
+    }
+    return(FALSE)
+  }
+  TRUE
+}
 
 AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
                         nyears, proyears, SampCpars, msg, control, Sample_Area) {
@@ -1084,6 +1130,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
         Res_List <- lapply(1:nsim, function(x) Calc_Residuals(sim.index=SimIndex[x,], 
                                                               obs.ind=ind,
                                                               beta=beta[x]))
+
         lResids_Hist <- do.call('rbind', lapply(Res_List, '[[', 1))
         if (fitbeta)
           ObsPars$AddIbeta[,i] <- as.vector(do.call('cbind', lapply(Res_List, '[[', 2)))
@@ -1096,16 +1143,19 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
         # Calculate statistics
         Stats_List <- lapply(1:nsim, function(x) Calc_Stats(lResids_Hist[x,]))
         Stats <- do.call('rbind', Stats_List)
-        
-        # Generate residuals for projections
-        Resid_Hist <- exp(lResids_Hist) # historical residuals in normal space
-        Resid_Proj <- Gen_Residuals(Stats, nsim, proyears)
-        
-        if (fitIerr) ObsPars$AddIerr[,i, ] <- cbind(Resid_Hist, Resid_Proj)
-        ObsPars$AddInd_Stat[[i]] <- Stats[,1:2] # index fit statistics
+        check_Index <- check_Index_Fit(Stats, i)
+        if (check_Index) {
+          # Generate residuals for projections
+          Resid_Hist <- exp(lResids_Hist) # historical residuals in normal space
+          Resid_Proj <- Gen_Residuals(Stats, nsim, proyears)
+          
+          if (fitIerr) ObsPars$AddIerr[,i, ] <- cbind(Resid_Hist, Resid_Proj)
+          
+        } else {
+          ObsPars$AddIerr[,i, ] <-  ObsPars$Ierr_y
+          ObsPars$AddInd_Stat[[i]] <- Stats[,1:2] # index fit statistics
+        }
       }
-
-
     }
   }
 

@@ -559,6 +559,13 @@ Sub <- function(MSEobj, MPs = NULL, sims = NULL, years = NULL) {
     Subextended <- list()
   }
   
+  # Numbers - dimensions changed in v3.6.2
+  if (length(dim(MSEobj@N)) == 3) {
+    N <- MSEobj@N[SubIts, SubMPs, Years, drop=FALSE]  
+  } else {
+    N <- MSEobj@N[SubIts, , SubMPs, Years, , drop=FALSE]
+  }
+  
   subMSE <- new("MSE",
                 Name = MSEobj@Name,
                 nyears=MSEobj@nyears,
@@ -570,7 +577,7 @@ Sub <- function(MSEobj, MPs = NULL, sims = NULL, years = NULL) {
                 Obs=MSEobj@Obs[SubIts,, drop=FALSE],
                 SB_SBMSY=MSEobj@SB_SBMSY[SubIts, SubMPs,  Years, drop=FALSE],
                 F_FMSY=MSEobj@F_FMSY[SubIts, SubMPs,  Years, drop=FALSE],
-                N=MSEobj@N[SubIts, SubMPs, Years, drop=FALSE],
+                N=N,
                 B=MSEobj@B[SubIts, SubMPs,  Years, drop=FALSE],
                 SSB=MSEobj@SSB[SubIts, SubMPs,  Years, drop=FALSE],
                 VB=MSEobj@VB[SubIts, SubMPs,  Years, drop=FALSE],

@@ -91,7 +91,7 @@ array with dimensions: nsim, nyears Non-negative real numbers}
 array with dimensions: nsim, nyears. Non-negative real numbers}
 
 \item{\code{Hist}}{Information from the historical spool-up period. Object of class
-\code{Hist}. Only returned if \code{extended=TRUE} in \code{runMSE}}
+\code{Hist}. Only contains slots \code{AtAge} and \code{TSdata} unless \code{extended=TRUE} in \code{runMSE}}
 
 \item{\code{PPD}}{Posterior predictive data. List of \code{Data} objects at the end of
 the projection period (length \code{nMPs})}

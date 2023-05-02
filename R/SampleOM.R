@@ -187,7 +187,7 @@ SampleCpars <- function(cpars, nsim=48, silent=FALSE) {
   sampCpars
 }
 
-sample_unif <- function(par, cpars, Obj, nsim, altpar=NULL) {
+sample_unif <- function(par, cpars, Obj, nsim, altpar=NULL, req=TRUE) {
   if (!is.null(cpars[[par]])) {
     tt <- myrunif(nsim, 0,1) # call to runif to increment RNG
     return(cpars[[par]])
@@ -201,7 +201,8 @@ sample_unif <- function(par, cpars, Obj, nsim, altpar=NULL) {
   
   if (!is.null(altpar)) par <- altpar
   vals <- slot(Obj, par)
-  if (length(vals)<1) stop('slot ', par, ' in object class ', class(Obj), ' is missing values')
+  if (req)
+    if (length(vals)<1) stop('slot ', par, ' in object class ', class(Obj), ' is missing values')
   myrunif(nsim, vals[1], vals[2])
 }
 
@@ -318,11 +319,13 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   }
 
   # ---- Growth Parameters ----
-  Linf <- sample_unif('Linf', cpars, Stock, nsim)
+
+  Linf <- sample_unif('Linf', cpars, Stock, nsim, req=FALSE)
   Linfsd <- sample_unif('Linfsd', cpars, Stock, nsim)
-  K <- sample_unif('K', cpars, Stock, nsim)
+  K <- sample_unif('K', cpars, Stock, nsim, req=FALSE)
   Ksd <- sample_unif('Ksd', cpars, Stock, nsim)
-  t0 <- sample_unif('t0', cpars, Stock, nsim)
+  t0 <- sample_unif('t0', cpars, Stock, nsim, req=FALSE)
+  
 
   # Generate random numbers for random walk
   if (!is.null(cpars$Mrand)) {
@@ -355,6 +358,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
     Karray <- GenerateRandomWalk(K, Ksd, nyears + proyears,
                                  nsim, Krand)
   }
+  
   if (!is.null(cpars$Agearray)) {
     Agearray <- cpars$Agearray
   } else {
@@ -572,7 +576,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
         } else {
           noksims <- (1:nsim)[-oksims]
           ageMarray[oksims,yr] <- unlist(sapply(oksims, function(x)
-            LinInterp(Mat_age[x,, yr], y=1:n_age, 0.5)))
+            LinInterp(Mat_age[x,, yr], y=0:(n_age-1), 0.5)))
           ageMarray[noksims,yr] <- 1 # set to 1
           L50array[oksims,yr] <- unlist(sapply(oksims, function(x)
             LinInterp(Mat_age[x,,yr], y=Len_age[x, , nyears], 0.5)))
@@ -590,21 +594,18 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
           oksims2 <- which(apply(Mat_age[,,yr], 1, max) < 0.95)
         }
         
-        
         if (length(oksims)<1 | length(oksims2)<1) {
           if (length(oksims)<1) {
             # no maturity-at-age >= 0.95
-            age95array[,yr] <- maxage # set to 1.5 if < 1
+            age95array[,yr] <- maxage #
           }
           if (length(oksims2)<1) {
-            # no maturity-at-age < 0.95
+            # no maturity-at-age <= 0.95
             age95array[,yr] <- 1.5 # set to 1.5 if < 1
           }
-          
-          
         } else {
           age95array[,yr] <- unlist(sapply(1:nsim, function(x)
-            LinInterp(Mat_age[x,, yr], y=1:n_age, 0.95)))
+            LinInterp(Mat_age[x,, yr], y=0:(n_age-1), 0.95)))
           L95array[,yr]<- unlist(sapply(1:nsim, function(x)
             LinInterp(Mat_age[x,,yr], y=Len_age[x, , nyears], 0.95)))
         }
@@ -1641,15 +1642,15 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
     cond <- StockPars$hs > 0.6
     hsim[cond] <- 0.2 + rbeta(sum(StockPars$hs > 0.6),
                               alphaconv((StockPars$hs[cond] - 0.2)/0.8,
-                                        (1 - (StockPars$hs[cond] - 0.2)/0.8) * Obs@hbiascv),
+                                        (1 - (StockPars$hs[cond] - 0.2)/0.8) * Obs@hbiascv[1]),
                               betaconv((StockPars$hs[cond] - 0.2)/0.8,
-                                       (1 - (StockPars$hs[cond] - 0.2)/0.8) * Obs@hbiascv)) * 0.8
+                                       (1 - (StockPars$hs[cond] - 0.2)/0.8) * Obs@hbiascv[1])) * 0.8
 
     hsim[!cond] <- 0.2 + rbeta(sum(StockPars$hs <= 0.6),
                                alphaconv((StockPars$hs[!cond] - 0.2)/0.8,
-                                         (StockPars$hs[!cond] - 0.2)/0.8 * Obs@hbiascv),
+                                         (StockPars$hs[!cond] - 0.2)/0.8 * Obs@hbiascv[1]),
                                betaconv((StockPars$hs[!cond] - 0.2)/0.8,
-                                        (StockPars$hs[!cond] - 0.2)/0.8 * Obs@hbiascv)) * 0.8
+                                        (StockPars$hs[!cond] - 0.2)/0.8 * Obs@hbiascv[1])) * 0.8
     hbias <- hsim/StockPars$hs  # back calculate the simulated bias
   } else {
     hbias <- hsim/StockPars$hs  # back calculate the simulated bias

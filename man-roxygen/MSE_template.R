@@ -56,7 +56,7 @@
 #' @slot SSB_hist Simulated spawning stock biomass from the spool-up period. An
 #'  array with dimensions: nsim, nyears. Non-negative real numbers
 #' @slot Hist Information from the historical spool-up period. Object of class
-#'  `Hist`. Only returned if `extended=TRUE` in `runMSE`
+#'  `Hist`. Only contains slots `AtAge` and `TSdata` unless `extended=TRUE` in `runMSE`
 #' @slot PPD Posterior predictive data. List of `Data` objects at the end of
 #'  the projection period (length `nMPs`)
 #' @slot Misc Miscellaneous output

@@ -364,6 +364,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
   }
   
   # Fecundity-at-age (weight used to calculate SB0 (females))
+  `Mat*Fecund` <- NULL # CRAN check hack
   if(!is.null(replist$endgrowth$`Mat*Fecund`)) {
     fec_age <- replist$endgrowth %>% dplyr::filter(Morph == 1, Seas == 1, Sex==i) %>%
       dplyr::select(Age_Beg, `Mat*Fecund`)
