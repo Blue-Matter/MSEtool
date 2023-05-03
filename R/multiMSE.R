@@ -1833,6 +1833,16 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       curdat<-multiDataS(MSElist,Real.Data.Map,np,mm,nf,realVB)
       runMP <- applyMP(curdat, MPs = MPs[mm], parallel=parallel_MPs[mm],
                        reps = 1, silent=TRUE)  # Apply MP
+      chk_run <- try(runMP[[1]][[1]], silent=TRUE)
+      if (methods::is(chk_run, 'try-error')) {
+        warning('Error applying MP. Returning Data object that failed')
+        out <- list()
+        out$runMP <- runMP
+        out$Data <- curdat
+        out$MP <- MPs[mm]
+        return(out)
+      }
+      
       Stock_Alloc<-realVB[,,nyears, drop=FALSE]/apply(realVB[,,nyears, drop=FALSE],1,sum)
 
       for(p in 1:np)  {
@@ -2405,6 +2415,16 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
           Stock_Alloc <- realVB[,,nyears, drop=FALSE]/
             apply(realVB[,,nyears, drop=FALSE],1,sum)
 
+          chk_run <- try(runMP[[1]][[1]], silent=TRUE)
+          if (methods::is(chk_run, 'try-error')) {
+            warning('Error applying MP. Returning Data object that failed')
+            out <- list()
+            out$runMP <- runMP
+            out$Data <- curdat
+            out$MP <- MPs[mm]
+            return(out)
+          }
+          
           for(p in 1:np)for(f in 1:nf){
             MPRecs_A[[p]][[f]] <- runMP[[1]][[1]]
             MPRecs_A[[p]][[f]]$TAC <- runMP[[1]][[1]]$TAC *
