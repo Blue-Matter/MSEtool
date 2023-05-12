@@ -211,6 +211,7 @@ Time-series of catch relative to the current year:
 par(mfrow=c(1,1), oma=c(3,3,1,1), mar=c(1,1,1,1))
 
 Depletion <- apply(Pars@TSdata$Landings, 1:2, sum)/matrix(apply(Pars@TSdata$Landings[,nyears,], 1, sum), nrow=nsim, ncol=nyears)
+Depletion[!is.finite(Depletion)] <- 0
 ylim <- c(0, max(c(1,max(Depletion))))
 matplot(Years, t(Depletion),
         type="l", lty=1, bty="l", main="", 
