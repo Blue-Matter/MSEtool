@@ -163,7 +163,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                     nyears, proyears)
     })
   }
-
+  
   # --- Update Parameters for two-sex stocks ----
   # Depletion, stock-recruit parameters, recdevs, Fleet, Obs, and Imp copied
   # from females to males
@@ -175,7 +175,8 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       FleetPars_t <- FleetPars
       
       slot_s <- c("D", "hs", "AC", "R0", "R0a", "Perr_y")
-      slot_f <- c("Esd", "Find", "dFFinal", "Spat_targ", "qinc", "qcv", "qvar", "FinF")
+      # slot_f <- c("Esd", "Find", "dFFinal", "Spat_targ", "qinc", "qcv", "qvar", "FinF")
+      slot_f <- c("Esd", "Spat_targ", "qinc", "qcv", "qvar")
       
       if (!silent)  message_info("You have specified sex-specific dynamics,",
                                  "these parameters will be mirrored across sex types according to SexPars$SSBfrom:\n",
@@ -1011,7 +1012,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     }
   }
 
-
   # --- Populate Data object with Historical Data ----
   CurrentYr <- MOM@Fleets[[1]][[1]]@CurrentYr
   DataList <- new('list')
@@ -1051,15 +1051,11 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       Data@Misc$StockPars <- StockPars[[p]]
       Data@Misc$FleetPars <- FleetPars[[p]][[f]]
       Data@Misc$ReferencePoints <- StockPars[[p]]$ReferencePoints
-
       DataList[[p]][[f]] <- Data
-
     }
   }
 
-
   # ---- Condition Simulated Data on input Data object (if it exists) & calculate error stats ----
-  
   Real.Data.Map <- matrix(rep(1:np), nrow=nf, ncol=np, byrow=TRUE)
   if (!is.null(SampCpars[[1]][[1]]$Real.Data.Map)) {
     Real.Data.Map.t <- SampCpars[[1]][[1]]$Real.Data.Map
@@ -1083,78 +1079,66 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       CAL_nsamp_array[,p,f] <- ObsPars[[p]][[f]]$CAL_nsamp
     }
   }
-  
+
   for (p in 1:np) {
     for (f in 1:nf) {
       if (methods::is(SampCpars[[p]][[f]]$Data,"Data")) {
-        StockPars2 <- StockPars[[p]]
-        
+        # real data has been passed in cpars
+
         # -- check real data mirroring across stocks ---
         map.stocks <- which(Real.Data.Map[f,] ==p)
         if (length(map.stocks)==0) {
           # stock data have been mapped to another one
           mapped.to <- Real.Data.Map[f,p]
           om <- DataList[[p]][[f]]@OM
-          DataList[[p]][[f]] <- new('Data') 
+          DataList[[p]][[f]] <- new('Data')
           DataList[[p]][[f]]@OM <- om
           ObsPars[[p]][[f]] <- ObsPars[[mapped.to]][[f]]
         } else {
-          if (length(map.stocks)>1) {
-            # assumes real data in cpars is identical for stocks that are mirrored
-            StockPars2$Biomass <- agg_data(Biomass,dim(Biomass[,1,,,]), map.stocks)
-            StockPars2$SSB <- agg_data(SSB, dim(SSB[,1,,,]), map.stocks)
-            StockPars2$VBiomass <- agg_data(VBF[,,f,,,], dim(VBF[,1,1,,,]), map.stocks)
-            StockPars2$N <- agg_data(N, dim(N[,1,,,]), map.stocks)
-            StockPars2$CBret <- agg_data(CBret[,,f,,,], dim(CBret[,1,1,,,]), map.stocks)
-            
-            ObsPars[[p]][[f]]$CAA_ESS <- apply(CAA_ESS_array[,map.stocks,], 1, sum)
-            ObsPars[[p]][[f]]$CAL_ESS <- apply(CAL_ESS_array[,map.stocks,], 1, sum)
-            ObsPars[[p]][[f]]$CAA_nsamp <- apply(CAA_nsamp_array[,map.stocks,], 1, sum)
-            ObsPars[[p]][[f]]$CAL_nsamp <- apply(CAL_nsamp_array[,map.stocks,], 1, sum)
-            
-            # update MPrec (map last catch across mapped stock)
-            MPrec <- rep(0, nsim)
-            for (i in map.stocks) {
-              MPrec <- MPrec+ DataList[[i]][[f]]@MPrec
-            }
-            
-          } else {
-            MPrec <- NULL
-            StockPars2$Biomass <- Biomass[,p,,,]
-            StockPars2$SSB <- SSB[,p,,,]
-            StockPars2$VBiomass <- VBF[,p,f,,,]
-            StockPars2$N <- N[,p,,,]
-            StockPars2$CBret <- CBret[,p,f,,,]
-          }
-
-          # real data has been passed in cpars
-          updatedData <- AddRealData(SimData= DataList[[p]][[f]],
-                                     RealData=SampCpars[[p]][[f]]$Data,
-                                     ObsPars=ObsPars[[p]][[f]],
-                                     StockPars=StockPars2,
-                                     FleetPars=FleetPars[[p]][[f]],
-                                     nsim,
-                                     nyears,
-                                     proyears,
-                                     SampCpars=SampCpars[[p]][[f]],
-                                     msg=!silent,
-                                     control,
-                                     Sample_Area)
           
+          ObsPars[[p]][[f]]$CAA_ESS <- apply(CAA_ESS_array[,map.stocks,, drop=FALSE], 1, sum)
+          ObsPars[[p]][[f]]$CAL_ESS <- apply(CAL_ESS_array[,map.stocks, ,drop=FALSE], 1, sum)
+          ObsPars[[p]][[f]]$CAA_nsamp <- apply(CAA_nsamp_array[,map.stocks,,drop=FALSE], 1, sum)
+          ObsPars[[p]][[f]]$CAL_nsamp <- apply(CAL_nsamp_array[,map.stocks,,drop=FALSE], 1, sum)
+          
+          # update MPrec (map last catch across mapped stock)
+          MPrec <- rep(0, nsim)
+          for (i in map.stocks) {
+            MPrec <- MPrec+ DataList[[i]][[f]]@MPrec
+          }
+          
+          # update Data and calculate observation error
+          updatedData <- AddRealData_MS(SimData=DataList[[p]][[f]],
+                                        RealData=SampCpars[[p]][[f]]$Data,
+                                        StockPars=StockPars,
+                                        FleetPars=FleetPars,
+                                        ObsPars=ObsPars,
+                                        SampCpars=SampCpars,
+                                        map.stocks,
+                                        CBret,
+                                        VBF,
+                                        p,
+                                        f,
+                                        nsim,
+                                        nyears,
+                                        proyears,
+                                        msg=!silent,
+                                        control)
+
           if (!is.null(MPrec)) {
             if (is.na(SampCpars[[p]][[f]]$Data@MPrec)) {
               # don't update if MPrec provided in real data
               updatedData$Data@MPrec <- MPrec
             }
           }
-            
+          
           DataList[[p]][[f]] <- updatedData$Data
-          ObsPars[[p]][[f]] <- updatedData$ObsPars
+          ObsPars <- updatedData$ObsPar
         }
       }
     }
   }
-  
+
   multiHist <- vector('list', np)
   
   stock.names <- names(MOM@Stocks)
@@ -2316,66 +2300,39 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
               MSElist[[p]][[f]][[mm]] <- new('Data') 
               MSElist[[p]][[f]][[mm]]@OM <- om
             } else {
-              if (length(map.stocks)>1) {
-                # assumes real data in cpars is identical for stocks that are mirrored
-                out.dim <- dim(Biomass[,1,,,])
-                b <- agg_data(Biomass, out.dim, map.stocks)
-                b_p <- agg_data(Biomass_P, dim(Biomass_P[,1,,,]), map.stocks)
-                ssb <- agg_data(SSB, dim(SSB[,1,,,]), map.stocks)
-                ssb_p <- agg_data(SSB_P, dim(SSB_P[,1,,,]), map.stocks)
-                vb <- agg_data(VBF[,,f,,,], dim(VBF[,1,1,,,]), map.stocks)
-                vb_p <- agg_data(VBF_P[,,f,,,], dim(VBF_P[,1,1,,,]), map.stocks)
-                n <- agg_data(N, dim(N[,1,,,]), map.stocks)
-                n_p <- agg_data(N_P, dim(N_P[,1,,,]), map.stocks)
-                cbret_p <- agg_data(CBret_P[,,f,,,], dim(CBret_P[,1,1,,,]), map.stocks)
-                
-                # update MPrec (map last catch across mapped stock)
-                MPrec <- rep(0, nsim)
-                for (i in map.stocks) {
-                  MPrec <- MPrec+ MPCalcs_list[[i]][[f]]$TACrec
-                }
-                
-              } else {
-                MPrec <- NULL
-                b <- Biomass[,p,,,]
-                b_p <- Biomass_P[,p,,,]
-                ssb <- SSB[,p,,,]
-                ssb_p <- SSB_P[,p,,,]
-                vb <- VBF[,p,f,,,]
-                vb_p <- VBF_P[,p,f,,,] 
-                n <- N[,p,,,]
-                n_p <- N_P[,p,,,]
-                cbret_p <- CBret_P[,p,f, ,,]
+              # update MPrec (map last catch across mapped stock)
+              MPrec <- rep(0, nsim)
+              for (i in map.stocks) {
+                MPrec <- MPrec+ MPCalcs_list[[i]][[f]]$TACrec
               }
-         
-              MSElist[[p]][[f]][[mm]] <- updateData(Data=MSElist[[p]][[f]][[mm]],
+        
+              MSElist[[p]][[f]][[mm]] <- updateData_MS(Data=MSElist[[p]][[f]][[mm]],
                                                     OM,
                                                     MPCalcs=MPCalcs_list[[p]][[f]],
                                                     Effort=Effort[,p,f,, ,drop=FALSE],
-                                                    Biomass=b,
-                                                    N=n,
-                                                    Biomass_P=b_p,
-                                                    CB_Pret=cbret_p,
-                                                    N_P=n_p,
-                                                    SSB=ssb,
-                                                    SSB_P=ssb_p,
-                                                    VBiomass=vb,
-                                                    VBiomass_P=vb_p,
-                                                    RefPoints=StockPars[[p]]$ReferencePoints$ReferencePoints,
-                                                    retA_P=FleetPars[[p]][[f]]$retA_real,
-                                                    retL_P=FleetPars[[p]][[f]]$retL_P,
-                                                    StockPars=StockPars[[p]],
-                                                    FleetPars=FleetPars[[p]][[f]],
-                                                    ObsPars=ObsPars[[p]][[f]],
-                                                    ImpPars=ImpPars[[p]][[f]],
-                                                    V_P=FleetPars[[p]][[f]]$V_P,
+                                                    Biomass=Biomass,
+                                                    N=N,
+                                                    Biomass_P=Biomass_P,
+                                                    CB_Pret=CBret_P,
+                                                    N_P=N_P,
+                                                    SSB=SSB,
+                                                    SSB_P=SSB_P,
+                                                    VBiomass=VBF,
+                                                    VBiomass_P=VBF_P,
+                                                    StockPars,
+                                                    FleetPars,
+                                                    ObsPars,
+                                                    ImpPars,
                                                     upyrs=upyrs,
                                                     interval=interval,
                                                     y=y,
                                                     mm=mm,
                                                     Misc=MSElist[[p]][[f]][[mm]]@Misc,
                                                     RealData=multiHist[[p]][[f]]@Data,
-                                                    Sample_Area=ObsPars[[p]][[f]]$Sample_Area)
+                                                    p, f,
+                                                    map.stocks)
+
+              
             }
             
             # ---- Update true abundance ----
@@ -2731,60 +2688,44 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             MSElist[[p]][[f]][[mm]] <- new('Data') 
             MSElist[[p]][[f]][[mm]]@OM <- om
           } else {
-            if (length(map.stocks)>1) {
-              # assumes real data in cpars is identical for stocks that are mirrored
-              out.dim <- dim(Biomass[,1,,,])
-              b <- agg_data(Biomass, out.dim, map.stocks)
-              b_p <- agg_data(Biomass_P, dim(Biomass_P[,1,,,]), map.stocks)
-              ssb <- agg_data(SSB, dim(SSB[,1,,,]), map.stocks)
-              ssb_p <- agg_data(SSB_P, dim(SSB_P[,1,,,]), map.stocks)
-              vb <- agg_data(VBF[,,f,,,], dim(VBF[,1,1,,,]), map.stocks)
-              vb_p <- agg_data(VBF_P[,,f,,,], dim(VBF_P[,1,1,,,]), map.stocks)
-              n <- agg_data(N, dim(N[,1,,,]), map.stocks)
-              n_p <- agg_data(N_P, dim(N_P[,1,,,]), map.stocks)
-              cbret_p <- agg_data(CBret_P[,,f,,,], dim(CBret_P[,1,1,,,]), map.stocks)
-            } else {
-              b <- Biomass[,p,,,]
-              b_p <- Biomass_P[,p,,,]
-              ssb <- SSB[,p,,,]
-              ssb_p <- SSB_P[,p,,,]
-              vb <- VBF[,p,f,,,]
-              vb_p <- VBF_P[,p,f,,,] 
-              n <- N[,p,,,]
-              n_p <- N_P[,p,,,]
-              cbret_p <- CBret_P[,p,f, ,,]
+        
+            # update MPrec (map last catch across mapped stock)
+            MPrec <- rep(0, nsim)
+            for (i in map.stocks) {
+              MPrec <- MPrec+ MPCalcs_list[[i]][[f]]$TACrec
             }
             
-            MSElist[[p]][[f]][[mm]] <- updateData(Data=MSElist[[p]][[f]][[mm]],
-                                                  OM,
-                                                  MPCalcs=MPCalcs_list[[p]][[f]],
-                                                  Effort=Effort[,p,f,, ,drop=FALSE],
-                                                  Biomass=b,
-                                                  N=n,
-                                                  Biomass_P=b_p,
-                                                  CB_Pret=cbret_p,
-                                                  N_P=n_p,
-                                                  SSB=ssb,
-                                                  SSB_P=ssb_p,
-                                                  VBiomass=vb,
-                                                  VBiomass_P=vb_p,
-                                                  RefPoints=StockPars[[p]]$ReferencePoints$ReferencePoints,
-                                                  retA_P=FleetPars[[p]][[f]]$retA_real,
-                                                  retL_P=FleetPars[[p]][[f]]$retL_P,
-                                                  StockPars=StockPars[[p]],
-                                                  FleetPars=FleetPars[[p]][[f]],
-                                                  ObsPars=ObsPars[[p]][[f]],
-                                                  ImpPars=ImpPars[[p]][[f]],
-                                                  V_P=FleetPars[[p]][[f]]$V_P,
-                                                  upyrs=upyrs2,
-                                                  interval=interval,
-                                                  y=y,
-                                                  mm=mm,
-                                                  Misc=MSElist[[p]][[f]][[mm]]@Misc,
-                                                  RealData=multiHist[[p]][[f]]@Data,
-                                                  Sample_Area=ObsPars[[p]][[f]]$Sample_Area)
+            MSElist[[p]][[f]][[mm]] <- updateData_MS(Data=MSElist[[p]][[f]][[mm]],
+                                                     OM,
+                                                     MPCalcs=MPCalcs_list[[p]][[f]],
+                                                     Effort=Effort[,p,f,, ,drop=FALSE],
+                                                     Biomass=Biomass,
+                                                     N=N,
+                                                     Biomass_P=Biomass_P,
+                                                     CB_Pret=CBret_P,
+                                                     N_P=N_P,
+                                                     SSB=SSB,
+                                                     SSB_P=SSB_P,
+                                                     VBiomass=VBF,
+                                                     VBiomass_P=VBF_P,
+                                                     StockPars,
+                                                     FleetPars,
+                                                     ObsPars,
+                                                     ImpPars,
+                                                     upyrs=upyrs2,
+                                                     interval=interval,
+                                                     y=y,
+                                                     mm=mm,
+                                                     Misc=MSElist[[p]][[f]][[mm]]@Misc,
+                                                     RealData=multiHist[[p]][[f]]@Data,
+                                                     p, f,
+                                                     map.stocks)
+            
+            
           }
-
+            
+            
+            
           # ---- Update true abundance ----
           M_array <- array(0.5*StockPars[[p]]$M_ageArray[,,nyears+y],
                            dim=c(nsim, n_age, nareas))
