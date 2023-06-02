@@ -1,10 +1,14 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
-# MSEtool 3.6.3.9999 - Development
+# MSEtool 3.7.0 - Development
 
 ## Fixes 
+- improve mapping of data across stocks in multiMSE
+- improve calculation of weighted mean of empirical weight-at-age for SS2OM
+- change to calculation of F in `popdyn.R` to include discard mortality
 - fix SPR reporting for multiMSE
-
+- fix `SubCpars` for `MOM` objects
+- fix year indexing for stock allocation for species complexes in multiMSE
 
 # MSEtool 3.6.2
 
