@@ -1041,12 +1041,17 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   
   # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
   retainedCatch <- apply(CB_Pret[,,y,], 1, sum)
+  removedCatch <- apply(CB_P[,,y,], 1, sum)
 
-  Ftot <- sapply(1:nsim, calcF, retainedCatch, V_P, retA_P, Biomass_P, fishdist,
+  # Ftot <- sapply(1:nsim, calcF, retainedCatch, V_P, retA_P, Biomass_P, fishdist,
+  #                Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
+  #                M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed 
+
+  control$TAC <- 'removals'
+  Ftot <- sapply(1:nsim, calcF, removedCatch, V_P, retA_P, Biomass_P, fishdist,
                  Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
                  M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed 
-
-
+  
   # Effort relative to last historical with this catch
   Effort_act <- Ftot/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]*
                         (1 + FleetPars$qinc/100)^y)  # effort required - already accounts for effort-by-area
@@ -1073,7 +1078,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   out$Ai <- Ai
   out$TAE <- TAE
   out$Effort <- Effort_act # actual effort this year
-  out$Ftot <- Ftot
+  out$Ftot <- Ftot 
 
   out$LR5_P <- LR5_P
   out$LFR_P <- LFR_P
