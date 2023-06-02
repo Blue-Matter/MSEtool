@@ -242,6 +242,7 @@ setMethod("SubCpars", signature(x = "MOM"),
                     cpars <- MOM@cpars[[p]][[f]]
                     MOM@cpars[[p]][[f]] <- lapply(names(cpars), SubCpars_sim, sims = sims2, cpars = cpars) %>% 
                       structure(names = names(cpars))
+
                   }
                 }
               }
@@ -272,7 +273,8 @@ setMethod("SubCpars", signature(x = "MOM"),
 
 SubCpars_sim <- function(xx, sims, cpars) {
   x <- cpars[[xx]]
-  vars_nosim <- c("CAL_bins", "MPA", "plusgroup", "CAL_binsmid", "binWidth", "AddIunits", "Wa", "Wb", "Data")
+  vars_nosim <- c("CAL_bins", "MPA", "plusgroup", "CAL_binsmid", "binWidth", "AddIunits", "Wa", "Wb", "Data",
+                  'Real.Data.Map')
   if(any(xx == vars_nosim)) {
     return(x)
   } else if(xx == "SRR") {
