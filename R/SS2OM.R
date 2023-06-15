@@ -499,10 +499,12 @@ calc_weightedmean_c <- function(l) {
     
     df <- left_join(Fdf, Vdf, by = c("Sim", "Yr"))
     df <- df %>% mutate(relF=fm*V)
+    
+    
   
     wtdf <- data.frame(Sim=rep(1:nsim),
-                       Yr=rep(1:totyears,each=nage*nsim),
-                       W=as.vector(Wt_age_C[[fl]]),
+                       Yr=rep(1:nyears,each=nage*nsim),
+                       W=as.vector(Wt_age_C[[fl]][,,1:nyears]),
                        Fl=fl,
                        Age=rep(0:(nage-1), each=nsim))
     df <- left_join(df, wtdf, by = c("Sim", "Yr", "Age"))
@@ -511,12 +513,28 @@ calc_weightedmean_c <- function(l) {
   }
   df <- do.call('rbind', wtlist)
   
-  wdf<- df %>% group_by(Sim, Yr, Age) %>% 
-    summarize(W=weighted.mean(x=W, w=relF), .groups='keep')
-  # projection years equal last historical
-  wdf$W[wdf$Yr>nyears] <- wdf$W[wdf$Yr==nyears]
-  wt <- array(wdf$W, dim=c(nage, totyears,nsim))
-  aperm(wt, c(3,1,2))
+  wdf_hist<- df %>% group_by(Sim, Yr, Age) %>% 
+    summarize(W=weighted.mean(x=W, w=relF), .groups='drop')
+  
+  
+  # add projection years 
+  lastYr <- wdf_hist %>% dplyr::ungroup() %>% dplyr::filter(Yr==max(Yr))
+  proj_list <- list()
+  for (y in 1:proyears) {
+    temp <- lastYr
+    temp$Yr <- nyears+y
+    proj_list[[y]] <- temp
+  }
+  proj_array <- do.call('rbind', proj_list)
+  wdf <- bind_rows(wdf_hist, proj_array) %>% 
+    arrange(Sim, Yr, Age)
+  
+  wt <- array(NA, dim=c(nage, totyears, nsim))
+  wt[] <- wdf$W
+
+  out <- aperm(wt, c(3,1,2))
+  out
+  
 }
 
 #' @describeIn SS2MOM Aggregate all fleets in an MOM object.
