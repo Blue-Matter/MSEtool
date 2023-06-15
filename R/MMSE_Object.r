@@ -171,3 +171,6 @@ setMethod('summary', signature="MMSE", function(object, ..., silent=FALSE, Refs=
   invisible(df)
   
 })
+
+# ---- show method (not exported) ----
+setMethod("show", "MMSE", function(object) show_int(object))
