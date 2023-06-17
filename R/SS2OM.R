@@ -315,6 +315,7 @@ calculate_single_fleet_dynamics <- function(x) {
     retL <- sapply(x, getElement, "retL", simplify = "array")
     V <- sapply(x, getElement, "V", simplify = "array")
     retA <- sapply(x, getElement, "retA", simplify = "array")
+    
     Find <- sapply(x, function(xx) xx$qs * xx$Find, simplify = "array")
     Fdisc1 <- sapply(x, getElement, "Fdisc_array1", simplify = "array")
     Fdisc2 <- sapply(x, getElement, "Fdisc_array2", simplify = "array")
@@ -337,10 +338,10 @@ calculate_single_fleet_dynamics <- function(x) {
     
     retA_avg <- retA_avg*V_avg
     
-    maxA <- apply(retA_avg, c(1,3), max)
-    nage <- dim(retA_avg)[2]
-    maxA <- aperm(replicate(nage, maxA), c(1,3,2))
-    retA_avg <- retA_avg/maxA
+    # maxA <- apply(retA_avg, c(1,3), max)
+    # nage <- dim(retA_avg)[2]
+    # maxA <- aperm(replicate(nage, maxA), c(1,3,2))
+    # retA_avg <- retA_avg/maxA 
 
     # Length-based arrays
     F_at_length <- single_fleet_F_at_age(Find, V = SLarray, retA = retL, 
