@@ -172,5 +172,6 @@ setMethod('summary', signature="MMSE", function(object, ..., silent=FALSE, Refs=
   
 })
 
-# ---- show method (not exported) ----
+# ---- show method ----
+#' @rdname show-MSEtool
 setMethod("show", "MMSE", function(object) show_int(object))
