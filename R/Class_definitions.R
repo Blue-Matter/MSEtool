@@ -1809,7 +1809,7 @@ show_int <- function(object, slots_check) {
   cat("\n")
   cat("Use str(), slotNames(),", dQuote("@"), "etc. to explore contents:\n\n")
   
-  txt <- capture.output(str(object))
+  txt <- capture.output(utils::str(object))
   for(i in txt[1:5]) cat(i, "\n")
   invisible()
 }
