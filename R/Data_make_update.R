@@ -1253,8 +1253,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
       yr.ind <- max(which(apply(nas, 1, prod)>0))
 
       if (!is.null(control$CAL) && control$CAL == 'removals') {
-        vn <- apply(StockPars$N[,,yr.ind,, drop=FALSE]*
-                      Sample_Area$CAL[,,yr.ind,, drop=FALSE], c(1,2,3), sum) *
+        vn <- apply(StockPars$N[,,yr.ind,, drop=FALSE], c(1,2,3), sum) *
           FleetPars$V_real[,,yr.ind, drop=FALSE]
         # numbers at age in population that would be removed
         vn <- aperm(vn, c(1,3, 2))
@@ -1262,8 +1261,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
                           FleetPars$SLarray_real[1,,yr.ind, drop=FALSE], yr.ind, ObsPars, Data_out, CAL)
         ObsPars$CAL_ESS <- rep(doopt$minimum, nsim)
       } else {
-        vn <- apply(StockPars$N[,,yr.ind,, drop=FALSE]*
-                      Sample_Area$CAL[,,yr.ind,, drop=FALSE], c(1,2,3), sum) *
+        vn <- apply(StockPars$N[,,yr.ind,, drop=FALSE], c(1,2,3), sum) *
           FleetPars$retA_real[,,yr.ind, drop=FALSE]
         # numbers at age in population that would be removed
         vn <- aperm(vn, c(1,3, 2))
@@ -1325,12 +1323,12 @@ optESS <- function(CAL_ESS, vn, StockPars, sel_ret, yr.ind, ObsPars, Data_out, C
 }
 
 
-AddRealData_MS <- function(SimData= DataList[[p]][[f]],
-                           RealData=SampCpars[[p]][[f]]$Data,
-                           StockPars=StockPars,
-                           FleetPars=FleetPars,
-                           ObsPars=ObsPars,
-                           SampCpars=SampCpars,
+AddRealData_MS <- function(SimData,
+                           RealData,
+                           StockPars,
+                           FleetPars,
+                           ObsPars,
+                           SampCpars,
                            map.stocks,
                            CBret,
                            VBF,
@@ -1754,8 +1752,7 @@ AddRealData_MS <- function(SimData= DataList[[p]][[f]],
       yr.ind <- max(which(apply(nas, 1, prod)>0))
       
       if (!is.null(control$CAL) && control$CAL == 'removals') {
-        vn <- apply(StockPars[[p]]$N[,,yr.ind,, drop=FALSE]*
-                      Sample_Area$CAL[,,yr.ind,, drop=FALSE], c(1,2,3), sum) *
+        vn <- apply(StockPars[[p]]$N[,,yr.ind,, drop=FALSE], c(1,2,3), sum) *
           FleetPars[[p]][[f]]$V_real[,,yr.ind, drop=FALSE]
         # numbers at age in population that would be removed
         vn <- aperm(vn, c(1,3, 2))
