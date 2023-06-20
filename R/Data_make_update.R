@@ -680,7 +680,7 @@ simCAL <- function(nsim, nyears, maxage,  CAL_ESS, CAL_nsamp, nCALbins, CAL_bins
   # a multinomial observation model for catch-at-length data
   # assumed normally-distributed length-at-age truncated at 2 standard deviations from the mean
   CAL <- array(NA, dim=c(nsim,  nyears, nCALbins))
-
+ 
   # Generate size comp data with variability in age
   runParallel <- snowfall::sfIsRunning()
   if (runParallel) {
@@ -688,6 +688,17 @@ simCAL <- function(nsim, nyears, maxage,  CAL_ESS, CAL_nsamp, nCALbins, CAL_bins
                                    retL, CAL_ESS, CAL_nsamp,
                                    Linfarray, Karray, t0array, LenCV, truncSD=2)
   } else {
+    # vn <<- vn
+    # CAL_binsmid <<- CAL_binsmid
+    # CAL_bins <<- CAL_bins
+    # retL <<- retL
+    # CAL_ESS <<- CAL_ESS
+    # CAL_nsamp <<- CAL_nsamp
+    # Linfarray <<- Linfarray
+    # Karray <<- Karray
+    # t0array <<- t0array
+    # LenCV <<- LenCV
+    # 
     tempSize <- lapply(1:nsim, genSizeCompWrap, vn, CAL_binsmid, CAL_bins, retL, CAL_ESS,
                        CAL_nsamp,
                        Linfarray, Karray, t0array, LenCV, truncSD=2)
@@ -695,6 +706,7 @@ simCAL <- function(nsim, nyears, maxage,  CAL_ESS, CAL_nsamp, nCALbins, CAL_bins
   CAL <- aperm(array(as.numeric(unlist(tempSize, use.names=FALSE)),
                      dim=c(nyears, length(CAL_binsmid), nsim)), c(3,1,2))
 
+  
   # calculate LFC - length-at-first capture - 5th percentile
   LFC <- rep(NA, nsim)
   LFC <- unlist(lapply(tempSize, function(x) getfifth(x[nyears, ], CAL_binsmid)))
@@ -2134,15 +2146,17 @@ updateData_MS <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_P
   } else {
     vn <- (apply(N_P[,p,,,, drop=FALSE], c(1,3,4), sum) * FleetPars[[p]][[f]]$retA_P[,,(nyears+1):(nyears+proyears)]) # numbers at age that would be retained
     vn <- aperm(vn, c(1,3,2))
-    
+    vn <- vn[,yind, ,drop=FALSE]
+
     CALdat <- simCAL(nsim, nyears=length(yind), StockPars[[p]]$maxage, ObsPars[[p]][[f]]$CAL_ESS,
                      ObsPars[[p]][[f]]$CAL_nsamp, StockPars[[p]]$nCALbins, StockPars[[p]]$CAL_binsmid, 
                      StockPars[[p]]$CAL_bins,
-                     vn=vn, retL=Vuln_CAL,
+                     vn=vn, retL=FleetPars[[p]][[f]]$retL_P[,,nyears+yind, drop=FALSE],
                      Linfarray=StockPars[[p]]$Linfarray[,nyears + yind, drop=FALSE],
                      Karray=StockPars[[p]]$Karray[,nyears + yind, drop=FALSE],
                      t0array=StockPars[[p]]$t0array[,nyears + yind,drop=FALSE],
                      LenCV=StockPars[[p]]$LenCV)
+    
   }
   
   Data@CAL[, nyears + yind, ] <- CALdat$CAL # observed catch-at-length
