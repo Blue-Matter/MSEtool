@@ -264,8 +264,12 @@ Fit_Index_MS <- function(ind_slot='Ind', indcv_slot="CV_Ind", Data_out,
                                                            obs.ind=slot(Data_out, ind_slot)[x,],
                                                            beta=ObsPars[[p]][[f]][[beta_var]][x]))
     
-    Res_List2[[1]]$res <- Res_List2[[1]]$res +   mean(Res_List[[1]]$res-Res_List2[[1]]$res[Ind_Yrs])
+    for (i in 1:nsim) {
+      Res_List2[[i]]$res <- Res_List2[[i]]$res +   mean(Res_List[[i]]$res-Res_List2[[i]]$res[Ind_Yrs])  
+    }
+    
     lResids_Hist <- do.call('rbind', lapply(Res_List2, '[[', 1))
+    
     
     
     ObsPars[[p]][[f]][[obs_err_var]][, 1:nyears] <- exp(lResids_Hist) # update Obs Error
