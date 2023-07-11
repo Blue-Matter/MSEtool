@@ -57,7 +57,13 @@
 <li>fix SPR reporting for multiMSE</li>
 <li>fix <code>SubCpars</code> for <code>MOM</code> objects</li>
 <li>fix year indexing for stock allocation for species complexes in multiMSE</li>
-<li>allow steepness (<code>OM@h</code>) to exceed 1 for Ricker stock-recruit relationship (the simulated steepness value in the Data object will be <code>Data@steep = rlnorm(OM@nsim, log(StockPars$hs - 0.2), sdconv(1, Obs@hbiascv)) + 0.2 - 0.5 * sdconv(1, Obs@hbiascv)^2</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-additions-3-7-0">New additions<a class="anchor" aria-label="anchor" href="#new-additions-3-7-0"></a></h3>
+<ul><li>allow steepness (<code>OM@h</code>) to exceed 1 for Ricker stock-recruit relationship (the simulated steepness value in the Data object will be <code>Data@steep = rlnorm(OM@nsim, log(StockPars$hs - 0.2), sdconv(1, Obs@hbiascv)) + 0.2 - 0.5 * sdconv(1, Obs@hbiascv)^2</code>.</li>
+<li>
+<code>Assess2OM</code> utilizes <code>spawn_time_frac</code>
+</li>
 </ul></div>
 </div>
     <div class="section level2">
