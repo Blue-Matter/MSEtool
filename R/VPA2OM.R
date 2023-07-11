@@ -37,6 +37,7 @@
 #' in the operating model such that the stock-recruit \code{alpha} and \code{beta} parameters match values implied in the input.
 #' \item \code{Perr} recruitment standard deviation (lognormal distribution) for sampling future recruitment
 #' \item \code{AC} autocorrelation in future recruitment deviates.
+#' \item \code{spawn_time_frac} The fraction of a year when spawning takes place (e.g., 0.5 is the midpoint of the year)
 #' }
 #' @details Use a seed for the random number generator to sample future recruitment.
 #' @return An object of class \linkS4class{OM}.
@@ -89,7 +90,7 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
     dims<-c(nsim,1,nyears)
     zeros<-array(0,dims)
 
-    # N0 back inputed
+    # N0 back imputed
     rec<-naa[,1,2:nyears]#*exp(Maa[,1,2:nyears])
     muR0<-apply(rec,1,mean) # mean R0 is assumed for most recent N0 - will be filled anyway using LowerTri argument
     N0<-array(cbind(rec,muR0),dims)
@@ -133,22 +134,33 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   if(length(h) == 1) h <- rep(h, nsim)
 
   OM<-new('OM')
-
-  surv <- array(1, dim(Maa))
-  surv[, -1, ] <- exp(-apply(Maa[, -n_age, ], c(1,3), cumsum)) %>% aperm(c(2,1,3))
-  if(plusgroup) {
-    surv[, n_age, ] <- surv[, n_age, ]/(1 - exp(-Maa[, n_age, ]))
+  
+  if(!is.null(dots$spawn_time_frac)) {
+    if(lengths(dots$spawn_time_frac) == 1) {
+      spawn_time_frac <- rep(dots$spawn_time_frac, nsim)
+    } else {
+      spawn_time_frac <- dots$spawn_time_frac
+    }
+  } else {
+    spawn_time_frac <- rep(0, nsim)
   }
-  SSBpR <- apply(surv * fecaa, c(1, 3), sum)
+  
+  SBsurv <- lapply(1:nsim, calc_survival,
+                   StockPars = list(M_ageArray = Maa, n_age = n_age, spawn_time_frac = spawn_time_frac),
+                   plusgroup = plusgroup, inc_spawn_time = TRUE) %>% 
+    abind(along = 3) %>% 
+    aperm(c(3,1,2))
+
+  SSBpR <- apply(SBsurv * fecaa, c(1, 3), sum)
 
   SSBpR_out <- vapply(1:nsim, function(x) {
     ageM <- min(LinInterp(Mataa[x,, 1], y = 1:n_age, 0.5), maxage - 1)
     SSBpR[x, 1:(ceiling(ageM) + 1)] %>% mean()
   }, numeric(1))
 
-  # Recalculate R0 and h based on phi0 to match openMSE
+  # Recalculate R0 and h that uses the replacement line corresponding to 1/SSBpR_out (used by openMSE)
   if(!is.null(dots$phi0)) {
-    new_SR <- local({ # BH only
+    new_SR <- local({
       if(length(dots$phi0) == 1) {
         phi0 <- rep(dots$phi0, nsim)
       } else {
@@ -177,7 +189,7 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   }
   SSB0 <- R0 * SSBpR_out
 
-  SSB <- apply(naa * fecaa, c(1, 3), sum, na.rm = TRUE)
+  SSB <- apply(naa * exp(-spawn_time_frac * (Maa + faa)) * fecaa, c(1, 3), sum, na.rm = TRUE)
   D <- SSB[,nyears]/SSB0
 
   OM@Name <- Name
@@ -246,7 +258,7 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
     Vi
   }
   V <- sapply(1:nsim, function(i) adjustV(V[i,,]), simplify = 'array') %>% 
-    aperm(., c(3,1,2))
+    aperm(c(3,1,2))
   
   # Future filling
   parmu<-function(arr,nyears,proyears,nyr_par_mu){ # function for calculation mean values over last nyr_par_mu years
@@ -309,14 +321,25 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   }
 
   # Initial naa initialization options (VPAs apparently do this differently...)
+  surv <- lapply(1:nsim, calc_survival,
+                 StockPars = list(M_ageArray = Maa, n_age = n_age),
+                 plusgroup = plusgroup, inc_spawn_time = FALSE) %>% 
+    abind(along = 3) %>% 
+    aperm(c(3,1,2))
+  
   Perr <- array(NA_real_, c(nsim, maxage + nyears - LowerTri))
   if(altinit < 2) {       # normal assumption with or without plusgroup
+    
+    
     Perr[, n_age:1] <- log(naa[, , 1]/(R0 * surv[, , 1]))
+    
   } else if(altinit==2) { # temporary fix for DLMtool initialization of plusgroup
-    Perr[, n_age:2] <- log(naa[, 1:(n_age-1), 1]/(R0 * surv[, 1:(n_age-1), 1]))
+    
+    Perr[, n_age:2] <- log(naa[, 1:(n_age-1), 1]/(R0 * SBsurv[, 1:(n_age-1), 1]))
     survDLMtool<-aperm(exp(-apply(Maa[,,1],1,cumsum)),c(2,1))
     fac<-surv[, n_age, 1]/survDLMtool[, n_age]
     Perr[, 1] <- log(naa[, n_age, 1]/(R0 * surv[, n_age, 1] * fac))
+    
   }
   Perr[, maxage + 2:(nyears - LowerTri)] <- recdevs[, 2:(nyears - LowerTri)]
   Perr_pro <- sample_recruitment(Perr_hist = Perr, proyears = proyears + LowerTri, procsd = procsd, AC = AC)
@@ -324,6 +347,8 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   OM@cpars$Perr_y <- exp(cbind(Perr, Perr_pro))
   OM@Perr <- rep(mean(procsd),2)
   OM@AC <- rep(mean(AC), 2)
+  OM@cpars$AC <- AC
+  OM@cpars$Perr <- procsd
 
   if(fixq1) OM@cpars$qs <- rep(1, nsim) # Overrides q estimation to fix q at 1 for VPA for which F history is
 
@@ -334,6 +359,7 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   OM@t0 <- rep(0,2)
   OM@DR <- rep(0,2)
   OM@MPA<-FALSE
+  if (any(spawn_time_frac > 0)) OM@cpars$spawn_time_frac <- spawn_time_frac
 
   if(!plusgroup) OM@cpars$plusgroup <- 0L
 

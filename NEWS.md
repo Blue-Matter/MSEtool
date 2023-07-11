@@ -9,8 +9,10 @@ The current version of the `MSEtool` package is available for download from [CRA
 - fix SPR reporting for multiMSE
 - fix `SubCpars` for `MOM` objects
 - fix year indexing for stock allocation for species complexes in multiMSE
-- allow steepness (`OM@h`) to exceed 1 for Ricker stock-recruit relationship (the simulated steepness value in the Data object will be `Data@steep = rlnorm(OM@nsim, log(StockPars$hs - 0.2), sdconv(1, Obs@hbiascv)) + 0.2 - 0.5 * sdconv(1, Obs@hbiascv)^2`.
 
+## New additions
+- allow steepness (`OM@h`) to exceed 1 for Ricker stock-recruit relationship (the simulated steepness value in the Data object will be `Data@steep = rlnorm(OM@nsim, log(StockPars$hs - 0.2), sdconv(1, Obs@hbiascv)) + 0.2 - 0.5 * sdconv(1, Obs@hbiascv)^2`.
+- `Assess2OM` utilizes `spawn_time_frac`
 
 # MSEtool 3.6.2
 
