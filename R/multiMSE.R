@@ -2378,19 +2378,19 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             return(out)
           }
           
-          for(p in 1:np)for(f in 1:nf){
+          for(p in 1:np) for(f in 1:nf){
             MPRecs_A[[p]][[f]] <- runMP[[1]][[1]]
             MPRecs_A[[p]][[f]]$TAC <- runMP[[1]][[1]]$TAC *
               MOM@Allocation[[p]][,f] * Stock_Alloc[,p,1]
             MPRecs_A[[p]][[f]]$Effort <- runMP[[1]][[1]]$Effort * MOM@Efactor[[p]][,f]
 
             if(length(MPRecs_A[[p]][[f]]$Effort)>0)
-              if(is.na(MPRecs_A[[p]][[f]]$Effort[1,1]))
+              if(all(is.na(MPRecs_A[[p]][[f]]$Effort[1,])))
                 MPRecs_A[[p]][[f]]$Effort <- matrix(NA,
                                                     nrow=0,
                                                     ncol=ncol(MPRecs_A[[p]][[f]]$Effort))
             if(length(MPRecs_A[[p]][[f]]$TAC)>0)
-              if(is.na(MPRecs_A[[p]][[f]]$TAC[1,1]))
+              if(all(is.na(MPRecs_A[[p]][[f]]$TAC[1,])))
                 MPRecs_A[[p]][[f]]$TAC <- matrix(NA,
                                                  nrow=0,
                                                  ncol=ncol(MPRecs_A[[p]][[f]]$TAC))
