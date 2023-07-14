@@ -48,10 +48,11 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="3.7.0" id="msetool-370---development">MSEtool 3.7.0 - Development<a class="anchor" aria-label="anchor" href="#msetool-370---development"></a></h2>
+<h2 class="page-header" data-toc-text="3.7.1" id="msetool-371---development">MSEtool 3.7.1 - Development<a class="anchor" aria-label="anchor" href="#msetool-371---development"></a></h2>
 <div class="section level3">
-<h3 id="fixes-3-7-0">Fixes<a class="anchor" aria-label="anchor" href="#fixes-3-7-0"></a></h3>
-<ul><li>improve mapping of data across stocks in multiMSE</li>
+<h3 id="fixes-3-7-1">Fixes<a class="anchor" aria-label="anchor" href="#fixes-3-7-1"></a></h3>
+<ul><li>fix to <code>Calc_Residuals</code> when not estimating beta parameter</li>
+<li>improve mapping of data across stocks in multiMSE</li>
 <li>improve calculation of weighted mean of empirical weight-at-age for SS2OM</li>
 <li>change to calculation of F in <code>popdyn.R</code> to include discard mortality</li>
 <li>fix SPR reporting for multiMSE</li>
@@ -59,7 +60,7 @@
 <li>fix year indexing for stock allocation for species complexes in multiMSE</li>
 </ul></div>
 <div class="section level3">
-<h3 id="new-additions-3-7-0">New additions<a class="anchor" aria-label="anchor" href="#new-additions-3-7-0"></a></h3>
+<h3 id="new-additions-3-7-1">New additions<a class="anchor" aria-label="anchor" href="#new-additions-3-7-1"></a></h3>
 <ul><li>allow steepness (<code>OM@h</code>) to exceed 1 for Ricker stock-recruit relationship (the simulated steepness value in the Data object will be <code>Data@steep = rlnorm(OM@nsim, log(StockPars$hs - 0.2), sdconv(1, Obs@hbiascv)) + 0.2 - 0.5 * sdconv(1, Obs@hbiascv)^2</code>.</li>
 <li>
 <code>Assess2OM</code> utilizes <code>spawn_time_frac</code>
