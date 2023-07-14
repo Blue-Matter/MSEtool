@@ -116,13 +116,6 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
                                proyears,
                                cpars=SampCpars,
                                msg=!silent)
-  
-  # Timing of Spawning (fraction of year)
-  if (!is.null(SampCpars$spawn_time_frac)) {
-    StockPars$spawn_time_frac <- SampCpars$spawn_time_frac
-  } else {
-    StockPars$spawn_time_frac <- rep(0, nsim) # default: beginning of year
-  }
 
   # Check for custom stock-recruit function
   StockPars <- Check_custom_SRR(StockPars, SampCpars, nsim)

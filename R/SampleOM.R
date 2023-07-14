@@ -822,6 +822,13 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   # check dimensions
   if (any(dim(mov) != c(nsim,n_age,nareas,nareas, nyears+proyears)))
     stop('cpars$mov must be array with dimensions: \nc(nsim, maxage+1, nareas, nareas) \nOR \nc(nsim, maxage+1, nareas, nareas, nyears+proyears)', call.=FALSE)
+  
+  # Timing of Spawning (fraction of year)
+  if (!is.null(cpars$spawn_time_frac)) {
+    spawn_time_frac <- cpars$spawn_time_frac
+  } else {
+    spawn_time_frac <- rep(0, nsim) # default: beginning of year
+  }
 
   StockOut <- list()
   StockOut$maxage <- maxage
@@ -880,6 +887,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   StockOut$Asize <- Asize
   StockOut$nareas <- nareas
   StockOut$Fec_Age <- Fec_Age
+  StockOut$spawn_time_frac <- spawn_time_frac
   StockOut
 }
 

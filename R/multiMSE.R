@@ -130,10 +130,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     StockPars[[p]]$maxF <- MOM@maxF
     StockPars[[p]]$n_age <- StockPars[[p]]$maxage+1
     
-    StockPars[[p]]$spawn_time_frac <- SampCpars[[p]][[1]]$spawn_time_frac
-    if (is.null(StockPars[[p]]$spawn_time_frac))
-      StockPars[[p]]$spawn_time_frac <- rep(0, nsim)
-    
     # --- custom SRR function ---
     # not implemented
     StockPars[[p]] <- Check_custom_SRR(StockPars[[p]], SampCpars[[p]][[1]], nsim)
