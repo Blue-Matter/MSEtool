@@ -2056,8 +2056,7 @@ updateData_MS <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_P
   
   
   # --- Index of recruitment ----
-  Recobs <- ObsPars[[p]][[f]]$Recerr_y[, nyears + yind] * apply(N_P[, p, 1, yind, , drop=FALSE], c(1, 3), sum)
-  
+  Recobs <- ObsPars[[p]][[f]]$Recerr_y[, nyears + yind] * apply(N_P[, p, 1, yind, , drop=FALSE], c(1, 4), sum)
   Data@Rec <- cbind(Data@Rec, Recobs)
   
   # --- Average catch ----
