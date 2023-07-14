@@ -12,9 +12,9 @@ getDataList<-function(MSElist,mm){
       DataList[[ss]][[ff]] <-MSElist[[ss]][[ff]][[mm]]
       
       # drop stockpars etc from Misc slot
-      DataList[[ss]][[ff]]@Misc$StockPars <- NULL
-      DataList[[ss]][[ff]]@Misc$FleetPars <- NULL
-      DataList[[ss]][[ff]]@Misc$ReferencePoints <- NULL
+      # DataList[[ss]][[ff]]@Misc$StockPars <- NULL
+      # DataList[[ss]][[ff]]@Misc$FleetPars <- NULL
+      # DataList[[ss]][[ff]]@Misc$ReferencePoints <- NULL
     }
   }
   DataList
