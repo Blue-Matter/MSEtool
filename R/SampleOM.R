@@ -271,9 +271,12 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   }
 
   hs <- sample_unif('hs', cpars, Stock, nsim, 'h')
-  if (any(hs > 1 | hs < 0.2))
+  if (all(SRrel == 2)) { # Ricker steepness between 0.2-Inf
+    if (any(hs < 0.2)) stop("Steepness (OM@h) must be greater than 0.2", call.=FALSE)
+  } else if (any(hs > 1 | hs < 0.2)) {
     stop("Steepness (OM@h) must be between 0.2 and 1", call.=FALSE)
-
+  }
+  
   # ---- Depletion ----
   D <- sample_unif('D', cpars, Stock, nsim)
 
@@ -819,6 +822,13 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   # check dimensions
   if (any(dim(mov) != c(nsim,n_age,nareas,nareas, nyears+proyears)))
     stop('cpars$mov must be array with dimensions: \nc(nsim, maxage+1, nareas, nareas) \nOR \nc(nsim, maxage+1, nareas, nareas, nyears+proyears)', call.=FALSE)
+  
+  # Timing of Spawning (fraction of year)
+  if (!is.null(cpars$spawn_time_frac)) {
+    spawn_time_frac <- cpars$spawn_time_frac
+  } else {
+    spawn_time_frac <- rep(0, nsim) # default: beginning of year
+  }
 
   StockOut <- list()
   StockOut$maxage <- maxage
@@ -877,6 +887,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   StockOut$Asize <- Asize
   StockOut$nareas <- nareas
   StockOut$Fec_Age <- Fec_Age
+  StockOut$spawn_time_frac <- spawn_time_frac
   StockOut
 }
 
@@ -1640,17 +1651,24 @@ SampleObsPars <- function(Obs, nsim=NULL, cpars=NULL, Stock=NULL,
   if (is.null(hsim)) {
     hsim <- rep(NA, nsim)
     cond <- StockPars$hs > 0.6
-    hsim[cond] <- 0.2 + rbeta(sum(StockPars$hs > 0.6),
-                              alphaconv((StockPars$hs[cond] - 0.2)/0.8,
-                                        (1 - (StockPars$hs[cond] - 0.2)/0.8) * Obs@hbiascv[1]),
-                              betaconv((StockPars$hs[cond] - 0.2)/0.8,
-                                       (1 - (StockPars$hs[cond] - 0.2)/0.8) * Obs@hbiascv[1])) * 0.8
-
-    hsim[!cond] <- 0.2 + rbeta(sum(StockPars$hs <= 0.6),
-                               alphaconv((StockPars$hs[!cond] - 0.2)/0.8,
-                                         (StockPars$hs[!cond] - 0.2)/0.8 * Obs@hbiascv[1]),
-                               betaconv((StockPars$hs[!cond] - 0.2)/0.8,
-                                        (StockPars$hs[!cond] - 0.2)/0.8 * Obs@hbiascv[1])) * 0.8
+    
+    if (all(StockPars$SRrel == 2)) { # Support of Ricker steepness is [0.2, Inf]
+      hsim <- rlnorm(nsim, log(StockPars$hs - 0.2), sdconv(1, Obs@hbiascv[1])) + 0.2 - 
+        0.5 * sdconv(1, Obs@hbiascv[1])^2
+    } else {
+      hsim[cond] <- 0.2 + rbeta(sum(StockPars$hs > 0.6),
+                                alphaconv((StockPars$hs[cond] - 0.2)/0.8,
+                                          (1 - (StockPars$hs[cond] - 0.2)/0.8) * Obs@hbiascv[1]),
+                                betaconv((StockPars$hs[cond] - 0.2)/0.8,
+                                         (1 - (StockPars$hs[cond] - 0.2)/0.8) * Obs@hbiascv[1])) * 0.8
+      
+      hsim[!cond] <- 0.2 + rbeta(sum(StockPars$hs <= 0.6),
+                                 alphaconv((StockPars$hs[!cond] - 0.2)/0.8,
+                                           (StockPars$hs[!cond] - 0.2)/0.8 * Obs@hbiascv[1]),
+                                 betaconv((StockPars$hs[!cond] - 0.2)/0.8,
+                                          (StockPars$hs[!cond] - 0.2)/0.8 * Obs@hbiascv[1])) * 0.8
+    }
+   
     hbias <- hsim/StockPars$hs  # back calculate the simulated bias
   } else {
     hbias <- hsim/StockPars$hs  # back calculate the simulated bias
