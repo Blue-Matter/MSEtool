@@ -91,10 +91,10 @@ Fit_Index <- function(ind_slot='Ind', indcv_slot="CV_Ind", Data_out,
 
 Calc_Residuals <- function(sim.index, obs.ind, beta=NA) {
   
-  if (any(obs.ind<0, na.rm=TRUE)) 
+  if (any(obs.ind<0, na.rm=TRUE))
     stop('Observed index cannot have negative values', call.=FALSE)
   
-  # standardize index and biomass to mean 1 
+  # standardize index and biomass to mean 1
   s.obs.ind <- obs.ind/mean(obs.ind, na.rm=TRUE)
   notnas <- !is.na(s.obs.ind)
   s.sim.index <- sim.index/mean(sim.index[notnas], na.rm=TRUE)
@@ -103,25 +103,26 @@ Calc_Residuals <- function(sim.index, obs.ind, beta=NA) {
   l.sim.index <- log(s.sim.index)
   l.obs.index <- log(s.obs.ind)
   
-  # mean 0 
-  l.sim.index <- l.sim.index-mean(l.sim.index[notnas], na.rm = TRUE)
-  l.obs.index <- l.obs.index-mean(l.obs.index, na.rm = TRUE)
-
   # estimate beta (if not provided)
   if (is.na(beta)) {
-    opt<-optimize(getbeta,x=exp(l.sim.index),y=exp(l.obs.index),
+    # mean 0
+    l.sim.index2 <- l.sim.index-mean(l.sim.index[notnas], na.rm = TRUE)
+    l.obs.index2 <- l.obs.index-mean(l.obs.index[notnas], na.rm = TRUE)
+    
+    opt<-optimize(getbeta,x=exp(l.sim.index2),y=exp(l.obs.index2),
                   interval=c(0.1,10))
     beta <- opt$minimum
-  } 
+    # adjust true biomass for beta
+    l.sim.index2 <- log((exp(l.sim.index2)^beta))
+    
+    l.sim.index <- l.sim.index2 +  mean(l.sim.index)
+  }
   
-  # adjust true biomass for beta 
-  l.sim.index <- log((exp(l.sim.index)^beta))
-  
-  # calculate residuals (log-space) 
+  # calculate residuals (log-space)
   res <- l.obs.index - l.sim.index
   
   out <- list()
-  out$res <- res 
+  out$res <- res
   out$beta <- beta
   out
 }

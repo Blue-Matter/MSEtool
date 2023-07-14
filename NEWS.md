@@ -1,8 +1,9 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
-# MSEtool 3.7.0 - Development
+# MSEtool 3.7.1 - Development
 
 ## Fixes 
+- fix to `Calc_Residuals` when not estimating beta parameter
 - improve mapping of data across stocks in multiMSE
 - improve calculation of weighted mean of empirical weight-at-age for SS2OM
 - change to calculation of F in `popdyn.R` to include discard mortality
