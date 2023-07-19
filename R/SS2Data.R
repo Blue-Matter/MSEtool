@@ -269,11 +269,11 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   if (!silent) message(paste0(sum(!is.na(Data@Cat[1, ])), " years of catch in Data@Cat."))
 
   CSD <- replist$catch_error
-  if(is.null(CSD) && packageVersion("r4ss") > 1.34) CSD <- replist$catch_se
+  if(is.null(CSD) && packageVersion("r4ss") > '1.34') CSD <- replist$catch_se
   if(!all(is.na(CSD))) {
     CSD <- CSD[!is.na(CSD)]
     CSD[CSD <= 0] <- NA
-    if(packageVersion("DLMtool") < 5.4) {
+    if(packageVersion("DLMtool") < '5.4') {
       Csd_weighted <- stats::weighted.mean(CSD, colSums(cbind(cat_weight, cat_numbers)), na.rm = TRUE)
       Data@CV_Cat <- sqrt(exp(Csd_weighted^2) - 1)
       if (!silent) message(paste0("CV of Catch (weighted by catch of individual fleets), Data@CV_Cat = ", round(Data@CV_Cat, 2)))
@@ -325,7 +325,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
 
   #### Recruitment
   if (!silent) message("\n")
-  if(packageVersion("r4ss") == 1.24) {
+  if(packageVersion("r4ss") == '1.24') {
     rec_ind <- match(mainyrs, replist$recruit$year)
   } else rec_ind <- match(mainyrs, replist$recruit$Yr)
   rec <- replist$recruit$pred_recr[rec_ind]
@@ -340,7 +340,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   if (!silent) message("Relative recruitment strength to Data@Rec obtained from assessment.")
 
   #### Depletion
-  if(packageVersion("r4ss") == 1.24) {
+  if(packageVersion("r4ss") == '1.24') {
     SSB <- replist$recruit$spawn_bio[rec_ind]
   } else SSB <- replist$recruit$SpawnBio[rec_ind]
 
@@ -354,7 +354,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
 
   #### Reference points ----------------------
   if (!silent) message("\n")
-  if(packageVersion("r4ss") == 1.24) {
+  if(packageVersion("r4ss") == '1.24') {
     Data@Cref <- replist$derived_quants$Value[replist$derived_quants$LABEL == "TotYield_MSY"] * ifelse(season_as_years, nseas, 1)
     FMSY <- replist$derived_quants$Value[replist$derived_quants$LABEL == "Fstd_MSY"] * ifelse(season_as_years, nseas, 1)
     Data@Bref <- replist$derived_quants$Value[replist$derived_quants$LABEL == "SSB_MSY"]
@@ -379,7 +379,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   if (!silent) message("Data@BMSY_B0 = ", Data@BMSY_B0)
 
   Data@Units <- "metric tonnes"
-  if(packageVersion("r4ss") == 1.24) {
+  if(packageVersion("r4ss") == '1.24') {
     OFLs <- replist$derived_quants[grepl("OFLCatch", replist$derived_quants$LABEL), ]
   } else OFLs <- replist$derived_quants[grepl("OFLCatch", replist$derived_quants$Label), ]
   if(season_as_years) {
@@ -392,7 +392,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
     if (!silent) message("No OFL detected from SS Assessment.")
   } else {
     Data@Ref <- OFL_terminal
-    if(packageVersion("r4ss") == 1.24) {
+    if(packageVersion("r4ss") == '1.24') {
 
       if(season_as_years) {
         Yr_OFL <- vapply(OFLs$LABEL[1:nseas], function(x) strsplit(x, "_")[[1]][2], character(1))
@@ -427,7 +427,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
     if (!silent) message("Ricker steepness = ", Data@steep)
   } else if(replist$SRRtype == 7) {
 
-    if(packageVersion("r4ss") == 1.24) {
+    if(packageVersion("r4ss") == '1.24') {
       SSB0 <- replist$derived_quants[replist$derived_quants$LABEL == "SPB_Virgin", 2]
       R0 <- replist$derived_quants[replist$derived_quants$LABEL == "Recr_Virgin", 2]
 
@@ -450,7 +450,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
 
   } else if (!silent) message("No steepness value found.")
 
-  if(packageVersion("r4ss") == 1.24) {
+  if(packageVersion("r4ss") == '1.24') {
     SpAbun_ind <- match(replist$endyr+1, replist$recruit$year)
     Data@SpAbun <- replist$recruit$spawn_bio[SpAbun_ind]
   } else {
@@ -464,13 +464,13 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   # Get F-at-age in terminal year, then obtain LFC and LFS
   cols <- match(ages, names(replist$Z_at_age))
   rows <- match(mainyrs, replist$Z_at_age$Year)
-  if(all(is.na(rows)) && packageVersion("r4ss") >= 1.35) rows <- match(mainyrs, replist$Z_at_age$Yr)
+  if(all(is.na(rows)) && packageVersion("r4ss") >= '1.35') rows <- match(mainyrs, replist$Z_at_age$Yr)
 
   Z_at_age <- replist$Z_at_age[rows, ]
   M_at_age <- replist$M_at_age[rows, ]
 
   rows2 <- Z_at_age$Gender == 1 & Z_at_age$Bio_Pattern == 1
-  if((all(!rows2, na.rm = TRUE) | all(is.na(rows2))) && packageVersion("r4ss") >= 1.35) rows2 <- Z_at_age$Sex == 1 & Z_at_age$Bio_Pattern == 1
+  if((all(!rows2, na.rm = TRUE) | all(is.na(rows2))) && packageVersion("r4ss") >='1.35') rows2 <- Z_at_age$Sex == 1 & Z_at_age$Bio_Pattern == 1
 
   Z_at_age <- Z_at_age[rows2, cols]
   M_at_age <- suppressWarnings(M_at_age[rows2, cols] %>% apply(2, as.numeric))
@@ -670,7 +670,7 @@ SS2Data_get_index <- function(replist, mainyrs, season_as_years = FALSE, nseas =
 # #' @export getGpars
 getGpars <- function(replist, seas = 1) { # This is a rip-off of SSPlotBiology
 
-  if(packageVersion("r4ss") == 1.24) {
+  if(packageVersion("r4ss") == '1.24') {
     res <- getGpars_r4ss_124(replist, seas)
   } else res <- getGpars_r4ss_134(replist, seas)
   #if(nrow(res) == 0) warning("No growth parameters were retrieved from r4ss output.")

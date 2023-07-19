@@ -64,7 +64,7 @@ SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1) {
 
     h_out <- rep(h, nsim)
   } else {
-    if(packageVersion("r4ss") == 1.24) {
+    if(packageVersion("r4ss") == '1.24') {
       SR_ind <- match(mainyrs, replist$recruit$year)
       SSB <- replist$recruit$spawn_bio[SR_ind]
       SSB0 <- replist$derived_quants[replist$derived_quants$LABEL == "SPB_Virgin", 2]

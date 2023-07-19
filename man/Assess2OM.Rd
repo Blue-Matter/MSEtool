@@ -110,6 +110,7 @@ in the first \code{ageM} (age of 50 percent maturity) years for the stock-recrui
 in the operating model such that the stock-recruit \code{alpha} and \code{beta} parameters match values implied in the input.
 \item \code{Perr} recruitment standard deviation (lognormal distribution) for sampling future recruitment
 \item \code{AC} autocorrelation in future recruitment deviates.
+\item \code{spawn_time_frac} The fraction of a year when spawning takes place (e.g., 0.5 is the midpoint of the year)
 }}
 }
 \value{
