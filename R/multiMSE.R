@@ -782,7 +782,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                 Vuln=FleetPars[[p]][[1]]$V_real[x,,],
                 Retc=FleetPars[[p]][[1]]$retA_real[x,,],
                 Prec=StockPars[[p]]$Perr_y[x,],
-                movc=split.along.dim(StockPars[[p]]$mov[x,,,,],4),
+                movc=split_along_dim(StockPars[[p]]$mov[x,,,,],4),
                 SRrelc=StockPars[[p]]$SRrel[x],
                 Effind=rep(0, nyears+proyears),
                 Spat_targc=FleetPars[[p]][[1]]$Spat_targ[x],
