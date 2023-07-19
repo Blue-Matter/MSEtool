@@ -143,7 +143,7 @@ Blow_opt<-function(lnq, N, Asize_c, SSBMSYc,SSBpRc, MPA, SSB0c, nareas, retAc,
   movcx <- array(movc[,,,nyears], dim=c(n_age, nareas, nareas, pyears)) # current movement pattern
 
   simpop <- popdynCPP(nareas, maxage, N, pyears, M_age, Asize_c,
-                      MatAge, WtAge, FecAge, Vuln, Retc, Prec, split.along.dim(movcx,4),
+                      MatAge, WtAge, FecAge, Vuln, Retc, Prec, split_along_dim(movcx,4),
                       SRrelc, Effind, Spat_targc, hc,
                       R0c=R0c, SSBpRc=SSBpRc, aRc=aRc, bRc=bRc, Qc=exp(lnq), Fapic=0,
                       maxF=maxF, MPA=MPA, control=1, SSB0c=SSB0c,
