@@ -24,7 +24,7 @@ CalculateQ <- function(x, StockPars, FleetPars, pyears,
                   FecAge=StockPars$Fec_Age[x,,], 
                   Vuln=FleetPars$V_real[x,,],
                   Retc=FleetPars$retA_real[x,,], Prec=StockPars$Perr_y[x,],
-                  movc=split.along.dim(StockPars$mov[x,,,,],4),
+                  movc=split_along_dim(StockPars$mov[x,,,,],4),
                   SRrelc=StockPars$SRrel[x], Effind=FleetPars$Find[x,],
                   Spat_targc=FleetPars$Spat_targ[x], hc=StockPars$hs[x],
                   R0c=StockPars$R0a[x,], SSBpRc=StockPars$SSBpR[x,],
@@ -125,7 +125,7 @@ optQ <- function(logQ, depc, SSB0c, nareas, maxage, Ncurr, pyears, M_age, Asize_
   }
 }
 
-split.along.dim <- function(a, n) {
+split_along_dim <- function(a, n) {
   stats::setNames(lapply(split(a, arrayInd(seq_along(a), dim(a))[, n]),
                          array, dim = dim(a)[-n], dimnames(a)[-n]),
                   dimnames(a)[[n]])
@@ -462,7 +462,7 @@ calcRefYield <- function(x, StockPars, FleetPars, pyears, Ncurr, nyears, proyear
                   Vuln=FleetPars$V_real[x,,(nyears):(nyears+proyears)],
                   Retc=FleetPars$retA_real[x,,(nyears):(nyears+proyears)],
                   Prec=StockPars$Perr_y[x,(nyears):(nyears+proyears+StockPars$maxage)],
-                  movc=split.along.dim(StockPars$mov[x,,,,(nyears):(nyears+proyears)],4),
+                  movc=split_along_dim(StockPars$mov[x,,,,(nyears):(nyears+proyears)],4),
                   SRrelc=StockPars$SRrel[x],
                   Effind=FleetPars$Find[x,],
                   Spat_targc=FleetPars$Spat_targ[x],
@@ -1254,7 +1254,7 @@ projectEq <- function(x, Asize, nareas, maxage, N, pyears, M_ageArray, Mat_age, 
                       pyears, M_age=M_ageArray[x,,], Asize_c=Asize[x,],
                       MatAge=Mat_age[x,,],
                       WtAge=Wt_age[x,,], FecAge=Fec_Age[x,,], Vuln=V[x,,], Retc=retA[x,,], Prec=Perr[x,],
-                      movc=split.along.dim(mov[x,,,,],4), SRrelc=SRrel[x],
+                      movc=split_along_dim(mov[x,,,,],4), SRrelc=SRrel[x],
                       Effind=Find[x,],  Spat_targc=Spat_targ[x], hc=hs[x], R0c=R0a[x,],
                       SSBpRc=SSBpR[x,], aRc=aR[x,], bRc=bR[x,], Qc=0, Fapic=0,
                       MPA=MPA,
