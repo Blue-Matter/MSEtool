@@ -1,5 +1,9 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
+# MSEtool 3.7.1 
+
+
+
 # MSEtool 3.7.0
 
 ## Fixes 

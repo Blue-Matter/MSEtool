@@ -1788,6 +1788,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                          exp(-M_array), 1, sum) # Abundance (mid-year before fishing)
 
         MSElist[[p]][[f]][[mm]]@OM$A <- Atemp
+        MSElist[[p]][[f]][[mm]]@Misc$StockPars <- StockPars[[p]]
+        MSElist[[p]][[f]][[mm]]@Misc$FleetPars <- FleetPars[[p]][[f]]
       } # end fleets
     } # end stocks
 
@@ -2093,20 +2095,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
           #summed over fleets and normalized to 1
           V_P<-nlz(apply(V_Pt,c(1,3,4),sum),c(1,3),"max")
           y1 <- nyears + y
-          MSYrefsYr <- sapply(1:nsim, optMSY_eq,
-                              M_ageArray=StockPars[[p]]$M_ageArray,
-                              Wt_age=StockPars[[p]]$Wt_age,
-                              Mat_age=StockPars[[p]]$Mat_age,
-                              Fec_age=StockPars[[p]]$Fec_Age,
-                              V=V_P,
-                              maxage=StockPars[[p]]$maxage,
-                              R0=StockPars[[p]]$R0,
-                              SRrel=StockPars[[p]]$SRrel,
-                              hs=StockPars[[p]]$hs,
-                              SSBpR=StockPars[[p]]$SSBpR,
+          MSYrefsYr <- sapply(1:nsim, optMSY_eq,         
                               yr.ind=y1,
-                              plusgroup=StockPars[[p]]$plusgroup,
-                              StockPars=StockPars[[p]])
+                              StockPars=StockPars[[p]],
+                              V=V_P)
           MSY_y[,p,mm,y1] <- MSYrefsYr[1,]
           FMSY_y[,p,mm,y1] <- MSYrefsYr[2,]
           SSBMSY_y[,p,mm,y1] <- MSYrefsYr[3,]
@@ -2330,6 +2322,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
               
             }
+            
+            MSElist[[p]][[f]][[mm]]@Misc$StockPars <- StockPars[[p]]
+            MSElist[[p]][[f]][[mm]]@Misc$FleetPars <- FleetPars[[p]][[f]]
+            
             
             # ---- Update true abundance ----
             M_array <- array(0.5*StockPars[[p]]$M_ageArray[,,nyears+y],
@@ -2719,6 +2715,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             
             
           }
+          
+          MSElist[[p]][[f]][[mm]]@Misc$StockPars <- StockPars[[p]]
+          MSElist[[p]][[f]][[mm]]@Misc$FleetPars <- FleetPars[[p]][[f]]
             
             
             
