@@ -1249,34 +1249,39 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
     if(any(dim(retA)!= c(nsim, n_age, nyears + proyears)))
       stop('retA must be dimensions: nsim, n_age, nyears + proyears')
     if (!all(c('LR5_y', 'LFR_y', 'Rmaxlen_y') %in% names(cpars))) {
-      # need to calculate these from retA
-      VB <- function(Linf, K, t0, age) Linf * (1-exp(-K*(age-t0)))
-      for (yr in 1:(nyears+proyears)) {
-        for (s in 1:nsim) {
-          xout <- seq(1, n_age, by=0.1)
-          tt <- approx(retA[s,,yr], xout=xout)
-          tt <- approx(V[s,,yr], xout=xout)
-          if (all(tt$y<0.05)) {
-            age5 <- 0
-            LR5_y[s,yr] <- tiny
-          } else {
-            age5 <- tt$x[min(which(tt$y >=0.05))]-1
-            LR5_y[s,yr] <- VB(StockPars$Linfarray[s,yr],
-                             StockPars$Karray[s,yr],
-                             StockPars$t0array[s,yr], age5)
+      if (all(retA==0)) {
+        LR5_y[] <- LFR_y[] <- Rmaxlen_y[] <- 0
+      } else {
+        # need to calculate these from retA
+        VB <- function(Linf, K, t0, age) Linf * (1-exp(-K*(age-t0)))
+        for (yr in 1:(nyears+proyears)) {
+          for (s in 1:nsim) {
+            xout <- seq(1, n_age, by=0.1)
+            tt <- approx(retA[s,,yr], xout=xout)
+            if (all(tt$y<0.05)) {
+              age5 <- 0
+              LR5_y[s,yr] <- tiny
+            } else {
+              age5 <- tt$x[min(which(tt$y >=0.05))]-1
+              LR5_y[s,yr] <- VB(StockPars$Linfarray[s,yr],
+                                StockPars$Karray[s,yr],
+                                StockPars$t0array[s,yr], age5)
+            }
+            ageFS <- tt$x[which.max(tt$y)]-1
+            if (ageFS == age5) ageFS <- age5 + 1
+            LFR_y[s, yr] <- VB(StockPars$Linfarray[s,yr],
+                               StockPars$Karray[s,yr],
+                               StockPars$t0array[s,yr], ageFS)
+            Rmaxlen_y[s, yr] <- retA[s, n_age, yr]
           }
-          ageFS <- tt$x[which.max(tt$y)]-1
-          if (ageFS == age5) ageFS <- age5 + 1
-          LFR_y[s, yr] <- VB(StockPars$Linfarray[s,yr],
-                             StockPars$Karray[s,yr],
-                             StockPars$t0array[s,yr], ageFS)
-          Rmaxlen_y[s, yr] <- retA[s, n_age, yr]
         }
       }
+
     }
   }
 
   if (!exists("retL", inherits = FALSE)) { # retention-at-length hasn't been defined yet
+  
     # calculate retL
     nCALbins <- length(StockPars$CAL_binsmid)
     CAL_binsmidMat <- matrix(StockPars$CAL_binsmid, nrow=nsim, ncol=length(StockPars$CAL_binsmid), byrow=TRUE)
@@ -1287,7 +1292,8 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
       srs[!is.finite(srs)] <- Inf
       sls <- (LFR_y[,yr] - LR5_y[, yr]) /((-log(0.05,2))^0.5)
       retL[,, yr] <- t(sapply(1:nsim, getsel, lens=CAL_binsmidMat, lfs=LFR_y[,yr], sls=sls, srs=srs))
-    }
+    } 
+    
   }
 
   # Check LFR is greater than LR5
@@ -1310,7 +1316,12 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
 
     retA <- aperm(array(as.numeric(unlist(VList, use.names=FALSE)), dim=c(n_age, nyears+proyears, nsim)), c(3,1,2))
   }
-
+  
+  
+  if (all(retA==0)) {
+    retL[] <- 0
+  }
+    
   # Apply general discard rate
   # if (is.null(cpars$retA)) {
   #   dr <- aperm(abind::abind(rep(list(DR_y), n_age), along=3), c(1,3,2))
@@ -1329,7 +1340,7 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
 
   Fdisc <- StockPars$Fdisc
   if (!all(is.finite(Fdisc))) Fdisc <- 0
-
+  
   Fdisc_array1 <- cpars$Fdisc_array1
   if (is.null(Fdisc_array1)) Fdisc_array1 <- array(Fdisc, dim=c(nsim, n_age, nyears+proyears))
   
@@ -1348,6 +1359,7 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
   if (is.null(Fleetout$retL_real)) 
     Fleetout$retL_real <- SLarray * retL # realized retention-at-length curve (prob of retention x prob of selection)
   Fleetout$SLarray_real <- cpars$SLarray_real
+  
   if (is.null(Fleetout$SLarray_real))
     Fleetout$SLarray_real <- Fleetout$retL_real + ((SLarray-Fleetout$retL_real) * Fdisc_array2)
   

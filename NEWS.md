@@ -2,6 +2,8 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 # MSEtool 3.7.1 
 
+## Fixes 
+- fix calculation of `retL` when `retA` passed in `cpars`
 
 
 # MSEtool 3.7.0
