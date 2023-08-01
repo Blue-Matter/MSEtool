@@ -1750,7 +1750,6 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
     N_P[,,,1,] <- aperm(array(as.numeric(unlist(NextYrN[1,], use.names=FALSE)),
                               dim=c(np,n_age, nareas, nsim)), c(4,1,2,3))
-
     Biomass_P[,,,1,] <- aperm(array(as.numeric(unlist(NextYrN[23,],
                                                       use.names=FALSE)),
                                     dim=c(np,n_age, nareas, nsim)), c(4,1,2,3))
@@ -2025,12 +2024,12 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
       }
     }
-
+    
     # ---- Account for timing of spawning (if spawn_time_frac >0) ----
     spawn_time_frac <- array(0, dim=c(nsim, np, n_age, nareas))
-    F_age <- array(0, dim=c(nsim, n_age, nareas))
     for (p in 1:np) {
       spawn_time_frac[,p,,] <-StockPars[[p]]$spawn_time_frac
+      F_age <- array(0, dim=c(nsim, n_age, nareas))
       for (f in 1:nf) {
         F_age <- F_age + FleetPars[[p]][[f]]$FM_P[,,y,]
       }
@@ -2044,11 +2043,15 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       SSN_P[,p,,y,] <- N_Psp * replicate(nareas,StockPars[[p]]$Mat_age[,,nyears+y])
     }
     
+  
+    
+    
     # recruitment
     for (p in 1:np) {
       StockPars[[p]]$SSN_P <- SSN_P[,p,,,]
       StockPars[[p]]$SSB_P <- SSB_P[,p,,,]
       if (length(SexPars$SSBfrom)) {  # use SSB from another stock to predict recruitment
+        
         SSBcurr <- local({
           SSBfrom <- array(SexPars$SSBfrom[p, ], c(np, nsim, n_age, nareas)) %>% 
             aperm(c(2, 1, 3, 4))
@@ -2068,6 +2071,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       
       StockPars[[p]]$N_P[,1,y,] <- N_P[,p,1,y,] <- t(rec_area)
     }
+
 
     # the years in which there are updates
     upyrs <- 1 + (0:(floor(proyears/interval[mm]) - 1)) * interval[mm]
@@ -2609,9 +2613,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       
       
       # ---- Account for timing of spawning (if spawn_time_frac >0) ----
-      F_age <- array(0, dim=c(nsim, n_age, nareas))
+      
       for (p in 1:np) {
         spawn_time_frac[,p,,] <-StockPars[[p]]$spawn_time_frac
+        F_age <- array(0, dim=c(nsim, n_age, nareas))
         for (f in 1:nf) {
           F_age <- F_age + FleetPars[[p]][[f]]$FM_P[,,y,]
         }

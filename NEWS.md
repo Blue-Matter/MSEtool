@@ -4,6 +4,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 ## Fixes 
 - fix calculation of `retL` when `retA` passed in `cpars`
+- fix calculation of F when `spawn_time_frac` used in `multiMSE`
 
 
 # MSEtool 3.7.0
