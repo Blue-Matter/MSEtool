@@ -972,6 +972,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     for (f in 1:nf){
       FleetPars[[p]][[f]]$CBret <- CBret[,p,f,,,]
       FleetPars[[p]][[f]]$CB <- CB[,p,f,,,]
+      FleetPars[[p]][[f]]$Fishing_Mortality <- apply(FM[,p,f,,,], c(1,3), max)
     }
   }
 
@@ -1758,7 +1759,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                 dim=c(np,n_age, nareas, nsim)), c(4,1,2,3))
     SSB_P[,,,1,] <- aperm(array(as.numeric(unlist(NextYrN[25,], use.names=FALSE)),
                                 dim=c(np,n_age, nareas, nsim)), c(4,1,2,3))
-  
+    
     VBiomass_P[,,,1,] <- aperm(array(as.numeric(unlist(NextYrN[19,],
                                                        use.names=FALSE)),
                                      dim=c(np,n_age, nareas, nsim)), c(4,1,2,3))
@@ -2024,6 +2025,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
       }
     }
+
+  
+    
+    
     
     # ---- Account for timing of spawning (if spawn_time_frac >0) ----
     spawn_time_frac <- array(0, dim=c(nsim, np, n_age, nareas))
@@ -2042,7 +2047,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       SSB_P[,p,,y,] <- N_Psp * replicate(nareas,StockPars[[p]]$Fec_Age[,,nyears+y])
       SSN_P[,p,,y,] <- N_Psp * replicate(nareas,StockPars[[p]]$Mat_age[,,nyears+y])
     }
-    
+
     # recruitment
     for (p in 1:np) {
       StockPars[[p]]$SSN_P <- SSN_P[,p,,,]
@@ -2085,7 +2090,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
           if (any(
             FleetPars[[p]][[f]]$retA_P[,,nyears+y] - FleetPars[[p]][[f]]$retA_P[,,nyears+y] !=0))  SelectChanged <- TRUE
           if (any(
-            FleetPars[[p]][[f]]$V_P[,,nyears+y] - FleetPars[[p]][[f]]$V_real[,,nyears+y] !=0))  SelectChanged <- TRUE
+            FleetPars[[p]][[f]]$V_P[,,nyears+y] - FleetPars[[p]][[f]]$V_P[,,nyears+y] !=0))  SelectChanged <- TRUE
 
 
           # recalculate MSY ref points because selectivity has changed
