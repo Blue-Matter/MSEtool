@@ -1274,7 +1274,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 #' @param multiHist An Historical Simulation object (class `multiHist`)
 #' @export
 ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
-                        checkMPs=TRUE, dropHist=TRUE, extended=FALSE) {
+                        checkMPs=TRUE, dropHist=FALSE, extended=FALSE) {
 
   # ---- Setup ----
   if (! 'multiHist' %in% class(multiHist))
@@ -1590,7 +1590,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         # selectivity at length array - projections
         FleetPars[[p]][[f]]$SLarray_P <- HistFleetPars[[p]][[f]]$SLarray_real
         #  selectivity at age array - projections
-        FleetPars[[p]][[f]]$V_P <- HistFleetPars[[p]][[f]]$V_real
+        FleetPars[[p]][[f]]$V_P <- HistFleetPars[[p]][[f]]$V
 
         # reset retention parameters for projections
         FleetPars[[p]][[f]]$LR5_P <- HistFleetPars[[p]][[f]]$LR5
@@ -2042,9 +2042,6 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       SSB_P[,p,,y,] <- N_Psp * replicate(nareas,StockPars[[p]]$Fec_Age[,,nyears+y])
       SSN_P[,p,,y,] <- N_Psp * replicate(nareas,StockPars[[p]]$Mat_age[,,nyears+y])
     }
-    
-  
-    
     
     # recruitment
     for (p in 1:np) {
