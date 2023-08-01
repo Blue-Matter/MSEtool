@@ -898,6 +898,10 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     SLarray_P[,,allyrs]  <- retL_P[,,allyrs, drop=FALSE]  + ((SLarray_P[,,allyrs, drop=FALSE]-retL_P[,,allyrs, drop=FALSE] ) * Fdisc_array2)
   }
 
+  # Calculate realized selectivity
+  V_P_real <- V_P
+  V_P_real <- retA_P + ((V_P-retA_P) * FleetPars$Fdisc_array1)
+  
   # ---- over-write biomass - with fleet-specific weight-at-age
   Biomass_P <- StockPars$N_P * replicate(StockPars$nareas, FleetPars$Wt_age_C[,,(nyears+1):((nyears)+proyears)])
   
@@ -949,9 +953,8 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
                         FleetPars$qvar[SY1] * FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y)/StockPars$Asize[SR]
 
     Effort_req <- Effort_pot
-
   }
-
+  
   # ---- calculate required F and effort for TAC recommendation ----
   if (!all(is.na(TACused))) { # a TAC has been set
     # if MP returns NA - TAC is set to TAC from last year
