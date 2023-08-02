@@ -1,7 +1,34 @@
+
+OM <- testOM 
+OM <- tinyErr(OM)
+OM@Linf <- c(100, 100)
+
+OM@L5 <- c(20,20)
+OM@LFS <- c(40, 40)
+OM@Vmaxlen <- c(1,1)
+
+OM@LR5 <- c(55, 55)
+OM@LFR <- c(60,60)
+OM@Rmaxlen <- c(1,1)
+OM@Fdisc <- c(0.5,0.5)
+
+OM@isRel <- FALSE
+
+plot(FleetPars$V[1,,1], type='l', ylim=c(0,1))
+lines(FleetPars$V_real[1,,1], col='blue')
+
+# Fix V_real in Hist and Projections
+# sensible names for FleetPars
+# F_total - include F for fish caught and discarded alive?
+# 
+
+
+
 #' @describeIn runMSE Run the Historical Simulations from an object of class `OM`
 #' @export
 #
 Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
+  
   # ---- Initial Checks and Setup ----
   if (methods::is(OM,'OM')) {
     if (OM@nsim <=1) stop("OM@nsim must be > 1", call.=FALSE)
@@ -138,6 +165,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
 
   # Imp Parameters
   ImpPars <- SampleImpPars(OM, nsim, cpars=SampCpars, nyears, proyears)
+  
 
   # Bio-Economic Parameters
   BioEcoPars <- c("RevCurr", "CostCurr", "Response", "CostInc", "RevInc", "LatentEff")
@@ -171,8 +199,9 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   VBiomass <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # vulnerable biomass array
   SSN <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # spawning stock numbers array
   SSB <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # spawning stock biomass array
-  FM <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # fishing mortality rate array
-  FMret <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # fishing mortality rate array for retained fish
+  FMtot <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # total fishing mortality rate (may include fish discarded alive)
+  FMrem <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # removed fishing mortality rate (less then FMtot if discard mortality < 1)
+  FMret <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # retained fishing mortality rate 
   Z <- array(NA, dim = c(nsim, n_age, nyears, nareas))  # total mortality rate array
   Agearray <- array(rep(0:StockPars$maxage, each = nsim), dim = c(nsim, n_age))  # Age array
 
