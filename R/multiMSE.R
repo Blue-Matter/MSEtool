@@ -2665,6 +2665,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       # --- Update Data object ----
       upyrs2 <- upyrs[upyrs>0] 
       upyrs2 <- c(upyrs2, proyears)
+      
+      if (length(upyrs2) < 3 && !silent) message("Updating the Data object for the final time...")
+      
       interval[mm] <- proyears
       for (p in 1:np) {
         for (f in 1:nf) {
