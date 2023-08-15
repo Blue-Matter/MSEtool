@@ -4,6 +4,7 @@
 #' @export
 #'
 SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FALSE) {
+
   # ---- Initial Checks and Setup ----
   if (methods::is(MOM,'MOM')) {
     if (MOM@nsim <=1) stop("MOM@nsim must be > 1", call.=FALSE)
@@ -1164,7 +1165,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       if (f==1) {
         Hist@AtAge <- list(Length=StockPars[[p]]$Len_age,
                            Weight=StockPars[[p]]$Wt_age,
-                           Select=FleetPars[[p]][[f]]$V_real,
+                           Select=FleetPars[[p]][[f]]$V_real_2,
                            Retention=FleetPars[[p]][[f]]$retA_real,
                            Maturity=StockPars[[p]]$Mat_age,
                            N.Mortality=StockPars[[p]]$M_ageArray,
@@ -1180,7 +1181,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                            Discards=CB[,p,f,,,]-CBret[,p,f,,,]
         )
       } else {
-        Hist@AtAge <- list(Select=FleetPars[[p]][[f]]$V_real,
+        Hist@AtAge <- list(Select=FleetPars[[p]][[f]]$V_real_2,
                            Retention=FleetPars[[p]][[f]]$retA_real,
                            Z.Mortality=Z[,p,,,],
                            F.Mortality=FM[,p,f,,,],
@@ -1592,13 +1593,18 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         FleetPars[[p]][[f]]$SLarray_P <- HistFleetPars[[p]][[f]]$SLarray_real
         #  selectivity at age array - projections
         FleetPars[[p]][[f]]$V_P <- HistFleetPars[[p]][[f]]$V
-
+        FleetPars[[p]][[f]]$V_P_real <- HistFleetPars[[p]][[f]]$V_real  #  selectivity at age array - realized selectivity (max may be less than 1)
+        FleetPars[[p]][[f]]$V_P_real_2 <- HistFleetPars[[p]][[f]]$V_real_2  #  selectivity at age array - realized selectivity (max = 1)
+        
         # reset retention parameters for projections
         FleetPars[[p]][[f]]$LR5_P <- HistFleetPars[[p]][[f]]$LR5
         FleetPars[[p]][[f]]$LFR_P <- HistFleetPars[[p]][[f]]$LFR
         FleetPars[[p]][[f]]$Rmaxlen_P <- HistFleetPars[[p]][[f]]$Rmaxlen
         # retention at age array - projections
-        FleetPars[[p]][[f]]$retA_P <- HistFleetPars[[p]][[f]]$retA_real
+        FleetPars[[p]][[f]]$retA_P <- HistFleetPars[[p]][[f]]$retA # retention at age array - projections
+        FleetPars[[p]][[f]]$retA_P_real <- HistFleetPars[[p]][[f]]$retA_real # retention at age array -  realized selectivity (max may be less than 1) 
+        FleetPars[[p]][[f]]$retA_P_real_2 <- HistFleetPars[[p]][[f]]$retA_real_2 # asymptote at 1
+        
         # retention at length array - projections
         FleetPars[[p]][[f]]$retL_P <- HistFleetPars[[p]][[f]]$retL_real
         # Discard ratio for projections
@@ -1944,7 +1950,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     }
 
     MPCalcs_list <- vector('list', np)
-
+    
     for(p in 1:np) {
       MPCalcs_list[[p]] <- vector('list', nf)
       for(f in 1:nf) {
@@ -1975,11 +1981,15 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                   Rmaxlen_P=FleetPars[[p]][[f]]$Rmaxlen_P,
                                   retL_P=FleetPars[[p]][[f]]$retL_P,
                                   retA_P=FleetPars[[p]][[f]]$retA_P,
+                                  retA_P_real=FleetPars[[p]][[f]]$retA_P_real,
+                                  retA_P_real_2=FleetPars[[p]][[f]]$retA_P_real_2,
                                   L5_P=FleetPars[[p]][[f]]$L5_P,
                                   LFS_P=FleetPars[[p]][[f]]$LFS_P,
                                   Vmaxlen_P=FleetPars[[p]][[f]]$Vmaxlen_P,
                                   SLarray_P=FleetPars[[p]][[f]]$SLarray_P,
                                   V_P=FleetPars[[p]][[f]]$V_P,
+                                  V_P_real=FleetPars[[p]][[f]]$V_P_real,
+                                  V_P_real_2=FleetPars[[p]][[f]]$V_P_real_2,
                                   Fdisc_P=StockPars[[p]]$Fdisc_P,
                                   DR_P=FleetPars[[p]][[f]]$DR_P,
                                   FM_P=FleetPars[[p]][[f]]$FM_P,
@@ -1992,6 +2002,34 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                   FleetPars=FleetPars[[p]][[f]],
                                   ImpPars=ImpPars[[p]][[f]], 
                                   control=control)
+        
+        ########################################################################
+        
+        # stop()
+        # 
+        # plot(FleetPars[[p]][[f]]$V_P[1,,nyears+y], ylim=c(0,1))
+        # lines(MPCalcs$V_P[1,,nyears+y])
+        # 
+        # plot(MPCalcs$retA_P_real[1,,nyears+y])
+        # lines(MPCalcs$V_P_real[1,,nyears+y])
+        # 
+        # 
+        # plot(FleetPars[[p]][[f]]$retA_P_real[1,,nyears+y], ylim=c(0,1))
+        # lines(MPCalcs$retA_P[1,,nyears+y])
+        # 
+        # plot(FleetPars[[p]][[f]]$retA_P_real[1,,nyears+y], ylim=c(0,1))
+        # lines(MPCalcs$retA_P_real[1,,nyears+y])
+        # lines(MPCalcs$V_P_real[1,,nyears+y], col='blue')
+        # 
+        # sum(MPCalcs$CB_P[1,,1,])
+        # sum(MPCalcs$CB_Pret[1,,1,])
+        # 
+        # FleetPars[[p]][[f]]$Rmaxlen_P[1, ] <- 1
+        # 
+        # plot(FleetPars[[p]][[f]]$retA_P[1,,nyears+y], ylim=c(0,1))
+        # lines(MPCalcs$retA_P[1,,nyears+y])
+        # 
+        # #
 
         if(length(SexPars)>0) MPCalcs<- MPCalcsNAs(MPCalcs) # Zeros caused by SexPars
 
@@ -2014,9 +2052,16 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         #FretA[,p,f,,]<- MPCalcs$FM_Pret
         FleetPars[[p]][[f]]$Z_P <- MPCalcs$Z_P # total mortality
         FleetPars[[p]][[f]]$retA_P <- MPCalcs$retA_P # retained-at-age
+        FleetPars[[p]][[f]]$retA_P_real <- MPCalcs$retA_P_real 
+        FleetPars[[p]][[f]]$retA_P_real_2 <- MPCalcs$retA_P_real_2 
 
         FleetPars[[p]][[f]]$retL_P <- MPCalcs$retL_P # retained-at-length
+        
         FleetPars[[p]][[f]]$V_P <- MPCalcs$V_P  # vulnerable-at-age
+        FleetPars[[p]][[f]]$V_P_real <- MPCalcs$V_P_real
+        FleetPars[[p]][[f]]$V_P_real_2 <- MPCalcs$V_P_real_2
+        
+        
         VF[,p,f,,]<- MPCalcs$V_P
         FleetPars[[p]][[f]]$SLarray_P <- MPCalcs$SLarray_P # vulnerable-at-length
         FMa[,p,f,mm,y] <- MPCalcs$Ftot # Total fishing mortality (by stock & fleet)
@@ -2026,9 +2071,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       }
     }
 
-  
-    
-    
+
     
     # ---- Account for timing of spawning (if spawn_time_frac >0) ----
     spawn_time_frac <- array(0, dim=c(nsim, np, n_age, nareas))
@@ -2491,11 +2534,16 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                       Rmaxlen_P=FleetPars[[p]][[f]]$Rmaxlen_P,
                                       retL_P=FleetPars[[p]][[f]]$retL_P,
                                       retA_P=FleetPars[[p]][[f]]$retA_P,
+                                      retA_P_real=FleetPars[[p]][[f]]$retA_P_real,
+                                      retA_P_real_2=FleetPars[[p]][[f]]$retA_P_real_2,
+                                      
                                       L5_P=FleetPars[[p]][[f]]$L5_P,
                                       LFS_P=FleetPars[[p]][[f]]$LFS_P,
                                       Vmaxlen_P=FleetPars[[p]][[f]]$Vmaxlen_P,
                                       SLarray_P=FleetPars[[p]][[f]]$SLarray_P,
                                       V_P=FleetPars[[p]][[f]]$V_P,
+                                      V_P_real=FleetPars[[p]][[f]]$V_P_real,
+                                      V_P_real_2=FleetPars[[p]][[f]]$V_P_real_2,
                                       Fdisc_P=StockPars[[p]]$Fdisc_P,
                                       DR_P=FleetPars[[p]][[f]]$DR_P,
                                       FM_P=FleetPars[[p]][[f]]$FM_P,
@@ -2523,11 +2571,18 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             FleetPars[[p]][[f]]$FM_P <- MPCalcs$FM_P # fishing mortality
             FM_P[,p,f,,,]<- MPCalcs$FM_P
             FleetPars[[p]][[f]]$FM_Pret <- MPCalcs$FM_Pret # retained fishing mortality
+
             FleetPars[[p]][[f]]$Z_P <- MPCalcs$Z_P # total mortality
             FleetPars[[p]][[f]]$retA_P <- MPCalcs$retA_P # retained-at-age
-
+            FleetPars[[p]][[f]]$retA_P_real <- MPCalcs$retA_P_real 
+            FleetPars[[p]][[f]]$retA_P_real_2 <- MPCalcs$retA_P_real_2 
+            
             FleetPars[[p]][[f]]$retL_P <- MPCalcs$retL_P # retained-at-length
+            
             FleetPars[[p]][[f]]$V_P <- MPCalcs$V_P  # vulnerable-at-age
+            FleetPars[[p]][[f]]$V_P_real <- MPCalcs$V_P_real
+            FleetPars[[p]][[f]]$V_P_real_2 <- MPCalcs$V_P_real_2
+            
             VF[,p,f,,]<- MPCalcs$V_P
             FleetPars[[p]][[f]]$SLarray_P <- MPCalcs$SLarray_P # vulnerable-at-length
             FMa[,p,f,mm,y] <- MPCalcs$Ftot # Total fishing mortality (by stock & fleet)
@@ -2566,6 +2621,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                       Vmaxlen_P=FleetPars[[p]][[f]]$Vmaxlen_P,
                                       SLarray_P=FleetPars[[p]][[f]]$SLarray_P,
                                       V_P=FleetPars[[p]][[f]]$V_P,
+                                      V_P_real=FleetPars[[p]][[f]]$V_P_real,
+                                      V_P_real_2=FleetPars[[p]][[f]]$V_P_real_2,
                                       Fdisc_P=StockPars[[p]]$Fdisc_P,
                                       DR_P=FleetPars[[p]][[f]]$DR_P,
                                       FM_P=FleetPars[[p]][[f]]$FM_P,
@@ -2599,11 +2656,19 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             FleetPars[[p]][[f]]$FM_Pret <- MPCalcs$FM_Pret # retained fishing mortality
             FMret_P[,p,f,,,]<- MPCalcs$FM_Pret
             #FretA[,p,f,,]<- MPCalcs$FM_Pret
+            
             FleetPars[[p]][[f]]$Z_P <- MPCalcs$Z_P # total mortality
             FleetPars[[p]][[f]]$retA_P <- MPCalcs$retA_P # retained-at-age
-
+            FleetPars[[p]][[f]]$retA_P_real <- MPCalcs$retA_P_real 
+            FleetPars[[p]][[f]]$retA_P_real_2 <- MPCalcs$retA_P_real_2 
+            
             FleetPars[[p]][[f]]$retL_P <- MPCalcs$retL_P # retained-at-length
+            
             FleetPars[[p]][[f]]$V_P <- MPCalcs$V_P  # vulnerable-at-age
+            FleetPars[[p]][[f]]$V_P_real <- MPCalcs$V_P_real
+            FleetPars[[p]][[f]]$V_P_real_2 <- MPCalcs$V_P_real_2
+          
+            FleetPars[[p]][[f]]$retL_P <- MPCalcs$retL_P # retained-at-length
             VF[,p,f,,]<- MPCalcs$V_P
             FleetPars[[p]][[f]]$SLarray_P <- MPCalcs$SLarray_P # vulnerable-at-length
 
@@ -2665,6 +2730,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       # --- Update Data object ----
       upyrs2 <- upyrs[upyrs>0] 
       upyrs2 <- c(upyrs2, proyears)
+      
+      if (length(upyrs2) < 3 && !silent) message("Updating the Data object for the final time...")
+      
       interval[mm] <- proyears
       for (p in 1:np) {
         for (f in 1:nf) {

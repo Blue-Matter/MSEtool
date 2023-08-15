@@ -1450,9 +1450,8 @@ AddRealData_MS <- function(SimData,
     Data_out@Cat <- matrix(RealData@Cat[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
     Data_out@CV_Cat <- matrix(RealData@CV_Cat[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
     
-    simcatch <- apply(CBret[,map.stocks,,,, ,drop=FALSE], c(1,5), sum)
+    simcatch <- apply(CBret[,map.stocks,f,,, ,drop=FALSE], c(1,5), sum)
     simcatch[simcatch==0] <- tiny
-    
     Cbias <- matrix(apply(Data_out@Cat, 1, mean)/apply(simcatch, 1, mean),
                     nrow=nsim, ncol=nyears+proyears)
     
