@@ -1279,6 +1279,8 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
 
     }
   }
+  
+  if(!is.null(cpars$Rmaxlen_y)) Rmaxlen_y <- cpars$Rmaxlen_y
 
   if (!exists("retL", inherits = FALSE)) { # retention-at-length hasn't been defined yet
   
@@ -1352,9 +1354,14 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
   if (is.null(Fleetout$retA_real)) 
     Fleetout$retA_real <- V * retA # realized retention curve (prob of retention x prob of selection)
   Fleetout$V_real <- cpars$V_real
+  
   if (is.null(Fleetout$V_real)) 
     Fleetout$V_real <- Fleetout$retA_real + ((V-Fleetout$retA_real) * Fdisc_array1)
  
+  # Realized selectivity curve max at 1
+  Fleetout$V_real_2 <- Fleetout$V_real/aperm(replicate(n_age,apply(Fleetout$V_real, c(1,3), max)), c(1,3,2))
+  Fleetout$retA_real_2 <- Fleetout$retA_real/aperm(replicate(n_age,apply(Fleetout$retA_real, c(1,3), max)), c(1,3,2))
+  
   Fleetout$retL_real <- cpars$retL_real 
   if (is.null(Fleetout$retL_real)) 
     Fleetout$retL_real <- SLarray * retL # realized retention-at-length curve (prob of retention x prob of selection)
@@ -1362,6 +1369,9 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
   
   if (is.null(Fleetout$SLarray_real))
     Fleetout$SLarray_real <- Fleetout$retL_real + ((SLarray-Fleetout$retL_real) * Fdisc_array2)
+  
+ 
+  
   
   # ---- Existing MPA ----
   if (inherits(Fleet@MPA, 'matrix')) {
