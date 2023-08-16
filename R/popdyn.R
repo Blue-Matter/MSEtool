@@ -1001,7 +1001,6 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     CB_Pret[SAYR] <- FM_Pret[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR] # retained
 
   
-    
     # for debugging info:
     # actualremovals <- apply(CB_P[,,y,], 1, sum)
     # retained <- apply(CB_Pret[,,y,], 1, sum)
@@ -1036,11 +1035,11 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   # --- Re-calculate catch given actual effort ----
   # TODO should really only do this for the sims where Effort_act is different than Effort_req
   # fishing mortality with actual effort
-  FM_P[SAYR] <- (FleetPars$FinF[S1] * Effort_act[S1] * V_P_real[SAYt] * t(Si)[SR] * fishdist[SR] *
+  FM_P[SAYR] <- (FleetPars$FinF[S1] * Effort_act[S1] * V_P_real_2[SAYt] * t(Si)[SR] * fishdist[SR] *
                  FleetPars$qvar[SY1] * (FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y))/StockPars$Asize[SR]
 
   # retained fishing mortality with actual effort
-  FM_Pret[SAYR] <- (FleetPars$FinF[S1] * Effort_act[S1] * retA_P_real[SAYt] * t(Si)[SR] * fishdist[SR] *
+  FM_Pret[SAYR] <- (FleetPars$FinF[S1] * Effort_act[S1] * retA_P_real_2[SAYt] * t(Si)[SR] * fishdist[SR] *
                     FleetPars$qvar[SY1] * FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y)/StockPars$Asize[SR]
 
   # Apply maxF constraint
@@ -1057,6 +1056,9 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   # plot(FleetPars[[p]][[f]]$retA_P_real_2[1,,nyears+y])
   # lines(FleetPars[[p]][[f]]$retA_P_real[1,,nyears+y])
   # 
+  # actualremovals <- apply(CB_P[,,y,], 1, sum)
+  # retained <- apply(CB_Pret[,,y,], 1, sum)
+  
   
   # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
   retainedCatch <- apply(CB_Pret[,,y,], 1, sum)
