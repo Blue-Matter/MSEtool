@@ -64,6 +64,8 @@ qestMICE(
 
 \item{CFc}{Matrix \verb{[nstock, nfleet]}, a catch fraction among fleets (sums to 1 for each stock (row))}
 
+\item{mode}{Character if 'opt' qestMICE returns the objective function otherwise the fitted values in a list}
+
 \item{nf}{Integer, number of fleets}
 
 \item{nyears}{Integer, number of historical years (unfished til today)}
@@ -128,22 +130,20 @@ qestMICE(
 
 \item{x}{Integer. The simulation number}
 
+\item{plusgroup}{Integer vector \verb{[stock]} indicating if a plus group is used}
+
 \item{optVB}{Logical, whether to optimize to vulnerable biomass (or spawning biomass otherwise)}
 
 \item{VB0x}{Vector \verb{[stock]} unfished vulnerable biomass}
 
 \item{B0x}{Vector \verb{[stock]} unfished total biomass}
 
+\item{WtCx}{Array \verb{[stock, fleet, n_age]} of weight at age in catch in the last historical year}
+
 \item{maxF}{A numeric value specifying the maximum fishing mortality for any
 single age class}
 
 \item{MPA}{An array of spatial closures by year \verb{[np,nf,nyears+proyears,nareas]}}
-
-\item{mod}{Character if 'opt' qestMICE returns the objective function otherwise the fitted values in a list}
-
-\item{plusgroup.}{Integer vector \verb{[stock]} indicating if a plus group is used}
-
-\item{WtC}{Array \verb{[stock, fleet, n_age]} of weight at age in catch in the last historical year}
 }
 \description{
 Function returns objective function that fits both stock depletion and catch fraction among fleets

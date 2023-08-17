@@ -614,11 +614,15 @@ calc_recs <- function(MPRecs, y, LastTAE, Effort_Imp_Error, nsim, histTAE, LastS
 #' @param Rmaxlen_P A matrix with `nyears+proyears` rows and `nsim` columns with the retention at maximum length.
 #' @param retL_P An array with dimensions `nsim`, `nCALbins` and `nyears+proyears` with retention at length
 #' @param retA_P An array with dimensions `nsim`, `maxage` and `nyears+proyears` with retention at age
+#' @param retA_P_real An array with dimensions `nsim`, `maxage` and `nyears+proyears` with realized  retention at age. May not asymptote at one
+#' @param retA_P_real_2 An array with dimensions `nsim`, `maxage` and `nyears+proyears` `retA_P_real` standardized to max 1
 #' @param L5_P A matrix with `nyears+proyears` rows and `nsim` columns with the first length at 5 percent selectivity
 #' @param LFS_P A matrix with `nyears+proyears` rows and `nsim` columns with the first length at full selectivity
 #' @param Vmaxlen_P A matrix with `nyears+proyears` rows and `nsim` columns with the selectivity at maximum length.
 #' @param SLarray_P An array with dimensions `nsim`, `nCALbins` and `nyears+proyears` with selectivity at length
 #' @param V_P An array with dimensions `nsim`, `maxage` and `nyears+proyears` with selectivity at age
+#' @param V_P_real An array with dimensions `nsim`, `maxage` and `nyears+proyears` with realized selectivity at age. May not asymptote at one
+#' @param V_P_real_2 An array with dimensions `nsim`, `maxage` and `nyears+proyears`. `V_P_real` standardized to max 1
 #' @param Fdisc_P  vector of length `nsim` with discard mortality. From `OM@Fdisc` but can be updated by MP (`Rec@Fdisc`)
 #' @param DR_P A matrix with `nyears+proyears` rows and `nsim` columns with the fraction discarded.
 #' @param M_ageArray An array with dimensions `nsim`, `maxage` and `nyears+proyears` with natural mortality at age

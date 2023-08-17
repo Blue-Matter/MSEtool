@@ -135,7 +135,6 @@ movestockCPP <- function(nareas, maxage, mov, Number) {
 #'
 #' @param nareas The number of spatial areas
 #' @param maxage The maximum age
-#' @param SSBcurr A numeric vector of length nareas with the current spawning biomass in each area
 #' @param Ncurr A numeric matrix (maxage+1, nareas) with current numbers-at-age in each area
 #' @param pyears The number of years to project the population forward
 #' @param M_age Numeric matrix (maxage+1, pyears) with natural mortality by age and year

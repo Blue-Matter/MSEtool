@@ -14,7 +14,7 @@ ProjectMOM(
   parallel = FALSE,
   silent = FALSE,
   checkMPs = TRUE,
-  dropHist = TRUE,
+  dropHist = FALSE,
   extended = FALSE
 )
 

@@ -175,7 +175,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
 #' @param par Integer, the simulation number
 #' @param depc Numeric vector, nstock long of specified stock depletion (SSB now / SSB0)
 #' @param CFc Matrix `[nstock, nfleet]`, a catch fraction among fleets (sums to 1 for each stock (row))
-#' @param mod Character if 'opt' qestMICE returns the objective function otherwise the fitted values in a list
+#' @param mode Character if 'opt' qestMICE returns the objective function otherwise the fitted values in a list
 #' @param nf Integer, number of stocks
 #' @param nf Integer, number of fleets
 #' @param nyears Integer, number of historical years (unfished til today)
@@ -209,11 +209,11 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
 #' @param Rel A list of inter-stock relationships see slot Rel of MOM object class
 #' @param SexPars A list of sex-specific dynamics (SSBfrom, stcck_age)
 #' @param x Integer. The simulation number
-#' @param plusgroup. Integer vector `[stock]` indicating if a plus group is used
+#' @param plusgroup Integer vector `[stock]` indicating if a plus group is used
 #' @param optVB Logical, whether to optimize to vulnerable biomass (or spawning biomass otherwise)
 #' @param VB0x Vector `[stock]` unfished vulnerable biomass
 #' @param B0x Vector `[stock]` unfished total biomass
-#' @param WtC Array `[stock, fleet, n_age]` of weight at age in catch in the last historical year
+#' @param WtCx Array `[stock, fleet, n_age]` of weight at age in catch in the last historical year
 #' @param maxF A numeric value specifying the maximum fishing mortality for any
 #' single age class
 #' @param MPA An array of spatial closures by year `[np,nf,nyears+proyears,nareas]`

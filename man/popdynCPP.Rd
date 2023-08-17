@@ -99,8 +99,6 @@ vulnerability to calculate F.}
 \item{plusgroup}{Integer. Include a plus-group (1) or not (0)?}
 
 \item{spawn_time_frac}{Numeric. Fraction of the year when spawning occurs. Default = 0.}
-
-\item{SSBcurr}{A numeric vector of length nareas with the current spawning biomass in each area}
 }
 \description{
 Project population forward pyears given current numbers-at-age and total mortality, etc

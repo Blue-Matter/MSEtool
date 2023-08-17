@@ -244,7 +244,7 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
 #'
 #' @param np Integer, the number of stocks
 #' @param nf Integer, number of fleets
-#' @param nyears Integer, number of historical years (unfished til today)
+#' @param nareas Integer, number of areas
 #' @param maxage Integer, maximum modelled age
 #' @param Ncur Array `[stock, age, area]` of stock numbers
 #' @param Bcur Array `[stock, age, area]` of stock biomass

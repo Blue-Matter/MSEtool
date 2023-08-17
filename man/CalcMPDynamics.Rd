@@ -24,11 +24,15 @@ CalcMPDynamics(
   Rmaxlen_P,
   retL_P,
   retA_P,
+  retA_P_real,
+  retA_P_real_2,
   L5_P,
   LFS_P,
   Vmaxlen_P,
   SLarray_P,
   V_P,
+  V_P_real,
+  V_P_real_2,
   Fdisc_P,
   DR_P,
   FM_P,
@@ -85,6 +89,10 @@ MPs must either return a recommendation or no recommendation for every simulatio
 
 \item{retA_P}{An array with dimensions \code{nsim}, \code{maxage} and \code{nyears+proyears} with retention at age}
 
+\item{retA_P_real}{An array with dimensions \code{nsim}, \code{maxage} and \code{nyears+proyears} with realized  retention at age. May not asymptote at one}
+
+\item{retA_P_real_2}{An array with dimensions \code{nsim}, \code{maxage} and \code{nyears+proyears} \code{retA_P_real} standardized to max 1}
+
 \item{L5_P}{A matrix with \code{nyears+proyears} rows and \code{nsim} columns with the first length at 5 percent selectivity}
 
 \item{LFS_P}{A matrix with \code{nyears+proyears} rows and \code{nsim} columns with the first length at full selectivity}
@@ -94,6 +102,10 @@ MPs must either return a recommendation or no recommendation for every simulatio
 \item{SLarray_P}{An array with dimensions \code{nsim}, \code{nCALbins} and \code{nyears+proyears} with selectivity at length}
 
 \item{V_P}{An array with dimensions \code{nsim}, \code{maxage} and \code{nyears+proyears} with selectivity at age}
+
+\item{V_P_real}{An array with dimensions \code{nsim}, \code{maxage} and \code{nyears+proyears} with realized selectivity at age. May not asymptote at one}
+
+\item{V_P_real_2}{An array with dimensions \code{nsim}, \code{maxage} and \code{nyears+proyears}. \code{V_P_real} standardized to max 1}
 
 \item{Fdisc_P}{vector of length \code{nsim} with discard mortality. From \code{OM@Fdisc} but can be updated by MP (\code{Rec@Fdisc})}
 
