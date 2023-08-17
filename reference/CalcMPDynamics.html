@@ -18,7 +18,7 @@ step based on the recent MP recommendation"><meta property="og:image" content="/
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.8.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.7.1</span>
       </span>
     </div>
 
@@ -75,11 +75,15 @@ step based on the recent MP recommendation</p>
 <span>  <span class="va">Rmaxlen_P</span>,</span>
 <span>  <span class="va">retL_P</span>,</span>
 <span>  <span class="va">retA_P</span>,</span>
+<span>  <span class="va">retA_P_real</span>,</span>
+<span>  <span class="va">retA_P_real_2</span>,</span>
 <span>  <span class="va">L5_P</span>,</span>
 <span>  <span class="va">LFS_P</span>,</span>
 <span>  <span class="va">Vmaxlen_P</span>,</span>
 <span>  <span class="va">SLarray_P</span>,</span>
 <span>  <span class="va">V_P</span>,</span>
+<span>  <span class="va">V_P_real</span>,</span>
+<span>  <span class="va">V_P_real_2</span>,</span>
 <span>  <span class="va">Fdisc_P</span>,</span>
 <span>  <span class="va">DR_P</span>,</span>
 <span>  <span class="va">FM_P</span>,</span>
@@ -174,6 +178,14 @@ MPs must either return a recommendation or no recommendation for every simulatio
 <dd><p>An array with dimensions <code>nsim</code>, <code>maxage</code> and <code>nyears+proyears</code> with retention at age</p></dd>
 
 
+<dt>retA_P_real</dt>
+<dd><p>An array with dimensions <code>nsim</code>, <code>maxage</code> and <code>nyears+proyears</code> with realized  retention at age. May not asymptote at one</p></dd>
+
+
+<dt>retA_P_real_2</dt>
+<dd><p>An array with dimensions <code>nsim</code>, <code>maxage</code> and <code>nyears+proyears</code> <code>retA_P_real</code> standardized to max 1</p></dd>
+
+
 <dt>L5_P</dt>
 <dd><p>A matrix with <code>nyears+proyears</code> rows and <code>nsim</code> columns with the first length at 5 percent selectivity</p></dd>
 
@@ -192,6 +204,14 @@ MPs must either return a recommendation or no recommendation for every simulatio
 
 <dt>V_P</dt>
 <dd><p>An array with dimensions <code>nsim</code>, <code>maxage</code> and <code>nyears+proyears</code> with selectivity at age</p></dd>
+
+
+<dt>V_P_real</dt>
+<dd><p>An array with dimensions <code>nsim</code>, <code>maxage</code> and <code>nyears+proyears</code> with realized selectivity at age. May not asymptote at one</p></dd>
+
+
+<dt>V_P_real_2</dt>
+<dd><p>An array with dimensions <code>nsim</code>, <code>maxage</code> and <code>nyears+proyears</code>. <code>V_P_real</code> standardized to max 1</p></dd>
 
 
 <dt>Fdisc_P</dt>

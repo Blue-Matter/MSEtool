@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MSEtool Functions</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.8.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.7.1</span>
       </span>
     </div>
 
@@ -119,6 +119,10 @@
 
 <dt>CFc</dt>
 <dd><p>Matrix <code>[nstock, nfleet]</code>, a catch fraction among fleets (sums to 1 for each stock (row))</p></dd>
+
+
+<dt>mode</dt>
+<dd><p>Character if 'opt' qestMICE returns the objective function otherwise the fitted values in a list</p></dd>
 
 
 <dt>nf</dt>
@@ -249,6 +253,10 @@
 <dd><p>Integer. The simulation number</p></dd>
 
 
+<dt>plusgroup</dt>
+<dd><p>Integer vector <code>[stock]</code> indicating if a plus group is used</p></dd>
+
+
 <dt>optVB</dt>
 <dd><p>Logical, whether to optimize to vulnerable biomass (or spawning biomass otherwise)</p></dd>
 
@@ -261,6 +269,10 @@
 <dd><p>Vector <code>[stock]</code> unfished total biomass</p></dd>
 
 
+<dt>WtCx</dt>
+<dd><p>Array <code>[stock, fleet, n_age]</code> of weight at age in catch in the last historical year</p></dd>
+
+
 <dt>maxF</dt>
 <dd><p>A numeric value specifying the maximum fishing mortality for any
 single age class</p></dd>
@@ -268,18 +280,6 @@ single age class</p></dd>
 
 <dt>MPA</dt>
 <dd><p>An array of spatial closures by year <code>[np,nf,nyears+proyears,nareas]</code></p></dd>
-
-
-<dt>mod</dt>
-<dd><p>Character if 'opt' qestMICE returns the objective function otherwise the fitted values in a list</p></dd>
-
-
-<dt>plusgroup.</dt>
-<dd><p>Integer vector <code>[stock]</code> indicating if a plus group is used</p></dd>
-
-
-<dt>WtC</dt>
-<dd><p>Array <code>[stock, fleet, n_age]</code> of weight at age in catch in the last historical year</p></dd>
 
 </dl></div>
     <div id="author">
