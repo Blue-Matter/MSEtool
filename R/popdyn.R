@@ -983,7 +983,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     expC <- TACusedE
     expC[TACusedE> availB] <- availB[TACusedE> availB] * 0.999
 
-    Ftot <- sapply(1:nsim, calcF, expC, V_P_real_2, retA_P_real_2, Biomass_P, fishdist,
+    Ftot <- sapply(1:nsim, calcF, expC, V_P_real_2, retA_P_real, Biomass_P, fishdist,
                    StockPars$Asize,
                    StockPars$maxage,
                    StockPars$nareas,
@@ -1043,7 +1043,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
                  FleetPars$qvar[SY1] * (FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y))/StockPars$Asize[SR]
 
   # retained fishing mortality with actual effort
-  FM_Pret[SAYR] <- (FleetPars$FinF[S1] * Effort_act[S1] * retA_P_real_2[SAYt] * t(Si)[SR] * fishdist[SR] *
+  FM_Pret[SAYR] <- (FleetPars$FinF[S1] * Effort_act[S1] * retA_P_real[SAYt] * t(Si)[SR] * fishdist[SR] *
                     FleetPars$qvar[SY1] * FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y)/StockPars$Asize[SR]
 
   # Apply maxF constraint
