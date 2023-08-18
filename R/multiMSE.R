@@ -648,6 +648,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   
   Z <- aperm(array(as.numeric(unlist(histYrs[18,], use.names=FALSE)),
                    dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
+  
   FMt<-aperm(array(as.numeric(unlist(histYrs[19,], use.names=FALSE)),
                    dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
   M_ageArray <- aperm(array(as.numeric(unlist(histYrs[20,], use.names=FALSE)),
@@ -2003,34 +2004,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                   ImpPars=ImpPars[[p]][[f]], 
                                   control=control)
         
-        ########################################################################
-        
-        # stop()
-        # 
-        # plot(FleetPars[[p]][[f]]$V_P[1,,nyears+y], ylim=c(0,1))
-        # lines(MPCalcs$V_P[1,,nyears+y])
-        # 
-        # plot(MPCalcs$retA_P_real[1,,nyears+y])
-        # lines(MPCalcs$V_P_real[1,,nyears+y])
-        # 
-        # 
-        # plot(FleetPars[[p]][[f]]$retA_P_real[1,,nyears+y], ylim=c(0,1))
-        # lines(MPCalcs$retA_P[1,,nyears+y])
-        # 
-        # plot(FleetPars[[p]][[f]]$retA_P_real[1,,nyears+y], ylim=c(0,1))
-        # lines(MPCalcs$retA_P_real[1,,nyears+y])
-        # lines(MPCalcs$V_P_real[1,,nyears+y], col='blue')
-        # 
-        # sum(MPCalcs$CB_P[1,,1,])
-        # sum(MPCalcs$CB_Pret[1,,1,])
-        # 
-        # FleetPars[[p]][[f]]$Rmaxlen_P[1, ] <- 1
-        # 
-        # plot(FleetPars[[p]][[f]]$retA_P[1,,nyears+y], ylim=c(0,1))
-        # lines(MPCalcs$retA_P[1,,nyears+y])
-        # 
-        # #
-
+  
         if(length(SexPars)>0) MPCalcs<- MPCalcsNAs(MPCalcs) # Zeros caused by SexPars
 
         TACa[,p,f, mm, y] <- TACused[,p,f]#MPCalcs$TACrec # recommended TAC
