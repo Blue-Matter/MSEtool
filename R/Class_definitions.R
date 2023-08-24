@@ -791,9 +791,6 @@ setMethod("initialize", "OM", function(.Object, Stock=NULL, Fleet=MSEtool::Gener
   if (is.null(Stock)) {
     # message("No Stock object found. Returning a blank OM object")
     
-    # Check and add defaults
-    if (docheck) 
-      .Object <- CheckOM(.Object, msg=FALSE, stop_if_missing=FALSE)
     # Default MSE parameters
     if (.hasSlot(.Object, "nsim")) .Object@nsim <- nsim
     if (.hasSlot(.Object, "proyears")) .Object@proyears <- proyears
@@ -804,6 +801,9 @@ setMethod("initialize", "OM", function(.Object, Stock=NULL, Fleet=MSEtool::Gener
     if (.hasSlot(.Object, "maxF")) .Object@maxF <- maxF
     if (.hasSlot(.Object, "reps")) .Object@reps <- reps
     
+    # Check and add defaults
+    if (docheck) 
+      .Object <- CheckOM(.Object, msg=FALSE, stop_if_missing=FALSE)
     return(.Object)
   }
 
