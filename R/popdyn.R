@@ -1039,12 +1039,15 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   # --- Re-calculate catch given actual effort ----
   # TODO should really only do this for the sims where Effort_act is different than Effort_req
   # fishing mortality with actual effort
-  FM_P[SAYR] <- (FleetPars$FinF[S1] * Effort_act[S1] * V_P_real_2[SAYt] * t(Si)[SR] * fishdist[SR] *
-                 FleetPars$qvar[SY1] * (FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y))/StockPars$Asize[SR]
-
-  # retained fishing mortality with actual effort
-  FM_Pret[SAYR] <- (FleetPars$FinF[S1] * Effort_act[S1] * retA_P_real[SAYt] * t(Si)[SR] * fishdist[SR] *
-                    FleetPars$qvar[SY1] * FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y)/StockPars$Asize[SR]
+  
+  # bio-economic model currently not working
+  
+  # FM_P[SAYR] <- (FleetPars$FinF[S1] * Effort_act[S1] * V_P_real_2[SAYt] * t(Si)[SR] * fishdist[SR] *
+  #                FleetPars$qvar[SY1] * (FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y))/StockPars$Asize[SR]
+  # 
+  # # retained fishing mortality with actual effort
+  # FM_Pret[SAYR] <- (FleetPars$FinF[S1] * Effort_act[S1] * retA_P_real[SAYt] * t(Si)[SR] * fishdist[SR] *
+  #                   FleetPars$qvar[SY1] * FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y)/StockPars$Asize[SR]
 
   # Apply maxF constraint
   FM_P[SAYR][FM_P[SAYR] > maxF] <- maxF
