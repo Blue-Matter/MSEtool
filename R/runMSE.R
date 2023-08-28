@@ -1211,12 +1211,18 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     V_P_real <- FleetPars$V_real  #  selectivity at age array - realized selectivity (max may be less than 1)
     V_P_real_2 <- FleetPars$V_real_2  #  selectivity at age array - realized selectivity (max = 1)
     
+    if (is.null(V_P_real_2)) # hack for backward compatability
+      V_P_real_2 <- V_P_real
+    
     LR5_P <- FleetPars$LR5_y
     LFR_P <- FleetPars$LFR_y
     Rmaxlen_P <- FleetPars$Rmaxlen_y
     retA_P <- FleetPars$retA # retention at age array - projections
     retA_P_real <- FleetPars$retA_real # retention at age array -  realized selectivity (max may be less than 1) 
     retA_P_real_2 <- FleetPars$retA_real_2
+    
+    if (is.null(retA_P_real_2)) # hack for backward compatability
+      retA_P_real_2 <- retA_P_real
     
     retL_P <- FleetPars$retL_real # retention at length array - projections
     Fdisc_P <- FleetPars$Fdisc_array1 # Discard mortality for projections - by age and year
