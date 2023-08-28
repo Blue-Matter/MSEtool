@@ -1123,6 +1123,9 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                                         proyears,
                                         msg=!silent,
                                         control)
+          
+          updatedData$ObsPars[[1]][[1]]$VIerr_y[1,1:69]
+          
 
           if (!is.null(MPrec)) {
             if (is.na(SampCpars[[p]][[f]]$Data@MPrec)) {
@@ -2045,8 +2048,6 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       }
     }
 
-
-    
     # ---- Account for timing of spawning (if spawn_time_frac >0) ----
     spawn_time_frac <- array(0, dim=c(nsim, np, n_age, nareas))
     for (p in 1:np) {
@@ -2590,6 +2591,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                       Rmaxlen_P=FleetPars[[p]][[f]]$Rmaxlen_P,
                                       retL_P=FleetPars[[p]][[f]]$retL_P,
                                       retA_P=FleetPars[[p]][[f]]$retA_P,
+                                      retA_P_real=FleetPars[[p]][[f]]$retA_P_real,
+                                      retA_P_real_2=FleetPars[[p]][[f]]$retA_P_real_2,
                                       L5_P=FleetPars[[p]][[f]]$L5_P,
                                       LFS_P=FleetPars[[p]][[f]]$LFS_P,
                                       Vmaxlen_P=FleetPars[[p]][[f]]$Vmaxlen_P,

@@ -1523,6 +1523,8 @@ AddRealData_MS <- function(SimData,
                             msg=msg) 
     Data_out <- fit_ind$Data_out
     ObsPars <- fit_ind$ObsPars
+    
+    fit_ind$ObsPars[[1]][[1]]$VIerr_y[,1:69]
   }
   
   # ---- Add Additional Indices ----
@@ -1915,7 +1917,6 @@ updateData_MS <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_P
   }
   
   # --- Index of vulnerable abundance ----
-  yr.ind <- max(which(!is.na(ObsPars[[p]][[f]]$VIerr_y[1,1:nyears])))
   I2 <- cbind(apply(VBiomass[,map.stocks,f,,,,drop=FALSE], c(1, 5), sum)[,yr.ind:nyears],
               apply(VBiomass_P[,map.stocks,f,,,,drop=FALSE], c(1, 5), sum)[, 1:(y - 1)])
   

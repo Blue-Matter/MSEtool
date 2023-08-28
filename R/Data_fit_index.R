@@ -232,7 +232,14 @@ Fit_Index_MS <- function(ind_slot='Ind', indcv_slot="CV_Ind", Data_out,
                         VInd = 'VBiomass')
   
   # Calculate Error
-  SimBiomass <- apply(StockPars[[p]][[biomass_var]][,map.stocks,,,,drop=FALSE], c(1, 4), sum)
+  dd <- dim(StockPars[[p]][[biomass_var]])
+  
+  if (length(dd)==5) {
+    SimBiomass <- apply(StockPars[[p]][[biomass_var]][,map.stocks,,,,drop=FALSE], c(1, 4), sum)  
+  } else {
+    SimBiomass <- apply(StockPars[[p]][[biomass_var]], c(1, 3), sum)  
+  }
+  
   
   # Fit to observed index and generate residuals for projections
   # Calculate residuals (with or without estimated beta)
@@ -266,7 +273,7 @@ Fit_Index_MS <- function(ind_slot='Ind', indcv_slot="CV_Ind", Data_out,
                                                            beta=ObsPars[[p]][[f]][[beta_var]][x]))
     
     for (i in 1:nsim) {
-      Res_List2[[i]]$res <- Res_List2[[i]]$res +   mean(Res_List[[i]]$res-Res_List2[[i]]$res[Ind_Yrs])  
+      Res_List2[[i]]$res <- Res_List2[[i]]$res +   mean(Res_List[[i]]$res-Res_List2[[i]]$res[Ind_Yrs], na.rm=TRUE)  
     }
     
     lResids_Hist <- do.call('rbind', lapply(Res_List2, '[[', 1))
