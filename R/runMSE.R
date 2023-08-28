@@ -829,14 +829,30 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
 
   # --- Calculate Historical Catch ----
   # Calculate catch-at-age
-  CB <- Biomass * (1 - exp(-Z)) * (FM/Z)  # Catch in biomass (removed from population)
-  CB[is.na(CB)] <- 0
-
+  if (!is.null( FleetPars$Wt_age_C)) {
+    w_at_age <- replicate(nareas, FleetPars$Wt_age_C[,,1:OM@nyears])
+    B2 <- N * w_at_age
+    CB <- B2 * (1 - exp(-Z)) * (FM/Z)
+    CB[is.na(CB)] <- 0
+  } else {
+    CB <- Biomass * (1 - exp(-Z)) * (FM/Z)  # Catch in biomass (removed from population)
+    CB[is.na(CB)] <- 0
+    
+  }
+  
   # Calculate retained-at-age
   Cret <- N * (1 - exp(-Z)) * (FMret/Z)  # Retained catch in numbers
   Cret[is.na(Cret)] <- 0
-  CBret <- Biomass * (1 - exp(-Z)) * (FMret/Z)  # Retained catch in biomass
-  CBret[is.na(CBret)] <- 0
+  
+  if (!is.null(FleetPars$Wt_age_C)) {
+    CBret <- B2 * (1 - exp(-Z)) * (FMret/Z)  # Retained catch in biomass
+    CBret[is.na(CBret)] <- 0
+    
+  } else {
+    CBret <- Biomass * (1 - exp(-Z)) * (FMret/Z)  # Retained catch in biomass
+    CBret[is.na(CBret)] <- 0
+  }
+ 
 
   # --- Sampling by area ----
   valNames <- c("Catch", 'BInd', 'SBInd', 'VInd', 'RecInd',
