@@ -4,7 +4,14 @@
 \alias{applyMMP}
 \title{Apply multi Management Procedures (class MMP) to a hierarchical list of Data class objects}
 \usage{
-applyMMP(DataList, MP = NA, reps = 1, nsims = NA, silent = FALSE)
+applyMMP(
+  DataList,
+  MP = NA,
+  reps = 1,
+  nsims = NA,
+  silent = FALSE,
+  parallel = snowfall::sfIsRunning()
+)
 }
 \arguments{
 \item{DataList}{A hierarchical list of \linkS4class{Data} objects (Fleets nested in Stocks)}
@@ -16,6 +23,8 @@ applyMMP(DataList, MP = NA, reps = 1, nsims = NA, silent = FALSE)
 \item{nsims}{Optional. Number of simulations.}
 
 \item{silent}{Logical. Should messages be suppressed?}
+
+\item{parallel}{Logical. Whether to run MPs in parallel}
 }
 \value{
 A hierarchical list of management recommendations (object class Rec), Fleets nested in Stocks

@@ -1448,6 +1448,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   if (runparallel & any(parallel_MPs)) {
     if (!isrunning) setup()
     Export_customMPs(allMPs)
+    if (!silent) message("MPs running in parallel: ", paste0(names(parallel), collapse = ", "))
   }
   
   ncpus <- set_parallel(runparallel, msg=!silent)
@@ -1464,7 +1465,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     if (!silent) message("Variable management intervals:")
     df <- data.frame(MP=MPs,interval=interval)
     for (i in 1:nrow(df)) {
-      if (!silent) message(df$MP[i], 'has management interval:', df$interval[i])
+      if (!silent) message(df$MP[i], 'has management interval:', df$interval[i], ifelse(i == nrow(df), "\n", ""))
     }
   }
 
@@ -1810,7 +1811,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       # DataList<-getDataList(MSElist,mm)
       DataList<-getDataList(MSElist,mm)
       # returns a hierarchical list object stock then fleet then slot type of Rec
-      MPRecs_A <- applyMMP(DataList, MP = MPs[mm], reps = 1, silent=TRUE)
+      MPRecs_A <- applyMMP(DataList, MP = MPs[mm], reps = 1, silent = TRUE, parallel = parallel_MPs[mm])
       Data_p_A <- MPrecs_A_blank
       for(p in 1:np)for(f in 1:nf){
         Data_p_A[[p]][[f]]<-MSElist[[p]][[f]][[mm]]
@@ -2366,7 +2367,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
           # returns a hierarchical list object stock then fleet of Data objects
           DataList <- getDataList(MSElist,mm)
           # # returns a hierarchical list object stock then fleet then slot type of Rec
-          MPRecs_A <- applyMMP(DataList, MP = MPs[mm], reps = 1, silent=TRUE)
+          MPRecs_A <- applyMMP(DataList, MP = MPs[mm], reps = 1, silent = TRUE, parallel = parallel_MPs[mms])
           Data_p_A <- MPrecs_A_blank
           for(p in 1:np)for(f in 1:nf){
             Data_p_A[[p]][[f]]<-MSElist[[p]][[f]][[mm]]

@@ -27,10 +27,11 @@ getDataList<-function(MSElist,mm){
 #' @param reps Number of samples
 #' @param nsims Optional. Number of simulations.
 #' @param silent Logical. Should messages be suppressed?
+#' @param parallel Logical. Whether to run MPs in parallel
 #'
 #' @return A hierarchical list of management recommendations (object class Rec), Fleets nested in Stocks
 #'
-applyMMP <- function(DataList, MP = NA, reps = 1, nsims=NA, silent=FALSE) {
+applyMMP <- function(DataList, MP = NA, reps = 1, nsims = NA, silent = FALSE, parallel = snowfall::sfIsRunning()) {
 
   if (is.na(nsims)) nsims <- length(DataList[[1]][[1]]@Mort)
   nMPs <- length(MP)
@@ -39,8 +40,14 @@ applyMMP <- function(DataList, MP = NA, reps = 1, nsims=NA, silent=FALSE) {
   } else {
     nareas <- 2
   }
+  
+  if (parallel) {
+    .lapply <- snowfall::sfLapply
+  } else {
+    .lapply <- base::lapply
+  }
 
-  DataList_F <-DataList  # formatted data list
+  #DataList_F <-DataList  # formatted data list
 
   # don't think this is needed anymore - AH May 2021
   # for(ss in 1:length(DataList)){
@@ -49,7 +56,7 @@ applyMMP <- function(DataList, MP = NA, reps = 1, nsims=NA, silent=FALSE) {
   #   }
   # }
 
-  temp <- lapply(1:nsims, MP, DataList = DataList, reps = reps)
+  temp <- .lapply(1:nsims, MP, DataList = DataList, reps = reps)
   recList<-
 
     #if (!silent && any(apply(is.na(recList$TAC), 2, sum) > rep(0.5 * reps, nsims)))
