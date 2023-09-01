@@ -53,7 +53,14 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">applyMMP</span><span class="op">(</span><span class="va">DataList</span>, MP <span class="op">=</span> <span class="cn">NA</span>, reps <span class="op">=</span> <span class="fl">1</span>, nsims <span class="op">=</span> <span class="cn">NA</span>, silent <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">applyMMP</span><span class="op">(</span></span>
+<span>  <span class="va">DataList</span>,</span>
+<span>  MP <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  reps <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  nsims <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  silent <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  parallel <span class="op">=</span> <span class="fu">snowfall</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/snowfall/man/snowfall-b-init.html" class="external-link">sfIsRunning</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -76,6 +83,10 @@
 
 <dt>silent</dt>
 <dd><p>Logical. Should messages be suppressed?</p></dd>
+
+
+<dt>parallel</dt>
+<dd><p>Logical. Whether to run MPs in parallel</p></dd>
 
 </dl></div>
     <div id="value">
