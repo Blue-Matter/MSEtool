@@ -2367,7 +2367,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
           # returns a hierarchical list object stock then fleet of Data objects
           DataList <- getDataList(MSElist,mm)
           # # returns a hierarchical list object stock then fleet then slot type of Rec
-          MPRecs_A <- applyMMP(DataList, MP = MPs[mm], reps = 1, silent = TRUE, parallel = parallel_MPs[mms])
+          MPRecs_A <- applyMMP(DataList, MP = MPs[mm], reps = 1, silent = TRUE, parallel = parallel_MPs[mm])
           Data_p_A <- MPrecs_A_blank
           for(p in 1:np)for(f in 1:nf){
             Data_p_A[[p]][[f]]<-MSElist[[p]][[f]][[mm]]
