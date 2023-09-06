@@ -6,6 +6,9 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   # ---- Initial Checks and Setup ---
   OM <- CheckOM(OM, !silent)
   
+  if (OM@nsim <=1) 
+    stop("OM@nsim must be > 1", call.=FALSE)
+  
   # Set up parallel processing 
   ncpus <- set_parallel(any(unlist(parallel)))
   
