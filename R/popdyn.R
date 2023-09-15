@@ -983,7 +983,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     expC <- TACusedE
     expC[TACusedE> availB] <- availB[TACusedE> availB] * 0.999
 
-    Ftot <- sapply(1:nsim, calcF, expC, V_P_real_2, retA_P_real, Biomass_P, fishdist,
+    Ftot <- sapply(1:nsim, calcF, expC, V_P_real_2, retA_P_real_2, Biomass_P, fishdist,
                    StockPars$Asize,
                    StockPars$maxage,
                    StockPars$nareas,
@@ -1002,6 +1002,10 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
 
     # Calculate total and retained catch
     CB_P[SAYR] <- FM_P[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR] # removals
+    
+    
+    sum(CB_Pret[1,,y,])
+    
     CB_Pret[SAYR] <- FM_Pret[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR] # retained
 
   
