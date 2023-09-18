@@ -2007,8 +2007,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                   FleetPars=FleetPars[[p]][[f]],
                                   ImpPars=ImpPars[[p]][[f]], 
                                   control=control)
+    
         
-  
         if(length(SexPars)>0) MPCalcs<- MPCalcsNAs(MPCalcs) # Zeros caused by SexPars
 
         TACa[,p,f, mm, y] <- TACused[,p,f]#MPCalcs$TACrec # recommended TAC
