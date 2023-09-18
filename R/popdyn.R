@@ -1002,13 +1002,8 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
 
     # Calculate total and retained catch
     CB_P[SAYR] <- FM_P[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR] # removals
-    
-    
-    sum(CB_Pret[1,,y,])
-    
     CB_Pret[SAYR] <- FM_Pret[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR] # retained
 
-  
     # for debugging info:
     # actualremovals <- apply(CB_P[,,y,], 1, sum)
     # retained <- apply(CB_Pret[,,y,], 1, sum)
