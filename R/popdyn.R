@@ -983,7 +983,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     expC <- TACusedE
     expC[TACusedE> availB] <- availB[TACusedE> availB] * 0.999
 
-    Ftot <- sapply(1:nsim, calcF, expC, V_P_real_2, retA_P_real_2, Biomass_P, fishdist,
+    Ftot <- sapply(1:nsim, calcF, expC, V_P_real_2, retA_P_real, Biomass_P, fishdist,
                    StockPars$Asize,
                    StockPars$maxage,
                    StockPars$nareas,
@@ -997,9 +997,10 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
 
     # Calculate F & Z by age class
     FM_P[SAYR] <- Ftot[S] * V_P_real_2[SAYt] * fishdist[SR]/StockPars$Asize[SR]
-    FM_Pret[SAYR] <- Ftot[S] * retA_P_real_2[SAYt] * fishdist[SR]/StockPars$Asize[SR]
+    FM_Pret[SAYR] <- Ftot[S] * retA_P_real[SAYt] * fishdist[SR]/StockPars$Asize[SR]
     Z_P[SAYR] <- FM_P[SAYR] + StockPars$M_ageArray[SAYt] # calculate total mortality
 
+    
     # Calculate total and retained catch
     CB_P[SAYR] <- FM_P[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR] # removals
     CB_Pret[SAYR] <- FM_Pret[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR] # retained
@@ -1008,7 +1009,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     # actualremovals <- apply(CB_P[,,y,], 1, sum)
     # retained <- apply(CB_Pret[,,y,], 1, sum)
     # ratio <- actualremovals/retained # ratio of actual removals to retained catch
-
+    # 
     # Effort relative to last historical with this catch
     Effort_req <- Ftot/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]*
                           (1 + FleetPars$qinc/100)^y) * apply(fracE2, 1, sum) # effort required
@@ -1075,8 +1076,8 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   #                M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed 
 
   control$TAC <- 'removals'
-  # total fishing mortality for realized selectivity curve
   
+  # total fishing mortality for realized selectivity curve
   Ftot <- sapply(1:nsim, calcF, removedCatch, V_P_real_2, retA_P_real_2, Biomass_P, fishdist,
                  Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
                  M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed
