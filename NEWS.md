@@ -1,7 +1,7 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
 
-# MSEtool 3.7.1 
+# MSEtool 3.7.2 
 
 ## Changes
 - modifications to calculation of selectivity and retention curves when there is high discarding

@@ -2285,7 +2285,13 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       CBret_P <- array(0, dim=c(nsim, np, nf, n_age, proyears, nareas))
       for (p in 1:np) {
         for(f in 1:nf) {
-          CBret_P[,p,f,,,] <-FleetPars[[p]][[f]]$CB_Pret
+          if (!is.null(control$TAC)) {
+            if (control$TAC=="removals") {
+              CBret_P[,p,f,,,] <-FleetPars[[p]][[f]]$CB_P    
+            }
+          } else {
+            CBret_P[,p,f,,,] <-FleetPars[[p]][[f]]$CB_Pret  
+          }
         }
       }
     
