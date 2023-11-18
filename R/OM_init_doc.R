@@ -41,16 +41,16 @@ OMexample <- function(dir=getwd()) {
 #' OMinit('myOM')
 #'
 #' # Create an Excel OM template and text file called 'myOM.rmd' and 'myOM.rmd', using
-#' another OM as a template:
-#' # OMinit('myOM', myOM)
+#' # another OM as a template:
+#' OMinit('myOM', myOM)
 #'
 #' # Create an Excel OM template and text file called 'myOM.rmd' and 'myOM.rmd', using
-#' the Stock object 'Herring' as a template:
-#' # OMinit('myOM', Herring)
+#' # the Stock object 'Herring' as a template:
+#' OMinit('myOM', Herring)
 #'
 #' # Create an Excel OM template and text file called 'myOM.rmd' and 'myOM.rmd', using
-#' the Stock object 'Herring', and Obs object 'Generic_obs' as templates:
-#' # OMinit('myOM', Herring, Generic_obs)
+#' # the Stock object 'Herring', and Obs object 'Generic_obs' as templates:
+#' OMinit('myOM', Herring, Generic_obs)
 #' }
 #'
 OMinit <- function(name=NULL, ..., files=c('xlsx', 'rmd'), dir=NULL, overwrite=FALSE) {
