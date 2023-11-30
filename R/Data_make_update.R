@@ -2140,7 +2140,7 @@ updateData_MS <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_P
     
     
   } else {
-    vn <- (apply(N_P[,p,,,, drop=FALSE], c(1,3,4), sum) * FleetPars[[p]][[f]]$retA_P[,,(nyears+1):(nyears+proyears)]) # numbers at age that would be retained
+    vn <- (apply(N_P[,p,,,, drop=FALSE], c(1,3,4), sum) * FleetPars[[p]][[f]]$retA_P_real[,,(nyears+1):(nyears+proyears)]) # numbers at age that would be retained
     vn <- aperm(vn, c(1,3,2))
     vn <- vn[,yind, ,drop=FALSE]
 
