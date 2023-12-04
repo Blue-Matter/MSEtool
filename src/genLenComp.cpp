@@ -137,8 +137,41 @@ NumericMatrix  genSizeComp(NumericMatrix VulnN, NumericVector CAL_binsmid, Numer
       int count = 0;
       for (int age=0; age < k; age++) { // loop over 1:maxage
         int Nage3 =  round(Nage2(age)); // number at this age
-        NumericVector rands = RcppArmadillo::sample(NumericVector::create(0,1,2,3,4,5,6,7,8,9,10,11), Nage3, TRUE, NumericVector::create()) ; //  assume ages are uniformly distributed across months
-        NumericVector subAgeVec = get_freq(rands, 1, 0, 12); // distribute n across months
+        // NumericVector rands = RcppArmadillo::sample(NumericVector::create(0,1,2,3,4,5,6,7,8,9,10,11), Nage3, TRUE, NumericVector::create()) ; //  assume ages are uniformly distributed across months
+        // NumericVector subAgeVec = get_freq(rands, 1, 0, 12); // distribute n across months
+        // Calculate probability of sub-year age-classes
+        int n_age = 12;
+        NumericVector mean_length_at_sub_age(12);
+        NumericMatrix ALK(n_age, nbins);
+        NumericMatrix ALKs(n_age, nbins);
+        NumericVector page(n_age);
+        
+        // calc select-at-subage
+        for (int subage=0; subage<=11; subage++) { // loop over 12 months
+          double sage = varAges(subage) + age;
+          mean_length_at_sub_age(subage) = Linfs(yr) * (1-exp(-Ks(yr)* (sage - t0s(yr))));
+        
+          ALK(subage, _) = Rcpp::dnorm(CAL_binsmid, mean_length_at_sub_age(subage), mean_length_at_sub_age(subage)*LenCV, false);
+          page(subage) = sum(ALK(age,_));
+        }
+        LogicalVector  b1 = page>0;
+        if (is_false(all(b1))) {
+          ALK(0,0) = 1;
+        }
+        NumericVector sela(n_age);
+        for (int subage=0; subage<n_age; subage++) {
+          if (page(subage)>0) {
+            ALKs(subage,_) = ALK(subage,_)/page(subage);
+          }
+          for (int len=0; len<nbins; len++) {
+            sela(subage) += ALKs(subage,len)*selCurve(len,yr);
+          }
+        }
+        
+        // distribute sub-year ages across months proportional to selectivity-at-monthly-age
+        NumericVector probsubage = sela/sum(sela);
+        NumericVector subAgeVec = Nage3 * probsubage;
+        
         // NumericVector subAgeVec = Nage3/NumericVector::create(1,2,3,4,5,6,7,8,9,10,11,12); // distribute n across months
         for (int subage=0; subage<=11; subage++) { // loop over 12 months
           if (subAgeVec(subage) > 0) {
@@ -148,7 +181,7 @@ NumericMatrix  genSizeComp(NumericMatrix VulnN, NumericVector CAL_binsmid, Numer
             NumericVector dist = tdnorm((CAL_binsmid-mean)/(LenCV*mean), -truncSD, truncSD); // prob density of lengths for this age
             NumericVector newdist = dist * selCurve(_,yr); // probability = dist * size-selection curve
             if (sum(newdist)!=0) {
-              newdist = newdist/sum(newdist);
+              // newdist = newdist/sum(newdist);
               Lens(count) = RcppArmadillo::sample(CAL_binsmid, subAgeVec(subage), TRUE, newdist); // sample lengths for this sub-age class
             } else {
               Lens(count) = NA_INTEGER;

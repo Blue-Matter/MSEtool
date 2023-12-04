@@ -674,7 +674,6 @@ simCAA <- function(nsim, yrs, n_age, Cret, CAA_ESS, CAA_nsamp) {
 #' @param LenCV CV of length-at-age#'
 #' @return named list with CAL array and LFC, ML, & Lc vectors
 #'
-#'     CALdat <- simCAL(nsim, nyears, StockPars$maxage, ObsPars$CAL_ESS,
 simCAL <- function(nsim, nyears, maxage,  CAL_ESS, CAL_nsamp, nCALbins, CAL_binsmid, CAL_bins,
                    vn, retL, Linfarray, Karray, t0array, LenCV) {
   # a multinomial observation model for catch-at-length data
@@ -702,6 +701,8 @@ simCAL <- function(nsim, nyears, maxage,  CAL_ESS, CAL_nsamp, nCALbins, CAL_bins
     tempSize <- lapply(1:nsim, genSizeCompWrap, vn, CAL_binsmid, CAL_bins, retL, CAL_ESS,
                        CAL_nsamp,
                        Linfarray, Karray, t0array, LenCV, truncSD=2)
+    
+    
   }
   CAL <- aperm(array(as.numeric(unlist(tempSize, use.names=FALSE)),
                      dim=c(nyears, length(CAL_binsmid), nsim)), c(3,1,2))
@@ -768,7 +769,7 @@ simCAL <- function(nsim, nyears, maxage,  CAL_ESS, CAL_nsamp, nCALbins, CAL_bins
 genSizeCompWrap <- function(i, vn, CAL_binsmid, CAL_bins, retL,
                             CAL_ESS, CAL_nsamp,
                             Linfarray, Karray, t0array,
-                            LenCV, truncSD=2) {
+                            LenCV, truncSD=3) {
   VulnN <- as.matrix(vn[i,,])
   if (ncol(VulnN)>1) {
     VulnN <- VulnN/rowSums(VulnN) * CAL_nsamp[i] # get relative numbers at age
@@ -798,6 +799,7 @@ genSizeCompWrap <- function(i, vn, CAL_binsmid, CAL_bins, retL,
   lens
 
 }
+
 
 #' @describeIn genSizeCompWrap Internal function to calculate fifth percentile of size composition
 #' @param lenvec Vector of lengths
@@ -2152,6 +2154,9 @@ updateData_MS <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_P
                      Karray=StockPars[[p]]$Karray[,nyears + yind, drop=FALSE],
                      t0array=StockPars[[p]]$t0array[,nyears + yind,drop=FALSE],
                      LenCV=StockPars[[p]]$LenCV)
+    
+    
+
     
   }
   
