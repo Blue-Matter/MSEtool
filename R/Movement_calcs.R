@@ -140,7 +140,7 @@ validateTMB <- function(obj) {
 #' @param dist A vector of fractions of unfished stock in each area. The length of this vector will determine the
 #' number of areas (\code{nareas}) in the OM.
 #' @param distE Logit (normal) St.Dev error for sampling desired fraction in each area
-#' @param frac_other A matrix (nareas rows from, nareas columns to) of relative fractions moving to other areas. 
+#' @param frac_other A matrix (nareas rows from, nareas columns to) of relative fractions moving to other areas (the positive diagonal (staying) is unspecified). 
 #' @param frac_otherE Logit (normal) St.Dev error for sampling desired fraction moving to other areas. 
 #' @param prob the mean probability of staying in the same area among all areas
 #' @param probE Logit (normal) St.Dev error for sampling desired probability of staying in each area
@@ -161,9 +161,9 @@ validateTMB <- function(obj) {
 #'
 #' }
 #' @describeIn simmov2 Estimation function for creating movement matrix.
-simmov2 <- function(OM,dist, distE = 0.01, frac_other = matrix(c(NA,2,1, 2,NA,1, 1,2,NA),nrow=3, byrow=T), frac_otherE = 0.01, prob = 0.8, probE = 0.3, figure = TRUE) {
+simmov2 <- function(OM,dist, distE = 0.01, frac_other = matrix(c(NA,2,1, 3,NA,1, 1,4,NA),nrow=3, byrow=T), frac_otherE = 0.01, prob = 0.8, probE = 3, figure = TRUE) {
   
-  # OM = testOM; dist=c(0.05,0.6,0.35);  distE = 0.1; frac_other = matrix(c(NA,2,1, 2,NA,1, 1,2,NA),nrow=3, byrow=T); frac_otherE = 0.01; prob = 0.8; probE = 0.3; figure = TRUE; ilogitm=SAMtool:::ilogitm; ilogit=SAMtool:::ilogit; logit=SAMtool:::logit
+  # OM = testOM; dist=c(0.05,0.6,0.35);  distE = 0.1; frac_other = matrix(c(NA,2,1, 4,NA,1, 1,4,NA),nrow=3, byrow=T); frac_otherE = 0.01; prob = 0.8; probE = 3; figure = TRUE; ilogitm=MSEtool:::ilogitm; ilogit=MSEtool:::ilogit; logit=MSEtool:::logit
   
   nareas <- length(dist)
   if(nareas < 2) stop("Error: nareas, i.e., length(dist), is less than 2.")
@@ -183,65 +183,76 @@ simmov2 <- function(OM,dist, distE = 0.01, frac_other = matrix(c(NA,2,1, 2,NA,1,
   return(OM)
 }
 
-
 markov_frac = function(logit_probs,frac_other){
-  
   probs = ilogit(logit_probs)
   left = 1-probs
   mov = frac_other/apply(frac_other,1,sum,na.rm=T)*left
   diag(mov) = probs
-  # all(apply(mov,1,sum)==1)
+  # all(apply(mov,1,sum)==1) # check
   mov
-  
 }
 
-opt_mov2 <- function(x, dist, prob, probE, frac_other, nits = 20) {
-  
+opt_mov2 <- function(x, dist, prob, probE, frac_other, nits = 50) {
   logit_probs = x
-  
   mov = markov_frac(logit_probs,frac_other)
-  outdist=dist
-  tol=rep(NA,nits)
-  for(i in 1:nits){
-    temp = outdist%*%mov
-    tol[i] = mean(abs(temp-outdist))
-    outdist = temp
-  }
-  
-  nll_dist <- dnorm(log(outdist), log(fracs), 0.1, TRUE)
+  outdist = CalcAsymptoticDist(mov,dist,nits,plot=F)
+  nll_dist <- dnorm(log(outdist), log(dist), 0.1, TRUE)
   nll_stay <- dnorm(logit_probs, logit(prob), probE, TRUE)
- 
   nll <- c(nll_dist, nll_stay) %>% sum()
   return(-nll)
 }
 
-#' Calculates movement matrices from user inputs for fraction in each area (fracs) the relative fraction moving to othere areas, plus a mean probability of staying
+#' Calculates movement matrices from user inputs for fraction in each area (fracs) the relative fraction moving to other areas, plus a mean probability of staying in any given area. 
 #'
-#' @description A function for calculating a movement matrix from user specified unfished stock biomass fraction in each area.
-#' Used by \link{simmov} to generate movement matrices for an operating model.
+#' @description A function for calculating a movement matrix from user specified distribution among areas (v) and relative movement to other areas (solves for positive diagonal - vector of prob staying).
+#' Used by \link{simmov2} to generate movement matrices for an operating model. There must be a prior on the positive diagonal of the movement matrix or these will tend to 1
+#' and hence perfectly satisfy the requirement V = MV. 
 #' @param dist A vector nareas long of fractions of unfished stock biomass in each area
 #' @param prob A vector of the probability of individuals staying in each area or a single value for the mean probability of staying among all areas
+#' @param probE The logit CV associated with prob (used as a penalty when optimizing for diagonal)
+#' @param frac_other A matrix nareas x nareas that specifies the relative fraction moving from one area to the others. The positive diagonal is unspecified. 
 #' @author T. Carruthers
 #' @export
-#' @seealso \link{simmov}
-makemov2 <- function(dist = c(0.05, 0.6, 0.35), prob = 0.8, probE = 0.3, frac_other = matrix(c(NA,2,1, 2,NA,1, 1,2,NA),nrow=3, byrow=T,nits=20)) {
-  
-  nareas <- length(fracs)
-  
+#' @seealso \link{simmov2}
+makemov2 <- function(dist = c(0.05, 0.6, 0.35), prob = 0.5, probE = 3, frac_other = matrix(c(NA,2,1, 2,NA,1, 1,2,NA),nrow=3, byrow=T),plot=F){
+  nareas <- length(dist)
   opt <- stats::nlminb(rep(0,nareas), opt_mov2, dist = dist, prob = prob, probE = probE, frac_other = frac_other, 
                        control = list(iter.max = 5e3, eval.max = 1e4))
   
   mov = markov_frac(opt$par, frac_other)
+  if(plot)CalcAsymptoticDist(mov,dist,plot=T)
+  return(mov)
+}
+
+#' Calculates the asymptotic distribution from an initial distribution vector (V) and a markov movement matrix (M) (rows sum to 1) 
+#'
+#' @description ACalculates the asymptotic distribution from an initial distribution vector (V) and a markov movement matrix (M) (rows sum to 1).  
+#' @param M A square markov movement matrix M of nareas rows and nareas columns (rows sum to 1) 
+#' @param V An optional vector nareas long of initial fractions by area (if unspecified the calculation will start from a uniform distribution)
+#' @param nits An integer number of iterations for multiplying V by M to get the asymptotic distribution (~50 is usually enough)
+#' @param plot Should the convergence to a stable distribution be plotted?
+#' @author T. Carruthers
+#' @export
+#' @seealso \link{simmov2}
+CalcAsymptoticDist = function(M,V=NULL,nits=50,plot=F){
   
-  outdist=fracs
+  if(is.null(V)) V = rep(1/dim(M)[1],dim(M)[1])
+  if(!all(length(V)==dim(M))) stop("Error in CalcAsymptoticDist(): the length of the distribution vector V is not the same as the dimensions of the square movement matrix M")
+  strV = V
   tol=rep(NA,nits)
   for(i in 1:nits){
-    temp = outdist%*%mov
-    tol[i] = mean(abs(temp-outdist))
-    outdist = temp
+    temp = V%*%M
+    tol[i] = mean(abs(temp-V))
+    V = temp
   }
-  
-  return(mov)
+  if(plot){
+    par(mfrow=c(1,2),mai=c(0.3,0.3,0.01,0.01),omi=c(0.05,0.05,0.3,0.05))
+    plot(tol,pch=19,col='blue'); lines(tol,col ="blue");grid()
+    plot(1:length(V),strV,col='#0000ff90',pch=1,lwd=2,cex=1.3,ylim=c(0,max(V,strV)));grid()
+    points(1:length(V),V,col="#ff000090",lwd=2,pch=3,cex=1.3)
+    legend('topright',legend=c("Specified","Achieved"),text.col=c("red","blue"),bty='n')
+  }
+  V
 }
 
 
