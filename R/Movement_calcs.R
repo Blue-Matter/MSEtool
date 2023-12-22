@@ -161,7 +161,7 @@ validateTMB <- function(obj) {
 #'
 #' }
 #' @describeIn simmov2 Estimation function for creating movement matrix.
-simmov2 <- function(OM,dist, distE = 0.01, frac_other = matrix(c(NA,2,1, 3,NA,1, 1,4,NA),nrow=3, byrow=T), frac_otherE = 0.01, prob = 0.8, probE = 3, figure = TRUE) {
+simmov2 <- function(OM,dist=c(0.05,0.6,0.35), distE = 0.01, frac_other = matrix(c(NA,2,1, 3,NA,1, 1,4,NA),nrow=3, byrow=T), frac_otherE = 0.01, prob = 0.8, probE = 1, figure = TRUE) {
   
   # OM = testOM; dist=c(0.05,0.6,0.35);  distE = 0.1; frac_other = matrix(c(NA,2,1, 4,NA,1, 1,4,NA),nrow=3, byrow=T); frac_otherE = 0.01; prob = 0.8; probE = 3; figure = TRUE; ilogitm=MSEtool:::ilogitm; ilogit=MSEtool:::ilogit; logit=MSEtool:::logit
   
@@ -195,7 +195,7 @@ markov_frac = function(logit_probs,frac_other){
 opt_mov2 <- function(x, dist, prob, probE, frac_other, nits = 50) {
   logit_probs = x
   mov = markov_frac(logit_probs,frac_other)
-  outdist = CalcAsymptoticDist(mov,dist,nits,plot=F)
+  outdist = CalcAsymptoticDist(mov,dist,nits=nits,plot=F)
   nll_dist <- dnorm(log(outdist), log(dist), 0.1, TRUE)
   nll_stay <- dnorm(logit_probs, logit(prob), probE, TRUE)
   nll <- c(nll_dist, nll_stay) %>% sum()
@@ -214,7 +214,7 @@ opt_mov2 <- function(x, dist, prob, probE, frac_other, nits = 50) {
 #' @author T. Carruthers
 #' @export
 #' @seealso \link{simmov2}
-makemov2 <- function(dist = c(0.05, 0.6, 0.35), prob = 0.5, probE = 3, frac_other = matrix(c(NA,2,1, 2,NA,1, 1,2,NA),nrow=3, byrow=T),plot=F){
+makemov2 <- function(dist = c(0.05, 0.6, 0.35), prob = 0.5, probE = 1, frac_other = matrix(c(NA,2,1, 2,NA,1, 1,2,NA),nrow=3, byrow=T),plot=F){
   nareas <- length(dist)
   opt <- stats::nlminb(rep(0,nareas), opt_mov2, dist = dist, prob = prob, probE = probE, frac_other = frac_other, 
                        control = list(iter.max = 5e3, eval.max = 1e4))
