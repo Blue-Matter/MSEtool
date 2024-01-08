@@ -539,6 +539,7 @@ CalcDistribution <- function(StockPars, FleetPars, SampCpars, nyears, maxF, plus
   if (plusgroup) {
     surv[,n_age] <- surv[,n_age]+surv[,n_age]*exp(-StockPars$M_ageArray[,n_age,1])/(1-exp(-StockPars$M_ageArray[,n_age,1])) # indefinite integral
   }
+  surv[!is.finite(surv)] <- tiny
   Nfrac <- surv * StockPars$Mat_age[,,1]  # predicted Numbers of mature ages in first year
 
   SSN[SAYR] <- Nfrac[SA] * StockPars$R0[S] * StockPars$Pinitdist[SR]  # Calculate initial spawning stock numbers

@@ -152,10 +152,18 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
     # numbers at age in population that would be retained
     vn <- aperm(vn, c(1,3, 2))
 
-    CALdat <- simCAL(nsim, nyears, StockPars$maxage, ObsPars$CAL_ESS,
-                     ObsPars$CAL_nsamp, StockPars$nCALbins, StockPars$CAL_binsmid, StockPars$CAL_bins,
-                     vn, FleetPars$retL_real, StockPars$Linfarray,
-                     StockPars$Karray, StockPars$t0array, StockPars$LenCV)
+    CALdat <- simCAL(nsim, nyears, maxage=StockPars$maxage, 
+                     CAL_ESS=ObsPars$CAL_ESS,
+                     CAL_nsamp=ObsPars$CAL_nsamp, 
+                     nCALbins=StockPars$nCALbins, 
+                     CAL_binsmid=StockPars$CAL_binsmid,
+                     CAL_bins=StockPars$CAL_bins,
+                     vn, 
+                     retL=FleetPars$retL_real, 
+                     Linfarray=StockPars$Linfarray,
+                     Karray=StockPars$Karray, 
+                     t0array=StockPars$t0array, 
+                     LenCV=StockPars$LenCV)
   }
 
   Data@CAL_bins <- StockPars$CAL_bins
@@ -545,9 +553,14 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   } else {
     vn <- (apply(N_P*Sample_Area$CAL[,,(nyears+1):(nyears+proyears),], c(1,2,3), sum) * retA_P[,,(nyears+1):(nyears+proyears)]) # numbers at age that would be retained
     vn <- aperm(vn, c(1,3,2))
-    CALdat <- simCAL(nsim, nyears=length(yind), StockPars$maxage, ObsPars$CAL_ESS,
-                     ObsPars$CAL_nsamp, StockPars$nCALbins, StockPars$CAL_binsmid, StockPars$CAL_bins,
-                     vn=vn[,yind,, drop=FALSE], retL=retL_P[,,nyears+yind, drop=FALSE],
+    CALdat <- simCAL(nsim, nyears=length(yind), maxage=StockPars$maxage,
+                     CAL_ESS=ObsPars$CAL_ESS,
+                     CAL_nsamp=ObsPars$CAL_nsamp, 
+                     nCALbins=StockPars$nCALbins, 
+                     CAL_binsmid=StockPars$CAL_binsmid, 
+                     CAL_bins=StockPars$CAL_bins,
+                     vn=vn[,yind,, drop=FALSE], 
+                     retL=retL_P[,,nyears+yind, drop=FALSE],
                      Linfarray=StockPars$Linfarray[,nyears + yind, drop=FALSE],
                      Karray=StockPars$Karray[,nyears + yind, drop=FALSE],
                      t0array=StockPars$t0array[,nyears + yind,drop=FALSE],
@@ -769,7 +782,7 @@ simCAL <- function(nsim, nyears, maxage,  CAL_ESS, CAL_nsamp, nCALbins, CAL_bins
 genSizeCompWrap <- function(i, vn, CAL_binsmid, CAL_bins, retL,
                             CAL_ESS, CAL_nsamp,
                             Linfarray, Karray, t0array,
-                            LenCV, truncSD=3) {
+                            LenCV, truncSD=2) {
   VulnN <- as.matrix(vn[i,,])
   if (ncol(VulnN)>1) {
     VulnN <- VulnN/rowSums(VulnN) * CAL_nsamp[i] # get relative numbers at age

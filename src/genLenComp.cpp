@@ -150,14 +150,14 @@ NumericMatrix  genSizeComp(NumericMatrix VulnN, NumericVector CAL_binsmid, Numer
         for (int subage=0; subage<=11; subage++) { // loop over 12 months
           double sage = varAges(subage) + age;
           mean_length_at_sub_age(subage) = Linfs(yr) * (1-exp(-Ks(yr)* (sage - t0s(yr))));
-        
           ALK(subage, _) = Rcpp::dnorm(CAL_binsmid, mean_length_at_sub_age(subage), mean_length_at_sub_age(subage)*LenCV, false);
-          page(subage) = sum(ALK(age,_));
+          page(subage) = sum(ALK(subage,_));
         }
         LogicalVector  b1 = page>0;
         if (is_false(all(b1))) {
           ALK(0,0) = 1;
         }
+       
         NumericVector sela(n_age);
         for (int subage=0; subage<n_age; subage++) {
           if (page(subage)>0) {

@@ -174,6 +174,7 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
     Mat_at_Age <- Mat_at_Age[ind]
     Fec_at_Age <- Fec_at_Age[ind]
     V_at_Age <- V_at_Age[ind]
+    
     maxage <- length(ind)-1
   }
   

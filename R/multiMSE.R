@@ -237,9 +237,9 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     # ---- Calculate initial distribution if mov provided in cpars ----
     if (is.null(StockPars[[p]]$initdist)) {
       # mov has been passed in cpars - initdist hasn't been defined
-      StockPars[[p]]$initdist <- CalcDistribution(StockPars[[p]],
-                                                  FleetPars[[p]][[1]],
-                                                  SampCpars[[p]][[1]],
+      StockPars[[p]]$initdist <- CalcDistribution(StockPars=StockPars[[p]],
+                                                  FleetPars=FleetPars[[p]][[1]],
+                                                  SampCpars=SampCpars[[p]][[1]],
                                                   nyears, maxF,
                                                   plusgroup[p], checks=FALSE)
     }
@@ -722,6 +722,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       })
     })
     
+
     # --- Annual reference points ----
     StockPars[[p]]$MSY_y <- sapply(MSYrefsYr, function(x) x["Yield", ]) %>% t()
     StockPars[[p]]$FMSY_y <- sapply(MSYrefsYr, function(x) x["F", ]) %>% t()

@@ -797,7 +797,6 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
         movedarray[mind[,c(1,3,4)]]<-Pinitdist[mind[,c(1,3)]]*mov[mind]
         Pinitdist<-apply(movedarray,c(1,3),sum) # add over to areas
       }
-
     }
     if(!is.null(cpars$Asize)) {
       Asize <- cpars$Asize
