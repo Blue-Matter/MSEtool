@@ -54,3 +54,4 @@ Suggests:
     usethis
 LinkingTo: Rcpp, RcppArmadillo
 BugReports: https://github.com/Blue-Matter/MSEtool/issues
+URL: https://msetool.openmse.com/
