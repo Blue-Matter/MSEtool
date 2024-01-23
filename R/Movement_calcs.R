@@ -226,7 +226,7 @@ makemov2 <- function(dist = c(0.05, 0.6, 0.35), prob = 0.5, probE = 1, frac_othe
 
 #' Calculates the asymptotic distribution from an initial distribution vector (V) and a markov movement matrix (M) (rows sum to 1) 
 #'
-#' @description ACalculates the asymptotic distribution from an initial distribution vector (V) and a markov movement matrix (M) (rows sum to 1).  
+#' @description Calculates the asymptotic distribution from an initial distribution vector (V) and a markov movement matrix (M) (rows sum to 1).  
 #' @param M A square markov movement matrix M of nareas rows and nareas columns (rows sum to 1) 
 #' @param V An optional vector nareas long of initial fractions by area (if unspecified the calculation will start from a uniform distribution)
 #' @param nits An integer number of iterations for multiplying V by M to get the asymptotic distribution (~50 is usually enough)
