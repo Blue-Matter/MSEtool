@@ -95,8 +95,7 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
     VBcur_a <- apply(VBcur, c(1,2,4), sum)
    
     # Fdist[Find] <- VBcur[Find]*MPAthisyr[Find[,c(1,2,4)]]^Spat_targ[Find[, 1:2]]
-    Fdist[Find] <- VBcur_a[Find[,c(1,2,4)]]*MPAthisyr[Find[,c(1,2,4)]]^Spat_targ[Find[, 1:2]]
-    
+    Fdist[Find] <- (VBcur_a[Find[,c(1,2,4)]]*MPAthisyr[Find[,c(1,2,4)]])^Spat_targ[Find[, 1:2]]
     Fdist[Find] <- Fdist[Find]/apply(Fdist,1:3,sum)[Find[,1:3]]
     Fdist[is.na(Fdist)] <- 0 # This is an NA catch for hermaphroditism
     
@@ -106,7 +105,7 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
     FMx[Find] <- qsx[Find[, 1]] * qfracx[Find[, 1:2]] * Ecur[Find[, 1:2]] * Fdist[Find] *
       Vcur[Find[, 1:3]]/Asizex[Find[, c(1, 4)]]
     FMx[FMx > maxF] <- maxF # apply maxF
- 
+    
     Retcur[] <- FretAx[, , , y-1] #array(FretAx[, , , 1], c(np, nf, n_age))
     FMretx[Find] <- qsx[Find[,1]] * qfracx[Find[,1:2]] * Ecur[Find[,1:2]] * Fdist[Find] *
       Retcur[Find[, 1:3]]/Asizex[Find[, c(1, 4)]]
