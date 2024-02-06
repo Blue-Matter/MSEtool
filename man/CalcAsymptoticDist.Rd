@@ -16,7 +16,7 @@ CalcAsymptoticDist(M, V = NULL, nits = 50, plot = F)
 \item{plot}{Should the convergence to a stable distribution be plotted?}
 }
 \description{
-ACalculates the asymptotic distribution from an initial distribution vector (V) and a markov movement matrix (M) (rows sum to 1).
+Calculates the asymptotic distribution from an initial distribution vector (V) and a markov movement matrix (M) (rows sum to 1).
 }
 \seealso{
 \link{simmov2}

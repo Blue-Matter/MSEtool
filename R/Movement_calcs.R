@@ -154,16 +154,19 @@ validateTMB <- function(obj) {
 #' @export
 #' @examples
 #' \dontrun{
-#' movOM_3areas <- simmov2(testOM, frac_other = matrix(c(NA,2,1, 2,NA,1, 1,2,NA),nrow=3, byrow=T), frac_otherE = 0.01, prob = 0.8, probE = 0.3)
-#' movOM_3areas@@cpars$mov[1, 1, , ] # sim 1, age 1, movement from areas in column i to areas in row j
+#' movOM_3areas <- simmov2(testOM, frac_other = matrix(c(NA,2,1, 2,NA,1, 1,2,NA),
+#' nrow=3, byrow=T), frac_otherE = 0.01, prob = 0.8, probE = 0.3)
+#' # sim 1, age 1, movement from areas in column i to areas in row j
+#' movOM_3areas@@cpars$mov[1, 1, , ] 
 #' plot_mov(movOM_3areas@@cpars$mov)
 #' plot_mov(movOM_3areas@@cpars$mov, type = "all")
 #'
 #' }
 #' @describeIn simmov2 Estimation function for creating movement matrix.
-simmov2 <- function(OM,dist=c(0.05,0.6,0.35), distE = 0.01, frac_other = matrix(c(NA,2,1, 3,NA,1, 1,4,NA),nrow=3, byrow=T), frac_otherE = 0.01, prob = 0.8, probE = 1, figure = TRUE) {
-  
-  # OM = testOM; dist=c(0.05,0.6,0.35);  distE = 0.1; frac_other = matrix(c(NA,2,1, 4,NA,1, 1,4,NA),nrow=3, byrow=T); frac_otherE = 0.01; prob = 0.8; probE = 3; figure = TRUE; ilogitm=MSEtool:::ilogitm; ilogit=MSEtool:::ilogit; logit=MSEtool:::logit
+simmov2 <- function(OM,dist=c(0.05,0.6,0.35), distE = 0.01,
+                    frac_other = matrix(c(NA,2,1, 3,NA,1, 1,4,NA),nrow=3, byrow=T),
+                    frac_otherE = 0.01, prob = 0.8, probE = 1, 
+                    figure = TRUE) {
   
   nareas <- length(dist)
   if(nareas < 2) stop("Error: nareas, i.e., length(dist), is less than 2.")
@@ -211,10 +214,14 @@ opt_mov2 <- function(x, dist, prob, probE, frac_other, nits = 50) {
 #' @param prob A vector of the probability of individuals staying in each area or a single value for the mean probability of staying among all areas
 #' @param probE The logit CV associated with prob (used as a penalty when optimizing for diagonal)
 #' @param frac_other A matrix nareas x nareas that specifies the relative fraction moving from one area to the others. The positive diagonal is unspecified. 
+#' @param plot Should the convergence to a stable distribution be plotted?
 #' @author T. Carruthers
 #' @export
 #' @seealso \link{simmov2}
-makemov2 <- function(dist = c(0.05, 0.6, 0.35), prob = 0.5, probE = 1, frac_other = matrix(c(NA,2,1, 2,NA,1, 1,2,NA),nrow=3, byrow=T),plot=F){
+makemov2 <- function(dist = c(0.05, 0.6, 0.35), prob = 0.5,
+                     probE = 1, 
+                     frac_other = matrix(c(NA,2,1, 2,NA,1, 1,2,NA),nrow=3, byrow=T),
+                     plot=F){
   nareas <- length(dist)
   opt <- stats::nlminb(rep(0,nareas), opt_mov2, dist = dist, prob = prob, probE = probE, frac_other = frac_other, 
                        control = list(iter.max = 5e3, eval.max = 1e4))

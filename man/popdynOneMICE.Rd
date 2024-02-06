@@ -129,6 +129,10 @@ relationship (1 = Beverton-Holt, 2= Ricker)}
 \item{Len_agenext}{Matrix \verb{[stock, age]} of next year's length-at-age}
 
 \item{Wt_agenext}{Matrix \verb{[stock, age]} of next year's weight-at-age}
+
+\item{SRRfun}{Optional. A stock-recruit function used if \code{SRrelc =3}}
+
+\item{SRRpars}{Optional. A named list of arguments for \code{SRRfun}}
 }
 \description{
 Completes a single iteration of recruitment, mortality, fishing and

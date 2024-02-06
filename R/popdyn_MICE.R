@@ -287,6 +287,8 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
 #' @param B0x Unfished B0, Vector `[stock]` length.
 #' @param Len_agenext Matrix `[stock, age]` of next year's length-at-age
 #' @param Wt_agenext Matrix `[stock, age]` of next year's weight-at-age
+#' @param SRRfun  Optional. A stock-recruit function used if `SRrelc =3` 
+#' @param SRRpars Optional. A named list of arguments for `SRRfun`
 #' @author T.Carruthers
 #' @keywords internal
 popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMretx, FMx, PerrYrp,

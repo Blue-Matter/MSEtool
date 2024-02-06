@@ -217,6 +217,9 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
 #' @param maxF A numeric value specifying the maximum fishing mortality for any
 #' single age class
 #' @param MPA An array of spatial closures by year `[np,nf,nyears+proyears,nareas]`
+#' @param SRRfun  Optional. A stock-recruit function used if `SRrelc =3` 
+#' @param SRRpars Optional. A named list of arguments for `SRRfun`
+#' @param spawn_time_frac Numeric. Fraction of the year when spawning occurs. Default = 0.
 #' @author T.Carruthers
 #' @keywords internal
 qestMICE <- function(par, depc, CFc, mode='opt', np, nf, nyears, nareas, maxage, Nx, VFx,
