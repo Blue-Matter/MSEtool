@@ -2,6 +2,7 @@
 
 - Fixed problems shown on [MSEtool check results](https://cran.r-project.org/web/checks/check_results_MSEtool.html),
  specifically, the Rd \usage sections check NOTEs.
+- fixed invalid URL detected in CRAN automatic incoming checks
 
 ## Test environments
 * local - Windows 4.2.3
