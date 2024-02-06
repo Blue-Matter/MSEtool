@@ -43,6 +43,9 @@
     <loc>https://msetool.openmse.com/reference/CSRAfunc.html</loc>
   </url>
   <url>
+    <loc>https://msetool.openmse.com/reference/CalcAsymptoticDist.html</loc>
+  </url>
+  <url>
     <loc>https://msetool.openmse.com/reference/CalcMPDynamics.html</loc>
   </url>
   <url>
@@ -541,6 +544,9 @@
     <loc>https://msetool.openmse.com/reference/makemov.html</loc>
   </url>
   <url>
+    <loc>https://msetool.openmse.com/reference/makemov2.html</loc>
+  </url>
+  <url>
     <loc>https://msetool.openmse.com/reference/movestockCPP.html</loc>
   </url>
   <url>
@@ -659,6 +665,9 @@
   </url>
   <url>
     <loc>https://msetool.openmse.com/reference/simmov.html</loc>
+  </url>
+  <url>
+    <loc>https://msetool.openmse.com/reference/simmov2.html</loc>
   </url>
   <url>
     <loc>https://msetool.openmse.com/reference/summary-Data.html</loc>

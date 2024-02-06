@@ -12,7 +12,7 @@ step based on the recent MP recommendation"><meta property="og:image" content="h
     
     <a class="navbar-brand me-2" href="../index.html">MSEtool Functions</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.7.9999</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.7.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -95,7 +95,7 @@ step based on the recent MP recommendation</p>
 <span>  <span class="va">FleetPars</span>,</span>
 <span>  <span class="va">ImpPars</span>,</span>
 <span>  checks <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  <span class="va">control</span></span>
+<span>  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -245,72 +245,24 @@ MPs must either return a recommendation or no recommendation for every simulatio
 <dd><p>A numeric vector of potential effort</p></dd>
 
 
+<dt>StockPars</dt>
+<dd><p>A list of stock parameters</p></dd>
+
+
+<dt>FleetPars</dt>
+<dd><p>A list of fleet parameters</p></dd>
+
+
+<dt>ImpPars</dt>
+<dd><p>A list of implementation error parameters</p></dd>
+
+
 <dt>checks</dt>
 <dd><p>Logical. Run internal checks? Currently not used.</p></dd>
 
 
-<dt>M_ageArray</dt>
-<dd><p>An array with dimensions <code>nsim</code>, <code>maxage</code> and <code>nyears+proyears</code> with natural mortality at age</p></dd>
-
-
-<dt>TAC_f</dt>
-<dd><p>A matrix with <code>nsim</code> rows and <code>proyears</code> columns with the TAC implementation error</p></dd>
-
-
-<dt>E_f</dt>
-<dd><p>A matrix with <code>nsim</code> rows and <code>proyears</code> columns with the effort implementation error</p></dd>
-
-
-<dt>SizeLim_f</dt>
-<dd><p>A matrix with <code>nsim</code> rows and <code>proyears</code> columns with the size limit implementation error</p></dd>
-
-
-<dt>FinF</dt>
-<dd><p>A numeric vector of length <code>nsim</code> with fishing mortality in the last historical year</p></dd>
-
-
-<dt>Spat_targ</dt>
-<dd><p>A numeric vector of length <code>nsim</code> with spatial targeting</p></dd>
-
-
-<dt>CAL_binsmid</dt>
-<dd><p>A numeric vector of length <code>nCALbins</code> with mid-points of the CAL bins</p></dd>
-
-
-<dt>Linf</dt>
-<dd><p>A numeric vector of length <code>nsim</code> with Linf (from <code>Stock@Linf</code>)</p></dd>
-
-
-<dt>Len_age</dt>
-<dd><p>An array with dimensions <code>nsim</code>, <code>maxage</code>, and <code>nyears+proyears</code> with length-at-age</p></dd>
-
-
-<dt>maxage</dt>
-<dd><p>A numeric value with maximum age from <code>Stock@maxage</code></p></dd>
-
-
-<dt>nareas</dt>
-<dd><p>A numeric value with number of areas</p></dd>
-
-
-<dt>Asize</dt>
-<dd><p>A matrix with <code>nsim</code> rows and <code>nareas</code> columns with the relative size of each area</p></dd>
-
-
-<dt>nCALbins</dt>
-<dd><p>The number of CAL bins. Should be the same as <code>length(CAL_binsmid)</code></p></dd>
-
-
-<dt>qs</dt>
-<dd><p>A numeric vector of length <code>nsim</code> with catchability coefficient</p></dd>
-
-
-<dt>qvar</dt>
-<dd><p>A matrix with <code>nsim</code> rows and <code>proyears</code> columns with catchability variability</p></dd>
-
-
-<dt>qinc</dt>
-<dd><p>A numeric vector of length <code>nsim</code> with average annual change in catchability</p></dd>
+<dt>control</dt>
+<dd><p>List of control parameters used internally.</p></dd>
 
 </dl></div>
     <div class="section level2">
