@@ -1,7 +1,7 @@
 ## Note to CRAN Maintainers
 
-- Fixed issue flagged in the automatic incoming checks. 
-- Now tested on windows-latest (devel) as well, and issue has been resolved.
+- Fixed problems shown on [MSEtool check results](https://cran.r-project.org/web/checks/check_results_MSEtool.html),
+ specifically, the Rd \usage sections check NOTEs.
 
 ## Test environments
 * local - Windows 4.2.3

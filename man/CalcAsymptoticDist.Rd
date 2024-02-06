@@ -24,3 +24,4 @@ Calculates the asymptotic distribution from an initial distribution vector (V) a
 \author{
 T. Carruthers
 }
+\keyword{internal}

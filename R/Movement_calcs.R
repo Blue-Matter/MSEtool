@@ -241,6 +241,7 @@ makemov2 <- function(dist = c(0.05, 0.6, 0.35), prob = 0.5,
 #' @author T. Carruthers
 #' @export
 #' @seealso \link{simmov2}
+#' @keywords internal
 CalcAsymptoticDist = function(M,V=NULL,nits=50,plot=F){
   
   if(is.null(V)) V = rep(1/dim(M)[1],dim(M)[1])
