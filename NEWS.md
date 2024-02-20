@@ -5,6 +5,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 ## New additions
 - custom stock-recruit functions available for `multiMSE`
 - allow plusgroup to be turned off in `multiMSE`
+- add `spawn_time_frac` argument to `iSCAM2OM`
 
 # MSEtool 3.7.1 
 
