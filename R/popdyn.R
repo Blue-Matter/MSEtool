@@ -219,7 +219,7 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
                      plusgroup=plusgroup,
                      spawn_time_frac=spawn_time_frac[x])
                      
-    if(!doopt$objective) MSYs[] <- 0 # Assume stock crashes regardless of F
+    if(!doopt$objective || is.na(doopt$objective)) MSYs[] <- 0 # Assume stock crashes regardless of F
   } else {
       
     # Optimize for maximum yield
@@ -318,8 +318,8 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
     names(MSYs) <- c("Yield", "F", "SB", "SB_SB0", "B_B0", "B", "VB", "VB_VB0",
                       "RelRec", "SB0", "B0", "R0", "h", "N0", "SN0")
  
-    if(!opt$objective) MSYs[] <- 0 # Assume stock crashes regardless of F
-    }
+    if(!opt$objective || is.na(doopt$objective)) MSYs[] <- 0 # Assume stock crashes regardless of F
+  }
   
   return(MSYs)
 }
