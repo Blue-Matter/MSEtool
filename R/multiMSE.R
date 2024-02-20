@@ -111,6 +111,13 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
   plusgroup <- rep(1, np)
   for (p in 1:np) {
+    
+    # Check for plusgroup now, then remove from cpars before SampleCpars call (see Simulate)
+    if (!is.null(cpars[[p]][[1]]$plusgroup) && all(!cpars[[p]][[1]]$plusgroup)) {
+      plusgroup[p] <- 0
+      for (f in 1:nf) cpars[[p]][[f]]$plusgroup <- NULL
+    }
+    
     SampCpars[[p]] <- lapply(1:nf, function(f) {
       if (length(cpars) && length(cpars[[p]][[f]])) {
         if (!silent) message("Sampling custom parameters for ", Snames[p], Fnames[f, p])
@@ -122,8 +129,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     
     set.seed(MOM@seed) # set seed again after cpars has been sampled
     # --- Sample Stock Parameters ----
-    if (!is.null(SampCpars[[p]][[1]]$plusgroup) && all(!SampCpars[[p]][[1]]$plusgroup)) plusgroup[p] <- 0
-    
     StockPars[[p]] <- SampleStockPars(Stock = Stocks[[p]], nsim, nyears,
                                       proyears, cpars = SampCpars[[p]][[1]],
                                       msg = !silent)
@@ -466,7 +471,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     out <- .lapply(1:nsim, getq_multi_MICE, StockPars, FleetPars, np, nf, nareas,
                    maxage, nyears, N, VF, FretA, maxF=MOM@maxF,
                    MPA,CatchFrac, bounds=bounds,tol=1E-6,HistRel,SexPars,
-                   plusgroup=plusgroup, optVB=optVB)
+                   plusgroup=plusgroup, optVB=optVB, silent=silent)
 
     qs <- NIL(out,"qtot") %>% matrix(nsim, np, byrow = TRUE)
     qfrac <- NIL(out,"qfrac") %>% array(c(np, nf, nsim)) %>% aperm(c(3, 1, 2))
@@ -550,7 +555,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       out2 <- .lapply(probQ,getq_multi_MICE,StockPars, FleetPars, np,nf, nareas,
                       maxage, nyears, N, VF, FretA, maxF=MOM@maxF,
                       MPA,CatchFrac, bounds= bounds,tol=1E-6,HistRel,SexPars,
-                      plusgroup=plusgroup, optVB=optVB)
+                      plusgroup=plusgroup, optVB=optVB, silent=silent)
 
       qs2<-t(matrix(NIL(out2,"qtot"),nrow=np))
       qout2<-array(NIL(out2,"qfrac"),c(np,nf,nsim))

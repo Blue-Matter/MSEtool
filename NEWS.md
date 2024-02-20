@@ -4,6 +4,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 ## New additions
 - custom stock-recruit functions available for `multiMSE`
+- allow plusgroup to be turned off in `multiMSE`
 
 # MSEtool 3.7.1 
 
