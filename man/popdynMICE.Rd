@@ -135,6 +135,10 @@ relationship (1 = Beverton-Holt, 2= Ricker)}
 \item{B0x}{B0 for this simulation}
 
 \item{MPA}{An array of spatial closures by year \verb{[np,nf,nyears+proyears,nareas]}}
+
+\item{SRRfun}{A list of custom stock-recruit functions. List of length \code{np}}
+
+\item{SRRpars}{A list of custom stock-recruit parameters for simulation \code{x}. List of length \code{np}}
 }
 \description{
 Calls popdynOneMICE iteratively to reconstruct a time series given MICE model inputs

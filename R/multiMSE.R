@@ -134,8 +134,8 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     # --- custom SRR function ---
     # not implemented
     StockPars[[p]] <- Check_custom_SRR(StockPars[[p]], SampCpars[[p]][[1]], nsim)
-    if (any(StockPars[[p]]$SRrel>2))
-      stop('Custom stock recruit function not supported in `multiMSE`')
+    #if (any(StockPars[[p]]$SRrel>2))
+    #  stop('Custom stock recruit function not supported in `multiMSE`')
     
     # --- Sample Fleet Parameters ----
     FleetPars[[p]] <- lapply(1:nf, function(f) {
@@ -1732,7 +1732,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       Len_agenext <- sapply(1:np, function(p) StockPars[[p]]$Len_age[, , nyears + 1], simplify = "array") %>% aperm(c(1, 3, 2))
       Wt_agenext <- sapply(1:np, function(p) StockPars[[p]]$Wt_age[, , nyears + 1], simplify = "array") %>% aperm(c(1, 3, 2))
       
+      SRRfun_p <- lapply(1:np, function(p) StockPars[[p]]$SRRfun)
+      
       sapply(1:nsim, function(x) {
+        SRRpars_p <- lapply(1:np, function(p) StockPars[[p]]$SRRpars[[x]])
         popdynOneMICE(np = np, nf = nf, nareas = nareas, maxage = maxage,
                       Ncur = array(N[x,,,nyears,], c(np, n_age, nareas)),
                       Bcur = array(Biomass[x,,,nyears,], c(np, n_age, nareas)),
@@ -1757,7 +1760,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                       plusgroup = plusgroup, SSB0x = SSB0array[x, ], B0x = B0array[x, ],
                       Len_agenext = array(Len_agenext[x, , ], c(np, n_age)),
                       Wt_agenext = array(Wt_agenext[x, , ], c(np, n_age)),
-                      SRRfun=StockPars[[p]]$SRRfun, SRRpars=StockPars[[p]]$SRRpars[[x]])
+                      SRRfun=SRRfun_p, SRRpars=SRRpars_p)
       })
     })
 
@@ -2170,7 +2173,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         Len_agenext <- sapply(1:np, function(p) StockPars[[p]]$Len_age[, , nyears + y], simplify = "array") %>% aperm(c(1, 3, 2))
         Wt_agenext <- sapply(1:np, function(p) StockPars[[p]]$Wt_age[, , nyears + y], simplify = "array") %>% aperm(c(1, 3, 2))
         
+        SRRfun_p <- lapply(1:np, function(p) StockPars[[p]]$SRRfun)
+        
         sapply(1:nsim, function(x) {
+          SRRpars_p <- lapply(1:np, function(p) StockPars[[p]]$SRRpars[[x]])
           popdynOneMICE(np = np, nf = nf, nareas = nareas, maxage = maxage,
                         Ncur = array(N_P[x,,,y-1,], c(np, n_age, nareas)),
                         Bcur = array(Biomass_P[x,,,y-1,], c(np, n_age, nareas)),
@@ -2195,7 +2201,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                         plusgroup = plusgroup, SSB0x = SSB0array[x, ], B0x = B0array[x, ],
                         Len_agenext = array(Len_agenext[x, , ], c(np, n_age)),
                         Wt_agenext = array(Wt_agenext[x, , ], c(np, n_age)),
-                        SRRfun=StockPars[[p]]$SRRfun, SRRpars=StockPars[[p]]$SRRpars[[x]])
+                        SRRfun=SRRfun_p, SRRpars=SRRpars_p)
         })
       })
 

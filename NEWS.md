@@ -1,5 +1,9 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
+# MSEtool 3.7.1.9999
+
+## New additions
+- custom stock-recruit functions available for `multiMSE`
 
 # MSEtool 3.7.1 
 

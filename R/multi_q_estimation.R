@@ -124,6 +124,9 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
     spawn_time_frac[p] <- StockPars[[p]]$spawn_time_frac[x]
   }
   
+  SRRfun_p <- lapply(1:np, function(p) StockPars[[p]]$SRRfun)
+  SRRpars_p <- lapply(1:np, function(p) StockPars[[p]]$SRRpars[[x]])
+  
   message_info("Simulation ", x, " objective function:\n")
   opt <- optim(par, qestMICE,
                method = "L-BFGS-B",
@@ -142,7 +145,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
                SRrelx = SRrelx, Rel = Rel, SexPars = SexPars, x = x, plusgroup = plusgroup,
                optVB = optVB, VB0x = VB0x, WtCx = WtCx, maxF = maxF,
                MPA=MPA,
-               SRRfun=StockPars[[1]]$SRRfun, SRRpars=StockPars[[1]]$SRRpars[[x]],
+               SRRfun=SRRfun_p, SRRpars=SRRpars_p,
                control = list(trace = 1, factr = tol/.Machine$double.eps),
                spawn_time_frac=spawn_time_frac)
   cat("\n")
@@ -161,7 +164,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
                   Rel = Rel,SexPars = SexPars, x = x, plusgroup = plusgroup,
                   optVB = optVB, VB0x = VB0x, B0x = B0x, WtCx = WtCx, maxF = maxF,
                   MPA=MPA,
-                  SRRfun=StockPars[[1]]$SRRfun, SRRpars=StockPars[[1]]$SRRpars[[x]],
+                  SRRfun=SRRfun_p, SRRpars=SRRpars_p,
                   spawn_time_frac=spawn_time_frac)
 
   out
@@ -217,8 +220,8 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
 #' @param maxF A numeric value specifying the maximum fishing mortality for any
 #' single age class
 #' @param MPA An array of spatial closures by year `[np,nf,nyears+proyears,nareas]`
-#' @param SRRfun  Optional. A stock-recruit function used if `SRrelc =3` 
-#' @param SRRpars Optional. A named list of arguments for `SRRfun`
+#' @param SRRfun  Optional. Stock-recruit functions used if `SRrelc =3`. List of length `np` 
+#' @param SRRpars Optional. A named list of arguments for `SRRfun`. List of length `np`
 #' @param spawn_time_frac Numeric. Fraction of the year when spawning occurs. Default = 0.
 #' @author T.Carruthers
 #' @keywords internal
