@@ -1641,7 +1641,7 @@ AddRealData_MS <- function(SimData,
         }
         
         if (AddIndType[i]!=1)
-          stop('Vulernable and spawning indices not supported for multiMSE. Use `cpars$AddIV` to specify selectivity pattern')
+          stop('Vulnerable and spawning indices not supported for multiMSE. Use `cpars$AddIV` to specify selectivity pattern')
         
         for (pp in seq_along(map.stocks)) {
           SimIndex[,pp,,] <- SimIndex[,pp,,] * Ind_V_list[[map.stocks[pp]]]
