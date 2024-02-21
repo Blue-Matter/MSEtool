@@ -34,9 +34,15 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1,
   MOM <- SS2MOM(replist, nsim = nsim, proyears = proyears, reps = reps, maxF = maxF, seed = seed,
                 interval = interval, pstar = pstar, Obs = Obs, Imp = Imp, silent = silent,
                 Name = Name, Source = Source)
+
   
+
   if(!silent) message("Converting MOM to OM...")
   OM <- SSMOM2OM(MOM, replist, gender, import_mov, seed, silent, model_discards)
+  
+  
+  
+  
   
   if(replist$nseasons == 1 && replist$seasduration < 1 && seasons_to_years) {
     message("Model with season as years found. Will convert to annual time step.")
@@ -245,6 +251,8 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
     cpars_out$V <- cbind(V, Vpro) %>% array(c(Stock@maxage + 1, nyears + proyears, nsim)) %>% aperm(c(3, 1 ,2))
     cpars_out$Find <- matrix(Find, nsim, nyears, byrow = TRUE)
   }
+  
+  cpars_out$qs <- rep(1, nsim)
 
   # Place holders
   Fleet@EffYears <- 1:nyears
