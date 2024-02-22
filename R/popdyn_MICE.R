@@ -316,7 +316,7 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
   oldWt_agenext <- Wt_agenext
   oldFec_agenext <- Fec_agenext
   
-  if (length(Rel)) { # MICE relationships, parameters that could change: M, K, Linf, t0, a, b, hs
+  if (length(Rel)) { # MICE relationships, parameters that could change: M, K, Linf, t0, a, b, hs, Perr_y
     Responses <- ResFromRel(Rel, Bcur, SSBcur, Ncur, SSB0x, B0x, seed = 1, x)
     DV <- sapply(Responses, function(xx) xx[4])
     
@@ -466,7 +466,8 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
        Bnext=Bnext, #23
        SSNnext=SSNnext, #24
        SSBnext=SSBnext,#25
-       Fec_agenext=Fec_agenext) #26
+       Fec_agenext=Fec_agenext,#26
+       PerrYrp=PerrYrp)#27
   
 }
 
@@ -494,16 +495,16 @@ ResFromRel <- function(Rel, Bcur, SSBcur, Ncur, SSB0, B0, seed, x) {
   SSB <- apply(SSBcur, 1, sum)
   N <- apply(Ncur, 1, sum)
 
-  DVnam <- c("M", "a", "b", "R0", "hs", "K", "Linf", "t0")
-  modnam <- c("Mx", "ax", "bx", "R0x", "hsx", "Kx", "Linfx", "t0x")
+  DVnam <- c("M", "a", "b", "R0", "hs", "K", "Linf", "t0", "Perr_y")
+  modnam <- c("Mx", "ax", "bx", "R0x", "hsx", "Kx", "Linfx", "t0x", "PerrYrp")
 
   nRel <- length(Rel)
   
   out <- lapply(1:nRel, function(r) {
     fnams <- names(Rel[[r]]$model)
     DV <- fnams[1]
-    Dp <- unlist(strsplit(DV, "_"))[2]
-    Dnam <- unlist(strsplit(DV, "_"))[1]
+    Dp <- get_Dp(DV)
+    Dnam <- get_Dnam(DV)
     IV <- fnams[-1]
     nIV <- length(IV)
     
@@ -524,7 +525,16 @@ ResFromRel <- function(Rel, Bcur, SSBcur, Ncur, SSB0, B0, seed, x) {
   out
 }
 
+get_Dp <- function(DV) {
+  x <- unlist(strsplit(DV, "_"))
+  x[length(x)]
+}
 
+get_Dnam <- function(DV) {
+  x <- unlist(strsplit(DV, "_"))
+  paste0(x[-length(x)], collapse = "_")
+}
+  
 #' Derives the rate of exchange from one sex to another based on asymptotic fraction
 #'
 #' @param frac A vector of asymptotic sex fraction (must start with zero and end with 1)
