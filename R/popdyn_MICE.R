@@ -397,7 +397,7 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
       ps <- as.numeric(strsplit(names(SexPars$Herm)[i], "_")[[1]][2:3])
       pfrom <- ps[2]
       pto <- ps[1]
-      frac <- rep(1,maxage)
+      frac <- rep(1, n_age)
       frac[1:length(SexPars$Herm[[i]][x, ])] <- SexPars$Herm[[i]][x, ]
       h_rate <- hrate(frac)
       Nnext[pto, , ] <- Nnext[pto, , ] * (frac > 0) # remove any recruitment
