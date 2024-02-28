@@ -318,17 +318,23 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
   
   if (length(Rel)) { # MICE relationships, parameters that could change: M, K, Linf, t0, a, b, hs, Perr_y
     Responses <- ResFromRel(Rel, Bcur, SSBcur, Ncur, SSB0x, B0x, seed = 1, x)
-    DV <- sapply(Responses, function(xx) xx[4])
+    
+    Dmodnam <- sapply(Responses, getElement, "modnam")
+    Dp <- sapply(Responses, getElement, "Dp")
+    Dval <- sapply(Responses, getElement, "value")
+    Dlag <- sapply(Responses, getElement, "lag")
     
     for (r in 1:length(Responses)) { # e.g., Mx[1] <- 0.4 - operations are sequential
-      eval(parse(text = paste0(DV[r], "[", Responses[[r]][3], "]<-", Responses[[r]][1])))
+      if (Dmodnam[r] != "PerrYrp" || Dlag[r] == "current") {
+        eval(parse(text = paste0(Dmodnam[r], "[", Dp[r], "] <- ", Dval[r])))
+      }
     }
     
-    if (any(DV %in% c("Linfx", "Kx", "t0x"))) { # only update Len_age for next year if MICE response is used
+    if (any(Dmodnam %in% c("Linfx", "Kx", "t0x"))) { # only update Len_age for next year if MICE response is used
       Len_agenext <- matrix(Linfx * (1 - exp(-Kx * (rep(0:maxage, each = np) - t0x))), nrow = np)
       Len_agenext[Len_agenext < 0] <- tiny
     } 
-    if (any(DV %in% c("Linfx", "Kx", "t0x", "ax", "bx"))) { # only update Len_age/Wt_age for next year if MICE response
+    if (any(Dmodnam %in% c("Linfx", "Kx", "t0x", "ax", "bx"))) { # only update Len_age/Wt_age for next year if MICE response
       # update relative fecundity-at-age for SSB
       Fec_per_weight <- array(NA, dim = dim(Fec_agenext))
       Fec_per_weight[Nind[, 1:2]] <- Fec_agenext[Nind[, 1:2]]/Wt_agenext[Nind[ ,1:2]]
@@ -338,7 +344,7 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
     }
     
     # Recalc M_age for this year ------------------
-    if (any(DV == "Mx")) {
+    if (any(Dmodnam == "Mx")) {
       M_agecur <- M_agecur * Mx/oldMx
       surv <- array(c(rep(1,np), t(exp(-apply(M_agecur, 1, cumsum)))[, 1:(n_age-1)]), 
                     c(np, n_age))
@@ -408,11 +414,9 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
   }
   
   # Calculate SSB for S-R relationship
+  SSBtemp <- array(NA_real_, dim(Nnext)) # np x n_age x nareas
+  SSBtemp[Nind] <- Nnext[Nind] * Fec_agenext[Nind[, 1:2]]
   SSB_SR <- local({
-    SSBtemp <- array(NA_real_, dim(Nnext)) # np x n_age x nareas
-
-    SSBtemp[Nind] <- Nnext[Nind] * Fec_agenext[Nind[, 1:2]]
-
     if (length(SexPars$SSBfrom)) { # use SSB from another stock to predict recruitment
       sapply(1:np, function(p) apply(SexPars$SSBfrom[p, ] * SSBtemp, 2:3, sum), simplify = "array") %>%
         aperm(c(3, 1, 2))
@@ -420,6 +424,23 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
       SSBtemp
     }
   })
+  
+  # Re-run MICE if any of them use recruitment deviations with next year's abundance/biomass
+  if (length(Rel) && any(Dlag == "next")) {
+    Responses2 <- local({
+      Bnext <- SSBnext <- array(NA_real_, dim(Nnext)) # np x n_age x nareas
+      Bnext[Nind] <- Nnext[Nind] * Wt_agenext[Nind[, 1:2]]
+      ResFromRel(Rel[Dlag == "next"], Bcur = Bnext, SSBcur = SSBtemp, Ncur = Nnext, SSB0x, B0x, seed = 1, x)
+    })
+    
+    Dmodnam2 <- sapply(Responses2, getElement, "modnam")
+    Dp2 <- sapply(Responses2, getElement, "Dp")
+    Dval2 <- sapply(Responses2, getElement, "value")
+    
+    for (r in 1:length(Responses2)) { # e.g., PerrYrp[1] <- 1.5 - operations are sequential
+      eval(parse(text = paste0(Dmodnam2[r], "[", Dp2[r], "] <- ", Dval2[r])))
+    }
+  }
 
   # Generate next year's recruitment (this will get updated if spawn_time_frac > 0 )
   Nnext[, 1, ] <- sapply(1:np, function(p) {
@@ -520,7 +541,20 @@ ResFromRel <- function(Rel, Bcur, SSBcur, Ncur, SSB0, B0, seed, x) {
     templm$fitted.values <- ys
     ysamp <- stats::simulate(templm, nsim = 1, seed = seed) %>% unlist()
     
-    c(ysamp, DV, Dp, modnam[match(Dnam, DVnam)])
+    rel_r <- c(ysamp, DV, Dp, modnam[match(Dnam, DVnam)]) %>%
+      structure(names = c("value", "DV", "Dp", "modnam"))
+    
+    if (Dnam == "Perr_y") {
+      if (!is.null(Rel[[r]]$lag)) {
+        lag <- Rel[[r]]$lag # choices are "current" or "next"
+      } else {
+        lag <- "current"
+      }
+      if (lag != "next") lag <- "current"
+      rel_r["lag"] <- lag
+    }
+    
+    return(rel_r)
   })
   out
 }

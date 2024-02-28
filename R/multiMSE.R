@@ -1729,8 +1729,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       sapply(1:nf, function(f) HistFleetPars[[p]][[f]]$Spat_targ)
     }, simplify = "array") %>% aperm(c(1, 3, 2))
     
-    # Predict abundance at the beginning of y = nyears+1 with F, M from y = nyears and
-    # growth, maturity, recdev, etc. in y = nyears+1
+    # Predict abundance, spawning, recruitment at the beginning of y = nyears+1. 
+    # F, M from y = nyears and growth, maturity, recdev, etc. in y = nyears+1
+    # MICE rel updates growth, Perr_y for nyears+1, M for nyears
     #
     # note that Fcur is apical F but, in popdynOneMICE it is DIVIDED in future
     # years between the two areas depending on vulnerable biomass.
@@ -2529,7 +2530,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             MSElist[[p]][[f]][[mm]]@Misc <- Data_p_A[[p]][[f]]@Misc
           }
         }
-
+        
         for(p in 1:np){
           for(f in 1:nf){
             # calculate pstar quantile of TAC recommendation dist
@@ -2866,7 +2867,6 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     }
 
     if (!silent) {
-      cat("\n")
       if (all(checkNA != nsim) & !all(checkNA == 0)) {
         # print number of NAs
         # message(checkNA)
@@ -2874,10 +2874,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         ntot <- sum(checkNA[,,upyrs])
         totyrs <- sum(checkNA[,,upyrs] >0)
         nfrac <- round(ntot/(length(upyrs)*nsim),2)*100
-
-        if (!silent) message(totyrs, ' years had TAC = NA for some simulations (',
-                nfrac, "% of total simulations)")
-        if (!silent) message('Used TAC_y = TAC_y-1')
+        
+        cat("\n")
+        message(totyrs, ' years had TAC = NA for some simulations (', nfrac, "% of total simulations)")
+        message('Used TAC_y = TAC_y-1')
       }
 
       if("progress"%in%names(control))
