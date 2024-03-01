@@ -304,10 +304,6 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
   n_age <- maxage + 1
   Nind <- TEG(dim(Ncur)) # p, age, area
   
-  # Survival this year
-  surv <- array(c(rep(1,np), t(exp(-apply(M_agecur, 1, cumsum)))[, 1:(n_age-1)]), c(np, n_age))  # Survival array
-  surv[plusgroup, n_age] <- surv[plusgroup, n_age]/(1 - exp(-M_agecur[plusgroup, n_age])) # plusgroup
-  
   # These could change, these are values previous to MICE rel
   oldMx <- Mx # M of mature animals
   oldM_agecur <- M_agecur
@@ -316,6 +312,8 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
   oldWt_agenext <- Wt_agenext
   oldFec_agenext <- Fec_agenext
   
+  oldPerrYrp <- PerrYrp
+  
   if (length(Rel)) { # MICE relationships, parameters that could change: M, K, Linf, t0, a, b, hs, Perr_y
     Responses <- ResFromRel(Rel, Bcur, SSBcur, Ncur, SSB0x, B0x, seed = 1, x)
     
@@ -323,10 +321,16 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
     Dp <- sapply(Responses, getElement, "Dp")
     Dval <- sapply(Responses, getElement, "value")
     Dlag <- sapply(Responses, getElement, "lag")
+    Dage <- sapply(Responses, getElement, "age")
     
     for (r in 1:length(Responses)) { # e.g., Mx[1] <- 0.4 - operations are sequential
-      if (Dmodnam[r] != "PerrYrp" || Dlag[r] == "current") {
-        eval(parse(text = paste0(Dmodnam[r], "[", Dp[r], "] <- ", Dval[r])))
+      if (Dmodnam[r] != "PerrYrp" || Dlag[r] == "current") { # Proceed except for Perr_y and Dlag = "next"
+        if (Dmodnam[r] == "Mx" && !is.na(Dage[r])) { # Age-specific M
+          Rel_txt <- paste0("M_agecur[", Dp[r], ", ", Dage[r] + 1, "] <- ", Dval[r])
+        } else {
+          Rel_txt <- paste0(Dmodnam[r], "[", Dp[r], "] <- ", Dval[r])
+        }
+        eval(parse(text = Rel_txt))
       }
     }
     
@@ -343,12 +347,9 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
       Fec_agenext[Nind[, 1:2]] <- Fec_per_weight[Nind[, 1:2]] * Wt_agenext[Nind[, 1:2]]
     }
     
-    # Recalc M_age for this year ------------------
-    if (any(Dmodnam == "Mx")) {
-      M_agecur <- M_agecur * Mx/oldMx
-      surv <- array(c(rep(1,np), t(exp(-apply(M_agecur, 1, cumsum)))[, 1:(n_age-1)]), 
-                    c(np, n_age))
-      surv[plusgroup, n_age] <- surv[plusgroup, n_age]/(1 - exp(-M_agecur[plusgroup, n_age])) # plusgroup
+    # Recalc M_age for this year (only if age-invariant M was updated) ------------------
+    if (any(Dmodnam == "Mx") && all(M_agecur == oldM_agecur)) {
+      M_agecur <- oldM_agecur * Mx/oldMx
     }
     
     # --- This is redundant code for updating parameters when R0 changes -----
@@ -363,6 +364,10 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
     #aRx <- matrix(exp(bRx * SSB0ax)/SSBpRx, nrow=np)  # Ricker SR params
     
   } # end of MICE
+  
+  # Survival this year
+  surv <- array(c(rep(1,np), t(exp(-apply(M_agecur, 1, cumsum)))[, 1:(n_age-1)]), c(np, n_age))  # Survival array
+  surv[plusgroup, n_age] <- surv[plusgroup, n_age]/(1 - exp(-M_agecur[plusgroup, n_age])) # plusgroup
   
   # Vulnerable biomass calculation (current year) -------------
   VBft <- Fdist <- array(NA, c(np, nf, n_age, nareas))
@@ -430,7 +435,7 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
     Responses2 <- local({
       Bnext <- SSBnext <- array(NA_real_, dim(Nnext)) # np x n_age x nareas
       Bnext[Nind] <- Nnext[Nind] * Wt_agenext[Nind[, 1:2]]
-      ResFromRel(Rel[Dlag == "next"], Bcur = Bnext, SSBcur = SSBtemp, Ncur = Nnext, SSB0x, B0x, seed = 1, x)
+      ResFromRel(Rel[!is.na(Dlag) & Dlag == "next"], Bcur = Bnext, SSBcur = SSBtemp, Ncur = Nnext, SSB0x, B0x, seed = 1, x)
     })
     
     Dmodnam2 <- sapply(Responses2, getElement, "modnam")
@@ -438,7 +443,8 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
     Dval2 <- sapply(Responses2, getElement, "value")
     
     for (r in 1:length(Responses2)) { # e.g., PerrYrp[1] <- 1.5 - operations are sequential
-      eval(parse(text = paste0(Dmodnam2[r], "[", Dp2[r], "] <- ", Dval2[r])))
+      Rel_txt <- paste0(Dmodnam2[r], "[", Dp2[r], "] <- ", Dval2[r])
+      eval(parse(text = Rel_txt))
     }
   }
 
@@ -541,8 +547,12 @@ ResFromRel <- function(Rel, Bcur, SSBcur, Ncur, SSB0, B0, seed, x) {
     templm$fitted.values <- ys
     ysamp <- stats::simulate(templm, nsim = 1, seed = seed) %>% unlist()
     
-    rel_r <- c(ysamp, DV, Dp, modnam[match(Dnam, DVnam)]) %>%
-      structure(names = c("value", "DV", "Dp", "modnam"))
+    rel_r <- list(
+      value = ysamp,
+      DV = DV,
+      Dp = Dp,
+      modnam = modnam[match(Dnam, DVnam)]
+    )
     
     if (Dnam == "Perr_y") {
       if (!is.null(Rel[[r]]$lag)) {
@@ -551,8 +561,21 @@ ResFromRel <- function(Rel, Bcur, SSBcur, Ncur, SSB0, B0, seed, x) {
         lag <- "current"
       }
       if (lag != "next") lag <- "current"
-      rel_r["lag"] <- lag
+    } else {
+      lag <- NA_character_
     }
+    rel_r[["lag"]] <- lag
+    
+    if (Dnam == "M") {
+      if (!is.null(Rel[[r]]$age)) {
+        age <- Rel[[r]]$age
+      } else {
+        age <- NA_integer_
+      }
+    } else {
+      age <- NA_integer_
+    }
+    rel_r[["age"]] <- age
     
     return(rel_r)
   })

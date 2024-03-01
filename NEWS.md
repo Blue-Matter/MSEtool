@@ -3,6 +3,8 @@ The current version of the `MSEtool` package is available for download from [CRA
 # MSEtool 3.7.1.9999
 
 ## New additions
+- add MICE rel for recruitment deviates in `multiMSE` which can be a function of the state dynamics in either the current year or previous year
+- MICE rel for natural mortality can be age-specific  in `multiMSE`
 - custom stock-recruit functions available for `multiMSE`
 - allow plusgroup to be turned off in `multiMSE`
 - add `spawn_time_frac` argument to `iSCAM2OM`
