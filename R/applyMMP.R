@@ -23,7 +23,7 @@ getDataList<-function(MSElist,mm){
 #' Apply multi Management Procedures (class MMP) to a hierarchical list of Data class objects
 #'
 #' @param DataList A hierarchical list of \linkS4class{Data} objects (Fleets nested in Stocks)
-#' @param MP Name(s) of the MPs to run
+#' @param MP Name of the MMP to run
 #' @param reps Number of samples
 #' @param nsims Optional. Number of simulations.
 #' @param silent Logical. Should messages be suppressed?
@@ -35,6 +35,10 @@ applyMMP <- function(DataList, MP = NA, reps = 1, nsims = NA, silent = FALSE, pa
 
   if (is.na(nsims)) nsims <- length(DataList[[1]][[1]]@Mort)
   nMPs <- length(MP)
+  if (nMPs > 1) {
+    MP <- MP[1]
+    if (!silent) message("Applying only the first MMP:", MP[1])
+  }
   if (.hasSlot(DataList[[1]][[1]], "nareas")) {
     nareas <- DataList[[1]][[1]]@nareas
   } else {
@@ -55,8 +59,9 @@ applyMMP <- function(DataList, MP = NA, reps = 1, nsims = NA, silent = FALSE, pa
   #     DataList_F[[ss]][[ff]] <- updateMSE(DataList[[ss]][[ff]])
   #   }
   # }
-
-  temp <- .lapply(1:nsims, MP, DataList = DataList, reps = reps)
+  
+  fn <- getMP(MP)
+  temp <- .lapply(1:nsims, fn, DataList = DataList, reps = reps)
   recList<-
 
     #if (!silent && any(apply(is.na(recList$TAC), 2, sum) > rep(0.5 * reps, nsims)))

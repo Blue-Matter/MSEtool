@@ -16,7 +16,7 @@ applyMMP(
 \arguments{
 \item{DataList}{A hierarchical list of \linkS4class{Data} objects (Fleets nested in Stocks)}
 
-\item{MP}{Name(s) of the MPs to run}
+\item{MP}{Name of the MMP to run}
 
 \item{reps}{Number of samples}
 

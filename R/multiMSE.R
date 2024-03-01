@@ -1339,7 +1339,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     MPrefs[] <- unlist(MPs)
 
     # check class of MPs
-    tt <- try(sapply(MPs, get), silent=TRUE)
+    tt <- try(sapply(MPs, getMP), silent=TRUE)
     if (methods::is(tt,'try-error'))
       stop('Error in the MPs -', strsplit(tt,':')[[1]][2])
     MP_classes <- sapply(tt, class)
@@ -1349,7 +1349,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
   if (methods::is(MPs,'character') && MPcond == 'unknown') {
     # check class of MPs
-    tt <- try(sapply(MPs, get), silent=TRUE)
+    tt <- try(sapply(MPs, getMP), silent=TRUE)
     if (methods::is(tt,'try-error'))
       stop('Error in the MPs -', strsplit(tt,':')[[1]][2])
     MP_classes <- sapply(tt, class)
@@ -1414,7 +1414,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       for(p in 1:np)MPrefs[,,p]<-MPs[[p]]
     }
 
-    tt <- try(sapply(unlist(MPs), get), silent=TRUE)
+    tt <- try(sapply(unlist(MPs), getMP), silent=TRUE)
     if (methods::is(tt,'try-error'))
       stop('Error in the MPs -', strsplit(tt,':')[[1]][2])
     MP_classes <- sapply(tt, class)
