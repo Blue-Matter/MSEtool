@@ -315,16 +315,18 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
   oldPerrYrp <- PerrYrp
   
   if (length(Rel)) { # MICE relationships, parameters that could change: M, K, Linf, t0, a, b, hs, Perr_y
-    Responses <- ResFromRel(Rel, Bcur, SSBcur, Ncur, SSB0x, B0x, seed = 1, x)
+    Dlag_all <- sapply(Rel, get_Dlag)
     
-    Dmodnam <- sapply(Responses, getElement, "modnam")
-    Dp <- sapply(Responses, getElement, "Dp")
-    Dval <- sapply(Responses, getElement, "value")
-    Dlag <- sapply(Responses, getElement, "lag")
-    Dage <- sapply(Responses, getElement, "age")
-    
-    for (r in 1:length(Responses)) { # e.g., Mx[1] <- 0.4 - operations are sequential
-      if (Dmodnam[r] != "PerrYrp" || Dlag[r] == "current") { # Proceed except for Perr_y and Dlag = "next"
+    if (any(Dlag_all == "current")) {  # Proceed except if Rel[[r]]$Dlag = "next"
+      Responses <- ResFromRel(Rel[Dlag_all == "current"], Bcur, SSBcur, Ncur, SSB0x, B0x, seed = 1, x)
+      
+      Dmodnam <- sapply(Responses, getElement, "modnam")
+      Dp <- sapply(Responses, getElement, "Dp")
+      Dval <- sapply(Responses, getElement, "value")
+      #Dlag <- sapply(Responses, getElement, "lag")
+      Dage <- sapply(Responses, getElement, "age")
+      
+      for (r in 1:length(Responses)) { # e.g., Mx[1] <- 0.4 - operations are sequential
         if (Dmodnam[r] == "Mx" && !is.na(Dage[r])) { # Age-specific M
           Rel_txt <- paste0("M_agecur[", Dp[r], ", ", Dage[r] + 1, "] <- ", Dval[r])
         } else {
@@ -332,37 +334,36 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
         }
         eval(parse(text = Rel_txt))
       }
-    }
-    
-    if (any(Dmodnam %in% c("Linfx", "Kx", "t0x"))) { # only update Len_age for next year if MICE response is used
-      Len_agenext <- matrix(Linfx * (1 - exp(-Kx * (rep(0:maxage, each = np) - t0x))), nrow = np)
-      Len_agenext[Len_agenext < 0] <- tiny
-    } 
-    if (any(Dmodnam %in% c("Linfx", "Kx", "t0x", "ax", "bx"))) { # only update Len_age/Wt_age for next year if MICE response
-      # update relative fecundity-at-age for SSB
-      Fec_per_weight <- array(NA, dim = dim(Fec_agenext))
-      Fec_per_weight[Nind[, 1:2]] <- Fec_agenext[Nind[, 1:2]]/Wt_agenext[Nind[ ,1:2]]
       
-      Wt_agenext <- ax * Len_agenext ^ bx # New weight-at-age
-      Fec_agenext[Nind[, 1:2]] <- Fec_per_weight[Nind[, 1:2]] * Wt_agenext[Nind[, 1:2]]
+      if (any(Dmodnam %in% c("Linfx", "Kx", "t0x"))) { # only update Len_age for next year if MICE response is used
+        Len_agenext <- matrix(Linfx * (1 - exp(-Kx * (rep(0:maxage, each = np) - t0x))), nrow = np)
+        Len_agenext[Len_agenext < 0] <- tiny
+      } 
+      if (any(Dmodnam %in% c("Linfx", "Kx", "t0x", "ax", "bx"))) { # only update Len_age/Wt_age for next year if MICE response
+        # update relative fecundity-at-age for SSB
+        Fec_per_weight <- array(NA, dim = dim(Fec_agenext))
+        Fec_per_weight[Nind[, 1:2]] <- Fec_agenext[Nind[, 1:2]]/Wt_agenext[Nind[ ,1:2]]
+        
+        Wt_agenext <- ax * Len_agenext ^ bx # New weight-at-age
+        Fec_agenext[Nind[, 1:2]] <- Fec_per_weight[Nind[, 1:2]] * Wt_agenext[Nind[, 1:2]]
+      }
+      
+      # Recalc M_age for this year (only if age-invariant M was updated) ------------------
+      if (any(Dmodnam == "Mx") && all(M_agecur == oldM_agecur)) {
+        M_agecur <- oldM_agecur * Mx/oldMx
+      }
+      
+      # --- This is redundant code for updating parameters when R0 changes -----
+      # surv <- cbind(rep(1,np),t(exp(-apply(M_agecur, 1, cumsum)))[, 1:(maxage-1)])  # Survival array
+      # SSB0x<-apply(R0x*surv*Mat_agecur*Wt_age,1,sum)
+      #SSBpRx<-SSB0x/R0x
+      #SSBpRax<-SSBpRx*distx
+      #SSB0ax<-distx*SSB0x
+      #R0ax<-distx*R0x
+      #R0recalc thus aR bR recalc ---------------
+      #bRx <- matrix(log(5 * hsx)/(0.8 * SSB0ax), nrow=np)  # Ricker SR params
+      #aRx <- matrix(exp(bRx * SSB0ax)/SSBpRx, nrow=np)  # Ricker SR params
     }
-    
-    # Recalc M_age for this year (only if age-invariant M was updated) ------------------
-    if (any(Dmodnam == "Mx") && all(M_agecur == oldM_agecur)) {
-      M_agecur <- oldM_agecur * Mx/oldMx
-    }
-    
-    # --- This is redundant code for updating parameters when R0 changes -----
-    # surv <- cbind(rep(1,np),t(exp(-apply(M_agecur, 1, cumsum)))[, 1:(maxage-1)])  # Survival array
-    # SSB0x<-apply(R0x*surv*Mat_agecur*Wt_age,1,sum)
-    #SSBpRx<-SSB0x/R0x
-    #SSBpRax<-SSBpRx*distx
-    #SSB0ax<-distx*SSB0x
-    #R0ax<-distx*R0x
-    #R0recalc thus aR bR recalc ---------------
-    #bRx <- matrix(log(5 * hsx)/(0.8 * SSB0ax), nrow=np)  # Ricker SR params
-    #aRx <- matrix(exp(bRx * SSB0ax)/SSBpRx, nrow=np)  # Ricker SR params
-    
   } # end of MICE
   
   # Survival this year
@@ -431,11 +432,11 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
   })
   
   # Re-run MICE if any of them use recruitment deviations with next year's abundance/biomass
-  if (length(Rel) && any(Dlag == "next")) {
+  if (length(Rel) && any(Dlag_all == "next")) {
     Responses2 <- local({
       Bnext <- SSBnext <- array(NA_real_, dim(Nnext)) # np x n_age x nareas
       Bnext[Nind] <- Nnext[Nind] * Wt_agenext[Nind[, 1:2]]
-      ResFromRel(Rel[!is.na(Dlag) & Dlag == "next"], Bcur = Bnext, SSBcur = SSBtemp, Ncur = Nnext, SSB0x, B0x, seed = 1, x)
+      ResFromRel(Rel[Dlag_all == "next"], Bcur = Bnext, SSBcur = SSBtemp, Ncur = Nnext, SSB0x, B0x, seed = 1, x)
     })
     
     Dmodnam2 <- sapply(Responses2, getElement, "modnam")
@@ -581,6 +582,23 @@ ResFromRel <- function(Rel, Bcur, SSBcur, Ncur, SSB0, B0, seed, x) {
   })
   out
 }
+
+get_Dlag <- function(Rel) {
+  #if (Dnam == "Perr_y") {
+  #  if (!is.null(Rel[[r]]$lag)) {
+  #    lag <- Rel[[r]]$lag # choices are "current" or "next"
+  #  } else {
+  #    lag <- "current"
+  #  }
+  #  if (lag != "next") lag <- "current"
+  #} else {
+  #  lag <- NA_character_
+  #}
+  lag <- Rel$lag
+  if (is.null(lag) || lag != "next") lag <- "current"
+  return(lag)
+}
+
 
 get_Dp <- function(DV) {
   x <- unlist(strsplit(DV, "_"))
