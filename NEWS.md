@@ -1,5 +1,10 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
+# MSEtool 3.7.2999 - dev version
+
+## Fixes
+
+- fix to `OMdoc`
 
 # MSEtool 3.7.2
 
