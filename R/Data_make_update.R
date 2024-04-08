@@ -164,6 +164,8 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
                      Karray=StockPars$Karray, 
                      t0array=StockPars$t0array, 
                      LenCV=StockPars$LenCV)
+    
+
   }
 
   Data@CAL_bins <- StockPars$CAL_bins
@@ -715,6 +717,8 @@ simCAL <- function(nsim, nyears, maxage,  CAL_ESS, CAL_nsamp, nCALbins, CAL_bins
                        CAL_nsamp,
                        Linfarray, Karray, t0array, LenCV, truncSD=2)
     
+
+    
     
   }
   CAL <- aperm(array(as.numeric(unlist(tempSize, use.names=FALSE)),
@@ -790,7 +794,8 @@ genSizeCompWrap <- function(i, vn, CAL_binsmid, CAL_bins, retL,
     VulnN <- VulnN/sum(VulnN) * CAL_nsamp[i] # get relative numbers at age
   }
 
-  VulnN <- round(VulnN,0) # convert to integers
+  # VulnN <- round(VulnN,0) # convert to integers
+  
   nyrs <- nrow(as.matrix(Linfarray[i,]))
   if (nyrs == 1) VulnN <- t(VulnN)
   retLa <- as.matrix(retL[i,,])
@@ -800,6 +805,7 @@ genSizeCompWrap <- function(i, vn, CAL_binsmid, CAL_bins, retL,
                       CAL_ESS=CAL_ESS[i], CAL_nsamp=CAL_nsamp[i],
                       Linfs=Linfarray[i,], Ks=Karray[i,], t0s=t0array[i,],
                       LenCV=LenCV[i], truncSD)
+
 
   # snapshot length comp
   # lens <- genSizeComp2(VulnN, CAL_binsmid, CAL_bins, retLa,

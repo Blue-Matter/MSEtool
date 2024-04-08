@@ -5,6 +5,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 ## Fixes
 
 - fix to `OMdoc`
+- fixes to simulation of length comp
 
 # MSEtool 3.7.2
 
