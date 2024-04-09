@@ -1877,8 +1877,12 @@ updateData_MS <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_P
   I2 <- exp(lcs(I2))^ObsPars[[p]][[f]]$I_beta * ObsPars[[p]][[f]]$Ierr_y[,yr.ind:(nyears + (y - 1))]
   
   # I2 <- exp(lcs(I2)) * ObsPars$Ierr_y[,yr.ind:(nyears + (y - 1))]
-  year.ind <- max(which(!is.na(Data@Ind[1,1:nyears])))
-  scaler <- Data@Ind[,year.ind]/I2[,1]
+  if (sum(Data@Ind[1,1:nyears], na.rm = TRUE)) {
+    year.ind <- max(which(!is.na(Data@Ind[1,1:nyears])))
+    scaler <- Data@Ind[,year.ind]/I2[,1]
+  } else {
+    scaler <- rep(1, nsim)
+  }
   scaler <- matrix(scaler, nrow=nsim, ncol=ncol(I2))
   I2 <- I2 * scaler # convert back to historical index scale
   
@@ -1908,8 +1912,12 @@ updateData_MS <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_P
   
   # standardize, apply  beta & obs error
   I2 <- exp(lcs(I2))^ObsPars[[p]][[f]]$SpI_beta * ObsPars[[p]][[f]]$SpIerr_y[,yr.ind:(nyears + (y - 1))]
-  year.ind <- max(which(!is.na(Data@SpInd[1,1:nyears])))
-  scaler <- Data@SpInd[,year.ind]/I2[,1]
+  if (sum(Data@SpInd[1,1:nyears], na.rm = TRUE)) {
+    year.ind <- max(which(!is.na(Data@SpInd[1,1:nyears])))
+    scaler <- Data@SpInd[,year.ind]/I2[,1]
+  } else {
+    scaler <- rep(1, nsim)
+  }
   scaler <- matrix(scaler, nrow=nsim, ncol=ncol(I2))
   I2 <- I2 * scaler # convert back to historical index scale
   
@@ -1937,8 +1945,12 @@ updateData_MS <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_P
   
   # standardize, apply  beta & obs error
   I2 <- exp(lcs(I2))^ObsPars[[p]][[f]]$VI_beta * ObsPars[[p]][[f]]$VIerr_y[,yr.ind:(nyears + (y - 1))]
-  year.ind <- max(which(!is.na(Data@VInd[1,1:nyears])))
-  scaler <- Data@VInd[,year.ind]/I2[,1]
+  if (sum(Data@VInd[1,1:nyears], na.rm = TRUE)) {
+    year.ind <- max(which(!is.na(Data@VInd[1,1:nyears])))
+    scaler <- Data@VInd[,year.ind]/I2[,1]
+  } else {
+    scaler <- rep(1, nsim)
+  }
   scaler <- matrix(scaler, nrow=nsim, ncol=ncol(I2))
   I2 <- I2 * scaler # convert back to historical index scale
   
