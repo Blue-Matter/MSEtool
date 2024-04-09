@@ -715,7 +715,7 @@ simCAL <- function(nsim, nyears, maxage,  CAL_ESS, CAL_nsamp, nCALbins, CAL_bins
                        CAL_nsamp,
                        Linfarray, Karray, t0array, LenCV, truncSD=2)
     
-    
+
   }
   CAL <- aperm(array(as.numeric(unlist(tempSize, use.names=FALSE)),
                      dim=c(nyears, length(CAL_binsmid), nsim)), c(3,1,2))
@@ -790,7 +790,7 @@ genSizeCompWrap <- function(i, vn, CAL_binsmid, CAL_bins, retL,
     VulnN <- VulnN/sum(VulnN) * CAL_nsamp[i] # get relative numbers at age
   }
 
-  VulnN <- round(VulnN,0) # convert to integers
+  # VulnN <- round(VulnN,0) # convert to integers
   nyrs <- nrow(as.matrix(Linfarray[i,]))
   if (nyrs == 1) VulnN <- t(VulnN)
   retLa <- as.matrix(retL[i,,])

@@ -1,16 +1,28 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
-# MSEtool 3.7.1.9999
+# MSEtool 3.7.2999 - dev version
 
 ## New additions
 - add MICE rel for recruitment deviates in `multiMSE` which can be a function of the state dynamics in either the current year or previous year
-- MICE rel for natural mortality can be age-specific  in `multiMSE`
+- MICE rel for natural mortality can be age-specific in `multiMSE`
 - custom stock-recruit functions available for `multiMSE`
 - allow plusgroup to be turned off in `multiMSE`
 - add `spawn_time_frac` argument to `iSCAM2OM`
 
 ## Internal
 - projections use `dynGet` then `get` to find the MPs in the R session (see function `getMP`). `dynGet` finds functions that are defined inside the function call stack but not available in the global environment.
+
+## Fixes
+
+- fix to `OMdoc`
+- fixes to simulation of length comp
+
+# MSEtool 3.7.2
+
+## Fixes
+
+- add `cpars$qs` to `OM` produce by `SS2OM`
+- Note: `SS2OM` does not return `cpars$Data`
 
 # MSEtool 3.7.1 
 

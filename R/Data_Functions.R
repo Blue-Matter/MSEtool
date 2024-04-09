@@ -928,7 +928,7 @@ DLMdiag <- function(Data, command = c("available", "not available", "needed"), r
     inMPind <- which(funcs1 %in% builtin)
     cMPind <- which(funcs1 %in% custom)
     repp <- rep('', length(funcs1))
-    # built in MPs (doesn't require 'dependencies' line)
+    # built in MPs (doesn't require 'dependencies' line) 
     reqdata <-  ReqData[match(builtin, ReqData$MP),2]
 
     repp[inMPind] <- vapply(reqdata, match_slots, character(1), Data = Data, internal=TRUE)
