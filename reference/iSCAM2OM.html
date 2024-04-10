@@ -62,6 +62,7 @@ These functions rely on several functions written by Chris Grandin (DFO PBS).</p
 <span>  nsim <span class="op">=</span> <span class="fl">48</span>,</span>
 <span>  proyears <span class="op">=</span> <span class="fl">50</span>,</span>
 <span>  mcmc <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  spawn_time_frac <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  Name <span class="op">=</span> <span class="st">"iSCAM model"</span>,</span>
 <span>  Source <span class="op">=</span> <span class="st">"No source provided"</span>,</span>
 <span>  length_timestep <span class="op">=</span> <span class="fl">1</span>,</span>
@@ -99,6 +100,10 @@ uncertainty (for OM@cpars custom parameters)</p></dd>
 <dt>mcmc</dt>
 <dd><p>Logical, whether to use mcmc samples to create custom parameters cpars. Alternatively, a list
 returned by <a href="iSCAM.html">read.mcmc</a>. Set the seed for the function to sub-sample the mcmc samples.</p></dd>
+
+
+<dt>spawn_time_frac</dt>
+<dd><p>Numeric between 0-1 indicating when spawning occurs within the time step</p></dd>
 
 
 <dt>Name</dt>
@@ -165,9 +170,9 @@ through the following arrays:</p>
     <h2 id="start-age">Start age<a class="anchor" aria-label="anchor" href="#start-age"></a></h2>
     
 
-<p>While the iSCAM start age can be greater than zero, abundance at age is back-calculated to age zero using the M
-at the start age.</p>
-<p>These arrays are then passed to <code>VPA2OM</code> to generate the operating model.</p>
+<p>While the iSCAM start age can be greater than zero, abundance at age is back-calculated to age zero with M, maturity, growth = 0. In this
+way, the stock-recruit dynamics from iSCAM are preserved.</p>
+<p>These arrays are then passed to <a href="Assess2OM.html">Assess2OM</a> to generate the operating model.</p>
     </div>
     <div class="section level2">
     <h2 id="reference-points">Reference points<a class="anchor" aria-label="anchor" href="#reference-points"></a></h2>
@@ -177,8 +182,7 @@ at the start age.</p>
 points using R0, steepness, and unfished spawners per recruit from the mean M, fecundity, and growth (mean with
 respect to time).</p>
 <p>R0 and h are recalculated for the operating model by obtaining the stock-recruit alpha and beta from the
-iSCAM parameters and the mean unfished spawners per recruit in the first <code>ageM</code> (age of 50% maturity) years.
-R0 is also back calculated to age zero.</p>
+iSCAM parameters and the mean unfished spawners per recruit in the first <code>ageM</code> (age of 50% maturity) years.</p>
     </div>
     <div class="section level2">
     <h2 id="author">Author<a class="anchor" aria-label="anchor" href="#author"></a></h2>

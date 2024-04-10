@@ -47,6 +47,22 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="3.7.2999" id="msetool-372999---dev-version">MSEtool 3.7.2999 - dev version<a class="anchor" aria-label="anchor" href="#msetool-372999---dev-version"></a></h2>
 <div class="section level3">
+<h3 id="new-additions-3-7-2999">New additions<a class="anchor" aria-label="anchor" href="#new-additions-3-7-2999"></a></h3>
+<ul><li>add MICE rel for recruitment deviates in <code>multiMSE</code> which can be a function of the state dynamics in either the current year or previous year</li>
+<li>MICE rel for natural mortality can be age-specific in <code>multiMSE</code>
+</li>
+<li>custom stock-recruit functions available for <code>multiMSE</code>
+</li>
+<li>allow plusgroup to be turned off in <code>multiMSE</code>
+</li>
+<li>add <code>spawn_time_frac</code> argument to <code>iSCAM2OM</code>
+</li>
+</ul></div>
+<div class="section level3">
+<h3 id="internal-3-7-2999">Internal<a class="anchor" aria-label="anchor" href="#internal-3-7-2999"></a></h3>
+<ul><li>projections use <code>dynGet</code> then <code>get</code> to find the MPs in the R session (see function <code>getMP</code>). <code>dynGet</code> finds functions that are defined inside the function call stack but not available in the global environment.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="fixes-3-7-2999">Fixes<a class="anchor" aria-label="anchor" href="#fixes-3-7-2999"></a></h3>
 <ul><li>fix to <code>OMdoc</code>
 </li>

@@ -74,7 +74,8 @@ depletion across stocks and fleets if there are relationships among stocks</p>
 <span>  <span class="va">Rel</span>,</span>
 <span>  <span class="va">SexPars</span>,</span>
 <span>  <span class="va">plusgroup</span>,</span>
-<span>  optVB <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  optVB <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  silent <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -155,6 +156,14 @@ list<code>[[stock]][nsim, nf]</code></p></dd>
 
 <dt>SexPars</dt>
 <dd><p>A list of sex-specific dynamics SSBfrom stock_age</p></dd>
+
+
+<dt>optVB</dt>
+<dd><p>Logical, whether to optimize to vulnerable biomass (or spawning biomass otherwise)</p></dd>
+
+
+<dt>silent</dt>
+<dd><p>Logical, whether to report the objective function for each simulation</p></dd>
 
 </dl></div>
     <div class="section level2">
