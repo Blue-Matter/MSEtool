@@ -45,6 +45,8 @@
 #' @param SSB0x SSB0 for this simulation
 #' @param B0x B0 for this simulation
 #' @param MPA An array of spatial closures by year `[np,nf,nyears+proyears,nareas]`
+#' @param SRRfun A list of custom stock-recruit functions. List of length `np`
+#' @param SRRpars A list of custom stock-recruit parameters for simulation `x`. List of length `np`
 #' @author T.Carruthers
 #' @keywords internal
 popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, FretAx, Effind,
@@ -120,32 +122,31 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
     
     SSBx[Nind] <- Nx[Nind] * exp(-ZMx_all[Nind[,c(1,2,4)]] * spawn_time_frac[Nind[,1]]) * Fec_agex[Nind[, 1:3]]
     SSNx[Nind] <- Nx[Nind] * exp(-ZMx_all[Nind[,c(1,2,4)]] * spawn_time_frac[Nind[,1]]) * Mat_agex[Nind[, 1:3]]
-  
-    # Calculate SSB for S-R relationship
-    SSB_SR <- local({
-      SSBtemp <- array(NA_real_, dim(SSBx[,,y-1,])) # np x n_age x nareas
-      SSBtemp[] <- SSBx[,,y-1,, drop=FALSE]
-      if (length(SexPars$SSBfrom)) { # use SSB from another stock to predict recruitment
-        sapply(1:np, function(p) apply(SexPars$SSBfrom[p, ] * SSBtemp, 2:3, sum), simplify = "array") %>%
-          aperm(c(3, 1, 2))
-      } else {
-        SSBtemp
-      }
-    })
  
     # Recruitment for last year
     if (y>2) {
+      # Calculate SSB for S-R relationship
+      SSB_SR <- local({
+        SSBtemp <- array(NA_real_, dim(SSBx[,,y-1,])) # np x n_age x nareas
+        SSBtemp[] <- SSBx[,,y-1,, drop=FALSE]
+        if (length(SexPars$SSBfrom)) { # use SSB from another stock to predict recruitment
+          sapply(1:np, function(p) apply(SexPars$SSBfrom[p, ] * SSBtemp, 2:3, sum), simplify = "array") %>%
+            aperm(c(3, 1, 2))
+        } else {
+          SSBtemp
+        }
+      })
       if (length(dim(SSB_SR))==2) {
         Nx[, 1, y-1, ] <- sapply(1:np, function(p) {
           calcRecruitment_int(SRrel = SRrelx[p], SSBcurr = SSB_SR, recdev = Perrx[p, y-1+n_age-1], hs = hsx[p], 
                               aR = aRx[p, 1], bR = 1/sum(1/bRx[p, ]), R0a = R0ax[p, ], SSBpR = SSBpRx[p, 1],
-                              SRRfun, SRRpars)
+                              SRRfun[[p]], SRRpars[[p]])
         }) %>% t()
       } else {
         Nx[, 1, y-1, ] <- sapply(1:np, function(p) {
           calcRecruitment_int(SRrel = SRrelx[p], SSBcurr = SSB_SR[p, , ], recdev = Perrx[p, y-1+n_age-1], hs = hsx[p], 
                               aR = aRx[p, 1], bR = 1/sum(1/bRx[p, ]), R0a = R0ax[p, ], SSBpR = SSBpRx[p, 1],
-                              SRRfun, SRRpars)
+                              SRRfun[[p]], SRRpars[[p]])
         }) %>% t()
       }
    
@@ -303,10 +304,6 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
   n_age <- maxage + 1
   Nind <- TEG(dim(Ncur)) # p, age, area
   
-  # Survival this year
-  surv <- array(c(rep(1,np), t(exp(-apply(M_agecur, 1, cumsum)))[, 1:(n_age-1)]), c(np, n_age))  # Survival array
-  surv[plusgroup, n_age] <- surv[plusgroup, n_age]/(1 - exp(-M_agecur[plusgroup, n_age])) # plusgroup
-  
   # These could change, these are values previous to MICE rel
   oldMx <- Mx # M of mature animals
   oldM_agecur <- M_agecur
@@ -315,47 +312,63 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
   oldWt_agenext <- Wt_agenext
   oldFec_agenext <- Fec_agenext
   
-  if (length(Rel)) { # MICE relationships, parameters that could change: M, K, Linf, t0, a, b, hs
-    Responses <- ResFromRel(Rel, Bcur, SSBcur, Ncur, SSB0x, B0x, seed = 1, x)
-    DV <- sapply(Responses, function(xx) xx[4])
+  oldPerrYrp <- PerrYrp
+  
+  if (length(Rel)) { # MICE relationships, parameters that could change: M, K, Linf, t0, a, b, hs, Perr_y
+    Dlag_all <- sapply(Rel, get_Dlag)
     
-    for (r in 1:length(Responses)) { # e.g., Mx[1] <- 0.4 - operations are sequential
-      eval(parse(text = paste0(DV[r], "[", Responses[[r]][3], "]<-", Responses[[r]][1])))
-    }
-    
-    if (any(DV %in% c("Linfx", "Kx", "t0x"))) { # only update Len_age for next year if MICE response is used
-      Len_agenext <- matrix(Linfx * (1 - exp(-Kx * (rep(0:maxage, each = np) - t0x))), nrow = np)
-      Len_agenext[Len_agenext < 0] <- tiny
-    } 
-    if (any(DV %in% c("Linfx", "Kx", "t0x", "ax", "bx"))) { # only update Len_age/Wt_age for next year if MICE response
-      # update relative fecundity-at-age for SSB
-      Fec_per_weight <- array(NA, dim = dim(Fec_agenext))
-      Fec_per_weight[Nind[, 1:2]] <- Fec_agenext[Nind[, 1:2]]/Wt_agenext[Nind[ ,1:2]]
+    if (any(Dlag_all == "current")) {  # Proceed except if Rel[[r]]$Dlag = "next"
+      Responses <- ResFromRel(Rel[Dlag_all == "current"], Bcur, SSBcur, Ncur, SSB0x, B0x, seed = 1, x)
       
-      Wt_agenext <- ax * Len_agenext ^ bx # New weight-at-age
-      Fec_agenext[Nind[, 1:2]] <- Fec_per_weight[Nind[, 1:2]] * Wt_agenext[Nind[, 1:2]]
+      Dmodnam <- sapply(Responses, getElement, "modnam")
+      Dp <- sapply(Responses, getElement, "Dp")
+      Dval <- sapply(Responses, getElement, "value")
+      #Dlag <- sapply(Responses, getElement, "lag")
+      Dage <- sapply(Responses, getElement, "age")
+      
+      for (r in 1:length(Responses)) { # e.g., Mx[1] <- 0.4 - operations are sequential
+        if (Dmodnam[r] == "Mx" && !is.na(Dage[r])) { # Age-specific M
+          Rel_txt <- paste0("M_agecur[", Dp[r], ", ", Dage[r] + 1, "] <- ", Dval[r])
+        } else {
+          Rel_txt <- paste0(Dmodnam[r], "[", Dp[r], "] <- ", Dval[r])
+        }
+        eval(parse(text = Rel_txt))
+      }
+      
+      if (any(Dmodnam %in% c("Linfx", "Kx", "t0x"))) { # only update Len_age for next year if MICE response is used
+        Len_agenext <- matrix(Linfx * (1 - exp(-Kx * (rep(0:maxage, each = np) - t0x))), nrow = np)
+        Len_agenext[Len_agenext < 0] <- tiny
+      } 
+      if (any(Dmodnam %in% c("Linfx", "Kx", "t0x", "ax", "bx"))) { # only update Len_age/Wt_age for next year if MICE response
+        # update relative fecundity-at-age for SSB
+        Fec_per_weight <- array(NA, dim = dim(Fec_agenext))
+        Fec_per_weight[Nind[, 1:2]] <- Fec_agenext[Nind[, 1:2]]/Wt_agenext[Nind[ ,1:2]]
+        
+        Wt_agenext <- ax * Len_agenext ^ bx # New weight-at-age
+        Fec_agenext[Nind[, 1:2]] <- Fec_per_weight[Nind[, 1:2]] * Wt_agenext[Nind[, 1:2]]
+      }
+      
+      # Recalc M_age for this year (only if age-invariant M was updated) ------------------
+      if (any(Dmodnam == "Mx") && all(M_agecur == oldM_agecur)) {
+        M_agecur <- oldM_agecur * Mx/oldMx
+      }
+      
+      # --- This is redundant code for updating parameters when R0 changes -----
+      # surv <- cbind(rep(1,np),t(exp(-apply(M_agecur, 1, cumsum)))[, 1:(maxage-1)])  # Survival array
+      # SSB0x<-apply(R0x*surv*Mat_agecur*Wt_age,1,sum)
+      #SSBpRx<-SSB0x/R0x
+      #SSBpRax<-SSBpRx*distx
+      #SSB0ax<-distx*SSB0x
+      #R0ax<-distx*R0x
+      #R0recalc thus aR bR recalc ---------------
+      #bRx <- matrix(log(5 * hsx)/(0.8 * SSB0ax), nrow=np)  # Ricker SR params
+      #aRx <- matrix(exp(bRx * SSB0ax)/SSBpRx, nrow=np)  # Ricker SR params
     }
-    
-    # Recalc M_age for this year ------------------
-    if (any(DV == "Mx")) {
-      M_agecur <- M_agecur * Mx/oldMx
-      surv <- array(c(rep(1,np), t(exp(-apply(M_agecur, 1, cumsum)))[, 1:(n_age-1)]), 
-                    c(np, n_age))
-      surv[plusgroup, n_age] <- surv[plusgroup, n_age]/(1 - exp(-M_agecur[plusgroup, n_age])) # plusgroup
-    }
-    
-    # --- This is redundant code for updating parameters when R0 changes -----
-    # surv <- cbind(rep(1,np),t(exp(-apply(M_agecur, 1, cumsum)))[, 1:(maxage-1)])  # Survival array
-    # SSB0x<-apply(R0x*surv*Mat_agecur*Wt_age,1,sum)
-    #SSBpRx<-SSB0x/R0x
-    #SSBpRax<-SSBpRx*distx
-    #SSB0ax<-distx*SSB0x
-    #R0ax<-distx*R0x
-    #R0recalc thus aR bR recalc ---------------
-    #bRx <- matrix(log(5 * hsx)/(0.8 * SSB0ax), nrow=np)  # Ricker SR params
-    #aRx <- matrix(exp(bRx * SSB0ax)/SSBpRx, nrow=np)  # Ricker SR params
-    
   } # end of MICE
+  
+  # Survival this year
+  surv <- array(c(rep(1,np), t(exp(-apply(M_agecur, 1, cumsum)))[, 1:(n_age-1)]), c(np, n_age))  # Survival array
+  surv[plusgroup, n_age] <- surv[plusgroup, n_age]/(1 - exp(-M_agecur[plusgroup, n_age])) # plusgroup
   
   # Vulnerable biomass calculation (current year) -------------
   VBft <- Fdist <- array(NA, c(np, nf, n_age, nareas))
@@ -396,7 +409,7 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
       ps <- as.numeric(strsplit(names(SexPars$Herm)[i], "_")[[1]][2:3])
       pfrom <- ps[2]
       pto <- ps[1]
-      frac <- rep(1,maxage)
+      frac <- rep(1, n_age)
       frac[1:length(SexPars$Herm[[i]][x, ])] <- SexPars$Herm[[i]][x, ]
       h_rate <- hrate(frac)
       Nnext[pto, , ] <- Nnext[pto, , ] * (frac > 0) # remove any recruitment
@@ -407,11 +420,9 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
   }
   
   # Calculate SSB for S-R relationship
+  SSBtemp <- array(NA_real_, dim(Nnext)) # np x n_age x nareas
+  SSBtemp[Nind] <- Nnext[Nind] * Fec_agenext[Nind[, 1:2]]
   SSB_SR <- local({
-    SSBtemp <- array(NA_real_, dim(Nnext)) # np x n_age x nareas
-
-    SSBtemp[Nind] <- Nnext[Nind] * Fec_agenext[Nind[, 1:2]]
-
     if (length(SexPars$SSBfrom)) { # use SSB from another stock to predict recruitment
       sapply(1:np, function(p) apply(SexPars$SSBfrom[p, ] * SSBtemp, 2:3, sum), simplify = "array") %>%
         aperm(c(3, 1, 2))
@@ -419,12 +430,30 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
       SSBtemp
     }
   })
+  
+  # Re-run MICE if any of them use recruitment deviations with next year's abundance/biomass
+  if (length(Rel) && any(Dlag_all == "next")) {
+    Responses2 <- local({
+      Bnext <- SSBnext <- array(NA_real_, dim(Nnext)) # np x n_age x nareas
+      Bnext[Nind] <- Nnext[Nind] * Wt_agenext[Nind[, 1:2]]
+      ResFromRel(Rel[Dlag_all == "next"], Bcur = Bnext, SSBcur = SSBtemp, Ncur = Nnext, SSB0x, B0x, seed = 1, x)
+    })
+    
+    Dmodnam2 <- sapply(Responses2, getElement, "modnam")
+    Dp2 <- sapply(Responses2, getElement, "Dp")
+    Dval2 <- sapply(Responses2, getElement, "value")
+    
+    for (r in 1:length(Responses2)) { # e.g., PerrYrp[1] <- 1.5 - operations are sequential
+      Rel_txt <- paste0(Dmodnam2[r], "[", Dp2[r], "] <- ", Dval2[r])
+      eval(parse(text = Rel_txt))
+    }
+  }
 
   # Generate next year's recruitment (this will get updated if spawn_time_frac > 0 )
   Nnext[, 1, ] <- sapply(1:np, function(p) {
     calcRecruitment_int(SRrel = SRrelx[p], SSBcurr = SSB_SR[p, , ], recdev = PerrYrp[p], hs = hsx[p],
                         aR = aRx[p, 1], bR = 1/sum(1/bRx[p, ]), R0a = R0ax[p, ], SSBpR = SSBpRx[p, 1],
-                        SRRfun, SRRpars)
+                        SRRfun[[p]], SRRpars[[p]])
   }) %>% t()
 
   # Movement
@@ -465,7 +494,8 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
        Bnext=Bnext, #23
        SSNnext=SSNnext, #24
        SSBnext=SSBnext,#25
-       Fec_agenext=Fec_agenext) #26
+       Fec_agenext=Fec_agenext,#26
+       PerrYrp=PerrYrp)#27
   
 }
 
@@ -493,16 +523,16 @@ ResFromRel <- function(Rel, Bcur, SSBcur, Ncur, SSB0, B0, seed, x) {
   SSB <- apply(SSBcur, 1, sum)
   N <- apply(Ncur, 1, sum)
 
-  DVnam <- c("M", "a", "b", "R0", "hs", "K", "Linf", "t0")
-  modnam <- c("Mx", "ax", "bx", "R0x", "hsx", "Kx", "Linfx", "t0x")
+  DVnam <- c("M", "a", "b", "R0", "hs", "K", "Linf", "t0", "Perr_y")
+  modnam <- c("Mx", "ax", "bx", "R0x", "hsx", "Kx", "Linfx", "t0x", "PerrYrp")
 
   nRel <- length(Rel)
   
   out <- lapply(1:nRel, function(r) {
     fnams <- names(Rel[[r]]$model)
     DV <- fnams[1]
-    Dp <- unlist(strsplit(DV, "_"))[2]
-    Dnam <- unlist(strsplit(DV, "_"))[1]
+    Dp <- get_Dp(DV)
+    Dnam <- get_Dnam(DV)
     IV <- fnams[-1]
     nIV <- length(IV)
     
@@ -518,12 +548,68 @@ ResFromRel <- function(Rel, Bcur, SSBcur, Ncur, SSB0, B0, seed, x) {
     templm$fitted.values <- ys
     ysamp <- stats::simulate(templm, nsim = 1, seed = seed) %>% unlist()
     
-    c(ysamp, DV, Dp, modnam[match(Dnam, DVnam)])
+    rel_r <- list(
+      value = ysamp,
+      DV = DV,
+      Dp = Dp,
+      modnam = modnam[match(Dnam, DVnam)]
+    )
+    
+    if (Dnam == "Perr_y") {
+      if (!is.null(Rel[[r]]$lag)) {
+        lag <- Rel[[r]]$lag # choices are "current" or "next"
+      } else {
+        lag <- "current"
+      }
+      if (lag != "next") lag <- "current"
+    } else {
+      lag <- NA_character_
+    }
+    rel_r[["lag"]] <- lag
+    
+    if (Dnam == "M") {
+      if (!is.null(Rel[[r]]$age)) {
+        age <- Rel[[r]]$age
+      } else {
+        age <- NA_integer_
+      }
+    } else {
+      age <- NA_integer_
+    }
+    rel_r[["age"]] <- age
+    
+    return(rel_r)
   })
   out
 }
 
+get_Dlag <- function(Rel) {
+  #if (Dnam == "Perr_y") {
+  #  if (!is.null(Rel[[r]]$lag)) {
+  #    lag <- Rel[[r]]$lag # choices are "current" or "next"
+  #  } else {
+  #    lag <- "current"
+  #  }
+  #  if (lag != "next") lag <- "current"
+  #} else {
+  #  lag <- NA_character_
+  #}
+  lag <- Rel$lag
+  if (is.null(lag) || lag != "next") lag <- "current"
+  return(lag)
+}
 
+
+get_Dp <- function(DV) {
+  x <- unlist(strsplit(DV, "_"))
+  x[length(x)]
+}
+
+get_Dnam <- function(DV) {
+  x <- unlist(strsplit(DV, "_"))
+  paste0(x[-length(x)], collapse = "_")
+}
+  
 #' Derives the rate of exchange from one sex to another based on asymptotic fraction
 #'
 #' @param frac A vector of asymptotic sex fraction (must start with zero and end with 1)

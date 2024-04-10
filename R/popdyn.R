@@ -219,7 +219,7 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
                      plusgroup=plusgroup,
                      spawn_time_frac=spawn_time_frac[x])
                      
-    if(!doopt$objective) MSYs[] <- 0 # Assume stock crashes regardless of F
+    if(!doopt$objective || is.na(doopt$objective)) MSYs[] <- 0 # Assume stock crashes regardless of F
   } else {
       
     # Optimize for maximum yield
@@ -318,8 +318,8 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
     names(MSYs) <- c("Yield", "F", "SB", "SB_SB0", "B_B0", "B", "VB", "VB_VB0",
                       "RelRec", "SB0", "B0", "R0", "h", "N0", "SN0")
  
-    if(!opt$objective) MSYs[] <- 0 # Assume stock crashes regardless of F
-    }
+    if(!opt$objective || is.na(doopt$objective)) MSYs[] <- 0 # Assume stock crashes regardless of F
+  }
   
   return(MSYs)
 }
@@ -1133,8 +1133,8 @@ calcF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, Asize, maxage, 
   ct <- TACusedE[x]
   ft <- ct/sum(Biomass_P[x,,y,] * V_P[x,,y+nyears]) # initial guess
   fishdist[x,] <- fishdist[x,]/sum(fishdist[x,])
-
-  if (ft <= 1E-9) return(tiny)
+  
+  if (ct <= 1E-9 || ft <= 1E-9) return(tiny)
   for (i in 1:maxiterF) {
     Fmat <- ft * matrix(V_P[x,,y+nyears], nrow=maxage+1, ncol=nareas) *
       matrix(fishdist[x,], maxage+1, nareas, byrow=TRUE)/

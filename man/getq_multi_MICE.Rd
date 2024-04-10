@@ -24,7 +24,8 @@ getq_multi_MICE(
   Rel,
   SexPars,
   plusgroup,
-  optVB = FALSE
+  optVB = FALSE,
+  silent = FALSE
 )
 }
 \arguments{
@@ -68,6 +69,10 @@ list\verb{[[stock]][nsim, nf]}}
 \item{Rel}{A list of inter-stock relationships see slot Rel of MOM object class}
 
 \item{SexPars}{A list of sex-specific dynamics SSBfrom stock_age}
+
+\item{optVB}{Logical, whether to optimize to vulnerable biomass (or spawning biomass otherwise)}
+
+\item{silent}{Logical, whether to report the objective function for each simulation}
 }
 \description{
 Function optimizes catchability (q, where F=qE) required to get to user-specified stock

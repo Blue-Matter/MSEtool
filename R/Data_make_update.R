@@ -108,7 +108,7 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
     ind <- apply(abs(b1/ b2 - 1), 1, which.min) # find years closest to BMSY
     Iref <- diag(I3[1:nsim,ind])  # return the real target abundance index closest to BMSY
   } else {
-    Iref <- apply(I3[, 1:5], 1, mean) * RefPoints$BMSY_B0  # return the real target abundance index corresponding to BMSY
+    Iref <- apply(I3[, 1:min(5, ncol(I3))], 1, mean) * RefPoints$BMSY_B0  # return the real target abundance index corresponding to BMSY
   }
   Data@Iref <- Iref * ObsPars$Irefbias # index reference with error
 
@@ -164,8 +164,6 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
                      Karray=StockPars$Karray, 
                      t0array=StockPars$t0array, 
                      LenCV=StockPars$LenCV)
-    
-
   }
 
   Data@CAL_bins <- StockPars$CAL_bins
@@ -718,8 +716,6 @@ simCAL <- function(nsim, nyears, maxage,  CAL_ESS, CAL_nsamp, nCALbins, CAL_bins
                        Linfarray, Karray, t0array, LenCV, truncSD=2)
     
 
-    
-    
   }
   CAL <- aperm(array(as.numeric(unlist(tempSize, use.names=FALSE)),
                      dim=c(nyears, length(CAL_binsmid), nsim)), c(3,1,2))
@@ -795,7 +791,6 @@ genSizeCompWrap <- function(i, vn, CAL_binsmid, CAL_bins, retL,
   }
 
   # VulnN <- round(VulnN,0) # convert to integers
-  
   nyrs <- nrow(as.matrix(Linfarray[i,]))
   if (nyrs == 1) VulnN <- t(VulnN)
   retLa <- as.matrix(retL[i,,])
@@ -805,7 +800,6 @@ genSizeCompWrap <- function(i, vn, CAL_binsmid, CAL_bins, retL,
                       CAL_ESS=CAL_ESS[i], CAL_nsamp=CAL_nsamp[i],
                       Linfs=Linfarray[i,], Ks=Karray[i,], t0s=t0array[i,],
                       LenCV=LenCV[i], truncSD)
-
 
   # snapshot length comp
   # lens <- genSizeComp2(VulnN, CAL_binsmid, CAL_bins, retLa,
@@ -1647,7 +1641,7 @@ AddRealData_MS <- function(SimData,
         }
         
         if (AddIndType[i]!=1)
-          stop('Vulernable and spawning indices not supported for multiMSE. Use `cpars$AddIV` to specify selectivity pattern')
+          stop('Vulnerable and spawning indices not supported for multiMSE. Use `cpars$AddIV` to specify selectivity pattern')
         
         for (pp in seq_along(map.stocks)) {
           SimIndex[,pp,,] <- SimIndex[,pp,,] * Ind_V_list[[map.stocks[pp]]]
@@ -1883,8 +1877,12 @@ updateData_MS <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_P
   I2 <- exp(lcs(I2))^ObsPars[[p]][[f]]$I_beta * ObsPars[[p]][[f]]$Ierr_y[,yr.ind:(nyears + (y - 1))]
   
   # I2 <- exp(lcs(I2)) * ObsPars$Ierr_y[,yr.ind:(nyears + (y - 1))]
-  year.ind <- max(which(!is.na(Data@Ind[1,1:nyears])))
-  scaler <- Data@Ind[,year.ind]/I2[,1]
+  if (sum(Data@Ind[1,1:nyears], na.rm = TRUE)) {
+    year.ind <- max(which(!is.na(Data@Ind[1,1:nyears])))
+    scaler <- Data@Ind[,year.ind]/I2[,1]
+  } else {
+    scaler <- rep(1, nsim)
+  }
   scaler <- matrix(scaler, nrow=nsim, ncol=ncol(I2))
   I2 <- I2 * scaler # convert back to historical index scale
   
@@ -1914,8 +1912,12 @@ updateData_MS <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_P
   
   # standardize, apply  beta & obs error
   I2 <- exp(lcs(I2))^ObsPars[[p]][[f]]$SpI_beta * ObsPars[[p]][[f]]$SpIerr_y[,yr.ind:(nyears + (y - 1))]
-  year.ind <- max(which(!is.na(Data@SpInd[1,1:nyears])))
-  scaler <- Data@SpInd[,year.ind]/I2[,1]
+  if (sum(Data@SpInd[1,1:nyears], na.rm = TRUE)) {
+    year.ind <- max(which(!is.na(Data@SpInd[1,1:nyears])))
+    scaler <- Data@SpInd[,year.ind]/I2[,1]
+  } else {
+    scaler <- rep(1, nsim)
+  }
   scaler <- matrix(scaler, nrow=nsim, ncol=ncol(I2))
   I2 <- I2 * scaler # convert back to historical index scale
   
@@ -1943,8 +1945,12 @@ updateData_MS <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_P
   
   # standardize, apply  beta & obs error
   I2 <- exp(lcs(I2))^ObsPars[[p]][[f]]$VI_beta * ObsPars[[p]][[f]]$VIerr_y[,yr.ind:(nyears + (y - 1))]
-  year.ind <- max(which(!is.na(Data@VInd[1,1:nyears])))
-  scaler <- Data@VInd[,year.ind]/I2[,1]
+  if (sum(Data@VInd[1,1:nyears], na.rm = TRUE)) {
+    year.ind <- max(which(!is.na(Data@VInd[1,1:nyears])))
+    scaler <- Data@VInd[,year.ind]/I2[,1]
+  } else {
+    scaler <- rep(1, nsim)
+  }
   scaler <- matrix(scaler, nrow=nsim, ncol=ncol(I2))
   I2 <- I2 * scaler # convert back to historical index scale
   

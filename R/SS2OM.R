@@ -35,14 +35,8 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1,
                 interval = interval, pstar = pstar, Obs = Obs, Imp = Imp, silent = silent,
                 Name = Name, Source = Source)
 
-  
-
   if(!silent) message("Converting MOM to OM...")
   OM <- SSMOM2OM(MOM, replist, gender, import_mov, seed, silent, model_discards)
-  
-  
-  
-  
   
   if(replist$nseasons == 1 && replist$seasduration < 1 && seasons_to_years) {
     message("Model with season as years found. Will convert to annual time step.")
