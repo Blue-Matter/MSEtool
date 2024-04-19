@@ -221,7 +221,8 @@ BAM2MOM <- function(rdat, nsim = 48, proyears = 50, interval = 1,
   # Add names
   names(MOM@Stocks) <- snameBAM
   names(MOM@Fleets) <- snameBAM
-  names(MOM@Fleets[[1]]) <- fnameBAM
+  names(MOM@cpars) <- snameBAM
+  
   
   # custom parameters 
   LatASD <- local({
@@ -243,9 +244,10 @@ BAM2MOM <- function(rdat, nsim = 48, proyears = 50, interval = 1,
       MOM@cpars[[p]][[f]][["t0"]] <- rep(parms$t0, nsim)
     }
     MOM@cpars[[p]][[1]]$spawn_time_frac <- rep(parms$spawn.time, nsim)
+    names(MOM@Fleets[[p]]) <- fnameBAM
+    names(MOM@cpars[[p]]) <- fnameBAM
   }
   MOM
-  
 }
 
 
