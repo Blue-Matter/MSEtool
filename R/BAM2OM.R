@@ -27,7 +27,7 @@ BAM2MOM <- function(rdat, nsim = 48, proyears = 50, interval = 1,
   parms <- rdat[["parms"]]
   
   # Convert all weights to metric (kg)
-  rdat <- convert_units(rdat)
+  # rdat <- convert_units(rdat)
   
   # Grab name of stock
   np <- 1
