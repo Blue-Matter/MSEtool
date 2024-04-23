@@ -247,6 +247,7 @@ BAM2MOM <- function(rdat, nsim = 48, proyears = 50, interval = 1,
     names(MOM@Fleets[[p]]) <- fnameBAM
     names(MOM@cpars[[p]]) <- fnameBAM
   }
+  MOM@maxF <- 5
   MOM
 }
 
