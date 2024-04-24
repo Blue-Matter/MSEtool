@@ -1451,9 +1451,9 @@ AddRealData_MS <- function(SimData,
   
   if (length(RealData@Year)>1) {
     # check years
-    if (all(RealData@Year !=SimData@Year)) {
-      stop('`OM$cpars$Data@Year` does not match `SimData@Year`. \nAre `Fleet@nyears` and `Fleet@CurrentYr` correct?')
-    }
+    # if (!all(RealData@Year %in%SimData@Year)) {
+    #   stop('`OM$cpars$Data@Year` does not match `SimData@Year`. \nAre `Fleet@nyears` and `Fleet@CurrentYr` correct?')
+    # }
     Data_out@Year <- RealData@Year
   }
   
@@ -1514,6 +1514,18 @@ AddRealData_MS <- function(SimData,
                             p, f, 
                             msg=msg) 
     Data_out <- fit_ind$Data_out
+    
+    # add future year data if they exist
+    n_future_years <-  length(RealData@Ind[1,]) - length(Data_out@Ind[1,])
+    if (n_future_years>0) {
+      ll <- length(RealData@Ind[1,])
+      future_index <- matrix(RealData@Ind[1,(ll-n_future_years+1):ll], nsim, n_future_years, byrow=TRUE)
+      future_index_cv <- matrix(RealData@CV_Ind[1,(ll-n_future_years+1):ll], nsim, n_future_years, byrow=TRUE)
+      Data_out@Ind <- cbind(Data_out@Ind, future_index)
+      Data_out@CV_Ind <- cbind(Data_out@CV_Ind, future_index_cv)
+    }
+   
+  
     ObsPars <- fit_ind$ObsPars
   }
   
@@ -1751,15 +1763,18 @@ AddRealData_MS <- function(SimData,
       # match length bins
       ind <- match(RealData@CAL_mids, StockPars[[p]]$CAL_binsmid)
       dd <- dim(Data_out@CAL)
+      dd_real <- dim(RealData@CAL[1,,])
+      dd[2] <- dd_real[1]
       Data_out@CAL <- array(0, dim=dd)
       CAL <- Data_out@CAL[1,,]
       CAL[,ind] <- RealData@CAL[1,,] # replace with real CAL
-      CAL <- aperm(replicate(nsim, CAL[1:nyears,]),c(3,1,2))
+      n_dat_years <- dim(RealData@CAL[1,,])[1]
+      CAL <- aperm(replicate(nsim, CAL[1:n_dat_years,]),c(3,1,2))
       Data_out@CAL <- CAL
       Data_out@Vuln_CAL <- RealData@Vuln_CAL
       
       # Get average sample size
-      nsamp <- ceiling(mean(apply(RealData@CAL[1,1:nyears,], 1, sum, na.rm=TRUE), na.rm=TRUE))
+      nsamp <- ceiling(mean(apply(RealData@CAL[1,1:n_dat_years,], 1, sum, na.rm=TRUE), na.rm=TRUE))
       ObsPars[[p]][[f]]$CAL_nsamp <- rep(nsamp, nsim)
       
       # calculate effective sample size for projections
