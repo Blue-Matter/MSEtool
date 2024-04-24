@@ -1912,12 +1912,18 @@ updateData_MS <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_P
   if (!is.null(RealData) && ncol(RealData@Ind)>nyears &&
       !all(is.na(RealData@Ind[1,(nyears+1):length(RealData@Ind[1,])]))) {
     # update projection index with observed index if it exists
-    addYr <- min(y,ncol(RealData@Ind) - nyears)
-    Data@Ind[,(nyears+1):(nyears+addYr)] <- matrix(RealData@Ind[1,(nyears+1):(nyears+addYr)],
-                                                   nrow=nsim, ncol=addYr, byrow=TRUE)
+    dd <- length(RealData@Ind[1,])
+  
+    p_yr_ind <- (nyears+1):(nyears+y-1)
+    p_yr_ind <- p_yr_ind[p_yr_ind<=dd]
+    p_ind <- matrix(RealData@Ind[1,p_yr_ind],
+                      nrow=nsim, ncol=length(p_yr_ind), byrow=TRUE)
     
-    Data@CV_Ind[,(nyears+1):(nyears+addYr)] <- matrix(RealData@CV_Ind[1,(nyears+1):(nyears+addYr)],
-                                                      nrow=nsim, ncol=addYr, byrow=TRUE)
+    p_cv <- matrix(RealData@CV_Ind[1,p_yr_ind],
+                     nrow=nsim, ncol=length(p_yr_ind), byrow=TRUE)
+    
+    Data@Ind[,p_yr_ind] <- p_ind
+    Data@CV_Ind[,p_yr_ind] <- p_cv
   }
   
   # --- Index of spawning abundance ----
