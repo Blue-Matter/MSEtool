@@ -36,24 +36,75 @@ NIL<-function(listy,namey,lev1=T){
   out
 }
 
-#' Expand the Herm list in SexPars to a matrix of fractions at age
+#' @name Herm-int 
+#' @aliases expandHerm
+#' @title Internal Herm functions
+#' 
+#' @description - `expandHerm` expands the Herm list in SexPars to a matrix of fractions at age
 #'
-#' @param Herm A list of Hermaphroditic fractions at age (starting age class 1)
+#' @param Herm A list of Hermaphroditic fractions at age
 #' @param maxage The maximum age of stocks being simulated
 #' @param np The total number of stocks being simulated
 #' @param nsim The number of simulations
 #' @author T. Carruthers
-expandHerm<-function(Herm,maxage,np,nsim){
-  HermFrac<-array(1,c(nsim,np,maxage))
-  if(length(Herm)>0){
-    ps<-matrix(as.numeric(sapply(names(Herm),function(x)strsplit(x,"_")[[1]][2:3])),nrow=length(Herm),byrow=T)
-    for(i in 1:length(Herm)){
-      HermFrac[,ps[i,1],1:ncol(Herm[[1]])]<-Herm[[1]]
-      HermFrac[,ps[i,2],]<-0
-      HermFrac[,ps[i,2],1:ncol(Herm[[1]])]<-1-Herm[[1]]
+expandHerm <- function(Herm, maxage, np, nsim) {
+  n_age <- maxage + 1
+  HermFrac <- array(1, c(nsim, np, n_age))
+  if (length(Herm) > 0){
+    ps <- matrix(as.numeric(sapply(names(Herm), function(x) strsplit(x,"_")[[1]][2:3])),
+                 nrow = length(Herm), byrow = TRUE)
+    for(i in 1:length(Herm)) {
+      HermFrac[, ps[i,1], 1:ncol(Herm[[1]])] <- Herm[[1]][, , 1]
+      HermFrac[, ps[i,2], ] <- 0
+      HermFrac[, ps[i,2], 1:ncol(Herm[[1]])] <- 1 - Herm[[1]][, , 1]
     }
   }
   HermFrac
+}
+
+
+#' @rdname Herm-int 
+#' @aliases checkHerm
+#' 
+#' @description - `checkHerm` checks that each array in the list has dimension nsim x maxage+1 x nyears + proyears.
+#' For backwards compatibility, also converts matrices to arrays by adding the year dimension.
+#' 
+#' @param nyears The number of historical years
+#' @param proyears The number of projection years
+#' @author Q. Huynh
+checkHerm <- function(Herm, maxage, nsim, nyears, proyears) {
+  n_age <- maxage + 1
+  
+  if (length(Herm)) {
+    for(i in 1:length(Herm)) {
+      if (is.matrix(Herm[[i]])) Herm[[i]] <- replicate(nyears + proyears, Herm[[i]])
+      
+      if (is.array(Herm[[i]])) {
+        if (!all(dim(Herm[[i]]) == c(nsim, n_age, proyears + nyears))) {
+          stop("Herm[[", i, "]] must be array with dimensions: nsim, maxage+1, nyears + proyears but has dimensions: ",
+               paste(dim(Herm[[i]]), collapse=" "))
+        }
+      } else {
+        stop("Hermaphroditic inputs must be an array.")
+      }
+    }
+  }
+  
+  return(Herm)
+}
+
+#' @rdname Herm-int 
+#' @aliases subsetHerm
+#' 
+#' @description - `subsetHerm` returns year-specific Herm values.
+#' 
+#' @param y The year to subset
+#' @author Q. Huynh
+subsetHerm <- function(Herm, y) {
+  if (length(Herm)) {
+    Herm_y <- lapply(Herm, function(x) x[, , y])
+  }
+  return(Herm_y)
 }
 
 #' Tom's expand grid
