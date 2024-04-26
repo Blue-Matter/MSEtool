@@ -226,6 +226,9 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
       Bx[, , y-1, ] <- Nx[, , y-1, ] * replicate(nareas,WatAgex[,,y-1])
     }
     
+    SexPars_y <- SexPars
+    SexPars_y$Herm <- subsetHerm(SexPars_y$Herm, y = y)
+    
     out <- popdynOneMICE(np, nf, nareas, maxage,
                          Ncur = array(Nx[, , y-1, ], dim(Nx)[c(1:2, 4)]),
                          Bcur = array(Bx[, , y-1, ], dim(Nx)[c(1:2, 4)]),
@@ -246,7 +249,7 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
                          t0x = t0arrayx[, y],
                          Mx = Marrayx[, y-1],
                          R0x = R0x, R0ax = R0ax, SSBpRx = SSBpRx, ax = ay[, y],
-                         bx = by[, y], Rel = Rel, SexPars = SexPars, x = x,
+                         bx = by[, y], Rel = Rel, SexPars = SexPars_y, x = x,
                          plusgroup = plusgroup, SSB0x = SSB0x, B0x = B0x,
                          Len_agenext = array(Len_agex[, , y], c(np, n_age)),
                          Wt_agenext = array(WatAgex[, , y], c(np, n_age)),

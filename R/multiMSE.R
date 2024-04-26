@@ -171,6 +171,9 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   # Depletion, stock-recruit parameters, recdevs, Fleet, Obs, and Imp copied
   # from females to males
   if (length(SexPars)) {
+    if (length(SexPars$Herm)) {
+      SexPars$Herm <- checkHerm(SexPars$Herm, maxage, nsim, nyears, proyears)
+    }
     if (is.null(SexPars$share_par) || SexPars$share_par == TRUE) {
       sexmatches <- sapply(1:nrow(SexPars$SSBfrom), function(x) paste(SexPars$SSBfrom[x, ], collapse = "_"))
       parcopy <- match(sexmatches, sexmatches)
@@ -222,7 +225,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   # (this is the fraction to be kept (after sex change))
   # E.g. protygynous (Female to male) is H_1_2 where 1 is female 2 is male
   # [sim, stock, maxage] Defaults to all 1s if length(SexPars$Herm)==0
-  HermFrac <- expandHerm(SexPars$Herm, maxage = n_age, np = np, nsim = nsim)
+  HermFrac <- expandHerm(SexPars$Herm, maxage = maxage, np = np, nsim = nsim)
 
   Unfished_Equilibrium <- list()
   for(p in 1:np){
@@ -1791,6 +1794,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       
       sapply(1:nsim, function(x) {
         SRRpars_p <- lapply(1:np, function(p) StockPars[[p]]$SRRpars[[x]])
+        SexPars_y <- SexPars
+        SexPars_y$Herm <- subsetHerm(SexPars_y$Herm, y = nyears+1)
         popdynOneMICE(np = np, nf = nf, nareas = nareas, maxage = maxage,
                       Ncur = array(N[x,,,nyears,], c(np, n_age, nareas)),
                       Bcur = array(Biomass[x,,,nyears,], c(np, n_age, nareas)),
@@ -1811,7 +1816,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                       R0x = R0[x, ], R0ax = array(R0a[x, , ], c(np, nareas)),
                       SSBpRx = array(SSBpR[x, , ], c(np, nareas)), ax = a_y, bx = b_y,
                       Rel = list(), # Do not use MICE. Parameters were updated in last time step of SimulateMOM!
-                      SexPars = SexPars, x = x,
+                      SexPars = SexPars_y, x = x,
                       plusgroup = plusgroup, SSB0x = SSB0array[x, ], B0x = B0array[x, ],
                       Len_agenext = array(Len_agenext[x, , ], c(np, n_age)),
                       Wt_agenext = array(Wt_agenext[x, , ], c(np, n_age)),
@@ -2247,6 +2252,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         
         sapply(1:nsim, function(x) {
           SRRpars_p <- lapply(1:np, function(p) StockPars[[p]]$SRRpars[[x]])
+          SexPars_y <- SexPars
+          SexPars_y$Herm <- subsetHerm(SexPars_y$Herm, y = nyears+y)
           popdynOneMICE(np = np, nf = nf, nareas = nareas, maxage = maxage,
                         Ncur = array(N_P[x,,,y-1,], c(np, n_age, nareas)),
                         Bcur = array(Biomass_P[x,,,y-1,], c(np, n_age, nareas)),
@@ -2267,7 +2274,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                         R0x = R0[x, ], R0ax = array(R0a[x, , ], c(np, nareas)),
                         SSBpRx = array(SSBpR[x, , ], c(np, nareas)), ax = a_y, bx = b_y,
                         Rel = Rel,
-                        SexPars = SexPars, x = x,
+                        SexPars = SexPars_y, x = x,
                         plusgroup = plusgroup, SSB0x = SSB0array[x, ], B0x = B0array[x, ],
                         Len_agenext = array(Len_agenext[x, , ], c(np, n_age)),
                         Wt_agenext = array(Wt_agenext[x, , ], c(np, n_age)),

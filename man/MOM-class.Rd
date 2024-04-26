@@ -79,7 +79,7 @@ over-ridden if an MP of class 'MP_F" is supplied that is a multi-fleet MP.}
 \item \code{SSBfrom} A nstock x nstock matrix that specifies the proportion of the spawning output of the row p stock for the column p' stock. A diagonal matrix means each stock is
 responsible for its own recruitment.
 \item \code{Herm} A list with each entry containing a matrix (nsim x maxage + 1) that specifies the proportion at age that moves from stock p to p' (sequential hermaphroditism).
-The names of the list should be of the form "H_p'_p" where p and p' are integers that identify the stock.
+The names of the list should be of the form "H_p'_p" where p and p' are integers that identify the stock. Arrays can also be used (nsim x maxage + 1 x nyears + proyears) for time-varying values.
 \item \code{share_par} Optional. Logical to indicate whether stock-recruit, depletion, and observation/implementation parameters are mirrored between stocks. By default, TRUE.
 }
 }

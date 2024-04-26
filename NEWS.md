@@ -9,6 +9,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 - allow plusgroup to be turned off in `multiMSE`
 - add `spawn_time_frac` argument to `iSCAM2OM`
 - added `BAM2OM`
+- hermaphroditism in `multiMSE` can be time-varying
 
 ## Internal
 - projections use `dynGet` then `get` to find the MPs in the R session (see function `getMP`). `dynGet` finds functions that are defined inside the function call stack but not available in the global environment.
