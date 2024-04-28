@@ -965,7 +965,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
 
     # Calculate total biomass available accounting for any changes in selectivity &/or spatial closures
     # Note vulnerable biomass is not used. With Baranov equation, catch can exceed VB with high F
-    Atemp <- apply(CurrentB, c(1,3), sum)
+    Atemp <- apply(CurrentB, c(1,3), sum, na.rm=TRUE)
     availB <- apply(Atemp * t(Si), 1, sum) # adjust for spatial closures
 
     # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
