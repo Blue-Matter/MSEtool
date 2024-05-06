@@ -3,287 +3,287 @@ icon: logo.png
 url: "https://msetool.openmse.com"
 template:
   bootstrap: 5
-  
-reference:
-- title: internal
-  contents:
-  - CheckDuplicate
-  - DLMDataDir
-  - DataDir
-  - MPCalcsNAs
-  - NIL
-  - OMinit
-  - OMexample
-  - LHdatabase
-  - OMDescription
-  - DataDescription
-  - StockDescription
-  - FleetDescription
-  - ObsDescription
-  - ImpDescription
-  - HistDescription
-  - MSEDescription
-  - ReqData
-  - SIL
-  - TEG
-  - Taxa_Table
-  - getclass
-  - getDataList
-  - getfirstlev
-  - getnIVs
-  - hist2
-  - iSCAM
-  - iSCAMcomps
-  - iSCAMinds
-  - initialize-methods
-  - ldim
-  - movfit_Rcpp
-  - show,MSE-method
-  - show-MSEtool
-  - show,Rec-method
-  - show,PMobj-method
-
-- title: Operating model
-
-- subtitle: General functions
-  contents:
-  - OM-class
-  - OMdoc
-  - testOM
-  - plot.Stock
-
-- subtitle: Import
-  desc: Convert stock assessment output, i.e., stock, fleet, and some observation error parameters, into an operating model
-  contents:
-  - ASAP2OM
-  - Assess2MOM
-  - Assess2OM
-  - Awatea2OM
-  - SS2MOM
-  - WHAM2OM
-  - iSCAM2OM
-  
-- subtitle: Manual configuration
-  desc: Manually parameterize the operating model
-  contents:
-  - Choose
-  - LH2OM
-  - ML2D
-  - SketchFun
-  - Turing
-  - XL2Fleet
-  - XL2OM
-  - XL2Stock
-  - makemov
-  
-- title: OM components
-- subtitle: Stock
-  desc: Object specifying biology and stock dynamics
-  contents:
-  - Stock-class-objects
-  - Stock-class
-  
-- subtitle: Fleet
-  desc: Object specifying fishing dynamics
-  contents:
-  - Fleet-class-objects
-  - Fleet-class
-  
-- subtitle: Obs
-  desc: Object specifying observation model (how data are simulated)
-  contents:
-  - Obs-class-objects
-  - Obs-class
-  
-- subtitle: Imp
-  desc: Object specifying the extent of error in MP implementation
-  contents:
-  - Imp-class-objects
-  - Imp-class
-  
-- subtitle: Hist
-  desc: Object generated from the historical reconstruction of the system dynamics (output of `runMSE(Hist = TRUE)`)
-  contents:
-  - Hist-class
-  
-- title: Data objects
-  desc: Includes functions to import and export Data objects, data frames describing slots, manipulate Data objects, and generate examples.
-  contents:
-  - Data-class-objects
-  - Data-class
-  - Data2csv
-  - DataInit
-  - DataSlots
-  - Data_xl
-  - Lag_Data
-  - Report
-  - SS2Data
-  - SS2DataMOM
-  - XL2Data
-  - SimulatedData
-  - boxplot.Data
-  - plot.Data
-  - plotOFL
-  - summary,Data-method
-  
-- title: Management procedures
-  desc: Calculate advice from management procedures
-
-- subtitle: General
-  contents:
-  - Can
-  - Fease
-  - Input
-  - MPtype
-  - RealFease
-  - Required
-  - Sense
-  - TAC
-  - TACfilter
-  - Uses
-  - runInMP
-  - runMP
-  
-- subtitle: Reference managment procedures
-  desc: Management procedures reflecting idealized management, e.g., perfect knowledge of stock productivity, no fishing scenario, etc.
-  contents: 
-  - FMSYref
-  
-- subtitle: Rec object 
-  desc: Output of management procedures to implement in the MSE simulation
-  contents:
-  - Rec-class
-  
-- title: Run MSE simulation
-  contents:
-  - runCOSEWIC
-  - runMSE
-  - setup
-  
-- title: Evaluate MSE results
-
-- subtitle: Performance metrics
-  contents:
-  - PMobj-class
-  - PerformanceMetric
-
-- subtitle: General and diagnostic functions
-  contents:
-  - MSE-class
-  - Converge
-  - Dom
-  - VOI
-  - VOI2
-  - summary,MSE-method
-  
-- subtitle: Plot MSE output (general)
-  contents:
-  - Cplot
-  - Kplot
-  - PMLimit
-  - Pplot
-  - Pplot2
-  - PWhisker
-  - SSBrefplot
-  - TradePlot
-  - VOIplot
-  - plot.MSE
-  - wormplot
-
-- subtitle: Plot MSE output (specific to management areas)
-  desc:
-  contents:
-  - DFO_bar
-  - DFO_hist
-  - DFO_plot
-  - DFO_plot2
-  - DFO_quant
-  - DFO_proj
-  - DFO_report
-  - DFO_spider
-  - DFO_tab
-  - DFO_tab_formatted
-  - Cos_thresh_tab
-  - Thresh_tab
-  - NOAA_plot
-  
-- title: multiMSE
-  desc: Multi-population (two-sex or multi-stock), multi-fleet operating models (class MOM) and corresponding MSE object (class MMSE)
-  contents:
-  - MOM-class-objects
-  - MOM-class
-  - MMSE-class
-  - makeMOM
-  - makeRel
-  - multiMSE
-  - multidebug
-  - plot.MMSE
-  - plot.MOM
-  - plotRel
-  - plotmulti
-  - summary,MMSE-method
-  
-- title: Miscellaneous
-  desc: Convenient user functions to process various objects
-  contents:
-  - avail
-  - optCPU
-  - tinyErr
-  - writeCSV
-  
-- subtitle: OM
-  contents:
-  - CheckOM
-  - Replace
-  - MSEextra
-  - SubCpars
-  - SubOM
-  - validcpars
-  
-- subtitle: Data
-  contents:
-  - CALsimp
-  - CheckMPs
-  - replic8
-  
-- subtitle: MP
-  contents:
-  - MPtype
-  - CombineMMP
-  
-- subtitle: MSE
-  contents:
-  - Sub
-  - checkMSE
-  - joinData
-  
-- subtitle: Internal functions
-  desc: Populations dynamics functions and other processing functions
-  contents:
-  - MSYCalcs
-  - applyMP
-  - applyMMP
-  - calcRefYield
-  - cparscheck
-  - dnormal
-  - getmov2
-  - getsel
-  - hconv
-  - movestockCPP
-  - simCAA
-  - simCAL
-  - simmov
-  
-- subtitle: Internal multiMSE
-  contents:
-  - expandHerm
-  - multiData
-  - multiDataS
-  
-- subtitle: Figures
-  contents:
-  - join_plots
-  - makeTransparent
-  - plotFun
-  - plotquant
-  
+#   
+# reference:
+# - title: internal
+#   contents:
+#   - CheckDuplicate
+#   - DLMDataDir
+#   - DataDir
+#   - MPCalcsNAs
+#   - NIL
+#   - OMinit
+#   - OMexample
+#   - LHdatabase
+#   - OMDescription
+#   - DataDescription
+#   - StockDescription
+#   - FleetDescription
+#   - ObsDescription
+#   - ImpDescription
+#   - HistDescription
+#   - MSEDescription
+#   - ReqData
+#   - SIL
+#   - TEG
+#   - Taxa_Table
+#   - getclass
+#   - getDataList
+#   - getfirstlev
+#   - getnIVs
+#   - hist2
+#   - iSCAM
+#   - iSCAMcomps
+#   - iSCAMinds
+#   - initialize-methods
+#   - ldim
+#   - movfit_Rcpp
+#   - show,MSE-method
+#   - show-MSEtool
+#   - show,Rec-method
+#   - show,PMobj-method
+# 
+# - title: Operating model
+# 
+# - subtitle: General functions
+#   contents:
+#   - OM-class
+#   - OMdoc
+#   - testOM
+#   - plot.Stock
+# 
+# - subtitle: Import
+#   desc: Convert stock assessment output, i.e., stock, fleet, and some observation error parameters, into an operating model
+#   contents:
+#   - ASAP2OM
+#   - Assess2MOM
+#   - Assess2OM
+#   - Awatea2OM
+#   - SS2MOM
+#   - WHAM2OM
+#   - iSCAM2OM
+#   
+# - subtitle: Manual configuration
+#   desc: Manually parameterize the operating model
+#   contents:
+#   - Choose
+#   - LH2OM
+#   - ML2D
+#   - SketchFun
+#   - Turing
+#   - XL2Fleet
+#   - XL2OM
+#   - XL2Stock
+#   - makemov
+#   
+# - title: OM components
+# - subtitle: Stock
+#   desc: Object specifying biology and stock dynamics
+#   contents:
+#   - Stock-class-objects
+#   - Stock-class
+#   
+# - subtitle: Fleet
+#   desc: Object specifying fishing dynamics
+#   contents:
+#   - Fleet-class-objects
+#   - Fleet-class
+#   
+# - subtitle: Obs
+#   desc: Object specifying observation model (how data are simulated)
+#   contents:
+#   - Obs-class-objects
+#   - Obs-class
+#   
+# - subtitle: Imp
+#   desc: Object specifying the extent of error in MP implementation
+#   contents:
+#   - Imp-class-objects
+#   - Imp-class
+#   
+# - subtitle: Hist
+#   desc: Object generated from the historical reconstruction of the system dynamics (output of `runMSE(Hist = TRUE)`)
+#   contents:
+#   - Hist-class
+#   
+# - title: Data objects
+#   desc: Includes functions to import and export Data objects, data frames describing slots, manipulate Data objects, and generate examples.
+#   contents:
+#   - Data-class-objects
+#   - Data-class
+#   - Data2csv
+#   - DataInit
+#   - DataSlots
+#   - Data_xl
+#   - Lag_Data
+#   - Report
+#   - SS2Data
+#   - SS2DataMOM
+#   - XL2Data
+#   - SimulatedData
+#   - boxplot.Data
+#   - plot.Data
+#   - plotOFL
+#   - summary,Data-method
+#   
+# - title: Management procedures
+#   desc: Calculate advice from management procedures
+# 
+# - subtitle: General
+#   contents:
+#   - Can
+#   - Fease
+#   - Input
+#   - MPtype
+#   - RealFease
+#   - Required
+#   - Sense
+#   - TAC
+#   - TACfilter
+#   - Uses
+#   - runInMP
+#   - runMP
+#   
+# - subtitle: Reference managment procedures
+#   desc: Management procedures reflecting idealized management, e.g., perfect knowledge of stock productivity, no fishing scenario, etc.
+#   contents: 
+#   - FMSYref
+#   
+# - subtitle: Rec object 
+#   desc: Output of management procedures to implement in the MSE simulation
+#   contents:
+#   - Rec-class
+#   
+# - title: Run MSE simulation
+#   contents:
+#   - runCOSEWIC
+#   - runMSE
+#   - setup
+#   
+# - title: Evaluate MSE results
+# 
+# - subtitle: Performance metrics
+#   contents:
+#   - PMobj-class
+#   - PerformanceMetric
+# 
+# - subtitle: General and diagnostic functions
+#   contents:
+#   - MSE-class
+#   - Converge
+#   - Dom
+#   - VOI
+#   - VOI2
+#   - summary,MSE-method
+#   
+# - subtitle: Plot MSE output (general)
+#   contents:
+#   - Cplot
+#   - Kplot
+#   - PMLimit
+#   - Pplot
+#   - Pplot2
+#   - PWhisker
+#   - SSBrefplot
+#   - TradePlot
+#   - VOIplot
+#   - plot.MSE
+#   - wormplot
+# 
+# - subtitle: Plot MSE output (specific to management areas)
+#   desc:
+#   contents:
+#   - DFO_bar
+#   - DFO_hist
+#   - DFO_plot
+#   - DFO_plot2
+#   - DFO_quant
+#   - DFO_proj
+#   - DFO_report
+#   - DFO_spider
+#   - DFO_tab
+#   - DFO_tab_formatted
+#   - Cos_thresh_tab
+#   - Thresh_tab
+#   - NOAA_plot
+#   
+# - title: multiMSE
+#   desc: Multi-population (two-sex or multi-stock), multi-fleet operating models (class MOM) and corresponding MSE object (class MMSE)
+#   contents:
+#   - MOM-class-objects
+#   - MOM-class
+#   - MMSE-class
+#   - makeMOM
+#   - makeRel
+#   - multiMSE
+#   - multidebug
+#   - plot.MMSE
+#   - plot.MOM
+#   - plotRel
+#   - plotmulti
+#   - summary,MMSE-method
+#   
+# - title: Miscellaneous
+#   desc: Convenient user functions to process various objects
+#   contents:
+#   - avail
+#   - optCPU
+#   - tinyErr
+#   - writeCSV
+#   
+# - subtitle: OM
+#   contents:
+#   - CheckOM
+#   - Replace
+#   - MSEextra
+#   - SubCpars
+#   - SubOM
+#   - validcpars
+#   
+# - subtitle: Data
+#   contents:
+#   - CALsimp
+#   - CheckMPs
+#   - replic8
+#   
+# - subtitle: MP
+#   contents:
+#   - MPtype
+#   - CombineMMP
+#   
+# - subtitle: MSE
+#   contents:
+#   - Sub
+#   - checkMSE
+#   - joinData
+#   
+# - subtitle: Internal functions
+#   desc: Populations dynamics functions and other processing functions
+#   contents:
+#   - MSYCalcs
+#   - applyMP
+#   - applyMMP
+#   - calcRefYield
+#   - cparscheck
+#   - dnormal
+#   - getmov2
+#   - getsel
+#   - hconv
+#   - movestockCPP
+#   - simCAA
+#   - simCAL
+#   - simmov
+#   
+# - subtitle: Internal multiMSE
+#   contents:
+#   - expandHerm
+#   - multiData
+#   - multiDataS
+#   
+# - subtitle: Figures
+#   contents:
+#   - join_plots
+#   - makeTransparent
+#   - plotFun
+#   - plotquant
+#   

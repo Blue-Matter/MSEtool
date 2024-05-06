@@ -27,12 +27,14 @@
 #' (once reduction in objective function steps below this, optimization ends)
 #' @param Rel A list of inter-stock relationships see slot Rel of MOM object class
 #' @param SexPars A list of sex-specific dynamics SSBfrom stock_age
+#' @param optVB Logical, whether to optimize to vulnerable biomass (or spawning biomass otherwise)
+#' @param silent Logical, whether to report the objective function for each simulation
 #' @author T.Carruthers
 #' @keywords internal
 getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
                             nyears, N, VF, FretA, maxF = 0.9, MPA, CatchFrac,
                             bounds= c(1e-05, 15), tol = 1E-6, Rel, SexPars, plusgroup,
-                            optVB = FALSE) {
+                            optVB = FALSE, silent = FALSE) {
 
   # Ensure this code matches HistMICE
   n_age <- maxage + 1 # include age-0
@@ -124,7 +126,10 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
     spawn_time_frac[p] <- StockPars[[p]]$spawn_time_frac[x]
   }
   
-  message_info("Simulation ", x, " objective function:\n")
+  SRRfun_p <- lapply(1:np, function(p) StockPars[[p]]$SRRfun)
+  SRRpars_p <- lapply(1:np, function(p) StockPars[[p]]$SRRpars[[x]])
+  
+  if (!silent) message_info("\n\nSimulation", x, "depletion objective function (should be zero):\n")
   opt <- optim(par, qestMICE,
                method = "L-BFGS-B",
                lower = c(rep(log(bounds[1]), np), rep(-5, np * (nf-1))),
@@ -142,10 +147,10 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
                SRrelx = SRrelx, Rel = Rel, SexPars = SexPars, x = x, plusgroup = plusgroup,
                optVB = optVB, VB0x = VB0x, WtCx = WtCx, maxF = maxF,
                MPA=MPA,
-               SRRfun=StockPars[[1]]$SRRfun, SRRpars=StockPars[[1]]$SRRpars[[x]],
-               control = list(trace = 1, factr = tol/.Machine$double.eps),
+               SRRfun=SRRfun_p, SRRpars=SRRpars_p,
+               control = list(trace = ifelse(silent, 0, 1), factr = tol/.Machine$double.eps),
                spawn_time_frac=spawn_time_frac)
-  cat("\n")
+  if (!silent) cat("\n")
 
   out <- qestMICE(par = opt$par, depc = depc,CFc = CFc, mode = 'calc', np = np, nf = nf,
                   nyears = nyears, nareas = nareas, maxage = maxage, Nx = Nx, VFx = VFx,
@@ -161,7 +166,7 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
                   Rel = Rel,SexPars = SexPars, x = x, plusgroup = plusgroup,
                   optVB = optVB, VB0x = VB0x, B0x = B0x, WtCx = WtCx, maxF = maxF,
                   MPA=MPA,
-                  SRRfun=StockPars[[1]]$SRRfun, SRRpars=StockPars[[1]]$SRRpars[[x]],
+                  SRRfun=SRRfun_p, SRRpars=SRRpars_p,
                   spawn_time_frac=spawn_time_frac)
 
   out
@@ -217,6 +222,9 @@ getq_multi_MICE <- function(x, StockPars, FleetPars, np, nf, nareas, maxage,
 #' @param maxF A numeric value specifying the maximum fishing mortality for any
 #' single age class
 #' @param MPA An array of spatial closures by year `[np,nf,nyears+proyears,nareas]`
+#' @param SRRfun  Optional. Stock-recruit functions used if `SRrelc =3`. List of length `np` 
+#' @param SRRpars Optional. A named list of arguments for `SRRfun`. List of length `np`
+#' @param spawn_time_frac Numeric. Fraction of the year when spawning occurs. Default = 0.
 #' @author T.Carruthers
 #' @keywords internal
 qestMICE <- function(par, depc, CFc, mode='opt', np, nf, nyears, nareas, maxage, Nx, VFx,

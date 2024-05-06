@@ -10,6 +10,7 @@ iSCAM2OM(
   nsim = 48,
   proyears = 50,
   mcmc = FALSE,
+  spawn_time_frac = 0,
   Name = "iSCAM model",
   Source = "No source provided",
   length_timestep = 1,
@@ -38,6 +39,8 @@ uncertainty (for OM@cpars custom parameters)}
 
 \item{mcmc}{Logical, whether to use mcmc samples to create custom parameters cpars. Alternatively, a list
 returned by \link{read.mcmc}. Set the seed for the function to sub-sample the mcmc samples.}
+
+\item{spawn_time_frac}{Numeric between 0-1 indicating when spawning occurs within the time step}
 
 \item{Name}{The name of the operating model}
 
@@ -103,10 +106,10 @@ through the following arrays:
 
 \section{Start age}{
 
-While the iSCAM start age can be greater than zero, abundance at age is back-calculated to age zero using the M
-at the start age.
+While the iSCAM start age can be greater than zero, abundance at age is back-calculated to age zero with M, maturity, growth = 0. In this
+way, the stock-recruit dynamics from iSCAM are preserved.
 
-These arrays are then passed to \code{VPA2OM} to generate the operating model.
+These arrays are then passed to \link{Assess2OM} to generate the operating model.
 }
 
 \section{Reference points}{
@@ -117,7 +120,6 @@ respect to time).
 
 R0 and h are recalculated for the operating model by obtaining the stock-recruit alpha and beta from the
 iSCAM parameters and the mean unfished spawners per recruit in the first \code{ageM} (age of 50\% maturity) years.
-R0 is also back calculated to age zero.
 }
 
 \author{

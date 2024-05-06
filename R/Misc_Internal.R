@@ -451,6 +451,19 @@ CheckDuplicate <- function(MPs) {
 }
 
 
+
+#' Search R session for MP
+#'
+#' Calls [dynGet()], then [get()] in order to find the MP definition in the R session.
+#' @param MP Character of MP name
+#' @author Q. Huynh
+#' @return The function definition or an error message from [try()] if unsuccessful
+getMP <- function(MP) {
+  fn <- try(dynGet(MP), silent = TRUE)
+  if (is.character(fn)) fn <- get(MP)
+  return(fn)  
+}
+
 #' Check that specified MPs are valid and will run on MSEtool::SimulatedData
 #'
 #' @param MPs Character vector of MP names
@@ -470,13 +483,12 @@ CheckMPs <- function(MPs=NA, silent=FALSE) {
 
   # Check MP names are valid functions of class MP
   chkMP <- list()
-  for (mm in MPs)
-    chkMP[[mm]] <- try(get(mm), silent=TRUE)
+  for (mm in MPs) chkMP[[mm]] <- getMP(mm)
 
   clss <- unlist(lapply(chkMP, class))
   invalid <- clss[clss!='MP']
   if (length(invalid)>0) {
-    stop("Some MPs are not a functions of class `MP`: ",
+    stop("Some MPs are not a function of class `MP`: ",
          paste0(names(invalid), collapse=", "), call.=FALSE)
   }
 

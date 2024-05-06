@@ -54,8 +54,10 @@ independent of age.
 }
 \examples{
 \dontrun{
-movOM_3areas <- simmov2(testOM, fracother = matrix(c(NA,2,1, 2,NA,1, 1,2,NA),nrow=3, byrow=T), frac_otherE = 0.01, prob = 0.8, probE = 0.3)
-movOM_3areas@cpars$mov[1, 1, , ] # sim 1, age 1, movement from areas in column i to areas in row j
+movOM_3areas <- simmov2(testOM, frac_other = matrix(c(NA,2,1, 2,NA,1, 1,2,NA),
+nrow=3, byrow=T), frac_otherE = 0.01, prob = 0.8, probE = 0.3)
+# sim 1, age 1, movement from areas in column i to areas in row j
+movOM_3areas@cpars$mov[1, 1, , ] 
 plot_mov(movOM_3areas@cpars$mov)
 plot_mov(movOM_3areas@cpars$mov, type = "all")
 

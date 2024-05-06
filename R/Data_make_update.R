@@ -108,7 +108,7 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
     ind <- apply(abs(b1/ b2 - 1), 1, which.min) # find years closest to BMSY
     Iref <- diag(I3[1:nsim,ind])  # return the real target abundance index closest to BMSY
   } else {
-    Iref <- apply(I3[, 1:5], 1, mean) * RefPoints$BMSY_B0  # return the real target abundance index corresponding to BMSY
+    Iref <- apply(I3[, 1:min(5, ncol(I3))], 1, mean) * RefPoints$BMSY_B0  # return the real target abundance index corresponding to BMSY
   }
   Data@Iref <- Iref * ObsPars$Irefbias # index reference with error
 
@@ -715,7 +715,7 @@ simCAL <- function(nsim, nyears, maxage,  CAL_ESS, CAL_nsamp, nCALbins, CAL_bins
                        CAL_nsamp,
                        Linfarray, Karray, t0array, LenCV, truncSD=2)
     
-    
+
   }
   CAL <- aperm(array(as.numeric(unlist(tempSize, use.names=FALSE)),
                      dim=c(nyears, length(CAL_binsmid), nsim)), c(3,1,2))
@@ -790,7 +790,7 @@ genSizeCompWrap <- function(i, vn, CAL_binsmid, CAL_bins, retL,
     VulnN <- VulnN/sum(VulnN) * CAL_nsamp[i] # get relative numbers at age
   }
 
-  VulnN <- round(VulnN,0) # convert to integers
+  # VulnN <- round(VulnN,0) # convert to integers
   nyrs <- nrow(as.matrix(Linfarray[i,]))
   if (nyrs == 1) VulnN <- t(VulnN)
   retLa <- as.matrix(retL[i,,])
@@ -1451,9 +1451,9 @@ AddRealData_MS <- function(SimData,
   
   if (length(RealData@Year)>1) {
     # check years
-    if (all(RealData@Year !=SimData@Year)) {
-      stop('`OM$cpars$Data@Year` does not match `SimData@Year`. \nAre `Fleet@nyears` and `Fleet@CurrentYr` correct?')
-    }
+    # if (!all(RealData@Year %in%SimData@Year)) {
+    #   stop('`OM$cpars$Data@Year` does not match `SimData@Year`. \nAre `Fleet@nyears` and `Fleet@CurrentYr` correct?')
+    # }
     Data_out@Year <- RealData@Year
   }
   
@@ -1514,6 +1514,18 @@ AddRealData_MS <- function(SimData,
                             p, f, 
                             msg=msg) 
     Data_out <- fit_ind$Data_out
+    
+    # add future year data if they exist
+    n_future_years <-  length(RealData@Ind[1,]) - length(Data_out@Ind[1,])
+    if (n_future_years>0) {
+      ll <- length(RealData@Ind[1,])
+      future_index <- matrix(RealData@Ind[1,(ll-n_future_years+1):ll], nsim, n_future_years, byrow=TRUE)
+      future_index_cv <- matrix(RealData@CV_Ind[1,(ll-n_future_years+1):ll], nsim, n_future_years, byrow=TRUE)
+      Data_out@Ind <- cbind(Data_out@Ind, future_index)
+      Data_out@CV_Ind <- cbind(Data_out@CV_Ind, future_index_cv)
+    }
+   
+  
     ObsPars <- fit_ind$ObsPars
   }
   
@@ -1641,7 +1653,7 @@ AddRealData_MS <- function(SimData,
         }
         
         if (AddIndType[i]!=1)
-          stop('Vulernable and spawning indices not supported for multiMSE. Use `cpars$AddIV` to specify selectivity pattern')
+          stop('Vulnerable and spawning indices not supported for multiMSE. Use `cpars$AddIV` to specify selectivity pattern')
         
         for (pp in seq_along(map.stocks)) {
           SimIndex[,pp,,] <- SimIndex[,pp,,] * Ind_V_list[[map.stocks[pp]]]
@@ -1751,15 +1763,18 @@ AddRealData_MS <- function(SimData,
       # match length bins
       ind <- match(RealData@CAL_mids, StockPars[[p]]$CAL_binsmid)
       dd <- dim(Data_out@CAL)
+      dd_real <- dim(RealData@CAL[1,,])
+      dd[2] <- dd_real[1]
       Data_out@CAL <- array(0, dim=dd)
       CAL <- Data_out@CAL[1,,]
       CAL[,ind] <- RealData@CAL[1,,] # replace with real CAL
-      CAL <- aperm(replicate(nsim, CAL[1:nyears,]),c(3,1,2))
+      n_dat_years <- dim(RealData@CAL[1,,])[1]
+      CAL <- aperm(replicate(nsim, CAL[1:n_dat_years,]),c(3,1,2))
       Data_out@CAL <- CAL
       Data_out@Vuln_CAL <- RealData@Vuln_CAL
       
       # Get average sample size
-      nsamp <- ceiling(mean(apply(RealData@CAL[1,1:nyears,], 1, sum, na.rm=TRUE), na.rm=TRUE))
+      nsamp <- ceiling(mean(apply(RealData@CAL[1,1:n_dat_years,], 1, sum, na.rm=TRUE), na.rm=TRUE))
       ObsPars[[p]][[f]]$CAL_nsamp <- rep(nsamp, nsim)
       
       # calculate effective sample size for projections
@@ -1877,8 +1892,12 @@ updateData_MS <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_P
   I2 <- exp(lcs(I2))^ObsPars[[p]][[f]]$I_beta * ObsPars[[p]][[f]]$Ierr_y[,yr.ind:(nyears + (y - 1))]
   
   # I2 <- exp(lcs(I2)) * ObsPars$Ierr_y[,yr.ind:(nyears + (y - 1))]
-  year.ind <- max(which(!is.na(Data@Ind[1,1:nyears])))
-  scaler <- Data@Ind[,year.ind]/I2[,1]
+  if (sum(Data@Ind[1,1:nyears], na.rm = TRUE)) {
+    year.ind <- max(which(!is.na(Data@Ind[1,1:nyears])))
+    scaler <- Data@Ind[,year.ind]/I2[,1]
+  } else {
+    scaler <- rep(1, nsim)
+  }
   scaler <- matrix(scaler, nrow=nsim, ncol=ncol(I2))
   I2 <- I2 * scaler # convert back to historical index scale
   
@@ -1893,12 +1912,18 @@ updateData_MS <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_P
   if (!is.null(RealData) && ncol(RealData@Ind)>nyears &&
       !all(is.na(RealData@Ind[1,(nyears+1):length(RealData@Ind[1,])]))) {
     # update projection index with observed index if it exists
-    addYr <- min(y,ncol(RealData@Ind) - nyears)
-    Data@Ind[,(nyears+1):(nyears+addYr)] <- matrix(RealData@Ind[1,(nyears+1):(nyears+addYr)],
-                                                   nrow=nsim, ncol=addYr, byrow=TRUE)
+    dd <- length(RealData@Ind[1,])
+  
+    p_yr_ind <- (nyears+1):(nyears+y-1)
+    p_yr_ind <- p_yr_ind[p_yr_ind<=dd]
+    p_ind <- matrix(RealData@Ind[1,p_yr_ind],
+                      nrow=nsim, ncol=length(p_yr_ind), byrow=TRUE)
     
-    Data@CV_Ind[,(nyears+1):(nyears+addYr)] <- matrix(RealData@CV_Ind[1,(nyears+1):(nyears+addYr)],
-                                                      nrow=nsim, ncol=addYr, byrow=TRUE)
+    p_cv <- matrix(RealData@CV_Ind[1,p_yr_ind],
+                     nrow=nsim, ncol=length(p_yr_ind), byrow=TRUE)
+    
+    Data@Ind[,p_yr_ind] <- p_ind
+    Data@CV_Ind[,p_yr_ind] <- p_cv
   }
   
   # --- Index of spawning abundance ----
@@ -1908,8 +1933,12 @@ updateData_MS <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_P
   
   # standardize, apply  beta & obs error
   I2 <- exp(lcs(I2))^ObsPars[[p]][[f]]$SpI_beta * ObsPars[[p]][[f]]$SpIerr_y[,yr.ind:(nyears + (y - 1))]
-  year.ind <- max(which(!is.na(Data@SpInd[1,1:nyears])))
-  scaler <- Data@SpInd[,year.ind]/I2[,1]
+  if (sum(Data@SpInd[1,1:nyears], na.rm = TRUE)) {
+    year.ind <- max(which(!is.na(Data@SpInd[1,1:nyears])))
+    scaler <- Data@SpInd[,year.ind]/I2[,1]
+  } else {
+    scaler <- rep(1, nsim)
+  }
   scaler <- matrix(scaler, nrow=nsim, ncol=ncol(I2))
   I2 <- I2 * scaler # convert back to historical index scale
   
@@ -1937,8 +1966,12 @@ updateData_MS <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_P
   
   # standardize, apply  beta & obs error
   I2 <- exp(lcs(I2))^ObsPars[[p]][[f]]$VI_beta * ObsPars[[p]][[f]]$VIerr_y[,yr.ind:(nyears + (y - 1))]
-  year.ind <- max(which(!is.na(Data@VInd[1,1:nyears])))
-  scaler <- Data@VInd[,year.ind]/I2[,1]
+  if (sum(Data@VInd[1,1:nyears], na.rm = TRUE)) {
+    year.ind <- max(which(!is.na(Data@VInd[1,1:nyears])))
+    scaler <- Data@VInd[,year.ind]/I2[,1]
+  } else {
+    scaler <- rep(1, nsim)
+  }
   scaler <- matrix(scaler, nrow=nsim, ncol=ncol(I2))
   I2 <- I2 * scaler # convert back to historical index scale
   

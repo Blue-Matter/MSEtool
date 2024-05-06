@@ -20,6 +20,8 @@ makemov2(
 \item{probE}{The logit CV associated with prob (used as a penalty when optimizing for diagonal)}
 
 \item{frac_other}{A matrix nareas x nareas that specifies the relative fraction moving from one area to the others. The positive diagonal is unspecified.}
+
+\item{plot}{Should the convergence to a stable distribution be plotted?}
 }
 \description{
 A function for calculating a movement matrix from user specified distribution among areas (v) and relative movement to other areas (solves for positive diagonal - vector of prob staying).

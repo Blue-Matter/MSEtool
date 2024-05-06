@@ -144,6 +144,12 @@ qestMICE(
 single age class}
 
 \item{MPA}{An array of spatial closures by year \verb{[np,nf,nyears+proyears,nareas]}}
+
+\item{SRRfun}{Optional. Stock-recruit functions used if \code{SRrelc =3}. List of length \code{np}}
+
+\item{SRRpars}{Optional. A named list of arguments for \code{SRRfun}. List of length \code{np}}
+
+\item{spawn_time_frac}{Numeric. Fraction of the year when spawning occurs. Default = 0.}
 }
 \description{
 Function returns objective function that fits both stock depletion and catch fraction among fleets

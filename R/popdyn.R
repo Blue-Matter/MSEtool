@@ -219,7 +219,7 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
                      plusgroup=plusgroup,
                      spawn_time_frac=spawn_time_frac[x])
                      
-    if(!doopt$objective) MSYs[] <- 0 # Assume stock crashes regardless of F
+    if(!doopt$objective || is.na(doopt$objective)) MSYs[] <- 0 # Assume stock crashes regardless of F
   } else {
       
     # Optimize for maximum yield
@@ -318,8 +318,8 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
     names(MSYs) <- c("Yield", "F", "SB", "SB_SB0", "B_B0", "B", "VB", "VB_VB0",
                       "RelRec", "SB0", "B0", "R0", "h", "N0", "SN0")
  
-    if(!opt$objective) MSYs[] <- 0 # Assume stock crashes regardless of F
-    }
+    if(!opt$objective || is.na(doopt$objective)) MSYs[] <- 0 # Assume stock crashes regardless of F
+  }
   
   return(MSYs)
 }
@@ -626,29 +626,17 @@ calc_recs <- function(MPRecs, y, LastTAE, Effort_Imp_Error, nsim, histTAE, LastS
 #' @param V_P_real_2 An array with dimensions `nsim`, `maxage` and `nyears+proyears`. `V_P_real` standardized to max 1
 #' @param Fdisc_P  vector of length `nsim` with discard mortality. From `OM@Fdisc` but can be updated by MP (`Rec@Fdisc`)
 #' @param DR_P A matrix with `nyears+proyears` rows and `nsim` columns with the fraction discarded.
-#' @param M_ageArray An array with dimensions `nsim`, `maxage` and `nyears+proyears` with natural mortality at age
 #' @param FM_P An array with dimensions `nsim`, `maxage`, `proyears`, and `nareas` with total fishing mortality
 #' @param FM_Pret An array with dimensions `nsim`, `maxage`, `proyears`, and `nareas` with fishing mortality of the retained fish
 #' @param Z_P An array with dimensions `nsim`, `maxage`, `proyears`, and `nareas` with total mortality
 #' @param CB_P An array with dimensions `nsim`, `maxage`, `proyears`, and `nareas` with total catch
 #' @param CB_Pret An array with dimensions `nsim`, `maxage`, `proyears`, and `nareas` with retained catch
-#' @param TAC_f A matrix with `nsim` rows and `proyears` columns with the TAC implementation error
-#' @param E_f A matrix with `nsim` rows and `proyears` columns with the effort implementation error
-#' @param SizeLim_f A matrix with `nsim` rows and `proyears` columns with the size limit implementation error
-#' @param FinF A numeric vector of length `nsim` with fishing mortality in the last historical year
-#' @param Spat_targ A numeric vector of length `nsim` with spatial targeting
-#' @param CAL_binsmid A numeric vector of length `nCALbins` with mid-points of the CAL bins
-#' @param Linf A numeric vector of length `nsim` with Linf (from `Stock@Linf`)
-#' @param Len_age An array with dimensions `nsim`, `maxage`, and `nyears+proyears` with length-at-age
-#' @param maxage A numeric value with maximum age from `Stock@maxage`
-#' @param nareas A numeric value with number of areas
-#' @param Asize A matrix with `nsim` rows and `nareas` columns with the relative size of each area
-#' @param nCALbins The number of CAL bins. Should be the same as `length(CAL_binsmid)`
-#' @param qs A numeric vector of length `nsim` with catchability coefficient
-#' @param qvar A matrix with `nsim` rows and `proyears` columns with catchability variability
-#' @param qinc A numeric vector of length `nsim` with average annual change in catchability
 #' @param Effort_pot A numeric vector of potential effort
+#' @param StockPars A list of stock parameters 
+#' @param FleetPars A list of fleet parameters 
+#' @param ImpPars A list of implementation error parameters
 #' @param checks Logical. Run internal checks? Currently not used.
+#' @param control List of control parameters used internally.
 #'
 #' @return A named list with updated population dynamics
 #' @author A. Hordyk
@@ -665,7 +653,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
                            Fdisc_P, DR_P,
                            FM_P, FM_Pret, Z_P, CB_P, CB_Pret, Effort_pot,
                            StockPars, FleetPars, ImpPars,
-                           checks=FALSE, control) {
+                           checks=FALSE, control=list()) {
 
   n_age <- StockPars$maxage + 1 # include age-0
 
@@ -1145,8 +1133,8 @@ calcF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, Asize, maxage, 
   ct <- TACusedE[x]
   ft <- ct/sum(Biomass_P[x,,y,] * V_P[x,,y+nyears]) # initial guess
   fishdist[x,] <- fishdist[x,]/sum(fishdist[x,])
-
-  if (ft <= 1E-9) return(tiny)
+  
+  if (ct <= 1E-9 || ft <= 1E-9) return(tiny)
   for (i in 1:maxiterF) {
     Fmat <- ft * matrix(V_P[x,,y+nyears], nrow=maxage+1, ncol=nareas) *
       matrix(fishdist[x,], maxage+1, nareas, byrow=TRUE)/

@@ -111,6 +111,13 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
   plusgroup <- rep(1, np)
   for (p in 1:np) {
+    
+    # Check for plusgroup now, then remove from cpars before SampleCpars call (see Simulate)
+    if (!is.null(cpars[[p]][[1]]$plusgroup) && all(!cpars[[p]][[1]]$plusgroup)) {
+      plusgroup[p] <- 0
+      for (f in 1:nf) cpars[[p]][[f]]$plusgroup <- NULL
+    }
+    
     SampCpars[[p]] <- lapply(1:nf, function(f) {
       if (length(cpars) && length(cpars[[p]][[f]])) {
         if (!silent) message("Sampling custom parameters for ", Snames[p], Fnames[f, p])
@@ -122,8 +129,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     
     set.seed(MOM@seed) # set seed again after cpars has been sampled
     # --- Sample Stock Parameters ----
-    if (!is.null(SampCpars[[p]][[1]]$plusgroup) && all(!SampCpars[[p]][[1]]$plusgroup)) plusgroup[p] <- 0
-    
     StockPars[[p]] <- SampleStockPars(Stock = Stocks[[p]], nsim, nyears,
                                       proyears, cpars = SampCpars[[p]][[1]],
                                       msg = !silent)
@@ -134,8 +139,8 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     # --- custom SRR function ---
     # not implemented
     StockPars[[p]] <- Check_custom_SRR(StockPars[[p]], SampCpars[[p]][[1]], nsim)
-    if (any(StockPars[[p]]$SRrel>2))
-      stop('Custom stock recruit function not supported in `multiMSE`')
+    #if (any(StockPars[[p]]$SRrel>2))
+    #  stop('Custom stock recruit function not supported in `multiMSE`')
     
     # --- Sample Fleet Parameters ----
     FleetPars[[p]] <- lapply(1:nf, function(f) {
@@ -466,7 +471,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     out <- .lapply(1:nsim, getq_multi_MICE, StockPars, FleetPars, np, nf, nareas,
                    maxage, nyears, N, VF, FretA, maxF=MOM@maxF,
                    MPA,CatchFrac, bounds=bounds,tol=1E-6,HistRel,SexPars,
-                   plusgroup=plusgroup, optVB=optVB)
+                   plusgroup=plusgroup, optVB=optVB, silent=silent)
 
     qs <- NIL(out,"qtot") %>% matrix(nsim, np, byrow = TRUE)
     qfrac <- NIL(out,"qfrac") %>% array(c(np, nf, nsim)) %>% aperm(c(3, 1, 2))
@@ -550,7 +555,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       out2 <- .lapply(probQ,getq_multi_MICE,StockPars, FleetPars, np,nf, nareas,
                       maxage, nyears, N, VF, FretA, maxF=MOM@maxF,
                       MPA,CatchFrac, bounds= bounds,tol=1E-6,HistRel,SexPars,
-                      plusgroup=plusgroup, optVB=optVB)
+                      plusgroup=plusgroup, optVB=optVB, silent=silent)
 
       qs2<-t(matrix(NIL(out2,"qtot"),nrow=np))
       qout2<-array(NIL(out2,"qfrac"),c(np,nf,nsim))
@@ -1334,7 +1339,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     MPrefs[] <- unlist(MPs)
 
     # check class of MPs
-    tt <- try(sapply(MPs, get), silent=TRUE)
+    tt <- try(sapply(MPs, getMP), silent=TRUE)
     if (methods::is(tt,'try-error'))
       stop('Error in the MPs -', strsplit(tt,':')[[1]][2])
     MP_classes <- sapply(tt, class)
@@ -1344,7 +1349,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
   if (methods::is(MPs,'character') && MPcond == 'unknown') {
     # check class of MPs
-    tt <- try(sapply(MPs, get), silent=TRUE)
+    tt <- try(sapply(MPs, getMP), silent=TRUE)
     if (methods::is(tt,'try-error'))
       stop('Error in the MPs -', strsplit(tt,':')[[1]][2])
     MP_classes <- sapply(tt, class)
@@ -1409,7 +1414,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       for(p in 1:np)MPrefs[,,p]<-MPs[[p]]
     }
 
-    tt <- try(sapply(unlist(MPs), get), silent=TRUE)
+    tt <- try(sapply(unlist(MPs), getMP), silent=TRUE)
     if (methods::is(tt,'try-error'))
       stop('Error in the MPs -', strsplit(tt,':')[[1]][2])
     MP_classes <- sapply(tt, class)
@@ -1523,10 +1528,21 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   # projection arrays for storing all info (by simulation, stock, age, MP, years, areas)
   N_P_mp <- array(NA, dim = c(nsim, np, n_age, nMP, proyears, nareas))
   
-  # store M, growth, length at age by MP due to MICE rel.
+  # store M, growth, length at age, rec dev by MP due to MICE rel.
   if (length(Rel)) {
-    StockPars_MICE <- lapply(rep(NA_real_, 3), array, dim = c(nsim, np, n_age, nMP, proyears)) %>%
-      structure(names = c("M_ageArray", "Wt_age", "Len_age"))
+    DV_MICE <- sapply(1:length(Rel), function(r) get_Dnam(Rel[[r]][["terms"]][1])) %>%
+      unique()
+    DVarray <- c("M" = "M_ageArray", "a" = "Wt_age", "b" = "Wt_age", #"R0", "hs", 
+                 "K" = "Len_age", "Linf" = "Len_age", "t0" = "Len_age", "Perr_y" = "Perr_y")
+    
+    StockPars_MICE <- lapply(1:length(DV_MICE), function(r) {
+      if (DV_MICE[r] == "Perr_y") {
+        array(NA_real_, dim = c(nsim, np, nMP, proyears))
+      } else {
+        array(NA_real_, dim = c(nsim, np, n_age, nMP, proyears))
+      }
+    }) %>%
+      structure(names = DVarray[DV_MICE])
   }
 
   # ---- Grab Historical N-at-age etc ----
@@ -1713,6 +1729,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       sapply(1:nf, function(f) HistFleetPars[[p]][[f]]$Spat_targ)
     }, simplify = "array") %>% aperm(c(1, 3, 2))
     
+    # Predict abundance, spawning, recruitment at the beginning of y = nyears+1. 
+    # F, M from y = nyears and growth, maturity, recdev, etc. in y = nyears+1
+    # MICE rel updates growth, Perr_y for nyears+1, M for nyears
+    #
     # note that Fcur is apical F but, in popdynOneMICE it is DIVIDED in future
     # years between the two areas depending on vulnerable biomass.
     # So to get Fcur you need to sum over areas (a bit weird)
@@ -1732,7 +1752,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       Len_agenext <- sapply(1:np, function(p) StockPars[[p]]$Len_age[, , nyears + 1], simplify = "array") %>% aperm(c(1, 3, 2))
       Wt_agenext <- sapply(1:np, function(p) StockPars[[p]]$Wt_age[, , nyears + 1], simplify = "array") %>% aperm(c(1, 3, 2))
       
+      SRRfun_p <- lapply(1:np, function(p) StockPars[[p]]$SRRfun)
+      
       sapply(1:nsim, function(x) {
+        SRRpars_p <- lapply(1:np, function(p) StockPars[[p]]$SRRpars[[x]])
         popdynOneMICE(np = np, nf = nf, nareas = nareas, maxage = maxage,
                       Ncur = array(N[x,,,nyears,], c(np, n_age, nareas)),
                       Bcur = array(Biomass[x,,,nyears,], c(np, n_age, nareas)),
@@ -1757,7 +1780,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                       plusgroup = plusgroup, SSB0x = SSB0array[x, ], B0x = B0array[x, ],
                       Len_agenext = array(Len_agenext[x, , ], c(np, n_age)),
                       Wt_agenext = array(Wt_agenext[x, , ], c(np, n_age)),
-                      SRRfun=StockPars[[p]]$SRRfun, SRRpars=StockPars[[p]]$SRRpars[[x]])
+                      SRRfun=SRRfun_p, SRRpars=SRRpars_p)
       })
     })
 
@@ -1933,7 +1956,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     
     # Update M if there is a MICE rel for CalcMPDynamics
     StockPars_MPCalc <- StockPars
-    if (length(Rel)) {
+    if (length(Rel) && any(DV_MICE == "M")) {
       M_MICE <- sapply(1:nsim, function(x) {
         Responses <- ResFromRel(Rel, 
                                 Bcur = array(Biomass_P[x, , , 1, ], c(np, n_age, nareas)),
@@ -1941,15 +1964,27 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                                 Ncur = array(N_P[x, , , 1, ], c(np, n_age, nareas)),
                                 SSB0 = SSB0array[x, ], B0 = B0array[x, ],
                                 seed = 1, x = x)
-        DV <- sapply(Responses, getElement, 4)
-        M_ageArray <- sapply(1:np, function(p) StockPars[[p]]$M_ageArray[x, , nyears + 1]) %>% t()
-        if (any(DV == "Mx")) { # Update M_ageArray
-          Mx <- Marray <- sapply(1:np, function(p) StockPars[[p]]$Marray[x, nyears + 1])
-          for(i in Responses[DV == "Mx"]) eval(parse(text = paste0(i[4], "[", i[3], "] <- ", i[1])))
-          M_ageArray * Mx/Marray
-        } else {
-          M_ageArray
+        
+        Dmodnam <- sapply(Responses, getElement, "modnam")
+        Dp <- sapply(Responses, getElement, "Dp")
+        Dval <- sapply(Responses, getElement, "value")
+        Dage <- sapply(Responses, getElement, "age")
+        
+        oldM_ageArray <- M_ageArray <- sapply(1:np, function(p) StockPars[[p]]$M_ageArray[x, , nyears + 1]) %>% t()
+        oldMx <- Mx <- sapply(1:np, function(p) StockPars[[p]]$Marray[x, nyears + 1])
+        
+        for (r in 1:length(Rel)) { # Ensure this is consistent with popdynOneMICE
+          if (Dmodnam[r] == "Mx") {
+            if (!is.na(Dage[r])) { # Age-specific M
+              Rel_txt <- paste0("M_ageArray[", Dp[r], ", ", Dage[r] + 1, "] <- ", Dval[r])
+            } else {
+              Rel_txt <- paste0(Dmodnam[r], "[", Dp[r], "] <- ", Dval[r])
+            }
+            eval(parse(text = Rel_txt))
+          }
         }
+        if (all(oldM_ageArray == M_ageArray)) M_ageArray <- oldM_ageArray * Mx/oldMx
+        return(M_ageArray)
       }, simplify = "array")
       
       for(p in 1:np) StockPars_MPCalc[[p]]$M_ageArray[, , nyears + 1] <- t(M_MICE[p, , ])
@@ -2151,6 +2186,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       SA2YR <- as.matrix(expand.grid(1:nsim, 2:n_age, y, 1:nareas))
       SA1YR <- as.matrix(expand.grid(1:nsim, 1:(n_age - 1), y -1, 1:nareas))
       
+      # Predict abundance at the beginning of y with F, M from y-1 and
+      # growth, maturity, recdev, etc. in y
+      #
       # note that Fcur is apical F but, in popdynOneMICE it is DIVIDED in future
       # years between the two areas depending on vulnerable biomass. So to get
       # Fcur you need to sum over areas (a bit weird)
@@ -2170,7 +2208,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         Len_agenext <- sapply(1:np, function(p) StockPars[[p]]$Len_age[, , nyears + y], simplify = "array") %>% aperm(c(1, 3, 2))
         Wt_agenext <- sapply(1:np, function(p) StockPars[[p]]$Wt_age[, , nyears + y], simplify = "array") %>% aperm(c(1, 3, 2))
         
+        SRRfun_p <- lapply(1:np, function(p) StockPars[[p]]$SRRfun)
+        
         sapply(1:nsim, function(x) {
+          SRRpars_p <- lapply(1:np, function(p) StockPars[[p]]$SRRpars[[x]])
           popdynOneMICE(np = np, nf = nf, nareas = nareas, maxage = maxage,
                         Ncur = array(N_P[x,,,y-1,], c(np, n_age, nareas)),
                         Bcur = array(Biomass_P[x,,,y-1,], c(np, n_age, nareas)),
@@ -2195,7 +2236,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                         plusgroup = plusgroup, SSB0x = SSB0array[x, ], B0x = B0array[x, ],
                         Len_agenext = array(Len_agenext[x, , ], c(np, n_age)),
                         Wt_agenext = array(Wt_agenext[x, , ], c(np, n_age)),
-                        SRRfun=StockPars[[p]]$SRRfun, SRRpars=StockPars[[p]]$SRRpars[[x]])
+                        SRRfun=SRRfun_p, SRRpars=SRRpars_p)
         })
       })
 
@@ -2216,29 +2257,34 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       
       FML <- apply(array(FM_P[, ,,, y-1, ],c(nsim,np,nf,n_age,nareas)),
                    c(1, 3), max)
-
-      Linfarray <- aperm(array(as.numeric(unlist(NextYrN[8,], use.names=FALSE)),
+      
+      if (length(Rel)) {
+        Linfarray <- aperm(array(as.numeric(unlist(NextYrN[8,], use.names=FALSE)),
+                                 dim=c(np, nsim)), c(2,1))
+        
+        Karray <- aperm(array(as.numeric(unlist(NextYrN[9,], use.names=FALSE)),
+                              dim=c(np, nsim)), c(2,1))
+        
+        t0array <- aperm(array(as.numeric(unlist(NextYrN[10,], use.names=FALSE)),
                                dim=c(np, nsim)), c(2,1))
-      
-      Karray <- aperm(array(as.numeric(unlist(NextYrN[9,], use.names=FALSE)),
-                            dim=c(np, nsim)), c(2,1))
-      
-      t0array <- aperm(array(as.numeric(unlist(NextYrN[10,], use.names=FALSE)),
-                             dim=c(np, nsim)), c(2,1))
-      
-      Len_age <- aperm(array(as.numeric(unlist(NextYrN[14,], use.names=FALSE)),
-                             dim=c(np, n_age, nsim)), c(3,1,2))
-      
-      Wt_age <- aperm(array(as.numeric(unlist(NextYrN[15,], use.names=FALSE)),
-                            dim=c(np, n_age, nsim)), c(3,1,2))
-      
-      Fec_Age <- aperm(array(as.numeric(unlist(NextYrN[26,], use.names=FALSE)),
-                             dim=c(np, n_age, nsim)), c(3,1,2))
-      
-      M_ageArray <- aperm(array(as.numeric(unlist(NextYrN[2,], use.names=FALSE)),
-                                dim=c(np, n_age, nsim)), c(3,1,2))
-      Marray <- aperm(array(as.numeric(unlist(NextYrN[11, ], use.names=FALSE)),
-                            dim=c(np, nsim)), c(2,1))
+        
+        Len_age <- aperm(array(as.numeric(unlist(NextYrN[14,], use.names=FALSE)),
+                               dim=c(np, n_age, nsim)), c(3,1,2))
+        
+        Wt_age <- aperm(array(as.numeric(unlist(NextYrN[15,], use.names=FALSE)),
+                              dim=c(np, n_age, nsim)), c(3,1,2))
+        
+        Fec_Age <- aperm(array(as.numeric(unlist(NextYrN[26,], use.names=FALSE)),
+                               dim=c(np, n_age, nsim)), c(3,1,2))
+        
+        M_ageArray <- aperm(array(as.numeric(unlist(NextYrN[2,], use.names=FALSE)),
+                                  dim=c(np, n_age, nsim)), c(3,1,2))
+        Marray <- aperm(array(as.numeric(unlist(NextYrN[11, ], use.names=FALSE)),
+                              dim=c(np, nsim)), c(2,1))
+        
+        Perr_y <- aperm(array(as.numeric(unlist(NextYrN[27, ], use.names=FALSE)),
+                              dim=c(np, nsim)), c(2,1))
+      }
 
       for (p in 1:np) {
         StockPars[[p]]$N_P <- N_P[,p,,,]
@@ -2248,35 +2294,50 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         StockPars[[p]]$VBiomass_P <- VBiomass_P[,p,,,]
         #for(f in 1:nf)FleetPars[[p]][[f]]$FML<-FML[]
         
-        StockPars[[p]]$Linfarray[, nyears + y] <- Linfarray[, p]
-        StockPars[[p]]$Karray[, nyears + y] <- Karray[, p]
-        StockPars[[p]]$t0array[, nyears + y] <- t0array[, p]
-        StockPars[[p]]$Len_age[, , nyears + y] <- Len_age[, p, ]
-        StockPars[[p]]$Wt_age[, , nyears + y] <- Wt_age[, p, ]
-        StockPars[[p]]$Fec_Age[, , nyears + y] <- Fec_Age[, p, ]
-        StockPars[[p]]$M_ageArray[, , nyears + y - 1] <- M_ageArray[, p, ]
-        StockPars[[p]]$Marray[, nyears + y - 1] <- Marray[, p]
+        if (length(Rel)) {
+          StockPars[[p]]$Linfarray[, nyears + y] <- Linfarray[, p]
+          StockPars[[p]]$Karray[, nyears + y] <- Karray[, p]
+          StockPars[[p]]$t0array[, nyears + y] <- t0array[, p]
+          StockPars[[p]]$Len_age[, , nyears + y] <- Len_age[, p, ]
+          StockPars[[p]]$Wt_age[, , nyears + y] <- Wt_age[, p, ]
+          StockPars[[p]]$Fec_Age[, , nyears + y] <- Fec_Age[, p, ]
+          StockPars[[p]]$M_ageArray[, , nyears + y - 1] <- M_ageArray[, p, ]
+          StockPars[[p]]$Marray[, nyears + y - 1] <- Marray[, p]
+          StockPars[[p]]$Perr_y[, nyears + maxage + y] <- Perr_y[, p]
+        }
       }
       
-      # Update M in year y if there is a MICE rel for CalcMPDynamics (not used in updateData)
+      # Update M in year y (one step ahead) if there is a MICE rel for CalcMPDynamics (not used in updateData)
       StockPars_MPCalc <- StockPars
-      if (length(Rel)) {
+      if (length(Rel) && any(DV_MICE == "M")) {
         M_MICE <- sapply(1:nsim, function(x) {
           Responses <- ResFromRel(Rel, 
-                                  Bcur = array(Biomass_P[x, , , y, ], c(np, n_age, nareas)),
-                                  SSBcur = array(SSB_P[x, , , y, ], c(np, n_age, nareas)),
-                                  Ncur = array(N_P[x, , , y, ], c(np, n_age, nareas)),
+                                  Bcur = array(Biomass_P[x, , , 1, ], c(np, n_age, nareas)),
+                                  SSBcur = array(SSB_P[x, , , 1, ], c(np, n_age, nareas)),
+                                  Ncur = array(N_P[x, , , 1, ], c(np, n_age, nareas)),
                                   SSB0 = SSB0array[x, ], B0 = B0array[x, ],
                                   seed = 1, x = x)
-          DV <- sapply(Responses, getElement, 4)
-          M_ageArray <- sapply(1:np, function(p) StockPars[[p]]$M_ageArray[x, , nyears + y]) %>% t()
-          if (any(DV == "Mx")) { # Update M_ageArray
-            Mx <- Marray <- sapply(1:np, function(p) StockPars[[p]]$Marray[x, nyears + y])
-            for(i in Responses[DV == "Mx"]) eval(parse(text = paste0(i[4], "[", i[3], "] <- ", i[1])))
-            M_ageArray * Mx/Marray
-          } else {
-            M_ageArray
+          
+          Dmodnam <- sapply(Responses, getElement, "modnam")
+          Dp <- sapply(Responses, getElement, "Dp")
+          Dval <- sapply(Responses, getElement, "value")
+          Dage <- sapply(Responses, getElement, "age")
+          
+          oldM_ageArray <- M_ageArray <- sapply(1:np, function(p) StockPars[[p]]$M_ageArray[x, , nyears + 1]) %>% t()
+          oldMx <- Mx <- sapply(1:np, function(p) StockPars[[p]]$Marray[x, nyears + 1])
+          
+          for (r in 1:length(Rel)) { # Ensure this is consistent with popdynOneMICE
+            if (Dmodnam[r] == "Mx") {
+              if (!is.na(Dage[r])) { # Age-specific M
+                Rel_txt <- paste0("M_ageArray[", Dp[r], ", ", Dage[r] + 1, "] <- ", Dval[r])
+              } else {
+                Rel_txt <- paste0(Dmodnam[r], "[", Dp[r], "] <- ", Dval[r])
+              }
+              eval(parse(text = Rel_txt))
+            }
           }
+          if (all(oldM_ageArray == M_ageArray)) M_ageArray <- oldM_ageArray * Mx/oldMx
+          return(M_ageArray)
         }, simplify = "array")
         
         for(p in 1:np) StockPars_MPCalc[[p]]$M_ageArray[, , nyears + y] <- t(M_MICE[p, , ])
@@ -2493,7 +2554,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             MSElist[[p]][[f]][[mm]]@Misc <- Data_p_A[[p]][[f]]@Misc
           }
         }
-
+        
         for(p in 1:np){
           for(f in 1:nf){
             # calculate pstar quantile of TAC recommendation dist
@@ -2816,6 +2877,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       CaRet[, p,f,mm, ] <- apply(FleetPars[[p]][[f]]$CB_Pret, c(1, 3),
                                  sum, na.rm=TRUE) # retained catch
     
+    #if (!silent) message("Calculating spawning potential ratio")
     for(p in 1:np) {
       SPReqa[, p, mm, ] <- CalcSPReq(FM = sapply(FleetPars[[p]], getElement, "FM_P", simplify = "array") %>% apply(1:4, sum),
                                      StockPars_MPCalc[[p]], n_age, nareas, nyears, proyears, nsim)
@@ -2829,7 +2891,6 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     }
 
     if (!silent) {
-      cat("\n")
       if (all(checkNA != nsim) & !all(checkNA == 0)) {
         # print number of NAs
         # message(checkNA)
@@ -2837,10 +2898,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         ntot <- sum(checkNA[,,upyrs])
         totyrs <- sum(checkNA[,,upyrs] >0)
         nfrac <- round(ntot/(length(upyrs)*nsim),2)*100
-
-        if (!silent) message(totyrs, ' years had TAC = NA for some simulations (',
-                nfrac, "% of total simulations)")
-        if (!silent) message('Used TAC_y = TAC_y-1')
+        
+        cat("\n")
+        message(totyrs, ' years had TAC = NA for some simulations (', nfrac, "% of total simulations)")
+        message('Used TAC_y = TAC_y-1')
       }
 
       if("progress"%in%names(control))
@@ -2849,17 +2910,17 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     }
     
     if (length(Rel)) {
-      StockPars_MICE$M_ageArray[, , , mm, ] <- sapply(1:np, function(p) {
-        StockPars_MPCalc[[p]]$M_ageArray[, , nyears + 1:proyears]
-      }, simplify = "array") %>% aperm(c(1, 4, 2, 3)) 
-      
-      StockPars_MICE$Wt_age[, , , mm, ] <- sapply(1:np, function(p) {
-        StockPars[[p]]$Wt_age[, , nyears + 1:proyears]
-      }, simplify = "array") %>% aperm(c(1, 4, 2, 3)) 
-      
-      StockPars_MICE$Len_age[, , , mm, ] <- sapply(1:np, function(p) {
-        StockPars[[p]]$Len_age[, , nyears + 1:proyears]
-      }, simplify = "array") %>% aperm(c(1, 4, 2, 3)) 
+      for (r in names(StockPars_MICE)) {
+        if (r == "Perr_y") {
+          StockPars_MICE[[r]][, , mm, ] <- sapply(1:np, function(p) {
+            StockPars_MPCalc[[p]][[r]][, maxage + nyears + 1:proyears]
+          }, simplify = "array") %>% aperm(c(1, 3, 2)) 
+        } else {
+          StockPars_MICE[[r]][, , , mm, ] <- sapply(1:np, function(p) {
+            StockPars_MPCalc[[p]][[r]][, , nyears + 1:proyears]
+          }, simplify = "array") %>% aperm(c(1, 4, 2, 3)) 
+        }
+      }
     }
 
   } # end of MP loop
@@ -2885,9 +2946,13 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   # Misc$Data <-MSElist
   Misc[['MOM']]<-MOM
   
-  if (length(Rel)) Misc[["MICE"]] <- StockPars_MICE # Update for potential values updated by MICE
+  if (length(Rel)) {
+    if (!silent) message("Returning updated parameters from MICE relationship in 'Misc$MICE'")
+    Misc[["MICE"]] <- StockPars_MICE # Update for potential values updated by MICE
+  }
   
   if (extended) {
+    if (!silent) message("Returning complete abundance series in 'Misc$extended$N")
     Misc[["extended"]] <- list(
       N = local({
         histN <- replicate(nMP, StockPars[[1]]$N) %>% aperm(c(1,2,3,6,4,5)) # nsim x np x n_age x nyears x nareas x nMP
@@ -2931,6 +2996,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   RefPoint$Dynamic_Unfished <- list()
   nms <- names(multiHist[[1]][[1]]@Ref$Dynamic_Unfished)
   # add Dynamic_Unfished
+  ### NOTE: Should be updated by MICE rel, e.g., M/Perr_y/growth have changed in the projection !
   for (nm in nms) {
     RefPoint$Dynamic_Unfished[[nm]] <- array(NA, dim=c(nsim, np,  proyears+nyears))
     for (p in 1:np) {

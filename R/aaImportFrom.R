@@ -3,7 +3,7 @@
 #' summarise
 #' @importFrom ggplot2 aes element_blank expand_limits facet_wrap geom_boxplot geom_line
 #' ggplot ggplotGrob geom_rect geom_point guides guide_legend labs theme theme_bw theme_classic xlim ylim xlab ylab
-#' @importFrom graphics abline arrows axis axTicks barplot boxplot contour hist
+#' @importFrom graphics abline arrows axis axTicks barplot boxplot contour grid hist
 #' identify layout legend
 #'  lines matplot mtext par plot plot.new points polygon segments text title text
 #' @importFrom grDevices col2rgb colorRampPalette dev.new dev.off jpeg gray png rainbow rgb xy.coords

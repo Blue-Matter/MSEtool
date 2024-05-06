@@ -928,7 +928,7 @@ DLMdiag <- function(Data, command = c("available", "not available", "needed"), r
     inMPind <- which(funcs1 %in% builtin)
     cMPind <- which(funcs1 %in% custom)
     repp <- rep('', length(funcs1))
-    # built in MPs (doesn't require 'dependencies' line)
+    # built in MPs (doesn't require 'dependencies' line) 
     reqdata <-  ReqData[match(builtin, ReqData$MP),2]
 
     repp[inMPind] <- vapply(reqdata, match_slots, character(1), Data = Data, internal=TRUE)
@@ -2698,11 +2698,12 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE, parallel
 
   for (mp in 1:nMPs) {
     if (!silent)  message(MPs[mp])
+    fn <- getMP(MPs[mp])
     
     if (runParallel && parallel[mp]) {
-      temp <- try(snowfall::sfLapply(1:nsims, MPs[mp], Data = Data, reps = reps), silent=TRUE)
+      temp <- try(snowfall::sfLapply(1:nsims, fn, Data = Data, reps = reps), silent=TRUE)
     } else {
-      temp <- try(lapply(1:nsims, MPs[mp], Data = Data, reps = reps), silent=TRUE)
+      temp <- try(lapply(1:nsims, fn, Data = Data, reps = reps), silent=TRUE)
     }
    
     if (methods::is(temp, 'try-error')) {

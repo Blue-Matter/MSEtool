@@ -13,6 +13,7 @@
 #' @param proyears The number of MSE projection years
 #' @param mcmc Logical, whether to use mcmc samples to create custom parameters cpars. Alternatively, a list
 #' returned by \link{read.mcmc}. Set the seed for the function to sub-sample the mcmc samples.
+#' @param spawn_time_frac Numeric between 0-1 indicating when spawning occurs within the time step
 #' @param Name The name of the operating model
 #' @param Source Reference to assessment documentation e.g. a url
 #' @param length_timestep How long is a model time step in years
@@ -58,10 +59,10 @@
 #' }
 #' 
 #' @section Start age:
-#' While the iSCAM start age can be greater than zero, abundance at age is back-calculated to age zero using the M
-#' at the start age.
+#' While the iSCAM start age can be greater than zero, abundance at age is back-calculated to age zero with M, maturity, growth = 0. In this
+#' way, the stock-recruit dynamics from iSCAM are preserved.
 #' 
-#' These arrays are then passed to \code{VPA2OM} to generate the operating model.
+#' These arrays are then passed to \link{Assess2OM} to generate the operating model.
 #' 
 #' @section Reference points:
 #' iSCAM calculates the stock-recruit relationship and subsequently a single set of MSY and unfished reference 
@@ -70,11 +71,10 @@
 #' 
 #' R0 and h are recalculated for the operating model by obtaining the stock-recruit alpha and beta from the 
 #' iSCAM parameters and the mean unfished spawners per recruit in the first \code{ageM} (age of 50% maturity) years.
-#' R0 is also back calculated to age zero. 
 #' 
 #' @author T. Carruthers, Q. Huynh
 #' @export
-iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=FALSE, Name="iSCAM model",
+iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=FALSE, spawn_time_frac = 0, Name="iSCAM model",
                    Source="No source provided", length_timestep=1,
                    nyr_par_mu=2, Author="No author provided", report=FALSE, silent=FALSE) {
   
@@ -281,37 +281,15 @@ iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=FALSE, Name="iSCAM model
     h <- mcmc_model$params$h[mcmc_samp]
     Perr <- sqrt((1 - mcmc_model$params$rho)/mcmc_model$params$vartheta)[mcmc_samp]
     R0 <- mcmc_model$params$ro[mcmc_samp]
+    SB0 <- mcmc_model$params$sbo[mcmc_samp]
   } else {
     h <- rep(replist$mpd$steepness, nsim)
     Perr <- rep(sqrt((1 - replist$par$theta6)/replist$par$theta7), nsim)
     R0 <- rep(replist$mpd$ro, nsim)
+    SB0 <- rep(replist$mpd$sbo, nsim)
   }
   
-  phi0 <- local({ # Get unfished spawners per recruit from mean M 
-    wt <- apply(waat, 1, mean)
-    fec <- apply(replist$mpd$d3_wt_mat, 2, mean)
-    if(do_mcmc) {
-      Mbar <- apply(Maa, 1:2, mean)
-      vapply(1:nsim, function(x) {
-        MSYCalcs(logF = log(1e-8), M_at_Age = Mbar[x, ], 
-                 Wt_at_Age = c(rep(0, sage), wt), Mat_at_Age = c(rep(0, sage), replist$mpd$ma), 
-                 Fec_at_Age = c(rep(0, sage), fec), V_at_Age = rep(0, n_age), 
-                 maxage = n_age - 1, 
-                 relRfun=function()NULL,
-                 SRRpars=list(),
-                 SRrelx = 4, opt = 0, plusgroup = 1)["SB"] %>% as.numeric()
-      }, numeric(1))
-    } else {
-      Mbar <- apply(Maa[1, , ], 1, mean)
-      MSYCalcs(logF = log(1e-8), M_at_Age = Mbar,
-               Wt_at_Age = c(rep(0, sage), wt), Mat_at_Age = c(rep(0, sage), replist$mpd$ma), 
-               Fec_at_Age = c(rep(0, sage), fec), V_at_Age = rep(0, n_age),
-               maxage = n_age - 1, 
-               relRfun=function()NULL,
-               SRRpars=list(),
-               SRrelx = 4, opt = 0, plusgroup = 1)["SB"] %>% as.numeric()
-    }
-  })
+  phi0 <- SB0/R0
   
   # make the OM
   OM <- Assess2OM(Name=Name,
@@ -320,7 +298,8 @@ iSCAM2OM<-function(iSCAMdir, nsim=48, proyears=50, mcmc=FALSE, Name="iSCAM model
                   naa[, , 1:nyears], faa, waa, Mataa, Maa, laa,
                   nyr_par_mu = nyr_par_mu, LowerTri=sage,
                   recind=0, plusgroup=TRUE, altinit=0, fixq1=TRUE,
-                  report=report, silent=FALSE, R0 = R0, phi0 = phi0, Perr = Perr)
+                  report=report, silent=FALSE, R0 = R0, phi0 = phi0, Perr = Perr, 
+                  spawn_time_frac = spawn_time_frac)
   
   # growth parameters
   OM@cpars$Linf <- rep(Linf, nsim)
