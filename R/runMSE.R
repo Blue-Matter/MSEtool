@@ -3,6 +3,10 @@
 #
 Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE) {
   
+  if (inherits(OM, 'MOM')) {
+    hist <- SimulateMOM(OM, parallel, silent)
+    return(hist)
+  }
   # ---- Initial Checks and Setup ---
   OM <- CheckOM(OM, !silent)
   
