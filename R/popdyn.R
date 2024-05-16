@@ -1181,9 +1181,8 @@ optDfun <- function(Perrmulti, x, initD, R0, Perr_y, surv,
 
   initRecs <- rev(Perr_y[x,1:n_age]) * exp(Perrmulti)
 
-  N <- R0[x] *  initRecs # Calculate initial spawning stock numbers
-  SSB <- N * Fec_age[x,,1]    # Calculate spawning stock biomass
-
+  SSB <- R0[x] *  surv[x,] * initRecs * Fec_age[x,,1] # Calculate initial spawning stock numbers
+  
   (sum(SSB)/SSB0[x] - initD[x])^2
 }
 

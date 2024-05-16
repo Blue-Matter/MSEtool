@@ -12,6 +12,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
     hist <- SimulateMOM(OM, parallel, silent)
     return(hist)
   }
+  
   # ---- Initial Checks and Setup ---
   OM <- CheckOM(OM, !silent)
   
@@ -249,12 +250,17 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
   initD <- SampCpars$initD #
   if (!is.null(initD)) { # initial depletion is not unfished
     if (!silent) message("Optimizing for user-specified depletion in first historical year")
-    Perrmulti <- sapply(1:nsim, optDfunwrap, initD=initD, R0=StockPars$R0,
-                        StockPars$initdist,
-                        Perr_y=StockPars$Perr_y, surv=surv[,,1], Fec_age=StockPars$Fec_Age,
+    Perrmulti <- sapply(1:nsim, optDfunwrap, initD=initD, 
+                        R0=StockPars$R0,
+                        initdist=StockPars$initdist,
+                        Perr_y=StockPars$Perr_y, 
+                        surv=surv[,,1], 
+                        Fec_age=StockPars$Fec_Age,
                         SSB0=SSB0,
-                        StockPars$n_age)
-    StockPars$Perr_y[,1:StockPars$maxage] <- StockPars$Perr_y[, 1:StockPars$maxage] * Perrmulti
+                        n_age=StockPars$n_age)
+    
+    StockPars$Perr_y[,1:StockPars$maxage] <- StockPars$Perr_y[, 1:StockPars$maxage] *
+      matrix(Perrmulti, nrow=nsim, ncol=StockPars$maxage, byrow=FALSE)
   }
 
   # --- Non-equilibrium Initial Year ----
@@ -265,6 +271,11 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
   SSB[SAYR] <- SBsurv[SAY] * StockPars$R0[S] *  StockPars$initdist[SAR]*StockPars$Perr_y[Sa] * StockPars$Fec_Age[SAY]    # Calculate spawning stock biomass
   VBiomass[SAYR] <- N[SAYR] * FleetPars$Wt_age_C[SAY] * FleetPars$V_real[SAY]  # Calculate vulnerable biomass
 
+  
+  SBsurv[1,,1]
+  SSB[1,,1,]
+  sum(SSB[1,,1,])
+  
   StockPars$aR <- aR
   StockPars$bR <- bR
   StockPars$SSB0 <- SSB0
