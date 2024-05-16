@@ -215,7 +215,9 @@ BAM2MOM <- function(rdat, nsim = 48, proyears = 50, interval = 1,
                     Perr = Perr,
                     AC = AC,
                     LowerTri=LowerTri,
-                    fecaa = fecaa
+                    fecaa = fecaa,
+                    ...
+        
   )
   
   # Add names
