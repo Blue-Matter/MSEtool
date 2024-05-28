@@ -139,6 +139,8 @@ relationship (1 = Beverton-Holt, 2= Ricker)}
 \item{SRRfun}{A list of custom stock-recruit functions. List of length \code{np}}
 
 \item{SRRpars}{A list of custom stock-recruit parameters for simulation \code{x}. List of length \code{np}}
+
+\item{spawn_time_frac}{vector of relative spawn timing. Length nstock}
 }
 \description{
 Calls popdynOneMICE iteratively to reconstruct a time series given MICE model inputs

@@ -147,7 +147,8 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       SampleFleetPars(Fleet = Fleets[[p]][[f]],
                       Stock = StockPars[[p]],
                       nsim, nyears, proyears,
-                      cpars = SampCpars[[p]][[f]])
+                      cpars = SampCpars[[p]][[f]],
+                      msg=!silent)
     })
     
     # --- Sample Obs Parameters ----
@@ -545,7 +546,8 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                                              nsim=Nprob,
                                              nyears=nyears,
                                              proyears=proyears,
-                                             cpars=SampCpars2[[f]])
+                                             cpars=SampCpars2[[f]],
+                                             msg=FALSE)
           FleetPars[[p]][[f]]$Esd[probQ] <- ResampFleetPars$Esd
           FleetPars[[p]][[f]]$Find[probQ, ] <- ResampFleetPars$Find
           FleetPars[[p]][[f]]$dFfinal[probQ] <- ResampFleetPars$dFfinal
@@ -607,8 +609,9 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                      maxage=maxage,nyears=nyears,N=N,VF=VF,FretA=FretA,
                      maxF=MOM@maxF,MPA=MPA,Rel=HistRel,SexPars=SexPars,qs=qs,
                      qfrac=qfrac,
-                     plusgroup=plusgroup)
-  
+                     plusgroup=plusgroup
+                     )
+
   N <- aperm(array(as.numeric(unlist(histYrs[1,], use.names=FALSE)),
                    dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
   
@@ -656,11 +659,14 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   
   FMt<-aperm(array(as.numeric(unlist(histYrs[19,], use.names=FALSE)),
                    dim=c(np,n_age, nyears, nareas, nsim)), c(5,1,2,3,4))
+  
   M_ageArray <- aperm(array(as.numeric(unlist(histYrs[20,], use.names=FALSE)),
                             dim=c(np, n_age, nyears+1, nsim)), c(4,1,2,3))
   Marray <- aperm(array(as.numeric(unlist(histYrs[13, ], use.names=FALSE)),
                         dim=c(np, nyears+1, nsim)), c(3,1,2))
-
+  
+  spat_targ_out <- array(as.numeric(unlist(histYrs[22,], use.names=FALSE)),
+                     dim=c(np, nf, nsim)) 
   # update StockPars (MICE)
   for (p in 1:np) {
     StockPars[[p]]$Linfarray[, 0:nyears + 1] <- Linfarray[, p, ]
@@ -671,6 +677,11 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     StockPars[[p]]$Fec_Age[, , 0:nyears + 1] <- Fec_Age[, p, , ]
     StockPars[[p]]$M_ageArray[, , 1:nyears] <- M_ageArray[, p, , 1:nyears]
     StockPars[[p]]$Marray[, 1:nyears] <- Marray[, p, 1:nyears]
+    
+    # update Spat_targ 
+    for (fl in 1:nf) {
+      FleetPars[[p]][[fl]]$Spat_targ <- spat_targ_out[p,fl,]
+    }
   }
 
   # TODO - selectivity-at-age should update if growth changes
@@ -942,7 +953,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     }
   }
   CB <- CBret <- Cret <- array(NA,c(nsim,np,nf,n_age,nyears,nareas))
-
   CNind <- TEG(dim(CB))
   Nind<-CNind[,c(1,2,4,5,6)]  # sim, stock, n_age, nyears, nareas
 
@@ -951,6 +961,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
   CB[CNind] <- Biomass_C[CNind]*(1-exp(-Z[Nind]))*(FM[CNind]/Z[Nind])
   CB[!is.finite(CB)] <- 0 # fix for Z=0
+
 
   if(!is.null(control$checks)) {
     for(p in 1:np){
@@ -1022,41 +1033,60 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   DataList <- new('list')
   for (p in 1:np) {
     DataList[[p]] <- vector('list', nf)
-    if (!silent) message('Generating historical data for', Snames[p])
-    for (f in 1:nf) {
-      ObsPars[[p]][[f]]$Sample_Area <- Sample_Area # add to Obs Pars
-      Data <- makeData(Biomass=Biomass[,p,,,],
-                       CBret=CBret[,p,f,,,],
-                       Cret=Cret[,p,f,,,],
-                       N=N[,p,,,],
-                       SSB=SSB[,p,,,],
-                       VBiomass=VBF[,p,f,,,],
-                       StockPars=StockPars[[p]],
-                       FleetPars=FleetPars[[p]][[f]],
-                       ObsPars=ObsPars[[p]][[f]],
-                       ImpPars=ImpPars[[p]][[f]],
-                       RefPoints=StockPars[[p]]$ReferencePoints$ReferencePoints,
-                       SampCpars=SampCpars[[p]][[f]],
-                       StockPars[[p]]$initD,
-                       Sample_Area,
-                       Name=paste(Snames[p], Fnames[f, p]),
-                       nyears,
-                       proyears,
-                       nsim,
-                       nareas,
-                       MOM@reps,
-                       CurrentYr,
-                       silent=TRUE,
-                       control)
-
-      # ---- Add Stock & Fleet Dynamics to Data ----
-      StockPars[[p]]$N <- N
-      StockPars[[p]]$SSB <- SSB
-      StockPars[[p]]$Biomass <- Biomass
-      Data@Misc$StockPars <- StockPars[[p]]
-      Data@Misc$FleetPars <- FleetPars[[p]][[f]]
-      Data@Misc$ReferencePoints <- StockPars[[p]]$ReferencePoints
-      DataList[[p]][[f]] <- Data
+    
+    if (!is.null(control$skipdata)) {
+      for (f in 1:nf) {
+        Data <- new('Data')
+        # ---- Add Stock & Fleet Dynamics to Data ----
+        StockPars[[p]]$N <- N
+        StockPars[[p]]$SSB <- SSB
+        StockPars[[p]]$Biomass <- Biomass
+        Data@Misc$StockPars <- StockPars[[p]]
+        Data@Misc$FleetPars <- FleetPars[[p]][[f]]
+        Data@Misc$ReferencePoints <- StockPars[[p]]$ReferencePoints
+        DataList[[p]][[f]] <- Data
+      }
+    } else {
+      if (!silent) message('Generating historical data for', Snames[p])
+      
+      for (f in 1:nf) {
+        if (!silent) message('Generating historical data for', Fnames[f])
+        ObsPars[[p]][[f]]$Sample_Area <- Sample_Area # add to Obs Pars
+        
+        Data <- makeData(Biomass=Biomass[,p,,,],
+                         CBret=CBret[,p,f,,,],
+                         Cret=Cret[,p,f,,,],
+                         N=N[,p,,,],
+                         SSB=SSB[,p,,,],
+                         VBiomass=VBF[,p,f,,,],
+                         StockPars=StockPars[[p]],
+                         FleetPars=FleetPars[[p]][[f]],
+                         ObsPars=ObsPars[[p]][[f]],
+                         ImpPars=ImpPars[[p]][[f]],
+                         RefPoints=StockPars[[p]]$ReferencePoints$ReferencePoints,
+                         SampCpars=SampCpars[[p]][[f]],
+                         StockPars[[p]]$initD,
+                         Sample_Area,
+                         Name=paste(Snames[p], Fnames[f, p]),
+                         nyears,
+                         proyears,
+                         nsim,
+                         nareas,
+                         MOM@reps,
+                         CurrentYr,
+                         silent=TRUE,
+                         control)
+        
+        
+        # ---- Add Stock & Fleet Dynamics to Data ----
+        StockPars[[p]]$N <- N
+        StockPars[[p]]$SSB <- SSB
+        StockPars[[p]]$Biomass <- Biomass
+        Data@Misc$StockPars <- StockPars[[p]]
+        Data@Misc$FleetPars <- FleetPars[[p]][[f]]
+        Data@Misc$ReferencePoints <- StockPars[[p]]$ReferencePoints
+        DataList[[p]][[f]] <- Data
+      }
     }
   }
 
@@ -1161,7 +1191,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     
     for (f in 1:nf) {
       Hist <- new("Hist")
-      Data@Misc <- list()
+      # Data@Misc <- list()
       Hist@Data <-  DataList[[p]][[f]]
       Hist@Data@Obs <- data.frame() # remove
 
@@ -1170,7 +1200,12 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       ind <- which(lapply(ImpPars[[p]][[f]], length) == nsim)
       imp <- data.frame(ImpPars[[p]][[f]][ind])
       OMPars <- DataList[[p]][[f]]@OM
-      OMPars <- data.frame(OMPars, obs, imp)
+      if (nrow(OMPars)<1) {
+        OMPars <- data.frame(obs, imp)
+      } else {
+        OMPars <- data.frame(OMPars, obs, imp)  
+      }
+      
       Hist@OMPars <- OMPars
       if (f==1) {
         Hist@AtAge <- list(Length=StockPars[[p]]$Len_age,

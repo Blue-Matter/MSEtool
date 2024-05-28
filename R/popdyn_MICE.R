@@ -48,7 +48,6 @@
 #' @param SRRfun A list of custom stock-recruit functions. List of length `np`
 #' @param SRRpars A list of custom stock-recruit parameters for simulation `x`. List of length `np`
 #' @param spawn_time_frac vector of relative spawn timing. Length nstock
-#' @param Fdistarray Optional. An array of relative distribution of fishing effort across areas. Dimensions: nstock, nfleet, narea
 #' @author T.Carruthers
 #' @keywords internal
 popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, FretAx, Effind,
@@ -59,8 +58,7 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
                        bRx, ax, bx, Perrx, SRrelx, Rel, SexPars, x, plusgroup, maxF, SSB0x, B0x,
                        MPA,
                        SRRfun, SRRpars,
-                       spawn_time_frac=rep(0, np),
-                       Fdistarray=NULL) {
+                       spawn_time_frac=rep(0, np)) {
 
   n_age <- maxage + 1 # include age-0
   Bx <- SSNx <- SSBx <- VBx <- Zx <- array(NA_real_, c(np, n_age, nyears, nareas))
@@ -79,15 +77,8 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
   Nind <- TEG(c(np, n_age, 1, nareas))
   
   FMx <- FMretx <- array(NA_real_, c(np, nf, n_age, nareas))
+  Fdist <- FMx
   
-  if (is.null(Fdistarray)) {
-    Fdist <- FMx
-  } else {
-    # add age dimension
-    Fdistarray <- replicate(n_age, Fdistarray)
-    Fdistarray <- Fdistarray  %>% aperm(., c(1,2,4,3))
-  }
-    
   Find <- TEG(dim(FMretx))
   
   VBcur <- array(NA, dim(VBfx)[-4]) # np x nfleet x nage x nareas
@@ -114,105 +105,57 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
     
     # Fdist[Find] <- VBcur[Find]*MPAthisyr[Find[,c(1,2,4)]]^Spat_targ[Find[, 1:2]]
     
-    if (all(is.na(Fdistarray))) {
-      Fdist[Find] <- (VBcur_a[Find[,c(1,2,4)]]*MPAthisyr[Find[,c(1,2,4)]])^Spat_targ[Find[, 1:2]]
-      Fdist[Find] <- Fdist[Find]/apply(Fdist,1:3,sum)[Find[,1:3]]
-      Fdist[is.na(Fdist)] <- 0 # This is an NA catch for hermaphroditism
-    } else {
-      Fdist <- Fdistarray
+    # optimize Spat_targ if neccesary - make sure overall F is correct
+    for (p in 1:np) {
+      # check if biomass equally distributed across areas
+      chk <- apply(VBcur_a[p,,], 2, mean)
+      if (chk[1] == mean(chk)) next()
+      
+      # optimize spat_targ 
+      par <- rep(0, nf) 
+      f_zero_fleet <- which(qfracx==0)
+      if (length(f_zero_fleet)>0)
+        par <- par[-f_zero_fleet] 
+      
+      N_area <- Nx[p,,y-1,]
+      M_age <- M_ageArrayx[p,,y-1]
+      opt_spat_targ <- optim(par, 
+                          fn=solve_spat_targ,
+                          pop=p, qsx=qsx,  qfracx=qfracx,
+                          Ecur=Ecur, n_age=n_age, nareas=nareas, 
+                          Fdist=Fdist, 
+                          Vcur=Vcur, 
+                          N_area=N_area, M_age=M_age,
+                          VBcur_a=VBcur_a,
+                          f_zero_fleet=f_zero_fleet,
+                          Asizex=Asizex)
+      
+      par <- opt_spat_targ$par
+      if (length(f_zero_fleet)>0) {
+        dummy <- rep(0, length(f_zero_fleet))
+        
+        temp <- rep(NA, length(c(par, f_zero_fleet)))
+        temp[f_zero_fleet] <- 0
+        temp[is.na(temp)] <- par
+        Spat_targ[p,] <- temp
+      } else {
+        Spat_targ[p,] <- opt_spat_targ$par
+      }
     }
+
+    Fdist[Find] <- (VBcur_a[Find[,c(1,2,4)]]*MPAthisyr[Find[,c(1,2,4)]])^Spat_targ[Find[, 1:2]]
+    Fdist[Find] <- Fdist[Find]/apply(Fdist,1:3,sum)[Find[,1:3]]
+    Fdist[is.na(Fdist)] <- 0 # This is an NA catch for hermaphroditism
     
     FMx[Find] <- qsx[Find[, 1]] * qfracx[Find[, 1:2]] * Ecur[Find[, 1:2]] * Fdist[Find] *
-      Vcur[Find[, 1:3]]/Asizex[Find[, c(1, 4)]]
+      Vcur[Find[, 1:3]]  / Asizex[Find[, c(1, 4)]]
     FMx[FMx > maxF] <- maxF # apply maxF
-    
+
     Retcur[] <- FretAx[, , , y-1] #array(FretAx[, , , 1], c(np, nf, n_age))
     FMretx[Find] <- qsx[Find[,1]] * qfracx[Find[,1:2]] * Ecur[Find[,1:2]] * Fdist[Find] *
-      Retcur[Find[, 1:3]]/Asizex[Find[, c(1, 4)]]
-    FMretx[FMretx > maxF] <- maxF # apply maxF
-    
-    
-    ##########################################################################
-    solveF <- function(C_area, N_area, F_area, M_age) {
-      maxiterF <- 300
-      tolF <- 1e-4
-      catch <- apply(C_area, 2, sum)
-      n <- apply(N_area, 1, sum)
-      
-      ft <- sum(catch)/sum(n) # initial guess
-      
-      V_current <- apply(F_area, 2, max)
-      V_current <- V_current/max(V_current)
-      
-      for (i in 1:maxiterF) {
-        ft[ft<0] <- 0
-        Fmat <- ft * V_current
-        Zmat <- Fmat + M_age
-        predC <- Fmat/Zmat * (1-exp(-Zmat)) * n
-        predC[!is.finite(predC)] <- 0 
-        pct <- sum(predC)
-        
-        Omat <- (1-exp(-Zmat)) * n
-        Zmat[Zmat==0] <- tiny
-        
-        # derivative of catch wrt ft
-        dct <- sum(Omat/Zmat - ((Fmat * Omat)/Zmat^2) + Fmat/Zmat * exp(-Zmat) * n)
-        
-        if (dct<1E-15) break
-        
-        ft <-  ft - (pct - sum(catch))/(0.8*dct)
-        if (abs(sum(pct) - sum(catch))/sum(catch) < tolF) break
-        
-      }
-      ft
-    }
-    
-    solve_q_dist <- function(lqmod, p, qsx, qfracx, Ecur, n_age, nareas, Fdist, Vcur, N_area, M_age ) {
-      qmod <- exp(lqmod)
-      # overall F
-      F_fleet <- qsx[p] * qfracx[p,] * Ecur[p,]
-      nf <- length(F_fleet)
-      F_total <- sum(F_fleet)
-      
-      ind <- TEG(c(1, nf, n_age, nareas))
-      ind[,1] <- p
-      F_area <- Z_area <- C_area <- array(NA, dim=c(nf, n_age, nareas))
-      
-      F_area[ind[,c(2:4)]] <-  qsx[ind[,1]] *  qmod * qfracx[ind[,1:2]]*  Ecur[ind[,1:2]] * Fdist[ind] * Vcur[ind[,1:3]]
-      M_area <- replicate(nareas, M_ageArrayx[p,,y-1] ) 
-      Z_area[ind[,c(2:4)]] <- F_area[ind[,c(2:4)]] + M_area[ind[,3:4]]
-      
-      C_area[ind[,c(2:4)]] <- F_area[ind[,c(2:4)]]/Z_area[ind[,c(2:4)]] * (1-exp(-Z_area[ind[,c(2:4)]])) * N_area[ind[,c(3:4)]]
-      
-      V_current <- Vcur[1,,]
-      
-      
-      # solve for overall F by fleet
-      apical_F <- solveF(C_area, N_area, F_area, M_age)
-      
-      (apical_F - F_total)^2
-    }
-    
-    interval <- log(c(0.5, 100))
-    
-    p <- 1 # stock 
-    N_area <- Nx[p,,y-1,]
-    M_age <- M_ageArrayx[p,,y-1]
-    
-    opt_q_dist <- optimize(solve_q_dist,interval=interval, p, qsx, qfracx, Ecur, n_age, nareas, Fdist, Vcur, N_area, M_age)
-    
-    qmod <- exp(opt_q_dist$minimum)
-    
-    FMx[Find] <- qsx[Find[, 1]] * qmod * qfracx[Find[, 1:2]] * Ecur[Find[, 1:2]] * Fdist[Find] *
-      Vcur[Find[, 1:3]]/Asizex[Find[, c(1, 4)]]
-    FMx[FMx > maxF] <- maxF # apply maxF
-    
-    Retcur[] <- FretAx[, , , y-1] #array(FretAx[, , , 1], c(np, nf, n_age))
-    FMretx[Find] <- qsx[Find[,1]] * qmod * qfracx[Find[,1:2]] * Ecur[Find[,1:2]] * Fdist[Find] *
-      Retcur[Find[, 1:3]]/Asizex[Find[, c(1, 4)]]
+      Retcur[Find[, 1:3]]  / Asizex[Find[, c(1, 4)]]
     FMretx[FMretx > maxF] <- maxF # apply maxF
 
-    
     # Update spawning biomass and recruitment for last year (calculated mid year if spawn_time_frac>0)
     ZMx_all <- array(NA, dim=c(np, n_age, nareas))
     Foverall <- apply(FMx, c(1,3,4), sum)
@@ -336,7 +279,8 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
        Zx=Zx, #18
        Fty=Fty, #19
        M_ageArrayx=M_ageArrayx, #20
-       Fec_Agex=Fec_agex) #21
+       Fec_Agex=Fec_agex, # 21
+       Spat_targ=Spat_targ) #22
 }
 
 
