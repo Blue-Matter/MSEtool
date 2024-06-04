@@ -9,6 +9,7 @@
 \alias{LTY}
 \alias{STY}
 \alias{Yield}
+\alias{PGK}
 \alias{AAVY}
 \alias{AAVE}
 \title{Performance Metrics Methods}
@@ -26,6 +27,8 @@ LTY(MSEobj = NULL, Ref = 0.5, Yrs = -10)
 STY(MSEobj = NULL, Ref = 0.5, Yrs = 10)
 
 Yield(MSEobj = NULL, Ref = 1, Yrs = NULL)
+
+PGK(MSE = NULL, Ref = 1, Yrs = NULL)
 
 AAVY(MSEobj = NULL, Ref = 0.2, Yrs = NULL)
 

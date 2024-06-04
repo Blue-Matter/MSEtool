@@ -37,8 +37,12 @@ solve_spat_targ <- function(par, pop, qsx, qfracx, Ecur, n_age, nareas, Fdist,
   
   # Catch for total F
   F_age <- replicate(n_age,F_fleet) *  Vcur[pop,,]
-  
-  Z_age <- apply(F_age, 2, sum) + M_age
+  if (!is.null(dim(F_age))) {
+    Z_age <- apply(F_age, 2, sum) + M_age
+  } else {
+    Z_age <- F_age + M_age
+  }
+ 
   Z_age <- t(replicate(nf, Z_age))
   
   N_total <- apply(N_area, 1, sum)
