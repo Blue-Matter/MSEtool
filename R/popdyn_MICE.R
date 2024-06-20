@@ -593,14 +593,15 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
 #' @keywords internal
 ResFromRel <- function(Rel, Bcur, SSBcur, Ncur, SSB0, B0, seed, x) {
 
-  IVnams <- c("B", "SSB", "N", "SSB0", "B0", "x")
-  IVcode <- c("Bcur", "SSBcur", "Ncur", "SSB0", "B0", "x")
+  IVnams <- c("B", "SSB", "N", "Nage", "SSB0", "B0", "x")           # Variable in MICE function
+  IVcode <- c("Bcur", "SSBcur", "Ncur", "Nage", "SSB0", "B0", "x")  # Variable in OM
   B <- apply(Bcur, 1, sum)
   SSB <- apply(SSBcur, 1, sum)
   N <- apply(Ncur, 1, sum)
+  Nage <- apply(Ncur, 1:2, sum)
 
-  DVnam <- c("M", "a", "b", "R0", "hs", "K", "Linf", "t0", "Perr_y")
-  modnam <- c("Mx", "ax", "bx", "R0x", "hsx", "Kx", "Linfx", "t0x", "PerrYrp")
+  DVnam <- c("M", "a", "b", "R0", "hs", "K", "Linf", "t0", "Perr_y")            # Variable in MICE function
+  modnam <- c("Mx", "ax", "bx", "R0x", "hsx", "Kx", "Linfx", "t0x", "PerrYrp")  # Variable in OM
 
   nRel <- length(Rel)
   
@@ -612,14 +613,27 @@ ResFromRel <- function(Rel, Bcur, SSBcur, Ncur, SSB0, B0, seed, x) {
     IV <- fnams[-1]
     nIV <- length(IV)
     
-    newdata <- sapply(IV, function(iv, B, SSB, N, SSB0, B0, x)  {
+    newdata <- lapply(IV, function(iv, B, SSB, N, Nage, SSB0, B0, x)  {
       IVs <- unlist(strsplit(iv, "_"))
       p <- ifelse(length(IVs) == 1, 1, as.numeric(IVs[2]))
-      get(IVs[1], inherits = FALSE)[p] # Get independent variables from OM
-    }, B = B, SSB = SSB, N = N, SSB0 = SSB0, B0 = B0, x = x) %>% 
-      matrix(nrow = 1) %>% as.data.frame() %>% structure(names = IV)
+      
+      # Get independent variables from OM
+      OMvar <- get(IVs[1], inherits = FALSE)
+      if (is.matrix(OMvar)) {
+        OMvar[p, ]
+      } else {
+        OMvar[p]
+      }
+    }, B = B, SSB = SSB, N = N, Nage = Nage, SSB0 = SSB0, B0 = B0, x = x) %>% 
+      structure(names = IV) %>%
+      unlist()
     
-    ys <- predict(Rel[[r]], newdata = newdata)
+    # If IV = Nage_p, then name will be Nage_pa (population, age)
+    newdata2 <- matrix(newdata, nrow = 1) %>%
+      as.data.frame() %>% 
+      structure(names = names(newdata))
+    
+    ys <- predict(Rel[[r]], newdata = newdata2)
     templm <- Rel[[r]]
     templm$fitted.values <- ys
     ysamp <- stats::simulate(templm, nsim = 1, seed = seed) %>% unlist()
