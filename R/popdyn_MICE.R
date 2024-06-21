@@ -400,14 +400,23 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
       Dp <- sapply(Responses, getElement, "Dp")
       Dval <- sapply(Responses, getElement, "value")
       #Dlag <- sapply(Responses, getElement, "lag")
-      Dage <- sapply(Responses, getElement, "age")
+      Dage <- lapply(Responses, getElement, "age")
+      Dmult <- sapply(Responses, getElement, "mult")
       
       for (r in 1:length(Responses)) { # e.g., Mx[1] <- 0.4 - operations are sequential
-        if (Dmodnam[r] == "Mx" && !is.na(Dage[r])) { # Age-specific M
-          Rel_txt <- paste0("M_agecur[", Dp[r], ", ", Dage[r] + 1, "] <- ", Dval[r])
-        } else {
-          Rel_txt <- paste0(Dmodnam[r], "[", Dp[r], "] <- ", Dval[r])
-        }
+        Rel_txt <- local({
+          if (Dmodnam[r] == "Mx" && all(!is.na(Dage[[r]]))) { # Age-specific M
+            Rel_var <- paste0("M_agecur[", Dp[r], ", ", Dage[[r]] + 1, "]")
+          } else {
+            Rel_var <- paste0(Dmodnam[r], "[", Dp[r], "]")
+          }
+          if (Dmult[r]) {
+            Rel_val <- paste(Dval[r], "*", Rel_var)
+          } else {
+            Rel_val <- Dval[r]
+          }
+          paste(Rel_var, "<-", Rel_val)
+        })
         eval(parse(text = Rel_txt))
       }
       
@@ -518,9 +527,18 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
     Dmodnam2 <- sapply(Responses2, getElement, "modnam")
     Dp2 <- sapply(Responses2, getElement, "Dp")
     Dval2 <- sapply(Responses2, getElement, "value")
+    Dmult2 <- sapply(Responses2, getElement, "mult")
     
     for (r in 1:length(Responses2)) { # e.g., PerrYrp[1] <- 1.5 - operations are sequential
-      Rel_txt <- paste0(Dmodnam2[r], "[", Dp2[r], "] <- ", Dval2[r])
+      Rel_txt <- local({
+        Rel_var2 <- paste0(Dmodnam2[r], "[", Dp2[r], "]")
+        if (Dmult2[r]) {
+          Rel_val2 <- paste(Dval2[r], "*", Rel_var2)
+        } else {
+          Rel_val2 <- Dval2[r]
+        }
+        paste(Rel_var2, "<-", Rel_val2)
+      })
       eval(parse(text = Rel_txt))
     }
   }
@@ -667,6 +685,9 @@ ResFromRel <- function(Rel, Bcur, SSBcur, Ncur, SSB0, B0, seed, x) {
       age <- NA_integer_
     }
     rel_r[["age"]] <- age
+    
+    rel_r[["mult"]] <- FALSE
+    if (!is.null(Rel[[r]]$mult) && is.logical(Rel[[r]]$mult)) rel_r[["mult"]] <- Rel[[r]]$mult
     
     return(rel_r)
   })
