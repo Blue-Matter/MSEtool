@@ -1519,7 +1519,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       if (y %in% upyrs) {
         # --- Update Data object ----
         Data_MP <- updateData(Data=Data_MP, OM, MPCalcs, Effort,
-                              Biomass=StockPars$Biomass, StockPars$N,
+                              Biomass=StockPars$Biomass,
+                              N=StockPars$N,
                               Biomass_P, CB_Pret, N_P, SSB=StockPars$SSB,
                               SSB_P, VBiomass=StockPars$VBiomass, VBiomass_P,
                               RefPoints=ReferencePoints,
