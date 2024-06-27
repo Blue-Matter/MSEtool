@@ -225,7 +225,11 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   # (this is the fraction to be kept (after sex change))
   # E.g. protygynous (Female to male) is H_1_2 where 1 is female 2 is male
   # [sim, stock, maxage] Defaults to all 1s if length(SexPars$Herm)==0
-  HermFrac <- expandHerm(SexPars$Herm, maxage = maxage, np = np, nsim = nsim)
+  if (!is.null(control$HermEq) && !control$HermEq) {
+    HermFrac <- expandHerm(list(), maxage = maxage, np = np, nsim = nsim)
+  } else {
+    HermFrac <- expandHerm(SexPars$Herm, maxage = maxage, np = np, nsim = nsim)
+  }
 
   Unfished_Equilibrium <- list()
   for(p in 1:np){
