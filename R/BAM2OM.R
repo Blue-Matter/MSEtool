@@ -20,6 +20,7 @@ convert_units <- function(rdat) {
 #' @param ... Additional arguments passed to `MSEtool::Assess2MOM`
 #'
 #' @return An object of class `MOM`
+#' @importFrom stats na.pass
 #' @export
 BAM2MOM <- function(rdat, nsim = 48, proyears = 50, interval = 1,
                     stock_name=NULL, fleet_name=NULL, LowerTri=0, report = FALSE, ...) {
@@ -271,7 +272,7 @@ BAM2OM <- function(rdat, nsim = 48, proyears = 50, interval = 2, report = FALSE,
   CurrentYr <- parms$endyr
   
   maa <- local({
-    M <- array(MSEtool:::tiny + .Machine$double.eps, c(nsim, n_age, nyears))
+    M <- array(tiny + .Machine$double.eps, c(nsim, n_age, nyears))
     M[, BAM_age + 1, ] <- array(a.series$M, c(length(BAM_age), nsim, nyears)) |>
       aperm(c(2, 1, 3))
     M
