@@ -77,16 +77,26 @@ checkHerm <- function(Herm, maxage, nsim, nyears, proyears) {
   
   if (length(Herm)) {
     for(i in 1:length(Herm)) {
-      if (is.matrix(Herm[[i]])) Herm[[i]] <- replicate(nyears + proyears, Herm[[i]])
+      
+      if (is.null(dim(Herm[[i]]))) {
+        stop("Hermaphroditic inputs must be a matrix or array.")
+      }
+      
+      if (is.matrix(Herm[[i]])) {
+        if (!all(dim(Herm[[i]]) == c(nsim, n_age))) {
+          stop("Herm[[", i, "]] must be a matrix with dimensions: nsim, maxage+1 but has dimensions: ",
+               paste(dim(Herm[[i]]), collapse = ","))
+        }
+        Herm[[i]] <- replicate(nyears + proyears, Herm[[i]])
+      }
       
       if (is.array(Herm[[i]])) {
         if (!all(dim(Herm[[i]]) == c(nsim, n_age, proyears + nyears))) {
           stop("Herm[[", i, "]] must be array with dimensions: nsim, maxage+1, nyears + proyears but has dimensions: ",
-               paste(dim(Herm[[i]]), collapse=" "))
+               paste(dim(Herm[[i]]), collapse = ","))
         }
-      } else {
-        stop("Hermaphroditic inputs must be an array.")
       }
+      
     }
   }
   
