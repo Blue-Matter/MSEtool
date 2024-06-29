@@ -1572,19 +1572,18 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   
   # store M, growth, length at age, rec dev by MP due to MICE rel.
   if (length(Rel)) {
-    DV_MICE <- sapply(1:length(Rel), function(r) get_Dnam(Rel[[r]][["terms"]][1])) %>%
-      unique()
+    DV_MICE <- sapply(1:length(Rel), function(r) get_Dnam(Rel[[r]][["terms"]][1]))
     DVarray <- c("M" = "M_ageArray", "a" = "Wt_age", "b" = "Wt_age", #"R0", "hs", 
                  "K" = "Len_age", "Linf" = "Len_age", "t0" = "Len_age", "Perr_y" = "Perr_y")
     
-    StockPars_MICE <- lapply(1:length(DV_MICE), function(r) {
-      if (DV_MICE[r] == "Perr_y") {
+    StockPars_MICE <- lapply(unique(DV_MICE), function(r) {
+      if (r == "Perr_y") {
         array(NA_real_, dim = c(nsim, np, nMP, proyears))
       } else {
         array(NA_real_, dim = c(nsim, np, n_age, nMP, proyears))
       }
     }) %>%
-      structure(names = DVarray[DV_MICE])
+      structure(names = DVarray[unique(DV_MICE)])
   }
 
   # ---- Grab Historical N-at-age etc ----
@@ -1824,7 +1823,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                       plusgroup = plusgroup, SSB0x = SSB0array[x, ], B0x = B0array[x, ],
                       Len_agenext = array(Len_agenext[x, , ], c(np, n_age)),
                       Wt_agenext = array(Wt_agenext[x, , ], c(np, n_age)),
-                      SRRfun=SRRfun_p, SRRpars=SRRpars_p)
+                      SRRfun=SRRfun_p, SRRpars=SRRpars_p, ycur = nyears)
       })
     })
 
@@ -2002,12 +2001,12 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     StockPars_MPCalc <- StockPars
     if (length(Rel) && any(DV_MICE == "M")) {
       M_MICE <- sapply(1:nsim, function(x) {
-        Responses <- ResFromRel(Rel, 
+        Responses <- ResFromRel(Rel[DV_MICE == "M"], 
                                 Bcur = array(Biomass_P[x, , , 1, ], c(np, n_age, nareas)),
                                 SSBcur = array(SSB_P[x, , , 1, ], c(np, n_age, nareas)),
                                 Ncur = array(N_P[x, , , 1, ], c(np, n_age, nareas)),
                                 SSB0 = SSB0array[x, ], B0 = B0array[x, ],
-                                seed = 1, x = x)
+                                seed = 1, x = x, y = nyears + 1)
         
         Dmodnam <- sapply(Responses, getElement, "modnam")
         Dp <- sapply(Responses, getElement, "Dp")
@@ -2015,10 +2014,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         Dage <- lapply(Responses, getElement, "age")
         Dmult <- sapply(Responses, getElement, "mult")
         
-        oldM_ageArray <- M_ageArray <- sapply(1:np, function(p) StockPars[[p]]$M_ageArray[x, , nyears + 1]) %>% t()
-        oldMx <- Mx <- sapply(1:np, function(p) StockPars[[p]]$Marray[x, nyears + 1])
+        oldM_ageArray <- M_ageArray <- sapply(1:np, function(p) StockPars[[p]]$M_ageArray[x, , nyears+1]) %>% t()
+        oldMx <- Mx <- sapply(1:np, function(p) StockPars[[p]]$Marray[x, nyears+1])
         
-        for (r in 1:length(Rel)) { # Ensure this is consistent with code in popdynOneMICE
+        for (r in 1:length(Responses)) { # Ensure this is consistent with code in popdynOneMICE
           if (Dmodnam[r] == "Mx") {
             Rel_txt <- local({
               if (all(!is.na(Dage[[r]]))) { # Age-specific M
@@ -2040,7 +2039,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         return(M_ageArray)
       }, simplify = "array")
       
-      for(p in 1:np) StockPars_MPCalc[[p]]$M_ageArray[, , nyears + 1] <- t(M_MICE[p, , ])
+      for(p in 1:np) StockPars_MPCalc[[p]]$M_ageArray[, , nyears+1] <- t(M_MICE[p, , ])
     }
 
     MPCalcs_list <- vector('list', np)
@@ -2291,7 +2290,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                         plusgroup = plusgroup, SSB0x = SSB0array[x, ], B0x = B0array[x, ],
                         Len_agenext = array(Len_agenext[x, , ], c(np, n_age)),
                         Wt_agenext = array(Wt_agenext[x, , ], c(np, n_age)),
-                        SRRfun=SRRfun_p, SRRpars=SRRpars_p)
+                        SRRfun=SRRfun_p, SRRpars=SRRpars_p, ycur = nyears+y-1)
         })
       })
 
@@ -2366,12 +2365,12 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       StockPars_MPCalc <- StockPars
       if (length(Rel) && any(DV_MICE == "M")) {
         M_MICE <- sapply(1:nsim, function(x) {
-          Responses <- ResFromRel(Rel, 
+          Responses <- ResFromRel(Rel[DV_MICE == "M"], 
                                   Bcur = array(Biomass_P[x, , , 1, ], c(np, n_age, nareas)),
                                   SSBcur = array(SSB_P[x, , , 1, ], c(np, n_age, nareas)),
                                   Ncur = array(N_P[x, , , 1, ], c(np, n_age, nareas)),
                                   SSB0 = SSB0array[x, ], B0 = B0array[x, ],
-                                  seed = 1, x = x)
+                                  seed = 1, x = x, y = nyears+y)
           
           Dmodnam <- sapply(Responses, getElement, "modnam")
           Dp <- sapply(Responses, getElement, "Dp")
@@ -2379,10 +2378,10 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
           Dage <- lapply(Responses, getElement, "age")
           Dmult <- sapply(Responses, getElement, "mult")
           
-          oldM_ageArray <- M_ageArray <- sapply(1:np, function(p) StockPars[[p]]$M_ageArray[x, , nyears + 1]) %>% t()
-          oldMx <- Mx <- sapply(1:np, function(p) StockPars[[p]]$Marray[x, nyears + 1])
+          oldM_ageArray <- M_ageArray <- sapply(1:np, function(p) StockPars[[p]]$M_ageArray[x, , nyears + y]) %>% t()
+          oldMx <- Mx <- sapply(1:np, function(p) StockPars[[p]]$Marray[x, nyears + y])
           
-          for (r in 1:length(Rel)) { # Ensure this is consistent with code in popdynOneMICE
+          for (r in 1:length(Responses)) { # Ensure this is consistent with code in popdynOneMICE
             if (Dmodnam[r] == "Mx") {
               Rel_txt <- local({
                 if (all(!is.na(Dage[[r]]))) { # Age-specific M

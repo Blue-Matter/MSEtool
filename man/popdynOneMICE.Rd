@@ -45,7 +45,8 @@ popdynOneMICE(
   Len_agenext,
   Wt_agenext,
   SRRfun,
-  SRRpars
+  SRRpars,
+  ycur
 )
 }
 \arguments{
@@ -133,6 +134,8 @@ relationship (1 = Beverton-Holt, 2= Ricker)}
 \item{SRRfun}{Optional. A stock-recruit function used if \code{SRrelc =3}}
 
 \item{SRRpars}{Optional. A named list of arguments for \code{SRRfun}}
+
+\item{ycur}{Integer. The current year of the simulation}
 }
 \description{
 Completes a single iteration of recruitment, mortality, fishing and

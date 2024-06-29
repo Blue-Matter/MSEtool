@@ -253,7 +253,7 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
                          plusgroup = plusgroup, SSB0x = SSB0x, B0x = B0x,
                          Len_agenext = array(Len_agex[, , y], c(np, n_age)),
                          Wt_agenext = array(WatAgex[, , y], c(np, n_age)),
-                         SRRfun=SRRfun, SRRpars=SRRpars)
+                         SRRfun=SRRfun, SRRpars=SRRpars, ycur = y-1)
     
     # update arrays 
     if (y <= nyears) {
@@ -366,6 +366,7 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
 #' @param Wt_agenext Matrix `[stock, age]` of next year's weight-at-age
 #' @param SRRfun  Optional. A stock-recruit function used if `SRrelc =3` 
 #' @param SRRpars Optional. A named list of arguments for `SRRfun`
+#' @param ycur Integer. The current year of the simulation
 #' @author T.Carruthers
 #' @keywords internal
 popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMretx, FMx, PerrYrp,
@@ -375,7 +376,7 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
                           Kx, Linfx, t0x, Mx, R0x, R0ax, SSBpRx, ax, bx, Rel, SexPars, x,
                           plusgroup, SSB0x, B0x,
                           Len_agenext, Wt_agenext,
-                          SRRfun, SRRpars) {
+                          SRRfun, SRRpars, ycur) {
   
   n_age <- maxage + 1
   Nind <- TEG(dim(Ncur)) # p, age, area
@@ -394,7 +395,7 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
     Dlag_all <- sapply(Rel, get_Dlag)
     
     if (any(Dlag_all == "current")) {  # Proceed except if Rel[[r]]$Dlag = "next"
-      Responses <- ResFromRel(Rel[Dlag_all == "current"], Bcur, SSBcur, Ncur, SSB0x, B0x, seed = 1, x)
+      Responses <- ResFromRel(Rel[Dlag_all == "current"], Bcur, SSBcur, Ncur, SSB0x, B0x, seed = 1, x, y = ycur)
       
       Dmodnam <- sapply(Responses, getElement, "modnam")
       Dp <- sapply(Responses, getElement, "Dp")
@@ -521,7 +522,7 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
     Responses2 <- local({
       Bnext <- SSBnext <- array(NA_real_, dim(Nnext)) # np x n_age x nareas
       Bnext[Nind] <- Nnext[Nind] * Wt_agenext[Nind[, 1:2]]
-      ResFromRel(Rel[Dlag_all == "next"], Bcur = Bnext, SSBcur = SSBtemp, Ncur = Nnext, SSB0x, B0x, seed = 1, x)
+      ResFromRel(Rel[Dlag_all == "next"], Bcur = Bnext, SSBcur = SSBtemp, Ncur = Nnext, SSB0x, B0x, seed = 1, x, y = ycur)
     })
     
     Dmodnam2 <- sapply(Responses2, getElement, "modnam")
@@ -607,12 +608,13 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
 #' @param B0 A vector of unfished biomass `[stock]`
 #' @param seed Seed for sampling.
 #' @param x The simulation number.
-#' @author T.Carruthers
+#' @param y The current year of the simulation.
+#' @author T. Carruthers, Q. Huynh
 #' @keywords internal
-ResFromRel <- function(Rel, Bcur, SSBcur, Ncur, SSB0, B0, seed, x) {
+ResFromRel <- function(Rel, Bcur, SSBcur, Ncur, SSB0, B0, seed, x, y) {
 
-  IVnams <- c("B", "SSB", "N", "Nage", "SSB0", "B0", "x")           # Variable in MICE function
-  IVcode <- c("Bcur", "SSBcur", "Ncur", "Nage", "SSB0", "B0", "x")  # Variable in OM
+  IVnams <- c("B", "SSB", "N", "Nage", "SSB0", "B0", "x", "y")           # Variable in MICE function
+  IVcode <- c("Bcur", "SSBcur", "Ncur", "Nage", "SSB0", "B0", "x", "y")  # Variable in OM
   B <- apply(Bcur, 1, sum)
   SSB <- apply(SSBcur, 1, sum)
   N <- apply(Ncur, 1, sum)
@@ -631,7 +633,7 @@ ResFromRel <- function(Rel, Bcur, SSBcur, Ncur, SSB0, B0, seed, x) {
     IV <- fnams[-1]
     nIV <- length(IV)
     
-    newdata <- lapply(IV, function(iv, B, SSB, N, Nage, SSB0, B0, x)  {
+    newdata <- lapply(IV, function(iv, B, SSB, N, Nage, SSB0, B0, x, y)  {
       IVs <- unlist(strsplit(iv, "_"))
       p <- ifelse(length(IVs) == 1, 1, as.numeric(IVs[2]))
       
@@ -642,7 +644,7 @@ ResFromRel <- function(Rel, Bcur, SSBcur, Ncur, SSB0, B0, seed, x) {
       } else {
         OMvar[p]
       }
-    }, B = B, SSB = SSB, N = N, Nage = Nage, SSB0 = SSB0, B0 = B0, x = x) %>% 
+    }, B = B, SSB = SSB, N = N, Nage = Nage, SSB0 = SSB0, B0 = B0, x = x, y = y) %>% 
       structure(names = IV) %>%
       unlist()
     
@@ -691,20 +693,11 @@ ResFromRel <- function(Rel, Bcur, SSBcur, Ncur, SSB0, B0, seed, x) {
     
     return(rel_r)
   })
-  out
+  
+  return(out)
 }
 
 get_Dlag <- function(Rel) {
-  #if (Dnam == "Perr_y") {
-  #  if (!is.null(Rel[[r]]$lag)) {
-  #    lag <- Rel[[r]]$lag # choices are "current" or "next"
-  #  } else {
-  #    lag <- "current"
-  #  }
-  #  if (lag != "next") lag <- "current"
-  #} else {
-  #  lag <- NA_character_
-  #}
   lag <- Rel$lag
   if (is.null(lag) || lag != "next") lag <- "current"
   return(lag)

@@ -10,7 +10,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 - add `spawn_time_frac` argument to `iSCAM2OM`
 - added `BAM2OM`
 - hermaphroditism in `multiMSE` can be time-varying if entries in the `MOM@SexPars$Herm` list is an array with dimensions `nsim, maxage+1, nyears+proyears`
-- MICE relationship can be specified by reading in the abundance at age from the operating model
+- MICE relationship can be specified by reading in the abundance at age and year from the operating model
 - MICE functions can operate as a multiplier on the base value instead of over-writing the base value
 - `MOM@cpars$control <- list(HermEq = FALSE)` sidesteps the first-year equilibrium age and sex distribution calculation from the hermaphroditic age schedule
 
