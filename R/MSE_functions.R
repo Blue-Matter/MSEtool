@@ -844,7 +844,7 @@ addMPs <- function(MSEobjs) {
              Obs = MSEobjs[[1]]@Obs,
              SB_SBMSY = join_arrays(MSEobjs, "SB_SBMSY", along = 2),
              F_FMSY = join_arrays(MSEobjs, "F_FMSY", along = 2),
-             N = join_arrays(MSEobjs, "N", along = 2),
+             N = join_arrays(MSEobjs, "N", along = 3),
              B = join_arrays(MSEobjs, "B", along = 2),
              SSB = join_arrays(MSEobjs, "SSB", along = 2),
              VB = join_arrays(MSEobjs, "VB", along = 2),
@@ -884,7 +884,7 @@ addMPs <- function(MSEobjs) {
   
 }
 
-#' @describeIn checkMSE Joins two or more MSE objects together. MSE objects must have identical
+#' @describeIn checkMSE Joins two or more MSE objects together across simulations. MSE objects must have identical
 #' number of historical years, and projection years.
 #' @param MSEobjs A list of MSE objects
 #' @export

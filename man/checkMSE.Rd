@@ -43,7 +43,7 @@ Utility functions for MSE objects
 multiple MSE objects that have identical historical OM values but different
 MPs.
 
-\item \code{joinMSE()}: Joins two or more MSE objects together. MSE objects must have identical
+\item \code{joinMSE()}: Joins two or more MSE objects together across simulations. MSE objects must have identical
 number of historical years, and projection years.
 
 \item \code{joinHist()}: Join objects of class \code{Hist}. Does not join slot \code{OM}
