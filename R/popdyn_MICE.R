@@ -399,26 +399,26 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
       
       Dmodnam <- sapply(Responses, getElement, "modnam")
       Dp <- sapply(Responses, getElement, "Dp")
-      Dval <- sapply(Responses, getElement, "value")
-      #Dlag <- sapply(Responses, getElement, "lag")
+      Dval <- lapply(Responses, getElement, "value")
       Dage <- lapply(Responses, getElement, "age")
       Dmult <- sapply(Responses, getElement, "mult")
       
+      Rel_txt <- sapply(1:length(Responses), function(r) {
+        if (Dmodnam[r] == "Mx" && all(!is.na(Dage[[r]]))) { # Age-specific M
+          Rel_var <- paste0("M_agecur[", Dp[r], ", Dage[[r]] + 1]")
+        } else {
+          Rel_var <- paste0(Dmodnam[r], "[", Dp[r], "]")
+        }
+        if (Dmult[r]) {
+          Rel_val <- paste("Dval[[r]] *", Rel_var)
+        } else {
+          Rel_val <- "Dval[[r]]"
+        }
+        paste(Rel_var, "<-", Rel_val)
+      })
+      
       for (r in 1:length(Responses)) { # e.g., Mx[1] <- 0.4 - operations are sequential
-        Rel_txt <- local({
-          if (Dmodnam[r] == "Mx" && all(!is.na(Dage[[r]]))) { # Age-specific M
-            Rel_var <- paste0("M_agecur[", Dp[r], ", ", Dage[[r]] + 1, "]")
-          } else {
-            Rel_var <- paste0(Dmodnam[r], "[", Dp[r], "]")
-          }
-          if (Dmult[r]) {
-            Rel_val <- paste(Dval[r], "*", Rel_var)
-          } else {
-            Rel_val <- Dval[r]
-          }
-          paste(Rel_var, "<-", Rel_val)
-        })
-        eval(parse(text = Rel_txt))
+        eval(parse(text = Rel_txt[r]))
       }
       
       if (any(Dmodnam %in% c("Linfx", "Kx", "t0x"))) { # only update Len_age for next year if MICE response is used
@@ -527,20 +527,21 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
     
     Dmodnam2 <- sapply(Responses2, getElement, "modnam")
     Dp2 <- sapply(Responses2, getElement, "Dp")
-    Dval2 <- sapply(Responses2, getElement, "value")
+    Dval2 <- lapply(Responses2, getElement, "value")
     Dmult2 <- sapply(Responses2, getElement, "mult")
     
+    Rel_txt2 <- sapply(1:length(Responses2), function(r) {
+      Rel_var2 <- paste0(Dmodnam2[r], "[", Dp2[r], "]")
+      if (Dmult2[r]) {
+        Rel_val2 <- paste("Dval2[r] *", Rel_var2)
+      } else {
+        Rel_val2 <- "Dval2[[r]]"
+      }
+      paste(Rel_var2, "<-", Rel_val2)
+    })
+    
     for (r in 1:length(Responses2)) { # e.g., PerrYrp[1] <- 1.5 - operations are sequential
-      Rel_txt <- local({
-        Rel_var2 <- paste0(Dmodnam2[r], "[", Dp2[r], "]")
-        if (Dmult2[r]) {
-          Rel_val2 <- paste(Dval2[r], "*", Rel_var2)
-        } else {
-          Rel_val2 <- Dval2[r]
-        }
-        paste(Rel_var2, "<-", Rel_val2)
-      })
-      eval(parse(text = Rel_txt))
+      eval(parse(text = Rel_txt2[r]))
     }
   }
 

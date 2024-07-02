@@ -2010,31 +2010,32 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         
         Dmodnam <- sapply(Responses, getElement, "modnam")
         Dp <- sapply(Responses, getElement, "Dp")
-        Dval <- sapply(Responses, getElement, "value")
+        Dval <- lapply(Responses, getElement, "value")
         Dage <- lapply(Responses, getElement, "age")
         Dmult <- sapply(Responses, getElement, "mult")
         
         oldM_ageArray <- M_ageArray <- sapply(1:np, function(p) StockPars[[p]]$M_ageArray[x, , nyears+1]) %>% t()
         oldMx <- Mx <- sapply(1:np, function(p) StockPars[[p]]$Marray[x, nyears+1])
         
-        for (r in 1:length(Responses)) { # Ensure this is consistent with code in popdynOneMICE
-          if (Dmodnam[r] == "Mx") {
-            Rel_txt <- local({
-              if (all(!is.na(Dage[[r]]))) { # Age-specific M
-                Rel_var <- paste0("M_ageArray[", Dp[r], ", ", Dage[[r]] + 1, "]")
-              } else {
-                Rel_var <- paste0(Dmodnam[r], "[", Dp[r], "]")
-              }
-              if (Dmult[r]) {
-                Rel_val <- paste(Dval[r], "*", Rel_var)
-              } else {
-                Rel_val <- Dval[r]
-              }
-              paste(Rel_var, "<-", Rel_val)
-            })
-            eval(parse(text = Rel_txt))
+        # Ensure this is consistent with code in popdynOneMICE
+        Rel_txt <- sapply(1:length(Responses), function(r) {
+          if (all(!is.na(Dage[[r]]))) { # Age-specific M
+            Rel_var <- paste0("M_ageArray[", Dp[r], ", Dage[[r]] + 1]")
+          } else {
+            Rel_var <- paste0(Dmodnam[r], "[", Dp[r], "]")
           }
+          if (Dmult[r]) {
+            Rel_val <- paste("Dval[[r]] *", Rel_var)
+          } else {
+            Rel_val <- "Dval[[r]]"
+          }
+          paste(Rel_var, "<-", Rel_val)
+        })
+        
+        for (r in 1:length(Responses)) {
+          eval(parse(text = Rel_txt[r]))
         }
+        
         if (all(oldM_ageArray == M_ageArray)) M_ageArray <- oldM_ageArray * Mx/oldMx
         return(M_ageArray)
       }, simplify = "array")
@@ -2374,31 +2375,31 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
           
           Dmodnam <- sapply(Responses, getElement, "modnam")
           Dp <- sapply(Responses, getElement, "Dp")
-          Dval <- sapply(Responses, getElement, "value")
+          Dval <- lapply(Responses, getElement, "value")
           Dage <- lapply(Responses, getElement, "age")
           Dmult <- sapply(Responses, getElement, "mult")
           
           oldM_ageArray <- M_ageArray <- sapply(1:np, function(p) StockPars[[p]]$M_ageArray[x, , nyears + y]) %>% t()
           oldMx <- Mx <- sapply(1:np, function(p) StockPars[[p]]$Marray[x, nyears + y])
           
-          for (r in 1:length(Responses)) { # Ensure this is consistent with code in popdynOneMICE
-            if (Dmodnam[r] == "Mx") {
-              Rel_txt <- local({
-                if (all(!is.na(Dage[[r]]))) { # Age-specific M
-                  Rel_var <- paste0("M_ageArray[", Dp[r], ", ", Dage[[r]] + 1, "]")
-                } else {
-                  Rel_var <- paste0(Dmodnam[r], "[", Dp[r], "]")
-                }
-                if (Dmult[r]) {
-                  Rel_val <- paste(Dval[r], "*", Rel_var)
-                } else {
-                  Rel_val <- Dval[r]
-                }
-                paste(Rel_var, "<-", Rel_val)
-              })
-              eval(parse(text = Rel_txt))
+          Rel_txt <- sapply(1:length(Responses), function(r) {
+            if (all(!is.na(Dage[[r]]))) { # Age-specific M
+              Rel_var <- paste0("M_ageArray[", Dp[r], ", Dage[[r]] + 1]")
+            } else {
+              Rel_var <- paste0(Dmodnam[r], "[", Dp[r], "]")
             }
+            if (Dmult[r]) {
+              Rel_val <- paste("Dval[[r]] *", Rel_var)
+            } else {
+              Rel_val <- "Dval[[r]]"
+            }
+            paste(Rel_var, "<-", Rel_val)
+          })
+          
+          for (r in 1:length(Responses)) {
+            eval(parse(text = Rel_txt[r]))
           }
+          
           if (all(oldM_ageArray == M_ageArray)) M_ageArray <- oldM_ageArray * Mx/oldMx
           return(M_ageArray)
         }, simplify = "array")
