@@ -59,6 +59,12 @@
 </li>
 <li>added <code>BAM2OM</code>
 </li>
+<li>hermaphroditism in <code>multiMSE</code> can be time-varying if entries in the <code>MOM@SexPars$Herm</code> list is an array with dimensions <code>nsim, maxage+1, nyears+proyears</code>
+</li>
+<li>MICE relationship can be specified by reading in the abundance at age and year from the operating model</li>
+<li>MICE functions can operate as a multiplier on the base value instead of over-writing the base value</li>
+<li>
+<code>MOM@cpars$control &lt;- list(HermEq = FALSE)</code> sidesteps the first-year equilibrium age and sex distribution calculation from the hermaphroditic age schedule</li>
 </ul></div>
 <div class="section level3">
 <h3 id="internal-3-7-2999">Internal<a class="anchor" aria-label="anchor" href="#internal-3-7-2999"></a></h3>

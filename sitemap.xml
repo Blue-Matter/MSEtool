@@ -163,6 +163,9 @@
     <loc>https://msetool.openmse.com/reference/GenerateRandomWalk.html</loc>
   </url>
   <url>
+    <loc>https://msetool.openmse.com/reference/Herm-int.html</loc>
+  </url>
+  <url>
     <loc>https://msetool.openmse.com/reference/Hist-class.html</loc>
   </url>
   <url>
@@ -458,9 +461,6 @@
   </url>
   <url>
     <loc>https://msetool.openmse.com/reference/dnormal.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/expandHerm.html</loc>
   </url>
   <url>
     <loc>https://msetool.openmse.com/reference/genSizeCompWrap.html</loc>
