@@ -112,9 +112,9 @@ checkHerm <- function(Herm, maxage, nsim, nyears, proyears) {
 #' @author Q. Huynh
 subsetHerm <- function(Herm, y) {
   if (length(Herm)) {
-    Herm_y <- lapply(Herm, function(x) x[, , y])
+    Herm <- lapply(Herm, function(x) x[, , y])
   }
-  return(Herm_y)
+  return(Herm)
 }
 
 #' Tom's expand grid
