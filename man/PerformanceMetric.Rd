@@ -28,7 +28,7 @@ STY(MSEobj = NULL, Ref = 0.5, Yrs = 10)
 
 Yield(MSEobj = NULL, Ref = 1, Yrs = NULL)
 
-PGK(MSE = NULL, Ref = 1, Yrs = NULL)
+PGK(MSEobj = NULL, Ref = 1, Yrs = NULL)
 
 AAVY(MSEobj = NULL, Ref = 0.2, Yrs = NULL)
 

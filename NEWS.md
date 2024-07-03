@@ -1,14 +1,15 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
-# MSEtool 3.7.2999 - dev version
+# MSEtool 3.7.2 - dev version
 
 ## New additions
+- added `nsim` argument to `Simulate` as an override to `OM@nsim`. Useful for generating `Hist` object with 2 sims when all historical values are identical across simulations
+- added `BAM2OM` to create OM from Beaufort Assessment Model (BAM) output
 - add MICE rel for recruitment deviates in `multiMSE` which can be a function of the state dynamics in either the current year or previous year
 - MICE rel for natural mortality can be age-specific in `multiMSE`
 - custom stock-recruit functions available for `multiMSE`
 - allow plusgroup to be turned off in `multiMSE`
 - add `spawn_time_frac` argument to `iSCAM2OM`
-- added `BAM2OM`
 - hermaphroditism in `multiMSE` can be time-varying if entries in the `MOM@SexPars$Herm` list is an array with dimensions `nsim, maxage+1, nyears+proyears`
 - MICE relationship can be specified by reading in the abundance at age and year from the operating model
 - MICE functions can operate as a multiplier on the base value instead of over-writing the base value
@@ -21,11 +22,6 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 - fix to `OMdoc`
 - fixes to simulation of length comp
-
-# MSEtool 3.7.2
-
-## Fixes
-
 - add `cpars$qs` to `OM` produce by `SS2OM`
 - Note: `SS2OM` does not return `cpars$Data`
 

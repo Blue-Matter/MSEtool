@@ -1815,11 +1815,13 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #' Functions to run the Management Strategy Evaluation (closed-loop
 #' simulation) for a specified operating model
 #'
-#' @param OM An operating model object (class `OM` or class `Hist`)
+#' @param OM An operating model object (class `OM` or class `Hist`). Also works for
+#' `MOM` objects, as a wrapper for `ProjectMOM`
 #' @param MPs A vector of methods (character string) of class MP
 #' @param Hist Should model stop after historical simulations? Returns an object of
 #' class 'Hist' containing all historical data
 #' @param silent Should messages be printed out to the console?
+#' @param nsim Optional. numeric value to override `OM@nsim`.
 #' @param parallel Logical or a named list. Should MPs be run using parallel processing? 
 #' For \code{runMSE}, can also be \code{"sac"} to run the entire MSE in parallel
 #' using the split-apply-combine technique. See Details for more information. 

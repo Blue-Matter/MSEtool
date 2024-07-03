@@ -1,9 +1,7 @@
 
+# convert weight to kg 
 convert_units <- function(rdat) {
-  if(rdat$info$units.weight =='lb') {
-    rdat$a.series$weight <- rdat$parms$wgt.a*
-      rdat$a.series$length^rdat$parms$wgt.b
-  }
+  rdat$a.series$weight <- rdat$a.series$wgt.mt * 1000
   rdat
 }
 
