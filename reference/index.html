@@ -44,9 +44,46 @@
     </div>
 
     <div class="section level2">
-      <h2 id="all-functions">All functions<a class="anchor" aria-label="anchor" href="#all-functions"></a></h2>
+      <h2 id="operating-model">Operating model<a class="anchor" aria-label="anchor" href="#operating-model"></a></h2>
       
       
+
+      
+    </div><div class="section level2">
+      
+      <h3 id="general-functions">General functions<a class="anchor" aria-label="anchor" href="#general-functions"></a></h3>
+      
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="OM-class.html">OM-class</a></code> 
+        </dt>
+        <dd>Class <code>'OM'</code></dd>
+      </dl><dl><dt>
+          
+          <code><a href="OMdoc.html">OMdoc()</a></code> 
+        </dt>
+        <dd>Generate OM Documentation Report</dd>
+      </dl><dl><dt>
+          
+          <code><a href="OM-class-objects.html">testOM</a></code> 
+        </dt>
+        <dd>OM class objects</dd>
+      </dl><dl><dt>
+          
+          <code><a href="plot.Stock.html">plot(<i>&lt;pars&gt;</i>)</a></code> <code><a href="plot.Stock.html">plot(<i>&lt;Stock&gt;</i>)</a></code> <code><a href="plot.Stock.html">plot(<i>&lt;Fleet&gt;</i>)</a></code> <code><a href="plot.Stock.html">plot(<i>&lt;Obs&gt;</i>)</a></code> <code><a href="plot.Stock.html">plot(<i>&lt;Imp&gt;</i>)</a></code> <code><a href="plot.Stock.html">plot(<i>&lt;Hist&gt;</i>)</a></code> <code><a href="plot.Stock.html">plot(<i>&lt;OM&gt;</i>)</a></code> 
+        </dt>
+        <dd>Plot Operating Model Object</dd>
+      </dl></div><div class="section level2">
+      
+      <h3 id="import">Import<a class="anchor" aria-label="anchor" href="#import"></a></h3>
+      <div class="section-desc"><p>Convert stock assessment output, i.e., stock, fleet, and some observation error parameters, into an operating model</p></div>
 
       
     </div><div id="" class="section level2">
@@ -81,39 +118,450 @@
         <dd>Import a multi-stock, multi-fleet OM from a BAM object</dd>
       </dl><dl><dt>
           
-          <code><a href="CALsimp.html">CALsimp()</a></code> 
+          <code><a href="iSCAM2OM.html">iSCAM2OM()</a></code> <code><a href="iSCAM2OM.html">iSCAM2Data()</a></code> 
         </dt>
-        <dd>Simplifies the CAL slot of data object</dd>
+        <dd>Reads MPD or MCMC estimates and data from iSCAM file structure into an operating model</dd>
       </dl><dl><dt>
           
-          <code><a href="Can.html">Can()</a></code> <code><a href="Can.html">Cant()</a></code> <code><a href="Can.html">DLMdiag()</a></code> <code><a href="Can.html">Needed()</a></code> 
+          <code><a href="SS2MOM.html">SS2MOM()</a></code> <code><a href="SS2MOM.html">plot_SS2MOM()</a></code> <code><a href="SS2MOM.html">SS2OM()</a></code> <code><a href="SS2MOM.html">SSMOM2OM()</a></code> <code><a href="SS2MOM.html">plot_SS2OM()</a></code> <code><a href="SS2MOM.html">MOM_agg_fleets()</a></code> 
         </dt>
-        <dd>Identify management procedures (MPs) based on data availability</dd>
+        <dd>Import Stock Synthesis to MOM (2-sex multi-fleet) or OM (single-sex, single-fleet)</dd>
       </dl><dl><dt>
           
-          <code><a href="CheckDuplicate.html">CheckDuplicate()</a></code> 
+          <code><a href="WHAM2OM.html">WHAM2OM()</a></code> 
         </dt>
-        <dd>Check for duplicated MPs names</dd>
-      </dl><dl><dt>
-          
-          <code><a href="CheckMPs.html">CheckMPs()</a></code> 
-        </dt>
-        <dd>Check that specified MPs are valid and will run on MSEtool::SimulatedData</dd>
-      </dl><dl><dt>
-          
-          <code><a href="CheckOM.html">CheckOM()</a></code> 
-        </dt>
-        <dd>Check OM object is complete</dd>
-      </dl><dl><dt>
+        <dd>Takes a fitted WHAM (Wood's Hole Assessment Model) and samples historical population and fishing dynamics from the MLE fit and variance-covariance matrix.</dd>
+      </dl></div><div class="section level2">
+      
+      <h3 id="manual-configuration">Manual configuration<a class="anchor" aria-label="anchor" href="#manual-configuration"></a></h3>
+      <div class="section-desc"><p>Manually parameterize the operating model</p></div>
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
           
           <code><a href="Choose.html">ChooseEffort()</a></code> <code><a href="Choose.html">ChooseM()</a></code> <code><a href="Choose.html">ChooseSelect()</a></code> 
         </dt>
         <dd>Manually map parameters for the historical period of operating model</dd>
       </dl><dl><dt>
           
-          <code><a href="CombineMMP.html">CombineMMP()</a></code> 
+          <code><a href="LH2OM.html">LH2OM()</a></code> <code><a href="LH2OM.html">predictLH()</a></code> 
         </dt>
-        <dd>Create a blank MP recommendations object (class Rec) of the right dimensions</dd>
+        <dd>Predict missing life-history parameters</dd>
+      </dl><dl><dt>
+          
+          <code><a href="ML2D.html">ML2D()</a></code> 
+        </dt>
+        <dd>Depletion and F estimation from mean length of catches</dd>
+      </dl><dl><dt>
+          
+          <code><a href="SketchFun.html">SketchFun()</a></code> 
+        </dt>
+        <dd>Manually map the historical relative fishing effort trajectory.</dd>
+      </dl><dl><dt>
+          
+          <code><a href="Turing.html">Turing()</a></code> <code><a href="Turing.html">TuringMOM()</a></code> 
+        </dt>
+        <dd>Turing Test</dd>
+      </dl><dl><dt>
+          
+          <code><a href="XL2Fleet.html">XL2Fleet()</a></code> 
+        </dt>
+        <dd>Import Fleet Object from Excel file</dd>
+      </dl><dl><dt>
+          
+          <code><a href="XL2OM.html">XL2OM()</a></code> 
+        </dt>
+        <dd>Load OM from Excel file</dd>
+      </dl><dl><dt>
+          
+          <code><a href="XL2Stock.html">XL2Stock()</a></code> 
+        </dt>
+        <dd>Import Stock Object from Excel file</dd>
+      </dl><dl><dt>
+          
+          <code><a href="makemov.html">makemov()</a></code> 
+        </dt>
+        <dd>Calculates movement matrices from user inputs for fraction in each area (fracs) and probability of staying in areas (prob)</dd>
+      </dl></div><div class="section level2">
+      <h2 id="om-components">OM components<a class="anchor" aria-label="anchor" href="#om-components"></a></h2>
+      
+      
+
+      
+    </div><div class="section level2">
+      
+      <h3 id="stock">Stock<a class="anchor" aria-label="anchor" href="#stock"></a></h3>
+      <div class="section-desc"><p>Object specifying biology and stock dynamics</p></div>
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="Stock-class-objects.html">Albacore</a></code> <code><a href="Stock-class-objects.html">Blue_shark</a></code> <code><a href="Stock-class-objects.html">Bluefin_tuna</a></code> <code><a href="Stock-class-objects.html">Bluefin_tuna_WAtl</a></code> <code><a href="Stock-class-objects.html">Butterfish</a></code> <code><a href="Stock-class-objects.html">Herring</a></code> <code><a href="Stock-class-objects.html">Mackerel</a></code> <code><a href="Stock-class-objects.html">Porgy</a></code> <code><a href="Stock-class-objects.html">Rockfish</a></code> <code><a href="Stock-class-objects.html">Snapper</a></code> <code><a href="Stock-class-objects.html">Sole</a></code> <code><a href="Stock-class-objects.html">Toothfish</a></code> 
+        </dt>
+        <dd>Stock class objects</dd>
+      </dl><dl><dt>
+          
+          <code><a href="Stock-class.html">Stock-class</a></code> 
+        </dt>
+        <dd>Class <code>'Stock'</code></dd>
+      </dl></div><div class="section level2">
+      
+      <h3 id="fleet">Fleet<a class="anchor" aria-label="anchor" href="#fleet"></a></h3>
+      <div class="section-desc"><p>Object specifying fishing dynamics</p></div>
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="Fleet-class-objects.html">DecE_Dom</a></code> <code><a href="Fleet-class-objects.html">DecE_HDom</a></code> <code><a href="Fleet-class-objects.html">DecE_NDom</a></code> <code><a href="Fleet-class-objects.html">FlatE_Dom</a></code> <code><a href="Fleet-class-objects.html">FlatE_HDom</a></code> <code><a href="Fleet-class-objects.html">FlatE_NDom</a></code> <code><a href="Fleet-class-objects.html">Generic_DecE</a></code> <code><a href="Fleet-class-objects.html">Generic_FlatE</a></code> <code><a href="Fleet-class-objects.html">Generic_Fleet</a></code> <code><a href="Fleet-class-objects.html">Generic_IncE</a></code> <code><a href="Fleet-class-objects.html">IncE_HDom</a></code> <code><a href="Fleet-class-objects.html">IncE_NDom</a></code> <code><a href="Fleet-class-objects.html">Low_Effort_Non_Target</a></code> <code><a href="Fleet-class-objects.html">Target_All_Fish</a></code> <code><a href="Fleet-class-objects.html">Targeting_Small_Fish</a></code> 
+        </dt>
+        <dd>Fleet class objects</dd>
+      </dl><dl><dt>
+          
+          <code><a href="Fleet-class.html">Fleet-class</a></code> 
+        </dt>
+        <dd>Class <code>'Fleet'</code></dd>
+      </dl></div><div class="section level2">
+      
+      <h3 id="obs">Obs<a class="anchor" aria-label="anchor" href="#obs"></a></h3>
+      <div class="section-desc"><p>Object specifying observation model (how data are simulated)</p></div>
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="Obs-class-objects.html">Generic_Obs</a></code> <code><a href="Obs-class-objects.html">Imprecise_Biased</a></code> <code><a href="Obs-class-objects.html">Imprecise_Unbiased</a></code> <code><a href="Obs-class-objects.html">Perfect_Info</a></code> <code><a href="Obs-class-objects.html">Precise_Biased</a></code> <code><a href="Obs-class-objects.html">Precise_Unbiased</a></code> 
+        </dt>
+        <dd>Obs class objects</dd>
+      </dl><dl><dt>
+          
+          <code><a href="Obs-class.html">Obs-class</a></code> 
+        </dt>
+        <dd>Class <code>'Obs'</code></dd>
+      </dl></div><div class="section level2">
+      
+      <h3 id="imp">Imp<a class="anchor" aria-label="anchor" href="#imp"></a></h3>
+      <div class="section-desc"><p>Object specifying the extent of error in MP implementation</p></div>
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="Imp-class-objects.html">Overages</a></code> <code><a href="Imp-class-objects.html">Perfect_Imp</a></code> 
+        </dt>
+        <dd>Imp class objects</dd>
+      </dl><dl><dt>
+          
+          <code><a href="Imp-class.html">Imp-class</a></code> 
+        </dt>
+        <dd>Class <code>'Imp'</code></dd>
+      </dl></div><div class="section level2">
+      
+      <h3 id="hist">Hist<a class="anchor" aria-label="anchor" href="#hist"></a></h3>
+      <div class="section-desc"><p>Object generated from the historical reconstruction of the system dynamics (output of <code>runMSE(Hist = TRUE)</code>)</p></div>
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="Hist-class.html">Hist-class</a></code> 
+        </dt>
+        <dd>Class <code>'Hist'</code></dd>
+      </dl></div><div class="section level2">
+      <h2 id="data-objects">Data objects<a class="anchor" aria-label="anchor" href="#data-objects"></a></h2>
+      
+      <div class="section-desc"><p>Includes functions to import and export Data objects, data frames describing slots, manipulate Data objects, and generate examples.</p></div>
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="Data-class-objects.html">Atlantic_mackerel</a></code> <code><a href="Data-class-objects.html">China_rockfish</a></code> <code><a href="Data-class-objects.html">Cobia</a></code> <code><a href="Data-class-objects.html">Example_datafile</a></code> <code><a href="Data-class-objects.html">Gulf_blue_tilefish</a></code> <code><a href="Data-class-objects.html">ourReefFish</a></code> <code><a href="Data-class-objects.html">Red_snapper</a></code> <code><a href="Data-class-objects.html">Simulation_1</a></code> 
+        </dt>
+        <dd>Data class objects</dd>
+      </dl><dl><dt>
+          
+          <code><a href="Data-class.html">Data-class</a></code> 
+        </dt>
+        <dd>Class <code>'Data'</code></dd>
+      </dl><dl><dt>
+          
+          <code><a href="Data2csv.html">Data2csv()</a></code> 
+        </dt>
+        <dd>Converts a Data object into a .csv data file</dd>
+      </dl><dl><dt>
+          
+          <code><a href="DataInit.html">DataInit()</a></code> 
+        </dt>
+        <dd>Initialize Data Input Files</dd>
+      </dl><dl><dt>
+          
+          <code><a href="DataSlots.html">DataSlots</a></code> 
+        </dt>
+        <dd>DataSlots</dd>
+      </dl><dl><dt>
+          
+          <code><a href="Data_xl.html">Data_xl()</a></code> 
+        </dt>
+        <dd>Read in Data object from Excel spreadsheet</dd>
+      </dl><dl><dt>
+          
+          <code><a href="Lag_Data.html">Lag_Data()</a></code> 
+        </dt>
+        <dd>Lag the time-series slots in a <code>Data</code> object by a specified number of time-steps</dd>
+      </dl><dl><dt>
+          
+          <code><a href="Report.html">Report()</a></code> 
+        </dt>
+        <dd>Generate a Data Report</dd>
+      </dl><dl><dt>
+          
+          <code><a href="SS2Data.html">SS2Data()</a></code> 
+        </dt>
+        <dd>Reads data Stock Synthesis file structure into a Data object using package r4ss</dd>
+      </dl><dl><dt>
+          
+          <code><a href="SS2DataMOM.html">SS2DataMOM()</a></code> 
+        </dt>
+        <dd>Reads data Stock Synthesis file structure into a nested Data object analogous with multiMSE</dd>
+      </dl><dl><dt>
+          
+          <code><a href="XL2Data.html">XL2Data()</a></code> 
+        </dt>
+        <dd>Import a Data object from Excel file</dd>
+      </dl><dl><dt>
+          
+          <code><a href="SimulatedData.html">SimulatedData</a></code> 
+        </dt>
+        <dd>SimulatedData Data</dd>
+      </dl><dl><dt>
+          
+          <code><a href="boxplot.Data.html">boxplot(<i>&lt;Data&gt;</i>)</a></code> 
+        </dt>
+        <dd>Boxplot of TAC recommendations</dd>
+      </dl><dl><dt>
+          
+          <code><a href="plot.Data.html">plot(<i>&lt;Data&gt;</i>)</a></code> 
+        </dt>
+        <dd>Plot Data object</dd>
+      </dl><dl><dt>
+          
+          <code><a href="plotOFL.html">plotOFL()</a></code> 
+        </dt>
+        <dd>A generic OFL plot for NOAA use</dd>
+      </dl><dl><dt>
+          
+          <code><a href="summary-Data.html">summary(<i>&lt;Data&gt;</i>)</a></code> 
+        </dt>
+        <dd>Summary of Data object</dd>
+      </dl></div><div class="section level2">
+      <h2 id="management-procedures">Management procedures<a class="anchor" aria-label="anchor" href="#management-procedures"></a></h2>
+      
+      <div class="section-desc"><p>Calculate advice from management procedures</p></div>
+
+      
+    </div><div class="section level2">
+      
+      <h3 id="general">General<a class="anchor" aria-label="anchor" href="#general"></a></h3>
+      
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="Can.html">Can()</a></code> <code><a href="Can.html">Cant()</a></code> <code><a href="Can.html">DLMdiag()</a></code> <code><a href="Can.html">Needed()</a></code> 
+        </dt>
+        <dd>Identify management procedures (MPs) based on data availability</dd>
+      </dl><dl><dt>
+          
+          <code><a href="Fease.html">Fease()</a></code> 
+        </dt>
+        <dd>MP feasibility diagnostic</dd>
+      </dl><dl><dt>
+          
+          <code><a href="Input.html">Input()</a></code> 
+        </dt>
+        <dd>Function to run a set of input control methods</dd>
+      </dl><dl><dt>
+          
+          <code><a href="MPtype.html">MPtype()</a></code> 
+        </dt>
+        <dd>Management Procedure Type</dd>
+      </dl><dl><dt>
+          
+          <code><a href="RealFease.html">RealFease()</a></code> 
+        </dt>
+        <dd>MP feasibility diagnostic using real data</dd>
+      </dl><dl><dt>
+          
+          <code><a href="Required.html">Required()</a></code> 
+        </dt>
+        <dd>What management procedures need what data</dd>
+      </dl><dl><dt>
+          
+          <code><a href="Sense.html">Sense()</a></code> 
+        </dt>
+        <dd>Sensitivity analysis</dd>
+      </dl><dl><dt>
+          
+          <code><a href="TAC.html">TAC()</a></code> 
+        </dt>
+        <dd>Calculate TAC recommendations for more than one MP</dd>
+      </dl><dl><dt>
+          
+          <code><a href="TACfilter.html">TACfilter()</a></code> 
+        </dt>
+        <dd>TAC Filter</dd>
+      </dl><dl><dt>
+          
+          <code><a href="Uses.html">Uses()</a></code> 
+        </dt>
+        <dd>Find the Management Procedures that use a particular data slot</dd>
+      </dl><dl><dt>
+          
+          <code><a href="runInMP.html">runInMP()</a></code> 
+        </dt>
+        <dd>Runs input control MPs on a Data object.</dd>
+      </dl><dl><dt>
+          
+          <code><a href="runMP.html">runMP()</a></code> 
+        </dt>
+        <dd>Run a Management Procedure</dd>
+      </dl></div><div class="section level2">
+      
+      <h3 id="reference-managment-procedures">Reference managment procedures<a class="anchor" aria-label="anchor" href="#reference-managment-procedures"></a></h3>
+      <div class="section-desc"><p>Management procedures reflecting idealized management, e.g., perfect knowledge of stock productivity, no fishing scenario, etc.</p></div>
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="FMSYref.html">FMSYref()</a></code> <code><a href="FMSYref.html">FMSYref50()</a></code> <code><a href="FMSYref.html">FMSYref75()</a></code> <code><a href="FMSYref.html">NFref()</a></code> <code><a href="FMSYref.html">curEref()</a></code> 
+        </dt>
+        <dd>Reference management procedures</dd>
+      </dl></div><div class="section level2">
+      
+      <h3 id="rec-object">Rec object<a class="anchor" aria-label="anchor" href="#rec-object"></a></h3>
+      <div class="section-desc"><p>Output of management procedures to implement in the MSE simulation</p></div>
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="Rec-class.html">Rec-class</a></code> 
+        </dt>
+        <dd>Class <code>'Rec'</code></dd>
+      </dl></div><div class="section level2">
+      <h2 id="run-mse-simulation">Run MSE simulation<a class="anchor" aria-label="anchor" href="#run-mse-simulation"></a></h2>
+      
+      
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="runCOSEWIC.html">runCOSEWIC()</a></code> <code><a href="runCOSEWIC.html">COSEWIC_Pplot()</a></code> <code><a href="runCOSEWIC.html">COSEWIC_Dplot()</a></code> <code><a href="runCOSEWIC.html">COSEWIC_Blow()</a></code> <code><a href="runCOSEWIC.html">COSEWIC_Hplot()</a></code> <code><a href="runCOSEWIC.html">COSEWIC_report()</a></code> <code><a href="runCOSEWIC.html">COSEWIC_tab()</a></code> <code><a href="runCOSEWIC.html">COSEWIC_tab_formatted()</a></code> 
+        </dt>
+        <dd>COSEWIC MSE run using the correct MPs and projected time horizon</dd>
+      </dl><dl><dt>
+          
+          <code><a href="runMSE.html">Simulate()</a></code> <code><a href="runMSE.html">Project()</a></code> <code><a href="runMSE.html">runMSE()</a></code> 
+        </dt>
+        <dd>Run a Management Strategy Evaluation</dd>
+      </dl><dl><dt>
+          
+          <code><a href="setup.html">setup()</a></code> 
+        </dt>
+        <dd>Setup parallel processing</dd>
+      </dl></div><div class="section level2">
+      <h2 id="evaluate-mse-results">Evaluate MSE results<a class="anchor" aria-label="anchor" href="#evaluate-mse-results"></a></h2>
+      
+      
+
+      
+    </div><div class="section level2">
+      
+      <h3 id="performance-metrics">Performance metrics<a class="anchor" aria-label="anchor" href="#performance-metrics"></a></h3>
+      
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="PMobj-class.html">PMobj-class</a></code> 
+        </dt>
+        <dd>An object for storing data for analysis using data-limited methods</dd>
+      </dl><dl><dt>
+          
+          <code><a href="PerformanceMetric.html">P10()</a></code> <code><a href="PerformanceMetric.html">P50()</a></code> <code><a href="PerformanceMetric.html">P100()</a></code> <code><a href="PerformanceMetric.html">PNOF()</a></code> <code><a href="PerformanceMetric.html">LTY()</a></code> <code><a href="PerformanceMetric.html">STY()</a></code> <code><a href="PerformanceMetric.html">Yield()</a></code> <code><a href="PerformanceMetric.html">PGK()</a></code> <code><a href="PerformanceMetric.html">AAVY()</a></code> <code><a href="PerformanceMetric.html">AAVE()</a></code> 
+        </dt>
+        <dd>Performance Metrics Methods</dd>
+      </dl></div><div class="section level2">
+      
+      <h3 id="general-and-diagnostic-functions">General and diagnostic functions<a class="anchor" aria-label="anchor" href="#general-and-diagnostic-functions"></a></h3>
+      
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="MSE-class.html">MSE-class</a></code> 
+        </dt>
+        <dd>Class <code>'MSE'</code></dd>
       </dl><dl><dt>
           
           <code><a href="Converge.html">Converge()</a></code> 
@@ -121,15 +569,102 @@
         <dd>Check Convergence</dd>
       </dl><dl><dt>
           
-          <code><a href="Cos_thresh_tab.html">Cos_thresh_tab()</a></code> 
+          <code><a href="Dom.html">Dom()</a></code> 
         </dt>
-        <dd>Current default thresholds for COSEWIC satisficing</dd>
+        <dd>Determine dominate MPs</dd>
       </dl><dl><dt>
+          
+          <code><a href="VOI.html">VOI()</a></code> 
+        </dt>
+        <dd>Calculate Value Of Information</dd>
+      </dl><dl><dt>
+          
+          <code><a href="VOI2.html">VOI2()</a></code> 
+        </dt>
+        <dd>Calculate Value Of Information 2</dd>
+      </dl><dl><dt>
+          
+          <code><a href="summary-MSE.html">summary(<i>&lt;MSE&gt;</i>)</a></code> 
+        </dt>
+        <dd>Summary of MSE object</dd>
+      </dl></div><div class="section level2">
+      
+      <h3 id="plot-mse-output-general-">Plot MSE output (general)<a class="anchor" aria-label="anchor" href="#plot-mse-output-general-"></a></h3>
+      
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
           
           <code><a href="Cplot.html">Cplot()</a></code> 
         </dt>
         <dd>Plot the median biomass and yield relative to last historical year</dd>
       </dl><dl><dt>
+          
+          <code><a href="Kplot.html">Kplot()</a></code> 
+        </dt>
+        <dd>KOBE plot: a projection by projection plot of F/FMSY and B/BMSY</dd>
+      </dl><dl><dt>
+          
+          <code><a href="PMLimit.html">PMLimit()</a></code> <code><a href="PMLimit.html">PMObj()</a></code> 
+        </dt>
+        <dd>Create a table of Performance Limits and Performance Objectives</dd>
+      </dl><dl><dt>
+          
+          <code><a href="Pplot.html">Pplot()</a></code> 
+        </dt>
+        <dd>A projection by projection plot of F/FMSY and B/BMSY</dd>
+      </dl><dl><dt>
+          
+          <code><a href="Pplot2.html">Pplot2()</a></code> 
+        </dt>
+        <dd>A projection by projection plot of F/FMSY, B/BMSY, B/B0, and yield</dd>
+      </dl><dl><dt>
+          
+          <code><a href="PWhisker.html">PWhisker()</a></code> 
+        </dt>
+        <dd>Performance Whisker Plot</dd>
+      </dl><dl><dt>
+          
+          <code><a href="SSBrefplot.html">SSBrefplot()</a></code> 
+        </dt>
+        <dd>Plot Spawning stock biomass and reference points for both historical and projected period</dd>
+      </dl><dl><dt>
+          
+          <code><a href="TradePlot.html">TradePlot()</a></code> <code><a href="TradePlot.html">Tplot()</a></code> <code><a href="TradePlot.html">Tplot2()</a></code> <code><a href="TradePlot.html">Tplot3()</a></code> <code><a href="TradePlot.html">NOAA_plot2()</a></code> 
+        </dt>
+        <dd>Generic Trade-Plot Function</dd>
+      </dl><dl><dt>
+          
+          <code><a href="VOIplot.html">VOIplot()</a></code> 
+        </dt>
+        <dd>Yet another Value of Information Plot</dd>
+      </dl><dl><dt>
+          
+          <code><a href="plot.MSE.html">plot(<i>&lt;MSE&gt;</i>)</a></code> 
+        </dt>
+        <dd>Plot MSE object</dd>
+      </dl><dl><dt>
+          
+          <code><a href="wormplot.html">wormplot()</a></code> 
+        </dt>
+        <dd>Biomass wormplot</dd>
+      </dl></div><div class="section level2">
+      
+      <h3 id="plot-mse-output-specific-to-management-areas-">Plot MSE output (specific to management areas)<a class="anchor" aria-label="anchor" href="#plot-mse-output-specific-to-management-areas-"></a></h3>
+      
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
           
           <code><a href="DFO_bar.html">DFO_bar()</a></code> 
         </dt>
@@ -151,14 +686,14 @@
         <dd>Department of Fisheries and Oceans default plot 2</dd>
       </dl><dl><dt>
           
-          <code><a href="DFO_proj.html">DFO_proj()</a></code> 
-        </dt>
-        <dd>Department of Fisheries and Oceans projection plot</dd>
-      </dl><dl><dt>
-          
           <code><a href="DFO_quant.html">DFO_quant()</a></code> 
         </dt>
         <dd>Department of Fisheries and Oceans biomass quantile plot</dd>
+      </dl><dl><dt>
+          
+          <code><a href="DFO_proj.html">DFO_proj()</a></code> 
+        </dt>
+        <dd>Department of Fisheries and Oceans projection plot</dd>
       </dl><dl><dt>
           
           <code><a href="DFO_report.html">DFO_report()</a></code> 
@@ -181,145 +716,31 @@
         <dd>A formatted version of the standard DFO performance plot, color coded by thresholds</dd>
       </dl><dl><dt>
           
-          <code><a href="DLMDataDir.html">DLMDataDir()</a></code> 
+          <code><a href="Cos_thresh_tab.html">Cos_thresh_tab()</a></code> 
         </dt>
-        <dd>Directory of the installed package on your computer</dd>
+        <dd>Current default thresholds for COSEWIC satisficing</dd>
       </dl><dl><dt>
           
-          <code><a href="Data-class-objects.html">Atlantic_mackerel</a></code> <code><a href="Data-class-objects.html">China_rockfish</a></code> <code><a href="Data-class-objects.html">Cobia</a></code> <code><a href="Data-class-objects.html">Example_datafile</a></code> <code><a href="Data-class-objects.html">Gulf_blue_tilefish</a></code> <code><a href="Data-class-objects.html">ourReefFish</a></code> <code><a href="Data-class-objects.html">Red_snapper</a></code> <code><a href="Data-class-objects.html">Simulation_1</a></code> 
+          <code><a href="Thresh_tab.html">Thresh_tab()</a></code> 
         </dt>
-        <dd>Data class objects</dd>
+        <dd>Current default thresholds for DFO satisficing</dd>
       </dl><dl><dt>
           
-          <code><a href="Data-class.html">Data-class</a></code> 
+          <code><a href="NOAA_plot.html">NOAA_plot()</a></code> 
         </dt>
-        <dd>Class <code>'Data'</code></dd>
-      </dl><dl><dt>
-          
-          <code><a href="Data2csv.html">Data2csv()</a></code> 
-        </dt>
-        <dd>Converts a Data object into a .csv data file</dd>
-      </dl><dl><dt>
-          
-          <code><a href="DataDescription.html">DataDescription</a></code> 
-        </dt>
-        <dd>DataDescription</dd>
-      </dl><dl><dt>
-          
-          <code><a href="DataDir.html">DataDir()</a></code> 
-        </dt>
-        <dd>Directory of the data in the installed package on your computer</dd>
-      </dl><dl><dt>
-          
-          <code><a href="DataInit.html">DataInit()</a></code> 
-        </dt>
-        <dd>Initialize Data Input Files</dd>
-      </dl><dl><dt>
-          
-          <code><a href="DataSlots.html">DataSlots</a></code> 
-        </dt>
-        <dd>DataSlots</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Data_xl.html">Data_xl()</a></code> 
-        </dt>
-        <dd>Read in Data object from Excel spreadsheet</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Dom.html">Dom()</a></code> 
-        </dt>
-        <dd>Determine dominate MPs</dd>
-      </dl><dl><dt>
-          
-          <code><a href="FMSYref.html">FMSYref()</a></code> <code><a href="FMSYref.html">FMSYref50()</a></code> <code><a href="FMSYref.html">FMSYref75()</a></code> <code><a href="FMSYref.html">NFref()</a></code> <code><a href="FMSYref.html">curEref()</a></code> 
-        </dt>
-        <dd>Reference management procedures</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Fease.html">Fease()</a></code> 
-        </dt>
-        <dd>MP feasibility diagnostic</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Fleet-class-objects.html">DecE_Dom</a></code> <code><a href="Fleet-class-objects.html">DecE_HDom</a></code> <code><a href="Fleet-class-objects.html">DecE_NDom</a></code> <code><a href="Fleet-class-objects.html">FlatE_Dom</a></code> <code><a href="Fleet-class-objects.html">FlatE_HDom</a></code> <code><a href="Fleet-class-objects.html">FlatE_NDom</a></code> <code><a href="Fleet-class-objects.html">Generic_DecE</a></code> <code><a href="Fleet-class-objects.html">Generic_FlatE</a></code> <code><a href="Fleet-class-objects.html">Generic_Fleet</a></code> <code><a href="Fleet-class-objects.html">Generic_IncE</a></code> <code><a href="Fleet-class-objects.html">IncE_HDom</a></code> <code><a href="Fleet-class-objects.html">IncE_NDom</a></code> <code><a href="Fleet-class-objects.html">Low_Effort_Non_Target</a></code> <code><a href="Fleet-class-objects.html">Target_All_Fish</a></code> <code><a href="Fleet-class-objects.html">Targeting_Small_Fish</a></code> 
-        </dt>
-        <dd>Fleet class objects</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Fleet-class.html">Fleet-class</a></code> 
-        </dt>
-        <dd>Class <code>'Fleet'</code></dd>
-      </dl><dl><dt>
-          
-          <code><a href="FleetDescription.html">FleetDescription</a></code> 
-        </dt>
-        <dd>FleetDescription</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Herm-int.html">expandHerm()</a></code> <code><a href="Herm-int.html">checkHerm()</a></code> <code><a href="Herm-int.html">subsetHerm()</a></code> 
-        </dt>
-        <dd>Internal Herm functions</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Hist-class.html">Hist-class</a></code> 
-        </dt>
-        <dd>Class <code>'Hist'</code></dd>
-      </dl><dl><dt>
-          
-          <code><a href="HistDescription.html">HistDescription</a></code> 
-        </dt>
-        <dd>HistDescription</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Imp-class-objects.html">Overages</a></code> <code><a href="Imp-class-objects.html">Perfect_Imp</a></code> 
-        </dt>
-        <dd>Imp class objects</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Imp-class.html">Imp-class</a></code> 
-        </dt>
-        <dd>Class <code>'Imp'</code></dd>
-      </dl><dl><dt>
-          
-          <code><a href="ImpDescription.html">ImpDescription</a></code> 
-        </dt>
-        <dd>ImpDescription</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Input.html">Input()</a></code> 
-        </dt>
-        <dd>Function to run a set of input control methods</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Kplot.html">Kplot()</a></code> 
-        </dt>
-        <dd>KOBE plot: a projection by projection plot of F/FMSY and B/BMSY</dd>
-      </dl><dl><dt>
-          
-          <code><a href="LH2OM.html">LH2OM()</a></code> <code><a href="LH2OM.html">predictLH()</a></code> 
-        </dt>
-        <dd>Predict missing life-history parameters</dd>
-      </dl><dl><dt>
-          
-          <code><a href="LHdatabase.html">LHdatabase</a></code> 
-        </dt>
-        <dd>LHdatabase</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Lag_Data.html">Lag_Data()</a></code> 
-        </dt>
-        <dd>Lag the time-series slots in a <code>Data</code> object by a specified number of time-steps</dd>
-      </dl><dl><dt>
-          
-          <code><a href="ML2D.html">ML2D()</a></code> 
-        </dt>
-        <dd>Depletion and F estimation from mean length of catches</dd>
-      </dl><dl><dt>
-          
-          <code><a href="MMSE-class.html">MMSE-class</a></code> 
-        </dt>
-        <dd>Class <code>'MMSE'</code></dd>
-      </dl><dl><dt>
+        <dd>National Oceanographic and Atmospheric Administration default plot 1</dd>
+      </dl></div><div class="section level2">
+      <h2 id="multimse">multiMSE<a class="anchor" aria-label="anchor" href="#multimse"></a></h2>
+      
+      <div class="section-desc"><p>Multi-population (two-sex or multi-stock), multi-fleet operating models (class MOM) and corresponding MSE object (class MMSE)</p></div>
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
           
           <code><a href="MOM-class-objects.html">Albacore_TwoFleet</a></code> 
         </dt>
@@ -331,424 +752,9 @@
         <dd>Class <code>'MOM'</code></dd>
       </dl><dl><dt>
           
-          <code><a href="MPCalcsNAs.html">MPCalcsNAs()</a></code> 
+          <code><a href="MMSE-class.html">MMSE-class</a></code> 
         </dt>
-        <dd>Fill any NAs arising from MPCalcs (hermaphroditism mode)</dd>
-      </dl><dl><dt>
-          
-          <code><a href="MPtype.html">MPtype()</a></code> 
-        </dt>
-        <dd>Management Procedure Type</dd>
-      </dl><dl><dt>
-          
-          <code><a href="MSE-class.html">MSE-class</a></code> 
-        </dt>
-        <dd>Class <code>'MSE'</code></dd>
-      </dl><dl><dt>
-          
-          <code><a href="MSEDescription.html">MSEDescription</a></code> 
-        </dt>
-        <dd>MSEDescription</dd>
-      </dl><dl><dt>
-          
-          <code><a href="MSEextra.html">MSEextra()</a></code> 
-        </dt>
-        <dd>Load more data from MSEextra package</dd>
-      </dl><dl><dt>
-          
-          <code><a href="MSYCalcs.html">MSYCalcs()</a></code> 
-        </dt>
-        <dd>Internal function to calculate MSY Reference Points</dd>
-      </dl><dl><dt>
-          
-          <code><a href="NIL.html">NIL()</a></code> 
-        </dt>
-        <dd>Item in list: get the list values from a list of lists</dd>
-      </dl><dl><dt>
-          
-          <code><a href="NOAA_plot.html">NOAA_plot()</a></code> 
-        </dt>
-        <dd>National Oceanographic and Atmospheric Administration default plot 1</dd>
-      </dl><dl><dt>
-          
-          <code><a href="OM-class-objects.html">testOM</a></code> 
-        </dt>
-        <dd>OM class objects</dd>
-      </dl><dl><dt>
-          
-          <code><a href="OM-class.html">OM-class</a></code> 
-        </dt>
-        <dd>Class <code>'OM'</code></dd>
-      </dl><dl><dt>
-          
-          <code><a href="OMDescription.html">OMDescription</a></code> 
-        </dt>
-        <dd>OMDescription</dd>
-      </dl><dl><dt>
-          
-          <code><a href="OMdoc.html">OMdoc()</a></code> 
-        </dt>
-        <dd>Generate OM Documentation Report</dd>
-      </dl><dl><dt>
-          
-          <code><a href="OMexample.html">OMexample()</a></code> 
-        </dt>
-        <dd>Copy example OM XL and OM Documentation</dd>
-      </dl><dl><dt>
-          
-          <code><a href="OMinit.html">OMinit()</a></code> 
-        </dt>
-        <dd>Initialize Operating Model</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Obs-class-objects.html">Generic_Obs</a></code> <code><a href="Obs-class-objects.html">Imprecise_Biased</a></code> <code><a href="Obs-class-objects.html">Imprecise_Unbiased</a></code> <code><a href="Obs-class-objects.html">Perfect_Info</a></code> <code><a href="Obs-class-objects.html">Precise_Biased</a></code> <code><a href="Obs-class-objects.html">Precise_Unbiased</a></code> 
-        </dt>
-        <dd>Obs class objects</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Obs-class.html">Obs-class</a></code> 
-        </dt>
-        <dd>Class <code>'Obs'</code></dd>
-      </dl><dl><dt>
-          
-          <code><a href="ObsDescription.html">ObsDescription</a></code> 
-        </dt>
-        <dd>ObsDescription</dd>
-      </dl><dl><dt>
-          
-          <code><a href="PMLimit.html">PMLimit()</a></code> <code><a href="PMLimit.html">PMObj()</a></code> 
-        </dt>
-        <dd>Create a table of Performance Limits and Performance Objectives</dd>
-      </dl><dl><dt>
-          
-          <code><a href="PMobj-class.html">PMobj-class</a></code> 
-        </dt>
-        <dd>An object for storing data for analysis using data-limited methods</dd>
-      </dl><dl><dt>
-          
-          <code><a href="PWhisker.html">PWhisker()</a></code> 
-        </dt>
-        <dd>Performance Whisker Plot</dd>
-      </dl><dl><dt>
-          
-          <code><a href="PerformanceMetric.html">P10()</a></code> <code><a href="PerformanceMetric.html">P50()</a></code> <code><a href="PerformanceMetric.html">P100()</a></code> <code><a href="PerformanceMetric.html">PNOF()</a></code> <code><a href="PerformanceMetric.html">LTY()</a></code> <code><a href="PerformanceMetric.html">STY()</a></code> <code><a href="PerformanceMetric.html">Yield()</a></code> <code><a href="PerformanceMetric.html">PGK()</a></code> <code><a href="PerformanceMetric.html">AAVY()</a></code> <code><a href="PerformanceMetric.html">AAVE()</a></code> 
-        </dt>
-        <dd>Performance Metrics Methods</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Pplot.html">Pplot()</a></code> 
-        </dt>
-        <dd>A projection by projection plot of F/FMSY and B/BMSY</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Pplot2.html">Pplot2()</a></code> 
-        </dt>
-        <dd>A projection by projection plot of F/FMSY, B/BMSY, B/B0, and yield</dd>
-      </dl><dl><dt>
-          
-          <code><a href="RealFease.html">RealFease()</a></code> 
-        </dt>
-        <dd>MP feasibility diagnostic using real data</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Rec-class.html">Rec-class</a></code> 
-        </dt>
-        <dd>Class <code>'Rec'</code></dd>
-      </dl><dl><dt>
-          
-          <code><a href="Replace.html">Replace()</a></code> 
-        </dt>
-        <dd>Replace an existing Stock, Fleet, Obs, or Imp object</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Report.html">Report()</a></code> 
-        </dt>
-        <dd>Generate a Data Report</dd>
-      </dl><dl><dt>
-          
-          <code><a href="ReqData.html">ReqData</a></code> 
-        </dt>
-        <dd>ReqData</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Required.html">Required()</a></code> 
-        </dt>
-        <dd>What management procedures need what data</dd>
-      </dl><dl><dt>
-          
-          <code><a href="SIL.html">SIL()</a></code> 
-        </dt>
-        <dd>Slot in list: get the slot values from a list of objects</dd>
-      </dl><dl><dt>
-          
-          <code><a href="SS2Data.html">SS2Data()</a></code> 
-        </dt>
-        <dd>Reads data Stock Synthesis file structure into a Data object using package r4ss</dd>
-      </dl><dl><dt>
-          
-          <code><a href="SS2DataMOM.html">SS2DataMOM()</a></code> 
-        </dt>
-        <dd>Reads data Stock Synthesis file structure into a nested Data object analogous with multiMSE</dd>
-      </dl><dl><dt>
-          
-          <code><a href="SS2MOM.html">SS2MOM()</a></code> <code><a href="SS2MOM.html">plot_SS2MOM()</a></code> <code><a href="SS2MOM.html">SS2OM()</a></code> <code><a href="SS2MOM.html">SSMOM2OM()</a></code> <code><a href="SS2MOM.html">plot_SS2OM()</a></code> <code><a href="SS2MOM.html">MOM_agg_fleets()</a></code> 
-        </dt>
-        <dd>Import Stock Synthesis to MOM (2-sex multi-fleet) or OM (single-sex, single-fleet)</dd>
-      </dl><dl><dt>
-          
-          <code><a href="SSBrefplot.html">SSBrefplot()</a></code> 
-        </dt>
-        <dd>Plot Spawning stock biomass and reference points for both historical and projected period</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Sense.html">Sense()</a></code> 
-        </dt>
-        <dd>Sensitivity analysis</dd>
-      </dl><dl><dt>
-          
-          <code><a href="SimulatedData.html">SimulatedData</a></code> 
-        </dt>
-        <dd>SimulatedData Data</dd>
-      </dl><dl><dt>
-          
-          <code><a href="SketchFun.html">SketchFun()</a></code> 
-        </dt>
-        <dd>Manually map the historical relative fishing effort trajectory.</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Stock-class-objects.html">Albacore</a></code> <code><a href="Stock-class-objects.html">Blue_shark</a></code> <code><a href="Stock-class-objects.html">Bluefin_tuna</a></code> <code><a href="Stock-class-objects.html">Bluefin_tuna_WAtl</a></code> <code><a href="Stock-class-objects.html">Butterfish</a></code> <code><a href="Stock-class-objects.html">Herring</a></code> <code><a href="Stock-class-objects.html">Mackerel</a></code> <code><a href="Stock-class-objects.html">Porgy</a></code> <code><a href="Stock-class-objects.html">Rockfish</a></code> <code><a href="Stock-class-objects.html">Snapper</a></code> <code><a href="Stock-class-objects.html">Sole</a></code> <code><a href="Stock-class-objects.html">Toothfish</a></code> 
-        </dt>
-        <dd>Stock class objects</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Stock-class.html">Stock-class</a></code> 
-        </dt>
-        <dd>Class <code>'Stock'</code></dd>
-      </dl><dl><dt>
-          
-          <code><a href="StockDescription.html">StockDescription</a></code> 
-        </dt>
-        <dd>StockDescription</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Sub.html">Sub()</a></code> 
-        </dt>
-        <dd>Subset MSE object by management procedure (MP) or simulation.</dd>
-      </dl><dl><dt>
-          
-          <code><a href="SubCpars.html">SubCpars()</a></code> 
-        </dt>
-        <dd>Subset the cpars slot in an operating model</dd>
-      </dl><dl><dt>
-          
-          <code><a href="SubOM.html">SubOM()</a></code> 
-        </dt>
-        <dd>Subset a Stock, Fleet, Obs, or Imp object from an OM object</dd>
-      </dl><dl><dt>
-          
-          <code><a href="TAC.html">TAC()</a></code> 
-        </dt>
-        <dd>Calculate TAC recommendations for more than one MP</dd>
-      </dl><dl><dt>
-          
-          <code><a href="TACfilter.html">TACfilter()</a></code> 
-        </dt>
-        <dd>TAC Filter</dd>
-      </dl><dl><dt>
-          
-          <code><a href="TEG.html">TEG()</a></code> 
-        </dt>
-        <dd>Tom's expand grid</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Taxa_Table.html">Taxa_Table</a></code> 
-        </dt>
-        <dd>Taxa_Table</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Thresh_tab.html">Thresh_tab()</a></code> 
-        </dt>
-        <dd>Current default thresholds for DFO satisficing</dd>
-      </dl><dl><dt>
-          
-          <code><a href="TradePlot.html">TradePlot()</a></code> <code><a href="TradePlot.html">Tplot()</a></code> <code><a href="TradePlot.html">Tplot2()</a></code> <code><a href="TradePlot.html">Tplot3()</a></code> <code><a href="TradePlot.html">NOAA_plot2()</a></code> 
-        </dt>
-        <dd>Generic Trade-Plot Function</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Turing.html">Turing()</a></code> <code><a href="Turing.html">TuringMOM()</a></code> 
-        </dt>
-        <dd>Turing Test</dd>
-      </dl><dl><dt>
-          
-          <code><a href="Uses.html">Uses()</a></code> 
-        </dt>
-        <dd>Find the Management Procedures that use a particular data slot</dd>
-      </dl><dl><dt>
-          
-          <code><a href="VOI.html">VOI()</a></code> 
-        </dt>
-        <dd>Calculate Value Of Information</dd>
-      </dl><dl><dt>
-          
-          <code><a href="VOI2.html">VOI2()</a></code> 
-        </dt>
-        <dd>Calculate Value Of Information 2</dd>
-      </dl><dl><dt>
-          
-          <code><a href="VOIplot.html">VOIplot()</a></code> 
-        </dt>
-        <dd>Yet another Value of Information Plot</dd>
-      </dl><dl><dt>
-          
-          <code><a href="WHAM2OM.html">WHAM2OM()</a></code> 
-        </dt>
-        <dd>Takes a fitted WHAM (Wood's Hole Assessment Model) and samples historical population and fishing dynamics from the MLE fit and variance-covariance matrix.</dd>
-      </dl><dl><dt>
-          
-          <code><a href="XL2Data.html">XL2Data()</a></code> 
-        </dt>
-        <dd>Import a Data object from Excel file</dd>
-      </dl><dl><dt>
-          
-          <code><a href="XL2Fleet.html">XL2Fleet()</a></code> 
-        </dt>
-        <dd>Import Fleet Object from Excel file</dd>
-      </dl><dl><dt>
-          
-          <code><a href="XL2OM.html">XL2OM()</a></code> 
-        </dt>
-        <dd>Load OM from Excel file</dd>
-      </dl><dl><dt>
-          
-          <code><a href="XL2Stock.html">XL2Stock()</a></code> 
-        </dt>
-        <dd>Import Stock Object from Excel file</dd>
-      </dl><dl><dt>
-          
-          <code><a href="applyMMP.html">applyMMP()</a></code> 
-        </dt>
-        <dd>Apply multi Management Procedures (class MMP) to a hierarchical list of Data class objects</dd>
-      </dl><dl><dt>
-          
-          <code><a href="applyMP.html">applyMP()</a></code> 
-        </dt>
-        <dd>Apply Management Procedures to an object of class Data</dd>
-      </dl><dl><dt>
-          
-          <code><a href="avail.html">avail()</a></code> 
-        </dt>
-        <dd>What objects of this class are available</dd>
-      </dl><dl><dt>
-          
-          <code><a href="boxplot.Data.html">boxplot(<i>&lt;Data&gt;</i>)</a></code> 
-        </dt>
-        <dd>Boxplot of TAC recommendations</dd>
-      </dl><dl><dt>
-          
-          <code><a href="calcRefYield.html">calcRefYield()</a></code> 
-        </dt>
-        <dd>Calculate Reference Yield</dd>
-      </dl><dl><dt>
-          
-          <code><a href="checkMSE.html">checkMSE()</a></code> <code><a href="checkMSE.html">addMPs()</a></code> <code><a href="checkMSE.html">joinMSE()</a></code> <code><a href="checkMSE.html">joinHist()</a></code> <code><a href="checkMSE.html">updateMSE()</a></code> 
-        </dt>
-        <dd>Utility functions for MSE objects</dd>
-      </dl><dl><dt>
-          
-          <code><a href="cparscheck.html">cparscheck()</a></code> 
-        </dt>
-        <dd>Internal function for checking that the <code>OM@cpars</code> is formatted correctly</dd>
-      </dl><dl><dt>
-          
-          <code><a href="dnormal.html">dnormal()</a></code> 
-        </dt>
-        <dd>Double-normal selectivity curve</dd>
-      </dl><dl><dt>
-          
-          <code><a href="getDataList.html">getDataList()</a></code> 
-        </dt>
-        <dd>Get part of an MP specific data-list</dd>
-      </dl><dl><dt>
-          
-          <code><a href="getMP.html">getMP()</a></code> 
-        </dt>
-        <dd>Search R session for MP</dd>
-      </dl><dl><dt>
-          
-          <code><a href="getclass.html">getclass()</a></code> 
-        </dt>
-        <dd>get object class</dd>
-      </dl><dl><dt>
-          
-          <code><a href="getfirstlev.html">getfirstlev()</a></code> 
-        </dt>
-        <dd>Extract the first dimension of a hierarchical list of recommendation objects</dd>
-      </dl><dl><dt>
-          
-          <code><a href="getmov2.html">getmov2()</a></code> 
-        </dt>
-        <dd>Optimization function to find a movement model that matches user specified movement characteristics modified for Rcpp.</dd>
-      </dl><dl><dt>
-          
-          <code><a href="getnIVs.html">getnIVs()</a></code> 
-        </dt>
-        <dd>Count independent variables for a MICE relationship at position x in a Rel list</dd>
-      </dl><dl><dt>
-          
-          <code><a href="getsel.html">getsel()</a></code> 
-        </dt>
-        <dd>Calculate selectivity curve</dd>
-      </dl><dl><dt>
-          
-          <code><a href="hconv.html">hconv()</a></code> <code><a href="hconv.html">R0conv()</a></code> <code><a href="hconv.html">SRalphaconv()</a></code> <code><a href="hconv.html">SRbetaconv()</a></code> 
-        </dt>
-        <dd>Stock recruit parameterization</dd>
-      </dl><dl><dt>
-          
-          <code><a href="hist2.html">hist2()</a></code> 
-        </dt>
-        <dd>Wrapper for histogram function</dd>
-      </dl><dl><dt>
-          
-          <code><a href="iSCAM.html">load.iscam.files()</a></code> <code><a href="iSCAM.html">fetch.file.names()</a></code> <code><a href="iSCAM.html">read.report.file()</a></code> <code><a href="iSCAM.html">read.data.file()</a></code> <code><a href="iSCAM.html">read.control.file()</a></code> <code><a href="iSCAM.html">read.projection.file()</a></code> <code><a href="iSCAM.html">read.par.file()</a></code> <code><a href="iSCAM.html">read.mcmc()</a></code> 
-        </dt>
-        <dd>Reads iSCAM files into a hierarchical R list object</dd>
-      </dl><dl><dt>
-          
-          <code><a href="iSCAM2OM.html">iSCAM2OM()</a></code> <code><a href="iSCAM2OM.html">iSCAM2Data()</a></code> 
-        </dt>
-        <dd>Reads MPD or MCMC estimates and data from iSCAM file structure into an operating model</dd>
-      </dl><dl><dt>
-          
-          <code><a href="iSCAMcomps.html">iSCAMcomps()</a></code> 
-        </dt>
-        <dd>Combines all iSCAM age composition data across fleets</dd>
-      </dl><dl><dt>
-          
-          <code><a href="iSCAMinds.html">iSCAMinds()</a></code> 
-        </dt>
-        <dd>Combines indices into a single index using linear modelling (** Deprecated **)</dd>
-      </dl><dl><dt>
-          
-          <code><a href="initialize-methods.html">initialize-methods</a></code> <code><a href="initialize-methods.html">initialize,Data-method</a></code> <code><a href="initialize-methods.html">initialize,Fleet-method</a></code> <code><a href="initialize-methods.html">initialize,MSE-method</a></code> <code><a href="initialize-methods.html">initialize,Obs-method</a></code> <code><a href="initialize-methods.html">initialize,OM-method</a></code> <code><a href="initialize-methods.html">initialize,Stock-method</a></code> <code><a href="initialize-methods.html">initialize</a></code> <code><a href="initialize-methods.html">initialize,Fease-method</a></code> <code><a href="initialize-methods.html">initialize,DLM_general-method</a></code> 
-        </dt>
-        <dd>~~ Methods for Function <code>initialize</code> ~~</dd>
-      </dl><dl><dt>
-          
-          <code><a href="joinData.html">joinData()</a></code> 
-        </dt>
-        <dd>Join Data objects present in a list</dd>
-      </dl><dl><dt>
-          
-          <code><a href="join_plots.html">join_plots()</a></code> 
-        </dt>
-        <dd>Plot several plots with a shared legend</dd>
-      </dl><dl><dt>
-          
-          <code><a href="ldim.html">ldim()</a></code> 
-        </dt>
-        <dd>Dimensions of a hierarchical list object</dd>
+        <dd>Class <code>'MMSE'</code></dd>
       </dl><dl><dt>
           
           <code><a href="makeMOM.html">makeMOM()</a></code> 
@@ -761,41 +767,6 @@
         <dd>MICE relationships for multi-OM</dd>
       </dl><dl><dt>
           
-          <code><a href="makeTransparent.html">makeTransparent()</a></code> 
-        </dt>
-        <dd>Make colors transparent</dd>
-      </dl><dl><dt>
-          
-          <code><a href="makemov.html">makemov()</a></code> 
-        </dt>
-        <dd>Calculates movement matrices from user inputs for fraction in each area (fracs) and probability of staying in areas (prob)</dd>
-      </dl><dl><dt>
-          
-          <code><a href="makemov2.html">makemov2()</a></code> 
-        </dt>
-        <dd>Calculates movement matrices from user inputs for fraction in each area (fracs) the relative fraction moving to other areas, plus a mean probability of staying in any given area.</dd>
-      </dl><dl><dt>
-          
-          <code><a href="movestockCPP.html">movestockCPP()</a></code> 
-        </dt>
-        <dd>Apply the movement model to the stock for one time-step</dd>
-      </dl><dl><dt>
-          
-          <code><a href="movfit_Rcpp.html">movfit_Rcpp()</a></code> 
-        </dt>
-        <dd>Rcpp version of the Optimization function that returns the squared difference between user specified and calculated movement parameters.</dd>
-      </dl><dl><dt>
-          
-          <code><a href="multiData.html">multiData()</a></code> 
-        </dt>
-        <dd>Combine data among fleets</dd>
-      </dl><dl><dt>
-          
-          <code><a href="multiDataS.html">multiDataS()</a></code> 
-        </dt>
-        <dd>Combine data among stocks</dd>
-      </dl><dl><dt>
-          
           <code><a href="multiMSE.html">SimulateMOM()</a></code> <code><a href="multiMSE.html">ProjectMOM()</a></code> <code><a href="multiMSE.html">multiMSE()</a></code> 
         </dt>
         <dd>Run a multi-fleet multi-stock Management Strategy Evaluation</dd>
@@ -804,16 +775,6 @@
           <code><a href="multidebug.html">multidebug()</a></code> 
         </dt>
         <dd>A basic comparison of runMSE output (MSE) and multiMSE (MMSE)</dd>
-      </dl><dl><dt>
-          
-          <code><a href="optCPU.html">optCPU()</a></code> 
-        </dt>
-        <dd>Determine optimal number of cpus</dd>
-      </dl><dl><dt>
-          
-          <code><a href="plot.Data.html">plot(<i>&lt;Data&gt;</i>)</a></code> 
-        </dt>
-        <dd>Plot Data object</dd>
       </dl><dl><dt>
           
           <code><a href="plot.MMSE.html">plot(<i>&lt;MMSE&gt;</i>)</a></code> 
@@ -826,26 +787,6 @@
         <dd>Standard plot for an object of class MOM</dd>
       </dl><dl><dt>
           
-          <code><a href="plot.MSE.html">plot(<i>&lt;MSE&gt;</i>)</a></code> 
-        </dt>
-        <dd>Plot MSE object</dd>
-      </dl><dl><dt>
-          
-          <code><a href="plot.Stock.html">plot(<i>&lt;pars&gt;</i>)</a></code> <code><a href="plot.Stock.html">plot(<i>&lt;Stock&gt;</i>)</a></code> <code><a href="plot.Stock.html">plot(<i>&lt;Fleet&gt;</i>)</a></code> <code><a href="plot.Stock.html">plot(<i>&lt;Obs&gt;</i>)</a></code> <code><a href="plot.Stock.html">plot(<i>&lt;Imp&gt;</i>)</a></code> <code><a href="plot.Stock.html">plot(<i>&lt;Hist&gt;</i>)</a></code> <code><a href="plot.Stock.html">plot(<i>&lt;OM&gt;</i>)</a></code> 
-        </dt>
-        <dd>Plot Operating Model Object</dd>
-      </dl><dl><dt>
-          
-          <code><a href="plotFun.html">plotFun()</a></code> 
-        </dt>
-        <dd>Print out plotting functions</dd>
-      </dl><dl><dt>
-          
-          <code><a href="plotOFL.html">plotOFL()</a></code> 
-        </dt>
-        <dd>A generic OFL plot for NOAA use</dd>
-      </dl><dl><dt>
-          
           <code><a href="plotRel.html">plotRel()</a></code> 
         </dt>
         <dd>Plot a relationship between stocks</dd>
@@ -856,54 +797,215 @@
         <dd>A basic SSB plot for debugging runMSE output</dd>
       </dl><dl><dt>
           
-          <code><a href="plotquant.html">plotquant()</a></code> 
+          <code><a href="summary-MMSE.html">summary(<i>&lt;MMSE&gt;</i>)</a></code> 
         </dt>
-        <dd>A fairly tidy time-series quantile plot</dd>
+        <dd>Summary of MMSE object</dd>
+      </dl></div><div class="section level2">
+      <h2 id="miscellaneous">Miscellaneous<a class="anchor" aria-label="anchor" href="#miscellaneous"></a></h2>
+      
+      <div class="section-desc"><p>Convenient user functions to process various objects</p></div>
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="avail.html">avail()</a></code> 
+        </dt>
+        <dd>What objects of this class are available</dd>
+      </dl><dl><dt>
+          
+          <code><a href="optCPU.html">optCPU()</a></code> 
+        </dt>
+        <dd>Determine optimal number of cpus</dd>
+      </dl><dl><dt>
+          
+          <code><a href="tinyErr.html">tinyErr()</a></code> 
+        </dt>
+        <dd>Remove observation, implementation, and process error</dd>
+      </dl><dl><dt>
+          
+          <code><a href="writeCSV.html">writeCSV()</a></code> 
+        </dt>
+        <dd>Internal function to write CSVs for objects</dd>
+      </dl></div><div class="section level2">
+      
+      <h3 id="om">OM<a class="anchor" aria-label="anchor" href="#om"></a></h3>
+      
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="CheckOM.html">CheckOM()</a></code> 
+        </dt>
+        <dd>Check OM object is complete</dd>
+      </dl><dl><dt>
+          
+          <code><a href="Replace.html">Replace()</a></code> 
+        </dt>
+        <dd>Replace an existing Stock, Fleet, Obs, or Imp object</dd>
+      </dl><dl><dt>
+          
+          <code><a href="MSEextra.html">MSEextra()</a></code> 
+        </dt>
+        <dd>Load more data from MSEextra package</dd>
+      </dl><dl><dt>
+          
+          <code><a href="SubCpars.html">SubCpars()</a></code> 
+        </dt>
+        <dd>Subset the cpars slot in an operating model</dd>
+      </dl><dl><dt>
+          
+          <code><a href="SubOM.html">SubOM()</a></code> 
+        </dt>
+        <dd>Subset a Stock, Fleet, Obs, or Imp object from an OM object</dd>
+      </dl><dl><dt>
+          
+          <code><a href="validcpars.html">validcpars()</a></code> 
+        </dt>
+        <dd>Valid custom parameters (cpars)</dd>
+      </dl></div><div class="section level2">
+      
+      <h3 id="data">Data<a class="anchor" aria-label="anchor" href="#data"></a></h3>
+      
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="CALsimp.html">CALsimp()</a></code> 
+        </dt>
+        <dd>Simplifies the CAL slot of data object</dd>
+      </dl><dl><dt>
+          
+          <code><a href="CheckMPs.html">CheckMPs()</a></code> 
+        </dt>
+        <dd>Check that specified MPs are valid and will run on MSEtool::SimulatedData</dd>
       </dl><dl><dt>
           
           <code><a href="replic8.html">replic8()</a></code> 
         </dt>
         <dd>Enlarge (replicate) a DLM data object to create an additional dimension for simulation / sensitivity testing</dd>
+      </dl></div><div class="section level2">
+      
+      <h3 id="mp">MP<a class="anchor" aria-label="anchor" href="#mp"></a></h3>
+      
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="MPtype.html">MPtype()</a></code> 
+        </dt>
+        <dd>Management Procedure Type</dd>
       </dl><dl><dt>
           
-          <code><a href="runCOSEWIC.html">runCOSEWIC()</a></code> <code><a href="runCOSEWIC.html">COSEWIC_Pplot()</a></code> <code><a href="runCOSEWIC.html">COSEWIC_Dplot()</a></code> <code><a href="runCOSEWIC.html">COSEWIC_Blow()</a></code> <code><a href="runCOSEWIC.html">COSEWIC_Hplot()</a></code> <code><a href="runCOSEWIC.html">COSEWIC_report()</a></code> <code><a href="runCOSEWIC.html">COSEWIC_tab()</a></code> <code><a href="runCOSEWIC.html">COSEWIC_tab_formatted()</a></code> 
+          <code><a href="CombineMMP.html">CombineMMP()</a></code> 
         </dt>
-        <dd>COSEWIC MSE run using the correct MPs and projected time horizon</dd>
+        <dd>Create a blank MP recommendations object (class Rec) of the right dimensions</dd>
+      </dl></div><div class="section level2">
+      
+      <h3 id="mse">MSE<a class="anchor" aria-label="anchor" href="#mse"></a></h3>
+      
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="Sub.html">Sub()</a></code> 
+        </dt>
+        <dd>Subset MSE object by management procedure (MP) or simulation.</dd>
       </dl><dl><dt>
           
-          <code><a href="runInMP.html">runInMP()</a></code> 
+          <code><a href="checkMSE.html">checkMSE()</a></code> <code><a href="checkMSE.html">addMPs()</a></code> <code><a href="checkMSE.html">joinMSE()</a></code> <code><a href="checkMSE.html">joinHist()</a></code> <code><a href="checkMSE.html">updateMSE()</a></code> 
         </dt>
-        <dd>Runs input control MPs on a Data object.</dd>
+        <dd>Utility functions for MSE objects</dd>
       </dl><dl><dt>
           
-          <code><a href="runMP.html">runMP()</a></code> 
+          <code><a href="joinData.html">joinData()</a></code> 
         </dt>
-        <dd>Run a Management Procedure</dd>
+        <dd>Join Data objects present in a list</dd>
+      </dl></div><div class="section level2">
+      
+      <h3 id="internal-functions">Internal functions<a class="anchor" aria-label="anchor" href="#internal-functions"></a></h3>
+      <div class="section-desc"><p>Populations dynamics functions and other processing functions</p></div>
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="MSYCalcs.html">MSYCalcs()</a></code> 
+        </dt>
+        <dd>Internal function to calculate MSY Reference Points</dd>
       </dl><dl><dt>
           
-          <code><a href="runMSE.html">Simulate()</a></code> <code><a href="runMSE.html">Project()</a></code> <code><a href="runMSE.html">runMSE()</a></code> 
+          <code><a href="applyMP.html">applyMP()</a></code> 
         </dt>
-        <dd>Run a Management Strategy Evaluation</dd>
+        <dd>Apply Management Procedures to an object of class Data</dd>
       </dl><dl><dt>
           
-          <code><a href="setup.html">setup()</a></code> 
+          <code><a href="applyMMP.html">applyMMP()</a></code> 
         </dt>
-        <dd>Setup parallel processing</dd>
+        <dd>Apply multi Management Procedures (class MMP) to a hierarchical list of Data class objects</dd>
       </dl><dl><dt>
           
-          <code><a href="show-MSE.html">show(<i>&lt;PMobj&gt;</i>)</a></code> 
+          <code><a href="calcRefYield.html">calcRefYield()</a></code> 
         </dt>
-        <dd>Show the output of a PM</dd>
+        <dd>Calculate Reference Yield</dd>
       </dl><dl><dt>
           
-          <code><a href="show-MSEtool.html">show(<i>&lt;Data&gt;</i>)</a></code> <code><a href="show-MSEtool.html">show(<i>&lt;OM&gt;</i>)</a></code> <code><a href="show-MSEtool.html">show(<i>&lt;Hist&gt;</i>)</a></code> <code><a href="show-MSEtool.html">show(<i>&lt;MSE&gt;</i>)</a></code> <code><a href="show-MSEtool.html">show(<i>&lt;MMSE&gt;</i>)</a></code> 
+          <code><a href="cparscheck.html">cparscheck()</a></code> 
         </dt>
-        <dd>Show MSEtool S4 objects</dd>
+        <dd>Internal function for checking that the <code>OM@cpars</code> is formatted correctly</dd>
       </dl><dl><dt>
           
-          <code><a href="show-Rec.html">show(<i>&lt;Rec&gt;</i>)</a></code> 
+          <code><a href="dnormal.html">dnormal()</a></code> 
         </dt>
-        <dd>Show the output of a single MP recommendation</dd>
+        <dd>Double-normal selectivity curve</dd>
+      </dl><dl><dt>
+          
+          <code><a href="getmov2.html">getmov2()</a></code> 
+        </dt>
+        <dd>Optimization function to find a movement model that matches user specified movement characteristics modified for Rcpp.</dd>
+      </dl><dl><dt>
+          
+          <code><a href="getsel.html">getsel()</a></code> 
+        </dt>
+        <dd>Calculate selectivity curve</dd>
+      </dl><dl><dt>
+          
+          <code><a href="hconv.html">hconv()</a></code> <code><a href="hconv.html">R0conv()</a></code> <code><a href="hconv.html">SRalphaconv()</a></code> <code><a href="hconv.html">SRbetaconv()</a></code> 
+        </dt>
+        <dd>Stock recruit parameterization</dd>
+      </dl><dl><dt>
+          
+          <code><a href="movestockCPP.html">movestockCPP()</a></code> 
+        </dt>
+        <dd>Apply the movement model to the stock for one time-step</dd>
       </dl><dl><dt>
           
           <code><a href="simCAA.html">simCAA()</a></code> 
@@ -919,48 +1021,66 @@
           <code><a href="simmov.html">simmov()</a></code> <code><a href="simmov.html">plot_mov()</a></code> 
         </dt>
         <dd>Calculates movement matrices from user inputs</dd>
+      </dl></div><div class="section level2">
+      
+      <h3 id="internal-multimse">Internal multiMSE<a class="anchor" aria-label="anchor" href="#internal-multimse"></a></h3>
+      
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="Herm-int.html">expandHerm()</a></code> <code><a href="Herm-int.html">checkHerm()</a></code> <code><a href="Herm-int.html">subsetHerm()</a></code> 
+        </dt>
+        <dd>Internal Herm functions</dd>
       </dl><dl><dt>
           
-          <code><a href="simmov2.html">simmov2()</a></code> 
+          <code><a href="multiData.html">multiData()</a></code> 
         </dt>
-        <dd>Calculates movement matrices from user specified distribution among other areas</dd>
+        <dd>Combine data among fleets</dd>
       </dl><dl><dt>
           
-          <code><a href="summary-Data.html">summary(<i>&lt;Data&gt;</i>)</a></code> 
+          <code><a href="multiDataS.html">multiDataS()</a></code> 
         </dt>
-        <dd>Summary of Data object</dd>
+        <dd>Combine data among stocks</dd>
+      </dl></div><div class="section level2">
+      
+      <h3 id="figures">Figures<a class="anchor" aria-label="anchor" href="#figures"></a></h3>
+      
+
+      
+    </div><div id="" class="section level2">
+      
+      
+      
+
+      <dl><dt>
+          
+          <code><a href="join_plots.html">join_plots()</a></code> 
+        </dt>
+        <dd>Plot several plots with a shared legend</dd>
       </dl><dl><dt>
           
-          <code><a href="summary-MMSE.html">summary(<i>&lt;MMSE&gt;</i>)</a></code> 
+          <code><a href="makeTransparent.html">makeTransparent()</a></code> 
         </dt>
-        <dd>Summary of MMSE object</dd>
+        <dd>Make colors transparent</dd>
       </dl><dl><dt>
           
-          <code><a href="summary-MSE.html">summary(<i>&lt;MSE&gt;</i>)</a></code> 
+          <code><a href="plotFun.html">plotFun()</a></code> 
         </dt>
-        <dd>Summary of MSE object</dd>
+        <dd>Print out plotting functions</dd>
       </dl><dl><dt>
           
-          <code><a href="tinyErr.html">tinyErr()</a></code> 
+          <code><a href="plotquant.html">plotquant()</a></code> 
         </dt>
-        <dd>Remove observation, implementation, and process error</dd>
-      </dl><dl><dt>
-          
-          <code><a href="validcpars.html">validcpars()</a></code> 
-        </dt>
-        <dd>Valid custom parameters (cpars)</dd>
-      </dl><dl><dt>
-          
-          <code><a href="wormplot.html">wormplot()</a></code> 
-        </dt>
-        <dd>Biomass wormplot</dd>
-      </dl><dl><dt>
-          
-          <code><a href="writeCSV.html">writeCSV()</a></code> 
-        </dt>
-        <dd>Internal function to write CSVs for objects</dd>
+        <dd>A fairly tidy time-series quantile plot</dd>
       </dl></div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">
