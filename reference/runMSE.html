@@ -12,7 +12,7 @@ simulation) for a specified operating model"><meta property="og:image" content="
     
     <a class="navbar-brand me-2" href="../index.html">MSEtool Functions</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.7.9999</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.7.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -79,7 +79,8 @@ simulation) for a specified operating model</p>
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>OM</dt>
-<dd><p>An operating model object (class <code>OM</code> or class <code>Hist</code>)</p></dd>
+<dd><p>An operating model object (class <code>OM</code> or class <code>Hist</code>). Also works for
+<code>MOM</code> objects, as a wrapper for <code>ProjectMOM</code></p></dd>
 
 
 <dt>parallel</dt>
@@ -90,6 +91,10 @@ using the split-apply-combine technique. See Details for more information.</p></
 
 <dt>silent</dt>
 <dd><p>Should messages be printed out to the console?</p></dd>
+
+
+<dt>nsim</dt>
+<dd><p>Optional. numeric value to override <code>OM@nsim</code>.</p></dd>
 
 
 <dt>Hist</dt>

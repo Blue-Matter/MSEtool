@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">MSEtool Functions</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.7.9999</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.7.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,10 +45,12 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="3.7.2999" id="msetool-372999---dev-version">MSEtool 3.7.2999 - dev version<a class="anchor" aria-label="anchor" href="#msetool-372999---dev-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="3.7.2" id="msetool-372---dev-version">MSEtool 3.7.2 - dev version<a class="anchor" aria-label="anchor" href="#msetool-372---dev-version"></a></h2>
 <div class="section level3">
-<h3 id="new-additions-3-7-2999">New additions<a class="anchor" aria-label="anchor" href="#new-additions-3-7-2999"></a></h3>
-<ul><li>add MICE rel for recruitment deviates in <code>multiMSE</code> which can be a function of the state dynamics in either the current year or previous year</li>
+<h3 id="new-additions-3-7-2">New additions<a class="anchor" aria-label="anchor" href="#new-additions-3-7-2"></a></h3>
+<ul><li>added <code>nsim</code> argument to <code>Simulate</code> as an override to <code>OM@nsim</code>. Useful for generating <code>Hist</code> object with 2 sims when all historical values are identical across simulations</li>
+<li>added <code>BAM2OM</code> to create OM from Beaufort Assessment Model (BAM) output</li>
+<li>add MICE rel for recruitment deviates in <code>multiMSE</code> which can be a function of the state dynamics in either the current year or previous year</li>
 <li>MICE rel for natural mortality can be age-specific in <code>multiMSE</code>
 </li>
 <li>custom stock-recruit functions available for <code>multiMSE</code>
@@ -56,8 +58,6 @@
 <li>allow plusgroup to be turned off in <code>multiMSE</code>
 </li>
 <li>add <code>spawn_time_frac</code> argument to <code>iSCAM2OM</code>
-</li>
-<li>added <code>BAM2OM</code>
 </li>
 <li>hermaphroditism in <code>multiMSE</code> can be time-varying if entries in the <code>MOM@SexPars$Herm</code> list is an array with dimensions <code>nsim, maxage+1, nyears+proyears</code>
 </li>
@@ -67,21 +67,15 @@
 <code>MOM@cpars$control &lt;- list(HermEq = FALSE)</code> sidesteps the first-year equilibrium age and sex distribution calculation from the hermaphroditic age schedule</li>
 </ul></div>
 <div class="section level3">
-<h3 id="internal-3-7-2999">Internal<a class="anchor" aria-label="anchor" href="#internal-3-7-2999"></a></h3>
+<h3 id="internal-3-7-2">Internal<a class="anchor" aria-label="anchor" href="#internal-3-7-2"></a></h3>
 <ul><li>projections use <code>dynGet</code> then <code>get</code> to find the MPs in the R session (see function <code>getMP</code>). <code>dynGet</code> finds functions that are defined inside the function call stack but not available in the global environment.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="fixes-3-7-2999">Fixes<a class="anchor" aria-label="anchor" href="#fixes-3-7-2999"></a></h3>
+<h3 id="fixes-3-7-2">Fixes<a class="anchor" aria-label="anchor" href="#fixes-3-7-2"></a></h3>
 <ul><li>fix to <code>OMdoc</code>
 </li>
 <li>fixes to simulation of length comp</li>
-</ul></div>
-</div>
-    <div class="section level2">
-<h2 class="pkg-version" data-toc-text="3.7.2" id="msetool-372">MSEtool 3.7.2<a class="anchor" aria-label="anchor" href="#msetool-372"></a></h2>
-<div class="section level3">
-<h3 id="fixes-3-7-2">Fixes<a class="anchor" aria-label="anchor" href="#fixes-3-7-2"></a></h3>
-<ul><li>add <code>cpars$qs</code> to <code>OM</code> produce by <code>SS2OM</code>
+<li>add <code>cpars$qs</code> to <code>OM</code> produce by <code>SS2OM</code>
 </li>
 <li>Note: <code>SS2OM</code> does not return <code>cpars$Data</code>
 </li>
