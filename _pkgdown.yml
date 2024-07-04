@@ -129,6 +129,7 @@ reference:
   - plot.Data
   - plotOFL
   - summary,Data-method
+  - select_MP
 
 - title: Management procedures
   desc: Calculate advice from management procedures
