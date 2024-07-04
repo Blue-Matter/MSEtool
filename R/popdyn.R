@@ -674,236 +674,271 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   Ai <- MPRecs_Imp$Ai # allocation
 
 
-  # Retention Curve
-  RetentFlag <- FALSE # should retention curve be updated for future years?
-  RetParsFlag <- FALSE
-  # LR5
-  if (length(MPRecs$LR5) == 0) { # no  recommendation
-    LR5_P[,(y + nyears):(nyears+proyears)] <- matrix(LR5_P[,y + nyears-1],
-                                                     ncol=(length((y + nyears):(nyears+proyears))),
-                                                     nrow=nsim, byrow=FALSE) # unchanged
-    
-  } else if (length(MPRecs$LR5) != nsim) {
-    stop("LR5 recommmendation is not 'nsim' long.\n Does MP return LR5 recommendation under all conditions?")
-  } else {
-    lr5 <- replicate(length(y:proyears), MPRecs$LR5[1,])
-    if (!prod(LR5_P[,(y + nyears):(nyears+proyears)]==lr5 *  SL_Imp_Error[,y:proyears])) {
-      # LR5 has changed 
-      LR5_P[,(y + nyears):(nyears+proyears)] <- matrix(lr5 *  SL_Imp_Error[,y:proyears],
-                                                       ncol=(length((y + nyears):(nyears+proyears))),
-                                                       nrow=nsim, byrow=FALSE) # recommendation with implementation error
-      RetentFlag <- TRUE; RetParsFlag <- TRUE
-    }
-  }
-  # LFR
-  if (length(MPRecs$LFR) == 0) { # no  recommendation
-    LFR_P[,(y + nyears):(nyears+proyears)] <- matrix(LFR_P[,y + nyears-1],
-                                                     ncol=(length((y + nyears):(nyears+proyears))),
-                                                     nrow=nsim, byrow=FALSE) # unchanged
-  } else if (length(MPRecs$LFR) != nsim) {
-    stop("LFR recommmendation is not 'nsim' long.\n Does MP return LFR recommendation under all conditions?")
-  } else {
-    lrr <- replicate(length(y:proyears), MPRecs$LFR[1,])
-    if (!prod(LFR_P[,(y + nyears):(nyears+proyears)]==lrr *  SL_Imp_Error[,y:proyears])) {
-      # LFR has changed 
-      LFR_P[,(y + nyears):(nyears+proyears)] <- matrix(lrr *  SL_Imp_Error[,y],
-                                                       ncol=(length((y + nyears):(nyears+proyears))),
-                                                       nrow=nsim, byrow=FALSE) # recommendation with implementation error
-      RetentFlag <- TRUE; RetParsFlag <- TRUE
-    }
-  }
-  # Rmaxlen
-  if (length(MPRecs$Rmaxlen) == 0) { # no  recommendation
-    Rmaxlen_P[,(y + nyears):(nyears+proyears)] <- matrix(Rmaxlen_P[,y + nyears-1],
-                                                         ncol=(length((y + nyears):(nyears+proyears))),
-                                                         nrow=nsim, byrow=FALSE)   # unchanged
-  } else if (length(MPRecs$Rmaxlen) != nsim) {
-    stop("Rmaxlen recommmendation is not 'nsim' long.\n Does MP return Rmaxlen recommendation under all conditions?")
-  } else {
-    if (!all(Rmaxlen_P[,(y + nyears):(nyears+proyears)]  ==MPRecs$Rmaxlen[1,])) {
-      Rmaxlen_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$Rmaxlen,
-                                                           ncol=(length((y + nyears):(nyears+proyears))),
-                                                           nrow=nsim, byrow=FALSE) # recommendation
-      RetentFlag <- TRUE; RetParsFlag <- TRUE  
-    }
-    
-  }
-  
-  # HS - harvest slot
-  if (length(MPRecs$HS) == 0) { # no  recommendation
-    HS <- rep(1E5, nsim) # no harvest slot
-  } else if (length(MPRecs$HS) != nsim) {
-    stop("HS recommmendation is not 'nsim' long.\n Does MP return HS recommendation under all conditions?")
-  } else {
-    HS <- MPRecs$HS  *  SL_Imp_Error[,y] # recommendation
-    RetentFlag <- TRUE; RetParsFlag <- TRUE
-  }
-
-  # Selectivity Curve
-  SelectFlag <- FALSE # has selectivity been updated?
-  SelectParsFlag <- FALSE
-  # L5
-  if (length(MPRecs$L5) == 0) { # no  recommendation
-    L5_P[,(y + nyears):(nyears+proyears)] <- matrix(L5_P[,y + nyears-1],
-                                                    ncol=(length((y + nyears):(nyears+proyears))),
-                                                    nrow=nsim, byrow=FALSE) # unchanged
-
-  } else if (length(MPRecs$L5) != nsim) {
-    stop("L5 recommmendation is not 'nsim' long.\n Does MP return L5 recommendation under all conditions?")
-  } else {
-    l5 <- replicate(length(y:proyears), MPRecs$L5[1,])
-    if (!prod(L5_P[,(y + nyears):(nyears+proyears)]==l5 *  SL_Imp_Error[,y:proyears])) {
-     #L5 has changed 
-      L5_P[,(y + nyears):(nyears+proyears)] <- matrix(l5 *  SL_Imp_Error[,y:proyears],
-                                                      ncol=(length((y + nyears):(nyears+proyears))),
-                                                      nrow=nsim, byrow=FALSE) # recommendation with implementation error
-      SelectFlag <- TRUE; SelectParsFlag <- TRUE
-    }
-    
-    
-  }
-  # LFS
-  if (length(MPRecs$LFS) == 0) { # no  recommendation
-    LFS_P[,(y + nyears):(nyears+proyears)] <- matrix(LFS_P[,y + nyears-1],
-                                                     ncol=(length((y + nyears):(nyears+proyears))),
-                                                     nrow=nsim, byrow=FALSE) # unchanged
-  } else if (length(MPRecs$LFS) != nsim) {
-    stop("LFS recommmendation is not 'nsim' long.\n Does MP return LFS recommendation under all conditions?")
-  } else {
-    lfs <- replicate(length(y:proyears), MPRecs$LFS[1,])
-    if (!prod(LFS_P[,(y + nyears):(nyears+proyears)]==lfs *  SL_Imp_Error[,y:proyears])) {
-     # LFS has changed 
-      LFS_P[,(y + nyears):(nyears+proyears)] <- matrix(lfs *  SL_Imp_Error[,y:proyears],
-                                                       ncol=(length((y + nyears):(nyears+proyears))),
-                                                       nrow=nsim, byrow=FALSE) # recommendation with implementation error
-      SelectFlag <- TRUE; SelectParsFlag <- TRUE
-    }
-   
-  }
-  # Vmaxlen
-  if (length(MPRecs$Vmaxlen) == 0) { # no  recommendation
-    Vmaxlen_P[,(y + nyears):(nyears+proyears)] <- matrix(Vmaxlen_P[,y + nyears-1],
-                                                         ncol=(length((y + nyears):(nyears+proyears))),
-                                                         nrow=nsim, byrow=FALSE)   # unchanged
-
-  } else if (length(MPRecs$Vmaxlen) != nsim) {
-    stop("Vmaxlen recommmendation is not 'nsim' long.\n Does MP return Vmaxlen recommendation under all conditions?")
-  } else {
-    Vmaxlen_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$Vmaxlen,
-                                                         ncol=(length((y + nyears):(nyears+proyears))),
-                                                         nrow=nsim, byrow=FALSE) # recommendation
-    SelectFlag <- TRUE; SelectParsFlag <- TRUE
-  }
-
-  # Discard Mortality
-  if (length(MPRecs$Fdisc) >0) { # Fdisc has changed
-    if (length(MPRecs$Fdisc) != nsim) stop("Fdisc recommmendation is not 'nsim' long.\n Does MP return Fdisc recommendation under all conditions?")
-    Fdisc_P <- MPRecs$Fdisc
-    RetentFlag <- TRUE
-  }
-
-  # Discard Ratio
-  if (length(MPRecs$DR)>0) { # DR has changed
-    if (length(MPRecs$DR) != nsim) stop("DR recommmendation is not 'nsim' long.\n Does MP return DR recommendation under all conditions?")
-    DR_P[,(y+nyears):(nyears+proyears)] <- matrix(MPRecs$DR, ncol=length((y+nyears):(nyears+proyears)), nrow=nsim, byrow=FALSE)
-    RetentFlag <- TRUE
-  }
-
-  # Update Selectivity and Retention Curve
-  if (SelectFlag | RetentFlag) {
+  if (!is.null(MPRecs$Misc[[1]]$V_age) | !is.null(MPRecs$Misc[[1]]$R_age)) {
     yr <- y+nyears
     allyrs <- (y+nyears):(nyears+proyears)  # update vulnerability for all future years
-
-    srs <- (StockPars$Linf - LFS_P[,yr]) / ((-log(Vmaxlen_P[,yr],2))^0.5) # descending limb
-    srs[!is.finite(srs)] <- Inf
-    sls <- (LFS_P[,yr] - L5_P[,yr]) / ((-log(0.05,2))^0.5) # ascending limb
     
-    CAL_binsmidMat <- matrix(StockPars$CAL_binsmid, nrow=nsim, ncol=length(StockPars$CAL_binsmid), byrow=TRUE)
-    selLen <- t(sapply(1:nsim, getsel, lens=CAL_binsmidMat, lfs=LFS_P[,yr], sls=sls, srs=srs))
-    
-    for (yy in allyrs) {
-      # update new selectivity at length curve
-      SLarray_P[,, yy] <- selLen # calculate new selectivity at length curve
-    } 
-  
-    # calculate selectivity-at-age from selectivity-at-length
-    if (snowfall::sfIsRunning()) {
-      VList <- snowfall::sfLapply(1:nsim, calcV, Len_age=StockPars$Len_age[,,allyrs, drop=FALSE],
-                                  LatASD=StockPars$LatASD[,,allyrs, drop=FALSE], SLarray=SLarray_P[,,allyrs, drop=FALSE],
-                                  n_age=n_age, nyears=0, proyears=length(allyrs),
-                                  CAL_binsmid=StockPars$CAL_binsmid)
-    } else {
-      VList <- lapply(1:nsim, calcV, Len_age=StockPars$Len_age[,,allyrs, drop=FALSE],
-                      LatASD=StockPars$LatASD[,,allyrs, drop=FALSE], SLarray=SLarray_P[,,allyrs, drop=FALSE],
-                      n_age=n_age, nyears=0, proyears=length(allyrs),
-                      CAL_binsmid=StockPars$CAL_binsmid)
-      
+    if (!is.null(MPRecs$Misc[[1]]$V_age)) {
+      # vulnerability at age has been provided in Rec
+      for (s in 1:nsim) {
+        V_P[s , , allyrs] <- MPRecs$Misc[[s]]$V_age
+      }
     }
-    newV <- aperm(array(as.numeric(unlist(VList, use.names=FALSE)), dim=c(n_age, length(allyrs), nsim)), c(3,1,2))
-    V_P[ , , allyrs] <- newV
-    
-    # calculate new retention curve
-    yr <- y+nyears
-    allyrs <- (y+nyears):(nyears+proyears)  # update vulnerability for all future years
-
-
-    srs <- (StockPars$Linf - LFR_P[,yr]) / ((-log(Rmaxlen_P[,yr],2))^0.5) # retention parameters are constant for all years
-    srs[!is.finite(srs)] <- Inf
-    sls <- (LFR_P[,yr] - LR5_P[,yr]) / ((-log(0.05,2))^0.5)
-
-    CAL_binsmidMat <- matrix(StockPars$CAL_binsmid, nrow=nsim, ncol=length(StockPars$CAL_binsmid), byrow=TRUE)
-    relLen <- t(sapply(1:nsim, getsel, lens=CAL_binsmidMat, lfs=LFR_P[,yr], sls=sls, srs=srs))
-
-    for (yy in allyrs) {
-      # calculate new retention at age curve
-      retL_P[,, yy] <- relLen  # calculate new retention at length curve
-    }
-
-    # calculate retention-at-age from retention-at-length
-    if (snowfall::sfIsRunning()) {
-      VList <- snowfall::sfLapply(1:nsim, calcV, Len_age=StockPars$Len_age[,,allyrs, drop=FALSE],
-                                  LatASD=StockPars$LatASD[,,allyrs, drop=FALSE], SLarray=retL_P[,,allyrs, drop=FALSE],
-                                  n_age=n_age, nyears=0, proyears=length(allyrs),
-                                  CAL_binsmid=StockPars$CAL_binsmid)
-    } else {
-      VList <- lapply(1:nsim, calcV, Len_age=StockPars$Len_age[,,allyrs, drop=FALSE],
-                      LatASD=StockPars$LatASD[,,allyrs, drop=FALSE], SLarray=retL_P[,,allyrs, drop=FALSE],
-                      n_age=n_age, nyears=0, proyears=length(allyrs),
-                      CAL_binsmid=StockPars$CAL_binsmid)
+    if (!is.null(MPRecs$Misc[[1]]$R_age)) {
+      # retention at age has been provided in Rec
+      for (s in 1:nsim) {
+        retA_P[s , , allyrs] <- MPRecs$Misc[[s]]$R_age
+      }
     }
     
-    newretA <- aperm(array(as.numeric(unlist(VList, use.names=FALSE)), dim=c(n_age, length(allyrs), nsim)), c(3,1,2))
-    retA_P[ , , allyrs] <- newretA
-    
-    # upper harvest slot
-    aboveHS <- StockPars$Len_age[,,allyrs, drop=FALSE]>array(HS, dim=c(nsim, n_age, length(allyrs)))
-    tretA_P <- retA_P[,,allyrs]
-    tretA_P[aboveHS] <- 0
-    retA_P[,,allyrs] <- tretA_P
-    for (ss in 1:nsim) {
-      index <- which(StockPars$CAL_binsmid >= HS[ss])
-      retL_P[ss, index, allyrs] <- 0
+    Fdisc_array1 <- array(0, dim=dim(V_P))
+    if (!is.null(MPRecs$Misc[[1]]$Fdisc)) {
+      # discard M at age  has been provided in Rec
+      for (s in 1:nsim) {
+        Fdisc_array1[s , , allyrs] <- MPRecs$Misc[[s]]$Fdisc
+      }
     }
-
-    dr <- aperm(abind::abind(rep(list(DR_P), n_age), along=3), c(1,3,2))
-    retA_P[,,allyrs] <- (1-dr[,,yr]) * retA_P[,,yr]
-    dr <- aperm(abind::abind(rep(list(DR_P), StockPars$nCALbins), along=3), c(1,3,2))
-    retL_P[,,allyrs] <- (1-dr[,,yr]) * retL_P[,,yr]
-
-    # update realized vulnerablity curve with retention and dead discarded fish
-    Fdisc_array1 <- array(Fdisc_P, dim=c(nsim, n_age, length(allyrs)))
-    Fdisc_array2 <- array(Fdisc_P, dim=c(nsim, StockPars$nCALbins, length(allyrs)))
-
+    
     retA_P_real[,,allyrs] <- retA_P[,,allyrs, drop=FALSE] * V_P[,,allyrs, drop=FALSE] # realized retention curve (prob of retention x prob of selection)
     retA_P_real_2 <- retA_P_real/aperm(replicate(n_age,apply(retA_P_real, c(1,3), max)), c(1,3,2)) # asymptote = 1 
     
-    V_P_real[,,allyrs] <- retA_P_real[,,allyrs, drop=FALSE] + ((V_P[,,allyrs, drop=FALSE]-retA_P_real[,,allyrs, drop=FALSE]) * Fdisc_array1)
+    V_P_real[,,allyrs] <- retA_P_real[,,allyrs, drop=FALSE] + ((V_P[,,allyrs, drop=FALSE]-retA_P_real[,,allyrs, drop=FALSE]) * Fdisc_array1[,,allyrs, drop=FALSE])
     V_P_real_2 <- V_P_real/aperm(replicate(n_age,apply(V_P_real, c(1,3), max)), c(1,3,2))
     
-    retL_P[,,allyrs] <- retL_P[,,allyrs, drop=FALSE] * SLarray_P[,,allyrs, drop=FALSE]
-    SLarray_P[,,allyrs]  <- retL_P[,,allyrs, drop=FALSE]  + ((SLarray_P[,,allyrs, drop=FALSE]-retL_P[,,allyrs, drop=FALSE] ) * Fdisc_array2)
+    ## NOTE - selectivity/retention at length are not updated!
+    
+    
+  } else {
+    # Retention Curve
+    RetentFlag <- FALSE # should retention curve be updated for future years?
+    RetParsFlag <- FALSE
+    # LR5
+    if (length(MPRecs$LR5) == 0) { # no  recommendation
+      LR5_P[,(y + nyears):(nyears+proyears)] <- matrix(LR5_P[,y + nyears-1],
+                                                       ncol=(length((y + nyears):(nyears+proyears))),
+                                                       nrow=nsim, byrow=FALSE) # unchanged
+      
+    } else if (length(MPRecs$LR5) != nsim) {
+      stop("LR5 recommmendation is not 'nsim' long.\n Does MP return LR5 recommendation under all conditions?")
+    } else {
+      lr5 <- replicate(length(y:proyears), MPRecs$LR5[1,])
+      if (!prod(LR5_P[,(y + nyears):(nyears+proyears)]==lr5 *  SL_Imp_Error[,y:proyears])) {
+        # LR5 has changed 
+        LR5_P[,(y + nyears):(nyears+proyears)] <- matrix(lr5 *  SL_Imp_Error[,y:proyears],
+                                                         ncol=(length((y + nyears):(nyears+proyears))),
+                                                         nrow=nsim, byrow=FALSE) # recommendation with implementation error
+        RetentFlag <- TRUE; RetParsFlag <- TRUE
+      }
+    }
+    # LFR
+    if (length(MPRecs$LFR) == 0) { # no  recommendation
+      LFR_P[,(y + nyears):(nyears+proyears)] <- matrix(LFR_P[,y + nyears-1],
+                                                       ncol=(length((y + nyears):(nyears+proyears))),
+                                                       nrow=nsim, byrow=FALSE) # unchanged
+    } else if (length(MPRecs$LFR) != nsim) {
+      stop("LFR recommmendation is not 'nsim' long.\n Does MP return LFR recommendation under all conditions?")
+    } else {
+      lrr <- replicate(length(y:proyears), MPRecs$LFR[1,])
+      if (!prod(LFR_P[,(y + nyears):(nyears+proyears)]==lrr *  SL_Imp_Error[,y:proyears])) {
+        # LFR has changed 
+        LFR_P[,(y + nyears):(nyears+proyears)] <- matrix(lrr *  SL_Imp_Error[,y],
+                                                         ncol=(length((y + nyears):(nyears+proyears))),
+                                                         nrow=nsim, byrow=FALSE) # recommendation with implementation error
+        RetentFlag <- TRUE; RetParsFlag <- TRUE
+      }
+    }
+    # Rmaxlen
+    if (length(MPRecs$Rmaxlen) == 0) { # no  recommendation
+      Rmaxlen_P[,(y + nyears):(nyears+proyears)] <- matrix(Rmaxlen_P[,y + nyears-1],
+                                                           ncol=(length((y + nyears):(nyears+proyears))),
+                                                           nrow=nsim, byrow=FALSE)   # unchanged
+    } else if (length(MPRecs$Rmaxlen) != nsim) {
+      stop("Rmaxlen recommmendation is not 'nsim' long.\n Does MP return Rmaxlen recommendation under all conditions?")
+    } else {
+      if (!all(Rmaxlen_P[,(y + nyears):(nyears+proyears)]  ==MPRecs$Rmaxlen[1,])) {
+        Rmaxlen_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$Rmaxlen,
+                                                             ncol=(length((y + nyears):(nyears+proyears))),
+                                                             nrow=nsim, byrow=FALSE) # recommendation
+        RetentFlag <- TRUE; RetParsFlag <- TRUE  
+      }
+      
+    }
+    
+    # HS - harvest slot
+    if (length(MPRecs$HS) == 0) { # no  recommendation
+      HS <- rep(1E5, nsim) # no harvest slot
+    } else if (length(MPRecs$HS) != nsim) {
+      stop("HS recommmendation is not 'nsim' long.\n Does MP return HS recommendation under all conditions?")
+    } else {
+      HS <- MPRecs$HS  *  SL_Imp_Error[,y] # recommendation
+      RetentFlag <- TRUE; RetParsFlag <- TRUE
+    }
+    
+    # Selectivity Curve
+    SelectFlag <- FALSE # has selectivity been updated?
+    SelectParsFlag <- FALSE
+    # L5
+    if (length(MPRecs$L5) == 0) { # no  recommendation
+      L5_P[,(y + nyears):(nyears+proyears)] <- matrix(L5_P[,y + nyears-1],
+                                                      ncol=(length((y + nyears):(nyears+proyears))),
+                                                      nrow=nsim, byrow=FALSE) # unchanged
+      
+    } else if (length(MPRecs$L5) != nsim) {
+      stop("L5 recommmendation is not 'nsim' long.\n Does MP return L5 recommendation under all conditions?")
+    } else {
+      l5 <- replicate(length(y:proyears), MPRecs$L5[1,])
+      if (!prod(L5_P[,(y + nyears):(nyears+proyears)]==l5 *  SL_Imp_Error[,y:proyears])) {
+        #L5 has changed 
+        L5_P[,(y + nyears):(nyears+proyears)] <- matrix(l5 *  SL_Imp_Error[,y:proyears],
+                                                        ncol=(length((y + nyears):(nyears+proyears))),
+                                                        nrow=nsim, byrow=FALSE) # recommendation with implementation error
+        SelectFlag <- TRUE; SelectParsFlag <- TRUE
+      }
+    }
+    # LFS
+    if (length(MPRecs$LFS) == 0) { # no  recommendation
+      LFS_P[,(y + nyears):(nyears+proyears)] <- matrix(LFS_P[,y + nyears-1],
+                                                       ncol=(length((y + nyears):(nyears+proyears))),
+                                                       nrow=nsim, byrow=FALSE) # unchanged
+    } else if (length(MPRecs$LFS) != nsim) {
+      stop("LFS recommmendation is not 'nsim' long.\n Does MP return LFS recommendation under all conditions?")
+    } else {
+      lfs <- replicate(length(y:proyears), MPRecs$LFS[1,])
+      if (!prod(LFS_P[,(y + nyears):(nyears+proyears)]==lfs *  SL_Imp_Error[,y:proyears])) {
+        # LFS has changed 
+        LFS_P[,(y + nyears):(nyears+proyears)] <- matrix(lfs *  SL_Imp_Error[,y:proyears],
+                                                         ncol=(length((y + nyears):(nyears+proyears))),
+                                                         nrow=nsim, byrow=FALSE) # recommendation with implementation error
+        SelectFlag <- TRUE; SelectParsFlag <- TRUE
+      }
+      
+    }
+    # Vmaxlen
+    if (length(MPRecs$Vmaxlen) == 0) { # no  recommendation
+      Vmaxlen_P[,(y + nyears):(nyears+proyears)] <- matrix(Vmaxlen_P[,y + nyears-1],
+                                                           ncol=(length((y + nyears):(nyears+proyears))),
+                                                           nrow=nsim, byrow=FALSE)   # unchanged
+      
+    } else if (length(MPRecs$Vmaxlen) != nsim) {
+      stop("Vmaxlen recommmendation is not 'nsim' long.\n Does MP return Vmaxlen recommendation under all conditions?")
+    } else {
+      Vmaxlen_P[,(y + nyears):(nyears+proyears)] <- matrix(MPRecs$Vmaxlen,
+                                                           ncol=(length((y + nyears):(nyears+proyears))),
+                                                           nrow=nsim, byrow=FALSE) # recommendation
+      SelectFlag <- TRUE; SelectParsFlag <- TRUE
+    }
+    
+    # Discard Mortality
+    if (length(MPRecs$Fdisc) >0) { # Fdisc has changed
+      if (length(MPRecs$Fdisc) != nsim) stop("Fdisc recommmendation is not 'nsim' long.\n Does MP return Fdisc recommendation under all conditions?")
+      Fdisc_P <- MPRecs$Fdisc
+      RetentFlag <- TRUE
+    }
+    
+    # Discard Ratio
+    if (length(MPRecs$DR)>0) { # DR has changed
+      if (length(MPRecs$DR) != nsim) stop("DR recommmendation is not 'nsim' long.\n Does MP return DR recommendation under all conditions?")
+      DR_P[,(y+nyears):(nyears+proyears)] <- matrix(MPRecs$DR, ncol=length((y+nyears):(nyears+proyears)), nrow=nsim, byrow=FALSE)
+      RetentFlag <- TRUE
+    }
+    
+    # Update Selectivity and Retention Curve
+    if (SelectFlag | RetentFlag) {
+      yr <- y+nyears
+      allyrs <- (y+nyears):(nyears+proyears)  # update vulnerability for all future years
+      
+      srs <- (StockPars$Linf - LFS_P[,yr]) / ((-log(Vmaxlen_P[,yr],2))^0.5) # descending limb
+      srs[!is.finite(srs)] <- Inf
+      sls <- (LFS_P[,yr] - L5_P[,yr]) / ((-log(0.05,2))^0.5) # ascending limb
+      
+      CAL_binsmidMat <- matrix(StockPars$CAL_binsmid, nrow=nsim, ncol=length(StockPars$CAL_binsmid), byrow=TRUE)
+      selLen <- t(sapply(1:nsim, getsel, lens=CAL_binsmidMat, lfs=LFS_P[,yr], sls=sls, srs=srs))
+      
+      for (yy in allyrs) {
+        # update new selectivity at length curve
+        SLarray_P[,, yy] <- selLen # calculate new selectivity at length curve
+      } 
+      
+      # calculate selectivity-at-age from selectivity-at-length
+      if (snowfall::sfIsRunning()) {
+        VList <- snowfall::sfLapply(1:nsim, calcV, Len_age=StockPars$Len_age[,,allyrs, drop=FALSE],
+                                    LatASD=StockPars$LatASD[,,allyrs, drop=FALSE], SLarray=SLarray_P[,,allyrs, drop=FALSE],
+                                    n_age=n_age, nyears=0, proyears=length(allyrs),
+                                    CAL_binsmid=StockPars$CAL_binsmid)
+      } else {
+        VList <- lapply(1:nsim, calcV, Len_age=StockPars$Len_age[,,allyrs, drop=FALSE],
+                        LatASD=StockPars$LatASD[,,allyrs, drop=FALSE], SLarray=SLarray_P[,,allyrs, drop=FALSE],
+                        n_age=n_age, nyears=0, proyears=length(allyrs),
+                        CAL_binsmid=StockPars$CAL_binsmid)
+        
+      }
+      newV <- aperm(array(as.numeric(unlist(VList, use.names=FALSE)), dim=c(n_age, length(allyrs), nsim)), c(3,1,2))
+      V_P[ , , allyrs] <- newV
+      
+      # calculate new retention curve
+      yr <- y+nyears
+      allyrs <- (y+nyears):(nyears+proyears)  # update vulnerability for all future years
+      
+      
+      srs <- (StockPars$Linf - LFR_P[,yr]) / ((-log(Rmaxlen_P[,yr],2))^0.5) # retention parameters are constant for all years
+      srs[!is.finite(srs)] <- Inf
+      sls <- (LFR_P[,yr] - LR5_P[,yr]) / ((-log(0.05,2))^0.5)
+      
+      CAL_binsmidMat <- matrix(StockPars$CAL_binsmid, nrow=nsim, ncol=length(StockPars$CAL_binsmid), byrow=TRUE)
+      relLen <- t(sapply(1:nsim, getsel, lens=CAL_binsmidMat, lfs=LFR_P[,yr], sls=sls, srs=srs))
+      
+      for (yy in allyrs) {
+        # calculate new retention at age curve
+        retL_P[,, yy] <- relLen  # calculate new retention at length curve
+      }
+      
+      # calculate retention-at-age from retention-at-length
+      if (snowfall::sfIsRunning()) {
+        VList <- snowfall::sfLapply(1:nsim, calcV, Len_age=StockPars$Len_age[,,allyrs, drop=FALSE],
+                                    LatASD=StockPars$LatASD[,,allyrs, drop=FALSE], SLarray=retL_P[,,allyrs, drop=FALSE],
+                                    n_age=n_age, nyears=0, proyears=length(allyrs),
+                                    CAL_binsmid=StockPars$CAL_binsmid)
+      } else {
+        VList <- lapply(1:nsim, calcV, Len_age=StockPars$Len_age[,,allyrs, drop=FALSE],
+                        LatASD=StockPars$LatASD[,,allyrs, drop=FALSE], SLarray=retL_P[,,allyrs, drop=FALSE],
+                        n_age=n_age, nyears=0, proyears=length(allyrs),
+                        CAL_binsmid=StockPars$CAL_binsmid)
+      }
+      
+      newretA <- aperm(array(as.numeric(unlist(VList, use.names=FALSE)), dim=c(n_age, length(allyrs), nsim)), c(3,1,2))
+      retA_P[ , , allyrs] <- newretA
+      
+      # upper harvest slot
+      aboveHS <- StockPars$Len_age[,,allyrs, drop=FALSE]>array(HS, dim=c(nsim, n_age, length(allyrs)))
+      tretA_P <- retA_P[,,allyrs]
+      tretA_P[aboveHS] <- 0
+      retA_P[,,allyrs] <- tretA_P
+      for (ss in 1:nsim) {
+        index <- which(StockPars$CAL_binsmid >= HS[ss])
+        retL_P[ss, index, allyrs] <- 0
+      }
+      
+      dr <- aperm(abind::abind(rep(list(DR_P), n_age), along=3), c(1,3,2))
+      retA_P[,,allyrs] <- (1-dr[,,yr]) * retA_P[,,yr]
+      dr <- aperm(abind::abind(rep(list(DR_P), StockPars$nCALbins), along=3), c(1,3,2))
+      retL_P[,,allyrs] <- (1-dr[,,yr]) * retL_P[,,yr]
+      
+      # update realized vulnerablity curve with retention and dead discarded fish
+      Fdisc_array1 <- array(Fdisc_P, dim=c(nsim, n_age, length(allyrs)))
+      Fdisc_array2 <- array(Fdisc_P, dim=c(nsim, StockPars$nCALbins, length(allyrs)))
+      
+      retA_P_real[,,allyrs] <- retA_P[,,allyrs, drop=FALSE] * V_P[,,allyrs, drop=FALSE] # realized retention curve (prob of retention x prob of selection)
+      retA_P_real_2 <- retA_P_real/aperm(replicate(n_age,apply(retA_P_real, c(1,3), max)), c(1,3,2)) # asymptote = 1 
+      
+      V_P_real[,,allyrs] <- retA_P_real[,,allyrs, drop=FALSE] + ((V_P[,,allyrs, drop=FALSE]-retA_P_real[,,allyrs, drop=FALSE]) * Fdisc_array1)
+      V_P_real_2 <- V_P_real/aperm(replicate(n_age,apply(V_P_real, c(1,3), max)), c(1,3,2))
+      
+      retL_P[,,allyrs] <- retL_P[,,allyrs, drop=FALSE] * SLarray_P[,,allyrs, drop=FALSE]
+      SLarray_P[,,allyrs]  <- retL_P[,,allyrs, drop=FALSE]  + ((SLarray_P[,,allyrs, drop=FALSE]-retL_P[,,allyrs, drop=FALSE] ) * Fdisc_array2)
+    }
+    
   }
-
+ 
   # ---- over-write biomass - with fleet-specific weight-at-age
   Biomass_P <- StockPars$N_P * replicate(StockPars$nareas, FleetPars$Wt_age_C[,,(nyears+1):((nyears)+proyears)])
   
