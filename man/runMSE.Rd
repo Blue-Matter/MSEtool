@@ -14,7 +14,7 @@ Project(
   parallel = FALSE,
   silent = FALSE,
   extended = FALSE,
-  checkMPs = TRUE
+  checkMPs = FALSE
 )
 
 runMSE(
@@ -24,7 +24,7 @@ runMSE(
   silent = FALSE,
   parallel = FALSE,
   extended = FALSE,
-  checkMPs = TRUE
+  checkMPs = FALSE
 )
 }
 \arguments{

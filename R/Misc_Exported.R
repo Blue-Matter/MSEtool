@@ -1565,3 +1565,20 @@ TACfilter <- function(TAC) {
   return(as.numeric(TAC))
 }
 
+#' Select DataList for an MP from `MMSE@PPD`
+#'
+#'
+#' @param PPD `PPD` slot from an MMSE object 
+#' @param MP Numeric value indicating the MP to return DataList
+#' @return A nested list `Data` objects (`nstock` by `nfleet`)
+#' @export
+select_MP <- function(PPD, MP=1) {
+  DataList <- vector('list', length(PPD))
+  for (s in 1:length(DataList)) {
+    DataList[[s]] <- vector('list', length(PPD[[s]]))
+    for (f in 1:length(DataList[[s]])) {
+      DataList[[s]][[f]] <- PPD[[s]][[f]][[MP]]
+    }
+  }
+  DataList
+}

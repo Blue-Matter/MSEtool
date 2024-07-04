@@ -13,7 +13,7 @@ ProjectMOM(
   MPs = NA,
   parallel = FALSE,
   silent = FALSE,
-  checkMPs = TRUE,
+  checkMPs = FALSE,
   dropHist = FALSE,
   extended = FALSE
 )
@@ -24,7 +24,7 @@ multiMSE(
   Hist = FALSE,
   silent = FALSE,
   parallel = TRUE,
-  checkMPs = TRUE,
+  checkMPs = FALSE,
   dropHist = TRUE,
   extended = FALSE
 )
