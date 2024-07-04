@@ -1057,7 +1057,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
 #'
 #' @export
 Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
-                     extended=FALSE, checkMPs=TRUE) {
+                     extended=FALSE, checkMPs=FALSE) {
 
   # ---- Setup ----
   if (!methods::is(Hist,'Hist'))
@@ -1869,7 +1869,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #' }
 #' @export
 runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
-                   parallel=FALSE, extended=FALSE, checkMPs=TRUE) {
+                   parallel=FALSE, extended=FALSE, checkMPs=FALSE) {
 
   # ---- Initial Checks and Setup ----
   if (methods::is(OM,'OM')) {

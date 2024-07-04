@@ -1328,7 +1328,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 #' @param multiHist An Historical Simulation object (class `multiHist`)
 #' @export
 ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
-                        checkMPs=TRUE, dropHist=FALSE, extended=FALSE) {
+                        checkMPs=FALSE, dropHist=FALSE, extended=FALSE) {
 
   # ---- Setup ----
   if (! 'multiHist' %in% class(multiHist))
@@ -2483,7 +2483,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             MSElist[[p]][[f]][[mm]]@Misc$StockPars <- StockPars[[p]]
             MSElist[[p]][[f]][[mm]]@Misc$FleetPars <- FleetPars[[p]][[f]]
             
-            
+
             # ---- Update true abundance ----
             M_array <- array(0.5*StockPars[[p]]$M_ageArray[,,nyears+y],
                              dim=c(nsim, n_age, nareas))
@@ -2615,7 +2615,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         # Update Misc slot in Data
         for (p in 1:np) {
           for (f in 1:nf) {
-            MSElist[[p]][[f]][[mm]]@Misc <- Data_p_A[[p]][[f]]@Misc
+            MSElist[[p]][[f]][[mm]]@Misc <- append(MSElist[[p]][[f]][[mm]]@Misc, Data_p_A[[p]][[f]]@Misc)
           }
         }
         
@@ -3167,7 +3167,7 @@ multiMSE <- function(MOM=MSEtool::Albacore_TwoFleet,
                      Hist=FALSE,
                      silent=FALSE,
                      parallel=TRUE,
-                     checkMPs=TRUE,
+                     checkMPs=FALSE,
                      dropHist=TRUE,
                      extended=FALSE) {
 
