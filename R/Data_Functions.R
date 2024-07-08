@@ -2711,7 +2711,7 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE, parallel
       returnList[[mp]] <- temp
     } else {
       slots <- slotNames(temp[[1]])
-      for (X in slots) { # sequence along recommendation slots
+      for (X in slots) {# sequence along recommendation slots
         if (X == "Misc") { # convert to a list nsim by nareas
           rec <- lapply(temp, slot, name=X)
         } else {
@@ -2721,7 +2721,8 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE, parallel
           rec <- matrix(rec, nareas, nsims, byrow=FALSE)
         }
         recList[[X]] <- rec
-        for (x in 1:nsims) Dataout@Misc[[x]] <- recList$Misc[[x]]
+        if (!is.null(recList$Misc))
+          for (x in 1:nsims) Dataout@Misc[[x]] <- recList$Misc[[x]]
         recList$Misc <- NULL
 
         if (MPs[mp] %in% refMPs) {
