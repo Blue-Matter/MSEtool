@@ -113,7 +113,7 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
       
       # optimize spat_targ 
       par <- rep(0, nf) 
-      f_zero_fleet <- which(qfracx==0)
+      f_zero_fleet <- which(qfracx[p,]==0)
       if (length(f_zero_fleet)>0)
         par <- par[-f_zero_fleet] 
       
@@ -167,9 +167,6 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
           Spat_targ[p,] <- opt_spat_targ$par
         }
       }
-
-      
- 
     }
 
     Fdist[Find] <- (VBcur_a[Find[,c(1,2,4)]]*MPAthisyr[Find[,c(1,2,4)]])^Spat_targ[Find[, 1:2]]

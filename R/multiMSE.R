@@ -611,10 +611,22 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     message("Calculating historical stock and fishing dynamics")
 
   # ---- Run Historical Simulations ----
-  histYrs <- .sapply(1:nsim, HistMICE, StockPars=StockPars,
-                     FleetPars=FleetPars,np=np,nf=nf,nareas=nareas,
-                     maxage=maxage,nyears=nyears,N=N,VF=VF,FretA=FretA,
-                     maxF=MOM@maxF,MPA=MPA,Rel=HistRel,SexPars=SexPars,qs=qs,
+  histYrs <- .sapply(1:nsim, HistMICE, 
+                     StockPars=StockPars,
+                     FleetPars=FleetPars,
+                     np=np,
+                     nf=nf,
+                     nareas=nareas,
+                     maxage=maxage,
+                     nyears=nyears,
+                     N=N,
+                     VF=VF,
+                     FretA=FretA,
+                     maxF=MOM@maxF,
+                     MPA=MPA,
+                     Rel=HistRel,
+                     SexPars=SexPars,
+                     qs=qs,
                      qfrac=qfrac,
                      plusgroup=plusgroup
                      )

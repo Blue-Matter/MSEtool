@@ -35,6 +35,8 @@ solve_spat_targ <- function(par, pop, qsx, qfracx, Ecur, n_age, nareas, Fdist,
   C_area[ind[,c(2:4)]] <- F_area[ind[,c(2:4)]]/Z_area[ind[,c(2:4)]] * 
     (1-exp(-Z_area[ind[,c(2:4)]])) * N_area[ind[,c(3:4)]]
   
+  C_area[!is.finite(C_area)] <- 0 
+  
   # Catch for total F
   F_age <- replicate(n_age,F_fleet) *  Vcur[pop,,]
   if (!is.null(dim(F_age))) {
@@ -48,6 +50,7 @@ solve_spat_targ <- function(par, pop, qsx, qfracx, Ecur, n_age, nareas, Fdist,
   N_total <- apply(N_area, 1, sum)
   N_total <- replicate(nf, N_total) |> t()
   C_total <- F_age/Z_age * (1-exp(-Z_age)) * N_total 
+  C_total[!is.finite(C_total)] <- 0
   
   # par(mfrow=c(2,2))
   # c_pred <- apply(C_area,1:2, sum)
