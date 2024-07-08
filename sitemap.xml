@@ -1,705 +1,237 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://msetool.openmse.com/404.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/LICENSE.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/authors.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/index.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/news/index.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/ASAP2OM.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Assess2MOM.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Assess2OM.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Awatea2OM.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/BAM2MOM.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/BlankSelPlot.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Blow_opt.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/CALsimp.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/CSRA.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/CSRAfunc.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/CalcAsymptoticDist.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/CalcMPDynamics.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/CalculateQ.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Can.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/CheckDuplicate.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/CheckMPs.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/CheckOM.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/ChkYrs.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Choose.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/CombineMMP.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Converge.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Cos_thresh_tab.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Cplot.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/DFO_bar.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/DFO_hist.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/DFO_plot.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/DFO_plot2.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/DFO_proj.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/DFO_quant.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/DFO_report.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/DFO_spider.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/DFO_tab.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/DFO_tab_formatted.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/DLMDataDir.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Data-class-objects.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Data-class.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Data2csv.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/DataDescription.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/DataDir.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/DataInit.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/DataSlots.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Data_xl.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Dom.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/FMSYref.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Fease.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Fleet-class-objects.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Fleet-class.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/FleetDescription.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/GenerateRandomWalk.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Herm-int.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Hist-class.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/HistDescription.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/HistMICE.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Imp-class-objects.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Imp-class.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/ImpDescription.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Input.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Kplot.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/L2A.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/LH2OM.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/LHdatabase.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Lag_Data.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/LinInterp.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/ML2D.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/MMSE-class.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/MOM-class-objects.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/MOM-class.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/MPCalcsNAs.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/MPtype.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/MPurl.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/MSE-class.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/MSEDescription.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/MSEextra.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/MSYCalcs.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/NAor0.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/NIL.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/NOAA_plot.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/OM-class-objects.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/OM-class.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/OMDescription.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/OMdoc.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/OMexample.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/OMinit.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Obs-class-objects.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Obs-class.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/ObsDescription.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/OneRep.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/PMLimit.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/PMobj-class.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/PWhisker.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/PerformanceMetric.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Pplot.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Pplot2.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Range.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/RealFease.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Rec-class.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Replace.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Report.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/ReqData.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Required.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/ResFromRel.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/SIL.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/SS2Data.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/SS2DataMOM.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/SS2MOM.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/SSBrefplot.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/SampleCpars.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/SampleFleetPars.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/SampleImpPars.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/SampleObsPars.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/SampleStockPars.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Sense.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/SimulatedData.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/SketchFun.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Stock-class-objects.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Stock-class.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/StockDescription.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Sub.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/SubCpars.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/SubOM.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/TAC.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/TACfilter.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/TEG.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Taxa_Table.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Thresh_tab.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/TradePlot.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Turing.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/Uses.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/VOI.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/VOI2.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/VOIplot.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/WHAM2OM.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/XL2Data.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/XL2Fleet.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/XL2OM.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/XL2Stock.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/alphaconv.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/applyMMP.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/applyMP.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/avail.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/boxplot.Data.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/calcMean.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/calcProb.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/calcRefYield.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/char.log-class.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/checkMSE.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/cparscheck.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/cv.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/dnormal.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/genSizeCompWrap.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/getAFC.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/getBlow.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/getDataList.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/getEffhist.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/getMP.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/getclass.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/getfirstlev.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/getmov2.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/getnIVs.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/getq_multi_MICE.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/getsel.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/hconv.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/hist2.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/hrate.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/iSCAM.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/iSCAM2OM.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/iSCAMcomps.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/iSCAMinds.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/initialize-methods.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/joinData.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/join_plots.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/label.class-class.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/ldim.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/makeMOM.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/makeRel.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/makeTransparent.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/makemov.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/makemov2.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/movestockCPP.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/movfit_Rcpp.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/multiData.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/multiDataS.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/multiMSE.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/multidebug.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/optCPU.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/optMSY_eq.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/optQ.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/optYield.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/plot.Data.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/plot.MMSE.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/plot.MOM.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/plot.MSE.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/plot.Stock.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/plotFun.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/plotOFL.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/plotRel.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/plotmulti.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/plotquant.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/popdynCPP.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/popdynMICE.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/popdynOneMICE.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/popdynOneTScpp.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/prob.class-class.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/qestMICE.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/replic8.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/runCOSEWIC.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/runInMP.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/runMP.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/runMSE.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/sample_steepness2.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/sdconv.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/select_MP.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/setup.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/show-MSE.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/show-MSEtool.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/show-Rec.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/simCAA.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/simCAL.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/simmov.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/simmov2.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/summary-Data.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/summary-MMSE.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/summary-MSE.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/tinyErr.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/trlnorm.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/validcpars.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/wormplot.html</loc>
-  </url>
-  <url>
-    <loc>https://msetool.openmse.com/reference/writeCSV.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://msetool.openmse.com/404.html</loc></url>
+<url><loc>https://msetool.openmse.com/LICENSE.html</loc></url>
+<url><loc>https://msetool.openmse.com/authors.html</loc></url>
+<url><loc>https://msetool.openmse.com/index.html</loc></url>
+<url><loc>https://msetool.openmse.com/news/index.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/ASAP2OM.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Assess2MOM.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Assess2OM.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Awatea2OM.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/BAM2MOM.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/BlankSelPlot.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Blow_opt.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/CALsimp.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/CSRA.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/CSRAfunc.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/CalcAsymptoticDist.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/CalcMPDynamics.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/CalculateQ.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Can.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/CheckDuplicate.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/CheckMPs.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/CheckOM.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/ChkYrs.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Choose.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/CombineMMP.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Converge.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Cos_thresh_tab.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Cplot.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/DFO_bar.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/DFO_hist.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/DFO_plot.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/DFO_plot2.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/DFO_proj.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/DFO_quant.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/DFO_report.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/DFO_spider.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/DFO_tab.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/DFO_tab_formatted.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/DLMDataDir.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Data-class-objects.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Data-class.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Data2csv.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/DataDescription.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/DataDir.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/DataInit.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/DataSlots.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Data_xl.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Dom.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/FMSYref.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Fease.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Fleet-class-objects.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Fleet-class.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/FleetDescription.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/GenerateRandomWalk.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Herm-int.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Hist-class.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/HistDescription.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/HistMICE.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Imp-class-objects.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Imp-class.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/ImpDescription.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Input.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Kplot.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/L2A.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/LH2OM.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/LHdatabase.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Lag_Data.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/LinInterp.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/ML2D.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/MMSE-class.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/MOM-class-objects.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/MOM-class.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/MPCalcsNAs.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/MPtype.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/MPurl.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/MSE-class.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/MSEDescription.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/MSEextra.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/MSYCalcs.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/NAor0.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/NIL.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/NOAA_plot.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/OM-class-objects.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/OM-class.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/OMDescription.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/OMdoc.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/OMexample.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/OMinit.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Obs-class-objects.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Obs-class.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/ObsDescription.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/OneRep.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/PMLimit.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/PMobj-class.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/PWhisker.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/PerformanceMetric.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Pplot.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Pplot2.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Range.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/RealFease.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Rec-class.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Replace.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Report.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/ReqData.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Required.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/ResFromRel.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/SIL.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/SS2Data.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/SS2DataMOM.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/SS2MOM.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/SSBrefplot.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/SampleCpars.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/SampleFleetPars.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/SampleImpPars.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/SampleObsPars.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/SampleStockPars.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Sense.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/SimulatedData.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/SketchFun.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Stock-class-objects.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Stock-class.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/StockDescription.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Sub.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/SubCpars.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/SubOM.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/TAC.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/TACfilter.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/TEG.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Taxa_Table.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Thresh_tab.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/TradePlot.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Turing.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Uses.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/VOI.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/VOI2.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/VOIplot.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/WHAM2OM.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/XL2Data.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/XL2Fleet.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/XL2OM.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/XL2Stock.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/alphaconv.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/applyMMP.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/applyMP.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/avail.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/boxplot.Data.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/calcMean.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/calcProb.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/calcRefYield.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/char.log-class.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/checkMSE.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/cparscheck.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/cv.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/dnormal.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/genSizeCompWrap.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/getAFC.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/getBlow.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/getDataList.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/getEffhist.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/getMP.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/getclass.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/getfirstlev.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/getmov2.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/getnIVs.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/getq_multi_MICE.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/getsel.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/hconv.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/hist2.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/hrate.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/iSCAM.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/iSCAM2OM.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/iSCAMcomps.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/iSCAMinds.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/index.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/initialize-methods.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/joinData.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/join_plots.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/label.class-class.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/ldim.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/makeMOM.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/makeRel.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/makeTransparent.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/makemov.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/makemov2.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/movestockCPP.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/movfit_Rcpp.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/multiData.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/multiDataS.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/multiMSE.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/multidebug.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/optCPU.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/optMSY_eq.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/optQ.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/optYield.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/plot.Data.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/plot.MMSE.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/plot.MOM.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/plot.MSE.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/plot.Stock.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/plotFun.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/plotOFL.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/plotRel.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/plotmulti.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/plotquant.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/popdynCPP.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/popdynMICE.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/popdynOneMICE.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/popdynOneTScpp.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/prob.class-class.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/qestMICE.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/replic8.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/runCOSEWIC.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/runInMP.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/runMP.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/runMSE.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/sample_steepness2.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/sdconv.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/select_MP.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/setup.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/show-MSE.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/show-MSEtool.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/show-Rec.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/simCAA.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/simCAL.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/simmov.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/simmov2.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/summary-Data.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/summary-MMSE.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/summary-MSE.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/tinyErr.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/trlnorm.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/validcpars.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/wormplot.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/writeCSV.html</loc></url>
 </urlset>
+
