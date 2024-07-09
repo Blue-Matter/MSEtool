@@ -294,7 +294,7 @@ SubCpars_sim <- function(xx, sims, cpars) {
 
 SubCpars_proyears <- function(xx, yr_diff, cpars) {
   x <- cpars[[xx]]
-  vars_noproyears <-  c("Asize", "Find", "AddIbeta", "Data", "SRR")
+  vars_noproyears <-  c("Asize", "Find", "AddIbeta", "Data", "SRR", "Real.Data.Map")
   if(xx %in% vars_noproyears) { # Matrices or arrays without projection year dimensions
     return(x)
   } else if(xx == "MPA") {
