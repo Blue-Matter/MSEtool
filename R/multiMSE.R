@@ -2627,7 +2627,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         # Update Misc slot in Data
         for (p in 1:np) {
           for (f in 1:nf) {
-            MSElist[[p]][[f]][[mm]]@Misc <- append(MSElist[[p]][[f]][[mm]]@Misc, Data_p_A[[p]][[f]]@Misc)
+            MSElist[[p]][[f]][[mm]]@Misc <- Data_p_A[[p]][[f]]@Misc
           }
         }
         
