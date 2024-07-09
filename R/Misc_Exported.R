@@ -256,11 +256,15 @@ setMethod("SubCpars", signature(x = "MOM"),
               
               if(length(MOM@cpars)) {
                 yr_diff <- proyears_full - proyears
+                nms <- names(MOM@cpars)
                 for(p in 1:length(MOM@cpars)) {
+                  if (nms[p]=='control')
+                    next()
                   for(f in 1:length(MOM@cpars[[p]])) {
                     cpars_p <- MOM@cpars[[p]][[f]]
                     MOM@cpars[[p]][[f]] <- lapply(names(cpars_p), SubCpars_proyears, yr_diff = yr_diff, cpars = cpars_p) %>% 
                       structure(names = names(cpars_p))
+                  
                   }
                 }
               }
