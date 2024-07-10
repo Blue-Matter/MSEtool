@@ -2929,7 +2929,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     }
   
     # SSB relative to SSBMSY
-    SB_SBMSYa[, ,mm, ] <- apply(SSB_P, c(1,2, 4), sum, na.rm=TRUE)/array(SSBMSY_y[,,mm,],
+    SB_SBMSYa[, ,mm, ] <- apply(SSB_P, c(1,2, 4), sum, na.rm=TRUE)/array(SSBMSY_y[,,mm,(nyears+1):(nyears+proyears)],
                                                                        c(nsim,np,proyears))
 
     # for(p in 1:np) for(f in 1:nf)
