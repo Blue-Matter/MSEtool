@@ -19,6 +19,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 - projections use `dynGet` then `get` to find the MPs in the R session (see function `getMP`). `dynGet` finds functions that are defined inside the function call stack but not available in the global environment.
 
 ## Fixes
+- fix `plot_SS2MOM` for latest version of `r4ss`
 - fix to reported `MMSE@SB_SBMSY` for `MMSE` objects
 - fix to `OMdoc`
 - fixes to simulation of length comp
