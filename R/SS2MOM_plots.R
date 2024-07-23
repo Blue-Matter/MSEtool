@@ -157,15 +157,28 @@ compareBmulti <- function(replist, multiHist) {
 compareCmulti <- function(replist, multiHist, type=c('removals', 'retained')) {
   type <- match.arg(type)
   
-  ssvar <- switch(type,
-                  removals='kill_bio',
-                  retained='ret_bio')
+  nms <- colnames(replist$catch)
+  if ('kill_bio' %in% nms) {
+    ssvar <- switch(type,
+                    removals='kill_bio',
+                    retained='ret_bio')
+    
+  } else {
+    ssvar <- switch(type,
+                    removals='dead_bio',
+                    retained='ret_bio')
+    
+  }
+  
+  
+ 
+  
   # removals 
   mainyrs <- replist$startyr:replist$endyr
   C_SS <- replist$catch %>% dplyr::filter(Yr %in% mainyrs) %>%
     dplyr::select(Year=Yr, Fleet=Fleet, C=all_of(ssvar), Seas = Seas) %>%
     dplyr::group_by(Year, Fleet) %>% 
-    dplyr::summarise(C = sum(C))
+    dplyr::summarise(C = sum(C), .groups='drop')
   
   n.p <- length(multiHist)
   n.f <- length(multiHist[[1]])
@@ -231,13 +244,20 @@ compareCmulti <- function(replist, multiHist, type=c('removals', 'retained')) {
 
 compareC_overallmulti <- function(replist, multiHist) {
   # removals 
-  Fleet <- kill_bio <- NULL
+  Fleet <- kill_bio <- dead_bio <- NULL
   mainyrs <- replist$startyr:replist$endyr
   # C_SS <- replist$catch %>% dplyr::filter(Yr %in% mainyrs) %>%
   #   dplyr::select(Year=Yr, Fleet=Fleet, C=Exp)
   
-  C_SS <- replist$catch %>% dplyr::filter(Yr %in% mainyrs) %>%
-    dplyr::select(Year=Yr, Fleet=Fleet, C=kill_bio)
+  nms <- colnames(replist$catch)
+  if ('kill_bio' %in% nms) {
+    C_SS <- replist$catch %>% dplyr::filter(Yr %in% mainyrs) %>%
+      dplyr::select(Year=Yr, Fleet=Fleet, C=all_of('kill_bio'))
+  } else {
+    C_SS <- replist$catch %>% dplyr::filter(Yr %in% mainyrs) %>%
+      dplyr::select(Year=Yr, Fleet=Fleet, C=all_of('dead_bio'))
+  }
+    
   
   n.p <- length(multiHist)
   n.f <- length(multiHist[[1]])
