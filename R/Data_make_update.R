@@ -551,7 +551,9 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
     
     
   } else {
-    vn <- (apply(N_P*Sample_Area$CAL[,,(nyears+1):(nyears+proyears),], c(1,2,3), sum) * retA_P[,,(nyears+1):(nyears+proyears)]) # numbers at age that would be retained
+    vn <- (apply(N_P*Sample_Area$CAL[,,(nyears+1):(nyears+proyears),], c(1,2,3), sum) * 
+             V_P[,,(nyears+1):(nyears+proyears)] *
+             retA_P[,,(nyears+1):(nyears+proyears)]) # numbers at age that would be retained
     vn <- aperm(vn, c(1,3,2))
     CALdat <- simCAL(nsim, nyears=length(yind), maxage=StockPars$maxage,
                      CAL_ESS=ObsPars$CAL_ESS,

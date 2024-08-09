@@ -1448,8 +1448,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       if (!silent) setTxtProgressBar(pb, y) # Works with pbapply
 
       SelectChanged <- FALSE
-      if (any(range(retA_P[,,nyears+y] -  FleetPars$retA_real[,,nyears+y]) !=0)) SelectChanged <- TRUE
-      if (any(range(V_P[,,nyears+y] - FleetPars$V_real[,,nyears+y]) !=0))  SelectChanged <- TRUE
+      if (any(range(retA_P[,,nyears+y] -  FleetPars$retA[,,nyears+y]) !=0)) SelectChanged <- TRUE
+      if (any(range(V_P[,,nyears+y] - FleetPars$V[,,nyears+y]) !=0))  SelectChanged <- TRUE
 
       # -- Calculate MSY stats for this year ----
       if (SelectChanged) { #
@@ -1529,6 +1529,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
                               upyrs, interval, y, mm,
                               Misc=Data_p@Misc, RealData,
                               Sample_Area=ObsPars$Sample_Area)
+        
+        
         
         Data_MP@Misc$StockPars$CB_Pret <- CB_Pret
         Data_MP@Misc$StockPars$Biomass_P <- Biomass_P
