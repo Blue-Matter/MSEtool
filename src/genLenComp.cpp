@@ -182,7 +182,8 @@ NumericMatrix genSizeComp(NumericMatrix VulnN,
         
 
         // distribute annual effective sample size proportional to relative monthly catch
-        NumericVector probsubage = sela/sum(sela);
+        double relnumber = Nage(age)/sum(Nage);
+        NumericVector probsubage = sela/sum(sela) * relnumber;
         NumericVector subAgeVec = CAL_ESS * probsubage;
         
         // NumericVector subAgeVec = Nage3/NumericVector::create(1,2,3,4,5,6,7,8,9,10,11,12); // distribute n across months
