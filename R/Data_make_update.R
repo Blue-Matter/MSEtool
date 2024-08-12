@@ -1299,6 +1299,13 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
   Data_out@Iref <- UpdateSlot('Iref', RealData, SimData, msg)
   Data_out@CV_Iref <- UpdateSlot('CV_Iref', RealData, SimData, msg)
   # ObsPars$Irefbias <- rep(NA, nsim) # not calculated
+  
+  # ---- Misc ----
+  if (length(RealData@Misc) && !is.null(names(RealData@Misc))) {
+    Data_out@Misc[names(RealData@Misc)] <- RealData@Misc[names(RealData@Misc)]
+    if (msg)
+      message('Adding named list from `OM@cpars$Data@Misc`')
+  }
 
   NotUpdated <- function(RealData, sl, msg) {
     if (!all(is.na(slot(RealData, sl)))) {
