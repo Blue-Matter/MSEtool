@@ -249,7 +249,7 @@ PGK <- function(MSEobj = NULL, Ref = 1, Yrs = NULL) {
   PMobj@Name <- "Probability of Green Kobe"
   PMobj@Caption <- "Probability of Green Kobe"
   PMobj@Ref <- Ref
-  PMobj@Stat <- MSEobj@SB_SBMSY[, , Yrs[1]:Yrs[2]] > 1 & MSE@F_FMSY[, , Yrs[1]:Yrs[2]]  < 1
+  PMobj@Stat <- MSEobj@SB_SBMSY[, , Yrs[1]:Yrs[2]] > 1 & MSEobj@F_FMSY[, , Yrs[1]:Yrs[2]]  < 1
   PMobj@Prob <- calcProb(PMobj@Stat, MSEobj)
   PMobj@Mean <- calcMean(PMobj@Prob)
   PMobj@MPs <- MSEobj@MPs
