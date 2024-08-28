@@ -1,9 +1,9 @@
-#' Takes a fitted WHAM (Wood's Hole Assessment Model) and samples historical population and fishing dynamics from the MLE fit and variance-covariance matrix. 
+#' Takes a fitted SAM model and samples historical population and fishing dynamics from the MLE fit and variance-covariance matrix. 
 #'
 #'
-#' @description Takes a fitted WHAM (Wood's Hole Assessment Model) and samples historical population and fishing dynamics from the MLE fit and variance-covariance matrix. 
+#' @description Takes a fitted SAM model and samples historical population and fishing dynamics from the MLE fit and variance-covariance matrix. 
 #' Maturity-at-age-year, Mortality-at-age-year and weight-at-age-year are identical among simulations and are a direct copy of the matrices in the WHAM fitting object. 
-#' @param obj a list object created by \code{fit_wham()}. 
+#' @param inp a SAM output object
 #' @param nsim Positive integer. The number of simulations. 
 #' @param proyears Positive integer. The number of projection years for MSE.
 #' @param interval Positive integer. The interval at which management procedures will update the management advice in \link[MSEtool]{runMSE}, e.g., 1 = annual updates.
@@ -34,7 +34,7 @@ WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=
   
   # nsim=3; proyears=30; interval=2; Name = NULL; WLa=1; WLb=3; WAAind = 1;  Obs = MSEtool::Imprecise_Unbiased; Imp=MSEtool::Perfect_Imp; nyr_par_mu = 3; LowerTri=2; recind=1; plusgroup=T; altinit=0; fixq1 = T; report = TRUE; silent = FALSE
   if(!requireNamespace("TMB", quietly = TRUE) || !requireNamespace("mvtnorm", quietly = TRUE)) {
-    stop("Install the TMB and mvtnorm packages to use WHAM2OM.")
+    stop("Install the TMB and mvtnorm packages to use SAM2OM")
   }
 
   # Do a TMB sd report and get means / invert Hessian
@@ -116,11 +116,11 @@ WHAM2OM<-function(obj, nsim=3, proyears=30, interval=2, Name = NULL, WLa=1, WLb=
   
   
   # Sample some selectivities potentially for use later and put these in a WHAM Misc slot
-  WHAM = list()
+  SAM = list()
   nsel<-length(output[[1]]$selAA)
   selfunc<-function(x)    sapply(x$selAA, function(y)c(0,y[nrow(y),])/max(y[nrow(y),])) # takes most recent selectivity at age for each block
-  WHAM$AddIndV<- aperm(array(unlist(lapply(output,FUN=selfunc)),c(na+1,nsel,nsim)),c(3,2,1))
-  OM@Misc$WHAM <- WHAM
+  SAM$AddIndV<- aperm(array(unlist(lapply(output,FUN=selfunc)),c(na+1,nsel,nsim)),c(3,2,1))
+  OM@Misc$WHAM <- SAM
   
   OM
 }
