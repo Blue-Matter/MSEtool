@@ -1,5 +1,5 @@
 
-#' Internal MSE running function for the tune_MP function
+# Internal MSE running function for the tune_MP function
 int_tune = function(par, MP_parname, MP, Hist_list,minfunc,parallel){
   assign("MPtest",get(MP))
   formals(MPtest)[[MP_parname]] = par
@@ -9,7 +9,7 @@ int_tune = function(par, MP_parname, MP, Hist_list,minfunc,parallel){
     MSE_list = lapply(Hist_list,function(X)Project(X,MPs = "MPtest"))
   }else{
     sfExport('MPtest')
-    MSE_list = sfLapply(Hist_list,function(X)Project(X,MPs = "MPtest"))
+    MSE_list = snowfall::sfLapply(Hist_list,function(X)Project(X,MPs = "MPtest"))
   }
   minfunc(MSE_list)
 }

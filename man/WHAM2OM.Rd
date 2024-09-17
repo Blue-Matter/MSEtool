@@ -2,7 +2,7 @@
 % Please edit documentation in R/WHAM2OM.R
 \name{WHAM2OM}
 \alias{WHAM2OM}
-\title{Takes a fitted WHAM (Wood's Hole Assessment Model) and samples historical population and fishing dynamics from the MLE fit and variance-covariance matrix.}
+\title{Takes a fitted SAM model and samples historical population and fishing dynamics from the MLE fit and variance-covariance matrix.}
 \usage{
 WHAM2OM(
   obj,
@@ -26,7 +26,7 @@ WHAM2OM(
 )
 }
 \arguments{
-\item{obj}{a list object created by \code{fit_wham()}.}
+\item{obj}{a SAM output object}
 
 \item{nsim}{Positive integer. The number of simulations.}
 
@@ -66,7 +66,7 @@ WHAM2OM(
 An object of class \linkS4class{OM}.
 }
 \description{
-Takes a fitted WHAM (Wood's Hole Assessment Model) and samples historical population and fishing dynamics from the MLE fit and variance-covariance matrix.
+Takes a fitted SAM model and samples historical population and fishing dynamics from the MLE fit and variance-covariance matrix.
 Maturity-at-age-year, Mortality-at-age-year and weight-at-age-year are identical among simulations and are a direct copy of the matrices in the WHAM fitting object.
 }
 \details{

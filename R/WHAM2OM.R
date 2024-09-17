@@ -3,7 +3,7 @@
 #'
 #' @description Takes a fitted SAM model and samples historical population and fishing dynamics from the MLE fit and variance-covariance matrix. 
 #' Maturity-at-age-year, Mortality-at-age-year and weight-at-age-year are identical among simulations and are a direct copy of the matrices in the WHAM fitting object. 
-#' @param inp a SAM output object
+#' @param obj a SAM output object
 #' @param nsim Positive integer. The number of simulations. 
 #' @param proyears Positive integer. The number of projection years for MSE.
 #' @param interval Positive integer. The interval at which management procedures will update the management advice in \link[MSEtool]{runMSE}, e.g., 1 = annual updates.

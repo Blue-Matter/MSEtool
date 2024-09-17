@@ -616,9 +616,12 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
 
   Data@Misc <- Misc
   
-  if (length(RealData@Misc) && !is.null(names(RealData@Misc))) {
-    Data@Misc[names(RealData@Misc)] <- RealData@Misc[names(RealData@Misc)]
+  if (!is.null(RealData)) {
+    if (length(RealData@Misc) && !is.null(names(RealData@Misc))) {
+      Data@Misc[names(RealData@Misc)] <- RealData@Misc[names(RealData@Misc)]
+    }
   }
+ 
 
   Data
 }
