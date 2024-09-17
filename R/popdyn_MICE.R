@@ -480,8 +480,8 @@ popdynOneMICE <- function(np, nf, nareas, maxage, Ncur, Bcur, SSBcur, Vcur, FMre
     zero.m.ind <- which(M_agecur[p,]==0)
     if (length(zero.m.ind)>0) {
       # set N above maxage for this stock to zero
-      Nnext[p,min(zero.m.ind)-1,] <- Nnext[p,min(zero.m.ind)-1,] + apply(Nnext[p,zero.m.ind,], 2, sum)
-      Nnext[p,zero.m.ind,] <- 0 
+      Nnext[p, min(zero.m.ind)-1, ] <- Nnext[p, min(zero.m.ind)-1, ] + apply(Nnext[p, zero.m.ind, , drop = FALSE], 3, sum)
+      Nnext[p, zero.m.ind, ] <- 0 
     }
   }
   
