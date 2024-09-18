@@ -1829,6 +1829,13 @@ AddRealData_MS <- function(SimData,
   Data_out@CV_Iref <- UpdateSlot('CV_Iref', RealData, SimData, msg)
   # ObsPars$Irefbias <- rep(NA, nsim) # not calculated
   
+  # ---- Misc ----
+  if (length(RealData@Misc) && !is.null(names(RealData@Misc))) {
+    Data_out@Misc[names(RealData@Misc)] <- RealData@Misc[names(RealData@Misc)]
+    if (msg)
+      message('Adding named list from `OM@cpars$Data@Misc`')
+  }
+  
   NotUpdated <- function(RealData, sl, msg) {
     if (!all(is.na(slot(RealData, sl)))) {
       if (msg)
@@ -2272,6 +2279,12 @@ updateData_MS <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_P
   Data@OM <- OMtable
   
   Data@Misc <- Misc
+  
+  if (!is.null(RealData)) {
+    if (length(RealData@Misc) && !is.null(names(RealData@Misc))) {
+      Data@Misc[names(RealData@Misc)] <- RealData@Misc[names(RealData@Misc)]
+    }
+  }
   
   Data
 }
