@@ -57,8 +57,10 @@ SS2MOM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1
   MOM@nsim <- nsim
   MOM@pstar <- pstar
 
-  output <- lapply(seq_len(replist$nsexes), SS_stock, replist = replist, mainyrs = mainyrs, nyears = nyears,
-                   proyears = proyears, nsim = nsim, single_sex = length(replist$nsexes) == 1)
+  output <- lapply(seq_len(replist$nsexes), SS_stock, replist = replist, 
+                   mainyrs = mainyrs, nyears = nyears,
+                   proyears = proyears, nsim = nsim, 
+                   single_sex = length(replist$nsexes) == 1)
 
   MOM@Stocks <- lapply(output, getElement, "Stock") %>% structure(names = c("Female", "Male")[seq_len(replist$nsexes)])
   MOM@Fleets <- lapply(output, getElement, "Fleet") %>% structure(names = c("Female", "Male")[seq_len(replist$nsexes)])

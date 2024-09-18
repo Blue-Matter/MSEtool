@@ -14,7 +14,8 @@
 #' @param gender An integer that indexes the sex for importing life history parameters (1 = usually female, 2 = usually male, 1:2 = mean across both sexes).
 #' Only used for \code{SS2OM} only in a 2-sex model.
 #' @export
-SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1, interval = 1, pstar = 0.5,
+SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1,
+                  maxF = 3, seed = 1, interval = 1, pstar = 0.5,
                   Obs = MSEtool::Generic_Obs, Imp = MSEtool::Perfect_Imp,
                   import_mov = TRUE, gender = 1:2, seasons_to_years = TRUE,
                   model_discards = TRUE, silent = FALSE,
@@ -489,7 +490,6 @@ calc_weightedmean_c <- function(l) {
   
   wtlist <- list()
   for (fl in 1:nfleets) {
-    
     Fdf <- data.frame(Sim=rep(1:nsim), 
                       Yr=rep(1:nyears,each=nsim),
                       fm=as.vector(Find[[fl]]))
@@ -499,12 +499,9 @@ calc_weightedmean_c <- function(l) {
                       Yr=rep(1:nyears,each=nage*nsim),
                       V=as.vector(V[[fl]][,,1:nyears]))
                        
-    
     df <- left_join(Fdf, Vdf, by = c("Sim", "Yr"))
     df <- df %>% mutate(relF=fm*V)
     
-    
-  
     wtdf <- data.frame(Sim=rep(1:nsim),
                        Yr=rep(1:nyears,each=nage*nsim),
                        W=as.vector(Wt_age_C[[fl]][,,1:nyears]),
