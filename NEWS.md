@@ -14,6 +14,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 - MICE relationship can be specified by reading in the abundance at age and year from the operating model
 - MICE functions can operate as a multiplier on the base value instead of over-writing the base value
 - `MOM@cpars$control <- list(HermEq = FALSE)` sidesteps the first-year equilibrium age and sex distribution calculation from the hermaphroditic age schedule
+- document the various `cpars$control` options in `help("validcpars")`
 
 ## Internal
 - projections use `dynGet` then `get` to find the MPs in the R session (see function `getMP`). `dynGet` finds functions that are defined inside the function call stack but not available in the global environment.

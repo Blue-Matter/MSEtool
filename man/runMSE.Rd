@@ -28,7 +28,7 @@ runMSE(
 )
 }
 \arguments{
-\item{OM}{An operating model object (class \code{OM} or class \code{Hist}). Also works for
+\item{OM}{An operating model object (class \linkS4class{OM} or class \code{Hist}). Also works for
 \code{MOM} objects, as a wrapper for \code{ProjectMOM}}
 
 \item{parallel}{Logical or a named list. Should MPs be run using parallel processing?

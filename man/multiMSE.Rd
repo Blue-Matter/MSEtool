@@ -30,7 +30,7 @@ multiMSE(
 )
 }
 \arguments{
-\item{MOM}{A multi-fleet multi-stock operating model (class 'MOM')}
+\item{MOM}{A multi-fleet multi-stock operating model (class \linkS4class{MOM})}
 
 \item{parallel}{Logical or a named list. Should MPs be run using parallel processing?  See Details for more information.}
 

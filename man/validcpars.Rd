@@ -23,6 +23,33 @@ a HTML datatable with variable name, description and type of valid cpars
 \description{
 Valid custom parameters (cpars)
 }
+\section{Control list}{
+
+
+A named list for \code{control}, for example, \code{OM@cpars$control <- list(TAC = "removals", CAL = "removals")}, can be
+specified to override default settings in the MSE simulation. Possible names in the \code{control} list are:
+\itemize{
+\item \code{TAC} Character, set to \code{"removals"} so that the TAC is applied to the sum of retained + discarded catch. Default only applies the TAC to the retained catch.
+\item \code{CAL} Character, set to \code{"removals"} to sample the catch-at-length from retained + discarded catch. Default only samples from retained catch.
+\item \code{D} Character, set to \code{"VB"} so that historical depletion \code{OM@D} corresponds to vulnerable biomass depletion (only used when \code{OM@cpars$qs = NULL}).
+\item \code{optVB} Logical, set to \code{TRUE} so that historical depletion \code{OM@D} corresponds to vulnerable biomass depletion. Default sets depletion according to spawning biomasss when \code{OM@cpars$qs = NULL}.
+\item \code{optSBMSY} Logical, set to \code{TRUE} such that \code{OM@D} corresponds to the ratio of spawning biomass to MSY. Default uses according to spawning biomass depletion (biomass relative to unfished levels).
+\item \code{Depletion} Character, set to \code{"end"} such that historical depletion \code{OM@D} corresponds to the biomass at the end of the last projection year. Default corresponds to the value at the beginning of the last projection year.
+\item \code{ntrials} Integer, set the number of iterations to sample the operating model to match the depletion to \code{OM@D}. Default is 50.
+\item \code{fracD} Numeric, the maximum allowable proportion of simulations allowed to hit the bounds of the depletion parameter (simulation returns an error if exceeded). Default is 0.05.
+\item \code{checks} Logical. If \code{TRUE}, plots depletion and SB/SBMSY figures and prints values to the R console to diagnose issues with operating model configuration with regards to depletion.
+\item \code{unfished} Logical. If \code{TRUE}, returns historical simulations with F = 0.
+\item \code{progress} Logical. If \code{TRUE}, updates progress bar through \code{shiny::incProgress}. Used in conjunction with Shiny apps.
+\item \code{maxiterF} Integer, the number of iterations to solve for F in the projections from the specified TAC. Default is 300.
+\item \code{tolF} Numeric, the tolerance for the catch relative to the TAC when solving for F in the projections. Default is 1e-4.
+\item \code{HZN} Integer, the number of generations to solve for B_low. Default is 2. See \code{\link[=getBlow]{getBlow()}}.
+\item \code{Bfrac} Numeric, proportion of SBMSY to solve for B_low. Default is 0.5. See \code{\link[=getBlow]{getBlow()}}.
+\item \code{skipdata} Logical. If \code{TRUE}, skips conditioning on data in \code{MOM@cpars[[p]][[f]]$Data}. Only used in \code{\link[=multiMSE]{multiMSE()}}.
+\item \code{HermEq} Logical, whether the equilibrium population age structures in the multi-OM is generated from the hermaphroditism vector (intended for use in salmonMSE). Default is TRUE. Only used in \code{\link[=multiMSE]{multiMSE()}}.
+\item \code{HistRel} Logical, whether to perform the historical reconstruction with inter-stock relationships in \code{MOM@Rel}. Default is TRUE. Only used in \code{\link[=multiMSE]{multiMSE()}}.
+}
+}
+
 \examples{
 \dontrun{
 validcpars() # all valid cpars

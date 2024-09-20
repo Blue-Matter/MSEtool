@@ -1817,7 +1817,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #' Functions to run the Management Strategy Evaluation (closed-loop
 #' simulation) for a specified operating model
 #'
-#' @param OM An operating model object (class `OM` or class `Hist`). Also works for
+#' @param OM An operating model object (class [MSEtool::OM-class] or class `Hist`). Also works for
 #' `MOM` objects, as a wrapper for `ProjectMOM`
 #' @param MPs A vector of methods (character string) of class MP
 #' @param Hist Should model stop after historical simulations? Returns an object of

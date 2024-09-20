@@ -27,7 +27,7 @@
 #' @slot maxF Maximum instantaneous fishing mortality rate that may be simulated for any given age class
 #' @slot reps Number of samples of the management recommendation for each method. Note that when this is set to 1, the mean value of
 #' the data inputs is used.
-#' @slot cpars A hierarchical list nstock then nfleet long of custom parameters. Time series are a matrix nsim rows by nyears columns. Single parameters are a vector nsim long
+#' @slot cpars A hierarchical list nstock then nfleet long of custom parameters. Time series are a matrix nsim rows by nyears columns. Single parameters are a vector nsim long. See [validcpars()]
 #' @slot seed A random seed to ensure users can reproduce results exactly
 #' @slot Source A reference to a website or article from which parameters were taken to define the operating model
 #' @slot Stocks List of stock objects

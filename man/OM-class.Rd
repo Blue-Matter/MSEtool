@@ -40,7 +40,7 @@ bounds of a uniform distribution from which to sample the parameter.
 \item{\code{reps}}{Number of samples of the management recommendation for each method. Note that when this is set to 1, the mean value of
 the data inputs is used.}
 
-\item{\code{cpars}}{A list of custom parameters. Time series are a matrix nsim rows by nyears columns. Single parameters are a vector nsim long}
+\item{\code{cpars}}{A list of custom parameters. Time series are a matrix nsim rows by nyears columns. Single parameters are a vector nsim long. See \code{\link[=validcpars]{validcpars()}}}
 
 \item{\code{seed}}{A random seed to ensure users can reproduce results exactly}
 
