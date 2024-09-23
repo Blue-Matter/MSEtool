@@ -65,6 +65,31 @@
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>a HTML datatable with variable name, description and type of valid cpars</p>
     </div>
+    <div class="section level2">
+    <h2 id="control-list">Control list<a class="anchor" aria-label="anchor" href="#control-list"></a></h2>
+
+
+
+<p>A named list for <code>control</code>, for example, <code>OM@cpars$control &lt;- list(TAC = "removals", CAL = "removals")</code>, can be
+specified to override default settings in the MSE simulation. Possible names in the <code>control</code> list are:</p><ul><li><p><code>TAC</code> Character, set to <code>"removals"</code> so that the TAC is applied to the sum of retained + discarded catch. Default only applies the TAC to the retained catch.</p></li>
+<li><p><code>CAL</code> Character, set to <code>"removals"</code> to sample the catch-at-length from retained + discarded catch. Default only samples from retained catch.</p></li>
+<li><p><code>D</code> Character, set to <code>"VB"</code> so that historical depletion <code>OM@D</code> corresponds to vulnerable biomass depletion (only used when <code>OM@cpars$qs = NULL</code>).</p></li>
+<li><p><code>optVB</code> Logical, set to <code>TRUE</code> so that historical depletion <code>OM@D</code> corresponds to vulnerable biomass depletion. Default sets depletion according to spawning biomasss when <code>OM@cpars$qs = NULL</code>.</p></li>
+<li><p><code>optSBMSY</code> Logical, set to <code>TRUE</code> such that <code>OM@D</code> corresponds to the ratio of spawning biomass to MSY. Default uses according to spawning biomass depletion (biomass relative to unfished levels).</p></li>
+<li><p><code>Depletion</code> Character, set to <code>"end"</code> such that historical depletion <code>OM@D</code> corresponds to the biomass at the end of the last projection year. Default corresponds to the value at the beginning of the last projection year.</p></li>
+<li><p><code>ntrials</code> Integer, set the number of iterations to sample the operating model to match the depletion to <code>OM@D</code>. Default is 50.</p></li>
+<li><p><code>fracD</code> Numeric, the maximum allowable proportion of simulations allowed to hit the bounds of the depletion parameter (simulation returns an error if exceeded). Default is 0.05.</p></li>
+<li><p><code>checks</code> Logical. If <code>TRUE</code>, plots depletion and SB/SBMSY figures and prints values to the R console to diagnose issues with operating model configuration with regards to depletion.</p></li>
+<li><p><code>unfished</code> Logical. If <code>TRUE</code>, returns historical simulations with F = 0.</p></li>
+<li><p><code>progress</code> Logical. If <code>TRUE</code>, updates progress bar through <code><a href="https://rdrr.io/pkg/shiny/man/withProgress.html" class="external-link">shiny::incProgress</a></code>. Used in conjunction with Shiny apps.</p></li>
+<li><p><code>maxiterF</code> Integer, the number of iterations to solve for F in the projections from the specified TAC. Default is 300.</p></li>
+<li><p><code>tolF</code> Numeric, the tolerance for the catch relative to the TAC when solving for F in the projections. Default is 1e-4.</p></li>
+<li><p><code>HZN</code> Integer, the number of generations to solve for B_low. Default is 2. See <code><a href="getBlow.html">getBlow()</a></code>.</p></li>
+<li><p><code>Bfrac</code> Numeric, proportion of SBMSY to solve for B_low. Default is 0.5. See <code><a href="getBlow.html">getBlow()</a></code>.</p></li>
+<li><p><code>skipdata</code> Logical. If <code>TRUE</code>, skips conditioning on data in <code>MOM@cpars[[p]][[f]]$Data</code>. Only used in <code><a href="multiMSE.html">multiMSE()</a></code>.</p></li>
+<li><p><code>HermEq</code> Logical, whether the equilibrium population age structures in the multi-OM is generated from the hermaphroditism vector (intended for use in salmonMSE). Default is TRUE. Only used in <code><a href="multiMSE.html">multiMSE()</a></code>.</p></li>
+<li><p><code>HistRel</code> Logical, whether to perform the historical reconstruction with inter-stock relationships in <code>MOM@Rel</code>. Default is TRUE. Only used in <code><a href="multiMSE.html">multiMSE()</a></code>.</p></li>
+</ul></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
@@ -85,7 +110,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
     </footer></div>
