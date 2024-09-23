@@ -145,6 +145,7 @@ reference:
   - Sense
   - TAC
   - TACfilter
+  - tune_MP
   - Uses
   - runInMP
   - runMP
