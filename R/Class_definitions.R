@@ -1147,12 +1147,14 @@ setMethod("show", signature = (object="PMobj"), function(object) {
     colnames(df) <- object@MPs
     names(lst) <- object@MPs
     if (nsim > (nprint+1)) {
-      df <- rbind(df,
-                  rep(".", nMP),
-                  rep(".", nMP),
-                  rep(".", nMP),
-                  lst)
-      rownames(df) <- c(1:(nprint+3), nsim)
+      ndots <- nsim-nprint-1
+      
+      dots <- df[1,]
+      dots[] <- '.'
+      dots <- do.call("rbind", replicate(ndots, dots, simplify = FALSE))
+      
+      df <- rbind(df, dots, lst)
+      rownames(df) <-  c(1:nprint, nprint+1:ndots, nsim)
     }
     print(df)
 

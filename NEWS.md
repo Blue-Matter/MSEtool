@@ -1,6 +1,11 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
-# MSEtool 3.7.2 - dev version
+# MSEtool 3.7.3 - Development
+
+## Fixes
+- fix print for `PM` objects when `nsim<15`
+
+# MSEtool 3.7.2 
 
 ## New additions
 - added `nsim` argument to `Simulate` as an override to `OM@nsim`. Useful for generating `Hist` object with 2 sims when all historical values are identical across simulations
