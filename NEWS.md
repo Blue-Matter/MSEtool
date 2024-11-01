@@ -4,6 +4,8 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 ## Fixes
 - fix print for `PM` objects when `nsim<15`
+- fix to `LinInterp_cpp` when searching for values on bounds
+
 
 # MSEtool 3.7.2 
 

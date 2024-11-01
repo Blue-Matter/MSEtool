@@ -331,7 +331,8 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
 #   out[c(1,4)]
 # }
 
-per_recruit_F_calc <- function(x, yr.ind=1, StockPars, V, SPR_target = seq(0.2, 0.6, 0.05)) {
+per_recruit_F_calc <- function(x, yr.ind=1, StockPars, V, 
+                               SPR_target = seq(0.2, 0.6, 0.05)) {
   maxage <- StockPars$maxage
   plusgroup <- StockPars$plusgroup
   
@@ -428,8 +429,6 @@ per_recruit_F_calc <- function(x, yr.ind=1, StockPars, V, SPR_target = seq(0.2, 
     SPRcrash <- LinInterp_cpp(RPS, SPR_search, xlev = alpha)
     Fcrash <- LinInterp_cpp(RPS, F_search, xlev = alpha)
   }
-
-
 
   return(list(FSPR, FYPR = c(YPR_F01 = F01, YPR_Fmax = Fmax,
                              SPRcrash=SPRcrash, Fcrash=Fcrash,

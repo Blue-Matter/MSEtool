@@ -1056,7 +1056,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
 #' @param Hist An Historical Simulation object (class `Hist`)
 #'
 #' @export
-Project <- function (Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
+Project <- function (Hist=NULL, MPs=NA, parallel=FALSE,
+                     silent=FALSE,
                      extended=FALSE, checkMPs=FALSE) {
 
   # ---- Setup ----
