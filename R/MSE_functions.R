@@ -812,7 +812,9 @@ addMPs <- function(MSEobjs) {
 
   # Check seed and hist values
   for (x in 2:length(MSEobjs)) {
-    check <- all(MSEobjs[[x]]@OM == MSEobjs[[1]]@OM)
+    chk <- MSEobjs[[x]]@OM == MSEobjs[[1]]@OM
+    chk[is.na(chk)] <- TRUE
+    check <- all(chk)
     if (!check) stop('Values for `MSEobjs[[', x, ']]@OM` are not the same as `MSEobjs[[1]]@OM`')
     
     check <- all(MSEobjs[[x]]@Obs == MSEobjs[[1]]@Obs)
