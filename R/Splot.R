@@ -77,8 +77,8 @@ Splot = function(MSEobj, MPs = 4,
     if(vv==1) mtext("Mean values",line=0.4)
     
     for(mp in 1:nMPs){   
-      quantile_plot(datmat = vval[, mp, ], xvals = yrs, p =p, col=cols[mp], 
-                    tcol = tcols[mp], ylim=c(0,ymax),refline = refs[vv], dox = vv==nv)
+      quantile_plot(datmat = vval[, mp, ], xvals = yrs, p =p, tcol = tcols[mp], 
+                    ylim=c(0,ymax),refline = refs[vv], dox = vv==nv)
       if(vv ==1) mtext(subMSE@MPs[mp],line=0.4,col=cols[mp])
     }
   }
