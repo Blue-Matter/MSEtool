@@ -42,39 +42,7 @@ SimulateDEV <- function(OM=NULL, parallel=FALSE, silent=FALSE, nSim=NULL) {
   
   
   
-                           
- 
-
-  
-  M_at_Age <- getR6(M_at_Age)
-  PlusGroup <- getR6(PlusGroup)
-  SpawnTimeFrac <- getR6(SpawnTimeFrac)
-  
- 
-  
-
-  
- 
-  
-  
-  M_at_Age <- ListSimStock(Stock=OM@Stock, slots=c('NaturalMortality', 'MeanAtAge'))
-  PlusGroup <- ListStock(OM@Stock, slots=c('Ages', 'PlusGroup'))
-  SpawnTimeFrac <- ListStock(OM@Stock, slots=c('SRR', 'SpawnTimeFrac'))
-  
-  Unfished_Survival <- CalcUnfishedSurvival(M_at_Age, PlusGroup)
-  # spawning population; SO = Spawning Output
-  Unfished_Survival_SO <- CalcUnfishedSurvival(M_at_Age, PlusGroup, SpawnTimeFrac)
-  
-
-
-  # nested lists nsim by nstock
-  # final array is an R6 object; data in `value`
-  # number at beginning of time-step
-  N_at_Age <- SimStockList(OM)
-  # number spawning (same as N_at_Age if  `Spawn_Time_Frac=0`)
-  NS_at_Age <- SimStockList(OM)
-  
-  
+                        
   
   
   
