@@ -397,8 +397,9 @@ setMethod("Populate", "om", function(object, silent=FALSE) {
  
   # Populate Stock
   stockList <- vector('list', nStocks)
+  names(stockList) <- paste('Stock', 1:nStocks)
   fleetList <- vector('list', nStocks)
-  
+  names(fleetList) <- paste('Stock', 1:nStocks)
   for (st in 1:nStocks) {
     if (methods::is(object@Stock, 'list')) {
       stock <- object@Stock[[st]]
@@ -419,10 +420,13 @@ setMethod("Populate", "om", function(object, silent=FALSE) {
     stock@pYears <- object@pYears
     stock@CurrentYear <- object@CurrentYear
     
-    stockList[[st]] <- Populate(stock, seed=object@Seed, silent=silent)
+    stockList[[st]] <- Populate(stock, seed=object@Seed, silent=TRUE)
+    names(stockList)[st] <- stock@Name
+    names(fleetList)[st] <- names(stockList)[st]
     
     for (fl in 1:nFleets) {
       fleetList[[st]] <- list()
+      
       if (methods::is(object@Fleet, 'list')) {
         fleet <- object@Fleet[[st]][[fl]]
       } else {
@@ -434,7 +438,9 @@ setMethod("Populate", "om", function(object, silent=FALSE) {
                                         nsim=nSim(object),
                                         TimeSteps=TimeSteps(object),
                                         seed=object@Seed,
-                                        silent=silent)
+                                        silent=TRUE)
+      
+      names(fleetList[[st]])[fl] <- fleetList[[st]][[fl]]@Name
       
     }
   }
@@ -446,7 +452,7 @@ setMethod("Populate", "om", function(object, silent=FALSE) {
   }
   
   if (methods::is(object@Fleet, 'list')) {
-    if (length((fleetList)==1)) {
+    if (length(fleetList)==1) {
       if (length((fleetList[[1]])==1)) {
         object@Fleet <- fleetList[[1]][[1]]    
       } else {
@@ -459,7 +465,12 @@ setMethod("Populate", "om", function(object, silent=FALSE) {
   
   # Obs and Imp
   
-  # Update OM Timesteps 
+  # Update OM Timesteps
+  # object@Stock[[1]]@Ages@Units
+  # TimeUnits(object)
+  # 
+  # object@Stock
+  # object@TimeUnits 
   
   SetDigest(list(), object)
   
@@ -478,7 +489,7 @@ setMethod("Populate", "stock", function(object,
                                         seed=NULL,
                                         silent=FALSE) {
 
-  argList <- list(seed)
+  argList <- list(seed, ALK, AWK)
   if (CheckDigest(argList, object) | EmptyObject(object))
     return(object)
 
@@ -487,12 +498,12 @@ setMethod("Populate", "stock", function(object,
   stock <- object
   
   stock@TimeUnits <- stock@Ages@Units
-  stock@TimeStepsPerYear <- CalcTimeSteps(stock@nYears, 
-                                          stock@pYears, 
-                                          stock@CurrentYear, 
-                                          stock@TimeUnits)
+  stock@TimeStepsPerYear <- TSperYear(stock@TimeUnits )
+  stock@TimeSteps <- CalcTimeSteps(stock@nYears, 
+                                   stock@pYears, 
+                                   stock@CurrentYear, 
+                                   stock@TimeUnits)
   
-
 
   # Check time-steps
   ## TODO - update for octopus
@@ -513,6 +524,8 @@ setMethod("Populate", "stock", function(object,
                            ASK = ALK,
                            seed=seed,
                            silent=silent)
+  
+
 
   stock@Weight <- Populate(stock@Weight,
                            Ages=stock@Ages,
@@ -550,9 +563,9 @@ setMethod("Populate", "stock", function(object,
                               silent=silent)
 
   stock@SRR <- Populate(stock@SRR,
-                        stock@Ages@MaxAge,
-                        stock@CurrentYear,
-                        stock@TimeSteps,
+                        MaxAge=stock@Ages@MaxAge,
+                        CurrentYear=stock@CurrentYear,
+                        TimeSteps=stock@TimeSteps,
                         nsim=stock@nSim,
                         seed=seed,
                         silent=silent)
@@ -756,8 +769,6 @@ setMethod("Populate", "maturity", function(object,
   SetSeed(object, seed)
   sb <- PrintPopulating(object, silent)
 
-
-
   object@Pars <- StructurePars(Pars=object@Pars, nsim, nTS=GetnTS(TimeSteps))
   object@Model <- FindModel(object)
 
@@ -902,7 +913,7 @@ setMethod("Populate", "srr", function(object,
                      EmptyObject(object@RecDevProj))
 
   if (all(!EmptyObjects)) {
-    PrintDonePopulating(object, sb, silent)
+    PrintDonePopulating(object, sb, silent, allup=TRUE)
     return( SetDigest(argList, object))
   }
 
@@ -1104,9 +1115,10 @@ setMethod("Populate", "fleet", function(object,
                               Length,
                               nsim,
                               TimeSteps,
+                              CalcAtLength=FALSE,
                               seed,
-                              silent)
-
+                              silent=silent)
+  
   fleet@Effort <- Populate(fleet@Effort,
                            FishingMortality=fleet@FishingMortality,
                            DiscardMortality=fleet@DiscardMortality,

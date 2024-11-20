@@ -46,6 +46,8 @@
 \alias{Longitude}
 \alias{Longitude<-}
 \alias{nAge}
+\alias{nTS}
+\alias{nArea}
 \alias{MaxAge}
 \alias{MaxAge<-}
 \alias{MeanAtAge}
@@ -211,6 +213,10 @@ Longitude(x)
 Longitude(x) <- value
 
 nAge(x)
+
+nTS(x)
+
+nArea(x)
 
 MaxAge(x)
 

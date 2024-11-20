@@ -104,6 +104,7 @@ getFleetInfo <- function(Fleets) {
 }
 
 TSperYear <- function(Units) {
+  Units <- tolower(Units)
   switch(Units,
          'year'=1,
          'half-year'=2,

@@ -22,6 +22,8 @@ OM(
   TimeUnits = "year",
   Stock = NULL,
   Fleet = NULL,
+  Obs = list(),
+  Imp = list(),
   Complexes = list(),
   Relations = list(),
   SexPars = list(),

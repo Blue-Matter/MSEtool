@@ -8,6 +8,7 @@
 \usage{
 Effort(
   Effort = NULL,
+  Catchability = NULL,
   Vessels = NULL,
   Trips = NULL,
   MaxVessels = NULL,

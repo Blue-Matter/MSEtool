@@ -134,7 +134,9 @@ Populate(object, ...)
   DiscardMortality = NULL,
   Ages = NULL,
   Length = NULL,
+  nsim = NULL,
   TimeSteps = NULL,
+  CalcAtLength = FALSE,
   seed = NULL,
   silent = FALSE
 )
@@ -145,7 +147,9 @@ Populate(object, ...)
   DiscardMortality = NULL,
   Ages = NULL,
   Length = NULL,
+  nsim = NULL,
   TimeSteps = NULL,
+  CalcAtLength = FALSE,
   seed = NULL,
   silent = FALSE
 )
@@ -156,6 +160,7 @@ Populate(object, ...)
   DiscardMortality = NULL,
   Ages = NULL,
   Length = NULL,
+  nsim = NULL,
   TimeSteps = NULL,
   seed = NULL,
   silent = FALSE

@@ -16,70 +16,88 @@ OM2om <- function(OM, Author='', CurrentYear=NULL) {
   if (!methods::is(OM, 'OM') & !methods::is(OM, 'MOM'))
     cli::cli_abort('Argument `OM` must be class `OM` or `MOM`')
 
-  om <- new('om')
+  om <- OM()
+
   om@Name <- OM@Name
   om@Agency <-  OM@Agency
   om@Region <-  OM@Region
   om@Author <- Author
-
-  ## TODO
-  # other stuff - latitude etc
-  # pstar
-  # maxF
-  # reps
-  # Source
-
-  om@nsim <- OM@nsim
-  om@proyears <-  OM@proyears
+  om@Longitude <- OM@Longitude
+  om@Latitude <- OM@Latitude
+  om@Sponsor <- OM@Sponsor
+  om@nSim <- OM@nsim
+  if (methods::is(OM, 'MOM')) {
+    om@nYears <- OM@Fleets[[1]][[1]]@nyears
+  } else {
+    om@nYears <- OM@nyears
+  }
+ 
   om@Interval <- OM@interval
   om@Seed <- OM@seed
+  om@pStar <- OM@pstar
+  om@maxF <- OM@maxF
+  om@nReps <- OM@reps
+  om@Source <- OM@Source
+  
+  if (is.null(CurrentYear)) {
+    if (methods::is(OM, 'MOM')) {
+      om@CurrentYear <- OM@Fleets[[1]][[1]]@CurrentYr
+    } else {
+      om@CurrentYear <- as.numeric(format(Sys.Date(), '%Y'))
+    }
+  } else {
+    om@CurrentYear <- CurrentYear
+  }
+    
+  om@TimeUnits <- 'Year'
+  om@TimeStepsPerYear <- 1
+  om@TimeSteps <- CalcTimeSteps(nYears=om@nYears,
+                                pYears=om@pYears,
+                                CurrentYear=om@CurrentYear,
+                                TimeUnits=om@TimeUnits)
+
+
+ 
 
   if (methods::is(OM, 'OM')) {
-    if (is.null(CurrentYear))
-      om@CurrentYear <- as.numeric(format(Sys.Date(), '%Y'))
-
     om@Stock <- OM2stock(OM, cpars=OM@cpars)
-    om@Stock@Fleet <- OM2fleet(OM, OM@cpars, OM@Fdisc)
+    om@Fleet <- OM2fleet(OM, OM@cpars, OM@Fdisc)
     return(om)
   }
 
   if (methods::is(OM, 'MOM')) {
-    if (is.null(CurrentYear))
-      om@CurrentYear <- OM@Fleets[[1]][[1]]@CurrentYr
-
+    
     om@Stock <- MOM2stock(OM)
-
-    OM@Obs
-    OM@Imps
-    OM@CatchFrac
-    OM@Allocation
-    OM@Efactor
-    OM@Complexes
-    OM@SexPars
-
-    # cpars
-    # cpars$Data
-
-    OM@Rel
-
-
-
-
+    om@Fleet <- list()
+    for (st in 1:length(om@Stock)) {
+      om@Fleet[[st]] <- MOM2fleet(OM, st)
+    }
   }
-    return(MOM2om(OM))
+
+  
 
 
-
+  
+  om@Obs <- OM@Obs
+  om@Imp <- OM@Imps
+  om@CatchFrac <- OM@CatchFrac
+  om@Allocation <- OM@Allocation
+  om@SexPars <- OM@SexPars
+  om@Efactor <- OM@Efactor
+  om@Complexes<- OM@Complexes
+  om@Relations <- OM@Rel
+  om
 }
+
 
 
 
 OM2stock <- function(OM, cpars=NULL) {
   stock <- Stock()
-  Name(stock) <- OM@Name
-  CommonName(stock) <- OM@Common_Name
-  Species(stock) <- OM@Species
-  Ages(stock) <- Ages(OM@maxage)
+  stock@Name <- OM@Name
+  stock@CommonName <- OM@Common_Name
+  stock@Species <- OM@Species
+  stock@Ages <- Ages(OM@maxage)
   Length(stock) <- OM2Length(OM, cpars)
   Weight(stock) <- OM2Weight(OM, cpars)
   NaturalMortality(stock) <- OM2NaturalMortality(OM, cpars)
@@ -87,6 +105,7 @@ OM2stock <- function(OM, cpars=NULL) {
   Fecundity(stock) <- OM2Fecundity(OM, cpars)
   SRR(stock) <- OM2SRR(OM, cpars)
   Spatial(stock) <- OM2Spatial(OM, cpars)
+  Depletion(stock) <- OM2Depletion(OM, cpars)
   stock
 }
 
@@ -103,34 +122,33 @@ OM2Length <- function(OM, cpars=NULL) {
 
   pars <- Pars(Length)
   if (!is.numeric(pars$Linf)) {
-    pars$Linf <- process_cpars(OM@Linf)
+    pars$Linf <- process_cpars(OM@Linf) 
   }
   if (!is.numeric(pars$K)) {
-    pars$K <- process_cpars(OM@K)
+    pars$K <- process_cpars(OM@K) 
   }
   if (!is.numeric(pars$t0)) {
-    pars$t0 <- process_cpars(OM@t0)
+    pars$t0 <- process_cpars(OM@t0) 
   }
   Pars(Length) <- pars
 
   if (!all(OM@Linfsd==0)) {
-    Length@Pars$Linfsd <- process_cpars(OM@Linfsd)
+    Length@Pars$Linfsd <- process_cpars(OM@Linfsd) 
   }
   if (!all(OM@Ksd==0)) {
-    Length@Pars$Ksd <- process_cpars(OM@Ksd)
+    Length@Pars$Ksd <- process_cpars(OM@Ksd) 
   }
 
-  if (!is.null(SDatAge(Length))) {
-    CVatAge(Length) <- SDatAge(Length)/MeanAtAge(Length)
-  } else {
-    CVatAge(Length) <- process_cpars(OM@LenCV)
+  if (is.null(CVatAge(Length))) {
+    CVatAge(Length) <- process_cpars(OM@LenCV) |> Structure()
   }
-  if (is.null(SDatAge(Length)))
-    SDatAge(Length) <- CVatAge(Length) * MeanAtAge(Length)
-
+  
   # ASK
   if (!is.null(Length@Classes))
-    Length@ASK <- calcALK(Length@MeanAtAge, Length@SDatAge, Length@Classes,  Length@TruncSD)
+    Length@ASK <- CalcASK(MeanAtAge=Length@MeanAtAge, 
+                          Length@CVatAge,
+                          Length@Classes,  
+                          Length@TruncSD)
 
   Length
 }
@@ -139,7 +157,6 @@ cpars2Length <- function(cpars) {
   Length <- Length()
   MeanAtAge(Length) <- process_cpars(cpars$Len_age)
   CVatAge(Length) <- process_cpars(cpars$LenCV)
-  SDatAge(Length) <- process_cpars(cpars$LatASD)
   Classes(Length) <- cpars$CAL_binsmid
   pars <- Pars(Length)
   pars$Linf <- process_cpars(cpars$Linf)
@@ -358,6 +375,19 @@ cpars2SRR <- function(cpars, nyears=NULL, maxage=NULL) {
 
   SRR
 }
+OM2Depletion <- function(OM, cpars=NULL) {
+  if (is.null(cpars) & inherits(OM, 'OM'))
+    cpars <- OM@cpars
+  if (!EmptyObject(cpars)) {
+    Depletion <- cpars2Depletion(cpars)
+  } else {
+    Depletion <- Depletion()
+  }
+  
+  if (is.null(Depletion@Final))
+    Depletion@Final <- OM@D
+  Depletion
+}
 
 OM2Spatial <- function(OM, cpars=NULL) {
   if (is.null(cpars) & inherits(OM, 'OM'))
@@ -381,6 +411,10 @@ OM2Spatial <- function(OM, cpars=NULL) {
     Spatial@ProbStaying <- process_cpars(OM@Prob_staying)
     Spatial@UnfishedDist <- process_cpars(OM@Frac_area_1)
   }
+  if (Spatial@RelativeSize == 0.5 &
+      Spatial@ProbStaying == 0.5 &
+      Spatial@UnfishedDist == 0.5) 
+    return(Spatial())
   Spatial
 }
 
@@ -411,6 +445,12 @@ cpars2Spatial <- function(cpars) {
   Spatial
 }
 
+cpars2Depletion <- function(cpars) {
+  Depletion <- Depletion()
+  Depletion@Initial <- process_cpars(cpars$initD)
+  Depletion@Final <- process_cpars(cpars[['D']])
+  Depletion
+}
 
 AdjustEffort <- function(FishingMortality, DiscardMortality) {
   d2 <- dim(DiscardMortality@MeanAtAge)
@@ -434,24 +474,15 @@ OM2fleet <- function(OM, cpars=NULL, Fdisc=NULL) {
   fleet <- Fleet()
   if (methods::is(OM, 'Fleet'))
     Name(fleet) <- OM@Name
-
-  # Discard Mortality
-  DiscardMortality(fleet) <- OM2DiscardMortality(OM, cpars, Fdisc)
-
-  # Fishing Mortality
+  
   FishingMortality(fleet) <- OM2FishingMortality(OM, cpars)
-
-  # Adjust Effort
-  FishingMortality(fleet) <- AdjustEffort(FishingMortality=FishingMortality(fleet),
-                                          DiscardMortality=DiscardMortality(fleet))
-  # Selectivity
+  DiscardMortality(fleet) <- OM2DiscardMortality(OM, cpars, Fdisc)
+  Effort(fleet) <- OM2Effort(OM, cpars)
   Selectivity(fleet) <- OM2Selectivity(OM, cpars)
-
-  # Retention
   Retention(fleet) <- OM2Retention(OM, cpars)
 
   # SpatTarg
-  SpatTarg(fleet) <- OM2SpatTarg(OM, cpars)
+  Distribution(fleet) <- OM2Distribution(OM, cpars)
 
   # Weight
   Weight(fleet) <- process_cpars(cpars$Wt_age_C)
@@ -471,30 +502,12 @@ OM2FishingMortality <- function(OM, cpars=NULL) {
   } else {
     FishingMortality <- FishingMortality()
   }
-
-  if (is.null(FishingMortality@nVessels)) {
-    FishingMortality@nVessels <- data.frame(EffLower=OM@EffLower,
-                                            EffUpper=OM@EffUpper,
-                                            EffYears=OM@EffYears)
-    FishingMortality@nTrips <- 1
-
-    FishingMortality@Catchability <- data.frame(qcv=OM@qcv, qinc=OM@qinc)
-  }
-
-  FishingMortality@nYear <- OM@nyears
+ 
   FishingMortality
 }
 
 cpars2FishingMortality <- function(cpars) {
   FishingMortality <- FishingMortality()
-  FishingMortality@nVessels <- process_cpars(cpars$Find)
-  FishingMortality@nTrips <- 1
-
-  FishingMortality@Catchability <- process_cpars(cpars$qs)
-
-  FishingMortality@ApicalF <-   FishingMortality@nVessels *
-    FishingMortality@nTrips *   FishingMortality@Catchability
-
   FishingMortality
 
 }
@@ -550,34 +563,25 @@ cpars2Retention <- function(cpars) {
 }
 
 
-OM2SpatTarg <- function(OM, cpars) {
+OM2Distribution <- function(OM, cpars) {
   if (is.null(cpars) & inherits(OM, 'OM'))
     cpars <- OM@cpars
 
   if (!EmptyObject(cpars)) {
-    SpatTarg  <- cpars2SpatTarg(cpars)
+    Distribution  <- cpars2Distribution(cpars)
   } else {
-    SpatTarg <- SpatTarg()
+    Distribution <- Distribution()
   }
 
-  if (is.null(SpatTarg@Targeting))
-    SpatTarg@Targeting <- process_cpars(OM@Spat_targ)
+  # TODO still
 
-  if (is.null(SpatTarg@UnfishedDist)) {
-    if (OM@MPA)
-      stop('OM@MPA not done yet')
-  }
-
-  SpatTarg
+  Distribution
 }
 
-cpars2SpatTarg <- function(cpars) {
-  SpatTarg <- SpatTarg()
-
-  SpatTarg@Targeting <-
-    if (!is.null(process_cpars(cpars$MPA)))
-      stop('cpars$MPA not done yet')
-  SpatTarg
+cpars2Distribution <- function(cpars) {
+  Distribution <- Distribution()
+  Distribution@Closure <- process_cpars(cpars$MPA)
+  Distribution
 }
 
 
@@ -585,6 +589,35 @@ cpars2SpatTarg <- function(cpars) {
 
 
 
+OM2Effort <- function(OM, cpars=NULL) {
+  if (is.null(cpars) & inherits(OM, 'OM'))
+    cpars <- OM@cpars
+  
+  if (!EmptyObject(cpars)) {
+    Effort <- cpars2Effort(cpars)
+  } else {
+    Effort <- Effort()
+  }
+  
+  if (is.null(Effort@Effort)) {
+    Effort@Effort <- data.frame(TimeSteps=OM@EffYears,
+                                Lower=OM@EffLower,
+                                Upper=OM@EffUpper,
+                                CV=OM@Esd[1])
+  } 
+  
+  Effort@qCV <- OM@qcv
+  Effort@qInc <- OM@qinc
+  Effort
+  
+}
+
+cpars2Effort <- function(cpars) {
+  Effort <- Effort()
+  Effort@Effort <- process_cpars(cpars$Find)
+  Effort@Catchability <- process_cpars(cpars$qs)
+  Effort
+}
 
 
 OM2DiscardMortality <- function(OM, cpars=NULL, Fdisc=NULL) {
@@ -598,21 +631,11 @@ OM2DiscardMortality <- function(OM, cpars=NULL, Fdisc=NULL) {
     DiscardMortality <- DiscardMortality()
   }
 
-  if (inherits(OM, 'OM')) {
-    DiscardMortality@Pars$Fdisc <- process_cpars(OM@Fdisc)
-  } else if (!is.null(Fdisc)) {
-    DiscardMortality@Pars$Fdisc <- Fdisc
-  }
   DiscardMortality
 }
 
 cpars2DiscardMortality <- function(cpars) {
   DiscardMortality <- DiscardMortality()
-
-  fdisc <- process_cpars(cpars[['Fdisc']])
-  if (!is.null(fdisc)) {
-    DiscardMortality@Pars$Fdisc <- fdisc
-  }
 
   DiscardMortality@MeanAtAge <- process_cpars(cpars$Fdisc_array1)
   DiscardMortality@MeanAtLength <- process_cpars(cpars$Fdisc_array2)
@@ -629,7 +652,6 @@ MOM2fleet <- function(MOM, st) {
     FleetNames <- paste('Fleet', 1:nfleets)
 
   FleetList <- list()
-  class(FleetList) <- 'FleetList'
 
   for (fl in 1:nfleets) {
     Fleet <- MOM@Fleets[[st]][[fl]]
@@ -645,7 +667,6 @@ MOM2fleet <- function(MOM, st) {
 
 MOM2stock <- function(MOM) {
   StockList <- list()
-  class(StockList) <- 'StockList'
   stocks <- MOM@Stocks
   nstocks <- length(stocks)
 
@@ -654,7 +675,7 @@ MOM2stock <- function(MOM) {
     cpars <- MOM@cpars[[st]][[1]]
     StockList[[st]] <- OM2stock(Stock, cpars)
 
-    StockList[[st]]@Fleet <- MOM2fleet(MOM, st)
+    
 
 
     # for (fl in 1:nfleets) {

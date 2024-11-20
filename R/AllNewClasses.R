@@ -28,6 +28,7 @@ methods::setClassUnion(name="ASK.null", members=c("NULL", 'array'))
 methods::setClassUnion(name="fun.char", members=c("character", "function", "NULL"))
 methods::setClassUnion(name="char.null", members=c("character", "NULL"))
 methods::setClassUnion(name="char.num", members=c('character', "numeric"))
+methods::setClassUnion(name="char.list", members=c('character', "list", 'NULL'))
 methods::setClassUnion(name="array.null", members=c("array", "NULL"))
 methods::setClassUnion(name="array.char.null", members=c("array", 'character', "NULL"))
 methods::setClassUnion(name="num.null", members=c("numeric", "NULL"))
@@ -1441,8 +1442,8 @@ Spatial <- function(UnfishedDist=NULL,
 #'
 #' @export
 setClass('depletion',
-         slots=c(Initial='numeric',
-                 Final='numeric',
+         slots=c(Initial='num.null',
+                 Final='num.null',
                  Reference='array.char.null'),
          contains = c('MiscClass', 'Created_ModifiedClass')
 )
@@ -1774,7 +1775,9 @@ FishingMortality <- function(ApicalF=NULL,
 #' @export
 setClass('effort',
          slots=c(Effort='num.array.df',
-                 Catchability='array.null',
+                 Catchability='num.array',
+                 qCV='num.array',
+                 qInc='num.array',
                  Vessels='num.array.df',
                  Trips='num.array',
                  MaxVessels='num.array',
@@ -2141,7 +2144,7 @@ Distribution <- function(Closure=NULL,
   if (methods::is(Closure, 'fleet'))
     return(Closure@Distribution)
 
-  methods::new('discardmortality',
+  methods::new('distribution',
                Closure=Closure,
                Cost=Cost,
                Targeting=Targeting,
@@ -2602,19 +2605,23 @@ setClass("om",
                  Obs='obs.list',
                  Imp='imp.list',
                  Data='data.list',
+                 CatchFrac='list',
+                 Allocation='list',
+                 Efactor='list',
                  Complexes='list',
-                 Relations='list',
                  SexPars='list',
+                 Relations='list',
                  Interval='numeric',
                  nReps='numeric',
                  pStar='numeric',
+                 maxF='numeric',
                  Seed='num.null',
                  TimeUnits='char.null',
                  TimeStepsPerYear='num.null',
                  TimeSteps='num.null',
                  Control='list',
                  Misc='list',
-                 Source='list'),
+                 Source='char.list'),
          contains = 'Created_ModifiedClass'
 )
 #' @describeIn OM Create a new object of class `om`
@@ -2706,6 +2713,7 @@ OM <- function(Name='A new `OM` object',
                Interval=1,
                nReps=1,
                pStar=0.5,
+               maxF=3,
                Seed=NULL,
                Control=list(),
                Misc=list(),
@@ -2742,6 +2750,7 @@ OM <- function(Name='A new `OM` object',
   .Object@Interval <- Interval
   .Object@nReps <- nReps
   .Object@pStar <- pStar
+  .Object@maxF <- maxF
   .Object@Seed <- Seed
   .Object@Control <- Control
   .Object@Misc <- Misc

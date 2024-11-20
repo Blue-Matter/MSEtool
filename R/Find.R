@@ -17,6 +17,9 @@ FindModel <- function(object, ignore=c('Ages', 'Length', 'nage', 'AtAge')) {
   if (any(is.na(object@Pars)))
     return(NULL)
 
+  if (length(object@Pars)<1)
+    return(NULL)
+  
   if (inherits(object@Model,'character'))
     return(object@Model)
 

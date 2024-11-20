@@ -873,6 +873,22 @@ TimeSteps <- function(x, Period=NULL) {
   assignSlot(x, value, 'TimeSteps')
 }
 
+## ---- TimeUnits ----
+
+#' @rdname Access
+#' @export
+TimeUnits <- function(x, Period=NULL) {
+ x@TimeUnits
+
+}
+
+#' @rdname Access
+#' @export
+`TimeUnits<-` <- function(x, value) {
+  assignSlot(x, value, 'TimeUnits')
+}
+
+
 ## ---- TruncSD ----
 
 #' @rdname Access
