@@ -13,8 +13,7 @@ SimulateDEV <- function(OM=NULL, parallel=FALSE, silent=FALSE, nSim=NULL) {
   
   # TODO
   # - MICE models and OM@Rel
-  
-  TimeSteps <- TimeSteps(OM)
+
   
   nStocks <- OM@Stock |> length()
   if (methods::is(OM@Stock, 'stock'))

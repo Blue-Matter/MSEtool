@@ -74,10 +74,7 @@ OM2om <- function(OM, Author='', CurrentYear=NULL) {
     }
   }
 
-  
 
-
-  
   om@Obs <- OM@Obs
   om@Imp <- OM@Imps
   om@CatchFrac <- OM@CatchFrac
@@ -86,6 +83,10 @@ OM2om <- function(OM, Author='', CurrentYear=NULL) {
   om@Efactor <- OM@Efactor
   om@Complexes<- OM@Complexes
   om@Relations <- OM@Rel
+  
+  
+  
+  
   om
 }
 
