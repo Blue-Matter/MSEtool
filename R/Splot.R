@@ -18,7 +18,7 @@ quantile_plot = function(datmat, xvals, p = c(0.05,0.25,0.5,0.75,0.95),  tcol, y
   qs = apply(datmat, 2,quantile,p=p)
   plot(range(xvals),range(qs),col="white",ylim=ylim, yaxs ="i",xlab="",ylab="",main="", axes=F)
   doborder(); 
-  if(dox){axis(1)}; if(doy){axis(2)}
+  if(dox){axis(1,las=2)}; if(doy){axis(2)}
   grid(col="grey")
   abline(h=refline,lty=1)
   polygon(c(xvals,rev(xvals)), c(qs[1,],rev(qs[5,])), border=NA, col=tcol)
@@ -53,12 +53,12 @@ Splot = function(MSEobj, MPs = 4,
   nMPs = subMSE@nMPs
   vars = c("F_FMSY","SB_SBMSY","Catch")
   refs = c(1,1,mean(MSEobj@PPD[[1]]@Cat[,MSEobj@nyears]))
-  leglabs = c("P(F>FMSY)","P(B<BMSY)","P(Catch>current)")
+  leglabs = c("P(F>FMSY)","P(B>BMSY)","P(Catch>current)")
   qlabs = c("F/FMSY","B/BMSY","Yield")
   nv = length(vars)
   yrs = subMSE@OM$CurrentYr[1]+1:subMSE@proyears
   
-  par(mfrow=c(nv,nMPs+1),mai=c(0.05,0.05,0.02,0.02),omi=c(0.5,0.5,0.35,0.02))
+  par(mfrow=c(nv,nMPs+1),mai=c(0.05,0.05,0.02,0.02),omi=c(0.7,0.5,0.35,0.02))
     
   for(vv in 1:nv){
     vnam = vars[vv]
@@ -69,7 +69,7 @@ Splot = function(MSEobj, MPs = 4,
     
     matplot(yrs,t(mus),col="white",xlab="",ylab="",main="",ylim=c(0,ymax),yaxs ="i",axes=F)
     grid(col="grey"); abline(h=refs[vv],lty=1); doborder()
-    axis(2); if(vv==nv)axis(1)
+    axis(2); if(vv==nv)axis(1,las=2)
     matplot(yrs,t(mus),col=cols, type="l",lty=1,lwd=2,add=T)
     mtext(qlabs[vv],2,line=2.6)
     Ps = apply(vval,2,function(x){mean(x>refs[vv])})
@@ -83,6 +83,6 @@ Splot = function(MSEobj, MPs = 4,
     }
   }
 
-  mtext("Projection Year",1,line=2.2, outer=T)
+  mtext("Projection Year",1,line=3.2, outer=T)
   
 }
