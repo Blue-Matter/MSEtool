@@ -4,6 +4,7 @@
 ^data-raw$
 
 man-roxygen
+^man-examples$
 
 ^.*\.git
 ## Ignore travis config file
@@ -38,3 +39,4 @@ src\*.dll
 ^README\.Rmd$
 ^codecov\.yml$
 ^CRAN-SUBMISSION$
+

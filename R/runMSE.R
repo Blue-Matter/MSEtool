@@ -3,6 +3,10 @@
 #
 Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL) {
   
+  if (methods::is(OM, 'om')) 
+    return(SimulateDEV(OM, parallel, silent, nsim))
+    
+    
   if (!is.null(nsim)) {
     if (nsim<OM@nsim) 
       OM@nsim <- nsim
@@ -118,6 +122,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
 
   # Imp Parameters
   ImpPars <- SampleImpPars(OM, nsim, cpars=SampCpars, nyears, proyears)
+  
+  
 
   # Bio-Economic Parameters
   BioEcoPars <- c("RevCurr", "CostCurr", "Response", "CostInc", "RevInc", "LatentEff")
