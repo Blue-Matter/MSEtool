@@ -35,13 +35,13 @@ quantile_plot = function(datmat, xvals, p = c(0.05,0.25,0.5,0.75,0.95),  tcol, y
 #' @param p Vector of quantiles five positions long. Defaults to c(0.05,0.25,0.5,0.75,0.95) so the 90% and 50% intervals with the median plotted  in white. 
 #' @author T. Carruthers
 #' @export
-Splot = function(MSEobj, MPs = 4,
+Splot = function(MSEobj, MPs = 5,
                  p = c(0.05,0.25,0.5,0.75,0.95)){
   
   if(class(MPs[1])=="character"){
     MPind = MSEobj@MPs %in% MPs
   }else if(length(MPs)==1){
-    MPind = 1:MPs
+    MPind = 1:min(MPs,MSEobj@nMPs)
   }else{
     MPind = MPs
   }
