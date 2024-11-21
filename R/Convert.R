@@ -11,7 +11,7 @@ NULL
 #'  to an `om` object
 #' @param OM An `OM` or `MOM` class object
 #' @export
-OM2om <- function(OM, Author='', CurrentYear=NULL) {
+OM2om <- function(OM, Author='', CurrentYear=NULL, keep=FALSE) {
 
   if (!methods::is(OM, 'OM') & !methods::is(OM, 'MOM'))
     cli::cli_abort('Argument `OM` must be class `OM` or `MOM`')
@@ -31,6 +31,8 @@ OM2om <- function(OM, Author='', CurrentYear=NULL) {
   } else {
     om@nYears <- OM@nyears
   }
+  
+  om@pYears <- OM@proyears
  
   om@Interval <- OM@interval
   om@Seed <- OM@seed
@@ -62,6 +64,7 @@ OM2om <- function(OM, Author='', CurrentYear=NULL) {
   if (methods::is(OM, 'OM')) {
     om@Stock <- OM2stock(OM, cpars=OM@cpars)
     om@Fleet <- OM2fleet(OM, OM@cpars, OM@Fdisc)
+    cli::cli_alert_danger('Obs and Imp and cpars not done yet!')
     return(om)
   }
 
@@ -72,20 +75,36 @@ OM2om <- function(OM, Author='', CurrentYear=NULL) {
     for (st in 1:length(om@Stock)) {
       om@Fleet[[st]] <- MOM2fleet(OM, st)
     }
+    om@Obs <- OM@Obs
+    om@Imp <- OM@Imps
+    om@CatchFrac <- OM@CatchFrac
+    om@Allocation <- OM@Allocation
+    om@SexPars <- OM@SexPars
+    om@Efactor <- OM@Efactor
+    om@Complexes<- OM@Complexes
+    om@Relations <- OM@Rel
+    
+    om@Data <- vector('list', nStock(om))
+    om@Misc$cpars <- vector('list', nStock(om))
+    for (st in 1:nStock(om)) {
+      om@Data[[st]] <- vector('list', nFleet(om))
+      om@Misc$cpars[[st]] <- vector('list', nFleet(om))
+      for (fl in 1:nFleet(om)) {
+        om@Data[[st]][[fl]] <- OM@cpars[[st]][[fl]]$Data
+        om@Misc$cpars[[st]][[fl]] <- OM@cpars[[st]][[fl]]
+      }
+    }
+    OM@cpars <- list()
   }
-
-
-  om@Obs <- OM@Obs
-  om@Imp <- OM@Imps
-  om@CatchFrac <- OM@CatchFrac
-  om@Allocation <- OM@Allocation
-  om@SexPars <- OM@SexPars
-  om@Efactor <- OM@Efactor
-  om@Complexes<- OM@Complexes
-  om@Relations <- OM@Rel
-  
-  
-  
+    
+  if (keep) {
+    # keep the old OM/MOM object 
+    if (methods::is(OM, 'OM'))
+      om@Misc$OM <- OM
+    if (methods::is(OM, 'MOM'))
+      om@Misc$MOM <- OM
+  } 
+      
   
   om
 }

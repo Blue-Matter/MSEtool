@@ -16,6 +16,17 @@ setGeneric('Check', function(object, ...)
   standardGeneric('Check')
 )
 
+## ---- Stock ----
+setMethod("Check", signature(object = "stock"), function(object, ...) {
+  # cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
+  ll <- CheckList(object)
+  if (ll@empty)
+    return(ll)
+  if (length(ll@errors)<1)
+    ll@complete <- TRUE
+  ll
+  
+})
 
 # Stock Objects ----
 
@@ -55,7 +66,7 @@ setMethod("Check", signature(object = "length"), function(object, ...) {
   if (ll@empty)
     return(ll)
 
-  cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
+  # cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
 
 
   if (length(ll@errors)<1)
@@ -73,7 +84,7 @@ setMethod("Check", signature(object = "weight"), function(object, ...) {
   if (ll@empty)
     return(ll)
 
-  cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
+  # cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
 
 
 
@@ -92,7 +103,7 @@ setMethod("Check", signature(object = "naturalmortality"), function(object, ...)
   if (ll@empty)
     return(ll)
 
-  cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
+  # cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
 
 
 
@@ -111,7 +122,7 @@ setMethod("Check", signature(object = "maturity"), function(object, ...) {
   if (ll@empty)
     return(ll)
 
-  cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
+  # cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
 
 
 
@@ -131,7 +142,7 @@ setMethod("Check", signature(object = "fecundity"), function(object, ...) {
   if (ll@empty)
     return(ll)
 
-  cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
+  # cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
 
 
 
@@ -150,7 +161,7 @@ setMethod("Check", signature(object = "srr"), function(object, ...) {
   if (ll@empty)
     return(ll)
 
-  cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
+  # cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
 
 
 
@@ -169,10 +180,6 @@ setMethod("Check", signature(object = "spatial"), function(object, ...) {
   if (ll@empty)
     return(ll)
 
-  cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
-
-
-
   if (length(ll@errors)<1)
     ll@complete <- TRUE
   ll
@@ -187,8 +194,8 @@ setMethod("Check", signature(object = "depletion"), function(object, ...) {
   ll <- CheckList(object)
   if (ll@empty)
     return(ll)
-
-  cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
+# 
+  # cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
 
 
 
@@ -196,6 +203,19 @@ setMethod("Check", signature(object = "depletion"), function(object, ...) {
     ll@complete <- TRUE
   ll
 
+})
+
+# ---- Fleet Object ----
+
+
+setMethod("Check", signature(object = "fleet"), function(object, ...) {
+  # cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
+  ll <- CheckList(object)
+  if (ll@empty)
+    return(ll)
+  if (length(ll@errors)<1)
+    ll@complete <- TRUE
+  ll
 })
 
 # Fleet Objects ----
@@ -209,7 +229,7 @@ setMethod("Check", signature(object = "fishingmortality"), function(object, ...)
   if (ll@empty)
     return(ll)
 
-  cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
+  # cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
 
 
 
@@ -228,7 +248,7 @@ setMethod("Check", signature(object = "discardmortality"), function(object, ...)
   if (ll@empty)
     return(ll)
 
-  cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
+  # cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
 
 
 
@@ -248,7 +268,7 @@ setMethod("Check", signature(object = "effort"), function(object, ...) {
   if (ll@empty)
     return(ll)
 
-  cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
+  # cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
 
 
 
@@ -267,7 +287,7 @@ setMethod("Check", signature(object = "selectivity"), function(object, ...) {
   if (ll@empty)
     return(ll)
 
-  cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
+  # cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
 
 
 
@@ -286,7 +306,7 @@ setMethod("Check", signature(object = "retention"), function(object, ...) {
   if (ll@empty)
     return(ll)
 
-  cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
+  # cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
 
 
 
@@ -306,7 +326,7 @@ setMethod("Check", signature(object = "distribution"), function(object, ...) {
   if (ll@empty)
     return(ll)
 
-  cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
+  # cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
 
 
 
@@ -318,32 +338,19 @@ setMethod("Check", signature(object = "distribution"), function(object, ...) {
 
 
 
-
+# ---- OM Object ----
 setMethod("Check", signature(object = "om"), function(object, ...) {
-  cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
+  # cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
   ll <- CheckList(object)
   if (ll@empty)
     return(ll)
+  
+  if (length(ll@errors)<1)
+    ll@complete <- TRUE
   ll
 })
 
 
-setMethod("Check", signature(object = "stock"), function(object, ...) {
-  cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
-  ll <- CheckList(object)
-  if (ll@empty)
-    return(ll)
-  ll
-
-})
-
-setMethod("Check", signature(object = "fleet"), function(object, ...) {
-  cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
-  ll <- CheckList(object)
-  if (ll@empty)
-    return(ll)
-  ll
-})
 
 
 

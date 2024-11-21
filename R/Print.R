@@ -291,8 +291,22 @@ setMethod('show', 'spatial', function(object) {
 ## --- OM  ----
 #' @describeIn show Print a [om-class()] object
 setMethod("show", "om", function(object) {
-  cli::cli_h1('An `om-class` Object')
-  cli::cli_alert('...')
+  
+  cli::cli_par()
+  cli::cli_h2("An {.help MSEtool::OM} Object")
+  
+  cli::cli_h3('{.code Name}')
+  cli::cli_text("{.val {object@Name}}")
+  
+  cli::cli_h3('Number of Stocks')
+  cli::cli_text("{.val {nStock(object)}}")
+  
+  cli::cli_h3('Number of Fleets')
+  cli::cli_text("{.val {nFleet(object)}}")
+  
+  cli::cli_end()
+  
+  print(Check(object))
 })
 
 ## --- CheckList Object ----

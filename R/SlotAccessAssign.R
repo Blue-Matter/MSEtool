@@ -531,6 +531,29 @@ nReps <- function(x) {
   assignSlot(x, value, 'nReps')
 }
 
+## ---- nStock ----
+
+#' @rdname Access
+#' @export
+nStock <- function(x) {
+  length(x@Stock)
+}
+
+## ---- nFleet ----
+
+#' @rdname Access
+#' @export
+nFleet <- function(x) {
+  nFleet <- length(x@Fleet)
+  if (nFleet==0)
+    return(0)
+  if (methods::is(x@Fleet, 'fleet'))
+    return(1)
+  
+  if (nFleet > 1)
+    nFleet <- length(x@Fleet[[1]])
+  nFleet
+}
 
 ## ---- nYears ----
 

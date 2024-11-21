@@ -2466,8 +2466,8 @@ setMethod("initialize", "data", function(.Object) {
 
 # ---- OM Class ----
 
-setClassUnion(name="stock.list", members=c("stock", "list", 'NULL'))
-setClassUnion(name="fleet.list", members=c("fleet", "list", 'NULL'))
+setClassUnion(name="stock.list", members=c("stock", 'Stock',  "list", 'NULL'))
+setClassUnion(name="fleet.list", members=c("fleet", 'Fleet', "list", 'NULL'))
 setClassUnion(name="data.list", members=c("data", "list", 'NULL'))
 # setClassUnion(name="obs.list", members=c('Obs', "obs", "list", 'NULL'))
 
