@@ -46,22 +46,22 @@ SAM2OM<-function(fit, nsim=32, proyears=30, interval=1, Name = "SAM Model", WLa=
   
   if(vanilla_SAM){
     
-    dims = dim(stockassessment::faytable(fit))
+    dims = dim(faytable(fit))
     ny = dims[1]
     na = dims[2]
-    yrs = row.names(stockassessment::faytable(fit))
+    yrs = row.names(faytable(fit))
     CurrentYr = max(as.numeric(yrs))
     waa = array(rep(t(fit$data$stockMeanWeight),each=nsim),c(nsim,na,ny)) # fit$input$dat$waa #weight at age
     Mataa = array(rep(t(fit$data$propMat),each=nsim),c(nsim,na,ny)) # fit$input$dat$maa #maturity at age
     Maa = array(rep(t(fit$data$natMor),each=nsim),c(nsim,na,ny)) # fit$input$dat$M #M at age
     laa = (waa/WLa)^(1/WLb) # length at age isn't used unless catch at length and mean length are simulated
-    caa = array(rep(t(stockassessment::caytable(fit)),each=nsim),c(nsim,na,ny)) # fit$caa #estimated catch at age
+    caa = array(rep(t(caytable(fit)),each=nsim),c(nsim,na,ny)) # fit$caa #estimated catch at age
     
     
     if(!stoch){ # deterministic historical reconstruction
       
-      faa = array(rep(t(stockassessment::faytable(fit)),each=nsim),c(nsim,na,ny)) # f at age
-      naa = array(rep(t(stockassessment::ntable(fit)),each=nsim),c(nsim,na,ny)) # number at age (million)
+      faa = array(rep(t(faytable(fit)),each=nsim),c(nsim,na,ny)) # f at age
+      naa = array(rep(t(ntable(fit)),each=nsim),c(nsim,na,ny)) # number at age (million)
         
     }else{ # rerun SAM 
       
@@ -82,12 +82,12 @@ SAM2OM<-function(fit, nsim=32, proyears=30, interval=1, Name = "SAM Model", WLa=
       cov_logN <- SD$jointPrecision[ind_logN, ind_logN] %>% as.matrix()
      
       log_NAA <- mvtnorm::rmvnorm(nsim, as.numeric(mean_logN), cov_logN) %>%
-        array(c(nsim, n_age, stockassessment::nscodData$noYears))
+        array(c(nsim, n_age, nscodData$noYears))
       
-      MAA <- stockassessment::nscodData$natMor
+      MAA <- nscodData$natMor
       FAA <- array(NA, dim(log_NAA))
       
-      for (y in 2:stockassessment::nscodData$noYears - 1) {
+      for (y in 2:nscodData$noYears - 1) {
         SAA <- log_NAA[, 2:n_age, y+1]-log_NAA[, 2:n_age - 1, y] # survival
         ZAA <- -log(SAA)                                           # Z
         FAA[, 2:n_age - 1, y] <- ZAA - matrix(MAA[y, 2:n_age - 1], nsim, n_age - 1, byrow = TRUE)
