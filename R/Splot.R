@@ -38,7 +38,7 @@ quantile_plot = function(datmat, xvals, p = c(0.05,0.25,0.5,0.75,0.95),  tcol, y
 Splot = function(MSEobj, MPs = 5,
                  p = c(0.05,0.25,0.5,0.75,0.95)){
   
-  if(class(MPs[1])=="character"){
+  if(methods::is(MPs[1],"character")){
     MPind = MSEobj@MPs %in% MPs
   }else if(length(MPs)==1){
     MPind = 1:min(MPs,MSEobj@nMPs)

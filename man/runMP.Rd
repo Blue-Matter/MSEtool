@@ -25,6 +25,3 @@ invisibly returns the Data object
 \description{
 Run a Management Procedure
 }
-\examples{
-Data_TAc <- runMP(MSEtool::Cobia)
-}

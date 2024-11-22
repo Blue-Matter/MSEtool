@@ -7,6 +7,8 @@ The current version of the `MSEtool` package is available for download from [CRA
 - fix print for `PM` objects when `nsim<15`
 - fix to `LinInterp_cpp` when searching for values on bounds
 
+## New additions
+- add `SAM2OM`, `Splot`, and empirical MP `Emp`
 
 # MSEtool 3.7.2 
 

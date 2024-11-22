@@ -18,7 +18,7 @@ smoothy<-function(xx,plot=F,enp_mult,plotname="",xlab="x",ylab="y",x = NA){
   if(is.na(x[1]))x = 1:length(xx)
   dat<-data.frame(x=x,y=log(xx))
   enp.target<-sum(tofill)*enp_mult
-  out<-loess(y~x,dat=dat,enp.target=enp.target)
+  out<-loess(y~x,data=dat,enp.target=enp.target)
   predout[tofill]<-exp(predict(out))
   if(plot){
     plot(x,xx,type="p",xlab=xlab,ylab=ylab,main=plotname); grid()
@@ -144,7 +144,7 @@ doHCR = function(trial_TAC, est, ref, CP = c(0,1), CPy = c(0,1)){
 #' @param HCR_CP_B Vector of positive real numbers. Biomass control points of an HCR. These are the x-axis locations of the hockey stick inflection points. c(0,1) means a linear ramp from I/I_target. c(0.5,1) means no fishing til half I_target then a linear ramp in fishing to I_target. c(0,0) means no HCR. 
 #' @param HCR_CP_TAC Vector of positive real numbers. Response control points of an HCR. These are the y-levels corresponding with the hockey stick. These are the minimum and maximum modifiers applied to the TAC recommendation. 
 #' @param Mode Integer. What type of index-based MP is used? 1 = Index rate, aims to fish at a rate of index (ie TAC = f(I, current_C / current_I, Ind_fac, HCR_CP_B, HCR_CP_TAC)), 2 = Index target, makes incremental TAC adjustments based on I/I_target (i.e. TAC = f(I, curI_2_target, ))
-#' @return An object of class \linkS4class{MP}.
+#' @return An object of class `MP`.
 #' @author T. Carruthers
 #' @export
 Emp <- function (x, Data, reps = 1, 

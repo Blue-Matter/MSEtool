@@ -48,10 +48,12 @@ Suggests:
     rfishbase,
     rmarkdown,
     shiny,
+    stockassessment,
     testthat,
     tidyr,
     TMB,
     usethis
+Remotes: github::fishfollower/SAM/stockassessment
 LinkingTo: Rcpp, RcppArmadillo
 BugReports: https://github.com/Blue-Matter/MSEtool/issues
 URL: https://msetool.openmse.com/
