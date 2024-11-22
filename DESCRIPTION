@@ -53,7 +53,7 @@ Suggests:
     tidyr,
     TMB,
     usethis
-Remotes: github::fishfollower/SAM/stockassessment
+Remotes: fishfollower/SAM/stockassessment
 LinkingTo: Rcpp, RcppArmadillo
 BugReports: https://github.com/Blue-Matter/MSEtool/issues
 URL: https://msetool.openmse.com/
