@@ -413,7 +413,7 @@ printMeanatAge <- function(MeanAtAge, round=2, type='Age') {
 
     if (dd[1]>1 & dd[3]>1) {
       if (!is.null(attributes(MeanAtAge)$TimeSteps)) {
-        cli::cli_text('Time Step: {.val {attributes(MeanAtAge)$TimeSteps[i]}}')
+        cli::cli_text('Time Step: {.val {attributes(MeanAtAge)$TimeSteps[ts[i]]}}')
       } else {
         cli::cli_text('Time Step: {.val {ts[i]}}')
       }

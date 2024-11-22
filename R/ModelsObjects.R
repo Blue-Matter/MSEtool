@@ -749,10 +749,61 @@ SelectivityAtLength <- function(Length, SL50, SL50_95) {
 }
 class(SelectivityAtLength) <- 'Selectivity-at-Length-Model'
 
+#' @describeIn SelectivityModels Double-normal selectivity-at-length model
+#' @param L5 Shortest length at which 5% of the population is vulnerable to
+#' selection by the gear used in this fleet. A single numeric value, a numeric
+#' vector length `nsim`, or a matrix `nsim` by `nTS`.
+#' @param FS Shortest length at which 100% of the population is vulnerable to
+#'  selection by the gear used by this fleet. Same structure as `L5`
+#' @param Vmaxlen Proportion of fish selected by the gear at the maximum
+#' length specified in `Length`. **Note**: this has changed from previous versions
+#' of `MSEtool`, where `Vmaxlen` corresponded to the selectivity at `Linf`.
+#' 
+#' @export
+DoubleNormal <- function(Length, L5, LFS, Vmaxlen) {
+  Pars <- list(L5=Structure(L5, out=c('nsim', 'nTS'), req='nsim'),
+               LFS=Structure(LFS, out=c('nsim', 'nTS'), req='nsim'),
+               Vmaxlen=Structure(Vmaxlen, out=c('nsim', 'nTS'), req='nsim'))
+  double_normal_(Length, Pars)
+}
+class(DoubleNormal) <- 'Selectivity-at-Length-Model'
 
-#' @describeIn SelectivityModels Logistic maturity-at-age model
+double_normal_ <- function(Length, Pars) {
+  
+  L5 <- Pars$L5
+  LFS <- Pars$LFS
+  Vmaxlen <- Pars$Vmaxlen
+  RefLength <- max(Length)
+  
+  DimList <- matrix(c(dim(L5),
+                    dim(LFS),
+                    dim(Vmaxlen)), 2,3)
+  
+  nsim <- max(DimList[1,])
+  nTS <- max(DimList[2,])
+  
+  select_at_length <- array(0, dim=c(nsim, length(Length), nTS))
+  
+  for (s in 1:nsim) {
+    for (ts in 1:nTS) {
+      l5 <- L5[GetIndex(s, DimList[1,1]), GetIndex(ts, DimList[2,1])] 
+      lfs <- LFS[GetIndex(s, DimList[1,2]), GetIndex(ts, DimList[2,2])] 
+      vmaxlen <- Vmaxlen[GetIndex(s, DimList[1,3]),GetIndex(ts, DimList[2,3])]
+      
+      sr <- (RefLength - lfs) / ((-log(vmaxlen,2))^0.5)
+      sr[!is.finite(sr)] <- Inf
+      sl <- (lfs - l5) /((-log(0.05,2))^0.5)
+      
+      select_at_length[s,,ts] <- dnormal(Length, lfs, sl, sr)
+      select_at_length[s,,ts] <- select_at_length[s,,ts]/max(select_at_length[s,,ts])
+    }
+  }
+  select_at_length
+}
+
+#' @describeIn SelectivityModels Logistic selectivity-at-age model
 #' @param Ages A numeric vector of ages
-#' @param A50 Age corresponding with 50% maturity
+#' @param A50 Age corresponding with 50% selectivity
 #' @param A50_95 Interval between `A50` and age at 95% selectivity (`A95`)
 #' @export
 SelectivityAtAge <- function(Ages, A50, A50_95) {
@@ -763,4 +814,123 @@ SelectivityAtAge <- function(Ages, A50, A50_95) {
   Maturity_at_Age_(Ages, Pars)
 }
 class(SelectivityAtAge) <- 'Selectivity-at-Age-Model'
+
+## ---- Retention ----
+
+#' Retention-at-Length or -Age Models
+#'
+#' Functions for generating retention-at-age or -at-length.
+#'
+#'
+#' @return Retention-at-length or -age values
+#' @name RetentionModels
+#' @examples
+#' RetentionModels()
+NULL
+
+#' @describeIn Retention Print a list of Retention-at-Age or Retention-at-Length models
+#' @param full Logical. Provide a complete table (TRUE) or just the model names (FALSE)?
+#' @param print Logical. Print out the results (TRUE) or just return the data.frame (FALSE)?
+#'
+#' @return Prints to console and invisible data.frame or model names
+#' @export
+RetentionModels <- function(full=TRUE, print=TRUE) {
+  ReturnModels(ModelClass=c('Retention-at-Age-Model',
+                            'Retention-at-Length-Model'),
+               full, print)
+}
+
+#' @describeIn RetentionModels Print a list of valid Retention-at-Length models
+#'
+#' @export
+RetentionModelsLength <- function(full=TRUE, print=TRUE) {
+  ReturnModels(ModelClass=c('RetentionModels-at-Length-Model'),
+               full, print)
+}
+
+#' @describeIn RetentionModels Print a list of valid Retention-at-Age models
+#'
+#' @export
+RetentionModelsAge <- function(full=TRUE, print=TRUE) {
+  ReturnModels(ModelClass=c('Retention-at-Age-Model'),
+               full, print)
+}
+
+#' @describeIn RetentionModels Logistic retention-at-length model
+#' @param Length A numeric vector of lengths
+#' @param L50 Length corresponding with 50% retention
+#' @param L50_95 Interval between `RL50` and length at 95% retention (`RL95`)
+#' @export
+RetentionAtLength <- function(Length, L50, L50_95) {
+  Pars <- list(SL50=Structure(L50, out=c('nsim', 'nTS'), req='nsim'),
+               SL50_95=Structure(L50_95, out=c('nsim', 'nTS'), req='nsim'))
+  Maturity_at_Length_(Length, Pars)
+}
+class(RetentionAtLength) <- 'Retention-at-Length-Model'
+
+#' @describeIn RetentionModels Double-normal retention-at-length model
+#' @param LR5 Shortest length at which 5% of the population is vulnerable to
+#' retention by the fleet. A single numeric value, a numeric
+#' vector length `nsim`, or a matrix `nsim` by `nTS`.
+#' @param LFR Shortest length at which 100% of the population is vulnerable to
+#'  retention by this fleet. Same structure as `L5`
+#' @param Rmaxlen Proportion of fish selected by the gear at the maximum
+#' length specified in `Length`. **Note**: this has changed from previous versions
+#' of `MSEtool`, where `Rmaxlen` corresponded to the selectivity at `Linf`.
+#' 
+#' @export
+RDoubleNormal <- function(Length, LR5, LFR, Rmaxlen) {
+  Pars <- list(L5=Structure(LR5, out=c('nsim', 'nTS'), req='nsim'),
+               LFS=Structure(LFR, out=c('nsim', 'nTS'), req='nsim'),
+               Vmaxlen=Structure(Rmaxlen, out=c('nsim', 'nTS'), req='nsim'))
+  double_normal_(Length, Pars)
+}
+class(RDoubleNormal) <- 'Retention-at-Length-Model'
+
+double_normal_ <- function(Length, Pars) {
+  
+  L5 <- Pars$L5
+  LFS <- Pars$LFS
+  Vmaxlen <- Pars$Vmaxlen
+  RefLength <- max(Length)
+  
+  DimList <- matrix(c(dim(L5),
+                      dim(LFS),
+                      dim(Vmaxlen)), 2,3)
+  
+  nsim <- max(DimList[1,])
+  nTS <- max(DimList[2,])
+  
+  select_at_length <- array(0, dim=c(nsim, length(Length), nTS))
+  
+  for (s in 1:nsim) {
+    for (ts in 1:nTS) {
+      l5 <- L5[GetIndex(s, DimList[1,1]), GetIndex(ts, DimList[2,1])] 
+      lfs <- LFS[GetIndex(s, DimList[1,2]), GetIndex(ts, DimList[2,2])] 
+      vmaxlen <- Vmaxlen[GetIndex(s, DimList[1,3]),GetIndex(ts, DimList[2,3])]
+      
+      sr <- (RefLength - lfs) / ((-log(vmaxlen,2))^0.5)
+      sr[!is.finite(sr)] <- Inf
+      sl <- (lfs - l5) /((-log(0.05,2))^0.5)
+      
+      select_at_length[s,,ts] <- dnormal(Length, lfs, sl, sr)
+      select_at_length[s,,ts] <- select_at_length[s,,ts]/max(select_at_length[s,,ts])
+    }
+  }
+  select_at_length
+}
+
+#' @describeIn RetentionModels Logistic retention-at-age model
+#' @param Ages A numeric vector of ages
+#' @param A50 Age corresponding with 50% retention
+#' @param A50_95 Interval between `A50` and age at 95% retention (`A95`)
+#' @export
+RetentionAtAge <- function(Ages, A50, A50_95) {
+  
+  Pars <- list(A50=Structure(A50, out=c('nsim', 'nTS'), req='nsim'),
+               A50_95=Structure(A50_95, out=c('nsim', 'nTS'), req='nsim'))
+  
+  Maturity_at_Age_(Ages, Pars)
+}
+class(RetentionAtAge) <- 'Retention-at-Age-Model'
 

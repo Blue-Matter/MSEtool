@@ -3,9 +3,9 @@
 #
 Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL) {
   
-  if (methods::is(OM, 'om')) 
-    return(SimulateDEV(OM, parallel, silent, nsim))
-    
+  # if (methods::is(OM, 'om')) 
+  #   return(SimulateDEV(OM, parallel, silent, nsim))
+  #   
     
   if (!is.null(nsim)) {
     if (nsim<OM@nsim) 

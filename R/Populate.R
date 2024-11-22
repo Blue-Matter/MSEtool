@@ -254,8 +254,6 @@ PopulateMeanAtLength <- function(object, Length=NULL, TimeSteps=NULL, Ages=NULL,
         Length <- Populate(Length, Ages, nsim, TimeSteps, seed, ASK=TRUE, silent)
       }
     }
-
-
     object@MeanAtLength <- GenerateMeanatLength(Model=object@Model,
                                                 Pars=object@Pars,
                                                 Length=Length@Classes)
@@ -374,10 +372,8 @@ setMethod("Populate", "om", function(object, silent=FALSE) {
   if (CheckDigest(list(), object) | EmptyObject(object))
     return(object)
   
-  
   chk <- Check(object)
 
-  
   if (methods::is(object@Stock, 'stock')) {
     nStocks <- 1
   } else if (methods::is(object@Stock, 'list')) {
@@ -393,8 +389,7 @@ setMethod("Populate", "om", function(object, silent=FALSE) {
   } else {
     cli::cli_abort('`Fleet` must be a {.fun {"Fleet"}} object or a list of {.fun {"Fleet"}} objects')
   }
-  
- 
+
   # Populate Stock
   stockList <- vector('list', nStocks)
   names(stockList) <- paste('Stock', 1:nStocks)
@@ -505,16 +500,9 @@ setMethod("Populate", "stock", function(object,
                                    stock@TimeUnits)
   
 
-  # Check time-steps
-  ## TODO - update for octopus
-
-  # stock@Ages@Units == stock@TimeUnits
-  # stock@CurrentYear
-  # stock@TimeSteps
-
 
   # Require ALK and/or AWK?
-  ALK <- RequireALK(stock)
+  # ALK <- RequireALK(stock)
   # AWK <- RequireAWK(stock)
 
   stock@Length <- Populate(stock@Length,
@@ -525,8 +513,6 @@ setMethod("Populate", "stock", function(object,
                            seed=seed,
                            silent=silent)
   
-
-
   stock@Weight <- Populate(stock@Weight,
                            Ages=stock@Ages,
                            Length=stock@Length,
@@ -551,6 +537,7 @@ setMethod("Populate", "stock", function(object,
                              TimeSteps=TimeSteps(stock),
                              seed=seed,
                              silent=silent)
+  
 
   stock@Fecundity <- Populate(object=stock@Fecundity,
                               Ages=stock@Ages,
@@ -1237,8 +1224,9 @@ setMethod("Populate", "selectivity", function(object,
   if (!is.null(ModelClass)) {
     
     if (grepl('at-Length',getModelClass(selectivity@Model))) {
-      selectivity <- PopulateMeanAtLength(selectivity, Length, TimeSteps, Ages, nsim,
-                                     seed, silent)
+      selectivity <- PopulateMeanAtLength(selectivity, Length, 
+                                          TimeSteps, Ages, nsim,
+                                          seed, silent)
     } else {
       
       selectivity <- PopulateMeanAtAge(selectivity, Ages, TimeSteps)

@@ -9,8 +9,9 @@ FindModels <- function(ModelClass) {
 }
 
 
-FindModel <- function(object, ignore=c('Ages', 'Length', 'nage', 'AtAge')) {
+FindModel <- function(object, ignore=c('Ages', 'Length', 'nage', 'AtAge', 'MaxLen')) {
 
+  
   if (inherits(object@Model,'function'))
     return(object@Model)
 
@@ -32,6 +33,11 @@ FindModel <- function(object, ignore=c('Ages', 'Length', 'nage', 'AtAge')) {
 
   matching_parameters <- rep(TRUE, length(models))
 
+  ParNames <- names(object@Pars)
+  ind <- which(tolower(ParNames) |> substrRight(2) == 'sd')
+  if (length(ind)>0)
+    ParNames <- ParNames[-ind]
+  
   for (i in seq_along(matching_parameters)) {
     formals <- formals(get(models[i]))
     formal_names <- NA
@@ -39,8 +45,8 @@ FindModel <- function(object, ignore=c('Ages', 'Length', 'nage', 'AtAge')) {
       formal_names[j] <- names(formals[j])
     }
     formal_names <- formal_names[!formal_names%in% ignore]
-    if (!(all(names(object@Pars) %in% formal_names)
-        & all(formal_names %in% names(object@Pars))))
+    if (!(all(ParNames %in% formal_names)
+        & all(formal_names %in% ParNames)))
       matching_parameters[i] <- FALSE
   }
   model <- models[matching_parameters]

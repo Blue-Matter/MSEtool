@@ -53,7 +53,7 @@ RandomWalk <- function(targ, targsd, nTS, nsim) {
 }
 
 ApplyRandomWalk <- function(Pars, nsim, nTS) {
-  detect_sd <- which(names(Pars) |> substrRight(2) == 'SD')
+  detect_sd <- which(tolower(names(Pars)) |> substrRight(2) == 'sd') 
   if (length(detect_sd)==0)
     return(Pars)
   for (i in detect_sd) {
