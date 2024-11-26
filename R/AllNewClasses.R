@@ -1583,7 +1583,6 @@ setMethod("initialize", "stock", function(.Object,
                                           nSim=48,
                                           CurrentYear=as.numeric(format(Sys.Date(), '%Y')),
                                           TimeUnits='year',
-                                          TimeSteps=NULL,
                                           Misc=list()) {
   .Object@Name <- Name
   .Object@CommonName <- CommonName
@@ -1647,24 +1646,38 @@ Stock <- function(Name=NULL,
                   SRR=new('srr'),
                   Spatial=new('spatial'),
                   Depletion=new('depletion'),
-                  nYears=20,
-                  pYears=30,
-                  nSim=48,
-                  CurrentYear=as.numeric(format(Sys.Date(), '%Y')),
-                  TimeUnits='year',
-                  TimeSteps=NULL,
-                  Misc=list()) {
+                  Misc=list(),
+                  ...) {
 
   if (methods::is(Name, 'om')) {
-    print(CommonName)
     if (methods::is(Name@Stock, 'list')) {
-      
+      if (methods::is(CommonName, 'numeric')) {
+        if (CommonName > nStock(Name)) {
+          if (nStock(Name)==1) {
+            cli::cli_abort('OM has only {.val {nStock(Name)}} stock')
+          } else {
+            cli::cli_abort('OM has only {.val {nStock(Name)}} stocks')
+          }
+        } else {
+          return(Name@Stock[[CommonName]])
+        }
+      } else {
+        cli::cli_alert_info('`Stock` is a list. Returning first stock. \n Use `Stock(OM, 2)` to access second stock')
+        return(Name@Stock[[1]])
+      }
     }
     return(Name@Stock)
-    
   }
-    
-
+      
+  dots <- list(...)
+  nYears <- 20
+  pYears <- 30
+  nSim <- 48
+  CurrentYear <- as.numeric(format(Sys.Date(), '%Y'))
+  TimeUnits <- 'year'
+  for (nm in names(dots)) 
+    assign(nm, dots[[nm]])
+  
   methods::new('stock',
                Name=Name,
                CommonName=CommonName,
@@ -1683,7 +1696,6 @@ Stock <- function(Name=NULL,
                nSim=nSim,
                CurrentYear=CurrentYear,
                TimeUnits=TimeUnits,
-               TimeSteps=TimeSteps,
                Misc=Misc)
 }
 

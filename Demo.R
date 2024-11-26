@@ -39,19 +39,13 @@ newNewOM <- OM('My Operating Model',
                Stock=myNewStock)
 newNewOM
 
-
 # Conversions
-
 SSdir <- 'G:/My Drive/1_PROJECTS/North_Atlantic_Swordfish/OMs/grid_2022/000_base_case'
 
 SWO_Existing <- SS2MOM(SSdir=SSdir,nsim=5, Name='North Atlantic Swordfish') 
 
-
-
 SWO_New <- Convert(SWO_Existing)  # convert from `MOM` to `om`
 
-
-Stock(SWO_New,2)
 
 format(object.size(SWO_Existing), units='Mb')
 
@@ -59,13 +53,8 @@ object.size(SWO_New)  |> format(units='Mb')
 
 newMOM <- Convert(OM)  # convert `om` back to `MOM`
 
-
 SWO_Existing@cpars[[1]][[1]]$Len_age
 
-
-
-SWO_New |> Stock() |> Length() |> MeanAtAge()
-
-
+SWO_New |> Stock(2) |> Length() |> MeanAtAge()
 
 SWO_New@Stock[[1]]@Length@MeanAtAge
