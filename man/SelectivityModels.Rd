@@ -5,6 +5,7 @@
 \alias{SelectivityModelsLength}
 \alias{SelectivityModelsAge}
 \alias{SelectivityAtLength}
+\alias{DoubleNormal}
 \alias{SelectivityAtAge}
 \title{Selectivity-at-Length or -Age Models}
 \usage{
@@ -15,6 +16,8 @@ SelectivityModelsLength(full = TRUE, print = TRUE)
 SelectivityModelsAge(full = TRUE, print = TRUE)
 
 SelectivityAtLength(Length, SL50, SL50_95)
+
+DoubleNormal(Length, L5, LFS, Vmaxlen)
 
 SelectivityAtAge(Ages, A50, A50_95)
 }
@@ -29,11 +32,22 @@ SelectivityAtAge(Ages, A50, A50_95)
 
 \item{SL50_95}{Interval between \code{SL50} and length at 95\% selectivity (\code{SL95})}
 
+\item{L5}{Shortest length at which 5\% of the population is vulnerable to
+selection by the gear used in this fleet. A single numeric value, a numeric
+vector length \code{nsim}, or a matrix \code{nsim} by \code{nTS}.}
+
+\item{Vmaxlen}{Proportion of fish selected by the gear at the maximum
+length specified in \code{Length}. \strong{Note}: this has changed from previous versions
+of \code{MSEtool}, where \code{Vmaxlen} corresponded to the selectivity at \code{Linf}.}
+
 \item{Ages}{A numeric vector of ages}
 
-\item{A50}{Age corresponding with 50\% maturity}
+\item{A50}{Age corresponding with 50\% selectivity}
 
 \item{A50_95}{Interval between \code{A50} and age at 95\% selectivity (\code{A95})}
+
+\item{FS}{Shortest length at which 100\% of the population is vulnerable to
+selection by the gear used by this fleet. Same structure as \code{L5}}
 }
 \value{
 Selectivity-at-length or -age values
@@ -53,7 +67,9 @@ Functions for generating selectivity-at-age or -at-length.
 
 \item \code{SelectivityAtLength()}: Logistic selectivity-at-length model
 
-\item \code{SelectivityAtAge()}: Logistic maturity-at-age model
+\item \code{DoubleNormal()}: Double-normal selectivity-at-length model
+
+\item \code{SelectivityAtAge()}: Logistic selectivity-at-age model
 
 }}
 \examples{

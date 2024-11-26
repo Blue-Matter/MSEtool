@@ -70,6 +70,8 @@
 \alias{nsim<-}
 \alias{nReps}
 \alias{nReps<-}
+\alias{nStock}
+\alias{nFleet}
 \alias{nYears}
 \alias{nYears<-}
 \alias{nyears}
@@ -118,6 +120,8 @@
 \alias{Species<-}
 \alias{TimeSteps}
 \alias{TimeSteps<-}
+\alias{TimeUnits}
+\alias{TimeUnits<-}
 \alias{TruncSD}
 \alias{TruncSD<-}
 \alias{Units}
@@ -216,7 +220,7 @@ nAge(x)
 
 nTS(x)
 
-nArea(x)
+nArea(x, stock = 1)
 
 MaxAge(x)
 
@@ -261,6 +265,10 @@ nsim(x) <- value
 nReps(x)
 
 nReps(x) <- value
+
+nStock(x)
+
+nFleet(x)
 
 nYears(x)
 
@@ -357,6 +365,10 @@ Species(x) <- value
 TimeSteps(x, Period = NULL)
 
 TimeSteps(x) <- value
+
+TimeUnits(x, Period = NULL)
+
+TimeUnits(x) <- value
 
 TruncSD(x)
 

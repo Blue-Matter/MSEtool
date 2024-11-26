@@ -4,7 +4,6 @@
 \name{Fleet-class}
 \alias{Fleet-class}
 \alias{Fleet}
-\alias{Fleet<-}
 \title{Class \code{'Fleet'}}
 \usage{
 Fleet(
@@ -19,13 +18,6 @@ Fleet(
   BioEconomic = list(),
   Misc = list()
 )
-
-Fleet(x) <- value
-}
-\arguments{
-\item{x}{An \code{\link[=OM]{OM()}} class object}
-
-\item{value}{A \code{Fleet} object, or a list of \code{Fleet} objects, to assign to \code{x}}
 }
 \description{
 The component of the operating model that controls fishing dynamics
@@ -33,8 +25,6 @@ The component of the operating model that controls fishing dynamics
 \section{Functions}{
 \itemize{
 \item \code{Fleet()}: Create a new \code{Fleet} object
-
-\item \code{Fleet(x) <- value}: Assign an \code{Fleet} object to an \code{\link[=OM]{OM()}} object
 
 }}
 \section{Slots}{

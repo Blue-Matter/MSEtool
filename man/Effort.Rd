@@ -52,5 +52,5 @@ DETAILS
 }}
 
 \seealso{
-\code{\link[=Effort]{Effort()}}, \code{\link[=Catchability]{Catchability()}}, \code{\link[=Vessels]{Vessels()}}, \code{\link[=Trips]{Trips()}}, \code{\link[=MaxVessels]{MaxVessels()}}, \code{\link[=MaxTrips]{MaxTrips()}}, \code{\link[=Units]{Units()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Created]{Created()}}, \code{\link[=Modified]{Modified()}}, \code{\link[=Check]{Check()}}
+\code{\link[=Effort]{Effort()}}, \code{\link[=Catchability]{Catchability()}}, \code{\link[=qCV]{qCV()}}, \code{\link[=qInc]{qInc()}}, \code{\link[=Vessels]{Vessels()}}, \code{\link[=Trips]{Trips()}}, \code{\link[=MaxVessels]{MaxVessels()}}, \code{\link[=MaxTrips]{MaxTrips()}}, \code{\link[=Units]{Units()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Created]{Created()}}, \code{\link[=Modified]{Modified()}}, \code{\link[=Check]{Check()}}
 }

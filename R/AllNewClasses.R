@@ -27,10 +27,11 @@ R6array <- R6::R6Class("R6array", list(
 methods::setClassUnion(name="ASK.null", members=c("NULL", 'array'))
 methods::setClassUnion(name="fun.char", members=c("character", "function", "NULL"))
 methods::setClassUnion(name="char.null", members=c("character", "NULL"))
-methods::setClassUnion(name="char.num", members=c('character', "numeric"))
+methods::setClassUnion(name="char.num", members=c('character', "numeric", 'NULL'))
 methods::setClassUnion(name="char.list", members=c('character', "list", 'NULL'))
 methods::setClassUnion(name="array.null", members=c("array", "NULL"))
 methods::setClassUnion(name="array.char.null", members=c("array", 'character', "NULL"))
+methods::setClassUnion(name="num.array.char.null", members=c('numeric', "array", 'character', "NULL"))
 methods::setClassUnion(name="num.null", members=c("numeric", "NULL"))
 methods::setClassUnion(name="num.list.null", members=c("numeric", 'list', "NULL"))
 methods::setClassUnion(name="num.array", members=c("numeric", "array", "NULL"))
@@ -1288,7 +1289,7 @@ SRR <- function(Pars=list(R0=NA, h=NA),
 setClass('spatial',
          slots=c(UnfishedDist='num.array',
                  ProbStaying='num.array',
-                 RelativeSize='num.array',
+                 RelativeSize='num.array.char.null',
                  Movement='array.null',
                  FracOther='array.null',
                  Arrangement='array.null',
@@ -1654,8 +1655,15 @@ Stock <- function(Name=NULL,
                   TimeSteps=NULL,
                   Misc=list()) {
 
-  if (methods::is(Name, 'om'))
+  if (methods::is(Name, 'om')) {
+    print(CommonName)
+    if (methods::is(Name@Stock, 'list')) {
+      
+    }
     return(Name@Stock)
+    
+  }
+    
 
   methods::new('stock',
                Name=Name,
@@ -2253,7 +2261,7 @@ Fleet <- function(Name=NULL,
                Misc=list())
 }
 
-#' @describeIn Fleet Assign an `Fleet` object to an [OM()] object
+#' @describeIn fleet Assign an `Fleet` object to an [OM()] object
 #' @param x An [OM()] class object
 #' @param value A `Fleet` object, or a list of `Fleet` objects, to assign to `x`
 #' @export
@@ -2500,7 +2508,7 @@ setClassUnion(name="data.list", members=c("data", "list", 'NULL'))
 #' Single value. Historical years are calculated as `rev(seq(CurrentYear, by=-1, length.out=nYears))`
 #' @slot pYears The number of projection years. Numeric. Single value.
 #' Projection years are calculated as `seq(CurrentYear+1, length.out=pYears)`.
-#' @slot Stock A [stock-class()] object or a list of [stock-class()] objects
+#' @slot Stock A [Stock()] object or a list of [Stock()] objects
 #' for multi-stock models.
 #' @slot Complexes For multi-stock models only. A list of stock complexes.
 #' Each position is a vector of stock numbers (as they appear in `Stock` list)
@@ -2649,7 +2657,7 @@ setClass("om",
 #' Single value. Historical years are calculated as `rev(seq(CurrentYear, by=-1, length.out=nYears))`
 #' @param pYears The number of projection years. Numeric. Single value.
 #' Projection years are calculated as `seq(CurrentYear+1, length.out=pYears)`.
-#' @param Stock A [stock-class()] object or a list of [stock-class()] objects
+#' @param Stock A [Stock] object or a list of [Stock()] objects
 #' for multi-stock models.
 #' @param Complexes For multi-stock models only. A list of stock complexes.
 #' Each position is a vector of stock numbers (as they appear in `Stock` list)

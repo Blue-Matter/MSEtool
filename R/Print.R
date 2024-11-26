@@ -4,6 +4,49 @@
 #' @export
 show <- function(object) methods::show(object)
 
+
+# ---- Stock ----
+
+#' @rdname show
+setMethod('show', 'stock', function(object) {
+  
+  cli::cli_par()
+  cli::cli_h2("A {.help MSEtool::Stock} Object")
+  
+
+  
+  cli::cli_h3('{.code Name}')
+  cli::cli_text('{.val { object@Name}}')
+  
+  cli::cli_h3('{.code CommonName}')
+  cli::cli_text('{.val { object@CommonName}}')
+  
+  cli::cli_h3('{.code Species}')
+  cli::cli_text('{.val { object@Species}}')
+  
+  slots <- c('Ages', 
+             'Length', 
+             'Weight',
+             'NaturalMortality',
+             'Maturity',
+             'Fecundity',
+             'SRR',
+             'Spatial',
+             'Depletion'
+             )
+  
+  for (sl in slots) {
+    cli::cli_h3('{.code {sl}}')
+    print_slot(object, sl)
+  }
+  
+
+  cli::cli_end()
+  print(Check(object))
+  
+})
+
+
 ## --- Ages ----
 
 #' @rdname show
@@ -284,6 +327,23 @@ setMethod('show', 'spatial', function(object) {
 })
 
 
+## ---- Depletion ----
+
+#' @rdname show
+setMethod('show', 'depletion', function(object) {
+  
+  cli::cli_par()
+  cli::cli_h2("A {.help MSEtool::Depletion} Object")
+  
+  cli::cli_inform('...')
+  
+  cli::cli_end()
+  print(Check(object))
+  
+})
+
+
+
 
 
 
@@ -297,6 +357,22 @@ setMethod("show", "om", function(object) {
   
   cli::cli_h3('{.code Name}')
   cli::cli_text("{.val {object@Name}}")
+  
+  cli::cli_h3('{.code nSim}')
+  cli::cli_text("{.val {object@nSim}}")
+  
+  cli::cli_h3('{.code CurrentYear}')
+  cli::cli_text("{.val {object@CurrentYear}}")
+  
+  cli::cli_h3('{.code nYears}')
+  cli::cli_text("{.val {object@nYears}}")
+  
+  cli::cli_h3('{.code pYears}')
+  cli::cli_text("{.val {object@pYears}}")
+  
+  cli::cli_h3('{.code TimeUnits}')
+  cli::cli_text("{.val {object@TimeUnits}}")
+  
   
   cli::cli_h3('Number of Stocks')
   cli::cli_text("{.val {nStock(object)}}")
@@ -550,6 +626,13 @@ print_single <- function(object) {
   }
 }
 
+print_slot <- function(object, name) {
+  obj <- slot(object, name)
+  chk <- Check(obj)
+  if (chk@empty)
+    return(cli::cli_alert_info('Object is empty'))
+  cli::cli_alert_success('Complete')
+}
 
 ## Internal Print Functions ----
 

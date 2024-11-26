@@ -2,16 +2,20 @@
 % Please edit documentation in R/Print.R
 \name{show}
 \alias{show}
+\alias{show,stock-method}
 \alias{show,ages-method}
 \alias{show,maturity-method}
 \alias{show,fecundity-method}
 \alias{show,srr-method}
 \alias{show,spatial-method}
+\alias{show,depletion-method}
 \alias{show,om-method}
 \alias{show,CheckList-method}
 \title{Generic show method}
 \usage{
 show(object)
+
+\S4method{show}{stock}(object)
 
 \S4method{show}{ages}(object)
 
@@ -22,6 +26,8 @@ show(object)
 \S4method{show}{srr}(object)
 
 \S4method{show}{spatial}(object)
+
+\S4method{show}{depletion}(object)
 
 \S4method{show}{om}(object)
 

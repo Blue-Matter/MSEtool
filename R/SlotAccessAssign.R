@@ -360,8 +360,16 @@ nTS <- function(x) {
 
 #' @rdname Access
 #' @export
-nArea <- function(x) {
-  dd <- dim(x@Spatial@UnfishedDist)
+nArea <- function(x, stock=1) {
+  if (methods::is(x, 'om')) {
+    stock <- x@Stock
+    if (methods::is(stock, 'list')) {
+      stock <- stock[[stock]]
+    }
+    dd <- dim(stock@Spatial@UnfishedDist)
+  } else {
+    dd <- dim(x@Spatial@UnfishedDist)  
+  }
   if (length(dd)<1)
     return(1)
   dd[2]

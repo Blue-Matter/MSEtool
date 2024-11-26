@@ -31,6 +31,7 @@ OM(
   Interval = 1,
   nReps = 1,
   pStar = 0.5,
+  maxF = 3,
   Seed = NULL,
   Control = list(),
   Misc = list(),
@@ -74,7 +75,7 @@ Projection years are calculated as \code{seq(CurrentYear+1, length.out=pYears)}.
 \item{CurrentYear}{The last historical year of the operating model. Defaults
 to the year the Operating Model object is built.}
 
-\item{Stock}{A \code{\link[=stock-class]{stock-class()}} object or a list of \code{\link[=stock-class]{stock-class()}} objects
+\item{Stock}{A \link{Stock} object or a list of \code{\link[=Stock]{Stock()}} objects
 for multi-stock models.}
 
 \item{Complexes}{For multi-stock models only. A list of stock complexes.

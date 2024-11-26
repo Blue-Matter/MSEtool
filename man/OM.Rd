@@ -94,7 +94,7 @@ Single value. Historical years are calculated as \code{rev(seq(CurrentYear, by=-
 \item{\code{pYears}}{The number of projection years. Numeric. Single value.
 Projection years are calculated as \code{seq(CurrentYear+1, length.out=pYears)}.}
 
-\item{\code{Stock}}{A \code{\link[=stock-class]{stock-class()}} object or a list of \code{\link[=stock-class]{stock-class()}} objects
+\item{\code{Stock}}{A \code{\link[=Stock]{Stock()}} object or a list of \code{\link[=Stock]{Stock()}} objects
 for multi-stock models.}
 
 \item{\code{Complexes}}{For multi-stock models only. A list of stock complexes.
@@ -156,5 +156,5 @@ with relevant information. Supports Markdown.}
 myOM <- OM('My Example OM')
 }
 \seealso{
-\code{\link[=Name]{Name()}}, \code{\link[=Agency]{Agency()}}, \code{\link[=Author]{Author()}}, \code{\link[=Email]{Email()}}, \code{\link[=Region]{Region()}}, \code{\link[=Latitude]{Latitude()}}, \code{\link[=Longitude]{Longitude()}}, \code{\link[=Sponsor]{Sponsor()}}, \code{\link[=nSim]{nSim()}}, \code{\link[=nYears]{nYears()}}, \code{\link[=pYears]{pYears()}}, \code{\link[=CurrentYear]{CurrentYear()}}, \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=Obs]{Obs()}}, \code{\link[=Imp]{Imp()}}, \code{\link[=Data]{Data()}}, \code{\link[=Complexes]{Complexes()}}, \code{\link[=Relations]{Relations()}}, \code{\link[=SexPars]{SexPars()}}, \code{\link[=Interval]{Interval()}}, \code{\link[=nReps]{nReps()}}, \code{\link[=pStar]{pStar()}}, \code{\link[=Seed]{Seed()}}, \code{\link[=TimeUnits]{TimeUnits()}}, \code{\link[=TimeStepsPerYear]{TimeStepsPerYear()}}, \code{\link[=TimeSteps]{TimeSteps()}}, \code{\link[=Control]{Control()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Source]{Source()}}, \code{\link[=Created]{Created()}}, \code{\link[=Modified]{Modified()}}
+\code{\link[=Name]{Name()}}, \code{\link[=Agency]{Agency()}}, \code{\link[=Author]{Author()}}, \code{\link[=Email]{Email()}}, \code{\link[=Region]{Region()}}, \code{\link[=Latitude]{Latitude()}}, \code{\link[=Longitude]{Longitude()}}, \code{\link[=Sponsor]{Sponsor()}}, \code{\link[=nSim]{nSim()}}, \code{\link[=nYears]{nYears()}}, \code{\link[=pYears]{pYears()}}, \code{\link[=CurrentYear]{CurrentYear()}}, \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=Obs]{Obs()}}, \code{\link[=Imp]{Imp()}}, \code{\link[=Data]{Data()}}, \code{\link[=CatchFrac]{CatchFrac()}}, \code{\link[=Allocation]{Allocation()}}, \code{\link[=Efactor]{Efactor()}}, \code{\link[=Complexes]{Complexes()}}, \code{\link[=SexPars]{SexPars()}}, \code{\link[=Relations]{Relations()}}, \code{\link[=Interval]{Interval()}}, \code{\link[=nReps]{nReps()}}, \code{\link[=pStar]{pStar()}}, \code{\link[=maxF]{maxF()}}, \code{\link[=Seed]{Seed()}}, \code{\link[=TimeUnits]{TimeUnits()}}, \code{\link[=TimeStepsPerYear]{TimeStepsPerYear()}}, \code{\link[=TimeSteps]{TimeSteps()}}, \code{\link[=Control]{Control()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Source]{Source()}}, \code{\link[=Created]{Created()}}, \code{\link[=Modified]{Modified()}}
 }

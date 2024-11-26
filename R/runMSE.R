@@ -254,6 +254,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
 
   # --- Optimize for Initial Depletion ----
   initD <- SampCpars$initD #
+  if (all(is.na(initD)))
+    initD <- NULL
   if (!is.null(initD)) { # initial depletion is not unfished
     if (!silent) message("Optimizing for user-specified depletion in first historical year")
     Perrmulti <- sapply(1:nsim, optDfunwrap, initD=initD, 
@@ -277,10 +279,6 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
   SSB[SAYR] <- SBsurv[SAY] * StockPars$R0[S] *  StockPars$initdist[SAR]*StockPars$Perr_y[Sa] * StockPars$Fec_Age[SAY]    # Calculate spawning stock biomass
   VBiomass[SAYR] <- N[SAYR] * FleetPars$Wt_age_C[SAY] * FleetPars$V_real[SAY]  # Calculate vulnerable biomass
 
-  
-  SBsurv[1,,1]
-  SSB[1,,1,]
-  sum(SSB[1,,1,])
   
   StockPars$aR <- aR
   StockPars$bR <- bR

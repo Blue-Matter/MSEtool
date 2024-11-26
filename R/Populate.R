@@ -352,6 +352,16 @@ PopulateASK <- function(object, Ages=NULL, silent=FALSE, type='Length') {
 }
 
 
+StructureCV <- function(CVatAge, nsim) {
+  if (is.null(dim(CVatAge))) {
+    if (length(CVatAge)==1)
+      return(Structure(CVatAge))
+    if (length(CVatAge)==2) {
+      return(Structure(StructurePars_(CVatAge, nsim)))
+    }
+  } 
+  Structure(CVatAge)
+} 
 
 #
 
@@ -431,7 +441,7 @@ setMethod("Populate", "om", function(object, silent=FALSE) {
                                         Ages=Ages(stockList[[st]]),
                                         Length=Length(stockList[[st]]),
                                         nsim=nSim(object),
-                                        TimeSteps=TimeSteps(object),
+                                        TimeSteps=TimeSteps(object, 'Historical'),
                                         seed=object@Seed,
                                         silent=TRUE)
       
@@ -607,7 +617,7 @@ setMethod("Populate", "length", function(object,
 
   object <- PopulateRandom(object)
 
-  object@CVatAge <- Structure(object@CVatAge)
+  object@CVatAge <- StructureCV(object@CVatAge, nsim)
 
   if (is.null(object@CVatAge))
     ASK <- FALSE
@@ -672,7 +682,7 @@ setMethod("Populate", "weight", function(object,
     object <- MeanAtAge2MeanAtLength(object, Length, Ages, nsim, TimeSteps, seed, silent)
 
   object <- PopulateRandom(object)
-  object@CVatAge <- Structure(object@CVatAge)
+  object@CVatAge <- StructureCV(object@CVatAge, nsim)
 
   if (is.null(object@CVatAge))
     ASK <- FALSE
@@ -973,7 +983,7 @@ setMethod("Populate", "spatial", function(object,
 
   nareas <- dim(object@UnfishedDist)[2]
 
-  if (!is.null(object@RelativeSize)) {
+  if (!is.null(object@RelativeSize) & !methods::is(object@RelativeSize, 'character')) {
     object@RelativeSize <- StructurePars(list(object@RelativeSize),nsim)[[1]]
     dd <- dim(object@RelativeSize)
     if (dd[2]>nareas)
@@ -993,9 +1003,14 @@ setMethod("Populate", "spatial", function(object,
       rowsums <- apply(object@RelativeSize, 1, sum)
       if (!all(rowsums==1))
         cli::cli_abort('`RelativeSize` must sum to 1 across columns')
-
     }
 
+  } else if (methods::is(object@RelativeSize, 'character')) {
+    if (object@RelativeSize=="EqualDensity") {
+      object@RelativeSize <- apply(object@UnfishedDist, 1:2, mean)   
+    } else {
+      cli::cli_abort('If `Spatial@RelativeSize` is character, it can only be "EqualDensity"')
+    }
   } else {
     cli::cli_alert_warning('`RelativeSize` is not specified. Assuming all areas are equal size')
     object@RelativeSize <- matrix(1/nareas, 1, nareas)
