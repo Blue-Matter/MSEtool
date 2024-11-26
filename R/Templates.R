@@ -33,7 +33,7 @@ Dist_param <- function() {
 }
 
 MaxAge_param <- function() {
-  "Integer. Length 1. The maximum age to include in the model. If `PlusGroup==TRUE`, `MaxAge` will be a plusgroup. **Required**."
+  "An integer value (length 1) specifying the maximum age to include in the model. If `PlusGroup==TRUE`, `MaxAge` will be a plusgroup. **Required**. Note that the age classes always start at 0, so there will be `MaxAge+1` age classes."
 }
 
 
@@ -72,7 +72,7 @@ Pars_param <- function() {
 
 
 Plusgroup_param <- function() {
-  'Logical. Include a plus-group? Defaults to TRUE if not specified.'
+  'Include a plus-group? Defaults to TRUE.'
 }
 
 Random_param <- function() {
@@ -94,7 +94,7 @@ TruncSD_param <- function() {
 }
 
 Units_param <- function(variable='MaxAge', class='Ages', default='year') {
-  paste0('Character. Length 1. The units corresponding to `', variable,
+  paste0('A character string describing the units corresponding to `', variable,
          '`. Valid values are found in `ValidUnits(', class, '())`. Defaults to `',
          default, '` if not specified.')
 }
