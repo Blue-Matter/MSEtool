@@ -743,8 +743,8 @@ SelectivityModelsAge <- function(full=TRUE, print=TRUE) {
 #' @param SL50_95 Interval between `SL50` and length at 95% selectivity (`SL95`)
 #' @export
 SelectivityAtLength <- function(Length, SL50, SL50_95) {
-  Pars <- list(SL50=Structure(SL50, out=c('nsim', 'nTS'), req='nsim'),
-               SL50_95=Structure(SL50_95, out=c('nsim', 'nTS'), req='nsim'))
+  Pars <- list(L50=Structure(SL50, out=c('nsim', 'nTS'), req='nsim'),
+               L50_95=Structure(SL50_95, out=c('nsim', 'nTS'), req='nsim'))
   Maturity_at_Length_(Length, Pars)
 }
 class(SelectivityAtLength) <- 'Selectivity-at-Length-Model'

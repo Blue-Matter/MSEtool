@@ -72,10 +72,8 @@
 \alias{nReps<-}
 \alias{nStock}
 \alias{nFleet}
-\alias{nYears}
-\alias{nYears<-}
-\alias{nyears}
-\alias{nyears<-}
+\alias{nYear}
+\alias{nYear<-}
 \alias{Pars}
 \alias{Pars<-}
 \alias{Period}
@@ -86,8 +84,8 @@
 \alias{ProbStaying<-}
 \alias{pStar}
 \alias{pStar<-}
-\alias{pYears}
-\alias{pYears<-}
+\alias{pYear}
+\alias{pYear<-}
 \alias{proyears}
 \alias{proyears<-}
 \alias{RecDevInit}
@@ -270,13 +268,13 @@ nStock(x)
 
 nFleet(x)
 
-nYears(x)
+nYear(x)
 
-nYears(x) <- value
+nYear(x) <- value
 
-nyears(x)
+nYear(x)
 
-nyears(x) <- value
+nYear(x) <- value
 
 Pars(x)
 
@@ -298,9 +296,9 @@ pStar(x)
 
 pStar(x) <- value
 
-pYears(x)
+pYear(x)
 
-pYears(x) <- value
+pYear(x) <- value
 
 proyears(x)
 

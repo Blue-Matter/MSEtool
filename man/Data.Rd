@@ -28,9 +28,9 @@ Like all of the new style objects in \code{MSEtool}, the slots in \code{data} ob
 \section{Slots}{
 
 \describe{
-\item{\code{MaxAge}}{Integer. Length 1. The maximum age to include in the model. If \code{PlusGroup==TRUE}, \code{MaxAge} will be a plusgroup. \strong{Required}.}
+\item{\code{MaxAge}}{An integer value (length 1) specifying the maximum age to include in the model. If \code{PlusGroup==TRUE}, \code{MaxAge} will be a plusgroup. \strong{Required}. Note that the age classes always start at 0, so there will be \code{MaxAge+1} age classes.}
 
-\item{\code{Units}}{Character. Length 1. The units corresponding to \code{MaxAge}. Valid values are found in \code{ValidUnits(Ages())}. Defaults to \code{year} if not specified.}
+\item{\code{Units}}{A character string describing the units corresponding to \code{MaxAge}. Valid values are found in \code{ValidUnits(Ages())}. Defaults to \code{year} if not specified.}
 }}
 
 \seealso{

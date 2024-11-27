@@ -16,7 +16,7 @@ Data(x) <- value
 
 \item{value}{An \code{data} class object to assign to \code{x}}
 
-\item{MaxAge}{Integer. Length 1. The maximum age to include in the model. If \code{PlusGroup==TRUE}, \code{MaxAge} will be a plusgroup. \strong{Required}.}
+\item{MaxAge}{An integer value (length 1) specifying the maximum age to include in the model. If \code{PlusGroup==TRUE}, \code{MaxAge} will be a plusgroup. \strong{Required}. Note that the age classes always start at 0, so there will be \code{MaxAge+1} age classes.}
 }
 \description{
 An object for storing fishery data for analysis

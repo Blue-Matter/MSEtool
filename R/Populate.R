@@ -209,8 +209,8 @@ PopulateMeanAtAge <- function(object, Ages=NULL, TimeSteps=NULL, Length=NULL) {
         Length <- Populate(Length, Ages, nsim, TimeSteps, seed, ASK=TRUE, silent)
       }
       object@MeanAtAge <- GenerateMeanatLength(Model=object@Model,
-                                            Pars=object@Pars,
-                                            Length=Length@MeanAtAge)
+                                               Pars=object@Pars,
+                                               Length=Length@MeanAtAge)
 
     } else {
       if ('Ages' %in% args) {
@@ -227,7 +227,11 @@ PopulateMeanAtAge <- function(object, Ages=NULL, TimeSteps=NULL, Length=NULL) {
   object
 }
 
-PopulateMeanAtLength <- function(object, Length=NULL, TimeSteps=NULL, Ages=NULL, nsim=NULL,
+PopulateMeanAtLength <- function(object, 
+                                 Length=NULL, 
+                                 TimeSteps=NULL, 
+                                 Ages=NULL, 
+                                 nsim=NULL,
                                  seed=NULL, silent) {
 
   if (is.null(object@Model))
@@ -374,9 +378,12 @@ setGeneric("Populate", function(object, ...) standardGeneric("Populate"))
 ## ---- OM -----
 #' @describeIn Populate Populate an [om-class()] object
 #' @param x A Operating Model object or sub-object
-#' @param silent Logical. Don't print messages?
+#' @param messages Logical or character. 
+#' FALSE to suppress all messages, 
+#' TRUE to print all messages,
+#' 'progress' to print key progress updates 
 #' @export
-setMethod("Populate", "om", function(object, silent=FALSE) {
+setMethod("Populate", "om", function(object, messages='progress') {
   
   
   if (CheckDigest(list(), object) | EmptyObject(object))
@@ -412,20 +419,20 @@ setMethod("Populate", "om", function(object, silent=FALSE) {
       stock <- object@Stock
     }
     
-    if (!silent) {
+    if (!isFALSE(messages)) {
       if (nStocks>1) {
         cli::cli_alert_info('Populating Stock {.val {st}/{nStocks}}')
       } else {
         cli::cli_alert_info('Populating Stock')
       }
     }
-    
+ 
     stock@nSim <- object@nSim
-    stock@nYears <- object@nYears
-    stock@pYears <- object@pYears
+    stock@nYear <- object@nYear
+    stock@pYear <- object@pYear
     stock@CurrentYear <- object@CurrentYear
     
-    stockList[[st]] <- Populate(stock, seed=object@Seed, silent=TRUE)
+    stockList[[st]] <- Populate(stock, seed=object@Seed, messages=messages)
     names(stockList)[st] <- stock@Name
     names(fleetList)[st] <- names(stockList)[st]
     
@@ -443,7 +450,7 @@ setMethod("Populate", "om", function(object, silent=FALSE) {
                                         nsim=nSim(object),
                                         TimeSteps=TimeSteps(object, 'Historical'),
                                         seed=object@Seed,
-                                        silent=TRUE)
+                                        messages=messages)
       
       names(fleetList[[st]])[fl] <- fleetList[[st]][[fl]]@Name
       
@@ -492,7 +499,7 @@ setMethod("Populate", "stock", function(object,
                                         ALK=TRUE,
                                         AWK=FALSE,
                                         seed=NULL,
-                                        silent=FALSE) {
+                                        messages='progress') {
 
   argList <- list(seed, ALK, AWK)
   if (CheckDigest(argList, object) | EmptyObject(object))
@@ -504,8 +511,8 @@ setMethod("Populate", "stock", function(object,
   
   stock@TimeUnits <- stock@Ages@Units
   stock@TimeStepsPerYear <- TSperYear(stock@TimeUnits )
-  stock@TimeSteps <- CalcTimeSteps(stock@nYears, 
-                                   stock@pYears, 
+  stock@TimeSteps <- CalcTimeSteps(stock@nYear, 
+                                   stock@pYear, 
                                    stock@CurrentYear, 
                                    stock@TimeUnits)
   
@@ -519,9 +526,9 @@ setMethod("Populate", "stock", function(object,
                            Ages=stock@Ages,
                            nsim=nSim(stock),
                            TimeSteps=TimeSteps(stock),
-                           ASK = ALK,
+                           ASK=ALK,
                            seed=seed,
-                           silent=silent)
+                           messages=messages)
   
   stock@Weight <- Populate(stock@Weight,
                            Ages=stock@Ages,
@@ -530,7 +537,7 @@ setMethod("Populate", "stock", function(object,
                            TimeSteps=TimeSteps(stock),
                            ASK=AWK,
                            seed=seed,
-                           silent=silent)
+                           messages=messages)
 
   stock@NaturalMortality <- Populate(stock@NaturalMortality,
                                      Ages=stock@Ages,
@@ -538,7 +545,7 @@ setMethod("Populate", "stock", function(object,
                                      nsim=nSim(stock),
                                      TimeSteps=TimeSteps(stock),
                                      seed=seed,
-                                     silent=silent)
+                                     messages=messages)
 
   stock@Maturity <- Populate(stock@Maturity,
                              Ages=stock@Ages,
@@ -546,7 +553,7 @@ setMethod("Populate", "stock", function(object,
                              nsim=nSim(stock),
                              TimeSteps=TimeSteps(stock),
                              seed=seed,
-                             silent=silent)
+                             messages=messages)
   
 
   stock@Fecundity <- Populate(object=stock@Fecundity,
@@ -557,7 +564,7 @@ setMethod("Populate", "stock", function(object,
                               nsim=nSim(stock),
                               TimeSteps=TimeSteps(stock),
                               seed=seed,
-                              silent=silent)
+                              messages=messages)
 
   stock@SRR <- Populate(stock@SRR,
                         MaxAge=stock@Ages@MaxAge,
@@ -565,18 +572,18 @@ setMethod("Populate", "stock", function(object,
                         TimeSteps=stock@TimeSteps,
                         nsim=stock@nSim,
                         seed=seed,
-                        silent=silent)
+                        messages=messages)
 
   stock@Spatial <- Populate(stock@Spatial,
                             Ages=stock@Ages,
                             nsim=stock@nSim,
                             seed=seed,
-                            silent=silent)
+                            messages=messages)
 
   stock@Depletion <- Populate(stock@Depletion,
                             nsim=stock@nSim,
                             seed=seed,
-                            silent=silent)
+                            messages=messages)
   
   
   SetDigest(argList, stock)
@@ -597,7 +604,7 @@ setMethod("Populate", "length", function(object,
                                          TimeSteps=NULL,
                                          ASK=TRUE,
                                          seed=NULL,
-                                         silent=FALSE) {
+                                         messages=TRUE) {
 
   TimeSteps <- TimeStepAttributes(object, TimeSteps)
 
@@ -607,30 +614,32 @@ setMethod("Populate", "length", function(object,
     return(object)
 
   SetSeed(object, seed)
-
-  sb <- PrintPopulating(object, silent)
   
-  object@Pars <- StructurePars(Pars=object@Pars, nsim,  GetnTS(TimeSteps))
-  object@Model <- FindModel(object)
+  length <- object
 
-  object <- PopulateMeanAtAge(object, Ages, TimeSteps)
+  sb <- PrintPopulating(length, isTRUE(messages))
+  
+  length@Pars <- StructurePars(Pars=length@Pars, nsim,  GetnTS(TimeSteps))
+  length@Model <- FindModel(length)
 
-  object <- PopulateRandom(object)
+  length <- PopulateMeanAtAge(length, Ages, TimeSteps)
 
-  object@CVatAge <- StructureCV(object@CVatAge, nsim)
+  length <- PopulateRandom(length)
 
-  if (is.null(object@CVatAge))
+  length@CVatAge <- StructureCV(length@CVatAge, nsim)
+
+  if (is.null(length@CVatAge))
     ASK <- FALSE
 
   if (ASK) {
-    object <- PopulateClasses(object)
-    object <- PopulateASK(object, Ages, silent)
+    length <- PopulateClasses(length)
+    length <- PopulateASK(length, Ages, isFALSE(messages))
   }
 
-  object <- AddMeanAtAgeAttributes(object, TimeSteps, Ages)
+  length <- AddMeanAtAgeAttributes(length, TimeSteps, Ages)
 
-  PrintDonePopulating(object, sb, silent)
-  SetDigest(argList, object)
+  PrintDonePopulating(length, sb, print=isTRUE(messages))
+  SetDigest(argList, length)
 })
 
 
@@ -646,7 +655,7 @@ setMethod("Populate", "weight", function(object,
                                          ASK=FALSE,
                                          CalcAtLength=FALSE,
                                          seed=NULL,
-                                         silent=FALSE) {
+                                         messages=TRUE) {
   TimeSteps <- TimeStepAttributes(object, TimeSteps)
   argList <- list(Ages, Length, nsim, TimeSteps, ASK, CalcAtLength, seed)
 
@@ -655,7 +664,7 @@ setMethod("Populate", "weight", function(object,
 
   SetSeed(object, seed)
 
-  sb <- PrintPopulating(object, silent)
+  sb <- PrintPopulating(length, isTRUE(messages))
 
   object@Pars <- StructurePars(Pars=object@Pars, nsim, nTS=GetnTS(TimeSteps))
   object@Model <- FindModel(object)
@@ -689,12 +698,12 @@ setMethod("Populate", "weight", function(object,
 
   if (ASK) {
     object <- PopulateClasses(object)
-    object <- PopulateASK(object, Ages, silent, type='Weight')
+    object <- PopulateASK(object, Ages, !isFALSE(messages), type='Weight')
   }
 
   object <- AddMeanAtAgeAttributes(object, TimeSteps, Ages)
 
-  PrintDonePopulating(object, sb, silent)
+  PrintDonePopulating(object, sb, isTRUE(messages))
   SetDigest(argList, object)
 })
 
@@ -709,7 +718,7 @@ setMethod("Populate", "naturalmortality", function(object,
                                                    TimeSteps=NULL,
                                                    CalcAtLength=FALSE,
                                                    seed=NULL,
-                                                   silent=FALSE) {
+                                                   messages=TRUE) {
 
   TimeSteps <- TimeStepAttributes(object, TimeSteps)
 
@@ -719,7 +728,7 @@ setMethod("Populate", "naturalmortality", function(object,
 
   SetSeed(object, seed)
 
-  sb <- PrintPopulating(object, silent, name='NaturalMortality')
+  sb <- PrintPopulating(object, isTRUE(messages), name='NaturalMortality')
 
   object@Pars <- StructurePars(Pars=object@Pars, nsim, nTS=GetnTS(TimeSteps))
   object@Model <- FindModel(object)
@@ -728,21 +737,21 @@ setMethod("Populate", "naturalmortality", function(object,
   if (!is.null(ModelClass)) {
     if (grepl('at-Length',getModelClass(object@Model))) {
       object <- PopulateMeanAtLength(object, Length, TimeSteps, Ages, nsim,
-                                     seed, silent)
+                                     seed, !isFALSE(messages))
     } else {
       object <- PopulateMeanAtAge(object, Ages, TimeSteps)
     }
   }
 
-  object <- MeanAtLength2MeanAtAge(object, Length, Ages, nsim, TimeSteps, seed, silent)
+  object <- MeanAtLength2MeanAtAge(object, Length, Ages, nsim, TimeSteps, seed, !isFALSE(messages))
   if (CalcAtLength)
-    object <- MeanAtAge2MeanAtLength(object, Length, Ages, nsim, TimeSteps, seed, silent)
+    object <- MeanAtAge2MeanAtLength(object, Length, Ages, nsim, TimeSteps, seed, !isFALSE(messages))
 
   object <- PopulateRandom(object)
 
   object <- AddMeanAtAgeAttributes(object, TimeSteps, Ages)
 
-  PrintDonePopulating(object, sb, silent, name='NaturalMortality')
+  PrintDonePopulating(object, sb, isTRUE(messages), name='NaturalMortality')
   SetDigest(argList, object)
 })
 
@@ -757,14 +766,14 @@ setMethod("Populate", "maturity", function(object,
                                            TimeSteps=NULL,
                                            CalcAtLength=FALSE,
                                            seed=NULL,
-                                           silent=FALSE) {
+                                           messages=TRUE) {
   TimeSteps <- TimeStepAttributes(object, TimeSteps)
   argList <- list(Ages, Length, nsim, TimeSteps, CalcAtLength, seed)
   if (CheckDigest(argList, object) | EmptyObject(object))
     return(object)
 
   SetSeed(object, seed)
-  sb <- PrintPopulating(object, silent)
+  sb <- PrintPopulating(object, isTRUE(messages))
 
   object@Pars <- StructurePars(Pars=object@Pars, nsim, nTS=GetnTS(TimeSteps))
   object@Model <- FindModel(object)
@@ -785,7 +794,7 @@ setMethod("Populate", "maturity", function(object,
 
   object <- AddMeanAtAgeAttributes(object, TimeSteps, Ages)
 
-  PrintDonePopulating(object, sb, silent)
+  PrintDonePopulating(object, sb, isTRUE(messages))
   SetDigest(argList, object)
 })
 
@@ -804,7 +813,7 @@ setMethod("Populate", "fecundity", function(object,
                                             TimeSteps=NULL,
                                             CalcAtLength=FALSE,
                                             seed=NULL,
-                                            silent=FALSE) {
+                                            messages=TRUE) {
   TimeSteps <- TimeStepAttributes(object, TimeSteps)
   argList <- list(Ages, Length, Weight, Maturity, nsim, TimeSteps, CalcAtLength, seed)
 
@@ -813,7 +822,7 @@ setMethod("Populate", "fecundity", function(object,
 
   SetSeed(object, seed)
 
-  sb <- PrintPopulating(object, silent)
+  sb <- PrintPopulating(object, isTRUE(messages))
 
   object@Pars <- StructurePars(Pars=object@Pars, nsim, GetnTS(TimeSteps))
   object@Model <- FindModel(object)
@@ -827,12 +836,12 @@ setMethod("Populate", "fecundity", function(object,
     CheckRequiredObject(Length, 'length', 'Length')
     CheckRequiredObject(Maturity, 'maturity', 'Maturity')
 
-    Weight <- Populate(Weight, Ages, Length, nsim, TimeSteps, seed=seed, ASK=FALSE, silent=TRUE)
-    Maturity <- Populate(Maturity, Ages, Length, nsim, TimeSteps, seed=seed, silent=TRUE)
+    Weight <- Populate(Weight, Ages, Length, nsim, TimeSteps, seed=seed, ASK=FALSE, messages=messages)
+    Maturity <- Populate(Maturity, Ages, Length, nsim, TimeSteps, seed=seed, messages=messages)
 
     object@MeanAtAge <- MultiplyArrays(array1=Weight@MeanAtAge, array2=Maturity@MeanAtAge)
 
-    PrintDonePopulating(object, sb, silent)
+    PrintDonePopulating(object, sb, isTRUE(messages))
     return(SetDigest(argList, object))
   }
 
@@ -852,7 +861,7 @@ setMethod("Populate", "fecundity", function(object,
 
   object <- AddMeanAtAgeAttributes(object, TimeSteps, Ages)
 
-  PrintDonePopulating(object, sb, silent)
+  PrintDonePopulating(object, sb, isTRUE(messages))
   SetDigest(argList, object)
 })
 
@@ -868,7 +877,7 @@ setMethod("Populate", "srr", function(object,
                                       TimeSteps=NULL,
                                       nsim=NULL,
                                       seed=NULL,
-                                      silent=FALSE) {
+                                      messages=TRUE) {
 
   argList <- list(MaxAge, CurrentYear, TimeSteps, nsim, seed)
 
@@ -897,7 +906,7 @@ setMethod("Populate", "srr", function(object,
 
   SetSeed(object, seed)
 
-  sb <- PrintPopulating(object, silent, allup=TRUE)
+  sb <- PrintPopulating(object, isTRUE(messages), allup=TRUE)
   object@Model <- FindModel(object)
 
   pars <- StructurePars(c(object@SD, object@AC), nsim, nTS=0)
@@ -910,7 +919,7 @@ setMethod("Populate", "srr", function(object,
                      EmptyObject(object@RecDevProj))
 
   if (all(!EmptyObjects)) {
-    PrintDonePopulating(object, sb, silent, allup=TRUE)
+    PrintDonePopulating(object, sb, isTRUE(messages), allup=TRUE)
     return( SetDigest(argList, object))
   }
 
@@ -929,7 +938,7 @@ setMethod("Populate", "srr", function(object,
   object@RecDevHist <- RecDeviations$RecDevHist
   object@RecDevProj <- RecDeviations$RecDevProj
 
-  PrintDonePopulating(object, sb, silent, allup=TRUE)
+  PrintDonePopulating(object, sb, isTRUE(messages), allup=TRUE)
   SetDigest(argList, object)
 })
 
@@ -943,7 +952,7 @@ setMethod("Populate", "spatial", function(object,
                                           Ages=NULL,
                                           nsim=NULL,
                                           seed=NULL,
-                                          silent=FALSE,
+                                          messages=TRUE,
                                           plot=FALSE,
                                           nits=100) {
 
@@ -971,9 +980,9 @@ setMethod("Populate", "spatial", function(object,
     cli::cli_abort('Spatial@Movement populated not done yet', .internal=TRUE)
   }
 
-  sb <- PrintPopulating(object, silent)
+  sb <- PrintPopulating(object, isTRUE(messages))
 
-  object <- CalcMovement(object, nsim, seed, nits, plot, silent=silent)
+  object <- CalcMovement(object, nsim, seed, nits, plot, silent=isFALSE(messages))
 
   if (is.null(object@UnfishedDist))
     cli::cli_abort('`UnfishedDist` must be populated for `Spatial` objects')
@@ -1017,7 +1026,7 @@ setMethod("Populate", "spatial", function(object,
   }
   object@RelativeSize <- AddDimNames(object@RelativeSize, c('sim', 'area'))
 
-  PrintDonePopulating(object, sb, silent)
+  PrintDonePopulating(object, sb, isTRUE(messages))
   SetDigest(argList, object)
 })
 
@@ -1029,7 +1038,7 @@ setMethod("Populate", "spatial", function(object,
 setMethod("Populate", "depletion", function(object,
                                          nsim=NULL,
                                          seed=NULL,
-                                         silent=FALSE) {
+                                         messages=TRUE) {
 
   argList <- list(nsim, seed)
 
@@ -1038,7 +1047,7 @@ setMethod("Populate", "depletion", function(object,
 
   SetSeed(object, seed)
 
-  sb <- PrintPopulating(object, silent)
+  sb <- PrintPopulating(object, isTRUE(messages))
 
   if (!is.null(object@Initial)) {
     if (length(object@Initial)==2) {
@@ -1055,7 +1064,7 @@ setMethod("Populate", "depletion", function(object,
   if (!object@Reference %in% c('B0', 'BMSY'))
     cli::cli_abort('`Reference` must be either `B0` or `BMSY`')
 
-  PrintDonePopulating(object, sb, silent)
+  PrintDonePopulating(object, sb, isTRUE(messages))
   SetDigest(argList, object)
 })
 
@@ -1072,7 +1081,7 @@ setMethod("Populate", "fleet", function(object,
                                         nsim=NULL,
                                         TimeSteps=NULL,
                                         seed=NULL,
-                                        silent=FALSE) {
+                                        messages=TRUE) {
   
   argList <- list(Ages, Length, nsim, TimeSteps, seed)
   if (CheckDigest(argList, object) | EmptyObject(object))
@@ -1088,7 +1097,7 @@ setMethod("Populate", "fleet", function(object,
                                       nsim,
                                       TimeSteps,
                                       seed,
-                                      silent
+                                      messages=messages
                                       )
 
   fleet@DiscardMortality <- Populate(fleet@DiscardMortality,
@@ -1097,7 +1106,7 @@ setMethod("Populate", "fleet", function(object,
                                       nsim,
                                       TimeSteps,
                                       seed=seed,
-                                      silent=silent)
+                                     messages=messages)
 
   fleet@Selectivity <- Populate(fleet@Selectivity,
                                 FishingMortality=fleet@FishingMortality,
@@ -1108,7 +1117,7 @@ setMethod("Populate", "fleet", function(object,
                                 TimeSteps,
                                 CalcAtLength=FALSE,
                                 seed,
-                                silent)
+                                messages=messages)
 
   fleet@Retention <- Populate(fleet@Retention,
                               FishingMortality=fleet@FishingMortality,
@@ -1119,7 +1128,7 @@ setMethod("Populate", "fleet", function(object,
                               TimeSteps,
                               CalcAtLength=FALSE,
                               seed,
-                              silent=silent)
+                              messages=messages)
   
   fleet@Effort <- Populate(fleet@Effort,
                            FishingMortality=fleet@FishingMortality,
@@ -1129,7 +1138,7 @@ setMethod("Populate", "fleet", function(object,
                            nsim,
                            TimeSteps,
                            seed,
-                           silent)
+                           messages)
   
   
   SetDigest(argList, fleet)
@@ -1144,7 +1153,7 @@ setMethod("Populate", "fishingmortality", function(object,
                                                    nsim=NULL,
                                                    TimeSteps=NULL,
                                                    seed=NULL,
-                                                   silent=FALSE) {
+                                                   messages=TRUE) {
 
 
   TimeSteps <- TimeStepAttributes(object, TimeSteps)
@@ -1154,7 +1163,7 @@ setMethod("Populate", "fishingmortality", function(object,
     return(object)
 
   SetSeed(object, seed)
-  sb <- PrintPopulating(object, silent, name='FishingMortality')
+  sb <- PrintPopulating(object, isTRUE(messages), name='FishingMortality')
 
   object@ApicalF <- AddSimDimension(object@ApicalF, c('Sim', 'Time Step'), TimeSteps=TimeSteps)
   object@DeadAtAge <- AddSimDimension(object@DeadAtAge, TimeSteps=TimeSteps)
@@ -1163,7 +1172,7 @@ setMethod("Populate", "fishingmortality", function(object,
   if (EmptyObject(object@ApicalF)) # calculate from `DeadAtAge`
     object@ApicalF <- apply(object@DeadAtAge, c(1,3), max)
 
-  PrintDonePopulating(object, sb, silent, name='FishingMortality')
+  PrintDonePopulating(object, sb, isTRUE(messages), name='FishingMortality')
   SetDigest(argList, object)
 })
 
@@ -1179,7 +1188,7 @@ setMethod("Populate", "discardmortality", function(object,
                                                    TimeSteps=NULL,
                                                    CalcAtLength=FALSE,
                                                    seed=NULL,
-                                                   silent=FALSE) {
+                                                   messages=TRUE) {
 
   TimeSteps <- TimeStepAttributes(object, TimeSteps)
   argList <- list(Ages, Length, nsim, TimeSteps, CalcAtLength, seed)
@@ -1189,16 +1198,16 @@ setMethod("Populate", "discardmortality", function(object,
 
   SetSeed(object, seed)
 
-  sb <- PrintPopulating(object, silent, name='DiscardMortality')
+  sb <- PrintPopulating(object, isTRUE(messages), name='DiscardMortality')
 
-  object <- MeanAtLength2MeanAtAge(object, Length, Ages, nsim, TimeSteps, seed, silent)
+  object <- MeanAtLength2MeanAtAge(object, Length, Ages, nsim, TimeSteps, seed, isFALSE(messages))
   if (CalcAtLength)
-    object <- MeanAtAge2MeanAtLength(object, Length, Ages, nsim, TimeSteps, seed, silent)
+    object <- MeanAtAge2MeanAtLength(object, Length, Ages, nsim, TimeSteps, seed, isFALSE(messages))
 
   object <- AddMeanAtAgeAttributes(object, TimeSteps, Ages)
 
   PrintDonePopulating(object, sb, silent, name='DiscardMortality')
-  SetDigest(argList, object)
+  SetDigest(argList, isTRUE(messages))
 })
 
 
@@ -1216,7 +1225,7 @@ setMethod("Populate", "selectivity", function(object,
                                               TimeSteps=NULL,
                                               CalcAtLength=FALSE,
                                               seed=NULL,
-                                              silent=FALSE) {
+                                              messages=TRUE) {
   
   TimeSteps <- TimeStepAttributes(object, TimeSteps)
   argList <- list(FishingMortality, DiscardMortality, Ages, Length, 
@@ -1226,7 +1235,7 @@ setMethod("Populate", "selectivity", function(object,
     return(object)
 
   SetSeed(object, seed)
-  sb <- PrintPopulating(object, silent)
+  sb <- PrintPopulating(object, isTRUE(messages))
   
   selectivity <- object
   
@@ -1239,9 +1248,13 @@ setMethod("Populate", "selectivity", function(object,
   if (!is.null(ModelClass)) {
     
     if (grepl('at-Length',getModelClass(selectivity@Model))) {
-      selectivity <- PopulateMeanAtLength(selectivity, Length, 
-                                          TimeSteps, Ages, nsim,
-                                          seed, silent)
+      selectivity <- PopulateMeanAtLength(selectivity, 
+                                          Length, 
+                                          TimeSteps,
+                                          Ages, 
+                                          nsim,
+                                          seed, 
+                                          isFALSE(messages))
     } else {
       
       selectivity <- PopulateMeanAtAge(selectivity, Ages, TimeSteps)
@@ -1259,7 +1272,7 @@ setMethod("Populate", "selectivity", function(object,
                                    nsim,
                                    TimeSteps,
                                    seed,
-                                   silent)
+                                   messages)
     
     if (!EmptyObject(FishingMortality@DeadAtAge)) {
       selectivity@MeanAtAge <- FishingMortality2Selectivity(FishingMortality,
@@ -1274,7 +1287,7 @@ setMethod("Populate", "selectivity", function(object,
   
 
   selectivity <- AddMeanAtAgeAttributes(selectivity, TimeSteps, Ages)
-  PrintDonePopulating(selectivity, sb, silent)
+  PrintDonePopulating(selectivity, sb, isTRUE(messages))
   SetDigest(argList, selectivity)
 
 })
@@ -1292,7 +1305,7 @@ setMethod("Populate", "retention", function(object,
                                             TimeSteps=NULL,
                                             CalcAtLength=FALSE,
                                             seed=NULL,
-                                            silent=FALSE) {
+                                            messages=TRUE) {
 
   TimeSteps <- TimeStepAttributes(object, TimeSteps)
   argList <- list(FishingMortality, DiscardMortality, Ages, Length, 
@@ -1303,7 +1316,7 @@ setMethod("Populate", "retention", function(object,
     return(object)
   
   SetSeed(object, seed)
-  sb <- PrintPopulating(object, silent)
+  sb <- PrintPopulating(object, isTRUE(messages))
   
   retention <- object
   
@@ -1322,9 +1335,9 @@ setMethod("Populate", "retention", function(object,
     }
   } 
   
-  retention <- MeanAtLength2MeanAtAge(retention, Length, Ages, nsim, TimeSteps, seed, silent)
+  retention <- MeanAtLength2MeanAtAge(retention, Length, Ages, nsim, TimeSteps, seed, isFALSE(messages))
   if (CalcAtLength)
-    retention <- MeanAtAge2MeanAtLength(retention, Length, Ages, nsim, TimeSteps, seed, silent)
+    retention <- MeanAtAge2MeanAtLength(retention, Length, Ages, nsim, TimeSteps, seed, isFALSE(messages))
   
   if (is.null(retention@MeanAtAge)) {
     chk <- CheckRequiredObject(FishingMortality, 'fishingmortality', 'FishingMortality')
@@ -1333,7 +1346,7 @@ setMethod("Populate", "retention", function(object,
                                    nsim,
                                    TimeSteps,
                                    seed,
-                                   silent)
+                                   messages)
     
     if (!EmptyObject(FishingMortality@DeadAtAge)) {
       retention@MeanAtAge <- FishingMortality2Retention(FishingMortality,
@@ -1348,7 +1361,7 @@ setMethod("Populate", "retention", function(object,
   
   
   retention <- AddMeanAtAgeAttributes(retention, TimeSteps, Ages)
-  PrintDonePopulating(retention, sb, silent)
+  PrintDonePopulating(retention, sb, isTRUE(messages))
   SetDigest(argList, retention)
  
 })
@@ -1366,7 +1379,7 @@ setMethod("Populate", "effort", function(object,
                                          nsim=NULL,
                                          TimeSteps=NULL,
                                          seed=NULL,
-                                         silent=FALSE) {
+                                         messages=TRUE) {
 
   argList <- list(FishingMortality,
                   DiscardMortality,
@@ -1380,7 +1393,7 @@ setMethod("Populate", "effort", function(object,
 
   SetSeed(object, seed)
 
-  sb <- PrintPopulating(object, silent)
+  sb <- PrintPopulating(object, isTRUE(messages))
 
   if (EmptyObject(object@Catchability)) {
     # if (!silent)
@@ -1409,7 +1422,7 @@ setMethod("Populate", "effort", function(object,
   }
 
 
-  PrintDonePopulating(object, sb, silent)
+  PrintDonePopulating(object, sb, isTRUE(messages))
   SetDigest(argList, object)
 
 })

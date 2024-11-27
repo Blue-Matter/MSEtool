@@ -563,30 +563,30 @@ nFleet <- function(x) {
   nFleet
 }
 
-## ---- nYears ----
+## ---- nYear ----
 
 #' @rdname Access
 #' @export
-nYears <- function(x) {
-  x@nYears
+nYear <- function(x) {
+  x@nYear
 }
 
 #' @rdname Access
 #' @export
-`nYears<-` <- function(x, value) {
-  assignSlot(x, value, 'nYears')
+`nYear<-` <- function(x, value) {
+  assignSlot(x, value, 'nYear')
 }
 
 #' @rdname Access
 #' @export
-nyears <- function(x) {
-  x@nYears
+nYear <- function(x) {
+  x@nYear
 }
 
 #' @rdname Access
 #' @export
-`nyears<-` <- function(x, value) {
-  assignSlot(x, value, 'nYears')
+`nYear<-` <- function(x, value) {
+  assignSlot(x, value, 'nYear')
 }
 
 ## ---- Pars ----
@@ -660,31 +660,31 @@ pStar <- function(x) {
   assignSlot(x, value, 'pStar')
 }
 
-## ---- pYears ----
+## ---- pYear ----
 
 #' @rdname Access
 #' @export
-pYears <- function(x) {
-  x@pYears
+pYear <- function(x) {
+  x@pYear
 }
 
 #' @rdname Access
 #' @export
-`pYears<-` <- function(x, value) {
-  assignSlot(x, value, 'pYears')
+`pYear<-` <- function(x, value) {
+  assignSlot(x, value, 'pYear')
 }
 
 
 #' @rdname Access
 #' @export
 proyears <- function(x) {
-  x@pYears
+  x@pYear
 }
 
 #' @rdname Access
 #' @export
 `proyears<-` <- function(x, value) {
-  assignSlot(x, value, 'pYears')
+  assignSlot(x, value, 'pYear')
 }
 
 
@@ -895,7 +895,7 @@ TimeSteps <- function(x, Period=NULL) {
   TimeSteps <- x@TimeSteps
   if (is.null(Period))
     return(TimeSteps)
-  CalcTimeSteps(x@nYears, x@pYears, x@CurrentYear, x@TimeUnits, Period)
+  CalcTimeSteps(x@nYear, x@pYear, x@CurrentYear, x@TimeUnits, Period)
 }
 
 #' @rdname Access

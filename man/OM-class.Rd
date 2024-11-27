@@ -16,8 +16,8 @@ OM(
   Longitude = NULL,
   Sponsor = "",
   nSim = 48,
-  nYears = 20,
-  pYears = 30,
+  nYear = 20,
+  pYear = 30,
   CurrentYear = as.numeric(format(Sys.Date(), "\%Y")),
   TimeUnits = "year",
   Stock = NULL,
@@ -64,13 +64,13 @@ Operating Model. Character string. Supports Markdown.}
 \item{nSim}{The number of simulations. Numeric. Positive integer \code{nSim=1} will
 produce a deterministic operating model.}
 
-\item{nYears}{The number of historical years. Typically corresponds to the
+\item{nYear}{The number of historical years. Typically corresponds to the
 year the fishery was first (assumed to be) exploited. For multi-stock models,
-\code{nYears} should be the earliest exploitation year of all stocks. Numeric.
-Single value. Historical years are calculated as \code{rev(seq(CurrentYear, by=-1, length.out=nYears))}}
+\code{nYear} should be the earliest exploitation year of all stocks. Numeric.
+Single value. Historical years are calculated as \code{rev(seq(CurrentYear, by=-1, length.out=nYear))}}
 
-\item{pYears}{The number of projection years. Numeric. Single value.
-Projection years are calculated as \code{seq(CurrentYear+1, length.out=pYears)}.}
+\item{pYear}{The number of projection years. Numeric. Single value.
+Projection years are calculated as \code{seq(CurrentYear+1, length.out=pYear)}.}
 
 \item{CurrentYear}{The last historical year of the operating model. Defaults
 to the year the Operating Model object is built.}

@@ -25,7 +25,7 @@ NaturalMortality(x) <- value
 \item{Model}{A character string or a R function. If \code{Pars} corresponds to a built-in model (see \code{\link[=LengthModels]{LengthModels()}}), then \code{Model} can be left blank and will be populated internally.
 Alternatively, \code{Model} can be a R function that takes the arguments named in \code{Pars}.}
 
-\item{Units}{Character. Length 1. The units corresponding to \code{MeanAtAge}. Valid values are found in \code{ValidUnits(NaturalMortality())}. Defaults to \code{year} if not specified.}
+\item{Units}{A character string describing the units corresponding to \code{MeanAtAge}. Valid values are found in \code{ValidUnits(NaturalMortality())}. Defaults to \code{year} if not specified.}
 
 \item{MeanAtAge}{Natural Mortality-at-Age schedule.  Calculated internally from \code{Pars} and \code{Model}. If populated manually,
 \code{Pars} and \code{Model} will be ignored. Should be a 3 dimensional array, with the first dimension either length 1 or
@@ -116,7 +116,7 @@ corresponding with each change point can be specified using \code{attributes}, s
 \item{\code{Model}}{A character string or a R function. If \code{Pars} corresponds to a built-in model (see \code{\link[=LengthModels]{LengthModels()}}), then \code{Model} can be left blank and will be populated internally.
 Alternatively, \code{Model} can be a R function that takes the arguments named in \code{Pars}.}
 
-\item{\code{Units}}{Character. Length 1. The units corresponding to \code{MeanAtAge}. Valid values are found in \code{ValidUnits(NaturalMortality())}. Defaults to \code{year} if not specified.}
+\item{\code{Units}}{A character string describing the units corresponding to \code{MeanAtAge}. Valid values are found in \code{ValidUnits(NaturalMortality())}. Defaults to \code{year} if not specified.}
 
 \item{\code{MeanAtAge}}{Natural Mortality-at-Age schedule.  Calculated internally from \code{Pars} and \code{Model}. If populated manually,
 \code{Pars} and \code{Model} will be ignored. Should be a 3 dimensional array, with the first dimension either length 1 or

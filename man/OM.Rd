@@ -41,7 +41,7 @@ of the form "H_p'_p" where \code{p} and \verb{p'} are integers that identify the
 in the \code{Stock} list. For time-varying values, arrays with dimensions
 \code{c(nSim, (MaxAge + 1),nHistTS + nProjTS)} can be used. \code{MaxAge} is the maximum age
 for the both stock \code{p} and stock \verb{p'}. \code{nHistTS} and \code{nProjTS} are equal to
-\code{nYears} and \code{pYears} respectively, unless \code{Units} in the stocks' \code{\link[=Ages]{Ages()}}
+\code{nYear} and \code{pYear} respectively, unless \code{Units} in the stocks' \code{\link[=Ages]{Ages()}}
 object are not \code{year} (i.e, a higher resolution time step).
 \item \code{SharePar}: Optional. Logical to indicate whether stock-recruit, depletion,
 and observation/implementation parameters are mirrored between stocks. By default, \code{TRUE}.
@@ -86,13 +86,13 @@ to the year the Operating Model object is built.}
 \item{\code{nSim}}{The number of simulations. Numeric. Positive integer \code{nSim=1} will
 produce a deterministic operating model.}
 
-\item{\code{nYears}}{The number of historical years. Typically corresponds to the
+\item{\code{nYear}}{The number of historical years. Typically corresponds to the
 year the fishery was first (assumed to be) exploited. For multi-stock models,
-\code{nYears} should be the earliest exploitation year of all stocks. Numeric.
-Single value. Historical years are calculated as \code{rev(seq(CurrentYear, by=-1, length.out=nYears))}}
+\code{nYear} should be the earliest exploitation year of all stocks. Numeric.
+Single value. Historical years are calculated as \code{rev(seq(CurrentYear, by=-1, length.out=nYear))}}
 
-\item{\code{pYears}}{The number of projection years. Numeric. Single value.
-Projection years are calculated as \code{seq(CurrentYear+1, length.out=pYears)}.}
+\item{\code{pYear}}{The number of projection years. Numeric. Single value.
+Projection years are calculated as \code{seq(CurrentYear+1, length.out=pYear)}.}
 
 \item{\code{Stock}}{A \code{\link[=Stock]{Stock()}} object or a list of \code{\link[=Stock]{Stock()}} objects
 for multi-stock models.}
@@ -156,5 +156,5 @@ with relevant information. Supports Markdown.}
 myOM <- OM('My Example OM')
 }
 \seealso{
-\code{\link[=Name]{Name()}}, \code{\link[=Agency]{Agency()}}, \code{\link[=Author]{Author()}}, \code{\link[=Email]{Email()}}, \code{\link[=Region]{Region()}}, \code{\link[=Latitude]{Latitude()}}, \code{\link[=Longitude]{Longitude()}}, \code{\link[=Sponsor]{Sponsor()}}, \code{\link[=nSim]{nSim()}}, \code{\link[=nYears]{nYears()}}, \code{\link[=pYears]{pYears()}}, \code{\link[=CurrentYear]{CurrentYear()}}, \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=Obs]{Obs()}}, \code{\link[=Imp]{Imp()}}, \code{\link[=Data]{Data()}}, \code{\link[=CatchFrac]{CatchFrac()}}, \code{\link[=Allocation]{Allocation()}}, \code{\link[=Efactor]{Efactor()}}, \code{\link[=Complexes]{Complexes()}}, \code{\link[=SexPars]{SexPars()}}, \code{\link[=Relations]{Relations()}}, \code{\link[=Interval]{Interval()}}, \code{\link[=nReps]{nReps()}}, \code{\link[=pStar]{pStar()}}, \code{\link[=maxF]{maxF()}}, \code{\link[=Seed]{Seed()}}, \code{\link[=TimeUnits]{TimeUnits()}}, \code{\link[=TimeStepsPerYear]{TimeStepsPerYear()}}, \code{\link[=TimeSteps]{TimeSteps()}}, \code{\link[=Control]{Control()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Source]{Source()}}, \code{\link[=Created]{Created()}}, \code{\link[=Modified]{Modified()}}
+\code{\link[=Name]{Name()}}, \code{\link[=Agency]{Agency()}}, \code{\link[=Author]{Author()}}, \code{\link[=Email]{Email()}}, \code{\link[=Region]{Region()}}, \code{\link[=Latitude]{Latitude()}}, \code{\link[=Longitude]{Longitude()}}, \code{\link[=Sponsor]{Sponsor()}}, \code{\link[=nSim]{nSim()}}, \code{\link[=nYear]{nYear()}}, \code{\link[=pYear]{pYear()}}, \code{\link[=CurrentYear]{CurrentYear()}}, \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=Obs]{Obs()}}, \code{\link[=Imp]{Imp()}}, \code{\link[=Data]{Data()}}, \code{\link[=CatchFrac]{CatchFrac()}}, \code{\link[=Allocation]{Allocation()}}, \code{\link[=Efactor]{Efactor()}}, \code{\link[=Complexes]{Complexes()}}, \code{\link[=SexPars]{SexPars()}}, \code{\link[=Relations]{Relations()}}, \code{\link[=Interval]{Interval()}}, \code{\link[=nReps]{nReps()}}, \code{\link[=pStar]{pStar()}}, \code{\link[=maxF]{maxF()}}, \code{\link[=Seed]{Seed()}}, \code{\link[=TimeUnits]{TimeUnits()}}, \code{\link[=TimeStepsPerYear]{TimeStepsPerYear()}}, \code{\link[=TimeSteps]{TimeSteps()}}, \code{\link[=Control]{Control()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Source]{Source()}}, \code{\link[=Created]{Created()}}, \code{\link[=Modified]{Modified()}}
 }

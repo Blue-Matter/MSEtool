@@ -364,11 +364,11 @@ setMethod("show", "om", function(object) {
   cli::cli_h3('{.code CurrentYear}')
   cli::cli_text("{.val {object@CurrentYear}}")
   
-  cli::cli_h3('{.code nYears}')
-  cli::cli_text("{.val {object@nYears}}")
+  cli::cli_h3('{.code nYear}')
+  cli::cli_text("{.val {object@nYear}}")
   
-  cli::cli_h3('{.code pYears}')
-  cli::cli_text("{.val {object@pYears}}")
+  cli::cli_h3('{.code pYear}')
+  cli::cli_text("{.val {object@pYear}}")
   
   cli::cli_h3('{.code TimeUnits}')
   cli::cli_text("{.val {object@TimeUnits}}")
@@ -637,8 +637,8 @@ print_slot <- function(object, name) {
 ## Internal Print Functions ----
 
 
-PrintPopulating <- function(object, silent=FALSE, name=NULL, allup=FALSE) {
-  if (silent)
+PrintPopulating <- function(object, print=TRUE, name=NULL, allup=FALSE) {
+  if (!print)
     return(NULL)
 
   if (!is.null(name)) {
@@ -653,8 +653,8 @@ PrintPopulating <- function(object, silent=FALSE, name=NULL, allup=FALSE) {
 
 }
 
-PrintDonePopulating <- function(object, sb, silent=FALSE, name=NULL, allup=FALSE) {
-  if (silent)
+PrintDonePopulating <- function(object, sb, print=TRUE, name=NULL, allup=FALSE) {
+  if (!print)
     return(NULL)
 
   cli::cli_progress_done(id = sb)

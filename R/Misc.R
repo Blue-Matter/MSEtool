@@ -114,14 +114,14 @@ TSperYear <- function(Units) {
          'day'=365)
 }
 
-CalcTimeSteps <- function(nYears, pYears, CurrentYear, TimeUnits='year', Period=NULL) {
+CalcTimeSteps <- function(nYear, pYear, CurrentYear, TimeUnits='year', Period=NULL) {
   nTimeStepsPerYear <- TSperYear(TimeUnits)
 
-  hist <- seq(CurrentYear-(nYears-1), by=1/nTimeStepsPerYear,
-      length.out=nYears*nTimeStepsPerYear)
+  hist <- seq(CurrentYear-(nYear-1), by=1/nTimeStepsPerYear,
+      length.out=nYear*nTimeStepsPerYear)
   proj <- seq(CurrentYear+1,
               by=1/nTimeStepsPerYear,
-              length.out=pYears*nTimeStepsPerYear)
+              length.out=pYear*nTimeStepsPerYear)
   if (is.null(Period))
     return(c(hist, proj))
 
@@ -280,7 +280,7 @@ ParsNotEmpty <- function(Pars) {
 
 GetIndex <- function(i, max_i) {
   if (i>=max_i)
-    return(rep(1:max_i, 100)[i])
+    return(rep(1:max_i, i)[i])
   i
 }
 

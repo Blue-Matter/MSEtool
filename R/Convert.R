@@ -45,12 +45,12 @@ OM2om <- function(OM, Author='', CurrentYear=NULL) {
   om@Sponsor <- OM@Sponsor
   om@nSim <- OM@nsim
   if (methods::is(OM, 'MOM')) {
-    om@nYears <- OM@Fleets[[1]][[1]]@nyears
+    om@nYear <- OM@Fleets[[1]][[1]]@nYear
   } else {
-    om@nYears <- OM@nyears
+    om@nYear <- OM@nYear
   }
   
-  om@pYears <- OM@proyears
+  om@pYear <- OM@proyears
   om@Interval <- OM@interval
   om@Seed <- OM@seed
   om@pStar <- OM@pstar
@@ -70,8 +70,8 @@ OM2om <- function(OM, Author='', CurrentYear=NULL) {
     
   om@TimeUnits <- 'Year'
   om@TimeStepsPerYear <- 1
-  om@TimeSteps <- CalcTimeSteps(nYears=om@nYears,
-                                pYears=om@pYears,
+  om@TimeSteps <- CalcTimeSteps(nYear=om@nYear,
+                                pYear=om@pYear,
                                 CurrentYear=om@CurrentYear,
                                 TimeUnits=om@TimeUnits)
 
@@ -403,7 +403,7 @@ OM2SRR <- function(OM, cpars=NULL) {
   SRR
 }
 
-cpars2SRR <- function(cpars, nyears=NULL, maxage=NULL) {
+cpars2SRR <- function(cpars, nYear=NULL, maxage=NULL) {
   SRR <- SRR()
   Pars(SRR)$R0 <- process_cpars(cpars$R0)
   Pars(SRR)$h <- process_cpars(cpars$h)
@@ -414,20 +414,20 @@ cpars2SRR <- function(cpars, nyears=NULL, maxage=NULL) {
   # Perr_y
   perr_y <- cpars[['Perr_y']]
   if (!is.null(perr_y)) {
-    if (is.null(nyears)) {
-      nyears <- dim(cpars$Find)[2]
+    if (is.null(nYear)) {
+      nYear <- dim(cpars$Find)[2]
     }
     if (is.null(maxage)) {
       maxage <- dim(cpars$Len_age)[2] -1
     }
 
-    if (is.null(nyears))
-      stop("`nyears` not found")
+    if (is.null(nYear))
+      stop("`nYear` not found")
     if (is.null(maxage))
       stop("`maxage` not found")
 
     dd <- dim(perr_y)[2]
-    proyears <- dd - nyears - maxage
+    proyears <- dd - nYear - maxage
 
 
     init_age_classes <- perr_y[,1:maxage]
@@ -438,14 +438,14 @@ cpars2SRR <- function(cpars, nyears=NULL, maxage=NULL) {
       SRR@RecDevInit <- init_age_classes
     }
 
-    hist_yrs <- perr_y[,(maxage+1):(nyears+maxage)]
+    hist_yrs <- perr_y[,(maxage+1):(nYear+maxage)]
     if (identical_sim(hist_yrs)) {
       SRR@RecDevHist <- hist_yrs[1,]
     } else {
       SRR@RecDevHist <- hist_yrs
     }
 
-    pro_yrs <- perr_y[,(nyears+maxage+1):(nyears+maxage+proyears)]
+    pro_yrs <- perr_y[,(nYear+maxage+1):(nYear+maxage+proyears)]
     if (identical_sim(pro_yrs)) {
       SRR@RecDevProj <- pro_yrs[1,]
     } else {
@@ -999,7 +999,7 @@ om2Fleet <- function(OM, st=NULL, fl=NULL) {
   
   
   fleet@isRel <- FALSE
-  fleet@nyears <- nYears(OM)
+  fleet@nYear <- nYear(OM)
   fleet@CurrentYr <- OM@CurrentYear
   fleet
 }
@@ -1225,7 +1225,7 @@ om2OM <- function(OM) {
   OMout@Latitude <- OM@Latitude
   OMout@Longitude <- OM@Longitude
   OMout@nsim <- OM@nSim
-  OMout@proyears <- OM@pYears
+  OMout@proyears <- OM@pYear
   OMout@interval <- OM@Interval
   OMout@pstar <- OM@pStar
   OMout@maxF <- OM@maxF
@@ -1265,7 +1265,7 @@ om2MOM <- function(OM) {
   
   MOM <- new('MOM',
              nsim=nsim,
-             proyears=pYears(OM),
+             proyears=pYear(OM),
              Stocks=Stocks,
              Fleets=Fleets,
              Obs=OM@Obs, # currently unchanged
@@ -1289,7 +1289,7 @@ om2MOM <- function(OM) {
   MOM@Latitude <- OM@Latitude
   MOM@Longitude <- OM@Longitude
   MOM@nsim <- OM@nSim
-  MOM@proyears <- OM@pYears
+  MOM@proyears <- OM@pYear
   MOM@interval <- OM@Interval
   MOM@pstar <- OM@pStar
   MOM@maxF <- OM@maxF

@@ -1553,8 +1553,8 @@ setClass('stock',
                  SRR='srr',
                  Spatial='spatial',
                  Depletion='depletion',
-                 nYears='num.null',
-                 pYears='num.null',
+                 nYear='num.null',
+                 pYear='num.null',
                  nSim='num.null',
                  CurrentYear='num.null',
                  TimeUnits='char.null',
@@ -1578,8 +1578,8 @@ setMethod("initialize", "stock", function(.Object,
                                           SRR=new('srr'),
                                           Spatial=new('spatial'),
                                           Depletion=new('depletion'),
-                                          nYears=20,
-                                          pYears=30,
+                                          nYear=20,
+                                          pYear=30,
                                           nSim=48,
                                           CurrentYear=as.numeric(format(Sys.Date(), '%Y')),
                                           TimeUnits='year',
@@ -1596,13 +1596,13 @@ setMethod("initialize", "stock", function(.Object,
   .Object@SRR <- SRR
   .Object@Spatial <- Spatial
   .Object@Depletion <- Depletion
-  .Object@nYears <- nYears
-  .Object@pYears <- pYears
+  .Object@nYear <- nYear
+  .Object@pYear <- pYear
   .Object@nSim <- nSim
   .Object@CurrentYear <- CurrentYear
 
   .Object@TimeStepsPerYear <- TSperYear(TimeUnits)
-  .Object@TimeSteps <- CalcTimeSteps(nYears, pYears, CurrentYear, TimeUnits)
+  .Object@TimeSteps <- CalcTimeSteps(nYear, pYear, CurrentYear, TimeUnits)
   .Object@TimeUnits <- TimeUnits
   .Object@Misc <- Misc
   .Object@Created <- Sys.time()
@@ -1670,8 +1670,8 @@ Stock <- function(Name=NULL,
   }
       
   dots <- list(...)
-  nYears <- 20
-  pYears <- 30
+  nYear <- 20
+  pYear <- 30
   nSim <- 48
   CurrentYear <- as.numeric(format(Sys.Date(), '%Y'))
   TimeUnits <- 'year'
@@ -1691,8 +1691,8 @@ Stock <- function(Name=NULL,
                SRR=SRR,
                Spatial=Spatial,
                Depletion=Depletion,
-               nYears=nYears,
-               pYears=pYears,
+               nYear=nYear,
+               pYear=pYear,
                nSim=nSim,
                CurrentYear=CurrentYear,
                TimeUnits=TimeUnits,
@@ -2514,12 +2514,12 @@ setClassUnion(name="data.list", members=c("data", "list", 'NULL'))
 #' to the year the Operating Model object is built.
 #' @slot nSim The number of simulations. Numeric. Positive integer `nSim=1` will
 #' produce a deterministic operating model.
-#' @slot nYears The number of historical years. Typically corresponds to the
+#' @slot nYear The number of historical years. Typically corresponds to the
 #' year the fishery was first (assumed to be) exploited. For multi-stock models,
-#' `nYears` should be the earliest exploitation year of all stocks. Numeric.
-#' Single value. Historical years are calculated as `rev(seq(CurrentYear, by=-1, length.out=nYears))`
-#' @slot pYears The number of projection years. Numeric. Single value.
-#' Projection years are calculated as `seq(CurrentYear+1, length.out=pYears)`.
+#' `nYear` should be the earliest exploitation year of all stocks. Numeric.
+#' Single value. Historical years are calculated as `rev(seq(CurrentYear, by=-1, length.out=nYear))`
+#' @slot pYear The number of projection years. Numeric. Single value.
+#' Projection years are calculated as `seq(CurrentYear+1, length.out=pYear)`.
 #' @slot Stock A [Stock()] object or a list of [Stock()] objects
 #' for multi-stock models.
 #' @slot Complexes For multi-stock models only. A list of stock complexes.
@@ -2589,7 +2589,7 @@ setClassUnion(name="data.list", members=c("data", "list", 'NULL'))
 #' in the `Stock` list. For time-varying values, arrays with dimensions
 #'  `c(nSim, (MaxAge + 1),nHistTS + nProjTS)` can be used. `MaxAge` is the maximum age
 #'  for the both stock `p` and stock `p'`. `nHistTS` and `nProjTS` are equal to
-#'  `nYears` and `pYears` respectively, unless `Units` in the stocks' [Ages()]
+#'  `nYear` and `pYear` respectively, unless `Units` in the stocks' [Ages()]
 #'  object are not `year` (i.e, a higher resolution time step).
 #' - `SharePar`: Optional. Logical to indicate whether stock-recruit, depletion,
 #' and observation/implementation parameters are mirrored between stocks. By default, `TRUE`.
@@ -2617,8 +2617,8 @@ setClass("om",
                  Longitude='num.null',
                  Sponsor='char.null',
                  nSim='num.null',
-                 nYears='num.null',
-                 pYears='num.null',
+                 nYear='num.null',
+                 pYear='num.null',
                  CurrentYear='num.null',
                  Stock='stock.list',
                  Fleet='fleet.list',
@@ -2663,12 +2663,12 @@ setClass("om",
 #' to the year the Operating Model object is built.
 #' @param nSim The number of simulations. Numeric. Positive integer `nSim=1` will
 #' produce a deterministic operating model.
-#' @param nYears The number of historical years. Typically corresponds to the
+#' @param nYear The number of historical years. Typically corresponds to the
 #' year the fishery was first (assumed to be) exploited. For multi-stock models,
-#' `nYears` should be the earliest exploitation year of all stocks. Numeric.
-#' Single value. Historical years are calculated as `rev(seq(CurrentYear, by=-1, length.out=nYears))`
-#' @param pYears The number of projection years. Numeric. Single value.
-#' Projection years are calculated as `seq(CurrentYear+1, length.out=pYears)`.
+#' `nYear` should be the earliest exploitation year of all stocks. Numeric.
+#' Single value. Historical years are calculated as `rev(seq(CurrentYear, by=-1, length.out=nYear))`
+#' @param pYear The number of projection years. Numeric. Single value.
+#' Projection years are calculated as `seq(CurrentYear+1, length.out=pYear)`.
 #' @param Stock A [Stock] object or a list of [Stock()] objects
 #' for multi-stock models.
 #' @param Complexes For multi-stock models only. A list of stock complexes.
@@ -2718,8 +2718,8 @@ OM <- function(Name='A new `OM` object',
                Longitude=NULL,
                Sponsor='',
                nSim=48,
-               nYears=20,
-               pYears=30,
+               nYear=20,
+               pYear=30,
                CurrentYear=as.numeric(format(Sys.Date(), '%Y')),
                TimeUnits='year',
                Stock=NULL,
@@ -2750,14 +2750,14 @@ OM <- function(Name='A new `OM` object',
   .Object@Sponsor <- Sponsor
 
   .Object@nSim <- nSim
-  .Object@nYears <- nYears
-  .Object@pYears <- pYears
+  .Object@nYear <- nYear
+  .Object@pYear <- pYear
 
   .Object@CurrentYear <- CurrentYear
   .Object@TimeUnits <- TimeUnits
 
   .Object@TimeStepsPerYear <- TSperYear(TimeUnits)
-  .Object@TimeSteps <- CalcTimeSteps(nYears, pYears, CurrentYear, TimeUnits)
+  .Object@TimeSteps <- CalcTimeSteps(nYear, pYear, CurrentYear, TimeUnits)
 
   .Object@Stock <- Stock
   .Object@Fleet <- Fleet

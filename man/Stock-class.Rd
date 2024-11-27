@@ -20,13 +20,8 @@ Stock(
   SRR = new("srr"),
   Spatial = new("spatial"),
   Depletion = new("depletion"),
-  nYears = 20,
-  pYears = 30,
-  nSim = 48,
-  CurrentYear = as.numeric(format(Sys.Date(), "\%Y")),
-  TimeUnits = "year",
-  TimeSteps = NULL,
-  Misc = list()
+  Misc = list(),
+  ...
 )
 
 Stock(x) <- value
@@ -56,6 +51,12 @@ Stock(x) <- value
 
 \item{Depletion}{A \code{\link[=Depletion]{Depletion()}} object. Optional.}
 
+\item{Misc}{A list for additional miscellaneous objects. Not currently used.}
+
+\item{x}{A \code{\link[=OM]{OM()}} class object}
+
+\item{value}{An \code{stock} class object to assign to \code{x}}
+
 \item{nSim}{The number of simulations. Numeric. Positive integer \code{nSim=1} will
 produce a deterministic operating model. Can be left empty and will be populated internally.}
 
@@ -64,12 +65,6 @@ to the year the Operating Model object is built. Must include \code{CurrentYear}
 in units other than \code{year}. See \code{ValidUnits('Ages')}}
 
 \item{TimeSteps}{Numeric vector of the time steps.}
-
-\item{Misc}{A list for additional miscellaneous objects. Not currently used.}
-
-\item{x}{A \code{\link[=OM]{OM()}} class object}
-
-\item{value}{An \code{stock} class object to assign to \code{x}}
 }
 \description{
 An operating model component that specifies the parameters of the population
