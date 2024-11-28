@@ -15,8 +15,8 @@ multiHist <- Simulate(MOM)
 OM <- Convert(MOM)  # convert from `MOM` to `om`
 
 
-
-
+multiHist[[1]][[1]]@Misc$MOM@Allocation[[1]][1,]
+multiHist[[1]][[1]]@Misc$MOM@Allocation[[2]][1,]
 
 newMOM <- Convert(OM)  # convert `om` back to `MOM`
 
