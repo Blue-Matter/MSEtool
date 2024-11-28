@@ -45,9 +45,9 @@ OM2om <- function(OM, Author='', CurrentYear=NULL) {
   om@Sponsor <- OM@Sponsor
   om@nSim <- OM@nsim
   if (methods::is(OM, 'MOM')) {
-    om@nYear <- OM@Fleets[[1]][[1]]@nYear
+    om@nYear <- OM@Fleets[[1]][[1]]@nyears
   } else {
-    om@nYear <- OM@nYear
+    om@nYear <- OM@nyears
   }
   
   om@pYear <- OM@proyears
@@ -136,7 +136,7 @@ OM2om <- function(OM, Author='', CurrentYear=NULL) {
     # update because Vmaxlen and Rmaxlen now correspond with maximum length class
     om <- SolveForVmaxlen(om) 
     om <- SolveForRmaxlen(om)
-    om <- Populate(om, silent=TRUE)
+    om <- Populate(om, messages=FALSE)
     return(om)
   }
 
@@ -1210,7 +1210,7 @@ om2Cpars <- function(OM, st=NULL, fl=NULL) {
 }
 
 om2OM <- function(OM) {
-  OM <- Populate(OM, silent=TRUE)
+  OM <- Populate(OM, messages=FALSE)
   nsim <- nSim(OM)
   nTS <- length(TimeSteps(OM))
   
@@ -1239,7 +1239,7 @@ om2OM <- function(OM) {
 }
 
 om2MOM <- function(OM) {
-  OM <- Populate(OM, silent=TRUE)
+  OM <- Populate(OM, messages=FALSE)
   nsim <- nSim(OM)
   nTS <- length(TimeSteps(OM))
   

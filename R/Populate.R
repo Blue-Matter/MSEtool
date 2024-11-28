@@ -421,9 +421,9 @@ setMethod("Populate", "om", function(object, messages='progress') {
     
     if (!isFALSE(messages)) {
       if (nStocks>1) {
-        cli::cli_alert_info('Populating Stock {.val {st}/{nStocks}}')
+        cli::cli_alert('Populating Stock {.val {st}/{nStocks}}')
       } else {
-        cli::cli_alert_info('Populating Stock')
+        cli::cli_alert('Populating Stock')
       }
     }
  
@@ -828,7 +828,7 @@ setMethod("Populate", "fecundity", function(object,
   object@Model <- FindModel(object)
 
   if (is.null(object@Model)| all(is.na(object@Pars))) {
-    if (!silent)
+    if (!isFALSE(messages))
       cli::cli_alert_info('No `Fecundity` model found. Assuming Fecundity proportional to Spawning Biomass')
 
     CheckRequiredObject(Ages, 'ages', 'Ages')
@@ -849,15 +849,15 @@ setMethod("Populate", "fecundity", function(object,
   if (!is.null(ModelClass)) {
     if (grepl('at-Length',getModelClass(object@Model))) {
       object <- PopulateMeanAtLength(object, Length, TimeSteps, Ages, nsim,
-                                     seed, silent)
+                                     seed, isTRUE(messages))
     } else {
       object <- PopulateMeanAtAge(object, Ages, TimeSteps)
     }
   }
 
-  object <- MeanAtLength2MeanAtAge(object, Length, Ages, nsim, TimeSteps, seed, silent)
+  object <- MeanAtLength2MeanAtAge(object, Length, Ages, nsim, TimeSteps, seed, isTRUE(messages))
   if (CalcAtLength)
-    object <- MeanAtAge2MeanAtLength(object, Length, Ages, nsim, TimeSteps, seed, silent)
+    object <- MeanAtAge2MeanAtLength(object, Length, Ages, nsim, TimeSteps, seed, isTRUE(messages))
 
   object <- AddMeanAtAgeAttributes(object, TimeSteps, Ages)
 
@@ -1206,8 +1206,8 @@ setMethod("Populate", "discardmortality", function(object,
 
   object <- AddMeanAtAgeAttributes(object, TimeSteps, Ages)
 
-  PrintDonePopulating(object, sb, silent, name='DiscardMortality')
-  SetDigest(argList, isTRUE(messages))
+  PrintDonePopulating(object, sb, isTRUE(messages), name='DiscardMortality')
+  SetDigest(argList, object)
 })
 
 
@@ -1261,9 +1261,9 @@ setMethod("Populate", "selectivity", function(object,
     }
   } 
  
-  selectivity <- MeanAtLength2MeanAtAge(selectivity, Length, Ages, nsim, TimeSteps, seed, silent)
+  selectivity <- MeanAtLength2MeanAtAge(selectivity, Length, Ages, nsim, TimeSteps, seed, isTRUE(messages))
   if (CalcAtLength)
-    selectivity <- MeanAtAge2MeanAtLength(selectivity, Length, Ages, nsim, TimeSteps, seed, silent)
+    selectivity <- MeanAtAge2MeanAtLength(selectivity, Length, Ages, nsim, TimeSteps, seed, isTRUE(messages))
   
   if (is.null(selectivity@MeanAtAge)) {
     chk <- CheckRequiredObject(FishingMortality, 'fishingmortality', 'FishingMortality')
@@ -1328,7 +1328,7 @@ setMethod("Populate", "retention", function(object,
   if (!is.null(ModelClass)) {
     if (grepl('at-Length',getModelClass(retention@Model))) {
       retention <- PopulateMeanAtLength(retention, Length, TimeSteps, Ages, nsim,
-                                          seed, silent)
+                                          seed, isTRUE(messages))
     } else {
       
       retention <- PopulateMeanAtAge(retention, Ages, TimeSteps)
