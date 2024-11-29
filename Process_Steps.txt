@@ -1,3 +1,13 @@
 # Simulate
 
 - Populate OM 
+
+
+
+## Things to Check 
+- Allocate: how does it work across male and female stocks?
+
+
+## OM@Control options
+
+Control$HistRel <- FALSE # don't use `Relations(OM)` in historical period

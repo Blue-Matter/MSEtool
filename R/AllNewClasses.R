@@ -1662,8 +1662,8 @@ Stock <- function(Name=NULL,
           return(Name@Stock[[CommonName]])
         }
       } else {
-        cli::cli_alert_info('`Stock` is a list. Returning first stock. \n Use `Stock(OM, 2)` to access second stock')
-        return(Name@Stock[[1]])
+        cli::cli_inform('`Stock` is a list. Returning stock list. \n Use `Stock(OM, x)` to access stock `x`')
+        return(Name@Stock)
       }
     }
     return(Name@Stock)

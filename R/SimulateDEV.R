@@ -19,30 +19,39 @@ StartMessages <- function(OM, messages='default') {
   msg <- SetMessages(messages)
   
   # Allocation
-  if(!length(MOM@Allocation)) {
-    MOM@Allocation <- CatchFrac
-    if (!silent) message_info("Slot @Allocation of MOM object not specified. Setting slot ",
-                              "@Allocation equal to slot @CatchFrac - current catch fractions")
+  if (nFleet(OM)>1) {
+    if (!length(OM@Allocation)) {
+      OM@Allocation <- OM@CatchFrac
+      if (isTRUE(msg$alert)) 
+        cli::cli_alert_info('`Allocation(OM)` not specified. \nSetting `Allocation` equal to `CatchFrac` (`Allocate(OM) <- CatchFrac(OM)`)\n'
+        )
+      
+    }
+    
+    if(!length(OM@Efactor)) {
+      OM@Efactor <- lapply(1:nStock(OM), function(x) 
+        matrix(1, nSim(OM), nFleet(OM)))
+      if (isTRUE(msg$alert)) 
+        cli::cli_alert_info(
+          "`Efactor(OM)` not specified. \nSetting `Efactor(OM)` to current effort for all fleets.\n"
+        )
+    }
   }
-  
-  if(!length(MOM@Efactor)) {
-    MOM@Efactor <- lapply(1:np, function(x) matrix(1, nsim, nf))
-    if (!silent) message_info("Slot @Efactor of MOM object not specified. Setting slot @Efactor ",
-                              "to current effort for all fleets")
-  }
-  
-  
-  if (nStock(OM)==1)
-    return(NULL)
-  
-  if (!length(OM@Relations) && !length(MOM@SexPars)) {
-    if (isTRUE(msg$alert==TRUE)) {
+
+  if (nStock(OM)>1 && !length(OM@Relations) && !length(MOM@SexPars)) {
+    if (isTRUE(msg$alert)) {
       cli::cli_alert_info("You have specified more than one stock but no MICE relationships (`Relations(OM)`) or sex-specific relationships (`SexPars(OM)`) among these. \nAs they are independent, consider doing MSE for one stock at a time for computational efficiency\n")
     }
   }
+  Populate(OM, messages=FALSE)
 }
 
-
+SetHistRel <- function(OM) {
+  # Ignore MICE in historical period
+  if (isFALSE(OM@Control$HistRel))
+    return(list())
+  Relations(OM) 
+}
 
 nSimUpdate <- function(OM, nSim=NULL, messages='default') {
   if (is.null(nSim))
@@ -61,13 +70,15 @@ nSimUpdate <- function(OM, nSim=NULL, messages='default') {
   OM@nSim <- nSim
   
   if (length(OM@CatchFrac)>0) 
-    CatchFrac <- lapply(OM@CatchFrac, function(x) x[1:OM@nSim, , drop = FALSE])
+    OM@CatchFrac <- lapply(OM@CatchFrac, function(x)
+      x[1:OM@nSim, , drop = FALSE])
   OM
 }
 
 CheckClass <- function(object, class='om', name='OM', type='Argument') {
   if (isFALSE(methods::is(object, class)))
      cli::cli_abort('{type} {.var {name}} must be class {.var {class}}')
+  invisible(object)
 }
 
 ConvertToList <- function(OM) {
@@ -87,13 +98,37 @@ ConvertFromList <- function(OM) {
 SimulateDEV <- function(OM=NULL, parallel=FALSE, messages='default', nSim=NULL) {
 
   # ---- Initial Checks and Setup ----
-  CheckClass(OM)
+  chk <- OM |> CheckClass() |> Check() # TODO OM checks
   
-  OM <- nSimUpdate(OM, nSim, messages) |>
+  OM <- OM |> nSimUpdate(nSim, messages) |>
     Populate(messages=messages) |>
-    ConvertToList()
+    ConvertToList() |>
+    StartMessages(messages)
   
-  OMCheck <- Check(OM)   # TODO OM checks
+
+  
+  
+  # TODO - copy rec devs (and others?) over all stocks in SexPars
+  # TODO - Herm
+  
+  # # --- Sample Obs Parameters ----
+  # # TODO - updated Obs object
+  # 
+  # ObsPars[[p]] <- lapply(1:nf, function(f) {
+  #   SampleObsPars(MOM@Obs[[p]][[f]], nsim,
+  #                 cpars = SampCpars[[p]][[f]],
+  #                 Stock = StockPars[[p]],
+  #                 nyears, proyears)
+  # })
+  # 
+  # # --- Sample Imp Parameters ----
+  # # TODO - updated Imp object
+  # 
+  # ImpPars[[p]] <- lapply(1:nf, function(f) {
+  #   SampleImpPars(MOM@Imps[[p]][[f]], nsim,
+  #                 cpars = SampCpars[[p]][[f]],
+  #                 nyears, proyears)
+  # })
   
   
   # ---- Unfished Equilibrium ----
@@ -113,6 +148,9 @@ SimulateDEV <- function(OM=NULL, parallel=FALSE, messages='default', nSim=NULL) 
   }
   
   
+  
+  
+  HistRel <- SetHistRel(OM)
   
   
                         
