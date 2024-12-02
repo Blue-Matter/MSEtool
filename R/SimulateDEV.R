@@ -105,10 +105,120 @@ SimulateDEV <- function(OM=NULL, parallel=FALSE, messages='default', nSim=NULL) 
     ConvertToList() |>
     StartMessages(messages)
   
-
+  
+  # ---- Hermaphroditism ----
+  # TODO this should be done in Populate
+  
+  OM@SexPars$Herm$H_2_1 <- c(0,0,0,0,0,0,0,0,0.05,0.1,0.2,0.35,0.65,0.8,0.9,1,1,1,1)
+  OM@SexPars$Herm$H_3_11<- c(0,0,0,0,0,0,0,0,0.05,0.1,0.2,0.35,0.65,0.8,0.9,1,1,1,1)
   
   
-  # TODO - copy rec devs (and others?) over all stocks in SexPars
+  StructureHerm <- function(OM) {
+    if (!(length(OM@SexPars)))
+      OM@SexPars <- list()
+    
+    if (!(length(OM@SexPars$Herm))) {
+      OM@SexPars$HermFrac <- vector('list', nStock(OM))
+      for (st in 1:nStock(OM)) {
+        nage <- Stock(OM, st) |> nAge()
+        OM@SexPars$HermFrac[[st]] <- array(1, dim=c(1, nage, 1))
+      }
+      return(OM)
+    }
+      
+      
+      
+     
+    }
+    
+    
+    
+    nHerm <- length(OM@SexPars$Herm)
+      
+    Herm <- vector('list', nHerm)
+    HermFrac <- vector('list', nStock(OM))
+    
+   
+    
+    nStock(OM)
+    
+    
+    # add dimensions 
+    
+    # expand for all stocks
+    
+    nStock(OM)
+    
+    OM@SexPars$Herm$H_1_2 |> dim()
+      
+    
+    OM@SexPars$Herm
+    
+    
+    
+    
+    
+    OM@SexPars$Herm <- Herm
+    OM@SexPars$HermFrac <- HermFrac
+    OM
+  }
+  
+  Initial()
+  
+  
+  
+  
+  control$HermEq
+  
+  
+  OM@SexPars$Herm
+  
+  
+  # --- Update Parameters for two-sex stocks ----
+  
+  
+  
+  
+  
+  # ---- Calculate Reference Points ----
+  
+  ## ---- Per-Recruit Reference Points ----
+  
+  ## ---- Unfished Reference Points ----
+  
+  ## ---- Dynamic Unfished Reference Points ---- 
+  
+  ## ---- MSY Reference Points ----
+  
+  ## ---- Calculate Spawning Potential Ratio ----
+  
+  ## ---- Mean Generation Time ----
+  
+  ## ---- Reference Yield ----
+  
+  # ---- Optimize Rec Devs for Initial Depletion ----
+  
+  
+  # ---- Non-Equilibrium Initial Year ----
+  
+  # ---- Optimize catchability (q) to fit depletion ----
+  # (if needed)
+  
+  # ---- Run Historical Simulations ----
+  
+  # ---- Calculate Historical Catch ----
+  
+  # ---- Condition Observation Object on Real Fishery Data ----
+  
+  # ---- Simulate Fishery Data ----
+  
+  # ---- Return `hist` Object ----
+  
+  
+  
+  
+  
+  # TODO - copy rec devs (and others?) over all stocks in SexPars - line 173 in multiMSE.R
   # TODO - Herm
   
   # # --- Sample Obs Parameters ----

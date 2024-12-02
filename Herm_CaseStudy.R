@@ -19,10 +19,12 @@ Fleet(OM) <- list(list(OM2fleet(Generic_FlatE)),
 # fraction in stock 2 at age
 nAge(Stock(OM,1))
 OM@SexPars$Herm$H_2_1 <- c(0,0,0,0,0,0,0,0,0.05,0.1,0.2,0.35,0.65,0.8,0.9,1,1,1,1)
+OM@SexPars$Herm$H_3_11<- c(0,0,0,0,0,0,0,0,0.05,0.1,0.2,0.35,0.65,0.8,0.9,1,1,1,1)
 
-StructureHerm <- function(herm) {
-  
-}
+lapply(OM@SexPars$Herm, length)
+
+
+
 
 
 
