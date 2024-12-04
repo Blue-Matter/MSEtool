@@ -1060,6 +1060,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
         StockPars[[p]]$N <- N
         StockPars[[p]]$SSB <- SSB
         StockPars[[p]]$Biomass <- Biomass
+        StockPars[[p]]$VBiomass <- VBiomass
         Data@Misc$StockPars <- StockPars[[p]]
         Data@Misc$FleetPars <- FleetPars[[p]][[f]]
         Data@Misc$ReferencePoints <- StockPars[[p]]$ReferencePoints
@@ -1101,6 +1102,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
         StockPars[[p]]$N <- N
         StockPars[[p]]$SSB <- SSB
         StockPars[[p]]$Biomass <- Biomass
+        StockPars[[p]]$VBiomass <- VBiomass
         Data@Misc$StockPars <- StockPars[[p]]
         Data@Misc$FleetPars <- FleetPars[[p]][[f]]
         Data@Misc$ReferencePoints <- StockPars[[p]]$ReferencePoints
@@ -1577,6 +1579,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     StockPars[[p]]$SSB <- StockPars[[p]]$SSB[, p, , , ]
     StockPars[[p]]$N <- StockPars[[p]]$N[, p, , , ]
     StockPars[[p]]$Biomass <- StockPars[[p]]$Biomass[, p, , , ]
+    if (!is.null(StockPars[[p]]$VBiomass)) StockPars[[p]]$VBiomass <- StockPars[[p]]$VBiomass[, p, , , ]
   }
 
   nareas <- StockPars[[1]]$nareas
@@ -1716,6 +1719,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       StockPars[[p]]$SSB <- StockPars[[p]]$SSB[, p, , , ]
       StockPars[[p]]$N <- StockPars[[p]]$N[, p, , , ]
       StockPars[[p]]$Biomass <- StockPars[[p]]$Biomass[, p, , , ]
+      if (!is.null(StockPars[[p]]$VBiomass)) StockPars[[p]]$VBiomass <- StockPars[[p]]$VBiomass[, p, , , ]
       
       # Discard mortality for projections
       StockPars[[p]]$Fdisc_P <- StockPars[[p]]$Fdisc
