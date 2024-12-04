@@ -3021,7 +3021,6 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   }
   Misc <- list()
   # Misc$Data <-MSElist
-  Misc[['MOM']]<-MOM
   
   if (length(Rel)) {
     if (!silent) message("Returning updated parameters from MICE relationship in 'Misc$MICE'")
@@ -3029,6 +3028,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   }
   
   if (extended) {
+    
     if (!silent) message("Returning complete abundance series in 'Misc$extended$N")
     Misc[["extended"]] <- list(
       N = local({
@@ -3036,6 +3036,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         abind::abind(histN, N_P_mp, along=5) # nsim x np x n_age x nMP x proyears x nareas
       })
     )
+    
+    Misc[['MOM']] <- MOM
   }
 
   # need to reformat MMP and complex mode to work with MSEout slot

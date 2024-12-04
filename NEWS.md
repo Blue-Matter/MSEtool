@@ -5,6 +5,10 @@ The current version of the `MSEtool` package is available for download from [CRA
 ## Fixes
 - `updateData` and `updateData_MS` use the Baranov catch equation to simulate `Data@CAA` in the projection. Previously, the catch at age was simulated with only the retention curve.
 
+## Updates
+- When indices are provided to the operating model, the default value of beta = 1 (hyperstability parameter) if not specified in `cpars`.
+- Add grid to base graphics
+
 # MSEtool 3.7.3
 
 ## Fixes
