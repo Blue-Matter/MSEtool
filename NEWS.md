@@ -1,5 +1,10 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
+# MSEtool 3.7.4
+
+## Fixes
+- `updateData` and `updateData_MS` use the Baranov catch equation to simulate `Data@CAA` in the projection. Previously, the catch at age was simulated with only the retention curve.
+
 # MSEtool 3.7.3
 
 ## Fixes

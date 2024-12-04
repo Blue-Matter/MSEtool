@@ -233,8 +233,7 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
 
 updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret,
                        N_P, SSB, SSB_P, VBiomass, VBiomass_P, RefPoints,
-                       retA_P,
-                       retL_P, StockPars, FleetPars, ObsPars, ImpPars,
+                       retA_P, retL_P, FM_Pret, Z_P, StockPars, FleetPars, ObsPars, ImpPars,
                        V_P,
                        upyrs, interval, y=2,
                        mm=1, Misc, RealData, Sample_Area) {
@@ -506,13 +505,11 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   Data@CAA[, 1:(nyears + y - interval[mm] - 1), ] <- oldCAA[, 1:(nyears + y - interval[mm] - 1), ]
 
   # update CAA
-  CNtemp <- retA_P[,,yind+nyears, drop=FALSE] *
-    apply(N_P[,,yind,, drop=FALSE]*Sample_Area$CAA[,,nyears+yind,, drop=FALSE], 1:3, sum)
+  CNtemp <- apply(FM_Pret/Z_P * (1 - exp(-Z_P)) * N_P * Sample_Area$CAA[, , nyears + 1:proyears, ], 1:3, sum)
   CNtemp[is.na(CNtemp)] <- tiny
   CNtemp[!is.finite(CNtemp)] <- tiny
 
-  CAA <- simCAA(nsim, yrs=length(yind), StockPars$maxage+1, Cret=CNtemp, ObsPars$CAA_ESS, ObsPars$CAA_nsamp)
-
+  CAA <- simCAA(nsim, yr = length(yind), StockPars$maxage+1, Cret = CNtemp[, , yind, drop = FALSE], ObsPars$CAA_ESS, ObsPars$CAA_nsamp)
   Data@CAA[, nyears + yind, ] <- CAA
 
   # --- Catch-at-length ----
@@ -2165,13 +2162,14 @@ updateData_MS <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_P
   Data@CAA[, 1:(nyears + y - interval[mm] - 1), ] <- oldCAA[, 1:(nyears + y - interval[mm] - 1), ]
   
   # update CAA
-  CNtemp <- FleetPars[[p]][[f]]$retA_P[,,yind+nyears, drop=FALSE] *
-    apply(N_P[,p,,yind,, drop=FALSE], c(1,3,4), sum)
+  FM_Pret <- FleetPars[[p]][[f]]$FM_Pret
+  Z_P <- FleetPars[[p]][[f]]$Z_P
+  CNtemp <- apply(FM_Pret/Z_P * (1 - exp(-Z_P)) * N_P[, p, , , ], 1:3, sum)
   CNtemp[is.na(CNtemp)] <- tiny
   CNtemp[!is.finite(CNtemp)] <- tiny
   
-  CAA <- simCAA(nsim, yrs=length(yind), StockPars[[p]]$maxage+1, Cret=CNtemp, ObsPars[[p]][[f]]$CAA_ESS, ObsPars[[p]][[f]]$CAA_nsamp)
-  
+  CAA <- simCAA(nsim, yrs = length(yind), StockPars[[p]]$maxage+1, Cret = CNtemp[, , yind, drop = FALSE], 
+                ObsPars[[p]][[f]]$CAA_ESS, ObsPars[[p]][[f]]$CAA_nsamp)
   Data@CAA[, nyears + yind, ] <- CAA
   
   # --- Catch-at-length ----

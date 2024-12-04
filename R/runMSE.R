@@ -1525,13 +1525,11 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE,
                               Biomass_P, CB_Pret, N_P, SSB=StockPars$SSB,
                               SSB_P, VBiomass=StockPars$VBiomass, VBiomass_P,
                               RefPoints=ReferencePoints,
-                              retA_P, retL_P, StockPars,
+                              retA_P, retL_P, FM_Pret, Z_P, StockPars,
                               FleetPars, ObsPars, ImpPars, V_P,
                               upyrs, interval, y, mm,
                               Misc=Data_p@Misc, RealData,
                               Sample_Area=ObsPars$Sample_Area)
-        
-        
         
         Data_MP@Misc$StockPars$CB_Pret <- CB_Pret
         Data_MP@Misc$StockPars$Biomass_P <- Biomass_P
@@ -1661,7 +1659,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE,
                                   Biomass_P, CB_Pret, N_P, StockPars$SSB, SSB_P,
                                   StockPars$VBiomass, VBiomass_P,
                                   RefPoints=ReferencePoints,
-                                  retA_P, retL_P, StockPars,
+                                  retA_P, retL_P, FM_Pret, Z_P, StockPars,
                                   FleetPars, ObsPars, ImpPars, V_P,
                                   upyrs=c(upyrs, proyears),
                                   interval=rep(proyears-max(upyrs), length(interval)), y, mm,
