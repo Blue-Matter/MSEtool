@@ -1066,16 +1066,17 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     n.ind <- dim(RealData@AddInd)[2]
     Data_out@AddInd <- Data_out@CV_AddInd <- array(NA, dim=c(nsim, n.ind, nyears))
 
-    fitbeta <- fitIerr <- TRUE
+    fitbeta <- FALSE
+    fitIerr <- TRUE
     if (!is.null(SampCpars$AddIbeta)) {
       if (any(dim(SampCpars$AddIbeta) != c(nsim, n.ind)))
         stop("cpars$AddIbeta must be dimensions c(nsim, n.ind)")
       if (msg) message_info('cpars$AddIbeta detected. Not updating beta for additional indices')
       ObsPars$AddIbeta <- SampCpars$AddIbeta
-      fitbeta <- FALSE
+      #fitbeta <- FALSE
     } else {
-      if (msg) message_info('Updating beta for additional indices from real data')
-      ObsPars$AddIbeta <- matrix(NA, nsim, n.ind)
+      if (msg) message_info('cpars$AddIbeta not detected. Will fix to 1 for all additional indices')
+      ObsPars$AddIbeta <- matrix(1, nsim, n.ind)
     }
 
     if (!is.null(SampCpars$AddIerr)) {
@@ -1154,16 +1155,10 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
         SimIndex <- apply(SimIndex*Ind_V, c(1,3), sum) 
         
         # Fit to observed index and generate residuals for projections
-        if (fitbeta) {
-          beta <- rep(NA, nsim)
-        } else {
-          beta <-  ObsPars$AddIbeta[,i]
-        }
-        
         # Calculate residuals (with or without estimated beta)
         Res_List <- lapply(1:nsim, function(x) Calc_Residuals(sim.index=SimIndex[x,], 
                                                               obs.ind=ind,
-                                                              beta=beta[x]))
+                                                              beta = ObsPars$AddIbeta[x, i]))
 
         lResids_Hist <- do.call('rbind', lapply(Res_List, '[[', 1))
         if (fitbeta)
@@ -1574,16 +1569,17 @@ AddRealData_MS <- function(SimData,
     n.ind <- dim(RealData@AddInd)[2]
     Data_out@AddInd <- Data_out@CV_AddInd <- array(NA, dim=c(nsim, n.ind, nyears))
     
-    fitbeta <- fitIerr <- TRUE
+    fitbeta <- FALSE
+    fitIerr <- TRUE
     if (!is.null(SampCpars[[p]][[f]]$AddIbeta)) {
       if (any(dim(SampCpars[[p]][[f]]$AddIbeta) != c(nsim, n.ind)))
         stop("cpars$AddIbeta must be dimensions c(nsim, n.ind)")
       if (msg) message_info('cpars$AddIbeta detected. Not updating beta for additional indices')
       ObsPars[[p]][[f]]$AddIbeta <- SampCpars[[p]][[f]]$AddIbeta
-      fitbeta <- FALSE
+      #fitbeta <- FALSE
     } else {
-      if (msg) message_info('Updating beta for additional indices from real data')
-      ObsPars[[p]][[f]]$AddIbeta <- matrix(NA, nsim, n.ind)
+      if (msg) message_info('cpars$AddIbeta not detected. Will fix to 1 for all additional indices')
+      ObsPars[[p]][[f]]$AddIbeta <- matrix(1, nsim, n.ind)
     }
     
     if (!is.null(SampCpars[[p]][[f]]$AddIerr)) {
@@ -1674,16 +1670,10 @@ AddRealData_MS <- function(SimData,
         SimIndex <- apply(SimIndex, c(1,4), sum)
         
         # Fit to observed index and generate residuals for projections
-        if (fitbeta) {
-          beta <- rep(NA, nsim)
-        } else {
-          beta <-  ObsPars[[p]][[f]]$AddIbeta[,i]
-        }
-        
         # Calculate residuals (with or without estimated beta)
         Res_List <- lapply(1:nsim, function(x) Calc_Residuals(sim.index=SimIndex[x,], 
                                                               obs.ind=ind,
-                                                              beta=beta[x]))
+                                                              beta = ObsPars[[p]][[f]]$AddIbeta[x, i]))
         
         lResids_Hist <- do.call('rbind', lapply(Res_List, '[[', 1))
         if (fitbeta)
