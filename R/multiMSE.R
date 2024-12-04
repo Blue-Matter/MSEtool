@@ -1572,6 +1572,11 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     FleetPars[[p]] <- lapply(1:nf, function(f) multiHist[[p]][[f]]@SampPars$Fleet)
     ObsPars[[p]] <- lapply(1:nf, function(f) multiHist[[p]][[f]]@SampPars$Obs)
     ImpPars[[p]] <- lapply(1:nf, function(f) multiHist[[p]][[f]]@SampPars$Imp)
+    
+    # Subset historical SSB, N, Biomass by stock
+    StockPars[[p]]$SSB <- StockPars[[p]]$SSB[, p, , , ]
+    StockPars[[p]]$N <- StockPars[[p]]$N[, p, , , ]
+    StockPars[[p]]$Biomass <- StockPars[[p]]$Biomass[, p, , , ]
   }
 
   nareas <- StockPars[[1]]$nareas
@@ -1706,6 +1711,11 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       }
       
       StockPars[[p]] <- multiHist[[p]][[1]]@SampPars$Stock
+      
+      # Subset historical SSB, N, Biomass by stock
+      StockPars[[p]]$SSB <- StockPars[[p]]$SSB[, p, , , ]
+      StockPars[[p]]$N <- StockPars[[p]]$N[, p, , , ]
+      StockPars[[p]]$Biomass <- StockPars[[p]]$Biomass[, p, , , ]
       
       # Discard mortality for projections
       StockPars[[p]]$Fdisc_P <- StockPars[[p]]$Fdisc
