@@ -172,7 +172,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   # from females to males
   if (length(SexPars)) {
     if (length(SexPars$Herm)) {
-      SexPars$Herm <- checkHerm(SexPars$Herm, maxage, nsim, nyears, proyears)
+      MOM@SexPars$Herm <- SexPars$Herm <- checkHerm(SexPars$Herm, maxage, nsim, nyears, proyears)
     }
     if (is.null(SexPars$share_par) || SexPars$share_par == TRUE) {
       sexmatches <- sapply(1:nrow(SexPars$SSBfrom), function(x) paste(SexPars$SSBfrom[x, ], collapse = "_"))
