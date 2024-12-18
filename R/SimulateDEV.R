@@ -1,50 +1,3 @@
-# default: info, progress, warnings
-# FALSE: no messages or warnings
-# minimal: 
-
-SetMessages <- function(messages='default') {
-  msg <- list()
-  if (isFALSE(messages)) 
-    return(msg)
-
-  msg$info <- TRUE
-  msg$alert <- TRUE
-  msg$progress <- TRUE
-  msg$warning <- TRUE
-
-  msg
-}
-
-StartMessages <- function(OM, messages='default') {
-  msg <- SetMessages(messages)
-  
-  # Allocation
-  if (nFleet(OM)>1) {
-    if (!length(OM@Allocation)) {
-      OM@Allocation <- OM@CatchFrac
-      if (isTRUE(msg$alert)) 
-        cli::cli_alert_info('`Allocation(OM)` not specified. \nSetting `Allocation` equal to `CatchFrac` (`Allocate(OM) <- CatchFrac(OM)`)\n'
-        )
-      
-    }
-    
-    if(!length(OM@Efactor)) {
-      OM@Efactor <- lapply(1:nStock(OM), function(x) 
-        matrix(1, nSim(OM), nFleet(OM)))
-      if (isTRUE(msg$alert)) 
-        cli::cli_alert_info(
-          "`Efactor(OM)` not specified. \nSetting `Efactor(OM)` to current effort for all fleets.\n"
-        )
-    }
-  }
-
-  if (nStock(OM)>1 && !length(OM@Relations) && !length(MOM@SexPars)) {
-    if (isTRUE(msg$alert)) {
-      cli::cli_alert_info("You have specified more than one stock but no MICE relationships (`Relations(OM)`) or sex-specific relationships (`SexPars(OM)`) among these. \nAs they are independent, consider doing MSE for one stock at a time for computational efficiency\n")
-    }
-  }
-  Populate(OM, messages=FALSE)
-}
 
 SetHistRel <- function(OM) {
   # Ignore MICE in historical period
@@ -81,12 +34,18 @@ CheckClass <- function(object, class='om', name='OM', type='Argument') {
   invisible(object)
 }
 
-ConvertToList <- function(OM) {
-  if (methods::is(OM@Stock, 'stock'))
-    OM@Stock <- list(OM@Stock)
-  if (methods::is(OM@Fleet, 'fleet'))
-    OM@Fleet <- list(list(OM@Fleet))
-  OM
+ConvertToList <- function(x) {
+  if (methods::is(x, 'om')) {
+    if (methods::is(x@Stock, 'stock'))
+      x@Stock <- list(x@Stock)
+    if (methods::is(x@Fleet, 'fleet'))
+      x@Fleet <- list(list(x@Fleet))
+  }
+  if (methods::is(x, 'stock')) 
+    x <- list(x)
+  if (methods::is(x, 'fleet')) 
+    x <- list(list(x))      
+  x
 }
 
 ConvertFromList <- function(OM) {
@@ -95,7 +54,15 @@ ConvertFromList <- function(OM) {
 
 #' @describeIn runMSE Development version of `Simulate`
 #' @export
-SimulateDEV <- function(OM=NULL, parallel=FALSE, messages='default', nSim=NULL) {
+SimulateDEV <- function(OM=NULL, 
+                        parallel=FALSE, 
+                        messages='default',
+                        nSim=NULL, 
+                        silent=FALSE, 
+                        ...) {
+  
+  if (isTRUE(silent)) 
+    messages <- 'FALSE'
 
   # ---- Initial Checks and Setup ----
   chk <- OM |> CheckClass() |> Check() # TODO OM checks
@@ -105,82 +72,126 @@ SimulateDEV <- function(OM=NULL, parallel=FALSE, messages='default', nSim=NULL) 
     ConvertToList() |>
     StartMessages(messages)
   
-  
-  # ---- Hermaphroditism ----
-  # TODO this should be done in Populate
-  
-  OM@SexPars$Herm$H_2_1 <- c(0,0,0,0,0,0,0,0,0.05,0.1,0.2,0.35,0.65,0.8,0.9,1,1,1,1)
-  OM@SexPars$Herm$H_3_11<- c(0,0,0,0,0,0,0,0,0.05,0.1,0.2,0.35,0.65,0.8,0.9,1,1,1,1)
+  # TODO
+  # OM@Allocation - dimension length
+  # OM@Efactor - dimension length
+  # Hermaphroditism do in Populate
   
   
-  StructureHerm <- function(OM) {
-    if (!(length(OM@SexPars)))
-      OM@SexPars <- list()
-    
-    if (!(length(OM@SexPars$Herm))) {
-      OM@SexPars$HermFrac <- vector('list', nStock(OM))
-      for (st in 1:nStock(OM)) {
-        nage <- Stock(OM, st) |> nAge()
-        OM@SexPars$HermFrac[[st]] <- array(1, dim=c(1, nage, 1))
-      }
-      return(OM)
+  CalcUnfishedSurvival <- function(Stock, SP=FALSE) {
+    M_at_Age <- Stock@NaturalMortality@MeanAtAge
+    PlusGroup <- Stock@Ages@PlusGroup
+    if (SP) {
+      SpawnTimeFrac <- Stock@SRR@SpawnTimeFrac  
+    } else {
+      SpawnTimeFrac <- NULL
     }
-      
-      
-      
-     
-    }
+    CalcSurvival(M_at_Age, PlusGroup, SpawnTimeFrac)
     
-    
-    
-    nHerm <- length(OM@SexPars$Herm)
-      
-    Herm <- vector('list', nHerm)
-    HermFrac <- vector('list', nStock(OM))
-    
-   
-    
-    nStock(OM)
-    
-    
-    # add dimensions 
-    
-    # expand for all stocks
-    
-    nStock(OM)
-    
-    OM@SexPars$Herm$H_1_2 |> dim()
-      
-    
-    OM@SexPars$Herm
-    
-    
-    
-    
-    
-    OM@SexPars$Herm <- Herm
-    OM@SexPars$HermFrac <- HermFrac
-    OM
+    # UnfishedSurvival <- list()
+    # # spawning population; SP = Spawning Production
+    # UnfishedSurvivalSP <- list()
+    # 
+    # for (st in 1:nStock(OM)) {
+    #   M_at_Age <- OM@Stock[[st]]@NaturalMortality@MeanAtAge
+    #   PlusGroup <- OM@Stock[[st]]@Ages@PlusGroup
+    #   SpawnTimeFrac <- OM@Stock[[st]]@SRR@SpawnTimeFrac
+    #   
+    #   UnfishedSurvival[[st]] <- CalcSurvival(M_at_Age, PlusGroup)
+    #   if (any(SpawnTimeFrac!=0) && length(SpawnTimeFrac)>0) 
+    #     UnfishedSurvivalSP[[st]] <- CalcSurvival(M_at_Age, PlusGroup, SpawnTimeFrac)
+    # }
+    # names(UnfishedSurvival) <- StockNames(OM)
+    # 
+    # if (length(UnfishedSurvivalSP)>0) 
+    #   names(UnfishedSurvivalSP) <- StockNames(OM)
+    # 
+    # list(Population=UnfishedSurvival,
+    #      Spawning=UnfishedSurvivalSP)
   }
   
-  Initial()
-  
-  
-  
-  
-  control$HermEq
-  
-  
-  OM@SexPars$Herm
-  
-  
-  # --- Update Parameters for two-sex stocks ----
-  
-  
-  
-  
-  
+
   # ---- Calculate Reference Points ----
+  
+  CalcReferencePoints <- function(OM, 
+                                  parallel=FALSE, 
+                                  messages='default',
+                                  nSim=NULL, 
+                                  ...) {
+    
+    OM <- OM |> nSimUpdate(nSim, messages) |>
+      Populate(messages=messages) |>
+      ConvertToList() |>
+      StartMessages(messages)
+    
+    
+  
+    # convert this to object later and add to initialize
+    
+    OM@Control$ReferencePoints <- list()
+    
+    OM@Control$ReferencePoints$UnfishedEq <- TRUE
+    OM@Control$ReferencePoints$UnfishedDyn <- TRUE
+    
+    OM@Control$ReferencePoints$Unfished <- TRUE
+    
+    
+    # if (!isFALSE(OM@Control$ReferencePoints$Unfished)) {
+    #   
+    # }
+    
+    
+    
+
+    
+    CalcR0 <- function(Stock) {
+      R0 <- Stock@SRR@Pars$R0
+      if (!is.null(R0)) 
+        
+        return(R0)
+      stop('R0 not in SRR@Pars. Calculate from parameters?')
+    }
+    
+    EquilibriumUnfished 
+  
+    CalcN0 <- function(R0, UnfishedSurvival) {
+      # R0 dimensions! 
+      # should have at least nsim 
+      # Add R0 to SRR object and remove from Pars!
+      # UP TO HERE 
+      
+      MultiplyArrays(array1=R0[[1]], 
+                     array2=UnfishedSurvival[[1]])
+    
+    }
+    
+    
+    UnfishedSurvival <- lapply(OM@Stock, CalcUnfishedSurvival)
+    UnfishedSurvivalSP <- lapply(OM@Stock, CalcUnfishedSurvival, SP=TRUE)
+    
+    R0 <- lapply(OM@Stock, CalcR0)
+    
+    
+    
+    N0
+    B0
+    SN0
+    SB0
+    
+    
+    
+    
+    SpawningPerRecruit
+    
+  
+    
+    
+  }
+  
+  
+  
+  
+  ## ---- Unfished Equilibrium ----
   
   ## ---- Per-Recruit Reference Points ----
   
@@ -195,6 +206,8 @@ SimulateDEV <- function(OM=NULL, parallel=FALSE, messages='default', nSim=NULL) 
   ## ---- Mean Generation Time ----
   
   ## ---- Reference Yield ----
+  
+  
   
   # ---- Optimize Rec Devs for Initial Depletion ----
   
@@ -216,11 +229,6 @@ SimulateDEV <- function(OM=NULL, parallel=FALSE, messages='default', nSim=NULL) 
   
   
   
-  
-  
-  # TODO - copy rec devs (and others?) over all stocks in SexPars - line 173 in multiMSE.R
-  # TODO - Herm
-  
   # # --- Sample Obs Parameters ----
   # # TODO - updated Obs object
   # 
@@ -241,26 +249,13 @@ SimulateDEV <- function(OM=NULL, parallel=FALSE, messages='default', nSim=NULL) 
   # })
   
   
-  # ---- Unfished Equilibrium ----
-  UnfishedSurvival <- list()
-  # spawning population; SO = Spawning Output
-  UnfishedSurvival_SO <- list()
+
   
-  for (st in 1:nStocks) {
-    M_at_Age <- OM@Stock[[st]]@NaturalMortality@MeanAtAge
-    PlusGroup <- OM@Stock[[st]]@Ages@PlusGroup
-    SpawnTimeFrac <- OM@Stock[[st]]@SRR@SpawnTimeFrac
-    
-    UnfishedSurvival[[st]] <- CalcSurvival(M_at_Age, PlusGroup)
-    if (any(SpawnTimeFrac!=0) && length(SpawnTimeFrac)>0) 
-      UnfishedSurvival_SO[[st]] <- CalcSurvival(M_at_Age, PlusGroup, SpawnTimeFrac)
+  
+  
+  HistRel <- SetHistRel(OM) {
     
   }
-  
-  
-  
-  
-  HistRel <- SetHistRel(OM)
   
   
                         

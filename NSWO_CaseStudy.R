@@ -8,11 +8,19 @@ SSdir <- 'G:/My Drive/1_PROJECTS/North_Atlantic_Swordfish/OMs/grid_2022/000_base
 
 MOM <- SS2MOM(SSdir=SSdir,nsim=5, Name='North Atlantic Swordfish') 
 
-multiHist <- Simulate(MOM)
-
+MOM@SexPars
 
 
 OM <- Convert(MOM)  # convert from `MOM` to `om`
+
+SexPars(OM) |> SPFrom()
+
+Stock(OM,2) |> SRR()
+
+OM@SexPars$SSBfrom |> class()
+
+
+multiHist <- Simulate(MOM)
 
 
 multiHist[[1]][[1]]@Misc$MOM@Allocation[[1]][1,]

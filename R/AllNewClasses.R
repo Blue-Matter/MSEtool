@@ -32,6 +32,7 @@ methods::setClassUnion(name="char.list", members=c('character', "list", 'NULL'))
 methods::setClassUnion(name="array.null", members=c("array", "NULL"))
 methods::setClassUnion(name="array.char.null", members=c("array", 'character', "NULL"))
 methods::setClassUnion(name="num.array.char.null", members=c('numeric', "array", 'character', "NULL"))
+methods::setClassUnion(name="list.null", members=c('list', "NULL"))
 methods::setClassUnion(name="num.null", members=c("numeric", "NULL"))
 methods::setClassUnion(name="num.list.null", members=c("numeric", 'list', "NULL"))
 methods::setClassUnion(name="num.array", members=c("numeric", "array", "NULL"))
@@ -2483,6 +2484,65 @@ setMethod("initialize", "data", function(.Object) {
 
 
 
+# SexPars ----
+
+#' SexPars Object
+#'
+#' @name SexPars
+#' @rdname SexPars
+#' @docType class
+#'
+#' @export
+setClass("sexpars",
+         slots=c(SPFrom='array.null',
+                 Herm='list.null',
+                 SharePar='num.log',
+                 Misc='list'
+         ),
+         contains='Created_ModifiedClass'
+)
+
+setValidity('sexpars', isValidObject)
+
+
+setMethod("initialize", "sexpars", function(.Object,
+                                            SPFrom=NULL,
+                                            Herm=NULL,
+                                            SharePar=TRUE,
+                                            Misc=list()) {
+  .Object@SPFrom <- SPFrom
+  .Object@Herm <- Herm
+  .Object@SharePar <- SharePar
+  .Object@Created <- Sys.time()
+  .Object
+})
+
+#' @describeIn SexPars Create a new `SexPars` object
+#' @export
+SexPars <- function(SPFrom=NULL,
+                    Herm=list(),
+                    SharePar=TRUE,
+                    Misc=list()) {
+  
+  if (methods::is(SPFrom, 'om'))
+    return(SPFrom@SexPars)
+  
+  methods::new('sexpars',
+               SPFrom=SPFrom,
+               Herm=Herm,
+               SharePar=SharePar,
+               Misc=Misc)
+}
+
+
+#' @describeIn SexPars Assign an `SexPars` object to an [OM()] object
+#' @param x An [OM()] object
+#' @param value A `SexPars` object to assign to `x`
+#' @export
+`SexPars<-` <- function(x, value) {
+  assignSlot(x, value, 'SexPars')
+}
+
 
 # ---- OM Class ----
 
@@ -2629,7 +2689,7 @@ setClass("om",
                  Allocation='list',
                  Efactor='list',
                  Complexes='list',
-                 SexPars='list',
+                 SexPars='sexpars',
                  Relations='list',
                  Interval='numeric',
                  nReps='numeric',
@@ -2728,7 +2788,7 @@ OM <- function(Name='A new `OM` object',
                Imp=list(),
                Complexes=list(),
                Relations=list(),
-               SexPars=list(),
+               SexPars=new('sexpars'),
                Data=NULL,
                Interval=1,
                nReps=1,

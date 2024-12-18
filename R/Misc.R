@@ -48,6 +48,74 @@ firstup <- function(x) {
   x
 }
 
+# ---- Names ---- 
+
+StockNames <- function(OM) {
+  if (!methods::is(OM, 'om'))
+    cli::cli_abort('`OM` must be class `om`')
+  names(OM@Stock)
+}
+
+FleetNames <- function(OM) {
+  if (!methods::is(OM, 'om'))
+    cli::cli_abort('`OM` must be class `om`')
+  names(OM@Fleet[[1]])
+}
+
+# ---- Messages ----
+
+# default: info, progress, warnings
+# FALSE: no messages or warnings
+# minimal: 
+
+SetMessages <- function(messages='default') {
+  msg <- list()
+  if (isFALSE(messages)) 
+    return(msg)
+  
+  msg$info <- TRUE
+  msg$alert <- TRUE
+  msg$progress <- TRUE
+  msg$warning <- TRUE
+  
+  msg
+}
+
+StartMessages <- function(OM, messages='default') {
+  msg <- SetMessages(messages)
+  
+  # Allocation
+  if (nFleet(OM)>1) {
+    if (!length(OM@Allocation)) {
+      OM@Allocation <- OM@CatchFrac
+      if (isTRUE(msg$alert)) 
+        cli::cli(c(
+          cli::cli_alert_info('`Allocation(OM)` not specified'),
+          cli::cli_alert('Setting `Allocation` equal to `CatchFrac` (`Allocate(OM) <- CatchFrac(OM)`)')
+        ))  
+      }
+    
+    if(!length(OM@Efactor)) {
+      OM@Efactor <- lapply(1:nStock(OM), function(x) 
+        matrix(1, nSim(OM), nFleet(OM)))
+      if (isTRUE(msg$alert)) 
+        cli::cli(c(
+          cli::cli_alert_info("`Efactor(OM)` not specified"),
+          cli::cli_alert("Setting `Efactor(OM)` to current effort for all fleets")
+        ))
+    }
+  }
+  
+  if (nStock(OM)>1 && !length(OM@Relations) && !length(MOM@SexPars)) {
+    if (isTRUE(msg$alert)) {
+      cli::cli_alert_info("You have specified more than one stock but no MICE relationships (`Relations(OM)`) or sex-specific relationships (`SexPars(OM)`) among these. \nAs they are independent, consider doing MSE for one stock at a time for computational efficiency\n")
+    }
+  }
+  Populate(OM, messages=FALSE)
+}
+
+
+
 # ----------------------------------
 
 GetnTS <- function(TimeSteps) {

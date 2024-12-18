@@ -367,6 +367,64 @@ StructureCV <- function(CVatAge, nsim) {
   Structure(CVatAge)
 } 
 
+ShareParameters <- function(OM) {
+  
+  if (length(OM@SexPars@Herm)) {
+    stop('Herm not done yet!')
+    # SexPars$Herm <- checkHerm(SexPars$Herm, maxage, nsim, nyears, proyears)
+  }
+  
+  if (!length(OM@SexPars@SPFrom))
+    return(OM)
+  
+  if (isFALSE(OM@SexPars@SharePar))
+    return(OM)
+  
+  sexmatches <- sapply(1:nrow(OM@SexPars@SPFrom), function(x) 
+    paste(OM@SexPars@SPFrom[x, ], collapse = "_"))
+  
+  parcopy <- match(sexmatches, sexmatches)
+  
+  # TODO - these can be added to SexPars object so they can be controlled by user
+  OM@SexPars@Misc$Stock <- c('Depletion',
+                             'SRR')
+  
+  OM@SexPars@Misc$Fleet <- c('Effort',
+                             'Distribution')
+  
+  OM@SexPars@Misc$Obs <- TRUE
+  OM@SexPars@Misc$Imp <- TRUE
+  
+  # TODO - Update message
+  if (!silent)  message_info("NEED TO UPDATE! You have specified sex-specific dynamics,",
+                             "these parameters will be mirrored across sex types according to SexPars$SSBfrom:\n",
+                             paste(c(slot_s, slot_f), collapse = ", "),
+                             ", all observation and implementation parameters")
+  
+  cli::cli_alert_danger('UPDATE PARAMETERS FOR TWO-SEX STOCKS NOT COMPLETE!')
+  
+  for (s in 1:nStock(OM)) {
+    for (sl in OM@SexPars@Misc$Stock) 
+      slot(OM@Stock[[s]], sl) <- slot(OM@Stock[[parcopy[s]]], sl)
+    
+    for (fl in 1:nFleet(OM)) {
+      for (sl in OM@SexPars@Misc$Fleet) 
+        slot(OM@Fleet[[s]][[fl]], sl) <- slot(OM@Fleet[[parcopy[s]]][[fl]], sl)
+      
+      if (OM@SexPars@Misc$Obs) {
+        for (sl in slotNames(OM@Obs[[s]][[fl]]))
+          slot(OM@Obs[[s]][[fl]], sl) <- slot(OM@Obs[[parcopy[s]]][[fl]], sl)
+      }
+      if (OM@SexPars@Misc$Imp) {
+        for (sl in slotNames(OM@Imp[[s]][[fl]]))
+          slot(OM@Imp[[s]][[fl]], sl) <- slot(OM@Imp[[parcopy[s]]][[fl]], sl)
+      }
+      
+    }
+  }
+  OM 
+}
+
 #
 
 #' Populate an object
@@ -400,7 +458,7 @@ setMethod("Populate", "om", function(object, messages='progress') {
   }
   
   if (methods::is(object@Fleet, 'fleet')) {
-    nFleets <- 1
+    nFleets <- n1
   } else if (methods::is(object@Fleet, 'list')) {
     nFleets <- length(object@Fleet[[1]])
   } else {
@@ -435,9 +493,10 @@ setMethod("Populate", "om", function(object, messages='progress') {
     stockList[[st]] <- Populate(stock, seed=object@Seed, messages=messages)
     names(stockList)[st] <- stock@Name
     names(fleetList)[st] <- names(stockList)[st]
+    fleetList[[st]] <- list()
     
     for (fl in 1:nFleets) {
-      fleetList[[st]] <- list()
+     
       
       if (methods::is(object@Fleet, 'list')) {
         fleet <- object@Fleet[[st]][[fl]]
@@ -464,16 +523,13 @@ setMethod("Populate", "om", function(object, messages='progress') {
   }
   
   if (methods::is(object@Fleet, 'list')) {
-    if (length(fleetList)==1) {
-      if (length((fleetList[[1]])==1)) {
-        object@Fleet <- fleetList[[1]][[1]]    
-      } else {
-        object@Fleet <- fleetList[[1]]
-      }
-    } 
+    object@Fleet <- fleetList
   } else {
     object@Fleet <- fleetList[[1]][[1]]    
   }
+  
+  # share paramaters for two-sex stocks
+  object <- ShareParameters(object)
   
   # Obs and Imp
   
@@ -522,7 +578,7 @@ setMethod("Populate", "stock", function(object,
   # ALK <- RequireALK(stock)
   # AWK <- RequireAWK(stock)
 
-  stock@Length <- Populate(stock@Length,
+  stock@Length <- Populate(object=stock@Length,
                            Ages=stock@Ages,
                            nsim=nSim(stock),
                            TimeSteps=TimeSteps(stock),
@@ -969,26 +1025,43 @@ setMethod("Populate", "spatial", function(object,
     object@ProbStaying <- AddDimNames(array(1, dim=c(1,1,1,1)), c('sim', 'area', 'age', 'ts'))
     object@FracOther <- AddDimNames(array(1, dim=c(1,1,1,1)), c('sim', 'area', 'age', 'ts'))
     object@UnfishedDist  <- AddDimNames(array(1, dim=c(1,1,1,1)), c('sim', 'area', 'age', 'ts'))
-    object@Movement  <- AddDimNames(array(1, dim=c(1,1,1,1)), c('sim', 'area', 'age', 'ts'))
+    object@Movement  <- AddDimNames(array(1, dim=c(1,1,1,1,1)), c('sim', 'area', 'area', 'age', 'ts'))
     return(SetDigest(argList, object))
   }
 
 
-  # movement populated
-  if (!is.null(object@Movement)) {
-    # return
-    cli::cli_abort('Spatial@Movement populated not done yet', .internal=TRUE)
+  sb <- PrintPopulating(object, isTRUE(messages))
+  
+  if (!is.null(object@Movement) & is.null(object@UnfishedDist)) {
+    dims <- dim(object@Movement)
+    
+    # Calculate Unfished Dist
+    UnfishedDist <- AddDimNames(array(NA, dim=c(dims[1],
+                                                dims[2],
+                                                dims[4],
+                                                dims[5])),
+                                c('sim', 'area', 'age', 'ts'))
+    
+    for (s in 1:dims[1]) {
+      for (ts in 1:dims[5]) {
+        for (age in 1:dims[4]) {
+          UnfishedDist[s,,age,ts] <- CalcAsymptoticDist(Movement=object@Movement[s,,,age,ts],
+                                                        plot=plot, nits=nits)
+        }
+      }
+    }
+    
+    object@UnfishedDist <- UnfishedDist
+  } else {
+    object <- CalcMovement(object, nsim, seed, nits, plot, silent=isFALSE(messages))
   }
 
-  sb <- PrintPopulating(object, isTRUE(messages))
-
-  object <- CalcMovement(object, nsim, seed, nits, plot, silent=isFALSE(messages))
 
   if (is.null(object@UnfishedDist))
     cli::cli_abort('`UnfishedDist` must be populated for `Spatial` objects')
 
-  if (is.null(object@ProbStaying))
-    cli::cli_abort('`ProbStaying` must be populated for `Spatial` objects')
+  # if (is.null(object@ProbStaying))
+  #   cli::cli_abort('`ProbStaying` must be populated for `Spatial` objects')
 
   nareas <- dim(object@UnfishedDist)[2]
 

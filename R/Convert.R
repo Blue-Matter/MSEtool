@@ -33,7 +33,6 @@ OM2om <- function(OM, Author='', CurrentYear=NULL) {
   cparsdrop <- cpars_info |>
     dplyr::filter(Type%in%c('Stock', 'Fleet'))
   
-  
   om <- OM()
 
   om@Name <- OM@Name
@@ -139,11 +138,9 @@ OM2om <- function(OM, Author='', CurrentYear=NULL) {
     om <- Populate(om, messages=FALSE)
     return(om)
   }
-
-
+  
   if (methods::is(OM, 'MOM')) {
-    
-    om@Stock <- MOM2stock(OM)
+    om@Stock <- ConvertToList(MOM2stock(OM))
     names(om@Stock) <- names(OM@Stocks)
     om@Fleet <- list()
     for (st in 1:length(om@Stock)) {
@@ -154,7 +151,7 @@ OM2om <- function(OM, Author='', CurrentYear=NULL) {
     om@Imp <- OM@Imps
     om@CatchFrac <- OM@CatchFrac
     om@Allocation <- OM@Allocation
-    om@SexPars <- OM@SexPars
+    om@SexPars <- ImportSexPars(OM)
     om@Efactor <- OM@Efactor
     om@Complexes<- OM@Complexes
     om@Relations <- OM@Rel
@@ -174,6 +171,23 @@ OM2om <- function(OM, Author='', CurrentYear=NULL) {
     }
   }
   Populate(om)
+}
+
+ImportSexPars <- function(OM) {
+  sexpars <- new('sexpars')
+  if (!is.null(OM@SexPars$SSBfrom)) {
+    SPFrom(sexpars) <- OM@SexPars$SSBfrom
+    rownames(SPFrom(sexpars)) <- names(OM@Stocks)
+    colnames(SPFrom(sexpars)) <- names(OM@Stocks)
+  }
+    
+  
+  if (!is.null(OM@SexPars$Herm))
+    Herm(sexpars) <- OM@SexPars$Herm
+  
+  if (!is.null(OM@SexPars$share_par))
+    SharePar(sexpars) <- OM@SexPars$share_par
+  sexpars
 }
 
 
@@ -241,7 +255,8 @@ cpars2Length <- function(cpars) {
   Length <- Length()
   MeanAtAge(Length) <- process_cpars(cpars$Len_age)
   CVatAge(Length) <- process_cpars(cpars$LatASD) / MeanAtAge(Length)
-
+  CVatAge(Length)[!is.finite(CVatAge(Length))] <- tiny
+  
   Classes(Length) <- cpars$CAL_binsmid
   pars <- Pars(Length)
   pars$Linf <- process_cpars(cpars$Linf)
@@ -484,7 +499,7 @@ OM2Spatial <- function(OM, cpars=NULL) {
   narea <- NA
   if (!is.null(Spatial@Movement)) {
     dd <- dim(Spatial@Movement)
-    narea <- dd[4]
+    narea <- dd[2]
     nsim <- dd[1]
     if (is.null(Spatial@RelativeSize))
       Spatial@RelativeSize <- array(1/narea, dim=c(1, narea))
@@ -519,6 +534,12 @@ process_mov <- function(mov, nage=1, nts=1) {
     mov <- abind::abind(mov, array(0, dim=c(0,dd)), along=1)
     mov <- aperm(mov, c(2,1,3,4,5))
   }
+  
+  # c('sim', 'area', 'area', 'age', 'ts'))
+  mov <- aperm(mov, c(1,4,5,3,2)) |>
+    AddDimNames(c('sim', 'area', 'area', 'age', 'ts')) |>
+    process_cpars()
+  
   mov
 }
 
@@ -526,7 +547,8 @@ process_mov <- function(mov, nage=1, nts=1) {
 cpars2Spatial <- function(cpars) {
   Spatial <- Spatial()
   Spatial@RelativeSize <- process_cpars(cpars$Asize)
-  Spatial@Movement <- process_cpars(process_mov(cpars$mov))
+  Spatial@Movement <- process_mov(cpars$mov)
+  
   Spatial
 }
 
@@ -759,19 +781,6 @@ MOM2stock <- function(MOM) {
     Stock <- stocks[[st]]
     cpars <- MOM@cpars[[st]][[1]]
     StockList[[st]] <- OM2stock(Stock, cpars)
-
-    
-
-
-    # for (fl in 1:nfleets) {
-    #   StockList[[st]]@Fleet
-    #
-    #
-    #   StockList[[st]]@Fleet
-    # }
-
-
-
   }
   if (nstocks==1) return(StockList[[1]])
   StockList

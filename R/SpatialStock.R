@@ -41,11 +41,7 @@ CalcMovement <- function(Spatial,
     Spatial@FracOther  <- Spatial@FracOther |>
       AddAgeTimeStepDimensions(outdim=5) |>
       AddDimNames(c('sim', 'area', 'area', 'age', 'ts'))
-
-
   }
-
-
 
   # generate stochastic values if needed
   Spatial@ProbStaying <- GenerateStochasticValues(Spatial@ProbStaying, nsim)
@@ -120,7 +116,6 @@ CalcMovement <- function(Spatial,
           if (dims$FracOther[3] < age) FracOther_age <- 1
 
         if (nareas==2) {
-
           optMovement <- stats::optim(logit(rep(Spatial@ProbStaying[ProbStaying_s,1,ProbStaying_age,ProbStaying_ts],2)),
                                       FitMovement,
                                       UnfishedDist = Spatial@UnfishedDist[FracArea_s,1,FracArea_age,FracArea_ts],

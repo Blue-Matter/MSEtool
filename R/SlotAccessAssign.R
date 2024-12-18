@@ -278,6 +278,20 @@ FracOther <- function(x) {
 }
 
 
+## ---- Herm ----
+
+#' @rdname Access
+#' @export
+Herm <- function(x) {
+  x@Herm
+}
+
+#' @rdname Access
+#' @export
+`Herm<-` <- function(x, value) {
+  assignSlot(x, value, 'Herm')
+}
+
 
 ## ---- Initial ----
 
@@ -544,6 +558,8 @@ nReps <- function(x) {
 #' @rdname Access
 #' @export
 nStock <- function(x) {
+  if (!methods::is(x,'om'))
+    cli::cli_abort('`x` must be class `om`')
   length(x@Stock)
 }
 
@@ -552,15 +568,13 @@ nStock <- function(x) {
 #' @rdname Access
 #' @export
 nFleet <- function(x) {
-  nFleet <- length(x@Fleet)
-  if (nFleet==0)
-    return(0)
-  if (methods::is(x@Fleet, 'fleet'))
+  if (!methods::is(x,'om'))
+    cli::cli_abort('`x` must be class `om`')
+
+  fleet <- x@Fleet
+  if (methods::is(fleet, 'fleet'))
     return(1)
-  
-  if (nFleet > 1)
-    nFleet <- length(x@Fleet[[1]])
-  nFleet
+  length(fleet[[1]])
 }
 
 ## ---- nYear ----
@@ -803,19 +817,35 @@ SD <- function(x) {
   assignSlot(x, value, 'SD')
 }
 
-## ---- SexPars ----
+## ---- SharePar ----
 
 #' @rdname Access
 #' @export
-SexPars <- function(x) {
-  x@SexPars
+SharePar <- function(x) {
+  x@SharePar
 }
 
 #' @rdname Access
 #' @export
-`SexPars<-` <- function(x, value) {
-  assignSlot(x, value, 'SexPars')
+`SharePar<-` <- function(x, value) {
+  assignSlot(x, value, 'SharePar')
 }
+
+
+## ---- SPFrom ----
+
+#' @rdname Access
+#' @export
+SPFrom <- function(x) {
+  x@SPFrom
+}
+
+#' @rdname Access
+#' @export
+`SPFrom<-` <- function(x, value) {
+  assignSlot(x, value, 'SPFrom')
+}
+
 
 ## ---- Source ----
 

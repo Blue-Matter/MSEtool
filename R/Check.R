@@ -352,6 +352,20 @@ setMethod("Check", signature(object = "om"), function(object, ...) {
 
 
 
+## SexPars ----
+setMethod("Check", signature(object = "sexpars"), function(object, ...) {
+  # cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
+  ll <- CheckList(object)
+  if (ll@empty)
+    return(ll)
+  
+  if (length(ll@errors)<1)
+    ll@complete <- TRUE
+  ll
+})
+
+
+
 
 
 CheckTimeUnitsStock <- function(stock) {
