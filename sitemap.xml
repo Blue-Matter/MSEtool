@@ -47,6 +47,7 @@
 <url><loc>https://msetool.openmse.com/reference/DataSlots.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/Data_xl.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/Dom.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Emp.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/FMSYref.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/Fease.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/Fleet-class-objects.html</loc></url>
@@ -118,6 +119,7 @@
 <url><loc>https://msetool.openmse.com/reference/Sense.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/SimulatedData.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/SketchFun.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/Splot.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/Stock-class-objects.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/Stock-class.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/StockDescription.html</loc></url>
@@ -153,6 +155,9 @@
 <url><loc>https://msetool.openmse.com/reference/cparscheck.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/cv.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/dnormal.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/doHCR.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/doIfreq.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/doRec.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/genSizeCompWrap.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/getAFC.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/getBlow.html</loc></url>
@@ -209,6 +214,7 @@
 <url><loc>https://msetool.openmse.com/reference/popdynOneTScpp.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/prob.class-class.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/qestMICE.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/quantile_plot.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/replic8.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/runCOSEWIC.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/runInMP.html</loc></url>
@@ -225,6 +231,7 @@
 <url><loc>https://msetool.openmse.com/reference/simCAL.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/simmov.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/simmov2.html</loc></url>
+<url><loc>https://msetool.openmse.com/reference/smoothy.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/summary-Data.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/summary-MMSE.html</loc></url>
 <url><loc>https://msetool.openmse.com/reference/summary-MSE.html</loc></url>
