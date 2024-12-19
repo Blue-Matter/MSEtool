@@ -7,7 +7,14 @@
 \alias{runMSE}
 \title{Run a Management Strategy Evaluation}
 \usage{
-SimulateDEV(OM = NULL, parallel = FALSE, silent = FALSE, nSim = NULL)
+SimulateDEV(
+  OM = NULL,
+  parallel = FALSE,
+  messages = "default",
+  nSim = NULL,
+  silent = FALSE,
+  ...
+)
 
 Simulate(OM = MSEtool::testOM, parallel = FALSE, silent = FALSE, nsim = NULL)
 

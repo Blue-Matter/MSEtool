@@ -625,7 +625,7 @@ NULL
 #' @export
 SRRModels <- function(full=TRUE, print=TRUE) {
   ReturnModels(ModelClass=c('SRR-Model'),
-               full, print, Independent=c('S', 'S0'))
+               full, print, Independent=c('S', 'S0', 'R0'))
 
 }
 
@@ -664,10 +664,10 @@ alpha_beta2R0 <- function(alpha, beta, phi0, SR=c('BH', 'RK')) {
 #' @param h Steepness of the Beverton-Holt SRR
 #'
 #' @export
-BevertonHolt <- function(S, S0, R0, h) {
+BevertonHolt <- function(S, S0, R0, h, model='BH') {
   phi0 <- S0/R0
-  alpha <- h2alpha(h, phi0, 'BH')
-  beta <- h_R0_2beta(h, R0, phi0, 'BH')
+  alpha <- h2alpha(h, phi0, model)
+  beta <- h_R0_2beta(h, R0, phi0, model)
   alpha * S / (1+beta*S)
 }
 class(BevertonHolt) <- 'SRR-Model'
@@ -677,10 +677,10 @@ class(BevertonHolt) <- 'SRR-Model'
 #' @param RKh Steepness for the Ricker SRR. Argument name indicates it's the
 #' Ricker SRR
 #' @export
-Ricker <- function(S, S0, R0, RKh) {
+Ricker <- function(S, S0, R0, h, model='RK') {
   phi0 <- S0/R0
-  alpha <- h2alpha(RKh, phi0, 'RK')
-  beta <- h_R0_2beta(RKh, R0, phi0, 'RK')
+  alpha <- h2alpha(h, phi0, model)
+  beta <- h_R0_2beta(h, R0, phi0, model)
   alpha * S * exp(-beta*S)
 }
 class(Ricker) <- 'SRR-Model'

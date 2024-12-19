@@ -26,7 +26,7 @@ OM(
   Imp = list(),
   Complexes = list(),
   Relations = list(),
-  SexPars = list(),
+  SexPars = new("sexpars"),
   Data = NULL,
   Interval = 1,
   nReps = 1,

@@ -62,7 +62,7 @@ SimulateDEV <- function(OM=NULL,
                         ...) {
   
   if (isTRUE(silent)) 
-    messages <- 'FALSE'
+    messages <- FALSE
 
   # ---- Initial Checks and Setup ----
   chk <- OM |> CheckClass() |> Check() # TODO OM checks
@@ -87,30 +87,111 @@ SimulateDEV <- function(OM=NULL,
       SpawnTimeFrac <- NULL
     }
     CalcSurvival(M_at_Age, PlusGroup, SpawnTimeFrac)
-    
-    # UnfishedSurvival <- list()
-    # # spawning population; SP = Spawning Production
-    # UnfishedSurvivalSP <- list()
-    # 
-    # for (st in 1:nStock(OM)) {
-    #   M_at_Age <- OM@Stock[[st]]@NaturalMortality@MeanAtAge
-    #   PlusGroup <- OM@Stock[[st]]@Ages@PlusGroup
-    #   SpawnTimeFrac <- OM@Stock[[st]]@SRR@SpawnTimeFrac
-    #   
-    #   UnfishedSurvival[[st]] <- CalcSurvival(M_at_Age, PlusGroup)
-    #   if (any(SpawnTimeFrac!=0) && length(SpawnTimeFrac)>0) 
-    #     UnfishedSurvivalSP[[st]] <- CalcSurvival(M_at_Age, PlusGroup, SpawnTimeFrac)
-    # }
-    # names(UnfishedSurvival) <- StockNames(OM)
-    # 
-    # if (length(UnfishedSurvivalSP)>0) 
-    #   names(UnfishedSurvivalSP) <- StockNames(OM)
-    # 
-    # list(Population=UnfishedSurvival,
-    #      Spawning=UnfishedSurvivalSP)
   }
   
+  
+  # ---- Calculate Unfished Dynamics ----
+  
+  CalcUnfishedDynamics <- function(OM,
+                                   parallel=FALSE, 
+                                   messages='default',
+                                   nSim=NULL,
+                                   ...) {
+    
+    # TODO Add Herm 
+    
+    Unfished <- new('AtAge') # returns an `AtAge` object
+    
+    # Calculates Equilibrium and Dynamic Unfished Population Dynamics
+    
+    OM <- OM |> nSimUpdate(nSim, messages) |>
+      Populate(messages=messages) |>
+      ConvertToList()
+    
+    # Equilibrium 
+    UnfishedSurvival <- purrr::map(OM@Stock, CalcUnfishedSurvival)
+    UnfishedSurvivalSP <- purrr::map(OM@Stock, CalcUnfishedSurvival, SP=TRUE)
+    R0 <- purrr::map(OM@Stock, GetR0)
+    WeightatAge <- purrr::map(OM@Stock, GetWeightAtAge)
+    MaturityatAge <- purrr::map(OM@Stock, GetMaturityAtAge)
+    FecundityatAge <- purrr::map(OM@Stock, GetFecundityAtAge)
+    
+    NatAge <- purrr::map2(R0, UnfishedSurvival, MultiplyArrays, structure=TRUE)
+    BatAge <- purrr::map2(NatAge, WeightatAge, MultiplyArrays)
+    
+    SNatAge <- purrr::map2(R0, UnfishedSurvivalSP, MultiplyArrays, structure=TRUE) |>
+      purrr::map2(MaturityatAge, MultiplyArrays)
+    SBatAge <- purrr::map2(SNatAge, WeightatAge, MultiplyArrays)
+    SPatAge <- purrr::map2(SNatAge, FecundityatAge, MultiplyArrays)
+    
+    Unfished@Equilibrium@NatAge <- NatAge
+    Unfished@Equilibrium@SNatAge <- SNatAge
+    Unfished@Equilibrium@BatAge <- BatAge
+    Unfished@Equilibrium@SBatAge <- SBatAge
+    Unfished@Equilibrium@SPatAge <- SPatAge
+    
+    # Dynamic 
+    RecDevInit <- purrr::map(OM@Stock, GetRecDevInit)
+    RecDevHist <- purrr::map(OM@Stock, GetRecDevHist)
+    RecDevProj <- purrr::map(OM@Stock, GetRecDevProj)
+    
+    c(dim(RecDevInit),
+      dim(RecDevHist),
+      dim(RecDevProj))
+    
+    ## UP TO HERE #####
+    purrr::map2(RecDevInit, NatAge, MultiplyArrays)
+    
+    N[1,1,,1,] |> rowSums()
+    
+    NatAge[[1]][1,,1] * RecDevInit[[1]][1,]
+    
+    
+   
+   
+    
+  
+    Unfished
+  }
+  
+  Hist |> Unfished() |> Equilibrium() |> NatAge()
+  
+  setClass("atAgeArray",
+           slots=c(NatAge='list',
+                   SNatAge='list',
+                   BatAge='list',
+                   SBatAge='list',
+                   SPatAge='list',
+                   Misc='list'
+           ),
+           contains='Created_ModifiedClass'
+  )
+  setClass("AtAge",
+           slots=c(Equilibrium='atAgeArray',
+                   Dynamic='atAgeArray',
+                   Misc='list'
+           ),
+           contains='Created_ModifiedClass'
+  )
+  
 
+  
+  
+  
+  # Calc dynamic unfished
+  
+  # Calc SPR
+  
+  
+  
+ 
+  
+  
+ 
+  
+
+
+  
   # ---- Calculate Reference Points ----
   
   CalcReferencePoints <- function(OM, 
@@ -124,7 +205,11 @@ SimulateDEV <- function(OM=NULL,
       ConvertToList() |>
       StartMessages(messages)
     
-    
+  }
+  
+  
+
+  
   
     # convert this to object later and add to initialize
     
@@ -154,20 +239,10 @@ SimulateDEV <- function(OM=NULL,
     
     EquilibriumUnfished 
   
-    CalcN0 <- function(R0, UnfishedSurvival) {
-      # R0 dimensions! 
-      # should have at least nsim 
-      # Add R0 to SRR object and remove from Pars!
-      # UP TO HERE 
-      
-      MultiplyArrays(array1=R0[[1]], 
-                     array2=UnfishedSurvival[[1]])
-    
-    }
+
     
     
-    UnfishedSurvival <- lapply(OM@Stock, CalcUnfishedSurvival)
-    UnfishedSurvivalSP <- lapply(OM@Stock, CalcUnfishedSurvival, SP=TRUE)
+
     
     R0 <- lapply(OM@Stock, CalcR0)
     
@@ -186,7 +261,7 @@ SimulateDEV <- function(OM=NULL,
   
     
     
-  }
+  
   
   
   
@@ -253,9 +328,9 @@ SimulateDEV <- function(OM=NULL,
   
   
   
-  HistRel <- SetHistRel(OM) {
+  HistRel <- SetHistRel(OM) 
     
-  }
+  
   
   
                         

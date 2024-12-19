@@ -486,10 +486,15 @@ AddArrays <- function(array1, array2) {
 
 }
 
-MultiplyArrays <- function(array1, array2) {
+MultiplyArrays <- function(array1, array2, structure=FALSE,
+                           names=c('Sim', 'Age', 'Time Step')) {
+  if (structure) {
+    array1  <- Structure(array1) |> AddDimNames(name=names)
+  }
+  
   d1 <- dim(array1)
   d2 <- dim(array2)
-  if (length(d1)!=length(d1))
+  if (length(d1)!=length(d2))
     cli::cli_abort('`array1` and `array2` must have number of dimensions')
 
   nm1 <- names(dimnames(array1))
@@ -504,13 +509,32 @@ MultiplyArrays <- function(array1, array2) {
   outdims <- apply(alldims, 2, max)
   out <- array(NA, dim=outdims)
 
-  for (s in 1:outdims[1]) {
-    for (ts in 1:outdims[2]) {
-      out[s,ts] <- array1[GetIndex(s, d1[1]), GetIndex(ts, d1[2])]  *
-                            array2[GetIndex(s, d2[1]), GetIndex(ts, d2[2])]
+  if (length(outdims)==2) {
+    for (s in 1:outdims[1]) {
+      for (age in 1:outdims[2]) {
+        out[s,age,ts] <- array1[GetIndex(s, d1[1]), 
+                                GetIndex(age, d1[2])]  *
+          array2[GetIndex(s, d2[1]),
+                 GetIndex(age, d2[2])]
+      }
     }
   }
-  out
+  
+  if (length(outdims)==3) {
+    for (s in 1:outdims[1]) {
+      for (age in 1:outdims[2]) {
+        for (ts in 1:outdims[3]) {
+          out[s,age,ts] <- array1[GetIndex(s, d1[1]), 
+                                  GetIndex(age, d1[2]),
+                                  GetIndex(ts, d1[3])]  *
+            array2[GetIndex(s, d2[1]),
+                   GetIndex(age, d2[2]),
+                   GetIndex(ts, d2[3])]
+        }
+      }
+    }
+  }
+  AddDimNames(out, nm1)
 }
 
 GetLengthClass <- function(object, RefValue=0.5) {

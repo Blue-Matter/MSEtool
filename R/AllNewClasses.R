@@ -515,7 +515,7 @@ setMethod("initialize", "weight", function(.Object,
 #' @param Classes `r Classes_param()`
 #' @param Misc `r Misc_param()`
 #' @export
-Weight <- function(Pars=list(a=NA, b=NA),
+Weight <- function(Pars=list(Alpha=NA, Beta=NA),
                    Model=NULL,
                    Units='g',
                    MeanAtAge=NULL,
@@ -1070,6 +1070,7 @@ Fecundity <- function(Pars=list(L50=NA, L50_95=NA, MaxFec=NA),
 setClass("srr",
          slots=c(Pars='list',
                  Model='fun.char',
+                 R0='num.array',
                  SD='num.array',
                  AC='num.array',
                  TruncSD='num.null',
@@ -1086,8 +1087,9 @@ setValidity('srr', isValidObject)
 
 
 setMethod("initialize", "srr", function(.Object,
-                                        Pars=list(R0=NA, h=NA),
+                                        Pars=list(h=NA),
                                         Model='BevertonHolt',
+                                        R0=array(),
                                         SD=array(),
                                         AC=array(),
                                         TruncSD=2,
@@ -1144,6 +1146,7 @@ setMethod("initialize", "srr", function(.Object,
 #' @export
 SRR <- function(Pars=list(R0=NA, h=NA),
                 Model='BevertonHolt',
+                R0=array(),
                 SD=array(),
                 AC=array(),
                 TruncSD=2,
@@ -1159,6 +1162,7 @@ SRR <- function(Pars=list(R0=NA, h=NA),
   methods::new('srr',
                Pars=Pars,
                Model=Model,
+               R0=R0,
                SD=SD,
                AC=AC,
                TruncSD=TruncSD,
@@ -2881,6 +2885,7 @@ CheckList <- function(object) {
 
 
 
+# ---- Internal Classes ----
 
 
 

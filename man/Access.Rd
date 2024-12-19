@@ -37,6 +37,8 @@
 \alias{Final<-}
 \alias{FracOther}
 \alias{FracOther<-}
+\alias{Herm}
+\alias{Herm<-}
 \alias{Initial}
 \alias{Initial<-}
 \alias{Interval}
@@ -104,8 +106,10 @@
 \alias{RelativeSize<-}
 \alias{SD}
 \alias{SD<-}
-\alias{SexPars}
-\alias{SexPars<-}
+\alias{SharePar}
+\alias{SharePar<-}
+\alias{SPFrom}
+\alias{SPFrom<-}
 \alias{Source}
 \alias{Source<-}
 \alias{Sponsor}
@@ -197,6 +201,10 @@ Final(x) <- value
 FracOther(x)
 
 FracOther(x) <- value
+
+Herm(x)
+
+Herm(x) <- value
 
 Initial(x)
 
@@ -336,9 +344,13 @@ SD(x)
 
 SD(x) <- value
 
-SexPars(x)
+SharePar(x)
 
-SexPars(x) <- value
+SharePar(x) <- value
+
+SPFrom(x)
+
+SPFrom(x) <- value
 
 Source(x)
 

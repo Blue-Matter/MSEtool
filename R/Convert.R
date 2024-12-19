@@ -387,9 +387,11 @@ cpars2Fecundity <- function(cpars) {
 }
 
 switchSRR <- function(SRrel) {
+  if (is.null(SRrel))
+    return(NULL)
   switch(SRrel,
-         '1'='BH',
-         '2'='RK')
+         '1'='BevertonHolt',
+         '2'='Ricker')
 }
 
 OM2SRR <- function(OM, cpars=NULL) {
@@ -403,26 +405,27 @@ OM2SRR <- function(OM, cpars=NULL) {
   }
 
   pars <- Pars(SRR)
-  if (!is.numeric(pars$R0)) {
-    pars$R0 <- process_cpars(OM@R0)
-  }
   if (!is.numeric(pars[['h']])) {
     pars[['h']] <- process_cpars(OM@h)
   }
-
   Pars(SRR) <- pars
-
-  SRR@Model <- switchSRR(OM@SRrel[1])
-  SRR@SD <- process_cpars(OM@Perr)
-  SRR@AC <- process_cpars(OM@AC)
+  
+  if (is.null(SRR@Model)) 
+    SRR@Model <- switchSRR(OM@SRrel[1])
+  if (is.null(SRR@R0)) 
+    SRR@R0 <- process_cpars(OM@R0)
+  if (is.null(SRR@SD))
+    SRR@SD <- process_cpars(OM@Perr)
+  if (is.null(SRR@AC)) 
+    SRR@AC <- process_cpars(OM@AC)
   SRR
 }
 
 cpars2SRR <- function(cpars, nYear=NULL, maxage=NULL) {
   SRR <- SRR()
-  Pars(SRR)$R0 <- process_cpars(cpars$R0)
   Pars(SRR)$h <- process_cpars(cpars$h)
-  SRR@Model <- process_cpars(cpars$SRrel)
+  SRR@R0 <- process_cpars(cpars$R0)
+  SRR@Model <- switchSRR(cpars$SRrel[1])
   SRR@SD <- process_cpars(cpars[['Perr']])
   SRR@AC <- process_cpars(cpars[['AC']])
 
@@ -448,21 +451,21 @@ cpars2SRR <- function(cpars, nYear=NULL, maxage=NULL) {
     init_age_classes <- perr_y[,1:maxage]
 
     if (identical_sim(init_age_classes)) {
-      SRR@RecDevInit <- init_age_classes[1,]
+      SRR@RecDevInit <- matrix(init_age_classes[1,], nrow=1)
     } else {
       SRR@RecDevInit <- init_age_classes
     }
 
     hist_yrs <- perr_y[,(maxage+1):(nYear+maxage)]
     if (identical_sim(hist_yrs)) {
-      SRR@RecDevHist <- hist_yrs[1,]
+      SRR@RecDevHist <- matrix(hist_yrs[1,], nrow=1)
     } else {
       SRR@RecDevHist <- hist_yrs
     }
 
     pro_yrs <- perr_y[,(nYear+maxage+1):(nYear+maxage+proyears)]
     if (identical_sim(pro_yrs)) {
-      SRR@RecDevProj <- pro_yrs[1,]
+      SRR@RecDevProj <- matrix(pro_yrs[1,], nrow=1)
     } else {
       SRR@RecDevProj <- pro_yrs
     }

@@ -890,13 +890,14 @@ setMethod("Populate", "fecundity", function(object,
     CheckRequiredObject(Ages, 'ages', 'Ages')
     CheckRequiredObject(Weight, 'weight', 'Weight')
     CheckRequiredObject(Length, 'length', 'Length')
-    CheckRequiredObject(Maturity, 'maturity', 'Maturity')
+    # CheckRequiredObject(Maturity, 'maturity', 'Maturity')
 
     Weight <- Populate(Weight, Ages, Length, nsim, TimeSteps, seed=seed, ASK=FALSE, messages=messages)
-    Maturity <- Populate(Maturity, Ages, Length, nsim, TimeSteps, seed=seed, messages=messages)
-
-    object@MeanAtAge <- MultiplyArrays(array1=Weight@MeanAtAge, array2=Maturity@MeanAtAge)
-
+    # Maturity <- Populate(Maturity, Ages, Length, nsim, TimeSteps, seed=seed, messages=messages)
+    # object@MeanAtAge <- MultiplyArrays(array1=Weight@MeanAtAge, array2=Maturity@MeanAtAge)
+    object@MeanAtAge <- Weight@MeanAtAge # egg production is fecundity x maturity - calculated internally
+    # fecundity is the egg production of a MATURE individual 
+    
     PrintDonePopulating(object, sb, isTRUE(messages))
     return(SetDigest(argList, object))
   }
@@ -965,9 +966,10 @@ setMethod("Populate", "srr", function(object,
   sb <- PrintPopulating(object, isTRUE(messages), allup=TRUE)
   object@Model <- FindModel(object)
 
-  pars <- StructurePars(c(object@SD, object@AC), nsim, nTS=0)
-  object@SD <- pars[[1]][,1]
-  object@AC <- pars[[2]][,1]
+  pars <- StructurePars(c(object@R0, object@SD, object@AC), nsim, nTS=0)
+  object@R0 <- pars[[1]][,1]
+  object@SD <- pars[[2]][,1]
+  object@AC <- pars[[3]][,1]
   object@SD[object@SD==0] <- 1E-6 # for reproducibility in rnorm
 
   EmptyObjects <- c(EmptyObject(object@RecDevInit),

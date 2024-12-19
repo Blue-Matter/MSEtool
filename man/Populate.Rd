@@ -22,9 +22,9 @@
 \usage{
 Populate(object, ...)
 
-\S4method{Populate}{om}(object, silent = FALSE)
+\S4method{Populate}{om}(object, messages = "progress")
 
-\S4method{Populate}{stock}(object, ALK = TRUE, AWK = FALSE, seed = NULL, silent = FALSE)
+\S4method{Populate}{stock}(object, ALK = TRUE, AWK = FALSE, seed = NULL, messages = "progress")
 
 \S4method{Populate}{length}(
   object,
@@ -33,7 +33,7 @@ Populate(object, ...)
   TimeSteps = NULL,
   ASK = TRUE,
   seed = NULL,
-  silent = FALSE
+  messages = TRUE
 )
 
 \S4method{Populate}{weight}(
@@ -45,7 +45,7 @@ Populate(object, ...)
   ASK = FALSE,
   CalcAtLength = FALSE,
   seed = NULL,
-  silent = FALSE
+  messages = TRUE
 )
 
 \S4method{Populate}{naturalmortality}(
@@ -56,7 +56,7 @@ Populate(object, ...)
   TimeSteps = NULL,
   CalcAtLength = FALSE,
   seed = NULL,
-  silent = FALSE
+  messages = TRUE
 )
 
 \S4method{Populate}{maturity}(
@@ -67,7 +67,7 @@ Populate(object, ...)
   TimeSteps = NULL,
   CalcAtLength = FALSE,
   seed = NULL,
-  silent = FALSE
+  messages = TRUE
 )
 
 \S4method{Populate}{fecundity}(
@@ -80,7 +80,7 @@ Populate(object, ...)
   TimeSteps = NULL,
   CalcAtLength = FALSE,
   seed = NULL,
-  silent = FALSE
+  messages = TRUE
 )
 
 \S4method{Populate}{srr}(
@@ -90,7 +90,7 @@ Populate(object, ...)
   TimeSteps = NULL,
   nsim = NULL,
   seed = NULL,
-  silent = FALSE
+  messages = TRUE
 )
 
 \S4method{Populate}{spatial}(
@@ -98,12 +98,12 @@ Populate(object, ...)
   Ages = NULL,
   nsim = NULL,
   seed = NULL,
-  silent = FALSE,
+  messages = TRUE,
   plot = FALSE,
   nits = 100
 )
 
-\S4method{Populate}{depletion}(object, nsim = NULL, seed = NULL, silent = FALSE)
+\S4method{Populate}{depletion}(object, nsim = NULL, seed = NULL, messages = TRUE)
 
 \S4method{Populate}{fleet}(
   object,
@@ -112,10 +112,10 @@ Populate(object, ...)
   nsim = NULL,
   TimeSteps = NULL,
   seed = NULL,
-  silent = FALSE
+  messages = TRUE
 )
 
-\S4method{Populate}{fishingmortality}(object, nsim = NULL, TimeSteps = NULL, seed = NULL, silent = FALSE)
+\S4method{Populate}{fishingmortality}(object, nsim = NULL, TimeSteps = NULL, seed = NULL, messages = TRUE)
 
 \S4method{Populate}{discardmortality}(
   object,
@@ -125,7 +125,7 @@ Populate(object, ...)
   TimeSteps = NULL,
   CalcAtLength = FALSE,
   seed = NULL,
-  silent = FALSE
+  messages = TRUE
 )
 
 \S4method{Populate}{selectivity}(
@@ -138,7 +138,7 @@ Populate(object, ...)
   TimeSteps = NULL,
   CalcAtLength = FALSE,
   seed = NULL,
-  silent = FALSE
+  messages = TRUE
 )
 
 \S4method{Populate}{retention}(
@@ -151,7 +151,7 @@ Populate(object, ...)
   TimeSteps = NULL,
   CalcAtLength = FALSE,
   seed = NULL,
-  silent = FALSE
+  messages = TRUE
 )
 
 \S4method{Populate}{effort}(
@@ -163,11 +163,14 @@ Populate(object, ...)
   nsim = NULL,
   TimeSteps = NULL,
   seed = NULL,
-  silent = FALSE
+  messages = TRUE
 )
 }
 \arguments{
-\item{silent}{Logical. Don't print messages?}
+\item{messages}{Logical or character.
+FALSE to suppress all messages,
+TRUE to print all messages,
+'progress' to print key progress updates}
 
 \item{seed}{Seed for the random number generator}
 
