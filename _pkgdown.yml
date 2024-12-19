@@ -150,10 +150,14 @@ reference:
   - runInMP
   - runMP
 
-- subtitle: Reference managment procedures
+- subtitle: Reference management procedures
   desc: Management procedures reflecting idealized management, e.g., perfect knowledge of stock productivity, no fishing scenario, etc.
   contents:
   - FMSYref
+  
+- subtitle: Other management procedures
+  contents:
+  - Emp
 
 - subtitle: Rec object
   desc: Output of management procedures to implement in the MSE simulation
@@ -190,6 +194,7 @@ reference:
   - Pplot
   - Pplot2
   - PWhisker
+  - Splot
   - SSBrefplot
   - TradePlot
   - VOIplot
@@ -256,6 +261,10 @@ reference:
   contents:
   - MPtype
   - CombineMMP
+  - doHCR
+  - doIfreq
+  - doRec
+  - smoothy
 
 - subtitle: MSE
   contents:
@@ -292,4 +301,5 @@ reference:
   - makeTransparent
   - plotFun
   - plotquant
+  - quantile_plot
 
