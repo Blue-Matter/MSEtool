@@ -138,7 +138,11 @@ A named list with updated population dynamics
 }
 \description{
 An internal function to calculate the population dynamics for the next time
-step based on the recent MP recommendation
+step based on the recent MP recommendation. First uses \code{.CalcMPDynamics_SelRetDisc} to update selectivity, retention, and discarding parameters,
+then calculates F from effort or catch recommendations.
+}
+\seealso{
+\code{\link[=CalcMPDynamics_MF]{CalcMPDynamics_MF()}}
 }
 \author{
 A. Hordyk
