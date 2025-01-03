@@ -3105,8 +3105,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #' The `multiHist` object can be (re-)created using `SimulateMOM` or kept in `MMSE@multiHist` if
 #' `dropHist=FALSE`
 #' @param extended Logical. Return extended projection results?
-#' if TRUE, `MMSE@Misc$extended` is a named list with extended data
-#' (including historical and projected abundance by area).
+#' if TRUE, `MMSE@Misc$extended` is a named list with extended data: FM for overall F across fleets `[nsim, nstock, n_age, nMP, proyears, nareas]`.
+#' `Misc` slot in `MMSE@PPD` will also contain StockPars, FleetPars, and ReferencePoints
 #' @describeIn multiMSE Run a multi-stock, multi-fleet MSE
 #' 
 #' @details 
