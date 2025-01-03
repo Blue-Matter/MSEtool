@@ -1589,6 +1589,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
   # projection arrays for storing all info (by simulation, stock, age, MP, years, areas)
   N_P_mp <- array(NA, dim = c(nsim, np, n_age, nMP, proyears, nareas))
+  FMage_mp <- array(NA, dim = c(nsim, np, n_age, nMP, proyears, nareas)) # overall F across fleets
   
   # store M, growth, length at age, rec dev by MP due to MICE rel.
   if (length(Rel)) {
@@ -2899,20 +2900,20 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
     N_P_mp[,,, mm,,] <- N_P
 
-    for(p in 1:np) for(f in 1:nf)
-      Ca[, p,f,mm, ] <- apply(FleetPars[[p]][[f]]$CB_P, c(1, 3),
-                              sum, na.rm=TRUE) # removed
-    for(p in 1:np) for(f in 1:nf)
-      CaRet[, p,f,mm, ] <- apply(FleetPars[[p]][[f]]$CB_Pret, c(1, 3),
-                                 sum, na.rm=TRUE) # retained catch
-    
-    #if (!silent) message("Calculating spawning potential ratio")
     for(p in 1:np) {
-      SPReqa[, p, mm, ] <- CalcSPReq(FM = sapply(FleetPars[[p]], getElement, "FM_P", simplify = "array") %>% apply(1:4, sum),
+      for(f in 1:nf) {
+        Ca[, p,f,mm, ] <- apply(FleetPars[[p]][[f]]$CB_P, c(1, 3), sum, na.rm=TRUE) # removed
+        CaRet[, p,f,mm, ] <- apply(FleetPars[[p]][[f]]$CB_Pret, c(1, 3), sum, na.rm=TRUE) # retained catch
+      }
+      
+      FMage_mp[, p, , mm, , ] <- FleetPars[[p]][[1]]$Z_P - replicate(nareas, StockPars_MPCalc[[p]]$M_ageArray[, , nyears + seq(1, proyears)])
+      
+      SPReqa[, p, mm, ] <- CalcSPReq(FM = FMage_mp[, p, , mm, , ],
                                      StockPars_MPCalc[[p]], n_age, nareas, nyears, proyears, nsim)
+      
       SPRdyna[, p, mm, ] <- local({
         FMh <- array(FM[, p, , , , ], c(nsim, nf, n_age, nyears, nareas)) %>% apply(c(1, 3:5), sum)
-        FMp <- sapply(FleetPars[[p]], getElement, "FM_P", simplify = "array") %>% apply(1:4, sum)
+        FMp <- FMage_mp[, p, , mm, , ]
         
         CalcSPRdyn(abind::abind(FMh, FMp, along = 3), 
                    StockPars_MPCalc[[p]], n_age, nareas, nyears, proyears, nsim)
@@ -2982,12 +2983,9 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   
   if (extended) {
     
-    if (!silent) message("Returning complete abundance series in 'Misc$extended$N")
+    if (!silent) message("Returning overall F in 'Misc$extended$FM'")
     Misc[["extended"]] <- list(
-      N = local({
-        histN <- replicate(nMP, StockPars[[1]]$N) %>% aperm(c(1,2,3,6,4,5)) # nsim x np x n_age x nyears x nareas x nMP
-        abind::abind(histN, N_P_mp, along=5) # nsim x np x n_age x nMP x proyears x nareas
-      })
+      FM = FMage_mp  # nsim x np x n_age x nMP x proyears x nareas
     )
     
     Misc[['MOM']] <- MOM
