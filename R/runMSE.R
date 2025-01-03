@@ -357,7 +357,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
       optMSY_eq(x, 
                 yr.ind=y,
                 StockPars,
-                FleetPars$V_real_2) 
+                FleetPars$V_real_2,
+                FleetPars$Wt_age_C) 
     })
   })
 
@@ -670,6 +671,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
       per_recruit_F_calc(x, yr.ind=y, 
                          StockPars=StockPars,
                          V=FleetPars$V_real_2,
+                         Wt_age_C=FleetPars$Wt_age_C,
                          SPR_target=SPR_target)
     })
   })
@@ -1457,7 +1459,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE,
         y1 <- nyears + y
         MSYrefsYr <- sapply(1:nsim, optMSY_eq, 
                             yr.ind=y1, StockPars,
-                            V_P)
+                            V_P, FleetPars$Wt_age_C)
         MSY_y[,mm,y1] <- MSYrefsYr[1, ]
         FMSY_y[,mm,y1] <- MSYrefsYr[2,]
         SSBMSY_y[,mm,y1] <- MSYrefsYr[3,]
@@ -1466,6 +1468,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE,
                                 yr.ind=y1,
                                 StockPars=StockPars,
                                 V=V_P,
+                                Wt_age_C=FleetPars$Wt_age_C,
                                 SPR_target=SPR_target)
 
         F_SPR_y[,mm,,y1] <- sapply(per_recruit_F, getElement, 1) %>% t()

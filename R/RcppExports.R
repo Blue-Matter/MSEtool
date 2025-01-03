@@ -13,10 +13,11 @@ LinInterp_cpp <- function(x, y, xlev) {
 #'
 #' @param logF log fishing mortality
 #' @param M_at_Age Vector of M-at-age
-#' @param Wt_at_Age Vector of weight-at-age
+#' @param Wt_at_Age Vector of stock weight-at-age
 #' @param Mat_at_Age Vector of maturity-at-age
 #' @param Fec_at_Age Vector of mature weight-at-age
 #' @param V_at_Age Vector of selectivity-at-age
+#' @param Wt_at_Age_C Vector of fishery weight-at-age
 #' @param maxage Maximum age
 #' @param relRfun Optional. A function used to calculate reference points if `SRrelc =3` 
 #' @param SRRpars Optional. A named list of arguments for `SRRfun`
@@ -28,12 +29,12 @@ LinInterp_cpp <- function(x, y, xlev) {
 #' @param plusgroup Integer. Default = 0 = no plus-group. Use 1 to include a plus-group
 #' @param spawn_time_frac Numeric. Fraction of the year when spawning occurs. Default = 0. 
 #' @return See `opt`
-MSYCalcs <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, maxage, relRfun, SRRpars, R0x = 1, SRrelx = 3L, hx = 1, SSBpR = 0, opt = 1L, plusgroup = 1L, spawn_time_frac = 0) {
-    .Call('_MSEtool_MSYCalcs', PACKAGE = 'MSEtool', logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, maxage, relRfun, SRRpars, R0x, SRrelx, hx, SSBpR, opt, plusgroup, spawn_time_frac)
+MSYCalcs <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, Wt_at_Age_C, maxage, relRfun, SRRpars, R0x = 1, SRrelx = 3L, hx = 1, SSBpR = 0, opt = 1L, plusgroup = 1L, spawn_time_frac = 0) {
+    .Call('_MSEtool_MSYCalcs', PACKAGE = 'MSEtool', logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, Wt_at_Age_C, maxage, relRfun, SRRpars, R0x, SRrelx, hx, SSBpR, opt, plusgroup, spawn_time_frac)
 }
 
-Ref_int_cpp <- function(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, relRfun, SRRpars, maxage, plusgroup = 1L, spawn_time_frac = 0) {
-    .Call('_MSEtool_Ref_int_cpp', PACKAGE = 'MSEtool', F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, relRfun, SRRpars, maxage, plusgroup, spawn_time_frac)
+Ref_int_cpp <- function(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, Wt_at_Age_C, relRfun, SRRpars, maxage, plusgroup = 1L, spawn_time_frac = 0) {
+    .Call('_MSEtool_Ref_int_cpp', PACKAGE = 'MSEtool', F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, Wt_at_Age_C, relRfun, SRRpars, maxage, plusgroup, spawn_time_frac)
 }
 
 calcVatAge <- function(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid) {

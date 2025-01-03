@@ -9,6 +9,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 ## Updates
 - When indices are provided to the operating model, the default value of beta = 1 (hyperstability parameter) if not specified in `cpars`.
 - Add grid to base graphics
+- MSY calculations in `Simulate` use fishery weight at age `FleetPars$Wt_age_C`
 
 # MSEtool 3.7.3
 

@@ -138,11 +138,14 @@ split_along_dim <- function(a, n) {
 #' @param yr.ind Year index used in calculations
 #' @param StockPars A list of stock parameters
 #' @param V Array of selectivity-at-age
+#' @param Wt_age_C Array of fishery weight at age. Optional. If missing, `StockPars$Wt_age` is used.
 #' @return Results from `MSYCalcs`
 #' @export
 #'
 #' @keywords internal
-optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
+optMSY_eq <- function(x, yr.ind=1, StockPars, V, Wt_age_C) {
+  
+  if (missing(Wt_age_C)) Wt_age_C <- StockPars$Wt_age
                      
   maxage <- StockPars$maxage
   plusgroup <- StockPars$plusgroup
@@ -158,12 +161,14 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
     Fec_at_Age <- StockPars$Fec_Age[x,, yr.ind]
     Mat_at_Age <- StockPars$Mat_age[x,, yr.ind]
     V_at_Age <- V[x,, yr.ind]
+    Wt_at_Age_C <- Wt_age_C[x,, yr.ind]
   } else {
     M_at_Age <- apply(StockPars$M_ageArray[x,,yr.ind], 1, mean)
     Wt_at_Age <- apply(StockPars$Wt_age[x,, yr.ind], 1, mean)
     Fec_at_Age <- apply(StockPars$Fec_Age[x,, yr.ind], 1, mean)
     Mat_at_Age <- apply(StockPars$Mat_age[x,, yr.ind], 1, mean)
     V_at_Age <- apply(V[x,, yr.ind], 1, mean)
+    Wt_at_Age_C <- apply(Wt_age_C[x,, yr.ind], 1, mean)
   }
   
   # check for M = 0 in MOMs where maxage isn't the same for each stock
@@ -174,6 +179,7 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
     Mat_at_Age <- Mat_at_Age[ind]
     Fec_at_Age <- Fec_at_Age[ind]
     V_at_Age <- V_at_Age[ind]
+    Wt_at_Age_C <- Wt_at_Age_C[ind]
     
     maxage <- length(ind)-1
   }
@@ -199,6 +205,7 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
                       Mat_at_Age,
                       Fec_at_Age, 
                       V_at_Age, 
+                      Wt_at_Age_C,
                       maxage,
                       relRfun = StockPars$relRfun, 
                       SRRpars=StockPars$SRRpars[[x]],
@@ -212,6 +219,7 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
                      Mat_at_Age, 
                      Fec_at_Age,
                      V_at_Age, 
+                     Wt_at_Age_C,
                      maxage, 
                      relRfun = StockPars$relRfun, 
                      SRRpars=StockPars$SRRpars[[x]],
@@ -242,7 +250,7 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
     MatAge <- replicate(pyears,Mat_at_Age)
     WtAge <- replicate(pyears,Wt_at_Age)
     FecAge <- replicate(pyears,Fec_at_Age)
-    WtAgeC <- replicate(pyears,Wt_at_Age)
+    WtAgeC <- replicate(pyears,Wt_at_Age_C)
     Vuln <- replicate(pyears, V_at_Age)
     Retc <- array(1, dim=dim(Vuln))
     Perr_y <- rep(1, pyears+n_age)
@@ -331,8 +339,10 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
 #   out[c(1,4)]
 # }
 
-per_recruit_F_calc <- function(x, yr.ind=1, StockPars, V, 
+per_recruit_F_calc <- function(x, yr.ind=1, StockPars, V, Wt_age_C,
                                SPR_target = seq(0.2, 0.6, 0.05)) {
+  
+  if (missing(Wt_age_C)) Wt_age_C <- StockPars$Wt_age
   maxage <- StockPars$maxage
   plusgroup <- StockPars$plusgroup
   
@@ -342,12 +352,14 @@ per_recruit_F_calc <- function(x, yr.ind=1, StockPars, V,
     Mat_at_Age <- StockPars$Mat_age[x,, yr.ind]
     Fec_at_Age <- StockPars$Fec_Age[x,, yr.ind]
     V_at_Age <- V[x,, yr.ind]
+    Wt_at_Age_C <- Wt_age_C[x,, yr.ind]
   } else {
     M_at_Age <- apply(StockPars$M_ageArray[x,,yr.ind], 1, mean)
     Wt_at_Age <- apply(StockPars$Wt_age[x,, yr.ind], 1, mean)
     Mat_at_Age <- apply(StockPars$Mat_age[x,, yr.ind], 1, mean)
     Fec_at_Age <- apply(StockPars$Fec_Age[x,, yr.ind], 1, mean)
     V_at_Age <- apply(V[x,, yr.ind], 1, mean)
+    Wt_at_Age_C <- apply(Wt_age_C[x,, yr.ind], 1, mean)
   }
 
   # check for M = 0 in MOMs where maxage isn't the same for each stock
@@ -358,6 +370,7 @@ per_recruit_F_calc <- function(x, yr.ind=1, StockPars, V,
     Mat_at_Age <- Mat_at_Age[ind]
     Fec_at_Age <- Fec_at_Age[ind]
     V_at_Age <- V_at_Age[ind]
+    Wt_at_Age_C <- Wt_at_Age_C[ind]
     maxage <- length(ind)-1
   }
   
@@ -371,6 +384,7 @@ per_recruit_F_calc <- function(x, yr.ind=1, StockPars, V,
                             Mat_at_Age = Mat_at_Age,
                             Fec_at_Age=Fec_at_Age,
                             V_at_Age = V_at_Age,
+                            Wt_at_Age_C = Wt_at_Age_C,
                             StockPars$relRfun,
                             StockPars$SRRpars[[x]],
                             maxage = maxage,
