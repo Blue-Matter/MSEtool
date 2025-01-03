@@ -1706,7 +1706,7 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE,
     FMret_P_mp[,,mm,,] <- FM_Pret
 
     # drop StockPars etc from Data_MP - already reported in Hist object
-    Data_MP@Misc$StockPars <- Data_MP@Misc$FleetPars <- Data_MP@Misc$ReferencePoints <- NULL
+    if (!extended) Data_MP@Misc$StockPars <- Data_MP@Misc$FleetPars <- Data_MP@Misc$ReferencePoints <- NULL
 
     MSElist[[mm]] <- Data_MP # update MSElist with PPD for this MP
   } # end of MP loop
@@ -1831,8 +1831,8 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE,
 #' using the split-apply-combine technique. See Details for more information. 
 #' @param extended Logical. Return extended projection results?
 #' if TRUE, `MSE@Misc$extended` is a named list with extended data
-#' (including historical and projection by area), and extended version of `MSE@Hist`
-#' is returned.
+#' (including historical and projection by area), extended version of `MSE@Hist`
+#' is returned, and returns `MSE@PPD` with StockPars, FleetPars, and ReferencePoints in `MSE@PPD`
 #' @param checkMPs Logical. Check if the specified MPs exist and can be run on `SimulatedData`?
 #'
 #' @describeIn runMSE Run the Historical Simulations and Forward Projections
