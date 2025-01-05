@@ -2698,7 +2698,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
           NoMPRecs <- MPRecs_A[[p]]
           for(f in 1:nf) NoMPRecs[[f]]$Spatial <- NA
           
-          MPCalcs <- CalcMPDynamics_MF(
+          MPCalcs_MF <- CalcMPDynamics_MF(
             MPRecs_f = NoMPRecs, y,
             nyears, proyears, nsim,
             LastTAE = array(LastTAE[, p, ], c(nsim, nf)),
