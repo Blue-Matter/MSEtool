@@ -11,6 +11,7 @@ MSYCalcs(
   Mat_at_Age,
   Fec_at_Age,
   V_at_Age,
+  Wt_at_Age_C,
   maxage,
   relRfun,
   SRRpars,
@@ -28,13 +29,15 @@ MSYCalcs(
 
 \item{M_at_Age}{Vector of M-at-age}
 
-\item{Wt_at_Age}{Vector of weight-at-age}
+\item{Wt_at_Age}{Vector of stock weight-at-age}
 
 \item{Mat_at_Age}{Vector of maturity-at-age}
 
 \item{Fec_at_Age}{Vector of mature weight-at-age}
 
 \item{V_at_Age}{Vector of selectivity-at-age}
+
+\item{Wt_at_Age_C}{Vector of fishery weight-at-age}
 
 \item{maxage}{Maximum age}
 

@@ -172,7 +172,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   # from females to males
   if (length(SexPars)) {
     if (length(SexPars$Herm)) {
-      SexPars$Herm <- checkHerm(SexPars$Herm, maxage, nsim, nyears, proyears)
+      MOM@SexPars$Herm <- SexPars$Herm <- checkHerm(SexPars$Herm, maxage, nsim, nyears, proyears)
     }
     if (is.null(SexPars$share_par) || SexPars$share_par == TRUE) {
       sexmatches <- sapply(1:nrow(SexPars$SSBfrom), function(x) paste(SexPars$SSBfrom[x, ], collapse = "_"))
@@ -1061,6 +1061,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
         StockPars[[p]]$N <- N
         StockPars[[p]]$SSB <- SSB
         StockPars[[p]]$Biomass <- Biomass
+        StockPars[[p]]$VBiomass <- VBiomass
         Data@Misc$StockPars <- StockPars[[p]]
         Data@Misc$FleetPars <- FleetPars[[p]][[f]]
         Data@Misc$ReferencePoints <- StockPars[[p]]$ReferencePoints
@@ -1102,6 +1103,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
         StockPars[[p]]$N <- N
         StockPars[[p]]$SSB <- SSB
         StockPars[[p]]$Biomass <- Biomass
+        StockPars[[p]]$VBiomass <- VBiomass
         Data@Misc$StockPars <- StockPars[[p]]
         Data@Misc$FleetPars <- FleetPars[[p]][[f]]
         Data@Misc$ReferencePoints <- StockPars[[p]]$ReferencePoints
@@ -1573,6 +1575,12 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     FleetPars[[p]] <- lapply(1:nf, function(f) multiHist[[p]][[f]]@SampPars$Fleet)
     ObsPars[[p]] <- lapply(1:nf, function(f) multiHist[[p]][[f]]@SampPars$Obs)
     ImpPars[[p]] <- lapply(1:nf, function(f) multiHist[[p]][[f]]@SampPars$Imp)
+    
+    # Subset historical SSB, N, Biomass by stock
+    StockPars[[p]]$SSB <- StockPars[[p]]$SSB[, p, , , ]
+    StockPars[[p]]$N <- StockPars[[p]]$N[, p, , , ]
+    StockPars[[p]]$Biomass <- StockPars[[p]]$Biomass[, p, , , ]
+    if (!is.null(StockPars[[p]]$VBiomass)) StockPars[[p]]$VBiomass <- StockPars[[p]]$VBiomass[, p, , , ]
   }
 
   nareas <- StockPars[[1]]$nareas
@@ -1582,6 +1590,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
   # projection arrays for storing all info (by simulation, stock, age, MP, years, areas)
   N_P_mp <- array(NA, dim = c(nsim, np, n_age, nMP, proyears, nareas))
+  FMage_mp <- array(NA, dim = c(nsim, np, n_age, nMP, proyears, nareas)) # overall F across fleets
   
   # store M, growth, length at age, rec dev by MP due to MICE rel.
   if (length(Rel)) {
@@ -1707,6 +1716,12 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       }
       
       StockPars[[p]] <- multiHist[[p]][[1]]@SampPars$Stock
+      
+      # Subset historical SSB, N, Biomass by stock
+      StockPars[[p]]$SSB <- StockPars[[p]]$SSB[, p, , , ]
+      StockPars[[p]]$N <- StockPars[[p]]$N[, p, , , ]
+      StockPars[[p]]$Biomass <- StockPars[[p]]$Biomass[, p, , , ]
+      if (!is.null(StockPars[[p]]$VBiomass)) StockPars[[p]]$VBiomass <- StockPars[[p]]$VBiomass[, p, , , ]
       
       # Discard mortality for projections
       StockPars[[p]]$Fdisc_P <- StockPars[[p]]$Fdisc
@@ -2060,6 +2075,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     
     for(p in 1:np) {
       MPCalcs_list[[p]] <- vector('list', nf)
+      
       for(f in 1:nf) {
         TACused[,p,f] <- apply(Data_p_A[[p]][[f]]@TAC, 2, quantile,
                                p = MOM@pstar, na.rm = T)
@@ -2071,84 +2087,62 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
         LastAllocat[,p,f] <- rep(1, nsim)
         LastCatch[,p,f] <- apply(CB[,p,f,,nyears,], 1, sum)
         Effort_pot[,p,f] <- rep(NA, nsim) # No bio-economic model
-
-        MPCalcs <- CalcMPDynamics(MPRecs=MPRecs_A[[p]][[f]], y,
-                                  nyears, proyears, nsim,
-                                  Biomass_P=StockPars[[p]]$Biomass_P,
-                                  VBiomass_P=VBF_P[, p, f, , , ],
-                                  LastTAE=LastTAE[,p,f],
-                                  histTAE=histTAE[,p,f],
-                                  LastSpatial=LastSpatial[,p,f,],
-                                  LastAllocat=LastAllocat[,p,f],
-                                  LastTAC=LastCatch[,p,f],
-                                  TACused=TACused[,p,f],
-                                  maxF=maxF,
-                                  LR5_P=FleetPars[[p]][[f]]$LR5_P,
-                                  LFR_P=FleetPars[[p]][[f]]$LFR_P,
-                                  Rmaxlen_P=FleetPars[[p]][[f]]$Rmaxlen_P,
-                                  retL_P=FleetPars[[p]][[f]]$retL_P,
-                                  retA_P=FleetPars[[p]][[f]]$retA_P,
-                                  retA_P_real=FleetPars[[p]][[f]]$retA_P_real,
-                                  retA_P_real_2=FleetPars[[p]][[f]]$retA_P_real_2,
-                                  L5_P=FleetPars[[p]][[f]]$L5_P,
-                                  LFS_P=FleetPars[[p]][[f]]$LFS_P,
-                                  Vmaxlen_P=FleetPars[[p]][[f]]$Vmaxlen_P,
-                                  SLarray_P=FleetPars[[p]][[f]]$SLarray_P,
-                                  V_P=FleetPars[[p]][[f]]$V_P,
-                                  V_P_real=FleetPars[[p]][[f]]$V_P_real,
-                                  V_P_real_2=FleetPars[[p]][[f]]$V_P_real_2,
-                                  Fdisc_P=StockPars[[p]]$Fdisc_P,
-                                  DR_P=FleetPars[[p]][[f]]$DR_P,
-                                  FM_P=FleetPars[[p]][[f]]$FM_P,
-                                  FM_Pret=FleetPars[[p]][[f]]$FM_Pret,
-                                  Z_P=FleetPars[[p]][[f]]$Z_P,
-                                  CB_P=FleetPars[[p]][[f]]$CB_P,
-                                  CB_Pret=FleetPars[[p]][[f]]$CB_Pret,
-                                  Effort_pot=Effort_pot[,p,f],
-                                  StockPars=StockPars_MPCalc[[p]],
-                                  FleetPars=FleetPars[[p]][[f]],
-                                  ImpPars=ImpPars[[p]][[f]], 
-                                  control=control)
-    
-        
-        if(length(SexPars)>0) MPCalcs<- MPCalcsNAs(MPCalcs) # Zeros caused by SexPars
+      }
+      
+      MPCalcs_MF <- CalcMPDynamics_MF(
+        MPRecs_f = MPRecs_A[[p]], y,
+        nyears, proyears, nsim,
+        LastTAE = array(LastTAE[, p, ], c(nsim, nf)),
+        histTAE = array(histTAE[, p, ], c(nsim, nf)),
+        LastSpatial = array(LastSpatial[, p, , ], c(nareas, nf, nsim)),
+        LastAllocat = array(LastAllocat[, p, ], c(nsim, nf)),
+        LastTAC = array(LastCatch[, p, ], c(nsim, nf)),
+        TACused = array(TACused[, p, ], c(nsim, nf)),
+        maxF = maxF,
+        Effort_pot = array(Effort_pot[, p, ], c(nsim, nf)),
+        StockPars = StockPars_MPCalc[[p]],
+        FleetPars_f = FleetPars[[p]],
+        ImpPars_f = ImpPars[[p]],
+        control = control
+      )
+      
+      for (f in 1:nf) {
+        if(length(SexPars)>0) MPCalcs_MF[[f]] <- MPCalcsNAs(MPCalcs_MF[[f]]) # Zeros caused by SexPars
 
         TACa[,p,f, mm, y] <- TACused[,p,f]#MPCalcs$TACrec # recommended TAC
-        LastSpatial[,p,f,] <- MPCalcs$Si
-        LastAllocat[,p,f] <- MPCalcs$Ai
+        LastSpatial[,p,f,] <- MPCalcs_MF[[f]]$Si
+        LastAllocat[,p,f] <- MPCalcs_MF[[f]]$Ai
 
-        LastTAE[,p,f] <- MPCalcs$TAE # TAE set by MP
-        TAE_out[,p,f, mm, y] <- MPCalcs$TAE # TAE
-        LastCatch[,p,f] <- MPCalcs$TACrec # TAC et by MP
+        LastTAE[,p,f] <- MPCalcs_MF[[f]]$TAE # TAE set by MP
+        TAE_out[,p,f, mm, y] <- MPCalcs_MF[[f]]$TAE # TAE
+        LastCatch[,p,f] <- MPCalcs_MF[[f]]$TACrec # TAC et by MP
 
-        Effort[,p,f, mm, y] <- rep(MPCalcs$Effort,nsim)[1:nsim]
-        FleetPars[[p]][[f]]$CB_P <- MPCalcs$CB_P # removals
-        FleetPars[[p]][[f]]$CB_Pret <- MPCalcs$CB_Pret # retained catch
-        FleetPars[[p]][[f]]$FM_P <- MPCalcs$FM_P # fishing mortality
-        FM_P[,p,f,,,]<- MPCalcs$FM_P
+        Effort[,p,f, mm, y] <- rep(MPCalcs_MF[[f]]$Effort,nsim)[1:nsim]
+        FleetPars[[p]][[f]]$CB_P <- MPCalcs_MF[[f]]$CB_P # removals
+        FleetPars[[p]][[f]]$CB_Pret <- MPCalcs_MF[[f]]$CB_Pret # retained catch
+        FleetPars[[p]][[f]]$FM_P <- MPCalcs_MF[[f]]$FM_P # fishing mortality
+        FM_P[,p,f,,,]<- MPCalcs_MF[[f]]$FM_P
 
-        FleetPars[[p]][[f]]$FM_Pret <- MPCalcs$FM_Pret # retained fishing mortality
-        FMret_P[,p,f,,,]<- MPCalcs$FM_Pret
-        #FretA[,p,f,,]<- MPCalcs$FM_Pret
-        FleetPars[[p]][[f]]$Z_P <- MPCalcs$Z_P # total mortality
-        FleetPars[[p]][[f]]$retA_P <- MPCalcs$retA_P # retained-at-age
-        FleetPars[[p]][[f]]$retA_P_real <- MPCalcs$retA_P_real 
-        FleetPars[[p]][[f]]$retA_P_real_2 <- MPCalcs$retA_P_real_2 
-
-        FleetPars[[p]][[f]]$retL_P <- MPCalcs$retL_P # retained-at-length
+        FleetPars[[p]][[f]]$FM_Pret <- MPCalcs_MF[[f]]$FM_Pret # retained fishing mortality
+        FMret_P[,p,f,,,] <- MPCalcs_MF[[f]]$FM_Pret
+        #FretA[,p,f,,] <- MPCalcs_MF[[f]]$FM_Pret
         
-        FleetPars[[p]][[f]]$V_P <- MPCalcs$V_P  # vulnerable-at-age
-        FleetPars[[p]][[f]]$V_P_real <- MPCalcs$V_P_real
-        FleetPars[[p]][[f]]$V_P_real_2 <- MPCalcs$V_P_real_2
-        
-        
-        VF[,p,f,,]<- MPCalcs$V_P
-        FleetPars[[p]][[f]]$SLarray_P <- MPCalcs$SLarray_P # vulnerable-at-length
-        FMa[,p,f,mm,y] <- MPCalcs$Ftot # Total fishing mortality (by stock & fleet)
+        FleetPars[[p]][[f]]$Z_P <- MPCalcs_MF[[f]]$Z_P # total mortality
+        FleetPars[[p]][[f]]$retA_P <- MPCalcs_MF[[f]]$retA_P # retained-at-age
+        FleetPars[[p]][[f]]$retA_P_real <- MPCalcs_MF[[f]]$retA_P_real 
+        FleetPars[[p]][[f]]$retA_P_real_2 <- MPCalcs_MF[[f]]$retA_P_real_2 
 
-        MPCalcs_list[[p]][[f]] <- MPCalcs
-
+        FleetPars[[p]][[f]]$retL_P <- MPCalcs_MF[[f]]$retL_P # retained-at-length
+        
+        FleetPars[[p]][[f]]$V_P <- MPCalcs_MF[[f]]$V_P  # vulnerable-at-age
+        FleetPars[[p]][[f]]$V_P_real <- MPCalcs_MF[[f]]$V_P_real
+        FleetPars[[p]][[f]]$V_P_real_2 <- MPCalcs_MF[[f]]$V_P_real_2
+        
+        VF[,p,f,,]<- MPCalcs_MF[[f]]$V_P
+        FleetPars[[p]][[f]]$SLarray_P <- MPCalcs_MF[[f]]$SLarray_P # vulnerable-at-length
+        FMa[,p,f,mm,y] <- MPCalcs_MF[[f]]$Ftot # Total fishing mortality (by stock & fleet)
       }
+      MPCalcs_list[[p]] <- MPCalcs_MF
     }
 
     # ---- Account for timing of spawning (if spawn_time_frac >0) ----
@@ -2638,164 +2632,125 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
             TACused[,p,f] <- apply(Data_p_A[[p]][[f]]@TAC, 2, quantile,
                                    p = MOM@pstar, na.rm = T)
             checkNA[p,f,y] <-checkNA[p,f,y] + sum(is.na(TACused[,p,f]))
+          }
+          
+          MPCalcs_MF <- CalcMPDynamics_MF(
+            MPRecs_f = MPRecs_A[[p]], y,
+            nyears, proyears, nsim,
+            LastTAE = array(LastTAE[, p, ], c(nsim, nf)),
+            histTAE = array(histTAE[, p, ], c(nsim, nf)),
+            LastSpatial = array(LastSpatial[, p, , ], c(nareas, nf, nsim)),
+            LastAllocat = array(LastAllocat[, p, ], c(nsim, nf)),
+            LastTAC = array(LastCatch[, p, ], c(nsim, nf)),
+            TACused = array(TACused[, p, ], c(nsim, nf)),
+            maxF = maxF,
+            Effort_pot = array(Effort_pot[, p, ], c(nsim, nf)),
+            StockPars = StockPars_MPCalc[[p]],
+            FleetPars_f = FleetPars[[p]],
+            ImpPars_f = ImpPars[[p]],
+            control = control
+          )
+          
+          for (f in 1:nf) {
+            if(length(SexPars)>0) MPCalcs_MF[[f]] <- MPCalcsNAs(MPCalcs_MF[[f]]) # Zeros caused by SexPars
+            
+            TACa[,p,f, mm, y] <- MPCalcs_MF[[f]]$TACrec # recommended TAC
+            LastSpatial[,p,f,] <- MPCalcs_MF[[f]]$Si
+            LastAllocat[,p,f] <- MPCalcs_MF[[f]]$Ai
+            LastTAE[,p,f] <- MPCalcs_MF[[f]]$TAE # adjustment to TAE
+            TAE_out[,p,f, mm, y] <- MPCalcs_MF[[f]]$TAE # TAE
+            LastCatch[,p,f] <- MPCalcs_MF[[f]]$TACrec # TAC et by MP
+            
+            Effort[,p,f, mm, y] <- rep(MPCalcs_MF[[f]]$Effort,nsim)[1:nsim]
+            FleetPars[[p]][[f]]$CB_P <- MPCalcs_MF[[f]]$CB_P # removals
+            FleetPars[[p]][[f]]$CB_Pret <- MPCalcs_MF[[f]]$CB_Pret # retained catch
+            FleetPars[[p]][[f]]$FM_P <- MPCalcs_MF[[f]]$FM_P # fishing mortality
+            FM_P[,p,f,,,] <- MPCalcs_MF[[f]]$FM_P
+            
+            FleetPars[[p]][[f]]$FM_Pret <- MPCalcs_MF[[f]]$FM_Pret # retained fishing mortality
+            FMret_P[,p,f,,,] <- MPCalcs_MF[[f]]$FM_Pret
+            #FretA[,p,f,,] <- MPCalcs_MF[[f]]$FM_Pret
 
-            MPCalcs <- CalcMPDynamics(MPRecs=MPRecs_A[[p]][[f]], y,
-                                      nyears, proyears, nsim,
-                                      Biomass_P=StockPars[[p]]$Biomass_P,
-                                      VBiomass_P=VBF_P[,p,f,,,],
-                                      LastTAE=LastTAE[,p,f],
-                                      histTAE=histTAE[,p,f],
-                                      LastSpatial=LastSpatial[,p,f,],
-                                      LastAllocat=LastAllocat[,p,f],
-                                      LastTAC=LastCatch[,p,f],
-                                      TACused=TACused[,p,f],
-                                      maxF=maxF,
-                                      LR5_P=FleetPars[[p]][[f]]$LR5_P,
-                                      LFR_P=FleetPars[[p]][[f]]$LFR_P,
-                                      Rmaxlen_P=FleetPars[[p]][[f]]$Rmaxlen_P,
-                                      retL_P=FleetPars[[p]][[f]]$retL_P,
-                                      retA_P=FleetPars[[p]][[f]]$retA_P,
-                                      retA_P_real=FleetPars[[p]][[f]]$retA_P_real,
-                                      retA_P_real_2=FleetPars[[p]][[f]]$retA_P_real_2,
-                                      
-                                      L5_P=FleetPars[[p]][[f]]$L5_P,
-                                      LFS_P=FleetPars[[p]][[f]]$LFS_P,
-                                      Vmaxlen_P=FleetPars[[p]][[f]]$Vmaxlen_P,
-                                      SLarray_P=FleetPars[[p]][[f]]$SLarray_P,
-                                      V_P=FleetPars[[p]][[f]]$V_P,
-                                      V_P_real=FleetPars[[p]][[f]]$V_P_real,
-                                      V_P_real_2=FleetPars[[p]][[f]]$V_P_real_2,
-                                      Fdisc_P=StockPars[[p]]$Fdisc_P,
-                                      DR_P=FleetPars[[p]][[f]]$DR_P,
-                                      FM_P=FleetPars[[p]][[f]]$FM_P,
-                                      FM_Pret=FleetPars[[p]][[f]]$FM_Pret,
-                                      Z_P=FleetPars[[p]][[f]]$Z_P,
-                                      CB_P=FleetPars[[p]][[f]]$CB_P,
-                                      CB_Pret=FleetPars[[p]][[f]]$CB_Pret,
-                                      Effort_pot=Effort_pot[,p,f],
-                                      StockPars=StockPars_MPCalc[[p]],
-                                      FleetPars=FleetPars[[p]][[f]],
-                                      ImpPars=ImpPars[[p]][[f]], control=control)
-            # Zeros caused by SexPars
-            if(length(SexPars)>0) MPCalcs<-MPCalcsNAs(MPCalcs)
-
-            TACa[,p,f, mm, y] <- MPCalcs$TACrec # recommended TAC
-            LastSpatial[,p,f,] <- MPCalcs$Si
-            LastAllocat[,p,f] <- MPCalcs$Ai
-            LastTAE[,p,f] <- MPCalcs$TAE # adjustment to TAE
-            TAE_out[,p,f, mm, y] <- MPCalcs$TAE # TAE
-            LastCatch[,p,f] <- MPCalcs$TACrec
-
-            Effort[,p,f, mm, y] <- rep(MPCalcs$Effort,nsim)[1:nsim]
-            FleetPars[[p]][[f]]$CB_P <- MPCalcs$CB_P # removals
-            FleetPars[[p]][[f]]$CB_Pret <- MPCalcs$CB_Pret # retained catch
-            FleetPars[[p]][[f]]$FM_P <- MPCalcs$FM_P # fishing mortality
-            FM_P[,p,f,,,]<- MPCalcs$FM_P
-            FleetPars[[p]][[f]]$FM_Pret <- MPCalcs$FM_Pret # retained fishing mortality
-
-            FleetPars[[p]][[f]]$Z_P <- MPCalcs$Z_P # total mortality
-            FleetPars[[p]][[f]]$retA_P <- MPCalcs$retA_P # retained-at-age
-            FleetPars[[p]][[f]]$retA_P_real <- MPCalcs$retA_P_real 
-            FleetPars[[p]][[f]]$retA_P_real_2 <- MPCalcs$retA_P_real_2 
+            FleetPars[[p]][[f]]$Z_P <- MPCalcs_MF[[f]]$Z_P # total mortality
+            FleetPars[[p]][[f]]$retA_P <- MPCalcs_MF[[f]]$retA_P # retained-at-age
+            FleetPars[[p]][[f]]$retA_P_real <- MPCalcs_MF[[f]]$retA_P_real 
+            FleetPars[[p]][[f]]$retA_P_real_2 <- MPCalcs_MF[[f]]$retA_P_real_2
             
-            FleetPars[[p]][[f]]$retL_P <- MPCalcs$retL_P # retained-at-length
+            FleetPars[[p]][[f]]$retL_P <- MPCalcs_MF[[f]]$retL_P # retained-at-length
             
-            FleetPars[[p]][[f]]$V_P <- MPCalcs$V_P  # vulnerable-at-age
-            FleetPars[[p]][[f]]$V_P_real <- MPCalcs$V_P_real
-            FleetPars[[p]][[f]]$V_P_real_2 <- MPCalcs$V_P_real_2
+            FleetPars[[p]][[f]]$V_P <- MPCalcs_MF[[f]]$V_P  # vulnerable-at-age
+            FleetPars[[p]][[f]]$V_P_real <- MPCalcs_MF[[f]]$V_P_real
+            FleetPars[[p]][[f]]$V_P_real_2 <- MPCalcs_MF[[f]]$V_P_real_2
             
-            VF[,p,f,,]<- MPCalcs$V_P
-            FleetPars[[p]][[f]]$SLarray_P <- MPCalcs$SLarray_P # vulnerable-at-length
-            FMa[,p,f,mm,y] <- MPCalcs$Ftot # Total fishing mortality (by stock & fleet)
+            VF[,p,f,,]<- MPCalcs_MF[[f]]$V_P
+            FleetPars[[p]][[f]]$SLarray_P <- MPCalcs_MF[[f]]$SLarray_P # vulnerable-at-length
+            FMa[,p,f,mm,y] <- MPCalcs_MF[[f]]$Ftot # Total fishing mortality (by stock & fleet)
             
-            MPCalcs_list[[p]][[f]] <- MPCalcs
-            
+            #MPCalcs_list[[p]][[f]] <- MPCalcs
           } # end of fleets
+          
+          MPCalcs_list[[p]] <- MPCalcs_MF
         } # end of stocks
 
         # end of update year
       } else {
         # ---- Not an update year ----
         for(p in 1:np){
-          for(f in 1:nf){
-            NoMPRecs <- MPRecs_A[[p]][[f]]
-            NoMPRecs$Spatial <- NA
-
-            MPCalcs <- CalcMPDynamics(MPRecs=NoMPRecs, y,
-                                      nyears, proyears, nsim,
-                                      Biomass_P=StockPars[[p]]$Biomass_P,
-                                      VBiomass_P=VBF_P[,p,f,,,],
-                                      LastTAE=LastTAE[,p,f],
-                                      histTAE=histTAE[,p,f],
-                                      LastSpatial=LastSpatial[,p,f,],
-                                      LastAllocat=LastAllocat[,p,f],
-                                      LastTAC=LastCatch[,p,f],
-                                      TACused=TACused[,p,f],
-                                      maxF=maxF,
-                                      LR5_P=FleetPars[[p]][[f]]$LR5_P,
-                                      LFR_P=FleetPars[[p]][[f]]$LFR_P,
-                                      Rmaxlen_P=FleetPars[[p]][[f]]$Rmaxlen_P,
-                                      retL_P=FleetPars[[p]][[f]]$retL_P,
-                                      retA_P=FleetPars[[p]][[f]]$retA_P,
-                                      retA_P_real=FleetPars[[p]][[f]]$retA_P_real,
-                                      retA_P_real_2=FleetPars[[p]][[f]]$retA_P_real_2,
-                                      L5_P=FleetPars[[p]][[f]]$L5_P,
-                                      LFS_P=FleetPars[[p]][[f]]$LFS_P,
-                                      Vmaxlen_P=FleetPars[[p]][[f]]$Vmaxlen_P,
-                                      SLarray_P=FleetPars[[p]][[f]]$SLarray_P,
-                                      V_P=FleetPars[[p]][[f]]$V_P,
-                                      V_P_real=FleetPars[[p]][[f]]$V_P_real,
-                                      V_P_real_2=FleetPars[[p]][[f]]$V_P_real_2,
-                                      Fdisc_P=StockPars[[p]]$Fdisc_P,
-                                      DR_P=FleetPars[[p]][[f]]$DR_P,
-                                      FM_P=FleetPars[[p]][[f]]$FM_P,
-                                      FM_Pret=FleetPars[[p]][[f]]$FM_Pret,
-                                      Z_P=FleetPars[[p]][[f]]$Z_P,
-                                      CB_P=FleetPars[[p]][[f]]$CB_P,
-                                      CB_Pret=FleetPars[[p]][[f]]$CB_Pret,
-                                      Effort_pot=Effort_pot[,p,f],
-                                      StockPars=StockPars_MPCalc[[p]],
-                                      FleetPars=FleetPars[[p]][[f]],
-                                      ImpPars=ImpPars[[p]][[f]], control=control)
-
-            if(length(SexPars)>0)
-              MPCalcs <- MPCalcsNAs(MPCalcs) # Zeros caused by SexPars
-            TACa[,p,f, mm, y] <- TACused[,p,f] # recommended TAC
-
-            #TACa[,p,f, mm, y] <- MPCalcs$TACrec # recommended TAC
-            LastSpatial[,p,f,] <- MPCalcs$Si
-            LastAllocat[,p,f] <- MPCalcs$Ai
-
-            LastTAE[,p,f] <- MPCalcs$TAE
-            TAE_out[,p,f, mm, y] <- MPCalcs$TAE # recommended TAE
-            # LastEi[,p,f] <- MPCalcs$Ei # adjustment to effort
-            LastCatch[,p,f] <- MPCalcs$TACrec
-
-            Effort[,p,f, mm, y] <- rep(MPCalcs$Effort,nsim)[1:nsim]
-            FleetPars[[p]][[f]]$CB_P <- MPCalcs$CB_P # removals
-            FleetPars[[p]][[f]]$CB_Pret <- MPCalcs$CB_Pret # retained catch
-            FleetPars[[p]][[f]]$FM_P <- MPCalcs$FM_P # fishing mortality
-            FM_P[,p,f,,,]<- MPCalcs$FM_P
-            FleetPars[[p]][[f]]$FM_Pret <- MPCalcs$FM_Pret # retained fishing mortality
-            FMret_P[,p,f,,,]<- MPCalcs$FM_Pret
-            #FretA[,p,f,,]<- MPCalcs$FM_Pret
-            
-            FleetPars[[p]][[f]]$Z_P <- MPCalcs$Z_P # total mortality
-            FleetPars[[p]][[f]]$retA_P <- MPCalcs$retA_P # retained-at-age
-            FleetPars[[p]][[f]]$retA_P_real <- MPCalcs$retA_P_real 
-            FleetPars[[p]][[f]]$retA_P_real_2 <- MPCalcs$retA_P_real_2 
-            
-            FleetPars[[p]][[f]]$retL_P <- MPCalcs$retL_P # retained-at-length
-            
-            FleetPars[[p]][[f]]$V_P <- MPCalcs$V_P  # vulnerable-at-age
-            FleetPars[[p]][[f]]$V_P_real <- MPCalcs$V_P_real
-            FleetPars[[p]][[f]]$V_P_real_2 <- MPCalcs$V_P_real_2
+          NoMPRecs <- MPRecs_A[[p]]
+          for(f in 1:nf) NoMPRecs[[f]]$Spatial <- NA
           
-            FleetPars[[p]][[f]]$retL_P <- MPCalcs$retL_P # retained-at-length
-            VF[,p,f,,]<- MPCalcs$V_P
-            FleetPars[[p]][[f]]$SLarray_P <- MPCalcs$SLarray_P # vulnerable-at-length
+          MPCalcs_MF <- CalcMPDynamics_MF(
+            MPRecs_f = NoMPRecs, y,
+            nyears, proyears, nsim,
+            LastTAE = array(LastTAE[, p, ], c(nsim, nf)),
+            histTAE = array(histTAE[, p, ], c(nsim, nf)),
+            LastSpatial = array(LastSpatial[, p, , ], c(nareas, nf, nsim)),
+            LastAllocat = array(LastAllocat[, p, ], c(nsim, nf)),
+            LastTAC = array(LastCatch[, p, ], c(nsim, nf)),
+            TACused = array(TACused[, p, ], c(nsim, nf)),
+            maxF = maxF,
+            Effort_pot = array(Effort_pot[, p, ], c(nsim, nf)),
+            StockPars = StockPars_MPCalc[[p]],
+            FleetPars_f = FleetPars[[p]],
+            ImpPars_f = ImpPars[[p]],
+            control = control
+          )
+          
+          for (f in 1:nf) {
 
-            FMa[,p,f,mm,y] <- MPCalcs$Ftot # Total fishing mortality (by stock & fleet)
+            if(length(SexPars)>0) MPCalcs_MF[[f]] <- MPCalcsNAs(MPCalcs_MF[[f]]) # Zeros caused by SexPars
+            
+            TACa[,p,f, mm, y] <- TACused[,p,f] # recommended TAC
+            LastSpatial[,p,f,] <- MPCalcs_MF[[f]]$Si
+            LastAllocat[,p,f] <- MPCalcs_MF[[f]]$Ai
+            LastTAE[,p,f] <- MPCalcs_MF[[f]]$TAE # adjustment to TAE
+            TAE_out[,p,f, mm, y] <- MPCalcs_MF[[f]]$TAE # TAE
+            LastCatch[,p,f] <- MPCalcs_MF[[f]]$TACrec # TAC et by MP
+
+            Effort[,p,f, mm, y] <- rep(MPCalcs_MF[[f]]$Effort,nsim)[1:nsim]
+            FleetPars[[p]][[f]]$CB_P <- MPCalcs_MF[[f]]$CB_P # removals
+            FleetPars[[p]][[f]]$CB_Pret <- MPCalcs_MF[[f]]$CB_Pret # retained catch
+            
+            FleetPars[[p]][[f]]$FM_P <- MPCalcs_MF[[f]]$FM_P # fishing mortality
+            FM_P[,p,f,,,] <- MPCalcs_MF[[f]]$FM_P
+            FleetPars[[p]][[f]]$FM_Pret <- MPCalcs_MF[[f]]$FM_Pret # retained fishing mortality
+            FMret_P[,p,f,,,] <- MPCalcs_MF[[f]]$FM_Pret
+            #FretA[,p,f,,] <- MPCalcs_MF[[f]]$FM_Pret
+            
+            FleetPars[[p]][[f]]$Z_P <- MPCalcs_MF[[f]]$Z_P # total mortality
+            FleetPars[[p]][[f]]$retA_P <- MPCalcs_MF[[f]]$retA_P # retained-at-age
+            FleetPars[[p]][[f]]$retA_P_real <- MPCalcs_MF[[f]]$retA_P_real 
+            FleetPars[[p]][[f]]$retA_P_real_2 <- MPCalcs_MF[[f]]$retA_P_real_2
+            
+            FleetPars[[p]][[f]]$retL_P <- MPCalcs_MF[[f]]$retL_P # retained-at-length
+            
+            FleetPars[[p]][[f]]$V_P <- MPCalcs_MF[[f]]$V_P  # vulnerable-at-age
+            FleetPars[[p]][[f]]$V_P_real <- MPCalcs_MF[[f]]$V_P_real
+            FleetPars[[p]][[f]]$V_P_real_2 <- MPCalcs_MF[[f]]$V_P_real_2
+            
+            VF[,p,f,,]<- MPCalcs_MF[[f]]$V_P
+            FleetPars[[p]][[f]]$SLarray_P <- MPCalcs_MF[[f]]$SLarray_P # vulnerable-at-length
+            FMa[,p,f,mm,y] <- MPCalcs_MF[[f]]$Ftot # Total fishing mortality (by stock & fleet)
 
           } # end of fleets
         } # end of stocks
@@ -2803,7 +2758,6 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       
       
       # ---- Account for timing of spawning (if spawn_time_frac >0) ----
-      
       for (p in 1:np) {
         spawn_time_frac[,p,,] <-StockPars[[p]]$spawn_time_frac
         F_age <- array(0, dim=c(nsim, n_age, nareas))
@@ -2947,20 +2901,20 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
     N_P_mp[,,, mm,,] <- N_P
 
-    for(p in 1:np) for(f in 1:nf)
-      Ca[, p,f,mm, ] <- apply(FleetPars[[p]][[f]]$CB_P, c(1, 3),
-                              sum, na.rm=TRUE) # removed
-    for(p in 1:np) for(f in 1:nf)
-      CaRet[, p,f,mm, ] <- apply(FleetPars[[p]][[f]]$CB_Pret, c(1, 3),
-                                 sum, na.rm=TRUE) # retained catch
-    
-    #if (!silent) message("Calculating spawning potential ratio")
     for(p in 1:np) {
-      SPReqa[, p, mm, ] <- CalcSPReq(FM = sapply(FleetPars[[p]], getElement, "FM_P", simplify = "array") %>% apply(1:4, sum),
+      for(f in 1:nf) {
+        Ca[, p,f,mm, ] <- apply(FleetPars[[p]][[f]]$CB_P, c(1, 3), sum, na.rm=TRUE) # removed
+        CaRet[, p,f,mm, ] <- apply(FleetPars[[p]][[f]]$CB_Pret, c(1, 3), sum, na.rm=TRUE) # retained catch
+      }
+      
+      FMage_mp[, p, , mm, , ] <- FleetPars[[p]][[1]]$Z_P - replicate(nareas, StockPars_MPCalc[[p]]$M_ageArray[, , nyears + seq(1, proyears)])
+      
+      SPReqa[, p, mm, ] <- CalcSPReq(FM = FMage_mp[, p, , mm, , ],
                                      StockPars_MPCalc[[p]], n_age, nareas, nyears, proyears, nsim)
+      
       SPRdyna[, p, mm, ] <- local({
         FMh <- array(FM[, p, , , , ], c(nsim, nf, n_age, nyears, nareas)) %>% apply(c(1, 3:5), sum)
-        FMp <- sapply(FleetPars[[p]], getElement, "FM_P", simplify = "array") %>% apply(1:4, sum)
+        FMp <- FMage_mp[, p, , mm, , ]
         
         CalcSPRdyn(abind::abind(FMh, FMp, along = 3), 
                    StockPars_MPCalc[[p]], n_age, nareas, nyears, proyears, nsim)
@@ -3022,7 +2976,6 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   }
   Misc <- list()
   # Misc$Data <-MSElist
-  Misc[['MOM']]<-MOM
   
   if (length(Rel)) {
     if (!silent) message("Returning updated parameters from MICE relationship in 'Misc$MICE'")
@@ -3030,13 +2983,13 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   }
   
   if (extended) {
-    if (!silent) message("Returning complete abundance series in 'Misc$extended$N")
+    
+    if (!silent) message("Returning overall F in 'Misc$extended$FM'")
     Misc[["extended"]] <- list(
-      N = local({
-        histN <- replicate(nMP, StockPars[[1]]$N) %>% aperm(c(1,2,3,6,4,5)) # nsim x np x n_age x nyears x nareas x nMP
-        abind::abind(histN, N_P_mp, along=5) # nsim x np x n_age x nMP x proyears x nareas
-      })
+      FM = FMage_mp  # nsim x np x n_age x nMP x proyears x nareas
     )
+    
+    Misc[['MOM']] <- MOM
   }
 
   # need to reformat MMP and complex mode to work with MSEout slot
@@ -3153,8 +3106,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 #' The `multiHist` object can be (re-)created using `SimulateMOM` or kept in `MMSE@multiHist` if
 #' `dropHist=FALSE`
 #' @param extended Logical. Return extended projection results?
-#' if TRUE, `MMSE@Misc$extended` is a named list with extended data
-#' (including historical and projected abundance by area).
+#' if TRUE, `MMSE@Misc$extended` is a named list with extended data: FM for overall F across fleets `[nsim, nstock, n_age, nMP, proyears, nareas]`.
+#' `Misc` slot in `MMSE@PPD` will also contain StockPars, FleetPars, and ReferencePoints
 #' @describeIn multiMSE Run a multi-stock, multi-fleet MSE
 #' 
 #' @details 

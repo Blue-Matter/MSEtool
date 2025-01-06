@@ -410,6 +410,11 @@ hist2 <- function(x, col, axes=FALSE, main="", breaks=10,cex.main=1) {
   } else {
     col="dark grey"
     hist(x, border='white',xlab="",col=col,axes=axes,main=main,breaks=breaks, ylab="")
+    graphics::grid()
   }
 }
 
+
+#' @importFrom graphics plot grid matplot
+plot.default <- function(...) graphics::plot.default(..., panel.first = graphics::grid())
+matplot <- function(...) graphics::matplot(..., panel.first = graphics::grid())

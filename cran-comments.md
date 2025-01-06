@@ -1,17 +1,16 @@
 ## Note to CRAN Maintainers
 
-- Fixed problems shown on [MSEtool check results](https://cran.r-project.org/web/checks/check_results_MSEtool.html),
- specifically, the Rd \usage sections check NOTEs.
-- fixed invalid URL detected in CRAN automatic incoming checks
+Minor but important patch
+
 
 ## Test environments
-* local - Windows 4.2.3
+* local - Windows 4.4.1
 * Github actions - windows-latest (release)
 * Github actions - windows-latest (devel)
 * Github actions - macOS-latest (release)
-* Github actions - ubuntu-20.04 (release)
-* Github actions - ubuntu-20.04 (devel)
-
+* Github actions - ubuntu-latest (release)
+* Github actions - ubuntu-latest (devel)
+* Github actions - ubuntu-latest (oldrel-1)
 
 ## R CMD check results
 There were no ERRORs or WARNINGs. 

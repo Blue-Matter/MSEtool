@@ -743,8 +743,6 @@ XL2Data <- function(name, dec=c(".", ","), sheet=1, silent=FALSE) {
 #' @param silent Logical. Should messages by suppressed?
 #'
 #' @export
-#' @examples
-#' Data_TAc <- runMP(MSEtool::Cobia)
 #' @return invisibly returns the Data object
 #'
 runMP <- function(Data, MPs = NA, reps = 100, perc=0.5, chkMPs=FALSE, silent=FALSE) {

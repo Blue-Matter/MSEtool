@@ -5,10 +5,11 @@ using namespace Rcpp;
 //'
 //' @param logF log fishing mortality
 //' @param M_at_Age Vector of M-at-age
-//' @param Wt_at_Age Vector of weight-at-age
+//' @param Wt_at_Age Vector of stock weight-at-age
 //' @param Mat_at_Age Vector of maturity-at-age
 //' @param Fec_at_Age Vector of mature weight-at-age
 //' @param V_at_Age Vector of selectivity-at-age
+//' @param Wt_at_Age_C Vector of fishery weight-at-age
 //' @param maxage Maximum age
 //' @param relRfun Optional. A function used to calculate reference points if `SRrelc =3` 
 //' @param SRRpars Optional. A named list of arguments for `SRRfun`
@@ -27,6 +28,7 @@ NumericVector MSYCalcs(double logF,
                        NumericVector Mat_at_Age,
                        NumericVector Fec_at_Age,
                        NumericVector V_at_Age,
+                       NumericVector Wt_at_Age_C,
                        int maxage,
                        Function relRfun, 
                        List SRRpars,
@@ -118,7 +120,7 @@ NumericVector MSYCalcs(double logF,
   }
   if (RelRec<0) RelRec = 0;
   
-  double YPR =  sum(lx * Wt_at_Age * F_at_Age * (1 - exp(-Z_at_Age))/Z_at_Age);
+  double YPR =  sum(lx * Wt_at_Age_C * F_at_Age * (1 - exp(-Z_at_Age))/Z_at_Age);
   double Yield = YPR * RelRec;
   
   if (opt ==1) {
@@ -158,6 +160,7 @@ NumericMatrix Ref_int_cpp(NumericVector F_search,
                           NumericVector Mat_at_Age,
                           NumericVector Fec_at_Age,
                           NumericVector V_at_Age,
+                          NumericVector Wt_at_Age_C,
                           Function relRfun, 
                           List SRRpars,
                           int maxage,
@@ -170,7 +173,7 @@ NumericMatrix Ref_int_cpp(NumericVector F_search,
   for (int i=0; i<ncol; i++) {
     double logF = log(F_search[i]);
     NumericVector msys = MSYCalcs(logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age,
-                                  V_at_Age, maxage,
+                                  V_at_Age, Wt_at_Age_C, maxage,
                                   relRfun, SRRpars,
                                   1, 4, 1, 0, 2, plusgroup,
                                   spawn_time_frac);

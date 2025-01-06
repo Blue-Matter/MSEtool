@@ -24,8 +24,8 @@ Fit_Index <- function(ind_slot='Ind', indcv_slot="CV_Ind", Data_out,
                      'Not updating observation error.')
     return(list(Data_out=Data_out, ObsPars=ObsPars))
   } 
-  # calculate observation error 
-  fitbeta <- TRUE
+  # calculate observation error
+  fitbeta <- FALSE
   
   beta_var <- switch(ind_slot,
                      Ind = 'I_beta',
@@ -36,9 +36,11 @@ Fit_Index <- function(ind_slot='Ind', indcv_slot="CV_Ind", Data_out,
     if (msg) message(paste0(ind_type, ' beta found (cpars$', beta_var, ').'),
                      'Not updating observation beta parameter')
     ObsPars[[beta_var]] <- SampCpars[[beta_var]]
-    fitbeta <- FALSE
+    #fitbeta <- FALSE
   } else {
-    ObsPars[[beta_var]] <- rep(NA, nsim)
+    if (msg) message(paste0(ind_type, ' beta (cpars$', beta_var, ') not found. Will fix to 1.'),
+                     'Not updating observation beta parameter')
+    ObsPars[[beta_var]] <- rep(1, nsim)
   }
   
   biomass_var <- switch(ind_slot,
@@ -210,7 +212,7 @@ Fit_Index_MS <- function(ind_slot='Ind', indcv_slot="CV_Ind", Data_out,
     return(list(Data_out=Data_out, ObsPars=ObsPars))
   } 
   # calculate observation error 
-  fitbeta <- TRUE
+  fitbeta <- FALSE
   
   beta_var <- switch(ind_slot,
                      Ind = 'I_beta',
@@ -223,7 +225,9 @@ Fit_Index_MS <- function(ind_slot='Ind', indcv_slot="CV_Ind", Data_out,
     ObsPars[[p]][[f]][[beta_var]] <- SampCpars[[p]][[f]][[beta_var]]
     fitbeta <- FALSE
   } else {
-    ObsPars[[p]][[f]][[beta_var]] <- rep(NA, nsim)
+    if (msg) message(paste0(ind_type, ' beta (cpars$', beta_var, ') not found. Will fix to 1.'),
+                     'Not updating observation beta parameter')
+    ObsPars[[p]][[f]][[beta_var]] <- rep(1, nsim)
   }
   
   biomass_var <- switch(ind_slot,

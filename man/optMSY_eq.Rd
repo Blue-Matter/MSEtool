@@ -4,7 +4,7 @@
 \alias{optMSY_eq}
 \title{Internal wrapper function to calculate MSY reference points (now using MSYCalcs)}
 \usage{
-optMSY_eq(x, yr.ind = 1, StockPars, V)
+optMSY_eq(x, yr.ind = 1, StockPars, V, Wt_age_C)
 }
 \arguments{
 \item{x}{Simulation number}
@@ -14,6 +14,8 @@ optMSY_eq(x, yr.ind = 1, StockPars, V)
 \item{StockPars}{A list of stock parameters}
 
 \item{V}{Array of selectivity-at-age}
+
+\item{Wt_age_C}{Array of fishery weight at age. Optional. If missing, \code{StockPars$Wt_age} is used.}
 }
 \value{
 Results from \code{MSYCalcs}

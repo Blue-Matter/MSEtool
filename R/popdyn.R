@@ -138,11 +138,14 @@ split_along_dim <- function(a, n) {
 #' @param yr.ind Year index used in calculations
 #' @param StockPars A list of stock parameters
 #' @param V Array of selectivity-at-age
+#' @param Wt_age_C Array of fishery weight at age. Optional. If missing, `StockPars$Wt_age` is used.
 #' @return Results from `MSYCalcs`
 #' @export
 #'
 #' @keywords internal
-optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
+optMSY_eq <- function(x, yr.ind=1, StockPars, V, Wt_age_C) {
+  
+  if (missing(Wt_age_C)) Wt_age_C <- StockPars$Wt_age
                      
   maxage <- StockPars$maxage
   plusgroup <- StockPars$plusgroup
@@ -158,12 +161,14 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
     Fec_at_Age <- StockPars$Fec_Age[x,, yr.ind]
     Mat_at_Age <- StockPars$Mat_age[x,, yr.ind]
     V_at_Age <- V[x,, yr.ind]
+    Wt_at_Age_C <- Wt_age_C[x,, yr.ind]
   } else {
     M_at_Age <- apply(StockPars$M_ageArray[x,,yr.ind], 1, mean)
     Wt_at_Age <- apply(StockPars$Wt_age[x,, yr.ind], 1, mean)
     Fec_at_Age <- apply(StockPars$Fec_Age[x,, yr.ind], 1, mean)
     Mat_at_Age <- apply(StockPars$Mat_age[x,, yr.ind], 1, mean)
     V_at_Age <- apply(V[x,, yr.ind], 1, mean)
+    Wt_at_Age_C <- apply(Wt_age_C[x,, yr.ind], 1, mean)
   }
   
   # check for M = 0 in MOMs where maxage isn't the same for each stock
@@ -174,6 +179,7 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
     Mat_at_Age <- Mat_at_Age[ind]
     Fec_at_Age <- Fec_at_Age[ind]
     V_at_Age <- V_at_Age[ind]
+    Wt_at_Age_C <- Wt_at_Age_C[ind]
     
     maxage <- length(ind)-1
   }
@@ -199,6 +205,7 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
                       Mat_at_Age,
                       Fec_at_Age, 
                       V_at_Age, 
+                      Wt_at_Age_C,
                       maxage,
                       relRfun = StockPars$relRfun, 
                       SRRpars=StockPars$SRRpars[[x]],
@@ -212,6 +219,7 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
                      Mat_at_Age, 
                      Fec_at_Age,
                      V_at_Age, 
+                     Wt_at_Age_C,
                      maxage, 
                      relRfun = StockPars$relRfun, 
                      SRRpars=StockPars$SRRpars[[x]],
@@ -242,7 +250,7 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
     MatAge <- replicate(pyears,Mat_at_Age)
     WtAge <- replicate(pyears,Wt_at_Age)
     FecAge <- replicate(pyears,Fec_at_Age)
-    WtAgeC <- replicate(pyears,Wt_at_Age)
+    WtAgeC <- replicate(pyears,Wt_at_Age_C)
     Vuln <- replicate(pyears, V_at_Age)
     Retc <- array(1, dim=dim(Vuln))
     Perr_y <- rep(1, pyears+n_age)
@@ -331,8 +339,10 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, V) {
 #   out[c(1,4)]
 # }
 
-per_recruit_F_calc <- function(x, yr.ind=1, StockPars, V, 
+per_recruit_F_calc <- function(x, yr.ind=1, StockPars, V, Wt_age_C,
                                SPR_target = seq(0.2, 0.6, 0.05)) {
+  
+  if (missing(Wt_age_C)) Wt_age_C <- StockPars$Wt_age
   maxage <- StockPars$maxage
   plusgroup <- StockPars$plusgroup
   
@@ -342,12 +352,14 @@ per_recruit_F_calc <- function(x, yr.ind=1, StockPars, V,
     Mat_at_Age <- StockPars$Mat_age[x,, yr.ind]
     Fec_at_Age <- StockPars$Fec_Age[x,, yr.ind]
     V_at_Age <- V[x,, yr.ind]
+    Wt_at_Age_C <- Wt_age_C[x,, yr.ind]
   } else {
     M_at_Age <- apply(StockPars$M_ageArray[x,,yr.ind], 1, mean)
     Wt_at_Age <- apply(StockPars$Wt_age[x,, yr.ind], 1, mean)
     Mat_at_Age <- apply(StockPars$Mat_age[x,, yr.ind], 1, mean)
     Fec_at_Age <- apply(StockPars$Fec_Age[x,, yr.ind], 1, mean)
     V_at_Age <- apply(V[x,, yr.ind], 1, mean)
+    Wt_at_Age_C <- apply(Wt_age_C[x,, yr.ind], 1, mean)
   }
 
   # check for M = 0 in MOMs where maxage isn't the same for each stock
@@ -358,6 +370,7 @@ per_recruit_F_calc <- function(x, yr.ind=1, StockPars, V,
     Mat_at_Age <- Mat_at_Age[ind]
     Fec_at_Age <- Fec_at_Age[ind]
     V_at_Age <- V_at_Age[ind]
+    Wt_at_Age_C <- Wt_at_Age_C[ind]
     maxage <- length(ind)-1
   }
   
@@ -371,6 +384,7 @@ per_recruit_F_calc <- function(x, yr.ind=1, StockPars, V,
                             Mat_at_Age = Mat_at_Age,
                             Fec_at_Age=Fec_at_Age,
                             V_at_Age = V_at_Age,
+                            Wt_at_Age_C = Wt_at_Age_C,
                             StockPars$relRfun,
                             StockPars$SRRpars[[x]],
                             maxage = maxage,
@@ -590,7 +604,8 @@ calc_recs <- function(MPRecs, y, LastTAE, Effort_Imp_Error, nsim, histTAE, LastS
 #' Calculate population dynamics from MP recommendation
 #'
 #' An internal function to calculate the population dynamics for the next time
-#' step based on the recent MP recommendation
+#' step based on the recent MP recommendation. First uses `.CalcMPDynamics_SelRetDisc` to update selectivity, retention, and discarding parameters,
+#' then calculates F from effort or catch recommendations.
 #'
 #' @param MPRecs A named list of MP recommendations. The names are the same as `slotNames('Rec')`, except
 #' for `Misc`. Each element in the list is a matrix. With the exception of `Spatial`, all elements in list
@@ -639,6 +654,7 @@ calc_recs <- function(MPRecs, y, LastTAE, Effort_Imp_Error, nsim, histTAE, LastS
 #'
 #' @return A named list with updated population dynamics
 #' @author A. Hordyk
+#' @seealso [CalcMPDynamics_MF()]
 #'
 #' @keywords internal
 CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
@@ -655,7 +671,532 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
                            checks=FALSE, control=list()) {
 
   n_age <- StockPars$maxage + 1 # include age-0
+  
+  out <- .CalcMPDynamics_SelRetDisc(
+    MPRecs, y, nyears, proyears, nsim,
+    LastTAE, histTAE, LastSpatial, LastAllocat,
+    LR5_P, LFR_P, Rmaxlen_P,
+    retL_P, retA_P, retA_P_real, retA_P_real_2,
+    L5_P, LFS_P, Vmaxlen_P, SLarray_P,
+    V_P, V_P_real, V_P_real_2, Fdisc_P, DR_P,
+    StockPars, ImpPars, checks, control
+  )
+ 
+  # ---- over-write biomass - with fleet-specific weight-at-age
+  Biomass_P <- StockPars$N_P * replicate(StockPars$nareas, FleetPars$Wt_age_C[,,(nyears+1):((nyears)+proyears)])
+  
+  CurrentB <- Biomass_P[,,y,] # biomass at the beginning of year
+  CurrentVB <- array(NA, dim=dim(CurrentB))
+  Catch_tot <- Catch_retain <- array(NA, dim=dim(CurrentB)) # catch this year arrays
+  FMc <- Zc <- array(NA, dim=dim(CurrentB)) # fishing and total mortality this year
 
+  # indices
+  SAYRL <- as.matrix(expand.grid(1:nsim, 1:n_age, nyears, 1:StockPars$nareas))  # Final historical year
+  SAYRt <- as.matrix(expand.grid(1:nsim, 1:n_age, y + nyears, 1:StockPars$nareas))  # Trajectory year
+  SAYR <- as.matrix(expand.grid(1:nsim, 1:n_age, y, 1:StockPars$nareas))
+  SAR <- SAYR[, c(1,2,4)]
+  SAY <- SAYR[,c(1:3)]
+
+  SYt <- SAYRt[, c(1, 3)]
+  SAYt <- SAYRt[, 1:3]
+  SR <- SAYR[, c(1, 4)]
+  SA1 <- SAYR[, 1:2]
+  S1 <- SAYR[, 1]
+  SY1 <- SAYR[, c(1, 3)]
+  SAY1 <- SAYR[, 1:3]
+  SYA <- as.matrix(expand.grid(1:nsim, 1, 1:n_age))  # Projection year
+  SY <- SYA[, 1:2]
+  SA <- SYA[, c(1, 3)]
+  S <- SYA[, 1]
+
+  CurrentVB[SAR] <- CurrentB[SAR] * V_P_real[SAYt] # update available biomass if selectivity has changed
+
+  # Calculate fishing distribution if all areas were open
+  newVB <- apply(CurrentVB, c(1,3), sum) # calculate total vuln biomass by area
+  fishdist <- (newVB^FleetPars$Spat_targ)/apply(newVB^FleetPars$Spat_targ, 1, sum)  # spatial preference according to spatial vulnerable biomass
+
+  d1 <- t(out$Si) * fishdist  # distribution of fishing effort
+  fracE <- apply(d1, 1, sum) # fraction of current effort in open areas
+  fracE2 <- d1 * (fracE + (1-fracE) * out$Ai)/fracE # re-distribution of fishing effort accounting for re-allocation of effort
+  fishdist <- fracE2 # fishing effort by area
+  
+  out$FM_P <- FM_P
+  out$FM_Pret <- FM_Pret
+
+  # ---- no TAC - calculate F with bio-economic effort ----
+  if (all(is.na(TACused))) {
+    if (all(is.na(Effort_pot)) & all(is.na(out$TAE_err))) Effort_pot <- rep(1, nsim) # historical effort
+    if (all(is.na(Effort_pot))) Effort_pot <- out$TAE_err[1,]
+    # fishing mortality with bio-economic effort
+    out$FM_P[SAYR] <- (FleetPars$FinF[S1] * Effort_pot[S1] * out$V_P_real[SAYt] * t(out$Si)[SR] * fishdist[SR] *
+                         FleetPars$qvar[SY1] * (FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y))/StockPars$Asize[SR]
+    
+    # retained fishing mortality with bio-economic effort
+    out$FM_Pret[SAYR] <- (FleetPars$FinF[S1] * Effort_pot[S1] * out$retA_P_real[SAYt] * t(out$Si)[SR] * fishdist[SR] *
+                            FleetPars$qvar[SY1] * FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y)/StockPars$Asize[SR]
+    
+    Effort_req <- Effort_pot
+  }
+  
+  # ---- calculate required F and effort for TAC recommendation ----
+  if (!all(is.na(TACused))) { # a TAC has been set
+    # if MP returns NA - TAC is set to TAC from last year
+    TACused[is.na(TACused)] <- LastTAC[is.na(TACused)]
+    TACusedE <- out$TAC_Imp_Error[,y]*TACused   # TAC taken after implementation error
+
+    # Calculate total biomass available accounting for any changes in selectivity &/or spatial closures
+    # Note vulnerable biomass is not used. With Baranov equation, catch can exceed VB with high F
+    Atemp <- apply(CurrentB, c(1,3), sum, na.rm=TRUE)
+    availB <- apply(Atemp * t(out$Si), 1, sum) # adjust for spatial closures
+
+    # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
+    expC <- TACusedE
+    expC[TACusedE> availB] <- availB[TACusedE> availB] * 0.999
+
+    Ftot <- sapply(1:nsim, calcF, expC, out$V_P_real_2, out$retA_P_real, Biomass_P, fishdist,
+                   StockPars$Asize,
+                   StockPars$maxage,
+                   StockPars$nareas,
+                   StockPars$M_ageArray,nyears, y,
+                   control)
+    
+    # apply max F constraint
+    Ftot[Ftot<0] <- maxF
+    Ftot[!is.finite(Ftot)] <- maxF
+    Ftot[Ftot>maxF] <- maxF
+
+    # Calculate F & Z by age class
+    out$FM_P[SAYR] <- Ftot[S] * out$V_P_real_2[SAYt] * fishdist[SR]/StockPars$Asize[SR]
+    out$FM_Pret[SAYR] <- Ftot[S] * out$retA_P_real[SAYt] * fishdist[SR]/StockPars$Asize[SR]
+    #out$Z_P[SAYR] <- FM_P[SAYR] + StockPars$M_ageArray[SAYt] # calculate total mortality
+    
+    # Calculate total and retained catch
+    #CB_P[SAYR] <- FM_P[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR] # removals
+    #CB_Pret[SAYR] <- FM_Pret[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR] # retained
+
+    # for debugging info:
+    # actualremovals <- apply(CB_P[,,y,], 1, sum)
+    # retained <- apply(CB_Pret[,,y,], 1, sum)
+    # ratio <- actualremovals/retained # ratio of actual removals to retained catch
+    # 
+    # Effort relative to last historical with this catch
+    Effort_req <- Ftot/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]*
+                          (1 + FleetPars$qinc/100)^y) * apply(fracE2, 1, sum) # effort required
+    Effort_req[Ftot<=tiny] <- tiny
+    
+  }
+
+  # Effort_req - effort required to catch TAC
+  # Effort_pot - potential effort this year (active fishers) from bio-economic model
+  # Effort_act - actual effort this year
+  # TAE_err - maximum actual effort limit - with imp error
+  # Effort_act < Effort_pot if Effort_req < Effort_pot
+
+  # Limit effort to potential effort from bio-economic model
+  Effort_act <- Effort_req
+  if (!all(is.na(Effort_pot))) {
+    excessEff <- Effort_req>Effort_pot # simulations where required effort > potential effort
+    Effort_act[excessEff] <- Effort_pot[excessEff] # actual effort can't be more than bio-economic effort
+  }
+
+  # Limit actual effort <= TAE
+  if (!all(is.na(out$TAE_err))) { # a TAE exists
+    Effort_act[Effort_act > out$TAE_err] <- out$TAE_err[Effort_act > out$TAE_err]
+  }
+  Effort_act[Effort_act <= 0] <- tiny
+
+  # --- Re-calculate catch given actual effort ----
+  # TODO should really only do this for the sims where Effort_act is different than Effort_req
+  # fishing mortality with actual effort
+  
+  # bio-economic model currently not working
+  
+  # FM_P[SAYR] <- (FleetPars$FinF[S1] * Effort_act[S1] * V_P_real_2[SAYt] * t(Si)[SR] * fishdist[SR] *
+  #                FleetPars$qvar[SY1] * (FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y))/StockPars$Asize[SR]
+  # 
+  # # retained fishing mortality with actual effort
+  # FM_Pret[SAYR] <- (FleetPars$FinF[S1] * Effort_act[S1] * retA_P_real[SAYt] * t(Si)[SR] * fishdist[SR] *
+  #                   FleetPars$qvar[SY1] * FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y)/StockPars$Asize[SR]
+
+  # Apply maxF constraint
+  out$FM_P[SAYR][out$FM_P[SAYR] > maxF] <- maxF
+  out$FM_Pret[SAYR][out$FM_Pret[SAYR] > maxF] <- maxF
+  
+  out$Z_P <- Z_P
+  out$Z_P[SAYR] <- out$FM_P[SAYR] + StockPars$M_ageArray[SAYt] # calculate total mortality
+
+  # Update catches after maxF constraint
+  out$CB_P <- CB_P
+  out$CB_Pret <- CB_Pret
+  out$CB_P[SAYR] <- out$FM_P[SAYR]/out$Z_P[SAYR] * (1-exp(-out$Z_P[SAYR])) * Biomass_P[SAYR]
+  out$CB_Pret[SAYR] <- out$FM_Pret[SAYR]/out$Z_P[SAYR] * (1-exp(-out$Z_P[SAYR])) * Biomass_P[SAYR]
+  out$CB_P[!is.finite(out$CB_P)] <- 0 
+  out$CB_Pret[!is.finite(out$CB_Pret)] <- 0 
+
+  # plot(FleetPars[[p]][[f]]$retA_P_real_2[1,,nyears+y])
+  # lines(FleetPars[[p]][[f]]$retA_P_real[1,,nyears+y])
+  # 
+  # actualremovals <- apply(CB_P[,,y,], 1, sum)
+  # retained <- apply(CB_Pret[,,y,], 1, sum)
+  
+  
+  # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
+  retainedCatch <- apply(out$CB_Pret[,,y,], 1, sum)
+  removedCatch <- apply(out$CB_P[,,y,], 1, sum)
+
+  # Ftot <- sapply(1:nsim, calcF, retainedCatch, V_P, retA_P, Biomass_P, fishdist,
+  #                Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
+  #                M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed 
+
+  control$TAC <- 'removals'
+  
+  # total fishing mortality for realized selectivity curve
+  Ftot <- sapply(1:nsim, calcF, removedCatch, out$V_P_real_2, out$retA_P_real_2, Biomass_P, fishdist,
+                 Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
+                 M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed
+
+  # total fishing mortality (proxy for effort) for realized selectivity curve that doesn't asymptote at 1
+  Ftot2 <- sapply(1:nsim, calcF, removedCatch, out$V_P_real, out$retA_P_real, Biomass_P, fishdist,
+                 Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
+                 M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed 
+  
+  # Effort relative to last historical with this catch
+  Effort_act <- Ftot2/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]*
+                        (1 + FleetPars$qinc/100)^y)  # effort required - already accounts for effort-by-area
+
+  Effort_act[Ftot2<=1E-3] <- tiny
+
+  # Returns
+  #TAE <- MPRecs$Effort
+  #if (length(TAE)==0) TAE <- rep(NA, nsim)
+  #out <- list()
+  out$TACrec <- TACused
+  #out$V_P <- V_P
+  #out$V_P_real <- V_P_real
+  #out$V_P_real_2 <- V_P_real_2
+  #out$SLarray_P <- SLarray_P
+  #out$retA_P <- retA_P
+  #out$retA_P_real <- retA_P_real
+  #out$retA_P_real_2 <- retA_P_real_2
+  #out$retL_P <- retL_P
+  #out$Fdisc_P <- Fdisc_P
+  #out$VBiomass_ <- VBiomass_P
+  #out$Z_P <- Z_P
+  #out$FM_P <- FM_P
+  #out$FM_Pret <- FM_Pret
+  #out$CB_P <- CB_P
+  #out$CB_Pret <- CB_Pret
+  #out$Si <- Si
+  #out$Ai <- Ai
+  #out$TAE <- TAE
+  out$Effort <- Effort_act # actual effort this year
+  out$Ftot <- Ftot 
+
+  #out$LR5_P <- LR5_P
+  #out$LFR_P <- LFR_P
+  #out$Rmaxlen_P <- Rmaxlen_P
+  #out$L5_P <- L5_P
+  #out$LFS_P <- LFS_P
+  #out$Vmaxlen_P <- Vmaxlen_P
+  #out$Fdisc_P <- Fdisc_P
+  #out$DR_P <- DR_P
+
+  out
+}
+
+#' Calculate population dynamics from MP recommendation for multi-fleet operating models
+#'
+#' An internal function to calculate the population dynamics for the next time
+#' step based on the recent MP recommendation. First uses `.CalcMPDynamics_SelRetDisc` to update selectivity, retention, and discarding parameters for
+#' individual fleets, then calculates F from effort or catch recommendations simultaneously across all fleets.
+#' 
+#' @param MPRecs_f A nested list first by fleet (length `nf`), then the various MP recommendations (`MPRecs`, see [CalcMPDynamics()]).
+#' @param y The projection year
+#' @param nyears The number of historical years
+#' @param proyears The number of projection years
+#' @param nsim The number of simulations
+#' @param LastTAE A matrix `[nsim, nf]` with the most recent TAE
+#' @param LastSpatial An array `[nareas, nsim, nf]` with the most recent spatial management arrangements
+#' @param LastAllocat A matrix `[nsim, nf]` with the most recent allocation
+#' @param LastTAC A matrix `[nsim, nf]` with the most recent TAC
+#' @param TACused A matrix `[nsim, nf]` with the most recent TAC
+#' @param maxF A numeric value with maximum allowed F. From `OM@maxF`
+#' @param Effort_pot A matrix `[nsim, nf]` of potential effort
+#' @param StockPars A list of stock parameters
+#' @param FleetPars_f A nested list first by fleet, then each containing the respective fleet parameters
+#' @param ImpPars_f A nested list first by fleet, then each containing the respective implementation error parameters
+#' @param checks Logical. Run internal checks? Currently not used.
+#' @param control List of control parameters used internally.
+#'
+#' @return A nested list by fleet with updated population dynamics
+#' @author Q. Huynh
+#' @seealso [CalcMPDynamics()]
+#'
+#' @keywords internal
+CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
+                              LastTAE, histTAE, LastSpatial, LastAllocat, LastTAC,
+                              TACused, maxF, Effort_pot,
+                              StockPars, FleetPars_f, ImpPars_f, checks = FALSE, control = list()) {
+  
+  nf <- length(MPRecs_f)
+  n_age <- StockPars$maxage + 1 # include age-0
+  
+  out <- vector("list", length = nf)
+  for (f in 1:nf) {
+    out[[f]] <- .CalcMPDynamics_SelRetDisc(
+      MPRecs_f[[f]], y, nyears, proyears, nsim,
+      LastTAE[, f], histTAE[, f], LastSpatial[, f, ], LastAllocat[, f],
+      FleetPars_f[[f]]$LR5_P, FleetPars_f[[f]]$LFR_P, FleetPars_f[[f]]$Rmaxlen_P,
+      FleetPars_f[[f]]$retL_P, FleetPars_f[[f]]$retA_P, FleetPars_f[[f]]$retA_P_real, FleetPars_f[[f]]$retA_P_real_2,
+      FleetPars_f[[f]]$L5_P, FleetPars_f[[f]]$LFS_P, FleetPars_f[[f]]$Vmaxlen_P, FleetPars_f[[f]]$SLarray_P,
+      FleetPars_f[[f]]$V_P, FleetPars_f[[f]]$V_P_real, FleetPars_f[[f]]$V_P_real_2, StockPars$Fdisc_P, FleetPars_f[[f]]$DR_P,
+      StockPars, ImpPars_f[[f]], checks, control
+    )
+  }
+  
+  # ---- over-write biomass - with fleet-specific weight-at-age
+  Biomass_P <- lapply(1:nf, function(f) {
+    StockPars$N_P * replicate(StockPars$nareas, FleetPars_f[[f]]$Wt_age_C[,,(nyears+1):((nyears)+proyears)])
+  })
+  
+  CurrentB <- sapply(1:nf, function(f) Biomass_P[[f]][,,y,], simplify = "array") # biomass at the beginning of year
+  CurrentVB <- array(NA, dim = dim(CurrentB))
+  Catch_tot <- Catch_retain <- array(NA, dim = dim(CurrentVB)) # catch this year arrays
+  FMc <- Zc <- array(NA, dim = dim(CurrentVB)) # fishing and total mortality this year
+  
+  V_P_real <- sapply(1:nf, function(f) out[[f]]$V_P_real, simplify = "array")
+  
+  # indices
+  SAYRL <- as.matrix(expand.grid(1:nsim, 1:n_age, nyears, 1:StockPars$nareas))  # Final historical year
+  SAYRt <- as.matrix(expand.grid(1:nsim, 1:n_age, y + nyears, 1:StockPars$nareas))  # Trajectory year
+  SAYR <- as.matrix(expand.grid(1:nsim, 1:n_age, y, 1:StockPars$nareas))
+  SAR <- SAYR[, c(1,2,4)]
+  SAY <- SAYR[,c(1:3)]
+  
+  SYt <- SAYRt[, c(1, 3)]
+  SAYt <- SAYRt[, 1:3]
+  SR <- SAYR[, c(1, 4)]
+  SA1 <- SAYR[, 1:2]
+  S1 <- SAYR[, 1]
+  SY1 <- SAYR[, c(1, 3)]
+  SAY1 <- SAYR[, 1:3]
+  SYA <- as.matrix(expand.grid(1:nsim, 1, 1:n_age))  # Projection year
+  SY <- SYA[, 1:2]
+  SA <- SYA[, c(1, 3)]
+  S <- SYA[, 1]
+  
+  SAYRF <- as.matrix(expand.grid(1:nsim, 1:n_age, y, 1:StockPars$nareas, 1:nf))
+  SARF <- SAYRF[, c(1,2,4,5)]
+  
+  SAYRtF <- as.matrix(expand.grid(1:nsim, 1:n_age, y + nyears, 1:StockPars$nareas, 1:nf))
+  SAYtF <- SAYRtF[, c(1:3, 5)]
+  
+  CurrentVB[SARF] <- CurrentB[SARF] * V_P_real[SAYtF] # update available biomass if selectivity has changed
+  
+  # Calculate fishing distribution if all areas were open
+  newVB <- apply(CurrentVB, c(1,3,4), sum) # calculate total vuln biomass by sim, area and fleet
+  
+  # spatial preference according to spatial vulnerable biomass
+  fishdist <- d1 <- fracE2 <- array(NA, c(nsim, StockPars$nareas, nf))
+  for (f in 1:nf) {
+    fishdist[, , f] <- newVB[, , f]^FleetPars_f[[f]]$Spat_targ/apply(newVB[, , f]^FleetPars_f[[f]]$Spat_targ, 1, sum)
+    d1[, , f] <- t(out[[f]]$Si) * fishdist[, , f] # distribution of fishing effort
+    fracE2[, , f] <- local({
+      fracE <- apply(d1[, , f], 1, sum)  # fraction of current effort in open areas (sim x fleet)
+      d1[, , f] * (fracE + (1 - fracE) * out[[f]]$Ai)/fracE # re-distribution of fishing effort accounting for re-allocation of effort
+    })
+  }
+  fishdist <- fracE2 # fishing effort by area
+  
+  TACused_NA <- logical(nf)
+  TACusedE <- TACused
+  Effort_req <- matrix(NA, nsim, nf)
+  for (f in 1:nf) {
+    out[[f]]$FM_P <- FleetPars_f[[f]]$FM_P
+    out[[f]]$FM_Pret <- FleetPars_f[[f]]$FM_Pret
+    
+    TACused_NA[f] <- all(is.na(TACused[, f]))
+    
+    # ---- no TAC - calculate F with bio-economic effort ----
+    if (TACused_NA[f]) {
+      
+      if (all(is.na(Effort_pot[, f])) && all(is.na(out[[f]]$TAE_err))) Effort_pot[, f] <- rep(1, nsim) # historical effort
+      if (all(is.na(Effort_pot[, f]))) Effort_pot[, f] <- out[[f]]$TAE_err[1, ]
+      
+      S1f <- cbind(S1, f = f)
+      SRf <- cbind(SR, f = f)
+      
+      # fishing mortality with bio-economic effort
+      out[[f]]$FM_P[SAYR] <- (FleetPars_f[[f]]$FinF[S1] * Effort_pot[S1f] * out[[f]]$V_P_real[SAYt] * t(out[[f]]$Si)[SR] * fishdist[SRf] *
+                                FleetPars_f[[f]]$qvar[SY1] * (FleetPars_f[[f]]$qs[S1]*(1 + FleetPars_f[[f]]$qinc[S1]/100)^y))/StockPars$Asize[SR]
+      
+      # retained fishing mortality with bio-economic effort
+      out[[f]]$FM_Pret[SAYR] <- (FleetPars_f[[f]]$FinF[S1] * Effort_pot[S1f] * out[[f]]$retA_P_real[SAYt] * t(out[[f]]$Si)[SR] * fishdist[SRf] *
+                                   FleetPars_f[[f]]$qvar[SY1] * FleetPars_f[[f]]$qs[S1]*(1 + FleetPars_f[[f]]$qinc[S1]/100)^y)/StockPars$Asize[SR]
+      
+      Effort_req[, f] <- Effort_pot[, f]
+    }
+    
+    # a TAC has been set
+    if (!TACused_NA[f]) {
+      # if MP returns NA - TAC is set to TAC from last year
+      TACused[is.na(TACused[, f]), f] <- LastTAC[is.na(TACused[, f]), f]
+      TACusedE[, f] <- out[[f]]$TAC_Imp_Error[, y] * TACused[, f]   # TAC taken after implementation error
+    }
+  }
+  
+  # ---- calculate required F and effort for TAC recommendation --
+  if (any(!TACused_NA)) {
+    # Calculate total biomass available accounting for any changes in selectivity &/or spatial closures
+    # Note vulnerable biomass is not used. With Baranov equation, catch can exceed VB with high F
+    Atemp <- apply(CurrentB, c(1,3,4), sum, na.rm=TRUE)
+    Si <- sapply(1:nf, function(f) t(out[[f]]$Si), simplify = "array")
+    availB <- apply(Atemp * Si, c(1, 3), sum) # adjust for spatial closures, sim x fleet
+    
+    # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
+    expC <- TACusedE
+    expC[TACusedE > availB] <- availB[TACusedE > availB] * 0.999
+    
+    Ftot <- sapply(1:nsim, calcF_MF, expC, 
+                   V_P = lapply(out, getElement, "V_P_real_2"), 
+                   retA_P = lapply(out, getElement, "retA_P_real"), 
+                   Biomass_P = Biomass_P, 
+                   fishdist,
+                   FM_P = lapply(out, getElement, "FM_P"),
+                   FM_Pret = lapply(out, getElement, "FM_Pret"),
+                   StockPars$Asize,
+                   StockPars$maxage,
+                   StockPars$nareas,
+                   StockPars$M_ageArray, nyears, y,
+                   control)
+    
+    Ftot <- matrix(Ftot, nsim, nf, byrow = TRUE)
+    
+    # apply max F constraint
+    Ftot[Ftot<0] <- maxF
+    Ftot[!is.finite(Ftot)] <- maxF
+    Ftot[Ftot>maxF] <- maxF
+    
+    for (f in 1:nf) {
+      # Calculate F if TAC is set
+      if (!TACused_NA[f]) {
+        
+        Sf <- cbind(S, f = f)
+        SRf <- cbind(SR, f = f)
+        
+        # Calculate F by age class (catch and Z later on)
+        out[[f]]$FM_P[SAYR] <- Ftot[Sf] * out[[f]]$V_P_real_2[SAYt] * fishdist[SRf]/StockPars$Asize[SR]
+        out[[f]]$FM_Pret[SAYR] <- Ftot[Sf] * out[[f]]$retA_P_real[SAYt] * fishdist[SRf]/StockPars$Asize[SR]
+        
+        # Effort relative to last historical with this catch
+        Effort_req[, f] <- Ftot[, f]/(FleetPars_f[[f]]$FinF * FleetPars_f[[f]]$qs*FleetPars_f[[f]]$qvar[,y]*
+                                        (1 + FleetPars_f[[f]]$qinc/100)^y) * apply(fracE2[, , f], 1, sum) # effort required
+        Effort_req[Ftot[, f] <= tiny, f] <- tiny
+      }
+    }
+  }
+  
+  # Effort_req - effort required to catch TAC
+  # Effort_pot - potential effort this year (active fishers) from bio-economic model
+  # Effort_act - actual effort this year
+  # TAE_err - maximum actual effort limit - with imp error
+  # Effort_act < Effort_pot if Effort_req < Effort_pot
+  Effort_act <- Effort_req
+  for (f in 1:nf) {
+    # Limit effort to potential effort from bio-economic model
+    if (!all(is.na(Effort_pot[, f]))) {
+      excessEff <- Effort_req[, f] > Effort_pot[, f] # simulations where required effort > potential effort
+      Effort_act[excessEff, f] <- Effort_pot[excessEff, f] # actual effort can't be more than bio-economic effort
+    }
+    
+    # Limit actual effort <= TAE
+    if (!all(is.na(out[[f]]$TAE_err))) { # a TAE exists
+      excessEff <- Effort_act[, f] > out[[f]]$TAE_err
+      Effort_act[excessEff, f] <- out[[f]]$TAE_err[excessEff]
+    }
+    
+    # --- Re-calculate catch given actual effort ----
+    # TODO should really only do this for the sims where Effort_act is different than Effort_req
+    # fishing mortality with actual effort
+    
+    # bio-economic model currently not working
+    
+    # FM_P[SAYR] <- (FleetPars$FinF[S1] * Effort_act[S1] * V_P_real_2[SAYt] * t(Si)[SR] * fishdist[SR] *
+    #                FleetPars$qvar[SY1] * (FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y))/StockPars$Asize[SR]
+    # 
+    # # retained fishing mortality with actual effort
+    # FM_Pret[SAYR] <- (FleetPars$FinF[S1] * Effort_act[S1] * retA_P_real[SAYt] * t(Si)[SR] * fishdist[SR] *
+    #                   FleetPars$qvar[SY1] * FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y)/StockPars$Asize[SR]
+    
+    # Apply maxF constraint
+    out[[f]]$FM_P[SAYR][out[[f]]$FM_P[SAYR] > maxF] <- maxF
+    out[[f]]$FM_Pret[SAYR][out[[f]]$FM_Pret[SAYR] > maxF] <- maxF
+  }
+  Effort_act[Effort_act <= 0] <- tiny
+  
+  # Calculate total mortality
+  Z_P <- FleetPars_f[[1]]$Z_P
+  Z_P[SAYR] <- StockPars$M_ageArray[SAYt]
+  for (f in 1:nf) Z_P[SAYR] <- Z_P[SAYR] + out[[f]]$FM_P[SAYR]
+  
+  # Update catches after maxF constraint
+  retainedCatch <- removedCatch <- matrix(NA, nsim, nf)
+  for (f in 1:nf) {
+    out[[f]]$Z_P <- Z_P
+    out[[f]]$CB_P <- FleetPars_f[[f]]$CB_P
+    out[[f]]$CB_Pret <- FleetPars_f[[f]]$CB_Pret
+    
+    out[[f]]$CB_P[SAYR] <- out[[f]]$FM_P[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[[f]][SAYR]
+    out[[f]]$CB_Pret[SAYR] <- out[[f]]$FM_Pret[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[[f]][SAYR]
+    out[[f]]$CB_P[!is.finite(out[[f]]$CB_P)] <- 0 
+    out[[f]]$CB_Pret[!is.finite(out[[f]]$CB_Pret)] <- 0 
+    
+    # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
+    retainedCatch[, f] <- apply(out[[f]]$CB_Pret[,,y,], 1, sum)
+    removedCatch[, f] <- apply(out[[f]]$CB_P[,,y,], 1, sum)
+  }
+  
+  control$TAC <- 'removals'
+  
+  # total fishing mortality for realized selectivity curve
+  Ftot <- sapply(1:nsim, calcF_MF, removedCatch, V_P = lapply(out, getElement, "V_P_real_2"), 
+                 retA_P = lapply(out, getElement, "retA_P_real_2"), Biomass_P, fishdist, FM_P = NULL, FM_Pret = NULL,
+                 Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
+                 M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed
+  
+  # total fishing mortality (proxy for effort) for realized selectivity curve that doesn't asymptote at 1
+  Ftot2 <- sapply(1:nsim, calcF_MF, removedCatch, V_P = lapply(out, getElement, "V_P_real"), 
+                  retA_P = lapply(out, getElement, "retA_P_real"), Biomass_P, fishdist, FM_P = NULL, FM_Pret = NULL,
+                  Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
+                  M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed 
+  
+  # Effort relative to last historical with this catch
+  for (f in 1:nf) {
+    Effort_act[, f] <- Ftot2[f, ]/(FleetPars_f[[f]]$FinF * FleetPars_f[[f]]$qs*FleetPars_f[[f]]$qvar[,y]*
+                                     (1 + FleetPars_f[[f]]$qinc/100)^y)  # effort required - already accounts for effort-by-area
+    
+    Effort_act[Ftot2[f, ] <= 1E-3, f] <- tiny
+    out[[f]]$Ftot <- Ftot[f, ]
+    
+    out[[f]]$TACrec <- TACused[, f]
+    out[[f]]$Effort <- Effort_act[, f]
+  }
+  
+  # Returns
+  return(out)
+}
+
+
+.CalcMPDynamics_SelRetDisc <- function(MPRecs, y, nyears, proyears, nsim,
+                                       LastTAE, histTAE, LastSpatial, LastAllocat,
+                                       LR5_P, LFR_P, Rmaxlen_P, retL_P, retA_P,
+                                       retA_P_real, retA_P_real_2, L5_P, LFS_P, 
+                                       Vmaxlen_P, SLarray_P, V_P, V_P_real, V_P_real_2,
+                                       Fdisc_P, DR_P,
+                                       StockPars, ImpPars, checks = FALSE, control = list()) {
+  
+  n_age <- StockPars$maxage + 1 # include age-0
+  
   # Implementation Error
   Effort_Imp_Error <- ImpPars$E_y
   SL_Imp_Error <- ImpPars$SizeLim_y
@@ -667,13 +1208,12 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   }
   
   # Calculate MP recs with Imp Error 
-  MPRecs_Imp <- calc_recs(MPRecs, y, LastTAE, Effort_Imp_Error, nsim, histTAE, LastSpatial, StockPars, LastAllocat)
+  MPRecs_Imp <- MSEtool:::calc_recs(MPRecs, y, LastTAE, Effort_Imp_Error, nsim, histTAE, LastSpatial, StockPars, LastAllocat)
   TAE_err <- MPRecs_Imp$TAE_err # Total allowable effort recommendation
   Si <- MPRecs_Imp$Si # spatial 
   Ai <- MPRecs_Imp$Ai # allocation
-
-
-  if (!is.null(MPRecs$Misc[[1]]$V_age) | !is.null(MPRecs$Misc[[1]]$R_age)) {
+  
+  if (!is.null(MPRecs$Misc[[1]]$V_age) || !is.null(MPRecs$Misc[[1]]$R_age)) {
     yr <- y+nyears
     allyrs <- (y+nyears):(nyears+proyears)  # update vulnerability for all future years
     
@@ -937,190 +1477,11 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     }
     
   }
- 
-  # ---- over-write biomass - with fleet-specific weight-at-age
-  Biomass_P <- StockPars$N_P * replicate(StockPars$nareas, FleetPars$Wt_age_C[,,(nyears+1):((nyears)+proyears)])
   
-  CurrentB <- Biomass_P[,,y,] # biomass at the beginning of year
-  CurrentVB <- array(NA, dim=dim(CurrentB))
-  Catch_tot <- Catch_retain <- array(NA, dim=dim(CurrentB)) # catch this year arrays
-  FMc <- Zc <- array(NA, dim=dim(CurrentB)) # fishing and total mortality this year
-
-  # indices
-  SAYRL <- as.matrix(expand.grid(1:nsim, 1:n_age, nyears, 1:StockPars$nareas))  # Final historical year
-  SAYRt <- as.matrix(expand.grid(1:nsim, 1:n_age, y + nyears, 1:StockPars$nareas))  # Trajectory year
-  SAYR <- as.matrix(expand.grid(1:nsim, 1:n_age, y, 1:StockPars$nareas))
-  SAR <- SAYR[, c(1,2,4)]
-  SAY <- SAYR[,c(1:3)]
-
-  SYt <- SAYRt[, c(1, 3)]
-  SAYt <- SAYRt[, 1:3]
-  SR <- SAYR[, c(1, 4)]
-  SA1 <- SAYR[, 1:2]
-  S1 <- SAYR[, 1]
-  SY1 <- SAYR[, c(1, 3)]
-  SAY1 <- SAYR[, 1:3]
-  SYA <- as.matrix(expand.grid(1:nsim, 1, 1:n_age))  # Projection year
-  SY <- SYA[, 1:2]
-  SA <- SYA[, c(1, 3)]
-  S <- SYA[, 1]
-
-  CurrentVB[SAR] <- CurrentB[SAR] * V_P_real[SAYt] # update available biomass if selectivity has changed
-
-  # Calculate fishing distribution if all areas were open
-  newVB <- apply(CurrentVB, c(1,3), sum) # calculate total vuln biomass by area
-  fishdist <- (newVB^FleetPars$Spat_targ)/apply(newVB^FleetPars$Spat_targ, 1, sum)  # spatial preference according to spatial vulnerable biomass
-
-  d1 <- t(Si) * fishdist  # distribution of fishing effort
-  fracE <- apply(d1, 1, sum) # fraction of current effort in open areas
-  fracE2 <- d1 * (fracE + (1-fracE) * Ai)/fracE # re-distribution of fishing effort accounting for re-allocation of effort
-  fishdist <- fracE2 # fishing effort by area
-
-  # ---- no TAC - calculate F with bio-economic effort ----
-  if (all(is.na(TACused))) {
-    if (all(is.na(Effort_pot)) & all(is.na(TAE_err))) Effort_pot <- rep(1, nsim) # historical effort
-    if (all(is.na(Effort_pot))) Effort_pot <- TAE_err[1,]
-    # fishing mortality with bio-economic effort
-    FM_P[SAYR] <- (FleetPars$FinF[S1] * Effort_pot[S1] * V_P_real[SAYt] * t(Si)[SR] * fishdist[SR] *
-                     FleetPars$qvar[SY1] * (FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y))/StockPars$Asize[SR]
-
-    # retained fishing mortality with bio-economic effort
-    FM_Pret[SAYR] <- (FleetPars$FinF[S1] * Effort_pot[S1] * retA_P_real[SAYt] * t(Si)[SR] * fishdist[SR] *
-                        FleetPars$qvar[SY1] * FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y)/StockPars$Asize[SR]
-
-    Effort_req <- Effort_pot
-  }
-  
-  # ---- calculate required F and effort for TAC recommendation ----
-  if (!all(is.na(TACused))) { # a TAC has been set
-    # if MP returns NA - TAC is set to TAC from last year
-    TACused[is.na(TACused)] <- LastTAC[is.na(TACused)]
-    TACusedE <-  TAC_Imp_Error[,y]*TACused   # TAC taken after implementation error
-
-    # Calculate total biomass available accounting for any changes in selectivity &/or spatial closures
-    # Note vulnerable biomass is not used. With Baranov equation, catch can exceed VB with high F
-    Atemp <- apply(CurrentB, c(1,3), sum, na.rm=TRUE)
-    availB <- apply(Atemp * t(Si), 1, sum) # adjust for spatial closures
-
-    # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
-    expC <- TACusedE
-    expC[TACusedE> availB] <- availB[TACusedE> availB] * 0.999
-
-    Ftot <- sapply(1:nsim, calcF, expC, V_P_real_2, retA_P_real, Biomass_P, fishdist,
-                   StockPars$Asize,
-                   StockPars$maxage,
-                   StockPars$nareas,
-                   StockPars$M_ageArray,nyears, y,
-                   control)
-    
-    # apply max F constraint
-    Ftot[Ftot<0] <- maxF
-    Ftot[!is.finite(Ftot)] <- maxF
-    Ftot[Ftot>maxF] <- maxF
-
-    # Calculate F & Z by age class
-    FM_P[SAYR] <- Ftot[S] * V_P_real_2[SAYt] * fishdist[SR]/StockPars$Asize[SR]
-    FM_Pret[SAYR] <- Ftot[S] * retA_P_real[SAYt] * fishdist[SR]/StockPars$Asize[SR]
-    Z_P[SAYR] <- FM_P[SAYR] + StockPars$M_ageArray[SAYt] # calculate total mortality
-
-    
-    # Calculate total and retained catch
-    CB_P[SAYR] <- FM_P[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR] # removals
-    CB_Pret[SAYR] <- FM_Pret[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR] # retained
-
-    # for debugging info:
-    # actualremovals <- apply(CB_P[,,y,], 1, sum)
-    # retained <- apply(CB_Pret[,,y,], 1, sum)
-    # ratio <- actualremovals/retained # ratio of actual removals to retained catch
-    # 
-    # Effort relative to last historical with this catch
-    Effort_req <- Ftot/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]*
-                          (1 + FleetPars$qinc/100)^y) * apply(fracE2, 1, sum) # effort required
-    Effort_req[Ftot<=tiny] <- tiny
-    
-  }
-
-  # Effort_req - effort required to catch TAC
-  # Effort_pot - potential effort this year (active fishers) from bio-economic model
-  # Effort_act - actual effort this year
-  # TAE_err - maximum actual effort limit - with imp error
-  # Effort_act < Effort_pot if Effort_req < Effort_pot
-
-  # Limit effort to potential effort from bio-economic model
-  Effort_act <- Effort_req
-  if (!all(is.na(Effort_pot))) {
-    excessEff <- Effort_req>Effort_pot # simulations where required effort > potential effort
-    Effort_act[excessEff] <- Effort_pot[excessEff] # actual effort can't be more than bio-economic effort
-  }
-
-  # Limit actual effort <= TAE
-  if (!all(is.na(TAE_err))) { # a TAE exists
-    Effort_act[Effort_act>TAE_err] <- TAE_err[Effort_act>TAE_err]
-  }
-  Effort_act[Effort_act<=0] <- tiny
-
-  # --- Re-calculate catch given actual effort ----
-  # TODO should really only do this for the sims where Effort_act is different than Effort_req
-  # fishing mortality with actual effort
-  
-  # bio-economic model currently not working
-  
-  # FM_P[SAYR] <- (FleetPars$FinF[S1] * Effort_act[S1] * V_P_real_2[SAYt] * t(Si)[SR] * fishdist[SR] *
-  #                FleetPars$qvar[SY1] * (FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y))/StockPars$Asize[SR]
-  # 
-  # # retained fishing mortality with actual effort
-  # FM_Pret[SAYR] <- (FleetPars$FinF[S1] * Effort_act[S1] * retA_P_real[SAYt] * t(Si)[SR] * fishdist[SR] *
-  #                   FleetPars$qvar[SY1] * FleetPars$qs[S1]*(1 + FleetPars$qinc[S1]/100)^y)/StockPars$Asize[SR]
-
-  # Apply maxF constraint
-  FM_P[SAYR][FM_P[SAYR] > maxF] <- maxF
-  FM_Pret[SAYR][FM_Pret[SAYR] > maxF] <- maxF
-  Z_P[SAYR] <- FM_P[SAYR] + StockPars$M_ageArray[SAYt] # calculate total mortality
-
-  # Update catches after maxF constraint
-  CB_P[SAYR] <- FM_P[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR]
-  CB_Pret[SAYR] <- FM_Pret[SAYR]/Z_P[SAYR] * (1-exp(-Z_P[SAYR])) * Biomass_P[SAYR]
-  CB_P[!is.finite(CB_P)] <- 0 
-  CB_Pret[!is.finite(CB_Pret)] <- 0 
-
-  # plot(FleetPars[[p]][[f]]$retA_P_real_2[1,,nyears+y])
-  # lines(FleetPars[[p]][[f]]$retA_P_real[1,,nyears+y])
-  # 
-  # actualremovals <- apply(CB_P[,,y,], 1, sum)
-  # retained <- apply(CB_Pret[,,y,], 1, sum)
-  
-  
-  # Calculate total F (using Steve Martell's approach http://api.admb-project.org/baranov_8cpp_source.html)
-  retainedCatch <- apply(CB_Pret[,,y,], 1, sum)
-  removedCatch <- apply(CB_P[,,y,], 1, sum)
-
-  # Ftot <- sapply(1:nsim, calcF, retainedCatch, V_P, retA_P, Biomass_P, fishdist,
-  #                Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
-  #                M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed 
-
-  control$TAC <- 'removals'
-  
-  # total fishing mortality for realized selectivity curve
-  Ftot <- sapply(1:nsim, calcF, removedCatch, V_P_real_2, retA_P_real_2, Biomass_P, fishdist,
-                 Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
-                 M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed
-
-  # total fishing mortality (proxy for effort) for realized selectivity curve that doesn't asymptote at 1
-  Ftot2 <- sapply(1:nsim, calcF, removedCatch, V_P_real, retA_P_real, Biomass_P, fishdist,
-                 Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
-                 M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed 
-  
-  # Effort relative to last historical with this catch
-  Effort_act <- Ftot2/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]*
-                        (1 + FleetPars$qinc/100)^y)  # effort required - already accounts for effort-by-area
-
-  Effort_act[Ftot2<=1E-3] <- tiny
-
-  # Returns
   TAE <- MPRecs$Effort
   if (length(TAE)==0) TAE <- rep(NA, nsim)
   out <- list()
-  out$TACrec <- TACused
+  #out$TACrec <- TACused
   out$V_P <- V_P
   out$V_P_real <- V_P_real
   out$V_P_real_2 <- V_P_real_2
@@ -1130,18 +1491,18 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   out$retA_P_real_2 <- retA_P_real_2
   out$retL_P <- retL_P
   out$Fdisc_P <- Fdisc_P
-  out$VBiomass_ <- VBiomass_P
-  out$Z_P <- Z_P
-  out$FM_P <- FM_P
-  out$FM_Pret <- FM_Pret
-  out$CB_P <- CB_P
-  out$CB_Pret <- CB_Pret
+  #out$VBiomass_ <- VBiomass_P
+  #out$Z_P <- Z_P
+  #out$FM_P <- FM_P
+  #out$FM_Pret <- FM_Pret
+  #out$CB_P <- CB_P
+  #out$CB_Pret <- CB_Pret
   out$Si <- Si
   out$Ai <- Ai
   out$TAE <- TAE
-  out$Effort <- Effort_act # actual effort this year
-  out$Ftot <- Ftot 
-
+  #out$Effort <- Effort_act # actual effort this year
+  #out$Ftot <- Ftot 
+  
   out$LR5_P <- LR5_P
   out$LFR_P <- LFR_P
   out$Rmaxlen_P <- Rmaxlen_P
@@ -1150,8 +1511,12 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   out$Vmaxlen_P <- Vmaxlen_P
   out$Fdisc_P <- Fdisc_P
   out$DR_P <- DR_P
-
+  out$TAE_err <- TAE_err
+  
+  out$TAC_Imp_Error <- TAC_Imp_Error  
+  
   out
+  
 }
 
 
@@ -1204,6 +1569,82 @@ calcF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, Asize, maxage, 
   }
   ft
 }
+
+# Multifleet version of calcF
+# For fleets managed by effort, i.e., TACusedE[f] = NA, this function will set F from FM_P
+calcF_MF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, FM_P, FM_Pret, Asize, maxage, nareas,
+                     M_ageArray, nyears, y, control) {
+  
+  maxiterF <- 300
+  if(!is.null(control$maxiterF) && is.numeric(control$maxiterF)) maxiterF <- as.integer(control$maxiterF)
+  
+  tolF <- 1e-4
+  if(!is.null(control$tolF) && is.numeric(control$tolF)) tolF <- control$tolF
+  
+  ct <- TACusedE[x, ]
+  nf <- length(ct)
+  
+  ft <- sapply(1:nf, function(f) ct[f]/sum(Biomass_P[[f]][x,,y,] * V_P[[f]][x,,y+nyears])) # initial guess
+  
+  fishdist_prop <- matrix(fishdist[x, , ], nareas, nf)
+  fishdist_prop <- apply(fishdist_prop, 2, function(i) i/sum(i)) # Ensure proportions sum to 1 across areas
+  
+  if (all(ct <= 1E-9) || all(ft <= 1E-9)) return(rep(tiny, nf))
+  Fmat <- Fmat_ret <- predC <- array(NA, c(maxage+1, nareas, nf))
+  dct <- pct <- numeric(nf)
+  for (i in 1:maxiterF) {
+    
+    # distribute F over age, areas, fleet
+    for (f in 1:nf) {
+      if (is.na(ct[f])) {
+        Fmat[, , f] <- FM_P[[f]][x,,y,]
+        Fmat_ret[, , f] <- FM_Pret[[f]][x,,y,]
+      } else {
+        Fmat[, , f] <- ft[f] * V_P[[f]][x, , y + nyears] * matrix(fishdist_prop[, f], maxage+1, nareas, byrow = TRUE)/
+          matrix(Asize[x, ], maxage+1, nareas, byrow = TRUE)
+        Fmat_ret[, , f] <- ft[f] * retA_P[[f]][x, , y + nyears] * matrix(fishdist_prop[, f], maxage+1, nareas, byrow = TRUE)/
+          matrix(Asize[x, ], maxage+1, nareas, byrow = TRUE)
+      }
+    }
+    
+    # total mortality over age, areas
+    Zmat <- apply(Fmat, 1:2, sum) + M_ageArray[x,,y+nyears]
+    Zmat[Zmat==0] <- tiny
+    
+    if (is.null(control$TAC)) {
+      # predicted retained catch
+      Fsolve <- Fmat_ret
+    } else {
+      if (control$TAC == 'removals') {
+        # TAC applied to predicted removals
+        Fsolve <- Fmat
+      }
+      else {
+        stop('invalid entry for `OM@cpars$control$TAC`. Must be `OM@cpars$control$TAC="removals"`')
+      }
+    }
+    
+    for (f in 1:nf) predC[, , f] <- Fsolve[, , f]/Zmat * (1-exp(-Zmat)) * Biomass_P[[f]][x,,y,]
+    predC[is.infinite(predC)] <- 0
+    
+    # derivative of catch wrt ft
+    for (f in 1:nf) {
+      pct[f] <- sum(predC[, , f], na.rm = TRUE)
+      
+      Omat <- (1 - exp(-Zmat)) * Biomass_P[[f]][x,,y,]
+      dct[f] <- sum(Omat/Zmat - ((Fsolve[, , f] * Omat)/Zmat^2) + Fsolve[, , f]/Zmat * exp(-Zmat) * Biomass_P[[f]][x,,y,])
+    }
+    
+    if (all(dct[!is.na(ct)] < 1E-15)) break
+    
+    ft <- ft - (pct - ct)/(0.8*dct)
+    obj <- abs(pct - ct)/ct
+    if (all(obj[!is.na(ct)] < tolF)) break
+  }
+  
+  return(ft)
+}
+
 
 
 

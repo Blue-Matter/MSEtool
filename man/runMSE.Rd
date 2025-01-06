@@ -56,8 +56,8 @@ class 'Hist' containing all historical data}
 
 \item{extended}{Logical. Return extended projection results?
 if TRUE, \code{MSE@Misc$extended} is a named list with extended data
-(including historical and projection by area), and extended version of \code{MSE@Hist}
-is returned.}
+(including historical and projection by area), extended version of \code{MSE@Hist}
+is returned, and returns \code{MSE@PPD} with StockPars, FleetPars, and ReferencePoints in \code{MSE@PPD}}
 
 \item{checkMPs}{Logical. Check if the specified MPs exist and can be run on \code{SimulatedData}?}
 }

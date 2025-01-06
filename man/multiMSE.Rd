@@ -47,8 +47,8 @@ The \code{multiHist} object can be (re-)created using \code{SimulateMOM} or kept
 \code{dropHist=FALSE}}
 
 \item{extended}{Logical. Return extended projection results?
-if TRUE, \code{MMSE@Misc$extended} is a named list with extended data
-(including historical and projected abundance by area).}
+if TRUE, \code{MMSE@Misc$extended} is a named list with extended data: FM for overall F across fleets \verb{[nsim, nstock, n_age, nMP, proyears, nareas]}.
+\code{Misc} slot in \code{MMSE@PPD} will also contain StockPars, FleetPars, and ReferencePoints}
 
 \item{Hist}{Should model stop after historical simulations? Returns a list
 containing all historical data}

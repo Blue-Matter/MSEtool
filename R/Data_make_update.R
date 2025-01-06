@@ -233,8 +233,7 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
 
 updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret,
                        N_P, SSB, SSB_P, VBiomass, VBiomass_P, RefPoints,
-                       retA_P,
-                       retL_P, StockPars, FleetPars, ObsPars, ImpPars,
+                       retA_P, retL_P, FM_Pret, Z_P, StockPars, FleetPars, ObsPars, ImpPars,
                        V_P,
                        upyrs, interval, y=2,
                        mm=1, Misc, RealData, Sample_Area) {
@@ -506,13 +505,11 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   Data@CAA[, 1:(nyears + y - interval[mm] - 1), ] <- oldCAA[, 1:(nyears + y - interval[mm] - 1), ]
 
   # update CAA
-  CNtemp <- retA_P[,,yind+nyears, drop=FALSE] *
-    apply(N_P[,,yind,, drop=FALSE]*Sample_Area$CAA[,,nyears+yind,, drop=FALSE], 1:3, sum)
+  CNtemp <- apply(FM_Pret/Z_P * (1 - exp(-Z_P)) * N_P * Sample_Area$CAA[, , nyears + 1:proyears, ], 1:3, sum)
   CNtemp[is.na(CNtemp)] <- tiny
   CNtemp[!is.finite(CNtemp)] <- tiny
 
-  CAA <- simCAA(nsim, yrs=length(yind), StockPars$maxage+1, Cret=CNtemp, ObsPars$CAA_ESS, ObsPars$CAA_nsamp)
-
+  CAA <- simCAA(nsim, yr = length(yind), StockPars$maxage+1, Cret = CNtemp[, , yind, drop = FALSE], ObsPars$CAA_ESS, ObsPars$CAA_nsamp)
   Data@CAA[, nyears + yind, ] <- CAA
 
   # --- Catch-at-length ----
@@ -1069,16 +1066,17 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
     n.ind <- dim(RealData@AddInd)[2]
     Data_out@AddInd <- Data_out@CV_AddInd <- array(NA, dim=c(nsim, n.ind, nyears))
 
-    fitbeta <- fitIerr <- TRUE
+    fitbeta <- FALSE
+    fitIerr <- TRUE
     if (!is.null(SampCpars$AddIbeta)) {
       if (any(dim(SampCpars$AddIbeta) != c(nsim, n.ind)))
         stop("cpars$AddIbeta must be dimensions c(nsim, n.ind)")
       if (msg) message_info('cpars$AddIbeta detected. Not updating beta for additional indices')
       ObsPars$AddIbeta <- SampCpars$AddIbeta
-      fitbeta <- FALSE
+      #fitbeta <- FALSE
     } else {
-      if (msg) message_info('Updating beta for additional indices from real data')
-      ObsPars$AddIbeta <- matrix(NA, nsim, n.ind)
+      if (msg) message_info('cpars$AddIbeta not detected. Will fix to 1 for all additional indices')
+      ObsPars$AddIbeta <- matrix(1, nsim, n.ind)
     }
 
     if (!is.null(SampCpars$AddIerr)) {
@@ -1157,16 +1155,10 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
         SimIndex <- apply(SimIndex*Ind_V, c(1,3), sum) 
         
         # Fit to observed index and generate residuals for projections
-        if (fitbeta) {
-          beta <- rep(NA, nsim)
-        } else {
-          beta <-  ObsPars$AddIbeta[,i]
-        }
-        
         # Calculate residuals (with or without estimated beta)
         Res_List <- lapply(1:nsim, function(x) Calc_Residuals(sim.index=SimIndex[x,], 
                                                               obs.ind=ind,
-                                                              beta=beta[x]))
+                                                              beta = ObsPars$AddIbeta[x, i]))
 
         lResids_Hist <- do.call('rbind', lapply(Res_List, '[[', 1))
         if (fitbeta)
@@ -1577,16 +1569,17 @@ AddRealData_MS <- function(SimData,
     n.ind <- dim(RealData@AddInd)[2]
     Data_out@AddInd <- Data_out@CV_AddInd <- array(NA, dim=c(nsim, n.ind, nyears))
     
-    fitbeta <- fitIerr <- TRUE
+    fitbeta <- FALSE
+    fitIerr <- TRUE
     if (!is.null(SampCpars[[p]][[f]]$AddIbeta)) {
       if (any(dim(SampCpars[[p]][[f]]$AddIbeta) != c(nsim, n.ind)))
         stop("cpars$AddIbeta must be dimensions c(nsim, n.ind)")
       if (msg) message_info('cpars$AddIbeta detected. Not updating beta for additional indices')
       ObsPars[[p]][[f]]$AddIbeta <- SampCpars[[p]][[f]]$AddIbeta
-      fitbeta <- FALSE
+      #fitbeta <- FALSE
     } else {
-      if (msg) message_info('Updating beta for additional indices from real data')
-      ObsPars[[p]][[f]]$AddIbeta <- matrix(NA, nsim, n.ind)
+      if (msg) message_info('cpars$AddIbeta not detected. Will fix to 1 for all additional indices')
+      ObsPars[[p]][[f]]$AddIbeta <- matrix(1, nsim, n.ind)
     }
     
     if (!is.null(SampCpars[[p]][[f]]$AddIerr)) {
@@ -1677,16 +1670,10 @@ AddRealData_MS <- function(SimData,
         SimIndex <- apply(SimIndex, c(1,4), sum)
         
         # Fit to observed index and generate residuals for projections
-        if (fitbeta) {
-          beta <- rep(NA, nsim)
-        } else {
-          beta <-  ObsPars[[p]][[f]]$AddIbeta[,i]
-        }
-        
         # Calculate residuals (with or without estimated beta)
         Res_List <- lapply(1:nsim, function(x) Calc_Residuals(sim.index=SimIndex[x,], 
                                                               obs.ind=ind,
-                                                              beta=beta[x]))
+                                                              beta = ObsPars[[p]][[f]]$AddIbeta[x, i]))
         
         lResids_Hist <- do.call('rbind', lapply(Res_List, '[[', 1))
         if (fitbeta)
@@ -2165,13 +2152,14 @@ updateData_MS <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_P
   Data@CAA[, 1:(nyears + y - interval[mm] - 1), ] <- oldCAA[, 1:(nyears + y - interval[mm] - 1), ]
   
   # update CAA
-  CNtemp <- FleetPars[[p]][[f]]$retA_P[,,yind+nyears, drop=FALSE] *
-    apply(N_P[,p,,yind,, drop=FALSE], c(1,3,4), sum)
+  FM_Pret <- FleetPars[[p]][[f]]$FM_Pret
+  Z_P <- FleetPars[[p]][[f]]$Z_P
+  CNtemp <- apply(FM_Pret/Z_P * (1 - exp(-Z_P)) * N_P[, p, , , ], 1:3, sum)
   CNtemp[is.na(CNtemp)] <- tiny
   CNtemp[!is.finite(CNtemp)] <- tiny
   
-  CAA <- simCAA(nsim, yrs=length(yind), StockPars[[p]]$maxage+1, Cret=CNtemp, ObsPars[[p]][[f]]$CAA_ESS, ObsPars[[p]][[f]]$CAA_nsamp)
-  
+  CAA <- simCAA(nsim, yrs = length(yind), StockPars[[p]]$maxage+1, Cret = CNtemp[, , yind, drop = FALSE], 
+                ObsPars[[p]][[f]]$CAA_ESS, ObsPars[[p]][[f]]$CAA_nsamp)
   Data@CAA[, nyears + yind, ] <- CAA
   
   # --- Catch-at-length ----
