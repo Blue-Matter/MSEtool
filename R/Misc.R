@@ -491,7 +491,7 @@ MultiplyArrays <- function(array1, array2, structure=FALSE,
   if (structure) {
     array1  <- Structure(array1) |> AddDimNames(name=names)
   }
-  
+
   d1 <- dim(array1)
   d2 <- dim(array2)
   if (length(d1)!=length(d2))
@@ -535,6 +535,7 @@ MultiplyArrays <- function(array1, array2, structure=FALSE,
     }
   }
   AddDimNames(out, nm1)
+
 }
 
 GetLengthClass <- function(object, RefValue=0.5) {
