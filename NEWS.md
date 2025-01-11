@@ -6,6 +6,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 - `updateData` and `updateData_MS` use the Baranov catch equation to simulate `Data@CAA` in the projection. Previously, the catch at age was simulated with only the retention curve.
 - `multiMSE` solves for F from multi-fleet TAC simultaneously with function `CalcMPDynamics_MF`
 - fix check for simulated `Data@VInd` in `multiMSE`
+- turn off check for valid `Data@AddInd` statistics (AC, SD) when `cpars$AddIerr` is provided
 
 ## Updates
 - When indices are provided to the operating model, the default value of beta = 1 (hyperstability parameter) if not specified in `cpars`.

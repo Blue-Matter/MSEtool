@@ -1172,18 +1172,20 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
         # Calculate statistics
         Stats_List <- lapply(1:nsim, function(x) Calc_Stats(lResids_Hist[x,]))
         Stats <- do.call('rbind', Stats_List)
-        check_Index <- check_Index_Fit(Stats, i)
-        if (check_Index) {
-          # Generate residuals for projections
-          Resid_Hist <- exp(lResids_Hist) # historical residuals in normal space
-          Resid_Proj <- Gen_Residuals(Stats, nsim, proyears)
-          
-          if (fitIerr) ObsPars$AddIerr[,i, ] <- cbind(Resid_Hist, Resid_Proj)
-          ObsPars$AddInd_Stat[[i]] <- Stats[,1:2] # index fit statistics
-        } else {
-          ObsPars$AddIerr[,i, ] <-  ObsPars$Ierr_y
-          ObsPars$AddInd_Stat[[i]] <- Stats[,1:2] # index fit statistics
+        
+        if (fitIerr) {
+          check_Index <- check_Index_Fit(Stats, i)
+          if (check_Index) {
+            # Generate residuals for projections
+            Resid_Hist <- exp(lResids_Hist) # historical residuals in normal space
+            Resid_Proj <- Gen_Residuals(Stats, nsim, proyears)
+            
+            ObsPars$AddIerr[,i, ] <- cbind(Resid_Hist, Resid_Proj)
+          } else {
+            ObsPars$AddIerr[,i, ] <-  ObsPars$Ierr_y
+          }
         }
+        ObsPars$AddInd_Stat[[i]] <- Stats[,1:2] # index fit statistics
       }
     }
   }
@@ -1687,18 +1689,20 @@ AddRealData_MS <- function(SimData,
         # Calculate statistics
         Stats_List <- lapply(1:nsim, function(x) Calc_Stats(lResids_Hist[x,]))
         Stats <- do.call('rbind', Stats_List)
-        check_Index <- check_Index_Fit(Stats, i)
-        if (check_Index) {
-          # Generate residuals for projections
-          Resid_Hist <- exp(lResids_Hist) # historical residuals in normal space
-          Resid_Proj <- Gen_Residuals(Stats, nsim, proyears)
-          
-          if (fitIerr) ObsPars[[p]][[f]]$AddIerr[,i, ] <- cbind(Resid_Hist, Resid_Proj)
-          ObsPars[[p]][[f]]$AddInd_Stat[[i]] <- Stats[,1:2] # index fit statistics
-        } else {
-          ObsPars[[p]][[f]]$AddIerr[,i, ] <-  ObsPars[[p]][[f]]$Ierr_y
-          ObsPars[[p]][[f]]$AddInd_Stat[[i]] <- Stats[,1:2] # index fit statistics
+        
+        if (fitIerr) {
+          check_Index <- check_Index_Fit(Stats, i)
+          if (check_Index) {
+            # Generate residuals for projections
+            Resid_Hist <- exp(lResids_Hist) # historical residuals in normal space
+            Resid_Proj <- Gen_Residuals(Stats, nsim, proyears)
+            
+            ObsPars[[p]][[f]]$AddIerr[,i, ] <- cbind(Resid_Hist, Resid_Proj)
+          } else {
+            ObsPars[[p]][[f]]$AddIerr[,i, ] <-  ObsPars[[p]][[f]]$Ierr_y
+          }
         }
+        ObsPars[[p]][[f]]$AddInd_Stat[[i]] <- Stats[,1:2] # index fit statistics
       }
     }
   }
