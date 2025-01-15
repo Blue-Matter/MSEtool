@@ -367,6 +367,7 @@ StructureCV <- function(CVatAge, nsim) {
   Structure(CVatAge)
 } 
 
+
 ShareParameters <- function(OM) {
   
   if (length(OM@SexPars@Herm)) {
@@ -384,45 +385,44 @@ ShareParameters <- function(OM) {
     paste(OM@SexPars@SPFrom[x, ], collapse = "_"))
   
   parcopy <- match(sexmatches, sexmatches)
+
+ 
+  # if (!silent)  {
+ 
+  cli::cli_alert_info("You have specified sex-specific dynamics, these parameters will be mirrored across sex types according to `SPFrom(OM)`:")
+  cli::cli_ul()
+  cli::cli_li(OM@SexPars@Misc$Stock)
+  cli::cli_li(OM@SexPars@Misc$Fleet)
+  cli::cli_li('Obs: All parameters')
+  cli::cli_li('Imp: All parameters')
+  cli::cli_end()
+    # }
   
-  # TODO - these can be added to SexPars object so they can be controlled by user
-  OM@SexPars@Misc$Stock <- c('Depletion',
-                             'SRR')
-  
-  OM@SexPars@Misc$Fleet <- c('Effort',
-                             'Distribution')
-  
-  OM@SexPars@Misc$Obs <- TRUE
-  OM@SexPars@Misc$Imp <- TRUE
-  
-  # TODO - Update message
-  if (!silent)  message_info("NEED TO UPDATE! You have specified sex-specific dynamics,",
-                             "these parameters will be mirrored across sex types according to SexPars$SSBfrom:\n",
-                             paste(c(slot_s, slot_f), collapse = ", "),
-                             ", all observation and implementation parameters")
-  
-  cli::cli_alert_danger('UPDATE PARAMETERS FOR TWO-SEX STOCKS NOT COMPLETE!')
   
   for (s in 1:nStock(OM)) {
+    # Stock
     for (sl in OM@SexPars@Misc$Stock) 
       slot(OM@Stock[[s]], sl) <- slot(OM@Stock[[parcopy[s]]], sl)
     
     for (fl in 1:nFleet(OM)) {
+      # Fleet
       for (sl in OM@SexPars@Misc$Fleet) 
         slot(OM@Fleet[[s]][[fl]], sl) <- slot(OM@Fleet[[parcopy[s]]][[fl]], sl)
       
+      # Obs
       if (OM@SexPars@Misc$Obs) {
         for (sl in slotNames(OM@Obs[[s]][[fl]]))
           slot(OM@Obs[[s]][[fl]], sl) <- slot(OM@Obs[[parcopy[s]]][[fl]], sl)
       }
+      
+      # Imp
       if (OM@SexPars@Misc$Imp) {
         for (sl in slotNames(OM@Imp[[s]][[fl]]))
           slot(OM@Imp[[s]][[fl]], sl) <- slot(OM@Imp[[parcopy[s]]][[fl]], sl)
       }
-      
     }
   }
-  OM 
+  OM
 }
 
 #
@@ -529,7 +529,7 @@ setMethod("Populate", "om", function(object, messages='progress') {
   }
   
   # share paramaters for two-sex stocks
-  object <- ShareParameters(object)
+  object <- object |> ShareParameters() |> StartMessages()
   
   # Obs and Imp
   

@@ -2501,7 +2501,7 @@ setClass("sexpars",
          slots=c(SPFrom='array.null',
                  Herm='list.null',
                  SharePar='num.log',
-                 Misc='list'
+                 Misc='list.null'
          ),
          contains='Created_ModifiedClass'
 )
@@ -2513,10 +2513,20 @@ setMethod("initialize", "sexpars", function(.Object,
                                             SPFrom=NULL,
                                             Herm=NULL,
                                             SharePar=TRUE,
-                                            Misc=list()) {
+                                            Misc=NULL) {
   .Object@SPFrom <- SPFrom
   .Object@Herm <- Herm
   .Object@SharePar <- SharePar
+  if (!is.null(Misc)) {
+    .Object@Misc <- Misc
+  } else {
+    .Object@Misc <- list()
+    .Object@Misc$Stock <- c('Depletion', 'SRR')
+    .Object@Misc$Fleet <- c('Effort', 'Distribution')
+    .Object@Misc$Obs <- TRUE
+    .Object@Misc$Imp <- TRUE
+  }
+
   .Object@Created <- Sys.time()
   .Object
 })
@@ -2526,7 +2536,7 @@ setMethod("initialize", "sexpars", function(.Object,
 SexPars <- function(SPFrom=NULL,
                     Herm=list(),
                     SharePar=TRUE,
-                    Misc=list()) {
+                    Misc=NULL) {
   
   if (methods::is(SPFrom, 'om'))
     return(SPFrom@SexPars)
@@ -2853,6 +2863,28 @@ validOMobject <- function(object) {
 }
 
 setValidity('om', validOMobject)
+
+
+# Hist Class ----
+
+# OM - Operating Model
+# Reference Points
+# Unfished
+# PopulationDynamics
+# FleetDynamics
+
+
+
+#' @export
+setClass("hist",
+         slots=c(Name='char.null',
+                 Agency='char.null'
+         )
+)
+
+
+
+
 
 
 # Other Classes ----

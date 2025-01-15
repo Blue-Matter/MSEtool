@@ -374,11 +374,11 @@ nTS <- function(x) {
 
 #' @rdname Access
 #' @export
-nArea <- function(x, stock=1) {
+nArea <- function(x, st=1) {
   if (methods::is(x, 'om')) {
     stock <- x@Stock
     if (methods::is(stock, 'list')) {
-      stock <- stock[[stock]]
+      stock <- stock[[st]]
     }
     dd <- dim(stock@Spatial@UnfishedDist)
   } else {
@@ -837,6 +837,8 @@ SharePar <- function(x) {
 #' @rdname Access
 #' @export
 SPFrom <- function(x) {
+  if (methods::is(x, 'OM'))
+    return(x@SexPars@SPFrom)
   x@SPFrom
 }
 

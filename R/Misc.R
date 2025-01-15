@@ -111,7 +111,7 @@ StartMessages <- function(OM, messages='default') {
       cli::cli_alert_info("You have specified more than one stock but no MICE relationships (`Relations(OM)`) or sex-specific relationships (`SexPars(OM)`) among these. \nAs they are independent, consider doing MSE for one stock at a time for computational efficiency\n")
     }
   }
-  Populate(OM, messages=FALSE)
+  OM
 }
 
 
@@ -486,12 +486,13 @@ AddArrays <- function(array1, array2) {
 
 }
 
-MultiplyArrays <- function(array1, array2, structure=FALSE,
-                           names=c('Sim', 'Age', 'Time Step')) {
+MultiplyArrays <- function(array1, array2, 
+                           names=c('Sim', 'Age', 'Time Step'),
+                           structure=FALSE) {
   if (structure) {
     array1  <- Structure(array1) |> AddDimNames(name=names)
   }
-
+  
   d1 <- dim(array1)
   d2 <- dim(array2)
   if (length(d1)!=length(d2))

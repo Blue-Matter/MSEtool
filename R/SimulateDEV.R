@@ -52,6 +52,19 @@ ConvertFromList <- function(OM) {
   
 }
 
+
+
+CalcUnfishedSurvival <- function(Stock, SP=FALSE) {
+  M_at_Age <- Stock@NaturalMortality@MeanAtAge
+  PlusGroup <- Stock@Ages@PlusGroup
+  if (SP) {
+    SpawnTimeFrac <- Stock@SRR@SpawnTimeFrac  
+  } else {
+    SpawnTimeFrac <- NULL
+  }
+  CalcSurvival(M_at_Age, PlusGroup, SpawnTimeFrac)
+}
+
 #' @describeIn runMSE Development version of `Simulate`
 #' @export
 SimulateDEV <- function(OM=NULL, 
@@ -69,25 +82,58 @@ SimulateDEV <- function(OM=NULL,
   
   OM <- OM |> nSimUpdate(nSim, messages) |>
     Populate(messages=messages) |>
-    ConvertToList() |>
-    StartMessages(messages)
+    ConvertToList() 
   
   # TODO
   # OM@Allocation - dimension length
   # OM@Efactor - dimension length
   # Hermaphroditism do in Populate
   
+  # new Hist object 
   
-  CalcUnfishedSurvival <- function(Stock, SP=FALSE) {
-    M_at_Age <- Stock@NaturalMortality@MeanAtAge
-    PlusGroup <- Stock@Ages@PlusGroup
-    if (SP) {
-      SpawnTimeFrac <- Stock@SRR@SpawnTimeFrac  
-    } else {
-      SpawnTimeFrac <- NULL
-    }
-    CalcSurvival(M_at_Age, PlusGroup, SpawnTimeFrac)
-  }
+  setClass("AgeArray",
+           slots=c(NatAge='list',
+                   SNatAge='list',
+                   BatAge='list',
+                   SBatAge='list',
+                   SPatAge='list',
+                   Misc='list'
+           ),
+           contains='Created_ModifiedClass'
+  )
+  
+  setClass("unfished",
+           slots=c(Equilibrium='AgeArray',
+                   Dynamic='AgeArray',
+                   Misc='list'
+           ),
+           contains='Created_ModifiedClass'
+  )
+  
+  
+  setClass("hist",
+           slots=c(OM='om',
+                   Unfished='unfished',
+                   RefPoints='list',
+                   BatAge='list',
+                   SBatAge='list',
+                   SPatAge='list',
+                   Misc='list'
+           ),
+           contains='Created_ModifiedClass'
+  )
+
+  hist <- new('hist')
+  hist@Unfished@Equilibrium@SBatAge
+
+  # OM - Operating Model
+  # Reference Points
+  # Unfished
+  # PopulationDynamics
+  # FleetDynamics
+  
+  
+  # Hist |> Unfished() |> Equilibrium() |> NatAge() # TODO
   
   
   # ---- Calculate Unfished Dynamics ----
@@ -98,15 +144,24 @@ SimulateDEV <- function(OM=NULL,
                                    nSim=NULL,
                                    ...) {
     
-    # TODO Add Herm 
     
-    Unfished <- new('AtAge') # returns an `AtAge` object
+    
     
     # Calculates Equilibrium and Dynamic Unfished Population Dynamics
     
     OM <- OM |> nSimUpdate(nSim, messages) |>
       Populate(messages=messages) |>
       ConvertToList()
+    
+    ######################################
+    # TODO                               #
+    ######################################
+    # - !! add Spatial Dimension !!      
+    # - add Herm
+    
+    not <- function(val) !val
+    
+    Unfished <- new('unfished') 
     
     # Equilibrium 
     UnfishedSurvival <- purrr::map(OM@Stock, CalcUnfishedSurvival)
@@ -115,14 +170,44 @@ SimulateDEV <- function(OM=NULL,
     WeightatAge <- purrr::map(OM@Stock, GetWeightAtAge)
     MaturityatAge <- purrr::map(OM@Stock, GetMaturityAtAge)
     FecundityatAge <- purrr::map(OM@Stock, GetFecundityAtAge)
+    # not sure if this will work for all cases
+    ind <- lapply(FecundityatAge, is.null) |> unlist() |> not() |> which() 
     
     NatAge <- purrr::map2(R0, UnfishedSurvival, MultiplyArrays, structure=TRUE)
     BatAge <- purrr::map2(NatAge, WeightatAge, MultiplyArrays)
     
-    SNatAge <- purrr::map2(R0, UnfishedSurvivalSP, MultiplyArrays, structure=TRUE) |>
+    SNatAge <- purrr::map2(R0, UnfishedSurvivalSP, MultiplyArrays, 
+                           structure=TRUE) |>
       purrr::map2(MaturityatAge, MultiplyArrays)
     SBatAge <- purrr::map2(SNatAge, WeightatAge, MultiplyArrays)
-    SPatAge <- purrr::map2(SNatAge, FecundityatAge, MultiplyArrays)
+    SPatAge <- purrr::map2(SNatAge[ind], FecundityatAge[ind], MultiplyArrays)
+    
+    # Distribute over areas
+    if (nArea(OM) == 1) {
+      # add spatial dimension only
+    } else {
+      # distribution over areas
+      NatAge$`Red Snapper` |> dim()
+      
+      OM@Stock[[1]]@Spatial@UnfishedDist 
+      
+      NatAge$`Red Snapper`[1,1,1]
+      
+      NatAge$`Red Snapper`[1,1,1] * 
+        OM@Stock[[1]]@Spatial@UnfishedDist[1,,1,1]
+      
+      OM@Stock[[1]]@Spatial@Movement[1,,,1,1] 
+      
+      t = CalcAsymptoticDist(OM@Stock[[1]]@Spatial@Movement[1,,,1,1])
+      
+      OM@Stock[[1]]@Spatial@UnfishedDist[1,,21,1]
+      # for SAMMC Red snapper - initial distribution by age is
+      # not the same in this version as previous method where it was calculated
+      # by projecting out equilibrium
+    }
+    
+  
+    
     
     Unfished@Equilibrium@NatAge <- NatAge
     Unfished@Equilibrium@SNatAge <- SNatAge
@@ -154,25 +239,7 @@ SimulateDEV <- function(OM=NULL,
     Unfished
   }
   
-  Hist |> Unfished() |> Equilibrium() |> NatAge()
-  
-  setClass("atAgeArray",
-           slots=c(NatAge='list',
-                   SNatAge='list',
-                   BatAge='list',
-                   SBatAge='list',
-                   SPatAge='list',
-                   Misc='list'
-           ),
-           contains='Created_ModifiedClass'
-  )
-  setClass("AtAge",
-           slots=c(Equilibrium='atAgeArray',
-                   Dynamic='atAgeArray',
-                   Misc='list'
-           ),
-           contains='Created_ModifiedClass'
-  )
+
   
 
   
