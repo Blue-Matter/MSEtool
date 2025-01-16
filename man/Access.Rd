@@ -222,11 +222,11 @@ Longitude(x)
 
 Longitude(x) <- value
 
-nAge(x)
+nAge(x, st = 1)
 
 nTS(x)
 
-nArea(x, stock = 1)
+nArea(x, st = 1)
 
 MaxAge(x)
 

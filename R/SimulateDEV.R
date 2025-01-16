@@ -1,3 +1,18 @@
+# 2025/01/16 
+# - fix errors in testOM.R - line 6 Convert(testOM)
+# - then test and compare SimulateDEV with Hist from Simulate 
+
+
+# New Classes (temp) ----
+
+setClass("hist",
+         contains=c('om', 'Created_ModifiedClass'),
+         slots=c(Unfished='unfished',
+                 RefPoints='refpoints'
+                 
+         )
+)
+
 
 SetHistRel <- function(OM) {
   # Ignore MICE in historical period
@@ -54,24 +69,14 @@ ConvertFromList <- function(OM) {
 
 
 
-CalcUnfishedSurvival <- function(Stock, SP=FALSE) {
-  M_at_Age <- Stock@NaturalMortality@MeanAtAge
-  PlusGroup <- Stock@Ages@PlusGroup
-  if (SP) {
-    SpawnTimeFrac <- Stock@SRR@SpawnTimeFrac  
-  } else {
-    SpawnTimeFrac <- NULL
-  }
-  CalcSurvival(M_at_Age, PlusGroup, SpawnTimeFrac)
-}
 
 #' @describeIn runMSE Development version of `Simulate`
 #' @export
 SimulateDEV <- function(OM=NULL, 
                         parallel=FALSE, 
                         messages='default',
-                        nSim=NULL, 
-                        silent=FALSE, 
+                        nSim=NULL,
+                        silent=FALSE,
                         ...) {
   
   if (isTRUE(silent)) 
@@ -80,256 +85,29 @@ SimulateDEV <- function(OM=NULL,
   # ---- Initial Checks and Setup ----
   chk <- OM |> CheckClass() |> Check() # TODO OM checks
   
-  OM <- OM |> nSimUpdate(nSim, messages) |>
+  OM <- OM |> 
+    nSimUpdate(nSim, messages) |>
     Populate(messages=messages) |>
-    ConvertToList() 
-  
-  # TODO
-  # OM@Allocation - dimension length
-  # OM@Efactor - dimension length
-  # Hermaphroditism do in Populate
-  
-  # new Hist object 
-  
-  setClass("AgeArray",
-           slots=c(NatAge='list',
-                   SNatAge='list',
-                   BatAge='list',
-                   SBatAge='list',
-                   SPatAge='list',
-                   Misc='list'
-           ),
-           contains='Created_ModifiedClass'
-  )
-  
-  setClass("unfished",
-           slots=c(Equilibrium='AgeArray',
-                   Dynamic='AgeArray',
-                   Misc='list'
-           ),
-           contains='Created_ModifiedClass'
-  )
+    ConvertToList() # converts OM@Stock and OM@Fleet to lists
   
   
-  setClass("hist",
-           slots=c(OM='om',
-                   Unfished='unfished',
-                   RefPoints='list',
-                   BatAge='list',
-                   SBatAge='list',
-                   SPatAge='list',
-                   Misc='list'
-           ),
-           contains='Created_ModifiedClass'
-  )
-
-  hist <- new('hist')
-  hist@Unfished@Equilibrium@SBatAge
-
-  # OM - Operating Model
-  # Reference Points
-  # Unfished
-  # PopulationDynamics
-  # FleetDynamics
-  
-  
-  # Hist |> Unfished() |> Equilibrium() |> NatAge() # TODO
-  
+  Hist <- new('hist') # new Hist object to return 
   
   # ---- Calculate Unfished Dynamics ----
+  Hist@Unfished <- CalcUnfishedDynamics(OM, parallel, messages)
   
-  CalcUnfishedDynamics <- function(OM,
-                                   parallel=FALSE, 
-                                   messages='default',
-                                   nSim=NULL,
-                                   ...) {
-    
-    
-    
-    
-    # Calculates Equilibrium and Dynamic Unfished Population Dynamics
-    
-    OM <- OM |> nSimUpdate(nSim, messages) |>
-      Populate(messages=messages) |>
-      ConvertToList()
-    
-    ######################################
-    # TODO                               #
-    ######################################
-    # - !! add Spatial Dimension !!      
-    # - add Herm
-    
-    not <- function(val) !val
-    
-    Unfished <- new('unfished') 
-    
-    # Equilibrium 
-    UnfishedSurvival <- purrr::map(OM@Stock, CalcUnfishedSurvival)
-    UnfishedSurvivalSP <- purrr::map(OM@Stock, CalcUnfishedSurvival, SP=TRUE)
-    R0 <- purrr::map(OM@Stock, GetR0)
-    WeightatAge <- purrr::map(OM@Stock, GetWeightAtAge)
-    MaturityatAge <- purrr::map(OM@Stock, GetMaturityAtAge)
-    FecundityatAge <- purrr::map(OM@Stock, GetFecundityAtAge)
-    # not sure if this will work for all cases
-    ind <- lapply(FecundityatAge, is.null) |> unlist() |> not() |> which() 
-    
-    NatAge <- purrr::map2(R0, UnfishedSurvival, MultiplyArrays, structure=TRUE)
-    BatAge <- purrr::map2(NatAge, WeightatAge, MultiplyArrays)
-    
-    SNatAge <- purrr::map2(R0, UnfishedSurvivalSP, MultiplyArrays, 
-                           structure=TRUE) |>
-      purrr::map2(MaturityatAge, MultiplyArrays)
-    SBatAge <- purrr::map2(SNatAge, WeightatAge, MultiplyArrays)
-    SPatAge <- purrr::map2(SNatAge[ind], FecundityatAge[ind], MultiplyArrays)
-    
-    # Distribute over areas
-    if (nArea(OM) == 1) {
-      # add spatial dimension only
-    } else {
-      # distribution over areas
-      NatAge$`Red Snapper` |> dim()
-      
-      OM@Stock[[1]]@Spatial@UnfishedDist 
-      
-      NatAge$`Red Snapper`[1,1,1]
-      
-      NatAge$`Red Snapper`[1,1,1] * 
-        OM@Stock[[1]]@Spatial@UnfishedDist[1,,1,1]
-      
-      OM@Stock[[1]]@Spatial@Movement[1,,,1,1] 
-      
-      t = CalcAsymptoticDist(OM@Stock[[1]]@Spatial@Movement[1,,,1,1])
-      
-      OM@Stock[[1]]@Spatial@UnfishedDist[1,,21,1]
-      # for SAMMC Red snapper - initial distribution by age is
-      # not the same in this version as previous method where it was calculated
-      # by projecting out equilibrium
-    }
-    
-  
-    
-    
-    Unfished@Equilibrium@NatAge <- NatAge
-    Unfished@Equilibrium@SNatAge <- SNatAge
-    Unfished@Equilibrium@BatAge <- BatAge
-    Unfished@Equilibrium@SBatAge <- SBatAge
-    Unfished@Equilibrium@SPatAge <- SPatAge
-    
-    # Dynamic 
-    RecDevInit <- purrr::map(OM@Stock, GetRecDevInit)
-    RecDevHist <- purrr::map(OM@Stock, GetRecDevHist)
-    RecDevProj <- purrr::map(OM@Stock, GetRecDevProj)
-    
-    c(dim(RecDevInit),
-      dim(RecDevHist),
-      dim(RecDevProj))
-    
-    ## UP TO HERE #####
-    purrr::map2(RecDevInit, NatAge, MultiplyArrays)
-    
-    N[1,1,,1,] |> rowSums()
-    
-    NatAge[[1]][1,,1] * RecDevInit[[1]][1,]
-    
-    
-   
-   
-    
-  
-    Unfished
-  }
-  
-
-  
-
-  
-  
-  
-  # Calc dynamic unfished
-  
-  # Calc SPR
-  
-  
-  
- 
-  
-  
- 
-  
-
-
   
   # ---- Calculate Reference Points ----
-  
-  CalcReferencePoints <- function(OM, 
-                                  parallel=FALSE, 
-                                  messages='default',
-                                  nSim=NULL, 
-                                  ...) {
-    
-    OM <- OM |> nSimUpdate(nSim, messages) |>
-      Populate(messages=messages) |>
-      ConvertToList() |>
-      StartMessages(messages)
-    
-  }
-  
+  Hist@RefPoints <- CalcReferencePoints(OM, parallel, messages,
+                                        Unfished = Hist@Unfished)
+
   
 
   
-  
-    # convert this to object later and add to initialize
-    
-    OM@Control$ReferencePoints <- list()
-    
-    OM@Control$ReferencePoints$UnfishedEq <- TRUE
-    OM@Control$ReferencePoints$UnfishedDyn <- TRUE
-    
-    OM@Control$ReferencePoints$Unfished <- TRUE
     
     
-    # if (!isFALSE(OM@Control$ReferencePoints$Unfished)) {
-    #   
-    # }
-    
-    
-    
-
-    
-    CalcR0 <- function(Stock) {
-      R0 <- Stock@SRR@Pars$R0
-      if (!is.null(R0)) 
-        
-        return(R0)
-      stop('R0 not in SRR@Pars. Calculate from parameters?')
-    }
-    
-    EquilibriumUnfished 
   
 
-    
-    
-
-    
-    R0 <- lapply(OM@Stock, CalcR0)
-    
-    
-    
-    N0
-    B0
-    SN0
-    SB0
-    
-    
-    
-    
-    SpawningPerRecruit
-    
-  
-    
-    
-  
-  
   
   
   

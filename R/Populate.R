@@ -425,6 +425,30 @@ ShareParameters <- function(OM) {
   OM
 }
 
+
+CalcUnfishedDist <- function(Spatial,
+                             plot=FALSE,
+                             nits=100) {
+  dims <- dim(Spatial@Movement)
+  if (is.null(dims))
+    return(Spatial)
+  UnfishedDist <- AddDimNames(array(NA, dim=c(dims[1],
+                                              dims[2],
+                                              dims[4],
+                                              dims[5])),
+                              c('Sim', 'Area', 'Age', 'Time Step'))
+  for (s in 1:dims[1]) {
+    for (ts in 1:dims[5]) {
+      for (age in 1:dims[4]) {
+        UnfishedDist[s,,age,ts] <- CalcAsymptoticDist(Movement=Spatial@Movement[s,,,age,ts],
+                                                      plot=plot, nits=nits)
+      }
+    }
+  }
+  Spatial@UnfishedDist <- UnfishedDist
+  Spatial
+}
+
 #
 
 #' Populate an object
@@ -458,7 +482,7 @@ setMethod("Populate", "om", function(object, messages='progress') {
   }
   
   if (methods::is(object@Fleet, 'fleet')) {
-    nFleets <- n1
+    nFleets <- 1
   } else if (methods::is(object@Fleet, 'list')) {
     nFleets <- length(object@Fleet[[1]])
   } else {
@@ -566,7 +590,7 @@ setMethod("Populate", "stock", function(object,
   stock <- object
   
   stock@TimeUnits <- stock@Ages@Units
-  stock@TimeStepsPerYear <- TSperYear(stock@TimeUnits )
+  stock@TimeStepsPerYear <- TSperYear(stock@TimeUnits)
   stock@TimeSteps <- CalcTimeSteps(stock@nYear, 
                                    stock@pYear, 
                                    stock@CurrentYear, 
@@ -1034,29 +1058,12 @@ setMethod("Populate", "spatial", function(object,
 
   sb <- PrintPopulating(object, isTRUE(messages))
   
-  if (!is.null(object@Movement) & is.null(object@UnfishedDist)) {
-    dims <- dim(object@Movement)
-    
-    # Calculate Unfished Dist
-    UnfishedDist <- AddDimNames(array(NA, dim=c(dims[1],
-                                                dims[2],
-                                                dims[4],
-                                                dims[5])),
-                                c('sim', 'area', 'age', 'ts'))
-    
-    for (s in 1:dims[1]) {
-      for (ts in 1:dims[5]) {
-        for (age in 1:dims[4]) {
-          UnfishedDist[s,,age,ts] <- CalcAsymptoticDist(Movement=object@Movement[s,,,age,ts],
-                                                        plot=plot, nits=nits)
-        }
-      }
-    }
-    
-    object@UnfishedDist <- UnfishedDist
-  } else {
+  if (is.null(object@Movement))
     object <- CalcMovement(object, nsim, seed, nits, plot, silent=isFALSE(messages))
-  }
+  
+  if (is.null(object@UnfishedDist)) {
+    object <- CalcUnfishedDist(object)
+  } 
 
 
   if (is.null(object@UnfishedDist))

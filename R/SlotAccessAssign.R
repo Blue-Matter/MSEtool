@@ -355,7 +355,7 @@ Longitude <- function(x) {
 
 #' @rdname Access
 #' @export
-nAge <- function(x) {
+nAge <- function(x, st=1) {
   if (methods::is(x, 'stock'))
     return(x@Ages@MaxAge+1)
   if (methods::is(x, 'ages'))
@@ -986,6 +986,12 @@ Units <- function(x) {
 #' @rdname Access
 #' @export
 UnfishedDist <- function(x) {
+  if (methods::is(x, 'stock'))
+    return(x@Spatial@UnfishedDist)
+  if (methods::is(x, 'om'))
+    return(lapply(x@Stock, slot, 'Spatial') |>
+      lapply(slot, 'UnfishedDist'))
+  
   x@UnfishedDist
 }
 

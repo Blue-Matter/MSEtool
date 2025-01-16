@@ -1,0 +1,5 @@
+Case Study,Script,MultiStock,MultiFleet,MultiSex,Herm,SubYear,Spatial,InitialDep,optDep
+Test OM,testOM.R,FALSE,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE,TRUE
+North Atlantic Swordfish,NSWO.R,TRUE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE
+South Atlantic Red Snapper,,FALSE,TRUE,FALSE,FALSE,FALSE,TRUE,,
+South Atlantic Gag,,FALSE,TRUE,TRUE,TRUE,FALSE,TRUE,,

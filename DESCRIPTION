@@ -63,6 +63,8 @@ Collate:
     'BAM2OM.R'
     'B_Low_functions.R'
     'Calc.R'
+    'CalculateRefPoints.R'
+    'CalculateUnfished.R'
     'Check.R'
     'Convert.R'
     'DFO.R'

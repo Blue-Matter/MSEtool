@@ -6,7 +6,7 @@
 \alias{SexPars<-}
 \title{SexPars Object}
 \usage{
-SexPars(SPFrom = NULL, Herm = list(), SharePar = TRUE, Misc = list())
+SexPars(SPFrom = NULL, Herm = list(), SharePar = TRUE, Misc = NULL)
 
 SexPars(x) <- value
 }

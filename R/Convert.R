@@ -87,6 +87,14 @@ OM2om <- function(OM, Author='', CurrentYear=NULL) {
                                 ASK=TRUE,
                                 seed=om@Seed)
 
+    om@Stock@Weight <- Populate(om@Stock@Weight,
+                                om@Stock@Ages,
+                                om@Stock@Length,
+                                om@nSim,
+                                TimeSteps(om),
+                                ASK=FALSE,
+                                seed=om@Seed)
+    
     if (as.logical(OM@isRel)) {
       # multiply by L50 
       om@Stock@Maturity <- Populate(om@Stock@Maturity,
@@ -276,12 +284,12 @@ OM2Weight <- function(OM, cpars=NULL) {
     Weight <- Weight()
   }
 
-  pars <- Pars(Weight)
-  if (!is.numeric(pars$a)) {
-    pars$a <- process_cpars(OM@a)
+  pars <- list()
+  if (!is.numeric(pars$alpha)) {
+    pars$alpha <- process_cpars(OM@a)
   }
-  if (!is.numeric(pars$b)) {
-    pars$b <- process_cpars(OM@b)
+  if (!is.numeric(pars$beta)) {
+    pars$beta <- process_cpars(OM@b)
   }
   Pars(Weight) <- pars
 
@@ -293,7 +301,7 @@ cpars2Weight <- function(cpars) {
   Weight <- Weight()
   MeanAtAge(Weight) <- process_cpars(cpars$Wt_age)
 
-  pars <- Pars(Weight)
+  pars <- list()
   pars$a <- process_cpars(cpars$Wa)
   pars$b <- process_cpars(cpars$Wb)
   Pars(Weight) <- pars
@@ -551,7 +559,7 @@ cpars2Spatial <- function(cpars) {
   Spatial <- Spatial()
   Spatial@RelativeSize <- process_cpars(cpars$Asize)
   Spatial@Movement <- process_mov(cpars$mov)
-  
+  Spatial <- CalcUnfishedDist(Spatial)
   Spatial
 }
 
