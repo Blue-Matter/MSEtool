@@ -418,13 +418,12 @@ OM2SRR <- function(OM, cpars=NULL) {
   }
   Pars(SRR) <- pars
   
-  if (is.null(SRR@Model)) 
-    SRR@Model <- switchSRR(OM@SRrel[1])
-  if (is.null(SRR@R0)) 
+  SRR@Model <- switchSRR(OM@SRrel[1])
+  if (!is.finite(SRR@R0)) 
     SRR@R0 <- process_cpars(OM@R0)
-  if (is.null(SRR@SD))
+  if (!is.finite(SRR@SD))
     SRR@SD <- process_cpars(OM@Perr)
-  if (is.null(SRR@AC)) 
+  if (!is.finite(SRR@AC)) 
     SRR@AC <- process_cpars(OM@AC)
   SRR
 }
@@ -546,9 +545,8 @@ process_mov <- function(mov, nage=1, nts=1) {
     mov <- aperm(mov, c(2,1,3,4,5))
   }
   
-  # c('sim', 'area', 'area', 'age', 'ts'))
   mov <- aperm(mov, c(1,4,5,3,2)) |>
-    AddDimNames(c('sim', 'area', 'area', 'age', 'ts')) |>
+    AddDimNames(c('Sim', 'Area', 'Area', 'Age', 'Time Step')) |>
     process_cpars()
   
   mov

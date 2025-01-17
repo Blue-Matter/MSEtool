@@ -1100,6 +1100,7 @@ setMethod("initialize", "srr", function(.Object,
                                         Misc=list()) {
   .Object@Pars <- Pars
   .Object@Model <- Model
+  .Object@R0 <- R0
   .Object@SD <- SD
   .Object@AC <- AC
   .Object@TruncSD <- TruncSD
@@ -1144,7 +1145,7 @@ setMethod("initialize", "srr", function(.Object,
 #' the time steps when spawning occurs, with 0 indicating the beginning of the time step.
 #' @param Misc `r Misc_param()`
 #' @export
-SRR <- function(Pars=list(R0=NA, h=NA),
+SRR <- function(Pars=list(h=NA),
                 Model='BevertonHolt',
                 R0=array(),
                 SD=array(),

@@ -535,6 +535,26 @@ MultiplyArrays <- function(array1, array2,
       }
     }
   }
+  
+  if (length(outdims)==4) {
+    for (s in 1:outdims[1]) {
+      for (age in 1:outdims[2]) {
+        for (ts in 1:outdims[3]) {
+          for (area in 1:outdims[4]) {
+            out[s,age,ts,area] <- array1[GetIndex(s, d1[1]), 
+                                         GetIndex(age, d1[2]),
+                                         GetIndex(ts, d1[3]),
+                                         GetIndex(area, d1[4])]  *
+              array2[GetIndex(s, d2[1]),
+                     GetIndex(age, d2[2]),
+                     GetIndex(ts, d2[3]),
+                     GetIndex(area, d2[4])]
+          }
+        }
+      }
+    }
+  }
+  
   AddDimNames(out, nm1)
 
 }

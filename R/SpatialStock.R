@@ -22,7 +22,7 @@ CalcMovement <- function(Spatial,
   # add age and time-step dimensions
   Spatial@UnfishedDist  <- Spatial@UnfishedDist |>
     AddAgeTimeStepDimensions() |>
-    AddDimNames(c('sim', 'area', 'age', 'ts'))
+    AddDimNames(c('Sim', 'Area', 'Age', 'Time Step'))
 
   nareas <- max(2,dim(Spatial@UnfishedDist)[2])
 
@@ -40,7 +40,7 @@ CalcMovement <- function(Spatial,
 
     Spatial@FracOther  <- Spatial@FracOther |>
       AddAgeTimeStepDimensions(outdim=5) |>
-      AddDimNames(c('sim', 'area', 'area', 'age', 'ts'))
+      AddDimNames(c('Sim', 'Area', 'Area', 'Age', 'Time Step'))
   }
 
   # generate stochastic values if needed
@@ -55,7 +55,7 @@ CalcMovement <- function(Spatial,
   # add age and time-step dimensions
   Spatial@ProbStaying  <- Spatial@ProbStaying |>
     AddAgeTimeStepDimensions() |>
-    AddDimNames(c('sim', 'area', 'age', 'ts'))
+    AddDimNames(c('Sim', 'Area', 'Age', 'Time Step'))
 
   dims <- lapply(list(Spatial@UnfishedDist, Spatial@ProbStaying), dim)
   if (!is.null(Spatial@FracOther)) {
@@ -72,7 +72,7 @@ CalcMovement <- function(Spatial,
                                                   nareas,
                                                   outdims[3],
                                                   outdims[4])),
-                                  c('sim', 'area', 'area', 'age', 'ts'))
+                                  c('Sim', 'Area', 'Area', 'Age', 'Time Step'))
 
 
   # nasty loop for now
@@ -85,7 +85,7 @@ CalcMovement <- function(Spatial,
                                               nareas,
                                               outdims[3],
                                               outdims[4])),
-                              c('sim', 'area', 'age', 'ts'))
+                              c('Sim', 'Area', 'Age', 'Time Step'))
 
 
 

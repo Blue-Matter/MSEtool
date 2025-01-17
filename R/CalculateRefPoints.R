@@ -1,12 +1,27 @@
 # --- New Classes (temp) ----
 setClass("refpoints",
-         slots=c(Unfished='list',
+         slots=c(N0='list',
+                 B0
+                 SB0
+                 SP0
+                 MSY
+                 FMSY
+                 BMSY
+                 SBMSY
+                 SPMSY
+                 
+                 
+                 F01
+                 FMax 
+                 FCrash 
+                 
                  PerRecruit='list',
                  MSY='list',
                  Misc='list',
                  MGT='list',
                  RefYield='list',
-                 BLow='list'
+                 BLow='list',
+                 Misc='list',
          ),
          contains='Created_ModifiedClass'
 )
@@ -46,8 +61,7 @@ CalcReferencePoints <- function(OM,
     nSimUpdate(nSim, messages) |>
     Populate(messages=messages) |>
     ConvertToList()
-  
-  
+
   # TODO                    
   if (!is.null(OM@SexPars@Herm))
     stop('Herm not done yet!')
@@ -67,7 +81,7 @@ CalcReferencePoints <- function(OM,
                                BLow=TRUE)
   
   #  ---- Unfished ----
-  RefPoints@Unfished <- CalcUnfishedRefPoints()
+  RefPoints@Unfished <- CalcUnfishedRefPoints(OM, parallel, messages)
   
 
   

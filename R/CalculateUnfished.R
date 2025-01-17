@@ -18,7 +18,10 @@ setClass("unfished",
 )
 
 
-
+AddStockNames <- function(list, Names) {
+  names(list) <- Names
+  list
+}
 
 
 CalcUnfishedSurvival <- function(Stock, SP=FALSE) {
@@ -69,7 +72,7 @@ DistributeStock <- function(AtAge, UnfishedDist) {
   # need to re-order here. Could fix this by restructiing UnfishedDist
   # TODO
   
-  UnfishedDist <- aperm(UnfishedDist, c(1,3,4,2)) 
+  UnfishedDist <- aperm(UnfishedDist, c(1,3,4,2)) # sim, age, time step, area
   
   DimUnfishedDist <- dim(UnfishedDist)
   narea <- DimUnfishedDist[4]
@@ -135,13 +138,22 @@ CalcUnfishedDynamics <- function(OM,
   SPatAge <- purrr::map2(SNatAge[ind], FecundityatAge[ind], MultiplyArrays)
   
   # Distribute over areas
-  Unfished@Equilibrium@Number <- purrr::map2(NatAge, UnfishedDist(OM), DistributeStock)
-  Unfished@Equilibrium@Biomass <- purrr::map2(BatAge, UnfishedDist(OM), DistributeStock)
-  Unfished@Equilibrium@SBiomass <- purrr::map2(SBatAge, UnfishedDist(OM), DistributeStock)
-  Unfished@Equilibrium@SProduction <- purrr::map2(SPatAge[ind], UnfishedDist(OM)[ind], DistributeStock)
+  Unfished@Equilibrium@Number <- purrr::map2(NatAge, 
+                                             UnfishedDist(OM), 
+                                             DistributeStock) |>
+    AddStockNames(StockNames(OM))
+  
+  Unfished@Equilibrium@Biomass <- purrr::map2(BatAge, UnfishedDist(OM), DistributeStock) |>
+    AddStockNames(StockNames(OM))
+  Unfished@Equilibrium@SBiomass <- purrr::map2(SBatAge, UnfishedDist(OM), DistributeStock) |>
+    AddStockNames(StockNames(OM))
+  Unfished@Equilibrium@SProduction <- purrr::map2(SPatAge[ind], UnfishedDist(OM)[ind], DistributeStock) |>
+    AddStockNames(StockNames(OM))
   
   # TODO `SProduction` will be identical to `SBiomass` if spawning biomass 
   # is used for fecundity. Can make it NULL here to save memory
+
+  t = AddStockNames(list= Unfished@Equilibrium@Number, Names=StockNames(OM))
   
   # ---- Dynamic ----
   

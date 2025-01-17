@@ -1,6 +1,5 @@
 # 2025/01/16 
-# - fix errors in testOM.R - line 6 Convert(testOM)
-# - then test and compare SimulateDEV with Hist from Simulate 
+# - testOM.R - code RefPoint calcs and compare with Hist 
 
 
 # New Classes (temp) ----
@@ -90,16 +89,23 @@ SimulateDEV <- function(OM=NULL,
     Populate(messages=messages) |>
     ConvertToList() # converts OM@Stock and OM@Fleet to lists
   
+  # TODO - re-populates if Stock/Fleet converted to list - fix hash
   
-  Hist <- new('hist') # new Hist object to return 
+  HistOut <- new('hist') # new Hist object to return 
   
   # ---- Calculate Unfished Dynamics ----
-  Hist@Unfished <- CalcUnfishedDynamics(OM, parallel, messages)
+  HistOut@Unfished <- CalcUnfishedDynamics(OM, parallel, messages)
+  
+  
+  # ---- Calculate Curves -----
+  
+  - yield curve
+  - SPR v F
   
   
   # ---- Calculate Reference Points ----
-  Hist@RefPoints <- CalcReferencePoints(OM, parallel, messages,
-                                        Unfished = Hist@Unfished)
+  HistOut@RefPoints <- CalcReferencePoints(OM, parallel, messages,
+                                           Unfished = HistOut@Unfished)
 
   
 
