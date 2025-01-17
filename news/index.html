@@ -32,16 +32,29 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="3.7.4" id="msetool-374">MSEtool 3.7.4<a class="anchor" aria-label="anchor" href="#msetool-374"></a></h2>
+<h2 class="pkg-version" data-toc-text="3.7.9999" id="msetool-379999">MSEtool 3.7.9999<a class="anchor" aria-label="anchor" href="#msetool-379999"></a></h2>
 <div class="section level3">
-<h3 id="fixes-3-7-4">Fixes<a class="anchor" aria-label="anchor" href="#fixes-3-7-4"></a></h3>
+<h3 id="fixes-3-7-9999">Fixes<a class="anchor" aria-label="anchor" href="#fixes-3-7-9999"></a></h3>
 <ul><li>
 <code>updateData</code> and <code>updateData_MS</code> use the Baranov catch equation to simulate <code>Data@CAA</code> in the projection. Previously, the catch at age was simulated with only the retention curve.</li>
+<li>
+<code>multiMSE</code> solves for F from multi-fleet TAC simultaneously with function <code>CalcMPDynamics_MF</code>
+</li>
+<li>fix check for simulated <code>Data@VInd</code> in <code>multiMSE</code>
+</li>
+<li>turn off check for valid <code>Data@AddInd</code> statistics (AC, SD) when <code>cpars$AddIerr</code> is provided</li>
 </ul></div>
 <div class="section level3">
-<h3 id="updates-3-7-4">Updates<a class="anchor" aria-label="anchor" href="#updates-3-7-4"></a></h3>
+<h3 id="updates-3-7-9999">Updates<a class="anchor" aria-label="anchor" href="#updates-3-7-9999"></a></h3>
 <ul><li>When indices are provided to the operating model, the default value of beta = 1 (hyperstability parameter) if not specified in <code>cpars</code>.</li>
 <li>Add grid to base graphics</li>
+<li>MSY calculations in <code>Simulate</code> use fishery weight at age <code>FleetPars$Wt_age_C</code>
+</li>
+<li>
+<code>multiMSE(extended = TRUE)</code> returns overall F by stock (and area) and <code>MMSE@PPD</code> includes StockPars, FleetPars, ReferencePoints in <code>Data@Misc</code>
+</li>
+<li>
+<code>runMSE(extended = TRUE)</code> leaves StockPars, FleetPars, ReferencePoints in <code>Data@Misc</code> of <code>MSE@PPD</code> slot</li>
 </ul></div>
 </div>
     <div class="section level2">

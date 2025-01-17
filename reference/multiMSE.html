@@ -101,8 +101,8 @@ The <code>multiHist</code> object can be (re-)created using <code>SimulateMOM</c
 
 <dt id="arg-extended">extended<a class="anchor" aria-label="anchor" href="#arg-extended"></a></dt>
 <dd><p>Logical. Return extended projection results?
-if TRUE, <code>MMSE@Misc$extended</code> is a named list with extended data
-(including historical and projected abundance by area).</p></dd>
+if TRUE, <code>MMSE@Misc$extended</code> is a named list with extended data: FM for overall F across fleets <code>[nsim, nstock, n_age, nMP, proyears, nareas]</code>.
+<code>Misc</code> slot in <code>MMSE@PPD</code> will also contain StockPars, FleetPars, and ReferencePoints</p></dd>
 
 
 <dt id="arg-hist">Hist<a class="anchor" aria-label="anchor" href="#arg-hist"></a></dt>
