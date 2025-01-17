@@ -488,7 +488,8 @@ AddArrays <- function(array1, array2) {
 
 MultiplyArrays <- function(array1, array2, 
                            names=c('Sim', 'Age', 'Time Step'),
-                           structure=FALSE) {
+                           structure=FALSE,
+                           CheckNames=TRUE) {
   if (structure) {
     array1  <- Structure(array1) |> AddDimNames(name=names)
   }
@@ -498,10 +499,12 @@ MultiplyArrays <- function(array1, array2,
   if (length(d1)!=length(d2))
     cli::cli_abort('`array1` and `array2` must have number of dimensions')
 
-  nm1 <- names(dimnames(array1))
-  nm2 <- names(dimnames(array2))
-  if (!(all(nm1==nm2)))
-    cli::cli_abort('`array1` and `array2` must have same named dimensions')
+  if (CheckNames) {
+    nm1 <- names(dimnames(array1))
+    nm2 <- names(dimnames(array2))
+    if (!(all(nm1==nm2)))
+      cli::cli_abort('`array1` and `array2` must have same named dimensions')
+  }
 
   if (all(d1==d2))
     return(array1*array2)
@@ -608,7 +611,8 @@ DivideArrays <- function(array1, array2) {
 AddSimDimension <- function(array, names=c('Sim', 'Age', 'Time Step'), TimeSteps=NULL) {
   dd <- dim(array)
   if (length(dd)==length(names))
-    return(AddDimNames(array, TimeSteps=TimeSteps))
+    return(AddDimNames(array, names, TimeSteps=TimeSteps))
+  
   if (length(dd)==2) {
     array <- replicate(1, array) |> aperm(c(3,1,2))
   }

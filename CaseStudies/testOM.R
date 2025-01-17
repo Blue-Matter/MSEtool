@@ -1,14 +1,20 @@
 
 devtools::load_all()
 
+
+
 OM <- Convert(testOM)
 
 Hist <- Simulate(testOM)
 
-# Check Unfished 
 
-# - TODO - fix Fecundity is not copied over from SBiomass
-# - TODO - add Stock names in Convert 
+# ---- Reference Points ----
+
+# - F - SPR Curve 
+
+Hist@Ref$ByYear$F_SPR[1,,1]
+
+
 
 sim <- 3
 age <- 12

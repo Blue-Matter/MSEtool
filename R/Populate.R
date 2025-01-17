@@ -635,7 +635,6 @@ setMethod("Populate", "stock", function(object,
                              seed=seed,
                              messages=messages)
   
-
   stock@Fecundity <- Populate(object=stock@Fecundity,
                               Ages=stock@Ages,
                               Length=stock@Length,
@@ -896,8 +895,27 @@ setMethod("Populate", "fecundity", function(object,
                                             messages=TRUE) {
   TimeSteps <- TimeStepAttributes(object, TimeSteps)
   argList <- list(Ages, Length, Weight, Maturity, nsim, TimeSteps, CalcAtLength, seed)
+  
+  if (EmptyObject(object)) {
+    if (!isFALSE(messages))
+      cli::cli_alert_info('No `Fecundity` model found. Assuming Fecundity proportional to Spawning Biomass')
+    
+    CheckRequiredObject(Ages, 'ages', 'Ages')
+    CheckRequiredObject(Weight, 'weight', 'Weight')
+    CheckRequiredObject(Length, 'length', 'Length')
+    # CheckRequiredObject(Maturity, 'maturity', 'Maturity')
+    
+    Weight <- Populate(Weight, Ages, Length, nsim, TimeSteps, seed=seed, ASK=FALSE, messages=messages)
+    # Maturity <- Populate(Maturity, Ages, Length, nsim, TimeSteps, seed=seed, messages=messages)
+    # object@MeanAtAge <- MultiplyArrays(array1=Weight@MeanAtAge, array2=Maturity@MeanAtAge)
+    object@MeanAtAge <- Weight@MeanAtAge # egg production is fecundity x maturity - calculated internally
+    # fecundity is the egg production of a MATURE individual 
+    
+    PrintDonePopulating(object, sb, isTRUE(messages))
+    return(SetDigest(argList, object))
+  }
 
-  if (CheckDigest(argList, object) | EmptyObject(object))
+  if (CheckDigest(argList, object))
     return(object)
 
   SetSeed(object, seed)

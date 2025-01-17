@@ -12,20 +12,20 @@
 #' @return A object of class `OM`, `MOM`, or `om`
 #' @export
 #' 
-Convert <- function(OM, Author='', CurrentYear=NULL) {
+Convert <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
   if (methods::is(OM, 'OM') | methods::is(OM, 'MOM')) {
-    return(OM2om(OM, Author, CurrentYear))
+    return(OM2om(OM, Author, CurrentYear, Populate=Populate))
   } else if (methods::is(OM, 'om')) {
     if (nStock(OM)>1 | nFleet(OM)>1)
-      return(om2MOM(OM))
-    return(om2OM(OM))
+      return(om2MOM(OM, , Populate=Populate))
+    return(om2OM(OM, Populate=Populate))
   } else {
     cli::cli_abort('`OM` must be class `OM`, `MOM`, or `om`')
   }
 }
 
 
-OM2om <- function(OM, Author='', CurrentYear=NULL) {
+OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
 
   if (!methods::is(OM, 'OM') & !methods::is(OM, 'MOM'))
     cli::cli_abort('Argument `OM` must be class `OM` or `MOM`')
@@ -143,7 +143,8 @@ OM2om <- function(OM, Author='', CurrentYear=NULL) {
     # update because Vmaxlen and Rmaxlen now correspond with maximum length class
     om <- SolveForVmaxlen(om) 
     om <- SolveForRmaxlen(om)
-    om <- Populate(om, messages=FALSE)
+    if (Populate)
+      om <- Populate(om, messages=FALSE)
     return(om)
   }
   
@@ -178,7 +179,9 @@ OM2om <- function(OM, Author='', CurrentYear=NULL) {
       }
     }
   }
-  Populate(om)
+  if (Populate)
+    om <- Populate(om)
+  om
 }
 
 ImportSexPars <- function(OM) {
@@ -201,7 +204,12 @@ ImportSexPars <- function(OM) {
 
 OM2stock <- function(OM, cpars=NULL) {
   stock <- Stock()
-  stock@Name <- OM@Name
+  if (methods::is(OM, 'OM')) {
+    stock@Name <- SubOM(OM, 'Stock')@Name
+  } else {
+    stock@Name <- OM@Name
+  }
+  
   stock@CommonName <- OM@Common_Name
   stock@Species <- OM@Species
   stock@Ages <- Ages(OM@maxage)
@@ -419,11 +427,11 @@ OM2SRR <- function(OM, cpars=NULL) {
   Pars(SRR) <- pars
   
   SRR@Model <- switchSRR(OM@SRrel[1])
-  if (!is.finite(SRR@R0)) 
+  if (!is.finite(SRR@R0) || is.null(SRR@R0)) 
     SRR@R0 <- process_cpars(OM@R0)
-  if (!is.finite(SRR@SD))
+  if (!is.finite(SRR@SD) || is.null(SRR@SD))
     SRR@SD <- process_cpars(OM@Perr)
-  if (!is.finite(SRR@AC)) 
+  if (!is.finite(SRR@AC) || is.null(SRR@AC)) 
     SRR@AC <- process_cpars(OM@AC)
   SRR
 }
@@ -617,6 +625,7 @@ OM2FishingMortality <- function(OM, cpars=NULL) {
     FishingMortality <- cpars2FishingMortality(cpars)
   } else {
     FishingMortality <- FishingMortality()
+    cli::cli_alert_warning('Apical F not imported!!')
   }
  
   FishingMortality
@@ -624,8 +633,8 @@ OM2FishingMortality <- function(OM, cpars=NULL) {
 
 cpars2FishingMortality <- function(cpars) {
   FishingMortality <- FishingMortality()
+  FishingMortality@ApicalF <- process_cpars(cpars$qs) * process_cpars(cpars$Find)
   FishingMortality
-
 }
 
 
@@ -807,15 +816,12 @@ identical_sim <- function(value) {
 }
 
 identical_year <- function(value) {
-
   dd <- dim(value)
-
   if (length(dd)==2)
-    return(prod(value[1,1]==value[1,dd[2]]))
+    return(all(value[1,] == mean(value[1,])))
 
   if (length(dd)==3)
-    return(prod(value[1,,1]==value[1,,dd[3]]))
-
+    return(all(value[1,,1] == mean(value[1,,1])))
 }
 
 get_cpars <- function(OM, st=1, fl=1) {

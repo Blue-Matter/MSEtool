@@ -49,6 +49,8 @@ ApicalF <- function(x) {
 #' @rdname Access
 #' @export
 `ApicalF<-` <- function(x, value) {
+  if (methods::is(x, 'fleet')) 
+    return(assignSlot(x@FishingMortality, value, 'ApicalF'))
   assignSlot(x, value, 'ApicalF')
 }
 

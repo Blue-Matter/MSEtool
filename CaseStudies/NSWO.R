@@ -8,7 +8,24 @@ SSdir <- 'G:/My Drive/1_PROJECTS/North_Atlantic_Swordfish/OMs/grid_2022/000_base
 
 MOM <- SS2MOM(SSdir=SSdir,nsim=5, Name='North Atlantic Swordfish') 
 MOM@nsim <- 4
+
 multiHist <- Simulate(MOM)
+
+OM <- Convert(MOM, Populate = FALSE)  # convert from `MOM` to `om`
+
+OM <- Populate(OM)
+
+
+array <- OM@Fleet[[1]][[4]]@FishingMortality@ApicalF 
+
+
+
+
+OM@Fleet$Female$SPN_1@FishingMortality@ApicalF
+
+
+multiHist[[1]][[1]]@Ref$ByYear$F_SPR[1,,1]
+multiHist[[1]][[1]]@Ref$ByYear$SSB0/multiHist[[1]][[1]]@Ref$ByYear$R0
 
 
 # Unfished Equilibrium
@@ -24,7 +41,7 @@ multiHist[[1]][[1]]@Ref$ReferencePoints |> names()
 
 multiHist[[1]][[1]]@Ref$ByYear |> names()
 
-OM <- Convert(MOM)  # convert from `MOM` to `om`
+
 
 
 # Historical

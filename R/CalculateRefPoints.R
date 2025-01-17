@@ -1,27 +1,22 @@
 # --- New Classes (temp) ----
 setClass("refpoints",
          slots=c(N0='list',
-                 B0
-                 SB0
-                 SP0
-                 MSY
-                 FMSY
-                 BMSY
-                 SBMSY
-                 SPMSY
-                 
-                 
-                 F01
-                 FMax 
-                 FCrash 
-                 
-                 PerRecruit='list',
+                 B0='list',
+                 SB0='list',
+                 SP0='list',
                  MSY='list',
-                 Misc='list',
+                 FMSY='list',
+                 BMSY='list',
+                 SBMSY='list',
+                 SPMSY='list',
+                 F01='list',
+                 FMax='list',
+                 FCrash='list',
+                 SPRcrash='list',
                  MGT='list',
                  RefYield='list',
                  BLow='list',
-                 Misc='list',
+                 Misc='list'
          ),
          contains='Created_ModifiedClass'
 )
@@ -50,23 +45,16 @@ setClass("refpoints",
 # - SPRcrash
 
 
-CalcReferencePoints <- function(OM, 
-                                parallel=FALSE, 
+CalcReferencePoints <- function(OM,
                                 messages='default',
                                 nSim=NULL, 
+                                parallel=FALSE, 
                                 Unfished=NULL,
                                 ...) {
   
-  OM <- OM |> 
-    nSimUpdate(nSim, messages) |>
-    Populate(messages=messages) |>
-    ConvertToList()
+  OM <- StartUp(OM, messages, nSim) 
 
-  # TODO                    
-  if (!is.null(OM@SexPars@Herm))
-    stop('Herm not done yet!')
-  
-  
+
   RefPoints <- new('refpoints') 
   
   

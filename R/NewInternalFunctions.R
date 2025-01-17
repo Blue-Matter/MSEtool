@@ -1,3 +1,86 @@
+
+# New Classes (temp) ----
+
+setClass("hist",
+         contains=c('om', 'Created_ModifiedClass'),
+         slots=c(Unfished='unfished',
+                 RefPoints='refpoints'
+                 
+         )
+)
+
+
+SetHistRel <- function(OM) {
+  # Ignore MICE in historical period
+  if (isFALSE(OM@Control$HistRel))
+    return(list())
+  Relations(OM) 
+}
+
+nSimUpdate <- function(OM, nSim=NULL, messages='default') {
+  if (is.null(nSim))
+    return(OM)
+  if (nSim==OM@nSim)
+    return(OM)
+  
+  msg <- SetMessages(messages)
+  if (nSim>OM@nSim) {
+    if (isTRUE(msg$alert==TRUE))
+      cli::cli_alert_info('Argument `nSim` ({.val {nSim}}) is greater than `nSim(OM)` ({.val {nSim(OM)}}). Ignoring.')
+    return(OM)                      
+  }
+  if (isTRUE(msg$alert==TRUE))
+    cli::cli_alert_info('Setting {.val nSim(OM) <-  {nSim}}')
+  OM@nSim <- nSim
+  
+  if (length(OM@CatchFrac)>0) 
+    OM@CatchFrac <- lapply(OM@CatchFrac, function(x)
+      x[1:OM@nSim, , drop = FALSE])
+  OM
+}
+
+CheckClass <- function(object, class='om', name='OM', type='Argument') {
+  if (isFALSE(methods::is(object, class)))
+    cli::cli_abort('{type} {.var {name}} must be class {.var {class}}')
+  invisible(object)
+}
+
+ConvertToList <- function(x) {
+  # TODO add names
+  if (methods::is(x, 'om')) {
+    if (methods::is(x@Stock, 'stock'))
+      x@Stock <- list(x@Stock)
+    if (methods::is(x@Fleet, 'fleet'))
+      x@Fleet <- list(list(x@Fleet))
+  }
+  if (methods::is(x, 'stock')) 
+    x <- list(x)
+  if (methods::is(x, 'fleet')) 
+    x <- list(list(x))      
+  x
+}
+
+ConvertFromList <- function(x) {
+  
+  
+}
+
+
+StartUp <- function(OM, messages='default', nSim=NULL) {
+  
+  # TODO                    
+  if (!is.null(OM@SexPars@Herm))
+    stop('Herm not done yet!')
+  
+  OM |> 
+    nSimUpdate(nSim, messages) |>
+    Populate(messages=messages) |>
+    ConvertToList() # converts OM@Stock and OM@Fleet to lists
+  
+}
+
+
+
 CalcSurvival <- function(M_at_Age, PlusGroup=TRUE, SpawnTimeFrac=NULL, F_at_Age=NULL) {
   Z_at_Age <- M_at_Age
   if (!is.null(F_at_Age))

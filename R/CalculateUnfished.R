@@ -93,20 +93,12 @@ DistributeStock <- function(AtAge, UnfishedDist) {
 
 # Calculates Equilibrium and Dynamic Unfished Population Dynamics
 CalcUnfishedDynamics <- function(OM,
-                                 parallel=FALSE, 
                                  messages='default',
                                  nSim=NULL,
+                                 parallel=FALSE, 
                                  ...) {
-  OM <- OM |> 
-    nSimUpdate(nSim, messages) |>
-    Populate(messages=messages) |>
-    ConvertToList()
-  
+  OM <- StartUp(OM, messages, nSim) 
 
-  # TODO                    
-  if (!is.null(OM@SexPars@Herm))
-    stop('Herm not done yet!')
-  
   
   Unfished <- new('unfished') 
   
