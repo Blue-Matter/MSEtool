@@ -2561,9 +2561,10 @@ SexPars <- function(SPFrom=NULL,
 
 # ---- OM Class ----
 
-setClassUnion(name="stock.list", members=c("stock", 'Stock',  "list", 'NULL'))
-setClassUnion(name="fleet.list", members=c("fleet", 'Fleet', "list", 'NULL'))
-setClassUnion(name="data.list", members=c("data", "list", 'NULL'))
+setClassUnion(name="StockList", members=c("stock", 'Stock',  "list", 'NULL'))
+setClassUnion(name="StockFleetList", members=c("fleet", 'Fleet', "list", 'NULL'))
+setClassUnion(name="FleetList", members=c("fleet", 'Fleet', "list", 'NULL'))
+setClassUnion(name="DataList", members=c("data", "list", 'NULL'))
 # setClassUnion(name="obs.list", members=c('Obs', "obs", "list", 'NULL'))
 
 #' Operating Model Object
@@ -2695,11 +2696,11 @@ setClass("om",
                  nYear='num.null',
                  pYear='num.null',
                  CurrentYear='num.null',
-                 Stock='stock.list',
-                 Fleet='fleet.list',
+                 Stock='StockList',
+                 Fleet='StockFleetList',
                  Obs='obs.list',
                  Imp='imp.list',
-                 Data='data.list',
+                 Data='DataList',
                  CatchFrac='list',
                  Allocation='list',
                  Efactor='list',

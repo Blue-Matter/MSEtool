@@ -13,7 +13,16 @@ multiHist <- Simulate(MOM)
 
 OM <- Convert(MOM, Populate = FALSE)  # convert from `MOM` to `om`
 
+
 OM <- Populate(OM)
+
+
+
+OM@Stock$Female@Length@MeanAtAge
+OM@Stock$Female@Weight@MeanAtAge |> dim()
+
+multiHist[[1]][[1]]@Ref$ByYear$F_SPR[1,,1]
+
 
 
 array <- OM@Fleet[[1]][[4]]@FishingMortality@ApicalF 
@@ -24,7 +33,7 @@ array <- OM@Fleet[[1]][[4]]@FishingMortality@ApicalF
 OM@Fleet$Female$SPN_1@FishingMortality@ApicalF
 
 
-multiHist[[1]][[1]]@Ref$ByYear$F_SPR[1,,1]
+
 multiHist[[1]][[1]]@Ref$ByYear$SSB0/multiHist[[1]][[1]]@Ref$ByYear$R0
 
 

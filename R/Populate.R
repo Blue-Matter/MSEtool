@@ -472,30 +472,40 @@ setMethod("Populate", "om", function(object, messages='progress') {
     return(object)
   
   chk <- Check(object)
+  
+  if (methods::is(object@Stock, 'list'))
+    class(object@Stock) <- 'StockList'
 
   if (methods::is(object@Stock, 'stock')) {
     nStocks <- 1
-  } else if (methods::is(object@Stock, 'list')) {
+  } else if (methods::is(object@Stock, 'StockList')) {
     nStocks <- length(object@Stock)
   } else {
     cli::cli_abort('`Stock` must be a {.fun {"Stock"}} object or a list of {.fun {"Stock"}} objects')
   }
   
+  
+  if (methods::is(object@Fleet, 'list')) 
+    class(object@Stock) <- 'StockFleetList'
+  
   if (methods::is(object@Fleet, 'fleet')) {
     nFleets <- 1
-  } else if (methods::is(object@Fleet, 'list')) {
+  } else if (methods::is(object@Fleet, 'StockFleetList')) {
     nFleets <- length(object@Fleet[[1]])
   } else {
-    cli::cli_abort('`Fleet` must be a {.fun {"Fleet"}} object or a list of {.fun {"Fleet"}} objects')
+    cli::cli_abort('`Fleet` must be a {.fun {"Fleet"}} object or a nested list of {.fun {"Fleet"}} objects for each {.fun {"Sleet"}} object')
   }
 
   # Populate Stock
   stockList <- vector('list', nStocks)
   names(stockList) <- paste('Stock', 1:nStocks)
+  class(stockList) <- 'StockList'
+  
   fleetList <- vector('list', nStocks)
+  class(fleetList) <- 'StockFleetList'
   names(fleetList) <- paste('Stock', 1:nStocks)
   for (st in 1:nStocks) {
-    if (methods::is(object@Stock, 'list')) {
+    if (methods::is(object@Stock, 'list') | methods::is(object@Stock, 'StockList')) {
       stock <- object@Stock[[st]]
     } else {
       stock <- object@Stock
@@ -518,12 +528,14 @@ setMethod("Populate", "om", function(object, messages='progress') {
     names(stockList)[st] <- stock@Name
     names(fleetList)[st] <- names(stockList)[st]
     fleetList[[st]] <- list()
+    class(fleetList[[st]]) <- 'FleetList'
     
     for (fl in 1:nFleets) {
      
-      
-      if (methods::is(object@Fleet, 'list')) {
+      if (methods::is(object@Fleet, 'StockFleetList')) {
         fleet <- object@Fleet[[st]][[fl]]
+      } else if (methods::is(object@Fleet, 'FleetList')){
+        fleet <- object@Fleet[[fl]]
       } else {
         fleet <- object@Fleet
       }
@@ -540,13 +552,13 @@ setMethod("Populate", "om", function(object, messages='progress') {
     }
   }
   
-  if (methods::is(object@Stock, 'list')) {
+  if (methods::is(object@Stock, 'list') | methods::is(object@Stock, 'StockList')) {
     object@Stock <- stockList
   } else {
     object@Stock <- stockList[[1]]
   }
   
-  if (methods::is(object@Fleet, 'list')) {
+  if (methods::is(object@Fleet, 'list')| methods::is(object@Fleet, 'StockFleetList')) {
     object@Fleet <- fleetList
   } else {
     object@Fleet <- fleetList[[1]][[1]]    

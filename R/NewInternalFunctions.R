@@ -48,15 +48,29 @@ CheckClass <- function(object, class='om', name='OM', type='Argument') {
 ConvertToList <- function(x) {
   # TODO add names
   if (methods::is(x, 'om')) {
-    if (methods::is(x@Stock, 'stock'))
+    if (methods::is(x@Stock, 'stock')) {
       x@Stock <- list(x@Stock)
-    if (methods::is(x@Fleet, 'fleet'))
+      class(x@Stock) <- 'StockList'
+    }
+      
+    if (methods::is(x@Fleet, 'fleet')) {
       x@Fleet <- list(list(x@Fleet))
+      class(x@Fleet) <- 'StockFleetList'
+      class(x@Fleet[[1]]) <- 'FleetList'
+    }
+      
   }
-  if (methods::is(x, 'stock')) 
+  if (methods::is(x, 'stock')) {
     x <- list(x)
-  if (methods::is(x, 'fleet')) 
-    x <- list(list(x))      
+    class(x) <- 'StockList'
+  }
+    
+  if (methods::is(x, 'fleet')) {
+    x <- list(list(x))   
+    class(x) <- 'StockFleetList'
+    class(x[[1]]) <- 'FleetList'
+  }
+    
   x
 }
 
@@ -81,33 +95,7 @@ StartUp <- function(OM, messages='default', nSim=NULL) {
 
 
 
-CalcSurvival <- function(M_at_Age, PlusGroup=TRUE, SpawnTimeFrac=NULL, F_at_Age=NULL) {
-  Z_at_Age <- M_at_Age
-  if (!is.null(F_at_Age))
-    Z_at_Age <- M_at_Age + F_at_Age
-  
-  dd <- dim(M_at_Age)
-  nSim <- dd[1]
-  nAge <- dd[2]
-  nTS <- dd[3]
-  
-  surv <- array(1, dim=c(nSim, nAge, nTS))
-  if (is.null(SpawnTimeFrac)) {
-    SpawnTimeFrac <- 0
-  }
-  SpawnTimeFrac <- rep(SpawnTimeFrac, nSim)[1:nSim]
-  
-  
-  surv[,1,] <- exp(-M_at_Age[,1,]*SpawnTimeFrac)
-  for (a in 2:nAge) {
-    surv[,a,] <- surv[,a-1,]*exp(-(Z_at_Age[,a-1,]*(1-SpawnTimeFrac)+Z_at_Age[,a,]*SpawnTimeFrac))
-  }
-  if (PlusGroup)
-    surv[,nAge,] <- surv[,nAge,]/(1-exp(-Z_at_Age[,nAge,]))
-  
 
-  surv |> AddDimNames(TimeSteps=attributes(M_at_Age)$TimeSteps)
-}
 
 # 
 # GetObject <- function(Stock, slots) {

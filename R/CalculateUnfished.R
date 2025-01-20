@@ -24,16 +24,7 @@ AddStockNames <- function(list, Names) {
 }
 
 
-CalcUnfishedSurvival <- function(Stock, SP=FALSE) {
-  M_at_Age <- Stock@NaturalMortality@MeanAtAge
-  PlusGroup <- Stock@Ages@PlusGroup
-  if (SP) {
-    SpawnTimeFrac <- Stock@SRR@SpawnTimeFrac  
-  } else {
-    SpawnTimeFrac <- NULL
-  }
-  CalcSurvival(M_at_Age, PlusGroup, SpawnTimeFrac)
-}
+
 
 not <- function(val) !val
 

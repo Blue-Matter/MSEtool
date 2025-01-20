@@ -1,55 +1,85 @@
-Get <- function(slot, x, y=NULL) {
-  cl <- class(x)
-  slots <- slotNames(cl)
-  ind <- match(slot, slots)
-  if (!is.na(ind))
-    return(slot(x, slot))
-  
-  if (!is.null(y)) {
-    obj <- slot(x,y)
-  } else {
-    # find object with unique `slot`
-    for (i in seq_along(slots)) {
-      obj <- slot(x, slots[i])
-      slots_i <- slotNames(obj)
-      ind <- match(slot, slots_i)
-      if (is.na(ind)) {
-        obj <- NULL
-      } else {
-        break()
-      }
-    }
+
+Get <- function(object, slots, df=FALSE) {
+
+  cl <- class(object)
+  for (i in seq_along(slots)) {
+    object <- slot(object, slots[i])
   }
-  if (is.null(obj))
-    return(NULL)
+  if (df) 
+    object <- as.data.frame.table(object, stringsAsFactors =FALSE,
+                            responseName =slots[length(slots)]) |>
+     dplyr::mutate_if(is.character, as.numeric)
   
-  slot(obj, slot)
+  object
+
 }
 
-GetR0 <- function(Stock) {
-  Get('R0', Stock)
+# Stock -----
+GetStockAtAge <- function(object, slots, df=FALSE) {
+  if (methods::is(object, 'om')) 
+    object <- object@Stock
+  
+  if (methods::is(object, 'StockList')) 
+    return(
+      purrr::map(object, Get, slots=slots, df=df)
+    )
+  Get(object, slots, df)
 }
 
-GetWeightAtAge <- function(Stock) {
-  Get('MeanAtAge', Stock, 'Weight')
+
+
+GetLengthAtAge <- function(object, df=FALSE) {
+  GetStockAtAge(object,  c('Length', 'MeanAtAge'),df)
 }
 
-GetMaturityAtAge <- function(Stock) {
-  Get('MeanAtAge', Stock, 'Maturity')
+GetWeightAtAge <- function(object, df=FALSE) {
+  GetStockAtAge(object,  c('Weight', 'MeanAtAge'),df)
 }
 
-GetFecundityAtAge <- function(Stock) {
-  Get('MeanAtAge', Stock, 'Fecundity')
+GetMaturityAtAge <- function(object, df=FALSE) {
+  GetStockAtAge(object,  c('Maturity', 'MeanAtAge'),df)
 }
 
-GetRecDevInit <- function(Stock) {
-  Get('RecDevInit', Stock, 'SRR')
+GetFecundityAtAge <- function(object, df=FALSE) {
+  GetStockAtAge(object,  c('Fecundity', 'MeanAtAge'),df)
 }
 
-GetRecDevHist <- function(Stock) {
-  Get('RecDevHist', Stock, 'SRR')
+
+GetR0 <- function(object, df=FALSE) {
+  GetStockAtAge(object,  c('SRR', 'R0'),df)
 }
 
-GetRecDevProj <- function(Stock) {
-  Get('RecDevProj', Stock, 'SRR')
+
+
+GetRecDevInit <- function(object, df=FALSE) {
+  GetStockAtAge(object,  c('SRR', 'RecDevInit'),df)
+}
+
+GetRecDevHist <- function(object, df=FALSE) {
+  GetStockAtAge(object,  c('SRR', 'RecDevHist'),df)
+}
+
+
+GetRecDevProj <- function(object, df=FALSE) {
+  GetStockAtAge(object,  c('SRR', 'RecDevProj'),df)
+}
+
+
+# Fleet -----
+
+GetFleetAtAge <- function(object, slots, df=FALSE) {
+  if (methods::is(object, 'om')) 
+    object <- object@Fleet
+  
+  if (methods::is(object, 'list')) {
+      object <- purrr::map(object, GetFleetAtAge, slots=slots, df=df)  
+  }
+  if (!isS4(object))
+    return(object)
+  Get(object, slots, df)
+}
+
+
+GetApicalF <- function(object, df=FALSE) {
+  GetFleetAtAge(object, slots=c('FishingMortality', 'ApicalF'), df)
 }

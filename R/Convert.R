@@ -75,7 +75,7 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
                                 TimeUnits=om@TimeUnits)
 
   if (methods::is(OM, 'OM')) {
-    om@Stock <- OM2stock(OM, cpars=OM@cpars)
+    om@Stock <- OM2stock(OM, cpars=OM@cpars) 
     om@Fleet <- OM2fleet(OM, OM@cpars, OM@Fdisc)
     om@Obs <- SubOM(OM, 'Obs')
     om@Imp <- SubOM(OM, 'Imp')
@@ -152,9 +152,11 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
     om@Stock <- ConvertToList(MOM2stock(OM))
     names(om@Stock) <- names(OM@Stocks)
     om@Fleet <- list()
+    class(om@Fleet) <- 'StockFleetList'
     for (st in 1:length(om@Stock)) {
       om@Fleet[[st]] <- MOM2fleet(OM, st)
       names(om@Fleet[[st]]) <- names(OM@Fleets[[st]])
+      class(om@Fleet[[st]]) <- 'FleetList'
     }
     om@Obs <- OM@Obs
     om@Imp <- OM@Imps
