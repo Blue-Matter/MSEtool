@@ -5,32 +5,54 @@ CalcFatAge <- function(Fleet, return=c('All', 'FCaught', 'FRetain', 'FDiscard', 
   apicalF <- Fleet@FishingMortality@ApicalF
   selectivity <-  Fleet@Selectivity@MeanAtAge
   DimSelectivity <- dim(selectivity)
+  DimapicalF <- dim(apicalF)
   
-  # add age dimension
-  apicalF <- replicate(DimSelectivity[2], apicalF) |> aperm(c(1,3,2))
+  if (all(DimapicalF==1)) {
+    # add sim, age, and time-step dimensions
+    apicalF <- array(apicalF, dim=c(1,DimSelectivity[2], DimSelectivity[3])) |>
+      AddDimNames(names=names(dimnames(selectivity)), TimeSteps =  dimnames(selectivity)$`Time Step`)
+  } else {
+    # add age dimension
+    apicalF <- replicate(DimSelectivity[2], apicalF, simplify = 'array') |> 
+      aperm(c(1,3,2))
+    names(dimnames(apicalF))[2] <- 'Age'
+    dimnames(apicalF)[[2]] <- 1:DimSelectivity[2]
+    
+  }
   
-  ind <- match(dimnames(apicalF)$`Time Step`, dimnames(selectivity)$`Time Step`)
   
-  dnames <- dimnames(selectivity)
-  dnames[[3]] <- dnames[[3]][ind]
-  dimnames(apicalF) <-  dnames
+  # Inflate ApicalF to account for discard mortality
+  # ApicalF = apicalF of Dead Fish 
+  # TODO - this can be made more efficient by only calculating when necessary
   
-  FCaught <- MultiplyArrays(apicalF, selectivity[,,ind, drop=FALSE])
+  SelectivityRetention <- MultiplyArrays(Fleet@Selectivity@MeanAtAge, Fleet@Retention@MeanAtAge)
+  SelectivityDiscardMort <- MultiplyArrays(Fleet@Selectivity@MeanAtAge, Fleet@DiscardMortality@MeanAtAge)
+  SelectivityDiscardMortRetention <- MultiplyArrays(SelectivityDiscardMort, Fleet@Retention@MeanAtAge)
   
-  EffectiveRetain <- MultiplyArrays(Fleet@Selectivity@MeanAtAge[,,ind, drop=FALSE], 
-                                    Fleet@Retention@MeanAtAge[,,ind, drop=FALSE])
+  InflateApicalF <- SubtractArrays(
+    AddArrays(SelectivityRetention, SelectivityDiscardMort),
+    SelectivityDiscardMortRetention
+  )
   
-  FRetain <-  MultiplyArrays(apicalF, EffectiveRetain)
+  apicalF <- DivideArrays(apicalF, InflateApicalF)
   
-  FDiscard <-  FCaught-FRetain
+  FCaught <- MultiplyArrays(apicalF, Fleet@Selectivity@MeanAtAge)
+  FRetain <- MultiplyArrays(Fleet@Retention@MeanAtAge, FCaught)
+  FDiscard <- SubtractArrays(FCaught, FRetain)
   
-  DiscardMort <- Fleet@DiscardMortality@MeanAtAge[,,ind, drop=FALSE]
-  
+
   if (is.null(DiscardMort) || !all(is.finite(DiscardMort))) {
     FDead <- FRetain   
   } else {
-    FDead <- FRetain + MultiplyArrays(FDiscard, DiscardMort)
+    FDead <- AddArrays(array1=FRetain, 
+                       array2=MultiplyArrays(FDiscard, SelectivityDiscardMort))
   }
+  
+  FCaught[1,,71] |> max()
+  FRetain[1,,71] |> max()
+  FDead[1,,71] |> max()
+  
+
   
   out <- list(
     FCaught=FCaught,
@@ -41,9 +63,11 @@ CalcFatAge <- function(Fleet, return=c('All', 'FCaught', 'FRetain', 'FDiscard', 
   
   return <- match.arg(return)
   
-  if (return=='All') return(out)
+  if (return=='All') 
+    return(out)
   
   out[[return]]
 }
+
 
 

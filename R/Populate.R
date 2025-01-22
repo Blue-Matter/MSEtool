@@ -486,10 +486,11 @@ setMethod("Populate", "om", function(object, messages='progress') {
   
   
   if (methods::is(object@Fleet, 'list')) 
-    class(object@Stock) <- 'StockFleetList'
+    class(object@Fleet) <- 'StockFleetList'
   
   if (methods::is(object@Fleet, 'fleet')) {
     nFleets <- 1
+    
   } else if (methods::is(object@Fleet, 'StockFleetList')) {
     nFleets <- length(object@Fleet[[1]])
   } else {
@@ -554,15 +555,17 @@ setMethod("Populate", "om", function(object, messages='progress') {
   
   if (methods::is(object@Stock, 'list') | methods::is(object@Stock, 'StockList')) {
     object@Stock <- stockList
-  } else {
-    object@Stock <- stockList[[1]]
-  }
+  } 
+  #else {
+    #object@Stock <- stockList[[1]]
+  #}
   
   if (methods::is(object@Fleet, 'list')| methods::is(object@Fleet, 'StockFleetList')) {
     object@Fleet <- fleetList
-  } else {
-    object@Fleet <- fleetList[[1]][[1]]    
   }
+  #else {
+   # object@Fleet <- fleetList[[1]][[1]]    
+  #}
   
   # share paramaters for two-sex stocks
   object <- object |> ShareParameters() |> StartMessages()
@@ -1204,6 +1207,8 @@ setMethod("Populate", "fleet", function(object,
   
   fleet <- object
   
+  # SAVE <- fleet
+  
 
   fleet@FishingMortality <- Populate(fleet@FishingMortality,
                                       nsim,
@@ -1211,6 +1216,8 @@ setMethod("Populate", "fleet", function(object,
                                       seed,
                                       messages=messages
                                       )
+  
+  
 
   fleet@DiscardMortality <- Populate(fleet@DiscardMortality,
                                       Ages,
@@ -1351,7 +1358,6 @@ setMethod("Populate", "selectivity", function(object,
   
   selectivity <- object
   
-
   selectivity@Pars <- StructurePars(Pars=selectivity@Pars, nsim, nTS=GetnTS(TimeSteps))
   selectivity@Model <- FindModel(selectivity)
   
@@ -1368,7 +1374,6 @@ setMethod("Populate", "selectivity", function(object,
                                           seed, 
                                           isFALSE(messages))
     } else {
-      
       selectivity <- PopulateMeanAtAge(selectivity, Ages, TimeSteps)
     }
   } 
@@ -1397,12 +1402,36 @@ setMethod("Populate", "selectivity", function(object,
     }
   }
   
+  # Check selectivity has a max value of one across age classes
+  selectivity@MeanAtAge <- CheckSelectivityMaximum(selectivity@MeanAtAge)
 
   selectivity <- AddMeanAtAgeAttributes(selectivity, TimeSteps, Ages)
   PrintDonePopulating(selectivity, sb, isTRUE(messages))
   SetDigest(argList, selectivity)
 
 })
+
+CheckSelectivityMaximum <- function(MeanAtAge) {
+  MaxValues <- apply(MeanAtAge, c(1,3), max)
+  
+  ind <- MaxValues<1
+  if (all(!ind))
+    return(MeanAtAge)
+  
+  cli::cli_alert_warning("WARNING: Selectivity-at-Age does not have a maximum value of 1. F-at-Age won't correspond with Apical")
+  cli::cli_alert_warning('Standardizing to a max value of 1 but you probably want to fix this in the OM')
+  
+  for (i in 1:nrow(ind)) {
+    for (j in 1:ncol(ind)) {
+      if (ind[i,j]==FALSE)
+        next()
+      cli::cli_alert('Simulation {i}, Time Step {j}')
+      MeanAtAge[i, ,j] <- MeanAtAge[i, ,j]/max(MeanAtAge[i, ,j])
+    }
+  }
+  
+  MeanAtAge
+}
 
 
 ### ---- Retention ----

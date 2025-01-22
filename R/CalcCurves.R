@@ -51,16 +51,61 @@ CalcSPRCurve <- function(OM,
 
   
   Stock <- OM@Stock[[1]]
-  Fleet <- OM@Fleet[[1]]
-  apicalF <- 0.1
+  FleetList <- OM@Fleet[[1]]
   
-  ########### UP TO HERE #########
-  # do CalcFishedSurvival  
+  apicalF <- 0.05
+  
+  CalcFishedSurvival <- function(Stock, FleetList, apicalF=NULL, SP=FALSE) {
+    
+    # TODO - include spatial closure and distribution for MSY and other ref points?
+    # TODO does this need to be for every year?
+    
+   
+
+    FDead <- purrr::map(FleetList, CalcFatAge, return='FDead')
+    
+    
+    # Apical F is by fleet, not over all fleets
+    
+    FDead <- array(unlist(FDead), dim=c(dim(FDead[[1]])[1], 
+                                        dim(FDead[[1]])[2], 
+                                        dim(FDead[[1]])[3], 
+                                        length(FDead))) |>
+      AddDimNames(names=c('Sim', 'Age', 'Time Step', 'Fleet'), TimeSteps=TimeSteps(Stock, 'Historical'))
+    
+    FDeadOverTotal <- apply(FDead, c(1,2,3), sum) 
+    
+    if (!is.null(apicalF)) 
+      FDeadOverTotal <- UpdateApicalF(FDeadOverTotal, apicalF)
+    
+    
+    M_at_Age <- Stock@NaturalMortality@MeanAtAge
+    PlusGroup <- Stock@Ages@PlusGroup
+    
+    if (SP) {
+      SpawnTimeFrac <- Stock@SRR@SpawnTimeFrac  
+    } else {
+      SpawnTimeFrac <- NULL
+    }
+    
+    ### UP TO HERE ####
+    # Convert this to the generic in CalcSurvival.R
+    CalcSurvival(M_at_Age, PlusGroup=PlusGroup, SpawnTimeFrac=SpawnTimeFrac, F_at_Age=FDeadOverTotal)
+  }
+  
+  
   
   
   CalculateSPR_ <- function(apicalF, Stock, Fleet) {
-    FishedSurvival <- CalcFishedSurvival(Stock, Fleet, apicalF)
-    EPF <- FishedSurvival * Stock@Fecundity@MeanAtAge # fished egg production per recruit
+    FishedSurvival <- CalcFishedSurvival(Stock, FleetList, apicalF)
+    
+    # fished egg production per recruit
+    SPRF <- MultiplyArrays(array1=FishedSurvival, array2=Stock@Fecundity@MeanAtAge) |>
+      apply(c(1,3), sum) |> process_cpars()
+    
+    ## over stocks --
+    DivideArrays(SPR0, SPRF)
+    
   }
   
   

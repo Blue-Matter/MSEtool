@@ -151,6 +151,7 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
   if (methods::is(OM, 'MOM')) {
     om@Stock <- ConvertToList(MOM2stock(OM))
     names(om@Stock) <- names(OM@Stocks)
+    class(om@Stock) <- 'StockList'
     om@Fleet <- list()
     class(om@Fleet) <- 'StockFleetList'
     for (st in 1:length(om@Stock)) {
@@ -166,7 +167,6 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
     om@Efactor <- OM@Efactor
     om@Complexes<- OM@Complexes
     om@Relations <- OM@Rel
-    
     om@Data <- vector('list', nStock(om))
     om@Misc$cpars <- vector('list', nStock(om))
     for (st in 1:nStock(om)) {
@@ -180,6 +180,8 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
         om@Misc$cpars[[st]][[fl]] <- l
       }
     }
+    # reduce time-series dimension
+    om <- ReduceArraysTS(om)
   }
   if (Populate)
     om <- Populate(om)

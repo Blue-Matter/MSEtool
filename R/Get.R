@@ -19,6 +19,9 @@ GetStockAtAge <- function(object, slots, df=FALSE) {
   if (methods::is(object, 'om')) 
     object <- object@Stock
   
+  if (isS4(object))
+    return(Get(object, slots, df))
+  
   if (methods::is(object, 'StockList')) 
     return(
       purrr::map(object, Get, slots=slots, df=df)
@@ -27,21 +30,44 @@ GetStockAtAge <- function(object, slots, df=FALSE) {
 }
 
 
-
 GetLengthAtAge <- function(object, df=FALSE) {
-  GetStockAtAge(object,  c('Length', 'MeanAtAge'),df)
+  GetStockAtAge(object,  slots=c('Length', 'MeanAtAge'),df)
 }
+
+
+`SetLengthAtAge<-` <- function(x, value) {
+  x@Length@MeanAtAge <- value
+  x
+}
+
 
 GetWeightAtAge <- function(object, df=FALSE) {
   GetStockAtAge(object,  c('Weight', 'MeanAtAge'),df)
 }
 
+`SetWeightAtAge<-` <- function(x, value) {
+  x@Weight@MeanAtAge <- value
+  x
+}
+
+
 GetMaturityAtAge <- function(object, df=FALSE) {
   GetStockAtAge(object,  c('Maturity', 'MeanAtAge'),df)
 }
 
+`SetMaturityAtAge<-` <- function(x, value) {
+  x@Maturity@MeanAtAge <- value
+  x
+}
+
+
 GetFecundityAtAge <- function(object, df=FALSE) {
   GetStockAtAge(object,  c('Fecundity', 'MeanAtAge'),df)
+}
+
+`SetFecundityAtAge<-` <- function(x, value) {
+  x@Fecundity@MeanAtAge <- value
+  x
 }
 
 
@@ -71,15 +97,58 @@ GetFleetAtAge <- function(object, slots, df=FALSE) {
   if (methods::is(object, 'om')) 
     object <- object@Fleet
   
-  if (methods::is(object, 'list')) {
+  if (isS4(object))
+    return(Get(object, slots, df))
+  
+  if (methods::is(object, 'FleetList')) {
       object <- purrr::map(object, GetFleetAtAge, slots=slots, df=df)  
   }
-  if (!isS4(object))
-    return(object)
-  Get(object, slots, df)
+  object
 }
 
 
 GetApicalF <- function(object, df=FALSE) {
   GetFleetAtAge(object, slots=c('FishingMortality', 'ApicalF'), df)
 }
+
+
+GetDiscardMortalityAtAge <- function(object, df=FALSE) {
+  GetFleetAtAge(object,  c('DiscardMortality', 'MeanAtAge'),df)
+}
+
+`SetDiscardMortalityAtAge<-` <- function(x, value) {
+  x@DiscardMortality@MeanAtAge <- value
+  x
+}
+
+GetSelectivityAtAge <- function(object, df=FALSE) {
+  GetFleetAtAge(object,  c('Selectivity', 'MeanAtAge'),df)
+}
+
+`SetSelectivityAtAge<-` <- function(x, value) {
+  x@Selectivity@MeanAtAge <- value
+  x
+}
+
+GetRetentionAtAge <- function(object, df=FALSE) {
+  GetFleetAtAge(object,  c('Retention', 'MeanAtAge'),df)
+}
+
+`SetRetentionAtAge<-` <- function(x, value) {
+  x@Retention@MeanAtAge <- value
+  x
+}
+
+GetFleetWeightAtAge <- function(object, df=FALSE) {
+  GetFleetAtAge(object,  c('Weight'),df)
+}
+
+`SetFleetWeightAtAge<-` <- function(x, value) {
+  x@Weight <- value
+  x
+}
+
+
+
+
+

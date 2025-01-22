@@ -6,16 +6,26 @@ devtools::load_all()
 
 SSdir <- 'G:/My Drive/1_PROJECTS/North_Atlantic_Swordfish/OMs/grid_2022/000_base_case'
 
-MOM <- SS2MOM(SSdir=SSdir,nsim=5, Name='North Atlantic Swordfish') 
-MOM@nsim <- 4
+MOM <- SS2MOM(SSdir=SSdir,nsim=3, Name='North Atlantic Swordfish') 
 
 multiHist <- Simulate(MOM)
 
 OM <- Convert(MOM, Populate = FALSE)  # convert from `MOM` to `om`
 
-
 OM <- Populate(OM)
 
+
+OM@Fleet[[1]][[2]]@Selectivity@MeanAtAge |> dim()
+
+OM@Fleet[[1]][[1]]@FishingMortality@ApicalF
+
+
+
+
+
+
+x <- om@Fleet[[1]][[1]]
+t <- ReduceArraysTS(x)
 
 
 OM@Stock$Female@Length@MeanAtAge

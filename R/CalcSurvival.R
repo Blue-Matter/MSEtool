@@ -1,9 +1,9 @@
 CalcSurvival <- function(M_at_Age, PlusGroup=TRUE, SpawnTimeFrac=NULL, F_at_Age=NULL) {
   Z_at_Age <- M_at_Age
   if (!is.null(F_at_Age))
-    Z_at_Age <- M_at_Age + F_at_Age
+    Z_at_Age <- AddArrays(M_at_Age, F_at_Age)
   
-  dd <- dim(M_at_Age)
+  dd <- dim(Z_at_Age)
   nSim <- dd[1]
   nAge <- dd[2]
   nTS <- dd[3]
@@ -21,7 +21,8 @@ CalcSurvival <- function(M_at_Age, PlusGroup=TRUE, SpawnTimeFrac=NULL, F_at_Age=
   if (PlusGroup)
     surv[,nAge,] <- surv[,nAge,]/(1-exp(-Z_at_Age[,nAge,]))
   
-  surv |> AddDimNames(TimeSteps=attributes(M_at_Age)$TimeSteps)
+  dimnames(surv) <- dimnames(Z_at_Age)
+  surv 
 }
 
 
@@ -53,20 +54,31 @@ setMethod('CalcUnfishedSurvival', c('om', 'ANY'), function(x, SP=FALSE) {
 })
 
 
-# ---- CalcFishedSurvival -----
+# ---- UpdateApicalF -----
+
+setGeneric('UpdateApicalF', function(x, apicalF)
+  standardGeneric('UpdateApicalF')
+)
+
+setMethod('UpdateApicalF', c('array',  'ANY'), function(x, apicalF) {
+  dd <- dim(x)
+  MaxF <- apply(x, c(1,3), max)
+  MaxF <- replicate(dd[2], MaxF) |> aperm(c(1,3,2))
+  dimnames(MaxF) <- dimnames(x)
+  DivideArrays(x, MaxF) * apicalF
+  
+})
+
+setMethod('UpdateApicalF', c('FleetList',  'ANY'), function(x, apicalF) {
 
 # normalize and set to apicalF by fleet fraction
-
-UpdateApicalF <- function(object, apicalF=0.1) {
+  ApicalFbyFleet <- GetApicalF(FleetList) 
   
-  if (methods::is(object, 'om')) 
-    object <- object@Fleet
-  
-  ApicalFbyFleet <- GetApicalF(object) 
   if (methods::is(ApicalFbyFleet, 'array')) {
+    stop()
     # single fleet
     ApicalF(object@FishingMortality)[] <- apicalF
-            
+    
     curr <- process_cpars(ApicalF(object@FishingMortality))
     ApicalF(object@FishingMortality) <- curr
     return(object)
@@ -75,10 +87,11 @@ UpdateApicalF <- function(object, apicalF=0.1) {
   if (all(purrr::map_lgl(ApicalFbyFleet, methods::is, 'array'))) {
     
     dd <- dim(ApicalFbyFleet[[1]])
+    TimeSteps <- dimnames(ApicalFbyFleet[[1]])$`Time Step`
     
     ApicalFbyFleetArray <- array(unlist(ApicalFbyFleet),
                                  dim=c(dd[1], dd[2], length(ApicalFbyFleet))) |>
-      AddDimNames(names=c('Sim', 'Time Step', 'Fleet'))
+      AddDimNames(names=c('Sim', 'Time Step', 'Fleet'), TimeSteps=TimeSteps)
     
     Ftotal <- apply(ApicalFbyFleetArray, c(1,2), sum)
     ApicalFbyFleetArray <- ApicalFbyFleetArray/replicate(length(ApicalFbyFleet), Ftotal) * apicalF
@@ -87,13 +100,17 @@ UpdateApicalF <- function(object, apicalF=0.1) {
       abind::adrop(ApicalFbyFleetArray[ , , x, drop=FALSE],3))
     
     for (fl in seq_along(ApicalFbyFleet)) {
-      ApicalF(object[[fl]]@FishingMortality) <- ApicalF[[fl]]
+      ApicalF(FleetList[[fl]]@FishingMortality) <- ApicalF[[fl]]
     }
-    return(object)
+    return(FleetList)
   }
-  purrr::map(object, UpdateApicalF, apicalF=apicalF)
-}
+  
+  purrr::map(FleetList, UpdateApicalF, apicalF=apicalF)
+})
 
+
+
+# ---- CalcFishedSurvival -----
 
 setGeneric('CalcFishedSurvival', function(x, Fleet=NULL, apicalF=NULL)
   standardGeneric('CalcFishedSurvival')
@@ -102,10 +119,7 @@ setGeneric('CalcFishedSurvival', function(x, Fleet=NULL, apicalF=NULL)
 
 setMethod('CalcFishedSurvival', c('stock', 'FleetList',  'ANY'), function(x, Fleet, apicalF) {
   
-  # TODO - include spatial closure and distribution?
-  
-  if (!is.null(apicalF)) 
-    Fleet <- UpdateApicalF(Fleet, apicalF)
+
   
   FDead <- purrr::map(Fleet, CalcFatAge, return='FDead')
   
@@ -114,51 +128,11 @@ setMethod('CalcFishedSurvival', c('stock', 'FleetList',  'ANY'), function(x, Fle
 
 setMethod('CalcFishedSurvival', c('StockList', 'StockFleetList',  'ANY'), function(x, Fleet, apicalF) {
   
-  # TODO - include spatial closure and distribution?
-  
-  if (!is.null(apicalF)) 
-    Fleet <- UpdateApicalF(Fleet, apicalF)
-  
-  FDead <- purrr::map(Fleet, CalcFatAge, return='FDead')
+
+
   
 })
 
 
 
-CalcFishedSurvival <- function(Stock, Fleet, apicalF=NULL) {
-  
 
-
-
-  
-  
-  FDead[[1]][1,,1] |> max()
-  
-  
-  FDead <- array(unlist(FDead), dim=c(dim(FDead[[1]])[1], 
-                                      dim(FDead[[1]])[2], 
-                                      dim(FDead[[1]])[3], 
-                                      length(FDead))) |>
-    AddDimNames(names=c('Sim', 'Age', 'Time Step', 'Fleet'), TimeSteps=TimeSteps(Stock, 'Historical'))
-  
-  apply(FDead, c(1,2,3), sum) |> max()
-  
-  ### ----- UP TO HERE -----
-  # - need to account for discard mortality for apicalF
-  # - resulting max F is lower than apicalF is discardmort < 1
-  # - depends how apicalF is defined!
-  
-  
-  
-  M_at_Age <- Stock@NaturalMortality@MeanAtAge
-  PlusGroup <- Stock@Ages@PlusGroup
-  
-  if (SP) {
-    SpawnTimeFrac <- Stock@SRR@SpawnTimeFrac  
-  } else {
-    SpawnTimeFrac <- NULL
-  }
-  
-  # TODO sum F over fleets
-  CalcSurvival(M_at_Age, PlusGroup=PlusGroup, SpawnTimeFrac=SpawnTimeFrac, F_at_Age=FDead[[1]])
-}

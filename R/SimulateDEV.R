@@ -9,8 +9,9 @@
 
 
 # TODO
-# - in Convert - reduce arrays to minimum size when values change across some time steps
-# - need to update in Simulate and elsewhere to deal with time step indexing
+# - add check in Populate for Selectivity to have max value 1. 
+
+
 
 
 #' @describeIn runMSE Development version of `Simulate`
