@@ -210,6 +210,12 @@ GenerateStochasticValues <- function(object, nsim=NULL) {
   object
 }
 
+AddAreaDimension <- function(array) {
+  array <- replicate(1, array) 
+  dimnames(array)[4] <- 'Area'
+  array
+}
+
 AddAgeTimeStepDimensions <- function(object, outdim=4) {
   if (is.null(object))
     return(object)

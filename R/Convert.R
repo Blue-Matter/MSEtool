@@ -77,6 +77,7 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
   if (methods::is(OM, 'OM')) {
     om@Stock <- OM2stock(OM, cpars=OM@cpars) 
     om@Fleet <- OM2fleet(OM, OM@cpars, OM@Fdisc)
+    
     om@Obs <- SubOM(OM, 'Obs')
     om@Imp <- SubOM(OM, 'Imp')
     
@@ -105,13 +106,10 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
                                     CalcAtLength=TRUE,
                                     seed=om@Seed)
       
-      om@Fleet@Selectivity <- Populate(om@Fleet@Selectivity,
-                                       Ages=om@Stock@Ages,
-                                       Length=om@Stock@Length,
-                                       nsim=om@nSim,
-                                       TimeSteps=om@TimeSteps,
-                                       seed=om@Seed)
-      
+      om@Fleet@Selectivity@Pars <- StructurePars(Pars=om@Fleet@Selectivity@Pars,
+                                                  nsim=om@nSim, 
+                                                  nTS=GetnTS(om@TimeSteps))
+ 
       om@Fleet@Selectivity@Pars$L5 <- MultiplyArrays(
         array1=GetLengthClass(om@Stock@Maturity),
         array2=om@Fleet@Selectivity@Pars$L5
@@ -122,13 +120,10 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
         array2=om@Fleet@Selectivity@Pars$LFS
       )
       
-      om@Fleet@Retention <- Populate(om@Fleet@Retention,
-                                       Ages=om@Stock@Ages,
-                                       Length=om@Stock@Length,
-                                       nsim=om@nSim,
-                                       TimeSteps=om@TimeSteps,
-                                       seed=om@Seed)
-      
+      om@Fleet@Retention@Pars <- StructurePars(Pars=om@Fleet@Retention@Pars,
+                                                  nsim=om@nSim, 
+                                                  nTS=GetnTS(om@TimeSteps))
+
       om@Fleet@Retention@Pars$LR5 <- MultiplyArrays(
         array1=GetLengthClass(om@Stock@Maturity),
         array2=om@Fleet@Retention@Pars$LR5

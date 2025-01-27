@@ -484,13 +484,11 @@ setMethod("Populate", "om", function(object, messages='progress') {
     cli::cli_abort('`Stock` must be a {.fun {"Stock"}} object or a list of {.fun {"Stock"}} objects')
   }
   
-  
   if (methods::is(object@Fleet, 'list')) 
     class(object@Fleet) <- 'StockFleetList'
   
   if (methods::is(object@Fleet, 'fleet')) {
     nFleets <- 1
-    
   } else if (methods::is(object@Fleet, 'StockFleetList')) {
     nFleets <- length(object@Fleet[[1]])
   } else {
@@ -505,11 +503,12 @@ setMethod("Populate", "om", function(object, messages='progress') {
   fleetList <- vector('list', nStocks)
   class(fleetList) <- 'StockFleetList'
   names(fleetList) <- paste('Stock', 1:nStocks)
+  
   for (st in 1:nStocks) {
-    if (methods::is(object@Stock, 'list') | methods::is(object@Stock, 'StockList')) {
-      stock <- object@Stock[[st]]
+    if (isS4(object@Stock)) {
+      stock <- object@Stock 
     } else {
-      stock <- object@Stock
+      stock <- object@Stock[[st]]
     }
     
     if (!isFALSE(messages)) {
@@ -532,19 +531,20 @@ setMethod("Populate", "om", function(object, messages='progress') {
     class(fleetList[[st]]) <- 'FleetList'
     
     for (fl in 1:nFleets) {
-     
-      if (methods::is(object@Fleet, 'StockFleetList')) {
-        fleet <- object@Fleet[[st]][[fl]]
-      } else if (methods::is(object@Fleet, 'FleetList')){
+      if (isS4(object@Fleet)) {
+        fleet <- object@Fleet
+      } else if (inherits(object@Fleet, 'FleetList')) {
         fleet <- object@Fleet[[fl]]
       } else {
-        fleet <- object@Fleet
+        fleet <- object@Fleet[[st]][[fl]]
       }
+     
+
       fleetList[[st]][[fl]] <- Populate(fleet, 
                                         Ages=Ages(stockList[[st]]),
                                         Length=Length(stockList[[st]]),
                                         nsim=nSim(object),
-                                        TimeSteps=TimeSteps(object, 'Historical'),
+                                        TimeSteps=TimeSteps(object),
                                         seed=object@Seed,
                                         messages=messages)
       
@@ -926,7 +926,7 @@ setMethod("Populate", "fecundity", function(object,
     object@MeanAtAge <- Weight@MeanAtAge # egg production is fecundity x maturity - calculated internally
     # fecundity is the egg production of a MATURE individual 
     
-    PrintDonePopulating(object, sb, isTRUE(messages))
+    PrintDonePopulating(object, sb=NULL, isTRUE(messages))
     return(SetDigest(argList, object))
   }
 
@@ -1204,12 +1204,8 @@ setMethod("Populate", "fleet", function(object,
   
   SetSeed(object, seed)
   
-  
   fleet <- object
   
-  # SAVE <- fleet
-  
-
   fleet@FishingMortality <- Populate(fleet@FishingMortality,
                                       nsim,
                                       TimeSteps,
@@ -1217,8 +1213,6 @@ setMethod("Populate", "fleet", function(object,
                                       messages=messages
                                       )
   
-  
-
   fleet@DiscardMortality <- Populate(fleet@DiscardMortality,
                                       Ages,
                                       Length,
@@ -1344,7 +1338,8 @@ setMethod("Populate", "selectivity", function(object,
                                               TimeSteps=NULL,
                                               CalcAtLength=FALSE,
                                               seed=NULL,
-                                              messages=TRUE) {
+                                              messages=TRUE,
+                                              CheckMaxValue=TRUE) {
   
   TimeSteps <- TimeStepAttributes(object, TimeSteps)
   argList <- list(FishingMortality, DiscardMortality, Ages, Length, 
@@ -1377,8 +1372,10 @@ setMethod("Populate", "selectivity", function(object,
       selectivity <- PopulateMeanAtAge(selectivity, Ages, TimeSteps)
     }
   } 
- 
-  selectivity <- MeanAtLength2MeanAtAge(selectivity, Length, Ages, nsim, TimeSteps, seed, isTRUE(messages))
+  
+  selectivity <- MeanAtLength2MeanAtAge(selectivity, Length, Ages, nsim,
+                                        TimeSteps, seed, isTRUE(messages))
+  
   if (CalcAtLength)
     selectivity <- MeanAtAge2MeanAtLength(selectivity, Length, Ages, nsim, TimeSteps, seed, isTRUE(messages))
   
@@ -1403,7 +1400,8 @@ setMethod("Populate", "selectivity", function(object,
   }
   
   # Check selectivity has a max value of one across age classes
-  selectivity@MeanAtAge <- CheckSelectivityMaximum(selectivity@MeanAtAge)
+  if(CheckMaxValue) 
+    selectivity@MeanAtAge <- CheckSelectivityMaximum(selectivity@MeanAtAge)
 
   selectivity <- AddMeanAtAgeAttributes(selectivity, TimeSteps, Ages)
   PrintDonePopulating(selectivity, sb, isTRUE(messages))
@@ -1421,11 +1419,15 @@ CheckSelectivityMaximum <- function(MeanAtAge) {
   cli::cli_alert_warning("WARNING: Selectivity-at-Age does not have a maximum value of 1. F-at-Age won't correspond with Apical")
   cli::cli_alert_warning('Standardizing to a max value of 1 but you probably want to fix this in the OM')
   
+  sims <- which(apply(ind,1, sum)>0) |> cli::cli_vec(list("vec-trunc" = 5))
+  TSs <- which(apply(ind, 2, sum)>0) |> cli::cli_vec(list("vec-trunc" = 5))
+
+  cli::cli_alert('Simulations {.val {sims}}; Time Steps {.val {TSs}}')
+
   for (i in 1:nrow(ind)) {
     for (j in 1:ncol(ind)) {
       if (ind[i,j]==FALSE)
         next()
-      cli::cli_alert('Simulation {i}, Time Step {j}')
       MeanAtAge[i, ,j] <- MeanAtAge[i, ,j]/max(MeanAtAge[i, ,j])
     }
   }
@@ -1461,21 +1463,36 @@ setMethod("Populate", "retention", function(object,
   
   retention <- object
   
-  
   retention@Pars <- StructurePars(Pars=retention@Pars, nsim, nTS=GetnTS(TimeSteps))
-  retention@Model <- FindModel(retention)
-  ModelClass <- getModelClass(retention@Model)
   
-  if (!is.null(ModelClass)) {
-    if (grepl('at-Length',getModelClass(retention@Model))) {
-      retention <- PopulateMeanAtLength(retention, Length, TimeSteps, Ages, nsim,
+  ParsZero <- all((lapply(lapply(retention@Pars, `==`, 0), prod) |> unlist())==1)
+  
+  if (!ParsZero) {
+    retention@Model <- FindModel(retention)
+    ModelClass <- getModelClass(retention@Model)
+    
+    if (!is.null(ModelClass)) {
+      if (grepl('at-Length',getModelClass(retention@Model))) {
+        retention <- PopulateMeanAtLength(retention, Length, TimeSteps, Ages, nsim,
                                           seed, isTRUE(messages))
-    } else {
-      
-      retention <- PopulateMeanAtAge(retention, Ages, TimeSteps)
-    }
+      } else {
+        retention <- PopulateMeanAtAge(retention, Ages, TimeSteps)
+      }
+    } 
+    
+  }
+  
+  if (ParsZero & is.null(retention@MeanAtAge) & is.null(retention@MeanAtLength)) {
+    
+    retention@MeanAtAge <- array(1, dim=c(1,1,1)) |> AddDimNames(TimeSteps=TimeSteps)
+    retention@MeanAtLength <- array(1, dim=c(1,1,1)) |> AddDimNames(c('Age', 'Length Class', 'Time Step'),
+                                                                    TimeSteps=TimeSteps)
+    
+    PrintDonePopulating(retention, sb, isTRUE(messages))
+    SetDigest(argList, retention)
   } 
   
+
   retention <- MeanAtLength2MeanAtAge(retention, Length, Ages, nsim, TimeSteps, seed, isFALSE(messages))
   if (CalcAtLength)
     retention <- MeanAtAge2MeanAtLength(retention, Length, Ages, nsim, TimeSteps, seed, isFALSE(messages))
@@ -1491,10 +1508,10 @@ setMethod("Populate", "retention", function(object,
     
     if (!EmptyObject(FishingMortality@DeadAtAge)) {
       retention@MeanAtAge <- FishingMortality2Retention(FishingMortality,
-                                                            DiscardMortality,
-                                                            Ages,
-                                                            TimeSteps,
-                                                            Length)
+                                                        DiscardMortality,
+                                                        Ages,
+                                                        TimeSteps,
+                                                        Length)
     } else {
       cli::cli_abort('`Retention` requires either `Pars`, `MeanAtAge` or a `FishingMortality` object')
     }
@@ -2001,7 +2018,8 @@ GenerateHistoricalEffort <- function(Effort, nsim=NULL, TimeSteps=NULL) {
 
 
 
-MeanAtLength2MeanAtAge <- function(object, Length, Ages, nsim, TimeSteps, seed, silent) {
+MeanAtLength2MeanAtAge <- function(object, Length, Ages, nsim, TimeSteps, seed, silent,
+                                   max1=TRUE) {
   if (!is.null(object@MeanAtAge))
     return(object)
 
@@ -2012,13 +2030,26 @@ MeanAtLength2MeanAtAge <- function(object, Length, Ages, nsim, TimeSteps, seed, 
     Length <- Populate(Length, Ages, nsim, TimeSteps, seed, ASK=TRUE, silent)
   }
 
-  object@MeanAtAge <- AtSize2AtAge(object, Length)
+  object@MeanAtAge <- AtSize2AtAge(object, Length) |>
+    AddDimNames(TimeSteps=TimeSteps)
+  
   if ('Units' %in% slotNames(object))
     attributes(object@MeanAtAge)$Units <- object@Units
-  attributes(object@MeanAtAge)$TimeSteps <- TimeSteps
-  attributes(object@MeanAtAge)$Ages <- Ages@Classes
   attributes(object@MeanAtAge)$UnitsAge <- Ages@Units
 
+  if (max1) {
+    maxValue <- apply(object@MeanAtAge, c(1,3), max)
+    ind <- maxValue<1
+    # TODO speed up loop
+    for (i in 1:nrow(ind)) {
+      for (j in 1:ncol(ind)) {
+        if (!ind[i,j])
+          next()
+        object@MeanAtAge[i,,j] <- object@MeanAtAge[i,,j]/max(object@MeanAtAge[i,,j], na.rm = TRUE)
+      }
+    }
+  }
+  
   object@Classes <- Length@Classes
   object
 }

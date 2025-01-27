@@ -60,9 +60,9 @@ MatchTimeSteps <- function(ArrayList) {
   d1[ind] <- length(TSout)
   d2[ind] <- length(TSout)
   
-  if (!all(TSout %in% TSarray1)) 
+  if (!all(TSout %in% TSarray1) & length(TSarray1)>1) 
     array1 <- ExpandArray(Array=array1, Dims=d1, TimeSteps=TSout)
-  if (!all(TSout %in% TSarray2)) 
+  if (!all(TSout %in% TSarray2)& length(TSarray2)>1) 
     array2 <- ExpandArray(Array=array2, Dims=d2, TimeSteps=TSout)
   
   list(array1=array1, array2=array2)
@@ -72,7 +72,7 @@ CheckDims <- function(ArrayList, dimname='Age') {
   array1 <- ArrayList[[1]]
   array2 <- ArrayList[[2]]
   
-  names(dimnames(array1))
+  nm1 <- names(dimnames(array1))
   ind <- which(nm1==dimname)
   if (length(ind)<1)
     return(ArrayList)
@@ -82,7 +82,7 @@ CheckDims <- function(ArrayList, dimname='Age') {
   
   if (
     (length(dims1)>1 & length(dims1) != length(dims2)) |
-    (length(dims2)>1 & length(dims1) != length(dims2))
+    (length(dims2)>1 & length(dims2) != length(dims2))
   ) {
     cli::cli_abort('{.code {dimname}} dimension must either be length 1 or equal lengths in both arrays')
   }
@@ -109,6 +109,7 @@ ArrayOperation <- function(array1, array2, operation=`*`) {
   alldims <- rbind(d1, d2)
   outdims <- apply(alldims, 2, max)
   out <- array(NA, dim=outdims) 
+  nm1 <- names(dimnames(array1))
   ind <- which(nm1=='Time Step')
   if (length(ind)>0) {
     out <- out |> AddDimNames(names=nm1, TimeSteps = dimnames(array1)$`Time Step`)

@@ -38,7 +38,7 @@ GenerateMeanatLength <- function(Model, Pars, Length) {
   }
 
   for (i in seq_along(arg_ind)) {
-    l[[fun_args[[arg_ind[i]]]]] <-  Pars[[i]]
+    l[[fun_args[[arg_ind[i]]]]] <- Pars[[i]]
   }
   do.call(fun, l)
 }

@@ -1,9 +1,18 @@
+# TODO 
+# add Spat_Targ to Convert 
+# add slot in distribution object
+# - replace methods::is with inherits
+# test for large number of Sims
 
 devtools::load_all()
 
+testOM@nsim <- 100
 
+OM <- testOM
 
-OM <- Convert(testOM)
+OM <- Convert(OM, Populate = FALSE)
+
+OM <- Populate(OM)
 
 Hist <- Simulate(testOM)
 
