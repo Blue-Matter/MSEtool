@@ -211,8 +211,10 @@ GenerateStochasticValues <- function(object, nsim=NULL) {
 }
 
 AddAreaDimension <- function(array) {
+  l <- dimnames(array)
   array <- replicate(1, array) 
-  dimnames(array)[4] <- 'Area'
+  l$Area <- 1
+  dimnames(array) <- l
   array
 }
 

@@ -53,10 +53,11 @@ DistributeStock <- function(AtAge, UnfishedDist) {
   if (is.null(UnfishedDist)) {
     # no spatial structure
     # just add spatial dimension
-    return(
-      replicate(1, AtAge) |>
-      AddDimNames(names=c('Sim', 'Age', 'Time Step', 'Area'))
-    )
+    out <- replicate(1, AtAge)
+    l <- dimnames(AtAge)
+    l$Area <- 1
+    dimnames(out) <- l
+    return(out)
   }
     
   # because UnfishedDist has different order in dimensions
@@ -69,15 +70,17 @@ DistributeStock <- function(AtAge, UnfishedDist) {
   narea <- DimUnfishedDist[4]
   DimAtAge <- dim(AtAge)
   if (length(DimAtAge)==3) {
-    AtAge <- replicate(narea, AtAge) |>
-      AddDimNames(names=c('Sim', 'Age', 'Time Step', 'Area'))
+    l <- dimnames(AtAge)
+    AtAge <- replicate(narea, AtAge) 
+    l$Area <- 1:narea
+    dimnames(AtAge) <- l
   }
   
   DimAtAge <- dim(AtAge)
   if (DimAtAge[4] !=narea) 
     cli::cli_abort('Mismatch in number of areas')
   
-  MultiplyArrays(UnfishedDist, AtAge)
+  MultiplyArrays(array1=UnfishedDist, array2=AtAge)
 }
 
 
@@ -93,11 +96,16 @@ CalcUnfishedDynamics <- function(OM,
 
   Unfished <- new('unfished') 
   
-  # ---- Equilibrium ----
+  cli::cli_progress_step(
+    'Calculating Unfished Dynamics',
+    msg_done = 'Calculated Unfished Dynamics',
+    spinner = TRUE)
   
+  # ---- Equilibrium ----
   # NOTE: Equilibrium N-at-Age is calculated from R0 (which may vary over time)
   # but does NOT account for expected recruitment from the stock-recruit relationship.
   # i.e., an expected change in recruitment if Fecundity-at-Age changes over time 
+  # e.g., change in Weight-at-Age etc
   
   UnfishedSurvival <- UnfishedSurvivalSP <- purrr::map(OM@Stock, CalcUnfishedSurvival)
   SpawnTimeFrac <- purrr::map(OM@Stock, GetSpawnTimeFrac)
@@ -106,74 +114,40 @@ CalcUnfishedDynamics <- function(OM,
       UnfishedSurvivalSP[[i]] <- CalcUnfishedSurvival(OM@Stock[[i]], SP=TRUE)
   }
   R0 <- purrr::map(OM@Stock, GetR0) |>
-    purrr::map(Structure)  # TODO - may need to add sim and time step dimensions to R0 in Populate
+    purrr::map(Structure) |> # TODO - may need to add sim and time step dimensions to R0 in Populate
+    purrr::map(AddDimNames, TimeSteps=TimeSteps(OM))
  
-  NatAge <- purrr::map2(R0, UnfishedSurvival, MultiplyArrays)
+  NatAge <- purrr::map2(UnfishedSurvival, R0, MultiplyArrays)
 
+  cli::cli_progress_update()
+  
   Unfished@Equilibrium@Number <- purrr::map2(NatAge, 
                                              UnfishedDist(OM), 
-                                             DistributeStock) |>
-    AddStockNames(StockNames(OM))
+                                             DistributeStock) #  |> AddStockNames(StockNames(OM))
   
-  
+  cli::cli_progress_update()
   WeightatAge <- purrr::map(OM@Stock, GetWeightAtAge) |> purrr::map(AddAreaDimension)
- 
-  ########## UP TO HERE - dimnames need to be added above 
-  
   Unfished@Equilibrium@Biomass <- purrr::map2(WeightatAge, Unfished@Equilibrium@Number, MultiplyArrays)
+  cli::cli_progress_update()
+  SNatAge <- purrr::map2(R0, UnfishedSurvivalSP, MultiplyArrays) |>
+    purrr::map2(purrr::map(OM@Stock, GetMaturityAtAge), MultiplyArrays) |>
+    purrr::map2(UnfishedDist(OM), DistributeStock)
+  cli::cli_progress_update()
+  Unfished@Equilibrium@SBiomass <- purrr::map2(WeightatAge, SNatAge, MultiplyArrays)
+  cli::cli_progress_update()
   
-  stop()
-  
-  BatAge <- purrr::map2(NatAge, WeightatAge, MultiplyArrays)
-  
-  MaturityatAge <- purrr::map(OM@Stock, GetMaturityAtAge)
-  FecundityatAge <- purrr::map(OM@Stock, GetFecundityAtAge)
+  FecundityatAge <- purrr::map(OM@Stock, GetFecundityAtAge) |> purrr::map(AddAreaDimension)
+  cli::cli_progress_update()
   # NOTE: not sure if this will work for all cases 
   ind <- lapply(FecundityatAge, is.null) |> unlist() |> not() |> which() 
-  
- 
-  
-  
-  
-  SNatAge <- purrr::map2(R0, UnfishedSurvivalSP, MultiplyArrays) |>
-    purrr::map2(MaturityatAge, MultiplyArrays)
-  
-  
-
-  
-  
-  
-t <- 
-  AddAgeTimeStepDimensions()
-  
-  
- 
-
-  SNatAge <- purrr::map2(R0, UnfishedSurvivalSP, MultiplyArrays) |>
-    purrr::map2(MaturityatAge, MultiplyArrays) 
-  
-  SBatAge <- purrr::map2(SNatAge, WeightatAge, MultiplyArrays)
-  
   # TODO 
   # need to be consistent if FecundityAtAge already accounts for maturity-at-age or not!
-  SPatAge <- purrr::map2(SNatAge[ind], FecundityatAge[ind], MultiplyArrays)
-  
-  # Distribute over areas
-
-  
- 
-  
-
-  Unfished@Equilibrium@SBiomass <- purrr::map2(SBatAge, UnfishedDist(OM), DistributeStock) |>
-    AddStockNames(StockNames(OM))
-  Unfished@Equilibrium@SProduction <- purrr::map2(SPatAge[ind], UnfishedDist(OM)[ind], DistributeStock) |>
-    AddStockNames(StockNames(OM))
+  Unfished@Equilibrium@SProduction <- purrr::map2(SNatAge[ind], FecundityatAge[ind], MultiplyArrays)
   
   # TODO `SProduction` will be identical to `SBiomass` if spawning biomass 
-  # is used for fecundity. Can make it NULL here to save memory
+  # is used for fecundity. Can make it NULL here to save memory or do checks above to avoid doing
+  # unnecessary calcs
 
-  t = AddStockNames(list= Unfished@Equilibrium@Number, Names=StockNames(OM))
-  
   # ---- Dynamic ----
   
   # RecDevInit <- purrr::map(OM@Stock, GetRecDevInit)

@@ -43,14 +43,19 @@ AC <- function(x) {
 #' @rdname Access
 #' @export
 ApicalF <- function(x) {
+  if (inherits(x, 'fleet')) 
+    return(x@FishingMortality@ApicalF)
   x@ApicalF
 }
 
 #' @rdname Access
 #' @export
 `ApicalF<-` <- function(x, value) {
-  if (methods::is(x, 'fleet')) 
-    return(assignSlot(x@FishingMortality, value, 'ApicalF'))
+  if (inherits(x, 'fleet')) {
+    assignSlot(x@FishingMortality, value, 'ApicalF')
+    return(x)
+  }
+ 
   assignSlot(x, value, 'ApicalF')
 }
 

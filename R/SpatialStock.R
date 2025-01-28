@@ -3,6 +3,7 @@
 #'
 #' @export
 CalcMovement <- function(Spatial,
+                         TimeSteps=NULL,
                          nsim=NULL,
                          seed=NULL,
                          nits=100,
@@ -22,7 +23,7 @@ CalcMovement <- function(Spatial,
   # add age and time-step dimensions
   Spatial@UnfishedDist  <- Spatial@UnfishedDist |>
     AddAgeTimeStepDimensions() |>
-    AddDimNames(c('Sim', 'Area', 'Age', 'Time Step'))
+    AddDimNames(c('Sim', 'Area', 'Age', 'Time Step'), TimeSteps=TimeSteps)
 
   nareas <- max(2,dim(Spatial@UnfishedDist)[2])
 
@@ -40,7 +41,7 @@ CalcMovement <- function(Spatial,
 
     Spatial@FracOther  <- Spatial@FracOther |>
       AddAgeTimeStepDimensions(outdim=5) |>
-      AddDimNames(c('Sim', 'Area', 'Area', 'Age', 'Time Step'))
+      AddDimNames(c('Sim', 'Area', 'Area', 'Age', 'Time Step'), TimeSteps=TimeSteps)
   }
 
   # generate stochastic values if needed
@@ -55,7 +56,7 @@ CalcMovement <- function(Spatial,
   # add age and time-step dimensions
   Spatial@ProbStaying  <- Spatial@ProbStaying |>
     AddAgeTimeStepDimensions() |>
-    AddDimNames(c('Sim', 'Area', 'Age', 'Time Step'))
+    AddDimNames(c('Sim', 'Area', 'Age', 'Time Step'), TimeSteps=TimeSteps)
 
   dims <- lapply(list(Spatial@UnfishedDist, Spatial@ProbStaying), dim)
   if (!is.null(Spatial@FracOther)) {
@@ -72,7 +73,8 @@ CalcMovement <- function(Spatial,
                                                   nareas,
                                                   outdims[3],
                                                   outdims[4])),
-                                  c('Sim', 'Area', 'Area', 'Age', 'Time Step'))
+                                  c('Sim', 'Area', 'Area', 'Age', 'Time Step'),
+                                  TimeSteps=TimeSteps)
 
 
   # nasty loop for now
@@ -85,7 +87,8 @@ CalcMovement <- function(Spatial,
                                               nareas,
                                               outdims[3],
                                               outdims[4])),
-                              c('Sim', 'Area', 'Age', 'Time Step'))
+                              c('Sim', 'Area', 'Age', 'Time Step'),
+                              TimeSteps=TimeSteps)
 
 
 

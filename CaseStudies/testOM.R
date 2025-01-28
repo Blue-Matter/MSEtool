@@ -6,13 +6,14 @@
 
 devtools::load_all()
 
-testOM@nsim <- 100
+testOM@nsim <- 10
 
 OM <- testOM
 
 OM <- Convert(OM, Populate = FALSE)
 
 OM <- Populate(OM)
+
 
 Hist <- Simulate(testOM)
 

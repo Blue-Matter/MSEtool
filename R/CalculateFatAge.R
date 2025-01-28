@@ -21,38 +21,39 @@ CalcFatAge <- function(Fleet, return=c('All', 'FCaught', 'FRetain', 'FDiscard', 
   }
   
   
-  # Inflate ApicalF to account for discard mortality
-  # ApicalF = apicalF of Dead Fish 
-  # TODO - this can be made more efficient by only calculating when necessary
-  
+ 
   SelectivityRetention <- MultiplyArrays(Fleet@Selectivity@MeanAtAge, Fleet@Retention@MeanAtAge)
-  SelectivityDiscardMort <- MultiplyArrays(Fleet@Selectivity@MeanAtAge, Fleet@DiscardMortality@MeanAtAge)
-  SelectivityDiscardMortRetention <- MultiplyArrays(SelectivityDiscardMort, Fleet@Retention@MeanAtAge)
   
-  InflateApicalF <- SubtractArrays(
-    AddArrays(SelectivityRetention, SelectivityDiscardMort),
-    SelectivityDiscardMortRetention
-  )
-  
-  apicalF <- DivideArrays(apicalF, InflateApicalF)
-  
+  isDiscards <- FALSE
+  if (!is.null(Fleet@DiscardMortality@MeanAtAge) &  !all(Fleet@DiscardMortality@MeanAtAge)==0) {
+    isDiscards <- TRUE
+    # Inflate ApicalF to account for discard mortality
+    # ApicalF = apicalF of Dead Fish; 'apicalF' for 'caught' fish will be higher
+    SelectivityDiscardMort <- MultiplyArrays(Fleet@Selectivity@MeanAtAge, Fleet@DiscardMortality@MeanAtAge)
+    SelectivityDiscardMortRetention <- MultiplyArrays(SelectivityDiscardMort, Fleet@Retention@MeanAtAge)
+    
+    InflateApicalF <- SubtractArrays(
+      AddArrays(SelectivityRetention, SelectivityDiscardMort),
+      SelectivityDiscardMortRetention
+    )
+    apicalF <- DivideArrays(apicalF, InflateApicalF)
+  }
+ 
   FCaught <- MultiplyArrays(apicalF, Fleet@Selectivity@MeanAtAge)
   FRetain <- MultiplyArrays(Fleet@Retention@MeanAtAge, FCaught)
-  FDiscard <- SubtractArrays(FCaught, FRetain)
+  if (isDiscards) {
+    FDiscard <- SubtractArrays(FCaught, FRetain)
+  } else {
+    FDiscard <- array(0, dim=dim(FCaught))
+    dimnames(FDiscard) <- dimnames(FCaught)
+  }
   
-
-  if (is.null(DiscardMort) || !all(is.finite(DiscardMort))) {
+  if (!isDiscards) {
     FDead <- FRetain   
   } else {
     FDead <- AddArrays(array1=FRetain, 
                        array2=MultiplyArrays(FDiscard, SelectivityDiscardMort))
   }
-  
-  FCaught[1,,71] |> max()
-  FRetain[1,,71] |> max()
-  FDead[1,,71] |> max()
-  
-
   
   out <- list(
     FCaught=FCaught,

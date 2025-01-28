@@ -44,6 +44,7 @@ MatchTimeSteps <- function(ArrayList) {
   
   nm1 <- names(dimnames(array1))
   ind <- which(nm1=='Time Step')
+
   if (length(ind)<1)
     return(list(array1, array2))
   
@@ -81,8 +82,8 @@ CheckDims <- function(ArrayList, dimname='Age') {
   dims2 <- dimnames(array2)[[ind]] |> as.numeric()
   
   if (
-    (length(dims1)>1 & length(dims1) != length(dims2)) |
-    (length(dims2)>1 & length(dims2) != length(dims2))
+    (length(dims1)>1 & length(dims2) != length(dims1)) &
+    (length(dims2)>1 & length(dims1) != length(dims2))
   ) {
     cli::cli_abort('{.code {dimname}} dimension must either be length 1 or equal lengths in both arrays')
   }
@@ -90,8 +91,7 @@ CheckDims <- function(ArrayList, dimname='Age') {
   
 }
 
-
-
+# TODO could speed up by converting sim dimension to list and map
 ArrayOperation <- function(array1, array2, operation=`*`) {
   ArrayList <- list(array1, array2)
   CheckArrays(ArrayList)
@@ -112,7 +112,9 @@ ArrayOperation <- function(array1, array2, operation=`*`) {
   nm1 <- names(dimnames(array1))
   ind <- which(nm1=='Time Step')
   if (length(ind)>0) {
-    out <- out |> AddDimNames(names=nm1, TimeSteps = dimnames(array1)$`Time Step`)
+    timesteps <- list(dimnames(array1)$`Time Step`, dimnames(array2)$`Time Step`)
+    maxTS <- lapply(timesteps, length) |> unlist() |> which.max()
+    out <- out |> AddDimNames(names=nm1, TimeSteps = timesteps[[maxTS]])
   } else {
     out <- out |> AddDimNames(names=nm1)
   }

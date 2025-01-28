@@ -40,8 +40,9 @@ nSimUpdate <- function(OM, nSim=NULL, messages='default') {
 }
 
 CheckClass <- function(object, class='om', name='OM', type='Argument') {
-  if (isFALSE(methods::is(object, class)))
-    cli::cli_abort('{type} {.var {name}} must be class {.var {class}}')
+  if (isFALSE(inherits(object, class)))
+    cli::cli_abort(c('{type} {.var {name}} must be class {.cls {class}}',
+                     "x" = "You've supplied an object of class {.cls {class(object)}}"), call=NULL)
   invisible(object)
 }
 

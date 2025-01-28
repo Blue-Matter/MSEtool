@@ -1,29 +1,24 @@
 
 # devtools::load_all()
 
+# NOTE: Curves do not account for spatial closures
 
+# --- New Classes (temp) ----
 
-
-CalcSPR0 <- function(OM) {
-  SPR0 <- purrr::map2(CalcUnfishedSurvival(OM@Stock, SP=TRUE), 
-                      GetFecundityAtAge(OM@Stock),
-                      MultiplyArrays)
-  
-  SPR0 <- purrr::map(SPR0, function(x)
-    apply(x, c(1,3), sum) |> process_cpars()
-  )
-  
-  # Map to Stock number
-  if (!is.null(OM@SexPars@SPFrom)) {
-    for (i in 1:nrow(OM@SexPars@SPFrom)) {
-      ind <- which(OM@SexPars@SPFrom[i,]==1)
-      if (i !=ind) {
-        SPR0[[i]] <- ind
-      }
-    }
-  }
-  SPR0
-}
+# Equilibrium values for a given F 
+setClass("Curves",
+         slots=c(apicalF='numeric', # vector
+                 SPR='data.frame', # 
+                 YPR='list',
+                 Recruit='list',
+                 Yield='list',
+                 Biomass='list',
+                 SBiomass='list',
+                 SP='list',
+                 Misc='list'
+         ),
+         contains='Created_ModifiedClass'
+)
 
 
 CalcSPRCurve <- function(OM, 
@@ -31,73 +26,70 @@ CalcSPRCurve <- function(OM,
                          nSim=NULL,
                          parallel=FALSE) {
   
-  # TODO add FVector to OM Control
-  boundsF <- c(1E-3, 3)
-  F_search <- exp(seq(log(min(boundsF)), log(max(boundsF)), length.out = 50))
+  # TODO add FVector to OM Control or somewhere else 
+  boundsF <- c(1E-3, 1)
+  FSearch <- exp(seq(log(min(boundsF)), log(max(boundsF)), length.out = 50))
   
-  OM@Control$FVector <- F_search
+  OM@Control$FVector <- FSearch
   
   FVector <- OM@Control$FVector
   
-  SPR <- vector('list', nStock(OM))
-  names(SPR) <- StockNames(OM)
-  
-  # TODO pass as input to function if already calculated outside
-  # TODO update function to take `hist` object as well 
-  
   # TODO Calculate SPR0 as a reference point and pass into function
-
+  # TODO update function to take `hist` object as well
+  
   SPR0 <- CalcSPR0(OM) # unfished spawning production per recruit
+  df <- data.frame(F=FSearch)
+  SPRatF <- list()
+  
+  cli::cli_progress_step(
+    'Calculating Equilibrium Spawning Potential Ratio',
+    msg_done = 'Calculated Equilibrium Spawning Potential Ratio',
+    spinner = TRUE)
 
+  SPRList <- list()
+  for (i in seq_along(FSearch)) {
+    SPRatF <- CalcSPR(OM, apicalF=FSearch[i], SPR0=SPR0)
+    df  <- purrr::map_df(SPRatF, array2DF, responseName='SPR')
+    df$F <- FSearch[i]
+    df$Stock <- purrr::map2(as.list(names(SPRatF)), 
+                            purrr::map(SPRatF, length), rep) |> 
+      unlist()
+    cli::cli_progress_update()
+    SPRList[[i]] <- df
+  }
+  cli::cli_progress_done()
+
+  # TODO store as array or data.frame??
+  df <- do.call(rbind, SPRList)
+  object.size(df)/1E6
+  dim(df)
+  100000    * 6 * 8
+  object.size(df)
+  
+  df$TEST <- 100
+  object.size(df)/1E6
+  df <- rbind(df, df)
+  object.size(df)/1E6
   
   Stock <- OM@Stock[[1]]
   FleetList <- OM@Fleet[[1]]
   
   apicalF <- 0.05
   
-  CalcFishedSurvival <- function(Stock, FleetList, apicalF=NULL, SP=FALSE) {
-    
-    # TODO - include spatial closure and distribution for MSY and other ref points?
-    # TODO does this need to be for every year?
-    
-   
-
-    FDead <- purrr::map(FleetList, CalcFatAge, return='FDead')
-    
-    
-    # Apical F is by fleet, not over all fleets
-    
-    FDead <- array(unlist(FDead), dim=c(dim(FDead[[1]])[1], 
-                                        dim(FDead[[1]])[2], 
-                                        dim(FDead[[1]])[3], 
-                                        length(FDead))) |>
-      AddDimNames(names=c('Sim', 'Age', 'Time Step', 'Fleet'), TimeSteps=TimeSteps(Stock, 'Historical'))
-    
-    FDeadOverTotal <- apply(FDead, c(1,2,3), sum) 
-    
-    if (!is.null(apicalF)) 
-      FDeadOverTotal <- UpdateApicalF(FDeadOverTotal, apicalF)
-    
-    
-    M_at_Age <- Stock@NaturalMortality@MeanAtAge
-    PlusGroup <- Stock@Ages@PlusGroup
-    
-    if (SP) {
-      SpawnTimeFrac <- Stock@SRR@SpawnTimeFrac  
-    } else {
-      SpawnTimeFrac <- NULL
-    }
-    
-    ### UP TO HERE ####
-    # Convert this to the generic in CalcSurvival.R
-    CalcSurvival(M_at_Age, PlusGroup=PlusGroup, SpawnTimeFrac=SpawnTimeFrac, F_at_Age=FDeadOverTotal)
-  }
+  t1 <- CalcFishedSurvival(OM)
+  t2 <- CalcFishedSurvival(OM, apicalF=0.5)
+  t1$Albacore[1,,1] |> max()
+  t2$Albacore[1,,1] |> max()
   
   
+  t1 <- CalcFishedSurvival(OM@Stock, OM@Fleet, apicalF = 0.1)
+  t2 <- CalcFishedSurvival(OM@Stock[[1]], OM@Fleet[[1]], apicalF = 0.1)
+  t1$Albacore[1,,1] |> max()
+  t2[1,,1] |> max()
   
   
-  CalculateSPR_ <- function(apicalF, Stock, Fleet) {
-    FishedSurvival <- CalcFishedSurvival(Stock, FleetList, apicalF)
+  CalculateSPR_ <- function(Stock, FleetList, apicalF) {
+    
     
     # fished egg production per recruit
     SPRF <- MultiplyArrays(array1=FishedSurvival, array2=Stock@Fecundity@MeanAtAge) |>

@@ -427,6 +427,7 @@ ShareParameters <- function(OM) {
 
 
 CalcUnfishedDist <- function(Spatial,
+                             TimeSteps=NULL,
                              plot=FALSE,
                              nits=100) {
   dims <- dim(Spatial@Movement)
@@ -436,7 +437,8 @@ CalcUnfishedDist <- function(Spatial,
                                               dims[2],
                                               dims[4],
                                               dims[5])),
-                              c('Sim', 'Area', 'Age', 'Time Step'))
+                              c('Sim', 'Area', 'Age', 'Time Step'),
+                              TimeSteps=TimeSteps)
   for (s in 1:dims[1]) {
     for (ts in 1:dims[5]) {
       for (age in 1:dims[4]) {
@@ -670,6 +672,7 @@ setMethod("Populate", "stock", function(object,
 
   stock@Spatial <- Populate(stock@Spatial,
                             Ages=stock@Ages,
+                            TimeSteps=TimeSteps(stock),
                             nsim=stock@nSim,
                             seed=seed,
                             messages=messages)
@@ -1065,6 +1068,7 @@ setMethod("Populate", "srr", function(object,
 #' @export
 setMethod("Populate", "spatial", function(object,
                                           Ages=NULL,
+                                          TimeSteps=NULL,
                                           nsim=NULL,
                                           seed=NULL,
                                           messages=TRUE,
@@ -1079,12 +1083,18 @@ setMethod("Populate", "spatial", function(object,
   SetSeed(object, seed)
 
   # empty object
+  DimNames <- c('Sim', 'Area', 'Age', 'Time Step')
   if (EmptyObject(object)) {
-    object@RelativeSize <- AddDimNames(array(1, dim=c(1,1)), c('sim', 'area'))
-    object@ProbStaying <- AddDimNames(array(1, dim=c(1,1,1,1)), c('sim', 'area', 'age', 'ts'))
-    object@FracOther <- AddDimNames(array(1, dim=c(1,1,1,1)), c('sim', 'area', 'age', 'ts'))
-    object@UnfishedDist  <- AddDimNames(array(1, dim=c(1,1,1,1)), c('sim', 'area', 'age', 'ts'))
-    object@Movement  <- AddDimNames(array(1, dim=c(1,1,1,1,1)), c('sim', 'area', 'area', 'age', 'ts'))
+    object@RelativeSize <- AddDimNames(array(1, dim=c(1,1)), 
+                                       DimNames[1:2], TimeSteps=TimeSteps)
+    object@ProbStaying <- AddDimNames(array(1, dim=c(1,1,1,1)), 
+                                      DimNames, TimeSteps=TimeSteps)
+    object@FracOther <- AddDimNames(array(1, dim=c(1,1,1,1)),
+                                    DimNames, TimeSteps=TimeSteps)
+    object@UnfishedDist  <- AddDimNames(array(1, dim=c(1,1,1,1)),
+                                        DimNames, TimeSteps=TimeSteps)
+    object@Movement  <- AddDimNames(array(1, dim=c(1,1,1,1,1)),
+                                    DimNames[c(1,2,2,3,4)], TimeSteps=TimeSteps)
     return(SetDigest(argList, object))
   }
 
@@ -1092,10 +1102,10 @@ setMethod("Populate", "spatial", function(object,
   sb <- PrintPopulating(object, isTRUE(messages))
   
   if (is.null(object@Movement))
-    object <- CalcMovement(object, nsim, seed, nits, plot, silent=isFALSE(messages))
+    object <- CalcMovement(object, TimeSteps, nsim, seed, nits, plot, silent=isFALSE(messages))
   
   if (is.null(object@UnfishedDist)) {
-    object <- CalcUnfishedDist(object)
+    object <- CalcUnfishedDist(object, TimeSteps)
   } 
 
 
@@ -1139,7 +1149,7 @@ setMethod("Populate", "spatial", function(object,
     cli::cli_alert_warning('`RelativeSize` is not specified. Assuming all areas are equal size')
     object@RelativeSize <- matrix(1/nareas, 1, nareas)
   }
-  object@RelativeSize <- AddDimNames(object@RelativeSize, c('sim', 'area'))
+  object@RelativeSize <- AddDimNames(object@RelativeSize, c('Sim', 'Area'))
 
   PrintDonePopulating(object, sb, isTRUE(messages))
   SetDigest(argList, object)

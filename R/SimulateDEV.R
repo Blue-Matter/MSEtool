@@ -23,11 +23,13 @@ SimulateDEV <- function(OM=NULL,
                         silent=FALSE,
                         ...) {
   
+  CheckClass(OM)
+  
   if (isTRUE(silent)) 
     messages <- FALSE
 
   # ---- Initial Checks and Setup ----
-  chk <- OM |> CheckClass() |> Check() # TODO OM checks
+  chk <- Check(OM) # TODO OM checks
   
   OM <- StartUp(OM, messages, nSim) 
     

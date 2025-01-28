@@ -71,20 +71,25 @@ setMethod('UpdateApicalF', c('array',  'ANY'), function(x, apicalF) {
 
 setMethod('UpdateApicalF', c('FleetList',  'ANY'), function(x, apicalF) {
 
-# normalize and set to apicalF by fleet fraction
-  ApicalFbyFleet <- GetApicalF(FleetList) 
-  
-  if (methods::is(ApicalFbyFleet, 'array')) {
-    stop()
-    # single fleet
-    ApicalF(object@FishingMortality)[] <- apicalF
-    
-    curr <- process_cpars(ApicalF(object@FishingMortality))
-    ApicalF(object@FishingMortality) <- curr
-    return(object)
+  if (length(x)==1) {
+    x[[1]]@FishingMortality@ApicalF <- array(apicalF, dim=c(1,1))
+    return(x)
   }
   
-  if (all(purrr::map_lgl(ApicalFbyFleet, methods::is, 'array'))) {
+# normalize and set to apicalF by fleet fraction
+  ApicalFbyFleet <- GetApicalF(x) 
+  
+  if (inherits(ApicalFbyFleet, 'array')) {
+    stop()
+    # single fleet
+    ApicalF(x@FishingMortality)[] <- apicalF
+    
+    curr <- process_cpars(ApicalF(x@FishingMortality))
+    ApicalF(x@FishingMortality) <- curr
+    return(x)
+  }
+  
+  if (all(purrr::map_lgl(ApicalFbyFleet, inherits, 'array'))) {
     
     dd <- dim(ApicalFbyFleet[[1]])
     TimeSteps <- dimnames(ApicalFbyFleet[[1]])$`Time Step`
@@ -105,34 +110,63 @@ setMethod('UpdateApicalF', c('FleetList',  'ANY'), function(x, apicalF) {
     return(FleetList)
   }
   
-  purrr::map(FleetList, UpdateApicalF, apicalF=apicalF)
+  # purrr::map(FleetList, UpdateApicalF, apicalF=apicalF)
 })
 
 
 
 # ---- CalcFishedSurvival -----
 
-setGeneric('CalcFishedSurvival', function(x, Fleet=NULL, apicalF=NULL)
+setGeneric('CalcFishedSurvival', function(x, Fleet=NULL, apicalF=NULL, SP=FALSE)
   standardGeneric('CalcFishedSurvival')
 )
 
 
-setMethod('CalcFishedSurvival', c('stock', 'FleetList',  'ANY'), function(x, Fleet, apicalF) {
+setMethod('CalcFishedSurvival', c('stock', 'FleetList',  'ANY'), 
+          function(x, Fleet=NULL, apicalF=NULL, SP=FALSE) {
   
-
+  if (length(FleetList)==1) {
+    if (!is.null(apicalF))
+      FleetList <- UpdateApicalF(FleetList, apicalF)
+  } 
   
-  FDead <- purrr::map(Fleet, CalcFatAge, return='FDead')
+  FDead <- purrr::map(FleetList, CalcFatAge, return='FDead')
   
+  FDead <- array(unlist(FDead), dim=c(dim(FDead[[1]])[1], 
+                                      dim(FDead[[1]])[2], 
+                                      dim(FDead[[1]])[3], 
+                                      length(FDead))) |>
+    AddDimNames(names=c('Sim', 'Age', 'Time Step', 'Fleet'), TimeSteps=TimeSteps(x))
+  
+  FDeadOverTotal <- apply(FDead, c(1,2,3), sum) 
+  
+  if (length(FleetList)>1) {
+    if (!is.null(apicalF))
+      # update for apicalF over all fleets
+      FDeadOverTotal <- UpdateApicalF(FDeadOverTotal, apicalF)
+  }
+  
+  if (SP) {
+    SpawnTimeFrac <- x@SRR@SpawnTimeFrac  
+  } else {
+    SpawnTimeFrac <- NULL
+  }
+  
+  CalcSurvival(x@NaturalMortality@MeanAtAge,
+               x@Ages@PlusGroup,
+               SpawnTimeFrac, 
+               FDeadOverTotal)
 })
 
 
-setMethod('CalcFishedSurvival', c('StockList', 'StockFleetList',  'ANY'), function(x, Fleet, apicalF) {
-  
-
-
-  
+setMethod('CalcFishedSurvival', c('StockList', 'StockFleetList',  'ANY'), 
+          function(x, Fleet=NULL, apicalF=NULL, SP=FALSE) {
+            purrr::map2(x, Fleet, CalcFishedSurvival, apicalF=apicalF, SP=SP)
 })
 
-
+setMethod('CalcFishedSurvival', c('om', 'ANY',  'ANY'), 
+          function(x, Fleet=NULL, apicalF=NULL, SP=FALSE) {
+            purrr::map2(x@Stock, x@Fleet, CalcFishedSurvival, apicalF=apicalF, SP=SP)
+          })
 
 
