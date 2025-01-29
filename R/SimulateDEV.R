@@ -61,14 +61,18 @@ SimulateDEV <- function(OM=NULL,
            contains='Created_ModifiedClass'
   )
   Curves <- new('curves')
-  Curves@SPR <- CalcSPR(OM)
+  Curves@SPR <- CalcSPRCurve(OM)
   
+  # YPR
+  # RelRecruit
+  # Recruit
+  
+  
+  fs <- as.numeric(names(Curves@SPR$Albacore[1,1,]))
+  plot(fs, Curves@SPR$Albacore[1,1,], ylim=c(0,1), type='l')
   # SPR
   
-  
-  Stock <- OM@Stock[[1]]
-  Fleet <- OM@Fleet[[1]]
-  
+
   
 
 
