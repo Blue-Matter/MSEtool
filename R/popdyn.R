@@ -1170,6 +1170,9 @@ CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
                   Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
                   M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed 
   
+  Ftot <- matrix(Ftot, nf, nsim)
+  Ftot2 <- matrix(Ftot2, nf, nsim)
+  
   # Effort relative to last historical with this catch
   for (f in 1:nf) {
     Effort_act[, f] <- Ftot2[f, ]/(FleetPars_f[[f]]$FinF * FleetPars_f[[f]]$qs*FleetPars_f[[f]]$qvar[,y]*
