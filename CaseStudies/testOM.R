@@ -1,18 +1,26 @@
 # TODO 
-# add Spat_Targ to Convert 
-# add slot in distribution object
+# add Spat_Targ to Convert - add slot in distribution object
 # - replace methods::is with inherits
 # test for large number of Sims
+# code nSim option properly to reduce sims in all arrays
 
 devtools::load_all()
 
-testOM@nsim <- 10
+testOM@nsim <- 5
 
 OM <- testOM
+OM <- Convert(OM)
 
-OM <- Convert(OM, Populate = FALSE)
+#OM <- Convert(OM, Populate = FALSE)
+# OM <- Populate(OM)
 
-OM <- Populate(OM)
+parallel=FALSE
+messages='default'
+nSim=NULL
+silent=FALSE
+
+
+SimulateDEV()
 
 
 Hist <- Simulate(testOM)
@@ -50,10 +58,4 @@ OM |> Stock() |> NaturalMortality() |> MeanAtAge()
 
 
 
-parallel=FALSE
-messages='default'
-nSim=NULL
-silent=FALSE
 
-
-SimulateDEV()

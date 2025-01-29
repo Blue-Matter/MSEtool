@@ -38,10 +38,33 @@ SimulateDEV <- function(OM=NULL,
   HistOut <- new('hist') # new Hist object to return 
   
   # ---- Calculate Unfished Dynamics ----
+  # TODO Dynamic Unfished - elsewhere by simulating dynamics
   HistOut@Unfished <- CalcUnfishedDynamics(OM, messages, parallel=parallel)
   
   
   # ---- Calculate Curves -----
+  
+  #New Classes (temp) 
+  
+  # Equilibrium values for a given F 
+  setClass("curves",
+           slots=c(
+                   SPR='list', 
+                   YPR='list',
+                   Recruit='list',
+                   Yield='list',
+                   Biomass='list',
+                   SBiomass='list',
+                   SP='list',
+                   Misc='list'
+           ),
+           contains='Created_ModifiedClass'
+  )
+  Curves <- new('curves')
+  Curves@SPR <- CalcSPR(OM)
+  
+  # SPR
+  
   
   Stock <- OM@Stock[[1]]
   Fleet <- OM@Fleet[[1]]

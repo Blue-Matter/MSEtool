@@ -9,6 +9,7 @@
 \usage{
 CalcMovement(
   Spatial,
+  TimeSteps = NULL,
   nsim = NULL,
   seed = NULL,
   nits = 100,

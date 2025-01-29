@@ -96,6 +96,7 @@ Populate(object, ...)
 \S4method{Populate}{spatial}(
   object,
   Ages = NULL,
+  TimeSteps = NULL,
   nsim = NULL,
   seed = NULL,
   messages = TRUE,
@@ -138,7 +139,8 @@ Populate(object, ...)
   TimeSteps = NULL,
   CalcAtLength = FALSE,
   seed = NULL,
-  messages = TRUE
+  messages = TRUE,
+  CheckMaxValue = TRUE
 )
 
 \S4method{Populate}{retention}(

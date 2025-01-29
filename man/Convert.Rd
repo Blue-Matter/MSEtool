@@ -4,7 +4,7 @@
 \alias{Convert}
 \title{Convert old style and new style object classes}
 \usage{
-Convert(OM, Author = "", CurrentYear = NULL)
+Convert(OM, Author = "", CurrentYear = NULL, Populate = TRUE)
 }
 \arguments{
 \item{OM}{An old style \code{OM} or \code{MOM} class object, or a

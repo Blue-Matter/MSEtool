@@ -7,7 +7,7 @@
 \title{SRR Object}
 \usage{
 SRR(
-  Pars = list(R0 = NA, h = NA),
+  Pars = list(h = NA),
   Model = "BevertonHolt",
   R0 = array(),
   SD = array(),

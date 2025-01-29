@@ -9,9 +9,9 @@
 \usage{
 SimulateDEV(
   OM = NULL,
-  parallel = FALSE,
   messages = "default",
   nSim = NULL,
+  parallel = FALSE,
   silent = FALSE,
   ...
 )

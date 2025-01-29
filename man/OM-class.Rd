@@ -33,7 +33,7 @@ OM(
   pStar = 0.5,
   maxF = 3,
   Seed = NULL,
-  Control = list(),
+  Control = NULL,
   Misc = list(),
   Source = list()
 )

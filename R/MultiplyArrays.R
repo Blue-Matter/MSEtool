@@ -14,15 +14,36 @@ NULL
 CheckArrays <- function(ArrayList) {
   array1 <- ArrayList[[1]]
   array2 <- ArrayList[[2]]
+  d1 <- dim(array1)
+  d2 <- dim(array2)
+  nm1 <- array1 |> dimnames() |> names()
+  nm2 <- array2 |> dimnames() |> names()
   
-  if (length(dim(array1))!=length(dim(array2)))
-    cli::cli_abort('`array1` and `array2` must have number of dimensions')
+  if (length(d1)!=length(d2))
+    cli::cli_abort(c(' `array1` and `array2` must have same number of dimensions',
+                   'x'='`array1` has {.val {length(d1)}} dimensions  while `array2` has {.val {length(d2)}} dimensions '))
   
-  if (!(all(names(dimnames(array1))==names(dimnames(array2)))))
-    cli::cli_abort('`array1` and `array2` must have same named dimensions')
+  if (!(all(nm1==nm2)))
+    cli::cli_abort(c('`array1` and `array2` must have same dimension names',
+                     'x'='Dimension names are {.val {nm1}} for `array1` and {.val {nm2}} for `array2`'))
 }
 
-ExpandArray <- function(Array, Dims, TimeSteps) {
+RepeatArrayDim <- function(array, dim, n) {
+  ArrayDim <- dim(array)
+  nDim <- length(ArrayDim)
+  OutDim <- ArrayDim
+  OutDim[dim] <- OutDim[dim] * n
+  
+  perm <- (1:nDim)[-dim]
+  perm <- c(perm, dim)
+  OutArray <- aperm(array, perm)
+  OutArray <- rep(OutArray, n)
+  dim(OutArray) <- OutDim[perm]
+  perm <- append((1:(nDim - 1)), nDim, dim - 1)
+  aperm(OutArray, perm) 
+}
+
+ExpandTS <- function(Array, Dims, TimeSteps) {
   ind <- which(names(dimnames(Array))=='Time Step')
   if (length(ind)<1) 
     return(Array)
@@ -38,19 +59,19 @@ ExpandArray <- function(Array, Dims, TimeSteps) {
   OutArray
 }
 
-MatchTimeSteps <- function(ArrayList) {
+MatchArrayTimeSteps <- function(ArrayList) {
   array1 <- ArrayList[[1]]
   array2 <- ArrayList[[2]]
   
   nm1 <- names(dimnames(array1))
   ind <- which(nm1=='Time Step')
-
+  
   if (length(ind)<1)
     return(list(array1, array2))
   
   TSarray1 <- dimnames(array1)[[ind]] |> as.numeric()
   TSarray2 <- dimnames(array2)[[ind]] |> as.numeric()
-
+  
   TSout <- c(TSarray1, TSarray2) |> unique() |> sort()
   
   if (all(TSout %in% TSarray1) & all(TSout %in% TSarray2)) 
@@ -62,119 +83,63 @@ MatchTimeSteps <- function(ArrayList) {
   d2[ind] <- length(TSout)
   
   if (!all(TSout %in% TSarray1) & length(TSarray1)>1) 
-    array1 <- ExpandArray(Array=array1, Dims=d1, TimeSteps=TSout)
+    array1 <- ExpandTS(Array=array1, Dims=d1, TimeSteps=TSout)
   if (!all(TSout %in% TSarray2)& length(TSarray2)>1) 
-    array2 <- ExpandArray(Array=array2, Dims=d2, TimeSteps=TSout)
+    array2 <- ExpandTS(Array=array2, Dims=d2, TimeSteps=TSout)
   
   list(array1=array1, array2=array2)
 }
 
-CheckDims <- function(ArrayList, dimname='Age') {
-  array1 <- ArrayList[[1]]
-  array2 <- ArrayList[[2]]
+ExpandArrays <- function(ArrayList, array2=NULL) {
+  if (inherits(ArrayList, 'array') & !is.null(array2))
+    ArrayList <- list(ArrayList, array2)
+   
+  ArrayList <- MatchArrayTimeSteps(ArrayList) # match time-steps
   
-  nm1 <- names(dimnames(array1))
-  ind <- which(nm1==dimname)
-  if (length(ind)<1)
+  AllDims <- rbind(dim(ArrayList[[1]]), dim(ArrayList[[2]]))
+  MatchDims <- AllDims[1,] == AllDims[2,]
+  if (all(MatchDims)) {
     return(ArrayList)
-  
-  dims1 <- dimnames(array1)[[ind]] |> as.numeric()
-  dims2 <- dimnames(array2)[[ind]] |> as.numeric()
-  
-  if (
-    (length(dims1)>1 & length(dims2) != length(dims1)) &
-    (length(dims2)>1 & length(dims1) != length(dims2))
-  ) {
-    cli::cli_abort('{.code {dimname}} dimension must either be length 1 or equal lengths in both arrays')
   }
-  ArrayList
+  DimNames1 <- dimnames(ArrayList[[1]])
+  DimNames2 <- dimnames(ArrayList[[2]])
+  Names <- names(DimNames1)
   
-}
+  if (!any(MatchDims)) {
+    if (sum(apply(AllDims == 1, 1, prod))>2)
+      cli::cli_abort(c('Array dimensions must be length {.val 1} or equal lengths in both arrays.',
+                     'x'='Dimensions {.val {Names}} are length {.val {AllDims[1,]}} for `array1` and length {.val {AllDims[2,]}} for `array2`. '))
+  }
+  
+  OutDims <- apply(AllDims, 2, max)
+  for (a in 1:2) {
+    for (dim in 1:ncol(AllDims)) {
+      if (AllDims[a,dim] != OutDims[dim])
+        ArrayList[[a]] <- RepeatArrayDim(ArrayList[[a]], dim, OutDims[dim])
+    }
+  }
+  
+  # set dimnames
+  l <- list()
+  for (i in seq_along(DimNames1)) {
+    nm <- list(DimNames1[[i]], DimNames2[[i]])
+    ind <- purrr::map_vec(nm, length) |> which.max()
+    l[[i]] <- nm[[ind]]
+  }
+  names(l) <- Names
+  dimnames(ArrayList[[1]]) <- l
+  dimnames(ArrayList[[2]]) <- l
+  ArrayList
+} 
 
-# TODO could speed up by converting sim dimension to list and map
 ArrayOperation <- function(array1, array2, operation=`*`) {
   ArrayList <- list(array1, array2)
   CheckArrays(ArrayList)
   
   ArrayList <- ArrayList |> 
-    MatchTimeSteps() |>
-    CheckDims('Sim') |>
-    CheckDims('Age') 
+    ExpandArrays() 
   
-  array1 <- ArrayList[[1]]
-  array2 <- ArrayList[[2]]
-  
-  d1 <- dim(array1)
-  d2 <- dim(array2)
-  alldims <- rbind(d1, d2)
-  outdims <- apply(alldims, 2, max)
-  out <- array(NA, dim=outdims) 
-  nm1 <- names(dimnames(array1))
-  ind <- which(nm1=='Time Step')
-  if (length(ind)>0) {
-    timesteps <- list(dimnames(array1)$`Time Step`, dimnames(array2)$`Time Step`)
-    maxTS <- lapply(timesteps, length) |> unlist() |> which.max()
-    out <- out |> AddDimNames(names=nm1, TimeSteps = timesteps[[maxTS]])
-  } else {
-    out <- out |> AddDimNames(names=nm1)
-  }
-  
-  if (all(d1==d2)) {
-    out[] <- operation(array1, array2)
-    return(out)
-  }
-  
-  # do the operation in a loop - TODO C++
-  
-  if (length(outdims)==2) {
-    for (s in 1:outdims[1]) {
-      for (age in 1:outdims[2]) {
-        out[s,age,ts] <- operation(array1[GetIndex(s, d1[1]), 
-                                          GetIndex(age, d1[2])],
-                                   array2[GetIndex(s, d2[1]),
-                                          GetIndex(age, d2[2])]
-        )
-      }
-    }
-  }
-  
-  
-  if (length(outdims)==3) {
-    for (s in 1:outdims[1]) {
-      for (age in 1:outdims[2]) {
-        for (ts in 1:outdims[3]) {
-          out[s,age,ts] <- operation(array1[GetIndex(s, d1[1]), 
-                                            GetIndex(age, d1[2]),
-                                            GetIndex(ts, d1[3])],
-                                     array2[GetIndex(s, d2[1]),
-                                            GetIndex(age, d2[2]),
-                                            GetIndex(ts, d2[3])]
-          )
-        }
-      }
-    }
-  }
-  
-  if (length(outdims)==4) {
-    for (s in 1:outdims[1]) {
-      for (age in 1:outdims[2]) {
-        for (ts in 1:outdims[3]) {
-          for (area in 1:outdims[4]) {
-            out[s,age,ts,area] <- operation(array1[GetIndex(s, d1[1]), 
-                                                   GetIndex(age, d1[2]),
-                                                   GetIndex(ts, d1[3]),
-                                                   GetIndex(area, d1[4])],
-                                            array2[GetIndex(s, d2[1]),
-                                                   GetIndex(age, d2[2]),
-                                                   GetIndex(ts, d2[3]),
-                                                   GetIndex(area, d2[4])]
-            )
-          }
-        }
-      }
-    }
-  }
-  out
+  operation(ArrayList[[1]], ArrayList[[2]])
 }
 
 #' @rdname MultiplyArrays

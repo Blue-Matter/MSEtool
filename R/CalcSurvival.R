@@ -105,9 +105,9 @@ setMethod('UpdateApicalF', c('FleetList',  'ANY'), function(x, apicalF) {
       abind::adrop(ApicalFbyFleetArray[ , , x, drop=FALSE],3))
     
     for (fl in seq_along(ApicalFbyFleet)) {
-      ApicalF(FleetList[[fl]]@FishingMortality) <- ApicalF[[fl]]
+      ApicalF(x[[fl]]@FishingMortality) <- ApicalF[[fl]]
     }
-    return(FleetList)
+    return(x)
   }
   
   # purrr::map(FleetList, UpdateApicalF, apicalF=apicalF)
@@ -125,12 +125,12 @@ setGeneric('CalcFishedSurvival', function(x, Fleet=NULL, apicalF=NULL, SP=FALSE)
 setMethod('CalcFishedSurvival', c('stock', 'FleetList',  'ANY'), 
           function(x, Fleet=NULL, apicalF=NULL, SP=FALSE) {
   
-  if (length(FleetList)==1) {
+  if (length(Fleet)==1) {
     if (!is.null(apicalF))
-      FleetList <- UpdateApicalF(FleetList, apicalF)
+      Fleet <- UpdateApicalF(Fleet, apicalF)
   } 
   
-  FDead <- purrr::map(FleetList, CalcFatAge, return='FDead')
+  FDead <- purrr::map(Fleet, CalcFatAge, return='FDead')
   
   FDead <- array(unlist(FDead), dim=c(dim(FDead[[1]])[1], 
                                       dim(FDead[[1]])[2], 
@@ -140,7 +140,7 @@ setMethod('CalcFishedSurvival', c('stock', 'FleetList',  'ANY'),
   
   FDeadOverTotal <- apply(FDead, c(1,2,3), sum) 
   
-  if (length(FleetList)>1) {
+  if (length(Fleet)>1) {
     if (!is.null(apicalF))
       # update for apicalF over all fleets
       FDeadOverTotal <- UpdateApicalF(FDeadOverTotal, apicalF)

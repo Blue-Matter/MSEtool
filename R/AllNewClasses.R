@@ -2715,7 +2715,7 @@ setClass("om",
                  TimeUnits='char.null',
                  TimeStepsPerYear='num.null',
                  TimeSteps='num.null',
-                 Control='list',
+                 Control='list.null',
                  Misc='list',
                  Source='char.list'),
          contains = 'Created_ModifiedClass'
@@ -2811,7 +2811,7 @@ OM <- function(Name='A new `OM` object',
                pStar=0.5,
                maxF=3,
                Seed=NULL,
-               Control=list(),
+               Control=NULL,
                Misc=list(),
                Source=list()) {
 
@@ -2848,7 +2848,14 @@ OM <- function(Name='A new `OM` object',
   .Object@pStar <- pStar
   .Object@maxF <- maxF
   .Object@Seed <- Seed
-  .Object@Control <- Control
+  
+ 
+  if (!is.null(Control)) {
+    .Object@Control <- Control
+  } else {
+    .Object@Control <- ControlDefault
+  }
+  
   .Object@Misc <- Misc
   .Object@Source <- Source
   .Object@Created <- Sys.time()
