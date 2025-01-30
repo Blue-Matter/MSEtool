@@ -367,6 +367,20 @@ StructureCV <- function(CVatAge, nsim) {
   Structure(CVatAge)
 } 
 
+UpdateSPFrom <- function(OM) {
+  stocknames <- StockNames(OM) 
+  if (length(stocknames) != nStock(OM)) {
+    cli::cli_abort(c('{.var Name} must be unique for each Stock.',
+                     'i'='Current Stock Names are {.val {stocknames}}'))
+  }
+  if (length(stocknames)==1)
+    return(OM)
+  for (st in 1:nStock(OM)) {
+    if (!is.null(OM@Stock[[st]]@SRR@SPFrom))
+      OM@Stock[[st]]@SRR@SPFrom <- stocknames[OM@Stock[[st]]@SRR@SPFrom]
+  }
+  OM
+}
 
 ShareParameters <- function(OM) {
   
@@ -375,6 +389,7 @@ ShareParameters <- function(OM) {
     # SexPars$Herm <- checkHerm(SexPars$Herm, maxage, nsim, nyears, proyears)
   }
   
+  # TODO - remove SPFrom if it remains in SRR
   if (!length(OM@SexPars@SPFrom))
     return(OM)
   
@@ -570,7 +585,10 @@ setMethod("Populate", "om", function(object, messages='progress') {
   #}
   
   # share paramaters for two-sex stocks
-  object <- object |> ShareParameters() |> StartMessages()
+  object <- object |> 
+    UpdateSPFrom() |>
+    ShareParameters() |> 
+    StartMessages()
   
   # Obs and Imp
   
@@ -1426,7 +1444,7 @@ CheckSelectivityMaximum <- function(MeanAtAge) {
   if (all(!ind))
     return(MeanAtAge)
   
-  cli::cli_alert_warning("WARNING: Selectivity-at-Age does not have a maximum value of 1. F-at-Age won't correspond with Apical")
+  cli::cli_alert_warning("WARNING: Selectivity-at-Age does not have a maximum value of 1. F-at-Age won't correspond with Apical F")
   cli::cli_alert_warning('Standardizing to a max value of 1 but you probably want to fix this in the OM')
   
   sims <- which(apply(ind,1, sum)>0) |> cli::cli_vec(list("vec-trunc" = 5))

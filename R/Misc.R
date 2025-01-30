@@ -210,6 +210,40 @@ GenerateStochasticValues <- function(object, nsim=NULL) {
   object
 }
 
+# ---- Add Dimensions ----
+
+AddDimension <- function(array, name) {
+  if (inherits(array, 'list'))
+    array <- unlist(array)
+  if (is.null(array))
+    return(NULL)
+  d <- dim(array)
+  
+  if (all(d==1)) {
+    outarray <- array(array[1,1], dim=c(d, 1))
+  } else {
+    outarray <- replicate(1, array) 
+  }
+  
+  # set dimnames
+  l <- dimnames(array)
+  l[name] <- 1
+  dimnames(outarray) <- l
+  outarray
+}
+
+AddSimDimension <- function(array, names=c('Sim', 'Age', 'Time Step'), TimeSteps=NULL) {
+  dd <- dim(array)
+  if (length(dd)==length(names))
+    return(AddDimNames(array, names, TimeSteps=TimeSteps))
+  
+  if (length(dd)==2) {
+    array <- replicate(1, array) |> aperm(c(3,1,2))
+  }
+  AddDimNames(array, names, TimeSteps=TimeSteps)
+}
+
+
 AddAreaDimension <- function(array) {
   l <- dimnames(array)
   array <- replicate(1, array) 
@@ -435,7 +469,9 @@ PopulatedObject <- function(object) {
 }
 
 AddDimNames <- function(array, names=c('Sim', 'Age', 'Time Step'), TimeSteps=NULL) {
-
+  
+  if (inherits(array,'list'))
+    array <- unlist(array)
   if (is.null(array))
     return(array)
   d <- dim(array)
@@ -466,11 +502,11 @@ AddMeanAtAgeAttributes <- function(object, TimeSteps=NULL, Ages=NULL) {
   if ('Units' %in% slotNames(object))
     attributes(object@MeanAtAge)$Units <- object@Units
 
-  if (is.null(attributes(object@MeanAtAge)$TimeSteps))
-    attributes(object@MeanAtAge)$TimeSteps <- TimeSteps
-  
+  # if (is.null(attributes(object@MeanAtAge)$TimeSteps))
+  #   attributes(object@MeanAtAge)$TimeSteps <- TimeSteps
+  # 
   if (methods::is(Ages, 'ages')) {
-    attributes(object@MeanAtAge)$Ages <- Ages@Classes
+    # attributes(object@MeanAtAge)$Ages <- Ages@Classes
     attributes(object@MeanAtAge)$UnitsAge <- Ages@Units
   }
   object
@@ -501,16 +537,6 @@ GetLengthClass <- function(object, RefValue=0.5) {
 
 
 
-AddSimDimension <- function(array, names=c('Sim', 'Age', 'Time Step'), TimeSteps=NULL) {
-  dd <- dim(array)
-  if (length(dd)==length(names))
-    return(AddDimNames(array, names, TimeSteps=TimeSteps))
-  
-  if (length(dd)==2) {
-    array <- replicate(1, array) |> aperm(c(3,1,2))
-  }
-  AddDimNames(array, names, TimeSteps=TimeSteps)
-}
 
 
 range01 <- function (x) {

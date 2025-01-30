@@ -236,10 +236,13 @@ Ages <- function(MaxAge=NA,
 #' - **Time-varying**: Numeric matrix with either 1 or `nSim` rows and `nTS` columns,
 #' where `nTS` is the total number of time steps. See note below.
 #'
+#'
+#' TODO - this has changed now - use dimnames not attributes
 #' **Note:** For time-varying parameters, if the parameter only varies in particular
 #' time steps (rather than every time step), the number of columns in the matrix
 #' can be equal to the number of change points instead of `nTS`. The time step
 #' corresponding with each change point can be specified using `attributes`, see `Examples`.
+#' 
 #'
 #' @slot Pars `r Pars_param()`
 #' @slot Model `r Model_param()`
@@ -1073,11 +1076,13 @@ setClass("srr",
                  R0='num.array',
                  SD='num.array',
                  AC='num.array',
+                 SPFrom='char.num',
                  TruncSD='num.null',
                  RecDevInit='num.array',
                  RecDevHist='num.array',
                  RecDevProj='num.array',
                  SpawnTimeFrac='numeric',
+                 RelRecFun="fun.char",
                  Misc='list'
          ),
          contains='Created_ModifiedClass'
@@ -1092,22 +1097,26 @@ setMethod("initialize", "srr", function(.Object,
                                         R0=array(),
                                         SD=array(),
                                         AC=array(),
+                                        SPFrom=NULL,
                                         TruncSD=2,
                                         RecDevInit=array(),
                                         RecDevHist=array(),
                                         RecDevProj=array(),
                                         SpawnTimeFrac=0,
+                                        RelRecFun=NULL,
                                         Misc=list()) {
   .Object@Pars <- Pars
   .Object@Model <- Model
   .Object@R0 <- R0
   .Object@SD <- SD
   .Object@AC <- AC
+  .Object@SPFrom <- SPFrom
   .Object@TruncSD <- TruncSD
   .Object@RecDevInit <- RecDevInit
   .Object@RecDevHist <- RecDevHist
   .Object@RecDevProj <- RecDevProj
   .Object@SpawnTimeFrac <- SpawnTimeFrac
+  .Object@RelRecFun <- RelRecFun
   .Object@Misc <- Misc
   .Object@Created <- Sys.time()
 
@@ -1150,11 +1159,13 @@ SRR <- function(Pars=list(h=NA),
                 R0=array(),
                 SD=array(),
                 AC=array(),
+                SPFrom=NULL,
                 TruncSD=2,
                 RecDevInit=array(),
                 RecDevHist=array(),
                 RecDevProj=array(),
                 SpawnTimeFrac=0,
+                RelRecFun=NULL,
                 Misc=list()) {
 
   if (methods::is(Pars, 'stock'))
@@ -1166,11 +1177,13 @@ SRR <- function(Pars=list(h=NA),
                R0=R0,
                SD=SD,
                AC=AC,
+               SPFrom=SPFrom,
                TruncSD=TruncSD,
                RecDevInit=RecDevInit,
                RecDevHist=RecDevHist,
                RecDevProj=RecDevProj,
                SpawnTimeFrac=SpawnTimeFrac,
+               RelRecFun=RelRecFun,
                Misc=Misc)
 }
 
@@ -2654,7 +2667,7 @@ setClassUnion(name="DataList", members=c("data", "list", 'NULL'))
 #' ## SexPars
 #' The following are valid names for `SexPars`:
 #'
-#' - `SSBfrom`: A `nstock` x `nstock` matrix, where `nstock` is `length(Stock`)
+#' - `SPfrom`: A `nstock` x `nstock` matrix, where `nstock` is `length(Stock`)
 #' that specifies the proportion of the spawning output of the row `p` stock for
 #' the column `p'` stock. A diagonal matrix means each stock is responsible for
 #' its own recruitment.

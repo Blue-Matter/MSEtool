@@ -30,7 +30,7 @@ Like all of the new style objects in \code{MSEtool}, the slots in \code{om} obje
 
 The following are valid names for \code{SexPars}:
 \itemize{
-\item \code{SSBfrom}: A \code{nstock} x \code{nstock} matrix, where \code{nstock} is \verb{length(Stock})
+\item \code{SPfrom}: A \code{nstock} x \code{nstock} matrix, where \code{nstock} is \verb{length(Stock})
 that specifies the proportion of the spawning output of the row \code{p} stock for
 the column \verb{p'} stock. A diagonal matrix means each stock is responsible for
 its own recruitment.

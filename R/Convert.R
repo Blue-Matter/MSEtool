@@ -158,7 +158,19 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
     om@Imp <- OM@Imps
     om@CatchFrac <- OM@CatchFrac
     om@Allocation <- OM@Allocation
+    
+    # 
+    if (!is.null(OM@SexPars$SSBfrom)) {
+      for (st in 1:length(om@Stock)) {
+        ind <- which(OM@SexPars$SSBfrom[st,]==1)
+        if (ind != st)
+          om@Stock[[st]]@SRR@SPFrom <- ind
+      }
+    }
+   
+    # TODO might remove SexPars slot later
     om@SexPars <- ImportSexPars(OM)
+  
     om@Efactor <- OM@Efactor
     om@Complexes<- OM@Complexes
     om@Relations <- OM@Rel
@@ -185,11 +197,12 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
 
 ImportSexPars <- function(OM) {
   sexpars <- new('sexpars')
-  if (!is.null(OM@SexPars$SSBfrom)) {
-    SPFrom(sexpars) <- OM@SexPars$SSBfrom
-    rownames(SPFrom(sexpars)) <- names(OM@Stocks)
-    colnames(SPFrom(sexpars)) <- names(OM@Stocks)
-  }
+  # TODO remove SPFrom functions and slot 
+  # if (!is.null(OM@SexPars$SSBfrom)) {
+  #   SPFrom(sexpars) <- OM@SexPars$SSBfrom
+  #   rownames(SPFrom(sexpars)) <- names(OM@Stocks)
+  #   colnames(SPFrom(sexpars)) <- names(OM@Stocks)
+  # }
     
   
   if (!is.null(OM@SexPars$Herm))

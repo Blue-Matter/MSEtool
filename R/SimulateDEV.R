@@ -32,16 +32,14 @@ SimulateDEV <- function(OM=NULL,
   chk <- Check(OM) # TODO OM checks
   
   OM <- StartUp(OM, messages, nSim) 
-    
-  # TODO - re-populates if Stock/Fleet converted to list - fix hash
   
   HistOut <- new('hist') # new Hist object to return 
   
   # ---- Calculate Unfished Dynamics ----
-  # TODO Dynamic Unfished - elsewhere by simulating dynamics
+  # TODO Dynamic Unfished
   HistOut@Unfished <- CalcUnfishedDynamics(OM, messages, parallel=parallel)
   
-  
+
   # ---- Calculate Curves -----
   
   #New Classes (temp) 
@@ -50,6 +48,7 @@ SimulateDEV <- function(OM=NULL,
   setClass("curves",
            slots=c(
                    SPR='list', 
+                   RelRec='list',
                    YPR='list',
                    Recruit='list',
                    Yield='list',
@@ -61,7 +60,11 @@ SimulateDEV <- function(OM=NULL,
            contains='Created_ModifiedClass'
   )
   Curves <- new('curves')
-  Curves@SPR <- CalcSPRCurve(OM)
+  Curves@SPR <- SPRCurve(OM)
+  Curves@RelRec <- RelRecruitCurve(OM)
+  Curves@YPR <- YPRCurve(OM, RelRec, SPR)
+  
+  
   
   # YPR
   # RelRecruit

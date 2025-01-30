@@ -130,6 +130,7 @@ setMethod('CalcFishedSurvival', c('stock', 'FleetList',  'ANY'),
       Fleet <- UpdateApicalF(Fleet, apicalF)
   } 
   
+        
   FDead <- purrr::map(Fleet, CalcFatAge, return='FDead')
   
   FDead <- array(unlist(FDead), dim=c(dim(FDead[[1]])[1], 

@@ -8,18 +8,25 @@ SSdir <- 'G:/My Drive/1_PROJECTS/North_Atlantic_Swordfish/OMs/grid_2022/000_base
 
 MOM <- SS2MOM(SSdir=SSdir,nsim=3, Name='North Atlantic Swordfish') 
 
-multiHist <- Simulate(MOM)
+# TODO Import - improved SS2MOM model 
+
 
 OM <- Convert(MOM, Populate = FALSE)  # convert from `MOM` to `om`
 
 OM <- Populate(OM)
 
 
+
+OM@Stock[[1]]@SRR@SPFrom
+OM@Stock[[1]]@Fecundity
+OM@Stock[[2]]@Fecundity
+
 OM@Fleet[[1]][[2]]@Selectivity@MeanAtAge |> dim()
 
 OM@Fleet[[1]][[1]]@FishingMortality@ApicalF
 
-
+multiHist <- Simulate(MOM)
+multiHist[[2]][[1]]@Ref$ByYear$SPRcrash
 
 
 

@@ -96,10 +96,10 @@ CalcUnfishedDynamics <- function(OM,
 
   Unfished <- new('unfished') 
   
-  cli::cli_progress_step(
-    'Calculating Unfished Dynamics',
-    msg_done = 'Calculated Unfished Dynamics',
-    spinner = TRUE)
+  # cli::cli_progress_step(
+  #   'Calculating Unfished Dynamics',
+  #   msg_done = 'Calculated Unfished Dynamics',
+  #   spinner = TRUE)
   
   # ---- Equilibrium ----
   # NOTE: Equilibrium N-at-Age is calculated from R0 (which may vary over time)
@@ -119,25 +119,29 @@ CalcUnfishedDynamics <- function(OM,
  
   NatAge <- purrr::map2(UnfishedSurvival, R0, MultiplyArrays)
 
-  cli::cli_progress_update()
+  # cli::cli_progress_update()
   
   Unfished@Equilibrium@Number <- purrr::map2(NatAge, 
                                              UnfishedDist(OM), 
                                              DistributeStock) #  |> AddStockNames(StockNames(OM))
   
-  cli::cli_progress_update()
-  WeightatAge <- purrr::map(OM@Stock, GetWeightAtAge) |> purrr::map(AddAreaDimension)
-  Unfished@Equilibrium@Biomass <- purrr::map2(WeightatAge, Unfished@Equilibrium@Number, MultiplyArrays)
-  cli::cli_progress_update()
+  # cli::cli_progress_update()
+  WeightatAge <- purrr::map(OM@Stock, GetWeightAtAge) |> 
+    purrr::map(AddAreaDimension)
+  
+  Unfished@Equilibrium@Biomass <- purrr::map2(WeightatAge, 
+                                              Unfished@Equilibrium@Number, 
+                                              MultiplyArrays)
+  # cli::cli_progress_update()
   SNatAge <- purrr::map2(R0, UnfishedSurvivalSP, MultiplyArrays) |>
     purrr::map2(purrr::map(OM@Stock, GetMaturityAtAge), MultiplyArrays) |>
     purrr::map2(UnfishedDist(OM), DistributeStock)
-  cli::cli_progress_update()
+  # cli::cli_progress_update()
   Unfished@Equilibrium@SBiomass <- purrr::map2(WeightatAge, SNatAge, MultiplyArrays)
-  cli::cli_progress_update()
+  # cli::cli_progress_update()
   
   FecundityatAge <- purrr::map(OM@Stock, GetFecundityAtAge) |> purrr::map(AddAreaDimension)
-  cli::cli_progress_update()
+  # cli::cli_progress_update()
   # NOTE: not sure if this will work for all cases 
   ind <- lapply(FecundityatAge, is.null) |> unlist() |> not() |> which() 
   # TODO 

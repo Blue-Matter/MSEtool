@@ -5,8 +5,14 @@ setGeneric('CalcSPR0', function(x)
 )
 
 setMethod('CalcSPR0', 'stock', function(x) {
-  MultiplyArrays(CalcUnfishedSurvival(x, SP=TRUE), 
-                         GetFecundityAtAge(x)) |> 
+  fecundity <- GetFecundityAtAge(x)
+  if (is.null(fecundity))
+    return(NULL)
+  
+  if (!is.null(x@SRR@SPFrom) && x@SRR@SPFrom != x@Name)
+    return(NULL)
+  
+  MultiplyArrays(CalcUnfishedSurvival(x, SP=TRUE), fecundity) |> 
   apply(c(1,3), sum) |> 
     process_cpars()
 })
@@ -29,25 +35,30 @@ setGeneric('CalcSPRF', function(x, Fleet=NULL, FSearch=NULL)
 )
 
 
-setMethod('CalcSPRF', c('stock', 'FleetList',  'ANY'), 
-          function(x, Fleet=NULL, FSearch=NULL) {
-            out <- lapply(cli::cli_progress_along(FSearch, 
-                                                  'Calculating Equilibrium SPR'),
-                          function(i) {
-                            FishedSurvival <- CalcFishedSurvival(x, Fleet, FSearch[i], SP=TRUE)
-                            
-                            # fished egg production per recruit
-                            # TODO need to check if Fecundity@MeanAtAge always include maturity-at-age
-                            MultiplyArrays(array1=FishedSurvival, array2=x@Fecundity@MeanAtAge) |>
-                              apply(c(1,3), sum) |> process_cpars()
-                          })
-            l <- out[[1]]
-            DimNames <- dimnames(l)
-            DimNames$apicalF <- FSearch
-            array <- array(unlist(out), dim=c(dim(l), length(FSearch)))
-            dimnames(array) <- DimNames
-            array
-          })
+setMethod('CalcSPRF', c('stock', 'FleetList',  'ANY'), function(x, Fleet=NULL, FSearch=NULL) {
+  
+  if (!is.null(x@SRR@SPFrom) && x@SRR@SPFrom!=x@Name)
+    return(NULL)
+  
+  out <- lapply(cli::cli_progress_along(FSearch, 
+                                        'Calculating Equilibrium SPR'),
+                function(i) {
+                  FishedSurvival <- CalcFishedSurvival(x, Fleet, FSearch[i], SP=TRUE)
+                  
+                  # fished egg production per recruit
+                  # TODO need to check if Fecundity@MeanAtAge always include maturity-at-age
+                  MultiplyArrays(array1=FishedSurvival, array2=x@Fecundity@MeanAtAge) |>
+                    apply(c(1,3), sum) |> process_cpars()
+                })
+  l <- out[[1]]
+  if (is.null(l)) 
+    return(NULL)
+  DimNames <- dimnames(l)
+  DimNames$apicalF <- FSearch
+  array <- array(unlist(out), dim=c(dim(l), length(FSearch)))
+  dimnames(array) <- DimNames
+  array
+})
 
 setMethod('CalcSPRF', c('StockList', 'StockFleetList',  'ANY'), 
           function(x, Fleet=NULL, FSearch=NULL) {
@@ -73,14 +84,12 @@ setMethod('CalcSPRF', c('om', 'ANY',  'ANY'),
 # })
 
 
-
 CalcSPR <- function(OM, FSearch=NULL, SPR0=NULL) {
   if (is.null(SPR0)) 
     SPR0 <- CalcSPR0(OM) # unfished spawning production per recruit
-  
-  # add F dimension for division
-  SPR0 <- purrr::map(SPR0, replicate, n=1) |>
-    purrr::map(AddDimNames, c('Sim', 'Time Step', 'apicalF'), TimeSteps=TimeSteps(OM))
+
+  # add apicalF dimension for division
+  SPR0 <- purrr::map(SPR0, AddDimension, 'apicalF') 
   
   SPRF <- CalcSPRF(OM, FSearch=FSearch)
   purrr::map2(SPRF, SPR0, DivideArrays)

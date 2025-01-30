@@ -21,11 +21,12 @@ CalcFatAge <- function(Fleet, return=c('All', 'FCaught', 'FRetain', 'FDiscard', 
   }
   
   
- 
-  SelectivityRetention <- MultiplyArrays(Fleet@Selectivity@MeanAtAge, Fleet@Retention@MeanAtAge)
+  SelectivityRetention <- MultiplyArrays(Fleet@Selectivity@MeanAtAge, 
+                                         Fleet@Retention@MeanAtAge)
   
   isDiscards <- FALSE
-  if (!is.null(Fleet@DiscardMortality@MeanAtAge) &  !all(Fleet@DiscardMortality@MeanAtAge)==0) {
+  if (!is.null(Fleet@DiscardMortality@MeanAtAge) &&
+      !all(Fleet@DiscardMortality@MeanAtAge==0)) {
     isDiscards <- TRUE
     # Inflate ApicalF to account for discard mortality
     # ApicalF = apicalF of Dead Fish; 'apicalF' for 'caught' fish will be higher
