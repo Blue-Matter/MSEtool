@@ -1,12 +1,15 @@
+# ---- CalcFatAge ----
 setGeneric('CalcFatAge', function(x)
   standardGeneric('CalcFatAge')
 )
 
 setMethod('CalcFatAge', 'om', function(x) {
-  purrr::map(x@Fleet, CalcFatAge)
+  purrr::map(x, CalcFatAge)
 })
 
-
+setMethod('CalcFatAge', 'StockFleetList', function(x) {
+  purrr::map(x, CalcFatAge)
+})
 
 
 setMethod('CalcFatAge', 'FleetList', function(x) {
@@ -18,7 +21,6 @@ setMethod('CalcFatAge', 'fleet', function(x) {
   if (is.null(x@FishingMortality@ApicalF)) { 
     stop('need to calculate apical F from Effort and q')
   }
-  
   
   apicalF <- x@FishingMortality@ApicalF
   selectivity <-  x@Selectivity@MeanAtAge
@@ -58,10 +60,13 @@ setMethod('CalcFatAge', 'fleet', function(x) {
       AddArrays(SelectivityRetention, SelectivityDiscardMort),
       SelectivityDiscardMortRetention
     )
+    InflateApicalF <- apply(InflateApicalF, c(1,3), max) 
+    InflateApicalF <- AddDimension(InflateApicalF, 'Age') |> aperm(c(1,3,2))
     apicalF <- DivideArrays(apicalF, InflateApicalF)
   }
   
   FCaught <- MultiplyArrays(apicalF, x@Selectivity@MeanAtAge)
+  
   FRetain <- MultiplyArrays(x@Retention@MeanAtAge, FCaught)
   if (isDiscards) {
     FDiscard <- SubtractArrays(FCaught, FRetain)
@@ -77,10 +82,43 @@ setMethod('CalcFatAge', 'fleet', function(x) {
                        array2=MultiplyArrays(FDiscard, SelectivityDiscardMort))
   }
   
+  
+  # apicalF[1,1,71]
+  # x@FishingMortality@ApicalF[1,71]
+  # max(FDead[1,,71])
+  
+  
   x@FishingMortality@DeadAtAge <- FDead
   x@FishingMortality@RetainAtAge <- FRetain
   x
   
+})
+
+
+# ---- GetFatAgeArray ----
+setGeneric('GetFatAgeArray', function(x, type='Dead')
+  standardGeneric('GetFatAgeArray')
+)
+
+setMethod('GetFatAgeArray', c('FleetList', 'ANY'), function(x, type=c('Dead', 'Retain')) {
+  type <- match.arg(type)
+  List <- purrr::map(x, GetFatAgeArray, type=type)
+
+  checkdims <- purrr::map_df(List, dim)
+
+  Array <- array(as.numeric(unlist(List)), dim=c(dim(List[[1]]), length(List)))
+  l <- dimnames(List[[1]])
+  l$Fleet <- names(List)
+  dimnames(Array) <- l
+  Array
+
+})
+
+setMethod('GetFatAgeArray', c('fleet', 'ANY'), function(x, type=c('Dead', 'Retain')) {
+  type <- match.arg(type)
+  if (type=='Dead')
+    return(x@FishingMortality@DeadAtAge)
+  x@FishingMortality@RetainAtAge
 })
 
 

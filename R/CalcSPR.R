@@ -43,7 +43,8 @@ setMethod('CalcSPRF', c('stock', 'FleetList',  'ANY'), function(x, Fleet=NULL, F
   out <- lapply(cli::cli_progress_along(FSearch, 
                                         'Calculating Equilibrium SPR'),
                 function(i) {
-                  FishedSurvival <- CalcFishedSurvival(x, Fleet, FSearch[i], SP=TRUE)
+                  Fleet <- UpdateApicalF(Fleet, FSearch[i]) 
+                  FishedSurvival <- CalcFishedSurvival(x, Fleet, SP=TRUE)
                   
                   # fished egg production per recruit
                   # TODO need to check if Fecundity@MeanAtAge always include maturity-at-age
@@ -84,9 +85,16 @@ setMethod('CalcSPRF', c('om', 'ANY',  'ANY'),
 # })
 
 
-CalcSPR <- function(OM, FSearch=NULL, SPR0=NULL) {
+CalcSPR <- function(OM, SPR0=NULL, FSearch=NULL) {
+  # TODO add option to specify Time Steps to calculate
+  # currently does all
+  
+  # TODO  modify for herm species
+  
+  if (is.null(FSearch))
+    FSearch <- OM@Control$Curves$FSearch
   if (is.null(SPR0)) 
-    SPR0 <- CalcSPR0(OM) # unfished spawning production per recruit
+    SPR0 <- CalcSPR0(OM)
 
   # add apicalF dimension for division
   SPR0 <- purrr::map(SPR0, AddDimension, 'apicalF') 

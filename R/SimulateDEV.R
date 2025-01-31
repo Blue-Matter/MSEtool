@@ -41,6 +41,7 @@ SimulateDEV <- function(OM=NULL,
   
 
   # ---- Calculate Curves -----
+  # NOTE: Curves do not account for spatial closures or MICE interactions
   
   #New Classes (temp) 
   
@@ -59,9 +60,12 @@ SimulateDEV <- function(OM=NULL,
            ),
            contains='Created_ModifiedClass'
   )
+  
+  SPR0 <- CalcSPR0(OM) # unfished spawning per recruit
+  
   Curves <- new('curves')
-  Curves@SPR <- SPRCurve(OM)
-  Curves@RelRec <- RelRecruitCurve(OM)
+  Curves@SPR <- CalcSPR(OM, SPR0, FSearch=OM@Control$Curves$FSearch)
+  Curves@RelRec <- CalcRelRec(OM)
   Curves@YPR <- YPRCurve(OM, RelRec, SPR)
   
   

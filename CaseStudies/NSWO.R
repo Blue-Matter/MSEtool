@@ -10,11 +10,27 @@ MOM <- SS2MOM(SSdir=SSdir,nsim=3, Name='North Atlantic Swordfish')
 
 # TODO Import - improved SS2MOM model 
 
+# hack to fix discard mortality reverting to 0 in projections for some fleets
+for (st in 1:2) {
+  for (fl in 1:length(MOM@cpars[[1]])) {
+    # d <- dim(MOM@cpars[[st]][[fl]]$Fdisc_array1)
+    MOM@cpars[[st]][[fl]]$Fdisc_array1[,,72:121] <-  MOM@cpars[[st]][[fl]]$Fdisc_array1[,,71, drop=FALSE]
+    MOM@cpars[[st]][[fl]]$Fdisc_array2[,,72:121] <-  MOM@cpars[[st]][[fl]]$Fdisc_array2[,,71, drop=FALSE]
+  }
+}
 
 OM <- Convert(MOM, Populate = FALSE)  # convert from `MOM` to `om`
 
 OM <- Populate(OM)
 
+
+messages='default'
+nSim=NULL
+parallel=FALSE
+silent=FALSE
+
+SimulateDEV
+                      
 
 
 OM@Stock[[1]]@SRR@SPFrom
