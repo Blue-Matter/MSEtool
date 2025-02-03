@@ -88,7 +88,7 @@ avail <- function(classy, package=NULL, msg=TRUE) {
     }
     
     if (length(temp) < 1) stop("No objects of class '", classy, "' found", call. = FALSE)
-    return(unique(temp))
+    return(sort(unique(temp)))
   }
 }
 
