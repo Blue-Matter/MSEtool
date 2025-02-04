@@ -12,7 +12,7 @@ setMethod('CalcSPR0', 'stock', function(x) {
   if (!is.null(x@SRR@SPFrom) && x@SRR@SPFrom != x@Name)
     return(NULL)
   
-  MultiplyArrays(CalcUnfishedSurvival(x, SP=TRUE), fecundity) |> 
+  ArrayMultiply(CalcUnfishedSurvival(x, SP=TRUE), fecundity) |> 
   apply(c(1,3), sum) |> 
     process_cpars()
 })
@@ -48,7 +48,7 @@ setMethod('CalcSPRF', c('stock', 'FleetList',  'ANY'), function(x, Fleet=NULL, F
                   
                   # fished egg production per recruit
                   # TODO need to check if Fecundity@MeanAtAge always include maturity-at-age
-                  MultiplyArrays(array1=FishedSurvival, array2=x@Fecundity@MeanAtAge) |>
+                  ArrayMultiply(array1=FishedSurvival, array2=x@Fecundity@MeanAtAge) |>
                     apply(c(1,3), sum) |> process_cpars()
                 })
   l <- out[[1]]
@@ -79,7 +79,7 @@ setMethod('CalcSPRF', c('om', 'ANY',  'ANY'),
 # 
 # 
 # setMethod('CalcSPR', c('stock', 'FleetList') function(x, ) {
-#   MultiplyArrays(CalcUnfishedSurvival(x, SP=TRUE), 
+#   ArrayMultiply(CalcUnfishedSurvival(x, SP=TRUE), 
 #                  GetFecundityAtAge(x)
 #   )
 # })
@@ -100,6 +100,6 @@ CalcSPR <- function(OM, SPR0=NULL, FSearch=NULL) {
   SPR0 <- purrr::map(SPR0, AddDimension, 'apicalF') 
   
   SPRF <- CalcSPRF(OM, FSearch=FSearch)
-  purrr::map2(SPRF, SPR0, DivideArrays)
+  purrr::map2(SPRF, SPR0, ArrayDivide)
 }
 

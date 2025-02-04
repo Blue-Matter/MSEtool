@@ -33,11 +33,11 @@ SimulateDEV <- function(OM=NULL,
   
   OM <- StartUp(OM, messages, nSim) 
   
-  HistOut <- new('hist') # new Hist object to return 
+  Hist <- new('hist') # new Hist object to return 
   
   # ---- Calculate Unfished Dynamics ----
   # TODO Dynamic Unfished
-  HistOut@Unfished <- CalcUnfishedDynamics(OM, messages, parallel=parallel)
+  Hist@Unfished <- CalcUnfishedDynamics(OM, messages, parallel=parallel)
   
 
   # ---- Calculate Curves -----
@@ -49,10 +49,12 @@ SimulateDEV <- function(OM=NULL,
   setClass("curves",
            slots=c(
                    SPR='list', 
-                   RelRec='list',
                    YPR='list',
+                   RPR='list',
+                   RelRec='list',
                    Recruit='list',
                    Yield='list',
+                   Removal='list',
                    Biomass='list',
                    SBiomass='list',
                    SP='list',
@@ -61,37 +63,30 @@ SimulateDEV <- function(OM=NULL,
            contains='Created_ModifiedClass'
   )
   
-  SPR0 <- CalcSPR0(OM) # unfished spawning per recruit
+  SPR0 <- CalcSPR0(OM) 
   
   Curves <- new('curves')
   Curves@SPR <- CalcSPR(OM, SPR0, FSearch=OM@Control$Curves$FSearch)
-  Curves@RelRec <- CalcRelRec(OM)
-  Curves@YPR <- YPRCurve(OM, RelRec, SPR)
+  Curves@RelRec <- CalcRelRec(OM, SPR=Curves@SPR)
+  ypr <-  CalcYPR(OM)
+  Curves@RPR <- lapply(ypr, '[[', 1)
+  Curves@YPR <- lapply(ypr, '[[', 2)
   
+  R0 <- purrr::map(GetR0(OM), AddDimension, name='apicalF')
+  Curves@Recruit <- purrr::map2(R0, Curves@RelRec, ArrayMultiply)
+  Curves@Yield <- purrr::map2(Curves@YPR, Curves@RelRec, ArrayMultiply)
+  Curves@Removal <- purrr::map2(Curves@RPR, Curves@RelRec, ArrayMultiply)
   
+  # add number-per-recruit
+  # calculate B, SB, and SP
   
-  # YPR
-  # RelRecruit
   # Recruit
+  # Yield 
+  
+  # MSY - use removals or retain?
   
   
-  fs <- as.numeric(names(Curves@SPR$Albacore[1,1,]))
-  plot(fs, Curves@SPR$Albacore[1,1,], ylim=c(0,1), type='l')
-  # SPR
-  
-
-  
-
-
-
-  
-  # CalculateEqRecruitment 
-  
-  # SPR
-  
-  # - yield curve
-  # - SPR v F
-  
+ 
   
   # ---- Calculate Reference Points ----
   HistOut@RefPoints <- CalcReferencePoints(OM, parallel, messages,

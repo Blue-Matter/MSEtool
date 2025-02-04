@@ -37,7 +37,7 @@ setMethod('CalcFatAge', 'fleet', function(x) {
     dimnames(apicalF)[[2]] <- 1:DimSelectivity[2]
   }
   
-  SelectivityRetention <- MultiplyArrays(x@Selectivity@MeanAtAge, 
+  SelectivityRetention <- ArrayMultiply(x@Selectivity@MeanAtAge, 
                                          x@Retention@MeanAtAge)
   
   isDiscards <- FALSE
@@ -48,23 +48,23 @@ setMethod('CalcFatAge', 'fleet', function(x) {
     # Inside this function 'apicalF' is for 'Caught' or 'Interacted' fish,
     # which will be higher than 'apicalF' for dead fish if discard mortality is < 1.
     
-    SelectivityDiscardMort <- MultiplyArrays(x@Selectivity@MeanAtAge, 
+    SelectivityDiscardMort <- ArrayMultiply(x@Selectivity@MeanAtAge, 
                                              x@DiscardMortality@MeanAtAge)
     
-    SelectivityDiscardMortRetention <- MultiplyArrays(SelectivityDiscardMort, 
+    SelectivityDiscardMortRetention <- ArrayMultiply(SelectivityDiscardMort, 
                                                       x@Retention@MeanAtAge)
     
-    InflateApicalF <- SubtractArrays(
-      AddArrays(SelectivityRetention, SelectivityDiscardMort),
+    InflateApicalF <- ArraySubtract(
+      ArrayAdd(SelectivityRetention, SelectivityDiscardMort),
       SelectivityDiscardMortRetention
     )
-    apicalF <- DivideArrays(apicalF, InflateApicalF)
+    apicalF <- ArrayDivide(apicalF, InflateApicalF)
   }
   
-  FCaught <- MultiplyArrays(apicalF, x@Selectivity@MeanAtAge)
-  FRetain <- MultiplyArrays(x@Retention@MeanAtAge, FCaught)
+  FCaught <- ArrayMultiply(apicalF, x@Selectivity@MeanAtAge)
+  FRetain <- ArrayMultiply(x@Retention@MeanAtAge, FCaught)
   if (isDiscards) {
-    FDiscard <- SubtractArrays(FCaught, FRetain)
+    FDiscard <- ArraySubtract(FCaught, FRetain)
   } else {
     FDiscard <- array(0, dim=dim(FCaught))
     dimnames(FDiscard) <- dimnames(FCaught)
@@ -73,8 +73,8 @@ setMethod('CalcFatAge', 'fleet', function(x) {
   if (!isDiscards) {
     FDead <- FRetain   
   } else {
-    FDead <- AddArrays(array1=FRetain, 
-                       array2=MultiplyArrays(FDiscard, SelectivityDiscardMort))
+    FDead <- ArrayAdd(array1=FRetain, 
+                       array2=ArrayMultiply(FDiscard, SelectivityDiscardMort))
   }
   
   x@FishingMortality@DeadAtAge <- FDead

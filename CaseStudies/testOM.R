@@ -6,13 +6,14 @@
 
 devtools::load_all()
 
-testOM@nsim <- 5
+testOM@nsim <- 10
 
-OM <- testOM
-OM <- Convert(OM)
+OMa <- Convert(testOM, Populate = FALSE)
 
-#OM <- Convert(OM, Populate = FALSE)
-# OM <- Populate(OM)
+OMa@Stock@NaturalMortality@MeanAtAge |> dimnames()
+
+OM <- Populate(OMa)
+GetR0(OM)
 
 parallel=FALSE
 messages='default'

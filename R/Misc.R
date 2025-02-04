@@ -289,9 +289,16 @@ AddAgeTimeStepDimensions <- function(object, outdim=4) {
   object
 }
 
+# Makes sure each seed is unique for the same object
 SetSeed <- function(object, seed=NULL) {
   if ('Misc' %in% slotNames(object))
     object@Misc <- list()
+  
+  if ('Created' %in% slotNames(object))
+    object@Created <- NULL
+  
+  if ('Modified' %in% slotNames(object))
+    object@Modified <- NULL
 
   val <- digest::digest2int(digest::digest(object))
 
@@ -555,6 +562,7 @@ SolveForVmaxlen <- function(om) {
   Vmaxlen <- om@Fleet@Selectivity@Pars$Vmaxlen
   
   VmaxlenOut <- array(0, dim=dd)
+  dimnames(VmaxlenOut) <- dimnames(Linf)
   cli::cli_progress_bar('Calculating `Vmaxlen`', total=prod(dd))
   
   for (s in 1:dd[1]) {
@@ -590,6 +598,7 @@ SolveForRmaxlen <- function(om) {
   Rmaxlen <- om@Fleet@Retention@Pars$Rmaxlen
   
   RmaxlenOut <- array(0, dim=dd)
+  dimnames(RmaxlenOut) <- dimnames(Linf)
   cli::cli_progress_bar('Calculating `Rmaxlen`', total=prod(dd))
   for (s in 1:dd[1]) {
     for (ts in 1:dd[2]) {

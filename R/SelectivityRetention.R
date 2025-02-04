@@ -41,7 +41,7 @@ FishingMortality2Retention <- function(FishingMortality,
                                   Ages,
                                   TimeSteps,
                                   Length)
-  Retention <- DivideArrays(FRetainAtAge, FInteract)
+  Retention <- ArrayDivide(FRetainAtAge, FInteract)
   Retention[!is.finite(Retention)] <- 0
   Retention
 }
@@ -70,7 +70,7 @@ CalculateFInteract <- function(FishingMortality, DiscardMortality,
                                  silent=silent)
 
   RetainAtAge <- AddSimDimension(FishingMortality@RetainAtAge, TimeSteps=TimeSteps)
-  DiscardAtAge <- SubtractArrays(DeadAtAge, RetainAtAge)
+  DiscardAtAge <- ArraySubtract(DeadAtAge, RetainAtAge)
 
   outdims <- rbind(dim(DeadAtAge), dim(RetainAtAge)) |> apply(2, max)
 

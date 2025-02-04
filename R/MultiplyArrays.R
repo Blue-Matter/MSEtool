@@ -7,7 +7,7 @@
 #' 
 #' @param array1 A 2D, 3D, or 4D array
 #' @param array2 A 2D, 3D, or 4D array
-#' @name MultiplyArrays
+#' @name ArrayMultiply
 NULL
 
 
@@ -142,26 +142,40 @@ ArrayOperation <- function(array1, array2, operation=`*`) {
   operation(ArrayList[[1]], ArrayList[[2]])
 }
 
-#' @rdname MultiplyArrays
+#' @rdname ArrayMultiply
 #' @export
-MultiplyArrays <- function(array1, array2) {
+ArrayMultiply <- function(array1, array2) {
   ArrayOperation(array1, array2)
 }
 
-#' @rdname MultiplyArrays
+#' @rdname ArrayMultiply
 #' @export
-AddArrays <- function(array1, array2) {
+ArrayAdd <- function(array1, array2) {
   ArrayOperation(array1, array2, `+`)
 }
 
-#' @rdname MultiplyArrays
+#' @rdname ArrayMultiply
 #' @export
-DivideArrays <- function(array1, array2) {
+ArrayDivide <- function(array1, array2) {
   ArrayOperation(array1, array2, `/`)
 }
 
-#' @rdname MultiplyArrays
+#' @rdname ArrayMultiply
 #' @export
-SubtractArrays <- function(array1, array2) {
+ArraySubtract <- function(array1, array2) {
   ArrayOperation(array1, array2, `-`)
+}
+
+#' @rdname ArrayMultiply
+#' @export
+ArrayFill <- function(Array, FillValue) {
+  ArrayList <- list(Array, FillValue)
+  CheckArrays(ArrayList)
+  ArrayList <- ArrayList |> 
+    ExpandArrays() 
+  
+  Array <- ArrayList[[1]]
+  FillValue <- ArrayList[[2]]
+  Array[] <- FillValue
+  Array
 }

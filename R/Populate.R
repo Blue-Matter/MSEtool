@@ -222,6 +222,10 @@ PopulateMeanAtAge <- function(object, Ages=NULL, TimeSteps=NULL, Length=NULL) {
       object@MeanAtAge <- GenerateMeanAtAge(Model=object@Model,
                                             Pars=object@Pars,
                                             Ages=Ages@Classes)
+      dd <- dim(object@MeanAtAge)
+      dimnames(object@MeanAtAge) <- list(Sim=1:dd[1],
+                                         Age=Ages@Classes[1:dd[2]],
+                                         `Time Step`=TimeSteps[1:dd[3]])
     }
   }
   object
@@ -484,7 +488,6 @@ setGeneric("Populate", function(object, ...) standardGeneric("Populate"))
 #' @export
 setMethod("Populate", "om", function(object, messages='progress') {
   
-  
   if (CheckDigest(list(), object) | EmptyObject(object))
     return(object)
   
@@ -540,8 +543,9 @@ setMethod("Populate", "om", function(object, messages='progress') {
     stock@nYear <- object@nYear
     stock@pYear <- object@pYear
     stock@CurrentYear <- object@CurrentYear
-    
+   
     stockList[[st]] <- Populate(stock, seed=object@Seed, messages=messages)
+
     names(stockList)[st] <- stock@Name
     names(fleetList)[st] <- names(stockList)[st]
     fleetList[[st]] <- list()
@@ -645,6 +649,7 @@ setMethod("Populate", "stock", function(object,
                            seed=seed,
                            messages=messages)
   
+
   stock@Weight <- Populate(stock@Weight,
                            Ages=stock@Ages,
                            Length=stock@Length,
@@ -729,12 +734,12 @@ setMethod("Populate", "length", function(object,
     return(object)
 
   SetSeed(object, seed)
-  
+
   length <- object
 
   sb <- PrintPopulating(length, isTRUE(messages))
   
-  length@Pars <- StructurePars(Pars=length@Pars, nsim,  GetnTS(TimeSteps))
+  length@Pars <- StructurePars(Pars=length@Pars, nsim, TimeSteps)
   length@Model <- FindModel(length)
 
   length <- PopulateMeanAtAge(length, Ages, TimeSteps)
@@ -781,7 +786,7 @@ setMethod("Populate", "weight", function(object,
 
   sb <- PrintPopulating(length, isTRUE(messages))
 
-  object@Pars <- StructurePars(Pars=object@Pars, nsim, nTS=GetnTS(TimeSteps))
+  object@Pars <- StructurePars(Pars=object@Pars, nsim, TimeSteps)
   object@Model <- FindModel(object)
 
   ModelClass <- getModelClass(object@Model)
@@ -845,7 +850,7 @@ setMethod("Populate", "naturalmortality", function(object,
 
   sb <- PrintPopulating(object, isTRUE(messages), name='NaturalMortality')
 
-  object@Pars <- StructurePars(Pars=object@Pars, nsim, nTS=GetnTS(TimeSteps))
+  object@Pars <- StructurePars(Pars=object@Pars, nsim, TimeSteps)
   object@Model <- FindModel(object)
 
   ModelClass <- getModelClass(object@Model)
@@ -890,7 +895,7 @@ setMethod("Populate", "maturity", function(object,
   SetSeed(object, seed)
   sb <- PrintPopulating(object, isTRUE(messages))
 
-  object@Pars <- StructurePars(Pars=object@Pars, nsim, nTS=GetnTS(TimeSteps))
+  object@Pars <- StructurePars(Pars=object@Pars, nsim, TimeSteps)
   object@Model <- FindModel(object)
 
   ModelClass <- getModelClass(object@Model)
@@ -958,7 +963,7 @@ setMethod("Populate", "fecundity", function(object,
 
   sb <- PrintPopulating(object, isTRUE(messages))
 
-  object@Pars <- StructurePars(Pars=object@Pars, nsim, GetnTS(TimeSteps))
+  object@Pars <- StructurePars(Pars=object@Pars, nsim, TimeSteps)
   object@Model <- FindModel(object)
 
   if (is.null(object@Model)| all(is.na(object@Pars))) {
@@ -1029,10 +1034,10 @@ setMethod("Populate", "srr", function(object,
     cli::cli_alert_info('`nsim` not specified. Assuming `nsim=1` and no recruitment process error.')
     nsim <-1
   }
-  TimeSteps <- floor(TimeSteps)
-
-  histTS <- TimeSteps[TimeSteps<=CurrentYear]
-  projTS <- TimeSteps[TimeSteps>CurrentYear]
+  
+  tTimeSteps <- floor(TimeSteps)
+  histTS <- tTimeSteps[tTimeSteps<=CurrentYear]
+  projTS <- tTimeSteps[tTimeSteps>CurrentYear]
   nHistTS <- length(histTS)
   nProjTS <- length(projTS)
 
@@ -1042,12 +1047,14 @@ setMethod("Populate", "srr", function(object,
   SetSeed(object, seed)
 
   sb <- PrintPopulating(object, isTRUE(messages), allup=TRUE)
+  object@Pars <- StructurePars(Pars=object@Pars, nsim, TimeSteps)
   object@Model <- FindModel(object)
 
-  pars <- StructurePars(c(object@R0, object@SD, object@AC), nsim, nTS=0)
-  object@R0 <- pars[[1]][,1]
-  object@SD <- pars[[2]][,1]
-  object@AC <- pars[[3]][,1]
+
+  pars <- StructurePars(list(object@R0, object@SD, object@AC), nsim, TimeSteps)
+  object@R0 <- pars[[1]][,1, drop=FALSE] # only one time step for now
+  object@SD <- pars[[2]][,1, drop=FALSE] # only one time step for now
+  object@AC <- pars[[3]][,1, drop=FALSE] # only one time step for now
   object@SD[object@SD==0] <- 1E-6 # for reproducibility in rnorm
 
   EmptyObjects <- c(EmptyObject(object@RecDevInit),
@@ -1381,7 +1388,7 @@ setMethod("Populate", "selectivity", function(object,
   
   selectivity <- object
   
-  selectivity@Pars <- StructurePars(Pars=selectivity@Pars, nsim, nTS=GetnTS(TimeSteps))
+  selectivity@Pars <- StructurePars(Pars=selectivity@Pars, nsim, TimeSteps)
   selectivity@Model <- FindModel(selectivity)
   
   ModelClass <- getModelClass(selectivity@Model)
@@ -1491,7 +1498,7 @@ setMethod("Populate", "retention", function(object,
   
   retention <- object
   
-  retention@Pars <- StructurePars(Pars=retention@Pars, nsim, nTS=GetnTS(TimeSteps))
+  retention@Pars <- StructurePars(Pars=retention@Pars, nsim, TimeSteps)
   
   ParsZero <- all((lapply(lapply(retention@Pars, `==`, 0), prod) |> unlist())==1)
   

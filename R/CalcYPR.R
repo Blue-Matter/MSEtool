@@ -4,65 +4,56 @@ setGeneric('CalcYPR', function(x, Fleet=NULL, FSearch=NULL)
   standardGeneric('CalcYPR')
 )
 
-# x <- OM@Stock[[1]]
-# Fleet <- OM@Fleet[[1]]
-# 
-# Fleet <- Fleet$SPN_1
 
+# setMethod('CalcYPR', c('StockList', 'StockFleetList',  'ANY'), 
+#           function(x, Fleet=NULL, FSearch=NULL) {
+#             purrr::map2(x, Fleet, CalcYPR, FSearch=FSearch)
+#           })
+  
+setMethod('CalcYPR', c('om', 'ANY',  'ANY'), 
+          function(x, Fleet=NULL, FSearch=NULL) {
+            if (is.null(FSearch))
+              FSearch <- x@Control$Curves$FSearch
+            purrr::map2(x@Stock, x@Fleet, CalcYPR, FSearch=FSearch)
+          })
 
-setMethod('CalcYPR', 
-          c('stock', 'FleetList',  'ANY'), 
+setMethod('CalcYPR', c('stock', 'FleetList',  'ANY'), 
           function(x, 
                    Fleet=NULL, 
                    FSearch=NULL) {
             
-            out <- lapply(FSearch, function(i) {
-              Fleet <- UpdateApicalF(Fleet, FSearch[i]) |>
-                CalcFatAge()
-              NatAge <- CalcFishedSurvival(x, Fleet)
-              
-              
-              
-              # TODO this should go in it's own function for calculating yield
-              FDead <- GetFatAgeArray(Fleet)
-              FRetain <- GetFatAgeArray(Fleet, 'Retain')
-              
-              FDeadTotal <- apply(FDead, 1:3, sum)
-              ZDead <- AddArrays(x@NaturalMortality@MeanAtAge, FDeadTotal)
-              
-              # TODO - get empirical weight by fleet where available
-              # add option to use empirical weight in control
-              # calculate yield with baranov
-              # add option for catch equation?
+            out <- purrr::map(cli::cli_progress_along(FSearch, 
+                                                      'Calculating Yield-Per-Recruit'), function(i) {
+                                                        Fleet <- UpdateApicalF(Fleet, FSearch[i]) 
+                                                        Fleet <- CalcFatAge(Fleet)
+                                                        NatAge <- CalcFishedSurvival(x, Fleet)
+                                                        CalcCatch(x, Fleet, NatAge)
+                                                      })
             
-            })
+            RemovalBiomass <- lapply(out, '[[', 'RemovalBiomass')
+            RemovalBiomass <- purrr::map(RemovalBiomass, \(x) apply(x, c(1,3), sum))
+            l <- RemovalBiomass[[1]]
+            DimNames <- dimnames(l)
+            DimNames$apicalF <- FSearch
+            RemovalBiomass <- array(unlist(RemovalBiomass), dim=c(dim(l), length(FSearch)))
+            dimnames(RemovalBiomass) <- DimNames
             
+            
+            RetainBiomass <- lapply(out, '[[', 'RetainBiomass')
+            RetainBiomass <- purrr::map(RetainBiomass, \(x) apply(x, c(1,3), sum))
+            l <- RetainBiomass[[1]]
+            DimNames <- dimnames(l)
+            DimNames$apicalF <- FSearch
+            RetainBiomass <- array(unlist(RetainBiomass), dim=c(dim(l), length(FSearch)))
+            dimnames(RetainBiomass) <- DimNames
+            
+            list(Removal=RemovalBiomass,
+                 Retain=RetainBiomass)
             
           })
 
 
-# YPRCurve <- function(OM, FSearch=NULL) {
-#   
-#   if (is.null(FSearch))
-#     FSearch <- OM@Control$Curves$FSearch
-#   
-#   
-#   # output - yield per recruit for each sim & time-step
-#   OM@Stock[[1]]
-#   N <- CalcFishedSurvival(OM, apicalF=FSearch[1])
-#   
-#   NatAge <- N$Female
-#   WeightatAge <- OM@Stock[[1]]@Weight@MeanAtAge
-#   MatAge <- OM@Stock[[1]]@NaturalMortality@MeanAtAge
-#   
-#   # TODO - empirical OM@Fleet[[1]][[1]]@Weight |> dim()
-#   FatAge <- UpdateApicalF(OM@Fleet[[1]], FSearch[1])
-#   
-#   CalcBaranov <- function(NatAge, WeightatAge, MatAge, FatAge) {
-#     
-#   }
-#   
-# }
+
 
 
 

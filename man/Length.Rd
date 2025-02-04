@@ -110,6 +110,7 @@ of a uniform distribution for the log-normally distributed inter-annual variatio
 where \code{nTS} is the total number of time steps. See note below.
 }
 
+TODO - this has changed now - use dimnames not attributes
 \strong{Note:} For time-varying parameters, if the parameter only varies in particular
 time steps (rather than every time step), the number of columns in the matrix
 can be equal to the number of change points instead of \code{nTS}. The time step

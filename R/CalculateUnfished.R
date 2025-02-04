@@ -80,7 +80,7 @@ DistributeStock <- function(AtAge, UnfishedDist) {
   if (DimAtAge[4] !=narea) 
     cli::cli_abort('Mismatch in number of areas')
   
-  MultiplyArrays(array1=UnfishedDist, array2=AtAge)
+  ArrayMultiply(array1=UnfishedDist, array2=AtAge)
 }
 
 
@@ -117,7 +117,7 @@ CalcUnfishedDynamics <- function(OM,
     purrr::map(Structure) |> # TODO - may need to add sim and time step dimensions to R0 in Populate
     purrr::map(AddDimNames, TimeSteps=TimeSteps(OM))
  
-  NatAge <- purrr::map2(UnfishedSurvival, R0, MultiplyArrays)
+  NatAge <- purrr::map2(UnfishedSurvival, R0, ArrayMultiply)
 
   # cli::cli_progress_update()
   
@@ -131,13 +131,13 @@ CalcUnfishedDynamics <- function(OM,
   
   Unfished@Equilibrium@Biomass <- purrr::map2(WeightatAge, 
                                               Unfished@Equilibrium@Number, 
-                                              MultiplyArrays)
+                                              ArrayMultiply)
   # cli::cli_progress_update()
-  SNatAge <- purrr::map2(R0, UnfishedSurvivalSP, MultiplyArrays) |>
-    purrr::map2(purrr::map(OM@Stock, GetMaturityAtAge), MultiplyArrays) |>
+  SNatAge <- purrr::map2(R0, UnfishedSurvivalSP, ArrayMultiply) |>
+    purrr::map2(purrr::map(OM@Stock, GetMaturityAtAge), ArrayMultiply) |>
     purrr::map2(UnfishedDist(OM), DistributeStock)
   # cli::cli_progress_update()
-  Unfished@Equilibrium@SBiomass <- purrr::map2(WeightatAge, SNatAge, MultiplyArrays)
+  Unfished@Equilibrium@SBiomass <- purrr::map2(WeightatAge, SNatAge, ArrayMultiply)
   # cli::cli_progress_update()
   
   FecundityatAge <- purrr::map(OM@Stock, GetFecundityAtAge) |> purrr::map(AddAreaDimension)
@@ -146,7 +146,7 @@ CalcUnfishedDynamics <- function(OM,
   ind <- lapply(FecundityatAge, is.null) |> unlist() |> not() |> which() 
   # TODO 
   # need to be consistent if FecundityAtAge already accounts for maturity-at-age or not!
-  Unfished@Equilibrium@SProduction <- purrr::map2(SNatAge[ind], FecundityatAge[ind], MultiplyArrays)
+  Unfished@Equilibrium@SProduction <- purrr::map2(SNatAge[ind], FecundityatAge[ind], ArrayMultiply)
   
   # TODO `SProduction` will be identical to `SBiomass` if spawning biomass 
   # is used for fecundity. Can make it NULL here to save memory or do checks above to avoid doing

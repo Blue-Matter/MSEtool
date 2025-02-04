@@ -107,29 +107,29 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
                                     seed=om@Seed)
       
       om@Fleet@Selectivity@Pars <- StructurePars(Pars=om@Fleet@Selectivity@Pars,
-                                                  nsim=om@nSim, 
-                                                  nTS=GetnTS(om@TimeSteps))
+                                                 nsim=om@nSim, 
+                                                 TimeSteps=om@TimeSteps)
  
-      om@Fleet@Selectivity@Pars$L5 <- MultiplyArrays(
+      om@Fleet@Selectivity@Pars$L5 <- ArrayMultiply(
         array1=GetLengthClass(om@Stock@Maturity),
         array2=om@Fleet@Selectivity@Pars$L5
-        )
-      
-      om@Fleet@Selectivity@Pars$LFS <- MultiplyArrays(
+      )
+
+      om@Fleet@Selectivity@Pars$LFS <- ArrayMultiply(
         array1=GetLengthClass(om@Stock@Maturity),
         array2=om@Fleet@Selectivity@Pars$LFS
       )
       
       om@Fleet@Retention@Pars <- StructurePars(Pars=om@Fleet@Retention@Pars,
                                                   nsim=om@nSim, 
-                                                  nTS=GetnTS(om@TimeSteps))
+                                                  TimeSteps=om@TimeSteps)
 
-      om@Fleet@Retention@Pars$LR5 <- MultiplyArrays(
+      om@Fleet@Retention@Pars$LR5 <- ArrayMultiply(
         array1=GetLengthClass(om@Stock@Maturity),
         array2=om@Fleet@Retention@Pars$LR5
       )
       
-      om@Fleet@Retention@Pars$LFR <- MultiplyArrays(
+      om@Fleet@Retention@Pars$LFR <- ArrayMultiply(
         array1=GetLengthClass(om@Stock@Maturity),
         array2=om@Fleet@Retention@Pars$LFR
       )

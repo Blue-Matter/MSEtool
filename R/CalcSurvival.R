@@ -1,7 +1,7 @@
 CalcSurvival <- function(M_at_Age, PlusGroup=TRUE, SpawnTimeFrac=NULL, F_at_Age=NULL) {
   Z_at_Age <- M_at_Age
   if (!is.null(F_at_Age))
-    Z_at_Age <- AddArrays(M_at_Age, F_at_Age)
+    Z_at_Age <- ArrayAdd(M_at_Age, F_at_Age)
   
   dd <- dim(Z_at_Age)
   nSim <- dd[1]
@@ -65,12 +65,11 @@ setMethod('UpdateApicalF', c('array',  'ANY'), function(x, apicalF) {
   MaxF <- apply(x, c(1,3), max)
   MaxF <- replicate(dd[2], MaxF) |> aperm(c(1,3,2))
   dimnames(MaxF) <- dimnames(x)
-  DivideArrays(x, MaxF) * apicalF
+  ArrayDivide(x, MaxF) * apicalF
   
 })
 
 setMethod('UpdateApicalF', c('FleetList',  'ANY'), function(x, apicalF) {
-
   if (length(x)==1) {
     x[[1]]@FishingMortality@ApicalF <- array(apicalF, dim=c(1,1))
     return(x)
@@ -78,16 +77,18 @@ setMethod('UpdateApicalF', c('FleetList',  'ANY'), function(x, apicalF) {
   
   x <- CalcFatAge(x)
   FDeadbyFleet <- GetFatAgeArray(x)
+
   FDeadTotal <- apply(FDeadbyFleet, 1:3, sum)
   apicalFCurr <- apply(FDeadTotal, c(1,3), max)
   adjust <- apicalF/apicalFCurr
+
   dd <- dim(FDeadbyFleet)
-  adjust <- replicate(dd[2], adjust) 
+  adjust <- replicate(dd[2], adjust)
   adjust <- replicate(dd[4], adjust) 
   adjust <- aperm(adjust, c(1,3,2,4))
   FDeadbyFleet <- FDeadbyFleet*adjust
   newApicalF <- apply(FDeadbyFleet, c(1,3,4), max)
-  
+
   for (fl in seq_along(x)) {
     x[[fl]]@FishingMortality@ApicalF <- abind::adrop(newApicalF[,,fl, drop=FALSE],3)
   }
@@ -123,10 +124,10 @@ setMethod('CalcFishedSurvival', c('stock', 'FleetList',  'ANY'),
           })
 
 
-setMethod('CalcFishedSurvival', c('StockList', 'StockFleetList',  'ANY'), 
-          function(x, Fleet=NULL, SP=FALSE) {
-            purrr::map2(x, Fleet, CalcFishedSurvival, SP=SP)
-})
+# setMethod('CalcFishedSurvival', c('StockList', 'StockFleetList',  'ANY'), 
+#           function(x, Fleet=NULL, SP=FALSE) {
+#             purrr::map2(x, Fleet, CalcFishedSurvival, SP=SP)
+# })
 
 setMethod('CalcFishedSurvival', c('om', 'ANY',  'ANY'), 
           function(x, Fleet=NULL, SP=FALSE) {
