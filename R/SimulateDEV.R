@@ -35,95 +35,96 @@ SimulateDEV <- function(OM=NULL,
   
   Hist <- new('hist') # new Hist object to return 
   
-  # ---- Calculate Unfished Dynamics ----
-  # TODO Dynamic Unfished
   Hist@Unfished <- CalcUnfishedDynamics(OM, messages, parallel=parallel)
+  # TODO Dynamic Unfished
   
+  Hist@RefPoints <- CalcRefPoints(OM, Hist@Unfished)
+  # TODO - SPRcrash, MGT, RefYield 
 
-  # ---- Calculate Curves -----
-  # NOTE: Curves do not account for spatial closures or MICE interactions
   
-  #New Classes (temp) 
+  # ---- Non-Equilibrium Initial Year ----
   
-  # Equilibrium values for a given F 
-  setClass("curves",
-           slots=c(
-                   SPR='list', 
-                   YPR='list',
-                   RPR='list',
-                   RelRec='list',
-                   Recruit='list',
-                   Yield='list',
-                   Removal='list',
-                   Biomass='list',
-                   SBiomass='list',
-                   SP='list',
-                   Misc='list'
-           ),
-           contains='Created_ModifiedClass'
+  InitialTimeStepN <- purrr::map2(Hist@Unfished@Equilibrium@Number,
+                                  purrr::map(OM@Stock,GetRecDevInitAgeClasses),
+                                  AddInitialRecDev
+    
   )
   
-  SPR0 <- CalcSPR0(OM) 
-  
-  Curves <- new('curves')
-  Curves@SPR <- CalcSPR(OM, SPR0, FSearch=OM@Control$Curves$FSearch)
-  Curves@RelRec <- CalcRelRec(OM, SPR=Curves@SPR)
-  ypr <-  CalcYPR(OM)
-  Curves@RPR <- lapply(ypr, '[[', 1)
-  Curves@YPR <- lapply(ypr, '[[', 2)
-  
-  R0 <- purrr::map(GetR0(OM), AddDimension, name='apicalF')
-  Curves@Recruit <- purrr::map2(R0, Curves@RelRec, ArrayMultiply)
-  Curves@Yield <- purrr::map2(Curves@YPR, Curves@RelRec, ArrayMultiply)
-  Curves@Removal <- purrr::map2(Curves@RPR, Curves@RelRec, ArrayMultiply)
-  
-  # add number-per-recruit
-  # calculate B, SB, and SP
-  
-  # Recruit
-  # Yield 
-  
-  # MSY - use removals or retain?
+  ## UP TO HERE --- 
+  # make arrays for historical and populate
+  # make arrays nsim dimension, then reduce later if not needed
   
   
+  CreateArraySATR <- function(Stock) {
+    if (inherits(Stock, 'om')) {
+      return(purrr::map(Stock@Stock, CreateArraySATR))
+    }
+    # sim, age, time step, region (area)
+    array <- array(NA, dim=c(nSim(Stock),nAge(Stock), nTS(Stock), nArea(Stock)))
+    AddDimNames(array, names=c("Sim", "Age", "Time Step", 'Area'),
+                TimeSteps = TimeSteps(Stock))
+  }
+
+
+  for (i in 1:nStock(OM)) {
+    # Numbers for initial age class
+    InitialTimeStepN <- AddInitialRecDev(Hist@Unfished@Equilibrium@Number[[i]],
+                                           GetRecDevInitAgeClasses(OM@Stock[[i]]))
+   
+  }
+  
+  
+  
+  Number <- Hist@Unfished@Equilibrium@Number$Female
+  InitAgeClassRecDevs <- GetRecDevInitAgeClasses(OM@Stock$Female)
+  
+  GetRecDevInitAgeClasses <- function(Stock) {
+    init1plus <- GetRecDevInit(Stock)
+    init0 <- abind::adrop(GetRecDevHist(Stock)[,1, drop=FALSE],2)
+    out <- cbind(init0, init1plus)
+    dimnames(out) <- list(Sim=1:nrow(out),
+                          Age=0:(ncol(out)-1))
+    out
+  }
+  
+  
+  AddInitialRecDev <- function(Number, InitAgeClassRecDevs) {
+    InitAgeClassRecDevs <- AddDimension(InitAgeClassRecDevs, 'Time Step')
+    InitAgeClassRecDevs <- AddDimension(InitAgeClassRecDevs, 'Area')
+    ArrayMultiply(Number[, ,1,, drop=FALSE], InitAgeClassRecDevs)
+    
+  }
+  
+  Hist@Unfished@Equilibrium@Number$Female 
+  
+  
+  R0 <- purrr::map(OM@Stock, GetR0)
+  
+  
+  
+  RecDevInit <- purrr::map(OM@Stock, GetRecDevInit)
+  
+  
+  abind::adrop(Hist@Unfished@Equilibrium@Number$Female[,,1,, drop=FALSE],3)
+  
+  ArrayMultiply(abind::adrop(Hist@Unfished@Equilibrium@Number$Female[,,1,, drop=FALSE],3),
+                AddDimension(OM@Stock$Female@SRR@RecDevInit, 'Area'))
+  
+  Hist@Unfished@Equilibrium@Number$Female[,,1,]
+  
+  OM@Stock$Female@SRR@RecDevHist
+  
+  
+  GetRecDevInit(OM)
+  GetRecDevHist(OM)$Female |> dimnames()
  
-  
-  # ---- Calculate Reference Points ----
-  HistOut@RefPoints <- CalcReferencePoints(OM, parallel, messages,
-                                           Unfished = HistOut@Unfished)
-
-  
-
-  
-    
-    
-  
-
-  
-  
-  
-  ## ---- Unfished Equilibrium ----
-  
-  ## ---- Per-Recruit Reference Points ----
-  
-  ## ---- Unfished Reference Points ----
-  
-  ## ---- Dynamic Unfished Reference Points ---- 
-  
-  ## ---- MSY Reference Points ----
-  
-  ## ---- Calculate Spawning Potential Ratio ----
-  
-  ## ---- Mean Generation Time ----
-  
-  ## ---- Reference Yield ----
-  
-  
   
   # ---- Optimize Rec Devs for Initial Depletion ----
   
   
-  # ---- Non-Equilibrium Initial Year ----
+  HistRel <- SetHistRel(OM) 
+  
+  
   
   # ---- Optimize catchability (q) to fit depletion ----
   # (if needed)
@@ -164,7 +165,7 @@ SimulateDEV <- function(OM=NULL,
   
   
   
-  HistRel <- SetHistRel(OM) 
+
     
   
   

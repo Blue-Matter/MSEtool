@@ -1,13 +1,4 @@
 
-# New Classes (temp) ----
-
-setClass("hist",
-         contains=c('om', 'Created_ModifiedClass'),
-         slots=c(Unfished='unfished',
-                 RefPoints='refpoints'
-                 
-         )
-)
 
 
 SetHistRel <- function(OM) {

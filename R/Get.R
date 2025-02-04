@@ -75,6 +75,11 @@ GetR0 <- function(object, df=FALSE) {
   GetStockAtAge(object,  c('SRR', 'R0'),df)
 }
 
+GetSPFrom <- function(object, df=FALSE) {
+  GetStockAtAge(object,  c('SRR', 'SPFrom'),df)
+}
+
+
 GetSpawnTimeFrac <- function(object, df=FALSE) {
   GetStockAtAge(object,  c('SRR', 'SpawnTimeFrac'),df)
 }

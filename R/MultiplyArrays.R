@@ -133,7 +133,11 @@ ExpandArrays <- function(ArrayList, array2=NULL) {
 } 
 
 ArrayOperation <- function(array1, array2, operation=`*`) {
-  ArrayList <- list(array1, array2)
+  if (inherits(array1, 'list') && length(array1)==2) {
+    ArrayList <- array1 
+  } else {
+    ArrayList <- list(array1, array2)
+  }
   CheckArrays(ArrayList)
   
   ArrayList <- ArrayList |> 

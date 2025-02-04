@@ -30,20 +30,20 @@ setMethod('CalcSPR0', 'om', function(x) {
 
 # ---- CalcSPRF -----
 
-setGeneric('CalcSPRF', function(x, Fleet=NULL, FSearch=NULL)
+setGeneric('CalcSPRF', function(x, NPR=NULL, FSearch=NULL)
   standardGeneric('CalcSPRF')
 )
 
 
-setMethod('CalcSPRF', c('stock', 'FleetList',  'ANY'), function(x, Fleet=NULL, FSearch=NULL) {
+setMethod('CalcSPRF', c('stock', 'FleetList',  'ANY'), function(x, NPR=NULL, FSearch=NULL) {
   
   if (!is.null(x@SRR@SPFrom) && x@SRR@SPFrom!=x@Name)
     return(NULL)
   
-  out <- lapply(cli::cli_progress_along(FSearch, 
-                                        'Calculating Equilibrium SPR'),
+  out <- lapply(cli::cli_progress_along(seq_along(FSearch), 
+                                        format='Calculating Spawning-Per-Recruit {.val {x@Name}} {cli::pb_bar} {cli::pb_percent} '),
                 function(i) {
-                  Fleet <- UpdateApicalF(Fleet, FSearch[i]) 
+                  Fleet <- UpdateApicalF(NPR, FSearch[i]) 
                   FishedSurvival <- CalcFishedSurvival(x, Fleet, SP=TRUE)
                   
                   # fished egg production per recruit
@@ -62,44 +62,43 @@ setMethod('CalcSPRF', c('stock', 'FleetList',  'ANY'), function(x, Fleet=NULL, F
 })
 
 setMethod('CalcSPRF', c('StockList', 'StockFleetList',  'ANY'), 
-          function(x, Fleet=NULL, FSearch=NULL) {
-            purrr::map2(x, Fleet, CalcSPRF, FSearch=FSearch)
+          function(x, NPR=NULL, FSearch=NULL) {
+            purrr::map2(x, NPR, CalcSPRF, FSearch=FSearch)
           })
 
 setMethod('CalcSPRF', c('om', 'ANY',  'ANY'), 
-          function(x, Fleet=NULL, FSearch=NULL) {
+          function(x, NPR=NULL, FSearch=NULL) {
+            if (is.null(FSearch))
+              FSearch <- x@Control$Curves$FSearch
             purrr::map2(x@Stock, x@Fleet, CalcSPRF, FSearch=FSearch)
+          })
+
+setMethod('CalcSPRF', c('stock', 'array',  'ANY'), 
+          function(x, NPR=NULL, FSearch=NULL) {
+            if (!is.null(x@SRR@SPFrom) && x@SRR@SPFrom!=x@Name)
+              return(NULL)
+            fecundity <- AddDimension(x@Fecundity@MeanAtAge, 'apicalF')
+            ArrayMultiply(NPR, fecundity) |>
+              apply(c(1,3,4), sum) 
           })
 
 # ---- CalcSPR ---- 
 
-# setGeneric('CalcSPR', function(x, SPR0=NULL, FSearch=NULL)
-#   standardGeneric('CalcSPR')
-# )
-# 
-# 
-# setMethod('CalcSPR', c('stock', 'FleetList') function(x, ) {
-#   ArrayMultiply(CalcUnfishedSurvival(x, SP=TRUE), 
-#                  GetFecundityAtAge(x)
-#   )
-# })
-
-
-CalcSPR <- function(OM, SPR0=NULL, FSearch=NULL) {
+CalcSPR <- function(OM, SPR0=NULL, NPR=NULL, FSearch=NULL) {
   # TODO add option to specify Time Steps to calculate
   # currently does all
   
   # TODO  modify for herm species
-  
-  if (is.null(FSearch))
-    FSearch <- OM@Control$Curves$FSearch
   if (is.null(SPR0)) 
     SPR0 <- CalcSPR0(OM)
+  if (is.null(FSearch))
+    FSearch <- OM@Control$Curves$FSearch
+  if (is.null(NPR)) 
+    NPR <- CalcNPR(OM, FSearch=FSearch)
 
+  SPRF <- purrr::map2(OM@Stock, NPR, CalcSPRF)
   # add apicalF dimension for division
   SPR0 <- purrr::map(SPR0, AddDimension, 'apicalF') 
-  
-  SPRF <- CalcSPRF(OM, FSearch=FSearch)
   purrr::map2(SPRF, SPR0, ArrayDivide)
 }
 

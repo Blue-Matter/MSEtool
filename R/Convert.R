@@ -73,9 +73,12 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
                                 pYear=om@pYear,
                                 CurrentYear=om@CurrentYear,
                                 TimeUnits=om@TimeUnits)
-
+  
+  TimeSteps <- list(HistTS=TimeSteps(om, 'Historical'),
+                    ProjTS=TimeSteps(om, 'Projection')
+  )
   if (methods::is(OM, 'OM')) {
-    om@Stock <- OM2stock(OM, cpars=OM@cpars) 
+    om@Stock <- OM2stock(OM, cpars=OM@cpars, TimeSteps) 
     om@Fleet <- OM2fleet(OM, OM@cpars, OM@Fdisc)
     
     om@Obs <- SubOM(OM, 'Obs')
@@ -142,9 +145,9 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
       om <- Populate(om, messages=FALSE)
     return(om)
   }
-  
+
   if (methods::is(OM, 'MOM')) {
-    om@Stock <- ConvertToList(MOM2stock(OM))
+    om@Stock <- ConvertToList(MOM2stock(OM, TimeSteps))
     names(om@Stock) <- names(OM@Stocks)
     class(om@Stock) <- 'StockList'
     om@Fleet <- list()
@@ -214,7 +217,7 @@ ImportSexPars <- function(OM) {
 }
 
 
-OM2stock <- function(OM, cpars=NULL) {
+OM2stock <- function(OM, cpars=NULL, TimeSteps=NULL) {
   stock <- Stock()
   if (methods::is(OM, 'OM')) {
     stock@Name <- SubOM(OM, 'Stock')@Name
@@ -230,7 +233,7 @@ OM2stock <- function(OM, cpars=NULL) {
   NaturalMortality(stock) <- OM2NaturalMortality(OM, cpars)
   Maturity(stock) <- OM2Maturity(OM, cpars)
   Fecundity(stock) <- OM2Fecundity(OM, cpars)
-  SRR(stock) <- OM2SRR(OM, cpars)
+  SRR(stock) <- OM2SRR(OM, cpars, TimeSteps)
   Spatial(stock) <- OM2Spatial(OM, cpars)
   Depletion(stock) <- OM2Depletion(OM, cpars)
   stock
@@ -422,7 +425,7 @@ switchSRR <- function(SRrel) {
          '2'='Ricker')
 }
 
-OM2SRR <- function(OM, cpars=NULL) {
+OM2SRR <- function(OM, cpars=NULL, TimeSteps=NULL) {
   if (is.null(cpars) & inherits(OM, 'OM'))
     cpars <- OM@cpars
 
@@ -445,6 +448,29 @@ OM2SRR <- function(OM, cpars=NULL) {
     SRR@SD <- process_cpars(OM@Perr)
   if (!is.finite(SRR@AC) || is.null(SRR@AC)) 
     SRR@AC <- process_cpars(OM@AC)
+  
+  # Add dimnames
+  if (!is.null(SRR@RecDevInit)) {
+    dimnames(SRR@RecDevInit) <- list(
+      Sim=1:nrow(SRR@RecDevInit),
+      Age=0:(ncol(SRR@RecDevInit)-1)
+    )
+  }
+  
+  if (!is.null(SRR@RecDevHist)) {
+    dimnames(SRR@RecDevHist) <- list(
+      Sim=1:nrow(SRR@RecDevHist),
+      `Time Step`= TimeSteps$HistTS
+    )
+  }
+  
+  if (!is.null(SRR@RecDevProj)) {
+    dimnames(SRR@RecDevProj) <- list(
+      Sim=1:nrow(SRR@RecDevProj),
+      `Time Step`= TimeSteps$ProjTS
+    )
+  }
+  
   SRR
 }
 
@@ -802,7 +828,7 @@ MOM2fleet <- function(MOM, st) {
 
 
 
-MOM2stock <- function(MOM) {
+MOM2stock <- function(MOM, TimeSteps=NULL) {
   StockList <- list()
   stocks <- MOM@Stocks
   nstocks <- length(stocks)
@@ -810,7 +836,7 @@ MOM2stock <- function(MOM) {
   for (st in 1:nstocks) {
     Stock <- stocks[[st]]
     cpars <- MOM@cpars[[st]][[1]]
-    StockList[[st]] <- OM2stock(Stock, cpars)
+    StockList[[st]] <- OM2stock(Stock, cpars, TimeSteps)
   }
   if (nstocks==1) return(StockList[[1]])
   StockList

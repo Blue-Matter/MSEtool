@@ -363,9 +363,9 @@ Longitude <- function(x) {
 #' @rdname Access
 #' @export
 nAge <- function(x, st=1) {
-  if (methods::is(x, 'stock'))
+  if (inherits(x, 'stock'))
     return(x@Ages@MaxAge+1)
-  if (methods::is(x, 'ages'))
+  if (inherits(x, 'ages'))
     return(x@MaxAge+1)
 }
 
@@ -382,9 +382,9 @@ nTS <- function(x) {
 #' @rdname Access
 #' @export
 nArea <- function(x, st=1) {
-  if (methods::is(x, 'om')) {
+  if (inherits(x, 'om')) {
     stock <- x@Stock
-    if (methods::is(stock, 'list')) {
+    if (inherits(stock, 'list')) {
       stock <- stock[[st]]
     }
     dd <- dim(stock@Spatial@UnfishedDist)
@@ -403,7 +403,7 @@ nArea <- function(x, st=1) {
 #' @rdname Access
 #' @export
 MaxAge <- function(x) {
-  if (methods::is(x, 'stock'))
+  if (inherits(x, 'stock'))
     return(x@Ages@MaxAge)
   x@MaxAge
 }
@@ -565,7 +565,7 @@ nReps <- function(x) {
 #' @rdname Access
 #' @export
 nStock <- function(x) {
-  if (!methods::is(x,'om'))
+  if (!inherits(x,'om'))
     cli::cli_abort('`x` must be class `om`')
   length(x@Stock)
 }
@@ -575,11 +575,11 @@ nStock <- function(x) {
 #' @rdname Access
 #' @export
 nFleet <- function(x) {
-  if (!methods::is(x,'om'))
+  if (!inherits(x,'om'))
     cli::cli_abort('`x` must be class `om`')
 
   fleet <- x@Fleet
-  if (methods::is(fleet, 'fleet'))
+  if (inherits(fleet, 'fleet'))
     return(1)
   length(fleet[[1]])
 }
@@ -844,7 +844,7 @@ SharePar <- function(x) {
 #' @rdname Access
 #' @export
 SPFrom <- function(x) {
-  if (methods::is(x, 'OM'))
+  if (inherits(x, 'OM'))
     return(x@SexPars@SPFrom)
   x@SPFrom
 }
@@ -993,9 +993,9 @@ Units <- function(x) {
 #' @rdname Access
 #' @export
 UnfishedDist <- function(x) {
-  if (methods::is(x, 'stock'))
+  if (inherits(x, 'stock'))
     return(x@Spatial@UnfishedDist)
-  if (methods::is(x, 'om'))
+  if (inherits(x, 'om'))
     return(lapply(x@Stock, slot, 'Spatial') |>
       lapply(slot, 'UnfishedDist'))
   

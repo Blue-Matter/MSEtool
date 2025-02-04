@@ -2887,22 +2887,7 @@ validOMobject <- function(object) {
 setValidity('om', validOMobject)
 
 
-# Hist Class ----
 
-# OM - Operating Model
-# Reference Points
-# Unfished
-# PopulationDynamics
-# FleetDynamics
-
-
-
-#' @export
-setClass("hist",
-         slots=c(Name='char.null',
-                 Agency='char.null'
-         )
-)
 
 
 
@@ -2941,12 +2926,102 @@ CheckList <- function(object) {
 
 # ---- Internal Classes ----
 
+# Equilibrium values for a given F 
+setClass("curves",
+         slots=c(FValues='numeric',
+                 NPR='list',
+                 SPR='list',
+                 YPR='list',
+                 RPR='list',
+                 RelRec='list',
+                 Recruit='list',
+                 Yield='list',
+                 Removal='list',
+                 Biomass='list',
+                 SBiomass='list',
+                 SP='list',
+                 Misc='list'
+         ),
+         contains='Created_ModifiedClass'
+)
+
+setClass("unfishedrefpoints",
+         slots=c(
+           N0='list',
+           B0='list',
+           SB0='list',
+           SP0='list',
+           Misc='list'
+         ),
+         contains='Created_ModifiedClass'
+)
+
+setClass("refpoints",
+         slots=c(Curves='curves',
+                 SPR0='list',
+                 MSY='list',
+                 FMSY='list',
+                 BMSY='list',
+                 SBMSY='list',
+                 SPMSY='list',
+                 SPRMSY='list',
+                 F01='list',
+                 FMax='list',
+                 FCrash='list',
+                 SPRcrash='list',
+                 MGT='list',
+                 RefYield='list',
+                 BLow='list',
+                 Equilibrium='unfishedrefpoints',
+                 Dynamic='unfishedrefpoints',
+                 Misc='list'
+         ),
+         contains='Created_ModifiedClass'
+)
 
 
+setClass("popdynamics",
+         slots=c(Number='list',
+                 Biomass='list',
+                 SBiomass='list',
+                 SProduction='list',
+                 Misc='list'
+         ),
+         contains='Created_ModifiedClass'
+)
+
+setClass("unfished",
+         slots=c(Equilibrium='popdynamics',
+                 Dynamic='popdynamics',
+                 Misc='list'
+         ),
+         contains='Created_ModifiedClass'
+)
 
 
+# Hist Class ----
+
+# OM - Operating Model
+# Reference Points
+# Unfished
+# PopulationDynamics
+# FleetDynamics
 
 
+#' @export
+setClass("hist",
+         contains=c('om', 'Created_ModifiedClass'),
+         slots=c(Unfished='unfished',
+                 RefPoints='refpoints',
+                 Number='list', # sim, age, ts, area
+                 Biomass='list',
+                 SBiomass='list',
+                 SProduction='list',
+                 Removal='list',
+                 Retain='list'
+                 
+         )
+)
 
 
 

@@ -1,21 +1,5 @@
 # --- New Classes (temp) ----
-setClass("popdynamics",
-         slots=c(Number='list',
-                 Biomass='list',
-                 SBiomass='list',
-                 SProduction='list',
-                 Misc='list'
-         ),
-         contains='Created_ModifiedClass'
-)
 
-setClass("unfished",
-         slots=c(Equilibrium='popdynamics',
-                 Dynamic='popdynamics',
-                 Misc='list'
-         ),
-         contains='Created_ModifiedClass'
-)
 
 
 AddStockNames <- function(list, Names) {
@@ -154,9 +138,9 @@ CalcUnfishedDynamics <- function(OM,
 
   # ---- Dynamic ----
   
-  # RecDevInit <- purrr::map(OM@Stock, GetRecDevInit)
-  # RecDevHist <- purrr::map(OM@Stock, GetRecDevHist)
-  # RecDevProj <- purrr::map(OM@Stock, GetRecDevProj)
+  RecDevInit <- purrr::map(OM@Stock, GetRecDevInit)
+  RecDevHist <- purrr::map(OM@Stock, GetRecDevHist)
+  RecDevProj <- purrr::map(OM@Stock, GetRecDevProj)
   
   # TODO - simulate population with no recruitment deviations
   

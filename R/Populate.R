@@ -1036,8 +1036,8 @@ setMethod("Populate", "srr", function(object,
   }
   
   tTimeSteps <- floor(TimeSteps)
-  histTS <- tTimeSteps[tTimeSteps<=CurrentYear]
-  projTS <- tTimeSteps[tTimeSteps>CurrentYear]
+  histTS <- TimeSteps[tTimeSteps<=CurrentYear]
+  projTS <- TimeSteps[tTimeSteps>CurrentYear]
   nHistTS <- length(histTS)
   nProjTS <- length(projTS)
 
@@ -1078,8 +1078,23 @@ setMethod("Populate", "srr", function(object,
                                    RecDevProj=object@RecDevProj)
 
   object@RecDevInit <- RecDeviations$RecDevInit
+  dimnames(object@RecDevInit) <- list(
+    Sim=1:nrow(object@RecDevInit),
+    Age=0:(ncol(object@RecDevInit)-1)
+  )
+  
   object@RecDevHist <- RecDeviations$RecDevHist
+  dimnames(object@RecDevHist) <- list(
+    Sim=1:nrow(object@RecDevHist),
+    `Time Step`=histTS
+  )
+  
   object@RecDevProj <- RecDeviations$RecDevProj
+  dimnames(object@RecDevProj) <- list(
+    Sim=1:nrow(object@RecDevProj),
+    `Time Step`=projTS
+  )
+  
 
   PrintDonePopulating(object, sb, isTRUE(messages), allup=TRUE)
   SetDigest(argList, object)

@@ -20,9 +20,11 @@ for (st in 1:2) {
   }
 }
 
-OM <- Convert(MOM, Populate = FALSE)  # convert from `MOM` to `om`
-OM <- Populate(OM)
-
+OMa <- Convert(MOM, Populate = FALSE)  # convert from `MOM` to `om`
+OM <- Populate(OMa)
+OM@Stock$Female@SRR@RecDevInit |> dimnames()
+OM@Stock$Female@SRR@RecDevHist |> dimnames()
+OM@Stock$Female@SRR@RecDevProj |> dimnames()
 
 messages='default'
 nSim=NULL
@@ -30,21 +32,41 @@ parallel=FALSE
 silent=FALSE
 
 SimulateDEV
-                      
+             
 
 
-OM@Stock[[1]]@SRR@SPFrom
-OM@Stock[[1]]@Fecundity
-OM@Stock[[2]]@Fecundity
+replist <- r4ss::SS_output(dir)
+replist$derived_quants$Label |> unique()
 
-OM@Fleet[[1]][[2]]@Selectivity@MeanAtAge |> dim()
+replist$derived_quants |> dplyr::filter(Label%in% c('annF_MSY', 'Dead_Catch_MSY', 'Ret_Catch_MSY',
+                                                    "SSB_Virgin",  "SSB_Initial", "SSB_1950" ))
 
-OM@Fleet[[1]][[1]]@FishingMortality@ApicalF
+
+# TODO - fix OM in new Import function, current selectivity curves are wrong, then check MSY ref points against SS
+
+
+
 
 multiHist <- Simulate(MOM)
-multiHist[[2]][[1]]@Ref$ByYear$SPRcrash
+
+multiHist[[1]][[1]]@Ref$ByYear$FMSY[1,1]
+multiHist[[1]][[1]]@Ref$ByYear$MSY[1,1] + multiHist[[2]][[1]]@Ref$ByYear$MSY[1,1]
+
+multiHist[[1]][[1]]@Ref$ByYear$N0[1,1]
+multiHist[[1]][[1]]@Ref$ByYear$SSB0[1,1]
+
+multiHist[[1]][[1]]@Ref$ByYear$MSY[1,1]
+multiHist[[1]][[1]]@Ref$ByYear$F_SPR[1,,1]
+
+multiHist[[1]][[1]]@Ref$ByYear$F01_YPR[1,1]
+multiHist[[1]][[1]]@Ref$ByYear$Fmax_YPR[1,1]
+
+multiHist[[2]][[1]]@Ref$ByYear$Fcrash[1,]
+multiHist[[2]][[1]]@Ref$ByYear$SPRcrash[1,]
 
 
+names(multiHist[[1]][[1]]@Ref$ByYear) |> sort()
+names(multiHist[[1]][[1]]@Ref$Dynamic_Unfished) |> sort()
 
 
 x <- om@Fleet[[1]][[1]]
