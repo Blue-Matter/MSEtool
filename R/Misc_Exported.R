@@ -28,6 +28,8 @@ get_funcs <- function(package, classy , msg) {
 #' @param package Optional. Names(s) of the package to search for object of class `classy`. String
 #' Default is all `openMSE` packages. Always searches the global environment as well.
 #' @param msg Print messages?
+#' @param abc Logical, whether to alphabetize the results. By default, the function returns results found in
+#' the global environment, then core openMSE packages, and any additional packages in argument `package`.
 #' @examples
 #' avail("OM", msg=FALSE)
 #' @author T. Carruthers
@@ -37,7 +39,7 @@ get_funcs <- function(package, classy , msg) {
 #' Fleets <- avail("Fleet")
 #' MPs <- avail("MP")
 #' @export
-avail <- function(classy, package=NULL, msg=TRUE) {
+avail <- function(classy, package=NULL, msg=TRUE, abc = FALSE) {
   temp <- try(class(classy), silent=TRUE)
   if (methods::is(temp, "try-error")) classy <- deparse(substitute(classy))
   if (temp == "function") classy <- deparse(substitute(classy))
@@ -88,7 +90,11 @@ avail <- function(classy, package=NULL, msg=TRUE) {
     }
     
     if (length(temp) < 1) stop("No objects of class '", classy, "' found", call. = FALSE)
-    return(sort(unique(temp)))
+    
+    out <- unique(temp)
+    if (abc) out <- sort(out)
+    
+    return(out)
   }
 }
 

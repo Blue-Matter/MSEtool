@@ -4,7 +4,7 @@
 \alias{avail}
 \title{What objects of this class are available}
 \usage{
-avail(classy, package = NULL, msg = TRUE)
+avail(classy, package = NULL, msg = TRUE, abc = FALSE)
 }
 \arguments{
 \item{classy}{A class of object (character string, e.g. 'Fleet')}
@@ -13,6 +13,9 @@ avail(classy, package = NULL, msg = TRUE)
 Default is all \code{openMSE} packages. Always searches the global environment as well.}
 
 \item{msg}{Print messages?}
+
+\item{abc}{Logical, whether to alphabetize the results. By default, the function returns results found in
+the global environment, then core openMSE packages, and any additional packages in argument \code{package}.}
 }
 \description{
 Generic class finder
