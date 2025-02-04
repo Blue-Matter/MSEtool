@@ -38,7 +38,7 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">avail</span><span class="op">(</span><span class="va">classy</span>, package <span class="op">=</span> <span class="cn">NULL</span>, msg <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">avail</span><span class="op">(</span><span class="va">classy</span>, package <span class="op">=</span> <span class="cn">NULL</span>, msg <span class="op">=</span> <span class="cn">TRUE</span>, abc <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -56,6 +56,11 @@ Default is all <code>openMSE</code> packages. Always searches the global environ
 
 <dt id="arg-msg">msg<a class="anchor" aria-label="anchor" href="#arg-msg"></a></dt>
 <dd><p>Print messages?</p></dd>
+
+
+<dt id="arg-abc">abc<a class="anchor" aria-label="anchor" href="#arg-abc"></a></dt>
+<dd><p>Logical, whether to alphabetize the results. By default, the function returns results found in
+the global environment, then core openMSE packages, and any additional packages in argument <code>package</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
