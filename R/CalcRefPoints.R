@@ -144,7 +144,7 @@ CalcYieldComplex <- function(Yield, OM) {
     if (length(yieldList)>2) 
       cli::cli_abort('List must be length 2', .internal=TRUE)
     if (length(yieldList)==1) {
-      YieldOut[[i]] <- yieldList
+      YieldOut[[i]] <- yieldList[[i]]
     } else {
       YieldOut[[i]] <- ArrayAdd(yieldList)
     }
