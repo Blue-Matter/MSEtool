@@ -234,7 +234,7 @@ OM2stock <- function(OM, cpars=NULL, TimeSteps=NULL) {
   Maturity(stock) <- OM2Maturity(OM, cpars)
   Fecundity(stock) <- OM2Fecundity(OM, cpars)
   SRR(stock) <- OM2SRR(OM, cpars, TimeSteps)
-  Spatial(stock) <- OM2Spatial(OM, cpars)
+  Spatial(stock) <- OM2Spatial(OM, cpars, TimeSteps)
   Depletion(stock) <- OM2Depletion(OM, cpars)
   stock
 }
@@ -453,7 +453,7 @@ OM2SRR <- function(OM, cpars=NULL, TimeSteps=NULL) {
   if (!is.null(SRR@RecDevInit)) {
     dimnames(SRR@RecDevInit) <- list(
       Sim=1:nrow(SRR@RecDevInit),
-      Age=0:(ncol(SRR@RecDevInit)-1)
+      Age=1:ncol(SRR@RecDevInit)
     )
   }
   
@@ -543,11 +543,11 @@ OM2Depletion <- function(OM, cpars=NULL) {
   Depletion
 }
 
-OM2Spatial <- function(OM, cpars=NULL) {
+OM2Spatial <- function(OM, cpars=NULL, TimeSteps=NULL) {
   if (is.null(cpars) & inherits(OM, 'OM'))
     cpars <- OM@cpars
   if (!EmptyObject(cpars)) {
-    Spatial <- cpars2Spatial(cpars)
+    Spatial <- cpars2Spatial(cpars, TimeSteps)
   } else {
     Spatial <- Spatial()
   }
@@ -557,8 +557,13 @@ OM2Spatial <- function(OM, cpars=NULL) {
     dd <- dim(Spatial@Movement)
     narea <- dd[2]
     nsim <- dd[1]
-    if (is.null(Spatial@RelativeSize))
+    if (is.null(Spatial@RelativeSize)) {
       Spatial@RelativeSize <- array(1/narea, dim=c(1, narea))
+      dimnames(Spatial@RelativeSize) <- list(Sim=1,
+                                             Area=1:narea)
+    }
+      
+    
 
   } else {
     Spatial@RelativeSize <- process_cpars(OM@Size_area_1)
@@ -599,11 +604,11 @@ process_mov <- function(mov, nage=1, nts=1) {
 }
 
 
-cpars2Spatial <- function(cpars) {
+cpars2Spatial <- function(cpars, TimeSteps) {
   Spatial <- Spatial()
   Spatial@RelativeSize <- process_cpars(cpars$Asize)
   Spatial@Movement <- process_mov(cpars$mov)
-  Spatial <- CalcUnfishedDist(Spatial)
+  Spatial <- CalcUnfishedDist(Spatial, c(TimeSteps$HistTS, TimeSteps$ProjTS))
   Spatial
 }
 

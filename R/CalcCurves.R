@@ -10,10 +10,11 @@ CalcCurves <- function(OM, SPR0=NULL, FSearch=NULL) {
   
   Curves <- new('curves')
   Curves@FValues <- FSearch
+  
   # per-recruit
+  # TODO speed up CalcNPR and CalcYPR and avoid duplication of calculations
   Curves@NPR <- CalcNPR(OM, FSearch=Curves@FValues) 
   Curves@SPR <- CalcSPR(OM, SPR0, NPR=Curves@NPR)
-  Curves@SPR$Female |> dim()
   
   Curves@RelRec <- CalcRelRec(OM, SPR=Curves@SPR)
   

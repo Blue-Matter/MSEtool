@@ -33,8 +33,12 @@ SimulateDEV <- function(OM=NULL,
   
   OM <- StartUp(OM, messages, nSim) 
   
-  Hist <- new('hist') # new Hist object to return 
-  
+  Hist <- new('hist') 
+  for (nm in slotNames(OM)) {
+    slot(Hist, nm) <- slot(OM, nm)
+  }
+
+
   Hist@Unfished <- CalcUnfishedDynamics(OM, messages, parallel=parallel)
   # TODO Dynamic Unfished
   
@@ -43,81 +47,42 @@ SimulateDEV <- function(OM=NULL,
 
   
   # ---- Non-Equilibrium Initial Year ----
+  Hist@Number <- purrr::map2(OM@Stock, Hist@Unfished@Equilibrium@Number, InitNumber)
   
-  InitialTimeStepN <- purrr::map2(Hist@Unfished@Equilibrium@Number,
-                                  purrr::map(OM@Stock,GetRecDevInitAgeClasses),
-                                  AddInitialRecDev
+  # loop over historical timesteps 
+  TimeStepsHist <- TimeSteps(OM, 'Historical')
+  
+  for (ts in seq_along(TimeStepsHist)[-1]) {
+    # beginning of time step
     
-  )
-  
-  ## UP TO HERE --- 
-  # make arrays for historical and populate
-  # make arrays nsim dimension, then reduce later if not needed
-  
-  
-  CreateArraySATR <- function(Stock) {
-    if (inherits(Stock, 'om')) {
-      return(purrr::map(Stock@Stock, CreateArraySATR))
-    }
-    # sim, age, time step, region (area)
-    array <- array(NA, dim=c(nSim(Stock),nAge(Stock), nTS(Stock), nArea(Stock)))
-    AddDimNames(array, names=c("Sim", "Age", "Time Step", 'Area'),
-                TimeSteps = TimeSteps(Stock))
-  }
-
-
-  for (i in 1:nStock(OM)) {
-    # Numbers for initial age class
-    InitialTimeStepN <- AddInitialRecDev(Hist@Unfished@Equilibrium@Number[[i]],
-                                           GetRecDevInitAgeClasses(OM@Stock[[i]]))
-   
-  }
-  
-  
-  
-  Number <- Hist@Unfished@Equilibrium@Number$Female
-  InitAgeClassRecDevs <- GetRecDevInitAgeClasses(OM@Stock$Female)
-  
-  GetRecDevInitAgeClasses <- function(Stock) {
-    init1plus <- GetRecDevInit(Stock)
-    init0 <- abind::adrop(GetRecDevHist(Stock)[,1, drop=FALSE],2)
-    out <- cbind(init0, init1plus)
-    dimnames(out) <- list(Sim=1:nrow(out),
-                          Age=0:(ncol(out)-1))
-    out
-  }
-  
-  
-  AddInitialRecDev <- function(Number, InitAgeClassRecDevs) {
-    InitAgeClassRecDevs <- AddDimension(InitAgeClassRecDevs, 'Time Step')
-    InitAgeClassRecDevs <- AddDimension(InitAgeClassRecDevs, 'Area')
-    ArrayMultiply(Number[, ,1,, drop=FALSE], InitAgeClassRecDevs)
+    # calculate fishing spatial distribution last time step
+    
+    # calculate FDead and FRetain for last time step
+    
+    # calculate Spawning Output last time step
+    
+    # calculate recruitment last time step
+    
+    # do MICE stuff if applicable
+    
+    # Mortality and Aging
+    
+    # Move Stock for beginning of this time step
+    
+    
+    
     
   }
   
-  Hist@Unfished@Equilibrium@Number$Female 
+  # PopDynamicsHist <- function(Hist) {
+    
+  
+  # }
   
   
-  R0 <- purrr::map(OM@Stock, GetR0)
-  
-  
-  
-  RecDevInit <- purrr::map(OM@Stock, GetRecDevInit)
-  
-  
-  abind::adrop(Hist@Unfished@Equilibrium@Number$Female[,,1,, drop=FALSE],3)
-  
-  ArrayMultiply(abind::adrop(Hist@Unfished@Equilibrium@Number$Female[,,1,, drop=FALSE],3),
-                AddDimension(OM@Stock$Female@SRR@RecDevInit, 'Area'))
-  
-  Hist@Unfished@Equilibrium@Number$Female[,,1,]
-  
-  OM@Stock$Female@SRR@RecDevHist
-  
-  
-  GetRecDevInit(OM)
-  GetRecDevHist(OM)$Female |> dimnames()
  
+  
+  
   
   # ---- Optimize Rec Devs for Initial Depletion ----
   

@@ -22,9 +22,6 @@ for (st in 1:2) {
 
 OMa <- Convert(MOM, Populate = FALSE)  # convert from `MOM` to `om`
 OM <- Populate(OMa)
-OM@Stock$Female@SRR@RecDevInit |> dimnames()
-OM@Stock$Female@SRR@RecDevHist |> dimnames()
-OM@Stock$Female@SRR@RecDevProj |> dimnames()
 
 messages='default'
 nSim=NULL
@@ -36,6 +33,7 @@ SimulateDEV
 
 
 replist <- r4ss::SS_output(dir)
+
 replist$derived_quants$Label |> unique()
 
 replist$derived_quants |> dplyr::filter(Label%in% c('annF_MSY', 'Dead_Catch_MSY', 'Ret_Catch_MSY',

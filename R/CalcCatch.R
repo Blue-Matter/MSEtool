@@ -9,7 +9,9 @@ CalcCatch <- function(Stock, Fleet, NatAge=NULL) {
   FDead <- GetFatAgeArray(Fleet) # need to add spatial dimension for pop dynamics
   FRetain <- GetFatAgeArray(Fleet, 'Retain')
   FDeadTotal <- apply(FDead, 1:3, sum)
-  ZDead <- ArrayAdd(Stock@NaturalMortality@MeanAtAge, FDeadTotal)
+  
+  timesteps <- dim(FDeadTotal)[3] # TODO 
+  ZDead <- ArrayAdd(Stock@NaturalMortality@MeanAtAge[,,timesteps, drop=FALSE], FDeadTotal)
   
   FleetWeightatAge <- FDead
   FleetWeightatAge[] <- NA

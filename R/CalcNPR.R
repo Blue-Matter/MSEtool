@@ -3,7 +3,8 @@ setGeneric('CalcNPR', function(x, Fleet=NULL, FSearch=NULL)
 )
 
 setMethod('CalcNPR', c('stock', 'FleetList',  'ANY'), function(x, Fleet=NULL, FSearch=NULL) {
-  out <- lapply(cli::cli_progress_along(seq_along(FSearch), 
+  
+  out <- lapply(cli::cli_progress_along(seq_along(FSearch),
                                         format='Calculating Number-Per-Recruit {.val {x@Name}} {cli::pb_bar} {cli::pb_percent} '),
                 function(i) {
                  CalcFishedSurvival(x, Fleet=UpdateApicalF(Fleet, FSearch[i]) )

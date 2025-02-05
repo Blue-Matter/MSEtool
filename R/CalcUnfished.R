@@ -98,34 +98,30 @@ CalcUnfishedDynamics <- function(OM,
       UnfishedSurvivalSP[[i]] <- CalcUnfishedSurvival(OM@Stock[[i]], SP=TRUE)
   }
   R0 <- purrr::map(OM@Stock, GetR0) |>
-    purrr::map(Structure) |> # TODO - may need to add sim and time step dimensions to R0 in Populate
+    purrr::map(Structure) |> 
     purrr::map(AddDimNames, TimeSteps=TimeSteps(OM))
  
   NatAge <- purrr::map2(UnfishedSurvival, R0, ArrayMultiply)
 
-  # cli::cli_progress_update()
-  
+
   Unfished@Equilibrium@Number <- purrr::map2(NatAge, 
                                              UnfishedDist(OM), 
-                                             DistributeStock) #  |> AddStockNames(StockNames(OM))
+                                             DistributeStock)
   
-  # cli::cli_progress_update()
   WeightatAge <- purrr::map(OM@Stock, GetWeightAtAge) |> 
     purrr::map(AddAreaDimension)
   
   Unfished@Equilibrium@Biomass <- purrr::map2(WeightatAge, 
                                               Unfished@Equilibrium@Number, 
                                               ArrayMultiply)
-  # cli::cli_progress_update()
+
   SNatAge <- purrr::map2(R0, UnfishedSurvivalSP, ArrayMultiply) |>
     purrr::map2(purrr::map(OM@Stock, GetMaturityAtAge), ArrayMultiply) |>
     purrr::map2(UnfishedDist(OM), DistributeStock)
-  # cli::cli_progress_update()
+
   Unfished@Equilibrium@SBiomass <- purrr::map2(WeightatAge, SNatAge, ArrayMultiply)
-  # cli::cli_progress_update()
-  
+
   FecundityatAge <- purrr::map(OM@Stock, GetFecundityAtAge) |> purrr::map(AddAreaDimension)
-  # cli::cli_progress_update()
   # NOTE: not sure if this will work for all cases 
   ind <- lapply(FecundityatAge, is.null) |> unlist() |> not() |> which() 
   # TODO 
@@ -144,5 +140,6 @@ CalcUnfishedDynamics <- function(OM,
   
   # TODO - simulate population with no recruitment deviations
   
+
   Unfished
 }

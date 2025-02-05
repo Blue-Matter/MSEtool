@@ -1,9 +1,21 @@
-# SAFMC Case Study
+library(MSEtool)
 
 devtools::load_all()
 
 MOM <- readRDS('../SAFMC-MSE/OM_Objects/BaseCase_RS.OM')
 MOM@nsim <- 4
+
+OMa <- Convert(MOM, Populate = FALSE)  
+OM <- Populate(OMa)
+
+messages='default'
+nSim=NULL
+parallel=FALSE
+silent=FALSE
+
+SimulateDEV
+
+
 
 multiHist <- Simulate(MOM)
 
@@ -19,7 +31,7 @@ multiHist[[1]][[1]]@SampPars$Stock$[1,21,] |> round(2)
 t <- multiHist[[1]][[1]]@AtAge$Number[1,1,70,]
 round(t/sum(t),2)
 
-OM <- Convert(MOM)  # convert from `MOM` to `om`
+
 
 
 OM@Stock$`Red Snapper`@Spatial@FracOther
@@ -30,4 +42,3 @@ silent=FALSE
 
 
 SimulateDEV
-

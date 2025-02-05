@@ -74,7 +74,6 @@ setMethod('UpdateApicalF', c('FleetList',  'ANY'), function(x, apicalF) {
     x[[1]]@FishingMortality@ApicalF <- array(apicalF, dim=c(1,1))
     return(x)
   }
-  
   x <- CalcFatAge(x)
   FDeadbyFleet <- GetFatAgeArray(x)
 

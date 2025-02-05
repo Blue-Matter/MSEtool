@@ -1080,7 +1080,7 @@ setMethod("Populate", "srr", function(object,
   object@RecDevInit <- RecDeviations$RecDevInit
   dimnames(object@RecDevInit) <- list(
     Sim=1:nrow(object@RecDevInit),
-    Age=0:(ncol(object@RecDevInit)-1)
+    Age=1:ncol(object@RecDevInit)
   )
   
   object@RecDevHist <- RecDeviations$RecDevHist
