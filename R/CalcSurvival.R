@@ -56,26 +56,30 @@ setMethod('CalcUnfishedSurvival', c('om', 'ANY'), function(x, SP=FALSE) {
 
 # ---- UpdateApicalF -----
 
-setGeneric('UpdateApicalF', function(x, apicalF)
+setGeneric('UpdateApicalF', function(x, apicalF, TimeSteps=NULL)
   standardGeneric('UpdateApicalF')
 )
 
-setMethod('UpdateApicalF', c('array',  'ANY'), function(x, apicalF) {
-  dd <- dim(x)
-  MaxF <- apply(x, c(1,3), max)
-  MaxF <- replicate(dd[2], MaxF) |> aperm(c(1,3,2))
-  dimnames(MaxF) <- dimnames(x)
-  ArrayDivide(x, MaxF) * apicalF
-  
-})
+setMethod('UpdateApicalF', c('array',  'ANY', 'ANY'), 
+          function(x, apicalF, TimeSteps=NULL) {
+            dd <- dim(x)
+            MaxF <- apply(x, c(1,3), max)
+            MaxF <- replicate(dd[2], MaxF) |> aperm(c(1,3,2))
+            dimnames(MaxF) <- dimnames(x)
+            ArrayDivide(x, MaxF) * apicalF
+            
+          })
 
-setMethod('UpdateApicalF', c('FleetList',  'ANY'), function(x, apicalF) {
+setMethod('UpdateApicalF', c('FleetList', 'ANY', 'ANY'), function(x, apicalF,  TimeSteps=NULL) {
   if (length(x)==1) {
     x[[1]]@FishingMortality@ApicalF <- array(apicalF, dim=c(1,1))
+    dimnames(x[[1]]@FishingMortality@ApicalF) <- list(Sim=1,
+                                                      `Time Step`=1) # TODO 
     return(x)
   }
-  x <- CalcFatAge(x)
-  FDeadbyFleet <- GetFatAgeArray(x)
+  
+  x <- CalcFatAge(x, TimeSteps)
+  FDeadbyFleet <- GetFatAgeArray(x, TimeSteps)
 
   FDeadTotal <- apply(FDeadbyFleet, 1:3, sum)
   apicalFCurr <- apply(FDeadTotal, c(1,3), max)
@@ -98,16 +102,16 @@ setMethod('UpdateApicalF', c('FleetList',  'ANY'), function(x, apicalF) {
 
 # ---- CalcFishedSurvival -----
 
-setGeneric('CalcFishedSurvival', function(x, Fleet=NULL, SP=FALSE)
+setGeneric('CalcFishedSurvival', function(x, Fleet=NULL, SP=FALSE, TimeSteps=NULL)
   standardGeneric('CalcFishedSurvival')
 )
 
 
-setMethod('CalcFishedSurvival', c('stock', 'FleetList',  'ANY'), 
-          function(x, Fleet=NULL, SP=FALSE) {
+setMethod('CalcFishedSurvival', c('stock', 'FleetList',  'ANY', 'ANY'), 
+          function(x, Fleet=NULL, SP=FALSE, TimeSteps=NULL) {
             
-            Fleet <- CalcFatAge(Fleet)
-            FDead <- GetFatAgeArray(Fleet)
+            Fleet <- CalcFatAge(Fleet, TimeSteps)
+            FDead <- GetFatAgeArray(Fleet, TimeSteps)
             FDeadOverTotal <- apply(FDead, c(1,2,3), sum) 
 
             if (SP) {
@@ -116,7 +120,7 @@ setMethod('CalcFishedSurvival', c('stock', 'FleetList',  'ANY'),
               SpawnTimeFrac <- NULL
             }
             
-            CalcSurvival(x@NaturalMortality@MeanAtAge,
+            CalcSurvival(GetNMortalityAtAge(x, TimeSteps),
                          x@Ages@PlusGroup,
                          SpawnTimeFrac, 
                          FDeadOverTotal)
@@ -128,9 +132,9 @@ setMethod('CalcFishedSurvival', c('stock', 'FleetList',  'ANY'),
 #             purrr::map2(x, Fleet, CalcFishedSurvival, SP=SP)
 # })
 
-setMethod('CalcFishedSurvival', c('om', 'ANY',  'ANY'), 
-          function(x, Fleet=NULL, SP=FALSE) {
-            purrr::map2(x@Stock, x@Fleet, CalcFishedSurvival, SP=SP)
+setMethod('CalcFishedSurvival', c('om', 'ANY',  'ANY', 'ANY'), 
+          function(x, Fleet=NULL, SP=FALSE, TimeSteps=NULL) {
+            purrr::map2(x@Stock, x@Fleet, CalcFishedSurvival, SP=SP, TimeSteps=TimeSteps)
           })
 
 

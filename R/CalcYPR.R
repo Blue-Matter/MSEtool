@@ -1,6 +1,6 @@
 # devtools::load_all()
 
-setGeneric('CalcYPR', function(x, Fleet=NULL, FSearch=NULL)
+setGeneric('CalcYPR', function(x, Fleet=NULL, FSearch=NULL, TimeSteps=NULL)
   standardGeneric('CalcYPR')
 )
 
@@ -11,23 +11,23 @@ setGeneric('CalcYPR', function(x, Fleet=NULL, FSearch=NULL)
 #           })
   
 setMethod('CalcYPR', c('om', 'ANY',  'ANY'), 
-          function(x, Fleet=NULL, FSearch=NULL) {
+          function(x, Fleet=NULL, FSearch=NULL, TimeSteps=NULL) {
             if (is.null(FSearch))
               FSearch <- x@Control$Curves$FSearch
-            purrr::map2(x@Stock, x@Fleet, CalcYPR, FSearch=FSearch)
+            if (is.null(TimeSteps))
+              TimeSteps <- TimeSteps(x, 'Historical')
+            purrr::map2(x@Stock, x@Fleet, CalcYPR, FSearch=FSearch, TimeSteps=TimeSteps)
           })
 
 setMethod('CalcYPR', c('stock', 'FleetList',  'ANY'), 
-          function(x, 
-                   Fleet=NULL, 
-                   FSearch=NULL) {
+          function(x, Fleet=NULL, FSearch=NULL, TimeSteps=NULL) {
             
             out <- lapply(cli::cli_progress_along(seq_along(FSearch), 
                                                       format='Calculating Yield-Per-Recruit {.val {x@Name}} {cli::pb_bar} {cli::pb_percent} '), function(i) {
-                                                        Fleet <- UpdateApicalF(Fleet, FSearch[i]) 
-                                                        Fleet <- CalcFatAge(Fleet)
-                                                        NatAge <- CalcFishedSurvival(x, Fleet)
-                                                        CalcCatch(x, Fleet, NatAge)
+                                                        Fleet <- UpdateApicalF(Fleet, FSearch[i], TimeSteps=TimeSteps) 
+                                                        Fleet <- CalcFatAge(Fleet, TimeSteps=TimeSteps)
+                                                        NatAge <- CalcFishedSurvival(x, Fleet, TimeSteps=TimeSteps)
+                                                        CalcCatch(x, Fleet, NatAge, TimeSteps=TimeSteps)
                                                       })
             
             RemovalBiomass <- lapply(out, '[[', 'RemovalBiomass')

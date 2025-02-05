@@ -2930,6 +2930,7 @@ CheckList <- function(object) {
 setClass("curves",
          slots=c(FValues='numeric',
                  NPR='list',
+                 NPRS='list',
                  SPR='list',
                  YPR='list',
                  RPR='list',

@@ -1,10 +1,11 @@
-setGeneric('GetFatAgeArray', function(x, type='Dead')
+setGeneric('GetFatAgeArray', function(x, TimeSteps=NULL, type='Dead')
   standardGeneric('GetFatAgeArray')
 )
 
-setMethod('GetFatAgeArray', c('FleetList', 'ANY'), function(x, type=c('Dead', 'Retain')) {
+setMethod('GetFatAgeArray', c('FleetList', 'ANY', 'ANY'), 
+          function(x, TimeSteps=NULL, type=c('Dead', 'Retain')) {
   type <- match.arg(type)
-  List <- purrr::map(x, GetFatAgeArray, type=type)
+  List <- purrr::map(x, GetFatAgeArray, type=type, TimeSteps=TimeSteps)
   
   checkdims <- purrr::map_df(List, dim)
   
@@ -16,9 +17,13 @@ setMethod('GetFatAgeArray', c('FleetList', 'ANY'), function(x, type=c('Dead', 'R
   
 })
 
-setMethod('GetFatAgeArray', c('fleet', 'ANY'), function(x, type=c('Dead', 'Retain')) {
+setMethod('GetFatAgeArray', c('fleet', 'ANY', 'ANY'), 
+          function(x, TimeSteps=NULL, type=c('Dead', 'Retain')) {
   type <- match.arg(type)
-  if (type=='Dead')
-    return(x@FishingMortality@DeadAtAge)
-  x@FishingMortality@RetainAtAge
+  if (type=='Dead') {
+    array <- x@FishingMortality@DeadAtAge
+  } else {
+    array <- x@FishingMortality@RetainAtAge  
+  }
+  ArraySubsetTimeStep(array, TimeSteps)
 })

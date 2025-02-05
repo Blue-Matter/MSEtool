@@ -16,6 +16,11 @@ CalcRefPoints <- function(OM, Unfished=NULL) {
   
   # MSY Ref Points ----
   Yield <- CalcYieldComplex(RefPoints@Curves@Yield, OM)
+  Yield$`Red Snapper`$`Red Snapper` |> dim()
+  
+  ## up to here for Red Snapper 
+  stop()
+  
   MaxYieldIndList <- purrr::map(Yield, \(x) apply(x, 1:2, which.max))
   
   FValuesList <- vector('list', nStock(OM))
@@ -127,16 +132,22 @@ CalcYieldComplex <- function(Yield, OM) {
   SPFrom <- GetSPFrom(OM)
   for (i in seq_along(L)) {
     ind <- match(SPFrom[[i]], names(SPFrom))
-    if (length(ind)<1)
-      next()
-    L[[i]] <- c(L[[i]], i, ind) |> unique() |> sort()
-    L[[ind]] <- c(L[[ind]], i, ind) |> unique() |> sort()
+    if (length(ind)<1) {
+      L[[i]] <- i
+    } else {
+      L[[i]] <- c(L[[i]], i, ind) |> unique() |> sort()
+      L[[ind]] <- L[[i]]
+    }
   }
   for (i in seq_along(L)) {
     yieldList <- Yield[L[[i]]] 
     if (length(yieldList)>2) 
       cli::cli_abort('List must be length 2', .internal=TRUE)
-    YieldOut[[i]] <- ArrayAdd(yieldList)
+    if (length(yieldList)==1) {
+      YieldOut[[i]] <- yieldList
+    } else {
+      YieldOut[[i]] <- ArrayAdd(yieldList)
+    }
   }
   YieldOut
 }

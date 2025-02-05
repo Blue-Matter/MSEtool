@@ -5,23 +5,24 @@
 # TODO - replace CalcFishedSurvival - needs to be actual n-at-age by area
 # TODO - functions for numbers and for weight
 # TODO - add option for alternative catch equation
-CalcCatch <- function(Stock, Fleet, NatAge=NULL) {
-  FDead <- GetFatAgeArray(Fleet) # need to add spatial dimension for pop dynamics
-  FRetain <- GetFatAgeArray(Fleet, 'Retain')
+CalcCatch <- function(Stock, Fleet, NatAge=NULL, TimeSteps=NULL) {
+  FDead <- GetFatAgeArray(Fleet, TimeSteps) # need to add spatial dimension for pop dynamics
+  FRetain <- GetFatAgeArray(Fleet, TimeSteps, 'Retain')
   FDeadTotal <- apply(FDead, 1:3, sum)
   
-  timesteps <- dim(FDeadTotal)[3] # TODO 
-  ZDead <- ArrayAdd(Stock@NaturalMortality@MeanAtAge[,,timesteps, drop=FALSE], FDeadTotal)
+  
+  MatAge <- GetNMortalityAtAge(Stock, TimeSteps)
+  ZDead <- ArrayAdd(MatAge, FDeadTotal)
   
   FleetWeightatAge <- FDead
   FleetWeightatAge[] <- NA
   
-  FleetEmpiricalWeightatAge <- GetFleetWeightAtAge(Fleet) 
+  FleetEmpiricalWeightatAge <- GetFleetWeightAtAge(Fleet, TimeSteps=TimeSteps) 
   # use the empirical weight at age if available, otherwise stock
   for (fl in seq_along(FleetEmpiricalWeightatAge)) {
     if (is.null(FleetEmpiricalWeightatAge[[fl]])) {
       FleetWeightatAge[,,,fl] <- ArrayFill(Array=abind::adrop(FleetWeightatAge[,,,fl, drop=FALSE],4),
-                                           FillValue=GetWeightAtAge(Stock))
+                                           FillValue=GetWeightAtAge(Stock, TimeSteps))
     } else {
       FleetWeightatAge[,,,fl] <- ArrayFill(Array=abind::adrop(FleetWeightatAge[,,,fl, drop=FALSE],4),
                                            FillValue=FleetEmpiricalWeightatAge[[fl]])

@@ -1,29 +1,34 @@
 # ---- CalcFatAge ----
-setGeneric('CalcFatAge', function(x)
+setGeneric('CalcFatAge', function(x, TimeSteps=NULL)
   standardGeneric('CalcFatAge')
 )
 
-setMethod('CalcFatAge', 'om', function(x) {
-  purrr::map(x, CalcFatAge)
+setMethod('CalcFatAge', c('om', 'ANY'), function(x, TimeSteps=NULL) {
+  purrr::map(x, CalcFatAge, TimeSteps)
 })
 
-setMethod('CalcFatAge', 'StockFleetList', function(x) {
-  purrr::map(x, CalcFatAge)
+setMethod('CalcFatAge', c('StockFleetList', 'ANY'), function(x, TimeSteps=NULL) {
+  purrr::map(x, CalcFatAge, TimeSteps)
 })
 
 
-setMethod('CalcFatAge', 'FleetList', function(x) {
-  purrr::map(x, CalcFatAge)
+setMethod('CalcFatAge', c('FleetList', 'ANY'), function(x, TimeSteps=NULL) {
+  purrr::map(x, CalcFatAge, TimeSteps)
 })
 
-setMethod('CalcFatAge', 'fleet', function(x) {
-
+setMethod('CalcFatAge', c('fleet', 'ANY'), function(x, TimeSteps=NULL) {
+  
+  # x = OM@Fleet[[1]][[1]]
+  # TimeSteps <- TimeSteps(OM, 'Historical')
+  
   if (is.null(x@FishingMortality@ApicalF)) { 
     stop('need to calculate apical F from Effort and q')
   }
   
-  apicalF <- x@FishingMortality@ApicalF
-  selectivity <-  x@Selectivity@MeanAtAge
+  apicalF <- GetApicalF(x, TimeSteps)
+  selectivity <-  GetSelectivityAtAge(x, TimeSteps)
+  retention <- GetRetentionAtAge(x, TimeSteps)
+  discardmortality <- GetDiscardMortalityAtAge(x, TimeSteps)
   DimSelectivity <- dim(selectivity)
   DimapicalF <- dim(apicalF)
   
@@ -39,22 +44,20 @@ setMethod('CalcFatAge', 'fleet', function(x) {
     dimnames(apicalF)[[2]] <- 1:DimSelectivity[2]
   }
   
-  SelectivityRetention <- ArrayMultiply(x@Selectivity@MeanAtAge, 
-                                         x@Retention@MeanAtAge)
+  SelectivityRetention <- ArrayMultiply(selectivity, retention)
   
   isDiscards <- FALSE
-  if (!is.null(x@DiscardMortality@MeanAtAge)) {
+  if (!is.null(discardmortality)) {
     isDiscards <- TRUE
     # Inflate ApicalF to account for discard mortality
     # FishingMortality@apicalF is the apicalF of Dead Fish;
     # Inside this function 'apicalF' is for 'Caught' or 'Interacted' fish,
     # which will be higher than 'apicalF' for dead fish if discard mortality is < 1.
     
-    SelectivityDiscardMort <- ArrayMultiply(x@Selectivity@MeanAtAge, 
-                                             x@DiscardMortality@MeanAtAge)
+    SelectivityDiscardMort <- ArrayMultiply(selectivity, discardmortality)
     
     SelectivityDiscardMortRetention <- ArrayMultiply(SelectivityDiscardMort, 
-                                                      x@Retention@MeanAtAge)
+                                                     retention)
     
     InflateApicalF <- ArraySubtract(
       ArrayAdd(SelectivityRetention, SelectivityDiscardMort),
@@ -65,9 +68,9 @@ setMethod('CalcFatAge', 'fleet', function(x) {
     apicalF <- ArrayDivide(apicalF, InflateApicalF)
   }
   
-  FCaught <- ArrayMultiply(apicalF, x@Selectivity@MeanAtAge)
+  FCaught <- ArrayMultiply(apicalF, selectivity)
   
-  FRetain <- ArrayMultiply(x@Retention@MeanAtAge, FCaught)
+  FRetain <- ArrayMultiply(retention, FCaught)
   if (isDiscards) {
     FDiscard <- ArraySubtract(FCaught, FRetain)
   } else {
@@ -81,12 +84,6 @@ setMethod('CalcFatAge', 'fleet', function(x) {
     FDead <- ArrayAdd(array1=FRetain, 
                        array2=ArrayMultiply(FDiscard, SelectivityDiscardMort))
   }
-  
-  
-  # apicalF[1,1,71]
-  # x@FishingMortality@ApicalF[1,71]
-  # max(FDead[1,,71])
-  
   
   x@FishingMortality@DeadAtAge <- FDead
   x@FishingMortality@RetainAtAge <- FRetain

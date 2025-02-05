@@ -148,25 +148,25 @@ ArrayOperation <- function(array1, array2, operation=`*`) {
 
 #' @rdname ArrayMultiply
 #' @export
-ArrayMultiply <- function(array1, array2) {
+ArrayMultiply <- function(array1, array2=NULL) {
   ArrayOperation(array1, array2)
 }
 
 #' @rdname ArrayMultiply
 #' @export
-ArrayAdd <- function(array1, array2) {
+ArrayAdd <- function(array1, array2=NULL) {
   ArrayOperation(array1, array2, `+`)
 }
 
 #' @rdname ArrayMultiply
 #' @export
-ArrayDivide <- function(array1, array2) {
+ArrayDivide <- function(array1, array2=NULL) {
   ArrayOperation(array1, array2, `/`)
 }
 
 #' @rdname ArrayMultiply
 #' @export
-ArraySubtract <- function(array1, array2) {
+ArraySubtract <- function(array1, array2=NULL) {
   ArrayOperation(array1, array2, `-`)
 }
 

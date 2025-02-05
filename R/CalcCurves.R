@@ -13,9 +13,11 @@ CalcCurves <- function(OM, SPR0=NULL, FSearch=NULL) {
   
   # per-recruit
   # TODO speed up CalcNPR and CalcYPR and avoid duplication of calculations
-  Curves@NPR <- CalcNPR(OM, FSearch=Curves@FValues) 
-  Curves@SPR <- CalcSPR(OM, SPR0, NPR=Curves@NPR)
   
+  npr <- CalcNPR(OM, FSearch=Curves@FValues)
+  Curves@NPR <- lapply(npr, '[[','NPR')
+  Curves@NPRS <- lapply(npr, '[[','NPRS')
+  Curves@SPR <- CalcSPR(OM, SPR0, NPR=Curves@NPRS)
   Curves@RelRec <- CalcRelRec(OM, SPR=Curves@SPR)
   
   ypr <- CalcYPR(OM, FSearch=Curves@FValues)

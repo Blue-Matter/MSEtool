@@ -49,6 +49,9 @@ SimulateDEV <- function(OM=NULL,
   # ---- Non-Equilibrium Initial Year ----
   Hist@Number <- purrr::map2(OM@Stock, Hist@Unfished@Equilibrium@Number, InitNumber)
   
+  ####### UP TO HERE ################
+  # check distribution .... 
+  
   # loop over historical timesteps 
   TimeStepsHist <- TimeSteps(OM, 'Historical')
   
