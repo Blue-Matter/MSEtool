@@ -16,11 +16,6 @@ CalcRefPoints <- function(OM, Unfished=NULL) {
   
   # MSY Ref Points ----
   Yield <- CalcYieldComplex(RefPoints@Curves@Yield, OM)
-  Yield$`Red Snapper`$`Red Snapper` |> dim()
-  
-  ## up to here for Red Snapper 
-  stop()
-  
   MaxYieldIndList <- purrr::map(Yield, \(x) apply(x, 1:2, which.max))
   
   FValuesList <- vector('list', nStock(OM))
@@ -32,6 +27,58 @@ CalcRefPoints <- function(OM, Unfished=NULL) {
     array <- Yield[[i]]
     array[] <- NA
     FValuesList[[i]] <- ArrayFill(array, FValues)
+  }
+  
+  SPRarray <- t
+  FValue <- 0.3
+  # TODO : check and match SPR with multiMSE
+  # TODO make this a genric for OM, Curves, and SPRarray
+  GetSPRF(t, 0.3)
+  SPR0 =  CalcSPR0(OM)
+  
+  SPR0$`Red Snapper`
+  spr <- RefPoints@Curves@SPR$`Red Snapper`[1,70,]
+  plot(as.numeric(names(spr)), spr, type='l')
+  
+  GetSPRF <- function(SPRarray, SPRvalue, TimeSteps=NULL) {
+    if (inherits(SPRarray, 'curves')) {
+      stop('need to make generic')
+    }
+    dimnames <- dimnames(SPRarray)
+    nms <- names(dimnames)
+
+    if (is.null(TimeSteps)) {
+      TimeSteps <- dimnames[['Time Step']] |> as.numeric() |> max()
+    }
+     
+    FValues <- dimnames$apicalF |> as.numeric()
+    SPRarray2 <- abind::asub(SPRarray,
+                as.character(TimeSteps), 
+                which(nms=='Time Step'),
+                drop=FALSE)
+    
+    r <- abs(SPRarray2 - SPRvalue)
+    r2 <- abind::adrop(r[,,1, drop=FALSE],3) 
+    r2[] <- 0
+    for (i in 1:nrow(r)) {
+      for (j in 1:ncol(r)) {
+        ind <- which.min(r[i,j,])
+        r2[i,j] <- FValues[ind]
+      }
+    }
+    
+    apicalF <- dimnames[['apicalF']] |> as.numeric()
+    Find <- abs(apicalF - FValue) |> which.min()
+    if (apicalF[Find] != FValue) {
+      
+    }
+    
+    abind::asub(SPRarray,
+                list(as.character(TimeSteps), Find), 
+                which(nms%in% c('Time Step', 
+                                'apicalF'
+                                )),
+                drop=FALSE)
   }
   
   RefPoints@FMSY <- purrr::map2(FValuesList,
@@ -82,7 +129,7 @@ CalcRefPoints <- function(OM, Unfished=NULL) {
   # TODO - can calculate directly from SRR pars - see CalcRelRec
   
   # MGT  ----
-  RefPoints@MGT 
+  # RefPoints@MGT 
   
   # Reference Yield ----
   # TODO

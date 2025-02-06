@@ -37,8 +37,7 @@ SimulateDEV <- function(OM=NULL,
   for (nm in slotNames(OM)) {
     slot(Hist, nm) <- slot(OM, nm)
   }
-
-
+  
   Hist@Unfished <- CalcUnfishedDynamics(OM, messages, parallel=parallel)
   # TODO Dynamic Unfished
   

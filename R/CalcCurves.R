@@ -1,19 +1,22 @@
 # NOTE: Curves do not account for spatial closures or MICE interactions
 
 
-CalcCurves <- function(OM, SPR0=NULL, FSearch=NULL) {
+CalcCurves <- function(OM, SPR0=NULL, FSearch=NULL, TimeSteps=NULL) {
   if (is.null(SPR0)) 
-    SPR0 <- CalcSPR0(OM) 
+    SPR0 <- CalcSPR0(OM)
+  
   
   if (is.null(FSearch))
     FSearch <- OM@Control$Curves$FSearch
   
+  if (is.null(TimeSteps))
+    TimeSteps <- TimeSteps(OM, 'Historical')
+  
   Curves <- new('curves')
   Curves@FValues <- FSearch
-  
+
   # per-recruit
   # TODO speed up CalcNPR and CalcYPR and avoid duplication of calculations
-  
   npr <- CalcNPR(OM, FSearch=Curves@FValues)
   Curves@NPR <- lapply(npr, '[[','NPR')
   Curves@NPRS <- lapply(npr, '[[','NPRS')

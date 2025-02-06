@@ -7,6 +7,9 @@ setGeneric('CalcSPR0', function(x, TimeSteps=NULL)
 setMethod('CalcSPR0', c('stock', 'ANY'), function(x, TimeSteps=NULL) {
   fecundity <- GetFecundityAtAge(x, TimeSteps(x, 'Historical'))
   
+  GetWeightAtAge(x)  
+
+  
   if (is.null(fecundity))
     return(NULL)
   

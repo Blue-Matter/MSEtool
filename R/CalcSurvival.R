@@ -60,6 +60,11 @@ setGeneric('UpdateApicalF', function(x, apicalF, TimeSteps=NULL)
   standardGeneric('UpdateApicalF')
 )
 
+setMethod('UpdateApicalF', c('StockFleetList',  'ANY', 'ANY'),
+          function(x, apicalF, TimeSteps=NULL) {
+            purrr::map(x, UpdateApicalF, apicalF=apicalF, TimeSteps=TimeSteps)
+          })
+
 setMethod('UpdateApicalF', c('array',  'ANY', 'ANY'), 
           function(x, apicalF, TimeSteps=NULL) {
             dd <- dim(x)
@@ -67,7 +72,6 @@ setMethod('UpdateApicalF', c('array',  'ANY', 'ANY'),
             MaxF <- replicate(dd[2], MaxF) |> aperm(c(1,3,2))
             dimnames(MaxF) <- dimnames(x)
             ArrayDivide(x, MaxF) * apicalF
-            
           })
 
 setMethod('UpdateApicalF', c('FleetList', 'ANY', 'ANY'), function(x, apicalF,  TimeSteps=NULL) {
@@ -127,7 +131,7 @@ setMethod('CalcFishedSurvival', c('stock', 'FleetList',  'ANY', 'ANY'),
           })
 
 
-# setMethod('CalcFishedSurvival', c('StockList', 'StockFleetList',  'ANY'), 
+# setMethod('CalcFishedSurvival', c('StockList', 'StockFleetList',  'ANY'),
 #           function(x, Fleet=NULL, SP=FALSE) {
 #             purrr::map2(x, Fleet, CalcFishedSurvival, SP=SP)
 # })
