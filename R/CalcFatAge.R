@@ -38,53 +38,41 @@ setMethod('CalcFatAge', c('fleet', 'ANY'), function(x, TimeSteps=NULL) {
       AddDimNames(names=names(dimnames(selectivity)), TimeSteps =  dimnames(selectivity)$`Time Step`)
   } else {
     # add age dimension
+    
     apicalF <- replicate(DimSelectivity[2], apicalF, simplify = 'array') |> 
       aperm(c(1,3,2))
     names(dimnames(apicalF))[2] <- 'Age'
     dimnames(apicalF)[[2]] <- 1:DimSelectivity[2]
   }
   
-  SelectivityRetention <- ArrayMultiply(selectivity, retention)
+  FInteract <- ArrayMultiply(apicalF, selectivity)
+  FRetain <- ArrayMultiply(FInteract, retention)
+  FDiscardTotal <- ArraySubtract(FInteract, FRetain)
+  FDiscardDead <- ArrayMultiply(FDiscardTotal, discardmortality)
+  FDead <- FRetain + FDiscardDead  
+  # print(FDead[1,,70] |> max())
   
-  isDiscards <- FALSE
-  if (!is.null(discardmortality)) {
-    isDiscards <- TRUE
+  DeadApicalF <- AddDimension(apply(FDead, c(1,3), max), 'Age') |> aperm(c(1,3,2)) 
+  InteractDeadRatio <- ArrayDivide(apicalF, DeadApicalF)
+  
+  
+  if (!all(InteractDeadRatio==1)) {
     # Inflate ApicalF to account for discard mortality
     # FishingMortality@apicalF is the apicalF of Dead Fish;
     # Inside this function 'apicalF' is for 'Caught' or 'Interacted' fish,
     # which will be higher than 'apicalF' for dead fish if discard mortality is < 1.
+
+    apicalF <- ArrayMultiply(apicalF, InteractDeadRatio)
+    FInteract <- ArrayMultiply(apicalF, selectivity)
+    FRetain <- ArrayMultiply(FInteract, retention)
+    FDiscardTotal <- ArraySubtract(FInteract, FRetain)
+    FDiscardDead <- ArrayMultiply(FDiscardTotal, discardmortality)
+    FDead <- FRetain + FDiscardDead 
     
-    SelectivityDiscardMort <- ArrayMultiply(selectivity, discardmortality)
-    
-    SelectivityDiscardMortRetention <- ArrayMultiply(SelectivityDiscardMort, 
-                                                     retention)
-    
-    InflateApicalF <- ArraySubtract(
-      ArrayAdd(SelectivityRetention, SelectivityDiscardMort),
-      SelectivityDiscardMortRetention
-    )
-    InflateApicalF <- apply(InflateApicalF, c(1,3), max) 
-    InflateApicalF <- AddDimension(InflateApicalF, 'Age') |> aperm(c(1,3,2))
-    apicalF <- ArrayDivide(apicalF, InflateApicalF)
+    print(FDead[1,,70] |> max())
   }
   
-  FCaught <- ArrayMultiply(apicalF, selectivity)
-  
-  FRetain <- ArrayMultiply(retention, FCaught)
-  if (isDiscards) {
-    FDiscard <- ArraySubtract(FCaught, FRetain)
-  } else {
-    FDiscard <- array(0, dim=dim(FCaught))
-    dimnames(FDiscard) <- dimnames(FCaught)
-  }
-  
-  if (!isDiscards) {
-    FDead <- FRetain   
-  } else {
-    FDead <- ArrayAdd(array1=FRetain, 
-                       array2=ArrayMultiply(FDiscard, SelectivityDiscardMort))
-  }
-  
+
   x@FishingMortality@DeadAtAge <- FDead
   x@FishingMortality@RetainAtAge <- FRetain
   x

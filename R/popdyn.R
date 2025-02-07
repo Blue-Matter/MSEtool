@@ -681,6 +681,8 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     V_P, V_P_real, V_P_real_2, Fdisc_P, DR_P,
     StockPars, ImpPars, checks, control
   )
+  
+  
  
   # ---- over-write biomass - with fleet-specific weight-at-age
   Biomass_P <- StockPars$N_P * replicate(StockPars$nareas, FleetPars$Wt_age_C[,,(nyears+1):((nyears)+proyears)])
@@ -759,7 +761,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
                    StockPars$nareas,
                    StockPars$M_ageArray,nyears, y,
                    control)
-    
+
     # apply max F constraint
     Ftot[Ftot<0] <- maxF
     Ftot[!is.finite(Ftot)] <- maxF
@@ -1243,7 +1245,7 @@ CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
     
     V_P_real[,,allyrs] <- retA_P_real[,,allyrs, drop=FALSE] + ((V_P[,,allyrs, drop=FALSE]-retA_P_real[,,allyrs, drop=FALSE]) * Fdisc_array1[,,allyrs, drop=FALSE])
     V_P_real_2 <- V_P_real/aperm(replicate(n_age,apply(V_P_real, c(1,3), max)), c(1,3,2))
-    
+    V_P_real_2[!is.finite(V_P_real_2)] <- 0
     ## NOTE - selectivity/retention at length are not updated!
     
     
@@ -1477,6 +1479,12 @@ CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
     }
     
   }
+  
+  # TT <<- V_P_real_2
+  # TT[!is.finite(TT)] <- 0
+  # 
+  # V_P_real_2[!is.finite(V_P_real_2)] <- 0
+  # print(range(V_P_real_2))
   
   TAE <- MPRecs$Effort
   if (length(TAE)==0) TAE <- rep(NA, nsim)

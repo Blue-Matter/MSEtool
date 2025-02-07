@@ -145,18 +145,18 @@ GenerateRecruitmentDeviations <- function(SD=0.2, AC=0, TruncSD=2,
   genHist <- TRUE
   genProj <- TRUE
 
-  if (!is.null(RecDevInit) & all(!is.na(RecDevInit)) & (!is.array(RecDevInit))) {
+  if (!is.null(RecDevInit) & all(!is.na(RecDevInit)) & is.array(RecDevInit)) {
     RecDevInit <- array(RecDevInit, dim=c(1, MaxAge))
     logRecDevInit <- log(RecDevInit)
     genInit <- FALSE
   }
 
-  if (!is.null(RecDevHist) & all(!is.na(RecDevHist)) & !is.array(RecDevHist)) {
+  if (!is.null(RecDevHist) & all(!is.na(RecDevHist)) & is.array(RecDevHist)) {
       RecDevHist <- array(RecDevHist, dim=c(1, nHistTS))
       logRecDevHist <- log(RecDevHist)
       genHist <- FALSE
   }
-  if (!is.null(RecDevProj) & all(!is.na(RecDevProj)) & !is.array(RecDevProj)) {
+  if (!is.null(RecDevProj) & all(!is.na(RecDevProj)) & is.array(RecDevProj)) {
       RecDevProj <- array(RecDevProj, dim=c(1,nProjTS))
       logRecDevProj <- log(RecDevProj)
       genProj <- FALSE

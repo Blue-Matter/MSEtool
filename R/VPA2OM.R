@@ -74,6 +74,7 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
     stop('One or more of the following arrays do not have the same shape: naa, faa, waa, Mataa, Maa, Laa')
   }
 
+
   if(!is.null(dots$fecaa)) {
     fecaa <- dots$fecaa
     if(!all(dim(naa) == dim(fecaa))) stop("Dimension of fecaa not equal to that for naa")

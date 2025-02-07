@@ -215,10 +215,18 @@ BAM2MOM <- function(rdat, nsim = 48, proyears = 50, interval = 1,
                     AC = AC,
                     LowerTri=LowerTri,
                     fecaa = fecaa,
+                    spawn_time_frac=parms$spawn.time,
                     ...
-        
   )
   
+  MOM@cpars[[1]][[1]]$Perr_y[1,]
+  
+  # dots <- list(R0 = R0,
+  #              phi0 = phi0,
+  #              Perr = Perr,
+  #              AC = AC,
+  #              LowerTri=LowerTri,
+  #              fecaa = fecaa)
   # Add names
   names(MOM@Stocks) <- snameBAM
   names(MOM@Fleets) <- snameBAM

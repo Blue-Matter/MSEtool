@@ -28,24 +28,24 @@ CalcSurvival <- function(M_at_Age, PlusGroup=TRUE, SpawnTimeFrac=NULL, F_at_Age=
 
 # ---- CalcUnfishedSurvival -----
 
-setGeneric('CalcUnfishedSurvival', function(x, SP=FALSE)
+setGeneric('CalcUnfishedSurvival', function(x, SP=FALSE, TimeSteps=NULL)
   standardGeneric('CalcUnfishedSurvival')
 )
 
-setMethod('CalcUnfishedSurvival', c('stock', 'ANY'), function(x, SP=FALSE) {
+setMethod('CalcUnfishedSurvival', c('stock', 'ANY', 'ANY'), function(x, SP=FALSE, TimeSteps=NULL) {
   if (SP) {
     SpawnTimeFrac <- x@SRR@SpawnTimeFrac  
   } else {
     SpawnTimeFrac <- NULL
   }
   
-  CalcSurvival(M_at_Age=x@NaturalMortality@MeanAtAge,
-               PlusGroup=x@Ages@PlusGroup,
-               SpawnTimeFrac)
+  CalcSurvival(M_at_Age=GetNMortalityAtAge(x, TimeSteps),
+               PlusGroup=GetPlusGroup(x),
+               SpawnTimeFrac=GetSpawnTimeFrac(x))
 })
 
-setMethod('CalcUnfishedSurvival', c('StockList', 'ANY'), function(x, SP=FALSE) {
-  purrr::map(x, CalcUnfishedSurvival, SP=SP)
+setMethod('CalcUnfishedSurvival', c('StockList', 'ANY'), function(x, SP=FALSE,TimeSteps=NULL) {
+  purrr::map(x, CalcUnfishedSurvival, SP=SP, TimeSteps=TimeSteps)
 })
 
 

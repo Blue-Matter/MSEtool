@@ -93,6 +93,10 @@ GetFecundityAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
 }
 
 
+GetPlusGroup <- function(object, TimeSteps=NULL, df=FALSE) {
+  GetStockAtAge(object,  c('Ages', 'PlusGroup'), TimeSteps, df)
+}
+
 GetR0 <- function(object, TimeSteps=NULL, df=FALSE) {
   GetStockAtAge(object,  c('SRR', 'R0'), TimeSteps, df)
 }
@@ -110,13 +114,28 @@ GetRecDevInit <- function(object, TimeSteps=NULL, df=FALSE) {
   GetStockAtAge(object,  c('SRR', 'RecDevInit'), TimeSteps, df)
 }
 
+`SetRecDevInit<-` <- function(x, value) {
+  x@SRR@RecDevInit <- value
+  x
+}
+
 GetRecDevHist <- function(object, TimeSteps=NULL, df=FALSE) {
   GetStockAtAge(object,  c('SRR', 'RecDevHist'), TimeSteps, df)
+}
+
+`SetRecDevHist<-` <- function(x, value) {
+  x@SRR@RecDevHist <- value
+  x
 }
 
 
 GetRecDevProj <- function(object, TimeSteps=NULL, df=FALSE) {
   GetStockAtAge(object,  c('SRR', 'RecDevProj'), TimeSteps, df)
+}
+
+`SetRecDevProj<-` <- function(x, value) {
+  x@SRR@RecDevProj <- value
+  x
 }
 
 

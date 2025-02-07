@@ -967,22 +967,24 @@ setMethod("Populate", "fecundity", function(object,
   object@Model <- FindModel(object)
 
   if (is.null(object@Model)| all(is.na(object@Pars))) {
-    if (!isFALSE(messages))
-      cli::cli_alert_info('No `Fecundity` model found. Assuming Fecundity proportional to Spawning Biomass')
-
-    CheckRequiredObject(Ages, 'ages', 'Ages')
-    CheckRequiredObject(Weight, 'weight', 'Weight')
-    CheckRequiredObject(Length, 'length', 'Length')
-    # CheckRequiredObject(Maturity, 'maturity', 'Maturity')
-
-    Weight <- Populate(Weight, Ages, Length, nsim, TimeSteps, seed=seed, ASK=FALSE, messages=messages)
-    # Maturity <- Populate(Maturity, Ages, Length, nsim, TimeSteps, seed=seed, messages=messages)
-    # object@MeanAtAge <- MultiplyArrays(array1=Weight@MeanAtAge, array2=Maturity@MeanAtAge)
-    object@MeanAtAge <- Weight@MeanAtAge # egg production is fecundity x maturity - calculated internally
-    # fecundity is the egg production of a MATURE individual 
-    
-    PrintDonePopulating(object, sb, isTRUE(messages))
-    return(SetDigest(argList, object))
+    if (is.null(object@MeanAtAge)) {
+      if (!isFALSE(messages))
+        cli::cli_alert_info('No `Fecundity` model found. Assuming Fecundity proportional to Spawning Biomass')
+      
+      CheckRequiredObject(Ages, 'ages', 'Ages')
+      CheckRequiredObject(Weight, 'weight', 'Weight')
+      CheckRequiredObject(Length, 'length', 'Length')
+      # CheckRequiredObject(Maturity, 'maturity', 'Maturity')
+      
+      Weight <- Populate(Weight, Ages, Length, nsim, TimeSteps, seed=seed, ASK=FALSE, messages=messages)
+      # Maturity <- Populate(Maturity, Ages, Length, nsim, TimeSteps, seed=seed, messages=messages)
+      # object@MeanAtAge <- MultiplyArrays(array1=Weight@MeanAtAge, array2=Maturity@MeanAtAge)
+      object@MeanAtAge <- Weight@MeanAtAge # egg production is fecundity x maturity - calculated internally
+      # fecundity is the egg production of a MATURE individual 
+      
+      PrintDonePopulating(object, sb, isTRUE(messages))
+      return(SetDigest(argList, object))
+    }
   }
 
   ModelClass <- getModelClass(object@Model)
@@ -1462,7 +1464,7 @@ setMethod("Populate", "selectivity", function(object,
 CheckSelectivityMaximum <- function(MeanAtAge) {
   MaxValues <- apply(MeanAtAge, c(1,3), max)
   
-  ind <- MaxValues<1
+  ind <- MaxValues<1 & MaxValues!=0
   if (all(!ind))
     return(MeanAtAge)
   
