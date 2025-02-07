@@ -13,7 +13,7 @@ CalcSurvival <- function(M_at_Age, PlusGroup=TRUE, SpawnTimeFrac=NULL, F_at_Age=
     SpawnTimeFrac <- 0
   }
   SpawnTimeFrac <- rep(SpawnTimeFrac, nSim)[1:nSim]
-  
+ 
   surv[,1,] <- exp(-M_at_Age[,1,]*SpawnTimeFrac)
   for (a in 2:nAge) {
     surv[,a,] <- surv[,a-1,]*exp(-(Z_at_Age[,a-1,]*(1-SpawnTimeFrac)+Z_at_Age[,a,]*SpawnTimeFrac))
@@ -38,10 +38,10 @@ setMethod('CalcUnfishedSurvival', c('stock', 'ANY', 'ANY'), function(x, SP=FALSE
   } else {
     SpawnTimeFrac <- NULL
   }
-  
+ 
   CalcSurvival(M_at_Age=GetNMortalityAtAge(x, TimeSteps),
                PlusGroup=GetPlusGroup(x),
-               SpawnTimeFrac=GetSpawnTimeFrac(x))
+               SpawnTimeFrac=SpawnTimeFrac)
 })
 
 setMethod('CalcUnfishedSurvival', c('StockList', 'ANY'), function(x, SP=FALSE,TimeSteps=NULL) {
@@ -113,8 +113,6 @@ setGeneric('CalcFishedSurvival', function(x, Fleet=NULL, SP=FALSE, TimeSteps=NUL
 
 setMethod('CalcFishedSurvival', c('stock', 'FleetList',  'ANY', 'ANY'), 
           function(x, Fleet=NULL, SP=FALSE, TimeSteps=NULL) {
-            
-            Fleet <- CalcFatAge(Fleet, TimeSteps)
             FDead <- GetFatAgeArray(Fleet, TimeSteps)
             FDeadOverTotal <- apply(FDead, c(1,2,3), sum) 
 

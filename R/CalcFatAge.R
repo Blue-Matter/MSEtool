@@ -1,31 +1,40 @@
 # ---- CalcFatAge ----
-setGeneric('CalcFatAge', function(x, TimeSteps=NULL)
+setGeneric('CalcFatAge', function(x, TimeSteps=NULL, apicalF=NULL)
   standardGeneric('CalcFatAge')
 )
 
-setMethod('CalcFatAge', c('om', 'ANY'), function(x, TimeSteps=NULL) {
-  purrr::map(x, CalcFatAge, TimeSteps)
+setMethod('CalcFatAge', c('om', 'ANY'), function(x, TimeSteps=NULL, apicalF=NULL) {
+  purrr::map(x, CalcFatAge, TimeSteps, apicalF)
 })
 
-setMethod('CalcFatAge', c('StockFleetList', 'ANY'), function(x, TimeSteps=NULL) {
-  purrr::map(x, CalcFatAge, TimeSteps)
+setMethod('CalcFatAge', c('StockFleetList', 'ANY'),
+          function(x, TimeSteps=NULL, apicalF=NULL) {
+  out <- purrr::map(x, CalcFatAge, TimeSteps, apicalF)
+  class(out) <- 'StockFleetList'
+  out
 })
 
 
-setMethod('CalcFatAge', c('FleetList', 'ANY'), function(x, TimeSteps=NULL) {
-  purrr::map(x, CalcFatAge, TimeSteps)
+setMethod('CalcFatAge', c('FleetList', 'ANY'), 
+          function(x, TimeSteps=NULL, apicalF=NULL) {
+  out <- purrr::map(x, CalcFatAge, TimeSteps, apicalF)
+  class(out) <- 'FleetList'
+  out
 })
 
-setMethod('CalcFatAge', c('fleet', 'ANY'), function(x, TimeSteps=NULL) {
+setMethod('CalcFatAge', c('fleet', 'ANY'),
+          function(x, TimeSteps=NULL, apicalF=NULL) {
   
   # x = OM@Fleet[[1]][[1]]
   # TimeSteps <- TimeSteps(OM, 'Historical')
   
-  if (is.null(x@FishingMortality@ApicalF)) { 
-    stop('need to calculate apical F from Effort and q')
+  if (is.null(apicalF)) { 
+    Effort <- GetEffort(x, TimeSteps)
+    q <- GetCatchability(x, TimeSteps)
+    apicalF <- ArrayMultiply(Effort, q)
   }
   
-  apicalF <- GetApicalF(x, TimeSteps)
+
   selectivity <-  GetSelectivityAtAge(x, TimeSteps)
   retention <- GetRetentionAtAge(x, TimeSteps)
   discardmortality <- GetDiscardMortalityAtAge(x, TimeSteps)
@@ -38,7 +47,6 @@ setMethod('CalcFatAge', c('fleet', 'ANY'), function(x, TimeSteps=NULL) {
       AddDimNames(names=names(dimnames(selectivity)), TimeSteps =  dimnames(selectivity)$`Time Step`)
   } else {
     # add age dimension
-    
     apicalF <- replicate(DimSelectivity[2], apicalF, simplify = 'array') |> 
       aperm(c(1,3,2))
     names(dimnames(apicalF))[2] <- 'Age'
@@ -50,12 +58,10 @@ setMethod('CalcFatAge', c('fleet', 'ANY'), function(x, TimeSteps=NULL) {
   FDiscardTotal <- ArraySubtract(FInteract, FRetain)
   FDiscardDead <- ArrayMultiply(FDiscardTotal, discardmortality)
   FDead <- FRetain + FDiscardDead  
-  # print(FDead[1,,70] |> max())
-  
+ 
   DeadApicalF <- AddDimension(apply(FDead, c(1,3), max), 'Age') |> aperm(c(1,3,2)) 
   InteractDeadRatio <- ArrayDivide(apicalF, DeadApicalF)
-  
-  
+  InteractDeadRatio[!is.finite(InteractDeadRatio)] <- 1
   if (!all(InteractDeadRatio==1)) {
     # Inflate ApicalF to account for discard mortality
     # FishingMortality@apicalF is the apicalF of Dead Fish;
@@ -68,15 +74,39 @@ setMethod('CalcFatAge', c('fleet', 'ANY'), function(x, TimeSteps=NULL) {
     FDiscardTotal <- ArraySubtract(FInteract, FRetain)
     FDiscardDead <- ArrayMultiply(FDiscardTotal, discardmortality)
     FDead <- FRetain + FDiscardDead 
-    
-    print(FDead[1,,70] |> max())
   }
   
-
+  x@FishingMortality@ApicalF <- apply(FDead, c(1,3), max)
   x@FishingMortality@DeadAtAge <- FDead
   x@FishingMortality@RetainAtAge <- FRetain
   x
   
 })
+# ---- CalcFTotal ----
+setGeneric('CalcFTotal', function(x, TimeSteps=NULL)
+  standardGeneric('CalcFTotal')
+)
 
+setMethod('CalcFTotal', c('om', 'ANY'), function(x, TimeSteps=NULL) {
+  purrr::map(x, CalcFTotal, TimeSteps)
+})
+
+setMethod('CalcFTotal', c('StockFleetList', 'ANY'),
+          function(x, TimeSteps=NULL) {
+            out <- purrr::map(x, CalcFTotal, TimeSteps=TimeSteps)
+            class(out) <- 'StockFleetList'
+            out
+          })
+
+
+setMethod('CalcFTotal', c('FleetList', 'ANY'), 
+          function(x, TimeSteps=NULL) {
+            FFleet <- purrr::map(x, GetFatAgeArray, TimeSteps=TimeSteps)
+            array <- array(unlist(FFleet), dim=c(dim(FFleet[[1]]), length(FFleet)))
+            array <- apply(array, 1:3, sum)
+            dd <- dim(array)
+            dimnames(array) <- dimnames(FFleet[[1]])
+            class(array) <- 'FTotal'
+            array
+          })
 

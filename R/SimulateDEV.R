@@ -38,55 +38,173 @@ SimulateDEV <- function(OM=NULL,
     slot(Hist, nm) <- slot(OM, nm)
   }
   
+  
   Hist@Unfished <- CalcUnfishedDynamics(OM, messages, parallel=parallel)
   # TODO Dynamic Unfished
   
+  # TODO add check for changes to all functions 
   Hist@RefPoints <- CalcRefPoints(OM, Hist@Unfished)
   # TODO - SPRcrash, MGT, RefYield 
-
+  # GetFSPR(SPRarray=Hist@RefPoints@Curves@SPR[[1]], SPRvalue=0.3)
   
-  # ---- Non-Equilibrium Initial Year ----
+  # ---- Optimize Rec Devs for Initial Depletion ----
+  # TODO
+  if (length(OM@Stock[[1]]@Depletion@Initial)>0)
+    cli::cli_abort('Initial depletion not done', .internal=TRUE)
+  
+  # ---- Non-Equilibrium Initial Time Step ----
   Hist@Number <- purrr::map2(OM@Stock, Hist@Unfished@Equilibrium@Number, InitNumber)
   
-  ####### UP TO HERE ################
-  # check distribution .... 
+  
+  ##############################################################################
+  CheckBAMN <- function(ts=1) {
+    # Match  numbers from BAM to OM 
+    ts <- 1
+    BAMdata <- BAMGetObject()
+    df <- data.frame(BAM=c(0,BAMdata$N.age[ts,]), 
+                     OM= rowSums(Hist@Number$`SA Red Snapper`[1,,ts,]))
+    plot(df$BAM)
+    lines(df$OM)
+    invisible(df)
+  }
+  ##############################################################################
   
   # loop over historical timesteps 
   TimeStepsHist <- TimeSteps(OM, 'Historical')
   
   for (ts in seq_along(TimeStepsHist)[-1]) {
-    # beginning of time step
     
-    # calculate fishing spatial distribution last time step
+    thisTimeStep <- TimeStepsHist[ts]
+    lastTimeStep <- TimeStepsHist[ts-1]
+  
+    # Do MICE stuff during last time step (if applicable)
+    if (length(OM@Relations)>0) {
+      cli::cli_abort('MICE not done', .interal=TRUE)
+    }
     
-    # calculate FDead and FRetain for last time step
     
-    # calculate Spawning Output last time step
+    # Calculate F-at-Age by Fleet 
     
-    # calculate recruitment last time step
+    # for projections:
+    # - calculate F-by-fleet-area from MP output, subject to constraint of overall F
+    # - update F-at-age schedules
     
-    # do MICE stuff if applicable
+    # Hist@Fleet <- CalcFatAge(Hist@Fleet, TimeSteps=lastTimeStep)
+    # FTotal <- CalcFTotal(Hist@Fleet, TimeSteps = lastTimeStep)
     
-    # Mortality and Aging
     
-    # Move Stock for beginning of this time step
+    CalcEffort <- function(Fleet) {
+      GetApicalF(Fleet)
+      Fleet@Effort@Catchability
+      
+      apicalF <- apply(GetFatAgeArray(Fleet), c(1,3), max)
+      
+    }
+    
+    # TODO - calculate Effort from apicalF 
+    # TODO - distribute effort across areas subject to overall F constraint
+    
+    
+    
+    # Calculate fishing spatial distribution for last time step
+    # Distribute fishing effort while maintaining overall F
+  
+    DistributeFishing <- function(Hist, TimeStep) {
+      # each fleet should distribute according to overall utility across stocks
+      
+      # Calculate fleet-specific utility by area (over all stocks)
+      NatAgeArea <- purrr::map(Hist@Number, ArraySubsetTimeStep, TimeSteps=TimeStep)
+      FleetWeightAgeArea <- purrr::map2(Hist@Stock, Hist@Fleet, GetFleetWeightAtAge,
+                                    TimeSteps=TimeStep) |>
+        purrr::map(AddDimension, name='Area') |>
+        purrr::map(aperm, perm=c(1,2,3,5,4))
+      
+      # currently based on retained biomass assuming equal value across stocks
+      # TODO: account for price/value per stock and Cost per fleet/area
+      # TODO: account for Targeting parameter
+      NatAgeAreaFleet <- purrr::map(NatAgeArea, AddDimension, name='Fleet')
+      BatAgeAreaFleet <- purrr::map2(NatAgeAreaFleet, FleetWeightAgeArea, ArrayMultiply)
+      
+      selectivity <- purrr::map(Hist@Fleet, GetSelectivityAtAge, TimeSteps=TimeStep) |>
+        purrr::map(function(.x) {
+          array <- array(unlist(l), dim=c(dim(l[[1]]), length(l)))
+          dimnames(array) <- c(dimnames(l[[1]]), Fleet=list(names(l)))
+          AddDimension(array, 'Area') |>
+          aperm(c(1,2,3,5,4))
+        })
+      
+      retention <- purrr::map(Hist@Fleet, GetRetentionAtAge, TimeSteps=TimeStep) |>
+        purrr::map(function(.x) {
+          array <- array(unlist(l), dim=c(dim(l[[1]]), length(l)))
+          dimnames(array) <- c(dimnames(l[[1]]), Fleet=list(names(l)))
+          AddDimension(array, 'Area') |>
+            aperm(c(1,2,3,5,4))
+        })
+      
+      SelectivityRetention <- purrr::map2(selectivity, retention, ArrayMultiply)
+
+      VBatAgeStockAreaFleetList <- purrr::map2(BatAgeAreaFleet, 
+                                           SelectivityRetention, 
+                                           ArrayMultiply)
+      dd <- dim(VBatAgeStockAreaFleetList[[1]]) 
+      VBatAgeStockAreaFleet <- array(unlist(VBatAgeStockAreaFleetList), 
+                                     dim=c(dd,
+                                           length(VBatAgeStockAreaFleetList)))
+     
+      dimnames(VBatAgeStockAreaFleet) <- c(dimnames(VBatAgeStockAreaFleetList[[1]]),
+                                           list(Stock=StockNames(Hist)))
+      # TODO
+      # account for spatial closure
+      # Fleet@Distribution@Closure
+      # Fleet@Distribution@Cost
+      # Calculate relative value by area, stock, fleet (cost of area & value of age class by stock/fleet)
+      
+      ValueAreaFleet <-  apply(VBatAgeStockAreaFleet, c(1,4,5), sum)
+      nAreas <- dim(ValueAreaFleet)[2]
+      TotalValueAreaFleet <- replicate(nAreas, apply(ValueAreaFleet, c(1,3), sum)) |> aperm(c(1,3,2))
+      
+      RelativeValueAreaFleet <- ValueAreaFleet/TotalValueAreaFleet
+      RelativeValueAreaFleet[!is.finite(RelativeValueAreaFleet)] <- 0
+    
+      # distribute effort by area
+      Fleet@Effort@Effort[1,1] * RelativeValueAreaFleet[1,,1]
+      
+      ########## UPTO HERE #####
+      
+      # calculate F by area given overall F 
+      
+      
+      
+      
+      
+      
+      
+      
+    }
+    
+    
+    
+    # Calculate fishing mortality for last time step
+    
+    # Calculate Spawning Output  and Recruitment for last time step
+    
+
+    # Mortality and Aging into this time step
+    
+    # Move Stock at beginning of this time step
     
     
     
     
   }
   
-  # PopDynamicsHist <- function(Hist) {
-    
-  
-  # }
   
   
  
   
   
   
-  # ---- Optimize Rec Devs for Initial Depletion ----
+
   
   
   HistRel <- SetHistRel(OM) 

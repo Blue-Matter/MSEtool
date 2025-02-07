@@ -11,6 +11,8 @@ CalcRefPoints <- function(OM, Unfished=NULL) {
     Unfished <- CalcUnfishedDynamics(OM)
   
   RefPoints <- new('refpoints')
+  
+  # At F Curves ----
   RefPoints@SPR0 <- CalcSPR0(OM)
   RefPoints@Curves <- CalcCurves(OM, SPR0=RefPoints@SPR0)
   
@@ -27,58 +29,6 @@ CalcRefPoints <- function(OM, Unfished=NULL) {
     array <- Yield[[i]]
     array[] <- NA
     FValuesList[[i]] <- ArrayFill(array, FValues)
-  }
-  
-  SPRarray <- t
-  FValue <- 0.3
-  # TODO : check and match SPR with multiMSE
-  # TODO make this a genric for OM, Curves, and SPRarray
-  GetSPRF(t, 0.3)
-  SPR0 =  CalcSPR0(OM)
-  
-  SPR0$`Red Snapper`
-  spr <- RefPoints@Curves@SPR$`Red Snapper`[1,70,]
-  plot(as.numeric(names(spr)), spr, type='l')
-  
-  GetSPRF <- function(SPRarray, SPRvalue, TimeSteps=NULL) {
-    if (inherits(SPRarray, 'curves')) {
-      stop('need to make generic')
-    }
-    dimnames <- dimnames(SPRarray)
-    nms <- names(dimnames)
-
-    if (is.null(TimeSteps)) {
-      TimeSteps <- dimnames[['Time Step']] |> as.numeric() |> max()
-    }
-     
-    FValues <- dimnames$apicalF |> as.numeric()
-    SPRarray2 <- abind::asub(SPRarray,
-                as.character(TimeSteps), 
-                which(nms=='Time Step'),
-                drop=FALSE)
-    
-    r <- abs(SPRarray2 - SPRvalue)
-    r2 <- abind::adrop(r[,,1, drop=FALSE],3) 
-    r2[] <- 0
-    for (i in 1:nrow(r)) {
-      for (j in 1:ncol(r)) {
-        ind <- which.min(r[i,j,])
-        r2[i,j] <- FValues[ind]
-      }
-    }
-    
-    apicalF <- dimnames[['apicalF']] |> as.numeric()
-    Find <- abs(apicalF - FValue) |> which.min()
-    if (apicalF[Find] != FValue) {
-      
-    }
-    
-    abind::asub(SPRarray,
-                list(as.character(TimeSteps), Find), 
-                which(nms%in% c('Time Step', 
-                                'apicalF'
-                                )),
-                drop=FALSE)
   }
   
   RefPoints@FMSY <- purrr::map2(FValuesList,
@@ -105,6 +55,18 @@ CalcRefPoints <- function(OM, Unfished=NULL) {
                                   MaxYieldIndList, 
                                   GetMSYValue)
   
+  # Fx% Ref Points ----
+  # TODO - add option for reference points for Fx% SPR
+  # Fx <- GetFSPR(RefPoints@Curves@SPR$`SA Red Snapper`, 0.3)
+  
+
+  # Fx
+  # Bx
+  # SBx
+  # SPx
+  # 
+  
+  
   # F-based Ref Points ----
   # yield per recruit accounting for complexes in yield calculation
   YPR <- CalcYieldComplex(RefPoints@Curves@YPR, OM) 
@@ -129,7 +91,7 @@ CalcRefPoints <- function(OM, Unfished=NULL) {
   # TODO - can calculate directly from SRR pars - see CalcRelRec
   
   # MGT  ----
-  # RefPoints@MGT 
+  # TODO RefPoints@MGT 
   
   # Reference Yield ----
   # TODO
@@ -152,7 +114,7 @@ CalcRefPoints <- function(OM, Unfished=NULL) {
   
   RefPoints@Equilibrium@SP0 <- purrr::map(Unfished@Equilibrium@SProduction,
                                           \(x) apply(x, c(1,3), sum))
-  
+ 
   # Dynamic Unfished ---- 
   # TODO
   
@@ -246,4 +208,61 @@ FirstFZero <- function(vec, FValues) {
 
 CalcFCrash <- function(RelRec, FValues) {
   apply(RelRec, 1:2, FirstFZero, FValues=FValues)
+}
+
+
+GetFSPR <- function(SPRarray, SPRvalue, TimeSteps=NULL) {
+  if (inherits(SPRarray, 'curves')) {
+    stop('need to make generic')
+  }
+  dimnames <- dimnames(SPRarray)
+  nms <- names(dimnames)
+  
+  if (is.null(TimeSteps)) {
+    TimeSteps <- dimnames[['Time Step']] |> as.numeric() |> max()
+  }
+  
+  FValues <- dimnames$apicalF |> as.numeric()
+  SPRarray2 <- abind::asub(SPRarray,
+                           as.character(TimeSteps), 
+                           which(nms=='Time Step'),
+                           drop=FALSE)
+  
+  Diff <- abs(SPRarray2 - SPRvalue)
+  FArray <- abind::adrop(Diff[,,1, drop=FALSE],3) 
+  FArray[] <- 0
+  for (i in 1:nrow(Diff)) {
+    for (j in 1:ncol(Diff)) {
+      ind <- which.min(Diff[i,j,])
+      FArray[i,j] <- FValues[ind]
+    }
+  }
+  FArray
+}
+
+GetValueAtF <- function(Array, FValue, TimeSteps=NULL) {
+
+  dimnames1 <- dimnames(Array)
+  nms1 <- names(dimnames1)
+  
+  dimnames2 <- dimnames(FValue)
+  nms2 <- names(dimnames2)
+  
+  if (is.null(TimeSteps)) {
+    TimeSteps <- dimnames1[['Time Step']] |> as.numeric() |> max()
+  }
+  
+  FValue2 <- abind::asub(FValue,
+                         as.character(TimeSteps), 
+                         which(nms2=='Time Step'),
+                         drop=FALSE)
+
+  Array2 <- abind::asub(Array,
+                           list(as.character(TimeSteps), 
+                                as.character(FValue2)),
+                           which(nms1%in%c('Time Step', 'apicalF')),
+                           drop=FALSE)
+  
+  Array2
+ 
 }

@@ -38,6 +38,7 @@ CalcCurves <- function(OM, SPR0=NULL, FSearch=NULL, TimeSteps=NULL) {
     purrr::map(\(x) aperm(x, c(1,4,2,3)))
   
   NumberAtAge <- purrr::map2(Recruit, Curves@NPR, ArrayMultiply)
+  SPNumberAtAge <- purrr::map2(Recruit, Curves@NPRS, ArrayMultiply)
   WeightAtAge <- purrr::map(GetWeightAtAge(OM), AddDimension, 'apicalF')
   MaturityAtAge <- purrr::map(GetMaturityAtAge(OM), AddDimension, 'apicalF')
   FecundityAtAge <- purrr::map(GetFecundityAtAge(OM), AddDimension, 'apicalF')
@@ -45,12 +46,12 @@ CalcCurves <- function(OM, SPR0=NULL, FSearch=NULL, TimeSteps=NULL) {
   Curves@Biomass <- purrr::map2(NumberAtAge, WeightAtAge, ArrayMultiply) |>
     purrr::map(\(x) apply(x, c(1,3,4), sum))
   
-  Curves@SBiomass <- purrr::map2(NumberAtAge, WeightAtAge, ArrayMultiply) |>
+  Curves@SBiomass <- purrr::map2(SPNumberAtAge, WeightAtAge, ArrayMultiply) |>
     purrr::map2(MaturityAtAge, ArrayMultiply) |> 
     purrr::map(\(x) apply(x, c(1,3,4), sum))
   
-  Curves@SP <- purrr::map2(NumberAtAge, WeightAtAge, ArrayMultiply) |>
-    purrr::map2(FecundityAtAge, ArrayMultiply) |> 
+  Curves@SP <- purrr::map2(SPNumberAtAge, FecundityAtAge, ArrayMultiply) |>
+    purrr::map2(MaturityAtAge, ArrayMultiply) |> 
     purrr::map(\(x) apply(x, c(1,3,4), sum))
   Curves
 }

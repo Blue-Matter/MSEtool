@@ -6,6 +6,22 @@ ArraySubsetTimeStep <- function(object, TimeSteps=NULL) {
   TSind <- which(names(DN) == 'Time Step')
   if (length(TSind)==0)
     cli::cli_abort("`Time Step` dimension not found in this array", .internal=TRUE)
+  
+  if (any(TimeSteps > max(DN$`Time Step`))) {
+    
+    TSexist <- TimeSteps[TimeSteps %in% DN$`Time Step`]
+    TSimpute <- TimeSteps[!TimeSteps %in% DN$`Time Step`]
+    if (length(TSimpute)) {
+      matchTS <- rep(NA, length(TSimpute))
+      for (i in seq_along(TSimpute)) {
+        matchTS[i] <- DN$`Time Step`[DN$`Time Step` < TSimpute[i]] |> max()
+      }
+    }
+    TimeStepsMod <- c(TSexist, matchTS)
+    array <- abind::asub(object, TimeStepsMod, TSind, drop=FALSE)
+    dimnames(array)$`Time Step` <- TimeSteps
+    return(array)
+  } 
   abind::asub(object, (DN[[TSind]] %in% TimeSteps), TSind, drop=FALSE)
 }
 
@@ -15,8 +31,9 @@ Get <- function(object, slots, TimeSteps=NULL, df=FALSE) {
   for (i in seq_along(slots)) {
     object <- slot(object, slots[i])
   }
-  if (is.null(object))
-    return(object)
+  if (is.null(object) | all(is.na(object)))
+    return(NULL)
+  
   object <- ArraySubsetTimeStep(object, TimeSteps)
   
   if (df) 
@@ -149,7 +166,8 @@ GetFleetAtAge <- function(object, slots, TimeSteps=NULL, df=FALSE) {
     return(Get(object, slots, TimeSteps, df))
   
   if (methods::is(object, 'FleetList')) {
-      object <- purrr::map(object, GetFleetAtAge, slots=slots, TimeSteps=TimeSteps, df=df)  
+      object <- purrr::map(object, GetFleetAtAge, slots=slots, TimeSteps=TimeSteps, df=df) 
+      return(object)
   }
   object
 }
@@ -158,6 +176,15 @@ GetFleetAtAge <- function(object, slots, TimeSteps=NULL, df=FALSE) {
 GetApicalF <- function(object, TimeSteps=NULL, df=FALSE) {
   GetFleetAtAge(object, slots=c('FishingMortality', 'ApicalF'), TimeSteps, df)
 }
+
+GetEffort <- function(object, TimeSteps=NULL, df=FALSE) {
+  GetFleetAtAge(object, slots=c('Effort', 'Effort'), TimeSteps, df)
+}
+
+GetCatchability <- function(object, TimeSteps=NULL, df=FALSE) {
+  GetFleetAtAge(object, slots=c('Effort', 'Catchability'), TimeSteps, df)
+}
+
 
 
 GetDiscardMortalityAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
@@ -187,13 +214,33 @@ GetRetentionAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
   x
 }
 
-GetFleetWeightAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
-  GetFleetAtAge(object,  c('Weight'),TimeSteps, df)
+GetEmpiricalWeightAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
+  GetFleetAtAge(object,  slots=c('Weight'),TimeSteps, df)
 }
 
 `SetFleetWeightAtAge<-` <- function(x, value) {
   x@Weight <- value
   x
+}
+
+GetFleetWeightAtAge <- function(Stock, FleetList, TimeSteps=NULL) {
+  nFleet <- length(FleetList)
+  FleetEmpiricalWeightatAge <- GetEmpiricalWeightAtAge(FleetList, TimeSteps=TimeSteps) 
+  StockWeightatAge <- GetWeightAtAge(Stock, TimeSteps)
+  FleetWeightatAge <- replicate(nFleet, StockWeightatAge)
+  l <- dimnames(StockWeightatAge)
+  l$Fleet <- names(FleetList)
+  dimnames(FleetWeightatAge) <- l
+  for (fl in seq_along(FleetEmpiricalWeightatAge)) {
+    if (is.null(FleetEmpiricalWeightatAge[[fl]])) {
+      FleetWeightatAge[,,,fl] <- ArrayFill(Array=abind::adrop(FleetWeightatAge[,,,fl, drop=FALSE],4),
+                                           FillValue=StockWeightatAge)
+    } else {
+      FleetWeightatAge[,,,fl] <- ArrayFill(Array=abind::adrop(FleetWeightatAge[,,,fl, drop=FALSE],4),
+                                           FillValue=FleetEmpiricalWeightatAge[[fl]])
+    }
+  }
+  FleetWeightatAge
 }
 
 

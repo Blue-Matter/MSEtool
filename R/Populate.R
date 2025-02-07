@@ -1631,6 +1631,11 @@ setMethod("Populate", "effort", function(object,
     }
   }
 
+  if (EmptyObject(object@Catchability)) {
+    object@Catchability <- array(1, dim=c(1,1)) |>
+      AddDimNames(c('Sim', 'Time Step'), TimeSteps=TimeSteps)
+    
+  }
 
   PrintDonePopulating(object, sb, isTRUE(messages))
   SetDigest(argList, object)

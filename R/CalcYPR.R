@@ -24,8 +24,7 @@ setMethod('CalcYPR', c('stock', 'FleetList',  'ANY'),
             
             out <- lapply(cli::cli_progress_along(seq_along(FSearch), 
                                                       format='Calculating Yield-Per-Recruit {.val {x@Name}} {cli::pb_bar} {cli::pb_percent} '), function(i) {
-                                                        Fleet <- UpdateApicalF(Fleet, FSearch[i], TimeSteps=TimeSteps) 
-                                                        Fleet <- CalcFatAge(Fleet, TimeSteps=TimeSteps)
+                                                        Fleet <- CalcFatAge(Fleet, TimeSteps, apicalF=FSearch[i]) 
                                                         NatAge <- CalcFishedSurvival(x, Fleet, TimeSteps=TimeSteps)
                                                         CalcCatch(x, Fleet, NatAge, TimeSteps=TimeSteps)
                                                       })

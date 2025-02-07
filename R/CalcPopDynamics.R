@@ -7,7 +7,7 @@ CreateArraySATR <- function(Stock, nsim=NULL, timesteps=NULL) {
   if (is.null(timesteps))
     timesteps <- TimeSteps(Stock, 'Historical')
   # sim, age, time step, region (area)
-  array <- array(NA, dim=c(nsim,nAge(Stock), length(ts), nArea(Stock)))
+  array <- array(NA, dim=c(nsim,nAge(Stock), length(timesteps), nArea(Stock)))
   AddDimNames(array, names=c("Sim", "Age", "Time Step", 'Area'),
               TimeSteps = timesteps)
   
@@ -27,7 +27,7 @@ InitNumber <- function(Stock, UnfishedNumber) {
                                         Area=1:dd[4])
   
   NumberHist <- CreateArraySATR(Stock,
-                                nrow(RecDevHistAll),
+                                dd[1],
                                 HistTimeSteps)
   
   NumberHist[,,1,] <- ArrayMultiply(UnfishedNumber[, ,1,, drop=FALSE], InitAgeClassRecDevs)
