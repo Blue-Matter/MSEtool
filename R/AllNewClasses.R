@@ -38,6 +38,7 @@ methods::setClassUnion(name="num.list.null", members=c("numeric", 'list', "NULL"
 methods::setClassUnion(name="num.array", members=c("numeric", "array", "NULL"))
 methods::setClassUnion(name="num.array.df", members=c("numeric", "array", 'data.frame', "NULL"))
 methods::setClassUnion(name="num.log", members=c("numeric", "logical", "NULL"))
+methods::setClassUnion(name="logical.array", members=c("logical", "array", "NULL"))
 methods::setClassUnion(name="num.Date", members=c("numeric", "Date", 'character', "NULL", 'POSIXct'))
 methods::setClassUnion("missingOrcharacter", c("missing", "character"))
 methods::setClassUnion("logical_list", c("logical", "list"))
@@ -88,7 +89,7 @@ setClass("ClassesClass",
 )
 
 setClass("SemelparousClass",
-         slots=c(Semelparous='logical')
+         slots=c(Semelparous='logical.array')
 )
 
 setClass("Timing",

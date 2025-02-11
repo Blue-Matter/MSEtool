@@ -92,6 +92,7 @@ CalcUnfishedDynamics <- function(OM,
   # e.g., change in Weight-at-Age etc
   
   UnfishedSurvival <- UnfishedSurvivalSP <- purrr::map(OM@Stock, CalcUnfishedSurvival)
+  
   SpawnTimeFrac <- purrr::map(OM@Stock, GetSpawnTimeFrac)
   for (i in seq_along(nStock(OM))) {
     if (SpawnTimeFrac[[i]] !=0)
@@ -102,10 +103,6 @@ CalcUnfishedDynamics <- function(OM,
     purrr::map(AddDimNames, TimeSteps=TimeSteps(OM))
  
   NatAge <- purrr::map2(UnfishedSurvival, R0, ArrayMultiply)
-  
-  UnfishedSurvival$`SA Red Snapper`[1,,1]
-  NatAge$`SA Red Snapper`[1,1,1]
-
   Unfished@Equilibrium@Number <- purrr::map2(NatAge, 
                                              UnfishedDist(OM), 
                                              DistributeStock)

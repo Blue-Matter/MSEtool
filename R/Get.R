@@ -2,6 +2,8 @@ ArraySubsetTimeStep <- function(object, TimeSteps=NULL) {
   if (is.null(TimeSteps))
     return(object)
   
+  TimeSteps <- TimeSteps |> as.numeric() |> round(2)
+  
   DN <- dimnames(object)
   TSind <- which(names(DN) == 'Time Step')
   if (length(TSind)==0)
@@ -98,6 +100,11 @@ GetMaturityAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
   x@Maturity@MeanAtAge <- value
   x
 }
+
+GetSemelparous <- function(object, TimeSteps=NULL, df=FALSE) {
+  GetStockAtAge(object,  c('Maturity', 'Semelparous'), TimeSteps, df)
+}
+
 
 
 GetFecundityAtAge <- function(object, TimeSteps=NULL, df=FALSE) {

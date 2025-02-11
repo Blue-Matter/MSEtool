@@ -913,6 +913,18 @@ setMethod("Populate", "maturity", function(object,
     object <- MeanAtAge2MeanAtLength(object, Length, Ages, nsim, TimeSteps, seed, silent)
 
   object <- AddMeanAtAgeAttributes(object, TimeSteps, Ages)
+  
+  # Semelparous 
+  if (inherits(object@Semelparous, 'array')) {
+    cli::cli_abort("`Maturity@Semelparous` does not support arrays yet", .internal=TRUE)
+  } 
+  if (object@Semelparous) {
+    object@Semelparous <- object@MeanAtAge 
+  } else {
+    object@Semelparous <- object@MeanAtAge 
+    object@Semelparous[] <- 0
+  }
+
 
   PrintDonePopulating(object, sb, isTRUE(messages))
   SetDigest(argList, object)
@@ -943,7 +955,7 @@ setMethod("Populate", "fecundity", function(object,
     
     CheckRequiredObject(Ages, 'ages', 'Ages')
     CheckRequiredObject(Weight, 'weight', 'Weight')
-    CheckRequiredObject(Length, 'length', 'Length')
+    # CheckRequiredObject(Length, 'length', 'Length')
     # CheckRequiredObject(Maturity, 'maturity', 'Maturity')
     
     Weight <- Populate(Weight, Ages, Length, nsim, TimeSteps, seed=seed, ASK=FALSE, messages=messages)
@@ -1462,7 +1474,7 @@ setMethod("Populate", "selectivity", function(object,
 })
 
 CheckSelectivityMaximum <- function(MeanAtAge) {
-  MaxValues <- apply(MeanAtAge, c(1,3), max)
+  MaxValues <- apply(MeanAtAge, c(1,3), max) |> round(3)
   
   ind <- MaxValues<1 & MaxValues!=0
   if (all(!ind))
@@ -1632,7 +1644,7 @@ setMethod("Populate", "effort", function(object,
   }
 
   if (EmptyObject(object@Catchability)) {
-    object@Catchability <- array(1, dim=c(1,1)) |>
+    object@Catchability <- array(NA, dim=c(1,1)) |>
       AddDimNames(c('Sim', 'Time Step'), TimeSteps=TimeSteps)
     
   }

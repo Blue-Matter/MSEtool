@@ -8,13 +8,13 @@
 \alias{ArrayFill}
 \title{Perform Operations on Two Arrays}
 \usage{
-ArrayMultiply(array1, array2)
+ArrayMultiply(array1, array2 = NULL)
 
-ArrayAdd(array1, array2)
+ArrayAdd(array1, array2 = NULL)
 
-ArrayDivide(array1, array2)
+ArrayDivide(array1, array2 = NULL)
 
-ArraySubtract(array1, array2)
+ArraySubtract(array1, array2 = NULL)
 
 ArrayFill(Array, FillValue)
 }

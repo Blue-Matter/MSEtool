@@ -10,16 +10,10 @@ CalcCatch <- function(Stock, Fleet, NatAge=NULL, TimeSteps=NULL) {
   FRetain <- GetFatAgeArray(Fleet, TimeSteps, 'Retain')
   FDeadTotal <- apply(FDead, 1:3, sum)
   
-  
   MatAge <- GetNMortalityAtAge(Stock, TimeSteps)
   ZDead <- ArrayAdd(MatAge, FDeadTotal)
   
-  
   FleetWeightatAge <- GetFleetWeightAtAge(Stock, Fleet)
-  
-
-  
-  # use the empirical weight at age if available, otherwise stock
 
   
   NatAge <- AddDimension(NatAge, 'Fleet')

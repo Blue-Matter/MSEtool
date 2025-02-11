@@ -32,9 +32,9 @@ setMethod('CalcFatAge', c('fleet', 'ANY'),
     Effort <- GetEffort(x, TimeSteps)
     q <- GetCatchability(x, TimeSteps)
     apicalF <- ArrayMultiply(Effort, q)
+    # TODO SetApicalF(x, TimeSteps) <- apicalF
   }
   
-
   selectivity <-  GetSelectivityAtAge(x, TimeSteps)
   retention <- GetRetentionAtAge(x, TimeSteps)
   discardmortality <- GetDiscardMortalityAtAge(x, TimeSteps)
@@ -54,9 +54,23 @@ setMethod('CalcFatAge', c('fleet', 'ANY'),
   }
   
   FInteract <- ArrayMultiply(apicalF, selectivity)
-  FRetain <- ArrayMultiply(FInteract, retention)
+  if (is.null(retention)) {
+    FRetain <- retention <- FInteract
+    retention[] <- 1
+  } else {
+    FRetain <- ArrayMultiply(FInteract, retention)   
+  }
+  
   FDiscardTotal <- ArraySubtract(FInteract, FRetain)
-  FDiscardDead <- ArrayMultiply(FDiscardTotal, discardmortality)
+  
+  if (is.null(discardmortality)) {
+    discardmortality <- FInteract
+    discardmortality[] <- 0
+    FDiscardDead <- discardmortality
+  } else {
+    FDiscardDead <- ArrayMultiply(FDiscardTotal, discardmortality)
+  }
+  
   FDead <- FRetain + FDiscardDead  
  
   DeadApicalF <- AddDimension(apply(FDead, c(1,3), max), 'Age') |> aperm(c(1,3,2)) 

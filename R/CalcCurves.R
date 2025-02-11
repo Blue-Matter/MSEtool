@@ -5,7 +5,6 @@ CalcCurves <- function(OM, SPR0=NULL, FSearch=NULL, TimeSteps=NULL) {
   if (is.null(SPR0)) 
     SPR0 <- CalcSPR0(OM)
   
-  
   if (is.null(FSearch))
     FSearch <- OM@Control$Curves$FSearch
   
@@ -45,7 +44,7 @@ CalcCurves <- function(OM, SPR0=NULL, FSearch=NULL, TimeSteps=NULL) {
   
   Curves@Biomass <- purrr::map2(NumberAtAge, WeightAtAge, ArrayMultiply) |>
     purrr::map(\(x) apply(x, c(1,3,4), sum))
-  
+ 
   Curves@SBiomass <- purrr::map2(SPNumberAtAge, WeightAtAge, ArrayMultiply) |>
     purrr::map2(MaturityAtAge, ArrayMultiply) |> 
     purrr::map(\(x) apply(x, c(1,3,4), sum))

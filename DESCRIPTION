@@ -1,6 +1,6 @@
 Package: MSEtool
 Title: Management Strategy Evaluation Toolkit
-Version: 3.7.9999
+Version: 4.0.0
 Authors@R: c(
   person("Adrian", "Hordyk", email = "adrian@bluematterscience.com", role = c("aut", "cre")),
   person("Quang", "Huynh", email = "quang@bluematterscience.com", role = "aut"), 
@@ -67,6 +67,7 @@ Collate:
     'CalcCurves.R'
     'CalcFatAge.R'
     'CalcNPR.R'
+    'CalcPopDynamics.R'
     'CalcRefPoints.R'
     'CalcRelRec.R'
     'CalcSPR.R'
@@ -149,6 +150,7 @@ Collate:
     'multiMSE_internal.R'
     'multi_q_estimation.R'
     'popdyn.R'
+    'popdynOneMICEDEV.R'
     'popdyn_MICE.R'
     'runMSE.R'
     'spatial_targ_opt.R'

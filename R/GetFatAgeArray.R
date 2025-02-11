@@ -2,6 +2,12 @@ setGeneric('GetFatAgeArray', function(x, TimeSteps=NULL, type='Dead')
   standardGeneric('GetFatAgeArray')
 )
 
+setMethod('GetFatAgeArray', c('StockFleetList', 'ANY', 'ANY'), 
+          function(x, TimeSteps=NULL, type=c('Dead', 'Retain')) {
+            type <- match.arg(type)
+            purrr::map(x, GetFatAgeArray, type=type, TimeSteps=TimeSteps)
+          })
+
 setMethod('GetFatAgeArray', c('FleetList', 'ANY', 'ANY'), 
           function(x, TimeSteps=NULL, type=c('Dead', 'Retain')) {
   type <- match.arg(type)
