@@ -5,20 +5,20 @@ setGeneric('CalcSPR0', function(x, TimeSteps=NULL)
 )
 
 setMethod('CalcSPR0', c('stock', 'ANY'), function(x, TimeSteps=NULL) {
-  fecundity <- GetFecundityAtAge(x, TimeSteps(x, 'Historical'))
+  fecundity <- GetFecundityAtAge(x, TimeSteps)
   
   if (is.null(fecundity))
     return(NULL)
   
   if (!is.null(x@SRR@SPFrom) && x@SRR@SPFrom != x@Name)
     return(NULL)
-  
-  ArrayMultiply(CalcUnfishedSurvival(x, SP=TRUE), fecundity) |> 
+
+  ArrayMultiply(CalcUnfishedSurvival(x, SP=TRUE, TimeSteps=TimeSteps), fecundity) |> 
   apply(c(1,3), sum) |> process_cpars()
 })
 
 setMethod('CalcSPR0', c('StockList', 'ANY'), function(x, TimeSteps=NULL) {
-  purrr::map(x, CalcSPR0)
+  purrr::map(x, CalcSPR0, TimeSteps)
 })
 
 
@@ -45,7 +45,7 @@ setMethod('CalcSPRF', c('stock', 'FleetList',  'ANY'), function(x, NPR=NULL, FSe
   out <- lapply(cli::cli_progress_along(seq_along(FSearch), 
                                         format='Calculating Spawning-Per-Recruit {.val {x@Name}} {cli::pb_bar} {cli::pb_percent} '),
                 function(i) {
-                  Fleet <- UpdateApicalF(NPR, FSearch[i]) 
+                  Fleet <- UpdateApicalF(NPR, FSearch[i],TimeSteps=TimeSteps) 
                   FishedSurvival <- CalcFishedSurvival(x, Fleet, SP=TRUE, TimeSteps=TimeSteps)
                   
                   # fished egg production per recruit
@@ -77,9 +77,11 @@ setMethod('CalcSPRF', c('om', 'ANY',  'ANY'),
 
 setMethod('CalcSPRF', c('stock', 'array',  'ANY'), 
           function(x, NPR=NULL, FSearch=NULL, TimeSteps=NULL) {
+           
             if (!is.null(x@SRR@SPFrom) && x@SRR@SPFrom!=x@Name)
               return(NULL)
-            fecundity <- AddDimension(x@Fecundity@MeanAtAge, 'apicalF')
+            
+            fecundity <- AddDimension(GetFecundityAtAge(x, TimeSteps), 'apicalF')
             ArrayMultiply(NPR, fecundity) |>
               apply(c(1,3,4), sum) 
           })
@@ -89,7 +91,7 @@ setMethod('CalcSPRF', c('stock', 'array',  'ANY'),
 CalcSPR <- function(OM, SPR0=NULL, NPR=NULL, FSearch=NULL, TimeSteps=NULL) {
   # TODO add option to specify Time Steps to calculate
   # currently does all
-  
+ 
   # TODO  modify for herm species
   if (is.null(SPR0)) 
     SPR0 <- CalcSPR0(OM)
@@ -105,5 +107,6 @@ CalcSPR <- function(OM, SPR0=NULL, NPR=NULL, FSearch=NULL, TimeSteps=NULL) {
   # add apicalF dimension for division
   SPR0 <- purrr::map(SPR0, AddDimension, 'apicalF') 
   purrr::map2(SPRF, SPR0, ArrayDivide)
+  
 }
 

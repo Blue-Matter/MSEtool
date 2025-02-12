@@ -5,8 +5,6 @@ CalcSurvival <- function(M_at_Age, F_at_Age=NULL,
   if (!is.null(F_at_Age))
     Z_at_Age <- ArrayAdd(M_at_Age, F_at_Age)
   
-
-
   dd <- dim(Z_at_Age)
   nSim <- dd[1]
   nAge <- dd[2]
@@ -32,8 +30,11 @@ CalcSurvival <- function(M_at_Age, F_at_Age=NULL,
     } else {
       ZlastAge <- abind::adrop(Z_at_Age[,a-1,, drop=FALSE], 2)
       PostSpawnMortalityLastAge <- abind::adrop(Semelparous[,a-1,, drop=FALSE], 2)
+
+      # surv[,a,] <- surv[,a-1,]*exp(-(Z_at_Age[,a-1,]*(1-SpawnTimeFrac)+Z_at_Age[,a,]*SpawnTimeFrac))
       
-      surv[,a,] <- ArrayMultiply(abind::adrop(surv[,a-1,, drop=FALSE],2), exp(-(ZlastAge*(1-SpawnTimeFrac)+ZthisAge))) |>
+      surv[,a,] <- ArrayMultiply(abind::adrop(surv[,a-1,, drop=FALSE],2),
+                                 exp(-(ZlastAge*(1-SpawnTimeFrac)+ZthisAge*SpawnTimeFrac)))|>
         ArrayMultiply(1-PostSpawnMortalityLastAge)
     }
   }
@@ -95,6 +96,7 @@ setMethod('UpdateApicalF', c('array',  'ANY', 'ANY'),
           })
 
 setMethod('UpdateApicalF', c('FleetList', 'ANY', 'ANY'), function(x, apicalF,  TimeSteps=NULL) {
+  
   if (length(x)==1) {
     x[[1]]@FishingMortality@ApicalF <- array(apicalF, dim=c(1,1))
     dimnames(x[[1]]@FishingMortality@ApicalF) <- list(Sim=1,
@@ -134,8 +136,7 @@ setGeneric('CalcFishedSurvival', function(x, Fleet=NULL, SP=FALSE, TimeSteps=NUL
 setMethod('CalcFishedSurvival', c('stock', 'FleetList',  'ANY', 'ANY'), 
           function(x, Fleet=NULL, SP=FALSE, TimeSteps=NULL) {
             FDead <- GetFatAgeArray(Fleet, TimeSteps)
-            FDeadOverTotal <- apply(FDead, c(1,2,3), sum) 
-
+            FDeadOverTotal <<- apply(FDead, c(1,2,3), sum) 
             if (SP) {
               SpawnTimeFrac <- x@SRR@SpawnTimeFrac  
             } else {

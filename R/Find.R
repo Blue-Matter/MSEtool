@@ -1,7 +1,7 @@
 
 FindModels <- function(ModelClass) {
   objects_name <- ls.str("package:MSEtool", mode = "function")
-  objects <- lapply(objects_name, get)
+  objects <- lapply(objects_name, get, envir=rlang::ns_env('MSEtool'))
   objects_class <- lapply(objects, class)
   objects_class <- unlist(lapply(objects_class, '[[', 1))
   ind <- which(objects_class%in%ModelClass)

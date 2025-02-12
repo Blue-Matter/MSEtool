@@ -8,10 +8,11 @@ setMethod('CalcNPR', c('stock', 'FleetList',  'ANY', 'ANY'),
   out <- lapply(cli::cli_progress_along(seq_along(FSearch),
                                         format='Calculating Number-Per-Recruit {.val {x@Name}} {cli::pb_bar} {cli::pb_percent} '),
                 function(i) {
-                  fleet <- CalcFatAge(Fleet, TimeSteps, apicalF=FSearch[i]) 
-                  NPR <- CalcFishedSurvival(x, Fleet=fleet, TimeSteps=TimeSteps)
+                  Fleet <- UpdateApicalF(Fleet, apicalF=FSearch[i], TimeSteps)
+                  Fleet <- CalcFatAge(Fleet, TimeSteps=TimeSteps, apicalF= GetApicalF(Fleet))
+                  NPR <- CalcFishedSurvival(x, Fleet=Fleet, TimeSteps=TimeSteps)
                   if (x@SRR@SpawnTimeFrac !=0) {
-                    NPRS <- CalcFishedSurvival(x, Fleet=fleet, SP=TRUE, TimeSteps=TimeSteps)
+                    NPRS <- CalcFishedSurvival(x, Fleet=Fleet, SP=TRUE, TimeSteps=TimeSteps)
                   } else {
                     NPRS <- NPR
                   }

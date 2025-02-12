@@ -916,14 +916,16 @@ setMethod("Populate", "maturity", function(object,
   
   # Semelparous 
   if (inherits(object@Semelparous, 'array')) {
-    cli::cli_abort("`Maturity@Semelparous` does not support arrays yet", .internal=TRUE)
-  } 
-  if (object@Semelparous) {
-    object@Semelparous <- object@MeanAtAge 
+    
   } else {
-    object@Semelparous <- object@MeanAtAge 
-    object@Semelparous[] <- 0
+    if (object@Semelparous) {
+      object@Semelparous <- object@MeanAtAge 
+    } else {
+      object@Semelparous <- object@MeanAtAge 
+      object@Semelparous[] <- 0
+    }
   }
+
 
 
   PrintDonePopulating(object, sb, isTRUE(messages))
@@ -1619,8 +1621,9 @@ setMethod("Populate", "effort", function(object,
 
   if (EmptyObject(object@Catchability)) {
     # if (!silent)
-    #   cli::cli_alert_info('`Catchability` (q) not populated. Assuming `q=1`')
-    # object@Catchability <- matrix(1,1,1)
+      cli::cli_alert_info('`Catchability` (q) not populated. Assuming `q=1`')
+    object@Catchability <- matrix(1,1,1) |> AddDimNames(c('Sim', 'Time Step'),
+                                                        TimeSteps=TimeSteps)
   }
 
   if (EmptyObject(object@Effort)) {
@@ -1643,11 +1646,7 @@ setMethod("Populate", "effort", function(object,
     }
   }
 
-  if (EmptyObject(object@Catchability)) {
-    object@Catchability <- array(NA, dim=c(1,1)) |>
-      AddDimNames(c('Sim', 'Time Step'), TimeSteps=TimeSteps)
-    
-  }
+
 
   PrintDonePopulating(object, sb, isTRUE(messages))
   SetDigest(argList, object)

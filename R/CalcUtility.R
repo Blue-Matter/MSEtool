@@ -112,3 +112,21 @@ CalcUtilityByStockFleetArea <- function(Hist, TimeStep) {
   
   UtilityAreaFleet
 }
+
+
+CalcUtilityDensity <- function(UtilityByArea, RelativeSize) {
+  UtilityByArea <- abind::adrop(UtilityByArea[,1,,, drop=FALSE], 2)
+  UtilityDensity <- UtilityByArea
+  UtilityDensity[] <- NA
+  nf <- dim(UtilityDensity)[3]
+  narea <- dim(UtilityDensity)[2]
+  for (fl in 1:nf) {
+    density <- ArrayDivide(
+      abind::adrop(UtilityByArea[,,fl, drop=FALSE], 3), RelativeSize
+    )/narea
+    
+    UtilityDensity[,,fl] <- density
+    
+  }
+  UtilityDensity
+}

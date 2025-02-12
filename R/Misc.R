@@ -289,6 +289,15 @@ AddAgeTimeStepDimensions <- function(object, outdim=4) {
   object
 }
 
+List2Array <- function(List, dimname='Fleet') {
+  array <- array(unlist(List), 
+                 dim=c(dim(List[[1]]), length(List)))
+  d <- dimnames(List[[1]])
+  d[[dimname]] <- names(List)
+  dimnames(array) <- d
+  array
+}
+
 # Makes sure each seed is unique for the same object
 SetSeed <- function(object, seed=NULL) {
   if ('Misc' %in% slotNames(object))

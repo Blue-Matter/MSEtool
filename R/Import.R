@@ -249,6 +249,8 @@ BAM2Fleet <- function(x, Stock) {
     effort <- AddDimension(Effort[,fl, drop=FALSE], 'Sim') |>
       abind::adrop(2) |> aperm(2:1)
     fleet@Effort <- Effort(Effort=effort)
+    fleet@Effort@Catchability <- array(1, c(1,1))  |> 
+      AddDimNames(c('Sim', 'Time Step'), TimeSteps=TimeSteps)
     
     MeanAtAge <- AddDimension(SelectivityAtAge[,,fl], 'Sim') |> aperm(c(3,1,2))
     fleet@Selectivity <- Selectivity(MeanAtAge=MeanAtAge)

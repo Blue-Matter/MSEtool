@@ -450,21 +450,21 @@ OM2SRR <- function(OM, cpars=NULL, TimeSteps=NULL) {
     SRR@AC <- process_cpars(OM@AC)
   
   # Add dimnames
-  if (!is.null(SRR@RecDevInit)) {
+  if (!is.null(SRR@RecDevInit) && !all(is.na(SRR@RecDevInit))) {
     dimnames(SRR@RecDevInit) <- list(
       Sim=1:nrow(SRR@RecDevInit),
       Age=1:ncol(SRR@RecDevInit)
     )
   }
   
-  if (!is.null(SRR@RecDevHist)) {
+  if (!is.null(SRR@RecDevHist)  && !all(is.na(SRR@RecDevHist))) {
     dimnames(SRR@RecDevHist) <- list(
       Sim=1:nrow(SRR@RecDevHist),
       `Time Step`= TimeSteps$HistTS
     )
   }
   
-  if (!is.null(SRR@RecDevProj)) {
+  if (!is.null(SRR@RecDevProj)  && !all(is.na(SRR@RecDevProj))) {
     dimnames(SRR@RecDevProj) <- list(
       Sim=1:nrow(SRR@RecDevProj),
       `Time Step`= TimeSteps$ProjTS

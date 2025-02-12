@@ -22,6 +22,15 @@ setMethod('CalcFatAge', c('FleetList', 'ANY'),
   out
 })
 
+setMethod('CalcFatAge', c('FleetList', 'ANY', 'list'), 
+          function(x, TimeSteps=NULL, apicalF=NULL) {
+            out <- purrr::map2(x, apicalF, \(x, apicalF)
+                               CalcFatAge(x, TimeSteps = TimeSteps, apicalF)
+            )
+            class(out) <- 'FleetList'
+            out
+          })
+
 setMethod('CalcFatAge', c('fleet', 'ANY'),
           function(x, TimeSteps=NULL, apicalF=NULL) {
   
@@ -35,7 +44,7 @@ setMethod('CalcFatAge', c('fleet', 'ANY'),
     # TODO SetApicalF(x, TimeSteps) <- apicalF
   }
   
-  selectivity <-  GetSelectivityAtAge(x, TimeSteps)
+  selectivity <- GetSelectivityAtAge(x, TimeSteps)
   retention <- GetRetentionAtAge(x, TimeSteps)
   discardmortality <- GetDiscardMortalityAtAge(x, TimeSteps)
   DimSelectivity <- dim(selectivity)
@@ -94,8 +103,8 @@ setMethod('CalcFatAge', c('fleet', 'ANY'),
   x@FishingMortality@DeadAtAge <- FDead
   x@FishingMortality@RetainAtAge <- FRetain
   x
-  
 })
+
 # ---- CalcFTotal ----
 setGeneric('CalcFTotal', function(x, TimeSteps=NULL)
   standardGeneric('CalcFTotal')

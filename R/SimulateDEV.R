@@ -44,6 +44,8 @@ SimulateDEV <- function(OM=NULL,
   
   # TODO add check for changes to all functions 
   Hist@RefPoints <- CalcRefPoints(OM, Hist@Unfished)
+  
+  
   # TODO - SPRcrash, MGT, RefYield 
   # GetFSPR(SPRarray=Hist@RefPoints@Curves@SPR[[1]], SPRvalue=0.3)
   
@@ -53,20 +55,11 @@ SimulateDEV <- function(OM=NULL,
     cli::cli_abort('Initial depletion not done', .internal=TRUE)
   
   # ---- Non-Equilibrium Initial Time Step ----
-  Hist@Number <- purrr::map2(OM@Stock, Hist@Unfished@Equilibrium@Number, InitNumber)
+  Hist@Number <- purrr::map2(OM@Stock,
+                             Hist@Unfished@Equilibrium@Number, 
+                             InitNumber)
 
-  ##############################################################################
-  CheckBAMN <- function(ts=1) {
-    # Match  numbers from BAM to OM 
-    ts <- 1
-    BAMdata <- BAMGetObject()
-    df <- data.frame(BAM=c(0,BAMdata$N.age[ts,]), 
-                     OM= rowSums(Hist@Number$`SA Red Snapper`[1,,ts,]))
-    plot(df$BAM)
-    lines(df$OM)
-    invisible(df)
-  }
-  ##############################################################################
+
   
   # loop over historical timesteps 
   TimeStepsHist <- TimeSteps(OM, 'Historical')
@@ -74,71 +67,287 @@ SimulateDEV <- function(OM=NULL,
   ts <- 2 
   for (ts in 2:nHistTS) {
     
+    # up to here - do spatial F distribution
+    
     thisTimeStep <- TimeStepsHist[ts]
     lastTimeStep <- TimeStepsHist[ts-1]
   
     # Do MICE stuff during last time step (if applicable)
-    if (length(OM@Relations)>0) {
-      cli::cli_abort('MICE not done', .interal=TRUE)
-    }
+    Hist <- CalcMICE(Hist, TimeStep=lastTimeStep)
+    
+    Hist@Fleet[[1]][[1]]@Effort@Effort[,1]  <- 0.5
+    
+    # Total catch last time step
+    Hist@Fleet <- CalcFatAge(Hist@Fleet, TimeSteps=lastTimeStep)
+  
+    NatAge <- purrr::map(Hist@Number, \(x) apply(x[,,ts-1,, drop=FALSE], 1:3, sum))
+    
+    CatchFleet <- CalcCatch(Stock=Hist@Stock[[1]],
+                            Fleet=Hist@Fleet[[1]], 
+                            NatAge=NatAge[[1]], 
+                            TimeSteps=lastTimeStep)
+    
+    CatchFleet$RetainBiomass |> sum()
+    
     
     # Distribute F over areas (if applicable)
-    NatAgeArea <- purrr::map(Hist@Number, ArraySubsetTimeStep, TimeSteps=lastTimeStep)
-    FleetWeightAgeArea <- purrr::map2(Hist@Stock, Hist@Fleet, GetFleetWeightAtAge,
-                                      TimeSteps=lastTimeStep) |>
-      purrr::map(AddDimension, name='Area') |>
-      purrr::map(aperm, perm=c(1,2,3,5,4))
+    Hist <- CalcFleetDistribution(Hist, TimeStep=lastTimeStep)
     
-    if (!is.null(Hist@Fleet[[1]][[1]]@Distribution@Closure))
-      cli::cli_abort('Spatial closures not done yet', .internal=TRUE)
+    # Update total catch given effort constraints by area 
+    TimeStep=lastTimeStep
     
-    # TODO
-    # account for Fleet@Distribution@Closure is N/B by area/fleet
+    CalcFleetDistribution <- function(Hist, TimeStep) {
+      narea <- nArea(Hist@Stock[[1]])
+      if (narea < 2)
+        return(Hist)
+      
+      if (!is.null(Hist@Fleet[[1]][[1]]@Distribution@Closure))
+        cli::cli_abort('Spatial closures not done yet', .internal=TRUE)
+      
+      NatAgeArea <- purrr::map(Hist@Number, ArraySubsetTimeStep, TimeSteps=TimeStep)
+      FleetWeightatAge <- purrr::map2(Hist@Stock, Hist@Fleet, \(x,y) 
+                                      GetFleetWeightAtAge(x,y, TimeSteps=TimeStep))
+                                      
+      # Calculate relative utility (current VB) by area
+      RelativeSize <- Hist@Stock[[1]]@Spatial@RelativeSize # should be the same across stocks
+      
+      UtilityByArea <- CalcUtilityByStockFleetArea(Hist, TimeStep=TimeStep)
+      UtilityDensity <- purrr::map(UtilityByArea, CalcUtilityDensity, RelativeSize)
+      
+      # TODO - note relative utility is calculated by stock 
+      # ie Stock-Fleet is independent 
+      # technically fleet distribution should be proportional to overall utility
+      # ie summed across stocks
+     
+      # optimize fleet effort distribution
+      for (st in 1:nStock(Hist)) {
+        selectivity <- GetSelectivityAtAge(Hist@Fleet[[st]], TimeStep) |>
+          List2Array()
+        
+        # TODO get these functions to return default arrays with correct dimensions
+        retention <- GetRetentionAtAge(object=Hist@Fleet[[st]], TimeStep) |>
+          List2Array()
+        
+
+        discardmortality <- GetDiscardMortalityAtAge(Hist@Fleet[[st]], TimeStep) |>
+          List2Array()
+        
+        retention <- discardmortality <- selectivity
+        retention[]<- 1
+        discardmortality[] <- 0
+       
+        fleetweight <- FleetWeightatAge[[st]]
+        
+        # this should probably be vulnerable biomass instead of utility
+        RelDensity <- UtilityDensity[[st]]
+        
+        CurrentEffort <- GetEffort(Hist@Fleet[[st]], TimeStep) |> List2Array() 
+        Catchability <- GetCatchability(Hist@Fleet[[st]], TimeSteps=TimeStep) |> List2Array() 
+        
+        naturalmortality <- GetNMortalityAtAge(Hist@Stock[[st]], TimeStep)
+        numberatage <- NatAgeArea[[st]]
+        
+        nFleet <- nFleet(Hist)
+        nAge <- nAge(Hist@Stock[[st]])
+        nArea <- nArea(Hist@Stock[[st]])
+        
+        
+        # for (s in 1:nSim(Hist)) {
+          s <- 1
+          SpatTarg <- rep(1, nFleet)
+          
+          
+          OptSpatTarg <- function(SpatTarg, ...) {
+           
+            reldensity <- abind::adrop(RelDensity[s,,, drop=FALSE],1)
+          
+            SpatTarg <- matrix(SpatTarg, nArea, nFleet, byrow=TRUE)
+            EffortDist <- reldensity^SpatTarg
+            EffortDist[!is.finite(EffortDist)] <- 0
+            RelativeQ <- Catchability[s,1,]/replicate(nFleet, RelativeSize[s,])
+            
+            ApicalFInteractArea <- t(CurrentEffort[s,1,] * t(EffortDist)) * RelativeQ
+            FInteractAgeAreaFleet <- array(NA, dim=c(nAge, nArea, nFleet))
+            FRetainAgeAreaFleet <- FInteractAgeAreaFleet
+            FDiscardAgeAreaFleet <- FInteractAgeAreaFleet
+            FDiscardDeadAgeAreaFleet <- FInteractAgeAreaFleet
+            FDeadAgeAreaFleet <- FInteractAgeAreaFleet
+            for (fl in 1:nFleet) {
+              FInteractAgeAreaFleet[,,fl] <- replicate(nArea,selectivity[s,,1,fl]) * 
+                t(replicate(nAge, ApicalFInteractArea[,fl]))
+              FRetainAgeAreaFleet[,,fl] <- replicate(nArea,retention[s,,1,fl]) *
+                FInteractAgeAreaFleet[,,fl] 
+              FDiscardAgeAreaFleet[,,fl] <- FInteractAgeAreaFleet[,,fl] -  FRetainAgeAreaFleet[,,fl]
+              FDiscardDeadAgeAreaFleet[,,fl] <-  FDiscardAgeAreaFleet[,,fl] *
+                replicate(nArea,discardmortality[s,,1,fl])
+              FDeadAgeAreaFleet[,,fl] <- FRetainAgeAreaFleet[,,fl] + FDiscardDeadAgeAreaFleet[,,fl]
+            }
+            
+            ZatAgeArea <- replicate(nArea, naturalmortality[s,,1]) + apply(FDeadAgeAreaFleet, 1:2, sum)
+            ZatAgeArea <- replicate(nFleet, ZatAgeArea) 
+            
+            InteractNumber <- FInteractAgeAreaFleet/ZatAgeArea * (1-exp(-ZatAgeArea)) * 
+              replicate(nFleet, numberatage[s,,1,])
+            
+            CatchNumber <- FRetainAgeAreaFleet/ZatAgeArea * (1-exp(-ZatAgeArea)) * 
+              replicate(nFleet, numberatage[s,,1,])
+            
+            fleetweightarea <- replicate(nArea, abind::adrop(fleetweight[s,,1,, drop=FALSE], c(1,3))) |> 
+              aperm(c(1,3,2))
+            CatchBiomass <- CatchNumber * fleetweightarea
+            
+            TotalCatchByFleet <- apply(CatchBiomass, 3, sum)
+            
+            # Calculate overall F by Area
+            # population wide F by area
+            m <- replicate(nArea, naturalmortality[s,,1])
+            m <- replicate(nFleet, m)
+            sel <- abind::adrop(selectivity[s,,1,, drop=FALSE], c(1,3))
+            sel <- replicate(nArea, sel) |> aperm(c(1,3,2))
+            
+            # This calculate F Interact (proxy of Effort) by Fleet and Area
+            # i.e population wide 'F'
+            PopFInteractbyArea <- CalcFfromCatchArea(Catch=InteractNumber,
+                                                     PopatAge=replicate(nFleet, numberatage[s,,1,]),
+                                                     MatAge=m,
+                                                     SelectAtAge=sel)
+            
+            EffortArea <- PopFInteractbyArea/matrix(colSums(PopFInteractbyArea), 
+                                                    nArea, nFleet, byrow=TRUE) * 
+              matrix(CurrentEffort[s,1,], nArea, nFleet, byrow=TRUE)
+            
+            # Utility per Unit Effort by Area & Fleet
+            # currently catch biomass but can convert to utility later
+            # i.e take into account targeting, cost of area, value of stocks, etc
+            # should be approximately equal across areas
+            CPUEArea <- apply(CatchBiomass, 2:3, sum)/EffortArea
+            CPUEArea[!is.finite(CPUEArea)] <- 0
+            
+            # SSQs
+            CPUEDistSSQ <- (CPUEArea -  matrix(apply(CPUEArea, 2, mean),nArea, nFleet, byrow=TRUE))^2
+            
+            CatchSSQ <- (TotalCatchByFleet - apply(abind::adrop(CatchFleet$RetainBiomass[s,,1,, drop=FALSE], c(1,3)), 2, sum))^2
+            
+            out <-  sum(CatchSSQ, CPUEDistSSQ)
+            # print(list(SpatTarg, out, CatchSSQ, CPUEDistSSQ))
+            out
+          }
+          
+        
+          SpatTarg <- rep(1, nFleet)
+          dopt <- optim(SpatTarg, OptSpatTarg)
+          
+          SpatTarg <- dopt$par
+          
+          
+        # }
+        
+      }
     
-    NatAgeAreaFleet <- purrr::map(NatAgeArea, AddDimension, name='Fleet')
-    BatAgeAreaFleet <- purrr::map2(NatAgeAreaFleet, FleetWeightAgeArea, ArrayMultiply)
+
+     
+      # by Stock and Sim 
+      RelDensity <- abind::adrop(UtilityDensity$`SA Red Snapper`[1,,, drop=FALSE],1)
+      CurrentEffort <- GetEffort(Hist@Fleet$`SA Red Snapper`, TimeStep) 
+     
+      
+      
+     
+      
+      CurrentEffort <- CurrentEffort[1,,]
+      Catchability <- Catchability[1,,]
+      RelativeSize <- RelativeSize[1,]
+     
+      
+  
+      
+  
+      
+      
+      
+      
     
-    # selectivity at age by fleet (list by stock)
-    selectivity <- purrr::map(Hist@Fleet, GetSelectivityAtAge, TimeSteps=lastTimeStep) |>
-      purrr::map(function(.x) {
-        array <- array(unlist(.x), dim=c(dim(.x[[1]]), length(.x)))
-        dimnames(array) <- c(dimnames(.x[[1]]), Fleet=list(names(.x)))
-        AddDimension(array, 'Area') |>
-          aperm(c(1,2,3,5,4))
-      })
+      
+      
     
-    retention <- purrr::map(Hist@Fleet, GetRetentionAtAge, TimeSteps=lastTimeStep) 
-    if (any(is.null(unlist(retention)))) {
-      SelectivityRetention <- selectivity
-    } else {
-      retention <- purrr::map(retention, function(.x) {
-        array <- array(unlist(.x), dim=c(dim(.x[[1]]), length(.x)))
-        dimnames(array) <- c(dimnames(.x[[1]]), Fleet=list(names(.x)))
-        AddDimension(array, 'Area') |>
-          aperm(c(1,2,3,5,4))
-      })
-      SelectivityRetention <- purrr::map2(selectivity, retention, ArrayMultiply)
+      
+      # Calculate retained catch by area in numbers at age
+      
+      
+      # Calculate overall F by area
+      
+      # Calculate relative utility by area
+      
+      
+      # Calculate overall catch
+      
+      # SSQs
+      
+      
+      
+      
+      
+      
+      CalcFatAge(Hist@Fleet$`SA Red Snapper`, ApicalFArea)
+      
+      ZArea <- FArea + M 
+      CatchArea <- FArea/ZArea * (1-exp(-ZArea)) * BiomassByArea
+     
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+  
+      
+      FleetWeightAgeArea <- purrr::map2(Hist@Stock, Hist@Fleet, GetFleetWeightAtAge,
+                                        TimeSteps=lastTimeStep) |>
+        purrr::map(AddDimension, name='Area') |>
+        purrr::map(aperm, perm=c(1,2,3,5,4))
+      
+      # TODO
+      # account for Fleet@Distribution@Closure in N/B by area/fleet
+      NatAgeAreaFleet <- purrr::map(NatAgeArea, AddDimension, name='Fleet')
+      BatAgeAreaFleet <- purrr::map2(NatAgeAreaFleet, FleetWeightAgeArea, ArrayMultiply)
+      
+      # selectivity at age by fleet (list by stock)
+      selectivity <- purrr::map(Hist@Fleet, GetSelectivityAtAge, TimeSteps=lastTimeStep) |>
+        purrr::map(function(.x) {
+          array <- array(unlist(.x), dim=c(dim(.x[[1]]), length(.x)))
+          dimnames(array) <- c(dimnames(.x[[1]]), Fleet=list(names(.x)))
+          AddDimension(array, 'Area') |>
+            aperm(c(1,2,3,5,4))
+        })
+      
+      retention <- purrr::map(Hist@Fleet, GetRetentionAtAge, TimeSteps=lastTimeStep) 
+      if (any(is.null(unlist(retention)))) {
+        SelectivityRetention <- selectivity
+      } else {
+        retention <- purrr::map(retention, function(.x) {
+          array <- array(unlist(.x), dim=c(dim(.x[[1]]), length(.x)))
+          dimnames(array) <- c(dimnames(.x[[1]]), Fleet=list(names(.x)))
+          AddDimension(array, 'Area') |>
+            aperm(c(1,2,3,5,4))
+        })
+        SelectivityRetention <- purrr::map2(selectivity, retention, ArrayMultiply)
+      }
+      
+      
+      VBatAgeAreaFleet <- purrr::map2(BatAgeAreaFleet, 
+                                      SelectivityRetention, 
+                                      ArrayMultiply)
+      
+      Hist@Fleet$`SA Red Snapper`$cHL@Distribution@Effort
+      
     }
     
-    
-    VBatAgeAreaFleet <- purrr::map2(BatAgeAreaFleet, 
-                               SelectivityRetention, 
-                               ArrayMultiply)
- 
-    
-    
-    # Calculate F-at-Age by Fleet from Effort and q - last time step 
-    OM@Fleet$`Day octopus`$`Octopus Fleet`@Effort@Effort[,1] <- 0.3
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+  
     OM@Fleet <- CalcFatAge(OM@Fleet, TimeSteps=lastTimeStep)
     
     # Calc overall catch
@@ -178,7 +387,7 @@ SimulateDEV <- function(OM=NULL,
     
     # TODO skip if no spatial areas
     # Calculate Utility by Area 
-    UtilityByArea <- CalcUtilityByStockFleetArea(Hist, TimeStep=lastTimeStep)
+    
     
     
     fl <- 1

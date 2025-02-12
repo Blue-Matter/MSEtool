@@ -1,8 +1,6 @@
 
 # returns catch-at-age by fleet
-# TODO - add time-step argument
 # TODO - add spatial dimension
-# TODO - replace CalcFishedSurvival - needs to be actual n-at-age by area
 # TODO - functions for numbers and for weight
 # TODO - add option for alternative catch equation
 CalcCatch <- function(Stock, Fleet, NatAge=NULL, TimeSteps=NULL) {
@@ -13,9 +11,8 @@ CalcCatch <- function(Stock, Fleet, NatAge=NULL, TimeSteps=NULL) {
   MatAge <- GetNMortalityAtAge(Stock, TimeSteps)
   ZDead <- ArrayAdd(MatAge, FDeadTotal)
   
-  FleetWeightatAge <- GetFleetWeightAtAge(Stock, Fleet)
+  FleetWeightatAge <- GetFleetWeightAtAge(Stock, Fleet, TimeSteps)
 
-  
   NatAge <- AddDimension(NatAge, 'Fleet')
   ZDead <- AddDimension(ZDead, 'Fleet')
   

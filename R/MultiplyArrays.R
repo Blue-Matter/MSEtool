@@ -51,7 +51,7 @@ ExpandTS <- function(Array, Dims, TimeSteps) {
   ArrayTS <- dimnames(Array)[[ind]] |> as.numeric()
   
   OutArray <- array(NA, dim=Dims) |>
-    AddDimNames(TimeSteps=TimeSteps)
+    AddDimNames(names(dimnames(Array)), TimeSteps=TimeSteps)
   for (i in seq_along(TimeSteps)) {
     j <- which(ArrayTS <= TimeSteps[i]) |> max()
     OutArray[,,i] <- Array[,,j]
@@ -66,11 +66,14 @@ MatchArrayTimeSteps <- function(ArrayList) {
   nm1 <- names(dimnames(array1))
   ind <- which(nm1=='Time Step')
   
+  nm2 <- names(dimnames(array2))
+  ind2 <- which(nm2=='Time Step')
+  
   if (length(ind)<1)
     return(list(array1, array2))
   
   TSarray1 <- dimnames(array1)[[ind]] |> as.numeric()
-  TSarray2 <- dimnames(array2)[[ind]] |> as.numeric()
+  TSarray2 <- dimnames(array2)[[ind2]] |> as.numeric()
   
   TSout <- c(TSarray1, TSarray2) |> unique() |> sort()
   
@@ -80,7 +83,7 @@ MatchArrayTimeSteps <- function(ArrayList) {
   d1 <- dim(array1)
   d2 <- dim(array2)
   d1[ind] <- length(TSout)
-  d2[ind] <- length(TSout)
+  d2[ind2] <- length(TSout)
   
   if (!all(TSout %in% TSarray1) & length(TSarray1)>1) 
     array1 <- ExpandTS(Array=array1, Dims=d1, TimeSteps=TSout)

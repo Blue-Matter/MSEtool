@@ -162,6 +162,10 @@ GetRecDevProj <- function(object, TimeSteps=NULL, df=FALSE) {
   x
 }
 
+GetRelativeSize <- function(object, TimeSteps=NULL, df=FALSE) {
+  GetStockAtAge(object,  c('Spatial', 'RelativeSize'), TimeSteps, df)
+}
+
 
 # Fleet -----
 
