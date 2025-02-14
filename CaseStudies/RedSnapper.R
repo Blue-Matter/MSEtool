@@ -27,7 +27,8 @@ SimulateDEV
 
 multiHist <- Simulate(MOM)
 
-multiHist$`Red Snapper`$`Commercial Line`@AtAge$Removals[1,,1,] |> sum()
+t = multiHist$`Red Snapper`$`Commercial Line`@AtAge$Removals[1,,1,] |> sum()
+t/1000
 
 # SPR 
 multiHist$`Red Snapper`$`Commercial Line`@Ref$ByYear$F_SPR[1,,70]

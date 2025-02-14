@@ -33,33 +33,23 @@ setMethod('CalcFatAge', c('FleetList', 'ANY', 'list'),
 
 setMethod('CalcFatAge', c('fleet', 'ANY'),
           function(x, TimeSteps=NULL, apicalF=NULL) {
-  
+
   # x = OM@Fleet[[1]][[1]]
   # TimeSteps <- TimeSteps(OM, 'Historical')
   
   if (is.null(apicalF)) {
     x <- CalcApicalF(x, TimeSteps)
-    apicalF <- GetApicalF(x, TimeSteps)
+    apicalF <- GetApicalF(x, TimeSteps, array=FALSE)
   }
     
-
   selectivity <- GetSelectivityAtAge(x, TimeSteps)
   retention <- GetRetentionAtAge(x, TimeSteps)
   discardmortality <- GetDiscardMortalityAtAge(x, TimeSteps)
   DimSelectivity <- dim(selectivity)
   DimapicalF <- dim(apicalF)
-  
-  if (all(DimapicalF==1)) {
-    # add sim, age, and time-step dimensions
-    apicalF <- array(apicalF, dim=c(1,DimSelectivity[2], DimSelectivity[3])) |>
-      AddDimNames(names=names(dimnames(selectivity)), TimeSteps =  dimnames(selectivity)$`Time Step`)
-  } else {
-    # add age dimension
-    apicalF <- replicate(DimSelectivity[2], apicalF, simplify = 'array') |> 
-      aperm(c(1,3,2))
-    names(dimnames(apicalF))[2] <- 'Age'
-    dimnames(apicalF)[[2]] <- 1:DimSelectivity[2]
-  }
+
+  # add age dimension
+  apicalF <- apicalF |> AddDimension('Age') |> aperm(c(1,3,2))
   
   FInteract <- ArrayMultiply(apicalF, selectivity)
   if (is.null(retention)) {
@@ -87,8 +77,10 @@ setMethod('CalcFatAge', c('fleet', 'ANY'),
   if (!all(InteractDeadRatio==1)) {
     # Inflate ApicalF to account for discard mortality
     # FishingMortality@apicalF is the apicalF of Dead Fish;
-    # Inside this function 'apicalF' is for 'Caught' or 'Interacted' fish,
-    # which will be higher than 'apicalF' for dead fish if discard mortality is < 1.
+    # If passed as an argument, `apicalF` is first calculated for 'Caught' or 'Interacted' fish,
+    # i.e., assuming it's proportion to Effort.
+    # Here it's adjusted so that the actual apicalF on dead fish is equal to `apicalF`
+    
 
     apicalF <- ArrayMultiply(apicalF, InteractDeadRatio)
     FInteract <- ArrayMultiply(apicalF, selectivity)
@@ -102,9 +94,6 @@ setMethod('CalcFatAge', c('fleet', 'ANY'),
   ArrayFill(x@FishingMortality@DeadAtAge) <- FDead
   ArrayFill(x@FishingMortality@RetainAtAge) <- FRetain
   
-  # x@FishingMortality@ApicalF <- apply(FDead, c(1,3), max)
-  # x@FishingMortality@DeadAtAge <- FDead
-  # x@FishingMortality@RetainAtAge <- FRetain
   x
 })
 

@@ -10,7 +10,7 @@ GetBiomassAtAge <- function(Stock, FleetList, NatAgeArea, TimeSteps=NULL, fleetw
   BatAgeArea
 }
 
-CalcDensity <- function(Stock, FleetList, NatAgeArea, TimeSteps=NULL, Rel=TRUE) {
+CalcVBiomassArea <- function(Stock, FleetList, NatAgeArea, TimeSteps=NULL, Rel=TRUE) {
   
   if (is.null(TimeSteps))
     TimeSteps <- TimeSteps(Stock, 'Historical')
@@ -25,6 +25,19 @@ CalcDensity <- function(Stock, FleetList, NatAgeArea, TimeSteps=NULL, Rel=TRUE) 
   VBatAgeArea <- ArrayMultiply(BatAgeArea, SelectRetain)
   
   VBatArea <- apply(VBatAgeArea, c(1,3,4,5), sum)
+  if (!Rel) 
+    return(VBatArea)
+       
+  Total <- apply(VBatArea, c('Sim', 'Time Step', 'Fleet'), sum) |> AddDimension('Area')
+  
+  RelVBatArea <- ArrayDivide(VBatArea,Total)
+  RelVBatArea[!is.finite(RelVBatArea)] <- tiny
+  RelVBatArea
+} 
+
+CalcDensity <- function(Stock, FleetList, NatAgeArea, TimeSteps=NULL, Rel=TRUE) {
+  
+  VBatArea <- CalcVBiomassArea(Stock, FleetList, NatAgeArea, TimeSteps, Rel=FALSE)
   
   RelativeSize <- Stock@Spatial@RelativeSize |>
     AddDimension('Time Step') |>
@@ -35,8 +48,8 @@ CalcDensity <- function(Stock, FleetList, NatAgeArea, TimeSteps=NULL, Rel=TRUE) 
   if (!Rel) 
     return(Density)
   
-  TotalDensity <- apply(Density, 1:3, sum) |> AddDimension('Area')
-  RelDensity <- ArrayDivide(Density,TotalDensity)
+  Total <- apply(Density, c('Sim', 'Time Step', 'Fleet'), sum) |> AddDimension('Area')
+  RelDensity <- ArrayDivide(Density,Total)
   RelDensity[!is.finite(RelDensity)] <- tiny
   RelDensity
 }

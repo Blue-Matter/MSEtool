@@ -212,15 +212,45 @@ GenerateStochasticValues <- function(object, nsim=NULL) {
 
 # ---- Add Dimensions ----
 
+
+SumOverDimension <- function(array, name='Area') {
+  d <- dim(array)
+  nms <- names(dimnames(array))
+  ind <- which(nms==name)
+  if (d[ind] == 1) {
+    return(DropDimension(array))
+  }
+  apply(array, nms[-ind], sum) 
+}
+
+DropDimension <- function(array, name='Area') {
+  # drops the named dimension only if it is length one
+  d <- dim(array)
+  nms <- names(dimnames(array))
+  ind <- which(nms==name)
+  if (length(ind)<1)
+    cli::cli_abort('Dimension {.var {name}} not found ', .internal=TRUE)
+  
+  if (d[ind]>1) 
+    return(array)
+  
+  array <- abind::asub(array, 1, ind, drop=FALSE) |>
+    abind::adrop(ind)
+  array
+}
+
 AddDimension <- function(array, name=NULL) {
   if (inherits(array, 'list'))
     array <- unlist(array)
   if (is.null(array))
     return(NULL)
   d <- dim(array)
+  nms <- names(dimnames(array))
+  if (name %in% nms)
+    return(array)
   
   if (all(d==1)) {
-    outarray <- array(array[1,1], dim=c(d, 1))
+    outarray <- array(array, dim=c(d, 1))
   } else {
     outarray <- replicate(1, array) 
   }
@@ -231,7 +261,6 @@ AddDimension <- function(array, name=NULL) {
     l[name] <- 1
     dimnames(outarray) <- l  
   }
-  
   outarray
 }
 

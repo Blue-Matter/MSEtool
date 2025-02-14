@@ -184,8 +184,11 @@ GetFleetAtAge <- function(object, slots, TimeSteps=NULL, df=FALSE) {
 }
 
 
-GetApicalF <- function(object, TimeSteps=NULL, df=FALSE) {
-  GetFleetAtAge(object, slots=c('FishingMortality', 'ApicalF'), TimeSteps, df)
+GetApicalF <- function(object, TimeSteps=NULL, df=FALSE, array=TRUE) {
+  out <- GetFleetAtAge(object, slots=c('FishingMortality', 'ApicalF'), TimeSteps, df)
+  if (array && inherits(out, 'list'))
+    return(List2Array(out))
+  out
 }
 
 GetEffort <- function(object, TimeSteps=NULL, df=FALSE) {

@@ -96,7 +96,7 @@ setMethod('UpdateApicalF', c('array',  'ANY', 'ANY'),
           })
 
 setMethod('UpdateApicalF', c('FleetList', 'ANY', 'ANY'), function(x, apicalF,  TimeSteps=NULL) {
-  
+  # updates the F-at-age for each fleet such that overall apical F = `apicalF`
   if (length(x)==1) {
     x[[1]]@FishingMortality@ApicalF <- array(apicalF, dim=c(1,1))
     dimnames(x[[1]]@FishingMortality@ApicalF) <- list(Sim=1,
@@ -109,17 +109,19 @@ setMethod('UpdateApicalF', c('FleetList', 'ANY', 'ANY'), function(x, apicalF,  T
 
   FDeadTotal <- apply(FDeadbyFleet, 1:3, sum)
   apicalFCurr <- apply(FDeadTotal, c(1,3), max)
+  
   adjust <- apicalF/apicalFCurr
-
-  dd <- dim(FDeadbyFleet)
-  adjust <- replicate(dd[2], adjust)
-  adjust <- replicate(dd[4], adjust) 
-  adjust <- aperm(adjust, c(1,3,2,4))
-  FDeadbyFleet <- FDeadbyFleet*adjust
+  adjust <- adjust |> 
+    AddDimension('Age') |> 
+    AddDimension('Fleet') |>
+    aperm(c(1,3,2,4))
+  
+  FDeadbyFleet <- ArrayMultiply(FDeadbyFleet,adjust)
+  
   newApicalF <- apply(FDeadbyFleet, c(1,3,4), max)
 
   for (fl in seq_along(x)) {
-    x[[fl]]@FishingMortality@ApicalF <- abind::adrop(newApicalF[,,fl, drop=FALSE],3)
+    ArrayFill(x[[fl]]@FishingMortality@ApicalF) <- abind::adrop(newApicalF[,,fl, drop=FALSE],3)
   }
   x
 })

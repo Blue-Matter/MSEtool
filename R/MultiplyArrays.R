@@ -176,20 +176,28 @@ ArraySubtract <- function(array1, array2=NULL) {
 #' @rdname ArrayMultiply
 #' @export
 `ArrayFill<-` <- function(object, value) {
-  Array <- object 
-  FillValue <- value
+  if (is.null(object)) {
+    object <- value
+    return(object)
+  }
   
-  if (is.null(Array))
-    return(value)
+  abind::afill(object) <- value
+  object
   
   
-  ArrayList <- list(Array, FillValue)
-  CheckArrays(ArrayList)
-  ArrayList <- ArrayList |> 
-    ExpandArrays() 
-  
-  Array <- ArrayList[[1]]
-  FillValue <- ArrayList[[2]]
-  Array[] <- FillValue
-  Array
+  # Array <- object
+  # FillValue <- value
+  # 
+  # if (is.null(Array))
+  #   return(value)
+  # 
+  # 
+  # ArrayList <- list(Array, FillValue)
+  # CheckArrays(ArrayList)
+  # ArrayList <- ArrayList |> ExpandArrays()
+  # 
+  # Array <- ArrayList[[1]]
+  # FillValue <- ArrayList[[2]]
+  # Array[] <- FillValue
+  # Array
 }

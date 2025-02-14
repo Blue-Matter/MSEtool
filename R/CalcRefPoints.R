@@ -6,15 +6,18 @@
 #'
 #' @returns
 #' @export
-CalcRefPoints <- function(OM, Unfished=NULL) {
+CalcRefPoints <- function(OM, Unfished=NULL, TimeSteps=NULL) {
   if (is.null(Unfished))
     Unfished <- CalcUnfishedDynamics(OM)
+  
+  if (is.null(TimeSteps))
+    TimeSteps <- TimeSteps(OM, 'Historical') |> tail(1)
   
   RefPoints <- new('refpoints')
   
   # At F Curves ----
-  RefPoints@SPR0 <- CalcSPR0(OM)
-  RefPoints@Curves <- CalcCurves(OM, SPR0=RefPoints@SPR0)
+  RefPoints@SPR0 <- CalcSPR0(OM, TimeSteps)
+  RefPoints@Curves <- CalcCurves(OM, TimeSteps=TimeSteps)
   
   # MSY Ref Points ----
   Yield <- CalcYieldComplex(RefPoints@Curves@Yield, OM)
@@ -23,12 +26,14 @@ CalcRefPoints <- function(OM, Unfished=NULL) {
   FValuesList <- vector('list', nStock(OM))
   FValues <- array(RefPoints@Curves@FValues, 
                    c(1,1, length(RefPoints@Curves@FValues)))
+  dimnames(FValues) <- list(Sim=1,
+                            `Time Step`=tail(TimeSteps),
+                            ApicalF=RefPoints@Curves@FValues)
+  
   
   names(FValuesList) <- names(Yield)
   for (i in seq_along(FValuesList)) {
-    array <- Yield[[i]]
-    array[] <- NA
-    FValuesList[[i]] <- ArrayFill(array, FValues)
+    ArrayFill(FValuesList[[i]]) <- FValues
   }
   
   RefPoints@FMSY <- purrr::map2(FValuesList,
@@ -76,12 +81,6 @@ CalcRefPoints <- function(OM, Unfished=NULL) {
                                 MaxYPRIndList, 
                                 GetMSYValue)
   
-  FValuesList <- vector('list', nStock(OM))
-  names(FValuesList) <- names(YPR)
-  for (i in seq_along(FValuesList)) {
-    FValuesList[[i]] <- RefPoints@Curves@FValues
-  }
-  
   RefPoints@F01 <- purrr::map2(YPR, FValuesList, CalcF01)
   RefPoints@FCrash <- purrr::map(RefPoints@Curves@RelRec, \(x)
                                  CalcFCrash(x, RefPoints@Curves@FValues))
@@ -124,8 +123,6 @@ CalcRefPoints <- function(OM, Unfished=NULL) {
 }
 
 
-
-
 CalcYieldComplex <- function(Yield, OM) {
   # Sums equilibrium yield at given F over stocks
   # so that the MSY calcs account for total yield for the
@@ -160,6 +157,7 @@ CalcYieldComplex <- function(Yield, OM) {
   }
   YieldOut
 }
+
 
 # returns the subset of array where the third dimension is selected
 # from MaxYieldInd 
@@ -260,7 +258,7 @@ GetValueAtF <- function(Array, FValue, TimeSteps=NULL) {
   Array2 <- abind::asub(Array,
                            list(as.character(TimeSteps), 
                                 as.character(FValue2)),
-                           which(nms1%in%c('Time Step', 'apicalF')),
+                           which(nms1%in%c('Time Step', 'ApicalF')),
                            drop=FALSE)
   
   Array2

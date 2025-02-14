@@ -1,6 +1,6 @@
-# sim, age, time step, region (area), fleet
+# sim, age, time step, fleet, area
 
-CreateArraySATRF <- function(Stock, nsim=NULL, timesteps=NULL, fleetnames=NULL) {
+CreateArraySATFR <- function(Stock, nsim=NULL, timesteps=NULL, fleetnames=NULL) {
   # if (inherits(Stock, 'om')) {
   #   return(purrr::map(Stock@Stock, CreateArraySATRF, nsim, timesteps, fleetnames))
   # }
@@ -11,7 +11,9 @@ CreateArraySATRF <- function(Stock, nsim=NULL, timesteps=NULL, fleetnames=NULL) 
   l <- dimnames(array)
   l$Fleet <- fleetnames
   dimnames(arrayFleet) <- l
-  arrayFleet
+  
+  
+  arrayFleet |> aperm(c(1,2,3,5,4))
   
 }
 
