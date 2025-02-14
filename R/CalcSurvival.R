@@ -136,7 +136,14 @@ setGeneric('CalcFishedSurvival', function(x, Fleet=NULL, SP=FALSE, TimeSteps=NUL
 setMethod('CalcFishedSurvival', c('stock', 'FleetList',  'ANY', 'ANY'), 
           function(x, Fleet=NULL, SP=FALSE, TimeSteps=NULL) {
             FDead <- GetFatAgeArray(Fleet, TimeSteps)
-            FDeadOverTotal <<- apply(FDead, c(1,2,3), sum) 
+            dd <- dim(FDead)
+            if (dd[4]==1) {
+              FDeadOverTotal <- abind::adrop(FDead[,,,1, drop=FALSE], 4)
+            } else {
+              # sum over fleets
+              FDeadOverTotal <- apply(FDead, c(1,2,3), sum)   
+            }
+            
             if (SP) {
               SpawnTimeFrac <- x@SRR@SpawnTimeFrac  
             } else {

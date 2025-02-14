@@ -14,13 +14,16 @@ CalcCatch <- function(Stock, Fleet, NatAge=NULL, TimeSteps=NULL) {
   FleetWeightatAge <- GetFleetWeightAtAge(Stock, Fleet, TimeSteps)
 
   NatAge <- AddDimension(NatAge, 'Fleet')
+  dimnames(NatAge)$Fleet <- names(Fleet)
+  
   ZDead <- AddDimension(ZDead, 'Fleet')
+  dimnames(ZDead)$Fleet <- names(Fleet)
   
   RemovalNumber <- ArrayMultiply(NatAge, (1-exp(-ZDead))) |>
     ArrayMultiply(ArrayDivide(FDead,ZDead))
   RemovalBiomass <- ArrayMultiply(RemovalNumber, FleetWeightatAge)
   
-  if (prod(FRetain, FDead)==1) {
+  if (prod(FRetain/FDead)==1) {
     RetainNumber <- RemovalNumber
     RetainBiomass <- RemovalBiomass
   } else {
@@ -35,3 +38,4 @@ CalcCatch <- function(Stock, Fleet, NatAge=NULL, TimeSteps=NULL) {
        RetainBiomass=RetainBiomass)
   
 }
+

@@ -2147,6 +2147,7 @@ setClass('distribution',
          slots=c(Closure='num.array',
                  Cost='num.array',
                  Targeting='num.array',
+                 ApicalF='num.array',
                  Catchability='num.array',
                  Effort='num.array',
                  Misc='list'
@@ -2159,12 +2160,14 @@ setMethod("initialize", "distribution", function(.Object,
                                                  Closure=NULL,
                                                  Cost=NULL,
                                                  Targeting=NULL,
+                                                 ApicalF=NULL,
                                                  Catchability=NULL,
                                                  Effort=NULL,
                                                  Misc=list()) {
   .Object@Closure <- Closure
   .Object@Cost <- Cost
   .Object@Targeting <- Targeting
+  .Object@ApicalF <- ApicalF
   .Object@Catchability <- Catchability
   .Object@Effort <- Effort
   .Object@Misc <- Misc
@@ -2177,6 +2180,7 @@ setMethod("initialize", "distribution", function(.Object,
 Distribution <- function(Closure=NULL,
                          Cost=NULL,
                          Targeting=NULL,
+                         ApicalF=NULL,
                          Catchability=NULL,
                          Effort=NULL,
                          Misc=list()) {
@@ -2188,6 +2192,7 @@ Distribution <- function(Closure=NULL,
                Closure=Closure,
                Cost=Cost,
                Targeting=Targeting,
+               ApicalF=ApicalF,
                Catchability=Catchability,
                Effort=Effort,
                Misc=Misc)

@@ -212,7 +212,7 @@ GenerateStochasticValues <- function(object, nsim=NULL) {
 
 # ---- Add Dimensions ----
 
-AddDimension <- function(array, name) {
+AddDimension <- function(array, name=NULL) {
   if (inherits(array, 'list'))
     array <- unlist(array)
   if (is.null(array))
@@ -227,8 +227,11 @@ AddDimension <- function(array, name) {
   
   # set dimnames
   l <- dimnames(array)
-  l[name] <- 1
-  dimnames(outarray) <- l
+  if (!is.null(l)) {
+    l[name] <- 1
+    dimnames(outarray) <- l  
+  }
+  
   outarray
 }
 

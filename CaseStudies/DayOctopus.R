@@ -87,11 +87,7 @@ Fleet(octopusOM) <- octopus_fleet
 
 object <- octopusOM
 OM <- Populate(octopusOM)
-
-octopusOM@Fleet@Effort
-
-OM@Fleet$`Day octopus`$`Octopus Fleet`@Effort
-
+OM@Fleet$`Day octopus`$`Octopus Fleet`@Effort@Effort[,1] <- 0.1
 
 
 messages='default'

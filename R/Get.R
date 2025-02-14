@@ -254,7 +254,24 @@ GetFleetWeightAtAge <- function(Stock, FleetList, TimeSteps=NULL) {
   FleetWeightatAge
 }
 
+# ---- Hist ----
 
+GetHistAtAge <- function(object, slots, TimeSteps=NULL, df=FALSE) {
+
+  if (isS4(object))
+    return(Get(object, slots, TimeSteps, df))
+  
+  if (methods::is(object, 'StockList')) 
+    return(
+      purrr::map(object, Get, slots=slots, TimeSteps=TimeSteps, df=df)
+    )
+  Get(object, slots, TimeSteps, df)
+}
+
+
+GetNumber <- function(object, TimeSteps=NULL, df=FALSE) {
+  t = GetHistAtAge(object, 'Number', TimeSteps, df)
+}
 
 
 
