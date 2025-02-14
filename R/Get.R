@@ -189,17 +189,26 @@ GetApicalF <- function(object, TimeSteps=NULL, df=FALSE) {
 }
 
 GetEffort <- function(object, TimeSteps=NULL, df=FALSE) {
-  GetFleetAtAge(object, slots=c('Effort', 'Effort'), TimeSteps, df)
+  out <- GetFleetAtAge(object, slots=c('Effort', 'Effort'), TimeSteps, df)
+  if (inherits(out, 'list'))
+    return(List2Array(out))
+  out
 }
 
 GetCatchability <- function(object, TimeSteps=NULL, df=FALSE) {
-  GetFleetAtAge(object, slots=c('Effort', 'Catchability'), TimeSteps, df)
+  out <- GetFleetAtAge(object, slots=c('Effort', 'Catchability'), TimeSteps, df)
+  if (inherits(out, 'list'))
+    return(List2Array(out))
+  out
 }
 
 
 
 GetDiscardMortalityAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
-  GetFleetAtAge(object,  c('DiscardMortality', 'MeanAtAge'), TimeSteps, df)
+  out <- GetFleetAtAge(object,  c('DiscardMortality', 'MeanAtAge'), TimeSteps, df)
+  if (inherits(out, 'list'))
+    return(List2Array(out))
+  out
 }
 
 `SetDiscardMortalityAtAge<-` <- function(x, value) {
@@ -208,7 +217,10 @@ GetDiscardMortalityAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
 }
 
 GetSelectivityAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
-  GetFleetAtAge(object,  c('Selectivity', 'MeanAtAge'), TimeSteps, df)
+  out <- GetFleetAtAge(object,  c('Selectivity', 'MeanAtAge'), TimeSteps, df)
+  if (inherits(out, 'list'))
+    return(List2Array(out))
+  out
 }
 
 `SetSelectivityAtAge<-` <- function(x, value) {
@@ -217,7 +229,10 @@ GetSelectivityAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
 }
 
 GetRetentionAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
-  GetFleetAtAge(object,  c('Retention', 'MeanAtAge'),TimeSteps, df)
+  out <- GetFleetAtAge(object,  c('Retention', 'MeanAtAge'),TimeSteps, df)
+  if (inherits(out, 'list'))
+    return(List2Array(out))
+  out
 }
 
 `SetRetentionAtAge<-` <- function(x, value) {
@@ -242,13 +257,16 @@ GetFleetWeightAtAge <- function(Stock, FleetList, TimeSteps=NULL) {
   l <- dimnames(StockWeightatAge)
   l$Fleet <- names(FleetList)
   dimnames(FleetWeightatAge) <- l
+  
   for (fl in seq_along(FleetEmpiricalWeightatAge)) {
     if (is.null(FleetEmpiricalWeightatAge[[fl]])) {
-      FleetWeightatAge[,,,fl] <- ArrayFill(Array=abind::adrop(FleetWeightatAge[,,,fl, drop=FALSE],4),
-                                           FillValue=StockWeightatAge)
+      array <- AddDimension(StockWeightatAge, 'Fleet')
+      dimnames(array)$Fleet <- l$Fleet[fl]
+      ArrayFill(FleetWeightatAge) <- array
     } else {
-      FleetWeightatAge[,,,fl] <- ArrayFill(Array=abind::adrop(FleetWeightatAge[,,,fl, drop=FALSE],4),
-                                           FillValue=FleetEmpiricalWeightatAge[[fl]])
+      array <- AddDimension(FleetEmpiricalWeightatAge[[fl]], 'Fleet')
+      dimnames(array)$Fleet <- l$Fleet[fl]
+      ArrayFill(FleetWeightatAge) <- array
     }
   }
   FleetWeightatAge

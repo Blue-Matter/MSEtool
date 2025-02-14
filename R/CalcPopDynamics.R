@@ -5,10 +5,13 @@ CreateArraySATRF <- function(Stock, nsim=NULL, timesteps=NULL, fleetnames=NULL) 
   #   return(purrr::map(Stock@Stock, CreateArraySATRF, nsim, timesteps, fleetnames))
   # }
   
-  array <- CreateArraySATR(Stock, nsim, timesteps) |> 
-    AddDimension('Fleet')
-  dimnames(array)$Fleet <- fleetnames
-  array
+  array <- CreateArraySATR(Stock, nsim, timesteps) 
+  arrayFleet <- replicate(length(fleetnames), array)
+  
+  l <- dimnames(array)
+  l$Fleet <- fleetnames
+  dimnames(arrayFleet) <- l
+  arrayFleet
   
 }
 

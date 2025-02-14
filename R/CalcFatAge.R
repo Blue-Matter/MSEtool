@@ -37,13 +37,12 @@ setMethod('CalcFatAge', c('fleet', 'ANY'),
   # x = OM@Fleet[[1]][[1]]
   # TimeSteps <- TimeSteps(OM, 'Historical')
   
-  if (is.null(apicalF)) { 
-    Effort <- GetEffort(x, TimeSteps)
-    q <- GetCatchability(x, TimeSteps)
-    apicalF <- ArrayMultiply(Effort, q)
-    # TODO SetApicalF(x, TimeSteps) <- apicalF
+  if (is.null(apicalF)) {
+    x <- CalcApicalF(x, TimeSteps)
+    apicalF <- GetApicalF(x, TimeSteps)
   }
-  
+    
+
   selectivity <- GetSelectivityAtAge(x, TimeSteps)
   retention <- GetRetentionAtAge(x, TimeSteps)
   discardmortality <- GetDiscardMortalityAtAge(x, TimeSteps)
@@ -99,9 +98,13 @@ setMethod('CalcFatAge', c('fleet', 'ANY'),
     FDead <- FRetain + FDiscardDead 
   }
   
-  x@FishingMortality@ApicalF <- apply(FDead, c(1,3), max)
-  x@FishingMortality@DeadAtAge <- FDead
-  x@FishingMortality@RetainAtAge <- FRetain
+  ArrayFill(x@FishingMortality@ApicalF) <- apply(FDead, c(1,3), max)
+  ArrayFill(x@FishingMortality@DeadAtAge) <- FDead
+  ArrayFill(x@FishingMortality@RetainAtAge) <- FRetain
+  
+  # x@FishingMortality@ApicalF <- apply(FDead, c(1,3), max)
+  # x@FishingMortality@DeadAtAge <- FDead
+  # x@FishingMortality@RetainAtAge <- FRetain
   x
 })
 

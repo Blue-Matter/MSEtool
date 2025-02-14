@@ -53,6 +53,7 @@ SimulateDEV <- function(OM=NULL,
                              fleetnames=FleetNames(OM))
   
   Hist@Unfished <- CalcUnfishedDynamics(OM, messages, parallel=parallel)
+  
   # TODO Dynamic Unfished
   
   # TODO add check for changes to all functions 
@@ -74,36 +75,13 @@ SimulateDEV <- function(OM=NULL,
 
   
   ###################
-  
-  CalcApicalF <- function(Fleet, TimeStep) {
-    if (inherits(Fleet, 'fleet')) {
-      
-      DeadAtAge <- ArraySubsetTimeStep(Fleet@FishingMortality@DeadAtAge, TimeStep)
-      ApicalF <-  apply(DeadAtAge, c(1,3), max)
-      SetApicalF(Fleet) <- ApicalF
-      Fleet
-    }
-    purrr::map(Fleet, CalcApicalF, TimeStep=TimeStep)
-  } 
-  
-  
-  `SetApicalF<-` <- function(object, value) {
-    ApicalF <- object@FishingMortality@ApicalF
-    if (is.null(ApicalF)) {
-      ApicalF <- value
-    } else {
-      ApicalF <- cbind(ApicalF, value)
-    }
-    object@FishingMortality@ApicalF <- ApicalF
-    object 
-  }
-  
-  
+
   
   # loop over historical timesteps 
   TimeStepsHist <- TimeSteps(OM, 'Historical')
   nHistTS <- length(TimeStepsHist)
   ts <- 2 
+  nHistTS + 1
   for (ts in 2:nHistTS) {
     
     thisTimeStep <- TimeStepsHist[ts]
@@ -127,6 +105,100 @@ SimulateDEV <- function(OM=NULL,
     # TODO
     Hist <- CalcMICE(Hist, TimeStep=lastTimeStep)
     
+    CalcEffortDist <- function(Hist, TimeSteps=NULL) {
+      # Distributes Effort over Areas 
+      # Proportional to Relative Density of Vulnerable Biomass
+      # Note: calculated independently by stock to deal with 
+      # multi-stock OMs imported from single-stock, non-spatial assessments
+      
+      if (is.null(TimeSteps))
+        TimeSteps <- TimeSteps(Hist@Stock[[1]], 'Historical')
+      
+      RelativeDensity <- purrr::pmap(list(Hist@Stock,
+                                          Hist@Fleet,
+                                          NumberLastTimeStepByArea  
+      ), 
+      TimeSteps=lastTimeStep, CalcDensity)
+      
+      Effort <- purrr::map(Hist@Fleet, GetEffort, TimeSteps=lastTimeStep)
+      Effort <- purrr::map(Effort, AddDimension, 'Area')
+      
+      purrr::map2(Effort, RelativeDensity, ArrayMultiply)
+    }
+    
+    EffortDist <- CalcEffortDist(Hist, lastTimeStep)
+    Catchability <- purrr::map(Hist@Fleet, GetCatchability,
+                               TimeSteps=lastTimeStep) |>
+      purrr::map(AddDimension, 'Area')
+    
+    ApicalF <- purrr::map2(Catchability, EffortDist, ArrayMultiply) |>
+      purrr::map(AddDimension, 'Age') |>
+      purrr::map(aperm, c(1,5,2,3,4))
+    
+    selectivity <- purrr::map(Hist@Fleet, GetSelectivityAtAge, TimeSteps=lastTimeStep) |>
+      purrr::map(AddDimension, 'Area')
+    retention <- purrr::map(Hist@Fleet, GetRetentionAtAge, TimeSteps=lastTimeStep) |>
+      purrr::map(AddDimension, 'Area')
+    discardmortality <- purrr::map(Hist@Fleet,
+                                   GetDiscardMortalityAtAge, TimeSteps=lastTimeStep) |>
+      purrr::map(AddDimension, 'Area')
+    
+    FInteract <- purrr::map2(ApicalF, selectivity, ArrayMultiply)
+    FRetain <- purrr::map2(FInteract, retention, ArrayMultiply)
+    FDiscardTotal <- purrr::map2(FInteract, FRetain, ArraySubtract)
+    FDiscardDead <-  purrr::map2(FDiscardTotal, discardmortality, ArrayMultiply)
+    FDead <- purrr::map2(FRetain, FDiscardDead, ArrayAdd)
+    
+    NMortalityAtAge <- purrr::map(Hist@Stock,  GetNMortalityAtAge, TimeSteps=lastTimeStep) |>
+      purrr::map(AddDimension, 'Area')
+
+    FDeadTotal <- purrr::map(FDead, \(x)
+                             apply(x, c(1,2,3,5), sum))
+    
+    ZatAge <- purrr::map2(FDeadTotal, NMortalityAtAge, ArrayAdd)
+    
+    BatAge <- purrr::pmap(list(Hist@Stock,
+                     Hist@Fleet,
+                     NumberLastTimeStepByArea  
+    ), 
+    TimeSteps=lastTimeStep, GetBiomassAtAge)
+    
+    # TODO - replace other CalcCatch function with this one
+    FatAge <- FDead$`SA Red Snapper`
+    ZatAge <- ZatAge$`SA Red Snapper`
+    BatAge <- BatAge$`SA Red Snapper`
+    NatAge <- NumberLastTimeStepByArea$`SA Red Snapper`
+    
+    # TODO calculate number first then multiply by weight
+    CalcCatch2 <- function(FatAge, ZatAge, NatAge) {
+      
+      NatAge <- AddDimension(NatAge, 'Fleet') |> 
+        aperm(c(1,2,3,5,4))
+      ZatAge <- AddDimension(ZatAge, 'Fleet') |> 
+        aperm(c(1,2,3,5,4)) 
+      
+      RemovalNumber <- ArrayMultiply(NatAge, (1-exp(-ZatAge))) |>
+        ArrayMultiply(ArrayDivide(FatAge,ZatAge))
+      
+      RemovalBiomass <- ArrayMultiply(RemovalNumber, 
+                                      AddDimension(FleetWeightatAge, 'Area'))
+      
+      # checking F
+      RemovalBiomass[1,,1,1,] |> sum()
+      CatchAtAge <- apply(RemovalNumber[1,,1,1,], 1, sum)
+      PopoAtAge <- apply(NatAge[1,,1,1,], 1, sum)
+      M <- NMortalityAtAge$`SA Red Snapper`[1,,1,1]
+      selectivity$`SA Red Snapper` |> dim()
+      
+      # TODO check if the Fs are equal
+      # update CalcFfromCatch for discards etc?
+      t <- CalcFfromCatch()
+      # 
+      
+    }
+    
+    
+    # sim, time step, fleet 
     
     
     # ---- Calculate F Overall - Last TS ----

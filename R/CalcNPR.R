@@ -45,7 +45,7 @@ CalcNPR_ <- function(apicalF, Stock, Fleet, TimeSteps) {
   Fleet <- CalcFatAge(Fleet, TimeSteps=TimeSteps, apicalF= GetApicalF(Fleet))
   NPR <- CalcFishedSurvival(Stock, Fleet=Fleet, TimeSteps=TimeSteps)
   if (x@SRR@SpawnTimeFrac !=0) {
-    NPRS <- CalcFishedSurvival(x, Fleet=Fleet, SP=TRUE, TimeSteps=TimeSteps)
+    NPRS <- CalcFishedSurvival(Stock, Fleet=Fleet, SP=TRUE, TimeSteps=TimeSteps)
   } else {
     NPRS <- NPR
   }

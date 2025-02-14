@@ -5,7 +5,6 @@ CalcCurves <- function(OM, SPR0=NULL, FSearch=NULL, TimeSteps=NULL) {
   if (is.null(SPR0)) 
     SPR0 <- CalcSPR0(OM)
  
-  
   if (is.null(FSearch))
     FSearch <- OM@Control$Curves$FSearch
   
