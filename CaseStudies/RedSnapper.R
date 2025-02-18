@@ -4,18 +4,42 @@ la <- devtools::load_all
 
 la()
 
+OM <- ImportBAM('Red Snapper')
+
+rdata <- bamExtras::rdat_RedSnapper
+
+
+cbind(Year=rdata$t.series$year, SSB=rdata$t.series$SSB, Recruits=rdata$t.series$recruits)
+
+n1 <- rdata$N.age[1,]
+n1 <- rdata$N.age[1,]
+
+z1 <- rdata$Z.age[1,]
+
+ns1 <- rdata$N.age.spawn[1,] 
+
+cbind( n1 *exp(-(z1*0.663)), ns1)
+
+rdata$N.age.spawn[1,]
+rdata$parms$spawn.time
+
+rdata$F.age[1,]
+rdata$t.series$SSB
+
+
+
+(rdata$a.series$M[1] +0.002950622)*0.663
+
+
 # temporary copy over from existing
 MOM <- readRDS('../SAFMC-MSE/OM_Objects/BaseCase_RS.OM')
 MOM@nsim <- 2
 OM2 <- Convert(MOM)  
+
+
 spatial <- OM2@Stock$`Red Snapper`@Spatial
 
-OM <- ImportBAM('Red Snapper')
 OM@Stock$`SA Red Snapper`@Spatial <- spatial
-
-
-
-
 
 messages='default'
 nSim=NULL
@@ -27,8 +51,20 @@ SimulateDEV
 
 multiHist <- Simulate(MOM)
 
-t = multiHist$`Red Snapper`$`Commercial Line`@AtAge$Removals[1,,1,] |> sum()
-t/1000
+bam <- rdata$N.age |> apply(1, sum)
+m1 <- apply(multiHist$`Red Snapper`$`Commercial Line`@AtAge$Number[1,2:21,,],2, sum)
+
+
+
+t = multiHist$`Red Snapper`$`Commercial Line`@AtAge$Number[1,,1:2,] 
+t <- apply(t, 1:2, sum)
+t
+rdata$N.age[1,]
+
+t <- t[2:21,,]
+apply(t, 2, sum)
+2422237/ 2458905
+
 
 # SPR 
 multiHist$`Red Snapper`$`Commercial Line`@Ref$ByYear$F_SPR[1,,70]

@@ -1,14 +1,4 @@
-GetBiomassAtAge <- function(Stock, FleetList, NatAgeArea, TimeSteps=NULL, fleetweight=TRUE) {
-  
-  if(!fleetweight)
-    cli::cli_abort('not done yet!', .internal=TRUE)
-  
-  fleetweight <- GetFleetWeightAtAge(Stock, FleetList, TimeSteps)
-  fleetweight <- AddDimension(fleetweight, 'Area')
-  NatAgeArea <- AddDimension(NatAgeArea, 'Fleet') |> aperm(c(1,2,3,5,4))
-  BatAgeArea <- ArrayMultiply(NatAgeArea, fleetweight)
-  BatAgeArea
-}
+
 
 CalcVBiomassArea <- function(Stock, FleetList, NatAgeArea, TimeSteps=NULL, Rel=TRUE) {
   
@@ -16,12 +6,16 @@ CalcVBiomassArea <- function(Stock, FleetList, NatAgeArea, TimeSteps=NULL, Rel=T
     TimeSteps <- TimeSteps(Stock, 'Historical')
   
   # Calculates the relative density of vulnerable biomass in each area
-  BatAgeArea <- GetBiomassAtAge(Stock, FleetList, NatAgeArea, TimeSteps)
+  fleetweight <- GetFleetWeightAtAge(Stock, FleetList, TimeSteps) |>
+    AddDimension('Area')
+  
+  NatAgeArea <- AddDimension(NatAgeArea, 'Fleet') |> aperm(c(1,2,3,5,4))
+  BatAgeArea <- ArrayMultiply(NatAgeArea, fleetweight)
   
   selectivity <- GetSelectivityAtAge(FleetList, TimeSteps)
   retention <- GetRetentionAtAge(FleetList, TimeSteps)
-  SelectRetain <- ArrayMultiply(retention, selectivity) 
-  SelectRetain <- AddDimension(SelectRetain, 'Area')
+  SelectRetain <- ArrayMultiply(retention, selectivity) |>
+    AddDimension('Area')
   VBatAgeArea <- ArrayMultiply(BatAgeArea, SelectRetain)
   
   VBatArea <- apply(VBatAgeArea, c(1,3,4,5), sum)
@@ -39,7 +33,7 @@ CalcDensity <- function(Stock, FleetList, NatAgeArea, TimeSteps=NULL, Rel=TRUE) 
   
   VBatArea <- CalcVBiomassArea(Stock, FleetList, NatAgeArea, TimeSteps, Rel=FALSE)
   
-  RelativeSize <- Stock@Spatial@RelativeSize |>
+  RelativeSize <- GetRelativeSize(Stock) |>
     AddDimension('Time Step') |>
     AddDimension('Fleet') |>
     aperm(c(1,3,4,2))

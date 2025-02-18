@@ -1,18 +1,3 @@
-# 2025/01/20
-# - NSWO.R - keep working on SPR Curve calcs. Added StockList, StockFleetList, and FleetList S3 classes
-
-# 2025/01/17 
-# - NSWO.R - generalize SPR calcs for multiple stocks and fleets 
-
-# 2025/01/16 
-# - testOM.R - code RefPoint calcs and compare with Hist - working test after NSWO working 
-
-
-# TODO
-# - add check in Populate for Selectivity to have max value 1. 
-
-
-
 
 #' @describeIn runMSE Development version of `Simulate`
 #' @export
@@ -33,446 +18,69 @@ SimulateDEV <- function(OM=NULL,
   
   OM <- StartUp(OM, messages, nSim) 
   
-  Hist <- new('hist') 
-  for (nm in slotNames(OM)) {
-    slot(Hist, nm) <- slot(OM, nm)
-  }
   
-  # TODO - this should be done in the call to Hist() creating `hist` object
-  # arrays: sim, age, time-step, region (area) fleet # list by stock
-  Hist@Removal <- purrr::map(OM@Stock, 
-                             CreateArraySATFR, 
-                             nSim(OM),
-                             TimeSteps(OM, 'Historical'),
-                             fleetnames=FleetNames(OM))
-  
-  Hist@Retain <- purrr::map(OM@Stock, 
-                            CreateArraySATFR, 
-                             nSim(OM),
-                             TimeSteps(OM, 'Historical'),
-                             fleetnames=FleetNames(OM))
-  
-  Hist@Unfished <- CalcUnfishedDynamics(OM, messages, parallel=parallel)
-  
-  # TODO Dynamic Unfished
-  
-  # TODO add check for changes to all functions 
-  Hist@RefPoints <- CalcRefPoints(OM, Hist@Unfished)
-  
-  # TODO - SPRcrash, MGT, RefYield 
-  # GetFSPR(SPRarray=Hist@RefPoints@Curves@SPR[[1]], SPRvalue=0.3)
-  
-  # ---- Optimize Rec Devs for Initial Depletion ----
-  # TODO
-  if (length(OM@Stock[[1]]@Depletion@Initial)>0)
-    cli::cli_abort('Initial depletion not done', .internal=TRUE)
-  
-  # ---- Non-Equilibrium Initial Time Step ----
-  Hist@Number <- purrr::map2(OM@Stock,
-                             Hist@Unfished@Equilibrium@Number, 
-                             InitNumber)
+  Hist <- Hist(OM)
 
+  # ---- Calculate Unfished Dynamics ----
+  Hist@Unfished <- CalcUnfishedDynamics(OM)
 
-  CalcEffortDist <- function(Hist, TimeSteps=NULL, type=c('Density', 'Biomass')) {
-    # Distributes Effort over Areas 
-    # Density: Proportional to Relative Density of Vulnerable Biomass
-    # Biomass: Proportional to Relative Vulnerable Biomass; i.e., ignores area size; 
-    # needed for non-spatial assessments
-    
-    # Note: calculated independently by stock to deal with 
-    # multi-stock OMs imported from single-stock, non-spatial assessments
-    
-    if (is.null(TimeSteps))
-      TimeSteps <- TimeSteps(Hist@Stock[[1]], 'Historical')
-    
-    type <- match.arg(type)
-    
-    NatAgeArea <- purrr::map(Hist@Number, 
-                             ArraySubsetTimeStep, 
-                             TimeSteps=TimeSteps)
-    
-    if (type=='Density') {
-      EffortDist <- purrr::pmap(list(Hist@Stock,
-                                     Hist@Fleet,
-                                     NatAgeArea), 
-                                TimeSteps=TimeSteps, CalcDensity)
-    } else {
-      EffortDist <- purrr::pmap(list(Hist@Stock,
-                                     Hist@Fleet,
-                                     NatAgeArea), 
-                                TimeSteps=TimeSteps, CalcVBiomassArea)
-    }
-      
-    Effort <- purrr::map(Hist@Fleet, GetEffort, TimeSteps=TimeSteps)
-    Effort <- purrr::map(Effort, AddDimension, 'Area')
-    purrr::map2(Effort, EffortDist, ArrayMultiply)
-    
-  }
+  # ---- Calculate Reference Points ----
+  Hist@RefPoints <- CalcRefPoints(Hist)
+
+  # ---- Optimize for Initial Depletion ----
+  Hist <- OptimInitDepletion(Hist)
+  
+  # ---- Number and Biomass in Initial Time Step ----
+  Hist <- CalcInitialTimeStep(Hist)
+  
+  # ---- Optimize Catchability for Terminal Depletion ----
+  Hist <- OptimCatchability(Hist)
   
   
+  # ---- Historical Population Dynamics ----
+
   # loop over historical timesteps 
   TimeStepsHist <- TimeSteps(OM, 'Historical')
   nHistTS <- length(TimeStepsHist)
-  ts <- 2 
+  ts <- 1
   nHistTS + 1
-  for (ts in 2:nHistTS) {
+  for (ts in cli::cli_progress_along(1:nHistTS,
+                                     'Calculating Population Dyamics')) {
+    
+    
     
     thisTimeStep <- TimeStepsHist[ts]
-    lastTimeStep <- TimeStepsHist[ts-1]
+    nextTimeStep <- TimeStepsHist[ts+1]
     
-    # ---- Do MICE stuff during Last Time Step (if applicable) -----
+    # ---- Do MICE stuff during this Time Step (if applicable) -----
     # TODO
-    Hist <- CalcMICE(Hist, TimeStep=lastTimeStep)
+    Hist <- CalcMICE(Hist, TimeStep=thisTimeStep)
     
-    # ---- Calculate Catch by Area Last Time Step ----
+    # for MPs - Calculate Effort, Selectivity, etc
     
-    TimeSteps <- lastTimeStep
-    
-    CatchByArea <- function(Hist, TimeSteps=NULL) {
-     if (is.null(TimeSteps)) 
-       TimeSteps <- TimeSteps(Hist, 'Historical')
-     
-     # Distribute Effort across Areas 
-     EffortDist <- CalcEffortDist(Hist, TimeSteps)
-     
-     # Calculate Catches in Areas 
-     Catchability <- purrr::map(Hist@Fleet, GetCatchability,
-                                TimeSteps=TimeSteps) |>
-       purrr::map(AddDimension, 'Area')
-     
-     ApicalF <- purrr::map2(Catchability, EffortDist, ArrayMultiply) |>
-       purrr::map(AddDimension, 'Age') |>
-       purrr::map(aperm, c(1,5,2,3,4))
-     
-     selectivity <- purrr::map(Hist@Fleet, GetSelectivityAtAge, TimeSteps=TimeSteps) |>
-       purrr::map(AddDimension, 'Area')
-     retention <- purrr::map(Hist@Fleet, GetRetentionAtAge, TimeSteps=TimeSteps) |>
-       purrr::map(AddDimension, 'Area')
-     discardmortality <- purrr::map(Hist@Fleet,
-                                    GetDiscardMortalityAtAge, TimeSteps=TimeSteps) |>
-       purrr::map(AddDimension, 'Area')
-     
-     FInteract <- purrr::map2(ApicalF, selectivity, ArrayMultiply)
-     FRetainAtAge <- purrr::map2(FInteract, retention, ArrayMultiply)
-     FDiscardTotal <- purrr::map2(FInteract, FRetainAtAge, ArraySubtract)
-     FDiscardDead <-  purrr::map2(FDiscardTotal, discardmortality, ArrayMultiply)
-     FDeadAtAge <- purrr::map2(FRetainAtAge, FDiscardDead, ArrayAdd)
-     
-     NMortAtAge <- purrr::map(Hist@Stock,  GetNMortalityAtAge, TimeSteps=TimeSteps)
-     
-     
-    }
+    # ---- Calculate Catch by Area this Time Step ----
+    Hist <- CatchByArea(Hist, TimeSteps=thisTimeStep)
   
-    # number at the beginning of last time step
+    # ---- Calculate and Update overall F by Fleet this Time Step ----
+    Hist <- CalcFleetFMortality(Hist, TimeSteps=thisTimeStep)
     
-    NatAgeArea <- purrr::map(Hist@Number, 
-                             ArraySubsetTimeStep, 
-                             TimeSteps=TimeSteps)
+    # ---- Calculate Recruitment  Time Step ----
+    Hist <- CalcRecruitment(Hist, TimeStep=thisTimeStep)
     
-    NatAge <- purrr::map(NatAgeArea, SumOverDimension)
-    
-                            
-    
+    # ---- Number, Biomass at beginning of Next Time Step and Move ----
+    Hist <- CalcNumberNext(Hist, thisTimeStep)
 
-    
-    FDeadAtAge=FDeadAtAge$`SA Red Snapper`
-    
-    # Red Snapper 
-    # TODO - modify Effort Dist to make equal F across areas
-    # if Effort proportional to Biomass
-    # each area has apical F
-    # F should be same all areas 
-    fotal <- apply(FDeadAtAge, 1:4, sum)
-    fotal <- replicate(6,fotal)
-    FDeadAtAge[] <- fotal
-    
-    FRetainAtAge=FRetainAtAge$`SA Red Snapper`
-    NatAge=NatAgeArea$`SA Red Snapper`
-    NMortAtAge=NMortAtAge$`SA Red Snapper`
-    
-    r = Removal[1,,1,1,]*
-    WeightAtAge$`SA Red Snapper`[1,,1,1,]
-    sum(r)/1000
-    # SEDAR 73: 1950: 368.85
-    
-    CatchN <- purrr::pmap(list(FDeadAtAge,
-                              FRetainAtAge,
-                              NatAgeArea,
-                              NMortAtAge), 
-                         CalcCatchN
-                         )
-    
-    
-    
-    
-    RemovalN <- lapply(CatchN , '[[', 'Removal')
-    RetainN <- lapply(CatchN , '[[', 'Retain')
-    
-     
-   
-    WeightAtAge <- purrr::map2(Hist@Stock, Hist@Fleet, GetFleetWeightAtAge, TimeSteps=lastTimeStep) |>
-      purrr::map(AddDimension, 'Area')
-    
-    RemovalB <- purrr::map2(WeightAtAge, RemovalN, ArrayMultiply)
-    RetainB <- purrr::map2(WeightAtAge, RemovalN, ArrayMultiply)
-    
-    t = RemovalB$`SA Red Snapper` |> sum()
-    t/1000
-    
-    for (i in seq_along(RemovalB)) {
-      ArrayFill(Hist@Removal[[i]]) <- RemovalB[[i]]
-      ArrayFill(Hist@Retain[[i]]) <- RetainB[[i]]
-    }
-    Hist 
-  
-  
-    
-
-    
-    
-    apply(Catch$`SA Red Snapper`$Retain[1,,1,,], 2, sum)
-    
-    FDeadAtAge=FDeadAtAge$`SA Red Snapper`
-    FRetainAtAge=FRetainAtAge$`SA Red Snapper`
-    NatAge= NatAgeArea$`SA Red Snapper`
-    NMortAtAge=NMortAtAge$`SA Red Snapper`
-    
-
-    FDeadTotal <- purrr::map(FDead, \(x)
-                             apply(x, c(1,2,3,5), sum))
-    
-    ZatAge <- purrr::map2(FDeadTotal, NMortalityAtAge, ArrayAdd)
-    
-    BatAge <- purrr::pmap(list(Hist@Stock,
-                     Hist@Fleet,
-                     NumberLastTimeStepByArea  
-    ), 
-    TimeSteps=lastTimeStep, GetBiomassAtAge)
-    
-    # TODO - replace other CalcCatch function with this one
-    FatAge <- FDead$`SA Red Snapper`
-    ZatAge <- ZatAge$`SA Red Snapper`
-    BatAge <- BatAge$`SA Red Snapper`
-    NatAge <- NumberLastTimeStepByArea$`SA Red Snapper`
-    
-    # TODO calculate number first then multiply by weight
-    CalcCatch2 <- function(FatAge, ZatAge, NatAge) {
-      
-      NatAge <- AddDimension(NatAge, 'Fleet') |> 
-        aperm(c(1,2,3,5,4))
-      ZatAge <- AddDimension(ZatAge, 'Fleet') |> 
-        aperm(c(1,2,3,5,4)) 
-      
-      RemovalNumber <- ArrayMultiply(NatAge, (1-exp(-ZatAge))) |>
-        ArrayMultiply(ArrayDivide(FatAge,ZatAge))
-      
-      RemovalBiomass <- ArrayMultiply(RemovalNumber, 
-                                      AddDimension(FleetWeightatAge, 'Area'))
-      
-      # checking F
-      RemovalBiomass[1,,1,1,] |> sum()
-      CatchAtAge <- apply(RemovalNumber[1,,1,1,], 1, sum)
-      PopoAtAge <- apply(NatAge[1,,1,1,], 1, sum)
-      M <- NMortalityAtAge$`SA Red Snapper`[1,,1,1]
-      selectivity$`SA Red Snapper` |> dim()
-      
-      # TODO check if the Fs are equal
-      # update CalcFfromCatch for discards etc?
-      t <- CalcFfromCatch()
-      # 
-      
-    }
-    
-    
-    # sim, time step, fleet 
-    
-    
-    # ---- Calculate F Overall - Last TS ----
-    Hist@Fleet <- CalcFatAge(Hist@Fleet, TimeSteps=lastTimeStep) # TODO this should update the array rather than replace it
-    Hist@Fleet <- CalcApicalF(Hist@Fleet, TimeStep=lastTimeStep)
-    
-    Catches <- purrr::pmap(
-      list(
-        Hist@Stock, 
-        Hist@Fleet, 
-        NumberLastTimeStep
-      ), 
-      CalcCatch, TimeSteps=lastTimeStep)
-
-    # Dead overall: Catches$`Day octopus`$RemovalNumber
-    
-    CalcEffortFromFDead <- function(Fleet) {
-      
-    }
-    
-    # Set effort by area - overall effort divide by relative size
-    
-    
-    
-    # TODO: expand for multi fleet
-    SolveFInteractArea <- function(logFArea, ...) {
-      Farea <- exp(logFArea)
-      nArea <- length(Farea)
-      
-      FInteractAgeArea <- Farea * replicate(nArea,select)
-        
-      ZArea <- FArea+ replicate(nArea,NaturalMortality)
-      
-    }
-    
-    apicalF <- GetApicalF(Hist@Fleet$`Day octopus`$`Octopus Fleet`, lastTimeStep)
-    M <- GetNMortalityAtAge(Hist@Stock$`Day octopus`, lastTimeStep)
-    NaturalMortality <- M[1,,1]
-    select <- GetSelectivityAtAge(Hist@Fleet$`Day octopus`$`Octopus Fleet`, lastTimeStep)
-    select <- select[1,,1]
-    logFArea <- rep(log(apicalF[1,1]),2)
-    
-    dopt <- optim(logFArea, SolveFInteractArea,  method = "BFGS")
-    
-    # ----  F, Effort Catch, Removals, Discards by Area - Last TS ----
-    
-    # Calc F-at-Age Array Overall
-  
-    
-    
-
-    Fleet@FishingMortality
-
-    
-    Fleet <- Hist@Fleet$`Day octopus`$`Octopus Fleet`
-    
-    
-    # F-at-Age by Area 
-    
-    # Update F-at-Age Overall if needed
-    
-    
-    
-    
-    
-    
-    
-    
-    Stock <- Hist@Stock$`Day octopus`
-    Fleet <- Hist@Fleet$`Day octopus`
-    NatAge <- NumberLastTimeStep$`Day octopus`
-    
-    # CalcApicalF <- function(Fleet, TimeStep) {
-    #   # ApicalF should be calculated from max FDead
-    #   if (inherits(Fleet, 'fleet')) {
-    #     effort <- ArraySubsetTimeStep(Fleet@Effort@Effort, TimeStep)
-    #     q <- ArraySubsetTimeStep(Fleet@Effort@Catchability, TimeStep)
-    #     if (!is.null(ArraySubsetTimeStep(Fleet@Effort@qCV)))
-    #       cli::cli_abort('`qCV` not done yet', .internal=TRUE)
-    #     if (!is.null(ArraySubsetTimeStep(Fleet@Effort@qInc)))
-    #       cli::cli_abort('`qInc` not done yet', .internal=TRUE)
-    #     
-    #     if (is.null(Fleet@FishingMortality@ApicalF)) {
-    #       Fleet@FishingMortality@ApicalF <- ArrayMultiply(q, effort)
-    #     } else {
-    #       Fleet@FishingMortality@ApicalF <- cbind(Fleet@FishingMortality@ApicalF, ArrayMultiply(q, effort))
-    #     }
-    #     return(Fleet)
-    #   }
-    #   purrr::map(Fleet, CalcApicalF, TimeStep=TimeStep)
-    # } 
-    
-    
-    
-    
-    Hist@Fleet <- purrr::map(Hist@Fleet, CalcApicalF, TimeStep=lastTimeStep)
-    
-
-    
-    # sim, time-step, area 
-    Hist@Fleet$`Day octopus`$`Octopus Fleet`@Distribution@ApicalF
-    GetApicalF(Hist@Fleet$`Day octopus`$`Octopus Fleet`, TimeSteps = lastTimeStep)
-    
-    
-    Hist@Fleet$`Day octopus`$`Octopus Fleet`@FishingMortality@ApicalF
-    
-    
-    
-   
-    
-    # TODO - this needs to fill the array each time 
-    Hist@Removal$`Day octopus` |> dim()
-    object <- Hist@Removal$`Day octopus`
-    value <- t
-    
-    `Removal<-` <- function(object, value) {
-      dimnames(object)$`Time Step` %in% dimnames(value)$`Time Step`  
-
-      length(dim(value)) < length(dim(object))
-      
-            length(dim(object))
-      
-      abind::afill(object) <- value
-      
-    }
-    
-    
-    t <- lapply(Catches, '[[', 'RemovalBiomass')
-    
-    t = t$`Day octopus`
-    
-    
-    Hist@Removal <- lapply(Catches, '[[', 'RemovalBiomass')
-    Catches$`Day octopus`$RemovalNumber
-    Catches$`Day octopus`$RemovalBiomass
-                
-    Hist@Removal                                                                                               
-    Hist@Retain
-    
-    Stock <- Hist@Stock$`Day octopus`
-    Fleet <- Hist@Fleet$`Day octopus`
-    NatAge <- NumberLastTimeStep$`Day octopus`
-    
-    
-   
- 
-    
-    t = Hist@Number$`Day octopus`
-    
-   
-    ListArray <- 
-    
-    
-    
-    Hist@Number$`Day octopus`[1,,ts-1,]
-    
-    Hist@Fleet$`Day octopus`$`Octopus Fleet`@Effort@Effort[,ts-1]
-    
-
-    Hist@Fleet$`Day octopus`$`Octopus Fleet`@Distribution@ApicalF
-    
-    Hist@Fleet$`Day octopus`$`Octopus Fleet`@Distribution@Effort
-    
-    
-    # Total catch last time step
-    Hist@Fleet <- CalcFatAge(Hist@Fleet, TimeSteps=lastTimeStep)
-  
-    # Distribute Effort over Areas (if applicable)  
-    
-    
-    # Fishing Mortality by Area for last time step
-    
-    # Catch by Area for Last
-    
-    # Calculate Spawning Output  and Recruitment for last time step
-    
-
-    # Mortality and Aging into this time step
-    
-    # Move Stock at beginning of this time step
-    
-    
-    
-    
   }
   
+  # TODO - fix and match BAM
   
+  bam <- rdata$N.age |> apply(1, sum)
+  m1 <- apply(multiHist$`Red Snapper`$`Commercial Line`@AtAge$Number[1,2:21,,],2, sum)
+  m2 <- Hist@Number$`SA Red Snapper`[1,2:21,,] |> apply(c('Time Step'), sum)
   
+  plot(bam)
+  lines(m1)
+  lines(m2, col='blue')
  
   
   
@@ -480,7 +88,7 @@ SimulateDEV <- function(OM=NULL,
 
   
   
-  HistRel <- SetHistRel(OM) 
+
   
   
   

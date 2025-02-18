@@ -239,7 +239,7 @@ DropDimension <- function(array, name='Area') {
   array
 }
 
-AddDimension <- function(array, name=NULL) {
+AddDimension <- function(array, name=NULL, val=1) {
   if (inherits(array, 'list'))
     array <- unlist(array)
   if (is.null(array))
@@ -252,13 +252,13 @@ AddDimension <- function(array, name=NULL) {
   if (all(d==1)) {
     outarray <- array(array, dim=c(d, 1))
   } else {
-    outarray <- replicate(1, array) 
+    outarray <- replicate(val, array) 
   }
   
   # set dimnames
   l <- dimnames(array)
   if (!is.null(l)) {
-    l[name] <- 1
+    l[name] <- val
     dimnames(outarray) <- l  
   }
   outarray
@@ -328,6 +328,25 @@ List2Array <- function(List, dimname='Fleet') {
   d[[dimname]] <- names(List)
   dimnames(array) <- d
   array
+}
+
+Array2List <- function(array, pos=3) {
+  dd <- dim(array)
+  list <- vector('list', dd[pos])
+  dimnames <- dimnames(array)
+  
+  listnames <- dimnames[[pos]]
+  names(list) <- listnames
+  keepnames <- dimnames[-pos]
+  keepnames[[names(dimnames)[pos]]] <- 1
+  
+  for (i in 1:length(list)) {
+    tdimnames <- dimnames
+    tdimnames[pos] <-  dimnames[[pos]][i]
+    list[[i]] <- abind::adrop(abind::asub(array, tdimnames, drop=FALSE), pos)
+    
+  }
+  list
 }
 
 # Makes sure each seed is unique for the same object

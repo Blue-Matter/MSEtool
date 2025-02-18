@@ -4,7 +4,7 @@
 \alias{CalcRefPoints}
 \title{Calculate Biological Reference Points}
 \usage{
-CalcRefPoints(OM, Unfished = NULL)
+CalcRefPoints(OM, Unfished = NULL, TimeSteps = NULL)
 }
 \arguments{
 \item{OM}{}

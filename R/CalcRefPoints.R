@@ -1,4 +1,8 @@
 
+# TODO add check for changes to all functions 
+# TODO - SPRcrash, MGT, RefYield 
+# GetFSPR(SPRarray=Hist@RefPoints@Curves@SPR[[1]], SPRvalue=0.3)
+
 #' Calculate Biological Reference Points
 #'
 #' @param OM 
@@ -7,6 +11,10 @@
 #' @returns
 #' @export
 CalcRefPoints <- function(OM, Unfished=NULL, TimeSteps=NULL) {
+  
+  if (inherits(OM, 'hist'))
+    Unfished <- OM@Unfished
+  
   if (is.null(Unfished))
     Unfished <- CalcUnfishedDynamics(OM)
   

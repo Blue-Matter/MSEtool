@@ -1774,7 +1774,7 @@ FishingMortality <- function(ApicalF=NULL,
                              DeadAtAge=NULL,
                              RetainAtAge=NULL,
                              Misc=list()) {
-  if (methods::is(ApicalF, 'fleet'))
+  if (inherits(ApicalF, 'fleet'))
     return(ApicalF@FishingMortality)
 
   methods::new('fishingmortality',
@@ -3024,13 +3024,32 @@ setClass("hist",
                  Biomass='list',
                  SBiomass='list',
                  SProduction='list',
-                 Removal='list',
+                 Removal='list', # sim, age, ts, fleet, area
                  Retain='list'
                  
          )
 )
 
 
+MakeNamedList <- function(names) {
+  l <- vector('list', length(names))
+  names(l) <- names
+  l
+}
 
+Hist <- function(OM, ...) {
+  if (!inherits(OM,'om'))
+    cli::cli_abort('`OM` must be class `om`')
+  Hist <- new('hist') 
+  for (nm in slotNames(OM)) {
+    slot(Hist, nm) <- slot(OM, nm)
+  }
+  
+  Hist@Number <- MakeNamedList(StockNames(OM))
+  Hist@Biomass  <- Hist@SBiomass <- Hist@SProduction <- Hist@Number
+  Hist@Removal <-   Hist@Retain <-  Hist@Number
+
+  Hist
+}
 
 

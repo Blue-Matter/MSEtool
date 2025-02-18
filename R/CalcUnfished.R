@@ -69,6 +69,8 @@ DistributeStock <- function(AtAge, UnfishedDist) {
 
 
 
+# TODO Dynamic Unfished
+
 # Calculates Equilibrium and Dynamic Unfished Population Dynamics
 # across spatial areas
 CalcUnfishedDynamics <- function(OM,

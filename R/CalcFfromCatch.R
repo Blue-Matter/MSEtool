@@ -1,4 +1,6 @@
-# 
+# Calculate apical F from Total Removals (retainted + dead discarded)
+# by fleet
+
 CalcFfromCatch <- function(CatchAtAge, 
                            PopatAge, 
                            NMortalityAtAge, 
@@ -7,221 +9,171 @@ CalcFfromCatch <- function(CatchAtAge,
                            DiscardAtAge=NULL,
                            control=NULL) {
   
+  # Calculates apicalF for Dead fish 
   
-  
-  # CatchAtAge can be either:
-  #
-  # 1. CatchInteract (all fish caught and some discarded alive)
-  # 2. CatchDead (retained and dead discarded fish)
-  # 
-  # 1. Will calculate apicalF Interact - i.e., proportional to Effort
-  # 2. Will calculate apicalF Dead. i.e., the actual fishing mortality for 
-  #    dead fish removed from population. 
-  #    apicalF Interact and Dead will be the same if there is no discarding, 
-  #    or all discards die, but otherwise apicalF Dead will be lower than
-  #    apicalF Interact
-  #
-  # RetainAtAge & DiscardAtAge are only required for calculation of apicalF Dead
-  
-  # NOTE: most of the time the Area dimension isn't needed. It is only used to 
-  # calculate the F on the overall population from area-specific catches
-  # i.e., this is different than the F within that area
+  # CatchAtAge is CatchDead (retained and dead discarded fish)
   
   # Dimensions:
   # Catch  
-  # 1. Age
-  # 2. Age, Fleet
-  # 3. Age, Fleet, Area
+  # 1. Sim, Age, Time Step, Fleet
+ 
+  # PopatAge: same units as Catch
+  # 1. Sim, Age, Time Step
   
-  # PopatAge
+  # NMortalityAtAge
+  # 1. Sim, Age, Time Step
+  
+  # SelectAtAge, RetainAtAge & DiscardAtAge (or NULL for RetainAtAge & DiscardAtAge)
+  # 1. Sim, Age, Time Step, Fleet
+  
+  # Calculate number of sims 
+  CatchAtAgeDim <- dim(CatchAtAge)
+  PopatAgeDim <- dim(PopatAge)
+  NMortalityAtAgeDim <- dim(NMortalityAtAge)
+  SelectAtAgeDim <- dim(SelectAtAge)
+  RetainAtAgeDim <- dim(RetainAtAge)
+  DiscardAtAgeDim <- dim(DiscardAtAge)
+  
+  nSims <- c(CatchAtAgeDim[1], 
+             PopatAgeDim[1],
+             PopatAgeDim[1],
+             SelectAtAgeDim[1],
+             RetainAtAgeDim[1],
+             DiscardAtAgeDim[1]
+  )
+  nSim <- max(nSims)
+  
+  nTSs <- c(CatchAtAgeDim[3], 
+           PopatAgeDim[3],
+           PopatAgeDim[3],
+           SelectAtAgeDim[3],
+           RetainAtAgeDim[3],
+           DiscardAtAgeDim[3]
+  ) 
+  nTS <- max(nTSs)
+
+  
+  nFleet <- SelectAtAgeDim[4]
+
+  ApicalF <- array(NA, dim=c(nSim, nTS, nFleet))
+  l <- list()
+  l$Sim <- 1:nSim
+  l$`Time Step` <- dimnames(CatchAtAge)$`Time Step`
+  l$Fleet <- dimnames(CatchAtAge)$`Fleet`
+  
+  dimnames(ApicalF) <- l
+  
+  # loop over sims
+  for (i in 1:nSim) {
+    for (ts in 1:nTS) {
+      CatchAtAge_i <- abind::adrop(CatchAtAge[GetIndex(i,nSims[1]),,GetIndex(ts,nTSs[1]),,drop=FALSE],c(1,3))
+      PopatAge_i <- abind::adrop(PopatAge[GetIndex(i, nSims[2]),,GetIndex(ts,nTSs[2]),drop=FALSE],c(1,3))
+      NMortalityAtAge_i <- abind::adrop(NMortalityAtAge[GetIndex(i, nSims[3]),,GetIndex(ts,nTSs[3]),drop=FALSE],c(1,3))
+      SelectAtAge_i <- abind::adrop(SelectAtAge[GetIndex(i,nSims[4]),,GetIndex(ts,nTSs[4]),,drop=FALSE],c(1,3))
+      RetainAtAge_i <- abind::adrop(RetainAtAge[GetIndex(i,nSims[5]),,GetIndex(ts,nTSs[5]),,drop=FALSE],c(1,3))
+      DiscardAtAge_i <- abind::adrop(DiscardAtAge[GetIndex(i,nSims[6]),,GetIndex(ts,nTSs[6]),,drop=FALSE],c(1,3))
+      
+      ApicalF[i,ts,] <- CalcFfromCatch_i(CatchAtAge_i,
+                                      PopatAge_i,
+                                      NMortalityAtAge_i,
+                                      SelectAtAge_i,
+                                      RetainAtAge_i,
+                                      DiscardAtAge_i,
+                                      control=control)
+      
+    }
+  }
+  ApicalF
+}
+
+# calculates by Sim and Time Step
+CalcFfromCatch_i <- function(CatchAtAge_i, 
+                            PopatAge_i, 
+                            NMortalityAtAge_i, 
+                            SelectAtAge_i,
+                            RetainAtAge_i=NULL,
+                            DiscardAtAge_i=NULL,
+                            control=NULL) {
+  
+
+  
+  # Dimensions:
+  # Catch  
+  # 1. Age, Fleet
+  
+  # PopatAge: same units as Catch
   # 1. Age
   
   # NMortalityAtAge
-  # 1. Age
+  # 1. Age, Time Step
   
-  # SelectAtAge, RetainAtAge & DiscardAtAge (or NULL for RetainAtAge & DiscardAtAge)
-  # 1. Age 
-  # 2. Age, Fleet
+  # SelectAtAge, RetainAtAge & DiscardAtAge 
+  # 1. Age, Fleet
   
-  if(!is.null(RetainAtAge))
-    cli::cli_abort('RetainAtAge not done yet', .internal=TRUE)
   
-  if(!is.null(DiscardAtAge))
-    cli::cli_abort('DiscardAtAge not done yet', .internal=TRUE)
-  
-  # ---- Controls -----
+
   if (is.null(control)) 
     control <- list(MaxIt=300, tolF=1e-4)
   
   maxiterF <- control$MaxIt
   tolF <- control$tolF
   
-  # ---- Set up Arrays -----
-  CatchAtAgeDim <- dim(CatchAtAge)
-  PopatAgeDim <- dim(PopatAge)
-  SelectAtAgeDim <- dim(SelectAtAge)
-  RetainAtAgeDim <- dim(RetainAtAge)
-  DiscardAtAgeDim <- dim(DiscardAtAge)
   
-  # Add Dimensions as Needed
-  if (is.null(CatchAtAgeDim)) {
-    CatchAtAge <- CatchAtAge |> array() |> AddDimension() |> AddDimension()
-  } 
-  if (length(CatchAtAgeDim)==2) {
-    CatchAtAge <- CatchAtAge |> AddDimension() 
-  }
-
-  if (is.null(SelectAtAgeDim)) {
-    if (length(SelectAtAge)==1) {
-      SelectAtAge <- array(SelectAtAge, dim=c(1,1))
-    } else {
-      SelectAtAge <- SelectAtAge |> array() |> AddDimension()   
-    }
-    
-  } 
+  nAge <- dim(SelectAtAge_i)[1]
+  nFleet <- dim(SelectAtAge_i)[2]
   
-  if (is.null(RetainAtAge)) {
-    RetainAtAge <- SelectAtAge
-    RetainAtAge[] <- 1
-    RetainAtAgeDim <- dim(RetainAtAge)
-  } else {
-    if (is.null(RetainAtAgeDim)) {
-      RetainAtAge <- RetainAtAge |> array() |> AddDimension() 
-    } 
-  }
-
-  if (is.null(DiscardAtAge)) {
-    DiscardAtAge <- SelectAtAge
-    DiscardAtAge[] <- 0
-    DiscardAtAgeDim <- dim(DiscardAtAge)
-  } else {
-    if (is.null(DiscardAtAgeDim)) {
-      DiscardAtAge <- DiscardAtAge |> array() |> AddDimension() 
-    } 
-  }
-
-  # Check Dimensions 
-  nAge <- length(NMortalityAtAge)
-  CatchAtAgeDim <- dim(CatchAtAge)
-  SelectAtAgeDim <- dim(SelectAtAge)
-  RetainAtAgeDim <- dim(RetainAtAge)
-  DiscardAtAgeDim <- dim(DiscardAtAge)
+  AF <- expand.grid(1:nAge, 1:nFleet) |> as.matrix() 
   
-  checkAge <- c(CatchAtAgeDim[1], SelectAtAgeDim[1], RetainAtAgeDim[1],DiscardAtAgeDim[1]) == nAge
-  if (!any(checkAge))
-    cli::cli_abort('All arrays must have equal number of age classes')
+  VulnPopAgeFleet <- SelectAtAge_i[]
+  VulnPopAgeFleet[] <- NA
+  VulnPopAgeFleet[AF] <- PopatAge_i[AF[,1]] * SelectAtAge_i[AF]
+  VulnPopFleet <- colSums(VulnPopAgeFleet)
   
-  chk <- c(length(CatchAtAgeDim)) == 3
-  if (any(!chk))
-    cli::cli_abort('`CatchAtAge` must have 3 dimensions')
-  
-  chk <- c(length(SelectAtAgeDim), length(RetainAtAgeDim), length(DiscardAtAgeDim)) == 2
-  if (any(!chk))
-    cli::cli_abort('`SelectAtAge`, `RetainAtAge`, and `DiscardAtAge` must have 2 dimensions')
-  
-  nFleet <- SelectAtAgeDim[2]
-  nArea <- CatchAtAgeDim[3]
-  
-  # ---- Calcs ----
-  AFR <- expand.grid(1:nAge, 1:nFleet, 1:nArea) |> as.matrix() # age, fleet, area (R)
-  
-  CatchFleetArea <- apply(CatchAtAge, 2:3, sum)
-  VulnPopAgeFleet <- array(NA, dim=c(nAge, nFleet))
-  VulnPopAgeFleet[AFR[,1:2]] <- PopatAge[AFR[,1]] * SelectAtAge[AFR[,1:2]]
-  
-  VulnPopFleet <- apply(VulnPopAgeFleet, 2, sum)
-  
-  apicalF <- array(NA, dim=c(nFleet, nArea))
-  # initial guess at apical F by fleet area
-  apicalF[AFR[,2:3]] <- CatchFleetArea[AFR[,2:3]]/VulnPopFleet[AFR[,2]] 
+  # initial guess at apical F by fleet 
+  apicalF <- colSums(CatchAtAge_i)/ colSums(VulnPopAgeFleet)
   apicalF[!is.finite(apicalF)] <- tiny
   
-  if (all(CatchFleetArea <=1E-6) || all(apicalF<=1E-6)) {
-    out <- array(tiny, dim=c(nFleet, nArea))
-    CollapseArray(out)
-  }
 
+  if (all(CatchAtAge_i <=1E-6) || all(apicalF<=1E-6)) 
+    return(rep(tiny, nFleet))
+  
   for (i in 1:maxiterF) {
-
-    FatAge <- array(NA, dim=c(nAge, nFleet, nArea))
-    PopDead <- ZatAge <- array(NA, dim=c(nAge))
-    FatAge[AFR] <- apicalF[AFR[,2:3]] * SelectAtAge[AFR[,1:2]]
+    apicalF_Age<- matrix(apicalF, nAge, nFleet, byrow=TRUE)
+    FInteract <- apicalF_Age * SelectAtAge_i
+    FRetain <- FInteract * RetainAtAge_i
+    FDiscard <- FInteract - FRetain
+    FDeadDiscard <- FDiscard * DiscardAtAge_i
+    FDead <- FRetain + FDeadDiscard
     
-    ZatAge <- apply(FatAge,1, sum) + NMortalityAtAge
+    ZatAge <- rowSums(FDead) + NMortalityAtAge_i
     ZatAge[!is.finite(ZatAge)] <- 1E-9
     ZatAge[ZatAge==0] <- 1E-9
     
-    PopDead <- (1-exp(-ZatAge)) * PopatAge
+    PopDead <- (1-exp(-ZatAge)) * PopatAge_i
     
-    predCatch <- FatAge/ZatAge * PopDead
-    predCatch[!is.finite(predCatch)] <- 0 
-    
-    predCatchTotal <- apply(predCatch, 2:3, sum)  
+    ZatAge <- matrix(ZatAge,  nAge, nFleet, byrow=FALSE)
+    PopDead <- matrix(PopDead,  nAge, nFleet, byrow=FALSE)
+    PopatAge_i <- matrix(PopatAge_i,  nAge, nFleet, byrow=FALSE)
+   
+    predRemoval <- FDead/ZatAge * PopDead
+    predRemoval[!is.finite(predRemoval)] <- 0 
     
     # derivative of predCatch wrt apicalF
-    dctarray <- array(NA, dim=dim(FatAge))
-    dctarray[AFR] <- PopDead/ZatAge - ((FatAge[AFR] * PopDead)/ZatAge^2) +
-      FatAge[AFR]/ZatAge * exp(-ZatAge) * PopatAge
+    dctarray <- array(NA, dim=dim(FDead))
+    dctarray[AF] <- PopDead/ZatAge - ((FDead * PopDead)/ZatAge^2) +
+      FDead/ZatAge * exp(-ZatAge) * PopatAge_i
     
-    dct <- apply(dctarray, 2:3, sum)  
+    dct <- apply(dctarray,2, sum)  
     
-    apicalF <- apicalF - (predCatchTotal - CatchFleetArea)/(0.8*dct)
- 
+    apicalF <- apicalF - (colSums(predRemoval) -colSums(CatchAtAge_i))/(0.8*dct)
+    
     # check for convergence
-    converge <- abs(predCatchTotal - CatchFleetArea)/CatchFleetArea
+    converge <- abs(predRemoval - CatchAtAge_i)/CatchAtAge_i
     converge[!is.finite(converge)] <- 0
     if (all(converge < tolF))
       break()
   }
-  CollapseArray(apicalF)
+  apicalF
 }
 
-CollapseArray <- function(out) {
-  d <- dim(out)
-  if (all(d==1)) {
-    return(out[1,1])
-  }
-  if (d[1]==1) {
-    return(out[1,])
-  }
-  if (d[2]==1) {
-    return(out[,1])
-  }
-}
-# 
-# CalcFfromCatch <- function(Catch, PopatAge, MatAge, SelectAtAge) {
-#   
-#   maxiterF <- 300
-#   tolF <- 1e-4
-#   
-#   # TODO add controls 
-#   # if(!is.null(control$maxiterF) && is.numeric(control$maxiterF)) maxiterF <- as.integer(control$maxiterF)
-#   # if(!is.null(control$tolF) && is.numeric(control$tolF)) tolF <- control$tolF
-#   # Catch = dead ; add option for catch = retained
-#   
-#   # TODO add retention and discard 
-#   
-#   
-#   apicalF <- Catch/sum(PopatAge * SelectAtAge) # initial guess
-#   if (Catch <= 1E-9 || apicalF <= 1E-9) 
-#     return(tiny)
-#   
-#   for (i in 1:maxiterF) {
-#     FatAge <- apicalF*SelectAtAge
-#     ZatAge <- FatAge + MatAge
-#     ZatAge[ZatAge==0] <- tiny
-#     
-#     PopDead <- (1-exp(-ZatAge)) * PopatAge
-#     predCatch <- FatAge/ZatAge * PopDead
-#     predCatch[!is.finite(predCatch)] <- 0 
-#     predCatchTotal <- sum(predCatch)
-#     
-#     # derivative of predCatch wrt apicalF
-#     dct <- sum(PopDead/ZatAge - ((FatAge * PopDead)/ZatAge^2) + FatAge/ZatAge * exp(-ZatAge) * PopatAge)
-#     
-#     if (dct<1E-15) break
-#     apicalF <- apicalF - (predCatchTotal - Catch)/(0.8*dct)
-#     if (abs(predCatchTotal - Catch)/Catch < tolF) break
-#   }
-#   apicalF
-# }
+

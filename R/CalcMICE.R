@@ -1,5 +1,6 @@
 CalcMICE <- function(Hist, TimeSteps=NULL) {
   
+  HistRel <- SetHistRel(OM) 
   
   if (length(Hist@Relations)>0) {
     cli::cli_abort('MICE not done', .interal=TRUE)

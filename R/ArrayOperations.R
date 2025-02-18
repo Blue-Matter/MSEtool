@@ -181,7 +181,30 @@ ArraySubtract <- function(array1, array2=NULL) {
     return(object)
   }
   
-  abind::afill(object) <- value
+  objectDims <- dimnames(object)
+  valueDims <- dimnames(value)
+  
+  if (length(objectDims) != length(valueDims))
+    stop('`object` and `value` must have same dimension names')
+  
+  chk <- rep(TRUE, length(objectDims))
+  for (i in seq_along(objectDims)) {
+    chk[i] <- all(valueDims[[i]] %in% objectDims[[i]])
+  }
+ 
+   if (!all(chk)) {
+    # Update object size if required
+    ind <- which(chk!=TRUE)
+    l <- objectDims 
+    for (i in seq_along(objectDims)) {
+      l[[i]] <- c(objectDims[[i]],  valueDims[[i]]) |> unique() |> sort()
+    }
+    
+    object <-  abind::abind(object, value, along=ind)
+    dimnames(object) <- l
+  } else {
+    abind::afill(object) <- value
+  }
   object
   
   
