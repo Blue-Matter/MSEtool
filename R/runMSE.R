@@ -697,78 +697,83 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
 
   # --- Calculate B-low ----
   Blow <- rep(NA,nsim)
+  
   HZN=2; Bfrac=0.5
   if (!is.null(control$HZN)) HZN <- control$HZN
   if (!is.null(control$Bfrac)) Bfrac <- control$Bfrac
-  if(!silent) message("Calculating B-low reference points")
-
-  MGThorizon<-floor(HZN*MGT)
-  if (!snowfall::sfIsRunning()) {
-    Blow <- sapply(1:nsim,getBlow,
-                   StockPars$N,
-                   StockPars$Asize,
-                   StockPars$SSBMSY,
-                   StockPars$SSBpR,
-                   FleetPars$MPA,
-                   StockPars$SSB0,
-                   StockPars$nareas,
-                   FleetPars$retA_real,
-                   MGThorizon,
-                   FleetPars$Find,
-                   StockPars$Perr_y,
-                   StockPars$M_ageArray,
-                   StockPars$hs,
-                   StockPars$Mat_age,
-                   StockPars$Wt_age,
-                   StockPars$Fec_Age,
-                   StockPars$R0a,
-                   FleetPars$V_real,
-                   nyears,
-                   StockPars$maxage,
-                   StockPars$mov,
-                   FleetPars$Spat_targ,
-                   StockPars$SRrel,
-                   StockPars$aR,
-                   StockPars$bR,
-                   Bfrac,
-                   maxF,
-                   SRRfun=StockPars$SRRfun, 
-                   SRRpars=StockPars$SRRpars,
-                   spawn_time_frac=StockPars$spawn_time_frac)
-  } else {
-    Blow <- sfSapply(1:nsim,getBlow,
-                   StockPars$N,
-                   StockPars$Asize,
-                   StockPars$SSBMSY,
-                   StockPars$SSBpR,
-                   FleetPars$MPA,
-                   StockPars$SSB0,
-                   StockPars$nareas,
-                   FleetPars$retA_real,
-                   MGThorizon,
-                   FleetPars$Find,
-                   StockPars$Perr_y,
-                   StockPars$M_ageArray,
-                   StockPars$hs,
-                   StockPars$Mat_age,
-                   StockPars$Wt_age,
-                   StockPars$Fec_Age,
-                   StockPars$R0a,
-                   FleetPars$V_real,
-                   nyears,
-                   StockPars$maxage,
-                   StockPars$mov,
-                   FleetPars$Spat_targ,
-                   StockPars$SRrel,
-                   StockPars$aR,
-                   StockPars$bR,
-                   Bfrac,
-                   maxF,
-                   SRRfun=StockPars$SRRfun, 
-                   SRRpars=StockPars$SRRpars,
-                   spawn_time_frac=StockPars$spawn_time_frac)
+  if (!Bfrac==FALSE) {
+    
+    if(!silent) message("Calculating B-low reference points")
+    
+    MGThorizon<-floor(HZN*MGT)
+    if (!snowfall::sfIsRunning()) {
+      Blow <- sapply(1:nsim,getBlow,
+                     StockPars$N,
+                     StockPars$Asize,
+                     StockPars$SSBMSY,
+                     StockPars$SSBpR,
+                     FleetPars$MPA,
+                     StockPars$SSB0,
+                     StockPars$nareas,
+                     FleetPars$retA_real,
+                     MGThorizon,
+                     FleetPars$Find,
+                     StockPars$Perr_y,
+                     StockPars$M_ageArray,
+                     StockPars$hs,
+                     StockPars$Mat_age,
+                     StockPars$Wt_age,
+                     StockPars$Fec_Age,
+                     StockPars$R0a,
+                     FleetPars$V_real,
+                     nyears,
+                     StockPars$maxage,
+                     StockPars$mov,
+                     FleetPars$Spat_targ,
+                     StockPars$SRrel,
+                     StockPars$aR,
+                     StockPars$bR,
+                     Bfrac,
+                     maxF,
+                     SRRfun=StockPars$SRRfun, 
+                     SRRpars=StockPars$SRRpars,
+                     spawn_time_frac=StockPars$spawn_time_frac)
+    } else {
+      Blow <- sfSapply(1:nsim,getBlow,
+                       StockPars$N,
+                       StockPars$Asize,
+                       StockPars$SSBMSY,
+                       StockPars$SSBpR,
+                       FleetPars$MPA,
+                       StockPars$SSB0,
+                       StockPars$nareas,
+                       FleetPars$retA_real,
+                       MGThorizon,
+                       FleetPars$Find,
+                       StockPars$Perr_y,
+                       StockPars$M_ageArray,
+                       StockPars$hs,
+                       StockPars$Mat_age,
+                       StockPars$Wt_age,
+                       StockPars$Fec_Age,
+                       StockPars$R0a,
+                       FleetPars$V_real,
+                       nyears,
+                       StockPars$maxage,
+                       StockPars$mov,
+                       FleetPars$Spat_targ,
+                       StockPars$SRrel,
+                       StockPars$aR,
+                       StockPars$bR,
+                       Bfrac,
+                       maxF,
+                       SRRfun=StockPars$SRRfun, 
+                       SRRpars=StockPars$SRRpars,
+                       spawn_time_frac=StockPars$spawn_time_frac)
+    }
+    
   }
-
+ 
   StockPars$Blow <- Blow
   
   # --- Calculate Reference Yield ----
