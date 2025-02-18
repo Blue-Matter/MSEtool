@@ -224,9 +224,27 @@ GetCatchability <- function(object, TimeSteps=NULL, df=FALSE) {
 
 GetDiscardMortalityAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
   out <- GetFleetAtAge(object,  c('DiscardMortality', 'MeanAtAge'), TimeSteps, df)
-  if (inherits(out, 'list'))
+  
+  if (inherits(out, 'list')) {
+    out <- purrr::map(out, \(x) {
+      if (!is.null(x))
+        return(x)
+      array(0, dim=c(1,1,1), 
+            dimnames=list(Sim=1,
+                          Age=0,
+                          `Time Step`=TimeSteps[1]))
+        
+    })
     return(List2Array(out))
-  out
+  }
+    
+  if (!is.null(out))
+    return(out)
+  
+  array(0, dim=c(1,1,1), 
+        dimnames=list(Sim=1,
+                      Age=0,
+                      `Time Step`=TimeSteps[1]))
 }
 
 `SetDiscardMortalityAtAge<-` <- function(x, value) {

@@ -38,66 +38,18 @@ SimulateDEV <- function(OM=NULL,
   
   
   # ---- Historical Population Dynamics ----
+  Hist <- CalcPopDynamics(Hist, TimeSteps=TimeSteps(Hist, 'Historical'))
+  
+  
 
-  # loop over historical timesteps 
-  TimeStepsHist <- TimeSteps(OM, 'Historical')
-  nHistTS <- length(TimeStepsHist)
-  ts <- 1
-  nHistTS + 1
-  for (ts in cli::cli_progress_along(1:nHistTS,
-                                     'Calculating Population Dyamics')) {
-    
-    
-    
-    thisTimeStep <- TimeStepsHist[ts]
-    nextTimeStep <- TimeStepsHist[ts+1]
-    
-    # ---- Do MICE stuff during this Time Step (if applicable) -----
-    # TODO
-    Hist <- CalcMICE(Hist, TimeStep=thisTimeStep)
-    
-    # for MPs - Calculate Effort, Selectivity, etc
-    
-    # ---- Calculate Catch by Area this Time Step ----
-    Hist <- CatchByArea(Hist, TimeSteps=thisTimeStep)
   
-    # ---- Calculate and Update overall F by Fleet this Time Step ----
-    Hist <- CalcFleetFMortality(Hist, TimeSteps=thisTimeStep)
-    
-    # ---- Calculate Recruitment  Time Step ----
-    Hist <- CalcRecruitment(Hist, TimeStep=thisTimeStep)
-    
-    # ---- Number, Biomass at beginning of Next Time Step and Move ----
-    Hist <- CalcNumberNext(Hist, thisTimeStep)
-
-  }
-  
-  # TODO - fix and match BAM
-  
-  bam <- rdata$N.age |> apply(1, sum)
-  m1 <- apply(multiHist$`Red Snapper`$`Commercial Line`@AtAge$Number[1,2:21,,],2, sum)
-  m2 <- Hist@Number$`SA Red Snapper`[1,2:21,,] |> apply(c('Time Step'), sum)
-  
-  plot(bam)
-  lines(m1)
-  lines(m2, col='blue')
  
   
   
   
+ 
+ 
 
-  
-  
-
-  
-  
-  
-  # ---- Optimize catchability (q) to fit depletion ----
-  # (if needed)
-  
-  # ---- Run Historical Simulations ----
-  
-  # ---- Calculate Historical Catch ----
   
   # ---- Condition Observation Object on Real Fishery Data ----
   

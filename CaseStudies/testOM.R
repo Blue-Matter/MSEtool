@@ -1,17 +1,13 @@
-# TODO 
-# add Spat_Targ to Convert - add slot in distribution object
-# - replace methods::is with inherits
-# test for large number of Sims
-# code nSim option properly to reduce sims in all arrays
 
-devtools::load_all()
+la <- devtools::load_all
+
+la()
 
 testOM@nsim <- 10
 
-OMa <- Convert(testOM, Populate=FALSE)
+OM <- Convert(testOM, Populate=TRUE)
 
-OM <- Populate(OMa)
-
+OM@Stock$Albacore@Depletion@Final
 
 parallel=FALSE
 messages='default'

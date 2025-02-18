@@ -53,3 +53,33 @@ InitNumber <- function(Stock, UnfishedNumber) {
   NumberHist[,,1,] <- ArrayMultiply(UnfishedNumber[, ,1,, drop=FALSE], InitAgeClassRecDevs)
   NumberHist
 }
+
+CalcPopDynamics <- function(Hist, TimeSteps, MP=NULL) {
+  on.exit(cli::cli_progress_done())
+  
+  for (ts in cli::cli_progress_along(TimeSteps,
+                                     'Calculating Population Dyamics')) {
+    
+    thisTimeStep <- TimeSteps[ts]
+    
+    # ---- Do MICE stuff during this Time Step (if applicable) -----
+    # TODO
+    Hist <- CalcMICE(Hist, TimeStep=thisTimeStep)
+    
+    # for MPs - Calculate Effort, Selectivity, etc
+    
+    # ---- Calculate Catch by Area this Time Step ----
+    Hist <- CatchByArea(Hist, TimeSteps=thisTimeStep)
+    
+    # ---- Calculate and Update overall F by Fleet this Time Step ----
+    Hist <- CalcFleetFMortality(Hist, TimeSteps=thisTimeStep)
+    
+    # ---- Calculate Recruitment  Time Step ----
+    Hist <- CalcRecruitment(Hist, TimeStep=thisTimeStep)
+    
+    # ---- Number, Biomass at beginning of Next Time Step and Move ----
+    Hist <- CalcNumberNext(Hist, thisTimeStep)
+  }
+  
+  Hist
+}

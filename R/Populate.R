@@ -1213,7 +1213,7 @@ setMethod("Populate", "spatial", function(object,
 
 
 
-### ---- Depetion ----
+### ---- Depletion ----
 #' @describeIn Populate Populate a [Depetion()] object
 #' @export
 setMethod("Populate", "depletion", function(object,
@@ -1621,8 +1621,8 @@ setMethod("Populate", "effort", function(object,
 
   if (EmptyObject(object@Catchability)) {
     # if (!silent)
-      cli::cli_alert_info('`Catchability` (q) not populated. Assuming `q=1`')
-    object@Catchability <- matrix(1,1,1) |> AddDimNames(c('Sim', 'Time Step'),
+      # cli::cli_alert_info('`Catchability` (q) not populated. Assuming `q=1`')
+    object@Catchability <- matrix(NA,1,1) |> AddDimNames(c('Sim', 'Time Step'),
                                                         TimeSteps=TimeSteps)
   }
 

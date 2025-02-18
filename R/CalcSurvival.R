@@ -100,7 +100,7 @@ setMethod('UpdateApicalF', c('FleetList', 'ANY', 'ANY'), function(x, apicalF,  T
   if (length(x)==1) {
     x[[1]]@FishingMortality@ApicalF <- array(apicalF, dim=c(1,1))
     dimnames(x[[1]]@FishingMortality@ApicalF) <- list(Sim=1,
-                                                      `Time Step`=1) # TODO 
+                                                      `Time Step`=TimeSteps[1]) 
     return(x)
   }
   

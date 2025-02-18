@@ -37,16 +37,18 @@ CalcNumberNext <- function(Hist, thisTimeStep) {
   FRetainAtAge <- purrr::map2(FInteract, retention, ArrayMultiply)
   FDiscardTotal <- purrr::map2(FInteract, FRetainAtAge, ArraySubtract)
   FDiscardDead <-  purrr::map2(FDiscardTotal, discardmortality, ArrayMultiply)
-  FDeadAtAge <- purrr::map2(FRetainAtAge, FDiscardDead, ArrayAdd)
+  FDeadAtAge <- purrr::map2(FRetainAtAge, FDiscardDead, ArrayAdd) 
+  
+  FDeadAtAgeTotal <- purrr::map(FDeadAtAge, \(x)
+                                apply(x, c('Sim', 'Age', 'Time Step', 'Area'), sum))
   
   NMortAtAge <- purrr::map(Hist@Stock, GetNMortalityAtAge, TimeSteps=thisTimeStep) |>
-    purrr::map(AddDimension, 'Fleet') |>
     purrr::map(AddDimension, 'Area')
-  
-  ZMortAtAge <- purrr::map2(FDeadAtAge, NMortAtAge, ArrayAdd)
-  
+   
+  ZMortAtAge <- purrr::map2(FDeadAtAgeTotal, NMortAtAge, ArrayAdd) 
+
   for (st in 1:nStock(Hist)) {
-    dd <- dim(ZMortAtAge[[st]])
+    dd <- dim(FDeadAtAge[[st]])
     nSim <- dd[1]
     nAge <- dd[2]
     nFleet <- dd[4]
@@ -61,11 +63,11 @@ CalcNumberNext <- function(Hist, thisTimeStep) {
     NumberNextTimeStep[[st]][] <- 0
     
     NumberNextTimeStep[[st]][SA1FR[,c(1,2,3,5)]] <- NumberThisTimeStep[[st]][SAFR[,c(1,2,3,5)]] *
-      exp(-ZMortAtAge[[st]][SAFR])
+      exp(-ZMortAtAge[[st]][SAFR[,c(1:3,5)]])
     
     if (GetPlusGroup(Hist@Stock[[st]])) {
       NumberNextTimeStep[[st]][SALFR[,c(1,2,3,5)]] <-  NumberNextTimeStep[[st]][SALFR[,c(1,2,3,5)]] +
-        NumberThisTimeStep[[st]][SALFR[,c(1,2,3,5)]] * exp(-ZMortAtAge[[st]][SALFR])
+        NumberThisTimeStep[[st]][SALFR[,c(1,2,3,5)]] * exp(-ZMortAtAge[[st]][SALFR[,c(1:3,5)]])
     }
     
     # movement at beginning of  next timestep

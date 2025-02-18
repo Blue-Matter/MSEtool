@@ -80,7 +80,7 @@ BAM2Stock <- function(BAMdata, nSim, CurrentYear, TimeSteps) {
                                MeanAtAge = c(rep(0, nAdd), AgeSeries$weight),
                                Units = BAMdata$info$units.weight),
                  NaturalMortality=NaturalMortality(Pars=list(),
-                                                   MeanAtAge = c(rep(1E-6, nAdd), AgeSeries$M)),
+                                                   MeanAtAge = c(rep(tiny, nAdd), AgeSeries$M)),
                  Maturity=Maturity(Pars=list(),
                                    MeanAtAge = MaturityAtAge),
                  Fecundity=Fecundity(Pars=list(),
@@ -110,16 +110,18 @@ BAM2Stock <- function(BAMdata, nSim, CurrentYear, TimeSteps) {
   dimnames(stock@SRR@RecDevInit) <- list(Sim=1, Age=1:MaxAge(stock))
   
   # equilibrium recruitment
-  RecruitsHistEq <- BevertonHolt(BAMdata$t.series$SSB,
-                                 BAMdata$parms$SSB0, 
+  SSB0 <- BAMdata$eq.series$SSB.eq[1]
+  RecruitsHistEq <- BevertonHolt(BAMdata$t.series$SSB[1:nYear],
+                                 SSB0, 
                                  GetR0(stock)[1,1], 
                                  stock@SRR@Pars$h[1,1])
+
+  stock@SRR@RecDevHist <- array((BAMdata$N.age[2:(nYear+1),1]/RecruitsHistEq),
+                                dim=c(1, nYear)) 
   
-  stock@SRR@RecDevHist <- array((BAMdata$N.age[,1]/RecruitsHistEq)[1:nYear],
-                                dim=c(1, nYear))  
   dimnames(stock@SRR@RecDevHist) <- list(Sim=1, `Time Step`=TimeSteps[1:nYear])
   
-  stock@SRR@RecDevProj <- NULL # reset so it's populated again  Populate(stock)
+  stock@SRR@RecDevProj <- NULL # reset so it's populated again in Populate(stock)
   stock
 }
 

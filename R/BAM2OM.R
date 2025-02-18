@@ -219,7 +219,6 @@ BAM2MOM <- function(rdat, nsim = 48, proyears = 50, interval = 1,
                     ...
   )
   
-  MOM@cpars[[1]][[1]]$Perr_y[1,]
   
   # dots <- list(R0 = R0,
   #              phi0 = phi0,

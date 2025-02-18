@@ -189,10 +189,11 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
     h <- new_SR$h
   }
   SSB0 <- R0 * SSBpR_out
-
+  
   SSB <- apply(naa * exp(-spawn_time_frac * (Maa + faa)) * fecaa, c(1, 3), sum, na.rm = TRUE)
   D <- SSB[,nyears]/SSB0
 
+  
   OM@Name <- Name
   OM@M<-OM@L50<-OM@L50_95<-OM@L5<-OM@LFS<-OM@Vmaxlen <-c(1,1)
   OM@a<-OM@b<-1
@@ -287,6 +288,7 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   }
 
   # Deterministic Recruitment
+  
   if(SRrel == 1) {
     recd <- vapply(1:nsim, function(x) (0.8*R0[x]*h[x]*SSB[x, ])/(0.2*SSB0[x]*(1-h[x]) + (h[x]-0.2)*SSB[x, ]),
                    numeric(nyears)) %>% t()
@@ -297,6 +299,8 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
       vapply(1:nsim, function(x) a[x] * SSB[x, ] * exp(-b[x] * SSB[x, ]), numeric(nyears)) %>% t()
     })
   }
+  
+  
 
   recdevs <- log(naa[, 1, ]/recd) # age zero
   recdevs[is.na(recdevs)] <- 0
@@ -329,8 +333,10 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
     aperm(c(3,1,2))
   
   Perr <- array(NA_real_, c(nsim, maxage + nyears - LowerTri))
+
   if(altinit < 2) {       # normal assumption with or without plusgroup
-    
+    SURV <<- surv[1,,1]
+    r0 <<- R0
     
     Perr[, n_age:1] <- log(naa[, , 1]/(R0 * surv[, , 1]))
     
@@ -342,10 +348,12 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
     Perr[, 1] <- log(naa[, n_age, 1]/(R0 * surv[, n_age, 1] * fac))
     
   }
+
   Perr[, maxage + 2:(nyears - LowerTri)] <- recdevs[, 2:(nyears - LowerTri)]
   Perr_pro <- sample_recruitment(Perr_hist = Perr, proyears = proyears + LowerTri, procsd = procsd, AC = AC)
-
+ 
   OM@cpars$Perr_y <- exp(cbind(Perr, Perr_pro))
+
   OM@Perr <- rep(mean(procsd),2)
   OM@AC <- rep(mean(AC), 2)
   OM@cpars$AC <- AC

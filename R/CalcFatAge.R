@@ -90,7 +90,6 @@ setMethod('CalcFatAge', c('fleet', 'ANY'),
               FDead <- FRetain + FDiscardDead 
             }
             
-       
             ArrayFill(x@FishingMortality@ApicalF) <- apply(FDead, c(1,3), max)
             ArrayFill(x@FishingMortality@DeadAtAge) <- FDead
             ArrayFill(x@FishingMortality@RetainAtAge) <- FRetain

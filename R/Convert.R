@@ -538,8 +538,9 @@ OM2Depletion <- function(OM, cpars=NULL) {
     Depletion <- Depletion()
   }
   
-  if (length(Depletion@Final)<1)
+  if (length(Depletion@Final)<1) 
     Depletion@Final <- OM@D
+  
   Depletion
 }
 
