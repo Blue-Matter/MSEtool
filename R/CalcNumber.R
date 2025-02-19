@@ -45,6 +45,7 @@ CalcNumberNext <- function(Hist, thisTimeStep) {
   NMortAtAge <- purrr::map(Hist@Stock, GetNMortalityAtAge, TimeSteps=thisTimeStep) |>
     purrr::map(AddDimension, 'Area')
    
+  # TODO store Z-at-Age in Hist
   ZMortAtAge <- purrr::map2(FDeadAtAgeTotal, NMortAtAge, ArrayAdd) 
 
   for (st in 1:nStock(Hist)) {

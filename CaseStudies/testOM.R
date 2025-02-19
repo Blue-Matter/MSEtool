@@ -1,14 +1,15 @@
 
 library(MSEtool)
 
-la <- devtools::load_all
+# la <- devtools::load_all
+# 
+# la()
 
-la()
 
-
-testOM@nsim <- 40
+testOM@nsim <- 20
 
 OM <- Convert(testOM)
+
 
 
 

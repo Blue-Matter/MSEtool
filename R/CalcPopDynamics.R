@@ -57,38 +57,37 @@ InitNumber <- function(Stock, UnfishedNumber) {
 CalcPopDynamics <- function(Hist, TimeSteps, MP=NULL, silent=FALSE) {
   on.exit(cli::cli_progress_done())
   
+  progress <- seq_along(TimeSteps)
+  
   if (!silent) {
     progress <- cli::cli_progress_along(TimeSteps,
                                         'Calculating Population Dyamics')
-  } else {
-    progress <- seq_along(TimeSteps)
-  }
+  } 
  
-  
+  tictoc::tic()
   for (ts in progress) {
     
     thisTimeStep <- TimeSteps[ts]
     
     # ---- Do MICE stuff during this Time Step (if applicable) -----
     # TODO
-    Hist <- CalcMICE(Hist, TimeStep=thisTimeStep)
     
+    Hist <- CalcMICE(Hist, TimeStep=thisTimeStep)
+   
     # for MPs - Calculate Effort, Selectivity, etc
     
     # ---- Calculate Catch by Area this Time Step ----
+   
     Hist <- CatchByArea(Hist, TimeSteps=thisTimeStep)
-    
-    # ---- Calculate and Update overall F by Fleet this Time Step ----
-    purrr::map(Hist@Fleet[[1]], MSEtool:::GetApicalF)
-    Hist <- CalcFleetFMortality(Hist, TimeSteps=thisTimeStep)
-    
+   
     # ---- Calculate Recruitment  Time Step ----
     Hist <- CalcRecruitment(Hist, TimeStep=thisTimeStep)
     
     # ---- Number, Biomass at beginning of Next Time Step and Move ----
     Hist <- CalcNumberNext(Hist, thisTimeStep)
+    
   }
-  
+  tictoc::toc()
   
   
   

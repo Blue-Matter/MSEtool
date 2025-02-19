@@ -1,59 +1,4 @@
-ArraySubsetTimeStep <- function(object, TimeSteps=NULL) {
-  if (is.null(TimeSteps))
-    return(object)
-  
-  TimeSteps <- TimeSteps |> as.numeric() |> round(2)
-  
-  DN <- dimnames(object)
-  TSind <- which(names(DN) == 'Time Step')
-  if (length(TSind)==0)
-    cli::cli_abort("`Time Step` dimension not found in this array", .internal=TRUE)
-  
-  if (any(TimeSteps > max(DN$`Time Step`))) {
-    
-    TSexist <- TimeSteps[TimeSteps %in% DN$`Time Step`]
-    TSimpute <- TimeSteps[!TimeSteps %in% DN$`Time Step`]
-    if (length(TSimpute)) {
-      matchTS <- rep(NA, length(TSimpute))
-      for (i in seq_along(TSimpute)) {
-        matchTS[i] <- DN$`Time Step`[DN$`Time Step` < TSimpute[i]] |> max()
-      }
-    }
-    TimeStepsMod <- c(TSexist, matchTS)
-    array <- abind::asub(object, TimeStepsMod, TSind, drop=FALSE)
-    dimnames(array)$`Time Step` <- TimeSteps
-    return(array)
-  } 
-  abind::asub(object, (DN[[TSind]] %in% TimeSteps), TSind, drop=FALSE)
-}
 
-ArraySubsetSim <- function(object, Sims=NULL) {
-  if (is.null(Sims))
-    return(object)
-  
-  Sims <- Sims |> as.numeric() 
-  
-  DN <- dimnames(object)
-  TSind <- which(names(DN) == 'Sim')
-  if (length(TSind)==0)
-    cli::cli_abort("`Sim` dimension not found in this array", .internal=TRUE)
-  
-  if (any(Sims > max(DN$Sim))) {
-    TSexist <- Sims[Sims %in% DN$Sim]
-    TSimpute <- Sims[!Sims %in% DN$Sim]
-    if (length(TSimpute)) {
-      matchTS <- rep(NA, length(TSimpute))
-      for (i in seq_along(TSimpute)) {
-        matchTS[i] <- DN$Sim[DN$Sim < TSimpute[i]] |> max()
-      }
-    }
-    TimeStepsMod <- c(TSexist, matchTS)
-    array <- abind::asub(object, TimeStepsMod, TSind, drop=FALSE)
-    dimnames(array)$`Sim` <- Sims
-    return(array)
-  } 
-  abind::asub(object, (DN[[TSind]] %in% Sims), TSind, drop=FALSE)
-}
 
 Get <- function(object, slots, TimeSteps=NULL, df=FALSE) {
   
@@ -294,9 +239,28 @@ GetSelectivityAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
 
 GetRetentionAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
   out <- GetFleetAtAge(object,  c('Retention', 'MeanAtAge'),TimeSteps, df)
-  if (inherits(out, 'list'))
+
+  if (inherits(out, 'list')) {
+    out <- purrr::map(out, \(x) {
+      if (!is.null(x))
+        return(x)
+      array(1, dim=c(1,1,1), 
+            dimnames=list(Sim=1,
+                          Age=0,
+                          `Time Step`=TimeSteps[1]))
+      
+    })
     return(List2Array(out))
-  out
+  }
+  
+  if (!is.null(out))
+    return(out)
+  
+  array(1, dim=c(1,1,1), 
+        dimnames=list(Sim=1,
+                      Age=0,
+                      `Time Step`=TimeSteps[1]))
+  
 }
 
 `SetRetentionAtAge<-` <- function(x, value) {

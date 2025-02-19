@@ -106,7 +106,7 @@ CatchByArea <- function(Hist, TimeSteps=NULL) {
   }
   
   # if F is the same in each area, update overall F (same) in the Hist object
-  chk <- apply(ApicalF$Albacore,c(1,5), mean)
+  chk <- apply(ApicalF[[1]],c(1,5), mean)
   chksame <- chk/matrix(apply(chk, 1, mean), nrow(chk), ncol(chk), byrow=FALSE) |>
     round(2)
   

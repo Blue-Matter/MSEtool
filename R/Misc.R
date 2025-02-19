@@ -186,10 +186,12 @@ CalcTimeSteps <- function(nYear, pYear, CurrentYear, TimeUnits='year', Period=NU
   nTimeStepsPerYear <- TSperYear(TimeUnits)
 
   hist <- seq(CurrentYear-(nYear-1), by=1/nTimeStepsPerYear,
-      length.out=nYear*nTimeStepsPerYear)
+      length.out=nYear*nTimeStepsPerYear) |>
+    round(2) 
   proj <- seq(CurrentYear+1,
               by=1/nTimeStepsPerYear,
-              length.out=pYear*nTimeStepsPerYear)
+              length.out=pYear*nTimeStepsPerYear) |>
+    round(2) 
   if (is.null(Period))
     return(c(hist, proj))
 

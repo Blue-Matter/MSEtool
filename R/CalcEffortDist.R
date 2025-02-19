@@ -19,7 +19,8 @@ CalcEffortDist <- function(Hist, TimeSteps=NULL) {
   EffortDist <- purrr::pmap(list(Hist@Stock,
                                  Hist@Fleet,
                                  NatAgeArea), 
-                            TimeSteps=TimeSteps, CalcDensity)
+                            TimeSteps=TimeSteps, 
+                            CalcDensity)
   
   Effort <- purrr::map(Hist@Fleet, GetEffort, TimeSteps=TimeSteps)
   Effort <- purrr::map(Effort, AddDimension, 'Area')

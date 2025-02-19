@@ -2,7 +2,7 @@ library(MSEtool)
 
 la <- devtools::load_all
 
-la()
+# la()
 
 
 octopusOM <- OM('Day Octopus OM',
@@ -12,7 +12,7 @@ octopusOM <- OM('Day Octopus OM',
                 Region='NE Sulawesi, Indonesia',
                 Latitude=1.741653,
                 Longitude = 125.085258,
-                nYear=20,
+                nYear=5,
                 pYear=10,
                 TimeUnits = 'month',
                 nSim=20)
@@ -87,7 +87,9 @@ Fleet(octopusOM) <- octopus_fleet
 
 object <- octopusOM
 OM <- Populate(octopusOM)
-OM@Fleet$`Day octopus`$`Octopus Fleet`@Effort@Effort[,1] <- 0.1
+OM@Fleet$`Day octopus`$`Octopus Fleet`@Effort@Catchability[] <- 0.1
+
+# OM@Fleet$`Day octopus`$`Octopus Fleet`@Effort@Effort[,1] <- 0.1
 
 
 messages='default'

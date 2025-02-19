@@ -7,7 +7,7 @@ SimulateDEV <- function(OM=NULL,
                         silent=FALSE,
                         ...) {
   
-  CheckClass(OM)
+  MSEtool:::CheckClass(OM)
   
   if (isTRUE(silent)) 
     messages <- FALSE
@@ -15,29 +15,38 @@ SimulateDEV <- function(OM=NULL,
   # ---- Initial Checks and Setup ----
   chk <- Check(OM) # TODO OM checks
   
-  OM <- StartUp(OM, messages, nSim) 
+  OM <- MSEtool:::StartUp(OM, messages, nSim) 
   
-  
-  Hist <- Hist(OM)
+  Hist <- MSEtool:::Hist(OM)
 
   # ---- Calculate Unfished Dynamics ----
-  Hist@Unfished <- CalcUnfishedDynamics(OM)
+  Hist@Unfished <- MSEtool:::CalcUnfishedDynamics(OM)
 
   # ---- Calculate Reference Points ----
-  Hist@RefPoints <- CalcRefPoints(Hist)
+  Hist@RefPoints <- MSEtool:::CalcRefPoints(Hist)
 
   # ---- Optimize for Initial Depletion ----
-  Hist <- OptimInitDepletion(Hist)
+  Hist <- MSEtool:::OptimInitDepletion(Hist)
   
   # ---- Number and Biomass in Initial Time Step ----
-  Hist <- CalcInitialTimeStep(Hist)
+  Hist <- MSEtool:::CalcInitialTimeStep(Hist)
   
   # ---- Optimize Catchability for Terminal Depletion ----
   Hist <- OptimCatchability(Hist)
   
   
   # ---- Historical Population Dynamics ----
-  Hist <- CalcPopDynamics(Hist, TimeSteps=TimeSteps(Hist, 'Historical'))
+  
+  profvis::profvis(
+    postHist <- MSEtool:::CalcPopDynamics(Hist, TimeSteps=TimeSteps(Hist,'Historical'), silent=T)
+  )
+  
+  
+  st <- Sys.time()
+  postHist <- MSEtool:::CalcPopDynamics(Hist, TimeSteps=TimeSteps(Hist,'Historical'), silent=T)
+  Sys.time() -st 
+  
+  Hist <-  MSEtool:::CalcPopDynamics(Hist, TimeSteps=TimeSteps(Hist, 'Historical'))
   
   
 
