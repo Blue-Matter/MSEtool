@@ -90,15 +90,11 @@ OptimCatchability <- function(Hist) {
     tictoc::toc()
   }
  
-  
   Hist@Fleet[[1]][[1]]@Effort@Catchability <- array(Qvals,
                                                     dim=c(nsims,1),
                                                     dimnames = list(Sim=1:nsims,
-                                                                    `Time Step`=TimeSteps(Hist, 'Historical')[1])
-  )
- 
+                                                                    `Time Step`=TimeSteps(Hist, 'Historical')[1]))
   Hist
- 
 }
 
 OptCatchability <- function(logQ, Hist, DepletionTarget, sim=1) {

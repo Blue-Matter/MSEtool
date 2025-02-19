@@ -3024,9 +3024,15 @@ setClass("hist",
                  Biomass='list',
                  SBiomass='list',
                  SProduction='list',
+                 FDead='list', # sim, age, ts, fleet
+                 FRetain='list', # sim, age, ts, fleet
+                 VBiomass='list',  # sim, age, ts, fleet, area
+                 EffortArea='list', # sim, age, ts, fleet, area
+                 FDeadArea='list', # sim, age, ts, fleet, area
+                 FRetainArea='list', # sim, age, ts, fleet, area
                  Removal='list', # sim, age, ts, fleet, area
-                 Retain='list'
-                 
+                 Retain='list',  # sim, age, ts, fleet, area
+                 Density='list' # sim, ts, fleet, area
          )
 )
 
@@ -3040,15 +3046,43 @@ MakeNamedList <- function(names) {
 Hist <- function(OM, ...) {
   if (!inherits(OM,'om'))
     cli::cli_abort('`OM` must be class `om`')
+  
   Hist <- new('hist') 
   for (nm in slotNames(OM)) {
     slot(Hist, nm) <- slot(OM, nm)
   }
   
   Hist@Number <- MakeNamedList(StockNames(OM))
-  Hist@Biomass  <- Hist@SBiomass <- Hist@SProduction <- Hist@Number
-  Hist@Removal <-   Hist@Retain <-  Hist@Number
+  Hist@Biomass  <- Hist@VBiomass <- Hist@SBiomass <- Hist@SProduction <- Hist@Number
+  Hist@FDead <- Hist@FRetain <- Hist@EffortArea <- Hist@FDeadArea <- Hist@FRetainArea <- Hist@Number
+  Hist@Removal <- Hist@Retain <-  Hist@Number
+  
+  nsim <- Hist@nSim
+  timesteps <- TimeSteps(Hist)
+  fleetnames <- FleetNames(Hist)
+  
+  for (st in 1:nStock(Hist)) {
+    # Sim, Age, Time Step, Area
+    Hist@Number[[st]] <- CreateArraySATR(Hist@Stock[[st]], nsim, timesteps)
+    Hist@Biomass[[st]] <- Hist@Number[[st]]
+    Hist@SBiomass[[st]] <- Hist@Number[[st]]
+    Hist@SProduction[[st]] <- Hist@Number[[st]]
+    
+    # Sim, Age, Time Step, Fleet
+    Hist@FDead[[st]] <- CreateArraySATF(Hist@Stock[[st]], nsim, timesteps, fleetnames)
+    Hist@FRetain[[st]] <- Hist@FDead[[st]]
 
+    # Sim, Age, Time Step, Fleet, Area 
+    Hist@EffortArea[[st]] <- CreateArraySATFR(Hist@Stock[[st]], nsim, timesteps, fleetnames)
+    Hist@VBiomass[[st]] <- Hist@EffortArea[[st]]
+    Hist@FDeadArea[[st]] <-  Hist@EffortArea[[st]]
+    Hist@FRetainArea[[st]] <- Hist@FDeadArea[[st]] 
+    Hist@Removal[[st]] <- Hist@FDeadArea[[st]]
+    Hist@Retain[[st]] <- Hist@FDeadArea[[st]]
+    
+    # Sim, Time Step, Fleet, Area 
+    Hist@Density[[st]] <- CreateArraySATFR(Hist@Stock[[st]], nsim, timesteps, fleetnames) |> DropDimension('Age', FALSE)
+  }
   Hist
 }
 

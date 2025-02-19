@@ -93,6 +93,7 @@ MatchArrayTimeSteps <- function(ArrayList) {
   list(array1=array1, array2=array2)
 }
 
+
 ExpandArrays <- function(ArrayList, array2=NULL) {
   if (inherits(ArrayList, 'array') & !is.null(array2))
     ArrayList <- list(ArrayList, array2)
@@ -124,9 +125,10 @@ ExpandArrays <- function(ArrayList, array2=NULL) {
   
   # set dimnames
   l <- list()
+  
   for (i in seq_along(DimNames1)) {
-    nm <- list(DimNames1[[i]], DimNames2[[i]])
-    ind <- purrr::map(nm, length) |> unlist() |> which.max()
+    ind <- which.max(AllDims[,i])
+    nm <- list(DimNames1[[i]], DimNames2[[i]]) 
     l[[i]] <- nm[[ind]]
   }
   names(l) <- Names

@@ -225,7 +225,7 @@ SumOverDimension <- function(array, name='Area') {
   apply(array, nms[-ind], sum) 
 }
 
-DropDimension <- function(array, name='Area') {
+DropDimension <- function(array, name='Area', warn=TRUE) {
   # drops the named dimension only if it is length one
   d <- dim(array)
   nms <- names(dimnames(array))
@@ -233,8 +233,9 @@ DropDimension <- function(array, name='Area') {
   if (length(ind)<1)
     cli::cli_abort('Dimension {.var {name}} not found ', .internal=TRUE)
   
-  if (d[ind]>1) 
-    return(array)
+  if (d[ind]>1 & warn) 
+    cli::cli_alert_warning('Note: Dropping dimension {.val {name}} but dimension length is > 1. Use `warn=FALSE` to suppress')
+  
   
   array <- abind::asub(array, 1, ind, drop=FALSE) |>
     abind::adrop(ind)

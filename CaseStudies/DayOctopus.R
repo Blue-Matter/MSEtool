@@ -1,8 +1,8 @@
 library(MSEtool)
 
 la <- devtools::load_all
-
-# la()
+# 
+la()
 
 
 octopusOM <- OM('Day Octopus OM',
@@ -15,7 +15,7 @@ octopusOM <- OM('Day Octopus OM',
                 nYear=5,
                 pYear=10,
                 TimeUnits = 'month',
-                nSim=20)
+                nSim=2)
 
 ## ---- create_stock ----
 
@@ -30,6 +30,7 @@ Ages(octopus) <- Ages(MaxAge=14,
                       PlusGroup = FALSE)
 
 ## ---- weight ----
+# TODO Schnute Growth Model
 
 Weight(octopus) <- Weight(Pars=list(a=c(0.0053975, 0.0073025),
                                     b=2.31),
@@ -50,6 +51,8 @@ Maturity(octopus) <- Maturity(Pars=list(A50=c(10, 12),
 
 ## ---- stockrecruit ----
 
+# TODO: Shepherd SSR
+
 SRR(octopus) <- SRR(Pars=list(h=c(0.85, 0.95)),
                     R0=10000,
                     SD=c(0.4,0.6),
@@ -62,7 +65,7 @@ Spatial(octopus) <- Spatial(UnfishedDist=c(0.05, 0.2),
                             RelativeSize='EqualDensity')
 
 ## ---- depletion ----
-Depletion(octopus) <- Depletion(Final=c(0.1, 0.4))
+Depletion(octopus) <- Depletion(Final=c(0.3, 0.4))
 
 
 ## ---- fleet ----

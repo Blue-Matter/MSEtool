@@ -31,5 +31,14 @@ setMethod('GetFatAgeArray', c('fleet', 'ANY', 'ANY'),
   } else {
     array <- x@FishingMortality@RetainAtAge  
   }
+  if (is.null(array)) {
+    ZeroArray <- array(tiny, dim=c(1,1,1), 
+                       dimnames=list(Sim=1,
+                                     Age=0,
+                                     `Time Step`=TimeSteps))
+    return(ZeroArray)
+  }
+    
+  
   ArraySubsetTimeStep(array, TimeSteps)
 })

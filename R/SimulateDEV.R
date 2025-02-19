@@ -23,16 +23,16 @@ SimulateDEV <- function(OM=NULL,
   Hist@Unfished <- MSEtool:::CalcUnfishedDynamics(OM)
 
   # ---- Calculate Reference Points ----
-  Hist@RefPoints <- MSEtool:::CalcRefPoints(Hist)
+  # Hist@RefPoints <- MSEtool:::CalcRefPoints(Hist)
 
   # ---- Optimize for Initial Depletion ----
-  Hist <- MSEtool:::OptimInitDepletion(Hist)
+  # Hist <- MSEtool:::OptimInitDepletion(Hist)
   
   # ---- Number and Biomass in Initial Time Step ----
-  Hist <- MSEtool:::CalcInitialTimeStep(Hist)
+  Hist <- MSEtool::: CalcInitialTimeStep(Hist)
   
   # ---- Optimize Catchability for Terminal Depletion ----
-  Hist <- OptimCatchability(Hist)
+  Hist <- MSEtool:::OptimCatchability(Hist)
   
   
   # ---- Historical Population Dynamics ----

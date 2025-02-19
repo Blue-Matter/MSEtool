@@ -1,10 +1,20 @@
+# sim, age, timestep, fleet
+CreateArraySATF <- function(Stock, nsim=NULL, timesteps=NULL, fleetnames=NULL) {
+  
+  array <- CreateArraySATR(Stock, nsim, timesteps)  |> DropDimension(warn=FALSE)
+    
+  arrayFleet <- replicate(length(fleetnames), array)
+  
+  l <- dimnames(array)
+  l$Fleet <- fleetnames
+  dimnames(arrayFleet) <- l
+  arrayFleet 
+}
+
 # sim, age, time step, fleet, area
 
 CreateArraySATFR <- function(Stock, nsim=NULL, timesteps=NULL, fleetnames=NULL) {
-  # if (inherits(Stock, 'om')) {
-  #   return(purrr::map(Stock@Stock, CreateArraySATRF, nsim, timesteps, fleetnames))
-  # }
-  
+
   array <- CreateArraySATR(Stock, nsim, timesteps) 
   arrayFleet <- replicate(length(fleetnames), array)
   
@@ -64,20 +74,26 @@ CalcPopDynamics <- function(Hist, TimeSteps, MP=NULL, silent=FALSE) {
                                         'Calculating Population Dyamics')
   } 
  
-  tictoc::tic()
+  # tictoc::tic()
   for (ts in progress) {
     
     thisTimeStep <- TimeSteps[ts]
     
     # ---- Do MICE stuff during this Time Step (if applicable) -----
     # TODO
-    
     Hist <- CalcMICE(Hist, TimeStep=thisTimeStep)
-   
+    
+    # ---- Update Biomass At Age ----
+    # done after MICE to account for changes
+    Hist <- UpdateArrays(Hist, thisTimeStep)
+    
+    
+  
+    
+    
     # for MPs - Calculate Effort, Selectivity, etc
     
     # ---- Calculate Catch by Area this Time Step ----
-   
     Hist <- CatchByArea(Hist, TimeSteps=thisTimeStep)
    
     # ---- Calculate Recruitment  Time Step ----
@@ -87,7 +103,7 @@ CalcPopDynamics <- function(Hist, TimeSteps, MP=NULL, silent=FALSE) {
     Hist <- CalcNumberNext(Hist, thisTimeStep)
     
   }
-  tictoc::toc()
+  # tictoc::toc()
   
   
   

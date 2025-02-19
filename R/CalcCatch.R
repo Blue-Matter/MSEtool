@@ -40,15 +40,19 @@ CalcCatchN <- function(FDeadAtAge, FRetainAtAge, NatAge, NMortAtAge) {
 
 
 CatchByArea <- function(Hist, TimeSteps=NULL) {
-  if (is.null(TimeSteps)) 
-    TimeSteps <- TimeSteps(Hist, 'Historical')
+  
+  
+ 
+  
+  # Distribute Effort across Areas proportional to Density
+  EffortDist <- CalcEffortDist(Hist, TimeSteps)
   
   NatAgeArea <- purrr::map(Hist@Number, 
                            ArraySubsetTimeStep, 
                            TimeSteps=TimeSteps)
   
-  # Distribute Effort across Areas proportional to Density
-  EffortDist <- CalcEffortDist(Hist, TimeSteps)
+
+
   
   # Relative catchability by Area proportional to Density
   RelDensity <- purrr::pmap(list(Hist@Stock,

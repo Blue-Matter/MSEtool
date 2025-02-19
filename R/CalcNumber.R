@@ -39,6 +39,17 @@ CalcNumberNext <- function(Hist, thisTimeStep) {
   FDiscardDead <-  purrr::map2(FDiscardTotal, discardmortality, ArrayMultiply)
   FDeadAtAge <- purrr::map2(FRetainAtAge, FDiscardDead, ArrayAdd) 
   
+  
+  # t <- GetFatAgeArray(Hist@Fleet, thisTimeStep)
+  # t$`Day octopus` |> dimnames()
+  # EffortDist$`Day octopus` |> dimnames()
+  # 
+  # FDeadAtAge$`Day octopus` |> dimnames()
+  # FDeadAtAgeTotal$`Day octopus` |> dimnames()
+  # 
+  # FDeadAtAge$`Day octopus`[1,,1,1,]
+  
+  
   FDeadAtAgeTotal <- purrr::map(FDeadAtAge, \(x)
                                 apply(x, c('Sim', 'Age', 'Time Step', 'Area'), sum))
   
