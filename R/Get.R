@@ -27,6 +27,34 @@ ArraySubsetTimeStep <- function(object, TimeSteps=NULL) {
   abind::asub(object, (DN[[TSind]] %in% TimeSteps), TSind, drop=FALSE)
 }
 
+ArraySubsetSim <- function(object, Sims=NULL) {
+  if (is.null(Sims))
+    return(object)
+  
+  Sims <- Sims |> as.numeric() 
+  
+  DN <- dimnames(object)
+  TSind <- which(names(DN) == 'Sim')
+  if (length(TSind)==0)
+    cli::cli_abort("`Sim` dimension not found in this array", .internal=TRUE)
+  
+  if (any(Sims > max(DN$Sim))) {
+    TSexist <- Sims[Sims %in% DN$Sim]
+    TSimpute <- Sims[!Sims %in% DN$Sim]
+    if (length(TSimpute)) {
+      matchTS <- rep(NA, length(TSimpute))
+      for (i in seq_along(TSimpute)) {
+        matchTS[i] <- DN$Sim[DN$Sim < TSimpute[i]] |> max()
+      }
+    }
+    TimeStepsMod <- c(TSexist, matchTS)
+    array <- abind::asub(object, TimeStepsMod, TSind, drop=FALSE)
+    dimnames(array)$`Sim` <- Sims
+    return(array)
+  } 
+  abind::asub(object, (DN[[TSind]] %in% Sims), TSind, drop=FALSE)
+}
+
 Get <- function(object, slots, TimeSteps=NULL, df=FALSE) {
   
   cl <- class(object)
@@ -336,9 +364,13 @@ GetBiomassAtAge <- function(Hist, TimeSteps=NULL) {
   if (is.null(TimeSteps))
     TimeSteps <- TimeSteps(Hist)
   
-  purrr::map(Hist@Biomass, \(x)
-             ArraySubsetTimeStep(x, TimeSteps=TimeSteps)
-  )
+  Number <- purrr::map(Hist@Number, \(x)
+                  ArraySubsetTimeStep(x, TimeSteps=TimeSteps))
+  Weight <- GetWeightAtAge(Hist, TimeSteps=TimeSteps) |>
+    purrr::map(AddDimension,'Area')
+  
+  purrr::map2(Number, Weight, ArrayMultiply)
+
 }
 
 GetRemovalAtAge <- function(Hist, TimeSteps=NULL) {

@@ -95,8 +95,6 @@ CalcFfromCatch_i <- function(CatchAtAge_i,
                             DiscardAtAge_i=NULL,
                             control=NULL) {
   
-
-  
   # Dimensions:
   # Catch  
   # 1. Age, Fleet
@@ -110,8 +108,6 @@ CalcFfromCatch_i <- function(CatchAtAge_i,
   # SelectAtAge, RetainAtAge & DiscardAtAge 
   # 1. Age, Fleet
   
-  
-
   if (is.null(control)) 
     control <- list(MaxIt=300, tolF=1e-4)
   
@@ -139,29 +135,29 @@ CalcFfromCatch_i <- function(CatchAtAge_i,
   
   for (i in 1:maxiterF) {
     apicalF_Age<- matrix(apicalF, nAge, nFleet, byrow=TRUE)
-    FInteract <- apicalF_Age * SelectAtAge_i
-    FRetain <- FInteract * RetainAtAge_i
-    FDiscard <- FInteract - FRetain
-    FDeadDiscard <- FDiscard * DiscardAtAge_i
-    FDead <- FRetain + FDeadDiscard
+    FInteract <- ArrayMultiply(apicalF_Age, SelectAtAge_i)
+    FRetain <- ArrayMultiply(FInteract, RetainAtAge_i)
+    FDiscard <- ArraySubtract(FInteract, FRetain)
+    FDeadDiscard <- ArrayMultiply(FDiscard, DiscardAtAge_i)
+    FDead <- ArrayAdd(FRetain, FDeadDiscard)
     
-    ZatAge <- rowSums(FDead) + NMortalityAtAge_i
+    ZatAge <- ArrayAdd(rowSums(FDead), NMortalityAtAge_i)
     ZatAge[!is.finite(ZatAge)] <- 1E-9
     ZatAge[ZatAge==0] <- 1E-9
     
-    PopDead <- (1-exp(-ZatAge)) * PopatAge_i
+    PopDead <- ArrayMultiply((1-exp(-ZatAge)), PopatAge_i)
     
     ZatAge <- matrix(ZatAge,  nAge, nFleet, byrow=FALSE)
     PopDead <- matrix(PopDead,  nAge, nFleet, byrow=FALSE)
-    PopatAge_i <- matrix(PopatAge_i,  nAge, nFleet, byrow=FALSE)
+    PopatAge_mat <- matrix(PopatAge_i,  nAge, nFleet, byrow=FALSE)
    
-    predRemoval <- FDead/ZatAge * PopDead
+    predRemoval <- ArrayMultiply(ArrayDivide(FDead,ZatAge), PopDead)
     predRemoval[!is.finite(predRemoval)] <- 0 
     
     # derivative of predCatch wrt apicalF
     dctarray <- array(NA, dim=dim(FDead))
     dctarray[AF] <- PopDead/ZatAge - ((FDead * PopDead)/ZatAge^2) +
-      FDead/ZatAge * exp(-ZatAge) * PopatAge_i
+      FDead/ZatAge * exp(-ZatAge) * PopatAge_mat
     
     dct <- apply(dctarray,2, sum)  
     

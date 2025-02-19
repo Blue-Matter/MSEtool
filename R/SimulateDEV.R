@@ -3,7 +3,6 @@
 #' @export
 SimulateDEV <- function(OM=NULL, 
                         messages='default',
-                        nSim=NULL,
                         parallel=FALSE, 
                         silent=FALSE,
                         ...) {

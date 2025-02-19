@@ -685,7 +685,7 @@ setMethod("Populate", "stock", function(object,
                               seed=seed,
                               messages=messages)
 
-  stock@SRR <- Populate(stock@SRR,
+  stock@SRR <- Populate(object=stock@SRR,
                         MaxAge=stock@Ages@MaxAge,
                         CurrentYear=stock@CurrentYear,
                         TimeSteps=stock@TimeSteps,
@@ -1088,7 +1088,7 @@ setMethod("Populate", "srr", function(object,
                                    MaxAge,
                                    nHistTS,
                                    nProjTS,
-                                   nsim,
+                                   nsim=nsim,
                                    RecDevInit=object@RecDevInit,
                                    RecDevHist=object@RecDevHist,
                                    RecDevProj=object@RecDevProj)
@@ -1685,13 +1685,20 @@ GenerateHistoricalEffort <- function(Effort, nsim=NULL, TimeSteps=NULL) {
   nTimeSteps <- length(TimeSteps)
   
   EffortPoints <- mapply(runif, n = nsim, min = Effort$Lower, max = Effort$Upper)  # sample Effort
-  EffortTS <- t(sapply(1:nsim, function(x) 
-    approx(x = Effort$TimeStep,
-           y = EffortPoints[x, ], 
-           method = "linear", 
-           n = nTimeSteps)$y)
-    ) 
-  
+  if (nsim>1) {
+    EffortTS <- t(sapply(1:nsim, function(x) 
+      approx(x = Effort$TimeStep,
+             y = EffortPoints[x, ], 
+             method = "linear", 
+             n = nTimeSteps)$y)
+    )
+  } else {
+    EffortTS <- approx(x = Effort$TimeStep,
+                       y = EffortPoints,
+                       method = "linear", 
+                       n = nTimeSteps)$y
+  }
+ 
   Esd <- Effort$CV[1]
   if (!is.null(Esd)) {
     Emu <- -0.5 * Esd^2

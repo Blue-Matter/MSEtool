@@ -36,8 +36,17 @@ CalcFleetFMortality <- function(Hist, TimeSteps=NULL) {
   CalcFfromCatch) |>
     purrr::map(Array2List)
   
+  
   Hist@Fleet <- purrr::map2(Hist@Fleet, ApicalF, \(x,y)
                             CalcFatAge(x, TimeSteps=TimeSteps, y)
   )
   Hist
 }
+# 
+# CatchAtAge=CatchDeadAtAge$Albacore 
+# PopatAge=BiomassAtAge$Albacore
+# NMortalityAtAge=NMortalityAtAge$Albacore
+# SelectAtAge=SelectAtAge$Albacore
+# RetainAtAge=RetainAtAge$Albacore
+# DiscardAtAge=DiscardAtAge$Albacore
+

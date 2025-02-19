@@ -1,13 +1,16 @@
 
+library(MSEtool)
+
 la <- devtools::load_all
 
 la()
 
-testOM@nsim <- 10
 
-OM <- Convert(testOM, Populate=TRUE)
+testOM@nsim <- 40
 
-OM@Stock$Albacore@Depletion@Final
+OM <- Convert(testOM)
+
+
 
 parallel=FALSE
 messages='default'

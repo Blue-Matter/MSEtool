@@ -131,12 +131,12 @@ GenerateRecruitmentDeviations <- function(SD=0.2, AC=0, TruncSD=2,
   if (is.null(nProjTS))
     cli::cli_abort('`nProjTS` cannot be NULL')
 
-  if (is.null(nsim) | nsim==1) {
-    cli::cli_alert_info('`nsim` not specified. Assuming `nsim=1` and no process error ')
+  if (!is.null(nsim) && nsim==1) {
+    cli::cli_alert_info('`nsim=1`. Assuming no process error ')
     return(
-      list(RecDevInit=rep(1, MaxAge),
-           RecDevHist=rep(1, nHistTS),
-           RecDevProj=rep(1, nProjTS)
+      list(RecDevInit=array(1, dim=c(1,MaxAge)),
+           RecDevHist=array(1, dim=c(1,nHistTS)),
+           RecDevProj=array(1, dim=c(1,nProjTS))
       )
     )
   }

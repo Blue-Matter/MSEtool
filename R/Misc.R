@@ -252,7 +252,7 @@ AddDimension <- function(array, name=NULL, val=1) {
   if (all(d==1)) {
     outarray <- array(array, dim=c(d, 1))
   } else {
-    outarray <- replicate(val, array) 
+    outarray <- replicate(1, array) 
   }
   
   # set dimnames

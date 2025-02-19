@@ -60,12 +60,13 @@ CatchByArea <- function(Hist, TimeSteps=NULL) {
                              TimeSteps=TimeSteps) |>
     purrr::map(AddDimension, 'Area')
   
-  
   Catchability <- purrr::map2(Catchability, RelDensity, ArrayDivide)
   
   ApicalF <- purrr::map2(Catchability, EffortDist, ArrayMultiply) |>
     purrr::map(AddDimension, 'Age') |>
     purrr::map(aperm, c(1,5,2,3,4))
+  
+  # TODO skip if all Fs are 0
   
   selectivity <- purrr::map(Hist@Fleet, GetSelectivityAtAge, TimeSteps=TimeSteps) |>
     purrr::map(AddDimension, 'Area')
@@ -103,5 +104,25 @@ CatchByArea <- function(Hist, TimeSteps=NULL) {
     ArrayFill(Hist@Removal[[i]]) <- RemovalB[[i]]
     ArrayFill(Hist@Retain[[i]]) <- RetainB[[i]]
   }
+  
+  # if F is the same in each area, update overall F (same) in the Hist object
+  chk <- apply(ApicalF$Albacore,c(1,5), mean)
+  chksame <- chk/matrix(apply(chk, 1, mean), nrow(chk), ncol(chk), byrow=FALSE) |>
+    round(2)
+  
+  if (prod(chksame) || all(chk==0)) {
+    ApicalF <- purrr::map(ApicalF, \(x) 
+                          abind::asub(x, list(1,1,1), c(2,4,5), drop=FALSE) |>
+                            abind::adrop(c(2,4,5))
+    )
+    Hist@Fleet <- purrr::map2(Hist@Fleet, ApicalF, \(x,y)
+                              CalcFatAge(x, TimeSteps=TimeSteps, y)
+    )
+  } else { 
+    # otherwise, calculate F by Area from Catch 
+    Hist <- CalcFleetFMortality(Hist, TimeSteps)
+  }
+  
+  
   Hist
 }

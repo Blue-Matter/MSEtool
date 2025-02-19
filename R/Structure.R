@@ -33,7 +33,7 @@ StructurePars_ <- function(Par, nsim=NULL, TimeSteps=NULL) {
                        'i'='Provide number of simulations to `nsim` argument')
       )
     if (nsim==1) {
-      out <- array(mean(c(Par[1], Par[2]), dim=c(1, 1)))
+      out <- array(mean(c(Par[1], Par[2])), dim=c(1, 1))
       dimnames(out) <- list(Sim=1,
                             `Time Step`=TimeSteps[1])
       return(out)

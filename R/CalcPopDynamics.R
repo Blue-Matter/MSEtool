@@ -54,11 +54,18 @@ InitNumber <- function(Stock, UnfishedNumber) {
   NumberHist
 }
 
-CalcPopDynamics <- function(Hist, TimeSteps, MP=NULL) {
+CalcPopDynamics <- function(Hist, TimeSteps, MP=NULL, silent=FALSE) {
   on.exit(cli::cli_progress_done())
   
-  for (ts in cli::cli_progress_along(TimeSteps,
-                                     'Calculating Population Dyamics')) {
+  if (!silent) {
+    progress <- cli::cli_progress_along(TimeSteps,
+                                        'Calculating Population Dyamics')
+  } else {
+    progress <- seq_along(TimeSteps)
+  }
+ 
+  
+  for (ts in progress) {
     
     thisTimeStep <- TimeSteps[ts]
     
@@ -72,6 +79,7 @@ CalcPopDynamics <- function(Hist, TimeSteps, MP=NULL) {
     Hist <- CatchByArea(Hist, TimeSteps=thisTimeStep)
     
     # ---- Calculate and Update overall F by Fleet this Time Step ----
+    purrr::map(Hist@Fleet[[1]], MSEtool:::GetApicalF)
     Hist <- CalcFleetFMortality(Hist, TimeSteps=thisTimeStep)
     
     # ---- Calculate Recruitment  Time Step ----
@@ -80,6 +88,9 @@ CalcPopDynamics <- function(Hist, TimeSteps, MP=NULL) {
     # ---- Number, Biomass at beginning of Next Time Step and Move ----
     Hist <- CalcNumberNext(Hist, thisTimeStep)
   }
+  
+  
+  
   
   Hist
 }

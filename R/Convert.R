@@ -17,8 +17,8 @@ Convert <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
     return(OM2om(OM, Author, CurrentYear, Populate=Populate))
   } else if (methods::is(OM, 'om')) {
     if (nStock(OM)>1 | nFleet(OM)>1)
-      return(om2MOM(OM, , Populate=Populate))
-    return(om2OM(OM, Populate=Populate))
+      return(om2MOM(OM))
+    return(om2OM(OM))
   } else {
     cli::cli_abort('`OM` must be class `OM`, `MOM`, or `om`')
   }
@@ -77,6 +77,7 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
   TimeSteps <- list(HistTS=TimeSteps(om, 'Historical'),
                     ProjTS=TimeSteps(om, 'Projection')
   )
+  
   if (methods::is(OM, 'OM')) {
     om@Stock <- OM2stock(OM, cpars=OM@cpars, TimeSteps) 
     om@Fleet <- OM2fleet(OM, OM@cpars, OM@Fdisc)
@@ -84,10 +85,10 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
     om@Obs <- SubOM(OM, 'Obs')
     om@Imp <- SubOM(OM, 'Imp')
     
-    om@Stock@Length <- Populate(om@Stock@Length,
-                                om@Stock@Ages,
-                                om@nSim,
-                                TimeSteps(om),
+    om@Stock@Length <- Populate(object=om@Stock@Length,
+                                Ages=om@Stock@Ages,
+                                nsim=om@nSim,
+                                TimeSteps=TimeSteps(om),
                                 ASK=TRUE,
                                 seed=om@Seed)
 

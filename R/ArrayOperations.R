@@ -126,7 +126,7 @@ ExpandArrays <- function(ArrayList, array2=NULL) {
   l <- list()
   for (i in seq_along(DimNames1)) {
     nm <- list(DimNames1[[i]], DimNames2[[i]])
-    ind <- purrr::map_vec(nm, length) |> which.max()
+    ind <- purrr::map(nm, length) |> unlist() |> which.max()
     l[[i]] <- nm[[ind]]
   }
   names(l) <- Names

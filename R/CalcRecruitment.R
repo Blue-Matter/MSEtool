@@ -27,30 +27,7 @@ CalcRecruitment <- function(Hist, TimeStep=NULL) {
                       R0=R0),
                  SRRPars)
     
-    RunSRRfunction <- function(fun, Arglist) {
-      dnames <- lapply(Arglist, dimnames)
-      SimsList <- lapply(dnames, '[[', 'Sim') 
-      MaxSimsList <- lapply(SimsList, as.numeric) |>  lapply(max)
-      sims <-  SimsList |> unlist() |> as.numeric() |> unique()
-      TSList <- lapply(dnames, '[[', 'Time Step')
-      ts <-  TSList |> unlist() |> as.numeric() |> unique()
-      
-      Recruit <- array(NA, dim=c(length(sims), length(ts)),
-                   dimnames = list(Sim=sims,
-                                   `Time Step`= ts)
-      )
-      for (i in seq_along(sims)) {
-        for (j in seq_along(ts)) {
-          Arglist$S[GetIndex(i, )]
-          i
-          j
-          
-        }
-      }
-    
-    }
-    
-    RecruitEq <- do.call(fun, l)
+    RecruitEq <- RunSRRfunction(fun, Arglist)
     RecDev <- GetRecDevHist(Hist@Stock[[st]], TimeStep)
     Recruit <- ArrayMultiply(RecruitEq, RecDev) |> 
       AddDimension('Age', val=0) |>
@@ -71,4 +48,35 @@ CalcRecruitment <- function(Hist, TimeStep=NULL) {
     ArrayFill(Hist@Number[[st]]) <- Recruit
   }
   Hist
+}
+
+RunSRRfunction <- function(fun, Arglist) {
+  dnames <- lapply(Arglist, dimnames)
+  SimsList <- lapply(dnames, '[[', 'Sim') 
+  TSList <- lapply(dnames, '[[', 'Time Step')
+  Sims <- lapply(SimsList, as.numeric) |> unlist() |> unique() |> sort()
+  MaxSims <- length(Sims)
+  TSs <- lapply(TSList, as.numeric) |> unlist() |> unique() |> sort()
+  MaxTS <- length(TSs)
+  
+  Recruit <- array(NA, dim=c(MaxSims, MaxTS),
+                   dimnames = list(Sim=Sims,
+                                   `Time Step`= TSs)
+  )
+  
+  for (sim in 1:MaxSims) {
+    for (ts in 1:MaxTS) {
+      Sim <- Sims[sim]
+      TS <- TSs[ts]
+      Arglist2 <- Arglist
+      for (arg in seq_along(Arglist2)) {
+        Arglist2[[arg]] <- Arglist2[[arg]] |>
+          ArraySubsetSim(Sim) |>
+          ArraySubsetTimeStep(TS)
+      }
+      Recruit[sim, ts] <- do.call(fun, Arglist2)
+      
+    }
+  }
+  Recruit
 }
