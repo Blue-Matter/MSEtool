@@ -13,7 +13,9 @@ CalcInitialTimeStep <- function(Hist) {
 }
 
 # assumes number at age, area is populated 
-UpdateArrays <- function(Hist, TimeStep) {
+UpdateBioArrays <- function(Hist, TimeStep) {
+  
+  fleetnames <- FleetNames(Hist)
   
   NumberAtAge <- GetNumberAtAge(Hist, TimeSteps=TimeStep) 
   WeightAtAge <- GetWeightAtAge(Hist@Stock, TimeSteps=TimeStep) |>
@@ -37,6 +39,12 @@ UpdateArrays <- function(Hist, TimeStep) {
   SelectRetain <- purrr::map2(selectivity, retention, \(x,y) {
     ArrayMultiply(x, y) |>  AddDimension('Area')
   })
+  
+  BatAgeArea <- purrr::map2(NumberAtAge, WeightAtAge, ArrayMultiply) |>
+    purrr::map(\(x)
+               AddDimension(x, 'Fleet', val=fleetnames[1]) |>
+                 aperm(c('Sim', 'Age', 'Time Step', 'Fleet', 'Area'))
+    )
   
   VBatArea <- purrr::map2(BatAgeArea, SelectRetain,  \(x,y) {
     ArrayMultiply(x, y) 
@@ -62,10 +70,12 @@ UpdateArrays <- function(Hist, TimeStep) {
     RelDensity
   })
   
+  BatAgeArea <- purrr::map(BatAgeArea, DropDimension, name='Fleet', warn=FALSE) 
+ 
   for (st in 1:nStock(Hist)) {
-    biomass <- ArrayMultiply(NumberAtAge[[st]], WeightAtAge[[st]])
-    ArrayFill(Hist@Biomass[[st]]) <- biomass
-    ArrayFill(Hist@SBiomass[[st]]) <- ArrayMultiply(biomass,MaturityAtAge[[st]])
+   
+    ArrayFill(Hist@Biomass[[st]]) <- BatAgeArea[[st]]
+    ArrayFill(Hist@SBiomass[[st]]) <- ArrayMultiply(BatAgeArea[[st]],MaturityAtAge[[st]])
     ArrayFill(Hist@SProduction[[st]]) <- ArrayMultiply(NumberAtAge[[st]], SProductionAtAge[[st]])
     
     ArrayFill(Hist@VBiomass[[st]]) <- VBatArea[[st]]

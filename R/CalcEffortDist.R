@@ -9,8 +9,7 @@ CalcEffortDist <- function(Hist, TimeSteps=NULL) {
   # TODO: calculate utility by area accounting for age/length value and
   #       cost by area in Fleet@Distribution
   
-  if (is.null(TimeSteps))
-    TimeSteps <- TimeSteps(Hist@Stock[[1]], 'Historical')
+
  
   EffortDist <- CalcDensity(Hist, TimeSteps=TimeSteps)
                             

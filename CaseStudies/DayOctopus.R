@@ -15,7 +15,7 @@ octopusOM <- OM('Day Octopus OM',
                 nYear=5,
                 pYear=10,
                 TimeUnits = 'month',
-                nSim=2)
+                nSim=20)
 
 ## ---- create_stock ----
 

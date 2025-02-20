@@ -89,7 +89,9 @@ OptimCatchability <- function(Hist) {
     Qvals[sim] <- exp(doOpt$minimum)
     tictoc::toc()
   }
- 
+  
+  # nsims <- nSim(Hist)
+  # Qvals <- rep(0.1, nSim(Hist))
   Hist@Fleet[[1]][[1]]@Effort@Catchability <- array(Qvals,
                                                     dim=c(nsims,1),
                                                     dimnames = list(Sim=1:nsims,

@@ -22,7 +22,6 @@ CreateArraySATFR <- function(Stock, nsim=NULL, timesteps=NULL, fleetnames=NULL) 
   l$Fleet <- fleetnames
   dimnames(arrayFleet) <- l
   
-  
   arrayFleet |> aperm(c(1,2,3,5,4))
   
 }
@@ -37,7 +36,7 @@ CreateArraySATR <- function(Stock, nsim=NULL, timesteps=NULL) {
   if (is.null(timesteps))
     timesteps <- TimeSteps(Stock, 'Historical')
   # sim, age, time step, region (area)
-  array <- array(NA, dim=c(nsim,nAge(Stock), length(timesteps), nArea(Stock)))
+  array <- array(tiny, dim=c(nsim,nAge(Stock), length(timesteps), nArea(Stock)))
   AddDimNames(array, names=c("Sim", "Age", "Time Step", 'Area'),
               TimeSteps = timesteps)
   
@@ -69,42 +68,46 @@ CalcPopDynamics <- function(Hist, TimeSteps, MP=NULL, silent=FALSE) {
   
   progress <- seq_along(TimeSteps)
   
-  if (!silent) {
+  if (!silent) 
     progress <- cli::cli_progress_along(TimeSteps,
                                         'Calculating Population Dyamics')
-  } 
+  
  
   # tictoc::tic()
+  ts <- 1
   for (ts in progress) {
     
-    thisTimeStep <- TimeSteps[ts]
+    TimeStep <- thisTimeStep <- TimeSteps[ts]
     
     # ---- Do MICE stuff during this Time Step (if applicable) -----
     # TODO
-    Hist <- CalcMICE(Hist, TimeStep=thisTimeStep)
+    Hist <- CalcMICE(Hist, TimeStep=TimeStep)
     
-    # ---- Update Biomass At Age ----
+    # ---- Update Biomass At Age etc ----
     # done after MICE to account for changes
-    Hist <- UpdateArrays(Hist, thisTimeStep)
-    
-    
-  
-    
+    Hist <- UpdateBioArrays(Hist, TimeStep)
     
     # for MPs - Calculate Effort, Selectivity, etc
+    # update fishery data 
+    # these two steps should be done first
+  
+    # ---- Distribute Effort across Areas ----
+    Hist <- DistributeEffort(Hist, TimeStep)
+ 
+    # ---- Calculate Catch and Fishing Mortality ----
+    Hist <- CalcCatch(Hist, TimeStep)
     
-    # ---- Calculate Catch by Area this Time Step ----
-    Hist <- CatchByArea(Hist, TimeSteps=thisTimeStep)
    
     # ---- Calculate Recruitment  Time Step ----
-    Hist <- CalcRecruitment(Hist, TimeStep=thisTimeStep)
+    Hist <- CalcRecruitment(Hist, TimeStep=TimeStep)
     
     # ---- Number, Biomass at beginning of Next Time Step and Move ----
-    Hist <- CalcNumberNext(Hist, thisTimeStep)
+    Hist <- CalcNumberNext(Hist, TimeStep)
     
   }
   # tictoc::toc()
   
+
   
   
   Hist

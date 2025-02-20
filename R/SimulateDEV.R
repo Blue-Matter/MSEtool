@@ -32,7 +32,8 @@ SimulateDEV <- function(OM=NULL,
   Hist <- MSEtool::: CalcInitialTimeStep(Hist)
   
   # ---- Optimize Catchability for Terminal Depletion ----
-  Hist <- MSEtool:::OptimCatchability(Hist)
+
+  Hist <- MSEtool:::  OptimCatchability(Hist)
   
   
   # ---- Historical Population Dynamics ----

@@ -180,11 +180,20 @@ GetApicalF <- function(object, TimeSteps=NULL, df=FALSE, array=TRUE) {
 }
 
 GetEffort <- function(object, TimeSteps=NULL, df=FALSE) {
+  if (inherits(object, 'hist')) 
+    return(
+      purrr::map(object@Fleet, GetEffort, TimeSteps)
+    )
+
   out <- GetFleetAtAge(object, slots=c('Effort', 'Effort'), TimeSteps, df)
   if (inherits(out, 'list'))
     return(List2Array(out))
   out
 }
+
+
+
+
 
 GetCatchability <- function(object, TimeSteps=NULL, df=FALSE) {
   out <- GetFleetAtAge(object, slots=c('Effort', 'Catchability'), TimeSteps, df)
@@ -391,5 +400,18 @@ GetSProductionAtAge <- function(Hist, TimeSteps=NULL) {
       stop('not done yet!')
   }
   out
+}
+
+
+GetDensity <- function(Hist, TimeSteps=NULL) {
+  purrr::map(Hist@Density, \(x)
+             ArraySubsetTimeStep(x, TimeSteps=TimeSteps)
+  )
+}
+
+GetEffortArea <- function(Hist, TimeSteps=NULL) {
+  purrr::map(Hist@EffortArea, \(x)
+             ArraySubsetTimeStep(x, TimeSteps=TimeSteps)
+  )
 }
 

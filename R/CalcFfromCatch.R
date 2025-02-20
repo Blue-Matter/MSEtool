@@ -86,11 +86,11 @@ CalcFfromCatch <- function(CatchAtAge,
   ApicalF
 }
 
-# calculates by Sim and Time Step
+# calculates by Sim 
 CalcFfromCatch_i <- function(CatchAtAge_i, 
                             PopatAge_i, 
-                            NMortalityAtAge_i, 
-                            SelectAtAge_i,
+                            NMortalityAtAge_i,
+                            SelectAtAge_i=NULL,
                             RetainAtAge_i=NULL,
                             DiscardAtAge_i=NULL,
                             control=NULL) {
@@ -103,7 +103,7 @@ CalcFfromCatch_i <- function(CatchAtAge_i,
   # 1. Age
   
   # NMortalityAtAge
-  # 1. Age, Time Step
+  # 1. Age
   
   # SelectAtAge, RetainAtAge & DiscardAtAge 
   # 1. Age, Fleet
@@ -113,7 +113,6 @@ CalcFfromCatch_i <- function(CatchAtAge_i,
   
   maxiterF <- control$MaxIt
   tolF <- control$tolF
-  
   
   nAge <- dim(SelectAtAge_i)[1]
   nFleet <- dim(SelectAtAge_i)[2]

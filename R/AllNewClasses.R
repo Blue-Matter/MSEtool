@@ -3055,7 +3055,7 @@ Hist <- function(OM, ...) {
   Hist@Number <- MakeNamedList(StockNames(OM))
   Hist@Biomass  <- Hist@VBiomass <- Hist@SBiomass <- Hist@SProduction <- Hist@Number
   Hist@FDead <- Hist@FRetain <- Hist@EffortArea <- Hist@FDeadArea <- Hist@FRetainArea <- Hist@Number
-  Hist@Removal <- Hist@Retain <-  Hist@Number
+  Hist@Removal <- Hist@Retain <- Hist@Density <-  Hist@Number
   
   nsim <- Hist@nSim
   timesteps <- TimeSteps(Hist)
@@ -3073,15 +3073,16 @@ Hist <- function(OM, ...) {
     Hist@FRetain[[st]] <- Hist@FDead[[st]]
 
     # Sim, Age, Time Step, Fleet, Area 
-    Hist@EffortArea[[st]] <- CreateArraySATFR(Hist@Stock[[st]], nsim, timesteps, fleetnames)
-    Hist@VBiomass[[st]] <- Hist@EffortArea[[st]]
-    Hist@FDeadArea[[st]] <-  Hist@EffortArea[[st]]
-    Hist@FRetainArea[[st]] <- Hist@FDeadArea[[st]] 
-    Hist@Removal[[st]] <- Hist@FDeadArea[[st]]
-    Hist@Retain[[st]] <- Hist@FDeadArea[[st]]
+    Hist@VBiomass[[st]] <- CreateArraySATFR(Hist@Stock[[st]], nsim, timesteps, fleetnames)
+    Hist@FDeadArea[[st]] <- Hist@VBiomass[[st]]
+    Hist@FRetainArea[[st]] <-  Hist@VBiomass[[st]]
+    Hist@Removal[[st]] <-  Hist@VBiomass[[st]]
+    Hist@Retain[[st]] <-  Hist@VBiomass[[st]]
     
     # Sim, Time Step, Fleet, Area 
+    
     Hist@Density[[st]] <- CreateArraySATFR(Hist@Stock[[st]], nsim, timesteps, fleetnames) |> DropDimension('Age', FALSE)
+    Hist@EffortArea[[st]] <- Hist@Density[[st]] 
   }
   Hist
 }

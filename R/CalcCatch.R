@@ -39,94 +39,159 @@ CalcCatchN <- function(FDeadAtAge, FRetainAtAge, NatAge, NMortAtAge) {
 }
 
 
-CatchByArea <- function(Hist, TimeSteps=NULL) {
+# Calculates Catch and Fishing Mortality by each area
+CalcCatch <- function(Hist, TimeStep=NULL) {
+  if (length(TimeStep)!=1)
+    stop('`TimeStep` must be length 1')
   
-  
+  # relative catchability in each area proportional to density
+  Catchability <- purrr::map(Hist@Fleet, \(x) {
+    GetCatchability(x, TimeStep) |>
+      AddDimension('Area')
+    })
  
-  
-  # Distribute Effort across Areas proportional to Density
-  EffortDist <- CalcEffortDist(Hist, TimeSteps)
-  
-  NatAgeArea <- purrr::map(Hist@Number, 
-                           ArraySubsetTimeStep, 
-                           TimeSteps=TimeSteps)
-  
+  Density <- GetDensity(Hist, TimeStep)
+  Catchability <- purrr::map2(Catchability, Density, ArrayDivide)
+  EffortDist <- GetEffortArea(Hist, TimeStep)
 
+  NatAge <- GetNumberAtAge(Hist, TimeStep)
+  
+  fleetnames <- FleetNames(Hist)
+  
+  # Calculate Catch and F within each area and F over all Areas
+  for (st in 1:nStock(Hist)) {
+    Catchability[[st]] <- Catchability[[st]] |> 
+      aperm(c('Sim', 'Time Step','Fleet', 'Area'))
+    
+    ApicalF <- ArrayMultiply(Catchability[[st]], EffortDist[[st]])
 
-  
-  # Relative catchability by Area proportional to Density
-  RelDensity <- purrr::pmap(list(Hist@Stock,
-                                 Hist@Fleet,
-                                 NatAgeArea), 
-                            TimeSteps=TimeSteps, CalcDensity)
-  
-  Catchability <- purrr::map(Hist@Fleet, GetCatchability,
-                             TimeSteps=TimeSteps) |>
-    purrr::map(AddDimension, 'Area')
-  
-  Catchability <- purrr::map2(Catchability, RelDensity, ArrayDivide)
-  
-  ApicalF <- purrr::map2(Catchability, EffortDist, ArrayMultiply) |>
-    purrr::map(AddDimension, 'Age') |>
-    purrr::map(aperm, c(1,5,2,3,4))
-  
-  # TODO skip if all Fs are 0
-  
-  selectivity <- purrr::map(Hist@Fleet, GetSelectivityAtAge, TimeSteps=TimeSteps) |>
-    purrr::map(AddDimension, 'Area')
-  retention <- purrr::map(Hist@Fleet, GetRetentionAtAge, TimeSteps=TimeSteps) |>
-    purrr::map(AddDimension, 'Area')
-  discardmortality <- purrr::map(Hist@Fleet,
-                                 GetDiscardMortalityAtAge, TimeSteps=TimeSteps) |>
-    purrr::map(AddDimension, 'Area')
-  
-  FInteract <- purrr::map2(ApicalF, selectivity, ArrayMultiply)
-  FRetainAtAge <- purrr::map2(FInteract, retention, ArrayMultiply)
-  FDiscardTotal <- purrr::map2(FInteract, FRetainAtAge, ArraySubtract)
-  FDiscardDead <-  purrr::map2(FDiscardTotal, discardmortality, ArrayMultiply)
-  FDeadAtAge <- purrr::map2(FRetainAtAge, FDiscardDead, ArrayAdd)
-  
-  NMortAtAge <- purrr::map(Hist@Stock, GetNMortalityAtAge, TimeSteps=TimeSteps)
-  
-  CatchN <- purrr::pmap(list(FDeadAtAge=FDeadAtAge,
-                             FRetainAtAge=FRetainAtAge,
-                             NatAge=NatAgeArea,
-                             NMortAtAge=NMortAtAge), 
-                        CalcCatchN)
-  
-  RemovalN <- lapply(CatchN , '[[', 'Removal')
-  RetainN <- lapply(CatchN , '[[', 'Retain')
-  
-  WeightAtAge <- purrr::map2(Hist@Stock, Hist@Fleet, 
-                             GetFleetWeightAtAge, TimeSteps=TimeSteps) |>
-    purrr::map(AddDimension, 'Area')
-  
-  RemovalB <- purrr::map2(WeightAtAge, RemovalN, ArrayMultiply)
-  RetainB <- purrr::map2(WeightAtAge, RemovalN, ArrayMultiply)
-  
-  for (i in seq_along(RemovalB)) {
-    ArrayFill(Hist@Removal[[i]]) <- RemovalB[[i]]
-    ArrayFill(Hist@Retain[[i]]) <- RetainB[[i]]
+    if (all(ApicalF[[st]]<= tiny)) {
+      apicalFEmptyArray <- array(tiny, dim=c(nSim(Hist),1),
+                                 dimnames = list(
+                                   Sim=1:nSim(Hist),
+                                   `Time Step`=TimeStep))
+      
+      FEmptyArray <- array(tiny, dim=c(nSim(Hist),nAge(Hist@Stock[[st]]),1),
+                           dimnames = list(
+                             Sim=1:nSim(Hist),
+                             Age=0:MaxAge(Hist@Stock[[st]]),
+                             `Time Step`=TimeStep))
+      for (fl in seq_along(fleetnames)) {
+        ArrayFill(Hist@Fleet[[st]][[fl]]@FishingMortality@ApicalF) <- apicalFEmptyArray
+        ArrayFill(Hist@Fleet[[st]][[fl]]@FishingMortality@DeadAtAge) <- FEmptyArray
+        ArrayFill(Hist@Fleet[[st]][[fl]]@FishingMortality@RetainAtAge) <- FEmptyArray
+        
+      }
+      return(Hist)
+ 
+      
+      selectivity <- GetSelectivityAtAge(Hist@Fleet[[st]], TimeSteps=TimeStep) |>
+        AddDimension('Area')
+      retention <- GetRetentionAtAge(Hist@Fleet[[st]], TimeSteps=TimeStep) |>
+        AddDimension('Area')
+      discardmortality <- GetDiscardMortalityAtAge(Hist@Fleet[[st]], TimeSteps=TimeStep) |>
+        AddDimension('Area')
+      
+      ApicalF <- ApicalF |> AddDimension('Age',0) |>
+        aperm(c('Sim', 'Age', 'Time Step', 'Fleet', 'Area'))
+      FInteract <- ArrayMultiply(ApicalF, selectivity)
+      FRetainAtAge <- ArrayMultiply(FInteract, retention)
+      
+      FDiscardTotal <- ArraySubtract(FInteract, FRetainAtAge)
+      FDiscardDead <- ArrayMultiply(FDiscardTotal, discardmortality)
+      FDeadAtAge <- ArrayAdd(FRetainAtAge, FDiscardDead)
+      
+      NMortAtAge <- GetNMortalityAtAge(Hist@Stock[[st]], TimeSteps=TimeStep)
+      
+      CatchN <- CalcCatchN(FDeadAtAge, 
+                           FRetainAtAge,
+                           NatAge[[st]],
+                           NMortAtAge)
+      
+      WeightAtAge <- GetFleetWeightAtAge(Hist@Stock[[st]], Hist@Fleet[[st]], TimeStep) |>
+        AddDimension('Area')
+      
+      RemovalB <- ArrayMultiply(WeightAtAge, CatchN$Removal)
+      RetainB <- ArrayMultiply(WeightAtAge, CatchN$Retain)
+      
+      ArrayFill(Hist@FDeadArea[[st]]) <- FDeadAtAge
+      ArrayFill(Hist@FRetainArea[[st]]) <- FRetainAtAge
+      ArrayFill(Hist@Removal[[st]]) <- RemovalB
+      ArrayFill(Hist@Retain[[st]]) <- RetainB
+      
+      # F Overall
+      FFleetEmptyArray <- array(tiny, dim=c(nSim(Hist),
+                                            nAge(Hist@Stock[[st]]),1,
+                                            length(fleetnames)),
+                                dimnames = list(
+                                  Sim=1:nSim(Hist),
+                                  Age=0:MaxAge(Hist@Stock[[st]]),
+                                  `Time Step`=TimeStep,
+                                  Fleet=fleetnames))
+      
+      FDeadArray <- FFleetEmptyArray
+      FRetainArray <- FFleetEmptyArray
+      
+      
+      for (sim in 1:nSim(Hist)) {
+        FFleetArea <- abind::adrop(ApicalF[sim,1,1,,, drop=FALSE], 1:3) 
+        if (all(round(FFleetArea/mean(FFleetArea),1)==1)) {
+          # Fs are the same across areas
+          FDeadAtAgeList <- DropDimension(FDeadAtAge, 'Area', FALSE) |>
+            Array2List(4) |> SubsetSim(sim)
+          FRetainAtAgeList <- DropDimension(FRetainAtAge, 'Area', FALSE) |>
+            Array2List(4) |> SubsetSim(sim)
+          for (fl in seq_along(fleetnames)) {
+            FDeadArray[sim,,1,] <-  FDeadAtAgeList[[fl]]
+            FRetainArray[sim,,1,] <- FRetainAtAgeList[[fl]]
+          }
+        } else {
+          # need to calculate overall Fs from catches
+          CatchAtAge_i <- abind::adrop(CatchN$Removal[sim,,1,,,drop=FALSE],c(1,3)) |> 
+            apply(c('Age', 'Fleet'), sum)
+          
+          PopatAge_i <- abind::adrop(NatAge[[st]][sim,,1,,drop=FALSE],c(1,3)) |> 
+            apply(c('Age'), sum)
+          NMortalityAtAge_i <- NMortAtAge[sim,,1]
+          SelectAtAge_i <- abind::adrop(selectivity[sim,,1,,1, drop=FALSE], c(1,3, 5))
+          RetainAtAge_i <- abind::adrop(selectivity[sim,,1,,1, drop=FALSE], c(1,3, 5))
+          DiscardAtAge_i <- abind::adrop(selectivity[sim,,1,,1, drop=FALSE], c(1,3, 5))
+          
+          apicalF <- CalcFfromCatch_i(CatchAtAge_i, 
+                                      PopatAge_i, 
+                                      NMortalityAtAge_i,
+                                      SelectAtAge_i,
+                                      RetainAtAge_i,
+                                      DiscardAtAge_i)
+          apicalF <- matrix(apicalF, nrow(SelectAtAge_i), length(fleetnames))
+          FInteract <- SelectAtAge_i * apicalF
+          FRetainAtAge <- FInteract * RetainAtAge_i
+          FDiscardTotal <- FInteract-FRetainAtAge
+          FDiscardDead <- FDiscardTotal*DiscardAtAge_i
+          FDeadAtAge <- FRetainAtAge+FDiscardDead
+          
+          FDeadAtAgeList <- FDeadAtAge |> AddDimension('Sim', sim) |>
+            AddDimension('Time Step', TimeStep) |>
+            aperm(c('Sim', 'Age', 'Time Step', 'Fleet')) |>
+            Array2List(pos=4)
+          
+          FRetainAtAgeList <- FRetainAtAge |> AddDimension('Sim', sim) |>
+            AddDimension('Time Step', TimeStep) |>
+            aperm(c('Sim', 'Age', 'Time Step', 'Fleet')) |>
+            Array2List(pos=4)
+          
+          for (fl in seq_along(fleetnames)) {
+            FDeadArray[sim,,1,] <-  FDeadAtAgeList[[fl]]
+            FRetainArray[sim,,1,] <- FRetainAtAgeList[[fl]]
+          }
+        }
+      }
+      for (fl in seq_along(fleetnames)) {
+        ArrayFill(Hist@Fleet[[st]][[fl]]@FishingMortality@ApicalF) <- apply(FDeadArray, c('Sim', 'Fleet'), sum)
+        ArrayFill(Hist@Fleet[[st]][[fl]]@FishingMortality@DeadAtAge) <- FDeadArray[,,,fl]
+        ArrayFill(Hist@Fleet[[st]][[fl]]@FishingMortality@RetainAtAge) <- FRetainArray[,,,fl]
+      }
+    }
   }
-  
-  # if F is the same in each area, update overall F (same) in the Hist object
-  chk <- apply(ApicalF[[1]],c(1,5), mean)
-  chksame <- chk/matrix(apply(chk, 1, mean), nrow(chk), ncol(chk), byrow=FALSE) |>
-    round(2)
-  
-  if (prod(chksame) || all(chk==0)) {
-    ApicalF <- purrr::map(ApicalF, \(x) 
-                          abind::asub(x, list(1,1,1), c(2,4,5), drop=FALSE) |>
-                            abind::adrop(c(2,4,5))
-    )
-    Hist@Fleet <- purrr::map2(Hist@Fleet, ApicalF, \(x,y)
-                              CalcFatAge(x, TimeSteps=TimeSteps, y)
-    )
-  } else { 
-    # otherwise, calculate F by Area from Catch 
-    Hist <- CalcFleetFMortality(Hist, TimeSteps)
-  }
-  
-  
   Hist
 }
