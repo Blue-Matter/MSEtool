@@ -559,13 +559,22 @@ setMethod("Populate", "om", function(object, messages='progress') {
       } else {
         fleet <- object@Fleet[[st]][[fl]]
       }
-     
-
+      
+      fleet@nSim <- object@nSim
+      fleet@nYear <- object@nYear
+      fleet@pYear <- object@pYear
+      fleet@CurrentYear <- object@CurrentYear
+      
+      fleet@TimeUnits <- stock@Ages@Units
+      fleet@TimeStepsPerYear <- TSperYear(stock@TimeUnits)
+      fleet@TimeSteps <- CalcTimeSteps(stock@nYear, 
+                                       stock@pYear, 
+                                       stock@CurrentYear, 
+                                       stock@TimeUnits)
+      
       fleetList[[st]][[fl]] <- Populate(fleet, 
                                         Ages=Ages(stockList[[st]]),
                                         Length=Length(stockList[[st]]),
-                                        nsim=nSim(object),
-                                        TimeSteps=TimeSteps(object),
                                         seed=object@Seed,
                                         messages=messages)
       
@@ -1259,10 +1268,12 @@ setMethod("Populate", "depletion", function(object,
 setMethod("Populate", "fleet", function(object,
                                         Ages=NULL,
                                         Length=NULL,
-                                        nsim=NULL,
-                                        TimeSteps=NULL,
                                         seed=NULL,
                                         messages=TRUE) {
+  
+  nsim <- nSim(object)
+  TimeSteps <- TimeSteps(object)
+  HistTimeSteps <- TimeSteps(object, 'Historical')
   
   argList <- list(Ages, Length, nsim, TimeSteps, seed)
   if (CheckDigest(argList, object) | EmptyObject(object))
@@ -1271,6 +1282,7 @@ setMethod("Populate", "fleet", function(object,
   SetSeed(object, seed)
   
   fleet <- object
+  
   
   fleet@FishingMortality <- Populate(fleet@FishingMortality,
                                       nsim,
@@ -1315,7 +1327,7 @@ setMethod("Populate", "fleet", function(object,
                            Ages,
                            Length,
                            nsim,
-                           TimeSteps,
+                           HistTimeSteps,
                            seed,
                            messages)
   

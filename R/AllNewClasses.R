@@ -2235,6 +2235,13 @@ setClass('fleet',
                  Distribution='distribution',
                  Weight='array.null',
                  BioEconomic='list',
+                 nYear='num.null',
+                 pYear='num.null',
+                 nSim='num.null',
+                 CurrentYear='num.null',
+                 TimeUnits='char.null',
+                 TimeSteps='num.null',
+                 TimeStepsPerYear='num.null',
                  Misc='list'
          ),
          contains='Created_ModifiedClass'
@@ -3053,7 +3060,7 @@ Hist <- function(OM, ...) {
   }
   
   Hist@Number <- MakeNamedList(StockNames(OM))
-  Hist@Biomass  <- Hist@VBiomass <- Hist@SBiomass <- Hist@SProduction <- Hist@Number
+  Hist@Biomass  <- Hist@VBiomass <- Hist@SBiomass <- Hist@Number
   Hist@FDead <- Hist@FRetain <- Hist@EffortArea <- Hist@FDeadArea <- Hist@FRetainArea <- Hist@Number
   Hist@Removal <- Hist@Retain <- Hist@Density <-  Hist@Number
   
@@ -3066,7 +3073,7 @@ Hist <- function(OM, ...) {
     Hist@Number[[st]] <- CreateArraySATR(Hist@Stock[[st]], nsim, timesteps)
     Hist@Biomass[[st]] <- Hist@Number[[st]]
     Hist@SBiomass[[st]] <- Hist@Number[[st]]
-    Hist@SProduction[[st]] <- Hist@Number[[st]]
+    
     
     # Sim, Age, Time Step, Fleet
     Hist@FDead[[st]] <- CreateArraySATF(Hist@Stock[[st]], nsim, timesteps, fleetnames)
@@ -3080,9 +3087,14 @@ Hist <- function(OM, ...) {
     Hist@Retain[[st]] <-  Hist@VBiomass[[st]]
     
     # Sim, Time Step, Fleet, Area 
-    
     Hist@Density[[st]] <- CreateArraySATFR(Hist@Stock[[st]], nsim, timesteps, fleetnames) |> DropDimension('Age', FALSE)
     Hist@EffortArea[[st]] <- Hist@Density[[st]] 
+    
+    # Sim, Time Step
+    Hist@SProduction [[st]] <- CreateArraySATR(Hist@Stock[[st]], nsim, timesteps) |> 
+      DropDimension('Age', FALSE) |>
+      DropDimension('Area', FALSE)
+    
   }
   Hist
 }

@@ -12,7 +12,7 @@ OptimInitDepletion <- function(Hist) {
   Hist
 }
 
-SubsetSim <- function(object, Sim=1) {
+SubsetSim <- function(object, Sim=1, drop=FALSE) {
   # this is a piece of black magic that subsets all arrays with a Sim
   # dimension
   # Sim is a numeric vector, can be length > 1
@@ -49,7 +49,7 @@ SubsetSim <- function(object, Sim=1) {
   
   if (inherits(object, 'array')) {
     if ("Sim" %in% names(dimnames(object))) {
-      object <- ArraySubsetSim(object, Sim)
+      object <- ArraySubsetSim(object, Sim, drop)
     }
     return(object)
   }
@@ -77,7 +77,7 @@ OptimCatchability <- function(Hist) {
   Qvals <- rep(NA, nsims)
  
   for (sim in 1:nsims) {
-    tictoc::tic()
+
     SubHist <- SubsetSim(Hist, sim)
   
     doOpt <- optimize(OptCatchability,
@@ -87,7 +87,7 @@ OptimCatchability <- function(Hist) {
                       tol=1e-3)
     
     Qvals[sim] <- exp(doOpt$minimum)
-    tictoc::toc()
+
   }
   
   # nsims <- nSim(Hist)
@@ -100,7 +100,8 @@ OptimCatchability <- function(Hist) {
 }
 
 OptCatchability <- function(logQ, Hist, DepletionTarget, sim=1) {
-  
+  # LOGQ <<- logQ
+  # logQ <- LOGQ
   TimeSteps <- TimeSteps(Hist, 'Historical')
   DepletionTarget <- Hist@Stock[[1]]@Depletion@Final[sim]
   

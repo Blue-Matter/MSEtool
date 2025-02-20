@@ -1,9 +1,8 @@
 library(MSEtool)
 
 la <- devtools::load_all
-# 
-la()
 
+ la()
 
 octopusOM <- OM('Day Octopus OM',
                 Author='Adrian Hordyk',
@@ -15,7 +14,7 @@ octopusOM <- OM('Day Octopus OM',
                 nYear=5,
                 pYear=10,
                 TimeUnits = 'month',
-                nSim=20)
+                nSim=2)
 
 ## ---- create_stock ----
 
@@ -45,7 +44,7 @@ NaturalMortality(octopus) <- NaturalMortality(Pars=list(M=c(0.10, 0.2)),
 
 ## ---- maturity ----
 
-Maturity(octopus) <- Maturity(Pars=list(A50=c(10, 12),
+Maturity(octopus) <- Maturity(Pars=list(A50=c(11, 12),
                                         A50_95=c(0.1, 0.5)),
                               Semelparous=TRUE)
 
@@ -57,6 +56,7 @@ SRR(octopus) <- SRR(Pars=list(h=c(0.85, 0.95)),
                     R0=10000,
                     SD=c(0.4,0.6),
                     SpawnTimeFrac = 0.5)
+
 
 ## ---- spatialdistribution ----
 
@@ -90,7 +90,11 @@ Fleet(octopusOM) <- octopus_fleet
 
 object <- octopusOM
 OM <- Populate(octopusOM)
-OM@Fleet$`Day octopus`$`Octopus Fleet`@Effort@Catchability[] <- 0.1
+
+OM@Fleet[[1]][[1]]@Effort@Effort
+
+
+# OM@Fleet$`Day octopus`$`Octopus Fleet`@Effort@Catchability[] <- 0.1
 
 # OM@Fleet$`Day octopus`$`Octopus Fleet`@Effort@Effort[,1] <- 0.1
 

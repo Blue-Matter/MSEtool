@@ -63,21 +63,54 @@ InitNumber <- function(Stock, UnfishedNumber) {
   NumberHist
 }
 
-CalcPopDynamics <- function(Hist, TimeSteps, MP=NULL, silent=FALSE) {
-  on.exit(cli::cli_progress_done())
+CalcPopDynamics <- function(Hist, TimeSteps=NULL, MP=NULL, silent=FALSE) {
+  
+  if (is.null(TimeSteps))
+    TimeSteps <- TimeSteps(Hist, 'Historical')
   
   progress <- seq_along(TimeSteps)
   
-  if (!silent) 
+  if (!silent)  {
     progress <- cli::cli_progress_along(TimeSteps,
                                         'Calculating Population Dyamics')
+    on.exit(cli::cli_progress_done())
+  }
   
- 
-  # tictoc::tic()
-  ts <- 1
+
+  # Arrays to create to convert the whole process to C++
+  # Set Up Arrays
+  # For each Stock:
+  # nsim, nage, nts, narea
+  # Number <- Hist@Number 
+  # Biomass <- Hist@Biomass
+  # SBiomass <- Hist@SBiomass
+  # LengthAtAge
+  # WeightAtAge
+  # MaturityAtAge
+  
+  # # nsim, nts
+  # SProduction <- Hist@SProduction
+  # 
+  # # nsim, nage, nts, nfleet
+  # Selectivity
+  # Retention
+  # DiscardMortality
+  # 
+  # 
+  # # nsim, nts, nfleet, narea
+  # 
+  # 
+  # VBiomass
+  # 
+  # # nsim, narea
+  # AreaSize 
+  # 
+
+  
   for (ts in progress) {
     
-    TimeStep <- thisTimeStep <- TimeSteps[ts]
+    TimeStep <- TimeSteps[ts]
+
     
     # ---- Do MICE stuff during this Time Step (if applicable) -----
     # TODO
@@ -86,23 +119,24 @@ CalcPopDynamics <- function(Hist, TimeSteps, MP=NULL, silent=FALSE) {
     # ---- Update Biomass At Age etc ----
     # done after MICE to account for changes
     Hist <- UpdateBioArrays(Hist, TimeStep)
-    
+  
     # for MPs - Calculate Effort, Selectivity, etc
     # update fishery data 
     # these two steps should be done first
   
     # ---- Distribute Effort across Areas ----
     Hist <- DistributeEffort(Hist, TimeStep)
- 
+    
     # ---- Calculate Catch and Fishing Mortality ----
     Hist <- CalcCatch(Hist, TimeStep)
     
-   
     # ---- Calculate Recruitment  Time Step ----
     Hist <- CalcRecruitment(Hist, TimeStep=TimeStep)
     
     # ---- Number, Biomass at beginning of Next Time Step and Move ----
     Hist <- CalcNumberNext(Hist, TimeStep)
+    
+    # print(sum(Hist@Number[[1]][1,,ts+1,]))
     
   }
   # tictoc::toc()

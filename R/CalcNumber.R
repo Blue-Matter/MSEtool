@@ -16,8 +16,10 @@ CalcNumberNext <- function(Hist, thisTimeStep) {
     FDeadAtAgeTotal <- apply(FDeadAtAge, c('Sim', 'Age', 'Time Step', 'Area'), sum)
     NMortAtAge <- GetNMortalityAtAge(Hist@Stock[[st]], thisTimeStep) |>
       AddDimension('Area')
+      
+    Semelparous <- GetSemelparous(Hist@Stock[[st]]) |> ArraySubsetTimeStep(thisTimeStep)
     
-    ZMortAtAge <- ArrayAdd(FDeadAtAgeTotal,NMortAtAge)
+    ZMortAtAge <-  ArrayAdd(FDeadAtAgeTotal,NMortAtAge)
   
     dd <- dim(FDeadAtAge)
     nSim <- dd[1]
@@ -33,12 +35,17 @@ CalcNumberNext <- function(Hist, thisTimeStep) {
     
     NumberNextTimeStep[[st]][] <- tiny
     
+    Surv <- ZMortAtAge
+    Surv[] <- 0
+    Surv[SAFR[,c(1:3,5)]] <- ArrayMultiply(exp(-ZMortAtAge[SAFR[,c(1:3,5)]]), 1-Semelparous[SAFR[,c(1:3)]])
+    Surv[SALFR[,c(1:3,5)]] <- ArrayMultiply(exp(-ZMortAtAge[SALFR[,c(1:3,5)]]), 1-Semelparous[SALFR[,c(1:3)]])
+    
     NumberNextTimeStep[[st]][SA1FR[,c(1,2,3,5)]] <- NumberThisTimeStep[[st]][SAFR[,c(1,2,3,5)]] *
-      exp(-ZMortAtAge[SAFR[,c(1:3,5)]])
+      Surv[SAFR[,c(1:3,5)]]
     
     if (GetPlusGroup(Hist@Stock[[st]])) {
       NumberNextTimeStep[[st]][SALFR[,c(1,2,3,5)]] <-  NumberNextTimeStep[[st]][SALFR[,c(1,2,3,5)]] +
-        NumberThisTimeStep[[st]][SALFR[,c(1,2,3,5)]] * exp(-ZMortAtAge[SALFR[,c(1:3,5)]])
+        NumberThisTimeStep[[st]][SALFR[,c(1,2,3,5)]] * Surv[SALFR[,c(1:3,5)]]
     }
     
     # movement at beginning of  next timestep

@@ -254,7 +254,7 @@ ArraySubsetTimeStep <- function(object, TimeSteps=NULL) {
   abind::asub(object, (DN[[TSind]] %in% TimeSteps), TSind, drop=FALSE)
 }
 
-ArraySubsetSim <- function(object, Sims=NULL) {
+ArraySubsetSim <- function(object, Sims=NULL, drop=FALSE) {
   if (is.null(Sims))
     return(object)
   
@@ -280,5 +280,10 @@ ArraySubsetSim <- function(object, Sims=NULL) {
     dimnames(array)$`Sim` <- Sims
     return(array)
   } 
-  abind::asub(object, (DN[[TSind]] %in% Sims), TSind, drop=FALSE)
+  if (drop) {
+    out <- abind::adrop(abind::asub(object, (DN[[TSind]] %in% Sims), TSind, drop=FALSE), TSind)
+  } else {
+    out <- abind::asub(object, (DN[[TSind]] %in% Sims), TSind, drop=FALSE)  
+  }
+  
 }

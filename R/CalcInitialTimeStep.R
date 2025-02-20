@@ -76,16 +76,10 @@ UpdateBioArrays <- function(Hist, TimeStep) {
    
     ArrayFill(Hist@Biomass[[st]]) <- BatAgeArea[[st]]
     ArrayFill(Hist@SBiomass[[st]]) <- ArrayMultiply(BatAgeArea[[st]],MaturityAtAge[[st]])
-    ArrayFill(Hist@SProduction[[st]]) <- ArrayMultiply(NumberAtAge[[st]], SProductionAtAge[[st]])
+    # ArrayFill(Hist@SProduction[[st]]) <- ArrayMultiply(NumberAtAge[[st]], SProductionAtAge[[st]])
     
     ArrayFill(Hist@VBiomass[[st]]) <- VBatArea[[st]]
-    
-    # ArrayFill(Hist@EffortArea[[st]]) <- VBatArea[[st]]
-    # ArrayFill(Hist@FDeadArea[[st]]) <- VBatArea[[st]]
-    # ArrayFill(Hist@FRetainArea[[st]]) <- VBatArea[[st]]
-    
     ArrayFill(Hist@Density[[st]]) <- Density[[st]]
-    
   }
   
   Hist
