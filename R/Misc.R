@@ -334,7 +334,13 @@ List2Array <- function(List, dimname='Fleet') {
 }
 
 Array2List <- function(array, pos=3) {
+  dnames <- names(dimnames(array))
+  if (is.character(pos)) {
+    pos <- match(pos, dnames)
+  }
+  
   dd <- dim(array)
+  
   list <- vector('list', dd[pos])
   dimnames <- dimnames(array)
   

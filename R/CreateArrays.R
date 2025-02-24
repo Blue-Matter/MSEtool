@@ -1,4 +1,12 @@
-# Sim
+
+CreateArrayAT <- function(nAge, TimeSteps) {
+  array(tiny, TimeSteps, dim=c(nAge,
+                               length(TimeSteps)),
+        dimnames=list(Age=0:(nAge-1),
+                      `Time Step`=TimeSteps)
+  )
+}
+
 
 # Sim, Age 
 

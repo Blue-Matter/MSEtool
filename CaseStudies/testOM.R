@@ -1,10 +1,9 @@
 
 library(MSEtool)
 
-# la <- devtools::load_all
-# 
-# la()
+la <- devtools::load_all
 
+la()
 
 testOM@nsim <- 20
 
@@ -19,7 +18,7 @@ nSim=NULL
 silent=FALSE
 
 
-SimulateDEV()
+SimulateDEV
 
 
 Hist <- Simulate(testOM)
