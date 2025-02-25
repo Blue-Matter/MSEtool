@@ -934,6 +934,8 @@ TimeSteps <- function(x, Period=NULL) {
   TimeSteps <- round(x@TimeSteps,2)
   if (is.null(Period))
     return(TimeSteps)
+  if (Period=='All')
+    return(TimeSteps)
   CalcTimeSteps(x@nYear, x@pYear, x@CurrentYear, x@TimeUnits, Period)
 }
 

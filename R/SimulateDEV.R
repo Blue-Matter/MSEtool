@@ -17,6 +17,12 @@ SimulateDEV <- function(OM=NULL,
   
   OM <- MSEtool:::StartUp(OM, messages, nSim) 
   
+  
+  # ---- Make Internal Arrays ----
+  MeanNaturalMortalityAtAge 
+  
+  
+  
   Hist <- MSEtool:::Hist(OM)
 
   # ---- Calculate Unfished Dynamics ----
@@ -31,26 +37,27 @@ SimulateDEV <- function(OM=NULL,
   # ---- Number and Biomass in Initial Time Step ----
   Hist <- MSEtool::: CalcInitialTimeStep(Hist)
   
-  # ---- Make All Array Lists ----
+ 
   
   NaturalMortalityAtAge <- purrr::map(OM@Stock,                           
                                       \(x) Array2List(x@NaturalMortality@MeanAtAge, 'Sim')
   ) |> purrr::transpose()
   
   
-    purrr::transpose()
+  MeanLengthAtAge <- purrr::map(OM@Stock,                           
+                                      \(x) Array2List(x@Length@MeanAtAge, 'Sim')
+  ) |> purrr::transpose()
   
-  LengthAtAge <- purrr::map(GetLengthAtAge(OM), 
-                                      Array2List, 'Sim') |>
-    purrr::transpose()
+  purrr::map(OM@Stock, nArea)
+  
+
   
   
-  
-  
+    
   
   SimList <- MakeNamedList(1:nSim(OM))
   StockList <- MakeNamedList(StockNames(OM))
-  
+  AreaList <- MakeNamedList(1:nareas(OM))
   
   
   
