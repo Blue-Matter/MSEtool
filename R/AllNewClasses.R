@@ -2146,9 +2146,6 @@ Retention <- function(Pars=list(),
 setClass('distribution',
          slots=c(Closure='num.array',
                  Cost='num.array',
-                 Targeting='num.array',
-                 ApicalF='num.array',
-                 Catchability='num.array',
                  Effort='num.array',
                  Misc='list'
          ),
@@ -2159,17 +2156,10 @@ setValidity('distribution', isValidObject)
 setMethod("initialize", "distribution", function(.Object,
                                                  Closure=NULL,
                                                  Cost=NULL,
-                                                 Targeting=NULL,
-                                                 ApicalF=NULL,
-                                                 Catchability=NULL,
                                                  Effort=NULL,
                                                  Misc=list()) {
   .Object@Closure <- Closure
   .Object@Cost <- Cost
-  .Object@Targeting <- Targeting
-  .Object@ApicalF <- ApicalF
-  .Object@Catchability <- Catchability
-  .Object@Effort <- Effort
   .Object@Misc <- Misc
   .Object@Created <- Sys.time()
   .Object
@@ -2179,10 +2169,6 @@ setMethod("initialize", "distribution", function(.Object,
 #' @export
 Distribution <- function(Closure=NULL,
                          Cost=NULL,
-                         Targeting=NULL,
-                         ApicalF=NULL,
-                         Catchability=NULL,
-                         Effort=NULL,
                          Misc=list()) {
 
   if (methods::is(Closure, 'fleet'))
@@ -2191,10 +2177,6 @@ Distribution <- function(Closure=NULL,
   methods::new('distribution',
                Closure=Closure,
                Cost=Cost,
-               Targeting=Targeting,
-               ApicalF=ApicalF,
-               Catchability=Catchability,
-               Effort=Effort,
                Misc=Misc)
 }
 
@@ -3044,9 +3026,14 @@ setClass("hist",
 )
 
 
-MakeNamedList <- function(names) {
+MakeNamedList <- function(names, values=NULL) {
   l <- vector('list', length(names))
   names(l) <- names
+  if (!is.null(values)) {
+    for (i in 1:length(l)) {
+      l[[i]] <- values
+    }
+  }
   l
 }
 
@@ -3068,34 +3055,34 @@ Hist <- function(OM, ...) {
   timesteps <- TimeSteps(Hist)
   fleetnames <- FleetNames(Hist)
   
-  for (st in 1:nStock(Hist)) {
-    # Sim, Age, Time Step, Area
-    Hist@Number[[st]] <- CreateArraySATR(Hist@Stock[[st]], nsim, timesteps)
-    Hist@Biomass[[st]] <- Hist@Number[[st]]
-    Hist@SBiomass[[st]] <- Hist@Number[[st]]
-    
-    
-    # Sim, Age, Time Step, Fleet
-    Hist@FDead[[st]] <- CreateArraySATF(Hist@Stock[[st]], nsim, timesteps, fleetnames)
-    Hist@FRetain[[st]] <- Hist@FDead[[st]]
-
-    # Sim, Age, Time Step, Fleet, Area 
-    Hist@VBiomass[[st]] <- CreateArraySATFR(Hist@Stock[[st]], nsim, timesteps, fleetnames)
-    Hist@FDeadArea[[st]] <- Hist@VBiomass[[st]]
-    Hist@FRetainArea[[st]] <-  Hist@VBiomass[[st]]
-    Hist@Removal[[st]] <-  Hist@VBiomass[[st]]
-    Hist@Retain[[st]] <-  Hist@VBiomass[[st]]
-    
-    # Sim, Time Step, Fleet, Area 
-    Hist@Density[[st]] <- CreateArraySATFR(Hist@Stock[[st]], nsim, timesteps, fleetnames) |> DropDimension('Age', FALSE)
-    Hist@EffortArea[[st]] <- Hist@Density[[st]] 
-    
-    # Sim, Time Step
-    Hist@SProduction [[st]] <- CreateArraySATR(Hist@Stock[[st]], nsim, timesteps) |> 
-      DropDimension('Age', FALSE) |>
-      DropDimension('Area', FALSE)
-    
-  }
+  # for (st in 1:nStock(Hist)) {
+  #   # Sim, Age, Time Step, Area
+  #   Hist@Number[[st]] <- CreateArraySATR(Hist@Stock[[st]], nsim, timesteps)
+  #   Hist@Biomass[[st]] <- Hist@Number[[st]]
+  #   Hist@SBiomass[[st]] <- Hist@Number[[st]]
+  #   
+  #   
+  #   # Sim, Age, Time Step, Fleet
+  #   Hist@FDead[[st]] <- CreateArraySATF(Hist@Stock[[st]], nsim, timesteps, fleetnames)
+  #   Hist@FRetain[[st]] <- Hist@FDead[[st]]
+  # 
+  #   # Sim, Age, Time Step, Fleet, Area 
+  #   Hist@VBiomass[[st]] <- CreateArraySATFR(Hist@Stock[[st]], nsim, timesteps, fleetnames)
+  #   Hist@FDeadArea[[st]] <- Hist@VBiomass[[st]]
+  #   Hist@FRetainArea[[st]] <-  Hist@VBiomass[[st]]
+  #   Hist@Removal[[st]] <-  Hist@VBiomass[[st]]
+  #   Hist@Retain[[st]] <-  Hist@VBiomass[[st]]
+  #   
+  #   # Sim, Time Step, Fleet, Area 
+  #   Hist@Density[[st]] <- CreateArraySATFR(Hist@Stock[[st]], nsim, timesteps, fleetnames) |> DropDimension('Age', FALSE)
+  #   Hist@EffortArea[[st]] <- Hist@Density[[st]] 
+  #   
+  #   # Sim, Time Step
+  #   Hist@SProduction [[st]] <- CreateArraySATR(Hist@Stock[[st]], nsim, timesteps) |> 
+  #     DropDimension('Age', FALSE) |>
+  #     DropDimension('Area', FALSE)
+  #   
+  # }
   Hist
 }
 

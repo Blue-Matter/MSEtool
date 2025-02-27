@@ -104,7 +104,7 @@ CalcCatch <- function(Hist, TimeStep=NULL) {
     
     # TODO add Semelparous
     # see CalcNumber.R
-    NMortAtAge <- GetNMortalityAtAge(Hist@Stock[[st]], TimeSteps=TimeStep)
+    NMortAtAge <- GetNaturalMortalityAtAge(Hist@Stock[[st]], TimeSteps=TimeStep)
     
     CatchN <- CalcCatchN(FDeadAtAge, 
                          FRetainAtAge,

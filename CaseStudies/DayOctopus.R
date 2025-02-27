@@ -89,9 +89,13 @@ Stock(octopusOM) <- octopus
 Fleet(octopusOM) <- octopus_fleet
 
 object <- octopusOM
+
+
+
+
 OM <- Populate(octopusOM)
 
-OM@Fleet[[1]][[1]]@Effort@Effort
+
 
 
 # OM@Fleet$`Day octopus`$`Octopus Fleet`@Effort@Catchability[] <- 0.1

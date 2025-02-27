@@ -36,71 +36,136 @@ GetStockAtAge <- function(object, slots, TimeSteps=NULL, df=FALSE) {
 }
 
 
-GetLengthAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
-  GetStockAtAge(object,  slots=c('Length', 'MeanAtAge'), TimeSteps, df)
+ProcessStockAtAge <- function(out, TimeSteps, default=tiny/2) {
+  if (inherits(out, 'list')) {
+    out <- purrr::map(out, \(x) {
+      if (!is.null(x)) {
+        ProcessStockAtAge(x, TimeSteps, default)
+      } else {
+        array(default, dim=c(1,1,1), 
+              dimnames=list(Sim=1,
+                            Age=0,
+                            `Time Step`=TimeSteps[1]))
+      }
+    })
+    return(out)
+  }
+  
+  if (is.null(dim(out)) & length(out)==1) {
+    return(array(out, dim=c(1,1,1), 
+          dimnames=list(Sim=1,
+                        Age=0,
+                        `Time Step`=TimeSteps[1]))
+    )
+  }
+  
+  if (!is.null(out))
+    return(out)
+  
+  array(default, dim=c(1,1,1), 
+        dimnames=list(Sim=1,
+                      Age=0,
+                      `Time Step`=TimeSteps[1]))
+}
+
+ProcessStockAtLength <- function(out, TimeSteps, default=tiny/2) {
+  if (inherits(out, 'list')) {
+    out <- purrr::map(out, \(x) {
+      if (!is.null(x)) {
+        ProcessStockAtAge(x, TimeSteps, default)
+      } else {
+        array(default, dim=c(1,1,1), 
+              dimnames=list(Sim=1,
+                            Class=0,
+                            `Time Step`=TimeSteps[1]))
+      }
+    })
+    return(out)
+  }
+  
+  if (is.null(dim(out)) & length(out)==1) {
+    return(array(out, dim=c(1,1,1), 
+                 dimnames=list(Sim=1,
+                               Class=0,
+                               `Time Step`=TimeSteps[1]))
+    )
+  }
+  
+  if (!is.null(out))
+    return(out)
+  
+  array(default, dim=c(1,1,1), 
+        dimnames=list(Sim=1,
+                      Class=0,
+                      `Time Step`=TimeSteps[1]))
+}
+
+GetMeanAtAge <- function(object, TimeSteps, slot='Length') {
+  out <- GetStockAtAge(object,  slots=c(slot, 'MeanAtAge'), TimeSteps)
+  
+  ProcessStockAtAge(out, TimeSteps)
+}
+
+GetMeanAtLength <- function(object, TimeSteps, slot='Weight') {
+  out <- GetStockAtAge(object,  slots=c(slot, 'MeanAtLength'), TimeSteps)
+  
+  ProcessStockAtLength(out, TimeSteps)
+}
+
+GetCVAtAge <- function(object, TimeSteps, slot='Length') {
+  out <- GetStockAtAge(object,  slots=c(slot, 'CVatAge'), TimeSteps)
+  
+  ProcessStockAtAge(out, TimeSteps)
 }
 
 
-`SetLengthAtAge<-` <- function(x, value) {
-  x@Length@MeanAtAge <- value
-  x
+GetLengthAtAge <- function(object, TimeSteps=NULL) {
+  GetMeanAtAge(object,  TimeSteps)
+}
+
+GetCVLengthAtAge <- function(object, TimeSteps=NULL) {
+  GetCVAtAge(object,TimeSteps)
+}
+
+GetWeightAtAge <- function(object, TimeSteps=NULL) {
+  GetMeanAtAge(object,  TimeSteps, 'Weight')
+}
+
+GetCVWeightAtAge <- function(object, TimeSteps=NULL) {
+  GetCVAtAge(object,  TimeSteps, 'Weight')
+}
+
+GetWeightAtLength <- function(object, TimeSteps=NULL) {
+  GetMeanAtLength(object,  TimeSteps, 'Weight')
 }
 
 
-GetWeightAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
-  GetStockAtAge(object,  c('Weight', 'MeanAtAge'), TimeSteps, df)
+GetNaturalMortalityAtAge <- function(object, TimeSteps=NULL) {
+  GetMeanAtAge(object,  TimeSteps, 'NaturalMortality')
 }
 
-`SetWeightAtAge<-` <- function(x, value) {
-  x@Weight@MeanAtAge <- value
-  x
+GetNaturalMortalityAtLength <- function(object, TimeSteps=NULL) {
+  GetMeanAtLength(object,  TimeSteps, 'NaturalMortality')
 }
 
-GetNMortalityAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
-  GetStockAtAge(object,  c('NaturalMortality', 'MeanAtAge'), TimeSteps, df)
+GetMaturityAtAge <- function(object, TimeSteps=NULL) {
+  GetMeanAtAge(object,  TimeSteps, 'Maturity')
 }
 
-`SetGetNMortalityAtAge<-` <- function(x, value) {
-  x@NaturalMortality@MeanAtAge <- value
-  x
-}
-
-GetMovementAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
-  GetStockAtAge(object,  c('Spatial', 'Movement'), TimeSteps, df)
-}
-
-GetUnfishedDist <- function(object, TimeSteps=NULL, df=FALSE) {
-  GetStockAtAge(object,  c('Spatial', 'UnfishedDist'), TimeSteps, df)
-}
-
-
-GetMaturityAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
-  GetStockAtAge(object,  c('Maturity', 'MeanAtAge'), TimeSteps, df)
-}
-
-`SetMaturityAtAge<-` <- function(x, value) {
-  x@Maturity@MeanAtAge <- value
-  x
+GetMaturityAtLength <- function(object, TimeSteps=NULL) {
+  GetMeanAtLength(object,  TimeSteps, 'Maturity')
 }
 
 GetSemelparous <- function(object, TimeSteps=NULL, df=FALSE) {
   GetStockAtAge(object,  c('Maturity', 'Semelparous'), TimeSteps, df)
 }
 
-
-
 GetFecundityAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
-  GetStockAtAge(object, c('Fecundity', 'MeanAtAge'), TimeSteps, df)
+  GetMeanAtAge(object,  TimeSteps, 'Fecundity')
 }
 
-`SetFecundityAtAge<-` <- function(x, value) {
-  x@Fecundity@MeanAtAge <- value
-  x
-}
-
-
-GetPlusGroup <- function(object, TimeSteps=NULL, df=FALSE) {
-  GetStockAtAge(object,  c('Ages', 'PlusGroup'), TimeSteps, df)
+GetFecundityAtLength <- function(object, TimeSteps=NULL, df=FALSE) {
+  GetMeanAtLength(object, TimeSteps, 'Fecundity')
 }
 
 GetR0 <- function(object, TimeSteps=NULL, df=FALSE) {
@@ -111,6 +176,31 @@ GetSPFrom <- function(object, TimeSteps=NULL, df=FALSE) {
   GetStockAtAge(object,  c('SRR', 'SPFrom'), TimeSteps, df)
 }
 
+GetMovementAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
+  GetStockAtAge(object,  c('Spatial', 'Movement'), TimeSteps, df)
+}
+
+GetUnfishedDist <- function(object, TimeSteps=NULL, df=FALSE) {
+  GetStockAtAge(object,  c('Spatial', 'UnfishedDist'), TimeSteps)
+}
+
+GetProbStaying <- function(object, TimeSteps) {
+  GetStockAtAge(object,  c('Spatial', 'ProbStaying'), TimeSteps)
+}
+
+GetRelativeSize <- function(object, TimeSteps=NULL, df=FALSE) {
+  out <- GetStockAtAge(object,  c('Spatial', 'RelativeSize'), TimeSteps, df)
+  if (is.null(out)) {
+    out <- array(1, dim=c(1,1))
+    dimnames(out) <- list(Sim=1,
+                          Area=1)
+  }
+  out
+}
+
+GetPlusGroup <- function(object, TimeSteps=NULL, df=FALSE) {
+  GetStockAtAge(object,  c('Ages', 'PlusGroup'), TimeSteps, df)
+}
 
 GetSpawnTimeFrac <- function(object, TimeSteps=NULL, df=FALSE) {
   GetStockAtAge(object,  c('SRR', 'SpawnTimeFrac'), TimeSteps, df)
@@ -118,6 +208,11 @@ GetSpawnTimeFrac <- function(object, TimeSteps=NULL, df=FALSE) {
 
 GetRecDevInit <- function(object, TimeSteps=NULL, df=FALSE) {
   GetStockAtAge(object,  c('SRR', 'RecDevInit'), TimeSteps, df)
+}
+
+
+GetRecDevProj <- function(object, TimeSteps=NULL, df=FALSE) {
+  GetStockAtAge(object,  c('SRR', 'RecDevProj'), TimeSteps, df)
 }
 
 `SetRecDevInit<-` <- function(x, value) {
@@ -129,29 +224,41 @@ GetRecDevHist <- function(object, TimeSteps=NULL, df=FALSE) {
   GetStockAtAge(object,  c('SRR', 'RecDevHist'), TimeSteps, df)
 }
 
+`SetLengthAtAge<-` <- function(x, value) {
+  x@Length@MeanAtAge <- value
+  x
+}
+
+`SetWeightAtAge<-` <- function(x, value) {
+  x@Weight@MeanAtAge <- value
+  x
+}
+
+`SetGetNMortalityAtAge<-` <- function(x, value) {
+  x@NaturalMortality@MeanAtAge <- value
+  x
+}
+
+
+`SetMaturityAtAge<-` <- function(x, value) {
+  x@Maturity@MeanAtAge <- value
+  x
+}
+
+
+`SetFecundityAtAge<-` <- function(x, value) {
+  x@Fecundity@MeanAtAge <- value
+  x
+}
+
 `SetRecDevHist<-` <- function(x, value) {
   x@SRR@RecDevHist <- value
   x
 }
 
-
-GetRecDevProj <- function(object, TimeSteps=NULL, df=FALSE) {
-  GetStockAtAge(object,  c('SRR', 'RecDevProj'), TimeSteps, df)
-}
-
 `SetRecDevProj<-` <- function(x, value) {
   x@SRR@RecDevProj <- value
   x
-}
-
-GetRelativeSize <- function(object, TimeSteps=NULL, df=FALSE) {
-  out <- GetStockAtAge(object,  c('Spatial', 'RelativeSize'), TimeSteps, df)
-  if (is.null(out)) {
-    out <- array(1, dim=c(1,1))
-    dimnames(out) <- list(Sim=1,
-                          Area=1)
-  }
-  out
 }
 
 
@@ -191,10 +298,6 @@ GetEffort <- function(object, TimeSteps=NULL, df=FALSE) {
   out
 }
 
-
-
-
-
 GetCatchability <- function(object, TimeSteps=NULL, df=FALSE) {
   out <- GetFleetAtAge(object, slots=c('Effort', 'Catchability'), TimeSteps, df)
   if (inherits(out, 'list'))
@@ -203,87 +306,49 @@ GetCatchability <- function(object, TimeSteps=NULL, df=FALSE) {
 }
 
 
-
-GetDiscardMortalityAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
-  out <- GetFleetAtAge(object,  c('DiscardMortality', 'MeanAtAge'), TimeSteps, df)
+GetMeanAtAgeFleet <- function(object, TimeSteps, slot='Selectivity') {
+  out <- GetFleetAtAge(object,  slots=c(slot, 'MeanAtAge'), TimeSteps) |> 
+    ProcessStockAtAge(TimeSteps)
   
-  if (inherits(out, 'list')) {
-    out <- purrr::map(out, \(x) {
-      if (!is.null(x))
-        return(x)
-      array(0, dim=c(1,1,1), 
-            dimnames=list(Sim=1,
-                          Age=0,
-                          `Time Step`=TimeSteps[1]))
-        
-    })
-    return(List2Array(out))
-  }
-    
-  if (!is.null(out))
-    return(out)
-  
-  array(0, dim=c(1,1,1), 
-        dimnames=list(Sim=1,
-                      Age=0,
-                      `Time Step`=TimeSteps[1]))
-}
-
-`SetDiscardMortalityAtAge<-` <- function(x, value) {
-  x@DiscardMortality@MeanAtAge <- value
-  x
-}
-
-GetSelectivityAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
-  out <- GetFleetAtAge(object,  c('Selectivity', 'MeanAtAge'), TimeSteps, df)
   if (inherits(out, 'list'))
-    return(List2Array(out))
+    out <- List2Array(out)
+  out
+  
+}
+
+GetMeanAtLengthFleet <- function(object, TimeSteps, slot='Selectivity') {
+  out <- GetFleetAtAge(object, slots=c(slot, 'MeanAtLength'), TimeSteps) |>
+    ProcessStockAtLength(TimeSteps)
+  
+  if (inherits(out, 'list'))
+    out <- List2Array(out)
   out
 }
 
-`SetSelectivityAtAge<-` <- function(x, value) {
-  x@Selectivity@MeanAtAge <- value
-  x
+GetDiscardMortalityAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
+  GetMeanAtAgeFleet(object, TimeSteps, 'DiscardMortality')
+}
+
+GetDiscardMortalityAtLength <- function(object, TimeSteps=NULL, df=FALSE) {
+  GetMeanAtLengthFleet(object, TimeSteps, 'DiscardMortality')
+}
+
+GetSelectivityAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
+  GetMeanAtAgeFleet(object, TimeSteps)
+}
+GetSelectivityAtLength <- function(object, TimeSteps=NULL, df=FALSE) {
+  GetMeanAtLengthFleet(object, TimeSteps)
 }
 
 GetRetentionAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
-  out <- GetFleetAtAge(object,  c('Retention', 'MeanAtAge'),TimeSteps, df)
-
-  if (inherits(out, 'list')) {
-    out <- purrr::map(out, \(x) {
-      if (!is.null(x))
-        return(x)
-      array(1, dim=c(1,1,1), 
-            dimnames=list(Sim=1,
-                          Age=0,
-                          `Time Step`=TimeSteps[1]))
-      
-    })
-    return(List2Array(out))
-  }
-  
-  if (!is.null(out))
-    return(out)
-  
-  array(1, dim=c(1,1,1), 
-        dimnames=list(Sim=1,
-                      Age=0,
-                      `Time Step`=TimeSteps[1]))
-  
+  GetMeanAtAgeFleet(object, TimeSteps, 'Retention')
+}
+GetRetentionAtLength <- function(object, TimeSteps=NULL, df=FALSE) {
+  GetMeanAtLengthFleet(object, TimeSteps, 'Retention')
 }
 
-`SetRetentionAtAge<-` <- function(x, value) {
-  x@Retention@MeanAtAge <- value
-  x
-}
-
-GetEmpiricalWeightAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
-  GetFleetAtAge(object,  slots=c('Weight'),TimeSteps, df)
-}
-
-`SetFleetWeightAtAge<-` <- function(x, value) {
-  x@Weight <- value
-  x
+GetEmpiricalWeightAtAge <- function(object, TimeSteps=NULL) {
+  GetFleetAtAge(object,  slots=c('Weight'),TimeSteps)
 }
 
 GetFleetWeightAtAge <- function(Stock, FleetList, TimeSteps=NULL) {
@@ -309,6 +374,33 @@ GetFleetWeightAtAge <- function(Stock, FleetList, TimeSteps=NULL) {
   FleetWeightatAge
 }
 
+
+
+`SetDiscardMortalityAtAge<-` <- function(x, value) {
+  x@DiscardMortality@MeanAtAge <- value
+  x
+}
+
+
+
+`SetSelectivityAtAge<-` <- function(x, value) {
+  x@Selectivity@MeanAtAge <- value
+  x
+}
+
+`SetRetentionAtAge<-` <- function(x, value) {
+  x@Retention@MeanAtAge <- value
+  x
+}
+
+
+
+`SetFleetWeightAtAge<-` <- function(x, value) {
+  x@Weight <- value
+  x
+}
+
+
 # ---- Hist ----
 
 # GetHistAtAge <- function(object, slots, TimeSteps=NULL, df=FALSE) {
@@ -323,96 +415,96 @@ GetFleetWeightAtAge <- function(Stock, FleetList, TimeSteps=NULL) {
 #   Get(object, slots, TimeSteps, df)
 # }
 
-
-GetNumberAtAge <- function(Hist, TimeSteps=NULL) {
-  if (is.null(TimeSteps))
-    TimeSteps <- TimeSteps(Hist)
-  
-  purrr::map(Hist@Number, \(x)
-             ArraySubsetTimeStep(x, TimeSteps=TimeSteps)
-  )
-}
-
-GetBiomassAtAge <- function(Hist, TimeSteps=NULL) {
-  if (is.null(TimeSteps))
-    TimeSteps <- TimeSteps(Hist)
-  
-  Number <- purrr::map(Hist@Number, \(x)
-                  ArraySubsetTimeStep(x, TimeSteps=TimeSteps))
-  Weight <- GetWeightAtAge(Hist, TimeSteps=TimeSteps) |>
-    purrr::map(AddDimension,'Area')
-  
-  purrr::map2(Number, Weight, ArrayMultiply)
-
-}
-
-GetRemovalAtAge <- function(Hist, TimeSteps=NULL) {
-  if (is.null(TimeSteps))
-    TimeSteps <- TimeSteps(Hist)
-  
-  purrr::map(Hist@Removal, \(x)
-             ArraySubsetTimeStep(x, TimeSteps=TimeSteps)
-  )
-}
-
-GetSpawnBiomassAtAge <- function(Hist, TimeSteps=NULL) {
-  if (is.null(TimeSteps))
-    TimeSteps <- TimeSteps(Hist)
-  
-  biomass <- GetBiomassAtAge(Hist, TimeSteps)
-  maturity <- GetMaturityAtAge(Hist@Stock, TimeSteps) |>
-    purrr::map(AddDimension, 'Area')
-  
-  purrr::map2(biomass, maturity, ArrayMultiply)
-  
-}
-
-GetSProductionAtAge <- function(Hist, TimeSteps=NULL) {
-  if (is.null(TimeSteps))
-    TimeSteps <- TimeSteps(Hist)
-  
-  out <- vector('list', nStock(Hist))
-  names(out) <- StockNames(Hist)
-  
-  for (st in 1:nStock(Hist)) {
-    SpawnTimeFrac <- GetSpawnTimeFrac(Hist@Stock[[st]])
-    fecundity <- GetFecundityAtAge(Hist@Stock[[st]], TimeSteps)
-    NBegin <- ArraySubsetTimeStep(Hist@Number[[st]], TimeSteps) |>
-      apply(1:3, sum) # sum over areas
-    
-    if (SpawnTimeFrac==0) {
-      out[[st]] <- ArrayMultiply(NBegin, fecundity)
-    } else {
-      # calculate number alive at SpawnTimeFrac of the time step
-      # before aging
-      fishingmortality <- Hist@FDead[[st]] |> ArraySubsetTimeStep(TimeSteps) |>
-        apply(c('Sim', 'Age', 'Time Step'), sum) # sum over fleets
-      naturalmortality <- GetNMortalityAtAge(Hist@Stock[[st]], TimeSteps) 
-      totalmortality <- ArrayAdd(fishingmortality, naturalmortality)
-      Semelparous <- GetSemelparous(Hist@Stock[[st]]) |> ArraySubsetTimeStep(TimeSteps)
-      Nspawn <- NBegin * exp(-totalmortality*SpawnTimeFrac) 
-      out[[st]] <- ArrayMultiply(Nspawn, fecundity)
-    }
-  }
-  
-  for (st in 1:nStock(Hist)) {
-    SPfrom <- GetSPFrom(Hist@Stock[[st]])
-    if (!is.null(SPfrom))
-      stop('not done yet!')
-  }
-  out
-}
-
-
-GetDensity <- function(Hist, TimeSteps=NULL) {
-  purrr::map(Hist@Density, \(x)
-             ArraySubsetTimeStep(x, TimeSteps=TimeSteps)
-  )
-}
-
-GetEffortArea <- function(Hist, TimeSteps=NULL) {
-  purrr::map(Hist@EffortArea, \(x)
-             ArraySubsetTimeStep(x, TimeSteps=TimeSteps)
-  )
-}
-
+# 
+# GetNumberAtAge <- function(Hist, TimeSteps=NULL) {
+#   if (is.null(TimeSteps))
+#     TimeSteps <- TimeSteps(Hist)
+#   
+#   purrr::map(Hist@Number, \(x)
+#              ArraySubsetTimeStep(x, TimeSteps=TimeSteps)
+#   )
+# }
+# 
+# GetBiomassAtAge <- function(Hist, TimeSteps=NULL) {
+#   if (is.null(TimeSteps))
+#     TimeSteps <- TimeSteps(Hist)
+#   
+#   Number <- purrr::map(Hist@Number, \(x)
+#                   ArraySubsetTimeStep(x, TimeSteps=TimeSteps))
+#   Weight <- GetWeightAtAge(Hist, TimeSteps=TimeSteps) |>
+#     purrr::map(AddDimension,'Area')
+#   
+#   purrr::map2(Number, Weight, ArrayMultiply)
+# 
+# }
+# 
+# GetRemovalAtAge <- function(Hist, TimeSteps=NULL) {
+#   if (is.null(TimeSteps))
+#     TimeSteps <- TimeSteps(Hist)
+#   
+#   purrr::map(Hist@Removal, \(x)
+#              ArraySubsetTimeStep(x, TimeSteps=TimeSteps)
+#   )
+# }
+# 
+# GetSpawnBiomassAtAge <- function(Hist, TimeSteps=NULL) {
+#   if (is.null(TimeSteps))
+#     TimeSteps <- TimeSteps(Hist)
+#   
+#   biomass <- GetBiomassAtAge(Hist, TimeSteps)
+#   maturity <- GetMaturityAtAge(Hist@Stock, TimeSteps) |>
+#     purrr::map(AddDimension, 'Area')
+#   
+#   purrr::map2(biomass, maturity, ArrayMultiply)
+#   
+# }
+# 
+# GetSProductionAtAge <- function(Hist, TimeSteps=NULL) {
+#   if (is.null(TimeSteps))
+#     TimeSteps <- TimeSteps(Hist)
+#   
+#   out <- vector('list', nStock(Hist))
+#   names(out) <- StockNames(Hist)
+#   
+#   for (st in 1:nStock(Hist)) {
+#     SpawnTimeFrac <- GetSpawnTimeFrac(Hist@Stock[[st]])
+#     fecundity <- GetFecundityAtAge(Hist@Stock[[st]], TimeSteps)
+#     NBegin <- ArraySubsetTimeStep(Hist@Number[[st]], TimeSteps) |>
+#       apply(1:3, sum) # sum over areas
+#     
+#     if (SpawnTimeFrac==0) {
+#       out[[st]] <- ArrayMultiply(NBegin, fecundity)
+#     } else {
+#       # calculate number alive at SpawnTimeFrac of the time step
+#       # before aging
+#       fishingmortality <- Hist@FDead[[st]] |> ArraySubsetTimeStep(TimeSteps) |>
+#         apply(c('Sim', 'Age', 'Time Step'), sum) # sum over fleets
+#       naturalmortality <- GetNaturalMortalityAtAge(Hist@Stock[[st]], TimeSteps) 
+#       totalmortality <- ArrayAdd(fishingmortality, naturalmortality)
+#       Semelparous <- GetSemelparous(Hist@Stock[[st]]) |> ArraySubsetTimeStep(TimeSteps)
+#       Nspawn <- NBegin * exp(-totalmortality*SpawnTimeFrac) 
+#       out[[st]] <- ArrayMultiply(Nspawn, fecundity)
+#     }
+#   }
+#   
+#   for (st in 1:nStock(Hist)) {
+#     SPfrom <- GetSPFrom(Hist@Stock[[st]])
+#     if (!is.null(SPfrom))
+#       stop('not done yet!')
+#   }
+#   out
+# }
+# 
+# 
+# GetDensity <- function(Hist, TimeSteps=NULL) {
+#   purrr::map(Hist@Density, \(x)
+#              ArraySubsetTimeStep(x, TimeSteps=TimeSteps)
+#   )
+# }
+# 
+# GetEffortArea <- function(Hist, TimeSteps=NULL) {
+#   purrr::map(Hist@EffortArea, \(x)
+#              ArraySubsetTimeStep(x, TimeSteps=TimeSteps)
+#   )
+# }
+# 

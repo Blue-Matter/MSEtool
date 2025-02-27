@@ -106,15 +106,7 @@ Populate(object, ...)
 
 \S4method{Populate}{depletion}(object, nsim = NULL, seed = NULL, messages = TRUE)
 
-\S4method{Populate}{fleet}(
-  object,
-  Ages = NULL,
-  Length = NULL,
-  nsim = NULL,
-  TimeSteps = NULL,
-  seed = NULL,
-  messages = TRUE
-)
+\S4method{Populate}{fleet}(object, Ages = NULL, Length = NULL, seed = NULL, messages = TRUE)
 
 \S4method{Populate}{fishingmortality}(object, nsim = NULL, TimeSteps = NULL, seed = NULL, messages = TRUE)
 

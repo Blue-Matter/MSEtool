@@ -17,73 +17,59 @@ SimulateDEV <- function(OM=NULL,
   
   OM <- MSEtool:::StartUp(OM, messages, nSim) 
   
+  # ---- Make Lists of Arrays ----
+  StockParsList <- MakeStockParsList(OM)
+  FleetParsList <- MakeFleetParsList(OM)
   
-  # ---- Make Internal Arrays ----
-  MeanNaturalMortalityAtAge 
+  # object too big for NSWO
   
-  
-  
-  Hist <- MSEtool:::Hist(OM)
-
   # ---- Calculate Unfished Dynamics ----
-  Hist@Unfished <- MSEtool:::CalcUnfishedDynamics(OM)
-
+  Unfished <- MSEtool:::CalcUnfishedDynamics(OM)
+  
+  
   # ---- Calculate Reference Points ----
-  #Hist@RefPoints <- MSEtool:::CalcRefPoints(Hist)
-
+  RefPoints <- MSEtool:::CalcRefPoints(OM)
+  
+  
   # ---- Optimize for Initial Depletion ----
-  Hist <- MSEtool:::OptimInitDepletion(Hist)
+  # Hist <- MSEtool:::OptimInitDepletion(OM)
   
-  # ---- Number and Biomass in Initial Time Step ----
-  Hist <- MSEtool::: CalcInitialTimeStep(Hist)
+  # ---- Number-at-Age at Beginning of Initial Time Step ----
+  abind::afill(StockParsList$NumberAtAgeArea) <- CalcInitialTimeStep(StockParsList, Unfished) 
   
- 
+  dd <- dim(StockParsList$NumberAtAgeArea)
   
-  NaturalMortalityAtAge <- purrr::map(OM@Stock,                           
-                                      \(x) Array2List(x@NaturalMortality@MeanAtAge, 'Sim')
-  ) |> purrr::transpose()
+  nStock <- nStock(OM)
+  nFleet <- nFleet(OM)
+  nArea <- nArea(OM@Stock[[1]])
+  nAges <- 21
+  
+  ArgList <- list(
+    NumberAtAgeArea=Array2List(StockParsList$NumberAtAgeArea, 'Sim'),
+    BiomassAtAgeArea=Array2List(StockParsList$BiomassAtAgeArea, 'Sim'),
+    WeightAtAge=Array2List(StockParsList$WeightMeanAtAge, 'Sim'),
+    Effort=Array2List(FleetParsList$Effort, 'Sim') 
+    )
+  
+  Test <- purrr::pmap(ArgList, CalcPopDynamics_,
+                     TimeStep=as.character(TimeSteps[1]),
+                     nStock=nStock,
+                     nAge=nAges,
+                     nFleet=nFleet,
+                     nArea=nArea)
   
   
-  MeanLengthAtAge <- purrr::map(OM@Stock,                           
-                                      \(x) Array2List(x@Length@MeanAtAge, 'Sim')
-  ) |> purrr::transpose()
-  
-  purrr::map(OM@Stock, nArea)
   
 
+
   
+  # R-Version
   
+  CalcPopDynamics <- function(NumberAtAgeArea=StockParsList$NumberAtAgeArea,
+                              BiomassAtAgeArea=StockParsList$BiomassAtAgeArea) {
     
+  }
   
-  SimList <- MakeNamedList(1:nSim(OM))
-  StockList <- MakeNamedList(StockNames(OM))
-  AreaList <- MakeNamedList(1:nareas(OM))
-  
-  
-  
-  NumberAtAge <- 
-  BiomassAtAge <- array()
-  
-  
-  array <- array(1:5, c(20,3,5), dimnames=list('Sim'=1:20,
-                                               'n'=1:3,
-                                               'p'=1:5))
-  List <- list(one=array,
-               two=array)
-
-  tt <- lapply(List, SubsetSim, 3, drop=TRUE)
-  tt$one |> dim()
-  
-  
-  # ---- Optimize Catchability for Terminal Depletion ----
-  # TODO:  Rarely used. Slooooow now, C++ later.
-  # Hist <- MSEtool::: OptimCatchability(Hist)
-  
-  nsims <- nSim(Hist)
-  Hist@Fleet[[1]][[1]]@Effort@Catchability <- array(15,
-                                                    dim=c(nsims,1),
-                                                    dimnames = list(Sim=1:nsims,
-                                                                    `Time Step`=TimeSteps(Hist, 'Historical')[1]))
   
   # ---- Historical Population Dynamics ----
   

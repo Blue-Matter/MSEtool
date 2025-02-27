@@ -92,11 +92,11 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
                                 ASK=TRUE,
                                 seed=om@Seed)
 
-    om@Stock@Weight <- Populate(om@Stock@Weight,
-                                om@Stock@Ages,
-                                om@Stock@Length,
-                                om@nSim,
-                                TimeSteps(om),
+    om@Stock@Weight <- Populate(object=om@Stock@Weight,
+                                Ages=om@Stock@Ages,
+                                Length=om@Stock@Length,
+                                nsim=om@nSim,
+                                TimeSteps=TimeSteps(om),
                                 ASK=FALSE,
                                 seed=om@Seed)
     

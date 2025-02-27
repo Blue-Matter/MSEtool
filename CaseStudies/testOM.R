@@ -5,12 +5,9 @@ la <- devtools::load_all
 
 la()
 
-testOM@nsim <- 20
+testOM@nsim <- 3
 
 OM <- Convert(testOM)
-
-
-
 
 parallel=FALSE
 messages='default'

@@ -14,7 +14,7 @@ CalcNumberNext <- function(Hist, thisTimeStep) {
     
     FDeadAtAge <- Hist@FDeadArea[[st]] |> ArraySubsetTimeStep(thisTimeStep) 
     FDeadAtAgeTotal <- apply(FDeadAtAge, c('Sim', 'Age', 'Time Step', 'Area'), sum)
-    NMortAtAge <- GetNMortalityAtAge(Hist@Stock[[st]], thisTimeStep) |>
+    NMortAtAge <- GetNaturalMortalityAtAge(Hist@Stock[[st]], thisTimeStep) |>
       AddDimension('Area')
       
     Semelparous <- GetSemelparous(Hist@Stock[[st]]) |> ArraySubsetTimeStep(thisTimeStep)

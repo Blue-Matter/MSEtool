@@ -59,7 +59,7 @@ setMethod('CalcUnfishedSurvival', c('stock', 'ANY', 'ANY'), function(x, SP=FALSE
     SpawnTimeFrac <- NULL
   }
  
-  CalcSurvival(M_at_Age=GetNMortalityAtAge(x, TimeSteps),
+  CalcSurvival(M_at_Age=GetNaturalMortalityAtAge(x, TimeSteps),
                PlusGroup=GetPlusGroup(x),
                SpawnTimeFrac=SpawnTimeFrac,
                Semelparous=GetSemelparous(x, TimeSteps))
@@ -152,7 +152,7 @@ setMethod('CalcFishedSurvival', c('stock', 'FleetList',  'ANY', 'ANY'),
               SpawnTimeFrac <- NULL
             }
             
-            CalcSurvival(M_at_Age=GetNMortalityAtAge(x, TimeSteps),
+            CalcSurvival(M_at_Age=GetNaturalMortalityAtAge(x, TimeSteps),
                          F_at_Age=FDeadOverTotal,
                          PlusGroup=GetPlusGroup(x),
                          SpawnTimeFrac=SpawnTimeFrac,

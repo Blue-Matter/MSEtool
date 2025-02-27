@@ -52,13 +52,17 @@ Suggests:
     tidyr,
     TMB,
     usethis
-LinkingTo: Rcpp, RcppArmadillo
+LinkingTo: 
+    cpp11,
+    Rcpp,
+    RcppArmadillo
 BugReports: https://github.com/Blue-Matter/MSEtool/issues
 URL: https://msetool.openmse.com/
 Collate: 
     'ASAP2OM.R'
     'Class_definitions.R'
     'AllNewClasses.R'
+    'ArrayCreate.R'
     'ArrayOperations.R'
     'Awatea2OM.R'
     'BAM2OM.R'
@@ -114,6 +118,8 @@ Collate:
     'MSE_Plotting.R'
     'MSE_Plotting_PMs.R'
     'MSE_functions.R'
+    'MSEtool-package.R'
+    'MakeStockParsList.R'
     'Misc.R'
     'Misc_Exported.R'
     'Misc_Internal.R'
@@ -154,6 +160,7 @@ Collate:
     'WHAM2OM.R'
     'aaImportFrom.R'
     'applyMMP.R'
+    'cpp11.R'
     'iSCAM2OM.R'
     'multiMSE.R'
     'multiMSE_DEVCOPY.R'

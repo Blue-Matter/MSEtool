@@ -66,8 +66,9 @@ BAM2Stock <- function(BAMdata, nSim, CurrentYear, TimeSteps) {
   # different units to AgeSeries$weight
   # BAMdata$parms$wgt.a*AgeSeries$length^ BAMdata$parms$wgt.b
   
+  Ages <- Ages(MaxAge=max(Ages)) 
   stock <- Stock(Name = BAMdata$info$species,
-                 Ages =  Ages(MaxAge=max(Ages)),
+                 Ages =  Ages,
                  Length = Length(Pars=list(
                    Linf=BAMdata$parms$Linf[1],
                    K=BAMdata$parms$K[1],
@@ -77,7 +78,12 @@ BAM2Stock <- function(BAMdata, nSim, CurrentYear, TimeSteps) {
                    Timing=0.5
                  ),
                  Weight=Weight(Pars=list(),
-                               MeanAtAge = c(rep(0, nAdd), AgeSeries$weight),
+                               MeanAtAge = array(c(rep(0, nAdd), AgeSeries$weight),
+                                                 dim=c(1, length(Ages@Classes), 1),
+                                                 dimnames=list(Sim=1,
+                                                               Age=Ages@Classes,
+                                                               `Time Step`=histTS[1])
+                               ),
                                Units = BAMdata$info$units.weight),
                  NaturalMortality=NaturalMortality(Pars=list(),
                                                    MeanAtAge = c(rep(tiny, nAdd), AgeSeries$M)),
@@ -267,8 +273,8 @@ BAM2Fleet <- function(x, Stock) {
 
 ImportBAM <- function(x='Red Snapper',     
                       nSim=48,
-                      pYear=50, 
-                      ...) {
+                      pYear=50,
+                      populate=TRUE) {
   
   # This works for Red Snapper - SEDAR 73
   # May need to be modified for other stocks, with aim of making it as generic
@@ -293,8 +299,10 @@ ImportBAM <- function(x='Red Snapper',
   OM@Fleet[[BAMdata$info$species]] <- BAM2Fleet(x, OM@Stock[[1]])
   
   # TODO - Obs & Imp
+  if (populate) 
+    OM <- Populate(OM)
   
-  Populate(OM) 
+  OM
 }
 
 # ---- SS3 ----

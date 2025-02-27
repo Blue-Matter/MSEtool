@@ -134,6 +134,7 @@ CalcMovement <- function(Spatial,
 
           UnfishedDist[FracArea_s,,FracArea_age,FracArea_ts] <- CalcAsymptoticDist(Movement, ExpectedDist, plot=plot, nits=nits)
 
+          
         } else {
           opt <- stats::nlminb(rep(0,nareas),
                                FitMovement,
@@ -154,6 +155,16 @@ CalcMovement <- function(Spatial,
         }
       }
     }
+  }
+  
+  if (nareas==2) {
+    ProbStaying <- abind::abind(Spatial@ProbStaying, 
+                                 1-Spatial@ProbStaying, 
+                                 along=2, 
+                                 use.first.dimnames=TRUE, 
+                                 use.dnns = TRUE)
+    dimnames(ProbStaying)[['Area']] <- 1:2
+    Spatial@ProbStaying <- ProbStaying
   }
 
   if (!silent)

@@ -231,6 +231,9 @@ ArraySubsetTimeStep <- function(object, TimeSteps=NULL) {
   TimeSteps <- TimeSteps |> as.numeric() |> round(2)
   
   DN <- dimnames(object)
+  if (is.null(DN))
+    return(object)
+  
   DN$`Time Step` <- as.numeric( DN$`Time Step`)
   TSind <- which(names(DN) == 'Time Step')
   if (length(TSind)==0)
@@ -286,4 +289,102 @@ ArraySubsetSim <- function(object, Sims=NULL, drop=FALSE) {
     out <- abind::asub(object, (DN[[TSind]] %in% Sims), TSind, drop=FALSE)  
   }
   
+}
+
+# ----- Array Expand ----
+
+ArrayExpand <- function(Array, nSim, nAges, TimeSteps) {
+  
+  Array |>
+    ExpandSims(nSim) |>
+    ExpandAges(nAges) |>
+    ExpandTimeSteps(TimeSteps)
+  
+  
+  
+}
+
+# fills all additional age classes with 1e-16
+ExpandAges <- function(Array, nAges) {
+  ind <- which(names(dimnames(Array))=='Age')
+  if (length(ind)<1)
+    return(Array)
+  
+  d <- dim(Array)
+  dnames <- dimnames(Array)
+  existing <- as.numeric(dnames[[ind]])
+  
+  AddDim <- nAges - length(existing)
+  
+  OutDim <- d
+  OutDim[ind] <- AddDim
+  
+  existingNames <- dnames[[ind]]
+  Last <- existingNames[length(existingNames)] |> as.numeric()
+  AddNames <- seq(Last+1, length.out=AddDim)
+  AddDimNames <- dnames
+  AddDimNames[[ind]] <- AddNames
+  empty <- array(tiny/2, dim=OutDim, 
+                 dimnames=AddDimNames)
+  
+  abind::abind(Array, empty, along=ind,
+               use.dnns=TRUE)
+  
+}
+
+# replicates to `nsim`
+ExpandSims <- function(Array, nSim) {
+  ind <- which(names(dimnames(Array))=='Sim')
+  if (length(ind)<1)
+    return(Array)
+  
+  d <- dim(Array)
+  dnames <- dimnames(Array)
+  existing <- as.numeric(dnames[[ind]])
+  if (length(existing)==nSim)
+    return(Array)
+  
+  if (length(existing)>1)
+    cli::cli_abort('`Sim` dimension must be either length `nSim` or length 1', .internal=TRUE)
+  
+  
+  AddDim <- nSim - length(existing)
+ 
+  OutDim <- d
+  OutDim[ind] <- AddDim
+  OutDimNames <- dnames
+  OutDimNames[[ind]] <- 1:nSim
+  
+  out <- RepeatArrayDim(Array, ind, nSim)
+  dimnames(out) <- OutDimNames
+  out
+  
+}
+
+# fills all time step values
+ExpandTimeSteps <- function(Array, TimeSteps) {
+  ind <- which(names(dimnames(Array))=='Time Step')
+  if (length(ind)<1)
+    return(Array)
+  
+  d <- dim(Array)
+  dnames <- dimnames(Array)
+  
+  ArrayTS <-dnames[[ind]] |> as.numeric()
+  
+  if (prod(TimeSteps %in% ArrayTS))
+    return(Array)
+  namematch <- match(ArrayTS, TimeSteps)
+  adddim <- length(TimeSteps) - length(namematch)
+  d[ind] <- length(TimeSteps)
+  dnames$`Time Step` <- TimeSteps
+  OutArray <- array(NA, dim=d, dimnames=dnames)
+  
+  for (i in seq_along(TimeSteps)) {
+    j <- which(ArrayTS <= TimeSteps[i]) |> max()
+    val <- abind::asub(Array, j, ind, drop=FALSE)
+    dimnames(val)$`Time Step` <- TimeSteps[i]
+    abind::afill(OutArray) <- val
+  }
+  OutArray
 }

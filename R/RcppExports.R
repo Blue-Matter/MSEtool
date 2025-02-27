@@ -2,11 +2,11 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 vecminInd <- function(x) {
-    .Call('_MSEtool_vecminInd', PACKAGE = 'MSEtool', x)
+    .Call(`_MSEtool_vecminInd`, x)
 }
 
 LinInterp_cpp <- function(x, y, xlev) {
-    .Call('_MSEtool_LinInterp_cpp', PACKAGE = 'MSEtool', x, y, xlev)
+    .Call(`_MSEtool_LinInterp_cpp`, x, y, xlev)
 }
 
 #'  Internal function to calculate MSY Reference Points
@@ -30,47 +30,59 @@ LinInterp_cpp <- function(x, y, xlev) {
 #' @param spawn_time_frac Numeric. Fraction of the year when spawning occurs. Default = 0. 
 #' @return See `opt`
 MSYCalcs <- function(logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, Wt_at_Age_C, maxage, relRfun, SRRpars, R0x = 1, SRrelx = 3L, hx = 1, SSBpR = 0, opt = 1L, plusgroup = 1L, spawn_time_frac = 0) {
-    .Call('_MSEtool_MSYCalcs', PACKAGE = 'MSEtool', logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, Wt_at_Age_C, maxage, relRfun, SRRpars, R0x, SRrelx, hx, SSBpR, opt, plusgroup, spawn_time_frac)
+    .Call(`_MSEtool_MSYCalcs`, logF, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, Wt_at_Age_C, maxage, relRfun, SRRpars, R0x, SRrelx, hx, SSBpR, opt, plusgroup, spawn_time_frac)
 }
 
 Ref_int_cpp <- function(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, Wt_at_Age_C, relRfun, SRRpars, maxage, plusgroup = 1L, spawn_time_frac = 0) {
-    .Call('_MSEtool_Ref_int_cpp', PACKAGE = 'MSEtool', F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, Wt_at_Age_C, relRfun, SRRpars, maxage, plusgroup, spawn_time_frac)
+    .Call(`_MSEtool_Ref_int_cpp`, F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, Wt_at_Age_C, relRfun, SRRpars, maxage, plusgroup, spawn_time_frac)
+}
+
+GetIndex_ <- function(dimSizes, dimIndices) {
+    .Call(`_MSEtool_GetIndex_`, dimSizes, dimIndices)
+}
+
+CalcPopDynamics_ <- function(BiomassAtAgeArea, NumberAtAgeArea, WeightAtAge, Effort, TimeStep, nStock, nAge, nFleet, nArea) {
+    .Call(`_MSEtool_CalcPopDynamics_`, BiomassAtAgeArea, NumberAtAgeArea, WeightAtAge, Effort, TimeStep, nStock, nAge, nFleet, nArea)
+}
+
+CalcBiomass_ <- function(NumberAtAgeArea, WeightAtAge, TimeStep) {
+    .Call(`_MSEtool_CalcBiomass_`, NumberAtAgeArea, WeightAtAge, TimeStep)
 }
 
 calcVatAge <- function(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid) {
-    .Call('_MSEtool_calcVatAge', PACKAGE = 'MSEtool', len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid)
+    .Call(`_MSEtool_calcVatAge`, len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid)
 }
 
 combine <- function(list) {
-    .Call('_MSEtool_combine', PACKAGE = 'MSEtool', list)
+    .Call(`_MSEtool_combine`, list)
 }
 
 get_freq <- function(x, width, origin = 0, outlen = 0L) {
-    .Call('_MSEtool_get_freq', PACKAGE = 'MSEtool', x, width, origin, outlen)
+    .Call(`_MSEtool_get_freq`, x, width, origin, outlen)
 }
 
 get_freq2 <- function(x, CAL_bins, outlen = 0L) {
-    .Call('_MSEtool_get_freq2', PACKAGE = 'MSEtool', x, CAL_bins, outlen)
+    .Call(`_MSEtool_get_freq2`, x, CAL_bins, outlen)
 }
 
 rnormSelect2 <- function(N, mi, ma) {
-    .Call('_MSEtool_rnormSelect2', PACKAGE = 'MSEtool', N, mi, ma)
+    .Call(`_MSEtool_rnormSelect2`, N, mi, ma)
 }
 
 tdnorm <- function(x, mi, ma) {
-    .Call('_MSEtool_tdnorm', PACKAGE = 'MSEtool', x, mi, ma)
+    .Call(`_MSEtool_tdnorm`, x, mi, ma)
 }
 
 genSizeComp <- function(VulnN, CAL_binsmid, CAL_bins, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD) {
-    .Call('_MSEtool_genSizeComp', PACKAGE = 'MSEtool', VulnN, CAL_binsmid, CAL_bins, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD)
+    .Call(`_MSEtool_genSizeComp`, VulnN, CAL_binsmid, CAL_bins, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD)
 }
 
 genSizeComp2 <- function(VulnN, CAL_binsmid, CAL_bins, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD) {
-    .Call('_MSEtool_genSizeComp2', PACKAGE = 'MSEtool', VulnN, CAL_binsmid, CAL_bins, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD)
+    .Call(`_MSEtool_genSizeComp2`, VulnN, CAL_binsmid, CAL_bins, selCurve, CAL_ESS, CAL_nsamp, Linfs, Ks, t0s, LenCV, truncSD)
 }
 
 grav <- function(log_visc, log_grav, fracs, nareas) {
-    .Call('_MSEtool_grav', PACKAGE = 'MSEtool', log_visc, log_grav, fracs, nareas)
+    .Call(`_MSEtool_grav`, log_visc, log_grav, fracs, nareas)
 }
 
 #' Rcpp version of the Optimization function that returns the squared difference between user
@@ -94,7 +106,7 @@ grav <- function(log_visc, log_grav, fracs, nareas) {
 #' @useDynLib MSEtool
 #' @export
 movfit_Rcpp <- function(par, prb, frac) {
-    .Call('_MSEtool_movfit_Rcpp', PACKAGE = 'MSEtool', par, prb, frac)
+    .Call(`_MSEtool_movfit_Rcpp`, par, prb, frac)
 }
 
 #' Aging and Mortality for one time-step
@@ -110,7 +122,7 @@ movfit_Rcpp <- function(par, prb, frac) {
 #'
 #' @keywords internal
 popdynOneTScpp <- function(nareas, maxage, Ncurr, Zcurr, plusgroup = 1L) {
-    .Call('_MSEtool_popdynOneTScpp', PACKAGE = 'MSEtool', nareas, maxage, Ncurr, Zcurr, plusgroup)
+    .Call(`_MSEtool_popdynOneTScpp`, nareas, maxage, Ncurr, Zcurr, plusgroup)
 }
 
 #' Apply the movement model to the stock for one time-step
@@ -126,7 +138,7 @@ popdynOneTScpp <- function(nareas, maxage, Ncurr, Zcurr, plusgroup = 1L) {
 #'
 #' @export
 movestockCPP <- function(nareas, maxage, mov, Number) {
-    .Call('_MSEtool_movestockCPP', PACKAGE = 'MSEtool', nareas, maxage, mov, Number)
+    .Call(`_MSEtool_movestockCPP`, nareas, maxage, mov, Number)
 }
 
 #' Population dynamics model in CPP
@@ -169,6 +181,6 @@ movestockCPP <- function(nareas, maxage, mov, Number) {
 #' @author A. Hordyk
 #' @keywords internal
 popdynCPP <- function(nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, SRRfun, SRRpars, plusgroup = 0L, spawn_time_frac = 0) {
-    .Call('_MSEtool_popdynCPP', PACKAGE = 'MSEtool', nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, SRRfun, SRRpars, plusgroup, spawn_time_frac)
+    .Call(`_MSEtool_popdynCPP`, nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, SRRfun, SRRpars, plusgroup, spawn_time_frac)
 }
 

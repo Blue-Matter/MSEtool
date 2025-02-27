@@ -1,24 +1,38 @@
-
-InitNumber <- function(Stock, UnfishedNumber) {
-  HistTimeSteps <- TimeSteps(Stock, 'Historical')
-  RecDevInit <- GetRecDevInit(Stock)
-  RecDevHist <- GetRecDevHist(Stock)
-  InitAgeClassRecDevs <- cbind(RecDevHist[,1, drop=FALSE], RecDevInit) |>
+CalcInitialTimeStep <- function(StockParsList, Unfished) {
+  
+  TimeSteps <- dimnames(StockParsList$NumberAtAgeArea)[['Time Steps']]
+  dd <- dim(StockParsList$NumberAtAgeArea)
+  nSim <- dd[1]
+  nAges <- dd[3]
+  TimeStep1 <- TimeSteps[1]
+  
+  RecDevInit <- StockParsList$RecDevInit
+  RecDevHist <- StockParsList$RecDevHist 
+  
+  N0atAge <- purrr::map(Unfished@Equilibrium@Number, \(x) 
+                        ArrayExpand(x, nSim, nAges, TimeStep1)
+  ) |> 
+    List2Array('Stock') |>
+    aperm(c('Sim', 'Stock', 'Age', 'Time Step', 'Area'))
+  
+  
+  InitAgeClassRecDevs <- abind::abind(RecDevHist[,, 1,drop=FALSE],
+                                      RecDevInit, along=3,
+                                      use.dnns = TRUE,
+                                      use.first.dimnames = FALSE)
+  
+  ages <- dimnames(InitAgeClassRecDevs)$Age |> as.numeric()
+  ages[1] <- ages[2]-1
+  dimnames(InitAgeClassRecDevs)$Age <- ages
+  
+  InitAgeClassRecDevs <- InitAgeClassRecDevs |> 
     AddDimension('Time Step') |> 
-    AddDimension('Area') 
-  dd <- dim(InitAgeClassRecDevs)
-  dimnames(InitAgeClassRecDevs) <- list(Sim=1:dd[1],
-                                        Age=0:(dd[2]-1),
-                                        `Time Step`=HistTimeSteps[1:dd[3]],
-                                        Area=1:dd[4])
+    AddDimension('Area')
   
-  NumberHist <- CreateArraySATR(Stock,
-                                dd[1],
-                                HistTimeSteps)
-  
-  NumberHist[,,1,] <- ArrayMultiply(UnfishedNumber[, ,1,, drop=FALSE], InitAgeClassRecDevs)
-  NumberHist
+  ArrayMultiply(N0atAge, InitAgeClassRecDevs)
 }
+
+
 
 CalcPopDynamics <- function(Hist, TimeSteps=NULL, MP=NULL, silent=FALSE) {
   

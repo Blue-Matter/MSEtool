@@ -1,3 +1,7 @@
+ReplaceTiny <- function(Array, value=1, default=tiny/2) {
+  Array[Array==default] <- value
+  Array
+}
 
 # Transformations -----
 
@@ -325,7 +329,23 @@ AddAgeTimeStepDimensions <- function(object, outdim=4) {
 }
 
 List2Array <- function(List, dimname='Fleet') {
-  array <- array(unlist(List), 
+  if (inherits(List, 'array'))
+    return(List)
+  UnList <- unlist(List)
+  if (length(UnList)<1)
+    return(UnList)
+  
+  if (is.null(dim(List[[1]]))) {
+    array <- array(UnList, 
+                   dim=c(length(List[[1]]), length(List)))
+    dimnames(array) <- list(Sim=1:nrow(array),
+                            temp=names(List))
+    names(dimnames(array))[2] <- dimname
+    return(array)
+    
+  } 
+  
+  array <- array(UnList, 
                  dim=c(dim(List[[1]]), length(List)))
   d <- dimnames(List[[1]])
   d[[dimname]] <- names(List)

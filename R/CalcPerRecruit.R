@@ -19,7 +19,7 @@ setMethod('CalcPerRecruit', c('stock', 'FleetList'),
             if (is.null(TimeSteps))
               TimeSteps <- TimeSteps(x, 'Historical') |> tail(1)
             
-            NMortAtAge <- GetNMortalityAtAge(x, TimeSteps)
+            NMortAtAge <- GetNaturalMortalityAtAge(x, TimeSteps)
             NPR0 <- CalcUnfishedSurvival(x, TimeSteps=TimeSteps)
             NPR0S <- CalcUnfishedSurvival(x, SP=TRUE, TimeSteps=TimeSteps)
             

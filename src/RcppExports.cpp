@@ -84,6 +84,50 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// GetIndex_
+int GetIndex_(IntegerVector dimSizes, IntegerVector dimIndices);
+RcppExport SEXP _MSEtool_GetIndex_(SEXP dimSizesSEXP, SEXP dimIndicesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector >::type dimSizes(dimSizesSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type dimIndices(dimIndicesSEXP);
+    rcpp_result_gen = Rcpp::wrap(GetIndex_(dimSizes, dimIndices));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcPopDynamics_
+List CalcPopDynamics_(NumericVector BiomassAtAgeArea, NumericVector NumberAtAgeArea, NumericVector WeightAtAge, NumericVector Effort, CharacterVector TimeStep, int nStock, int nAge, int nFleet, int nArea);
+RcppExport SEXP _MSEtool_CalcPopDynamics_(SEXP BiomassAtAgeAreaSEXP, SEXP NumberAtAgeAreaSEXP, SEXP WeightAtAgeSEXP, SEXP EffortSEXP, SEXP TimeStepSEXP, SEXP nStockSEXP, SEXP nAgeSEXP, SEXP nFleetSEXP, SEXP nAreaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type BiomassAtAgeArea(BiomassAtAgeAreaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type NumberAtAgeArea(NumberAtAgeAreaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type WeightAtAge(WeightAtAgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Effort(EffortSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type TimeStep(TimeStepSEXP);
+    Rcpp::traits::input_parameter< int >::type nStock(nStockSEXP);
+    Rcpp::traits::input_parameter< int >::type nAge(nAgeSEXP);
+    Rcpp::traits::input_parameter< int >::type nFleet(nFleetSEXP);
+    Rcpp::traits::input_parameter< int >::type nArea(nAreaSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcPopDynamics_(BiomassAtAgeArea, NumberAtAgeArea, WeightAtAge, Effort, TimeStep, nStock, nAge, nFleet, nArea));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcBiomass_
+NumericVector CalcBiomass_(NumericVector NumberAtAgeArea, NumericVector WeightAtAge, CharacterVector TimeStep);
+RcppExport SEXP _MSEtool_CalcBiomass_(SEXP NumberAtAgeAreaSEXP, SEXP WeightAtAgeSEXP, SEXP TimeStepSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type NumberAtAgeArea(NumberAtAgeAreaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type WeightAtAge(WeightAtAgeSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type TimeStep(TimeStepSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcBiomass_(NumberAtAgeArea, WeightAtAge, TimeStep));
+    return rcpp_result_gen;
+END_RCPP
+}
 // calcVatAge
 NumericMatrix calcVatAge(NumericMatrix len_at_age, NumericMatrix len_aa_sd, NumericMatrix sel_at_length, int n_age, int nyears, int proyears, NumericVector CAL_binsmid);
 RcppExport SEXP _MSEtool_calcVatAge(SEXP len_at_ageSEXP, SEXP len_aa_sdSEXP, SEXP sel_at_lengthSEXP, SEXP n_ageSEXP, SEXP nyearsSEXP, SEXP proyearsSEXP, SEXP CAL_binsmidSEXP) {
@@ -303,30 +347,4 @@ BEGIN_RCPP
     rcpp_result_gen = Rcpp::wrap(popdynCPP(nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, SRRfun, SRRpars, plusgroup, spawn_time_frac));
     return rcpp_result_gen;
 END_RCPP
-}
-
-static const R_CallMethodDef CallEntries[] = {
-    {"_MSEtool_vecminInd", (DL_FUNC) &_MSEtool_vecminInd, 1},
-    {"_MSEtool_LinInterp_cpp", (DL_FUNC) &_MSEtool_LinInterp_cpp, 3},
-    {"_MSEtool_MSYCalcs", (DL_FUNC) &_MSEtool_MSYCalcs, 17},
-    {"_MSEtool_Ref_int_cpp", (DL_FUNC) &_MSEtool_Ref_int_cpp, 12},
-    {"_MSEtool_calcVatAge", (DL_FUNC) &_MSEtool_calcVatAge, 7},
-    {"_MSEtool_combine", (DL_FUNC) &_MSEtool_combine, 1},
-    {"_MSEtool_get_freq", (DL_FUNC) &_MSEtool_get_freq, 4},
-    {"_MSEtool_get_freq2", (DL_FUNC) &_MSEtool_get_freq2, 3},
-    {"_MSEtool_rnormSelect2", (DL_FUNC) &_MSEtool_rnormSelect2, 3},
-    {"_MSEtool_tdnorm", (DL_FUNC) &_MSEtool_tdnorm, 3},
-    {"_MSEtool_genSizeComp", (DL_FUNC) &_MSEtool_genSizeComp, 11},
-    {"_MSEtool_genSizeComp2", (DL_FUNC) &_MSEtool_genSizeComp2, 11},
-    {"_MSEtool_grav", (DL_FUNC) &_MSEtool_grav, 4},
-    {"_MSEtool_movfit_Rcpp", (DL_FUNC) &_MSEtool_movfit_Rcpp, 3},
-    {"_MSEtool_popdynOneTScpp", (DL_FUNC) &_MSEtool_popdynOneTScpp, 5},
-    {"_MSEtool_movestockCPP", (DL_FUNC) &_MSEtool_movestockCPP, 4},
-    {"_MSEtool_popdynCPP", (DL_FUNC) &_MSEtool_popdynCPP, 31},
-    {NULL, NULL, 0}
-};
-
-RcppExport void R_init_MSEtool(DllInfo *dll) {
-    R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
-    R_useDynamicSymbols(dll, FALSE);
 }
