@@ -46,49 +46,53 @@ int GetIndex_(IntegerVector dimSizes, IntegerVector dimIndices) {
 }
 
 // [[Rcpp::export]]
-NumericVector CalcBiomass_(NumericVector BiomassAtAgeArea,
+NumericVector CalcBiomass_(NumericVector BiomassArea,
                            NumericVector NumberAtAgeArea,
                            NumericVector WeightAtAge,
                            int TSindex) {
   
+
+  // Note nTime Steps may be longer for NumberAtAgeArea
   IntegerVector SATR = CalcDims_(NumberAtAgeArea); // stock, age, time step, area
-  IntegerVector SAT = SATR[IntegerVector{0,1,2}];
+  IntegerVector SAT = CalcDims_(WeightAtAge); 
+  IntegerVector STR = CalcDims_(BiomassArea); 
   
   int nStock = SATR[0];
   int nAge = SATR[1];
   int nArea = SATR[3];
   
   for (int st=0; st<nStock; st++) {
-    for(int age=0; age<nAge; age++) {
-      for (int area=0; area<nArea; area++) {
+    for (int area=0; area<nArea; area++) {
+      IntegerVector STRindex = IntegerVector::create(st, TSindex, area);
+      for(int age=0; age<nAge; age++) {
         IntegerVector SATRindex = IntegerVector::create(st, age, TSindex, area);
         IntegerVector SATindex = IntegerVector::create(st, age, TSindex);
-        IntegerVector SRindex = IntegerVector::create(st, area);
-
-        BiomassAtAgeArea[GetIndex_(SATR, SATRindex)] =
+        BiomassArea[GetIndex_(STR, STRindex)] +=
           NumberAtAgeArea[GetIndex_(SATR, SATRindex)] *
           WeightAtAge[GetIndex_(SAT, SATindex)];
       }
     }
   }
   
-  return(BiomassAtAgeArea);
+  return(BiomassArea);
 }
 
-NumericVector CalcVBiomass_(NumericVector VBiomassAtAgeArea,
+// [[Rcpp::export]]
+NumericVector CalcVBiomass_(NumericVector VBiomassArea,
                             NumericVector NumberAtAgeArea,
                             NumericVector FleetWeightAtAge,
                             NumericVector SelectivityAtAge,
                             int TSindex) {
   
-  IntegerVector SATFR = CalcDims_(VBiomassAtAgeArea); // stock, age, time step, fleet, area
-  IntegerVector SATF = SATFR[IntegerVector{0,1,2,3}];
-  IntegerVector SATR = SATFR[IntegerVector{0,1,2,4}];
+  // Note nTime Steps may be longer for NumberAtAgeArea
+  IntegerVector STFR = CalcDims_(VBiomassArea); // stock, time step, fleet, area
+  IntegerVector SATR = CalcDims_(NumberAtAgeArea); // stock, age, time step, area
+  IntegerVector SATF = CalcDims_(FleetWeightAtAge);// stock, age, time step, fleet
   
-  int nStock = SATFR[0];
-  int nAge = SATFR[1];
-  int nFleet = SATFR[3];
-  int nArea = SATFR[4];
+  int nStock = STFR[0];
+  int nAge = SATR[1];
+  int nFleet = STFR[2];
+  int nArea = STFR[3];
   
   for (int st=0; st<nStock; st++) {
     for(int age=0; age<nAge; age++) {
@@ -96,46 +100,42 @@ NumericVector CalcVBiomass_(NumericVector VBiomassAtAgeArea,
         IntegerVector SATRindex = IntegerVector::create(st, age, TSindex, area);
         for (int fl=0; fl<nFleet; fl++) {
           IntegerVector SATFRindex = IntegerVector::create(st, age, TSindex, fl, area);
+          IntegerVector STFRindex = IntegerVector::create(st, TSindex, fl, area);
           IntegerVector SATFindex = IntegerVector::create(st, age, TSindex, fl);
-          VBiomassAtAgeArea[GetIndex_(SATFR, SATFRindex)] = NumberAtAgeArea[GetIndex_(SATR, SATRindex)] * 
+          VBiomassArea[GetIndex_(STFR, STFRindex)] += 
+            NumberAtAgeArea[GetIndex_(SATR, SATRindex)] *
             FleetWeightAtAge[GetIndex_(SATF, SATFindex)] * SelectivityAtAge[GetIndex_(SATF, SATFindex)];
         }
       }
     }
   }
   
-  return(VBiomassAtAgeArea);
+  return(VBiomassArea);
 }
 
+
+
+// [[Rcpp::export]]
 NumericVector CalcDensity_(NumericVector DensityArea, 
-                           NumericVector VBiomassAtAgeArea,
+                           NumericVector VBiomassArea,
                            NumericVector RelativeSize, 
                            int TSindex) {
   
-  IntegerVector SATFR = CalcDims_(VBiomassAtAgeArea); // stock, age, time step, fleet, area
-  IntegerVector STFR = SATFR[IntegerVector{0,2,3,4}];
-  IntegerVector SFR = SATFR[IntegerVector{0,3,4}];
-  IntegerVector SR = SFR[IntegerVector{0,2}];
-  IntegerVector SF = SFR[IntegerVector{0,1}];
-  int nStock = SATFR[0];
-  int nAge = SATFR[1];
-  int nFleet = SATFR[3];
-  int nArea = SATFR[4];
+  IntegerVector STFR = CalcDims_(VBiomassArea); // stock, time step, fleet, area
+  IntegerVector SR = STFR[IntegerVector{0,3}];
+  IntegerVector SF = STFR[IntegerVector{0,2}];
+  int nStock = STFR[0];
+  int nFleet = STFR[2];
+  int nArea = STFR[3];
   
-  NumericVector VBiomassArea = (nStock * nFleet * nArea);
   NumericVector DensityTotal = (nStock * nFleet);
   
   for (int st=0; st<nStock; st++) {
     for (int area=0; area<nArea; area++) {
       IntegerVector SRindex = IntegerVector::create(st, area);
       for (int fl=0; fl<nFleet; fl++) {
-        IntegerVector SFRindex = IntegerVector::create(st, fl, area);
         IntegerVector STFRindex = IntegerVector::create(st, TSindex, fl, area);
-        for(int age=0; age<nAge; age++) {
-          IntegerVector SATFRindex = IntegerVector::create(st, age, TSindex, fl, area);
-          VBiomassArea[GetIndex_(SFR, SFRindex)] += VBiomassAtAgeArea[GetIndex_(SATFR, SATFRindex)];
-        }
-        DensityArea[GetIndex_(STFR, STFRindex)] = VBiomassArea[GetIndex_(SFR, SFRindex)]/ RelativeSize[GetIndex_(SR, SRindex)];
+        DensityArea[GetIndex_(STFR, STFRindex)] = VBiomassArea[GetIndex_(STFR, STFRindex)]/ RelativeSize[GetIndex_(SR, SRindex)];
       }
     }
   }
@@ -145,12 +145,17 @@ NumericVector CalcDensity_(NumericVector DensityArea,
       for (int area=0; area<nArea; area++) {
         IntegerVector STFRindex = IntegerVector::create(st, TSindex, fl, area);
         IntegerVector SFindex = IntegerVector::create(st, fl);
-        DensityTotal[GetIndex_(SF, SFindex)] +=  DensityArea[GetIndex_(STFR, STFRindex)];
+        DensityTotal[GetIndex_(SF, SFindex)] += DensityArea[GetIndex_(STFR, STFRindex)];
       }
       for (int area=0; area<nArea; area++) {
         IntegerVector STFRindex = IntegerVector::create(st, TSindex, fl, area);
         IntegerVector SFindex = IntegerVector::create(st, fl);
-        DensityArea[GetIndex_(STFR, STFRindex)] =  DensityArea[GetIndex_(STFR, STFRindex)]/DensityTotal[GetIndex_(SF, SFindex)];
+        if (DensityTotal[GetIndex_(SF, SFindex)]>0) {
+          DensityArea[GetIndex_(STFR, STFRindex)] =  DensityArea[GetIndex_(STFR, STFRindex)]/DensityTotal[GetIndex_(SF, SFindex)];  
+        } else {
+          DensityArea[GetIndex_(STFR, STFRindex)] = 0;
+        }
+        
       }
     }
   }
@@ -158,7 +163,7 @@ NumericVector CalcDensity_(NumericVector DensityArea,
   return(DensityArea);
 }
 
-
+// [[Rcpp::export]]
 NumericVector DistEffort_(NumericVector EffortArea, 
                           NumericVector DensityArea, 
                           NumericVector Effort, 
@@ -185,7 +190,7 @@ NumericVector DistEffort_(NumericVector EffortArea,
   return(EffortArea);
 }
 
-
+// [[Rcpp::export]]
 List CalcCatch_(NumericVector NumberAtAgeArea, 
                 NumericVector DensityArea,
                 NumericVector NaturalMortalityAtAge,
@@ -238,22 +243,26 @@ List CalcCatch_(NumericVector NumberAtAgeArea,
       for (int area=0; area<nArea; area++) {
         IntegerVector STFRindex = IntegerVector::create(st, TSindex, fl, area);
         double effort = EffortArea[GetIndex_(STFR, STFRindex)];
-        double catchabilityArea = catchability/DensityArea[GetIndex_(STFR, STFRindex)];
-        
+        double catchabilityArea = 0;
+
+        if (DensityArea[GetIndex_(STFR, STFRindex)]>0) {
+          catchabilityArea = catchability/DensityArea[GetIndex_(STFR, STFRindex)];  
+        }
+      
         for(int age=0; age<nAge; age++) {
           IntegerVector SATFindex = IntegerVector::create(st, age, TSindex, fl);
           IntegerVector SATFRindex = IntegerVector::create(st, age, TSindex, fl, area);
           
-       
           double FInteract = effort * catchabilityArea * SelectivityAtAge[GetIndex_(SATF, SATFindex)];
           FRetainArea[GetIndex_(SATFR, SATFRindex)] = FInteract * RetentionAtAge[GetIndex_(SATF, SATFindex)];
           double FDiscardTotal = FInteract - FRetainArea[GetIndex_(SATF, SATFindex)];
           double FDiscardDead = FDiscardTotal * DiscardMortalityAtAge[GetIndex_(SATF, SATFindex)];
+          
           FDeadArea[GetIndex_(SATFR, SATFRindex)] = FDiscardDead + FRetainArea[GetIndex_(SATFR, SATFRindex)];
         }
       }
     }
-    
+
     
     for (int area=0; area<nArea; area++) {
       for(int age=0; age<nAge; age++) {
@@ -270,8 +279,10 @@ List CalcCatch_(NumericVector NumberAtAgeArea,
         
         // Z by Area
         for (int fl=0; fl<nFleet; fl++) {
+          
           IntegerVector SATFRindex = IntegerVector::create(st, age, TSindex, fl, area);
           IntegerVector SATFindex = IntegerVector::create(st, age, TSindex, fl);
+          
           
           // number
           RemovalArea[GetIndex_(SATFR, SATFRindex)] = FDeadArea[GetIndex_(SATFR, SATFRindex)]/ZDeadTotal[GetIndex_(SAR, SARindex)] *
@@ -309,7 +320,7 @@ List CalcCatch_(NumericVector NumberAtAgeArea,
   return(L);
 }
 
-
+// [[Rcpp::export]]
 List CalcFfromCatch_(NumericVector FDeadAtAge,
                      NumericVector FRetainAtAge,
                      NumericVector NumberAtAgeArea,
@@ -360,9 +371,10 @@ List CalcFfromCatch_(NumericVector FDeadAtAge,
           for (int area=0; area<nArea; area++) {
             IntegerVector SATFRindex = IntegerVector::create(st, age, TSindex, fl, area);
             FDeadAtAge[GetIndex_(SATF, SATFindex)] += FDeadArea[GetIndex_(SATFR, SATFRindex)];
+            
             FRetainAtAge[GetIndex_(SATF, SATFindex)] += FRetainArea[GetIndex_(SATFR, SATFRindex)];  
           }
-          FDeadTotalAtAge[GetIndex_(SA, SAindex)] =  FDeadAtAge[GetIndex_(SATF, SATFindex)];
+          FDeadTotalAtAge[GetIndex_(SA, SAindex)] +=  FDeadAtAge[GetIndex_(SATF, SATFindex)];
         }
       }
     }
@@ -518,21 +530,35 @@ List CalcFfromCatch_(NumericVector FDeadAtAge,
 }
 
 
-
+// [[Rcpp::export]]
 NumericVector CalcSpawnProduction_(NumericVector SProduction,
                                    NumericVector NaturalMortalityAtAge,
                                    NumericVector FDeadAtAge, // sum over fleets
                                    NumericVector FecundityAtAge,
-                                   NumericVector NumberAtAge, // sum over areas
+                                   NumericVector NumberAtAgeArea, 
                                    NumericVector SpawnTimeFrac,
                                    IntegerVector SPFrom,
                                    int TSindex) {
-
-  IntegerVector SAT = CalcDims_(NaturalMortalityAtAge); // stock, age, time step
-  IntegerVector SA =  SAT[IntegerVector{0,1}];
-  IntegerVector ST =  SAT[IntegerVector{0,2}];
-  int nStock = SAT[0];
-  int nAge = SAT[1];
+  // sum N over areas
+  IntegerVector SATR = CalcDims_(NumberAtAgeArea); // stock, age, time step, area
+  IntegerVector SAT = SATR[IntegerVector{0,1,2}];
+  IntegerVector SAR = SATR[IntegerVector{0,1,3}];
+  IntegerVector SA = SATR[IntegerVector{0,1}];
+  IntegerVector ST =  SATR[IntegerVector{0,2}];
+  int nStock = SATR[0];
+  int nAge = SATR[1];
+  int nArea = SATR[3];
+  
+  NumericVector NumberAtAge(nStock*nAge);
+  for (int st=0; st<nStock; st++) {
+    for (int age=0; age<nAge; age++) {
+      IntegerVector SAindex = IntegerVector::create(st, age);
+      for (int area=0; area<nArea; area++) {
+        IntegerVector SATRindex = IntegerVector::create(st, age, TSindex, area);
+        NumberAtAge[GetIndex_(SA, SAindex)] += NumberAtAgeArea[GetIndex_(SATR, SATRindex)];
+      }
+    }
+  }
   
   
   NumericVector totalmortality(nStock*nAge);
@@ -564,25 +590,22 @@ NumericVector CalcSpawnProduction_(NumericVector SProduction,
 
 
 // [[Rcpp::export]]
-List CalcRecruitment_(NumericVector SProduction,
+NumericVector CalcRecruitment_(NumericVector SProduction,
                                NumericVector R0,
                                NumericVector SP0,
                                NumericVector RecDevs,
                                List SRRModel,
                                List SRRPars,
                                int Sim,
-                               int TSindex,
-                               Function RunSRRfunction) {
+                               int TSindex) {
   
   IntegerVector ST = CalcDims_(SProduction); // stock, time step
   int nStock = ST[0];
-  
   NumericVector Recruits(nStock);
-  
-  List OUT(nStock);
   
   for (int st=0; st<nStock; st++) {
     IntegerVector STindex = IntegerVector::create(st, TSindex);
+    IntegerVector SimTindex = IntegerVector::create(Sim, TSindex);
     List srrparsList = SRRPars[st];
     Function srrModel = SRRModel[st];
     
@@ -598,181 +621,326 @@ List CalcRecruitment_(NumericVector SProduction,
  
     for (int i=0; i<srrparsList.size(); i++) {
       NumericVector argVec = srrparsList[i];
-      double arg = argVec[0];
+      IntegerVector SimT = CalcDims_(argVec);
+      double arg = argVec[GetIndex_(SimT, SimTindex)];
       Arglist.push_back(arg);
-      ArglistNames[2+i] = ParNames[i];
+      ArglistNames[3+i] = ParNames[i];
     }
   
     Arglist.attr("names") = ArglistNames;
     
-    OUT[st] = Arglist;
-    // RObject RecruitsEQ = srrModel(Arglist);
-    // Recruits[st] = as<double>(RecruitsEQ);
+    Rcpp::Environment base("package:base"); 
+    Rcpp::Function doCall = base["do.call"]; 
+    
+    RObject RecruitsEQ = doCall(srrModel, Arglist);
+    Recruits[st] = as<double>(RecruitsEQ) * RecDevs[GetIndex_(ST, STindex)];
+  }
+
+  return(Recruits);
+  
+}
+// [[Rcpp::export]]
+NumericVector AddRecruits_(NumericVector NumberAtAgeArea,
+                           NumericVector Recruits,
+                           NumericVector UnfishedDist,
+                           int TSindex) {
+  
+  // TODO option to recruit into next time step: TSindex + 1
+  // Need to check if first age class is 0 or 1; 
+  
+  IntegerVector SATR = CalcDims_(NumberAtAgeArea); // stock, age, time step, region
+  int nStock = SATR[0];
+  int nAge = SATR[1];
+  int nTS = SATR[2];
+  int nArea = SATR[3];
+  
+  IntegerVector SRAT {nStock, nArea, nAge, nTS};
+  
+  for (int st=0; st<nStock; st++) {
+    for (int area=0; area<nArea; area++) {
+      IntegerVector SATRindex = IntegerVector::create(st, 0, TSindex, area);
+      IntegerVector SRATindex = IntegerVector::create(st, area, 0, TSindex);
+      NumberAtAgeArea[GetIndex_(SATR, SATRindex)] = Recruits[st]*UnfishedDist[GetIndex_(SRAT, SRATindex)]; 
+    }
   }
   
-  return(OUT);
-  // return(Recruits);
+  return(NumberAtAgeArea);
   
+}
+// [[Rcpp::export]]
+NumericVector MoveStock_(NumericVector NumberAtAgeArea,
+                         NumericVector Movement,
+                         int TSindex) {
+  
+  IntegerVector SATR = CalcDims_(NumberAtAgeArea); // stock, age, time step, region
+  int nStock = SATR[0];
+  int nAge = SATR[1];
+  int nTS = SATR[2];
+  int nArea = SATR[3];
+  
+  IntegerVector SRRAT = {nStock, nArea, nArea, nAge, nTS};
+  
+  for (int st=0; st<nStock; st++) {
+    for (int age=0; age<nAge; age++) {
+      for (int fromArea=0; fromArea<nArea; fromArea++) {
+        NumericVector temp(nArea);
+        for (int toArea=0; toArea<nArea; toArea++) {
+          IntegerVector SATFromRindex = IntegerVector::create(st, age, TSindex, fromArea);
+          IntegerVector SATYToRindex = IntegerVector::create(st, age, TSindex, toArea);
+          IntegerVector Moveindex = IntegerVector::create(st, fromArea, toArea, age, TSindex);
+          
+          temp[toArea] += NumberAtAgeArea[GetIndex_(SATR, SATFromRindex)] * Movement[GetIndex_(SRRAT, Moveindex)];
+        }
+        for (int toArea=0; toArea<nArea; toArea++) {
+          IntegerVector SATYToRindex = IntegerVector::create(st, age, TSindex, toArea);
+          NumberAtAgeArea[GetIndex_(SATR, SATYToRindex)] += temp[toArea];
+        }
+      }
+    }
+  }
+  
+ return(NumberAtAgeArea); 
+}
+
+// [[Rcpp::export]]
+NumericVector CalcNumberNext_(NumericVector NumberAtAgeArea,
+                              NumericVector NaturalMortalityAtAge,
+                              NumericVector FDeadArea,
+                              NumericVector Semelparous,
+                              List Ages,
+                              int TSindex) {
+  
+  IntegerVector SATFR = CalcDims_(FDeadArea); // stock, age, time step, fleet, region
+  IntegerVector SATR = SATFR[IntegerVector{0,1,2,4}];
+  IntegerVector SAR = SATFR[IntegerVector{0,1,4}];
+  IntegerVector SAT = SATFR[IntegerVector{0,1,2}];
+  int nStock = SATFR[0];
+  int nAge = SATFR[1];
+  int nFleet = SATFR[3];
+  int nArea = SATFR[4];
+  
+  
+  // Total mortality and survival by area 
+  NumericVector FMortAgeArea(nStock *nAge*nArea);
+  NumericVector ZMortAgeArea(nStock *nAge*nArea);
+  NumericVector Surv(nStock*nAge*nArea);
+  
+  
+  for (int st=0; st<nStock; st++) {
+    for (int area=0; area<nArea; area++) {
+      for (int age=0; age<nAge; age++) {
+        IntegerVector SATRindex = IntegerVector::create(st, age, TSindex, area);
+        IntegerVector SARindex = IntegerVector::create(st, age, area);
+        IntegerVector SATindex = IntegerVector::create(st, age, TSindex);
+        for (int fl=0; fl<nFleet; fl++) {
+          IntegerVector SATFRindex = IntegerVector::create(st, age, TSindex, fl, area);
+
+          FMortAgeArea[GetIndex_(SAR, SARindex)] += FDeadArea[GetIndex_(SATFR, SATFRindex)];
+        }
+        ZMortAgeArea[GetIndex_(SAR, SARindex)] = FMortAgeArea[GetIndex_(SAR, SARindex)] + NaturalMortalityAtAge[GetIndex_(SAT, SATindex)];
+        Surv[GetIndex_(SAR, SARindex)] = exp(-ZMortAgeArea[GetIndex_(SAR, SARindex)]) * (1-Semelparous[GetIndex_(SAT, SATindex)]);
+
+      }
+    }
+  }
+
+  // age and mortality
+  for (int st=0; st<nStock; st++) {
+    for (int area=0; area<nArea; area++) {
+      for (int age=0; age<(nAge-1); age++) {
+        IntegerVector SATRNowindex = IntegerVector::create(st, age, TSindex, area);
+        IntegerVector SARNowindex = IntegerVector::create(st, age, area);
+        IntegerVector SATRNextindex = IntegerVector::create(st, age+1, TSindex+1, area);
+        NumberAtAgeArea[GetIndex_(SATR, SATRNextindex)] = NumberAtAgeArea[GetIndex_(SATR, SATRNowindex)] * Surv[GetIndex_(SAR, SARNowindex)];
+      }
+    }
+
+    Rcpp::RObject ages = Ages[st];
+    bool plusgroup = ages.slot("PlusGroup");
+
+    if (plusgroup) {
+      IntegerVector ageClasses = ages.slot("Classes");
+      Rcout << "plusgroup " << std::endl;
+      int LastAge = max(ageClasses);
+      for (int area=0; area<nArea; area++) {
+        IntegerVector SATRNowLastAgeindex = IntegerVector::create(st, LastAge, TSindex, area);
+        IntegerVector SARNowLastAgeindex = IntegerVector::create(st, LastAge, area); 
+        IntegerVector SATRNextLastAgeindex = IntegerVector::create(st, LastAge, TSindex+1, area);
+      
+
+        NumberAtAgeArea[GetIndex_(SATR, SATRNextLastAgeindex)] += NumberAtAgeArea[GetIndex_(SATR, SATRNowLastAgeindex)] * 
+          Surv[GetIndex_(SAR, SARNowLastAgeindex)];
+      }
+    }
+  }
+
+  return(NumberAtAgeArea);
 }
 
 // Given N and Effort at beginning of Time Step, calculates catch etc this time
 // step and N at beginning of next time step
 // returns updated arrays
+// for a SINGLE simulation
 // [[Rcpp::export]]
-List CalcPopDynamics_(NumericVector NumberAtAgeArea,
-                      NumericVector BiomassAtAgeArea,
-                      
-                      NumericVector WeightAtAge,
-                      NumericVector NaturalMortalityAtAge,
-                      
-                      NumericVector FecundityAtAge,
-                      NumericVector SpawnTimeFrac,
-                      IntegerVector SPFrom,
-                      NumericVector SProduction,
-                      
-                      NumericVector R0,
-                      NumericVector SP0,
-                      NumericVector RecDevs,
-                      List SRRModel,
-                      List SRRPars,
-                      Function RunSRRfunction,
-                      
-                      NumericVector RelativeSize,
-                      
-                      NumericVector Effort,
-                      NumericVector EffortArea,
-                      NumericVector Catchability,
-                      
-                      NumericVector SelectivityAtAge,
-                      NumericVector RetentionAtAge,
-                      NumericVector DiscardMortalityAtAge,
-                      
-                      NumericVector VBiomassAtAgeArea,
-                      NumericVector FleetWeightAtAge,
-                      NumericVector DensityArea,
-                      
-                      NumericVector FDeadArea,
-                      NumericVector FRetainArea,
-                      NumericVector RemovalArea,
-                      NumericVector RetainArea,
-                      
-                      NumericVector FDeadAtAge,
-                      NumericVector FRetainAtAge,
-                      
-                      NumericVector RemovalNAtAge,
-                      NumericVector RetainNAtAge,
-                      NumericVector RemovalBAtAge,
-                      NumericVector RetainBAtAge,
-                      
-                      int Sim,
-                   
-                      CharacterVector TimeStep) {
+List CalcPopDynamics_(List PopulationList,
+                      List FleetList,
+                      CharacterVector TimeSteps) {
   
-  int TSindex = MatchTimeStep_(NumberAtAgeArea, TimeStep);
+  // deep copy (for development at least)
+  List PopulationListOut = clone(PopulationList);
+  List FleetListOut = clone(FleetList);
   
-  // Biomass by Area beginning of this time step
-  BiomassAtAgeArea = CalcBiomass_(BiomassAtAgeArea, NumberAtAgeArea, WeightAtAge, TSindex);
+  List WeightList = PopulationListOut["Weight"];
+  NumericVector WeightAtAge = WeightList["MeanAtAge"];
   
-  // VB by Area
-  VBiomassAtAgeArea = CalcVBiomass_(VBiomassAtAgeArea, NumberAtAgeArea, FleetWeightAtAge, SelectivityAtAge, TSindex);
+  NumericVector NumberAtAgeArea = PopulationListOut["NumberAtAgeArea"];
+  NumericVector BiomassArea = PopulationListOut["BiomassArea"];
   
-  // Relative VB Density by Area & Fleet
-  DensityArea = CalcDensity_(DensityArea, VBiomassAtAgeArea, RelativeSize, TSindex);
- 
-  // Distribute Effort over Areas (currently proportional to VB Density)
-  EffortArea = DistEffort_(EffortArea, DensityArea, Effort, TSindex);
+  List SpatialList = PopulationListOut["Spatial"];
+  NumericVector RelativeSize = SpatialList["RelativeSize"];
   
-  // Calc F and Catch Removal and Retain by Area
-  List CatchList = CalcCatch_(NumberAtAgeArea,
-                              DensityArea,
-                              NaturalMortalityAtAge,
-                              FleetWeightAtAge,
-                              EffortArea,
-                              Catchability,
-                              SelectivityAtAge,
-                              RetentionAtAge,
-                              DiscardMortalityAtAge,
-                              FDeadArea,
-                              FRetainArea,
-                              RemovalArea,
-                              RetainArea,
-                              RemovalNAtAge,
-                              RetainNAtAge,
-                              RemovalBAtAge,
-                              RetainBAtAge,
-                              TSindex);
+  List SelectivityList = FleetListOut["Selectivity"];
+  NumericVector SelectivityAtAge = SelectivityList["MeanAtAge"]; 
   
-  // Calculate overall F 
-  List Foverall = CalcFfromCatch_(FDeadAtAge,
-                                  FRetainAtAge,
-                                  NumberAtAgeArea,
-                                  RemovalNAtAge,
-                                  NaturalMortalityAtAge,
-                                  SelectivityAtAge,
-                                  RetentionAtAge,
-                                  DiscardMortalityAtAge,
-                                  FDeadArea,
-                                  FRetainArea,
-                                  TSindex);
-
+  NumericVector FleetWeightAtAge = FleetListOut["FleetWeightAtAge"];
+  NumericVector VBiomassArea = FleetListOut["VBiomassArea"];
+  NumericVector DensityArea = FleetListOut["DensityArea"];
   
-  // Calc Spawning Production 
-  // sum N over areas
-  IntegerVector SATR = CalcDims_(NumberAtAgeArea); // stock, age, time step, area
-  IntegerVector SAR = SATR[IntegerVector{0,1,3}];
-  IntegerVector SA = SATR[IntegerVector{0,1}];
-  int nStock = SATR[0];
-  int nAge = SATR[1];
-  int nArea = SATR[3];
-
-  NumericVector NumberAtAge(nStock*nAge);
-  for (int st=0; st<nStock; st++) {
-    for (int age=0; age<nAge; age++) {
-      IntegerVector SAindex = IntegerVector::create(st, age);
-      for (int area=0; area<nArea; area++) {
-        IntegerVector SATRindex = IntegerVector::create(st, age, TSindex, area);
-        NumberAtAge[GetIndex_(SA, SAindex)] += NumberAtAgeArea[GetIndex_(SATR, SATRindex)];
-      }
-    }
+  
+  for (int ts=0; ts<TimeSteps.size(); ts++) {
+    int TSindex = MatchTimeStep_(NumberAtAgeArea, as<CharacterVector>(TimeSteps[ts]));
+    
+    // Biomass by Area beginning of this time step
+    BiomassArea = CalcBiomass_(BiomassArea,
+                               NumberAtAgeArea,
+                               WeightAtAge,
+                               TSindex); 
+    
+    // VB by Area
+    VBiomassArea = CalcVBiomass_(VBiomassArea, 
+                                 NumberAtAgeArea, 
+                                 FleetWeightAtAge, 
+                                 SelectivityAtAge, 
+                                 TSindex);
+    
+    // Relative VB Density by Area & Fleet
+    DensityArea = CalcDensity_(DensityArea, 
+                               VBiomassArea,
+                               RelativeSize, 
+                               TSindex);
   }
+      
+  //   
+ 
+  //   
+  //   // Distribute Effort over Areas (currently proportional to VB Density)
+  //   EffortArea = DistEffort_(EffortArea, DensityArea, Effort, TSindex);
+  //   
+  //   // Calc F and Catch Removal and Retain by Area
+  //   List CatchList = CalcCatch_(NumberAtAgeArea,
+  //                               DensityArea,
+  //                               NaturalMortalityAtAge,
+  //                               FleetWeightAtAge,
+  //                               EffortArea,
+  //                               Catchability,
+  //                               SelectivityAtAge,
+  //                               RetentionAtAge,
+  //                               DiscardMortalityAtAge,
+  //                               FDeadArea,
+  //                               FRetainArea,
+  //                               RemovalArea,
+  //                               RetainArea,
+  //                               RemovalNAtAge,
+  //                               RetainNAtAge,
+  //                               RemovalBAtAge,
+  //                               RetainBAtAge,
+  //                               TSindex);
+  //   
+  //   FDeadArea = CatchList["FDeadArea"];
+  //   FRetainArea = CatchList["FRetainArea"];
+  //   RemovalArea = CatchList["RemovalArea"];
+  //   RetainArea = CatchList["RetainArea"];
+  //   RemovalNAtAge = CatchList["RemovalNAtAge"];
+  //   RetainNAtAge = CatchList["RetainNAtAge"];
+  //   RemovalBAtAge = CatchList["RemovalBAtAge"];
+  //   RetainBAtAge = CatchList["RetainBAtAge"];
+  //   
+  //   
+  //   
+  //   // Calculate overall F 
+  //   List Foverall = CalcFfromCatch_(FDeadAtAge,
+  //                                   FRetainAtAge,
+  //                                   NumberAtAgeArea,
+  //                                   RemovalNAtAge,
+  //                                   NaturalMortalityAtAge,
+  //                                   SelectivityAtAge,
+  //                                   RetentionAtAge,
+  //                                   DiscardMortalityAtAge,
+  //                                   FDeadArea,
+  //                                   FRetainArea,
+  //                                   TSindex);
+  //   
+  //   
+  //   
+  //   // Calc Spawning Production 
+  //   
+  //   
+  //   SProduction = CalcSpawnProduction_(SProduction,
+  //                                      NaturalMortalityAtAge,
+  //                                      Foverall["FDeadTotalAtAge"], // summed over fleets and areas
+  //                                              FecundityAtAge,
+  //                                              NumberAtAgeArea, 
+  //                                              SpawnTimeFrac,
+  //                                              SPFrom,
+  //                                              TSindex);
+  //   
+  //   
+  //   
+  //   
+  //   // Calc Recruitment 
+  //   NumericVector Recruits = CalcRecruitment_(SProduction,
+  //                                             R0,
+  //                                             SP0,
+  //                                             RecDevs,
+  //                                             SRRModel,
+  //                                             SRRPars,
+  //                                             Sim,
+  //                                             TSindex);
+  //   // Add Recruits 
+  //   // TODO option to add to beginning of next time-step i.e age 1
+  //   
+  //   NumberAtAgeArea = AddRecruits_(NumberAtAgeArea,
+  //                                  Recruits,
+  //                                  UnfishedDist,
+  //                                  TSindex);
+  //   
+  //   
+  //   
+  //   
+  //   // Update Number beginning of next Time Step 
+  //   NumberAtAgeArea = CalcNumberNext_(NumberAtAgeArea,
+  //                                     NaturalMortalityAtAge,
+  //                                     CatchList["FDeadArea"],
+  //                                              Semelparous,
+  //                                              Ages,
+  //                                              TSindex);
+  //   
+  //   // Move Population at beginning
+  //   // NumberAtAgeArea = MoveStock_(NumberAtAgeArea,
+  //   //                              Movement,
+  //   //                              TSindex);
+  //   
+  // }
+  // 
+  // 
 
-  SProduction = CalcSpawnProduction_(SProduction,
-                                     NaturalMortalityAtAge,
-                                     Foverall["FDeadTotalAtAge"], // summed over fleets
-                                     FecundityAtAge,
-                                     NumberAtAge, // summed over areas
-                                     SpawnTimeFrac,
-                                     SPFrom,
-                                     TSindex);
-    
-    
-    
+  PopulationListOut["BiomassArea"] = BiomassArea;
   
-  // Recruitment (TODO different age class)
-  
-         
-  // Update Number beginning of next Time Step 
-  
-  // Move Population at beginning
-  
+  FleetListOut["VBiomassArea"] = VBiomassArea; 
+  FleetListOut["DensityArea"] = DensityArea;
 
-  
-  
-  List L = List::create(Named("NumberAtAgeArea")=NumberAtAgeArea,
-                        Named("BiomassAtAgeArea") = BiomassAtAgeArea,
-                        Named("WeightAtAge") = WeightAtAge,
-                        Named("Effort") = Effort,
-                        Named("SelectivityAtAge") = SelectivityAtAge,
-                        Named("VBiomassAtAge") = VBiomassAtAgeArea,
-                        Named("DensityArea") = DensityArea,
-                        Named("EffortArea") = EffortArea,
-                        Named("FDeadArea") = CatchList["FDeadArea"],
-                        Named("FRetainArea") = CatchList["FRetainArea"],
-                        Named("RemovalArea") = CatchList["RemovalArea"],
-                        Named("RetainArea") = CatchList["RetainArea"],
-                        Named("FDeadAtAge") = Foverall["FDeadAtAge"],
-                        Named("SProduction") = SProduction
-                          
+  List L = List::create(Named("PopulationList")=PopulationListOut,
+                        Named("FleetList")=FleetListOut
   ); 
                         
 

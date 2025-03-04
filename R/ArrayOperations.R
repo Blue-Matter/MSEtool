@@ -293,7 +293,7 @@ ArraySubsetSim <- function(object, Sims=NULL, drop=FALSE) {
 
 # ----- Array Expand ----
 
-ArrayExpand <- function(Array, nSim, nAges, TimeSteps) {
+ArrayExpand <- function(Array, nSim, nAges, TimeSteps, AgeOpt=1) {
   
   Array |>
     ExpandSims(nSim) |>
@@ -304,8 +304,10 @@ ArrayExpand <- function(Array, nSim, nAges, TimeSteps) {
   
 }
 
-# fills all additional age classes with 1e-16
-ExpandAges <- function(Array, nAges) {
+# AgeOpt = 1 fills all additional age classes with 1e-16
+# AgeOpt = 2 fills all additional age classes with 1
+# AgeOpt = 3 fills all additional age classes with same as last age 
+ExpandAges <- function(Array, nAges, AgeOpt=1) {
   ind <- which(names(dimnames(Array))=='Age')
   if (length(ind)<1)
     return(Array)
@@ -319,12 +321,21 @@ ExpandAges <- function(Array, nAges) {
   OutDim <- d
   OutDim[ind] <- AddDim
   
+  fillvalue <- tiny/2
+  if (AgeOpt==2)
+    fillvalue <- 1
+  if (AgeOpt==3) {
+    fillvalue <- abind::asub(Array, 1, ind)
+    
+  }
+    
+  
   existingNames <- dnames[[ind]]
   Last <- existingNames[length(existingNames)] |> as.numeric()
   AddNames <- seq(Last+1, length.out=AddDim)
   AddDimNames <- dnames
   AddDimNames[[ind]] <- AddNames
-  empty <- array(tiny/2, dim=OutDim, 
+  empty <- array(fillvalue, dim=OutDim, 
                  dimnames=AddDimNames)
   
   abind::abind(Array, empty, along=ind,

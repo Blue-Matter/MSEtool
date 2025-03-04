@@ -298,6 +298,18 @@ GetEffort <- function(object, TimeSteps=NULL, df=FALSE) {
   out
 }
 
+GetClosure <- function(object, TimeSteps=NULL, df=FALSE) {
+  if (inherits(object, 'hist')) 
+    return(
+      purrr::map(object@Fleet, GetClosure, TimeSteps)
+    )
+  
+  out <- GetFleetAtAge(object, slots=c('Distribution', 'Closure'), TimeSteps, df)
+  if (inherits(out, 'list'))
+    return(List2Array(out))
+  out
+}
+
 GetCatchability <- function(object, TimeSteps=NULL, df=FALSE) {
   out <- GetFleetAtAge(object, slots=c('Effort', 'Catchability'), TimeSteps, df)
   if (inherits(out, 'list'))

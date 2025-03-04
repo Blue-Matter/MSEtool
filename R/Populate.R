@@ -992,13 +992,13 @@ setMethod("Populate", "fecundity", function(object,
     
     CheckRequiredObject(Ages, 'ages', 'Ages')
     CheckRequiredObject(Weight, 'weight', 'Weight')
-    # CheckRequiredObject(Length, 'length', 'Length')
-    # CheckRequiredObject(Maturity, 'maturity', 'Maturity')
+    CheckRequiredObject(Length, 'length', 'Length')
+    CheckRequiredObject(Maturity, 'maturity', 'Maturity')
     
     Weight <- Populate(Weight, Ages, Length, nsim, TimeSteps, seed=seed, ASK=FALSE, messages=messages)
-    # Maturity <- Populate(Maturity, Ages, Length, nsim, TimeSteps, seed=seed, messages=messages)
-    # object@MeanAtAge <- MultiplyArrays(array1=Weight@MeanAtAge, array2=Maturity@MeanAtAge)
-    object@MeanAtAge <- Weight@MeanAtAge # egg production is fecundity x maturity - calculated internally
+    Maturity <- Populate(Maturity, Ages, Length, nsim, TimeSteps, seed=seed, messages=messages)
+    object@MeanAtAge <- ArrayMultiply(array1=Weight@MeanAtAge, array2=Maturity@MeanAtAge)
+    # object@MeanAtAge <- Weight@MeanAtAge # egg production is fecundity x maturity - calculated internally
     # fecundity is the egg production of a MATURE individual 
     
     PrintDonePopulating(object, sb=NULL, isTRUE(messages))
@@ -1026,9 +1026,9 @@ setMethod("Populate", "fecundity", function(object,
       # CheckRequiredObject(Maturity, 'maturity', 'Maturity')
       
       Weight <- Populate(Weight, Ages, Length, nsim, TimeSteps, seed=seed, ASK=FALSE, messages=messages)
-      # Maturity <- Populate(Maturity, Ages, Length, nsim, TimeSteps, seed=seed, messages=messages)
-      # object@MeanAtAge <- MultiplyArrays(array1=Weight@MeanAtAge, array2=Maturity@MeanAtAge)
-      object@MeanAtAge <- Weight@MeanAtAge # egg production is fecundity x maturity - calculated internally
+      Maturity <- Populate(Maturity, Ages, Length, nsim, TimeSteps, seed=seed, messages=messages)
+      object@MeanAtAge <- ArrayMultiply(array1=Weight@MeanAtAge, array2=Maturity@MeanAtAge)
+      # object@MeanAtAge <- Weight@MeanAtAge # egg production is fecundity x maturity - calculated internally
       # fecundity is the egg production of a MATURE individual 
       
       PrintDonePopulating(object, sb, isTRUE(messages))
@@ -1712,7 +1712,7 @@ setMethod("Populate", "effort", function(object,
                                     TimeSteps,
                                     Length)
     dd <- dim(FInteract)
-    object@Effort <- MultiplyArrays(array1=object@Catchability,
+    object@Effort <- ArrayMultiply(array1=object@Catchability,
                                     array2=apply(FInteract,c(1,3), max)
                                     ) |>
       AddDimNames(c('Sim', 'Time Step'), TimeSteps=TimeSteps)
@@ -2041,7 +2041,7 @@ GenerateHistoricalEffort <- function(Effort, nsim=NULL, TimeSteps=NULL) {
 #     if (!silent)
 #       cli::cli_alert_info('No `Fecundity` model found. \nAssuming Fecundity proportional to Spawning Biomass')
 #
-#     object@MeanAtAge <- MultiplyArrays(Weight@MeanAtAge, Maturity@MeanAtAge)
+#     object@MeanAtAge <- ArrayMultiply(Weight@MeanAtAge, Maturity@MeanAtAge)
 #     return(SetDigest(argList, object))
 #   }
 #

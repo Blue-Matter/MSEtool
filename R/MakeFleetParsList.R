@@ -1,79 +1,58 @@
 
-MakeFleetParsList <- function(OM, Period='Historical') {
-  nSim <- nSim(OM)
-  nAges <- purrr::map(OM@Stock, nAge) |> unlist() |> max()
-  TimeSteps <- TimeSteps(OM, Period)
-  nStock <- nStock(OM)
-  nFleet <- nFleet(OM)
-  nArea <- nArea(OM@Stock[[1]])
-  
-  FleetParsList <- list()
-  
-  FleetParsList <- MakeEffortList(OM, nSim, nAges, TimeSteps, Period)
-  FleetParsList <- c(FleetParsList, 
-                     MakeFishingMortalityList(OM, nSim, nAges, TimeSteps, Period))
+MakeFleetList <- function(OM, Period='Historical') {
  
-  FleetParsList <- c(FleetParsList, 
-                     MakeFleetSlotList(OM, Period, 'DiscardMortality', nSim, nAges, TimeSteps),
-                     MakeFleetSlotList(OM, Period, 'Selectivity', nSim, nAges, TimeSteps),
-                     MakeFleetSlotList(OM, Period, 'Retention', nSim, nAges, TimeSteps))
-  
-                   
-  
-  # Distribution 
-  FleetParsList$Closure <- purrr::map(OM@Fleet, \(x) {
-    closure <- purrr::map(x, \(y) 
-                          y@Distribution@Closure)
-    List2Array(closure)
-  }) |> 
-    List2Array('Stock') |>
-    aperm(c('Sim', 'Stock', 'Time Step', 'Area', 'Fleet')) 
-  
-  # Weight
-  FleetParsList$FleetWeightAtAge <- purrr::map2(OM@Stock, OM@Fleet, \(x,y)
-              GetFleetWeightAtAge(x,y, TimeSteps)
-              ) |>
-    List2Array('Stock') |>
-    aperm(c('Sim', 'Stock', 'Age', 'Time Step', 'Fleet')) |>
-    ArrayExpand(nSim, nAges, TimeSteps) 
+  List <- list()
+  List$FishingMortality <- MakeFishingMortalityList(OM, Period)
+  List$DiscardMortality <- MakeFleetSlotList(OM, 'DiscardMortality', Period=Period)
+  List$Effort <- MakeEffortList(OM, Period)
+  List$Selectivity <- MakeFleetSlotList(OM, 'Selectivity', Period)
+  List$Retention <- MakeFleetSlotList(OM, 'Retention', Period)
+  List$Distribution <-  MakeDistributionList(OM, Period)
 
-  # BioEconomic
-  # TODO
-  
-  FleetParsList$EffortArea <- ArraySimStockAgeTimeFleetArea(OM, Period) |>
+  ## Arrays to be filled
+  List$EffortArea <- ArraySimStockAgeTimeFleetArea(OM, Period) |>
     DropDimension('Age', warn=FALSE) 
   
-  FleetParsList$DensityArea <- FleetParsList$EffortArea 
-  
-  FleetParsList$VBiomass <- ArraySimStockAgeTimeFleetArea(OM, Period)
-  
-  FleetParsList$FDeadArea <-  FleetParsList$VBiomass
-  FleetParsList$FRetainArea <- FleetParsList$FDeadArea
-  FleetParsList$RemovalArea <- FleetParsList$FDeadArea
-  FleetParsList$RetainArea <- FleetParsList$FDeadArea
-  
-  FleetParsList$RemovalNAtAge <- ArraySimStockAgeTimeFleet(OM, Period) # number
-  FleetParsList$RetainNAtAge <- FleetParsList$RemovalNAtAge
-  
-  FleetParsList$RemovalBAtAge <- FleetParsList$RemovalNAtAge # biomass
-  FleetParsList$RetainBAtAge <- FleetParsList$RemovalNAtAge
+  List$DensityArea <- List$EffortArea 
+  List$VBiomassArea <- List$EffortArea 
   
   
+  List$FDeadAtAgeArea <-  ArraySimStockAgeTimeFleetArea(OM, Period)
+  List$FRetainAtAgeArea <- List$FDeadAtAgeArea
   
-  class(FleetParsList) <- c('list', 'FleetParsList')
-  FleetParsList
+  List$RemovalAtAgeArea <- List$FDeadAtAgeArea
+  List$RetainAtAgeArea <- List$FDeadAtAgeArea
+  
+  
+  List$RemovalNumberAtAge <- ArraySimStockAgeTimeFleet(OM, Period)
+  List$RetainNumberAtAge <- List$RemovalNumberAtAge
+  
+  List$RemovalBiomassAtAge <- List$RemovalNumberAtAge 
+  List$RetainBiomassAtAge <- List$RemovalNumberAtAge
+  
+  List$FleetWeightAtAge <- MakeFleetWeightList(OM)
+  List
 }
 
 
-MakeFleetSlotList <- function(OM, Period='Historical', slot='Selectivity',
-                              nSim, nAges, TimeSteps) {
+MakeFleetSlotList <- function(OM, slot='Selectivity', Period='Historical',
+                              TimeSteps=NULL) {
   
   sNames <- slotNames(slot(OM@Fleet[[1]][[1]], slot))
+  
+  meta <- GetMetaData(OM, Period, TimeSteps)
+  nSim <- meta$nSim
+  nAges <- meta$nAges
+  TimeSteps <- meta$TimeSteps
+  nStock <- length(meta$StockNames)
+  nFleet <- length(meta$FleetNames)
+  nArea <- meta$nAreas
+  
   
   List <- list()
   
   if ('Pars' %in% sNames) 
-    List[[paste0(slot, 'Pars')]] <- purrr::map(OM@Fleet, \(x)
+    List[['Pars']] <- purrr::map(OM@Fleet, \(x)
                                                purrr::map(x, \(y) 
                                                y|> 
                                                  slot(slot) |>
@@ -81,7 +60,7 @@ MakeFleetSlotList <- function(OM, Period='Historical', slot='Selectivity',
     )
   
   if ('Model' %in% sNames) 
-    List[[paste0(slot, 'Model')]] <- purrr::map(OM@Fleet, \(x)
+    List[['Model']] <- purrr::map(OM@Fleet, \(x)
                                                 purrr::map(x, \(y) 
                                                            y|> 
                                                              slot(slot) |>
@@ -90,7 +69,7 @@ MakeFleetSlotList <- function(OM, Period='Historical', slot='Selectivity',
   
   if ('MeanAtAge' %in% sNames) {
     fun <- get(paste0('Get', slot, 'AtAge'))
-    List[[paste0(slot, 'MeanAtAge')]] <- purrr::map(OM@Fleet, \(x) fun(x, TimeSteps)) |>
+    List[['MeanAtAge']] <- purrr::map(OM@Fleet, \(x) fun(x, TimeSteps)) |>
       List2Array('Stock') |>
       aperm(c('Sim', 'Stock', 'Age', 'Time Step', 'Fleet')) |>
       ArrayExpand(nSim, nAges, TimeSteps) |>
@@ -99,7 +78,7 @@ MakeFleetSlotList <- function(OM, Period='Historical', slot='Selectivity',
   
   if ('MeanAtLength' %in% sNames) {
     fun <- get(paste0('Get', slot, 'AtLength'))
-    List[[paste0(slot, 'MeanAtLength')]] <- purrr::map(OM@Fleet, \(x) fun(x, TimeSteps)) |>
+    List[['MeanAtLength']] <- purrr::map(OM@Fleet, \(x) fun(x, TimeSteps)) |>
       List2Array('Stock') |>
       aperm(c('Sim', 'Stock', 'Class', 'Time Step', 'Fleet')) |>
       ArrayExpand(nSim, nAges, TimeSteps) 
@@ -107,7 +86,7 @@ MakeFleetSlotList <- function(OM, Period='Historical', slot='Selectivity',
   
   
   if ('Classes' %in% sNames)
-    List[[paste0(slot, 'Classes')]] <- purrr::map(OM@Fleet, \(x)
+    List[['Classes']] <- purrr::map(OM@Fleet, \(x)
                                                   purrr::map(x, \(y) 
                                                              y|> 
                                                                slot(slot) |>
@@ -115,7 +94,7 @@ MakeFleetSlotList <- function(OM, Period='Historical', slot='Selectivity',
     ) 
  
   if ('Misc' %in% sNames)
-    List[[paste0(slot, 'Misc')]] <- purrr::map(OM@Fleet, \(x)
+    List[['Misc']] <- purrr::map(OM@Fleet, \(x)
                                                purrr::map(x, \(y) 
                                                           y|> 
                                                             slot(slot) |>
@@ -126,39 +105,40 @@ MakeFleetSlotList <- function(OM, Period='Historical', slot='Selectivity',
 
 
 
-MakeFishingMortalityList <- function(OM, nSim, nAges, TimeSteps, Period) {
+MakeFishingMortalityList <- function(OM, Period='Historical', TimeSteps=NULL) {
+  
+  meta <- GetMetaData(OM, Period, TimeSteps)
+  nSim <- meta$nSim
+  nAges <- meta$nAges
+  TimeSteps <- meta$TimeSteps
+  nStock <- length(meta$StockNames)
+  nFleet <- length(meta$FleetNames)
+  nArea <- meta$nAreas
+  
   List <- list()
   
-  List$ApicalF <- purrr::map(OM@Fleet, \(x)
-                            GetApicalF(x, TimeSteps)) |>
-    List2Array('Stock') 
+  List$ApicalF <- ArraySimStockAgeTimeFleet(OM, Period) |>
+    DropDimension('Age', warn=FALSE)
   
-  if (is.null(List$ApicalF)) {
-    List$ApicalF <- ArraySimStockAgeTimeFleet(OM, Period) |>
-      DropDimension('Age', warn=FALSE) 
-  } else {
-    List$ApicalF <- List$ApicalF |>
-      aperm(c('Sim', 'Stock', 'Time Step', 'Fleet')) |>
-      ArrayExpand(nSim, nAges, TimeSteps) 
-  }
+  List$DeadAtAge <- ArraySimStockAgeTimeFleet(OM, Period)
+  List$RetainAtAge <- ArraySimStockAgeTimeFleet(OM, Period)
   
-  List$FDeadAtAge <- purrr::map(OM@Fleet, \(x)
-                               GetFatAgeArray(x, TimeSteps)) |>
-    List2Array('Stock') |>
-    aperm(c('Sim', 'Stock',  'Age', 'Time Step', 'Fleet')) |>
-    ArrayExpand(nSim, nAges, TimeSteps) 
-  
-  List$FRetainAtAge <- purrr::map(OM@Fleet, \(x)
-                               GetFatAgeArray(x, TimeSteps, type='Retain')) |>
-    List2Array('Stock') |>
-    aperm(c('Sim', 'Stock',  'Age', 'Time Step', 'Fleet')) |>
-    ArrayExpand(nSim, nAges, TimeSteps) |>
-    ReplaceTiny() 
-
   List
 }
 
-MakeEffortList <- function(OM, nSim, nAges, TimeSteps, Period) {
+
+
+MakeEffortList <- function(OM, Period='Historical', TimeSteps=NULL) {
+  
+  
+  meta <- GetMetaData(OM, Period, TimeSteps)
+  nSim <- meta$nSim
+  nAges <- meta$nAges
+  TimeSteps <- meta$TimeSteps
+  nStock <- length(meta$StockNames)
+  nFleet <- length(meta$FleetNames)
+  nArea <- meta$nAreas
+  
   List <- list()
 
   # Effort
@@ -184,8 +164,55 @@ MakeEffortList <- function(OM, nSim, nAges, TimeSteps, Period) {
   
   #TODO qCV, qInc, Vessels, Trips, MaxVessels, MaxTrips
   # do in Populate
+
+  List
+}
+
+
+
+MakeDistributionList <- function(OM, Period='Historical', TimeSteps=NULL) {
   
+  meta <- GetMetaData(OM, Period, TimeSteps)
+  nSim <- meta$nSim
+  nAges <- meta$nAges
+  TimeSteps <- meta$TimeSteps
+  nStock <- length(meta$StockNames)
+  nFleet <- length(meta$FleetNames)
+  nArea <- meta$nAreas
+  
+  List <- list()
+  
+  List$Closure <- purrr::map(OM@Fleet, \(x)
+                             GetClosure(x, TimeSteps)) |>
+    List2Array('Stock') |>
+    aperm(c('Sim', 'Stock', 'Time Step', 'Area', 'Fleet')) |>
+    ArrayExpand(nSim, nAges, TimeSteps)
+  
+  #TODO Cost 
   
   List
+}
+
+
+MakeFleetWeightList <- function(OM, Period='Historical', TimeSteps=NULL) {
   
+  meta <- GetMetaData(OM, Period, TimeSteps)
+  nSim <- meta$nSim
+  nAges <- meta$nAges
+  TimeSteps <- meta$TimeSteps
+  nStock <- length(meta$StockNames)
+  nFleet <- length(meta$FleetNames)
+  nArea <- meta$nAreas
+  
+  FleetWeightAtAge <- purrr::map2(OM@Stock, OM@Fleet, \(x,y)
+                                                GetFleetWeightAtAge(x,y, TimeSteps)
+  ) |>
+    List2Array('Stock') |>
+    aperm(c('Sim', 'Stock', 'Age', 'Time Step', 'Fleet')) |>
+    ArrayExpand(nSim, nAges, TimeSteps) 
+  
+  
+ 
+  
+  FleetWeightAtAge
 }

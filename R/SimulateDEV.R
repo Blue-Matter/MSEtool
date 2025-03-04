@@ -18,9 +18,10 @@ SimulateDEV <- function(OM=NULL,
   OM <- MSEtool:::StartUp(OM, messages, nSim) 
   
   # ---- Make Lists of Arrays ----
-  StockParsList <- MakeStockParsList(OM)
-  FleetParsList <- MakeFleetParsList(OM)
-  
+  # expands all arrays to include all sims, and maximum `nage` across stocks, and all Historical time steps
+  PopulationList <- MakePopulationList(OM)
+  FleetList <- MakeFleetList(OM) # everything with a fleet dimension
+
   # ---- Calculate Unfished Dynamics ----
   Unfished <- CalcUnfishedDynamics(OM)
   
@@ -31,128 +32,75 @@ SimulateDEV <- function(OM=NULL,
   # Hist <- MSEtool:::OptimInitDepletion(OM)
   
   # ---- Number-at-Age at Beginning of Initial Time Step ----
-  abind::afill(StockParsList$NumberAtAgeArea) <- CalcInitialTimeStep(StockParsList, Unfished) 
-  
-  NumberAtAgeArea <- Array2List(StockParsList$NumberAtAgeArea, 'Sim')[[1]]
-  BiomassAtAgeArea <- Array2List(StockParsList$BiomassAtAgeArea, 'Sim')[[1]]
-  WeightAtAge <- Array2List(StockParsList$WeightMeanAtAge, 'Sim')[[1]]
-  NaturalMortalityAtAge <- Array2List(StockParsList$NaturalMortalityMeanAtAge, 'Sim')[[1]]
-  FecundityAtAge <- Array2List(StockParsList$FecundityMeanAtAge, 'Sim')[[1]]
-  
-  SProduction <- Array2List(StockParsList$SProduction, 'Sim')[[1]]
-  
-  SP0 <- purrr::map(Unfished@Equilibrium@SProduction, \(x)
-                    apply(x, c('Sim', 'Time Step'), sum)) |>
-    List2Array('Stock') |>
-    Array2List(pos=1)
-  
-  SP0 <- SP0[[1]]
-  
-  SPFrom <- List2Array(StockParsList$SPFrom, 'Stock')[1,]
-  
-  for (st in 1:nStock(OM)) {
-    SP0[st] <- SP0[SPFrom[st]]
-  }
+  abind::afill(PopulationList$NumberAtAgeArea) <- CalcInitialTimeStep(PopulationList, SRRList, Unfished) 
  
-
-  SpawnTimeFrac <- List2Array(StockParsList$SpawnTimeFrac, 'Stock')[1,]
-  Semelparous <- Array2List(StockParsList$Semelparous, 'Sim')[[1]]
-
-  SRRModel <- StockParsList$SRRModel
-  SRRPars <- StockParsList$SRRPars
-  R0 <- Array2List(StockParsList$R0, 'Sim')[[1]]
-  RecDevHist <- Array2List(StockParsList$RecDevHist, 'Sim')[[1]]
-
+  sim <- 1
+  
+  PopulationListsim <- MakeSimList(PopulationList, sim)
+  FleetListsim <- MakeSimList(FleetList, sim)
   
   
-  RelativeSize <- Array2List(StockParsList$RelativeSize, 'Sim')[[1]]
+  PopulationListsim$Weight$MeanAtAge
+  FleetListsim$VBiomassArea |> dim()
   
+  Test <- CalcPopDynamics_(PopulationListsim,
+                           FleetListsim,
+                           TimeSteps=as.character(TimeSteps)[1])
   
-  Effort <- Array2List(FleetParsList$Effort, 'Sim')[[1]]
-  EffortArea <- Array2List(FleetParsList$EffortArea, 'Sim')[[1]]
+  Test$PopulationList$BiomassArea
+  Test$FleetList$VBiomassArea[1,,1,]
+  Test$FleetList$DensityArea[1,,1,]
   
-  Catchability <- Array2List(FleetParsList$Catchability, 'Sim')[[1]]
+  Test$PopulationList$BiomassArea
+  Test$PopulationList$NumberAtAgeArea[1,,1,] * 
   
-  
-  SelectivityAtAge <- Array2List(FleetParsList$SelectivityMeanAtAge, 'Sim')[[1]]
-  RetentionAtAge <- Array2List(FleetParsList$RetentionMeanAtAge, 'Sim')[[1]]
-  DiscardMortalityAtAge <- Array2List(FleetParsList$DiscardMortalityMeanAtAge, 'Sim')[[1]]
-  
-  FDeadArea <- Array2List(FleetParsList$FDeadArea, 'Sim')[[1]]
-  FRetainArea <- Array2List(FleetParsList$FRetainArea, 'Sim')[[1]]
-  
-  RemovalArea <- Array2List(FleetParsList$RemovalArea, 'Sim')[[1]]
-  RetainArea <- Array2List(FleetParsList$RetainArea, 'Sim')[[1]]
-  
-  FDeadAtAge <- Array2List(FleetParsList$FDeadAtAge, 'Sim')[[1]]
-  FRetainAtAge <- Array2List(FleetParsList$FRetainAtAge, 'Sim')[[1]]
-  
-  RemovalNAtAge <- Array2List(FleetParsList$RemovalNAtAge, 'Sim')[[1]]
-  RetainNAtAge <- Array2List(FleetParsList$RetainNAtAge, 'Sim')[[1]]
-  
-  RemovalBAtAge <- Array2List(FleetParsList$RemovalBAtAge, 'Sim')[[1]]
-  RetainBAtAge <- Array2List(FleetParsList$RetainBAtAge, 'Sim')[[1]]
-  
-  VBiomassAtAgeArea <- Array2List(FleetParsList$VBiomass, 'Sim')[[1]]
-  FleetWeightAtAge <- Array2List(FleetParsList$FleetWeightAtAge, 'Sim')[[1]]
-  DensityArea <- Array2List(FleetParsList$DensityArea, 'Sim')[[1]] 
-  
-  Sim <- StockParsList$Sim[[1]]
-
-  ## TODO PlusGroup! with match for actual max age
+  SelectivityListsim$MeanAtAge[1,,1,1] *
+  FleetListsim$FleetWeightAtAge[1,,1,1]
   
   
   
-  TimeSteps <- TimeSteps(OM,'Historical')
+  n <- NumberAtAgeArea[1,,1,] |> rowSums()
+  n2 <- NumberAtAgeArea[1,,2,] |> rowSums()
   
-  Test <- CalcPopDynamics_(NumberAtAgeArea, 
-                           BiomassAtAgeArea,
-                           
-                           WeightAtAge,
-                           NaturalMortalityAtAge,
-                           
-                           FecundityAtAge,
-                           SpawnTimeFrac,
-                           SPFrom,
-                           SProduction,
-                           
-                           R0,
-                           SP0,
-                           RecDevHist,
-                           SRRModel,
-                           SRRPars,
-                           RunSRRfunction,
-                           
-                           RelativeSize,
-                           
-                           Effort,
-                           EffortArea,
-                           Catchability,
-                           
-                           SelectivityAtAge,
-                           RetentionAtAge,
-                           DiscardMortalityAtAge,
-                           
-                           VBiomassAtAgeArea,
-                           FleetWeightAtAge,
-                           DensityArea, 
-                           
-                           FDeadArea, 
-                           FRetainArea, 
-                           RemovalArea, 
-                           RetainArea,
-                           
-                           FDeadAtAge, 
-                           FRetainAtAge,
-                           RemovalNAtAge,
-                           RetainNAtAge,
-                           RemovalBAtAge,
-                           RetainBAtAge,
-                           Sim,
-                           
-                           TimeStep=as.character(TimeSteps[1]))
+  plot(n, type='l')
+  lines(n2, col='blue')
   
-  Test$NumberAtAgeArea[1,,1,]
+  plot(n, type='l')
+  n0 <- rowSums(Unfished@Equilibrium@Number$`Day octopus`[1,,1,])
+  sum(n * FecundityAtAge[1,,1])
+  
+  sum(n0 * FecundityAtAge[1,,1])
+  SP0
+  
+  plot(n0)
+  lines(rowSums(SNatAge$`Day octopus`[1,,1,]))
+  
+  
+  sum(Unfished@Equilibrium@SProduction$`Day octopus`[1,,1,])
+  
+  Test$NumberAtAgeArea[1,,2,]
+  
+  Test$SProduction[1]
+  
+  36693921/5207933
+  
+  CalcRecruitment_(SProduction,
+                   R0,
+                   SP0,
+                   RecDevHist,
+                   SRRModel,
+                   SRRPars,
+                   Sim,
+                   TSindex=0);
+  
+  
+  rdat <- bamExtras::rdat_RedSnapper
+  
+  cbind(Test$NumberAtAgeArea[1,,1,], c(rdat$N.age[1,1], rdat$N.age[1,]))
+  
+  Test$NumberAtAgeArea[1,,2,]
+  c(rdat$N.age[2,1], rdat$N.age[2,])
+  
   Test$BiomassAtAge[1,,1,]
   Test$VBiomassAtAge[1,,1,1,]
   Test$DensityArea[1,1,1,]
@@ -160,22 +108,13 @@ SimulateDEV <- function(OM=NULL,
   Test$FDeadArea[1,,1,1,]
   Test$RemovalArea[1,,1,1,]
   Test$RetainArea[1,,1,1,]
-  Test$SProduction
   
-  # TODO need to fix the Sim indexing for SRRPars
-  r = CalcRecruitment_(Test$SProduction,
-                   R0,
-                   SP0,
-                   RecDevHist,
-                   SRRModel,
-                   SRRPars,
-                   Sim=1,
-                   TSindex=0,
-                   RunSRRfunction=RunSRRfunction
-                   )
   
-  r[[1]]
-  do.call(SRRModel[[1]], r[[1]])
+ 
+  
+  
+
+
   
   ArgList <- list(NumberAtAgeArea=NumberAtAgeArea,
                   BiomassAtAgeArea=BiomassAtAgeArea,
@@ -190,38 +129,38 @@ SimulateDEV <- function(OM=NULL,
 
   
   # ---- Historical Population Dynamics ----
-  # 
-  # for (ts in progress) {
-  #   
-  #   TimeStep <- TimeSteps[ts]
-  #   
-  #   # ---- Do MICE stuff during this Time Step (if applicable) -----
-  #   # TODO
-  #   Hist <- CalcMICE(Hist, TimeStep=TimeStep)
-  #   
-  #   # ---- Update Biomass At Age etc ----
-  #   # done after MICE to account for changes
-  #   Hist <- UpdateBioArrays(Hist, TimeStep)
-  #   
-  #   # for MPs - Calculate Effort, Selectivity, etc
-  #   # update fishery data 
-  #   # these two steps should be done first
-  #   
-  #   # ---- Distribute Effort across Areas ----
-  #   Hist <- DistributeEffort(Hist, TimeStep)
-  #   
-  #   # ---- Calculate Catch and Fishing Mortality ----
-  #   Hist <- CalcCatch(Hist, TimeStep)
-  #   
-  #   # ---- Calculate Recruitment  Time Step ----
-  #   Hist <- CalcRecruitment(Hist, TimeStep=TimeStep)
-  #   
-  #   # ---- Number, Biomass at beginning of Next Time Step and Move ----
-  #   Hist <- CalcNumberNext(Hist, TimeStep)
-  #   
-  #   # print(sum(Hist@Number[[1]][1,,ts+1,]))
-  #   
-  # }
+  progress = seq_along(TimeSteps)
+  for (ts in progress) {
+
+    TimeStep <- TimeSteps[ts]
+
+    # ---- Do MICE stuff during this Time Step (if applicable) -----
+    # TODO
+    Hist <- CalcMICE(Hist, TimeStep=TimeStep)
+
+    # ---- Update Biomass At Age etc ----
+    # done after MICE to account for changes
+    Hist <- UpdateBioArrays(Hist, TimeStep)
+
+    # for MPs - Calculate Effort, Selectivity, etc
+    # update fishery data
+    # these two steps should be done first
+
+    # ---- Distribute Effort across Areas ----
+    Hist <- DistributeEffort(Hist, TimeStep)
+
+    # ---- Calculate Catch and Fishing Mortality ----
+    Hist <- CalcCatch(Hist, TimeStep)
+
+    # ---- Calculate Recruitment  Time Step ----
+    Hist <- CalcRecruitment(Hist, TimeStep=TimeStep)
+
+    # ---- Number, Biomass at beginning of Next Time Step and Move ----
+    Hist <- CalcNumberNext(Hist, TimeStep)
+
+    # print(sum(Hist@Number[[1]][1,,ts+1,]))
+
+  }
   # 
   # 
   # Hist <- MSEtool:::CalcPopDynamics(Hist, TimeSteps=TimeSteps(Hist, 'Historical'))
