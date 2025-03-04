@@ -37,12 +37,20 @@ Ref_int_cpp <- function(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V
     .Call(`_MSEtool_Ref_int_cpp`, F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, Wt_at_Age_C, relRfun, SRRpars, maxage, plusgroup, spawn_time_frac)
 }
 
+CalcDims_ <- function(vec) {
+    .Call(`_MSEtool_CalcDims_`, vec)
+}
+
 GetIndex_ <- function(dimSizes, dimIndices) {
     .Call(`_MSEtool_GetIndex_`, dimSizes, dimIndices)
 }
 
-CalcPopDynamics_ <- function(NumberAtAgeArea, BiomassAtAgeArea, WeightAtAge, NaturalMortalityAtAge, FecundityAtAge, R0, RecDevs, SRRModel, SRRPars, SProduction, RelativeSize, Effort, EffortArea, Catchability, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, VBiomassAtAgeArea, FleetWeightAtAge, DensityArea, FDeadArea, FRetainArea, RemovalArea, RetainArea, FDeadAtAge, FRetainAtAge, RemovalNAtAge, RetainNAtAge, RemovalBAtAge, RetainBAtAge, TimeStep) {
-    .Call(`_MSEtool_CalcPopDynamics_`, NumberAtAgeArea, BiomassAtAgeArea, WeightAtAge, NaturalMortalityAtAge, FecundityAtAge, R0, RecDevs, SRRModel, SRRPars, SProduction, RelativeSize, Effort, EffortArea, Catchability, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, VBiomassAtAgeArea, FleetWeightAtAge, DensityArea, FDeadArea, FRetainArea, RemovalArea, RetainArea, FDeadAtAge, FRetainAtAge, RemovalNAtAge, RetainNAtAge, RemovalBAtAge, RetainBAtAge, TimeStep)
+CalcBiomass_ <- function(BiomassAtAgeArea, NumberAtAgeArea, WeightAtAge, TSindex) {
+    .Call(`_MSEtool_CalcBiomass_`, BiomassAtAgeArea, NumberAtAgeArea, WeightAtAge, TSindex)
+}
+
+CalcPopDynamics_ <- function(NumberAtAgeArea, BiomassAtAgeArea, WeightAtAge, NaturalMortalityAtAge, FecundityAtAge, SpawnTimeFrac, SPFrom, SProduction, R0, RecDevs, SRRModel, SRRPars, RelativeSize, Effort, EffortArea, Catchability, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, VBiomassAtAgeArea, FleetWeightAtAge, DensityArea, FDeadArea, FRetainArea, RemovalArea, RetainArea, FDeadAtAge, FRetainAtAge, RemovalNAtAge, RetainNAtAge, RemovalBAtAge, RetainBAtAge, Sim, TimeStep) {
+    .Call(`_MSEtool_CalcPopDynamics_`, NumberAtAgeArea, BiomassAtAgeArea, WeightAtAge, NaturalMortalityAtAge, FecundityAtAge, SpawnTimeFrac, SPFrom, SProduction, R0, RecDevs, SRRModel, SRRPars, RelativeSize, Effort, EffortArea, Catchability, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, VBiomassAtAgeArea, FleetWeightAtAge, DensityArea, FDeadArea, FRetainArea, RemovalArea, RetainArea, FDeadAtAge, FRetainAtAge, RemovalNAtAge, RetainNAtAge, RemovalBAtAge, RetainBAtAge, Sim, TimeStep)
 }
 
 calcVatAge <- function(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid) {

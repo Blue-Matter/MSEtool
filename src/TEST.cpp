@@ -64,9 +64,6 @@ NumericVector CalcBiomass_(NumericVector BiomassAtAgeArea,
         IntegerVector SATRindex = IntegerVector::create(st, age, TSindex, area);
         IntegerVector SATindex = IntegerVector::create(st, age, TSindex);
         IntegerVector SRindex = IntegerVector::create(st, area);
-        
-        Rcout << "SATRindex " << SATRindex << std::endl;
-        Rcout << "SRindex " << SRindex << std::endl;
 
         BiomassAtAgeArea[GetIndex_(SATR, SATRindex)] =
           NumberAtAgeArea[GetIndex_(SATR, SATRindex)] *
@@ -190,6 +187,7 @@ NumericVector DistEffort_(NumericVector EffortArea,
 
 
 List CalcCatch_(NumericVector NumberAtAgeArea, 
+                NumericVector DensityArea,
                 NumericVector NaturalMortalityAtAge,
                 NumericVector FleetWeightAtAge,
                 
@@ -219,6 +217,7 @@ List CalcCatch_(NumericVector NumberAtAgeArea,
   IntegerVector SAR  = SATFR[IntegerVector{0,1,4}];
   IntegerVector SATR  = SATFR[IntegerVector{0,1,2,4}];
   IntegerVector STFR = SATFR[IntegerVector{0,2,3,4}];
+  IntegerVector STF = SATFR[IntegerVector{0,2,3}];
   IntegerVector SFR = SATFR[IntegerVector{0,3,4}];
   IntegerVector SR = SFR[IntegerVector{0,2}];
   IntegerVector SF = SFR[IntegerVector{0,1}];
@@ -233,14 +232,20 @@ List CalcCatch_(NumericVector NumberAtAgeArea,
   for (int st=0; st<nStock; st++) {
     // Fishing mortality by area
     for (int fl=0; fl<nFleet; fl++) {
+      IntegerVector STFindex = IntegerVector::create(st, TSindex, fl);
+      double catchability = Catchability[GetIndex_(STF, STFindex)];
+      
       for (int area=0; area<nArea; area++) {
         IntegerVector STFRindex = IntegerVector::create(st, TSindex, fl, area);
         double effort = EffortArea[GetIndex_(STFR, STFRindex)];
+        double catchabilityArea = catchability/DensityArea[GetIndex_(STFR, STFRindex)];
+        
         for(int age=0; age<nAge; age++) {
           IntegerVector SATFindex = IntegerVector::create(st, age, TSindex, fl);
           IntegerVector SATFRindex = IntegerVector::create(st, age, TSindex, fl, area);
           
-          double FInteract = effort * SelectivityAtAge[GetIndex_(SATF, SATFindex)];
+       
+          double FInteract = effort * catchabilityArea * SelectivityAtAge[GetIndex_(SATF, SATFindex)];
           FRetainArea[GetIndex_(SATFR, SATFRindex)] = FInteract * RetentionAtAge[GetIndex_(SATF, SATFindex)];
           double FDiscardTotal = FInteract - FRetainArea[GetIndex_(SATF, SATFindex)];
           double FDiscardDead = FDiscardTotal * DiscardMortalityAtAge[GetIndex_(SATF, SATFindex)];
@@ -340,8 +345,10 @@ List CalcFfromCatch_(NumericVector FDeadAtAge,
   IntegerVector SATFR = CalcDims_(FDeadArea);
   IntegerVector SA =  SATFR[IntegerVector{0,1}];
   IntegerVector SAR =  SATFR[IntegerVector{0,1,4}]; 
+  IntegerVector SAT =  SATFR[IntegerVector{0,1,3}];
   IntegerVector AF = SATFR[IntegerVector{1,3}]; 
   
+  NumericVector FDeadTotalAtAge(nStock*nAge);
     
   // 1 Area
   if (nArea<2) {
@@ -349,16 +356,19 @@ List CalcFfromCatch_(NumericVector FDeadAtAge,
       for (int fl=0; fl<nFleet; fl++) {
         for (int age=0; age<nAge; age++) {
           IntegerVector SATFindex = IntegerVector::create(st, age, TSindex, fl);
+          IntegerVector SAindex = IntegerVector::create(st, age);
           for (int area=0; area<nArea; area++) {
             IntegerVector SATFRindex = IntegerVector::create(st, age, TSindex, fl, area);
             FDeadAtAge[GetIndex_(SATF, SATFindex)] += FDeadArea[GetIndex_(SATFR, SATFRindex)];
             FRetainAtAge[GetIndex_(SATF, SATFindex)] += FRetainArea[GetIndex_(SATFR, SATFRindex)];  
           }
+          FDeadTotalAtAge[GetIndex_(SA, SAindex)] =  FDeadAtAge[GetIndex_(SATF, SATFindex)];
         }
       }
     }
     List L = List::create(Named("FDeadAtAge")=FDeadAtAge,
-                          Named("FRetainAtAge") = FRetainAtAge
+                          Named("FRetainAtAge") = FRetainAtAge,
+                          Named("FDeadTotalAtAge") = FDeadTotalAtAge
     ); 
     
     return(L);
@@ -375,8 +385,8 @@ List CalcFfromCatch_(NumericVector FDeadAtAge,
     for (int age=0; age<nAge; age++) {
       IntegerVector SAindex = IntegerVector::create(st, age);
       for (int area=0; area<nArea; area++) {
-        IntegerVector SARindex = IntegerVector::create(st, age, area);
-        NumberAtAge[GetIndex_(SA, SAindex)] += NumberAtAgeArea[GetIndex_(SAR, SARindex)]; 
+        IntegerVector SATRindex = IntegerVector::create(st, age, TSindex, area);
+        NumberAtAge[GetIndex_(SA, SAindex)] += NumberAtAgeArea[GetIndex_(SATR, SATRindex)]; 
       }
       
       Number[st] += NumberAtAge[GetIndex_(SA, SAindex)];
@@ -483,12 +493,15 @@ List CalcFfromCatch_(NumericVector FDeadAtAge,
         
         for (int age=0; age<nAge; age++) {
           IntegerVector SATFindex = IntegerVector::create(st, age, TSindex, fl);
+          IntegerVector SAindex = IntegerVector::create(st, age);
           for (int area=0; area<nArea; area++) {
             IntegerVector AFindex = IntegerVector::create(age, fl);
             FDeadAtAge[GetIndex_(SATF, SATFindex)] =  FDeadTotal[GetIndex_(AF, AFindex)];
             FRetainAtAge[GetIndex_(SATF, SATFindex)] = FRetain[GetIndex_(AF, AFindex)];
           }
+          FDeadTotalAtAge[GetIndex_(SA, SAindex)] +=  FDeadAtAge[GetIndex_(SATF, SATFindex)];
         }
+         
       }
       
     }
@@ -496,38 +509,111 @@ List CalcFfromCatch_(NumericVector FDeadAtAge,
   
 
   List L = List::create(Named("FDeadAtAge")=FDeadAtAge,
-                        Named("FRetainAtAge") = FRetainAtAge
+                        Named("FRetainAtAge") = FRetainAtAge,
+                        Named("FDeadTotalAtAge") = FDeadTotalAtAge
   ); 
   
   return(L);
 
 }
 
-// NumericVector CalcSurvival_(NumericVector NaturalMortalityAtAge,
-//                             NumericVector FDeadAtAge,
-//                             PlusGroup
-//   
-// ) {
-//   
-// }
 
-// NumericVector CalcSpawnProduction_(NumericVector SProduction, 
-//                                    NumericVector NaturalMortalityAtAge,
-//                                    NumericVector FDeadAtAge,
-//                                    NumericVector FecundityAtAge,
-//                                    NumericVector NumberAtAge,
-//                                    NumericVector Semelparous,
-//                                    NumericVector SpawnTimeFrac,
-//                                    int TSindex) {
-//   
-//   
-//   
-//   SProduction[GetIndex_(ST, STFindex)] +=  
-//  
-//   
-//   return(SProduction);
-// }
 
+NumericVector CalcSpawnProduction_(NumericVector SProduction,
+                                   NumericVector NaturalMortalityAtAge,
+                                   NumericVector FDeadAtAge, // sum over fleets
+                                   NumericVector FecundityAtAge,
+                                   NumericVector NumberAtAge, // sum over areas
+                                   NumericVector SpawnTimeFrac,
+                                   IntegerVector SPFrom,
+                                   int TSindex) {
+
+  IntegerVector SAT = CalcDims_(NaturalMortalityAtAge); // stock, age, time step
+  IntegerVector SA =  SAT[IntegerVector{0,1}];
+  IntegerVector ST =  SAT[IntegerVector{0,2}];
+  int nStock = SAT[0];
+  int nAge = SAT[1];
+  
+  
+  NumericVector totalmortality(nStock*nAge);
+  for (int st=0; st<nStock; st++) {
+    NumericVector NSpawn(nAge);
+    IntegerVector STindex = IntegerVector::create(st, TSindex);
+    for (int age=0; age<nAge; age++) {
+      IntegerVector SATindex = IntegerVector::create(st, age, TSindex);
+      IntegerVector SAindex = IntegerVector::create(st, age);
+      if (SpawnTimeFrac[st] > 0) {
+        totalmortality[GetIndex_(SA, SAindex)] =  NaturalMortalityAtAge[GetIndex_(SAT, SATindex)] +  FDeadAtAge[GetIndex_(SAT, SATindex)];
+        NSpawn[age] = NumberAtAge[GetIndex_(SA, SAindex)] * exp(-totalmortality[GetIndex_(SA, SAindex)]*SpawnTimeFrac[st]);
+        SProduction[GetIndex_(ST, STindex)] +=  NSpawn[age] * FecundityAtAge[GetIndex_(SAT, SATindex)];
+      } else {
+        SProduction[GetIndex_(ST, STindex)] += NumberAtAge[GetIndex_(SA, SAindex)] * FecundityAtAge[GetIndex_(SAT, SATindex)];
+      }
+    }
+  }
+
+  // SPFrom
+  for (int st=0; st<nStock; st++) {
+    IntegerVector SPto = IntegerVector::create(st, TSindex);
+    IntegerVector SPfrom = IntegerVector::create(SPFrom[st]-1, TSindex);
+    SProduction[GetIndex_(ST, SPto)] = SProduction[GetIndex_(ST, SPfrom)];
+  }
+
+  return(SProduction);
+}
+
+
+// [[Rcpp::export]]
+List CalcRecruitment_(NumericVector SProduction,
+                               NumericVector R0,
+                               NumericVector SP0,
+                               NumericVector RecDevs,
+                               List SRRModel,
+                               List SRRPars,
+                               int Sim,
+                               int TSindex,
+                               Function RunSRRfunction) {
+  
+  IntegerVector ST = CalcDims_(SProduction); // stock, time step
+  int nStock = ST[0];
+  
+  NumericVector Recruits(nStock);
+  
+  List OUT(nStock);
+  
+  for (int st=0; st<nStock; st++) {
+    IntegerVector STindex = IntegerVector::create(st, TSindex);
+    List srrparsList = SRRPars[st];
+    Function srrModel = SRRModel[st];
+    
+    List Arglist = List::create(Named("S") = SProduction[GetIndex_(ST, STindex)],
+                                Named("S0") = SP0[st],
+                                Named("R0") = R0[GetIndex_(ST, STindex)]);
+    
+    CharacterVector ParNames = srrparsList.names();
+    CharacterVector ArglistNames(3+srrparsList.size());
+    ArglistNames[0] = "S";
+    ArglistNames[1] = "S0";
+    ArglistNames[2] = "R0";
+ 
+    for (int i=0; i<srrparsList.size(); i++) {
+      NumericVector argVec = srrparsList[i];
+      double arg = argVec[0];
+      Arglist.push_back(arg);
+      ArglistNames[2+i] = ParNames[i];
+    }
+  
+    Arglist.attr("names") = ArglistNames;
+    
+    OUT[st] = Arglist;
+    // RObject RecruitsEQ = srrModel(Arglist);
+    // Recruits[st] = as<double>(RecruitsEQ);
+  }
+  
+  return(OUT);
+  // return(Recruits);
+  
+}
 
 // Given N and Effort at beginning of Time Step, calculates catch etc this time
 // step and N at beginning of next time step
@@ -537,14 +623,19 @@ List CalcPopDynamics_(NumericVector NumberAtAgeArea,
                       NumericVector BiomassAtAgeArea,
                       
                       NumericVector WeightAtAge,
-                      NumericVector NaturalMortalityAtAge, 
+                      NumericVector NaturalMortalityAtAge,
+                      
                       NumericVector FecundityAtAge,
+                      NumericVector SpawnTimeFrac,
+                      IntegerVector SPFrom,
+                      NumericVector SProduction,
                       
                       NumericVector R0,
+                      NumericVector SP0,
                       NumericVector RecDevs,
-                      Function  SRRModel,
+                      List SRRModel,
                       List SRRPars,
-                      NumericVector SProduction,
+                      Function RunSRRfunction,
                       
                       NumericVector RelativeSize,
                       
@@ -572,6 +663,8 @@ List CalcPopDynamics_(NumericVector NumberAtAgeArea,
                       NumericVector RetainNAtAge,
                       NumericVector RemovalBAtAge,
                       NumericVector RetainBAtAge,
+                      
+                      int Sim,
                    
                       CharacterVector TimeStep) {
   
@@ -591,6 +684,7 @@ List CalcPopDynamics_(NumericVector NumberAtAgeArea,
   
   // Calc F and Catch Removal and Retain by Area
   List CatchList = CalcCatch_(NumberAtAgeArea,
+                              DensityArea,
                               NaturalMortalityAtAge,
                               FleetWeightAtAge,
                               EffortArea,
@@ -621,9 +715,40 @@ List CalcPopDynamics_(NumericVector NumberAtAgeArea,
                                   FRetainArea,
                                   TSindex);
 
-  // Calc Spawning Production 
   
-  // Recruitment (TODO differnet age class)
+  // Calc Spawning Production 
+  // sum N over areas
+  IntegerVector SATR = CalcDims_(NumberAtAgeArea); // stock, age, time step, area
+  IntegerVector SAR = SATR[IntegerVector{0,1,3}];
+  IntegerVector SA = SATR[IntegerVector{0,1}];
+  int nStock = SATR[0];
+  int nAge = SATR[1];
+  int nArea = SATR[3];
+
+  NumericVector NumberAtAge(nStock*nAge);
+  for (int st=0; st<nStock; st++) {
+    for (int age=0; age<nAge; age++) {
+      IntegerVector SAindex = IntegerVector::create(st, age);
+      for (int area=0; area<nArea; area++) {
+        IntegerVector SATRindex = IntegerVector::create(st, age, TSindex, area);
+        NumberAtAge[GetIndex_(SA, SAindex)] += NumberAtAgeArea[GetIndex_(SATR, SATRindex)];
+      }
+    }
+  }
+
+  SProduction = CalcSpawnProduction_(SProduction,
+                                     NaturalMortalityAtAge,
+                                     Foverall["FDeadTotalAtAge"], // summed over fleets
+                                     FecundityAtAge,
+                                     NumberAtAge, // summed over areas
+                                     SpawnTimeFrac,
+                                     SPFrom,
+                                     TSindex);
+    
+    
+    
+  
+  // Recruitment (TODO different age class)
   
          
   // Update Number beginning of next Time Step 
@@ -645,7 +770,8 @@ List CalcPopDynamics_(NumericVector NumberAtAgeArea,
                         Named("FRetainArea") = CatchList["FRetainArea"],
                         Named("RemovalArea") = CatchList["RemovalArea"],
                         Named("RetainArea") = CatchList["RetainArea"],
-                        Named("FDeadAtAge") = Foverall["FDeadAtAge"]                                                      
+                        Named("FDeadAtAge") = Foverall["FDeadAtAge"],
+                        Named("SProduction") = SProduction
                           
   ); 
                         

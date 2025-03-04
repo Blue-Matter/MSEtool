@@ -1,6 +1,8 @@
 library(MSEtool)
 
-devtools::load_all()
+la <- devtools::load_all
+
+la()
 
 # ---- Multi Stock & Multi Fleet (MOM) ----
 

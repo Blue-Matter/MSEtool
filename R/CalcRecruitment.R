@@ -50,6 +50,7 @@ CalcRecruitment <- function(Hist, TimeStep=NULL) {
   Hist
 }
 
+#' @export
 RunSRRfunction <- function(fun, Arglist) {
   dnames <- lapply(Arglist, dimnames)
   SimsList <- lapply(dnames, '[[', 'Sim') 

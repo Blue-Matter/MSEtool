@@ -666,8 +666,8 @@ alpha_beta2R0 <- function(alpha, beta, phi0, SR=c('BH', 'RK')) {
 #' @export
 BevertonHolt <- function(S, S0, R0, h) {
   phi0 <- S0/R0
-  alpha <- h2alpha(h, phi0, model='BH')
-  beta <- h_R0_2beta(h, R0, phi0, model='BH')
+  alpha <- h2alpha(h, phi0, 'BH')
+  beta <- h_R0_2beta(h, R0, phi0, 'BH')
   alpha * S / (1+beta*S)
 }
 class(BevertonHolt) <- 'SRR-Model'
@@ -701,8 +701,8 @@ BevertonHoltRelRec <- function(Pars, SPR) {
 #' @export
 Ricker <- function(S, S0, R0, hR) {
   phi0 <- S0/R0
-  alpha <- h2alpha(hR, phi0, model='RK')
-  beta <- h_R0_2beta(hR, R0, phi0, model='RK')
+  alpha <- h2alpha(hR, phi0, 'RK')
+  beta <- h_R0_2beta(hR, R0, phi0, 'RK')
   alpha * S * exp(-beta*S)
 }
 class(Ricker) <- 'SRR-Model'

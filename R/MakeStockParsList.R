@@ -124,12 +124,12 @@ MakeStockSlotList <- function(OM, Period='Historical', slot='Length',
                                                 slot('Classes'))
   
   if ('Semelparous' %in% sNames) {
-    fun <- get(paste0('Get', slot, 'AtAge'))
-    List[[paste0(slot, 'Semelparous')]] <- fun(OM@Stock, TimeSteps) |>
+    List[[paste0('Semelparous')]] <- GetSemelparous(OM@Stock, TimeSteps) |>
       List2Array('Stock') |>
       aperm(c('Sim', 'Stock', 'Age', 'Time Step')) |>
       ArrayExpand(nSim, nAges, TimeSteps) 
   }
+  
   
   if ('Misc' %in% sNames)
     List[[paste0(slot, 'Misc')]] <- purrr::map(OM@Stock, \(x) x |> 
@@ -176,6 +176,17 @@ MakeSRRList <- function(OM, Period, nSim, nAges, TimeSteps) {
   
   List$SPFrom <- purrr::map(OM@Stock, \(x) 
     x |> slot('SRR') |> slot('SPFrom')) 
+  
+  for (i in 1:nStock(OM)) {
+    SPFrom <- List$SPFrom[[i]]
+    if (is.null(SPFrom)) {
+      List$SPFrom[[i]] <- i
+    } else {
+      List$SPFrom[[i]] <- match(SPFrom, StockNames(OM))
+    }
+     
+  }
+  
     
   
   List$RecDevInit <- purrr::map(OM@Stock, \(x) 

@@ -285,7 +285,13 @@ AddSimDimension <- function(array, names=c('Sim', 'Age', 'Time Step'), TimeSteps
 
 AddAreaDimension <- function(array) {
   l <- dimnames(array)
-  array <- replicate(1, array) 
+  dd <- dim(array)
+  if (all(dd==1)) {
+    array <- array(array, dim=c(dd, 1))
+  } else {
+    array <- replicate(1, array) 
+  }
+  
   l$Area <- 1
   dimnames(array) <- l
   array

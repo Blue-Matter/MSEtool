@@ -33,8 +33,6 @@ SimulateDEV <- function(OM=NULL,
   # ---- Number-at-Age at Beginning of Initial Time Step ----
   abind::afill(StockParsList$NumberAtAgeArea) <- CalcInitialTimeStep(StockParsList, Unfished) 
   
-
-
   NumberAtAgeArea <- Array2List(StockParsList$NumberAtAgeArea, 'Sim')[[1]]
   BiomassAtAgeArea <- Array2List(StockParsList$BiomassAtAgeArea, 'Sim')[[1]]
   WeightAtAge <- Array2List(StockParsList$WeightMeanAtAge, 'Sim')[[1]]
@@ -43,10 +41,6 @@ SimulateDEV <- function(OM=NULL,
   
   SProduction <- Array2List(StockParsList$SProduction, 'Sim')[[1]]
   
-  SRRModel <- StockParsList$SRRModel
-  
-  R0 <- Array2List(StockParsList$R0, 'Sim')[[1]]
-  
   SP0 <- purrr::map(Unfished@Equilibrium@SProduction, \(x)
                     apply(x, c('Sim', 'Time Step'), sum)) |>
     List2Array('Stock') |>
@@ -54,13 +48,21 @@ SimulateDEV <- function(OM=NULL,
   
   SP0 <- SP0[[1]]
   
+  SPFrom <- List2Array(StockParsList$SPFrom, 'Stock')[1,]
   
-  SpawnTimeFrac <- List2Array(StockParsList$SpawnTimeFrac, 'Stock')
-  Semelparous <- Array2List(StockParsList$MaturitySemelparous, 'Sim')[[1]]
+  for (st in 1:nStock(OM)) {
+    SP0[st] <- SP0[SPFrom[st]]
+  }
+ 
 
-  RecDevHist <- Array2List(StockParsList$RecDevHist, 'Sim')[[1]]
-  
+  SpawnTimeFrac <- List2Array(StockParsList$SpawnTimeFrac, 'Stock')[1,]
+  Semelparous <- Array2List(StockParsList$Semelparous, 'Sim')[[1]]
+
+  SRRModel <- StockParsList$SRRModel
   SRRPars <- StockParsList$SRRPars
+  R0 <- Array2List(StockParsList$R0, 'Sim')[[1]]
+  RecDevHist <- Array2List(StockParsList$RecDevHist, 'Sim')[[1]]
+
   
   
   RelativeSize <- Array2List(StockParsList$RelativeSize, 'Sim')[[1]]
@@ -96,23 +98,9 @@ SimulateDEV <- function(OM=NULL,
   DensityArea <- Array2List(FleetParsList$DensityArea, 'Sim')[[1]] 
   
   Sim <- StockParsList$Sim[[1]]
+
+  ## TODO PlusGroup! with match for actual max age
   
-  ## 
-  NumberAtAge <- apply(NumberAtAgeArea, c('Stock', 'Age', 'Time Step'), sum)
-  CalcDims_(NumberAtAgeArea)
-  t = CalcDims_(NumberAtAge)
-  
-  
-  t = CalcBiomass_(BiomassAtAgeArea,
-               NumberAtAgeArea,
-               WeightAtAge,
-               TSindex=0)
-  
-  SATR = CalcDims_(NumberAtAgeArea);
-  nStock <- 1
-  c(0:nStock, 0:nAge)
-  GetIndex_(SATR, SATRindex)
-  ###
   
   
   TimeSteps <- TimeSteps(OM,'Historical')
@@ -120,17 +108,20 @@ SimulateDEV <- function(OM=NULL,
   Test <- CalcPopDynamics_(NumberAtAgeArea, 
                            BiomassAtAgeArea,
                            
-                           
                            WeightAtAge,
                            NaturalMortalityAtAge,
+                           
                            FecundityAtAge,
+                           SpawnTimeFrac,
+                           SPFrom,
+                           SProduction,
                            
                            R0,
+                           SP0,
                            RecDevHist,
                            SRRModel,
                            SRRPars,
-                           SProduction,
-                           
+                           RunSRRfunction,
                            
                            RelativeSize,
                            
@@ -169,8 +160,22 @@ SimulateDEV <- function(OM=NULL,
   Test$FDeadArea[1,,1,1,]
   Test$RemovalArea[1,,1,1,]
   Test$RetainArea[1,,1,1,]
-  Test$FDeadAtAge[1,,1,1]
+  Test$SProduction
   
+  # TODO need to fix the Sim indexing for SRRPars
+  r = CalcRecruitment_(Test$SProduction,
+                   R0,
+                   SP0,
+                   RecDevHist,
+                   SRRModel,
+                   SRRPars,
+                   Sim=1,
+                   TSindex=0,
+                   RunSRRfunction=RunSRRfunction
+                   )
+  
+  r[[1]]
+  do.call(SRRModel[[1]], r[[1]])
   
   ArgList <- list(NumberAtAgeArea=NumberAtAgeArea,
                   BiomassAtAgeArea=BiomassAtAgeArea,

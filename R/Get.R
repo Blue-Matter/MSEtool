@@ -459,41 +459,41 @@ GetFleetWeightAtAge <- function(Stock, FleetList, TimeSteps=NULL) {
 #   
 # }
 # 
-# GetSProductionAtAge <- function(Hist, TimeSteps=NULL) {
-#   if (is.null(TimeSteps))
-#     TimeSteps <- TimeSteps(Hist)
-#   
-#   out <- vector('list', nStock(Hist))
-#   names(out) <- StockNames(Hist)
-#   
-#   for (st in 1:nStock(Hist)) {
-#     SpawnTimeFrac <- GetSpawnTimeFrac(Hist@Stock[[st]])
-#     fecundity <- GetFecundityAtAge(Hist@Stock[[st]], TimeSteps)
-#     NBegin <- ArraySubsetTimeStep(Hist@Number[[st]], TimeSteps) |>
-#       apply(1:3, sum) # sum over areas
-#     
-#     if (SpawnTimeFrac==0) {
-#       out[[st]] <- ArrayMultiply(NBegin, fecundity)
-#     } else {
-#       # calculate number alive at SpawnTimeFrac of the time step
-#       # before aging
-#       fishingmortality <- Hist@FDead[[st]] |> ArraySubsetTimeStep(TimeSteps) |>
-#         apply(c('Sim', 'Age', 'Time Step'), sum) # sum over fleets
-#       naturalmortality <- GetNaturalMortalityAtAge(Hist@Stock[[st]], TimeSteps) 
-#       totalmortality <- ArrayAdd(fishingmortality, naturalmortality)
-#       Semelparous <- GetSemelparous(Hist@Stock[[st]]) |> ArraySubsetTimeStep(TimeSteps)
-#       Nspawn <- NBegin * exp(-totalmortality*SpawnTimeFrac) 
-#       out[[st]] <- ArrayMultiply(Nspawn, fecundity)
-#     }
-#   }
-#   
-#   for (st in 1:nStock(Hist)) {
-#     SPfrom <- GetSPFrom(Hist@Stock[[st]])
-#     if (!is.null(SPfrom))
-#       stop('not done yet!')
-#   }
-#   out
-# }
+GetSProductionAtAge <- function(Hist, TimeSteps=NULL) {
+  if (is.null(TimeSteps))
+    TimeSteps <- TimeSteps(Hist)
+
+  out <- vector('list', nStock(Hist))
+  names(out) <- StockNames(Hist)
+
+  for (st in 1:nStock(Hist)) {
+    SpawnTimeFrac <- GetSpawnTimeFrac(Hist@Stock[[st]])
+    fecundity <- GetFecundityAtAge(Hist@Stock[[st]], TimeSteps)
+    NBegin <- ArraySubsetTimeStep(Hist@Number[[st]], TimeSteps) |>
+      apply(1:3, sum) # sum over areas
+
+    if (SpawnTimeFrac==0) {
+      out[[st]] <- ArrayMultiply(NBegin, fecundity)
+    } else {
+      # calculate number alive at SpawnTimeFrac of the time step
+      # before aging
+      fishingmortality <- Hist@FDead[[st]] |> ArraySubsetTimeStep(TimeSteps) |>
+        apply(c('Sim', 'Age', 'Time Step'), sum) # sum over fleets
+      naturalmortality <- GetNaturalMortalityAtAge(Hist@Stock[[st]], TimeSteps)
+      totalmortality <- ArrayAdd(fishingmortality, naturalmortality)
+      Semelparous <- GetSemelparous(Hist@Stock[[st]]) |> ArraySubsetTimeStep(TimeSteps)
+      Nspawn <- NBegin * exp(-totalmortality*SpawnTimeFrac) 
+      out[[st]] <- ArrayMultiply(Nspawn, fecundity)
+    }
+  }
+
+  for (st in 1:nStock(Hist)) {
+    SPfrom <- GetSPFrom(Hist@Stock[[st]])
+    if (!is.null(SPfrom))
+      stop('not done yet!')
+  }
+  out
+}
 # 
 # 
 # GetDensity <- function(Hist, TimeSteps=NULL) {
