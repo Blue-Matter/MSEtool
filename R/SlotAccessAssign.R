@@ -374,7 +374,13 @@ nAge <- function(x, st=1) {
 #' @rdname Access
 #' @export
 nTS <- function(x) {
-  TimeSteps(x) |> length()
+  
+  if (isS4(x))
+    return(length(TimeSteps(x)))
+  dnames <- dimnames(x) 
+  if (!is.null(dnames))
+    return(length(dnames[['Time Step']]))
+  
 }
 
 ## nArea ----
@@ -525,7 +531,11 @@ Name <- function(x) {
 #' @rdname Access
 #' @export
 nSim <- function(x) {
-  x@nSim
+  if (isS4(x))
+    return(x@nSim)
+  dnames <- dimnames(x) 
+  if (!is.null(dnames))
+    return(length(dnames[['Sim']]))
 }
 
 #' @rdname Access
@@ -537,7 +547,11 @@ nSim <- function(x) {
 #' @rdname Access
 #' @export
 nsim <- function(x) {
-  x@nSim
+  if (isS4(x))
+    return(x@nSim)
+  dnames <- dimnames(x) 
+  if (!is.null(dnames))
+    return(length(dnames[['Sim']]))
 }
 
 #' @rdname Access

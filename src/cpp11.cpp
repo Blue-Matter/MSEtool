@@ -18,8 +18,7 @@ extern "C" SEXP _MSEtool_fun() {
 
 extern "C" {
 /* .Call calls */
-extern SEXP _MSEtool_CalcBiomass_(SEXP, SEXP, SEXP);
-extern SEXP _MSEtool_CalcPopDynamics_(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+extern SEXP _MSEtool_CalcPopDynamics_(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_GetIndex_(SEXP, SEXP);
 extern SEXP _MSEtool_LinInterp_cpp(SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_MSYCalcs(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
@@ -40,8 +39,7 @@ extern SEXP _MSEtool_tdnorm(SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_vecminInd(SEXP);
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_MSEtool_CalcBiomass_",     (DL_FUNC) &_MSEtool_CalcBiomass_,      3},
-    {"_MSEtool_CalcPopDynamics_", (DL_FUNC) &_MSEtool_CalcPopDynamics_,  9},
+    {"_MSEtool_CalcPopDynamics_", (DL_FUNC) &_MSEtool_CalcPopDynamics_, 31},
     {"_MSEtool_GetIndex_",        (DL_FUNC) &_MSEtool_GetIndex_,         2},
     {"_MSEtool_LinInterp_cpp",    (DL_FUNC) &_MSEtool_LinInterp_cpp,     3},
     {"_MSEtool_MSYCalcs",         (DL_FUNC) &_MSEtool_MSYCalcs,         17},

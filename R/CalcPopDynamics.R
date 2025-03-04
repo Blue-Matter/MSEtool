@@ -34,6 +34,8 @@ CalcInitialTimeStep <- function(StockParsList, Unfished) {
 
 
 
+
+
 CalcPopDynamics <- function(Hist, TimeSteps=NULL, MP=NULL, silent=FALSE) {
   
   if (is.null(TimeSteps))
@@ -46,37 +48,6 @@ CalcPopDynamics <- function(Hist, TimeSteps=NULL, MP=NULL, silent=FALSE) {
                                         'Calculating Population Dyamics')
     on.exit(cli::cli_progress_done())
   }
-  
-
-  # Arrays to create to convert the whole process to C++
-  # Set Up Arrays
-  # For each Stock:
-  # nsim, nage, nts, narea
-  # Number <- Hist@Number 
-  # Biomass <- Hist@Biomass
-  # SBiomass <- Hist@SBiomass
-  # LengthAtAge
-  # WeightAtAge
-  # MaturityAtAge
-  
-  # # nsim, nts
-  # SProduction <- Hist@SProduction
-  # 
-  # # nsim, nage, nts, nfleet
-  # Selectivity
-  # Retention
-  # DiscardMortality
-  # 
-  # 
-  # # nsim, nts, nfleet, narea
-  # 
-  # 
-  # VBiomass
-  # 
-  # # nsim, narea
-  # AreaSize 
-  # 
-
   
   for (ts in progress) {
     

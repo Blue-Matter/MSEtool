@@ -9,7 +9,8 @@ FindModels <- function(ModelClass) {
 }
 
 
-FindModel <- function(object, ignore=c('Ages', 'Length', 'nage', 'AtAge', 'MaxLen')) {
+FindModel <- function(object, ignore=c('Ages', 'Length', 'nage', 'AtAge', 'MaxLen',
+                                       'S0', 'S', 'R0')) {
 
   
   if (inherits(object@Model,'function'))
@@ -21,8 +22,8 @@ FindModel <- function(object, ignore=c('Ages', 'Length', 'nage', 'AtAge', 'MaxLe
   if (length(object@Pars)<1)
     return(NULL)
   
-  if (inherits(object@Model,'character'))
-    return(object@Model)
+  # if (inherits(object@Model,'character'))
+  #   return(object@Model)
 
   cl <- class(object)
   slots <- c(slotNames('stock'), slotNames('fleet'))

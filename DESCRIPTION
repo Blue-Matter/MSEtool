@@ -119,6 +119,7 @@ Collate:
     'MSE_Plotting_PMs.R'
     'MSE_functions.R'
     'MSEtool-package.R'
+    'MakeFleetParsList.R'
     'MakeStockParsList.R'
     'Misc.R'
     'Misc_Exported.R'

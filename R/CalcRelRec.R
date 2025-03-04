@@ -47,26 +47,5 @@ setMethod('CalcRelRec', c('om', 'ANY'), function(x, SPR=seq(0.01,1, by=0.01)) {
 })
 
 
-BevertonHoltRelRec <- function(Pars, SPR) {
-  # TODO doesn't do time-varying h - make other SRR funs
-  # TODO RelRec functions for Ricker and HockeyStick
-  h <- Pars$h
-  
-  CR <- (4*h)/(1-h) # Goodyear Compensation Ratio
-  
-  if (inherits(SPR, 'numeric')) {
-    l <- dimnames(h)
-    l$SPR <- SPR
-    SPR <- matrix(SPR, nrow(h), length(SPR), byrow = TRUE)
-    SPR <- replicate(ncol(h), SPR) |> aperm(c(1,3,2))
-    dimnames(SPR) <- l
-    CR <- AddDimension(CR, 'SPR')
-  } else {
-    CR <- AddDimension(CR, 'ApicalF')
-  }
-  
-  out <- ArrayDivide(ArrayMultiply(CR, SPR)-1, ArrayMultiply((CR-1), SPR))
-  out[out<0] <- 0
-  out 
-}
+
 

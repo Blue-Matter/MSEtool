@@ -747,7 +747,7 @@ setMethod("Populate", "length", function(object,
                                          seed=NULL,
                                          messages=TRUE) {
 
-  TimeSteps <- TimeStepAttributes(object, TimeSteps)
+  # TimeSteps <- TimeStepAttributes(object, TimeSteps)
 
   argList <- list(Ages, nsim, TimeSteps, ASK, seed)
 

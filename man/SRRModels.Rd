@@ -9,9 +9,9 @@
 \usage{
 SRRModels(full = TRUE, print = TRUE)
 
-BevertonHolt(S, S0, R0, h, model = "BH")
+BevertonHolt(S, S0, R0, h)
 
-Ricker(S, S0, R0, h, model = "RK")
+Ricker(S, S0, R0, hR)
 
 HockeyStick(S, S0, R0, Shinge)
 }
@@ -28,14 +28,14 @@ HockeyStick(S, S0, R0, Shinge)
 
 \item{h}{Steepness of the Beverton-Holt SRR}
 
+\item{hR}{Steepness for the Ricker SRR. Argument name indicates it's the
+Ricker SRR}
+
 \item{Shinge}{The hinge-point of the SRR, relative to \code{S0}}
 
 \item{alpha}{See \code{Details}}
 
 \item{beta}{See \code{Details}}
-
-\item{RKh}{Steepness for the Ricker SRR. Argument name indicates it's the
-Ricker SRR}
 }
 \value{
 Prints to console and invisible data.frame or model names

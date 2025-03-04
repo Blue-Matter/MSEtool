@@ -664,27 +664,54 @@ alpha_beta2R0 <- function(alpha, beta, phi0, SR=c('BH', 'RK')) {
 #' @param h Steepness of the Beverton-Holt SRR
 #'
 #' @export
-BevertonHolt <- function(S, S0, R0, h, model='BH') {
+BevertonHolt <- function(S, S0, R0, h) {
   phi0 <- S0/R0
-  alpha <- h2alpha(h, phi0, model)
-  beta <- h_R0_2beta(h, R0, phi0, model)
+  alpha <- h2alpha(h, phi0, model='BH')
+  beta <- h_R0_2beta(h, R0, phi0, model='BH')
   alpha * S / (1+beta*S)
 }
 class(BevertonHolt) <- 'SRR-Model'
 
+BevertonHoltRelRec <- function(Pars, SPR) {
+  # TODO doesn't do time-varying h - make other SRR funs
+  # TODO RelRec functions for Ricker and HockeyStick
+  h <- Pars$h
+  
+  CR <- (4*h)/(1-h) # Goodyear Compensation Ratio
+  
+  if (inherits(SPR, 'numeric')) {
+    l <- dimnames(h)
+    l$SPR <- SPR
+    SPR <- matrix(SPR, nrow(h), length(SPR), byrow = TRUE)
+    SPR <- replicate(ncol(h), SPR) |> aperm(c(1,3,2))
+    dimnames(SPR) <- l
+    CR <- AddDimension(CR, 'SPR')
+  } else {
+    CR <- AddDimension(CR, 'ApicalF')
+  }
+  
+  out <- ArrayDivide(ArrayMultiply(CR, SPR)-1, ArrayMultiply((CR-1), SPR))
+  out[out<0] <- 0
+  out 
+}
 
 #' @describeIn SRRModels Ricker Stock-Recruitment Model
-#' @param RKh Steepness for the Ricker SRR. Argument name indicates it's the
+#' @param hR Steepness for the Ricker SRR. Argument name indicates it's the
 #' Ricker SRR
 #' @export
-Ricker <- function(S, S0, R0, h, model='RK') {
+Ricker <- function(S, S0, R0, hR) {
   phi0 <- S0/R0
-  alpha <- h2alpha(h, phi0, model)
-  beta <- h_R0_2beta(h, R0, phi0, model)
+  alpha <- h2alpha(hR, phi0, model='RK')
+  beta <- h_R0_2beta(hR, R0, phi0, model='RK')
   alpha * S * exp(-beta*S)
 }
 class(Ricker) <- 'SRR-Model'
 
+
+RickerRelRec <- function(Pars, SPR) {
+  
+ 
+}
 
 #' @describeIn SRRModels Hockey Stick Stock-Recruitment Model
 #' @param Shinge The hinge-point of the SRR, relative to `S0`

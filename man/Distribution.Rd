@@ -6,15 +6,7 @@
 \alias{Distribution<-}
 \title{Distribution Object}
 \usage{
-Distribution(
-  Closure = NULL,
-  Cost = NULL,
-  Targeting = NULL,
-  ApicalF = NULL,
-  Catchability = NULL,
-  Effort = NULL,
-  Misc = list()
-)
+Distribution(Closure = NULL, Cost = NULL, Misc = list())
 
 Distribution(x) <- value
 }
@@ -47,5 +39,5 @@ DETAILS
 }}
 
 \seealso{
-\code{\link[=Closure]{Closure()}}, \code{\link[=Cost]{Cost()}}, \code{\link[=Targeting]{Targeting()}}, \code{\link[=ApicalF]{ApicalF()}}, \code{\link[=Catchability]{Catchability()}}, \code{\link[=Effort]{Effort()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Created]{Created()}}, \code{\link[=Modified]{Modified()}}, \code{\link[=Check]{Check()}}
+\code{\link[=Closure]{Closure()}}, \code{\link[=Cost]{Cost()}}, \code{\link[=Effort]{Effort()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Created]{Created()}}, \code{\link[=Modified]{Modified()}}, \code{\link[=Check]{Check()}}
 }

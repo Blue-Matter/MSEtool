@@ -18,6 +18,7 @@
 \alias{Populate,selectivity-method}
 \alias{Populate,retention-method}
 \alias{Populate,effort-method}
+\alias{Populate,distribution-method}
 \title{Populate an object}
 \usage{
 Populate(object, ...)
@@ -106,7 +107,14 @@ Populate(object, ...)
 
 \S4method{Populate}{depletion}(object, nsim = NULL, seed = NULL, messages = TRUE)
 
-\S4method{Populate}{fleet}(object, Ages = NULL, Length = NULL, seed = NULL, messages = TRUE)
+\S4method{Populate}{fleet}(
+  object,
+  Ages = NULL,
+  Length = NULL,
+  nAreas = NULL,
+  seed = NULL,
+  messages = TRUE
+)
 
 \S4method{Populate}{fishingmortality}(object, nsim = NULL, TimeSteps = NULL, seed = NULL, messages = TRUE)
 
@@ -159,6 +167,8 @@ Populate(object, ...)
   seed = NULL,
   messages = TRUE
 )
+
+\S4method{Populate}{distribution}(object, nsim = NULL, TimeSteps = NULL, nAreas = NULL)
 }
 \arguments{
 \item{messages}{Logical or character.
@@ -222,5 +232,7 @@ This function takes a valid S4 object and ...
 \item \code{Populate(retention)}: Populate a \code{\link[=Retention]{Retention()}} object
 
 \item \code{Populate(effort)}: Populate a \code{\link[=Effort]{Effort()}} object
+
+\item \code{Populate(distribution)}: Populate a \code{\link[=Distribution]{Distribution()}} object
 
 }}

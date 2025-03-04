@@ -22,7 +22,7 @@ CalcSurvival <- function(M_at_Age, F_at_Age=NULL,
     Semelparous <- M_at_Age[,,1]
     Semelparous[] <- 0
   }
-    
+  
   for (a in 1:nAge) {
     ZthisAge <- abind::adrop(Z_at_Age[,a,, drop=FALSE], 2)
     if (a==1) {

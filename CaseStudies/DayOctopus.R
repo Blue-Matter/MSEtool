@@ -2,7 +2,7 @@ library(MSEtool)
 
 la <- devtools::load_all
 
- la()
+la()
 
 octopusOM <- OM('Day Octopus OM',
                 Author='Adrian Hordyk',
@@ -23,36 +23,48 @@ octopus <- Stock('Day octopus',
                  Species='Octopus cyanea')
 
 ## ---- ages ---
-
 Ages(octopus) <- Ages(MaxAge=14,
                       Units='month',
                       PlusGroup = FALSE)
 
-## ---- weight ----
-# TODO Schnute Growth Model
+## ---- length ----
+# Schnute Growth Model
 
-Weight(octopus) <- Weight(Pars=list(a=c(0.0053975, 0.0073025),
-                                    b=2.31),
-                          CVatAge = c(0.3, 0.5),
-                          Units='kg',
+Schnute <- function(Ages, SizeAgeZero, SizeInflectionPoint, GrowthRateCoefficient, ShapeParameter) {
+  (SizeAgeZero^ShapeParameter + ((SizeInflectionPoint^ShapeParameter)/(1-ShapeParameter)-SizeAgeZero^ShapeParameter) *
+     (1-exp(-GrowthRateCoefficient*Ages)))^(1/ShapeParameter)
+}
+
+
+Length(octopus) <- Length(Pars=list(SizeAgeZero=c(30, 40),
+                                   SizeInflectionPoint=c(150, 200),
+                                   GrowthRateCoefficient=c(0.6, 0.9),
+                                   ShapeParameter=c(-5,-3)),
+                         Model=Schnute,
+                         CVatAge=c(0.1,0.2))
+
+## ---- weight ----
+
+Weight(octopus) <- Weight(Pars=list(Alpha=0.0721,
+                                    Beta=1.9181),
+                          Units='g',
                           Classes=seq(from=0.25, by=0.5, to=4))
 
 ## ---- natural_mortality ----
 
-NaturalMortality(octopus) <- NaturalMortality(Pars=list(M=c(0.10, 0.2)),
+NaturalMortality(octopus) <- NaturalMortality(Pars=list(M=c(0.1, 0.2)),
                                               Units='month')
 
 ## ---- maturity ----
 
-Maturity(octopus) <- Maturity(Pars=list(A50=c(11, 12),
+Maturity(octopus) <- Maturity(Pars=list(A50=c(10, 11),
                                         A50_95=c(0.1, 0.5)),
                               Semelparous=TRUE)
 
 ## ---- stockrecruit ----
 
-# TODO: Shepherd SSR
-
-SRR(octopus) <- SRR(Pars=list(h=c(0.85, 0.95)),
+# Ricker
+SRR(octopus) <- SRR(Pars=list(hR=c(0.85, 0.95)),
                     R0=10000,
                     SD=c(0.4,0.6),
                     SpawnTimeFrac = 0.5)
@@ -60,12 +72,12 @@ SRR(octopus) <- SRR(Pars=list(h=c(0.85, 0.95)),
 
 ## ---- spatialdistribution ----
 
-Spatial(octopus) <- Spatial(UnfishedDist=c(0.05, 0.2),
-                            ProbStaying=c(0.7, 0.95),
+Spatial(octopus) <- Spatial(UnfishedDist=c(0.3, 0.3),
+                            ProbStaying=c(0.9, 0.95),
                             RelativeSize='EqualDensity')
 
 ## ---- depletion ----
-Depletion(octopus) <- Depletion(Final=c(0.3, 0.4))
+Depletion(octopus) <- Depletion(Final=c(0.35, 0.45))
 
 
 ## ---- fleet ----
@@ -88,20 +100,7 @@ Selectivity(octopus_fleet) <- Selectivity(Pars=list(A50=c(4, 6),
 Stock(octopusOM) <- octopus
 Fleet(octopusOM) <- octopus_fleet
 
-object <- octopusOM
-
-
-
-
 OM <- Populate(octopusOM)
-
-
-
-
-# OM@Fleet$`Day octopus`$`Octopus Fleet`@Effort@Catchability[] <- 0.1
-
-# OM@Fleet$`Day octopus`$`Octopus Fleet`@Effort@Effort[,1] <- 0.1
-
 
 messages='default'
 nSim=NULL

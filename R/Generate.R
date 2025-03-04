@@ -1,8 +1,65 @@
 
+ApplyCustomAtAgeModel <- function(Model, Pars, Ages) {
+  nSimnTS <- cbind(unlist(lapply(Pars, nSim)),    
+                   unlist(lapply(Pars, nTS)))
+  
+  nsim <- max(nSimnTS[,1])
+  nTS <- max(nSimnTS[,2])
+  
+  tsind <- which.max(nSimnTS[,2])
+  TSnames <- dimnames(Pars[[tsind]])
+  
+  out <- array(0, dim=c(nsim, length(Ages), nTS))
+  l <- Pars
+  l$Ages <- Ages
+  
+  for (s in 1:nsim) {
+    for (ts in 1:nTS) {
+      for (arg in 1:nrow(nSimnTS)) {
+        l[[arg]] <- Pars[[arg]][GetIndex(s, nSimnTS[arg,1]), GetIndex(ts, nSimnTS[arg,2])]
+      }
+      out[s,,ts] <- do.call(Model, l)
+    }
+  }
+  dimnames(out) <- list(Sim=1:nsim,
+                        Age=Ages,
+                        `Time Step`=TSnames$`Time Step`)
+  out
+}
+
+ApplyCustomAtLengthModel <- function(Model, Pars, Length) {
+  nSimnTS <- cbind(unlist(lapply(Pars, nSim)),    
+                   unlist(lapply(Pars, nTS)))
+  
+  nsim <- max(nSimnTS[,1])
+  nTS <- max(nSimnTS[,2])
+  
+  tsind <- which.max(nSimnTS[,2])
+  TSnames <- dimnames(Pars[[tsind]])
+  
+  out <- array(0, dim=c(nsim, length(Length), nTS))
+  l <- Pars
+  l$Length <- Length
+  
+  for (s in 1:nsim) {
+    for (ts in 1:nTS) {
+      for (arg in 1:nrow(nSimnTS)) {
+        l[[arg]] <- Pars[[arg]][GetIndex(s, nSimnTS[arg,1]), GetIndex(ts, nSimnTS[arg,2])]
+      }
+      out[s,,ts] <- do.call(Model, l)
+    }
+  }
+  dimnames(out) <- list(Sim=1:nsim,
+                        Class=Length,
+                        `Time Step`=TSnames$`Time Step`)
+  out
+}
+
+
 GenerateMeanAtAge <- function(Model, Pars, Ages) {
 
   if (inherits(Model, 'function')) {
-    return(Model(Ages, Pars))
+    return(ApplyCustomAtAgeModel(Model, Pars, Ages))
   }
 
   fun_args <- names(formals(Model))
@@ -24,7 +81,7 @@ GenerateMeanAtAge <- function(Model, Pars, Ages) {
 GenerateMeanatLength <- function(Model, Pars, Length) {
 
   if (inherits(Model, 'function')) {
-    return(Model(Length, Pars))
+    return(ApplyCustomAtLengthModel(Model, Pars, Ages))
   }
 
   fun_args <- names(formals(Model))

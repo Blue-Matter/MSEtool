@@ -43,11 +43,22 @@ MakeFleetParsList <- function(OM, Period='Historical') {
   FleetParsList$EffortArea <- ArraySimStockAgeTimeFleetArea(OM, Period) |>
     DropDimension('Age', warn=FALSE) 
   
-  FleetParsList$FDeadArea <- ArraySimStockAgeTimeFleetArea(OM, Period)
-    
+  FleetParsList$DensityArea <- FleetParsList$EffortArea 
+  
+  FleetParsList$VBiomass <- ArraySimStockAgeTimeFleetArea(OM, Period)
+  
+  FleetParsList$FDeadArea <-  FleetParsList$VBiomass
   FleetParsList$FRetainArea <- FleetParsList$FDeadArea
   FleetParsList$RemovalArea <- FleetParsList$FDeadArea
   FleetParsList$RetainArea <- FleetParsList$FDeadArea
+  
+  FleetParsList$RemovalNAtAge <- ArraySimStockAgeTimeFleet(OM, Period) # number
+  FleetParsList$RetainNAtAge <- FleetParsList$RemovalNAtAge
+  
+  FleetParsList$RemovalBAtAge <- FleetParsList$RemovalNAtAge # biomass
+  FleetParsList$RetainBAtAge <- FleetParsList$RemovalNAtAge
+  
+  
   
   class(FleetParsList) <- c('list', 'FleetParsList')
   FleetParsList

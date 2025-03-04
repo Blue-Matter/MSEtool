@@ -97,34 +97,43 @@ BEGIN_RCPP
 END_RCPP
 }
 // CalcPopDynamics_
-List CalcPopDynamics_(NumericVector BiomassAtAgeArea, NumericVector NumberAtAgeArea, NumericVector WeightAtAge, NumericVector Effort, CharacterVector TimeStep, int nStock, int nAge, int nFleet, int nArea);
-RcppExport SEXP _MSEtool_CalcPopDynamics_(SEXP BiomassAtAgeAreaSEXP, SEXP NumberAtAgeAreaSEXP, SEXP WeightAtAgeSEXP, SEXP EffortSEXP, SEXP TimeStepSEXP, SEXP nStockSEXP, SEXP nAgeSEXP, SEXP nFleetSEXP, SEXP nAreaSEXP) {
+List CalcPopDynamics_(NumericVector NumberAtAgeArea, NumericVector BiomassAtAgeArea, NumericVector WeightAtAge, NumericVector NaturalMortalityAtAge, NumericVector FecundityAtAge, NumericVector R0, NumericVector RecDevs, Function SRRModel, List SRRPars, NumericVector SProduction, NumericVector RelativeSize, NumericVector Effort, NumericVector EffortArea, NumericVector Catchability, NumericVector SelectivityAtAge, NumericVector RetentionAtAge, NumericVector DiscardMortalityAtAge, NumericVector VBiomassAtAgeArea, NumericVector FleetWeightAtAge, NumericVector DensityArea, NumericVector FDeadArea, NumericVector FRetainArea, NumericVector RemovalArea, NumericVector RetainArea, NumericVector FDeadAtAge, NumericVector FRetainAtAge, NumericVector RemovalNAtAge, NumericVector RetainNAtAge, NumericVector RemovalBAtAge, NumericVector RetainBAtAge, CharacterVector TimeStep);
+RcppExport SEXP _MSEtool_CalcPopDynamics_(SEXP NumberAtAgeAreaSEXP, SEXP BiomassAtAgeAreaSEXP, SEXP WeightAtAgeSEXP, SEXP NaturalMortalityAtAgeSEXP, SEXP FecundityAtAgeSEXP, SEXP R0SEXP, SEXP RecDevsSEXP, SEXP SRRModelSEXP, SEXP SRRParsSEXP, SEXP SProductionSEXP, SEXP RelativeSizeSEXP, SEXP EffortSEXP, SEXP EffortAreaSEXP, SEXP CatchabilitySEXP, SEXP SelectivityAtAgeSEXP, SEXP RetentionAtAgeSEXP, SEXP DiscardMortalityAtAgeSEXP, SEXP VBiomassAtAgeAreaSEXP, SEXP FleetWeightAtAgeSEXP, SEXP DensityAreaSEXP, SEXP FDeadAreaSEXP, SEXP FRetainAreaSEXP, SEXP RemovalAreaSEXP, SEXP RetainAreaSEXP, SEXP FDeadAtAgeSEXP, SEXP FRetainAtAgeSEXP, SEXP RemovalNAtAgeSEXP, SEXP RetainNAtAgeSEXP, SEXP RemovalBAtAgeSEXP, SEXP RetainBAtAgeSEXP, SEXP TimeStepSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type NumberAtAgeArea(NumberAtAgeAreaSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type BiomassAtAgeArea(BiomassAtAgeAreaSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type NumberAtAgeArea(NumberAtAgeAreaSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type WeightAtAge(WeightAtAgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type NaturalMortalityAtAge(NaturalMortalityAtAgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type FecundityAtAge(FecundityAtAgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type R0(R0SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type RecDevs(RecDevsSEXP);
+    Rcpp::traits::input_parameter< Function >::type SRRModel(SRRModelSEXP);
+    Rcpp::traits::input_parameter< List >::type SRRPars(SRRParsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type SProduction(SProductionSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type RelativeSize(RelativeSizeSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type Effort(EffortSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type EffortArea(EffortAreaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Catchability(CatchabilitySEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type SelectivityAtAge(SelectivityAtAgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type RetentionAtAge(RetentionAtAgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type DiscardMortalityAtAge(DiscardMortalityAtAgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type VBiomassAtAgeArea(VBiomassAtAgeAreaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type FleetWeightAtAge(FleetWeightAtAgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type DensityArea(DensityAreaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type FDeadArea(FDeadAreaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type FRetainArea(FRetainAreaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type RemovalArea(RemovalAreaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type RetainArea(RetainAreaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type FDeadAtAge(FDeadAtAgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type FRetainAtAge(FRetainAtAgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type RemovalNAtAge(RemovalNAtAgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type RetainNAtAge(RetainNAtAgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type RemovalBAtAge(RemovalBAtAgeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type RetainBAtAge(RetainBAtAgeSEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type TimeStep(TimeStepSEXP);
-    Rcpp::traits::input_parameter< int >::type nStock(nStockSEXP);
-    Rcpp::traits::input_parameter< int >::type nAge(nAgeSEXP);
-    Rcpp::traits::input_parameter< int >::type nFleet(nFleetSEXP);
-    Rcpp::traits::input_parameter< int >::type nArea(nAreaSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcPopDynamics_(BiomassAtAgeArea, NumberAtAgeArea, WeightAtAge, Effort, TimeStep, nStock, nAge, nFleet, nArea));
-    return rcpp_result_gen;
-END_RCPP
-}
-// CalcBiomass_
-NumericVector CalcBiomass_(NumericVector NumberAtAgeArea, NumericVector WeightAtAge, CharacterVector TimeStep);
-RcppExport SEXP _MSEtool_CalcBiomass_(SEXP NumberAtAgeAreaSEXP, SEXP WeightAtAgeSEXP, SEXP TimeStepSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type NumberAtAgeArea(NumberAtAgeAreaSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type WeightAtAge(WeightAtAgeSEXP);
-    Rcpp::traits::input_parameter< CharacterVector >::type TimeStep(TimeStepSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcBiomass_(NumberAtAgeArea, WeightAtAge, TimeStep));
+    rcpp_result_gen = Rcpp::wrap(CalcPopDynamics_(NumberAtAgeArea, BiomassAtAgeArea, WeightAtAge, NaturalMortalityAtAge, FecundityAtAge, R0, RecDevs, SRRModel, SRRPars, SProduction, RelativeSize, Effort, EffortArea, Catchability, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, VBiomassAtAgeArea, FleetWeightAtAge, DensityArea, FDeadArea, FRetainArea, RemovalArea, RetainArea, FDeadAtAge, FRetainAtAge, RemovalNAtAge, RetainNAtAge, RemovalBAtAge, RetainBAtAge, TimeStep));
     return rcpp_result_gen;
 END_RCPP
 }

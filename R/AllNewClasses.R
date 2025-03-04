@@ -320,7 +320,6 @@ setMethod("initialize", "length", function(.Object,
   .Object@Misc <- Misc
   .Object@Created <- Sys.time()
 
-
   .Object
 })
 

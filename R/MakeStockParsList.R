@@ -7,10 +7,11 @@ MakeStockParsList <- function(OM, Period='Historical') {
   nFleet <- nFleet(OM)
   nArea <- nArea(OM@Stock[[1]])
   
+ 
   StockParsList <- list()
   
   StockParsList$Ages <- purrr::map(OM@Stock, \(x) slot(x, 'Ages'))
-  
+
   StockParsList <- c(StockParsList, 
                      MakeStockSlotList(OM, Period, 'Length', nSim, nAges, TimeSteps),
                      MakeStockSlotList(OM, Period, 'Weight', nSim, nAges, TimeSteps),
@@ -27,11 +28,15 @@ MakeStockParsList <- function(OM, Period='Historical') {
   StockParsList$NumberAtAgeArea <- ArraySimStockAgeTimeArea(OM, Period) 
   StockParsList$BiomassAtAgeArea <- StockParsList$NumberAtAgeArea
   StockParsList$SBiomass <- StockParsList$NumberAtAgeArea
-  StockParsList$SProduction <- StockParsList$NumberAtAgeArea
+  StockParsList$SProduction <- ArraySimStockAgeTimeArea(OM, Period)  |> 
+    DropDimension('Age', warn=FALSE) |>
+    DropDimension('Area', warn=FALSE)
   
   StockParsList$CurrentYear <- purrr::map(OM@Stock, \(x) slot(x, 'CurrentYear'))
   StockParsList$TimeUnits <- purrr::map(OM@Stock, \(x) slot(x, 'TimeUnits'))
   StockParsList$TimeSteps <- purrr::map(OM@Stock, \(x) slot(x, 'TimeSteps'))
+  StockParsList$TimeStepsHist <- purrr::map(OM@Stock, \(x) TimeSteps(x, 'Historical'))
+  StockParsList$TimeStepsProj <- purrr::map(OM@Stock, \(x) TimeSteps(x, 'Projection'))
   StockParsList$TimeStepsPerYear <- purrr::map(OM@Stock, \(x) slot(x, 'TimeStepsPerYear'))
   StockParsList$Misc <- purrr::map(OM@Stock, \(x) slot(x, 'Misc'))
   
@@ -137,15 +142,16 @@ MakeStockSlotList <- function(OM, Period='Historical', slot='Length',
 MakeSRRList <- function(OM, Period, nSim, nAges, TimeSteps) {
   List <- list()
   
-  List$Pars <- purrr::map(OM@Stock, \(x)
+  List$SRRPars <- purrr::map(OM@Stock, \(x)
                           x |> 
                             slot('SRR') |>
                             slot('Pars')) 
                               
-  List$Model <- purrr::map(OM@Stock, \(x)
+  List$SRRModel <- purrr::map(OM@Stock, \(x)
                           x |> 
                             slot('SRR') |>
-                            slot('Model')) 
+                            slot('Model') |>
+                            get()) 
  
   List$R0 <- purrr::map(OM@Stock, \(x) 
                         x |> slot('SRR') |> slot('R0')
@@ -168,7 +174,7 @@ MakeSRRList <- function(OM, Period, nSim, nAges, TimeSteps) {
     aperm(c('Sim', 'Stock', 'Time Step')) |>
     ArrayExpand(nSim, nAges, TimeSteps) 
   
-  StockParsList$SPFrom <- purrr::map(OM@Stock, \(x) 
+  List$SPFrom <- purrr::map(OM@Stock, \(x) 
     x |> slot('SRR') |> slot('SPFrom')) 
     
   

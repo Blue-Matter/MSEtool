@@ -546,13 +546,13 @@ EmptyObject <- function(object) {
     for (i in seq_along(sltnms)) {
       sl <- sltnms[i]
       val <- slot(object, sl)
+      if (inherits(val, 'function'))
+        next()
       if (isS4(val)) {
         empty[i] <- Recall(val)
       } else {
         empty[i] <- is.null(val) || length(val)==0 || all(is.na(val))
       }
-
-
     }
     return(prod(empty))
   }

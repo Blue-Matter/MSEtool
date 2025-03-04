@@ -49,6 +49,10 @@ replist$derived_quants |> dplyr::filter(Label%in% c('annF_MSY', 'Dead_Catch_MSY'
 
 multiHist <- Simulate(MOM)
 
+
+
+multiHist # object.size
+
 multiHist[[1]][[1]]@Ref$ByYear$FMSY[1,1]
 multiHist[[1]][[1]]@Ref$ByYear$MSY[1,1] + multiHist[[2]][[1]]@Ref$ByYear$MSY[1,1]
 
