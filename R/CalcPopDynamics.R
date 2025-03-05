@@ -1,4 +1,4 @@
-CalcInitialTimeStep <- function(PopulationList, SRRList, Unfished) {
+CalcInitialTimeStep <- function(PopulationList, Unfished) {
   
   TimeSteps <- dimnames(PopulationList$NumberAtAgeArea)[['Time Steps']]
   dd <- dim(PopulationList$NumberAtAgeArea)
@@ -6,8 +6,8 @@ CalcInitialTimeStep <- function(PopulationList, SRRList, Unfished) {
   nAges <- dd[3]
   TimeStep1 <- TimeSteps[1]
   
-  RecDevInit <- SRRList$RecDevInit
-  RecDevHist <- SRRList$RecDevHist 
+  RecDevInit <- PopulationList$SRR$RecDevInit
+  RecDevHist <- PopulationList$SRR$RecDevs 
   
   N0atAge <- purrr::map(Unfished@Equilibrium@Number, \(x) 
                         ArrayExpand(x, nSim, nAges, TimeStep1)

@@ -120,14 +120,18 @@ CalcUnfishedDynamics <- function(OM,
     purrr::map2(purrr::map(OM@Stock, GetMaturityAtAge), ArrayMultiply) |>
     purrr::map2(UnfishedDist(OM), DistributeStock)
 
+  
   Unfished@Equilibrium@SBiomass <- purrr::map2(WeightatAge, SNatAge, ArrayMultiply)
 
   FecundityatAge <- purrr::map(OM@Stock, GetFecundityAtAge) |> purrr::map(AddAreaDimension)
   # NOTE: not sure if this will work for all cases 
   ind <- lapply(FecundityatAge, is.null) |> unlist() |> not() |> which() 
-  # TODO 
-  # need to be consistent if FecundityAtAge already accounts for maturity-at-age or not!
-  Unfished@Equilibrium@SProduction <- purrr::map2(SNatAge[ind], FecundityatAge[ind], ArrayMultiply)
+  
+  SNatAge <- purrr::map2(R0, UnfishedSurvivalSP, ArrayMultiply) |> # already accounts for maturity in FecundityatAge
+    purrr::map2(UnfishedDist(OM), DistributeStock)
+  
+  Unfished@Equilibrium@SProduction <- purrr::map2(SNatAge[ind], FecundityatAge[ind], ArrayMultiply) |>
+    purrr::map(\(x) apply(x, c('Sim', 'Time Step'), sum))
   
   # TODO `SProduction` will be identical to `SBiomass` if spawning biomass 
   # is used for fecundity. Can make it NULL here to save memory or do checks above to avoid doing

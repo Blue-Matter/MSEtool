@@ -185,7 +185,7 @@ MakeDistributionList <- function(OM, Period='Historical', TimeSteps=NULL) {
   List$Closure <- purrr::map(OM@Fleet, \(x)
                              GetClosure(x, TimeSteps)) |>
     List2Array('Stock') |>
-    aperm(c('Sim', 'Stock', 'Time Step', 'Area', 'Fleet')) |>
+    aperm(c('Sim', 'Stock', 'Time Step', 'Fleet', 'Area')) |>
     ArrayExpand(nSim, nAges, TimeSteps)
   
   #TODO Cost 

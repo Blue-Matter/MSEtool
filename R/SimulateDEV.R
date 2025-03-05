@@ -17,13 +17,14 @@ SimulateDEV <- function(OM=NULL,
   
   OM <- MSEtool:::StartUp(OM, messages, nSim) 
   
-  # ---- Make Lists of Arrays ----
-  # expands all arrays to include all sims, and maximum `nage` across stocks, and all Historical time steps
-  PopulationList <- MakePopulationList(OM)
-  FleetList <- MakeFleetList(OM) # everything with a fleet dimension
-
   # ---- Calculate Unfished Dynamics ----
   Unfished <- CalcUnfishedDynamics(OM)
+  
+  
+  # ---- Make Lists of Arrays ----
+  # expands all arrays to include all sims, and maximum `nage` across stocks, and all Historical time steps
+  PopulationList <- MakePopulationList(OM, Unfished=Unfished)
+  FleetList <- MakeFleetList(OM) # everything with a fleet dimension
   
   # ---- Calculate Reference Points ----
   # RefPoints <- CalcRefPoints(OM)
@@ -32,30 +33,30 @@ SimulateDEV <- function(OM=NULL,
   # Hist <- MSEtool:::OptimInitDepletion(OM)
   
   # ---- Number-at-Age at Beginning of Initial Time Step ----
-  abind::afill(PopulationList$NumberAtAgeArea) <- CalcInitialTimeStep(PopulationList, SRRList, Unfished) 
+  abind::afill(PopulationList$NumberAtAgeArea) <- CalcInitialTimeStep(PopulationList, Unfished) 
  
   sim <- 1
   
   PopulationListsim <- MakeSimList(PopulationList, sim)
   FleetListsim <- MakeSimList(FleetList, sim)
-  
-  
-  PopulationListsim$Weight$MeanAtAge
-  FleetListsim$VBiomassArea |> dim()
+  TimeSteps <- TimeSteps(OM, 'Historical')
   
   Test <- CalcPopDynamics_(PopulationListsim,
                            FleetListsim,
-                           TimeSteps=as.character(TimeSteps)[1])
+                           TimeSteps=as.character(TimeSteps))
   
-  Test$PopulationList$BiomassArea
-  Test$FleetList$VBiomassArea[1,,1,]
-  Test$FleetList$DensityArea[1,,1,]
   
-  Test$PopulationList$BiomassArea
-  Test$PopulationList$NumberAtAgeArea[1,,1,] * 
+  # TODO
+  # - check plus group
+  # - check recruits
+  # - check N-at-age match BAMdata
+  # - finish movement
+  Test$PopulationList$SP0
+  Test$PopulationList$SProduction
   
-  SelectivityListsim$MeanAtAge[1,,1,1] *
-  FleetListsim$FleetWeightAtAge[1,,1,1]
+  Test$PopulationList$NumberAtAgeArea[1,,1,1]
+  Test$PopulationList$NumberAtAgeArea[1,,2,1]
+
   
   
   

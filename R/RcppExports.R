@@ -53,8 +53,8 @@ CalcVBiomass_ <- function(VBiomassArea, NumberAtAgeArea, FleetWeightAtAge, Selec
     .Call(`_MSEtool_CalcVBiomass_`, VBiomassArea, NumberAtAgeArea, FleetWeightAtAge, SelectivityAtAge, TSindex)
 }
 
-CalcDensity_ <- function(DensityArea, VBiomassAtAgeArea, RelativeSize, TSindex) {
-    .Call(`_MSEtool_CalcDensity_`, DensityArea, VBiomassAtAgeArea, RelativeSize, TSindex)
+CalcDensity_ <- function(DensityArea, VBiomassArea, RelativeSize, TSindex) {
+    .Call(`_MSEtool_CalcDensity_`, DensityArea, VBiomassArea, RelativeSize, TSindex)
 }
 
 DistEffort_ <- function(EffortArea, DensityArea, Effort, TSindex) {
@@ -89,8 +89,8 @@ CalcNumberNext_ <- function(NumberAtAgeArea, NaturalMortalityAtAge, FDeadArea, S
     .Call(`_MSEtool_CalcNumberNext_`, NumberAtAgeArea, NaturalMortalityAtAge, FDeadArea, Semelparous, Ages, TSindex)
 }
 
-CalcPopDynamics_ <- function(PopulationList, FleetList, WeightList, SelectivityList, TimeSteps) {
-    .Call(`_MSEtool_CalcPopDynamics_`, PopulationList, FleetList, WeightList, SelectivityList, TimeSteps)
+CalcPopDynamics_ <- function(PopulationList, FleetList, TimeSteps) {
+    .Call(`_MSEtool_CalcPopDynamics_`, PopulationList, FleetList, TimeSteps)
 }
 
 calcVatAge <- function(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid) {

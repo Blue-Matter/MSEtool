@@ -137,16 +137,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // CalcDensity_
-NumericVector CalcDensity_(NumericVector DensityArea, NumericVector VBiomassAtAgeArea, NumericVector RelativeSize, int TSindex);
-RcppExport SEXP _MSEtool_CalcDensity_(SEXP DensityAreaSEXP, SEXP VBiomassAtAgeAreaSEXP, SEXP RelativeSizeSEXP, SEXP TSindexSEXP) {
+NumericVector CalcDensity_(NumericVector DensityArea, NumericVector VBiomassArea, NumericVector RelativeSize, int TSindex);
+RcppExport SEXP _MSEtool_CalcDensity_(SEXP DensityAreaSEXP, SEXP VBiomassAreaSEXP, SEXP RelativeSizeSEXP, SEXP TSindexSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type DensityArea(DensityAreaSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type VBiomassAtAgeArea(VBiomassAtAgeAreaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type VBiomassArea(VBiomassAreaSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type RelativeSize(RelativeSizeSEXP);
     Rcpp::traits::input_parameter< int >::type TSindex(TSindexSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcDensity_(DensityArea, VBiomassAtAgeArea, RelativeSize, TSindex));
+    rcpp_result_gen = Rcpp::wrap(CalcDensity_(DensityArea, VBiomassArea, RelativeSize, TSindex));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -293,17 +293,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // CalcPopDynamics_
-List CalcPopDynamics_(List PopulationList, List FleetList, List WeightList, List SelectivityList, CharacterVector TimeSteps);
-RcppExport SEXP _MSEtool_CalcPopDynamics_(SEXP PopulationListSEXP, SEXP FleetListSEXP, SEXP WeightListSEXP, SEXP SelectivityListSEXP, SEXP TimeStepsSEXP) {
+List CalcPopDynamics_(List PopulationList, List FleetList, CharacterVector TimeSteps);
+RcppExport SEXP _MSEtool_CalcPopDynamics_(SEXP PopulationListSEXP, SEXP FleetListSEXP, SEXP TimeStepsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< List >::type PopulationList(PopulationListSEXP);
     Rcpp::traits::input_parameter< List >::type FleetList(FleetListSEXP);
-    Rcpp::traits::input_parameter< List >::type WeightList(WeightListSEXP);
-    Rcpp::traits::input_parameter< List >::type SelectivityList(SelectivityListSEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type TimeSteps(TimeStepsSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcPopDynamics_(PopulationList, FleetList, WeightList, SelectivityList, TimeSteps));
+    rcpp_result_gen = Rcpp::wrap(CalcPopDynamics_(PopulationList, FleetList, TimeSteps));
     return rcpp_result_gen;
 END_RCPP
 }
