@@ -359,7 +359,7 @@ List2Array <- function(List, dimname='Fleet') {
   array
 }
 
-Array2List <- function(array, pos=3) {
+Array2List <- function(array, pos=3, sim=NULL) {
   dnames <- names(dimnames(array))
   if (is.character(pos)) {
     pos <- match(pos, dnames)
@@ -367,17 +367,25 @@ Array2List <- function(array, pos=3) {
   
   dd <- dim(array)
   
-  list <- vector('list', dd[pos])
+  if (!is.null(sim)) {
+    list <- vector('list', 1)
+    indexvalue <- sim
+  } else {
+    list <- vector('list', dd[pos])  
+    indexvalue <- 1:length(list)
+  }
+  
+  
   dimnames <- dimnames(array)
   
-  listnames <- dimnames[[pos]]
+  listnames <- dimnames[[pos]][indexvalue]
   names(list) <- listnames
   keepnames <- dimnames[-pos]
   keepnames[[names(dimnames)[pos]]] <- 1
   
-  for (i in 1:length(list)) {
+  for (i in seq_along(indexvalue)) {
     tdimnames <- dimnames
-    tdimnames[pos] <-  dimnames[[pos]][i]
+    tdimnames[pos] <-  dimnames[[pos]][indexvalue[i]]
     list[[i]] <- abind::adrop(abind::asub(array, tdimnames, drop=FALSE), pos)
     
   }

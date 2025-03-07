@@ -1,35 +1,42 @@
 CalcInitialTimeStep <- function(PopulationList, Unfished) {
   
-  TimeSteps <- dimnames(PopulationList$NumberAtAgeArea)[['Time Steps']]
-  dd <- dim(PopulationList$NumberAtAgeArea)
-  nSim <- dd[1]
-  nAges <- dd[3]
-  TimeStep1 <- TimeSteps[1]
+  nStock <- length(PopulationList$NumberAtAgeArea)
   
-  RecDevInit <- PopulationList$SRR$RecDevInit
-  RecDevHist <- PopulationList$SRR$RecDevs 
+  for (st in 1:nStock) {
+    TimeSteps <- dimnames(PopulationList$NumberAtAgeArea[[st]])[['Time Steps']]
+    dd <- dim(PopulationList$NumberAtAgeArea)
+    nSim <- dd[1]
+    nAges <- dd[3]
+    TimeStep1 <- TimeSteps[1]
+    
+    RecDevInit <- PopulationList$SRR$RecDevInit[[st]]
+    RecDevHist <- PopulationList$SRR$RecDevs[[st]] 
   
-  N0atAge <- purrr::map(Unfished@Equilibrium@Number, \(x) 
-                        ArrayExpand(x, nSim, nAges, TimeStep1)
-  ) |> 
-    List2Array('Stock') |>
-    aperm(c('Sim', 'Stock', 'Age', 'Time Step', 'Area'))
-  
-  
-  InitAgeClassRecDevs <- abind::abind(RecDevHist[,, 1,drop=FALSE],
-                                      RecDevInit, along=3,
-                                      use.dnns = TRUE,
-                                      use.first.dimnames = FALSE)
-  
-  ages <- dimnames(InitAgeClassRecDevs)$Age |> as.numeric()
-  ages[1] <- ages[2]-1
-  dimnames(InitAgeClassRecDevs)$Age <- ages
-  
-  InitAgeClassRecDevs <- InitAgeClassRecDevs |> 
-    AddDimension('Time Step') |> 
-    AddDimension('Area')
-  
-  ArrayMultiply(N0atAge, InitAgeClassRecDevs)
+    InitAgeClassRecDevs <- abind::abind(RecDevHist[,1,drop=FALSE],
+                                        RecDevInit, along=2,
+                                        use.dnns = TRUE,
+                                        use.first.dimnames = FALSE)
+    ages <- dimnames(InitAgeClassRecDevs)$Age |> as.numeric()
+    ages[1] <- ages[2]-1
+    dimnames(InitAgeClassRecDevs)$Age <- ages
+    
+    N0atAge <- Unfished@Equilibrium@Number[[st]][,,1,, drop=FALSE]
+    
+    InitAgeClassRecDevs <- InitAgeClassRecDevs |> 
+      AddDimension('Time Step') |> 
+      AddDimension('Area')
+    
+    NatAgeInitial <- ArrayMultiply(N0atAge, InitAgeClassRecDevs)
+    
+    if (length(PopulationList$Depletion$Initial[[st]]) > 0){
+      cli::cli_abort('Initial depletion not done', .internal=TRUE)
+      # NatAgeInitial update for initial depletion
+    }
+    
+    PopulationList$NumberAtAgeArea[[st]][,,1,] <- NatAgeInitial
+    
+  }
+  PopulationList
 }
 
 

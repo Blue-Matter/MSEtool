@@ -1279,12 +1279,15 @@ SRR <- function(Pars=list(h=NA),
 #' If `RelativeSize` is not specified, all areas are assumed to be the same size.
 #'
 #' ## Movement
-#' `Movement` is a numeric array  with dimensions `nSim`, `nArea`, `nArea`, `nAge`, and
-#' `nTS`. The last two dimensions are optional.
-#'
 #' `Movement` is calculated internally from `UnfishedDist` and `ProbStaying`. If it is
 #' provided, the asymptotic unfished distribution will be calculated and assigned
 #' to `UnfishedDist` (over-writing any values that are in `UnfishedDist`).
+#' 
+#' `Movement` is a numeric array  with dimensions `nSim`, `nArea`, `nArea`, `nAge`, and
+#' `nTS`, with each element containing the probability of moving from the first area
+#' dimension (row in an `nArea` by `nArea` matrix) to the second area (column in an `nArea` by `nArea` matrix).
+#' The last two dimensions `nAge` and `nTS` are optional.
+#' 
 #'
 #' @slot UnfishedDist Numeric or numeric array. The relative distribution of the stock over areas.
 #' See `Details`.

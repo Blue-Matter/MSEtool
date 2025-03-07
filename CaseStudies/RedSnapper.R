@@ -6,9 +6,7 @@ la()
 
 OM <- ImportBAM('Red Snapper')
 
-OM@Stock$`SA Red Snapper`@Spatial@UnfishedDist
 
-OM@Stock$`SA Red Snapper`@Weight@MeanAtAge
 
 messages='default'
 nSim=NULL

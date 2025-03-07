@@ -1,4 +1,35 @@
 
+CheckSimsUnique <- function(List) {
+  l1 <- MakeSimList(List, 1)
+  l2 <- MakeSimList(List, 2)
+  digest::digest(l1, algo='spookyhash') != digest::digest(l2, algo='spookyhash')
+}
+
+ConvertToSimList <- function(PopulationList, FleetList, nSim) {
+  
+  SimsUnique <- FALSE
+  if (OM@nSim>1) {
+    SimsUnique <- CheckSimsUnique(PopulationList) | CheckSimsUnique(FleetList)
+  }
+  
+  if (SimsUnique) {
+    uniqueSims <- 1:OM@nSim
+    PopulationListSim <- lapply(1:OM@nSim, function(x) MakeSimList(PopulationList, x))
+    names(PopulationListSim) <- 1:OM@nSim
+    FleetListSim <- lapply(1:OM@nSim, function(x) MakeSimList(FleetList, x)) 
+    names(FleetListSim) <- 1:OM@nSim
+  } else {
+    uniqueSims <- 1
+    PopulationListSim <- list(MakeSimList(PopulationList, 1))
+    names(PopulationListSim) <- 1
+    FleetListSim <- list(MakeSimList(FleetList, 1) )
+    names(FleetListSim) <- 1
+  }
+  
+  list(PopulationListSim=PopulationListSim,
+       FleetListSim=FleetListSim)
+}
+
 #' @describeIn runMSE Development version of `Simulate`
 #' @export
 SimulateDEV <- function(OM=NULL, 
@@ -15,162 +46,65 @@ SimulateDEV <- function(OM=NULL,
   # ---- Initial Checks and Setup ----
   chk <- Check(OM) # TODO OM checks
   
-  OM <- MSEtool:::StartUp(OM, messages, nSim) 
+  OM <- MSEtool:::StartUp(OM, messages) 
   
   # ---- Calculate Unfished Dynamics ----
   Unfished <- CalcUnfishedDynamics(OM)
   
-  
   # ---- Make Lists of Arrays ----
-  # expands all arrays to include all sims, and maximum `nage` across stocks, and all Historical time steps
+  # Convert values from Stock and Fleet objects to named lists
+  # Expands simulations, ages, and time steps as needed
+  
   PopulationList <- MakePopulationList(OM, Unfished=Unfished)
   FleetList <- MakeFleetList(OM) # everything with a fleet dimension
+
+  # Convert to list by simulation
+  # length OM@nSim or length 1 if all values identical across simulations
+  SimList <- ConvertToSimList(PopulationList, FleetList, OM@nSim)
+  PopulationListSim <- SimList$PopulationListSim
+  FleetListSim <- SimList$FleetListSim
   
   # ---- Calculate Reference Points ----
   # RefPoints <- CalcRefPoints(OM)
   
-  # ---- Optimize for Initial Depletion ----
-  # Hist <- MSEtool:::OptimInitDepletion(OM)
-  
   # ---- Number-at-Age at Beginning of Initial Time Step ----
-  abind::afill(PopulationList$NumberAtAgeArea) <- CalcInitialTimeStep(PopulationList, Unfished) 
- 
-  sim <- 1
+  PopulationList <- CalcInitialTimeStep(PopulationList, Unfished) 
   
-  PopulationListsim <- MakeSimList(PopulationList, sim)
-  FleetListsim <- MakeSimList(FleetList, sim)
-  TimeSteps <- TimeSteps(OM, 'Historical')
+  # ---- Optimize for Final Depletion ----
   
-  Test <- CalcPopDynamics_(PopulationListsim,
-                           FleetListsim,
-                           TimeSteps=as.character(TimeSteps))
-  
-  
-  # TODO
-  # - check plus group
-  # - check recruits
-  # - check N-at-age match BAMdata
-  # - finish movement
-  Test$PopulationList$SP0
-  Test$PopulationList$SProduction
-  
-  Test$PopulationList$NumberAtAgeArea[1,,1,1]
-  Test$PopulationList$NumberAtAgeArea[1,,2,1]
-
-  
-  
-  
-  n <- NumberAtAgeArea[1,,1,] |> rowSums()
-  n2 <- NumberAtAgeArea[1,,2,] |> rowSums()
-  
-  plot(n, type='l')
-  lines(n2, col='blue')
-  
-  plot(n, type='l')
-  n0 <- rowSums(Unfished@Equilibrium@Number$`Day octopus`[1,,1,])
-  sum(n * FecundityAtAge[1,,1])
-  
-  sum(n0 * FecundityAtAge[1,,1])
-  SP0
-  
-  plot(n0)
-  lines(rowSums(SNatAge$`Day octopus`[1,,1,]))
-  
-  
-  sum(Unfished@Equilibrium@SProduction$`Day octopus`[1,,1,])
-  
-  Test$NumberAtAgeArea[1,,2,]
-  
-  Test$SProduction[1]
-  
-  36693921/5207933
-  
-  CalcRecruitment_(SProduction,
-                   R0,
-                   SP0,
-                   RecDevHist,
-                   SRRModel,
-                   SRRPars,
-                   Sim,
-                   TSindex=0);
-  
-  
-  rdat <- bamExtras::rdat_RedSnapper
-  
-  cbind(Test$NumberAtAgeArea[1,,1,], c(rdat$N.age[1,1], rdat$N.age[1,]))
-  
-  Test$NumberAtAgeArea[1,,2,]
-  c(rdat$N.age[2,1], rdat$N.age[2,])
-  
-  Test$BiomassAtAge[1,,1,]
-  Test$VBiomassAtAge[1,,1,1,]
-  Test$DensityArea[1,1,1,]
-  Test$EffortArea[1,1,1,] 
-  Test$FDeadArea[1,,1,1,]
-  Test$RemovalArea[1,,1,1,]
-  Test$RetainArea[1,,1,1,]
-  
-  
- 
-  
+  OptimCatchability(PopulationListSim, FleetListSim)
   
 
-
-  
-  ArgList <- list(NumberAtAgeArea=NumberAtAgeArea,
-                  BiomassAtAgeArea=BiomassAtAgeArea,
-                  WeightAtAge=WeightAtAge,
-                  Effort=Effort,
-                  SelectivityAtAge=SelectivityAtAge,
-                  SelectivityAtAge=SelectivityAtAge,
-                  TimeStep=as.character(TimeSteps[1]))
-  
-  
-  
-
-  
   # ---- Historical Population Dynamics ----
-  progress = seq_along(TimeSteps)
-  for (ts in progress) {
+  PopDynamicsHistorical <- purrr::map2(PopulationListSim, FleetListSim, \(x,y)
+                                       CalcPopDynamics_(x,
+                                                        y,
+                                                        TimeSteps=TimeSteps(OM, 'Historical'))
+  ) 
+  
+  
+ 
 
-    TimeStep <- TimeSteps[ts]
-
-    # ---- Do MICE stuff during this Time Step (if applicable) -----
-    # TODO
-    Hist <- CalcMICE(Hist, TimeStep=TimeStep)
-
-    # ---- Update Biomass At Age etc ----
-    # done after MICE to account for changes
-    Hist <- UpdateBioArrays(Hist, TimeStep)
-
-    # for MPs - Calculate Effort, Selectivity, etc
-    # update fishery data
-    # these two steps should be done first
-
-    # ---- Distribute Effort across Areas ----
-    Hist <- DistributeEffort(Hist, TimeStep)
-
-    # ---- Calculate Catch and Fishing Mortality ----
-    Hist <- CalcCatch(Hist, TimeStep)
-
-    # ---- Calculate Recruitment  Time Step ----
-    Hist <- CalcRecruitment(Hist, TimeStep=TimeStep)
-
-    # ---- Number, Biomass at beginning of Next Time Step and Move ----
-    Hist <- CalcNumberNext(Hist, TimeStep)
-
-    # print(sum(Hist@Number[[1]][1,,ts+1,]))
-
+  
+  if (length(PopulationListSim)<OM@nSim) {
+    
   }
-  # 
-  # 
-  # Hist <- MSEtool:::CalcPopDynamics(Hist, TimeSteps=TimeSteps(Hist, 'Historical'))
+    
+  
+  
+ 
+  # TODO
+  # - project with catch, effort, spatial, size limits
+  # - make MICE model 
+  # - make data 
+  # - make obs
+  # - make imp
+  
+  
+  
+  
 
-  # TODO Make C++ version for increased speed
-  # TODO Make C++ versions for Ref Point Calcs
-  # profvis::profvis(
-  #   postHist <- MSEtool:::CalcPopDynamics(Hist, TimeSteps=TimeSteps(Hist,'Historical'), silent=T)
-  # )
+
   
   # ---- Condition Observation Object on Real Fishery Data ----
   
@@ -178,7 +112,7 @@ SimulateDEV <- function(OM=NULL,
   
   # ---- Return `hist` Object ----
   
-  Hist
+  # make Hist object
 }
 
 

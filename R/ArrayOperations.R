@@ -307,7 +307,7 @@ ArrayExpand <- function(Array, nSim, nAges, TimeSteps, AgeOpt=1) {
 # AgeOpt = 1 fills all additional age classes with 1e-16
 # AgeOpt = 2 fills all additional age classes with 1
 # AgeOpt = 3 fills all additional age classes with same as last age 
-ExpandAges <- function(Array, nAges, AgeOpt=1) {
+ExpandAges <- function(Array, nAges, AgeOpt=3) {
   ind <- which(names(dimnames(Array))=='Age')
   if (length(ind)<1)
     return(Array)

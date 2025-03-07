@@ -73,7 +73,7 @@ CalcMovement <- function(Spatial,
                                                   nareas,
                                                   outdims[3],
                                                   outdims[4])),
-                                  c('Sim', 'Area', 'Area', 'Age', 'Time Step'),
+                                  c('Sim', 'FromArea', 'ToArea', 'Age', 'Time Step'),
                                   TimeSteps=TimeSteps)
 
 
@@ -157,15 +157,14 @@ CalcMovement <- function(Spatial,
     }
   }
   
-  if (nareas==2) {
-    ProbStaying <- abind::abind(Spatial@ProbStaying, 
-                                 1-Spatial@ProbStaying, 
-                                 along=2, 
-                                 use.first.dimnames=TRUE, 
-                                 use.dnns = TRUE)
-    dimnames(ProbStaying)[['Area']] <- 1:2
-    Spatial@ProbStaying <- ProbStaying
-  }
+  # if (nareas==2) {
+  #   ProbStaying <- abind::abind(Spatial@ProbStaying, 
+  #                                1-Spatial@ProbStaying, 
+  #                                along=2, 
+  #                                use.dnns = TRUE)
+  #   dimnames(ProbStaying)[['Area']] <- 1:2
+  #   Spatial@ProbStaying <- ProbStaying
+  # }
 
   if (!silent)
     cli::cli_progress_done()

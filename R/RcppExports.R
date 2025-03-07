@@ -45,48 +45,52 @@ GetIndex_ <- function(dimSizes, dimIndices) {
     .Call(`_MSEtool_GetIndex_`, dimSizes, dimIndices)
 }
 
-CalcBiomass_ <- function(BiomassArea, NumberAtAgeArea, WeightAtAge, TSindex) {
-    .Call(`_MSEtool_CalcBiomass_`, BiomassArea, NumberAtAgeArea, WeightAtAge, TSindex)
+CalcBiomass_ <- function(BiomassAreaList, NumberAtAgeAreaList, WeightList, TSindex) {
+    .Call(`_MSEtool_CalcBiomass_`, BiomassAreaList, NumberAtAgeAreaList, WeightList, TSindex)
 }
 
-CalcVBiomass_ <- function(VBiomassArea, NumberAtAgeArea, FleetWeightAtAge, SelectivityAtAge, TSindex) {
-    .Call(`_MSEtool_CalcVBiomass_`, VBiomassArea, NumberAtAgeArea, FleetWeightAtAge, SelectivityAtAge, TSindex)
+CalcVBiomass_ <- function(VBiomassAreaList, NumberAtAgeAreaList, FleetWeightAtAgeList, SelectivityAtAgeList, ClosureAreaList, TSindex) {
+    .Call(`_MSEtool_CalcVBiomass_`, VBiomassAreaList, NumberAtAgeAreaList, FleetWeightAtAgeList, SelectivityAtAgeList, ClosureAreaList, TSindex)
 }
 
-CalcDensity_ <- function(DensityArea, VBiomassArea, RelativeSize, TSindex) {
-    .Call(`_MSEtool_CalcDensity_`, DensityArea, VBiomassArea, RelativeSize, TSindex)
+CalcDensity_ <- function(DensityAreaList, VBiomassAreaList, RelativeSizeList, TSindex) {
+    .Call(`_MSEtool_CalcDensity_`, DensityAreaList, VBiomassAreaList, RelativeSizeList, TSindex)
 }
 
-DistEffort_ <- function(EffortArea, DensityArea, Effort, TSindex) {
-    .Call(`_MSEtool_DistEffort_`, EffortArea, DensityArea, Effort, TSindex)
+DistEffort_ <- function(EffortAreaList, DensityAreaList, EffortList, TSindex) {
+    .Call(`_MSEtool_DistEffort_`, EffortAreaList, DensityAreaList, EffortList, TSindex)
 }
 
-CalcCatch_ <- function(NumberAtAgeArea, DensityArea, NaturalMortalityAtAge, FleetWeightAtAge, EffortArea, Catchability, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, FDeadArea, FRetainArea, RemovalArea, RetainArea, RemovalNAtAge, RetainNAtAge, RemovalBAtAge, RetainBAtAge, TSindex) {
-    .Call(`_MSEtool_CalcCatch_`, NumberAtAgeArea, DensityArea, NaturalMortalityAtAge, FleetWeightAtAge, EffortArea, Catchability, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, FDeadArea, FRetainArea, RemovalArea, RetainArea, RemovalNAtAge, RetainNAtAge, RemovalBAtAge, RetainBAtAge, TSindex)
+CalcFArea_ <- function(FDeadAtAgeAreaList, FRetainAtAgeAreaList, EffortAreaList, DensityAreaList, CatchabilityList, SelectivityAtAgeList, RetentionAtAgeList, DiscardMortalityAtAgeList, TSindex) {
+    .Call(`_MSEtool_CalcFArea_`, FDeadAtAgeAreaList, FRetainAtAgeAreaList, EffortAreaList, DensityAreaList, CatchabilityList, SelectivityAtAgeList, RetentionAtAgeList, DiscardMortalityAtAgeList, TSindex)
 }
 
-CalcFfromCatch_ <- function(FDeadAtAge, FRetainAtAge, NumberAtAgeArea, RemovalNAtAge, NaturalMortalityAtAge, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, FDeadArea, FRetainArea, TSindex) {
-    .Call(`_MSEtool_CalcFfromCatch_`, FDeadAtAge, FRetainAtAge, NumberAtAgeArea, RemovalNAtAge, NaturalMortalityAtAge, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, FDeadArea, FRetainArea, TSindex)
+CalcCatch_ <- function(RemovalAtAgeAreaList, RetainAtAgeAreaList, RemovalNumberAtAgeList, RetainNumberAtAgeList, RemovalBiomassAtAgeList, RetainBiomassAtAgeList, NaturalMortalityAtAgeList, FleetWeightAtAgeList, NumberAtAgeAreaList, FDeadAtAgeAreaList, FRetainAtAgeAreaList, TSindex) {
+    .Call(`_MSEtool_CalcCatch_`, RemovalAtAgeAreaList, RetainAtAgeAreaList, RemovalNumberAtAgeList, RetainNumberAtAgeList, RemovalBiomassAtAgeList, RetainBiomassAtAgeList, NaturalMortalityAtAgeList, FleetWeightAtAgeList, NumberAtAgeAreaList, FDeadAtAgeAreaList, FRetainAtAgeAreaList, TSindex)
 }
 
-CalcSpawnProduction_ <- function(SProduction, NaturalMortalityAtAge, FDeadAtAge, FecundityAtAge, NumberAtAgeArea, SpawnTimeFrac, SPFrom, TSindex) {
-    .Call(`_MSEtool_CalcSpawnProduction_`, SProduction, NaturalMortalityAtAge, FDeadAtAge, FecundityAtAge, NumberAtAgeArea, SpawnTimeFrac, SPFrom, TSindex)
+CalcFfromCatch_ <- function(FDeadAtAgeList, FRetainAtAgeList, NumberAtAgeAreaList, RemovalNumberAtAgeList, NaturalMortalityAtAgeList, SelectivityAtAgeList, RetentionAtAgeList, DiscardMortalityAtAgeList, FDeadAtAgeAreaList, FRetainAtAgeAreaList, TSindex) {
+    .Call(`_MSEtool_CalcFfromCatch_`, FDeadAtAgeList, FRetainAtAgeList, NumberAtAgeAreaList, RemovalNumberAtAgeList, NaturalMortalityAtAgeList, SelectivityAtAgeList, RetentionAtAgeList, DiscardMortalityAtAgeList, FDeadAtAgeAreaList, FRetainAtAgeAreaList, TSindex)
 }
 
-CalcRecruitment_ <- function(SProduction, R0, SP0, RecDevs, SRRModel, SRRPars, Sim, TSindex) {
-    .Call(`_MSEtool_CalcRecruitment_`, SProduction, R0, SP0, RecDevs, SRRModel, SRRPars, Sim, TSindex)
+CalcSpawnProduction_ <- function(SProductionList, NumberAtAgeAreaList, NaturalMortalityAtAgeList, FecundityAtAgeList, SpawnTimeFrac, SPFromList, FDeadAtAgeList, TSindex) {
+    .Call(`_MSEtool_CalcSpawnProduction_`, SProductionList, NumberAtAgeAreaList, NaturalMortalityAtAgeList, FecundityAtAgeList, SpawnTimeFrac, SPFromList, FDeadAtAgeList, TSindex)
 }
 
-AddRecruits_ <- function(NumberAtAgeArea, Recruits, UnfishedDist, TSindex) {
-    .Call(`_MSEtool_AddRecruits_`, NumberAtAgeArea, Recruits, UnfishedDist, TSindex)
+CalcRecruitment_ <- function(SProductionList, SP0List, R0List, RecDevsList, SRRModelList, SRRParsList, TSindex) {
+    .Call(`_MSEtool_CalcRecruitment_`, SProductionList, SP0List, R0List, RecDevsList, SRRModelList, SRRParsList, TSindex)
 }
 
-MoveStock_ <- function(NumberAtAgeArea, Movement, TSindex) {
-    .Call(`_MSEtool_MoveStock_`, NumberAtAgeArea, Movement, TSindex)
+AddRecruits_ <- function(NumberAtAgeAreaList, Recruits, UnfishedDistList, TSindex) {
+    .Call(`_MSEtool_AddRecruits_`, NumberAtAgeAreaList, Recruits, UnfishedDistList, TSindex)
 }
 
-CalcNumberNext_ <- function(NumberAtAgeArea, NaturalMortalityAtAge, FDeadArea, Semelparous, Ages, TSindex) {
-    .Call(`_MSEtool_CalcNumberNext_`, NumberAtAgeArea, NaturalMortalityAtAge, FDeadArea, Semelparous, Ages, TSindex)
+CalcNumberNext_ <- function(NumberAtAgeAreaList, NaturalMortalityAtAgeList, FDeadAtAgeAreaList, SemelparousList, AgesList, TSindex) {
+    .Call(`_MSEtool_CalcNumberNext_`, NumberAtAgeAreaList, NaturalMortalityAtAgeList, FDeadAtAgeAreaList, SemelparousList, AgesList, TSindex)
+}
+
+MoveStock_ <- function(NumberAtAgeAreaList, MovementList, TSindex, Sim = 1L) {
+    .Call(`_MSEtool_MoveStock_`, NumberAtAgeAreaList, MovementList, TSindex, Sim)
 }
 
 CalcPopDynamics_ <- function(PopulationList, FleetList, TimeSteps) {

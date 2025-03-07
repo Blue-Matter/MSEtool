@@ -1186,15 +1186,29 @@ setMethod("Populate", "spatial", function(object,
     object@UnfishedDist  <- AddDimNames(array(1, dim=c(1,1,1,1)),
                                         DimNames, TimeSteps=TimeSteps)
     object@Movement  <- AddDimNames(array(1, dim=c(1,1,1,1,1)),
-                                    DimNames[c(1,2,2,3,4)], TimeSteps=TimeSteps)
+                                    c("Sim",'FromArea', 'ToArea','Age', 'Time Step'), TimeSteps=TimeSteps)
     return(SetDigest(argList, object))
   }
 
-
   sb <- PrintPopulating(object, isTRUE(messages))
   
-  if (is.null(object@Movement))
+  if (is.null(object@Movement)) {
     object <- CalcMovement(object, TimeSteps, nsim, seed, nits, plot, silent=isFALSE(messages))
+  } else {
+    dnames <- dimnames(object@Movement)
+    if (!all(names(dnames)[1:3] == c('Sim', 'FromArea', 'ToArea'))) {
+      cli::cli_abort("First three dimensions of `Spatial@Movement` must be: {.val {c('Sim', 'FromArea', 'ToArea')}}")
+    }
+    if (length(dnames)==3) {
+      object@Movement <- AddAgeTimeStepDimensions(object@Movement, outdim=5) |>
+        AddDimNames(c('Sim', 'FromArea', 'ToArea', 'Age', 'Time Step'), TimeSteps=TimeSteps)
+    } else if (length(dnames)==4) {
+      cli::cli_abort("`Spatial@Movement` should either have dimensions: 
+                     {.val {c('Sim', 'FromArea', 'ToArea')}} OR 
+                     {.val {c('Sim', 'FromArea', 'ToArea', 'Age', 'Time Step')}}")
+    }
+  }
+    
   
   if (is.null(object@UnfishedDist)) {
     object <- CalcUnfishedDist(object, TimeSteps)

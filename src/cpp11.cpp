@@ -20,20 +20,21 @@ extern "C" {
 /* .Call calls */
 extern SEXP _MSEtool_AddRecruits_(SEXP, SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_CalcBiomass_(SEXP, SEXP, SEXP, SEXP);
-extern SEXP _MSEtool_CalcCatch_(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+extern SEXP _MSEtool_CalcCatch_(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_CalcDensity_(SEXP, SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_CalcDims_(SEXP);
+extern SEXP _MSEtool_CalcFArea_(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_CalcFfromCatch_(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_CalcNumberNext_(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_CalcPopDynamics_(SEXP, SEXP, SEXP);
-extern SEXP _MSEtool_CalcRecruitment_(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+extern SEXP _MSEtool_CalcRecruitment_(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_CalcSpawnProduction_(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
-extern SEXP _MSEtool_CalcVBiomass_(SEXP, SEXP, SEXP, SEXP, SEXP);
+extern SEXP _MSEtool_CalcVBiomass_(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_DistEffort_(SEXP, SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_GetIndex_(SEXP, SEXP);
 extern SEXP _MSEtool_LinInterp_cpp(SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_MSYCalcs(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
-extern SEXP _MSEtool_MoveStock_(SEXP, SEXP, SEXP);
+extern SEXP _MSEtool_MoveStock_(SEXP, SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_Ref_int_cpp(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_calcVatAge(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_combine(SEXP);
@@ -53,20 +54,21 @@ extern SEXP _MSEtool_vecminInd(SEXP);
 static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_AddRecruits_",         (DL_FUNC) &_MSEtool_AddRecruits_,          4},
     {"_MSEtool_CalcBiomass_",         (DL_FUNC) &_MSEtool_CalcBiomass_,          4},
-    {"_MSEtool_CalcCatch_",           (DL_FUNC) &_MSEtool_CalcCatch_,           18},
+    {"_MSEtool_CalcCatch_",           (DL_FUNC) &_MSEtool_CalcCatch_,           12},
     {"_MSEtool_CalcDensity_",         (DL_FUNC) &_MSEtool_CalcDensity_,          4},
     {"_MSEtool_CalcDims_",            (DL_FUNC) &_MSEtool_CalcDims_,             1},
+    {"_MSEtool_CalcFArea_",           (DL_FUNC) &_MSEtool_CalcFArea_,            9},
     {"_MSEtool_CalcFfromCatch_",      (DL_FUNC) &_MSEtool_CalcFfromCatch_,      11},
     {"_MSEtool_CalcNumberNext_",      (DL_FUNC) &_MSEtool_CalcNumberNext_,       6},
     {"_MSEtool_CalcPopDynamics_",     (DL_FUNC) &_MSEtool_CalcPopDynamics_,      3},
-    {"_MSEtool_CalcRecruitment_",     (DL_FUNC) &_MSEtool_CalcRecruitment_,      8},
+    {"_MSEtool_CalcRecruitment_",     (DL_FUNC) &_MSEtool_CalcRecruitment_,      7},
     {"_MSEtool_CalcSpawnProduction_", (DL_FUNC) &_MSEtool_CalcSpawnProduction_,  8},
-    {"_MSEtool_CalcVBiomass_",        (DL_FUNC) &_MSEtool_CalcVBiomass_,         5},
+    {"_MSEtool_CalcVBiomass_",        (DL_FUNC) &_MSEtool_CalcVBiomass_,         6},
     {"_MSEtool_DistEffort_",          (DL_FUNC) &_MSEtool_DistEffort_,           4},
     {"_MSEtool_GetIndex_",            (DL_FUNC) &_MSEtool_GetIndex_,             2},
     {"_MSEtool_LinInterp_cpp",        (DL_FUNC) &_MSEtool_LinInterp_cpp,         3},
     {"_MSEtool_MSYCalcs",             (DL_FUNC) &_MSEtool_MSYCalcs,             17},
-    {"_MSEtool_MoveStock_",           (DL_FUNC) &_MSEtool_MoveStock_,            3},
+    {"_MSEtool_MoveStock_",           (DL_FUNC) &_MSEtool_MoveStock_,            4},
     {"_MSEtool_Ref_int_cpp",          (DL_FUNC) &_MSEtool_Ref_int_cpp,          12},
     {"_MSEtool_calcVatAge",           (DL_FUNC) &_MSEtool_calcVatAge,            7},
     {"_MSEtool_combine",              (DL_FUNC) &_MSEtool_combine,               1},

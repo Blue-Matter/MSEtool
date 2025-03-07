@@ -1,16 +1,4 @@
-OptimInitDepletion <- function(Hist) {
-  # TODO
-  # adjust initial rec devs to match initial depletion in first time step
-  
-  InitialDepletion <- purrr::map(Hist@Stock, slot, 'Depletion') |>
-    purrr::map(slot, 'Initial')
-  
-  lens <- lapply(InitialDepletion, length) |> unlist()
-  
-  if (any(lens)>0)
-    cli::cli_abort('Initial depletion not done', .internal=TRUE)
-  Hist
-}
+
 
 SubsetSim <- function(object, Sim=1, drop=FALSE) {
   # this is a piece of black magic that subsets all arrays with a Sim
@@ -57,38 +45,35 @@ SubsetSim <- function(object, Sim=1, drop=FALSE) {
   object
 }
 
-OptimCatchability <- function(Hist) {
+OptimCatchability <- function(PopulationListSim, FleetListSim) {
   
-  Depletion <- purrr::map(Hist@Stock, slot, 'Depletion') 
-  DepletionTarget <- purrr::map(Depletion, slot, 'Final')
-
-  if (length(DepletionTarget[[1]])<1)
-    return(Hist)
+  nsims <- length(PopulationListSim)
   
-  if (nStock(Hist)>1)
-    cli::cli_abort('Optimizing catchability not working for multiple stocks', .internal=TRUE)
+  nStock <- length(PopulationListSim[[1]]$Ages)
+  nFleet <- dim(FleetListSim[[1]]$FishingMortality$DeadAtAge[[1]])[3]
   
-  if (nFleet(Hist)>1)
-    cli::cli_abort('Optimizing catchability not working for multiple fleets', .internal=TRUE)
+  if (nStock>1)
+    cli::cli_abort('Optimizing catchability not currently working for multiple stocks', .internal=TRUE)
   
-  nsims <- dim(Hist@Number[[1]][,,1,1, drop=FALSE])[1]
+  if (nFleet>1)
+    cli::cli_abort('Optimizing catchability not currently working for multiple fleets', .internal=TRUE)
+  
   bounds <-  c(1e-03, 15)
-  
   Qvals <- rep(NA, nsims)
- 
-  for (sim in 1:nsims) {
-
-    SubHist <- SubsetSim(Hist, sim)
   
+  Qvals <- purrr::map2(PopulationListSim, FleetListSim, \(popList, fleetList) {
+    
+    DepletionTarget <- popList$Depletion$Final[[1]]
+    if (length(DepletionTarget)<1)
+      return(NA)
+    
     doOpt <- optimize(OptCatchability,
                       log(bounds), 
                       Hist=SubHist, 
-                      sim=sim,
                       tol=1e-3)
-    
-    Qvals[sim] <- exp(doOpt$minimum)
-
-  }
+    exp(doOpt$minimum)
+  })
+  
   
   # nsims <- nSim(Hist)
   # Qvals <- rep(0.1, nSim(Hist))
@@ -99,12 +84,10 @@ OptimCatchability <- function(Hist) {
   Hist
 }
 
-OptCatchability <- function(logQ, Hist, DepletionTarget, sim=1) {
-  # LOGQ <<- logQ
-  # logQ <- LOGQ
-  TimeSteps <- TimeSteps(Hist, 'Historical')
-  DepletionTarget <- Hist@Stock[[1]]@Depletion@Final[sim]
+OptCatchability <- function(logQ, popList, fleetList, DepletionTarget) {
   
+  ## up to here ## 
+  stop()
   Hist@Fleet[[1]][[1]]@Effort@Catchability <- array(exp(logQ),
                                                     dim=c(1,1),
                                                     dimnames = list(Sim=sim,

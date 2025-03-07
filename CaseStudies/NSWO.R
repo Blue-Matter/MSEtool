@@ -23,8 +23,14 @@ for (st in 1:2) {
 }
 
 OMa <- Convert(MOM, Populate = FALSE)  # convert from `MOM` to `om`
-OM <- Populate(OMa)
+OMa@Fleet[[1]][[1]]@Distribution@Closure
 
+OM <- Populate(OMa)
+OM@nSim
+
+OM@Fleet[[1]][[1]]@Distribution@Closure |> dim()
+
+OM@Stock$Female@Length@MeanAtAge |> dim()
 
 
 messages='default'

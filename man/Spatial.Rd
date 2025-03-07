@@ -133,12 +133,14 @@ If \code{RelativeSize} is not specified, all areas are assumed to be the same si
 
 \subsection{Movement}{
 
-\code{Movement} is a numeric array  with dimensions \code{nSim}, \code{nArea}, \code{nArea}, \code{nAge}, and
-\code{nTS}. The last two dimensions are optional.
-
 \code{Movement} is calculated internally from \code{UnfishedDist} and \code{ProbStaying}. If it is
 provided, the asymptotic unfished distribution will be calculated and assigned
 to \code{UnfishedDist} (over-writing any values that are in \code{UnfishedDist}).
+
+\code{Movement} is a numeric array  with dimensions \code{nSim}, \code{nArea}, \code{nArea}, \code{nAge}, and
+\code{nTS}, with each element containing the probability of moving from the first area
+dimension (row in an \code{nArea} by \code{nArea} matrix) to the second area (column in an \code{nArea} by \code{nArea} matrix).
+The last two dimensions \code{nAge} and \code{nTS} are optional.
 }
 }
 \section{Functions}{

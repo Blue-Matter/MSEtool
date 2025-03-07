@@ -6,10 +6,10 @@ GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), TimeSte
   if (is.null(TimeSteps))
     TimeSteps <- TimeSteps(OM, Period)
   
-  nAges <- unlist(purrr::map(OM@Stock, nAge)) |> max()
+  nAges <- purrr::map(OM@Stock, nAge)
 
-  
   nAreas <- unlist(purrr::map(OM@Stock, nArea)) |> unique()
+  
   if (length(nAreas)>1) 
     cli::cli_abort('All Stocks must have the same number of areas')
   
@@ -25,13 +25,18 @@ GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), TimeSte
 
 MakeSimList <- function(List, Sim=1) {
   nms <- names(List)
+  
   for (i in seq_along(nms)) {
+    
     if (inherits(List[[i]], 'array')) {
       if ("Sim" %in% names(dimnames(List[[i]]))) {
-        List[[i]] <- Array2List(List[[i]], 'Sim')[[Sim]]
+        List[[i]] <- Array2List(List[[i]], 'Sim', Sim)[[1]]
       }
     } else if (inherits(List[[i]], 'list')) {
-      List[[i]] <- Recall(List[[i]])
+      List[[i]] <- Recall(List[[i]], Sim)
+    } else if (inherits(List[[i]], 'numeric')) {
+      List[[i]] <- List[[i]][Sim]
+
     }
   } 
   
@@ -58,15 +63,18 @@ MakePopulationList <- function(OM, Period='Historical', Unfished=NULL) {
   
   # Arrays to be  filled 
  
-  List$NumberAtAgeArea <- ArraySimStockAgeTimeArea(OM, Period) 
-  List$BiomassArea <- ArraySimStockAgeTimeArea(OM, Period) |>
-    DropDimension('Age', warn=FALSE) 
-  # List$SBiomassArea <- List$BiomassArea 
-  List$SProduction <-  List$BiomassArea |>
-    DropDimension('Area', warn=FALSE)
+  List$NumberAtAgeArea <- ListArraySimAgeTimeArea(OM, Period) 
+  List$BiomassArea <- ListArraySimAgeTimeArea(OM, Period) |>
+    purrr::map(\(x)  DropDimension(x, 'Age', warn=FALSE))
   
-  List$SP0 <- List2Array(Unfished@Equilibrium@SProduction,'Stock') |>
-    aperm(c('Sim', 'Stock', 'Time Step')) 
+  List$SProduction <-  List$BiomassArea |>
+    purrr::map(\(x)  DropDimension(x, 'Area', warn=FALSE))
+  
+  List$SP0 <- Unfished@Equilibrium@SProduction |>
+    purrr::map(\(x) {
+      x |> ExpandSims(OM@nSim) |> ExpandTimeSteps(TimeSteps=TimeSteps(OM, Period))
+        
+    })
   
   List$CurrentYear <- purrr::map(OM@Stock, \(x) slot(x, 'CurrentYear'))
   List$TimeUnits <- purrr::map(OM@Stock, \(x) slot(x, 'TimeUnits'))
@@ -75,22 +83,18 @@ MakePopulationList <- function(OM, Period='Historical', Unfished=NULL) {
   List$TimeStepsProj <- purrr::map(OM@Stock, \(x) TimeSteps(x, 'Projection'))
   List$TimeStepsPerYear <- purrr::map(OM@Stock, \(x) slot(x, 'TimeStepsPerYear'))
   List$Misc <- purrr::map(OM@Stock, \(x) slot(x, 'Misc'))
-  List$Sim <- as.list(1:nSim(OM))
   
   List
 }
 
 MakeStockSlotList <- function(OM, slot='Length', Period='Historical', TimeSteps=NULL) {
   
-  meta <- GetMetaData(OM, Period, TimeSteps)
-  nSim <- meta$nSim
-  nAges <- meta$nAges
-  TimeSteps <- meta$TimeSteps
-  nStock <- length(meta$StockNames)
-  nFleet <- length(meta$FleetNames)
-  nArea <- meta$nAreas
-
+  if (is.null(TimeSteps))
+    TimeSteps <- TimeSteps(OM, Period)
+  
   sNames <- slotNames(slot(OM@Stock[[1]], slot))
+  
+  meta <- GetMetaData(OM)
   
   List <- list()
   
@@ -103,41 +107,49 @@ MakeStockSlotList <- function(OM, slot='Length', Period='Historical', TimeSteps=
     for (i in seq_along(List[['Pars']])) {
       stList <-  List[['Pars']][[i]]
       for (j in seq_along(stList)) {
-        List[['Pars']][[i]][[j]] <-  List[['Pars']][[i]][[j]] |>  ArrayExpand(nSim, nAges, TimeSteps)
+        List[['Pars']][[i]][[j]] <-  List[['Pars']][[i]][[j]] |> ArrayExpand(OM@nSim, 
+                                                                             nAge(OM@Stock[[j]]),
+                                                                             TimeSteps)
       }
     }
     
   }
     
   if ('Model' %in% sNames) 
-    List[['Model']] <- purrr::map(OM@Stock, \(x)
-                                               x |> 
-                                                 slot(slot) |>
-                                                 slot('Model'))
+    List$Model <- purrr::map(OM@Stock, \(x)
+                             x |> 
+                               slot(slot) |>
+                               slot('Model')
+    ) |> purrr::map(\(x) if(!is.null(x) && is.character(x))
+      get(x))
+  
+  
   
   if ('MeanAtAge' %in% sNames) {
     fun <- get(paste0('Get', slot, 'AtAge'))
-    List[['MeanAtAge']] <- fun(OM@Stock, TimeSteps) |>
-      List2Array('Stock') |>
-      aperm(c('Sim', 'Stock', 'Age', 'Time Step')) |>
-      ArrayExpand(nSim, nAges, TimeSteps) 
+    List$MeanAtAge <- fun(OM@Stock, TimeSteps) |>
+      purrr::imap(\(x, idx) {
+        ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
+                    TimeSteps)
+      })
   }
    
   if ('MeanAtLength' %in% sNames) {
     fun <- get(paste0('Get', slot, 'AtLength'))
-    List[['MeanAtLength']] <- fun(OM@Stock, TimeSteps) |>
-      List2Array('Stock') |>
-      aperm(c('Sim', 'Stock', 'Class', 'Time Step')) |>
-      ArrayExpand(nSim, nAges, TimeSteps) 
-  }
+    List$MeanAtLength <- fun(OM@Stock, TimeSteps) |>
+      purrr::imap(\(x, idx) {
+        ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
+                    TimeSteps)
+      })
+    }
   
   
   if ('CVatAge' %in% sNames) {
-    fun <- get('GetCVAtAge')
-    List[['CVAtAge']] <- fun(OM@Stock, TimeSteps, slot) |>
-      List2Array('Stock') |>
-      aperm(c('Sim', 'Stock', 'Age', 'Time Step')) |>
-      ArrayExpand(nSim, nAges, TimeSteps) 
+    List[['CVAtAge']] <- GetCVAtAge(OM@Stock, TimeSteps, slot) |>
+      purrr::imap(\(x, idx) {
+        ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
+                    TimeSteps)
+      })
   }
   
   if ('Dist' %in% sNames)
@@ -151,7 +163,7 @@ MakeStockSlotList <- function(OM, slot='Length', Period='Historical', TimeSteps=
                                                  slot('TruncSD'))
   
   if ('Timing' %in% sNames)
-    List[[paste0(slot, 'Timing')]] <- purrr::map(OM@Stock, \(x) x |> 
+    List[['Timing']] <- purrr::map(OM@Stock, \(x) x |> 
                                                     slot(slot) |>
                                                     slot('Timing'))
   
@@ -174,9 +186,10 @@ MakeStockSlotList <- function(OM, slot='Length', Period='Historical', TimeSteps=
   
   if ('Semelparous' %in% sNames) {
     List[['Semelparous']] <- GetSemelparous(OM@Stock, TimeSteps) |>
-      List2Array('Stock') |>
-      aperm(c('Sim', 'Stock', 'Age', 'Time Step')) |>
-      ArrayExpand(nSim, nAges, TimeSteps) 
+      purrr::imap(\(x, idx) {
+        ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
+                    TimeSteps)
+      })
   }
   
   
@@ -189,14 +202,10 @@ MakeStockSlotList <- function(OM, slot='Length', Period='Historical', TimeSteps=
 
 
 MakeSRRList <- function(OM, Period='Historical', TimeSteps=NULL) {
+  meta <- GetMetaData(OM)
   
-  meta <- GetMetaData(OM, Period, TimeSteps)
-  nSim <- meta$nSim
-  nAges <- meta$nAges
-  TimeSteps <- meta$TimeSteps
-  nStock <- length(meta$StockNames)
-  nFleet <- length(meta$FleetNames)
-  nArea <- meta$nAreas
+  if (is.null(TimeSteps))
+    TimeSteps <- TimeSteps(OM, Period)
   
   List <- list()
   
@@ -208,7 +217,9 @@ MakeSRRList <- function(OM, Period='Historical', TimeSteps=NULL) {
   for (i in seq_along(List$SRRPars)) {
     stList <- List$SRRPars[[i]]
     for (j in seq_along(stList)) {
-      List$SRRPars[[i]][[j]] <- List$SRRPars[[i]][[j]] |>  ArrayExpand(nSim, nAges, TimeSteps)
+      List$SRRPars[[i]][[j]] <- List$SRRPars[[i]][[j]] |> ArrayExpand(OM@nSim, 
+                                                                      nAge(OM@Stock[[j]]),
+                                                                      TimeSteps)
     }
   }
                               
@@ -221,23 +232,11 @@ MakeSRRList <- function(OM, Period='Historical', TimeSteps=NULL) {
   List$R0 <- purrr::map(OM@Stock, \(x) 
                         x |> slot('SRR') |> slot('R0')
                         ) |>
-    List2Array('Stock') |>
-    aperm(c('Sim', 'Stock', 'Time Step')) |>
-    ArrayExpand(nSim, nAges, TimeSteps) 
+    purrr::imap(\(x, idx) {
+      ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
+                  TimeSteps)
+    })
   
-  # List$SD <- purrr::map(OM@Stock, \(x) 
-  #                       x |> slot('SRR') |> slot('SD')
-  #                       ) |>
-  #   List2Array('Stock') |>
-  #   aperm(c('Sim', 'Stock', 'Time Step')) |>
-  #   ArrayExpand(nSim, nAges, TimeSteps) 
-  # 
-  # List$AC <- purrr::map(OM@Stock, \(x) 
-  #                       x |> slot('SRR') |> slot('AC')
-  #                       ) |>
-  #   List2Array('Stock') |>
-  #   aperm(c('Sim', 'Stock', 'Time Step')) |>
-  #   ArrayExpand(nSim, nAges, TimeSteps) 
   
   List$SPFrom <- purrr::map(OM@Stock, \(x) 
     x |> slot('SRR') |> slot('SPFrom')) 
@@ -255,24 +254,19 @@ MakeSRRList <- function(OM, Period='Historical', TimeSteps=NULL) {
   List$RecDevInit <- purrr::map(OM@Stock, \(x)
                                 x |> slot('SRR') |> slot('RecDevInit')
                                 ) |>
-    List2Array('Stock') |>
-    aperm(c('Sim', 'Stock', 'Age')) |>
-    ExpandSims(nSim)
+    purrr::map(ExpandSims, OM@nSim)
   
   if (Period=='Historical') {
     List$RecDevs <- purrr::map(OM@Stock, \(x) 
                                   x |> slot('SRR') |> slot('RecDevHist')
     ) |>
-      List2Array('Stock') |>
-      aperm(c('Sim', 'Stock', 'Time Step')) |>
-      ExpandSims(nSim)
+      purrr::map(ExpandSims, OM@nSim)
+    
   } else {
     List$RecDevs <- purrr::map(OM@Stock, \(x) 
                                   x |> slot('SRR') |> slot('RecDevProj')
     ) |>
-      List2Array('Stock') |>
-      aperm(c('Sim', 'Stock', 'Time Step')) |>
-      ExpandSims(nSim) 
+      purrr::map(ExpandSims, OM@nSim)
   }
  
 
@@ -280,9 +274,9 @@ MakeSRRList <- function(OM, Period='Historical', TimeSteps=NULL) {
                                    x |> slot('SRR') |> slot('SpawnTimeFrac')
                                    ) |> unlist()
   
-  # List$RelRecFun <- purrr::map(OM@Stock, \(x) 
-  #                              x |> slot('SRR') |> slot('RelRecFun')
-  #                              ) 
+  List$RelRecFun <- purrr::map(OM@Stock, \(x)
+                               x |> slot('SRR') |> slot('RelRecFun')
+                               )
   
   List$Misc <- purrr::map(OM@Stock, \(x) x |> 
                             slot('SRR') |>
@@ -293,88 +287,80 @@ MakeSRRList <- function(OM, Period='Historical', TimeSteps=NULL) {
 
 MakeSpatialList <- function(OM, Period='Historical', TimeSteps=NULL) {
   
-  meta <- GetMetaData(OM, Period, TimeSteps)
-  nSim <- meta$nSim
-  nAges <- meta$nAges
-  TimeSteps <- meta$TimeSteps
-  nStock <- length(meta$StockNames)
-  nFleet <- length(meta$FleetNames)
-  nArea <- meta$nAreas
+  meta <- GetMetaData(OM)
   
+  if (is.null(TimeSteps))
+    TimeSteps <- TimeSteps(OM, Period)
+
   List <- list()
   
   List$UnfishedDist <- GetUnfishedDist(OM, TimeSteps) |>
-    List2Array('Stock') |>
-    aperm(c('Sim', 'Stock', 'Age', 'Time Step', 'Area')) |>
-    ArrayExpand(nSim, nAges, TimeSteps, AgeOpt=3)
+    purrr::map(\(x) aperm(x, c('Sim', 'Age', 'Time Step', 'Area'))) |>
+    purrr::imap(\(x, idx) {
+      ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
+                  TimeSteps)
+    })
   
 
   List$ProbStaying <- GetProbStaying(OM, TimeSteps) |>
-    List2Array('Stock') |>
-    aperm(c('Sim', 'Stock', 'Age', 'Time Step', 'Area')) |>
-    ArrayExpand(nSim, nAges, TimeSteps, AgeOpt=3) 
+    purrr::map(\(x) aperm(x, c('Sim', 'Age', 'Time Step', 'Area'))) |>
+    purrr::imap(\(x, idx) {
+      ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
+                  TimeSteps)
+    })
   
   List$RelativeSize <- GetRelativeSize(OM) |>
-    List2Array('Stock') |>
-    aperm(c('Sim', 'Stock', 'Area')) |>
-    ExpandSims(nSim) 
+    purrr::imap(\(x, idx) {
+      ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
+                  TimeSteps)
+    })
   
   List$Movement <- GetMovementAtAge(OM) |>
-    List2Array('Stock') |>
-    aperm(c(1, 6, 4, 5, 2, 3)) |>
-    ArrayExpand(nSim, nAges, TimeSteps, AgeOpt=3)
+    purrr::imap(\(x, idx) ArrayExpand(x, OM@nSim, meta$nAges[[idx]], TimeSteps)) |>
+    purrr::map(\(x) aperm(x, c('Sim', 'Age', 'Time Step', 'FromArea', 'ToArea'))) 
+
   
-  # List$FracOther <- purrr::map(OM@Stock, \(x) 
-  #                              x@Spatial@FracOther
-  #                              ) |>
-  #   List2Array('Stock') 
-  # 
-  #   aperm(c(1, 6, 2, 3, 4, 5)) |>
-  #   ArrayExpand(nSim, nAges, TimeSteps) |
+  List$FracOther <- purrr::map(OM@Stock, \(x)
+                               x@Spatial@FracOther
+                               ) |>
+    purrr::imap(\(x, idx) {
+      ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
+                  TimeSteps)
+    })
   
   List$Misc <- purrr::map(OM@Stock, \(x) x |> 
                             slot('Spatial') |>
                             slot('Misc'))
-  
-  
-  
-  
+
   List
   
 }
 
 MakeDepletionList <- function(OM, Period='Historical', TimeSteps=NULL) {
 
-  meta <- GetMetaData(OM, Period, TimeSteps)
-  nSim <- meta$nSim
-  nAges <- meta$nAges
-  TimeSteps <- meta$TimeSteps
-  nStock <- length(meta$StockNames)
-  nFleet <- length(meta$FleetNames)
-  nArea <- meta$nAreas
+  if (is.null(TimeSteps))
+    TimeSteps <- TimeSteps(OM, Period)
     
   List <- list()
   
   List$Initial <- purrr::map(OM@Stock, \(x)
-                           x@Depletion@Initial) |>
-    List2Array('Stock')
+                           x@Depletion@Initial) 
   
   if (length(List$Initial)>0) {
     List$Initial <- List$Initial  |>
-      ExpandSims(nSim)
+      purrr::map(ExpandSims,OM@nSim)
   } else {
-    List$Initial <- MakeNamedList(1:nSim)
+    List$Initial <- MakeNamedList(1:OM@nSim)
   }
   
   List$Final <- purrr::map(OM@Stock, \(x)
-                             x@Depletion@Final) |>
-    List2Array('Stock')
+                             x@Depletion@Final) 
   
   if (length(List$Final)>0) {
     List$Final <- List$Final  |>
-      ExpandSims(nSim) 
+      purrr::map(ExpandSims,OM@nSim)
   } else {
-    List$Final <- MakeNamedList(1:nSim)
+    List$Final <- MakeNamedList(1:OM@nSim)
   }
   
   List$DepletionReference <- purrr::map(OM@Stock, \(x)
