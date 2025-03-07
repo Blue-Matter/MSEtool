@@ -5,7 +5,7 @@ CheckSimsUnique <- function(List) {
   digest::digest(l1, algo='spookyhash') != digest::digest(l2, algo='spookyhash')
 }
 
-ConvertToSimList <- function(PopulationList, FleetList, nSim) {
+ConvertToSimList <- function(PopulationList, FleetList, OM) {
   
   SimsUnique <- FALSE
   if (OM@nSim>1) {
@@ -58,12 +58,19 @@ SimulateDEV <- function(OM=NULL,
   PopulationList <- MakePopulationList(OM, Unfished=Unfished)
   FleetList <- MakeFleetList(OM) # everything with a fleet dimension
 
+  # Calculate Unfished 
+  
+  # Calculate Reference Points
+  
+  # Add to Pop List 
+  
   # Convert to list by simulation
   # length OM@nSim or length 1 if all values identical across simulations
-  SimList <- ConvertToSimList(PopulationList, FleetList, OM@nSim)
+  SimList <- ConvertToSimList(PopulationList, FleetList, OM)
   PopulationListSim <- SimList$PopulationListSim
   FleetListSim <- SimList$FleetListSim
   
+
   # ---- Calculate Reference Points ----
   # RefPoints <- CalcRefPoints(OM)
   
@@ -85,11 +92,7 @@ SimulateDEV <- function(OM=NULL,
   
  
 
-  
-  if (length(PopulationListSim)<OM@nSim) {
-    
-  }
-    
+  # ---- Project with an MP ----
   
   
  

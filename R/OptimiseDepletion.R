@@ -45,7 +45,7 @@ SubsetSim <- function(object, Sim=1, drop=FALSE) {
   object
 }
 
-OptimCatchability <- function(PopulationListSim, FleetListSim) {
+OptimCatchability <- function(PopulationListSim, FleetListSim, OM) {
   
   nsims <- length(PopulationListSim)
   
@@ -69,7 +69,10 @@ OptimCatchability <- function(PopulationListSim, FleetListSim) {
     
     doOpt <- optimize(OptCatchability,
                       log(bounds), 
-                      Hist=SubHist, 
+                      popList=popList,
+                      fleetList=fleetList,
+                      DepletionTarget=DepletionTarget,
+                      TimeSteps=TimeSteps(OM,"Historical"),
                       tol=1e-3)
     exp(doOpt$minimum)
   })
@@ -84,34 +87,29 @@ OptimCatchability <- function(PopulationListSim, FleetListSim) {
   Hist
 }
 
-OptCatchability <- function(logQ, popList, fleetList, DepletionTarget) {
+OptCatchability <- function(logQ, popList, fleetList, DepletionTarget, TimeSteps) {
   
-  ## up to here ## 
-  stop()
-  Hist@Fleet[[1]][[1]]@Effort@Catchability <- array(exp(logQ),
-                                                    dim=c(1,1),
-                                                    dimnames = list(Sim=sim,
-                                                                    `Time Step`=TimeSteps[1])
-  )
-  postHist <- CalcPopDynamics(Hist, TimeSteps=TimeSteps(Hist,'Historical'), silent=TRUE)
-  CurrDepletion <- GetDepletion(postHist)
-  ssq <- sum((CurrDepletion[[1]][1,1] - DepletionTarget)^2)
+  # TODO update for multiple stocks and fleets
+  fleetList$Effort$Catchability[[1]][] <- exp(logQ)
+  
+  PopDynamicsHistorical <- CalcPopDynamics_(popList, fleetList, TimeSteps)
+  
+  CurrDepletion <- GetDepletion(PopDynamicsHistorical)
+  ssq <- sum((CurrDepletion - DepletionTarget)^2)
   ssq
 }
 
 
-GetDepletion <- function(Hist, TimeSteps=NULL, Reference=NULL) {
-  if (is.null(TimeSteps))
-    TimeSteps <- TimeSteps(Hist, 'Historical') |> tail(1)
+GetDepletion <- function(object, Reference=NULL) {
+  Biomass <- rowSums(object$PopulationList$BiomassArea[[1]] )
+  Bterminal <- Biomass[length(Biomass)]
   
-  Biomass <- GetBiomassAtAge(Hist, TimeSteps) |>
-    purrr::map(\(x) apply(x, c('Sim', 'Time Step'), sum))
+  # TODO Unfished B shouldn't be by age 
+  B0 <- object$PopulationList$Unfished@Equilibrium@Biomass[[1]] |>
+    apply(c("Sim",'Time Step'), sum)
+  Bterminal/B0[1,length(TimeSteps)]
   
-  Unfished <- purrr::map(Hist@Unfished@Equilibrium@Biomass, \(x) {
-    ArraySubsetTimeStep(x,TimeSteps)
-  }) |>
-    purrr::map(\(x) apply(x, c('Sim', 'Time Step'), sum))
     
-  purrr::map2(Biomass, Unfished, ArrayDivide)
+  
 
 }
