@@ -66,6 +66,7 @@ SimulateDEV <- function(OM=NULL,
   # Calculate Reference Points
   
   # Add to Pop List 
+  PopulationList$Unfished <- Unfished
   
   # Convert to list by simulation
   # length OM@nSim or length 1 if all values identical across simulations
@@ -81,28 +82,23 @@ SimulateDEV <- function(OM=NULL,
   
   # ---- Optimize for Final Depletion ----
   
-  OptimCatchability(PopulationListSim, FleetListSim)
+  OptimCatchability(PopulationListSim, FleetListSim, OM)
   
 
   # ---- Historical Population Dynamics ----
+  tictoc::tic()
   PopDynamicsHistorical <- purrr::map2(PopulationListSim, FleetListSim, \(x,y)
                                        CalcPopDynamics_(x,
                                                         y,
                                                         TimeSteps=TimeSteps(OM, 'Historical'))
   ) 
+  tictoc::toc()
   
-  PopulationListSim$`1`$SP0
-  PopulationListSim$`1`$SProduction  
-  PopulationListSim$`1`$Fecundity$MeanAtAge$Albacore
-  PopulationListSim$`1`$NumberAtAgeArea$Albacore[,1,]
-  PopDynamicsHistorical$`1`$NumberAtAgeArea$Albacore[,2,]
-  
-  PopDynamicsHistorical$`1`$PopulationList$SProduction
-  
+  PopDynamicsHistorical$`1`$PopulationList$NaturalMortality$MeanAtLength
   N <- PopDynamicsHistorical$`1`$PopulationList$NumberAtAgeArea$Albacore |> apply("Time Step", sum)
   plot(N, type='l') 
   
-  B <- PopDynamicsHistorical$`1`$PopulationList$BiomassArea$Albacore |> rowSums()
+  B <- PopDynamicsHistorical$`3`$PopulationList$BiomassArea$Albacore |> rowSums()
   plot(B, type='l')
 
   # ---- Project with an MP ----
