@@ -58,6 +58,9 @@ SimulateDEV <- function(OM=NULL,
   PopulationList <- MakePopulationList(OM, Unfished=Unfished)
   FleetList <- MakeFleetList(OM) # everything with a fleet dimension
 
+  # ---- Number-at-Age at Beginning of Initial Time Step ----
+  PopulationList <- CalcInitialTimeStep(PopulationList, Unfished) 
+  
   # Calculate Unfished 
   
   # Calculate Reference Points
@@ -74,8 +77,7 @@ SimulateDEV <- function(OM=NULL,
   # ---- Calculate Reference Points ----
   # RefPoints <- CalcRefPoints(OM)
   
-  # ---- Number-at-Age at Beginning of Initial Time Step ----
-  PopulationList <- CalcInitialTimeStep(PopulationList, Unfished) 
+
   
   # ---- Optimize for Final Depletion ----
   
@@ -89,8 +91,19 @@ SimulateDEV <- function(OM=NULL,
                                                         TimeSteps=TimeSteps(OM, 'Historical'))
   ) 
   
+  PopulationListSim$`1`$SP0
+  PopulationListSim$`1`$SProduction  
+  PopulationListSim$`1`$Fecundity$MeanAtAge$Albacore
+  PopulationListSim$`1`$NumberAtAgeArea$Albacore[,1,]
+  PopDynamicsHistorical$`1`$NumberAtAgeArea$Albacore[,2,]
   
- 
+  PopDynamicsHistorical$`1`$PopulationList$SProduction
+  
+  N <- PopDynamicsHistorical$`1`$PopulationList$NumberAtAgeArea$Albacore |> apply("Time Step", sum)
+  plot(N, type='l') 
+  
+  B <- PopDynamicsHistorical$`1`$PopulationList$BiomassArea$Albacore |> rowSums()
+  plot(B, type='l')
 
   # ---- Project with an MP ----
   
