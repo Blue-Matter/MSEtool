@@ -46,10 +46,20 @@ MakeOMList <- function(OM, Unfished, Period="All") {
   List$SP0 <- Unfished@Equilibrium@SProduction |>
     purrr::map(\(x) {
       x |> ExpandSims(OM@nSim) |> ExpandTimeSteps(TimeSteps=TimeSteps(OM, Period='All'))
-      
+    })
+  
+  List$SB0 <- Unfished@Equilibrium@SBiomass |>
+    purrr::map(\(x) {
+      x |> ExpandSims(OM@nSim) |> ExpandTimeSteps(TimeSteps=TimeSteps(OM, Period='All'))
+    })
+  
+  List$B0 <- Unfished@Equilibrium@Biomass |>
+    purrr::map(\(x) {
+      x |> ExpandSims(OM@nSim) |> ExpandTimeSteps(TimeSteps=TimeSteps(OM, Period='All'))
     })
   
   List$Sim <- 1:OM@nSim
+  names(List$Sim) <- rep("Sim", OM@nSim)
   List
 }
 
@@ -89,8 +99,11 @@ MakeSimList <- function(List, Sim=1) {
     } else if (inherits(List[[i]], 'list')) {
       List[[i]] <- Recall(List[[i]], Sim)
     } else if (inherits(List[[i]], 'numeric')) {
-      List[[i]] <- List[[i]][Sim]
-
+      if (!is.null(names(List[[i]])))
+        List[[i]] <- List[[i]][Sim]
+    } else if (inherits(List[[i]], 'integer')) {
+      if (!is.null(names(List[[i]])))
+        List[[i]] <- List[[i]][Sim]
     }
   } 
   
@@ -315,10 +328,12 @@ MakeSRRList <- function(OM, Period='Historical', TimeSteps=NULL) {
     purrr::map(ExpandSims, OM@nSim)
   
 
-  List$RecDevs <- purrr::map2(RecDevHist,RecDevProj,  \(x,y) 
-                             cbind(x,y)
-  ) 
- 
+  List$RecDevs <- purrr::map2(RecDevHist,RecDevProj,  \(x,y) {
+    r <- cbind(x,y)
+    names(dimnames(r)) <- c('Sim', 'Time Step')
+    r
+  }) 
+  
 
   List$SpawnTimeFrac <- purrr::map(OM@Stock, \(x) 
                                    x |> methods::slot('SRR') |> methods::slot('SpawnTimeFrac')
@@ -367,15 +382,16 @@ MakeSpatialList <- function(OM, Period='Historical', TimeSteps=NULL) {
   
   List$Movement <- GetMovementAtAge(OM) |>
     purrr::imap(\(x, idx) ArrayExpand(x, OM@nSim, meta$nAges[[idx]], TimeSteps)) |>
-    purrr::map(\(x) aperm(x, c('Sim', 'Age', 'Time Step', 'FromArea', 'ToArea'))) 
+    purrr::map(\(x) aperm(x, c('Sim', 'Age', 'Time Step', 'FromArea', 'ToArea'))) |>
+    purrr::map(\(x) Array2List(x, "Time Step"))
 
-  List$FracOther <- purrr::map(OM@Stock, \(x)
-                               x@Spatial@FracOther
-                               ) |>
-    purrr::imap(\(x, idx) {
-      ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
-                  TimeSteps)
-    }) 
+  # List$FracOther <- purrr::map(OM@Stock, \(x)
+  #                              x@Spatial@FracOther
+  #                              ) |>
+  #   purrr::imap(\(x, idx) {
+  #     ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
+  #                 TimeSteps)
+  #   }) 
   
   List$Misc <- purrr::map(OM@Stock, \(x) x |> 
                             slot('Spatial') |>
@@ -405,6 +421,7 @@ MakeDepletionList <- function(OM, Period='Historical', TimeSteps=NULL) {
   List$Final <- purrr::map(OM@Stock, \(x)
                              x@Depletion@Final) 
   
+  
   if (length(List$Final)>0) {
     List$Final <- List$Final  |>
       purrr::map(ExpandSims,OM@nSim)
@@ -412,7 +429,7 @@ MakeDepletionList <- function(OM, Period='Historical', TimeSteps=NULL) {
     List$Final <- MakeNamedList(1:OM@nSim)
   }
   
-  List$DepletionReference <- purrr::map(OM@Stock, \(x)
+  List$Reference <- purrr::map(OM@Stock, \(x)
                                         x@Depletion@Reference)
   
   

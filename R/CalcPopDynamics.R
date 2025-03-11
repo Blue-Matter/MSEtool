@@ -38,55 +38,154 @@ CalcInitialTimeStep <- function(OMList, Unfished) {
 
 
 
-CalcPopDynamics <- function(Hist, TimeSteps=NULL, MP=NULL, silent=FALSE) {
+CalcPopDynamics <- function(OMListSim, TimeSteps=NULL, MP=NULL) {
   
-  if (is.null(TimeSteps))
-    TimeSteps <- TimeSteps(Hist, 'Historical')
+  nTS <- length(TimeSteps)
   
-  progress <- seq_along(TimeSteps)
+  for (ts in seq_along(TimeSteps)) {
+    TSindex <- ts - 1
+    
+    # Biomass by Area beginning of this time step
+    OMListSim$BiomassArea = CalcBiomass_(
+      OMListSim$BiomassArea,
+      OMListSim$NumberAtAgeArea,
+      OMListSim$Weight$MeanAtAge,
+      TSindex
+    )
+    
+    # VB by Area
+    OMListSim$VBiomassArea = CalcVBiomass_(
+      OMListSim$VBiomassArea,
+      OMListSim$NumberAtAgeArea,
+      OMListSim$FleetWeightAtAge,
+      OMListSim$Selectivity$MeanAtAge,
+      OMListSim$Distribution$Closure,
+      TSindex
+    )
+    
+    # Relative VB Density by Area & Fleet
+    OMListSim$DensityArea = CalcDensity_(
+      OMListSim$DensityArea,
+      OMListSim$VBiomassArea,
+      OMListSim$Spatial$RelativeSize,
+      TSindex
+    )
+    
+    # Distribute Effort over Areas (currently proportional to VB Density)
+    OMListSim$EffortArea = DistEffort_(
+      OMListSim$EffortArea,
+      OMListSim$DensityArea,
+      OMListSim$Effort$Effort,
+      TSindex
+    )
+    
+    # Calculate F within each Area
+    List <- CalcFArea_(
+      OMListSim$FDeadAtAgeArea,
+      OMListSim$FRetainAtAgeArea,
+      OMListSim$EffortArea,
+      OMListSim$DensityArea,
+      OMListSim$Effort$Catchability,
+      OMListSim$Selectivity$MeanAtAge,
+      OMListSim$Retention$MeanAtAge,
+      OMListSim$DiscardMortality$MeanAtAge,
+      TSindex)
+    
+    OMListSim$FDeadAtAgeArea <- List$FDeadAtAgeArea
+    OMListSim$FRetainAtAgeArea <- List$FRetainAtAgeArea
+    
+    # Removals and Retained Number and Biomass by Area
+    List <- CalcCatch_(
+      OMListSim$RemovalAtAgeArea,
+      OMListSim$RetainAtAgeArea,
+      OMListSim$RemovalNumberAtAge,
+      OMListSim$RetainNumberAtAge,
+      OMListSim$RemovalBiomassAtAge,
+      OMListSim$RetainBiomassAtAge,
+      OMListSim$NaturalMortality$MeanAtAge,
+      OMListSim$FleetWeightAtAge,
+      OMListSim$NumberAtAgeArea,
+      OMListSim$FDeadAtAgeArea,
+      OMListSim$FRetainAtAgeArea,
+      TSindex)
   
-  if (!silent)  {
-    progress <- cli::cli_progress_along(TimeSteps,
-                                        'Calculating Population Dyamics')
-    on.exit(cli::cli_progress_done())
+    OMListSim$RemovalAtAgeArea <- List$RemovalAtAgeArea
+    OMListSim$RetainAtAgeArea <- List$RetainAtAgeArea
+    OMListSim$RemovalNumberAtAge <- List$RemovalNumberAtAge
+    OMListSim$RetainNumberAtAge <- List$RetainNumberAtAge
+    OMListSim$RemovalBiomassAtAge <- List$RemovalBiomassAtAge
+    OMListSim$RetainBiomassAtAge <- List$RetainBiomassAtAge
+    
+    List <- CalcFfromCatch_(
+      OMListSim$FDeadAtAge,
+      OMListSim$FRetainAtAge,
+      OMListSim$NumberAtAgeArea,
+      OMListSim$RemovalNumberAtAge,
+      OMListSim$NaturalMortality$MeanAtAge,
+      OMListSim$Selectivity$MeanAtAge,
+      OMListSim$Retention$MeanAtAge,
+      OMListSim$DiscardMortality$MeanAtAge,
+      OMListSim$FDeadAtAgeArea,
+      OMListSim$FRetainAtAgeArea,
+      TSindex
+    )
+    
+    OMListSim$FDeadAtAge <- List$FDeadAtAge
+    OMListSim$FRetainAtAge <- List$FRetainAtAge
+    
+    # Calc Spawning Production
+    OMListSim$SProduction = CalcSpawnProduction_(
+      OMListSim$SProduction,
+      OMListSim$NumberAtAgeArea,
+      OMListSim$NaturalMortality$MeanAtAge,
+      OMListSim$Fecundity$MeanAtAge,
+      OMListSim$SRR$SpawnTimeFrac,
+      OMListSim$SRR$SPFrom,
+      OMListSim$FDeadAtAge,
+      TSindex
+    )
+    
+    # Calc Recruitment 
+    Recruits <- CalcRecruitment_(
+      OMListSim$SProduction,
+      OMListSim$SP0,
+      OMListSim$SRR$R0,
+      OMListSim$SRR$RecDevs,
+      OMListSim$SRR$SRRModel,
+      OMListSim$SRR$SRRPars,
+      TSindex
+    )
+    
+    # Add Recruits
+    OMListSim$NumberAtAgeArea <- AddRecruits_(
+      OMListSim$NumberAtAgeArea,
+      Recruits,
+      OMListSim$Spatial$UnfishedDist,
+      TSindex
+    )
+    
+    if (TSindex<nTS) {
+      # Update Number beginning of next Time Step
+      OMListSim$NumberAtAgeArea <- CalcNumberNext_(
+        OMListSim$NumberAtAgeArea,
+        OMListSim$NaturalMortality$MeanAtAge,
+        OMListSim$FDeadAtAgeArea,
+        OMListSim$Maturity$Semelparous,
+        OMListSim$Ages,
+        TSindex
+      )
+      
+      OMListSim$NumberAtAgeArea <- MoveStock_(
+        OMListSim$NumberAtAgeArea,
+        OMListSim$Spatial$Movement,
+        TSindex+1
+      )
+      
+    
+    }
   }
-  
-  for (ts in progress) {
-    
-    TimeStep <- TimeSteps[ts]
 
-    
-    # ---- Do MICE stuff during this Time Step (if applicable) -----
-    # TODO
-    Hist <- CalcMICE(Hist, TimeStep=TimeStep)
-    
-    # ---- Update Biomass At Age etc ----
-    # done after MICE to account for changes
-    Hist <- UpdateBioArrays(Hist, TimeStep)
-  
-    # for MPs - Calculate Effort, Selectivity, etc
-    # update fishery data 
-    # these two steps should be done first
-  
-    # ---- Distribute Effort across Areas ----
-    Hist <- DistributeEffort(Hist, TimeStep)
-    
-    # ---- Calculate Catch and Fishing Mortality ----
-    Hist <- CalcCatch(Hist, TimeStep)
-    
-    # ---- Calculate Recruitment  Time Step ----
-    Hist <- CalcRecruitment(Hist, TimeStep=TimeStep)
-    
-    # ---- Number, Biomass at beginning of Next Time Step and Move ----
-    Hist <- CalcNumberNext(Hist, TimeStep)
-    
-    # print(sum(Hist@Number[[1]][1,,ts+1,]))
-    
-  }
-  # tictoc::toc()
-  
-
+  OMListSim
   
   
-  Hist
 }

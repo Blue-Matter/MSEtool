@@ -45,12 +45,13 @@ SubsetSim <- function(object, Sim=1, drop=FALSE) {
   object
 }
 
-OptimCatchability <- function(PopulationListSim, FleetListSim, OM) {
+
+OptimCatchability <- function(OMListSim) {
   
-  nsims <- length(PopulationListSim)
+  nsims <- length(OMListSim)
   
-  nStock <- length(PopulationListSim[[1]]$Ages)
-  nFleet <- dim(FleetListSim[[1]]$FishingMortality$DeadAtAge[[1]])[3]
+  nStock <- length(OMListSim[[1]]$Ages)
+  nFleet <- dim(OMListSim[[1]]$FishingMortality$DeadAtAge[[1]])[3]
   
   if (nStock>1)
     cli::cli_abort('Optimizing catchability not currently working for multiple stocks', .internal=TRUE)
@@ -61,42 +62,58 @@ OptimCatchability <- function(PopulationListSim, FleetListSim, OM) {
   bounds <-  c(1e-03, 15)
   Qvals <- rep(NA, nsims)
   
-  Qvals <- purrr::map2(PopulationListSim, FleetListSim, \(popList, fleetList) {
+  st <- 1
+  fl <- 1
+  
+  OMListSim <- purrr::map(OMListSim, \(x) {
     
-    DepletionTarget <- popList$Depletion$Final[[1]]
-    if (length(DepletionTarget)<1)
-      return(NA)
-    
+    q1 <- x$Effort$Catchability[[st]][1,fl]
+    if (q1>tiny)
+      return(x)
+      
     doOpt <- optimize(OptCatchability,
                       log(bounds), 
-                      popList=popList,
-                      fleetList=fleetList,
-                      DepletionTarget=DepletionTarget,
-                      TimeSteps=TimeSteps(OM,"Historical"),
+                      x=x,
                       tol=1e-3)
-    exp(doOpt$minimum)
+    qval <- exp(doOpt$minimum)
+    x$Effort$Catchability[[st]][,fl] <- qval
+    x
+    
   })
-  
-  
-  # nsims <- nSim(Hist)
-  # Qvals <- rep(0.1, nSim(Hist))
-  Hist@Fleet[[1]][[1]]@Effort@Catchability <- array(Qvals,
-                                                    dim=c(nsims,1),
-                                                    dimnames = list(Sim=1:nsims,
-                                                                    `Time Step`=TimeSteps(Hist, 'Historical')[1]))
-  Hist
+ 
+  OMListSim
 }
 
-OptCatchability <- function(logQ, popList, fleetList, DepletionTarget, TimeSteps) {
+OptCatchability <- function(logQ, x) {
   
   # TODO update for multiple stocks and fleets
-  fleetList$Effort$Catchability[[1]][] <- exp(logQ)
+  st <- 1
   
-  PopDynamicsHistorical <- CalcPopDynamics_(popList, fleetList, TimeSteps)
+  DepletionTarget <- x$Depletion$Final[[st]]
+  DepletionReference <- x$Depletion$Reference[[st]]
   
-  CurrDepletion <- GetDepletion(PopDynamicsHistorical)
-  ssq <- sum((CurrDepletion - DepletionTarget)^2)
-  ssq
+  if (length(DepletionTarget)<1)
+    cli::cli_abort("`Effort@Catchability` not set for first time step and no value set for `Depletion@Final`")
+  
+  
+  x$Effort$Catchability[[st]][] <- exp(logQ)
+  TimeStepsAll <- x$TimeSteps[[st]]
+  TimeStepsHist <- x$TimeStepsHist[[st]]
+  TermInd <- match(max(TimeStepsHist),TimeStepsAll)
+  
+  PopDynamicsHistorical <- CalcPopDynamics_(x, TimeSteps)
+  
+  Biomass <- rowSums(PopDynamicsHistorical$BiomassArea[[1]])
+  Bterminal <- Biomass[TermInd]
+  
+  if (DepletionReference=='B0') {
+    depRef <- sum(x$B0[[st]][, TermInd,])  
+  } else {
+    cli::cli_abort("Currently only accepts`Depletion@Reference = 'B0'", .internal=TRUE)
+  }
+  
+  sum((Bterminal/depRef - DepletionTarget)^2)
+  
 }
 
 
