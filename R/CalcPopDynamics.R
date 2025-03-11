@@ -1,16 +1,11 @@
-CalcInitialTimeStep <- function(PopulationList, Unfished) {
+CalcInitialTimeStep <- function(OMList, Unfished) {
   
-  nStock <- length(PopulationList$NumberAtAgeArea)
+  nStock <- length(OMList$NumberAtAgeArea)
   
   for (st in 1:nStock) {
-    TimeSteps <- dimnames(PopulationList$NumberAtAgeArea[[st]])[['Time Steps']]
-    dd <- dim(PopulationList$NumberAtAgeArea)
-    nSim <- dd[1]
-    nAges <- dd[3]
-    TimeStep1 <- TimeSteps[1]
-    
-    RecDevInit <- PopulationList$SRR$RecDevInit[[st]]
-    RecDevHist <- PopulationList$SRR$RecDevs[[st]] 
+  
+    RecDevInit <- OMList$SRR$RecDevInit[[st]]
+    RecDevHist <- OMList$SRR$RecDevs[[st]] 
   
     InitAgeClassRecDevs <- abind::abind(RecDevHist[,1,drop=FALSE],
                                         RecDevInit, along=2,
@@ -28,15 +23,15 @@ CalcInitialTimeStep <- function(PopulationList, Unfished) {
     
     NatAgeInitial <- ArrayMultiply(N0atAge, InitAgeClassRecDevs)
     
-    if (length(PopulationList$Depletion$Initial[[st]]) > 0){
+    if (length(OMList$Depletion$Initial[[st]]) > 0){
       cli::cli_abort('Initial depletion not done', .internal=TRUE)
       # NatAgeInitial update for initial depletion
     }
     
-    PopulationList$NumberAtAgeArea[[st]][,,1,] <- NatAgeInitial
+    OMList$NumberAtAgeArea[[st]][,,1,] <- NatAgeInitial
     
   }
-  PopulationList
+  OMList
 }
 
 

@@ -360,6 +360,8 @@ List2Array <- function(List, dimname='Fleet') {
 }
 
 Array2List <- function(array, pos=3, sim=NULL) {
+  if (is.null(array))
+    return(array)
   dnames <- names(dimnames(array))
   if (is.character(pos)) {
     pos <- match(pos, dnames)

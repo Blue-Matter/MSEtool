@@ -111,16 +111,15 @@ CalcRefPoints <- function(OM, Unfished=NULL, TimeSteps=NULL) {
   
   # Equilibrium Unfished ----
   RefPoints@Equilibrium@N0 <- purrr::map(Unfished@Equilibrium@Number,
-                                         \(x) apply(x, c(1,3), sum))
+                                         \(x) apply(x, c("Sim","Time Step"), sum))
   
   RefPoints@Equilibrium@B0 <- purrr::map(Unfished@Equilibrium@Biomass,
-                                         \(x) apply(x, c(1,3), sum))
+                                         \(x) apply(x, c("Sim","Time Step"), sum))
   
   RefPoints@Equilibrium@SB0 <- purrr::map(Unfished@Equilibrium@SBiomass,
-                                          \(x) apply(x, c(1,3), sum))
+                                          \(x) apply(x, c("Sim","Time Step"), sum))
   
-  RefPoints@Equilibrium@SP0 <- purrr::map(Unfished@Equilibrium@SProduction,
-                                          \(x) apply(x, c(1,3), sum))
+  RefPoints@Equilibrium@SP0 <- Unfished@Equilibrium@SProduction
  
   # Dynamic Unfished ---- 
   # TODO

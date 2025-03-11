@@ -37,14 +37,6 @@ Ref_int_cpp <- function(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V
     .Call(`_MSEtool_Ref_int_cpp`, F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, Wt_at_Age_C, relRfun, SRRpars, maxage, plusgroup, spawn_time_frac)
 }
 
-CalcDims_ <- function(vec) {
-    .Call(`_MSEtool_CalcDims_`, vec)
-}
-
-GetIndex_ <- function(dimSizes, dimIndices) {
-    .Call(`_MSEtool_GetIndex_`, dimSizes, dimIndices)
-}
-
 CalcBiomass_ <- function(BiomassAreaList, NumberAtAgeAreaList, WeightList, TSindex) {
     .Call(`_MSEtool_CalcBiomass_`, BiomassAreaList, NumberAtAgeAreaList, WeightList, TSindex)
 }
@@ -71,30 +63,6 @@ CalcCatch_ <- function(RemovalAtAgeAreaList, RetainAtAgeAreaList, RemovalNumberA
 
 CalcFfromCatch_ <- function(FDeadAtAgeList, FRetainAtAgeList, NumberAtAgeAreaList, RemovalNumberAtAgeList, NaturalMortalityAtAgeList, SelectivityAtAgeList, RetentionAtAgeList, DiscardMortalityAtAgeList, FDeadAtAgeAreaList, FRetainAtAgeAreaList, TSindex) {
     .Call(`_MSEtool_CalcFfromCatch_`, FDeadAtAgeList, FRetainAtAgeList, NumberAtAgeAreaList, RemovalNumberAtAgeList, NaturalMortalityAtAgeList, SelectivityAtAgeList, RetentionAtAgeList, DiscardMortalityAtAgeList, FDeadAtAgeAreaList, FRetainAtAgeAreaList, TSindex)
-}
-
-CalcSpawnProduction_ <- function(SProductionList, NumberAtAgeAreaList, NaturalMortalityAtAgeList, FecundityAtAgeList, SpawnTimeFrac, SPFromList, FDeadAtAgeList, TSindex) {
-    .Call(`_MSEtool_CalcSpawnProduction_`, SProductionList, NumberAtAgeAreaList, NaturalMortalityAtAgeList, FecundityAtAgeList, SpawnTimeFrac, SPFromList, FDeadAtAgeList, TSindex)
-}
-
-CalcRecruitment_ <- function(SProductionList, SP0List, R0List, RecDevsList, SRRModelList, SRRParsList, TSindex) {
-    .Call(`_MSEtool_CalcRecruitment_`, SProductionList, SP0List, R0List, RecDevsList, SRRModelList, SRRParsList, TSindex)
-}
-
-AddRecruits_ <- function(NumberAtAgeAreaList, Recruits, UnfishedDistList, TSindex) {
-    .Call(`_MSEtool_AddRecruits_`, NumberAtAgeAreaList, Recruits, UnfishedDistList, TSindex)
-}
-
-CalcNumberNext_ <- function(NumberAtAgeAreaList, NaturalMortalityAtAgeList, FDeadAtAgeAreaList, SemelparousList, AgesList, TSindex) {
-    .Call(`_MSEtool_CalcNumberNext_`, NumberAtAgeAreaList, NaturalMortalityAtAgeList, FDeadAtAgeAreaList, SemelparousList, AgesList, TSindex)
-}
-
-MoveStock_ <- function(NumberAtAgeAreaList, MovementList, TSindex, Sim = 1L) {
-    .Call(`_MSEtool_MoveStock_`, NumberAtAgeAreaList, MovementList, TSindex, Sim)
-}
-
-CalcPopDynamics_ <- function(PopulationList, FleetList, TimeSteps) {
-    .Call(`_MSEtool_CalcPopDynamics_`, PopulationList, FleetList, TimeSteps)
 }
 
 calcVatAge <- function(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid) {

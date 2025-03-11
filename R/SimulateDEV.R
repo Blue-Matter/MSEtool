@@ -1,35 +1,4 @@
 
-CheckSimsUnique <- function(List) {
-  l1 <- MakeSimList(List, 1)
-  l2 <- MakeSimList(List, 2)
-  digest::digest(l1, algo='spookyhash') != digest::digest(l2, algo='spookyhash')
-}
-
-ConvertToSimList <- function(PopulationList, FleetList, OM) {
-  
-  SimsUnique <- FALSE
-  if (OM@nSim>1) {
-    SimsUnique <- CheckSimsUnique(PopulationList) | CheckSimsUnique(FleetList)
-  }
-  
-  if (SimsUnique) {
-    uniqueSims <- 1:OM@nSim
-    PopulationListSim <- lapply(1:OM@nSim, function(x) MakeSimList(PopulationList, x))
-    names(PopulationListSim) <- 1:OM@nSim
-    FleetListSim <- lapply(1:OM@nSim, function(x) MakeSimList(FleetList, x)) 
-    names(FleetListSim) <- 1:OM@nSim
-  } else {
-    uniqueSims <- 1
-    PopulationListSim <- list(MakeSimList(PopulationList, 1))
-    names(PopulationListSim) <- 1
-    FleetListSim <- list(MakeSimList(FleetList, 1) )
-    names(FleetListSim) <- 1
-  }
-  
-  list(PopulationListSim=PopulationListSim,
-       FleetListSim=FleetListSim)
-}
-
 #' @describeIn runMSE Development version of `Simulate`
 #' @export
 SimulateDEV <- function(OM=NULL, 
@@ -51,34 +20,124 @@ SimulateDEV <- function(OM=NULL,
   # ---- Calculate Unfished Dynamics ----
   Unfished <- CalcUnfishedDynamics(OM)
   
-  # ---- Make Lists of Arrays ----
-  # Convert values from Stock and Fleet objects to named lists
-  # Expands simulations, ages, and time steps as needed
+  # ---- Calculate Reference Points ----
+  RefPoints <- CalcRefPoints(OM, Unfished)
   
-  PopulationList <- MakePopulationList(OM, Unfished=Unfished)
-  FleetList <- MakeFleetList(OM) # everything with a fleet dimension
-
+  # ---- Make OM List ----
+  OMList <- MakeOMList(OM, Unfished)
+  
   # ---- Number-at-Age at Beginning of Initial Time Step ----
-  PopulationList <- CalcInitialTimeStep(PopulationList, Unfished) 
-  
-  # Calculate Unfished 
-  
-  # Calculate Reference Points
-  
-  # Add to Pop List 
-  PopulationList$Unfished <- Unfished
+  OMList <- CalcInitialTimeStep(OMList, Unfished) 
   
   # Convert to list by simulation
-  # length OM@nSim or length 1 if all values identical across simulations
-  SimList <- ConvertToSimList(PopulationList, FleetList, OM)
-  PopulationListSim <- SimList$PopulationListSim
-  FleetListSim <- SimList$FleetListSim
+  OMListSim <- ConvertToSimList(OMList) 
   
 
-  # ---- Calculate Reference Points ----
-  # RefPoints <- CalcRefPoints(OM)
+  AgesList <- OMListSim[[1]]$Ages
+  LengthList <- OMListSim[[1]]$Length$MeanAtAge
+  WeightList <- OMListSim[[1]]$Weight$MeanAtAge
+  NaturalMortalityList <- OMListSim[[1]]$NaturalMortality$MeanAtAge
+  MaturityList <- OMListSim[[1]]$Maturity$MeanAtAge
+  FecundityList <- OMListSim[[1]]$Fecundity$MeanAtAge
+  # SRRList <- OMListSim[[1]]$SRR
+  
+  RelativeSizeList <- OMListSim$`1`$Spatial$RelativeSize
+  DepletionList <- OMListSim[[1]]$Depletion
+  
+  NumberAtAgeAreaList <- OMListSim[[1]]$NumberAtAgeArea
+  BiomassAreaList <- OMListSim[[1]]$BiomassArea
   
 
+  
+  
+  DiscardMortalityAtAgeList <- OMListSim$`1`$DiscardMortality$MeanAtAge
+  EffortList <- OMListSim$`1`$Effort$Effort
+  CatchabilityList <- OMListSim$`1`$Effort$Catchability
+  
+  SelectivityAtAgeList <- OMListSim$`1`$Selectivity$MeanAtAge
+  RetentionAtAgeList <- OMListSim$`1`$Retention$MeanAtAge
+  ClosureAreaList <- OMListSim$`1`$Distribution$Closure
+  
+  EffortAreaList <- OMListSim$`1`$EffortArea
+  DensityAreaList <- OMListSim$`1`$DensityArea
+  VBiomassAreaList <- OMListSim$`1`$VBiomassArea
+  
+  FDeadAtAgeList <- OMListSim$`1`$FishingMortality$DeadAtAge
+  FRetainAtAgeList <- OMListSim$`1`$FishingMortality$RetainAtAge
+ 
+  FDeadAtAgeAreaList <- OMListSim$`1`$FDeadAtAgeArea
+  FRetainAtAgeAreaList <- OMListSim$`1`$FRetainAtAgeArea
+ 
+  RemovalAtAgeAreaList <- OMListSim$`1`$RemovalAtAgeArea
+  RetainAtAgeAreaList <- OMListSim$`1`$RetainAtAgeArea
+  
+  RemovalNumberAtAgeList <- OMListSim$`1`$RemovalNumberAtAge
+  RetainNumberAtAgeList  <- OMListSim$`1`$RetainNumberAtAge
+  RemovalBiomassAtAgeList <- OMListSim$`1`$RemovalBiomassAtAge
+  RetainBiomassAtAgeList <- OMListSim$`1`$RetainBiomassAtAge
+  
+  
+  TSindex = 0;
+  
+  OMListSim$`1`$BiomassArea$Albacore |> dimnames()
+  
+  OMListSim$`1`$BiomassArea = CalcBiomass_(
+    OMListSim$`1`$BiomassArea,
+    OMListSim$`1`$NumberAtAgeArea,
+    OMListSim$`1`$Weight$MeanAtAge,
+    TSindex
+  );
+  
+
+  OMListSim$`1`$VBiomassArea = CalcVBiomass_(
+    OMListSim$`1`$VBiomassArea,
+    OMListSim$`1`$NumberAtAgeArea,
+    OMListSim$`1`$FleetWeightAtAge,
+    OMListSim$`1`$Selectivity$MeanAtAge,
+    OMListSim$`1`$Distribution$Closure,
+    TSindex
+  );
+  
+  OMListSim$`1`$DensityArea = CalcDensity_(
+    OMListSim$`1`$DensityArea,
+    OMListSim$`1`$VBiomassArea,
+    OMListSim$`1`$Spatial$RelativeSize,
+    TSindex
+  );
+  
+  OMListSim$`1`$EffortArea = DistEffort_(
+    OMListSim$`1`$EffortArea,
+    OMListSim$`1`$DensityArea,
+    OMListSim$`1`$Effort$Effort,
+    TSindex
+  );
+  OMListSim$`1`$EffortArea$Albacore[1,,]
+  
+
+  
+  St <- Sys.time()
+  for (i in 1:1) {
+    Test <- CalcFfromCatch_(FDeadAtAgeList,
+                            FRetainAtAgeList,
+                            NumberAtAgeAreaList,
+                            RemovalNumberAtAgeList,
+                            NaturalMortalityList,
+                            SelectivityAtAgeList,
+                            RetentionAtAgeList,
+                            DiscardMortalityAtAgeList,
+                            FDeadAtAgeAreaList,
+                            FRetainAtAgeAreaList,
+                            TSindex=0)
+  }
+  Sys.time() - St
+  Test$RemovalAtAgeArea$Albacore$`1976`[,1,]
+  
+  Test$FRetainAtAgeArea$Albacore$`1976`[,1,]
+  Test$FDeadAtAgeArea$Albacore$`1976`[,1,]
+
+  DensityAreaList$Albacore[1,,]
+  EffortAreaList$Albacore[1,,]
+  
   
   # ---- Optimize for Final Depletion ----
   

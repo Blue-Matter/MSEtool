@@ -350,7 +350,7 @@ PopulateClasses <- function(object) {
 }
 
 
-PopulateASK <- function(object, Ages=NULL, silent=FALSE, type='Length') {
+PopulateASK <- function(object, Ages=NULL, TimeSteps=NULL, silent=FALSE, type='Length') {
 
 
   CheckRequiredObject(Ages, 'ages', 'Ages')
@@ -366,7 +366,11 @@ PopulateASK <- function(object, Ages=NULL, silent=FALSE, type='Length') {
 
   object@ASK <- CalcASK(MeanAtAge, CVatAge, Classes, TruncSD, Dist, Ages,
                         silent=silent, type=type)
-  attributes(object@ASK)$timesteps <- attributes(object@MeanAtAge)$timesteps
+  dd <- dim(object@ASK)
+  dimnames(object@ASK) <- list(Sim=1:dd[1],
+                               Age=Ages@Classes,
+                               Class=Classes,
+                               `Time Step`=TimeSteps)
   object
 }
 
@@ -778,7 +782,7 @@ setMethod("Populate", "length", function(object,
 
   if (ASK) {
     length <- PopulateClasses(length)
-    length <- PopulateASK(length, Ages, isFALSE(messages))
+    length <- PopulateASK(length, Ages, TimeSteps, isFALSE(messages))
   }
 
   length <- AddMeanAtAgeAttributes(length, TimeSteps, Ages)
@@ -853,7 +857,7 @@ setMethod("Populate", "weight", function(object,
 
   if (ASK) {
     object <- PopulateClasses(object)
-    object <- PopulateASK(object, Ages, !isFALSE(messages), type='Weight')
+    object <- PopulateASK(object, Ages, TimeSteps, !isFALSE(messages), type='Weight')
   }
 
   # object <- AddMeanAtAgeAttributes(object, TimeSteps, Ages)

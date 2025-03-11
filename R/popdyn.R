@@ -132,6 +132,11 @@ split_along_dim <- function(a, n) {
                   dimnames(a)[[n]])
 }
 
+SplitAlongDim <- function(a, n) {
+  stats::setNames(lapply(split(a, arrayInd(seq_along(a), dim(a))[, n]),
+                         array, dim = dim(a)[-n], dimnames(a)[-n]),
+                  dimnames(a)[[n]])
+}
 
 #' Internal wrapper function to calculate MSY reference points (now using MSYCalcs)
 #'

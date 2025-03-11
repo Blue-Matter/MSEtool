@@ -2,6 +2,7 @@
 "_PACKAGE"
 
 ## usethis namespace: start
+#' @importFrom Rcpp sourceCpp
 #' @useDynLib MSEtool, .registration = TRUE
 ## usethis namespace: end
 NULL
