@@ -5,7 +5,7 @@ la <- devtools::load_all
 
 la()
 
-testOM@nsim <- 100
+testOM@nsim <- 5
 
 
 OM <- Convert(testOM)

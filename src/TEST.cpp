@@ -477,13 +477,13 @@ List CalcSpawnProduction_(List SProductionList,
     arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // nage, nTS, nArea
     arma::mat NaturalMortalityAtAge = NaturalMortalityAtAgeList[st]; // age, time step
     arma::mat FecundityAtAge = FecundityAtAgeList[st]; // age, time step
-    
+
     arma::cube FDeadAtAge = FDeadAtAgeList[st]; // age, time steep, fleet
-    
+
     int nAge = NumberAtAgeArea.n_rows;
     int nArea = NumberAtAgeArea.n_slices;
     int nFleet = FDeadAtAge.n_slices;
-    
+
     // Sum number over areas and F over fleets
     arma::vec NatAge(nAge);
     arma::vec FDeadatAge(nAge);
@@ -494,8 +494,7 @@ List CalcSpawnProduction_(List SProductionList,
 
     // Calculate SP production
     arma::vec SpawnMortality(nAge);
-    SpawnMortality.zeros();
-    arma::vec NSpawn = NatAge; 
+    arma::vec NSpawn = NatAge;
     if (SpawnTimeFrac[st] > 0) {
       SpawnMortality = (NaturalMortalityAtAge.col(TSindex) + FDeadatAge) * SpawnTimeFrac[st];
       NSpawn = NSpawn % exp(-SpawnMortality);

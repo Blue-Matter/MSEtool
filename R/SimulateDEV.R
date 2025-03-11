@@ -21,6 +21,7 @@ SimulateDEV <- function(OM=NULL,
   Unfished <- CalcUnfishedDynamics(OM)
   
   # ---- Calculate Reference Points ----
+  # TODO speed up
   RefPoints <- CalcRefPoints(OM, Unfished)
   
   # ---- Make OM List ----
@@ -33,25 +34,23 @@ SimulateDEV <- function(OM=NULL,
   OMListSim <- ConvertToSimList(OMList)
   
   # ---- Optimize for Final Depletion ----
+  # TODO add spinner 
   OMListSim <- OptimCatchability(OMListSim)
   
-
   # ---- Historical Population Dynamics ----
-  tictoc::tic()
-  PopDynamicsHistorical <- purrr::map2(PopulationListSim, FleetListSim, \(x,y)
-                                       CalcPopDynamics_(x,
-                                                        y,
-                                                        TimeSteps=TimeSteps(OM, 'Historical'))
-  ) 
-  tictoc::toc()
+  TimeStepsHist <- TimeSteps(OM, 'Historical')
   
-  PopDynamicsHistorical$`1`$PopulationList$NaturalMortality$MeanAtLength
-  N <- PopDynamicsHistorical$`1`$PopulationList$NumberAtAgeArea$Albacore |> apply("Time Step", sum)
-  plot(N, type='l') 
-  
-  B <- PopDynamicsHistorical$`3`$PopulationList$BiomassArea$Albacore |> rowSums()
-  plot(B, type='l')
 
+  # loop over in CalcPopDynamics
+  
+  for (i in 1:OM@nSim) {
+    print(i)
+    OMListSim[[i]] <- CalcPopDynamics(OMListSim[[i]], TimeSteps=TimeStepsHist)  
+  }
+  
+  
+  
+  
   # ---- Project with an MP ----
   
   

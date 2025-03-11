@@ -79,7 +79,11 @@ OptimCatchability <- function(OMListSim) {
     x$Effort$Catchability[[st]][,fl] <- qval
     x
     
-  })
+  },
+  .progress = list(
+    type = "iterator", 
+    format = "Optimizing catchability (q) for Final Depletion {cli::pb_bar} {cli::pb_percent}",
+    clear = TRUE))
  
   OMListSim
 }
@@ -101,7 +105,7 @@ OptCatchability <- function(logQ, x) {
   TimeStepsHist <- x$TimeStepsHist[[st]]
   TermInd <- match(max(TimeStepsHist),TimeStepsAll)
   
-  PopDynamicsHistorical <- CalcPopDynamics_(x, TimeSteps)
+  PopDynamicsHistorical <- CalcPopDynamics_(x, TimeStepsHist)
   
   Biomass <- rowSums(PopDynamicsHistorical$BiomassArea[[1]])
   Bterminal <- Biomass[TermInd]
