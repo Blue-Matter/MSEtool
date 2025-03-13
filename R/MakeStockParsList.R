@@ -1,33 +1,33 @@
 
-CheckSimsUnique <- function(OMList) {
-  l1 <- MakeSimList(OMList, 1)
-  l2 <- MakeSimList(OMList, 2)
-  digest::digest(l1, algo='spookyhash') != digest::digest(l2, algo='spookyhash')
-}
+# CheckSimsUnique <- function(OMList) {
+#   l1 <- MakeSimList(OMList, 1)
+#   l2 <- MakeSimList(OMList, 2)
+#   digest::digest(l1, algo='spookyhash') != digest::digest(l2, algo='spookyhash')
+# }
 
-ConvertToSimList <- function(OMList) {
-  
-  sims <- OMList$Sim
-  nsim <- max(sims)
-  
-  SimsUnique <- FALSE
-  if (nsim) {
-    SimsUnique <- CheckSimsUnique(OMList) 
-  }
-  
-  if (SimsUnique) {
-    # tictoc::tic()
-    OMListSim <- lapply(sims, function(x) MakeSimList(OMList, x))
-    # tictoc::toc()
-    names(OMListSim) <-sims
-  } else {
-    OMListSim <- list(MakeSimList(OMList, 1))
-    names(OMListSim) <- 1
-  }
-  
-  
-  OMListSim
-}
+# ConvertToSimList <- function(OMList) {
+#   
+#   sims <- OMList$Sim
+#   nsim <- max(sims)
+#   
+#   SimsUnique <- FALSE
+#   if (nsim) {
+#     SimsUnique <- CheckSimsUnique(OMList) 
+#   }
+#   
+#   if (SimsUnique) {
+#     # tictoc::tic()
+#     OMListSim <- lapply(sims, function(x) MakeSimList(OMList, x))
+#     # tictoc::toc()
+#     names(OMListSim) <-sims
+#   } else {
+#     OMListSim <- list(MakeSimList(OMList, 1))
+#     names(OMListSim) <- 1
+#   }
+#   
+#   
+#   OMListSim
+# }
 
 
 # https://stackoverflow.com/questions/15263146/revert-list-structure
@@ -39,28 +39,52 @@ ReverseList <- function(ls) {
 }
 
 MakeOMList <- function(OM, Unfished, Period="All") {
-
+  id <- cli::cli_progress_bar("Creating Internal OM List Object")
   
-  List <- MakePopulationList(OM, Period)
-  List <- c(List, MakeFleetList(OM, Period))
-  List$SP0 <- Unfished@Equilibrium@SProduction |>
+  cli::cli_progress_update()
+  
+  OMList <- MakePopulationList(OM, Period)
+  cli::cli_progress_update()
+  
+  OMList <- c(OMList, MakeFleetList(OM, Period))
+  cli::cli_progress_update()
+  
+  OMList$SP0 <- Unfished@Equilibrium@SProduction |>
     purrr::map(\(x) {
       x |> ExpandSims(OM@nSim) |> ExpandTimeSteps(TimeSteps=TimeSteps(OM, Period='All'))
     })
   
-  List$SB0 <- Unfished@Equilibrium@SBiomass |>
+  OMList$SB0 <- Unfished@Equilibrium@SBiomass |>
     purrr::map(\(x) {
       x |> ExpandSims(OM@nSim) |> ExpandTimeSteps(TimeSteps=TimeSteps(OM, Period='All'))
     })
   
-  List$B0 <- Unfished@Equilibrium@Biomass |>
+  OMList$B0 <- Unfished@Equilibrium@Biomass |>
     purrr::map(\(x) {
       x |> ExpandSims(OM@nSim) |> ExpandTimeSteps(TimeSteps=TimeSteps(OM, Period='All'))
     })
   
-  List$Sim <- 1:OM@nSim
-  names(List$Sim) <- rep("Sim", OM@nSim)
-  List
+  OMList$N0atAge <- Unfished@Equilibrium@Number |>
+    purrr::map(\(x) {
+      x |> ExpandSims(OM@nSim) |> ExpandTimeSteps(TimeSteps=TimeSteps(OM, Period='All'))
+    })
+  
+  OMList$Sim <- 1:OM@nSim
+  names(OMList$Sim) <- rep("Sim", OM@nSim)
+  
+  OMList <- CalcInitialTimeStep(OMList) 
+  cli::cli_progress_update()
+  
+  OMList <- purrr::map(1:OM@nSim, function(x) {
+    cli::cli_progress_update(id=id)
+    MakeSimList(OMList, x)
+    })
+  
+  cli::cli_progress_done()
+  names(OMList) <- 1:OM@nSim
+  class(OMList) <- "OMList"
+ 
+  OMList
 }
 
 GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), TimeSteps=NULL) {
@@ -84,7 +108,6 @@ GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), TimeSte
        TimeSteps=TimeSteps,
        Period=Period,
        FleetNames=FleetNames(OM))
-  
 }
 
 MakeSimList <- function(List, Sim=1) {
@@ -106,7 +129,7 @@ MakeSimList <- function(List, Sim=1) {
         List[[i]] <- List[[i]][Sim]
     }
   } 
-  
+  class(List) <- "OMListSim"
   List
 }
 

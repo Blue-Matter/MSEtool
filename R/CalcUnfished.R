@@ -1,34 +1,5 @@
-# --- New Classes (temp) ----
-
-
-
-AddStockNames <- function(list, Names) {
-  names(list) <- Names
-  list
-}
-
-
-
 
 not <- function(val) !val
-
-MakeAtAgeArray <- function(nSim, nAge, nTS, nArea) {
-  lens <- list(nSim=nSim, nAge=nAge, nTS=nTS, nArea=nArea) |> 
-    lapply(length) |> unlist()
-  
-  nout <- vector('list', max(lens))
-  for (i in seq_along(nout)) {
-    nout[[i]] <- array(NA, dim=c(nSim[GetIndex(i, length(lens[1]))],
-                                 nAge[GetIndex(i, length(lens[2]))],
-                                 nTS[GetIndex(i, length(lens[3]))],
-                                 nArea[GetIndex(i, length(lens[4]))]
-    )
-    ) 
-    nout[[i]] <- AddDimNames(nout[[i]], c('Sim', 'Age', 'Time Step', 'Area'))
-  }
-  names(nout) <- names(nAge)
-  nout
-}
 
 DistributeStock <- function(AtAge, UnfishedDist) {
   # adds an area dimension and distributes -at-age arrays
@@ -68,12 +39,11 @@ DistributeStock <- function(AtAge, UnfishedDist) {
 }
 
 
-
 # TODO Dynamic Unfished
 
-# Calculates Equilibrium and Dynamic Unfished Population Dynamics
+# Calculates Equilibrium  Population Dynamics
 # across spatial areas
-CalcUnfishedDynamics <- function(OM,
+CalcEquilibriumUnfished <- function(OM,
                                  messages='default',
                                  nSim=NULL,
                                  parallel=FALSE, 
@@ -133,18 +103,5 @@ CalcUnfishedDynamics <- function(OM,
   Unfished@Equilibrium@SProduction <- purrr::map2(SNatAge[ind], FecundityatAge[ind], ArrayMultiply) |>
     purrr::map(\(x) apply(x, c('Sim', 'Time Step'), sum))
   
-  # TODO `SProduction` will be identical to `SBiomass` if spawning biomass 
-  # is used for fecundity. Can make it NULL here to save memory or do checks above to avoid doing
-  # unnecessary calcs
-
-  # ---- Dynamic ----
-  
-  RecDevInit <- purrr::map(OM@Stock, GetRecDevInit)
-  RecDevHist <- purrr::map(OM@Stock, GetRecDevHist)
-  RecDevProj <- purrr::map(OM@Stock, GetRecDevProj)
-  
-  # TODO - simulate population with no recruitment deviations
-  
-
   Unfished
 }

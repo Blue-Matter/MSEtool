@@ -12,9 +12,9 @@ octopusOM <- OM('Day Octopus OM',
                 Latitude=1.741653,
                 Longitude = 125.085258,
                 nYear=5,
-                pYear=10,
+                pYear=5,
                 TimeUnits = 'month',
-                nSim=2)
+                nSim=100)
 
 ## ---- create_stock ----
 
@@ -100,11 +100,47 @@ Selectivity(octopus_fleet) <- Selectivity(Pars=list(A50=c(4, 6),
 Stock(octopusOM) <- octopus
 Fleet(octopusOM) <- octopus_fleet
 
+
 OM <- Populate(octopusOM)
 
+# ---- Simulate Historical -----
 messages='default'
 nSim=NULL
 parallel=FALSE
 silent=FALSE
 
-# SimulateDEV
+OMList <- SimulateDEV(OM)
+
+saveRDS(OMList, "C:/Users/User/Documents/GitHub/IndonesiaHarvestStrategies/OMs/Octopus/BaseCase.hist")
+
+# ---- Project Forward -----
+
+
+CloseArea_1_12 <- function(Data=NULL) {
+  Advice <- Advice()
+  Advice@Distribution@Closure <- c(0,1)
+  Advice
+}
+class(MP) <- 'mp'
+
+
+CloseArea_6 <- function(Data=NULL) {
+  ind <- which(c(Data$TimeSteps, Data$TimeStepCurrent)==Data$TimeStepCurrent )
+  month <- ind %% 12
+  if (month==0)
+    month <- 12
+  
+  Advice <- Advice()
+  
+  if (month %in% 6) {
+    Advice@Distribution@Closure <- c(0,1)
+  } else {
+    Advice@Distribution@Closure <- c(1,1)
+  }
+  
+  Advice
+}
+class(MP) <- 'mp'
+
+# Hist <- OMList
+

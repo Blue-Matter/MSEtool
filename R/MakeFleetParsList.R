@@ -75,7 +75,7 @@ MakeFleetSlotList <- function(OM, slot='Selectivity', Period='Historical',
                     TimeSteps) 
       })
   }
-  
+
   if ('MeanAtLength' %in% sNames) {
     fun <- get(paste0('Get', slot, 'AtLength'))
     List[['MeanAtLength']] <- purrr::map(OM@Fleet, \(x) fun(x, TimeSteps)) |>

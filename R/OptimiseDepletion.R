@@ -46,12 +46,12 @@ SubsetSim <- function(object, Sim=1, drop=FALSE) {
 }
 
 
-OptimCatchability <- function(OMListSim) {
+OptimCatchability <- function(OMList) {
   
-  nsims <- length(OMListSim)
+  nsims <- length(OMList)
   
-  nStock <- length(OMListSim[[1]]$Ages)
-  nFleet <- dim(OMListSim[[1]]$FishingMortality$DeadAtAge[[1]])[3]
+  nStock <- length(OMList[[1]]$Ages)
+  nFleet <- dim(OMList[[1]]$FishingMortality$DeadAtAge[[1]])[3]
   
   if (nStock>1)
     cli::cli_abort('Optimizing catchability not currently working for multiple stocks', .internal=TRUE)
@@ -60,36 +60,38 @@ OptimCatchability <- function(OMListSim) {
     cli::cli_abort('Optimizing catchability not currently working for multiple fleets', .internal=TRUE)
   
   bounds <-  c(1e-03, 15)
-  Qvals <- rep(NA, nsims)
+ 
   
   st <- 1
   fl <- 1
   
-  OMListSim <- purrr::map(OMListSim, \(x) {
+  OMList <- purrr::map(OMList, \(x) {
     
     q1 <- x$Effort$Catchability[[st]][1,fl]
     if (q1>tiny)
       return(x)
-      
     doOpt <- optimize(OptCatchability,
                       log(bounds), 
                       x=x,
-                      tol=1e-3)
+                      tol=1e-2)
+    
+    logQ <- doOpt$minimum
     qval <- exp(doOpt$minimum)
+    # TODO add qinc etc
     x$Effort$Catchability[[st]][,fl] <- qval
     x
     
-  },
-  .progress = list(
+  }, .progress = list(
     type = "iterator", 
     format = "Optimizing catchability (q) for Final Depletion {cli::pb_bar} {cli::pb_percent}",
     clear = TRUE))
+  
  
-  OMListSim
+  OMList
 }
 
 OptCatchability <- function(logQ, x) {
-  
+ 
   # TODO update for multiple stocks and fleets
   st <- 1
   
@@ -98,15 +100,14 @@ OptCatchability <- function(logQ, x) {
   
   if (length(DepletionTarget)<1)
     cli::cli_abort("`Effort@Catchability` not set for first time step and no value set for `Depletion@Final`")
-  
-  
+
   x$Effort$Catchability[[st]][] <- exp(logQ)
   TimeStepsAll <- x$TimeSteps[[st]]
   TimeStepsHist <- x$TimeStepsHist[[st]]
   TermInd <- match(max(TimeStepsHist),TimeStepsAll)
   
   PopDynamicsHistorical <- CalcPopDynamics_(x, TimeStepsHist)
-  
+
   Biomass <- rowSums(PopDynamicsHistorical$BiomassArea[[1]])
   Bterminal <- Biomass[TermInd]
   

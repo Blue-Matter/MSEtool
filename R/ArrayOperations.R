@@ -299,9 +299,7 @@ ArrayExpand <- function(Array, nSim, nAges, TimeSteps, AgeOpt=1) {
     ExpandSims(nSim) |>
     ExpandAges(nAges) |>
     ExpandTimeSteps(TimeSteps)
-  
-  
-  
+
 }
 
 # AgeOpt = 1 fills all additional age classes with 1e-16
@@ -391,11 +389,20 @@ ExpandTimeSteps <- function(Array, TimeSteps) {
   dnames$`Time Step` <- TimeSteps
   OutArray <- array(NA, dim=d, dimnames=dnames)
   
-  for (i in seq_along(TimeSteps)) {
-    j <- which(ArrayTS <= TimeSteps[i]) |> max()
-    val <- abind::asub(Array, j, ind, drop=FALSE)
-    dimnames(val)$`Time Step` <- TimeSteps[i]
-    abind::afill(OutArray) <- val
+
+  for (i in seq_along(ArrayTS)) {
+    TSind <- which(TimeSteps >= ArrayTS[i])
+    val <- abind::adrop(abind::asub(Array, i, ind, drop=FALSE), ind,  one.d.array=TRUE)
+    TSexpanded <- replicate(length(TSind), val)
+    dd <- dim(TSexpanded) |> length()
+    dimnames(TSexpanded)[[dd]] <- TimeSteps[TSind]
+    names(dimnames(TSexpanded))[dd] <- 'Time Step'
+    
+    TSexpanded <- TSexpanded |>
+      aperm(names(dimnames(Array)))
+
+    abind::afill(OutArray) <- TSexpanded
   }
+  
   OutArray
 }

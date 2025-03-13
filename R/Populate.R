@@ -352,7 +352,6 @@ PopulateClasses <- function(object) {
 
 PopulateASK <- function(object, Ages=NULL, TimeSteps=NULL, silent=FALSE, type='Length') {
 
-
   CheckRequiredObject(Ages, 'ages', 'Ages')
   if ('Timing' %in% slotNames(object)) {
     Ages@Classes <- Ages@Classes+object@Timing
@@ -366,11 +365,15 @@ PopulateASK <- function(object, Ages=NULL, TimeSteps=NULL, silent=FALSE, type='L
 
   object@ASK <- CalcASK(MeanAtAge, CVatAge, Classes, TruncSD, Dist, Ages,
                         silent=silent, type=type)
+  
+  timesteps <- c(dimnames(MeanAtAge)$`Time Step`,
+                 dimnames(CVatAge)$`Time Step`) |> unique() |> sort()
+  
   dd <- dim(object@ASK)
   dimnames(object@ASK) <- list(Sim=1:dd[1],
                                Age=Ages@Classes,
                                Class=Classes,
-                               `Time Step`=TimeSteps)
+                               `Time Step`=timesteps)
   object
 }
 
@@ -991,8 +994,8 @@ setMethod("Populate", "fecundity", function(object,
   argList <- list(Ages, Length, Weight, Maturity, nsim, TimeSteps, CalcAtLength, seed)
   
   if (EmptyObject(object)) {
-    if (!isFALSE(messages))
-      cli::cli_alert_info('No `Fecundity` model found. Assuming Fecundity proportional to Spawning Biomass')
+    # if (!isFALSE(messages))
+    #   cli::cli_alert_info('No `Fecundity` model found. Assuming Fecundity proportional to Spawning Biomass')
     
     CheckRequiredObject(Ages, 'ages', 'Ages')
     CheckRequiredObject(Weight, 'weight', 'Weight')
@@ -1021,19 +1024,18 @@ setMethod("Populate", "fecundity", function(object,
 
   if (is.null(object@Model)| all(is.na(object@Pars))) {
     if (is.null(object@MeanAtAge)) {
-      if (!isFALSE(messages))
-        cli::cli_alert_info('No `Fecundity` model found. Assuming Fecundity proportional to Spawning Biomass')
+      # if (!isFALSE(messages))
+      #   cli::cli_alert_info('No `Fecundity` model found. Assuming Fecundity proportional to Spawning Biomass')
       
       CheckRequiredObject(Ages, 'ages', 'Ages')
       CheckRequiredObject(Weight, 'weight', 'Weight')
       CheckRequiredObject(Length, 'length', 'Length')
-      # CheckRequiredObject(Maturity, 'maturity', 'Maturity')
+      CheckRequiredObject(Maturity, 'maturity', 'Maturity')
       
       Weight <- Populate(Weight, Ages, Length, nsim, TimeSteps, seed=seed, ASK=FALSE, messages=messages)
       Maturity <- Populate(Maturity, Ages, Length, nsim, TimeSteps, seed=seed, messages=messages)
       object@MeanAtAge <- ArrayMultiply(array1=Weight@MeanAtAge, array2=Maturity@MeanAtAge)
-      # object@MeanAtAge <- Weight@MeanAtAge # egg production is fecundity x maturity - calculated internally
-      # fecundity is the egg production of a MATURE individual 
+      
       
       PrintDonePopulating(object, sb, isTRUE(messages))
       return(SetDigest(argList, object))
@@ -1605,8 +1607,17 @@ setMethod("Populate", "retention", function(object,
                   TimeSteps, nsim, CalcAtLength, seed)
   
   
-  if (CheckDigest(argList, object) | EmptyObject(object))
+  if (CheckDigest(argList, object))
     return(object)
+  
+  if (EmptyObject(object)) {
+    object@MeanAtAge <- array(1, dim=c(1,1,1)) |> AddDimNames(TimeSteps=TimeSteps)
+    object@MeanAtLength <- array(1, dim=c(1,1,1)) |> AddDimNames(c('Sim', 'Class', 'Time Step'),
+                                                                    TimeSteps=TimeSteps)
+    
+    PrintDonePopulating(object, sb, isTRUE(messages))
+    return(SetDigest(argList, object))
+  }
   
   SetSeed(object, seed)
   sb <- PrintPopulating(object, isTRUE(messages))
@@ -1639,7 +1650,7 @@ setMethod("Populate", "retention", function(object,
                                                                     TimeSteps=TimeSteps)
     
     PrintDonePopulating(retention, sb, isTRUE(messages))
-    SetDigest(argList, retention)
+    return(SetDigest(argList, retention))
   } 
   
 

@@ -1,4 +1,6 @@
-CalcInitialTimeStep <- function(OMList, Unfished) {
+CalcInitialTimeStep <- function(OMList) {
+  
+  nSim <- length(OMList)
   
   nStock <- length(OMList$NumberAtAgeArea)
   
@@ -15,15 +17,15 @@ CalcInitialTimeStep <- function(OMList, Unfished) {
     ages[1] <- ages[2]-1
     dimnames(InitAgeClassRecDevs)$Age <- ages
     
-    N0atAge <- Unfished@Equilibrium@Number[[st]][,,1,, drop=FALSE]
-    
+  
     InitAgeClassRecDevs <- InitAgeClassRecDevs |> 
-      AddDimension('Time Step') |> 
       AddDimension('Area')
+    
+    N0atAge <- OMList$N0atAge[[st]][,,1,]
     
     NatAgeInitial <- ArrayMultiply(N0atAge, InitAgeClassRecDevs)
     
-    if (length(OMList$Depletion$Initial[[st]]) > 0){
+    if (length(OMList$Depletion$Initial[[st]]) > 0) {
       cli::cli_abort('Initial depletion not done', .internal=TRUE)
       # NatAgeInitial update for initial depletion
     }
@@ -35,14 +37,33 @@ CalcInitialTimeStep <- function(OMList, Unfished) {
 }
 
 
+# OMListSim <- OMList[[1]]
+# Period <- "Historical"
+# MP=NULL
+# DataListSim=NULL
 
+CalcPopDynamics <- function(OMListSim, Period=c("Historical", "Projection", "All"), MP=NULL, DataListSim=NULL) {
 
+  Period <- match.arg(Period)
 
-CalcPopDynamics <- function(OMListSim, TimeSteps=NULL, MP=NULL) {
+  if (!inherits(OMListSim, "OMListSim"))
+    stop('Object must be class `OMListSim`')
   
-  nTS <- length(TimeSteps)
+  TimeStepsAll <- OMListSim$TimeSteps[[1]]
+  if (Period=="Historical") {
+    TimeSteps <- OMListSim$TimeStepsHist[[1]]
+  } else if (Period=="Projection") {
+    TimeSteps <- OMListSim$TimeStepsProj[[1]]
+  } else {
+    TimeSteps <- TimeStepsAll
+  }
+    
+  nTStotal <- dim(OMListSim$NumberAtAgeArea[[1]])[2]
   
-  for (ts in seq_along(TimeSteps)) {
+  # timestep <- TimeSteps[2]
+  for (timestep in TimeSteps) {
+
+    ts <- match(timestep, TimeStepsAll)
     TSindex <- ts - 1
     
     # Biomass by Area beginning of this time step
@@ -53,6 +74,26 @@ CalcPopDynamics <- function(OMListSim, TimeSteps=NULL, MP=NULL) {
       TSindex
     )
     
+    # Spawning Biomass by Area beginning of this time step
+    # OMListSim$SBiomassArea = CalcBiomass_(
+    #   OMListSim$BiomassArea,
+    #   OMListSim$NumberAtAgeArea,
+    #   OMListSim$Weight$MeanAtAge,
+    #   TSindex
+    # )
+    
+    
+    # Apply MICE 
+    
+    
+    # Apply MP 
+    if (!is.null(MP)) {
+      OMListSim <- ApplyMP(OMListSim, 
+                           Data=NULL, 
+                           MP=MP,
+                           TimeStep=timestep)
+    }
+    
     # VB by Area
     OMListSim$VBiomassArea = CalcVBiomass_(
       OMListSim$VBiomassArea,
@@ -62,7 +103,7 @@ CalcPopDynamics <- function(OMListSim, TimeSteps=NULL, MP=NULL) {
       OMListSim$Distribution$Closure,
       TSindex
     )
-    
+  
     # Relative VB Density by Area & Fleet
     OMListSim$DensityArea = CalcDensity_(
       OMListSim$DensityArea,
@@ -70,7 +111,7 @@ CalcPopDynamics <- function(OMListSim, TimeSteps=NULL, MP=NULL) {
       OMListSim$Spatial$RelativeSize,
       TSindex
     )
-    
+  
     # Distribute Effort over Areas (currently proportional to VB Density)
     OMListSim$EffortArea = DistEffort_(
       OMListSim$EffortArea,
@@ -78,7 +119,7 @@ CalcPopDynamics <- function(OMListSim, TimeSteps=NULL, MP=NULL) {
       OMListSim$Effort$Effort,
       TSindex
     )
-    
+
     # Calculate F within each Area
     List <- CalcFArea_(
       OMListSim$FDeadAtAgeArea,
@@ -90,6 +131,13 @@ CalcPopDynamics <- function(OMListSim, TimeSteps=NULL, MP=NULL) {
       OMListSim$Retention$MeanAtAge,
       OMListSim$DiscardMortality$MeanAtAge,
       TSindex)
+  
+    dimnames(List$FDeadAtAgeArea[[1]][[1]])
+    
+    dimnames(OMListSim$FDeadAtAgeArea[[1]][[1]])
+    
+    
+    dimnames(List$FRetainAtAgeArea[[1]])
     
     OMListSim$FDeadAtAgeArea <- List$FDeadAtAgeArea
     OMListSim$FRetainAtAgeArea <- List$FRetainAtAgeArea
@@ -116,6 +164,7 @@ CalcPopDynamics <- function(OMListSim, TimeSteps=NULL, MP=NULL) {
     OMListSim$RemovalBiomassAtAge <- List$RemovalBiomassAtAge
     OMListSim$RetainBiomassAtAge <- List$RetainBiomassAtAge
     
+
     List <- CalcFfromCatch_(
       OMListSim$FDeadAtAge,
       OMListSim$FRetainAtAge,
@@ -129,7 +178,7 @@ CalcPopDynamics <- function(OMListSim, TimeSteps=NULL, MP=NULL) {
       OMListSim$FRetainAtAgeArea,
       TSindex
     )
-    
+  
     OMListSim$FDeadAtAge <- List$FDeadAtAge
     OMListSim$FRetainAtAge <- List$FRetainAtAge
     
@@ -164,7 +213,9 @@ CalcPopDynamics <- function(OMListSim, TimeSteps=NULL, MP=NULL) {
       TSindex
     )
     
-    if (TSindex<nTS) {
+    # Generate Data 
+    
+    if (ts<nTStotal) {
       # Update Number beginning of next Time Step
       OMListSim$NumberAtAgeArea <- CalcNumberNext_(
         OMListSim$NumberAtAgeArea,
@@ -180,12 +231,10 @@ CalcPopDynamics <- function(OMListSim, TimeSteps=NULL, MP=NULL) {
         OMListSim$Spatial$Movement,
         TSindex+1
       )
-      
     
     }
   }
 
+  
   OMListSim
-  
-  
 }

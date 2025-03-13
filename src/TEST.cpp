@@ -374,7 +374,7 @@ List CalcFfromCatch_(List FDeadAtAgeList,
     if (nArea<2) {
       FDeadAtAge(arma::span(0, nAge-1),
                  arma::span(TSindex, TSindex), 
-                 arma::span(0, nFleet-1)) = FRetainAtAgeArea(
+                 arma::span(0, nFleet-1)) = FDeadAtAgeArea(
                    arma::span(0, nAge-1), 
                    arma::span(0, nFleet-1), 
                    arma::span(0,0)); 
@@ -402,6 +402,35 @@ List CalcFfromCatch_(List FDeadAtAgeList,
       continue;
     }
     
+    // check if F same in all areas 
+    LogicalVector IdenticalF(nFleet);
+    for (int fl=0; fl<nFleet; fl++) {
+       arma::mat fdeadfleet = FDeadAtAgeArea(arma::span(0, nAge-1), arma::span(fl,fl), arma::span(0,nArea-1));
+       NumericMatrix FDeadFleet = as<NumericMatrix>(Rcpp::wrap(fdeadfleet));
+       int same = 0;
+       for (int area=1; area<nArea; area++) {
+         NumericVector sameAge = FDeadFleet(_,0) / FDeadFleet(_,area);
+         same += sum(sameAge);
+       }
+       if (same == nAge) {
+         IdenticalF(fl) = TRUE;
+       }
+     
+    }
+    
+    if ((all(IdenticalF).is_true())) {
+      // identical F across areas for all fleets
+      FDeadAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(0, nFleet-1)) = 
+        FDeadAtAgeArea(arma::span(0, nAge-1),arma::span(0, nFleet-1),   arma::span(0,0)); 
+      FRetainAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(0, nFleet-1)) = 
+        FRetainAtAgeArea(arma::span(0, nAge-1), arma::span(0, nFleet-1), arma::span(0,0)); 
+      
+      FDeadAtAgeList[st] = FDeadAtAge;
+      FRetainAtAgeList[st] = FRetainAtAge;
+      continue;
+    }
+    
+  
     // solve for overall F 
     
     // initial guess at apicalF

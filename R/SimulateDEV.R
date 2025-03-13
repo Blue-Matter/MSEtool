@@ -17,47 +17,59 @@ SimulateDEV <- function(OM=NULL,
   
   OM <- MSEtool:::StartUp(OM, messages) 
   
-  # ---- Calculate Unfished Dynamics ----
-  Unfished <- CalcUnfishedDynamics(OM)
-  
-  # ---- Calculate Reference Points ----
-  # TODO speed up
-  RefPoints <- CalcRefPoints(OM, Unfished)
+  # ---- Calculate Equilbrium Unfished Dynamics ----
+  Unfished <- CalcEquilibriumUnfished(OM)
   
   # ---- Make OM List ----
   OMList <- MakeOMList(OM, Unfished)
   
-  # ---- Number-at-Age at Beginning of Initial Time Step ----
-  OMList <- CalcInitialTimeStep(OMList, Unfished) 
+  # ---- Calculate Dynamic Unfished ----
+  # TODO 
+  # update Unfished: create array sizes on initization
+  # Create from OMList 
   
-  # ---- Convert to List by Simulation ----
-  OMListSim <- ConvertToSimList(OMList)
-  
-  # ---- Optimize for Final Depletion ----
-  # TODO add spinner 
-  OMListSim <- OptimCatchability(OMListSim)
-  
-  # ---- Historical Population Dynamics ----
-  TimeStepsHist <- TimeSteps(OM, 'Historical')
+  # CalcDynamicUnfished <- function(OMList, Unfished) {
+  #   
+  #   OMListUnfished <- purrr::map(OMList, \(x, idx, Unfished=Unfished) {
+  #     x$Effort$Catchability <- purrr::map(x$Effort$Catchability , \(y) {
+  #       y[] = tiny
+  #       y
+  #     })
+  #     unfished <- CalcPopDynamics(x, Period="All")  
+  #     
+  #     
+  #   },
+  #   .progress = list(
+  #     type = "iterator", 
+  #     format = "Calculating Unfished {cli::pb_bar} {cli::pb_percent}",
+  #     clear = TRUE))
+  #   
+  #   OMListUnfished[[1]]$NumberAtAgeArea[[1]] |> dim()
+  #   
+  #   Unfished@Dynamic@Number |> dim()
+  #   
+  # } 
   
 
-  # loop over in CalcPopDynamics
+  # ---- Calculate Reference Points ----
+  # TODO speed up
+  # RefPoints <- CalcRefPoints(OM, Unfished)
+
+  # ---- Optimize for Final Depletion ----
+  OMList <- OptimCatchability(OMList)
   
-  for (i in 1:OM@nSim) {
-    print(i)
-    OMListSim[[i]] <- CalcPopDynamics(OMListSim[[i]], TimeSteps=TimeStepsHist)  
-  }
+  # ---- Historical Population Dynamics ----
+  OMListDone <- purrr::map(OMList, \(x) 
+                       CalcPopDynamics(x),
+                       .progress = list(
+                         type = "iterator", 
+                         format = "Simulating Historical Fishery {cli::pb_bar} {cli::pb_percent}",
+                         clear = TRUE))
   
   
   
-  
-  # ---- Project with an MP ----
-  
-  
- 
   # TODO
-  # - project with catch, effort, spatial, size limits
-  # - make MICE model 
+  # - make MICE Case Study and test 
   # - make data 
   # - make obs
   # - make imp
@@ -75,118 +87,182 @@ SimulateDEV <- function(OM=NULL,
   # ---- Return `hist` Object ----
   
   # make Hist object
+  OMListDone
 }
 
 
-
-
-ProjectDEV <- function(Hist, MPs=NULL, parallel = FALSE, silent = FALSE, options=NULL) {
-  
-  
-} 
-
-# TODO Pre-MP function
-
-
-
 setClass('advice',
-         slots=c(Name='character',
-                 TimeStep='numeric',
-                 Removal='numeric',
+         slots=c(Removal='numeric',
                  Retain='numeric',
-                 Spatial='numeric',
-                 Selectivity='list',
-                 Retention='list',
-                 DiscardMortality='list',
+                 Effort='effort',
+                 Distribution='distribution',
+                 Selectivity='selectivity',
+                 Retention='retention',
+                 DiscardMortality='discardmortality',
                  Misc='list'
          ),
          contains='Created_ModifiedClass'
 )
 
-
-Advice <- function() new('advice')
-
-
-MP <- function(Data=NULL) {
-  Advice <- Advice()
-  Advice@Spatial <- c(0,1)
-  Advice
+Advice <- function(DataList=NULL) {
+  # TODO - populate selectivity model parameters etc
+  new('advice')
 }
-class(MP) <- 'mp'
 
 
-ProjectMP <- function(Hist, MP, parallel = FALSE, silent = FALSE, options=NULL) {
-  
-  AllTimeSteps <- TimeSteps(Hist)
-  TimeSteps <- TimeSteps(Hist, 'Projection')
-  
-  progress <- seq_along(TimeSteps)
 
-  # TODO create the arrays
-  ts <- progress[1]
+ProjectDEV <- function(Hist, MPs=NULL, parallel = FALSE, silent = FALSE, options=NULL) {
   
-  for (ts in progress) {
+  # class(Hist) # OMList or hist
+  
+  MPs <- c('CloseArea_1_12', 'CloseArea_6')
+  
+  # Create MSE object 
+  
+  # MSE 
+  # OM
+  # Hist
+  # RefPoints
+
+  # Number  # sim, age, time step, mp, area
+  # Biomass  # sim, age, time step, mp, area
+  # SBiomass  # sim, age, time step, mp, area
+  # Effort
+  
+  Number <- ListArraySimAgeTimeMPArea(OM, "All", MPs)  # sim, age, time step, mp, area
+  Biomass <- Number
+  SBiomass <- Number
+  Removal <- ListArraySimAgeTimeMPFleetArea(OM, "All", MPs)  # sim, age, time step, mp, fleet, area
+  Retain <- Removal
+  
+  
+  for (mm in seq_along(MPs)) {
+    start <- Sys.time()
+    MPList <- tryCatch(
+      purrr::map(OMList, \(x) 
+                 CalcPopDynamics(x, Period="Projection", MP=MPs[mm]),
+                 .progress = list(
+                   type = "iterator", 
+                   format = "{.val {MPs[mm]}} {cli::pb_bar} {cli::pb_percent}",
+                   clear = TRUE
+                 )
+      )
+    )
+    end <- Sys.time() 
+    elapsed <- round(as.numeric(difftime(time1 = end, time2 = start, units = "secs")),2)
+    cli::cli_alert_success("{.val {MPs[mm]}} ({elapsed} seconds)")
     
-    TSInd <- match(TimeStep, AllTimeSteps)
+    # TODO keep dimnames
     
-    TimeStep <- TimeSteps[ts]
+    # TODO add spawn biomass
     
-    # ---- Apply MP ----
+    # TODO speed up opt D 
     
-    ApplyMP <- function(Hist, DataList, MP, TimeStep) {
+    for (st in 1:nStock(OM)) {
       
+      Removal[[st]][,,,mm,,] |> dim()
       
-      
-      
-      # Apply the MP
-      Advice <- MP()
-      
-      # update Selectivity, Retention, Spatial Closures based on MP Advice
-      Hist@Fleet[[1]][[1]]@Distribution@Closure
-      
-      
-      # Calculate Effort from Removal or Retain if necessary
-      
-      # Update Effort 
-      
-      
-      # Return Hist
-      Hist
-      
+      purrr::map(MPList, \(x)
+                 x$RemovalAtAgeArea[[st]]
+                 )
     }
-    
-    # ---- Do MICE stuff during this Time Step (if applicable) -----
-    # TODO
-    Hist <- CalcMICE(Hist, TimeStep=TimeStep)
-    
-    # ---- Update Biomass At Age etc ----
-    # done after MICE to account for changes
-    Hist <- UpdateBioArrays(Hist, TimeStep)
-    
-  
-
-    
-    Hist@EffortArea
-    
-    # ---- Distribute Effort across Areas ----
-    Hist <- DistributeEffort(Hist, TimeStep)
-    
-    # ---- Calculate Catch and Fishing Mortality ----
-    Hist <- CalcCatch(Hist, TimeStep)
-    
-    Hist@Removal[[1]][1,,1,1,]
+    st = 1
+    r = List2Array(MPList[[1]]$RemovalAtAgeArea[[st]])
     
     
-    # ---- Calculate Recruitment  Time Step ----
-    Hist <- CalcRecruitment(Hist, TimeStep=TimeStep)
-    
-    # ---- Number, Biomass at beginning of Next Time Step and Move ----
-    Hist <- CalcNumberNext(Hist, TimeStep)
-    
-    # print(sum(Hist@Number[[1]][1,,ts+1,]))
-    
+    MPList[[1]]$BiomassArea[[st]] |> dim()
+    SBiomass
   }
-  # tictoc::toc()
   
+  
+  
+  
+} 
+
+
+# TODO Pre-MP function
+
+# TimeStep <- '2026'
+# MP <- "CloseArea_6"
+
+# DataList list of Data by Stock
+ApplyMP <- function(OMListSim, Data=NULL, MP, TimeStep) {
+  
+  TimeStepsAll <- OMListSim$TimeSteps[[1]]
+  Data <- list()
+  Data$TimeStepCurrent <- as.numeric(TimeStep)
+  Data$TimeStepLastHist <- max(OMListSim$TimeStepsHist[[1]])
+  ind <- which(TimeStepsAll==Data$TimeStepCurrent)
+  
+  Data$TimeSteps <- TimeStepsAll[1:(ind-1)]
+
+  
+  Dims <- dim(OMListSim$NumberAtAgeArea[[1]])
+  nTS <- Dims[2]
+  nAreas <- Dims[3]
+  nFleet <- dim(OMListSim$VBiomassArea[[1]])[2]
+  
+  LastHistindex <-  match(Data$TimeStepLastHist, TimeStepsAll)
+  TSindex <- match(TimeStep, TimeStepsAll)
+  nTS <- length(TimeStepsAll)
+  
+  # Apply the MP
+  intervalTS <- TRUE
+  if (intervalTS) {
+    MPfun <- getMP(MP)
+    Advice <- tryCatch(MPfun(Data))  
+  } else {
+    Advice <- Advice()
+  }
+  
+  # Update Effort 
+  effortTS <- Advice@Effort@Effort
+  if (is.null(effortTS)) {
+    effortTS <- rep(1, nFleet)
+  } 
+  if (length(effortTS)!=nFleet)
+    cli::cli_abort("`Advice@Effort@Effort` must be length `nFleet`: {.val {nFleet}}")
+  
+  OMListSim$Effort$Effort[[1]][TSindex,] <-  OMListSim$Effort$Effort[[1]][LastHistindex,] * effortTS
+  
+  # Update Spatial Closure
+  closure <- Advice@Distribution@Closure
+  if (is.null(closure)) {
+    closure <- rep(1, nAreas)
+  } 
+  if (length(closure) != nAreas)
+    cli::cli_abort("`Advice@Distribution@Closure` must be length `nAreas`: {.val {nAreas}}")
+  
+  OMListSim$Distribution$Closure[[1]][TSindex,1,] <- closure
+  
+  # Update Selectivity 
+  if (!EmptyObject(Advice@Selectivity)) {
+    cli::cli_abort("Selectivity Management not done")
+  }
+  
+  # Update Retention 
+  if (!EmptyObject(Advice@Retention)) {
+    cli::cli_abort("Retention Management not done")
+  }
+  
+  # Calculate Effort from Removals or Retain
+  
+  # Apply Effort constraint if applicable 
+  
+  OMListSim
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
