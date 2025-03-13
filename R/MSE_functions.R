@@ -803,6 +803,7 @@ Dom <- function(MSEobj, ..., PMlist=NULL, Refs=NULL, Yrs=NULL) {
 #' @describeIn checkMSE Adds additional MPs to an MSE object by combining
 #' multiple MSE objects that have identical historical OM values but different
 #' MPs.
+#' @seealso [addMMPs()]
 #' @export
 addMPs <- function(MSEobjs) {
   # join two or more MSE objects
