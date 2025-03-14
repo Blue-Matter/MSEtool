@@ -5,28 +5,31 @@ using namespace Rcpp;
 
 
 // [[Rcpp::export]]
-List CalcBiomass_(List BiomassAreaList,
+List CalcBiomass_(List BiomassList,
                   List NumberAtAgeAreaList,
                   List WeightList,
                   int TSindex) {
   
-  int nStock = BiomassAreaList.size();
+  int nStock = BiomassList.size();
 
   for (int st=0; st<nStock; st++) {
     arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st];
-    NumericMatrix BiomassArea = BiomassAreaList[st];
-    NumericMatrix WeightAtAge = WeightList[st];
+    NumericVector Biomass = BiomassList[st];
+    Biomass[TSindex] = 0;
+    
     int nAge = NumberAtAgeArea.n_rows;
-    int nArea = BiomassArea.ncol();
-    NumericVector W = WeightAtAge.column(TSindex);
+    int nArea = NumberAtAgeArea.n_slices;
+
+    NumericMatrix WeightAtAge = WeightList[st];
+    
     arma::mat narea = NumberAtAgeArea.subcube(0, TSindex, 0, nAge-1, TSindex, nArea-1);
     NumericMatrix NArea  = as<NumericMatrix>(Rcpp::wrap(narea));
     for (int area=0; area<nArea; area++) {
-      BiomassArea(TSindex, area) = sum(W * NArea(_, area));
+      Biomass(TSindex) += sum(WeightAtAge(_, TSindex) * NArea(_, area));
     }
-    BiomassAreaList[st] = BiomassArea;
+    BiomassList[st] = Biomass;
   }
-  return(BiomassAreaList);
+  return(BiomassList);
 }
 
 
@@ -61,7 +64,7 @@ List CalcVBiomass_(List VBiomassAreaList,
 
     for (int area=0; area<nArea; area++) {
       for (int fl=0; fl<nFleet; fl++) {
-        VBiomassArea.subcube(TSindex, fl, area, TSindex, fl, area)=  accu(NArea.col(area) %  FWeight.col(fl) % Selectivity.col(fl) *  Closure.row(fl).col(area));
+        VBiomassArea.subcube(TSindex, fl, area, TSindex, fl, area)= arma::accu(NArea.col(area) %  FWeight.col(fl) % Selectivity.col(fl) *  Closure.row(fl).col(area));
       }
     }
     
@@ -110,10 +113,6 @@ List DistEffort_(List EffortAreaList,
 
   for (int st=0; st<nStock; st++) {
     
-    // NumericVector out = clone(EffortAreaList)[st];
-    // List dimnames = out.attr("dimnames");
-    // NumericVector dims = out.attr("dim");
-
     arma::cube EffortArea = EffortAreaList[st]; // nTS, nFleet, nArea
     arma::cube DensityArea = DensityAreaList[st]; // nTS, nFleet, nArea
     arma::mat Effort = EffortList[st]; // nTS, nFleet
@@ -125,11 +124,7 @@ List DistEffort_(List EffortAreaList,
       arma::vec densityArea = DensityArea.subcube(TSindex, fl, 0, TSindex, fl, nArea-1);
       EffortArea.subcube(TSindex, fl, 0, TSindex, fl, nArea-1) = arma::as_scalar(Effort.row(TSindex).col(fl)) * densityArea;
     }
-    
-    // out = as<NumericVector>(Rcpp::wrap(EffortArea));
-    // out.attr("dim") = dims;
-    // out.attr("dimnames") = dimnames;
-    
+   
     EffortAreaList[st] = EffortArea;
   }
   return(EffortAreaList);
@@ -182,9 +177,15 @@ List CalcFArea_(List FDeadAtAgeAreaList,
       double catchabilityArea = 0;
       for (int fl=0; fl<nFleet; fl++) {
         double fleetdensity = arma::as_scalar(DensityArea.subcube(TSindex, fl, area, TSindex, fl, area));
+        Rcout << "area " << area << std::endl;
+        Rcout << "fleetdensity " << fleetdensity << std::endl;
         if (fleetdensity>0) {
           catchabilityArea = arma::as_scalar(q.col(fl))/fleetdensity;
+         
         }
+        double effortarea = arma::as_scalar(effortArea.col(area));
+        Rcout << "effortarea " << effortarea << std::endl;
+        Rcout << "catchabilityArea " << catchabilityArea << std::endl;
         arma::vec FInteract = arma::as_scalar(effortArea.col(area) * catchabilityArea) * selectivity.col(fl);  
         arma::vec FRetain = FInteract % retention.col(fl);  
         arma::vec Discard = FInteract - FRetain;
@@ -350,10 +351,6 @@ List CalcFfromCatch_(List FDeadAtAgeList,
 
     arma::cube FDeadAtAge = FDeadAtAgeList[st]; // age, time steep, fleet
     
-    // NumericVector out = FDeadAtAgeList[st];
-    // List dimnames = out.attr("dimnames");
-    // NumericVector dims = out.attr("dim");
-    
     arma::cube FRetainAtAge = FRetainAtAgeList[st]; // age, time steep, fleet
     arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // age, time step, area
     arma::cube RemovalNumberAtAge = RemovalNumberAtAgeList[st]; // age, time steep, fleet
@@ -388,14 +385,6 @@ List CalcFfromCatch_(List FDeadAtAgeList,
       FRetainAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(0, nFleet-1)) = 
         FRetainAtAgeArea(arma::span(0, nAge-1), arma::span(0, nFleet-1), arma::span(0,0)); 
 
-      // NumericVector FDeadAtAgeNamed = as<NumericVector>(Rcpp::wrap(FDeadAtAge));
-      // FDeadAtAgeNamed.attr("dim") = dims;
-      // FDeadAtAgeNamed.attr("dimnames") = dimnames;
-      // 
-      // NumericVector FRetainAtAgeNamed = as<NumericVector>(Rcpp::wrap(FRetainAtAge));
-      // FRetainAtAgeNamed.attr("dim") = dims;
-      // FRetainAtAgeNamed.attr("dimnames") = dimnames;
-      
       FDeadAtAgeList[st] = FDeadAtAge;
       FRetainAtAgeList[st] = FRetainAtAge;
       continue;
@@ -519,14 +508,14 @@ List CalcFfromCatch_(List FDeadAtAgeList,
 }
 
 
-
-
-
 // [[Rcpp::export]]
 List CalcSpawnProduction_(List SProductionList,
+                          List SBiomassList,
                           List NumberAtAgeAreaList,
                           List NaturalMortalityAtAgeList,
                           List FecundityAtAgeList,
+                          List WeightAtAgeList,
+                          List MaturityAtAgeList,
                           arma::vec SpawnTimeFrac,
                           List SPFromList,
                           List FDeadAtAgeList,
@@ -536,13 +525,17 @@ List CalcSpawnProduction_(List SProductionList,
   
   for (int st=0; st<nStock; st++) {
     arma::vec SProduction = SProductionList[st]; // length time steps
+    arma::vec SBiomass = SBiomassList[st]; // length time steps
 
     arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // nage, nTS, nArea
     arma::mat NaturalMortalityAtAge = NaturalMortalityAtAgeList[st]; // age, time step
     arma::mat FecundityAtAge = FecundityAtAgeList[st]; // age, time step
+    arma::mat WeightAtAge = WeightAtAgeList[st]; // age, time step
+    arma::mat MaturityAtAge = MaturityAtAgeList[st]; // age, time step
 
     arma::cube FDeadAtAge = FDeadAtAgeList[st]; // age, time steep, fleet
-
+    
+  
     int nAge = NumberAtAgeArea.n_rows;
     int nArea = NumberAtAgeArea.n_slices;
     int nFleet = FDeadAtAge.n_slices;
@@ -564,22 +557,28 @@ List CalcSpawnProduction_(List SProductionList,
     }
     
     SProduction(TSindex) = arma::accu(NSpawn % FecundityAtAge.col(TSindex));
+    SBiomass(TSindex) = arma::accu(NSpawn % WeightAtAge.col(TSindex) % MaturityAtAge.col(TSindex));
     SProductionList[st] = SProduction;
+    SBiomassList[st] = SBiomass;
   }
   
-
-  
-
   // apply SPfrom
   if (nStock>1) {
     for (int st=0; st<nStock; st++) {
       int SPFrom = SPFromList[st];
       SProductionList[st] = SProductionList[SPFrom];
+      SBiomassList[st] = SBiomassList[SPFrom];
     }
   }
 
-  return(SProductionList);
+  List L = List::create(Named("SProduction")=SProductionList,
+                        Named("SBiomass") = SBiomassList
+  );
+  
+  return(L);
+
 }
+
 
 
 // [[Rcpp::export]]
@@ -781,7 +780,7 @@ List CalcPopDynamics_(List OMListSim,
                       NumericVector TimeSteps) {
 
 
-  List OMListSimOut = OMListSim;
+  List OMListSimOut = clone(OMListSim);
   List AgesList = OMListSimOut["Ages"];
   
   List Length = OMListSimOut["Length"];
@@ -801,13 +800,21 @@ List CalcPopDynamics_(List OMListSim,
   List Retention = OMListSimOut["Retention"];
   List Distribution = OMListSimOut["Distribution"];
 
+  List TimeStepsList = OMListSim["TimeSteps"];
+  NumericVector TimeStepsAll = TimeStepsList[0];
+  
   int nTS = TimeSteps.size();
 
-  for (int TSindex=0; TSindex<nTS; TSindex++) {
-
-    // Biomass by Area beginning of this time step
-    OMListSimOut["BiomassArea"] = CalcBiomass_(
-      OMListSimOut["BiomassArea"],
+  for (int timestep=0; timestep<nTS; timestep++) {
+    NumericVector TSmatch = abs(TimeStepsAll - TimeSteps[timestep]);
+    int TSindex = which_min(TSmatch);
+    
+    
+    // Do MICE 
+ 
+    // Biomass at beginning of this time step
+    OMListSimOut["Biomass"] = CalcBiomass_(
+      OMListSimOut["Biomass"],
       OMListSimOut["NumberAtAgeArea"],
       Weight["MeanAtAge"],
       TSindex
@@ -897,19 +904,24 @@ List CalcPopDynamics_(List OMListSim,
     OMListSimOut["FDeadAtAge"] = Foverall["FDeadAtAge"];
     OMListSimOut["FRetainAtAge"] = Foverall["FRetainAtAge"];
 
-    // Calc Spawning Production
-    OMListSimOut["SProduction"] = CalcSpawnProduction_(
+    // Calc Spawning Production and Spawning Biomass
+    List SProductSBiomass = CalcSpawnProduction_(
       OMListSimOut["SProduction"],
+      OMListSimOut["SBiomass"],                  
       OMListSimOut["NumberAtAgeArea"],
       NaturalMortality["MeanAtAge"],
       Fecundity["MeanAtAge"],
+      Weight["MeanAtAge"],
+      Maturity["MeanAtAge"],      
       SRR["SpawnTimeFrac"],
       SRR["SPFrom"],
       OMListSimOut["FDeadAtAge"],
       TSindex
     );
     
-
+    OMListSimOut["SProduction"] = SProductSBiomass["SProduction"];
+    OMListSimOut["SBiomass"] = SProductSBiomass["SBiomass"];
+    
 	  // Calc Recruitment
 	  NumericVector Recruits = CalcRecruitment_(
 	    OMListSimOut["SProduction"],
@@ -931,7 +943,7 @@ List CalcPopDynamics_(List OMListSim,
      );
 
 
-    if (TSindex<(nTS-1)) {
+    if (timestep<(nTS-1)) {
 
       // Update Number beginning of next Time Step
       OMListSimOut["NumberAtAgeArea"] = CalcNumberNext_(

@@ -47,7 +47,7 @@ SubsetSim <- function(object, Sim=1, drop=FALSE) {
 
 
 OptimCatchability <- function(OMList) {
-  
+  # OMList <- rlang::duplicate(OMList)
   nsims <- length(OMList)
   
   nStock <- length(OMList[[1]]$Ages)
@@ -59,9 +59,8 @@ OptimCatchability <- function(OMList) {
   if (nFleet>1)
     cli::cli_abort('Optimizing catchability not currently working for multiple fleets', .internal=TRUE)
   
-  bounds <-  c(1e-03, 15)
+  bounds <- c(1e-03, 15)
  
-  
   st <- 1
   fl <- 1
   
@@ -70,11 +69,11 @@ OptimCatchability <- function(OMList) {
     q1 <- x$Effort$Catchability[[st]][1,fl]
     if (q1>tiny)
       return(x)
+    
     doOpt <- optimize(OptCatchability,
                       log(bounds), 
                       x=x,
                       tol=1e-2)
-    
     logQ <- doOpt$minimum
     qval <- exp(doOpt$minimum)
     # TODO add qinc etc
@@ -94,7 +93,6 @@ OptCatchability <- function(logQ, x) {
  
   # TODO update for multiple stocks and fleets
   st <- 1
-  
   DepletionTarget <- x$Depletion$Final[[st]]
   DepletionReference <- x$Depletion$Reference[[st]]
   
@@ -108,13 +106,16 @@ OptCatchability <- function(logQ, x) {
   
   PopDynamicsHistorical <- CalcPopDynamics_(x, TimeStepsHist)
 
-  Biomass <- rowSums(PopDynamicsHistorical$BiomassArea[[1]])
-  Bterminal <- Biomass[TermInd]
+ 
   
   if (DepletionReference=='B0') {
+    Bterminal <- PopDynamicsHistorical$Biomass[[1]][TermInd]
     depRef <- sum(x$B0[[st]][, TermInd,])  
+  } else if (DepletionReference=='SB0') {
+    Bterminal <- PopDynamicsHistorical$SBiomass[[1]][TermInd]
+    depRef <- sum(x$SB0[[st]][, TermInd,])  
   } else {
-    cli::cli_abort("Currently only accepts`Depletion@Reference = 'B0'", .internal=TRUE)
+    cli::cli_abort("Currently only accepts`Depletion@Reference = 'B0' or 'SB0'")
   }
   
   sum((Bterminal/depRef - DepletionTarget)^2)

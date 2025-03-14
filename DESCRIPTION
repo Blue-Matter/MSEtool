@@ -138,6 +138,7 @@ Collate:
     'Plot.R'
     'Populate.R'
     'Print.R'
+    'ProjectMP.R'
     'RcppExports.R'
     'ReduceArrayDimensions.R'
     'SAM2OM.R'

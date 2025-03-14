@@ -1298,8 +1298,9 @@ setMethod("Populate", "depletion", function(object,
     }
   }
 
-  if (!object@Reference %in% c('B0', 'BMSY'))
-    cli::cli_abort('`Reference` must be either `B0` or `BMSY`')
+  validReference <- c('B0', 'BMSY', 'SB0', 'SBMSY')
+  if (!object@Reference %in% validReference)
+    cli::cli_abort('`Reference` must be one of: {.val {validReference}}')
 
   PrintDonePopulating(object, sb, isTRUE(messages))
   SetDigest(argList, object)

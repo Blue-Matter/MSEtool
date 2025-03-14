@@ -28,7 +28,7 @@ OM2MOM <- function(OM) {
              Imp = list(list(SubOM(OM, "Imp"))))
   
   vars <- intersect(slotNames("MOM"), slotNames("OM")) # setdiff(slotNames("MOM"), slotNames("OM"))
-  lapply(vars, function(i) slot(MOM, i) <<- slot(OM, i))
+  lapply(vars, function(i) slot(MOM, i) <- slot(OM, i))
   
   # Override cpars
   MOM@cpars <- list(list(OM@cpars))

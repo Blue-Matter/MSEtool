@@ -37,8 +37,8 @@ Ref_int_cpp <- function(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V
     .Call(`_MSEtool_Ref_int_cpp`, F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, Wt_at_Age_C, relRfun, SRRpars, maxage, plusgroup, spawn_time_frac)
 }
 
-CalcBiomass_ <- function(BiomassAreaList, NumberAtAgeAreaList, WeightList, TSindex) {
-    .Call(`_MSEtool_CalcBiomass_`, BiomassAreaList, NumberAtAgeAreaList, WeightList, TSindex)
+CalcBiomass_ <- function(BiomassList, NumberAtAgeAreaList, WeightList, TSindex) {
+    .Call(`_MSEtool_CalcBiomass_`, BiomassList, NumberAtAgeAreaList, WeightList, TSindex)
 }
 
 CalcVBiomass_ <- function(VBiomassAreaList, NumberAtAgeAreaList, FleetWeightAtAgeList, SelectivityAtAgeList, ClosureAreaList, TSindex) {
@@ -65,8 +65,8 @@ CalcFfromCatch_ <- function(FDeadAtAgeList, FRetainAtAgeList, NumberAtAgeAreaLis
     .Call(`_MSEtool_CalcFfromCatch_`, FDeadAtAgeList, FRetainAtAgeList, NumberAtAgeAreaList, RemovalNumberAtAgeList, NaturalMortalityAtAgeList, SelectivityAtAgeList, RetentionAtAgeList, DiscardMortalityAtAgeList, FDeadAtAgeAreaList, FRetainAtAgeAreaList, TSindex)
 }
 
-CalcSpawnProduction_ <- function(SProductionList, NumberAtAgeAreaList, NaturalMortalityAtAgeList, FecundityAtAgeList, SpawnTimeFrac, SPFromList, FDeadAtAgeList, TSindex) {
-    .Call(`_MSEtool_CalcSpawnProduction_`, SProductionList, NumberAtAgeAreaList, NaturalMortalityAtAgeList, FecundityAtAgeList, SpawnTimeFrac, SPFromList, FDeadAtAgeList, TSindex)
+CalcSpawnProduction_ <- function(SProductionList, SBiomassList, NumberAtAgeAreaList, NaturalMortalityAtAgeList, FecundityAtAgeList, WeightAtAgeList, MaturityAtAgeList, SpawnTimeFrac, SPFromList, FDeadAtAgeList, TSindex) {
+    .Call(`_MSEtool_CalcSpawnProduction_`, SProductionList, SBiomassList, NumberAtAgeAreaList, NaturalMortalityAtAgeList, FecundityAtAgeList, WeightAtAgeList, MaturityAtAgeList, SpawnTimeFrac, SPFromList, FDeadAtAgeList, TSindex)
 }
 
 CalcRecruitment_ <- function(SProductionList, SP0List, R0List, RecDevsList, SRRModelList, SRRParsList, TSindex) {

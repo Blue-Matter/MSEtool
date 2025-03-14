@@ -1,4 +1,4 @@
-CalcInitialTimeStep <- function(OMList) {
+CalcInitialTimeStep <- function(OMList, Unfished=NULL) {
   
   nSim <- length(OMList)
   
@@ -26,6 +26,16 @@ CalcInitialTimeStep <- function(OMList) {
     NatAgeInitial <- ArrayMultiply(N0atAge, InitAgeClassRecDevs)
     
     if (length(OMList$Depletion$Initial[[st]]) > 0) {
+      
+      # for (i in 1:nSim) {
+      #   W1 <- OMList$Weight$MeanAtAge[[st]][i,,1]
+      #   
+      # }
+      # 
+      # 
+      # Binit <- apply(apply(NatAgeInitial, c('Sim', 'Age'), sum) * W1, 'Sim', sum)
+      # B0 <- apply(Unfished@Equilibrium@Biomass[[st]], 'Sim', sum) 
+      # 
       cli::cli_abort('Initial depletion not done', .internal=TRUE)
       # NatAgeInitial update for initial depletion
     }
@@ -62,10 +72,7 @@ CalcPopDynamics <- function(OMListSim,
     TimeSteps <- TimeStepsAll
   }
     
-  StockNames <- names(OMListSim$NumberAtAgeArea)
-  nStock <- length(StockNames)
-  FleetNames <- dimnames(OMListSim$Selectivity$MeanAtAge[[1]])[["Fleet"]]
-  nFleet <- length(FleetNames)
+
   nTStotal <- dim(OMListSim$NumberAtAgeArea[[1]])[2]
   
   # timestep <- TimeSteps[1]
@@ -73,24 +80,17 @@ CalcPopDynamics <- function(OMListSim,
 
     ts <- match(timestep, TimeStepsAll)
     TSindex <- ts - 1
+
+    # Apply MICE 
+  
     
-    # Biomass by Area beginning of this time step
-    OMListSim$BiomassArea = CalcBiomass_(
-      OMListSim$BiomassArea,
+    # Biomass  beginning of this time step
+    OMListSim$Biomass = CalcBiomass_(
+      OMListSim$Biomass,
       OMListSim$NumberAtAgeArea,
       OMListSim$Weight$MeanAtAge,
       TSindex
     )
-
-    # Spawning Biomass by Area beginning of this time step
-    # OMListSim$SBiomassArea = CalcBiomass_(
-    #   OMListSim$BiomassArea,
-    #   OMListSim$NumberAtAgeArea,
-    #   OMListSim$Weight$MeanAtAge,
-    #   TSindex
-    # )
-    
-    # Apply MICE 
     
     # Apply MP 
     if (!is.null(MP)) {
@@ -100,6 +100,7 @@ CalcPopDynamics <- function(OMListSim,
                            TimeStep=timestep)
     }
     
+  
     # VB by Area
     OMListSim$VBiomassArea = CalcVBiomass_(
       OMListSim$VBiomassArea,
@@ -189,19 +190,23 @@ CalcPopDynamics <- function(OMListSim,
     OMListSim$FDeadAtAge <- List$FDeadAtAge
     OMListSim$FRetainAtAge <- List$FRetainAtAge
     
-    # Calc Spawning Production
-    OMListSim$SProduction = CalcSpawnProduction_(
+    # Calc Spawning Production and Spawning Biomass
+    List <-CalcSpawnProduction_(
       OMListSim$SProduction,
+      OMListSim$SBiomass,
       OMListSim$NumberAtAgeArea,
       OMListSim$NaturalMortality$MeanAtAge,
       OMListSim$Fecundity$MeanAtAge,
+      OMListSim$Weight$MeanAtAge,
+      OMListSim$Maturity$MeanAtAge,
       OMListSim$SRR$SpawnTimeFrac,
       OMListSim$SRR$SPFrom,
       OMListSim$FDeadAtAge,
       TSindex
     )
-
-
+    OMListSim$SProduction <- List$SProduction
+    OMListSim$SBiomass <- List$SBiomass
+    
     # Calc Recruitment 
     Recruits <- CalcRecruitment_(
       OMListSim$SProduction,
@@ -245,114 +250,132 @@ CalcPopDynamics <- function(OMListSim,
     }
   }
   
-  if (AddDimNames) {
-    for (st in 1:nStock) {
-      ages <- OMListSim$Ages[[st]]@Classes
-      areas <- 1:dim(OMListSim$NumberAtAgeArea[[st]])[3]
+  if (AddDimNames) 
+    OMListSim <- AddDimNamesOMListSim(OMListSim)
     
-      dimnames(OMListSim$VBiomassArea[[st]]) <- list(
-        "Time Step"= TimeStepsAll,
-        "Fleet" = FleetNames,
-        "Area" = areas
-      )
-      
-      dimnames(OMListSim$DensityArea[[st]]) <- list(
-        "Time Step"= TimeStepsAll,
-        "Fleet" = FleetNames,
-        "Area" = areas
-      )
-      
-      
-      dimnames(OMListSim$EffortArea[[st]]) <- list(
-        "Time Step"= TimeStepsAll,
-        "Fleet" = FleetNames,
-        "Area" = areas
-      )
-      
-      OMListSim$FDeadAtAgeArea[[st]] <- purrr::map(OMListSim$FDeadAtAgeArea[[st]], \(x) {
-        dimnames(x) <- list(
-          "Age" = ages,
-          "Fleet" = FleetNames,
-          "Area" = areas
-        )
-        x
-      })
-      
-      OMListSim$FRetainAtAgeArea[[st]] <- purrr::map(OMListSim$FRetainAtAgeArea[[st]], \(x) {
-        dimnames(x) <- list(
-          "Age" = ages,
-          "Fleet" = FleetNames,
-          "Area" = areas
-        )
-        x
-      })
-      
-      OMListSim$RemovalAtAgeArea[[st]] <- purrr::map(OMListSim$RemovalAtAgeArea[[st]], \(x) {
-        dimnames(x) <- list(
-          "Age" = ages,
-          "Fleet" = FleetNames,
-          "Area" = areas
-        )
-        x
-      })
-      
-      OMListSim$RetainAtAgeArea[[st]] <- purrr::map(OMListSim$RetainAtAgeArea[[st]], \(x) {
-        dimnames(x) <- list(
-          "Age" = ages,
-          "Fleet" = FleetNames,
-          "Area" = areas
-        )
-        x
-      })
-      
-      dimnames(OMListSim$RemovalNumberAtAge[[st]]) <- list(
-        "Age" = ages,
-        "Time Step"= TimeStepsAll,
-        "Fleet" = FleetNames
-      )
-      
-      dimnames(OMListSim$RetainNumberAtAge[[st]]) <- list(
-        "Age" = ages,
-        "Time Step"= TimeStepsAll,
-        "Fleet" = FleetNames
-      )
-   
-      dimnames(OMListSim$RemovalBiomassAtAge[[st]]) <- list(
-        "Age" = ages,
-        "Time Step"= TimeStepsAll,
-        "Fleet" = FleetNames
-      )
-      dimnames(OMListSim$RetainBiomassAtAge[[st]]) <- list(
-        "Age" = ages,
-        "Time Step"= TimeStepsAll,
-        "Fleet" = FleetNames
-      )
-      
-      dimnames(OMListSim$FDeadAtAge[[st]]) <- list(
-        "Age" = ages,
-        "Time Step"= TimeStepsAll,
-        "Fleet" = FleetNames
-      )
-      
-      dimnames(OMListSim$FRetainAtAge[[st]]) <- list(
-        "Age" = ages,
-        "Time Step"= TimeStepsAll,
-        "Fleet" = FleetNames
-      )
-      
-      OMListSim$SProduction[[st]] <- array(OMListSim$SProduction[[st]][,1])
-      dimnames(OMListSim$SProduction[[st]]) <- list(
-        "Time Step"= TimeStepsAll)
-      
-      dimnames(OMListSim$NumberAtAgeArea[[st]]) <- list(
-        "Age" = ages,
-        "Time Step"= TimeStepsAll,
-        "Area" = areas
-      )
-    }
-  
-  }
-
-  
   OMListSim
 }
+
+
+AddDimNamesOMListSim <- function(OMListSim) {
+  
+  StockNames <- names(OMListSim$NumberAtAgeArea)
+  nStock <- length(StockNames)
+  FleetNames <- dimnames(OMListSim$Selectivity$MeanAtAge[[1]])[["Fleet"]]
+  nFleet <- length(FleetNames)
+  TimeStepsAll <- OMListSim$TimeSteps[[1]]
+  
+  for (st in 1:nStock) {
+    ages <- OMListSim$Ages[[st]]@Classes
+    areas <- 1:dim(OMListSim$NumberAtAgeArea[[st]])[3]
+    
+    OMListSim$Biomass[[st]] <- array(OMListSim$Biomass[[st]])
+    dimnames(OMListSim$Biomass[[st]]) <- list(
+      "Time Step"= TimeStepsAll)
+    
+    dimnames(OMListSim$VBiomassArea[[st]]) <- list(
+      "Time Step"= TimeStepsAll,
+      "Fleet" = FleetNames,
+      "Area" = areas
+    )
+    
+    dimnames(OMListSim$DensityArea[[st]]) <- list(
+      "Time Step"= TimeStepsAll,
+      "Fleet" = FleetNames,
+      "Area" = areas
+    )
+    
+    dimnames(OMListSim$EffortArea[[st]]) <- list(
+      "Time Step"= TimeStepsAll,
+      "Fleet" = FleetNames,
+      "Area" = areas
+    )
+    
+    OMListSim$FDeadAtAgeArea[[st]] <- purrr::map(OMListSim$FDeadAtAgeArea[[st]], \(x) {
+      dimnames(x) <- list(
+        "Age" = ages,
+        "Fleet" = FleetNames,
+        "Area" = areas
+      )
+      x
+    })
+    
+    OMListSim$FRetainAtAgeArea[[st]] <- purrr::map(OMListSim$FRetainAtAgeArea[[st]], \(x) {
+      dimnames(x) <- list(
+        "Age" = ages,
+        "Fleet" = FleetNames,
+        "Area" = areas
+      )
+      x
+    })
+    
+    OMListSim$RemovalAtAgeArea[[st]] <- purrr::map(OMListSim$RemovalAtAgeArea[[st]], \(x) {
+      dimnames(x) <- list(
+        "Age" = ages,
+        "Fleet" = FleetNames,
+        "Area" = areas
+      )
+      x
+    })
+    
+    OMListSim$RetainAtAgeArea[[st]] <- purrr::map(OMListSim$RetainAtAgeArea[[st]], \(x) {
+      dimnames(x) <- list(
+        "Age" = ages,
+        "Fleet" = FleetNames,
+        "Area" = areas
+      )
+      x
+    })
+    
+    dimnames(OMListSim$RemovalNumberAtAge[[st]]) <- list(
+      "Age" = ages,
+      "Time Step"= TimeStepsAll,
+      "Fleet" = FleetNames
+    )
+    
+    dimnames(OMListSim$RetainNumberAtAge[[st]]) <- list(
+      "Age" = ages,
+      "Time Step"= TimeStepsAll,
+      "Fleet" = FleetNames
+    )
+    
+    dimnames(OMListSim$RemovalBiomassAtAge[[st]]) <- list(
+      "Age" = ages,
+      "Time Step"= TimeStepsAll,
+      "Fleet" = FleetNames
+    )
+    dimnames(OMListSim$RetainBiomassAtAge[[st]]) <- list(
+      "Age" = ages,
+      "Time Step"= TimeStepsAll,
+      "Fleet" = FleetNames
+    )
+    
+    dimnames(OMListSim$FDeadAtAge[[st]]) <- list(
+      "Age" = ages,
+      "Time Step"= TimeStepsAll,
+      "Fleet" = FleetNames
+    )
+    
+    dimnames(OMListSim$FRetainAtAge[[st]]) <- list(
+      "Age" = ages,
+      "Time Step"= TimeStepsAll,
+      "Fleet" = FleetNames
+    )
+    
+    OMListSim$SProduction[[st]] <- array(OMListSim$SProduction[[st]])
+    dimnames(OMListSim$SProduction[[st]]) <- list(
+      "Time Step"= TimeStepsAll)
+    
+    OMListSim$SBiomass[[st]] <- array(OMListSim$SBiomass[[st]])
+    dimnames(OMListSim$SBiomass[[st]]) <- list(
+      "Time Step"= TimeStepsAll)
+    
+    dimnames(OMListSim$NumberAtAgeArea[[st]]) <- list(
+      "Age" = ages,
+      "Time Step"= TimeStepsAll,
+      "Area" = areas
+    )
+  }
+  OMListSim
+}
+

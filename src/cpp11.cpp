@@ -27,7 +27,7 @@ extern SEXP _MSEtool_CalcFfromCatch_(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, S
 extern SEXP _MSEtool_CalcNumberNext_(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_CalcPopDynamics_(SEXP, SEXP);
 extern SEXP _MSEtool_CalcRecruitment_(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
-extern SEXP _MSEtool_CalcSpawnProduction_(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+extern SEXP _MSEtool_CalcSpawnProduction_(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_CalcVBiomass_(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_DistEffort_(SEXP, SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_LinInterp_cpp(SEXP, SEXP, SEXP);
@@ -59,7 +59,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_CalcNumberNext_",      (DL_FUNC) &_MSEtool_CalcNumberNext_,       6},
     {"_MSEtool_CalcPopDynamics_",     (DL_FUNC) &_MSEtool_CalcPopDynamics_,      2},
     {"_MSEtool_CalcRecruitment_",     (DL_FUNC) &_MSEtool_CalcRecruitment_,      7},
-    {"_MSEtool_CalcSpawnProduction_", (DL_FUNC) &_MSEtool_CalcSpawnProduction_,  8},
+    {"_MSEtool_CalcSpawnProduction_", (DL_FUNC) &_MSEtool_CalcSpawnProduction_, 11},
     {"_MSEtool_CalcVBiomass_",        (DL_FUNC) &_MSEtool_CalcVBiomass_,         6},
     {"_MSEtool_DistEffort_",          (DL_FUNC) &_MSEtool_DistEffort_,           4},
     {"_MSEtool_LinInterp_cpp",        (DL_FUNC) &_MSEtool_LinInterp_cpp,         3},

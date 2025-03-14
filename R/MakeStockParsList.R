@@ -72,7 +72,7 @@ MakeOMList <- function(OM, Unfished, Period="All") {
   OMList$Sim <- 1:OM@nSim
   names(OMList$Sim) <- rep("Sim", OM@nSim)
   
-  OMList <- CalcInitialTimeStep(OMList) 
+  OMList <- CalcInitialTimeStep(OMList, Unfished) 
   cli::cli_progress_update()
   
   OMList <- purrr::map(1:OM@nSim, function(x) {
@@ -151,12 +151,11 @@ MakePopulationList <- function(OM, Period='All') {
   # Arrays to be  filled 
   List$NumberAtAgeArea <- ListArraySimAgeTimeArea(OM, Period) 
   
-  List$BiomassArea <- ListArraySimAgeTimeArea(OM, Period) |>
+  List$Biomass <- ListArraySimAgeTime(OM, Period) |>
     purrr::map(\(x)  DropDimension(x, 'Age', warn=FALSE)) 
   
-  List$SProduction <-  ListArraySimAgeTimeArea(OM, Period) |>
-    purrr::map(\(x)  DropDimension(x, 'Age', warn=FALSE)) |>
-    purrr::map(\(x)  DropDimension(x, 'Area', warn=FALSE)) 
+  List$SProduction <- List$Biomass
+  List$SBiomass <-  List$SProduction
   
   List$CurrentYear <- purrr::map(OM@Stock, \(x) methods::slot(x, 'CurrentYear'))
   List$TimeUnits <- purrr::map(OM@Stock, \(x) methods::slot(x, 'TimeUnits'))

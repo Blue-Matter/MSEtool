@@ -335,9 +335,6 @@ Assess2OM <- function(Name="A fishery made by VPA2OM",
   Perr <- array(NA_real_, c(nsim, maxage + nyears - LowerTri))
 
   if(altinit < 2) {       # normal assumption with or without plusgroup
-    SURV <<- surv[1,,1]
-    r0 <<- R0
-    
     Perr[, n_age:1] <- log(naa[, , 1]/(R0 * surv[, , 1]))
     
   } else if(altinit==2) { # temporary fix for DLMtool initialization of plusgroup

@@ -85,16 +85,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // CalcBiomass_
-List CalcBiomass_(List BiomassAreaList, List NumberAtAgeAreaList, List WeightList, int TSindex);
-RcppExport SEXP _MSEtool_CalcBiomass_(SEXP BiomassAreaListSEXP, SEXP NumberAtAgeAreaListSEXP, SEXP WeightListSEXP, SEXP TSindexSEXP) {
+List CalcBiomass_(List BiomassList, List NumberAtAgeAreaList, List WeightList, int TSindex);
+RcppExport SEXP _MSEtool_CalcBiomass_(SEXP BiomassListSEXP, SEXP NumberAtAgeAreaListSEXP, SEXP WeightListSEXP, SEXP TSindexSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type BiomassAreaList(BiomassAreaListSEXP);
+    Rcpp::traits::input_parameter< List >::type BiomassList(BiomassListSEXP);
     Rcpp::traits::input_parameter< List >::type NumberAtAgeAreaList(NumberAtAgeAreaListSEXP);
     Rcpp::traits::input_parameter< List >::type WeightList(WeightListSEXP);
     Rcpp::traits::input_parameter< int >::type TSindex(TSindexSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcBiomass_(BiomassAreaList, NumberAtAgeAreaList, WeightList, TSindex));
+    rcpp_result_gen = Rcpp::wrap(CalcBiomass_(BiomassList, NumberAtAgeAreaList, WeightList, TSindex));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -205,20 +205,23 @@ BEGIN_RCPP
 END_RCPP
 }
 // CalcSpawnProduction_
-List CalcSpawnProduction_(List SProductionList, List NumberAtAgeAreaList, List NaturalMortalityAtAgeList, List FecundityAtAgeList, arma::vec SpawnTimeFrac, List SPFromList, List FDeadAtAgeList, int TSindex);
-RcppExport SEXP _MSEtool_CalcSpawnProduction_(SEXP SProductionListSEXP, SEXP NumberAtAgeAreaListSEXP, SEXP NaturalMortalityAtAgeListSEXP, SEXP FecundityAtAgeListSEXP, SEXP SpawnTimeFracSEXP, SEXP SPFromListSEXP, SEXP FDeadAtAgeListSEXP, SEXP TSindexSEXP) {
+List CalcSpawnProduction_(List SProductionList, List SBiomassList, List NumberAtAgeAreaList, List NaturalMortalityAtAgeList, List FecundityAtAgeList, List WeightAtAgeList, List MaturityAtAgeList, arma::vec SpawnTimeFrac, List SPFromList, List FDeadAtAgeList, int TSindex);
+RcppExport SEXP _MSEtool_CalcSpawnProduction_(SEXP SProductionListSEXP, SEXP SBiomassListSEXP, SEXP NumberAtAgeAreaListSEXP, SEXP NaturalMortalityAtAgeListSEXP, SEXP FecundityAtAgeListSEXP, SEXP WeightAtAgeListSEXP, SEXP MaturityAtAgeListSEXP, SEXP SpawnTimeFracSEXP, SEXP SPFromListSEXP, SEXP FDeadAtAgeListSEXP, SEXP TSindexSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< List >::type SProductionList(SProductionListSEXP);
+    Rcpp::traits::input_parameter< List >::type SBiomassList(SBiomassListSEXP);
     Rcpp::traits::input_parameter< List >::type NumberAtAgeAreaList(NumberAtAgeAreaListSEXP);
     Rcpp::traits::input_parameter< List >::type NaturalMortalityAtAgeList(NaturalMortalityAtAgeListSEXP);
     Rcpp::traits::input_parameter< List >::type FecundityAtAgeList(FecundityAtAgeListSEXP);
+    Rcpp::traits::input_parameter< List >::type WeightAtAgeList(WeightAtAgeListSEXP);
+    Rcpp::traits::input_parameter< List >::type MaturityAtAgeList(MaturityAtAgeListSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type SpawnTimeFrac(SpawnTimeFracSEXP);
     Rcpp::traits::input_parameter< List >::type SPFromList(SPFromListSEXP);
     Rcpp::traits::input_parameter< List >::type FDeadAtAgeList(FDeadAtAgeListSEXP);
     Rcpp::traits::input_parameter< int >::type TSindex(TSindexSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcSpawnProduction_(SProductionList, NumberAtAgeAreaList, NaturalMortalityAtAgeList, FecundityAtAgeList, SpawnTimeFrac, SPFromList, FDeadAtAgeList, TSindex));
+    rcpp_result_gen = Rcpp::wrap(CalcSpawnProduction_(SProductionList, SBiomassList, NumberAtAgeAreaList, NaturalMortalityAtAgeList, FecundityAtAgeList, WeightAtAgeList, MaturityAtAgeList, SpawnTimeFrac, SPFromList, FDeadAtAgeList, TSindex));
     return rcpp_result_gen;
 END_RCPP
 }
