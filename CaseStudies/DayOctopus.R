@@ -121,7 +121,7 @@ CloseArea_1_12 <- function(Data=NULL) {
   Advice@Distribution@Closure <- c(0,1)
   Advice
 }
-class(MP) <- 'mp'
+class(CloseArea_1_12) <- 'mp'
 
 
 CloseArea_6 <- function(Data=NULL) {
@@ -140,7 +140,7 @@ CloseArea_6 <- function(Data=NULL) {
   
   Advice
 }
-class(MP) <- 'mp'
+class(CloseArea_6) <- 'mp'
 
 # Hist <- OMList
 

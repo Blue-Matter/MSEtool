@@ -36,13 +36,17 @@ CalcInitialTimeStep <- function(OMList) {
   OMList
 }
 
-
-# OMListSim <- OMList[[1]]
+# OMList <- MakeOMList(OM, Unfished)
+# OMListSim <- OMList[[8]]
 # Period <- "Historical"
 # MP=NULL
 # DataListSim=NULL
 
-CalcPopDynamics <- function(OMListSim, Period=c("Historical", "Projection", "All"), MP=NULL, DataListSim=NULL) {
+CalcPopDynamics <- function(OMListSim, 
+                            Period=c("Historical", "Projection", "All"), 
+                            MP=NULL, 
+                            DataListSim=NULL,
+                            AddDimNames=TRUE) {
 
   Period <- match.arg(Period)
 
@@ -58,9 +62,13 @@ CalcPopDynamics <- function(OMListSim, Period=c("Historical", "Projection", "All
     TimeSteps <- TimeStepsAll
   }
     
+  StockNames <- names(OMListSim$NumberAtAgeArea)
+  nStock <- length(StockNames)
+  FleetNames <- dimnames(OMListSim$Selectivity$MeanAtAge[[1]])[["Fleet"]]
+  nFleet <- length(FleetNames)
   nTStotal <- dim(OMListSim$NumberAtAgeArea[[1]])[2]
   
-  # timestep <- TimeSteps[2]
+  # timestep <- TimeSteps[1]
   for (timestep in TimeSteps) {
 
     ts <- match(timestep, TimeStepsAll)
@@ -73,7 +81,7 @@ CalcPopDynamics <- function(OMListSim, Period=c("Historical", "Projection", "All
       OMListSim$Weight$MeanAtAge,
       TSindex
     )
-    
+
     # Spawning Biomass by Area beginning of this time step
     # OMListSim$SBiomassArea = CalcBiomass_(
     #   OMListSim$BiomassArea,
@@ -82,9 +90,7 @@ CalcPopDynamics <- function(OMListSim, Period=c("Historical", "Projection", "All
     #   TSindex
     # )
     
-    
     # Apply MICE 
-    
     
     # Apply MP 
     if (!is.null(MP)) {
@@ -103,7 +109,7 @@ CalcPopDynamics <- function(OMListSim, Period=c("Historical", "Projection", "All
       OMListSim$Distribution$Closure,
       TSindex
     )
-  
+
     # Relative VB Density by Area & Fleet
     OMListSim$DensityArea = CalcDensity_(
       OMListSim$DensityArea,
@@ -111,14 +117,18 @@ CalcPopDynamics <- function(OMListSim, Period=c("Historical", "Projection", "All
       OMListSim$Spatial$RelativeSize,
       TSindex
     )
+
   
     # Distribute Effort over Areas (currently proportional to VB Density)
+
     OMListSim$EffortArea = DistEffort_(
       OMListSim$EffortArea,
       OMListSim$DensityArea,
       OMListSim$Effort$Effort,
       TSindex
     )
+
+    # dimnames(OMListSim$EffortArea[[1]])
 
     # Calculate F within each Area
     List <- CalcFArea_(
@@ -131,13 +141,9 @@ CalcPopDynamics <- function(OMListSim, Period=c("Historical", "Projection", "All
       OMListSim$Retention$MeanAtAge,
       OMListSim$DiscardMortality$MeanAtAge,
       TSindex)
-  
-    dimnames(List$FDeadAtAgeArea[[1]][[1]])
+
     
-    dimnames(OMListSim$FDeadAtAgeArea[[1]][[1]])
-    
-    
-    dimnames(List$FRetainAtAgeArea[[1]])
+    # dimnames(List$FDeadAtAgeArea[[1]][[1]])
     
     OMListSim$FDeadAtAgeArea <- List$FDeadAtAgeArea
     OMListSim$FRetainAtAgeArea <- List$FRetainAtAgeArea
@@ -156,15 +162,16 @@ CalcPopDynamics <- function(OMListSim, Period=c("Historical", "Projection", "All
       OMListSim$FDeadAtAgeArea,
       OMListSim$FRetainAtAgeArea,
       TSindex)
-  
+
+    
     OMListSim$RemovalAtAgeArea <- List$RemovalAtAgeArea
     OMListSim$RetainAtAgeArea <- List$RetainAtAgeArea
     OMListSim$RemovalNumberAtAge <- List$RemovalNumberAtAge
     OMListSim$RetainNumberAtAge <- List$RetainNumberAtAge
     OMListSim$RemovalBiomassAtAge <- List$RemovalBiomassAtAge
     OMListSim$RetainBiomassAtAge <- List$RetainBiomassAtAge
-    
-
+  
+    # Calc overall F from catch and pop by Area
     List <- CalcFfromCatch_(
       OMListSim$FDeadAtAge,
       OMListSim$FRetainAtAge,
@@ -178,7 +185,7 @@ CalcPopDynamics <- function(OMListSim, Period=c("Historical", "Projection", "All
       OMListSim$FRetainAtAgeArea,
       TSindex
     )
-  
+ 
     OMListSim$FDeadAtAge <- List$FDeadAtAge
     OMListSim$FRetainAtAge <- List$FRetainAtAge
     
@@ -193,7 +200,8 @@ CalcPopDynamics <- function(OMListSim, Period=c("Historical", "Projection", "All
       OMListSim$FDeadAtAge,
       TSindex
     )
-    
+
+
     # Calc Recruitment 
     Recruits <- CalcRecruitment_(
       OMListSim$SProduction,
@@ -212,7 +220,8 @@ CalcPopDynamics <- function(OMListSim, Period=c("Historical", "Projection", "All
       OMListSim$Spatial$UnfishedDist,
       TSindex
     )
-    
+ 
+  
     # Generate Data 
     
     if (ts<nTStotal) {
@@ -225,14 +234,123 @@ CalcPopDynamics <- function(OMListSim, Period=c("Historical", "Projection", "All
         OMListSim$Ages,
         TSindex
       )
-      
+  
       OMListSim$NumberAtAgeArea <- MoveStock_(
         OMListSim$NumberAtAgeArea,
         OMListSim$Spatial$Movement,
         TSindex+1
       )
-    
+
+
     }
+  }
+  
+  if (AddDimNames) {
+    for (st in 1:nStock) {
+      ages <- OMListSim$Ages[[st]]@Classes
+      areas <- 1:dim(OMListSim$NumberAtAgeArea[[st]])[3]
+    
+      dimnames(OMListSim$VBiomassArea[[st]]) <- list(
+        "Time Step"= TimeStepsAll,
+        "Fleet" = FleetNames,
+        "Area" = areas
+      )
+      
+      dimnames(OMListSim$DensityArea[[st]]) <- list(
+        "Time Step"= TimeStepsAll,
+        "Fleet" = FleetNames,
+        "Area" = areas
+      )
+      
+      
+      dimnames(OMListSim$EffortArea[[st]]) <- list(
+        "Time Step"= TimeStepsAll,
+        "Fleet" = FleetNames,
+        "Area" = areas
+      )
+      
+      OMListSim$FDeadAtAgeArea[[st]] <- purrr::map(OMListSim$FDeadAtAgeArea[[st]], \(x) {
+        dimnames(x) <- list(
+          "Age" = ages,
+          "Fleet" = FleetNames,
+          "Area" = areas
+        )
+        x
+      })
+      
+      OMListSim$FRetainAtAgeArea[[st]] <- purrr::map(OMListSim$FRetainAtAgeArea[[st]], \(x) {
+        dimnames(x) <- list(
+          "Age" = ages,
+          "Fleet" = FleetNames,
+          "Area" = areas
+        )
+        x
+      })
+      
+      OMListSim$RemovalAtAgeArea[[st]] <- purrr::map(OMListSim$RemovalAtAgeArea[[st]], \(x) {
+        dimnames(x) <- list(
+          "Age" = ages,
+          "Fleet" = FleetNames,
+          "Area" = areas
+        )
+        x
+      })
+      
+      OMListSim$RetainAtAgeArea[[st]] <- purrr::map(OMListSim$RetainAtAgeArea[[st]], \(x) {
+        dimnames(x) <- list(
+          "Age" = ages,
+          "Fleet" = FleetNames,
+          "Area" = areas
+        )
+        x
+      })
+      
+      dimnames(OMListSim$RemovalNumberAtAge[[st]]) <- list(
+        "Age" = ages,
+        "Time Step"= TimeStepsAll,
+        "Fleet" = FleetNames
+      )
+      
+      dimnames(OMListSim$RetainNumberAtAge[[st]]) <- list(
+        "Age" = ages,
+        "Time Step"= TimeStepsAll,
+        "Fleet" = FleetNames
+      )
+   
+      dimnames(OMListSim$RemovalBiomassAtAge[[st]]) <- list(
+        "Age" = ages,
+        "Time Step"= TimeStepsAll,
+        "Fleet" = FleetNames
+      )
+      dimnames(OMListSim$RetainBiomassAtAge[[st]]) <- list(
+        "Age" = ages,
+        "Time Step"= TimeStepsAll,
+        "Fleet" = FleetNames
+      )
+      
+      dimnames(OMListSim$FDeadAtAge[[st]]) <- list(
+        "Age" = ages,
+        "Time Step"= TimeStepsAll,
+        "Fleet" = FleetNames
+      )
+      
+      dimnames(OMListSim$FRetainAtAge[[st]]) <- list(
+        "Age" = ages,
+        "Time Step"= TimeStepsAll,
+        "Fleet" = FleetNames
+      )
+      
+      OMListSim$SProduction[[st]] <- array(OMListSim$SProduction[[st]][,1])
+      dimnames(OMListSim$SProduction[[st]]) <- list(
+        "Time Step"= TimeStepsAll)
+      
+      dimnames(OMListSim$NumberAtAgeArea[[st]]) <- list(
+        "Age" = ages,
+        "Time Step"= TimeStepsAll,
+        "Area" = areas
+      )
+    }
+  
   }
 
   

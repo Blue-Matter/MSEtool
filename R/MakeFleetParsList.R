@@ -1,5 +1,5 @@
 
-MakeFleetList <- function(OM, Period='Historical') {
+MakeFleetList <- function(OM, Period='All') {
  
   List <- list()
   List$FishingMortality <- MakeFishingMortalityList(OM, Period)

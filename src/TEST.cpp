@@ -14,7 +14,7 @@ List CalcBiomass_(List BiomassAreaList,
 
   for (int st=0; st<nStock; st++) {
     arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st];
-    NumericMatrix BiomassArea = clone(BiomassAreaList)[st];
+    NumericMatrix BiomassArea = BiomassAreaList[st];
     NumericMatrix WeightAtAge = WeightList[st];
     int nAge = NumberAtAgeArea.n_rows;
     int nArea = BiomassArea.ncol();
@@ -42,12 +42,8 @@ List CalcVBiomass_(List VBiomassAreaList,
   int nStock = VBiomassAreaList.size();
   
   for (int st=0; st<nStock; st++) {
-    
-    NumericVector out = clone(VBiomassAreaList)[st];
-    List dimnames = out.attr("dimnames");
-    NumericVector dims = out.attr("dim");
   
-    arma::cube VBiomassArea = clone(VBiomassAreaList)[st];
+    arma::cube VBiomassArea = VBiomassAreaList[st];
 
     arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st];
     arma::cube FleetWeightAtAge = FleetWeightAtAgeList[st];
@@ -69,11 +65,7 @@ List CalcVBiomass_(List VBiomassAreaList,
       }
     }
     
-    out = as<NumericVector>(Rcpp::wrap(VBiomassArea));
-    out.attr("dim") = dims;
-    out.attr("dimnames") = dimnames;
-    
-    VBiomassAreaList[st] = out;
+    VBiomassAreaList[st] = VBiomassArea;
   }
 
   return(VBiomassAreaList);
@@ -89,12 +81,7 @@ List CalcDensity_(List DensityAreaList,
   int nStock = DensityAreaList.size();
   
   for (int st=0; st<nStock; st++) {
-    
-    NumericVector out = clone(DensityAreaList)[st];
-    List dimnames = out.attr("dimnames");
-    NumericVector dims = out.attr("dim");
-    
-    arma::cube DensityArea = clone(DensityAreaList)[st]; // nTS, nFleet, nArea
+    arma::cube DensityArea = DensityAreaList[st]; // nTS, nFleet, nArea
     arma::cube VBiomassArea = VBiomassAreaList[st]; // nTS, nFleet, nArea
     arma::vec RelativeSize = RelativeSizeList[st]; // narea
    
@@ -106,12 +93,7 @@ List CalcDensity_(List DensityAreaList,
       arma::vec FleetDensityArea = FleetVBArea  / RelativeSize;
       DensityArea.subcube(TSindex, fl, 0, TSindex, fl, nArea-1) = FleetDensityArea/sum(FleetDensityArea);;
     }
-    
-    out = as<NumericVector>(Rcpp::wrap(DensityArea));
-    out.attr("dim") = dims;
-    out.attr("dimnames") = dimnames;
-    
-    DensityAreaList[st] = out;
+    DensityAreaList[st] = DensityArea;
   }
   return(DensityAreaList);
 }
@@ -128,11 +110,11 @@ List DistEffort_(List EffortAreaList,
 
   for (int st=0; st<nStock; st++) {
     
-    NumericVector out = clone(EffortAreaList)[st];
-    List dimnames = out.attr("dimnames");
-    NumericVector dims = out.attr("dim");
-    
-    arma::cube EffortArea = clone(EffortAreaList)[st]; // nTS, nFleet, nArea
+    // NumericVector out = clone(EffortAreaList)[st];
+    // List dimnames = out.attr("dimnames");
+    // NumericVector dims = out.attr("dim");
+
+    arma::cube EffortArea = EffortAreaList[st]; // nTS, nFleet, nArea
     arma::cube DensityArea = DensityAreaList[st]; // nTS, nFleet, nArea
     arma::mat Effort = EffortList[st]; // nTS, nFleet
     
@@ -144,11 +126,11 @@ List DistEffort_(List EffortAreaList,
       EffortArea.subcube(TSindex, fl, 0, TSindex, fl, nArea-1) = arma::as_scalar(Effort.row(TSindex).col(fl)) * densityArea;
     }
     
-    out = as<NumericVector>(Rcpp::wrap(EffortArea));
-    out.attr("dim") = dims;
-    out.attr("dimnames") = dimnames;
+    // out = as<NumericVector>(Rcpp::wrap(EffortArea));
+    // out.attr("dim") = dims;
+    // out.attr("dimnames") = dimnames;
     
-    EffortAreaList[st] = out;
+    EffortAreaList[st] = EffortArea;
   }
   return(EffortAreaList);
 }
@@ -167,12 +149,16 @@ List CalcFArea_(List FDeadAtAgeAreaList,
   int nStock = FDeadAtAgeAreaList.size();
 
   for (int st=0; st<nStock; st++) {
-    Rcpp::List FDeadAtAgeAreaStock =  FDeadAtAgeAreaList[st];
-    Rcpp::List FRetainAtAgeAreaStock =  FRetainAtAgeAreaList[st];
-
-    arma::cube FDeadAtAgeArea =FDeadAtAgeAreaStock[TSindex]; // nAge, nFleet, nArea
+    Rcpp::List FDeadAtAgeAreaStock = FDeadAtAgeAreaList[st];
+    Rcpp::List FRetainAtAgeAreaStock = FRetainAtAgeAreaList[st];
+    
+    arma::cube FDeadAtAgeArea = FDeadAtAgeAreaStock[TSindex]; // nAge, nFleet, nArea
     arma::cube FRetainAtAgeArea = FRetainAtAgeAreaStock[TSindex]; // nAge, nFleet, nArea
 
+    // NumericVector out = FRetainAtAgeAreaStock[TSindex];
+    // List dimnames = out.attr("dimnames");
+    // NumericVector dims = out.attr("dim");
+    // 
     arma::cube EffortArea = EffortAreaList[st]; // nTS, nFleet, nArea
     arma::cube DensityArea = DensityAreaList[st]; // nTS, nFleet, nArea
     arma::mat Catchability = CatchabilityList[st]; // nTS, nFleet
@@ -208,6 +194,15 @@ List CalcFArea_(List FDeadAtAgeAreaList,
         FDeadAtAgeArea.subcube(0, fl, area, nAge-1,fl, area) = FRetain + DeadDiscard;
       }
     }
+    
+    // NumericVector FDeadAtAgeAreaNamed = as<NumericVector>(Rcpp::wrap(FDeadAtAgeArea));
+    // FDeadAtAgeAreaNamed.attr("dim") = dims;
+    // FDeadAtAgeAreaNamed.attr("dimnames") = dimnames;
+    // 
+    // NumericVector FRetainAtAgeAreaNamed = as<NumericVector>(Rcpp::wrap(FRetainAtAgeArea));
+    // FRetainAtAgeAreaNamed.attr("dim") = dims;
+    // FRetainAtAgeAreaNamed.attr("dimnames") = dimnames;
+  
     FDeadAtAgeAreaStock[TSindex] = FDeadAtAgeArea;
     FRetainAtAgeAreaStock[TSindex] = FRetainAtAgeArea;
     
@@ -237,70 +232,77 @@ List CalcCatch_(List RemovalAtAgeAreaList,
   int nStock = NaturalMortalityAtAgeList.size();
 
   for (int st=0; st<nStock; st++) {
+
     Rcpp::List RemovalAtAgeAreaStock = RemovalAtAgeAreaList[st];
     Rcpp::List RetainAtAgeAreaStock = RetainAtAgeAreaList[st];
     Rcpp::List FDeadAtAgeAreaStock = FDeadAtAgeAreaList[st];
     Rcpp::List FRetainAtAgeAreaStock = FRetainAtAgeAreaList[st];
     
+
     arma::cube RemovalAtAgeArea = RemovalAtAgeAreaStock[TSindex]; // age, fleet, area
     arma::cube RetainAtAgeArea = RetainAtAgeAreaStock[TSindex]; // age, fleet, area
-  
+
     arma::cube RemovalNumberAtAge = RemovalNumberAtAgeList[st]; // age, time step, fleet
-    arma::cube RetainNumberAtAge = RetainNumberAtAgeList[st];  // age, time step, fleet  
-    arma::cube RemovalBiomassAtAge = RemovalBiomassAtAgeList[st];  // age, time step, fleet  
-    arma::cube RetainBiomassAtAge = RetainBiomassAtAgeList[st];  // age, time step, fleet  
+    arma::cube RetainNumberAtAge = RetainNumberAtAgeList[st];  // age, time step, fleet
+    arma::cube RemovalBiomassAtAge = RemovalBiomassAtAgeList[st];  // age, time step, fleet
+    arma::cube RetainBiomassAtAge = RetainBiomassAtAgeList[st];  // age, time step, fleet
+
     arma::mat NaturalMortalityAtAge = NaturalMortalityAtAgeList[st]; // age, time step
     arma::cube FleetWeightAtAge = FleetWeightAtAgeList[st]; // age, time step, fleet
     arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // age, time step, area
     arma::cube FDeadAtAgeArea = FDeadAtAgeAreaStock[TSindex]; // age, fleet, area
     arma::cube FRetainAtAgeArea = FRetainAtAgeAreaStock[TSindex]; // age, fleet, area
-    
+
    int nAge = NumberAtAgeArea.n_rows;
    int nArea =NumberAtAgeArea.n_slices;
    int nFleet = FDeadAtAgeArea.n_cols;
 
    for (int area=0; area<nArea; area++) {
-     Rcpp::NumericVector ZDead(nAge);
-     for (int fl=0; fl<nFleet; fl++) {
-       Rcpp::NumericVector FDeadFleetArea = Rcpp::wrap(FDeadAtAgeArea.subcube(0, fl, area, nAge-1, fl, area));
-       ZDead = ZDead +=FDeadFleetArea;
-     }
-     
-     arma::vec zdead = Rcpp::as<arma::vec>(Rcpp::wrap(ZDead)) + NaturalMortalityAtAge.col(TSindex);
-     
+     arma::vec zdead = arma::sum(FDeadAtAgeArea.subcube(0, 0, area, nAge-1, nFleet-1, area), 1);
+     zdead = zdead + NaturalMortalityAtAge.col(TSindex);
+
+     // Rcpp::NumericVector ZDead(nAge);
+     // for (int fl=0; fl<nFleet; fl++) {
+     //   Rcpp::NumericVector FDeadFleetArea = Rcpp::wrap(FDeadAtAgeArea.subcube(0, fl, area, nAge-1, fl, area));
+     //   ZDead = ZDead +=FDeadFleetArea;
+     // }
+     //
+     // arma::vec zdead = Rcpp::as<arma::vec>(Rcpp::wrap(ZDead)) + NaturalMortalityAtAge.col(TSindex);
+
+
      for (int fl=0; fl<nFleet; fl++) {
        arma::vec FDeadFleetArea = FDeadAtAgeArea.subcube(0, fl, area, nAge-1, fl, area);
        arma::vec FRetainFleetArea = FRetainAtAgeArea.subcube(0, fl, area, nAge-1, fl, area);
        arma::vec NumberArea = NumberAtAgeArea.subcube(0, TSindex, area, nAge-1, TSindex, area);
-       
+
        arma::vec removal = FDeadFleetArea/zdead % NumberArea % (1-exp(-zdead));
        arma::vec retain = FDeadFleetArea/zdead % NumberArea % (1-exp(-zdead));
-       
+
        RemovalAtAgeArea.subcube(0, fl, area, nAge-1, fl, area) = removal;
        RetainAtAgeArea.subcube(0, fl, area, nAge-1, fl, area) = retain;
      }
    }
-   
+
    // sum over areas
    for (int age=0; age<nAge; age++) {
      for (int fl=0; fl<nFleet; fl++) {
        arma::vec removalArea = RemovalAtAgeArea.subcube(age, fl, 0,age, fl, nArea-1);
        arma::vec retainArea = RemovalAtAgeArea.subcube(age, fl, 0,age, fl, nArea-1);
        double weight = arma::as_scalar(FleetWeightAtAge.subcube(age, TSindex, fl, age, TSindex, fl));
-      
+
        RemovalNumberAtAge.subcube(age, TSindex, fl, age , TSindex, fl) = sum(removalArea);
        RetainNumberAtAge.subcube(age, TSindex, fl, age, TSindex, fl) = sum(retainArea);
        RemovalBiomassAtAge.subcube(age, TSindex, fl, age , TSindex, fl) = sum(removalArea * weight);
        RetainBiomassAtAge.subcube(age, TSindex, fl, age , TSindex, fl) = sum(retainArea * weight);
      }
    }
-   
+
    RemovalAtAgeAreaStock[TSindex] = RemovalAtAgeArea;
    RetainAtAgeAreaStock[TSindex] = RetainAtAgeArea;
-   
+
    RemovalAtAgeAreaList[st] = RemovalAtAgeAreaStock;
    RetainAtAgeAreaList[st] = RetainAtAgeAreaStock;
-   
+
    RemovalNumberAtAgeList[st] = RemovalNumberAtAge;
    RetainNumberAtAgeList[st] = RetainNumberAtAge;
    RemovalBiomassAtAgeList[st] = RemovalBiomassAtAge;
@@ -347,6 +349,11 @@ List CalcFfromCatch_(List FDeadAtAgeList,
   for (int st=0; st<nStock; st++) {
 
     arma::cube FDeadAtAge = FDeadAtAgeList[st]; // age, time steep, fleet
+    
+    // NumericVector out = FDeadAtAgeList[st];
+    // List dimnames = out.attr("dimnames");
+    // NumericVector dims = out.attr("dim");
+    
     arma::cube FRetainAtAge = FRetainAtAgeList[st]; // age, time steep, fleet
     arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // age, time step, area
     arma::cube RemovalNumberAtAge = RemovalNumberAtAgeList[st]; // age, time steep, fleet
@@ -381,6 +388,14 @@ List CalcFfromCatch_(List FDeadAtAgeList,
       FRetainAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(0, nFleet-1)) = 
         FRetainAtAgeArea(arma::span(0, nAge-1), arma::span(0, nFleet-1), arma::span(0,0)); 
 
+      // NumericVector FDeadAtAgeNamed = as<NumericVector>(Rcpp::wrap(FDeadAtAge));
+      // FDeadAtAgeNamed.attr("dim") = dims;
+      // FDeadAtAgeNamed.attr("dimnames") = dimnames;
+      // 
+      // NumericVector FRetainAtAgeNamed = as<NumericVector>(Rcpp::wrap(FRetainAtAge));
+      // FRetainAtAgeNamed.attr("dim") = dims;
+      // FRetainAtAgeNamed.attr("dimnames") = dimnames;
+      
       FDeadAtAgeList[st] = FDeadAtAge;
       FRetainAtAgeList[st] = FRetainAtAge;
       continue;
@@ -425,8 +440,17 @@ List CalcFfromCatch_(List FDeadAtAgeList,
       FRetainAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(0, nFleet-1)) = 
         FRetainAtAgeArea(arma::span(0, nAge-1), arma::span(0, nFleet-1), arma::span(0,0)); 
       
+      // NumericVector FDeadAtAgeNamed = as<NumericVector>(Rcpp::wrap(FDeadAtAge));
+      // FDeadAtAgeNamed.attr("dim") = dims;
+      // FDeadAtAgeNamed.attr("dimnames") = dimnames;
+      // 
+      // NumericVector FRetainAtAgeNamed = as<NumericVector>(Rcpp::wrap(FRetainAtAge));
+      // FRetainAtAgeNamed.attr("dim") = dims;
+      // FRetainAtAgeNamed.attr("dimnames") = dimnames;
+      
       FDeadAtAgeList[st] = FDeadAtAge;
       FRetainAtAgeList[st] = FRetainAtAge;
+
       continue;
     }
     
@@ -474,8 +498,17 @@ List CalcFfromCatch_(List FDeadAtAgeList,
         break;
     }
 
+    // NumericVector FDeadAtAgeNamed = as<NumericVector>(Rcpp::wrap(FDeadAtAge));
+    // FDeadAtAgeNamed.attr("dim") = dims;
+    // FDeadAtAgeNamed.attr("dimnames") = dimnames;
+    // 
+    // NumericVector FRetainAtAgeNamed = as<NumericVector>(Rcpp::wrap(FRetainAtAge));
+    // FRetainAtAgeNamed.attr("dim") = dims;
+    // FRetainAtAgeNamed.attr("dimnames") = dimnames;
+    
     FDeadAtAgeList[st] = FDeadAtAge;
     FRetainAtAgeList[st] = FRetainAtAge;
+    
   }
 
   List L = List::create(Named("FDeadAtAge")=FDeadAtAgeList,
@@ -500,9 +533,10 @@ List CalcSpawnProduction_(List SProductionList,
                           int TSindex) {
 
   int nStock = NaturalMortalityAtAgeList.size();
-
+  
   for (int st=0; st<nStock; st++) {
     arma::vec SProduction = SProductionList[st]; // length time steps
+
     arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // nage, nTS, nArea
     arma::mat NaturalMortalityAtAge = NaturalMortalityAtAgeList[st]; // age, time step
     arma::mat FecundityAtAge = FecundityAtAgeList[st]; // age, time step
@@ -528,9 +562,13 @@ List CalcSpawnProduction_(List SProductionList,
       SpawnMortality = (NaturalMortalityAtAge.col(TSindex) + FDeadatAge) * SpawnTimeFrac[st];
       NSpawn = NSpawn % exp(-SpawnMortality);
     }
+    
     SProduction(TSindex) = arma::accu(NSpawn % FecundityAtAge.col(TSindex));
     SProductionList[st] = SProduction;
   }
+  
+
+  
 
   // apply SPfrom
   if (nStock>1) {
@@ -642,6 +680,7 @@ List CalcNumberNext_(List NumberAtAgeAreaList,
     Rcpp::List FDeadAtAgeAreaStock = FDeadAtAgeAreaList[st];
     arma::cube FDeadAtAgeArea = FDeadAtAgeAreaStock[TSindex]; // age, fleet, area
     
+    
     arma::mat Semelparous = SemelparousList[st]; // age, time step
     
     int nAge = NumberAtAgeArea.n_rows;
@@ -673,6 +712,7 @@ List CalcNumberNext_(List NumberAtAgeAreaList,
     }
     
     NumberAtAgeArea(arma::span(0, nAge-1), arma::span(TSindex+1, TSindex+1), arma::span(0, nArea-1)) =Nnext;
+    
     NumberAtAgeAreaList[st] = NumberAtAgeArea;
   }
 
@@ -706,7 +746,7 @@ List MoveStock_(List NumberAtAgeAreaList,
     NumericMatrix NumberAtAgeArea = as<NumericMatrix>(NumberAtAgeAreaVec);
     
  
-    NumericMatrix NumberAtAgeAreaMoved = clone(NumberAtAgeArea);
+    NumericMatrix NumberAtAgeAreaMoved = NumberAtAgeArea;
     
     for (int age=0; age<nAge; age++) {
       arma::mat moveage = Movement.subcube(age, 0, 0, age, nArea-1, nArea-1);
@@ -740,9 +780,8 @@ List MoveStock_(List NumberAtAgeAreaList,
 List CalcPopDynamics_(List OMListSim,
                       NumericVector TimeSteps) {
 
-  // deep copy (for development at least)
-  List OMListSimOut = clone(OMListSim);
-  
+
+  List OMListSimOut = OMListSim;
   List AgesList = OMListSimOut["Ages"];
   
   List Length = OMListSimOut["Length"];
