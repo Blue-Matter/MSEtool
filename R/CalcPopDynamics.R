@@ -47,10 +47,11 @@ CalcInitialTimeStep <- function(OMList, Unfished=NULL) {
 }
 
 # OMList <- MakeOMList(OM, Unfished)
-# OMListSim <- OMList[[8]]
+# OMListSim <- OMList[[1]]
 # Period <- "Historical"
 # MP=NULL
 # DataListSim=NULL
+# AddDimNames=TRUE
 
 CalcPopDynamics <- function(OMListSim, 
                             Period=c("Historical", "Projection", "All"), 
@@ -93,53 +94,44 @@ CalcPopDynamics <- function(OMListSim,
     )
     
     # Apply MP 
-    if (!is.null(MP)) {
-      OMListSim <- ApplyMP(OMListSim, 
-                           Data=NULL, 
-                           MP=MP,
-                           TimeStep=timestep)
-    }
+    OMListSim <- ApplyMP(OMListSim, 
+                         Data=NULL, 
+                         MP=MP,
+                         TimeStep=timestep)
     
-  
+    
     # VB by Area
     OMListSim$VBiomassArea = CalcVBiomass_(
       OMListSim$VBiomassArea,
       OMListSim$NumberAtAgeArea,
       OMListSim$FleetWeightAtAge,
       OMListSim$Selectivity$MeanAtAge,
+      OMListSim$Distribution$Closure,
       TSindex
     )
 
     # Relative VB Density by Area & Fleet
-    OMListSim$DensityArea = CalcDensity_(
-      OMListSim$DensityArea,
-      OMListSim$VBiomassArea,
-      OMListSim$Spatial$RelativeSize,
-      TSindex
-    )
-    ############################################################################
+    # OMListSim$DensityArea = CalcDensity_(
+    #   OMListSim$DensityArea,
+    #   OMListSim$VBiomassArea,
+    #   OMListSim$Spatial$RelativeSize,
+    #   TSindex
+    # )
     
-    
-    
-    # Distribute Effort over Areas (currently proportional to VB Density)
-
-    # OMListSim$Distribution$Closure[[1]][ts,,] <- c(0,1)
-    
+    # Distribute Effort over Areas (currently proportional to VB)
     OMListSim$EffortArea = DistEffort_(
       OMListSim$EffortArea,
-      OMListSim$DensityArea,
+      OMListSim$VBiomassArea,
       OMListSim$Effort$Effort,
-      OMListSim$Distribution$Closure,
       TSindex
     )
     
     # Calculate F within each Area
-    
     List <- CalcFArea_(
       OMListSim$FDeadAtAgeArea,
       OMListSim$FRetainAtAgeArea,
       OMListSim$EffortArea,
-      OMListSim$DensityArea,
+      OMListSim$Spatial$RelativeSize,
       OMListSim$Effort$Catchability,
       OMListSim$Selectivity$MeanAtAge,
       OMListSim$Retention$MeanAtAge,
@@ -164,7 +156,6 @@ CalcPopDynamics <- function(OMListSim,
       OMListSim$FRetainAtAgeArea,
       TSindex)
 
-    
     OMListSim$RemovalAtAgeArea <- List$RemovalAtAgeArea
     OMListSim$RetainAtAgeArea <- List$RetainAtAgeArea
     OMListSim$RemovalNumberAtAge <- List$RemovalNumberAtAge
@@ -188,8 +179,6 @@ CalcPopDynamics <- function(OMListSim,
     )
  
     OMListSim$FDeadAtAge <- List$FDeadAtAge
-    max(List$FDeadAtAge[[1]][,ts,])
-    
     OMListSim$FRetainAtAge <- List$FRetainAtAge
     
     # Calc Spawning Production and Spawning Biomass
@@ -230,6 +219,7 @@ CalcPopDynamics <- function(OMListSim,
  
   
     # Generate Data 
+    
     
     if (ts<nTStotal) {
       # Update Number beginning of next Time Step

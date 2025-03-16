@@ -21,7 +21,6 @@ ProjectMP <- function(OMList, MP) {
   elapsed <- round(as.numeric(difftime(time1 = end, time2 = start, units = "secs")),2)
   cli::cli_alert_success("{.val {MP}} ({elapsed} seconds)")
   
-  
   NumberAtAgeArea <- purrr::map(MPList, \(x)
                                 purrr::map(x$NumberAtAgeArea, \(y) 
                                            ArraySubsetTimeStep(y, TimeStepsProj))) |> 
@@ -53,6 +52,16 @@ ProjectMP <- function(OMList, MP) {
     purrr::map(List2Array, 'Sim', 'Time Step') |>
     List2Array("Stock") |> 
     aperm(c("Sim", "Stock", "Time Step"))
+  
+  # Removal Number-at-Age-Area
+  RemovalAtAgeArea <- purrr::map(MPList, \(x)
+                        purrr::map(x$RemovalAtAgeArea, \(y) {
+                          y <- List2Array(y, "Time Step")                
+                          ArraySubsetTimeStep(y, TimeStepsProj)
+                        })) |> 
+    ReverseList() |>
+    purrr::map(List2Array, 'Sim', 'Time Step') |>
+    purrr::map(\(x) aperm(x, c("Sim", "Age", "Time Step", "Fleet", "Area")))
   
   # Removed Biomass (summed over areas)
   Removal <- purrr::map(MPList, \(x)
@@ -101,7 +110,8 @@ ProjectMP <- function(OMList, MP) {
        SBiomass=SBiomass,
        SProduction=SProduction,
        Removal=Removal,
-       Retain=Retain)
+       Retain=Retain,
+       RemovalAtAgeArea=RemovalAtAgeArea)
   
 }
 

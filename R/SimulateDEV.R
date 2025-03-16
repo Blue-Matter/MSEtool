@@ -112,6 +112,14 @@ Advice <- function(DataList=NULL) {
 
 
 
+# MPs=c('Open', 
+#       'Closed_1', 
+#       'Closed_2',
+#       'Closed_3',
+#       'Closed_6',
+#       'Closed_12')
+# OMList <- OMListHist
+
 ProjectDEV <- function(OMList, MPs=NULL, parallel = FALSE, silent = FALSE, 
                        options=NULL, output=c('MSE', 'MSEList')) {
   
@@ -128,6 +136,7 @@ ProjectDEV <- function(OMList, MPs=NULL, parallel = FALSE, silent = FALSE,
   names(MSEList) <- MPs
   MSEList <- ReverseList(MSEList)
   class(MSEList) <- 'MSEList'
+  
   # TODO - add Hist, Unfished, Ref Points, etc 
   if (output == 'MSEList')
     return(MSEList)
@@ -198,7 +207,9 @@ MSEList2MSE <- function(MSEList) {
 # TODO multi-stock
 # TODO multi-fleet
 # TODO data
-ApplyMP <- function(OMListSim, Data=NULL, MP, TimeStep) {
+ApplyMP <- function(OMListSim, Data=NULL, MP=NULL, TimeStep) {
+  if (is.null(MP))
+    return(OMListSim)
   
   TimeStepsAll <- OMListSim$TimeSteps[[1]]
   Data <- list()
@@ -252,6 +263,10 @@ ApplyMP <- function(OMListSim, Data=NULL, MP, TimeStep) {
 
 UpdateEffort <- function(OMListSim, Advice, TSindex) {
   LastHistindex <- length(OMListSim$TimeStepsHist[[1]])
+  Dims <- dim(OMListSim$NumberAtAgeArea[[1]])
+  nTS <- Dims[2]
+  nAreas <- Dims[3]
+  nFleet <- dim(OMListSim$VBiomassArea[[1]])[2]
   
   effortTS <- Advice@Effort@Effort
   

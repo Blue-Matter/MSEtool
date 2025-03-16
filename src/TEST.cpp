@@ -39,6 +39,7 @@ List CalcVBiomass_(List VBiomassAreaList,
                    List NumberAtAgeAreaList,
                    List FleetWeightAtAgeList,
                    List SelectivityAtAgeList,
+                   List ClosureAreaList,
                    int TSindex) {
 
   int nStock = VBiomassAreaList.size();
@@ -50,7 +51,8 @@ List CalcVBiomass_(List VBiomassAreaList,
     arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st];
     arma::cube FleetWeightAtAge = FleetWeightAtAgeList[st];
     arma::cube SelectivityAtAge = SelectivityAtAgeList[st];
-  
+    arma::cube ClosureArea = ClosureAreaList[st];
+    
     int nAge = NumberAtAgeArea.n_rows;
     int nArea = VBiomassArea.n_slices;
     int nFleet = VBiomassArea.n_cols;
@@ -58,10 +60,16 @@ List CalcVBiomass_(List VBiomassAreaList,
     arma::mat NArea  = NumberAtAgeArea.subcube(0, TSindex, 0, nAge-1, TSindex, nArea-1); // nAge, nArea
     arma::mat FWeight  = FleetWeightAtAge.subcube(0, TSindex, 0, nAge-1, TSindex, nFleet-1); // nAge, nFleet
     arma::mat Selectivity  = SelectivityAtAge.subcube(0, TSindex, 0, nAge-1, TSindex, nFleet-1); // nAge, nFleet
-  
+    arma::mat Closure  = ClosureArea.subcube(TSindex, 0, 0, TSindex, nFleet-1, nArea-1); // nFleet, nArea
+    
     for (int area=0; area<nArea; area++) {
       for (int fl=0; fl<nFleet; fl++) {
-        VBiomassArea.subcube(TSindex, fl, area, TSindex, fl, area)= arma::accu(NArea.col(area) %  FWeight.col(fl) % Selectivity.col(fl));
+        VBiomassArea.subcube(TSindex, fl, area, TSindex, fl, area)=
+          arma::accu(NumberAtAgeArea.subcube(0, TSindex, area, nAge-1, TSindex, area) % 
+          FleetWeightAtAge.subcube(0, TSindex, fl, nAge-1, TSindex, fl) % 
+          SelectivityAtAge.subcube(0, TSindex, fl, nAge-1, TSindex, fl)) *
+          arma::as_scalar(ClosureArea.subcube(TSindex, fl, area, TSindex, fl, area));
+          // arma::accu(NArea.col(area) %  FWeight.col(fl) % Selectivity.col(fl)) % Closure.row(fl);
       }
     }
     
@@ -102,37 +110,33 @@ List CalcDensity_(List DensityAreaList,
 
 // [[Rcpp::export]]
 List DistEffort_(List EffortAreaList,
-                 List DensityAreaList,
+                 List VBiomassAreaList,
                  List EffortList,
-                 List ClosureAreaList,
                  int TSindex) {
 
-  int nStock = DensityAreaList.size();
+  int nStock = VBiomassAreaList.size();
   
 
   for (int st=0; st<nStock; st++) {
     
     arma::cube EffortArea = EffortAreaList[st]; // nTS, nFleet, nArea
-    arma::cube DensityArea = DensityAreaList[st]; // nTS, nFleet, nArea
+    arma::cube VBiomassArea = VBiomassAreaList[st]; // nTS, nFleet, nArea
     arma::mat Effort = EffortList[st]; // nTS, nFleet
     
-    arma::cube ClosureArea = ClosureAreaList[st];
-  
-    int nArea = DensityArea.n_slices;
-    int nFleet = DensityArea.n_cols;
-    
-    arma::mat Closure  = ClosureArea.subcube(TSindex, 0, 0, TSindex, nFleet-1, nArea-1); // nFleet, nArea
-    
+    int nArea = VBiomassArea.n_slices;
+    int nFleet = VBiomassArea.n_cols;
     
     for (int fl=0; fl<nFleet; fl++) {
-      arma::rowvec densityArea = DensityArea.subcube(TSindex, fl, 0, TSindex, fl, nArea-1);    
-      densityArea = densityArea %  Closure.row(fl);
-      densityArea = densityArea/accu(densityArea);
-      EffortArea.subcube(TSindex, fl, 0, TSindex, fl, nArea-1) = arma::as_scalar(Effort.row(TSindex).col(fl)) * densityArea;  
-    }
+      arma::vec vbiomassarea = VBiomassArea.subcube(TSindex, fl, 0, TSindex, fl, nArea-1);
+      double totalVB = arma::accu(vbiomassarea);
+      arma::vec relvbiomassarea(nArea, arma::fill::zeros);
+      if (totalVB > 0) {
+        relvbiomassarea = vbiomassarea/totalVB;
+      }
       
+      EffortArea.subcube(TSindex, fl, 0, TSindex, fl, nArea-1) = arma::as_scalar(Effort.row(TSindex).col(fl)) * relvbiomassarea; 
+    }
     
-   
     EffortAreaList[st] = EffortArea;
   }
   return(EffortAreaList);
@@ -142,7 +146,7 @@ List DistEffort_(List EffortAreaList,
 List CalcFArea_(List FDeadAtAgeAreaList,
                 List FRetainAtAgeAreaList,
                 List EffortAreaList,
-                List DensityAreaList,
+                List RelativeSizeList,
                 List CatchabilityList,
                 List SelectivityAtAgeList,
                 List RetentionAtAgeList,
@@ -158,12 +162,10 @@ List CalcFArea_(List FDeadAtAgeAreaList,
     arma::cube FDeadAtAgeArea = FDeadAtAgeAreaStock[TSindex]; // nAge, nFleet, nArea
     arma::cube FRetainAtAgeArea = FRetainAtAgeAreaStock[TSindex]; // nAge, nFleet, nArea
 
-    // NumericVector out = FRetainAtAgeAreaStock[TSindex];
-    // List dimnames = out.attr("dimnames");
-    // NumericVector dims = out.attr("dim");
-    // 
     arma::cube EffortArea = EffortAreaList[st]; // nTS, nFleet, nArea
-    arma::cube DensityArea = DensityAreaList[st]; // nTS, nFleet, nArea
+
+    arma::vec RelativeSize = RelativeSizeList[st]; // narea
+    
     arma::mat Catchability = CatchabilityList[st]; // nTS, nFleet
 
     arma::cube SelectivityAtAge = SelectivityAtAgeList[st];
@@ -177,24 +179,14 @@ List CalcFArea_(List FDeadAtAgeAreaList,
     arma::mat selectivity = SelectivityAtAge.subcube(0, TSindex, 0, nAge-1, TSindex, nFleet-1);
     arma::mat retention = RetentionAtAge.subcube(0, TSindex, 0, nAge-1, TSindex, nFleet-1);
     arma::mat discardmort = DiscardMortalityAtAge.subcube(0, TSindex, 0, nAge-1, TSindex, nFleet-1);
-    arma::mat effortArea = EffortArea.subcube(TSindex, 0, 0, TSindex, nFleet-1, nArea-1);
     arma::vec q = Catchability.row(TSindex);
     
     // Calculate fishing mortality by fleet and area
     for (int area=0; area<nArea; area++) {
-      double catchabilityArea = 0;
       for (int fl=0; fl<nFleet; fl++) {
-        double fleetdensity = arma::as_scalar(DensityArea.subcube(TSindex, fl, area, TSindex, fl, area));
-        Rcout << "area " << area << std::endl;
-        Rcout << "fleetdensity " << fleetdensity << std::endl;
-        if (fleetdensity>0) {
-          catchabilityArea = arma::as_scalar(q.col(fl))/fleetdensity;
-         
-        }
-        double effortarea = arma::as_scalar(effortArea.col(area));
-        Rcout << "effortarea " << effortarea << std::endl;
-        Rcout << "catchabilityArea " << catchabilityArea << std::endl;
-        arma::vec FInteract = arma::as_scalar(effortArea.col(area) * catchabilityArea) * selectivity.col(fl);  
+        double catchabilityArea = q(fl)/RelativeSize(area);
+        double effortarea = arma::as_scalar(EffortArea.subcube(TSindex, fl, area, TSindex, fl, area));
+        arma::vec FInteract = effortarea * catchabilityArea * selectivity.col(fl);  
         arma::vec FRetain = FInteract % retention.col(fl);  
         arma::vec Discard = FInteract - FRetain;
         arma::vec DeadDiscard = Discard % discardmort.col(fl);
@@ -204,14 +196,6 @@ List CalcFArea_(List FDeadAtAgeAreaList,
       }
     }
     
-    // NumericVector FDeadAtAgeAreaNamed = as<NumericVector>(Rcpp::wrap(FDeadAtAgeArea));
-    // FDeadAtAgeAreaNamed.attr("dim") = dims;
-    // FDeadAtAgeAreaNamed.attr("dimnames") = dimnames;
-    // 
-    // NumericVector FRetainAtAgeAreaNamed = as<NumericVector>(Rcpp::wrap(FRetainAtAgeArea));
-    // FRetainAtAgeAreaNamed.attr("dim") = dims;
-    // FRetainAtAgeAreaNamed.attr("dimnames") = dimnames;
-  
     FDeadAtAgeAreaStock[TSindex] = FDeadAtAgeArea;
     FRetainAtAgeAreaStock[TSindex] = FRetainAtAgeArea;
     
@@ -834,23 +818,23 @@ List CalcPopDynamics_(List OMListSim,
       OMListSimOut["NumberAtAgeArea"],
       OMListSimOut["FleetWeightAtAge"],
       Selectivity["MeanAtAge"],
+      Distribution["Closure"],
       TSindex
     );
     
     // Relative VB Density by Area & Fleet
-    OMListSimOut["DensityArea"] = CalcDensity_(
-      OMListSimOut["DensityArea"],
-      OMListSimOut["VBiomassArea"],
-      Spatial["RelativeSize"],
-      TSindex
-    );
+    // OMListSimOut["DensityArea"] = CalcDensity_(
+    //   OMListSimOut["DensityArea"],
+    //   OMListSimOut["VBiomassArea"],
+    //   Spatial["RelativeSize"],
+    //   TSindex
+    // );
 
-    // Distribute Effort over Areas (currently proportional to VB Density)
+    // Distribute Effort over Areas (currently proportional to VB)
     OMListSimOut["EffortArea"] = DistEffort_(
       OMListSimOut["EffortArea"],
-      OMListSimOut["DensityArea"],
+      OMListSimOut["VBiomassArea"],
       EffortList["Effort"],
-      Distribution["Closure"],
       TSindex
     );
 
@@ -859,7 +843,7 @@ List CalcPopDynamics_(List OMListSim,
       OMListSimOut["FDeadAtAgeArea"],
       OMListSimOut["FRetainAtAgeArea"],
       OMListSimOut["EffortArea"],
-      OMListSimOut["DensityArea"],
+      Spatial["RelativeSize"],
       EffortList["Catchability"],
       Selectivity["MeanAtAge"],
       Retention["MeanAtAge"],

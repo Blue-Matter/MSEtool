@@ -1,12 +1,6 @@
-# NEED TO FIX THE F-by-Area for Spatial Closures
-
-# overall F increases when area closed??
-
-
-
-
-
-
+# TODO
+# replace Time Step with TimeStep everywhere
+# run Spatio-Temporal and Seasonal Closure MPs and compare
 
 
 
@@ -85,7 +79,7 @@ SRR(octopus) <- SRR(Pars=list(hR=c(0.85, 0.95)),
 ## ---- spatialdistribution ----
 
 Spatial(octopus) <- Spatial(UnfishedDist=c(0.3, 0.3),
-                            ProbStaying=c(0.9, 0.95),
+                            ProbStaying=c(0.95, 0.99),
                             RelativeSize='EqualDensity')
 
 ## ---- depletion ----
@@ -123,110 +117,19 @@ silent=FALSE
 
 OMListHist <- SimulateDEV(OM)
 
-
-
-saveRDS(OMListHist, "C:/Users/User/Documents/GitHub/IndonesiaHarvestStrategies/OMs/Octopus/BaseCase.hist")
-
 # ---- Project Forward -----
-
-# Open all the time (status quo)
-Open <- function(Data=NULL) {
-  Advice()
-}
-class(Open) <- 'mp'
-
-# Close Area 1 for month 6
-Closed_1 <- function(Data=NULL) {
-  ind <- which(c(Data$TimeSteps, Data$TimeStepCurrent)==Data$TimeStepCurrent )
-  month <- ind %% 12
-  if (month==0)
-    month <- 12
-  
-  Advice <- Advice()
-  
-  if (month %in% 6) {
-    Advice@Distribution@Closure <- c(0,1)
-  } else {
-    Advice@Distribution@Closure <- c(1,1)
-  }
-  
-  Advice
-}
-class(Closed_1) <- 'mp'
+source("OctopusMPs.R")
 
 
-Closed_2 <- function(Data=NULL) {
-  ind <- which(c(Data$TimeSteps, Data$TimeStepCurrent)==Data$TimeStepCurrent )
-  month <- ind %% 12
-  if (month==0)
-    month <- 12
-  
-  Advice <- Advice()
-  
-  if (month %in% c(5,6)) {
-    Advice@Distribution@Closure <- c(0,1)
-  } else {
-    Advice@Distribution@Closure <- c(1,1)
-  }
-  
-  Advice
-}
-class(Closed_2) <- 'mp'
 
-Closed_3 <- function(Data=NULL) {
-  ind <- which(c(Data$TimeSteps, Data$TimeStepCurrent)==Data$TimeStepCurrent )
-  month <- ind %% 12
-  if (month==0)
-    month <- 12
-  
-  Advice <- Advice()
-  
-  if (month %in% c(4,5,6)) {
-    Advice@Distribution@Closure <- c(0,1)
-  } else {
-    Advice@Distribution@Closure <- c(1,1)
-  }
-  
-  Advice
-}
-class(Closed_3) <- 'mp'
-
-# Close Area 1 
-Closed_6 <- function(Data=NULL) {
-  ind <- which(c(Data$TimeSteps, Data$TimeStepCurrent)==Data$TimeStepCurrent )
-  month <- ind %% 12
-  if (month==0)
-    month <- 12
-  
-  Advice <- Advice()
-  
-  if (month %in% c(3:7)) {
-    Advice@Distribution@Closure <- c(0,1)
-  } else {
-    Advice@Distribution@Closure <- c(1,1)
-  }
-  
-  Advice
-}
-class(Closed_6) <- 'mp'
-
-# Close Area 1 all months
-Closed_12 <- function(Data=NULL) {
-  Advice <- Advice()
-  Advice@Distribution@Closure <- c(0,1)
-  Advice
-}
-class(Closed_12) <- 'mp'
 
 MSE <- ProjectDEV(OMListHist, MPs=c('Open', 
-                                    'Closed_1', 
-                                    'Closed_2',
-                                    'Closed_3',
-                                    'Closed_6',
-                                    'Closed_12'))
-
-
-
+                                    'Spatial_1', 
+                                    'Seasonal_1',
+                                    'Spatial_2',
+                                    'Spatial_3',
+                                    'Spatial_6',
+                                    'Spatial_12'))
 
 # Make Figures 
 library(ggplot2)
@@ -299,6 +202,12 @@ RemovalProj <- left_join(ConvertToDF(MSE$Removal),RefCatch) |>
   dplyr::group_by(`Time Step`, MP) |>
   dplyr::mutate(Median=median(Value))
 
+RemovalProj |> 
+  dplyr::filter(Sim==1, MP=='Open')
+
+RemovalProj |> 
+  dplyr::filter(Sim==1, MP=='Closed_12')
+
 
 ggplot(RemovalProj, aes(x=`Time Step`, y=Median)) +
   geom_line() +
@@ -321,8 +230,7 @@ SBiomassMean <- SBiomassProj |>
 plot(SBiomassMean$Mean,  RemovalMean$Mean )
 
 barplot(SBiomassMean$Mean, names.arg=SBiomassMean$MP)
-barplot(RemovalMean$Mean/RemovalMean$Mean[6], names.arg=RemovalMean$MP)
-
+barplot(RemovalMean$Mean, names.arg=RemovalMean$MP)
 
 
 ggplot(RemovalProj, aes(x=`Time Step`, y=Median, col=MP)) +
