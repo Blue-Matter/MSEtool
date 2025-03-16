@@ -107,7 +107,6 @@ CalcPopDynamics <- function(OMListSim,
       OMListSim$NumberAtAgeArea,
       OMListSim$FleetWeightAtAge,
       OMListSim$Selectivity$MeanAtAge,
-      OMListSim$Distribution$Closure,
       TSindex
     )
 
@@ -118,20 +117,24 @@ CalcPopDynamics <- function(OMListSim,
       OMListSim$Spatial$RelativeSize,
       TSindex
     )
-
-  
+    ############################################################################
+    
+    
+    
     # Distribute Effort over Areas (currently proportional to VB Density)
 
+    # OMListSim$Distribution$Closure[[1]][ts,,] <- c(0,1)
+    
     OMListSim$EffortArea = DistEffort_(
       OMListSim$EffortArea,
       OMListSim$DensityArea,
       OMListSim$Effort$Effort,
+      OMListSim$Distribution$Closure,
       TSindex
     )
-
-    # dimnames(OMListSim$EffortArea[[1]])
-
+    
     # Calculate F within each Area
+    
     List <- CalcFArea_(
       OMListSim$FDeadAtAgeArea,
       OMListSim$FRetainAtAgeArea,
@@ -142,9 +145,6 @@ CalcPopDynamics <- function(OMListSim,
       OMListSim$Retention$MeanAtAge,
       OMListSim$DiscardMortality$MeanAtAge,
       TSindex)
-
-    
-    # dimnames(List$FDeadAtAgeArea[[1]][[1]])
     
     OMListSim$FDeadAtAgeArea <- List$FDeadAtAgeArea
     OMListSim$FRetainAtAgeArea <- List$FRetainAtAgeArea
@@ -188,6 +188,8 @@ CalcPopDynamics <- function(OMListSim,
     )
  
     OMListSim$FDeadAtAge <- List$FDeadAtAge
+    max(List$FDeadAtAge[[1]][,ts,])
+    
     OMListSim$FRetainAtAge <- List$FRetainAtAge
     
     # Calc Spawning Production and Spawning Biomass

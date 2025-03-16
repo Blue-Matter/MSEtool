@@ -1,3 +1,15 @@
+# NEED TO FIX THE F-by-Area for Spatial Closures
+
+# overall F increases when area closed??
+
+
+
+
+
+
+
+
+
 library(MSEtool)
 
 la <- devtools::load_all
@@ -77,7 +89,7 @@ Spatial(octopus) <- Spatial(UnfishedDist=c(0.3, 0.3),
                             RelativeSize='EqualDensity')
 
 ## ---- depletion ----
-Depletion(octopus) <- Depletion(Final=c(0.45, 0.65), Reference="SB0")
+Depletion(octopus) <- Depletion(Final=c(0.35, 0.45), Reference="SB0")
 
 
 ## ---- fleet ----
@@ -110,6 +122,8 @@ parallel=FALSE
 silent=FALSE
 
 OMListHist <- SimulateDEV(OM)
+
+
 
 saveRDS(OMListHist, "C:/Users/User/Documents/GitHub/IndonesiaHarvestStrategies/OMs/Octopus/BaseCase.hist")
 
@@ -211,6 +225,9 @@ MSE <- ProjectDEV(OMListHist, MPs=c('Open',
                                     'Closed_6',
                                     'Closed_12'))
 
+
+
+
 # Make Figures 
 library(ggplot2)
 
@@ -259,7 +276,8 @@ SBiomass <- SBiomassProj |>
   dplyr::group_by(Sim, `Time Step`) |>
   dplyr::mutate(Value=Value/SB0) |>
   dplyr::group_by(`Time Step`, MP) |>
-  dplyr::summarise(Median=median(Value))
+  dplyr::mutate(Median=median(Value))
+
 
 ggplot(SBiomass, aes(x=`Time Step`, y=Median)) +
   geom_line() +
@@ -279,7 +297,7 @@ RemovalProj <- left_join(ConvertToDF(MSE$Removal),RefCatch) |>
   dplyr::group_by(MP, Sim) |>
   dplyr::mutate(Value=Value/RefCatch) |> 
   dplyr::group_by(`Time Step`, MP) |>
-  dplyr::summarise(Median=median(Value))
+  dplyr::mutate(Median=median(Value))
 
 
 ggplot(RemovalProj, aes(x=`Time Step`, y=Median)) +
@@ -294,19 +312,24 @@ RemovalMean <- RemovalProj |>
   dplyr::group_by(MP) |>
   dplyr::summarise(Mean=mean(Value))
 
-
-
 SBiomassMean <- SBiomassProj |> 
   dplyr::group_by(Sim, `Time Step`) |>
   dplyr::mutate(Value=Value/SB0) |>
   dplyr::group_by(MP) |>
   dplyr::summarise(Mean=mean(Value))
 
-barplot(SBiomassMean$Mean/SBiomassMean$Mean[6], names.arg=SBiomassMean$MP)
+plot(SBiomassMean$Mean,  RemovalMean$Mean )
+
+barplot(SBiomassMean$Mean, names.arg=SBiomassMean$MP)
 barplot(RemovalMean$Mean/RemovalMean$Mean[6], names.arg=RemovalMean$MP)
 
 
 
+ggplot(RemovalProj, aes(x=`Time Step`, y=Median, col=MP)) +
+  geom_line() +
+  expand_limits(y=0) +
+  theme_bw() +
+  labs(x='Time', y='Relative Catch')
 
 
 
