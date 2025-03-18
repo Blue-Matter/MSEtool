@@ -13,13 +13,13 @@ CalcRecruitment <- function(Hist, TimeStep=NULL) {
     
     
     S0 <- Hist@Unfished@Equilibrium@SProduction[[st]] |>
-      apply(c('Sim', 'Time Step'), sum) |>
+      apply(c('Sim', 'TimeStep'), sum) |>
       ArraySubsetTimeStep(TimeSteps=TimeStep)
     
     R0 <- GetR0(Hist@Stock[[st]], TimeSteps=TimeStep)
     
     S <- apply(SpawnProduction[[st]], 
-               c('Sim', 'Time Step'),
+               c('Sim', 'TimeStep'),
                sum)
     
     Arglist <- c(list(S=S,
@@ -54,7 +54,7 @@ CalcRecruitment <- function(Hist, TimeStep=NULL) {
 RunSRRfunction <- function(fun, Arglist) {
   dnames <- lapply(Arglist, dimnames)
   SimsList <- lapply(dnames, '[[', 'Sim') 
-  TSList <- lapply(dnames, '[[', 'Time Step')
+  TSList <- lapply(dnames, '[[', 'TimeStep')
   Sims <- lapply(SimsList, as.numeric) |> unlist() |> unique() |> sort()
   MaxSims <- length(Sims)
   TSs <- lapply(TSList, as.numeric) |> unlist() |> unique() |> sort()
@@ -62,7 +62,7 @@ RunSRRfunction <- function(fun, Arglist) {
   
   Recruit <- array(NA, dim=c(MaxSims, MaxTS),
                    dimnames = list(Sim=Sims,
-                                   `Time Step`= TSs)
+                                   TimeStep= TSs)
   )
   
   for (sim in 1:MaxSims) {

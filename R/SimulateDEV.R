@@ -20,8 +20,12 @@ SimulateDEV <- function(OM=NULL,
   # ---- Calculate Equilbrium Unfished Dynamics ----
   Unfished <- CalcEquilibriumUnfished(OM)
   
+
   # ---- Make OM List ----
+  
   OMList <- MakeOMList(OM, Unfished)
+  
+  # OMList$`2`$Effort$Effort$`Day octopus`[,1] |> plot()
   
   # ---- Calculate Dynamic Unfished ----
   # TODO 
@@ -57,7 +61,23 @@ SimulateDEV <- function(OM=NULL,
 
   # ---- Optimize for Final Depletion ----
   OMList <- OptimCatchability(OMList)
-  
+
+  # ---- Speed Tests ------
+  # TimeStepsHist <- TimeSteps(OM, "Historical")
+  # nits <- 1
+  # sim <- 2
+  # x <- OMList[[sim]]
+  # tictoc::tic()
+  # for (i in 1:nits)
+  #   t1 <- CalcPopDynamics_(x, TimeSteps = TimeStepsHist)
+  # tictoc::toc()
+  # 
+  # tictoc::tic()
+  # for (i in 1:nits)
+  #   t1 <- CalcPopDynamics2_(x, TimeSteps = TimeStepsHist)  
+  # tictoc::toc()
+  # 
+
   
   # ---- Historical Population Dynamics ----
   OMListDone <- purrr::map(OMList, \(x) 
@@ -67,8 +87,8 @@ SimulateDEV <- function(OM=NULL,
                          format = "Simulating Historical Fishery {cli::pb_bar} {cli::pb_percent}",
                          clear = TRUE))
   
-
   OMListDone <- purrr::map(OMListDone, AddDimNamesOMListSim)
+  
   
   # ---- Calculate Reference Catch ----
   OMListDone <- OptimRefCatch(OMListDone) 
@@ -105,6 +125,7 @@ setClass('advice',
          contains='Created_ModifiedClass'
 )
 
+#' @export
 Advice <- function(DataList=NULL) {
   # TODO - populate selectivity model parameters etc
   new('advice')
@@ -120,6 +141,7 @@ Advice <- function(DataList=NULL) {
 #       'Closed_12')
 # OMList <- OMListHist
 
+#' @export
 ProjectDEV <- function(OMList, MPs=NULL, parallel = FALSE, silent = FALSE, 
                        options=NULL, output=c('MSE', 'MSEList')) {
   
@@ -159,36 +181,36 @@ MSEList2MSE <- function(MSEList) {
   
   Number <- purrr::map(MSEList$NumberAtAgeArea, \(mm) {
     purrr::map(mm, \(st) {
-      apply(st, c('Sim', 'Time Step'), sum)
+      apply(st, c('Sim', 'TimeStep'), sum)
     }) |>
       List2Array("Stock")
   }) |>  List2Array("MP") |>
-    aperm(c("Sim", "Stock", "MP", "Time Step"))
+    aperm(c("Sim", "Stock", "MP", "TimeStep"))
   
   Biomass <- List2Array(MSEList$Biomass, 'MP') |>
-    aperm(c("Sim", "Stock", "MP", "Time Step"))
+    aperm(c("Sim", "Stock", "MP", "TimeStep"))
   
   SBiomass <- List2Array(MSEList$SBiomass, 'MP') |>
-    aperm(c("Sim", "Stock", "MP", "Time Step"))
+    aperm(c("Sim", "Stock", "MP", "TimeStep"))
   
   SProduction <- List2Array(MSEList$SProduction, 'MP') |>
-    aperm(c("Sim", "Stock", "MP", "Time Step"))
+    aperm(c("Sim", "Stock", "MP", "TimeStep"))
   
   Removal <- purrr::map(MSEList$Removal, \(mm) {
     purrr::map(mm, \(st) {
-      apply(st, c('Sim', 'Time Step', 'Fleet'), sum)
+      apply(st, c('Sim', 'TimeStep', 'Fleet'), sum)
     }) |>
       List2Array("Stock")
   }) |>  List2Array("MP") |>
-    aperm(c("Sim", "Stock", "MP", "Time Step", "Fleet"))
+    aperm(c("Sim", "Stock", "MP", "TimeStep", "Fleet"))
   
   Retain <- purrr::map(MSEList$Retain, \(mm) {
     purrr::map(mm, \(st) {
-      apply(st, c('Sim', 'Time Step', 'Fleet'), sum)
+      apply(st, c('Sim', 'TimeStep', 'Fleet'), sum)
     }) |>
       List2Array("Stock")
   }) |>  List2Array("MP") |>
-    aperm(c("Sim", "Stock", "MP", "Time Step", "Fleet"))
+    aperm(c("Sim", "Stock", "MP", "TimeStep", "Fleet"))
  
   list(Number=Number,
        Biomass=Biomass,

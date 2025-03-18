@@ -13,7 +13,7 @@ CalcCatchN <- function(FDeadAtAge, FRetainAtAge, NatAge, NMortAtAge) {
   NatAge <- AddDimension(NatAge, 'Area')
   NMortAtAge <- AddDimension(NMortAtAge, 'Area')
   
-  FDeadTotal <- apply(FDeadAtAge, c('Sim', 'Age', 'Time Step', 'Area'), sum)
+  FDeadTotal <- apply(FDeadAtAge, c('Sim', 'Age', 'TimeStep', 'Area'), sum)
   ZDeadTotal <- ArrayAdd(NMortAtAge, FDeadTotal)
   
   NDead <- ArrayMultiply(NatAge, (1-exp(-ZDeadTotal)))
@@ -61,7 +61,7 @@ CalcCatch <- function(Hist, TimeStep=NULL) {
   # Calculate Catch and F within each area and F over all Areas
   for (st in 1:nStock(Hist)) {
     Catchability[[st]] <- Catchability[[st]] |> 
-      aperm(c('Sim', 'Time Step','Fleet', 'Area'))
+      aperm(c('Sim', 'TimeStep','Fleet', 'Area'))
     
     ApicalF <- ArrayMultiply(Catchability[[st]], EffortDist[[st]])
     
@@ -69,13 +69,13 @@ CalcCatch <- function(Hist, TimeStep=NULL) {
       apicalFEmptyArray <- array(tiny, dim=c(nSim(Hist),1),
                                  dimnames = list(
                                    Sim=1:nSim(Hist),
-                                   `Time Step`=TimeStep))
+                                   TimeStep=TimeStep))
       
       FEmptyArray <- array(tiny, dim=c(nSim(Hist),nAge(Hist@Stock[[st]]),1),
                            dimnames = list(
                              Sim=1:nSim(Hist),
                              Age=0:MaxAge(Hist@Stock[[st]]),
-                             `Time Step`=TimeStep))
+                             TimeStep=TimeStep))
       for (fl in seq_along(fleetnames)) {
         ArrayFill(Hist@Fleet[[st]][[fl]]@FishingMortality@ApicalF) <- apicalFEmptyArray
         ArrayFill(Hist@Fleet[[st]][[fl]]@FishingMortality@DeadAtAge) <- FEmptyArray
@@ -94,7 +94,7 @@ CalcCatch <- function(Hist, TimeStep=NULL) {
       AddDimension('Area')
     
     ApicalF <- ApicalF |> AddDimension('Age',0) |>
-      aperm(c('Sim', 'Age', 'Time Step', 'Fleet', 'Area'))
+      aperm(c('Sim', 'Age', 'TimeStep', 'Fleet', 'Area'))
     FInteract <- ArrayMultiply(ApicalF, selectivity)
     FRetainAtAge <- ArrayMultiply(FInteract, retention)
     
@@ -129,7 +129,7 @@ CalcCatch <- function(Hist, TimeStep=NULL) {
                               dimnames = list(
                                 Sim=1:nSim(Hist),
                                 Age=0:MaxAge(Hist@Stock[[st]]),
-                                `Time Step`=TimeStep,
+                                TimeStep=TimeStep,
                                 Fleet=fleetnames))
     
     FDeadArray <- FFleetEmptyArray
@@ -179,13 +179,13 @@ CalcCatch <- function(Hist, TimeStep=NULL) {
         FDeadAtAge <- FRetainAtAge+FDiscardDead
         
         FDeadAtAgeList <- FDeadAtAge |> AddDimension('Sim', sim) |>
-          AddDimension('Time Step', TimeStep) |>
-          aperm(c('Sim', 'Age', 'Time Step', 'Fleet')) |>
+          AddDimension('TimeStep', TimeStep) |>
+          aperm(c('Sim', 'Age', 'TimeStep', 'Fleet')) |>
           Array2List(pos=4)
         
         FRetainAtAgeList <- FRetainAtAge |> AddDimension('Sim', sim) |>
-          AddDimension('Time Step', TimeStep) |>
-          aperm(c('Sim', 'Age', 'Time Step', 'Fleet')) |>
+          AddDimension('TimeStep', TimeStep) |>
+          aperm(c('Sim', 'Age', 'TimeStep', 'Fleet')) |>
           Array2List(pos=4)
         
         for (fl in seq_along(fleetnames)) {

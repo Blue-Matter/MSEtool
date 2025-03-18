@@ -23,7 +23,7 @@ ApplyCustomAtAgeModel <- function(Model, Pars, Ages) {
   }
   dimnames(out) <- list(Sim=1:nsim,
                         Age=Ages,
-                        `Time Step`=TSnames$`Time Step`)
+                        TimeStep=TSnames$TimeStep)
   out
 }
 
@@ -51,7 +51,7 @@ ApplyCustomAtLengthModel <- function(Model, Pars, Length) {
   }
   dimnames(out) <- list(Sim=1:nsim,
                         Class=Length,
-                        `Time Step`=TSnames$`Time Step`)
+                        TimeStep=TSnames$TimeStep)
   out
 }
 

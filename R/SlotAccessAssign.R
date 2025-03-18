@@ -379,7 +379,7 @@ nTS <- function(x) {
     return(length(TimeSteps(x)))
   dnames <- dimnames(x) 
   if (!is.null(dnames))
-    return(length(dnames[['Time Step']]))
+    return(length(dnames[['TimeStep']]))
   
 }
 
@@ -945,7 +945,7 @@ Species <- function(x) {
 #' @rdname Access
 #' @export
 TimeSteps <- function(x, Period=NULL) {
-  TimeSteps <- round(x@TimeSteps,2)
+  TimeSteps <- x@TimeSteps
   if (is.null(Period))
     return(TimeSteps)
   if (Period=='All')

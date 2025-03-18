@@ -82,7 +82,7 @@ BAM2Stock <- function(BAMdata, nSim, CurrentYear, TimeSteps) {
                                                  dim=c(1, length(Ages@Classes), 1),
                                                  dimnames=list(Sim=1,
                                                                Age=Ages@Classes,
-                                                               `Time Step`=histTS[1])
+                                                               TimeStep=histTS[1])
                                ),
                                Units = BAMdata$info$units.weight),
                  NaturalMortality=NaturalMortality(Pars=list(),
@@ -125,7 +125,7 @@ BAM2Stock <- function(BAMdata, nSim, CurrentYear, TimeSteps) {
   stock@SRR@RecDevHist <- array((BAMdata$N.age[2:(nYear+1),1]/RecruitsHistEq),
                                 dim=c(1, nYear)) 
   
-  dimnames(stock@SRR@RecDevHist) <- list(Sim=1, `Time Step`=TimeSteps[1:nYear])
+  dimnames(stock@SRR@RecDevHist) <- list(Sim=1, TimeStep=TimeSteps[1:nYear])
   
   stock@SRR@RecDevProj <- NULL # reset so it's populated again in Populate(stock)
   stock
@@ -152,11 +152,11 @@ BAMGetDiscardMortality <- function(x, TimeSteps, RetainFleets, Stock) {
     as.numeric()
   
   DiscardMortArray <- array(NA, dim=c(nAge(Stock), nYear(Stock), nFleet)) |>
-    AddDimNames(c("Age", "Time Step", 'Fleet'), TimeSteps = TimeSteps)
+    AddDimNames(c("Age", "TimeStep", 'Fleet'), TimeSteps = TimeSteps)
   dimnames(DiscardMortArray)$Fleet <- RetainFleets
   
   for (i in 1:nrow(DiscMortDF)) {
-    TSind <- which(dimnames(DiscardMortArray)$`Time Step` > DiscMortDF$Year[i])
+    TSind <- which(dimnames(DiscardMortArray)$TimeStep > DiscMortDF$Year[i])
     fillvalue <- abind::asub(DiscardMortArray,
                              list(TSind, DiscMortDF$Fleet[i]),
                              2:3, drop=FALSE) 
@@ -214,14 +214,14 @@ BAM2Fleet <- function(x, Stock) {
                                    dim=c(length(HistTS), nAdd, length(RetainFleets))),  
                              FDeadatAge, along=2) |>
     aperm(c(2,1,3)) |>
-    AddDimNames(c("Age", "Time Step", 'Fleet'), TimeSteps = TimeSteps)
+    AddDimNames(c("Age", "TimeStep", 'Fleet'), TimeSteps = TimeSteps)
   dimnames(FDeadatAge)$Fleet <- RetainFleets
   
   FRetainatAge <- abind::abind(array(0, 
                                      dim=c(length(HistTS), nAdd, length(RetainFleets))),  
                                FRetainatAge, along=2) |>
     aperm(c(2,1,3)) |>
-    AddDimNames(c("Age", "Time Step", 'Fleet'), TimeSteps = TimeSteps)
+    AddDimNames(c("Age", "TimeStep", 'Fleet'), TimeSteps = TimeSteps)
   dimnames(FRetainatAge)$Fleet <- RetainFleets
   
   
@@ -245,7 +245,7 @@ BAM2Fleet <- function(x, Stock) {
     fleet <- Fleet(Name=RetainFleets[fl])
     apicalF <-  apply(FDeadatAge, 2:3, max)[,fl, drop=FALSE] |> t()
     dimnames(apicalF) <- list(Sim=1,
-                              'Time Step'=  dimnames(apicalF)$`Time Step`)
+                              'TimeStep'=  dimnames(apicalF)$TimeStep)
     
     fleet@FishingMortality <- FishingMortality(ApicalF=apicalF)
     
@@ -258,7 +258,7 @@ BAM2Fleet <- function(x, Stock) {
       abind::adrop(2) |> aperm(2:1)
     fleet@Effort <- Effort(Effort=effort)
     fleet@Effort@Catchability <- array(1, c(1,1))  |> 
-      AddDimNames(c('Sim', 'Time Step'), TimeSteps=TimeSteps)
+      AddDimNames(c('Sim', 'TimeStep'), TimeSteps=TimeSteps)
     
     MeanAtAge <- AddDimension(SelectivityAtAge[,,fl], 'Sim') |> aperm(c(3,1,2))
     fleet@Selectivity <- Selectivity(MeanAtAge=MeanAtAge)

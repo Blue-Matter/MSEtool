@@ -35,7 +35,7 @@ setMethod('GetFatAgeArray', c('fleet', 'ANY', 'ANY'),
     ZeroArray <- array(tiny/2, dim=c(1,1,1), 
                        dimnames=list(Sim=1,
                                      Age=0,
-                                     `Time Step`=TimeSteps[1]))
+                                     TimeStep=TimeSteps[1]))
     return(ZeroArray)
   }
     

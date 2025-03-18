@@ -45,7 +45,7 @@ ProcessStockAtAge <- function(out, TimeSteps, default=tiny/2) {
         array(default, dim=c(1,1,1), 
               dimnames=list(Sim=1,
                             Age=0,
-                            `Time Step`=TimeSteps[1]))
+                            TimeStep=TimeSteps[1]))
       }
     })
     return(out)
@@ -55,7 +55,7 @@ ProcessStockAtAge <- function(out, TimeSteps, default=tiny/2) {
     return(array(out, dim=c(1,1,1), 
           dimnames=list(Sim=1,
                         Age=0,
-                        `Time Step`=TimeSteps[1]))
+                        TimeStep=TimeSteps[1]))
     )
   }
   
@@ -65,7 +65,7 @@ ProcessStockAtAge <- function(out, TimeSteps, default=tiny/2) {
   array(default, dim=c(1,1,1), 
         dimnames=list(Sim=1,
                       Age=0,
-                      `Time Step`=TimeSteps[1]))
+                      TimeStep=TimeSteps[1]))
 }
 
 ProcessStockAtLength <- function(out, TimeSteps, default=tiny/2) {
@@ -77,7 +77,7 @@ ProcessStockAtLength <- function(out, TimeSteps, default=tiny/2) {
         array(default, dim=c(1,1,1), 
               dimnames=list(Sim=1,
                             Class=0,
-                            `Time Step`=TimeSteps[1]))
+                            TimeStep=TimeSteps[1]))
       }
     })
     return(out)
@@ -87,7 +87,7 @@ ProcessStockAtLength <- function(out, TimeSteps, default=tiny/2) {
     return(array(out, dim=c(1,1,1), 
                  dimnames=list(Sim=1,
                                Class=0,
-                               `Time Step`=TimeSteps[1]))
+                               TimeStep=TimeSteps[1]))
     )
   }
   
@@ -97,7 +97,7 @@ ProcessStockAtLength <- function(out, TimeSteps, default=tiny/2) {
   array(default, dim=c(1,1,1), 
         dimnames=list(Sim=1,
                       Class=0,
-                      `Time Step`=TimeSteps[1]))
+                      TimeStep=TimeSteps[1]))
 }
 
 GetMeanAtAge <- function(object, TimeSteps, slot='Length') {
@@ -490,7 +490,7 @@ GetSProductionAtAge <- function(Hist, TimeSteps=NULL) {
       # calculate number alive at SpawnTimeFrac of the time step
       # before aging
       fishingmortality <- Hist@FDead[[st]] |> ArraySubsetTimeStep(TimeSteps) |>
-        apply(c('Sim', 'Age', 'Time Step'), sum) # sum over fleets
+        apply(c('Sim', 'Age', 'TimeStep'), sum) # sum over fleets
       naturalmortality <- GetNaturalMortalityAtAge(Hist@Stock[[st]], TimeSteps)
       totalmortality <- ArrayAdd(fishingmortality, naturalmortality)
       Semelparous <- GetSemelparous(Hist@Stock[[st]]) |> ArraySubsetTimeStep(TimeSteps)

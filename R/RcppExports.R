@@ -49,12 +49,12 @@ CalcDensity_ <- function(DensityAreaList, VBiomassAreaList, RelativeSizeList, TS
     .Call(`_MSEtool_CalcDensity_`, DensityAreaList, VBiomassAreaList, RelativeSizeList, TSindex)
 }
 
-DistEffort_ <- function(EffortAreaList, DensityAreaList, EffortList, TSindex) {
-    .Call(`_MSEtool_DistEffort_`, EffortAreaList, DensityAreaList, EffortList, TSindex)
+DistEffort_ <- function(EffortAreaList, VBiomassAreaList, EffortList, TSindex) {
+    .Call(`_MSEtool_DistEffort_`, EffortAreaList, VBiomassAreaList, EffortList, TSindex)
 }
 
-CalcFArea_ <- function(FDeadAtAgeAreaList, FRetainAtAgeAreaList, EffortAreaList, DensityAreaList, CatchabilityList, SelectivityAtAgeList, RetentionAtAgeList, DiscardMortalityAtAgeList, TSindex) {
-    .Call(`_MSEtool_CalcFArea_`, FDeadAtAgeAreaList, FRetainAtAgeAreaList, EffortAreaList, DensityAreaList, CatchabilityList, SelectivityAtAgeList, RetentionAtAgeList, DiscardMortalityAtAgeList, TSindex)
+CalcFArea_ <- function(FDeadAtAgeAreaList, FRetainAtAgeAreaList, EffortAreaList, RelativeSizeList, CatchabilityList, SelectivityAtAgeList, RetentionAtAgeList, DiscardMortalityAtAgeList, TSindex) {
+    .Call(`_MSEtool_CalcFArea_`, FDeadAtAgeAreaList, FRetainAtAgeAreaList, EffortAreaList, RelativeSizeList, CatchabilityList, SelectivityAtAgeList, RetentionAtAgeList, DiscardMortalityAtAgeList, TSindex)
 }
 
 CalcCatch_ <- function(RemovalAtAgeAreaList, RetainAtAgeAreaList, RemovalNumberAtAgeList, RetainNumberAtAgeList, RemovalBiomassAtAgeList, RetainBiomassAtAgeList, NaturalMortalityAtAgeList, FleetWeightAtAgeList, NumberAtAgeAreaList, FDeadAtAgeAreaList, FRetainAtAgeAreaList, TSindex) {

@@ -461,14 +461,14 @@ OM2SRR <- function(OM, cpars=NULL, TimeSteps=NULL) {
   if (!is.null(SRR@RecDevHist)  && !all(is.na(SRR@RecDevHist))) {
     dimnames(SRR@RecDevHist) <- list(
       Sim=1:nrow(SRR@RecDevHist),
-      `Time Step`= TimeSteps$HistTS
+      TimeStep= TimeSteps$HistTS
     )
   }
   
   if (!is.null(SRR@RecDevProj)  && !all(is.na(SRR@RecDevProj))) {
     dimnames(SRR@RecDevProj) <- list(
       Sim=1:nrow(SRR@RecDevProj),
-      `Time Step`= TimeSteps$ProjTS
+      TimeStep= TimeSteps$ProjTS
     )
   }
   
@@ -599,7 +599,7 @@ process_mov <- function(mov, nage=1, nts=1) {
   }
   
   mov <- aperm(mov, c(1,4,5,3,2)) |>
-    AddDimNames(c('Sim', 'Area', 'Area', 'Age', 'Time Step')) |>
+    AddDimNames(c('Sim', 'Area', 'Area', 'Age', 'TimeStep')) |>
     process_cpars()
   
   mov

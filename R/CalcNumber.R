@@ -13,7 +13,7 @@ CalcNumberNext <- function(Hist, thisTimeStep) {
   for (st in 1:nStock(Hist)) {
     
     FDeadAtAge <- Hist@FDeadArea[[st]] |> ArraySubsetTimeStep(thisTimeStep) 
-    FDeadAtAgeTotal <- apply(FDeadAtAge, c('Sim', 'Age', 'Time Step', 'Area'), sum)
+    FDeadAtAgeTotal <- apply(FDeadAtAge, c('Sim', 'Age', 'TimeStep', 'Area'), sum)
     NMortAtAge <- GetNaturalMortalityAtAge(Hist@Stock[[st]], thisTimeStep) |>
       AddDimension('Area')
       
@@ -31,7 +31,7 @@ CalcNumberNext <- function(Hist, thisTimeStep) {
     SALFR <- expand.grid(1:nSim, nAge, 1, 1:nFleet, 1:nArea) |> as.matrix()
     
     NumberNextTimeStep[[st]] <- NumberThisTimeStep[[st]]
-    dimnames(NumberNextTimeStep[[st]])$`Time Step` <- nextTimeStep
+    dimnames(NumberNextTimeStep[[st]])$TimeStep <- nextTimeStep
     
     NumberNextTimeStep[[st]][] <- tiny
     

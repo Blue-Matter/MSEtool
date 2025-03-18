@@ -17,7 +17,7 @@ MakeFleetList <- function(OM, Period='All') {
   List$VBiomassArea <- List$EffortArea 
   
   List$FDeadAtAgeArea <-  ListArraySimAgeTimeFleetArea(OM, Period) |>
-    purrr::map(Array2List, "Time Step")
+    purrr::map(Array2List, "TimeStep")
   
   List$FRetainAtAgeArea <- List$FDeadAtAgeArea
   
@@ -133,6 +133,12 @@ MakeEffortList <- function(OM, Period='Historical', TimeSteps=NULL) {
                             GetEffort(x, TimeSteps)) |>
     purrr::map(\(x) ArrayExpand(x, OM@nSim, TimeSteps=TimeSteps))
     
+  # 
+  # y = GetEffort(OM@Fleet$`Day octopus`$`Octopus Fleet`, TimeSteps)
+  # 
+  # object = OM@Fleet$`Day octopus`$`Octopus Fleet`
+  # OM@Fleet$`Day octopus`$`Octopus Fleet`@Effort@Effort[1,] |> plot()
+  # plot(y[1,,])
   
   # Catchability
   List$Catchability <- purrr::map(OM@Fleet, \(x)
@@ -160,7 +166,7 @@ MakeDistributionList <- function(OM, Period='Historical', TimeSteps=NULL) {
   
   List$Closure <- purrr::map(OM@Fleet, \(x) {
     GetClosure(x, TimeSteps) |>
-      aperm(c('Sim', 'Time Step', 'Fleet', 'Area'))
+      aperm(c('Sim', 'TimeStep', 'Fleet', 'Area'))
   }) |>
     purrr::imap(\(x, idx) {
       ArrayExpand(x, OM@nSim, meta$nAges[[idx]],

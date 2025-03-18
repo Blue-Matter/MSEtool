@@ -198,7 +198,7 @@ PopulateMeanAtAge <- function(object, Ages=NULL, TimeSteps=NULL, Length=NULL) {
       dd <- dim(object@MeanAtAge)
       dimnames(object@MeanAtAge) <- list(Sim=1:dd[1],
                                          Age=Ages@Classes[1:dd[2]],
-                                         `Time Step`=TimeSteps[1:dd[3]])
+                                         TimeStep=TimeSteps[1:dd[3]])
     }
     
     return(object)
@@ -237,7 +237,7 @@ PopulateMeanAtAge <- function(object, Ages=NULL, TimeSteps=NULL, Length=NULL) {
     dd <- dim(object@MeanAtAge)
     dimnames(object@MeanAtAge) <- list(Sim=1:dd[1],
                                        Age=Ages@Classes[1:dd[2]],
-                                       `Time Step`=TimeSteps[1:dd[3]])
+                                       TimeStep=TimeSteps[1:dd[3]])
   }
   object
 }
@@ -284,7 +284,7 @@ PopulateMeanAtLength <- function(object,
       attributes(object@MeanAtLength)$LengthClasses <- Length@Classes
       attributes(object@MeanAtLength)$UnitsLength <- Length@Units
     }
-    object@MeanAtLength <- AddDimNames(object@MeanAtLength, c('Sim', 'Class', 'Time Step'), TimeSteps)
+    object@MeanAtLength <- AddDimNames(object@MeanAtLength, c('Sim', 'Class', 'TimeStep'), TimeSteps)
   }
   object
 }
@@ -366,14 +366,14 @@ PopulateASK <- function(object, Ages=NULL, TimeSteps=NULL, silent=FALSE, type='L
   object@ASK <- CalcASK(MeanAtAge, CVatAge, Classes, TruncSD, Dist, Ages,
                         silent=silent, type=type)
   
-  timesteps <- c(dimnames(MeanAtAge)$`Time Step`,
-                 dimnames(CVatAge)$`Time Step`) |> unique() |> sort()
+  timesteps <- c(dimnames(MeanAtAge)$TimeStep,
+                 dimnames(CVatAge)$TimeStep) |> unique() |> sort()
   
   dd <- dim(object@ASK)
   dimnames(object@ASK) <- list(Sim=1:dd[1],
                                Age=Ages@Classes,
                                Class=Classes,
-                               `Time Step`=timesteps)
+                               TimeStep=timesteps)
   object
 }
 
@@ -474,7 +474,7 @@ CalcUnfishedDist <- function(Spatial,
                                               dims[2],
                                               dims[4],
                                               dims[5])),
-                              c('Sim', 'Area', 'Age', 'Time Step'),
+                              c('Sim', 'Area', 'Age', 'TimeStep'),
                               TimeSteps=TimeSteps)
   for (s in 1:dims[1]) {
     for (ts in 1:dims[5]) {
@@ -762,9 +762,9 @@ setMethod("Populate", "length", function(object,
     return(object)
 
   SetSeed(object, seed)
-
+  
   length <- object
-
+  
   sb <- PrintPopulating(length, isTRUE(messages))
   
   length@Pars <- StructurePars(Pars=length@Pars, nsim, TimeSteps)
@@ -779,7 +779,7 @@ setMethod("Populate", "length", function(object,
   dd <- dim(length@CVatAge)
   dimnames(length@CVatAge) <- list(Sim=(1:nsim)[1:dd[1]],
                                    Age=Ages@Classes[1:dd[2]],
-                                   `Time Step`=TimeSteps[1:dd[3]])
+                                   TimeStep=TimeSteps[1:dd[3]])
   if (is.null(length@CVatAge))
     ASK <- FALSE
 
@@ -852,7 +852,7 @@ setMethod("Populate", "weight", function(object,
   if (!is.null(dd))
     dimnames(object@CVatAge) <- list(Sim=(1:nsim)[1:dd[1]],
                                      Age=Ages@Classes[1:dd[2]],
-                                     `Time Step`=TimeSteps[1:dd[3]])
+                                     TimeStep=TimeSteps[1:dd[3]])
 
 
   if (is.null(object@CVatAge))
@@ -1144,13 +1144,13 @@ setMethod("Populate", "srr", function(object,
   object@RecDevHist <- RecDeviations$RecDevHist
   dimnames(object@RecDevHist) <- list(
     Sim=1:nrow(object@RecDevHist),
-    `Time Step`=histTS
+    TimeStep=histTS
   )
   
   object@RecDevProj <- RecDeviations$RecDevProj
   dimnames(object@RecDevProj) <- list(
     Sim=1:nrow(object@RecDevProj),
-    `Time Step`=projTS
+    TimeStep=projTS
   )
   
 
@@ -1181,7 +1181,7 @@ setMethod("Populate", "spatial", function(object,
   SetSeed(object, seed)
 
   # empty object
-  DimNames <- c('Sim', 'Area', 'Age', 'Time Step')
+  DimNames <- c('Sim', 'Area', 'Age', 'TimeStep')
   if (EmptyObject(object)) {
     object@RelativeSize <- AddDimNames(array(1, dim=c(1,1)), 
                                        DimNames[1:2], TimeSteps=TimeSteps)
@@ -1192,7 +1192,7 @@ setMethod("Populate", "spatial", function(object,
     object@UnfishedDist  <- AddDimNames(array(1, dim=c(1,1,1,1)),
                                         DimNames, TimeSteps=TimeSteps)
     object@Movement  <- AddDimNames(array(1, dim=c(1,1,1,1,1)),
-                                    c("Sim",'FromArea', 'ToArea','Age', 'Time Step'), TimeSteps=TimeSteps)
+                                    c("Sim",'FromArea', 'ToArea','Age', 'TimeStep'), TimeSteps=TimeSteps)
     return(SetDigest(argList, object))
   }
 
@@ -1207,11 +1207,11 @@ setMethod("Populate", "spatial", function(object,
     }
     if (length(dnames)==3) {
       object@Movement <- AddAgeTimeStepDimensions(object@Movement, outdim=5) |>
-        AddDimNames(c('Sim', 'FromArea', 'ToArea', 'Age', 'Time Step'), TimeSteps=TimeSteps)
+        AddDimNames(c('Sim', 'FromArea', 'ToArea', 'Age', 'TimeStep'), TimeSteps=TimeSteps)
     } else if (length(dnames)==4) {
       cli::cli_abort("`Spatial@Movement` should either have dimensions: 
                      {.val {c('Sim', 'FromArea', 'ToArea')}} OR 
-                     {.val {c('Sim', 'FromArea', 'ToArea', 'Age', 'Time Step')}}")
+                     {.val {c('Sim', 'FromArea', 'ToArea', 'Age', 'TimeStep')}}")
     }
   }
     
@@ -1289,12 +1289,14 @@ setMethod("Populate", "depletion", function(object,
   if (!is.null(object@Initial)) {
     if (length(object@Initial)==2) {
       object@Initial <- StructurePars(list(object@Initial), nsim)[[1]][,1]
+      object@Initial <- array(object@Initial, dim=nsim, dimnames = list(Sim=1:nsim))
     }
   }
 
   if (!is.null(object@Final)) {
     if (length(object@Final)==2) {
       object@Final <- StructurePars(list(object@Final), nsim)[[1]][,1]
+      object@Final <- array(object@Final, dim=nsim, dimnames = list(Sim=1:nsim))
     }
   }
 
@@ -1409,7 +1411,7 @@ setMethod("Populate", "fishingmortality", function(object,
   SetSeed(object, seed)
   sb <- PrintPopulating(object, isTRUE(messages), name='FishingMortality')
 
-  object@ApicalF <- AddSimDimension(object@ApicalF, c('Sim', 'Time Step'), TimeSteps=TimeSteps)
+  object@ApicalF <- AddSimDimension(object@ApicalF, c('Sim', 'TimeStep'), TimeSteps=TimeSteps)
   object@DeadAtAge <- AddSimDimension(object@DeadAtAge, TimeSteps=TimeSteps)
   object@RetainAtAge <- AddSimDimension(object@RetainAtAge, TimeSteps=TimeSteps)
 
@@ -1457,7 +1459,7 @@ setMethod("Populate", "discardmortality", function(object,
     if (is.null(dnames)) 
       dimnames(object@MeanAtLength) <- list(Sim=1:dd[1],
                                                  Class=object@Classes,
-                                                 `Time Step`=TimeSteps[1:dd[3]])
+                                                 TimeStep=TimeSteps[1:dd[3]])
   }
   
   PrintDonePopulating(object, sb, isTRUE(messages), name='DiscardMortality')
@@ -1552,7 +1554,7 @@ setMethod("Populate", "selectivity", function(object,
     if (is.null(dnames)) 
       dimnames(selectivity@MeanAtLength) <- list(Sim=1:dd[1],
                                                Class=selectivity@Classes,
-                                               `Time Step`=TimeSteps[1:dd[3]])
+                                               TimeStep=TimeSteps[1:dd[3]])
   }
   
   
@@ -1575,7 +1577,7 @@ CheckSelectivityMaximum <- function(MeanAtAge) {
   sims <- which(apply(ind,1, sum)>0) |> cli::cli_vec(list("vec-trunc" = 5))
   TSs <- which(apply(ind, 2, sum)>0) |> cli::cli_vec(list("vec-trunc" = 5))
 
-  cli::cli_alert('Simulations {.val {sims}}; Time Steps {.val {TSs}}')
+  cli::cli_alert('Simulations {.val {sims}}; TimeSteps {.val {TSs}}')
 
   for (i in 1:nrow(ind)) {
     for (j in 1:ncol(ind)) {
@@ -1613,7 +1615,7 @@ setMethod("Populate", "retention", function(object,
   
   if (EmptyObject(object)) {
     object@MeanAtAge <- array(1, dim=c(1,1,1)) |> AddDimNames(TimeSteps=TimeSteps)
-    object@MeanAtLength <- array(1, dim=c(1,1,1)) |> AddDimNames(c('Sim', 'Class', 'Time Step'),
+    object@MeanAtLength <- array(1, dim=c(1,1,1)) |> AddDimNames(c('Sim', 'Class', 'TimeStep'),
                                                                     TimeSteps=TimeSteps)
     
     PrintDonePopulating(object, sb, isTRUE(messages))
@@ -1647,7 +1649,7 @@ setMethod("Populate", "retention", function(object,
   if (ParsZero & is.null(retention@MeanAtAge) & is.null(retention@MeanAtLength)) {
     
     retention@MeanAtAge <- array(1, dim=c(1,1,1)) |> AddDimNames(TimeSteps=TimeSteps)
-    retention@MeanAtLength <- array(1, dim=c(1,1,1)) |> AddDimNames(c('Sim', 'Class', 'Time Step'),
+    retention@MeanAtLength <- array(1, dim=c(1,1,1)) |> AddDimNames(c('Sim', 'Class', 'TimeStep'),
                                                                     TimeSteps=TimeSteps)
     
     PrintDonePopulating(retention, sb, isTRUE(messages))
@@ -1687,7 +1689,7 @@ setMethod("Populate", "retention", function(object,
     if (is.null(dnames)) 
       dimnames(retention@MeanAtLength) <- list(Sim=1:dd[1],
                                                  Class=retention@Classes,
-                                                 `Time Step`=TimeSteps[1:dd[3]])
+                                                 TimeStep=TimeSteps[1:dd[3]])
   }
   
   # retention <- AddMeanAtAgeAttributes(retention, TimeSteps, Ages)
@@ -1728,11 +1730,11 @@ setMethod("Populate", "effort", function(object,
   if (EmptyObject(object@Catchability)) {
     # if (!silent)
       # cli::cli_alert_info('`Catchability` (q) not populated. Assuming `q=1`')
-    object@Catchability <- matrix(tiny/2,1,1) |> AddDimNames(c('Sim', 'Time Step'),
+    object@Catchability <- matrix(tiny/2,1,1) |> AddDimNames(c('Sim', 'TimeStep'),
                                                         TimeSteps=TimeSteps)
   } else {
     object@Catchability <- Structure(object@Catchability, c('nSim', 'nTS')) |>
-      AddDimNames(c('Sim', 'Time Step'),                                                            TimeSteps=TimeSteps)
+      AddDimNames(c('Sim', 'TimeStep'),                                                            TimeSteps=TimeSteps)
   }
 
   if (EmptyObject(object@Effort)) {
@@ -1745,7 +1747,7 @@ setMethod("Populate", "effort", function(object,
     object@Effort <- ArrayMultiply(array1=object@Catchability,
                                     array2=apply(FInteract,c(1,3), max)
                                     ) |>
-      AddDimNames(c('Sim', 'Time Step'), TimeSteps=TimeSteps)
+      AddDimNames(c('Sim', 'TimeStep'), TimeSteps=TimeSteps)
 
 
   } else {
@@ -1754,7 +1756,7 @@ setMethod("Populate", "effort", function(object,
       
     } else{
       object@Effort <- Structure(object@Effort, c('nSim', 'nTS')) |>
-        AddDimNames(c('Sim', 'Time Step'),                                                            TimeSteps=TimeSteps)
+        AddDimNames(c('Sim', 'TimeStep'),                                                            TimeSteps=TimeSteps)
     }
   }
 
@@ -1783,7 +1785,7 @@ setMethod("Populate", "distribution", function(object,
                                      length(TimeSteps),
                                      nAreas),
                             dimnames=list(Sim=1:nsim,
-                                          `Time Step`=TimeSteps,
+                                          TimeStep=TimeSteps,
                                           Area=1:nAreas)
     )
           
@@ -1852,8 +1854,8 @@ GenerateHistoricalEffort <- function(Effort, nsim=NULL, TimeSteps=NULL) {
                          c(nsim, nTimeSteps))  
     EffortTS <- EffortTS * EffortError
   }
-  EffortTS <- EffortTS |> AddDimNames(names=c('Sim', 'Time Step'), 
-                                      TimeSteps = round(TimeSteps,2))
+  EffortTS <- EffortTS |> AddDimNames(names=c('Sim', 'TimeStep'), 
+                                      TimeSteps = TimeSteps)
   
   EffortTS/matrix(EffortTS[,nTimeSteps], nsim, nTimeSteps, byrow=FALSE)
 }

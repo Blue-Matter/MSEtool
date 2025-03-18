@@ -1465,8 +1465,8 @@ Spatial <- function(UnfishedDist=NULL,
 #'
 #' @export
 setClass('depletion',
-         slots=c(Initial='num.null',
-                 Final='num.null',
+         slots=c(Initial='num.array',
+                 Final='num.array',
                  Reference='array.char.null'),
          contains = c('MiscClass', 'Created_ModifiedClass')
 )

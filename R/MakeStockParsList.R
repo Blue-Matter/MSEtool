@@ -31,6 +31,7 @@
 
 
 # https://stackoverflow.com/questions/15263146/revert-list-structure
+#' @export
 ReverseList <- function(ls) {
   if (all(lapply(ls, is.null) |> unlist()))
     return(ls)
@@ -114,7 +115,10 @@ MakeSimList <- function(List, Sim=1) {
   nms <- names(List)
   
   for (i in seq_along(nms)) {
-    
+    nmsList <- names(List[[i]]) 
+    hasSim <- "Sim" %in% nmsList
+    if (all(is.na(nmsList)))
+      nmsList <- NULL 
     if (inherits(List[[i]], 'array')) {
       if ("Sim" %in% names(dimnames(List[[i]]))) {
         List[[i]] <- Array2List(List[[i]], 'Sim', Sim)[[1]]
@@ -122,10 +126,10 @@ MakeSimList <- function(List, Sim=1) {
     } else if (inherits(List[[i]], 'list')) {
       List[[i]] <- Recall(List[[i]], Sim)
     } else if (inherits(List[[i]], 'numeric')) {
-      if (!is.null(names(List[[i]])))
+      if (hasSim)
         List[[i]] <- List[[i]][Sim]
     } else if (inherits(List[[i]], 'integer')) {
-      if (!is.null(names(List[[i]])))
+      if (hasSim)
         List[[i]] <- List[[i]][Sim]
     }
   } 
@@ -202,6 +206,7 @@ MakeStockSlotList <- function(OM, slot='Length', Period='Historical', TimeSteps=
                                methods::slot('Model')
     ) |> purrr::map(\(x) if(!is.null(x) && is.character(x))
       get(x))
+  
   
   if ('MeanAtAge' %in% sNames) {
     fun <- get(paste0('Get', slot, 'AtAge'))
@@ -352,7 +357,7 @@ MakeSRRList <- function(OM, Period='Historical', TimeSteps=NULL) {
 
   List$RecDevs <- purrr::map2(RecDevHist,RecDevProj,  \(x,y) {
     r <- cbind(x,y)
-    names(dimnames(r)) <- c('Sim', 'Time Step')
+    names(dimnames(r)) <- c('Sim', 'TimeStep')
     r
   }) 
   
@@ -382,7 +387,7 @@ MakeSpatialList <- function(OM, Period='Historical', TimeSteps=NULL) {
   List <- list()
   
   List$UnfishedDist <- GetUnfishedDist(OM, TimeSteps) |>
-    purrr::map(\(x) aperm(x, c('Sim', 'Age', 'Time Step', 'Area'))) |>
+    purrr::map(\(x) aperm(x, c('Sim', 'Age', 'TimeStep', 'Area'))) |>
     purrr::imap(\(x, idx) {
       ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
                   TimeSteps) 
@@ -390,7 +395,7 @@ MakeSpatialList <- function(OM, Period='Historical', TimeSteps=NULL) {
   
 
   List$ProbStaying <- GetProbStaying(OM, TimeSteps) |>
-    purrr::map(\(x) aperm(x, c('Sim', 'Age', 'Time Step', 'Area'))) |>
+    purrr::map(\(x) aperm(x, c('Sim', 'Age', 'TimeStep', 'Area'))) |>
     purrr::imap(\(x, idx) {
       ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
                   TimeSteps)
@@ -404,8 +409,8 @@ MakeSpatialList <- function(OM, Period='Historical', TimeSteps=NULL) {
   
   List$Movement <- GetMovementAtAge(OM) |>
     purrr::imap(\(x, idx) ArrayExpand(x, OM@nSim, meta$nAges[[idx]], TimeSteps)) |>
-    purrr::map(\(x) aperm(x, c('Sim', 'Age', 'Time Step', 'FromArea', 'ToArea'))) |>
-    purrr::map(\(x) Array2List(x, "Time Step"))
+    purrr::map(\(x) aperm(x, c('Sim', 'Age', 'TimeStep', 'FromArea', 'ToArea'))) |>
+    purrr::map(\(x) Array2List(x, "TimeStep"))
 
   # List$FracOther <- purrr::map(OM@Stock, \(x)
   #                              x@Spatial@FracOther

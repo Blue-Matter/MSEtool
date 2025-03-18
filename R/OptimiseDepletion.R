@@ -110,10 +110,10 @@ OptCatchability <- function(logQ, x) {
   
   if (DepletionReference=='B0') {
     Bterminal <- PopDynamicsHistorical$Biomass[[1]][TermInd]
-    depRef <- sum(x$B0[[st]][, TermInd,])  
+    depRef <- x$B0[[st]][TermInd]  
   } else if (DepletionReference=='SB0') {
     Bterminal <- PopDynamicsHistorical$SBiomass[[1]][TermInd]
-    depRef <- sum(x$SB0[[st]][, TermInd,])  
+    depRef <- x$SB0[[st]][TermInd] 
   } else {
     cli::cli_abort("Currently only accepts`Depletion@Reference = 'B0' or 'SB0'")
   }
@@ -129,7 +129,7 @@ GetDepletion <- function(object, Reference=NULL) {
   
   # TODO Unfished B shouldn't be by age 
   B0 <- object$PopulationList$Unfished@Equilibrium@Biomass[[1]] |>
-    apply(c("Sim",'Time Step'), sum)
+    apply(c("Sim",'TimeStep'), sum)
   Bterminal/B0[1,length(TimeSteps)]
   
     

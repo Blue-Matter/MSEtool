@@ -35,7 +35,7 @@ CalcRefPoints <- function(OM, Unfished=NULL, TimeSteps=NULL) {
   FValues <- array(RefPoints@Curves@FValues, 
                    c(1,1, length(RefPoints@Curves@FValues)))
   dimnames(FValues) <- list(Sim=1,
-                            `Time Step`=tail(TimeSteps),
+                            TimeStep=tail(TimeSteps),
                             ApicalF=RefPoints@Curves@FValues)
   
   
@@ -111,13 +111,13 @@ CalcRefPoints <- function(OM, Unfished=NULL, TimeSteps=NULL) {
   
   # Equilibrium Unfished ----
   RefPoints@Equilibrium@N0 <- purrr::map(Unfished@Equilibrium@Number,
-                                         \(x) apply(x, c("Sim","Time Step"), sum))
+                                         \(x) apply(x, c("Sim","TimeStep"), sum))
   
   RefPoints@Equilibrium@B0 <- purrr::map(Unfished@Equilibrium@Biomass,
-                                         \(x) apply(x, c("Sim","Time Step"), sum))
+                                         \(x) apply(x, c("Sim","TimeStep"), sum))
   
   RefPoints@Equilibrium@SB0 <- purrr::map(Unfished@Equilibrium@SBiomass,
-                                          \(x) apply(x, c("Sim","Time Step"), sum))
+                                          \(x) apply(x, c("Sim","TimeStep"), sum))
   
   RefPoints@Equilibrium@SP0 <- Unfished@Equilibrium@SProduction
  
@@ -224,13 +224,13 @@ GetFSPR <- function(SPRarray, SPRvalue, TimeSteps=NULL) {
   nms <- names(dimnames)
   
   if (is.null(TimeSteps)) {
-    TimeSteps <- dimnames[['Time Step']] |> as.numeric() |> max()
+    TimeSteps <- dimnames[['TimeStep']] |> as.numeric() |> max()
   }
   
   FValues <- dimnames$apicalF |> as.numeric()
   SPRarray2 <- abind::asub(SPRarray,
                            as.character(TimeSteps), 
-                           which(nms=='Time Step'),
+                           which(nms=='TimeStep'),
                            drop=FALSE)
   
   Diff <- abs(SPRarray2 - SPRvalue)
@@ -254,18 +254,18 @@ GetValueAtF <- function(Array, FValue, TimeSteps=NULL) {
   nms2 <- names(dimnames2)
   
   if (is.null(TimeSteps)) {
-    TimeSteps <- dimnames1[['Time Step']] |> as.numeric() |> max()
+    TimeSteps <- dimnames1[['TimeStep']] |> as.numeric() |> max()
   }
   
   FValue2 <- abind::asub(FValue,
                          as.character(TimeSteps), 
-                         which(nms2=='Time Step'),
+                         which(nms2=='TimeStep'),
                          drop=FALSE)
 
   Array2 <- abind::asub(Array,
                            list(as.character(TimeSteps), 
                                 as.character(FValue2)),
-                           which(nms1%in%c('Time Step', 'ApicalF')),
+                           which(nms1%in%c('TimeStep', 'ApicalF')),
                            drop=FALSE)
   
   Array2

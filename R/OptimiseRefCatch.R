@@ -45,7 +45,7 @@ OptRefCatch <- function(logEffort, x, lastnTS=12) {
   
   PopDynamicsProject <- CalcPopDynamics_(x, TimeStepsProj)
 
-  retained <- PopDynamicsProject$RetainBiomassAtAge[[st]] |> List2Array("Time Step")
+  retained <- PopDynamicsProject$RetainBiomassAtAge[[st]] |> List2Array("TimeStep")
   
   dd <- dim(retained)
   nTS <- dd[2]

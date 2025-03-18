@@ -21,7 +21,7 @@ StructurePars_ <- function(Par, nsim=NULL, TimeSteps=NULL) {
   if (length(Par)==1) {
     out <- array(Par, dim=c(1,1))
     dimnames(out) <- list(Sim=1,
-                          `Time Step`=TimeSteps[1])
+                          TimeStep=TimeSteps[1])
     return(out)
   }
    
@@ -35,20 +35,20 @@ StructurePars_ <- function(Par, nsim=NULL, TimeSteps=NULL) {
     if (nsim==1) {
       out <- array(mean(c(Par[1], Par[2])), dim=c(1, 1))
       dimnames(out) <- list(Sim=1,
-                            `Time Step`=TimeSteps[1])
+                            TimeStep=TimeSteps[1])
       return(out)
     }
       
     out <- array(stats::runif(nsim, Par[1], Par[2]), dim=c(nsim, 1))
     dimnames(out) <- list(Sim=1:nsim,
-                          `Time Step`=TimeSteps[1])
+                          TimeStep=TimeSteps[1])
     return(out)
   }
 
   # Par are `nsim` long
   out <- array(Par, dim=c(length(Par), 1))
   dimnames(out) <- list(Sim=1:nsim,
-                        `Time Step`=TimeSteps[1])
+                        TimeStep=TimeSteps[1])
   out
 }
 
@@ -62,7 +62,7 @@ RandomWalk <- function(targ, targsd, nsim, TimeSteps) {
   mutemp <- -0.5 * targsd^2
   temp <- array(exp(rnorm(nsim*nTS, mutemp, targsd)),dim = c(nsim, nTS))
   dimnames(temp) <- list(Sim=1:nsim,
-                        `Time Step`=TimeSteps)
+                        TimeStep=TimeSteps)
   if (nsim >1) {
     return(targ * temp/apply(temp, 1, mean))
   } else {

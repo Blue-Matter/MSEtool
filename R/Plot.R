@@ -44,7 +44,7 @@ setMethod('plot', 'length', function(x,
     MeanAtAge[,1] <- 1:nsim
     MeanAtAge[,2] <- rep(0:(nage-1), each=nsim)
     MeanAtAge[,3] <- rep(TimeSteps, each=nsim*nage)
-    colnames(MeanAtAge) <- c('Sim', 'Age','Time Step', 'Value')
+    colnames(MeanAtAge) <- c('Sim', 'Age','TimeStep', 'Value')
 
 
     keepSim <- min(nsim, maxSim)
@@ -54,7 +54,7 @@ setMethod('plot', 'length', function(x,
     keepTS <- seq(from=1, to=nTS, length.out=keepTS)
     MeanAtAge <- MeanAtAge |>
       dplyr::filter(Sim %in% keepSim,
-                    `Time Step` %in% TimeSteps[keepTS]
+                    TimeStep %in% TimeSteps[keepTS]
       )
 
     p <- ggplot2::ggplot(MeanAtAge,
@@ -71,14 +71,14 @@ setMethod('plot', 'length', function(x,
 
     if (bySim & byTS) {
       if (!silent)
-        cli::cli_alert('Faceting by Simulation (rows) and Time Steps (columns)')
-      p <- p + ggplot2::facet_grid(Sim~`Time Step`)
+        cli::cli_alert('Faceting by Simulation (rows) and TimeSteps (columns)')
+      p <- p + ggplot2::facet_grid(Sim~TimeStep)
     }
 
     if (!bySim & byTS) {
       if (!silent)
         cli::cli_alert('Faceting by Time Steps')
-      p <- p + ggplot2::facet_wrap(~`Time Step`)
+      p <- p + ggplot2::facet_wrap(~TimeStep)
     }
 
     if (bySim & !byTS) {
@@ -130,7 +130,7 @@ setMethod('plot', 'length', function(x,
     ASK[,2] <- rep(0:(nage-1), each=nsim)
     ASK[,3] <- rep(Classes, each=nsim*nage)
     ASK[,4] <- rep(TimeSteps, each=nsim*nage*nbin)
-    colnames(ASK) <- c('Sim', 'Age', 'Length Class', 'Time Step', 'Value')
+    colnames(ASK) <- c('Sim', 'Age', 'Length Class', 'TimeStep', 'Value')
 
     keepSim <- min(nsim, maxSim)
     keepTS <- min(nTS, maxTS)
@@ -139,7 +139,7 @@ setMethod('plot', 'length', function(x,
     keepTS <- seq(from=1, to=nTS, length.out=keepTS)
     ASK <- ASK |>
       dplyr::filter(Sim %in% keepSim,
-                    `Time Step` %in% TimeSteps[keepTS]
+                    TimeStep %in% TimeSteps[keepTS]
       )
 
     p <- ggplot2::ggplot(ASK,

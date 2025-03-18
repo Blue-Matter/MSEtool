@@ -4,7 +4,7 @@ ReduceArraysTS_ <- function(Array, TimeSteps) {
   # reduces the time-step dimension to unique values
   # adds dimnames and attributes 
 
-  # for 3D arrays: Sim, Age, Time Step
+  # for 3D arrays: Sim, Age, TimeStep
   if (length(dd)==3) {
     List <- lapply(seq(dim(Array)[3]), function(x) Array[ , , x, drop=FALSE])
     KeepInd <- duplicated(List) |> not() |> which()

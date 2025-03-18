@@ -527,7 +527,6 @@ List CalcSpawnProduction_(List SProductionList,
 
     arma::cube FDeadAtAge = FDeadAtAgeList[st]; // age, time steep, fleet
     
-  
     int nAge = NumberAtAgeArea.n_rows;
     int nArea = NumberAtAgeArea.n_slices;
     int nFleet = FDeadAtAge.n_slices;
@@ -535,7 +534,7 @@ List CalcSpawnProduction_(List SProductionList,
     // Sum number over areas and F over fleets
     arma::vec NatAge(nAge);
     arma::vec FDeadatAge(nAge);
-    for (int age=0; age<nAge; age++) {
+    for (int age=1; age<nAge; age++) { // assumes first age class is age 0 and doesn't spawn
       NatAge(age) = accu(NumberAtAgeArea(arma::span(age, age), arma::span(TSindex, TSindex), arma::span(0, nArea-1)));
       FDeadatAge(age) = accu(FDeadAtAge(arma::span(age, age), arma::span(TSindex, TSindex), arma::span(0, nFleet-1)));
     }
@@ -547,9 +546,10 @@ List CalcSpawnProduction_(List SProductionList,
       SpawnMortality = (NaturalMortalityAtAge.col(TSindex) + FDeadatAge) * SpawnTimeFrac[st];
       NSpawn = NSpawn % exp(-SpawnMortality);
     }
-    
-    SProduction(TSindex) = arma::accu(NSpawn % FecundityAtAge.col(TSindex));
-    SBiomass(TSindex) = arma::accu(NSpawn % WeightAtAge.col(TSindex) % MaturityAtAge.col(TSindex));
+    double Sproduction = arma::accu(NSpawn % FecundityAtAge.col(TSindex));
+    double Sbiomass = arma::accu(NSpawn % WeightAtAge.col(TSindex) % MaturityAtAge.col(TSindex));
+    SProduction(TSindex) = Sproduction;
+    SBiomass(TSindex) = Sbiomass;
     SProductionList[st] = SProduction;
     SBiomassList[st] = SBiomass;
   }
@@ -960,9 +960,233 @@ List CalcPopDynamics_(List OMListSim,
 }
 
 
-
-
-
+// 
+// // [[Rcpp::export]]
+// List CalcPopDynamics2_(List OMListSim,
+//                       NumericVector TimeSteps) {
+//   
+//   
+//   List OMListSimOut = clone(OMListSim);
+//   List AgesList = OMListSimOut["Ages"];
+//   
+//   List Length = OMListSimOut["Length"];
+//   List Weight = OMListSimOut["Weight"];
+//   List NaturalMortality = OMListSimOut["NaturalMortality"];
+//   List Maturity = OMListSimOut["Maturity"];
+//   List Fecundity = OMListSimOut["Fecundity"];
+//   List SRR = OMListSimOut["SRR"];
+//   List SRRPars = SRR["SRRPars"];
+//   List SRRModel = SRR["SRRModel"];
+//   List Spatial = OMListSimOut["Spatial"];
+//   
+//   List FishingMortality = OMListSimOut["FishingMortality"];
+//   List DiscardMortality = OMListSimOut["DiscardMortality"];
+//   List EffortList = OMListSimOut["Effort"];
+//   List Selectivity = OMListSimOut["Selectivity"];
+//   List Retention = OMListSimOut["Retention"];
+//   List Distribution = OMListSimOut["Distribution"];
+//   
+//   List TimeStepsList = OMListSim["TimeSteps"];
+//   NumericVector TimeStepsAll = TimeStepsList[0];
+//   
+//   
+//   List BiomassList = OMListSimOut["Biomass"]; // Biomass by TimeStep
+//   List VBiomassList = OMListSimOut["Biomass"]; // Vulnerable Biomass by TimeStep
+//   List NumberAtAgeAreaList = OMListSimOut["NumberAtAgeArea"];
+//   List WeightAtAgeList = Weight["MeanAtAge"];
+//   
+//   List SelectivityAtAgeList = Selectivity["MeanAtAge"];
+//   List ClosureAreaList = Distribution["Closure"];
+//   
+//   int nTS = TimeSteps.size();
+//   int nStock = BiomassList.size();
+//   
+//   for (int timestep=0; timestep<nTS; timestep++) {
+//     NumericVector TSmatch = abs(TimeStepsAll - TimeSteps[timestep]);
+//     int TSindex = which_min(TSmatch);
+//     
+//     
+//     // Do MICE 
+//     
+//     // loop over stocks
+//     // for (int st=0; st<nStock; st++) {
+//     //   arma::cube NumberAtAgeTSArea = NumberAtAgeAreaList[st]; // age, TS, area
+//     //   arma::cube SelectivityAtAge = SelectivityAtAgeList[st]; // age, TS, fleet
+//     //   arma::cube ClosureArea = ClosureAreaList[st]; // TS, fleet, area
+//     //   
+//     //   int nAge = NumberAtAgeTSArea.n_rows;
+//     //   int nArea = NumberAtAgeTSArea.n_slices;
+//     //   int nFleet = SelectivityAtAge.n_slices;
+//     //   
+//     //   
+//     //   arma::mat NatAgeArea = NumberAtAgeTSArea.col(TSindex);
+//     //   NumericMatrix NumberAtAgeArea = as<NumericMatrix>(wrap(NatAgeArea)); // age, area
+//     //   
+//     //   NumericMatrix WeightAtAgeTS = WeightAtAgeList[st]; // age, TS
+//     // 
+//     // // Biomass at beginning of this time step
+//     //   NumericVector BiomassTS = BiomassList[st]; // TS
+//     //   BiomassTS[TSindex] = 0;
+//     //   
+//     //   for (int area=0; area<nArea; area++) {
+//     //     BiomassTS[TSindex] += sum(WeightAtAgeTS(_, TSindex) * NumberAtAgeArea(_,area));
+//     //   }
+//     //   
+//     //   BiomassList[st] = BiomassTS;
+//     //   
+//     //   // VB by Area
+//     //   NumericMatrix VBiomassArea(nArea, nFleet);
+//     //   
+//     //   VBiomassArea(_, fl)
+//     //   
+//     //   
+//     // }
+//     
+// 
+//     // VB by Area
+// 
+//     // Relative VB Density by Area & Fleet
+//     // OMListSimOut["DensityArea"] = CalcDensity_(
+//     //   OMListSimOut["DensityArea"],
+//     //   OMListSimOut["VBiomassArea"],
+//     //   Spatial["RelativeSize"],
+//     //   TSindex
+//     // );
+//     
+//     // Distribute Effort over Areas (currently proportional to VB)
+//     OMListSimOut["EffortArea"] = DistEffort_(
+//       OMListSimOut["EffortArea"],
+//                   OMListSimOut["VBiomassArea"],
+//                               EffortList["Effort"],
+//                                         TSindex
+//     );
+//     
+//     // F within each Area
+//     List FArea = CalcFArea_(
+//       OMListSimOut["FDeadAtAgeArea"],
+//                   OMListSimOut["FRetainAtAgeArea"],
+//                               OMListSimOut["EffortArea"],
+//                                           Spatial["RelativeSize"],
+//                                                  EffortList["Catchability"],
+//                                                            Selectivity["MeanAtAge"],
+//                                                                       Retention["MeanAtAge"],
+//                                                                                DiscardMortality["MeanAtAge"],
+//                                                                                                TSindex
+//     );
+//     
+//     OMListSimOut["FDeadAtAgeArea"] = FArea["FDeadAtAgeArea"];
+//     OMListSimOut["FRetainAtAgeArea"] = FArea["FRetainAtAgeArea"];
+//     
+//     // Removals and Retained Number and Biomass by Area
+//     List CatchList = CalcCatch_(
+//       OMListSimOut["RemovalAtAgeArea"],
+//                   OMListSimOut["RetainAtAgeArea"],
+//                               OMListSimOut["RemovalNumberAtAge"],
+//                                           OMListSimOut["RetainNumberAtAge"],
+//                                                       OMListSimOut["RemovalBiomassAtAge"],
+//                                                                   OMListSimOut["RetainBiomassAtAge"],
+//                                                                               NaturalMortality["MeanAtAge"],
+//                                                                                               OMListSimOut["FleetWeightAtAge"],
+//                                                                                                           OMListSimOut["NumberAtAgeArea"],
+//                                                                                                                       OMListSimOut["FDeadAtAgeArea"],
+//                                                                                                                                   OMListSimOut["FRetainAtAgeArea"],
+//                                                                                                                                               TSindex
+//     );
+//     
+//     OMListSimOut["RemovalAtAgeArea"] = CatchList["RemovalAtAgeArea"];
+//     OMListSimOut["RetainAtAgeArea"] = CatchList["RetainAtAgeArea"];
+//     OMListSimOut["RemovalNumberAtAge"] = CatchList["RemovalNumberAtAge"];
+//     OMListSimOut["RetainNumberAtAge"] = CatchList["RetainNumberAtAge"];
+//     OMListSimOut["RemovalBiomassAtAge"] = CatchList["RemovalBiomassAtAge"];
+//     OMListSimOut["RetainBiomassAtAge"] = CatchList["RetainBiomassAtAge"];
+//     
+//     
+//     // Calculate F over all areas
+//     List Foverall = CalcFfromCatch_(
+//       OMListSimOut["FDeadAtAge"],
+//                   OMListSimOut["FRetainAtAge"],
+//                               OMListSimOut["NumberAtAgeArea"],
+//                                           OMListSimOut["RemovalNumberAtAge"],
+//                                                       NaturalMortality["MeanAtAge"],
+//                                                                       Selectivity["MeanAtAge"],
+//                                                                                  Retention["MeanAtAge"],
+//                                                                                           DiscardMortality["MeanAtAge"],
+//                                                                                                           OMListSimOut["FDeadAtAgeArea"],
+//                                                                                                                       OMListSimOut["FRetainAtAgeArea"],
+//                                                                                                                                   TSindex
+//     );
+//     
+//     OMListSimOut["FDeadAtAge"] = Foverall["FDeadAtAge"];
+//     OMListSimOut["FRetainAtAge"] = Foverall["FRetainAtAge"];
+//     
+//     // Calc Spawning Production and Spawning Biomass
+//     List SProductSBiomass = CalcSpawnProduction_(
+//       OMListSimOut["SProduction"],
+//                   OMListSimOut["SBiomass"],                  
+//                               OMListSimOut["NumberAtAgeArea"],
+//                                           NaturalMortality["MeanAtAge"],
+//                                                           Fecundity["MeanAtAge"],
+//                                                                    Weight["MeanAtAge"],
+//                                                                          Maturity["MeanAtAge"],      
+//                                                                                  SRR["SpawnTimeFrac"],
+//                                                                                     SRR["SPFrom"],
+//                                                                                        OMListSimOut["FDeadAtAge"],
+//                                                                                                    TSindex
+//     );
+//     
+//     OMListSimOut["SProduction"] = SProductSBiomass["SProduction"];
+//     OMListSimOut["SBiomass"] = SProductSBiomass["SBiomass"];
+//     
+//     // Calc Recruitment
+//     NumericVector Recruits = CalcRecruitment_(
+//       OMListSimOut["SProduction"],
+//                   OMListSimOut["SP0"],
+//                               SRR["R0"],
+//                                  SRR["RecDevs"],
+//                                     SRR["SRRModel"],
+//                                        SRR["SRRPars"],
+//                                           TSindex
+//     );
+//     
+//     // Add Recruits
+//     // TODO option to add to beginning of next time-step i.e age 1
+//     OMListSimOut["NumberAtAgeArea"] = AddRecruits_(
+//       OMListSimOut["NumberAtAgeArea"],
+//                   Recruits,
+//                   Spatial["UnfishedDist"],
+//                          TSindex
+//     );
+//     
+//     
+//     if (timestep<(nTS-1)) {
+//       
+//       // Update Number beginning of next Time Step
+//       OMListSimOut["NumberAtAgeArea"] = CalcNumberNext_(
+//         OMListSimOut["NumberAtAgeArea"],
+//                     NaturalMortality["MeanAtAge"],
+//                                     OMListSimOut["FDeadAtAgeArea"],
+//                                                 Maturity["Semelparous"],
+//                                                         AgesList,
+//                                                         TSindex
+//       );
+//       
+//       // Move Population at beginning of next Time Step
+//       OMListSimOut["NumberAtAgeArea"] = MoveStock_(
+//         OMListSimOut["NumberAtAgeArea"],
+//                     Spatial["Movement"],
+//                            TSindex+1
+//       );
+//     }
+//   }
+//   
+//   OMListSimOut["Biomass"] = BiomassList;
+//   OMListSimOut["VBiomassArea"] = VBiomassAreaList;
+//   return(OMListSimOut);
+// }
+// 
+// 
+// 
+// 
 
 
 

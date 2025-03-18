@@ -187,15 +187,41 @@ TSperYear <- function(Units) {
 }
 
 CalcTimeSteps <- function(nYear, pYear, CurrentYear, TimeUnits='year', Period=NULL) {
-  nTimeStepsPerYear <- TSperYear(TimeUnits)
-
-  hist <- seq(CurrentYear-(nYear-1), by=1/nTimeStepsPerYear,
-      length.out=nYear*nTimeStepsPerYear) |>
-    round(2) 
-  proj <- seq(CurrentYear+1,
-              by=1/nTimeStepsPerYear,
-              length.out=pYear*nTimeStepsPerYear) |>
-    round(2) 
+  
+ 
+  FirstHistYear <- lubridate::ymd(paste0(CurrentYear-nYear+1, '-01-01'))
+  LastHistYear <- lubridate::ymd(paste0(CurrentYear, '-12-31'))
+  
+  FirstProjYear <- lubridate::ymd(paste0(CurrentYear+1, '-01-01'))
+  LastProjYear <- lubridate::ymd(paste0(CurrentYear+pYear, '-12-31'))
+  
+  validTimeUnits <- c('year', 'half-year', 'quarter', 'month', 'week', 'day')
+  
+  if (TimeUnits=='year') {
+    hist <- seq(FirstHistYear, LastHistYear, by='year') |> lubridate::decimal_date()
+    proj <- seq(FirstProjYear, LastProjYear, by='year') |> lubridate::decimal_date()
+  } else if (TimeUnits=='half-year') {
+    hist <- seq(FirstHistYear, LastHistYear, by='6 months') |> lubridate::decimal_date()
+    proj <- seq(FirstProjYear, LastProjYear, by='6 months') |> lubridate::decimal_date()
+  } else if (TimeUnits=='quarter') {
+    hist <- seq(FirstHistYear, LastHistYear, by='4 months') |> lubridate::decimal_date()
+    proj <- seq(FirstProjYear, LastProjYear, by='4 months') |> lubridate::decimal_date()
+  } else if (TimeUnits=='month') {
+    hist <- seq(FirstHistYear, LastHistYear, by='1 month') |> lubridate::decimal_date()
+    proj <- seq(FirstProjYear, LastProjYear, by='1 month') |> lubridate::decimal_date()
+  } else if (TimeUnits=='week') {
+    hist <- seq(FirstHistYear, LastHistYear, by='1 week') |> lubridate::decimal_date()
+    proj <- seq(FirstProjYear, LastProjYear, by='1 week') |> lubridate::decimal_date()
+  } else if (TimeUnits=='day') {
+    hist <- seq(FirstHistYear, LastHistYear, by='1 day') |> lubridate::decimal_date()
+    proj <- seq(FirstProjYear, LastProjYear, by='1 day') |> lubridate::decimal_date()
+  } else {
+    cli::cli_abort('`TimeUnits` must be one of: {.val {validTimeUnits}}')
+  }
+  
+  hist <- hist |> round(4)
+  proj <- proj |> round(4)
+ 
   if (is.null(Period))
     return(c(hist, proj))
 
@@ -271,7 +297,7 @@ AddDimension <- function(array, name=NULL, val=1) {
   outarray
 }
 
-AddSimDimension <- function(array, names=c('Sim', 'Age', 'Time Step'), TimeSteps=NULL) {
+AddSimDimension <- function(array, names=c('Sim', 'Age', 'TimeStep'), TimeSteps=NULL) {
   dd <- dim(array)
   if (length(dd)==length(names))
     return(AddDimNames(array, names, TimeSteps=TimeSteps))
@@ -334,6 +360,7 @@ AddAgeTimeStepDimensions <- function(object, outdim=4) {
   object
 }
 
+#' @export
 List2Array <- function(List, dimname="Fleet", dim1="Sim", ListDimNames=NULL) {
   if (inherits(List, 'array'))
     return(List)
@@ -400,7 +427,12 @@ Array2List <- function(array, pos=3, sim=NULL) {
   for (i in seq_along(indexvalue)) {
     tdimnames <- dimnames
     tdimnames[pos] <-  dimnames[[pos]][indexvalue[i]]
-    list[[i]] <- abind::adrop(abind::asub(array, tdimnames, drop=FALSE), pos)
+    val <- abind::adrop(abind::asub(array, tdimnames, drop=FALSE), pos)
+    if (is.null(dimnames(val))) {
+      tdimnames[pos] <- NULL
+      val <- array(val, dim=length(val), dimnames=tdimnames)
+    }
+    list[[i]] <- val
     
   }
   list
@@ -416,12 +448,19 @@ SetSeed <- function(object, seed=NULL) {
   
   if ('Modified' %in% slotNames(object))
     object@Modified <- NULL
+  
+  if ('Model' %in% slotNames(object))
+    object@Model <- NULL
+  
+  if ('RelRecFun' %in% slotNames(object))
+    object@RelRecFun <- NULL
+  
 
   val <- digest::digest2int(digest::digest(object))
 
   if (!is.null(seed))
     val <- val + seed
-
+ 
   set.seed(val)
 }
 
@@ -592,7 +631,7 @@ PopulatedObject <- function(object) {
   !is.null(attributes(object)$digest)
 }
 
-AddDimNames <- function(array, names=c('Sim', 'Age', 'Time Step'), TimeSteps=NULL) {
+AddDimNames <- function(array, names=c('Sim', 'Age', 'TimeStep'), TimeSteps=NULL) {
   
   if (inherits(array,'list'))
     array <- unlist(array)
@@ -603,7 +642,7 @@ AddDimNames <- function(array, names=c('Sim', 'Age', 'Time Step'), TimeSteps=NUL
   for (i in seq_along(names)) {
     if (names[i]=='Age') {
       l[[i]] <- 0:(d[i]-1)
-    } else if (names[i]=='Time Step' & !is.null(TimeSteps)) {
+    } else if (names[i]=='TimeStep' & !is.null(TimeSteps)) {
       l[[i]] <- TimeSteps[1:d[i]]
     } else {
       l[[i]] <- 1:d[i]

@@ -58,7 +58,7 @@ CalcFfromCatch <- function(CatchAtAge,
   ApicalF <- array(NA, dim=c(nSim, nTS, nFleet))
   l <- list()
   l$Sim <- 1:nSim
-  l$`Time Step` <- dimnames(CatchAtAge)$`Time Step`
+  l$TimeStep <- dimnames(CatchAtAge)$TimeStep
   l$Fleet <- dimnames(CatchAtAge)$`Fleet`
   
   dimnames(ApicalF) <- l

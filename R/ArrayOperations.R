@@ -44,7 +44,7 @@ RepeatArrayDim <- function(array, dim, n) {
 }
 
 ExpandTS <- function(Array, Dims, TimeSteps) {
-  ind <- which(names(dimnames(Array))=='Time Step')
+  ind <- which(names(dimnames(Array))=='TimeStep')
   if (length(ind)<1) 
     return(Array)
   
@@ -64,10 +64,10 @@ MatchArrayTimeSteps <- function(ArrayList) {
   array2 <- ArrayList[[2]]
   
   nm1 <- names(dimnames(array1))
-  ind <- which(nm1=='Time Step')
+  ind <- which(nm1=='TimeStep')
   
   nm2 <- names(dimnames(array2))
-  ind2 <- which(nm2=='Time Step')
+  ind2 <- which(nm2=='TimeStep')
   
   if (length(ind)<1)
     return(list(array1, array2))
@@ -228,30 +228,30 @@ ArraySubsetTimeStep <- function(object, TimeSteps=NULL) {
   if (is.null(TimeSteps))
     return(object)
   
-  TimeSteps <- TimeSteps |> as.numeric() |> round(2)
+  TimeSteps <- as.numeric(TimeSteps)
   
   DN <- dimnames(object)
   if (is.null(DN))
     return(object)
   
-  DN$`Time Step` <- as.numeric( DN$`Time Step`)
-  TSind <- which(names(DN) == 'Time Step')
+  DN$TimeStep <- as.numeric( DN$TimeStep)
+  TSind <- which(names(DN) == 'TimeStep')
   if (length(TSind)==0)
-    cli::cli_abort("`Time Step` dimension not found in this array", .internal=TRUE)
+    cli::cli_abort("`TimeStep` dimension not found in this array", .internal=TRUE)
   
-  if (any(TimeSteps > max(DN$`Time Step`))) {
+  if (any(TimeSteps > max(DN$TimeStep))) {
     
-    TSexist <- TimeSteps[TimeSteps %in% DN$`Time Step`]
-    TSimpute <- TimeSteps[!TimeSteps %in% DN$`Time Step`]
+    TSexist <- TimeSteps[TimeSteps %in% DN$TimeStep]
+    TSimpute <- TimeSteps[!TimeSteps %in% DN$TimeStep]
     if (length(TSimpute)) {
       matchTS <- rep(NA, length(TSimpute))
       for (i in seq_along(TSimpute)) {
-        matchTS[i] <- DN$`Time Step`[DN$`Time Step` < TSimpute[i]] |> max()
+        matchTS[i] <- DN$TimeStep[DN$TimeStep < TSimpute[i]] |> max()
       }
     }
     TimeStepsMod <- c(TSexist, matchTS) |> as.character()
     array <- abind::asub(object, TimeStepsMod, TSind, drop=FALSE)
-    dimnames(array)$`Time Step` <- TimeSteps
+    dimnames(array)$TimeStep <- TimeSteps
     return(array)
   } 
   abind::asub(object, (DN[[TSind]] %in% TimeSteps), TSind, drop=FALSE)
@@ -372,7 +372,7 @@ ExpandSims <- function(Array, nSim) {
 
 # fills all time step values
 ExpandTimeSteps <- function(Array, TimeSteps) {
-  ind <- which(names(dimnames(Array))=='Time Step')
+  ind <- which(names(dimnames(Array))=='TimeStep')
   if (length(ind)<1)
     return(Array)
   
@@ -386,7 +386,7 @@ ExpandTimeSteps <- function(Array, TimeSteps) {
   namematch <- match(ArrayTS, TimeSteps)
   adddim <- length(TimeSteps) - length(namematch)
   d[ind] <- length(TimeSteps)
-  dnames$`Time Step` <- TimeSteps
+  dnames$TimeStep <- TimeSteps
   OutArray <- array(NA, dim=d, dimnames=dnames)
   
 
@@ -395,9 +395,18 @@ ExpandTimeSteps <- function(Array, TimeSteps) {
     val <- abind::adrop(abind::asub(Array, i, ind, drop=FALSE), ind,  one.d.array=TRUE)
     TSexpanded <- replicate(length(TSind), val)
     dd <- dim(TSexpanded) |> length()
-    dimnames(TSexpanded)[[dd]] <- TimeSteps[TSind]
-    names(dimnames(TSexpanded))[dd] <- 'Time Step'
-    
+    if (dd==0) {
+      dnames <- dimnames(Array)
+      d1 <- dim(Array)
+      d1[ind] <- length(TimeSteps[TSind])
+      TSexpanded <- array(TSexpanded, dim=d1)
+      dnames[[ind]] <- TimeSteps[TSind]
+      dimnames(TSexpanded) <- dnames
+    } else {
+      dimnames(TSexpanded)[[dd]] <- TimeSteps[TSind]
+      names(dimnames(TSexpanded))[dd] <- 'TimeStep'
+    }
+  
     TSexpanded <- TSexpanded |>
       aperm(names(dimnames(Array)))
 

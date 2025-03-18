@@ -164,7 +164,7 @@ StartUp <- function(OM, messages='default', nSim=NULL) {
 # 
 # SimStockList <- function(OM, 
 #                          dims=c('nAge', 'nTS', 'nArea'),
-#                          names=c('Sim', 'Time Step', 'Area')) {
+#                          names=c('Sim', 'TimeStep', 'Area')) {
 #   out <- vector('list', OM@nSim)
 #   if (methods::is(OM@Stock, 'stock'))
 #     OM@Stock <- list(OM@Stock)

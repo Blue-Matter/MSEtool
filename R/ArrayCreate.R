@@ -39,7 +39,7 @@ ArraySimAgeTime <- function(OM, Period=c('Historical', 'Projection', 'All'),
                        length(meta$TimeSteps)),
         dimnames=list(Sim=1:meta$nSim,
                       Age=0:(nAges-1),
-                      `Time Step`=meta$TimeSteps)
+                      TimeStep=meta$TimeSteps)
   ) 
     
 }
@@ -68,7 +68,7 @@ ArraySimAgeTimeArea <- function(OM, Period=c('Historical', 'Projection', 'All'),
                        meta$nAreas),
         dimnames=list(Sim=1:meta$nSim,
                       Age=0:(nAges-1),
-                      `Time Step`=meta$TimeSteps,
+                      TimeStep=meta$TimeSteps,
                       Area=1:meta$nAreas)
   )
 }
@@ -97,7 +97,7 @@ ArraySimAgeTimeFleet <- function(OM, Period=c('Historical', 'Projection', 'All')
                     length(meta$FleetNames)),
         dimnames=list(Sim=1:meta$nSim,
                       Age=0:(nAges-1),
-                      `Time Step`=meta$TimeSteps,
+                      TimeStep=meta$TimeSteps,
                       Fleet=meta$FleetNames)
   )  
 }
@@ -128,7 +128,7 @@ ArraySimAgeTimeFleetArea <- function(OM, Period=c('Historical', 'Projection', 'A
                        meta$nAreas),
         dimnames=list(Sim=1:meta$nSim,
                       Age=0:(nAges-1),
-                      `Time Step`=meta$TimeSteps,
+                      TimeStep=meta$TimeSteps,
                       Fleet=meta$FleetNames,
                       Area=1:meta$nAreas)
   )  
@@ -161,7 +161,7 @@ ArraySimAgeTimeMPArea <- function(OM, Period=c('Historical', 'Projection', 'All'
                        meta$nAreas),
         dimnames=list(Sim=1:meta$nSim,
                       Age=0:(nAges-1),
-                      `Time Step`=meta$TimeSteps,
+                      TimeStep=meta$TimeSteps,
                       MP=MPs,
                       Area=1:meta$nAreas)
   )  
@@ -196,7 +196,7 @@ ArraySimAgeTimeMPFleetArea <- function(OM, Period=c('Historical', 'Projection', 
                        meta$nAreas),
         dimnames=list(Sim=1:meta$nSim,
                       Age=0:(nAges-1),
-                      `Time Step`=meta$TimeSteps,
+                      TimeStep=meta$TimeSteps,
                       MP=MPs,
                       Fleet=meta$FleetNames,
                       Area=1:meta$nAreas)
