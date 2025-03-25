@@ -646,14 +646,16 @@ Export_customMPs <- function(MPs) {
   globalMP <- NULL
   extra_package <- NULL
   for (mm in seq_along(cMPs)) {
-    nmspace <- utils::find(cMPs[mm])
-    if (nmspace==".GlobalEnv") {
-      globalMP <- c(globalMP, cMPs[mm])
-    } else {
-      extra_package <- c(extra_package, strsplit(nmspace, ":")[[1]][2])
+    nmspace <- utils::find(cMPs[mm]) # length can be greater than 1
+    for (j in seq_along(nmspace)) {
+      if (nmspace[j] == ".GlobalEnv") {
+        globalMP <- c(globalMP, cMPs[mm])
+      } else if (grepl("package:", nmspace[j])) {
+        extra_package <- c(extra_package, strsplit(nmspace[j], ":")[[1]][2])
+      }
     }
-    extra_package <- unique(extra_package)
   }
+  extra_package <- unique(extra_package)
   if (!is.null(globalMP)) {
     message("Exporting custom MPs in global environment:", paste0(globalMP, collapse = ", "))
     snowfall::sfExport(list=globalMP)

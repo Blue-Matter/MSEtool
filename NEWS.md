@@ -15,7 +15,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 - `multiMSE(extended = TRUE)` returns overall F by stock (and area) and `MMSE@PPD` includes StockPars, FleetPars, ReferencePoints in `Data@Misc`
 - `runMSE(extended = TRUE)` leaves StockPars, FleetPars, ReferencePoints in `Data@Misc` of `MSE@PPD` slot
 - add `addMMPs()` function
-
+- Internal function `Export_customMPs` allows for MPs defined in more than one namespace, e.g., functions initially defined in a package and modified in the global environment.
 # MSEtool 3.7.3
 
 ## Fixes
