@@ -188,7 +188,8 @@ TSperYear <- function(Units) {
 
 CalcTimeSteps <- function(nYear, pYear, CurrentYear, TimeUnits='year', Period=NULL) {
   
- 
+  TimeUnits <- tolower(TimeUnits)
+  
   FirstHistYear <- lubridate::ymd(paste0(CurrentYear-nYear+1, '-01-01'))
   LastHistYear <- lubridate::ymd(paste0(CurrentYear, '-12-31'))
   

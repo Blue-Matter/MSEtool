@@ -89,6 +89,10 @@ CalcPopDynamics_ <- function(OMListSim, TimeSteps) {
     .Call(`_MSEtool_CalcPopDynamics_`, OMListSim, TimeSteps)
 }
 
+CalcPopDynamics2_ <- function(OMListSim, TimeSteps) {
+    .Call(`_MSEtool_CalcPopDynamics2_`, OMListSim, TimeSteps)
+}
+
 calcVatAge <- function(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid) {
     .Call(`_MSEtool_calcVatAge`, len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid)
 }

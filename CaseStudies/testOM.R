@@ -5,8 +5,7 @@ la <- devtools::load_all
 
 la()
 
-testOM@nsim <- 5
-
+testOM@nsim <- 50
 
 OM <- Convert(testOM)
 
@@ -14,7 +13,6 @@ parallel=FALSE
 messages='default'
 nSim=NULL
 silent=FALSE
-
 
 # SimulateDEV
 

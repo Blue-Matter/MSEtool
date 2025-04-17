@@ -297,6 +297,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// CalcPopDynamics2_
+List CalcPopDynamics2_(List OMListSim, NumericVector TimeSteps);
+RcppExport SEXP _MSEtool_CalcPopDynamics2_(SEXP OMListSimSEXP, SEXP TimeStepsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type OMListSim(OMListSimSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type TimeSteps(TimeStepsSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcPopDynamics2_(OMListSim, TimeSteps));
+    return rcpp_result_gen;
+END_RCPP
+}
 // calcVatAge
 NumericMatrix calcVatAge(NumericMatrix len_at_age, NumericMatrix len_aa_sd, NumericMatrix sel_at_length, int n_age, int nyears, int proyears, NumericVector CAL_binsmid);
 RcppExport SEXP _MSEtool_calcVatAge(SEXP len_at_ageSEXP, SEXP len_aa_sdSEXP, SEXP sel_at_lengthSEXP, SEXP n_ageSEXP, SEXP nyearsSEXP, SEXP proyearsSEXP, SEXP CAL_binsmidSEXP) {

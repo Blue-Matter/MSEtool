@@ -25,8 +25,6 @@ SimulateDEV <- function(OM=NULL,
   
   OMList <- MakeOMList(OM, Unfished)
   
-  # OMList$`2`$Effort$Effort$`Day octopus`[,1] |> plot()
-  
   # ---- Calculate Dynamic Unfished ----
   # TODO 
   # update Unfished: create array sizes on initization
@@ -63,25 +61,42 @@ SimulateDEV <- function(OM=NULL,
   OMList <- OptimCatchability(OMList)
 
   # ---- Speed Tests ------
-  # TimeStepsHist <- TimeSteps(OM, "Historical")
-  # nits <- 1
-  # sim <- 2
-  # x <- OMList[[sim]]
-  # tictoc::tic()
-  # for (i in 1:nits)
-  #   t1 <- CalcPopDynamics_(x, TimeSteps = TimeStepsHist)
-  # tictoc::toc()
-  # 
-  # tictoc::tic()
-  # for (i in 1:nits)
-  #   t1 <- CalcPopDynamics2_(x, TimeSteps = TimeStepsHist)  
-  # tictoc::toc()
-  # 
 
+  HistTimeSteps <- TimeSteps(OM, 'Historical')
   
+  la()
+
+  nits <- 50
+  OMListSim <- OMList[[1]]
+
+  tictoc::tic()
+  for (i in 1:nits) {
+    TEMP <- CalcPopDynamics_(OMListSim, HistTimeSteps)
+  }
+  tictoc::toc()
+  
+  tictoc::tic()
+  for (i in 1:nits) {
+    TEMP <- CalcPopDynamics2_(OMListSim, HistTimeSteps)
+  }
+  tictoc::toc()
+  
+  
+  TEMP <- CalcPopDynamics_(OMListSim, HistTimeSteps)
+  
+  TEMP2 <- CalcPopDynamics2_(OMListSim, HistTimeSteps)
+  
+ 
+  TEMP$VBiomassArea$Albacore[1,,]
+  TEMP2$VBiomassArea$Albacore[1,,]
+  
+  # check biomass is same for both 
+  
+
   # ---- Historical Population Dynamics ----
+  HistTimeSteps <- TimeSteps(OM, 'Historical')
   OMListDone <- purrr::map(OMList, \(x) 
-                       CalcPopDynamics(x),
+                           CalcPopDynamics_(x, HistTimeSteps),
                        .progress = list(
                          type = "iterator", 
                          format = "Simulating Historical Fishery {cli::pb_bar} {cli::pb_percent}",

@@ -25,6 +25,7 @@ extern SEXP _MSEtool_CalcDensity_(SEXP, SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_CalcFArea_(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_CalcFfromCatch_(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_CalcNumberNext_(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+extern SEXP _MSEtool_CalcPopDynamics2_(SEXP, SEXP);
 extern SEXP _MSEtool_CalcPopDynamics_(SEXP, SEXP);
 extern SEXP _MSEtool_CalcRecruitment_(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP _MSEtool_CalcSpawnProduction_(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
@@ -57,6 +58,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_CalcFArea_",           (DL_FUNC) &_MSEtool_CalcFArea_,            9},
     {"_MSEtool_CalcFfromCatch_",      (DL_FUNC) &_MSEtool_CalcFfromCatch_,      11},
     {"_MSEtool_CalcNumberNext_",      (DL_FUNC) &_MSEtool_CalcNumberNext_,       6},
+    {"_MSEtool_CalcPopDynamics2_",    (DL_FUNC) &_MSEtool_CalcPopDynamics2_,     2},
     {"_MSEtool_CalcPopDynamics_",     (DL_FUNC) &_MSEtool_CalcPopDynamics_,      2},
     {"_MSEtool_CalcRecruitment_",     (DL_FUNC) &_MSEtool_CalcRecruitment_,      7},
     {"_MSEtool_CalcSpawnProduction_", (DL_FUNC) &_MSEtool_CalcSpawnProduction_, 11},
