@@ -45,6 +45,7 @@ MakeOMList <- function(OM, Unfished, Period="All") {
   cli::cli_progress_update()
   
   OMList <- MakePopulationList(OM, Period)
+  
   cli::cli_progress_update()
   
   OMList <- c(OMList, MakeFleetList(OM, Period))
@@ -142,10 +143,12 @@ MakePopulationList <- function(OM, Period='All') {
   
   List <- list()
   
-  List$Ages <- purrr::map(OM@Stock, methods::slot, 'Ages')
+
+  List$Ages <- Ages
   List$Length <- MakeStockSlotList(OM, 'Length', Period)
   List$Weight <- MakeStockSlotList(OM, 'Weight', Period)
   List$NaturalMortality <- MakeStockSlotList(OM, 'NaturalMortality', Period)
+  
   List$Maturity <- MakeStockSlotList(OM, 'Maturity', Period)
   List$Fecundity <- MakeStockSlotList(OM, 'Fecundity', Period)
   List$SRR <- MakeSRRList(OM, Period)

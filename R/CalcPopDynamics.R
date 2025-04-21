@@ -60,6 +60,7 @@ CalcPopDynamics <- function(OMListSim,
                             AddDimNames=TRUE) {
 
   
+  stop()
   Period <- match.arg(Period)
   
   OMListSim <- rlang::duplicate(OMListSim)

@@ -66,7 +66,7 @@ SimulateDEV <- function(OM=NULL,
   
   la()
 
-  nits <- 50
+  nits <- 100
   OMListSim <- OMList[[1]]
 
   tictoc::tic()
@@ -75,20 +75,43 @@ SimulateDEV <- function(OM=NULL,
   }
   tictoc::toc()
   
+  
   tictoc::tic()
   for (i in 1:nits) {
     TEMP <- CalcPopDynamics2_(OMListSim, HistTimeSteps)
   }
   tictoc::toc()
+
+  # Removals and Retained Number and Biomass by Area
+  # 0.77
+  # 0.58 commented out 
   
   
   TEMP <- CalcPopDynamics_(OMListSim, HistTimeSteps)
-  
   TEMP2 <- CalcPopDynamics2_(OMListSim, HistTimeSteps)
   
+  ts <- 50
+  
+  sum(TEMP$RemovalNumberAtAge$Albacore[,ts,])
+  sum(TEMP2$RemovalNumberAtAge$Albacore[,ts,])
+  
+  
+  TEMP$NumberAtAgeArea$Albacore[,ts,] 
+  TEMP2$NumberAtAgeArea$Albacore[,ts,]  
+  
+  
+  TEMP$FDeadAtAge$Albacore[,ts,]
+  TEMP2$FDeadAtAge$Albacore[,ts,]
+  
+  
+  
+  
+  
+  
+  TEMP$RemovalAtAgeArea$Albacore[[ts]][,1,]
+  TEMP2$RemovalAtAgeArea$Albacore[[ts]][,1,]
+  
  
-  TEMP$VBiomassArea$Albacore[1,,]
-  TEMP2$VBiomassArea$Albacore[1,,]
   
   # check biomass is same for both 
   

@@ -418,14 +418,6 @@ List CalcFfromCatch_(List FDeadAtAgeList,
       FRetainAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(0, nFleet-1)) = 
         FRetainAtAgeArea(arma::span(0, nAge-1), arma::span(0, nFleet-1), arma::span(0,0)); 
       
-      // NumericVector FDeadAtAgeNamed = as<NumericVector>(Rcpp::wrap(FDeadAtAge));
-      // FDeadAtAgeNamed.attr("dim") = dims;
-      // FDeadAtAgeNamed.attr("dimnames") = dimnames;
-      // 
-      // NumericVector FRetainAtAgeNamed = as<NumericVector>(Rcpp::wrap(FRetainAtAge));
-      // FRetainAtAgeNamed.attr("dim") = dims;
-      // FRetainAtAgeNamed.attr("dimnames") = dimnames;
-      
       FDeadAtAgeList[st] = FDeadAtAge;
       FRetainAtAgeList[st] = FRetainAtAge;
 
@@ -549,6 +541,7 @@ List CalcSpawnProduction_(List SProductionList,
     SBiomass(TSindex) = Sbiomass;
     SProductionList[st] = SProduction;
     SBiomassList[st] = SBiomass;
+    
   }
   
   // apply SPfrom
@@ -613,7 +606,11 @@ NumericVector CalcRecruitment_(List SProductionList,
 
     RObject RecruitsEQ = doCall(SRRModel, Arglist);
     Recruits[st] = as<double>(RecruitsEQ) * RecDevs[TSindex];
+    
+
+    
   }
+
 
   return(Recruits);
 }
@@ -684,6 +681,7 @@ List CalcNumberNext_(List NumberAtAgeAreaList,
       arma::vec nnow = NumberAtAgeArea(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(area, area));
       Nnow.col(area) = nnow;
     }
+    
     for (int area=0; area<nArea; area++) {  
       Nnext(0, area) = 5e-16;
       for (int age=0; age<(nAge-1); age++) {
