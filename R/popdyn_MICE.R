@@ -119,6 +119,8 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
       
       N_area <- Nx[p,,y-1,]
       M_age <- M_ageArrayx[p,,y-1]
+      
+      
       if (length(par)==1) {
         opt_spat_targ <- optimize(solve_spat_targ, 
                                c(-3,3),
@@ -130,7 +132,8 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
                                N_area=N_area, M_age=M_age,
                                VBcur_a=VBcur_a,
                                f_zero_fleet=f_zero_fleet,
-                               Asizex=Asizex)
+                               Asizex=Asizex,
+                               MPAthisyr)
         
         par <- opt_spat_targ$minimum
         if (length(f_zero_fleet)>0) {
@@ -153,7 +156,8 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
                                N_area=N_area, M_age=M_age,
                                VBcur_a=VBcur_a,
                                f_zero_fleet=f_zero_fleet,
-                               Asizex=Asizex)
+                               Asizex=Asizex,
+                               MPAthisyr)
         
         par <- opt_spat_targ$par
         if (length(f_zero_fleet)>0) {
