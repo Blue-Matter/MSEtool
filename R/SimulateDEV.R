@@ -81,6 +81,9 @@ SimulateDEV <- function(OM=NULL,
     TEMP <- CalcPopDynamics2_(OMListSim, HistTimeSteps)
   }
   tictoc::toc()
+  # 0.1
+  
+  TEMP$VBiomassArea$Albacore[1,1,]
 
   # Removals and Retained Number and Biomass by Area
   # 0.77

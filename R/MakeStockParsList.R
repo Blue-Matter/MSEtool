@@ -144,7 +144,7 @@ MakePopulationList <- function(OM, Period='All') {
   List <- list()
   
 
-  List$Ages <- Ages
+  List$Ages <-  purrr::map(OM@Stock, methods::slot, 'Ages')
   List$Length <- MakeStockSlotList(OM, 'Length', Period)
   List$Weight <- MakeStockSlotList(OM, 'Weight', Period)
   List$NaturalMortality <- MakeStockSlotList(OM, 'NaturalMortality', Period)

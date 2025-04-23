@@ -27,7 +27,8 @@ solve_spat_targ <- function(par, pop, qsx, qfracx, Ecur, n_age, nareas, Fdist,
   
   Fdist[is.na(Fdist)] <- 0 # This is an NA catch for hermaphroditism
   F_area[ind[,c(2:4)]] <-  qsx[ind[,1]]  * qfracx[ind[,1:2]] * Ecur[ind[,1:2]] * 
-    Fdist[ind[,c(2:4)]] * Vcur[ind[,1:3]] / Asizex[ind[, c(1, 4)]]
+    Fdist[ind[,c(2:4)]] * Vcur[ind[,1:3]] / Asizex[ind[, c(1, 4)]] *
+    MPAthisyr
   
   M_area <- replicate(nareas, M_age) 
   Z_area[ind[,c(2:4)]] <- F_area[ind[,c(2:4)]] + M_area[ind[,3:4]]
