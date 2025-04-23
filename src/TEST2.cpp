@@ -21,42 +21,25 @@ arma::mat CalcVBiomass_(arma::mat NumberAtAgeAreaThisTS, // nAge, nArea
   return(VBiomassAreaThisTS);
 }
 
-List CalcFArea_(List FDeadAtAgeAreaStock,
-                List FRetainAtAgeAreaStock, // nAge, nFleet, nArea
-                arma::vec RelativeSize, // nArea
-                arma::mat Catchability, // nFleet
-                arma::mat DiscardMortAtAgeThisTS, // nAge, nFleet
-                arma::cube EffortArea,
-                arma::mat SelectivityAtAgeThisTS,
-                arma::mat RetentionAtAgeThisTS,
-                int TSindex,
-                int nFleet,
-                int nArea,
-                int nAge) {
-  
-  arma::cube FDeadAtAgeAreaThisTS = FDeadAtAgeAreaStock[TSindex]; // nAge, nFleet, nArea
-  arma::cube FRetainAtAgeAreaThisTS = FRetainAtAgeAreaStock[TSindex]; // nAge, nFleet, nArea
+arma::mat DistEffort_(arma::mat EffortAreaThisTS, // nFleet, nArea
+                      arma::mat VBiomassAreaThisTS, // nFleet, nArea
+                      arma::vec EffortThisTS, // nFleet
+                      int nArea,
+                      int nFleet) {
   
   for (int fl=0; fl<nFleet; fl++) {
-    for (int area=0; area<nArea; area++) {
-      double catchabilityArea = arma::as_scalar(Catchability.row(TSindex).col(fl)/RelativeSize(area));
-      double effortarea = arma::as_scalar(EffortArea.subcube(TSindex, fl, area, TSindex, fl, area));
-      arma::vec FInteract = effortarea * catchabilityArea * SelectivityAtAgeThisTS.col(fl);
-      arma::vec FRetain = FInteract % RetentionAtAgeThisTS.col(fl);
-      arma::vec Discard = FInteract - FRetain;
-      arma::vec DeadDiscard = Discard % DiscardMortAtAgeThisTS.col(fl);
-      FRetainAtAgeAreaThisTS.subcube(0, fl, area, nAge-1, fl, area) = FRetain;
-      FDeadAtAgeAreaThisTS.subcube(0, fl, area, nAge-1,fl, area) = FRetain + DeadDiscard;
+    arma::rowvec relvbiomassarea(nArea, arma::fill::zeros);
+    double totalVB = arma::accu(VBiomassAreaThisTS.row(fl));
+    if (totalVB > 0) {
+      relvbiomassarea = VBiomassAreaThisTS.row(fl)/totalVB;
     }
+    EffortAreaThisTS.row(fl) = arma::as_scalar(EffortThisTS(fl)) * relvbiomassarea;
   }
-  
-  FDeadAtAgeAreaStock[TSindex] = FDeadAtAgeAreaThisTS;
-  FRetainAtAgeAreaStock[TSindex] = FRetainAtAgeAreaThisTS;
-  
-  List L = List::create(Named("FDeadAtAgeAreaStock")=FDeadAtAgeAreaStock,
-                        Named("FRetainAtAgeAreaStock") = FRetainAtAgeAreaStock);
-  return(L);
+  return(EffortAreaThisTS);
 }
+
+
+
 
 
 
@@ -251,98 +234,70 @@ List CalcPopDynamics2_(Rcpp::List OMListSim,
       // Distribute Effort over Areas
       // (currently proportional to VB)
       EffortArea.row(TSindex) = DistEffort_(EffortArea.row(TSindex),
-                     VBiomassArea.row(TSindex))
-        
-        
-      arma::mat DistEffort_(arma::mat EffortAreaThisTS,
-                            arma::mat VBiomassAreaThisTS,
-                            arma::vec EffortThisTS,
-                            int nArea,
-                            int nFleet
-                             ) {
-        
-        
-        arma::rowvec relvbiomassarea(nArea, arma::fill::zeros);
-        double totalVB = arma::accu(VBiomassAreaThisTS.row(fl));
-        if (totalVB > 0) {
-          relvbiomassarea = VBiomassAreaThisTS.row(fl)/totalVB;
-        }
-        
-        
-        for (int fl=0; fl<nFleet; fl++) {
-          EffortArea.subcube(TSindex, fl, 0, TSindex, fl, nArea-1) = arma::as_scalar(Effort.row(TSindex).col(fl)) * relvbiomassarea;
-        }
-        
-        
-        return(EffortAreaThisTS)
-        
-      }
-   
-      // for (int fl=0; fl<nFleet; fl++) {
-      //   for (int area=0; area<nArea; area++) {
-      //     VBiomassAreaThisTS.row(fl).col(area) = arma::accu(NumberAtAgeAreaThisTS.col(area) % 
-      //       FleetWeightAtAgeThisTS.col(fl) % 
-      //       SelectivityAtAgeThisTS.col(fl)) *
-      //       ClosureAreaThisTS.row(fl).col(area);
-      //   }
-      //   
-
-      //   
-      // }
-      // VBiomassArea.row(TSindex) = VBiomassAreaThisTS;
-      // 
-      
-      
-      arma::mat FleetWeightAtAgeThisTS = FleetWeightAtAge.col(TSindex); // nAge, nFleet
+                                            VBiomassArea.row(TSindex),
+                                            Effort.row(TSindex),
+                                            nArea,
+                                            nFleet);
  
-      arma::mat SelectivityAtAgeThisTS = SelectivityAtAge.col(TSindex); // nAge, nFleet
-      
-      arma::mat RetentionAtAgeThisTS = RetentionAtAge.col(TSindex); // nAge, nFleet
-     
-      arma::mat DiscardMortAtAgeThisTS = DiscardMortalityAtAge.col(TSindex);
-     
+     // F within each Area
+     List FDeadAtAgeAreaStock = FDeadAtAgeAreaList[st];
+     List FRetainAtAgeAreaStock = FRetainAtAgeAreaStock[st];
 
-
-
-      
-      arma::mat VBiomassAreaThisTS = VBiomassArea.row(TSindex); // nFleet, nArea
-      
-      arma::mat NumberAtAgeAreaThisTS = NumberAtAgeArea.col(TSindex); // nAge, nArea
-      
- 
-      arma::mat ClosureAreaThisTS = ClosureArea.row(TSindex); // nFleet, nArea // 1 for Open, 0 for Closed
-
-      
-      
+     List FArea = CalcFArea_(FDeadAtAgeAreaStock,
+                             FRetainAtAgeAreaStock,
+                             RelativeSizeList[st],
+                             CatchabilityList[st],
+                             DiscardMortalityAtAge.col(TSindex),
+                             EffortAreaList[st],
+                             SelectivityAtAge.col(TSindex),
+                             RetentionAtAge.col(TSindex),
+                             TSindex,
+                             nFleet,
+                             nArea,
+                             nAge);
 
      
-
-
-     
-      
-  
-
-
-     // // F within each Area
-     // List FDeadAtAgeAreaStock = FDeadAtAgeAreaList[st];
-     // List FRetainAtAgeAreaStock = FRetainAtAgeAreaStock[st];
-     // 
-     // List FArea = CalcFArea_(FDeadAtAgeAreaStock, 
-     //                         FRetainAtAgeAreaStock,
-     //                         RelativeSizeList[st],
-     //                         CatchabilityList[st],
-     //                         DiscardMortalityAtAge.col(TSindex),
-     //                         EffortAreaList[st],
-     //                         SelectivityAtAgeThisTS,
-     //                         RetentionAtAgeThisTS,
-     //                         TSindex,
-     //                         nFleet,
-     //                         nArea,
-     //                         nAge);
-     // 
-     // 
      // FDeadAtAgeAreaStock = FArea["FDeadAtAgeAreaStock"];
      // FRetainAtAgeAreaStock = FArea["FDeadAtAgeAreaStock"];
+  
+  
+  List CalcFArea_(List FDeadAtAgeAreaStock,
+                  List FRetainAtAgeAreaStock, // nAge, nFleet, nArea
+                  arma::vec RelativeSize, // nArea
+                  arma::mat Catchability, // nFleet
+                  arma::mat DiscardMortAtAgeThisTS, // nAge, nFleet
+                  arma::cube EffortArea,
+                  arma::mat SelectivityAtAgeThisTS,
+                  arma::mat RetentionAtAgeThisTS,
+                  int TSindex,
+                  int nFleet,
+                  int nArea,
+                  int nAge) {
+    
+    arma::cube FDeadAtAgeAreaThisTS = FDeadAtAgeAreaStock[TSindex]; // nAge, nFleet, nArea
+    arma::cube FRetainAtAgeAreaThisTS = FRetainAtAgeAreaStock[TSindex]; // nAge, nFleet, nArea
+    
+    for (int fl=0; fl<nFleet; fl++) {
+      for (int area=0; area<nArea; area++) {
+        double catchabilityArea = arma::as_scalar(Catchability.row(TSindex).col(fl)/RelativeSize(area));
+        double effortarea = arma::as_scalar(EffortArea.subcube(TSindex, fl, area, TSindex, fl, area));
+        arma::vec FInteract = effortarea * catchabilityArea * SelectivityAtAgeThisTS.col(fl);
+        arma::vec FRetain = FInteract % RetentionAtAgeThisTS.col(fl);
+        arma::vec Discard = FInteract - FRetain;
+        arma::vec DeadDiscard = Discard % DiscardMortAtAgeThisTS.col(fl);
+        FRetainAtAgeAreaThisTS.subcube(0, fl, area, nAge-1, fl, area) = FRetain;
+        FDeadAtAgeAreaThisTS.subcube(0, fl, area, nAge-1,fl, area) = FRetain + DeadDiscard;
+      }
+    }
+    
+    FDeadAtAgeAreaStock[TSindex] = FDeadAtAgeAreaThisTS;
+    FRetainAtAgeAreaStock[TSindex] = FRetainAtAgeAreaThisTS;
+    
+    List L = List::create(Named("FDeadAtAgeAreaStock")=FDeadAtAgeAreaStock,
+                          Named("FRetainAtAgeAreaStock") = FRetainAtAgeAreaStock);
+    return(L);
+  }
+  
   
      // arma::vec RelativeSize = RelativeSizeList[st]; // nArea
      // arma::mat Catchability = CatchabilityList[st]; // nTS, nFleet

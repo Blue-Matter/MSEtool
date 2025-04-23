@@ -572,7 +572,7 @@ if(!is.null(control$unfished)) { # generate unfished historical simulations
 FleetPars$qs <- qs
 
 tictoc::tic()
-for (i in 1:10) {
+for (i in 1:100) {
   TEMP <-
     popdynCPP(nareas, StockPars$maxage,
               Ncurr=StockPars$N[x,,1,],

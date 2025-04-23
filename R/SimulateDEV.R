@@ -84,6 +84,8 @@ SimulateDEV <- function(OM=NULL,
   # 0.1
   
   TEMP$VBiomassArea$Albacore[1,1,]
+  TEMP$Effort$Effort$Albacore[2,]
+  TEMP$EffortArea$Albacore[2,1,]
 
   # Removals and Retained Number and Biomass by Area
   # 0.77
