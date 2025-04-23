@@ -133,7 +133,7 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
                                VBcur_a=VBcur_a,
                                f_zero_fleet=f_zero_fleet,
                                Asizex=Asizex,
-                               MPAthisyr)
+                               MPAthisyr=MPAthisyr)
         
         par <- opt_spat_targ$minimum
         if (length(f_zero_fleet)>0) {
@@ -157,7 +157,7 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
                                VBcur_a=VBcur_a,
                                f_zero_fleet=f_zero_fleet,
                                Asizex=Asizex,
-                               MPAthisyr)
+                               MPAthisyr=MPAthisyr)
         
         par <- opt_spat_targ$par
         if (length(f_zero_fleet)>0) {
