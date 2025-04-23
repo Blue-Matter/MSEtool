@@ -81,7 +81,13 @@ SimulateDEV <- function(OM=NULL,
     TEMP <- CalcPopDynamics2_(OMListSim, HistTimeSteps)
   }
   tictoc::toc()
-  # 0.1
+  
+  # Calculate catches and removals after - not need for depletion optimization
+  # TODO // Calculate F over all areas in TEST2.cpp = wrap in it's own function
+  # 0.12
+  0.17/0.12
+  
+  OMListSim$FDeadAtAgeArea$Albacore[[1]] |> dim()
   
   TEMP$VBiomassArea$Albacore[1,1,]
   TEMP$Effort$Effort$Albacore[2,]

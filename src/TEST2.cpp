@@ -39,7 +39,35 @@ arma::mat DistEffort_(arma::mat EffortAreaThisTS, // nFleet, nArea
 }
 
 
-
+List CalcFArea_(arma::cube FDeadAtAgeAreaThisTS, // nAge, nFleet, nArea
+                arma::cube FRetainAtAgeAreaThisTS, // nAge, nFleet, nArea
+                arma::vec RelativeSize, // nArea
+                arma::vec CatchabilityThisTS, // nFleet
+                arma::mat DiscardMortAtAgeThisTS, // nAge, nFleet
+                arma::mat EffortAreaThisTS, // nFleet, nArea
+                arma::mat SelectivityAtAgeThisTS,
+                arma::mat RetentionAtAgeThisTS,
+                int nFleet,
+                int nArea,
+                int nAge) {
+  
+  for (int fl=0; fl<nFleet; fl++) {
+    for (int area=0; area<nArea; area++) {
+      double catchabilityArea = arma::as_scalar(CatchabilityThisTS(fl)/RelativeSize(area));
+      double effortarea = arma::as_scalar(EffortAreaThisTS.row(fl).col(area));
+      arma::vec FInteract = effortarea * catchabilityArea * SelectivityAtAgeThisTS.col(fl);
+      arma::vec FRetain = FInteract % RetentionAtAgeThisTS.col(fl);
+      arma::vec Discard = FInteract - FRetain;
+      arma::vec DeadDiscard = Discard % DiscardMortAtAgeThisTS.col(fl);
+      FRetainAtAgeAreaThisTS.subcube(0, fl, area, nAge-1, fl, area) = FRetain;
+      FDeadAtAgeAreaThisTS.subcube(0, fl, area, nAge-1,fl, area) = FRetain + DeadDiscard;
+    }
+  }
+  
+  List L = List::create(Named("FDeadAtAgeAreaThisTS")=FDeadAtAgeAreaThisTS,
+                        Named("FRetainAtAgeAreaThisTS") = FRetainAtAgeAreaThisTS);
+  return(L);
+}
 
 
 
@@ -208,12 +236,12 @@ List CalcPopDynamics2_(Rcpp::List OMListSim,
       arma::cube SelectivityAtAge = SelectivityAtAgeList[st]; // nAge, nTS, nFleet
       arma::cube RetentionAtAge = RetentionAtAgeList[st]; // nAge, nTS, nFleet
       arma::cube DiscardMortalityAtAge = DiscardMortalityAtAgeList[st]; // nAge, nTS, nFleet
-      
       arma::cube EffortArea = EffortAreaList[st]; // nTS, nFleet, nArea
-      arma::mat Effort = EffortList[st]; // nTS, nFleet
       
+      arma::mat Effort = EffortList[st]; // nTS, nFleet
+      arma::mat Catchability = CatchabilityList[st]; // nTS, nFleet
+      arma::mat NaturalMortalityAtAge = NaturalMortalityAtAgeList[st]; // nAge, nTS
   
-
       int nAge = NumberAtAgeArea.n_rows;
       int nArea = NumberAtAgeArea.n_slices;
       int nFleet = VBiomassArea.n_cols;
@@ -241,75 +269,29 @@ List CalcPopDynamics2_(Rcpp::List OMListSim,
  
      // F within each Area
      List FDeadAtAgeAreaStock = FDeadAtAgeAreaList[st];
-     List FRetainAtAgeAreaStock = FRetainAtAgeAreaStock[st];
+     List FRetainAtAgeAreaStock = FRetainAtAgeAreaList[st];
+     
+     
 
-     List FArea = CalcFArea_(FDeadAtAgeAreaStock,
-                             FRetainAtAgeAreaStock,
-                             RelativeSizeList[st],
-                             CatchabilityList[st],
-                             DiscardMortalityAtAge.col(TSindex),
-                             EffortAreaList[st],
-                             SelectivityAtAge.col(TSindex),
-                             RetentionAtAge.col(TSindex),
-                             TSindex,
+     List FArea = CalcFArea_(FDeadAtAgeAreaStock[TSindex], // nAge, nFleet, nArea
+                             FRetainAtAgeAreaStock[TSindex], // nAge, nFleet, nArea
+                             RelativeSizeList[st], // nArea
+                             Catchability.row(TSindex), // nFleet
+                             DiscardMortalityAtAge.col(TSindex), // nAge, nFleet
+                             EffortArea.row(TSindex), // nFleet, nArea
+                             SelectivityAtAge.col(TSindex), // nAge, nFleet
+                             RetentionAtAge.col(TSindex), // nAge, nFleet
                              nFleet,
                              nArea,
                              nAge);
 
+     FDeadAtAgeAreaStock[TSindex] = FArea["FDeadAtAgeAreaThisTS"];
+     FRetainAtAgeAreaStock[TSindex] = FArea["FRetainAtAgeAreaThisTS"];
      
-     // FDeadAtAgeAreaStock = FArea["FDeadAtAgeAreaStock"];
-     // FRetainAtAgeAreaStock = FArea["FDeadAtAgeAreaStock"];
-  
-  
-  List CalcFArea_(List FDeadAtAgeAreaStock,
-                  List FRetainAtAgeAreaStock, // nAge, nFleet, nArea
-                  arma::vec RelativeSize, // nArea
-                  arma::mat Catchability, // nFleet
-                  arma::mat DiscardMortAtAgeThisTS, // nAge, nFleet
-                  arma::cube EffortArea,
-                  arma::mat SelectivityAtAgeThisTS,
-                  arma::mat RetentionAtAgeThisTS,
-                  int TSindex,
-                  int nFleet,
-                  int nArea,
-                  int nAge) {
-    
-    arma::cube FDeadAtAgeAreaThisTS = FDeadAtAgeAreaStock[TSindex]; // nAge, nFleet, nArea
-    arma::cube FRetainAtAgeAreaThisTS = FRetainAtAgeAreaStock[TSindex]; // nAge, nFleet, nArea
-    
-    for (int fl=0; fl<nFleet; fl++) {
-      for (int area=0; area<nArea; area++) {
-        double catchabilityArea = arma::as_scalar(Catchability.row(TSindex).col(fl)/RelativeSize(area));
-        double effortarea = arma::as_scalar(EffortArea.subcube(TSindex, fl, area, TSindex, fl, area));
-        arma::vec FInteract = effortarea * catchabilityArea * SelectivityAtAgeThisTS.col(fl);
-        arma::vec FRetain = FInteract % RetentionAtAgeThisTS.col(fl);
-        arma::vec Discard = FInteract - FRetain;
-        arma::vec DeadDiscard = Discard % DiscardMortAtAgeThisTS.col(fl);
-        FRetainAtAgeAreaThisTS.subcube(0, fl, area, nAge-1, fl, area) = FRetain;
-        FDeadAtAgeAreaThisTS.subcube(0, fl, area, nAge-1,fl, area) = FRetain + DeadDiscard;
-      }
-    }
-    
-    FDeadAtAgeAreaStock[TSindex] = FDeadAtAgeAreaThisTS;
-    FRetainAtAgeAreaStock[TSindex] = FRetainAtAgeAreaThisTS;
-    
-    List L = List::create(Named("FDeadAtAgeAreaStock")=FDeadAtAgeAreaStock,
-                          Named("FRetainAtAgeAreaStock") = FRetainAtAgeAreaStock);
-    return(L);
-  }
-  
-  
-     // arma::vec RelativeSize = RelativeSizeList[st]; // nArea
-     // arma::mat Catchability = CatchabilityList[st]; // nTS, nFleet
-     // arma::mat DiscardMortAtAgeThisTS = DiscardMortalityAtAge.col(TSindex);
      
-    
-     
-
      // Removals and Retained Number and Biomass by Area
-     // 
-     // Rcpp::List RemovalAtAgeAreaStock = RemovalAtAgeAreaList[st];
-     // Rcpp::List RetainAtAgeAreaStock = RetainAtAgeAreaList[st];
+     // List RemovalAtAgeAreaStock = RemovalAtAgeAreaList[st];
+     // List RetainAtAgeAreaStock = RetainAtAgeAreaList[st];
      // arma::cube RemovalAtAgeAreaThisTS = RemovalAtAgeAreaStock[TSindex]; // nAge, nFleet, nArea
      // arma::cube RetainAtAgeAreaThisTS = RetainAtAgeAreaStock[TSindex]; // nAge, nFleet, nArea
      // 
@@ -322,8 +304,9 @@ List CalcPopDynamics2_(Rcpp::List OMListSim,
      // 
      // arma::cube FDeadAtAgeAreaThisTS = FDeadAtAgeAreaStock[TSindex]; // nAge, nFleet, nArea
      // arma::cube FRetainAtAgeAreaThisTS = FRetainAtAgeAreaStock[TSindex]; // nAge, nFleet, nArea
-     // 
+     // arma::mat NumberAtAgeAreaThisTS = NumberAtAgeArea.col(TSindex);
      // arma::mat Zmortality(nAge, nArea, arma::fill::zeros); // nAge, nArea;
+     // 
      // for (int area=0; area<nArea; area++) {
      //   Zmortality.col(area) = arma::sum(FDeadAtAgeAreaThisTS.slice(area),1) + NaturalMortalityAtAge.col(TSindex);
      //   arma::mat ndead = NumberAtAgeAreaThisTS.col(area) % (1-exp(-Zmortality.col(area))); // nAge, nFleet
@@ -331,124 +314,124 @@ List CalcPopDynamics2_(Rcpp::List OMListSim,
      //   RetainAtAgeAreaThisTS.slice(area) = FRetainAtAgeAreaThisTS.slice(area)/Zmortality.col(area) % ndead;
      // }
      
-
+    
      // sum catches over areas
      // arma::mat RemovalAgeFleet = arma::sum(RemovalAtAgeAreaThisTS, 2);
      // arma::mat RetainAgeFleet = arma::sum(RetainAtAgeAreaThisTS, 2);
-     // RemovalNumberAtAge.col(TSindex) = RemovalAgeFleet;
-     // RetainNumberAtAge.col(TSindex) = RetainAgeFleet;
-     // RemovalBiomassAtAge.col(TSindex) =  RemovalAgeFleet % FleetWeightAtAgeThisTS;
-     // RetainBiomassAtAge.col(TSindex) =  RetainAgeFleet % FleetWeightAtAgeThisTS;
+     // // RemovalNumberAtAge.col(TSindex) = RemovalAgeFleet;
+     // // RetainNumberAtAge.col(TSindex) = RetainAgeFleet;
+     // // RemovalBiomassAtAge.col(TSindex) =  RemovalAgeFleet % FleetWeightAtAge.col(TSindex);
+     // // RetainBiomassAtAge.col(TSindex) =  RetainAgeFleet % FleetWeightAtAge.col(TSindex);
      // 
      // RemovalAtAgeAreaStock[TSindex] = RemovalAtAgeAreaThisTS;
      // RetainAtAgeAreaStock[TSindex] = RetainAtAgeAreaThisTS;
-     // 
+
      
      // Calculate F over all areas
-     // arma::cube FDeadAtAge = FDeadAtAgeList[st]; // nAge, nTS, nFleet
-     // arma::cube FRetainAtAge = FRetainAtAgeList[st]; // nAge, nTS, nFleet
+     arma::cube FDeadAtAge = FDeadAtAgeList[st]; // nAge, nTS, nFleet
+     arma::cube FRetainAtAge = FRetainAtAgeList[st]; // nAge, nTS, nFleet
      
-     // if (nArea<2) {
-     //   // no spatial structure
-     //   arma::mat temp = sum(FDeadAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(0, nFleet-1), arma::span(0,0)),2);
-     //   FDeadAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(0, nFleet-1)) = temp;
-     //   
-     //   temp = sum(FRetainAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(0, nFleet-1), arma::span(0,0)),2);
-     //   FRetainAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(0, nFleet-1)) = temp;
-     //   
-     //   FDeadAtAgeList[st] = FDeadAtAge;
-     //   FRetainAtAgeList[st] = FRetainAtAge;
-     //   
-     // } else {
-     //   // spatial structure - need to calculate overall F 
-     //   
-     //   arma::mat NatAgeArea = NumberAtAgeArea(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(0, nArea-1)); // nAge, nArea
-     //   arma::vec NumberAtAge = sum(NatAgeArea,1); // summed over areas
-     //   double TotalNumber = accu(NumberAtAge); 
-     //   
-     //   arma::mat TotalRemovalsFleet = RemovalNumberAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(0, nFleet-1));
-     //   arma::vec TotalRemovals = sum(TotalRemovalsFleet,0);
-     //   
-     //   LogicalVector ZeroCatch(nFleet);
-     //   ZeroCatch = TotalRemovals < 1E-4;
-     //   
-     //   // only continue if catches >0
-     //   if ((all(ZeroCatch).is_false())) {
-     //     // check if F same in all areas 
-     //     LogicalVector IdenticalF(nFleet);
-     //     for (int fl=0; fl<nFleet; fl++) {
-     //       arma::mat fdeadfleet = FDeadAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(fl,fl), arma::span(0,nArea-1));
-     //       NumericMatrix FDeadFleet = as<NumericMatrix>(Rcpp::wrap(fdeadfleet));
-     //       int same = 0;
-     //       for (int area=1; area<nArea; area++) {
-     //         NumericVector sameAge = FDeadFleet(_,0) / FDeadFleet(_,area);
-     //         same += sum(sameAge);
-     //       }
-     //       if (same == nAge) {
-     //         IdenticalF(fl) = TRUE;
-     //       }
-     //     }
-     //     
-     //     if ((all(IdenticalF).is_true())) {
-     //       // identical F across areas for all fleets
-     //       FDeadAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(0, nFleet-1)) = 
-     //         FDeadAtAgeAreaThisTS(arma::span(0, nAge-1),arma::span(0, nFleet-1),   arma::span(0,0)); 
-     //       FRetainAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(0, nFleet-1)) = 
-     //         FRetainAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(0, nFleet-1), arma::span(0,0)); 
-     //       
-     //       FDeadAtAgeList[st] = FDeadAtAge;
-     //       FRetainAtAgeList[st] = FRetainAtAge;
-     //      
-     //     } else {
-     //       // need to solve for overall F 
-     //       int MaxIt = 200;
-     //       double tolF = 1E-4;
-     //       
-     //       arma::vec apicalF(nFleet);
-     //       for (int fl=0; fl<nFleet; fl++) {
-     //         apicalF(fl) = TotalRemovals[fl]/TotalNumber;
-     //       }
-     //       
-     //       for (int i=0; i<MaxIt; i++) {
-     //         // Calculate F-at-age fleet
-     //         for (int fl=0; fl<nFleet; fl++) {
-     //           arma::vec FInteract = apicalF(fl) * SelectivityAtAgeThisTS.col(fl);
-     //           arma::vec FRetain = FInteract % RetentionAtAgeThisTS.col(fl);
-     //           arma::vec FDiscard = FInteract - FRetain;
-     //           arma::vec FDeadDiscard = FDiscard % DiscardMortAtAgeThisTS.col(fl);
-     //           arma::vec FDead = FDeadDiscard + FRetain;
-     //           FRetainAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(fl, fl)) = FRetain;
-     //           FDeadAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(fl, fl)) = FDead;
-     //         }
-     //         
-     //         arma::mat FDeadAtAgeFleet = FDeadAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(0, nFleet-1));
-     //         arma::vec ZatAge = sum(FDeadAtAgeFleet,1) + NaturalMortalityAtAge.col(TSindex);
-     //         arma::vec PopDeadAtAge = (1-exp(-ZatAge)) % NumberAtAge;
-     //         
-     //         // derivative of catch wrt ft
-     //         arma::vec dct(nFleet);
-     //         arma::vec predRemovals(nFleet);
-     //         for (int fl=0; fl<nFleet; fl++) {
-     //           arma::vec FDead = FDeadAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(fl, fl));
-     //           predRemovals(fl) = arma::accu(FDead/ZatAge % (1-exp(-ZatAge)) % NumberAtAge);
-     //           arma::vec temp = PopDeadAtAge / ZatAge - ((FDead % PopDeadAtAge / pow(ZatAge,2))) + FDead/ZatAge % exp(-ZatAge)%NumberAtAge;
-     //           dct(fl) = accu(temp);
-     //         }
-     //         
-     //         apicalF = apicalF - (predRemovals - TotalRemovals)/(0.8*dct);
-     //         NumericVector diff = as<NumericVector>(Rcpp::wrap((predRemovals - TotalRemovals)));
-     //         NumericVector totalremovals = as<NumericVector>(Rcpp::wrap((TotalRemovals)));
-     //         
-     //         LogicalVector converge = (Rcpp::abs(diff)/totalremovals) < tolF;
-     //         if (all(converge).is_true())
-     //           break;
-     //       }
-     //       FDeadAtAgeList[st] = FDeadAtAge;
-     //       FRetainAtAgeList[st] = FRetainAtAge;
-     //       
-     //     }
-     //   }
-     // } // end of calculate overall F 
+     if (nArea<2) {
+       // no spatial structure
+       arma::mat temp = sum(FDeadAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(0, nFleet-1), arma::span(0,0)),2);
+       FDeadAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(0, nFleet-1)) = temp;
+
+       temp = sum(FRetainAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(0, nFleet-1), arma::span(0,0)),2);
+       FRetainAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(0, nFleet-1)) = temp;
+
+       FDeadAtAgeList[st] = FDeadAtAge;
+       FRetainAtAgeList[st] = FRetainAtAge;
+
+     } else {
+       // spatial structure - need to calculate overall F
+
+       arma::mat NatAgeArea = NumberAtAgeArea(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(0, nArea-1)); // nAge, nArea
+       arma::vec NumberAtAge = sum(NatAgeArea,1); // summed over areas
+       double TotalNumber = accu(NumberAtAge);
+
+       arma::mat TotalRemovalsFleet = RemovalNumberAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(0, nFleet-1));
+       arma::vec TotalRemovals = sum(TotalRemovalsFleet,0);
+
+       LogicalVector ZeroCatch(nFleet);
+       ZeroCatch = TotalRemovals < 1E-4;
+
+       // only continue if catches >0
+       if ((all(ZeroCatch).is_false())) {
+         // check if F same in all areas
+         LogicalVector IdenticalF(nFleet);
+         for (int fl=0; fl<nFleet; fl++) {
+           arma::mat fdeadfleet = FDeadAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(fl,fl), arma::span(0,nArea-1));
+           NumericMatrix FDeadFleet = as<NumericMatrix>(Rcpp::wrap(fdeadfleet));
+           int same = 0;
+           for (int area=1; area<nArea; area++) {
+             NumericVector sameAge = FDeadFleet(_,0) / FDeadFleet(_,area);
+             same += sum(sameAge);
+           }
+           if (same == nAge) {
+             IdenticalF(fl) = TRUE;
+           }
+         }
+
+         if ((all(IdenticalF).is_true())) {
+           // identical F across areas for all fleets
+           FDeadAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(0, nFleet-1)) =
+             FDeadAtAgeAreaThisTS(arma::span(0, nAge-1),arma::span(0, nFleet-1),   arma::span(0,0));
+           FRetainAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(0, nFleet-1)) =
+             FRetainAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(0, nFleet-1), arma::span(0,0));
+
+           FDeadAtAgeList[st] = FDeadAtAge;
+           FRetainAtAgeList[st] = FRetainAtAge;
+
+         } else {
+           // need to solve for overall F
+           int MaxIt = 200;
+           double tolF = 1E-4;
+
+           arma::vec apicalF(nFleet);
+           for (int fl=0; fl<nFleet; fl++) {
+             apicalF(fl) = TotalRemovals[fl]/TotalNumber;
+           }
+
+           for (int i=0; i<MaxIt; i++) {
+             // Calculate F-at-age fleet
+             for (int fl=0; fl<nFleet; fl++) {
+               arma::vec FInteract = apicalF(fl) * SelectivityAtAgeThisTS.col(fl);
+               arma::vec FRetain = FInteract % RetentionAtAgeThisTS.col(fl);
+               arma::vec FDiscard = FInteract - FRetain;
+               arma::vec FDeadDiscard = FDiscard % DiscardMortAtAgeThisTS.col(fl);
+               arma::vec FDead = FDeadDiscard + FRetain;
+               FRetainAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(fl, fl)) = FRetain;
+               FDeadAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(fl, fl)) = FDead;
+             }
+
+             arma::mat FDeadAtAgeFleet = FDeadAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(0, nFleet-1));
+             arma::vec ZatAge = sum(FDeadAtAgeFleet,1) + NaturalMortalityAtAge.col(TSindex);
+             arma::vec PopDeadAtAge = (1-exp(-ZatAge)) % NumberAtAge;
+
+             // derivative of catch wrt ft
+             arma::vec dct(nFleet);
+             arma::vec predRemovals(nFleet);
+             for (int fl=0; fl<nFleet; fl++) {
+               arma::vec FDead = FDeadAtAge(arma::span(0, nAge-1), arma::span(TSindex, TSindex), arma::span(fl, fl));
+               predRemovals(fl) = arma::accu(FDead/ZatAge % (1-exp(-ZatAge)) % NumberAtAge);
+               arma::vec temp = PopDeadAtAge / ZatAge - ((FDead % PopDeadAtAge / pow(ZatAge,2))) + FDead/ZatAge % exp(-ZatAge)%NumberAtAge;
+               dct(fl) = accu(temp);
+             }
+
+             apicalF = apicalF - (predRemovals - TotalRemovals)/(0.8*dct);
+             NumericVector diff = as<NumericVector>(Rcpp::wrap((predRemovals - TotalRemovals)));
+             NumericVector totalremovals = as<NumericVector>(Rcpp::wrap((TotalRemovals)));
+
+             LogicalVector converge = (Rcpp::abs(diff)/totalremovals) < tolF;
+             if (all(converge).is_true())
+               break;
+           }
+           FDeadAtAgeList[st] = FDeadAtAge;
+           FRetainAtAgeList[st] = FRetainAtAge;
+
+         }
+       }
+     } // end of calculate overall F
      
      
      // Calc Spawning Production and Spawning Biomass
