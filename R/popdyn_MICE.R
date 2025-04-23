@@ -106,72 +106,72 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
     # Fdist[Find] <- VBcur[Find]*MPAthisyr[Find[,c(1,2,4)]]^Spat_targ[Find[, 1:2]]
     
     # optimize Spat_targ if neccesary - make sure overall F is correct
-    for (p in 1:np) {
-      # check if biomass equally distributed across areas
-      chk <- apply(VBcur_a[p,,, drop=FALSE], 3, mean)
-      if (chk[1] == mean(chk)) next()
-      
-      # optimize spat_targ 
-      par <- rep(0, nf) 
-      f_zero_fleet <- which(qfracx[p,]==0)
-      if (length(f_zero_fleet)>0)
-        par <- par[-f_zero_fleet] 
-      
-      N_area <- Nx[p,,y-1,]
-      M_age <- M_ageArrayx[p,,y-1]
-      
-      
-      if (length(par)==1) {
-        opt_spat_targ <- optimize(solve_spat_targ, 
-                               c(-3,3),
-                               pop=p, qsx=qsx, 
-                               qfracx=qfracx,
-                               Ecur=Ecur, n_age=n_age, nareas=nareas, 
-                               Fdist=Fdist, 
-                               Vcur=Vcur, 
-                               N_area=N_area, M_age=M_age,
-                               VBcur_a=VBcur_a,
-                               f_zero_fleet=f_zero_fleet,
-                               Asizex=Asizex,
-                               MPAthisyr=MPAthisyr)
-        
-        par <- opt_spat_targ$minimum
-        if (length(f_zero_fleet)>0) {
-          dummy <- rep(0, length(f_zero_fleet))
-          
-          temp <- rep(NA, length(c(par, f_zero_fleet)))
-          temp[f_zero_fleet] <- 0
-          temp[is.na(temp)] <- par
-          Spat_targ[p] <- temp
-        } else {
-          Spat_targ[p] <- opt_spat_targ$minimum
-        }
-      } else {
-        opt_spat_targ <- optim(par, 
-                               fn=solve_spat_targ,
-                               pop=p, qsx=qsx,  qfracx=qfracx,
-                               Ecur=Ecur, n_age=n_age, nareas=nareas, 
-                               Fdist=Fdist, 
-                               Vcur=Vcur, 
-                               N_area=N_area, M_age=M_age,
-                               VBcur_a=VBcur_a,
-                               f_zero_fleet=f_zero_fleet,
-                               Asizex=Asizex,
-                               MPAthisyr=MPAthisyr)
-        
-        par <- opt_spat_targ$par
-        if (length(f_zero_fleet)>0) {
-          dummy <- rep(0, length(f_zero_fleet))
-          
-          temp <- rep(NA, length(c(par, f_zero_fleet)))
-          temp[f_zero_fleet] <- 0
-          temp[is.na(temp)] <- par
-          Spat_targ[p,] <- temp
-        } else {
-          Spat_targ[p,] <- opt_spat_targ$par
-        }
-      }
-    }
+    # for (p in 1:np) {
+    #   # check if biomass equally distributed across areas
+    #   chk <- apply(VBcur_a[p,,, drop=FALSE], 3, mean)
+    #   if (chk[1] == mean(chk)) next()
+    #   
+    #   # optimize spat_targ 
+    #   par <- rep(0, nf) 
+    #   f_zero_fleet <- which(qfracx[p,]==0)
+    #   if (length(f_zero_fleet)>0)
+    #     par <- par[-f_zero_fleet] 
+    #   
+    #   N_area <- Nx[p,,y-1,]
+    #   M_age <- M_ageArrayx[p,,y-1]
+    #   
+    #   
+    #   if (length(par)==1) {
+    #     opt_spat_targ <- optimize(solve_spat_targ, 
+    #                            c(-3,3),
+    #                            pop=p, qsx=qsx, 
+    #                            qfracx=qfracx,
+    #                            Ecur=Ecur, n_age=n_age, nareas=nareas, 
+    #                            Fdist=Fdist, 
+    #                            Vcur=Vcur, 
+    #                            N_area=N_area, M_age=M_age,
+    #                            VBcur_a=VBcur_a,
+    #                            f_zero_fleet=f_zero_fleet,
+    #                            Asizex=Asizex,
+    #                            MPAthisyr=MPAthisyr)
+    #     
+    #     par <- opt_spat_targ$minimum
+    #     if (length(f_zero_fleet)>0) {
+    #       dummy <- rep(0, length(f_zero_fleet))
+    #       
+    #       temp <- rep(NA, length(c(par, f_zero_fleet)))
+    #       temp[f_zero_fleet] <- 0
+    #       temp[is.na(temp)] <- par
+    #       Spat_targ[p] <- temp
+    #     } else {
+    #       Spat_targ[p] <- opt_spat_targ$minimum
+    #     }
+    #   } else {
+    #     opt_spat_targ <- optim(par, 
+    #                            fn=solve_spat_targ,
+    #                            pop=p, qsx=qsx,  qfracx=qfracx,
+    #                            Ecur=Ecur, n_age=n_age, nareas=nareas, 
+    #                            Fdist=Fdist, 
+    #                            Vcur=Vcur, 
+    #                            N_area=N_area, M_age=M_age,
+    #                            VBcur_a=VBcur_a,
+    #                            f_zero_fleet=f_zero_fleet,
+    #                            Asizex=Asizex,
+    #                            MPAthisyr=MPAthisyr)
+    #     
+    #     par <- opt_spat_targ$par
+    #     if (length(f_zero_fleet)>0) {
+    #       dummy <- rep(0, length(f_zero_fleet))
+    #       
+    #       temp <- rep(NA, length(c(par, f_zero_fleet)))
+    #       temp[f_zero_fleet] <- 0
+    #       temp[is.na(temp)] <- par
+    #       Spat_targ[p,] <- temp
+    #     } else {
+    #       Spat_targ[p,] <- opt_spat_targ$par
+    #     }
+    #   }
+    # }
 
     Fdist[Find] <- (VBcur_a[Find[,c(1,2,4)]]*MPAthisyr[Find[,c(1,2,4)]])^Spat_targ[Find[, 1:2]]
     Fdist[Find] <- Fdist[Find]/apply(Fdist,1:3,sum)[Find[,1:3]]
