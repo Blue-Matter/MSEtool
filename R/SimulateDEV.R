@@ -17,7 +17,7 @@ SimulateDEV <- function(OM=NULL,
   
   OM <- MSEtool:::StartUp(OM, messages) 
   
-  # ---- Calculate Equilbrium Unfished Dynamics ----
+  # ---- Calculate Equilibrium Unfished Dynamics ----
   Unfished <- CalcEquilibriumUnfished(OM)
   
 
@@ -60,87 +60,50 @@ SimulateDEV <- function(OM=NULL,
   # ---- Optimize for Final Depletion ----
   OMList <- OptimCatchability(OMList)
 
-  # ---- Speed Tests ------
-
-  HistTimeSteps <- TimeSteps(OM, 'Historical')
   
-  la()
-
-  nits <- 100
-  OMListSim <- OMList[[1]]
-
-  tictoc::tic()
-  for (i in 1:nits) {
-    TEMP <- CalcPopDynamics_(OMListSim, HistTimeSteps)
-  }
-  tictoc::toc()
-  
-  
-  tictoc::tic()
-  for (i in 1:nits) {
-    TEMP <- CalcPopDynamics2_(OMListSim, HistTimeSteps)
-  }
-  tictoc::toc()
-  
-  # Calculate catches and removals after - not need for depletion optimization
-  # TODO // Calculate F over all areas in TEST2.cpp = wrap in it's own function
-  # 0.12
-  0.17/0.12
-  
-  OMListSim$FDeadAtAgeArea$Albacore[[1]] |> dim()
-  
-  TEMP$VBiomassArea$Albacore[1,1,]
-  TEMP$Effort$Effort$Albacore[2,]
-  TEMP$EffortArea$Albacore[2,1,]
-
-  # Removals and Retained Number and Biomass by Area
-  # 0.77
-  # 0.58 commented out 
-  
-  
-  TEMP <- CalcPopDynamics_(OMListSim, HistTimeSteps)
-  TEMP2 <- CalcPopDynamics2_(OMListSim, HistTimeSteps)
-  
-  ts <- 50
-  
-  sum(TEMP$RemovalNumberAtAge$Albacore[,ts,])
-  sum(TEMP2$RemovalNumberAtAge$Albacore[,ts,])
-  
-  
-  TEMP$NumberAtAgeArea$Albacore[,ts,] 
-  TEMP2$NumberAtAgeArea$Albacore[,ts,]  
-  
-  
-  TEMP$FDeadAtAge$Albacore[,ts,]
-  TEMP2$FDeadAtAge$Albacore[,ts,]
-  
-  
-  
-  
-  
-  
-  TEMP$RemovalAtAgeArea$Albacore[[ts]][,1,]
-  TEMP2$RemovalAtAgeArea$Albacore[[ts]][,1,]
-  
- 
-  
-  # check biomass is same for both 
-  
-
   # ---- Historical Population Dynamics ----
   HistTimeSteps <- TimeSteps(OM, 'Historical')
-  OMListDone <- purrr::map(OMList, \(x) 
-                           CalcPopDynamics_(x, HistTimeSteps),
-                       .progress = list(
-                         type = "iterator", 
-                         format = "Simulating Historical Fishery {cli::pb_bar} {cli::pb_percent}",
-                         clear = TRUE))
   
-  OMListDone <- purrr::map(OMListDone, AddDimNamesOMListSim)
+  # Calculate Population Dynamics (Fishing Mortality & Number by Area)
+  
+  OMList <- purrr::map(OMList, \(x) 
+                           CalcPopDynamics_(x, HistTimeSteps),
+                           .progress = list(
+                             type = "iterator", 
+                             format = "Simulating Historical Fishery {cli::pb_bar} {cli::pb_percent}",
+                             clear = TRUE))
+  
+  # Calculate Removals, Landings
+  OMList <- purrr::map(OMList, \(x) 
+                           CalcCatches_(x, HistTimeSteps))
+  
+  # Calculate Aggregate F 
+  OMList <- purrr::map(OMList, \(x) 
+                           CalcAggregateF_(x, HistTimeSteps))
+  
+  # TODO -
+  # fix catches, Fs, etc over time 
+  # not updating
+  ts <- 2
+  OMList$`1`$EffortArea$Albacore[1,,]
+  
+  OMList[[1]]$FDeadAtAgeArea$Albacore[[ts]] 
+  
+  OMList[[1]]$FDeadAtAge$Albacore[,ts,] 
+  
+  
+  OMList[[1]]$RemovalAtAgeArea$Albacore[[ts]]
+  
+
+  
+  
+  OMList <- purrr::map(OMList, AddDimNamesOMListSim)
   
   
   # ---- Calculate Reference Catch ----
-  OMListDone <- OptimRefCatch(OMListDone) 
+  OMList <- OptimRefCatch(OMList) 
+  
+  OMList$`1`$RefCatch
   
 
 

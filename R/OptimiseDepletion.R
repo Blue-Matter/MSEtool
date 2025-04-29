@@ -106,8 +106,7 @@ OptCatchability <- function(logQ, x) {
   
   PopDynamicsHistorical <- CalcPopDynamics_(x, TimeStepsHist)
 
- 
-  
+
   if (DepletionReference=='B0') {
     Bterminal <- PopDynamicsHistorical$Biomass[[1]][TermInd]
     depRef <- x$B0[[st]][TermInd]  

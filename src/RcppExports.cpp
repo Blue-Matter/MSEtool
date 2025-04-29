@@ -11,6 +11,102 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// CalcCatches_
+List CalcCatches_(Rcpp::List OMListSim, Rcpp::NumericVector TimeSteps);
+RcppExport SEXP _MSEtool_CalcCatches_(SEXP OMListSimSEXP, SEXP TimeStepsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type OMListSim(OMListSimSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcCatches_(OMListSim, TimeSteps));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcFfromCatch_
+List CalcFfromCatch_(arma::vec NumberAtAge, arma::mat RemovalNAtAge, arma::mat SelectivityAtAge, arma::mat RetentionAtAge, arma::mat DiscardMortalityAtAge, arma::vec NaturalMortalityAtAge, int MaxIt, double tolF);
+RcppExport SEXP _MSEtool_CalcFfromCatch_(SEXP NumberAtAgeSEXP, SEXP RemovalNAtAgeSEXP, SEXP SelectivityAtAgeSEXP, SEXP RetentionAtAgeSEXP, SEXP DiscardMortalityAtAgeSEXP, SEXP NaturalMortalityAtAgeSEXP, SEXP MaxItSEXP, SEXP tolFSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type NumberAtAge(NumberAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type RemovalNAtAge(RemovalNAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type SelectivityAtAge(SelectivityAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type RetentionAtAge(RetentionAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type DiscardMortalityAtAge(DiscardMortalityAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type NaturalMortalityAtAge(NaturalMortalityAtAgeSEXP);
+    Rcpp::traits::input_parameter< int >::type MaxIt(MaxItSEXP);
+    Rcpp::traits::input_parameter< double >::type tolF(tolFSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcFfromCatch_(NumberAtAge, RemovalNAtAge, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, NaturalMortalityAtAge, MaxIt, tolF));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcAggregateF_
+List CalcAggregateF_(Rcpp::List OMListSim, Rcpp::NumericVector TimeSteps);
+RcppExport SEXP _MSEtool_CalcAggregateF_(SEXP OMListSimSEXP, SEXP TimeStepsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type OMListSim(OMListSimSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcAggregateF_(OMListSim, TimeSteps));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcVBiomass
+arma::mat CalcVBiomass(arma::mat NumberAtAgeArea, arma::mat FleetWeightAtAgeFleet, arma::mat SelectivityAtAgeFleet, arma::mat ClosureFleetArea);
+RcppExport SEXP _MSEtool_CalcVBiomass(SEXP NumberAtAgeAreaSEXP, SEXP FleetWeightAtAgeFleetSEXP, SEXP SelectivityAtAgeFleetSEXP, SEXP ClosureFleetAreaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type NumberAtAgeArea(NumberAtAgeAreaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type FleetWeightAtAgeFleet(FleetWeightAtAgeFleetSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type SelectivityAtAgeFleet(SelectivityAtAgeFleetSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type ClosureFleetArea(ClosureFleetAreaSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcVBiomass(NumberAtAgeArea, FleetWeightAtAgeFleet, SelectivityAtAgeFleet, ClosureFleetArea));
+    return rcpp_result_gen;
+END_RCPP
+}
+// DistributeEffort
+arma::mat DistributeEffort(arma::mat VBiomassFleetArea, arma::vec Effort);
+RcppExport SEXP _MSEtool_DistributeEffort(SEXP VBiomassFleetAreaSEXP, SEXP EffortSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type VBiomassFleetArea(VBiomassFleetAreaSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Effort(EffortSEXP);
+    rcpp_result_gen = Rcpp::wrap(DistributeEffort(VBiomassFleetArea, Effort));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcFMortality
+arma::cube CalcFMortality(arma::mat EffortFleetArea, arma::vec Catchability, arma::vec RelativeSize, arma::mat SelectivityAtAgeFleet, arma::mat RetentionAtAgeFleet, arma::mat DiscardMortalityAtAgeFleet);
+RcppExport SEXP _MSEtool_CalcFMortality(SEXP EffortFleetAreaSEXP, SEXP CatchabilitySEXP, SEXP RelativeSizeSEXP, SEXP SelectivityAtAgeFleetSEXP, SEXP RetentionAtAgeFleetSEXP, SEXP DiscardMortalityAtAgeFleetSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type EffortFleetArea(EffortFleetAreaSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Catchability(CatchabilitySEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type RelativeSize(RelativeSizeSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type SelectivityAtAgeFleet(SelectivityAtAgeFleetSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type RetentionAtAgeFleet(RetentionAtAgeFleetSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type DiscardMortalityAtAgeFleet(DiscardMortalityAtAgeFleetSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcFMortality(EffortFleetArea, Catchability, RelativeSize, SelectivityAtAgeFleet, RetentionAtAgeFleet, DiscardMortalityAtAgeFleet));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcPopDynamics_
+List CalcPopDynamics_(Rcpp::List OMListSim, Rcpp::NumericVector TimeSteps);
+RcppExport SEXP _MSEtool_CalcPopDynamics_(SEXP OMListSimSEXP, SEXP TimeStepsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type OMListSim(OMListSimSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcPopDynamics_(OMListSim, TimeSteps));
+    return rcpp_result_gen;
+END_RCPP
+}
 // vecminInd
 int vecminInd(NumericVector x);
 RcppExport SEXP _MSEtool_vecminInd(SEXP xSEXP) {
@@ -81,231 +177,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type plusgroup(plusgroupSEXP);
     Rcpp::traits::input_parameter< double >::type spawn_time_frac(spawn_time_fracSEXP);
     rcpp_result_gen = Rcpp::wrap(Ref_int_cpp(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, Wt_at_Age_C, relRfun, SRRpars, maxage, plusgroup, spawn_time_frac));
-    return rcpp_result_gen;
-END_RCPP
-}
-// CalcBiomass_
-List CalcBiomass_(List BiomassList, List NumberAtAgeAreaList, List WeightList, int TSindex);
-RcppExport SEXP _MSEtool_CalcBiomass_(SEXP BiomassListSEXP, SEXP NumberAtAgeAreaListSEXP, SEXP WeightListSEXP, SEXP TSindexSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type BiomassList(BiomassListSEXP);
-    Rcpp::traits::input_parameter< List >::type NumberAtAgeAreaList(NumberAtAgeAreaListSEXP);
-    Rcpp::traits::input_parameter< List >::type WeightList(WeightListSEXP);
-    Rcpp::traits::input_parameter< int >::type TSindex(TSindexSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcBiomass_(BiomassList, NumberAtAgeAreaList, WeightList, TSindex));
-    return rcpp_result_gen;
-END_RCPP
-}
-// CalcVBiomass_
-List CalcVBiomass_(List VBiomassAreaList, List NumberAtAgeAreaList, List FleetWeightAtAgeList, List SelectivityAtAgeList, List ClosureAreaList, int TSindex);
-RcppExport SEXP _MSEtool_CalcVBiomass_(SEXP VBiomassAreaListSEXP, SEXP NumberAtAgeAreaListSEXP, SEXP FleetWeightAtAgeListSEXP, SEXP SelectivityAtAgeListSEXP, SEXP ClosureAreaListSEXP, SEXP TSindexSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type VBiomassAreaList(VBiomassAreaListSEXP);
-    Rcpp::traits::input_parameter< List >::type NumberAtAgeAreaList(NumberAtAgeAreaListSEXP);
-    Rcpp::traits::input_parameter< List >::type FleetWeightAtAgeList(FleetWeightAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type SelectivityAtAgeList(SelectivityAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type ClosureAreaList(ClosureAreaListSEXP);
-    Rcpp::traits::input_parameter< int >::type TSindex(TSindexSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcVBiomass_(VBiomassAreaList, NumberAtAgeAreaList, FleetWeightAtAgeList, SelectivityAtAgeList, ClosureAreaList, TSindex));
-    return rcpp_result_gen;
-END_RCPP
-}
-// CalcDensity_
-List CalcDensity_(List DensityAreaList, List VBiomassAreaList, List RelativeSizeList, int TSindex);
-RcppExport SEXP _MSEtool_CalcDensity_(SEXP DensityAreaListSEXP, SEXP VBiomassAreaListSEXP, SEXP RelativeSizeListSEXP, SEXP TSindexSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type DensityAreaList(DensityAreaListSEXP);
-    Rcpp::traits::input_parameter< List >::type VBiomassAreaList(VBiomassAreaListSEXP);
-    Rcpp::traits::input_parameter< List >::type RelativeSizeList(RelativeSizeListSEXP);
-    Rcpp::traits::input_parameter< int >::type TSindex(TSindexSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcDensity_(DensityAreaList, VBiomassAreaList, RelativeSizeList, TSindex));
-    return rcpp_result_gen;
-END_RCPP
-}
-// DistEffort_
-List DistEffort_(List EffortAreaList, List VBiomassAreaList, List EffortList, int TSindex);
-RcppExport SEXP _MSEtool_DistEffort_(SEXP EffortAreaListSEXP, SEXP VBiomassAreaListSEXP, SEXP EffortListSEXP, SEXP TSindexSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type EffortAreaList(EffortAreaListSEXP);
-    Rcpp::traits::input_parameter< List >::type VBiomassAreaList(VBiomassAreaListSEXP);
-    Rcpp::traits::input_parameter< List >::type EffortList(EffortListSEXP);
-    Rcpp::traits::input_parameter< int >::type TSindex(TSindexSEXP);
-    rcpp_result_gen = Rcpp::wrap(DistEffort_(EffortAreaList, VBiomassAreaList, EffortList, TSindex));
-    return rcpp_result_gen;
-END_RCPP
-}
-// CalcFArea_
-List CalcFArea_(List FDeadAtAgeAreaList, List FRetainAtAgeAreaList, List EffortAreaList, List RelativeSizeList, List CatchabilityList, List SelectivityAtAgeList, List RetentionAtAgeList, List DiscardMortalityAtAgeList, int TSindex);
-RcppExport SEXP _MSEtool_CalcFArea_(SEXP FDeadAtAgeAreaListSEXP, SEXP FRetainAtAgeAreaListSEXP, SEXP EffortAreaListSEXP, SEXP RelativeSizeListSEXP, SEXP CatchabilityListSEXP, SEXP SelectivityAtAgeListSEXP, SEXP RetentionAtAgeListSEXP, SEXP DiscardMortalityAtAgeListSEXP, SEXP TSindexSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type FDeadAtAgeAreaList(FDeadAtAgeAreaListSEXP);
-    Rcpp::traits::input_parameter< List >::type FRetainAtAgeAreaList(FRetainAtAgeAreaListSEXP);
-    Rcpp::traits::input_parameter< List >::type EffortAreaList(EffortAreaListSEXP);
-    Rcpp::traits::input_parameter< List >::type RelativeSizeList(RelativeSizeListSEXP);
-    Rcpp::traits::input_parameter< List >::type CatchabilityList(CatchabilityListSEXP);
-    Rcpp::traits::input_parameter< List >::type SelectivityAtAgeList(SelectivityAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type RetentionAtAgeList(RetentionAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type DiscardMortalityAtAgeList(DiscardMortalityAtAgeListSEXP);
-    Rcpp::traits::input_parameter< int >::type TSindex(TSindexSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcFArea_(FDeadAtAgeAreaList, FRetainAtAgeAreaList, EffortAreaList, RelativeSizeList, CatchabilityList, SelectivityAtAgeList, RetentionAtAgeList, DiscardMortalityAtAgeList, TSindex));
-    return rcpp_result_gen;
-END_RCPP
-}
-// CalcCatch_
-List CalcCatch_(List RemovalAtAgeAreaList, List RetainAtAgeAreaList, List RemovalNumberAtAgeList, List RetainNumberAtAgeList, List RemovalBiomassAtAgeList, List RetainBiomassAtAgeList, List NaturalMortalityAtAgeList, List FleetWeightAtAgeList, List NumberAtAgeAreaList, List FDeadAtAgeAreaList, List FRetainAtAgeAreaList, int TSindex);
-RcppExport SEXP _MSEtool_CalcCatch_(SEXP RemovalAtAgeAreaListSEXP, SEXP RetainAtAgeAreaListSEXP, SEXP RemovalNumberAtAgeListSEXP, SEXP RetainNumberAtAgeListSEXP, SEXP RemovalBiomassAtAgeListSEXP, SEXP RetainBiomassAtAgeListSEXP, SEXP NaturalMortalityAtAgeListSEXP, SEXP FleetWeightAtAgeListSEXP, SEXP NumberAtAgeAreaListSEXP, SEXP FDeadAtAgeAreaListSEXP, SEXP FRetainAtAgeAreaListSEXP, SEXP TSindexSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type RemovalAtAgeAreaList(RemovalAtAgeAreaListSEXP);
-    Rcpp::traits::input_parameter< List >::type RetainAtAgeAreaList(RetainAtAgeAreaListSEXP);
-    Rcpp::traits::input_parameter< List >::type RemovalNumberAtAgeList(RemovalNumberAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type RetainNumberAtAgeList(RetainNumberAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type RemovalBiomassAtAgeList(RemovalBiomassAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type RetainBiomassAtAgeList(RetainBiomassAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type NaturalMortalityAtAgeList(NaturalMortalityAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type FleetWeightAtAgeList(FleetWeightAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type NumberAtAgeAreaList(NumberAtAgeAreaListSEXP);
-    Rcpp::traits::input_parameter< List >::type FDeadAtAgeAreaList(FDeadAtAgeAreaListSEXP);
-    Rcpp::traits::input_parameter< List >::type FRetainAtAgeAreaList(FRetainAtAgeAreaListSEXP);
-    Rcpp::traits::input_parameter< int >::type TSindex(TSindexSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcCatch_(RemovalAtAgeAreaList, RetainAtAgeAreaList, RemovalNumberAtAgeList, RetainNumberAtAgeList, RemovalBiomassAtAgeList, RetainBiomassAtAgeList, NaturalMortalityAtAgeList, FleetWeightAtAgeList, NumberAtAgeAreaList, FDeadAtAgeAreaList, FRetainAtAgeAreaList, TSindex));
-    return rcpp_result_gen;
-END_RCPP
-}
-// CalcFfromCatch_
-List CalcFfromCatch_(List FDeadAtAgeList, List FRetainAtAgeList, List NumberAtAgeAreaList, List RemovalNumberAtAgeList, List NaturalMortalityAtAgeList, List SelectivityAtAgeList, List RetentionAtAgeList, List DiscardMortalityAtAgeList, List FDeadAtAgeAreaList, List FRetainAtAgeAreaList, int TSindex);
-RcppExport SEXP _MSEtool_CalcFfromCatch_(SEXP FDeadAtAgeListSEXP, SEXP FRetainAtAgeListSEXP, SEXP NumberAtAgeAreaListSEXP, SEXP RemovalNumberAtAgeListSEXP, SEXP NaturalMortalityAtAgeListSEXP, SEXP SelectivityAtAgeListSEXP, SEXP RetentionAtAgeListSEXP, SEXP DiscardMortalityAtAgeListSEXP, SEXP FDeadAtAgeAreaListSEXP, SEXP FRetainAtAgeAreaListSEXP, SEXP TSindexSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type FDeadAtAgeList(FDeadAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type FRetainAtAgeList(FRetainAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type NumberAtAgeAreaList(NumberAtAgeAreaListSEXP);
-    Rcpp::traits::input_parameter< List >::type RemovalNumberAtAgeList(RemovalNumberAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type NaturalMortalityAtAgeList(NaturalMortalityAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type SelectivityAtAgeList(SelectivityAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type RetentionAtAgeList(RetentionAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type DiscardMortalityAtAgeList(DiscardMortalityAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type FDeadAtAgeAreaList(FDeadAtAgeAreaListSEXP);
-    Rcpp::traits::input_parameter< List >::type FRetainAtAgeAreaList(FRetainAtAgeAreaListSEXP);
-    Rcpp::traits::input_parameter< int >::type TSindex(TSindexSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcFfromCatch_(FDeadAtAgeList, FRetainAtAgeList, NumberAtAgeAreaList, RemovalNumberAtAgeList, NaturalMortalityAtAgeList, SelectivityAtAgeList, RetentionAtAgeList, DiscardMortalityAtAgeList, FDeadAtAgeAreaList, FRetainAtAgeAreaList, TSindex));
-    return rcpp_result_gen;
-END_RCPP
-}
-// CalcSpawnProduction_
-List CalcSpawnProduction_(List SProductionList, List SBiomassList, List NumberAtAgeAreaList, List NaturalMortalityAtAgeList, List FecundityAtAgeList, List WeightAtAgeList, List MaturityAtAgeList, arma::vec SpawnTimeFrac, List SPFromList, List FDeadAtAgeList, int TSindex);
-RcppExport SEXP _MSEtool_CalcSpawnProduction_(SEXP SProductionListSEXP, SEXP SBiomassListSEXP, SEXP NumberAtAgeAreaListSEXP, SEXP NaturalMortalityAtAgeListSEXP, SEXP FecundityAtAgeListSEXP, SEXP WeightAtAgeListSEXP, SEXP MaturityAtAgeListSEXP, SEXP SpawnTimeFracSEXP, SEXP SPFromListSEXP, SEXP FDeadAtAgeListSEXP, SEXP TSindexSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type SProductionList(SProductionListSEXP);
-    Rcpp::traits::input_parameter< List >::type SBiomassList(SBiomassListSEXP);
-    Rcpp::traits::input_parameter< List >::type NumberAtAgeAreaList(NumberAtAgeAreaListSEXP);
-    Rcpp::traits::input_parameter< List >::type NaturalMortalityAtAgeList(NaturalMortalityAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type FecundityAtAgeList(FecundityAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type WeightAtAgeList(WeightAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type MaturityAtAgeList(MaturityAtAgeListSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type SpawnTimeFrac(SpawnTimeFracSEXP);
-    Rcpp::traits::input_parameter< List >::type SPFromList(SPFromListSEXP);
-    Rcpp::traits::input_parameter< List >::type FDeadAtAgeList(FDeadAtAgeListSEXP);
-    Rcpp::traits::input_parameter< int >::type TSindex(TSindexSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcSpawnProduction_(SProductionList, SBiomassList, NumberAtAgeAreaList, NaturalMortalityAtAgeList, FecundityAtAgeList, WeightAtAgeList, MaturityAtAgeList, SpawnTimeFrac, SPFromList, FDeadAtAgeList, TSindex));
-    return rcpp_result_gen;
-END_RCPP
-}
-// CalcRecruitment_
-NumericVector CalcRecruitment_(List SProductionList, List SP0List, List R0List, List RecDevsList, List SRRModelList, List SRRParsList, int TSindex);
-RcppExport SEXP _MSEtool_CalcRecruitment_(SEXP SProductionListSEXP, SEXP SP0ListSEXP, SEXP R0ListSEXP, SEXP RecDevsListSEXP, SEXP SRRModelListSEXP, SEXP SRRParsListSEXP, SEXP TSindexSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type SProductionList(SProductionListSEXP);
-    Rcpp::traits::input_parameter< List >::type SP0List(SP0ListSEXP);
-    Rcpp::traits::input_parameter< List >::type R0List(R0ListSEXP);
-    Rcpp::traits::input_parameter< List >::type RecDevsList(RecDevsListSEXP);
-    Rcpp::traits::input_parameter< List >::type SRRModelList(SRRModelListSEXP);
-    Rcpp::traits::input_parameter< List >::type SRRParsList(SRRParsListSEXP);
-    Rcpp::traits::input_parameter< int >::type TSindex(TSindexSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcRecruitment_(SProductionList, SP0List, R0List, RecDevsList, SRRModelList, SRRParsList, TSindex));
-    return rcpp_result_gen;
-END_RCPP
-}
-// AddRecruits_
-List AddRecruits_(List NumberAtAgeAreaList, arma::vec Recruits, List UnfishedDistList, int TSindex);
-RcppExport SEXP _MSEtool_AddRecruits_(SEXP NumberAtAgeAreaListSEXP, SEXP RecruitsSEXP, SEXP UnfishedDistListSEXP, SEXP TSindexSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type NumberAtAgeAreaList(NumberAtAgeAreaListSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type Recruits(RecruitsSEXP);
-    Rcpp::traits::input_parameter< List >::type UnfishedDistList(UnfishedDistListSEXP);
-    Rcpp::traits::input_parameter< int >::type TSindex(TSindexSEXP);
-    rcpp_result_gen = Rcpp::wrap(AddRecruits_(NumberAtAgeAreaList, Recruits, UnfishedDistList, TSindex));
-    return rcpp_result_gen;
-END_RCPP
-}
-// CalcNumberNext_
-List CalcNumberNext_(List NumberAtAgeAreaList, List NaturalMortalityAtAgeList, List FDeadAtAgeAreaList, List SemelparousList, List AgesList, int TSindex);
-RcppExport SEXP _MSEtool_CalcNumberNext_(SEXP NumberAtAgeAreaListSEXP, SEXP NaturalMortalityAtAgeListSEXP, SEXP FDeadAtAgeAreaListSEXP, SEXP SemelparousListSEXP, SEXP AgesListSEXP, SEXP TSindexSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type NumberAtAgeAreaList(NumberAtAgeAreaListSEXP);
-    Rcpp::traits::input_parameter< List >::type NaturalMortalityAtAgeList(NaturalMortalityAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type FDeadAtAgeAreaList(FDeadAtAgeAreaListSEXP);
-    Rcpp::traits::input_parameter< List >::type SemelparousList(SemelparousListSEXP);
-    Rcpp::traits::input_parameter< List >::type AgesList(AgesListSEXP);
-    Rcpp::traits::input_parameter< int >::type TSindex(TSindexSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcNumberNext_(NumberAtAgeAreaList, NaturalMortalityAtAgeList, FDeadAtAgeAreaList, SemelparousList, AgesList, TSindex));
-    return rcpp_result_gen;
-END_RCPP
-}
-// MoveStock_
-List MoveStock_(List NumberAtAgeAreaList, List MovementList, int TSindex);
-RcppExport SEXP _MSEtool_MoveStock_(SEXP NumberAtAgeAreaListSEXP, SEXP MovementListSEXP, SEXP TSindexSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type NumberAtAgeAreaList(NumberAtAgeAreaListSEXP);
-    Rcpp::traits::input_parameter< List >::type MovementList(MovementListSEXP);
-    Rcpp::traits::input_parameter< int >::type TSindex(TSindexSEXP);
-    rcpp_result_gen = Rcpp::wrap(MoveStock_(NumberAtAgeAreaList, MovementList, TSindex));
-    return rcpp_result_gen;
-END_RCPP
-}
-// CalcPopDynamics_
-List CalcPopDynamics_(List OMListSim, NumericVector TimeSteps);
-RcppExport SEXP _MSEtool_CalcPopDynamics_(SEXP OMListSimSEXP, SEXP TimeStepsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type OMListSim(OMListSimSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type TimeSteps(TimeStepsSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcPopDynamics_(OMListSim, TimeSteps));
-    return rcpp_result_gen;
-END_RCPP
-}
-// CalcPopDynamics2_
-List CalcPopDynamics2_(List OMListSim, NumericVector TimeSteps);
-RcppExport SEXP _MSEtool_CalcPopDynamics2_(SEXP OMListSimSEXP, SEXP TimeStepsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type OMListSim(OMListSimSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type TimeSteps(TimeStepsSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcPopDynamics2_(OMListSim, TimeSteps));
     return rcpp_result_gen;
 END_RCPP
 }
