@@ -80,7 +80,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // CalcFMortality
-arma::cube CalcFMortality(arma::mat EffortFleetArea, arma::vec Catchability, arma::vec RelativeSize, arma::mat SelectivityAtAgeFleet, arma::mat RetentionAtAgeFleet, arma::mat DiscardMortalityAtAgeFleet);
+List CalcFMortality(arma::mat EffortFleetArea, arma::vec Catchability, arma::vec RelativeSize, arma::mat SelectivityAtAgeFleet, arma::mat RetentionAtAgeFleet, arma::mat DiscardMortalityAtAgeFleet);
 RcppExport SEXP _MSEtool_CalcFMortality(SEXP EffortFleetAreaSEXP, SEXP CatchabilitySEXP, SEXP RelativeSizeSEXP, SEXP SelectivityAtAgeFleetSEXP, SEXP RetentionAtAgeFleetSEXP, SEXP DiscardMortalityAtAgeFleetSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -92,6 +92,37 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type RetentionAtAgeFleet(RetentionAtAgeFleetSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type DiscardMortalityAtAgeFleet(DiscardMortalityAtAgeFleetSEXP);
     rcpp_result_gen = Rcpp::wrap(CalcFMortality(EffortFleetArea, Catchability, RelativeSize, SelectivityAtAgeFleet, RetentionAtAgeFleet, DiscardMortalityAtAgeFleet));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcSpawnProduction
+arma::vec CalcSpawnProduction(arma::mat NumberAtAgeArea, arma::vec FecundityAtAge, arma::vec MaturityAtAge, arma::vec WeightAtAge, arma::vec NaturalMortalityAtAge, arma::mat FDeadAtAgeArea, double SpawnTimeFrac);
+RcppExport SEXP _MSEtool_CalcSpawnProduction(SEXP NumberAtAgeAreaSEXP, SEXP FecundityAtAgeSEXP, SEXP MaturityAtAgeSEXP, SEXP WeightAtAgeSEXP, SEXP NaturalMortalityAtAgeSEXP, SEXP FDeadAtAgeAreaSEXP, SEXP SpawnTimeFracSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type NumberAtAgeArea(NumberAtAgeAreaSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type FecundityAtAge(FecundityAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type MaturityAtAge(MaturityAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type WeightAtAge(WeightAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type NaturalMortalityAtAge(NaturalMortalityAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type FDeadAtAgeArea(FDeadAtAgeAreaSEXP);
+    Rcpp::traits::input_parameter< double >::type SpawnTimeFrac(SpawnTimeFracSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcSpawnProduction(NumberAtAgeArea, FecundityAtAge, MaturityAtAge, WeightAtAge, NaturalMortalityAtAge, FDeadAtAgeArea, SpawnTimeFrac));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcFisheryDynamics_
+List CalcFisheryDynamics_(Rcpp::List OMListSim, Rcpp::NumericVector TimeSteps, RObject MP, int CalcCatch);
+RcppExport SEXP _MSEtool_CalcFisheryDynamics_(SEXP OMListSimSEXP, SEXP TimeStepsSEXP, SEXP MPSEXP, SEXP CalcCatchSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type OMListSim(OMListSimSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
+    Rcpp::traits::input_parameter< RObject >::type MP(MPSEXP);
+    Rcpp::traits::input_parameter< int >::type CalcCatch(CalcCatchSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcFisheryDynamics_(OMListSim, TimeSteps, MP, CalcCatch));
     return rcpp_result_gen;
 END_RCPP
 }

@@ -51,6 +51,24 @@ CalcFMortality <- function(EffortFleetArea, Catchability, RelativeSize, Selectiv
     .Call(`_MSEtool_CalcFMortality`, EffortFleetArea, Catchability, RelativeSize, SelectivityAtAgeFleet, RetentionAtAgeFleet, DiscardMortalityAtAgeFleet)
 }
 
+#' Calculate Spawning Production and Spawning Biomass 
+#' 
+#' SPFrom is handled later
+CalcSpawnProduction <- function(NumberAtAgeArea, FecundityAtAge, MaturityAtAge, WeightAtAge, NaturalMortalityAtAge, FDeadAtAgeArea, SpawnTimeFrac = 0) {
+    .Call(`_MSEtool_CalcSpawnProduction`, NumberAtAgeArea, FecundityAtAge, MaturityAtAge, WeightAtAge, NaturalMortalityAtAge, FDeadAtAgeArea, SpawnTimeFrac)
+}
+
+#' Calculate Fishery Dynamics
+#' 
+#' Calculates the fishery dynamics for a given simulation and the specified
+#' time steps.
+#' 
+#' Optionally can include an MP.
+#' 
+CalcFisheryDynamics_ <- function(OMListSim, TimeSteps, MP, CalcCatch = 0L) {
+    .Call(`_MSEtool_CalcFisheryDynamics_`, OMListSim, TimeSteps, MP, CalcCatch)
+}
+
 CalcPopDynamics_ <- function(OMListSim, TimeSteps) {
     .Call(`_MSEtool_CalcPopDynamics_`, OMListSim, TimeSteps)
 }

@@ -25,6 +25,10 @@ SimulateDEV <- function(OM=NULL,
   
   OMList <- MakeOMList(OM, Unfished)
   
+  
+  
+  
+  
   # ---- Calculate Dynamic Unfished ----
   # TODO 
   # update Unfished: create array sizes on initization
@@ -80,6 +84,36 @@ SimulateDEV <- function(OM=NULL,
   # Calculate Aggregate F 
   OMList <- purrr::map(OMList, \(x) 
                            CalcAggregateF_(x, HistTimeSteps))
+  
+  
+  # OMList <- MakeOMList(OM, Unfished
+  
+  OMListSim <- OMList$`1`
+  
+  CalcFisheryDynamics <- function(OMListSim=list(),
+                                  TimeSteps=NULL,
+                                  MP=NULL,
+                                  CalcCatch=1) {
+    if (!inherits(OMListSim, 'OMListSim'))
+      stop('`OMListSim` must be class `OMListSim`')
+    
+    if (is.null(TimeSteps))
+      TimeSteps <- OMListSim$TimeStepsHist[[1]]
+    
+    # check time steps
+    
+    
+    CalcFisheryDynamics_(OMListSim,
+                         TimeSteps,
+                         MP,
+                         CalcCatch)
+  }
+  
+  OMListSim$TimeSteps$Albacore
+  t = CalcFisheryDynamics(OMListSim, TimeSteps=1900:2075)
+  
+# 
+  
   
   # TODO -
   # fix catches, Fs, etc over time 

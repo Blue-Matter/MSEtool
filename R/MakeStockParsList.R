@@ -39,7 +39,7 @@ ReverseList <- function(ls) {
   apply(do.call(rbind, x), 2, as.list) 
 }
 
-MakeOMList <- function(OM, Unfished, Period="All") {
+MakeOMList <- function(OM, Unfished, Period="All", bySim=TRUE) {
   id <- cli::cli_progress_bar("Creating Internal OM List Object")
   
   cli::cli_progress_update()
@@ -77,13 +77,16 @@ MakeOMList <- function(OM, Unfished, Period="All") {
   OMList <- CalcInitialTimeStep(OMList, Unfished) 
   cli::cli_progress_update()
   
-  OMList <- purrr::map(1:OM@nSim, function(x) {
-    cli::cli_progress_update(id=id)
-    MakeSimList(OMList, x)
+  if (bySim) {
+    OMList <- purrr::map(1:OM@nSim, function(x) {
+      cli::cli_progress_update(id=id)
+      MakeSimList(OMList, x)
     })
+    names(OMList) <- 1:OM@nSim
+  }
   
   cli::cli_progress_done()
-  names(OMList) <- 1:OM@nSim
+ 
   class(OMList) <- "OMList"
  
   OMList

@@ -5,6 +5,27 @@
 using namespace Rcpp;
 
 
+
+void CheckClass_(RObject object,
+                 Rcpp::CharacterVector reqClass,
+                 Rcpp::CharacterVector argName) {
+  
+  bool b = object.hasAttribute("class");
+  int counter = 0;
+  int nClass = reqClass.size();
+  if (b) {
+    CharacterVector actualClass = object.attr("class");
+    for(int i = 0; i < nClass; i++) {
+      if (actualClass[0] == reqClass[i])
+        counter++;
+    }
+  }
+  
+  if (!b || counter ==0) 
+    stop("argument %s must be class %s", argName, reqClass);
+  
+}
+
 void CheckDimensions(int req, 
                      int act,
                      Rcpp::CharacterVector object,
@@ -284,6 +305,149 @@ arma::cube MoveStock_(arma::cube NumberAtAgeArea,
   return(NumberAtAgeArea);
 };
 
+
+
+//' Calculate Fishery Dynamics
+//' 
+//' Calculates the fishery dynamics for a given simulation and the specified
+//' time steps.
+//' 
+//' Optionally can include an MP.
+//' 
+// [[Rcpp::export]]
+List CalcFisheryDynamics_(Rcpp::List OMListSim,
+                          Rcpp::NumericVector TimeSteps,
+                          RObject MP,
+                          int CalcCatch = 0) {
+  
+  // Check Class
+  CheckClass_(OMListSim, CharacterVector("OMListSim"), CharacterVector("OMListSim"));
+                  
+  // Check MP
+  int hasMP = 0;
+  if(is<Function>(MP)){
+    // check the class
+    CharacterVector req = {"MP", "MMP"};
+    CheckClass_(MP, req, CharacterVector("MP"));
+    hasMP = 1;
+  } else if(!MP.isNULL()){
+    stop("Argument `MP` must be either NULL or a function class `MP` or `MMP`");
+  }
+  
+
+  // Unpack `OMListSim`
+  List OMListSimOut = clone(OMListSim);
+  List AgesList = OMListSimOut["Ages"];
+  List Length = OMListSimOut["Length"];
+  
+  List Weight = OMListSimOut["Weight"];
+  List WeightAtAgeList = Weight["MeanAtAge"];
+  
+  List NaturalMortality = OMListSimOut["NaturalMortality"];
+  List NaturalMortalityAtAgeList = NaturalMortality["MeanAtAge"];
+  
+  List Maturity = OMListSimOut["Maturity"];
+  List MaturityAtAgeList = Maturity["MeanAtAge"];
+  List SemelparousList = Maturity["Semelparous"];
+  
+  List Fecundity = OMListSimOut["Fecundity"];
+  List FecundityAtAgeList = Fecundity["MeanAtAge"];
+  
+  List SRR = OMListSimOut["SRR"];
+  arma::vec SpawnTimeFrac = SRR["SpawnTimeFrac"];
+  List SPFromList = SRR["SPFrom"];
+  List R0List = SRR["R0"];
+  
+  List SP0List = OMListSimOut["SP0"];
+  List RecDevsList = SRR["RecDevs"];
+  List SRRParsList = SRR["SRRPars"];
+  List SRRModelList = SRR["SRRModel"];
+  
+  List Spatial = OMListSimOut["Spatial"];
+  List UnfishedDistList = Spatial["UnfishedDist"];
+  List RelativeSizeList = Spatial["RelativeSize"];
+  List MovementList = Spatial["Movement"];
+  
+  List NumberAtAgeAreaList = OMListSimOut["NumberAtAgeArea"];
+  List BiomassList = OMListSimOut["Biomass"];
+  List SProductionList = OMListSimOut["SProduction"];
+  List SBiomassList = OMListSimOut["SBiomass"];
+  List TimeStepsList = OMListSim["TimeSteps"];
+  NumericVector TimeStepsAll = TimeStepsList[0];
+  
+  List FishingMortality = OMListSimOut["FishingMortality"];
+  
+  List DiscardMortality = OMListSimOut["DiscardMortality"];
+  List DiscardMortalityAtAgeList = DiscardMortality["MeanAtAge"];
+  
+  List Effort = OMListSimOut["Effort"];
+  List EffortList = Effort["Effort"];
+  List CatchabilityList = Effort["Catchability"];
+  
+  List Selectivity = OMListSimOut["Selectivity"];
+  List SelectivityAtAgeList = Selectivity["MeanAtAge"];
+  
+  List Retention = OMListSimOut["Retention"];
+  List RetentionAtAgeList = Retention["MeanAtAge"];
+  
+  List Distribution = OMListSimOut["Distribution"];
+  List ClosureAreaList = Distribution["Closure"];
+  
+  List EffortAreaList = OMListSimOut["EffortArea"];
+  List VBiomassAreaList = OMListSimOut["VBiomassArea"];
+  
+  List FDeadAtAgeAreaList = OMListSimOut["FDeadAtAgeArea"];
+  List FRetainAtAgeAreaList = OMListSimOut["FRetainAtAgeArea"];
+  
+  List FleetWeightAtAgeList = OMListSimOut["FleetWeightAtAge"];
+  
+  int nTS = TimeSteps.size();
+  int nStock = BiomassList.size();
+  
+
+  IntegerVector MatchTS = match(TimeSteps, TimeStepsAll);
+  LogicalVector chkTS = any(MatchTS<1);
+  if (chkTS[0]) {
+    stop("All values in `TimeSteps` must be matched in `OMListSim$TimeSteps[1]`");
+  }
+    
+  
+  
+  for (int timestep=0; timestep<nTS; timestep++) {
+    NumericVector TSmatch = abs(TimeStepsAll - TimeSteps[timestep]);
+    int TSindex = MatchTS[timestep];
+    
+    
+    
+    
+    // Generate Data and Apply the MP
+    if (hasMP>0) {
+      
+      
+      // interval 
+    }
+    
+  }
+  
+  
+  
+  
+  
+
+
+  
+  
+  
+ 
+    
+ 
+  // CalcCatch
+  
+  // int nTS = TimeSteps.size();
+  
+  
+  return(OMListSim);
+}
 
 
 
