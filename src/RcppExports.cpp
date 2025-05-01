@@ -38,14 +38,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // CalcFMortality
-List CalcFMortality(arma::mat EffortFleetArea, arma::vec Catchability, arma::vec RelativeSize, arma::mat SelectivityAtAgeFleet, arma::mat RetentionAtAgeFleet, arma::mat DiscardMortalityAtAgeFleet);
+List CalcFMortality(arma::mat EffortFleetArea, arma::vec Catchability, arma::rowvec RelativeSize, arma::mat SelectivityAtAgeFleet, arma::mat RetentionAtAgeFleet, arma::mat DiscardMortalityAtAgeFleet);
 RcppExport SEXP _MSEtool_CalcFMortality(SEXP EffortFleetAreaSEXP, SEXP CatchabilitySEXP, SEXP RelativeSizeSEXP, SEXP SelectivityAtAgeFleetSEXP, SEXP RetentionAtAgeFleetSEXP, SEXP DiscardMortalityAtAgeFleetSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type EffortFleetArea(EffortFleetAreaSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type Catchability(CatchabilitySEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type RelativeSize(RelativeSizeSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type RelativeSize(RelativeSizeSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type SelectivityAtAgeFleet(SelectivityAtAgeFleetSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type RetentionAtAgeFleet(RetentionAtAgeFleetSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type DiscardMortalityAtAgeFleet(DiscardMortalityAtAgeFleetSEXP);
@@ -67,6 +67,20 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type FDeadAtAgeArea(FDeadAtAgeAreaSEXP);
     Rcpp::traits::input_parameter< double >::type SpawnTimeFrac(SpawnTimeFracSEXP);
     rcpp_result_gen = Rcpp::wrap(CalcSpawnProduction(NumberAtAgeArea, FecundityAtAge, MaturityAtAge, WeightAtAge, NaturalMortalityAtAge, FDeadAtAgeArea, SpawnTimeFrac));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcFisheryDynamics_
+List CalcFisheryDynamics_(Rcpp::List OMListSim, Rcpp::NumericVector TimeSteps, RObject MP, int CalcCatch);
+RcppExport SEXP _MSEtool_CalcFisheryDynamics_(SEXP OMListSimSEXP, SEXP TimeStepsSEXP, SEXP MPSEXP, SEXP CalcCatchSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type OMListSim(OMListSimSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
+    Rcpp::traits::input_parameter< RObject >::type MP(MPSEXP);
+    Rcpp::traits::input_parameter< int >::type CalcCatch(CalcCatchSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcFisheryDynamics_(OMListSim, TimeSteps, MP, CalcCatch));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -121,28 +135,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::List >::type OMListSim(OMListSimSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
     rcpp_result_gen = Rcpp::wrap(CalcAggregateF_(OMListSim, TimeSteps));
-    return rcpp_result_gen;
-END_RCPP
-}
-// Model1
-List Model1(Rcpp::List OMListSim);
-RcppExport SEXP _MSEtool_Model1(SEXP OMListSimSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::List >::type OMListSim(OMListSimSEXP);
-    rcpp_result_gen = Rcpp::wrap(Model1(OMListSim));
-    return rcpp_result_gen;
-END_RCPP
-}
-// Model2
-List Model2(Rcpp::List OMListSim);
-RcppExport SEXP _MSEtool_Model2(SEXP OMListSimSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::List >::type OMListSim(OMListSimSEXP);
-    rcpp_result_gen = Rcpp::wrap(Model2(OMListSim));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -445,12 +437,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_DistributeEffort", (DL_FUNC) &_MSEtool_DistributeEffort, 2},
     {"_MSEtool_CalcFMortality", (DL_FUNC) &_MSEtool_CalcFMortality, 6},
     {"_MSEtool_CalcSpawnProduction", (DL_FUNC) &_MSEtool_CalcSpawnProduction, 7},
+    {"_MSEtool_CalcFisheryDynamics_", (DL_FUNC) &_MSEtool_CalcFisheryDynamics_, 4},
     {"_MSEtool_CalcPopDynamics_", (DL_FUNC) &_MSEtool_CalcPopDynamics_, 2},
     {"_MSEtool_CalcCatches_", (DL_FUNC) &_MSEtool_CalcCatches_, 2},
     {"_MSEtool_CalcFfromCatch_", (DL_FUNC) &_MSEtool_CalcFfromCatch_, 8},
     {"_MSEtool_CalcAggregateF_", (DL_FUNC) &_MSEtool_CalcAggregateF_, 2},
-    {"_MSEtool_Model1", (DL_FUNC) &_MSEtool_Model1, 1},
-    {"_MSEtool_Model2", (DL_FUNC) &_MSEtool_Model2, 1},
     {"_MSEtool_vecminInd", (DL_FUNC) &_MSEtool_vecminInd, 1},
     {"_MSEtool_LinInterp_cpp", (DL_FUNC) &_MSEtool_LinInterp_cpp, 3},
     {"_MSEtool_MSYCalcs", (DL_FUNC) &_MSEtool_MSYCalcs, 17},

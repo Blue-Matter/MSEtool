@@ -60,6 +60,8 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
   if (is.null(CurrentYear)) {
     if (methods::is(OM, 'MOM')) {
       om@CurrentYear <- OM@Fleets[[1]][[1]]@CurrentYr
+      if (om@CurrentYear < 1000)
+        om@CurrentYear <- as.numeric(format(Sys.Date(), '%Y'))
     } else {
       om@CurrentYear <- as.numeric(format(Sys.Date(), '%Y'))
     }

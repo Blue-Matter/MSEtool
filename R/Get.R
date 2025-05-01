@@ -100,9 +100,11 @@ ProcessStockAtLength <- function(out, TimeSteps, default=tiny/2) {
                       TimeStep=TimeSteps[1]))
 }
 
-GetMeanAtAge <- function(object, TimeSteps, slot='Length') {
+GetMeanAtAge <- function(object, TimeSteps, slot='Length', process=TRUE) {
   out <- GetStockAtAge(object,  slots=c(slot, 'MeanAtAge'), TimeSteps)
   
+  if (!process)
+    return(out)
   ProcessStockAtAge(out, TimeSteps)
 }
 
@@ -119,16 +121,16 @@ GetCVAtAge <- function(object, TimeSteps, slot='Length') {
 }
 
 
-GetLengthAtAge <- function(object, TimeSteps=NULL) {
-  GetMeanAtAge(object,  TimeSteps)
+GetLengthAtAge <- function(object, TimeSteps=NULL, process=TRUE) {
+  GetMeanAtAge(object,  TimeSteps, process=process)
 }
 
-GetCVLengthAtAge <- function(object, TimeSteps=NULL) {
-  GetCVAtAge(object,TimeSteps)
+GetCVLengthAtAge <- function(object, TimeSteps=NULL, process=TRUE) {
+  GetCVAtAge(object,TimeSteps, process=process)
 }
 
-GetWeightAtAge <- function(object, TimeSteps=NULL) {
-  GetMeanAtAge(object,  TimeSteps, 'Weight')
+GetWeightAtAge <- function(object, TimeSteps=NULL, process=TRUE) {
+  GetMeanAtAge(object,  TimeSteps, 'Weight', process)
 }
 
 GetCVWeightAtAge <- function(object, TimeSteps=NULL) {
@@ -140,16 +142,16 @@ GetWeightAtLength <- function(object, TimeSteps=NULL) {
 }
 
 
-GetNaturalMortalityAtAge <- function(object, TimeSteps=NULL) {
-  GetMeanAtAge(object,  TimeSteps, 'NaturalMortality')
+GetNaturalMortalityAtAge <- function(object, TimeSteps=NULL, process=TRUE) {
+  GetMeanAtAge(object,  TimeSteps, 'NaturalMortality', process)
 }
 
 GetNaturalMortalityAtLength <- function(object, TimeSteps=NULL) {
   GetMeanAtLength(object,  TimeSteps, 'NaturalMortality')
 }
 
-GetMaturityAtAge <- function(object, TimeSteps=NULL) {
-  GetMeanAtAge(object,  TimeSteps, 'Maturity')
+GetMaturityAtAge <- function(object, TimeSteps=NULL, process=TRUE) {
+  GetMeanAtAge(object,  TimeSteps, 'Maturity', process)
 }
 
 GetMaturityAtLength <- function(object, TimeSteps=NULL) {
@@ -160,8 +162,8 @@ GetSemelparous <- function(object, TimeSteps=NULL, df=FALSE) {
   GetStockAtAge(object,  c('Maturity', 'Semelparous'), TimeSteps, df)
 }
 
-GetFecundityAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
-  GetMeanAtAge(object,  TimeSteps, 'Fecundity')
+GetFecundityAtAge <- function(object, TimeSteps=NULL, process=TRUE) {
+  GetMeanAtAge(object,  TimeSteps, 'Fecundity', process)
 }
 
 GetFecundityAtLength <- function(object, TimeSteps=NULL, df=FALSE) {

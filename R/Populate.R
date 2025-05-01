@@ -622,6 +622,10 @@ setMethod("Populate", "om", function(object, messages='progress') {
     ShareParameters() |> 
     StartMessages()
   
+  # CatchFrac 
+  object <- ProcessCatchFrac(object)
+  
+  
   # Obs and Imp
   
   # Update OM Timesteps
@@ -2447,3 +2451,41 @@ AtAge2AtSize <- function(object, Length) {
   AtSize
 }
 
+# TODO - CatchFrac could be array nsim, nstock, nfleet - rather than list 
+ProcessCatchFrac <- function(object) {
+  if (length(object@CatchFrac)<1)
+    return(object)
+  
+  nStock <- nStock(object)
+  nFleet <- nFleet(object)
+  nSim <- nSim(object)
+  
+  names(object@CatchFrac) <- StockNames(object)
+  
+  if (length(object@CatchFrac)!= nStock)
+    cli::cli_abort('`OM@CatchFrac` must be a list length 0 or length `nStock(OM)` ')
+  
+  
+  for (st in 1:nStock) {
+    
+    CatchFracFleet <- object@CatchFrac[[st]]
+    if (!all(dim(CatchFracFleet) == c(nSim, nFleet)))
+      cli::cli_abort('`OM@CatchFrac` must be a list length `nStock(OM)` with a `nSim` by `nFleet` matrix  for each stock')
+    
+    if (any(CatchFracFleet<0) || any(!is.finite(CatchFracFleet)))
+      cli::cli_abort('Values in `OM@CatchFrac` must be positive')
+    
+    rsum <- rowSums(CatchFracFleet)
+    if (any(rsum!=1))
+      cli::cli_abort('Values in `OM@CatchFrac` sum to 1 across rows')
+    
+    
+    dimnames(CatchFracFleet) <- list("Sim"=1:nSim,
+                                     "Fleet"=FleetNames(object))
+    
+    object@CatchFrac[[st]] <- CatchFracFleet
+  }
+  
+  object
+  
+}

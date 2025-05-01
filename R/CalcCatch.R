@@ -1,4 +1,51 @@
 
+
+
+SubsetSim <- function(object, Sim=1, drop=FALSE) {
+  # this is a piece of black magic that subsets all arrays with a Sim
+  # dimension
+  # Sim is a numeric vector, can be length > 1
+  # If Sim includes values greater then the length of the `Sim` dimension in
+  # an array, the last value in that dimension will be returned
+  # All Sim dimension should be length 1 or length nsim, so that shouldn't be 
+  # a problem, but you've been warned!
+  if (isS4(object)) {
+    slots <- slotNames(object)
+    for (i in seq_along(slots)) {
+      obj <- slot(object, slots[i])
+      slot(object, slots[i]) <- Recall(obj, Sim)
+    }
+    if ('nSim' %in% slotNames(object)) 
+      object@nSim <- length(Sim)
+    
+    return(object)
+  }
+  
+  if (inherits(object, c('StockList',  'StockFleetList', 'FleetList', 'list'))) {
+    outlist <- object 
+    for (j in seq_along(object)) {
+      if (is.null(object[[j]])) {
+        outlist[[j]] <- object[[j]]
+      } else {
+        outlist[[j]] <- Recall(object[[j]], Sim)
+      }
+      
+    }
+    if (length(outlist)<1) 
+      outlist <- object
+    return(outlist)
+  }
+  
+  if (inherits(object, 'array')) {
+    if ("Sim" %in% names(dimnames(object))) {
+      object <- ArraySubsetSim(object, Sim, drop)
+    }
+    return(object)
+  }
+  
+  object
+}
+
 CalcCatchN <- function(FDeadAtAge, FRetainAtAge, NatAge, NMortAtAge) {
   # calculate removals and retained number at age
   

@@ -25,9 +25,40 @@ SimulateDEV <- function(OM=NULL,
   
   OMList <- MakeOMList(OM, Unfished)
   
+  ##########################################
+  OMListSim <- OMList[[1]]
+  
+  OMListSim$Catchability[] <- 1
+  
+  CalcFisheryDynamics <- function(OMListSim=list(),
+                                  TimeSteps=NULL,
+                                  MP=NULL,
+                                  CalcCatch=1) {
+    if (!inherits(OMListSim, 'OMListSim'))
+      stop('`OMListSim` must be class `OMListSim`')
+    
+    if (is.null(TimeSteps))
+      TimeSteps <- OMListSim$TimeStepsHist
+    
+    # check time steps
+    
+    
+    CalcFisheryDynamics_(OMListSim,
+                         TimeSteps,
+                         MP,
+                         CalcCatch)
+  }
+  
+  OMListSim$TimeSteps
+  t = CalcFisheryDynamics(OMListSim, OMListSim$TimeStepsHist[1])
+ 
+  # TODO - test MICE dep optimizer
+  # - fix and test single stock dep optimizer
+  # - finsh simulate code
   
   
   
+  ##########################################
   
   # ---- Calculate Dynamic Unfished ----
   # TODO 
@@ -62,7 +93,7 @@ SimulateDEV <- function(OM=NULL,
   # RefPoints <- CalcRefPoints(OM, Unfished)
 
   # ---- Optimize for Final Depletion ----
-  OMList <- OptimCatchability(OMList)
+  OMList <- OptimizeCatchability(OMList)
 
   
   # ---- Historical Population Dynamics ----
@@ -98,24 +129,7 @@ SimulateDEV <- function(OM=NULL,
   
   
   
-  CalcFisheryDynamics <- function(OMListSim=list(),
-                                  TimeSteps=NULL,
-                                  MP=NULL,
-                                  CalcCatch=1) {
-    if (!inherits(OMListSim, 'OMListSim'))
-      stop('`OMListSim` must be class `OMListSim`')
-    
-    if (is.null(TimeSteps))
-      TimeSteps <- OMListSim$TimeStepsHist[[1]]
-    
-    # check time steps
-    
-    
-    CalcFisheryDynamics_(OMListSim,
-                         TimeSteps,
-                         MP,
-                         CalcCatch)
-  }
+
   
   OMListSim$TimeSteps$Albacore
   t = CalcFisheryDynamics(OMListSim)

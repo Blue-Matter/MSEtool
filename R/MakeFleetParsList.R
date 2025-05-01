@@ -3,15 +3,26 @@ MakeFleetList <- function(OM, Period='All') {
  
   List <- list()
   List$FishingMortality <- MakeFishingMortalityList(OM, Period)
-  List$DiscardMortality <- MakeFleetSlotList(OM, 'DiscardMortality', Period=Period)
-  List$Effort <- MakeEffortList(OM, Period)
-  List$Selectivity <- MakeFleetSlotList(OM, 'Selectivity', Period)
-  List$Retention <- MakeFleetSlotList(OM, 'Retention', Period)
-  List$Distribution <-  MakeDistributionList(OM, Period)
+  
+  discardmortality <- MakeFleetSlotList(OM, 'DiscardMortality', Period=Period)
+  List$DiscardMortalityMeanAtAge <- discardmortality$MeanAtAge
+  
+  effort <- MakeEffortList(OM, Period)
+  List$Effort <- effort$Effort
+  List$Catchability <- effort$Catchability
+  selectivity <- MakeFleetSlotList(OM, 'Selectivity', Period)
+  List$SelectivityMeanAtAge <- selectivity$MeanAtAge
+  
+  retention <- MakeFleetSlotList(OM, 'Retention', Period)
+  List$RetentionMeanAtAge <- retention$MeanAtAge
+  
+  distribution <- MakeDistributionList(OM, Period)
+  List$Closure <- distribution$Closure
 
   ## Arrays to be filled
   List$EffortArea <- ListArraySimAgeTimeFleetArea(OM, Period) |>
     purrr::map(\(x) DropDimension(x, 'Age', warn=FALSE)) 
+    
   
   List$DensityArea <- List$EffortArea 
   List$VBiomassArea <- List$EffortArea 
@@ -133,13 +144,8 @@ MakeEffortList <- function(OM, Period='Historical', TimeSteps=NULL) {
                             GetEffort(x, TimeSteps)) |>
     purrr::map(\(x) ArrayExpand(x, OM@nSim, TimeSteps=TimeSteps))
     
-  # 
-  # y = GetEffort(OM@Fleet$`Day octopus`$`Octopus Fleet`, TimeSteps)
-  # 
-  # object = OM@Fleet$`Day octopus`$`Octopus Fleet`
-  # OM@Fleet$`Day octopus`$`Octopus Fleet`@Effort@Effort[1,] |> plot()
-  # plot(y[1,,])
-  
+  List$Effort  <- List2Array(List$Effort, 'Stock') |> aperm(c('Sim', 'Stock', 'TimeStep', 'Fleet'))
+
   # Catchability
   List$Catchability <- purrr::map(OM@Fleet, \(x)
                                   GetCatchability(x, TimeSteps)) |>
@@ -147,6 +153,8 @@ MakeEffortList <- function(OM, Period='Historical', TimeSteps=NULL) {
       ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
                   TimeSteps)
     })
+  
+  List$Catchability  <- List2Array(List$Catchability, 'Stock') |> aperm(c('Sim', 'Stock',  'TimeStep', 'Fleet'))
   
   #TODO qCV, qInc, Vessels, Trips, MaxVessels, MaxTrips
   # do in Populate

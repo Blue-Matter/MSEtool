@@ -51,6 +51,9 @@ MakeOMList <- function(OM, Unfished, Period="All", bySim=TRUE) {
   OMList <- c(OMList, MakeFleetList(OM, Period))
   cli::cli_progress_update()
   
+  OMList$CatchFrac <- List2Array(OM@CatchFrac, 'Stock') |> aperm(c('Sim', 'Stock', 'Fleet'))
+  
+
   OMList$SP0 <- Unfished@Equilibrium@SProduction |>
     purrr::map(\(x) {
       x |> ExpandSims(OM@nSim) |> ExpandTimeSteps(TimeSteps=TimeSteps(OM, Period='All'))
@@ -70,6 +73,7 @@ MakeOMList <- function(OM, Unfished, Period="All", bySim=TRUE) {
     purrr::map(\(x) {
       x |> ExpandSims(OM@nSim) |> ExpandTimeSteps(TimeSteps=TimeSteps(OM, Period='All'))
     })
+  
   
   OMList$Sim <- 1:OM@nSim
   names(OMList$Sim) <- rep("Sim", OM@nSim)
@@ -146,32 +150,59 @@ MakePopulationList <- function(OM, Period='All') {
   
   List <- list()
   
-
   List$Ages <-  purrr::map(OM@Stock, methods::slot, 'Ages')
   List$Length <- MakeStockSlotList(OM, 'Length', Period)
-  List$Weight <- MakeStockSlotList(OM, 'Weight', Period)
-  List$NaturalMortality <- MakeStockSlotList(OM, 'NaturalMortality', Period)
+  weight <- MakeStockSlotList(OM, 'Weight', Period)
+  List$WeightMeanAtAge <- weight$MeanAtAge
   
-  List$Maturity <- MakeStockSlotList(OM, 'Maturity', Period)
-  List$Fecundity <- MakeStockSlotList(OM, 'Fecundity', Period)
-  List$SRR <- MakeSRRList(OM, Period)
-  List$Spatial <- MakeSpatialList(OM, Period)
-  List$Depletion <- MakeDepletionList(OM, Period)
+  natmort <- MakeStockSlotList(OM, 'NaturalMortality', Period)
+  List$NaturalMortalityMeanAtAge <- natmort$MeanAtAge
+  
+  maturity <- MakeStockSlotList(OM, 'Maturity', Period)
+  List$MaturityMeanAtAge <- maturity$MeanAtAge 
+  List$MaturitySemelparous <- maturity$Semelparous
+  
+  fecundity <- MakeStockSlotList(OM, 'Fecundity', Period)
+  List$FecundityMeanAtAge <- fecundity$MeanAtAge
+  
+  srr <- MakeSRRList(OM, Period)
+  List$SRRPars <- srr$SRRPars
+  List$SRRModel <- srr$SRRModel
+  List$R0 <- List2Array(srr$R0, "Stock") |> aperm(c("Sim", "Stock", "TimeStep"))
+  List$SPFrom <- srr$SPFrom
+  List$RecDevInit <- srr$RecDevInit
+  List$RecDevs <- srr$RecDevs
+  List$SpawnTimeFrac <- srr$SpawnTimeFrac
+  List$RelRecFun <- srr$RelRecFun
+  
+  spatial <- MakeSpatialList(OM, Period)
+  List$UnfishedDist <- spatial$UnfishedDist
+  List$ProbStaying <- spatial$ProbStaying
+  List$RelativeSize <- List2Array(spatial$RelativeSize, "Stock") |> aperm(c('Sim', 'Stock', 'Area'))
+  List$Movement <- spatial$Movement
+  
+  
+  Depletion <- MakeDepletionList(OM, Period)
+  List$DepletionInitial <- Depletion$Initial
+  List$DepletionFinal <- Depletion$Final
+  List$DepletionReference <- Depletion$Reference
+  List$DepletionMisc <- Depletion$Misc
   
   # Arrays to be  filled 
   List$NumberAtAgeArea <- ListArraySimAgeTimeArea(OM, Period) 
   
   List$Biomass <- ListArraySimAgeTime(OM, Period) |>
     purrr::map(\(x)  DropDimension(x, 'Age', warn=FALSE)) 
+  List$Biomass <- List2Array( List$Biomass , 'Stock') |> aperm(c('Sim','Stock', 'TimeStep'))
   
   List$SProduction <- List$Biomass
   List$SBiomass <-  List$SProduction
   
   List$CurrentYear <- purrr::map(OM@Stock, \(x) methods::slot(x, 'CurrentYear'))
   List$TimeUnits <- purrr::map(OM@Stock, \(x) methods::slot(x, 'TimeUnits'))
-  List$TimeSteps <- purrr::map(OM@Stock, \(x) methods::slot(x, 'TimeSteps'))
-  List$TimeStepsHist <- purrr::map(OM@Stock, \(x) TimeSteps(x, 'Historical'))
-  List$TimeStepsProj <- purrr::map(OM@Stock, \(x) TimeSteps(x, 'Projection'))
+  List$TimeSteps <- TimeSteps(OM@Stock[[1]])
+  List$TimeStepsHist <- TimeSteps(OM@Stock[[1]], "Historical")
+  List$TimeStepsProj <- TimeSteps(OM@Stock[[1]], 'Projection')
   List$TimeStepsPerYear <- purrr::map(OM@Stock, \(x) methods::slot(x, 'TimeStepsPerYear'))
   List$Misc <- purrr::map(OM@Stock, \(x) methods::slot(x, 'Misc'))
   
@@ -450,6 +481,7 @@ MakeDepletionList <- function(OM, Period='Historical', TimeSteps=NULL) {
   } else {
     List$Initial <- MakeNamedList(1:OM@nSim)
   }
+  List$Initial <- List2Array(List$Initial, "Stock")
   
   List$Final <- purrr::map(OM@Stock, \(x)
                              x@Depletion@Final) 
@@ -461,10 +493,11 @@ MakeDepletionList <- function(OM, Period='Historical', TimeSteps=NULL) {
   } else {
     List$Final <- MakeNamedList(1:OM@nSim)
   }
+  List$Final <- List2Array(List$Final, "Stock")
   
   List$Reference <- purrr::map(OM@Stock, \(x)
                                         x@Depletion@Reference)
-  
+  List$Reference <- unlist(List$Reference)
   
   List$Misc <- purrr::map(OM@Stock, \(x) x |> 
                             slot('Depletion') |>

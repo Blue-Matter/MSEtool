@@ -45,10 +45,10 @@ setMethod('ReduceArraysTS', c('StockList'), function(x, TimeSteps) {
 })
 
 setMethod('ReduceArraysTS', c('stock'), function(x, TimeSteps) {
-  SetLengthAtAge(x) <- ReduceArraysTS_(GetLengthAtAge(x), TimeSteps)
-  SetWeightAtAge(x) <- ReduceArraysTS_(GetWeightAtAge(x), TimeSteps)
-  SetMaturityAtAge(x) <- ReduceArraysTS_(GetMaturityAtAge(x), TimeSteps)
-  SetFecundityAtAge(x) <- ReduceArraysTS_(GetFecundityAtAge(x), TimeSteps)
+  SetLengthAtAge(x) <- ReduceArraysTS_(GetLengthAtAge(x, process=FALSE), TimeSteps)
+  SetWeightAtAge(x) <- ReduceArraysTS_(GetWeightAtAge(x, process=FALSE), TimeSteps)
+  SetMaturityAtAge(x) <- ReduceArraysTS_(GetMaturityAtAge(x, process=FALSE), TimeSteps)
+  SetFecundityAtAge(x) <- ReduceArraysTS_(GetFecundityAtAge(x, process=FALSE), TimeSteps)
   x
 })
 

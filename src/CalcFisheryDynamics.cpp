@@ -52,6 +52,27 @@ void CheckLength(int req,
   }
 }
 
+// TODO - doesn't handle MP Lists
+int CheckMPClass(RObject MP) {
+  int hasMP = 0;
+  if(is<Function>(MP)){
+    // check the class
+    CharacterVector req = {"MP", "MMP"};
+    CheckClass(MP, req, CharacterVector("MP"));
+    hasMP = 1;
+  } else if(!MP.isNULL()){
+    stop("Argument `MP` must be either NULL or a function class `MP` or `MMP`");
+  }
+  return(hasMP);
+}
+
+
+double CalcBiomass(arma::mat NumberAtAgeArea, // nAge, nArea
+                   arma::vec WeightAtAge){ // nAge
+  
+  double B = arma::accu(WeightAtAge %  arma::sum(NumberAtAgeArea,1));
+  return(B);
+}
 
 //' Calculates Vulnerable Biomass by Fleet and Area
 //' 
@@ -87,10 +108,13 @@ arma::mat CalcVBiomass(arma::mat NumberAtAgeArea, // nAge, nArea
   
   arma::mat VBiomassFleetArea(nFleet, nArea, arma::fill::zeros);
   for (int area=0; area<nArea; area++) {
-    VBiomassFleetArea.col(area) = arma::sum(NumberAtAgeArea.col(area) %
-                                   SelectivityAtAgeFleet %
-                                   FleetWeightAtAgeFleet,0) %
-                                   ClosureFleetArea.col(area);
+    for (int fl=0; fl<nFleet; fl++) {
+      VBiomassFleetArea.row(fl).col(area) += arma::sum(NumberAtAgeArea.col(area) %
+        SelectivityAtAgeFleet.col(fl) %
+        FleetWeightAtAgeFleet.col(fl),0) *
+        arma::as_scalar(ClosureFleetArea.row(fl).col(area));
+    }
+
   }
   return(VBiomassFleetArea);
 }
@@ -132,7 +156,7 @@ arma::mat DistributeEffort(arma::mat VBiomassFleetArea, // nFleet, nArea
 // [[Rcpp::export]]
 List CalcFMortality(arma::mat EffortFleetArea, // nFleet, nArea
                     arma::vec Catchability, // nFleet
-                    arma::vec RelativeSize, // nArea
+                    arma::rowvec RelativeSize, // nArea
                     arma::mat SelectivityAtAgeFleet, // nAge, nFleet
                     arma::mat RetentionAtAgeFleet, // nAge, nFleet
                     arma::mat DiscardMortalityAtAgeFleet // nAge, nFleet
@@ -305,12 +329,19 @@ arma::cube MoveStock_(arma::cube NumberAtAgeArea,
 
 
 
+// Function f("Range");
+// NumericVector test = f(10, 1, 2);
+// Rcout << test << std::endl;
+
+
+
 //' Calculate Fishery Dynamics
 //' 
 //' Calculates the fishery dynamics for a given simulation and the specified
 //' time steps.
 //' 
 //' Optionally can include an MP.
+// [[Rcpp::export]]
 List CalcFisheryDynamics_(Rcpp::List OMListSim,
                           Rcpp::NumericVector TimeSteps,
                           RObject MP,
@@ -319,162 +350,205 @@ List CalcFisheryDynamics_(Rcpp::List OMListSim,
   // Check Class
   CheckClass(OMListSim, CharacterVector("OMListSim"), CharacterVector("OMListSim"));
                   
-  // Check MP
-  int hasMP = 0;
-  if(is<Function>(MP)){
-    // check the class
-    CharacterVector req = {"MP", "MMP"};
-    CheckClass(MP, req, CharacterVector("MP"));
-    hasMP = 1;
-  } else if(!MP.isNULL()){
-    stop("Argument `MP` must be either NULL or a function class `MP` or `MMP`");
-  }
-  
-  // Function f("Range");
-  // NumericVector test = f(10, 1, 2);
-  // Rcout << test << std::endl;
 
-  // Unpack `OMListSim`
+  
+  // Clone `OMListSim`
   List OMListSimOut = clone(OMListSim);
-  List AgesList = OMListSimOut["Ages"];
-  List Length = OMListSimOut["Length"];
   
-  List Weight = OMListSimOut["Weight"];
-  List WeightAtAgeList = Weight["MeanAtAge"];
-  
-  List NaturalMortality = OMListSimOut["NaturalMortality"];
-  List NaturalMortalityAtAgeList = NaturalMortality["MeanAtAge"];
-  
-  List Maturity = OMListSimOut["Maturity"];
-  List MaturityAtAgeList = Maturity["MeanAtAge"];
-  List SemelparousList = Maturity["Semelparous"];
-  
-  List Fecundity = OMListSimOut["Fecundity"];
-  List FecundityAtAgeList = Fecundity["MeanAtAge"];
-  
-  List SRR = OMListSimOut["SRR"];
-  arma::vec SpawnTimeFrac = SRR["SpawnTimeFrac"];
-  List SPFromList = SRR["SPFrom"];
-  List R0List = SRR["R0"];
-  
-  List SP0List = OMListSimOut["SP0"];
-  List RecDevsList = SRR["RecDevs"];
-  List SRRParsList = SRR["SRRPars"];
-  List SRRModelList = SRR["SRRModel"];
-  
-  List Spatial = OMListSimOut["Spatial"];
-  List UnfishedDistList = Spatial["UnfishedDist"];
-  List RelativeSizeList = Spatial["RelativeSize"];
-  List MovementList = Spatial["Movement"];
-  
-  List NumberAtAgeAreaList = OMListSimOut["NumberAtAgeArea"];
-  List BiomassList = OMListSimOut["Biomass"];
-  List SProductionList = OMListSimOut["SProduction"];
-  List SBiomassList = OMListSimOut["SBiomass"];
-  List TimeStepsList = OMListSim["TimeSteps"];
-  NumericVector TimeStepsAll = TimeStepsList[0];
-  
-  List FishingMortality = OMListSimOut["FishingMortality"];
-  
-  List DiscardMortality = OMListSimOut["DiscardMortality"];
-  List DiscardMortalityAtAgeList = DiscardMortality["MeanAtAge"];
-  
-  List Effort = OMListSimOut["Effort"];
-  List EffortList = Effort["Effort"];
-  List CatchabilityList = Effort["Catchability"];
-  
-  List Selectivity = OMListSimOut["Selectivity"];
-  List SelectivityAtAgeList = Selectivity["MeanAtAge"];
-  
-  List Retention = OMListSimOut["Retention"];
-  List RetentionAtAgeList = Retention["MeanAtAge"];
-  
-  List Distribution = OMListSimOut["Distribution"];
-  List ClosureAreaList = Distribution["Closure"];
-  
-  List EffortAreaList = OMListSimOut["EffortArea"];
-  List VBiomassAreaList = OMListSimOut["VBiomassArea"];
-  
-  List FDeadAtAgeAreaList = OMListSimOut["FDeadAtAgeArea"];
-  List FRetainAtAgeAreaList = OMListSimOut["FRetainAtAgeArea"];
-  
-  List FleetWeightAtAgeList = OMListSimOut["FleetWeightAtAge"];
-  
+  // Time Steps
+  NumericVector TimeStepsAll = OMListSim["TimeSteps"];
   int nTS = TimeSteps.size();
-  int nStock = BiomassList.size();
-  
-
   IntegerVector MatchTS = match(TimeSteps, TimeStepsAll);
   LogicalVector chkTS = any(MatchTS<1);
   if (chkTS[0]) {
-    stop("All values in `TimeSteps` must be matched in `OMListSim$TimeSteps[1]`");
+    stop("All values in `TimeSteps` must be matched in `OMListSim$TimeSteps`");
   }
-    
   
+  // Unpack  OMListSimOut
+  arma::vec SpawnTimeFrac = OMListSimOut["SpawnTimeFrac"]; // nStock
+  arma::vec SPFrom = OMListSimOut["SPFrom"]; // nStock
   
+  arma::mat Biomass = OMListSimOut["Biomass"]; // nStock, nTS
+  arma::mat R0 = OMListSimOut["R0"]; // nStock, nTS
+  arma::mat RelativeSize = OMListSimOut["RelativeSize"]; // nStock, nArea
+  arma::mat SBiomass = OMListSimOut["SBiomass"]; // nStock, nTS
+  arma::mat SProduction = OMListSimOut["SProduction"]; // nStock, nTS
+
+  arma::cube Catchability = OMListSimOut["Catchability"]; // nStock, nFleet, nTS
+  arma::cube Effort = OMListSimOut["Effort"]; // nStock, nFleet, nTS
+ 
+  List ClosureAreaList = OMListSimOut["Closure"];
+  List DiscardMortalityAtAgeList = OMListSimOut["DiscardMortalityMeanAtAge"];
+  List EffortAreaList = OMListSimOut["EffortArea"];
+  List FDeadAtAgeAreaList = OMListSimOut["FDeadAtAgeArea"];
+  List FRetainAtAgeAreaList = OMListSimOut["FRetainAtAgeArea"];
+  List FecundityAtAgeList = OMListSimOut["FecundityMeanAtAge"];
+  List FleetWeightAtAgeList = OMListSimOut["FleetWeightAtAge"];
+  List MaturityAtAgeList = OMListSimOut["MaturityMeanAtAge"];
+  List MovementList = OMListSimOut["Movement"];
+  List NaturalMortalityAtAgeList = OMListSimOut["NaturalMortalityMeanAtAge"];
+  List NumberAtAgeAreaList = OMListSimOut["NumberAtAgeArea"];
+  List RetentionAtAgeList = OMListSimOut["RetentionMeanAtAge"];
+  List SelectivityAtAgeList =  OMListSimOut["SelectivityMeanAtAge"];
+  List SemelparousList = OMListSimOut["MaturitySemelparous"];
+  List SRRPars = OMListSimOut["SRRPars"];
+  List SRRModel = OMListSimOut["SRRModel"];
+  List UnfishedDistList = OMListSimOut["UnfishedDist"];
+  List VBiomassAreaList = OMListSimOut["VBiomassArea"];
+  List WeightAtAgeList = OMListSimOut["WeightMeanAtAge"];
+  
+ 
+  int nStock = Biomass.n_rows;
+ 
+
+  // Loop Over Time Steps
   for (int timestep=0; timestep<nTS; timestep++) {
     NumericVector TSmatch = abs(TimeStepsAll - TimeSteps[timestep]);
-    int TSindex = MatchTS[timestep];
+    int TSindex = MatchTS[timestep] -1;
     
+
     // Do MICE
-    // update length, weight, fleet weight, natural mortality, maturity, etc 
+    // update length, weight, fleet weight, natural mortality, maturity, rec pars, etc 
     
+    // Apply MP
+    // TODO 
+    // if management interval:
+    // - generate Data upto TSindex - 1
+    // - apply MP
+    // - update selectivity, vulnerability, discard mortality from MP
+    // - update closed area from MP
+    // - calculate Effort from TAC (if applicable)
+    // - apply BioEconomic to Effort
+    // - return Effort, Selectivity, Vuln, Discard, Closure
+    
+    // Check MP
+    int hasMP = CheckMPClass(MP);
+    
+    
+    // Calculate Biomass & VBiomass, Distribute Effort, Calculate F within Areas,
+    // and Calculate SProduction and SBiomass
     for (int st=0; st<nStock; st++) {
+    
+    // List to matrics and arrays
+    arma::mat FecundityAtAge = FecundityAtAgeList[st]; // nAge, nTS
+    arma::mat MaturityAtAge = MaturityAtAgeList[st]; // nAge, nTS
+    arma::mat NaturalMortalityAtAge = NaturalMortalityAtAgeList[st]; // nAge, nTS
+    arma::mat WeightAtAge = WeightAtAgeList[st]; // nAge, nTS
+   
+    arma::cube ClosureArea = ClosureAreaList[st]; // nTS, nFleet, nArea
+    arma::cube DiscardMortalityAtAge = DiscardMortalityAtAgeList[st]; // nAge, nTS, nFleet
+    arma::cube EffortArea = EffortAreaList[st]; // nTS, nFleet, nArea
+    arma::cube FleetWeightAtAge = FleetWeightAtAgeList[st]; // nAge, nTS, nFleet
+    arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // nAge, nTS, nArea
+    arma::cube RetentionAtAge = RetentionAtAgeList[st]; // nAge, nTS, nFleet
+    arma::cube SelectivityAtAge = SelectivityAtAgeList[st]; // nAge, nTS, nFleet
+    arma::cube VBiomassArea = VBiomassAreaList[st]; // nTS, nFleet, nArea
+
+    List FDeadAtAgeAreaStock = FDeadAtAgeAreaList[st];
+    List FRetainAtAgeAreaStock = FRetainAtAgeAreaList[st];
+    
+    int nFleet = VBiomassArea.n_cols;
+    
+    // Calculate Total Biomass 
+    Biomass.row(st).col(TSindex) = CalcBiomass(NumberAtAgeArea.col_as_mat(TSindex), WeightAtAge.col(TSindex));
+
+    // VBiomass by Area
+    // VB = vulnerable (selectivity) x available (spatial closure)
+    VBiomassArea.row(TSindex) = CalcVBiomass(NumberAtAgeArea.col(TSindex), // nAge, nArea
+                     FleetWeightAtAge.col(TSindex), // nAge, nFleet
+                     SelectivityAtAge.col(TSindex), // nAge, nFleet
+                     ClosureArea.row(TSindex)); // nFleet, nArea
+    VBiomassAreaList[st] = VBiomassArea;
+    
+    // Distribute Effort over Areas
+    // currently proportional to VB - ie no SpatTarg
+    bool EffortAreaEmpty = all(vectorise(EffortArea.row(TSindex)) < 1E-6);
+    if (EffortAreaEmpty) {
+      arma::vec FleetEffort = Effort(arma::span(st), arma::span(TSindex), arma::span(0, nFleet-1));
+      EffortArea.row(TSindex) = DistributeEffort(VBiomassArea.row(TSindex), FleetEffort);
+    } 
+    EffortAreaList[st] = EffortArea;
+
+    // Calculate F within each Area
+    arma::vec FleetCatchability = Catchability(arma::span(st), arma::span(TSindex), arma::span(0, nFleet-1));
+    List FMortFleetArea = CalcFMortality(EffortArea.row(TSindex), // nFleet, nArea,
+                                         FleetCatchability, // nFleet
+                                         RelativeSize.row(st), // nArea
+                                         SelectivityAtAge.col(TSindex), // nAge, nFleet
+                                         RetentionAtAge.col(TSindex), // nAge, nFleet
+                                         DiscardMortalityAtAge.col(TSindex) // nAge, nFleet
+    );
+    FDeadAtAgeAreaStock[TSindex] = FMortFleetArea["FDeadFleetArea"];
+    FRetainAtAgeAreaStock[TSindex] = FMortFleetArea["FRetainFleetArea"];
+    FDeadAtAgeAreaList[st] = FDeadAtAgeAreaStock;
+    FRetainAtAgeAreaList[st] = FRetainAtAgeAreaStock;
+    
+    // Calc Spawning Production and Spawning Biomass
+    // (first calculate by area and then summed over areas)
+    arma::cube FDeadFleetArea = FMortFleetArea["FDeadFleetArea"];
+    arma::mat FDeadAtAgeArea = arma::sum(FDeadFleetArea,1);
+    arma::vec SProductSBiomass = CalcSpawnProduction(NumberAtAgeArea.col(TSindex), // nAge
+                                                     FecundityAtAge.col(TSindex), // nAge
+                                                     MaturityAtAge.col(TSindex), // nAge
+                                                     WeightAtAge.col(TSindex), // nAge
+                                                     NaturalMortalityAtAge.col(TSindex), // nAge
+                                                     FDeadAtAgeArea,
+                                                     SpawnTimeFrac[st] // double
+    );
+    SProduction.row(st).col(TSindex) = SProductSBiomass[0];
+    SBiomass.row(st).col(TSindex) = SProductSBiomass[1];
+    } // end of Stock loop
+    
+    
+    
+    // Apply SPFrom for spawning production from another stock 
+    // TODO herm
+    if (nStock>1) {
+      for (int st=0; st<nStock; st++) {
+        int fromStock = SPFrom[st];
+        SProduction.row(st).col(TSindex) = SProduction.row(fromStock).col(TSindex);
+      }
+    } 
+    
+    // Calculate Recruitment and Numbers at beginning of next time step
+    
+    
+    
+    // CalcCatch and overall F
+    if (CalcCatch>0) {
       
-      List FDeadAtAgeAreaStock = FDeadAtAgeAreaList[st];
-      List FRetainAtAgeAreaStock = FRetainAtAgeAreaList[st];
-      
-      arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // nAge, nTS, nArea
-      arma::cube VBiomassArea = VBiomassAreaList[st]; // nTS, nFleet, nArea
-      arma::cube ClosureArea = ClosureAreaList[st]; // nTS, nFleet, nArea
-      arma::cube FleetWeightAtAge = FleetWeightAtAgeList[st]; // nAge, nTS, nFleet
-      arma::cube SelectivityAtAge = SelectivityAtAgeList[st]; // nAge, nTS, nFleet
-      arma::cube RetentionAtAge = RetentionAtAgeList[st]; // nAge, nTS, nFleet
-      arma::cube DiscardMortalityAtAge = DiscardMortalityAtAgeList[st]; // nAge, nTS, nFleet
-      arma::cube EffortArea = EffortAreaList[st]; // nTS, nFleet, nArea
-      
-      
-      arma::mat Effort = EffortList[st]; // nTS, nFleet
-      arma::mat Catchability = CatchabilityList[st]; // nTS, nFleet
-      arma::mat NaturalMortalityAtAge = NaturalMortalityAtAgeList[st]; // nAge, nTS
-      arma::mat WeightAtAge = WeightAtAgeList[st]; // nAge, nTS
-      arma::mat FecundityAtAge = FecundityAtAgeList[st]; // nAge, nTS
-      arma::mat MaturityAtAge = MaturityAtAgeList[st]; // nAge, nTS
-      
-      arma::vec Biomass = BiomassList[st];
-      arma::vec SProduction = SProductionList[st]; // nTS
-      arma::vec SBiomass = SBiomassList[st]; // nTS
       
     }
     
     
-    // Generate Data and Apply the MP
-    if (hasMP>0) {
-      
-      
-      // interval 
-    }
-    
-  }
+  } // end of Time Step loop
   
-  
-  
-  
-  
+  // Update OMListSimOut
+  // TODO - check all are updated
+  OMListSimOut["Biomass"] = Biomass;
+  OMListSimOut["EffortArea"] = EffortAreaList;
+  OMListSimOut["FDeadAtAgeArea"] = FDeadAtAgeAreaList
+  OMListSimOut["FRetainAtAgeArea"] = FRetainAtAgeAreaList;
+  OMListSimOut["FleetWeightAtAge"] = FleetWeightAtAgeList;
+  OMListSimOut["NumberAtAgeArea"] = NumberAtAgeAreaList;
+  OMListSimOut["SBiomass"] = SBiomass; // nStock, nTS
+  OMListSimOut["SProduction"] = SProduction; // nStock, nTS
+  OMListSimOut["VBiomassArea"] = VBiomassAreaList;
 
 
-  
-  
-  
- 
+   
+   
+    
+    
+   
+    
+    
     
  
-  // CalcCatch
-  
-  // int nTS = TimeSteps.size();
+
   
   
-  return(OMListSim);
+  return(OMListSimOut);
 }
 
 
@@ -484,6 +558,7 @@ List CalcPopDynamics_(Rcpp::List OMListSim,
                       Rcpp::NumericVector TimeSteps) {
 
   List OMListSimOut = clone(OMListSim);
+  
   List AgesList = OMListSimOut["Ages"];
   List Length = OMListSimOut["Length"];
   
@@ -527,9 +602,8 @@ List CalcPopDynamics_(Rcpp::List OMListSim,
   List DiscardMortality = OMListSimOut["DiscardMortality"];
   List DiscardMortalityAtAgeList = DiscardMortality["MeanAtAge"];
   
-  List Effort = OMListSimOut["Effort"];
-  List EffortList = Effort["Effort"];
-  List CatchabilityList = Effort["Catchability"];
+  arma::cube Effort = OMListSimOut["Effort"]; // nStock, nFleet, nTS
+  arma::cube Catchability = OMListSimOut["Catchability"]; // nStock, nFleet, nTS
   
   List Selectivity = OMListSimOut["Selectivity"];
   List SelectivityAtAgeList = Selectivity["MeanAtAge"];
@@ -573,8 +647,8 @@ List CalcPopDynamics_(Rcpp::List OMListSim,
       arma::cube EffortArea = EffortAreaList[st]; // nTS, nFleet, nArea
 
       
-      arma::mat Effort = EffortList[st]; // nTS, nFleet
-      arma::mat Catchability = CatchabilityList[st]; // nTS, nFleet
+      // arma::mat Effort = EffortList[st]; // nTS, nFleet
+      //arma::mat Catchability = CatchabilityList[st]; // nTS, nFleet
       arma::mat NaturalMortalityAtAge = NaturalMortalityAtAgeList[st]; // nAge, nTS
       arma::mat WeightAtAge = WeightAtAgeList[st]; // nAge, nTS
       arma::mat FecundityAtAge = FecundityAtAgeList[st]; // nAge, nTS
@@ -586,7 +660,7 @@ List CalcPopDynamics_(Rcpp::List OMListSim,
       
       // int nAge = NumberAtAgeArea.n_rows;
       // int nArea = NumberAtAgeArea.n_slices;
-      // int nFleet = VBiomassArea.n_cols;
+      int nFleet = VBiomassArea.n_cols;
       
       // Biomass
       Biomass[TSindex] = arma::accu(WeightAtAge.col(TSindex) % arma::sum(NumberAtAgeArea.col_as_mat(TSindex),1));
@@ -602,45 +676,51 @@ List CalcPopDynamics_(Rcpp::List OMListSim,
 
       // Distribute Effort over Areas
       // (currently proportional to VB) - currently no SpatTarg
+      Rcout << "Here\n";
       bool EffortAreaEmpty = all(vectorise(EffortArea.row(TSindex)) < 1E-6);
       if (EffortAreaEmpty) {
-        EffortArea.row(TSindex) = DistributeEffort(VBiomassArea.row(TSindex), Effort.row(TSindex));
+        Rcout << "Here\n";
+        arma::rowvec FleetEffort = Effort(arma::span(st), arma::span(0, nFleet-1), arma::span(TSindex));
+  
+        Rcout << "Herio \n";
+        EffortArea.row(TSindex) = DistributeEffort(VBiomassArea.row(TSindex), FleetEffort);
       } 
       EffortAreaList[st] = EffortArea;
- 
+      Rcout << "Here 2\n";
 
-      // Calculate F within each Area
-      List FMortFleetArea = CalcFMortality(EffortArea.row(TSindex), // nFleet, nArea,
-                                           Catchability.row(TSindex), // nFleet
-                                           RelativeSizeList[st], // nArea
-                                           SelectivityAtAge.col(TSindex), // nAge, nFleet
-                                           RetentionAtAge.col(TSindex), // nAge, nFleet
-                                           DiscardMortalityAtAge.col(TSindex) // nAge, nFleet
-                                           );
-
-      FDeadAtAgeAreaStock[TSindex] = FMortFleetArea["FDeadFleetArea"];
-      FRetainAtAgeAreaStock[TSindex] = FMortFleetArea["FRetainFleetArea"];
-      FDeadAtAgeAreaList[st] = FDeadAtAgeAreaStock;
-      FRetainAtAgeAreaList[st] = FRetainAtAgeAreaStock;
- 
-      // Calc Spawning Production and Spawning Biomass
-      // (first calculate by area and then summed over areas)
-      arma::cube FDeadFleetArea = FMortFleetArea["FDeadFleetArea"];
-      arma::mat FDeadAtAgeArea = arma::sum(FDeadFleetArea,1);
-      
-      arma::vec SProductSBiomass = CalcSpawnProduction(NumberAtAgeArea.col(TSindex), // nAge
-                                                       FecundityAtAge.col(TSindex), // nAge
-                                                       MaturityAtAge.col(TSindex), // nAge
-                                                       WeightAtAge.col(TSindex), // nAge
-                                                       NaturalMortalityAtAge.col(TSindex), // nAge
-                                                       FDeadAtAgeArea,
-                                                       SpawnTimeFrac[st] // double
-      );
-      
-      SProduction[TSindex] = SProductSBiomass[0];
-      SBiomass[TSindex] = SProductSBiomass[1];
-      SProductionList[st] = SProduction;
-      SBiomassList[st] = SBiomass;
+      // // Calculate F within each Area
+      // arma::rowvec FleetCatchability = Catchability.subcube(st, 0, TSindex, st, nFleet-1, TSindex);
+      // List FMortFleetArea = CalcFMortality(EffortArea.row(TSindex), // nFleet, nArea,
+      //                                      FleetCatchability, // nFleet
+      //                                      RelativeSizeList[st], // nArea
+      //                                      SelectivityAtAge.col(TSindex), // nAge, nFleet
+      //                                      RetentionAtAge.col(TSindex), // nAge, nFleet
+      //                                      DiscardMortalityAtAge.col(TSindex) // nAge, nFleet
+      //                                      );
+      // Rcout << "Here 3\n";
+      // FDeadAtAgeAreaStock[TSindex] = FMortFleetArea["FDeadFleetArea"];
+      // FRetainAtAgeAreaStock[TSindex] = FMortFleetArea["FRetainFleetArea"];
+      // FDeadAtAgeAreaList[st] = FDeadAtAgeAreaStock;
+      // FRetainAtAgeAreaList[st] = FRetainAtAgeAreaStock;
+      // 
+      // // Calc Spawning Production and Spawning Biomass
+      // // (first calculate by area and then summed over areas)
+      // arma::cube FDeadFleetArea = FMortFleetArea["FDeadFleetArea"];
+      // arma::mat FDeadAtAgeArea = arma::sum(FDeadFleetArea,1);
+      // 
+      // arma::vec SProductSBiomass = CalcSpawnProduction(NumberAtAgeArea.col(TSindex), // nAge
+      //                                                  FecundityAtAge.col(TSindex), // nAge
+      //                                                  MaturityAtAge.col(TSindex), // nAge
+      //                                                  WeightAtAge.col(TSindex), // nAge
+      //                                                  NaturalMortalityAtAge.col(TSindex), // nAge
+      //                                                  FDeadAtAgeArea,
+      //                                                  SpawnTimeFrac[st] // double
+      // );
+      // 
+      // SProduction[TSindex] = SProductSBiomass[0];
+      // SBiomass[TSindex] = SProductSBiomass[1];
+      // SProductionList[st] = SProduction;
+      // SBiomassList[st] = SBiomass;
      
     } // end of stock loop
     
