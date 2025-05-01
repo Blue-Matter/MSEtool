@@ -69,7 +69,6 @@ SimulateDEV <- function(OM=NULL,
   HistTimeSteps <- TimeSteps(OM, 'Historical')
   
   # Calculate Population Dynamics (Fishing Mortality & Number by Area)
-  
   OMList <- purrr::map(OMList, \(x) 
                            CalcPopDynamics_(x, HistTimeSteps),
                            .progress = list(
@@ -85,10 +84,19 @@ SimulateDEV <- function(OM=NULL,
   OMList <- purrr::map(OMList, \(x) 
                            CalcAggregateF_(x, HistTimeSteps))
   
+  # Condition Observation Model on Fishery Data
+  
+  # Generate Simulated Fishery Data
   
   # OMList <- MakeOMList(OM, Unfished
   
   OMListSim <- OMList$`1`
+  
+
+  
+  
+  
+  
   
   CalcFisheryDynamics <- function(OMListSim=list(),
                                   TimeSteps=NULL,
@@ -110,10 +118,10 @@ SimulateDEV <- function(OM=NULL,
   }
   
   OMListSim$TimeSteps$Albacore
-  t = CalcFisheryDynamics(OMListSim, TimeSteps=1900:2075)
+  t = CalcFisheryDynamics(OMListSim)
   
 # 
-  
+  CheckClass
   
   # TODO -
   # fix catches, Fs, etc over time 

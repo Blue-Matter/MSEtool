@@ -13,6 +13,7 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
+SystemRequirements: C++11
 Depends: 
     R (>= 3.5.0),
     snowfall
@@ -106,6 +107,7 @@ Collate:
     'Get.R'
     'GetFatAgeArray.R'
     'Import.R'
+    'MICE.R'
     'MICE_Rel.R'
     'MMSE_Object.r'
     'MMSE_plots.R'
@@ -163,7 +165,6 @@ Collate:
     'WHAM2OM.R'
     'aaImportFrom.R'
     'applyMMP.R'
-    'cpp11.R'
     'iSCAM2OM.R'
     'multiMSE.R'
     'multiMSE_DEVCOPY.R'

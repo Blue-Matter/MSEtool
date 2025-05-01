@@ -11,48 +11,6 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// CalcCatches_
-List CalcCatches_(Rcpp::List OMListSim, Rcpp::NumericVector TimeSteps);
-RcppExport SEXP _MSEtool_CalcCatches_(SEXP OMListSimSEXP, SEXP TimeStepsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::List >::type OMListSim(OMListSimSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcCatches_(OMListSim, TimeSteps));
-    return rcpp_result_gen;
-END_RCPP
-}
-// CalcFfromCatch_
-List CalcFfromCatch_(arma::vec NumberAtAge, arma::mat RemovalNAtAge, arma::mat SelectivityAtAge, arma::mat RetentionAtAge, arma::mat DiscardMortalityAtAge, arma::vec NaturalMortalityAtAge, int MaxIt, double tolF);
-RcppExport SEXP _MSEtool_CalcFfromCatch_(SEXP NumberAtAgeSEXP, SEXP RemovalNAtAgeSEXP, SEXP SelectivityAtAgeSEXP, SEXP RetentionAtAgeSEXP, SEXP DiscardMortalityAtAgeSEXP, SEXP NaturalMortalityAtAgeSEXP, SEXP MaxItSEXP, SEXP tolFSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type NumberAtAge(NumberAtAgeSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type RemovalNAtAge(RemovalNAtAgeSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type SelectivityAtAge(SelectivityAtAgeSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type RetentionAtAge(RetentionAtAgeSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type DiscardMortalityAtAge(DiscardMortalityAtAgeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type NaturalMortalityAtAge(NaturalMortalityAtAgeSEXP);
-    Rcpp::traits::input_parameter< int >::type MaxIt(MaxItSEXP);
-    Rcpp::traits::input_parameter< double >::type tolF(tolFSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcFfromCatch_(NumberAtAge, RemovalNAtAge, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, NaturalMortalityAtAge, MaxIt, tolF));
-    return rcpp_result_gen;
-END_RCPP
-}
-// CalcAggregateF_
-List CalcAggregateF_(Rcpp::List OMListSim, Rcpp::NumericVector TimeSteps);
-RcppExport SEXP _MSEtool_CalcAggregateF_(SEXP OMListSimSEXP, SEXP TimeStepsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::List >::type OMListSim(OMListSimSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcAggregateF_(OMListSim, TimeSteps));
-    return rcpp_result_gen;
-END_RCPP
-}
 // CalcVBiomass
 arma::mat CalcVBiomass(arma::mat NumberAtAgeArea, arma::mat FleetWeightAtAgeFleet, arma::mat SelectivityAtAgeFleet, arma::mat ClosureFleetArea);
 RcppExport SEXP _MSEtool_CalcVBiomass(SEXP NumberAtAgeAreaSEXP, SEXP FleetWeightAtAgeFleetSEXP, SEXP SelectivityAtAgeFleetSEXP, SEXP ClosureFleetAreaSEXP) {
@@ -112,20 +70,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// CalcFisheryDynamics_
-List CalcFisheryDynamics_(Rcpp::List OMListSim, Rcpp::NumericVector TimeSteps, RObject MP, int CalcCatch);
-RcppExport SEXP _MSEtool_CalcFisheryDynamics_(SEXP OMListSimSEXP, SEXP TimeStepsSEXP, SEXP MPSEXP, SEXP CalcCatchSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::List >::type OMListSim(OMListSimSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
-    Rcpp::traits::input_parameter< RObject >::type MP(MPSEXP);
-    Rcpp::traits::input_parameter< int >::type CalcCatch(CalcCatchSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcFisheryDynamics_(OMListSim, TimeSteps, MP, CalcCatch));
-    return rcpp_result_gen;
-END_RCPP
-}
 // CalcPopDynamics_
 List CalcPopDynamics_(Rcpp::List OMListSim, Rcpp::NumericVector TimeSteps);
 RcppExport SEXP _MSEtool_CalcPopDynamics_(SEXP OMListSimSEXP, SEXP TimeStepsSEXP) {
@@ -135,6 +79,70 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::List >::type OMListSim(OMListSimSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
     rcpp_result_gen = Rcpp::wrap(CalcPopDynamics_(OMListSim, TimeSteps));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcCatches_
+List CalcCatches_(Rcpp::List OMListSim, Rcpp::NumericVector TimeSteps);
+RcppExport SEXP _MSEtool_CalcCatches_(SEXP OMListSimSEXP, SEXP TimeStepsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type OMListSim(OMListSimSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcCatches_(OMListSim, TimeSteps));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcFfromCatch_
+List CalcFfromCatch_(arma::vec NumberAtAge, arma::mat RemovalNAtAge, arma::mat SelectivityAtAge, arma::mat RetentionAtAge, arma::mat DiscardMortalityAtAge, arma::vec NaturalMortalityAtAge, int MaxIt, double tolF);
+RcppExport SEXP _MSEtool_CalcFfromCatch_(SEXP NumberAtAgeSEXP, SEXP RemovalNAtAgeSEXP, SEXP SelectivityAtAgeSEXP, SEXP RetentionAtAgeSEXP, SEXP DiscardMortalityAtAgeSEXP, SEXP NaturalMortalityAtAgeSEXP, SEXP MaxItSEXP, SEXP tolFSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type NumberAtAge(NumberAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type RemovalNAtAge(RemovalNAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type SelectivityAtAge(SelectivityAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type RetentionAtAge(RetentionAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type DiscardMortalityAtAge(DiscardMortalityAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type NaturalMortalityAtAge(NaturalMortalityAtAgeSEXP);
+    Rcpp::traits::input_parameter< int >::type MaxIt(MaxItSEXP);
+    Rcpp::traits::input_parameter< double >::type tolF(tolFSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcFfromCatch_(NumberAtAge, RemovalNAtAge, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, NaturalMortalityAtAge, MaxIt, tolF));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcAggregateF_
+List CalcAggregateF_(Rcpp::List OMListSim, Rcpp::NumericVector TimeSteps);
+RcppExport SEXP _MSEtool_CalcAggregateF_(SEXP OMListSimSEXP, SEXP TimeStepsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type OMListSim(OMListSimSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcAggregateF_(OMListSim, TimeSteps));
+    return rcpp_result_gen;
+END_RCPP
+}
+// Model1
+List Model1(Rcpp::List OMListSim);
+RcppExport SEXP _MSEtool_Model1(SEXP OMListSimSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type OMListSim(OMListSimSEXP);
+    rcpp_result_gen = Rcpp::wrap(Model1(OMListSim));
+    return rcpp_result_gen;
+END_RCPP
+}
+// Model2
+List Model2(Rcpp::List OMListSim);
+RcppExport SEXP _MSEtool_Model2(SEXP OMListSimSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type OMListSim(OMListSimSEXP);
+    rcpp_result_gen = Rcpp::wrap(Model2(OMListSim));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -430,4 +438,40 @@ BEGIN_RCPP
     rcpp_result_gen = Rcpp::wrap(popdynCPP(nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, SRRfun, SRRpars, plusgroup, spawn_time_frac));
     return rcpp_result_gen;
 END_RCPP
+}
+
+static const R_CallMethodDef CallEntries[] = {
+    {"_MSEtool_CalcVBiomass", (DL_FUNC) &_MSEtool_CalcVBiomass, 4},
+    {"_MSEtool_DistributeEffort", (DL_FUNC) &_MSEtool_DistributeEffort, 2},
+    {"_MSEtool_CalcFMortality", (DL_FUNC) &_MSEtool_CalcFMortality, 6},
+    {"_MSEtool_CalcSpawnProduction", (DL_FUNC) &_MSEtool_CalcSpawnProduction, 7},
+    {"_MSEtool_CalcPopDynamics_", (DL_FUNC) &_MSEtool_CalcPopDynamics_, 2},
+    {"_MSEtool_CalcCatches_", (DL_FUNC) &_MSEtool_CalcCatches_, 2},
+    {"_MSEtool_CalcFfromCatch_", (DL_FUNC) &_MSEtool_CalcFfromCatch_, 8},
+    {"_MSEtool_CalcAggregateF_", (DL_FUNC) &_MSEtool_CalcAggregateF_, 2},
+    {"_MSEtool_Model1", (DL_FUNC) &_MSEtool_Model1, 1},
+    {"_MSEtool_Model2", (DL_FUNC) &_MSEtool_Model2, 1},
+    {"_MSEtool_vecminInd", (DL_FUNC) &_MSEtool_vecminInd, 1},
+    {"_MSEtool_LinInterp_cpp", (DL_FUNC) &_MSEtool_LinInterp_cpp, 3},
+    {"_MSEtool_MSYCalcs", (DL_FUNC) &_MSEtool_MSYCalcs, 17},
+    {"_MSEtool_Ref_int_cpp", (DL_FUNC) &_MSEtool_Ref_int_cpp, 12},
+    {"_MSEtool_calcVatAge", (DL_FUNC) &_MSEtool_calcVatAge, 7},
+    {"_MSEtool_combine", (DL_FUNC) &_MSEtool_combine, 1},
+    {"_MSEtool_get_freq", (DL_FUNC) &_MSEtool_get_freq, 4},
+    {"_MSEtool_get_freq2", (DL_FUNC) &_MSEtool_get_freq2, 3},
+    {"_MSEtool_rnormSelect2", (DL_FUNC) &_MSEtool_rnormSelect2, 3},
+    {"_MSEtool_tdnorm", (DL_FUNC) &_MSEtool_tdnorm, 3},
+    {"_MSEtool_genSizeComp", (DL_FUNC) &_MSEtool_genSizeComp, 11},
+    {"_MSEtool_genSizeComp2", (DL_FUNC) &_MSEtool_genSizeComp2, 11},
+    {"_MSEtool_grav", (DL_FUNC) &_MSEtool_grav, 4},
+    {"_MSEtool_movfit_Rcpp", (DL_FUNC) &_MSEtool_movfit_Rcpp, 3},
+    {"_MSEtool_popdynOneTScpp", (DL_FUNC) &_MSEtool_popdynOneTScpp, 5},
+    {"_MSEtool_movestockCPP", (DL_FUNC) &_MSEtool_movestockCPP, 4},
+    {"_MSEtool_popdynCPP", (DL_FUNC) &_MSEtool_popdynCPP, 31},
+    {NULL, NULL, 0}
+};
+
+RcppExport void R_init_MSEtool(DllInfo *dll) {
+    R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
+    R_useDynamicSymbols(dll, FALSE);
 }
