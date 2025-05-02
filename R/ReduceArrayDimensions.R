@@ -65,9 +65,9 @@ setMethod('ReduceArraysTS', c('FleetList'), function(x, TimeSteps) {
 })
 
 setMethod('ReduceArraysTS', c('fleet'), function(x, TimeSteps) {
-  SetDiscardMortalityAtAge(x) <- ReduceArraysTS_(GetDiscardMortalityAtAge(x), TimeSteps)
-  SetSelectivityAtAge(x) <- ReduceArraysTS_(GetSelectivityAtAge(x), TimeSteps)
-  SetRetentionAtAge(x) <- ReduceArraysTS_(GetRetentionAtAge(x), TimeSteps)
+  SetDiscardMortalityAtAge(x) <- ReduceArraysTS_(GetDiscardMortalityAtAge(x, process=FALSE), TimeSteps)
+  SetSelectivityAtAge(x) <- ReduceArraysTS_(GetSelectivityAtAge(x, process=FALSE), TimeSteps)
+  SetRetentionAtAge(x) <- ReduceArraysTS_(GetRetentionAtAge(x, process=FALSE), TimeSteps)
   SetFleetWeightAtAge(x) <- ReduceArraysTS_(GetEmpiricalWeightAtAge(x), TimeSteps)
   x
 })

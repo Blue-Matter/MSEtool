@@ -57,17 +57,18 @@ MakeOMList <- function(OM, Unfished, Period="All", bySim=TRUE) {
   OMList$SP0 <- Unfished@Equilibrium@SProduction |>
     purrr::map(\(x) {
       x |> ExpandSims(OM@nSim) |> ExpandTimeSteps(TimeSteps=TimeSteps(OM, Period='All'))
-    })
+    }) |> List2Array("Stock") |> aperm(c("Sim", "Stock", "TimeStep"))
   
   OMList$SB0 <- Unfished@Equilibrium@SBiomass |>
     purrr::map(\(x) {
       x |> ExpandSims(OM@nSim) |> ExpandTimeSteps(TimeSteps=TimeSteps(OM, Period='All'))
-    })
+    }) |> List2Array("Stock") |> aperm(c("Sim", "Stock", "TimeStep"))
   
   OMList$B0 <- Unfished@Equilibrium@Biomass |>
     purrr::map(\(x) {
-      x |> ExpandSims(OM@nSim) |> ExpandTimeSteps(TimeSteps=TimeSteps(OM, Period='All'))
-    })
+      x |> ExpandSims(OM@nSim) |> ExpandTimeSteps(TimeSteps=TimeSteps(OM, Period='All')) |>
+        apply(c("Sim" ,"TimeStep"), sum)
+    }) |> List2Array("Stock") |> aperm(c("Sim", "Stock", "TimeStep"))  
   
   OMList$N0atAge <- Unfished@Equilibrium@Number |>
     purrr::map(\(x) {
@@ -171,7 +172,7 @@ MakePopulationList <- function(OM, Period='All') {
   List$R0 <- List2Array(srr$R0, "Stock") |> aperm(c("Sim", "Stock", "TimeStep"))
   List$SPFrom <- srr$SPFrom
   List$RecDevInit <- srr$RecDevInit
-  List$RecDevs <- srr$RecDevs
+  List$RecDevs <- srr$RecDevs |> List2Array("Stock") |> aperm(c("Sim", "Stock", "TimeStep"))
   List$SpawnTimeFrac <- srr$SpawnTimeFrac
   List$RelRecFun <- srr$RelRecFun
   

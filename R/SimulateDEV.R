@@ -23,6 +23,7 @@ SimulateDEV <- function(OM=NULL,
 
   # ---- Make OM List ----
   
+  
   OMList <- MakeOMList(OM, Unfished)
   
   ##########################################
@@ -43,18 +44,17 @@ SimulateDEV <- function(OM=NULL,
     # check time steps
     
     
-    CalcFisheryDynamics_(OMListSim,
+    SimulateFisheryDynamics_(OMListSim,
                          TimeSteps,
                          MP,
                          CalcCatch)
   }
   
-  OMListSim$TimeSteps
-  t = CalcFisheryDynamics(OMListSim, OMListSim$TimeStepsHist[1])
+  t = CalcFisheryDynamics(OMListSim, OMListSim$TimeStepsHist[1:2])
  
-  # TODO - test MICE dep optimizer
-  # - fix and test single stock dep optimizer
-  # - finsh simulate code
+  # TODO
+  # - fix multi stock depletion optimizer - not modifying catch by fleet
+  # - fix single stock optimizer
   
   
   

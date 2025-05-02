@@ -15,17 +15,14 @@ OptimizeCatchability <- function(OMList) {
       # multi stock/fleet
       QMatrix <- OMListSim$Catchability[,,1]
       
-      if (all(QMatrix>tiny))
+      if (all(QMatrix>1E-5))
         return(OMListSim)
       
-      
-      
       # Catch divided by effort (q proxy)
-      FDist <- OMListSim$CatchFrac/OMListSim$Effort[,,length(OMListSim$TimeStepsHist[[1]])]
+      FDist <- OMListSim$CatchFrac/OMListSim$Effort[,length(OMListSim$TimeStepsHist[[1]]),]
       FDist[!is.finite(FDist)] <- tiny
       FDist <- FDist/apply(FDist[, , drop = FALSE], 1, sum)    # q ratio proxy (real space)
       
-  
       if (nFleet == 1) {
         pars <- rep(-5, nStock)
       } else {
@@ -33,64 +30,6 @@ OptimizeCatchability <- function(OMList) {
         # according to catch fraction in recent year
         pars <- c(rep(-5,nStock), logit(FDist[, 2:nFleet]))
       }
-      
-      
-      OptCatchabilityMulti <- function(pars, OMListSim) {
-        
-        nStock <- length(OMListSim$Ages)
-        nFleet <- dim(OMListSim$FishingMortality$DeadAtAge[[1]])[3]
-        
-        DepletionTarget <- OMListSim$DepletionFinal
-        DepletionReference <- OMListSim$DepletionReference
-        
-        if (length(DepletionTarget)!= nStock)
-          cli::cli_abort("`Effort@Catchability` not set for first time step and no value set for `Depletion@Final`")
-        
-        if (length(DepletionReference)!= nStock)
-          cli::cli_abort("`Effort@Catchability` not set for first time step and no value set for `Depletion@Reference`")
-        
-        qStock <- exp(pars[1:nStock])
-        if (nFleet == 1) {
-          qFleet <- matrix(1, nrow = qStock, 1)
-        } else {
-          qlogit <- matrix(0, nStock, nFleet)
-          qlogit[, 2:nf] <- pars[(nStock+1):length(pars)]
-          qFleet <- ilogitm(qlogit)
-        }
-        
-        for (st in 1:nStock) {
-          for (fl in 1:nFleet) {
-            OMListSim$Catchability[st, fl, ] <- qStock[st] * qFleet[st,fl]
-          }
-        }
-        
-        
-        
-        
-      
-        
-        
-        TimeStepsAll <- OMListSim$TimeSteps[[1]]
-        TimeStepsHist <- OMListSim$TimeStepsHist[[1]]
-        TermInd <- match(max(TimeStepsHist), TimeStepsAll)
-        
-        PopDynamicsHistorical <- CalcPopDynamics_(OMListSim, TimeStepsHist)
-        
-        
-        if (DepletionReference=='B0') {
-          Bterminal <- PopDynamicsHistorical$Biomass[[1]][TermInd]
-          depRef <- OMListSim$B0[[1]][TermInd]  
-        } else if (DepletionReference=='SB0') {
-          Bterminal <- PopDynamicsHistorical$SBiomass[[1]][TermInd]
-          depRef <- OMListSim$SB0[[1]][TermInd] 
-        } else {
-          cli::cli_abort("Currently only accepts`Depletion@Reference = 'B0' or 'SB0'")
-        }
-        
-        sum((Bterminal/depRef - DepletionTarget)^2)
-      }
-      
-      
       
       doOpt <- optim(pars,
                      OptCatchabilityMulti,
@@ -100,6 +39,24 @@ OptimizeCatchability <- function(OMList) {
                      OMListSim=OMListSim,
                      control = list(trace = ifelse(silent, 0, 1), factr = tol/.Machine$double.eps)
                      )
+      
+      pars <- doOpt$par
+      qStock <- exp(pars[1:nStock])
+      if (nFleet == 1) {
+        qFleet <- matrix(1, nrow = qStock, 1)
+      } else {
+        qlogit <- matrix(0, nStock, nFleet)
+        qlogit[, 2:nFleet] <- pars[(nStock+1):length(pars)]
+        qFleet <- ilogitm(qlogit)
+      }
+      
+      for (st in 1:nStock) {
+        for (fl in 1:nFleet) {
+          OMListSim$Catchability[st, fl, ] <- qStock[st] * qFleet[st,fl]
+        }
+      }
+      
+      
       
       logQ <- doOpt$minimum
       qval <- exp(doOpt$minimum)
@@ -131,7 +88,6 @@ OptimizeCatchability <- function(OMList) {
     format = "Optimizing catchability (q) for Final Depletion {cli::pb_bar} {cli::pb_percent}",
     clear = TRUE))
   
- 
   OMList
 }
 
@@ -166,6 +122,80 @@ OptCatchabilitySingle <- function(logQ, OMListSim) {
   
   sum((Bterminal/depRef - DepletionTarget)^2)
 }
+
+
+OptCatchabilityMulti <- function(pars, OMListSim) {
+  
+  nStock <- length(OMListSim$Ages)
+  nFleet <- dim(OMListSim$FishingMortality$DeadAtAge[[1]])[3]
+  
+  DepletionTarget <- OMListSim$DepletionFinal
+  DepletionReference <- OMListSim$DepletionReference
+  
+  if (length(DepletionTarget)!= nStock)
+    cli::cli_abort("`Effort@Catchability` not set for first time step and no value set for `Depletion@Final`")
+  
+  if (length(DepletionReference)!= nStock)
+    cli::cli_abort("`Effort@Catchability` not set for first time step and no value set for `Depletion@Reference`")
+  
+  qStock <- exp(pars[1:nStock])
+  if (nFleet == 1) {
+    qFleet <- matrix(1, nrow = qStock, 1)
+  } else {
+    qlogit <- matrix(0, nStock, nFleet)
+    qlogit[, 2:nFleet] <- pars[(nStock+1):length(pars)]
+    qFleet <- ilogitm(qlogit)
+  }
+  
+  for (st in 1:nStock) {
+    for (fl in 1:nFleet) {
+      OMListSim$Catchability[st, , fl] <- qStock[st] * qFleet[st,fl]
+    }
+  }
+  
+  TimeStepsAll <- OMListSim$TimeSteps
+  TimeStepsHist <- OMListSim$TimeStepsHist
+  TermInd <- match(max(TimeStepsHist), TimeStepsAll)
+  
+  
+  PopDynamicsHistorical <- SimulateFisheryDynamics_(OMListSim, TimeStepsHist, MP=NULL, CalcCatch = 0)
+
+  # Depletion objective
+  PredDep <- rep(NA, nStock)
+  
+  for (st in 1:nStock) {
+    ref <- DepletionReference[st]
+    if (!ref %in% c('B0', 'SB0'))
+      cli::cli_abort("Currently only accepts `Depletion@Reference = 'B0' or 'SB0'")
+    RefVal <- OMListSim[[ref]][st,TermInd]
+    var <- switch(ref, B0='Biomass', SB0="SBiomass")
+    PredDep[st] <- PopDynamicsHistorical[[var]][st,TermInd]/RefVal
+  }
+  
+  depOBJ <- sum(log(PredDep/DepletionTarget)^2)
+  
+
+  # need to do SPFrom ---
+  # TODO 
+  
+  # Catch objective
+  terminalLandings <- CalcCatch_(OMListSim, max(TimeStepsHist))
+  
+  predCatchFrac <- purrr::map(terminalLandings$RetainBiomassAtAge, \(x) 
+                              apply(x[,TermInd,], 2, sum)
+  ) |> 
+    List2Array("Stock", "Fleet") |> 
+    aperm(c('Stock', 'Fleet'))
+  total <- matrix(apply(predCatchFrac, 1, sum), nrow=nStock, ncol=nFleet)
+  total[total==0] <- tiny
+  predCatchFrac <- predCatchFrac/total
+  
+  # Lazy - should be: sum(log(CFc[,2:nf]/Cpred[,2:nf])^2) but this doesn't work for single fleets and it makes no difference anyway
+  cOBJ <- sum(log(OMListSim$CatchFrac/predCatchFrac)^2) 
+  
+  depOBJ+cOBJ
+}
+
 
 
 

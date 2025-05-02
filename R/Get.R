@@ -320,9 +320,10 @@ GetCatchability <- function(object, TimeSteps=NULL, df=FALSE) {
 }
 
 
-GetMeanAtAgeFleet <- function(object, TimeSteps, slot='Selectivity') {
-  out <- GetFleetAtAge(object,  slots=c(slot, 'MeanAtAge'), TimeSteps) |> 
-    ProcessStockAtAge(TimeSteps)
+GetMeanAtAgeFleet <- function(object, TimeSteps, slot='Selectivity', process=TRUE, default=tiny/2) {
+  out <- GetFleetAtAge(object,  slots=c(slot, 'MeanAtAge'), TimeSteps)
+  if (process) 
+    out <- out |> ProcessStockAtAge(TimeSteps, default)
   
   if (inherits(out, 'list'))
     out <- List2Array(out)
@@ -339,23 +340,24 @@ GetMeanAtLengthFleet <- function(object, TimeSteps, slot='Selectivity') {
   out
 }
 
-GetDiscardMortalityAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
-  GetMeanAtAgeFleet(object, TimeSteps, 'DiscardMortality')
+GetDiscardMortalityAtAge <- function(object, TimeSteps=NULL, process=TRUE) {
+  GetMeanAtAgeFleet(object, TimeSteps, 'DiscardMortality', process)
 }
 
-GetDiscardMortalityAtLength <- function(object, TimeSteps=NULL, df=FALSE) {
+GetDiscardMortalityAtLength <- function(object, TimeSteps=NULL, process=TRUE) {
   GetMeanAtLengthFleet(object, TimeSteps, 'DiscardMortality')
 }
 
-GetSelectivityAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
-  GetMeanAtAgeFleet(object, TimeSteps)
+GetSelectivityAtAge <- function(object, TimeSteps=NULL, process=TRUE) {
+  GetMeanAtAgeFleet(object, TimeSteps, process=process)
 }
+
 GetSelectivityAtLength <- function(object, TimeSteps=NULL, df=FALSE) {
   GetMeanAtLengthFleet(object, TimeSteps)
 }
 
-GetRetentionAtAge <- function(object, TimeSteps=NULL, df=FALSE) {
-  GetMeanAtAgeFleet(object, TimeSteps, 'Retention')
+GetRetentionAtAge <- function(object, TimeSteps=NULL, process=TRUE) {
+  GetMeanAtAgeFleet(object, TimeSteps, 'Retention', process, 1)
 }
 GetRetentionAtLength <- function(object, TimeSteps=NULL, df=FALSE) {
   GetMeanAtLengthFleet(object, TimeSteps, 'Retention')

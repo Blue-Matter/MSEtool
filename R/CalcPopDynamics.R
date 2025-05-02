@@ -7,9 +7,9 @@ CalcInitialTimeStep <- function(OMList, Unfished=NULL) {
   for (st in 1:nStock) {
   
     RecDevInit <- OMList$RecDevInit[[st]]
-    RecDevHist <- OMList$RecDevs[[st]] 
+    RecDevHist <- OMList$RecDevs
   
-    InitAgeClassRecDevs <- abind::abind(RecDevHist[,1,drop=FALSE],
+    InitAgeClassRecDevs <- abind::abind(abind::adrop(RecDevHist[,st,1,drop=FALSE],2),
                                         RecDevInit, along=2,
                                         use.dnns = TRUE,
                                         use.first.dimnames = FALSE)

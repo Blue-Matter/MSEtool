@@ -59,7 +59,6 @@ MOM <- new('MOM', Stocks, Fleets, Obs, Imps, CatchFrac, Rel = Rel, nsim = nsim)
 
 
 # Convert to new OM
-# TODO reduce age classes
 
 OM <- Convert(MOM, Populate=FALSE)
 
