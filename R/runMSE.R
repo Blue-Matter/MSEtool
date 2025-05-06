@@ -949,6 +949,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
                    control)
 
   # --- Condition Simulated Data on input Data object (if it exists) & calculate error stats ----
+  StockPars$CB <- CB
   StockPars$CBret <- CBret
   StockPars$Biomass <- Biomass
   StockPars$SSB <- SSB
@@ -1195,7 +1196,6 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE,
   nareas <- StockPars$nareas
 
   RealData <- Hist@OM@cpars$Data
-
   ReferencePoints <- Hist@Ref$ReferencePoints
 
   LatentEff <- Hist@Misc$BioEco$LatentEff
@@ -1527,16 +1527,34 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE,
       # --- An update year - update data and run MP ----
       if (y %in% upyrs) {
         # --- Update Data object ----
-        Data_MP <- updateData(Data=Data_MP, OM, MPCalcs, Effort,
+        Data_MP <- updateData(Data=Data_MP, 
+                              OM, MPCalcs, 
+                              Effort,
                               Biomass=StockPars$Biomass,
                               N=StockPars$N,
-                              Biomass_P, CB_Pret, N_P, SSB=StockPars$SSB,
-                              SSB_P, VBiomass=StockPars$VBiomass, VBiomass_P,
+                              Biomass_P, 
+                              CB_Pret, 
+                              N_P, 
+                              SSB=StockPars$SSB,
+                              SSB_P, 
+                              VBiomass=StockPars$VBiomass, 
+                              VBiomass_P,
                               RefPoints=ReferencePoints,
-                              retA_P, retL_P, FM_Pret, Z_P, StockPars,
-                              FleetPars, ObsPars, ImpPars, V_P,
-                              upyrs, interval, y, mm,
-                              Misc=Data_p@Misc, RealData,
+                              retA_P, 
+                              retL_P, 
+                              FM_Pret,
+                              Z_P, 
+                              StockPars,
+                              FleetPars,
+                              ObsPars, 
+                              ImpPars, 
+                              V_P,
+                              upyrs, 
+                              interval,
+                              y, 
+                              mm,
+                              Misc=Data_p@Misc,
+                              RealData,
                               Sample_Area=ObsPars$Sample_Area)
         
         Data_MP@Misc$StockPars$CB_Pret <- CB_Pret
