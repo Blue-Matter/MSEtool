@@ -3,6 +3,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 # MSEtool 3.7.9999
 
 ## Fixes
+- Fixed issue where TAC was being applied to landings rather than removals 
 - `updateData` and `updateData_MS` use the Baranov catch equation to simulate `Data@CAA` in the projection. Previously, the catch at age was simulated with only the retention curve.
 - `multiMSE` solves for F from multi-fleet TAC simultaneously with function `CalcMPDynamics_MF`
 - fix check for simulated `Data@VInd` in `multiMSE`

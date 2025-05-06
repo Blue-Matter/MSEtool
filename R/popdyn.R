@@ -670,6 +670,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
                            StockPars, FleetPars, ImpPars,
                            checks=FALSE, control=list()) {
 
+  control$TAC <- 'removals'
   n_age <- StockPars$maxage + 1 # include age-0
   
   out <- .CalcMPDynamics_SelRetDisc(
@@ -744,6 +745,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
     TACused[is.na(TACused)] <- LastTAC[is.na(TACused)]
     TACusedE <- out$TAC_Imp_Error[,y]*TACused   # TAC taken after implementation error
 
+
     # Calculate total biomass available accounting for any changes in selectivity &/or spatial closures
     # Note vulnerable biomass is not used. With Baranov equation, catch can exceed VB with high F
     Atemp <- apply(CurrentB, c(1,3), sum, na.rm=TRUE)
@@ -759,7 +761,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
                    StockPars$nareas,
                    StockPars$M_ageArray,nyears, y,
                    control)
-    
+  
     # apply max F constraint
     Ftot[Ftot<0] <- maxF
     Ftot[!is.finite(Ftot)] <- maxF
@@ -848,7 +850,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
   #                Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
   #                M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed 
 
-  control$TAC <- 'removals'
+  
   
   # total fishing mortality for realized selectivity curve
   Ftot <- sapply(1:nsim, calcF, removedCatch, out$V_P_real_2, out$retA_P_real_2, Biomass_P, fishdist,
@@ -938,6 +940,7 @@ CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
                               TACused, maxF, Effort_pot,
                               StockPars, FleetPars_f, ImpPars_f, checks = FALSE, control = list()) {
   
+  control$TAC <- 'removals'
   nf <- length(MPRecs_f)
   n_age <- StockPars$maxage + 1 # include age-0
   
@@ -1156,7 +1159,7 @@ CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
     removedCatch[, f] <- apply(out[[f]]$CB_P[,,y,], 1, sum)
   }
   
-  control$TAC <- 'removals'
+  
   
   # total fishing mortality for realized selectivity curve
   Ftot <- sapply(1:nsim, calcF_MF, removedCatch, V_P = lapply(out, getElement, "V_P_real_2"), 
@@ -1551,7 +1554,7 @@ calcF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, Asize, maxage, 
       predC <- Fmat_ret/Zmat * (1-exp(-Zmat)) * Biomass_P[x,,y,] # predicted retained catch
     } else {
       if (control$TAC == 'removals') {
-        predC <- Fmat/Zmat * (1-exp(-Zmat)) * Biomass_P[x,,y,] # TAC applied to predicted removals
+        predC <- Fmat/Zmat * (1-exp(-Zmat)) * Biomass_P[x,,y,] # TAC applied to predicted removal
       }
       else {
         stop('invalid entry for `OM@cpars$control$TAC`. Must be `OM@cpars$control$TAC="removals"`')
