@@ -924,8 +924,14 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
     shiny::incProgress(0.2, detail = 'Simulating Data')
 
   # --- Populate Data object with Historical Data ----
+  if (!is.null(control$ObsCatch) && control$ObsCatch == "Removals") {
+    CatchBiomass <- CB
+  } else {
+    CatchBiomass <- CBret
+  }
+  
   Data <- makeData(Biomass,
-                   CBret,
+                   CatchBiomass,
                    Cret,
                    N,
                    SSB,
@@ -1527,13 +1533,19 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE,
       # --- An update year - update data and run MP ----
       if (y %in% upyrs) {
         # --- Update Data object ----
+        if (!is.null(control$ObsCatch) && control$ObsCatch == "Removals") {
+          CatchBiomass <- CB_P
+        } else {
+          CatchBiomass <- CB_Pret
+        }
+        
         Data_MP <- updateData(Data=Data_MP, 
                               OM, MPCalcs, 
                               Effort,
                               Biomass=StockPars$Biomass,
                               N=StockPars$N,
                               Biomass_P, 
-                              CB_Pret, 
+                              CatchBiomass, 
                               N_P, 
                               SSB=StockPars$SSB,
                               SSB_P, 

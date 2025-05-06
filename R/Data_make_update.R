@@ -25,6 +25,7 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
   # --- Observed catch ----
   # Simulated observed retained catch (biomass)
   Data@Cat <- ObsPars$Cobs_y[,1:nyears] * apply(CBret*Sample_Area$Catch[,,1:nyears,], c(1, 3), sum)
+
   Data@CV_Cat <- matrix(Data@CV_Cat[,1], nrow=nsim, ncol=nyears)
 
   # --- Index of total abundance ----
@@ -266,17 +267,19 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   # if (!is.null(RealData) && ncol(RealData@Cat)>nyears &&
       # !all(is.na(RealData@Cat[1,(nyears+1):length(RealData@Cat[1,])]))) {
     # update projection catches with observed catches
-
-    if (ncol(RealData@Cat)>= ncol(Data@Cat)) {
-      dataTS <- min(nyears+yind, ncol(RealData@Cat))
-      Data@Cat[, 1:dataTS] <- matrix(RealData@Cat[1,1:dataTS],
-                                     nrow=nsim, ncol=length(1:dataTS),
-                                     byrow=TRUE)
-      Data@CV_Cat[, 1:dataTS] <- matrix(RealData@CV_Cat[1,1:dataTS],
-                                        nrow=nsim, ncol=length(1:dataTS),
-                                        byrow=TRUE)
-      
+    if (inherits(RealData, 'Data')) {
+      if (ncol(RealData@Cat)>= ncol(Data@Cat)) {
+        dataTS <- min(nyears+yind, ncol(RealData@Cat))
+        Data@Cat[, 1:dataTS] <- matrix(RealData@Cat[1,1:dataTS],
+                                       nrow=nsim, ncol=length(1:dataTS),
+                                       byrow=TRUE)
+        Data@CV_Cat[, 1:dataTS] <- matrix(RealData@CV_Cat[1,1:dataTS],
+                                          nrow=nsim, ncol=length(1:dataTS),
+                                          byrow=TRUE)
+        
+      }
     }
+
   # }
 
   # --- Index of total abundance ----
@@ -307,6 +310,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   #   # update projection index with observed index if it exists
     
   # if (ncol(RealData@Ind)>= ncol(Data@Ind)) {
+  if  (inherits(RealData, 'Data')) { 
     dataTS <- min(nyears+yind, ncol(RealData@Ind))
     
     Data@Ind[, 1:dataTS] <- matrix(RealData@Ind[1,1:dataTS],
@@ -315,6 +319,8 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
     Data@CV_Ind[, 1:dataTS] <- matrix(RealData@CV_Ind[1,1:dataTS],
                                       nrow=nsim, ncol=length(1:dataTS),
                                       byrow=TRUE)
+  }
+  
   # }
   # }
   
