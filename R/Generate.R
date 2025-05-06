@@ -274,9 +274,6 @@ GenerateRecruitmentDeviations <- function(SD=0.2, AC=0, TruncSD=2,
         logRecDeviations[timesteps[ts]] * (1 - AC[i] * AC[i])^0.5
     }
 
-    # rescale to SD
-    logRecDeviations[timesteps] <- (scale(logRecDeviations[timesteps]) + mean(logRecDeviations[timesteps])) * SD[i]
-
     if (genInit)
       logRecDevInit[GetIndex(i, nrow(logRecDevInit)), ] <- logRecDeviations[period =='Init']
 
