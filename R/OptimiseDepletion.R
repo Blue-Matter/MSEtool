@@ -41,10 +41,12 @@ OptimizeCatchability <- function(OMList) {
                      )
       
       pars <- doOpt$par
+ 
+      
       qStock <- exp(pars[1:nStock])
-      if (nFleet == 1) {
-        qFleet <- matrix(1, nrow = qStock, 1)
-      } else {
+      qFleet <- matrix(1, nStock, nFleet)
+      
+      if (nFleet > 1) {
         qlogit <- matrix(0, nStock, nFleet)
         qlogit[, 2:nFleet] <- pars[(nStock+1):length(pars)]
         qFleet <- ilogitm(qlogit)
@@ -52,9 +54,11 @@ OptimizeCatchability <- function(OMList) {
       
       for (st in 1:nStock) {
         for (fl in 1:nFleet) {
-          OMListSim$Catchability[st, fl, ] <- qStock[st] * qFleet[st,fl]
+          OMListSim$Catchability[st, , fl] <- qStock[st] * qFleet[st,fl]
         }
       }
+      
+ 
       
       
       
@@ -139,11 +143,15 @@ OptCatchabilityMulti <- function(pars, OMListSim) {
     cli::cli_abort("`Effort@Catchability` not set for first time step and no value set for `Depletion@Reference`")
   
   qStock <- exp(pars[1:nStock])
-  if (nFleet == 1) {
-    qFleet <- matrix(1, nrow = qStock, 1)
-  } else {
+  qFleet <- matrix(1, nStock, nFleet)
+  
+  if (nFleet > 1) {
     qlogit <- matrix(0, nStock, nFleet)
     qlogit[, 2:nFleet] <- pars[(nStock+1):length(pars)]
+    
+    ilogitm(qlogit[1,1])
+    ilogitm(qlogit[1,1])
+    
     qFleet <- ilogitm(qlogit)
   }
   
@@ -182,8 +190,7 @@ OptCatchabilityMulti <- function(pars, OMListSim) {
   terminalLandings <- CalcCatch_(OMListSim, max(TimeStepsHist))
   
   predCatchFrac <- purrr::map(terminalLandings$RetainBiomassAtAge, \(x) 
-                              apply(x[,TermInd,], 2, sum)
-  ) |> 
+                              apply(x[,TermInd,], 2, sum)) |> 
     List2Array("Stock", "Fleet") |> 
     aperm(c('Stock', 'Fleet'))
   total <- matrix(apply(predCatchFrac, 1, sum), nrow=nStock, ncol=nFleet)
@@ -192,7 +199,7 @@ OptCatchabilityMulti <- function(pars, OMListSim) {
   
   # Lazy - should be: sum(log(CFc[,2:nf]/Cpred[,2:nf])^2) but this doesn't work for single fleets and it makes no difference anyway
   cOBJ <- sum(log(OMListSim$CatchFrac/predCatchFrac)^2) 
-  
+  print(cOBJ)
   depOBJ+cOBJ
 }
 

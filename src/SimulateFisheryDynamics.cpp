@@ -100,7 +100,6 @@ List SimulateFisheryDynamics_(Rcpp::List OMListSim,
     // Check MP
     int hasMP = CheckMPClass(MP);
     
-    
     // Calculate Biomass & VBiomass, Distribute Effort, Calculate F within Areas,
     // and Calculate SProduction and SBiomass
     for (int st=0; st<nStock; st++) {
@@ -155,8 +154,10 @@ List SimulateFisheryDynamics_(Rcpp::List OMListSim,
                                          RetentionAtAge.col(TSindex), // nAge, nFleet
                                          DiscardMortalityAtAge.col(TSindex) // nAge, nFleet
     );
+    
     FDeadAtAgeAreaStock[TSindex] = FMortFleetArea["FDeadFleetArea"];
     FRetainAtAgeAreaStock[TSindex] = FMortFleetArea["FRetainFleetArea"];
+    
     FDeadAtAgeAreaList[st] = FDeadAtAgeAreaStock;
     FRetainAtAgeAreaList[st] = FRetainAtAgeAreaStock;
     
@@ -191,7 +192,6 @@ List SimulateFisheryDynamics_(Rcpp::List OMListSim,
       arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // nAge, nTS, nArea
       int nAge = NumberAtAgeArea.n_rows;
       int nArea = NumberAtAgeArea.n_slices;
-      
       
       // Determine Age at Recruitment
       Rcpp::RObject AgesS4 = AgesList[st];

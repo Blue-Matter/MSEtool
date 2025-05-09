@@ -50,8 +50,11 @@ SimulateDEV <- function(OM=NULL,
                          CalcCatch)
   }
   
-  t = CalcFisheryDynamics(OMListSim, OMListSim$TimeStepsHist[1:2])
  
+  OMList <- OptimizeCatchability(OMList)
+  
+  
+  
   # TODO
   # - fix multi stock depletion optimizer - not modifying catch by fleet
   # - fix single stock optimizer
