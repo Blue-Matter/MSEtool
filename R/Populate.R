@@ -1,110 +1,3 @@
-#' Calculate an Age-Size Key
-#'
-#' Generates an Age-Size key given mean and standard deviation of size-at-age. The size-at-age
-#' can be normally or log-normally distributed. By default the distribution is truncated at 2
-#' standard deviations.
-#'
-#' @param MeanAtAge The mean size at age. Either a numeric vector of length `nage`, a 2D array with
-#' dimensions `c(nsim, nage)`, or a 3D array with dimensions `c(nsim, nage, nTS)`.
-#' @param CVatAge The coefficient of variation (CV) at age. Same structure as `MeanAtAge`.
-#' @param Classes A numeric vector with the size classes for the age-size key.
-#' @param TruncSD Numeric value indicating the number of standard deviations
-#' where the distribution is truncated. Use high values to approximate a non-truncated distribution
-#' @param Dist The distribution of `MeanAtAge`. Character, either `normal` or `lognormal`
-#' @param Ages Optional. Numeric vector of values for the age classes. Defaults to `0:(nage-1)`.
-#'
-#' @return A 4D array with dimensions `nsim`, `nage`, `nClasses`, and `nTS`
-#'
-#' @export
-CalcASK <- function(MeanAtAge, CVatAge, Classes,
-                    TruncSD=2, Dist=c('normal', 'lognormal'),
-                    Ages=NULL, silent=FALSE,
-                    type='Length') {
-  Dist <- match.arg(Dist)
-
-  # Checks
-  if (any(Classes<0))
-    cli::cli_abort('Some `Classes` < 0 ')
-  if (length(Classes)<3)
-    cli::cli_abort('`length(Classes)<3`')
-  if (length(TruncSD)>1)
-    TruncSD <- TruncSD[1]
-  if (TruncSD<0)
-    cli::cli_abort('`TruncSD` < 0 ')
-
-  MeanAtAge <- Structure(MeanAtAge)
-  SDatAge <- CalcSDatAge(MeanAtAge, CVatAge)
-
-  dim_MeanAtAge <- dim(MeanAtAge)
-  nage <- dim_MeanAtAge[2]
-
-  dim_SDatAge <- dim(SDatAge)
-
-  if (dim_MeanAtAge[2] != dim_SDatAge[2]) {
-    if (dim_SDatAge[2]==1) {
-      SDatAge <- Structure(replicate(nage, SDatAge))
-    } else {
-      cli::cli_abort('`dim(MeanAtAge)[2] != dim(SDatAge)[2]`')
-    }
-  }
-
-  nsim_MeanAtAge <- dim_MeanAtAge[1]
-  nTS_MeanAtAge <- dim_MeanAtAge[3]
-
-  nsim_SDatAge <- dim_SDatAge[1]
-  nTS_SDatAge <- dim_SDatAge[3]
-
-  nsim <- max(nsim_MeanAtAge, nsim_SDatAge) # maximum number of simulations
-  nTS <- max(nTS_MeanAtAge, nTS_SDatAge) # maximum number of time-steps
-
-  ASK_list <- vector('list', nsim)
-
-  by <- Classes[2]-Classes[1]
-  ClassLower <- seq(Classes[1]-0.5*by, by=by, length.out=length(Classes))
-  nClasses <- length(Classes)
-
-  if (is.null(Ages))
-    Ages <- 0:(nage-1)
-
-  text <- paste('Age', type, sep='-')
-  if (!silent)
-    cli::cli_progress_bar(paste('Calculating', text, 'Key'),
-                          total=nsim, type='tasks')
-  for (s in 1:nsim) {
-    if (!silent)
-      cli::cli_progress_update()
-    ASK <- array(0, dim=c(nage, nClasses, nTS))
-    for (t in 1:nTS) {
-      sd <- SDatAge[GetIndex(s, nsim_SDatAge),,GetIndex(t, nTS_SDatAge)]
-      if (Dist=='normal') {
-        mu <- MeanAtAge[GetIndex(s, nsim_MeanAtAge),,GetIndex(t, nTS_MeanAtAge)]
-        classlower <- ClassLower
-      }
-      if (Dist =='lognormal') {
-        sd <- SDatAge[GetIndex(s, nsim_SDatAge),,GetIndex(t, nTS_SDatAge)]/
-          MeanAtAge[GetIndex(s, nsim_MeanAtAge),,GetIndex(t, nTS_MeanAtAge)]
-
-        sd[!is.finite(sd)] <- 0.05
-        mu <- log(MeanAtAge[GetIndex(s, nsim_MeanAtAge),,GetIndex(t, nTS_MeanAtAge)]) -
-          0.5 * sd^2
-        mu[!is.finite(mu)] <- log(1E-6)
-        classlower <- log(ClassLower)
-      }
-      ASK[,1,t] <- ptnorm(classlower[2], mean=mu, sd=sd, truncsd=TruncSD)
-      for (l in 2:(nClasses-1)) {
-        ASK[,l,t] <- ptnorm(classlower[l+1], mean=mu, sd=sd, TruncSD) -
-          ptnorm(classlower[l], mean=mu, sd=sd, TruncSD)
-      }
-      ASK[,nClasses,t] <- 1 - ptnorm(classlower[nClasses], mean=mu, sd, TruncSD)
-      # ASK[,,t] <- ASK[,,t]/matrix(apply(ASK[,,t], 1, sum), nrow=nage, ncol=nClasses)
-    }
-    ASK_list[[s]] <- ASK
-  }
-  out <- abind::abind(ASK_list, along=4) |> aperm(c(4,1,2,3))
-  attributes(out)$Classes <- Classes
-  attributes(out)$Ages <- Ages
-  out
-}
 
 
 RequireALK <- function(stock) {
@@ -310,6 +203,13 @@ CalcSDatAge <- function(MeanAtAge, CVatAge) {
   ind3 <- expand.grid(1:dim[1], 1:dim[2], 1:dim[3]) |> as.matrix()
   SDatAge[ind3] <-  MeanAtAge[ind1] * CVatAge[ind2]
 
+  
+  if (all(d1 >= d2)) {
+    dimnames(SDatAge) <- dimnames(MeanAtAge)
+  } else { 
+    dimnames(SDatAge) <- dimnames(CVatAge)
+  }
+  
   SDatAge
 }
 
@@ -351,20 +251,26 @@ PopulateClasses <- function(object) {
 
 
 PopulateASK <- function(object, Ages=NULL, TimeSteps=NULL, silent=FALSE, type='Length') {
-
+  
   CheckRequiredObject(Ages, 'ages', 'Ages')
   if ('Timing' %in% slotNames(object)) {
     Ages@Classes <- Ages@Classes+object@Timing
   }
-
+  
   MeanAtAge <- object@MeanAtAge
   CVatAge <- object@CVatAge
   Classes <- object@Classes
   Dist <- object@Dist
   TruncSD <- object@TruncSD
-
+  
   object@ASK <- CalcASK(MeanAtAge, CVatAge, Classes, TruncSD, Dist, Ages,
                         silent=silent, type=type)
+  
+  
+  # CPP version 
+  
+  
+  
   
   timesteps <- c(dimnames(MeanAtAge)$TimeStep,
                  dimnames(CVatAge)$TimeStep) |> unique() |> sort()
@@ -490,49 +396,31 @@ CalcUnfishedDist <- function(Spatial,
 
 #
 
-#' Populate an object
-#'
-#' This function takes a valid S4 object and ...
-#'
+# Populate an object
+# 
+# This function takes a valid S4 object and ...
+# 
 setGeneric("Populate", function(object, ...) standardGeneric("Populate"))
+
+# setMethod("Populate", "om", function(object, silent=FALSE)
 
 ## ---- OM -----
 #' @describeIn Populate Populate an [om-class()] object
 #' @param x A Operating Model object or sub-object
-#' @param messages Logical or character. 
-#' FALSE to suppress all messages, 
-#' TRUE to print all messages,
-#' 'progress' to print key progress updates 
+#' @param silent Logical. TRUE to suppress all messages
 #' @export
-setMethod("Populate", "om", function(object, messages='progress') {
+#' 
+PopulateOM <- function(OM, silent=FALSE) {
+  if (CheckDigest(list(), OM) | EmptyObject(OM))
+    return(OM)
   
-  if (CheckDigest(list(), object) | EmptyObject(object))
-    return(object)
+  # TODO - object check
+  chk <- Check(OM)
   
-  chk <- Check(object)
   
-  if (methods::is(object@Stock, 'list'))
-    class(object@Stock) <- 'StockList'
-
-  if (methods::is(object@Stock, 'stock')) {
-    nStocks <- 1
-  } else if (methods::is(object@Stock, 'StockList')) {
-    nStocks <- length(object@Stock)
-  } else {
-    cli::cli_abort('`Stock` must be a {.fun {"Stock"}} object or a list of {.fun {"Stock"}} objects')
-  }
+  nStocks <- nStock(OM)
+  nFleets <- nFleet(OM)
   
-  if (methods::is(object@Fleet, 'list')) 
-    class(object@Fleet) <- 'StockFleetList'
-  
-  if (methods::is(object@Fleet, 'fleet')) {
-    nFleets <- 1
-  } else if (methods::is(object@Fleet, 'StockFleetList')) {
-    nFleets <- length(object@Fleet[[1]])
-  } else {
-    cli::cli_abort('`Fleet` must be a {.fun {"Fleet"}} object or a nested list of {.fun {"Fleet"}} objects for each {.fun {"Sleet"}} object')
-  }
-
   # Populate Stock
   stockList <- vector('list', nStocks)
   names(stockList) <- paste('Stock', 1:nStocks)
@@ -543,27 +431,25 @@ setMethod("Populate", "om", function(object, messages='progress') {
   names(fleetList) <- paste('Stock', 1:nStocks)
   
   for (st in 1:nStocks) {
-    if (isS4(object@Stock)) {
-      stock <- object@Stock 
+    if (isS4(OM@Stock)) {
+      stock <- OM@Stock 
     } else {
-      stock <- object@Stock[[st]]
+      stock <- OM@Stock[[st]]
     }
     
-    if (!isFALSE(messages)) {
-      if (nStocks>1) {
-        cli::cli_alert('Populating Stock {.val {st}/{nStocks}}')
-      } else {
-        cli::cli_alert('Populating Stock')
-      }
+    if (!silent) {
+      cli::cli_alert('Populating Stock: {.val {stock@Name} ({st}/{nStocks})}')
     }
- 
-    stock@nSim <- object@nSim
-    stock@nYear <- object@nYear
-    stock@pYear <- object@pYear
-    stock@CurrentYear <- object@CurrentYear
-   
-    stockList[[st]] <- Populate(stock, seed=object@Seed, messages=messages)
-
+    
+    stock@nSim <- OM@nSim
+    stock@nYear <- OM@nYear
+    stock@pYear <- OM@pYear
+    stock@CurrentYear <- OM@CurrentYear
+    
+    stockList[[st]] <- PopulateStock(stock, 
+                                     seed=OM@Seed, 
+                                     messages=messages)
+    
     names(stockList)[st] <- stock@Name
     names(fleetList)[st] <- names(stockList)[st]
     fleetList[[st]] <- list()
@@ -602,63 +488,71 @@ setMethod("Populate", "om", function(object, messages='progress') {
     }
   }
   
-  if (methods::is(object@Stock, 'list') | methods::is(object@Stock, 'StockList')) {
-    object@Stock <- stockList
-  } 
-  #else {
-    #object@Stock <- stockList[[1]]
-  #}
-  
-  if (methods::is(object@Fleet, 'list')| methods::is(object@Fleet, 'StockFleetList')) {
-    object@Fleet <- fleetList
-  }
-  #else {
-   # object@Fleet <- fleetList[[1]][[1]]    
-  #}
-  
-  # share paramaters for two-sex stocks
-  object <- object |> 
-    UpdateSPFrom() |>
-    ShareParameters() |> 
-    StartMessages()
-  
-  # CatchFrac 
-  object <- ProcessCatchFrac(object)
-  
-  
-  # Obs and Imp
-  
-  # Update OM Timesteps
-  # object@Stock[[1]]@Ages@Units
-  # TimeUnits(object)
-  # 
-  # object@Stock
-  # object@TimeUnits 
-  
-  SetDigest(list(), object)
-  
-  
-})
+}
 
 
-## ---- Stock ----
+ 
+  
+  
+  
+ 
+  
+
+#   
+#   if (methods::is(object@Stock, 'list') | methods::is(object@Stock, 'StockList')) {
+#     object@Stock <- stockList
+#   } 
+#   #else {
+#     #object@Stock <- stockList[[1]]
+#   #}
+#   
+#   if (methods::is(object@Fleet, 'list')| methods::is(object@Fleet, 'StockFleetList')) {
+#     object@Fleet <- fleetList
+#   }
+#   #else {
+#    # object@Fleet <- fleetList[[1]][[1]]    
+#   #}
+#   
+#   # share paramaters for two-sex stocks
+#   object <- object |> 
+#     UpdateSPFrom() |>
+#     ShareParameters() |> 
+#     StartMessages()
+#   
+#   # CatchFrac 
+#   object <- ProcessCatchFrac(object)
+#   
+#   
+#   # Obs and Imp
+#   
+#   # Update OM Timesteps
+#   # object@Stock[[1]]@Ages@Units
+#   # TimeUnits(object)
+#   # 
+#   # object@Stock
+#   # object@TimeUnits 
+#   
+#   SetDigest(list(), object)
+#   
+#   
+# }
+
+# ---- Stock ----
 
 #' @describeIn Populate Populate an [stock-class()] object
 #' @param seed Seed for the random number generator
 #' @export
-setMethod("Populate", "stock", function(object,
-                                        ALK=TRUE,
-                                        AWK=FALSE,
-                                        seed=NULL,
-                                        messages='progress') {
-
+PopulateStock <- function(stock, 
+                          ALK=TRUE, 
+                          AWK=FALSE, 
+                          seed=NULL, 
+                          silent=FALSE) {
+  
   argList <- list(seed, ALK, AWK)
-  if (CheckDigest(argList, object) | EmptyObject(object))
-    return(object)
-
-  SetSeed(object, seed)
-
-  stock <- object
+  if (CheckDigest(argList, stock) | EmptyObject(stock))
+    return(stock)
+  
+  SetSeed(stock, seed)
   
   stock@TimeUnits <- stock@Ages@Units
   stock@TimeStepsPerYear <- TSperYear(stock@TimeUnits)
@@ -666,81 +560,219 @@ setMethod("Populate", "stock", function(object,
                                    stock@pYear, 
                                    stock@CurrentYear, 
                                    stock@TimeUnits)
-  
-
-
   # Require ALK and/or AWK?
   # ALK <- RequireALK(stock)
   # AWK <- RequireAWK(stock)
-
-  stock@Length <- Populate(object=stock@Length,
-                           Ages=stock@Ages,
-                           nsim=nSim(stock),
-                           TimeSteps=TimeSteps(stock),
-                           ASK=ALK,
-                           seed=seed,
-                           messages=messages)
-  
-
-  stock@Weight <- Populate(object=stock@Weight,
-                           Ages=stock@Ages,
-                           Length=stock@Length,
-                           nSim(stock),
-                           TimeSteps=TimeSteps(stock),
-                           ASK=AWK,
-                           seed=seed,
-                           messages=messages)
-
-  stock@NaturalMortality <- Populate(stock@NaturalMortality,
-                                     Ages=stock@Ages,
-                                     Length=stock@Length,
-                                     nsim=nSim(stock),
-                                     TimeSteps=TimeSteps(stock),
-                                     seed=seed,
-                                     messages=messages)
-
-  stock@Maturity <- Populate(stock@Maturity,
-                             Ages=stock@Ages,
-                             Length=stock@Length,
-                             nsim=nSim(stock),
-                             TimeSteps=TimeSteps(stock),
-                             seed=seed,
-                             messages=messages)
-  
-  stock@Fecundity <- Populate(object=stock@Fecundity,
-                              Ages=stock@Ages,
-                              Length=stock@Length,
-                              Weight=stock@Weight,
-                              Maturity=stock@Maturity,
-                              nsim=nSim(stock),
-                              TimeSteps=TimeSteps(stock),
-                              seed=seed,
-                              messages=messages)
-
-  stock@SRR <- Populate(object=stock@SRR,
-                        MaxAge=stock@Ages@MaxAge,
-                        CurrentYear=stock@CurrentYear,
-                        TimeSteps=stock@TimeSteps,
-                        nsim=stock@nSim,
-                        seed=seed,
-                        messages=messages)
-
-  stock@Spatial <- Populate(stock@Spatial,
-                            Ages=stock@Ages,
-                            TimeSteps=TimeSteps(stock),
-                            nsim=stock@nSim,
-                            seed=seed,
-                            messages=messages)
-
-  stock@Depletion <- Populate(stock@Depletion,
-                            nsim=stock@nSim,
-                            seed=seed,
-                            messages=messages)
   
   
-  SetDigest(argList, stock)
-})
+  
+}
 
+# Length = OM@Stock@Length
+
+## ---- Length -----
+
+PopulateLength <- function(Length,
+                           Ages=NULL,
+                           nsim=NULL,
+                           TimeSteps=NULL,
+                           ASK=TRUE,
+                           seed=NULL,
+                           silent=FALSE) {
+  
+  argList <- list(Ages, nsim, TimeSteps, ASK, seed)
+  
+  if (CheckDigest(argList, Length) | EmptyObject(Length))
+    return(Length)
+  
+  SetSeed(Length, seed)
+  
+  Length@Pars <- StructurePars(Pars=Length@Pars, nsim, TimeSteps)
+  Length@Model <- FindModel(Length)
+  Length <- PopulateMeanAtAge(Length, Ages, TimeSteps)
+  Length <- PopulateRandom(Length)
+  Length@CVatAge <- StructureCV(Length@CVatAge, nsim)
+  dd <- dim(Length@CVatAge)
+  dimnames(Length@CVatAge) <- list(Sim=(1:nsim)[1:dd[1]],
+                                   Age=Ages@Classes[1:dd[2]],
+                                   TimeStep=TimeSteps[1:dd[3]])
+  
+  if (is.null(Length@CVatAge))
+    ASK <- FALSE
+  
+  if (ASK) {
+    Length <- PopulateClasses(Length)
+    Length <- PopulateASK(Length, Ages, TimeSteps, isFALSE(messages))
+  }
+  
+  
+  
+}
+
+
+PopulateWeight <- function() {
+  
+}
+
+
+PopulateNaturalMortality <- function() {
+  
+}
+
+PopulateMaturity <- function() {
+  
+}
+
+PopulateFecundity <- function() {
+  
+}
+
+PopulateSRR <- function() {
+  
+}
+
+PopulateSpatial <- function(Spatial,
+                            Ages=NULL,
+                            TimeSteps=NULL,
+                            nsim=NULL,
+                            seed=NULL,
+                            silent=FALSE,
+                            nits=100) {
+  
+  
+}
+
+
+## ---- Depletion ----
+
+PopulateInitial <- function(Initial, nsim=NA, name='Initial') {
+  if (length(Initial)<1)
+    return(Initial)
+  if (all(is.na(Initial)))
+    return(Initial)
+  
+  if (length(Initial)==1) 
+    nsim <- 1
+  
+  if (length(Initial)==2) {
+    # sample from uniform distribution
+    if (is.na(nsim))
+      cli::cli_abort(c('`nsim` required to generate stochastic values',
+                       'i'='Provide number of simulations to `nsim` argument')
+      )
+    Initial <- sort(Initial)
+    Initial <- stats::runif(48, Initial[1], Initial[2])
+  }
+  nsim <- length(Initial)
+  array(Initial, dim=nsim, dimnames = list(Sim=1:nsim))
+}
+
+PopulateDepletion <- function(Depletion,  
+                              nsim=NULL,
+                              seed=NULL) {
+  argList <- list(nsim, seed)
+  
+  if (CheckDigest(argList, Depletion) | EmptyObject(Depletion))
+    return(Depletion)
+  
+  SetSeed(Depletion, seed)
+  
+  Depletion@Initial <- PopulateInitial(Depletion@Initial, nsim)
+  Depletion@Final <- PopulateInitial(Depletion@Final, nsim, 'Final')
+
+  validReference <- c('B0', 'BMSY', 'SB0', 'SBMSY')
+  if (!Depletion@Reference %in% validReference)
+    cli::cli_abort(c('Invalid value for `Reference`',
+                     "x"="Currently {.val {Depletion@Reference}}. Must be one of: {.val {validReference}}")
+                   )
+  SetDigest(argList, Depletion)
+}
+
+
+
+
+# setMethod("Populate", "stock", function(object,
+#                                         ALK=TRUE,
+#                                         AWK=FALSE,
+#                                         seed=NULL,
+#                                         silent=FALSE) {
+
+  
+  
+
+
+  
+  
+
+# 
+#   stock@Length <- Populate(object=stock@Length,
+#                            Ages=stock@Ages,
+#                            nsim=nSim(stock),
+#                            TimeSteps=TimeSteps(stock),
+#                            ASK=ALK,
+#                            seed=seed,
+#                            messages=messages)
+#   
+# 
+#   stock@Weight <- Populate(object=stock@Weight,
+#                            Ages=stock@Ages,
+#                            Length=stock@Length,
+#                            nSim(stock),
+#                            TimeSteps=TimeSteps(stock),
+#                            ASK=AWK,
+#                            seed=seed,
+#                            messages=messages)
+# 
+#   stock@NaturalMortality <- Populate(stock@NaturalMortality,
+#                                      Ages=stock@Ages,
+#                                      Length=stock@Length,
+#                                      nsim=nSim(stock),
+#                                      TimeSteps=TimeSteps(stock),
+#                                      seed=seed,
+#                                      messages=messages)
+# 
+#   stock@Maturity <- Populate(stock@Maturity,
+#                              Ages=stock@Ages,
+#                              Length=stock@Length,
+#                              nsim=nSim(stock),
+#                              TimeSteps=TimeSteps(stock),
+#                              seed=seed,
+#                              messages=messages)
+#   
+#   stock@Fecundity <- Populate(object=stock@Fecundity,
+#                               Ages=stock@Ages,
+#                               Length=stock@Length,
+#                               Weight=stock@Weight,
+#                               Maturity=stock@Maturity,
+#                               nsim=nSim(stock),
+#                               TimeSteps=TimeSteps(stock),
+#                               seed=seed,
+#                               messages=messages)
+# 
+#   stock@SRR <- Populate(object=stock@SRR,
+#                         MaxAge=stock@Ages@MaxAge,
+#                         CurrentYear=stock@CurrentYear,
+#                         TimeSteps=stock@TimeSteps,
+#                         nsim=stock@nSim,
+#                         seed=seed,
+#                         messages=messages)
+# 
+#   stock@Spatial <- Populate(stock@Spatial,
+#                             Ages=stock@Ages,
+#                             TimeSteps=TimeSteps(stock),
+#                             nsim=stock@nSim,
+#                             seed=seed,
+#                             messages=messages)
+# 
+#   stock@Depletion <- Populate(stock@Depletion,
+#                             nsim=stock@nSim,
+#                             seed=seed,
+#                             messages=messages)
+#   
+#   
+#   SetDigest(argList, stock)
+# })
+# 
 
 
 ### ---- Length ----

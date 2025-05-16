@@ -51,7 +51,8 @@ MakeOMList <- function(OM, Unfished, Period="All", bySim=TRUE) {
   OMList <- c(OMList, MakeFleetList(OM, Period))
   cli::cli_progress_update()
   
-  OMList$CatchFrac <- List2Array(OM@CatchFrac, 'Stock') |> aperm(c('Sim', 'Stock', 'Fleet'))
+  if (length(OM@CatchFrac)>0)
+    OMList$CatchFrac <- List2Array(OM@CatchFrac, 'Stock') |> aperm(c('Sim', 'Stock', 'Fleet'))
   
 
   OMList$SP0 <- Unfished@Equilibrium@SProduction |>

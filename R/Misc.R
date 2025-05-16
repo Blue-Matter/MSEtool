@@ -365,6 +365,9 @@ AddAgeTimeStepDimensions <- function(object, outdim=4) {
 List2Array <- function(List, dimname="Fleet", dim1="Sim", ListDimNames=NULL) {
   if (inherits(List, 'array'))
     return(List)
+  if (!length(List))
+    return(NULL)
+  
   UnList <- unlist(List)
   if (length(UnList)<1)
     return(UnList)
@@ -625,8 +628,10 @@ EmptyObject <- function(object) {
     return(prod(empty))
   }
   length(object) < 1 | all(is.na(object))
-
 }
+
+
+
 
 PopulatedObject <- function(object) {
   !is.null(attributes(object)$digest)

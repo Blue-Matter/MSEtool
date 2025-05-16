@@ -200,8 +200,8 @@ List SimulateFisheryDynamics_(Rcpp::List OMListSim,
       
       int AgeRec = AgeClasses.min(); // first age class = age of recruitment (should be 0 or 1)
       int TSRec = TSindex + AgeRec; // TSindex + 1 for age-1 recruitment
-      
-      if (TSRec<(nTS-1)) {
+
+      if (TSRec<nTS) {
         // Calcate Recruitment
         // NOTE: uses SP0 and R0 from first time step
         // Uses aggregate SProduction - ie summed over areas

@@ -68,6 +68,7 @@ Collate:
     'Awatea2OM.R'
     'BAM2OM.R'
     'B_Low_functions.R'
+    'CalcASK.R'
     'CalcApicalF.R'
     'CalcCatch.R'
     'CalcCurves.R'

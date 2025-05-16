@@ -5,9 +5,12 @@ la <- devtools::load_all
 
 la()
 
-testOM@nsim <- 10
+testOM@nsim <- 20
 
-OM <- Convert(testOM)
+OM <- Convert(testOM, Populate = FALSE)
+
+t <- Populate(OM)
+
 
 parallel=FALSE
 messages='default'
@@ -15,6 +18,21 @@ nSim=NULL
 silent=FALSE
 
 # SimulateDEV
+
+Stock <- OM@Stock$Albacore
+
+MeanAtAge = Stock@Length@MeanAtAge
+CVatAge <- Stock@Length@CVatAge
+Classes <- Stock@Length@Classes
+TruncSD=2
+Dist='normal'
+Ages=NULL
+silent=FALSE
+type='Length'
+
+
+
+CalcASK(Stock@Length)
 
 
 

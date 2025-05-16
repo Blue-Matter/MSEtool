@@ -340,10 +340,36 @@ setMethod("Check", signature(object = "distribution"), function(object, ...) {
 
 # ---- OM Object ----
 setMethod("Check", signature(object = "om"), function(object, ...) {
-  # cli::cli_alert_info('`Check` not complete for Class {.val {class(object)}}')
-  ll <- CheckList(object)
+  
+  OM <- object
+  
+  ll <- CheckList(OM)
   if (ll@empty)
     return(ll)
+  
+  if (methods::is(OM@Stock, 'list'))
+    class(OM@Stock) <- 'StockList'
+
+  if (methods::is(OM@Stock, 'stock')) {
+    nStocks <- 1
+  } else if (methods::is(OM@Stock, 'StockList')) {
+    nStocks <- length(OM@Stock)
+  } else {
+    cli::cli_abort('`Stock` must be a {.fun {"Stock"}} object or a list of {.fun {"Stock"}} objects')
+  }
+
+  if (methods::is(OM@Fleet, 'list'))
+    class(OM@Fleet) <- 'StockFleetList'
+
+  if (methods::is(OM@Fleet, 'fleet')) {
+    nFleets <- 1
+  } else if (methods::is(OM@Fleet, 'StockFleetList')) {
+    nFleets <- length(OM@Fleet[[1]])
+  } else {
+    cli::cli_abort('`Fleet` must be a {.fun {"Fleet"}} object or a nested list of {.fun {"Fleet"}} objects for each {.fun {"Stock"}} object')
+  }
+  
+  
   
   if (length(ll@errors)<1)
     ll@complete <- TRUE

@@ -20,47 +20,11 @@ SimulateDEV <- function(OM=NULL,
   # ---- Calculate Equilibrium Unfished Dynamics ----
   Unfished <- CalcEquilibriumUnfished(OM)
   
-
   # ---- Make OM List ----
-  
-  
   OMList <- MakeOMList(OM, Unfished)
   
-  ##########################################
-  OMListSim <- OMList[[1]]
   
-  OMListSim$Catchability[] <- 1
-  
-  CalcFisheryDynamics <- function(OMListSim=list(),
-                                  TimeSteps=NULL,
-                                  MP=NULL,
-                                  CalcCatch=1) {
-    if (!inherits(OMListSim, 'OMListSim'))
-      stop('`OMListSim` must be class `OMListSim`')
-    
-    if (is.null(TimeSteps))
-      TimeSteps <- OMListSim$TimeStepsHist
-    
-    # check time steps
-    
-    
-    SimulateFisheryDynamics_(OMListSim,
-                         TimeSteps,
-                         MP,
-                         CalcCatch)
-  }
-  
- 
-  OMList <- OptimizeCatchability(OMList)
-  
-  
-  
-  # TODO
-  # - fix multi stock depletion optimizer - not modifying catch by fleet
-  # - fix single stock optimizer
-  
-  
-  
+
   ##########################################
   
   # ---- Calculate Dynamic Unfished ----
@@ -104,11 +68,14 @@ SimulateDEV <- function(OM=NULL,
   
   # Calculate Population Dynamics (Fishing Mortality & Number by Area)
   OMList <- purrr::map(OMList, \(x) 
-                           CalcPopDynamics_(x, HistTimeSteps),
-                           .progress = list(
-                             type = "iterator", 
-                             format = "Simulating Historical Fishery {cli::pb_bar} {cli::pb_percent}",
-                             clear = TRUE))
+                       SimulateFisheryDynamics_(x, HistTimeSteps, MP=NULL, CalcCatch = 1),
+                       .progress = list(
+                         type = "iterator", 
+                         format = "Simulating Historical Fishery {cli::pb_bar} {cli::pb_percent}",
+                         clear = TRUE))
+  
+  
+  OMList[[1]]$RemovalBiomassAtAge$Albacore[,50,]
   
   # Calculate Removals, Landings
   OMList <- purrr::map(OMList, \(x) 
