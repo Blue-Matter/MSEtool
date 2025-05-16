@@ -66,10 +66,6 @@ ConvertToList <- function(x) {
   x
 }
 
-ConvertFromList <- function(x) {
-  
-  
-}
 
 
 StartUp <- function(OM, messages='default', nSim=NULL) {
@@ -80,7 +76,7 @@ StartUp <- function(OM, messages='default', nSim=NULL) {
   
   OM |> 
     nSimUpdate(nSim, messages) |>
-    Populate(messages=messages) |>
+    Populate() |>
     ConvertToList() # converts OM@Stock and OM@Fleet to lists
   
 }

@@ -87,14 +87,14 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
     om@Obs <- SubOM(OM, 'Obs')
     om@Imp <- SubOM(OM, 'Imp')
     
-    om@Stock@Length <- Populate(object=om@Stock@Length,
+    om@Stock@Length <- PopulateLength(om@Stock@Length,
                                 Ages=om@Stock@Ages,
                                 nsim=om@nSim,
                                 TimeSteps=TimeSteps(om),
                                 ASK=TRUE,
                                 seed=om@Seed)
 
-    om@Stock@Weight <- Populate(object=om@Stock@Weight,
+    om@Stock@Weight <- PopulateWeight(om@Stock@Weight,
                                 Ages=om@Stock@Ages,
                                 Length=om@Stock@Length,
                                 nsim=om@nSim,
@@ -104,10 +104,10 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
     
     if (as.logical(OM@isRel)) {
       # multiply by L50 
-      om@Stock@Maturity <- Populate(om@Stock@Maturity,
-                                    om@Stock@Ages,
-                                    om@Stock@Length,
-                                    om@nSim,
+      om@Stock@Maturity <- PopulateMaturity(om@Stock@Maturity,
+                                    Ages=om@Stock@Ages,
+                                    Length=om@Stock@Length,
+                                    nsim=om@nSim,
                                     TimeSteps(om),
                                     CalcAtLength=TRUE,
                                     seed=om@Seed)
@@ -145,7 +145,7 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
     om <- SolveForVmaxlen(om) 
     om <- SolveForRmaxlen(om)
     if (Populate)
-      om <- Populate(om, messages=FALSE)
+      om <- Populate(om, silent=FALSE)
     return(om)
   }
 
@@ -532,6 +532,7 @@ cpars2SRR <- function(cpars, nYear=NULL, maxage=NULL) {
 
   SRR
 }
+
 OM2Depletion <- function(OM, cpars=NULL) {
   if (is.null(cpars) & inherits(OM, 'OM'))
     cpars <- OM@cpars
@@ -607,7 +608,6 @@ process_mov <- function(mov, nage=1, nts=1) {
   mov
 }
 
-
 cpars2Spatial <- function(cpars, TimeSteps) {
   Spatial <- Spatial()
   Spatial@RelativeSize <- process_cpars(cpars$Asize)
@@ -640,7 +640,6 @@ AdjustEffort <- function(FishingMortality, DiscardMortality) {
   FishingMortality
 }
 
-
 OM2fleet <- function(OM, cpars=NULL, Fdisc=NULL) {
   fleet <- Fleet()
   if (methods::is(OM, 'Fleet'))
@@ -672,7 +671,7 @@ OM2FishingMortality <- function(OM, cpars=NULL) {
     FishingMortality <- cpars2FishingMortality(cpars)
   } else {
     FishingMortality <- FishingMortality()
-    cli::cli_alert_warning('Apical F not imported!!')
+    # cli::cli_alert_warning('Apical F not imported!!')
   }
  
   FishingMortality
@@ -683,7 +682,6 @@ cpars2FishingMortality <- function(cpars) {
   FishingMortality@ApicalF <- process_cpars(cpars$qs) * process_cpars(cpars$Find)
   FishingMortality
 }
-
 
 
 OM2Selectivity <- function(OM, cpars=NULL) {
@@ -709,7 +707,6 @@ cpars2Selectivity <- function(cpars) {
   Selectivity
 }
 
-
 OM2Retention <- function(OM, cpars=NULL) {
   if (is.null(cpars) & inherits(OM, 'OM'))
     cpars <- OM@cpars
@@ -734,7 +731,6 @@ cpars2Retention <- function(cpars) {
   Retention
 }
 
-
 OM2Distribution <- function(OM, cpars) {
   if (is.null(cpars) & inherits(OM, 'OM'))
     cpars <- OM@cpars
@@ -755,8 +751,6 @@ cpars2Distribution <- function(cpars) {
   Distribution@Closure <- process_cpars(cpars$MPA)
   Distribution
 }
-
-
 
 
 
@@ -834,8 +828,6 @@ MOM2fleet <- function(MOM, st) {
   if (nfleets==1) return(FleetList[[1]])
   FleetList
 }
-
-
 
 MOM2stock <- function(MOM, TimeSteps=NULL) {
   StockList <- list()

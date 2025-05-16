@@ -106,3 +106,25 @@ CalcEquilibriumUnfished <- function(OM,
   
   Unfished
 }
+
+
+CalcDynamicUnfished <- function(OMList, Unfished) {
+  
+  
+  OMListUnfished <- purrr::map(OMList, \(x) {
+    x$Catchability[] <- tiny
+    SimulateFisheryDynamics_(x, TimeSteps=x$TimeSteps, MP=NULL, CalcCatch=0)    
+  })
+  
+  Unfished@Equilibrium@Number$Albacore |> dim()
+  
+  Unfished@Dynamic@Number |> dim()
+  OMListUnfished[[1]]$NumberAtAgeArea |> List2Array() |> dim()
+  
+  Unfished@Dynamic@Number |> dim()
+  
+  stop()
+  # populate Dynamic
+  Unfished
+  
+}

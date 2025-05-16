@@ -735,13 +735,13 @@ SolveForVmaxlen <- function(om) {
       vmaxlen <- Vmaxlen[GetIndex(s, nrow(Vmaxlen)), GetIndex(ts, ncol(Vmaxlen))]
       if (vmaxlen==1)
         next()
-      opt <- uniroot(optForVmaxLen,
+      opt <- optimize(optForVmaxLen,
                       interval=logit(c(0.001, 0.999)),
                       l5=l5,
                       lfs=lfs,
                       linf=linf,
                       vmaxlen=vmaxlen)
-      VmaxlenOut[s,ts] <- ilogit(opt$root)
+      VmaxlenOut[s,ts] <- ilogit(opt$minimum)
       cli::cli_progress_update()
     }
   }
@@ -775,13 +775,13 @@ SolveForRmaxlen <- function(om) {
       
       if (rmaxlen==1)
         next()
-      opt <- uniroot(optForVmaxLen,
+      opt <- optimize(optForVmaxLen,
                      interval=logit(c(0.001, 0.999)),
                      l5=l5,
                      lfs=lfs,
                      linf=linf,
                      vmaxlen=rmaxlen)
-      RmaxlenOut[s,ts] <- ilogit(opt$root)
+      RmaxlenOut[s,ts] <- ilogit(opt$minimum)
       cli::cli_progress_update()
     }
   }
@@ -794,5 +794,5 @@ optForVmaxLen <- function(logitTrial, l5, lfs, linf, vmaxlen) {
   trial <- ilogit(logitTrial)
   lens <- seq(0, linf,length.out=100)
   sel <- DoubleNormal(lens,l5, lfs, trial)
-  sel[length(sel)] - vmaxlen
+  (sel[length(sel)] - vmaxlen)^2
 }

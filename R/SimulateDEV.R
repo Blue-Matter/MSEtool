@@ -7,7 +7,7 @@ SimulateDEV <- function(OM=NULL,
                         silent=FALSE,
                         ...) {
   
-  MSEtool:::CheckClass(OM)
+  CheckClass(OM)
   
   if (isTRUE(silent)) 
     messages <- FALSE
@@ -15,7 +15,7 @@ SimulateDEV <- function(OM=NULL,
   # ---- Initial Checks and Setup ----
   chk <- Check(OM) # TODO OM checks
   
-  OM <- MSEtool:::StartUp(OM, messages) 
+  OM <- StartUp(OM, messages) 
   
   # ---- Calculate Equilibrium Unfished Dynamics ----
   Unfished <- CalcEquilibriumUnfished(OM)
@@ -23,38 +23,18 @@ SimulateDEV <- function(OM=NULL,
   # ---- Make OM List ----
   OMList <- MakeOMList(OM, Unfished)
   
+  # TODO:
+  # - dynamic unfished - finish
+  # - reference point - update
+  # - SimulateFisheryDynamics_ 
+  #   - add option to calculate Catch
+  #   - check that all objects in OMList are updated and returned
   
-
-  ##########################################
+  stop()
   
   # ---- Calculate Dynamic Unfished ----
-  # TODO 
-  # update Unfished: create array sizes on initization
-  # Create from OMList 
+  Unfished <- CalcDynamicUnfished(OMList, Unfished)
   
-  # CalcDynamicUnfished <- function(OMList, Unfished) {
-  #   
-  #   OMListUnfished <- purrr::map(OMList, \(x, idx, Unfished=Unfished) {
-  #     x$Effort$Catchability <- purrr::map(x$Effort$Catchability , \(y) {
-  #       y[] = tiny
-  #       y
-  #     })
-  #     unfished <- CalcPopDynamics(x, Period="All")  
-  #     
-  #     
-  #   },
-  #   .progress = list(
-  #     type = "iterator", 
-  #     format = "Calculating Unfished {cli::pb_bar} {cli::pb_percent}",
-  #     clear = TRUE))
-  #   
-  #   OMListUnfished[[1]]$NumberAtAgeArea[[1]] |> dim()
-  #   
-  #   Unfished@Dynamic@Number |> dim()
-  #   
-  # } 
-  
-
   # ---- Calculate Reference Points ----
   # TODO speed up
   # RefPoints <- CalcRefPoints(OM, Unfished)
@@ -62,7 +42,6 @@ SimulateDEV <- function(OM=NULL,
   # ---- Optimize for Final Depletion ----
   OMList <- OptimizeCatchability(OMList)
 
-  
   # ---- Historical Population Dynamics ----
   HistTimeSteps <- TimeSteps(OM, 'Historical')
   
@@ -75,11 +54,11 @@ SimulateDEV <- function(OM=NULL,
                          clear = TRUE))
   
   
-  OMList[[1]]$RemovalBiomassAtAge$Albacore[,50,]
+  OMList[[1]]$RemovalBiomassAtAge$Albacore[,2,]
   
   # Calculate Removals, Landings
   OMList <- purrr::map(OMList, \(x) 
-                           CalcCatches_(x, HistTimeSteps))
+                       CalcCatch_(x, HistTimeSteps))
   
   # Calculate Aggregate F 
   OMList <- purrr::map(OMList, \(x) 

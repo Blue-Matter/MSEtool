@@ -637,38 +637,38 @@ print_slot <- function(object, name) {
 ## Internal Print Functions ----
 
 
-PrintPopulating <- function(object, print=TRUE, name=NULL, allup=FALSE) {
-  if (!print)
-    return(NULL)
-
-  if (!is.null(name)) {
-    cli::cli_progress_message("{cli::symbol$info} Populating {.val {name}}")
-  } else {
-    if (allup)
-      cli::cli_progress_message("{cli::symbol$info}Populating {.val {toupper(class(object))}}")
-    if (!allup)
-      cli::cli_progress_message("{cli::symbol$info} Populating {.val {firstup(class(object))}}")
-  }
-
-
-}
-
-PrintDonePopulating <- function(object, sb, print=TRUE, name=NULL, allup=FALSE) {
-  if (!print)
-    return(NULL)
-
-  cli::cli_progress_done(id = sb)
-
-  if (!is.null(name)) {
-    cli::cli_alert_success("Populated {.val {name}}")
-  } else {
-    if (allup)
-      cli::cli_alert_success("Populated {.val {toupper(class(object))}}")
-    if (!allup)
-      cli::cli_alert_success("Populated {.val {firstup(class(object))}}")
-  }
-
-}
+# PrintPopulating <- function(object, print=TRUE, name=NULL, allup=FALSE) {
+#   if (!print)
+#     return(NULL)
+# 
+#   if (!is.null(name)) {
+#     cli::cli_progress_message("{cli::symbol$info} Populating {.val {name}}")
+#   } else {
+#     if (allup)
+#       cli::cli_progress_message("{cli::symbol$info}Populating {.val {toupper(class(object))}}")
+#     if (!allup)
+#       cli::cli_progress_message("{cli::symbol$info} Populating {.val {firstup(class(object))}}")
+#   }
+# 
+# 
+# }
+# 
+# PrintDonePopulating <- function(object, sb, print=TRUE, name=NULL, allup=FALSE) {
+#   if (!print)
+#     return(NULL)
+# 
+#   cli::cli_progress_done(id = sb)
+# 
+#   if (!is.null(name)) {
+#     cli::cli_alert_success("Populated {.val {name}}")
+#   } else {
+#     if (allup)
+#       cli::cli_alert_success("Populated {.val {toupper(class(object))}}")
+#     if (!allup)
+#       cli::cli_alert_success("Populated {.val {firstup(class(object))}}")
+#   }
+# 
+# }
 
 
 

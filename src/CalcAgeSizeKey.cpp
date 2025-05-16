@@ -51,6 +51,10 @@ arma::cube CalcAgeSizeKey_(NumericMatrix MeanAtAge, // nAge, nTS
     ClassesLower[i] = Classes[i]-0.5*By;
   }
   
+  if (Dist[0]=="lognormal") {
+    ClassesLower = log(ClassesLower);
+  }
+  
   for (int ts=0; ts<nTS; ts++) {
     NumericVector sd = SDatAge(_,ts);
     NumericVector mu = MeanAtAge(_,ts);
@@ -60,7 +64,6 @@ arma::cube CalcAgeSizeKey_(NumericMatrix MeanAtAge, // nAge, nTS
       sd[!is_finite(sd)] = 0.05;
       mu = log(mu) - 0.5 * pow(sd,2);
       mu[!is_finite(mu)] = log(1E-6);
-      ClassesLower = log(ClassesLower);
     }
   
     NumericVector prob1 =  ptnorm_(ClassesLower[1], mu, sd, TruncSD);
@@ -73,7 +76,5 @@ arma::cube CalcAgeSizeKey_(NumericMatrix MeanAtAge, // nAge, nTS
     NumericVector prob4 = 1 - ptnorm_(ClassesLower[nClass-1], mu, sd, TruncSD);
     ASK(arma::span(0, nAge-1), arma::span(nClass-1), arma::span(ts)) = as<arma::vec>(wrap(prob4));
   }
-
   return(ASK);
-
 }

@@ -142,6 +142,7 @@ Collate:
     'PMtable.R'
     'Plot.R'
     'Populate.R'
+    'PopulateFunctions.R'
     'Print.R'
     'ProjectMP.R'
     'RcppExports.R'

@@ -5,11 +5,11 @@ la <- devtools::load_all
 
 la()
 
-testOM@nsim <- 20
+testOM@nsim <- 5
 
-OM <- Convert(testOM, Populate = FALSE)
+OM <- Convert(testOM)
 
-t <- Populate(OM)
+
 
 
 parallel=FALSE

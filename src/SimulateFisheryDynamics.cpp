@@ -242,15 +242,9 @@ List SimulateFisheryDynamics_(Rcpp::List OMListSim,
       
     } // end of Stock loop 
     
-    
-    // CalcCatch and overall F
-    if (CalcCatch>0) {
-      
-      
-    }
-    
-    
   } // end of Time Step loop
+  
+
   
   // Update OMListSimOut
   // TODO - check all are updated
@@ -264,6 +258,13 @@ List SimulateFisheryDynamics_(Rcpp::List OMListSim,
   OMListSimOut["SProduction"] = SProduction; // nStock, nTS
   OMListSimOut["VBiomassArea"] = VBiomassAreaList;
 
+  
+  // CalcCatch and overall F
+  if (CalcCatch>0) {
+    CalcCatch_(OMListSim, TimeSteps)
+    
+  }
+  
   
   return(OMListSimOut);
 }
