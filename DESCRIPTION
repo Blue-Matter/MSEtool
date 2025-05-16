@@ -69,6 +69,7 @@ Collate:
     'BAM2OM.R'
     'B_Low_functions.R'
     'CalcASK.R'
+    'CalcAgeSizeKey.R'
     'CalcApicalF.R'
     'CalcCatch.R'
     'CalcCurves.R'

@@ -11,20 +11,6 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// CalcAgeSizeKey_
-arma::cube CalcAgeSizeKey_(arma::mat MeanAtAge, arma::mat SDatAge, arma::vec Classes, CharacterVector Dist);
-RcppExport SEXP _MSEtool_CalcAgeSizeKey_(SEXP MeanAtAgeSEXP, SEXP SDatAgeSEXP, SEXP ClassesSEXP, SEXP DistSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type MeanAtAge(MeanAtAgeSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type SDatAge(SDatAgeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type Classes(ClassesSEXP);
-    Rcpp::traits::input_parameter< CharacterVector >::type Dist(DistSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcAgeSizeKey_(MeanAtAge, SDatAge, Classes, Dist));
-    return rcpp_result_gen;
-END_RCPP
-}
 // CalcCatch_
 List CalcCatch_(Rcpp::List OMListSim, Rcpp::NumericVector TimeSteps);
 RcppExport SEXP _MSEtool_CalcCatch_(SEXP OMListSimSEXP, SEXP TimeStepsSEXP) {
@@ -376,7 +362,6 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_MSEtool_CalcAgeSizeKey_", (DL_FUNC) &_MSEtool_CalcAgeSizeKey_, 4},
     {"_MSEtool_CalcCatch_", (DL_FUNC) &_MSEtool_CalcCatch_, 2},
     {"_MSEtool_vecminInd", (DL_FUNC) &_MSEtool_vecminInd, 1},
     {"_MSEtool_LinInterp_cpp", (DL_FUNC) &_MSEtool_LinInterp_cpp, 3},
