@@ -14,6 +14,12 @@ inline double CalcBiomass(arma::mat NumberAtAgeArea, // nAge, nArea
   return(B);
 }
 
+inline arma::mat TransposeMatrix(arma::mat matrix, int ncol) {
+  if (ncol == 1) {
+    matrix = matrix.t();
+  }
+  return(matrix);
+}
 
 inline arma::mat CalcVBiomass(arma::mat NumberAtAgeArea, // nAge, nArea
                        arma::mat FleetWeightAtAgeFleet, // nAge, nFleet
@@ -24,6 +30,8 @@ inline arma::mat CalcVBiomass(arma::mat NumberAtAgeArea, // nAge, nArea
   int nArea = NumberAtAgeArea.n_cols;
   int nFleet = FleetWeightAtAgeFleet.n_cols;
   
+  ClosureFleetArea = TransposeMatrix(ClosureFleetArea, nArea);
+ 
   CheckDimensions(nAge, FleetWeightAtAgeFleet.n_rows, "FleetWeightAtAgeFleet", "nAge");
   CheckDimensions(nAge, SelectivityAtAgeFleet.n_rows, "SelectivityAtAgeFleet", "nAge");
   CheckDimensions(nFleet, SelectivityAtAgeFleet.n_cols, "SelectivityAtAgeFleet", "nFleet", 1);
@@ -45,11 +53,11 @@ inline arma::mat CalcVBiomass(arma::mat NumberAtAgeArea, // nAge, nArea
 
 
 inline arma::mat CalcEffortDistribution(arma::mat VBiomassFleetArea, // nFleet, nArea
-                                        arma::vec Effort) {  // nFleet
+                                        arma::vec Effort,
+                                        int nArea) {  // nFleet
   
-  
+  VBiomassFleetArea = TransposeMatrix(VBiomassFleetArea, nArea);
   int nFleet = VBiomassFleetArea.n_rows;
-  int nArea = VBiomassFleetArea.n_cols;
   
   CheckLength(Effort.size(), nFleet, "Effort", "nFleet (nrow(VBiomassFleetArea))");
   
@@ -71,13 +79,14 @@ inline List CalcFMortality(arma::mat EffortFleetArea, // nFleet, nArea
                            arma::rowvec RelativeSize, // nArea
                            arma::mat SelectivityAtAgeFleet, // nAge, nFleet
                            arma::mat RetentionAtAgeFleet, // nAge, nFleet
-                           arma::mat DiscardMortalityAtAgeFleet // nAge, nFleet
+                           arma::mat DiscardMortalityAtAgeFleet, // nAge, nFleet
+                           int nArea
 ) {
   
+  EffortFleetArea = TransposeMatrix(EffortFleetArea, nArea);
   int nFleet = EffortFleetArea.n_rows;
-  int nArea = EffortFleetArea.n_cols;
   int nAge = SelectivityAtAgeFleet.n_rows;
-  
+
   CheckLength(Catchability.size(), nFleet, "Catchability", "nFleet (nrow(EffortFleetArea))");
   CheckLength(RelativeSize.size(), nArea, "RelativeSize", "nArea (ncol(EffortFleetArea))");
   

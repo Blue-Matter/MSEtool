@@ -1,9 +1,61 @@
 
-# CheckSimsUnique <- function(OMList) {
-#   l1 <- MakeSimList(OMList, 1)
-#   l2 <- MakeSimList(OMList, 2)
-#   digest::digest(l1, algo='spookyhash') != digest::digest(l2, algo='spookyhash')
-# }
+OMListSimSubsetTimeStep <- function(List, TimeSteps=NULL) {
+  nms <- names(List)
+  if (is.null(nms)) {
+    if (inherits(List, 'array')) {
+      if ("TimeStep" %in% names(dimnames(List))) {
+        List <- ArraySubsetTimeStep(List, TimeSteps)
+      }
+    }
+  } else {
+    for (i in seq_along(nms)) {
+      nmsList <- names(List[[i]]) 
+      if (isS4(List[[i]])) {
+        return(List[[i]])
+      }
+      
+      hasTS <- "TimeStep" %in% nmsList
+      if (all(is.na(nmsList)))
+        nmsList <- NULL 
+      if (inherits(List[[i]], 'array')) {
+        if ("TimeStep" %in% names(dimnames(List[[i]]))) {
+          List[[i]] <- ArraySubsetTimeStep(List[[i]], TimeSteps)
+        }
+      } else if (is.list(List[[i]])) {
+        for (j in seq_along(List[[i]])) {
+          obj <- Recall(List[[i]][[j]], TimeSteps)
+          if (is.null(obj))
+            next()
+          List[[i]][[j]] <- Recall(List[[i]][[j]], TimeSteps)
+        }
+      } else if (inherits(List[[i]], 'numeric')) {
+        if (hasTS)
+          List[[i]] <- ArraySubsetTimeStep(List[[i]], TimeSteps)
+      } else if (inherits(List[[i]], 'integer')) {
+        if (hasTS)
+          List[[i]] <-  ArraySubsetTimeStep(List[[i]], TimeSteps)
+      }
+    }
+  }
+  List
+}
+
+
+CheckSimsUnique <- function(OMList, TimeSteps=NULL, ignore=c('Sim')) {
+  if (is.null(TimeSteps)) {
+    l1 <- OMList[[1]]
+    l2 <- OMList[[2]]
+  } else {
+    l1 <- OMListSimSubsetTimeStep(OMList[[1]], TimeSteps)
+    l2 <- OMListSimSubsetTimeStep(OMList[[2]], TimeSteps)  
+  }
+  
+  for (nm in ignore) {
+    l1[[nm]] <- NULL
+    l2[[nm]] <- NULL
+  }
+  digest::digest(l1, algo='spookyhash') == digest::digest(l2, algo='spookyhash')
+}
 
 # ConvertToSimList <- function(OMList) {
 #   
@@ -39,57 +91,26 @@ ReverseList <- function(ls) {
   apply(do.call(rbind, x), 2, as.list) 
 }
 
-MakeOMList <- function(OM, Unfished, Period="All", bySim=TRUE) {
+MakeOMList <- function(OM, Period="All") {
   id <- cli::cli_progress_bar("Creating Internal OM List Object")
   
-  cli::cli_progress_update()
-  
   OMList <- MakePopulationList(OM, Period)
-  
-  cli::cli_progress_update()
-  
+
   OMList <- c(OMList, MakeFleetList(OM, Period))
-  cli::cli_progress_update()
-  
+
   if (length(OM@CatchFrac)>0)
     OMList$CatchFrac <- List2Array(OM@CatchFrac, 'Stock') |> aperm(c('Sim', 'Stock', 'Fleet'))
   
-
-  OMList$SP0 <- Unfished@Equilibrium@SProduction |>
-    purrr::map(\(x) {
-      x |> ExpandSims(OM@nSim) |> ExpandTimeSteps(TimeSteps=TimeSteps(OM, Period='All'))
-    }) |> List2Array("Stock") |> aperm(c("Sim", "Stock", "TimeStep"))
-  
-  OMList$SB0 <- Unfished@Equilibrium@SBiomass |>
-    purrr::map(\(x) {
-      x |> ExpandSims(OM@nSim) |> ExpandTimeSteps(TimeSteps=TimeSteps(OM, Period='All'))
-    }) |> List2Array("Stock") |> aperm(c("Sim", "Stock", "TimeStep"))
-  
-  OMList$B0 <- Unfished@Equilibrium@Biomass |>
-    purrr::map(\(x) {
-      x |> ExpandSims(OM@nSim) |> ExpandTimeSteps(TimeSteps=TimeSteps(OM, Period='All')) |>
-        apply(c("Sim" ,"TimeStep"), sum)
-    }) |> List2Array("Stock") |> aperm(c("Sim", "Stock", "TimeStep"))  
-  
-  OMList$N0atAge <- Unfished@Equilibrium@Number |>
-    purrr::map(\(x) {
-      x |> ExpandSims(OM@nSim) |> ExpandTimeSteps(TimeSteps=TimeSteps(OM, Period='All'))
-    })
-  
-  
   OMList$Sim <- 1:OM@nSim
+  OMList$CurvesFSearch <- OM@Control$Curves$FSearch
+  
   names(OMList$Sim) <- rep("Sim", OM@nSim)
   
-  OMList <- CalcInitialTimeStep(OMList, Unfished) 
-  cli::cli_progress_update()
-  
-  if (bySim) {
-    OMList <- purrr::map(1:OM@nSim, function(x) {
-      cli::cli_progress_update(id=id)
-      MakeSimList(OMList, x)
-    })
-    names(OMList) <- 1:OM@nSim
-  }
+  OMList <- purrr::map(1:OM@nSim, function(x) {
+    cli::cli_progress_update(id=id)
+    MakeSimList(OMList, x)
+  })
+  names(OMList) <- 1:OM@nSim
   
   cli::cli_progress_done()
  
@@ -121,6 +142,7 @@ GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), TimeSte
        FleetNames=FleetNames(OM))
 }
 
+
 MakeSimList <- function(List, Sim=1) {
   nms <- names(List)
   
@@ -143,6 +165,7 @@ MakeSimList <- function(List, Sim=1) {
         List[[i]] <- List[[i]][Sim]
     }
   } 
+ 
   class(List) <- "OMListSim"
   List
 }
@@ -154,6 +177,7 @@ MakePopulationList <- function(OM, Period='All') {
   
   List$Ages <-  purrr::map(OM@Stock, methods::slot, 'Ages')
   List$Length <- MakeStockSlotList(OM, 'Length', Period)
+  
   weight <- MakeStockSlotList(OM, 'Weight', Period)
   List$WeightMeanAtAge <- weight$MeanAtAge
   
@@ -256,7 +280,7 @@ MakeStockSlotList <- function(OM, slot='Length', Period='Historical', TimeSteps=
       })
   }
   
- 
+
   if ('MeanAtLength' %in% sNames) {
     fun <- get(paste0('Get', slot, 'AtLength'))
     List$MeanAtLength <- fun(OM@Stock, TimeSteps) |>
@@ -303,6 +327,13 @@ MakeStockSlotList <- function(OM, slot='Length', Period='Historical', TimeSteps=
       ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
                   TimeSteps) 
     }) 
+  
+  List$ASK$Female |> dimnames()
+  t = ArrayExpand(List$ASK[[1]], nSim=OM@nSim, nAges=meta$nAges[[1]],
+                  TimeSteps)
+  
+  
+  
   
   if ('Classes' %in% sNames)
     List$Classes <- purrr::map(OM@Stock, \(x) x |> 

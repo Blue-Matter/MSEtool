@@ -8,7 +8,7 @@ SetHistRel <- function(OM) {
   Relations(OM) 
 }
 
-nSimUpdate <- function(OM, nSim=NULL, messages='default') {
+nSimUpdate <- function(OM, nSim=NULL, silent=FALSE, messages='default') {
   if (is.null(nSim))
     return(OM)
   if (nSim==OM@nSim)
@@ -68,14 +68,14 @@ ConvertToList <- function(x) {
 
 
 
-StartUp <- function(OM, messages='default', nSim=NULL) {
+StartUp <- function(OM, silent=FALSE, nSim=NULL) {
   
   # TODO                    
   if (!is.null(OM@SexPars@Herm))
     stop('Herm not done yet!')
   
   OM |> 
-    nSimUpdate(nSim, messages) |>
+    nSimUpdate(nSim, silent) |>
     Populate() |>
     ConvertToList() # converts OM@Stock and OM@Fleet to lists
   

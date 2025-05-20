@@ -1,30 +1,28 @@
+#' @include MOM_object.r
+NULL
+
+
 #' Convert old style and new style object classes
-#' 
-#' Converts `OM` and `MOM` class objects to new `om` class, and 
-#' back again
-#'
-#' @param OM An old style `OM` or `MOM` class object, or a
-#' new OM object (class `om`)
-#' @param Author Optional. Character vector with author name(s)
-#' @param CurrentYear Optional. Current calendar year. Otherwise will try grab from
-#' the OM object if it exists
-#' 
-#' @return A object of class `OM`, `MOM`, or `om`
+setGeneric("Convert", function(object, ...) standardGeneric("Convert"))
+
+setMethod("Convert", "OM", function(object, Author='', CurrentYear=NULL, Populate=TRUE) {
+  OM2om(object, Author, CurrentYear, Populate=Populate)
+})
+
+setMethod("Convert", "MOM", function(object, Author='', CurrentYear=NULL, Populate=TRUE) {
+  OM2om(object, Author, CurrentYear, Populate=Populate)
+})
+
+setMethod("Convert", "om", function(object, Author='', CurrentYear=NULL, Populate=TRUE) {
+  if (nStock(object)>1 | nFleet(object)>1)
+    return(om2MOM(object))
+  om2OM(object)
+
+})
+
+
+#' @describeIn Convert description Convert an `OM` or `MOM` object to new `om` class
 #' @export
-#' 
-Convert <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
-  if (methods::is(OM, 'OM') | methods::is(OM, 'MOM')) {
-    return(OM2om(OM, Author, CurrentYear, Populate=Populate))
-  } else if (methods::is(OM, 'om')) {
-    if (nStock(OM)>1 | nFleet(OM)>1)
-      return(om2MOM(OM))
-    return(om2OM(OM))
-  } else {
-    cli::cli_abort('`OM` must be class `OM`, `MOM`, or `om`')
-  }
-}
-
-
 OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
 
   if (!methods::is(OM, 'OM') & !methods::is(OM, 'MOM'))
@@ -104,13 +102,13 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
     
     if (as.logical(OM@isRel)) {
       # multiply by L50 
-      om@Stock@Maturity <- PopulateMaturity(om@Stock@Maturity,
-                                    Ages=om@Stock@Ages,
-                                    Length=om@Stock@Length,
-                                    nsim=om@nSim,
-                                    TimeSteps(om),
-                                    CalcAtLength=TRUE,
-                                    seed=om@Seed)
+      om@Stock@Maturity <- PopulateMaturity(Maturity=om@Stock@Maturity,
+                                            Ages=om@Stock@Ages,
+                                            Length=om@Stock@Length,
+                                            nsim=om@nSim,
+                                            TimeSteps(om),
+                                            CalcAtLength=TRUE,
+                                            seed=om@Seed)
       
       om@Fleet@Selectivity@Pars <- StructurePars(Pars=om@Fleet@Selectivity@Pars,
                                                  nsim=om@nSim, 
@@ -231,7 +229,7 @@ OM2stock <- function(OM, cpars=NULL, TimeSteps=NULL) {
   stock@CommonName <- OM@Common_Name
   stock@Species <- OM@Species
   stock@Ages <- Ages(OM@maxage)
-  Length(stock) <- OM2Length(OM, cpars)
+  Length(stock) <- OM2Length(OM, cpars, TimeSteps)
   Weight(stock) <- OM2Weight(OM, cpars)
   NaturalMortality(stock) <- OM2NaturalMortality(OM, cpars)
   Maturity(stock) <- OM2Maturity(OM, cpars)
@@ -242,7 +240,7 @@ OM2stock <- function(OM, cpars=NULL, TimeSteps=NULL) {
   stock
 }
 
-OM2Length <- function(OM, cpars=NULL) {
+OM2Length <- function(OM, cpars=NULL, TimeSteps=NULL) {
   if (is.null(cpars) & inherits(OM, 'OM'))
     cpars <- OM@cpars
 
@@ -251,7 +249,7 @@ OM2Length <- function(OM, cpars=NULL) {
   } else {
     Length <- Length()
   }
-
+  
   pars <- Pars(Length)
   if (!is.numeric(pars$Linf)) {
     pars$Linf <- process_cpars(OM@Linf) 
@@ -276,11 +274,21 @@ OM2Length <- function(OM, cpars=NULL) {
   }
   
   # ASK
-  if (!is.null(Length@Classes))
-    Length@ASK <- CalcASK(MeanAtAge=Length@MeanAtAge, 
-                          Length@CVatAge,
-                          Length@Classes,  
-                          Length@TruncSD)
+  if (!is.null(Length@Classes)) {
+    dd <- dim(Length@MeanAtAge)
+    AllTimeSteps <- c(TimeSteps$HistTS, TimeSteps$ProjTS)
+    DimNames <- list(Sim=1:dd[1],
+                     Age=0:OM@maxage,
+                     TimeSteps=AllTimeSteps[1:dd[3]])
+    dimnames(Length@MeanAtAge) <- DimNames
+    dimnames(Length@CVatAge) <- DimNames
+    
+    Length@ASK <- CalcAgeSizeKey(MeanAtAge=Length@MeanAtAge, 
+                                 CVatAge=Length@CVatAge,
+                                 Classes=Length@Classes,  
+                                 TruncSD=Length@TruncSD)
+  }
+ 
 
   Length
 }

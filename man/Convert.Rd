@@ -2,23 +2,18 @@
 % Please edit documentation in R/Convert.R
 \name{Convert}
 \alias{Convert}
+\alias{OM2om}
 \title{Convert old style and new style object classes}
 \usage{
-Convert(OM, Author = "", CurrentYear = NULL, Populate = TRUE)
-}
-\arguments{
-\item{OM}{An old style \code{OM} or \code{MOM} class object, or a
-new OM object (class \code{om})}
+Convert(object, ...)
 
-\item{Author}{Optional. Character vector with author name(s)}
-
-\item{CurrentYear}{Optional. Current calendar year. Otherwise will try grab from
-the OM object if it exists}
-}
-\value{
-A object of class \code{OM}, \code{MOM}, or \code{om}
+OM2om(OM, Author = "", CurrentYear = NULL, Populate = TRUE)
 }
 \description{
-Converts \code{OM} and \code{MOM} class objects to new \code{om} class, and
-back again
+Convert old style and new style object classes
 }
+\section{Functions}{
+\itemize{
+\item \code{OM2om()}: description Convert an \code{OM} or \code{MOM} object to new \code{om} class
+
+}}

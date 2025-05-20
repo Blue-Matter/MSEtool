@@ -1,3 +1,5 @@
+not <- function(val) !val
+
 ReplaceTiny <- function(Array, value=1, default=tiny/2) {
   Array[Array==default] <- value
   Array
@@ -717,37 +719,60 @@ range01 <- function (x) {
 SolveForVmaxlen <- function(om) {
   # calculates new value for Vmaxlen to correspond with maximum
   # length bin rather than Linf, as previously defined
-  Linf <- om@Stock@Length@Pars$Linf
+  Linf <- om@Stock@Length@Pars$Linf 
   dd <- dim(Linf)
   L5 <- om@Fleet@Selectivity@Pars$L5
   LFS <- om@Fleet@Selectivity@Pars$LFS
   Vmaxlen <- om@Fleet@Selectivity@Pars$Vmaxlen
+
+  df <- rbind(dim(Linf),
+        dim(L5),
+        dim(LFS),
+        dim(Vmaxlen)
+  )
+  nsim <- max(df[,1])
+  
+  timestepsList <- list(dimnames(Linf)$TimeStep,
+                        dimnames(L5)$TimeStep,
+                        dimnames(LFS)$TimeStep,
+                        dimnames(Vmaxlen)$TimeStep
+  )
+  timesteps <- timestepsList[[which.max(df[,2])]]                      
+    
+  Linf <- Linf |> ArrayExpand(nsim, TimeSteps=timesteps)
+  L5 <- L5 |> ArrayExpand(nsim, TimeSteps=timesteps)
+  LFS <- LFS |> ArrayExpand(nsim, TimeSteps=timesteps)
+  Vmaxlen <- Vmaxlen |> ArrayExpand(nsim, TimeSteps=timesteps)
   
   VmaxlenOut <- array(0, dim=dd)
   dimnames(VmaxlenOut) <- dimnames(Linf)
   cli::cli_progress_bar('Calculating `Vmaxlen`', total=prod(dd))
   
-  for (s in 1:dd[1]) {
-    for (ts in 1:dd[2]) {
-      l5 <- L5[GetIndex(s, nrow(L5)), GetIndex(ts, ncol(L5))]
-      lfs <- LFS[GetIndex(s, nrow(LFS)), GetIndex(ts, ncol(LFS))]
-      linf <- Linf[GetIndex(s, nrow(Linf)), GetIndex(ts, ncol(Linf))]
-      vmaxlen <- Vmaxlen[GetIndex(s, nrow(Vmaxlen)), GetIndex(ts, ncol(Vmaxlen))]
-      if (vmaxlen==1)
-        next()
-      opt <- optimize(optForVmaxLen,
-                      interval=logit(c(0.001, 0.999)),
-                      l5=l5,
-                      lfs=lfs,
-                      linf=linf,
-                      vmaxlen=vmaxlen)
-      VmaxlenOut[s,ts] <- ilogit(opt$minimum)
+  for (s in 1:nsim) {
+    for (ts in seq_along(timesteps)) {
+      VmaxlenOut[s,ts] <- VmaxLenOpt(L5[s,ts], 
+                                     LFS[s,ts],
+                                     Vmaxlen[s, ts],
+                                     Linf[s,ts])
       cli::cli_progress_update()
     }
   }
   cli::cli_progress_done()
+  
   om@Fleet@Selectivity@Pars$Vmaxlen <- VmaxlenOut
   om
+}
+
+VmaxLenOpt <- function(l5, lfs, vmaxlen, linf) {
+  if (vmaxlen > 0.99)
+    return(vmaxlen)
+  opt <- optimize(optForVmaxLen,
+                  interval=logit(c(0.001, 0.999)),
+                  l5=l5,
+                  lfs=lfs,
+                  linf=linf,
+                  vmaxlen=vmaxlen)
+  return(ilogit(opt$minimum))
 }
 
 SolveForRmaxlen <- function(om) {

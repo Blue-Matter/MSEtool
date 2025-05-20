@@ -1,78 +1,93 @@
-CalcSurvival <- function(M_at_Age, F_at_Age=NULL,
-                         PlusGroup=TRUE, SpawnTimeFrac=NULL, 
-                         Semelparous=FALSE) {
-  Z_at_Age <- M_at_Age
-  if (!is.null(F_at_Age))
-    Z_at_Age <- ArrayAdd(M_at_Age, F_at_Age)
+CalcSurvival <- function(NaturalMortalityAtAge, # nAge, nTS
+                         FishingMortalityAtAge=NULL, # nAge, nTS
+                         PlusGroup=TRUE, # logical
+                         SpawnTimeFrac=NULL, # double  
+                         Semelparous=FALSE) { # FALSE or array nAge, nTS
   
-  dd <- dim(Z_at_Age)
-  nSim <- dd[1]
-  nAge <- dd[2]
-  nTS <- dd[3]
   
-  surv <- array(NA, dim=c(nSim, nAge, nTS))
-  dimnames(surv) <- dimnames(Z_at_Age)
+  TotalMortalityAtAge <- NaturalMortalityAtAge
+  if (!is.null(FishingMortalityAtAge))
+    TotalMortalityAtAge <- ArrayAdd(NaturalMortalityAtAge, FishingMortalityAtAge)
+  
+  nAge <- nrow(TotalMortalityAtAge)
+  nTS <- ncol(TotalMortalityAtAge)
+  
+  survival <- array(NA, dim=c(nAge, nTS))
+  dimnames(survival) <- dimnames(TotalMortalityAtAge)
     
   if (is.null(SpawnTimeFrac)) {
     SpawnTimeFrac <- 0
   }
-  SpawnTimeFrac <- rep(SpawnTimeFrac, nSim)[1:nSim]
   
   if (inherits(Semelparous, 'logical')) {
-    Semelparous <- M_at_Age[,,1]
+    Semelparous <- NaturalMortalityAtAge[,1]
     Semelparous[] <- 0
   }
   
   for (a in 1:nAge) {
-    ZthisAge <- abind::adrop(Z_at_Age[,a,, drop=FALSE], 2)
+    ZthisAge <- TotalMortalityAtAge[a,]
     if (a==1) {
-      surv[,a,] <- exp(-ZthisAge*SpawnTimeFrac)
+      survival[a,] <- exp(-ZthisAge*SpawnTimeFrac)
     } else {
-      ZlastAge <- abind::adrop(Z_at_Age[,a-1,, drop=FALSE], 2)
-      PostSpawnMortalityLastAge <- abind::adrop(Semelparous[,a-1,, drop=FALSE], 2)
-
-      # surv[,a,] <- surv[,a-1,]*exp(-(Z_at_Age[,a-1,]*(1-SpawnTimeFrac)+Z_at_Age[,a,]*SpawnTimeFrac))
-      
-      surv[,a,] <- ArrayMultiply(abind::adrop(surv[,a-1,, drop=FALSE],2),
-                                 exp(-(ZlastAge*(1-SpawnTimeFrac)+ZthisAge*SpawnTimeFrac)))|>
-        ArrayMultiply(1-PostSpawnMortalityLastAge)
+      ZlastAge <- TotalMortalityAtAge[a-1,]
+      PostSpawnMortalityLastAge <- Semelparous[a-1,]
+      survival[a,] <- survival[a-1,]*
+        exp(-(ZlastAge*(1-SpawnTimeFrac)+ZthisAge*SpawnTimeFrac)) *
+        (1-PostSpawnMortalityLastAge)
     }
   }
   if (PlusGroup)
-    surv[,nAge,] <- surv[,nAge,]/(1-exp(-Z_at_Age[,nAge,]))
+    survival[nAge,] <- survival[nAge,]/(1-exp(-TotalMortalityAtAge[nAge,]))
   
-  dimnames(surv) <- dimnames(Z_at_Age)
-  surv 
+  dimnames(survival) <- dimnames(TotalMortalityAtAge)
+  survival 
 }
 
-
-# ---- CalcUnfishedSurvival -----
-
-setGeneric('CalcUnfishedSurvival', function(x, SP=FALSE, TimeSteps=NULL)
-  standardGeneric('CalcUnfishedSurvival')
-)
-
-setMethod('CalcUnfishedSurvival', c('stock', 'ANY', 'ANY'), function(x, SP=FALSE, TimeSteps=NULL) {
-  if (SP) {
-    SpawnTimeFrac <- x@SRR@SpawnTimeFrac  
-  } else {
+CalcUnfishedSurvival <- function(NaturalMortalityAtAge, # nAge, nTS
+                                 PlusGroup, # logical
+                                 SpawnTimeFrac, # double
+                                 Semelparous, # FALSE or array nAge, nTS
+                                 SP=FALSE) # logical 
+{
+  
+  if (!SP)
     SpawnTimeFrac <- NULL
-  }
- 
-  CalcSurvival(M_at_Age=GetNaturalMortalityAtAge(x, TimeSteps),
-               PlusGroup=GetPlusGroup(x),
+  
+  CalcSurvival(NaturalMortalityAtAge,
+               PlusGroup=PlusGroup,
                SpawnTimeFrac=SpawnTimeFrac,
-               Semelparous=GetSemelparous(x, TimeSteps))
-})
+               Semelparous=Semelparous)
+  
+}
 
-setMethod('CalcUnfishedSurvival', c('StockList', 'ANY'), function(x, SP=FALSE, TimeSteps=NULL) {
-  purrr::map(x, CalcUnfishedSurvival, SP=SP, TimeSteps=TimeSteps)
-})
-
-
-setMethod('CalcUnfishedSurvival', c('om', 'ANY'), function(x, SP=FALSE) {
-  CalcUnfishedSurvival(x@Stock, SP)
-})
+# 
+# # ---- CalcUnfishedSurvival -----
+# 
+# setGeneric('CalcUnfishedSurvival', function(x, SP=FALSE, TimeSteps=NULL)
+#   standardGeneric('CalcUnfishedSurvival')
+# )
+# 
+# setMethod('CalcUnfishedSurvival', c('stock', 'ANY', 'ANY'), function(x, SP=FALSE, TimeSteps=NULL) {
+#   if (SP) {
+#     SpawnTimeFrac <- x@SRR@SpawnTimeFrac  
+#   } else {
+#     SpawnTimeFrac <- NULL
+#   }
+#  
+#   CalcSurvival(M_at_Age=GetNaturalMortalityAtAge(x, TimeSteps),
+#                PlusGroup=GetPlusGroup(x),
+#                SpawnTimeFrac=SpawnTimeFrac,
+#                Semelparous=GetSemelparous(x, TimeSteps))
+# })
+# 
+# setMethod('CalcUnfishedSurvival', c('StockList', 'ANY'), function(x, SP=FALSE, TimeSteps=NULL) {
+#   purrr::map(x, CalcUnfishedSurvival, SP=SP, TimeSteps=TimeSteps)
+# })
+# 
+# 
+# setMethod('CalcUnfishedSurvival', c('om', 'ANY'), function(x, SP=FALSE) {
+#   CalcUnfishedSurvival(x@Stock, SP)
+# })
 
 
 # ---- UpdateApicalF -----

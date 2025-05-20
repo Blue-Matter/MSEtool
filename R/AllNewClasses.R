@@ -30,6 +30,7 @@ methods::setClassUnion(name="char.null", members=c("character", "NULL"))
 methods::setClassUnion(name="char.num", members=c('character', "numeric", 'NULL'))
 methods::setClassUnion(name="char.list", members=c('character', "list", 'NULL'))
 methods::setClassUnion(name="array.null", members=c("array", "NULL"))
+methods::setClassUnion(name="array.list.null", members=c("array", "list", "NULL"))
 methods::setClassUnion(name="array.char.null", members=c("array", 'character', "NULL"))
 methods::setClassUnion(name="num.array.char.null", members=c('numeric', "array", 'character', "NULL"))
 methods::setClassUnion(name="list.null", members=c('list', "NULL"))
@@ -2945,31 +2946,31 @@ setClass("curves",
 
 setClass("unfishedrefpoints",
          slots=c(
-           N0='list',
-           B0='list',
-           SB0='list',
-           SP0='list',
-           Misc='list'
+           N0='array.list.null',
+           B0='array.list.null',
+           SB0='array.list.null',
+           SP0='array.list.null',
+           Misc='array.list.null'
          ),
          contains='Created_ModifiedClass'
 )
 
 setClass("refpoints",
          slots=c(Curves='curves',
-                 SPR0='list',
-                 MSY='list',
-                 FMSY='list',
-                 BMSY='list',
-                 SBMSY='list',
-                 SPMSY='list',
-                 SPRMSY='list',
-                 F01='list',
-                 FMax='list',
-                 FCrash='list',
-                 SPRcrash='list',
-                 MGT='list',
-                 RefYield='list',
-                 BLow='list',
+                 SPR0='array.list.null',
+                 MSY='array.list.null',
+                 FMSY='array.list.null',
+                 BMSY='array.list.null',
+                 SBMSY='array.list.null',
+                 SPMSY='array.list.null',
+                 SPRMSY='array.list.null',
+                 F01='array.list.null',
+                 FMax='array.list.null',
+                 FCrash='array.list.null',
+                 SPRcrash='array.list.null',
+                 MGT='array.list.null',
+                 RefYield='array.list.null',
+                 BLow='array.list.null',
                  Equilibrium='unfishedrefpoints',
                  Dynamic='unfishedrefpoints',
                  Misc='list'
@@ -2979,10 +2980,10 @@ setClass("refpoints",
 
 
 setClass("popdynamics",
-         slots=c(Number='list',
-                 Biomass='list',
-                 SBiomass='list',
-                 SProduction='list',
+         slots=c(Number='array.list.null',
+                 Biomass='array.list.null',
+                 SBiomass='array.list.null',
+                 SProduction='array.list.null',
                  Misc='list'
          ),
          contains='Created_ModifiedClass'
