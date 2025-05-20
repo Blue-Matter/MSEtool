@@ -60,7 +60,7 @@ SimulateDEV <- function(OM=NULL,
  class(r$Female)
 
  
-  # UP TO HERE 
+
   FSearch <- OMListSim$CurvesFSearch
   
  
@@ -94,6 +94,7 @@ SimulateDEV <- function(OM=NULL,
   RelativeFbyFleet <- ArrayDivide(RelativeFbyFleet,AddDimension(TotalFbyFleet, 'Fleet')) |>
     Array2List(1)
   
+  # UP TO HERE 
   # TODO  - check if faster to loop over Fs 
 
   tictoc::tic()
