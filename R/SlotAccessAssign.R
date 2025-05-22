@@ -360,6 +360,13 @@ nAge <- function(x, st=1) {
     return(x@Ages@MaxAge+1)
   if (inherits(x, 'ages'))
     return(x@MaxAge+1)
+  if (inherits(x, 'om')) {
+    nages <- purrr::map(x@Stock, \(x) {
+      length(x@Ages@Classes)
+    }) |> unlist() |> max()
+    return(nages)
+  }
+    
 }
 
 ## nTS ----
@@ -383,7 +390,7 @@ nTS <- function(x) {
 nArea <- function(x, st=1) {
   if (inherits(x, 'om')) {
     stock <- x@Stock
-    if (inherits(stock, 'list')) {
+    if (is.list(stock)) {
       stock <- stock[[st]]
     }
     dd <- dim(stock@Spatial@UnfishedDist)

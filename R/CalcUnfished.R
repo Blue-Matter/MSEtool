@@ -1,172 +1,80 @@
-CalcEquilibriumUnfished <- function(OMListSim) {
+CalcEquilibriumUnfished <- function(OM) {
+  OM <- Populate(OM)
   
   # NOTE: Equilibrium N-at-Age is calculated from R0 (which may vary over time)
   # but does NOT account for expected recruitment from the stock-recruit relationship.
   # i.e., an expected change in recruitment if Fecundity-at-Age changes over time 
   # e.g., change in Weight-at-Age etc
   
-  NaturalMortalityAtAge <- OMListSim$NaturalMortalityMeanAtAge
-  PlusGroup <- lapply(OMListSim$Ages, slot, 'PlusGroup')
-  SpawnTimeFrac <- as.list(OMListSim$SpawnTimeFrac)
-  Semelparous <- OMListSim$MaturitySemelparous
+  UnfishedSurvival <- CalcUnfishedSurvival(OM)
+  UnfishedSurvivalSP <- CalcUnfishedSurvival(OM, TRUE)
   
-  UnfishedSurvival <- purrr::pmap(list(NaturalMortalityAtAge,
-                                       PlusGroup,
-                                       SpawnTimeFrac,
-                                       Semelparous),
-                                  CalcUnfishedSurvival)
+  EquilibriumUnfished <- new('popdynamics')
   
-  UnfishedSurvivalSP <- purrr::pmap(list(NaturalMortalityAtAge,
-                                         PlusGroup,
-                                         SpawnTimeFrac,
-                                         Semelparous,
-                                         SP=TRUE),
-                                    CalcUnfishedSurvival)
+  R0List <- purrr::map(OM@Stock, \(x) {
+    x@SRR@R0 |> 
+      AddDimension('Age') |>
+      aperm(c('Sim', 'Age', 'TimeStep'))
+  })
+               
+  UnfishedNumberAtAge <- purrr::map2(UnfishedSurvival, R0List, ArrayMultiply)
+  UnfishedSpawnNumberAtAge <- purrr::map2(UnfishedSurvival, R0List, ArrayMultiply)
   
-
-  # Include spatial distribution
-  # NumberAtAgeArea <- purrr::pmap(list(UnfishedSurvival, 
-  #                                 Array2List(OMListSim$R0, 1),
-  #                                 OMListSim$UnfishedDist),
-  #                            \(x,y,z) {
-  #                              NatAge <- x * matrix(y, nrow=nrow(x), ncol=length(y))   
-  #                              out <- replicate(dim(z)[3], NatAge) *  z
-  #                              dimnames(out) <- dimnames(z)
-  #                              out
-  #                            }
-  #                            
-  # ) 
-  # 
-  # BiomassAtAgeArea = purrr::map2(NumberAtAgeArea, OMListSim$WeightMeanAtAge,
-  #                                \(x,y) 
-  #                                x * replicate(dim(x)[3],y)
-  # )
+  WeightAtAge <- purrr::map(OM@Stock, \(x) {
+    x@Weight@MeanAtAge 
+  })
   
+  FecundityAtAge <- purrr::map(OM@Stock, \(x) {
+    x@Fecundity@MeanAtAge 
+  })
   
-  UnfishedNumberAtAge <- purrr::pmap(list(UnfishedSurvival,
-                                          Array2List(OMListSim$R0, 1)),  
-                                     \(surv, r0) 
-                                     surv * matrix(r0, nrow=nrow(surv), ncol=length(r0))
-  )
+  EquilibriumUnfished@Number <- UnfishedNumberAtAge
   
-  UnfishedSpawnNumberAtAge <- purrr::pmap(list(UnfishedSurvivalSP,
-                                               Array2List(OMListSim$R0, 1),
-                                               OMListSim$MaturityMeanAtAge),  
-                                          \(surv, r0, maturity) 
-                                          surv * matrix(r0, nrow=nrow(surv), ncol=length(r0)) * maturity
-  )
+  EquilibriumUnfished@Biomass <- purrr::map2(UnfishedNumberAtAge, WeightAtAge, ArrayMultiply) |>
+    purrr::map(\(x) apply(x, c('Sim', 'TimeStep'), sum)) |> 
+    List2Array('Stock') |>
+    aperm(c('Sim', 'Stock', 'TimeStep'))
   
+  EquilibriumUnfished@SBiomass <- purrr::map2(UnfishedSpawnNumberAtAge, WeightAtAge, ArrayMultiply) |>
+    purrr::map(\(x) apply(x, c('Sim', 'TimeStep'), sum)) |>
+    List2Array('Stock') |>
+    aperm(c('Sim', 'Stock', 'TimeStep'))
   
-  UnfishedBiomass <- purrr::map2(UnfishedNumberAtAge, OMListSim$WeightMeanAtAge,
-                                 \(number,weight)
-                                 apply(number * weight, 'TimeStep', sum)
-  ) |> List2Array('Stock', 'TimeStep') |> aperm(c('Stock', 'TimeStep'))
-  dimnames(UnfishedBiomass)$TimeStep <- OMListSim$TimeSteps
+  EquilibriumUnfished@SProduction <- purrr::map2(UnfishedSpawnNumberAtAge, FecundityAtAge, ArrayMultiply) |>
+    purrr::map(\(x) apply(x, c('Sim', 'TimeStep'), sum)) |>
+    List2Array('Stock') |>
+    aperm(c('Sim', 'Stock', 'TimeStep'))
   
-  UnfishedSBiomass <- purrr::map2(UnfishedSpawnNumberAtAge, OMListSim$WeightMeanAtAge,
-                                  \(number,weight)
-                                  apply(number * weight, 'TimeStep', sum)
-  ) |> List2Array('Stock', 'TimeStep') |> aperm(c('Stock', 'TimeStep'))
-  dimnames(UnfishedSBiomass)$TimeStep <- OMListSim$TimeSteps
-  
-  # already accounts for maturity in FecundityatAge
-  UnfishedSpawnNumberAtAge2 <- purrr::pmap(list(UnfishedSurvivalSP,
-                                                Array2List(OMListSim$R0, 1)),  
-                                           \(surv, r0) 
-                                           surv * matrix(r0, nrow=nrow(surv), ncol=length(r0)) 
-  ) 
-  
-  UnfishedSProduction <- purrr::map2(UnfishedSpawnNumberAtAge2, OMListSim$FecundityMeanAtAge,
-                                     \(number,weight)
-                                     apply(number * weight, 'TimeStep', sum)
-  ) |> List2Array('Stock', 'TimeStep') |> aperm(c('Stock', 'TimeStep'))
-  dimnames(UnfishedSProduction)$TimeStep <- OMListSim$TimeSteps
-  
-  
-  OMListSim$N0atAge <- UnfishedNumberAtAge
-  OMListSim$B0 <- UnfishedBiomass
-  OMListSim$SB0 <- UnfishedSBiomass
-  OMListSim$SP0 <- UnfishedSProduction
-  OMListSim
+  EquilibriumUnfished
 }
 
-CalcDynamicUnfished <- function(OMListSim) {
-  OMListSim$Catchability[] <- tiny
-  out <- SimulateFisheryDynamics_(OMListSim, TimeSteps=OMListSim$TimeSteps, MP=NULL, CalcCatch=0)  
-  AddDimNamesOMListSim(out)
-  
-}
 
-CalcUnfished <- function(OMList) {
-  if (inherits(OMList, 'om'))
-    OMList <- MakeOMList(OMList)
+CalcDynamicUnfished <- function(Hist, silent=FALSE) {
+  if (inherits(Hist, 'om')) {
+    Hist <- Hist(Hist, silent)
+  } 
   
-  if (is.null(OMList[[1]]$N0atAge)) {
-    if (CheckSimsUnique(OMList, ignore=c('Sim', 'RecDevs'))) {
-      # identical across Sims
-      temp <- CalcEquilibriumUnfished(OMList[[1]])
-      for (i in seq_along(OMList)) {
-        OMList[[i]]$N0atAge <- temp$N0atAge
-        OMList[[i]]$B0 <- temp$B0
-        OMList[[i]]$SB0 <- temp$SB0
-        OMList[[i]]$SP0 <- temp$SP0
-      }
-    } else {
-      OMList <- purrr::map(OMList, CalcEquilibriumUnfished)  
-    }
+  nStock <- length(Hist@OM@Fleet)
+  for (st in 1:nStock) {
+    Hist@OM@Fleet[[st]]@Effort@Catchability[] <- tiny
   }
-    
+  
+  
+  
+  # out <- SimulateFisheryDynamics_(OMListSim, TimeSteps=OMListSim$TimeSteps, MP=NULL, CalcCatch=0)  
+  # AddDimNamesOMListSim(out)
+  
+}
+
+CalcUnfished <- function(OM, Hist=NULL, silent=FALSE) {
+  OM <- Populate(OM)
   Unfished <- new('unfished')
-  
-  # Equilibrium 
-  Unfished@Equilibrium@Number <- purrr::map(OMList, \(x) {
-    array <- lapply(x$N0atAge, apply, 2, sum) |>
-      List2Array('Stock', 'TimeStep') |> aperm(c('Stock', 'TimeStep'))
-    dimnames(array)$TimeStep <- x$TimeSteps
-    array
-  }) |> List2Array('Sim') |> aperm(c('Sim', 'Stock', 'TimeStep'))
-  
-  Unfished@Equilibrium@Biomass <- purrr::map(OMList, \(x) {
-    x$B0
-  }) |> List2Array('Sim') |> aperm(c('Sim', 'Stock', 'TimeStep'))
-  
-  Unfished@Equilibrium@SBiomass <- purrr::map(OMList, \(x) {
-    x$SB0
-  }) |> List2Array('Sim') |> aperm(c('Sim', 'Stock', 'TimeStep'))
-  
-  Unfished@Equilibrium@SProduction <- purrr::map(OMList, \(x) {
-    x$SP0
-  }) |> List2Array('Sim') |> aperm(c('Sim', 'Stock', 'TimeStep'))
-  
-  
-  # Dynamic - accounts for rec devs AND SRR 
-  DynamicUnfished <- purrr::map(OMList, CalcDynamicUnfished,
-                                .progress = list(
-                                  type = "iterator", 
-                                  format = "Calculating Dynamic Unfished {cli::pb_bar} {cli::pb_percent}",
-                                  clear = TRUE))
- 
-  Unfished@Dynamic@Number <- purrr::map(DynamicUnfished, \(x) {
-    array <- lapply(x$NumberAtAgeArea, apply, 2, sum) |>
-      List2Array('Stock', 'TimeStep') |> aperm(c('Stock', 'TimeStep'))
-    dimnames(array)$TimeStep <- x$TimeSteps
-    array
-  }) |> List2Array('Sim') |> aperm(c('Sim', 'Stock', 'TimeStep'))
-  
-  Unfished@Dynamic@Biomass <- purrr::map(DynamicUnfished, \(x) {
-    x$Biomass
-  }) |> List2Array('Sim') |> aperm(c('Sim', 'Stock', 'TimeStep'))
-  
-  
-  Unfished@Dynamic@SBiomass <- purrr::map(DynamicUnfished, \(x) {
-    x$SBiomass
-  }) |> List2Array('Sim') |> aperm(c('Sim', 'Stock', 'TimeStep'))
-  
-  Unfished@Dynamic@SProduction <- purrr::map(DynamicUnfished, \(x) {
-    x$SProduction
-  }) |> List2Array('Sim') |> aperm(c('Sim', 'Stock', 'TimeStep'))
-  
+  Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
+  if (is.null(Hist))
+    Hist <- Hist(OM, silent)
+  Unfished@Dynamic <- CalcDynamicUnfished(Hist)
   Unfished
+ 
 }
 
 # 

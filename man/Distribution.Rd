@@ -6,7 +6,7 @@
 \alias{Distribution<-}
 \title{Distribution Object}
 \usage{
-Distribution(Closure = NULL, Cost = NULL, Misc = list())
+Distribution(Closure = NULL, Cost = NULL, EffortArea = NULL, Misc = list())
 
 Distribution(x) <- value
 }
@@ -35,5 +35,5 @@ DETAILS
 }}
 
 \seealso{
-\code{\link[=Closure]{Closure()}}, \code{\link[=Cost]{Cost()}}, \code{\link[=Effort]{Effort()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Check]{Check()}}
+\code{\link[=Closure]{Closure()}}, \code{\link[=Cost]{Cost()}}, \code{\link[=EffortArea]{EffortArea()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Check]{Check()}}
 }

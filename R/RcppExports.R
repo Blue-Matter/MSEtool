@@ -45,22 +45,11 @@ Ref_int_cpp <- function(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V
     .Call(`_MSEtool_Ref_int_cpp`, F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, Wt_at_Age_C, relRfun, SRRpars, maxage, plusgroup, spawn_time_frac)
 }
 
-CalcFfromCatch_ <- function(NumberAtAge, RemovalNAtAge, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, NaturalMortalityAtAge, MaxIt = 200L, tolF = 1E-4) {
-    .Call(`_MSEtool_CalcFfromCatch_`, NumberAtAge, RemovalNAtAge, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, NaturalMortalityAtAge, MaxIt, tolF)
-}
-
-CalcAggregateF_ <- function(OMListSim, TimeSteps) {
-    .Call(`_MSEtool_CalcAggregateF_`, OMListSim, TimeSteps)
-}
-
 #' Simulate Fishery Dynamics
-#' 
-#' Calculates the fishery dynamics for a given simulation and the specified
-#' time steps.
-#' 
-#' Optionally can include an MP.
-SimulateFisheryDynamics_ <- function(OMListSim, TimeSteps, MP, CalcCatch = 0L) {
-    .Call(`_MSEtool_SimulateFisheryDynamics_`, OMListSim, TimeSteps, MP, CalcCatch)
+NULL
+
+SimulateDynamics_ <- function(NumberAtAgeAreaList, FleetWeightAtAgeList, SelectivityAtAgeList, ClosureAreaList, EffortAreaList, WeightAtAge, Effort, TimeSteps, TimeStepsAll, nAges, nStock, nFleet, nArea) {
+    .Call(`_MSEtool_SimulateDynamics_`, NumberAtAgeAreaList, FleetWeightAtAgeList, SelectivityAtAgeList, ClosureAreaList, EffortAreaList, WeightAtAge, Effort, TimeSteps, TimeStepsAll, nAges, nStock, nFleet, nArea)
 }
 
 calcVatAge <- function(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid) {

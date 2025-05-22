@@ -2103,7 +2103,7 @@ Retention <- function(Pars=list(),
 setClass('distribution',
          slots=c(Closure='num.array',
                  Cost='num.array.list',
-                 Effort='num.array.list',
+                 EffortArea='num.array.list',
                  Misc='list'
          ))
 
@@ -2112,7 +2112,7 @@ setValidity('distribution', isValidObject)
 setMethod("initialize", "distribution", function(.Object,
                                                  Closure=NULL,
                                                  Cost=NULL,
-                                                 Effort=NULL,
+                                                 EffortArea=NULL,
                                                  Misc=list()) {
   .Object@Closure <- Closure
   .Object@Cost <- Cost
@@ -2125,6 +2125,7 @@ setMethod("initialize", "distribution", function(.Object,
 #' @export
 Distribution <- function(Closure=NULL,
                          Cost=NULL,
+                         EffortArea=NULL,
                          Misc=list()) {
 
   if (methods::is(Closure, 'fleet'))
@@ -2133,6 +2134,7 @@ Distribution <- function(Closure=NULL,
   methods::new('distribution',
                Closure=Closure,
                Cost=Cost,
+               EffortArea=EffortArea,
                Misc=Misc)
 }
 
@@ -2952,19 +2954,19 @@ setClass("hist",
          slots=c(OM='omhist' , 
                  Unfished='unfished',
                  RefPoints='refpoints',
-                 Number='list', # sim, age, ts, area
-                 Biomass='list',
-                 SBiomass='list',
-                 SProduction='list',
-                 FDead='list', # sim, age, ts, fleet
-                 FRetain='list', # sim, age, ts, fleet
-                 VBiomass='list',  # sim, age, ts, fleet, area
-                 EffortArea='list', # sim, age, ts, fleet, area
-                 FDeadArea='list', # sim, age, ts, fleet, area
-                 FRetainArea='list', # sim, age, ts, fleet, area
-                 Removal='list', # sim, age, ts, fleet, area
-                 Retain='list',  # sim, age, ts, fleet, area
-                 Density='list' # sim, ts, fleet, area
+                 Number='array', # sim, stock, age, ts, area
+                 Biomass='array',
+                 SBiomass='array'
+                 # SProduction='array',
+                 # FDead='array', # sim, stock, age, ts, fleet
+                 # FRetain='array', # sim, age, ts, fleet
+                 # VBiomass='array',  # sim, age, ts, fleet, area
+                 # EffortArea='list', # sim, age, ts, fleet, area
+                 # FDeadArea='list', # sim, age, ts, fleet, area
+                 # FRetainArea='list', # sim, age, ts, fleet, area
+                 # Removal='list', # sim, age, ts, fleet, area
+                 # Retain='list',  # sim, age, ts, fleet, area
+                 # Density='list' # sim, ts, fleet, area
          )
 )
 

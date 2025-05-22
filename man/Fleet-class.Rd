@@ -14,7 +14,7 @@ Fleet(
   Selectivity = new("selectivity"),
   Retention = new("retention"),
   Distribution = new("distribution"),
-  Weight = array(),
+  WeightFleet = array(),
   BioEconomic = list(),
   Misc = list()
 )

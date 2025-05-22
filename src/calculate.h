@@ -7,12 +7,6 @@
 // [[Rcpp::plugins("cpp11")]]
 using namespace Rcpp;
 
-inline double CalcBiomass(arma::mat NumberAtAgeArea, // nAge, nArea
-                          arma::vec WeightAtAge){ // nAge
-  
-  double B = arma::accu(WeightAtAge %  arma::sum(NumberAtAgeArea,1));
-  return(B);
-}
 
 inline arma::mat TransposeMatrix(arma::mat matrix, int ncol) {
   if (ncol == 1) {
@@ -20,6 +14,15 @@ inline arma::mat TransposeMatrix(arma::mat matrix, int ncol) {
   }
   return(matrix);
 }
+
+inline double CalcBiomass(arma::mat NumberAtAgeArea, // nAge, nArea
+                          arma::vec WeightAtAge){ // nAge
+  
+  double B = arma::accu(WeightAtAge %  arma::sum(NumberAtAgeArea,1));
+  return(B);
+}
+
+
 
 inline arma::mat CalcVBiomass(arma::mat NumberAtAgeArea, // nAge, nArea
                        arma::mat FleetWeightAtAgeFleet, // nAge, nFleet
@@ -56,12 +59,17 @@ inline arma::mat CalcEffortDistribution(arma::mat VBiomassFleetArea, // nFleet, 
                                         arma::vec Effort,
                                         int nArea) {  // nFleet
   
-  VBiomassFleetArea = TransposeMatrix(VBiomassFleetArea, nArea);
+  
   int nFleet = VBiomassFleetArea.n_rows;
   
   CheckLength(Effort.size(), nFleet, "Effort", "nFleet (nrow(VBiomassFleetArea))");
   
   arma::mat EffortFleetArea(nFleet, nArea, arma::fill::zeros);
+  
+  if (nArea==1) {
+    EffortFleetArea(arma::span(0, nFleet-1), 0) = Effort;
+    return(EffortFleetArea);
+  }
   
   for (int fl=0; fl<nFleet; fl++) {
     arma::rowvec relvbiomassarea(nArea, arma::fill::zeros);

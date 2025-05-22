@@ -50,8 +50,17 @@ OM2Hist <- function(OM, silent=FALSE) {
   
   Hist@OM@Fleet <- vector('list', nStock(OM))
   names(Hist@OM@Fleet) <- StockNames(OM)
-  Hist@OM@Fleet <- purrr::map2(OM@Fleet, nAgesList, Fleet2Hist, nSim(OM), TimeSteps(OM),
-                               silent, id)
+  Hist@OM@Fleet <- purrr::map2(OM@Fleet, nAgesList, Fleet2Hist, nSim(OM), TimeSteps(OM), 
+                               nArea(OM),  silent, id)
+  
+  
+  ind <- which.max(lapply(Hist@OM@Stock@Ages@Classes, length))
+  
+  Hist@Number <- ArraySimStockAgeTimeArea(1:nSim(OM), 
+                                          Stocks=StockNames(OM), 
+                                          Ages=Hist@OM@Stock@Ages@Classes[[ind]], 
+                                          TimeSteps(OM),
+                                          Areas=1:nArea(OM))
   
   if (!silent) 
     cli::cli_progress_done()
@@ -121,7 +130,7 @@ Stock2Hist <- function(StockList, nSim, TimeSteps, silent=FALSE, id=NULL) {
   histstock
 }
     
-Fleet2Hist <- function(FleetList, nAges, nSim, TimeSteps, silent=FALSE, id=NULL) {
+Fleet2Hist <- function(FleetList, nAges, nSim, TimeSteps, nArea, silent=FALSE, id=NULL) {
   Fleet <- new('fleet')
   Fleet@Name <- unlist(names(FleetList))
   if (!silent)
@@ -133,7 +142,9 @@ Fleet2Hist <- function(FleetList, nAges, nSim, TimeSteps, silent=FALSE, id=NULL)
     cli::cli_progress_update(id=id)
   Fleet@DiscardMortality  <- CombineStockObjects(lapply(FleetList, slot, 
                                                         'DiscardMortality'),
-                                                 nSim, nAges, TimeSteps) 
+                                                 nSim, nAges, TimeSteps, type='Fleet')
+  Fleet@DiscardMortality@MeanAtAge <- aperm(Fleet@DiscardMortality@MeanAtAge,c('Sim', 'Age', 'TimeStep', 'Fleet'))
+  
   if (!silent)
     cli::cli_progress_update(id=id)
   Fleet@Effort <- CombineEffort(lapply(FleetList, slot, 'Effort'),
@@ -142,23 +153,29 @@ Fleet2Hist <- function(FleetList, nAges, nSim, TimeSteps, silent=FALSE, id=NULL)
     cli::cli_progress_update(id=id)
   Fleet@Selectivity <- CombineStockObjects(lapply(FleetList, slot, 
                                                   'Selectivity'),
-                                           nSim, nAges, TimeSteps)
+                                           nSim, nAges, TimeSteps, type='Fleet') 
+  Fleet@Selectivity@MeanAtAge <- aperm(Fleet@Selectivity@MeanAtAge,c('Sim', 'Age', 'TimeStep', 'Fleet'))
+  
   if (!silent)
     cli::cli_progress_update(id=id)
   Fleet@Retention <- CombineStockObjects(lapply(FleetList, slot, 
                                                 'Retention'),
-                                         nSim, nAges, TimeSteps)
+                                         nSim, nAges, TimeSteps, type='Fleet') 
+  Fleet@Retention@MeanAtAge <- aperm(Fleet@Retention@MeanAtAge,c('Sim', 'Age', 'TimeStep', 'Fleet'))
+  
   if (!silent)
     cli::cli_progress_update(id=id)
   Fleet@Distribution <- CombineDistribution(lapply(FleetList, slot, 
                                                    'Distribution'),
-                                            nSim, nAges, TimeSteps)
+                                            nSim, nAges, TimeSteps, nArea)
+  
   if (!silent)
     cli::cli_progress_update(id=id)
   Fleet@WeightFleet <- lapply(FleetList, slot, 'WeightFleet') |>
     purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |>
     List2Array('Fleet') |>
     aperm(c('Sim', 'Age', 'TimeStep', 'Fleet')) 
+  
   Fleet@BioEconomic <- lapply(FleetList, slot, 'BioEconomic')
   Fleet <- CopySlots(Fleet, FleetList)
   if (!silent)
@@ -175,7 +192,7 @@ Fleet2Hist <- function(FleetList, nAges, nSim, TimeSteps, silent=FALSE, id=NULL)
   
   
   
-CombineStockObjects <- function(object, nSim, nAges, TimeSteps) {
+CombineStockObjects <- function(object, nSim, nAges, TimeSteps, type='Stock') {
   class <- class(object[[1]])
   out <- new(class)
   nms <- slotNames(out)
@@ -191,8 +208,8 @@ CombineStockObjects <- function(object, nSim, nAges, TimeSteps) {
   if ('MeanAtAge' %in% nms) 
     out@MeanAtAge <- lapply(object, slot, 'MeanAtAge') |> 
     purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |>
-    List2Array('Stock') |>
-    aperm(c('Sim', 'Stock', 'Age', 'TimeStep'))
+    List2Array(type) |>
+    aperm(c('Sim', type, 'Age', 'TimeStep'))
   
   if ('MeanAtLength' %in% nms) 
     out@MeanAtLength <- lapply(object, slot, 'MeanAtAge') |> 
@@ -201,14 +218,14 @@ CombineStockObjects <- function(object, nSim, nAges, TimeSteps) {
   if ('Semelparous' %in% nms) 
     out@Semelparous <- lapply(object, slot, 'Semelparous') |> 
     purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |>
-    List2Array('Stock') |>
-    aperm(c('Sim', 'Stock', 'Age', 'TimeStep'))
+    List2Array(type) |>
+    aperm(c('Sim', type, 'Age', 'TimeStep'))
   
   if ('CVatAge' %in% nms) 
     out@CVatAge <- lapply(object, slot, 'CVatAge') |>
     purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |>
-    List2Array('Stock') |>
-    aperm(c('Sim', 'Stock', 'Age', 'TimeStep'))
+    List2Array(type) |>
+    aperm(c('Sim', type, 'Age', 'TimeStep'))
   
   if ('Dist' %in% nms) 
     out@Dist <- List2Array(lapply(object, slot, 'Dist'))[1,]
@@ -219,8 +236,8 @@ CombineStockObjects <- function(object, nSim, nAges, TimeSteps) {
   if ('Random' %in% nms) 
     out@Random <- lapply(object, slot, 'Random') |>
     purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |>
-    List2Array('Stock') |>
-    aperm(c('Sim', 'Stock', 'Age', 'TimeStep'))
+    List2Array(type) |>
+    aperm(c('Sim', type, 'Age', 'TimeStep'))
   
   if ('ASK' %in% nms) 
     out@ASK <- lapply(object, slot, 'ASK') 
@@ -276,19 +293,22 @@ CombineSRR <- function(srr, nSim, nAges, TimeSteps) {
 CombineSpatial <- function(List, nSim, nAges, TimeSteps) {
   Spatial <- new('spatial')
   Spatial@UnfishedDist <- lapply(List, slot, 'UnfishedDist') |>
-    purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |>
+    purrr::map(ArrayExpand, nSim, nAges, TimeSteps, AgeOpt=3) |>
     List2Array('Stock') |>
     aperm(c('Sim', 'Stock', 'Age', 'TimeStep', 'Area'))
+  
   Spatial@ProbStaying <- lapply(List, slot, 'ProbStaying') |>
-    purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |>
+    purrr::map(ArrayExpand, nSim, nAges, TimeSteps, AgeOpt=3) |>
     List2Array('Stock') |>
     aperm(c('Sim', 'Stock', 'Age', 'TimeStep', 'Area'))
+  
   Spatial@RelativeSize <- lapply(List, slot, 'RelativeSize') |>
     purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |>
     List2Array('Stock') |>
     aperm(c('Sim', 'Stock', 'Area'))
+  
   Spatial@Movement <- lapply(List, slot, 'Movement') |>
-    purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |>
+    purrr::map(ArrayExpand, nSim, nAges, TimeSteps, AgeOpt=3) |>
     List2Array('Stock') |>
     aperm(c('Sim', 'Stock', 'Age', 'TimeStep', 'FromArea', 'ToArea'))
   Spatial@FracOther  <- lapply(List, slot, 'FracOther') 
@@ -359,14 +379,31 @@ CombineEffort <- function(List, nSim, nAges, TimeSteps) {
   Effort
 }
 
-CombineDistribution <- function(List, nSim, nAges, TimeSteps) {
+CombineDistribution <- function(List, nSim, nAges, TimeSteps, nArea) {
   Distribution <- Distribution()
   Distribution@Closure <- lapply(List, slot, 'Closure') |>
     List2Array() |>
     aperm(c('Sim', 'TimeStep', 'Fleet', 'Area'))
   
   Distribution@Cost <- lapply(List, slot, 'Cost')
-  Distribution@Effort <- lapply(List, slot, 'Effort')
+  
+  EffortArea <- lapply(List, slot, 'Effort')
+  for (i in seq_along(EffortArea)) {
+    if (is.null(EffortArea[[i]])) {
+      EffortArea[[i]] <- array(tiny/2, c(nSim, length(TimeSteps), nArea),
+                               dimnames = list(Sim=1:nSim,
+                                               TimeStep=TimeSteps,
+                                               Area=1:nArea))
+    }
+    if (any((dim(EffortArea[[i]]) != c(nSim, length(TimeSteps), nArea)))) {
+      cli::cli_abort("Dimensions not correct for EffortArea")
+    }
+  }
+  
+  Distribution@EffortArea <- EffortArea |>
+    List2Array() |>
+    aperm(c('Sim', 'TimeStep', 'Fleet', 'Area'))
+  
   Distribution@Misc <- lapply(List, slot, 'Misc')
   Distribution
 }

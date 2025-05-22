@@ -23,17 +23,26 @@ SimulateDEV <- function(OM=NULL,
   
   OM <- StartUp(OM) 
   
+
   # ---- Make Hist Object ----
   Hist <- Hist(OM, silent)
 
+  # ---- Calculate Equilibrium Unfished ----
+  Hist@Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
   
+  # ---- Calculate Number-at-Age for Initial TimeStep ----
+  Hist@Number[,,,1,] <- CalcInitialTimeStep(Hist)
   
-  Unfished <- CalcUnfished(OMList)
- 
+
+  Hist@OM@Fleet$Female@Effort@Effort
+  
+  Hist@OM@Fleet$Female@Distribution@Effort
+  
+  # ---- Calculate Unfished Equilibrium and Dynamic ----
+  Unfished <- CalcUnfished(OM)
 
  
-  
-  
+
   # ---- Convert OM to OMList -----
   OMList <- MakeOMList(OM)
   

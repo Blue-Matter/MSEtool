@@ -514,21 +514,21 @@ cpars2SRR <- function(cpars, nYear=NULL, maxage=NULL) {
 
     init_age_classes <- perr_y[,1:maxage]
 
-    if (identical_sim(init_age_classes)) {
+    if (IdenticalSim(init_age_classes)) {
       SRR@RecDevInit <- matrix(init_age_classes[1,], nrow=1)
     } else {
       SRR@RecDevInit <- init_age_classes
     }
 
     hist_yrs <- perr_y[,(maxage+1):(nYear+maxage)]
-    if (identical_sim(hist_yrs)) {
+    if (IdenticalSim(hist_yrs)) {
       SRR@RecDevHist <- matrix(hist_yrs[1,], nrow=1)
     } else {
       SRR@RecDevHist <- hist_yrs
     }
 
     pro_yrs <- perr_y[,(nYear+maxage+1):(nYear+maxage+proyears)]
-    if (identical_sim(pro_yrs)) {
+    if (IdenticalSim(pro_yrs)) {
       SRR@RecDevProj <- matrix(pro_yrs[1,], nrow=1)
     } else {
       SRR@RecDevProj <- pro_yrs
@@ -852,7 +852,7 @@ MOM2stock <- function(MOM, TimeSteps=NULL) {
 }
 
 
-identical_sim <- function(value) {
+IdenticalSim <- function(value) {
   dd <- dim(value)
   if (is.null(dd))
     return(mean(value) == value[1])
@@ -862,7 +862,7 @@ identical_sim <- function(value) {
 
 }
 
-identical_year <- function(value) {
+IdenticalTime <- function(value) {
   dd <- dim(value)
   if (length(dd)==2)
     return(all(value[1,] == mean(value[1,])))
@@ -893,7 +893,7 @@ process_cpars <- function(value) {
   if (is.null(value)) return()
   dd <- dim(value)
   if (is.null(dd)) {
-    if (identical_sim(value)) {
+    if (IdenticalSim(value)) {
       return(value[1])
     } else {
       return(value)
@@ -901,42 +901,42 @@ process_cpars <- function(value) {
   }
 
   if (length(dd)==2) {
-    if (identical_sim(value) & identical_year(value)) {
+    if (IdenticalSim(value) & IdenticalTime(value)) {
       return(value[1,1, drop=FALSE])
     }
-    if (identical_sim(value) & !identical_year(value)) {
+    if (IdenticalSim(value) & !IdenticalTime(value)) {
       return(value[1,, drop=FALSE])
     }
-    if (!identical_sim(value) & identical_year(value)) {
+    if (!IdenticalSim(value) & IdenticalTime(value)) {
       return(value[,1, drop=FALSE])
     }
-    if (!identical_sim(value) & !identical_year(value)) {
+    if (!IdenticalSim(value) & !IdenticalTime(value)) {
       return(value)
     }
 
   }
 
   if (length(dd)==3) {
-    if (identical_sim(value) & identical_year(value)) {
+    if (IdenticalSim(value) & IdenticalTime(value)) {
       return(value[1,,1, drop=FALSE])
     }
-    if (identical_sim(value) & !identical_year(value)) {
+    if (IdenticalSim(value) & !IdenticalTime(value)) {
       return(value[1,,, drop=FALSE])
     }
-    if (!identical_sim(value) & identical_year(value)) {
+    if (!IdenticalSim(value) & IdenticalTime(value)) {
       return(value[,,1, drop=FALSE])
     }
-    if (!identical_sim(value) & !identical_year(value)) {
+    if (!IdenticalSim(value) & !IdenticalTime(value)) {
       return(value)
     }
   }
 
   if (length(dd)==4) {
-    if (identical_sim(value))
+    if (IdenticalSim(value))
       return(value[1,,,,drop=FALSE])
   }
   if (length(dd)==5) {
-    if (identical_sim(value))
+    if (IdenticalSim(value))
       return(value[1,,,,,drop=FALSE])
   }
 

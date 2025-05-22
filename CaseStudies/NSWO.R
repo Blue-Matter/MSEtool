@@ -9,7 +9,7 @@ la()
 dir <- 'G:/My Drive/1_PROJECTS/North_Atlantic_Swordfish/OMs/grid_2022/000_base_case'
 
 
-MOM <- SS2MOM(SSdir=dir,nsim=50, Name='North Atlantic Swordfish') 
+MOM <- SS2MOM(SSdir=dir,nsim=25, Name='North Atlantic Swordfish') 
 
 # TODO Import - new SS2MOM for new OM structure 
 
