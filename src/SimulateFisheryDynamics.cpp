@@ -380,7 +380,7 @@ List SimulateFisheryDynamics_(Rcpp::List OMListSim,
     arma::vec FleetCatchability = Catchability(arma::span(st), arma::span(TSindex), arma::span(0, nFleet-1));
  
    // 
-    List FMortFleetArea = CalcFMortality(EffortArea.row_as_mat(TSindex), // nFleet, nArea,
+    List FMortFleetArea = CalcFMortality(EffortArea.row(TSindex), // nFleet, nArea,
                                          FleetCatchability, // nFleet
                                          RelativeSize.row(st), // nArea
                                          SelectivityAtAge.col(TSindex), // nAge, nFleet

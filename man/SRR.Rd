@@ -152,10 +152,6 @@ internally from \code{SD} and \code{AC} if not specified.}
 the time steps when spawning occurs, with 0 indicating the beginning of the time step.}
 
 \item{\code{Misc}}{A list for additional miscellaneous objects. Not currently used.}
-
-\item{\code{Created}}{Time the object was created.}
-
-\item{\code{Modified}}{Time the object was last modified.}
 }}
 
 \examples{
@@ -173,5 +169,5 @@ plot(SRR)
 # see Examples in `?Length` for other `Pars` configurations
 }
 \seealso{
-\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=R0]{R0()}}, \code{\link[=SD]{SD()}}, \code{\link[=AC]{AC()}}, \code{\link[=SPFrom]{SPFrom()}}, \code{\link[=TruncSD]{TruncSD()}}, \code{\link[=RecDevInit]{RecDevInit()}}, \code{\link[=RecDevHist]{RecDevHist()}}, \code{\link[=RecDevProj]{RecDevProj()}}, \code{\link[=SpawnTimeFrac]{SpawnTimeFrac()}}, \code{\link[=RelRecFun]{RelRecFun()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Created]{Created()}}, \code{\link[=Modified]{Modified()}}, \code{\link[=SRRModels]{SRRModels()}}, \code{\link[=Check]{Check()}}
+\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=R0]{R0()}}, \code{\link[=SD]{SD()}}, \code{\link[=AC]{AC()}}, \code{\link[=SPFrom]{SPFrom()}}, \code{\link[=TruncSD]{TruncSD()}}, \code{\link[=RecDevInit]{RecDevInit()}}, \code{\link[=RecDevHist]{RecDevHist()}}, \code{\link[=RecDevProj]{RecDevProj()}}, \code{\link[=SpawnTimeFrac]{SpawnTimeFrac()}}, \code{\link[=RelRecFun]{RelRecFun()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=SRRModels]{SRRModels()}}, \code{\link[=Check]{Check()}}
 }

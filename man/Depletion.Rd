@@ -104,10 +104,6 @@ relative to \code{Reference} in the last historical time step.  See \code{Detail
 \item{\code{Reference}}{The reference point used to calculate Depletion.  See \code{Details}.}
 
 \item{\code{Misc}}{A list for additional miscellaneous objects. Not currently used.}
-
-\item{\code{Created}}{Time the object was created.}
-
-\item{\code{Modified}}{Time the object was last modified.}
 }}
 
 \examples{
@@ -119,5 +115,5 @@ Populate(Depletion, nsim=5)
 
 }
 \seealso{
-\code{\link[=Initial]{Initial()}}, \code{\link[=Final]{Final()}}, \code{\link[=Reference]{Reference()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Created]{Created()}}, \code{\link[=Modified]{Modified()}}, \code{\link[=Check]{Check()}}
+\code{\link[=Initial]{Initial()}}, \code{\link[=Final]{Final()}}, \code{\link[=Reference]{Reference()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Check]{Check()}}
 }

@@ -24,8 +24,8 @@ R6array <- R6::R6Class("R6array", list(
 ))
 
 # Custom Class Unions ----
-methods::setClassUnion(name="ASK.null", members=c("NULL", 'array'))
-methods::setClassUnion(name="fun.char", members=c("character", "function", "NULL"))
+methods::setClassUnion(name="ASK.null", members=c("NULL", 'array', 'list'))
+methods::setClassUnion(name="fun.char", members=c("character", "function", "list", "NULL"))
 methods::setClassUnion(name="char.null", members=c("character", "NULL"))
 methods::setClassUnion(name="char.num", members=c('character', "numeric", 'NULL'))
 methods::setClassUnion(name="char.list", members=c('character', "list", 'NULL'))
@@ -37,7 +37,8 @@ methods::setClassUnion(name="list.null", members=c('list', "NULL"))
 methods::setClassUnion(name="num.null", members=c("numeric", "NULL"))
 methods::setClassUnion(name="num.list.null", members=c("numeric", 'list', "NULL"))
 methods::setClassUnion(name="num.array", members=c("numeric", "array", "NULL"))
-methods::setClassUnion(name="num.array.df", members=c("numeric", "array", 'data.frame', "NULL"))
+methods::setClassUnion(name="num.array.list", members=c("numeric", "array", 'list', "NULL"))
+methods::setClassUnion(name="num.array.df", members=c("numeric", "array", 'data.frame', 'list', "NULL"))
 methods::setClassUnion(name="num.log", members=c("numeric", "logical", "NULL"))
 methods::setClassUnion(name="logical.array", members=c("logical", "array", "NULL"))
 methods::setClassUnion(name="num.Date", members=c("numeric", "Date", 'character', "NULL", 'POSIXct'))
@@ -72,9 +73,8 @@ setClass("MeanAtAgeClass",
 )
 
 
-
 setClass("MeanAtLengthClass",
-         slots=c(MeanAtLength='num.array')
+         slots=c(MeanAtLength='num.array.list')
 )
 
 setClass("RandomClass",
@@ -86,7 +86,7 @@ setClass("ASKClass",
 )
 
 setClass("ClassesClass",
-         slots=c(Classes='num.null')
+         slots=c(Classes='num.list.null')
 )
 
 setClass("SemelparousClass",
@@ -102,10 +102,6 @@ setClass("MiscClass",
 )
 
 
-setClass('Created_ModifiedClass',
-         slots=c(Created='num.Date',
-                 Modified='num.Date')
-)
 
 
 
@@ -135,8 +131,6 @@ setClass('Created_ModifiedClass',
 #' @slot Units `r Units_param()`
 #' @slot PlusGroup `r Plusgroup_param()`
 #' @slot Classes `r AgeClasses_param()`
-#' @slot Created `r Created_param()`
-#' @slot Modified `r Modified_param()`
 #'
 #' @seealso `r See_Also('ages', c('ValidUnits', 'Check'))`
 #'
@@ -150,7 +144,7 @@ setClass('ages',
          slots=c(MaxAge='numeric',
                  Units='character',
                  PlusGroup='logical'),
-         contains = c('ClassesClass', 'Created_ModifiedClass')
+         contains = c('ClassesClass')
 )
 
 setValidity('ages', isValidObject)
@@ -166,7 +160,7 @@ setMethod("initialize", "ages", function(.Object,
 
   .Object@Units <- Units
   .Object@PlusGroup <- PlusGroup
-  .Object@Created <- Sys.time()
+# #   .Object@Created <- Sys.time()
   .Object
 })
 
@@ -258,8 +252,6 @@ Ages <- function(MaxAge=NA,
 #' @slot ASK `r ASK_param()`
 #' @slot Classes `r Classes_param()`
 #' @slot Misc `r Misc_param()`
-#' @slot Created `r Created_param()`
-#' @slot Modified `r Modified_param()`
 #'
 #' @seealso `r See_Also('length', c('ValidUnits', 'Check', 'LengthModels', 'Populate'))`
 #'
@@ -278,8 +270,7 @@ setClass("length",
                      'RandomClass',
                      'ASKClass',
                      'ClassesClass',
-                     'MiscClass',
-                     'Created_ModifiedClass')
+                     'MiscClass')
 
 )
 
@@ -319,7 +310,7 @@ setMethod("initialize", "length", function(.Object,
   .Object@ASK <- ASK
   .Object@Classes <- Classes
   .Object@Misc <- Misc
-  .Object@Created <- Sys.time()
+#   .Object@Created <- Sys.time()
 
   .Object
 })
@@ -434,9 +425,7 @@ Length <- function(Pars=list(Linf=NA, K=NA, t0=NA),
 #' @slot Random `r Random_param()`
 #' @slot ASK `r ASK_param()`
 #' @slot Classes `r Classes_param()`
-#' @slot Misc `r Misc_param()`
-#' @slot Created `r Created_param()`
-#' @slot Modified `r Modified_param()`
+#' @slot Misc `r Misc_param()``
 #'
 #' @seealso `r See_Also('weight', c('ValidUnits', 'Check', 'WeightModels', 'Populate'))`
 #'
@@ -455,8 +444,7 @@ setClass("weight",
                      'RandomClass',
                      'ASKClass',
                      'ClassesClass',
-                     'MiscClass',
-                     'Created_ModifiedClass')
+                     'MiscClass')
 )
 
 setValidity('weight', isValidObject)
@@ -498,7 +486,7 @@ setMethod("initialize", "weight", function(.Object,
   .Object@ASK <- ASK
   .Object@Classes <- Classes
   .Object@Misc <- Misc
-  .Object@Created <- Sys.time()
+#   .Object@Created <- Sys.time()
 
   .Object
 })
@@ -615,8 +603,7 @@ Weight <- function(Pars=list(Alpha=NA, Beta=NA),
 #' @slot Random `r Random_param()`
 #' @slot Classes `r Classes_param()`
 #' @slot Misc `r Misc_param()`
-#' @slot Created `r Created_param()`
-#' @slot Modified `r Modified_param()`
+
 #'
 #' @seealso `r See_Also('naturalmortality', c('ValidUnits', 'Check', 'NaturalMortalityModels', 'Populate'))`
 #'
@@ -632,8 +619,7 @@ setClass("naturalmortality",
                      'MeanAtLengthClass',
                      'RandomClass',
                      'ClassesClass',
-                     'MiscClass',
-                     'Created_ModifiedClass')
+                     'MiscClass')
 )
 
 
@@ -664,7 +650,7 @@ setMethod("initialize", "naturalmortality", function(.Object,
   .Object@Random <- Random
   .Object@Classes <- Classes
   .Object@Misc <- Misc
-  .Object@Created <- Sys.time()
+#   .Object@Created <- Sys.time()
   .Object
 })
 
@@ -762,8 +748,6 @@ NaturalMortality <- function(Pars=list(M=NA),
 #' @slot Classes `r Classes_param()`
 #' @slot Semelparous Logical. Do animals die after spawning?
 #' @slot Misc `r Misc_param()`
-#' @slot Created `r Created_param()`
-#' @slot Modified `r Modified_param()`
 #'
 #' @seealso `r See_Also('maturity', c('ValidUnits', 'Check', 'MaturityModels', 'Populate'))`
 #'
@@ -779,8 +763,7 @@ setClass("maturity",
                      'MeanAtLengthClass',
                      'ClassesClass',
                      'SemelparousClass',
-                     'MiscClass',
-                     'Created_ModifiedClass')
+                     'MiscClass')
 )
 
 setValidity('maturity', isValidObject)
@@ -809,7 +792,7 @@ setMethod("initialize", "maturity", function(.Object,
   .Object@Classes <- Classes
   .Object@Semelparous <- Semelparous
   .Object@Misc <- Misc
-  .Object@Created <- Sys.time()
+#   .Object@Created <- Sys.time()
   .Object
 })
 
@@ -909,8 +892,6 @@ Maturity <- function(Pars=list(L50=NA, L50_95=NA),
 #' @slot MeanAtLength `r MeanAtLength_param()`
 #' @slot Classes `r Classes_param()`
 #' @slot Misc `r Misc_param()`
-#' @slot Created `r Created_param()`
-#' @slot Modified `r Modified_param()`
 #'
 #' @seealso `r See_Also('fecundity', c('FecundityModels', 'Check'))`
 #' @name Fecundity
@@ -924,8 +905,7 @@ setClass("fecundity",
                      'MeanAtAgeClass',
                      'MeanAtLengthClass',
                      'ClassesClass',
-                     'MiscClass',
-                     'Created_ModifiedClass')
+                     'MiscClass')
 )
 
 setValidity('fecundity', isValidObject)
@@ -948,7 +928,7 @@ setMethod("initialize", "fecundity", function(.Object,
   .Object@Classes <- Classes
   .Object@Units <- Units
   .Object@Misc <- Misc
-  .Object@Created <- Sys.time()
+#   .Object@Created <- Sys.time()
   .Object
 })
 
@@ -1061,8 +1041,6 @@ Fecundity <- function(Pars=list(L50=NA, L50_95=NA, MaxFec=NA),
 #' @slot SpawnTimeFrac Numeric value between 0 (default) and 1. The relative time in between
 #' the time steps when spawning occurs, with 0 indicating the beginning of the time step.
 #' @slot Misc `r Misc_param()`
-#' @slot Created `r Created_param()`
-#' @slot Modified `r Modified_param()`
 #'
 #' @seealso `r See_Also('srr', c('SRRModels', 'Check'))`
 #' @name SRR
@@ -1079,14 +1057,13 @@ setClass("srr",
                  AC='num.array',
                  SPFrom='char.num',
                  TruncSD='num.null',
-                 RecDevInit='num.array',
-                 RecDevHist='num.array',
-                 RecDevProj='num.array',
+                 RecDevInit='num.array.list',
+                 RecDevHist='num.array.list',
+                 RecDevProj='num.array.list',
                  SpawnTimeFrac='numeric',
                  RelRecFun="fun.char",
                  Misc='list'
-         ),
-         contains='Created_ModifiedClass'
+         )
 )
 
 setValidity('srr', isValidObject)
@@ -1119,7 +1096,7 @@ setMethod("initialize", "srr", function(.Object,
   .Object@SpawnTimeFrac <- SpawnTimeFrac
   .Object@RelRecFun <- RelRecFun
   .Object@Misc <- Misc
-  .Object@Created <- Sys.time()
+#   .Object@Created <- Sys.time()
 
   if (length(Pars)>0 &
       !is.null(names(Pars)) &
@@ -1300,8 +1277,6 @@ SRR <- function(Pars=list(h=NA),
 #' @slot CVDist The logit CV associated with `UnfishedDist` (used as a penalty when optimizing for `UnfishedDist`). See `?FitMovement` for details.
 #' @slot CVStay The logit CV associated with `ProbStaying` (used as a penalty when optimizing for diagonal (`ProbStaying`)). See `?FitMovement` for details.
 #' @slot Misc `r Misc_param()`
-#' @slot Created `r Created_param()`
-#' @slot Modified `r Modified_param()`
 #'
 #' @seealso `r See_Also('spatial', c('CalcMovement', 'Check'))`
 #' @name Spatial
@@ -1313,14 +1288,13 @@ setClass('spatial',
          slots=c(UnfishedDist='num.array',
                  ProbStaying='num.array',
                  RelativeSize='num.array.char.null',
-                 Movement='array.null',
-                 FracOther='array.null',
-                 Arrangement='array.null',
+                 Movement='array.list.null',
+                 FracOther='array.list.null',
+                 Arrangement='array.list.null',
                  CVDist='numeric',
                  CVStay='numeric',
                  Misc='list'
-         ),
-         contains='Created_ModifiedClass'
+         )
 )
 
 
@@ -1343,7 +1317,7 @@ setMethod("initialize", "spatial", function(.Object,
   .Object@CVDist <- CVDist
   .Object@CVStay <- CVStay
   .Object@Misc <- Misc
-  .Object@Created <- Sys.time()
+#   .Object@Created <- Sys.time()
   .Object
 })
 
@@ -1454,8 +1428,6 @@ Spatial <- function(UnfishedDist=NULL,
 #'  relative to `Reference` in the last historical time step.  See `Details`.
 #' @slot Reference The reference point used to calculate Depletion.  See `Details`.
 #' @slot Misc `r Misc_param()`
-#' @slot Created `r Created_param()`
-#' @slot Modified `r Modified_param()`
 #'
 #' @seealso `r See_Also('depletion', c('Check'))`
 #'
@@ -1469,7 +1441,7 @@ setClass('depletion',
          slots=c(Initial='num.array',
                  Final='num.array',
                  Reference='array.char.null'),
-         contains = c('MiscClass', 'Created_ModifiedClass')
+         contains = c('MiscClass')
 )
 
 setValidity('depletion', isValidObject)
@@ -1481,7 +1453,7 @@ setMethod("initialize", "depletion", function(.Object,
   .Object@Initial <- Initial
   .Object@Final <- Final
   .Object@Reference <- Reference
-  .Object@Created <- Sys.time()
+#   .Object@Created <- Sys.time()
   .Object
 })
 
@@ -1552,8 +1524,6 @@ Depletion <- function(Initial=numeric(),
 #'
 #' @slot Misc `r Misc_param()`
 #' @slot Log A list. Used internally for logging and debugging.
-#' @slot Created `r Created_param()`
-#' @slot Modified `r Modified_param()`
 #'
 #' @seealso `r See_Also('stock', c('Check'))`
 #'
@@ -1584,8 +1554,7 @@ setClass('stock',
                  TimeSteps='num.null',
                  TimeStepsPerYear='num.null',
                  Misc='list',
-                 Log='list'),
-         contains='Created_ModifiedClass'
+                 Log='list')
 )
 
 setMethod("initialize", "stock", function(.Object,
@@ -1628,7 +1597,7 @@ setMethod("initialize", "stock", function(.Object,
   .Object@TimeSteps <- CalcTimeSteps(nYear, pYear, CurrentYear, TimeUnits)
   .Object@TimeUnits <- TimeUnits
   .Object@Misc <- Misc
-  .Object@Created <- Sys.time()
+#   .Object@Created <- Sys.time()
   .Object
 })
 
@@ -1740,8 +1709,6 @@ Stock <- function(Name=NULL,
 #'
 #' FishingMortality
 #'
-#' @slot Created `r Created_param()`
-#' @slot Modified `r Modified_param()`
 #'
 #' @seealso `r See_Also('fishingmortality', c('Check'))`
 #'
@@ -1755,7 +1722,7 @@ setClass('fishingmortality',
                  DeadAtAge='array.null',
                  RetainAtAge='array.null'
          ),
-         contains = c('MiscClass', 'Created_ModifiedClass')
+         contains = c('MiscClass')
 )
 
 setMethod("initialize", "fishingmortality", function(.Object,
@@ -1767,7 +1734,7 @@ setMethod("initialize", "fishingmortality", function(.Object,
   .Object@DeadAtAge <- DeadAtAge
   .Object@RetainAtAge <- RetainAtAge
   .Object@Misc <- Misc
-  .Object@Created <- Sys.time()
+#   .Object@Created <- Sys.time()
   .Object
 })
 
@@ -1806,8 +1773,6 @@ FishingMortality <- function(ApicalF=NULL,
 #' @slot Vessels Numeric array. The average number of fishing vessels per time step.
 #' @slot Trips Numeric array. The average number of trips per vessel per time step.
 #' @slot Misc `r Misc_param()`
-#' @slot Created `r Created_param()`
-#' @slot Modified `r Modified_param()`
 #'
 #' @seealso `r See_Also('effort', c('Check'))`
 #'
@@ -1819,15 +1784,15 @@ FishingMortality <- function(ApicalF=NULL,
 setClass('effort',
          slots=c(Effort='num.array.df',
                  Catchability='num.array',
-                 qCV='num.array',
-                 qInc='num.array',
+                 qCV='num.array.list',
+                 qInc='num.array.list',
                  Vessels='num.array.df',
-                 Trips='num.array',
-                 MaxVessels='num.array',
-                 MaxTrips='num.array',
+                 Trips='num.array.list',
+                 MaxVessels='num.array.list',
+                 MaxTrips='num.array.list',
                  Units='char.null'
                  ),
-         contains = c('MiscClass', 'Created_ModifiedClass')
+         contains = c('MiscClass')
 )
 
 setValidity('effort', isValidObject)
@@ -1849,7 +1814,7 @@ setMethod("initialize", "effort", function(.Object,
   .Object@MaxTrips <- MaxTrips
   .Object@Units <- Units
   .Object@Misc <- Misc
-  .Object@Created <- Sys.time()
+#   .Object@Created <- Sys.time()
   .Object
 })
 
@@ -1894,8 +1859,6 @@ Effort <- function(Effort=NULL,
 #' DETAILS
 #'
 #' @slot Misc `r Misc_param()`
-#' @slot Created `r Created_param()`
-#' @slot Modified `r Modified_param()`
 #'
 #' @seealso `r See_Also('discardmortality', c('Check'))`
 #'
@@ -1909,8 +1872,7 @@ setClass("discardmortality",
            'MeanAtAgeClass',
            'MeanAtLengthClass',
            'ClassesClass',
-           'MiscClass',
-           'Created_ModifiedClass')
+           'MiscClass')
 )
 
 setValidity('discardmortality', isValidObject)
@@ -1925,7 +1887,7 @@ setMethod("initialize", "discardmortality", function(.Object,
   .Object@MeanAtLength <- MeanAtLength
   .Object@Classes <- Classes
   .Object@Misc <- Misc
-  .Object@Created <- Sys.time()
+#   .Object@Created <- Sys.time()
   .Object
 })
 
@@ -1965,8 +1927,6 @@ DiscardMortality <- function(MeanAtAge=NULL,
 #' DETAILS
 #'
 #' @slot Misc `r Misc_param()`
-#' @slot Created `r Created_param()`
-#' @slot Modified `r Modified_param()`
 #'
 #' @seealso `r See_Also('selectivity', c('Check'))`
 #'
@@ -1981,8 +1941,7 @@ setClass("selectivity",
          contains= c('MeanAtAgeClass',
                      'MeanAtLengthClass',
                      'ClassesClass',
-                     'MiscClass',
-                     'Created_ModifiedClass'))
+                     'MiscClass'))
 
 setValidity('selectivity', isValidObject)
 
@@ -2007,7 +1966,7 @@ setMethod("initialize", "selectivity", function(.Object,
   .Object@MeanAtLength <- MeanAtLength
   .Object@Classes <- Classes
   .Object@Misc <- Misc
-  .Object@Created <- Sys.time()
+#   .Object@Created <- Sys.time()
   .Object
 })
 
@@ -2051,8 +2010,6 @@ Selectivity <- function(Pars=list(),
 #' DETAILS
 #'
 #' @slot Misc `r Misc_param()`
-#' @slot Created `r Created_param()`
-#' @slot Modified `r Modified_param()`
 #'
 #' @seealso `r See_Also('retention', c('Check'))`
 #'
@@ -2067,8 +2024,7 @@ setClass("retention",
          contains= c('MeanAtAgeClass',
                      'MeanAtLengthClass',
                      'ClassesClass',
-                     'MiscClass',
-                     'Created_ModifiedClass'))
+                     'MiscClass'))
 
 setValidity('retention', isValidObject)
 
@@ -2093,7 +2049,7 @@ setMethod("initialize", "retention", function(.Object,
   .Object@MeanAtLength <- MeanAtLength
   .Object@Classes <- Classes
   .Object@Misc <- Misc
-  .Object@Created <- Sys.time()
+#   .Object@Created <- Sys.time()
   .Object
 })
 
@@ -2136,8 +2092,6 @@ Retention <- function(Pars=list(),
 #' DETAILS
 #'
 #' @slot Misc `r Misc_param()`
-#' @slot Created `r Created_param()`
-#' @slot Modified `r Modified_param()`
 #'
 #' @seealso `r See_Also('distribution', c('Check'))`
 #'
@@ -2148,11 +2102,10 @@ Retention <- function(Pars=list(),
 #' @export
 setClass('distribution',
          slots=c(Closure='num.array',
-                 Cost='num.array',
-                 Effort='num.array',
+                 Cost='num.array.list',
+                 Effort='num.array.list',
                  Misc='list'
-         ),
-         contains='Created_ModifiedClass')
+         ))
 
 setValidity('distribution', isValidObject)
 
@@ -2164,7 +2117,7 @@ setMethod("initialize", "distribution", function(.Object,
   .Object@Closure <- Closure
   .Object@Cost <- Cost
   .Object@Misc <- Misc
-  .Object@Created <- Sys.time()
+#   .Object@Created <- Sys.time()
   .Object
 })
 
@@ -2200,8 +2153,6 @@ Distribution <- function(Closure=NULL,
 #' DETAILS
 #'
 #' @slot Misc `r Misc_param()`
-#' @slot Created `r Created_param()`
-#' @slot Modified `r Modified_param()`
 #'
 #' @seealso `r See_Also('fleet', c('Check'))`
 #'
@@ -2218,7 +2169,7 @@ setClass('fleet',
                  Selectivity='selectivity',
                  Retention='retention',
                  Distribution='distribution',
-                 Weight='array.null',
+                 WeightFleet='array.null',
                  BioEconomic='list',
                  nYear='num.null',
                  pYear='num.null',
@@ -2228,8 +2179,7 @@ setClass('fleet',
                  TimeSteps='num.null',
                  TimeStepsPerYear='num.null',
                  Misc='list'
-         ),
-         contains='Created_ModifiedClass'
+         )
 )
 
 
@@ -2241,7 +2191,7 @@ setMethod("initialize", "fleet", function(.Object,
                                           Selectivity=new('selectivity'),
                                           Retention=new('retention'),
                                           Distribution=new('distribution'),
-                                          Weight=array(),
+                                          WeightFleet=array(),
                                           BioEconomic=list(),
                                           Misc=list()) {
 
@@ -2252,11 +2202,11 @@ setMethod("initialize", "fleet", function(.Object,
   .Object@Selectivity <- Selectivity
   .Object@Retention <- Retention
   .Object@Distribution <- Distribution
-  .Object@Weight <- Weight
+  .Object@WeightFleet <- WeightFleet
   .Object@BioEconomic <- BioEconomic
   .Object@Misc <- Misc
 
-  .Object@Created <- Sys.time()
+#   .Object@Created <- Sys.time()
   # methods::validObject(.Object)
   .Object
 })
@@ -2270,7 +2220,7 @@ Fleet <- function(Name=NULL,
                   Selectivity=new('selectivity'),
                   Retention=new('retention'),
                   Distribution=new('distribution'),
-                  Weight=array(),
+                  WeightFleet=array(),
                   BioEconomic=list(),
                   Misc=list()) {
 
@@ -2285,7 +2235,7 @@ Fleet <- function(Name=NULL,
                Selectivity=Selectivity,
                Retention=Retention,
                Distribution=Distribution,
-               Weight=array(),
+               WeightFleet=array(),
                BioEconomic=list(),
                Misc=list())
 }
@@ -2457,11 +2407,8 @@ setClass('data',
                  Sponsor='char.null',
                  CurrentYear='num.null',
                  Biology='biology'
-         ),
+         ))
 
-
-         contains = c('Created_ModifiedClass')
-)
 
 
 
@@ -2486,7 +2433,7 @@ setValidity('data', validDataObject)
 setMethod("initialize", "data", function(.Object) {
 
 
-  .Object@Created <- Sys.time()
+#   .Object@Created <- Sys.time()
   .Object
 })
 
@@ -2514,8 +2461,7 @@ setClass("sexpars",
                  Herm='list.null',
                  SharePar='num.log',
                  Misc='list.null'
-         ),
-         contains='Created_ModifiedClass'
+         )
 )
 
 setValidity('sexpars', isValidObject)
@@ -2539,7 +2485,7 @@ setMethod("initialize", "sexpars", function(.Object,
     .Object@Misc$Imp <- TRUE
   }
 
-  .Object@Created <- Sys.time()
+#   .Object@Created <- Sys.time()
   .Object
 })
 
@@ -2646,8 +2592,6 @@ setClassUnion(name="DataList", members=c("data", "list", 'NULL'))
 #' Mainly for development purposes.
 #' @slot Source Character string. Can be used to reference websites, articles, etc
 #' with relevant information. Supports Markdown.
-#' @slot Created `r Created_param()`
-#' @slot Modified `r Modified_param()`
 #'
 #' @details
 #'
@@ -2728,8 +2672,7 @@ setClass("om",
                  TimeSteps='num.null',
                  Control='list.null',
                  Misc='list',
-                 Source='char.list'),
-         contains = 'Created_ModifiedClass'
+                 Source='char.list')
 )
 #' @describeIn OM Create a new object of class `om`
 #' @param Name Name of the Operating Model. Character string.
@@ -2869,7 +2812,7 @@ OM <- function(Name='A new `OM` object',
   
   .Object@Misc <- Misc
   .Object@Source <- Source
-  .Object@Created <- Sys.time()
+#   .Object@Created <- Sys.time()
 
   methods::validObject(.Object)
   .Object
@@ -2940,8 +2883,7 @@ setClass("curves",
                  SBiomass='list',
                  SP='list',
                  Misc='list'
-         ),
-         contains='Created_ModifiedClass'
+         )
 )
 
 setClass("unfishedrefpoints",
@@ -2951,8 +2893,7 @@ setClass("unfishedrefpoints",
            SB0='array.list.null',
            SP0='array.list.null',
            Misc='array.list.null'
-         ),
-         contains='Created_ModifiedClass'
+         )
 )
 
 setClass("refpoints",
@@ -2974,8 +2915,7 @@ setClass("refpoints",
                  Equilibrium='unfishedrefpoints',
                  Dynamic='unfishedrefpoints',
                  Misc='list'
-         ),
-         contains='Created_ModifiedClass'
+         )
 )
 
 
@@ -2985,16 +2925,14 @@ setClass("popdynamics",
                  SBiomass='array.list.null',
                  SProduction='array.list.null',
                  Misc='list'
-         ),
-         contains='Created_ModifiedClass'
+         )
 )
 
 setClass("unfished",
          slots=c(Equilibrium='popdynamics',
                  Dynamic='popdynamics',
                  Misc='list'
-         ),
-         contains='Created_ModifiedClass'
+         )
 )
 
 
@@ -3006,11 +2944,13 @@ setClass("unfished",
 # PopulationDynamics
 # FleetDynamics
 
+setClass("omhist", contains=c('om'))
+
 
 #' @export
 setClass("hist",
-         contains=c('om', 'Created_ModifiedClass'),
-         slots=c(Unfished='unfished',
+         slots=c(OM='omhist' , 
+                 Unfished='unfished',
                  RefPoints='refpoints',
                  Number='list', # sim, age, ts, area
                  Biomass='list',
@@ -3040,53 +2980,58 @@ MakeNamedList <- function(names, values=NULL) {
   l
 }
 
-Hist <- function(OM, ...) {
+Hist <- function(OM=NULL, ...) {
+  if (is.null(OM))
+    return(new('Hist'))
+  
   if (!inherits(OM,'om'))
     cli::cli_abort('`OM` must be class `om`')
   
-  Hist <- new('hist') 
-  for (nm in slotNames(OM)) {
-    slot(Hist, nm) <- slot(OM, nm)
-  }
+  OM2Hist(OM, ...)
   
-  Hist@Number <- MakeNamedList(StockNames(OM))
-  Hist@Biomass  <- Hist@VBiomass <- Hist@SBiomass <- Hist@Number
-  Hist@FDead <- Hist@FRetain <- Hist@EffortArea <- Hist@FDeadArea <- Hist@FRetainArea <- Hist@Number
-  Hist@Removal <- Hist@Retain <- Hist@Density <-  Hist@Number
-  
-  nsim <- Hist@nSim
-  timesteps <- TimeSteps(Hist)
-  fleetnames <- FleetNames(Hist)
-  
-  # for (st in 1:nStock(Hist)) {
-  #   # Sim, Age, Time Step, Area
-  #   Hist@Number[[st]] <- CreateArraySATR(Hist@Stock[[st]], nsim, timesteps)
-  #   Hist@Biomass[[st]] <- Hist@Number[[st]]
-  #   Hist@SBiomass[[st]] <- Hist@Number[[st]]
-  #   
-  #   
-  #   # Sim, Age, Time Step, Fleet
-  #   Hist@FDead[[st]] <- CreateArraySATF(Hist@Stock[[st]], nsim, timesteps, fleetnames)
-  #   Hist@FRetain[[st]] <- Hist@FDead[[st]]
-  # 
-  #   # Sim, Age, Time Step, Fleet, Area 
-  #   Hist@VBiomass[[st]] <- CreateArraySATFR(Hist@Stock[[st]], nsim, timesteps, fleetnames)
-  #   Hist@FDeadArea[[st]] <- Hist@VBiomass[[st]]
-  #   Hist@FRetainArea[[st]] <-  Hist@VBiomass[[st]]
-  #   Hist@Removal[[st]] <-  Hist@VBiomass[[st]]
-  #   Hist@Retain[[st]] <-  Hist@VBiomass[[st]]
-  #   
-  #   # Sim, Time Step, Fleet, Area 
-  #   Hist@Density[[st]] <- CreateArraySATFR(Hist@Stock[[st]], nsim, timesteps, fleetnames) |> DropDimension('Age', FALSE)
-  #   Hist@EffortArea[[st]] <- Hist@Density[[st]] 
-  #   
-  #   # Sim, Time Step
-  #   Hist@SProduction [[st]] <- CreateArraySATR(Hist@Stock[[st]], nsim, timesteps) |> 
-  #     DropDimension('Age', FALSE) |>
-  #     DropDimension('Area', FALSE)
-  #   
+  # Hist <- new('hist') 
+  # for (nm in slotNames(OM)) {
+  #   slot(Hist, nm) <- slot(OM, nm)
   # }
-  Hist
+  # 
+  # Hist@Number <- MakeNamedList(StockNames(OM))
+  # Hist@Biomass  <- Hist@VBiomass <- Hist@SBiomass <- Hist@Number
+  # Hist@FDead <- Hist@FRetain <- Hist@EffortArea <- Hist@FDeadArea <- Hist@FRetainArea <- Hist@Number
+  # Hist@Removal <- Hist@Retain <- Hist@Density <-  Hist@Number
+  # 
+  # nsim <- Hist@nSim
+  # timesteps <- TimeSteps(Hist)
+  # fleetnames <- FleetNames(Hist)
+  # 
+  # # for (st in 1:nStock(Hist)) {
+  # #   # Sim, Age, Time Step, Area
+  # #   Hist@Number[[st]] <- CreateArraySATR(Hist@Stock[[st]], nsim, timesteps)
+  # #   Hist@Biomass[[st]] <- Hist@Number[[st]]
+  # #   Hist@SBiomass[[st]] <- Hist@Number[[st]]
+  # #   
+  # #   
+  # #   # Sim, Age, Time Step, Fleet
+  # #   Hist@FDead[[st]] <- CreateArraySATF(Hist@Stock[[st]], nsim, timesteps, fleetnames)
+  # #   Hist@FRetain[[st]] <- Hist@FDead[[st]]
+  # # 
+  # #   # Sim, Age, Time Step, Fleet, Area 
+  # #   Hist@VBiomass[[st]] <- CreateArraySATFR(Hist@Stock[[st]], nsim, timesteps, fleetnames)
+  # #   Hist@FDeadArea[[st]] <- Hist@VBiomass[[st]]
+  # #   Hist@FRetainArea[[st]] <-  Hist@VBiomass[[st]]
+  # #   Hist@Removal[[st]] <-  Hist@VBiomass[[st]]
+  # #   Hist@Retain[[st]] <-  Hist@VBiomass[[st]]
+  # #   
+  # #   # Sim, Time Step, Fleet, Area 
+  # #   Hist@Density[[st]] <- CreateArraySATFR(Hist@Stock[[st]], nsim, timesteps, fleetnames) |> DropDimension('Age', FALSE)
+  # #   Hist@EffortArea[[st]] <- Hist@Density[[st]] 
+  # #   
+  # #   # Sim, Time Step
+  # #   Hist@SProduction [[st]] <- CreateArraySATR(Hist@Stock[[st]], nsim, timesteps) |> 
+  # #     DropDimension('Age', FALSE) |>
+  # #     DropDimension('Area', FALSE)
+  # #   
+  # # }
+  # Hist
 }
 
 

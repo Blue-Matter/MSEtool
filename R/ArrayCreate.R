@@ -1,4 +1,21 @@
 
+ArraySimStockAgeTimeArea <- function(Sims, Stocks, Ages, TimeSteps, Areas, default=tiny/2) {
+  
+  array(default, dim=c(length(Sims),
+                       length(Stocks),
+                       length(Ages),
+                       length(TimeSteps),
+                       length(Areas)),
+        dimnames=list(Sim=Sims,
+                      Stock=Stocks,
+                      Age=Ages,
+                      TimeStep=TimeSteps,
+                      Area=Areas)
+  )
+  
+  
+}
+
 
 # ---- Sim, Age ----
 ArraySimAge <- function(OM, Period=c('Historical', 'Projection', 'All'),

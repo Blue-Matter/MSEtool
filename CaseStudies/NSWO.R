@@ -168,8 +168,7 @@ SimulateDEV
 #                  SBatAge='list',
 #                  SPatAge='list',
 #                  Misc='list'
-#          ),
-#          contains='Created_ModifiedClass'
+#          )
 # )
 # 
 # hist <- new('hist')

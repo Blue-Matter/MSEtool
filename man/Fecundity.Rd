@@ -130,10 +130,6 @@ or length \code{nTS}.}
 Will also be used for calculating at-length schedules, e.g., \code{\link[=Maturity]{Maturity()}} or \code{\link[=Selectivity]{Selectivity()}}.}
 
 \item{\code{Misc}}{A list for additional miscellaneous objects. Not currently used.}
-
-\item{\code{Created}}{Time the object was created.}
-
-\item{\code{Modified}}{Time the object was last modified.}
 }}
 
 \examples{
@@ -164,5 +160,5 @@ plot(Fecundity)
 # see Examples in `?Length` for other `Pars` configurations
 }
 \seealso{
-\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=Units]{Units()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Created]{Created()}}, \code{\link[=Modified]{Modified()}}, \code{\link[=FecundityModels]{FecundityModels()}}, \code{\link[=Check]{Check()}}
+\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=Units]{Units()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=FecundityModels]{FecundityModels()}}, \code{\link[=Check]{Check()}}
 }

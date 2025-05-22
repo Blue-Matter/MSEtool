@@ -127,10 +127,6 @@ Will also be used for calculating at-length schedules, e.g., \code{\link[=Maturi
 \item{\code{Semelparous}}{Logical. Do animals die after spawning?}
 
 \item{\code{Misc}}{A list for additional miscellaneous objects. Not currently used.}
-
-\item{\code{Created}}{Time the object was created.}
-
-\item{\code{Modified}}{Time the object was last modified.}
 }}
 
 \examples{
@@ -170,5 +166,5 @@ plot(Maturity)
 # see Examples in `?Length` for other `Pars` configurations
 }
 \seealso{
-\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Semelparous]{Semelparous()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Created]{Created()}}, \code{\link[=Modified]{Modified()}}, \code{\link[=ValidUnits]{ValidUnits()}}, \code{\link[=Check]{Check()}}, \code{\link[=MaturityModels]{MaturityModels()}}, \code{\link[=Populate]{Populate()}}
+\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Semelparous]{Semelparous()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=ValidUnits]{ValidUnits()}}, \code{\link[=Check]{Check()}}, \code{\link[=MaturityModels]{MaturityModels()}}, \code{\link[=Populate]{Populate()}}
 }

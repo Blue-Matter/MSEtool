@@ -61,10 +61,6 @@ Like all of the new style objects in \code{MSEtool}, the slots in \code{ages} ob
 \item{\code{PlusGroup}}{Include a plus-group? Defaults to TRUE.}
 
 \item{\code{Classes}}{Numeric vector length \code{MaxAge+1}. The age classes for the stock. Always starts at 0. Populated internally from \code{MaxAge}.}
-
-\item{\code{Created}}{Time the object was created.}
-
-\item{\code{Modified}}{Time the object was last modified.}
 }}
 
 \examples{
@@ -86,5 +82,5 @@ Check(Ages)
 
 }
 \seealso{
-\code{\link[=MaxAge]{MaxAge()}}, \code{\link[=Units]{Units()}}, \code{\link[=PlusGroup]{PlusGroup()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Created]{Created()}}, \code{\link[=Modified]{Modified()}}, \code{\link[=ValidUnits]{ValidUnits()}}, \code{\link[=Check]{Check()}}
+\code{\link[=MaxAge]{MaxAge()}}, \code{\link[=Units]{Units()}}, \code{\link[=PlusGroup]{PlusGroup()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=ValidUnits]{ValidUnits()}}, \code{\link[=Check]{Check()}}
 }

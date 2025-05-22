@@ -297,7 +297,7 @@ ArrayExpand <- function(Array, nSim, nAges, TimeSteps, AgeOpt=1) {
   
   Array |>
     ExpandSims(nSim) |>
-    ExpandAges(nAges) |>
+    ExpandAges(nAges, AgeOpt) |>
     ExpandTimeSteps(TimeSteps)
 
 }

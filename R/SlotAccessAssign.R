@@ -174,13 +174,6 @@ Control <- function(x) {
   assignSlot(x, value, 'Control')
 }
 
-## ---- Created ----
-
-#' @rdname Access
-#' @export
-Created <- function(x) {
-  x@Created
-}
 
 ## ---- CurrentYear ----
 
@@ -468,19 +461,7 @@ Misc <- function(x) {
 }
 
 
-## ---- Modified ----
 
-#' @rdname Access
-#' @export
-Modified <- function(x) {
-  x@Modified
-}
-
-#' @rdname Access
-#' @export
-`Modified<-` <- function(x, value) {
-  assignSlot(x, value, 'Modified')
-}
 
 ## ---- Model ----
 

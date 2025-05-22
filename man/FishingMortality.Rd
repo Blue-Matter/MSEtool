@@ -30,14 +30,6 @@ FishingMortality
 \item \code{FishingMortality(x) <- value}: Assign an \code{FishingMortality} object to a \code{\link[=Fleet]{Fleet()}} object
 
 }}
-\section{Slots}{
-
-\describe{
-\item{\code{Created}}{Time the object was created.}
-
-\item{\code{Modified}}{Time the object was last modified.}
-}}
-
 \seealso{
-\code{\link[=ApicalF]{ApicalF()}}, \code{\link[=DeadAtAge]{DeadAtAge()}}, \code{\link[=RetainAtAge]{RetainAtAge()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Created]{Created()}}, \code{\link[=Modified]{Modified()}}, \code{\link[=Check]{Check()}}
+\code{\link[=ApicalF]{ApicalF()}}, \code{\link[=DeadAtAge]{DeadAtAge()}}, \code{\link[=RetainAtAge]{RetainAtAge()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Check]{Check()}}
 }

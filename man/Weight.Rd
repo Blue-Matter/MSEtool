@@ -176,11 +176,7 @@ The \code{Classes} slot is populated internally unless specified in the object.}
 \item{\code{Classes}}{The length classes used for the calculation of the age-size key (\code{ASK}).
 Will also be used for calculating at-length schedules, e.g., \code{\link[=Maturity]{Maturity()}} or \code{\link[=Selectivity]{Selectivity()}}.}
 
-\item{\code{Misc}}{A list for additional miscellaneous objects. Not currently used.}
-
-\item{\code{Created}}{Time the object was created.}
-
-\item{\code{Modified}}{Time the object was last modified.}
+\item{\code{Misc}}{`r Misc_param()``}
 }}
 
 \examples{
@@ -225,5 +221,5 @@ plot(Weight)
 
 }
 \seealso{
-\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=Units]{Units()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=CVatAge]{CVatAge()}}, \code{\link[=Dist]{Dist()}}, \code{\link[=TruncSD]{TruncSD()}}, \code{\link[=Timing]{Timing()}}, \code{\link[=Random]{Random()}}, \code{\link[=ASK]{ASK()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Created]{Created()}}, \code{\link[=Modified]{Modified()}}, \code{\link[=ValidUnits]{ValidUnits()}}, \code{\link[=Check]{Check()}}, \code{\link[=WeightModels]{WeightModels()}}, \code{\link[=Populate]{Populate()}}
+\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=Units]{Units()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=CVatAge]{CVatAge()}}, \code{\link[=Dist]{Dist()}}, \code{\link[=TruncSD]{TruncSD()}}, \code{\link[=Timing]{Timing()}}, \code{\link[=Random]{Random()}}, \code{\link[=ASK]{ASK()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=ValidUnits]{ValidUnits()}}, \code{\link[=Check]{Check()}}, \code{\link[=WeightModels]{WeightModels()}}, \code{\link[=Populate]{Populate()}}
 }

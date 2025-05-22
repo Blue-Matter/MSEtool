@@ -111,20 +111,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulateFisheryDynamics_
-List SimulateFisheryDynamics_(Rcpp::List OMListSim, Rcpp::NumericVector TimeSteps, RObject MP, int CalcCatch);
-RcppExport SEXP _MSEtool_SimulateFisheryDynamics_(SEXP OMListSimSEXP, SEXP TimeStepsSEXP, SEXP MPSEXP, SEXP CalcCatchSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::List >::type OMListSim(OMListSimSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
-    Rcpp::traits::input_parameter< RObject >::type MP(MPSEXP);
-    Rcpp::traits::input_parameter< int >::type CalcCatch(CalcCatchSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulateFisheryDynamics_(OMListSim, TimeSteps, MP, CalcCatch));
-    return rcpp_result_gen;
-END_RCPP
-}
 // CalcFfromCatch_
 List CalcFfromCatch_(arma::vec NumberAtAge, arma::mat RemovalNAtAge, arma::mat SelectivityAtAge, arma::mat RetentionAtAge, arma::mat DiscardMortalityAtAge, arma::vec NaturalMortalityAtAge, int MaxIt, double tolF);
 RcppExport SEXP _MSEtool_CalcFfromCatch_(SEXP NumberAtAgeSEXP, SEXP RemovalNAtAgeSEXP, SEXP SelectivityAtAgeSEXP, SEXP RetentionAtAgeSEXP, SEXP DiscardMortalityAtAgeSEXP, SEXP NaturalMortalityAtAgeSEXP, SEXP MaxItSEXP, SEXP tolFSEXP) {
@@ -152,6 +138,20 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::List >::type OMListSim(OMListSimSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
     rcpp_result_gen = Rcpp::wrap(CalcAggregateF_(OMListSim, TimeSteps));
+    return rcpp_result_gen;
+END_RCPP
+}
+// SimulateFisheryDynamics_
+List SimulateFisheryDynamics_(Rcpp::List OMListSim, Rcpp::NumericVector TimeSteps, RObject MP, int CalcCatch);
+RcppExport SEXP _MSEtool_SimulateFisheryDynamics_(SEXP OMListSimSEXP, SEXP TimeStepsSEXP, SEXP MPSEXP, SEXP CalcCatchSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type OMListSim(OMListSimSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
+    Rcpp::traits::input_parameter< RObject >::type MP(MPSEXP);
+    Rcpp::traits::input_parameter< int >::type CalcCatch(CalcCatchSEXP);
+    rcpp_result_gen = Rcpp::wrap(SimulateFisheryDynamics_(OMListSim, TimeSteps, MP, CalcCatch));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -383,9 +383,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_LinInterp_cpp", (DL_FUNC) &_MSEtool_LinInterp_cpp, 3},
     {"_MSEtool_MSYCalcs", (DL_FUNC) &_MSEtool_MSYCalcs, 17},
     {"_MSEtool_Ref_int_cpp", (DL_FUNC) &_MSEtool_Ref_int_cpp, 12},
-    {"_MSEtool_SimulateFisheryDynamics_", (DL_FUNC) &_MSEtool_SimulateFisheryDynamics_, 4},
     {"_MSEtool_CalcFfromCatch_", (DL_FUNC) &_MSEtool_CalcFfromCatch_, 8},
     {"_MSEtool_CalcAggregateF_", (DL_FUNC) &_MSEtool_CalcAggregateF_, 2},
+    {"_MSEtool_SimulateFisheryDynamics_", (DL_FUNC) &_MSEtool_SimulateFisheryDynamics_, 4},
     {"_MSEtool_calcVatAge", (DL_FUNC) &_MSEtool_calcVatAge, 7},
     {"_MSEtool_combine", (DL_FUNC) &_MSEtool_combine, 1},
     {"_MSEtool_get_freq", (DL_FUNC) &_MSEtool_get_freq, 4},

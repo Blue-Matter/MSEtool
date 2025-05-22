@@ -14,12 +14,8 @@ DETAILS
 
 \describe{
 \item{\code{Misc}}{A list for additional miscellaneous objects. Not currently used.}
-
-\item{\code{Created}}{Time the object was created.}
-
-\item{\code{Modified}}{Time the object was last modified.}
 }}
 
 \seealso{
-\code{\link[=Name]{Name()}}, \code{\link[=FishingMortality]{FishingMortality()}}, \code{\link[=DiscardMortality]{DiscardMortality()}}, \code{\link[=Effort]{Effort()}}, \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}}, \code{\link[=Distribution]{Distribution()}}, \code{\link[=Weight]{Weight()}}, \code{\link[=BioEconomic]{BioEconomic()}}, \code{\link[=nYear]{nYear()}}, \code{\link[=pYear]{pYear()}}, \code{\link[=nSim]{nSim()}}, \code{\link[=CurrentYear]{CurrentYear()}}, \code{\link[=TimeUnits]{TimeUnits()}}, \code{\link[=TimeSteps]{TimeSteps()}}, \code{\link[=TimeStepsPerYear]{TimeStepsPerYear()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Created]{Created()}}, \code{\link[=Modified]{Modified()}}, \code{\link[=Check]{Check()}}
+\code{\link[=Name]{Name()}}, \code{\link[=FishingMortality]{FishingMortality()}}, \code{\link[=DiscardMortality]{DiscardMortality()}}, \code{\link[=Effort]{Effort()}}, \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}}, \code{\link[=Distribution]{Distribution()}}, \code{\link[=Weight]{Weight()}}, \code{\link[=BioEconomic]{BioEconomic()}}, \code{\link[=nYear]{nYear()}}, \code{\link[=pYear]{pYear()}}, \code{\link[=nSim]{nSim()}}, \code{\link[=CurrentYear]{CurrentYear()}}, \code{\link[=TimeUnits]{TimeUnits()}}, \code{\link[=TimeSteps]{TimeSteps()}}, \code{\link[=TimeStepsPerYear]{TimeStepsPerYear()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Check]{Check()}}
 }

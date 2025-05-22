@@ -364,7 +364,7 @@ GetRetentionAtLength <- function(object, TimeSteps=NULL, df=FALSE) {
 }
 
 GetEmpiricalWeightAtAge <- function(object, TimeSteps=NULL) {
-  GetFleetAtAge(object,  slots=c('Weight'),TimeSteps)
+  GetFleetAtAge(object,  slots=c('WeightFleet'),TimeSteps)
 }
 
 GetFleetWeightAtAge <- function(Stock, FleetList, TimeSteps=NULL) {
@@ -412,7 +412,7 @@ GetFleetWeightAtAge <- function(Stock, FleetList, TimeSteps=NULL) {
 
 
 `SetFleetWeightAtAge<-` <- function(x, value) {
-  x@Weight <- value
+  x@WeightFleet <- value
   x
 }
 

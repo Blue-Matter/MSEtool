@@ -171,10 +171,6 @@ See \code{Details}.}
 \item{\code{CVStay}}{The logit CV associated with \code{ProbStaying} (used as a penalty when optimizing for diagonal (\code{ProbStaying})). See \code{?FitMovement} for details.}
 
 \item{\code{Misc}}{A list for additional miscellaneous objects. Not currently used.}
-
-\item{\code{Created}}{Time the object was created.}
-
-\item{\code{Modified}}{Time the object was last modified.}
 }}
 
 \examples{
@@ -300,5 +296,5 @@ Movement(Spatial)[1,,,6,]
 
 }
 \seealso{
-\code{\link[=UnfishedDist]{UnfishedDist()}}, \code{\link[=ProbStaying]{ProbStaying()}}, \code{\link[=RelativeSize]{RelativeSize()}}, \code{\link[=Movement]{Movement()}}, \code{\link[=FracOther]{FracOther()}}, \code{\link[=Arrangement]{Arrangement()}}, \code{\link[=CVDist]{CVDist()}}, \code{\link[=CVStay]{CVStay()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Created]{Created()}}, \code{\link[=Modified]{Modified()}}, \code{\link[=CalcMovement]{CalcMovement()}}, \code{\link[=Check]{Check()}}
+\code{\link[=UnfishedDist]{UnfishedDist()}}, \code{\link[=ProbStaying]{ProbStaying()}}, \code{\link[=RelativeSize]{RelativeSize()}}, \code{\link[=Movement]{Movement()}}, \code{\link[=FracOther]{FracOther()}}, \code{\link[=Arrangement]{Arrangement()}}, \code{\link[=CVDist]{CVDist()}}, \code{\link[=CVStay]{CVStay()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=CalcMovement]{CalcMovement()}}, \code{\link[=Check]{Check()}}
 }

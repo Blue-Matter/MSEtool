@@ -1,3 +1,9 @@
+aperm <- function(a, perm, ...) {
+  if (is.null(a))
+    return(a)
+  base::aperm(a, perm, ...)
+}
+
 # TODO check where
 
 #' @describeIn runMSE Development version of `Simulate`
@@ -16,6 +22,17 @@ SimulateDEV <- function(OM=NULL,
   chk <- Check(OM) # TODO OM checks
   
   OM <- StartUp(OM) 
+  
+  # ---- Make Hist Object ----
+  Hist <- Hist(OM, silent)
+
+  
+  
+  Unfished <- CalcUnfished(OMList)
+ 
+
+ 
+  
   
   # ---- Convert OM to OMList -----
   OMList <- MakeOMList(OM)
@@ -52,7 +69,7 @@ SimulateDEV <- function(OM=NULL,
  t <- lapply(OM@Stock, GetMeanAtAge, TimeSteps=TimeSteps)
  dimnames(t$Female)
  
- GetMeanAtAge(OM@Stock, TimeSteps)$Male |> dimnGetMeanAtAge(OM@Stock, TimeSteps)$Male |> dimnGetMeanAtAge(OM@Stock, TimeSteps)$Male |> dimnames()
+ # GetMeanAtAge(OM@Stock, TimeSteps)$Male |> dimnGetMeanAtAge(OM@Stock, TimeSteps)$Male |> dimnGetMeanAtAge(OM@Stock, TimeSteps)$Male |> dimnames()
  
  r <- lapply(OM@Stock, 'Weight')
  r$Female@MeanAtAge
@@ -364,8 +381,7 @@ setClass('advice',
                  Retention='retention',
                  DiscardMortality='discardmortality',
                  Misc='list'
-         ),
-         contains='Created_ModifiedClass'
+         )
 )
 
 #' @export

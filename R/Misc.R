@@ -565,14 +565,14 @@ GetIndex <- function(i, max_i) {
 
 
 SetDigest <- function(argList, object) {
-  object@Created <- NULL
-  object@Modified <- NULL
+  # object@Created <- NULL
+  # object@Modified <- NULL
 
   if (is.list(argList)) {
     for (i in seq_along(argList)) {
       if (isS4(argList[[i]])) {
-        argList[[i]]@Created <- NULL
-        argList[[i]]@Modified <- NULL
+        # argList[[i]]@Created <- NULL
+        # argList[[i]]@Modified <- NULL
       }
     }
   }

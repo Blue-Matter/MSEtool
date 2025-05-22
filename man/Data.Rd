@@ -34,5 +34,5 @@ Like all of the new style objects in \code{MSEtool}, the slots in \code{data} ob
 }}
 
 \seealso{
-\code{\link[=Name]{Name()}}, \code{\link[=CommonName]{CommonName()}}, \code{\link[=Species]{Species()}}, \code{\link[=Agency]{Agency()}}, \code{\link[=Author]{Author()}}, \code{\link[=Email]{Email()}}, \code{\link[=Region]{Region()}}, \code{\link[=Latitude]{Latitude()}}, \code{\link[=Longitude]{Longitude()}}, \code{\link[=Sponsor]{Sponsor()}}, \code{\link[=CurrentYear]{CurrentYear()}}, \code{\link[=Biology]{Biology()}}, \code{\link[=Created]{Created()}}, \code{\link[=Modified]{Modified()}}, \code{\link[=Check]{Check()}}
+\code{\link[=Name]{Name()}}, \code{\link[=CommonName]{CommonName()}}, \code{\link[=Species]{Species()}}, \code{\link[=Agency]{Agency()}}, \code{\link[=Author]{Author()}}, \code{\link[=Email]{Email()}}, \code{\link[=Region]{Region()}}, \code{\link[=Latitude]{Latitude()}}, \code{\link[=Longitude]{Longitude()}}, \code{\link[=Sponsor]{Sponsor()}}, \code{\link[=CurrentYear]{CurrentYear()}}, \code{\link[=Biology]{Biology()}}, \code{\link[=Check]{Check()}}
 }

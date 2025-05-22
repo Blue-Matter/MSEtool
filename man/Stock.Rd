@@ -60,10 +60,6 @@ produce a deterministic operating model. Can be left empty and will be populated
 \item{\code{Misc}}{A list for additional miscellaneous objects. Not currently used.}
 
 \item{\code{Log}}{A list. Used internally for logging and debugging.}
-
-\item{\code{Created}}{Time the object was created.}
-
-\item{\code{Modified}}{Time the object was last modified.}
 }}
 
 \examples{
@@ -74,5 +70,5 @@ Stock <- Stock('My Example Stock',
 # TODO
 }
 \seealso{
-\code{\link[=Name]{Name()}}, \code{\link[=CommonName]{CommonName()}}, \code{\link[=Species]{Species()}}, \code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, \code{\link[=Weight]{Weight()}}, \code{\link[=NaturalMortality]{NaturalMortality()}}, \code{\link[=Maturity]{Maturity()}}, \code{\link[=Fecundity]{Fecundity()}}, \code{\link[=SRR]{SRR()}}, \code{\link[=Spatial]{Spatial()}}, \code{\link[=Depletion]{Depletion()}}, \code{\link[=nYear]{nYear()}}, \code{\link[=pYear]{pYear()}}, \code{\link[=nSim]{nSim()}}, \code{\link[=CurrentYear]{CurrentYear()}}, \code{\link[=TimeUnits]{TimeUnits()}}, \code{\link[=TimeSteps]{TimeSteps()}}, \code{\link[=TimeStepsPerYear]{TimeStepsPerYear()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Log]{Log()}}, \code{\link[=Created]{Created()}}, \code{\link[=Modified]{Modified()}}, \code{\link[=Check]{Check()}}
+\code{\link[=Name]{Name()}}, \code{\link[=CommonName]{CommonName()}}, \code{\link[=Species]{Species()}}, \code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, \code{\link[=Weight]{Weight()}}, \code{\link[=NaturalMortality]{NaturalMortality()}}, \code{\link[=Maturity]{Maturity()}}, \code{\link[=Fecundity]{Fecundity()}}, \code{\link[=SRR]{SRR()}}, \code{\link[=Spatial]{Spatial()}}, \code{\link[=Depletion]{Depletion()}}, \code{\link[=nYear]{nYear()}}, \code{\link[=pYear]{pYear()}}, \code{\link[=nSim]{nSim()}}, \code{\link[=CurrentYear]{CurrentYear()}}, \code{\link[=TimeUnits]{TimeUnits()}}, \code{\link[=TimeSteps]{TimeSteps()}}, \code{\link[=TimeStepsPerYear]{TimeStepsPerYear()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Log]{Log()}}, \code{\link[=Check]{Check()}}
 }

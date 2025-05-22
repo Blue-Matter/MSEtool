@@ -144,10 +144,6 @@ Mainly for development purposes.}
 
 \item{\code{Source}}{Character string. Can be used to reference websites, articles, etc
 with relevant information. Supports Markdown.}
-
-\item{\code{Created}}{Time the object was created.}
-
-\item{\code{Modified}}{Time the object was last modified.}
 }}
 
 \examples{
@@ -156,5 +152,5 @@ with relevant information. Supports Markdown.}
 myOM <- OM('My Example OM')
 }
 \seealso{
-\code{\link[=Name]{Name()}}, \code{\link[=Agency]{Agency()}}, \code{\link[=Author]{Author()}}, \code{\link[=Email]{Email()}}, \code{\link[=Region]{Region()}}, \code{\link[=Latitude]{Latitude()}}, \code{\link[=Longitude]{Longitude()}}, \code{\link[=Sponsor]{Sponsor()}}, \code{\link[=nSim]{nSim()}}, \code{\link[=nYear]{nYear()}}, \code{\link[=pYear]{pYear()}}, \code{\link[=CurrentYear]{CurrentYear()}}, \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=Obs]{Obs()}}, \code{\link[=Imp]{Imp()}}, \code{\link[=Data]{Data()}}, \code{\link[=CatchFrac]{CatchFrac()}}, \code{\link[=Allocation]{Allocation()}}, \code{\link[=Efactor]{Efactor()}}, \code{\link[=Complexes]{Complexes()}}, \code{\link[=SexPars]{SexPars()}}, \code{\link[=Relations]{Relations()}}, \code{\link[=Interval]{Interval()}}, \code{\link[=nReps]{nReps()}}, \code{\link[=pStar]{pStar()}}, \code{\link[=maxF]{maxF()}}, \code{\link[=Seed]{Seed()}}, \code{\link[=TimeUnits]{TimeUnits()}}, \code{\link[=TimeStepsPerYear]{TimeStepsPerYear()}}, \code{\link[=TimeSteps]{TimeSteps()}}, \code{\link[=Control]{Control()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Source]{Source()}}, \code{\link[=Created]{Created()}}, \code{\link[=Modified]{Modified()}}
+\code{\link[=Name]{Name()}}, \code{\link[=Agency]{Agency()}}, \code{\link[=Author]{Author()}}, \code{\link[=Email]{Email()}}, \code{\link[=Region]{Region()}}, \code{\link[=Latitude]{Latitude()}}, \code{\link[=Longitude]{Longitude()}}, \code{\link[=Sponsor]{Sponsor()}}, \code{\link[=nSim]{nSim()}}, \code{\link[=nYear]{nYear()}}, \code{\link[=pYear]{pYear()}}, \code{\link[=CurrentYear]{CurrentYear()}}, \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=Obs]{Obs()}}, \code{\link[=Imp]{Imp()}}, \code{\link[=Data]{Data()}}, \code{\link[=CatchFrac]{CatchFrac()}}, \code{\link[=Allocation]{Allocation()}}, \code{\link[=Efactor]{Efactor()}}, \code{\link[=Complexes]{Complexes()}}, \code{\link[=SexPars]{SexPars()}}, \code{\link[=Relations]{Relations()}}, \code{\link[=Interval]{Interval()}}, \code{\link[=nReps]{nReps()}}, \code{\link[=pStar]{pStar()}}, \code{\link[=maxF]{maxF()}}, \code{\link[=Seed]{Seed()}}, \code{\link[=TimeUnits]{TimeUnits()}}, \code{\link[=TimeStepsPerYear]{TimeStepsPerYear()}}, \code{\link[=TimeSteps]{TimeSteps()}}, \code{\link[=Control]{Control()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Source]{Source()}}
 }

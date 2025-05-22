@@ -663,7 +663,7 @@ OM2fleet <- function(OM, cpars=NULL, Fdisc=NULL) {
   Distribution(fleet) <- OM2Distribution(OM, cpars)
 
   # Weight
-  Weight(fleet) <- process_cpars(cpars$Wt_age_C)
+  fleet@WeightFleet <- process_cpars(cpars$Wt_age_C)
 
   # BioEco
 

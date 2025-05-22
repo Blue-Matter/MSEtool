@@ -160,13 +160,7 @@ setMethod('show', 'weight', function(object) {
     cli::cli_text('{.val { val}}')
   }
 
-  # cli::cli_h3('{.code Created}')
-  # cli::cli_text('{.val { format(object@Created)}}')
-  #
-  # if (!is.null(object@Modified)) {
-  #   cli::cli_h3('{.code Modified}')
-  #   cli::cli_text('{.val { format(object@Modified)}}')
-  # }
+
 
   cli::cli_end()
   print(Check(object))

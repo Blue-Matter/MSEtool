@@ -22,7 +22,6 @@
 \alias{Complexes<-}
 \alias{Control}
 \alias{Control<-}
-\alias{Created}
 \alias{CurrentYear}
 \alias{CurrentYear<-}
 \alias{CVatAge}
@@ -58,8 +57,6 @@
 \alias{MeanAtLength<-}
 \alias{Misc}
 \alias{Misc<-}
-\alias{Modified}
-\alias{Modified<-}
 \alias{Model}
 \alias{Model<-}
 \alias{Movement}
@@ -172,8 +169,6 @@ Control(x)
 
 Control(x) <- value
 
-Created(x)
-
 CurrentYear(x)
 
 CurrentYear(x) <- value
@@ -243,10 +238,6 @@ MeanAtLength(x) <- value
 Misc(x)
 
 Misc(x) <- value
-
-Modified(x)
-
-Modified(x) <- value
 
 Model(x)
 

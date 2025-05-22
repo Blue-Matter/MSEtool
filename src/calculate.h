@@ -83,6 +83,7 @@ inline List CalcFMortality(arma::mat EffortFleetArea, // nFleet, nArea
                            int nArea
 ) {
   
+
   EffortFleetArea = TransposeMatrix(EffortFleetArea, nArea);
   int nFleet = EffortFleetArea.n_rows;
   int nAge = SelectivityAtAgeFleet.n_rows;
