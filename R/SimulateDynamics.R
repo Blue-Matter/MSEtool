@@ -13,8 +13,13 @@ SimulateDynamics <- function(HistSimList, TimeSteps=NULL, silent=FALSE) {
  
   r = SimulateDynamics_(HistSim, TimeSteps)
   
+  
+  
+  r@TimeSeries@FDeadAtAgeArea$`Day octopus`[[2]][,1,]
+  r@TimeSeries@FRetainAtAgeArea$`Day octopus`[[2]][,1,]
+  
 
-  HistSim@TimeSeries@FRetainAtAgeArea
+  HistSim@TimeSeries@SBiomass |> dim()
  
   t = HistSim@TimeSeries@FDeadAtAgeArea[[1]] |> Array2List(2)
   t$`2021` |> dim()
