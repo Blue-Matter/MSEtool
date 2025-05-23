@@ -113,10 +113,9 @@ setMethod('CalcUnfishedSurvival', c('stock', 'ANY', 'ANY'), function(x, SP=FALSE
     Survival <- purrr::pmap(list(
       NaturalMortalityAtAge=NaturalMortalityAtAgeList,
       PlusGroup=PlusGroup, 
-      SpawnTimeFrac=SpawnTimeFrac, 
       Semelparous=SemelparousList),
-      CalcSurvival
-    ) |> List2Array('Sim') |>
+      CalcSurvival, SpawnTimeFrac=SpawnTimeFrac) |> 
+      List2Array('Sim') |>
       aperm(c('Sim', 'Age', 'TimeStep'))
     
   }

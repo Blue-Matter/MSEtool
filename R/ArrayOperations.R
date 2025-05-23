@@ -285,15 +285,20 @@ ArraySubsetSim <- function(object, Sims=NULL, drop=FALSE) {
   } 
   if (drop) {
     out <- abind::adrop(abind::asub(object, (DN[[TSind]] %in% Sims), TSind, drop=FALSE), TSind)
+    if (is.null(dim(out))) {
+      out <- array(out, dim=length(out), dimnames=list(TimeStep=names(out)))
+    }
+    return(out)  
   } else {
     out <- abind::asub(object, (DN[[TSind]] %in% Sims), TSind, drop=FALSE)  
+    return(out)
   }
   
 }
 
 # ----- Array Expand ----
 
-ArrayExpand <- function(Array, nSim, nAges, TimeSteps, AgeOpt=1) {
+ArrayExpand <- function(Array, nSim, nAges, TimeSteps, AgeOpt=3) {
   
   Array |>
     ExpandSims(nSim) |>

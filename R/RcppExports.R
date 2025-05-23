@@ -48,8 +48,8 @@ Ref_int_cpp <- function(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V
 #' Simulate Fishery Dynamics
 NULL
 
-SimulateDynamics_ <- function(NumberAtAgeAreaList, FleetWeightAtAgeList, SelectivityAtAgeList, ClosureAreaList, EffortAreaList, WeightAtAge, Effort, TimeSteps, TimeStepsAll, nAges, nStock, nFleet, nArea) {
-    .Call(`_MSEtool_SimulateDynamics_`, NumberAtAgeAreaList, FleetWeightAtAgeList, SelectivityAtAgeList, ClosureAreaList, EffortAreaList, WeightAtAge, Effort, TimeSteps, TimeStepsAll, nAges, nStock, nFleet, nArea)
+SimulateDynamics_ <- function(HistSim, TimeSteps) {
+    .Call(`_MSEtool_SimulateDynamics_`, HistSim, TimeSteps)
 }
 
 calcVatAge <- function(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid) {

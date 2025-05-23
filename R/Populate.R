@@ -82,7 +82,7 @@ PopulateOM <- function(OM, silent=FALSE) {
       fleet@nYear <- OM@nYear
       fleet@pYear <- OM@pYear
       fleet@CurrentYear <- OM@CurrentYear
-      
+      stock <- stockList[[st]]
       fleet@TimeUnits <- stock@Ages@Units
       fleet@TimeStepsPerYear <- TSperYear(stock@TimeUnits)
       fleet@TimeSteps <- CalcTimeSteps(stock@nYear, 
@@ -93,6 +93,7 @@ PopulateOM <- function(OM, silent=FALSE) {
       fleetList[[st]][[fl]] <- PopulateFleet(fleet, 
                                         Ages=Ages(stockList[[st]]),
                                         Length=Length(stockList[[st]]),
+                                        Weight=Weight(stockList[[st]]),
                                         nAreas=nArea(stockList[[st]]),
                                         seed=OM@Seed,
                                         silent=silent)
@@ -541,7 +542,7 @@ PopulateSRR <- function(SRR,
   SRR@Pars <- StructurePars(Pars=SRR@Pars, nsim, TimeSteps)
   SRR@Model <- FindModel(SRR)
   
-  
+
   pars <- StructurePars(list(SRR@R0, SRR@SD, SRR@AC), nsim, TimeSteps)
   SRR@R0 <- pars[[1]][,1, drop=FALSE] # only one time step for now
   SRR@SD <- pars[[2]][,1, drop=FALSE] # only one time step for now
@@ -742,6 +743,7 @@ PopulateDepletion <- function(Depletion,
 PopulateFleet <- function(Fleet, 
                           Ages=NULL,
                           Length=NULL,
+                          Weight=NULL,
                           nAreas=NULL,
                           seed=NULL,
                           silent=FALSE) {
@@ -807,6 +809,13 @@ PopulateFleet <- function(Fleet,
                                              nsim, 
                                              TimeSteps,
                                              nAreas)
+  
+  if (all(is.na(Fleet@WeightFleet ))) {
+    Fleet@WeightFleet <- Weight@MeanAtAge
+  } else {
+    stop('need to add populate for Fleet@WeightFleet')
+  }
+  
   
   SetDigest(argList, Fleet)
 }

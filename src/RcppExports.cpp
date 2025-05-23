@@ -112,25 +112,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // SimulateDynamics_
-List SimulateDynamics_(List NumberAtAgeAreaList, List FleetWeightAtAgeList, List SelectivityAtAgeList, List ClosureAreaList, List EffortAreaList, arma::cube WeightAtAge, arma::cube Effort, Rcpp::NumericVector TimeSteps, Rcpp::NumericVector TimeStepsAll, NumericVector nAges, int nStock, int nFleet, int nArea);
-RcppExport SEXP _MSEtool_SimulateDynamics_(SEXP NumberAtAgeAreaListSEXP, SEXP FleetWeightAtAgeListSEXP, SEXP SelectivityAtAgeListSEXP, SEXP ClosureAreaListSEXP, SEXP EffortAreaListSEXP, SEXP WeightAtAgeSEXP, SEXP EffortSEXP, SEXP TimeStepsSEXP, SEXP TimeStepsAllSEXP, SEXP nAgesSEXP, SEXP nStockSEXP, SEXP nFleetSEXP, SEXP nAreaSEXP) {
+S4 SimulateDynamics_(S4 HistSim, Rcpp::NumericVector TimeSteps);
+RcppExport SEXP _MSEtool_SimulateDynamics_(SEXP HistSimSEXP, SEXP TimeStepsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type NumberAtAgeAreaList(NumberAtAgeAreaListSEXP);
-    Rcpp::traits::input_parameter< List >::type FleetWeightAtAgeList(FleetWeightAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type SelectivityAtAgeList(SelectivityAtAgeListSEXP);
-    Rcpp::traits::input_parameter< List >::type ClosureAreaList(ClosureAreaListSEXP);
-    Rcpp::traits::input_parameter< List >::type EffortAreaList(EffortAreaListSEXP);
-    Rcpp::traits::input_parameter< arma::cube >::type WeightAtAge(WeightAtAgeSEXP);
-    Rcpp::traits::input_parameter< arma::cube >::type Effort(EffortSEXP);
+    Rcpp::traits::input_parameter< S4 >::type HistSim(HistSimSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeStepsAll(TimeStepsAllSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type nAges(nAgesSEXP);
-    Rcpp::traits::input_parameter< int >::type nStock(nStockSEXP);
-    Rcpp::traits::input_parameter< int >::type nFleet(nFleetSEXP);
-    Rcpp::traits::input_parameter< int >::type nArea(nAreaSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulateDynamics_(NumberAtAgeAreaList, FleetWeightAtAgeList, SelectivityAtAgeList, ClosureAreaList, EffortAreaList, WeightAtAge, Effort, TimeSteps, TimeStepsAll, nAges, nStock, nFleet, nArea));
+    rcpp_result_gen = Rcpp::wrap(SimulateDynamics_(HistSim, TimeSteps));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -362,7 +351,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_LinInterp_cpp", (DL_FUNC) &_MSEtool_LinInterp_cpp, 3},
     {"_MSEtool_MSYCalcs", (DL_FUNC) &_MSEtool_MSYCalcs, 17},
     {"_MSEtool_Ref_int_cpp", (DL_FUNC) &_MSEtool_Ref_int_cpp, 12},
-    {"_MSEtool_SimulateDynamics_", (DL_FUNC) &_MSEtool_SimulateDynamics_, 13},
+    {"_MSEtool_SimulateDynamics_", (DL_FUNC) &_MSEtool_SimulateDynamics_, 2},
     {"_MSEtool_calcVatAge", (DL_FUNC) &_MSEtool_calcVatAge, 7},
     {"_MSEtool_combine", (DL_FUNC) &_MSEtool_combine, 1},
     {"_MSEtool_get_freq", (DL_FUNC) &_MSEtool_get_freq, 4},

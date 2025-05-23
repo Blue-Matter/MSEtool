@@ -4,6 +4,22 @@ aperm <- function(a, perm, ...) {
   base::aperm(a, perm, ...)
 }
 
+Hist2HistSimList <- function(Hist) {
+  HistSimList <- purrr::map(1:nSim(Hist@OM), \(x)  
+                            SubsetSim(Hist, Sim=x, drop=TRUE)
+                            , .progress = 'Building internal object `HistSimList`')
+  names(HistSimList) <- 1:nSim(Hist@OM)
+  
+  for (i in 1:nSim(Hist@OM)) {
+    HistSimList[[i]]@TimeSeries@FDeadAtAgeArea <- lapply(HistSimList[[i]]@TimeSeries@FDeadAtAgeArea, Array2List, 2)
+    HistSimList[[i]]@TimeSeries@FRetainAtAgeArea <- lapply(HistSimList[[i]]@TimeSeries@FRetainAtAgeArea, Array2List, 2)  
+  }
+  
+  
+  class(HistSimList) <- 'histsimlist'
+  HistSimList
+}
+
 # TODO check where
 
 #' @describeIn runMSE Development version of `Simulate`
@@ -26,20 +42,21 @@ SimulateDEV <- function(OM=NULL,
 
   # ---- Make Hist Object ----
   Hist <- Hist(OM, silent)
-
+  
   # ---- Calculate Equilibrium Unfished ----
   Hist@Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
   
   # ---- Calculate Number-at-Age for Initial TimeStep ----
-  Hist@Number[,,,1,] <- CalcInitialTimeStep(Hist)
+  Hist <- CalcInitialTimeStep(Hist)
+  
+  # ---- Build HistSimList ----
+  # List of `Hist` objects, each with one simulation
+  HistSimList <- Hist2HistSimList(Hist)
   
 
-  Hist@OM@Fleet$Female@Effort@Effort
-  
-  Hist@OM@Fleet$Female@Distribution@Effort
-  
+
   # ---- Calculate Unfished Equilibrium and Dynamic ----
-  Unfished <- CalcUnfished(OM)
+  Hist@Unfished@Dynamic <- CalcDynamicUnfished(OM)
 
  
 
@@ -65,25 +82,10 @@ SimulateDEV <- function(OM=NULL,
   # TODO speed up - see below
   RefPoints <- CalcRefPoints(OM, Unfished)
   
-  # ---- Calculate Initial TimeStep ----
-  OMList <- purrr::map(OMList, CalcInitialTimeStep) 
+
   
   
-  
-  
- t = ArrayExpand(OM@Stock$Female@NaturalMortality@MeanAtAge, OM@nSim, 50, TimeSteps)
-  
- t = ArrayExpand(OM@Stock$Female@Weight@MeanAtAge, OM@nSim, 30, TimeSteps)
  
- t <- lapply(OM@Stock, GetMeanAtAge, TimeSteps=TimeSteps)
- dimnames(t$Female)
- 
- # GetMeanAtAge(OM@Stock, TimeSteps)$Male |> dimnGetMeanAtAge(OM@Stock, TimeSteps)$Male |> dimnGetMeanAtAge(OM@Stock, TimeSteps)$Male |> dimnames()
- 
- r <- lapply(OM@Stock, 'Weight')
- r$Female@MeanAtAge
- r$Male@MeanAtAge
- class(r$Female)
 
  
 

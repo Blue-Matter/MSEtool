@@ -28,7 +28,7 @@ inline arma::mat CalcVBiomass(arma::mat NumberAtAgeArea, // nAge, nArea
                        arma::mat FleetWeightAtAgeFleet, // nAge, nFleet
                        arma::mat SelectivityAtAgeFleet, // nAge, nFleet
                        arma::mat ClosureFleetArea) { // nFleet, nArea) 
-  
+
   int nAge = NumberAtAgeArea.n_rows;
   int nArea = NumberAtAgeArea.n_cols;
   int nFleet = FleetWeightAtAgeFleet.n_cols;
@@ -65,12 +65,11 @@ inline arma::mat CalcEffortDistribution(arma::mat VBiomassFleetArea, // nFleet, 
   CheckLength(Effort.size(), nFleet, "Effort", "nFleet (nrow(VBiomassFleetArea))");
   
   arma::mat EffortFleetArea(nFleet, nArea, arma::fill::zeros);
-  
   if (nArea==1) {
     EffortFleetArea(arma::span(0, nFleet-1), 0) = Effort;
     return(EffortFleetArea);
   }
-  
+
   for (int fl=0; fl<nFleet; fl++) {
     arma::rowvec relvbiomassarea(nArea, arma::fill::zeros);
     double totalVB = arma::accu(VBiomassFleetArea.row(fl));
@@ -84,7 +83,7 @@ inline arma::mat CalcEffortDistribution(arma::mat VBiomassFleetArea, // nFleet, 
 
 inline List CalcFMortality(arma::mat EffortFleetArea, // nFleet, nArea
                            arma::vec Catchability, // nFleet
-                           arma::rowvec RelativeSize, // nArea
+                           arma::vec RelativeSize, // nArea
                            arma::mat SelectivityAtAgeFleet, // nAge, nFleet
                            arma::mat RetentionAtAgeFleet, // nAge, nFleet
                            arma::mat DiscardMortalityAtAgeFleet, // nAge, nFleet

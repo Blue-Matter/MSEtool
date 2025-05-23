@@ -10,6 +10,8 @@ RequireALK <- function(stock) {
     model <- slot(slot(stock, stock_slots[i]), 'Model')
     if (is.null(model))
       next()
+    if (inherits(model, 'function'))
+      next()
     cl <- model|> get() |> class()
     if (grepl('at-Length-Model', cl))
       reqALK[i] <- TRUE

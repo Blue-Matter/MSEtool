@@ -11,18 +11,6 @@ isValidObject <- function(object) {
 # S3 classes ----
 # methods::setOldClass("ASK")
 
-# R6 Classes ----
-R6array <- R6::R6Class("R6array", list(
-  value = NULL,
-  initialize = function(vals) {
-    self$value <- vals
-  },
-  set_value = function(val) {
-    self$value <- val
-    invisible(self)
-  }
-))
-
 # Custom Class Unions ----
 methods::setClassUnion(name="ASK.null", members=c("NULL", 'array', 'list'))
 methods::setClassUnion(name="fun.char", members=c("character", "function", "list", "NULL"))
@@ -36,7 +24,7 @@ methods::setClassUnion(name="num.array.char.null", members=c('numeric', "array",
 methods::setClassUnion(name="list.null", members=c('list', "NULL"))
 methods::setClassUnion(name="num.null", members=c("numeric", "NULL"))
 methods::setClassUnion(name="num.list.null", members=c("numeric", 'list', "NULL"))
-methods::setClassUnion(name="num.array", members=c("numeric", "array", "NULL"))
+methods::setClassUnion(name="num.array", members=c("numeric", "array", 'list', "NULL"))
 methods::setClassUnion(name="num.array.list", members=c("numeric", "array", 'list', "NULL"))
 methods::setClassUnion(name="num.array.df", members=c("numeric", "array", 'data.frame', 'list', "NULL"))
 methods::setClassUnion(name="num.log", members=c("numeric", "logical", "NULL"))
@@ -2946,45 +2934,39 @@ setClass("unfished",
 # PopulationDynamics
 # FleetDynamics
 
-setClass("omhist", contains=c('om'))
-
-
-#' @export
-setClass("hist",
-         slots=c(OM='omhist' , 
-                 Unfished='unfished',
-                 RefPoints='refpoints',
-                 Number='array', # sim, stock, age, ts, area
-                 Biomass='array',
-                 SBiomass='array'
-                 # SProduction='array',
-                 # FDead='array', # sim, stock, age, ts, fleet
-                 # FRetain='array', # sim, age, ts, fleet
-                 # VBiomass='array',  # sim, age, ts, fleet, area
-                 # EffortArea='list', # sim, age, ts, fleet, area
-                 # FDeadArea='list', # sim, age, ts, fleet, area
-                 # FRetainArea='list', # sim, age, ts, fleet, area
-                 # Removal='list', # sim, age, ts, fleet, area
-                 # Retain='list',  # sim, age, ts, fleet, area
-                 # Density='list' # sim, ts, fleet, area
+setClass("timeseries",
+         slots=c(Number='array.list.null',
+                 Biomass='array.list.null',
+                 SBiomass='array.list.null',
+                 SProduction='array.list.null',
+                 Removals='array.list.null',
+                 Landings='array.list.null',
+                 Effort='array.list.null',
+                 FDeadAtAge='array.list.null',
+                 FRetainAtAge='array.list.null',
+                 EffortArea='array.list.null',
+                 FDeadAtAgeArea='array.list.null',
+                 FRetainAtAgeArea='array.list.null',
+                 Misc='list'
          )
 )
 
 
-MakeNamedList <- function(names, values=NULL) {
-  l <- vector('list', length(names))
-  names(l) <- names
-  if (!is.null(values)) {
-    for (i in 1:length(l)) {
-      l[[i]] <- values
-    }
-  }
-  l
-}
+#' @export
+setClass("hist",
+         slots=c(OM='om',
+                 TimeSeries='timeseries',
+                 Unfished='unfished',
+                 RefPoints='refpoints'
+
+         )
+)
+
+
 
 Hist <- function(OM=NULL, ...) {
   if (is.null(OM))
-    return(new('Hist'))
+    return(new('hist'))
   
   if (!inherits(OM,'om'))
     cli::cli_abort('`OM` must be class `om`')
@@ -3035,5 +3017,6 @@ Hist <- function(OM=NULL, ...) {
   # # }
   # Hist
 }
+
 
 

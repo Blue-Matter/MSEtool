@@ -1,17 +1,32 @@
-SimulateDynamics <- function(Hist, TimeSteps=NULL, silent=FALSE) {
+SimulateDynamics <- function(HistSimList, TimeSteps=NULL, silent=FALSE) {
   
-  if (inherits(Hist, 'om')) {
-    Hist <- Hist(Hist, silent)
+  if (inherits(HistSimList, 'hist')) {
+    HistSimList <- Hist2HistSimList(HistSimList)
   } 
   
   if (is.null(TimeSteps))
-    TimeSteps <- TimeSteps(Hist@OM, 'Historical')
+    TimeSteps <- TimeSteps(HistSimList[[1]]@OM, 'Historical')
   
   
-  
-  # Convert to List by Sim
+  sim <- 1
+  HistSim <- HistSimList[[sim]]
+ 
+  r = SimulateDynamics_(HistSim, TimeSteps)
   
 
+  HistSim@TimeSeries@FRetainAtAgeArea
+ 
+  t = HistSim@TimeSeries@FDeadAtAgeArea[[1]] |> Array2List(2)
+  t$`2021` |> dim()
+  HistSim@TimeSeries@FRetainAtAgeArea
+  
+  
+  FDeadAtAgeAreaStock[TSindex] = FMortFleetArea["FDeadFleetArea"];
+  FRetainAtAgeAreaStock[TSindex] = FMortFleetArea["FRetainFleetArea"];
+  
+  FDeadAtAgeAreaList[st] = FDeadAtAgeAreaStock;
+  FRetainAtAgeAreaList[st] = FRetainAtAgeAreaStock;
+  
   
   # Lists by Sim 
   

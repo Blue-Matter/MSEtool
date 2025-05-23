@@ -2,6 +2,7 @@
 
 
 SubsetSim <- function(object, Sim=1, drop=FALSE) {
+ 
   # this is a piece of black magic that subsets all arrays with a Sim
   # dimension
   # Sim is a numeric vector, can be length > 1
@@ -13,7 +14,7 @@ SubsetSim <- function(object, Sim=1, drop=FALSE) {
     slots <- slotNames(object)
     for (i in seq_along(slots)) {
       obj <- slot(object, slots[i])
-      slot(object, slots[i]) <- Recall(obj, Sim)
+      slot(object, slots[i]) <- Recall(obj, Sim, drop)
     }
     if ('nSim' %in% slotNames(object)) 
       object@nSim <- length(Sim)
@@ -27,7 +28,7 @@ SubsetSim <- function(object, Sim=1, drop=FALSE) {
       if (is.null(object[[j]])) {
         outlist[[j]] <- object[[j]]
       } else {
-        outlist[[j]] <- Recall(object[[j]], Sim)
+        outlist[[j]] <- Recall(object[[j]], Sim, drop)
       }
       
     }

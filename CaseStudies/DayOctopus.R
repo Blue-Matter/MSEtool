@@ -17,7 +17,7 @@ octopusOM <- OM('Day Octopus OM',
                 nYear=5,
                 pYear=5,
                 TimeUnits = 'month',
-                nSim=10)
+                nSim=30)
 
 octopusOM@TimeSteps
 
@@ -116,182 +116,182 @@ nSim=NULL
 parallel=FALSE
 silent=FALSE
 
-
-OMListHist <- SimulateDEV(OM)
-
-
-# ---- Project Forward -----
-source("OctopusMPs.R")
-
-
-
-
-MSE <- ProjectDEV(OMListHist, MPs=c('Open', 
-                                    'Spatial_1', 
-                                    'Seasonal_1',
-                                    'Spatial_2',
-                                    'Spatial_3',
-                                    'Spatial_6',
-                                    'Spatial_12'))
-
-# Make Figures 
-library(ggplot2)
-
-ConvertToDF <- function(array, responseName ="Value") {
-  DF <- array2DF(array, responseName) 
-  nms <- names(DF)
-  if ("Sim" %in% nms)
-    DF$Sim <- as.numeric(DF$Sim)
-  
-  if ("TimeStep" %in% nms)
-    DF["TimeStep"] <- as.numeric(DF$TimeStep)
-  
-  if ("MP" %in% nms)
-    DF$MP <- factor(DF$MP, ordered = TRUE, levels=unique(DF$MP))
-  
-  if ("Stock" %in% nms)
-    DF$Stock <- factor(DF$Stock, ordered = TRUE, levels=unique(DF$Stock))
-  
-  if ("Fleet" %in% nms)
-    DF$Fleet <- factor(DF$Fleet, ordered = TRUE, levels=unique(DF$Fleet))
-
-  DF
-}
-
-# Make Data frames 
-TimeStepsHist <- OMListHist[[1]]$TimeStepsHist[[1]]
-TimeStepsProj <- OMListHist[[1]]$TimeStepsProj[[1]]
-
-
-SBiomassProj <- ConvertToDF(MSE$SBiomass)
-
-SB0 <- purrr::map(OMListHist, \(x)
-                  x$SB0) |>
-  ReverseList() |>
-  purrr::map(List2Array, 'Sim', 'TimeStep') |>
-  purrr::map(\(x) apply(x, c('Sim', 'TimeStep'), sum)) |>
-  List2Array("Stock") |> 
-  aperm(c("Sim", "Stock", "TimeStep")) |>
-  ConvertToDF('SB0') |>
-  dplyr::filter(TimeStep%in% TimeStepsProj)
-
-SBiomassProj <- dplyr::left_join(SBiomassProj, SB0)
-               
-SBiomass <- SBiomassProj |> 
-  dplyr::arrange("TimeStep", "Sim", "Stock") |>
-  dplyr::group_by(Sim, TimeStep) |>
-  dplyr::mutate(Value=Value/SB0) |>
-  dplyr::group_by(TimeStep, MP) |>
-  dplyr::mutate(Median=median(Value))
-
-
-ggplot(SBiomass, aes(x=TimeStep, y=Median)) +
-  geom_line() +
-  expand_limits(y=c(0,1)) +
-  facet_wrap(~MP) +
-  theme_bw() +
-  labs(x='Time', y='Relative Spawning Biomass')
-
-
-RefCatch <- purrr::map(OMListHist, \(x)
-                  x$RefCatch) |> unlist()
-
-RefCatch <- data.frame(Sim=1:length(RefCatch), RefCatch)
-
-
-RemovalProj <- left_join(ConvertToDF(MSE$Removal),RefCatch) |>
-  dplyr::group_by(MP, Sim) |>
-  dplyr::mutate(Value=Value/RefCatch) |> 
-  dplyr::group_by(TimeStep, MP) |>
-  dplyr::mutate(Median=median(Value))
-
-RemovalProj |> 
-  dplyr::filter(Sim==1, MP=='Open')
-
-RemovalProj |> 
-  dplyr::filter(Sim==1, MP=='Closed_12')
-
-
-ggplot(RemovalProj, aes(x=TimeStep, y=Median)) +
-  geom_line() +
-  expand_limits(y=0) +
-  facet_wrap(~MP) +
-  theme_bw() +
-  labs(x='Time', y='Relative Catch')
-
-
-RemovalMean <- RemovalProj |> 
-  dplyr::group_by(MP) |>
-  dplyr::summarise(Mean=mean(Value))
-
-SBiomassMean <- SBiomassProj |> 
-  dplyr::group_by(Sim, TimeStep) |>
-  dplyr::mutate(Value=Value/SB0) |>
-  dplyr::group_by(MP) |>
-  dplyr::summarise(Mean=mean(Value))
-
-plot(SBiomassMean$Mean,  RemovalMean$Mean )
-
-barplot(SBiomassMean$Mean, names.arg=SBiomassMean$MP)
-barplot(RemovalMean$Mean, names.arg=RemovalMean$MP)
-
-
-ggplot(RemovalProj, aes(x=TimeStep, y=Median, col=MP)) +
-  geom_line() +
-  expand_limits(y=0) +
-  theme_bw() +
-  labs(x='Time', y='Relative Catch')
-
-
-
-
-
-
-
-
-
-
-
-BiomassProj <- ConvertToDF(MSE$Biomass)
-
- 
-
-B0 <- purrr::map(OMListHist, \(x)
-                  x$B0) |>
-  ReverseList() |>
-  purrr::map(List2Array, 'Sim', 'TimeStep') |>
-  purrr::map(\(x) apply(x, c('Sim', 'TimeStep'), sum)) |>
-  List2Array("Stock") |> 
-  aperm(c("Sim", "Stock", "TimeStep")) |>
-  ConvertToDF('B0') |>
-  dplyr::filter(TimeStep%in% TimeStepsProj)
-
-BiomassProj <- dplyr::left_join(BiomassProj, B0)
-
-Biomass <- BiomassProj |> 
-  dplyr::arrange("TimeStep", "Sim", "Stock") |>
-  dplyr::group_by(Sim, TimeStep) |>
-  dplyr::mutate(Value=Value/B0) |>
-  dplyr::group_by(TimeStep, MP) |>
-  dplyr::summarise(Biomass=median(Value))
-
-ggplot(Biomass, aes(x=TimeStep, y=Biomass, col=MP)) +
-  geom_line() +
-  expand_limits(y=0) +
-  facet_wrap(~MP)
-
-w = BiomassProj |> dplyr::filter(MP=="Open", TimeStep==2026)
-w$Value/w$B0
-
-r = BiomassProj |> dplyr::filter(MP=="CloseArea_1_12", TimeStep==2026)
-r$Value/r$B0
-
-w
-r
-
-SBiomassProj
-
-# final depletion isn't right!
-# why is depletion different across MPs?
-
-MSE$Biomass[1,1,,1]
+# 
+# OMListHist <- SimulateDEV(OM)
+# 
+# 
+# # ---- Project Forward -----
+# source("OctopusMPs.R")
+# 
+# 
+# 
+# 
+# MSE <- ProjectDEV(OMListHist, MPs=c('Open', 
+#                                     'Spatial_1', 
+#                                     'Seasonal_1',
+#                                     'Spatial_2',
+#                                     'Spatial_3',
+#                                     'Spatial_6',
+#                                     'Spatial_12'))
+# 
+# # Make Figures 
+# library(ggplot2)
+# 
+# ConvertToDF <- function(array, responseName ="Value") {
+#   DF <- array2DF(array, responseName) 
+#   nms <- names(DF)
+#   if ("Sim" %in% nms)
+#     DF$Sim <- as.numeric(DF$Sim)
+#   
+#   if ("TimeStep" %in% nms)
+#     DF["TimeStep"] <- as.numeric(DF$TimeStep)
+#   
+#   if ("MP" %in% nms)
+#     DF$MP <- factor(DF$MP, ordered = TRUE, levels=unique(DF$MP))
+#   
+#   if ("Stock" %in% nms)
+#     DF$Stock <- factor(DF$Stock, ordered = TRUE, levels=unique(DF$Stock))
+#   
+#   if ("Fleet" %in% nms)
+#     DF$Fleet <- factor(DF$Fleet, ordered = TRUE, levels=unique(DF$Fleet))
+# 
+#   DF
+# }
+# 
+# # Make Data frames 
+# TimeStepsHist <- OMListHist[[1]]$TimeStepsHist[[1]]
+# TimeStepsProj <- OMListHist[[1]]$TimeStepsProj[[1]]
+# 
+# 
+# SBiomassProj <- ConvertToDF(MSE$SBiomass)
+# 
+# SB0 <- purrr::map(OMListHist, \(x)
+#                   x$SB0) |>
+#   ReverseList() |>
+#   purrr::map(List2Array, 'Sim', 'TimeStep') |>
+#   purrr::map(\(x) apply(x, c('Sim', 'TimeStep'), sum)) |>
+#   List2Array("Stock") |> 
+#   aperm(c("Sim", "Stock", "TimeStep")) |>
+#   ConvertToDF('SB0') |>
+#   dplyr::filter(TimeStep%in% TimeStepsProj)
+# 
+# SBiomassProj <- dplyr::left_join(SBiomassProj, SB0)
+#                
+# SBiomass <- SBiomassProj |> 
+#   dplyr::arrange("TimeStep", "Sim", "Stock") |>
+#   dplyr::group_by(Sim, TimeStep) |>
+#   dplyr::mutate(Value=Value/SB0) |>
+#   dplyr::group_by(TimeStep, MP) |>
+#   dplyr::mutate(Median=median(Value))
+# 
+# 
+# ggplot(SBiomass, aes(x=TimeStep, y=Median)) +
+#   geom_line() +
+#   expand_limits(y=c(0,1)) +
+#   facet_wrap(~MP) +
+#   theme_bw() +
+#   labs(x='Time', y='Relative Spawning Biomass')
+# 
+# 
+# RefCatch <- purrr::map(OMListHist, \(x)
+#                   x$RefCatch) |> unlist()
+# 
+# RefCatch <- data.frame(Sim=1:length(RefCatch), RefCatch)
+# 
+# 
+# RemovalProj <- left_join(ConvertToDF(MSE$Removal),RefCatch) |>
+#   dplyr::group_by(MP, Sim) |>
+#   dplyr::mutate(Value=Value/RefCatch) |> 
+#   dplyr::group_by(TimeStep, MP) |>
+#   dplyr::mutate(Median=median(Value))
+# 
+# RemovalProj |> 
+#   dplyr::filter(Sim==1, MP=='Open')
+# 
+# RemovalProj |> 
+#   dplyr::filter(Sim==1, MP=='Closed_12')
+# 
+# 
+# ggplot(RemovalProj, aes(x=TimeStep, y=Median)) +
+#   geom_line() +
+#   expand_limits(y=0) +
+#   facet_wrap(~MP) +
+#   theme_bw() +
+#   labs(x='Time', y='Relative Catch')
+# 
+# 
+# RemovalMean <- RemovalProj |> 
+#   dplyr::group_by(MP) |>
+#   dplyr::summarise(Mean=mean(Value))
+# 
+# SBiomassMean <- SBiomassProj |> 
+#   dplyr::group_by(Sim, TimeStep) |>
+#   dplyr::mutate(Value=Value/SB0) |>
+#   dplyr::group_by(MP) |>
+#   dplyr::summarise(Mean=mean(Value))
+# 
+# plot(SBiomassMean$Mean,  RemovalMean$Mean )
+# 
+# barplot(SBiomassMean$Mean, names.arg=SBiomassMean$MP)
+# barplot(RemovalMean$Mean, names.arg=RemovalMean$MP)
+# 
+# 
+# ggplot(RemovalProj, aes(x=TimeStep, y=Median, col=MP)) +
+#   geom_line() +
+#   expand_limits(y=0) +
+#   theme_bw() +
+#   labs(x='Time', y='Relative Catch')
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# BiomassProj <- ConvertToDF(MSE$Biomass)
+# 
+#  
+# 
+# B0 <- purrr::map(OMListHist, \(x)
+#                   x$B0) |>
+#   ReverseList() |>
+#   purrr::map(List2Array, 'Sim', 'TimeStep') |>
+#   purrr::map(\(x) apply(x, c('Sim', 'TimeStep'), sum)) |>
+#   List2Array("Stock") |> 
+#   aperm(c("Sim", "Stock", "TimeStep")) |>
+#   ConvertToDF('B0') |>
+#   dplyr::filter(TimeStep%in% TimeStepsProj)
+# 
+# BiomassProj <- dplyr::left_join(BiomassProj, B0)
+# 
+# Biomass <- BiomassProj |> 
+#   dplyr::arrange("TimeStep", "Sim", "Stock") |>
+#   dplyr::group_by(Sim, TimeStep) |>
+#   dplyr::mutate(Value=Value/B0) |>
+#   dplyr::group_by(TimeStep, MP) |>
+#   dplyr::summarise(Biomass=median(Value))
+# 
+# ggplot(Biomass, aes(x=TimeStep, y=Biomass, col=MP)) +
+#   geom_line() +
+#   expand_limits(y=0) +
+#   facet_wrap(~MP)
+# 
+# w = BiomassProj |> dplyr::filter(MP=="Open", TimeStep==2026)
+# w$Value/w$B0
+# 
+# r = BiomassProj |> dplyr::filter(MP=="CloseArea_1_12", TimeStep==2026)
+# r$Value/r$B0
+# 
+# w
+# r
+# 
+# SBiomassProj
+# 
+# # final depletion isn't right!
+# # why is depletion different across MPs?
+# 
+# MSE$Biomass[1,1,,1]

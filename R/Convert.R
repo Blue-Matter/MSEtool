@@ -1226,7 +1226,7 @@ om2Cpars <- function(OM, st=NULL, fl=NULL) {
                                 nTS=length(TimeSteps(OM, 'Historical')))
     Cpars$qs <- setCparValues(val=OM@Fleet@Effort@Catchability, 1, nsim)
     
-    Cpars$Wt_age_C <- setCparValues(val=OM@Fleet@Weight, 3, nsim, nTS)
+    Cpars$Wt_age_C <- setCparValues(val=OM@Fleet@WeightFleet, 3, nsim, nTS)
     
     Cpars$V <- setCparValues(val=OM@Fleet@Selectivity@MeanAtAge, 3, nsim, nTS)
     Cpars$SLarray <- setCparValues(val=OM@Fleet@Selectivity@MeanAtLength, 3, nsim, nTS)
