@@ -87,12 +87,13 @@ inline List CalcFMortality(arma::mat EffortFleetArea, // nFleet, nArea
                            arma::mat SelectivityAtAgeFleet, // nAge, nFleet
                            arma::mat RetentionAtAgeFleet, // nAge, nFleet
                            arma::mat DiscardMortalityAtAgeFleet, // nAge, nFleet
-                           int nArea
-) {
+                           int nArea) {
   
-
-  EffortFleetArea = TransposeMatrix(EffortFleetArea, nArea);
   int nFleet = EffortFleetArea.n_rows;
+  EffortFleetArea = TransposeMatrix(EffortFleetArea, nArea);
+  // int nFleet = EffortFleetArea.n_rows;
+  // Rcout << "nFleet = " << nArea << std::endl;
+  
   int nAge = SelectivityAtAgeFleet.n_rows;
 
   CheckLength(Catchability.size(), nFleet, "Catchability", "nFleet (nrow(EffortFleetArea))");
@@ -171,7 +172,8 @@ inline double CalcRecruitment_(double SProduction,
                                double SP0,
                                double RecDev,
                                Function SRRModel,
-                               List SRRPars) {
+                               List SRRPars,
+                               int TSindex) {
   
   // NOTE: uses SP0 and R0 from first time step
   // TODO option to use time-varying alpha, beta
@@ -187,7 +189,7 @@ inline double CalcRecruitment_(double SProduction,
   
   for (int i=0; i<SRRPars.size(); i++) {
     NumericVector argVec = SRRPars[i];
-    double arg = argVec[i];
+    double arg = argVec[TSindex];
     Arglist.push_back(arg);
     ArglistNames[3+i] = ParNames[i];
   }
@@ -229,7 +231,7 @@ inline arma::mat CalcNumberNext_(arma::mat NumberAtAgeAreaThisTS, // nAge, nArea
 
 
 arma::cube CalcStockMovement_(arma::cube NumberAtAgeArea,
-                              arma::cube Movement, // nAge, FromArea, ToArea
+                              arma::cube Movement, // FromArea, ToArea, nAge 
                               int nAge,
                               int nArea,
                               int TSindex) {
@@ -238,7 +240,7 @@ arma::cube CalcStockMovement_(arma::cube NumberAtAgeArea,
   arma::mat NumberAtAgeAreaMoved(nAge, nArea, arma::fill::zeros);  // nAge, nArea
   
   for (int age=0; age<nAge; age++) {
-    arma::mat moveage = Movement.row(age);
+    arma::mat moveage = Movement.slice(age);
     for (int toArea=0; toArea<nArea; toArea++) {
       arma::vec Narea(nArea, arma::fill::zeros);
       for (int fromArea=0; fromArea<nArea; fromArea++) {

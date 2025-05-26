@@ -375,8 +375,15 @@ ExpandSims <- function(Array, nSim) {
   
 }
 
+
 # fills all time step values
-ExpandTimeSteps <- function(Array, TimeSteps) {
+ExpandTimeSteps <- function(Array, TimeSteps, default=NULL) {
+  Array1 <<- Array
+  TimeSteps1 <<- TimeSteps
+  
+  TimeSteps <- TimeSteps1
+  Array = Array1
+  
   ind <- which(names(dimnames(Array))=='TimeStep')
   if (length(ind)<1)
     return(Array)
@@ -384,39 +391,67 @@ ExpandTimeSteps <- function(Array, TimeSteps) {
   d <- dim(Array)
   dnames <- dimnames(Array)
   
-  ArrayTS <-dnames[[ind]] |> as.numeric()
+  ArrayTS <- dnames[[ind]] |> as.numeric()
+  
+  TimeSteps <- TimeSteps[TimeSteps>=ArrayTS]
   
   if (prod(TimeSteps %in% ArrayTS))
     return(Array)
+  
   namematch <- match(ArrayTS, TimeSteps)
   adddim <- length(TimeSteps) - length(namematch)
   d[ind] <- length(TimeSteps)
   dnames$TimeStep <- TimeSteps
   OutArray <- array(NA, dim=d, dimnames=dnames)
-  
 
-  for (i in seq_along(ArrayTS)) {
-    TSind <- which(TimeSteps >= ArrayTS[i])
-    val <- abind::adrop(abind::asub(Array, i, ind, drop=FALSE), ind,  one.d.array=TRUE)
-    TSexpanded <- replicate(length(TSind), val)
-    dd <- dim(TSexpanded) |> length()
-    if (dd==0) {
-      dnames <- dimnames(Array)
-      d1 <- dim(Array)
-      d1[ind] <- length(TimeSteps[TSind])
-      TSexpanded <- array(TSexpanded, dim=d1)
-      dnames[[ind]] <- TimeSteps[TSind]
-      dimnames(TSexpanded) <- dnames
-    } else {
-      dimnames(TSexpanded)[[dd]] <- TimeSteps[TSind]
-      names(dimnames(TSexpanded))[dd] <- 'TimeStep'
-    }
+  TSmatch <- which(ArrayTS %in% TimeSteps)
+  TimeStepsKeep <- TimeSteps[TSmatch]
+  KeepValues <- abind::asub(Array, TSmatch, ind, drop=FALSE)
+  abind::afill(OutArray) <- KeepValues
   
+  TSfill <- which(!TimeSteps %in% ArrayTS)
+  
+  if (length(TSfill)<1)
+    return(OutArray)
+  
+  
+  TimeStepsFill <- TimeSteps[TSfill]
+  
+  nTSFill <- dim(OutArray)[ind] - dim(Array)[ind]
+  d2 <- d
+  d2[ind] <- nTSFill
+  dnames[[ind]] <- TimeStepsFill
+  FillArray <- array(NA, dim=d2, dimnames = dnames)
+  
+  for (i in TimeStepsFill) {
+  
+    ValueInd <- which(ArrayTS <=i) |> max()
+    if (!is.finite(ValueInd))
+      stop()
+    TSexpanded <- abind::asub(Array, ValueInd, ind, drop=FALSE)
+    if (!is.null(default) && i > max(ArrayTS) )
+       TSexpanded[] <- default
+    
+    dd <- dim(TSexpanded) |> length()
+    
+    if (dd==0) {
+      stop("need to fix!")
+      # dnames <- dimnames(Array)
+      # d1 <- dim(Array)
+      # d1[ind] <- length(TimeSteps[TSind])
+      # TSexpanded <- array(TSexpanded, dim=d1)
+      # dnames[[ind]] <- TimeSteps[TSind]
+      # dimnames(TSexpanded) <- dnames
+    } else {
+      dimnames(TSexpanded)[[ind]] <- i
+    }
+    
     TSexpanded <- TSexpanded |>
       aperm(names(dimnames(Array)))
-
-    abind::afill(OutArray) <- TSexpanded
+    
+    abind::afill(FillArray) <- TSexpanded
   }
   
+  abind::afill(OutArray) <- FillArray
   OutArray
 }

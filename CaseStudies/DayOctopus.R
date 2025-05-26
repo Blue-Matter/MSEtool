@@ -116,10 +116,10 @@ nSim=NULL
 parallel=FALSE
 silent=FALSE
 
-# 
-# OMListHist <- SimulateDEV(OM)
-# 
-# 
+Hist <- SimulateDEV(OM)
+
+
+
 # # ---- Project Forward -----
 # source("OctopusMPs.R")
 # 

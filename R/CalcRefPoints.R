@@ -1,3 +1,211 @@
+# 
+# 
+# 
+# 
+# FSearch <- OMListSim$CurvesFSearch
+# 
+# 
+# 
+# # Calculate Number Per Recruit for a Given F 
+# OMListSim <- OMList$`1`
+# 
+# 
+# TimeSteps <- OMListSim$TimeSteps
+# 
+# dd <- dim(OMListSim$SelectivityMeanAtAge[[1]])
+# nAge <- dd[1]
+# nTS <- dd[2]
+# nFleet <- dd[3]
+# stocks <- names(OMListSim$Length$MeanAtAge)
+# nstock <- length(stocks)
+# 
+# nFs <- length(FSearch)
+# 
+# NPR <- array(NA, dim=c(nStock, nTS, nFs), dimnames = list(Stock=stocks, TimeStep=TimeSteps,
+#                                                           F=FSearch))
+# YPR <- SPR_0 <- SPR_F <- SPR <- NPR 
+# 
+# 
+# 
+# 
+# 
+# # Distribute F over fleets
+# RelativeFbyFleet <- OMListSim$Catchability * OMListSim$Effort # nStock, nTS, nFleet
+# TotalFbyFleet <- apply(RelativeFbyFleet, c('Stock', 'TimeStep'), sum) 
+# RelativeFbyFleet <- ArrayDivide(RelativeFbyFleet,AddDimension(TotalFbyFleet, 'Fleet')) |>
+#   Array2List(1)
+# 
+# # UP TO HERE 
+# # TODO  - check if faster to loop over Fs 
+# 
+# tictoc::tic()
+# for (st in 1:nStock) {
+#   Ind <- expand.grid(F=1:nFs, Age=1:nAge, TimeStep=1:nTS, Fleet=1:nFleet) |> as.matrix()
+#   
+#   dd <- dim(OMListSim$SelectivityMeanAtAge[[st]])
+#   nAge <- dd[1]
+#   apicalFs <- array(FSearch, dim=c(nFs, nAge, nTS, nFleet))
+#   
+#   FInteract <- array(NA, dim=c(nFs, nAge, nTS, nFleet))
+#   FDead <- FRetain <- FDiscard <- FDeadDiscard <- FInteract
+#   
+#   
+#   FInteract[Ind] <- RelativeFbyFleet[[st]][Ind[,3:4]] * apicalFs[Ind] * 
+#     OMListSim$SelectivityMeanAtAge[[st]][Ind[,2:4]]  # Age, TimeStep, Fleet
+#   FRetain[Ind] <- FInteract[Ind] * OMListSim$RetentionMeanAtAge[[st]][Ind[,2:4]] # Age, TimeStep, Fleet
+#   FDiscard[] <- FInteract - FRetain
+#   FDeadDiscard[] <- FDiscard * OMListSim$DiscardMortalityMeanAtAge[[st]][Ind[,2:4]]
+#   FDead[] <- FDeadDiscard + FRetain
+#   apicalFCurr <- apply(FDead, c(1:3), sum) |> apply(c(1,3), max)
+#   
+# }
+# tictoc::toc()
+# 
+# # Update apical F to account for discard mortality 
+# # to make sure apicalF = apicalF for Dead rather than Interact
+# 
+# 
+# 
+# 
+# 
+# st <- 1
+# 
+# 
+# RelF <- RelF |> 
+#   AddDimension('Age', 0) |> 
+#   ExpandAges(length(OMListSim$Ages[[st]]@Classes)) |>
+#   aperm(c('Stock', 'Age', 'TimeStep', 'Fleet'))
+# 
+# totalF <- apply(RelF, c('Stock', 'TimeStep', 'Age'), sum) 
+# totalF <- replicate(nFleet, totalF)
+# names(dimnames(totalF))[4] <- 'Fleet'
+# dimnames(totalF)[['Fleet']] <- dimnames(RelF)[['Fleet']] 
+# totalF <- totalF |> aperm(c('Stock', 'Age', 'TimeStep', 'Fleet'))
+# 
+# RelF <- RelF/totalF
+# RelF <- Array2List(RelF, 1)
+# 
+# 
+# FInteract <- array(NA, dim=c(nAge, nTS, nFleet))
+# FRetain <- FDeadDiscard <- FDead<- FInteract
+# 
+# tstApicalF <- apicalF
+# FInteract <- RelF[[st]] * tstApicalF * OMListSim$SelectivityMeanAtAge[[st]] # Age, TimeStep, Fleet
+# FRetain <- FInteract * OMListSim$RetentionMeanAtAge[[st]] # Age, TimeStep, Fleet
+# FDiscard <- FInteract - FRetain
+# FDeadDiscard <- FDiscard * OMListSim$DiscardMortalityMeanAtAge[[st]]
+# FDead <- FDeadDiscard + FRetain
+# apicalFCurr <- apply(FDead, c('TimeStep', 'Age'), sum) |> apply(c('TimeStep'), max)
+# tstApicalF[Ind] <- apicalF[Ind] * apicalF[Ind]/apicalFCurr[Ind[,2]]
+# 
+# FInteract <- RelF[[st]] * tstApicalF * OMListSim$SelectivityMeanAtAge[[st]] # Age, TimeStep, Fleet
+# FRetain <- FInteract * OMListSim$RetentionMeanAtAge[[st]] # Age, TimeStep, Fleet
+# FDiscard <- FInteract - FRetain
+# FDeadDiscard <- FDiscard * OMListSim$DiscardMortalityMeanAtAge[[st]]
+# FDead <- FDeadDiscard + FRetain
+# 
+# # Number
+# NaturalMortalityAtAge <- OMListSim$NaturalMortalityMeanAtAge[[st]]
+# FishingMortalityAtAge <- apply(FDead, c('Age', 'TimeStep'), sum)
+# PlusGroup <- OMListSim$Ages[[st]]@PlusGroup
+# SpawnTimeFrac <- OMListSim$SpawnTimeFrac[st]
+# Semelparous <- OMListSim$MaturitySemelparous[[st]]
+# 
+# # Number per Recruit
+# NPR <- CalcSurvival(NaturalMortalityAtAge,
+#                     FishingMortalityAtAge,
+#                     PlusGroup,
+#                     SpawnTimeFrac=NULL,
+#                     Semelparous)
+# if (SpawnTimeFrac==0) {
+#   NPR_SP <- NPR
+# } else {
+#   NPR_SP <- CalcSurvival(NaturalMortalityAtAge,
+#                          FishingMortalityAtAge,
+#                          PlusGroup,
+#                          SpawnTimeFrac,
+#                          Semelparous)
+# }
+# 
+# # Yield per Recruit
+# ZDeadTotal <- NaturalMortalityAtAge + FishingMortalityAtAge
+# ZDeadTotalFleet <- AddDimension(ZDeadTotal, 'Fleet') 
+# FishingDead <- ArrayDivide(FDead, ZDeadTotalFleet)
+# FishingRetain <- ArrayDivide(FRetain, ZDeadTotalFleet)
+# NDead <- ArrayMultiply(NPR, (1-exp(-ZDeadTotal)))
+# 
+# Removal <- ArrayMultiply(FishingDead, AddDimension(NDead, 'Fleet')) * OMListSim$FleetWeightAtAge[[st]]
+# Retain <- ArrayMultiply(FishingRetain, AddDimension(NDead, 'Fleet')) * OMListSim$FleetWeightAtAge[[st]]
+# 
+# RemovalPerRecruit <- apply(Removal, 'TimeStep', sum)
+# RetainPerRecruit <- apply(Retain, 'TimeStep', sum)
+# 
+# # Spawning per Recruit 
+# SPR_F <- apply(NPR_SP * OMListSim$FecundityMeanAtAge[[st]], 'TimeStep', sum)
+# SPR_0 <- OMListSim$SP0[st]/OMListSim$R0[st]
+# SPR <- SPR_F/SPR_0
+# 
+# 
+# 
+# 
+# 
+# # Age, TimeStep, Fleet
+# 
+# t = CalcCatch_(OMListSim, OMListSim$TimeSteps)
+# t$Effort |> dimnames()
+# 
+# 
+# 
+# NaturalMortalityAtAge <- OMListSim$NaturalMortalityMeanAtAge
+# PlusGroup <- lapply(OMListSim$Ages, slot, 'PlusGroup')
+# SpawnTimeFrac <- as.list(OMListSim$SpawnTimeFrac)
+# Semelparous <- OMListSim$MaturitySemelparous
+# 
+# SelectivityAtAge <- OMListSim$SelectivityMeanAtAge
+# RetentionAtAge <- OMListSim$RetentionMeanAtAge
+# DiscardMortalityAtAge <- OMListSim$DiscardMortalityMeanAtAge
+# 
+# 
+# F <- FSearch[i]
+# 
+# FishingMortalityAtAge <- F * SelectivityAtAge[[st]]
+# 
+# 
+# 
+# Survival <- purrr::pmap(list(NaturalMortalityAtAge,
+#                              PlusGroup,
+#                              SpawnTimeFrac,
+#                              Semelparous),
+#                         CalcSurvival)
+# 
+# CalcSurvival()
+# 
+# 
+# 
+# RefPoints <- new('refpoints')
+# 
+# 
+# 
+# 
+# CalcSPR0 <- function(OMListSim) {
+#   
+# }
+# 
+# 
+# RefPoints@Curves
+# 
+# 
+
+
+
+# - reference point - update
+# - SimulateFisheryDynamics_ 
+#   - add option to calculate Catch
+#   - check that all objects in OMList are updated and returned
+
+
+
+
 
 # TODO add check for changes to all functions 
 # TODO - SPRcrash, MGT, RefYield 

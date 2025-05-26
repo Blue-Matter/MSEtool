@@ -35,7 +35,7 @@ CalcInitialTimeStep <- function(Hist, silent=FALSE) {
     UnfishedDist <- abind::adrop(Hist@OM@Stock[[st]]@Spatial@UnfishedDist[,,,1,drop=FALSE], 4) |>
       aperm(c('Sim', 'Age', 'Area'))
     
-    Hist@TimeSeries@Number[[st]][,,1,] <- ArrayMultiply(NatAge, UnfishedDist)
+    Hist@Number[[st]][,,1,] <- ArrayMultiply(NatAge, UnfishedDist)
     
     if (length(Hist@OM@Stock[[st]]@Depletion@Initial)>0) 
       Hist <- DoOptInitialDepletion(Hist, st)
@@ -66,7 +66,7 @@ DoOptInitialDepletion <- function(Hist, st) {
   }
   RefVal <- RefVal[,st, drop=FALSE] |> abind::adrop(2)
   
-  NatAge <- Hist@TimeSeries@Number[[st]][,,1,]
+  NatAge <- Hist@Number[[st]][,,1,]
   NumberAtAgeList <- Array2List(apply(NatAge, c('Sim', 'Age'), sum), 1)
   WeightAtAgeList <- Array2List(abind::adrop(Hist@OM@Stock[[st]]@Weight@MeanAtAge[,,1, drop=FALSE],3), 1)
   MaturityAtAgeList <- Array2List(abind::adrop(Hist@OM@Stock[[st]]@Maturity@MeanAtAge[,,1, drop=FALSE],3), 1)
@@ -98,7 +98,7 @@ DoOptInitialDepletion <- function(Hist, st) {
   adjust <- lapply(dopt, '[[', 'minimum') |> unlist()
   adjust <- replicate(nAge, adjust)
   adjust <- replicate(nArea, adjust)
-  Hist@TimeSeries@Number[[st]][,,1,] <- NatAge * adjust
+  Hist@Number[[st]][,,1,] <- NatAge * adjust
   Hist
 }
     

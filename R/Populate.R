@@ -159,7 +159,7 @@ PopulateStock <- function(stock,
                                    stock@CurrentYear, 
                                    stock@TimeUnits)
   # Require ALK and/or AWK?
-  ALK <- RequireALK(stock)
+  # ALK <- RequireALK(stock)
   # AWK <- RequireAWK(stock)
   
   stock@Length <- PopulateLength(stock@Length,
@@ -257,8 +257,10 @@ PopulateLength <- function(Length,
   if (is.null(Length@CVatAge))
     ASK <- FALSE
   
-  if (ASK) {
+  if (!is.null(Length@CVatAge))
     Length <- PopulateClasses(Length)
+  
+  if (ASK) {
     Length <- PopulateASK(Length, Ages, TimeSteps, silent=silent)
   }
   

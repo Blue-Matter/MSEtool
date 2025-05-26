@@ -5,8 +5,16 @@ CalcAgeSizeKey_ <- function(MeanAtAge, SDatAge, Classes, TruncSD, Dist) {
     .Call(`_MSEtool_CalcAgeSizeKey_`, MeanAtAge, SDatAge, Classes, TruncSD, Dist)
 }
 
-CalcCatch_ <- function(OMListSim, TimeSteps) {
-    .Call(`_MSEtool_CalcCatch_`, OMListSim, TimeSteps)
+CalcFfromCatch_ <- function(NumberAtAge, RemovalNAtAge, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, NaturalMortalityAtAge, MaxIt = 200L, tolF = 1E-4) {
+    .Call(`_MSEtool_CalcFfromCatch_`, NumberAtAge, RemovalNAtAge, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, NaturalMortalityAtAge, MaxIt, tolF)
+}
+
+CalcAggregateF_ <- function(HistSimIn, TimeSteps) {
+    .Call(`_MSEtool_CalcAggregateF_`, HistSimIn, TimeSteps)
+}
+
+CalcCatch_ <- function(HistSimIn, TimeSteps) {
+    .Call(`_MSEtool_CalcCatch_`, HistSimIn, TimeSteps)
 }
 
 vecminInd <- function(x) {
@@ -48,8 +56,8 @@ Ref_int_cpp <- function(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V
 #' Simulate Fishery Dynamics
 NULL
 
-SimulateDynamics_ <- function(HistSim, TimeSteps) {
-    .Call(`_MSEtool_SimulateDynamics_`, HistSim, TimeSteps)
+SimulateDynamics_ <- function(HistSimIn, TimeSteps, MP, CalcCatch = 1L) {
+    .Call(`_MSEtool_SimulateDynamics_`, HistSimIn, TimeSteps, MP, CalcCatch)
 }
 
 calcVatAge <- function(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid) {

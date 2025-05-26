@@ -650,7 +650,7 @@ PopulatedObject <- function(object) {
   !is.null(attributes(object)$digest)
 }
 
-AddDimNames <- function(array, names=c('Sim', 'Age', 'TimeStep'), TimeSteps=NULL) {
+AddDimNames <- function(array, names=c('Sim', 'Age', 'TimeStep'), TimeSteps=NULL, values=NULL) {
   
   if (inherits(array,'list'))
     array <- unlist(array)
@@ -664,7 +664,17 @@ AddDimNames <- function(array, names=c('Sim', 'Age', 'TimeStep'), TimeSteps=NULL
     } else if (names[i]=='TimeStep' & !is.null(TimeSteps)) {
       l[[i]] <- TimeSteps[1:d[i]]
     } else {
-      l[[i]] <- 1:d[i]
+      if (is.null(values)) {
+        l[[i]] <- 1:d[i]  
+      } else {
+        if (!is.null(values[[i]]) & !is.na(values[[i]])) {
+          l[[i]] <- values[[i]]
+        } else {
+          l[[i]] <- 1:d[i]  
+        }
+          
+      }
+      
     }
   }
 
@@ -832,3 +842,11 @@ optForVmaxLen <- function(logitTrial, l5, lfs, linf, vmaxlen) {
   sel <- DoubleNormal(lens,l5, lfs, trial)
   (sel[length(sel)] - vmaxlen)^2
 }
+
+
+aperm <- function(a, perm, ...) {
+  if (is.null(a))
+    return(a)
+  base::aperm(a, perm, ...)
+}
+

@@ -1,7 +1,7 @@
-OptimRefCatch <- function(OMList) {
+OptimRefCatch <- function(HistSimList) {
   
-  nStock <- length(OMList[[1]]$Ages)
-  nFleet <- dim(OMList[[1]]$FishingMortality$DeadAtAge[[1]])[3]
+  nStock <- nStock(HistSimList[[1]]@OM)
+  nFleet <- nFleet(HistSimList[[1]]@OM)
   
   if (nStock>1)
     cli::cli_abort('Optimizing Reference Catch not currently working for multiple stocks', .internal=TRUE)

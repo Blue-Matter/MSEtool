@@ -2353,7 +2353,6 @@ setClass("data_length_composition",
 
 
 
-
 # Data  Class  ----
 
 #' Data Object
@@ -2955,11 +2954,12 @@ setClass("timeseries",
 #' @export
 setClass("hist",
          slots=c(OM='om',
-                 TimeSeries='timeseries',
                  Unfished='unfished',
-                 RefPoints='refpoints'
-
-         )
+                 RefPoints='refpoints',
+                 Data='list' 
+         ), 
+         contains=c('timeseries',
+                    'MiscClass')
 )
 
 

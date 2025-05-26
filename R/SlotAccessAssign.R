@@ -583,7 +583,19 @@ nFleet <- function(x) {
   fleet <- x@Fleet
   if (inherits(fleet, 'fleet'))
     return(1)
-  length(fleet[[1]])
+  
+  if (is.list(fleet[[1]]))
+    return(length(fleet[[1]]))
+  
+  if(isS4(fleet[[1]])) {
+    dd <- dim(x@Fleet[[1]]@Selectivity@MeanAtAge)
+    return(dd[3])
+    
+  }
+  
+  
+  
+  
 }
 
 ## ---- nYear ----

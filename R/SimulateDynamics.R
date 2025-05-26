@@ -9,11 +9,17 @@ SimulateDynamics <- function(HistSimList, TimeSteps=NULL, silent=FALSE) {
   
   
   sim <- 1
-  HistSim <- HistSimList[[sim]]
+  HistSim = HistSimList[[sim]]
  
   r = SimulateDynamics_(HistSim, TimeSteps)
   
   
+  
+  # Add DimNames back in !
+
+  
+  
+  r@EffortArea$`Day octopus`[,1,]
   
   r@TimeSeries@FDeadAtAgeArea$`Day octopus`[[2]][,1,]
   r@TimeSeries@FRetainAtAgeArea$`Day octopus`[[2]][,1,]

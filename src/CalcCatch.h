@@ -1,7 +1,7 @@
 #ifndef CalcCatch_H
 #define CalcCatch_H
 
-Rcpp::List CalcCatch_(Rcpp::List OMListSim,
-                      Rcpp::NumericVector TimeSteps);
+Rcpp::S4 CalcCatch_(Rcpp::S4 OMListSim,
+                    Rcpp::NumericVector TimeSteps);
 
 #endif

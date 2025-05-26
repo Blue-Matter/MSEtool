@@ -26,15 +26,45 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// CalcCatch_
-List CalcCatch_(Rcpp::List OMListSim, Rcpp::NumericVector TimeSteps);
-RcppExport SEXP _MSEtool_CalcCatch_(SEXP OMListSimSEXP, SEXP TimeStepsSEXP) {
+// CalcFfromCatch_
+List CalcFfromCatch_(arma::vec NumberAtAge, arma::mat RemovalNAtAge, arma::mat SelectivityAtAge, arma::mat RetentionAtAge, arma::mat DiscardMortalityAtAge, arma::vec NaturalMortalityAtAge, int MaxIt, double tolF);
+RcppExport SEXP _MSEtool_CalcFfromCatch_(SEXP NumberAtAgeSEXP, SEXP RemovalNAtAgeSEXP, SEXP SelectivityAtAgeSEXP, SEXP RetentionAtAgeSEXP, SEXP DiscardMortalityAtAgeSEXP, SEXP NaturalMortalityAtAgeSEXP, SEXP MaxItSEXP, SEXP tolFSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::List >::type OMListSim(OMListSimSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type NumberAtAge(NumberAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type RemovalNAtAge(RemovalNAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type SelectivityAtAge(SelectivityAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type RetentionAtAge(RetentionAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type DiscardMortalityAtAge(DiscardMortalityAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type NaturalMortalityAtAge(NaturalMortalityAtAgeSEXP);
+    Rcpp::traits::input_parameter< int >::type MaxIt(MaxItSEXP);
+    Rcpp::traits::input_parameter< double >::type tolF(tolFSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcFfromCatch_(NumberAtAge, RemovalNAtAge, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, NaturalMortalityAtAge, MaxIt, tolF));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcAggregateF_
+S4 CalcAggregateF_(S4 HistSimIn, Rcpp::NumericVector TimeSteps);
+RcppExport SEXP _MSEtool_CalcAggregateF_(SEXP HistSimInSEXP, SEXP TimeStepsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< S4 >::type HistSimIn(HistSimInSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcCatch_(OMListSim, TimeSteps));
+    rcpp_result_gen = Rcpp::wrap(CalcAggregateF_(HistSimIn, TimeSteps));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcCatch_
+S4 CalcCatch_(S4 HistSimIn, Rcpp::NumericVector TimeSteps);
+RcppExport SEXP _MSEtool_CalcCatch_(SEXP HistSimInSEXP, SEXP TimeStepsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< S4 >::type HistSimIn(HistSimInSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcCatch_(HistSimIn, TimeSteps));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -112,14 +142,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // SimulateDynamics_
-S4 SimulateDynamics_(S4 HistSim, Rcpp::NumericVector TimeSteps);
-RcppExport SEXP _MSEtool_SimulateDynamics_(SEXP HistSimSEXP, SEXP TimeStepsSEXP) {
+S4 SimulateDynamics_(S4 HistSimIn, Rcpp::NumericVector TimeSteps, RObject MP, int CalcCatch);
+RcppExport SEXP _MSEtool_SimulateDynamics_(SEXP HistSimInSEXP, SEXP TimeStepsSEXP, SEXP MPSEXP, SEXP CalcCatchSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< S4 >::type HistSim(HistSimSEXP);
+    Rcpp::traits::input_parameter< S4 >::type HistSimIn(HistSimInSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulateDynamics_(HistSim, TimeSteps));
+    Rcpp::traits::input_parameter< RObject >::type MP(MPSEXP);
+    Rcpp::traits::input_parameter< int >::type CalcCatch(CalcCatchSEXP);
+    rcpp_result_gen = Rcpp::wrap(SimulateDynamics_(HistSimIn, TimeSteps, MP, CalcCatch));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -346,12 +378,14 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_CalcAgeSizeKey_", (DL_FUNC) &_MSEtool_CalcAgeSizeKey_, 5},
+    {"_MSEtool_CalcFfromCatch_", (DL_FUNC) &_MSEtool_CalcFfromCatch_, 8},
+    {"_MSEtool_CalcAggregateF_", (DL_FUNC) &_MSEtool_CalcAggregateF_, 2},
     {"_MSEtool_CalcCatch_", (DL_FUNC) &_MSEtool_CalcCatch_, 2},
     {"_MSEtool_vecminInd", (DL_FUNC) &_MSEtool_vecminInd, 1},
     {"_MSEtool_LinInterp_cpp", (DL_FUNC) &_MSEtool_LinInterp_cpp, 3},
     {"_MSEtool_MSYCalcs", (DL_FUNC) &_MSEtool_MSYCalcs, 17},
     {"_MSEtool_Ref_int_cpp", (DL_FUNC) &_MSEtool_Ref_int_cpp, 12},
-    {"_MSEtool_SimulateDynamics_", (DL_FUNC) &_MSEtool_SimulateDynamics_, 2},
+    {"_MSEtool_SimulateDynamics_", (DL_FUNC) &_MSEtool_SimulateDynamics_, 4},
     {"_MSEtool_calcVatAge", (DL_FUNC) &_MSEtool_calcVatAge, 7},
     {"_MSEtool_combine", (DL_FUNC) &_MSEtool_combine, 1},
     {"_MSEtool_get_freq", (DL_FUNC) &_MSEtool_get_freq, 4},

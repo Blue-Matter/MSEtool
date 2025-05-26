@@ -24,6 +24,10 @@ CalcEquilibriumUnfished <- function(OM) {
     x@Weight@MeanAtAge 
   })
   
+  MaturityAtAge <- purrr::map(OM@Stock, \(x) {
+    x@Maturity@MeanAtAge 
+  })
+  
   FecundityAtAge <- purrr::map(OM@Stock, \(x) {
     x@Fecundity@MeanAtAge 
   })
@@ -35,7 +39,8 @@ CalcEquilibriumUnfished <- function(OM) {
     List2Array('Stock') |>
     aperm(c('Sim', 'Stock', 'TimeStep'))
   
-  EquilibriumUnfished@SBiomass <- purrr::map2(UnfishedSpawnNumberAtAge, WeightAtAge, ArrayMultiply) |>
+  EquilibriumUnfished@SBiomass <- purrr::map2(UnfishedSpawnNumberAtAge, WeightAtAge, ArrayMultiply) |> 
+    purrr::map2(MaturityAtAge, ArrayMultiply) |>
     purrr::map(\(x) apply(x, c('Sim', 'TimeStep'), sum)) |>
     List2Array('Stock') |>
     aperm(c('Sim', 'Stock', 'TimeStep'))
@@ -49,33 +54,56 @@ CalcEquilibriumUnfished <- function(OM) {
 }
 
 
-CalcDynamicUnfished <- function(Hist, silent=FALSE) {
-  if (inherits(Hist, 'om')) {
-    Hist <- Hist(Hist, silent)
-  } 
+CalcDynamicUnfished <- function(HistSimList, silent=FALSE) {
   
-  nStock <- length(Hist@OM@Fleet)
-  for (st in 1:nStock) {
-    Hist@OM@Fleet[[st]]@Effort@Catchability[] <- tiny
-  }
+  if (inherits(HistSimList, 'om')) 
+    HistSimList <- OM2Hist(HistSimList, silent) |> Hist2HistSimList()
   
+  if (inherits(HistSimList, 'hist')) 
+    HistSimList <- Hist2HistSimList(HistSimList)
   
+  HistSimList <- purrr::map(HistSimList, \(x) {
+    nStock <- nStock(x@OM)
+    for (st in 1:nStock) {
+      x@OM@Fleet[[st]]@Effort@Catchability[] <- tiny
+    }
+    x
+  })
   
-  # out <- SimulateFisheryDynamics_(OMListSim, TimeSteps=OMListSim$TimeSteps, MP=NULL, CalcCatch=0)  
-  # AddDimNamesOMListSim(out)
-  
+  TimeSteps <- TimeSteps(HistSimList[[1]]@OM, 'Historical')
+  out <- purrr::map(HistSimList, \(x) {
+    
+    unfished <- SimulateDynamics_(x, TimeSteps, MP=NULL)
+    
+    x@Unfished@Dynamic@Number <- lapply( unfished@Number, AddDimNames, c("Age", "TimeStep", "Area"), TimeSteps)
+    
+    x@Unfished@Dynamic@Biomass  <- AddDimNames(unfished@Biomass, 
+                                                      c('Stock', 'TimeStep'), 
+                                                      TimeSteps=TimeSteps, values=list(StockNames(x@OM)))
+    
+    x@Unfished@Dynamic@SBiomass  <- AddDimNames(unfished@SBiomass, 
+                                                      c('Stock', 'TimeStep'), 
+                                                      TimeSteps=TimeSteps, values=list(StockNames(x@OM)))
+    
+    x@Unfished@Dynamic@SProduction  <- AddDimNames(unfished@SProduction, 
+                                                       c('Stock', 'TimeStep'), 
+                                                       TimeSteps=TimeSteps, values=list(StockNames(x@OM)))
+    x
+    
+  })
+  out
 }
 
-CalcUnfished <- function(OM, Hist=NULL, silent=FALSE) {
-  OM <- Populate(OM)
-  Unfished <- new('unfished')
-  Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
-  if (is.null(Hist))
-    Hist <- Hist(OM, silent)
-  Unfished@Dynamic <- CalcDynamicUnfished(Hist)
-  Unfished
- 
-}
+# CalcUnfished <- function(OM, Hist=NULL, silent=FALSE) {
+#   OM <- Populate(OM)
+#   Unfished <- new('unfished')
+#   Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
+#   if (is.null(Hist))
+#     Hist <- Hist(OM, silent)
+#   Unfished@Dynamic <- CalcDynamicUnfished(Hist)
+#   Unfished
+#  
+# }
 
 # 
 # nsim <- length(OMList) 

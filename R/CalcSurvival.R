@@ -62,7 +62,7 @@ setMethod('CalcUnfishedSurvival', c('stock', 'ANY', 'ANY'), function(x, SP=FALSE
   if (SP) {
     SpawnTimeFrac <- x@SRR@SpawnTimeFrac
   } else {
-    SpawnTimeFrac <- NULL
+    SpawnTimeFrac <- 0
   }
   
   Semelparous <- x@Maturity@Semelparous |>

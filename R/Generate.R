@@ -81,7 +81,7 @@ GenerateMeanAtAge <- function(Model, Pars, Ages) {
 GenerateMeanatLength <- function(Model, Pars, Length) {
 
   if (inherits(Model, 'function')) {
-    return(ApplyCustomAtLengthModel(Model, Pars, Ages))
+    return(ApplyCustomAtLengthModel(Model, Pars, Length))
   }
 
   fun_args <- names(formals(Model))
