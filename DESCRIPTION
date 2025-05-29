@@ -137,7 +137,7 @@ Collate:
     'OM_init_doc.R'
     'OM_plots.R'
     'OptimiseDepletion.R'
-    'OptimiseRefCatch.R'
+    'OptimiseRefYield.R'
     'PMobjects.R'
     'PMtable.R'
     'Plot.R'

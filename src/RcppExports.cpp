@@ -141,17 +141,29 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// PopulateNumberNext_
+S4 PopulateNumberNext_(S4 HistSimIn, NumericVector TimeStep);
+RcppExport SEXP _MSEtool_PopulateNumberNext_(SEXP HistSimInSEXP, SEXP TimeStepSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< S4 >::type HistSimIn(HistSimInSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type TimeStep(TimeStepSEXP);
+    rcpp_result_gen = Rcpp::wrap(PopulateNumberNext_(HistSimIn, TimeStep));
+    return rcpp_result_gen;
+END_RCPP
+}
 // SimulateDynamics_
-S4 SimulateDynamics_(S4 HistSimIn, Rcpp::NumericVector TimeSteps, RObject MP, int CalcCatch);
-RcppExport SEXP _MSEtool_SimulateDynamics_(SEXP HistSimInSEXP, SEXP TimeStepsSEXP, SEXP MPSEXP, SEXP CalcCatchSEXP) {
+S4 SimulateDynamics_(S4 HistSimIn, Rcpp::NumericVector TimeSteps, int CalcCatch, int debug);
+RcppExport SEXP _MSEtool_SimulateDynamics_(SEXP HistSimInSEXP, SEXP TimeStepsSEXP, SEXP CalcCatchSEXP, SEXP debugSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< S4 >::type HistSimIn(HistSimInSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
-    Rcpp::traits::input_parameter< RObject >::type MP(MPSEXP);
     Rcpp::traits::input_parameter< int >::type CalcCatch(CalcCatchSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulateDynamics_(HistSimIn, TimeSteps, MP, CalcCatch));
+    Rcpp::traits::input_parameter< int >::type debug(debugSEXP);
+    rcpp_result_gen = Rcpp::wrap(SimulateDynamics_(HistSimIn, TimeSteps, CalcCatch, debug));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -385,6 +397,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_LinInterp_cpp", (DL_FUNC) &_MSEtool_LinInterp_cpp, 3},
     {"_MSEtool_MSYCalcs", (DL_FUNC) &_MSEtool_MSYCalcs, 17},
     {"_MSEtool_Ref_int_cpp", (DL_FUNC) &_MSEtool_Ref_int_cpp, 12},
+    {"_MSEtool_PopulateNumberNext_", (DL_FUNC) &_MSEtool_PopulateNumberNext_, 2},
     {"_MSEtool_SimulateDynamics_", (DL_FUNC) &_MSEtool_SimulateDynamics_, 4},
     {"_MSEtool_calcVatAge", (DL_FUNC) &_MSEtool_calcVatAge, 7},
     {"_MSEtool_combine", (DL_FUNC) &_MSEtool_combine, 1},

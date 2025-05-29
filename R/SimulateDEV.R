@@ -20,7 +20,7 @@ SimulateDEV <- function(OM=NULL,
   
   # ---- Make Hist Object ----
   Hist <- OM2Hist(OM, silent)
-  
+
   # ---- Calculate Equilibrium Unfished ----
   Hist@Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
   
@@ -41,30 +41,26 @@ SimulateDEV <- function(OM=NULL,
                               type = "iterator", 
                               format = "Optimizing catchability (q) for Final Depletion {cli::pb_bar} {cli::pb_percent}",
                               clear = TRUE))
-
+  
   # ---- Calculate Reference Points ----
   # TODO speed up - CalcRefPoints.R
   # RefPoints <- CalcRefPoints(OM, Unfished)
   
   # ---- Historical Population Dynamics ----
   HistTimeSteps <- TimeSteps(OM, 'Historical')
-  
+
   # Calculate Population Dynamics (Fishing Mortality & Number by Area)
   HistSimList <- purrr::map(HistSimList, \(x) 
-                       SimulateDynamics_(x, HistTimeSteps, MP=NULL),
+                       SimulateDynamics_(x, HistTimeSteps),
                        .progress = list(
                          type = "iterator", 
                          format = "Simulating Historical Fishery {cli::pb_bar} {cli::pb_percent}",
                          clear = TRUE))
   
-  
- 
-  
   # Condition Observation Model observed Historical Fishery Data
   
   # Simulate Historical Fishery Data
   
- 
   # ---- Condition Observation Object on Real Fishery Data ----
   
   # ---- Simulate Fishery Data ----
@@ -75,7 +71,9 @@ SimulateDEV <- function(OM=NULL,
 
   
   # make Hist object
-  UpdateHist(Hist, HistSimList)
+  HistSimList2Hist(Hist, HistSimList)
+
+  
 }
 
 

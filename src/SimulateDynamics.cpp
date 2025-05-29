@@ -3,21 +3,21 @@
 #include "calculate.h"
 #include "CalcCatch.h"
 #include "CalcAggregateF.h"
+#include "PopulateNumberNext.h"
 //[[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::plugins("cpp11")]]
 using namespace Rcpp;
 
 //' Simulate Fishery Dynamics
- //' 
- //' Calculates the fishery dynamics for a given simulation and the specified
- //' time steps.
- //' 
- //' Optionally can include an MP.
- // [[Rcpp::export]]
+//' 
+//' Calculates the fishery dynamics for a given simulation and the specified
+//' time steps.
+//'
+// [[Rcpp::export]]
 S4 SimulateDynamics_(S4 HistSimIn, 
                        Rcpp::NumericVector TimeSteps,
-                       RObject MP,
-                       int CalcCatch = 1) {
+                       int CalcCatch = 1,
+                       int debug = 0) {
   
   S4 HistSim = clone(HistSimIn);
   S4 OM = HistSim.slot("OM");
@@ -47,28 +47,19 @@ S4 SimulateDynamics_(S4 HistSimIn,
   for (int timestep=0; timestep<nTS; timestep++) {
     NumericVector TSmatch = abs(TimeStepsAll - TimeSteps[timestep]);
     int TSindex = MatchTS[timestep] -1;
-    
-    // Rcout << "TSindex = " << TSindex << std::endl;
+
+    if (debug)
+      Rcout << "\n\nTimestep = " << TimeSteps[timestep] << std::endl;
     
     // // Do MICE
     //     // update length, weight, fleet weight, natural mortality, maturity, rec pars, etc 
-    //     
-    //     // Apply MP
-    //     // TODO 
-    //     // if management interval:
-    //     // - generate Data upto TSindex - 1
-    //     // - apply MP
-    //     // - update selectivity, vulnerability, discard mortality from MP
-    //     // - update closed area from MP
-    //     // - calculate Effort from TAC (if applicable)
-    //     // - apply BioEconomic to Effort
-    //     // - return Effort, Selectivity, Vuln, Discard, Closure
     
-    
+
     for (int st=0; st<nStock; st++) {
       
-      // Rcout << "Stock = " << st << std::endl;
-      
+      if (debug)
+        Rcout << "\nStock = " << st << std::endl;
+    
       S4 Stock = StockList[st];
       S4 Weight = Stock.slot("Weight");
       arma::mat WeightAtAge = Weight.slot("MeanAtAge");
@@ -87,7 +78,6 @@ S4 SimulateDynamics_(S4 HistSimIn,
       
       S4 Spatial = Stock.slot("Spatial");
       arma::vec RelativeSize = Spatial.slot("RelativeSize");
-      
       
       S4 Fleet = FleetList[st];
       
@@ -110,8 +100,9 @@ S4 SimulateDynamics_(S4 HistSimIn,
       arma::cube FleetWeightAtAge = Fleet.slot("WeightFleet") ; // nAge, nTS, nFleet
 
  
-      
       // Calculate Total Biomass 
+      if (debug)
+        Rcout << "Total Biomass" << std::endl;
       arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // nAge, nTS, nArea
 
       int nAge = NumberAtAgeArea.n_rows;
@@ -123,7 +114,8 @@ S4 SimulateDynamics_(S4 HistSimIn,
       // Calculate VBiomass by Area
       // VB = vulnerable (selectivity) x available (spatial closure)
       
-      // Rcout << "VBiomassArea\n";
+      if (debug)
+        Rcout << "VBiomassArea" << std::endl;;
       
       arma::mat VBiomassArea = CalcVBiomass(NumberAtAgeArea.col(TSindex), // nAge, nArea
                                             FleetWeightAtAge.col(TSindex), // nAge, nFleet
@@ -206,6 +198,7 @@ S4 SimulateDynamics_(S4 HistSimIn,
       
       arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // nAge, nTS, nArea
       int nAge = NumberAtAgeArea.n_rows;
+      int nTSnumber = NumberAtAgeArea.n_cols;
       int nArea = NumberAtAgeArea.n_slices;
 
       // Determine Age at Recruitment
@@ -216,10 +209,9 @@ S4 SimulateDynamics_(S4 HistSimIn,
       int AgeRec = AgeClasses.min(); // first age class = age of recruitment (should be 0 or 1)
       int TSRec = TSindex + AgeRec; // TSindex + 1 for age-1 recruitment
 
-
       S4 Spatial = Stock.slot("Spatial");
-
-      if (TSRec<nTS) {
+      
+      if (TSRec<nTSnumber) {
         S4 SRR = Stock.slot("SRR");
         arma::vec R0 = SRR.slot("R0");
         arma::vec RecDevHist = SRR.slot("RecDevHist");
@@ -228,9 +220,7 @@ S4 SimulateDynamics_(S4 HistSimIn,
 
         Function SRRModel = SRR.slot("Model");
         List SRRPars = SRR.slot("Pars");
-        
-        // Rcout << "Calculating Recruitment \n";
-
+      
         // Calculate Recruitment
         // NOTE: uses SP0 and R0 from first time step
         // Uses aggregate SProduction - ie summed over areas
@@ -242,39 +232,45 @@ S4 SimulateDynamics_(S4 HistSimIn,
                                            SRRModel,
                                            SRRPars,
                                            TSindex);
-
+     
+         // Rcout << "Recruits = " << Recruits << std::endl;
         // Distribute Recruits
-
+      
         arma::cube UnfishedDist = Spatial.slot("UnfishedDist"); // nArea, nAge, nTS;
         arma::vec recruitArea(nArea);
+        
         for (int area=0; area<nArea; area++) {
           recruitArea(area) = Recruits * arma::as_scalar(UnfishedDist(arma::span(area), arma::span(0), arma::span(TSRec)));
         }
-
+  
         NumberAtAgeArea.subcube(0, TSRec, 0, 0, TSRec, nArea-1) = recruitArea;
-      }
+        }
+      
 
-      if (timestep<(nTS-1)) {
-
-
+      if (TSindex <(nTSnumber-1)) {
+        
+        // Rcout << "timestep = " << timestep << std::endl;
+        // Rcout << "TSindex = " << TSindex << std::endl;
+        // Rcout << "nTSnumber = " << nTSnumber << std::endl;
+        
         List FDeadAtAgeAreaStock = FDeadAtAgeAreaList[st];
-
+        
         S4 NaturalMortality = Stock.slot("NaturalMortality");
         arma::mat NaturalMortalityAtAge = NaturalMortality.slot("MeanAtAge");
-
+        
         S4 Maturity = Stock.slot("Maturity");
         arma::mat Semelparous = Maturity.slot("Semelparous");
-
-
+        
         NumberAtAgeArea.col(TSindex+1) = CalcNumberNext_(NumberAtAgeArea.col(TSindex),
-                                                         Semelparous.col(TSindex),
-                                                         FDeadAtAgeAreaStock[TSindex],
-                                                         NaturalMortalityAtAge.col(TSindex),
-                                                         plusgroup,
-                                                         nAge,
-                                                         nArea);
-
+                            Semelparous.col(TSindex),
+                            FDeadAtAgeAreaStock[TSindex],
+                                               NaturalMortalityAtAge.col(TSindex),
+                                               plusgroup,
+                                               nAge,
+                                               nArea);
+        
         // Move Population at beginning of next Time Step
+        
         List MovementList = Spatial.slot("Movement");
         NumberAtAgeArea = CalcStockMovement_(NumberAtAgeArea,
                                              MovementList[TSindex+1],
@@ -283,11 +279,13 @@ S4 SimulateDynamics_(S4 HistSimIn,
                                                          TSindex+1);
       }
       NumberAtAgeAreaList[st] = NumberAtAgeArea;
-    
+      
     } // end of Stock loop
-    
+
   } // end of Time Step loop
  
+  
+
   
   HistSim.slot("Number") = NumberAtAgeAreaList;
   HistSim.slot("Biomass") = Biomass;

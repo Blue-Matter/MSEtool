@@ -378,11 +378,11 @@ ExpandSims <- function(Array, nSim) {
 
 # fills all time step values
 ExpandTimeSteps <- function(Array, TimeSteps, default=NULL) {
-  Array1 <<- Array
-  TimeSteps1 <<- TimeSteps
-  
-  TimeSteps <- TimeSteps1
-  Array = Array1
+  # Array1 <<- Array
+  # TimeSteps1 <<- TimeSteps
+  # 
+  # TimeSteps <- TimeSteps1
+  # Array = Array1
   
   ind <- which(names(dimnames(Array))=='TimeStep')
   if (length(ind)<1)
@@ -393,7 +393,8 @@ ExpandTimeSteps <- function(Array, TimeSteps, default=NULL) {
   
   ArrayTS <- dnames[[ind]] |> as.numeric()
   
-  TimeSteps <- TimeSteps[TimeSteps>=ArrayTS]
+  # TimeSteps <- TimeSteps[TimeSteps>=ArrayTS]
+  # TimeSteps <- TimeSteps[!is.na(TimeSteps)]
   
   if (prod(TimeSteps %in% ArrayTS))
     return(Array)
@@ -424,7 +425,8 @@ ExpandTimeSteps <- function(Array, TimeSteps, default=NULL) {
   FillArray <- array(NA, dim=d2, dimnames = dnames)
   
   for (i in TimeStepsFill) {
-  
+    if (all(i < ArrayTS))
+      next()
     ValueInd <- which(ArrayTS <=i) |> max()
     if (!is.finite(ValueInd))
       stop()

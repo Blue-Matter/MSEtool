@@ -91,33 +91,33 @@ ReverseList <- function(ls) {
   apply(do.call(rbind, x), 2, as.list) 
 }
 
-MakeOMList <- function(OM, Period="All") {
-  id <- cli::cli_progress_bar("Creating Internal OM List Object")
-  
-  OMList <- MakePopulationList(OM, Period)
-
-  OMList <- c(OMList, MakeFleetList(OM, Period))
-
-  if (length(OM@CatchFrac)>0)
-    OMList$CatchFrac <- List2Array(OM@CatchFrac, 'Stock') |> aperm(c('Sim', 'Stock', 'Fleet'))
-  
-  OMList$Sim <- 1:OM@nSim
-  OMList$CurvesFSearch <- OM@Control$Curves$FSearch
-  
-  names(OMList$Sim) <- rep("Sim", OM@nSim)
-  
-  OMList <- purrr::map(1:OM@nSim, function(x) {
-    cli::cli_progress_update(id=id)
-    MakeSimList(OMList, x)
-  })
-  names(OMList) <- 1:OM@nSim
-  
-  cli::cli_progress_done()
- 
-  class(OMList) <- "OMList"
- 
-  OMList
-}
+# MakeOMList <- function(OM, Period="All") {
+#   id <- cli::cli_progress_bar("Creating Internal OM List Object")
+#   
+#   OMList <- MakePopulationList(OM, Period)
+# 
+#   OMList <- c(OMList, MakeFleetList(OM, Period))
+# 
+#   if (length(OM@CatchFrac)>0)
+#     OMList$CatchFrac <- List2Array(OM@CatchFrac, 'Stock') |> aperm(c('Sim', 'Stock', 'Fleet'))
+#   
+#   OMList$Sim <- 1:OM@nSim
+#   OMList$CurvesFSearch <- OM@Control$Curves$FSearch
+#   
+#   names(OMList$Sim) <- rep("Sim", OM@nSim)
+#   
+#   OMList <- purrr::map(1:OM@nSim, function(x) {
+#     cli::cli_progress_update(id=id)
+#     MakeSimList(OMList, x)
+#   })
+#   names(OMList) <- 1:OM@nSim
+#   
+#   cli::cli_progress_done()
+#  
+#   class(OMList) <- "OMList"
+#  
+#   OMList
+# }
 
 GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), TimeSteps=NULL) {
   

@@ -53,11 +53,17 @@ Ref_int_cpp <- function(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V
     .Call(`_MSEtool_Ref_int_cpp`, F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, Wt_at_Age_C, relRfun, SRRpars, maxage, plusgroup, spawn_time_frac)
 }
 
-#' Simulate Fishery Dynamics
-NULL
+PopulateNumberNext_ <- function(HistSimIn, TimeStep) {
+    .Call(`_MSEtool_PopulateNumberNext_`, HistSimIn, TimeStep)
+}
 
-SimulateDynamics_ <- function(HistSimIn, TimeSteps, MP, CalcCatch = 1L) {
-    .Call(`_MSEtool_SimulateDynamics_`, HistSimIn, TimeSteps, MP, CalcCatch)
+#' Simulate Fishery Dynamics
+#' 
+#' Calculates the fishery dynamics for a given simulation and the specified
+#' time steps.
+#'
+SimulateDynamics_ <- function(HistSimIn, TimeSteps, CalcCatch = 1L, debug = 0L) {
+    .Call(`_MSEtool_SimulateDynamics_`, HistSimIn, TimeSteps, CalcCatch, debug)
 }
 
 calcVatAge <- function(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid) {

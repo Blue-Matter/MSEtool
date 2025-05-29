@@ -57,11 +57,11 @@ inline int CheckMPClass(RObject MP) {
   int hasMP = 0;
   if(is<Function>(MP)){
     // check the class
-    CharacterVector req = {"MP", "MMP"};
+    CharacterVector req = {"mp", "mmp", "MP", "MMP"};
     CheckClass(MP, req, CharacterVector("MP"));
     hasMP = 1;
   } else if(!MP.isNULL()){
-    stop("Argument `MP` must be either NULL or a function class `MP` or `MMP`");
+    stop("Argument `MP` must be either NULL or a function class `mp`, `mmp`, `MP` or `MMP`");
   }
   return(hasMP);
 }

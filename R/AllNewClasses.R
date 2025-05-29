@@ -2272,7 +2272,7 @@ setClass("biology"
          #            'depletion')
 )
 
-
+# new('biology')
 
 # Selectivity
 
@@ -2393,9 +2393,12 @@ setClass('data',
                  Region='char.null',
                  Latitude='num.null',
                  Longitude='num.null',
-                 Sponsor='char.null',
-                 CurrentYear='num.null',
-                 Biology='biology'
+                 
+                 Biology='biology',
+                 TimeSteps='num.null',
+                 TimeUnits='char.null',
+                 TimeStepsPerYear='num.null',
+                 LastHistTS='num.null'
          ))
 
 
@@ -2972,51 +2975,54 @@ Hist <- function(OM=NULL, ...) {
     cli::cli_abort('`OM` must be class `om`')
   
   OM2Hist(OM, ...)
-  
-  # Hist <- new('hist') 
-  # for (nm in slotNames(OM)) {
-  #   slot(Hist, nm) <- slot(OM, nm)
-  # }
-  # 
-  # Hist@Number <- MakeNamedList(StockNames(OM))
-  # Hist@Biomass  <- Hist@VBiomass <- Hist@SBiomass <- Hist@Number
-  # Hist@FDead <- Hist@FRetain <- Hist@EffortArea <- Hist@FDeadArea <- Hist@FRetainArea <- Hist@Number
-  # Hist@Removal <- Hist@Retain <- Hist@Density <-  Hist@Number
-  # 
-  # nsim <- Hist@nSim
-  # timesteps <- TimeSteps(Hist)
-  # fleetnames <- FleetNames(Hist)
-  # 
-  # # for (st in 1:nStock(Hist)) {
-  # #   # Sim, Age, Time Step, Area
-  # #   Hist@Number[[st]] <- CreateArraySATR(Hist@Stock[[st]], nsim, timesteps)
-  # #   Hist@Biomass[[st]] <- Hist@Number[[st]]
-  # #   Hist@SBiomass[[st]] <- Hist@Number[[st]]
-  # #   
-  # #   
-  # #   # Sim, Age, Time Step, Fleet
-  # #   Hist@FDead[[st]] <- CreateArraySATF(Hist@Stock[[st]], nsim, timesteps, fleetnames)
-  # #   Hist@FRetain[[st]] <- Hist@FDead[[st]]
-  # # 
-  # #   # Sim, Age, Time Step, Fleet, Area 
-  # #   Hist@VBiomass[[st]] <- CreateArraySATFR(Hist@Stock[[st]], nsim, timesteps, fleetnames)
-  # #   Hist@FDeadArea[[st]] <- Hist@VBiomass[[st]]
-  # #   Hist@FRetainArea[[st]] <-  Hist@VBiomass[[st]]
-  # #   Hist@Removal[[st]] <-  Hist@VBiomass[[st]]
-  # #   Hist@Retain[[st]] <-  Hist@VBiomass[[st]]
-  # #   
-  # #   # Sim, Time Step, Fleet, Area 
-  # #   Hist@Density[[st]] <- CreateArraySATFR(Hist@Stock[[st]], nsim, timesteps, fleetnames) |> DropDimension('Age', FALSE)
-  # #   Hist@EffortArea[[st]] <- Hist@Density[[st]] 
-  # #   
-  # #   # Sim, Time Step
-  # #   Hist@SProduction [[st]] <- CreateArraySATR(Hist@Stock[[st]], nsim, timesteps) |> 
-  # #     DropDimension('Age', FALSE) |>
-  # #     DropDimension('Area', FALSE)
-  # #   
-  # # }
-  # Hist
 }
+
+# ---- MSE -----
+
+#' @export
+setClass("mse",
+         slots=c(OM='om',
+                 Unfished='unfished',
+                 RefPoints='refpoints',
+                 Hist='timeseries',
+                 PPD='list' 
+         ), 
+         contains=c('timeseries',
+                    'MiscClass')
+)
+
+MSE <- function(Hist=NULL, MPs=NULL,...) {
+  if (is.null(Hist))
+    return(new('mse'))
+  
+  if (!inherits(Hist,'hist'))
+    cli::cli_abort('`Hist` must be class `hist`')
+  
+  Hist2MSE(Hist, MPs, ...)
+}
+
+
+
+# ---- Management Prodedure ----
+
+setClass('advice',
+         slots=c(TAC='numeric',
+                 Effort='numeric',
+                 Spatial='numeric',
+                 Selectivity='selectivity',
+                 Retention='retention',
+                 DiscardMortality='discardmortality',
+                 Misc='list'
+         )
+)
+
+#' @export
+Advice <- function(DataList=NULL) {
+  # TODO - populate selectivity model parameters etc
+  new('advice')
+}
+
+
 
 
 

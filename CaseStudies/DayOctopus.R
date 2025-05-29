@@ -7,6 +7,8 @@ la <- devtools::load_all
 
 la()
 
+nsim <- 10
+
 octopusOM <- OM('Day Octopus OM',
                 Author='Adrian Hordyk',
                 Email='adrian@bluematterscience.com',
@@ -17,7 +19,7 @@ octopusOM <- OM('Day Octopus OM',
                 nYear=5,
                 pYear=5,
                 TimeUnits = 'month',
-                nSim=30)
+                nSim=nsim)
 
 octopusOM@TimeSteps
 
@@ -106,6 +108,7 @@ Selectivity(octopus_fleet) <- Selectivity(Pars=list(A50=c(4, 6),
 Stock(octopusOM) <- octopus
 Fleet(octopusOM) <- octopus_fleet
 
+octopusOM@Control$RefYield$lastnTS <- 12
 
 OM <- Populate(octopusOM)
 
@@ -119,21 +122,28 @@ silent=FALSE
 Hist <- SimulateDEV(OM)
 
 
-
 # # ---- Project Forward -----
-# source("OctopusMPs.R")
-# 
-# 
-# 
-# 
-# MSE <- ProjectDEV(OMListHist, MPs=c('Open', 
-#                                     'Spatial_1', 
-#                                     'Seasonal_1',
-#                                     'Spatial_2',
-#                                     'Spatial_3',
-#                                     'Spatial_6',
-#                                     'Spatial_12'))
-# 
+source("OctopusMPs.R")
+
+MPs=c('Open', 
+      'Spatial_1',
+      'Seasonal_1',
+      'Spatial_2',
+      'Spatial_3',
+      'Spatial_6',
+      'Spatial_12')
+      
+
+MSE <- ProjectDEV(OMListHist, MPs=c('Open', 
+                                    'Spatial_1',
+                                    'Seasonal_1',
+                                    'Spatial_2',
+                                    'Spatial_3',
+                                    'Spatial_6',
+                                    'Spatial_12'))
+
+
+
 # # Make Figures 
 # library(ggplot2)
 # 

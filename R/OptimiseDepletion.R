@@ -119,7 +119,6 @@ OptCatchability <- function(pars, HistSim) {
   
   PopDynamicsHistorical <- SimulateDynamics_(HistSim, 
                                                     TimeStepsHist, 
-                                                    MP=NULL, 
                                                     CalcCatch = 0)
 
   # Depletion objective

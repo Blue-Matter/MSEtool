@@ -132,6 +132,8 @@ ListArraySimAgeTimeFleet <- function(OM, Period=c('Historical', 'Projection', 'A
 }
 
 
+
+
 # ---- Sim, Age, Time Step, Fleet, Area ----
 ArraySimAgeTimeFleetArea <- function(OM, Period=c('Historical', 'Projection', 'All'),
                                      stock=1, default=tiny/2, TimeSteps=NULL) {
@@ -164,7 +166,8 @@ ListArraySimAgeTimeFleetArea <- function(OM, Period=c('Historical', 'Projection'
 }
 
 
-# ---- Sim, Age, Time Step, MP, Area ----
+
+# ---- Sim, Age, Time Step, Area, MP ----
 ArraySimAgeTimeMPArea <- function(OM, Period=c('Historical', 'Projection', 'All'),
                                        MPs=NULL,
                                        stock=1, default=tiny/2, TimeSteps=NULL) {
@@ -174,17 +177,18 @@ ArraySimAgeTimeMPArea <- function(OM, Period=c('Historical', 'Projection', 'All'
   array(default, dim=c(meta$nSim,
                        nAges,
                        length(meta$TimeSteps),
-                       length(MPs),
-                       meta$nAreas),
+                       meta$nAreas,
+                       length(MPs)
+                       ),
         dimnames=list(Sim=1:meta$nSim,
                       Age=0:(nAges-1),
                       TimeStep=meta$TimeSteps,
-                      MP=MPs,
-                      Area=1:meta$nAreas)
+                      Area=1:meta$nAreas,
+                      MP=MPs)
   )  
 }
 
-ListArraySimAgeTimeMPArea <- function(OM, Period=c('Historical', 'Projection', 'All'),
+ListArraySimAgeTimeAreaMP <- function(OM, Period=c('Historical', 'Projection', 'All'),
                                            MPs=NULL,
                                            default=tiny/2, TimeSteps=NULL) {
   meta <- GetMetaData(OM, Period)
@@ -198,29 +202,31 @@ ListArraySimAgeTimeMPArea <- function(OM, Period=c('Historical', 'Projection', '
 }
 
 
-# ---- Sim, Age, Time Step, MP, Fleet, Area ----
-ArraySimAgeTimeMPFleetArea <- function(OM, Period=c('Historical', 'Projection', 'All'),
+# ---- Sim, Age, Time Step, Fleet, Area, MP ----
+ArraySimAgeTimeFleetAreaMP <- function(OM, Period=c('Historical', 'Projection', 'All'),
                                        MPs=NULL,
                                        stock=1, default=tiny/2, TimeSteps=NULL) {
   meta <- GetMetaData(OM, Period, TimeSteps)
+  
+  FleetNames <- as.vector(OM@Fleet[[1]]@Name)
   nAges <-  meta$nAges[[stock]]
   
   array(default, dim=c(meta$nSim,
                        nAges,
                        length(meta$TimeSteps),
-                       length(MPs),
-                       length(meta$FleetNames),
-                       meta$nAreas),
+                       length(FleetNames),
+                       meta$nAreas,
+                       length(MPs)),
         dimnames=list(Sim=1:meta$nSim,
                       Age=0:(nAges-1),
                       TimeStep=meta$TimeSteps,
-                      MP=MPs,
-                      Fleet=meta$FleetNames,
-                      Area=1:meta$nAreas)
+                      Fleet=FleetNames,
+                      Area=1:meta$nAreas,
+                      MP=MPs)
   )  
 }
 
-ListArraySimAgeTimeMPFleetArea <- function(OM, Period=c('Historical', 'Projection', 'All'),
+ListArraySimAgeTimeFleetAreaMP <- function(OM, Period=c('Historical', 'Projection', 'All'),
                                            MPs=NULL,
                                            default=tiny/2, TimeSteps=NULL) {
   meta <- GetMetaData(OM, Period)
@@ -228,7 +234,110 @@ ListArraySimAgeTimeMPFleetArea <- function(OM, Period=c('Historical', 'Projectio
   
   List <- MakeNamedList(stocknames)
   for (st in 1:length(List)) {
-    List[[st]] <- ArraySimAgeTimeMPFleetArea(OM, Period, MPs, stock=st, default, TimeSteps)
+    List[[st]] <- ArraySimAgeTimeFleetAreaMP(OM, Period, MPs, stock=st, default, TimeSteps)
   } 
   List
 }
+
+
+
+# ---- Sim, Stock, Time Step, MP ----
+
+ArraySimStockTimeMP <- function(OM, Period=c('Historical', 'Projection', 'All'),
+                                  MPs=NULL,
+                                  stock=1, default=tiny/2, TimeSteps=NULL) {
+  meta <- GetMetaData(OM, Period, TimeSteps)
+  
+  StockNames <- meta$StockNames
+  array(default, dim=c(meta$nSim,
+                       length(StockNames),
+                       length(meta$TimeSteps),
+                       length(MPs)),
+        dimnames=list(Sim=1:meta$nSim,
+                      Stock=StockNames,
+                      TimeStep=meta$TimeSteps,
+                      MP=MPs)
+  )  
+}
+# ---- Sim, Stock, Time Step, Fleet MP ----
+
+ArraySimStockTimeFleetMP <- function(OM, Period=c('Historical', 'Projection', 'All'),
+                                MPs=NULL,
+                                stock=1, default=tiny/2, TimeSteps=NULL) {
+  meta <- GetMetaData(OM, Period, TimeSteps)
+  
+  FleetNames <- as.vector(OM@Fleet[[1]]@Name)
+  
+  StockNames <- meta$StockNames
+  array(default, dim=c(meta$nSim,
+                       length(StockNames),
+                       length(meta$TimeSteps),
+                       length(FleetNames),
+                       length(MPs)),
+        dimnames=list(Sim=1:meta$nSim,
+                      Stock=StockNames,
+                      TimeStep=meta$TimeSteps,
+                      Fleet=FleetNames,
+                      MP=MPs)
+  )  
+}
+
+# ---- Sim, Age, Timestep, Fleet, MP ----
+
+ArraySimAgeTimeFleetMP <- function(OM, Period=c('Historical', 'Projection', 'All'),
+                                       MPs=NULL,
+                                       stock=1, default=tiny/2, TimeSteps=NULL) {
+  meta <- GetMetaData(OM, Period, TimeSteps)
+  
+  FleetNames <- as.vector(OM@Fleet[[1]]@Name)
+  nAges <-  meta$nAges[[stock]]
+  
+  array(default, dim=c(meta$nSim,
+                       nAges,
+                       length(meta$TimeSteps),
+                       length(FleetNames),
+                       length(MPs)),
+        dimnames=list(Sim=1:meta$nSim,
+                      Age=0:(nAges-1),
+                      TimeStep=meta$TimeSteps,
+                      Fleet=FleetNames,
+                      MP=MPs)
+  )  
+}
+
+ListArraySimAgeTimeFleetMP <- function(OM, Period=c('Historical', 'Projection', 'All'),
+                                           MPs=NULL,
+                                           default=tiny/2, TimeSteps=NULL) {
+  meta <- GetMetaData(OM, Period)
+  stocknames <- meta$StockNames
+  FleetNames <- as.vector(OM@Fleet[[1]]@Name)
+  
+  List <- MakeNamedList(stocknames)
+  for (st in 1:length(List)) {
+    List[[st]] <- ArraySimAgeTimeFleetMP(OM, Period, MPs, stock=st, default, TimeSteps)
+  } 
+  List
+}
+
+
+# ---- Sim, Timestep, Fleet, Area, MP ----
+
+ListArraySimTimeFleetAreaMP <- function(OM, Period=c('Historical', 'Projection', 'All'),
+                                       MPs=NULL,
+                                       default=tiny/2, TimeSteps=NULL) {
+  meta <- GetMetaData(OM, Period)
+  stocknames <- meta$StockNames
+  FleetNames <- as.vector(OM@Fleet[[1]]@Name)
+  
+  List <- MakeNamedList(stocknames)
+  for (st in 1:length(List)) {
+    List[[st]] <- ArraySimAgeTimeFleetAreaMP(OM, Period, MPs, stock=st, default, TimeSteps) |>
+      DropDimension('Age', FALSE)
+  } 
+  List
+}
+
+
+
+
+

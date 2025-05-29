@@ -73,7 +73,7 @@ CalcDynamicUnfished <- function(HistSimList, silent=FALSE) {
   TimeSteps <- TimeSteps(HistSimList[[1]]@OM, 'Historical')
   out <- purrr::map(HistSimList, \(x) {
     
-    unfished <- SimulateDynamics_(x, TimeSteps, MP=NULL)
+    unfished <- SimulateDynamics_(x, TimeSteps)
     
     x@Unfished@Dynamic@Number <- lapply( unfished@Number, AddDimNames, c("Age", "TimeStep", "Area"), TimeSteps)
     

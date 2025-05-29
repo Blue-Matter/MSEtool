@@ -4,7 +4,7 @@
 \alias{ProjectMP}
 \title{Projects a single MP from the output of \code{Simulate}}
 \usage{
-ProjectMP(OMList, MP)
+ProjectMP(ProjSim, MP)
 }
 \description{
 Projects a single MP from the output of \code{Simulate}

@@ -1,117 +1,92 @@
-#' Projects a single MP from the output of `Simulate`
-ProjectMP <- function(OMList, MP) {
-  
-  OMList <- rlang::duplicate(OMList)
-  
-  TimeStepsProj <- OMList[[1]]$TimeStepsProj[[1]]
-  
-  # Run MP for all Simulations
-  start <- Sys.time()
-  MPList <- tryCatch(
-    purrr::map(OMList, CalcPopDynamics, Period="Projection", MP=MP,
-               .progress = list(
-                 type = "iterator",
-                 format = "Running MP {cli::pb_bar} {cli::pb_percent}",
-                 clear = TRUE
-               )
-               )
-  )
-  
-  end <- Sys.time() 
-  elapsed <- round(as.numeric(difftime(time1 = end, time2 = start, units = "secs")),2)
-  cli::cli_alert_success("{.val {MP}} ({elapsed} seconds)")
-  
-  NumberAtAgeArea <- purrr::map(MPList, \(x)
-                                purrr::map(x$NumberAtAgeArea, \(y) 
-                                           ArraySubsetTimeStep(y, TimeStepsProj))) |> 
-    ReverseList() |>
-    purrr::map(List2Array, 'Sim') |>
-    purrr::map(\(x) aperm(x, c("Sim", "Age", "TimeStep", "Area")))
-  
-  
-  Biomass <- purrr::map(MPList, \(x)
-                            purrr::map(x$Biomass, \(y) 
-                                       ArraySubsetTimeStep(y, TimeStepsProj))) |> 
-    ReverseList() |>
-    purrr::map(List2Array, 'Sim', 'TimeStep') |>
-    List2Array("Stock") |> 
-    aperm(c("Sim", "Stock", "TimeStep"))
-    
-  SBiomass <- purrr::map(MPList, \(x)
-                        purrr::map(x$SBiomass, \(y) 
-                                   ArraySubsetTimeStep(y, TimeStepsProj))) |> 
-    ReverseList() |>
-    purrr::map(List2Array, 'Sim', 'TimeStep') |>
-    List2Array("Stock") |> 
-    aperm(c("Sim", "Stock", "TimeStep"))
-  
-  SProduction <- purrr::map(MPList, \(x)
-                         purrr::map(x$SProduction, \(y) 
-                                    ArraySubsetTimeStep(y, TimeStepsProj))) |> 
-    ReverseList() |>
-    purrr::map(List2Array, 'Sim', 'TimeStep') |>
-    List2Array("Stock") |> 
-    aperm(c("Sim", "Stock", "TimeStep"))
-  
-  # Removal Number-at-Age-Area
-  RemovalAtAgeArea <- purrr::map(MPList, \(x)
-                        purrr::map(x$RemovalAtAgeArea, \(y) {
-                          y <- List2Array(y, "TimeStep")                
-                          ArraySubsetTimeStep(y, TimeStepsProj)
-                        })) |> 
-    ReverseList() |>
-    purrr::map(List2Array, 'Sim', 'TimeStep') |>
-    purrr::map(\(x) aperm(x, c("Sim", "Age", "TimeStep", "Fleet", "Area")))
-  
-  # Removed Biomass (summed over areas)
-  Removal <- purrr::map(MPList, \(x)
-                        purrr::map(x$RemovalBiomassAtAge, \(y) 
-                                   ArraySubsetTimeStep(y, TimeStepsProj))) |> 
-    ReverseList() |>
-    purrr::map(List2Array, 'Sim') |>
-    purrr::map(\(x) aperm(x, c("Sim", "Age", "TimeStep", "Fleet")))
 
-  # Retained Biomass (summed over areas)
-  Retain <- purrr::map(MPList, \(x)
-                        purrr::map(x$RetainBiomassAtAge, \(y) 
-                                   ArraySubsetTimeStep(y, TimeStepsProj))) |> 
-    ReverseList() |>
-    purrr::map(List2Array, 'Sim') |>
-    purrr::map(\(x) aperm(x, c("Sim", "Age", "TimeStep", "Fleet")))
+ProjectionTimeStep <- function(Data) {
+  length(Data@TimeSteps[Data@TimeSteps>Data@LastHistTS])+1
+}
+
+
+ApplyMPInternal <- function(ProjSim, MP, TimeStep) {
+
+  TimeStepsAll <- TimeSteps(ProjSim@OM)
+  TimeStepsHist <- TimeSteps(ProjSim@OM, "Historical")
+  TimeStepsProj <- TimeSteps(ProjSim@OM, "Projection")
+  
+  ind <- seq(1, by=ProjSim@OM@Interval, to=length(TimeStepsProj))
+ 
+  ManagementTimeSteps <- TimeStepsProj[ind] # time steps where management will be implemented
+  
+  if (!TimeStep %in% ManagementTimeSteps) {
+    MPAdvice <- ProjSim@Misc$MPAdvice[[length(ProjSim@Misc$MPAdvice)]] # get previous management advice
+  } else {
+    # Apply MP to Data
+    Data <- ProjSim@Data[[1]]
+    MPFunction <- get(MP)
+
+    MPAdvice <- MPFunction(Data)
     
+    if (is.null(ProjSim@Misc$MPAdvice))
+      ProjSim@Misc$MPAdvice <- list()
+    ProjSim@Misc$MPAdvice[[as.character(TimeStep)]] <- MPAdvice
+  }
   
+  TSIndex <- match(TimeStep, TimeStepsAll)
   
+  if (length(MPAdvice@TAC)>0) {
+    
+  }
   
-  EffortArea <- purrr::map(MPList, \(x)
-                        purrr::map(x$EffortArea, \(y) 
-                                   ArraySubsetTimeStep(y, TimeStepsProj))) |> 
-    ReverseList() |>
-    purrr::map(List2Array, 'Sim', 'TimeStep') |>
-    List2Array('Stock') |>
-    aperm(c("Sim", "Stock", "TimeStep", "Fleet", "Area"))
+  if (length(MPAdvice@Effort)>0) {
+    ProjSim@Effort[1,TSIndex,1] <- MPAdvice@Effort
+  } else {
+    ProjSim@Effort[1,TSIndex,1] <- ProjSim@Effort[1,TSIndex-1,1]
+  }
   
-  # EffortArea[1,1,,1,]
+  if (length(MPAdvice@Spatial)>0) {
+    ProjSim@OM@Fleet[[1]]@Distribution@Closure[TSIndex,1,] <- MPAdvice@Spatial
+  } else {
+    ProjSim@OM@Fleet[[1]]@Distribution@Closure[TSIndex,1,] <- ProjSim@OM@Fleet[[1]]@Distribution@Closure[TSIndex-1,1,]
+  }
   
-  FDeadAtAgeArea <- purrr::map(MPList, \(x)
-                           purrr::map(x$FDeadAtAgeArea, \(y) {
-                             y <- List2Array(y, 'TimeStep') 
-                             ArraySubsetTimeStep(y, TimeStepsProj)
-                           }))|> 
-    ReverseList() |>
-    purrr::map(List2Array, 'Sim') |>
-    List2Array('Stock') |>
-    aperm(c("Sim", "Stock", "Age" , "TimeStep", "Fleet", "Area"))
+
+  # - update selectivity, vulnerability, discard mortality from MP
+  # - update closed area from MP
   
-  # FDeadAtAgeArea[1,1,12,,1,]
+  # - calculate Effort from TAC (if applicable)
+  # - apply BioEconomic to Effort
+  # - return Effort, Selectivity, Vuln, Discard, Closure
   
+  ProjSim
+}
+
+# tictoc::tic()
+# tt <- purrr::map(ProjSimList, ProjectMP, MP)
+# tictoc::toc()
+
+#' Projects a single MP from the output of `Simulate`
+ProjectMP <- function(ProjSim, MP) {
   
-  list(NumberAtAgeArea=NumberAtAgeArea,
-       Biomass=Biomass,
-       SBiomass=SBiomass,
-       SProduction=SProduction,
-       Removal=Removal,
-       Retain=Retain,
-       RemovalAtAgeArea=RemovalAtAgeArea)
+  TimeStepsAll <- TimeSteps(ProjSim@OM)
+  TimeStepsHist <- TimeSteps(ProjSim@OM, "Historical")
+  TimeStepsProj <- TimeSteps(ProjSim@OM, "Projection")
+  
+  Data <- new('data')
+  
+  for (TimeStep in TimeStepsProj) {
+    
+    # Generate Data up to TimeStep - 1
+    # TODO - add option for Data Lag 
+    Data@LastHistTS <- max(TimeStepsHist)
+    Data@TimeSteps <- TimeStepsAll[1:(match(TimeStep, TimeStepsAll)-1)]
+    ProjSim@Data <- list(Data)
+    
+    # --- Update `ProjSim` with MP Advice ----
+    ProjSim <- ApplyMPInternal(ProjSim, MP, TimeStep)
+    
+    # --- Simulate Pop Dynamics for this Time Step ----
+    ProjSim <- SimulateDynamics_(ProjSim, TimeStep)
+  
+  } 
+  
+  ProjSim
   
 }
 

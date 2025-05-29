@@ -229,8 +229,7 @@ inline arma::mat CalcNumberNext_(arma::mat NumberAtAgeAreaThisTS, // nAge, nArea
   return(Nnext);
 }
 
-
-arma::cube CalcStockMovement_(arma::cube NumberAtAgeArea,
+inline arma::cube CalcStockMovement_(arma::cube NumberAtAgeArea,
                               arma::cube Movement, // FromArea, ToArea, nAge 
                               int nAge,
                               int nArea,
@@ -252,6 +251,8 @@ arma::cube CalcStockMovement_(arma::cube NumberAtAgeArea,
   
   NumberAtAgeArea.col(TSindex) = NumberAtAgeAreaMoved;
   return(NumberAtAgeArea);
-};
+}
+
+
 
 #endif // calculate_h
