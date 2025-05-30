@@ -535,7 +535,7 @@ MeanAtAge2MeanAtLength <- function(object, Length, Ages, nsim, TimeSteps, seed, 
   }
   
   if (is.null(Length@ASK)) {
-    Length <- Populate(Length, Ages, nsim, TimeSteps, seed, ASK=TRUE, silent)
+    Length <- PopulateLength(Length, Ages, nsim, TimeSteps, seed, ASK=TRUE, silent)
   }
   
   object@MeanAtLength <- AtAge2AtSize(object, Length)
@@ -554,46 +554,67 @@ MeanAtAge2MeanAtLength <- function(object, Length, Ages, nsim, TimeSteps, seed, 
   
 }
 
-#' @export
+
 AtSize2AtAge <- function(object, Length) {
   
   MeanAtLength <- object@MeanAtLength
   ASK <- Length@ASK
   dim_MeanAtLength <- dim(MeanAtLength)
   dim_ASK <- dim(ASK)
-  nage <- dim_ASK[2]
-  nClasses <- dim_ASK[3]
+ 
   
-  nsim_MeanAtLength <- dim_MeanAtLength[1]
-  nTS_MeanAtLength <- dim_MeanAtLength[3]
-  
-  nsim_ASK <- dim_ASK[1]
-  nTS_ASK <- dim_ASK[4]
-  
-  nsim <- max(nsim_MeanAtLength, nsim_ASK) # maximum number of simulations
-  nTS <- max(nTS_MeanAtLength, nTS_ASK) # maximum number of time-steps
+  DNames <- dimnames(Length@MeanAtAge)
+  bySim <- TRUE
+  if ("Sim" %in% DNames) {
+    nage <- dim_ASK[2]
+    nClasses <- dim_ASK[3]
+    
+    nsim_MeanAtLength <- dim_MeanAtLength[1]
+    nTS_MeanAtLength <- dim_MeanAtLength[3]
+    
+    nsim_ASK <- dim_ASK[1]
+    nTS_ASK <- dim_ASK[4]
+    
+    nsim <- max(nsim_MeanAtLength, nsim_ASK) # maximum number of simulations
+    nTS <- max(nTS_MeanAtLength, nTS_ASK) # maximum number of time-steps
+  } else {
+    bySim <- FALSE
+    
+    nage <- dim_ASK[1]
+    nClasses <- dim_ASK[2]
+    
+    nsim_ASK <- 1
+    nsim_MeanAtLength <- 1
+    nsim <- 1
+    
+    nTS_ASK <- 1
+    nTS_MeanAtLength <- 1
+    nTS <- dim_MeanAtLength[3]
+  }
   
   AtAge <- array(0, dim=c(nsim, nage, nTS))
   for (s in 1:nsim) {
     for (t in 1:nTS) {
       MeanAtLength_ts <- MeanAtLength[GetIndex(s, nsim_MeanAtLength), ,GetIndex(t, nTS_MeanAtLength)]
-      ASK_ts <- ASK[GetIndex(s, nsim_ASK),,,GetIndex(t, nTS_ASK)]
-      ASK_ts_stand <- ASK_ts/ matrix(apply(ASK_ts, 1, sum), nage, nClasses, byrow=FALSE)
-      AtAge[s,,t] <- MeanAtLength_ts %*%t(ASK_ts)
+      if (bySim) {
+        ASK_ts <- ASK[GetIndex(s, nsim_ASK),,,GetIndex(t, nTS_ASK)]
+        AtAge[s,,t] <- MeanAtLength_ts %*%t(ASK_ts)
+      } else {
+        AtAge[s,,t] <- (MeanAtLength_ts %*%t(ASK))[1,]
+      }
     }
   }
   AtAge
 }
 
-#' @export
-AtAge2AtSize <- function(object, Length) {
+AtAge2AtSize <- function(object, Length, max1=TRUE) {
   
   MeanAtAge <- object@MeanAtAge
   ASK <- Length@ASK
   
   if (dim(MeanAtAge)[2]<30) { # arbitrary number!
     # Generate higher resolution length-at-age
-    # linear intepolate Mean length-at-age and CV length-at-age
+    # linear interpolate Mean length-at-age and CV length-at-age
     # for 11 time-steps in-between (e.g., months)
     dims  <- rbind(dim(Length@MeanAtAge),
                    dim(Length@CVatAge),
@@ -601,11 +622,24 @@ AtAge2AtSize <- function(object, Length) {
     )
     dd <- apply(dims, 2, max)
     
-    objectMeanAtAge <- array(0, dim=c(dd[1], (dd[2]*12)-11, dd[3]))
-    LengthMeanAtAge <- array(0, dim=c(dd[1], (dd[2]*12)-11, dd[3]))
-    LengthCVatAge <- array(0, dim=c(dd[1], (dd[2]*12)-11, dd[3]))
+    nSubAges <- 12
+    SubAgeDim <- (dd[2]*nSubAges)-(nSubAges-1)
     
-    ind <- seq(from=1, by=12, to=dim(LengthMeanAtAge)[2])
+    objectMeanAtAge <- array(0, dim=c(dd[1], SubAgeDim, dd[3]))
+    LengthMeanAtAge <- array(0, dim=c(dd[1], SubAgeDim, dd[3]))
+    LengthCVatAge <- array(0, dim=c(dd[1], SubAgeDim, dd[3]))
+    
+    dname1 <- dimnames(Length@MeanAtAge)
+    ages <- as.numeric(dname1[["Age"]])
+    dname1[["Age"]] <- seq(from=ages[1], to=ages[length(ages)], length.out=SubAgeDim)
+    dimnames(LengthMeanAtAge) <- dname1
+    
+    dname1 <- dimnames(Length@CVatAge)
+    dname1[["Age"]] <- seq(from=ages[1], to=ages[length(ages)], length.out=SubAgeDim)
+    dimnames(LengthCVatAge) <- dname1
+    
+    
+    ind <- seq(from=1, by=nSubAges, to=dim(LengthMeanAtAge)[2])
     
     objectMeanAtAge[,ind,] <- MeanAtAge[]
     LengthMeanAtAge[,ind,] <- Length@MeanAtAge[]
@@ -649,7 +683,8 @@ AtAge2AtSize <- function(object, Length) {
         }
       }
     }
-    # generate a new age-size key with finer temportal resolution
+    
+    # generate a new age-size key with finer temporal resolution
     ASK <- CalcAgeSizeKey(MeanAtAge=LengthMeanAtAge,
                           CVatAge=LengthCVatAge,
                           Classes=Length@Classes,
@@ -659,6 +694,7 @@ AtAge2AtSize <- function(object, Length) {
                           silent=TRUE)
     
     MeanAtAge <- objectMeanAtAge
+    dimnames(MeanAtAge) <- dname1
     
   }
   
@@ -685,13 +721,23 @@ AtAge2AtSize <- function(object, Length) {
     for (t in 1:nTS) {
       MeanAtAge_ts <- MeanAtAge[GetIndex(s, nsim_MeanAtAge), ,GetIndex(t, nTS_MeanAtAge)]
       ASK_ts <- ASK[GetIndex(s, nsim_ASK),,,GetIndex(t, nTS_ASK)]
+      ASK_tsvec <- apply(ASK_ts, 2, sum)
+      ind <- max(which(ASK_tsvec>0))
+      
+      
       sums <- matrix(apply(ASK_ts, 2, sum), nage, nClasses, byrow=TRUE)
       ASK_ts_stand <- ASK_ts/sums
       ASK_ts_stand[!is.finite(ASK_ts_stand)] <- 0
       AtSize[s,,t] <- MeanAtAge_ts %*% ASK_ts_stand
+      if (max1)
+        AtSize[s,ind:ncol(ASK_ts),t] <- 1
     }
   }
-  AtSize
+  
+  dimnames(AtSize) <- list(Sim=1:nsim,
+                           Class=Length@Classes,
+                           TimeStep=dimnames(MeanAtAge)[["TimeStep"]][1:nTS])
+  AtSize 
 }
 
 # TODO - CatchFrac could be array nsim, nstock, nfleet - rather than list 

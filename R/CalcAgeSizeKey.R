@@ -62,12 +62,17 @@ CalcAgeSizeKey <- function(MeanAtAge,
   ind <- unlist(lapply(TimeStepsList, length)) |> which.max()
   TimeSteps <- TimeStepsList[[ind]]
   
-  MeanAtAgeList <- ExpandSims(MeanAtAge, nsim) |> 
-    ExpandTimeSteps(TimeSteps) |> 
-    Array2List(pos=1)
-  SDatAgeList <- ExpandSims(SDatAge, nsim) |> 
-    ExpandTimeSteps(TimeSteps) |>
-    Array2List(pos=1)
+  if (!is.null(TimeSteps)) {
+    MeanAtAge <- ExpandSims(MeanAtAge, nsim) |> 
+      ExpandTimeSteps(TimeSteps) 
+    SDatAge <- ExpandSims(SDatAge, nsim) |> 
+      ExpandTimeSteps(TimeSteps) 
+      
+  }
+  
+  MeanAtAgeList <- MeanAtAge |> Array2List(pos=1)
+  SDatAgeList <- SDatAge |> Array2List(pos=1)
+
 
   if (silent) {
     ASKList <- purrr::map2(MeanAtAgeList, SDatAgeList, \(x,y) 

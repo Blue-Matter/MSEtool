@@ -65,16 +65,27 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE) {
   
   nMPs <- length(MPs)
   # Projection MP loop
-  cli::cli_alert('Projecting {.val {nMPs}} MPs')
+  cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
   
   for (mp in seq_along(MPs)) {
+    
+    
+    # *********************************** # 
+    ProjSim <- ProjSimList[[1]]
+    MP <- MPs[1]
+    # ProjectMP
+    ProjSim@Data <- list(Data)
+    
+    # TODO Simulate historical data 
+    # *********************************** # 
+    
     
     # TODO keep this messages
     ProjSimListMP <- purrr::map(ProjSimList, \(ProjSim) 
                                 ProjectMP(ProjSim, MPs[mp]),
                                 .progress = list(
                                   type = "tasks", 
-                                  format = "Projecting {.val {MPs[mp]}} {cli::pb_bar} {cli::pb_percent}",
+                                  format = "Running {.val {MPs[mp]}} {cli::pb_bar} {cli::pb_percent}",
                                   clear = TRUE))
     cli::cli_alert_success('{.val {MPs[mp]}}')
     

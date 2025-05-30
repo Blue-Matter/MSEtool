@@ -20,10 +20,6 @@ octopusOM <- OM('Day Octopus OM',
                 pYear=5,
                 TimeUnits = 'month',
                 nSim=nsim)
-
-octopusOM@TimeSteps
-
-
 ## ---- create_stock ----
 
 octopus <- Stock('Day octopus',
@@ -114,13 +110,44 @@ OM <- Populate(octopusOM)
 
 
 # ---- Simulate Historical -----
+Hist <- SimulateDEV(OM)
+
+
+
+# ----- Create Observation Object -----
+
+Obs <- Obs()
+
+Obs@Catch@Error <- 0.3
+Obs@Index@Error <- 0.3
+Obs@CAL@ESS <- 200
+
+Hist@OM@Obs <- Obs
+
+# ---- Define MPs -----
+
+
+
+SizeLimit <- function(Data=NULL) {
+  Advice <- Advice()
+  Advice@Selectivity@Pars <- list(SL50=150,
+                                  SL50_95=20)
+  
+  Advice
+}
+class(SizeLimit) <- 'mp'
+
+
+# ---- Forward Projections ----
+
 messages='default'
 nSim=NULL
 parallel=FALSE
 silent=FALSE
 
-Hist <- SimulateDEV(OM)
-
+MPs="SizeLimit"
+MP="SizeLimit"
+ProjectDEV
 
 # # ---- Project Forward -----
 source("OctopusMPs.R")
@@ -134,13 +161,13 @@ MPs=c('Open',
       'Spatial_12')
       
 
-MSE <- ProjectDEV(OMListHist, MPs=c('Open', 
-                                    'Spatial_1',
-                                    'Seasonal_1',
-                                    'Spatial_2',
-                                    'Spatial_3',
-                                    'Spatial_6',
-                                    'Spatial_12'))
+# MSE <- ProjectDEV(OMListHist, MPs=c('Open', 
+#                                     'Spatial_1',
+#                                     'Seasonal_1',
+#                                     'Spatial_2',
+#                                     'Spatial_3',
+#                                     'Spatial_6',
+#                                     'Spatial_12'))
 
 
 

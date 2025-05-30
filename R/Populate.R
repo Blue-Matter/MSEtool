@@ -187,7 +187,7 @@ PopulateStock <- function(stock,
                                                      seed=seed,
                                                      silent=silent)
   
-  stock@Maturity <- PopulateMaturity(stock@Maturity,
+  stock@Maturity <- PopulateMaturity(Maturity=stock@Maturity,
                                      Ages=stock@Ages,
                                      Length=stock@Length,
                                      nsim=nSim(stock),
@@ -259,6 +259,7 @@ PopulateLength <- function(Length,
   
   if (!is.null(Length@CVatAge))
     Length <- PopulateClasses(Length)
+  
   
   if (ASK) {
     Length <- PopulateASK(Length, Ages, TimeSteps, silent=silent)
@@ -378,12 +379,13 @@ PopulateMaturity <- function(Maturity,
                              Length=NULL,
                              nsim=NULL,
                              TimeSteps=NULL,
-                             CalcAtLength=FALSE,
+                             CalcAtLength=TRUE,
                              seed=NULL,
                              silent=FALSE) {
   
   TimeSteps <- TimeStepAttributes(Maturity, TimeSteps)
   argList <- list(Ages, Length, nsim, TimeSteps, CalcAtLength, seed)
+  
   if (CheckDigest(argList, Maturity) | EmptyObject(Maturity))
     return(Maturity)
   
@@ -772,6 +774,7 @@ PopulateFleet <- function(Fleet,
                                      Length,
                                      nsim,
                                      TimeSteps,
+                                     CalcAtLength=TRUE,
                                      seed=seed,
                                      silent)
   
@@ -782,7 +785,7 @@ PopulateFleet <- function(Fleet,
                                            Length,
                                            nsim,
                                            TimeSteps,
-                                           CalcAtLength=FALSE,
+                                           CalcAtLength=TRUE,
                                            seed,
                                            silent=silent)
   
@@ -793,7 +796,7 @@ PopulateFleet <- function(Fleet,
                                        Length,
                                        nsim,
                                        TimeSteps,
-                                       CalcAtLength=FALSE,
+                                       CalcAtLength=TRUE,
                                        seed,
                                        silent=silent)
   
@@ -898,7 +901,7 @@ PopulateSelectivity <- function(Selectivity,
                                 Length=NULL,
                                 nsim=NULL,
                                 TimeSteps=NULL,
-                                CalcAtLength=FALSE,
+                                CalcAtLength=TRUE,
                                 seed=NULL,
                                 silent=FALSE,
                                 CheckMaxValue=TRUE) {

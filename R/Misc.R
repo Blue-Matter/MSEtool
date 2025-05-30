@@ -1,3 +1,4 @@
+
 not <- function(val) !val
 
 ReplaceTiny <- function(Array, value=1, default=tiny/2) {
