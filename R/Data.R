@@ -25,16 +25,16 @@ GenerateHistoricalData <- function(HistSim) {
     
    
     
-  
+  HistSim
   
 }
 
 GenerateHistoricalDataStock <- function(stock, HistSim) {
   Data <- HistSim@Data[[stock]]
-  Data@Name <- OM@Stock[[stock]]@Name
-  Data@Time <- TimeSteps(OM, 'Historical')
+  Data@Name <- HistSim@OM@Stock[[stock]]@Name
+  Data@Time <- TimeSteps(HistSim@OM, 'Historical')
   Data@TimeLH <- Data@Time[length(Data@Time)]
-  Data@Units <- OM@Stock[[stock]]@Ages@Units
+  Data@Units <- HistSim@OM@Stock[[stock]]@Ages@Units
   
   Data@Catch <- GenerateHistoricalData_Catch(Data, HistSim, stock)
   
@@ -43,7 +43,7 @@ GenerateHistoricalDataStock <- function(stock, HistSim) {
   Data@CAA
   Data@CAL
   
-  
+  Data
 }
   
   

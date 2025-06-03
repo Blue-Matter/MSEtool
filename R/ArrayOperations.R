@@ -319,6 +319,9 @@ ExpandAges <- function(Array, nAges, AgeOpt=3) {
   dnames <- dimnames(Array)
   existing <- as.numeric(dnames[[ind]])
   
+  if (length(existing)==nAges)
+    return(Array)
+  
   AddDim <- nAges - length(existing)
   
   OutDim <- d
@@ -415,7 +418,6 @@ ExpandTimeSteps <- function(Array, TimeSteps, default=NULL) {
   if (length(TSfill)<1)
     return(OutArray)
   
-  
   TimeStepsFill <- TimeSteps[TSfill]
   
   nTSFill <- dim(OutArray)[ind] - dim(Array)[ind]
@@ -423,6 +425,20 @@ ExpandTimeSteps <- function(Array, TimeSteps, default=NULL) {
   d2[ind] <- nTSFill
   dnames[[ind]] <- TimeStepsFill
   FillArray <- array(NA, dim=d2, dimnames = dnames)
+  
+  
+  if (length(ArrayTS)==1) {
+    vals <- abind::adrop(abind::asub(Array, 1,ind, drop=FALSE), ind)
+    if (inherits(vals, 'numeric'))
+      vals <- array(vals, length(vals), dimnames = list(Sim=1:length(vals)))
+    vals <- replicate(nTSFill, vals) 
+    dimnames(vals)[[ind]] <- TimeStepsFill
+    names(dimnames(vals))[ind] <- 'TimeStep'
+    vals <- aperm(vals, names(dnames))
+    abind::afill(OutArray) <- vals
+    return(OutArray)
+    
+  }
   
   for (i in TimeStepsFill) {
     if (all(i < ArrayTS))

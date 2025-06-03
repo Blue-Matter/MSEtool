@@ -146,7 +146,6 @@ Stock2Hist <- function(Stock, nSim, TimeSteps, silent=FALSE, id=NULL) {
     cli::cli_progress_update(id=id)
   Stock@Maturity <- StockObject(Stock@Maturity, nSim, nAges, TimeSteps)
 
-
   if (!silent)
     cli::cli_progress_update(id=id)
   Stock@Fecundity <- StockObject(Stock@Fecundity, nSim, nAges, TimeSteps)
