@@ -7,7 +7,8 @@ la <- devtools::load_all
 
 la()
 
-nsim <- 10
+
+nsim <- 100
 
 octopusOM <- OM('Day Octopus OM',
                 Author='Adrian Hordyk',
@@ -99,46 +100,175 @@ Effort(octopus_fleet) <- Effort(Effort=data.frame(TimeStep=c(0, 0.125, 0.5, 1),
 Selectivity(octopus_fleet) <- Selectivity(Pars=list(A50=c(4, 6),
                                                     A50_95=c(1,2)))
 
+
+## ---- Obs ----
+
+octopus_obs <- Obs()
+
+octopus_obs@Catch@CV <- 0.3
+
+octopus_obs@Index@Error <- 0.3
+
+
+octopus_obs@CAL@ESS <- 200
+
+
 ## ---- populateOM ----
 
 Stock(octopusOM) <- octopus
 Fleet(octopusOM) <- octopus_fleet
+Obs(octopusOM) <- octopus_obs
 
 octopusOM@Control$RefYield$lastnTS <- 12
 
-OM <- Populate(octopusOM)
+# OM <- Populate(octopusOM)
+
+OM <- PopulateOM(octopusOM)
+
 
 
 # ---- Simulate Historical -----
+silent = parallel = FALSE
+
 Hist <- SimulateDEV(OM)
+
+
+
+
+
+
+
 
 
 
 # ----- Create Observation Object -----
 
-Obs <- Obs()
 
-Obs@Catch@Error <- 0.3
-Obs@Index@Error <- 0.3
-Obs@CAL@ESS <- 200
 
-Hist@OM@Obs <- Obs
+matplot(t(OM@Stock$`Day octopus`@Weight@MeanAtAge[,,1]), type='l')
 
 # ---- Define MPs -----
 
 
+SpatioTemporalClosure <- function(Data=NULL, 
+                                  MonthsClosed=NULL,
+                                  AreasClosed=NULL,
+                                  AnnEffortInc=NULL) {
+  
+  Advice <- Advice()
+  
+  if (all(c(is.null(MonthsClosed),
+            is.null(AreasClosed),
+            is.null(AnnEffortInc))))
+    return(Advice)
+  
+  
+  ProjectionTimeStep <- ProjectionTimeStep(Data)
+  
+  month <- ProjectionTimeStep %% 12
+  if (month==0)
+    month <- 12
+  
+  if (!is.null(AnnEffortInc)) {
+    if (month==12) {
+      Advice@Effort <- (1+AnnEffortInc/100)^(ProjectionTimeStep/12)
+    } 
+  }
+  
+  if (!is.null(MonthsClosed)) {
+    if (month %in% MonthsClosed) {
+      Advice@Spatial <- AreasClosed
+    } else {
+      Advice@Spatial <- rep(1,2)
+    }
+  }
+  Advice
+}
+
+# Open all the time (status quo)
+Open <- function(Data=NULL) {
+  SpatioTemporalClosure(Data, AnnEffortInc=2.5)
+}
+class(Open) <- 'mp'
+
+# Close Area 1 for month 6
+Spatial_1 <- function(Data=NULL) {
+  SpatioTemporalClosure(Data,
+                        MonthsClosed=6,
+                        AreasClosed=c(0,1),
+                        AnnEffortInc=2.5)
+}
+class(Spatial_1) <- 'mp'
+
+# Close whole fishery for 1 month
+Seasonal_1 <- function(Data=NULL) {
+  SpatioTemporalClosure(Data,
+                        MonthsClosed=6,
+                        AreasClosed=c(0,0),
+                        AnnEffortInc=2.5)
+}
+class(Seasonal_1) <- 'mp'
+
+
+Spatial_2 <- function(Data=NULL) {
+  SpatioTemporalClosure(Data,
+                        MonthsClosed=5:6,
+                        AreasClosed=c(0,1),
+                        AnnEffortInc=2.5)
+}
+class(Spatial_2) <- 'mp'
+
+
+Spatial_3 <- function(Data=NULL) {
+  SpatioTemporalClosure(Data,
+                        MonthsClosed=4:6,
+                        AreasClosed=c(0,1),
+                        AnnEffortInc=2.5)
+}
+class(Spatial_3) <- 'mp'
+
+Spatial_6 <- function(Data=NULL) {
+  SpatioTemporalClosure(Data,
+                        MonthsClosed=4:9,
+                        AreasClosed=c(0,1),
+                        AnnEffortInc=2.5)
+}
+class(Spatial_6) <- 'mp'
+
+
+Spatial_12 <- function(Data=NULL) {
+  SpatioTemporalClosure(Data,
+                        MonthsClosed=1:12,
+                        AreasClosed=c(0,1),
+                        AnnEffortInc=2.5)
+}
+class(Spatial_12) <- 'mp'
+
 
 SizeLimit <- function(Data=NULL) {
   Advice <- Advice()
-  Advice@Selectivity@Pars <- list(SL50=150,
-                                  SL50_95=20)
+  Advice@Selectivity@Pars <- list(SL50=1500,
+                                  SL50_95=200)
+  Advice@Selectivity@Misc[["Type"]] <- "Weight"
   
   Advice
 }
 class(SizeLimit) <- 'mp'
 
 
+
+
+
 # ---- Forward Projections ----
+
+MPs <- c('Open', 
+         'Spatial_1',
+         'Seasonal_1',
+         'SizeLimit')
+
+MSE <- ProjectDEV(Hist, MPs=MPs)
+
+
 
 messages='default'
 nSim=NULL
@@ -148,27 +278,6 @@ silent=FALSE
 MPs="SizeLimit"
 MP="SizeLimit"
 ProjectDEV
-
-# # ---- Project Forward -----
-source("OctopusMPs.R")
-
-MPs=c('Open', 
-      'Spatial_1',
-      'Seasonal_1',
-      'Spatial_2',
-      'Spatial_3',
-      'Spatial_6',
-      'Spatial_12')
-      
-
-# MSE <- ProjectDEV(OMListHist, MPs=c('Open', 
-#                                     'Spatial_1',
-#                                     'Seasonal_1',
-#                                     'Spatial_2',
-#                                     'Spatial_3',
-#                                     'Spatial_6',
-#                                     'Spatial_12'))
-
 
 
 # # Make Figures 

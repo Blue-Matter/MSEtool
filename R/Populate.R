@@ -2,7 +2,7 @@
 # Populate an object
 # 
 # This function takes a valid S4 object and ...
-# 
+
 setGeneric("Populate", function(object, ...) standardGeneric("Populate"))
 
 setMethod("Populate", "om", function(object, silent=FALSE) {
@@ -100,8 +100,9 @@ PopulateOM <- function(OM, silent=FALSE) {
       
       names(fleetList[[st]])[fl] <- fleetList[[st]][[fl]]@Name
       
-    }
-  }
+    } # end fleet loop
+    
+  } # end stock loop
   
   if (methods::is(OM@Stock, 'list') | methods::is(OM@Stock, 'StockList')) {
     OM@Stock <- stockList
@@ -110,7 +111,8 @@ PopulateOM <- function(OM, silent=FALSE) {
   if (methods::is(OM@Fleet, 'list')| methods::is(OM@Fleet, 'StockFleetList')) {
     OM@Fleet <- fleetList
   }
- 
+  
+
   # share paramaters for two-sex stocks
   OM <- OM |>
     UpdateSPFrom() |>
@@ -121,7 +123,18 @@ PopulateOM <- function(OM, silent=FALSE) {
   OM <- ProcessCatchFrac(OM)
   
   
-  # Obs and Imp
+  OM <- PopulateObs(OM)
+  
+
+  
+  
+  
+  
+  
+  
+  #Imp
+  
+  
   
   # Update OM Timesteps
   # object@Stock[[1]]@Ages@Units
@@ -1177,15 +1190,177 @@ PopulateDistribution <- function(Distribution,
   SetDigest(argList, Distribution)
 }
 
+# Obs ----
+
+StructureObs <- function(OM) {
+  
+  StockNames <- StockNames(OM)
+  FleetNames <- FleetNames(OM)
+  
+  # Obs should be list length `nStock`
+  # with each element a list `nFleet`
+  
+  # Recycles over both stocks and fleets
+  
+  if (inherits(OM@Obs,'obs')) {
+    OM@Obs <- MakeNamedList(StockNames, MakeNamedList(FleetNames, OM@Obs))
+  }
+  
+  if (!is.list(OM@Obs)) {
+    cli::cli_abort("`OM@Obs` must be a list or an object of class `obs`")
+  }
+  
+  if (length(StockNames)>1)
+    stop("Multi-stock/fleet Obs not done")
+  
+  # TODO 
+  
+  
+  if (length(OM@Obs)!=nStock(OM)) {
+    cli::cli_abort('`OM@Obs` must be a list length `nStock(OM)`')
+  }
+  names(OM@Obs) <- StockNames(OM)
+  
+  OM
+}
+
+PopulateObs <- function(OM) {
+  
+  if (is.null(OM@Obs))
+    return(OM)
+
+  OM <- StructureObs(OM)
+  
+  StockNames <- StockNames(OM)
+  FleetNames <- FleetNames(OM)
+  
+  for (st in 1:length(OM@Obs)) {
+    for (fl in 1:length(OM@Obs[[1]])) {
+      SetSeed(OM@Obs[[st]][[fl]], OM@Seed)
+      
+      OM@Obs[[st]][[fl]]@Catch <- PopulateCatchObs(Catch=OM@Obs[[st]][[fl]]@Catch, 
+                                                   nSim=OM@nSim, 
+                                                   TimeSteps=OM@TimeSteps)
+      
+      OM@Obs[[st]][[fl]]@Index
+      
+      
+      OM@Obs[[st]][[fl]]@CAA
+      
+      
+      OM@Obs[[st]][[fl]]@CAL
+      
+      
+    }
+    
+    
+  
+  }
+    
+    
+  
+  
+
+
+
+  OM
+}
+
+PopulateCatchObs <- function(Catch, nSim, TimeSteps) {
+  nTS <- length(TimeSteps)
+  
+  Catch@CV <- PopulateObsCV(Catch@CV, nSim)
+  
+  Catch@Error <- PopulateObsError(Catch, nSim, TimeSteps)
+  
+  Catch@Bias <- PopulateObsBias(Catch, nSim)
+  
+  if (length(Catch@TimeSteps)<1)
+    Catch@TimeSteps <- TimeSteps
+  
+  if (!Catch@Type %in% c('removals', 'landings'))
+    cli::cli_abort(message="Valid values for `Obs@Catch@Type` are: {.val {c('removals', 'landings')}} ")
+  
+  Catch
+}
+
+PopulateObsCV <- function(CV, nSim) {
+  if (is.null(CV)) {
+    CV <- array(0, nSim, dimnames = list(Sim=1:nSim))
+    return(CV)
+  }
+  
+  CV <- StructurePars(list(CV), nSim)[[1]] |> 
+    ExpandSims(nSim) |>
+    DropDimension("TimeStep", FALSE)
+  CV
+}
+
+
+PopulateObsError <- function(object, nSim, TimeSteps) {
+  nTS <- length(TimeSteps)
+  if (length(object@Error)<1) {
+    Error <- array(rlnorm(nTS * nSim,
+                          mconv(1, rep(object@CV, nTS)),
+                          sdconv(1, rep(object@CV, nTS))),
+                   c(nSim, nTS))
+    
+    dimnames(Error) <- list(Sim=1:nSim,
+                            TimeStep=TimeSteps)
+    object@Error <- Error
+  } else {
+    if (!inherits(object@Error, 'array'))
+      cli::cli_abort("`object@Error` must be an array with `nSim` rows and `nTS` columns")
+    
+    chk1 <- nrow(object@Error) != nSim
+    chk2 <- ncol(object@Error) != length(TimeSteps)
+    if (chk1 & chk2) 
+      cli::cli_abort("`object@Error` must be an array with `nSim` rows and `nTS` columns")
+    if (chk1 & !chk2) 
+      cli::cli_abort("`object@Error` must be an array with `nSim` rows")
+    
+    if (!chk1 & chk2) 
+      cli::cli_abort("`object@Error` must be an array with `nTS` columns")
+    
+    dimnames(object@Error) <- list(Sim=1:nSim,
+                                   TimeStep=TimeSteps)
+    
+  }
+  object@Error
+}
 
 
 
 
 
-
-
-
-
-
-
-
+PopulateObsBias <- function(object, nSim) {
+  if (length(object@Bias)<1) {
+    object@Bias <- array(1, dim=nSim, dimnames = list(Sim=1:nSim)) 
+    return(object@Bias)
+  }
+  
+  if (any(object@Bias<=0))
+    cli::cli_abort("`Bias` must be positive values")
+  
+  if (length(object@Bias) == 1) {
+    object@Bias <- array(object@Bias, dim=nSim, dimnames = list(Sim=1:nSim)) 
+    return(object@Bias)
+  }
+    
+  if (nSim != 2 & length(object@Bias) == 2) {
+    object@Bias <- StructurePars_(object@Bias, nSim) |> 
+      ExpandSims(nSim) |>
+      DropDimension('TimeStep')
+    return(object@Bias)
+  }
+  
+  if (length(object@Bias) == nSim) {
+    object@Bias <- array(object@Bias, dim=nSim, dimnames = list(Sim=1:nSim)) 
+    return(object@Bias)
+  }
+  
+  if (length(object@Bias) != nSim)
+  cli::abort("`Catch@Bias` must be length 1, 2, or `nSim`")
+  
+  object@Bias
+}

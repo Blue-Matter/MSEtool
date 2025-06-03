@@ -3,9 +3,12 @@
 \docType{class}
 \name{ObsClass}
 \alias{ObsClass}
+\alias{Obs}
 \alias{Obs<-}
 \title{Obs Object}
 \usage{
+Obs(object = NULL)
+
 Obs(x) <- value
 }
 \arguments{
@@ -18,6 +21,8 @@ Obs Object
 }
 \section{Functions}{
 \itemize{
+\item \code{Obs()}: description
+
 \item \code{Obs(x) <- value}: Assign an \code{Obs} object to a \code{\link[=OM]{OM()}} object
 
 }}

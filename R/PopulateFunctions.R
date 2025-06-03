@@ -556,6 +556,8 @@ MeanAtAge2MeanAtLength <- function(object, Length, Ages, nsim, TimeSteps, seed, 
 
 
 AtSize2AtAge <- function(object, Length) {
+  # OBJ <<- object
+  # LEN <<- Length
   
   MeanAtLength <- object@MeanAtLength
   ASK <- Length@ASK
@@ -563,7 +565,7 @@ AtSize2AtAge <- function(object, Length) {
   dim_ASK <- dim(ASK)
  
   
-  DNames <- dimnames(Length@MeanAtAge)
+  DNames <- names(dimnames(Length@MeanAtAge))
   bySim <- TRUE
   if ("Sim" %in% DNames) {
     nage <- dim_ASK[2]

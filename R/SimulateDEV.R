@@ -35,6 +35,15 @@ SimulateDEV <- function(OM=NULL,
   HistSimList <- CalcDynamicUnfished(HistSimList)
   
   # ---- Optimize for Final Depletion ----
+  
+   
+  # EXTREMELY SLOW
+  # future::plan(future::multisession, workers = 6)
+  # tictoc::tic()
+  # HistSimList <- furrr::future_map(HistSimList, \(HistSim) 
+  #                                   OptimizeCatchability(HistSim))
+  # tictoc::toc()
+  
   HistSimList <- purrr::map(HistSimList, \(HistSim) 
                             OptimizeCatchability(HistSim),
                             .progress = list(
@@ -42,22 +51,39 @@ SimulateDEV <- function(OM=NULL,
                               format = "Optimizing catchability (q) for Final Depletion {cli::pb_bar} {cli::pb_percent}",
                               clear = TRUE))
   
+
   # ---- Calculate Reference Points ----
   # TODO speed up - CalcRefPoints.R
   # RefPoints <- CalcRefPoints(OM, Unfished)
   
   # ---- Historical Population Dynamics ----
-  HistTimeSteps <- TimeSteps(OM, 'Historical')
-
-  # Calculate Population Dynamics (Fishing Mortality & Number by Area)
   HistSimList <- purrr::map(HistSimList, \(x) 
-                       SimulateDynamics_(x, HistTimeSteps),
+                       SimulateDynamics_(x, TimeSteps(OM, 'Historical')),
                        .progress = list(
                          type = "iterator", 
                          format = "Simulating Historical Fishery {cli::pb_bar} {cli::pb_percent}",
                          clear = TRUE))
   
-  # Condition Observation Model observed Historical Fishery Data
+  # ---- Historical Fishery Data ----
+  HistSimList <- purrr::map(HistSimList, \(x) 
+                            GenerateHistoricalData(x),
+                            .progress = list(
+                              type = "iterator", 
+                              format = "Generating Historical Data {cli::pb_bar} {cli::pb_percent}",
+                              clear = TRUE))
+  
+  
+  # Data:
+  # - list of length `nSim` then
+  # - list of length `nStock`
+  
+  # MPs: 
+  # - `MMP`
+  # - 'complex' 
+  
+
+
+  
   
   # Simulate Historical Fishery Data
   

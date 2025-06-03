@@ -16,45 +16,95 @@ UpdateTAC <- function(ProjSim, MPAdvice, TimeStep) {
   ProjSim
 }
 
-UpdateEffort <- function(ProjSim, MPAdvice, TSIndex) {
+UpdateEffort <- function(ProjSim, MPAdvice, TimeStep) {
 
+  TimeStepsAll <- TimeSteps(ProjSim@OM)
+  TimeStepsHist <- TimeSteps(ProjSim@OM, "Historical")
+  LastHistIndex <-  match(max(TimeStepsHist), TimeStepsAll)
+  TSIndex <- match(TimeStep, TimeStepsAll)
+  
+  # *************************** # 
+  st <- 1
+  fl <- 1
+  # *************************** #
   
   if (length(MPAdvice@Effort)>0) {
-    ProjSim@Effort[1,TSIndex,1] <- MPAdvice@Effort
+    ProjSim@Effort[st,TSIndex,fl] <- ProjSim@Effort[st,LastHistIndex,fl] * MPAdvice@Effort
   } else {
-    ProjSim@Effort[1,TSIndex,1] <- ProjSim@Effort[1,TSIndex-1,1]
+    ProjSim@Effort[st,TSIndex,fl] <- ProjSim@Effort[st,TSIndex-1,fl]
   }
   ProjSim
 }
 
-UpdateSpatial <- function(ProjSim, MPAdvice, TSIndex) {
+UpdateSpatial <- function(ProjSim, MPAdvice, TimeStep) {
+  
+  TimeStepsAll <- TimeSteps(ProjSim@OM)
+  TSIndex <- match(TimeStep, TimeStepsAll)
+  
+  # *************************** # 
+  st <- 1
+  fl <- 1
+  # *************************** #
+  
   if (length(MPAdvice@Spatial)>0) {
-    ProjSim@OM@Fleet[[st]]@Distribution@Closure[TSIndex,1,] <- MPAdvice@Spatial
+    ProjSim@OM@Fleet[[st]]@Distribution@Closure[TSIndex,fl,] <- MPAdvice@Spatial
   } else {
-    ProjSim@OM@Fleet[[st]]@Distribution@Closure[TSIndex,1,] <- ProjSim@OM@Fleet[[st]]@Distribution@Closure[TSIndex-1,1,]
+    ProjSim@OM@Fleet[[st]]@Distribution@Closure[TSIndex,fl,] <- ProjSim@OM@Fleet[[st]]@Distribution@Closure[TSIndex-1,fl,]
   }
   ProjSim
 }
 
 
 UpdateRetention <- function(ProjSim, MPAdvice, TSIndex) {
-  stop("TODO")
+  UpdateSelectivity(ProjSim, MPAdvice, TimeStep, 'Retention')
 }
 
 
 UpdateDiscardMortality <- function(ProjSim, MPAdvice, TSIndex) {
-  stop("TODO")
+  if (EmptyObject(MPAdvice@DiscardMortality))
+    return(ProjSim)
+  
+  # *************************** # 
+  st <- 1
+  fl <- 1
+  # *************************** #
+  if (length(MPAdvice@DiscardMortality@MeanAtAge)>0) {
+    stop("Discard mortality TODO")
+    
+    # check its length age@Classes
+    # calc DiscMatLength
+    ProjSim@OM@Fleet[[st]]@DiscardMortality@MeanAtAge[,TSIndex,fl]
+  }
+  # repeat for MeanAtLength
+  ProjSim
+  
+  
 }
   
-UpdateSelectivity <- function(ProjSim, MPAdvice, TimeStep) {
+UpdateSelectivity <- function(ProjSim, MPAdvice, TimeStep, type='Selectivity') {
   TimeStepsAll <- TimeSteps(ProjSim@OM)
   TSIndex <- match(TimeStep, TimeStepsAll)
   
-  Selectivity <- MPAdvice@Selectivity
+  # *************************** # 
+  st <- 1
+  fl <- 1
+  # *************************** #
+  
+  Selectivity <- slot(MPAdvice,type)
   if (EmptyObject(Selectivity))
     return(ProjSim)
   
   # TODO checks
+  
+  if (!is.null(Selectivity@Misc$Type) && Selectivity@Misc$Type=="Weight") {
+    # Convert weight to length
+    len <- ProjSim@OM@Stock[[st]]@Length@MeanAtAge[,TSIndex]
+    wght <- ProjSim@OM@Stock[[st]]@Weight@MeanAtAge[,TSIndex]
+    SL95 <- LinInterp_cpp(wght, len, Selectivity@Pars$SL50+Selectivity@Pars$SL50_95) 
+    Selectivity@Pars$SL50 <- LinInterp_cpp(wght, len, Selectivity@Pars$SL50)
+    Selectivity@Pars$SL50_95 <- SL95 -Selectivity@Pars$SL50
+  }
+  
   Selectivity@Model <- FindModel(Selectivity)
   
   ModelClass <- getModelClass(Selectivity@Model)
@@ -68,7 +118,6 @@ UpdateSelectivity <- function(ProjSim, MPAdvice, TimeStep) {
     Selectivity@MeanAtLength <- GenerateMeanatLength(Model=Selectivity@Model,
                                                      Pars=Selectivity@Pars,
                                                      Length=Length@Classes)
-    
     dimnames(Selectivity@MeanAtLength) <- list(Sim=1,
                                                Class=LengthClasses,
                                                TimeStep=TimeStep)
@@ -78,16 +127,16 @@ UpdateSelectivity <- function(ProjSim, MPAdvice, TimeStep) {
   
   Selectivity <- MeanAtLength2MeanAtAge(Selectivity, Length, Ages, nsim=1,
                                         TimeSteps=TimeStep)
-  
-  
-  # *************************** # 
-  fl <- 1
-  # *************************** # 
-
-  ProjSim@OM@Fleet[[st]]@Selectivity@MeanAtLength[,TSIndex,fl] <- Selectivity@MeanAtLength[1,,1]
-  ProjSim@OM@Fleet[[st]]@Selectivity@MeanAtAge[,TSIndex,fl] <- Selectivity@MeanAtAge[1,,1]
-  
-  
+  if (type=="Selectivity") {
+    ProjSim@OM@Fleet[[st]]@Selectivity@MeanAtLength[,TSIndex,fl] <- Selectivity@MeanAtLength[1,,1]
+    ProjSim@OM@Fleet[[st]]@Selectivity@MeanAtAge[,TSIndex,fl] <- Selectivity@MeanAtAge[1,,1]
+  } else if (type=="Retention") {
+    ProjSim@OM@Fleet[[st]]@Retention@MeanAtLength[,TSIndex,fl] <- Selectivity@MeanAtLength[1,,1]
+    ProjSim@OM@Fleet[[st]]@Retention@MeanAtAge[,TSIndex,fl] <- Selectivity@MeanAtAge[1,,1]
+  } else{
+    stop("type must be `Selectivity` or `Retention`")
+  }
+ 
   ProjSim
 }
 
@@ -131,23 +180,18 @@ ApplyMPInternal <- function(ProjSim, MP, TimeStep) {
   # otherwise selectivity in projection years will revert back to original OM
   
   ProjSim <- ProjSim |> 
-    UpdateSpatial(MPAdvice, TSIndex) |>
+    UpdateSpatial(MPAdvice, TimeStep) |>
     UpdateSelectivity(MPAdvice, TimeStep) |>
     UpdateRetention(MPAdvice, TimeStep) |>
     UpdateDiscardMortality(MPAdvice, TimeStep) |>
     UpdateTAC(MPAdvice, TimeStep) |>
-    UpdateEffort(MPAdvice, TSIndex) 
+    UpdateEffort(MPAdvice, TimeStep) 
 
   # apply bioeconomic ...
   
-  EmptyObject(MPAdvice@Retention)
-
-  # - update selectivity, vulnerability, discard mortality from MP
-  # - update closed area from MP
-  
   # - calculate Effort from TAC (if applicable)
   # - apply BioEconomic to Effort
-  # - return Effort, Selectivity, Vuln, Discard, Closure
+  
   
   ProjSim
 }

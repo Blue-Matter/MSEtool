@@ -1,27 +1,44 @@
 
 
 setClass('CatchObs',
-         slots=c(Error='num.array',
-                 Bias='num.array',
-                 Time='num.null',
-                 Misc='MiscClass')
+         slots=c(CV='num.array', # numeric length 1, length 2, or length nSim
+                 Error='num.array', # numeric array nsim by nTS
+                 Bias='num.array',  # numeric length 1, length 2, or length nSim
+                 TimeSteps='char.num',
+                 Type='character'), # 'removals' or 'landings'
+         contains='MiscClass'
 )
+
+setMethod("initialize", "CatchObs", function(.Object,
+                                         CV=numeric(),
+                                         Error=numeric(),
+                                         Bias=numeric(),
+                                         TimeSteps=NULL,
+                                         Type='removals') {
+  .Object@CV <- CV
+  .Object@Error <- Error
+  .Object@Bias <- Bias
+  .Object@TimeSteps <- TimeSteps
+  .Object@Type <- Type
+  .Object
+})
+
 
 setClass('IndexObs',
          slots=c(
            Error='num.array',
            Beta='num.array',
-           Time='num.null',
-           Misc='MiscClass'
-         )
+           Time='num.null'
+         ),
+         contains='MiscClass'
 )
 
 setClass('CompObs',
          slots=c(
            ESS='num.array', # nSim, nTS
-           Time='num.null',
-           Misc='MiscClass'
-         )
+           Time='num.null'
+         ),
+         contains='MiscClass'
 )
 
 
@@ -35,13 +52,14 @@ setClass('obs',
          slots=c(Catch='CatchObs',
                  Index='IndexObs',
                  CAA='CompObs',
-                 CAL='CompObs',
-                 Misc='MiscClass' 
-         ))
+                 CAL='CompObs'
+         ),
+         contains='MiscClass')
 
 
 
-
+#' @describeIn ObsClass description
+#' @export
 Obs <- function(object=NULL) {
   if (inherits(object, 'om'))
     return(object@Obs)
@@ -67,6 +85,6 @@ setMethod("initialize", "obs", function(.Object) {
 #' @param value An `obs` class object to assign to `x`
 #' @export
 `Obs<-` <- function(x, value) {
-  assignSlot(x, value, 'Data')
+  assignSlot(x, value, 'Obs')
 }
 

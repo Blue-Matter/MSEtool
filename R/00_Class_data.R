@@ -3,9 +3,8 @@
 #' @include 00_Class_unions.R
 #' @include 00_Class_child.R
 setClass("catch",
-         slots=c(Time='numeric',
-                 Value='array.null',
-                 CV='numeric',
+         slots=c(Value='array.null',
+                 CV='array.null',
                  Units='char.null',
                  Type='char.null' # removals or landings
          )
@@ -18,9 +17,8 @@ methods::setClassUnion("catch.list", c("catch", "list", 'NULL'))
 #' @include 00_Class_unions.R
 #' @include 00_Class_child.R
 setClass("index",
-         slots=c(Time='numeric',
-                 Value='array.null',
-                 CV='numeric',
+         slots=c( Value='array.null',
+                 CV='array.null',
                  Timing='numeric',
                  Misc="MiscClass"
          )
@@ -33,8 +31,7 @@ methods::setClassUnion("index.list", c("index", "list", 'NULL'))
 #' @include 00_Class_unions.R
 #' @include 00_Class_child.R
 setClass("composition",
-         slots=c(Time='numeric',
-                 Classes='num.null',
+         slots=c(Classes='num.null',
                  Value='array.null',
                  Units='char.null',
                  Misc="MiscClass"
@@ -86,15 +83,16 @@ setClass('data',
                  Longitude='num.null',
                  
                  Time='num.null', # should be in fraction of year - or convert Date to fraction year
+                 TimeLH='num.null', # last historical time step
                  Units='char.null', # time units - same as `Ages`
                  
-                 Catch='catch.list',
+                 Catch='catch.list',  # always is removals
                  Index='index.list',
                  CAA='comp.list',
-                 CAL='comp.list',
-                 Misc='MiscClass' # add last historical time year
-                 
-         ))
+                 CAL='comp.list'
+         ),
+         contains ='MiscClass'
+         )
 
 
 

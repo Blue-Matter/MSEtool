@@ -270,9 +270,13 @@ DropDimension <- function(array, name='Area', warn=TRUE) {
   if (d[ind]>1 & warn) 
     cli::cli_alert_warning('Note: Dropping dimension {.val {name}} but dimension length is > 1. Use `warn=FALSE` to suppress')
   
+  dNames <- dimnames(array)[-ind]
   
   array <- abind::asub(array, 1, ind, drop=FALSE) |>
     abind::adrop(ind)
+  
+  if (!inherits(array, 'array'))
+    array <- array(array, dimnames=dNames)
   array
 }
 
