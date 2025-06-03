@@ -127,6 +127,7 @@ Collate:
     'MOM_object.r'
     'Convert.R'
     'DFO.R'
+    'Data.R'
     'Data2csv.R'
     'Data_Functions.R'
     'Data_Plotting.R'
