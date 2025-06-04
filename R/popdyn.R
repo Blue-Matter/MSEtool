@@ -1214,7 +1214,7 @@ CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
   }
   
   # Calculate MP recs with Imp Error 
-  MPRecs_Imp <- MSEtool:::calc_recs(MPRecs, y, LastTAE, Effort_Imp_Error, nsim, histTAE, LastSpatial, StockPars, LastAllocat)
+  MPRecs_Imp <- calc_recs(MPRecs, y, LastTAE, Effort_Imp_Error, nsim, histTAE, LastSpatial, StockPars, LastAllocat)
   TAE_err <- MPRecs_Imp$TAE_err # Total allowable effort recommendation
   Si <- MPRecs_Imp$Si # spatial 
   Ai <- MPRecs_Imp$Ai # allocation

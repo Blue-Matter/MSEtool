@@ -1,10 +1,10 @@
 ## Note to CRAN Maintainers
 
-Minor but important patch
+Minor patch and fix issue on CRAN Package Check 
 
 
 ## Test environments
-* local - Windows 4.4.1
+* local - Windows 4.4.2
 * Github actions - windows-latest (release)
 * Github actions - windows-latest (devel)
 * Github actions - macOS-latest (release)

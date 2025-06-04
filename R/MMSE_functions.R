@@ -72,7 +72,7 @@ addMMPs <- function(MMSEobjs) {
   
   MMSE@RefPoint <- local({
     Refout <- list()
-    Refout$ByYear <- lapply(MMSEobjs, function(x) x@RefPoint$ByYear) %>% MSEtool:::join_list_of_arrays(along = 3)
+    Refout$ByYear <- lapply(MMSEobjs, function(x) x@RefPoint$ByYear) %>% join_list_of_arrays(along = 3)
     Refout$Dynamic_Unfished <- MMSEobjs[[1]]@RefPoint$Dynamic_Unfished
     Refout
   })

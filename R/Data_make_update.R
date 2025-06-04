@@ -524,7 +524,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   CNtemp[is.na(CNtemp)] <- tiny
   CNtemp[!is.finite(CNtemp)] <- tiny
 
-  CAA <- simCAA(nsim, yr = length(yind), StockPars$maxage+1, Cret = CNtemp[, , yind, drop = FALSE], ObsPars$CAA_ESS, ObsPars$CAA_nsamp)
+  CAA <- simCAA(nsim, length(yind), StockPars$maxage+1, Cret = CNtemp[, , yind, drop = FALSE], ObsPars$CAA_ESS, ObsPars$CAA_nsamp)
   Data@CAA[, nyears + yind, ] <- CAA
 
   # --- Catch-at-length ----

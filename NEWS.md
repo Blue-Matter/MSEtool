@@ -1,6 +1,6 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
-# MSEtool 3.7.9999
+# MSEtool 3.7.4
 
 ## Fixes
 - Fixed issue where TAC was being applied to landings rather than removals 
