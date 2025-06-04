@@ -36,7 +36,6 @@ SimulateDEV <- function(OM=NULL,
   
   # ---- Optimize for Final Depletion ----
   
-   
   # EXTREMELY SLOW
   # future::plan(future::multisession, workers = 6)
   # tictoc::tic()
@@ -44,12 +43,21 @@ SimulateDEV <- function(OM=NULL,
   #                                   OptimizeCatchability(HistSim))
   # tictoc::toc()
   
+ 
+  # for (i in 1:length(HistSimList))
+       # HistSimList[[i]]@OM@Fleet$`Day octopus`@Effort@Catchability[] <- tiny
+       
+  # tictoc::tic()
   HistSimList <- purrr::map(HistSimList, \(HistSim) 
                             OptimizeCatchability(HistSim),
                             .progress = list(
                               type = "iterator", 
                               format = "Optimizing catchability (q) for Final Depletion {cli::pb_bar} {cli::pb_percent}",
                               clear = TRUE))
+  # tictoc::toc()
+  
+ 
+  
   
 
   # ---- Calculate Reference Points ----
@@ -64,6 +72,17 @@ SimulateDEV <- function(OM=NULL,
                          format = "Simulating Historical Fishery {cli::pb_bar} {cli::pb_percent}",
                          clear = TRUE))
   
+  # ---- Check for Depletion Optimization ----
+ 
+  # TODO 
+  # B0 <- Hist@Unfished@Equilibrium@Biomass[,1,1:360]
+  # B <- Hist@Biomass[,1,]
+  # B <- B/B0
+  # matplot(t(B), type='l', ylim=c(0,1.2))
+  # 
+  # which(B[,360] > 0.4)
+   
+
   # ---- Historical Fishery Data ----
   HistSimList <- purrr::map(HistSimList, \(x) 
                             GenerateHistoricalData(x),
@@ -97,8 +116,8 @@ SimulateDEV <- function(OM=NULL,
 
   
   # make Hist object
-  HistSimList2Hist(Hist, HistSimList)
-
+  Hist <- HistSimList2Hist(Hist, HistSimList)
+  Hist
   
 }
 

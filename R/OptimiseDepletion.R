@@ -4,7 +4,7 @@ OptimizeCatchability <- function(HistSim) {
   
   # TODO add qinc, qvar etc for historical and projection
   
-  bounds <- c(1e-03, 15)
+  bounds <- c(1e-02, 3)
   tol <- 1E-5
   silent <- TRUE
   
@@ -57,11 +57,32 @@ OptimizeCatchability <- function(HistSim) {
       if (q1>tiny)
         return(HistSim)
       
-      doOpt <- optimize(OptCatchability,
-                        log(bounds), 
+      
+      doOpt <- stats::optimize(OptCatchability,
+                        log(bounds),
                         HistSim=HistSim,
                         tol=tol)
       pars <- doOpt$minimum
+      
+      # qs <- seq(0.01, 0.5, length.out=100)
+      # obj <- rep(NA, 100)
+      # for (i in seq_along(qs)) {
+      #   obj[i] = OptCatchability(log(qs[i]), HistSim)
+      # }
+      # 
+      # plot(qs, obj)
+      # qs[which.min(obj)]
+      
+      
+      if (any(abs(exp(pars) - bounds) < 0.01)) {
+        # more robust than optimize but slower
+        doOpt <- stats::nlminb(mean(log(bounds)),
+                               OptCatchability,
+                               HistSim=HistSim,
+                               lower=log(bounds[1]),
+                               upper=log(bounds[2]))
+        pars <- doOpt$par
+      }
       
     }
     
@@ -83,7 +104,7 @@ OptimizeCatchability <- function(HistSim) {
     HistSim
 }
 
-OptCatchability <- function(pars, HistSim) {
+OptCatchability <- function(pars, HistSim, debug=FALSE) {
   
   nStock <- nStock(HistSim@OM)
   nFleet <- nFleet(HistSim@OM)
@@ -118,8 +139,8 @@ OptCatchability <- function(pars, HistSim) {
   TermInd <- match(max(TimeStepsHist), TimeStepsAll)
   
   PopDynamicsHistorical <- SimulateDynamics_(HistSim, 
-                                                    TimeStepsHist, 
-                                                    CalcCatch = 0)
+                                             TimeStepsHist, 
+                                             CalcCatch = 0)
 
   # Depletion objective
   PredDep <- rep(NA, nStock)
@@ -134,7 +155,22 @@ OptCatchability <- function(pars, HistSim) {
     PredDep[st] <- slot(PopDynamicsHistorical, var)[st,TermInd]/RefVal
   }
   
+  
+
   depOBJ <- sum(log(PredDep/DepletionTarget)^2)
+  
+  if (debug) {
+    print("*******************")
+    print(paste("Pars = ", exp(pars)))
+    print(paste("Depletion  = ", PredDep))
+    print(paste("DepletionTarget  = ", DepletionTarget))
+    print(paste("Objective = ", depOBJ))
+    print("*******************")
+    cat("\n")
+    return(PopDynamicsHistorical)
+  }
+  
+
   
   # TODO need to do SPFrom for Depletion sharing ---
   

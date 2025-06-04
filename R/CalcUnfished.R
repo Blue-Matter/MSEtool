@@ -90,7 +90,7 @@ CalcDynamicUnfished <- function(HistSimList, silent=FALSE) {
                                                        TimeSteps=TimeSteps, values=list(StockNames(x@OM)))
     x
     
-  })
+  }, .progress = 'Calculating Dynamic Unfished')
   out
 }
 

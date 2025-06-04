@@ -217,7 +217,7 @@ S4 SimulateDynamics_(S4 HistSimIn,
         arma::vec RecDevHist = SRR.slot("RecDevHist");
         arma::vec RecDevProj = SRR.slot("RecDevProj");
         arma::vec RecDevs = join_cols(RecDevHist, RecDevProj);
-
+        
         Function SRRModel = SRR.slot("Model");
         List SRRPars = SRR.slot("Pars");
       
@@ -232,8 +232,7 @@ S4 SimulateDynamics_(S4 HistSimIn,
                                            SRRModel,
                                            SRRPars,
                                            TSindex);
-     
-         // Rcout << "Recruits = " << Recruits << std::endl;
+        
         // Distribute Recruits
       
         arma::cube UnfishedDist = Spatial.slot("UnfishedDist"); // nArea, nAge, nTS;
@@ -242,10 +241,8 @@ S4 SimulateDynamics_(S4 HistSimIn,
         for (int area=0; area<nArea; area++) {
           recruitArea(area) = Recruits * arma::as_scalar(UnfishedDist(arma::span(area), arma::span(0), arma::span(TSRec)));
         }
-  
         NumberAtAgeArea.subcube(0, TSRec, 0, 0, TSRec, nArea-1) = recruitArea;
-        }
-      
+      }
 
       if (TSindex <(nTSnumber-1)) {
         
