@@ -318,8 +318,8 @@ CalcMaxBin <- function(MeanAtAge, CVatAge, TruncSD=2, dist='normal') {
     d2 <- dim(CVatAge)
     ind2 <- expand.grid(1:d2[1], 1:d2[2], 1:d2[3]) |> as.matrix()
     MeanAtAge[MeanAtAge<=0] <- 1E-6
-    MeanAtAge <- log(MeanAtAge[ind1]) - -0.5*CVatAge[ind2]^2
-    MaxBin <- max(exp(MeanAtAge[ind1] + TruncSD * CVatAge[ind2])) |> ceiling()
+    logMeanAtAge <- ArraySubtract(MeanAtAge, -0.5*CVatAge^2) |> log()
+    MaxBin <- max(exp(logMeanAtAge + TruncSD * CVatAge[ind2])) |> ceiling() 
   } else {
     cli::cli_abort('{.code {dist}} is not valid for `Dist` slot. Options are `normal` or `lognormal`')
   }
@@ -331,7 +331,10 @@ PopulateClasses <- function(object) {
   if (!EmptyObject(object@Classes))
     return(object)
   
-  MaxBin <- CalcMaxBin(object@MeanAtAge, object@CVatAge, object@TruncSD, object@Dist)
+  MaxBin <- CalcMaxBin(MeanAtAge=object@MeanAtAge, 
+                       CVatAge=object@CVatAge, 
+                       TruncSD=object@TruncSD, 
+                       dist=object@Dist)
   bins <- seq(0, to=MaxBin, length.out=40) |> round(2)
   by <- bins[2] - bins[1]
   
@@ -519,7 +522,6 @@ MeanAtLength2MeanAtAge <- function(object, Length, Ages, nsim, TimeSteps, seed, 
     }
   }
   
-  object@Classes <- Length@Classes
   object
 }
 

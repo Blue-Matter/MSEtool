@@ -381,19 +381,21 @@ setMethod("show", "om", function(object) {
 
 ## --- CheckList Object ----
 
-#' @describeIn show Print a `CheckList` object
-setMethod('show', 'CheckList', function(object) {
+# Clashes with Slick - need new object class name
 
-  cli::cli_h3('Checking')
-
-  if (is.list(object@empty)) {
-    print_list(object)
-  } else {
-    print_single(object)
-  }
-})
-
-
+# #' @describeIn show Print a `CheckList` object
+# setMethod('show', 'CheckList', function(object) {
+# 
+#   cli::cli_h3('Checking')
+# 
+#   if (is.list(object@empty)) {
+#     print_list(object)
+#   } else {
+#     print_single(object)
+#   }
+# })
+# 
+# 
 
 
 ## --- Supporting Functions ----

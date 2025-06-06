@@ -310,7 +310,7 @@ OM <- function(Name='A new `OM` object',
 }
 
 validOMobject <- function(object) {
-  chk <- Check(object)
+  # chk <- Check(object)
   if (chk@empty) return(TRUE)
   if (length(chk@errors)>0) return(chk@errors)
   TRUE

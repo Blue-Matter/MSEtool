@@ -155,7 +155,7 @@ PopulateOM <- function(OM, silent=FALSE) {
 #' @export
 PopulateStock <- function(stock, 
                           ALK=TRUE, 
-                          AWK=FALSE, 
+                          AWK=TRUE, 
                           seed=NULL, 
                           silent=FALSE) {
   
@@ -183,7 +183,7 @@ PopulateStock <- function(stock,
                                  seed=seed,
                                  silent=silent)
   
-  stock@Weight <- PopulateWeight(stock@Weight,
+  stock@Weight <- PopulateWeight(Weight=stock@Weight,
                                  Ages=stock@Ages,
                                  Length=stock@Length,
                                  nSim(stock),

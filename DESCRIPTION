@@ -60,8 +60,8 @@ LinkingTo:
 BugReports: https://github.com/Blue-Matter/MSEtool/issues
 URL: https://msetool.openmse.com/
 Collate: 
-    '00_Class_unions.R'
     '00_Class_CheckList.R'
+    '00_Class_unions.R'
     '00_Class_child.R'
     '00_Class_discardmortality.R'
     '00_Class_retention.R'
