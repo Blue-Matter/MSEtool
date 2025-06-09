@@ -30,7 +30,7 @@ PopulateOM <- function(OM, silent=FALSE) {
     return(OM)
   
   # TODO - object check
-  chk <- Check(OM)
+  # chk <- Check(OM)
   
   nStocks <- nStock(OM)
   nFleets <- nFleet(OM)
@@ -63,6 +63,9 @@ PopulateOM <- function(OM, silent=FALSE) {
     stockList[[st]] <- PopulateStock(stock, 
                                      seed=OM@Seed, 
                                      silent=silent)
+    
+    OM@Stock@Weight@MeanAtAge
+    stockList[[st]]@Weight@MeanAtAge
     
     names(stockList)[st] <- stock@Name
     names(fleetList)[st] <- names(stockList)[st]
@@ -203,6 +206,7 @@ PopulateStock <- function(stock,
   stock@Maturity <- PopulateMaturity(Maturity=stock@Maturity,
                                      Ages=stock@Ages,
                                      Length=stock@Length,
+                                     Weight=stock@Weight,
                                      nsim=nSim(stock),
                                      TimeSteps=TimeSteps(stock),
                                      seed=seed,
@@ -289,7 +293,7 @@ PopulateWeight <- function(Weight,
                            nsim=NULL,
                            TimeSteps=NULL,
                            ASK=FALSE,
-                           CalcAtLength=FALSE,
+                           CalcAtLength=TRUE,
                            seed=NULL,
                            silent=FALSE) {
   TimeSteps <- TimeStepAttributes(Weight, TimeSteps)
@@ -308,7 +312,7 @@ PopulateWeight <- function(Weight,
   if (!is.null(ModelClass)) {
     if (grepl('at-Length',getModelClass(Weight@Model))) {
       CheckRequiredObject(Length, 'length', 'Length')
-      chk <- Check(Length, silent=TRUE)
+      # chk <- Check(Length, silent=TRUE)
       if (!chk@populated) {
         CheckRequiredObject(Ages, 'ages', 'Ages')
         Length <- Populate(Length, Ages, nsim, TimeSteps, seed, ASK=TRUE, silent)
@@ -321,9 +325,11 @@ PopulateWeight <- function(Weight,
   }
   
   Weight <- MeanAtLength2MeanAtAge(Weight, Length, Ages, nsim, TimeSteps, seed, silent)
-  if (CalcAtLength)
-    Weight <- MeanAtAge2MeanAtLength(Weight, Length, Ages, nsim, TimeSteps, seed, silent)
   
+  if (CalcAtLength) {
+    Weight <- MeanAtAge2MeanAtLength(Weight, Length, Ages, nsim, TimeSteps, seed, silent)
+  }
+    
   Weight <- PopulateRandom(Weight)
   Weight@CVatAge <- StructureCV(Weight@CVatAge, nsim)
   dd <- dim(Weight@CVatAge)
@@ -334,6 +340,9 @@ PopulateWeight <- function(Weight,
   if (is.null(Weight@CVatAge))
     ASK <- FALSE
   
+  Weight@MeanAtAge <- AddDimNames(Weight@MeanAtAge, TimeSteps=TimeSteps)
+  Weight@CVatAge <- AddDimNames(Weight@CVatAge, TimeSteps=TimeSteps)
+
   if (ASK) {
     Weight <- PopulateClasses(Weight)
     Weight <- PopulateASK(Weight, Ages, TimeSteps, silent, type='Weight')
@@ -390,6 +399,7 @@ PopulateNaturalMortality <- function(NaturalMortality,
 PopulateMaturity <- function(Maturity,
                              Ages=NULL,
                              Length=NULL,
+                             Weight=NULL,
                              nsim=NULL,
                              TimeSteps=NULL,
                              CalcAtLength=TRUE,
@@ -413,6 +423,13 @@ PopulateMaturity <- function(Maturity,
     if (grepl('at-Length',getModelClass(Maturity@Model))) {
       Maturity <- PopulateMeanAtLength(Maturity, Length, TimeSteps, Ages, nsim,
                                      seed, silent)
+    } else if (grepl('at-Weight',getModelClass(Maturity@Model))) {
+      MaturityTemp <- PopulateMeanAtWeight(Maturity, Weight, TimeSteps, Ages, nsim,
+                                       seed, silent)
+      
+      Maturity <- MeanAtWeight2MeanAtAge(MaturityTemp, Weight, Ages, nsim, TimeSteps,
+                                       seed, silent)
+      
     } else {
       Maturity <- PopulateMeanAtAge(Maturity, Ages, TimeSteps)
     }
@@ -463,7 +480,7 @@ PopulateFecundity <- function(Fecundity,
     
     Weight <- PopulateWeight(Weight, Ages, Length, nsim, TimeSteps,
                        seed=seed, ASK=FALSE)
-    Maturity <- PopulateMaturity(Maturity, Ages, Length, nsim, TimeSteps,
+    Maturity <- PopulateMaturity(Maturity, Ages, Length, Weight, nsim, TimeSteps,
                          seed=seed)
     
     Fecundity@MeanAtAge <- ArrayMultiply(array1=Weight@MeanAtAge,
@@ -491,7 +508,7 @@ PopulateFecundity <- function(Fecundity,
       CheckRequiredObject(Length, 'length', 'Length')
       CheckRequiredObject(Maturity, 'maturity', 'Maturity')
       
-      Weight <- PopulateWeight(Weight, Ages, Length, nsim, TimeSteps,
+      Weight <- PopulateWeight(Weight, Ages, Length, Weight, nsim, TimeSteps,
                          seed=seed, ASK=FALSE)
       Maturity <- PopulateMaturity(Maturity, Ages, Length, nsim, TimeSteps, seed=seed)
       Fecundity@MeanAtAge <- ArrayMultiply(array1=Weight@MeanAtAge,
@@ -791,11 +808,12 @@ PopulateFleet <- function(Fleet,
                                      seed=seed,
                                      silent)
   
-  Fleet@Selectivity <- PopulateSelectivity(Fleet@Selectivity,
+  Fleet@Selectivity <- PopulateSelectivity(Selectivity=Fleet@Selectivity,
                                            FishingMortality=Fleet@FishingMortality,
                                            DiscardMortality=Fleet@DiscardMortality,
                                            Ages,
                                            Length,
+                                           Weight,
                                            nsim,
                                            TimeSteps,
                                            CalcAtLength=TRUE,
@@ -912,6 +930,7 @@ PopulateSelectivity <- function(Selectivity,
                                 DiscardMortality=NULL,
                                 Ages=NULL,
                                 Length=NULL,
+                                Weight=NULL,
                                 nsim=NULL,
                                 TimeSteps=NULL,
                                 CalcAtLength=TRUE,
@@ -920,8 +939,8 @@ PopulateSelectivity <- function(Selectivity,
                                 CheckMaxValue=TRUE) {
   
   TimeSteps <- TimeStepAttributes(Selectivity, TimeSteps)
-  argList <- list(FishingMortality, DiscardMortality, Ages, Length, 
-                  TimeSteps, nsim, CalcAtLength, seed)
+  argList <- list(FishingMortality, DiscardMortality, Ages, 
+                  Length, Weight, TimeSteps, nsim, CalcAtLength, seed)
   
   if (CheckDigest(argList, Selectivity))
     return(Selectivity)
@@ -944,6 +963,11 @@ PopulateSelectivity <- function(Selectivity,
                                           nsim,
                                           seed, 
                                           silent)
+    } else if (grepl('at-Weight',getModelClass(Selectivity@Model))) {
+      Temp <- PopulateMeanAtWeight(Selectivity, Weight, TimeSteps, Ages, nsim, seed, silent)
+      Selectivity <- MeanAtWeight2MeanAtAge(Temp, Weight, Ages, nsim, TimeSteps, seed, silent) 
+    
+      
     } else {
       Selectivity <- PopulateMeanAtAge(Selectivity, Ages, TimeSteps)
     }

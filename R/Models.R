@@ -12,7 +12,7 @@ PrintModelTable <- function(models, print=TRUE, Independent=NULL) {
                           Class=class(mod))
     if (print) {
       cli::cli_par()
-      cli::cli_text(paste0("{.strong Model:} {.help MSEtool2::", models[i],"}"))
+      cli::cli_text(paste0("{.strong Model:} {.help MSEtool::", models[i],"}"))
       cli::cli_text("{.strong Pars:} {.code {args[!other_index]}}")
 
       if (sum(other_index))
@@ -332,7 +332,7 @@ allometric_mat_length <- function(Length, Pars) {
 #' MaturityModels()
 NULL
 
-#' @describeIn MaturityModels Print a list of maturity-at-Age or maturity-at-Length models
+#' @describeIn MaturityModels Print a list of Maturity-at-Age, Maturity-at-Length models, or Maturity-at-Weight models
 #' @param full Logical. Provide a complete table (TRUE) or just the model names (FALSE)?
 #' @param print Logical. Print out the results (TRUE) or just return the data.frame (FALSE)?
 #'
@@ -340,7 +340,8 @@ NULL
 #' @export
 MaturityModels <- function(full=TRUE, print=TRUE) {
   ReturnModels(ModelClass=c('Maturity-at-Age-Model',
-                            'Maturity-at-Length-Model'),
+                            'Maturity-at-Length-Model',
+                            'Maturity-at-Weight-Model'),
                full, print)
 }
 
@@ -357,6 +358,15 @@ MaturityModelsLength <- function(full=TRUE, print=TRUE) {
 #' @export
 MaturityModelsAge <- function(full=TRUE, print=TRUE) {
   ReturnModels(ModelClass=c('Maturity-at-Age-Model'),
+               full, print)
+}
+
+
+#' @describeIn MaturityModels Print a list of valid Maturity-at-Weight models
+#'
+#' @export
+MaturityModelsWeight <- function(full=TRUE, print=TRUE) {
+  ReturnModels(ModelClass=c('Maturity-at-Weight-Model'),
                full, print)
 }
 
@@ -400,6 +410,18 @@ Maturity_at_Length_ <- function(Length, Pars) {
   }
   MAL
 }
+
+#' @describeIn MaturityModels Logistic maturity-at-weight model
+#' @param Weight A numeric vector of weights
+#' @param W50 Weight corresponding with 50% maturity
+#' @param W50_95 Interval between `W50` and weight at 95% maturity (`W95`)
+#' @export
+MaturityAtWeight <- function(Weight, W50, W50_95) {
+  Pars <- list(L50=Structure(W50, out=c('nsim', 'nTS'), req='nsim'),
+               L50_95=Structure(W50_95, out=c('nsim', 'nTS'), req='nsim'))
+  Maturity_at_Length_(Weight, Pars)
+}
+class(MaturityAtWeight) <- 'Maturity-at-Weight-Model'
 
 # Two-parameter logistic function asymptote at 1
 Logistic1 <- function(x, p50, p50_p95, max=1) {
@@ -744,7 +766,8 @@ NULL
 #' @export
 SelectivityModels <- function(full=TRUE, print=TRUE) {
   ReturnModels(ModelClass=c('Selectivity-at-Age-Model',
-                            'Selectivity-at-Length-Model'),
+                            'Selectivity-at-Length-Model',
+                            'Selectivity-at-Weight-Model'),
                full, print)
 }
 
@@ -764,6 +787,15 @@ SelectivityModelsAge <- function(full=TRUE, print=TRUE) {
                full, print)
 }
 
+
+#' @describeIn SelectivityModels Print a list of valid Selectivity-at-Weight models
+#'
+#' @export
+SelectivityModelsWeight <- function(full=TRUE, print=TRUE) {
+  ReturnModels(ModelClass=c('Selectivity-at-Weight-Model'),
+               full, print)
+}
+
 #' @describeIn SelectivityModels Logistic selectivity-at-length model
 #' @param Length A numeric vector of lengths
 #' @param SL50 Length corresponding with 50% selectivity
@@ -775,6 +807,7 @@ SelectivityAtLength <- function(Length, SL50, SL50_95) {
   Maturity_at_Length_(Length, Pars)
 }
 class(SelectivityAtLength) <- 'Selectivity-at-Length-Model'
+
 
 #' @describeIn SelectivityModels Double-normal selectivity-at-length model
 #' @param L5 Shortest length at which 5% of the population is vulnerable to
@@ -794,6 +827,17 @@ DoubleNormal <- function(Length, L5, LFS, Vmaxlen) {
   double_normal_(Length, Pars)
 }
 class(DoubleNormal) <- 'Selectivity-at-Length-Model'
+
+#' @describeIn SelectivityModels Double-normal selectivity-at-weight model
+#' @export
+SelectivityAtWeight <- function(Weight, W5, WFS, Vmaxweight) {
+  Pars <- list(L5=Structure(W5, out=c('nsim', 'nTS'), req='nsim'),
+               LFS=Structure(WFS, out=c('nsim', 'nTS'), req='nsim'),
+               Vmaxlen=Structure(Vmaxweight, out=c('nsim', 'nTS'), req='nsim'))
+  double_normal_(Weight, Pars)
+}
+class(SelectivityAtWeight) <- 'Selectivity-at-Weight-Model'
+
 
 double_normal_ <- function(Length, Pars) {
   

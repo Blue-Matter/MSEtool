@@ -125,8 +125,8 @@ GetLengthAtAge <- function(object, TimeSteps=NULL, process=TRUE) {
   GetMeanAtAge(object,  TimeSteps, process=process)
 }
 
-GetCVLengthAtAge <- function(object, TimeSteps=NULL, process=TRUE) {
-  GetCVAtAge(object,TimeSteps, process=process)
+GetCVLengthAtAge <- function(object, TimeSteps=NULL) {
+  GetCVAtAge(object,TimeSteps)
 }
 
 GetWeightAtAge <- function(object, TimeSteps=NULL, process=TRUE) {

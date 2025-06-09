@@ -10,7 +10,6 @@
 \alias{show,spatial-method}
 \alias{show,depletion-method}
 \alias{show,om-method}
-\alias{show,CheckList-method}
 \title{Generic show method}
 \usage{
 show(object)
@@ -30,8 +29,6 @@ show(object)
 \S4method{show}{depletion}(object)
 
 \S4method{show}{om}(object)
-
-\S4method{show}{CheckList}(object)
 }
 \arguments{
 \item{object}{Object to print to console}
@@ -42,7 +39,5 @@ Generic show method
 \section{Methods (by class)}{
 \itemize{
 \item \code{show(om)}: Print a \code{\link[=om-class]{om-class()}} object
-
-\item \code{show(CheckList)}: Print a \code{CheckList} object
 
 }}

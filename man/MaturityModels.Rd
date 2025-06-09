@@ -4,7 +4,9 @@
 \alias{MaturityModels}
 \alias{MaturityModelsLength}
 \alias{MaturityModelsAge}
+\alias{MaturityModelsWeight}
 \alias{MaturityAtLength}
+\alias{MaturityAtWeight}
 \alias{MaturityAtAge}
 \title{Maturity-at-Length or -Age Models}
 \usage{
@@ -14,7 +16,11 @@ MaturityModelsLength(full = TRUE, print = TRUE)
 
 MaturityModelsAge(full = TRUE, print = TRUE)
 
+MaturityModelsWeight(full = TRUE, print = TRUE)
+
 MaturityAtLength(Length, L50, L50_95)
+
+MaturityAtWeight(Weight, W50, W50_95)
 
 MaturityAtAge(Ages, A50, A50_95)
 }
@@ -28,6 +34,12 @@ MaturityAtAge(Ages, A50, A50_95)
 \item{L50}{Length corresponding with 50\% maturity}
 
 \item{L50_95}{Interval between \code{L50} and length at 95\% maturity (\code{L95})}
+
+\item{Weight}{A numeric vector of weights}
+
+\item{W50}{Weight corresponding with 50\% maturity}
+
+\item{W50_95}{Interval between \code{W50} and weight at 95\% maturity (\code{W95})}
 
 \item{Ages}{A numeric vector of ages}
 
@@ -45,13 +57,17 @@ Functions for generating maturity-at-age or -at-length.
 }
 \section{Functions}{
 \itemize{
-\item \code{MaturityModels()}: Print a list of maturity-at-Age or maturity-at-Length models
+\item \code{MaturityModels()}: Print a list of Maturity-at-Age, Maturity-at-Length models, or Maturity-at-Weight models
 
 \item \code{MaturityModelsLength()}: Print a list of valid Maturity-at-Length models
 
 \item \code{MaturityModelsAge()}: Print a list of valid Maturity-at-Age models
 
+\item \code{MaturityModelsWeight()}: Print a list of valid Maturity-at-Weight models
+
 \item \code{MaturityAtLength()}: Logistic maturity-at-length model
+
+\item \code{MaturityAtWeight()}: Logistic maturity-at-weight model
 
 \item \code{MaturityAtAge()}: Logistic maturity-at-age model
 

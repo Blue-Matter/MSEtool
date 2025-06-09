@@ -70,16 +70,17 @@ CheckRequiredObject <- function(object, class, argName=NULL) {
     
   }
   
-  tt <- methods('Check')
-  if (!any(grepl(paste0(class, '-method'), tt))) {
-    cli::cli_alert_warning("`Check` method doesn't exist for class {.code {class}}")
-    chk <- NULL
-  } else {
-    chk <- Check(object)
-    if(!chk@complete)
-      cli::cli_abort("{.code {argName}} is not complete. See {.code Check({.run {class}})}")
-  }
-  invisible(chk)
+  # tt <- methods('Check')
+  # if (!any(grepl(paste0(class, '-method'), tt))) {
+  #   cli::cli_alert_warning("`Check` method doesn't exist for class {.code {class}}")
+  #   chk <- NULL
+  # } else {
+  #   # chk <- Check(object)
+  #   # if(!chk@complete)
+  #   #   cli::cli_abort("{.code {argName}} is not complete. See {.code Check({.run {class}})}")
+  # }
+  # invisible(chk)
+  NULL
 }
 
 PopulateMeanAtAge <- function(object, Ages=NULL, TimeSteps=NULL, Length=NULL) {
@@ -159,11 +160,11 @@ PopulateMeanAtLength <- function(object,
     
     if ('Length' %in% args) {
       CheckRequiredObject(Length, 'length', 'Length')
-      chk <- Check(Length)
-      if(!chk@populated) {
-        CheckRequiredObject(Ages, 'ages', 'Ages')
-        Length <- Populate(Length, Ages, nsim, TimeSteps, seed, ASK=TRUE, silent)
-      }
+      # chk <- Check(Length)
+      # if(!chk@populated) {
+      #   CheckRequiredObject(Ages, 'ages', 'Ages')
+      #   Length <- Populate(Length, Ages, nsim, TimeSteps, seed, ASK=TRUE, silent)
+      # }
     }
     object@MeanAtLength <- GenerateMeanatLength(Model=object@Model,
                                                 Pars=object@Pars,
@@ -181,6 +182,52 @@ PopulateMeanAtLength <- function(object,
   object
 }
 
+PopulateMeanAtWeight <- function(object, 
+                                 Weight=NULL, 
+                                 TimeSteps=NULL, 
+                                 Ages=NULL, 
+                                 nsim=NULL,
+                                 seed=NULL, silent) {
+  
+  if (is.null(object@Model))
+    return(object)
+  
+  if (!is.null(object@MeanAtLength))
+    return(object)
+  
+  if (ParsNotEmpty(object@Pars)) {
+    
+    if (is.null(object@Model))
+      object@Model <- FindModel(object)
+    
+    args <- names(formals(object@Model))
+    
+    if ('Ages' %in% args)
+      return(object)
+    
+    if ('Weight' %in% args) {
+      CheckRequiredObject(Weight, 'weight', 'Weight')
+      # chk <- Check(Length)
+      # if(!chk@populated) {
+        # CheckRequiredObject(Ages, 'ages', 'Ages')
+        # Weight <- Populate(Weight, Ages, nsim, TimeSteps, seed, ASK=TRUE, silent)
+      # }
+    }
+    object@MeanAtLength <- GenerateMeanatWeight(Model=object@Model,
+                                                Pars=object@Pars,
+                                                Weight=Weight@Classes)
+    
+    if ('Units' %in% slotNames(object))
+      attributes(object@MeanAtLength)$Units <- object@Units
+    attributes(object@MeanAtLength)$TimeSteps <- TimeSteps
+    if (methods::is(Length, 'length')) {
+      attributes(object@MeanAtLength)$LengthClasses <- Length@Classes
+      attributes(object@MeanAtLength)$UnitsLength <- Length@Units
+    }
+    object@MeanAtLength <- AddDimNames(object@MeanAtLength, c('Sim', 'Class', 'TimeStep'), TimeSteps)
+  }
+  object
+}
 
 CalcSDatAge <- function(MeanAtAge, CVatAge) {
   
@@ -525,6 +572,40 @@ MeanAtLength2MeanAtAge <- function(object, Length, Ages, nsim, TimeSteps, seed, 
   object
 }
 
+MeanAtWeight2MeanAtAge <- function(object, Weight, Ages, nsim, TimeSteps, seed, silent,
+                                   max1=TRUE) {
+  if (!is.null(object@MeanAtAge))
+    return(object)
+  
+  CheckRequiredObject(Weight, 'weight')
+  CheckRequiredObject(Ages, 'ages')
+  
+  if (is.null(Weight@ASK)) 
+    return(object)
+  
+  object@MeanAtAge <- AtSize2AtAge(object, Weight) |>
+    AddDimNames(TimeSteps=TimeSteps)
+  
+  if ('Units' %in% slotNames(object))
+    attributes(object@MeanAtAge)$Units <- object@Units
+  attributes(object@MeanAtAge)$UnitsAge <- Ages@Units
+  
+  if (max1) {
+    maxValue <- apply(object@MeanAtAge, c(1,3), max)
+    ind <- maxValue<1
+    # TODO speed up loop
+    for (i in 1:nrow(ind)) {
+      for (j in 1:ncol(ind)) {
+        if (!ind[i,j])
+          next()
+        object@MeanAtAge[i,,j] <- object@MeanAtAge[i,,j]/max(object@MeanAtAge[i,,j], na.rm = TRUE)
+      }
+    }
+  }
+  
+  object
+}
+
 MeanAtAge2MeanAtLength <- function(object, Length, Ages, nsim, TimeSteps, seed, silent) {
   if (!is.null(object@MeanAtLength))
     return(object)
@@ -535,6 +616,9 @@ MeanAtAge2MeanAtLength <- function(object, Length, Ages, nsim, TimeSteps, seed, 
     cli::cli_alert_warning('Must supply populated `Length` object to calculate `MeanAtLength`')
     return(object)
   }
+  
+  if (EmptyObject(Length))
+    return(object)
   
   if (is.null(Length@ASK)) {
     Length <- PopulateLength(Length, Ages, nsim, TimeSteps, seed, ASK=TRUE, silent)
@@ -553,6 +637,36 @@ MeanAtAge2MeanAtLength <- function(object, Length, Ages, nsim, TimeSteps, seed, 
   object@Classes <- Length@Classes
   object
   
+}
+
+MeanAtAge2MeanAtWeight <- function(object, Weight, Ages, nsim, TimeSteps, seed, silent) {
+  if (!is.null(object@MeanAtLength))
+    return(object)
+  
+  CheckRequiredObject(Ages, 'ages')
+  
+  if (!methods::is(Weight, 'weight')) {
+    cli::cli_alert_warning('Must supply populated `Weight` object to calculate `MeanAtWeight`')
+    return(object)
+  }
+  
+  if (EmptyObject(Weight))
+    return(object)
+  
+  if (is.null(Weight@ASK)) 
+    return(object)
+  
+  object@MeanAtLength <- AtAge2AtSize(object, Weight)
+  
+  if ('Units' %in% slotNames(object))
+    attributes(object@MeanAtLength)$Units <- object@Units
+  attributes(object@MeanAtLength)$TimeSteps <- TimeSteps
+  
+  # attributes(object@MeanAtLength)$ClassesLength <- Length@Classes
+  # attributes(object@MeanAtLength)$UnitsLength <- Length@Units
+  
+  object@Classes <- Weight@Classes
+  object
   
 }
 

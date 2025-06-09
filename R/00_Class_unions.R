@@ -1,9 +1,9 @@
 
 
 isValidObject <- function(object) {
-  chk <- Check(object)
-  if (chk@empty) return(TRUE)
-  if (length(chk@errors)>0) return(chk@errors)
+  # chk <- Check(object)
+  # if (chk@empty) return(TRUE)
+  # if (length(chk@errors)>0) return(chk@errors)
   TRUE
 }
 

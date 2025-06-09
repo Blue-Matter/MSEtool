@@ -427,24 +427,23 @@
 # }
 # 
 # 
-# 
-# CheckPars <- function(Pars) {
-#   if (length(Pars)<1)
-#     return(Pars)
-# 
-#   if (any(nchar(names(Pars))==0)) {
-#     cli::cli_abort('`Pars` must be a named list (or an empty list or NULL)')
-#   }
-#   Pars
-# }
-# 
-# CheckModel <- function(object) {
-#   fun <- paste0(firstup(class(object)), 'Models')
-#   nms <-  names(object@Pars)
-#   cli::cli_abort(c(
-#     'No model found for this object class {.val {class(object)}} with parameters named: {.val { nms }}.',
-#     'i'='See {.fun { fun}} or set `Pars` to NULL or `Model` to a R function with arguments corresponding with those in `Pars`.')
-#   )
-# }
-# 
-# 
+
+CheckPars <- function(Pars) {
+  if (length(Pars)<1)
+    return(Pars)
+
+  if (any(nchar(names(Pars))==0)) {
+    cli::cli_abort('`Pars` must be a named list (or an empty list or NULL)')
+  }
+  Pars
+}
+
+CheckModel <- function(object) {
+  fun <- paste0(firstup(class(object)), 'Models')
+  nms <-  names(object@Pars)
+  cli::cli_abort(c(
+    'No model found for this object class {.val {class(object)}} with parameters named: {.val { nms }}.',
+    'i'='See {.fun { fun}} or set `Pars` to NULL or `Model` to a R function with arguments corresponding with those in `Pars`.')
+  )
+}
+

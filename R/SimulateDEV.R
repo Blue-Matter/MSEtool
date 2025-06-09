@@ -14,7 +14,7 @@ SimulateDEV <- function(OM=NULL,
   #   messages <- FALSE
 
   # ---- Initial Checks and Setup ----
-  chk <- Check(OM) # TODO OM checks
+  # chk <- Check(OM) # TODO OM checks
   
   OM <- StartUp(OM) 
   

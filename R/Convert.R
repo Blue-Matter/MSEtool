@@ -105,6 +105,7 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
       om@Stock@Maturity <- PopulateMaturity(Maturity=om@Stock@Maturity,
                                             Ages=om@Stock@Ages,
                                             Length=om@Stock@Length,
+                                            Weight=om@Stock@Weight,
                                             nsim=om@nSim,
                                             TimeSteps(om),
                                             CalcAtLength=TRUE,

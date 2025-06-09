@@ -9,7 +9,7 @@ FindModels <- function(ModelClass) {
 }
 
 
-FindModel <- function(object, ignore=c('Ages', 'Length', 'nage', 'AtAge', 'MaxLen',
+FindModel <- function(object, ignore=c('Ages', 'Length', 'Weight', 'nage', 'AtAge', 'MaxLen',
                                        'S0', 'S', 'R0')) {
 
   

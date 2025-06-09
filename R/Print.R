@@ -42,7 +42,7 @@ setMethod('show', 'stock', function(object) {
   
 
   cli::cli_end()
-  print(Check(object))
+  # print(Check(object))
   
 })
 
@@ -70,7 +70,7 @@ setMethod('show', 'ages', function(object) {
   cli::cli_text("{.val {object@PlusGroup}}")
   cli::cli_end()
 
-  print(Check(object))
+  # print(Check(object))
 
 })
 
@@ -116,7 +116,7 @@ setMethod('show', 'length', function(object) {
 
 
   cli::cli_end()
-  print(Check(object))
+  # print(Check(object))
 })
 
 
@@ -163,7 +163,7 @@ setMethod('show', 'weight', function(object) {
 
 
   cli::cli_end()
-  print(Check(object))
+  # print(Check(object))
 
 })
 
@@ -195,7 +195,7 @@ setMethod('show', 'naturalmortality', function(object) {
   }
 
   cli::cli_end()
-  print(Check(object))
+  # Check(object)
 })
 
 
@@ -227,7 +227,7 @@ setMethod('show', 'maturity', function(object) {
   }
 
   cli::cli_end()
-  print(Check(object))
+  # Check(object)
 
 })
 
@@ -262,7 +262,7 @@ setMethod('show', 'fecundity', function(object) {
   }
 
   cli::cli_end()
-  print(Check(object))
+  # Check(object)
 
 })
 
@@ -301,7 +301,7 @@ setMethod('show', 'srr', function(object) {
   cli::cli_text('{.val { object@SpawnTimeFrac}}')
 
   cli::cli_end()
-  print(Check(object))
+  # Check(object)
 
 })
 
@@ -316,7 +316,7 @@ setMethod('show', 'spatial', function(object) {
   cli::cli_inform('...')
 
   cli::cli_end()
-  print(Check(object))
+  # print(Check(object))
 
 })
 
@@ -332,7 +332,7 @@ setMethod('show', 'depletion', function(object) {
   cli::cli_inform('...')
   
   cli::cli_end()
-  print(Check(object))
+  # print(Check(object))
   
 })
 
@@ -376,7 +376,7 @@ setMethod("show", "om", function(object) {
   
   cli::cli_end()
   
-  print(Check(object))
+  # print(Check(object))
 })
 
 ## --- CheckList Object ----

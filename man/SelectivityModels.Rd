@@ -4,8 +4,10 @@
 \alias{SelectivityModels}
 \alias{SelectivityModelsLength}
 \alias{SelectivityModelsAge}
+\alias{SelectivityModelsWeight}
 \alias{SelectivityAtLength}
 \alias{DoubleNormal}
+\alias{SelectivityAtWeight}
 \alias{SelectivityAtAge}
 \title{Selectivity-at-Length or -Age Models}
 \usage{
@@ -15,9 +17,13 @@ SelectivityModelsLength(full = TRUE, print = TRUE)
 
 SelectivityModelsAge(full = TRUE, print = TRUE)
 
+SelectivityModelsWeight(full = TRUE, print = TRUE)
+
 SelectivityAtLength(Length, SL50, SL50_95)
 
 DoubleNormal(Length, L5, LFS, Vmaxlen)
+
+SelectivityAtWeight(Weight, W5, WFS, Vmaxweight)
 
 SelectivityAtAge(Ages, A50, A50_95)
 }
@@ -65,9 +71,13 @@ Functions for generating selectivity-at-age or -at-length.
 
 \item \code{SelectivityModelsAge()}: Print a list of valid Selectivity-at-Age models
 
+\item \code{SelectivityModelsWeight()}: Print a list of valid Selectivity-at-Weight models
+
 \item \code{SelectivityAtLength()}: Logistic selectivity-at-length model
 
 \item \code{DoubleNormal()}: Double-normal selectivity-at-length model
+
+\item \code{SelectivityAtWeight()}: Double-normal selectivity-at-weight model
 
 \item \code{SelectivityAtAge()}: Logistic selectivity-at-age model
 
