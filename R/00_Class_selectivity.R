@@ -20,6 +20,7 @@ setClass("selectivity",
                  Model='fun.char'),
          contains= c('MeanAtAgeClass',
                      'MeanAtLengthClass',
+                     'MeanAtWeightClass',
                      'ClassesClass',
                      'MiscClass'))
 
@@ -30,6 +31,7 @@ setMethod("initialize", "selectivity", function(.Object,
                                                 Model=NULL,
                                                 MeanAtAge=NULL,
                                                 MeanAtLength=NULL,
+                                                MeanAtWeight=NULL,
                                                 Classes=NULL,
                                                 Misc=list()) {
   .Object@Pars <- Pars
@@ -44,6 +46,7 @@ setMethod("initialize", "selectivity", function(.Object,
   
   .Object@MeanAtAge <- MeanAtAge
   .Object@MeanAtLength <- MeanAtLength
+  .Object@MeanAtWeight <- MeanAtWeight
   .Object@Classes <- Classes
   .Object@Misc <- Misc
   #   .Object@Created <- Sys.time()
@@ -56,6 +59,7 @@ Selectivity <- function(Pars=list(),
                         Model=NULL,
                         MeanAtAge=NULL,
                         MeanAtLength=NULL,
+                        MeanAtWeight=NULL,
                         Classes=NULL,
                         Misc=list()) {
   
@@ -67,6 +71,7 @@ Selectivity <- function(Pars=list(),
                Model=Model,
                MeanAtAge=MeanAtAge,
                MeanAtLength=MeanAtLength,
+               MeanAtWeight=MeanAtWeight,
                Classes=Classes,
                Misc=Misc)
 }

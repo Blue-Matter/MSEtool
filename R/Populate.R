@@ -402,7 +402,7 @@ PopulateMaturity <- function(Maturity,
                              Weight=NULL,
                              nsim=NULL,
                              TimeSteps=NULL,
-                             CalcAtLength=TRUE,
+                             CalcAtLength=FALSE,
                              seed=NULL,
                              silent=FALSE) {
   
@@ -417,19 +417,15 @@ PopulateMaturity <- function(Maturity,
   
   Maturity@Pars <- StructurePars(Pars=Maturity@Pars, nsim, TimeSteps)
   Maturity@Model <- FindModel(Maturity)
-  
   ModelClass <- getModelClass(Maturity@Model)
+
   if (!is.null(ModelClass)) {
     if (grepl('at-Length',getModelClass(Maturity@Model))) {
       Maturity <- PopulateMeanAtLength(Maturity, Length, TimeSteps, Ages, nsim,
                                      seed, silent)
     } else if (grepl('at-Weight',getModelClass(Maturity@Model))) {
-      MaturityTemp <- PopulateMeanAtWeight(Maturity, Weight, TimeSteps, Ages, nsim,
+      Maturity <- PopulateMeanAtWeight(Maturity, Weight, TimeSteps, Ages, nsim,
                                        seed, silent)
-      
-      Maturity <- MeanAtWeight2MeanAtAge(MaturityTemp, Weight, Ages, nsim, TimeSteps,
-                                       seed, silent)
-      
     } else {
       Maturity <- PopulateMeanAtAge(Maturity, Ages, TimeSteps)
     }
@@ -437,6 +433,10 @@ PopulateMaturity <- function(Maturity,
   
   Maturity <- MeanAtLength2MeanAtAge(Maturity, Length, Ages, nsim, 
                                    TimeSteps, seed, silent)
+  
+  Maturity <- MeanAtWeight2MeanAtAge(Maturity, Weight, Ages, nsim, TimeSteps,
+                                     seed, silent)
+  
   if (CalcAtLength)
     Maturity <- MeanAtAge2MeanAtLength(Maturity, Length, Ages, nsim, 
                                        TimeSteps, seed, silent)
@@ -964,10 +964,8 @@ PopulateSelectivity <- function(Selectivity,
                                           seed, 
                                           silent)
     } else if (grepl('at-Weight',getModelClass(Selectivity@Model))) {
-      Temp <- PopulateMeanAtWeight(Selectivity, Weight, TimeSteps, Ages, nsim, seed, silent)
-      Selectivity <- MeanAtWeight2MeanAtAge(Temp, Weight, Ages, nsim, TimeSteps, seed, silent) 
-    
-      
+      Selectivity <- PopulateMeanAtWeight(Selectivity, Weight, TimeSteps, Ages, nsim, seed, silent)
+
     } else {
       Selectivity <- PopulateMeanAtAge(Selectivity, Ages, TimeSteps)
     }
@@ -975,6 +973,9 @@ PopulateSelectivity <- function(Selectivity,
   
   Selectivity <- MeanAtLength2MeanAtAge(Selectivity, Length, Ages, nsim,
                                         TimeSteps, seed, silent)
+  
+  Selectivity <- MeanAtWeight2MeanAtAge(Selectivity, Weight, Ages, nsim,
+                                        TimeSteps, seed, silent) 
   
   if (CalcAtLength)
     Selectivity <- MeanAtAge2MeanAtLength(Selectivity, Length, Ages, nsim, TimeSteps, seed, silent)

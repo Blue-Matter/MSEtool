@@ -32,6 +32,10 @@ setClass("MeanAtLengthClass",
          slots=c(MeanAtLength='num.array.list')
 )
 
+setClass("MeanAtWeightClass",
+         slots=c(MeanAtWeight='num.array.list')
+)
+
 setClass("RandomClass",
          slots=c(Random='num.array')
 )

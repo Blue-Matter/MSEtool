@@ -37,6 +37,7 @@ ExtendHist <- function(Hist, TimeSteps=NULL) {
 
 }
 
+#' @export
 ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE) {
   
   # Extend Arrays for Projection TimeSteps 
@@ -51,6 +52,7 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE) {
   # TODO add Recruitment for first projection time step if Age-Recruitment = 1 (i.e use SP from last historical)
   
   # Calculate Reference Catch 
+  # TODO add option for this 
   ProjSimList <- OptimRefYield(ProjSimList) 
   
   
@@ -79,31 +81,28 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE) {
     # TODO Simulate historical data 
     # *********************************** # 
     
+    thisMP <- MPs[mp]
     
-    # TODO keep this messages
+    # format = "Running {.val {thisMP}} {cli::pb_bar} {cli::pb_percent}",
+    
+    st <- Sys.time()
     ProjSimListMP <- purrr::map(ProjSimList, \(ProjSim) 
-                                ProjectMP(ProjSim, MPs[mp]),
+                                ProjectMP(ProjSim, thisMP),
                                 .progress = list(
                                   type = "tasks", 
-                                  format = "Running {.val {MPs[mp]}} {cli::pb_bar} {cli::pb_percent}",
+                                  format = "Projecting MP {cli::pb_bar} {cli::pb_percent}",
                                   clear = TRUE))
-    cli::cli_alert_success('{.val {MPs[mp]}}')
+    end <- Sys.time()
+    elapse <- paste0(round(as.numeric(difftime(time1 = end, time2 = st, units = "secs")), 3), " Seconds")
+    
+    cli::cli_alert_success('{.val {thisMP} ({elapse})}')
     
     MSE <- UpdateMSEObject(MSE, ProjSimListMP, mp)
     
   }
     
   
-  matplot(MSE@Removals[1,1,,1,], type='b')
-  
-  MSE@Effort[1,1,,1,]
-  # TO DO
-  MSE@EffortArea$`Day octopus` 
-  
-  MPs
-  
- b <- apply(MSE@Biomass, c("TimeStep", "MP"), quantile, 0.025)
-  matplot(b, type='b')
+  MSE
   
   
   

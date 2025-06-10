@@ -90,7 +90,10 @@ StockObject <- function(object, nSim, nAges, TimeSteps) {
   nms <- slotNames(object)
   
   if ("Pars" %in% nms)
-    object@Pars <- lapply(object@Pars, ArrayExpand, nSim, nAges, TimeSteps)
+    if (!all(unlist(lapply(object@Pars, is.na)))) {
+      object@Pars <- lapply(object@Pars, ArrayExpand, nSim, nAges, TimeSteps)
+    }
+    
   
   if ("Model" %in% nms) {
     if (!is.null(object@Model)) {
@@ -110,6 +113,9 @@ StockObject <- function(object, nSim, nAges, TimeSteps) {
   
   if ("MeanAtLength" %in% nms)
     object@MeanAtLength <- ArrayExpand(object@MeanAtLength, nSim, nAges, TimeSteps)
+  
+  if ("MeanAtWeight" %in% nms)
+    object@MeanAtWeight <- ArrayExpand(object@MeanAtWeight, nSim, nAges, TimeSteps)
   
   if ("Semelparous" %in% nms)
     object@Semelparous  <- ArrayExpand(object@Semelparous , nSim, nAges, TimeSteps)
@@ -268,6 +274,11 @@ CombineFleetObject <- function(List, nSim, nAges, TimeSteps) {
     purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |>
     List2Array('Fleet')
   
+  if ('MeanAtWeight' %in% nms) 
+    out@MeanAtWeight <- lapply(List, slot, 'MeanAtWeight') |>
+    purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |>
+    List2Array('Fleet')
+  
   if ('Classes' %in% nms) 
     out@Classes <- lapply(List, slot, 'Classes') 
   
@@ -359,6 +370,7 @@ CombineDistribution <- function(List, nSim, nAges, TimeSteps, nArea) {
 
 
 Hist2HistSimList <- function(Hist) {
+  
   HistSimList <- purrr::map(1:nSim(Hist@OM), \(x)  
                             SubsetSim(Hist, Sim=x, drop=TRUE)
                             , .progress = 'Building internal object `HistSimList`')
@@ -366,7 +378,7 @@ Hist2HistSimList <- function(Hist) {
   
   nstock <- nStock(HistSimList[[1]]@OM)
   
-  for (i in 1:nSim(Hist@OM)) {
+  for (i in cli::cli_progress_along(1:nSim(Hist@OM), "Processing `HistSimList`")) {
     HistSimList[[i]]@FDeadAtAgeArea <- lapply(HistSimList[[i]]@FDeadAtAgeArea, Array2List, 2)
     HistSimList[[i]]@FRetainAtAgeArea <- lapply(HistSimList[[i]]@FRetainAtAgeArea, Array2List, 2) 
     HistSimList[[i]]@Removals <- lapply(HistSimList[[i]]@Removals, Array2List, 2)
@@ -459,8 +471,15 @@ HistSimListFleet <- function(Hist, HistSimList) {
 }
 
 StockList2SimArray <- function(Stock, StockList, slot="Length") {
+  if (EmptyObject(slot(Stock, slot))) {
+    slot(Stock, slot) <- new(class(slot(Stock, slot)))
+    return(Stock)
+  }
+    
+    
   nms <- slotNames(slot(Stock, slot))
   
+
   if ("Pars" %in% nms) {
     Pars <- slot(Stock, slot)@Pars
     if (!any(lapply(Pars, is.na) |> unlist())) {

@@ -34,6 +34,9 @@ SimulateDEV <- function(OM=NULL,
   # ---- Calculate Unfished Equilibrium and Dynamic ----
   HistSimList <- CalcDynamicUnfished(HistSimList)
   
+  OM@Fleet$`Day octopus`$`Octopus Fleet`@Selectivity@MeanAtWeight
+  HistSimList$`1`@OM@Fleet$`Day octopus`@Selectivity@MeanAtWeight
+  
   # ---- Optimize for Final Depletion ----
   
   # EXTREMELY SLOW
@@ -58,8 +61,6 @@ SimulateDEV <- function(OM=NULL,
   
  
   
-  
-
   # ---- Calculate Reference Points ----
   # TODO speed up - CalcRefPoints.R
   # RefPoints <- CalcRefPoints(OM, Unfished)

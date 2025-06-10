@@ -106,11 +106,11 @@ PopulateMeanAtAge <- function(object, Ages=NULL, TimeSteps=NULL, Length=NULL) {
     
     if ('Length' %in% args) {
       CheckRequiredObject(Length, 'length', 'Length')
-      chk <- Check(Length)
-      if(!chk@populated) {
-        CheckRequiredObject(Ages, 'ages', 'Ages')
-        Length <- Populate(Length, Ages, nsim, TimeSteps, seed, ASK=TRUE, silent)
-      }
+      # chk <- Check(Length)
+      # if(!chk@populated) {
+      #   CheckRequiredObject(Ages, 'ages', 'Ages')
+      #   Length <- Populate(Length, Ages, nsim, TimeSteps, seed, ASK=TRUE, silent)
+      # }
       object@MeanAtAge <- GenerateMeanatLength(Model=object@Model,
                                                Pars=object@Pars,
                                                Length=Length@MeanAtAge)
@@ -170,14 +170,22 @@ PopulateMeanAtLength <- function(object,
                                                 Pars=object@Pars,
                                                 Length=Length@Classes)
     
-    if ('Units' %in% slotNames(object))
-      attributes(object@MeanAtLength)$Units <- object@Units
-    attributes(object@MeanAtLength)$TimeSteps <- TimeSteps
-    if (methods::is(Length, 'length')) {
-      attributes(object@MeanAtLength)$LengthClasses <- Length@Classes
-      attributes(object@MeanAtLength)$UnitsLength <- Length@Units
-    }
-    object@MeanAtLength <- AddDimNames(object@MeanAtLength, c('Sim', 'Class', 'TimeStep'), TimeSteps)
+    object@Classes <- Length@Classes
+    
+    dd <- dim(object@MeanAtLength)
+    dimnames(object@MeanAtLength) <- list(Sim=1:dd[1],
+                                          Class=Length@Classes,
+                                          TimeStep=TimeSteps[1:dd[3]])
+    
+    
+  #   if ('Units' %in% slotNames(object))
+  #     attributes(object@MeanAtLength)$Units <- object@Units
+  #   attributes(object@MeanAtLength)$TimeSteps <- TimeSteps
+  #   if (methods::is(Length, 'length')) {
+  #     attributes(object@MeanAtLength)$LengthClasses <- Length@Classes
+  #     attributes(object@MeanAtLength)$UnitsLength <- Length@Units
+  #   }
+  #   object@MeanAtLength <- AddDimNames(object@MeanAtLength, c('Sim', 'Class', 'TimeStep'), TimeSteps)
   }
   object
 }
@@ -213,18 +221,22 @@ PopulateMeanAtWeight <- function(object,
         # Weight <- Populate(Weight, Ages, nsim, TimeSteps, seed, ASK=TRUE, silent)
       # }
     }
-    object@MeanAtLength <- GenerateMeanatWeight(Model=object@Model,
+    object@MeanAtWeight <- GenerateMeanatWeight(Model=object@Model,
                                                 Pars=object@Pars,
                                                 Weight=Weight@Classes)
     
-    if ('Units' %in% slotNames(object))
-      attributes(object@MeanAtLength)$Units <- object@Units
-    attributes(object@MeanAtLength)$TimeSteps <- TimeSteps
-    if (methods::is(Length, 'length')) {
-      attributes(object@MeanAtLength)$LengthClasses <- Length@Classes
-      attributes(object@MeanAtLength)$UnitsLength <- Length@Units
-    }
-    object@MeanAtLength <- AddDimNames(object@MeanAtLength, c('Sim', 'Class', 'TimeStep'), TimeSteps)
+    object@Classes <- Weight@Classes
+    
+    # if ('Units' %in% slotNames(object))
+    #   attributes(object@MeanAtWeight)$Units <- object@Units
+    # attributes(object@MeanAtWeight)$TimeSteps <- TimeSteps
+    dd <- dim(object@MeanAtWeight)
+    dimnames(object@MeanAtWeight) <- list(Sim=1:dd[1],
+                                          Class=Weight@Classes,
+                                          TimeStep=TimeSteps[1:dd[3]])
+      
+    
+    
   }
   object
 }
@@ -546,7 +558,7 @@ MeanAtLength2MeanAtAge <- function(object, Length, Ages, nsim, TimeSteps, seed, 
   CheckRequiredObject(Ages, 'ages')
   
   if (is.null(Length@ASK)) {
-    Length <- Populate(Length, Ages, nsim, TimeSteps, seed, ASK=TRUE, silent)
+    return(object)
   }
   
   object@MeanAtAge <- AtSize2AtAge(object, Length) |>
@@ -675,9 +687,16 @@ AtSize2AtAge <- function(object, Length) {
   # OBJ <<- object
   # LEN <<- Length
   
-  MeanAtLength <- object@MeanAtLength
+  if (inherits(Length, 'length')) {
+    MeanAtSize <- object@MeanAtLength
+  } else if (inherits(Length, 'weight')) {
+    MeanAtSize <- object@MeanAtWeight
+  } else {
+    cli::abort("`Length` must be an object of class `length` or `weight`")
+  }
+  
   ASK <- Length@ASK
-  dim_MeanAtLength <- dim(MeanAtLength)
+  dim_MeanAtSize <- dim(MeanAtSize)
   dim_ASK <- dim(ASK)
  
   
@@ -687,14 +706,14 @@ AtSize2AtAge <- function(object, Length) {
     nage <- dim_ASK[2]
     nClasses <- dim_ASK[3]
     
-    nsim_MeanAtLength <- dim_MeanAtLength[1]
-    nTS_MeanAtLength <- dim_MeanAtLength[3]
+    nsim_MeanAtSize <- dim_MeanAtSize[1]
+    nTS_MeanAtSize <- dim_MeanAtSize[3]
     
     nsim_ASK <- dim_ASK[1]
     nTS_ASK <- dim_ASK[4]
     
-    nsim <- max(nsim_MeanAtLength, nsim_ASK) # maximum number of simulations
-    nTS <- max(nTS_MeanAtLength, nTS_ASK) # maximum number of time-steps
+    nsim <- max(nsim_MeanAtSize, nsim_ASK) # maximum number of simulations
+    nTS <- max(nTS_MeanAtSize, nTS_ASK) # maximum number of time-steps
   } else {
     bySim <- FALSE
     
@@ -702,23 +721,27 @@ AtSize2AtAge <- function(object, Length) {
     nClasses <- dim_ASK[2]
     
     nsim_ASK <- 1
-    nsim_MeanAtLength <- 1
+    nsim_MeanAtSize <- 1
     nsim <- 1
     
     nTS_ASK <- 1
-    nTS_MeanAtLength <- 1
-    nTS <- dim_MeanAtLength[3]
+    nTS_MeanAtSize <- 1
+    nTS <- dim_MeanAtSize[3]
   }
   
   AtAge <- array(0, dim=c(nsim, nage, nTS))
   for (s in 1:nsim) {
     for (t in 1:nTS) {
-      MeanAtLength_ts <- MeanAtLength[GetIndex(s, nsim_MeanAtLength), ,GetIndex(t, nTS_MeanAtLength)]
+      MeanAtSize_ts <- MeanAtSize[GetIndex(s, nsim_MeanAtSize), ,GetIndex(t, nTS_MeanAtSize)]
       if (bySim) {
         ASK_ts <- ASK[GetIndex(s, nsim_ASK),,,GetIndex(t, nTS_ASK)]
-        AtAge[s,,t] <- MeanAtLength_ts %*%t(ASK_ts)
+        
+        MeanAtSize_ts * ASK_ts[15,]
+        
+        AtAge[s,,t] <- MeanAtSize_ts %*%t(ASK_ts)
       } else {
-        AtAge[s,,t] <- (MeanAtLength_ts %*%t(ASK))[1,]
+        ASK_ts <- ASK[,,GetIndex(t, nTS_ASK)]
+        AtAge[s,,t] <- (MeanAtSize_ts %*%t(ASK_ts))[1,]
       }
     }
   }

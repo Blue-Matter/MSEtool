@@ -808,6 +808,18 @@ SelectivityAtLength <- function(Length, SL50, SL50_95) {
 }
 class(SelectivityAtLength) <- 'Selectivity-at-Length-Model'
 
+#' @describeIn SelectivityModels Logistic selectivity-at-weight model
+#' @param Weight A numeric vector of weights
+#' @param SW50 Weight corresponding with 50% selectivity
+#' @param SW50_95 Interval between `SW50` and weight at 95% selectivity (`SW95`)
+#' @export
+SelectivityAtWeight <- function(Weight, SW50, SW50_95) {
+  Pars <- list(L50=Structure(SW50, out=c('nsim', 'nTS'), req='nsim'),
+               L50_95=Structure(SW50_95, out=c('nsim', 'nTS'), req='nsim'))
+  Maturity_at_Length_(Weight, Pars)
+}
+class(SelectivityAtWeight) <- 'Selectivity-at-Weight-Model'
+
 
 #' @describeIn SelectivityModels Double-normal selectivity-at-length model
 #' @param L5 Shortest length at which 5% of the population is vulnerable to
@@ -830,13 +842,13 @@ class(DoubleNormal) <- 'Selectivity-at-Length-Model'
 
 #' @describeIn SelectivityModels Double-normal selectivity-at-weight model
 #' @export
-SelectivityAtWeight <- function(Weight, W5, WFS, Vmaxweight) {
+DoubleNormalWeight <- function(Weight, W5, WFS, Vmaxweight) {
   Pars <- list(L5=Structure(W5, out=c('nsim', 'nTS'), req='nsim'),
                LFS=Structure(WFS, out=c('nsim', 'nTS'), req='nsim'),
                Vmaxlen=Structure(Vmaxweight, out=c('nsim', 'nTS'), req='nsim'))
   double_normal_(Weight, Pars)
 }
-class(SelectivityAtWeight) <- 'Selectivity-at-Weight-Model'
+class(DoubleNormalWeight) <- 'Selectivity-at-Weight-Model'
 
 
 double_normal_ <- function(Length, Pars) {

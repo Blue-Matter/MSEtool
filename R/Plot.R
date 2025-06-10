@@ -19,9 +19,9 @@ setMethod('plot', 'length', function(x,
 
   Length <- x
 
-  chk <- Check(Length)
-  if (!chk@populated)
-    Length <- Populate(Length, Ages, nsim, TimeSteps, seed, ASK, silent)
+  # chk <- Check(Length)
+  # if (!chk@populated)
+  #   Length <- Populate(Length, Ages, nsim, TimeSteps, seed, ASK, silent)
 
 
   if (type=='MeanAtAge') {

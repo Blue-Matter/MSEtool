@@ -6,8 +6,9 @@
 \alias{SelectivityModelsAge}
 \alias{SelectivityModelsWeight}
 \alias{SelectivityAtLength}
-\alias{DoubleNormal}
 \alias{SelectivityAtWeight}
+\alias{DoubleNormal}
+\alias{DoubleNormalWeight}
 \alias{SelectivityAtAge}
 \title{Selectivity-at-Length or -Age Models}
 \usage{
@@ -21,9 +22,11 @@ SelectivityModelsWeight(full = TRUE, print = TRUE)
 
 SelectivityAtLength(Length, SL50, SL50_95)
 
+SelectivityAtWeight(Weight, SW50, SW50_95)
+
 DoubleNormal(Length, L5, LFS, Vmaxlen)
 
-SelectivityAtWeight(Weight, W5, WFS, Vmaxweight)
+DoubleNormalWeight(Weight, W5, WFS, Vmaxweight)
 
 SelectivityAtAge(Ages, A50, A50_95)
 }
@@ -37,6 +40,12 @@ SelectivityAtAge(Ages, A50, A50_95)
 \item{SL50}{Length corresponding with 50\% selectivity}
 
 \item{SL50_95}{Interval between \code{SL50} and length at 95\% selectivity (\code{SL95})}
+
+\item{Weight}{A numeric vector of weights}
+
+\item{SW50}{Weight corresponding with 50\% selectivity}
+
+\item{SW50_95}{Interval between \code{SW50} and weight at 95\% selectivity (\code{SW95})}
 
 \item{L5}{Shortest length at which 5\% of the population is vulnerable to
 selection by the gear used in this fleet. A single numeric value, a numeric
@@ -75,9 +84,11 @@ Functions for generating selectivity-at-age or -at-length.
 
 \item \code{SelectivityAtLength()}: Logistic selectivity-at-length model
 
+\item \code{SelectivityAtWeight()}: Logistic selectivity-at-weight model
+
 \item \code{DoubleNormal()}: Double-normal selectivity-at-length model
 
-\item \code{SelectivityAtWeight()}: Double-normal selectivity-at-weight model
+\item \code{DoubleNormalWeight()}: Double-normal selectivity-at-weight model
 
 \item \code{SelectivityAtAge()}: Logistic selectivity-at-age model
 

@@ -50,6 +50,7 @@
 #' @slot Units `r Units_param(variable="MeanAtAge", class='Length', default='mm')`
 #' @slot MeanAtAge `r MeanAtAge_param('Maturity')`
 #' @slot MeanAtLength `r MeanAtLength_param('Maturity')`
+#' @slot MeanAtWeight TODO
 #' @slot Classes `r Classes_param()`
 #' @slot Semelparous Logical. Do animals die after spawning?
 #' @slot Misc `r Misc_param()`
@@ -66,6 +67,7 @@ setClass("maturity",
          contains= c("ParsClassNoUnits",
                      'MeanAtAgeClass',
                      'MeanAtLengthClass',
+                     'MeanAtWeightClass',
                      'ClassesClass',
                      'SemelparousClass',
                      'MiscClass')
@@ -78,6 +80,7 @@ setMethod("initialize", "maturity", function(.Object,
                                              Pars=list(L50=NA, L50_95=NA),
                                              MeanAtAge=NULL,
                                              MeanAtLength=NULL,
+                                             MeanAtWeight=NULL,
                                              Classes=NULL,
                                              Semelparous=FALSE,
                                              Misc=list()) {
@@ -94,6 +97,7 @@ setMethod("initialize", "maturity", function(.Object,
   
   .Object@MeanAtAge <- MeanAtAge
   .Object@MeanAtLength <- MeanAtLength
+  .Object@MeanAtWeight <- MeanAtWeight
   .Object@Classes <- Classes
   .Object@Semelparous <- Semelparous
   .Object@Misc <- Misc
@@ -115,6 +119,7 @@ Maturity <- function(Pars=list(L50=NA, L50_95=NA),
                      Model=NULL,
                      MeanAtAge=NULL,
                      MeanAtLength=NULL,
+                     MeanAtWeight=NULL,
                      Classes=NULL,
                      Semelparous=FALSE,
                      Misc=list()) {
@@ -125,6 +130,7 @@ Maturity <- function(Pars=list(L50=NA, L50_95=NA),
                Pars=Pars,
                MeanAtAge=MeanAtAge,
                MeanAtLength=MeanAtLength,
+               MeanAtWeight=MeanAtWeight,
                Classes=Classes,
                Model=Model,
                Semelparous=Semelparous,
