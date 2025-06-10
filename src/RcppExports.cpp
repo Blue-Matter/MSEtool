@@ -154,16 +154,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // SimulateDynamics_
-S4 SimulateDynamics_(S4 HistSimIn, Rcpp::NumericVector TimeSteps, int CalcCatch, int debug);
-RcppExport SEXP _MSEtool_SimulateDynamics_(SEXP HistSimInSEXP, SEXP TimeStepsSEXP, SEXP CalcCatchSEXP, SEXP debugSEXP) {
+S4 SimulateDynamics_(S4 HistSim, Rcpp::NumericVector TimeSteps, int CalcCatch, int debug);
+RcppExport SEXP _MSEtool_SimulateDynamics_(SEXP HistSimSEXP, SEXP TimeStepsSEXP, SEXP CalcCatchSEXP, SEXP debugSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< S4 >::type HistSimIn(HistSimInSEXP);
+    Rcpp::traits::input_parameter< S4 >::type HistSim(HistSimSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
     Rcpp::traits::input_parameter< int >::type CalcCatch(CalcCatchSEXP);
     Rcpp::traits::input_parameter< int >::type debug(debugSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulateDynamics_(HistSimIn, TimeSteps, CalcCatch, debug));
+    rcpp_result_gen = Rcpp::wrap(SimulateDynamics_(HistSim, TimeSteps, CalcCatch, debug));
     return rcpp_result_gen;
 END_RCPP
 }

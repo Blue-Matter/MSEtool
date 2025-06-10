@@ -33,10 +33,7 @@ SimulateDEV <- function(OM=NULL,
   
   # ---- Calculate Unfished Equilibrium and Dynamic ----
   HistSimList <- CalcDynamicUnfished(HistSimList)
-  
-  OM@Fleet$`Day octopus`$`Octopus Fleet`@Selectivity@MeanAtWeight
-  HistSimList$`1`@OM@Fleet$`Day octopus`@Selectivity@MeanAtWeight
-  
+
   # ---- Optimize for Final Depletion ----
   
   # EXTREMELY SLOW
@@ -48,8 +45,13 @@ SimulateDEV <- function(OM=NULL,
   
  
   # for (i in 1:length(HistSimList))
-       # HistSimList[[i]]@OM@Fleet$`Day octopus`@Effort@Catchability[] <- tiny
+       # HistSimList[[i]]@OM@Fleet[[1]]@Effort@Catchability[] <- tiny
        
+  # HistSim <- HistSimList[[5]]
+  # tictoc::tic()
+  # t <- OptimizeCatchability(HistSim)
+  # tictoc::toc()
+  
   # tictoc::tic()
   HistSimList <- purrr::map(HistSimList, \(HistSim) 
                             OptimizeCatchability(HistSim),
@@ -85,12 +87,12 @@ SimulateDEV <- function(OM=NULL,
    
 
   # ---- Historical Fishery Data ----
-  HistSimList <- purrr::map(HistSimList, \(x) 
-                            GenerateHistoricalData(x),
-                            .progress = list(
-                              type = "iterator", 
-                              format = "Generating Historical Data {cli::pb_bar} {cli::pb_percent}",
-                              clear = TRUE))
+  # HistSimList <- purrr::map(HistSimList, \(x) 
+  #                           GenerateHistoricalData(x),
+  #                           .progress = list(
+  #                             type = "iterator", 
+  #                             format = "Generating Historical Data {cli::pb_bar} {cli::pb_percent}",
+  #                             clear = TRUE))
   
   
   # Data:

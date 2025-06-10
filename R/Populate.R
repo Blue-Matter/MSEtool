@@ -293,7 +293,7 @@ PopulateWeight <- function(Weight,
                            nsim=NULL,
                            TimeSteps=NULL,
                            ASK=FALSE,
-                           CalcAtLength=TRUE,
+                           CalcAtLength=FALSE,
                            seed=NULL,
                            silent=FALSE) {
   TimeSteps <- TimeStepAttributes(Weight, TimeSteps)
@@ -1226,7 +1226,6 @@ StructureObs <- function(OM) {
   # with each element a list `nFleet`
   
   # Recycles over both stocks and fleets
-  
   if (inherits(OM@Obs,'obs')) {
     OM@Obs <- MakeNamedList(StockNames, MakeNamedList(FleetNames, OM@Obs))
   }
@@ -1253,8 +1252,13 @@ PopulateObs <- function(OM) {
   
   if (is.null(OM@Obs))
     return(OM)
-
+  
+  if (inherits(OM@Obs,'Obs')) {
+    cli::cli_alert('Convert not complete for `Obs`')
+    return(OM)
+  }
   OM <- StructureObs(OM)
+  
   
   StockNames <- StockNames(OM)
   FleetNames <- FleetNames(OM)

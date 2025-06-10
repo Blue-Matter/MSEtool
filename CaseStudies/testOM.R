@@ -8,9 +8,18 @@ la()
 OM <- testOM
 OM@nsim <- 100
 
-OM <- Convert(OM)
+OMa <- Convert(OM, Populate=FALSE)
+OM <- Populate(OMa)
 
+tictoc::tic()
+Hist <- SimulateDEV(OM)
+tictoc::toc()
 
+OM2 <- testOM
+OM2@nsim <- 100
+tictoc::tic()
+Hist2 <- Simulate(OM2)
+tictoc::toc()
 
 
 parallel=FALSE

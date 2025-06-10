@@ -4,7 +4,7 @@
 \alias{SimulateDynamics_}
 \title{Simulate Fishery Dynamics}
 \usage{
-SimulateDynamics_(HistSimIn, TimeSteps, CalcCatch = 1L, debug = 0L)
+SimulateDynamics_(HistSim, TimeSteps, CalcCatch = 1L, debug = 0L)
 }
 \description{
 Calculates the fishery dynamics for a given simulation and the specified

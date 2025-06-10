@@ -11,6 +11,7 @@ Selectivity(
   Model = NULL,
   MeanAtAge = NULL,
   MeanAtLength = NULL,
+  MeanAtWeight = NULL,
   Classes = NULL,
   Misc = list()
 )
@@ -39,5 +40,5 @@ Selectivity Object
 }}
 
 \seealso{
-\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Check]{Check()}}
+\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=MeanAtWeight]{MeanAtWeight()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Check]{Check()}}
 }

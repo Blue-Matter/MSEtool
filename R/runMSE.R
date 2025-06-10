@@ -472,9 +472,15 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
   } else {
     if(!silent)
       message("Optimizing for user-specified depletion in last historical year")
-    
+   
     qs <- .sapply(1:nsim, CalculateQ, StockPars, FleetPars, pyears=nyears, bounds, control=control)
+    
   }
+  
+  # tictoc::tic()
+  # t <- CalculateQ(5, StockPars, FleetPars, pyears=nyears, bounds, control=control)
+  # tictoc::toc()
+ 
 
   # --- Check that q optimizer has converged ----
   LimBound <- c(1.1, 0.9)*range(bounds)

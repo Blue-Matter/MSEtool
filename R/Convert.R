@@ -92,13 +92,13 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
                                 ASK=TRUE,
                                 seed=om@Seed)
 
-    om@Stock@Weight <- PopulateWeight(om@Stock@Weight,
-                                Ages=om@Stock@Ages,
-                                Length=om@Stock@Length,
-                                nsim=om@nSim,
-                                TimeSteps=TimeSteps(om),
-                                ASK=FALSE,
-                                seed=om@Seed)
+    om@Stock@Weight <- PopulateWeight(Weight=om@Stock@Weight,
+                                      Ages=om@Stock@Ages,
+                                      Length=om@Stock@Length,
+                                      nsim=om@nSim,
+                                      TimeSteps=TimeSteps(om),
+                                      ASK=FALSE,
+                                      seed=om@Seed)
     
     if (as.logical(OM@isRel)) {
       # multiply by L50 

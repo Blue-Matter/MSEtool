@@ -11,6 +11,7 @@ Maturity(
   Model = NULL,
   MeanAtAge = NULL,
   MeanAtLength = NULL,
+  MeanAtWeight = NULL,
   Classes = NULL,
   Semelparous = FALSE,
   Misc = list()
@@ -120,6 +121,8 @@ or length \code{nTS}.}
 length \code{nSim}, the second dimension length \code{nClasses}, and the third dimension either length 1
 or length \code{nTS}.}
 
+\item{\code{MeanAtWeight}}{TODO}
+
 \item{\code{Classes}}{The length classes used for the calculation of the age-size key (\code{ASK}).
 Will also be used for calculating at-length schedules, e.g., \code{\link[=Maturity]{Maturity()}} or \code{\link[=Selectivity]{Selectivity()}}.}
 
@@ -165,5 +168,5 @@ plot(Maturity)
 # see Examples in `?Length` for other `Pars` configurations
 }
 \seealso{
-\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Semelparous]{Semelparous()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=ValidUnits]{ValidUnits()}}, \code{\link[=Check]{Check()}}, \code{\link[=MaturityModels]{MaturityModels()}}, \code{\link[=Populate]{Populate()}}
+\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=MeanAtWeight]{MeanAtWeight()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Semelparous]{Semelparous()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=ValidUnits]{ValidUnits()}}, \code{\link[=Check]{Check()}}, \code{\link[=MaturityModels]{MaturityModels()}}, \code{\link[=Populate]{Populate()}}
 }

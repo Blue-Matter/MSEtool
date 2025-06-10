@@ -775,16 +775,21 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
     dname1[["Age"]] <- seq(from=ages[1], to=ages[length(ages)], length.out=SubAgeDim)
     dimnames(LengthMeanAtAge) <- dname1
     
+    Length@CVatAge <- ArrayExpand(Length@CVatAge, dd[1], dd[2], dname1[["TimeStep"]])
     dname1 <- dimnames(Length@CVatAge)
     dname1[["Age"]] <- seq(from=ages[1], to=ages[length(ages)], length.out=SubAgeDim)
     dimnames(LengthCVatAge) <- dname1
-    
-    
+  
     ind <- seq(from=1, by=nSubAges, to=dim(LengthMeanAtAge)[2])
     
     objectMeanAtAge[,ind,] <- MeanAtAge[]
     LengthMeanAtAge[,ind,] <- Length@MeanAtAge[]
     LengthCVatAge[,ind,] <- Length@CVatAge[]
+    
+    dims  <- rbind(dim(Length@MeanAtAge),
+                   dim(Length@CVatAge),
+                   dim(MeanAtAge)
+    )
     
     for (i in 1:(length(ind)-1)) {
       ind2 <- c(ind[i], ind[i]+12)
