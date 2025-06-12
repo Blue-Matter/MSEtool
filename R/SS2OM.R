@@ -516,6 +516,8 @@ calc_weightedmean_c <- function(l) {
   wdf_hist<- df %>% group_by(Sim, Yr, Age) %>% 
     summarize(W=weighted.mean(x=W, w=relF), .groups='drop')
   
+  # For age-zero, all relF can be zero, returning W = NaN
+  wdf_hist$W[is.na(wdf_hist$W)] <- 0
   
   # add projection years 
   lastYr <- wdf_hist %>% dplyr::ungroup() %>% dplyr::filter(Yr==max(Yr))

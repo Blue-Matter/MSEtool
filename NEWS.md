@@ -1,5 +1,10 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
+# MSEtool 3.7.9999
+
+## Fixes
+- `calc_weightedmean_c`, used in `SSMOM2OM`, can return `NaN` in `cpars$Wt_age_C = 0`. Overwrite `NaN` with `0`. Occurs with un-exploited age classes, e.g., age zero.
+
 # MSEtool 3.7.4
 
 ## Fixes
