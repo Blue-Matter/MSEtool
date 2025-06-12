@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">MSEtool Functions</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.7.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">3.7.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,7 +32,15 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="3.7.4" id="msetool-374">MSEtool 3.7.4<a class="anchor" aria-label="anchor" href="#msetool-374"></a></h2>
+<h2 class="pkg-version" data-toc-text="3.7.9999" id="msetool-379999">MSEtool 3.7.9999<a class="anchor" aria-label="anchor" href="#msetool-379999"></a></h2>
+<div class="section level3">
+<h3 id="fixes-3-7-9999">Fixes<a class="anchor" aria-label="anchor" href="#fixes-3-7-9999"></a></h3>
+<ul><li>
+<code>calc_weightedmean_c</code>, used in <code>SSMOM2OM</code>, can return <code>NaN</code> in <code>cpars$Wt_age_C = 0</code>. Overwrite <code>NaN</code> with <code>0</code>. Occurs with un-exploited age classes, e.g., age zero.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="3.7.4" id="msetool-374">MSEtool 3.7.4<a class="anchor" aria-label="anchor" href="#msetool-374"></a></h2><p class="text-muted">CRAN release: 2025-06-04</p>
 <div class="section level3">
 <h3 id="fixes-3-7-4">Fixes<a class="anchor" aria-label="anchor" href="#fixes-3-7-4"></a></h3>
 <ul><li>Fixed issue where TAC was being applied to landings rather than removals</li>
