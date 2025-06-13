@@ -51,7 +51,24 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=TRUE) {
   .lapply <- define.lapply(silent) 
   .sapply <- define.sapply(silent)
 
-  # Extend Arrays for Projection TimeSteps 
+  # Extend Arrays for Projection TimeSteps
+  
+  MSEobj <- FALSE
+  if (inherits(Hist,'mse')) {
+    MSE <- Hist
+    MSEobj <- TRUE
+    Hist <- Hist()
+    Hist@OM <- MSE@OM
+    Hist@Unfished <- MSE@Unfished
+    Hist@RefPoints <- MSE@RefPoints
+    Hist@Data <- list(MSE@OM@Data)
+    
+    slots <- slotNames(MSE@Hist)
+    for (sl in slots)  {
+      slot(Hist, sl) <- slot(MSE@Hist, sl) 
+    }
+  }
+  
   Proj <- ExtendHist(Hist)
   
   # List of `Hist` objects, each with one simulation
@@ -70,7 +87,31 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=TRUE) {
   # Process MPs
   # Hist@MPs - need to store in Misc ?
   
-  MSE <- Hist2MSE(Hist, MPs)
+  
+  if(!MSEobj) {
+    MSE <- Hist2MSE(Hist, MPs)  
+  } else {
+    newMPs <- which(!MPs %in% names(MSE@MPs))
+    if (length(newMPs)>0) {
+      newMPList <- lapply(MPs[newMPs], get)
+      names(newMPList) <- MPs[newMPs]
+      attributes(newMPList)$complete <- rep(FALSE, length(newMPList))
+      MSE@MPs <- c(MSE@MPs, newMPList)
+      
+      
+      # TODO - add dimensions for new MPs 
+      # check if MP has changed
+      # check if MSE object has changed
+      # run new MPs and changed MP - or all MPs if MSE object has changed
+      stop()
+      MSE@Number[[1]] 
+      MSE@Number[[1]] |> dimnames()
+      
+    }
+  }
+  
+  
+  
 
   TimeStepsAll <- TimeSteps(ProjSimList[[1]]@OM)
   TimeStepsHist <- TimeSteps(ProjSimList[[1]]@OM, "Historical")

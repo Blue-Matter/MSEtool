@@ -20,8 +20,6 @@ Hist2MSE <- function(Hist, MPs) {
   
   MSE@SBiomass <- MSE@SProduction <- MSE@Biomass
   
-  Hist@Landings$`Day octopus` |> dimnames()
-  
   MSE@Removals <- ArraySimStockTimeFleetMP(Hist@OM, "Projection", MPs=MPNames)
   
   MSE@Landings <-  MSE@Removals
