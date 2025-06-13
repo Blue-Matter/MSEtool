@@ -198,7 +198,9 @@ UpdateSelectivity <- function(ProjSim, MPAdvice, MPAdvicePrevious,
     ProjSim@OM@Fleet[[st]]@Selectivity@MeanAtWeight[,projInd,fl] <- Selectivity@MeanAtWeight[1,,]
     ProjSim@OM@Fleet[[st]]@Selectivity@MeanAtAge[,projInd,fl] <- Selectivity@MeanAtAge[1,,]
   } else if (type=="Retention") {
-    ProjSim@OM@Fleet[[st]]@Retention@MeanAtLength[,projInd,fl] <- Selectivity@MeanAtLength[1,,]
+    # TODO fix initialization of these
+    # ProjSim@OM@Fleet[[st]]@Retention@MeanAtLength[,projInd,fl] <- Selectivity@MeanAtLength[1,,]
+    # ProjSim@OM@Fleet[[st]]@Retention@MeanAtWeight[,projInd,fl] <- Selectivity@MeanAtWeight[1,,]
     ProjSim@OM@Fleet[[st]]@Retention@MeanAtAge[,projInd,fl] <- Selectivity@MeanAtAge[1,,]
   } else{
     stop("type must be `Selectivity` or `Retention`")

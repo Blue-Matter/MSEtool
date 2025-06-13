@@ -823,6 +823,7 @@ PopulateFleet <- function(Fleet,
                                        DiscardMortality=Fleet@DiscardMortality,
                                        Ages,
                                        Length,
+                                       Weight,
                                        nsim,
                                        TimeSteps,
                                        CalcAtLength=TRUE,
@@ -1026,6 +1027,7 @@ PopulateRetention <- function(Retention,
                               DiscardMortality=NULL,
                               Ages=NULL,
                               Length=NULL,
+                              Weight=NULL,
                               nsim=NULL,
                               TimeSteps=NULL,
                               CalcAtLength=FALSE,
@@ -1066,6 +1068,9 @@ PopulateRetention <- function(Retention,
         Retention <- PopulateMeanAtLength(Retention, Length, TimeSteps,
                                           Ages, nsim,
                                           seed, silent)
+      } else if (grepl('at-Weight',getModelClass(Selectivity@Model))) {
+        Retention <- PopulateMeanAtWeight(Retention, Weight, TimeSteps, Ages, nsim, seed, silent)
+        
       } else {
         Retention <- PopulateMeanAtAge(Retention, Ages, TimeSteps)
       }
@@ -1085,6 +1090,10 @@ PopulateRetention <- function(Retention,
   
   Retention <- MeanAtLength2MeanAtAge(Retention, Length, Ages,
                                       nsim, TimeSteps, seed, silent)
+  
+  Retention <- MeanAtWeight2MeanAtAge(Retention, Weight, Ages, nsim,
+                                        TimeSteps, seed, silent) 
+  
   if (CalcAtLength)
     Retention <- MeanAtAge2MeanAtLength(Retention, Length, Ages, 
                                         nsim, TimeSteps, seed, silent)

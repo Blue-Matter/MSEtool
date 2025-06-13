@@ -71,6 +71,7 @@ CalcDynamicUnfished <- function(HistSimList, silent=FALSE) {
   })
   
   TimeSteps <- TimeSteps(HistSimList[[1]]@OM, 'Historical')
+  StockNames <- StockNames(HistSimList[[1]]@OM)
   out <- purrr::map(HistSimList, \(HistSim) {
     
     unfished <- SimulateDynamics_(HistSim, TimeSteps)
@@ -79,15 +80,15 @@ CalcDynamicUnfished <- function(HistSimList, silent=FALSE) {
     
     HistSim@Unfished@Dynamic@Biomass  <- AddDimNames(unfished@Biomass, 
                                                       c('Stock', 'TimeStep'), 
-                                                      TimeSteps=TimeSteps, values=list(StockNames(x@OM)))
+                                                      TimeSteps=TimeSteps, values=list(StockNames))
     
     HistSim@Unfished@Dynamic@SBiomass  <- AddDimNames(unfished@SBiomass, 
                                                       c('Stock', 'TimeStep'), 
-                                                      TimeSteps=TimeSteps, values=list(StockNames(x@OM)))
+                                                      TimeSteps=TimeSteps, values=list(StockNames))
     
     HistSim@Unfished@Dynamic@SProduction  <- AddDimNames(unfished@SProduction, 
                                                        c('Stock', 'TimeStep'), 
-                                                       TimeSteps=TimeSteps, values=list(StockNames(x@OM)))
+                                                       TimeSteps=TimeSteps, values=list(StockNames))
     HistSim
     
   }, .progress = 'Calculating Dynamic Unfished')

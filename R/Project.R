@@ -80,6 +80,7 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=TRUE) {
   
   nMPs <- length(MPs)
   # Projection MP loop
+  mp <- 2 # for debugging 
   cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
   
   for (mp in seq_along(MPs)) {
