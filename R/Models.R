@@ -919,7 +919,8 @@ NULL
 #' @export
 RetentionModels <- function(full=TRUE, print=TRUE) {
   ReturnModels(ModelClass=c('Retention-at-Age-Model',
-                            'Retention-at-Length-Model'),
+                            'Retention-at-Length-Model',
+                            'Retention-at-Weight-Model'),
                full, print)
 }
 
@@ -939,17 +940,38 @@ RetentionModelsAge <- function(full=TRUE, print=TRUE) {
                full, print)
 }
 
+#' @describeIn RetentionModels Print a list of valid Retention-at-Weight models
+#'
+#' @export
+RetentionModelsWeight <- function(full=TRUE, print=TRUE) {
+  ReturnModels(ModelClass=c('Retention-at-Weight-Model'),
+               full, print)
+}
+
 #' @describeIn RetentionModels Logistic retention-at-length model
 #' @param Length A numeric vector of lengths
-#' @param L50 Length corresponding with 50% retention
-#' @param L50_95 Interval between `RL50` and length at 95% retention (`RL95`)
+#' @param RL50 Length corresponding with 50% retention
+#' @param RL50_95 Interval between `RL50` and length at 95% retention (`RL95`)
 #' @export
-RetentionAtLength <- function(Length, L50, L50_95) {
-  Pars <- list(SL50=Structure(L50, out=c('nsim', 'nTS'), req='nsim'),
-               SL50_95=Structure(L50_95, out=c('nsim', 'nTS'), req='nsim'))
+RetentionAtLength <- function(Length, RL50, RL50_95) {
+  Pars <- list(SL50=Structure(RL50, out=c('nsim', 'nTS'), req='nsim'),
+               SL50_95=Structure(RL50_95, out=c('nsim', 'nTS'), req='nsim'))
   Maturity_at_Length_(Length, Pars)
 }
 class(RetentionAtLength) <- 'Retention-at-Length-Model'
+
+#' @describeIn RetentionModels Logistic retention-at-weight model
+#' @param Weight A numeric vector of weights
+#' @param RW50 Weight corresponding with 50% retention
+#' @param RW50_95 Interval between `RW50` and weight at 95% retention (`RW95`)
+#' @export
+RetentionAtWeight <- function(Weight, RW50, RW50_95) {
+  Pars <- list(L50=Structure(RW50, out=c('nsim', 'nTS'), req='nsim'),
+               L50_95=Structure(RW50_95, out=c('nsim', 'nTS'), req='nsim'))
+  Maturity_at_Length_(Weight, Pars)
+}
+class(RetentionAtWeight) <- 'Retention-at-Weight-Model'
+
 
 #' @describeIn RetentionModels Double-normal retention-at-length model
 #' @param LR5 Shortest length at which 5% of the population is vulnerable to

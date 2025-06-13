@@ -27,10 +27,12 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
   ncpus <- set_parallel(any(unlist(parallel)))
   
   # Set pbapply functions 
+
+  
   if (requireNamespace("pbapply", quietly = TRUE) && !silent) {
     .lapply <- pbapply::pblapply
     .sapply <- pbapply::pbsapply
-    
+
     # Argument to pass parallel cluster (if running)
     formals(.lapply)$cl <- formals(.sapply)$cl <- substitute(if (snowfall::sfIsRunning()) snowfall::sfGetCluster() else NULL)
   } else if (snowfall::sfIsRunning()) {

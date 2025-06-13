@@ -11,6 +11,9 @@ Hist2MSE <- function(Hist, MPs) {
   }
   
   MPNames <- MPs
+  MSE@MPs <- lapply(MPs, get)
+  names(MSE@MPs) <- MPNames
+  attributes(MSE@MPs)$complete <- rep(FALSE, length(MPNames))
   
   MSE@Number <- ListArraySimAgeTimeAreaMP(Hist@OM, "Projection", MPNames)
   MSE@Biomass <- ArraySimStockTimeMP(Hist@OM, "Projection", MPs=MPNames)

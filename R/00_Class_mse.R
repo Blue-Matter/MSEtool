@@ -9,6 +9,7 @@
 #' @name MSEClass
 setClass("mse",
          slots=c(OM='om',
+                 MPs='list',
                  Unfished='unfished',
                  RefPoints='refpoints',
                  Hist='timeseries',

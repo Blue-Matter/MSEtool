@@ -26,7 +26,7 @@ setMethod("Populate", "stock", function(object,
 #' @export
 #' 
 PopulateOM <- function(OM, silent=FALSE) {
-  if (CheckDigest(list(), OM) | EmptyObject(OM))
+  if (CheckDigest(OM) | EmptyObject(OM))
     return(OM)
   
   # TODO - object check
@@ -64,9 +64,7 @@ PopulateOM <- function(OM, silent=FALSE) {
                                      seed=OM@Seed, 
                                      silent=silent)
     
-    OM@Stock@Weight@MeanAtAge
-    stockList[[st]]@Weight@MeanAtAge
-    
+
     names(stockList)[st] <- stock@Name
     names(fleetList)[st] <- names(stockList)[st]
     fleetList[[st]] <- list()
@@ -146,7 +144,7 @@ PopulateOM <- function(OM, silent=FALSE) {
   # object@Stock
   # object@TimeUnits
   
-  SetDigest(list(), OM)
+  SetDigest(OM)
   
 }
 
@@ -163,7 +161,7 @@ PopulateStock <- function(stock,
                           silent=FALSE) {
   
   argList <- list(seed, ALK, AWK)
-  if (CheckDigest(argList, stock) | EmptyObject(stock))
+  if (CheckDigest(stock, argList) | EmptyObject(stock))
     return(stock)
   
   SetSeed(stock, seed)
@@ -241,7 +239,7 @@ PopulateStock <- function(stock,
                                        nsim=stock@nSim,
                                        seed=seed)
   
-  SetDigest(argList, stock)
+  SetDigest(stock, argList)
 }
 
 
@@ -256,7 +254,7 @@ PopulateLength <- function(Length,
   TimeSteps <- TimeStepAttributes(Length, TimeSteps)
   argList <- list(Ages, nsim, TimeSteps, ASK, seed)
   
-  if (CheckDigest(argList, Length) | EmptyObject(Length))
+  if (CheckDigest(Length, argList) | EmptyObject(Length))
     return(Length)
   
   SetSeed(Length, seed)
@@ -283,7 +281,7 @@ PopulateLength <- function(Length,
   }
   
   Length <- AddMeanAtAgeAttributes(Length, TimeSteps, Ages)
-  SetDigest(argList, Length)
+  SetDigest(Length, argList)
 }
 
 
@@ -300,7 +298,7 @@ PopulateWeight <- function(Weight,
   argList <- list(Ages, Length, nsim, TimeSteps, ASK,
                   CalcAtLength, seed)
   
-  if (CheckDigest(argList, Weight) | EmptyObject(Weight))
+  if (CheckDigest(Weight, argList) | EmptyObject(Weight))
     return(Weight)
   
   SetSeed(Weight, seed)
@@ -348,7 +346,7 @@ PopulateWeight <- function(Weight,
     Weight <- PopulateASK(Weight, Ages, TimeSteps, silent, type='Weight')
   }
   
-  SetDigest(argList, Weight)
+  SetDigest(Weight, argList)
 }
 
 
@@ -364,7 +362,7 @@ PopulateNaturalMortality <- function(NaturalMortality,
   TimeSteps <- TimeStepAttributes(NaturalMortality, TimeSteps)
   
   argList <- list(Ages, Length, nsim, TimeSteps, CalcAtLength, seed)
-  if (CheckDigest(argList, NaturalMortality) | EmptyObject(NaturalMortality))
+  if (CheckDigest( NaturalMortality, argList) | EmptyObject(NaturalMortality))
     return(NaturalMortality)
   
   SetSeed(NaturalMortality, seed)
@@ -393,7 +391,7 @@ PopulateNaturalMortality <- function(NaturalMortality,
   NaturalMortality <- PopulateRandom(NaturalMortality)
   
   NaturalMortality <- AddMeanAtAgeAttributes(NaturalMortality, TimeSteps, Ages)
-  SetDigest(argList, NaturalMortality)
+  SetDigest(NaturalMortality, argList)
 }
 
 PopulateMaturity <- function(Maturity,
@@ -409,7 +407,7 @@ PopulateMaturity <- function(Maturity,
   TimeSteps <- TimeStepAttributes(Maturity, TimeSteps)
   argList <- list(Ages, Length, nsim, TimeSteps, CalcAtLength, seed)
   
-  if (CheckDigest(argList, Maturity) | EmptyObject(Maturity))
+  if (CheckDigest(Maturity, argList) | EmptyObject(Maturity))
     return(Maturity)
   
   SetSeed(Maturity, seed)
@@ -455,7 +453,7 @@ PopulateMaturity <- function(Maturity,
     }
   }
   
-  SetDigest(argList, Maturity)
+  SetDigest(Maturity, argList)
 }
 
 PopulateFecundity <- function(Fecundity,
@@ -489,10 +487,10 @@ PopulateFecundity <- function(Fecundity,
     # object@MeanAtAge <- Weight@MeanAtAge # egg production is fecundity x maturity - calculated internally
     # fecundity is the egg production of a MATURE individual 
     
-    return(SetDigest(argList, Fecundity))
+    return(SetDigest(Fecundity, argList))
   }
   
-  if (CheckDigest(argList, Fecundity))
+  if (CheckDigest(Fecundity, argList))
     return(Fecundity)
   
   SetSeed(Fecundity, seed)
@@ -514,7 +512,7 @@ PopulateFecundity <- function(Fecundity,
       Fecundity@MeanAtAge <- ArrayMultiply(array1=Weight@MeanAtAge,
                                         array2=Maturity@MeanAtAge)
       
-      return(SetDigest(argList, Fecundity))
+      return(SetDigest(Fecundity, argList))
     }
   }
   
@@ -536,7 +534,7 @@ PopulateFecundity <- function(Fecundity,
   
   Fecundity <- AddMeanAtAgeAttributes(Fecundity, TimeSteps, Ages)
   
-  SetDigest(argList, Fecundity)
+  SetDigest(Fecundity, argList)
 }
 
 PopulateSRR <- function(SRR,
@@ -568,7 +566,7 @@ PopulateSRR <- function(SRR,
   nHistTS <- length(histTS)
   nProjTS <- length(projTS)
   
-  if (CheckDigest(argList, SRR) | EmptyObject(SRR))
+  if (CheckDigest(SRR, argList) | EmptyObject(SRR))
     return(SRR)
   
   SetSeed(SRR, seed)
@@ -589,7 +587,7 @@ PopulateSRR <- function(SRR,
                     EmptyObject(SRR@RecDevProj))
   
   if (all(!EmptyObjects)) {
-    return( SetDigest(argList, SRR))
+    return( SetDigest(SRR, argList))
   }
   
   RecDeviations <- GenerateRecruitmentDeviations(SD=SRR@SD,
@@ -620,7 +618,7 @@ PopulateSRR <- function(SRR,
     Sim=1:nrow(SRR@RecDevProj),
     TimeStep=projTS
   )
-  SetDigest(argList, SRR)
+  SetDigest(SRR, argList)
 }
 
 PopulateSpatial <- function(Spatial,
@@ -633,7 +631,7 @@ PopulateSpatial <- function(Spatial,
                             nits=100) {
   argList <- list(Ages, nsim, seed, nits)
   
-  if (CheckDigest(argList, Spatial))
+  if (CheckDigest(Spatial, argList))
     return(Spatial)
   
   SetSeed(Spatial, seed)
@@ -652,7 +650,7 @@ PopulateSpatial <- function(Spatial,
     Spatial@Movement  <- AddDimNames(array(1, dim=c(1,1,1,1,1)),
                                     c("Sim",'FromArea', 'ToArea','Age', 'TimeStep'),
                                     TimeSteps=TimeSteps)
-    return(SetDigest(argList, Spatial))
+    return(SetDigest(Spatial, argList))
   }
   
 
@@ -723,7 +721,7 @@ PopulateSpatial <- function(Spatial,
   Spatial@RelativeSize <- AddDimNames(Spatial@RelativeSize, c('Sim', 'Area'))
   
 
-  SetDigest(argList, Spatial)
+  SetDigest(Spatial, argList)
   
 }
 
@@ -756,7 +754,7 @@ PopulateDepletion <- function(Depletion,
                               seed=NULL) {
   argList <- list(nsim, seed)
   
-  if (CheckDigest(argList, Depletion) | EmptyObject(Depletion))
+  if (CheckDigest(Depletion, argList) | EmptyObject(Depletion))
     return(Depletion)
   
   SetSeed(Depletion, seed)
@@ -769,7 +767,7 @@ PopulateDepletion <- function(Depletion,
     cli::cli_abort(c('Invalid value for `Reference`',
                      "x"="Currently {.val {Depletion@Reference}}. Must be one of: {.val {validReference}}")
                    )
-  SetDigest(argList, Depletion)
+  SetDigest(Depletion, argList)
 }
 
 
@@ -788,7 +786,7 @@ PopulateFleet <- function(Fleet,
   HistTimeSteps <- TimeSteps(Fleet, 'Historical')
   
   argList <- list(Ages, Length, nsim, TimeSteps, seed)
-  if (CheckDigest(argList, Fleet) | EmptyObject(Fleet))
+  if (CheckDigest(Fleet, argList) | EmptyObject(Fleet))
     return(Fleet)
   
   SetSeed(Fleet, seed)
@@ -846,14 +844,15 @@ PopulateFleet <- function(Fleet,
                                              TimeSteps,
                                              nAreas)
   
-  if (all(is.na(Fleet@WeightFleet ))) {
+  if (all(is.na(Fleet@WeightFleet))) {
     Fleet@WeightFleet <- Weight@MeanAtAge
   } else {
-    stop('need to add populate for Fleet@WeightFleet')
+    Fleet@WeightFleet
+    # stop('need to add populate for Fleet@WeightFleet')
   }
   
   
-  SetDigest(argList, Fleet)
+  SetDigest(Fleet, argList)
 }
 
 
@@ -866,7 +865,7 @@ PopulateFishingMortality <- function(FishingMortality,
   TimeSteps <- TimeStepAttributes(FishingMortality, TimeSteps)
   argList <- list(nsim, TimeSteps, seed)
   
-  if (CheckDigest(argList, FishingMortality) | EmptyObject(FishingMortality))
+  if (CheckDigest(FishingMortality, argList) | EmptyObject(FishingMortality))
     return(FishingMortality)
   
   SetSeed(FishingMortality, seed)
@@ -883,7 +882,7 @@ PopulateFishingMortality <- function(FishingMortality,
   if (EmptyObject(FishingMortality@ApicalF)) # calculate from `DeadAtAge`
     FishingMortality@ApicalF <- apply(FishingMortality@DeadAtAge, c(1,3), max)
   
-  SetDigest(argList, FishingMortality)
+  SetDigest(FishingMortality, argList)
   
 }
   
@@ -899,7 +898,7 @@ PopulateDiscardMortality <- function(DiscardMortality,
   TimeSteps <- TimeStepAttributes(DiscardMortality, TimeSteps)
   argList <- list(Ages, Length, nsim, TimeSteps, CalcAtLength, seed)
   
-  if (CheckDigest(argList, DiscardMortality) | EmptyObject(DiscardMortality))
+  if (CheckDigest(DiscardMortality, argList) | EmptyObject(DiscardMortality))
     return(DiscardMortality)
   
   SetSeed(DiscardMortality, seed)
@@ -922,7 +921,7 @@ PopulateDiscardMortality <- function(DiscardMortality,
                                             TimeStep=TimeSteps[1:dd[3]])
   }
   
-  SetDigest(argList, DiscardMortality)
+  SetDigest(DiscardMortality, argList)
 }
   
 PopulateSelectivity <- function(Selectivity,
@@ -942,7 +941,7 @@ PopulateSelectivity <- function(Selectivity,
   argList <- list(FishingMortality, DiscardMortality, Ages, 
                   Length, Weight, TimeSteps, nsim, CalcAtLength, seed)
   
-  if (CheckDigest(argList, Selectivity))
+  if (CheckDigest(Selectivity, argList))
     return(Selectivity)
   
   SetSeed(Selectivity, seed)
@@ -1018,7 +1017,7 @@ PopulateSelectivity <- function(Selectivity,
   
   # selectivity <- AddMeanAtAgeAttributes(selectivity, TimeSteps, Ages)
 
-  SetDigest(argList, Selectivity)
+  SetDigest(Selectivity, argList)
 }
 
 
@@ -1038,7 +1037,7 @@ PopulateRetention <- function(Retention,
                   TimeSteps, nsim, CalcAtLength, seed)
   
   
-  if (CheckDigest(argList, Retention))
+  if (CheckDigest(Retention, argList))
     return(Retention)
   
   if (EmptyObject(Retention)) {
@@ -1047,7 +1046,7 @@ PopulateRetention <- function(Retention,
     Retention@MeanAtLength <- array(1, dim=c(1,1,1)) |> 
       AddDimNames(c('Sim', 'Class', 'TimeStep'), TimeSteps=TimeSteps)
     
-    return(SetDigest(argList, Retention))
+    return(SetDigest(Retention, argList))
   }
   
   SetSeed(Retention, seed)
@@ -1081,7 +1080,7 @@ PopulateRetention <- function(Retention,
     Retention@MeanAtLength <- array(1, dim=c(1,1,1)) |> 
       AddDimNames(c('Sim', 'Class', 'TimeStep'),TimeSteps=TimeSteps)
     
-    return(SetDigest(argList, Retention))
+    return(SetDigest(Retention, argList))
   } 
   
   Retention <- MeanAtLength2MeanAtAge(Retention, Length, Ages,
@@ -1122,7 +1121,7 @@ PopulateRetention <- function(Retention,
   }
   
   # Retention <- AddMeanAtAgeAttributes(Retention, TimeSteps, Ages)
-  SetDigest(argList, Retention)
+  SetDigest(Retention, argList)
   
 }
 
@@ -1145,7 +1144,7 @@ PopulateEffort <- function(Effort,
                   TimeSteps,
                   seed)
   
-  if (CheckDigest(argList, Effort))
+  if (CheckDigest(Effort, argList))
     return(Effort)
   
   SetSeed(Effort, seed)
@@ -1180,7 +1179,7 @@ PopulateEffort <- function(Effort,
         AddDimNames(c('Sim', 'TimeStep'), TimeSteps=TimeSteps)
     }
   }
-  SetDigest(argList, Effort)
+  SetDigest(Effort, argList)
 }
                             
 
@@ -1191,7 +1190,7 @@ PopulateDistribution <- function(Distribution,
   
   argList <- list(TimeSteps, nAreas)
   
-  if (CheckDigest(argList, Distribution))
+  if (CheckDigest(Distribution, argList))
     return(Distribution)
   
   # Closure
@@ -1212,7 +1211,7 @@ PopulateDistribution <- function(Distribution,
   if (!EmptyObject(Distribution@Cost))
     cli::cli_warn('`Distribution@Cost` not currently supported')
   
-  SetDigest(argList, Distribution)
+  SetDigest(Distribution, argList)
 }
 
 # Obs ----
@@ -1319,6 +1318,12 @@ PopulateObsCV <- function(CV, nSim) {
     return(CV)
   }
   
+  if (!is.null(dimnames(CV))) {
+    return(CV[1:nSim])
+  
+  }
+  
+  
   CV <- StructurePars(list(CV), nSim)[[1]] |> 
     ExpandSims(nSim) |>
     DropDimension("TimeStep", FALSE)
@@ -1342,6 +1347,13 @@ PopulateObsError <- function(object, nSim, TimeSteps) {
       cli::cli_abort("`object@Error` must be an array with `nSim` rows and `nTS` columns")
     
     chk1 <- nrow(object@Error) != nSim
+    
+    if (chk1 & nrow(object@Error) > nSim) {
+      object@Error <- object@Error[1:nSim,]
+      chk1 <- !chk1
+    }
+    
+    
     chk2 <- ncol(object@Error) != length(TimeSteps)
     if (chk1 & chk2) 
       cli::cli_abort("`object@Error` must be an array with `nSim` rows and `nTS` columns")
@@ -1383,13 +1395,18 @@ PopulateObsBias <- function(object, nSim) {
     return(object@Bias)
   }
   
+  if (length(object@Bias) > nSim) {
+    object@Bias <- object@Bias[1:nSim]
+  } 
+  
   if (length(object@Bias) == nSim) {
     object@Bias <- array(object@Bias, dim=nSim, dimnames = list(Sim=1:nSim)) 
     return(object@Bias)
   }
   
-  if (length(object@Bias) != nSim)
-  cli::abort("`Catch@Bias` must be length 1, 2, or `nSim`")
+
+  
+  cli::cli_abort("`Catch@Bias` must be length 1, 2, or `nSim`")
   
   object@Bias
 }

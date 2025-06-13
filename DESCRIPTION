@@ -175,6 +175,7 @@ Collate:
     'OptimiseRefYield.R'
     'PMobjects.R'
     'PMtable.R'
+    'Parallel.R'
     'Plot.R'
     'Populate.R'
     'PopulateFunctions.R'

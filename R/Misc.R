@@ -568,8 +568,11 @@ GetIndex <- function(i, max_i) {
   i
 }
 
+IdenticalS4 <- function(object1, object2) {
+  digest::digest(object1, algo='spookyhash') == digest::digest(object2, algo='spookyhash')
+}
 
-SetDigest <- function(argList, object) {
+SetDigest <- function(object, argList=list()) {
   # object@Created <- NULL
   # object@Modified <- NULL
 
@@ -599,10 +602,10 @@ MakeNamedList <- function(names, values=NULL) {
   l
 }
 
-CheckDigest <- function(argList, object) {
+CheckDigest <- function(object, argList=list()) {
   if (is.null(attributes(object)$digest))
     return(FALSE)
-  SetDigest <- SetDigest(argList, object)
+  SetDigest <- SetDigest(object, argList)
 
   if (attributes(SetDigest)$digest == attributes(object)$digest)
     return(TRUE)

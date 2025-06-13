@@ -1,9 +1,14 @@
+
+methods::setClassUnion(name="list.data", members=c('list', "data"))
+
+
 #' Class Hist
 #' 
 #' More 
 #' 
 #' @include 00_Class_unions.R
 #' @include 00_Class_child.R
+#' @include 00_Class_data.R
 #' @include 00_Class_om.R
 #' @include 00_Class_unfished.R
 #' @include 00_Class_refpoints.R
@@ -15,7 +20,7 @@ setClass("hist",
          slots=c(OM='om',
                  Unfished='unfished',
                  RefPoints='refpoints',
-                 Data='list' 
+                 Data='list.data' 
          ), 
          contains=c('timeseries',
                     'MiscClass')

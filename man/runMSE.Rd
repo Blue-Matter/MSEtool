@@ -7,7 +7,7 @@
 \alias{runMSE}
 \title{Run a Management Strategy Evaluation}
 \usage{
-SimulateDEV(OM = NULL, parallel = FALSE, silent = FALSE, ...)
+SimulateDEV(OM = NULL, silent = FALSE, parallel = TRUE, ...)
 
 Simulate(OM = MSEtool::testOM, parallel = FALSE, silent = FALSE, nsim = NULL)
 
@@ -34,11 +34,11 @@ runMSE(
 \item{OM}{An operating model object (class \linkS4class{OM} or class \code{Hist}). Also works for
 \code{MOM} objects, as a wrapper for \code{ProjectMOM}}
 
+\item{silent}{Should messages be printed out to the console?}
+
 \item{parallel}{Logical or a named list. Should MPs be run using parallel processing?
 For \code{runMSE}, can also be \code{"sac"} to run the entire MSE in parallel
 using the split-apply-combine technique. See Details for more information.}
-
-\item{silent}{Should messages be printed out to the console?}
 
 \item{nsim}{Optional. numeric value to override \code{OM@nsim}.}
 

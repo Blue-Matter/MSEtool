@@ -78,6 +78,7 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
                     ProjTS=TimeSteps(om, 'Projection')
   )
   
+  
   if (methods::is(OM, 'OM')) {
     om@Stock <- OM2stock(OM, cpars=OM@cpars, TimeSteps) 
     om@Fleet <- OM2fleet(OM, OM@cpars, OM@Fdisc)
@@ -88,7 +89,7 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
     om@Stock@Length <- PopulateLength(om@Stock@Length,
                                 Ages=om@Stock@Ages,
                                 nsim=om@nSim,
-                                TimeSteps=TimeSteps(om),
+                                TimeSteps=om@TimeSteps,
                                 ASK=TRUE,
                                 seed=om@Seed)
 
@@ -96,7 +97,7 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
                                       Ages=om@Stock@Ages,
                                       Length=om@Stock@Length,
                                       nsim=om@nSim,
-                                      TimeSteps=TimeSteps(om),
+                                      TimeSteps=om@TimeSteps,
                                       ASK=FALSE,
                                       seed=om@Seed)
     
@@ -107,7 +108,7 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
                                             Length=om@Stock@Length,
                                             Weight=om@Stock@Weight,
                                             nsim=om@nSim,
-                                            TimeSteps(om),
+                                            om@TimeSteps,
                                             CalcAtLength=TRUE,
                                             seed=om@Seed)
       

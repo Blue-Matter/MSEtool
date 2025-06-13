@@ -12,7 +12,7 @@ CalcMovement <- function(Spatial,
                          control = list(iter.max = 5e3, eval.max = 1e4)) {
 
   argList <- list(nsim, seed, nits, control)
-  if (CheckDigest(argList, Spatial))
+  if (CheckDigest(Spatial, argList))
     return(Spatial)
 
   SetSeed(Spatial, seed)
@@ -171,7 +171,7 @@ CalcMovement <- function(Spatial,
 
   Spatial@UnfishedDist <- UnfishedDist
 
-  SetDigest(argList, Spatial)
+  SetDigest(Spatial, argList)
 }
 
 

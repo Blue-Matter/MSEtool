@@ -22,9 +22,10 @@ CopySlots <- function(ObjectOut,
 }
 
 OM2Hist <- function(OM, silent=FALSE) {
+  
 
   if (!silent) 
-    id <- cli::cli_progress_bar("Initializing `Hist` Object")
+    id <- cli::cli_progress_bar("Initializing `Hist` Object")  
   
   OM <- Populate(OM, silent=silent)
   
@@ -33,21 +34,21 @@ OM2Hist <- function(OM, silent=FALSE) {
   TimeSteps <- TimeSteps(OM)
   nArea <- nArea(OM)
   
+ 
   Hist@OM@Stock <- purrr::map(Hist@OM@Stock, \(Stock) 
-                              Stock2Hist(Stock, nSim=nSim(OM), TimeSteps=TimeSteps(OM), silent, id)
-  )
-  
-  Hist@OM@Stock <- purrr::map(Hist@OM@Stock, \(x)  {
-    x@SRR@SPFrom <- match(x@SRR@SPFrom,StockNames(OM))
-    x
+                              Stock2Hist(Stock, nSim=nSim(OM), TimeSteps=TimeSteps, silent, id))
+
+  Hist@OM@Stock <- purrr::map(Hist@OM@Stock, \(Stock)  {
+    Stock@SRR@SPFrom <- match(Stock@SRR@SPFrom,StockNames(OM))
+    Stock
   })
   
-
   nAgesList <- purrr::map(Hist@OM@Stock, \(Stock) 
-                      length(Stock@Ages@Classes))
+    length(Stock@Ages@Classes))
   
+
   Hist@OM@Fleet <- purrr::map2(Hist@OM@Fleet, nAgesList, \(FleetList,nAges)
-                               Fleet2Hist(FleetList, nAges, nSim=nSim(OM), TimeSteps=TimeSteps(OM), nArea, silent, id)
+    Fleet2Hist(FleetList, nAges, nSim=nSim(OM), TimeSteps=TimeSteps, nArea, silent, id)
   )
   
   Hist@Number <- ListArraySimAgeTimeArea(OM, 'Historical') 
@@ -367,22 +368,20 @@ CombineDistribution <- function(List, nSim, nAges, TimeSteps, nArea) {
 
 
 
-
-
-Hist2HistSimList <- function(Hist) {
+MSE2HistSimList <- function(MSE) {
   
-  HistSimList <- purrr::map(1:nSim(Hist@OM), \(x)  
-                            SubsetSim(Hist, Sim=x, drop=TRUE)
+  HistSimList <- purrr::map(1:nSim(MSE@OM), \(x)  
+                            SubsetSim(MSE, Sim=x, drop=TRUE)
                             , .progress = 'Building internal object `HistSimList`')
-  names(HistSimList) <- 1:nSim(Hist@OM)
+  names(HistSimList) <- 1:nSim(MSE@OM)
   
   nstock <- nStock(HistSimList[[1]]@OM)
   
-  for (i in cli::cli_progress_along(1:nSim(Hist@OM), "Processing `HistSimList`")) {
-    HistSimList[[i]]@FDeadAtAgeArea <- lapply(HistSimList[[i]]@FDeadAtAgeArea, Array2List, 2)
-    HistSimList[[i]]@FRetainAtAgeArea <- lapply(HistSimList[[i]]@FRetainAtAgeArea, Array2List, 2) 
-    HistSimList[[i]]@Removals <- lapply(HistSimList[[i]]@Removals, Array2List, 2)
-    HistSimList[[i]]@Landings <- lapply(HistSimList[[i]]@Landings, Array2List, 2) 
+  for (i in cli::cli_progress_along(1:nSim(MSE@OM), "Processing `HistSimList`")) {
+    HistSimList[[i]]@FDeadAtAgeArea <- lapply(HistSimList[[i]]@Hist@FDeadAtAgeArea, Array2List, 2)
+    HistSimList[[i]]@FRetainAtAgeArea <- lapply(HistSimList[[i]]@Hist@FRetainAtAgeArea, Array2List, 2) 
+    HistSimList[[i]]@Removals <- lapply(HistSimList[[i]]@Hist@Removals, Array2List, 2)
+    HistSimList[[i]]@Landings <- lapply(HistSimList[[i]]@Hist@Landings, Array2List, 2) 
     
     for (st in 1:nstock) {
       movement <- HistSimList[[i]]@OM@Stock[[st]]@Spatial@Movement
@@ -390,7 +389,80 @@ Hist2HistSimList <- function(Hist) {
     }
   }
   
+  class(HistSimList) <- 'histsimlist'
+  HistSimList
   
+}
+
+Hist2HistSimList <- function(Hist) {
+  
+  # parallel <- snowfall::sfIsRunning()
+
+  
+  HistSimList <- purrr::map(1:nSim(Hist@OM), \(x)  
+                            SubsetSim(Hist, Sim=x, drop=TRUE)
+                            , .progress = 'Building internal object')
+  names(HistSimList) <- 1:nSim(Hist@OM)
+
+  nstock <- nStock(HistSimList[[1]]@OM)
+  
+  HistSimList <- purrr::map(HistSimList, \(HistSim) {
+    HistSim@FDeadAtAgeArea <- purrr::map(HistSim@FDeadAtAgeArea, Array2List, 2)
+    HistSim@FRetainAtAgeArea <- purrr::map(HistSim@FRetainAtAgeArea, Array2List, 2)
+    HistSim@Removals <- purrr::map(HistSim@Removals, Array2List, 2)
+    HistSim@Landings <- purrr::map(HistSim@Landings, Array2List, 2)
+    
+    HistSim@OM@Stock <- purrr::map(HistSim@OM@Stock, \(Stock) {
+      Stock@Spatial@Movement <- Array2List(Stock@Spatial@Movement,4)
+      Stock
+    })
+    HistSim
+  }, .progress = 'Processing internal object')
+  
+  # TODO
+  # - parallel a lot slower with large objects 
+  # - consider breaking HistSim into many smaller sub-objects
+  # 
+  # st <- Sys.time()
+  # if (parallel) {
+  #   cli::cli_progress_message("{cli::symbol$info} Processing internal object ...")
+  #   
+  #   HistSimList <- snowfall::sfLapply(HistSimList, function(HistSim) {
+  #     
+  #     HistSim@FDeadAtAgeArea <- purrr::map(HistSim@FDeadAtAgeArea, MSEtool:::Array2List, 2)
+  #     HistSim@FRetainAtAgeArea <- purrr::map(HistSim@FRetainAtAgeArea, MSEtool:::Array2List, 2)
+  #     HistSim@Removals <- purrr::map(HistSim@Removals, MSEtool:::Array2List, 2)
+  #     HistSim@Landings <- purrr::map(HistSim@Landings, MSEtool:::Array2List, 2)
+  #     
+  #     HistSim@OM@Stock <- purrr::map(HistSim@OM@Stock, \(Stock) {
+  #       Stock@Spatial@Movement <- MSEtool:::Array2List(Stock@Spatial@Movement,4)
+  #       Stock
+  #     })
+  #     
+  #     HistSim
+  #   })
+  #   
+  #   cli::cli_process_done()
+  #   
+  # } else {
+  #   HistSimList <- purrr::map(HistSimList, \(HistSim) {
+  #     HistSim@FDeadAtAgeArea <- purrr::map(HistSim@FDeadAtAgeArea, Array2List, 2)
+  #     HistSim@FRetainAtAgeArea <- purrr::map(HistSim@FRetainAtAgeArea, Array2List, 2)
+  #     HistSim@Removals <- purrr::map(HistSim@Removals, Array2List, 2)
+  #     HistSim@Landings <- purrr::map(HistSim@Landings, Array2List, 2)
+  #     
+  #     HistSim@OM@Stock <- purrr::map(HistSim@OM@Stock, \(Stock) {
+  #       Stock@Spatial@Movement <- Array2List(Stock@Spatial@Movement,4)
+  #       Stock
+  #     })
+  #     HistSim
+  #   }, .progress = 'Processing internal object')
+  # }
+  # 
+  # end <- Sys.time()
+  # 
+  # print(end-st)
+
   class(HistSimList) <- 'histsimlist'
   HistSimList
 }

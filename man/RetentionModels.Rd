@@ -4,7 +4,9 @@
 \alias{RetentionModels}
 \alias{RetentionModelsLength}
 \alias{RetentionModelsAge}
+\alias{RetentionModelsWeight}
 \alias{RetentionAtLength}
+\alias{RetentionAtWeight}
 \alias{RDoubleNormal}
 \alias{RetentionAtAge}
 \title{Retention-at-Length or -Age Models}
@@ -13,7 +15,11 @@ RetentionModelsLength(full = TRUE, print = TRUE)
 
 RetentionModelsAge(full = TRUE, print = TRUE)
 
-RetentionAtLength(Length, L50, L50_95)
+RetentionModelsWeight(full = TRUE, print = TRUE)
+
+RetentionAtLength(Length, RL50, RL50_95)
+
+RetentionAtWeight(Weight, RW50, RW50_95)
 
 RDoubleNormal(Length, LR5, LFR, Rmaxlen)
 
@@ -22,9 +28,15 @@ RetentionAtAge(Ages, A50, A50_95)
 \arguments{
 \item{Length}{A numeric vector of lengths}
 
-\item{L50}{Length corresponding with 50\% retention}
+\item{RL50}{Length corresponding with 50\% retention}
 
-\item{L50_95}{Interval between \code{RL50} and length at 95\% retention (\code{RL95})}
+\item{RL50_95}{Interval between \code{RL50} and length at 95\% retention (\code{RL95})}
+
+\item{Weight}{A numeric vector of weights}
+
+\item{RW50}{Weight corresponding with 50\% retention}
+
+\item{RW50_95}{Interval between \code{RW50} and weight at 95\% retention (\code{RW95})}
 
 \item{LR5}{Shortest length at which 5\% of the population is vulnerable to
 retention by the fleet. A single numeric value, a numeric
@@ -55,7 +67,11 @@ Functions for generating retention-at-age or -at-length.
 
 \item \code{RetentionModelsAge()}: Print a list of valid Retention-at-Age models
 
+\item \code{RetentionModelsWeight()}: Print a list of valid Retention-at-Weight models
+
 \item \code{RetentionAtLength()}: Logistic retention-at-length model
+
+\item \code{RetentionAtWeight()}: Logistic retention-at-weight model
 
 \item \code{RDoubleNormal()}: Double-normal retention-at-length model
 

@@ -4,11 +4,13 @@
 #' @describeIn runMSE Development version of `Simulate`
 #' @export
 SimulateDEV <- function(OM=NULL, 
-                        parallel=FALSE, 
                         silent=FALSE,
+                        parallel=TRUE, 
                         ...) {
   
   CheckClass(OM)
+  
+  on.exit(cli::stop_app())
   
   # if (isTRUE(silent)) 
   #   messages <- FALSE
@@ -18,9 +20,27 @@ SimulateDEV <- function(OM=NULL,
   
   OM <- StartUp(OM) 
   
+  # Set up parallel processing 
+  if (parallel & !snowfall::sfIsRunning())
+    setup()
+  ncpus <- set_parallel(any(unlist(parallel)))
+
+  # Set pbapply functions
+  .lapply <- define.lapply(silent)
+  .sapply <- define.sapply(silent)
+  
+  # NOTE: future appears a lot slower 
+  # if (parallel) {
+  #   ncores <- parallelly::availableCores(logical=FALSE)
+  #   future::plan('multisession', workers=ncores)
+  # } else {
+  #   future::plan()
+  # }
+  
+  
   # ---- Make Hist Object ----
   Hist <- OM2Hist(OM, silent)
-
+  
   # ---- Calculate Equilibrium Unfished ----
   Hist@Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
   
@@ -36,44 +56,42 @@ SimulateDEV <- function(OM=NULL,
 
   # ---- Optimize for Final Depletion ----
   
-  # EXTREMELY SLOW
-  # future::plan(future::multisession, workers = 6)
-  # tictoc::tic()
-  # HistSimList <- furrr::future_map(HistSimList, \(HistSim) 
-  #                                   OptimizeCatchability(HistSim))
-  # tictoc::toc()
+  if (parallel) {
+    cli::cli_progress_message("Optimizing catchability (q) for Final Depletion")
+    HistSimList <- .lapply(HistSimList, OptimizeCatchability)
+    cli::cli_progress_done()
+  } else {
+    HistSimList <- purrr::map(HistSimList, \(HistSim)
+                              OptimizeCatchability(HistSim),
+                              .progress = list(
+                                type = "iterator",
+                                format = "Optimizing catchability (q) for Final Depletion {cli::pb_bar} {cli::pb_percent}",
+                                clear = TRUE))
+  }
   
- 
-  # for (i in 1:length(HistSimList))
-       # HistSimList[[i]]@OM@Fleet[[1]]@Effort@Catchability[] <- tiny
-       
-  # HistSim <- HistSimList[[5]]
-  # tictoc::tic()
-  # t <- OptimizeCatchability(HistSim)
-  # tictoc::toc()
+  # HistSimList <- purrr::map(HistSimList, \(HistSim)
+  #                           OptimizeCatchability(HistSim),
+  #                           .progress = list(
+  #                             type = "iterator",
+  #                             format = "Optimizing catchability (q) for Final Depletion {cli::pb_bar} {cli::pb_percent}",
+  #                             clear = TRUE))
+
   
-  # tictoc::tic()
-  HistSimList <- purrr::map(HistSimList, \(HistSim) 
-                            OptimizeCatchability(HistSim),
-                            .progress = list(
-                              type = "iterator", 
-                              format = "Optimizing catchability (q) for Final Depletion {cli::pb_bar} {cli::pb_percent}",
-                              clear = TRUE))
-  # tictoc::toc()
-  
- 
   
   # ---- Calculate Reference Points ----
   # TODO speed up - CalcRefPoints.R
   # RefPoints <- CalcRefPoints(OM, Unfished)
   
   # ---- Historical Population Dynamics ----
+  # tictoc::tic()
   HistSimList <- purrr::map(HistSimList, \(x) 
                        SimulateDynamics_(x, TimeSteps(OM, 'Historical')),
                        .progress = list(
                          type = "iterator", 
                          format = "Simulating Historical Fishery {cli::pb_bar} {cli::pb_percent}",
                          clear = TRUE))
+  
+  # tictoc::toc()
   
   # ---- Check for Depletion Optimization ----
  
@@ -120,6 +138,7 @@ SimulateDEV <- function(OM=NULL,
   
   # make Hist object
   Hist <- HistSimList2Hist(Hist, HistSimList)
+  Hist <- SetDigest(Hist)
   Hist
   
 }
