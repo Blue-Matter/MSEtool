@@ -119,7 +119,7 @@ setMethod('CalcUnfishedSurvival', c('stock', 'ANY', 'ANY'), function(x, SP=FALSE
       aperm(c('Sim', 'Age', 'TimeStep'))
     
   }
-  Survival
+  Survival |> ArrayExpand(x@nSim, nAges, TimeSteps)
 })
 
 setMethod('CalcUnfishedSurvival', c('StockList', 'ANY'), function(x, SP=FALSE, TimeSteps=NULL) {

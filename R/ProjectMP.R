@@ -158,7 +158,7 @@ UpdateSelectivity <- function(ProjSim, MPAdvice, MPAdvicePrevious,
   ModelClass <- getModelClass(Selectivity@Model)
   
   Length <- ProjSim@OM@Stock[[st]]@Length
-  Length@ASK <- Length@ASK[,,TSIndex]
+  Length@ASK <- Length@ASK[,,TSIndex, drop=FALSE]
   Weight <- ProjSim@OM@Stock[[st]]@Weight
   Ages <- ProjSim@OM@Stock[[st]]@Ages
   if (grepl('at-Length',ModelClass)) {

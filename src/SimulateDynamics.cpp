@@ -103,6 +103,7 @@ S4 SimulateDynamics_(S4 HistSimIn,
       // Calculate Total Biomass 
       if (debug)
         Rcout << "Total Biomass" << std::endl;
+      
       arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // nAge, nTS, nArea
 
       int nAge = NumberAtAgeArea.n_rows;
@@ -115,7 +116,7 @@ S4 SimulateDynamics_(S4 HistSimIn,
       // VB = vulnerable (selectivity) x available (spatial closure)
       
       if (debug)
-        Rcout << "VBiomassArea" << std::endl;;
+        Rcout << "VBiomassArea" << std::endl;
       
       arma::mat VBiomassArea = CalcVBiomass(NumberAtAgeArea.col(TSindex), // nAge, nArea
                                             FleetWeightAtAge.col(TSindex), // nAge, nFleet
@@ -126,8 +127,8 @@ S4 SimulateDynamics_(S4 HistSimIn,
       
       // Distribute Effort over Areas
       // currently proportional to VB - ie no SpatTarg
-      
-      // Rcout << "Effort\n";
+      if (debug)
+        Rcout << "Effort" << std::endl;
       
       int nFleet = VBiomassArea.n_rows;
       arma::cube EffortArea = EffortAreaList[st]; // nTS, nFleet, nArea
@@ -142,7 +143,9 @@ S4 SimulateDynamics_(S4 HistSimIn,
       
 
       // Calculate F within each Area
-      // Rcout << "FMortFleetArea\n";
+      if (debug)
+        Rcout << "FMortFleetArea" << std::endl;
+      
       List FMortFleetArea = CalcFMortality(EffortArea.row(TSindex), // nFleet, nArea,
                                            arma::vectorise(Catchability.row(TSindex)), // nFleet
                                            RelativeSize, // nArea
@@ -162,7 +165,9 @@ S4 SimulateDynamics_(S4 HistSimIn,
       
       // Calc Spawning Production and Spawning Biomass
       // (first calculate by area and then summed over areas)
-      // Rcout << "SProductSBiomass\n";
+      if (debug)
+        Rcout << "SProductSBiomass" << std::endl;
+      
       arma::cube FDeadFleetArea = FMortFleetArea["FDeadFleetArea"];
       arma::mat FDeadAtAgeArea = arma::sum(FDeadFleetArea,1);
       arma::vec SProductSBiomass = CalcSpawnProduction(NumberAtAgeArea.col(TSindex), // nAge
@@ -180,6 +185,9 @@ S4 SimulateDynamics_(S4 HistSimIn,
     // Apply SPFrom for spawning production from another stock
     // TODO herm
     if (nStock>1) {
+      if (debug)
+        Rcout << "SPFrom" << std::endl;
+      
       for (int st=0; st<nStock; st++) {
         S4 Stock = StockList[st];
         S4 SRR = Stock.slot("SRR");
@@ -194,7 +202,8 @@ S4 SimulateDynamics_(S4 HistSimIn,
     // Calculate Recruitment and Numbers at beginning of next time step
     for (int st=0; st<nStock; st++) {
       
-      // Rcout << "Stock = " << st << std::endl;
+      if (debug)
+        Rcout << "Calculate Recruitment and Numbers " << st << std::endl;
       
       arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // nAge, nTS, nArea
       int nAge = NumberAtAgeArea.n_rows;
@@ -211,6 +220,9 @@ S4 SimulateDynamics_(S4 HistSimIn,
 
       S4 Spatial = Stock.slot("Spatial");
       
+      if (debug)
+        Rcout << "Recruitment " << std::endl;
+      
       if (TSRec<nTSnumber) {
         S4 SRR = Stock.slot("SRR");
         arma::vec R0 = SRR.slot("R0");
@@ -220,20 +232,40 @@ S4 SimulateDynamics_(S4 HistSimIn,
         
         Function SRRModel = SRR.slot("Model");
         List SRRPars = SRR.slot("Pars");
-      
+        
         // Calculate Recruitment
         // NOTE: uses SP0 and R0 from first time step
         // Uses aggregate SProduction - ie summed over areas
         // TODO option to use time-varying alpha, beta
+        
+        
+        // double SP = arma::as_scalar(SProduction.row(st).col(TSindex));
+        // Rcout << "SP = " << SP << std::endl;
+        // double r0 =  arma::as_scalar(R0(TSindex));
+        // Rcout << "r0 = " << r0 << std::endl;
+        
+        // Rcout << "sp0 = " << sp0 << std::endl;
+        // double recdev = arma::as_scalar(RecDevs(TSRec));
+        // Rcout << "recdev = " << recdev << std::endl;
+        
+        int sp0_nts = SP0.n_cols;
+        double sp0 = arma::as_scalar(SP0.row(st).col(0));
+        if (sp0_nts >1 ) {
+          sp0 = arma::as_scalar(SP0.row(st).col(TSindex));  
+        } 
+        
+        
         double Recruits = CalcRecruitment_(arma::as_scalar(SProduction.row(st).col(TSindex)),
                                            arma::as_scalar(R0(TSindex)),
-                                           arma::as_scalar(SP0.row(st).col(TSindex)),
+                                           sp0,
                                            arma::as_scalar(RecDevs(TSRec)),
                                            SRRModel,
                                            SRRPars,
                                            TSindex);
         
         // Distribute Recruits
+        if (debug)
+          Rcout << "Distribute Recruits " << std::endl;
       
         arma::cube UnfishedDist = Spatial.slot("UnfishedDist"); // nArea, nAge, nTS;
         arma::vec recruitArea(nArea);
@@ -258,6 +290,9 @@ S4 SimulateDynamics_(S4 HistSimIn,
         S4 Maturity = Stock.slot("Maturity");
         arma::mat Semelparous = Maturity.slot("Semelparous");
         
+        if (debug)
+          Rcout << "NumberAtAgeArea Next"  << std::endl;
+        
         NumberAtAgeArea.col(TSindex+1) = CalcNumberNext_(NumberAtAgeArea.col(TSindex),
                             Semelparous.col(TSindex),
                             FDeadAtAgeAreaStock[TSindex],
@@ -267,6 +302,9 @@ S4 SimulateDynamics_(S4 HistSimIn,
                                                nArea);
         
         // Move Population at beginning of next Time Step
+        
+        if (debug)
+          Rcout << "Movement"  << std::endl;
         
         List MovementList = Spatial.slot("Movement");
         NumberAtAgeArea = CalcStockMovement_(NumberAtAgeArea,

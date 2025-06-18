@@ -181,6 +181,8 @@ inline double CalcRecruitment_(double SProduction,
                               Named("S0") = SP0,
                               Named("R0") = R0);
   
+  // Rcout << "Here" << std::endl;
+  
   CharacterVector ParNames = SRRPars.names();
   CharacterVector ArglistNames(3+SRRPars.size());
   ArglistNames[0] = "S";

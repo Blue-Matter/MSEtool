@@ -74,6 +74,8 @@ CalcDynamicUnfished <- function(HistSimList, silent=FALSE) {
   StockNames <- StockNames(HistSimList[[1]]@OM)
   out <- purrr::map(HistSimList, \(HistSim) {
     
+    HistSim@Unfished@Equilibrium@SProduction
+    
     unfished <- SimulateDynamics_(HistSim, TimeSteps)
     
     HistSim@Unfished@Dynamic@Number <- lapply( unfished@Number, AddDimNames, c("Age", "TimeStep", "Area"), TimeSteps)

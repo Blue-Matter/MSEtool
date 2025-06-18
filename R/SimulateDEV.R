@@ -53,6 +53,8 @@ SimulateDEV <- function(OM=NULL,
   
   # ---- Calculate Unfished Equilibrium and Dynamic ----
   HistSimList <- CalcDynamicUnfished(HistSimList)
+  
+ 
 
   # ---- Optimize for Final Depletion ----
   

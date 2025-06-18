@@ -870,7 +870,7 @@ IdenticalTime <- function(value) {
     return(all(value[1,] == mean(value[1,])))
 
   if (length(dd)==3)
-    return(all(value[1,,1] == mean(value[1,,1])))
+    return(all(value[1,1,] == mean(value[1,1,])))
 }
 
 get_cpars <- function(OM, st=1, fl=1) {

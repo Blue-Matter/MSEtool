@@ -38,7 +38,7 @@ ExtendHist <- function(Hist, TimeSteps=NULL) {
 }
 
 #' @export
-ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=TRUE) {
+ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE) {
   
   on.exit(cli::stop_app())
   
@@ -70,6 +70,7 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=TRUE) {
   }
   
   Proj <- ExtendHist(Hist)
+  
   
   # List of `Hist` objects, each with one simulation
   ProjSimList <- Hist2HistSimList(Proj)
@@ -121,7 +122,7 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=TRUE) {
   
   nMPs <- length(MPs)
   # Projection MP loop
-  mp <- 2 # for debugging 
+  mp <- 7 # for debugging 
   cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
   
   for (mp in seq_along(MPs)) {
@@ -149,12 +150,23 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=TRUE) {
                                   format = "Projecting {.val {MP}} {cli::pb_bar} {cli::pb_percent}",
                                   clear = TRUE))
     end <- Sys.time()
-    elapse <- paste0(round(as.numeric(difftime(time1 = end, time2 = st, units = "secs")), 0), " Seconds")
+    elapse <- round(as.numeric(difftime(time1 = end, time2 = st, units = "secs")), 0)
+    incElapse <- FALSE
+    if (elapse > 5) {
+      incElapse <- TRUE
+      elapse <- paste0(elapse, " Seconds")
+    }  
     
+  
     check <- CheckMSERun(ProjSimListMP, MP)
     
     if (check) {
-      cli::cli_alert_success('{.val {MP}} ({elapse})')
+      if (incElapse) {
+        cli::cli_alert_success('{.val {MP}} ({elapse})')
+      } else {
+        cli::cli_alert_success('{.val {MP}}')  
+      }
+      
       attributes(MSE@MPs)$complete[mp] <- TRUE
       MSE <- UpdateMSEObject(MSE, ProjSimListMP, mp, TimeStepsAll, TimeStepsProj)
     }
@@ -307,6 +319,18 @@ UpdateMSEObject <- function(MSE, ProjSimListMP, mp, TimeStepsAll, TimeStepsProj)
       List2Array("Sim") |>
       aperm(c("Sim", "Age", "TimeStep", "Fleet", "Area"))
   }
+  
+  # Misc 
+  # keep MPAdvice 
+  if (is.null(MSE@Misc$Advice)) {
+    MSE@Misc$Advice <- list()
+  }
+  MPName <- names(MSE@MPs)[mp]
+  MSE@Misc$Advice[[MPName]] <- lapply(ProjSimListMP, slot, 'Misc') |> lapply("[[", "MPAdvice")
+  
+  # keep Retention if changed 
+  MSE <- KeepRetention(MSE, ProjSimListMP, mp)
+  
   MSE
 }
 
@@ -358,4 +382,32 @@ ReProject <- function(MSE, MPs, mp) {
   }
   MSE
   
+}
+
+
+KeepRetention <- function(MSE, ProjSimListMP, mp) {
+  MPretention <- purrr::map(ProjSimListMP, \(ProjSim) {
+    purrr::map(ProjSim@OM@Fleet, \(fleet) {
+      fleet@Retention@MeanAtAge
+    }) 
+  }) |> 
+    ReverseList() |>
+    purrr::map(List2Array, 'Sim') |>
+    purrr::map(aperm, c('Sim', 'Age', 'TimeStep', 'Fleet'))
+  
+  stocks <- StockNames(MSE@OM)
+  for (st in seq_along(stocks)) {
+    if (!prod(MPretention[[st]] == MSE@OM@Fleet[[st]]@Retention@MeanAtAge)) {
+      if (is.null(MSE@Misc$Retention)) {
+        MSE@Misc$Retention <- list()
+      }
+      
+      MPName <- names(MSE@MPs)[mp]
+      MSE@Misc$Retention[[MPName]]  <- list()
+      MSE@Misc$Retention[[MPName]][[stocks[st]]] <- MPretention[[st]]
+      
+    }
+    
+  }
+  MSE
 }

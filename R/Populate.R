@@ -311,10 +311,10 @@ PopulateWeight <- function(Weight,
     if (grepl('at-Length',getModelClass(Weight@Model))) {
       CheckRequiredObject(Length, 'length', 'Length')
       # chk <- Check(Length, silent=TRUE)
-      if (!chk@populated) {
+      # if (!chk@populated) {
         CheckRequiredObject(Ages, 'ages', 'Ages')
-        Length <- Populate(Length, Ages, nsim, TimeSteps, seed, ASK=TRUE, silent)
-      }
+        Length <- PopulateLength(Length, Ages, nsim, TimeSteps, seed, ASK=TRUE, silent)
+      # }
       Weight <- PopulateMeanAtLength(Weight, Length, TimeSteps, Ages,
                                      nsim,  seed, silent)
     } else {
@@ -1259,6 +1259,9 @@ StructureObs <- function(OM) {
 PopulateObs <- function(OM) {
   
   if (is.null(OM@Obs))
+    return(OM)
+  
+  if (EmptyObject(OM@Obs))
     return(OM)
   
   if (inherits(OM@Obs,'Obs')) {

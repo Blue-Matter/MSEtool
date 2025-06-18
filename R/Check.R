@@ -439,7 +439,12 @@ CheckPars <- function(Pars) {
 }
 
 CheckModel <- function(object) {
-  fun <- paste0(firstup(class(object)), 'Models')
+  if (inherits(object, "srr")) {
+    fun <- paste0(firstup(class(object),3), 'Models')
+  } else {
+    fun <- paste0(firstup(class(object)), 'Models')  
+  }
+  
   nms <-  names(object@Pars)
   cli::cli_abort(c(
     'No model found for this object class {.val {class(object)}} with parameters named: {.val { nms }}.',

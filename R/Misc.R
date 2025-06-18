@@ -50,19 +50,21 @@ rtnorm <- function(n, mu, sigma, lower, upper) {
 
 
 # ---- Text ----
-firstup <- function(x) {
-  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+firstup <- function(x, n=1) {
+  substr(x, 1, n) <- toupper(substr(x, 1, n))
   x
 }
 
 # ---- Names ---- 
 
+#' @export
 StockNames <- function(OM) {
   if (!methods::is(OM, 'om'))
     cli::cli_abort('`OM` must be class `om`')
   names(OM@Stock)
 }
 
+#' @export
 FleetNames <- function(OM) {
   if (!methods::is(OM, 'om'))
     cli::cli_abort('`OM` must be class `om`')
@@ -858,3 +860,24 @@ aperm <- function(a, perm, ...) {
   base::aperm(a, perm, ...)
 }
 
+
+MakeFactor <- function(x) {
+  factor(x, ordered = TRUE, levels=unique(x))
+}
+
+#' @export
+ConvertDF <- function(df) {
+  nms <- colnames(df)
+  if ('Sim' %in% nms)
+    df$Sim <- as.numeric(df$Sim)
+  if ('Stock' %in% nms)
+    df$Stock <- MakeFactor(df$Stock)
+  if ('Fleet' %in% nms)
+    df$Fleet <- MakeFactor(df$Fleet)
+  if ('TimeStep' %in% nms)
+    df$TimeStep <- as.numeric(df$TimeStep)
+  if ('Value' %in% nms)
+    df$Value <- as.numeric(df$Value)
+  
+  df
+}

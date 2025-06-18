@@ -735,9 +735,6 @@ AtSize2AtAge <- function(object, Length) {
       MeanAtSize_ts <- MeanAtSize[GetIndex(s, nsim_MeanAtSize), ,GetIndex(t, nTS_MeanAtSize)]
       if (bySim) {
         ASK_ts <- ASK[GetIndex(s, nsim_ASK),,,GetIndex(t, nTS_ASK)]
-        
-        MeanAtSize_ts * ASK_ts[15,]
-        
         AtAge[s,,t] <- MeanAtSize_ts %*%t(ASK_ts)
       } else {
         ASK_ts <- ASK[,,GetIndex(t, nTS_ASK)]

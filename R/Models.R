@@ -954,8 +954,8 @@ RetentionModelsWeight <- function(full=TRUE, print=TRUE) {
 #' @param RL50_95 Interval between `RL50` and length at 95% retention (`RL95`)
 #' @export
 RetentionAtLength <- function(Length, RL50, RL50_95) {
-  Pars <- list(SL50=Structure(RL50, out=c('nsim', 'nTS'), req='nsim'),
-               SL50_95=Structure(RL50_95, out=c('nsim', 'nTS'), req='nsim'))
+  Pars <- list(L50=Structure(RL50, out=c('nsim', 'nTS'), req='nsim'),
+               L50_95=Structure(RL50_95, out=c('nsim', 'nTS'), req='nsim'))
   Maturity_at_Length_(Length, Pars)
 }
 class(RetentionAtLength) <- 'Retention-at-Length-Model'
