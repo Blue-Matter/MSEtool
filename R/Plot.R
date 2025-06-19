@@ -211,14 +211,5 @@ setMethod('plot', 'srr', function(x, MaxAge=10, nHistTS=20, nProjTS=15, nsim=5, 
 
 })
 
-# SRR ----
-#' @export
-setMethod('plot', 'spatial', function(x, ...) {
+# Biomass ----
 
-
-  cli::cli_alert_danger('plot({.val {firstup(class(x))}}) not done yet!')
-
-
-
-
-})

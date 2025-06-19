@@ -100,6 +100,7 @@ Collate:
     'Awatea2OM.R'
     'BAM2OM.R'
     'B_Low_functions.R'
+    'Biomass.R'
     'CalcAgeSizeKey.R'
     'CalcApicalF.R'
     'CalcCatch.R'
