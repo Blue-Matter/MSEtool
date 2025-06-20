@@ -5,7 +5,7 @@
 #' @export
 SimulateDEV <- function(OM=NULL, 
                         silent=FALSE,
-                        parallel=TRUE, 
+                        parallel=FALSE, 
                         ...) {
   
   CheckClass(OM)
