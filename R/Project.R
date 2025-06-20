@@ -85,10 +85,7 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE) {
   # TODO move this to Simulate
   # ProjSimList <- OptimRefYield(ProjSimList, silent, .lapply) 
   
-  # Process MPs
-  # Hist@MPs - need to store in Misc ?
-  
-  
+
   if(!MSEobj) {
     MSE <- Hist2MSE(Hist, MPs)  
   } else {
