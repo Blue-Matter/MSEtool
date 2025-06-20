@@ -270,7 +270,8 @@ ProjectMP <- function(ProjSim, MP, TimeStepsHist, TimeStepsProj, ManagementTimeS
   TimeStep <- TimeStepsProj[1]
   # *********************************** # 
   
-  # tictoc::tic()
+
+  # tictoc::tic("Project TimeSteps")
   for (TimeStep in TimeStepsProj) {
     
     # Generate Data up to TimeStep - 1
@@ -278,22 +279,25 @@ ProjectMP <- function(ProjSim, MP, TimeStepsHist, TimeStepsProj, ManagementTimeS
     Data@TimeLH <- max(TimeStepsHist)
     TimeStepsAll <- c(TimeStepsHist, TimeStepsProj)
     Data@Time <- TimeStepsAll[1:(match(TimeStep, TimeStepsAll)-1)]
-
+    
     ProjSim@Data <- Data
     
- 
+    
     # --- Update `ProjSim` with MP Advice ----
+    # tictoc::tic("Apply MP")
     ProjSim <- ApplyMPInternal(ProjSim, 
                                MP, 
                                TimeStep, 
                                TimeStepsHist,
                                TimeStepsProj,
                                ManagementTimeSteps)
+    # tictoc::toc()
     
     
-
     # --- Simulate Pop Dynamics for this Time Step ----
+    # tictoc::tic("Update Dynamics")
     ProjSim <- SimulateDynamics_(ProjSim, TimeStep)
+    # tictoc::toc()
     
   } 
   # tictoc::toc()
