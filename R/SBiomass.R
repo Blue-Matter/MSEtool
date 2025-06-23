@@ -1,75 +1,54 @@
-MakeFactor <- function(x) {
-  factor(x, ordered = TRUE, levels=unique(x))
-}
-
-ConvertDF <- function(df) {
-  nms <- colnames(df)
-  if ('Sim' %in% nms)
-    df$Sim <- as.numeric(df$Sim)
-  if ('Stock' %in% nms)
-    df$Stock <- MakeFactor(df$Stock)
-  if ('Fleet' %in% nms)
-    df$Fleet <- MakeFactor(df$Fleet)
-  if ('TimeStep' %in% nms)
-    df$TimeStep <- as.numeric(df$TimeStep)
-  if ('Value' %in% nms)
-    df$Value <- as.numeric(df$Value)
-  
-  df
-}
 
 
-
-
-#' Return Biomass from Hist or MSE object
+#' Return Spawning Biomass from Hist or MSE object
 #' 
-#' Returns `Biomass` 
+#' Returns `SBiomass` 
 #' @param object A [Hist()] or [MSE()] object
 #' @return A [data.frame()] or a multi-dimensional [array()] if `df=FALSE`
 #' @export
-Biomass <- function(object, df=TRUE, hist=TRUE) {
+SBiomass <- function(object, df=TRUE, hist=TRUE) {
   CheckClass(object, c('mse', 'hist'), 'MSE')
   if (inherits(object, 'hist')) {
-      return(BiomassHist(object, df))
+    return(SBiomassHist(object, df))
   }
   if (!df)
-    return(object@Biomass)
-  proj <- array2DF(object@Biomass)
+    return(object@SBiomass)
+  proj <- array2DF(object@SBiomass)
   proj$Period <- 'Projection'
-  proj$Variable <- "Biomass"
+  proj$Variable <- "Spawning Biomass"
   proj <- ConvertDF(proj)
   units <- lapply(object@OM@Stock, slot, 'Weight') |> lapply(Units) |> unlist() 
   proj <- proj |> 
     dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock') 
- 
+  
   if (hist) {
     temp <- new('hist')
     temp@OM <- object@OM
-    temp@Biomass <- object@Hist@Biomass
-    hist <- BiomassHist(temp, df)
+    temp@SBiomass <- object@Hist@SBiomass
+    hist <- SBiomassHist(temp, df)
     proj <- dplyr::bind_rows(hist, proj) |>
       dplyr::arrange(Sim, TimeStep, Period)
   }
-  class(proj) <- c("biomass", class(proj))
+  class(proj) <- c("sbiomass", class(proj))
   proj
 }
 
-BiomassHist <- function(Hist, df=TRUE) {
+SBiomassHist <- function(Hist, df=TRUE) {
   CheckClass(Hist, 'hist', 'Hist')
   if (!df)
-    return(Hist@Biomass)
+    return(Hist@SBiomass)
   HistTimeStep <- TimeSteps(Hist@OM, "Historical")
-  hist <- array2DF(Hist@Biomass)
+  hist <- array2DF(Hist@SBiomass)
   hist$Period <- 'Historical'
-  hist$Variable <- "Biomass"
-
+  hist$Variable <- "Spawning Biomass"
+  
   hist <- ConvertDF(hist)
   
   units <- lapply(Hist@OM@Stock, slot, 'Weight') |> lapply(Units) |> unlist()
   hist <- hist |>
     dplyr::filter(TimeStep%in%HistTimeStep) |> 
     dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock') 
-  class(hist) <- c("biomass", class(hist))
+  class(hist) <- c("sbiomass", class(hist))
   hist
 }
 

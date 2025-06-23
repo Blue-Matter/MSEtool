@@ -270,8 +270,8 @@ ProjectMP <- function(ProjSim, MP, TimeStepsHist, TimeStepsProj, ManagementTimeS
   TimeStep <- TimeStepsProj[1]
   # *********************************** # 
   
-
   # tictoc::tic("Project TimeSteps")
+
   for (TimeStep in TimeStepsProj) {
     
     # Generate Data up to TimeStep - 1
@@ -292,7 +292,6 @@ ProjectMP <- function(ProjSim, MP, TimeStepsHist, TimeStepsProj, ManagementTimeS
                                TimeStepsProj,
                                ManagementTimeSteps)
     # tictoc::toc()
-    
     
     # --- Simulate Pop Dynamics for this Time Step ----
     # tictoc::tic("Update Dynamics")

@@ -80,12 +80,6 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE) {
   ProjSimList <- purrr::map(ProjSimList, \(ProjSim) PopulateNumberNext_(ProjSim, LastHistTS))
   # TODO add Recruitment for first projection time step if Age-Recruitment = 1 (i.e use SP from last historical)
   
-  # Calculate Reference Catch 
-  # TODO add option to skip this in OM@control
-  # TODO move this to Simulate
-  # ProjSimList <- OptimRefYield(ProjSimList, silent, .lapply) 
-  
-
   if(!MSEobj) {
     MSE <- Hist2MSE(Hist, MPs)  
   } else {
@@ -119,7 +113,7 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE) {
   
   nMPs <- length(MPs)
   # Projection MP loop
-  mp <- 7 # for debugging 
+  mp <- 1 # for debugging 
   cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
   
   for (mp in seq_along(MPs)) {
@@ -154,7 +148,6 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE) {
       elapse <- paste0(elapse, " Seconds")
     }  
     
-  
     check <- CheckMSERun(ProjSimListMP, MP)
     
     if (check) {
