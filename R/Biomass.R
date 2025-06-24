@@ -1,25 +1,3 @@
-MakeFactor <- function(x) {
-  factor(x, ordered = TRUE, levels=unique(x))
-}
-
-ConvertDF <- function(df) {
-  nms <- colnames(df)
-  if ('Sim' %in% nms)
-    df$Sim <- as.numeric(df$Sim)
-  if ('Stock' %in% nms)
-    df$Stock <- MakeFactor(df$Stock)
-  if ('Fleet' %in% nms)
-    df$Fleet <- MakeFactor(df$Fleet)
-  if ('TimeStep' %in% nms)
-    df$TimeStep <- as.numeric(df$TimeStep)
-  if ('Value' %in% nms)
-    df$Value <- as.numeric(df$Value)
-  
-  df
-}
-
-
-
 
 #' Return Biomass from Hist or MSE object
 #' 
