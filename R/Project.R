@@ -37,6 +37,20 @@ ExtendHist <- function(Hist, TimeSteps=NULL) {
 
 }
 
+MSE2Hist <- function(MSE) {
+  Hist <- Hist()
+  Hist@OM <- MSE@OM
+  Hist@Unfished <- MSE@Unfished
+  Hist@RefPoints <- MSE@RefPoints
+  Hist@Data <- list(MSE@OM@Data)
+  
+  slots <- slotNames(MSE@Hist)
+  for (sl in slots)  {
+    slot(Hist, sl) <- slot(MSE@Hist, sl) 
+  }
+  Hist
+}
+
 #' @export
 ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE) {
   
@@ -52,21 +66,11 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE) {
   .sapply <- define.sapply(silent)
 
   # Extend Arrays for Projection TimeSteps
-  
+
   MSEobj <- FALSE
   if (inherits(Hist,'mse')) {
     MSE <- Hist
-    MSEobj <- TRUE
-    Hist <- Hist()
-    Hist@OM <- MSE@OM
-    Hist@Unfished <- MSE@Unfished
-    Hist@RefPoints <- MSE@RefPoints
-    Hist@Data <- list(MSE@OM@Data)
-    
-    slots <- slotNames(MSE@Hist)
-    for (sl in slots)  {
-      slot(Hist, sl) <- slot(MSE@Hist, sl) 
-    }
+    Hist <- MSE2Hist(Hist) 
   }
   
   Proj <- ExtendHist(Hist)
@@ -76,13 +80,8 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE) {
   ProjSimList <- Hist2HistSimList(Proj)
   
   # Calculate Reference Catch 
-  # TODO add option to skip this in OM@control
-  ProjSimList <- OptimRefYield(ProjSimList, silent)
-  
-  ProjSimList$`2`@RefPoints@RefYield
-  stop()
-  
-  
+  # TODO calculate externally with option in Simulate or OM@Control
+   
   # Populate Number-at-Age at Beginning of Projection TimeStep
   LastHistTS <- tail(TimeSteps(Hist@OM,"Historical"),1)
   ProjSimList <- purrr::map(ProjSimList, \(ProjSim) PopulateNumberNext_(ProjSim, LastHistTS))

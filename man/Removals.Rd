@@ -5,9 +5,9 @@
 \alias{Landings}
 \title{Return Removals from Hist or MSE object}
 \usage{
-Removals(object, df = TRUE, hist = TRUE, byArea = FALSE, byAge = FALSE)
+Removals(object, df = TRUE, hist = TRUE)
 
-Landings(object, df = TRUE, hist = TRUE, byArea = FALSE, byAge = FALSE)
+Landings(object, df = TRUE, hist = TRUE)
 }
 \arguments{
 \item{object}{A \code{\link[=Hist]{Hist()}} or \code{\link[=MSE]{MSE()}} object}

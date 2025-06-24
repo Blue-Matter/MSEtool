@@ -1,11 +1,35 @@
-OptimRefYield <- function(ProjSimList, silent=FALSE, .lapply=NULL, parallel=TRUE) {
+
+
+#' Calculate Reference Yield
+#' 
+#' Highest Landings or Removals over the projection period with a constant F 
+#' policy
+#' 
+#' @export
+CalcRefLandings <- function(MSE, type=c('Landings', 'Removals')) {
+  type <- match.arg(type)
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+  if (inherits(MSE, 'mse')) {
+    Hist <- MSE2Hist(MSE)
+  } else if (inherits(MSE, 'hist')) {
+    Hist <- MSE
+    stop('TODO...')
+  }
   
-  if (is.null(.lapply))
-    .lapply <- define.lapply(silent) 
+  TimeStepsHist <- TimeSteps(MSE@OM, 'Historical')
+  TimeStepsProj <- TimeSteps(MSE@OM, 'Projection')
+  TimeSteps <- c(TimeStepsHist, TimeStepsProj)
+  projind <- match(TimeStepsProj,TimeSteps)
   
-  nStock <- nStock(ProjSimList[[1]]@OM)
-  nFleet <- nFleet(ProjSimList[[1]]@OM)
+  Proj <- ExtendHist(Hist, TimeSteps)
+  ProjSimList <- Hist2HistSimList(Proj)
+  LastHistTS <- tail(TimeStepsHist,1)
+  ProjSimList <- purrr::map(ProjSimList, \(ProjSim) PopulateNumberNext_(ProjSim, LastHistTS))
   
+  nStock <- nStock(MSE@OM)
+  nFleet <- nFleet(MSE)
+  
+  # TODO 
   if (nStock>1)
     cli::cli_abort('Optimizing Reference Catch not currently working for multiple stocks', .internal=TRUE)
   
@@ -14,151 +38,74 @@ OptimRefYield <- function(ProjSimList, silent=FALSE, .lapply=NULL, parallel=TRUE
   
   bounds <- c(0.01, 1)
   
-  TimeStepsProj <- TimeSteps(ProjSimList[[1]]@OM, 'Projection')
-  TimeSteps <- TimeSteps(ProjSimList[[1]]@OM)
-  projind <- match(TimeStepsProj,TimeSteps)
-  
-  st <- 1
-  fl <- 1
-  
-  
-  # Retained Catch (Landings)
-  # tictoc::tic()
-  # ProjSimList <- purrr::imap(ProjSimList, \(ProjSim, idx) {
-  # 
-  #   doOpt <- optimize(OptRefYield,
-  #                     log(bounds),
-  #                     ProjSim=ProjSim,
-  #                     TimeStepsProj=TimeStepsProj,
-  #                     projind=projind,
-  #                     tol=1e-2)
-  # 
-  #   ProjSim@RefPoints@RefYield <- array(-doOpt$objective, dimnames=list(Sim=idx))
-  #   ProjSim
-  # }, .progress = list(
-  #   type = "iterator",
-  #   format = "Calculating Reference Yield {cli::pb_bar} {cli::pb_percent}",
-  #   clear = TRUE))
-  
-  # tictoc::toc()
-  
-  # if (parallel) {
-  # 
-  #   optRefYieldFunction <- function(ProjSim, bounds, TimeStepsProj, projind) {
-  #     doOpt <- optimize(MSEtool:::OptRefYield,
-  #                       log(bounds),
-  #                       ProjSim=ProjSim,
-  #                       TimeStepsProj=TimeStepsProj,
-  #                       projind=projind,
-  #                       tol=1e-2)
-  # 
-  #     ProjSim@RefPoints@RefYield <- array(-doOpt$objective)
-  #     ProjSim
-  #   }
-  # 
-  #   cli::cli_progress_message("Calculating Reference Yield")
-  #   
-  #   snowfall::sfExport('bounds', 'TimeStepsProj', 'projind')
-  #   
-  #   ProjSimList <- .lapply(ProjSimList, optRefYieldFunction, bounds, TimeStepsProj, projind)
-  #   cli::cli_progress_done()
-  # 
-  # } else {
-  #   ProjSimList <- purrr::imap(ProjSimList, \(ProjSim, idx) {
-  # 
-  #     doOpt <- optimize(OptRefYield,
-  #                       log(bounds),
-  #                       ProjSim=ProjSim,
-  #                       TimeStepsProj=TimeStepsProj,
-  #                       projind=projind,
-  #                       tol=1e-2)
-  # 
-  #     ProjSim@RefPoints@RefYield <- array(-doOpt$objective, dimnames=list(Sim=idx))
-  #     ProjSim
-  #   }, .progress = list(
-  #     type = "iterator",
-  #     format = "Calculating Reference Yield {cli::pb_bar} {cli::pb_percent}",
-  #     clear = TRUE))
-  # }
-  # 
-  
-  ProjSimList <- purrr::imap(ProjSimList, \(ProjSim, idx) {
-    
-    doOpt <- optimize(OptRefYield,
+  RefYieldList <- purrr::imap(ProjSimList, \(ProjSim, idx) {
+    doOpt <- optimize(OptRefLandings,
                       log(bounds),
                       ProjSim=ProjSim,
                       TimeStepsProj=TimeStepsProj,
                       projind=projind,
+                      type=type,
                       tol=1e-2)
     
-    ProjSim@RefPoints@RefYield <- array(-doOpt$objective, dimnames=list(Sim=idx))
-    ProjSim
+    array(-doOpt$objective, dimnames=list(Sim=idx))
   }, .progress = list(
     type = "iterator",
-    format = "Calculating Reference Yield {cli::pb_bar} {cli::pb_percent}",
+    caller = environment(),
+    format = "Calculating Reference {type} {cli::pb_bar} {cli::pb_percent}",
     clear = TRUE))
-
-  # Fastest 
-  #
-  # setup()
-  # library(snowfall)
-  # # snowfall::sfExport()
-  # sfExport("bounds", "TimeStepsProj", "projind")
-  # # sfLibrary( "MSEtool", character.only=TRUE )
-  # 
-  # tictoc::tic()
-
-  # tictoc::toc()
+  
+  RefYield <- List2Array(RefYieldList) 
+  dimnames(RefYield) <- list(Stock=StockNames(MSE@OM),
+                             Sim=1:MSE@OM@nSim)
+  
+  RefYield <- RefYield |>  aperm(c("Sim", 'Stock'))
   
   
-  # Very slow
-  # future::plan(future::multisession, workers = 24)
-  # tictoc::tic()
-  # HistSimList <- furrr::future_map(ProjSimList, \(ProjSim) {
-  #     doOpt <- optimize(MSEtool:::OptRefYield,
-  #                       log(bounds), 
-  #                       ProjSim=ProjSim,
-  #                       TimeStepsProj=TimeStepsProj, 
-  #                       projind=projind,
-  #                       tol=1e-2)
-  #     
-  #     ProjSim@RefPoints@RefYield <- array(-doOpt$objective)
-  #     ProjSim
-  #   })
-  # 
-  # tictoc::toc()
-  
-  
- 
-  ProjSimList
+  if (type=='Landings') {
+    MSE@RefPoints@RefLandings <- RefYield
+  } else {
+    MSE@RefPoints@RefRemovals <- RefYield
+  }
+  MSE 
 }
 
-OptRefYield <- function(logF, ProjSim, TimeStepsProj, projind) {
-  
+#' @describeIn CalcRefLandings Calculate Reference Removals
+#' @export
+CalcRefRemovals <- function(MSE, type=c('Landings', 'Removals')) {
+  CalcRefLandings(MSE, type)
+}
+
+OptRefLandings <- function(logF, ProjSim, TimeStepsProj, projind, type=c('Landings', 'Removals')) {
+   
+  type <- match.arg(type)
   # TODO update for multiple stocks and fleets
   st <- 1
   fl <- 1
   
   ProjSim@Effort[st,projind,fl] <- exp(logF) # ProjSim@Effort[st,min(projind)-1,fl] * exp(logEffort)
   ProjSim@OM@Fleet[[st]]@Effort@Catchability[] <- 1
-  tictoc::tic()
-  
+
   PopDynamicsProject <- SimulateDynamics_(ProjSim, TimeStepsProj)
   
-  Landings <- PopDynamicsProject@Landings[[st]] |> List2Array("TimeStep")
+  if (type=='Landings') {
+    Yield <- PopDynamicsProject@Landings[[st]] |> List2Array("TimeStep")
+  } else {
+    Yield <- PopDynamicsProject@Removals[[st]] |> List2Array("TimeStep")
+  }
+  
 
   lastnTS <- ProjSim@OM@Control$RefYield$lastnTS
   if (is.null(lastnTS))
     lastnTS <- 5
   
-  dd <- dim(Landings)
+  dd <- dim(Yield)
   nTS <- dd[4]
   if (lastnTS >nTS)
     lastnTS <- nTS
   
   TSmean <- (nTS-lastnTS+1):nTS
   
-  -mean(apply(Landings[,,,TSmean,drop=FALSE], c('TimeStep'), sum))
+  -mean(apply(Yield[,,,TSmean,drop=FALSE], c('TimeStep'), sum))
   
 }
 

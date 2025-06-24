@@ -577,25 +577,22 @@ nStock <- function(x) {
 #' @rdname Access
 #' @export
 nFleet <- function(x) {
-  if (!inherits(x,'om'))
-    cli::cli_abort('`x` must be class `om`')
-
-  fleet <- x@Fleet
-  if (inherits(fleet, 'fleet'))
-    return(1)
+  CheckClass(x, c('om', 'hist', 'mse'), 'x')
   
-  if (is.list(fleet[[1]]))
-    return(length(fleet[[1]]))
-  
-  if(isS4(fleet[[1]])) {
-    dd <- dim(x@Fleet[[1]]@Selectivity@MeanAtAge)
-    return(dd[3])
-    
+  if (inherits(x,'om')) {
+    fleet <- x@Fleet
+    if (inherits(fleet, 'fleet'))
+      return(1)
+    if (is.list(fleet[[1]]))
+      return(length(fleet[[1]]))
+    if(isS4(fleet[[1]])) {
+      dd <- dim(x@Fleet[[1]]@Selectivity@MeanAtAge)
+      return(dd[3])
+    }
   }
-  
-  
-  
-  
+    
+  return(dim(x@Landings)[4])
+
 }
 
 ## ---- nYear ----
