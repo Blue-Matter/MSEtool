@@ -1,7 +1,7 @@
 
 ExtendHist <- function(Hist, TimeSteps=NULL) {
   if (is.null(TimeSteps))
-    TimeSteps=TimeSteps(Hist@OM)
+    TimeSteps <- TimeSteps(Hist@OM)
   
   slots <- slotNames('timeseries')
   slots <- slots[!slots=='Misc']
@@ -74,6 +74,14 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE) {
   
   # List of `Hist` objects, each with one simulation
   ProjSimList <- Hist2HistSimList(Proj)
+  
+  # Calculate Reference Catch 
+  # TODO add option to skip this in OM@control
+  ProjSimList <- OptimRefYield(ProjSimList, silent)
+  
+  ProjSimList$`2`@RefPoints@RefYield
+  stop()
+  
   
   # Populate Number-at-Age at Beginning of Projection TimeStep
   LastHistTS <- tail(TimeSteps(Hist@OM,"Historical"),1)

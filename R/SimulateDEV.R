@@ -82,9 +82,7 @@ SimulateDEV <- function(OM=NULL,
   # TODO speed up - CalcRefPoints.R
   # RefPoints <- CalcRefPoints(OM, Unfished)
   
-  # Calculate Reference Catch 
-  # TODO add option to skip this in OM@control
-  HistSimList <- OptimRefYield(HistSimList, silent)
+
   
   # ---- Historical Population Dynamics ----
   # tictoc::tic()
