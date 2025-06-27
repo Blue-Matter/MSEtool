@@ -208,7 +208,6 @@ Fleet2Hist <- function(FleetList, nAges, nSim, TimeSteps, nArea, silent=FALSE, i
     cli::cli_progress_update(id=id)
   
 
- 
   if (!silent)
     cli::cli_progress_update(id=id)
   Fleet@Effort <- CombineEffort(lapply(FleetList, slot, 'Effort'),

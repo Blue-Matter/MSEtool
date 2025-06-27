@@ -874,6 +874,8 @@ ConvertDF <- function(df) {
     df$Stock <- MakeFactor(df$Stock)
   if ('Fleet' %in% nms)
     df$Fleet <- MakeFactor(df$Fleet)
+  if ('MP' %in% nms)
+    df$MP <- MakeFactor(df$MP)
   if ('TimeStep' %in% nms)
     df$TimeStep <- as.numeric(df$TimeStep)
   if ('Value' %in% nms)

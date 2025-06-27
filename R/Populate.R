@@ -643,8 +643,9 @@ PopulateSpatial <- function(Spatial,
                                        DimNames[1:2], TimeSteps=TimeSteps)
     Spatial@ProbStaying <- AddDimNames(array(1, dim=c(1,1,1,1)), 
                                       DimNames, TimeSteps=TimeSteps)
-    Spatial@FracOther <- AddDimNames(array(1, dim=c(1,1,1,1)),
-                                    DimNames, TimeSteps=TimeSteps)
+    Spatial@FracOther <- AddDimNames(array(1, dim=c(1,1,1,1,1)),
+                                     c("Sim",'FromArea', 'ToArea','Age', 'TimeStep'), 
+                                     TimeSteps=TimeSteps)
     Spatial@UnfishedDist  <- AddDimNames(array(1, dim=c(1,1,1,1)),
                                         DimNames, TimeSteps=TimeSteps)
     Spatial@Movement  <- AddDimNames(array(1, dim=c(1,1,1,1,1)),
@@ -830,7 +831,7 @@ PopulateFleet <- function(Fleet,
                                        seed,
                                        silent=silent)
   
-  Fleet@Effort <- PopulateEffort(Fleet@Effort,
+  Fleet@Effort <- PopulateEffort(Effort=Fleet@Effort,
                                  FishingMortality=Fleet@FishingMortality,
                                  DiscardMortality=Fleet@DiscardMortality,
                                  Ages,

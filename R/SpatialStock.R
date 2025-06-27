@@ -41,7 +41,7 @@ CalcMovement <- function(Spatial,
 
     Spatial@FracOther  <- Spatial@FracOther |>
       AddAgeTimeStepDimensions(outdim=5) |>
-      AddDimNames(c('Sim', 'Area', 'Area', 'Age', 'TimeStep'), TimeSteps=TimeSteps)
+      AddDimNames(c('Sim', 'FromArea', 'ToArea', 'Age', 'TimeStep'), TimeSteps=TimeSteps)
   }
 
   # generate stochastic values if needed

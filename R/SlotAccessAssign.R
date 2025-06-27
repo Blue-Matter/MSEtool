@@ -394,12 +394,22 @@ nArea <- function(x, st=1) {
       stock <- stock[[st]]
     }
     dd <- dim(stock@Spatial@UnfishedDist)
+    d1 <- length(stock@Spatial@UnfishedDist)
   } else {
-    dd <- dim(x@Spatial@UnfishedDist)  
+    stock <- x
+    dd <- dim(stock@Spatial@UnfishedDist)  
+    d1 <- length(stock@Spatial@UnfishedDist)
   }
-  if (length(dd)<1)
+
+  if (length(dd)<1) {
+    if (length(d1)>0)
+      return(d1)
     return(1)
-  dd[2]
+  }
+    
+  nms <- names(dimnames(stock@Spatial@UnfishedDist))
+  dd[which(nms=='Area')]
+  
 }
 
 

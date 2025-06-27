@@ -1,6 +1,7 @@
 
+#' @export
 ProjectionTimeStep <- function(Data) {
-  length(Data@TimeSteps[Data@TimeSteps>Data@LastHistTS])+1
+  length(Data@TimeSteps[Data@TimeSteps>Data@TimeStepLH])+1
 }
 
 
@@ -223,6 +224,7 @@ ApplyMPInternal <- function(ProjSim, MP, TimeStep, TimeStepsHist, TimeStepsProj,
 
     # TODO add tryCatch
     MPAdvice <- MPFunction(ProjSim@Data)
+    ProjSim@Data@Misc <- MPAdvice@Misc
     
     if (is.null(ProjSim@Misc$MPAdvice))
       ProjSim@Misc$MPAdvice <- list()
@@ -249,6 +251,8 @@ ApplyMPInternal <- function(ProjSim, MP, TimeStep, TimeStepsHist, TimeStepsProj,
     UpdateTAC(MPAdvice, TimeStep) |>
     UpdateEffort(MPAdvice, MPAdvicePrevious, TimeStepsAll, TimeStepsHist, TSIndex) 
   
+  
+  
 
   
   # apply bioeconomic ...
@@ -270,18 +274,20 @@ ProjectMP <- function(ProjSim, MP, TimeStepsHist, TimeStepsProj, ManagementTimeS
   TimeStep <- TimeStepsProj[1]
   # *********************************** # 
   
+  TimeStepsAll <- c(TimeStepsHist, TimeStepsProj)
+  
+  Data@TimeStepLH <- max(TimeStepsHist)
+  Data@TimeStepsPerYear <- ProjSim@OM@TimeStepsPerYear
+  Data@nArea <- nArea(ProjSim@OM)
+  ProjSim@Data <- Data
+  
   # tictoc::tic("Project TimeSteps")
 
   for (TimeStep in TimeStepsProj) {
     
     # Generate Data up to TimeStep - 1
     # TODO - add option for Data Lag 
-    Data@TimeLH <- max(TimeStepsHist)
-    TimeStepsAll <- c(TimeStepsHist, TimeStepsProj)
-    Data@Time <- TimeStepsAll[1:(match(TimeStep, TimeStepsAll)-1)]
-    
-    ProjSim@Data <- Data
-    
+    ProjSim@Data@TimeSteps <- TimeStepsAll[1:(match(TimeStep, TimeStepsAll)-1)]
     
     # --- Update `ProjSim` with MP Advice ----
     # tictoc::tic("Apply MP")

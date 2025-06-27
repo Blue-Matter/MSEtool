@@ -82,9 +82,11 @@ setClass('data',
                  Latitude='num.null',
                  Longitude='num.null',
                  
-                 Time='num.null', # should be in fraction of year - or convert Date to fraction year
-                 TimeLH='num.null', # last historical time step
-                 Units='char.null', # time units - same as `Ages`
+                 TimeSteps='num.null', # should be in fraction of year - or convert Date to fraction year
+                 TimeStepLH='num.null', # last historical time step,
+                 TimeUnits='char.null', # time units - same as `Ages`
+                 TimeStepsPerYear='num.null',
+                 nArea='num.null',
                  
                  Catch='catch.list',  # always is removals
                  Index='index.list',

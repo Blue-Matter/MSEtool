@@ -109,13 +109,9 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE) {
     }
   }
   
-  
-  
-
-  TimeStepsAll <- TimeSteps(ProjSimList[[1]]@OM)
   TimeStepsHist <- TimeSteps(ProjSimList[[1]]@OM, "Historical")
   TimeStepsProj <- TimeSteps(ProjSimList[[1]]@OM, "Projection")
-  
+  TimeStepsAll <- c(TimeStepsHist, TimeStepsProj)
   nStock <- nStock(Hist@OM)
   
   nMPs <- length(MPs)
