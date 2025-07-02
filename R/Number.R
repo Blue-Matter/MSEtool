@@ -48,7 +48,7 @@ Number <- function(object, df=TRUE, hist=TRUE, byArea=FALSE, byAge=FALSE) {
     temp <- new('hist')
     temp@OM <- object@OM
     temp@Number <- object@Hist@Number
-    hist <- NumberHist(temp, df)
+    hist <- NumberHist(temp, df, byArea, byAge)
     proj <- dplyr::bind_rows(hist, proj) |>
       dplyr::arrange(Sim, TimeStep, Period, MP)
   }

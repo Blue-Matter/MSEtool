@@ -6,10 +6,21 @@ ProjectionTimeStep <- function(Data) {
 
 
 
-UpdateTAC <- function(ProjSim, MPAdvice, TimeStep) {
+UpdateTAC <- function(ProjSim, MPAdvice, MPAdvicePrevious, TimeStep) {
+  
+
+  if (is.null(MPAdvice))
+    return(ProjSim)
   
   if (length(MPAdvice@TAC)<1)
     return(ProjSim)
+  
+  if (!is.null(MPAdvicePrevious)) {
+    if (IdenticalS4(MPAdvice@TAC, MPAdvicePrevious@TAC))
+      return(ProjSim)  
+  }
+  
+  
   
   TimeStepsAll <- TimeSteps(ProjSim@OM)
   TSIndex <- match(TimeStep, TimeStepsAll)
@@ -96,11 +107,13 @@ UpdateDiscardMortality <- function(ProjSim, MPAdvice, MPAdvicePrevious, TimeStep
   fl <- 1
   # *************************** #
   
+  if (is.null(MPAdvice))
+    return(ProjSim)
+  
   if (EmptyObject(MPAdvice@DiscardMortality))
     return(ProjSim)
   
-  if (is.null(MPAdvice))
-    return(ProjSim)
+
   
   if (!is.null(MPAdvicePrevious)) {
     if (IdenticalS4(MPAdvice@DiscardMortality, MPAdvicePrevious@DiscardMortality))
@@ -218,6 +231,13 @@ ApplyMPInternal <- function(ProjSim, MP, TimeStep, TimeStepsHist, TimeStepsProj,
   st <- 1 
   ##############################
   
+  if (!is.null(ProjSim@Misc$MPAdvice) & length(ProjSim@Misc$MPAdvice)>0) {
+    # Has MPAdvice Changed from last time 
+    MPAdvicePrevious <- ProjSim@Misc$MPAdvice[[length(ProjSim@Misc$MPAdvice)]] 
+  } else {
+    MPAdvicePrevious <- NULL
+  }
+  
   if (TimeStep %in% ManagementTimeSteps) {
     # Apply MP to Data
     MPFunction <- get(MP)
@@ -232,13 +252,7 @@ ApplyMPInternal <- function(ProjSim, MP, TimeStep, TimeStepsHist, TimeStepsProj,
   } else {
     MPAdvice <- NULL
   }
-  
-  if (!is.null(ProjSim@Misc$MPAdvice) & length(ProjSim@Misc$MPAdvice)>1) {
-    # Has MPAdvice Changed from last time 
-    MPAdvicePrevious <- ProjSim@Misc$MPAdvice[[length(ProjSim@Misc$MPAdvice)-1]] 
-  } else {
-    MPAdvicePrevious <- NULL
-  }
+
   
   TimeStepsAll <- c(TimeStepsHist, TimeStepsProj) 
   TSIndex <- match(TimeStep, TimeStepsAll)
@@ -248,7 +262,7 @@ ApplyMPInternal <- function(ProjSim, MP, TimeStep, TimeStepsHist, TimeStepsProj,
     UpdateSelectivity(MPAdvice, MPAdvicePrevious, TimeStepsAll, TSIndex) |>
     UpdateRetention(MPAdvice, MPAdvicePrevious, TimeStepsAll, TSIndex) |>
     UpdateDiscardMortality(MPAdvice, MPAdvicePrevious, TimeStepsAll, TSIndex) |>
-    UpdateTAC(MPAdvice, TimeStep) |>
+    UpdateTAC(MPAdvice, MPAdvicePrevious, TimeStep) |>
     UpdateEffort(MPAdvice, MPAdvicePrevious, TimeStepsAll, TimeStepsHist, TSIndex) 
   
   

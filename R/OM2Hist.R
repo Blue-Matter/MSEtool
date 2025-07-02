@@ -66,7 +66,7 @@ OM2Hist <- function(OM, silent=FALSE) {
   
   for (st in 1:nStock(OM)) {
     for (fl in 1:nFleet(OM)) {
-      Hist@Effort[,st,,fl] <- OM@Fleet[[st]][[fl]]@Effort@Effort    
+      Hist@Effort[,st,,fl] <- OM@Fleet[[st]][[fl]]@Effort@Effort[1:nSim(OM),]  
     }
   }
   

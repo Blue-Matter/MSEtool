@@ -137,6 +137,7 @@ Collate:
     'Data_make_update.R'
     'DistributeEffort.R'
     'DocData.R'
+    'Effort.R'
     'Empirical_MP.R'
     'Fease_Functions.R'
     'Find.R'

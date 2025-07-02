@@ -5,13 +5,35 @@
 #' @param object A [Hist()] or [MSE()] object
 #' @return A [data.frame()] or a multi-dimensional [array()] if `df=FALSE`
 #' @export
-Biomass <- function(object, df=TRUE, hist=TRUE) {
+Biomass <- function(object, df=TRUE, hist=TRUE, RelTo=NULL) {
+  
   CheckClass(object, c('mse', 'hist'), 'MSE')
-  if (inherits(object, 'hist')) {
-      return(BiomassHist(object, df))
+  
+  if (!is.null(RelTo)) {
+    if (RelTo!='B0')
+      stop("Currently `RelTo` can only be `B0`")
+    RefVal <- array2DF(object@Unfished@Equilibrium@Biomass, 'B0') |> ConvertDF()
+    RefVal <- RefVal |> dplyr::rename(relto=RelTo)
+    
+  } else {
+    RefVal <- NULL
   }
+  
+  if (inherits(object, 'hist')) {
+    Biomass <- BiomassHist(object, df)
+    if (is.null(RefVal))
+      return(Biomass)
+    
+    Biomass <- Biomass |>
+      dplyr::left_join(RefVal) |>
+      dplyr::mutate(Value=Value/relto)
+    
+    return(Biomass)
+  }
+  
   if (!df)
     return(object@Biomass)
+  
   proj <- array2DF(object@Biomass)
   proj$Period <- 'Projection'
   proj$Variable <- "Biomass"
@@ -25,10 +47,19 @@ Biomass <- function(object, df=TRUE, hist=TRUE) {
     temp@OM <- object@OM
     temp@Biomass <- object@Hist@Biomass
     hist <- BiomassHist(temp, df)
+    
     proj <- dplyr::bind_rows(hist, proj) |>
       dplyr::arrange(Sim, TimeStep, Period)
   }
   class(proj) <- c("biomass", class(proj))
+  
+  if (!is.null(RefVal)) {
+    proj <- proj |>
+      dplyr::left_join(RefVal) |>
+      dplyr::mutate(Value=Value/relto)
+  }
+  
+  
   proj
 }
 

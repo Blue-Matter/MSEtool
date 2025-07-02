@@ -228,7 +228,7 @@ PopulateStock <- function(stock,
                            seed=seed,
                            silent=silent)
   
-  stock@Spatial <- PopulateSpatial(stock@Spatial,
+  stock@Spatial <- PopulateSpatial(Spatial=stock@Spatial,
                                    Ages=stock@Ages,
                                    TimeSteps=TimeSteps(stock),
                                    nsim=stock@nSim,
@@ -711,7 +711,7 @@ PopulateSpatial <- function(Spatial,
     
   } else if (methods::is(Spatial@RelativeSize, 'character')) {
     if (Spatial@RelativeSize=="EqualDensity") {
-      Spatial@RelativeSize <- apply(Spatial@UnfishedDist, 1:2, mean)   
+      Spatial@RelativeSize <- apply(Spatial@UnfishedDist, c('Sim', 'Area'), mean)   
     } else {
       cli::cli_abort('If `Spatial@RelativeSize` is character, it can only be "EqualDensity"')
     }
@@ -1158,7 +1158,6 @@ PopulateEffort <- function(Effort,
     return(Effort)
   
   SetSeed(Effort, seed)
-  
   
   if (EmptyObject(Effort@Catchability)) {
     # if (!silent)

@@ -44,6 +44,7 @@ SimulateDEV <- function(OM=NULL,
   # ---- Calculate Equilibrium Unfished ----
   Hist@Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
   
+  
   # ---- Calculate Number-at-Age for Initial TimeStep ----
   Hist <- CalcInitialTimeStep(Hist)
   
@@ -52,7 +53,7 @@ SimulateDEV <- function(OM=NULL,
   HistSimList <- Hist2HistSimList(Hist)
   
   # ---- Calculate Unfished Equilibrium and Dynamic ----
-  HistSimList <- CalcDynamicUnfished(HistSimList)
+  # HistSimList <- CalcDynamicUnfished(HistSimList)
   
   # ---- Optimize for Final Depletion ----
   

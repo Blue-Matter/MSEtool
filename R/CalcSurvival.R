@@ -97,7 +97,7 @@ setMethod('CalcUnfishedSurvival', c('stock', 'ANY', 'ANY'), function(x, SP=FALSE
     
   } else if (!IsIdenticalSim & IsIdenticalTime) {
     NaturalMortalityAtAgeList <- Array2List(NaturalMortalityAtAge[,,1, drop=FALSE], 1)
-    SemelparousList <- Array2List(Semelparous[1,,1, drop=FALSE], 1)
+    SemelparousList <- Array2List(Semelparous[,,1, drop=FALSE], 1)
     Survival <- purrr::pmap(list(
       NaturalMortalityAtAge=NaturalMortalityAtAgeList,
       PlusGroup=PlusGroup, 

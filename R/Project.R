@@ -144,18 +144,20 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE) {
                                   format = "Projecting {.val {MP}} {cli::pb_bar} {cli::pb_percent}",
                                   clear = TRUE))
     end <- Sys.time()
-    elapse <- round(as.numeric(difftime(time1 = end, time2 = st, units = "secs")), 0)
+    
+    elapse_secs <- round(difftime(time1 = end, time2 = st, units = "secs"),2) |> as.numeric()
+    elapse_auto <- round(difftime(time1 = end, time2 = st, units = "auto"),2) |> format()
+    
     incElapse <- FALSE
-    if (elapse > 5) {
+    if (elapse_secs > 5) {
       incElapse <- TRUE
-      elapse <- paste0(elapse, " Seconds")
     }  
     
     check <- CheckMSERun(ProjSimListMP, MP)
     
     if (check) {
       if (incElapse) {
-        cli::cli_alert_success('{.val {MP}} ({elapse})')
+        cli::cli_alert_success('{.val {MP}} ({elapse_auto})')
       } else {
         cli::cli_alert_success('{.val {MP}}')  
       }

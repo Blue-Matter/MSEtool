@@ -361,6 +361,14 @@ ExpandSims <- function(Array, nSim) {
   if (length(existing)==nSim)
     return(Array)
   
+  if (length(existing)>nSim) {
+    list <- as.list(d)
+    list[[ind]] <- 1:nSim
+    return(abind::asub(Array, list, drop=FALSE))
+  }
+    
+    
+  
   if (length(existing)>1)
     cli::cli_abort('`Sim` dimension must be either length `nSim` or length 1', .internal=TRUE)
   

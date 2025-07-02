@@ -468,6 +468,8 @@ SetSeed <- function(object, seed=NULL) {
   if ('RelRecFun' %in% slotNames(object))
     object@RelRecFun <- NULL
   
+  if ('Catchability' %in% slotNames(object))
+    object@Catchability <- NULL
 
   val <- digest::digest2int(digest::digest(object))
 
@@ -870,6 +872,10 @@ ConvertDF <- function(df) {
   nms <- colnames(df)
   if ('Sim' %in% nms)
     df$Sim <- as.numeric(df$Sim)
+  if ('Age' %in% nms)
+    df$Age <- as.numeric(df$Age)
+  if ('Class' %in% nms)
+    df$Class <- as.numeric(df$Class)
   if ('Stock' %in% nms)
     df$Stock <- MakeFactor(df$Stock)
   if ('Fleet' %in% nms)

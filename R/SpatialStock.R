@@ -205,6 +205,7 @@ FitMovement <- function(LogitProbs,
   }
 
   Movement <- MarkovFrac(LogitProbs, FracOther)
+
   outdist <- CalcAsymptoticDist(Movement, UnfishedDist, nits=nits)
   nll_dist <- dnorm(log(outdist), log(UnfishedDist), CVDist, TRUE)
   nll_stay <- dnorm(LogitProbs, logit(ProbStaying), CVStay, TRUE)
@@ -237,10 +238,12 @@ CalcAsymptoticDist <- function(Movement, ExpectedDist=NULL,nits=100,plot=F){
   AsymptoticDist <- ExpectedDist
   tol <- rep(NA,nits)
   for(i in 1:nits){
+    
     temp <- AsymptoticDist%*%Movement
     tol[i] <- mean(abs(temp-AsymptoticDist))
     AsymptoticDist <- temp
   }
+
   if(plot){
     graphics::par(mfrow=c(1,2),mai=c(0.3,0.3,0.01,0.01),omi=c(0.05,0.05,0.3,0.05))
     plot(tol,pch=19,col='blue')
@@ -255,18 +258,22 @@ CalcAsymptoticDist <- function(Movement, ExpectedDist=NULL,nits=100,plot=F){
 }
 
 
-
 #' @rdname CalcMovement
 #' @export
 MarkovFrac <- function(LogitProbs, FracOther=NULL){
   probs <- ilogit(LogitProbs)
   left <- 1-probs
+  
   if (!is.null(FracOther)) {
+    diag(FracOther) <- NA
     mov <- FracOther/apply(FracOther,1,sum,na.rm=T)*left
   } else {
     mov <- matrix(left, 2,2)
   }
   diag(mov) <- probs
+  if (!all(rowSums(mov)==1))
+    cli::cli_abort('Movement matrix does not sum to 1 across areas')
+  
   mov
 }
 
