@@ -1178,14 +1178,25 @@ CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
   
   # Effort relative to last historical with this catch
   for (f in 1:nf) {
-    Effort_act[, f] <- Ftot2[f, ]/(FleetPars_f[[f]]$FinF * FleetPars_f[[f]]$qs*FleetPars_f[[f]]$qvar[,y]*
-                                     (1 + FleetPars_f[[f]]$qinc/100)^y)  # effort required - already accounts for effort-by-area
-    
-    Effort_act[Ftot2[f, ] <= 1E-3, f] <- tiny
-    out[[f]]$Ftot <- Ftot[f, ]
-    
-    out[[f]]$TACrec <- TACused[, f]
-    out[[f]]$Effort <- Effort_act[, f]
+    if (nf>1) {
+      Effort_act[, f] <- Ftot2[f, ]/(FleetPars_f[[f]]$FinF * FleetPars_f[[f]]$qs*FleetPars_f[[f]]$qvar[,y]*
+                                       (1 + FleetPars_f[[f]]$qinc/100)^y)  # effort required - already accounts for effort-by-area
+      
+      Effort_act[Ftot2[f, ] <= 1E-3, f] <- tiny
+      out[[f]]$Ftot <- Ftot[f, ]
+      
+      out[[f]]$TACrec <- TACused[, f]
+      out[[f]]$Effort <- Effort_act[, f]
+    } else {
+      Effort_act[, f] <- Ftot2/(FleetPars_f[[f]]$FinF * FleetPars_f[[f]]$qs*FleetPars_f[[f]]$qvar[,y]*
+                                  (1 + FleetPars_f[[f]]$qinc/100)^y)  # effort required - already accounts for effort-by-area
+      
+      Effort_act[Ftot2 <= 1E-3, f] <- tiny
+      out[[f]]$Ftot <- Ftot
+      
+      out[[f]]$TACrec <- TACused[, f]
+      out[[f]]$Effort <- Effort_act[, f]
+    }
   }
   
   # Returns

@@ -271,11 +271,6 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
   SSB[SAYR] <- SBsurv[SAY] * StockPars$R0[S] *  StockPars$initdist[SAR]*StockPars$Perr_y[Sa] * StockPars$Fec_Age[SAY]    # Calculate spawning stock biomass
   VBiomass[SAYR] <- N[SAYR] * FleetPars$Wt_age_C[SAY] * FleetPars$V_real[SAY]  # Calculate vulnerable biomass
 
-  
-  SBsurv[1,,1]
-  SSB[1,,1,]
-  sum(SSB[1,,1,])
-  
   StockPars$aR <- aR
   StockPars$bR <- bR
   StockPars$SSB0 <- SSB0
@@ -562,6 +557,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
     qs <- rep(0, nsim) # no fishing
   }
   FleetPars$qs <- qs
+  
 
   histYrs <- sapply(1:nsim, function(x)
     popdynCPP(nareas, StockPars$maxage,
