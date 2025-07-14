@@ -1,6 +1,6 @@
 Import <- function(dir=NULL,
                    nSim=48,
-                   pYears=50, ...) {
+                   pYear=50, ...) {
   list.files(dir)
   
 }
@@ -309,8 +309,9 @@ ImportBAM <- function(x='Red Snapper',
 
 ImportSS <- function(SSdir,     
                      nSim=48,
-                     pYears=50, 
+                     pYear=50, 
                      Name = "Imported SS3 Model",
+                     silent=FALSE,
                      ...) {
   
   if(!requireNamespace("r4ss", quietly = TRUE)) 
@@ -326,12 +327,235 @@ ImportSS <- function(SSdir,
   if(!any(names(dots) == "verbose")) dots$verbose <- FALSE
   if(!any(names(dots) == "warn")) dots$warn <- FALSE
   
+ 
+  if (!silent)
+    cli::cli_progress_message('Importing SS3 output from {.val {SSdir}}')
   replist <- try(do.call(r4ss::SS_output, dots), silent = TRUE)
+  if (!silent)
+    cli::cli_progress_done()
   
   if(is.character(replist)) 
     cli::cli_abort(c("`r4ss::SS_output` function returned an error.", 
                      'x' = replist), call. = FALSE)
   
-  OM <- OM(Name=Name)
+  nStock <- replist$nsexes
+  nFleet <- replist$nfleets
   
+  if(!silent) 
+    cli::cli_alert('{.val {nStock}-sex} and {.val {nFleet}-fleet} model detected.')
+  
+  OM <- OM(Name=Name)
+  OM@nSim <- nSim
+  mainyrs <- replist$startyr:replist$endyr
+  OM@nYear <- length(mainyrs)
+  OM@pYear <- pYear
+  OM@CurrentYear <- max(mainyrs)
+  
+  
+  if (nStock==1) {
+    StockNames <- 'Female and Male'
+    
+  } else if (nStock==2) {
+    StockNames <- c('Female', 'Male')
+  } else {
+    cli::cli_abort('`nStock` should be {.val {1} or {2}}')
+  }
+  
+  
+  
+  OM@Stock <- purrr::map(seq_along(StockNames), SS2Stock, replist=replist)
+  names(OM@Stock) <- StockNames
+  
+
+  
+  
+  
+  OM@Fleet <- MakeNamedList(StockNames, list())
+  purrr::map(OM@Fleet, MakeNamedList(FleetNames, new('fleet')))
+  
+  
+  
+  
+  
+  
+  
+}
+
+SS2Stock <- function(st, replist, ...) {
+  
+  mainyrs <- replist$startyr:replist$endyr
+  nyears <- length(mainyrs)
+  
+  Stock <- new('stock')
+  Stock@Name <- ifelse(st == 1, "Female", "Male")  # TODO - option for single sex combined models
+  
+  if(!is.null(replist$movement) && nrow(replist$movement) > 0) 
+    cli::cli_alert_warning("Movement detected in SS model but not imported right now.")
+  
+  # Number-at-Age
+  if(replist$nsexes > 1) {
+    # For the 2 sex model with multiple seasons used to develop this code: 
+    # the i-th morph recruits appear in the i-th season Males are indexed morphs 5-8 in a 4-season model. 
+    # Morph2 re-maps males to 1-4
+    N_at_age <- dplyr::filter(replist$natage, Sex == st, `Beg/Mid` == "B", Era == "VIRG") %>%
+      dplyr::mutate(Morph2 = Morph - (st - 1) * replist$nseasons) %>% dplyr::filter(Morph2 == Seas)
+  } else {
+    # For the single-sex model with multiple seasons used to develop this code: 
+    # the annual recruits entering the population is found by matching BirthSeas to Seas
+    N_at_age <- dplyr::filter(replist$natage, Sex == st, `Beg/Mid` == "B", Era == "VIRG") %>%
+      dplyr::filter(BirthSeas == Seas)
+  }
+  
+  AgeClasses <- suppressWarnings(as.numeric(colnames(N_at_age)))
+  AgeClasses <- AgeClasses[!is.na(AgeClasses)]
+  n_age <- length(AgeClasses)
+  
+  Stock@Ages <- Ages(MaxAge=max(AgeClasses), MinAge=min(AgeClasses))
+  Stock@Length <- SS2Length(st, replist, mainyrs, nyears, AgeClasses)
+  Stock@Weight <- SS2Weight(st, replist, mainyrs, nyears, AgeClasses)
+  Stock@NaturalMortality <- SS2NaturalMortality(st, replist, mainyrs, nyears, AgeClasses)
+  
+  Stock@Maturity <- SS2Maturity(st, replist, mainyrs, nyears, AgeClasses)
+  
+  
+  SS2Maturity <- function(st, replist, mainyrs, nyears, AgeClasses) {
+    
+  }
+  
+  
+  Stock@Fecundity
+  
+  Stock@SRR
+  
+  Stock@Spatial
+  
+  Stock@Depletion
+  
+  Stock@nYear
+  Stock@pYear
+  Stock@nSim
+  Stock@CurrentYear
+  Stock@TimeUnits
+  Stock@TimeSteps
+  Stock@TimeStepsPerYear
+  
+  
+  
+  
+  
+  Stock
+}
+
+GetEndGrowth <- function(st,replist) {
+  endgrowth <- dplyr::filter(replist$endgrowth, Sex == st, Seas == 1)
+  if(!is.null(endgrowth$BirthSeas)) endgrowth <- dplyr::filter(endgrowth, BirthSeas == 1)
+  if(!is.null(endgrowth$Settlement)) endgrowth <- dplyr::filter(endgrowth, Settlement == 1)
+  endgrowth
+}
+
+SS2Length <- function(st, replist, mainyrs, nyears, AgeClasses) {
+  
+  endgrowth <- GetEndGrowth(st, replist)
+  
+  Len_age_df <- dplyr::filter(replist$growthseries, Morph == st, Yr %in% mainyrs)
+  
+  if(nrow(Len_age_df)>0) { # Would do time-varying
+    Len_age <- do.call(rbind, lapply(AgeClasses, function(x) parse(text = paste0("Len_age_df$`", x, "`")) |> eval()))
+    if (ncol(Len_age) == (nyears - 1)) Len_age <- cbind(Len_age, endgrowth$Len_Beg)
+  } else {
+    Len_age <- endgrowth$Len_Beg |>matrix(n_age, nyears) # No time-varying
+  }
+  
+  dimnames(Len_age) <- list(Age=AgeClasses,
+                            TimeStep=mainyrs)
+  
+  Len_age <- process_cpars(Len_age)
+  
+  Len_age <- AddDimension(Len_age, 'Sim') |> aperm(c('Sim', 'Age', 'TimeStep'))
+  
+  Length <- Length(MeanAtAge = Len_age)
+  Length@CVatAge <-  mean(endgrowth$SD_Beg[-1]/endgrowth$Len_Beg[-1])
+  
+  
+  # TODO - add parameters and models
+  # https://nmfs-ost.github.io/ss3-doc/SS330_User_Manual_release.html#Growth
+  Linf <- replist$Growth_Parameters[st, ]$Linf
+  K <- replist$Growth_Parameters[st, ]$K
+  A1 <-  replist$Growth_Parameters[st, ]$A1 
+  A2 <-  replist$Growth_Parameters[st, ]$A2
+  L1 <- replist$Growth_Parameters[st, ]$L_a_A1
+  L2 <- replist$Growth_Parameters[st, ]$L_a_A2
+  t0 <- replist$Growth_Parameters[st, ]$A_a_L0
+  
+  # len <- Linf + (L1-Linf)*exp(-K*(AgeClasses-A1))
+  # 
+  # plot(  Len_age[,1], type='l')  
+  # lines(len, col='blue')
+  # 
+  Length@Pars <- list()
+  # Length@Model
+  
+  Length
+}
+
+SS2Weight <- function(st, replist, mainyrs, nyears, AgeClasses) {
+  Weight <- Weight()
+  Weight@Pars <- list(Alpha=replist$Growth_Parameters[st, ]$WtLen1,
+                      Beta=replist$Growth_Parameters[st, ]$WtLen2)
+  Weight@Model <- FindModel(Weight)
+  
+  
+  if(!is.null(replist$mean_body_wt)) {
+    cli::cli_abort('TODO - get array same as M and length', .internal=TRUE)
+    # Wt_age_df <- replist$mean_body_wt[replist$mean_body_wt$Morph == st, ]
+    # Wt_age_df <- Wt_age_df[findInterval(mainyrs, Wt_age_df$Yr), ]
+    # Wt_age <- do.call(rbind, lapply(0:n_age, function(x) parse(text = paste0("Wt_age_df$`", x, "`")) %>% eval()))
+    # if(ncol(Wt_age) == nyears - 1) Wt_age <- cbind(Wt_age, endgrowth$Wt_Beg[-1])
+  } else {
+    endgrowth <- GetEndGrowth(st, replist)
+    Wt_age <- matrix(endgrowth$Wt_Beg, length(AgeClasses), nyears)
+  }
+  
+  dimnames(Wt_age) <- list(Age=AgeClasses,
+                            TimeStep=mainyrs)
+  
+  Wt_age <- Wt_age |> 
+    process_cpars() |> 
+    AddDimension('Sim') |> 
+    aperm(c('Sim', 'Age', 'TimeStep'))
+  
+  Weight@MeanAtAge <- Wt_age
+  
+  Weight
+}
+
+SS2NaturalMortality <- function(st, replist, mainyrs, nyears, AgeClasses) {
+  endgrowth <- GetEndGrowth(st, replist)
+  
+  M_at_age <- replist$M_at_age[replist$M_at_age$Sex == st & replist$M_at_age$Year %in% mainyrs, ]
+  if(!nrow(M_at_age)) {
+    M_at_age <- replist$M_at_age[replist$M_at_age$Sex == st & replist$M_at_age$Yr %in% mainyrs, ]
+  }
+  if(!nrow(M_at_age)) {
+    M_at_age <- replist$M_at_age[replist$M_at_age$Gender == st & replist$M_at_age$Year %in% mainyrs, ]
+  }
+  
+  M_age <- suppressWarnings(lapply(AgeClasses, function(x) parse(text = paste0("M_at_age$`", x, "`")) |>
+                                     eval() |>
+                                     as.numeric()))
+  M_age <- do.call(rbind, M_age)
+  
+  if(all(is.na(M_age[nrow(M_age), ]))) 
+    M_age[nrow(M_age), ] <- endgrowth$M[length(AgeClasses)]
+  if(ncol(M_age) == (nyears - 1)) M_age <- cbind(M_age, endgrowth$M)
+  
+  dimnames(M_age) <- list(Age=AgeClasses,
+                          TimeStep=mainyrs)
+  
+  M_age <- process_cpars(M_age)
+  
+  NaturalMortality <- NaturalMortality()
+  NaturalMortality@MeanAtAge <- AddDimension(M_age, 'Sim') |> aperm(c('Sim', 'Age', 'TimeStep'))
+  
+  NaturalMortality
 }

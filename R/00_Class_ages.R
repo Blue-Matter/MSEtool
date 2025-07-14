@@ -14,6 +14,7 @@
 #' @include 00_Class_child.R
 setClass('ages',
          slots=c(MaxAge='numeric',
+                 MinAge='numeric',
                  Units='character',
                  PlusGroup='logical'),
          contains = c('ClassesClass')
@@ -23,11 +24,12 @@ setValidity('ages', isValidObject)
 
 setMethod("initialize", "ages", function(.Object,
                                          MaxAge=NA,
+                                         MinAge=0,
                                          Units='year',
                                          PlusGroup=TRUE) {
   if (!is.na(MaxAge)) {
     .Object@MaxAge <- MaxAge
-    .Object@Classes <- 0:MaxAge
+    .Object@Classes <- MinAge:MaxAge
   }
   
   .Object@Units <- Units
@@ -44,13 +46,16 @@ setMethod("initialize", "ages", function(.Object,
 #' @param Classes `r AgeClasses_param()`
 #' @export
 Ages <- function(MaxAge=NA,
+                 MinAge=0,
                  Units='year',
-                 PlusGroup=TRUE) {
+                 PlusGroup=TRUE
+                 ) {
   if (methods::is(MaxAge, 'stock'))
     return(MaxAge@Ages)
   
   .Object <- methods::new('ages',
                           MaxAge=MaxAge,
+                          MinAge=MinAge,
                           Units=Units,
                           PlusGroup=PlusGroup)
   

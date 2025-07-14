@@ -4,12 +4,18 @@ la <- devtools::load_all
 
 la()
 
+
+nsim <- 5
+SSdir <- 'G:/My Drive/1_PROJECTS/North_Atlantic_Swordfish/OMs/grid_2022/000_base_case'
+
+OM <- ImportSS(SSdir, nsim)
+
+
+
 # ---- Multi Stock & Multi Fleet (MOM) ----
 
-dir <- 'G:/My Drive/1_PROJECTS/North_Atlantic_Swordfish/OMs/grid_2022/000_base_case'
 
-
-MOM <- SS2MOM(SSdir=dir,nsim=50, Name='North Atlantic Swordfish') 
+MOM <- SS2MOM(SSdir=SSdir,nsim=nsim, Name='North Atlantic Swordfish') 
 
 # TODO Import - new SS2MOM for new OM structure 
 
@@ -25,6 +31,8 @@ for (st in 1:2) {
 OMa <- Convert(MOM, Populate = FALSE)  # convert from `MOM` to `om`
 
 OMa@Fleet[[1]][[1]]@Distribution@Closure
+
+
 
 OM <- Populate(OMa)
 
