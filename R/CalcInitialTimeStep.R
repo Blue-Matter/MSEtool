@@ -22,9 +22,9 @@ CalcInitialTimeStep <- function(Hist, silent=FALSE) {
     RecDevHist1 <- RecDevHist[,1, drop=FALSE] |>
       ExpandSims(nSim)
     names(dimnames(RecDevHist1))[2] <- 'Age'
-    dimnames(RecDevHist1)[[2]]
-    
+  
     ages <- as.numeric(dimnames(RecDevInit)[['Age']])
+    
     InitAgeClassRecDevs <- cbind(RecDevHist1, RecDevInit) 
     dimnames(InitAgeClassRecDevs) <- list(Sim=1:nSim,
                                           Age=c(ages[1]-1, ages))

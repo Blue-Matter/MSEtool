@@ -698,8 +698,7 @@ AtSize2AtAge <- function(object, Length) {
   ASK <- Length@ASK
   dim_MeanAtSize <- dim(MeanAtSize)
   dim_ASK <- dim(ASK)
- 
-  
+
   DNames <- names(dimnames(Length@MeanAtAge))
   bySim <- TRUE
   if ("Sim" %in% DNames) {

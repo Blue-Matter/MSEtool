@@ -24,7 +24,9 @@ FishingMortality2Selectivity <- function(FishingMortality, DiscardMortality, Age
   nAge <- dim(FishingMortality@DeadAtAge)[2]
   maxValues <- apply(FInteract, c(1,3), max)
   maxValues <- replicate(nAge, maxValues) |> aperm(c(1,3,2))
-  FInteract/maxValues
+  out <- FInteract/maxValues
+  out[!is.finite(out)] <- 0
+  out
 }
 
 FishingMortality2Retention <- function(FishingMortality,

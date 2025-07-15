@@ -201,7 +201,7 @@ GenerateRecruitmentDeviations <- function(SD=0.2, AC=0, TruncSD=2,
                                           RecDevInit=NULL,
                                           RecDevHist=NULL,
                                           RecDevProj=NULL) {
-
+  
   if (is.null(MaxAge))
     cli::cli_abort('`MaxAge` cannot be NULL')
 

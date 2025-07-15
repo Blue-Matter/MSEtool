@@ -87,14 +87,16 @@ SimulateDEV <- function(OM=NULL,
   
   # ---- Historical Population Dynamics ----
   # tictoc::tic()
-  HistSimList <- purrr::map(HistSimList, \(x) 
-                       SimulateDynamics_(x, TimeSteps(OM, 'Historical')),
+  HistTimeSteps <- TimeSteps(OM, 'Historical')
+  HistSimList <- purrr::map(HistSimList, \(HistSim) 
+                       SimulateDynamics_(HistSim, HistTimeSteps),
                        .progress = list(
                          type = "iterator", 
                          format = "Simulating Historical Fishery {cli::pb_bar} {cli::pb_percent}",
                          clear = TRUE))
   
   # tictoc::toc()
+  
   
   # ---- Check for Depletion Optimization ----
  

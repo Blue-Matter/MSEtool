@@ -89,10 +89,11 @@ inline List CalcFMortality(arma::mat EffortFleetArea, // nFleet, nArea
                            arma::mat DiscardMortalityAtAgeFleet, // nAge, nFleet
                            int nArea) {
   
-  int nFleet = EffortFleetArea.n_rows;
-  EffortFleetArea = TransposeMatrix(EffortFleetArea, nArea);
   // int nFleet = EffortFleetArea.n_rows;
-  // Rcout << "nFleet = " << nArea << std::endl;
+  EffortFleetArea = TransposeMatrix(EffortFleetArea, nArea);
+  int nFleet = Catchability.size();
+  // Rcout << "nFleet = " << nFleet << std::endl;
+  // Rcout << "Catchability = " << Catchability << std::endl;
   
   int nAge = SelectivityAtAgeFleet.n_rows;
 

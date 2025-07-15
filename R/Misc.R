@@ -673,13 +673,13 @@ AddDimNames <- function(array, names=c('Sim', 'Age', 'TimeStep'), TimeSteps=NULL
   for (i in seq_along(names)) {
     if (names[i]=='Age') {
       l[[i]] <- 0:(d[i]-1)
-    } else if (names[i]=='TimeStep' & !is.null(TimeSteps)) {
+    } else if (names[i]=='TimeStep' && !is.null(TimeSteps)) {
       l[[i]] <- TimeSteps[1:d[i]]
     } else {
       if (is.null(values)) {
         l[[i]] <- 1:d[i]  
       } else {
-        if (!is.null(values[[i]]) & !is.na(values[[i]])) {
+        if (!is.null(values[[i]]) && !any(is.na(values[[i]]))) {
           l[[i]] <- values[[i]]
         } else {
           l[[i]] <- 1:d[i]  

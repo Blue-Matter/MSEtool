@@ -124,7 +124,7 @@ PopulateOM <- function(OM, silent=FALSE) {
   OM <- ProcessCatchFrac(OM)
   
   
-  OM <- PopulateObs(OM)
+  # OM <- PopulateObs(OM)
   
 
   
@@ -1243,7 +1243,7 @@ StructureObs <- function(OM) {
   }
   
   if (length(StockNames)>1)
-    stop("Multi-stock/fleet Obs not done")
+    warning("Multi-stock/fleet Obs not done")
   
   # TODO 
   

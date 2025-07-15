@@ -18,7 +18,7 @@ OptimizeCatchability <- function(HistSim) {
     # multi stock/fleet
     QMatrix <- matrix(0, nStock, nFleet) 
     for (st in 1:nStock) {
-      QMatrix[st,] <- HistSim@OM@Fleet[[st]]@Effort@Catchability[1,] 
+      QMatrix[st,] <- apply(HistSim@OM@Fleet[[st]]@Effort@Catchability, 2, max)
     }
 
     if (all(QMatrix>1E-5))

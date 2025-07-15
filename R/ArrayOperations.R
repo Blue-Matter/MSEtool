@@ -33,13 +33,16 @@ RepeatArrayDim <- function(array, dim, n) {
   nDim <- length(ArrayDim)
   OutDim <- ArrayDim
   OutDim[dim] <- OutDim[dim] * n
-  
+
   perm <- (1:nDim)[-dim]
   perm <- c(perm, dim)
   OutArray <- aperm(array, perm)
   OutArray <- rep(OutArray, n)
   dim(OutArray) <- OutDim[perm]
   perm <- append((1:(nDim - 1)), nDim, dim - 1)
+  if (nDim==1) {
+    return(OutArray)
+  } 
   aperm(OutArray, perm) 
 }
 

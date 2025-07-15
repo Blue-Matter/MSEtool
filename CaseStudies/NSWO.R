@@ -8,8 +8,6 @@ la()
 nsim <- 5
 SSdir <- 'G:/My Drive/1_PROJECTS/North_Atlantic_Swordfish/OMs/grid_2022/000_base_case'
 
-OM <- ImportSS(SSdir, nsim)
-
 
 
 # ---- Multi Stock & Multi Fleet (MOM) ----
@@ -28,14 +26,54 @@ for (st in 1:2) {
   }
 }
 
-OMa <- Convert(MOM, Populate = FALSE)  # convert from `MOM` to `om`
 
-OMa@Fleet[[1]][[1]]@Distribution@Closure
+OM <- ImportSS(SSdir, nsim)
+
+Hist1 <- SimulateDEV(OM)
+
+
+# Compare MOM and OM
+Hist2 <- Simulate(MOM) # takes a long time!
+
+
+OMTEST <- Convert(MOM)  # convert from `MOM` to `om`
+Hist3 <- SimulateDEV(OMTEST)
+
+
+b1 <- Hist1@Biomass[1,,] |> apply('TimeStep', sum, na.rm=TRUE)
+b2 <- Hist3@Biomass[1,,] |> apply('TimeStep', sum, na.rm=TRUE)
+
+b = replist$timeseries |> dplyr::filter(Yr %in% mainyrs) |>
+  dplyr::select(Year=Yr, Biomass=Bio_all)
+
+bdf <- cbind(b, b1, b2)
+
+matplot(bdf[,2:4], type='b')
+
+
+# UP TO HERE
+# - fix Biomass for Male in Hist1
+# - match Biomass, Number, etc with SS3 output
 
 
 
-OM <- Populate(OMa)
 
+
+
+
+OMTEST@Stock$Female@Length@ASK |> dimnames()
+
+plot(MOM@cpars$Female$SPN_1$V[1,,71], type='l')
+
+lines(MOM@cpars$Female$SPN_1$retA[1,,71], col='blue')
+lines(Fleet@Selectivity@MeanAtAge[1,,71], col='red')
+
+
+MOM@cpars$Female$SPN_1$retA[1,,1]
+
+MOM@cpars$Female$SPN_1$Fdisc_array2[1,,1]
+
+OMTEST@Fleet$Female$SPN_1@DiscardMortality@MeanAtAge[1,,1]
 
 
 messages='default'

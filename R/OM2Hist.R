@@ -64,10 +64,10 @@ OM2Hist <- function(OM, silent=FALSE) {
   Hist@Effort <- ListArraySimAgeTimeFleet(OM, 'Historical') |> lapply(DropDimension, 'Age', FALSE) |>
     List2Array('Stock') |> aperm(c('Sim', 'Stock', 'TimeStep', 'Fleet'))
   
+
+  nTS <- dim(Hist@Effort)[3]
   for (st in 1:nStock(OM)) {
-    for (fl in 1:nFleet(OM)) {
-      Hist@Effort[,st,,fl] <- OM@Fleet[[st]][[fl]]@Effort@Effort[1:nSim(OM),]  
-    }
+      Hist@Effort[,st,,] <- Hist@OM@Fleet[[st]]@Effort@Effort[,1:nTS,,drop=FALSE] # OM@Fleet[[st]][[fl]]@Effort@Effort[1:nSim(OM),]  
   }
   
   Hist@FDeadAtAge <- ListArraySimAgeTimeFleet(OM, 'Historical') 
