@@ -61,15 +61,15 @@ CalculateFInteract <- function(FishingMortality, DiscardMortality,
   }
 
   # account for discard mortality
-  chk <- CheckRequiredObject(DiscardMortality, 'discardmortality', 'DiscardMortality')
-  if (!chk@populated)
-    DiscardMortality <- Populate(DiscardMortality,
-                                 Ages,
-                                 Length,
-                                 nsim,
-                                 TimeSteps,
-                                 seed=seed,
-                                 silent=silent)
+  # chk <- CheckRequiredObject(DiscardMortality, 'discardmortality', 'DiscardMortality')
+  # if (!chk@populated)
+  #   DiscardMortality <- PopulateDiscardMortality(DiscardMortality,
+  #                                Ages,
+  #                                Length,
+  #                                nsim,
+  #                                TimeSteps,
+  #                                seed=seed,
+  #                                silent=silent)
 
   RetainAtAge <- AddSimDimension(FishingMortality@RetainAtAge, TimeSteps=TimeSteps)
   DiscardAtAge <- ArraySubtract(DeadAtAge, RetainAtAge)
@@ -102,6 +102,6 @@ CalculateFInteract <- function(FishingMortality, DiscardMortality,
       DiscardMortalityAtAge[,,st:end] <- DiscardMortalityAtAge[,,st]
     }
   }
-  RetainAtAge+DiscardAtAge/DiscardMortalityAtAge
+  ArrayAdd(RetainAtAge,ArrayDivide(DiscardAtAge,DiscardMortalityAtAge))
 
 }

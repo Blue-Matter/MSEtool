@@ -203,7 +203,7 @@ S4 SimulateDynamics_(S4 HistSimIn,
     for (int st=0; st<nStock; st++) {
       
       if (debug)
-        Rcout << "Calculate Recruitment and Numbers " << st << std::endl;
+        Rcout << "\n\nCalculate Recruitment and Numbers for Stock " << st << std::endl;
       
       arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // nAge, nTS, nArea
       int nAge = NumberAtAgeArea.n_rows;
@@ -243,8 +243,8 @@ S4 SimulateDynamics_(S4 HistSimIn,
         // Rcout << "SP = " << SP << std::endl;
         // double r0 =  arma::as_scalar(R0(TSindex));
         // Rcout << "r0 = " << r0 << std::endl;
-        
-        // Rcout << "sp0 = " << sp0 << std::endl;
+        // 
+        // 
         // double recdev = arma::as_scalar(RecDevs(TSRec));
         // Rcout << "recdev = " << recdev << std::endl;
         
@@ -253,7 +253,7 @@ S4 SimulateDynamics_(S4 HistSimIn,
         if (sp0_nts >1 ) {
           sp0 = arma::as_scalar(SP0.row(st).col(TSindex));  
         } 
-        
+        // Rcout << "sp0 = " << sp0 << std::endl;
         
         double Recruits = CalcRecruitment_(arma::as_scalar(SProduction.row(st).col(TSindex)),
                                            arma::as_scalar(R0(TSindex)),
@@ -262,6 +262,9 @@ S4 SimulateDynamics_(S4 HistSimIn,
                                            SRRModel,
                                            SRRPars,
                                            TSindex);
+        if (debug)
+          Rcout << "Recruits =  " << Recruits << std::endl;
+        
         
         // Distribute Recruits
         if (debug)

@@ -50,6 +50,17 @@ CalcEquilibriumUnfished <- function(OM) {
     List2Array('Stock') |>
     aperm(c('Sim', 'Stock', 'TimeStep'))
   
+  # apply SPFrom
+  stockNames <- StockNames(OM)
+  for (st in seq_along(stockNames)) {
+    SPFrom <- OM@Stock[[st]]@SRR@SPFrom
+    if (!is.null(SPFrom)) {
+      ind <- match(SPFrom, stockNames)
+      EquilibriumUnfished@SProduction[,st,] <- EquilibriumUnfished@SProduction[,ind,]
+    }
+  }
+  
+  
   EquilibriumUnfished
 }
 
@@ -62,7 +73,7 @@ CalcDynamicUnfished <- function(HistSimList, silent=FALSE) {
   if (inherits(HistSimList, 'hist')) 
     HistSimList <- Hist2HistSimList(HistSimList)
   
-  HistSimList <- purrr::map(HistSimList, \(x) {
+  HistSimListCopy <- purrr::map(HistSimList, \(x) {
     nStock <- nStock(x@OM)
     for (st in 1:nStock) {
       x@OM@Fleet[[st]]@Effort@Catchability[] <- tiny
@@ -72,9 +83,8 @@ CalcDynamicUnfished <- function(HistSimList, silent=FALSE) {
   
   TimeSteps <- TimeSteps(HistSimList[[1]]@OM, 'Historical')
   StockNames <- StockNames(HistSimList[[1]]@OM)
-  out <- purrr::map(HistSimList, \(HistSim) {
-    
-    HistSim@Unfished@Equilibrium@SProduction
+  
+  HistSimListOut <- purrr::map(HistSimListCopy, \(HistSim) {
     
     unfished <- SimulateDynamics_(HistSim, TimeSteps)
     
@@ -94,7 +104,16 @@ CalcDynamicUnfished <- function(HistSimList, silent=FALSE) {
     HistSim
     
   }, .progress = 'Calculating Dynamic Unfished')
-  out
+  
+  
+  HistSimListOut <- purrr::map2(HistSimListOut, HistSimList, \(x,y) {
+    nStock <- nStock(x@OM)
+    for (st in 1:nStock) {
+      x@OM@Fleet[[st]]@Effort@Catchability[] <- y@OM@Fleet[[st]]@Effort@Catchability[]
+    }
+    x
+  })
+  HistSimListOut
 }
 
 # CalcUnfished <- function(OM, Hist=NULL, silent=FALSE) {

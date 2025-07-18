@@ -7,7 +7,7 @@
 \alias{Ages<-}
 \title{Ages Object}
 \usage{
-Ages(MaxAge = NA, Units = "year", PlusGroup = TRUE)
+Ages(MaxAge = NA, MinAge = 0, Units = "year", PlusGroup = TRUE)
 
 Ages(x) <- value
 }

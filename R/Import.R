@@ -323,6 +323,7 @@ ImportSS <- function(SSdir,
                      'i'="It is recommended to install the Github version with `pak::pkg_install('r4ss/r4ss')`"
     ))
   
+  # dots <- list(dir = SSdir) 
   dots <- list(dir = SSdir, ...)
   if(!any(names(dots) == "covar")) dots$covar <- FALSE
   if(!any(names(dots) == "forecast")) dots$forecast <- FALSE
@@ -365,17 +366,13 @@ ImportSS <- function(SSdir,
     cli::cli_abort('`nStock` should be {.val {1} or {2}}')
   }
   
-  
   OM@Stock <- purrr::map(seq_along(StockNames), SS2Stock, 
                          replist=replist, 
                          pYear=pYear, 
                          nSim=nSim)
   
   names(OM@Stock) <- StockNames
-
-  ## update Stock@Length@Class & ASK 
   
-
 
   OM@Fleet <- MakeNamedList(StockNames, list())
   
@@ -384,9 +381,13 @@ ImportSS <- function(SSdir,
   for (st in seq_along(OM@Fleet)) {
     OM@Fleet[[st]] <- MakeNamedList(FleetNames, new('fleet'))
     for (fl in seq_along(FleetNames)) {
-      OM@Fleet[[st]][[fl]] <- SS2Fleet(st, fl, replist, OM@Stock)
+      OM@Fleet[[st]][[fl]] <- SS2Fleet(st, fl, replist, OM@Stock[[st]])
     }
   }
+  
+  
+  OM@Stock$Female@Length@Classes
+  
   
   # Drop Survey Fleets and Add to Data instead
   
@@ -451,6 +452,11 @@ GetEndGrowth <- function(st,replist) {
   if(!is.null(endgrowth$BirthSeas)) endgrowth <- dplyr::filter(endgrowth, BirthSeas == 1)
   if(!is.null(endgrowth$Settlement)) endgrowth <- dplyr::filter(endgrowth, Settlement == 1)
   endgrowth
+}
+
+GetSSAgeClasses <- function(array) {
+  AgeClasses <- suppressWarnings(as.numeric(colnames(array)))
+  AgeClasses[!is.na(AgeClasses)]
 }
 
 SS2Length <- function(st, replist, mainyrs, nyears, AgeClasses) {
@@ -737,6 +743,37 @@ SS2SRR <- function(st, replist, mainyrs, AgeClasses, R0, Depletion, pYear, nSim)
   SRR
 }
 
+SS2Fleet <- function(st, fl, replist, Stock) {
+  
+  FleetNames <- replist$catch$Fleet_Name  |> unique()
+  
+  mainyrs <- replist$startyr:replist$endyr
+  nyears <- length(mainyrs)
+  
+  Fleet <- Fleet(FleetNames[fl])
+  
+  Fleet@DiscardMortality <- SS2DiscardMortality(st, fl, replist, mainyrs, Stock)
+  Fleet@FishingMortality <- SS2FishingMortality(st, fl, replist, mainyrs)
+  
+  Fleet@FishingMortality@DeadAtAge[1,,44] |> max()
+
+  Fleet@Selectivity <- SS2Selectivity(st, fl, replist, mainyrs, 
+                                      Fleet@FishingMortality,
+                                      Fleet@DiscardMortality, Stock)
+  
+  Fleet@Retention <- SS2Retention(st, fl, replist, mainyrs, Fleet@Selectivity, Stock)
+  
+  Fleet@FishingMortality@RetainAtAge <- ArrayMultiply(Fleet@Retention@MeanAtAge, Fleet@FishingMortality@DeadAtAge)
+  
+  Fleet@Effort <- SS2Effort(st, fl, replist, mainyrs, 
+                            FishingMortality=Fleet@FishingMortality, 
+                            DiscardMortality=Fleet@DiscardMortality, 
+                            Stock=Stock)
+  
+  Fleet@WeightFleet <- SS2WeightFleet(st, fl, replist, mainyrs)
+  Fleet
+}
+
 SS2DiscardMortality <- function(st, fl, replist, mainyrs, Stock) {
   DiscardMortality <- DiscardMortality()
   
@@ -757,7 +794,7 @@ SS2DiscardMortality <- function(st, fl, replist, mainyrs, Stock) {
     aperm(c('Sim', 'Class', 'TimeStep'))
   
   AgeClasses <- Stock@Ages@Classes
-  ALK <- GetSSALK(replist, AgeClasses, LengthClasses) |>
+  ALK <- GetSSALK(st, replist, AgeClasses, LengthClasses) |>
     AddDimension('Sim') |>
     AddDimension('TimeStep', min(mainyrs)) |>
     aperm(c('Sim', 'Age', 'Class', 'TimeStep'))
@@ -780,12 +817,12 @@ SS2DiscardMortality <- function(st, fl, replist, mainyrs, Stock) {
 }
 
 
-GetSSALK <- function(replist, AgeClasses, LengthClasses) {
-  ALK_dim_match <- paste0("Seas: 1 Sub_Seas: 2 Morph: ", i) %in% dimnames(replist$ALK)[[3]] |> any()
+GetSSALK <- function(st, replist, AgeClasses, LengthClasses) {
+  ALK_dim_match <- paste0("Seas: 1 Sub_Seas: 2 Morph: ", st) %in% dimnames(replist$ALK)[[3]] |> any()
   if(ALK_dim_match) {
-    ALK <- replist$ALK[, , paste0("Seas: 1 Sub_Seas: 2 Morph: ", i)]
+    ALK <- replist$ALK[, , paste0("Seas: 1 Sub_Seas: 2 Morph: ", st)]
   } else {
-    ALK <- replist$ALK[, , paste0("Seas: 1 Morph: ", (i - 1) * replist$nseasons + 1)]
+    ALK <- replist$ALK[, , paste0("Seas: 1 Morph: ", (st - 1) * replist$nseasons + 1)]
   }
   if (all(!is.na(replist$lbinspop))) {
     ALK <- ALK[match(replist$lbinspop, dimnames(ALK)$Length), match(AgeClasses, dimnames(ALK)$TrueAge)]
@@ -813,13 +850,13 @@ SS2FishingMortality <- function(st, fl, replist, mainyrs) {
   AgeClasses <- suppressWarnings(as.numeric(colnames(FatAge)))
   AgeClasses <- AgeClasses[!is.na(AgeClasses)]
   n_age <- length(AgeClasses)
-  
+
   FatAge <- t(FatAge[,as.character(AgeClasses)])
   dimnames(FatAge) <- list(Age=AgeClasses,
                            TimeStep=mainyrs)
   
   FatAge <- FatAge |> AddDimension('Sim') |> aperm(c('Sim', 'Age', 'TimeStep'))
-  
+
   FishingMortality <- FishingMortality(ApicalF=apply(FatAge, c('Sim', 'TimeStep'), max),
                                        DeadAtAge=FatAge)
 
@@ -851,7 +888,7 @@ SS2Selectivity <- function(st, fl, replist, mainyrs, FishingMortality, DiscardMo
   
   
   AgeClasses <- Stock@Ages@Classes
-  ALK <- GetSSALK(replist, AgeClasses, LengthClasses) |>
+  ALK <- GetSSALK(st, replist, AgeClasses, LengthClasses) |>
     AddDimension('Sim') |>
     AddDimension('TimeStep', min(mainyrs)) |>
     aperm(c('Sim', 'Age', 'Class', 'TimeStep'))
@@ -872,7 +909,7 @@ SS2Selectivity <- function(st, fl, replist, mainyrs, FishingMortality, DiscardMo
 }
 
 
-SS2Retention <- function(st, fl, replist, mainyrs, Stock) {
+SS2Retention <- function(st, fl, replist, mainyrs, Selectivity, Stock) {
   Retention <- Retention()
   Retention@Pars <- list()
   
@@ -893,55 +930,93 @@ SS2Retention <- function(st, fl, replist, mainyrs, Stock) {
   RetainAtLength <- RetainAtLength |> AddDimension('Sim') |>
     aperm(c('Sim', 'Class', 'TimeStep'))
   
-  RetainAtLength <- RetainAtLength/Selectivity@MeanAtLength
+  RetainAtLength <- ArrayDivide(round(RetainAtLength,3),
+                                round(Selectivity@MeanAtLength,3)
+  )
+  
+
+  RetainAtLength[!is.finite(RetainAtLength)] <- 0
   Retention@MeanAtLength <- RetainAtLength
   Retention@Classes <- LengthClasses
+
+  AgeClasses <- Stock@Ages@Classes
+  ALK <- GetSSALK(st, replist, AgeClasses, LengthClasses) |>
+    AddDimension('Sim') |>
+    AddDimension('TimeStep', min(mainyrs)) |>
+    aperm(c('Sim', 'Age', 'Class', 'TimeStep'))
+
+  Stock@Length@ASK <- ALK
+
+  temp <- MeanAtLength2MeanAtAge(object=Retention, 
+                                 Length=Stock@Length, 
+                                 Ages=Stock@Ages, 
+                                 nsim=1, 
+                                 TimeSteps=mainyrs,
+                                 max1=FALSE)
   
-  temp <- MeanAtLength2MeanAtAge(Retention, Stock@Length, Stock@Ages@Classes,
-                             1, mainyrs)
-  Selectivity@MeanAtAge <- temp@MeanAtAge
-  
-  
-  Retention@MeanAtAge
-  
-  
+  Retention@MeanAtAge <- temp@MeanAtAge
   Retention
 }
 
-SS2Effort <- function(st, fl, replist, FishingMortality) {
+SS2Effort <- function(st, fl, replist, mainyrs, FishingMortality, DiscardMortality, Stock) {
   Effort <- Effort()
-  Fmean <- apply(FishingMortality@ApicalF, 'Sim', mean)
-  Fmean <- array(Fmean, dim=dim(FishingMortality@ApicalF))
-  RelEffort <- FishingMortality@ApicalF/Fmean # mean 1 for historical 
+  
+  FInteract <- CalculateFInteract(FishingMortality,
+                                  DiscardMortality,
+                                  Ages=Stock@Ages,
+                                  TimeSteps=mainyrs,
+                                  Length=Stock@Length)
+  
+  FInteractApical <- apply(FInteract, c('Sim', 'TimeStep'), max)
+  FInteractApicalTerminal <- FInteractApical
+  FInteractApicalTerminal[] <- 0
+  
+  for (i in 1:nrow(FInteractApical)) {
+    ind <- which(FInteractApical[i,]>0) |> max()
+    FInteractApicalTerminal[] <- FInteractApical[i,ind]
+  }
+
+  RelEffort <- ArrayDivide(FInteractApical,FInteractApicalTerminal)
   Effort@Effort <- RelEffort
-  Effort@Catchability <- Fmean
+  Effort@Catchability <- FInteractApicalTerminal
   Effort
 }
 
-SS2Fleet <- function(st, fl, replist, Stock) {
+SS2WeightFleet <- function(st, fl, replist, mainyrs) {
   
-  FleetNames <- replist$catch$Fleet_Name  |> unique()
+  if (inherits(replist$wtatage, 'logical'))
+    return(NULL)
   
-  mainyrs <- replist$startyr:replist$endyr
-  nyears <- length(mainyrs)
+  if (!is.null(replist$wtatage$Yr)) {
+    wt_at_age_c_df <- replist$wtatage |>
+      dplyr::filter(abs(Yr) %in% mainyrs, Sex==st, Fleet==fl)
+  } else {
+    if (!is.null(replist$wtatage$sex)) {
+      wt_at_age_c_df <- replist$wtatage |>
+        dplyr::filter(abs(year) %in% mainyrs, sex==st, fleet==fl)
+    } else {
+      wt_at_age_c_df <- replist$wtatage |>
+        dplyr::filter(abs(year) %in% mainyrs, Sex==st, Fleet==fl)
+    }
+    wt_at_age_c_df <- wt_at_age_c_df |> dplyr::rename(Yr=year)
+  }  
+  
+  AgeClasses <- suppressWarnings(as.numeric(colnames(wt_at_age_c_df)))
+  AgeClasses <- AgeClasses[!is.na(AgeClasses)]
+  n_age <- length(AgeClasses)
+  
+  Weight_at_Age_array <- wt_at_age_c_df[,as.character(AgeClasses)] |> t()
   
   
-  Fleet <- Fleet(FleetNames[fl])
+  dimnames(Weight_at_Age_array) <- list(Age=AgeClasses,
+                                        TimeStep=mainyrs)
   
-  Fleet@DiscardMortality <- SS2DiscardMortality(st, fl, replist, mainyrs, Stock[[st]])
-  Fleet@FishingMortality <- SS2FishingMortality(st, fl, replist, mainyrs)
-  Fleet@Selectivity <- SS2Selectivity(st, fl, replist, mainyrs, 
-                                      Fleet@FishingMortality,
-                                      Fleet@DiscardMortality, Stock[[st]])
-  
-  Fleet@Effort <- SS2Effort(st, fl, replist,    Fleet@FishingMortality)
+  Weight_at_Age_array <- Weight_at_Age_array |> AddDimension('Sim') |>
+    aperm(c('Sim', 'Age', 'TimeStep'))
   
   
+  Weight_at_Age_array
   
-  Fleet@WeightFleet # TODO
-  
-  
-  
-  
-  Fleet
 }
+
+

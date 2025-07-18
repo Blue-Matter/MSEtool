@@ -561,8 +561,7 @@ MeanAtLength2MeanAtAge <- function(object, Length, Ages, nsim, TimeSteps, seed, 
     return(object)
   }
   
-  object@MeanAtAge <- AtSize2AtAge(object, Length) |>
-    AddDimNames(TimeSteps=TimeSteps)
+  object@MeanAtAge <- AtSize2AtAge(object, Length) 
   
   if ('Units' %in% slotNames(object))
     attributes(object@MeanAtAge)$Units <- object@Units
@@ -741,6 +740,15 @@ AtSize2AtAge <- function(object, Length) {
       }
     }
   }
+  dd <- dim(AtAge)
+  
+  TSnames <- c(dimnames(MeanAtSize)[[3]], 
+               dimnames(Length@MeanAtAge)[[3]]) |>
+    unique() |>
+    sort()
+  dimnames(AtAge) <- list(Sim=1:dd[1],
+                          Age=dimnames(Length@MeanAtAge)[[2]],
+                          TimeStep=TSnames)
   AtAge
 }
 

@@ -443,6 +443,10 @@ ExpandTimeSteps <- function(Array, TimeSteps, default=NULL) {
     if (inherits(vals, 'numeric'))
       vals <- array(vals, length(vals), dimnames = list(Sim=1:length(vals)))
     vals <- replicate(nTSFill, vals) 
+    if (!inherits(vals, 'array')) {
+      vals <- array(vals, dim=c(1, length(vals)))
+      dimnames(vals) <- dnames
+    }
     dimnames(vals)[[ind]] <- TimeStepsFill
     names(dimnames(vals))[ind] <- 'TimeStep'
     vals <- aperm(vals, names(dnames))

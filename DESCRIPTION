@@ -144,6 +144,7 @@ Collate:
     'Generate.R'
     'Get.R'
     'GetFatAgeArray.R'
+    'HandyFunctions.R'
     'Hist2MSE.R'
     'Import.R'
     'MICE.R'

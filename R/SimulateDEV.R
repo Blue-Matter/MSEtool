@@ -44,16 +44,16 @@ SimulateDEV <- function(OM=NULL,
   # ---- Calculate Equilibrium Unfished ----
   Hist@Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
   
-  
   # ---- Calculate Number-at-Age for Initial TimeStep ----
   Hist <- CalcInitialTimeStep(Hist)
+  
   
   # ---- Build HistSimList ----
   # List of `Hist` objects, each with one simulation
   HistSimList <- Hist2HistSimList(Hist)
   
   # ---- Calculate Unfished Equilibrium and Dynamic ----
-  # HistSimList <- CalcDynamicUnfished(HistSimList)
+  HistSimList <- CalcDynamicUnfished(HistSimList)
   
   # ---- Optimize for Final Depletion ----
   
@@ -69,6 +69,8 @@ SimulateDEV <- function(OM=NULL,
                                 format = "Optimizing catchability (q) for Final Depletion {cli::pb_bar} {cli::pb_percent}",
                                 clear = TRUE))
   }
+  
+  
   
   # HistSimList <- purrr::map(HistSimList, \(HistSim)
   #                           OptimizeCatchability(HistSim),
@@ -96,8 +98,7 @@ SimulateDEV <- function(OM=NULL,
                          clear = TRUE))
   
   # tictoc::toc()
-  
-  
+ 
   # ---- Check for Depletion Optimization ----
  
   # TODO 
