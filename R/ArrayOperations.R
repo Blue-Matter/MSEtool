@@ -269,6 +269,8 @@ ArraySubsetSim <- function(object, Sims=NULL, drop=FALSE) {
   DN <- dimnames(object)
   DN$Sim <- as.numeric(DN$Sim)
   TSind <- which(names(DN) == 'Sim')
+  
+  
   if (length(TSind)==0)
     cli::cli_abort("`Sim` dimension not found in this array", .internal=TRUE)
   
@@ -282,8 +284,10 @@ ArraySubsetSim <- function(object, Sims=NULL, drop=FALSE) {
       }
     }
     TimeStepsMod <- c(TSexist, matchTS)
-    array <- abind::asub(object, TimeStepsMod, TSind, drop=FALSE)
-    dimnames(array)$`Sim` <- Sims
+    array <- abind::asub(object, TimeStepsMod, TSind, drop=drop)
+
+    if (!is.null( dimnames(array)))
+      dimnames(array)$`Sim` <- Sims
     return(array)
   } 
   if (drop) {
@@ -303,11 +307,11 @@ ArraySubsetSim <- function(object, Sims=NULL, drop=FALSE) {
 
 ArrayExpand <- function(Array, nSim, nAges, TimeSteps, AgeOpt=3) {
   
-  Array |>
+  out <- Array |>
     ExpandSims(nSim) |>
     ExpandAges(nAges, AgeOpt) |>
     ExpandTimeSteps(TimeSteps)
-
+  out
 }
 
 # AgeOpt = 1 fills all additional age classes with 1e-16

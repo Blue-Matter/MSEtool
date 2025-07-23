@@ -9,6 +9,69 @@ la()
 
 nsim <- 5
 SSdir <- 'G:/My Drive/1_PROJECTS/North_Atlantic_Swordfish/OMs/grid_2022/000_base_case'
+replist <- r4ss::SS_output(SSdir)
+
+OMImport <- ImportSS(SSdir, nsim)
+
+HistImport <- ImportSS(SSdir, nsim) |> SimulateDEV() 
+
+# TODO - match number from SS and Import
+
+CompareSSNumber(replist, HistImport)
+CompareSSLandings(replist, HistImport)
+CompareSSRemovals(replist, HistImport)
+
+
+
+################################################################################
+
+
+mainyrs <- replist$startyr:replist$endyr
+FatAgeSS <- replist$fatage |> dplyr::filter(Yr%in%mainyrs) 
+AgeClasses <- GetSSAgeClasses(FatAgeSS)
+
+FatAgeSS <- FatAgeSS |> 
+  tidyr::pivot_longer(cols=as.character(AgeClasses), names_to='Age', values_to = 'Value')  |>
+  dplyr::select(Stock=Sex, Fleet, TimeStep=Yr, Age, Value) |>
+  dplyr::mutate(Age=as.numeric(Age))
+
+FatAgeSS$Stock <- StockNames(Hist@OM)[FatAgeSS$Stock]
+FatAgeSS$Fleet <- Hist@OM@Fleet[[1]]@Name[FatAgeSS$Fleet]
+FatAgeSS$Model <- 'SS3'
+
+FatAgeHist <- lapply(Hist@FDeadAtAge, array2DF)
+for (i in seq_along(FatAgeHist))
+  FatAgeHist[[i]]$Stock <- StockNames(Hist@OM)[i]
+
+FatAgeHist <- do.call('rbind', FatAgeHist) 
+FatAgeHist$Fleet <- Hist@OM@Fleet[[1]]@Name[FatAgeHist$Fleet]
+
+FatAgeHist$Model <- 'Import'
+FatAgeHist <- FatAgeHist |> ConvertDF() |>
+  dplyr::filter(Sim==1)
+
+SelectedYears <- 1992
+
+df <- dplyr::bind_rows(FatAgeSS, FatAgeHist) |>
+  dplyr::filter(TimeStep %in% SelectedYears) 
+
+
+ggplot(df, aes(x=Age, y=Value, color=Model)) +
+  facet_grid(Fleet~Stock, scales='free') +
+  geom_line() +
+  theme_bw()
+
+
+### 
+# TODO 
+# - compare with old method and fix discrepancies in F-at-age, landings, etc
+# - fix Convert so it matches both Old and Import
+
+
+
+
+
+
 
 MOM <- SS2MOM(SSdir=SSdir,nsim=nsim, Name='North Atlantic Swordfish') 
 MOM@nsim <- nsim
@@ -25,7 +88,6 @@ for (st in 1:2) {
 
 OMImport <- ImportSS(SSdir, nsim)
 OMConvert <- Convert(MOM)
-
 
 HistImport <- SimulateDEV(OMImport)  
 HistConvert <- SimulateDEV(OMConvert)
@@ -53,59 +115,46 @@ NatAge <- replist$natage |>
 NatAge$Stock <- StockNames(OMImport)[NatAge$Stock]
   
 
-
-df <- dplyr::bind_rows(
+Number <- dplyr::bind_rows(
   Number(HistImport) |> dplyr::mutate(Model='Import'),
   Number(HistConvert) |> dplyr::mutate(Model='Convert'),
   NumberOld,
   NatAge
 ) |> dplyr::filter(Sim==1)
 
-ggplot(df, aes(x=TimeStep, y=Value, color=Model)) +
+ggplot(Number, aes(x=TimeStep, y=Value, color=Model)) +
   facet_grid(~Stock) +
   geom_line() +
   theme_bw()
 
-df |> dplyr::filter(TimeStep==1992) |>
-  dplyr::select(Stock, Model, Value) |>
-  tidyr::pivot_wider(names_from = Model, values_from = Value)
+Number |> dplyr::filter(TimeStep%in%1992:1998) |>
+  dplyr::select(Stock, Model, Value, TimeStep) |>
+  tidyr::pivot_wider(names_from = Model, values_from = Value) |>
+  dplyr::select(Stock, TimeStep, SS3, Import)
+
+
 
 
 ##############################################################################
-# Fix Import!
-
-# something to do with selectivity, retention, and discard mortality!!
-
-t <- which(TimeSteps(OMImport) == 1994)
-HistOld$Female$SPN_1@AtAge$F.Mortality[1,,t,1] |> plot()
-HistImport@FDeadAtAge$Female[1,,t,1] |> lines()
-
-HistOld$Female$SPN_1@AtAge$F.Mortality[1,,t,1] |> max()
-HistImport@FDeadAtAge$Female[1,,t,1] |> max()
+# Fix Convert!
+st <- 1
 
 
-HistImport@OM@Fleet$Female@Effort@Effort[1,t,1] *
-HistImport@OM@Fleet$Female@Effort@Catchability[1,t,1] 
-HistImport@OM@Fleet$Female@Selectivity@MeanAtAge[1,,t,1] |> plot()
-HistImport@OM@Fleet$Female@Retention@MeanAtAge[1,,t,1] |> lines()
-lines(MOM@cpars$Female$SPN_1$retA[1,,t], col='blue')
+nms <- slotNames('stock') 
 
+OMImport@Fleet[[st]][[fl]]@Retention@MeanAtAge[1,,1]
+OMConvert@Fleet[[st]][[fl]]@Retention@MeanAtAge[1,,1]
 
+MOM@cpars$Female$SPN_1$retA[1,,1]
 
-d <- HistImport@Removals$Female - HistImport@Landings$Female
-sum(d[1,,t,1,1])
-sum(HistOld$Female$SPN_1@TSdata$Discards[1,t,])
 
 
 ################################################################################
 
 
-# TODO - Fix Male N is Convert
-yr <- 2
-sum(HistImport@Number$Male[1,,yr,1])
-sum(HistConvert@Number$Male[1,,yr,1])
 
-################################################################################
+
+
 
 SS3Removals <- replist$catch |> dplyr::filter(Yr %in% mainyrs) |>
   dplyr::select(TimeStep=Yr,  Fleet, Value=kill_bio) |>
@@ -128,6 +177,25 @@ ggplot(df, aes(x=TimeStep, y=Value, color=Model)) +
   facet_wrap(~Fleet, ncol=3, scales='free') +
   geom_line() +
   theme_bw()
+
+
+################################################################################
+
+
+
+df |> dplyr::filter(Fleet=='SPN_1', TimeStep>=1985) |> 
+  tidyr::pivot_wider(names_from = Model, values_from = Value)
+
+t <- which(TimeSteps(OMImport) == 1993)
+
+
+HistOld$Female$SPN_1@AtAge$F.Mortality[1,,t,1] |> plot()
+HistImport@FDeadAtAge$Female[1,,t,1] |> lines()
+
+
+
+################################################################################
+
 
 
 SS3Landings <- replist$catch |> dplyr::filter(Yr %in% mainyrs) |>
@@ -158,20 +226,6 @@ ggplot(df, aes(x=TimeStep, y=Value, color=Model)) +
 
 
 
-
-
-
-
-
-
-
-for (st in 1:2) {
-  for (fl in 1:11) {
-    OM@Fleet[[st]][[fl]]@Retention <- OMTEST@Fleet[[st]][[fl]]@Retention
-  }
-}
-
-Hist1 <- SimulateDEV(OM)
 
 
 # ---- Multi Stock & Multi Fleet (MOM) ----

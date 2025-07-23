@@ -47,7 +47,6 @@ SimulateDEV <- function(OM=NULL,
   # ---- Calculate Number-at-Age for Initial TimeStep ----
   Hist <- CalcInitialTimeStep(Hist)
   
-  
   # ---- Build HistSimList ----
   # List of `Hist` objects, each with one simulation
   HistSimList <- Hist2HistSimList(Hist)
@@ -57,6 +56,7 @@ SimulateDEV <- function(OM=NULL,
   
   # ---- Optimize for Final Depletion ----
   
+  # TODO - check for identical across sims
   if (parallel) {
     cli::cli_progress_message("Optimizing catchability (q) for Final Depletion")
     HistSimList <- .lapply(HistSimList, OptimizeCatchability)
@@ -72,15 +72,7 @@ SimulateDEV <- function(OM=NULL,
   
   
   
-  # HistSimList <- purrr::map(HistSimList, \(HistSim)
-  #                           OptimizeCatchability(HistSim),
-  #                           .progress = list(
-  #                             type = "iterator",
-  #                             format = "Optimizing catchability (q) for Final Depletion {cli::pb_bar} {cli::pb_percent}",
-  #                             clear = TRUE))
 
-  
-  
   # ---- Calculate Reference Points ----
   # TODO speed up - CalcRefPoints.R
   # RefPoints <- CalcRefPoints(OM, Unfished)
@@ -90,12 +82,22 @@ SimulateDEV <- function(OM=NULL,
   # ---- Historical Population Dynamics ----
   # tictoc::tic()
   HistTimeSteps <- TimeSteps(OM, 'Historical')
+  IdenticalAcrossSims <- CheckIdenticalSims(HistSimList)
+  if (IdenticalAcrossSims) {
+    # TODO - only run SimulateDynamics_ once and copy across HistSimList
+    # need to make sure to update all historical dynamics - eg Stock@Length for each sim
+    # if MICE is used
+  } 
+  
   HistSimList <- purrr::map(HistSimList, \(HistSim) 
-                       SimulateDynamics_(HistSim, HistTimeSteps),
-                       .progress = list(
-                         type = "iterator", 
-                         format = "Simulating Historical Fishery {cli::pb_bar} {cli::pb_percent}",
-                         clear = TRUE))
+                            SimulateDynamics_(HistSim, HistTimeSteps),
+                            .progress = list(
+                              type = "iterator", 
+                              format = "Simulating Historical Fishery {cli::pb_bar} {cli::pb_percent}",
+                              clear = TRUE))
+  
+  
+
   
   # tictoc::toc()
  

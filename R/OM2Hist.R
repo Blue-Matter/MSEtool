@@ -34,7 +34,6 @@ OM2Hist <- function(OM, silent=FALSE) {
   TimeSteps <- TimeSteps(OM)
   nArea <- nArea(OM)
   
- 
   Hist@OM@Stock <- purrr::map(Hist@OM@Stock, \(Stock) 
                               Stock2Hist(Stock, nSim=nSim(OM), TimeSteps=TimeSteps, silent, id))
 
@@ -216,7 +215,7 @@ Fleet2Hist <- function(FleetList, nAges, nSim, TimeSteps, nArea, silent=FALSE, i
     cli::cli_progress_update(id=id)
   
   Fleet@Selectivity <- CombineFleetObject(lapply(FleetList, slot, "Selectivity"), nSim, nAges, TimeSteps)
-  
+
   if (!silent)
     cli::cli_progress_update(id=id)
   
@@ -266,18 +265,23 @@ CombineFleetObject <- function(List, nSim, nAges, TimeSteps) {
   
   if ('MeanAtAge' %in% nms) 
     out@MeanAtAge <- lapply(List, slot, 'MeanAtAge') |>
-    purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |>
-    List2Array('Fleet')
-
+    List2Array('Fleet') |>
+    ArrayExpand(nSim, nAges, TimeSteps) 
+    
+    
   if ('MeanAtLength' %in% nms) 
     out@MeanAtLength <- lapply(List, slot, 'MeanAtLength') |>
-    purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |>
-    List2Array('Fleet')
-  
+    List2Array('Fleet') |>
+    ArrayExpand(nSim, nAges, TimeSteps) 
+    
+    # out@MeanAtLength <- lapply(List, slot, 'MeanAtLength') |>
+    # purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |>
+    # List2Array('Fleet')
+
   if ('MeanAtWeight' %in% nms) 
     out@MeanAtWeight <- lapply(List, slot, 'MeanAtWeight') |>
-    purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |>
-    List2Array('Fleet')
+    List2Array('Fleet') |>
+    ArrayExpand(nSim, nAges, TimeSteps) 
   
   if ('Classes' %in% nms) 
     out@Classes <- lapply(List, slot, 'Classes') 
@@ -402,6 +406,9 @@ Hist2HistSimList <- function(Hist) {
                             SubsetSim(Hist, Sim=x, drop=TRUE)
                             , .progress = 'Building internal object')
   names(HistSimList) <- 1:nSim(Hist@OM)
+  
+  HistSimList[[1]]@OM@Stock$Female@SRR@RecDevInit |> dim()
+  HistSimList[[2]]@OM@Stock$Female@SRR@RecDevInit |> dim()
 
   nstock <- nStock(HistSimList[[1]]@OM)
   

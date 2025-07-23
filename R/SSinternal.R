@@ -524,6 +524,8 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
     if(!is.numeric(Fdisc1[n_age,yy])) Fdisc1[n_age,yy] <- Fdisc1[n_age-1]
     
     # back-calculate retention probability curve
+
+    
     retA[,yy] <- retA[,yy]/V[,yy]
     isZero <- which(V[,yy]==0)
     if (length(isZero)>0) retA[isZero,yy] <- 0

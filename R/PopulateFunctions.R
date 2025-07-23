@@ -617,7 +617,7 @@ MeanAtWeight2MeanAtAge <- function(object, Weight, Ages, nsim, TimeSteps, seed, 
   object
 }
 
-MeanAtAge2MeanAtLength <- function(object, Length, Ages, nsim, TimeSteps, seed, silent) {
+MeanAtAge2MeanAtLength <- function(object, Length, Ages, nsim, TimeSteps, seed=NULL, silent=TRUE) {
   if (!is.null(object@MeanAtLength))
     return(object)
   
@@ -743,9 +743,10 @@ AtSize2AtAge <- function(object, Length) {
   dd <- dim(AtAge)
   
   TSnames <- c(dimnames(MeanAtSize)[[3]], 
-               dimnames(Length@MeanAtAge)[[3]]) |>
+               dimnames(Length@ASK)[[4]]) |>
     unique() |>
     sort()
+
   dimnames(AtAge) <- list(Sim=1:dd[1],
                           Age=dimnames(Length@MeanAtAge)[[2]],
                           TimeStep=TSnames)
@@ -777,11 +778,18 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
     dname1 <- dimnames(Length@MeanAtAge)
     ages <- as.numeric(dname1[["Age"]])
     dname1[["Age"]] <- seq(from=ages[1], to=ages[length(ages)], length.out=SubAgeDim)
+    
+    TSteps <- c(dimnames(MeanAtAge)[[3]], dimnames(Length@MeanAtAge)[[3]]) |> unique() |> sort()
+    dname1[["TimeStep"]] <- TSteps
+    
     dimnames(LengthMeanAtAge) <- dname1
     
     Length@CVatAge <- ArrayExpand(Length@CVatAge, dd[1], dd[2], dname1[["TimeStep"]])
     dname1 <- dimnames(Length@CVatAge)
     dname1[["Age"]] <- seq(from=ages[1], to=ages[length(ages)], length.out=SubAgeDim)
+    TSteps <- c(dimnames(MeanAtAge)[[3]], dimnames(Length@CVatAge)[[3]]) |> unique() |> sort()
+    dname1[["TimeStep"]] <- TSteps
+    
     dimnames(LengthCVatAge) <- dname1
   
     ind <- seq(from=1, by=nSubAges, to=dim(LengthMeanAtAge)[2])

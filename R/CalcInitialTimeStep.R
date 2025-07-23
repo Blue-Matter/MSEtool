@@ -49,7 +49,7 @@ CalcInitialTimeStep <- function(Hist, silent=FALSE) {
 DoOptInitialDepletion <- function(Hist, st) {
   DepletionInitial <- Hist@OM@Stock[[st]]@Depletion@Initial
   DepletionReference <- Hist@OM@Stock[[st]]@Depletion@Reference
-  
+ 
   if (is.null(DepletionInitial))
     return(Hist)
   
@@ -58,15 +58,16 @@ DoOptInitialDepletion <- function(Hist, st) {
   
   if (DepletionReference == 'B0') {
     # currently using Unfished Equilibrium Biomass from first time step
-    RefVal <- abind::adrop(Hist@Unfished@Equilibrium@Biomass[,,1, drop=FALSE], 3) |> ExpandSims(nSim) |>
+    RefVal <- abind::adrop(Hist@Unfished@Equilibrium@Biomass[,,1, drop=FALSE], 3) |> ExpandSims(Hist@OM@nSim) |>
       apply(c('Sim', 'Stock'), sum)
   } else {
-    RefVal <- abind::adrop(Hist@Unfished@Equilibrium@SBiomass[,,1, drop=FALSE], 3) |> ExpandSims(nSim) |>
+    RefVal <- abind::adrop(Hist@Unfished@Equilibrium@SBiomass[,,1, drop=FALSE], 3) |> ExpandSims(Hist@OM@nSim) |>
       apply(c('Sim', 'Stock'), sum) 
   }
   RefVal <- RefVal[,st, drop=FALSE] |> abind::adrop(2)
   
-  NatAge <- Hist@Number[[st]][,,1,]
+  NatAge <- Hist@Number[[st]][,,1,, drop=FALSE] |>
+    abind::adrop(3)
   NumberAtAgeList <- Array2List(apply(NatAge, c('Sim', 'Age'), sum), 1)
   WeightAtAgeList <- Array2List(abind::adrop(Hist@OM@Stock[[st]]@Weight@MeanAtAge[,,1, drop=FALSE],3), 1)
   MaturityAtAgeList <- Array2List(abind::adrop(Hist@OM@Stock[[st]]@Maturity@MeanAtAge[,,1, drop=FALSE],3), 1)
@@ -94,6 +95,10 @@ DoOptInitialDepletion <- function(Hist, st) {
              DepletionReference=DepletionReference,
              RefVal=RefVal)
   })
+  
+  
+  nAge <- ncol(NatAge)
+  nArea <- nArea(Hist@OM)
   
   adjust <- lapply(dopt, '[[', 'minimum') |> unlist()
   adjust <- replicate(nAge, adjust)

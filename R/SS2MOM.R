@@ -66,6 +66,7 @@ SS2MOM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1
   MOM@Fleets <- lapply(output, getElement, "Fleet") %>% structure(names = c("Female", "Male")[seq_len(replist$nsexes)])
   MOM@cpars <- lapply(output, getElement, "cpars") %>% structure(names = c("Female", "Male")[seq_len(replist$nsexes)])
 
+  
   # Sample future recruitment
   Perr_proj <- exp(sample_recruitment(log(MOM@cpars[[1]][[1]]$Perr_y), proyears,
                                       replist$sigma_R_in, MOM@Stocks[[1]]@AC[1], seed))

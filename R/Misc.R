@@ -377,6 +377,7 @@ List2Array <- function(List, dimname="Fleet", dim1="Sim", ListDimNames=NULL) {
   if (!length(List))
     return(NULL)
   
+  
   UnList <- unlist(List)
   if (length(UnList)<1)
     return(UnList)
@@ -888,4 +889,49 @@ ConvertDF <- function(df) {
     df$Value <- as.numeric(df$Value)
   
   df
+}
+
+EditSlotsForSimCheck <- function(object, TimeSteps) {
+  # TODO subset time dimension to check for identical historical
+  nms <- slotNames(object)
+  
+  for (nm in nms) {
+    object2 <- slot(object, nm)
+    if (!isS4(object2))
+      next()
+    
+    if (inherits(object2, 'srr')) {
+      dimnames(object2@RecDevInit) <- NULL
+      names(object2@RecDevInit) <- NULL
+      object2@RecDevInit <- array(object2@RecDevInit)
+      object2@RecDevProj <- array()
+    }
+    
+    slots <- slotNames(object2)
+
+    # if ('MeanAtAge' %in% slots) 
+    #   object2@MeanAtAge <- ArraySubsetTimeStep(object2@MeanAtAge, TimeSteps)
+    #   
+  
+    if (!'Pars' %in% slots)
+      next()
+    object2@Pars <- list()
+    slot(object, nm) <- object2
+  }
+  object
+}
+
+
+CheckIdenticalSims <- function(HistSimList, Period='Historical') {
+  TimeSteps <- TimeSteps(HistSimList[[1]]@OM, Period)
+  
+  Digest <- vector('character', length(HistSimList)) 
+  for (i in seq_along(HistSimList)) {
+    HistSimList[[i]]@OM@Stock <- lapply(HistSimList[[i]]@OM@Stock, EditSlotsForSimCheck, TimeSteps=TimeSteps)
+    Digest[i] <- digest::digest(HistSimList[[i]], algo='spookyhash')
+    
+    if (Digest[i] != Digest[1]) 
+      return(FALSE)
+  }
+  TRUE
 }
