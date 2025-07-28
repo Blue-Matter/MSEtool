@@ -1,15 +1,24 @@
 library(MSEtool)
 
+la <- devtools::load_all
+
+la()
+
+
 SSDir <- 'C:/Users/Admin/Documents/GitHub/SALB-MSE/Condition/SS3/ALB-S_Stochastic/Condition/SS3'
 StochasticDirs <- list.dirs(file.path(SSDir), full.names = TRUE, recursive = FALSE)
 StochasticDirs <- StochasticDirs[!grepl('Base', StochasticDirs)]
 
-RepList <- ImportSSRepList(StochasticDirs)
+RepList <- ImportSSRepList(StochasticDirs[1:5])
 
 OM <- ImportSS(RepList)
 
 
-devtools::load_all()
+Hist <- SimulateDEV(OM)
+
+
+
+
 
  
 
@@ -17,8 +26,6 @@ devtools::load_all()
 t <- ImportSS(file.path(SSDir, 'Base'))
 t <- ImportSS(StochasticDirs)
 t <- ImportSS(RepList)
-
-
 
 
 

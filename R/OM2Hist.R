@@ -45,7 +45,6 @@ OM2Hist <- function(OM, silent=FALSE) {
   nAgesList <- purrr::map(Hist@OM@Stock, \(Stock) 
     length(Stock@Ages@Classes))
   
-
   Hist@OM@Fleet <- purrr::map2(Hist@OM@Fleet, nAgesList, \(FleetList,nAges)
     Fleet2Hist(FleetList, nAges, nSim=nSim(OM), TimeSteps=TimeSteps, nArea, silent, id)
   )

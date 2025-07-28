@@ -761,7 +761,7 @@ SS2Effort <- function(st, fl, RepList, mainyrs) {
   Effort
 }
 
-GetSS_DiscardMortalityAtLength <- function(st, replist, mainyrs, Stock) {
+GetSS_DiscardMortalityAtLength <- function(st, fl, replist, mainyrs, Stock) {
   
   DiscardAtLength <- replist$sizeselex[replist$sizeselex$Fleet == fl & 
                                          replist$sizeselex$Sex == st & 
@@ -810,7 +810,7 @@ SS2DiscardMortality <- function(st, fl, replist, mainyrs, Stock) {
   DiscardMortality <- DiscardMortality()
   
   DiscardMortalityAtLength <- purrr::map(RepList, \(replist)
-                                         GetSS_DiscardMortalityAtLength (st, replist, mainyrs, Stock)
+                                         GetSS_DiscardMortalityAtLength (st, fl, replist, mainyrs, Stock)
                                          )
   DiscardMortalityAtLength <- abind::abind(DiscardMortalityAtLength, along=3,
                                            use.first.dimnames=TRUE, use.dnns=TRUE)
@@ -850,7 +850,7 @@ GetSS_SelectivityAtAge <- function(st, fl, replist, mainyrs) {
                          Yr %in% mainyrs)
   AgeSelect <- Asel2[,as.character(AgeClasses)] |> t()
   
-  dimnames(AgeSelect) <- list(Age=Stock@Ages@Classes,
+  dimnames(AgeSelect) <- list(Age=AgeClasses,
                               TimeStep=Asel2$Yr)
   
   maxSel <- apply(AgeSelect, 'TimeStep', max) # should be 1 
@@ -1066,23 +1066,35 @@ ImportSS <- function(x,
   names(OM@Stock) <- StockNames
   
   OM@Fleet <- MakeNamedList(StockNames, list())
-  FleetNames <- replist$catch$Fleet_Name |> unique()
+  FleetNames <- RepList[[1]]$catch$Fleet_Name |> unique()
   
   for (st in seq_along(OM@Fleet)) {
     OM@Fleet[[st]] <- MakeNamedList(FleetNames, new('fleet'))
     for (fl in seq_along(FleetNames)) {
-      OM@Fleet[[st]][[fl]] <- SS2Fleet(st, fl, RepList, OM@Stock[[st]], FleetNames, mainyrs)
+      OM@Fleet[[st]][[fl]] <- SS2Fleet(st, fl, RepList, mainyrs, OM@Stock[[st]])
     }
   }
+
+  OM@Data <- ImportSSData(RepList[[1]], OM@Name)
   
+  # OM@Obs
+  # OM@Imp
+
+  # OM@CatchFrac
+  # OM@Allocation
+  # OM@Efactor - TODO - update to different name 
+  # OM@Complexes
+  # OM@SexPars
+  # OM@Relations
   
   # CatchFrac
   # Data
   # etc 
   
-  
   OM
 }
+
+
 
 
 
@@ -1184,6 +1196,205 @@ ImportSSRepList <- function(x, silent=FALSE, parallel=TRUE, ...) {
     }
   }
 }
+
+## Import SS Data ----
+
+ImportSSData <- function(replist,  
+                         Name="Imported by ImportSSData", 
+                         CommonName = "", 
+                         Species = "",
+                         silent=FALSE, ...) {
+  
+  nStock <- replist$nsexes
+  if (nStock>1)
+    cli::cli_abort('ImportSSData not working yet for multiple stocks', .internal=TRUE)
+  mainyrs <- replist$startyr:replist$endyr
+  
+  # SeasonsAsYears <- function(replist) {
+  #   if (replist$nseasons == 1 && replist$seasduration < 1) {
+  #     cli::cli_abort('Seasonal SS3 not done yet', .internal=TRUE)
+  #     return(TRUE)
+  #   }
+  #   
+  # }
+  
+  season_as_years <- FALSE
+  if (replist$nseasons == 1 && replist$seasduration < 1) {
+    cli::cli_abort('Seasonal SS3 not done yet', .internal=TRUE)
+    if (!silent) message(paste("Season-as-years detected in SS model. There is one season in the year with duration of", replist$seasduration, "year."))
+    season_as_years <- TRUE
+    nseas <- 1/replist$seasduration
+    if (!silent) message("MSEtool operates on annual basis. Since the SS model is seasonal, we need to aggregate over seasons.\n")
+  } else {
+    nseas <- replist$nseasons
+    if(nseas > 1) {
+      cli::cli_abort('Seasonal SS3 not done yet', .internal=TRUE)
+      if (!silent) message("MSEtool operating model is an annual model. Since the SS model is seasonal, we need to aggregate over seasons.\n")
+    }
+  }
+  
+  # TODO - life history 
+  
+  # Create Data object
+  Data <- new('data')
+  Data@Name <- Name
+  Data@CommonName <- CommonName
+  Data@Species <- Species
+  # Data@Agency
+  # Data@Author
+  # Data@Email
+  # Data@Region
+  # Data@Latitude
+  # Data@Longitude
+  
+  Data@TimeSteps <- mainyrs
+  Data@TimeStepLH <- max(mainyrs)
+  Data@TimeUnits <- 'year'
+  Data@TimeStepsPerYear <- 1
+  Data@nArea <- 1
+
+
+  Data@Catch <- ImportSSData_Catch(replist, silent)
+  Data@Index <- ImportSSData_Index(replist)
+  Data@CAA
+  Data@CAL
+  # Data@Misc
+  Data
+}
+
+ImportSSData_Catch <- function(replist, silent=FALSE) {
+  CatchOut <- new('catch')
+  
+  mainyrs <- replist$startyr:replist$endyr
+  nTS <- length(mainyrs)
+  FleetNames <- replist$catch$Fleet_Name |> unique()
+  nFleet <- length(FleetNames)
+  
+  CatchOut@Value <- array(NA, 
+                          dim=c(nTS, nFleet),
+                          dimnames = list(TimeStep=mainyrs,
+                                          Fleet=FleetNames))
+  
+  CatchOut@CV <- CatchOut@Value
+  CatchOut@Units <-   sapply(replist$catch_units[replist$IsFishFleet], function(x)
+    switch(x, '1'='Biomass', '2'='Number'))
+  CatchOut@Type <- rep('Removals', nFleet)
+  
+  
+  CatchDF <- replist$timeseries |> dplyr::filter(Yr%in%mainyrs)
+  CatchColumns <- grepl("obs_cat", colnames(CatchDF))
+  CatchOut@Value[] <- as.matrix(CatchDF[,CatchColumns, drop=FALSE])
+  
+  # TODO aggregate over seasons?
+
+  
+  # TODO CatchCV
+  # CatchSD <- replist$catch_error
+  # if(is.null(CatchSD) && packageVersion("r4ss") > '1.34') CatchSD <- replist$catch_se
+  # if(!all(is.na(CatchSD))) {
+  #   CatchSD <- CatchSD[!is.na(CatchSD)]
+  #   CatchSD[CatchSD <= 0] <- NA
+  #   if(packageVersion("DLMtool") < '5.4') {
+  #     Csd_weighted <- stats::weighted.mean(CatchSD, colSums(cbind(cat_weight, cat_numbers)), na.rm = TRUE)
+  #     Data@CV_Cat <- sqrt(exp(Csd_weighted^2) - 1)
+  #     if (!silent) message(paste0("CV of Catch (weighted by catch of individual fleets), Data@CV_Cat = ", round(Data@CV_Cat, 2)))
+  #   } else {
+  #     Csd_weighted <- colSums(t(cbind(cat_weight, cat_numbers)) * CatchSD, na.rm = TRUE)/rowSums(cbind(cat_weight, cat_numbers))
+  #     Data@CV_Cat <- matrix(sqrt(exp(Csd_weighted^2) - 1), 1)
+  #     if (!silent) message("Annual CV of Catch (Data@CV_Cat) is weighted by catch of individual fleets. Range: ",
+  #                          paste(signif(range(Data@CV_Cat, na.rm = TRUE), 3), collapse = " - "))
+  #   }
+  # }
+  
+  
+  CatchOut
+}
+
+ImportSSData_Index <- function(replist, season_as_years = FALSE, nseas = 1, index_season = "mean") {
+  mainyrs <- replist$startyr:replist$endyr
+  Index <- new('index')
+  if(nrow(replist$cpue) == 0) return(Index)
+  
+  mainyrs <- replist$startyr:replist$endyr
+  nTS <- length(mainyrs)
+  
+  CPUE <- replist$cpue
+  CPUE_Ind <- CPUE$Fleet |> unique() 
+  
+  CPUE_Split <- CPUE |> dplyr::group_by(Fleet) |>
+    dplyr::group_split()
+  
+  CPUENames <- purrr::map(CPUE_Split, \(cpue) {
+    out <- unique(cpue$Fleet_name)
+    ifelse(length(out) == 1, out, NA_character_)
+    out
+  }) |> 
+    unlist() |> 
+    as.character()
+  
+  names(CPUE_Split) <- CPUENames
+  nIndex <- length(CPUENames)
+  
+  Index@Value <- array(NA, 
+                       dim=c(nTS, nIndex),
+                       dimnames = list(TimeStep=mainyrs,
+                                       Fleet=as.character(CPUENames)))
+  Index@CV <- Index@Value
+  
+  Index@Timing <- rep(0, nIndex) # assume at beginning of time step
+  
+  # TODO season_as_years and nyears>1
+  Indices <- purrr::imap(CPUE_Split, \(cpue, idx) {
+    index <-  array(NA, c(length(mainyrs),1), 
+                    dimnames = list(TimeStep=mainyrs,
+                                    Fleet=CPUENames[idx])
+    )
+    
+    TSind <- match(cpue$Yr, mainyrs)
+    index[TSind,] <- cpue |> dplyr::filter(Yr%in% mainyrs) |>
+      dplyr::pull('Obs')
+    index
+  }) 
+
+  IndicesCV <- purrr::imap(CPUE_Split, \(cpue, idx) {
+    index <-  array(NA, c(length(mainyrs),1), 
+                    dimnames = list(TimeStep=mainyrs,
+                                    Fleet=CPUENames[idx])
+    )
+    
+    TSind <- match(cpue$Yr, mainyrs)
+    index[TSind,] <- cpue |> dplyr::filter(Yr%in% mainyrs) |>
+      dplyr::pull('SE')
+    index
+  })
+  
+  Index@Value[] <- do.call('cbind', Indices)
+  Index@CV[] <- do.call('cbind', IndicesCV)
+
+  Index@Units <- sapply(replist$survey_units[CPUE_Ind], function(x)
+    switch(as.character(x), 
+           '0'="Number",
+           '1'='Biomass', 
+           '2'='F')) |> 
+    unlist()
+  
+  Selectivity <- purrr::map(CPUE_Ind, \(fl) 
+             GetSS_SelectivityAtAge(st=1, fl, replist, mainyrs) |>
+               process_cpars()
+             ) 
+  names(Selectivity) <- CPUENames
+  # Selectivity <- abind::abind(Selectivity, along=3,
+  #                             use.first.dimnames = TRUE, hier.names = TRUE, use.dnns = TRUE) 
+  # 
+  # dnames <- dimnames(Selectivity)
+  # names(dnames)[3]<- 'Fleet'
+  # dnames[[3]] <- CPUENames
+  # dimnames(Selectivity) <- dnames
+  Index@Selectivity <- Selectivity
+
+  Index 
+}
+
 
 
 

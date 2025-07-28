@@ -26,8 +26,8 @@ SimulateDEV <- function(OM=NULL,
   ncpus <- set_parallel(any(unlist(parallel)))
 
   # Set pbapply functions
-  .lapply <- define.lapply(silent)
-  .sapply <- define.sapply(silent)
+  # .lapply <- define.lapply(silent)
+  # .sapply <- define.sapply(silent)
   
   # NOTE: future appears a lot slower 
   # if (parallel) {
@@ -71,8 +71,6 @@ SimulateDEV <- function(OM=NULL,
   }
   
   
-  
-
   # ---- Calculate Reference Points ----
   # TODO speed up - CalcRefPoints.R
   # RefPoints <- CalcRefPoints(OM, Unfished)
@@ -82,7 +80,7 @@ SimulateDEV <- function(OM=NULL,
   # ---- Historical Population Dynamics ----
   # tictoc::tic()
   HistTimeSteps <- TimeSteps(OM, 'Historical')
-  IdenticalAcrossSims <- CheckIdenticalSims(HistSimList)
+  IdenticalAcrossSims <- CheckIdenticalSims(HistSimList, HistTimeSteps)
   if (IdenticalAcrossSims) {
     # TODO - only run SimulateDynamics_ once and copy across HistSimList
     # need to make sure to update all historical dynamics - eg Stock@Length for each sim
@@ -110,8 +108,26 @@ SimulateDEV <- function(OM=NULL,
   # matplot(t(B), type='l', ylim=c(0,1.2))
   # 
   # which(B[,360] > 0.4)
-   
+  
 
+  # ---- Condition Observation Object on Real Fishery Data ----
+  HistSimList <- purrr::map(HistSimList, \(HistSim)
+                            ConditionObs(HistSim, HistTimeSteps))
+  
+  HistSim <- HistSimList$`1`
+  
+  
+  # TODO - check for identical sims 
+  # TODO - multiple stocks
+  # TODO - pass Obs in OM and update 
+  
+
+  
+  
+
+
+  
+  
   # ---- Historical Fishery Data ----
   # HistSimList <- purrr::map(HistSimList, \(x) 
   #                           GenerateHistoricalData(x),
@@ -135,7 +151,7 @@ SimulateDEV <- function(OM=NULL,
   
   # Simulate Historical Fishery Data
   
-  # ---- Condition Observation Object on Real Fishery Data ----
+ 
   
   # ---- Simulate Fishery Data ----
   

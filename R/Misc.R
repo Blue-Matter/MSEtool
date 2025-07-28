@@ -922,16 +922,17 @@ EditSlotsForSimCheck <- function(object, TimeSteps) {
 }
 
 
-CheckIdenticalSims <- function(HistSimList, Period='Historical') {
-  TimeSteps <- TimeSteps(HistSimList[[1]]@OM, Period)
-  
+CheckIdenticalSims <- function(HistSimList, TimeSteps=NULL, Period='Historical') {
+  if (is.null(TimeSteps))
+    TimeSteps <- TimeSteps(HistSimList[[1]]@OM, Period)
   Digest <- vector('character', length(HistSimList)) 
   for (i in seq_along(HistSimList)) {
     HistSimList[[i]]@OM@Stock <- lapply(HistSimList[[i]]@OM@Stock, EditSlotsForSimCheck, TimeSteps=TimeSteps)
     Digest[i] <- digest::digest(HistSimList[[i]], algo='spookyhash')
-    
-    if (Digest[i] != Digest[1]) 
+    if (Digest[i] != Digest[1]) {
       return(FALSE)
+    } 
   }
   TRUE
 }
+

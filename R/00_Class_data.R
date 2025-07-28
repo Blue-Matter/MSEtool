@@ -6,26 +6,30 @@ setClass("catch",
          slots=c(Value='array.null',
                  CV='array.null',
                  Units='char.null',
-                 Type='char.null' # removals or landings
+                 Type='char.null' # Removals or Landings
          )
 )
 
 
 methods::setClassUnion("catch.list", c("catch", "list", 'NULL'))
 
+methods::setClassUnion("numeric.selectivity", c("numeric", "selectivity"))
 #' Class `Index`
 #' @include 00_Class_unions.R
 #' @include 00_Class_child.R
 setClass("index",
-         slots=c( Value='array.null',
+         slots=c(Value='array.null',
                  CV='array.null',
+                 Units='char.null',
                  Timing='numeric',
+                 Selectivity='array.list.null',
                  Misc="MiscClass"
          )
 )
 
 
 methods::setClassUnion("index.list", c("index", "list", 'NULL'))
+
 
 #' Class `composition`
 #' @include 00_Class_unions.R
@@ -117,8 +121,8 @@ validDataObject <- function(object) {
 setValidity('data', validDataObject)
 
 setMethod("initialize", "data", function(.Object) {
-  
-  #   .Object@Created <- Sys.time()
+  # TODO
+  .Object@TimeUnits <- 'year'
   .Object
 })
 

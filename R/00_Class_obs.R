@@ -5,7 +5,7 @@ setClass('CatchObs',
                  Error='num.array', # numeric array nsim by nTS
                  Bias='num.array',  # numeric length 1, length 2, or length nSim
                  TimeSteps='char.num',
-                 Type='character'), # 'removals' or 'landings'
+                 Type='character'), # 'Removals' or 'Landings'
          contains='MiscClass'
 )
 
@@ -14,7 +14,7 @@ setMethod("initialize", "CatchObs", function(.Object,
                                          Error=numeric(),
                                          Bias=numeric(),
                                          TimeSteps=NULL,
-                                         Type='removals') {
+                                         Type='Removals') {
   .Object@CV <- CV
   .Object@Error <- Error
   .Object@Bias <- Bias
@@ -28,7 +28,9 @@ setClass('IndexObs',
          slots=c(
            Error='num.array',
            Beta='num.array',
-           Time='num.null'
+           AC='num.array',
+           TimeSteps='num.null',
+           Type='character' # 
          ),
          contains='MiscClass'
 )
