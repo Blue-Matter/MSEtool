@@ -8,13 +8,13 @@
 ImportSS(
   x,
   nSim = 48,
-  pYear = 50,
+  pYear = 30,
   Name = "Imported SS3 Model",
   silent = FALSE,
   ...
 )
 
-ImportSSRepList(x, silent = FALSE, ...)
+ImportSSRepList(x, silent = FALSE, parallel = TRUE, ...)
 }
 \arguments{
 \item{x}{Either a character string}

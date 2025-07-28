@@ -21,7 +21,7 @@ BAMGetObject <- function(x='Red Snapper', type=c('rdat', 'dat')) {
   BAMdata
 }
 
-BAMSetupOM <- function(BAMdata, nSim=48, pYear=50) {
+BAMSetupOM <- function(BAMdata, nSim=48, pYear=30) {
   HistYears <- BAMdata$parms$styr:BAMdata$parms$endyr
   om <- OM(Name=paste(BAMdata$info$title, BAMdata$info$species),
            nSim=nSim,
@@ -411,8 +411,8 @@ SS2Weight <- function(st, RepList, mainyrs, AgeClasses) {
   Weight
 }
 
-GetSS_M_at_age <- function(st, replist, mainyrs) {
-  
+GetSS_M_at_age <- function(st, replist, mainyrs, AgeClasses) {
+  nyears <- length(mainyrs)
   endgrowth <- GetEndGrowth(st, replist)
   M_at_age <- replist$M_at_age[replist$M_at_age$Sex == st & replist$M_at_age$Year %in% mainyrs, ]
   if(!nrow(M_at_age)) {
@@ -431,7 +431,7 @@ GetSS_M_at_age <- function(st, replist, mainyrs) {
 }
 
 SS2NaturalMortality <- function(st, RepList, mainyrs, AgeClasses) {
-  MeanAtAge <- purrr::map(RepList, \(replist) GetSS_M_at_age(st, replist, mainyrs)) |>
+  MeanAtAge <- purrr::map(RepList, \(replist) GetSS_M_at_age(st, replist, mainyrs, AgeClasses)) |>
     List2Array() |>
     AddDimNames(c("Age", "TimeStep", "Sim"), TimeSteps = mainyrs) |>
     aperm(c('Sim', 'Age','TimeStep'))
@@ -590,7 +590,7 @@ GetSS_SRRPars <- function(replist) {
 }
 
 
-GetSS_RecDevs <- function(replist, mainyrs, period=c('Historical', 'Early')) {
+GetSS_RecDevs <- function(replist, mainyrs, AgeClasses, period=c('Historical', 'Early')) {
   period <- match.arg(period)
   if (period=='Historical') {
     Rec_main <- replist$recruit[replist$recruit$Yr %in% mainyrs, ]
@@ -639,7 +639,7 @@ SS2SRR <- function(st, RepList, mainyrs, AgeClasses, pYear, nSim) {
   names(ParsList) <- colnames(Pars)
   SRR@Pars <- ParsList
   
-  RecDevsEarly <- purrr::map(RepList, \(replist) GetSS_RecDevs(replist, mainyrs, 'Early'))
+  RecDevsEarly <- purrr::map(RepList, \(replist) GetSS_RecDevs(replist, mainyrs, AgeClasses, 'Early'))
   RecDevsEarly <- do.call('cbind', RecDevsEarly)
   SRR@RecDevInit <- array(RecDevsEarly, dim=c(length(AgeClasses)-1,ncol(RecDevsEarly)),
                           dimnames = list(Age=rev(AgeClasses[-1]),
@@ -647,7 +647,7 @@ SS2SRR <- function(st, RepList, mainyrs, AgeClasses, pYear, nSim) {
     aperm(c('Sim', 'Age'))
   
   
-  RecDevs <- purrr::map(RepList, \(replist) GetSS_RecDevs(replist, mainyrs))
+  RecDevs <- purrr::map(RepList, \(replist) GetSS_RecDevs(replist, mainyrs, AgeClasses))
   RecDevs <- do.call('cbind', RecDevs)
   SRR@RecDevHist  <- array(RecDevs, dim=c(length(mainyrs),ncol(RecDevs)),
                            dimnames = list(TimeStep=mainyrs,
@@ -1019,18 +1019,18 @@ SS2Fleet <- function(st, fl, RepList, mainyrs, Stock) {
   Fleet
 }
 
-
+## Import SS  ----
 #' Import an OM from SS3 Output
 #' @param x Either a character string  
 #' @export
 ImportSS <- function(x,     
                      nSim=48,
-                     pYear=50, 
+                     pYear=30, 
                      Name = "Imported SS3 Model",
                      silent=FALSE,
                      ...) {
   
-  RepList <- GetSSRepList(x, silent, ...)
+  RepList <- ImportSSRepList(x, silent, ...)
   nStock <- RepList[[1]]$nsexes
   nFleet <- RepList[[1]]$nfishfleets
   
