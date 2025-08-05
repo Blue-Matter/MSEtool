@@ -6,322 +6,203 @@ ProjectionTimeStep <- function(Data) {
 
 
 
-UpdateTAC <- function(ProjSim, MPAdvice, MPAdvicePrevious, TimeStep) {
-  
 
-  if (is.null(MPAdvice))
-    return(ProjSim)
+GenerateProjectionData_Catch <- function(ProjSim, DataTimeStep, TimeStepsAll, st=1) {
   
-  if (length(MPAdvice@TAC)<1)
-    return(ProjSim)
+  # TODO needs to have a stock index in ProjSim@OM@Data at some point
+  # TODO catch units in numbers
+  Removals <- ProjSim@Removals[[st]][[as.character(DataTimeStep)]] |>
+    apply(2, sum) # sum over ages and areas
+  Landings <- ProjSim@Landings[[st]][[as.character(DataTimeStep)]] |>
+    apply(2, sum) # sum over age and areas
   
-  if (!is.null(MPAdvicePrevious)) {
-    if (IdenticalS4(MPAdvice@TAC, MPAdvicePrevious@TAC))
-      return(ProjSim)  
+  Catch <- ProjSim@Data[[st]]@Catch
+  Value <- Catch@Value
+  CV <- Catch@CV
+  
+  if (DataTimeStep %in% dimnames(Value)[[1]]) {
+    # data already exists
+    return(ProjSim)
   }
   
+  TSIndex <- match(DataTimeStep, TimeStepsAll)
   
+  nFleet <- ncol(Value)
+  NewValue <- array(NA, dim=c(1, nFleet),
+                    dimnames = list(TimeStep=DataTimeStep,
+                                    Fleet=Catch@Name))
+  NewCV <- array(NA, dim=c(1, nFleet),
+                 dimnames = list(TimeStep=DataTimeStep,
+                                 Fleet=Catch@Name))
   
-  TimeStepsAll <- TimeSteps(ProjSim@OM)
-  TSIndex <- match(TimeStep, TimeStepsAll)
-  
-  stop("TAC not done yet")
-  # TODO: update for all projection years, skip if unchagned etc
-  
-  ProjSim
-}
-
-UpdateEffort <- function(ProjSim, MPAdvice, MPAdvicePrevious, TimeStepsAll, TimeStepsHist, TSIndex) {
-  
-  # *************************** # 
-  st <- 1
-  fl <- 1
-  # *************************** #
-  
-  if (is.null(MPAdvice))
-    return(ProjSim)
-  
-  if (!is.null(MPAdvicePrevious)) {
-    if (IdenticalS4(MPAdvice@Effort, MPAdvicePrevious@Effort))
-      return(ProjSim)  
-  }
-  
-  
-  TimeStep <- TimeStepsAll[TSIndex]
-  TimeStepProj <- TimeStepsAll[TSIndex:length(TimeStepsAll)]
-  nprojTS <- length(TimeStepsAll)
-  projInd <- TSIndex:nprojTS
-  
-  if (length(MPAdvice@Effort)<1)
-    MPAdvice@Effort <- 1
-  
-  if (length(MPAdvice@Effort)>0) {
-    LastHistIndex <- length(TimeStepsHist)
-    futureEffort <- ProjSim@Effort[st,LastHistIndex,fl] * MPAdvice@Effort
-    ProjSim@Effort[st,projInd,fl] <- futureEffort
-  } 
-  ProjSim
-}
-
-UpdateSpatial <- function(ProjSim, MPAdvice, MPAdvicePrevious, TSIndex) {
-  
-  # *************************** # 
-  st <- 1
-  fl <- 1
-  # *************************** #
-  
-  if (is.null(MPAdvice))
-    return(ProjSim)
-  
-  if (!is.null(MPAdvicePrevious)) {
-    if (IdenticalS4(MPAdvice@Spatial, MPAdvicePrevious@Spatial))
-      return(ProjSim)  
-  }
-  
-  if (length(MPAdvice@Spatial)>0) {
-    dd <- dim(ProjSim@OM@Fleet[[st]]@Distribution@Closure)
-    nprojTS <- dd[1]
-    projInd <- TSIndex:nprojTS
-    nArea <- dd[3]
+  # loop over fleets 
+  for (fl in 1:nFleet) {
+    Obs <- ProjSim@OM@Obs[[st]][[fl]]
+    # check if real data exists
     
-    if (length(MPAdvice@Spatial) != nArea) {
-      cli::cli_warn(c("x"='`length(MPAdvice@Spatial)` ({.val {(length(MPAdvice@Spatial))}}) != `nArea` ({.val {nArea}})',
-                      'i'="Ignoring Spatial Management Advice")
-      )
-      return(ProjSim)
+    # Catch 
+    if (nrow(ProjSim@OM@Data@Catch@Value)>=TSIndex) {
+      NewValue[,fl] <- ProjSim@OM@Data@Catch@Value[TSIndex,fl]
+    } else {
+      if (Catch@Units[fl] != 'Biomass')
+        cli::cli_abort('Currently catch can only be in units of Biomass', .internal=TRUE)
+      
+      error <- ArraySubsetTimeStep(Obs@Catch@Error, DataTimeStep)
+      bias <- ArraySubsetTimeStep(Obs@Catch@Bias, DataTimeStep)
+       
+      
+      
+      if (Catch@Type[fl] == 'Removals') {
+        NewValue[,fl] <- Removals[fl] * error * bias
+      } else {
+        NewValue[,fl] <- Landings[fl] *  error * bias
+      }
     }
-    ProjSim@OM@Fleet[[st]]@Distribution@Closure[projInd,fl,] <- matrix(MPAdvice@Spatial, length(projInd), nArea, byrow=TRUE)
-  } 
-  
+    
+    # CV 
+    if (nrow(ProjSim@OM@Data@Catch@CV)>=TSIndex) {
+      NewCV[,fl] <- ProjSim@OM@Data@Catch@CV[TSIndex,fl]
+    } else {
+      NewCV[,fl] <- Catch@CV[TSIndex-1,fl]
+    }
+  }
+  Catch@Value <- abind::abind(Value, NewValue, along=1)
+  Catch@CV <- abind::abind(CV, NewCV, along=1)
+  ProjSim@Data[[st]]@Catch <- Catch
   ProjSim
 }
 
-UpdateRetention <- function(ProjSim, MPAdvice, MPAdvicePrevious, TimeStepsAll, TSIndex) {
-  UpdateSelectivity(ProjSim, MPAdvice, MPAdvicePrevious, TimeStepsAll, TSIndex, 'Retention')
-}
+GenerateProjectionData_Index <- function(ProjSim, DataTimeStep, TimeStepsHist, TimeStepsAll, st=1) {
+  
+  # TODO hyperstability Beta not functional yet - ignored
 
-UpdateDiscardMortality <- function(ProjSim, MPAdvice, MPAdvicePrevious, TimeStepsAll, TSIndex) {
+  Index <- ProjSim@Data[[st]]@Index
+  Value <- Index@Value
+  CV <- Index@CV
   
-  # *************************** # 
-  st <- 1
-  fl <- 1
-  # *************************** #
-  
-  if (is.null(MPAdvice))
+  if (DataTimeStep %in% dimnames(Value)[[1]]) {
+    # data already exists
     return(ProjSim)
-  
-  if (EmptyObject(MPAdvice@DiscardMortality))
-    return(ProjSim)
-  
-
-  
-  if (!is.null(MPAdvicePrevious)) {
-    if (IdenticalS4(MPAdvice@DiscardMortality, MPAdvicePrevious@DiscardMortality))
-      return(ProjSim)  
   }
   
+  TSIndex <- match(DataTimeStep, TimeStepsAll)
   
-  TimeStep <- TimeStepsAll[TSIndex]
-  TimeStepProj <- TimeStepsAll[TSIndex:length(TimeStepsAll)]
-  nprojTS <- length(TimeStepsAll)
-  projInd <- TSIndex:nprojTS
+  nFleet <- ncol(Value)
+  NewValue <- array(NA, dim=c(1, nFleet),
+                    dimnames = list(TimeStep=DataTimeStep,
+                                    Fleet=Index@Name))
+  NewCV <- array(NA, dim=c(1, nFleet),
+                 dimnames = list(TimeStep=DataTimeStep,
+                                 Fleet=Index@Name))
   
-  if (length(MPAdvice@DiscardMortality@MeanAtAge)>0) {
-    stop("Discard mortality TODO")
+  FleetIndex <- match(Index@Name, names(ProjSim@OM@Obs[[st]]))
+  
+  # loop over fleets 
+  for (fl in 1:nFleet) {
+    Obs <- ProjSim@OM@Obs[[st]][[FleetIndex[fl]]]
     
-    # check its length age@Classes
-    # calc DiscMatLength
-    ProjSim@OM@Fleet[[st]]@DiscardMortality@MeanAtAge[,projInd,fl]
-  }
-  # repeat for MeanAtLength
-  ProjSim
-
-}
-  
-UpdateSelectivity <- function(ProjSim, MPAdvice, MPAdvicePrevious, 
-                              TimeStepsAll, TSIndex,type='Selectivity') {
-  
-  
-  # *************************** # 
-  st <- 1
-  fl <- 1
-  # *************************** #
-  
-  
-  if (is.null(MPAdvice))
-    return(ProjSim)
-  
-  if (!is.null(MPAdvicePrevious)) {
-    if (IdenticalS4(slot(MPAdvice,type), slot(MPAdvicePrevious,type)))
-      return(ProjSim)  
-  }
-  
-  Selectivity <- slot(MPAdvice,type)
-  if (EmptyObject(Selectivity))
-    return(ProjSim)
-  
-  # TODO checks
-  
-  TimeStep <- TimeStepsAll[TSIndex]
-  TimeStepProj <- TimeStepsAll[TSIndex:length(TimeStepsAll)]
-  nprojTS <- length(TimeStepsAll)
-  projInd <- TSIndex:nprojTS
-  
-  Selectivity@Model <- FindModel(Selectivity)
-  
-  ModelClass <- getModelClass(Selectivity@Model)
-  
-  Length <- ProjSim@OM@Stock[[st]]@Length
-  Length@ASK <- Length@ASK[,,TSIndex, drop=FALSE]
-  Weight <- ProjSim@OM@Stock[[st]]@Weight
-  Ages <- ProjSim@OM@Stock[[st]]@Ages
-  if (grepl('at-Length',ModelClass)) {
-    Selectivity@Classes <- Length@Classes
-    LengthClasses <- ProjSim@OM@Stock[[st]]@Length@Classes
-    Selectivity@MeanAtLength <- GenerateMeanatLength(Model=Selectivity@Model,
-                                                     Pars=Selectivity@Pars,
-                                                     Length=Length@Classes)
-    dimnames(Selectivity@MeanAtLength) <- list(Sim=1,
-                                               Class=LengthClasses,
-                                               TimeStep=TimeStep)
+    # TODO - make this an option
+    # currently doesn't simulate index if last two data points were NAs
+    if (all(!is.finite(tail(Value[,fl],2)))) 
+      next()
     
-    Selectivity@MeanAtLength <- Selectivity@MeanAtLength |> ExpandTimeSteps(TimeSteps=TimeStepProj)
+    # Index 
+    if (nrow(ProjSim@OM@Data@Index@Value)>=TSIndex) {
+      # check if real data exists
+      NewValue[,fl] <- ProjSim@OM@Data@Index@Value[TSIndex,fl]
+    } else {
+      if (Index@Timing[fl]!=0)
+        cli::cli_alert_warning('`Index@Timing` not working yet. Calculating from beginning of time step')
+  
+      if (Index@Selectivity[fl]=='Obs') {
+        SelectAtAge <- ArraySubsetTimeStep(Obs@Index@Selectivity, DataTimeStep)
+      } else {
+        cli::cli_abort('Not done yet!', .internal=TRUE)
+      }
+      
+      NumberAtAge <- ProjSim@Number[[st]][,TSIndex,, drop=FALSE] |> apply(1:2, sum) 
+      SimulatedValue <- ArrayMultiply(NumberAtAge, SelectAtAge)
+      
+      if (Index@Units[fl] == 'Biomass') {
+        SimulatedValue <- SimulatedValue * ProjSim@OM@Stock[[st]]@Weight@MeanAtAge[,TSIndex]
+      }
+      SimulatedValue <- apply(SimulatedValue, 2, sum)
+      
+      NewValue[,fl] <- SimulatedValue * ProjSim@OM@Obs[[st]][[FleetIndex[fl]]]@Index@q*Obs@Index@Error[TSIndex]
+    }
     
-  }  else if (grepl('at-Weight',getModelClass(Selectivity@Model))) {
-    Selectivity <- PopulateMeanAtWeight(Selectivity, Weight, TimeSteps=TimeStep, Ages, nsim, seed, silent)
-    Selectivity@MeanAtWeight <- Selectivity@MeanAtWeight |> ExpandTimeSteps(TimeSteps=TimeStepProj)
-    
-  } else {
-    Selectivity <- PopulateMeanAtAge(Selectivity, Ages, TimeSteps=TimeStep)
-    Selectivity@MeanAtAge <- Selectivity@MeanAtAge |> ExpandTimeSteps(TimeSteps=TimeStepProj)
+    # CV 
+    if (nrow(ProjSim@OM@Data@Index@CV)>=TSIndex) {
+      NewCV[,fl] <- ProjSim@OM@Data@Index@CV[TSIndex,fl]
+    } else {
+      NewCV[,fl] <- Index@CV[TSIndex-1,fl]
+    }
   }
-  
-  Selectivity <- MeanAtLength2MeanAtAge(Selectivity, Length, Ages, nsim=1, TimeSteps=TimeStep)
-  
-  Selectivity <- MeanAtWeight2MeanAtAge(Selectivity, Weight, Ages, nsim,
-                                        TimeSteps=TimeStep, seed, silent) 
-  
-  dimnames(Selectivity@MeanAtAge) <- list(Sim=1,
-                                          Age=ProjSim@OM@Stock[[st]]@Ages@Classes,
-                                          TimeStep=TimeStepProj)
-  
-  
-  
-  if (type=="Selectivity") {
-    ProjSim@OM@Fleet[[st]]@Selectivity@MeanAtLength[,projInd,fl] <- Selectivity@MeanAtLength[1,,]
-    ProjSim@OM@Fleet[[st]]@Selectivity@MeanAtWeight[,projInd,fl] <- Selectivity@MeanAtWeight[1,,]
-    ProjSim@OM@Fleet[[st]]@Selectivity@MeanAtAge[,projInd,fl] <- Selectivity@MeanAtAge[1,,]
-  } else if (type=="Retention") {
-    # TODO fix initialization of these
-    # ProjSim@OM@Fleet[[st]]@Retention@MeanAtLength[,projInd,fl] <- Selectivity@MeanAtLength[1,,]
-    # ProjSim@OM@Fleet[[st]]@Retention@MeanAtWeight[,projInd,fl] <- Selectivity@MeanAtWeight[1,,]
-    ProjSim@OM@Fleet[[st]]@Retention@MeanAtAge[,projInd,fl] <- Selectivity@MeanAtAge[1,,]
-  } else{
-    stop("type must be `Selectivity` or `Retention`")
-  }
-  
+  Index@Value <- abind::abind(Value, NewValue, along=1)
+  Index@CV <- abind::abind(CV, NewCV, along=1)
+  ProjSim@Data[[st]]@Index <- Index
   ProjSim
 }
 
 
+GenerateProjectionData <- function(ProjSim, TimeStep, TimeStepsHist, TimeStepsProj) {
+  
+  st <- 1 # TODO multiple stocks
+  
+  TimeStepsAll <- c(TimeStepsHist, TimeStepsProj)
+  
+  # TODO make DataLag an option 
+  DataLag <- 1 # this function is run at the beginning of implementation time step
+  # so DataLag = 1 is the data from the time step (year) before the MP is implemented
+  
+  DataTimeStep <- TimeStep-DataLag
+  
+  ProjSim@Data[[st]]@TimeSteps <- TimeStepsAll[1:(match(TimeStep, TimeStepsAll)-DataLag)]
+  
+  ProjSim <- GenerateProjectionData_Catch(ProjSim, DataTimeStep, TimeStepsAll, st)
+  ProjSim <- GenerateProjectionData_Index(ProjSim, DataTimeStep, TimeStepsHist, TimeStepsAll, st)
+  
+  # TODO 
+  # - CAL
+  # - CAA
+  # - Life history
 
-ApplyMPInternal <- function(ProjSim, MP, TimeStep, TimeStepsHist, TimeStepsProj, ManagementTimeSteps) {
-
-  ###############################
-  st <- 1 
-  ##############################
-  
-  if (!is.null(ProjSim@Misc$MPAdvice) & length(ProjSim@Misc$MPAdvice)>0) {
-    # Has MPAdvice Changed from last time 
-    MPAdvicePrevious <- ProjSim@Misc$MPAdvice[[length(ProjSim@Misc$MPAdvice)]] 
-  } else {
-    MPAdvicePrevious <- NULL
-  }
-  
-  if (TimeStep %in% ManagementTimeSteps) {
-    # Apply MP to Data
-    MPFunction <- get(MP)
-
-    # TODO add tryCatch
-    MPAdvice <- MPFunction(ProjSim@Data)
-    ProjSim@Data@Misc <- MPAdvice@Misc
-    
-    if (is.null(ProjSim@Misc$MPAdvice))
-      ProjSim@Misc$MPAdvice <- list()
-    ProjSim@Misc$MPAdvice[[as.character(TimeStep)]] <- MPAdvice
-  } else {
-    MPAdvice <- NULL
-  }
-
-  
-  TimeStepsAll <- c(TimeStepsHist, TimeStepsProj) 
-  TSIndex <- match(TimeStep, TimeStepsAll)
-  
-  ProjSim <- ProjSim |> 
-    UpdateSpatial(MPAdvice, MPAdvicePrevious, TSIndex) |>
-    UpdateSelectivity(MPAdvice, MPAdvicePrevious, TimeStepsAll, TSIndex) |>
-    UpdateRetention(MPAdvice, MPAdvicePrevious, TimeStepsAll, TSIndex) |>
-    UpdateDiscardMortality(MPAdvice, MPAdvicePrevious, TimeStepsAll, TSIndex) |>
-    UpdateTAC(MPAdvice, MPAdvicePrevious, TimeStep) |>
-    UpdateEffort(MPAdvice, MPAdvicePrevious, TimeStepsAll, TimeStepsHist, TSIndex) 
-  
-  
-  
-
-  
-  # apply bioeconomic ...
-  
-  # - calculate Effort from TAC (if applicable)
-  # - apply BioEconomic to Effort
-  
-  
   ProjSim
 }
 
 
 #' Projects a single MP from the output of `Simulate`
 ProjectMP <- function(ProjSim, MP, TimeStepsHist, TimeStepsProj, ManagementTimeSteps) {
-  
-
-  # *********************************** # 
-  Data <- new('data')
-  TimeStep <- TimeStepsProj[1]
-  # *********************************** # 
-  
-  TimeStepsAll <- c(TimeStepsHist, TimeStepsProj)
-  
-  Data@TimeStepLH <- max(TimeStepsHist)
-  Data@TimeStepsPerYear <- ProjSim@OM@TimeStepsPerYear
-  Data@nArea <- nArea(ProjSim@OM)
-  ProjSim@Data <- Data
-  
   # tictoc::tic("Project TimeSteps")
 
   for (TimeStep in TimeStepsProj) {
     
     # Generate Data up to TimeStep - 1
     # TODO - add option for Data Lag 
-    ProjSim@Data@TimeSteps <- TimeStepsAll[1:(match(TimeStep, TimeStepsAll)-1)]
+    ProjSim <- GenerateProjectionData(ProjSim, TimeStep, TimeStepsHist, TimeStepsProj)
+
     
     # --- Update `ProjSim` with MP Advice ----
     # tictoc::tic("Apply MP")
+    
     ProjSim <- ApplyMPInternal(ProjSim, 
                                MP, 
                                TimeStep, 
                                TimeStepsHist,
                                TimeStepsProj,
                                ManagementTimeSteps)
+    
     # tictoc::toc()
     
     # --- Simulate Pop Dynamics for this Time Step ----
     # tictoc::tic("Update Dynamics")
+ 
+    
     ProjSim <- SimulateDynamics_(ProjSim, TimeStep)
     # tictoc::toc()
     
   } 
   # tictoc::toc()
-  
   ProjSim
-  
 }
 

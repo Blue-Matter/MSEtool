@@ -105,11 +105,11 @@ PopulateOM <- function(OM, silent=FALSE) {
     
   } # end stock loop
   
-  if (methods::is(OM@Stock, 'list') | methods::is(OM@Stock, 'StockList')) {
+  if (inherits(OM@Stock, 'list') | inherits(OM@Stock, 'StockList')) {
     OM@Stock <- stockList
   }
  
-  if (methods::is(OM@Fleet, 'list')| methods::is(OM@Fleet, 'StockFleetList')) {
+  if (inherits(OM@Fleet, 'list')| inherits(OM@Fleet, 'StockFleetList')) {
     OM@Fleet <- fleetList
   }
   
@@ -124,7 +124,7 @@ PopulateOM <- function(OM, silent=FALSE) {
   OM <- ProcessCatchFrac(OM)
   
   
-  # OM <- PopulateObs(OM)
+  OM <- PopulateObs(OM)
   
 
   
@@ -573,7 +573,6 @@ PopulateSRR <- function(SRR,
   
   SRR@Pars <- StructurePars(Pars=SRR@Pars, nsim, TimeSteps)
   SRR@Model <- FindModel(SRR)
-  
 
   pars <- StructurePars(list(SRR@R0, SRR@SD, SRR@AC), nsim, TimeSteps)
   SRR@R0 <- pars[[1]][,1, drop=FALSE] # only one time step for now
@@ -1258,11 +1257,15 @@ StructureObs <- function(OM) {
 
 PopulateObs <- function(OM) {
   
-  if (is.null(OM@Obs))
+  if (EmptyObject(OM@Obs)) {
+    # initialize Obs object for conditioning
+    OM@Obs <- MakeNamedList(StockNames(OM),new('obs'))
     return(OM)
+  }
   
-  if (EmptyObject(OM@Obs))
-    return(OM)
+  cli::cli_alert('`PopulateObs` not complete')
+  return(OM)
+  
   
   if (inherits(OM@Obs,'Obs')) {
     cli::cli_alert('Convert not complete for `Obs`')

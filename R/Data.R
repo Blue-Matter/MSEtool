@@ -2,53 +2,51 @@
 # HistSim <- HistSimList$`1`
 
 
-GenerateHistoricalData <- function(HistSim) {
-  
-  if (length(HistSim@Data) > 0)
-    stop("Real data not done yet")
-  
-  
-  # TODO 
-  # - check if it needs to do this for every sim - prior to this function 
-  
+GenerateHistoricalData <- function(HistSim, HistTimeSteps) {
   OM <- HistSim@OM
-  
   HistSim@Data <- MakeNamedList(StockNames(OM), new('data'))
   nStock <- nStock(OM)
   
+  if (nStock>1)
+    cli::cli_abort('Not done yet!', .internal=TRUE)
+  
+  if (!is.null(HistSim@OM@Data)) {
+    HistSim@Data[[1]] <- HistSim@OM@Data
+  }
+    
+  
+
   for (stock in 1:nStock) {
-    HistSim@Data[[stock]] <- GenerateHistoricalDataStock(stock, HistSim)
+    HistSim@Data[[stock]] <- GenerateHistoricalDataStock(stock, HistSim, HistTimeSteps)
     
   }
   
-
-    
-   
-    
   HistSim
-  
 }
 
-GenerateHistoricalDataStock <- function(stock, HistSim) {
+GenerateHistoricalDataStock <- function(stock, HistSim, HistTimeSteps) {
   Data <- HistSim@Data[[stock]]
+  # TODO - don't overwrite if already existing
   Data@Name <- HistSim@OM@Stock[[stock]]@Name
-  Data@Time <- TimeSteps(HistSim@OM, 'Historical')
-  Data@TimeLH <- Data@Time[length(Data@Time)]
-  Data@Units <- HistSim@OM@Stock[[stock]]@Ages@Units
+  Data@TimeSteps <- HistTimeSteps
+  Data@TimeStepLH <- Data@TimeSteps[length(Data@TimeSteps)]
+  Data@TimeUnits <- HistSim@OM@Stock[[stock]]@Ages@Units
   
-  Data@Catch <- GenerateHistoricalData_Catch(Data, HistSim, stock)
-  
+  Data <- GenerateHistoricalData_Catch(Data, HistSim, HistTimeSteps, stock)
+  Data <- GenerateHistoricalData_Index(Data, HistSim, HistTimeSteps, stock)
 
-  Data@Index
-  Data@CAA
-  Data@CAL
+  # Data@Index
+  # Data@CAA
+  # Data@CAL
   
   Data
 }
   
   
-GenerateHistoricalData_Catch <- function(Data, HistSim, stock) {
-  HistTimeSteps <- TimeSteps(HistSim@OM, 'Historical')
+GenerateHistoricalData_Catch <- function(Data, HistSim, HistTimeSteps, stock) {
+  if (!EmptyObject(Data@Catch)) 
+    return(Data)
+  
   nTS <- length(HistTimeSteps)
   FleetNames <- HistSim@OM@Fleet[[stock]]@Name |> as.character()
   nFleet <- length(FleetNames)
@@ -72,10 +70,10 @@ GenerateHistoricalData_Catch <- function(Data, HistSim, stock) {
 
   for (fl in 1:nFleet) {
     Obs <- HistSim@OM@Obs[[stock]][[fl]]
-    if (Obs@Catch@Type == 'removals') {
-      Data@Catch@Value[,fl] <- Removals[,fl] * ArraySubsetTimeStep(Obs@Catch@Error, HistTimeSteps) * Obs@Catch@Bias[1]
+    if (Obs@Catch@Type == 'Removals') {
+      Data@Catch@Value[,fl] <- Removals[,fl] * ArraySubsetTimeStep(Obs@Catch@Error, HistTimeSteps) * Obs@Catch@Bias[1:length(HistTimeSteps)]
     } else {
-      Data@Catch@Value[,fl] <- Landings[,fl] * ArraySubsetTimeStep(Obs@Catch@Error, HistTimeSteps) * Obs@Catch@Bias[1]
+      Data@Catch@Value[,fl] <- Landings[,fl] * ArraySubsetTimeStep(Obs@Catch@Error, HistTimeSteps) * Obs@Catch@Bias[1:length(HistTimeSteps)]
     }
     
     NA_TS <- which(!HistTimeSteps %in% Obs@Catch@TimeSteps)
@@ -85,13 +83,21 @@ GenerateHistoricalData_Catch <- function(Data, HistSim, stock) {
     Data@Catch@Type[fl] <- Obs@Catch@Type
   }
   
-  Data@Catch@Units <- 'biomass'
-  
-  
-  Data@Catch
+  Data@Catch@Units <- 'Biomass'
+  Data
 }
   
-
+GenerateHistoricalData_Index <- function(Data, HistSim, HistTimeSteps, stock) {
+  # TODO add ability to generate additional indices using info in Obs 
+  if (!EmptyObject(Data@Index)) 
+    return(Data)
+  
+  nTS <- length(HistTimeSteps)
+  FleetNames <- HistSim@OM@Fleet[[stock]]@Name |> as.character()
+  nFleet <- length(FleetNames)
+  
+  Data
+}
   
   
   

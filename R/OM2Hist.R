@@ -94,6 +94,16 @@ StockObject <- function(object, nSim, nAges, TimeSteps) {
     }
     
   
+  if ("RelRecFun" %in% nms) {
+    if (!is.null(object@Model) && inherits(object@Model, 'character')) {
+      if (is.null(object@RelRecFun)) {
+        mod <- get(paste0(object@Model, 'RelRec'))
+        class(mod) <- 'function'
+        object@RelRecFun <- mod
+      }
+    }
+  }
+  
   if ("Model" %in% nms) {
     if (!is.null(object@Model)) {
       if (inherits(object@Model, 'character')) {
@@ -103,6 +113,8 @@ StockObject <- function(object, nSim, nAges, TimeSteps) {
       }
     }
   }
+  
+
   
   if ("MeanAtAge" %in% nms)
     object@MeanAtAge <- ArrayExpand(object@MeanAtAge, nSim, nAges, TimeSteps)
@@ -400,14 +412,19 @@ Hist2HistSimList <- function(Hist) {
   
   # parallel <- snowfall::sfIsRunning()
 
-  
-  HistSimList <- purrr::map(1:nSim(Hist@OM), \(x)  
-                            SubsetSim(Hist, Sim=x, drop=TRUE)
-                            , .progress = 'Building internal object')
+  HistSimList <- purrr::map(1:nSim(Hist@OM), \(x) {
+    hist <- SubsetSim(Hist, Sim=x, drop=TRUE)
+    if (length(Hist@Data)<1)
+      return(hist)
+    if (length(Hist@Data)<x) {
+      hist@Data <- Hist@Data[[1]]
+    } else {
+      hist@Data <- Hist@Data[[x]]  
+    }
+    hist
+  }, .progress = 'Building internal object')
   names(HistSimList) <- 1:nSim(Hist@OM)
   
-  HistSimList[[1]]@OM@Stock$Female@SRR@RecDevInit |> dim()
-  HistSimList[[2]]@OM@Stock$Female@SRR@RecDevInit |> dim()
 
   nstock <- nStock(HistSimList[[1]]@OM)
   
@@ -421,6 +438,8 @@ Hist2HistSimList <- function(Hist) {
       Stock@Spatial@Movement <- Array2List(Stock@Spatial@Movement,4)
       Stock
     })
+    
+    
     HistSim
   }, .progress = 'Processing internal object')
   
@@ -483,18 +502,51 @@ HistSimList2Hist <- function(Hist, HistSimList, TimeSteps=NULL) {
   FleetNames <- as.vector(Hist@OM@Fleet[[1]]@Name)
   nStock <- length(StockNames)
   
+  # RefPoints 
+  Hist <- HistSimListRefPoints(Hist, HistSimList)
+  
   # Stock
-  Hist <-  HistSimListStock(Hist, HistSimList)
+  Hist <- HistSimListStock(Hist, HistSimList)
 
   # Fleet 
   Hist <- HistSimListFleet(Hist, HistSimList)
   
+  # Obs 
+  Hist <- HistSimListObs(Hist, HistSimList)
+
   # Time Series
   Hist <- HistSimListTimeSeries(Hist, HistSimList, TimeSteps)
-
+  
+  # Data
+  # TODO - only keep first if all data identical
+  HistData <- purrr::map(HistSimList, \(HistSim)
+                  HistSim@Data) 
+  CheckHash <- purrr::map(HistData, \(data) digest::digest(data, 'spookyhash')) |> unlist()
+  if (all(CheckHash==CheckHash[1])) {
+    Hist@Data <- list()
+    Hist@Data[[1]] <- HistData[[1]]
+    names(Hist@Data) <- 1
+  } else {
+    Hist@Data <- HistData
+  }
+  
+  
   Hist
 }
   
+
+HistSimListRefPoints <- function(Hist, HistSimList) {
+  slots <- slotNames(Hist@RefPoints)
+  # TODO - complete RefPoints object - Curves, Equilbrium etc 
+  slots <- slots[!slots %in% c('Curves', 'Equilibrium','Dynamic', 'Misc')]
+  for (slot in slots) {
+    slot(Hist@RefPoints, slot) <- purrr::map(HistSimList, \(HistSim) slot(HistSim@RefPoints, slot)) |> 
+      List2Array('Sim') |>
+      aperm(c('Sim', 'Stock', 'TimeStep'))
+    
+  }
+  Hist
+}
 
 HistSimListStock <- function(Hist, HistSimList) {
   
@@ -547,6 +599,71 @@ HistSimListFleet <- function(Hist, HistSimList) {
   Hist
 }
 
+ObsList2SimArray <- function(Obs, ObsList, fl, slot='Catch') {
+  
+
+  Slots <- slotNames(slot(Obs[[fl]], slot))
+  
+  for (sl in Slots) {
+    Val <- purrr::map(ObsList, \(obs) 
+                      slot(slot(obs[[fl]], slot), sl)
+    )
+    
+    if (inherits(Val[[1]], 'NULL'))
+      next()
+    
+    if (inherits(Val[[1]], 'array')) {
+      Val <- List2Array(Val, 'Sim') 
+      dnames <- names(dimnames(Val)) 
+      if (length(dnames)==3) {
+        Val <- aperm(Val, c('Sim', 'Age', 'TimeStep'))
+      }
+      if (length(dnames)==2) {
+        Val <- aperm(Val, c('Sim', 'TimeStep'))
+      }
+    
+    } else if (inherits(Val[[1]], 'numeric')) {
+      if (length(Val[[1]])==1) {
+        Val <- List2Array(Val, 'Sim')[1,]  
+      } else {
+        Val <- Val[[1]] # TODO this probably doesn't apply for all cases
+      }
+    } else if (inherits(Val[[1]], 'character')) {
+      if (length(Val[[1]])<1)
+        next()
+      Val <- List2Array(Val, 'Sim')[1,]
+      
+    } else if (inherits(Val[[1]], 'list')) {
+      
+    } else {
+      stop("!")
+    }
+    slot(slot(Obs[[fl]], slot), sl) <- Val
+  }
+  Obs[[fl]]
+}
+
+HistSimListObs <- function(Hist, HistSimList) {
+  
+  StockNames <- StockNames(Hist@OM)
+  FleetNames <- as.vector(Hist@OM@Fleet[[1]]@Name)
+  nStock <- length(StockNames)
+  
+  for (st in 1:nStock) {
+    Obs <- Hist@OM@Obs[[st]]
+    ObsList <- purrr::map(HistSimList, \(x) x@OM@Obs[[st]])
+    for (fl in 1:length(ObsList[[1]])) {
+      Obs[[fl]] <- ObsList2SimArray(Obs, ObsList, fl, slot='Catch')
+      Obs[[fl]] <- ObsList2SimArray(Obs, ObsList, fl, slot='Index')
+      # Obs <- ObsList2SimArray(Obs, ObsList, fl, slot='CAA')
+      # Obs <- ObsList2SimArray(Obs, ObsList, fl, slot='CAL')
+      
+      Hist@OM@Obs[[st]][[fl]] <- Obs[[fl]]
+    }
+  }
+  Hist
+}
+
 StockList2SimArray <- function(Stock, StockList, slot="Length") {
   if (EmptyObject(slot(Stock, slot))) {
     slot(Stock, slot) <- new(class(slot(Stock, slot)))
@@ -556,7 +673,6 @@ StockList2SimArray <- function(Stock, StockList, slot="Length") {
     
   nms <- slotNames(slot(Stock, slot))
   
-
   if ("Pars" %in% nms) {
     Pars <- slot(Stock, slot)@Pars
     if (!any(lapply(Pars, is.na) |> unlist())) {
@@ -565,9 +681,7 @@ StockList2SimArray <- function(Stock, StockList, slot="Length") {
         purrr::map(List2Array, 'Sim') |>
         purrr::map(aperm, c('Sim', 'TimeStep'))
     }
-    
   }
-  
   
   if ("MeanAtAge" %in% nms)
     slot(Stock, slot)@MeanAtAge <- purrr::map(StockList, \(x) slot(x, slot)@MeanAtAge) |> 
@@ -583,7 +697,6 @@ StockList2SimArray <- function(Stock, StockList, slot="Length") {
     slot(Stock, slot)@MeanAtLength <- purrr::map(StockList, \(x) slot(x, slot)@MeanAtLength) |> 
       List2Array('Sim') |>
       aperm(c('Sim', 'Class', 'TimeStep'))
-  
   
   Stock
 }

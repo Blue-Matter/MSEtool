@@ -24,15 +24,12 @@ S4 CalcCatch_(S4 HistSimIn,
     stop("All values in `TimeSteps` must be matched in `OMListSim$TimeSteps`");
   }
 
-
   List NumberAtAgeAreaList = HistSim.slot("Number"); // nStock
   List FDeadAtAgeAreaList = HistSim.slot("FDeadAtAgeArea");
   List FRetainAtAgeAreaList = HistSim.slot("FRetainAtAgeArea");
 
   List RemovalAtAgeAreaList = HistSim.slot("Removals");
   List RetainAtAgeAreaList = HistSim.slot("Landings");
-  
-  
 
  int nStock = NumberAtAgeAreaList.size();
 

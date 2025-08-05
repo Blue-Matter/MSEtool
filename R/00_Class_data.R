@@ -3,7 +3,8 @@
 #' @include 00_Class_unions.R
 #' @include 00_Class_child.R
 setClass("catch",
-         slots=c(Value='array.null',
+         slots=c(Name='char.null',
+                 Value='array.null',
                  CV='array.null',
                  Units='char.null',
                  Type='char.null' # Removals or Landings
@@ -13,20 +14,29 @@ setClass("catch",
 
 methods::setClassUnion("catch.list", c("catch", "list", 'NULL'))
 
-methods::setClassUnion("numeric.selectivity", c("numeric", "selectivity"))
+# methods::setClassUnion("numeric.selectivity", c("numeric", "selectivity"))
+
 #' Class `Index`
 #' @include 00_Class_unions.R
 #' @include 00_Class_child.R
 setClass("index",
-         slots=c(Value='array.null',
+         slots=c(Name='char.null',
+                 Value='array.null',
                  CV='array.null',
                  Units='char.null',
                  Timing='numeric',
-                 Selectivity='array.list.null',
+                 Selectivity='array.char.null',
                  Misc="MiscClass"
          )
 )
 
+# Selectivity
+# Biomass (total)
+# SBiomass
+# Numeric array - nrow n age classes - maximum of 1 ncol nfleet
+# Numeric array - nrow n length classes - maximum of 1 ncol nfleet
+# Fleet Number - map to a fleet
+# Character - Obs - 
 
 methods::setClassUnion("index.list", c("index", "list", 'NULL'))
 
@@ -35,8 +45,9 @@ methods::setClassUnion("index.list", c("index", "list", 'NULL'))
 #' @include 00_Class_unions.R
 #' @include 00_Class_child.R
 setClass("composition",
-         slots=c(Classes='num.null',
+         slots=c(Name='char.null',
                  Value='array.null',
+                 Classes='num.null',
                  Units='char.null',
                  Misc="MiscClass"
          )
@@ -92,8 +103,8 @@ setClass('data',
                  TimeStepsPerYear='num.null',
                  nArea='num.null',
                  
-                 Catch='catch.list',  # always is removals
-                 Index='index.list',
+                 Catch='catch',  # always is removals
+                 Index='index',
                  CAA='comp.list',
                  CAL='comp.list'
          ),

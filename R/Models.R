@@ -708,9 +708,11 @@ BevertonHoltRelRec <- function(Pars, SPR) {
     SPR <- replicate(ncol(h), SPR) |> aperm(c(1,3,2))
     dimnames(SPR) <- l
     CR <- AddDimension(CR, 'SPR')
-  } else {
-    CR <- AddDimension(CR, 'ApicalF')
-  }
+  } 
+  
+  # else {
+  #   CR <- AddDimension(CR, 'ApicalF')
+  # }
   
   out <- ArrayDivide(ArrayMultiply(CR, SPR)-1, ArrayMultiply((CR-1), SPR))
   out[out<0] <- 0

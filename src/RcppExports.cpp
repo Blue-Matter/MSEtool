@@ -167,6 +167,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// SolveForFishingMortality
+List SolveForFishingMortality(arma::vec NumberAtAge, arma::vec TotalRemovalsFleet, arma::mat SelectivityAtAge, arma::mat RetentionAtAge, arma::mat DiscardMortalityAtAge, arma::mat FleetWeightAtAge, arma::vec NaturalMortalityAtAge, int MaxIt, double tolF, int debug);
+RcppExport SEXP _MSEtool_SolveForFishingMortality(SEXP NumberAtAgeSEXP, SEXP TotalRemovalsFleetSEXP, SEXP SelectivityAtAgeSEXP, SEXP RetentionAtAgeSEXP, SEXP DiscardMortalityAtAgeSEXP, SEXP FleetWeightAtAgeSEXP, SEXP NaturalMortalityAtAgeSEXP, SEXP MaxItSEXP, SEXP tolFSEXP, SEXP debugSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type NumberAtAge(NumberAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type TotalRemovalsFleet(TotalRemovalsFleetSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type SelectivityAtAge(SelectivityAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type RetentionAtAge(RetentionAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type DiscardMortalityAtAge(DiscardMortalityAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type FleetWeightAtAge(FleetWeightAtAgeSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type NaturalMortalityAtAge(NaturalMortalityAtAgeSEXP);
+    Rcpp::traits::input_parameter< int >::type MaxIt(MaxItSEXP);
+    Rcpp::traits::input_parameter< double >::type tolF(tolFSEXP);
+    Rcpp::traits::input_parameter< int >::type debug(debugSEXP);
+    rcpp_result_gen = Rcpp::wrap(SolveForFishingMortality(NumberAtAge, TotalRemovalsFleet, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, FleetWeightAtAge, NaturalMortalityAtAge, MaxIt, tolF, debug));
+    return rcpp_result_gen;
+END_RCPP
+}
 // calcVatAge
 NumericMatrix calcVatAge(NumericMatrix len_at_age, NumericMatrix len_aa_sd, NumericMatrix sel_at_length, int n_age, int nyears, int proyears, NumericVector CAL_binsmid);
 RcppExport SEXP _MSEtool_calcVatAge(SEXP len_at_ageSEXP, SEXP len_aa_sdSEXP, SEXP sel_at_lengthSEXP, SEXP n_ageSEXP, SEXP nyearsSEXP, SEXP proyearsSEXP, SEXP CAL_binsmidSEXP) {
@@ -399,6 +419,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_Ref_int_cpp", (DL_FUNC) &_MSEtool_Ref_int_cpp, 12},
     {"_MSEtool_PopulateNumberNext_", (DL_FUNC) &_MSEtool_PopulateNumberNext_, 2},
     {"_MSEtool_SimulateDynamics_", (DL_FUNC) &_MSEtool_SimulateDynamics_, 4},
+    {"_MSEtool_SolveForFishingMortality", (DL_FUNC) &_MSEtool_SolveForFishingMortality, 10},
     {"_MSEtool_calcVatAge", (DL_FUNC) &_MSEtool_calcVatAge, 7},
     {"_MSEtool_combine", (DL_FUNC) &_MSEtool_combine, 1},
     {"_MSEtool_get_freq", (DL_FUNC) &_MSEtool_get_freq, 4},

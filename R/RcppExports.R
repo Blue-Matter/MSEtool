@@ -66,6 +66,10 @@ SimulateDynamics_ <- function(HistSimIn, TimeSteps, CalcCatch = 1L, debug = 0L) 
     .Call(`_MSEtool_SimulateDynamics_`, HistSimIn, TimeSteps, CalcCatch, debug)
 }
 
+SolveForFishingMortality <- function(NumberAtAge, TotalRemovalsFleet, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, FleetWeightAtAge, NaturalMortalityAtAge, MaxIt = 200L, tolF = 1E-4, debug = 0L) {
+    .Call(`_MSEtool_SolveForFishingMortality`, NumberAtAge, TotalRemovalsFleet, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, FleetWeightAtAge, NaturalMortalityAtAge, MaxIt, tolF, debug)
+}
+
 calcVatAge <- function(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid) {
     .Call(`_MSEtool_calcVatAge`, len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid)
 }

@@ -48,8 +48,15 @@ S4 SimulateDynamics_(S4 HistSimIn,
     NumericVector TSmatch = abs(TimeStepsAll - TimeSteps[timestep]);
     int TSindex = MatchTS[timestep] -1;
 
-    if (debug)
+    if (debug) {
       Rcout << "\n\nTimestep = " << TimeSteps[timestep] << std::endl;
+      // Rcout << "TimeStepsAll = " << TimeStepsAll << std::endl;
+      // Rcout << "MatchTS = " << MatchTS << std::endl;
+      // Rcout << "TSmatch = " << TSmatch << std::endl;
+      // Rcout << "timestep = " << timestep << std::endl;
+      Rcout << "TSindex = " << TSindex << std::endl;
+    }
+      
     
     // // Do MICE
     //     // update length, weight, fleet weight, natural mortality, maturity, rec pars, etc 
@@ -86,8 +93,7 @@ S4 SimulateDynamics_(S4 HistSimIn,
       
       S4 Selectivity = Fleet.slot("Selectivity");
       arma::cube SelectivityAtAge = Selectivity.slot("MeanAtAge"); // nAge, nTS, nFleet
-      
-
+    
       S4 Retention = Fleet.slot("Retention");
       arma::cube RetentionAtAge = Retention.slot("MeanAtAge"); // nAge, nTS, nFleet
       
@@ -99,7 +105,6 @@ S4 SimulateDynamics_(S4 HistSimIn,
       
       arma::cube FleetWeightAtAge = Fleet.slot("WeightFleet") ; // nAge, nTS, nFleet
 
- 
       // Calculate Total Biomass 
       if (debug)
         Rcout << "Total Biomass" << std::endl;
@@ -108,7 +113,7 @@ S4 SimulateDynamics_(S4 HistSimIn,
 
       int nAge = NumberAtAgeArea.n_rows;
       int nArea = NumberAtAgeArea.n_slices;
-     
+    
       arma::mat NumberAtAgeAreaThisTS = NumberAtAgeArea.subcube(arma::span(0, nAge-1), arma::span(TSindex), arma::span(0, nArea-1));
       Biomass.row(st).col(TSindex) = CalcBiomass(NumberAtAgeAreaThisTS, WeightAtAge.col(TSindex));
 

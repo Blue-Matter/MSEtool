@@ -74,8 +74,7 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE) {
   }
   
   Proj <- ExtendHist(Hist)
-  
-  
+
   # List of `Hist` objects, each with one simulation
   ProjSimList <- Hist2HistSimList(Proj)
   
@@ -87,51 +86,50 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE) {
   ProjSimList <- purrr::map(ProjSimList, \(ProjSim) PopulateNumberNext_(ProjSim, LastHistTS))
   # TODO add Recruitment for first projection time step if Age-Recruitment = 1 (i.e use SP from last historical)
   
-  if(!MSEobj) {
-    MSE <- Hist2MSE(Hist, MPs)  
-  } else {
-    newMPs <- which(!MPs %in% names(MSE@MPs))
-    if (length(newMPs)>0) {
-      newMPList <- lapply(MPs[newMPs], get)
-      names(newMPList) <- MPs[newMPs]
-      attributes(newMPList)$complete <- rep(FALSE, length(newMPList))
-      MSE@MPs <- c(MSE@MPs, newMPList)
-      
-      
-      # TODO - add dimensions for new MPs 
-      # check if MP has changed
-      # check if MSE object has changed
-      # run new MPs and changed MP - or all MPs if MSE object has changed
-      stop()
-      MSE@Number[[1]] 
-      MSE@Number[[1]] |> dimnames()
-      
-    }
-  }
+  MSE <- Hist2MSE(Hist, MPs) 
+  
+  # if(!MSEobj) {
+  #   MSE <- Hist2MSE(Hist, MPs)  
+  # } else {
+  #   newMPs <- which(!MPs %in% names(MSE@MPs))
+  #   if (length(newMPs)>0) {
+  #     newMPList <- lapply(MPs[newMPs], get)
+  #     names(newMPList) <- MPs[newMPs]
+  #     attributes(newMPList)$complete <- rep(FALSE, length(newMPList))
+  #     MSE@MPs <- c(MSE@MPs, newMPList)
+  #     
+  #     
+  #     # TODO - add dimensions for new MPs 
+  #     # check if MP has changed
+  #     # check if MSE object has changed
+  #     # run new MPs and changed MP - or all MPs if MSE object has changed
+  #     stop()
+  #     MSE@Number[[1]] 
+  #     MSE@Number[[1]] |> dimnames()
+  #     
+  #   }
+  # }
   
   TimeStepsHist <- TimeSteps(ProjSimList[[1]]@OM, "Historical")
   TimeStepsProj <- TimeSteps(ProjSimList[[1]]@OM, "Projection")
-  TimeStepsAll <- c(TimeStepsHist, TimeStepsProj)
   nStock <- nStock(Hist@OM)
   
   nMPs <- length(MPs)
+  
   # Projection MP loop
   mp <- 1 # for debugging 
+  ProjSim <- ProjSimList$`1` # for debugging
+  
+  
   cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
   
   for (mp in seq_along(MPs)) {
-    
-    # *********************************** # 
- 
-    # TODO Simulate historical data 
-    # *********************************** # 
-  
     MP <- MPs[mp]
     
     # TODO add option to specify Interval by MP
     ind <- seq(1, by=ProjSimList[[1]]@OM@Interval, to=length(TimeStepsProj)) 
     ManagementTimeSteps <- TimeStepsProj[ind] # time steps where management will be implemented
-    
+  
     st <- Sys.time()
     ProjSimListMP <- purrr::map(ProjSimList, \(ProjSim) 
                                 try(
@@ -163,9 +161,17 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE) {
       }
       
       attributes(MSE@MPs)$complete[mp] <- TRUE
-      MSE <- UpdateMSEObject(MSE, ProjSimListMP, mp, TimeStepsAll, TimeStepsProj)
+      MSE <- UpdateMSEObject(MSE, ProjSimListMP, mp, TimeStepsHist, TimeStepsProj)
+      
+      
     }
   }
+  
+ 
+  
+ 
+  
+  
 
   MSE
 }
@@ -196,8 +202,10 @@ CheckMSERun <- function(ProjSimListMP, MP) {
 }
 
 
-UpdateMSEObject <- function(MSE, ProjSimListMP, mp, TimeStepsAll, TimeStepsProj) {
+UpdateMSEObject <- function(MSE, ProjSimListMP, mp, TimeStepsHist, TimeStepsProj) {
 
+  TimeStepsAll <- c(TimeStepsHist, TimeStepsProj)
+  
   nStock <- nStock(ProjSimListMP[[1]]@OM)
   
   FleetNames <- as.vector(ProjSimListMP[[1]]@OM@Fleet[[1]]@Name)
@@ -323,61 +331,64 @@ UpdateMSEObject <- function(MSE, ProjSimListMP, mp, TimeStepsAll, TimeStepsProj)
   MPName <- names(MSE@MPs)[mp]
   MSE@Misc$Advice[[MPName]] <- lapply(ProjSimListMP, slot, 'Misc') |> lapply("[[", "MPAdvice")
   
-  # keep Retention if changed 
-  MSE <- KeepRetention(MSE, ProjSimListMP, mp)
+  MSE <- MSE |> 
+    KeepRetention(ProjSimListMP, mp) |>
+    KeepSelectivity(ProjSimListMP, mp) |> 
+    KeepDiscardMortality(ProjSimListMP, mp) |>
+    AddPPD(ProjSimListMP, mp)
   
   MSE
 }
 
-#' @export
-ReProject <- function(MSE, MPs, mp) {
-  
-  Hist <- Hist()
-  Hist@OM <- MSE@OM
-  Hist@Unfished <- MSE@Unfished
-  
-  slots <- slotNames(MSE@Hist)
-  for (sl in slots) {
-    slot(Hist, sl) <- slot(MSE@Hist,sl)
-  }
-  
-  Proj <- ExtendHist(Hist)
-  ProjSimList <- Hist2HistSimList(Proj)
-  
-  TimeStepsAll <- TimeSteps(ProjSimList[[1]]@OM)
-  TimeStepsHist <- TimeSteps(ProjSimList[[1]]@OM, "Historical")
-  TimeStepsProj <- TimeSteps(ProjSimList[[1]]@OM, "Projection")
-  
-  MP <- MPs[mp]
-  
-  # TODO add option to specify Interval by MP
-  ind <- seq(1, by=ProjSimList[[1]]@OM@Interval, to=length(TimeStepsProj)) 
-  ManagementTimeSteps <- TimeStepsProj[ind] # time steps where management will be implemented
-  
-  st <- Sys.time()
-  ProjSimListMP <- purrr::map(ProjSimList, \(ProjSim) 
-                              try(
-                                ProjectMP(ProjSim, MP, TimeStepsHist, TimeStepsProj, ManagementTimeSteps),
-                                silent=TRUE
-                              ),
-                              .progress = list(
-                                type = "tasks", 
-                                caller = environment(),
-                                format = "Projecting {.val {MP}} {cli::pb_bar} {cli::pb_percent}",
-                                clear = TRUE))
-  end <- Sys.time()
-  elapse <- paste0(round(as.numeric(difftime(time1 = end, time2 = st, units = "secs")), 0), " Seconds")
-  
-  check <- CheckMSERun(ProjSimListMP, MP)
-
-  
-  if (check) {
-    cli::cli_alert_success('{.val {MP}} ({elapse})')
-    MSE <- UpdateMSEObject(MSE, ProjSimListMP, mp, TimeStepsAll, TimeStepsProj)
-  }
-  MSE
-  
-}
+# 
+# ReProject <- function(MSE, MPs, mp) {
+#   
+#   Hist <- Hist()
+#   Hist@OM <- MSE@OM
+#   Hist@Unfished <- MSE@Unfished
+#   
+#   slots <- slotNames(MSE@Hist)
+#   for (sl in slots) {
+#     slot(Hist, sl) <- slot(MSE@Hist,sl)
+#   }
+#   
+#   Proj <- ExtendHist(Hist)
+#   ProjSimList <- Hist2HistSimList(Proj)
+#   
+#   TimeStepsAll <- TimeSteps(ProjSimList[[1]]@OM)
+#   TimeStepsHist <- TimeSteps(ProjSimList[[1]]@OM, "Historical")
+#   TimeStepsProj <- TimeSteps(ProjSimList[[1]]@OM, "Projection")
+#   
+#   MP <- MPs[mp]
+#   
+#   # TODO add option to specify Interval by MP
+#   ind <- seq(1, by=ProjSimList[[1]]@OM@Interval, to=length(TimeStepsProj)) 
+#   ManagementTimeSteps <- TimeStepsProj[ind] # time steps where management will be implemented
+#   
+#   st <- Sys.time()
+#   ProjSimListMP <- purrr::map(ProjSimList, \(ProjSim) 
+#                               try(
+#                                 ProjectMP(ProjSim, MP, TimeStepsHist, TimeStepsProj, ManagementTimeSteps),
+#                                 silent=TRUE
+#                               ),
+#                               .progress = list(
+#                                 type = "tasks", 
+#                                 caller = environment(),
+#                                 format = "Projecting {.val {MP}} {cli::pb_bar} {cli::pb_percent}",
+#                                 clear = TRUE))
+#   end <- Sys.time()
+#   elapse <- paste0(round(as.numeric(difftime(time1 = end, time2 = st, units = "secs")), 0), " Seconds")
+#   
+#   check <- CheckMSERun(ProjSimListMP, MP)
+# 
+#   
+#   if (check) {
+#     cli::cli_alert_success('{.val {MP}} ({elapse})')
+#     MSE <- UpdateMSEObject(MSE, ProjSimListMP, mp, TimeStepsAll, TimeStepsProj)
+#   }
+#   MSE
+#   
+# }
 
 
 KeepRetention <- function(MSE, ProjSimListMP, mp) {
@@ -406,3 +417,61 @@ KeepRetention <- function(MSE, ProjSimListMP, mp) {
   }
   MSE
 }
+
+KeepSelectivity <- function(MSE, ProjSimListMP, mp) {
+  MPselectivity <- purrr::map(ProjSimListMP, \(ProjSim) {
+    purrr::map(ProjSim@OM@Fleet, \(fleet) {
+      fleet@Selectivity@MeanAtAge
+    }) 
+  }) |> 
+    ReverseList() |>
+    purrr::map(List2Array, 'Sim') |>
+    purrr::map(aperm, c('Sim', 'Age', 'TimeStep', 'Fleet'))
+  
+  stocks <- StockNames(MSE@OM)
+  for (st in seq_along(stocks)) {
+    if (!prod(MPselectivity[[st]] == MSE@OM@Fleet[[st]]@Selectivity@MeanAtAge)) {
+      if (is.null(MSE@Misc$Selectivity)) {
+        MSE@Misc$Selectivity <- list()
+      }
+      MPName <- names(MSE@MPs)[mp]
+      MSE@Misc$Selectivity[[MPName]]  <- list()
+      MSE@Misc$Selectivity[[MPName]][[stocks[st]]] <- MPselectivity[[st]]
+    }
+  }
+  MSE
+}
+
+KeepDiscardMortality <- function(MSE, ProjSimListMP, mp) {
+  MPDiscardMortality <- purrr::map(ProjSimListMP, \(ProjSim) {
+    purrr::map(ProjSim@OM@Fleet, \(fleet) {
+      fleet@Selectivity@MeanAtAge
+    }) 
+  }) |> 
+    ReverseList() |>
+    purrr::map(List2Array, 'Sim') |>
+    purrr::map(aperm, c('Sim', 'Age', 'TimeStep', 'Fleet'))
+  
+  stocks <- StockNames(MSE@OM)
+  for (st in seq_along(stocks)) {
+    if (!prod(MPDiscardMortality[[st]] == MSE@OM@Fleet[[st]]@DiscardMortality@MeanAtAge)) {
+      if (is.null(MSE@Misc$DiscardMortality)) {
+        MSE@Misc$DiscardMortality <- list()
+      }
+      MPName <- names(MSE@MPs)[mp]
+      MSE@Misc$DiscardMortality[[MPName]]  <- list()
+      MSE@Misc$DiscardMortality[[MPName]][[stocks[st]]] <- MPDiscardMortality[[st]]
+    }
+  }
+  MSE
+}
+
+AddPPD <- function(MSE, ProjSimListMP, mp) {
+  PPD <- purrr::map(ProjSimListMP, slot, 'Data')
+  MPName <- names(MSE@MPs)[mp]
+  MSE@PPD[[MPName]] <- PPD
+  MSE
+}
+
+
+  

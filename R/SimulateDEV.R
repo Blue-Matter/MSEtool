@@ -40,17 +40,17 @@ SimulateDEV <- function(OM=NULL,
   
   # ---- Make Hist Object ----
   Hist <- OM2Hist(OM, silent)
-  
+
   # ---- Calculate Equilibrium Unfished ----
   Hist@Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
   
   # ---- Calculate Number-at-Age for Initial TimeStep ----
   Hist <- CalcInitialTimeStep(Hist)
-  
+
   # ---- Build HistSimList ----
   # List of `Hist` objects, each with one simulation
   HistSimList <- Hist2HistSimList(Hist)
-  
+
   # ---- Calculate Unfished Equilibrium and Dynamic ----
   HistSimList <- CalcDynamicUnfished(HistSimList)
   
@@ -72,14 +72,13 @@ SimulateDEV <- function(OM=NULL,
   
   
   # ---- Calculate Reference Points ----
-  # TODO speed up - CalcRefPoints.R
-  # RefPoints <- CalcRefPoints(OM, Unfished)
+  HistTimeSteps <- TimeSteps(OM, 'Historical')
+  HistSimList <- CalcRefPoints(HistSimList, TimeSteps=tail(HistTimeSteps,1))
   
-
-  
+ 
   # ---- Historical Population Dynamics ----
   # tictoc::tic()
-  HistTimeSteps <- TimeSteps(OM, 'Historical')
+
   IdenticalAcrossSims <- CheckIdenticalSims(HistSimList, HistTimeSteps)
   if (IdenticalAcrossSims) {
     # TODO - only run SimulateDynamics_ once and copy across HistSimList
@@ -111,30 +110,24 @@ SimulateDEV <- function(OM=NULL,
   
 
   # ---- Condition Observation Object on Real Fishery Data ----
+  ProjectionTimeSteps <- TimeSteps(OM, 'Projection')
   HistSimList <- purrr::map(HistSimList, \(HistSim)
-                            ConditionObs(HistSim, HistTimeSteps))
-  
-  HistSim <- HistSimList$`1`
-  
+                            ConditionObs(HistSim, HistTimeSteps, ProjectionTimeSteps))
   
   # TODO - check for identical sims 
   # TODO - multiple stocks
   # TODO - pass Obs in OM and update 
   
-
-  
-  
-
-
-  
   
   # ---- Historical Fishery Data ----
-  # HistSimList <- purrr::map(HistSimList, \(x) 
-  #                           GenerateHistoricalData(x),
-  #                           .progress = list(
-  #                             type = "iterator", 
-  #                             format = "Generating Historical Data {cli::pb_bar} {cli::pb_percent}",
-  #                             clear = TRUE))
+  # TODO - check for identical sims
+  HistSimList <- purrr::map(HistSimList, \(HistSim)
+                            GenerateHistoricalData(HistSim, HistTimeSteps),
+                            .progress = list(
+                              type = "iterator",
+                              format = "Generating Historical Data {cli::pb_bar} {cli::pb_percent}",
+                              clear = TRUE))
+  
   
   
   # Data:
@@ -162,9 +155,14 @@ SimulateDEV <- function(OM=NULL,
   
   # make Hist object
   Hist <- HistSimList2Hist(Hist, HistSimList)
+  
+  Hist@RefPoints@FMSY
+  
+  Hist@RefPoints@SPR0
+  
+  
   Hist <- SetDigest(Hist)
   Hist
-  
 }
 
 

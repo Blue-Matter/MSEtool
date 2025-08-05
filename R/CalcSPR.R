@@ -1,32 +1,27 @@
 
-# ---- CalcSPR0 -----
-setGeneric('CalcSPR0', function(x, TimeSteps=NULL)
-  standardGeneric('CalcSPR0')
-)
-
-setMethod('CalcSPR0', c('stock', 'ANY'), function(x, TimeSteps=NULL) {
-  fecundity <- GetFecundityAtAge(x, TimeSteps)
+CalcSPR0 <- function(HistSim, TimeSteps) {
   
-  if (is.null(fecundity))
-    return(NULL)
   
-  if (!is.null(x@SRR@SPFrom) && x@SRR@SPFrom != x@Name)
-    return(NULL)
+  SPR0 <- purrr::map(HistSim@OM@Stock, \(stock) CalcSPR0_Stock(stock, TimeSteps))
+  
+  SPFrom <- purrr::map(HistSim@OM@Stock, \(stock) stock@SRR@SPFrom)
+  
+  for (st in seq_along(SPR0)) {
+    if (SPFrom[[st]] != st && SPFrom[[st]] != HistSim@OM@Stock[[st]]@Name)
+      SPR0[[st]][] <- NA
+  }
+  
+  SPR0 <- List2Array(SPR0, 'Stock', 'TimeStep') |> t() 
+  dimnames(SPR0)[[2]] <- TimeSteps
+  SPR0
+}
 
-  ArrayMultiply(CalcUnfishedSurvival(x, SP=TRUE, TimeSteps=TimeSteps), fecundity) |> 
-  apply(c(1,3), sum) |> process_cpars()
-})
-
-setMethod('CalcSPR0', c('StockList', 'ANY'), function(x, TimeSteps=NULL) {
-  purrr::map(x, CalcSPR0, TimeSteps)
-})
-
-
-setMethod('CalcSPR0', c('om', 'ANY'), function(x, TimeSteps=NULL) {
-  if (is.null(TimeSteps))
-    TimeSteps <- TimeSteps(x, 'Historical')
-  CalcSPR0(x@Stock, TimeSteps)
-})
+CalcSPR0_Stock <- function(Stock, TimeSteps) {
+  FecundityAtAge <- Stock@Fecundity@MeanAtAge |> ArraySubsetTimeStep(TimeSteps)
+  UnfishedSurvival <- CalcUnfishedSurvival(Stock, TRUE, TimeSteps)
+  SPR0 <- ArrayMultiply(UnfishedSurvival, FecundityAtAge) |> apply('TimeStep', sum)
+  array(SPR0, dimnames=list(TimeStep=TimeSteps))
+}
 
 
 # 

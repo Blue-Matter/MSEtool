@@ -46,6 +46,8 @@ CalcSurvival <- function(NaturalMortalityAtAge, # nAge, nTS
 
 # # ---- CalcUnfishedSurvival -----
 
+# TODO remove generic
+
 setGeneric('CalcUnfishedSurvival', function(x, SP=FALSE, TimeSteps=NULL)
   standardGeneric('CalcUnfishedSurvival')
 )
@@ -70,6 +72,29 @@ setMethod('CalcUnfishedSurvival', c('stock', 'ANY', 'ANY'), function(x, SP=FALSE
   
   IsIdenticalTime <- IdenticalTime(NaturalMortalityAtAge) & IdenticalTime(Semelparous)
   IsIdenticalSim <- IdenticalSim(NaturalMortalityAtAge) & IdenticalSim(Semelparous)
+  
+  BySim <- names(dimnames(NaturalMortalityAtAge))[1] == 'Sim'
+
+  if (!BySim) {
+    if (IsIdenticalTime) {
+      NaturalMortalityAtAge <- NaturalMortalityAtAge[,1, drop=FALSE]
+      Semelparous <- Semelparous[,1, drop=FALSE]
+    } 
+      Survival <- CalcSurvival(NaturalMortalityAtAge, 
+                             PlusGroup=PlusGroup, 
+                             SpawnTimeFrac=SpawnTimeFrac, 
+                             Semelparous=Semelparous)
+      dnames <- dimnames(Survival)
+      nTS <- length(TimeSteps)
+      
+      SurvivalList <- replicate(nTS, Survival, simplify = FALSE)
+      
+      Survival <- abind::abind(SurvivalList, along=2)
+      dimnames(Survival) <- list(Age=dnames[[1]],
+                                 TimeStep=TimeSteps)
+      
+     return(Survival)
+  }
   
   if (IsIdenticalSim & IsIdenticalTime) {
     NaturalMortalityAtAge <- abind::adrop(NaturalMortalityAtAge[1,,1, drop=FALSE], 1)

@@ -1,4 +1,5 @@
 library(MSEtool)
+library(SAMtool)
 
 la <- devtools::load_all
 
@@ -9,123 +10,178 @@ SSDir <- 'C:/Users/Admin/Documents/GitHub/SALB-MSE/Condition/SS3/ALB-S_Stochasti
 StochasticDirs <- list.dirs(file.path(SSDir), full.names = TRUE, recursive = FALSE)
 StochasticDirs <- StochasticDirs[!grepl('Base', StochasticDirs)]
 
-RepList <- ImportSSRepList(StochasticDirs[1:5])
+RepList <- ImportSSReport(StochasticDirs[1:5])
 
 OM <- ImportSS(RepList)
 
-
 Hist <- SimulateDEV(OM)
+Hist@RefPoints@RemovalsMSY
+
+# MPs 
 
 
+SurplusProduction <- function(Data, ...) {
+  fitmodel <- SAMtool::SP(1, data2Data(Data))
+  advice <- Advice()
+  advice@TAC <- fitmodel@BMSY * fitmodel@FMSY
+  advice
+}
 
-
-
- 
-
-
-t <- ImportSS(file.path(SSDir, 'Base'))
-t <- ImportSS(StochasticDirs)
-t <- ImportSS(RepList)
-
-
-
-
-
-
-ImportSS_Dirs <- function(Dirs, RepList=NULL, pYear=50, Name = "Imported SS3 Model", silent=FALSE) {
-  AllSSFiles <- lapply(Dirs, list.files)
+SurplusProduction4010 <- function(Data, ...) {
+  fitmodel <- SAMtool::SP_4010(1, data2Data(Data))
   
-  ReportExists <- lapply(AllSSFiles, function(x) sum(grepl('^Report.sso', x))) |> 
-    unlist()
+}
+
+IndexTarget <- function(Data, ...) {
   
-  ind <- which(ReportExists<1)
-  if (length(ind)>0) {
-    cli::cli_alert_warning('Warning: SS3 output is not available in {?directory/directories}: {.val {basename(Dirs[ind])}}. \nSkipping {?this/these} {?directory/directories} ...')
+}
+
+MPs <- c('SurplusProduction',
+         'SurplusProduction4010',
+         'IndexTarget')
+
+
+MSE <- ProjectDEV(Hist, MPs=MPs[1])
+
+
+
+SB_SBMSY <- function(MSE) {
+  MPs <- names(MSE@MPs)
+  
+  # TODO get MP specific MSY ref points if applicable
+  SBiomass <- MSE@SBiomass
+  timesteps <- dimnames(SBiomass)[[3]]
+  SBMSY <- MSE@RefPoints@SBMSY |> ArraySubsetTimeStep(timesteps)  
+  
+  out <- SBiomass
+  out[] <- NA
+  for (mp in seq_along(MPs)) {
+    out[,,,mp] <- ArrayDivide(abind::adrop(SBiomass[,,,mp, drop=FALSE], 4), SBMSY)
   }
-  Dirs <- Dirs[-ind]
+  array2DF(out, 'SB_SBMSY') |> ConvertDF()
+}
+
+
+F_FMSY <- function(MSE) {
+  MPs <- names(MSE@MPs)
   
-  # TODO - option to pass RepList as first argument
-  if (is.null(RepList)) {
-    RepList <- purrr::map(Dirs, r4ss::SS_output, verbose=FALSE, printstats=FALSE,
-                          .progress=  list(
-                            caller = environment(),
-                            format =  'Reading SS3 Output from {.val {length(Dirs)}} directories {cli::pb_bar} {cli::pb_percent}')
-    )
+  # TODO get MP specific MSY ref points if applicable
+  apicalF <- purrr::map(MSE@FDeadAtAge, \(stock) 
+             apply(stock, c('Sim', 'Age', 'TimeStep', 'MP'), sum) |>
+               apply(c('Sim', 'TimeStep', 'MP'), max)
+             ) |> 
+    List2Array('Stock') |>
+    aperm(c('Sim', 'Stock', 'TimeStep', 'MP'))
+  
+  
+  timesteps <- dimnames(apicalF)[[3]]
+  FMSY <- MSE@RefPoints@FMSY |> ArraySubsetTimeStep(timesteps)  
+  
+  out <- apicalF
+  out[] <- NA
+  for (mp in seq_along(MPs)) {
+    out[,,,mp] <- ArrayDivide(abind::adrop(apicalF[,,,mp, drop=FALSE], 4), FMSY)
   }
-  
-  replist <- RepList[[1]] 
-  nStock <- replist$nsexes
-  nFleet <- replist$nfishfleets
-  
-  if (!silent)
-    cli::cli_alert('{.val {nStock}-sex} and {.val {nFleet}-fleet} model detected.')
-  
-  
-  OM <- OM(Name=Name)
-  OM@nSim <- length(RepList)
-  mainyrs <- replist$startyr:replist$endyr
-  OM@nYear <- length(mainyrs)
-  OM@pYear <- pYear
-  OM@CurrentYear <- max(mainyrs)
-  ProYears <- seq(max(mainyrs)+1, by=1, length.out=pYear)
-  OM@TimeSteps <- c(mainyrs, ProYears)
-  
-  if (nStock==1) {
-    StockNames <- 'Female'
-  } else if (nStock==2) {
-    StockNames <- c('Female', 'Male')
-  } else {
-    cli::cli_abort('`nStock` should be {.val {1} or {2}}')
-  }
-  
-  
-  
-
-  
-  
-  ssstock <- function(st, RepList){
-    mainyrs <- RepList[[1]]$startyr:RepList[[1]]$endyr
-    nyears <- length(mainyrs)
-    
-    Stock <- new('stock')
-    Stock@Name <- ifelse(st == 1, "Female", "Male")  # TODO - option for single sex combined models
-    
-    
-    endgrowth <- purrr::map(RepList, \(replist) GetEndGrowth(st, replist))
-    
-    
-    M_at_age <- purrr::map(RepList, \(replist) {
-      replist$M_at_age[replist$M_at_age$Sex == st & replist$M_at_age$Year %in% mainyrs, ]
-    })
-    
-    M_at_age <- purrr::map(RepList, \(replist) {
-      replist$M_at_age[replist$M_at_age$Sex == st & replist$M_at_age$Yr %in% mainyrs, ]
-    })
-    
-    M_at_age <- purrr::map(RepList, \(replist) {
-      replist$M_at_age[replist$M_at_age$Gender == st & replist$M_at_age$Year %in% mainyrs, ]
-    })
-    
-    
-    M_at_age <- replist$M_at_age[replist$M_at_age$Gender == st & replist$M_at_age$Year %in% mainyrs, ]
-    
-    
-  }
-  
-  r = lapply(RepList, '[[', 'natage')
-
-  r[[1]] |> dim()
-  r[[2]] |> dim()
-
-  
-
-
- 
+  array2DF(out, 'F_FMSY') |> ConvertDF()
 }
 
 
 
-MOM <- readRDS("C:\\Users\\Admin\\AppData\\Local\\Temp\\RtmpM5YKdS\\file1ccc33a58d9")
+MSE@FDeadAtAge$Female |> dimnames()
 
-Hist <- SimulateMOM(MOM)
+MSE@FDeadAtAge$Female[1,,,,] |> apply(1:2, sum) |>
+  apply(2, max)
+
+MSE@SBiomass[1,1,,1]
+
+MSE@Removals[1,1,,,1] |> apply(1, sum)
+
+
+multiHist <- SimulateMOM(MOM)
+
+multiHist$Female$Fleet_01@Ref$ReferencePoints$SSBMSY
+multiHist$Female$Fleet_01@Ref$ReferencePoints$MSY
+
+############ REF POINTS #################
+
+Hist@Unfished@Equilibrium@Biomass[1,1,]
+Hist@Unfished@Equilibrium@SBiomass[1,1,]
+
+
+
+
+refpoints
+
+
+lines(RepList$`1`$SPAWN_RECR_CURVE$`SSB/SSB_virgin`, RepList$`1`$SPAWN_RECR_CURVE$Recruitment, xlim=c(0,1), col='blue')
+
+abline(v=0.2, lty=2)
+abline(h=Stock@SRR@Pars$h[1], lty=2)
+
+
+
+
+
+RepList$`1`$current_depletion
+
+mainyrs <- RepList$`1`$startyr:RepList$`1`$endyr
+
+B0 <- RepList$`1`$timeseries |> head(1) |> dplyr::select(Bio_all )
+
+B <- RepList$`1`$timeseries |> dplyr::filter(Yr%in%mainyrs) |>
+  dplyr::select(Yr, Bio_all)
+
+B/B0$Bio_all
+
+
+SB0 <- RepList$`1`$timeseries |> head(1) |> dplyr::select(SpawnBio)
+
+SB <- RepList$`1`$timeseries |> dplyr::filter(Yr%in%mainyrs) |>
+  dplyr::select(Yr, SpawnBio)
+
+SB[,2]/SB0$SpawnBio
+
+SB[,2]/refpoints$Value[1]
+
+
+# Project 
+
+Fixed17K <- function(Data) {
+  advice <- Advice()
+  advice@TAC <- 17000
+  advice
+}
+class(Fixed17K) <- 'mp'
+
+Fixed15K <- function(Data) {
+  advice <- Advice()
+  advice@TAC <- 15000
+  advice
+}
+class(Fixed15K) <- 'mp'
+
+MPs <- c('Fixed15K', 'Fixed17K')
+
+MSE <- ProjectDEV(Hist, MPs=MPs)
+
+
+ggplot(SB, aes(x=TimeStep, group=Sim, y=Value)) +
+  facet_wrap(~MP) +
+  geom_line()
+
+
+## REFERENCE POINTS 
+## MPS 
+
+## RESULTS = Performance Metrics
+
+## Grid Approach
+
+
+
+
+
+
+ 
+
 

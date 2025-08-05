@@ -2,19 +2,19 @@
 % Please edit documentation in R/Import.R
 \name{ImportSS}
 \alias{ImportSS}
-\alias{ImportSSRepList}
+\alias{ImportSSReport}
 \title{Import an OM from SS3 Output}
 \usage{
 ImportSS(
   x,
+  Name = "Imported SS3 Model",
   nSim = 48,
   pYear = 30,
-  Name = "Imported SS3 Model",
   silent = FALSE,
   ...
 )
 
-ImportSSRepList(x, silent = FALSE, parallel = TRUE, ...)
+ImportSSReport(x, silent = FALSE, parallel = TRUE, ...)
 }
 \arguments{
 \item{x}{Either a character string}
@@ -24,6 +24,6 @@ Import an OM from SS3 Output
 }
 \section{Functions}{
 \itemize{
-\item \code{ImportSSRepList()}: Import SS3 Report
+\item \code{ImportSSReport()}: Import SS3 Report
 
 }}

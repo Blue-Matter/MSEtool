@@ -806,7 +806,7 @@ GetSSALK <- function(st, replist, AgeClasses, LengthClasses) {
 }
 
 
-SS2DiscardMortality <- function(st, fl, replist, mainyrs, Stock) {
+SS2DiscardMortality <- function(st, fl, RepList, mainyrs, Stock) {
   DiscardMortality <- DiscardMortality()
   
   DiscardMortalityAtLength <- purrr::map(RepList, \(replist)
@@ -1024,13 +1024,13 @@ SS2Fleet <- function(st, fl, RepList, mainyrs, Stock) {
 #' @param x Either a character string  
 #' @export
 ImportSS <- function(x,     
+                     Name = "Imported SS3 Model",
                      nSim=48,
                      pYear=30, 
-                     Name = "Imported SS3 Model",
                      silent=FALSE,
                      ...) {
   
-  RepList <- ImportSSRepList(x, silent, ...)
+  RepList <- ImportSSReport(x, silent, ...)
   nStock <- RepList[[1]]$nsexes
   nFleet <- RepList[[1]]$nfishfleets
   
@@ -1051,7 +1051,6 @@ ImportSS <- function(x,
   
   if (nStock==1) {
     StockNames <- 'Female'
-    
   } else if (nStock==2) {
     StockNames <- c('Female', 'Male')
   } else {
@@ -1074,13 +1073,50 @@ ImportSS <- function(x,
       OM@Fleet[[st]][[fl]] <- SS2Fleet(st, fl, RepList, mainyrs, OM@Stock[[st]])
     }
   }
-
-  OM@Data <- ImportSSData(RepList[[1]], OM@Name)
   
-  # OM@Obs
+  # TODO should be a list by stock
+  OM@Data <- ImportSSData(RepList, OM@Name)
+  
+  # Obs
+  CPUENames <- OM@Data@Index@Name
+  AllFleetNames <- c(FleetNames, CPUENames) |> unique()
+  OM@Obs <- MakeNamedList(StockNames, MakeNamedList(AllFleetNames, new('obs')))
+  
+  # Add Selectivity to Obs for indices
+  IndexInd <- which(grepl('Obs', OM@Data@Index@Selectivity))
+  if (length(IndexInd)>0) {
+    CPUE_Ind <- RepList[[1]]$cpue$Fleet |> unique() 
+    for (ind in CPUE_Ind) {
+      
+      SelectAtAge <- purrr::map(RepList, \(replist) {
+        GetSS_SelectivityAtAge(st=1, ind, replist, mainyrs) |>
+          process_cpars()
+      }) |>
+        List2Array('Sim') |> aperm(c('Sim', 'Age', 'TimeStep'))
+    
+      OM@Obs[[1]][[ind]]@Index@Selectivity <- SelectAtAge
+    }
+  }
+ 
   # OM@Imp
+  
+  CatchFracList <- MakeNamedList(StockNames)
 
-  # OM@CatchFrac
+  for (st in 1:nStock) {
+    catch <- OM@Data@Catch@Value # currently not by stock # TODO
+    catch_last <- abind::adrop(catch[nrow(catch), ,drop=FALSE], 1)
+    catch_last <- catch_last /sum(catch_last)
+    catch_last[!is.finite(catch_last)] <- 0
+    
+    CatchFracList[[st]] <- array(catch_last, 
+                                 dim=c(1, nFleet), 
+                                 dimnames = list(Sim=1,
+                                                 Fleet=FleetNames))
+    
+  }
+  OM@CatchFrac <- CatchFracList
+  
+  
   # OM@Allocation
   # OM@Efactor - TODO - update to different name 
   # OM@Complexes
@@ -1132,7 +1168,7 @@ GetSSRepList <- function(SSdir, silent=FALSE, ...) {
 
 #' @describeIn ImportSS Import SS3 Report
 #' @export
-ImportSSRepList <- function(x, silent=FALSE, parallel=TRUE, ...) {
+ImportSSReport <- function(x, silent=FALSE, parallel=TRUE, ...) {
   if (inherits(x, 'list')) {
     if (inherits(x[[1]], 'list')) {
       names(x) <- 1:length(x)
@@ -1199,17 +1235,19 @@ ImportSSRepList <- function(x, silent=FALSE, parallel=TRUE, ...) {
 
 ## Import SS Data ----
 
-ImportSSData <- function(replist,  
+ImportSSData <- function(x,  
                          Name="Imported by ImportSSData", 
                          CommonName = "", 
                          Species = "",
                          silent=FALSE, ...) {
   
+  RepList <- ImportSSReport(x, silent, ...)
+  replist <- RepList[[1]]
   nStock <- replist$nsexes
-  if (nStock>1)
-    cli::cli_abort('ImportSSData not working yet for multiple stocks', .internal=TRUE)
+  
   mainyrs <- replist$startyr:replist$endyr
   
+
   # SeasonsAsYears <- function(replist) {
   #   if (replist$nseasons == 1 && replist$seasduration < 1) {
   #     cli::cli_abort('Seasonal SS3 not done yet', .internal=TRUE)
@@ -1233,6 +1271,12 @@ ImportSSData <- function(replist,
     }
   }
   
+
+
+  
+  if (nStock>1)
+    cli::cli_alert_warning('ImportSSData may not be working yet correctly for multiple stocks...')
+  
   # TODO - life history 
   
   # Create Data object
@@ -1251,18 +1295,18 @@ ImportSSData <- function(replist,
   Data@TimeStepLH <- max(mainyrs)
   Data@TimeUnits <- 'year'
   Data@TimeStepsPerYear <- 1
-  Data@nArea <- 1
+  Data@nArea <- 1 
 
-
-  Data@Catch <- ImportSSData_Catch(replist, silent)
-  Data@Index <- ImportSSData_Index(replist)
+  Data@Catch <- ImportSSData_Catch(RepList, silent)
+  Data@Index <- ImportSSData_Index(RepList)
   Data@CAA
   Data@CAL
   # Data@Misc
   Data
 }
 
-ImportSSData_Catch <- function(replist, silent=FALSE) {
+ImportSSData_Catch <- function(RepList, silent=FALSE) {
+  replist <- RepList[[1]]
   CatchOut <- new('catch')
   
   mainyrs <- replist$startyr:replist$endyr
@@ -1270,6 +1314,7 @@ ImportSSData_Catch <- function(replist, silent=FALSE) {
   FleetNames <- replist$catch$Fleet_Name |> unique()
   nFleet <- length(FleetNames)
   
+  CatchOut@Name <- FleetNames
   CatchOut@Value <- array(NA, 
                           dim=c(nTS, nFleet),
                           dimnames = list(TimeStep=mainyrs,
@@ -1280,7 +1325,6 @@ ImportSSData_Catch <- function(replist, silent=FALSE) {
     switch(x, '1'='Biomass', '2'='Number'))
   CatchOut@Type <- rep('Removals', nFleet)
   
-  
   CatchDF <- replist$timeseries |> dplyr::filter(Yr%in%mainyrs)
   CatchColumns <- grepl("obs_cat", colnames(CatchDF))
   CatchOut@Value[] <- as.matrix(CatchDF[,CatchColumns, drop=FALSE])
@@ -1289,6 +1333,7 @@ ImportSSData_Catch <- function(replist, silent=FALSE) {
 
   
   # TODO CatchCV
+  
   # CatchSD <- replist$catch_error
   # if(is.null(CatchSD) && packageVersion("r4ss") > '1.34') CatchSD <- replist$catch_se
   # if(!all(is.na(CatchSD))) {
@@ -1310,7 +1355,10 @@ ImportSSData_Catch <- function(replist, silent=FALSE) {
   CatchOut
 }
 
-ImportSSData_Index <- function(replist, season_as_years = FALSE, nseas = 1, index_season = "mean") {
+ImportSSData_Index <- function(RepList, season_as_years = FALSE, 
+                               nseas = 1, 
+                               index_season = "mean") {
+  replist <- RepList[[1]]
   mainyrs <- replist$startyr:replist$endyr
   Index <- new('index')
   if(nrow(replist$cpue) == 0) return(Index)
@@ -1328,10 +1376,9 @@ ImportSSData_Index <- function(replist, season_as_years = FALSE, nseas = 1, inde
     out <- unique(cpue$Fleet_name)
     ifelse(length(out) == 1, out, NA_character_)
     out
-  }) |> 
-    unlist() |> 
-    as.character()
+  }) |> unlist() |> as.character()
   
+  Index@Name <- CPUENames
   names(CPUE_Split) <- CPUENames
   nIndex <- length(CPUENames)
   
@@ -1375,23 +1422,18 @@ ImportSSData_Index <- function(replist, season_as_years = FALSE, nseas = 1, inde
     switch(as.character(x), 
            '0'="Number",
            '1'='Biomass', 
-           '2'='F')) |> 
-    unlist()
+           '2'='F')) |> unlist()
   
-  Selectivity <- purrr::map(CPUE_Ind, \(fl) 
-             GetSS_SelectivityAtAge(st=1, fl, replist, mainyrs) |>
-               process_cpars()
-             ) 
-  names(Selectivity) <- CPUENames
-  # Selectivity <- abind::abind(Selectivity, along=3,
-  #                             use.first.dimnames = TRUE, hier.names = TRUE, use.dnns = TRUE) 
-  # 
-  # dnames <- dimnames(Selectivity)
-  # names(dnames)[3]<- 'Fleet'
-  # dnames[[3]] <- CPUENames
-  # dimnames(Selectivity) <- dnames
-  Index@Selectivity <- Selectivity
+  Index@Selectivity <- rep('Obs', length(CPUE_Ind))
+  
+  # Biomass (total)
+  # SBiomass
+  # Numeric array - nrow n age classes - maximum of 1 ncol nfleet
+  # Numeric array - nrow n length classes - maximum of 1 ncol nfleet
+  # Fleet Number - map to a fleet
+  # Character - Obs - 
 
+  
   Index 
 }
 

@@ -56,7 +56,10 @@ ExpandTS <- function(Array, Dims, TimeSteps) {
   OutArray <- array(NA, dim=Dims) |>
     AddDimNames(names(dimnames(Array)), TimeSteps=TimeSteps)
   for (i in seq_along(TimeSteps)) {
-    j <- which(ArrayTS <= TimeSteps[i]) |> max()
+    j <- which(ArrayTS <= TimeSteps[i])
+    if (!is.finite(j) || length(j)<1)
+      next()
+    j <- max(j)
     OutArray[,,i] <- Array[,,j]
   }
   OutArray

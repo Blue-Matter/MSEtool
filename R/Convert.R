@@ -1372,3 +1372,35 @@ om2MOM <- function(OM) {
   MOM
   
 }
+
+
+
+# ----- Data -----
+
+ConvertData <- function(Data) {
+  if (inherits(Data,'data')) {
+    return(data2Data(Data))
+    
+  } else if (inherits(Data,'Data')) {
+    
+  } else {
+    cli::cli_abort('`Data` must be class `data` or `Data`')
+  }
+  
+}
+
+data2Data <- function(data) {
+  # TODO - AddInd, LifeHistory, CAL, etc etc 
+  
+  DataOut <- new('Data')
+  DataOut@Year <- data@TimeSteps
+  DataOut@LHYear <- data@TimeStepLH
+  DataOut@Ind <- matrix(data@Index@Value[,1], nrow=1)
+  DataOut@CV_Ind <- matrix(data@Index@CV[,1], nrow=1)
+  
+  DataOut@Cat <- matrix(rowSums(data@Catch@Value), nrow=1)
+  DataOut@CV_Cat <- matrix(data@Catch@CV[,1], nrow=1)
+  DataOut
+}
+
+

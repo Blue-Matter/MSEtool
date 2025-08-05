@@ -6,9 +6,32 @@ la <- devtools::load_all
 
 la()
 
-
 nsim <- 5
-SSdir <- 'G:/My Drive/1_PROJECTS/North_Atlantic_Swordfish/OMs/grid_2022/000_base_case'
+
+SSDir <- 'G:/My Drive/1_PROJECTS/North_Atlantic_Swordfish/OMs/2024_OMs/Reference/001_M0.1_sigmaR0.2_steepness0.69_cpuelambda1_llq1_env7'
+SSDir <- 'G:/My Drive/1_PROJECTS/North_Atlantic_Swordfish/OMs/grid_2022/000_base_case'
+replist <- ImportSSReport(SSDir)
+
+OM <- ImportSS(replist, nSim=nsim)
+
+Hist <- SimulateDEV(OM)
+
+
+replist$`1`$derived_quants |> 
+  dplyr::filter(Label %in% c('annF_MSY', 'SSB_MSY', 'Dead_Catch_MSY', 'Ret_Catch_MSY'))
+
+
+
+
+# reference points with SPFrom 
+
+Name = "Imported SS3 Model"
+nSim = nSim
+silent=FALSE
+x <- replist 
+pYear=30
+
+
 replist <- r4ss::SS_output(SSdir)
 
 OMImport <- ImportSS(SSdir, nsim)

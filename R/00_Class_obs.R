@@ -1,11 +1,11 @@
 
 
 setClass('CatchObs',
-         slots=c(CV='num.array', # numeric length 1, length 2, or length nSim
-                 Error='num.array', # numeric array nsim by nTS
-                 Bias='num.array',  # numeric length 1, length 2, or length nSim
-                 TimeSteps='char.num',
-                 Type='character'), # 'Removals' or 'Landings'
+         slots=c(CV='num.array.list', # numeric length 1, length 2, or length nSim
+                 Error='num.array.list', # numeric array nsim by nTS
+                 Bias='num.array.list',  # numeric length 1, length 2, or length nSim
+                 TimeSteps='num.list.null',
+                 Type='char.list'), # 'Removals' or 'Landings'
          contains='MiscClass'
 )
 
@@ -26,11 +26,14 @@ setMethod("initialize", "CatchObs", function(.Object,
 
 setClass('IndexObs',
          slots=c(
-           Error='num.array',
-           Beta='num.array',
-           AC='num.array',
-           TimeSteps='num.null',
-           Type='character' # 
+           CV='num.array.list',
+           Error='num.array.list',
+           Beta='num.array.list',
+           AC='num.array.list',
+           TimeSteps='num.list.null',
+           Selectivity='array.list.null', # Biomass, SBiomass, age classes
+           Type='character',
+           q='numeric' 
          ),
          contains='MiscClass'
 )
@@ -78,7 +81,6 @@ validDataObject <- function(object) {
 setValidity('obs', validDataObject)
 
 setMethod("initialize", "obs", function(.Object) {
-
   .Object
 })
 

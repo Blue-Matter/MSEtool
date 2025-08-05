@@ -115,7 +115,7 @@ StartMessages <- function(OM, messages='default') {
     }
   }
   
-  if (nStock(OM)>1 && !length(OM@Relations) && !length(MOM@SexPars)) {
+  if (nStock(OM)>1 && !length(OM@Relations) && !length(OM@SexPars)) {
     if (isTRUE(msg$alert)) {
       cli::cli_alert_info("You have specified more than one stock but no MICE relationships (`Relations(OM)`) or sex-specific relationships (`SexPars(OM)`) among these. \nAs they are independent, consider doing MSE for one stock at a time for computational efficiency\n")
     }
