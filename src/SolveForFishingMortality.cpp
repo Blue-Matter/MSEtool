@@ -12,19 +12,18 @@ List SolveForFishingMortality(arma::vec NumberAtAge, // nAge
                               arma::mat DiscardMortalityAtAge,  // nAge, nFleet
                               arma::mat FleetWeightAtAge,  // nAge, nFleet
                               arma::vec NaturalMortalityAtAge, // nAge
-                              int MaxIt=200,
+                              int MaxIt=500,
                               double tolF=1E-4,
                               int debug=0) {
   
   int nAge = SelectivityAtAge.n_rows;
   int nFleet = SelectivityAtAge.n_cols;
-  
+  arma::vec predRemovals(nFleet);
   arma::mat BiomassAtAge(nAge, nFleet);
   
   for (int fl=0; fl<nFleet; fl++) {
     BiomassAtAge.col(fl) = NumberAtAge % FleetWeightAtAge.col(fl);
   }
-  
   
   double TotalBiomass = arma::accu(BiomassAtAge);
   
@@ -43,14 +42,14 @@ List SolveForFishingMortality(arma::vec NumberAtAge, // nAge
       arma::vec FDeadDiscard = FDiscard % DiscardMortalityAtAge.col(fl);
       arma::vec FDead = FDeadDiscard + FRetain;
       FRetainAtAge.col(fl) = FDead;
-      FDeadAtAge.col(fl) = FRetain;
+      FDeadAtAge.col(fl) = FRetain + FDeadDiscard;
     }
     
     arma::vec ZatAge = arma::sum(FDeadAtAge,1) + NaturalMortalityAtAge;
     
     // derivative of catch wrt ft
     arma::vec dct(nFleet);
-    arma::vec predRemovals(nFleet);
+
     for (int fl=0; fl<nFleet; fl++) {
       arma::vec PopDeadAtAge = (1-exp(-ZatAge)) % BiomassAtAge.col(fl);
       arma::vec FDead = FDeadAtAge.col(fl);
@@ -59,7 +58,12 @@ List SolveForFishingMortality(arma::vec NumberAtAge, // nAge
       dct(fl) = accu(temp);
     }
     
+    if (debug) {
+      Rcout << "\n\ni = " << i << std::endl; 
+      Rcout << "apicalF = " << apicalF << std::endl; 
+    }
     apicalF = apicalF - (predRemovals - TotalRemovalsFleet)/(0.8*dct);
+
     NumericVector diff = as<NumericVector>(Rcpp::wrap((predRemovals - TotalRemovalsFleet)));
     NumericVector totalremovals = as<NumericVector>(Rcpp::wrap((TotalRemovalsFleet)));
     
@@ -68,14 +72,24 @@ List SolveForFishingMortality(arma::vec NumberAtAge, // nAge
     converge[ZeroVals] = 1;
     
     if (debug) {
-      Rcout << "i = " << i << std::endl; 
       NumericVector temp = (Rcpp::abs(diff)/totalremovals);
+      Rcout << "Next apicalF = " << apicalF << std::endl; 
       Rcout << "predRemovals = " << predRemovals << std::endl; 
       Rcout << "TotalRemovalsFleet = " << TotalRemovalsFleet << std::endl; 
       Rcout << "diff = " << diff << std::endl; 
-      Rcout << "diff = " << temp  << std::endl; 
+      Rcout << "dct = " << dct  << std::endl; 
       Rcout << "converge = " << converge  << std::endl; 
     }
+    
+    double MaxF = 5; //  // TODO max F 
+    for (int fl=0; fl<nFleet; fl++) {
+      if (apicalF(fl)> MaxF)
+        apicalF(fl) = MaxF;
+    }
+    
+    LogicalVector HitMaxF = as<NumericVector>(Rcpp::wrap((apicalF))) >= MaxF;
+    if (all(HitMaxF).is_true()) 
+      break;
       
   
     if (all(converge).is_true()) 
@@ -85,6 +99,7 @@ List SolveForFishingMortality(arma::vec NumberAtAge, // nAge
 
   List L = List::create(Named("ApicalFInteract") = apicalF,
                         Named("FDeadAtAge") = FDeadAtAge,
-                        Named("FRetainAtAge") = FRetainAtAge);
+                        Named("FRetainAtAge") = FRetainAtAge,
+                        Named("PredRemovals") = predRemovals);
   return(L);
 }

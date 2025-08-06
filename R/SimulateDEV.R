@@ -40,7 +40,7 @@ SimulateDEV <- function(OM=NULL,
   
   # ---- Make Hist Object ----
   Hist <- OM2Hist(OM, silent)
-
+  
   # ---- Calculate Equilibrium Unfished ----
   Hist@Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
   
@@ -69,23 +69,23 @@ SimulateDEV <- function(OM=NULL,
                                 format = "Optimizing catchability (q) for Final Depletion {cli::pb_bar} {cli::pb_percent}",
                                 clear = TRUE))
   }
-  
-  
+
+ 
   # ---- Calculate Reference Points ----
   HistTimeSteps <- TimeSteps(OM, 'Historical')
-  HistSimList <- CalcRefPoints(HistSimList, TimeSteps=tail(HistTimeSteps,1))
   
- 
+  HistSimList <- CalcRefPoints(HistSimList, TimeSteps=tail(HistTimeSteps,1)) 
+  
   # ---- Historical Population Dynamics ----
   # tictoc::tic()
 
-  IdenticalAcrossSims <- CheckIdenticalSims(HistSimList, HistTimeSteps)
-  if (IdenticalAcrossSims) {
-    # TODO - only run SimulateDynamics_ once and copy across HistSimList
-    # need to make sure to update all historical dynamics - eg Stock@Length for each sim
-    # if MICE is used
-  } 
-  
+
+  # if (IdenticalAcrossSims) {
+  #   # TODO - only run SimulateDynamics_ once and copy across HistSimList
+  #   # need to make sure to update all historical dynamics - eg Stock@Length for each sim
+  #   # if MICE is used
+  # } 
+  # 
   HistSimList <- purrr::map(HistSimList, \(HistSim) 
                             SimulateDynamics_(HistSim, HistTimeSteps),
                             .progress = list(
@@ -100,6 +100,11 @@ SimulateDEV <- function(OM=NULL,
  
   # ---- Check for Depletion Optimization ----
  
+  # OM@Stock$Albacore@Depletion@Final
+  # OM@Stock$Albacore@Depletion@Reference
+  # 
+  # HistSimList$`3`@Biomass[1,50]/HistSimList$`3`@Unfished@Equilibrium@Biomass[1,50]
+  
   # TODO 
   # B0 <- Hist@Unfished@Equilibrium@Biomass[,1,1:360]
   # B <- Hist@Biomass[,1,]
@@ -155,11 +160,7 @@ SimulateDEV <- function(OM=NULL,
   
   # make Hist object
   Hist <- HistSimList2Hist(Hist, HistSimList)
-  
-  Hist@RefPoints@FMSY
-  
-  Hist@RefPoints@SPR0
-  
+
   
   Hist <- SetDigest(Hist)
   Hist

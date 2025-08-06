@@ -1,10 +1,22 @@
 CalcRefPoints <- function(HistSimList, TimeSteps) {
   
+  IdenticalAcrossSims <- CheckIdenticalSims(HistSimList, TimeSteps)
+  
   RefPoints <- new('refpoints')
   
   # ---- MSY Ref Points ----
-  HistSimList <- purrr::map(HistSimList, \(HistSim) OptimizeMSY(HistSim, TimeSteps))
-  
+  if (IdenticalAcrossSims) {
+    HistSim <- HistSimList[[1]]
+    HistSim <- OptimizeMSY(HistSim, TimeSteps)
+    HistSimList <- purrr::map(HistSimList, \(histsim) {
+      histsim@RefPoints <- HistSim@RefPoints
+      histsim
+    })
+    
+  } else {
+    HistSimList <- purrr::map(HistSimList, \(HistSim) 
+                              OptimizeMSY(HistSim, TimeSteps))  
+  }
   
 
   
@@ -48,45 +60,52 @@ CalcRefPoints <- function(HistSimList, TimeSteps) {
 }
 
 OptimizeMSY <- function(HistSim, TimeSteps) {
+  # TODO - add Frange to OM@control 
+  logApicalFRange <- log(c(0.01, 3))
   
   StockList <- HistSim@OM@Stock
   FleetList <- HistSim@OM@Fleet
   Allocation <- HistSim@OM@Allocation
-  
+
   # if Complexes or SPFrom another stock - calculate overall MSY
   Complexes <- HistSim@OM@Complexes
   SPFrom <- purrr::map(StockList, \(stock) stock@SRR@SPFrom) |> unlist()
   
   if (length(Complexes)>0) {
-    # stock complex - calculate MSY for complex
+    # stock complex - calculate MSY for complex TODO
     cli::cli_alert_warning('MSY calculations for Stock Complexes not complete. Calculating MSY ref points by stock')
   }
   
-  # TODO - account for SPFrom
-  if (length(SPFrom)>1) {
+  
+  # TODO - fix for complexes, multi-sex, etc
+  if (all(SPFrom==SPFrom[1]) & length(SPFrom)>1) {
     # stock complex - calculate MSY for complex
-    cli::cli_alert_warning('MSY calculations for SPFrom not complete. Calculating MSY ref points by stock')
+    opt <- optimize(CalculateMSY_Complex, 
+                    logApicalFRange, 
+                    StockList, 
+                    FleetList, 
+                    Allocation, 
+                    TimeSteps=TimeSteps)
+    
+    MSYRefs <- CalculateMSY_Complex(opt$minimum,
+                         StockList, 
+                         FleetList, 
+                         Allocation, 
+                         TimeSteps=TimeSteps,2)
+  } else {
+    # By Stock
+    MSYRefs <- purrr::pmap(list(StockList, FleetList, Allocation), \(stock, fleet, allocation) {
+      opt <- optimize(CalculateMSY_SingleStock, 
+                      logApicalFRange, 
+                      Stock=stock, 
+                      Fleet=fleet, 
+                      Allocation=allocation, 
+                      TimeSteps=TimeSteps)
+      CalculateMSY_SingleStock(opt$minimum,
+                               stock, fleet, allocation, TimeSteps,2)
+    })
   }
-  
-  # TODO - add Frange to OM@control 
-  logApicalFRange <- log(c(0.01, 3))
-  
-  # By Stock
-  MSYRefs <- purrr::pmap(list(StockList, FleetList, Allocation), \(stock, fleet, allocation) {
-    opt <- optimize(CalculateMSY_SingleStock, 
-             logApicalFRange, 
-             Stock=stock, 
-             Fleet=fleet, 
-             Allocation=allocation, 
-             TimeSteps=TimeSteps)
-    CalculateMSY_SingleStock(opt$minimum,
-                             stock, fleet, allocation, TimeSteps,2)
-  })
-  
-  # Complex 
-  # CalculateMSY_Complex
-  
-  
+
   HistSim@RefPoints@SPR0 <- List2Array(purrr::map(MSYRefs, \(stock) stock$SPR0), 'Stock') |> t()
   HistSim@RefPoints@RemovalsMSY <- List2Array(purrr::map(MSYRefs, \(stock) stock$Removals), 'Stock') |> t()
   HistSim@RefPoints@LandingsMSY <- List2Array(purrr::map(MSYRefs, \(stock) stock$Landings), 'Stock')|> t()
@@ -97,7 +116,6 @@ OptimizeMSY <- function(HistSim, TimeSteps) {
   HistSim@RefPoints@SPRMSY <- List2Array(purrr::map(MSYRefs, \(stock) stock$SPR), 'Stock') |> t()
   HistSim
 }
-
 
 
 CalculateMSY_SingleStock <- function(logApicalF, Stock, Fleet, Allocation, TimeSteps, option=1) {
@@ -155,7 +173,6 @@ CalculateMSY_Complex <- function(logApicalF, StockList, FleetList, Allocation,Ti
   
   # TODO - this approach could be problematic if there are different 
   # apical Fs by sex or stocks within complex ...
-  
   
   for (st in seq_along(StockList)) {
     Stock <- StockList[[st]]

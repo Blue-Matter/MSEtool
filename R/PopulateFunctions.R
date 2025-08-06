@@ -742,13 +742,20 @@ AtSize2AtAge <- function(object, Length) {
   }
   dd <- dim(AtAge)
   
-  TSnames <- c(dimnames(MeanAtSize)[[3]], 
-               dimnames(Length@ASK)[[4]]) |>
+  MeanAtSizeDNAmes <- MeanAtSize |> dimnames() |> names()
+  LengthASKDNAmes <- Length@ASK |> dimnames() |> names()
+  
+  ind1 <- which(MeanAtSizeDNAmes == 'TimeStep')
+  ind2 <- which(LengthASKDNAmes == 'TimeStep')
+  
+  TSnames <- c(dimnames(MeanAtSize)[[ind1]],
+               dimnames(Length@ASK)[[ind2]]) |>
     unique() |>
     sort()
 
+  AgeInd <- which(names(dimnames(Length@MeanAtAge))=='Age')
   dimnames(AtAge) <- list(Sim=1:dd[1],
-                          Age=dimnames(Length@MeanAtAge)[[2]],
+                          Age=dimnames(Length@MeanAtAge)[[AgeInd]],
                           TimeStep=TSnames)
   AtAge
 }
@@ -900,9 +907,10 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
 
 # TODO - CatchFrac could be array nsim, nstock, nfleet - rather than list 
 ProcessCatchFrac <- function(object) {
-  if (length(object@CatchFrac)<1)
-    return(object)
-  
+  if (length(object@CatchFrac)<1) {
+    object@CatchFrac <- MakeNamedList(StockNames(object))
+  }
+    
   nStock <- nStock(object)
   nFleet <- nFleet(object)
   nSim <- nSim(object)
@@ -914,7 +922,13 @@ ProcessCatchFrac <- function(object) {
   
   for (st in 1:nStock) {
     CatchFracFleet <- object@CatchFrac[[st]]
+    if (is.null(CatchFracFleet)) {
+      if (nFleet>1)
+        cli::cli_abort("`OM@CatchFrac` must be specified if there are multiple fleets")
+      CatchFracFleet <- matrix(1, nSim, nFleet)
+    } 
     dd <- dim(CatchFracFleet)
+   
     if (dd[1]>nSim)
       cli::cli_abort('`OM@CatchFrac` must be a list length `nStock(OM)` with a `nSim` by `nFleet` matrix  for each stock')
       

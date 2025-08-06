@@ -59,8 +59,12 @@ inline arma::mat CalcEffortDistribution(arma::mat VBiomassFleetArea, // nFleet, 
                                         arma::vec Effort,
                                         int nArea) {  // nFleet
   
-  
   int nFleet = VBiomassFleetArea.n_rows;
+  
+  // Rcout << "nArea = " << nArea << std::endl;
+  // Rcout << "nFleet = " << nFleet << std::endl;
+  // Rcout << "Effort = " << Effort << std::endl;
+  // Rcout << "VBiomassFleetArea = " << VBiomassFleetArea << std::endl;
   
   CheckLength(Effort.size(), nFleet, "Effort", "nFleet (nrow(VBiomassFleetArea))");
   

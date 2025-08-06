@@ -57,7 +57,7 @@ ExpandTS <- function(Array, Dims, TimeSteps) {
     AddDimNames(names(dimnames(Array)), TimeSteps=TimeSteps)
   for (i in seq_along(TimeSteps)) {
     j <- which(ArrayTS <= TimeSteps[i])
-    if (!is.finite(j) || length(j)<1)
+    if (any(!is.finite(j)) || length(j)<1)
       next()
     j <- max(j)
     OutArray[,,i] <- Array[,,j]
@@ -454,8 +454,15 @@ ExpandTimeSteps <- function(Array, TimeSteps, default=NULL) {
       vals <- array(vals, dim=c(1, length(vals)))
       dimnames(vals) <- dnames
     }
-    dimnames(vals)[[ind]] <- TimeStepsFill
-    names(dimnames(vals))[ind] <- 'TimeStep'
+    
+    dnames2 <- vals |> dimnames() |> names()
+    tsInd <- which(dnames2=='TimeStep')
+    
+    if (length(tsInd)<1) 
+      tsInd <- which(nchar(dnames2)==0)  
+    
+    dimnames(vals)[[tsInd]] <- TimeStepsFill
+    names(dimnames(vals))[tsInd] <- 'TimeStep'
     vals <- aperm(vals, names(dnames))
     abind::afill(OutArray) <- vals
     return(OutArray)
@@ -468,6 +475,7 @@ ExpandTimeSteps <- function(Array, TimeSteps, default=NULL) {
     ValueInd <- which(ArrayTS <=i) |> max()
     if (!is.finite(ValueInd))
       stop()
+    
     TSexpanded <- abind::asub(Array, ValueInd, ind, drop=FALSE)
     if (!is.null(default) && i > max(ArrayTS) )
        TSexpanded[] <- default

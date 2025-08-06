@@ -58,7 +58,8 @@ setMethod('CalcUnfishedSurvival', c('stock', 'ANY', 'ANY'), function(x, SP=FALSE
   
   nAges <- x@Ages@Classes |> length()
   NaturalMortalityAtAge <- x@NaturalMortality@MeanAtAge |>
-    ArrayExpand(x@nSim, nAges, TimeSteps)
+    ArrayExpand(x@nSim, nAges, TimeSteps) |>
+    ArraySubsetTimeStep(TimeSteps)
   
   PlusGroup <- x@Ages@PlusGroup
   if (SP) {

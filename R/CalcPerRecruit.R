@@ -1,6 +1,5 @@
 CalcPerRecruit <- function(apicalF, Stock, Fleet, Allocation, TimeSteps) {
   
-  
   if (is.null(Allocation))
     Allocation <- 1
   

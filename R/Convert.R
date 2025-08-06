@@ -83,8 +83,8 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
     om@Stock <- OM2stock(OM, cpars=OM@cpars, TimeSteps) 
     om@Fleet <- OM2fleet(OM, OM@cpars, OM@Fdisc)
     
-    om@Obs <- SubOM(OM, 'Obs')
-    om@Imp <- SubOM(OM, 'Imp')
+    om@Obs <- list(list(SubOM(OM, 'Obs')))
+    om@Imp <- list(list(SubOM(OM, 'Imp'))) 
     
     om@Stock@Length <- PopulateLength(om@Stock@Length,
                                 Ages=om@Stock@Ages,

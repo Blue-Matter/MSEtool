@@ -7,18 +7,13 @@ GenerateHistoricalData <- function(HistSim, HistTimeSteps) {
   HistSim@Data <- MakeNamedList(StockNames(OM), new('data'))
   nStock <- nStock(OM)
   
-  if (nStock>1)
-    cli::cli_abort('Not done yet!', .internal=TRUE)
-  
   if (!is.null(HistSim@OM@Data)) {
-    HistSim@Data[[1]] <- HistSim@OM@Data
+    HistSim@Data <- HistSim@OM@Data
   }
     
-  
-
-  for (stock in 1:nStock) {
+  nStockData <- length(HistSim@Data)
+  for (stock in 1:nStockData) {
     HistSim@Data[[stock]] <- GenerateHistoricalDataStock(stock, HistSim, HistTimeSteps)
-    
   }
   
   HistSim
@@ -70,6 +65,8 @@ GenerateHistoricalData_Catch <- function(Data, HistSim, HistTimeSteps, stock) {
 
   for (fl in 1:nFleet) {
     Obs <- HistSim@OM@Obs[[stock]][[fl]]
+    if (!inherits(Obs, 'obs')) # TODO
+      next()
     if (Obs@Catch@Type == 'Removals') {
       Data@Catch@Value[,fl] <- Removals[,fl] * ArraySubsetTimeStep(Obs@Catch@Error, HistTimeSteps) * Obs@Catch@Bias[1:length(HistTimeSteps)]
     } else {

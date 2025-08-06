@@ -67,7 +67,6 @@ S4 CalcCatch_(S4 HistSimIn,
       for (int fl=0; fl<nFleet; fl++) {
         arma::vec fleetweight = FleetWeightAtAge(arma::span(0, nAge-1), arma::span(TSindex), arma::span(fl)); // nAge
         for (int area=0; area<nArea; area++) {
-          
           arma::vec ZmortalityThisArea = arma::sum(FDeadAtAgeAreaThisTS.slice(area),1) + NaturalMortalityAtAge.col(TSindex);
           arma::mat NDeadThisArea = NumberAtAgeAreaThisTS.col(area) % (1-exp(-ZmortalityThisArea)); // nAge, nFleet
           arma::mat FDead = FDeadAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(fl), arma::span(area));

@@ -57,11 +57,9 @@ S4 SimulateDynamics_(S4 HistSimIn,
       Rcout << "TSindex = " << TSindex << std::endl;
     }
       
-    
     // // Do MICE
     //     // update length, weight, fleet weight, natural mortality, maturity, rec pars, etc 
     
-
     for (int st=0; st<nStock; st++) {
       
       if (debug)
@@ -138,6 +136,10 @@ S4 SimulateDynamics_(S4 HistSimIn,
       int nFleet = VBiomassArea.n_rows;
       arma::cube EffortArea = EffortAreaList[st]; // nTS, nFleet, nArea
       bool EffortAreaEmpty = all(arma::vectorise(EffortArea.row(TSindex)) < 1E-6);
+      
+      if (debug)
+        Rcout << "EffortAreaEmpty = " << EffortAreaEmpty << std::endl;
+      
       if (EffortAreaEmpty) {
         EffortArea.subcube(arma::span(TSindex), arma::span(0, nFleet-1), arma::span(0, nArea-1))= 
           CalcEffortDistribution(VBiomassArea, EffortCube.subcube(arma::span(st), arma::span(TSindex), arma::span(0, nFleet-1)), nArea);
@@ -201,8 +203,6 @@ S4 SimulateDynamics_(S4 HistSimIn,
         SProduction.row(st).col(TSindex) = SProduction.row(fromStock).col(TSindex);
       }
     }
-    
-    
     
     // Calculate Recruitment and Numbers at beginning of next time step
     for (int st=0; st<nStock; st++) {
@@ -270,7 +270,6 @@ S4 SimulateDynamics_(S4 HistSimIn,
         if (debug)
           Rcout << "Recruits =  " << Recruits << std::endl;
         
-        
         // Distribute Recruits
         if (debug)
           Rcout << "Distribute Recruits " << std::endl;
@@ -279,7 +278,10 @@ S4 SimulateDynamics_(S4 HistSimIn,
         arma::vec recruitArea(nArea);
         
         for (int area=0; area<nArea; area++) {
-          recruitArea(area) = Recruits * arma::as_scalar(UnfishedDist(arma::span(area), arma::span(0), arma::span(TSRec)));
+          double rec = Recruits * arma::as_scalar(UnfishedDist(arma::span(area), arma::span(0), arma::span(TSRec)));
+          if (rec < 1E-6) 
+            rec = 1E-6;
+          recruitArea(area) = rec;
         }
         NumberAtAgeArea.subcube(0, TSRec, 0, 0, TSRec, nArea-1) = recruitArea;
       }

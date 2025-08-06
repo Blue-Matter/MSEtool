@@ -113,15 +113,17 @@ PopulateOM <- function(OM, silent=FALSE) {
     OM@Fleet <- fleetList
   }
   
-
+  OM <- ProcessCatchFrac(OM)
+  
   # share paramaters for two-sex stocks
   OM <- OM |>
     UpdateSPFrom() |>
     ShareParameters() |>
     StartMessages()
   
+  
   # CatchFrac
-  OM <- ProcessCatchFrac(OM)
+ 
   
   
   OM <- PopulateObs(OM)

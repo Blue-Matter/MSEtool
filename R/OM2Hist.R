@@ -8,7 +8,7 @@ CopySlots <- function(ObjectOut,
   Slots <- slotNames(ObjectOut)
   for (sl in Concate) {
     if (sl %in% Slots) {
-      slot(ObjectOut, sl) <- List2Array(lapply(ObjectIn, slot, sl))[1,]
+      slot(ObjectOut, sl) <- List2Array(lapply(ObjectIn, slot, sl))[1,] |> unique()
     }
   }
   
@@ -23,7 +23,6 @@ CopySlots <- function(ObjectOut,
 
 OM2Hist <- function(OM, silent=FALSE) {
   
-
   if (!silent) 
     id <- cli::cli_progress_bar("Initializing `Hist` Object")  
   
@@ -93,6 +92,8 @@ StockObject <- function(object, nSim, nAges, TimeSteps) {
       object@Pars <- lapply(object@Pars, ArrayExpand, nSim, nAges, TimeSteps)
     }
     
+  
+  
   
   if ("RelRecFun" %in% nms) {
     if (!is.null(object@Model) && inherits(object@Model, 'character')) {
@@ -217,7 +218,6 @@ Fleet2Hist <- function(FleetList, nAges, nSim, TimeSteps, nArea, silent=FALSE, i
   if (!silent)
     cli::cli_progress_update(id=id)
   
-
   if (!silent)
     cli::cli_progress_update(id=id)
   Fleet@Effort <- CombineEffort(lapply(FleetList, slot, 'Effort'),
@@ -262,6 +262,8 @@ Fleet2Hist <- function(FleetList, nAges, nSim, TimeSteps, nArea, silent=FALSE, i
   
   Fleet@BioEconomic <- lapply(FleetList, slot, 'BioEconomic')
   Fleet <- CopySlots(Fleet, FleetList)
+
+  
   if (!silent)
     cli::cli_progress_update(id=id)
   Fleet@TimeSteps <- TimeSteps
@@ -601,6 +603,8 @@ HistSimListFleet <- function(Hist, HistSimList) {
 
 ObsList2SimArray <- function(Obs, ObsList, fl, slot='Catch') {
   
+  if (!inherits(Obs[[fl]], 'obs')) # TODO - Convert Obs
+    return(Obs)
 
   Slots <- slotNames(slot(Obs[[fl]], slot))
   
@@ -645,9 +649,7 @@ ObsList2SimArray <- function(Obs, ObsList, fl, slot='Catch') {
 
 HistSimListObs <- function(Hist, HistSimList) {
   
-  StockNames <- StockNames(Hist@OM)
-  FleetNames <- as.vector(Hist@OM@Fleet[[1]]@Name)
-  nStock <- length(StockNames)
+  nStock <- length(Hist@OM@Obs)
   
   for (st in 1:nStock) {
     Obs <- Hist@OM@Obs[[st]]

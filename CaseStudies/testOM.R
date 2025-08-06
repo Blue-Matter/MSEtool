@@ -6,14 +6,39 @@ la <- devtools::load_all
 la()
 
 OM <- testOM
-OM@nsim <- 100
+OM@nsim <- 10
 
-OMa <- Convert(OM, Populate=FALSE)
-OM <- Populate(OMa)
+OM <- Convert(OM)
+OM@Stock$Albacore@Spatial <- Spatial()
+OM@Fleet$Albacore$`Stock:Albacore  Fleet:Generic_Fleet  Obs model:Generic_Obs  Imp model:Perfect_Imp`@Distribution <- Distribution()
 
+OM@Interval <- 1 # TODO test with different
 tictoc::tic()
 Hist <- SimulateDEV(OM)
 tictoc::toc()
+
+
+FixedTAC1000 <- function(...) {
+  advice <- Advice()
+  advice@TAC <- 10000
+  advice
+}
+
+MSE <- ProjectDEV(Hist,
+                  MPs='FixedTAC1000')
+
+MSE@Removals[1,1,,1,1] |> round(2)
+
+MSE@Removals[2,1,,1,1] |> round(2)
+
+
+silent=FALSE
+parallel=FALSE
+
+
+
+
+
 
 OM2 <- testOM
 OM2@nsim <- 100

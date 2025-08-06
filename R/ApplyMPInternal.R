@@ -1,9 +1,7 @@
 
+
+
 UpdateTAC <- function(ProjSim, MPAdvice, TSIndex) {
-  
-  # ----------------# 
-  st <- 1
-  # ----------------# 
   
   if (is.null(MPAdvice))
     return(ProjSim)
@@ -11,33 +9,48 @@ UpdateTAC <- function(ProjSim, MPAdvice, TSIndex) {
   if (length(MPAdvice@TAC)<1)
     return(ProjSim)
   
+
   # calculate effort for a given TAC ... 
   # TODO doesn't account for spatial closures
   # TODO calculate effortArea here instead - calculate distribution of F/Effort by area
   
+  # TODO applies for all stocks - TODO multistock with stock specific TAC
   
-  NumberAtAge <- apply(ProjSim@Number[[st]][,TSIndex,, drop=FALSE], 1, sum) # sum over areas
-  TotalRemovalsFleet <- MPAdvice@TAC * ProjSim@OM@Allocation[[st]] |> as.numeric()
+  nStock <- length(ProjSim@Number)
   
-  SelectivityAtAge <- ProjSim@OM@Fleet[[st]]@Selectivity@MeanAtAge[,TSIndex,, drop=FALSE] |> abind::adrop(2)
-  RetentionAtAge <- ProjSim@OM@Fleet[[st]]@Retention@MeanAtAge[,TSIndex,, drop=FALSE] |> abind::adrop(2)
-  DiscardMortalityAtAge <- ProjSim@OM@Fleet[[st]]@DiscardMortality@MeanAtAge[,TSIndex,, drop=FALSE] |> abind::adrop(2)
-  FleetWeightAtAge <- ProjSim@OM@Fleet[[st]]@WeightFleet[,TSIndex,, drop=FALSE] |> abind::adrop(2)
+  NumberAtAge <- purrr::map(ProjSim@Number, \(stock) stock[,TSIndex,, drop=FALSE] |> abind::adrop(2) |> apply(1, sum)) # summed over areas
+  SelectivityAtAge <- purrr::map(ProjSim@OM@Fleet, \(stock) stock@Selectivity@MeanAtAge[,TSIndex,, drop=FALSE] |> abind::adrop(2))
+  RetentionAtAge <- purrr::map(ProjSim@OM@Fleet, \(stock) stock@Retention@MeanAtAge[,TSIndex,, drop=FALSE] |> abind::adrop(2))
+  DiscardMortalityAtAge <- purrr::map(ProjSim@OM@Fleet, \(stock) stock@DiscardMortality@MeanAtAge[,TSIndex,, drop=FALSE] |> abind::adrop(2))
+  FleetWeightAtAge <- purrr::map(ProjSim@OM@Fleet, \(stock) stock@WeightFleet[,TSIndex,, drop=FALSE] |> abind::adrop(2))
+  NaturalMortalityAtAge <- purrr::map(ProjSim@OM@Stock, \(stock) stock@NaturalMortality@MeanAtAge[,TSIndex])
   
-  NaturalMortalityAtAge <- ProjSim@OM@Stock[[st]]@NaturalMortality@MeanAtAge[,TSIndex]
+  RelVuln <- purrr::map2(NumberAtAge, SelectivityAtAge, \(number, select) {
+    sum(number * select)
+    # sum(ArrayMultiply(number, select))
+  }) |> unlist()
   
-  SolvedF <- SolveForFishingMortality(NumberAtAge,
-                                      TotalRemovalsFleet,
-                                      SelectivityAtAge,  
-                                      RetentionAtAge,  
-                                      DiscardMortalityAtAge,  
-                                      FleetWeightAtAge,
-                                      NaturalMortalityAtAge) 
- 
-  FInteract <- t(SolvedF$ApicalFInteract)
-  RequiredEffort <- FInteract / ProjSim@OM@Fleet[[st]]@Effort@Catchability[TSIndex,] 
+  StockAllocation <- RelVuln/sum(RelVuln)
+  
+  for (st in 1:nStock) {
+    TotalRemovalsFleet <- MPAdvice@TAC *StockAllocation[st] * ProjSim@OM@Allocation[[st]] |> as.numeric()
 
-  ProjSim@Effort[st,TSIndex,] <- RequiredEffort
+
+    SolvedF <- SolveForFishingMortality(NumberAtAge[[st]],
+                                        TotalRemovalsFleet,
+                                        SelectivityAtAge[[st]],  
+                                        RetentionAtAge[[st]],  
+                                        DiscardMortalityAtAge[[st]],  
+                                        FleetWeightAtAge[[st]],
+                                        NaturalMortalityAtAge[[st]]) 
+  
+    FInteract <- t(SolvedF$ApicalFInteract)
+    RequiredEffort <- FInteract / ProjSim@OM@Fleet[[st]]@Effort@Catchability[TSIndex,] 
+    RequiredEffort[RequiredEffort<1E-5] <- 1E-5 
+    
+    ProjSim@Effort[st,TSIndex,] <- RequiredEffort
+  }
+  
   ProjSim
 }
 
@@ -266,7 +279,6 @@ ApplyMPInternal <- function(ProjSim, MP, TimeStep, TimeStepsHist, TimeStepsProj,
     MPAdvice <- NULL
   }
   
-  
   TimeStepsAll <- c(TimeStepsHist, TimeStepsProj) 
   TSIndex <- match(TimeStep, TimeStepsAll)
   
@@ -277,6 +289,9 @@ ApplyMPInternal <- function(ProjSim, MP, TimeStep, TimeStepsHist, TimeStepsProj,
     UpdateDiscardMortality(MPAdvice, MPAdvicePrevious, TimeStepsAll, TSIndex) |>
     UpdateTAC(MPAdvice, TSIndex) |>
     UpdateEffort(MPAdvice, MPAdvicePrevious, TimeStepsAll, TimeStepsHist, TSIndex) 
+  
+  
+
   
   
   # TODO

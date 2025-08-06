@@ -94,19 +94,22 @@ StartMessages <- function(OM, messages='default') {
   msg <- SetMessages(messages)
   
   # Allocation
-  if (nFleet(OM)>1) {
-    if (!length(OM@Allocation)) {
-      OM@Allocation <- OM@CatchFrac
+ 
+  if (!length(OM@Allocation)) {
+    OM@Allocation <- OM@CatchFrac
+    if (nFleet(OM)>1) {
       if (isTRUE(msg$alert)) 
         cli::cli(c(
           cli::cli_alert_info('`Allocation(OM)` not specified'),
           cli::cli_alert('Setting `Allocation` equal to `CatchFrac` (`Allocate(OM) <- CatchFrac(OM)`)')
         ))  
-      }
-    
-    if(!length(OM@Efactor)) {
-      OM@Efactor <- lapply(1:nStock(OM), function(x) 
-        matrix(1, nSim(OM), nFleet(OM)))
+    }
+  }
+  
+  if(!length(OM@Efactor)) {
+    OM@Efactor <- lapply(1:nStock(OM), function(x) 
+      matrix(1, nSim(OM), nFleet(OM)))
+    if (nFleet(OM)>1) {
       if (isTRUE(msg$alert)) 
         cli::cli(c(
           cli::cli_alert_info("`Efactor(OM)` not specified"),
@@ -114,6 +117,7 @@ StartMessages <- function(OM, messages='default') {
         ))
     }
   }
+    
   
   if (nStock(OM)>1 && !length(OM@Relations) && !length(OM@SexPars)) {
     if (isTRUE(msg$alert)) {
@@ -935,4 +939,16 @@ CheckIdenticalSims <- function(HistSimList, TimeSteps=NULL, Period='Historical')
   }
   TRUE
 }
+
+# slots <- slotNames(HistSimList[[1]]@OM@Fleet$Female)
+# for (sl in slots) {
+#   dig1 <- digest::digest(slot(HistSimList[[1]]@OM@Fleet$Female, sl), algo='spookyhash')
+#   dig2 <- digest::digest(slot(HistSimList[[i]]@OM@Fleet$Female,sl), algo='spookyhash')
+#   if (dig1 != dig2)
+#     stop(sl)
+# }
+
+
+
+
 

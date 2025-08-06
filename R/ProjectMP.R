@@ -17,6 +17,9 @@ GenerateProjectionData_Catch <- function(ProjSim, DataTimeStep, TimeStepsAll, st
     apply(2, sum) # sum over age and areas
   
   Catch <- ProjSim@Data[[st]]@Catch
+  if (EmptyObject(Catch))
+    return(ProjSim)
+  
   Value <- Catch@Value
   CV <- Catch@CV
   
@@ -38,11 +41,13 @@ GenerateProjectionData_Catch <- function(ProjSim, DataTimeStep, TimeStepsAll, st
   # loop over fleets 
   for (fl in 1:nFleet) {
     Obs <- ProjSim@OM@Obs[[st]][[fl]]
+    if (!inherits(Obs, 'obs')) # TODO - convert Obs
+      return(ProjSim)
     # check if real data exists
     
     # Catch 
-    if (nrow(ProjSim@OM@Data@Catch@Value)>=TSIndex) {
-      NewValue[,fl] <- ProjSim@OM@Data@Catch@Value[TSIndex,fl]
+    if (!is.null(ProjSim@OM@Data[[st]]) && nrow(ProjSim@OM@Data[[st]]@Catch@Value)>=TSIndex) {
+      NewValue[,fl] <- ProjSim@OM@Data[[st]]@Catch@Value[TSIndex,fl]
     } else {
       if (Catch@Units[fl] != 'Biomass')
         cli::cli_abort('Currently catch can only be in units of Biomass', .internal=TRUE)
@@ -60,8 +65,8 @@ GenerateProjectionData_Catch <- function(ProjSim, DataTimeStep, TimeStepsAll, st
     }
     
     # CV 
-    if (nrow(ProjSim@OM@Data@Catch@CV)>=TSIndex) {
-      NewCV[,fl] <- ProjSim@OM@Data@Catch@CV[TSIndex,fl]
+    if (nrow(ProjSim@OM@Data[[st]]@Catch@CV)>=TSIndex) {
+      NewCV[,fl] <- ProjSim@OM@Data[[st]]@Catch@CV[TSIndex,fl]
     } else {
       NewCV[,fl] <- Catch@CV[TSIndex-1,fl]
     }
@@ -77,6 +82,8 @@ GenerateProjectionData_Index <- function(ProjSim, DataTimeStep, TimeStepsHist, T
   # TODO hyperstability Beta not functional yet - ignored
 
   Index <- ProjSim@Data[[st]]@Index
+  if (EmptyObject(Index))
+    return(ProjSim)
   Value <- Index@Value
   CV <- Index@CV
   
@@ -107,9 +114,9 @@ GenerateProjectionData_Index <- function(ProjSim, DataTimeStep, TimeStepsHist, T
       next()
     
     # Index 
-    if (nrow(ProjSim@OM@Data@Index@Value)>=TSIndex) {
+    if (nrow(ProjSim@OM@Data[[st]]@Index@Value)>=TSIndex) {
       # check if real data exists
-      NewValue[,fl] <- ProjSim@OM@Data@Index@Value[TSIndex,fl]
+      NewValue[,fl] <- ProjSim@OM@Data[[st]]@Index@Value[TSIndex,fl]
     } else {
       if (Index@Timing[fl]!=0)
         cli::cli_alert_warning('`Index@Timing` not working yet. Calculating from beginning of time step')
@@ -132,8 +139,8 @@ GenerateProjectionData_Index <- function(ProjSim, DataTimeStep, TimeStepsHist, T
     }
     
     # CV 
-    if (nrow(ProjSim@OM@Data@Index@CV)>=TSIndex) {
-      NewCV[,fl] <- ProjSim@OM@Data@Index@CV[TSIndex,fl]
+    if (nrow(ProjSim@OM@Data[[st]]@Index@CV)>=TSIndex) {
+      NewCV[,fl] <- ProjSim@OM@Data[[st]]@Index@CV[TSIndex,fl]
     } else {
       NewCV[,fl] <- Index@CV[TSIndex-1,fl]
     }
@@ -175,13 +182,16 @@ GenerateProjectionData <- function(ProjSim, TimeStep, TimeStepsHist, TimeStepsPr
 ProjectMP <- function(ProjSim, MP, TimeStepsHist, TimeStepsProj, ManagementTimeSteps) {
   # tictoc::tic("Project TimeSteps")
 
-  for (TimeStep in TimeStepsProj) {
+  TimeStep <- TimeStepsProj[1] # for debugging
+  
+  for (i in seq_along(TimeStepsProj)) {
+    TimeStep <- TimeStepsProj[i]
+    TSIndex <- match(TimeStep, c(TimeStepsHist, TimeStepsProj))
     
     # Generate Data up to TimeStep - 1
     # TODO - add option for Data Lag 
     ProjSim <- GenerateProjectionData(ProjSim, TimeStep, TimeStepsHist, TimeStepsProj)
 
-    
     # --- Update `ProjSim` with MP Advice ----
     # tictoc::tic("Apply MP")
     
@@ -191,14 +201,16 @@ ProjectMP <- function(ProjSim, MP, TimeStepsHist, TimeStepsProj, ManagementTimeS
                                TimeStepsHist,
                                TimeStepsProj,
                                ManagementTimeSteps)
-    
+
     # tictoc::toc()
     
     # --- Simulate Pop Dynamics for this Time Step ----
     # tictoc::tic("Update Dynamics")
- 
+    ProjSim <- SimulateDynamics_(ProjSim, TimeStep) 
+    if (!is.na(TimeStepsProj[i+1])) 
+      ProjSim <- SimulateDynamics_(ProjSim, TimeStepsProj[i+1]) # calc recruits before fishing mortality
     
-    ProjSim <- SimulateDynamics_(ProjSim, TimeStep)
+  
     # tictoc::toc()
     
   } 

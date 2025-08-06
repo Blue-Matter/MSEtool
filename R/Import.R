@@ -1075,15 +1075,16 @@ ImportSS <- function(x,
   }
   
   # TODO should be a list by stock
-  OM@Data <- ImportSSData(RepList, OM@Name)
+  OM@Data <- list(ImportSSData(RepList, OM@Name))
+  names(OM@Data) <- paste(StockNames, collapse=' ')
   
   # Obs
-  CPUENames <- OM@Data@Index@Name
+  CPUENames <- OM@Data[[1]]@Index@Name
   AllFleetNames <- c(FleetNames, CPUENames) |> unique()
-  OM@Obs <- MakeNamedList(StockNames, MakeNamedList(AllFleetNames, new('obs')))
+  OM@Obs <- MakeNamedList(names(OM@Data), MakeNamedList(AllFleetNames, new('obs')))
   
   # Add Selectivity to Obs for indices
-  IndexInd <- which(grepl('Obs', OM@Data@Index@Selectivity))
+  IndexInd <- which(grepl('Obs', OM@Data[[1]]@Index@Selectivity))
   if (length(IndexInd)>0) {
     CPUE_Ind <- RepList[[1]]$cpue$Fleet |> unique() 
     for (ind in CPUE_Ind) {
@@ -1103,7 +1104,7 @@ ImportSS <- function(x,
   CatchFracList <- MakeNamedList(StockNames)
 
   for (st in 1:nStock) {
-    catch <- OM@Data@Catch@Value # currently not by stock # TODO
+    catch <- OM@Data[[1]]@Catch@Value # currently not by stock # TODO
     catch_last <- abind::adrop(catch[nrow(catch), ,drop=FALSE], 1)
     catch_last <- catch_last /sum(catch_last)
     catch_last[!is.finite(catch_last)] <- 0
@@ -1325,8 +1326,11 @@ ImportSSData_Catch <- function(RepList, silent=FALSE) {
     switch(x, '1'='Biomass', '2'='Number'))
   CatchOut@Type <- rep('Removals', nFleet)
   
-  CatchDF <- replist$timeseries |> dplyr::filter(Yr%in%mainyrs)
-  CatchColumns <- grepl("obs_cat", colnames(CatchDF))
+  CatchDF <- replist$catch |> dplyr::filter(Yr%in%mainyrs) |>
+    dplyr::select(Year=Yr, Fleet=Fleet, Obs=dead_bio)
+
+  CatchDF <- tidyr::pivot_wider(CatchDF, values_from = Obs, names_from='Fleet')
+  CatchColumns <- 2:ncol(CatchDF)
   CatchOut@Value[] <- as.matrix(CatchDF[,CatchColumns, drop=FALSE])
   
   # TODO aggregate over seasons?
@@ -1451,7 +1455,7 @@ CompareSSNumber <- function(replist, Hist) {
     cli::cli_abort('`Hist` must be class `hist`')
   
   mainyrs <- replist$startyr:replist$endyr
-  AgeClasses <- GetSSAgeClasses(replist$natage)
+  AgeClasses <- GetSSAgeClasses(replist)
   
   NumberHist <- Number(Hist) |> dplyr::mutate(Model='Import') |>
     dplyr::filter(Sim==1)
@@ -1543,9 +1547,17 @@ CompareSSRemovals <- function(replist, Hist) {
     dplyr::group_by(TimeStep, Fleet, Model) |>
     dplyr::summarise(Value=sum(Value))
   
-  SS3Removals <- replist$catch |> dplyr::filter(Yr %in% mainyrs) |>
-    dplyr::select(TimeStep=Yr,  Fleet, Value=kill_bio) |>
-    dplyr::mutate(Model='SS3')
+  SS3Removals <- replist$catch |> dplyr::filter(Yr %in% mainyrs)
+  if ('dead_bio' %in% names(SS3Removals)){
+    SS3Removals <- SS3Removals |> 
+      dplyr::select(TimeStep=Yr,  Fleet, Value=dead_bio) |>
+      dplyr::mutate(Model='SS3')
+  } else {
+    SS3Removals <- SS3Removals |> 
+      dplyr::select(TimeStep=Yr,  Fleet, Value=kill_bio) |>
+      dplyr::mutate(Model='SS3')
+  }
+
   SS3Removals$Fleet <- Hist@OM@Fleet[[1]]@Name[SS3Removals$Fleet]
   SS3Removals$Sim <- 1
   

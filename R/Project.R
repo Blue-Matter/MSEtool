@@ -78,13 +78,18 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE) {
   # List of `Hist` objects, each with one simulation
   ProjSimList <- Hist2HistSimList(Proj)
   
+  TimeStepsHist <- TimeSteps(ProjSimList[[1]]@OM, "Historical")
+  TimeStepsProj <- TimeSteps(ProjSimList[[1]]@OM, "Projection")
+  
   # Calculate Reference Catch 
   # TODO calculate externally with option in Simulate or OM@Control
    
   # Populate Number-at-Age at Beginning of Projection TimeStep
-  LastHistTS <- tail(TimeSteps(Hist@OM,"Historical"),1)
-  ProjSimList <- purrr::map(ProjSimList, \(ProjSim) PopulateNumberNext_(ProjSim, LastHistTS))
-  # TODO add Recruitment for first projection time step if Age-Recruitment = 1 (i.e use SP from last historical)
+  LastHistTS <- tail(TimeStepsHist,1)
+  ProjSimList <- purrr::map(ProjSimList, \(ProjSim) SimulateDynamics_(ProjSim, LastHistTS))
+  
+  # Recruitment for first projection timestep 
+  ProjSimList <- purrr::map(ProjSimList, \(ProjSim) SimulateDynamics_(ProjSim, head(TimeStepsProj,1)))
   
   MSE <- Hist2MSE(Hist, MPs) 
   
@@ -109,13 +114,11 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE) {
   #     
   #   }
   # }
-  
-  TimeStepsHist <- TimeSteps(ProjSimList[[1]]@OM, "Historical")
-  TimeStepsProj <- TimeSteps(ProjSimList[[1]]@OM, "Projection")
+
   nStock <- nStock(Hist@OM)
-  
   nMPs <- length(MPs)
   
+
   # Projection MP loop
   mp <- 1 # for debugging 
   ProjSim <- ProjSimList$`1` # for debugging
