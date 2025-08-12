@@ -854,24 +854,24 @@ MOM2stock <- function(MOM, TimeSteps=NULL) {
 }
 
 
-IdenticalSim <- function(value) {
-  dd <- dim(value)
-  if (is.null(dd))
-    return(mean(value) == value[1])
+# IdenticalSim <- function(value) {
+#   dd <- dim(value)
+#   if (is.null(dd))
+#     return(mean(value) == value[1])
+# 
+#   temp <- apply(value, 1, mean)
+#   mean(temp) == temp[1]
+# 
+# }
 
-  temp <- apply(value, 1, mean)
-  mean(temp) == temp[1]
-
-}
-
-IdenticalTime <- function(value) {
-  dd <- dim(value)
-  if (length(dd)==2)
-    return(all(value[1,] == mean(value[1,])))
-
-  if (length(dd)==3)
-    return(all(value[1,1,] == mean(value[1,1,])))
-}
+# IdenticalTime <- function(value) {
+#   dd <- dim(value)
+#   if (length(dd)==2)
+#     return(all(value[1,] == mean(value[1,])))
+# 
+#   if (length(dd)==3)
+#     return(all(value[1,1,] == mean(value[1,1,])))
+# }
 
 get_cpars <- function(OM, st=1, fl=1) {
   cpars <- OM@cpars

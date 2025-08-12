@@ -19,8 +19,16 @@ CalcSPR0 <- function(HistSim, TimeSteps) {
 CalcSPR0_Stock <- function(Stock, TimeSteps) {
   FecundityAtAge <- Stock@Fecundity@MeanAtAge |> ArraySubsetTimeStep(TimeSteps)
   UnfishedSurvival <- CalcUnfishedSurvival(Stock, TRUE, TimeSteps)
-  SPR0 <- ArrayMultiply(UnfishedSurvival, FecundityAtAge) |> apply('TimeStep', sum)
-  array(SPR0, dimnames=list(TimeStep=TimeSteps))
+  
+  BySim <- "Sim" %in% names(dimnames(FecundityAtAge))
+  if (BySim) {
+    SPR0 <- ArrayMultiply(UnfishedSurvival, FecundityAtAge) |> apply(c('Sim', 'TimeStep'), sum)
+  } else {
+    SPR0 <- ArrayMultiply(UnfishedSurvival, FecundityAtAge) |> apply('TimeStep', sum) |>
+      array(dimnames=list(TimeStep=TimeSteps))
+    
+  }
+  SPR0
 }
 
 

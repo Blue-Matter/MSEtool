@@ -1,5 +1,8 @@
 IdenticalSims <- function(SimList, TimeSteps, EditSlots=TRUE) {
   
+  if (is.array(SimList))
+    return(IdenticalSimsArray(SimList))
+  
   SimList <- purrr::map(SimList, \(List) {
     List <-  List |> SubsetTimeStep(TimeSteps, AddPast = FALSE)
     if (EditSlots) 
@@ -16,15 +19,6 @@ IdenticalSims <- function(SimList, TimeSteps, EditSlots=TRUE) {
   }
   TRUE
 }
-
-SimList <- StockSimList
-SimList[[1]]$Female@SRR@RecDevProj
-SimList[[2]]$Female@SRR@RecDevProj
-
-digest::digest(SimList[[1]]$Female@SRR@RecDevProj, algo='spookyhash')
-digest::digest(SimList[[2]]$Female@SRR@RecDevProj, algo='spookyhash')
-
-
 
 
 
@@ -54,4 +48,30 @@ EditSlotsForSimCheck <- function(object) {
     slot(object, nm) <- object2
   }
   object
+}
+
+IdenticalSimsArray <- function(array) {
+  if (!is.array(array))
+    return(TRUE)
+  
+  dnames <- dimnames(array)
+  SimInd <- which(names(dnames) == 'Sim')
+  
+  if (!length(SimInd))
+    return(TRUE)
+  
+  dd <- dim(array)    
+  if (dd[SimInd]==1)
+    return(TRUE)
+  
+  meanSim <- apply(array, SimInd, mean)
+  
+  meanmeanSim <- mean(meanSim)
+  if (meanmeanSim<=0)
+    return(TRUE)
+  
+  sum(meanSim/meanmeanSim - 1) < 1E-6
+  
+
+  
 }

@@ -1,5 +1,8 @@
 #' @include 00_Class_popdynamics.R
 
+
+
+
 setClass("refpoints",
          slots=c(Curves='curves',
                  SPR0='array.list.null',

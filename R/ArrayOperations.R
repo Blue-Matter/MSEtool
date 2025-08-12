@@ -246,12 +246,10 @@ ArraySubsetTimeStep <- function(object, TimeSteps=NULL, AddPast=TRUE) {
     cli::cli_abort("`TimeStep` dimension not found in this array", .internal=TRUE)
   
   TSexist <- TimeSteps[TimeSteps %in% DN$TimeStep]
-  if (!length(TSexist))
-    return(object)
   TSimpute <- TimeSteps[!TimeSteps %in% DN$TimeStep]
   
-  if (!AddPast) {
-    TSimpute <- TSimpute[!TSimpute<max(TSexist)]
+  if (!AddPast & length(TSexist)) {
+    TSimpute <- TSimpute[!TSimpute<min(DN$TimeStep)]
   }
   
   if (length(TSimpute)) {
@@ -261,9 +259,9 @@ ArraySubsetTimeStep <- function(object, TimeSteps=NULL, AddPast=TRUE) {
       
       FutureImpute <- which(DN$TimeStep < TSimpute[i]) 
       if (length(FutureImpute)>0)
-        matchTS[i] <- DN$TimeStep[min(FutureImpute)]
+        matchTS[i] <- DN$TimeStep[max(FutureImpute)]
       
-      PastImpute <- which(DN$TimeStep > TSimpute[i]) 
+      PastImpute <- which(DN$TimeStep >TSimpute[i]) 
       if (length(PastImpute)>0)
         matchTS[i] <- DN$TimeStep[min(PastImpute)]
     }
@@ -467,8 +465,11 @@ ExpandTimeSteps <- function(Array, TimeSteps, default=NULL) {
   
   if (length(ArrayTS)==1) {
     vals <- abind::adrop(abind::asub(Array, 1,ind, drop=FALSE), ind)
-    if (inherits(vals, 'numeric'))
+    if (inherits(vals, 'numeric')) {
       vals <- array(vals, length(vals), dimnames = list(Sim=1:length(vals)))
+      dimnames(vals) <- dnames[-ind]
+    }
+      
     vals <- replicate(nTSFill, vals) 
     if (!inherits(vals, 'array')) {
       vals <- array(vals, dim=c(1, length(vals)))
@@ -477,7 +478,7 @@ ExpandTimeSteps <- function(Array, TimeSteps, default=NULL) {
     
     dnames2 <- vals |> dimnames() |> names()
     tsInd <- which(dnames2=='TimeStep')
-    
+
     if (length(tsInd)<1) 
       tsInd <- which(nchar(dnames2)==0)  
     

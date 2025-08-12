@@ -117,12 +117,14 @@ SubsetTimeStep <- function(object, TimeSteps, debug=FALSE, AddPast=TRUE) {
       TSValues <- dnames[[ind]]
       if (is.null(TSValues))
         return(object)
-      maxTS <- max(TSValues)
-      if (maxTS< max(TimeSteps)) {
-        object <- ArraySubsetTimeStep(object, maxTS, AddPast=AddPast)  
-      } else {
-        object <- ArraySubsetTimeStep(object, TimeSteps, AddPast=AddPast)  
-      }
+      
+      object <- ArraySubsetTimeStep(object, TimeSteps, AddPast=AddPast)  
+      # maxTS <- max(TSValues)
+      # if (maxTS< max(TimeSteps)) {
+      #   object <- ArraySubsetTimeStep(object, maxTS, AddPast=AddPast)  
+      # } else {
+      #   object <- ArraySubsetTimeStep(object, TimeSteps, AddPast=AddPast)  
+      # }
     }
     return(object)
   }

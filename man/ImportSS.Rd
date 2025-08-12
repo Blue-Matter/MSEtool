@@ -22,8 +22,8 @@ ImportSS(
   CommonNames = NULL,
   SpeciesNames = NULL,
   FleetNames = NULL,
-  Interval = Interval,
-  DataLag = DataLag,
+  Interval = 1,
+  DataLag = 0,
   ...
 )
 

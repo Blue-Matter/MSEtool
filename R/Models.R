@@ -694,26 +694,13 @@ BevertonHolt <- function(S, S0, R0, h) {
 }
 class(BevertonHolt) <- 'SRR-Model'
 
+# TODO RelRec functions for Ricker and HockeyStick
 BevertonHoltRelRec <- function(Pars, SPR) {
-  # TODO doesn't do time-varying h - make other SRR funs
-  # TODO RelRec functions for Ricker and HockeyStick
-  h <- Pars$h
-  
-  CR <- (4*h)/(1-h) # Goodyear Compensation Ratio
-  
-  if (inherits(SPR, 'numeric')) {
-    l <- dimnames(h)
-    l$SPR <- SPR
-    SPR <- matrix(SPR, nrow(h), length(SPR), byrow = TRUE)
-    SPR <- replicate(ncol(h), SPR) |> aperm(c(1,3,2))
-    dimnames(SPR) <- l
-    CR <- AddDimension(CR, 'SPR')
-  } 
-  
-  # else {
-  #   CR <- AddDimension(CR, 'ApicalF')
-  # }
-  
+  if (is.array(SPR)) 
+    cli::cli_abort("`SPR` must be numeric length 1.")
+
+  CR <- h2CR(Pars$h)
+  SPR <- array(SPR, dim=dim(CR), dimnames=dimnames(CR))
   out <- ArrayDivide(ArrayMultiply(CR, SPR)-1, ArrayMultiply((CR-1), SPR))
   out[out<0] <- 0
   out 
