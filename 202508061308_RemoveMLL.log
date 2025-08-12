@@ -1,4 +1,0 @@
-
-Simulation 1
-Error in if (grepl("at-Length", ModelClass)) { : 
-  argument is of length zero
