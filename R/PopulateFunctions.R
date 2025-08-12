@@ -923,9 +923,10 @@ ProcessCatchFrac <- function(object) {
   for (st in 1:nStock) {
     CatchFracFleet <- object@CatchFrac[[st]]
     if (is.null(CatchFracFleet)) {
-      if (nFleet>1)
-        cli::cli_abort("`OM@CatchFrac` must be specified if there are multiple fleets")
-      CatchFracFleet <- matrix(1, nSim, nFleet)
+      CatchFracFleet <- matrix(1/nFleet, nSim, nFleet)
+      if (nFleet>1) 
+        cli::cli_alert_warning("`OM@CatchFrac` must be specified if there are multiple fleets... ")
+        
     } 
     dd <- dim(CatchFracFleet)
    

@@ -28,6 +28,7 @@ OM(
   Relations = list(),
   SexPars = new("sexpars"),
   Data = NULL,
+  DataLag = 0,
   Interval = 1,
   nReps = 1,
   pStar = 0.5,
@@ -35,6 +36,7 @@ OM(
   Seed = NULL,
   Control = NULL,
   Misc = list(),
+  Log = list(),
   Source = list()
 )
 }
@@ -96,7 +98,12 @@ More generally, controls spawning and moving abundance between stocks. See \code
 if \code{Complexes} is specified, \code{Data} follows the same structure, i.e., elements
 in \code{Data} list will be assumed to be aggregated according to \code{Complexes}.}
 
-\item{Interval}{The management update interval. Management will be implemented
+\item{DataLag}{Integer length 1. The number of time steps to lag the data.
+Default \code{DataLage=0} means data is generated up to the time step before an MP is implemented.
+E.g., if management advice is being produced for \code{TimeStep=2025}, the data provided to the MP
+will be up to and including \code{2024}.}
+
+\item{Interval}{Integer length 1. The management update interval. Management will be implemented
 in the first projection time step, and then every \code{Interval} time step, with
 management remaining unchanged in the interim. A single numeric value for the
 same interval for all managemement procedures. For MP-specific management

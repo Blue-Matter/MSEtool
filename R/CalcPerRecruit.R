@@ -69,7 +69,6 @@ CalcPerRecruit <- function(apicalF, Stock, Fleet, Allocation, TimeSteps) {
   SPR0 <- CalcSPR0_Stock(Stock, TimeSteps)
   Fecundity <- Stock@Fecundity@MeanAtAge |> ArraySubsetTimeStep(TimeSteps)
   
-  
   SPR_F <- ArrayMultiply(NPR_F, Fecundity) |> 
     apply('TimeStep', sum)
   SPR_F <- array(SPR_F, dimnames=list(TimeStep=TimeSteps))

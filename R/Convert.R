@@ -1389,6 +1389,7 @@ ConvertData <- function(Data) {
   
 }
 
+#' @export
 data2Data <- function(data) {
   # TODO - AddInd, LifeHistory, CAL, etc etc 
   
@@ -1400,6 +1401,8 @@ data2Data <- function(data) {
   
   DataOut@Cat <- matrix(rowSums(data@Catch@Value), nrow=1)
   DataOut@CV_Cat <- matrix(data@Catch@CV[,1], nrow=1)
+  DataOut@CV_Cat[is.na(DataOut@CV_Cat)] <- 0.2 # hack for some DLMtool MPs that require CV
+  
   DataOut
 }
 

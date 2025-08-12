@@ -8,27 +8,7 @@ SetHistRel <- function(OM) {
   Relations(OM) 
 }
 
-nSimUpdate <- function(OM, nSim=NULL, silent=FALSE, messages='default') {
-  if (is.null(nSim))
-    return(OM)
-  if (nSim==OM@nSim)
-    return(OM)
-  
-  msg <- SetMessages(messages)
-  if (nSim>OM@nSim) {
-    if (isTRUE(msg$alert==TRUE))
-      cli::cli_alert_info('Argument `nSim` ({.val {nSim}}) is greater than `nSim(OM)` ({.val {nSim(OM)}}). Ignoring.')
-    return(OM)                      
-  }
-  if (isTRUE(msg$alert==TRUE))
-    cli::cli_alert_info('Setting {.val nSim(OM) <-  {nSim}}')
-  OM@nSim <- nSim
-  
-  if (length(OM@CatchFrac)>0) 
-    OM@CatchFrac <- lapply(OM@CatchFrac, function(x)
-      x[1:OM@nSim, , drop = FALSE])
-  OM
-}
+
 
 CheckClass <- function(object, class='om', name='OM', type='Argument') {
   
@@ -71,14 +51,14 @@ ConvertToList <- function(x) {
 
 
 
-StartUp <- function(OM, silent=FALSE, nSim=NULL) {
+StartUp <- function(OM, nSim=NULL, silent=FALSE) {
   
   # TODO                    
   if (!is.null(OM@SexPars@Herm))
     stop('Herm not done yet!')
   
   OM |> 
-    nSimUpdate(nSim, silent) |>
+    ReduceNSim(nSim) |>
     Populate() |>
     ConvertToList() # converts OM@Stock and OM@Fleet to lists
   

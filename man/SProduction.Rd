@@ -4,7 +4,7 @@
 \alias{SProduction}
 \title{Return Spawning Production from Hist or MSE object}
 \usage{
-SProduction(object, df = TRUE, hist = TRUE)
+SProduction(MSE)
 }
 \arguments{
 \item{object}{A \code{\link[=Hist]{Hist()}} or \code{\link[=MSE]{MSE()}} object}

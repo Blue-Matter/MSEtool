@@ -1,30 +1,14 @@
 
-# Populate an object
-# 
-# This function takes a valid S4 object and ...
-
-setGeneric("Populate", function(object, ...) standardGeneric("Populate"))
-
-setMethod("Populate", "om", function(object, silent=FALSE) {
-  PopulateOM(object, silent)
-})
-
-setMethod("Populate", "stock", function(object, 
-                                        ALK=TRUE, 
-                                        AWK=FALSE, 
-                                        seed=NULL,
-                                        silent=FALSE) {
-  PopulateStock(object, ALK, AWK, seed, silent)
-})
-
+#' Populate an Object 
+#' 
+#' @name Populate
+NULL
 
 
 ## ---- OM -----
 #' @describeIn Populate Populate an [om-class()] object
-#' @param x A Operating Model object or sub-object
-#' @param silent Logical. TRUE to suppress all messages
+#' @param seed Seed for the random number generator
 #' @export
-#' 
 PopulateOM <- function(OM, silent=FALSE) {
   if (CheckDigest(OM) | EmptyObject(OM))
     return(OM)
@@ -32,87 +16,9 @@ PopulateOM <- function(OM, silent=FALSE) {
   # TODO - object check
   # chk <- Check(OM)
   
-  nStocks <- nStock(OM)
-  nFleets <- nFleet(OM)
-  
-  # Populate Stock
-  stockList <- vector('list', nStocks)
-  names(stockList) <- paste('Stock', 1:nStocks)
-  class(stockList) <- 'StockList'
-  
-  fleetList <- vector('list', nStocks)
-  class(fleetList) <- 'StockFleetList'
-  names(fleetList) <- paste('Stock', 1:nStocks)
-  
-  for (st in 1:nStocks) {
-    if (isS4(OM@Stock)) {
-      stock <- OM@Stock 
-    } else {
-      stock <- OM@Stock[[st]]
-    }
-    
-    if (!silent) {
-      cli::cli_alert('Populating: {.val {stock@Name}} ({st}/{nStocks})')
-    }
-    
-    stock@nSim <- OM@nSim
-    stock@nYear <- OM@nYear
-    stock@pYear <- OM@pYear
-    stock@CurrentYear <- OM@CurrentYear
-    
-    stockList[[st]] <- PopulateStock(stock, 
-                                     seed=OM@Seed, 
-                                     silent=silent)
-    
+  OM@Stock  <- PopulateStockList(OM, silent)
+  OM@Fleet <- PopulateFleetList(OM, StockList, silent)
 
-    names(stockList)[st] <- stock@Name
-    names(fleetList)[st] <- names(stockList)[st]
-    fleetList[[st]] <- list()
-    class(fleetList[[st]]) <- 'FleetList'
-    
-    for (fl in 1:nFleets) {
-      if (isS4(OM@Fleet)) {
-        fleet <- OM@Fleet
-      } else if (inherits(OM@Fleet, 'FleetList')) {
-        fleet <- OM@Fleet[[fl]]
-      } else {
-        fleet <- OM@Fleet[[st]][[fl]]
-      }
-      
-      fleet@nSim <- OM@nSim
-      fleet@nYear <- OM@nYear
-      fleet@pYear <- OM@pYear
-      fleet@CurrentYear <- OM@CurrentYear
-      stock <- stockList[[st]]
-      fleet@TimeUnits <- stock@Ages@Units
-      fleet@TimeStepsPerYear <- TSperYear(stock@TimeUnits)
-      fleet@TimeSteps <- CalcTimeSteps(stock@nYear, 
-                                       stock@pYear, 
-                                       stock@CurrentYear, 
-                                       stock@TimeUnits)
-      
-      fleetList[[st]][[fl]] <- PopulateFleet(fleet, 
-                                        Ages=Ages(stockList[[st]]),
-                                        Length=Length(stockList[[st]]),
-                                        Weight=Weight(stockList[[st]]),
-                                        nAreas=nArea(stockList[[st]]),
-                                        seed=OM@Seed,
-                                        silent=silent)
-      
-      names(fleetList[[st]])[fl] <- fleetList[[st]][[fl]]@Name
-      
-    } # end fleet loop
-    
-  } # end stock loop
-  
-  if (inherits(OM@Stock, 'list') | inherits(OM@Stock, 'StockList')) {
-    OM@Stock <- stockList
-  }
- 
-  if (inherits(OM@Fleet, 'list')| inherits(OM@Fleet, 'StockFleetList')) {
-    OM@Fleet <- fleetList
-  }
-  
   OM <- ProcessCatchFrac(OM)
   
   # share paramaters for two-sex stocks
@@ -121,8 +27,7 @@ PopulateOM <- function(OM, silent=FALSE) {
     ShareParameters() |>
     StartMessages()
   
-  
-  # CatchFrac
+
  
   
   
@@ -151,10 +56,87 @@ PopulateOM <- function(OM, silent=FALSE) {
 }
 
 
+PopulateStockList <- function(OM, silent=FALSE) {
+  nStocks <- nStock(OM)
+  StockList <- vector('list', nStocks)
+  names(StockList) <- paste('Stock', 1:nStocks)
+  class(StockList) <- 'StockList'
+  
+  for (st in 1:nStocks) {
+    if (isS4(OM@Stock)) {
+      stock <- OM@Stock 
+    } else {
+      stock <- OM@Stock[[st]]
+    }
+    
+    if (!silent) {
+      cli::cli_alert('Populating: {.val {stock@Name}} ({st}/{nStocks})')
+    }
+    
+    stock@nSim <- OM@nSim
+    stock@nYear <- OM@nYear
+    stock@pYear <- OM@pYear
+    stock@CurrentYear <- OM@CurrentYear
+    
+    StockList[[st]] <- PopulateStock(stock, 
+                                     seed=OM@Seed, 
+                                     silent=silent)
+    names(StockList)[st] <- stock@Name
+  }
+  StockList
+}
+PopulateFleetList <- function(OM, StockList, silent=FALSE) {
+  nStocks <- nStock(OM)
+  nFleets <- nFleet(OM)
+  FleetList <- vector('list', nStocks)
+  class(FleetList) <- 'StockFleetList'
+  names(FleetList) <- paste('Stock', 1:nStocks)
+  
+  
+  for (st in 1:nStocks) {
+    names(FleetList)[st] <- names(StockList)[st]
+    FleetList[[st]] <- list()
+    class(FleetList[[st]]) <- 'FleetList'
+    
+    for (fl in 1:nFleets) {
+      if (isS4(OM@Fleet)) {
+        fleet <- OM@Fleet
+      } else if (inherits(OM@Fleet, 'FleetList')) {
+        fleet <- OM@Fleet[[fl]]
+      } else {
+        fleet <- OM@Fleet[[st]][[fl]]
+      }
+      
+      fleet@nSim <- OM@nSim
+      fleet@nYear <- OM@nYear
+      fleet@pYear <- OM@pYear
+      fleet@CurrentYear <- OM@CurrentYear
+      stock <- StockList[[st]]
+      fleet@TimeUnits <- stock@Ages@Units
+      fleet@TimeStepsPerYear <- TSperYear(stock@TimeUnits)
+      fleet@TimeSteps <- CalcTimeSteps(stock@nYear, 
+                                       stock@pYear, 
+                                       stock@CurrentYear, 
+                                       stock@TimeUnits)
+      
+      FleetList[[st]][[fl]] <- PopulateFleet(fleet, 
+                                             Ages=Ages(StockList[[st]]),
+                                             Length=Length(StockList[[st]]),
+                                             Weight=Weight(StockList[[st]]),
+                                             nAreas=nArea(StockList[[st]]),
+                                             seed=OM@Seed,
+                                             silent=silent)
+      
+      names(FleetList[[st]])[fl] <- FleetList[[st]][[fl]]@Name
+      
+    }
+  }
+  FleetList
+}
+
 # ---- Stock ----
 
 #' @describeIn Populate Populate an [stock-class()] object
-#' @param seed Seed for the random number generator
 #' @export
 PopulateStock <- function(stock, 
                           ALK=TRUE, 
@@ -170,10 +152,10 @@ PopulateStock <- function(stock,
   
   stock@TimeUnits <- stock@Ages@Units
   stock@TimeStepsPerYear <- TSperYear(stock@TimeUnits)
-  stock@TimeSteps <- CalcTimeSteps(stock@nYear, 
-                                   stock@pYear, 
-                                   stock@CurrentYear, 
-                                   stock@TimeUnits)
+  stock@TimeSteps <- CalcTimeSteps(nYear=stock@nYear, 
+                                   pYear=stock@pYear, 
+                                   CurrentYear=stock@CurrentYear, 
+                                   TimeUnits=stock@TimeUnits)
   # Require ALK and/or AWK?
   # ALK <- RequireALK(stock)
   # AWK <- RequireAWK(stock)
@@ -222,7 +204,7 @@ PopulateStock <- function(stock,
                                        seed=seed,
                                        silent=silent)
   
-  stock@SRR <- PopulateSRR(stock@SRR,
+  stock@SRR <- PopulateSRR(SRR=stock@SRR,
                            MaxAge=stock@Ages@MaxAge,
                            CurrentYear=stock@CurrentYear,
                            TimeSteps=stock@TimeSteps,
@@ -774,6 +756,8 @@ PopulateDepletion <- function(Depletion,
 
 
 # ---- Fleet ----
+#' @describeIn Populate Populate an [fleet-class()] object
+#' @export
 PopulateFleet <- function(Fleet, 
                           Ages=NULL,
                           Length=NULL,

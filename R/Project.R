@@ -52,9 +52,13 @@ MSE2Hist <- function(MSE) {
 }
 
 #' @export
-ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE) {
+ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE, nSim=NULL) {
   
   on.exit(cli::stop_app())
+  
+  if (!is.null(nSim)) {
+    Hist <- ReduceNSim(Hist, nSim)
+  }
   
   # Set up parallel processing 
   if (parallel & !snowfall::sfIsRunning())
@@ -77,7 +81,7 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE) {
 
   # List of `Hist` objects, each with one simulation
   ProjSimList <- Hist2HistSimList(Proj)
-  
+
   TimeStepsHist <- TimeSteps(ProjSimList[[1]]@OM, "Historical")
   TimeStepsProj <- TimeSteps(ProjSimList[[1]]@OM, "Projection")
   
@@ -118,11 +122,9 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE) {
   nStock <- nStock(Hist@OM)
   nMPs <- length(MPs)
   
-
   # Projection MP loop
   mp <- 1 # for debugging 
   ProjSim <- ProjSimList$`1` # for debugging
-  
   
   cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
   
@@ -133,7 +135,7 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE) {
     ind <- seq(1, by=ProjSimList[[1]]@OM@Interval, to=length(TimeStepsProj)) 
     ManagementTimeSteps <- TimeStepsProj[ind] # time steps where management will be implemented
   
-    st <- Sys.time()
+    StartTime <- Sys.time()
     ProjSimListMP <- purrr::map(ProjSimList, \(ProjSim) 
                                 try(
                                   ProjectMP(ProjSim, MP, TimeStepsHist, TimeStepsProj, ManagementTimeSteps),
@@ -144,68 +146,66 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE) {
                                   caller = environment(),
                                   format = "Projecting {.val {MP}} {cli::pb_bar} {cli::pb_percent}",
                                   clear = TRUE))
-    end <- Sys.time()
+    EndTime <- Sys.time()
+    ProjSimListMP <- CheckMSERun(ProjSimListMP, ProjSimList, MP, StartTime, EndTime)
+  
+    # attributes(MSE@MPs)$complete[mp] <- TRUE
+    MSE <- UpdateMSEObject(MSE, ProjSimListMP, mp, TimeStepsHist, TimeStepsProj, MP)
+    MSE@Log
     
-    elapse_secs <- round(difftime(time1 = end, time2 = st, units = "secs"),2) |> as.numeric()
-    elapse_auto <- round(difftime(time1 = end, time2 = st, units = "auto"),2) |> format()
-    
-    incElapse <- FALSE
-    if (elapse_secs > 5) {
-      incElapse <- TRUE
-    }  
-    
-    check <- CheckMSERun(ProjSimListMP, MP)
-    
-    if (check) {
-      if (incElapse) {
-        cli::cli_alert_success('{.val {MP}} ({elapse_auto})')
-      } else {
-        cli::cli_alert_success('{.val {MP}}')  
-      }
-      
-      attributes(MSE@MPs)$complete[mp] <- TRUE
-      MSE <- UpdateMSEObject(MSE, ProjSimListMP, mp, TimeStepsHist, TimeStepsProj)
-      
-      
-    }
   }
-  
- 
-  
- 
-  
-  
-
   MSE
 }
 
-CheckMSERun <- function(ProjSimListMP, MP) {
+CheckMSERun <- function(ProjSimListMP, ProjSimList, MP, StartTime, EndTime) {
+  
+  elapse_secs <- round(difftime(time1 = EndTime, time2 = StartTime, units = "secs"),2) |> as.numeric()
+  elapse_auto <- round(difftime(time1 = EndTime, time2 = StartTime, units = "auto"),2) |> format()
+  incElapse <- ifelse(elapse_secs > 5, TRUE, FALSE)
+  
   ErrorCheck <- unlist(lapply(ProjSimListMP, class))
-  if (any(ErrorCheck=='try-error')) {
-    if (all(ErrorCheck=='try-error')) {
-      cli::cli_alert_danger(c("x"="Error: {.val {MP}} failed for all simulations. Skipping this MP"))
+  Failed <- which(ErrorCheck=='try-error') |> as.numeric()
+  nFailed <- length(Failed)
+  
+  if (incElapse) {
+    if (nFailed<1) {
+      cli::cli_alert_success('{.val {MP}} ({elapse_auto})')  
     } else {
-      ind <- which(ErrorCheck=='try-error')
-      cli::cli_alert_danger(c("x"="Error: {.val {MP}} failed for simulations {.val {ind}}. Skipping this MP"))
+      cli::cli_alert_warning('{.val {MP}} ({elapse_auto})')
+    }
+  } else {
+    if (nFailed<1) {
+      cli::cli_alert_success('{.val {MP}}')  
+    } else {
+      cli::cli_alert_warning('{.val {MP}}')  
+    }
+  }
+  
+  if (nFailed) {
+    if (nFailed == length(ProjSimListMP)) {
+      cli::cli_alert_danger(c("x"="ERROR: {.val {MP}} failed for all simulations. `MSE` object not updated for this MP. See {.var MSE@Misc$Failed}"))
+    } else {
+      cli::cli_alert_warning(c("x"="WARNING: {.val {MP}} failed for {.val {nFailed}} simulation{?s}: {.val {Failed}}.{cli::qty(nFailed)} `MSE` object not updated for {?this/these} simulation{?s}. See {.var MSE@Misc$Failed}"))
     }
     time <- format(Sys.time(), "%Y%m%d%H%M")
     logFile <- paste0(time, "_", MP, '.log')
     logFile <- file.path(getwd(), logFile)
     file.create(logFile)
-    for (i in seq_along(ProjSimListMP)) {
-      if (inherits(ProjSimListMP[[i]],'try-error')) {
-        cat(paste0("\nSimulation ", i , '\n'), file=logFile, append=TRUE)
-        cat(ProjSimListMP[[i]], file=logFile, append=TRUE)
-      }
+    for (i in Failed) {
+      cat(paste0("\nSimulation ", i , '\n'), file=logFile, append=TRUE)
+      cat(ProjSimListMP[[i]], file=logFile, append=TRUE)
+      ProjSimListMP[[i]] <- ProjSimList[[i]]
+      ProjSimListMP[[i]]@Misc$Failed <- i
     }
     cli::cli_alert_info("Writing error log to {.file {logFile}}")
-    return(FALSE)
   }
-  TRUE
+
+  
+  ProjSimListMP
 }
 
 
-UpdateMSEObject <- function(MSE, ProjSimListMP, mp, TimeStepsHist, TimeStepsProj) {
+UpdateMSEObject <- function(MSE, ProjSimListMP, mp, TimeStepsHist, TimeStepsProj, MP) {
 
   TimeStepsAll <- c(TimeStepsHist, TimeStepsProj)
   
@@ -333,16 +333,32 @@ UpdateMSEObject <- function(MSE, ProjSimListMP, mp, TimeStepsHist, TimeStepsProj
   }
   MPName <- names(MSE@MPs)[mp]
   MSE@Misc$Advice[[MPName]] <- lapply(ProjSimListMP, slot, 'Misc') |> lapply("[[", "MPAdvice")
+  MSE@Misc$Failed[[MPName]] <- lapply(ProjSimListMP, slot, 'Misc') |> 
+    lapply("[[", "Failed") |> 
+    unlist() |> 
+    as.numeric()
   
   MSE <- MSE |> 
     KeepRetention(ProjSimListMP, mp) |>
     KeepSelectivity(ProjSimListMP, mp) |> 
     KeepDiscardMortality(ProjSimListMP, mp) |>
-    AddPPD(ProjSimListMP, mp)
+    AddPPD(ProjSimListMP, mp) |>
+    ProcessLogMSE(ProjSimListMP, mp, MP)
   
   MSE
 }
 
+ProcessLogMSE <- function(MSE, ProjSimListMP, mp, MP) {
+  
+  LogList <- purrr::map(ProjSimListMP, \(ProjSim) slot(ProjSim,'Log'))
+  purrr::map(LogList, length)
+
+  if (is.null(MSE@Log[["MP"]]))
+    MSE@Log[["MP"]] <- list()
+  
+  MSE@Log[["MP"]][[MP]] <- LogList
+  MSE
+}
 # 
 # ReProject <- function(MSE, MPs, mp) {
 #   

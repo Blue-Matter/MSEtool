@@ -1,3 +1,51 @@
+OnExit <- function() {
+  on.exit(cli::stop_app())
+}
+
+
+#' Miscellaneous Helper Functions 
+#' @name miscellanous
+NULL
+
+#' @describeIn miscellanous Reduce the number of simulations in an `om` or `hist` object
+#' @export
+ReduceNSim <- function(object, nSim=NULL) {
+  if (is.null(nSim))
+    return(object)
+  
+  CheckClass(nSim, c('numeric', 'integer'))
+  
+  if (length(nSim)>1)
+    cli::cli_abort("`nSim` ({.val {nSim}}) must be numeric/integer length 1")
+  
+  if (nSim<1)
+    cli::cli_abort("`nSim` ({.val {nSim}}) must be >= 1")
+  
+  if (nSim>nSim(object))
+    cli::cli_abort("`nSim` ({.val {nSim}}) must < `nSim(OM)` ({.val {nSim(object)}})")
+  
+  if (nSim(object) == nSim)
+    return(object)
+  
+  SubsetSim(object, Sim=1:nSim)
+}
+
+#' Update missing slots in an S4 object 
+#' @export
+UpdateObject <- function(object) {
+  if (!isS4(object))
+    return(object)
+  slots <- slotNames(object)
+  for (sl in slots) {
+    chk <- try(slot(object,sl), silent=TRUE)
+    if (inherits(chk, 'try-error')) {
+      newobject <- new(class(object))
+      slot(object,sl) <- slot(newobject,sl)
+    }
+  }
+  object
+}
+
 
 not <- function(val) !val
 
@@ -198,6 +246,21 @@ TSperYear <- function(Units) {
 CalcTimeSteps <- function(nYear, pYear, CurrentYear, TimeUnits='year', Period=NULL) {
   
   TimeUnits <- tolower(TimeUnits)
+  
+  if (CurrentYear<1900) {
+    # not in year units
+    hist <- seq(CurrentYear, by=-1, length.out=nYear) |> rev()
+    proj <- seq(CurrentYear+1, by=1, length.out=pYear)
+    
+    if (is.null(Period))
+      return(c(hist, proj))
+    
+    if (Period=='Historical')
+      return(hist)
+    
+    if (Period=='Projection')
+      return(proj)
+  }
   
   FirstHistYear <- lubridate::ymd(paste0(CurrentYear-nYear+1, '-01-01'))
   LastHistYear <- lubridate::ymd(paste0(CurrentYear, '-12-31'))
@@ -868,32 +931,6 @@ aperm <- function(a, perm, ...) {
 }
 
 
-MakeFactor <- function(x) {
-  factor(x, ordered = TRUE, levels=unique(x))
-}
-
-#' @export
-ConvertDF <- function(df) {
-  nms <- colnames(df)
-  if ('Sim' %in% nms)
-    df$Sim <- as.numeric(df$Sim)
-  if ('Age' %in% nms)
-    df$Age <- as.numeric(df$Age)
-  if ('Class' %in% nms)
-    df$Class <- as.numeric(df$Class)
-  if ('Stock' %in% nms)
-    df$Stock <- MakeFactor(df$Stock)
-  if ('Fleet' %in% nms)
-    df$Fleet <- MakeFactor(df$Fleet)
-  if ('MP' %in% nms)
-    df$MP <- MakeFactor(df$MP)
-  if ('TimeStep' %in% nms)
-    df$TimeStep <- as.numeric(df$TimeStep)
-  if ('Value' %in% nms)
-    df$Value <- as.numeric(df$Value)
-  
-  df
-}
 
 EditSlotsForSimCheck <- function(object, TimeSteps) {
   # TODO subset time dimension to check for identical historical

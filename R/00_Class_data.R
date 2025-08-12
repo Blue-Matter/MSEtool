@@ -19,7 +19,7 @@ methods::setClassUnion("catch.list", c("catch", "list", 'NULL'))
 #' Class `Index`
 #' @include 00_Class_unions.R
 #' @include 00_Class_child.R
-setClass("index",
+setClass("indices",
          slots=c(Name='char.null',
                  Value='array.null',
                  CV='array.null',
@@ -38,7 +38,7 @@ setClass("index",
 # Fleet Number - map to a fleet
 # Character - Obs - 
 
-methods::setClassUnion("index.list", c("index", "list", 'NULL'))
+methods::setClassUnion("indices.list", c("indices", "list", 'NULL'))
 
 
 #' Class `composition`
@@ -49,7 +49,8 @@ setClass("composition",
                  Value='array.null',
                  Classes='num.null',
                  Units='char.null',
-                 Misc="MiscClass"
+                 Misc="MiscClass",
+                 Log='list'
          )
 )
 
@@ -104,9 +105,11 @@ setClass('data',
                  nArea='num.null',
                  
                  Catch='catch',  # always is removals
-                 Index='index',
+                 Index='indices',
                  CAA='comp.list',
-                 CAL='comp.list'
+                 CAL='comp.list',
+                 TAC='array',
+                 TAE='array'
          ),
          contains ='MiscClass'
          )

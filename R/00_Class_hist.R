@@ -20,7 +20,8 @@ setClass("hist",
          slots=c(OM='om',
                  Unfished='unfished',
                  RefPoints='refpoints',
-                 Data='list.data' 
+                 Data='list.data',
+                 Log='list'
          ), 
          contains=c('timeseries',
                     'MiscClass')

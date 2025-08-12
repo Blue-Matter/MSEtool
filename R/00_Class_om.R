@@ -147,6 +147,7 @@ setClass("om",
                  Obs='obs.list',
                  Imp='imp.list',
                  Data='DataList',
+                 DataLag='numeric',
                  CatchFrac='list',
                  Allocation='list',
                  Efactor='list',
@@ -163,6 +164,7 @@ setClass("om",
                  TimeSteps='num.null',
                  Control='list.null',
                  Misc='list',
+                 Log='list',
                  Source='char.list')
 )
 #' @describeIn OM Create a new object of class `om`
@@ -206,12 +208,16 @@ setClass("om",
 #' `length(Stock)`) containing the real fishery data.
 #' if `Complexes` is specified, `Data` follows the same structure, i.e., elements
 #' in `Data` list will be assumed to be aggregated according to `Complexes`.
-#' @param Interval The management update interval. Management will be implemented
+#' @param Interval Integer length 1. The management update interval. Management will be implemented
 #' in the first projection time step, and then every `Interval` time step, with
 #' management remaining unchanged in the interim. A single numeric value for the
 #' same interval for all managemement procedures. For MP-specific management
 #' intervals , `Interval` can be a named numeric vector with length corresponding
 #' to the number of management procedures used in [runMSE()] or [Project()].
+#' @param DataLag Integer length 1. The number of time steps to lag the data. 
+#' Default `DataLage=0` means data is generated up to the time step before an MP is implemented.
+#' E.g., if management advice is being produced for `TimeStep=2025`, the data provided to the MP
+#' will be up to and including `2024`. 
 #' @param nReps Number of samples of the management recommendation for each method.
 #' Only for management procedures that generate stochastic management advice (i.e.,
 #' account for uncertainty in the data). Defaults to 1, which produces deterministic
@@ -251,6 +257,7 @@ OM <- function(Name='A new `OM` object',
                Relations=list(),
                SexPars=new('sexpars'),
                Data=NULL,
+               DataLag=0,
                Interval=1,
                nReps=1,
                pStar=0.5,
@@ -258,6 +265,7 @@ OM <- function(Name='A new `OM` object',
                Seed=NULL,
                Control=NULL,
                Misc=list(),
+               Log=list(),
                Source=list()) {
   
   .Object <- new('om')
@@ -288,13 +296,12 @@ OM <- function(Name='A new `OM` object',
   .Object@Relations <- Relations
   .Object@SexPars <- SexPars
   .Object@Data <- Data
+  .Object@DataLag <- DataLag
   .Object@Interval <- Interval
   .Object@nReps <- nReps
   .Object@pStar <- pStar
   .Object@maxF <- maxF
-  .Object@Seed <- Seed
-  
-  
+  .Object@Seed <- Seed 
   if (!is.null(Control)) {
     .Object@Control <- Control
   } else {

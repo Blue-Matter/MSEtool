@@ -75,7 +75,7 @@ ConditionObs_Catch <- function(HistSim, FisheryData, HistTimeSteps, ProjectionTi
     
     CatchErrorHistCondition <- CatchErrorHist[as.character(CatchObs@TimeSteps)]
     CatchErrorHistCondition <- CatchErrorHistCondition/mean(CatchErrorHistCondition, na.rm=TRUE)
-    CatchObs@CV <- as.numeric(CatchErrorHistCondition) |> sd(na.rm=TRUE)
+    CatchObs@CV <- as.numeric(CatchErrorHistCondition) |> sd(na.rm=TRUE) 
     SD <- CatchObs@CV 
     CatchErrorProj <- exp(rnorm(nProjTS, -((SD^2)/2), SD))
     CatchObs@Error <-c(CatchErrorHist,CatchErrorProj) |> 

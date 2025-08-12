@@ -8,7 +8,8 @@ setClass('advice',
                  Selectivity='selectivity',
                  Retention='retention',
                  DiscardMortality='discardmortality',
-                 Misc='list'
+                 Misc='list',
+                 Log='list'
          )
 )
 

@@ -478,6 +478,23 @@ Misc <- function(x) {
 }
 
 
+## ---- MPs ----
+
+#' @rdname Access
+#' @export
+MPs <- function(x) {
+  if (isS4(x)) {
+    slots <- slotNames(x)
+    if (!'MPs' %in% slots)
+      cli::cli_abort('No slot `MPs` in object of class {.var {class(x)}}')
+    return(x@MPs |> names())
+  }
+  
+  if (is.list(x))
+    purrr::map(x, MPs)
+  
+}
+
 
 
 ## ---- Model ----
@@ -529,8 +546,17 @@ Name <- function(x) {
 #' @rdname Access
 #' @export
 nSim <- function(x) {
-  if (isS4(x))
-    return(x@nSim)
+  if (isS4(x)) {
+    slots <- slotNames(x)
+    if ('nSim' %in% slots)
+      return(x@nSim)
+    return(x@OM@nSim)
+  }
+  
+  if (is.list(x)) {
+    return(purrr::map(x, nSim) |> unlist())
+  }
+    
   dnames <- dimnames(x) 
   if (!is.null(dnames))
     return(length(dnames[['Sim']]))
@@ -952,12 +978,21 @@ Species <- function(x) {
 #' @rdname Access
 #' @export
 TimeSteps <- function(x, Period=NULL) {
-  TimeSteps <- x@TimeSteps
-  if (is.null(Period))
-    return(TimeSteps)
-  if (Period=='All')
-    return(TimeSteps)
-  CalcTimeSteps(x@nYear, x@pYear, x@CurrentYear, x@TimeUnits, Period)
+  if (isS4(x)) {
+    if (inherits(x, 'mse') | inherits(x, 'hist'))
+      x <- x@OM
+    
+    TimeSteps <- x@TimeSteps
+    if (is.null(Period))
+      return(TimeSteps)
+    if (Period=='All')
+      return(TimeSteps)
+    return(CalcTimeSteps(x@nYear, x@pYear, x@CurrentYear, x@TimeUnits, Period))
+  }
+  
+  if (is.list(x))
+    purrr::map(x, TimeSteps, Period)
+
 }
 
 #' @rdname Access

@@ -1,9 +1,77 @@
 library(MSEtool)
-library(SAMtool)
 
 la <- devtools::load_all
 
 la()
+
+
+
+source("C:/Users/Admin/Documents/GitHub/SALB-MSE/3. DefineCMPs.r")
+
+OM <- readRDS('C:/Users/Admin/Documents/GitHub/SALB-MSE/OM/Stochastic.om')
+
+nSim <- 5 # OM@nSim
+
+Hist <- Simulate(OM, nSim=nSim)
+
+# Hist <- readRDS('C:/Users/Admin/Documents/GitHub/SALB-MSE/Hist/Stochastic.hist')
+
+
+
+MSE <- ProjectDEV(Hist, MPs)
+
+
+
+
+
+
+r = purrr::map(MSE@PPD$SP2, \(obj) slot(obj[[1]], 'Catch'))
+TAC = purrr::map(MSE@PPD$SP2, \(obj) slot(obj[[1]], 'TAC'))
+
+
+do.call('rbind', TAC)
+
+list2DF(TAC) |> head()
+
+r$`1`@Value
+
+
+MSE@PPD$SP1$`1`$Albacore@TimeSteps
+MSE@PPD$SP1$`1`$Albacore@Catch@Value
+
+
+object <- MSE@SBiomass
+dimnames(object)
+TimeSteps <- 2:2021
+out <- ArraySubsetTimeStep(object, TimeSteps)
+dimnames(out)
+
+
+
+
+
+MSE <- readRDS('C:/Users/Admin/Documents/GitHub/SALB-MSE/MSE/Stochastic.mse')
+
+Hist@Data$`1`$Female@Catch@Value |> dimnames()
+MSE@PPD$SP2$`1`$Female@Catch@Value |> dimnames()
+
+slick <- MSE2Slick(MSE)
+
+Slick::plotTimeseries(slick, byOM=TRUE, includeHist = FALSE, includeQuants = FALSE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 SSDir <- 'C:/Users/Admin/Documents/GitHub/SALB-MSE/Condition/SS3/ALB-S_Stochastic/Condition/SS3'
@@ -60,6 +128,8 @@ SB_SBMSY <- function(MSE) {
   }
   array2DF(out, 'SB_SBMSY') |> ConvertDF()
 }
+
+
 
 
 F_FMSY <- function(MSE) {

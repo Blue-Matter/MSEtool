@@ -413,7 +413,7 @@ MSE2HistSimList <- function(MSE) {
 Hist2HistSimList <- function(Hist) {
   
   # parallel <- snowfall::sfIsRunning()
-
+  
   HistSimList <- purrr::map(1:nSim(Hist@OM), \(x) {
     hist <- SubsetSim(Hist, Sim=x, drop=TRUE)
     if (length(Hist@Data)<1)
@@ -427,7 +427,6 @@ Hist2HistSimList <- function(Hist) {
   }, .progress = 'Building internal object')
   names(HistSimList) <- 1:nSim(Hist@OM)
   
-
   nstock <- nStock(HistSimList[[1]]@OM)
   
   HistSimList <- purrr::map(HistSimList, \(HistSim) {
@@ -628,7 +627,7 @@ ObsList2SimArray <- function(Obs, ObsList, fl, slot='Catch') {
     
     } else if (inherits(Val[[1]], 'numeric')) {
       if (length(Val[[1]])==1) {
-        Val <- List2Array(Val, 'Sim')[1,]  
+        Val <- List2Array(Val, 'Sim')[1,]
       } else {
         Val <- Val[[1]] # TODO this probably doesn't apply for all cases
       }

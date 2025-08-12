@@ -11,6 +11,19 @@ ImportSS(
   nSim = 48,
   pYear = 30,
   silent = FALSE,
+  Agency = "",
+  Author = "",
+  Email = "",
+  Region = "",
+  Latitude = numeric(),
+  Longitude = numeric(),
+  Sponsor = "",
+  StockNames = NULL,
+  CommonNames = NULL,
+  SpeciesNames = NULL,
+  FleetNames = NULL,
+  Interval = Interval,
+  DataLag = DataLag,
   ...
 )
 

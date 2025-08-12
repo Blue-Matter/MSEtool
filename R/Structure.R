@@ -26,7 +26,7 @@ StructurePars_ <- function(Par, nsim=NULL, TimeSteps=NULL) {
   }
    
   # length 2 = sample from uniform distribution
-  if (length(Par)==2) {
+  if (length(Par)==2 && nsim!=2) {
     Par <- sort(Par)
     if (is.null(nsim))
       cli::cli_abort(c('`nsim` required to generate stochastic values',
@@ -45,6 +45,11 @@ StructurePars_ <- function(Par, nsim=NULL, TimeSteps=NULL) {
     return(out)
   }
 
+  if (length(Par) > nsim) {
+    Par <- Par[1:nsim]
+  }
+  
+  
   # Par are `nsim` long
   out <- array(Par, dim=c(length(Par), 1))
   dimnames(out) <- list(Sim=1:nsim,

@@ -49,6 +49,7 @@ Suggests:
     rfishbase,
     rmarkdown,
     shiny,
+    Slick,
     testthat,
     tidyr,
     TMB,
@@ -101,7 +102,6 @@ Collate:
     'Awatea2OM.R'
     'BAM2OM.R'
     'B_Low_functions.R'
-    'Biomass.R'
     'CalcAgeSizeKey.R'
     'CalcApicalF.R'
     'CalcCatch.R'
@@ -130,7 +130,6 @@ Collate:
     'MOM_object.r'
     'Convert.R'
     'DFO.R'
-    'Data.R'
     'Data2csv.R'
     'Data_Functions.R'
     'Data_Plotting.R'
@@ -144,6 +143,7 @@ Collate:
     'Fease_Functions.R'
     'Find.R'
     'Generate.R'
+    'GenerateData.R'
     'Get.R'
     'GetFatAgeArray.R'
     'HandyFunctions.R'
@@ -204,6 +204,7 @@ Collate:
     'SimulateDEV.R'
     'SimulateDynamics.R'
     'Sketch_Functions.R'
+    'Slick.R'
     'SlotAccessAssign.R'
     'SpatialStock.R'
     'Splot.R'
@@ -215,6 +216,11 @@ Collate:
     'WHAM2OM.R'
     'aaImportFrom.R'
     'applyMMP.R'
+    'fct_Biomass.R'
+    'fct_DataHelpers.R'
+    'fct_Simulate.R'
+    'fct_SimulateOM.R'
+    'fct_Subset.R'
     'iSCAM2OM.R'
     'multiMSE.R'
     'multiMSE_DEVCOPY.R'

@@ -1,0 +1,687 @@
+# TODO - make compatible with MSE, MMSE, Hist, and MultiHist
+
+# TODO - check for failed sims and drop those from the data frames
+
+
+# Hist <- MSE@Hist
+
+#' Extract values from an MSE or Hist object
+#' 
+#' Returns as a data.frame
+#' 
+#' @param MSE An `mse` class or `hist` object
+#' @name Biomass
+NULL 
+
+
+MakeFactor <- function(x) {
+  factor(x, ordered = TRUE, levels=unique(x))
+}
+
+ConvertDF <- function(df) {
+  nms <- colnames(df)
+  if ('Sim' %in% nms)
+    df$Sim <- as.numeric(df$Sim)
+  if ('Age' %in% nms)
+    df$Age <- as.numeric(df$Age)
+  if ('Class' %in% nms)
+    df$Class <- as.numeric(df$Class)
+  if ('Stock' %in% nms)
+    df$Stock <- MakeFactor(df$Stock)
+  if ('Fleet' %in% nms)
+    df$Fleet <- MakeFactor(df$Fleet)
+  # if ('MP' %in% nms)
+  #   df$MP <- MakeFactor(df$MP)
+  if ('TimeStep' %in% nms)
+    df$TimeStep <- as.numeric(df$TimeStep)
+  if ('Value' %in% nms)
+    df$Value <- as.numeric(df$Value)
+  
+  df
+}
+
+# ----- Fishing Mortality ----
+#' @describeIn Biomass Apical Fishing Mortality
+#' @export
+apicalF <- function(MSE, Type=c('Dead', 'Retain'), ByFleet=FALSE) {
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+
+  Type <- match.arg(Type)
+  
+  if (inherits(MSE, 'hist')) {
+    return(apicalFHist(MSE, Type, ByFleet))
+  }
+    
+  apicalFHist <- apicalFHist(MSE, Type, ByFleet)
+  apicalFHist$MP <- 'Historical'
+  
+  if (Type=='Dead') {
+    Values <- MSE@FDeadAtAge
+  } else {
+    Values <- MSE@FRetainAtAge
+  }
+  
+  apicalF <- purrr::map(Values, \(stock) {
+    if (ByFleet) {
+      apply(stock, c('Sim', 'Age', 'TimeStep', 'Fleet', 'MP'), sum) |>
+        apply(c('Sim', 'TimeStep', 'Fleet', 'MP'), max)  
+    } else {
+      apply(stock, c('Sim', 'Age', 'TimeStep', 'MP'), sum) |>
+        apply(c('Sim', 'TimeStep', 'MP'), max)
+    }
+  }) |> List2Array('Stock') |>
+    array2DF()
+  
+  apicalF$Period <- 'Projection'
+  apicalF$Variable <- "apicalF"
+  apicalF <- ConvertDF(apicalF)
+
+  apicalF <- dplyr::bind_rows(apicalFHist, apicalF) |>
+    dplyr::arrange(Sim, TimeStep, Period)
+  
+  ConvertDF(apicalF)
+}
+
+apicalFHist <- function(Hist, Type=c('Dead', 'Retain'), ByFleet=FALSE) {
+  CheckClass(Hist, c('hist', 'mse'))
+  Type <- match.arg(Type)
+  
+  if (inherits(Hist, 'mse')) {
+    if (Type=='Dead') {
+      Values <- Hist@Hist@FDeadAtAge
+    } else {
+      Values <- Hist@Hist@FRetainAtAge
+    }
+  } else {
+    if (Type=='Dead') {
+      Values <- Hist@FDeadAtAge
+    } else {
+      Values <- Hist@FRetainAtAge
+    }
+  }
+
+  apicalF <- purrr::map(Values, \(stock) {
+    if (ByFleet) {
+      apply(stock, c('Sim', 'Age', 'TimeStep', 'Fleet'), sum) |>
+        apply(c('Sim', 'TimeStep', 'Fleet'), max)  
+    } else {
+      apply(stock, c('Sim', 'Age', 'TimeStep'), sum) |>
+        apply(c('Sim', 'TimeStep'), max)
+    }
+  }) |> List2Array('Stock') |>
+    array2DF() 
+  
+  if (ByFleet) {
+    apicalF <- apicalF |> dplyr::select(c('Sim', 'Stock', 'TimeStep', 'Fleet', 'Value'))
+  } else {
+    apicalF <- apicalF |>  dplyr::select(c('Sim', 'Stock', 'TimeStep', 'Value'))
+  }
+  apicalF$Period <- 'Historical'
+  apicalF$Variable <- "apicalF"
+  
+  ConvertDF(apicalF)
+}
+
+#' @describeIn Biomass FMSY
+#' @export
+FMSY <- function(MSE, TimeSteps=NULL) {
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+  
+  RefValue <- MSE@RefPoints@FMSY 
+  
+  if (is.null(TimeSteps))
+    TimeSteps <- TimeSteps(MSE@OM)
+  
+  if (inherits(MSE, 'hist'))
+    TimeSteps <- TimeSteps[TimeSteps %in% TimeSteps(MSE@OM, 'Historical')]
+  
+  RefValue |> ArraySubsetTimeStep(TimeSteps) |>
+    array2DF() |>
+    ConvertDF() |>
+    dplyr::mutate(Variable='FMSY')
+}
+
+#' @describeIn Biomass F_FMSY
+#' @export
+F_FMSY <- function(MSE, TimeSteps=NULL) {
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+  
+  RefValue <- FMSY(MSE, TimeSteps) |>
+    dplyr::rename(FMSY=Value) |>
+    dplyr::select(-Variable)
+
+  apicalF <- apicalF(MSE) |>
+    dplyr::left_join(RefValue, by = dplyr::join_by(Sim, Stock, TimeStep))
+  
+  apicalF |> 
+    dplyr::mutate(Value=Value/FMSY,
+                  Variable='F_FMSY') |>
+    ConvertDF()
+}
+
+# ----- Biomass ----
+
+#' @describeIn Biomass Total Biomass
+#' @export
+Biomass <- function(MSE) {
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+  
+  if (inherits(MSE, 'hist')) 
+    return(BiomassHist(MSE))
+  
+  HistBiomass <- BiomassHist(MSE)
+  HistBiomass$MP <- 'Historical'
+  
+  ProjBiomass <- array2DF(MSE@Biomass)
+  ProjBiomass$Period <- 'Projection'
+  ProjBiomass$Variable <- "Biomass"
+  ProjBiomass <- ConvertDF(ProjBiomass)
+  
+  units <- lapply(MSE@OM@Stock, slot, 'Weight') |> 
+    lapply(Units) |> 
+    unlist() 
+  ProjBiomass <- ProjBiomass |> 
+    dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock') 
+ 
+  ProjBiomass <- dplyr::bind_rows(HistBiomass, ProjBiomass) |>
+    dplyr::arrange(Sim, TimeStep, Period)
+  
+  ConvertDF(ProjBiomass) 
+}
+
+BiomassHist <- function(Hist) {
+  CheckClass(Hist, c('hist', 'mse'), 'Hist')
+  HistTimeStep <- TimeSteps(Hist@OM, "Historical")
+  
+  if (inherits(Hist, 'mse')) {
+    hist <- array2DF(Hist@Hist@Biomass)
+  } else {
+    hist <- array2DF(Hist@Biomass)  
+  }
+  
+  hist$Period <- 'Historical'
+  hist$Variable <- "Biomass"
+  hist <- ConvertDF(hist)
+  
+  units <- lapply(Hist@OM@Stock, slot, 'Weight') |> 
+    lapply(Units) |> 
+    unlist()
+  
+  hist <- hist |>
+    dplyr::filter(TimeStep%in%HistTimeStep) |> 
+    dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock') 
+  hist
+}
+
+#' @describeIn Biomass Unfished Biomass 
+#' @param Ref Character string specifying the reference point to use `('Equilibrium', 'Dynamic)` 
+#' @param TimeSteps Numeric value specifying the time step(s) to use for the reference point. Defaults to all time-steps.
+#' @export
+B0 <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+  Ref <- match.arg(Ref)
+  
+  if (is.null(TimeSteps))
+    TimeSteps <- TimeSteps(MSE@OM)
+  
+  RefValue <- MSE@Unfished@Equilibrium@Biomass 
+  
+  if (inherits(MSE,'hist'))
+    TimeSteps <- TimeSteps[TimeSteps %in% TimeSteps(MSE@OM, 'Historical')]
+  
+  RefValue |> ArraySubsetTimeStep(TimeSteps) |>
+    array2DF() |>
+    ConvertDF() |>
+    dplyr::mutate(Variable='B0')
+}
+
+#' @describeIn Biomass Total Biomass relative to Unfished Biomass 
+#' @param Ref Character string specifying the reference point to use `('Equilibrium', 'Dynamic)` 
+#' @param TimeSteps Numeric value specifying the time step(s) to use for the reference point. Defaults to all time-steps.
+#' @export
+B_B0 <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+  Ref <- match.arg(Ref)
+  
+  RefValue <- B0(MSE, Ref, TimeSteps) |>
+    dplyr::rename(B0=Value) |>
+    dplyr::select(-Variable)
+  
+  Biomass(MSE) |>
+    dplyr::left_join(RefValue, by = dplyr::join_by(Sim, Stock, TimeStep)) |> 
+    dplyr::mutate(Value=Value/B0,
+                  Variable='B_B0') |>
+    ConvertDF()
+}
+
+#' @describeIn Biomass BMSY
+#' @export
+BMSY <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+  
+  RefValue <- MSE@RefPoints@BMSY 
+  
+  if (is.null(TimeSteps))
+    TimeSteps <- TimeSteps(MSE@OM)
+  
+  if (inherits(MSE,'hist'))
+    TimeSteps <- TimeSteps[TimeSteps %in% TimeSteps(MSE@OM, 'Historical')]
+  
+  RefValue |> ArraySubsetTimeStep(TimeSteps) |>
+    array2DF() |>
+    ConvertDF() |>
+    dplyr::mutate(Variable='BMSY')
+}
+
+#' @describeIn Biomass Total Biomass relative to Biomass corresponding with MSY
+#' @export
+B_BMSY <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+  Ref <- match.arg(Ref)
+  
+  RefValue <- BMSY(MSE, Ref, TimeSteps) |>
+    dplyr::rename(BMSY=Value) |>
+    dplyr::select(-Variable)
+  
+  Biomass(MSE) |>
+    dplyr::left_join(RefValue, by = dplyr::join_by(Sim, Stock, TimeStep)) |> 
+    dplyr::mutate(Value=Value/BMSY,
+                  Variable='B_BMSY') |>
+    ConvertDF()
+  
+}
+
+# ---- Spawning Biomass ----
+
+#' @describeIn Biomass Spawning Biomass
+#' @export
+SBiomass <- function(MSE) {
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+  if (inherits(MSE, 'hist')) 
+    return(SBiomassHist(MSE))
+  
+  HistSBiomass <- SBiomassHist(MSE)
+  HistSBiomass$MP <- 'Historical'
+  
+  ProjSBiomass <- array2DF(MSE@SBiomass)
+  ProjSBiomass$Period <- 'Projection'
+  ProjSBiomass$Variable <- "SBiomass"
+  ProjSBiomass <- ConvertDF(ProjSBiomass)
+  
+  units <- lapply(MSE@OM@Stock, slot, 'Weight') |> 
+    lapply(Units) |> 
+    unlist() 
+  ProjSBiomass <- ProjSBiomass |> 
+    dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock') 
+  
+  ProjSBiomass <- dplyr::bind_rows(HistSBiomass, ProjSBiomass) |>
+    dplyr::arrange(Sim, TimeStep, Period)
+  
+  ConvertDF(ProjSBiomass) 
+}
+
+
+SBiomassHist <- function(Hist) {
+  CheckClass(Hist, c('hist', 'mse'))
+  HistTimeStep <- TimeSteps(Hist@OM, "Historical")
+  if (inherits(Hist,'mse')) {
+    hist <- array2DF(Hist@Hist@SBiomass)
+  } else {
+    hist <- array2DF(Hist@SBiomass)  
+  }
+  
+  hist$Period <- 'Historical'
+  hist$Variable <- "SBiomass"
+  hist <- ConvertDF(hist)
+  
+  units <- lapply(Hist@OM@Stock, slot, 'Weight') |> 
+    lapply(Units) |> 
+    unlist()
+  
+  hist <- hist |>
+    dplyr::filter(TimeStep%in%HistTimeStep) |> 
+    dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock') 
+  hist
+}
+
+#' @describeIn Biomass Unfished Spawning Biomass 
+#' @export
+SB0 <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+  Ref <- match.arg(Ref)
+  
+  if (is.null(TimeSteps))
+    TimeSteps <- TimeSteps(MSE@OM)
+  
+  if (inherits(MSE, 'hist'))
+    TimeSteps <- TimeSteps[TimeSteps %in% TimeSteps(MSE@OM, 'Historical')]
+  
+  if (Ref=='Equilibrium') {
+    RefValue <- MSE@Unfished@Equilibrium@SBiomass 
+  } else {
+    RefValue <- MSE@Unfished@Dynamic@SBiomass
+  }
+  
+  RefValue |> ArraySubsetTimeStep(TimeSteps) |>
+    array2DF() |>
+    ConvertDF() |>
+    dplyr::mutate(Variable='SB0')
+}
+
+#' @describeIn Biomass Spawning Biomass relative to Unfished Spawning Biomass 
+#' @export
+SB_SB0 <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+  Ref <- match.arg(Ref)
+  
+  RefValue <- SB0(MSE, Ref, TimeSteps) |>
+    dplyr::rename(SB0=Value) |>
+    dplyr::select(-Variable)
+  
+  SBiomass(MSE) |>
+    dplyr::left_join(RefValue, by = dplyr::join_by(Sim, Stock, TimeStep)) |> 
+    dplyr::mutate(Value=Value/SB0,
+                  Variable='SB_SB0') |>
+    ConvertDF()
+}
+
+#' @describeIn Biomass SBMSY
+#' @export
+SBMSY <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+  
+  RefValue <- MSE@RefPoints@SBMSY 
+
+  if (is.null(TimeSteps))
+    TimeSteps <- TimeSteps(MSE@OM)
+  
+  if (inherits(MSE, 'hist'))
+    TimeSteps <- TimeSteps[TimeSteps %in% TimeSteps(MSE@OM, 'Historical')]
+  
+  RefValue |> ArraySubsetTimeStep(TimeSteps) |>
+    array2DF() |>
+    ConvertDF() |>
+    dplyr::mutate(Variable='SBMSY')
+}
+
+#' @describeIn Biomass Spawning Biomass relative to Spawning Biomass corresponding with MSY
+#' @export
+#' 
+SB_SBMSY <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+  Ref <- match.arg(Ref)
+  
+  RefValue <- SBMSY(MSE, Ref, TimeSteps) |>
+    dplyr::rename(SBMSY=Value) |>
+    dplyr::select(-Variable)
+  
+  SBiomass(MSE) |>
+    dplyr::left_join(RefValue, by = dplyr::join_by(Sim, Stock, TimeStep)) |> 
+    dplyr::mutate(Value=Value/SBMSY,
+                  Variable='SB_SBMSY') |>
+    ConvertDF()
+}
+# ---- Spawning Production ----
+
+
+#' @describeIn Biomass Spawning Production (e.g. eggs)
+#' @export
+SProduction <- function(MSE) {
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+  
+  if (inherits(MSE, 'hist')) 
+    return(SProductionHist(MSE))
+  
+  HistSProduction <- SBiomassHist(MSE)
+  HistSProduction$MP <- 'Historical'
+  
+  ProjSProduction <- array2DF(MSE@SProduction)
+  ProjSProduction$Period <- 'Projection'
+  ProjSProduction$Variable <- "SProduction"
+  ProjSProduction <- ConvertDF(ProjSProduction)
+  
+  units <- lapply(MSE@OM@Stock, slot, 'Fecundity') |> 
+    lapply(Units) |> 
+    unlist() 
+  ProjSProduction <- ProjSProduction |> 
+    dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock') 
+  
+  dplyr::bind_rows(HistSProduction, ProjSProduction) |>
+    dplyr::arrange(Sim, TimeStep, Period) |>
+    ConvertDF()
+}
+
+
+SProductionHist <- function(Hist) {
+  CheckClass(Hist, 'hist', 'Hist')
+  HistTimeStep <- TimeSteps(Hist@OM, "Historical")
+  hist <- array2DF(Hist@SProduction)
+  hist$Period <- 'Historical'
+  hist$Variable <- "SProduction"
+  hist <- ConvertDF(hist)
+  
+  units <- lapply(Hist@OM@Stock, slot, 'Fecundity') |> 
+    lapply(Units) |> 
+    unlist()
+  
+  hist |>
+    dplyr::filter(TimeStep%in%HistTimeStep) |> 
+    dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock') 
+}
+
+#' @describeIn Biomass Unfished Spawning Production 
+#' @export
+SP0 <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+  Ref <- match.arg(Ref)
+  
+  if (is.null(TimeSteps))
+    TimeSteps <- TimeSteps(MSE@OM)
+  
+  if (inherits(MSE, 'hist'))
+    TimeSteps <- TimeSteps[TimeSteps %in% TimeSteps(MSE@OM, 'Historical')]
+  
+  if (Ref=='Equilibrium') {
+    RefValue <- MSE@Unfished@Equilibrium@SProduction 
+  } else {
+    RefValue <- MSE@Unfished@Dynamic@SProduction 
+  }
+  
+  RefValue |> ArraySubsetTimeStep(TimeSteps) |>
+    array2DF() |>
+    ConvertDF() |>
+    dplyr::mutate(Variable='SP0')
+}
+
+#' @describeIn Biomass Spawning Production relative to Unfished Spawning Production 
+#' @export
+SP_SP0 <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+  Ref <- match.arg(Ref)
+  
+  RefValue <- SP0(MSE, Ref, TimeSteps) |>
+    dplyr::rename(SP0=Value) |>
+    dplyr::select(-Variable)
+  
+  SBiomass(MSE) |>
+    dplyr::left_join(RefValue, by = dplyr::join_by(Sim, Stock, TimeStep)) |> 
+    dplyr::mutate(Value=Value/SP0,
+                  Variable='SP_SP0') |>
+    ConvertDF()
+}
+
+#' @describeIn Biomass SPMSY
+#' @export
+SPMSY <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+  
+  RefValue <- MSE@RefPoints@SPMSY 
+  if (is.null(RefValue))
+    cli::cli_abort('`RefPoints@SPMSY` has not been calculated')
+  
+  if (is.null(TimeSteps))
+    TimeSteps <- TimeSteps(MSE@OM)
+  
+  if (inherits(MSE, 'hist'))
+    TimeSteps <- TimeSteps[TimeSteps %in% TimeSteps(MSE@OM, 'Historical')]
+  
+  RefValue |> ArraySubsetTimeStep(TimeSteps) |>
+    array2DF() |>
+    ConvertDF() |>
+    dplyr::mutate(Variable='SPMSY')
+}
+
+#' @describeIn Biomass Spawning Production relative to Spawning Production corresponding with MSY
+#' @export
+SP_SPMSY <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+  Ref <- match.arg(Ref)
+  
+  RefValue <- SPMSY(MSE, Ref, TimeSteps) |>
+    dplyr::rename(SPMSY=Value) |>
+    dplyr::select(-Variable)
+  
+  SProduction(MSE) |>
+    dplyr::left_join(RefValue, by = dplyr::join_by(Sim, Stock, TimeStep)) |> 
+    dplyr::mutate(Value=Value/SPMSY,
+                  Variable='SP_SPMSY') |>
+    ConvertDF()
+}
+
+# ---- Removals ----
+
+#' @describeIn Biomass Dead Removals (Landings + Discards)
+#' @export
+Removals <- function(MSE, ByFleet=FALSE) {
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+  
+  if (inherits(MSE, 'hist')) 
+    return(RemovalsHist(MSE, ByFleet))
+  
+  HistRemovals <- RemovalsHist(MSE, ByFleet)
+  HistRemovals$MP <- 'Historical'
+  
+  ProjRemovals <- MSE@Removals
+  
+  if (!ByFleet) {
+    ProjRemovals <- ProjRemovals |>
+      apply(c('Sim', 'Stock', 'TimeStep', 'MP'), sum)
+  } 
+  
+  ProjRemovals <- array2DF(ProjRemovals) |> 
+    dplyr::mutate(Period='Projection', Variable='Removals') |>
+    ConvertDF()
+ 
+  units <- lapply(MSE@OM@Stock, slot, 'Weight') |> 
+    lapply(Units) |> 
+    unlist() 
+  
+  ProjRemovals <- ProjRemovals |> 
+    dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock') 
+    
+  dplyr::bind_rows(HistRemovals, ProjRemovals) |>
+    dplyr::arrange(Sim, TimeStep, Period) |>
+    ConvertDF()
+}
+
+RemovalsHist <- function(Hist, ByFleet=FALSE) {
+  CheckClass(Hist, c('hist', 'mse'))
+  HistTimeStep <- TimeSteps(Hist@OM, "Historical")
+  
+  if (inherits(Hist,'mse')) {
+    Value <- Hist@Hist@Removals
+  } else {
+    Value <- Hist@Removals
+  }
+  
+  Removals <- purrr::map(Value, \(stock) {
+    if (ByFleet) {
+      apply(stock, c('Sim', 'TimeStep', 'Fleet'), sum) 
+    } else {
+      apply(stock, c('Sim', 'TimeStep'), sum) 
+    }
+  }) |> List2Array('Stock') |>
+    array2DF() |>
+    ConvertDF() |>
+    dplyr::mutate(Variable="Removals", Period='Historical')
+  
+  
+  units <- lapply(Hist@OM@Stock, slot, 'Weight') |> 
+    lapply(Units) |> 
+    unlist()
+  
+  Removals |>
+    dplyr::filter(TimeStep%in%HistTimeStep) |> 
+    dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock') 
+  
+}
+
+
+# ---- Landings ----
+#' @describeIn Biomass Landings
+#' @export
+Landings <- function(MSE, ByFleet=FALSE) {
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+  
+  if (inherits(MSE, 'hist')) 
+    return(LandingsHist(MSE, ByFleet))
+  
+  HistLandings <- LandingsHist(MSE, ByFleet)
+  HistLandings$MP <- 'Historical'
+  
+  ProjLandings <- MSE@Landings
+  
+  if (!ByFleet) {
+    ProjLandings <- ProjLandings |>
+      apply(c('Sim', 'Stock', 'TimeStep', 'MP'), sum)
+  } 
+  
+  ProjLandings <- array2DF(ProjLandings) |> 
+    dplyr::mutate(Period='Projection', Variable='Landings') |>
+    ConvertDF()
+  
+  units <- lapply(MSE@OM@Stock, slot, 'Weight') |> 
+    lapply(Units) |> 
+    unlist() 
+  
+  ProjLandings <- ProjLandings |> 
+    dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock') 
+  
+  dplyr::bind_rows(HistLandings, ProjLandings) |>
+    dplyr::arrange(Sim, TimeStep, Period) |>
+    ConvertDF()
+}
+
+LandingsHist <- function(Hist, ByFleet=FALSE) {
+  CheckClass(Hist, c('hist', 'mse'))
+  HistTimeStep <- TimeSteps(Hist@OM, "Historical")
+  
+  if (inherits(Hist,'mse')) {
+    Value <- Hist@Hist@Landings
+  } else {
+    Value <- Hist@Landings
+  }
+  
+  
+  Landings <- purrr::map(Value, \(stock) {
+    if (ByFleet) {
+      apply(stock, c('Sim', 'TimeStep', 'Fleet'), sum) 
+    } else {
+      apply(stock, c('Sim', 'TimeStep'), sum) 
+    }
+  }) |> List2Array('Stock') |>
+    array2DF() |>
+    ConvertDF() |>
+    dplyr::mutate(Variable="Landings", Period='Historical')
+  
+  
+  units <- lapply(Hist@OM@Stock, slot, 'Weight') |> 
+    lapply(Units) |> 
+    unlist()
+  
+  Landings |>
+    dplyr::filter(TimeStep%in%HistTimeStep) |> 
+    dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock') 
+  
+}
+

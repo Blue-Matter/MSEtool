@@ -1028,8 +1028,21 @@ ImportSS <- function(x,
                      nSim=48,
                      pYear=30, 
                      silent=FALSE,
+                     Agency='',
+                     Author='',
+                     Email='',
+                     Region='',
+                     Latitude=numeric(),
+                     Longitude=numeric(),
+                     Sponsor='',
+                     StockNames=NULL,
+                     CommonNames=NULL,
+                     SpeciesNames=NULL,
+                     FleetNames=NULL,
+                     Interval=1,
+                     DataLag=0,
                      ...) {
-  
+  OnExit()
   RepList <- ImportSSReport(x, silent, ...)
   nStock <- RepList[[1]]$nsexes
   nFleet <- RepList[[1]]$nfishfleets
@@ -1040,32 +1053,61 @@ ImportSS <- function(x,
   if (length(RepList)>1) 
     nSim <- length(RepList)
   
-  OM <- OM(Name=Name)
+  OM <- OM(Name=Name, 
+           Agency=Agency, 
+           Author=Author, 
+           Email=Email, 
+           Region=Region, 
+           Latitude=Latitude,
+           Longitude=Longitude,
+           Sponsor=Sponsor, 
+           Interval=Interval,
+           DataLag=DataLag)
+  
   OM@nSim <- nSim
-  mainyrs <- RepList[[1]]$startyr:RepList[[1]]$endyr
+  FirstHistYear <- RepList[[1]]$startyr
+  LastHistYear <- RepList[[1]]$endyr
+  # TODO - update time steps in OM if these are integers rather than years
+  
+  mainyrs <- FirstHistYear:LastHistYear
   OM@nYear <- length(mainyrs)
   OM@pYear <- pYear
   OM@CurrentYear <- max(mainyrs)
   ProYears <- seq(max(mainyrs)+1, by=1, length.out=pYear)
   OM@TimeSteps <- c(mainyrs, ProYears)
   
-  if (nStock==1) {
-    StockNames <- 'Female'
-  } else if (nStock==2) {
-    StockNames <- c('Female', 'Male')
-  } else {
-    cli::cli_abort('`nStock` should be {.val {1} or {2}}')
+  if (is.null(StockNames)) {
+    if (nStock==1) {
+      StockNames <- 'Female'
+    } else if (nStock==2) {
+      StockNames <- c('Female', 'Male')
+    } else {
+      cli::cli_abort('`nStock` should be {.val {1} or {2}}')
+    }
   }
   
-  OM@Stock <- purrr::map(seq_along(StockNames), SS2Stock, 
-                         RepList=RepList, 
-                         pYear=pYear, 
-                         nSim=nSim)
+  if (length(StockNames)!=nStock)
+    cli::cli_abort('`StockNames` should be length `nStock`: {.val {nStock}}')
   
+
+  OM@Stock <- purrr::map(seq_along(StockNames), \(st) {
+    stock <- SS2Stock(st, RepList, pYear, nSim=nSim)
+    stock@Name <- StockNames[st]
+    stock@CommonName <- CommonNames[st]
+    stock@Species <- SpeciesNames[st]
+    stock
+  })
   names(OM@Stock) <- StockNames
   
   OM@Fleet <- MakeNamedList(StockNames, list())
-  FleetNames <- RepList[[1]]$catch$Fleet_Name |> unique()
+  SSFleetNames <- RepList[[1]]$catch$Fleet_Name |> unique()
+  nFleet <- length(SSFleetNames)
+  if (is.null(FleetNames)) 
+    FleetNames <- SSFleetNames
+    
+  if (length(FleetNames)!=nFleet)
+    cli::cli_abort('`FleetNames` should be length `nFleet`: {.val {nFleet}}')
+  
   
   for (st in seq_along(OM@Fleet)) {
     OM@Fleet[[st]] <- MakeNamedList(FleetNames, new('fleet'))
@@ -1100,11 +1142,12 @@ ImportSS <- function(x,
   }
  
   # OM@Imp
-  
   CatchFracList <- MakeNamedList(StockNames)
 
   for (st in 1:nStock) {
     catch <- OM@Data[[1]]@Catch@Value # currently not by stock # TODO
+    if (is.null(catch))
+      next()
     catch_last <- abind::adrop(catch[nrow(catch), ,drop=FALSE], 1)
     catch_last <- catch_last /sum(catch_last)
     catch_last[!is.finite(catch_last)] <- 0
@@ -1170,6 +1213,7 @@ GetSSRepList <- function(SSdir, silent=FALSE, ...) {
 #' @describeIn ImportSS Import SS3 Report
 #' @export
 ImportSSReport <- function(x, silent=FALSE, parallel=TRUE, ...) {
+  OnExit()
   if (inherits(x, 'list')) {
     if (inherits(x[[1]], 'list')) {
       names(x) <- 1:length(x)
@@ -1241,14 +1285,13 @@ ImportSSData <- function(x,
                          CommonName = "", 
                          Species = "",
                          silent=FALSE, ...) {
-  
+  OnExit()
   RepList <- ImportSSReport(x, silent, ...)
   replist <- RepList[[1]]
   nStock <- replist$nsexes
   
   mainyrs <- replist$startyr:replist$endyr
   
-
   # SeasonsAsYears <- function(replist) {
   #   if (replist$nseasons == 1 && replist$seasduration < 1) {
   #     cli::cli_abort('Seasonal SS3 not done yet', .internal=TRUE)
@@ -1259,7 +1302,8 @@ ImportSSData <- function(x,
   
   season_as_years <- FALSE
   if (replist$nseasons == 1 && replist$seasduration < 1) {
-    cli::cli_abort('Seasonal SS3 not done yet', .internal=TRUE)
+    cli::cli_alert_warning('Seasonal SS3 not done yet in `ImportSSData.` Not importing Data')
+    return(new('data'))
     if (!silent) message(paste("Season-as-years detected in SS model. There is one season in the year with duration of", replist$seasduration, "year."))
     season_as_years <- TRUE
     nseas <- 1/replist$seasduration
@@ -1364,7 +1408,7 @@ ImportSSData_Index <- function(RepList, season_as_years = FALSE,
                                index_season = "mean") {
   replist <- RepList[[1]]
   mainyrs <- replist$startyr:replist$endyr
-  Index <- new('index')
+  Index <- new('indices')
   if(nrow(replist$cpue) == 0) return(Index)
   
   mainyrs <- replist$startyr:replist$endyr

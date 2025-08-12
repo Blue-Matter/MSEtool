@@ -230,7 +230,7 @@ ArraySubtract <- function(array1, array2=NULL) {
 
 }
 
-ArraySubsetTimeStep <- function(object, TimeSteps=NULL) {
+ArraySubsetTimeStep <- function(object, TimeSteps=NULL, AddPast=TRUE) {
   if (is.null(TimeSteps))
     return(object)
   
@@ -240,26 +240,38 @@ ArraySubsetTimeStep <- function(object, TimeSteps=NULL) {
   if (is.null(DN))
     return(object)
   
-  DN$TimeStep <- as.numeric( DN$TimeStep)
+  DN$TimeStep <- as.numeric(DN$TimeStep)
   TSind <- which(names(DN) == 'TimeStep')
   if (length(TSind)==0)
     cli::cli_abort("`TimeStep` dimension not found in this array", .internal=TRUE)
   
-  if (any(TimeSteps > max(DN$TimeStep))) {
-    
-    TSexist <- TimeSteps[TimeSteps %in% DN$TimeStep]
-    TSimpute <- TimeSteps[!TimeSteps %in% DN$TimeStep]
-    if (length(TSimpute)) {
-      matchTS <- rep(NA, length(TSimpute))
-      for (i in seq_along(TSimpute)) {
-        matchTS[i] <- DN$TimeStep[DN$TimeStep < TSimpute[i]] |> max()
-      }
+  TSexist <- TimeSteps[TimeSteps %in% DN$TimeStep]
+  TSimpute <- TimeSteps[!TimeSteps %in% DN$TimeStep]
+  
+  if (!AddPast) {
+    TSimpute <- TSimpute[!TSimpute<max(TSexist)]
+  }
+  
+  if (length(TSimpute)) {
+    # need to impute some values
+    matchTS <- rep(NA, length(TSimpute))
+    for (i in seq_along(TSimpute)) {
+      
+      FutureImpute <- which(DN$TimeStep < TSimpute[i]) 
+      if (length(FutureImpute)>0)
+        matchTS[i] <- DN$TimeStep[min(FutureImpute)]
+      
+      PastImpute <- which(DN$TimeStep > TSimpute[i]) 
+      if (length(PastImpute)>0)
+        matchTS[i] <- DN$TimeStep[min(PastImpute)]
     }
-    TimeStepsMod <- c(TSexist, matchTS) |> as.character()
+    
+    TimeStepsMod <- c(TSexist, matchTS) |> as.character() 
     array <- abind::asub(object, TimeStepsMod, TSind, drop=FALSE)
     dimnames(array)$TimeStep <- TimeSteps
     return(array)
-  } 
+  }
+  
   abind::asub(object, (DN[[TSind]] %in% TimeSteps), TSind, drop=FALSE)
 }
 

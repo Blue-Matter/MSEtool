@@ -72,7 +72,6 @@ UpdateEffort <- function(ProjSim, MPAdvice, MPAdvicePrevious, TimeStepsAll, Time
       return(ProjSim)  
   }
   
-  
   TimeStep <- TimeStepsAll[TSIndex]
   TimeStepProj <- TimeStepsAll[TSIndex:length(TimeStepsAll)]
   nprojTS <- length(TimeStepsAll)
@@ -167,20 +166,13 @@ UpdateDiscardMortality <- function(ProjSim, MPAdvice, MPAdvicePrevious, TimeStep
 UpdateSelectivity <- function(ProjSim, MPAdvice, MPAdvicePrevious, 
                               TimeStepsAll, TSIndex,type='Selectivity') {
   
-  
-  # *************************** # 
-  st <- 1
-  fl <- 1
-  # *************************** #
-  
-  
   if (is.null(MPAdvice))
     return(ProjSim)
   
-  if (!is.null(MPAdvicePrevious)) {
-    if (IdenticalS4(slot(MPAdvice,type), slot(MPAdvicePrevious,type)))
-      return(ProjSim)  
-  }
+  # if (!is.null(MPAdvicePrevious)) {
+  #   if (IdenticalS4(slot(MPAdvice,type), slot(MPAdvicePrevious,type)))
+  #     return(ProjSim)  
+  # }
   
   Selectivity <- slot(MPAdvice,type)
   if (EmptyObject(Selectivity))
@@ -189,7 +181,6 @@ UpdateSelectivity <- function(ProjSim, MPAdvice, MPAdvicePrevious,
   # TODO checks
   
   TimeStep <- TimeStepsAll[TSIndex]
-  TimeStepProj <- TimeStepsAll[TSIndex:length(TimeStepsAll)]
   nprojTS <- length(TimeStepsAll)
   projInd <- TSIndex:nprojTS
   
@@ -197,53 +188,74 @@ UpdateSelectivity <- function(ProjSim, MPAdvice, MPAdvicePrevious,
   
   ModelClass <- getModelClass(Selectivity@Model)
   
-  Length <- ProjSim@OM@Stock[[st]]@Length
-  Length@ASK <- Length@ASK[,,TSIndex, drop=FALSE]
-  Weight <- ProjSim@OM@Stock[[st]]@Weight
-  Ages <- ProjSim@OM@Stock[[st]]@Ages
-  if (grepl('at-Length',ModelClass)) {
-    Selectivity@Classes <- Length@Classes
-    LengthClasses <- ProjSim@OM@Stock[[st]]@Length@Classes
-    Selectivity@MeanAtLength <- GenerateMeanatLength(Model=Selectivity@Model,
-                                                     Pars=Selectivity@Pars,
-                                                     Length=Length@Classes)
-    dimnames(Selectivity@MeanAtLength) <- list(Sim=1,
-                                               Class=LengthClasses,
-                                               TimeStep=TimeStep)
+  nStock <- nStock(ProjSim@OM)
+  nFleet <- nFleet(ProjSim@OM)
+  
+  for (st in 1:nStock) {
     
-    Selectivity@MeanAtLength <- Selectivity@MeanAtLength |> ExpandTimeSteps(TimeSteps=TimeStepProj)
+    Length <- ProjSim@OM@Stock[[st]]@Length
     
-  }  else if (grepl('at-Weight',getModelClass(Selectivity@Model))) {
-    Selectivity <- PopulateMeanAtWeight(Selectivity, Weight, TimeSteps=TimeStep, Ages, nsim, seed, silent)
-    Selectivity@MeanAtWeight <- Selectivity@MeanAtWeight |> ExpandTimeSteps(TimeSteps=TimeStepProj)
-    
-  } else {
-    Selectivity <- PopulateMeanAtAge(Selectivity, Ages, TimeSteps=TimeStep)
-    Selectivity@MeanAtAge <- Selectivity@MeanAtAge |> ExpandTimeSteps(TimeSteps=TimeStepProj)
-  }
-  
-  Selectivity <- MeanAtLength2MeanAtAge(Selectivity, Length, Ages, nsim=1, TimeSteps=TimeStep)
-  
-  Selectivity <- MeanAtWeight2MeanAtAge(Selectivity, Weight, Ages, nsim,
-                                        TimeSteps=TimeStep, seed, silent) 
-  
-  dimnames(Selectivity@MeanAtAge) <- list(Sim=1,
-                                          Age=ProjSim@OM@Stock[[st]]@Ages@Classes,
-                                          TimeStep=TimeStepProj)
-  
-  
-  
-  if (type=="Selectivity") {
-    ProjSim@OM@Fleet[[st]]@Selectivity@MeanAtLength[,projInd,fl] <- Selectivity@MeanAtLength[1,,]
-    ProjSim@OM@Fleet[[st]]@Selectivity@MeanAtWeight[,projInd,fl] <- Selectivity@MeanAtWeight[1,,]
-    ProjSim@OM@Fleet[[st]]@Selectivity@MeanAtAge[,projInd,fl] <- Selectivity@MeanAtAge[1,,]
-  } else if (type=="Retention") {
-    # TODO fix initialization of these
-    # ProjSim@OM@Fleet[[st]]@Retention@MeanAtLength[,projInd,fl] <- Selectivity@MeanAtLength[1,,]
-    # ProjSim@OM@Fleet[[st]]@Retention@MeanAtWeight[,projInd,fl] <- Selectivity@MeanAtWeight[1,,]
-    ProjSim@OM@Fleet[[st]]@Retention@MeanAtAge[,projInd,fl] <- Selectivity@MeanAtAge[1,,]
-  } else{
-    stop("type must be `Selectivity` or `Retention`")
+    for (fl in 1:nFleet) {
+      if (type=="Selectivity") {
+        Length@Classes <- ProjSim@OM@Fleet[[st]]@Selectivity@Classes[[fl]]
+      } else  {
+        Length@Classes <- ProjSim@OM@Fleet[[st]]@Retention@Classes[[fl]]
+      }
+      
+      Length@MeanAtAge <- Length@MeanAtAge |> ArraySubsetTimeStep(TimeStep)
+      Length@CVatAge <- Length@CVatAge |> ArraySubsetTimeStep(TimeStep)
+      SDatAge <- ArrayMultiply(Length@MeanAtAge, Length@CVatAge)
+      
+      Length@ASK <- CalcAgeSizeKey_(Length@MeanAtAge, 
+                                    SDatAge, 
+                                    Length@Classes, 
+                                    Length@TruncSD, 
+                                    Length@Dist)
+      
+      Weight <- ProjSim@OM@Stock[[st]]@Weight |> ArraySubsetTimeStep(TimeStep)
+      Ages <- ProjSim@OM@Stock[[st]]@Ages
+      if (grepl('at-Length',ModelClass)) {
+        Selectivity@Classes <- Length@Classes
+        
+        Selectivity@MeanAtLength <- GenerateMeanatLength(Model=Selectivity@Model,
+                                                         Pars=Selectivity@Pars,
+                                                         Length=Selectivity@Classes)
+        dimnames(Selectivity@MeanAtLength) <- list(Sim=1,
+                                                   Class=   Selectivity@Classes,
+                                                   TimeStep=TimeStep)
+        
+        Selectivity@MeanAtLength <- Selectivity@MeanAtLength 
+        
+      }  else if (grepl('at-Weight',getModelClass(Selectivity@Model))) {
+        Selectivity <- PopulateMeanAtWeight(Selectivity, Weight, TimeSteps=TimeStep, Ages, nsim, seed, silent)
+        Selectivity@MeanAtWeight <- Selectivity@MeanAtWeight |> ExpandTimeSteps(TimeSteps=TimeStepProj)
+        
+      } else {
+        Selectivity <- PopulateMeanAtAge(Selectivity, Ages, TimeSteps=TimeStep)
+        Selectivity@MeanAtAge <- Selectivity@MeanAtAge |> ExpandTimeSteps(TimeSteps=TimeStepProj)
+      }
+      
+      Selectivity <- MeanAtLength2MeanAtAge(Selectivity, Length, Ages, nsim=1, TimeSteps=TimeStep)
+      
+      Selectivity <- MeanAtWeight2MeanAtAge(Selectivity, Weight, Ages, nsim,
+                                            TimeSteps=TimeStep, seed, silent) 
+      
+      dimnames(Selectivity@MeanAtAge) <- list(Sim=1,
+                                              Age=ProjSim@OM@Stock[[st]]@Ages@Classes,
+                                              TimeStep=TimeStep)
+      
+      if (type=="Selectivity") {
+        ProjSim@OM@Fleet[[st]]@Selectivity@MeanAtLength[,projInd,fl] <- Selectivity@MeanAtLength[1,,]
+        ProjSim@OM@Fleet[[st]]@Selectivity@MeanAtWeight[,projInd,fl] <- Selectivity@MeanAtWeight[1,,]
+        ProjSim@OM@Fleet[[st]]@Selectivity@MeanAtAge[,projInd,fl] <- Selectivity@MeanAtAge[1,,]
+      } else if (type=="Retention") {
+        ProjSim@OM@Fleet[[st]]@Retention@MeanAtLength[,projInd,fl] <- Selectivity@MeanAtLength[1,,]
+        ProjSim@OM@Fleet[[st]]@Retention@MeanAtWeight[,projInd,fl] <- Selectivity@MeanAtWeight[1,,]
+        ProjSim@OM@Fleet[[st]]@Retention@MeanAtAge[,projInd,fl] <- Selectivity@MeanAtAge[1,,]
+      } else{
+        stop("type must be `Selectivity` or `Retention`")
+      }
+    }
   }
   
   ProjSim
@@ -255,6 +267,9 @@ ApplyMPInternal <- function(ProjSim, MP, TimeStep, TimeStepsHist, TimeStepsProj,
   ###############################
   st <- 1 
   ##############################
+  
+  TimeStepsAll <- c(TimeStepsHist, TimeStepsProj) 
+  TSIndex <- match(TimeStep, TimeStepsAll)
   
   if (!is.null(ProjSim@Misc$MPAdvice) & length(ProjSim@Misc$MPAdvice)>0) {
     # Has MPAdvice Changed from last time 
@@ -269,18 +284,33 @@ ApplyMPInternal <- function(ProjSim, MP, TimeStep, TimeStepsHist, TimeStepsProj,
     
     # TODO add tryCatch
     # TODO - by stock?
-    MPAdvice <- MPFunction(ProjSim@Data[[st]])
+    
+    if (TimeStep>ManagementTimeSteps[1]) {
+      # don't lag data in first projection time-step
+      MPData <- purrr::map(ProjSim@Data, \(Data) 
+                           DataTrim(Data, TimeStep=TimeStep-(ProjSim@OM@DataLag+1))
+      )
+    } else {
+      MPData <- ProjSim@Data
+    }
+    
+    MPAdvice <- MPFunction(Data=MPData[[st]])
     ProjSim@Data[[st]]@Misc <- MPAdvice@Misc
+    
+    if (length(MPAdvice@Log)) 
+      ProjSim@Log[[as.character(TimeStep)]] <- MPAdvice@Log
+
+    if (length(ProjSim@Data[[st]]@TAC)<1) {
+      ProjSim@Data[[st]]@TAC <- array(NA, length(TimeStepsProj), dimnames = list(TimeStep=TimeStepsProj))
+    }
+    ProjSim@Data[[st]]@TAC[match(TimeStep, TimeStepsProj)] <- ifelse(is.null(MPAdvice@TAC), NA, MPAdvice@TAC)
     
     if (is.null(ProjSim@Misc$MPAdvice))
       ProjSim@Misc$MPAdvice <- list()
     ProjSim@Misc$MPAdvice[[as.character(TimeStep)]] <- MPAdvice
   } else {
-    MPAdvice <- NULL
+    MPAdvice <- MPAdvicePrevious
   }
-  
-  TimeStepsAll <- c(TimeStepsHist, TimeStepsProj) 
-  TSIndex <- match(TimeStep, TimeStepsAll)
   
   ProjSim <- ProjSim |> 
     UpdateSpatial(MPAdvice, MPAdvicePrevious, TSIndex) |>

@@ -13,7 +13,8 @@ setClass("mse",
                  Unfished='unfished',
                  RefPoints='refpoints',
                  Hist='timeseries',
-                 PPD='list' 
+                 PPD='list',
+                 Log='list'
          ), 
          contains=c('timeseries',
                     'MiscClass')

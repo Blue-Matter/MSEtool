@@ -1,4 +1,30 @@
-CalcRefPoints <- function(HistSimList, TimeSteps) {
+CalculateReferencePoints <- function(OM, TimeSteps=NULL, silent=FALSE) {
+  
+  StockList <- PopulateStockList(OM)
+  FleetList <- PopulateFleetList(OM, StockList)
+  
+  HistSimList <- Populate(OM) |> 
+    OM2Hist() |>
+    Hist2HistSimList()
+  
+  r = CalcRefPointsHistSim(HistSimList, TimeSteps)
+}
+
+
+CalculateMSY <- function(OM, TimeSteps=NULL) {
+  
+  
+}
+
+
+
+
+
+
+CalcRefPointsHistSim <- function(HistSimList, TimeSteps=NULL) {
+  
+  if (is.null(TimeSteps))
+    TimeSteps <- HistSimList[[1]] |> TimeSteps() |> tail(1)
   
   IdenticalAcrossSims <- CheckIdenticalSims(HistSimList, TimeSteps)
   
@@ -7,15 +33,15 @@ CalcRefPoints <- function(HistSimList, TimeSteps) {
   # ---- MSY Ref Points ----
   if (IdenticalAcrossSims) {
     HistSim <- HistSimList[[1]]
-    HistSim <- OptimizeMSY(HistSim, TimeSteps)
+    RefPoints <- CalculateMSYHistSim(HistSim, TimeSteps)
     HistSimList <- purrr::map(HistSimList, \(histsim) {
-      histsim@RefPoints <- HistSim@RefPoints
+      histsim@RefPoints <-RefPoints
       histsim
     })
     
   } else {
     HistSimList <- purrr::map(HistSimList, \(HistSim) 
-                              OptimizeMSY(HistSim, TimeSteps))  
+                              CalculateMSYHistSim(HistSim, TimeSteps))  
   }
   
 
@@ -59,7 +85,7 @@ CalcRefPoints <- function(HistSimList, TimeSteps) {
   
 }
 
-OptimizeMSY <- function(HistSim, TimeSteps) {
+CalculateMSYHistSim <- function(HistSim, TimeSteps) {
   # TODO - add Frange to OM@control 
   logApicalFRange <- log(c(0.01, 3))
   
@@ -106,15 +132,15 @@ OptimizeMSY <- function(HistSim, TimeSteps) {
     })
   }
 
-  HistSim@RefPoints@SPR0 <- List2Array(purrr::map(MSYRefs, \(stock) stock$SPR0), 'Stock') |> t()
-  HistSim@RefPoints@RemovalsMSY <- List2Array(purrr::map(MSYRefs, \(stock) stock$Removals), 'Stock') |> t()
-  HistSim@RefPoints@LandingsMSY <- List2Array(purrr::map(MSYRefs, \(stock) stock$Landings), 'Stock')|> t()
-  HistSim@RefPoints@FMSY <- List2Array(purrr::map(MSYRefs, \(stock) stock$F), 'Stock', 'TimeStep')|> t()
-  dimnames(HistSim@RefPoints@FMSY)[[2]] <- TimeSteps
-  HistSim@RefPoints@BMSY <- List2Array(purrr::map(MSYRefs, \(stock) stock$Biomass), 'Stock') |> t()
-  HistSim@RefPoints@SBMSY <- List2Array(purrr::map(MSYRefs, \(stock) stock$SBiomass), 'Stock') |> t()
-  HistSim@RefPoints@SPRMSY <- List2Array(purrr::map(MSYRefs, \(stock) stock$SPR), 'Stock') |> t()
-  HistSim
+  RefPoints@SPR0 <- List2Array(purrr::map(MSYRefs, \(stock) stock$SPR0), 'Stock') |> t()
+  RefPoints@RemovalsMSY <- List2Array(purrr::map(MSYRefs, \(stock) stock$Removals), 'Stock') |> t()
+  RefPoints@LandingsMSY <- List2Array(purrr::map(MSYRefs, \(stock) stock$Landings), 'Stock')|> t()
+  RefPoints@FMSY <- List2Array(purrr::map(MSYRefs, \(stock) stock$F), 'Stock', 'TimeStep')|> t()
+  dimnames(RefPoints@FMSY)[[2]] <- TimeSteps
+  RefPoints@BMSY <- List2Array(purrr::map(MSYRefs, \(stock) stock$Biomass), 'Stock') |> t()
+  RefPoints@SBMSY <- List2Array(purrr::map(MSYRefs, \(stock) stock$SBiomass), 'Stock') |> t()
+  RefPoints@SPRMSY <- List2Array(purrr::map(MSYRefs, \(stock) stock$SPR), 'Stock') |> t()
+  RefPoints
 }
 
 
@@ -210,76 +236,73 @@ CalculateMSY_Complex <- function(logApicalF, StockList, FleetList, Allocation,Ti
 }
 
 
-CalculateMSY <- function(logApicalF, StockList, FleetList, Allocation, SPR0=NULL, TimeSteps, option=1) {
-  
-  apicalF <- exp(logApicalF)
-  
-  # Loop over Stocks
-  
-
-  
-  for (st in seq_along(StockList)) {
-    Stock <- StockList[[st]]
-    
-    SPFrom <- Stock@SRR@SPFrom 
-    SPR <- PerRecruit[[SPFrom]]$SPR
-    RecPars <- purrr::map(Stock@SRR@Pars, \(pars) ArraySubsetTimeStep(pars,TimeSteps))
-    RelRecruits <- Stock@SRR@RelRecFun(Pars=RecPars, SPR=SPR)
-    RelRecruits[RelRecruits<0] <- 0
-    
-    R0 <- Stock@SRR@R0 |> ArraySubsetTimeStep(TimeSteps)
-    Recruits <- ArrayMultiply(R0, RelRecruits)
-    
-    Removals <- ArrayMultiply(PerRecruit[[st]]$RemovalsPR, Recruits)
-    Landings <- ArrayMultiply(PerRecruit[[st]]$LandingsPR, Recruits)
-    SBiomass <- ArrayMultiply(PerRecruit[[st]]$SBiomassPR, Recruits)
-    Biomass <- ArrayMultiply(PerRecruit[[st]]$BiomassPR, Recruits)
-    
-    PerRecruit[[st]]$Removals <- Removals
-    PerRecruit[[st]]$Landings <- Landings
-    PerRecruit[[st]]$SBiomass <- SBiomass
-    PerRecruit[[st]]$Biomass <- Biomass
-    PerRecruit[[st]]$Recruits <- Recruits
-    PerRecruit[[st]]$RelRecruits <- RelRecruits
-    PerRecruit[[st]]$Recruits <- Recruits
-  }
-  
-  if (option==1) {
-    # TODO add option to calculate MSY in terms of removals or landings
-    return(-Removals)
-  }
-  
-
-  
-  
-  # PerRecruit <- CalcPerRecruit(apicalF, Stock, Fleet, Allocation, SPR0, TimeSteps)
-  
-  RecPars <- purrr::map(Stock@SRR@Pars, \(pars) ArraySubsetTimeStep(pars,TimeSteps))
-  RelRecruits <- Stock@SRR@RelRecFun(Pars=RecPars, SPR=PerRecruit$SPR)
-  
-  RelRecruits[RelRecruits<0] <- 0
-  
-  R0 <- Stock@SRR@R0 |> ArraySubsetTimeStep(TimeSteps)
-  Recruits <- ArrayMultiply(R0, RelRecruits)
-  
-  Removals <- ArrayMultiply(PerRecruit$RemovalsPR, Recruits)
-  Landings <- ArrayMultiply(PerRecruit$LandingsPR, Recruits)
-  SBiomass <- ArrayMultiply(PerRecruit$SBiomassPR, Recruits)
-  Biomass <- ArrayMultiply(PerRecruit$BiomassPR, Recruits)
-
-  if (option==1) {
-    # TODO add option to calculate MSY in terms of removals or landings
-    return(-Removals)
-  }
-  PerRecruit$Removals <- Removals
-  PerRecruit$Landings <- Landings
-  PerRecruit$SBiomass <- SBiomass
-  PerRecruit$Biomass <- Biomass
-  PerRecruit$Recruits <- Recruits
-  PerRecruit$RelRecruits <- RelRecruits
-  PerRecruit$Recruits <- Recruits
-  PerRecruit
-}
+# CalculateMSY <- function(logApicalF, StockList, FleetList, Allocation, SPR0=NULL, TimeSteps, option=1) {
+#   
+#   apicalF <- exp(logApicalF)
+#   
+#   # Loop over Stocks
+#   for (st in seq_along(StockList)) {
+#     Stock <- StockList[[st]]
+#     
+#     SPFrom <- Stock@SRR@SPFrom 
+#     SPR <- PerRecruit[[SPFrom]]$SPR
+#     RecPars <- purrr::map(Stock@SRR@Pars, \(pars) ArraySubsetTimeStep(pars,TimeSteps))
+#     RelRecruits <- Stock@SRR@RelRecFun(Pars=RecPars, SPR=SPR)
+#     RelRecruits[RelRecruits<0] <- 0
+#     
+#     R0 <- Stock@SRR@R0 |> ArraySubsetTimeStep(TimeSteps)
+#     Recruits <- ArrayMultiply(R0, RelRecruits)
+#     
+#     Removals <- ArrayMultiply(PerRecruit[[st]]$RemovalsPR, Recruits)
+#     Landings <- ArrayMultiply(PerRecruit[[st]]$LandingsPR, Recruits)
+#     SBiomass <- ArrayMultiply(PerRecruit[[st]]$SBiomassPR, Recruits)
+#     Biomass <- ArrayMultiply(PerRecruit[[st]]$BiomassPR, Recruits)
+#     
+#     PerRecruit[[st]]$Removals <- Removals
+#     PerRecruit[[st]]$Landings <- Landings
+#     PerRecruit[[st]]$SBiomass <- SBiomass
+#     PerRecruit[[st]]$Biomass <- Biomass
+#     PerRecruit[[st]]$Recruits <- Recruits
+#     PerRecruit[[st]]$RelRecruits <- RelRecruits
+#     PerRecruit[[st]]$Recruits <- Recruits
+#   }
+#   
+#   if (option==1) {
+#     # TODO add option to calculate MSY in terms of removals or landings
+#     return(-Removals)
+#   }
+#   
+# 
+#   
+#   
+#   # PerRecruit <- CalcPerRecruit(apicalF, Stock, Fleet, Allocation, SPR0, TimeSteps)
+#   
+#   RecPars <- purrr::map(Stock@SRR@Pars, \(pars) ArraySubsetTimeStep(pars,TimeSteps))
+#   RelRecruits <- Stock@SRR@RelRecFun(Pars=RecPars, SPR=PerRecruit$SPR)
+#   
+#   RelRecruits[RelRecruits<0] <- 0
+#   
+#   R0 <- Stock@SRR@R0 |> ArraySubsetTimeStep(TimeSteps)
+#   Recruits <- ArrayMultiply(R0, RelRecruits)
+#   
+#   Removals <- ArrayMultiply(PerRecruit$RemovalsPR, Recruits)
+#   Landings <- ArrayMultiply(PerRecruit$LandingsPR, Recruits)
+#   SBiomass <- ArrayMultiply(PerRecruit$SBiomassPR, Recruits)
+#   Biomass <- ArrayMultiply(PerRecruit$BiomassPR, Recruits)
+# 
+#   if (option==1) {
+#     # TODO add option to calculate MSY in terms of removals or landings
+#     return(-Removals)
+#   }
+#   PerRecruit$Removals <- Removals
+#   PerRecruit$Landings <- Landings
+#   PerRecruit$SBiomass <- SBiomass
+#   PerRecruit$Biomass <- Biomass
+#   PerRecruit$Recruits <- Recruits
+#   PerRecruit$RelRecruits <- RelRecruits
+#   PerRecruit$Recruits <- Recruits
+#   PerRecruit
+# }
 
 
 

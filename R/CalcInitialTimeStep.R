@@ -37,7 +37,8 @@ CalcInitialTimeStep <- function(Hist, silent=FALSE) {
     
     Hist@Number[[st]][,,1,] <- ArrayMultiply(NatAge, UnfishedDist)
     
-    if (length(Hist@OM@Stock[[st]]@Depletion@Initial)>0) 
+    InitialDepletion <- Hist@OM@Stock[[st]]@Depletion@Initial
+    if (length(InitialDepletion) && InitialDepletion!=1) 
       Hist <- DoOptInitialDepletion(Hist, st)
     
 
@@ -100,10 +101,12 @@ DoOptInitialDepletion <- function(Hist, st) {
   nAge <- ncol(NatAge)
   nArea <- nArea(Hist@OM)
   
-  adjust <- lapply(dopt, '[[', 'minimum') |> unlist()
-  adjust <- replicate(nAge, adjust)
-  adjust <- replicate(nArea, adjust)
-  Hist@Number[[st]][,,1,] <- NatAge * adjust
+  adjust <- lapply(dopt, '[[', 'minimum') |> 
+    unlist() |>
+    array(dim=length(dopt), dimnames=list(Sim=1:length(dopt))) |>
+    AddDimension("Age") |> AddDimension("Area")
+  
+  Hist@Number[[st]][,,1,] <- ArrayMultiply(NatAge, adjust)
   Hist
 }
     
