@@ -13,7 +13,7 @@ ReduceNSim <- function(object, nSim=NULL) {
   if (is.null(nSim))
     return(object)
   
-  CheckClass(nSim, c('numeric', 'integer'))
+  CheckClass(nSim, c('numeric', 'integer'), 'nSim')
   
   if (length(nSim)>1)
     cli::cli_abort("`nSim` ({.val {nSim}}) must be numeric/integer length 1")
@@ -143,16 +143,16 @@ StartMessages <- function(OM, messages='default') {
   
   # Allocation
  
-  if (!length(OM@Allocation)) {
-    OM@Allocation <- OM@CatchFrac
-    if (nFleet(OM)>1) {
-      if (isTRUE(msg$alert)) 
-        cli::cli(c(
-          cli::cli_alert_info('`Allocation(OM)` not specified'),
-          cli::cli_alert('Setting `Allocation` equal to `CatchFrac` (`Allocate(OM) <- CatchFrac(OM)`)')
-        ))  
-    }
-  }
+  # if (!length(OM@Allocation)) {
+  #   OM@Allocation <- OM@CatchFrac
+  #   if (nFleet(OM)>1) {
+  #     if (isTRUE(msg$alert)) 
+  #       cli::cli(c(
+  #         cli::cli_alert_info('`Allocation(OM)` not specified'),
+  #         cli::cli_alert('Setting `Allocation` equal to `CatchFrac` (`Allocate(OM) <- CatchFrac(OM)`)')
+  #       ))  
+  #   }
+  # }
   
   if(!length(OM@Efactor)) {
     OM@Efactor <- lapply(1:nStock(OM), function(x) 
@@ -932,35 +932,35 @@ aperm <- function(a, perm, ...) {
 
 
 
-EditSlotsForSimCheck <- function(object, TimeSteps) {
-  # TODO subset time dimension to check for identical historical
-  nms <- slotNames(object)
-  
-  for (nm in nms) {
-    object2 <- slot(object, nm)
-    if (!isS4(object2))
-      next()
-    
-    if (inherits(object2, 'srr')) {
-      dimnames(object2@RecDevInit) <- NULL
-      names(object2@RecDevInit) <- NULL
-      object2@RecDevInit <- array(object2@RecDevInit)
-      object2@RecDevProj <- array()
-    }
-    
-    slots <- slotNames(object2)
-
-    # if ('MeanAtAge' %in% slots) 
-    #   object2@MeanAtAge <- ArraySubsetTimeStep(object2@MeanAtAge, TimeSteps)
-    #   
-  
-    if (!'Pars' %in% slots)
-      next()
-    object2@Pars <- list()
-    slot(object, nm) <- object2
-  }
-  object
-}
+# EditSlotsForSimCheck <- function(object, TimeSteps) {
+#   # TODO subset time dimension to check for identical historical
+#   nms <- slotNames(object)
+#   
+#   for (nm in nms) {
+#     object2 <- slot(object, nm)
+#     if (!isS4(object2))
+#       next()
+#     
+#     if (inherits(object2, 'srr')) {
+#       dimnames(object2@RecDevInit) <- NULL
+#       names(object2@RecDevInit) <- NULL
+#       object2@RecDevInit <- array(object2@RecDevInit)
+#       object2@RecDevProj <- array()
+#     }
+#     
+#     slots <- slotNames(object2)
+# 
+#     # if ('MeanAtAge' %in% slots) 
+#     #   object2@MeanAtAge <- ArraySubsetTimeStep(object2@MeanAtAge, TimeSteps)
+#     #   
+#   
+#     if (!'Pars' %in% slots)
+#       next()
+#     object2@Pars <- list()
+#     slot(object, nm) <- object2
+#   }
+#   object
+# }
 
 
 CheckIdenticalSims <- function(HistSimList, TimeSteps=NULL, Period='Historical') {

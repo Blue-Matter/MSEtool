@@ -15,13 +15,10 @@ Simulate <- function(OM=MSEtool::testOM,
   if (!is.null(nsim))
     nSim <- nsim
   
-  if (!is.null(nSim))
-    nsim <- nSim
-  
   if (inherits(OM, 'om'))
     return(Simulate_om(OM, parallel, silent, nSim))
   
-  SimulateOM(OM, parallel, silent, nsim)
+  SimulateOM(OM, parallel, silent, nSim)
 }
 
 # Simulate for new `om` class objects
@@ -35,7 +32,8 @@ Simulate_om <- function(OM=NULL,
   # ---- Initial Checks and Setup ----
   CheckClass(OM)
   OM <- OM |> StartUp(nSim) 
-  
+
+
   # Set up parallel processing 
   # if (parallel & !snowfall::sfIsRunning())
   #   setup()

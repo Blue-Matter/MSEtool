@@ -1,5 +1,7 @@
 CalcPerRecruit <- function(apicalF, Stock, Fleet, Allocation, TimeSteps) {
-  
+ 
+  stop()
+  # TODO replace Allocation with CatchFrac 
   if (is.null(Allocation))
     Allocation <- 1
   

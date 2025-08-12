@@ -246,6 +246,8 @@ ArraySubsetTimeStep <- function(object, TimeSteps=NULL, AddPast=TRUE) {
     cli::cli_abort("`TimeStep` dimension not found in this array", .internal=TRUE)
   
   TSexist <- TimeSteps[TimeSteps %in% DN$TimeStep]
+  if (!length(TSexist))
+    return(object)
   TSimpute <- TimeSteps[!TimeSteps %in% DN$TimeStep]
   
   if (!AddPast) {
@@ -308,7 +310,13 @@ ArraySubsetSim <- function(object, Sims=NULL, drop=FALSE) {
   if (drop) {
     out <- abind::adrop(abind::asub(object, (DN[[TSind]] %in% Sims), TSind, drop=FALSE), TSind)
     if (is.null(dim(out))) {
-      out <- array(out, dim=length(out), dimnames=list(TimeStep=names(out)))
+      nms <- names(out)
+      numericNames <- suppressWarnings(as.numeric(nms))
+      if (any(is.na(numericNames))) {
+        out <- array(out, dim=length(out), dimnames=list(Fleet=names(out)))
+      } else {
+        out <- array(out, dim=length(out), dimnames=list(TimeStep=names(out)))
+      }
     }
     return(out)  
   } else {

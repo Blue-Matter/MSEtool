@@ -91,9 +91,7 @@ SubsetTimeStep <- function(object, TimeSteps, debug=FALSE, AddPast=TRUE) {
       
       slot(object, slots[i]) <- Recall(obj, TimeSteps, debug)
     }
-    if ('nSim' %in% slotNames(object)) 
-      object@nSim <- length(Sim)
-    
+ 
     return(object)
   }
   
@@ -116,7 +114,10 @@ SubsetTimeStep <- function(object, TimeSteps, debug=FALSE, AddPast=TRUE) {
     dnames <- dimnames(object)
     if ("TimeStep" %in% names(dnames)) {
       ind <- which(names(dnames)=='TimeStep')
-      maxTS <- max(dnames[[ind]])
+      TSValues <- dnames[[ind]]
+      if (is.null(TSValues))
+        return(object)
+      maxTS <- max(TSValues)
       if (maxTS< max(TimeSteps)) {
         object <- ArraySubsetTimeStep(object, maxTS, AddPast=AddPast)  
       } else {

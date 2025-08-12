@@ -1,24 +1,61 @@
-CalculateReferencePoints <- function(OM, TimeSteps=NULL, silent=FALSE) {
+CalcReferencePoints <- function(OM, TimeSteps=NULL, silent=FALSE) {
   
-  StockList <- PopulateStockList(OM)
-  FleetList <- PopulateFleetList(OM, StockList)
+  if (is.null(TimeSteps))
+    TimeSteps <- OM |> TimeSteps('Historical') |> tail(1)
   
-  HistSimList <- Populate(OM) |> 
-    OM2Hist() |>
-    Hist2HistSimList()
+  StockList <- PopulateStockList(OM) |> SubsetTimeStep(TimeSteps, AddPast = FALSE)
+  StockFleetList <- PopulateFleetList(OM, StockList) |> SubsetTimeStep(TimeSteps)
+  CatchFracList <- OM |> CheckCatchFrac() |> CatchFrac()
   
-  r = CalcRefPointsHistSim(HistSimList, TimeSteps)
+  StockNames <- StockNames(OM)
+  nAgesList <- purrr::map(StockList, \(Stock) 
+                          length(Stock@Ages@Classes))
+  
+  FleetList <- purrr::map2(StockFleetList, nAgesList, \(FleetList,nAges)
+                               Fleet2Hist(FleetList, nAges,
+                                          nSim=nSim(OM), 
+                                          TimeSteps=TimeSteps,
+                                          nArea(StockList[[1]]),
+                                          silent=TRUE)
+  )
+  
+  StockSimList <- purrr::map(1:nSim(OM), \(x) {
+    SubsetSim(StockList, Sim=x, drop=TRUE)
+  }, .progress = 'Building StockList')
+  names(StockSimList) <- 1:nSim(OM)
+  
+  FleetSimList <- purrr::map(1:nSim(OM), \(x) {
+    SubsetSim(FleetList, Sim=x, drop=TRUE)
+  }, .progress = 'Building FleetList')
+  names(FleetSimList) <- 1:nSim(OM)
+  
+  CatchFracSimList <- purrr::map(1:nSim(OM), \(x) {
+    SubsetSim(CatchFracList, Sim=x, drop=TRUE)
+  })
+  names(CatchFracSimList) <- 1:nSim(OM)
+  
+
+ 
 }
+
+CalcRefPointsSim <- function(StockSimList, FleetSimList, CatchFracSimList, TimeSteps) {
+  IdenticalAcrossSims <- IdenticalSims(StockSimList, TimeSteps) &
+    IdenticalSims(FleetSimList, TimeSteps) &
+    IdenticalSims(CatchFracSimList, TimeSteps, EditSlots=FALSE)
+  
+
+  RefPoints <- new('refpoints')
+  stop()
+  # TODO - up to here - refine refpoints object, finiish code, update Simulate_om
+  
+}
+
 
 
 CalculateMSY <- function(OM, TimeSteps=NULL) {
   
   
 }
-
-
-
-
 
 
 CalcRefPointsHistSim <- function(HistSimList, TimeSteps=NULL) {

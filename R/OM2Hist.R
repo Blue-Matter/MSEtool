@@ -248,8 +248,7 @@ Fleet2Hist <- function(FleetList, nAges, nSim, TimeSteps, nArea, silent=FALSE, i
     
   if (!silent)
     cli::cli_progress_update(id=id)
-  Fleet@Distribution <- CombineDistribution(lapply(FleetList, slot, 
-                                                   'Distribution'),
+  Fleet@Distribution <- CombineDistribution(lapply(FleetList, slot, 'Distribution'),
                                             nSim, nAges, TimeSteps, nArea)
   
   if (!silent)

@@ -19,26 +19,19 @@ PopulateOM <- function(OM, silent=FALSE) {
   OM@Stock  <- PopulateStockList(OM, silent)
   OM@Fleet <- PopulateFleetList(OM, StockList, silent)
 
-  OM <- ProcessCatchFrac(OM)
+  OM <- PopulateObs(OM)
   
-  # share paramaters for two-sex stocks
+  OM <- CheckCatchFrac(OM) # TODO - auto-populate CatchFrac if OM@Data exists
+  
+  # share parameters for two-sex stocks
   OM <- OM |>
     UpdateSPFrom() |>
     ShareParameters() |>
     StartMessages()
   
 
- 
-  
-  
-  OM <- PopulateObs(OM)
-  
 
-  
-  
-  
-  
-  
+
   
   #Imp
   

@@ -305,6 +305,11 @@ UpdateSPFrom <- function(OM) {
 
 ShareParameters <- function(OM) {
   
+  return(OM)
+  
+  # TODO
+  
+  
   if (length(OM@SexPars@Herm)) {
     stop('Herm not done yet!')
     # SexPars$Herm <- checkHerm(SexPars$Herm, maxage, nsim, nyears, proyears)
@@ -905,7 +910,6 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
   AtSize 
 }
 
-# TODO - CatchFrac could be array nsim, nstock, nfleet - rather than list 
 ProcessCatchFrac <- function(object) {
   if (length(object@CatchFrac)<1) {
     object@CatchFrac <- MakeNamedList(StockNames(object))

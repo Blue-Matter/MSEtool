@@ -74,6 +74,21 @@ Agency <- function(x) {
   assignSlot(x, value, 'Agency')
 }
 
+## ---- Allocation ----
+
+#' @rdname Access
+#' @export
+Allocation <- function(x) {
+  x@Allocation
+}
+
+#' @rdname Access
+#' @export
+`Allocation<-` <- function(x, value) {
+  assignSlot(x, value, 'Allocation')
+}
+
+
 ## ---- Author ----
 
 #' @rdname Access
@@ -116,6 +131,19 @@ Catchability <- function(x) {
   assignSlot(x, value, 'Catchability')
 }
 
+## ---- CatchFrac ----
+
+#' @rdname Access
+#' @export
+CatchFrac <- function(x) {
+  x@CatchFrac
+}
+
+#' @rdname Access
+#' @export
+`CatchFrac<-` <- function(x, value) {
+  assignSlot(x, value, 'CatchFrac')
+}
 
 ## ---- Classes ----
 

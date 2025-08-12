@@ -59,7 +59,7 @@ StartUp <- function(OM, nSim=NULL, silent=FALSE) {
   
   OM |> 
     ReduceNSim(nSim) |>
-    Populate() |>
+    PopulateOM() |>
     ConvertToList() # converts OM@Stock and OM@Fleet to lists
   
 }
