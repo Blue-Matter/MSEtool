@@ -2698,6 +2698,7 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE, parallel
     if (!silent)  message(MPs[mp])
     fn <- getMP(MPs[mp])
     
+    
     if (runParallel && parallel[mp]) {
       temp <- try(snowfall::sfLapply(1:nsims, fn, Data = Data, reps = reps), silent=TRUE)
     } else {

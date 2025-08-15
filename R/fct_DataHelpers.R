@@ -52,3 +52,5 @@ DataTrim <- function(Data, TimeStep) {
   OutData@TimeSteps <- OutTimeSteps
   OutData
 }
+
+

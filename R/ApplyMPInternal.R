@@ -31,10 +31,10 @@ UpdateTAC <- function(ProjSim, MPAdvice, TSIndex) {
   }) |> unlist()
   
   StockAllocation <- RelVuln/sum(RelVuln)
-  
+  FleetAllocation <- ProjSim@OM@Allocation
   for (st in 1:nStock) {
-    TotalRemovalsFleet <- MPAdvice@TAC *StockAllocation[st] * ProjSim@OM@Allocation[[st]] |> as.numeric()
-
+    
+    TotalRemovalsFleet <- MPAdvice@TAC *StockAllocation[st] * FleetAllocation[[st]] |> as.numeric()
 
     SolvedF <- SolveForFishingMortality(NumberAtAge[[st]],
                                         TotalRemovalsFleet,
@@ -45,6 +45,12 @@ UpdateTAC <- function(ProjSim, MPAdvice, TSIndex) {
                                         NaturalMortalityAtAge[[st]]) 
   
     FInteract <- t(SolvedF$ApicalFInteract)
+    apicalFDead <- apply(SolvedF$FDeadAtAge, 1, sum) |> max()
+    
+    if (apicalFDead > ProjSim@OM@maxF) {
+      FInteract <- FInteract * ProjSim@OM@maxF/apicalFDead
+    }
+    
     RequiredEffort <- FInteract / ProjSim@OM@Fleet[[st]]@Effort@Catchability[TSIndex,] 
     RequiredEffort[RequiredEffort<1E-5] <- 1E-5 
     

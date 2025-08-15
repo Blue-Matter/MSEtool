@@ -1,15 +1,24 @@
-#' @describeIn runMSE Run the Historical Simulations from an object of class `OM`
-#' @export
-#
+
 
 #' @describeIn runMSE Run the Forward Projections
 #'
 #' @param Hist An Historical Simulation object (class `Hist`)
 #'
 #' @export
-Project <- function (Hist=NULL, MPs=NA, parallel=FALSE,
-                     silent=FALSE,
-                     extended=FALSE, checkMPs=FALSE) {
+#'
+Project <- function(Hist=NULL, MPs=NA, parallel=FALSE,
+                    silent=FALSE, extended=FALSE, checkMPs=FALSE) {
+  
+  if (inherits(Hist, 'Hist'))
+    return(
+      Project_Hist(Hist, MPs, parallel, silent, extended, checkMPs)
+    )
+  
+  Project_hist(Hist, MPs, parallel, silent, nSim=NULL)
+}
+
+Project_Hist <- function (Hist=NULL, MPs=NA, parallel=FALSE,
+                     silent=FALSE, extended=FALSE, checkMPs=FALSE) {
 
   # ---- Setup ----
   if (!methods::is(Hist,'Hist'))

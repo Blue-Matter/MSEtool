@@ -1,60 +1,8 @@
 
-ExtendHist <- function(Hist, TimeSteps=NULL) {
-  if (is.null(TimeSteps))
-    TimeSteps <- TimeSteps(Hist@OM)
-  
-  slots <- slotNames('timeseries')
-  slots <- slots[!slots=='Misc']
-  for (sl in slots) {
-    object <- slot(Hist, sl) 
-    if (is.list(object)) {
-      object <- purrr::map(object, \(x) ExpandTimeSteps(x, TimeSteps, default = tiny/2))
-    } else {
-      object <- ExpandTimeSteps(object, TimeSteps, default = tiny/2)
-    }
-    slot(Hist, sl) <- object
-  }
-  Hist
-  # 
-  # if (isS4(object)) {
-  #   nms <- slotNames(object)
-  #   for (i in seq_along(nms)) {
-  #     slot(object, nms[i]) <- Recall(slot(object, nms[i]), TimeSteps)
-  #   }  
-  # }
-  # 
-  # if (is.list(object)) {
-  #   for (i in seq_along(object)) {
-  #     object[[i]] <- Recall(object[[i]], TimeSteps)
-  #   }  
-  # }
-  # if (inherits(object,'array'))  {
-  #   dnames <- names(dimnames(object))
-  #   if ("TimeStep" %in% dnames)
-  #     object <- ExpandTimeSteps(object, TimeSteps, default=tiny/2)
-  # }
-  # object
-
-}
-
-MSE2Hist <- function(MSE) {
-  Hist <- Hist()
-  Hist@OM <- MSE@OM
-  Hist@Unfished <- MSE@Unfished
-  Hist@RefPoints <- MSE@RefPoints
-  Hist@Data <- list(MSE@OM@Data)
-  
-  slots <- slotNames(MSE@Hist)
-  for (sl in slots)  {
-    slot(Hist, sl) <- slot(MSE@Hist, sl) 
-  }
-  Hist
-}
-
 #' @export
-ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE, nSim=NULL) {
+Project_hist <- function(Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, nSim=NULL) {
   
-  on.exit(cli::stop_app())
+  OnExit()
   
   if (!is.null(nSim)) {
     Hist <- ReduceNSim(Hist, nSim)
@@ -68,9 +16,9 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE, nSim=NUL
   # Set pbapply functions 
   .lapply <- define.lapply(silent) 
   .sapply <- define.sapply(silent)
-
+  
   # Extend Arrays for Projection TimeSteps
-
+  
   MSEobj <- FALSE
   if (inherits(Hist,'mse')) {
     MSE <- Hist
@@ -78,16 +26,16 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE, nSim=NUL
   }
   
   Proj <- ExtendHist(Hist)
-
+  
   # List of `Hist` objects, each with one simulation
   ProjSimList <- Hist2HistSimList(Proj)
-
+  
   TimeStepsHist <- TimeSteps(ProjSimList[[1]]@OM, "Historical")
   TimeStepsProj <- TimeSteps(ProjSimList[[1]]@OM, "Projection")
   
   # Calculate Reference Catch 
   # TODO calculate externally with option in Simulate or OM@Control
-   
+  
   # Populate Number-at-Age at Beginning of Projection TimeStep
   LastHistTS <- tail(TimeStepsHist,1)
   ProjSimList <- purrr::map(ProjSimList, \(ProjSim) SimulateDynamics_(ProjSim, LastHistTS))
@@ -95,8 +43,19 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE, nSim=NUL
   # Recruitment for first projection timestep 
   ProjSimList <- purrr::map(ProjSimList, \(ProjSim) SimulateDynamics_(ProjSim, head(TimeStepsProj,1)))
   
+  # Check Allocation - should be done in Simulate # TODO 
+  chk <- purrr::map(ProjSimList, \(ProjSim) ProjSim@OM@Allocation) |> unlist()
+  if (is.null(chk)) {
+    cli::cli_alert_warning("`OM@Allocation` has not been specified. Using OM@CatchFrac. This should be fixed in the MSEtool code!")
+    ProjSimList <- purrr::map(ProjSimList, \(ProjSim) {
+      ProjSim@OM@Allocation <- ProjSim@OM@CatchFrac
+      ProjSim
+      })
+  }
+  
   MSE <- Hist2MSE(Hist, MPs) 
   
+
   # if(!MSEobj) {
   #   MSE <- Hist2MSE(Hist, MPs)  
   # } else {
@@ -118,7 +77,7 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE, nSim=NUL
   #     
   #   }
   # }
-
+  
   nStock <- nStock(Hist@OM)
   nMPs <- length(MPs)
   
@@ -134,7 +93,7 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE, nSim=NUL
     # TODO add option to specify Interval by MP
     ind <- seq(1, by=ProjSimList[[1]]@OM@Interval, to=length(TimeStepsProj)) 
     ManagementTimeSteps <- TimeStepsProj[ind] # time steps where management will be implemented
-  
+    
     StartTime <- Sys.time()
     ProjSimListMP <- purrr::map(ProjSimList, \(ProjSim) 
                                 try(
@@ -148,7 +107,7 @@ ProjectDEV <- function(Hist=NULL, MPs=NA, silent=FALSE, parallel=FALSE, nSim=NUL
                                   clear = TRUE))
     EndTime <- Sys.time()
     ProjSimListMP <- CheckMSERun(ProjSimListMP, ProjSimList, MP, StartTime, EndTime)
-  
+    
     # attributes(MSE@MPs)$complete[mp] <- TRUE
     MSE <- UpdateMSEObject(MSE, ProjSimListMP, mp, TimeStepsHist, TimeStepsProj, MP)
     MSE@Log
@@ -199,14 +158,14 @@ CheckMSERun <- function(ProjSimListMP, ProjSimList, MP, StartTime, EndTime) {
     }
     cli::cli_alert_info("Writing error log to {.file {logFile}}")
   }
-
+  
   
   ProjSimListMP
 }
 
 
 UpdateMSEObject <- function(MSE, ProjSimListMP, mp, TimeStepsHist, TimeStepsProj, MP) {
-
+  
   TimeStepsAll <- c(TimeStepsHist, TimeStepsProj)
   
   nStock <- nStock(ProjSimListMP[[1]]@OM)
@@ -273,15 +232,15 @@ UpdateMSEObject <- function(MSE, ProjSimListMP, mp, TimeStepsHist, TimeStepsProj
   MSE@Effort[,,,,mp] <- purrr::map(ProjSimListMP, \(x) 
                                    x@Effort |> 
                                      AddDimNames(c("Stock", "TimeStep", "Fleet"),
-                    values=c(list(StockNames),
-                             list(NA),
-                             list(FleetNames)),
-                    TimeSteps=TimeStepsAll) |>
-        ArraySubsetTimeStep(TimeSteps=TimeStepsProj)
-    ) |>
+                                                 values=c(list(StockNames),
+                                                          list(NA),
+                                                          list(FleetNames)),
+                                                 TimeSteps=TimeStepsAll) |>
+                                     ArraySubsetTimeStep(TimeSteps=TimeStepsProj)
+  ) |>
     List2Array("Sim") |>
     aperm(c("Sim", "Stock", "TimeStep", "Fleet"))
-    
+  
   for (st in 1:nStock) {
     MSE@FDeadAtAge[[st]][,,,,mp] <- purrr::map(ProjSimListMP, \(x) x@FDeadAtAge[[st]]) |> 
       List2Array("Sim") |>
@@ -347,6 +306,60 @@ UpdateMSEObject <- function(MSE, ProjSimListMP, mp, TimeStepsHist, TimeStepsProj
   
   MSE
 }
+
+
+ExtendHist <- function(Hist, TimeSteps=NULL) {
+  if (is.null(TimeSteps))
+    TimeSteps <- TimeSteps(Hist@OM)
+  
+  slots <- slotNames('timeseries')
+  slots <- slots[!slots=='Misc']
+  for (sl in slots) {
+    object <- slot(Hist, sl) 
+    if (is.list(object)) {
+      object <- purrr::map(object, \(x) ExpandTimeSteps(x, TimeSteps, default = tiny/2))
+    } else {
+      object <- ExpandTimeSteps(object, TimeSteps, default = tiny/2)
+    }
+    slot(Hist, sl) <- object
+  }
+  Hist
+  # 
+  # if (isS4(object)) {
+  #   nms <- slotNames(object)
+  #   for (i in seq_along(nms)) {
+  #     slot(object, nms[i]) <- Recall(slot(object, nms[i]), TimeSteps)
+  #   }  
+  # }
+  # 
+  # if (is.list(object)) {
+  #   for (i in seq_along(object)) {
+  #     object[[i]] <- Recall(object[[i]], TimeSteps)
+  #   }  
+  # }
+  # if (inherits(object,'array'))  {
+  #   dnames <- names(dimnames(object))
+  #   if ("TimeStep" %in% dnames)
+  #     object <- ExpandTimeSteps(object, TimeSteps, default=tiny/2)
+  # }
+  # object
+
+}
+
+MSE2Hist <- function(MSE) {
+  Hist <- Hist()
+  Hist@OM <- MSE@OM
+  Hist@Unfished <- MSE@Unfished
+  Hist@RefPoints <- MSE@RefPoints
+  Hist@Data <- list(MSE@OM@Data)
+  
+  slots <- slotNames(MSE@Hist)
+  for (sl in slots)  {
+    slot(Hist, sl) <- slot(MSE@Hist, sl) 
+  }
+  Hist
+}
+
 
 ProcessLogMSE <- function(MSE, ProjSimListMP, mp, MP) {
   

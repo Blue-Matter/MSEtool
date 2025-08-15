@@ -32,8 +32,8 @@ Simulate_om <- function(OM=NULL,
   # ---- Initial Checks and Setup ----
   CheckClass(OM)
   OM <- OM |> StartUp(nSim) 
-
-
+  HistTimeSteps <- TimeSteps(OM, 'Historical')
+  
   # Set up parallel processing 
   # if (parallel & !snowfall::sfIsRunning())
   #   setup()
@@ -60,40 +60,70 @@ Simulate_om <- function(OM=NULL,
   
   # ---- Calculate Number-at-Age for Initial TimeStep ----
   Hist <- CalcInitialTimeStep(Hist)
-
+  
   # ---- Build HistSimList ----
   # List of `Hist` objects, each with one simulation
   HistSimList <- Hist2HistSimList(Hist)
-
+  
+  # ---- Calculate Reference Points ----
+  # unfished spawning per recruit (egg production; i.e. fecundity)
+  HistSimList<- purrr::map(HistSimList, \(HistSim) {
+    HistSim@RefPoints@SPR0 <- CalcSPR0(HistSim)
+    HistSim
+    }) 
+  
+  # MSY Ref Points 
+  # HistSim=HistSimList$`1`
+  # StockList=HistSim@OM@Stock
+  # FleetList=HistSim@OM@Fleet
+  # 
+  # Complexes=HistSim@OM@Complexes
+  # TimeSteps = tail(HistTimeSteps,1)
+  # maxF=OM@maxF
+  
+  HistSimList <- purrr::map(HistSimList, \(HistSim) {
+    HistSim@RefPoints@MSYRefPoints <- CalculateMSYSim(StockList=HistSim@OM@Stock,
+                                             FleetList=HistSim@OM@Fleet,                                  
+                                             Complexes=HistSim@OM@Complexes,
+                                             TimeSteps = tail(HistTimeSteps,1),
+                                             maxF=OM@maxF)
+    HistSim
+  }, .progress = list(
+    type = "iterator",
+    format = "Calculating MSY Reference Points {cli::pb_bar} {cli::pb_percent}",
+    clear = TRUE))
+  
+  # Per-Recruit Curves TODO
+  
   # ---- Calculate Unfished Equilibrium and Dynamic ----
   HistSimList <- CalcDynamicUnfished(HistSimList)
   
   # ---- Optimize for Final Depletion ----
+  # # check if catchability values exist
+  Catchability <- purrr::map(HistSimList, \(HistSim) {
+    purrr::map(HistSim@OM@Fleet, \(StockFleet)
+               apply(StockFleet@Effort@Catchability, 2, max)
+    ) |>
+      List2Array('Stock')
+  })|> List2Array()
   
-  # TODO - check for identical across sims
-  if (parallel) {
-    cli::cli_progress_message("Optimizing catchability (q) for Final Depletion")
-    HistSimList <- .lapply(HistSimList, OptimizeCatchability)
-    cli::cli_progress_done()
-  } else {
-    HistSimList <- purrr::map(HistSimList, \(HistSim)
-                              OptimizeCatchability(HistSim),
-                              .progress = list(
-                                type = "iterator",
-                                format = "Optimizing catchability (q) for Final Depletion {cli::pb_bar} {cli::pb_percent}",
-                                clear = TRUE))
+  if (!(all(Catchability>1E-5))) {
+    if (parallel) {
+      cli::cli_progress_message("Optimizing catchability (q) for Final Depletion")
+      HistSimList <- .lapply(HistSimList, OptimizeCatchability)
+      cli::cli_progress_done()
+    } else {
+      HistSimList <- purrr::map(HistSimList, \(HistSim)
+                                OptimizeCatchability(HistSim),
+                                .progress = list(
+                                  type = "iterator",
+                                  format = "Optimizing catchability (q) for Final Depletion {cli::pb_bar} {cli::pb_percent}",
+                                  clear = TRUE))
+    }
   }
 
- 
-  # ---- Calculate Reference Points ----
-  HistTimeSteps <- TimeSteps(OM, 'Historical')
-  
-  HistSimList <- CalcReferencePoints(HistSimList, TimeSteps=tail(HistTimeSteps,1)) 
-  
   # ---- Historical Population Dynamics ----
-  # tictoc::tic()
-
-
+  
   # if (IdenticalAcrossSims) {
   #   # TODO - only run SimulateDynamics_ once and copy across HistSimList
   #   # need to make sure to update all historical dynamics - eg Stock@Length for each sim
@@ -106,7 +136,6 @@ Simulate_om <- function(OM=NULL,
                               type = "iterator", 
                               format = "Simulating Historical Fishery {cli::pb_bar} {cli::pb_percent}",
                               clear = TRUE))
-  
   
 
   # update CatchFrac and Allocation ...
@@ -150,7 +179,6 @@ Simulate_om <- function(OM=NULL,
                               clear = TRUE))
   
   
-  
   # Data:
   # - list of length `nSim` then
   # - list of length `nStock`
@@ -161,25 +189,12 @@ Simulate_om <- function(OM=NULL,
   
 
 
-  
-  
-  # Simulate Historical Fishery Data
-  
- 
-  
   # ---- Simulate Fishery Data ----
+  # TODO 
+  # simulate data where values exist in Obs
   
   # ---- Return `hist` Object ----
-  
-  # Convert Back to Hist
-  RRHist <- HistSimList2Hist(Hist, HistSimList)
-  RRHist@OM@Obs$Albacore$Fleet_01@Catch@CV
-  
-  
-  # make Hist object
   Hist <- HistSimList2Hist(Hist, HistSimList)
-  
-
   
   Hist <- SetDigest(Hist)
   Hist

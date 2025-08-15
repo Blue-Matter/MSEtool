@@ -1,5 +1,5 @@
 CalcEquilibriumUnfished <- function(OM) {
-  OM <- Populate(OM)
+  OM <- PopulateOM(OM)
   
   # NOTE: Equilibrium N-at-Age is calculated from R0 (which may vary over time)
   # but does NOT account for expected recruitment from the stock-recruit relationship.
@@ -83,7 +83,7 @@ CalcDynamicUnfished <- function(HistSimList, silent=FALSE) {
   
   TimeSteps <- TimeSteps(HistSimList[[1]]@OM, 'Historical')
   StockNames <- StockNames(HistSimList[[1]]@OM)
-  
+
   if (CheckIdenticalSims(HistSimListCopy)) {
     # identical historical period across all sims
     HistSim <- HistSimListCopy[[1]]

@@ -26,7 +26,7 @@ OM2Hist <- function(OM, silent=FALSE) {
   if (!silent) 
     id <- cli::cli_progress_bar("Initializing `Hist` Object")  
   
-  OM <- Populate(OM, silent=silent)
+  OM <- PopulateOM(OM, silent=silent)
   
   Hist <- new('hist')
   Hist@OM <- OM
@@ -536,15 +536,19 @@ HistSimList2Hist <- function(Hist, HistSimList, TimeSteps=NULL) {
   
 
 HistSimListRefPoints <- function(Hist, HistSimList) {
-  slots <- slotNames(Hist@RefPoints)
-  # TODO - complete RefPoints object - Curves, Equilbrium etc 
-  slots <- slots[!slots %in% c('Curves', 'Equilibrium','Dynamic', 'Misc')]
+  
+  slots <- slotNames(Hist@RefPoints@MSYRefPoints)
   for (slot in slots) {
-    slot(Hist@RefPoints, slot) <- purrr::map(HistSimList, \(HistSim) slot(HistSim@RefPoints, slot)) |> 
+    slot(Hist@RefPoints@MSYRefPoints, slot) <- purrr::map(HistSimList, \(HistSim) 
+                                                 slot(HistSim@RefPoints@MSYRefPoints, slot)) |>
       List2Array('Sim') |>
       aperm(c('Sim', 'Stock', 'TimeStep'))
-    
   }
+  
+  Hist@RefPoints@SPR0 <- purrr::map(HistSimList, \(HistSim) HistSim@RefPoints@SPR0) |>
+    List2Array('Sim') |>
+    aperm(c('Sim', 'Stock', 'TimeStep'))
+  
   Hist
 }
 

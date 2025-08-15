@@ -21,9 +21,11 @@ ReduceNSim <- function(object, nSim=NULL) {
   if (nSim<1)
     cli::cli_abort("`nSim` ({.val {nSim}}) must be >= 1")
   
-  if (nSim>nSim(object))
-    cli::cli_abort("`nSim` ({.val {nSim}}) must < `nSim(OM)` ({.val {nSim(object)}})")
-  
+  if (nSim>nSim(object)) {
+    cli::cli_alert_warning("Argument `nSim` ({.val {nSim}}) is greater than {.run nSim(OM)} ({.val {nSim(object)}}). Ignoring argument `nSim`  ")
+    nSim <- nSim(object)
+  }
+    
   if (nSim(object) == nSim)
     return(object)
   
@@ -963,19 +965,6 @@ aperm <- function(a, perm, ...) {
 # }
 
 
-CheckIdenticalSims <- function(HistSimList, TimeSteps=NULL, Period='Historical') {
-  if (is.null(TimeSteps))
-    TimeSteps <- TimeSteps(HistSimList[[1]]@OM, Period)
-  Digest <- vector('character', length(HistSimList)) 
-  for (i in seq_along(HistSimList)) {
-    HistSimList[[i]]@OM@Stock <- lapply(HistSimList[[i]]@OM@Stock, EditSlotsForSimCheck, TimeSteps=TimeSteps)
-    Digest[i] <- digest::digest(HistSimList[[i]], algo='spookyhash')
-    if (Digest[i] != Digest[1]) {
-      return(FALSE)
-    } 
-  }
-  TRUE
-}
 
 # slots <- slotNames(HistSimList[[1]]@OM@Fleet$Female)
 # for (sl in slots) {

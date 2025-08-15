@@ -37,7 +37,7 @@ ConvertDF <- function(df) {
   if ('Value' %in% nms)
     df$Value <- as.numeric(df$Value)
   
-  df
+  df |> tibble::as_tibble()
 }
 
 
@@ -52,6 +52,37 @@ TimeStepsDF <- function(MSE) {
       dplyr::bind_rows(data.frame(TimeStep=TimeSteps(OM, 'Historical'), Period='Historical'),
                        data.frame(TimeStep=TimeSteps(OM, 'Projection'), Period='Projection'))
     )
+}
+
+AdjustTimeSteps <- function(MSE, TimeSteps, TimeStepsDF) {
+  if (inherits(MSE, 'hist') & !is.null(TimeSteps))
+    TimeSteps <- TimeSteps[TimeSteps %in% (TimeStepsDF |> dplyr::filter(Period =='Historical') |> dplyr::pull('TimeStep'))]
+  TimeSteps
+}
+
+GetMSYRefValue <- function(MSE, Metric='FMSY', Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+  Ref <- match.arg(Ref)
+  if (Ref !="Equilibrium")
+    cli::cli_alert_warning("Only Equilibrium msy reference points are currently working")
+  
+  RefValue <- try(slot(MSE@RefPoints@MSYRefPoints, Metric), silent=TRUE)
+  if (inherits(RefValue, 'try-error')) {
+    RefValue <- try(slot(MSE@RefPoints@MSY, Metric), silent=TRUE)
+  }
+  
+  TimeStepsDF <- TimeStepsDF(MSE) 
+  if (is.null(TimeSteps))
+    TimeSteps <- TimeStepsDF$TimeStep
+  TimeSteps <- AdjustTimeSteps(MSE, TimeSteps, TimeStepsDF)
+  
+  RefValue |> ArraySubsetTimeStep(TimeSteps) |>
+    array2DF() |>
+    ConvertDF() |>
+    dplyr::mutate(Variable=Metric) |>
+    dplyr::left_join(TimeStepsDF, by='TimeStep') |>
+    dplyr::select("Sim", "Stock", "TimeStep", "Period", "Value", "Variable")
+  
 }
 
 # ----- Fishing Mortality ----
@@ -138,25 +169,8 @@ apicalFHist <- function(Hist, Type=c('Dead', 'Retain'), ByFleet=FALSE) {
 
 #' @describeIn Biomass FMSY
 #' @export
-FMSY <- function(MSE, TimeSteps=NULL) {
-  CheckClass(MSE, c('mse', 'hist'), 'MSE')
-  
-  RefValue <- MSE@RefPoints@FMSY 
-  
-  TimeStepsDF <- TimeStepsDF(MSE) 
-  if (is.null(TimeSteps))
-    TimeSteps <- TimeStepsDF$TimeStep
-  
-  if (inherits(MSE, 'hist') & !is.null(TimeSteps))
-    TimeSteps <- TimeSteps[TimeSteps %in% TimeStepsDF |> dplyr::filter(Period =='Historical') |> dplyr::pull('TimeStep')]
-
-  RefValue |> ArraySubsetTimeStep(TimeSteps) |>
-    array2DF() |>
-    ConvertDF() |>
-    dplyr::mutate(Variable='FMSY') |>
-    dplyr::left_join(TimeStepsDF, by='TimeStep') |>
-    dplyr::select("Sim" ,"Stock", "TimeStep", "Value", "Period", "Variable")
-  
+FMSY <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
+  GetMSYRefValue(MSE, Metric='FMSY', Ref, TimeSteps)
 }
 
 #' @describeIn Biomass F_FMSY
@@ -249,15 +263,14 @@ B0 <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
   if (is.null(TimeSteps))
     TimeSteps <- TimeStepsDF$TimeStep
   
-  if (inherits(MSE, 'hist') & !is.null(TimeSteps))
-    TimeSteps <- TimeSteps[TimeSteps %in% TimeStepsDF |> dplyr::filter(Period =='Historical') |> dplyr::pull('TimeStep')]
+  TimeSteps <- AdjustTimeSteps(MSE, TimeSteps)
   
   RefValue |> ArraySubsetTimeStep(TimeSteps) |>
     array2DF() |>
     ConvertDF() |>
     dplyr::mutate(Variable='B0') |>
     dplyr::left_join(TimeStepsDF, by='TimeStep') |>
-    dplyr::select("Sim" ,"Stock", "TimeStep", "Value", "Period", "Variable")
+    dplyr::select("Sim" ,"Stock", "TimeStep", "Period", "Value", "Variable")
 }
 
 #' @describeIn Biomass Total Biomass relative to Unfished Biomass 
@@ -282,23 +295,7 @@ B_B0 <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
 #' @describeIn Biomass BMSY
 #' @export
 BMSY <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
-  CheckClass(MSE, c('mse', 'hist'), 'MSE')
-  
-  RefValue <- MSE@RefPoints@BMSY 
-  
-  TimeStepsDF <- TimeStepsDF(MSE) 
-  if (is.null(TimeSteps))
-    TimeSteps <- TimeStepsDF$TimeStep
-  
-  if (inherits(MSE, 'hist') & !is.null(TimeSteps))
-    TimeSteps <- TimeSteps[TimeSteps %in% TimeStepsDF |> dplyr::filter(Period =='Historical') |> dplyr::pull('TimeStep')]
-  
-  RefValue |> ArraySubsetTimeStep(TimeSteps) |>
-    array2DF() |>
-    ConvertDF() |>
-    dplyr::mutate(Variable='BMSY') |>
-    dplyr::left_join(TimeStepsDF, by='TimeStep') |>
-    dplyr::select("Sim" ,"Stock", "TimeStep", "Value", "Period", "Variable")
+  GetMSYRefValue(MSE, Metric='BMSY', Ref, TimeSteps)
 }
 
 #' @describeIn Biomass Total Biomass relative to Biomass corresponding with MSY
@@ -388,15 +385,14 @@ SB0 <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
   if (is.null(TimeSteps))
     TimeSteps <- TimeStepsDF$TimeStep
   
-  if (inherits(MSE, 'hist') & !is.null(TimeSteps))
-    TimeSteps <- TimeSteps[TimeSteps %in% TimeStepsDF |> dplyr::filter(Period =='Historical') |> dplyr::pull('TimeStep')]
+  TimeSteps <- AdjustTimeSteps(MSE, TimeSteps)
   
   RefValue |> ArraySubsetTimeStep(TimeSteps) |>
     array2DF() |>
     ConvertDF() |>
     dplyr::mutate(Variable='SB0') |>
     dplyr::left_join(TimeStepsDF, by='TimeStep') |>
-    dplyr::select("Sim" ,"Stock", "TimeStep", "Value", "Period", "Variable")
+    dplyr::select("Sim" ,"Stock", "TimeStep",  "Period", "Value", "Variable")
 }
 
 #' @describeIn Biomass Spawning Biomass relative to Unfished Spawning Biomass 
@@ -419,23 +415,7 @@ SB_SB0 <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
 #' @describeIn Biomass SBMSY
 #' @export
 SBMSY <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
-  CheckClass(MSE, c('mse', 'hist'), 'MSE')
-  
-  RefValue <- MSE@RefPoints@SBMSY 
-  
-  TimeStepsDF <- TimeStepsDF(MSE) 
-  if (is.null(TimeSteps))
-    TimeSteps <- TimeStepsDF$TimeStep
-  
-  if (inherits(MSE, 'hist') & !is.null(TimeSteps))
-    TimeSteps <- TimeSteps[TimeSteps %in% TimeStepsDF |> dplyr::filter(Period =='Historical') |> dplyr::pull('TimeStep')]
-  
-  RefValue |> ArraySubsetTimeStep(TimeSteps) |>
-    array2DF() |>
-    ConvertDF() |>
-    dplyr::mutate(Variable='SBMSY') |>
-    dplyr::left_join(TimeStepsDF, by='TimeStep') |>
-    dplyr::select("Sim" ,"Stock", "TimeStep", "Value", "Period", "Variable")
+  GetMSYRefValue(MSE, Metric='SBMSY', Ref, TimeSteps)
 }
 
 #' @describeIn Biomass Spawning Biomass relative to Spawning Biomass corresponding with MSY
@@ -518,15 +498,15 @@ SP0 <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
   TimeStepsDF <- TimeStepsDF(MSE) 
   if (is.null(TimeSteps))
     TimeSteps <- TimeStepsDF$TimeStep
-  if (inherits(MSE, 'hist') & !is.null(TimeSteps))
-    TimeSteps <- TimeSteps[TimeSteps %in% TimeStepsDF |> dplyr::filter(Period =='Historical') |> dplyr::pull('TimeStep')]
+  
+  TimeSteps <- AdjustTimeSteps(MSE, TimeSteps)
   
   RefValue |> ArraySubsetTimeStep(TimeSteps) |>
     array2DF() |>
     ConvertDF() |>
     dplyr::mutate(Variable='SP0') |>
     dplyr::left_join(TimeStepsDF, by='TimeStep') |>
-    dplyr::select("Sim" ,"Stock", "TimeStep", "Value", "Period", "Variable")
+    dplyr::select("Sim" ,"Stock", "TimeStep", "Period", "Value",  "Variable")
 }
 
 #' @describeIn Biomass Spawning Production relative to Unfished Spawning Production 
@@ -549,26 +529,7 @@ SP_SP0 <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
 #' @describeIn Biomass SPMSY
 #' @export
 SPMSY <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
-  CheckClass(MSE, c('mse', 'hist'), 'MSE')
-  
-  RefValue <- MSE@RefPoints@SPMSY 
-  if (is.null(RefValue))
-    cli::cli_abort('`RefPoints@SPMSY` has not been calculated')
-  
-  TimeStepsDF <- TimeStepsDF(MSE) 
-  if (is.null(TimeSteps))
-    TimeSteps <- TimeStepsDF$TimeStep
-  
-  if (inherits(MSE, 'hist') & !is.null(TimeSteps))
-    TimeSteps <- TimeSteps[TimeSteps %in% TimeStepsDF |> dplyr::filter(Period =='Historical') |> dplyr::pull('TimeStep')]
-  
-  RefValue |> ArraySubsetTimeStep(TimeSteps) |>
-    array2DF() |>
-    ConvertDF() |>
-    dplyr::mutate(Variable='SPMSY') |>
-    dplyr::left_join(TimeStepsDF, by='TimeStep') |>
-    dplyr::select("Sim" ,"Stock", "TimeStep", "Value", "Period", "Variable")
-  
+  GetMSYRefValue(MSE, Metric='SPMSY', Ref, TimeSteps)
 }
 
 #' @describeIn Biomass Spawning Production relative to Spawning Production corresponding with MSY

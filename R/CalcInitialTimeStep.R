@@ -38,7 +38,7 @@ CalcInitialTimeStep <- function(Hist, silent=FALSE) {
     Hist@Number[[st]][,,1,] <- ArrayMultiply(NatAge, UnfishedDist)
     
     InitialDepletion <- Hist@OM@Stock[[st]]@Depletion@Initial
-    if (length(InitialDepletion) && InitialDepletion!=1) 
+    if (length(InitialDepletion) && all(InitialDepletion!=1)) 
       Hist <- DoOptInitialDepletion(Hist, st)
     
 
@@ -67,8 +67,7 @@ DoOptInitialDepletion <- function(Hist, st) {
   }
   RefVal <- RefVal[,st, drop=FALSE] |> abind::adrop(2)
   
-  NatAge <- Hist@Number[[st]][,,1,, drop=FALSE] |>
-    abind::adrop(3)
+  NatAge <- Hist@Number[[st]][,,1,, drop=FALSE] |> abind::adrop(3)
   NumberAtAgeList <- Array2List(apply(NatAge, c('Sim', 'Age'), sum), 1)
   WeightAtAgeList <- Array2List(abind::adrop(Hist@OM@Stock[[st]]@Weight@MeanAtAge[,,1, drop=FALSE],3), 1)
   MaturityAtAgeList <- Array2List(abind::adrop(Hist@OM@Stock[[st]]@Maturity@MeanAtAge[,,1, drop=FALSE],3), 1)

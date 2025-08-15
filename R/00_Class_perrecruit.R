@@ -16,12 +16,3 @@ setClass("perrecruit",
          )
 )
 
-setClass("msyrefpoints",
-         slots=c(FMSY='array.numeric.null', # Sim, Stock, TimeStep
-                 BMSY='array.numeric.null', # Sim, Stock,  TimeStep, F
-                 SBMSY='array.numeric.null', # Sim, Stock, TimeStep, F
-                 SPMSY='array.numeric.null', # Sim, Stock, TimeStep, F
-                 MSYRemovals='array.numeric.null', # Sim, Stock, TimeStep, F
-                 MSYLandings='array.numeric.null' # Sim, Stock, TimeStep, F   
-         )
-)

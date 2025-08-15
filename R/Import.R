@@ -348,13 +348,15 @@ SS2Length <- function(st, RepList, mainyrs, AgeClasses) {
                           GetSS_Length_at_Age(st, replist, mainyrs, AgeClasses)) |>
     List2Array() |>
     AddDimNames(c("Age", "TimeStep", "Sim"), TimeSteps = mainyrs) |>
-    aperm(c('Sim', 'Age','TimeStep'))
+    aperm(c('Sim', 'Age','TimeStep')) |>
+    ArrayReduceDims()
   
   CVAtAge <- purrr::map(RepList, \(replist) 
                         GetSS_LengthCV_at_Age(st, replist, mainyrs, AgeClasses)) |>
     List2Array() |>
     AddDimNames(c("Age", "TimeStep", "Sim"), TimeSteps = mainyrs) |>
-    aperm(c('Sim', 'Age','TimeStep'))
+    aperm(c('Sim', 'Age','TimeStep')) |>
+    ArrayReduceDims()
 
   Length <- Length()
   Length@MeanAtAge <- MeanAtAge
@@ -384,7 +386,7 @@ GetSS_WeightAtAge <- function(st, replist, mainyrs, AgeClasses) {
   } else {
     Wt_age <- matrix(endgrowth$Wt_Beg, length(AgeClasses), nyears)
   }
-  Wt_age
+  Wt_age 
 }
 
 SS2Weight <- function(st, RepList, mainyrs, AgeClasses) {
@@ -406,7 +408,8 @@ SS2Weight <- function(st, RepList, mainyrs, AgeClasses) {
                                  GetSS_WeightAtAge(st, replist, mainyrs, AgeClasses)) |>
     List2Array() |>
     AddDimNames(c("Age", "TimeStep", "Sim"), TimeSteps = mainyrs) |>
-    aperm(c('Sim', 'Age','TimeStep'))
+    aperm(c('Sim', 'Age','TimeStep')) |>
+    ArrayReduceDims()
   
   Weight
 }
@@ -434,7 +437,8 @@ SS2NaturalMortality <- function(st, RepList, mainyrs, AgeClasses) {
   MeanAtAge <- purrr::map(RepList, \(replist) GetSS_M_at_age(st, replist, mainyrs, AgeClasses)) |>
     List2Array() |>
     AddDimNames(c("Age", "TimeStep", "Sim"), TimeSteps = mainyrs) |>
-    aperm(c('Sim', 'Age','TimeStep'))
+    aperm(c('Sim', 'Age','TimeStep')) |>
+    ArrayReduceDims()
   
   NaturalMortality <- NaturalMortality()
   NaturalMortality@Pars <- list()
@@ -462,7 +466,8 @@ SS2Maturity <- function(st, RepList, mainyrs, AgeClasses) {
                                    GetSS_Maturity_at_Age(st, replist, AgeClasses)) |>
     List2Array() |>
     AddDimNames(c("Age", "TimeStep", "Sim"), TimeSteps = mainyrs) |>
-    aperm(c('Sim', 'Age','TimeStep'))
+    aperm(c('Sim', 'Age','TimeStep')) |>
+    ArrayReduceDims()
   Maturity
 }
 
@@ -503,7 +508,8 @@ SS2Fecundity <- function(st, RepList, mainyrs, AgeClasses) {
   Fecundity@MeanAtAge <- purrr::map(RepList, \(replist) GetSS_Fecundity(st, replist, AgeClasses)) |>
     List2Array() |>
     AddDimNames(c("Age", "TimeStep", "Sim"), TimeSteps = mainyrs) |>
-    aperm(c('Sim', 'Age','TimeStep'))
+    aperm(c('Sim', 'Age','TimeStep')) |>
+    ArrayReduceDims()
   Fecundity
 }
 
@@ -644,7 +650,8 @@ SS2SRR <- function(st, RepList, mainyrs, AgeClasses, pYear, nSim) {
   SRR@RecDevInit <- array(RecDevsEarly, dim=c(length(AgeClasses)-1,ncol(RecDevsEarly)),
                           dimnames = list(Age=rev(AgeClasses[-1]),
                                           Sim=1:ncol(RecDevsEarly))) |>
-    aperm(c('Sim', 'Age'))
+    aperm(c('Sim', 'Age')) |>
+    ArrayReduceDims()
   
   
   RecDevs <- purrr::map(RepList, \(replist) GetSS_RecDevs(replist, mainyrs, AgeClasses))
@@ -652,7 +659,8 @@ SS2SRR <- function(st, RepList, mainyrs, AgeClasses, pYear, nSim) {
   SRR@RecDevHist  <- array(RecDevs, dim=c(length(mainyrs),ncol(RecDevs)),
                            dimnames = list(TimeStep=mainyrs,
                                            Sim=1:ncol(RecDevs))) |>
-    aperm(c('Sim', 'TimeStep'))
+    aperm(c('Sim', 'TimeStep')) |>
+    ArrayReduceDims(includeTimeStep=FALSE)
   
   recdevs <- SRR@RecDevHist
   
@@ -811,13 +819,14 @@ SS2DiscardMortality <- function(st, fl, RepList, mainyrs, Stock) {
   
   DiscardMortalityAtLength <- purrr::map(RepList, \(replist)
                                          GetSS_DiscardMortalityAtLength (st, fl, replist, mainyrs, Stock)
-                                         )
+                                         ) 
   DiscardMortalityAtLength <- abind::abind(DiscardMortalityAtLength, along=3,
                                            use.first.dimnames=TRUE, use.dnns=TRUE)
   names(dimnames(DiscardMortalityAtLength))[[3]] <- 'Sim'
   
   DiscardMortality@MeanAtLength <- DiscardMortalityAtLength |>
-    aperm(c("Sim", 'Class', 'TimeStep'))
+    aperm(c("Sim", 'Class', 'TimeStep')) |>
+    ArrayReduceDims()
 
   
   AgeClasses <- Stock@Ages@Classes
@@ -840,6 +849,7 @@ SS2DiscardMortality <- function(st, fl, RepList, mainyrs, Stock) {
                                  nsim=Stock@nSim,
                                  TimeSteps = mainyrs,
                                  max1=FALSE)
+  DiscardMortality@MeanAtAge <- ArrayReduceDims(DiscardMortality@MeanAtAge)
   DiscardMortality
 }
 
@@ -893,8 +903,8 @@ SS2Selectivity <- function(st, fl, RepList, mainyrs, Stock) {
                  use.first.dimnames=TRUE, use.dnns=TRUE)
   names(dimnames(MeanAtAge))[[3]] <- 'Sim'
   
-  Selectivity@MeanAtAge <- aperm(MeanAtAge, c('Sim', 'Age', 'TimeStep'))
-  
+  Selectivity@MeanAtAge <- aperm(MeanAtAge, c('Sim', 'Age', 'TimeStep')) |>
+    ArrayReduceDims()
   
   MeanAtLength <-  purrr::map(RepList, \(replist)
                               GetSS_SelectivityAtLength(st, fl, replist, mainyrs)
@@ -902,7 +912,8 @@ SS2Selectivity <- function(st, fl, RepList, mainyrs, Stock) {
                     use.first.dimnames=TRUE, use.dnns=TRUE)
   names(dimnames(MeanAtLength))[[3]] <- 'Sim'
   
-  Selectivity@MeanAtLength <- aperm(MeanAtLength, c('Sim', 'Class', 'TimeStep'))
+  Selectivity@MeanAtLength <- aperm(MeanAtLength, c('Sim', 'Class', 'TimeStep')) |>
+    ArrayReduceDims()
   Selectivity@Classes <- as.numeric(dimnames(Selectivity@MeanAtLength)[[2]])
   Selectivity
 }
@@ -935,7 +946,8 @@ SS2Retention <- function(st, fl, RepList, mainyrs, Selectivity, Stock) {
   names(dimnames(MeanAtLength))[[3]] <- 'Sim'
   MeanAtLength[!is.finite(MeanAtLength)] <- 0
   
-  Retention@MeanAtLength <- MeanAtLength |> aperm(c('Sim', 'Class', 'TimeStep'))
+  Retention@MeanAtLength <- MeanAtLength |> aperm(c('Sim', 'Class', 'TimeStep')) |>
+    ArrayReduceDims()
   LengthClasses <- as.numeric(dimnames(Retention@MeanAtLength)[[2]])
   Retention@Classes <- LengthClasses
   
@@ -957,7 +969,7 @@ SS2Retention <- function(st, fl, RepList, mainyrs, Selectivity, Stock) {
                                  TimeSteps=mainyrs,
                                  max1=FALSE)
   
-  Retention@MeanAtAge <-  temp@MeanAtAge # , Selectivity@MeanAtAge)
+  Retention@MeanAtAge <-  temp@MeanAtAge |> ArrayReduceDims() # , Selectivity@MeanAtAge)
   Retention
 }
 
@@ -1003,7 +1015,7 @@ SS2WeightFleet <- function(st, fl, RepList, mainyrs) {
   names(dimnames(Weight_at_Age_array))[[3]] <- 'Sim'
   
   Weight_at_Age_array <- Weight_at_Age_array |> aperm(c('Sim', 'Age', 'TimeStep'))
-  Weight_at_Age_array
+  Weight_at_Age_array |> ArrayReduceDims()
 }
 
 SS2Fleet <- function(st, fl, RepList, mainyrs, Stock) {
@@ -1027,7 +1039,6 @@ ImportSS <- function(x,
                      Name = "Imported SS3 Model",
                      nSim=48,
                      pYear=30, 
-                     silent=FALSE,
                      Agency='',
                      Author='',
                      Email='',
@@ -1035,12 +1046,13 @@ ImportSS <- function(x,
                      Latitude=numeric(),
                      Longitude=numeric(),
                      Sponsor='',
-                     StockNames=NULL,
-                     CommonNames=NULL,
-                     SpeciesNames=NULL,
+                     StockName=NULL,
+                     CommonName=NULL,
+                     Species=NULL,
                      FleetNames=NULL,
                      Interval=1,
                      DataLag=0,
+                     silent=FALSE,
                      ...) {
   OnExit()
   RepList <- ImportSSReport(x, silent, ...)
@@ -1067,7 +1079,6 @@ ImportSS <- function(x,
   OM@nSim <- nSim
   FirstHistYear <- RepList[[1]]$startyr
   LastHistYear <- RepList[[1]]$endyr
-  # TODO - update time steps in OM if these are integers rather than years
   
   mainyrs <- FirstHistYear:LastHistYear
   OM@nYear <- length(mainyrs)
@@ -1076,30 +1087,30 @@ ImportSS <- function(x,
   ProYears <- seq(max(mainyrs)+1, by=1, length.out=pYear)
   OM@TimeSteps <- c(mainyrs, ProYears)
   
-  if (is.null(StockNames)) {
+  if (is.null(StockName)) {
     if (nStock==1) {
-      StockNames <- 'Female'
+      StockName <- 'Female'
     } else if (nStock==2) {
-      StockNames <- c('Female', 'Male')
+      StockName <- c('Female', 'Male')
     } else {
       cli::cli_abort('`nStock` should be {.val {1} or {2}}')
     }
   }
   
-  if (length(StockNames)!=nStock)
-    cli::cli_abort('`StockNames` should be length `nStock`: {.val {nStock}}')
+  if (length(StockName)!=nStock)
+    cli::cli_abort('`StockName` ({.val {StockName}}) should be length `nStock` ({.val {nStock}})')
   
 
-  OM@Stock <- purrr::map(seq_along(StockNames), \(st) {
+  OM@Stock <- purrr::map(seq_along(StockName), \(st) {
     stock <- SS2Stock(st, RepList, pYear, nSim=nSim)
-    stock@Name <- StockNames[st]
-    stock@CommonName <- CommonNames[st]
-    stock@Species <- SpeciesNames[st]
+    stock@Name <- StockName[st]
+    stock@CommonName <- CommonName[st]
+    stock@Species <- Species[st]
     stock
   })
-  names(OM@Stock) <- StockNames
+  names(OM@Stock) <- StockName
   
-  OM@Fleet <- MakeNamedList(StockNames, list())
+  OM@Fleet <- MakeNamedList(StockName, list())
   SSFleetNames <- RepList[[1]]$catch$Fleet_Name |> unique()
   nFleet <- length(SSFleetNames)
   if (is.null(FleetNames)) 
@@ -1116,9 +1127,8 @@ ImportSS <- function(x,
     }
   }
   
-  # TODO should be a list by stock
   OM@Data <- list(ImportSSData(RepList, OM@Name))
-  names(OM@Data) <- paste(StockNames, collapse=' ')
+  names(OM@Data) <- paste(StockName, collapse=' ')
   
   # Obs
   CPUENames <- OM@Data[[1]]@Index@Name
@@ -1130,19 +1140,19 @@ ImportSS <- function(x,
   if (length(IndexInd)>0) {
     CPUE_Ind <- RepList[[1]]$cpue$Fleet |> unique() 
     for (ind in CPUE_Ind) {
-      
+      # TODO - currently only does this for Stock 1
       SelectAtAge <- purrr::map(RepList, \(replist) {
         GetSS_SelectivityAtAge(st=1, ind, replist, mainyrs) |>
-          process_cpars()
+          ArrayReduceDims()
       }) |>
         List2Array('Sim') |> aperm(c('Sim', 'Age', 'TimeStep'))
     
       OM@Obs[[1]][[ind]]@Index@Selectivity <- SelectAtAge
     }
   }
- 
+
   # OM@Imp
-  CatchFracList <- MakeNamedList(StockNames)
+  CatchFracList <- MakeNamedList(StockName)
 
   for (st in 1:nStock) {
     catch <- OM@Data[[1]]@Catch@Value # currently not by stock # TODO

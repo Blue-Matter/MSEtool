@@ -10,7 +10,6 @@ ImportSS(
   Name = "Imported SS3 Model",
   nSim = 48,
   pYear = 30,
-  silent = FALSE,
   Agency = "",
   Author = "",
   Email = "",
@@ -18,12 +17,13 @@ ImportSS(
   Latitude = numeric(),
   Longitude = numeric(),
   Sponsor = "",
-  StockNames = NULL,
-  CommonNames = NULL,
-  SpeciesNames = NULL,
+  StockName = NULL,
+  CommonName = NULL,
+  Species = NULL,
   FleetNames = NULL,
   Interval = 1,
   DataLag = 0,
+  silent = FALSE,
   ...
 )
 

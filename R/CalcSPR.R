@@ -1,5 +1,7 @@
 
-CalcSPR0 <- function(HistSim, TimeSteps) {
+CalcSPR0 <- function(HistSim, TimeSteps=NULL) {
+  if (is.null(TimeSteps))
+    TimeSteps <- HistSim@OM@TimeSteps
   
   
   SPR0 <- purrr::map(HistSim@OM@Stock, \(stock) CalcSPR0_Stock(stock, TimeSteps))
@@ -13,7 +15,7 @@ CalcSPR0 <- function(HistSim, TimeSteps) {
   
   SPR0 <- List2Array(SPR0, 'Stock', 'TimeStep') |> t() 
   dimnames(SPR0)[[2]] <- TimeSteps
-  SPR0
+  SPR0 |> ArrayReduceDims()
 }
 
 CalcSPR0_Stock <- function(Stock, TimeSteps) {

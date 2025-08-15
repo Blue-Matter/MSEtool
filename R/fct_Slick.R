@@ -19,7 +19,7 @@ SlickChecks <- function(MSE) {
     
     SameMPs <- MPs(MSE) |> unique() |> length() == 1
     if (!SameMPs)
-      cli::cli_abort("All MSE objects must have the MPs. Use {.run MPs(MSE)} to check.")
+      cli::cli_abort("All MSE objects must have the same MPs. Use {.run MPs(MSE)} to check.")
     
     SameTSs <-  TimeSteps(MSE) |> unique() |> length() == 1
     if (!SameTSs)

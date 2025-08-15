@@ -5,6 +5,8 @@
 NULL
 
 
+
+
 ## ---- OM -----
 #' @describeIn Populate Populate an [om-class()] object
 #' @param seed Seed for the random number generator
@@ -17,37 +19,22 @@ PopulateOM <- function(OM, silent=FALSE) {
   # chk <- Check(OM)
   
   OM@Stock  <- PopulateStockList(OM, silent)
-  OM@Fleet <- PopulateFleetList(OM, StockList, silent)
+  OM@Fleet <- PopulateFleetList(OM, OM@Stock, silent)
 
-  OM <- PopulateObs(OM)
-  
-  OM <- CheckCatchFrac(OM) # TODO - auto-populate CatchFrac if OM@Data exists
-  
-  # share parameters for two-sex stocks
   OM <- OM |>
-    UpdateSPFrom() |>
-    ShareParameters() |>
+    PopulateObs() |>
+    CheckCatchFrac() |> # TODO - auto-populate CatchFrac if OM@Data exists
+    CheckAllocation() |>
+    UpdateSPFrom() |> # TODO
+    ShareParameters() |>   # share parameters for two-sex stocks TODO
     StartMessages()
-  
-
-
-
   
   #Imp
   
   
-  
-  # Update OM Timesteps
-  # object@Stock[[1]]@Ages@Units
-  # TimeUnits(object)
-  #
-  # object@Stock
-  # object@TimeUnits
-  
   SetDigest(OM)
   
 }
-
 
 PopulateStockList <- function(OM, silent=FALSE) {
   nStocks <- nStock(OM)
@@ -62,14 +49,17 @@ PopulateStockList <- function(OM, silent=FALSE) {
       stock <- OM@Stock[[st]]
     }
     
-    if (!silent) {
-      cli::cli_alert('Populating: {.val {stock@Name}} ({st}/{nStocks})')
-    }
+    # if (!silent) {
+    #   cli::cli_alert('Populating: {.val {stock@Name}} ({st}/{nStocks})')
+    # }
     
     stock@nSim <- OM@nSim
     stock@nYear <- OM@nYear
     stock@pYear <- OM@pYear
     stock@CurrentYear <- OM@CurrentYear
+    
+    digest::digest(OM@Stock$Albacore, algo='spookyhash')
+    digest::digest(stock, algo='spookyhash')
     
     StockList[[st]] <- PopulateStock(stock, 
                                      seed=OM@Seed, 

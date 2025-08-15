@@ -71,7 +71,7 @@ SubsetSim <- function(object, Sim=1, drop=FALSE, debug=FALSE) {
   object
 }
 
-SubsetTimeStep <- function(object, TimeSteps, debug=FALSE, AddPast=TRUE) {
+SubsetTimeStep <- function(object, TimeSteps, AddPast=TRUE, debug=FALSE) {
   
   if (debug) 
     cli::cli_alert('Class {.val {class(object)}}')
@@ -89,7 +89,7 @@ SubsetTimeStep <- function(object, TimeSteps, debug=FALSE, AddPast=TRUE) {
       if (debug)
         cli::cli_alert('Class obj {.val {class(obj)}}')
       
-      slot(object, slots[i]) <- Recall(obj, TimeSteps, debug)
+      slot(object, slots[i]) <- Recall(obj, TimeSteps, AddPast, debug)
     }
  
     return(object)
@@ -101,7 +101,7 @@ SubsetTimeStep <- function(object, TimeSteps, debug=FALSE, AddPast=TRUE) {
       if (is.null(object[[j]])) {
         outlist[[j]] <- object[[j]]
       } else {
-        outlist[[j]] <- Recall(object[[j]], TimeSteps, debug)
+        outlist[[j]] <- Recall(object[[j]], TimeSteps, AddPast, debug)
       }
       
     }

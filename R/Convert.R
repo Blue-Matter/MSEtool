@@ -891,7 +891,70 @@ get_cpars <- function(OM, st=1, fl=1) {
   }
 }
 
+ArrayReduceDims <- function(array, includeTimeStep=TRUE) {
+  
+  if (!is.array(array)) {
+    cli::cli_alert_warning('`array` is not an array. Returning `array`')
+    return(array)
+  }
+  
+  dnames <- array |> dimnames() |> names()
+  
+  indSim <- which(dnames=='Sim')
+  indTimeStep <- which(dnames=='TimeStep')
+  
+  incSim <- length(indSim)
+  incTimeStep <- length(indTimeStep)
+  
+  if (!includeTimeStep)
+    incTimeStep <- 0
+  
+  if (!incSim & !incTimeStep)
+    return(array)
+  
+  if (incSim & !incTimeStep) {
+    if (!IdenticalSims(array)) 
+      return(array)
+    return(abind::asub(array, 1, indSim, drop=FALSE))
+  }
+    
+  if (!incSim & incTimeStep) {
+    uniqueTimeSteps <- IdenticalTimeSteps(array, FALSE)
+    identicalTSs <- length(uniqueTimeSteps)==1
+    
+    if (!identicalTSs) 
+      return(array)
+    
+    return(abind::asub(array, uniqueTimeSteps, indTimeStep, drop=FALSE))
+  }
+  
+  if (incSim & incTimeStep) {
+    identicalSims <- IdenticalSims(array)
+    uniqueTimeSteps <- IdenticalTimeSteps(array, FALSE)
+    identicalTSs <- length(uniqueTimeSteps)==1
+    
+    if (!identicalSims & !identicalTSs)
+      return(array)
+    
+    if (identicalSims & identicalTSs) {
+      return(abind::asub(array, list(1,1), c(indSim, indTimeStep), drop=FALSE))
+    }
+    
+    if (!identicalSims & identicalTSs) {
+      return(abind::asub(array, uniqueTimeSteps, indTimeStep, drop=FALSE))
+    }
+    
+    if (identicalSims & !identicalTSs) {
+      return(abind::asub(array, list(1,uniqueTimeSteps), c(indSim, indTimeStep), drop=FALSE))
+    }
+  }
+    
+}
+  
+
+
 process_cpars <- function(value) {
+  stop('Use `ArrayReduceDims` instead')
   if (is.null(value)) return()
   dd <- dim(value)
   if (is.null(dd)) {

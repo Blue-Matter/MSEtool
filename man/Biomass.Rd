@@ -25,7 +25,7 @@
 \usage{
 apicalF(MSE, Type = c("Dead", "Retain"), ByFleet = FALSE)
 
-FMSY(MSE, TimeSteps = NULL)
+FMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
 
 F_FMSY(MSE, TimeSteps = NULL)
 
@@ -66,9 +66,9 @@ Landings(MSE, ByFleet = FALSE)
 \arguments{
 \item{MSE}{An \code{mse} class or \code{hist} object}
 
-\item{TimeSteps}{Numeric value specifying the time step(s) to use for the reference point. Defaults to all time-steps.}
-
 \item{Ref}{Character string specifying the reference point to use \verb{('Equilibrium', 'Dynamic)}}
+
+\item{TimeSteps}{Numeric value specifying the time step(s) to use for the reference point. Defaults to all time-steps.}
 }
 \description{
 Returns as a data.frame

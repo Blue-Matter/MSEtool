@@ -20,6 +20,19 @@ IdenticalSims <- function(SimList, TimeSteps, EditSlots=TRUE) {
   TRUE
 }
 
+CheckIdenticalSims <- function(HistSimList, TimeSteps=NULL, Period='Historical') {
+  if (is.null(TimeSteps))
+    TimeSteps <- TimeSteps(HistSimList[[1]]@OM, Period)
+  Digest <- vector('character', length(HistSimList)) 
+  for (i in seq_along(HistSimList)) {
+    HistSimList[[i]]@OM@Stock <- lapply(HistSimList[[i]]@OM@Stock, EditSlotsForSimCheck)
+    Digest[i] <- digest::digest(HistSimList[[i]], algo='spookyhash')
+    if (Digest[i] != Digest[1]) {
+      return(FALSE)
+    } 
+  }
+  TRUE
+}
 
 
 EditSlotsForSimCheck <- function(object) {
@@ -50,28 +63,35 @@ EditSlotsForSimCheck <- function(object) {
   object
 }
 
-IdenticalSimsArray <- function(array) {
+IdenticalSimsArray <- function(array, logical=TRUE) {
   if (!is.array(array))
     return(TRUE)
   
+  unique <- UniqueSims(array)
+  
+  if (!logical) 
+    return(unique)
+  
+  if (is.null(unique))
+    return(TRUE)
+  
+  length(unique)==1
+  
+}
+
+UniqueSims <- function(array) {
+  if (!is.array(array))
+    cli::cli_abort('`array` is not an array')
+  
   dnames <- dimnames(array)
   SimInd <- which(names(dnames) == 'Sim')
-  
   if (!length(SimInd))
-    return(TRUE)
+    return(NULL)
   
   dd <- dim(array)    
   if (dd[SimInd]==1)
-    return(TRUE)
+    return(1)
   
   meanSim <- apply(array, SimInd, mean)
-  
-  meanmeanSim <- mean(meanSim)
-  if (meanmeanSim<=0)
-    return(TRUE)
-  
-  sum(meanSim/meanmeanSim - 1) < 1E-6
-  
-
-  
+  match(unique(meanSim), meanSim)
 }
