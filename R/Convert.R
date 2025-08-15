@@ -891,6 +891,7 @@ get_cpars <- function(OM, st=1, fl=1) {
   }
 }
 
+#' @export
 ArrayReduceDims <- function(array, includeTimeStep=TRUE) {
   
   if (!is.array(array)) {

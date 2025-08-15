@@ -18,6 +18,7 @@ MakeFactor <- function(x) {
   factor(x, ordered = TRUE, levels=unique(x))
 }
 
+#' @export
 ConvertDF <- function(df) {
   nms <- colnames(df)
   if ('Sim' %in% nms)
