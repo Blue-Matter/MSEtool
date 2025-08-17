@@ -116,7 +116,6 @@ CalcPerRecruit_StockList <- function(apicalF, StockList, FleetList, TimeSteps) {
                                    ArraySubsetTimeStep(TimeSteps)) |> 
     List2Array('Stock') |> aperm(setdnames(c('Stock', 'Age', 'TimeStep', 'Fleet'), BySim))
   
-  
   PerRecruitF <- purrr::map(apicalF, \(F)
                             CalcPerRecruit_StockList_F(F, 
                                                        StockAllocation, 
@@ -253,6 +252,7 @@ CalcPerRecruit_StockList_F <- function(apicalF,
     ZDeadTotalFleet <- AddDimension(ZDeadTotal, 'Fleet')
     ArrayDivide(FDead, ZDeadTotalFleet)
   })
+  names(FishingDeadList) <- names(NaturalMortalityList)
   
   NDeadList <- purrr::map2(NPRFList, ZDeadTotalList, \(NPRF, ZDeadTotal)
                            ArrayMultiply(NPRF, (1-exp(-ZDeadTotal))))
@@ -265,7 +265,8 @@ CalcPerRecruit_StockList_F <- function(apicalF,
     if (!is.array(removals))
       removals <- array(removals, length(removals), dimnames = list(TimeStep=TimeSteps))
     removals
-  }) |> List2Array('Stock') |>
+  }) |> 
+    List2Array('Stock') |>
     aperm(setdnames(c('Stock', 'TimeStep'), BySim))
   
   FRetainList <- FRetain |> Array2List(1)
@@ -273,6 +274,7 @@ CalcPerRecruit_StockList_F <- function(apicalF,
     ZDeadTotalFleet <- AddDimension(ZDeadTotal, 'Fleet')
     ArrayDivide(FRetain, ZDeadTotalFleet)
   })
+  names(FishingRetainList) <- names(NaturalMortalityList)
   
   Landings <- purrr::pmap(list(FishingRetainList, NDeadList, WeightFleetList), \(FishingRetain, NDead, WeightFleet) {
     NDeadFleet <- AddDimension(NDead, 'Fleet')
@@ -300,9 +302,8 @@ CalcPerRecruit_StockList_F <- function(apicalF,
     biomass
   }) |> List2Array("Stock") |> aperm(setdnames(c('Stock', 'TimeStep'), BySim)) 
   
-  SProduction <- purrr::pmap(list(NPRF_SPList, WeightList,FecundityList), \(NPRF_SP, Weight, Fecundity) {
-    biomass <- ArrayMultiply(NPRF_SP, Weight) |>
-      ArrayMultiply(Fecundity) |>
+  SProduction <- purrr::map2(NPRF_SPList,FecundityList, \(NPRF_SP, Fecundity) {
+    biomass <- ArrayMultiply(NPRF_SP, Fecundity) |>
       apply(setdnames('TimeStep', BySim), sum)
     if (!is.array(biomass))
       biomass <- array(biomass, length(biomass), dimnames = list(TimeStep=TimeSteps))

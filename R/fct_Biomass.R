@@ -264,7 +264,7 @@ B0 <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
   if (is.null(TimeSteps))
     TimeSteps <- TimeStepsDF$TimeStep
   
-  TimeSteps <- AdjustTimeSteps(MSE, TimeSteps)
+  TimeSteps <- AdjustTimeSteps(MSE, TimeSteps, TimeStepsDF)
   
   RefValue |> ArraySubsetTimeStep(TimeSteps) |>
     array2DF() |>
@@ -386,7 +386,7 @@ SB0 <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
   if (is.null(TimeSteps))
     TimeSteps <- TimeStepsDF$TimeStep
   
-  TimeSteps <- AdjustTimeSteps(MSE, TimeSteps)
+  TimeSteps <- AdjustTimeSteps(MSE, TimeSteps, TimeStepsDF)
   
   RefValue |> ArraySubsetTimeStep(TimeSteps) |>
     array2DF() |>
@@ -447,7 +447,7 @@ SProduction <- function(MSE) {
   if (inherits(MSE, 'hist')) 
     return(SProductionHist(MSE))
   
-  HistSProduction <- SBiomassHist(MSE)
+  HistSProduction <- SProductionHist(MSE)
   HistSProduction$MP <- 'Historical'
   
   ProjSProduction <- array2DF(MSE@SProduction)
@@ -500,7 +500,7 @@ SP0 <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
   if (is.null(TimeSteps))
     TimeSteps <- TimeStepsDF$TimeStep
   
-  TimeSteps <- AdjustTimeSteps(MSE, TimeSteps)
+  TimeSteps <- AdjustTimeSteps(MSE, TimeSteps, TimeStepsDF)
   
   RefValue |> ArraySubsetTimeStep(TimeSteps) |>
     array2DF() |>
@@ -551,6 +551,10 @@ SP_SPMSY <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
 }
 
 # ---- Removals ----
+
+
+
+
 
 #' @describeIn Biomass Dead Removals (Landings + Discards)
 #' @export
@@ -685,5 +689,19 @@ LandingsHist <- function(Hist, ByFleet=FALSE) {
     dplyr::filter(TimeStep%in%HistTimeStep) |> 
     dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock') 
   
+}
+
+
+#' @describeIn Biomass MSY
+#' @export
+MSY <- function(MSE, TimeSteps=NULL, 
+                type=c('Removals', 'Landings')) {
+  type <- match.arg(type)
+  vals <- GetMSYRefValue(MSE, Metric=paste0('MSY', type), Ref='Equilibrium', TimeSteps)
+  if (all(is.na(vals$Value))) {
+    vals <- GetMSYRefValue(MSE, Metric=paste0('MSY', 'Removals'), Ref='Equilibrium', TimeSteps)
+    vals$Variable <- paste0('MSY', type)
+  }
+  vals
 }
 

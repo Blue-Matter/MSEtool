@@ -534,8 +534,8 @@ SS2Depletion <- function(st, RepList, mainyrs) {
       sum(na.rm = TRUE)
   }) |> unlist()
   
-  if (!all(round(SB0/SB1,2)==1)) {
-    Depletion@Initial <- SB0/SB1
+  if (!all(round(SB1/SB0,2)==1)) {
+    Depletion@Initial <- SB1/SB0
   }
   
   if (st==1) {
@@ -1059,6 +1059,11 @@ ImportSS <- function(x,
   nStock <- RepList[[1]]$nsexes
   nFleet <- RepList[[1]]$nfishfleets
   
+  DotsList <- list(...)
+  if (!is.null(DotsList$nsim))
+    nSim <- DotsList$nsim
+  
+  
   if(!silent) 
     cli::cli_alert('{.val {nStock}-sex} and {.val {nFleet}-fleet} model detected.')
   
@@ -1525,18 +1530,18 @@ CompareSSNumber <- function(replist, Hist) {
   
   NumberDF <- dplyr::bind_rows(NumberHist, NumberSS)
   
-  p1 <- ggplot(NumberDF, aes(x=TimeStep, y=Value, color=Model)) +
-    facet_grid(~Stock) +
-    geom_line() +
-    theme_bw()
+  p1 <- ggplot(NumberDF, ggplot2::aes(x=TimeStep, y=Value, color=Model)) +
+    ggplot2::facet_grid(~Stock) +
+    ggplot2::geom_line() +
+    ggplot2::theme_bw()
   
   pDF <- NumberDF |> dplyr::group_by(Stock, TimeStep) |>
     dplyr::summarise(Mean=mean(Value[Model=='SS3']/Value[Model!='SS3']))
   
-  p2 <- ggplot(pDF, aes(x=TimeStep, y=Mean, color=Stock)) +
-    geom_line() +
-    theme_bw() +
-    labs(y='Ratio SS3/Model')
+  p2 <- ggplot2::ggplot(pDF, ggplot2::aes(x=TimeStep, y=Mean, color=Stock)) +
+    ggplot2::geom_line() +
+    ggplot2::theme_bw() +
+    ggplot2::labs(y='Ratio SS3/Model')
   
   print(patchwork::wrap_plots(p1, p2, ncol=1))
   invisible(NumberDF)
@@ -1549,7 +1554,7 @@ CompareSSLandings <- function(replist, Hist) {
   mainyrs <- replist$startyr:replist$endyr
   AgeClasses <- GetSSAgeClasses(replist$natage)
   
-  HistLandings <- Landings(Hist) |>
+  HistLandings <- Landings(Hist, ByFleet=TRUE) |>
     dplyr::mutate(Model='Import') |>
     dplyr::filter(Sim==1) |>
     dplyr::group_by(TimeStep, Fleet, Model) |>
@@ -1570,7 +1575,7 @@ CompareSSLandings <- function(replist, Hist) {
     dplyr::group_by(TimeStep, Model, Fleet) |>
     dplyr::summarise(Value=sum(Value))
   
-  p1 <- ggplot(df, aes(x=TimeStep, y=Value, color=Model)) +
+  p1 <- ggplot(df, aes(x=TimeStep, y=Value, color=Model, linetype=Model)) +
     facet_wrap(~Fleet, ncol=3, scales='free') +
     geom_line() +
     theme_bw()
@@ -1595,7 +1600,7 @@ CompareSSRemovals <- function(replist, Hist) {
   mainyrs <- replist$startyr:replist$endyr
   AgeClasses <- GetSSAgeClasses(replist$natage)
   
-  HistRemovals <- Removals(Hist) |>
+  HistRemovals <- Removals(Hist, ByFleet=TRUE) |>
     dplyr::mutate(Model='Import') |>
     dplyr::filter(Sim==1) |>
     dplyr::group_by(TimeStep, Fleet, Model) |>
@@ -1622,7 +1627,7 @@ CompareSSRemovals <- function(replist, Hist) {
     dplyr::group_by(TimeStep, Model, Fleet) |>
     dplyr::summarise(Value=sum(Value))
   
-  p1 <- ggplot(df, aes(x=TimeStep, y=Value, color=Model)) +
+  p1 <- ggplot(df, aes(x=TimeStep, y=Value, color=Model, linetype=Model)) +
     facet_wrap(~Fleet, ncol=3, scales='free') +
     geom_line() +
     theme_bw()
@@ -1640,4 +1645,28 @@ CompareSSRemovals <- function(replist, Hist) {
 }
 
 
+CompareSSRefPoints <- function(replist, Hist) {
+  refs <- replist$derived_quants |> dplyr::filter(Label%in% c('Dead_Catch_MSY',
+                                                              'Ret_Catch_MSY',
+                                                              'SSB_MSY', 
+                                                              'SPR_MSY')) |>
+    dplyr::select(Label, Value) 
+  
+  OM <- data.frame(Variable=c('SBMSY', 'SPMSY', 'MSYRemovals', 'MSYLandings'),
+                   OM=c(SBMSY(Hist) |> dplyr::filter(Sim==1, TimeStep==max(TimeStep)) |> dplyr::pull(Value),
+                           SPMSY(Hist) |> dplyr::filter(Sim==1, TimeStep==max(TimeStep)) |> dplyr::pull(Value),
+                           MSY(Hist) |> dplyr::filter(Sim==1, TimeStep==max(TimeStep)) |> dplyr::pull(Value),
+                           MSY(Hist, type='Landings') |> dplyr::filter(Sim==1, TimeStep==max(TimeStep)) |> dplyr::pull(Value))
+  ) 
+
+  SS <- data.frame(
+                   Variable=c('SBMSY', 'SPMSY', 'MSYRemovals', 'MSYLandings'),
+                   SS=c(refs |> dplyr::filter(Label=='SSB_MSY') |> dplyr::pull(Value),
+                           refs |> dplyr::filter(Label=='SSB_MSY') |> dplyr::pull(Value),
+                           refs |> dplyr::filter(Label=='Dead_Catch_MSY') |> dplyr::pull(Value),
+                           refs |> dplyr::filter(Label=='Ret_Catch_MSY') |> dplyr::pull(Value))
+  )
+  
+  dplyr::left_join(OM, SS) |> dplyr::mutate("OM/SS"=OM/SS)
+}
 

@@ -41,7 +41,6 @@ CalcInitialTimeStep <- function(Hist, silent=FALSE) {
     if (length(InitialDepletion) && all(InitialDepletion!=1)) 
       Hist <- DoOptInitialDepletion(Hist, st)
     
-
   }
   Hist
 }

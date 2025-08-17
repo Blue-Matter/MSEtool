@@ -118,8 +118,11 @@ CalculateMSYSim <- function(StockList, FleetList, Complexes, TimeSteps=NULL, max
   
     MSYRefs <- OptMSY(opt$minimum, StockList_, FleetList_, TimeSteps,2)
     
-    for (sl in slotNames(MSYRefs)) 
-      abind::afill(slot(MSYRefPoints,sl)) <- slot(MSYRefs,sl)
+    for (sl in slotNames(MSYRefs)) {
+      val <- slot(MSYRefs,sl)
+      if (!is.null(val))
+        abind::afill(slot(MSYRefPoints,sl)) <- val
+    }
   }
   MSYRefPoints
 }
