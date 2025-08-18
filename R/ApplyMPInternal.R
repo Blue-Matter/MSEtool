@@ -1,6 +1,5 @@
 
 
-
 UpdateTAC <- function(ProjSim, MPAdvice, TSIndex) {
   
   if (is.null(MPAdvice))
@@ -58,6 +57,54 @@ UpdateTAC <- function(ProjSim, MPAdvice, TSIndex) {
   }
   
   ProjSim
+}
+
+
+
+UpdateApicalF <- function(ProjSim, MPAdvice, TimeStep, TSIndex) {
+  if (is.null(MPAdvice))
+    return(ProjSim)
+  
+  if (length(MPAdvice@apicalF)<1)
+    return(ProjSim)
+  
+  apicalF <- MPAdvice@apicalF 
+
+  FleetAllocationF <- CalcFleetAllocationF(ProjSim@OM@Fleet, TimeStep)
+  
+
+  apicalFAge <- apicalF * FleetAllocationF  |> 
+    AddDimension("Age") |> 
+    aperm(c('Stock', 'Age', 'TimeStep', 'Fleet'))
+  
+  # TODO - currently only for stock = 1 
+  
+  SelectivityAtAge <- purrr::map(ProjSim@OM@Fleet, \(stock) stock@Selectivity@MeanAtAge[,TSIndex,, drop=FALSE] |> abind::adrop(2))
+  RetentionAtAge <- purrr::map(ProjSim@OM@Fleet, \(stock) stock@Retention@MeanAtAge[,TSIndex,, drop=FALSE] |> abind::adrop(2))
+  DiscardMortalityAtAge <- purrr::map(ProjSim@OM@Fleet, \(stock) stock@DiscardMortality@MeanAtAge[,TSIndex,, drop=FALSE] |> abind::adrop(2))
+  
+  st <- 1
+
+  FInteract <- ArrayMultiply(apicalFAge[st,,1,, drop=FALSE] |> abind::adrop(c(1,3)),
+                             SelectivityAtAge[[st]])
+  
+  FRetain <- ArrayMultiply(FInteract, RetentionAtAge[[st]])  
+  FDiscardTotal <- ArraySubtract(FInteract, FRetain)
+  FDiscardDead <- ArrayMultiply(FDiscardTotal, DiscardMortalityAtAge[[st]])
+  FDead <- FRetain + FDiscardDead
+  FDeadTotal <- apply(FDead, 'Age',  sum) 
+  ActualApicalF <- max(FDeadTotal)  
+  if (abs(ActualApicalF/apicalF -1) > 1e-2) {
+    adjust <- apicalF/ActualApicalF
+    FInteract <- FInteract * adjust
+  }
+  
+  RequiredEffort <- apply(FInteract, 2, max) / ProjSim@OM@Fleet[[st]]@Effort@Catchability[TSIndex,] 
+  RequiredEffort[RequiredEffort<1E-5] <- 1E-5 
+  
+  ProjSim@Effort[st,TSIndex,] <- RequiredEffort
+  ProjSim
+  
 }
 
 UpdateEffort <- function(ProjSim, MPAdvice, MPAdvicePrevious, TimeStepsAll, TimeStepsHist, TSIndex) {
@@ -267,72 +314,3 @@ UpdateSelectivity <- function(ProjSim, MPAdvice, MPAdvicePrevious,
   ProjSim
 }
 
-
-ApplyMPInternal <- function(ProjSim, MP, TimeStep, TimeStepsHist, TimeStepsProj, ManagementTimeSteps) {
-  
-  ###############################
-  st <- 1 
-  ##############################
-  
-  TimeStepsAll <- c(TimeStepsHist, TimeStepsProj) 
-  TSIndex <- match(TimeStep, TimeStepsAll)
-  
-  if (!is.null(ProjSim@Misc$MPAdvice) & length(ProjSim@Misc$MPAdvice)>0) {
-    # Has MPAdvice Changed from last time 
-    MPAdvicePrevious <- ProjSim@Misc$MPAdvice[[length(ProjSim@Misc$MPAdvice)]] 
-  } else {
-    MPAdvicePrevious <- NULL
-  }
-  
-  if (TimeStep %in% ManagementTimeSteps) {
-    # Apply MP to Data
-    MPFunction <- get(MP)
-    
-    # TODO add tryCatch
-    # TODO - by stock?
-    
-    if (TimeStep>ManagementTimeSteps[1]) {
-      # don't lag data in first projection time-step
-      MPData <- purrr::map(ProjSim@Data, \(Data) 
-                           DataTrim(Data, TimeStep=TimeStep-(ProjSim@OM@DataLag+1))
-      )
-    } else {
-      MPData <- ProjSim@Data
-    }
-    
-    MPAdvice <- MPFunction(Data=MPData[[st]])
-    ProjSim@Data[[st]]@Misc <- MPAdvice@Misc
-    
-    if (length(MPAdvice@Log)) 
-      ProjSim@Log[[as.character(TimeStep)]] <- MPAdvice@Log
-
-    if (length(ProjSim@Data[[st]]@TAC)<1) {
-      ProjSim@Data[[st]]@TAC <- array(NA, length(TimeStepsProj), dimnames = list(TimeStep=TimeStepsProj))
-    }
-    ProjSim@Data[[st]]@TAC[match(TimeStep, TimeStepsProj)] <- ifelse(is.null(MPAdvice@TAC), NA, MPAdvice@TAC)
-    
-    if (is.null(ProjSim@Misc$MPAdvice))
-      ProjSim@Misc$MPAdvice <- list()
-    ProjSim@Misc$MPAdvice[[as.character(TimeStep)]] <- MPAdvice
-  } else {
-    MPAdvice <- MPAdvicePrevious
-  }
-  
-  ProjSim <- ProjSim |> 
-    UpdateSpatial(MPAdvice, MPAdvicePrevious, TSIndex) |>
-    UpdateSelectivity(MPAdvice, MPAdvicePrevious, TimeStepsAll, TSIndex) |>
-    UpdateRetention(MPAdvice, MPAdvicePrevious, TimeStepsAll, TSIndex) |>
-    UpdateDiscardMortality(MPAdvice, MPAdvicePrevious, TimeStepsAll, TSIndex) |>
-    UpdateTAC(MPAdvice, TSIndex) |>
-    UpdateEffort(MPAdvice, MPAdvicePrevious, TimeStepsAll, TimeStepsHist, TSIndex) 
-  
-  
-
-  
-  
-  # TODO
-  # - apply BioEconomic to Effort
-  
-  
-  ProjSim
-}

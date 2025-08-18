@@ -1,12 +1,28 @@
 
+#' @describeIn runMSE Run the Forward Projections
+#'
+#' @param Hist An Historical Simulation object (class `Hist`)
+#'
 #' @export
+#'
+Project <- function(Hist=NULL, MPs=NA, parallel=FALSE,
+                    silent=FALSE, extended=FALSE, checkMPs=FALSE) {
+  
+  if (inherits(Hist, 'Hist'))
+    return(
+      Project_Hist(Hist, MPs, parallel, silent, extended, checkMPs)
+    )
+  
+  Project_hist(Hist, MPs, parallel, silent, nSim=NULL)
+}
+
+
 Project_hist <- function(Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, nSim=NULL) {
   
   OnExit()
   
-  if (!is.null(nSim)) {
-    Hist <- ReduceNSim(Hist, nSim)
-  }
+  Hist <- ReduceNSim(Hist, nSim)
+  
   
   # Set up parallel processing 
   if (parallel & !snowfall::sfIsRunning())
@@ -54,7 +70,6 @@ Project_hist <- function(Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, nSim=N
   }
   
   MSE <- Hist2MSE(Hist, MPs) 
-  
 
   # if(!MSEobj) {
   #   MSE <- Hist2MSE(Hist, MPs)  
@@ -82,7 +97,7 @@ Project_hist <- function(Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, nSim=N
   nMPs <- length(MPs)
   
   # Projection MP loop
-  mp <- 1 # for debugging 
+  mp <- 2 # for debugging 
   ProjSim <- ProjSimList$`1` # for debugging
   
   cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
@@ -97,7 +112,11 @@ Project_hist <- function(Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, nSim=N
     StartTime <- Sys.time()
     ProjSimListMP <- purrr::map(ProjSimList, \(ProjSim) 
                                 try(
-                                  ProjectMP(ProjSim, MP, TimeStepsHist, TimeStepsProj, ManagementTimeSteps),
+                                  ProjectMP(ProjSim, 
+                                            MP, 
+                                            TimeStepsHist, 
+                                            TimeStepsProj, 
+                                            ManagementTimeSteps),
                                   silent=TRUE
                                 ),
                                 .progress = list(

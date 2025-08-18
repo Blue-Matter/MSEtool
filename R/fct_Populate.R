@@ -23,8 +23,9 @@ PopulateOM <- function(OM, silent=FALSE) {
 
   OM <- OM |>
     PopulateObs() |>
-    CheckCatchFrac() |> # TODO - auto-populate CatchFrac if OM@Data exists
-    CheckAllocation() |>
+    # CheckCatchFrac() |> # TODO - auto-populate CatchFrac if OM@Data exists
+    # CheckAllocation() |>
+    
     UpdateSPFrom() |> # TODO
     ShareParameters() |>   # share parameters for two-sex stocks TODO
     StartMessages()
@@ -1228,7 +1229,8 @@ PopulateObs <- function(OM) {
   
   if (EmptyObject(OM@Obs)) {
     # initialize Obs object for conditioning
-    OM@Obs <- MakeNamedList(StockNames(OM),new('obs'))
+    OM@Obs <- MakeNamedList(StockNames(OM),
+                            MakeNamedList(FleetNames(OM),new('obs')))
     return(OM)
   }
   

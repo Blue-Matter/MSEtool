@@ -17,7 +17,7 @@ ProjectMP <- function(ProjSim, MP, TimeStepsHist, TimeStepsProj, ManagementTimeS
     #  Update `ProjSim` with MP Advice
     # tictoc::tic("Apply MP")
     
-    ProjSim <- ApplyMPInternal(ProjSim, 
+    ProjSim <- ApplyMPAdvice(ProjSim, 
                                MP, 
                                TimeStep, 
                                TimeStepsHist,

@@ -121,6 +121,17 @@ FleetNames <- function(OM) {
   names(OM@Fleet[[1]])
 }
 
+# 
+# `FleetNames<-` <- function(x, value) {
+#   if (inherits(x, 'om'))
+#     AssignFleetNamesOM(x, value)
+# }
+# 
+# AssignFleetNamesOM <- function(OM, value) {
+#   
+# 
+# }
+
 # ---- Messages ----
 
 # default: info, progress, warnings

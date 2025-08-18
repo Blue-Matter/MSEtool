@@ -66,6 +66,9 @@ GenerateHistoricalData_Catch <- function(Data, HistSim, HistTimeSteps, stock) {
 
   for (fl in 1:nFleet) {
     Obs <- HistSim@OM@Obs[[stock]][[fl]]
+    if (EmptyObject(Obs)) {
+      next()
+    }
     if (!inherits(Obs, 'obs')) # TODO
       next()
     if (Obs@Catch@Type == 'Removals') {
@@ -135,6 +138,8 @@ GenerateProjectionData_Catch <- function(ProjSim, DataTimeStep, TimeStepsAll, st
   # loop over fleets 
   for (fl in 1:nFleet) {
     Obs <- ProjSim@OM@Obs[[st]][[fl]]
+    if (length(Obs@Catch@Error)<1)
+      next()
     if (!inherits(Obs, 'obs')) # TODO - convert Obs
       return(ProjSim)
     # check if real data exists
@@ -149,8 +154,7 @@ GenerateProjectionData_Catch <- function(ProjSim, DataTimeStep, TimeStepsAll, st
       error <- ArraySubsetTimeStep(Obs@Catch@Error, DataTimeStep)
       bias <- ArraySubsetTimeStep(Obs@Catch@Bias, DataTimeStep)
       
-      
-      
+
       if (Catch@Type[fl] == 'Removals') {
         NewValue[,fl] <- Removals[fl] * error * bias
       } else {
@@ -202,7 +206,8 @@ GenerateProjectionData_Index <- function(ProjSim, DataTimeStep, TimeStepsHist, T
   # loop over fleets 
   for (fl in 1:nFleet) {
     Obs <- ProjSim@OM@Obs[[st]][[FleetIndex[fl]]]
-    
+    if (length(Obs@Index@Error)<1)
+      next()
     # TODO - make this an option
     # currently doesn't simulate index if last two data points were NAs
     if (all(!is.finite(tail(Value[,fl],2)))) 

@@ -1,6 +1,7 @@
 #' @include 00_Class_selectivity.R
 #' @include 00_Class_retention.R
 #' @include 00_Class_discardmortality.R
+#' @include 00_Class_fishingmortality.R
 setClass('advice',
          slots=c(TAC='numeric',
                  Effort='numeric',
@@ -8,6 +9,7 @@ setClass('advice',
                  Selectivity='selectivity',
                  Retention='retention',
                  DiscardMortality='discardmortality',
+                 apicalF='numeric',
                  Misc='list',
                  Log='list'
          )

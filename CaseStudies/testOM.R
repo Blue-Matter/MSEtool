@@ -9,6 +9,7 @@ OM <- testOM
 OM@nsim <- 10
 
 OM <- Convert(OM)
+
 OM@Stock$Albacore@Spatial <- Spatial()
 OM@Fleet$Albacore$`Stock:Albacore  Fleet:Generic_Fleet  Obs model:Generic_Obs  Imp model:Perfect_Imp`@Distribution <- Distribution()
 

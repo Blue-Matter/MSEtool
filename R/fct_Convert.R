@@ -1,24 +1,68 @@
-#' @include MOM_object.r
-NULL
-
-
 #' Convert old style and new style object classes
-setGeneric("Convert", function(object, ...) standardGeneric("Convert"))
+#' @include MOM_object.r
+#'
+NULL 
 
-setMethod("Convert", "OM", function(object, Author='', CurrentYear=NULL, Populate=TRUE) {
-  OM2om(object, Author, CurrentYear, Populate=Populate)
-})
-
-setMethod("Convert", "MOM", function(object, Author='', CurrentYear=NULL, Populate=TRUE) {
-  OM2om(object, Author, CurrentYear, Populate=Populate)
-})
-
-setMethod("Convert", "om", function(object, Author='', CurrentYear=NULL, Populate=TRUE) {
-  if (nStock(object)>1 | nFleet(object)>1)
-    return(om2MOM(object))
-  om2OM(object)
-
-})
+#' Converts `OM` class to `om`
+#' @export
+ConvertOM <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
+  if (!inherits(OM, 'OM') & !inherits(OM, 'MOM'))
+    cli::cli_abort('Argument `OM` must be class `OM` or `MOM`')
+  
+  isMOM <- inherits(OM, 'MOM')
+  
+  om <- OM()
+  om@Name <- OM@Name
+  om@Agency <-  OM@Agency
+  om@Region <-  OM@Region
+  om@Author <- Author
+  om@Longitude <- OM@Longitude
+  om@Latitude <- OM@Latitude
+  om@Sponsor <- OM@Sponsor
+  om@nSim <- OM@nsim
+  om@nYear <- ifelse(isMOM,  OM@Fleets[[1]][[1]]@nyears, OM@nyears)
+  om@pYear <- OM@proyears
+  om@Interval <- OM@interval
+  om@Seed <- OM@seed
+  om@pStar <- OM@pstar
+  om@maxF <- OM@maxF
+  om@nReps <- OM@reps
+  om@Source <- OM@Source
+  
+  if (is.null(CurrentYear)) {
+    if (isMOM) {
+      om@CurrentYear <- OM@Fleets[[1]][[1]]@CurrentYr
+      if (om@CurrentYear < 1000)
+        om@CurrentYear <- as.numeric(format(Sys.Date(), '%Y'))
+    } else {
+      om@CurrentYear <- as.numeric(format(Sys.Date(), '%Y'))
+    }
+  } else {
+    om@CurrentYear <- CurrentYear
+  }
+  
+  om@TimeUnits <- 'Year'
+  om@TimeStepsPerYear <- 1
+  om@TimeSteps <- CalcTimeSteps(nYear=om@nYear,
+                                pYear=om@pYear,
+                                CurrentYear=om@CurrentYear,
+                                TimeUnits=om@TimeUnits)
+  
+  TimeSteps <- list(HistTS=TimeSteps(om, 'Historical'),
+                    ProjTS=TimeSteps(om, 'Projection')
+  )
+  
+  
+  if (isMOM)
+    stop("not done yet!")
+  
+  
+  om@Stock <- OM2stock(OM, cpars=OM@cpars, TimeSteps) 
+  
+  
+  
+  
+}
 
 
 #' @describeIn Convert description Convert an `OM` or `MOM` object to new `om` class
@@ -82,7 +126,7 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
   if (methods::is(OM, 'OM')) {
     om@Stock <- OM2stock(OM, cpars=OM@cpars, TimeSteps) 
     om@Fleet <- OM2fleet(OM, OM@cpars, OM@Fdisc)
-    
+    process_cpars
     om@Obs <- list(list(SubOM(OM, 'Obs')))
     om@Imp <- list(list(SubOM(OM, 'Imp'))) 
     
@@ -194,7 +238,7 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
       }
     }
     # reduce time-series dimension
-    om <- ReduceArraysTS(om)
+    om <- ArrayReduceDims(om)
   }
   if (Populate)
     om <- Populate(om)
@@ -220,27 +264,7 @@ ImportSexPars <- function(OM) {
 }
 
 
-OM2stock <- function(OM, cpars=NULL, TimeSteps=NULL) {
-  stock <- Stock()
-  if (methods::is(OM, 'OM')) {
-    stock@Name <- SubOM(OM, 'Stock')@Name
-  } else {
-    stock@Name <- OM@Name
-  }
-  
-  stock@CommonName <- OM@Common_Name
-  stock@Species <- OM@Species
-  stock@Ages <- Ages(OM@maxage)
-  Length(stock) <- OM2Length(OM, cpars, TimeSteps)
-  Weight(stock) <- OM2Weight(OM, cpars)
-  NaturalMortality(stock) <- OM2NaturalMortality(OM, cpars)
-  Maturity(stock) <- OM2Maturity(OM, cpars)
-  Fecundity(stock) <- OM2Fecundity(OM, cpars)
-  SRR(stock) <- OM2SRR(OM, cpars, TimeSteps)
-  Spatial(stock) <- OM2Spatial(OM, cpars, TimeSteps)
-  Depletion(stock) <- OM2Depletion(OM, cpars)
-  stock
-}
+
 
 OM2Length <- function(OM, cpars=NULL, TimeSteps=NULL) {
   if (is.null(cpars) & inherits(OM, 'OM'))
@@ -254,25 +278,25 @@ OM2Length <- function(OM, cpars=NULL, TimeSteps=NULL) {
   
   pars <- Pars(Length)
   if (!is.numeric(pars$Linf)) {
-    pars$Linf <- process_cpars(OM@Linf) 
+    pars$Linf <- OM@Linf
   }
   if (!is.numeric(pars$K)) {
-    pars$K <- process_cpars(OM@K) 
+    pars$K <- OM@K
   }
+  
   if (!is.numeric(pars$t0)) {
-    pars$t0 <- process_cpars(OM@t0) 
+    pars$t0 <- OM@t0
   }
   Pars(Length) <- pars
 
   if (!all(OM@Linfsd==0)) {
-    Length@Pars$Linfsd <- process_cpars(OM@Linfsd) 
+    Length@Pars$Linfsd <- OM@Linfsd
   }
   if (!all(OM@Ksd==0)) {
-    Length@Pars$Ksd <- process_cpars(OM@Ksd) 
+    Length@Pars$Ksd <- OM@Ksd
   }
-
   if (is.null(CVatAge(Length))) {
-    CVatAge(Length) <- process_cpars(OM@LenCV) |> Structure()
+    CVatAge(Length) <- OM@LenCV |> Structure()
   }
   
   # ASK
@@ -955,7 +979,7 @@ ArrayReduceDims <- function(array, includeTimeStep=TRUE) {
 
 
 process_cpars <- function(value) {
-  stop('Use `ArrayReduceDims` instead')
+  
   if (is.null(value)) return()
   dd <- dim(value)
   if (is.null(dd)) {

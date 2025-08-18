@@ -550,6 +550,14 @@ SP_SPMSY <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
     ConvertDF()
 }
 
+# ---- SPR ----
+
+#' @describeIn Biomass SBMSY
+#' @export
+SPRMSY <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
+  GetMSYRefValue(MSE, Metric='SPRMSY', Ref, TimeSteps)
+}
+
 # ---- Removals ----
 
 
@@ -558,13 +566,13 @@ SP_SPMSY <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
 
 #' @describeIn Biomass Dead Removals (Landings + Discards)
 #' @export
-Removals <- function(MSE, ByFleet=FALSE) {
+Removals <- function(MSE, ByFleet=FALSE, ByAge=FALSE) {
   CheckClass(MSE, c('mse', 'hist'), 'MSE')
   
   if (inherits(MSE, 'hist')) 
-    return(RemovalsHist(MSE, ByFleet))
+    return(RemovalsHist(MSE, ByFleet, ByAge))
   
-  HistRemovals <- RemovalsHist(MSE, ByFleet)
+  HistRemovals <- RemovalsHist(MSE, ByFleet, ByAge)
   HistRemovals$MP <- 'Historical'
   
   ProjRemovals <- MSE@Removals
@@ -590,7 +598,7 @@ Removals <- function(MSE, ByFleet=FALSE) {
     ConvertDF()
 }
 
-RemovalsHist <- function(Hist, ByFleet=FALSE) {
+RemovalsHist <- function(Hist, ByFleet=FALSE, ByAge=FALSE) {
   CheckClass(Hist, c('hist', 'mse'))
   HistTimeStep <- TimeSteps(Hist@OM, "Historical")
   
@@ -601,9 +609,13 @@ RemovalsHist <- function(Hist, ByFleet=FALSE) {
   }
   
   Removals <- purrr::map(Value, \(stock) {
-    if (ByFleet) {
+    if (ByFleet & ByAge) {
+      apply(stock, c('Sim',  'Age', 'TimeStep', 'Fleet'), sum) 
+    } else if (ByFleet & !ByAge) {
       apply(stock, c('Sim', 'TimeStep', 'Fleet'), sum) 
-    } else {
+    } else if (!ByFleet & ByAge) {
+      apply(stock, c('Sim', 'Age', 'TimeStep'), sum) 
+    } else if (!ByFleet & !ByAge) {
       apply(stock, c('Sim', 'TimeStep'), sum) 
     }
   }) |> List2Array('Stock') |>
@@ -626,13 +638,13 @@ RemovalsHist <- function(Hist, ByFleet=FALSE) {
 # ---- Landings ----
 #' @describeIn Biomass Landings
 #' @export
-Landings <- function(MSE, ByFleet=FALSE) {
+Landings <- function(MSE, ByFleet=FALSE, ByAge=FALSE) {
   CheckClass(MSE, c('mse', 'hist'), 'MSE')
   
   if (inherits(MSE, 'hist')) 
-    return(LandingsHist(MSE, ByFleet))
+    return(LandingsHist(MSE, ByFleet, ByAge))
   
-  HistLandings <- LandingsHist(MSE, ByFleet)
+  HistLandings <- LandingsHist(MSE, ByFleet, ByAge)
   HistLandings$MP <- 'Historical'
   
   ProjLandings <- MSE@Landings
@@ -658,7 +670,7 @@ Landings <- function(MSE, ByFleet=FALSE) {
     ConvertDF()
 }
 
-LandingsHist <- function(Hist, ByFleet=FALSE) {
+LandingsHist <- function(Hist, ByFleet=FALSE, ByAge=FALSE) {
   CheckClass(Hist, c('hist', 'mse'))
   HistTimeStep <- TimeSteps(Hist@OM, "Historical")
   
@@ -670,9 +682,13 @@ LandingsHist <- function(Hist, ByFleet=FALSE) {
   
   
   Landings <- purrr::map(Value, \(stock) {
-    if (ByFleet) {
+    if (ByFleet & ByAge) {
+      apply(stock, c('Sim',  'Age', 'TimeStep', 'Fleet'), sum) 
+    } else if (ByFleet & !ByAge) {
       apply(stock, c('Sim', 'TimeStep', 'Fleet'), sum) 
-    } else {
+    } else if (!ByFleet & ByAge) {
+      apply(stock, c('Sim', 'Age', 'TimeStep'), sum) 
+    } else if (!ByFleet & !ByAge) {
       apply(stock, c('Sim', 'TimeStep'), sum) 
     }
   }) |> List2Array('Stock') |>

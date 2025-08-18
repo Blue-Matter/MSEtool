@@ -92,7 +92,7 @@ Simulate_om <- function(OM=NULL,
     type = "iterator",
     format = "Calculating MSY Reference Points {cli::pb_bar} {cli::pb_percent}",
     clear = TRUE))
-  
+
   # Per-Recruit Curves TODO
   
   # ---- Calculate Unfished Equilibrium and Dynamic ----

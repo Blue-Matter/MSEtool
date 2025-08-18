@@ -624,10 +624,10 @@ print_single <- function(object) {
 
 print_slot <- function(object, name) {
   obj <- slot(object, name)
-  chk <- Check(obj)
-  if (chk@empty)
-    return(cli::cli_alert_info('Object is empty'))
-  cli::cli_alert_success('Complete')
+  # chk <- Check(obj)
+  # if (chk@empty)
+    # return(cli::cli_alert_info('Object is empty'))
+  # cli::cli_alert_success('Complete')
 }
 
 ## Internal Print Functions ----

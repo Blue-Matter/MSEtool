@@ -19,8 +19,10 @@
 \alias{SP_SP0}
 \alias{SPMSY}
 \alias{SP_SPMSY}
+\alias{SPRMSY}
 \alias{Removals}
 \alias{Landings}
+\alias{MSY}
 \title{Extract values from an MSE or Hist object}
 \usage{
 apicalF(MSE, Type = c("Dead", "Retain"), ByFleet = FALSE)
@@ -59,9 +61,13 @@ SPMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
 
 SP_SPMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
 
-Removals(MSE, ByFleet = FALSE)
+SPRMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
 
-Landings(MSE, ByFleet = FALSE)
+Removals(MSE, ByFleet = FALSE, ByAge = FALSE)
+
+Landings(MSE, ByFleet = FALSE, ByAge = FALSE)
+
+MSY(MSE, TimeSteps = NULL, type = c("Removals", "Landings"))
 }
 \arguments{
 \item{MSE}{An \code{mse} class or \code{hist} object}
@@ -111,8 +117,12 @@ Returns as a data.frame
 
 \item \code{SP_SPMSY()}: Spawning Production relative to Spawning Production corresponding with MSY
 
+\item \code{SPRMSY()}: SBMSY
+
 \item \code{Removals()}: Dead Removals (Landings + Discards)
 
 \item \code{Landings()}: Landings
+
+\item \code{MSY()}: MSY
 
 }}
