@@ -6,7 +6,7 @@ setClassUnion(name="FleetList", members=c("fleet", 'Fleet', "list", 'NULL'))
 setClassUnion(name="DataList", members=c("data", "list", 'NULL'))
 
 setClassUnion(name="obs.list", members=c('Obs', "obs", "list", 'NULL'))
-setClassUnion(name="imp.list", members=c('Imp', "obs", "list", 'NULL'))
+setClassUnion(name="imp.list", members=c('Imp', "imp", "list", 'NULL'))
 
 #' Operating Model Object
 #'

@@ -1,7 +1,8 @@
 
 
 setClass('CatchObs',
-         slots=c(CV='num.array.list', # numeric length 1, length 2, or length nSim
+         slots=c(
+                 CV='num.array.list', # numeric length 1, length 2, or length nSim
                  Error='num.array.list', # numeric array nsim by nTS
                  Bias='num.array.list',  # numeric length 1, length 2, or length nSim
                  TimeSteps='num.list.null',
@@ -10,11 +11,11 @@ setClass('CatchObs',
 )
 
 setMethod("initialize", "CatchObs", function(.Object,
-                                         CV=numeric(),
-                                         Error=numeric(),
-                                         Bias=numeric(),
-                                         TimeSteps=NULL,
-                                         Type='Removals') {
+                                             CV=numeric(),
+                                             Error=numeric(),
+                                             Bias=numeric(),
+                                             TimeSteps=NULL,
+                                             Type='Removals') {
   .Object@CV <- CV
   .Object@Error <- Error
   .Object@Bias <- Bias
@@ -54,7 +55,8 @@ setClass('CompObs',
 #'
 #' @export
 setClass('obs',
-         slots=c(Catch='CatchObs',
+         slots=c(Name='character',
+                 Catch='CatchObs',
                  Index='IndexObs',
                  CAA='CompObs',
                  CAL='CompObs'
@@ -75,10 +77,10 @@ Obs <- function(object=NULL) {
   .Object
 }
 
-validDataObject <- function(object) {
+validObsObject <- function(object) {
   TRUE
 }
-setValidity('obs', validDataObject)
+setValidity('obs', validObsObject)
 
 setMethod("initialize", "obs", function(.Object) {
   .Object

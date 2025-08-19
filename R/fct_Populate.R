@@ -59,9 +59,6 @@ PopulateStockList <- function(OM, silent=FALSE) {
     stock@pYear <- OM@pYear
     stock@CurrentYear <- OM@CurrentYear
     
-    digest::digest(OM@Stock$Albacore, algo='spookyhash')
-    digest::digest(stock, algo='spookyhash')
-    
     StockList[[st]] <- PopulateStock(stock, 
                                      seed=OM@Seed, 
                                      silent=silent)

@@ -3,7 +3,26 @@
 \docType{class}
 \name{ImpClass}
 \alias{ImpClass}
+\alias{Imp}
+\alias{Imp<-}
 \title{Imp Object}
+\usage{
+Imp(object = NULL)
+
+Imp(x) <- value
+}
+\arguments{
+\item{x}{An \code{\link[=OM]{OM()}} class object}
+
+\item{value}{An \code{imp} class object to assign to \code{x}}
+}
 \description{
 Imp Object
 }
+\section{Functions}{
+\itemize{
+\item \code{Imp()}: description
+
+\item \code{Imp(x) <- value}: Assign an \code{\link[=Imp]{Imp()}} object to a \code{\link[=OM]{OM()}} object
+
+}}

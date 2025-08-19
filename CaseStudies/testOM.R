@@ -8,15 +8,13 @@ la()
 OM <- testOM
 OM@nsim <- 10
 
-OM <- Convert(OM)
+OM <- ConvertOM(OM)
 
-OM@Stock$Albacore@Spatial <- Spatial()
-OM@Fleet$Albacore$`Stock:Albacore  Fleet:Generic_Fleet  Obs model:Generic_Obs  Imp model:Perfect_Imp`@Distribution <- Distribution()
+Hist <- Simulate(OM)
 
-OM@Interval <- 1 # TODO test with different
-tictoc::tic()
-Hist <- SimulateDEV(OM)
-tictoc::toc()
+# TODO - make oBs and Imp into named lists 
+
+
 
 
 FixedTAC1000 <- function(...) {

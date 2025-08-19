@@ -801,24 +801,7 @@ AddMeanAtAgeAttributes <- function(object, TimeSteps=NULL, Ages=NULL) {
 
 
 
-GetLengthClass <- function(object, RefValue=0.5) {
-  array <- object@MeanAtLength
-  
-  d1 <- dim(RefValue)
-  if (is.null(d1)) {
-    dd <- dim(array)
-  } 
-  
-  out <- array(0, dim=dd[c(1,3)])
-  # silly loop for now
-  for (s in 1:dd[1]) {
-    for (ts in 1:dd[3]) {
-      ind <- which.min(abs(array[s,,ts]-RefValue))
-      out[s,ts] <- object@Classes[ind]
-    }
-  }
-  out
-}
+
 
 
 
@@ -830,111 +813,6 @@ range01 <- function (x) {
 
 
 
-SolveForVmaxlen <- function(om) {
-  # calculates new value for Vmaxlen to correspond with maximum
-  # length bin rather than Linf, as previously defined
-  Linf <- om@Stock@Length@Pars$Linf 
-  dd <- dim(Linf)
-  L5 <- om@Fleet@Selectivity@Pars$L5
-  LFS <- om@Fleet@Selectivity@Pars$LFS
-  Vmaxlen <- om@Fleet@Selectivity@Pars$Vmaxlen
-
-  df <- rbind(dim(Linf),
-        dim(L5),
-        dim(LFS),
-        dim(Vmaxlen)
-  )
-  nsim <- max(df[,1])
-  
-  timestepsList <- list(dimnames(Linf)$TimeStep,
-                        dimnames(L5)$TimeStep,
-                        dimnames(LFS)$TimeStep,
-                        dimnames(Vmaxlen)$TimeStep
-  )
-  timesteps <- timestepsList[[which.max(df[,2])]]                      
-    
-  Linf <- Linf |> ArrayExpand(nsim, TimeSteps=timesteps)
-  L5 <- L5 |> ArrayExpand(nsim, TimeSteps=timesteps)
-  LFS <- LFS |> ArrayExpand(nsim, TimeSteps=timesteps)
-  Vmaxlen <- Vmaxlen |> ArrayExpand(nsim, TimeSteps=timesteps)
-  
-  VmaxlenOut <- array(0, dim=dd)
-  dimnames(VmaxlenOut) <- dimnames(Linf)
-  cli::cli_progress_bar('Calculating `Vmaxlen`', total=prod(dd))
-  
-  for (s in 1:nsim) {
-    for (ts in seq_along(timesteps)) {
-      VmaxlenOut[s,ts] <- VmaxLenOpt(L5[s,ts], 
-                                     LFS[s,ts],
-                                     Vmaxlen[s, ts],
-                                     Linf[s,ts])
-      cli::cli_progress_update()
-    }
-  }
-  cli::cli_progress_done()
-  
-  om@Fleet@Selectivity@Pars$Vmaxlen <- VmaxlenOut
-  om
-}
-
-VmaxLenOpt <- function(l5, lfs, vmaxlen, linf) {
-  if (vmaxlen > 0.99)
-    return(vmaxlen)
-  opt <- optimize(optForVmaxLen,
-                  interval=logit(c(0.001, 0.999)),
-                  l5=l5,
-                  lfs=lfs,
-                  linf=linf,
-                  vmaxlen=vmaxlen)
-  return(ilogit(opt$minimum))
-}
-
-SolveForRmaxlen <- function(om) {
-  # calculates new value for Rmaxlen  to correspond with maximum
-  # length bin rather than Linf, as previously defined
-  Linf <- om@Stock@Length@Pars$Linf
-  dd <- dim(Linf)
-  L5 <- om@Fleet@Retention@Pars$LR5
-  LFS <- om@Fleet@Retention@Pars$LFR
-  Rmaxlen <- om@Fleet@Retention@Pars$Rmaxlen
-  
-  RmaxlenOut <- array(0, dim=dd)
-  dimnames(RmaxlenOut) <- dimnames(Linf)
-  cli::cli_progress_bar('Calculating `Rmaxlen`', total=prod(dd))
-  for (s in 1:dd[1]) {
-    for (ts in 1:dd[2]) {
-      l5 <- L5[GetIndex(s, nrow(L5)), GetIndex(ts, ncol(L5))]
-      lfs <- LFS[GetIndex(s, nrow(LFS)), GetIndex(ts, ncol(LFS))]
-      linf <- Linf[GetIndex(s, nrow(Linf)), GetIndex(ts, ncol(Linf))]
-      rmaxlen <- Rmaxlen[GetIndex(s, nrow(Rmaxlen)), GetIndex(ts, ncol(Rmaxlen))]
-      
-      if (l5==0)
-        next()
-      
-      
-      if (rmaxlen==1)
-        next()
-      opt <- optimize(optForVmaxLen,
-                     interval=logit(c(0.001, 0.999)),
-                     l5=l5,
-                     lfs=lfs,
-                     linf=linf,
-                     vmaxlen=rmaxlen)
-      RmaxlenOut[s,ts] <- ilogit(opt$minimum)
-      cli::cli_progress_update()
-    }
-  }
-  cli::cli_progress_done()
-  om@Fleet@Retention@Pars$Rmaxlen <- RmaxlenOut
-  om
-}
-
-optForVmaxLen <- function(logitTrial, l5, lfs, linf, vmaxlen) {
-  trial <- ilogit(logitTrial)
-  lens <- seq(0, linf,length.out=100)
-  sel <- DoubleNormal(lens,l5, lfs, trial)
-  (sel[length(sel)] - vmaxlen)^2
-}
 
 
 aperm <- function(a, perm, ...) {
