@@ -2,24 +2,16 @@
 % Please edit documentation in R/fct_Convert.R, R/fct_ConvertOM.R
 \name{Convert}
 \alias{Convert}
-\alias{OM2om}
 \alias{ConvertMOM}
 \alias{ConvertOM}
 \title{Convert old style and new style object classes}
 \usage{
 Convert(x, ...)
 
-OM2om(OM, Author = "", CurrentYear = NULL, Populate = TRUE)
-
 ConvertMOM(MOM, ...)
 
-ConvertOM(OM, ...)
+ConvertOM(OM, Author = "", CurrentYear = NULL, Populate = TRUE)
 }
 \description{
 Convert old style and new style object classes
 }
-\section{Functions}{
-\itemize{
-\item \code{OM2om()}: description Convert an \code{OM} or \code{MOM} object to new \code{om} class
-
-}}

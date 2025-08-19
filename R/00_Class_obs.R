@@ -1,6 +1,6 @@
 
 
-setClass('CatchObs',
+setClass('catchobs',
          slots=c(
                  CV='num.array.list', # numeric length 1, length 2, or length nSim
                  Error='num.array.list', # numeric array nsim by nTS
@@ -10,7 +10,7 @@ setClass('CatchObs',
          contains='MiscClass'
 )
 
-setMethod("initialize", "CatchObs", function(.Object,
+setMethod("initialize", "catchobs", function(.Object,
                                              CV=numeric(),
                                              Error=numeric(),
                                              Bias=numeric(),
@@ -25,14 +25,14 @@ setMethod("initialize", "CatchObs", function(.Object,
 })
 
 
-setClass('IndexObs',
+setClass('indicesobs',
          slots=c(
            CV='num.array.list',
            Error='num.array.list',
            Beta='num.array.list',
            AC='num.array.list',
            TimeSteps='num.list.null',
-           Selectivity='array.list.null', # Biomass, SBiomass, age classes
+           Selectivity='array.char.num', # Biomass, SBiomass, age classes
            Type='character',
            q='numeric' 
          ),
@@ -42,7 +42,8 @@ setClass('IndexObs',
 setClass('CompObs',
          slots=c(
            ESS='num.array', # nSim, nTS
-           Time='num.null'
+           TimeSteps='num.null',
+           Bias='num.array'
          ),
          contains='MiscClass'
 )
@@ -56,8 +57,12 @@ setClass('CompObs',
 #' @export
 setClass('obs',
          slots=c(Name='character',
-                 Catch='CatchObs',
-                 Index='IndexObs',
+                 Removals='catchobs',
+                 Landings='catchobs',
+                 
+                 CPUE='indicesobs',
+                 Survey='indicesobs',
+                 
                  CAA='CompObs',
                  CAL='CompObs'
          ),

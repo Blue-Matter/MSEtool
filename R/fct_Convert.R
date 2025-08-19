@@ -229,10 +229,10 @@ ArrayReduceDims <- function(array, includeTimeStep=TRUE) {
   if (!incSim & incTimeStep) {
     uniqueTimeSteps <- IdenticalTimeSteps(array, FALSE)
     identicalTSs <- length(uniqueTimeSteps)==1
-    
-    if (!identicalTSs) 
-      return(array)
-    
+    # 
+    # if (!identicalTSs) 
+    #   return(array)
+    # 
     return(abind::asub(array, uniqueTimeSteps, indTimeStep, drop=FALSE))
   }
   

@@ -20,6 +20,7 @@ PopulateOM <- function(OM, silent=FALSE) {
   
   OM@Stock  <- PopulateStockList(OM, silent)
   OM@Fleet <- PopulateFleetList(OM, OM@Stock, silent)
+  
 
   OM <- OM |>
     PopulateObs() |>
@@ -1230,21 +1231,10 @@ PopulateObs <- function(OM) {
                             MakeNamedList(FleetNames(OM),new('obs')))
     return(OM)
   }
-  
-  cli::cli_alert('`PopulateObs` not complete')
-  return(OM)
-  
-  
-  if (inherits(OM@Obs,'Obs')) {
-    cli::cli_alert('Convert not complete for `Obs`')
-    return(OM)
-  }
+ 
   OM <- StructureObs(OM)
   
-  
-  StockNames <- StockNames(OM)
-  FleetNames <- FleetNames(OM)
-  
+
   for (st in 1:length(OM@Obs)) {
     for (fl in 1:length(OM@Obs[[1]])) {
       SetSeed(OM@Obs[[st]][[fl]], OM@Seed)
@@ -1253,14 +1243,13 @@ PopulateObs <- function(OM) {
                                                    nSim=OM@nSim, 
                                                    TimeSteps=OM@TimeSteps)
       
-      OM@Obs[[st]][[fl]]@Index
-      
-      
+      OM@Obs[[st]][[fl]]@Index <- PopulateIndexObs(Index=OM@Obs[[st]][[fl]]@Index, 
+                                                   nSim=OM@nSim, 
+                                                   TimeSteps=OM@TimeSteps)
+    
       OM@Obs[[st]][[fl]]@CAA
       
-      
       OM@Obs[[st]][[fl]]@CAL
-      
       
     }
     
@@ -1269,28 +1258,46 @@ PopulateObs <- function(OM) {
   }
     
     
-  
-  
-
-
-
   OM
 }
 
+
+getACF <- function(Value) {
+  acf(Value, plot=FALSE)[[1]][2,1,1]
+}
+
+PopulateIndexObs <- function(Index, nSim, TimeSteps) {
+  Index@CV <- PopulateObsCV(Index@CV, nSim)
+  Index@Error <- PopulateObsError(Index, nSim, TimeSteps)
+  Index@Beta # TODO - currently not implemented
+ 
+  if (length(Index@TimeSteps)<1)
+    Index@TimeSteps <- TimeSteps
+  
+  # TODO implement AC if specified 
+  if (!is.null(Index@AC)) {
+    
+  }
+ 
+  Index@Selectivity
+  Index@Type
+  Index@q
+  Index
+  
+}
+
+
 PopulateCatchObs <- function(Catch, nSim, TimeSteps) {
   nTS <- length(TimeSteps)
-  
   Catch@CV <- PopulateObsCV(Catch@CV, nSim)
-  
   Catch@Error <- PopulateObsError(Catch, nSim, TimeSteps)
-  
   Catch@Bias <- PopulateObsBias(Catch, nSim)
   
   if (length(Catch@TimeSteps)<1)
     Catch@TimeSteps <- TimeSteps
   
-  if (!Catch@Type %in% c('removals', 'landings'))
-    cli::cli_abort(message="Valid values for `Obs@Catch@Type` are: {.val {c('removals', 'landings')}} ")
+  if (!Catch@Type %in% c('Removals', 'Landings'))
+    cli::cli_abort(message="Valid values for `Obs@Catch@Type` are: {.val {c('Removals', 'Landings')}} ")
   
   Catch
 }
@@ -1305,8 +1312,6 @@ PopulateObsCV <- function(CV, nSim) {
     return(CV[1:nSim])
   
   }
-  
-  
   CV <- StructurePars(list(CV), nSim)[[1]] |> 
     ExpandSims(nSim) |>
     DropDimension("TimeStep", FALSE)
@@ -1353,10 +1358,6 @@ PopulateObsError <- function(object, nSim, TimeSteps) {
   object@Error
 }
 
-
-
-
-
 PopulateObsBias <- function(object, nSim) {
   if (length(object@Bias)<1) {
     object@Bias <- array(1, dim=nSim, dimnames = list(Sim=1:nSim)) 
@@ -1366,18 +1367,13 @@ PopulateObsBias <- function(object, nSim) {
   if (any(object@Bias<=0))
     cli::cli_abort("`Bias` must be positive values")
   
-  if (length(object@Bias) == 1) {
-    object@Bias <- array(object@Bias, dim=nSim, dimnames = list(Sim=1:nSim)) 
+  if (length(object@Bias) != nSim) {
+    object@Bias <- array(rlnorm(nSim, mconv(1, object@Bias), sdconv(1, object@Bias)),
+                         dim=nSim, 
+                         dimnames = list(Sim=1:nSim)) 
     return(object@Bias)
   }
     
-  if (nSim != 2 & length(object@Bias) == 2) {
-    object@Bias <- StructurePars_(object@Bias, nSim) |> 
-      ExpandSims(nSim) |>
-      DropDimension('TimeStep')
-    return(object@Bias)
-  }
-  
   if (length(object@Bias) > nSim) {
     object@Bias <- object@Bias[1:nSim]
   } 
@@ -1386,10 +1382,6 @@ PopulateObsBias <- function(object, nSim) {
     object@Bias <- array(object@Bias, dim=nSim, dimnames = list(Sim=1:nSim)) 
     return(object@Bias)
   }
-  
-
-  
   cli::cli_abort("`Catch@Bias` must be length 1, 2, or `nSim`")
-  
   object@Bias
 }

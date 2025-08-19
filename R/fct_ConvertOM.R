@@ -7,16 +7,8 @@ ConvertMOM <- function(MOM, ...) {
 
 #' @rdname Convert
 #' @export
-ConvertOM <- function(OM, ...) {
+ConvertOM <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
   CheckClass(OM, c('OM', 'MOM'), 'OM')
-  
-  dotsList <- list()
-  dotsList <- list(...)
-  
-  Author <- dotsList$Author
-  CurrentYear <- dotsList$CurrentYear
-  Populate <- ifelse(is.null(dotsList$Populate), TRUE, FALSE)
-  
   isMOM <- inherits(OM, 'MOM')
   
   om <- OM()

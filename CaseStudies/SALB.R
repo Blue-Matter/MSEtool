@@ -6,7 +6,7 @@ la <- devtools::load_all
 
 la()
 
-nSim <- 200
+
 pYear <- 30
 
 Interval <- 3 
@@ -19,15 +19,16 @@ DataLag <- 1 # lagged by 1 year?
 
 SSDir <- 'C:/Users/Admin/Documents/GitHub/SALB-MSE/Condition/SS3/ALB-S_Stochastic/Condition/SS3'
 
+SSDir <- 'G:/Shared drives/BM shared/1. Projects/TOF-MSE-SALB/ALB-S_Stochastic/ALB-S_Stochastic/Condition/SS3'
+
 StochasticDirs <- list.dirs(file.path(SSDir), full.names = TRUE, recursive = FALSE)
 StochasticDirs <- StochasticDirs[!grepl('Base', StochasticDirs)]
 
-# StochasticDirs <- StochasticDirs[1:5] # fewer for development
+StochasticDirs <- StochasticDirs[1:5] # fewer for development
 
 RepList <- ImportSSReport(StochasticDirs)
 
 OM <- ImportSS(RepList, 
-               nSim=nSim, 
                pYear = pYear,
                Name=Name,
                Agency=Agency,

@@ -5,16 +5,40 @@ la <- devtools::load_all
 
 la()
 
-OM <- testOM
-OM@nsim <- 10
 
-OM <- ConvertOM(OM)
+# TODO
+# - generate fleet specific indices
+# - generate total and spawning biomass indices
+# - figure out Obs object for these
+# - test with testOM & SALB, & NSWO
+
+OM <- ConvertOM(testOM)
+
+OM@Obs$Albacore$Generic_Fleet@Index
+OM@Obs$Albacore$Survey <- Obs()
+OM@Obs$Albacore$Survey@Index@CV <- c(0.1,02)
+OM@Obs$Albacore$Survey@Index@Selectivity <- 'Biomass'
+OM <- PopulateOM(OM)
 
 Hist <- Simulate(OM)
 
-# TODO - make oBs and Imp into named lists 
+Hist@OM@Obs$Albacore$Generic_Fleet@Index@Error
 
 
+Hist@Data$`2`$Albacore@Index@Value
+
+slotNames("Data") |>sort()
+
+SimulatedData@Name
+SimulatedData@Ind[1,] |> plot(type='l')
+SimulatedData@VInd[1,] |> plot(type='l')
+SimulatedData@SpInd[1,] |> plot(type='l')
+
+
+
+testOM@nsim <- 10
+hist <- Simulate(testOM)
+hist@SampPars$Obs$Cbias
 
 
 FixedTAC1000 <- function(...) {

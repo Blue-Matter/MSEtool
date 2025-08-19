@@ -177,8 +177,7 @@ Simulate_om <- function(OM=NULL,
                               type = "iterator",
                               format = "Generating Historical Data {cli::pb_bar} {cli::pb_percent}",
                               clear = TRUE))
-  
-  
+
   # Data:
   # - list of length `nSim` then
   # - list of length `nStock`
@@ -187,11 +186,6 @@ Simulate_om <- function(OM=NULL,
   # - `MMP`
   # - 'complex' 
   
-
-
-  # ---- Simulate Fishery Data ----
-  # TODO 
-  # simulate data where values exist in Obs
   
   # ---- Return `hist` Object ----
   Hist <- HistSimList2Hist(Hist, HistSimList)

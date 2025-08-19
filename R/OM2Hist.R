@@ -518,7 +518,6 @@ HistSimList2Hist <- function(Hist, HistSimList, TimeSteps=NULL) {
   Hist <- HistSimListTimeSeries(Hist, HistSimList, TimeSteps)
   
   # Data
-  # TODO - only keep first if all data identical
   HistData <- purrr::map(HistSimList, \(HistSim)
                   HistSim@Data) 
   CheckHash <- purrr::map(HistData, \(data) digest::digest(data, 'spookyhash')) |> unlist()
@@ -529,8 +528,7 @@ HistSimList2Hist <- function(Hist, HistSimList, TimeSteps=NULL) {
   } else {
     Hist@Data <- HistData
   }
-  
-  
+
   Hist
 }
   
@@ -631,6 +629,7 @@ ObsList2SimArray <- function(Obs, ObsList, fl, slot='Catch') {
     } else if (inherits(Val[[1]], 'numeric')) {
       if (length(Val[[1]])==1) {
         Val <- List2Array(Val, 'Sim')[1,]
+        Val <- array(Val, length(Val), dimnames=list(Sim=names(Val)))
       } else {
         Val <- Val[[1]] # TODO this probably doesn't apply for all cases
       }

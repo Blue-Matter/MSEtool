@@ -184,7 +184,6 @@ ConditionObs_Index <- function(HistSim, FisheryData, HistTimeSteps, ProjectionTi
   
   for (fl in 1:nFleet) {
     IndexObs <- HistSim@OM@Obs[[1]][[NameIndices[fl]]]@Index
-                                     
     SelectivityAtAge <- FisheryData@Index@Selectivity[[fl]]
     if (is.character(SelectivityAtAge)) {
       if (SelectivityAtAge == 'Biomass') {

@@ -1,8 +1,8 @@
 
-#' Class `catch`
+#' Class `catchdata`
 #' @include 00_Class_unions.R
 #' @include 00_Class_child.R
-setClass("catch",
+setClass("catchdata",
          slots=c(Name='char.null',
                  Value='array.null',
                  CV='array.null',
@@ -12,20 +12,16 @@ setClass("catch",
 )
 
 
-methods::setClassUnion("catch.list", c("catch", "list", 'NULL'))
-
-# methods::setClassUnion("numeric.selectivity", c("numeric", "selectivity"))
-
-#' Class `Index`
+#' Class `indicesdata`
 #' @include 00_Class_unions.R
 #' @include 00_Class_child.R
-setClass("indices",
+setClass("indicesdata",
          slots=c(Name='char.null',
                  Value='array.null',
                  CV='array.null',
                  Units='char.null',
                  Timing='numeric',
-                 Selectivity='array.char.null',
+                 Selectivity='array.char.num', # fleet number, Biomass, SBiomass, Recruits, age vector
                  Misc="MiscClass"
          )
 )
@@ -38,13 +34,13 @@ setClass("indices",
 # Fleet Number - map to a fleet
 # Character - Obs - 
 
-methods::setClassUnion("indices.list", c("indices", "list", 'NULL'))
+# methods::setClassUnion("indices.list", c("indices", "list", 'NULL'))
 
 
-#' Class `composition`
+#' Class `compdata`
 #' @include 00_Class_unions.R
 #' @include 00_Class_child.R
-setClass("composition",
+setClass("compdata",
          slots=c(Name='char.null',
                  Value='array.null',
                  Classes='num.null',
@@ -55,7 +51,7 @@ setClass("composition",
 )
 
 
-methods::setClassUnion("comp.list", c("composition", "list", 'NULL'))
+# methods::setClassUnion("comp.list", c("composition", "list", 'NULL'))
 
 
 
@@ -104,12 +100,18 @@ setClass('data',
                  TimeStepsPerYear='num.null',
                  nArea='num.null',
                  
-                 Catch='catch',  # always is removals
-                 Index='indices',
-                 CAA='comp.list',
-                 CAL='comp.list',
+                 Removals='catchdata',  
+                 Landings='catchdata',
+                 
+                 CPUE='indicesdata', # fleet-specific CPUEs
+                 Survey='indicesdata', # Biomass, SBiomass, Recruits, Age-Specific
+                 
+             
+                 CAA='compdata',
+                 CAL='compdata',
                  TAC='array',
-                 TAE='array'
+                 TAE='array',
+                 Log='list'
          ),
          contains ='MiscClass'
          )

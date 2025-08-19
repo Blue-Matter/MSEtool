@@ -5,7 +5,7 @@ OM2obs <- function(OM, cpars=NULL) {
   
   
   obs@Catch@Bias <- Obs@Cbiascv
-  obs@Catch@Error <- Obs@Cobs
+  obs@Catch@CV <- Obs@Cobs
   
   obs@Index@CV <- Obs@Iobs
   obs@Index@Beta <-  Obs@beta

@@ -10,11 +10,14 @@ nsim <- 5
 
 SSDir <- 'G:/My Drive/1_PROJECTS/North_Atlantic_Swordfish/OMs/2024_OMs/Reference/001_M0.1_sigmaR0.2_steepness0.69_cpuelambda1_llq1_env7'
 SSDir <- 'G:/My Drive/1_PROJECTS/North_Atlantic_Swordfish/OMs/grid_2022/000_base_case'
-replist <- ImportSSReport(SSDir)
+RepList <- ImportSSReport(SSDir)
 
-OM <- ImportSS(replist, nSim=nsim)
+OM <- ImportSS(RepList, nSim=nsim)
 
-Hist <- SimulateDEV(OM)
+# TODO -Obs
+# - data conditioning
+
+Hist <- Simulate(OM)
 
 
 replist$`1`$derived_quants |> 

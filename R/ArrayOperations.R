@@ -285,7 +285,6 @@ ArraySubsetSim <- function(object, Sims=NULL, drop=FALSE) {
   DN$Sim <- as.numeric(DN$Sim)
   TSind <- which(names(DN) == 'Sim')
   
-  
   if (length(TSind)==0)
     cli::cli_abort("`Sim` dimension not found in this array", .internal=TRUE)
   
@@ -310,7 +309,9 @@ ArraySubsetSim <- function(object, Sims=NULL, drop=FALSE) {
     if (is.null(dim(out))) {
       nms <- names(out)
       numericNames <- suppressWarnings(as.numeric(nms))
-      if (any(is.na(numericNames))) {
+      if (is.null(nms)) {
+        return(out)
+      } else  if (any(is.na(numericNames))) {
         out <- array(out, dim=length(out), dimnames=list(Fleet=names(out)))
       } else {
         out <- array(out, dim=length(out), dimnames=list(TimeStep=names(out)))
