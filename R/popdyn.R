@@ -1548,10 +1548,13 @@ calcF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, Asize, maxage, 
   
   ct <- TACusedE[x]
   ft <- ct/sum(Biomass_P[x,,y,] * V_P[x,,y+nyears]) # initial guess
+  log_ft <- log(ft) # initial guess
+  
   fishdist[x,] <- fishdist[x,]/sum(fishdist[x,])
   
   if (ct <= 1E-9 || ft <= 1E-9) return(tiny)
   for (i in 1:maxiterF) {
+    ft <- exp(log_ft)
     Fmat <- ft * matrix(V_P[x,,y+nyears], nrow=maxage+1, ncol=nareas) *
       matrix(fishdist[x,], maxage+1, nareas, byrow=TRUE)/
       matrix(Asize[x,], maxage+1, nareas, byrow=TRUE) # distribute F over age and areas
@@ -1562,29 +1565,34 @@ calcF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, Asize, maxage, 
 
     Zmat <- Fmat + matrix(M_ageArray[x,,y+nyears], nrow=maxage+1, ncol=nareas, byrow=FALSE) # total mortality
     if (is.null(control$TAC)) {
-      predC <- Fmat_ret/Zmat * (1-exp(-Zmat)) * Biomass_P[x,,y,] # predicted retained catch
+      Fsolve <- Fmat_ret # predicted retained catch
     } else {
       if (control$TAC == 'removals') {
-        predC <- Fmat/Zmat * (1-exp(-Zmat)) * Biomass_P[x,,y,] # TAC applied to predicted removal
+        Fsolve <- Fmat # TAC applied to predicted removal
       }
       else {
         stop('invalid entry for `OM@cpars$control$TAC`. Must be `OM@cpars$control$TAC="removals"`')
       }
     }
+    predC <- Fsolve/Zmat * (1-exp(-Zmat)) * Biomass_P[x,,y,]
     predC[!is.finite(predC)] <- 0 
     pct <- sum(predC)
     
-    Omat <- (1-exp(-Zmat)) * Biomass_P[x,,y,]
+    # derivative of catch wrt log_ft
+    #Omat <- (1-exp(-Zmat)) * Biomass_P[x,,y,]
+    Omat <- (1-exp(-Zmat))
     Zmat[Zmat==0] <- tiny
-    # derivative of catch wrt ft
-    dct <- sum(Omat/Zmat - ((Fmat * Omat)/Zmat^2) + Fmat/Zmat * exp(-Zmat) * Biomass_P[x,,y,])
+    VBiomass <- Fsolve/ft * Biomass_P[x,,y,]
+    dct <- sum(VBiomass * ((ft * Zmat - Fsolve * ft) * Omat + Fsolve * ft * Zmat * exp(-Zmat))/Zmat/Zmat)
+    #dct <- sum(Omat/Zmat - ((Fmat * Omat)/Zmat^2) + Fmat/Zmat * exp(-Zmat) * Biomass_P[x,,y,])
     
     if (dct<1E-15) break
     
-    ft <-  ft - (pct - ct)/(0.8*dct)
+    log_ft <- log_ft - (pct - ct)/dct
+    #ft <-  ft - (pct - ct)/(0.8*dct)
     if (abs(pct - ct)/ct < tolF) break
   }
-  ft
+  return(exp(log_ft))
 }
 
 # Multifleet version of calcF
@@ -1602,6 +1610,7 @@ calcF_MF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, FM_P, FM_Pre
   nf <- length(ct)
   
   ft <- sapply(1:nf, function(f) ct[f]/sum(Biomass_P[[f]][x,,y,] * V_P[[f]][x,,y+nyears])) # initial guess
+  log_ft <- log(ft) # initial guess
   
   fishdist_prop <- matrix(fishdist[x, , ], nareas, nf)
   fishdist_prop <- apply(fishdist_prop, 2, function(i) i/sum(i)) # Ensure proportions sum to 1 across areas
@@ -1610,6 +1619,8 @@ calcF_MF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, FM_P, FM_Pre
   Fmat <- Fmat_ret <- predC <- array(NA, c(maxage+1, nareas, nf))
   dct <- pct <- numeric(nf)
   for (i in 1:maxiterF) {
+    
+    ft <- exp(log_ft)
     
     # distribute F over age, areas, fleet
     for (f in 1:nf) {
@@ -1644,22 +1655,27 @@ calcF_MF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, FM_P, FM_Pre
     for (f in 1:nf) predC[, , f] <- Fsolve[, , f]/Zmat * (1-exp(-Zmat)) * Biomass_P[[f]][x,,y,]
     predC[is.infinite(predC)] <- 0
     
-    # derivative of catch wrt ft
+    # derivative of catch wrt log_ft
     for (f in 1:nf) {
       pct[f] <- sum(predC[, , f], na.rm = TRUE)
       
-      Omat <- (1 - exp(-Zmat)) * Biomass_P[[f]][x,,y,]
-      dct[f] <- sum(Omat/Zmat - ((Fsolve[, , f] * Omat)/Zmat^2) + Fsolve[, , f]/Zmat * exp(-Zmat) * Biomass_P[[f]][x,,y,])
+      Omat <- 1 - exp(-Zmat)
+      VBiomass <- Fsolve[, , f]/ft[f] * Biomass_P[[f]][x,,y,]
+      dct[f] <- sum(VBiomass * ((ft[f] * Zmat - Fsolve[, , f] * ft[f]) * Omat + Fsolve[, , f] * ft[f] * Zmat * exp(-Zmat))/Zmat/Zmat)
+      
+    #  Omat <- (1 - exp(-Zmat)) * Biomass_P[[f]][x,,y,]
+    #  dct[f] <- sum(Omat/Zmat - ((Fsolve[, , f] * Omat)/Zmat^2) + Fsolve[, , f]/Zmat * exp(-Zmat) * Biomass_P[[f]][x,,y,])
     }
     
     if (all(dct[!is.na(ct)] < 1E-15)) break
+    log_ft <- log_ft - (pct - ct)/dct
     
-    ft <- ft - (pct - ct)/(0.8*dct)
+    #ft <- ft - (pct - ct)/(0.8*dct)
     obj <- abs(pct - ct)/ct
     if (all(obj[!is.na(ct)] < tolF)) break
   }
   
-  return(ft)
+  return(exp(log_ft))
 }
 
 
