@@ -111,7 +111,6 @@ UpdateEffort <- function(ProjSim, MPAdvice, MPAdvicePrevious, TimeStepsAll, Time
   
   # *************************** # 
   st <- 1
-  fl <- 1
   # *************************** #
   
   if (is.null(MPAdvice))
@@ -135,8 +134,8 @@ UpdateEffort <- function(ProjSim, MPAdvice, MPAdvicePrevious, TimeStepsAll, Time
   
   if (length(MPAdvice@Effort)>0) {
     LastHistIndex <- length(TimeStepsHist)
-    futureEffort <- ProjSim@Effort[st,LastHistIndex,fl] * MPAdvice@Effort
-    ProjSim@Effort[st,projInd,fl] <- futureEffort
+    futureEffort <- ProjSim@Effort[st,LastHistIndex,] * MPAdvice@Effort
+    ProjSim@Effort[st,projInd,] <-  matrix(futureEffort, nrow=length(projInd), ncol=length(futureEffort), byrow=TRUE)
   } 
   ProjSim
 }
@@ -182,7 +181,6 @@ UpdateDiscardMortality <- function(ProjSim, MPAdvice, MPAdvicePrevious, TimeStep
   
   # *************************** # 
   st <- 1
-  fl <- 1
   # *************************** #
   
   if (is.null(MPAdvice))
@@ -191,8 +189,7 @@ UpdateDiscardMortality <- function(ProjSim, MPAdvice, MPAdvicePrevious, TimeStep
   if (EmptyObject(MPAdvice@DiscardMortality))
     return(ProjSim)
   
-  
-  
+
   if (!is.null(MPAdvicePrevious)) {
     if (IdenticalS4(MPAdvice@DiscardMortality, MPAdvicePrevious@DiscardMortality))
       return(ProjSim)  
@@ -205,11 +202,34 @@ UpdateDiscardMortality <- function(ProjSim, MPAdvice, MPAdvicePrevious, TimeStep
   projInd <- TSIndex:nprojTS
   
   if (length(MPAdvice@DiscardMortality@MeanAtAge)>0) {
-    stop("Discard mortality TODO")
     
-    # check its length age@Classes
-    # calc DiscMatLength
-    ProjSim@OM@Fleet[[st]]@DiscardMortality@MeanAtAge[,projInd,fl]
+    nAge <- length(ProjSim@OM@Stock[[st]]@Ages@Classes)
+    MeanAtAge <- MPAdvice@DiscardMortality@MeanAtAge
+    if (length(MeanAtAge)!=1& length(MeanAtAge)!=nAge) 
+      cli::cli_abort("`MPAdvice@DiscardMortality@MeanAtAge` must be either length 1 or length `nAge` ({.val {nAge}})")
+
+    if (length(MeanAtAge)==1)
+      MeanAtAge <- rep(MeanAtAge, nAge)
+    
+    MeanAtAge <- matrix(MeanAtAge, nrow=nAge, ncol=nFleet(ProjSim@OM))
+    MeanAtAge <- replicate(length(projInd), MeanAtAge) |> aperm(c(1,3,2))
+    ProjSim@OM@Fleet[[st]]@DiscardMortality@MeanAtAge[,projInd,] <- MeanAtAge
+    
+    # TODO 
+    # r = MeanAtAge2MeanAtLength(object=ProjSim@OM@Fleet[[st]]@DiscardMortality,
+    #                            Length=ProjSim@OM@Stock[[st]]@Length,
+    #                            Ages=ProjSim@OM@Stock[[st]]@Ages,
+    #                            nsim=1,
+    #                            TimeSteps=TimeStepProj,
+    #                            replace = TRUE
+    #                            )
+    # 
+    # r@MeanAtAge[,120,]
+    # r@MeanAtLength[,120,]
+  }
+  if (length(MPAdvice@DiscardMortality@MeanAtLength)>0) {
+    cli::cli_abort("`MPAdvice@DiscardMortality@MeanAtLength` not done yet", .internal=TRUE)
+    
   }
   # repeat for MeanAtLength
   ProjSim

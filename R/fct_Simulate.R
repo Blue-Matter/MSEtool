@@ -51,7 +51,6 @@ Simulate_om <- function(OM=NULL,
   #   future::plan()
   # }
   
-  
   # ---- Make Hist Object ----
   Hist <- OM2Hist(OM, silent)
   
@@ -107,6 +106,7 @@ Simulate_om <- function(OM=NULL,
       List2Array('Stock')
   })|> List2Array()
   
+  # TODO - check if CatchFrac exists for multiple fleets
   if (!(all(Catchability>1E-5))) {
     if (parallel) {
       cli::cli_progress_message("Optimizing catchability (q) for Final Depletion")
@@ -138,17 +138,24 @@ Simulate_om <- function(OM=NULL,
                               clear = TRUE))
   
 
-  # update CatchFrac and Allocation ...
-  
+  # update CatchFrac 
+  HistSimList <- purrr::map(HistSimList, \(HistSim) {
+    HistSim@OM@CatchFrac <- purrr::map(HistSim@Removals, \(stock) {
+      fleetCatch <- apply(stock[[length(stock)]],2, sum)
+      fleetCatch/sum(fleetCatch)
+    })
+    HistSim
+  })
   
   # tictoc::toc()
  
   # ---- Check for Depletion Optimization ----
+  
  
   # OM@Stock$Albacore@Depletion@Final
   # OM@Stock$Albacore@Depletion@Reference
   # 
-  # HistSimList$`3`@Biomass[1,50]/HistSimList$`3`@Unfished@Equilibrium@Biomass[1,50]
+  # HistSimList$`1`@Biomass[1,50]/HistSimList$`1`@Unfished@Equilibrium@Biomass[1,50]
   
   # TODO 
   # B0 <- Hist@Unfished@Equilibrium@Biomass[,1,1:360]

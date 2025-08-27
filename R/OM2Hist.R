@@ -502,6 +502,17 @@ HistSimList2Hist <- function(Hist, HistSimList, TimeSteps=NULL) {
   FleetNames <- as.vector(Hist@OM@Fleet[[1]]@Name)
   nStock <- length(StockNames)
   
+  CatchFrac <- purrr::map(HistSimList, \(HistSim) {
+    HistSim@OM@CatchFrac
+  }) |> ReverseList()
+  
+  Hist@OM@CatchFrac <- purrr::map(CatchFrac, \(Stock) {
+    catchfrac <- List2Array(Stock, 'Sim', 'Fleet') |> aperm(c('Sim', 'Fleet'))
+    dimnames(catchfrac)[[2]] <- FleetNames
+    catchfrac
+  }) 
+
+  
   # RefPoints 
   Hist <- HistSimListRefPoints(Hist, HistSimList)
   
@@ -656,8 +667,10 @@ HistSimListObs <- function(Hist, HistSimList) {
     Obs <- Hist@OM@Obs[[st]]
     ObsList <- purrr::map(HistSimList, \(x) x@OM@Obs[[st]])
     for (fl in 1:length(ObsList[[1]])) {
-      Obs[[fl]] <- ObsList2SimArray(Obs, ObsList, fl, slot='Catch')
-      Obs[[fl]] <- ObsList2SimArray(Obs, ObsList, fl, slot='Index')
+      Obs[[fl]] <- ObsList2SimArray(Obs, ObsList, fl, slot='Landings')
+      Obs[[fl]] <- ObsList2SimArray(Obs, ObsList, fl, slot='Removals')
+      Obs[[fl]] <- ObsList2SimArray(Obs, ObsList, fl, slot='Survey')
+      Obs[[fl]] <- ObsList2SimArray(Obs, ObsList, fl, slot='CPUE')
       # Obs <- ObsList2SimArray(Obs, ObsList, fl, slot='CAA')
       # Obs <- ObsList2SimArray(Obs, ObsList, fl, slot='CAL')
       

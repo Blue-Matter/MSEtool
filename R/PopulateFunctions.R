@@ -622,8 +622,9 @@ MeanAtWeight2MeanAtAge <- function(object, Weight, Ages, nsim, TimeSteps, seed, 
   object
 }
 
-MeanAtAge2MeanAtLength <- function(object, Length, Ages, nsim, TimeSteps, seed=NULL, silent=TRUE) {
-  if (!is.null(object@MeanAtLength))
+MeanAtAge2MeanAtLength <- function(object, Length, Ages, nsim, TimeSteps, seed=NULL, silent=TRUE, replace=FALSE) {
+  
+  if (!is.null(object@MeanAtLength) & !replace)
     return(object)
   
   CheckRequiredObject(Ages, 'ages')
@@ -770,7 +771,10 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
   MeanAtAge <- object@MeanAtAge
   ASK <- Length@ASK
   
-  if (dim(MeanAtAge)[2]<30) { # arbitrary number!
+  BySim <- 'Sim' %in% names(dimnames(ASK))
+  AgeDim <- which(names(dimnames(MeanAtAge)) == "Age")
+  
+  if (dim(MeanAtAge)[AgeDim]<30) { # arbitrary number!
     # Generate higher resolution length-at-age
     # linear interpolate Mean length-at-age and CV length-at-age
     # for 11 time-steps in-between (e.g., months)

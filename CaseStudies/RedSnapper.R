@@ -8,11 +8,10 @@ la()
 # TODO - 
 # - fix Stock/Fleet Allocation if missing 
 # - make plots of selectivity, retention, landings, discards (below)
-# - make plot of biomass under different projection scnearios:
+# - make plot of biomass under different projection scenarios:
 #   - status quo
 #   - all retained
 #   - no discard mortality
-
 
 OM <- ImportBAM('Red Snapper')
 
@@ -36,23 +35,58 @@ FixedEffort <- function(Data) {
   advice
 }
 
-MPs <- c('FixedF', 'FixedTAC', 'FixedEffort')
+NoDiscardMortality <- function(Data) {
+  advice <- Advice()
+  advice@Effort <- 1
+  advice@DiscardMortality@MeanAtAge <- 0 
+  advice
+}
+class(NoDiscardMortality) <- 'mp'
+
+MPs <- c('NoDiscardMortality', 'FixedEffort', 'FixedF', 'FixedTAC')
 
 # Test 
 # - fixedF
 # - TAC
 # - TAC and Effort
-
-MSE <- Project(Hist, MPs=MPs)
-
-MSE@Effort |> ArrayReduceDims()
+# - discard mortality 
 
 
-MSE@FDeadAtAge$`SA Red Snapper`[1,,1,,1] |> rowSums()
+MSE <- Project(Hist, MPs=MPs[1:2])
+
+MSE@Misc$DiscardMortality$NoDiscardMortality$`SA Red Snapper`[1,21,,]
+
+
+b <- Biomass(MSE) |> 
+  dplyr::group_by(TimeStep, MP) |>
+  dplyr::summarise(Value=mean(Value))
+
+ggplot(b, aes(x=TimeStep, y=Value, color=MP)) +
+  geom_line() 
+
+b <- Landings(MSE) |> 
+  dplyr::group_by(TimeStep, MP) |>
+  dplyr::summarise(Value=mean(Value))
+
+ggplot(b, aes(x=TimeStep, y=Value, color=MP)) +
+  geom_line() 
+
+b <- Removals(MSE) |> 
+  dplyr::group_by(TimeStep, MP) |>
+  dplyr::summarise(Value=mean(Value))
+
+ggplot(b, aes(x=TimeStep, y=Value, color=MP)) +
+  geom_line() 
+
+
+
+MSE@Effort |> ArrayReduceDims() |> range()
+
+MSE@FDeadAtAge$`SA Red Snapper`[1,,50,,1] |> rowSums()
 
 MSE@FDeadAtAge$`SA Red Snapper` |> ArrayReduceDims() |>
-  apply(c('Age', 'TimeStep'), sum) |>
-  apply('TimeStep', max)
+  apply(c('Sim', 'Age', 'TimeStep', 'MP'), sum) |>
+  apply(c('Sim', 'TimeStep', 'MP'), max)
 
 
 

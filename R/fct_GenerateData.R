@@ -28,8 +28,17 @@ GenerateHistoricalDataStock <- function(st, HistSim, HistTimeSteps) {
   Data@TimeStepLH <- Data@TimeSteps[length(Data@TimeSteps)]
   Data@TimeUnits <- HistSim@OM@Stock[[st]]@Ages@Units
   
+  Data@Removals
+  Data@Landings
+  Data@CPUE
+  Data@Survey
+  
   Data <- GenerateHistoricalData_Catch(Data, HistSim, HistTimeSteps, st)
+  Data <- GenerateHistoricalData_Catch(Data, HistSim, HistTimeSteps, st, 'Landings')
+  
+  # TODO
   Data <- GenerateHistoricalData_Index(Data, HistSim, HistTimeSteps, st)
+  Data <- GenerateHistoricalData_Index(Data, HistSim, HistTimeSteps, st, 'Survey')
 
   # Data@Index
   # Data@CAA
@@ -39,29 +48,34 @@ GenerateHistoricalDataStock <- function(st, HistSim, HistTimeSteps) {
 }
   
   
-GenerateHistoricalData_Catch <- function(Data, HistSim, HistTimeSteps, st) {
-  if (!EmptyObject(Data@Catch)) 
+GenerateHistoricalData_Catch <- function(Data, HistSim, HistTimeSteps, st, type=c('Removals', 'Landings')) {
+  type <- match.arg(type)
+  if (!EmptyObject(slot(Data, type))) 
     return(Data)
+  
+
   
   nTS <- length(HistTimeSteps)
   FleetNames <- HistSim@OM@Fleet[[st]]@Name |> as.character()
   nFleet <- length(FleetNames)
   
-  Data@Catch <- new('catch')
-  Data@Catch@Value <- array(NA, dim=c(nTS, nFleet),
-                               dimnames=list(TimeStep=HistTimeSteps,
-                                             Fleet=FleetNames))
+  CatchData <- new('catchdata')
+  CatchData@Type <- type
+  CatchData@Value <- array(NA, dim=c(nTS, nFleet),
+                           dimnames=list(TimeStep=HistTimeSteps,
+                                         Fleet=FleetNames))
+  CatchData@CV <- CatchData@Value 
+  CatchData@CV[] <- 0.2
   
-  Data@Catch@CV <- Data@Catch@Value 
-  Data@Catch@CV[] <- 0.2
+  if (type=='Removals') {
+    Catch <- apply(List2Array(HistSim@Removals[[st]]), c(2,4), sum) |> t()
+  } else {
+    Catch <- apply(List2Array(HistSim@Landings[[st]]), c(2,4), sum) |> t()
+  }
+  dimnames(Catch) <- list(TimeStep=HistTimeSteps, 
+                          Fleet=FleetNames)
   
-  Removals <- apply(List2Array(HistSim@Removals[[st]]), c(2,4), sum) |> t()
-  dimnames(Removals) <- list(TimeStep=HistTimeSteps, 
-                             Fleet=FleetNames)
   
-  Landings <- apply(List2Array(HistSim@Landings[[st]]), c(2,4), sum) |> t()
-  dimnames(Landings) <- list(TimeStep=HistTimeSteps, 
-                             Fleet=FleetNames)
   for (fl in 1:nFleet) {
     Obs <- HistSim@OM@Obs[[st]][[fl]]
     if (EmptyObject(Obs)) {
@@ -69,26 +83,28 @@ GenerateHistoricalData_Catch <- function(Data, HistSim, HistTimeSteps, st) {
     }
     if (!inherits(Obs, 'obs')) # TODO
       next()
-    if (Obs@Catch@Type == 'Removals') {
-      Data@Catch@Value[,fl] <- Removals[,fl] * ArraySubsetTimeStep(Obs@Catch@Error, HistTimeSteps) * Obs@Catch@Bias
-    } else {
-      Data@Catch@Value[,fl] <- Landings[,fl] * ArraySubsetTimeStep(Obs@Catch@Error, HistTimeSteps) * Obs@Catch@Bias
-    }
     
-    NA_TS <- which(!HistTimeSteps %in% Obs@Catch@TimeSteps)
+    obs <- slot(Obs, type)
+    CatchData@Value <-  Catch[,fl] * ArraySubsetTimeStep(obs@Error, HistTimeSteps) * obs@Bias
+    
+    NA_TS <- which(!HistTimeSteps %in% obs@TimeSteps)
     if (length(NA_TS)>0) {
-      Data@Catch@Value[NA_TS,fl] <- NA
+      CatchData@Value[NA_TS,fl] <- NA
     }
-    Data@Catch@Type[fl] <- Obs@Catch@Type
+    # CatchData@Type[fl] <- Obs@Catch@Type
   }
   
-  Data@Catch@Units <- 'Biomass'
+  CatchData@Units <- 'Biomass'
+  
+  slot(Data, type) <- CatchData
+  
   Data
 }
   
-GenerateHistoricalData_Index <- function(Data, HistSim, HistTimeSteps, st) {
+GenerateHistoricalData_Index <- function(Data, HistSim, HistTimeSteps, st, type=c('CPUE', 'Survey')) {
   # TODO add ability to generate additional indices using info in Obs 
-  if (!EmptyObject(Data@Index)) 
+  type <- match.arg(type)
+  if (!EmptyObject(slot(Data, type))) 
     return(Data)
   
   nTS <- length(HistTimeSteps)
@@ -102,16 +118,16 @@ GenerateHistoricalData_Index <- function(Data, HistSim, HistTimeSteps, st) {
 # ---- Projection -----
 
 
-GenerateProjectionData_Catch <- function(ProjSim, DataTimeStep, TimeStepsAll, st=1) {
+GenerateProjectionData_Catch <- function(ProjSim, DataTimeStep, TimeStepsAll, st=1, type=c('Removals', 'Landings')) {
+  type <- match.arg(type)
+  
+  SimCatch <- slot(ProjSim, type)[[st]][[as.character(DataTimeStep)]] |>
+    apply(2, sum) # sum over age and areas
   
   # TODO needs to have a stock index in ProjSim@OM@Data at some point
   # TODO catch units in numbers
-  Removals <- ProjSim@Removals[[st]][[as.character(DataTimeStep)]] |>
-    apply(2, sum) # sum over ages and areas
-  Landings <- ProjSim@Landings[[st]][[as.character(DataTimeStep)]] |>
-    apply(2, sum) # sum over age and areas
   
-  Catch <- ProjSim@Data[[st]]@Catch
+  Catch <- slot(ProjSim@Data[[st]], type)
   if (EmptyObject(Catch))
     return(ProjSim)
   
@@ -135,34 +151,28 @@ GenerateProjectionData_Catch <- function(ProjSim, DataTimeStep, TimeStepsAll, st
   
   # loop over fleets 
   for (fl in 1:nFleet) {
-    Obs <- ProjSim@OM@Obs[[st]][[fl]]
-    if (length(Obs@Catch@Error)<1)
-      next()
-    if (!inherits(Obs, 'obs')) # TODO - convert Obs
-      return(ProjSim)
-    # check if real data exists
+    Obs <- slot(ProjSim@OM@Obs[[st]][[fl]], type)
     
+    if (length(Obs@Error)<1)
+      next()
+
+ 
     # Catch 
-    if (!is.null(ProjSim@OM@Data[[st]]) && nrow(ProjSim@OM@Data[[st]]@Catch@Value)>=TSIndex) {
-      NewValue[,fl] <- ProjSim@OM@Data[[st]]@Catch@Value[TSIndex,fl]
+    if (!is.null(ProjSim@OM@Data[[st]]) && nrow(slot(ProjSim@OM@Data[[st]],type)@Value)>=TSIndex) {
+      NewValue[,fl] <- slot(ProjSim@OM@Data[[st]],type)@Value[TSIndex,fl]
     } else {
       if (Catch@Units[fl] != 'Biomass')
         cli::cli_abort('Currently catch can only be in units of Biomass', .internal=TRUE)
       
-      error <- ArraySubsetTimeStep(Obs@Catch@Error, DataTimeStep)
-      bias <- ArraySubsetTimeStep(Obs@Catch@Bias, DataTimeStep)
-      
-
-      if (Catch@Type[fl] == 'Removals') {
-        NewValue[,fl] <- Removals[fl] * error * bias
-      } else {
-        NewValue[,fl] <- Landings[fl] *  error * bias
-      }
+      error <- ArraySubsetTimeStep(Obs@Error, DataTimeStep)
+      bias <- ArraySubsetTimeStep(Obs@Bias, DataTimeStep)
+    
+      NewValue[,fl] <- SimCatch[fl] * error * bias
     }
     
     # CV 
-    if (nrow(ProjSim@OM@Data[[st]]@Catch@CV)>=TSIndex) {
-      NewCV[,fl] <- ProjSim@OM@Data[[st]]@Catch@CV[TSIndex,fl]
+    if (nrow(slot(ProjSim@OM@Data[[st]],type)@CV)>=TSIndex) {
+      NewCV[,fl] <- slot(ProjSim@OM@Data[[st]],type)@CV[TSIndex,fl]
     } else {
       NewCV[,fl] <- SubsetTimeStep(Catch@CV, DataTimeStep)[fl]
     }
@@ -170,7 +180,7 @@ GenerateProjectionData_Catch <- function(ProjSim, DataTimeStep, TimeStepsAll, st
   
   Catch@Value <- abind::abind(Value, NewValue, along=1, use.dnns=TRUE)
   Catch@CV <- abind::abind(CV, NewCV, along=1, use.dnns=TRUE)
-  ProjSim@Data[[st]]@Catch <- Catch
+  slot(ProjSim@Data[[st]],type) <- Catch
   ProjSim
 }
 
@@ -263,8 +273,9 @@ GenerateProjectionData <- function(ProjSim, TimeStep, TimeStepsHist, TimeStepsPr
   
   ProjSim@Data[[st]]@TimeSteps <- TimeStepsAll[1:TSIndex]
   
-  ProjSim <- GenerateProjectionData_Catch(ProjSim, DataTimeStep, TimeStepsAll, st)
-  ProjSim <- GenerateProjectionData_Index(ProjSim, DataTimeStep, TimeStepsHist, TimeStepsAll, st)
+  ProjSim <- GenerateProjectionData_Catch(ProjSim, DataTimeStep, TimeStepsAll, st, type='Removals')
+  ProjSim <- GenerateProjectionData_Catch(ProjSim, DataTimeStep, TimeStepsAll, st, type='Landings')
+  # ProjSim <- GenerateProjectionData_Index(ProjSim, DataTimeStep, TimeStepsHist, TimeStepsAll, st, type=c('CPUE', 'Survey'))
   
   # TODO 
   # - CAL

@@ -264,7 +264,7 @@ BAM2Fleet <- function(x, Stock) {
 #' @export
 ImportBAM <- function(x='Red Snapper',     
                       nSim=48,
-                      pYear=50,
+                      pYear=30,
                       populate=TRUE) {
   
   # This works for Red Snapper - SEDAR 73

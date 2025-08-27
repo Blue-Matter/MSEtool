@@ -21,7 +21,6 @@ PopulateOM <- function(OM, silent=FALSE) {
   OM@Stock  <- PopulateStockList(OM, silent)
   OM@Fleet <- PopulateFleetList(OM, OM@Stock, silent)
   
-
   OM <- OM |>
     PopulateObs() |>
     # CheckCatchFrac() |> # TODO - auto-populate CatchFrac if OM@Data exists
@@ -1234,19 +1233,26 @@ PopulateObs <- function(OM) {
  
   OM <- StructureObs(OM)
   
-
   for (st in 1:length(OM@Obs)) {
     for (fl in 1:length(OM@Obs[[1]])) {
       SetSeed(OM@Obs[[st]][[fl]], OM@Seed)
       
-      OM@Obs[[st]][[fl]]@Catch <- PopulateCatchObs(Catch=OM@Obs[[st]][[fl]]@Catch, 
+      OM@Obs[[st]][[fl]]@Removals <- PopulateCatchObs(Catch=OM@Obs[[st]][[fl]]@Removals, 
                                                    nSim=OM@nSim, 
                                                    TimeSteps=OM@TimeSteps)
       
-      OM@Obs[[st]][[fl]]@Index <- PopulateIndexObs(Index=OM@Obs[[st]][[fl]]@Index, 
+      OM@Obs[[st]][[fl]]@Landings <- PopulateCatchObs(Catch=OM@Obs[[st]][[fl]]@Landings, 
+                                                      nSim=OM@nSim, 
+                                                      TimeSteps=OM@TimeSteps)
+      
+      OM@Obs[[st]][[fl]]@CPUE <- PopulateIndexObs(Index=OM@Obs[[st]][[fl]]@CPUE, 
                                                    nSim=OM@nSim, 
                                                    TimeSteps=OM@TimeSteps)
     
+      OM@Obs[[st]][[fl]]@Survey <- PopulateIndexObs(Index=OM@Obs[[st]][[fl]]@Survey, 
+                                                  nSim=OM@nSim, 
+                                                  TimeSteps=OM@TimeSteps)
+      
       OM@Obs[[st]][[fl]]@CAA
       
       OM@Obs[[st]][[fl]]@CAL

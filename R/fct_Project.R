@@ -23,7 +23,6 @@ Project_hist <- function(Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, nSim=N
   
   Hist <- ReduceNSim(Hist, nSim)
   
-  
   # Set up parallel processing 
   if (parallel & !snowfall::sfIsRunning())
     setup()
@@ -97,7 +96,7 @@ Project_hist <- function(Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, nSim=N
   nMPs <- length(MPs)
   
   # Projection MP loop
-  mp <- 2 # for debugging 
+  mp <- 1 # for debugging 
   ProjSim <- ProjSimList$`1` # for debugging
   
   cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
@@ -496,7 +495,7 @@ KeepSelectivity <- function(MSE, ProjSimListMP, mp) {
 KeepDiscardMortality <- function(MSE, ProjSimListMP, mp) {
   MPDiscardMortality <- purrr::map(ProjSimListMP, \(ProjSim) {
     purrr::map(ProjSim@OM@Fleet, \(fleet) {
-      fleet@Selectivity@MeanAtAge
+      fleet@DiscardMortality@MeanAtAge
     }) 
   }) |> 
     ReverseList() |>

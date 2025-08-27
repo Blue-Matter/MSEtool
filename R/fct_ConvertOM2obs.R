@@ -4,13 +4,18 @@ OM2obs <- function(OM, cpars=NULL) {
   obs@Name <- Obs@Name
   
   
-  obs@Catch@Bias <- Obs@Cbiascv
-  obs@Catch@CV <- Obs@Cobs
+  obs@Removals@Bias <- Obs@Cbiascv
+  obs@Removals@CV <- Obs@Cobs
   
-  obs@Index@CV <- Obs@Iobs
-  obs@Index@Beta <-  Obs@beta
- 
+  obs@Landings@Bias <- Obs@Cbiascv
+  obs@Landings@CV <- Obs@Cobs
   
+  obs@CPUE@CV <- Obs@Iobs
+  obs@CPUE@Beta <-  Obs@beta
+  
+  obs@Survey@CV <- Obs@Iobs
+  obs@Survey@Beta <-  Obs@beta 
+
   Obs@CAA_nsamp
   Obs@CAA_ESS
   

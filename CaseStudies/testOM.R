@@ -14,13 +14,11 @@ la()
 
 OM <- ConvertOM(testOM)
 
-OM@Obs$Albacore$Generic_Fleet@Index
-OM@Obs$Albacore$Survey <- Obs()
-OM@Obs$Albacore$Survey@Index@CV <- c(0.1,02)
-OM@Obs$Albacore$Survey@Index@Selectivity <- 'Biomass'
-OM <- PopulateOM(OM)
 
 Hist <- Simulate(OM)
+
+
+Hist@Data$`2`$Albacore@Removals
 
 Hist@OM@Obs$Albacore$Generic_Fleet@Index@Error
 
