@@ -10,8 +10,11 @@ ConditionObs <- function(HistSim, HistTimeSteps, ProjectionTimeSteps) {
 
   # FisheryData # Life History 
   
-  HistSim <- ConditionObs_Catch(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps)
-  HistSim <- ConditionObs_Index(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps)
+  HistSim <- ConditionObs_Catch(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps, 'Landings')
+  HistSim <- ConditionObs_Catch(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps, 'Removals')
+  
+  HistSim <- ConditionObs_Index(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps, 'CPUE')
+  HistSim <- ConditionObs_Index(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps, 'Survey')
   
 
   # FisheryData@CAA
@@ -24,7 +27,11 @@ ConditionObs <- function(HistSim, HistTimeSteps, ProjectionTimeSteps) {
 
 # ----- Catch ----
 
-ConditionObs_Catch <- function(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps) {
+ConditionObs_Catch <- function(HistSim, FisheryData, HistTimeSteps,
+                               ProjectionTimeSteps, type=c('Landings', 'Removals')) {
+  
+  type <- match.arg(type)
+  
   
   # TODO multiple stocks 
   if (!inherits(FisheryData, 'data')) {
@@ -34,19 +41,12 @@ ConditionObs_Catch <- function(HistSim, FisheryData, HistTimeSteps, ProjectionTi
   nHistTS <- length(HistTimeSteps)
   nProjTS <- length(ProjectionTimeSteps)
   
-  ObservedCatch <- FisheryData@Catch@Value |>
+  ObservedCatch <- slot(FisheryData, type)@Value |>
     ArraySubsetTimeStep(TimeSteps=HistTimeSteps)
   
   nFleet <- ncol(ObservedCatch)
   
-  SimulatedRemovals <- purrr::map(HistSim@Removals, \(stock) {
-    List2Array(stock) |> AddDimNames(c('Age', 'Fleet', 'Area', 'TimeStep'), HistTimeSteps) |>
-      apply(c('TimeStep', 'Fleet'), sum)
-  }) |> 
-    List2Array('Stock') |> 
-    apply(c('TimeStep', 'Fleet'), sum)
-  
-  SimulatedLandings <- purrr::map(HistSim@Landings, \(stock) {
+  SimulatedCatch <- purrr::map(slot(HistSim, type), \(stock) {
     List2Array(stock) |> AddDimNames(c('Age', 'Fleet', 'Area', 'TimeStep'), HistTimeSteps) |>
       apply(c('TimeStep', 'Fleet'), sum)
   }) |> 
@@ -54,14 +54,10 @@ ConditionObs_Catch <- function(HistSim, FisheryData, HistTimeSteps, ProjectionTi
     apply(c('TimeStep', 'Fleet'), sum)
   
   for (fl in 1:nFleet) {
-    CatchObs <- HistSim@OM@Obs[[1]][[fl]]@Catch
-    CatchObs@Type <- FisheryData@Catch@Type[fl]
+    CatchObs <- slot(HistSim@OM@Obs[[1]][[fl]], type)
+    CatchObs@Type <- slot(FisheryData,type)@Type[fl]
     
-    if (CatchObs@Type =='Removals') {
-      SimValue <- SimulatedRemovals[,fl]
-    } else {
-      SimValue <- SimulatedLandings[,fl]
-    }
+    SimValue <- SimulatedCatch[,fl]
     
     bias <- mean(SimValue/ObservedCatch[,fl], na.rm=TRUE) |> round(2)
     
@@ -80,7 +76,7 @@ ConditionObs_Catch <- function(HistSim, FisheryData, HistTimeSteps, ProjectionTi
     CatchErrorProj <- exp(rnorm(nProjTS, -((SD^2)/2), SD))
     CatchObs@Error <-c(CatchErrorHist,CatchErrorProj) |> 
       array(dimnames = list(TimeStep=c(HistTimeSteps, ProjectionTimeSteps)))
-    HistSim@OM@Obs[[1]][[fl]]@Catch <- CatchObs
+    slot(HistSim@OM@Obs[[1]][[fl]], type) <- CatchObs
     
   }
   HistSim
@@ -158,7 +154,10 @@ ApplyIndexAC <- function(Residuals, ac, LastError) {
   Residuals
 }
 
-ConditionObs_Index <- function(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps, st=1) {
+ConditionObs_Index <- function(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps, 
+                               type=c('CPUE', 'Survey'), st=1) {
+  
+  type <- match.arg(type)
   
   # TODO - condition index for specific timesteps - NSWO
   
@@ -170,21 +169,20 @@ ConditionObs_Index <- function(HistSim, FisheryData, HistTimeSteps, ProjectionTi
   
   nTS <- length(HistTimeSteps)
   
-  NameIndices <- FisheryData@Index@Name
-  ObservedIndices <- FisheryData@Index@Value |>
+  NameIndices <- slot(FisheryData, type)@Name
+  ObservedIndices <- slot(FisheryData, type)@Value |>
     ArraySubsetTimeStep(TimeSteps=HistTimeSteps)
   
-  # TODO - total biomass, spawning biomass, vulnerable biomass
   nFleet <- ncol(ObservedIndices)
   
   SimulatedNumber <- List2Array(HistSim@Number, 'Stock') |> 
     AddDimNames(c('Age', 'TimeStep', 'Area', 'Stock'),HistTimeSteps) |>
-    apply(c('Age', 'TimeStep'), sum)
-    # apply(c('Stock', 'Age', 'TimeStep'), sum)
+    # apply(c('Age', 'TimeStep'), sum)
+    apply(c('Stock', 'Age', 'TimeStep'), sum)
   
   for (fl in 1:nFleet) {
-    IndexObs <- HistSim@OM@Obs[[1]][[NameIndices[fl]]]@Index
-    SelectivityAtAge <- FisheryData@Index@Selectivity[[fl]]
+    IndexObs <- slot(HistSim@OM@Obs[[1]][[NameIndices[fl]]],type)
+    SelectivityAtAge <- slot(FisheryData, type)@Selectivity[[fl]]
     if (is.character(SelectivityAtAge)) {
       if (SelectivityAtAge == 'Biomass') {
         SelectivityAtAge <- matrix(1,nAge(HistSim@OM, 1), 1) |>
@@ -195,16 +193,21 @@ ConditionObs_Index <- function(HistSim, FisheryData, HistTimeSteps, ProjectionTi
         SelectivityAtAge <- IndexObs@Selectivity
       }
     } else {
-      cli::cli_abort('Not complete for non character!', .internal=TRUE) # TODO
+      SelectivityAtAge <- purrr::map(HistSim@OM@Fleet, \(stock) stock@Selectivity@MeanAtAge[,,fl]) |>
+        List2Array('Stock') |> aperm(c('Stock', 'Age', 'TimeStep')) |>
+        ArraySubsetTimeStep(HistTimeSteps)
     }
   
     ObservedIndex <- ObservedIndices[,fl]
-    Units <- FisheryData@Index@Units[fl]
+    Units <- slot(FisheryData,type)@Units[fl]
     
-    SimNumberSelected <- ArrayMultiply(SimulatedNumber, SelectivityAtAge)
+    SimNumberSelected <- ArrayMultiply(SimulatedNumber, SelectivityAtAge) 
     
     if (Units=='Biomass') {
-      WeightAtAge <- ArraySubsetTimeStep(HistSim@OM@Stock[[1]]@Weight@MeanAtAge, HistTimeSteps)
+      WeightAtAge <- purrr::map(HistSim@OM@Stock, \(stock) stock@Weight@MeanAtAge |>
+                   ArraySubsetTimeStep(HistTimeSteps)) |>
+        List2Array('Stock') |> aperm(c('Stock', 'Age', 'TimeStep'))
+      
       SimulatedIndex <- ArrayMultiply(WeightAtAge, SimNumberSelected) |> apply('TimeStep', sum)
     } else if (Units=='Number') {
       SimulatedIndex <- SimNumberSelected |> apply('TimeStep', sum)
@@ -242,7 +245,7 @@ ConditionObs_Index <- function(HistSim, FisheryData, HistTimeSteps, ProjectionTi
     IndexObs@Error <- c(ResidualsHistorical, ResidualsProjection) |> 
       array(dimnames = list(TimeStep=c(HistTimeSteps,  ProjectionTimeSteps)))
     
-    HistSim@OM@Obs[[st]][[NameIndices[fl]]]@Index <- IndexObs
+    slot(HistSim@OM@Obs[[st]][[NameIndices[fl]]],type) <- IndexObs
   }
   
   HistSim

@@ -80,6 +80,8 @@ Simulate_om <- function(OM=NULL,
   # TimeSteps = tail(HistTimeSteps,1)
   # maxF=OM@maxF
   
+  # TODO - check if varies over simulations
+  
   HistSimList <- purrr::map(HistSimList, \(HistSim) {
     HistSim@RefPoints@MSYRefPoints <- CalculateMSYSim(StockList=HistSim@OM@Stock,
                                              FleetList=HistSim@OM@Fleet,                                  
@@ -150,8 +152,6 @@ Simulate_om <- function(OM=NULL,
   # tictoc::toc()
  
   # ---- Check for Depletion Optimization ----
-  
- 
   # OM@Stock$Albacore@Depletion@Final
   # OM@Stock$Albacore@Depletion@Reference
   # 

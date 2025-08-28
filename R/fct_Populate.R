@@ -1208,16 +1208,17 @@ StructureObs <- function(OM) {
     cli::cli_abort("`OM@Obs` must be a list or an object of class `obs`")
   }
   
-  if (length(StockNames)>1)
-    warning("Multi-stock/fleet Obs not done")
-  
+  # if (length(StockNames)>1)
+  #   warning("Multi-stock/fleet Obs not done")
+  # 
   # TODO 
   
   
-  if (length(OM@Obs)!=nStock(OM)) {
-    cli::cli_abort('`OM@Obs` must be a list length `nStock(OM)`')
-  }
-  names(OM@Obs) <- StockNames(OM)
+  
+  # if (length(OM@Obs)!=nStock(OM)) {
+  #   cli::cli_abort('`OM@Obs` must be a list length `nStock(OM)`')
+  # }
+  # names(OM@Obs) <- StockNames(OM)
   
   OM
 }
@@ -1294,6 +1295,8 @@ PopulateIndexObs <- function(Index, nSim, TimeSteps) {
 
 
 PopulateCatchObs <- function(Catch, nSim, TimeSteps) {
+  if (EmptyObject(Catch))
+    return(Catch)
   nTS <- length(TimeSteps)
   Catch@CV <- PopulateObsCV(Catch@CV, nSim)
   Catch@Error <- PopulateObsError(Catch, nSim, TimeSteps)

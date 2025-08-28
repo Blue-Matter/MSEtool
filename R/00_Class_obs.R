@@ -34,7 +34,7 @@ setClass('indicesobs',
            TimeSteps='num.list.null',
            Selectivity='array.char.num', # Biomass, SBiomass, age classes
            Type='character',
-           q='numeric' 
+           q='num.array.list' 
          ),
          contains='MiscClass'
 )
