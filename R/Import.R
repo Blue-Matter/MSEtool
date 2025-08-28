@@ -885,6 +885,8 @@ ImportSS <- function(x,
 ProcessSurveyObsSelectivity <- function(OM, RepList) {
   # Add Selectivity to Obs for Survey indices
   IndexInd <- which(grepl('Obs', OM@Data[[1]]@Survey@Selectivity))
+  mainyrs <- RepList[[1]]$startyr:RepList[[1]]$endyr
+  
   if (length(IndexInd)>0) {
     Survey_Ind <- which(!RepList[[1]]$IsFishFleet)
     nStock <- nStock(OM)
