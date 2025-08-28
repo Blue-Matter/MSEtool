@@ -841,7 +841,7 @@ ImportSS <- function(x,
   
   # Obs
   SurveyNames <- OM@Data[[1]]@Survey@Name
-  AllFleetNames <- c(FleetNames, CPUENames) |> unique()
+  AllFleetNames <- c(FleetNames, SurveyNames) |> unique()
   OM@Obs <- MakeNamedList(names(OM@Data), MakeNamedList(AllFleetNames, new('obs')))
   OM <- ProcessSurveyObsSelectivity(OM, RepList)
   
