@@ -1188,20 +1188,20 @@ ImportSSData_Index <- function(replist, Type=c('CPUE', 'Survey'),
     out
   }) |> unlist() |> as.character()
   
-  Index@Name <- CPUENames
+  Indices@Name <- CPUENames
   names(CPUE_Split) <- CPUENames
   nIndex <- length(CPUENames)
   
-  Index@Value <- array(NA, 
+  Indices@Value <- array(NA, 
                        dim=c(nTS, nIndex),
                        dimnames = list(TimeStep=mainyrs,
                                        Fleet=as.character(CPUENames)))
-  Index@CV <- Index@Value
+  Indices@CV <- Indices@Value
   
-  Index@Timing <- rep(0, nIndex) # assume at beginning of time step
+  Indices@Timing <- rep(0, nIndex) # assume at beginning of time step
   
   # TODO season_as_years and nyears>1
-  Indices <- purrr::imap(CPUE_Split, \(cpue, idx) {
+  Value <- purrr::imap(CPUE_Split, \(cpue, idx) {
     index <-  array(NA, c(length(mainyrs),1), 
                     dimnames = list(TimeStep=mainyrs,
                                     Fleet=CPUENames[idx])
@@ -1213,7 +1213,7 @@ ImportSSData_Index <- function(replist, Type=c('CPUE', 'Survey'),
     index
   }) 
 
-  IndicesCV <- purrr::imap(CPUE_Split, \(cpue, idx) {
+  CV <- purrr::imap(CPUE_Split, \(cpue, idx) {
     index <-  array(NA, c(length(mainyrs),1), 
                     dimnames = list(TimeStep=mainyrs,
                                     Fleet=CPUENames[idx])
@@ -1225,19 +1225,19 @@ ImportSSData_Index <- function(replist, Type=c('CPUE', 'Survey'),
     index
   })
   
-  Index@Value[] <- do.call('cbind', Indices)
-  Index@CV[] <- do.call('cbind', IndicesCV)
+  Indices@Value[] <- do.call('cbind', Value)
+  Indices@CV[] <- do.call('cbind', CV)
 
-  Index@Units <- sapply(replist$survey_units[CPUE_Ind], function(x)
+  Indices@Units <- sapply(replist$survey_units[CPUE_Ind], function(x)
     switch(as.character(x), 
            '0'="Number",
            '1'='Biomass', 
            '2'='F')) |> unlist()
   
   if (Type=='CPUE') {
-    Index@Selectivity <- IndFleets
+    Indices@Selectivity <- IndFleets
   } else {
-    Index@Selectivity <- rep('Obs', length(CPUE_Ind))
+    Indices@Selectivity <- rep('Obs', length(CPUE_Ind))
   }
   
   
@@ -1249,7 +1249,7 @@ ImportSSData_Index <- function(replist, Type=c('CPUE', 'Survey'),
   # Character - Obs - 
 
   
-  Index 
+  Indices 
 }
 
 
