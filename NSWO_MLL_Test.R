@@ -1,0 +1,182 @@
+library(MSEtool)
+library(SWOMSE)
+SSDir <- 'G:/My Drive/1_PROJECTS/North_Atlantic_Swordfish/OMs/2024_OMs/Reference/005_M0.2_sigmaR0.2_steepness0.80_cpuelambda1_llq1_env7'
+
+nSim <- 5
+OM <- ImportSS(SSDir, nSim=nSim, DataLag = 2)
+
+Hist <- Simulate(OM)
+
+L <- Landings(Hist, TRUE) |> dplyr::filter(Sim==1, TimeStep==max(TimeStep)) |>
+  dplyr::group_by(Fleet) |>
+  dplyr::filter(Value>0)
+
+KeepFleets <- unique(L$Fleet)
+
+SelectivityAtAge <- GetSelectivityAtAge(Hist) |> dplyr::filter(TimeStep==max(TimeStep), Fleet %in% KeepFleets)
+SelectivityAtLength <- GetSelectivityAtLength(Hist) |> dplyr::filter(TimeStep==max(TimeStep), Fleet %in% KeepFleets)
+RetentionAtAge <- GetRetentionAtAge(Hist) |> dplyr::filter(TimeStep==max(TimeStep), Fleet %in% KeepFleets)
+RetentionAtLength <- GetRetentionAtLength(Hist) |> dplyr::filter(TimeStep==max(TimeStep), Fleet %in% KeepFleets)
+
+DF <- dplyr::bind_rows(SelectivityAtAge, RetentionAtAge)
+plot(DF |> dplyr::filter(Stock=='Female'), color='Variable', ylab='Probability')
+
+DF <- dplyr::bind_rows(SelectivityAtLength, RetentionAtLength)
+plot(DF |> dplyr::filter(Stock=='Female'), color='Variable', xlab='Length', ylab='Probability')
+
+l <- Landings(Hist, ByAge=TRUE) |>
+  dplyr::filter(TimeStep==max(TimeStep), Sim==1) |>
+  dplyr::group_by(Age, TimeStep, Variable) |>
+  dplyr::reframe(Value=sum(Value))
+
+r <- Removals(Hist, ByAge=TRUE) |> 
+  dplyr::filter(TimeStep==max(TimeStep), Sim==1) |>
+  dplyr::group_by(Age, TimeStep, Variable) |>
+  dplyr::reframe(Value=sum(Value))
+
+d <- r
+d$Value <- r$Value - l$Value
+d$Variable <- 'Dead Discards'
+
+ggplot(dplyr::bind_rows(l,d), aes(x=Age, y=Value, fill=Variable)) +
+  geom_bar(stat='identity') +
+  theme_bw() +
+  labs(fill='')
+
+
+MCC11 <- function(Data,
+                  Data_Lag = 2,
+                  Interval = 3,
+                  tunepar = 0.756222283813747,
+                  mc = NA, ...) {
+  advice <- Advice()
+  CurrentTS <- tail(Data@TimeSteps,1)
+  if (CurrentTS %in% Catchdf$Year) {
+    advice@TAC <-  Catchdf$Catch[match(CurrentTS, Catchdf$Year)]
+    return(advice)
+  }
+  
+  Initial_MP_Yr <- max(Catchdf$Year)+1
+  ManagementTimeSteps <- seq(Initial_MP_Yr, by=Interval, length.out=50)
+  
+  if (!(CurrentTS+1) %in% ManagementTimeSteps) {
+    advice@TAC <- tail(Data@TAC[!is.na(Data@TAC)],1) |> as.numeric()
+    return(advice)
+  }
+  
+  TACbase <- 12600 * tunepar
+  
+  CombinedIndex <- Data@Survey@Value[,8]
+  
+  Ibase <- mean(CombinedIndex[match(2017:2019, Data@TimeSteps)], na.rm=TRUE)
+  
+  # combined index averaged over last available 3 # years in time-series (y-4, y-3, y-2)
+  Icurr <- mean(tail(CombinedIndex,3))
+  
+  Irat <- Icurr/Ibase
+  
+  fixed_low_TAC <- NULL  # initialize
+  
+  if (Irat>=1.85) {
+    deltaTAC <- 1.85
+  }
+  if (Irat>=1.75 & Irat<1.85) {
+    deltaTAC <- 1.75
+  }
+  if (Irat>=1.65 & Irat<1.75) {
+    deltaTAC <- 1.65
+  }
+  if (Irat>=1.55 & Irat<1.65) {
+    deltaTAC <- 1.55
+  }
+  if (Irat>=1.45 & Irat<1.55) {
+    deltaTAC <- 1.45
+  }
+  if (Irat>=1.35 & Irat<1.45) {
+    deltaTAC <- 1.35
+  }
+  if (Irat>=1.25 & Irat<1.35) {
+    deltaTAC <- 1.25
+  }
+  if (Irat>=1.15 & Irat<1.25) {
+    deltaTAC <- 1.15
+  }
+  if (Irat>=0.75 & Irat<1.15) {
+    deltaTAC <- 1
+  }
+  if (Irat>=0.5 & Irat<0.75) {
+    deltaTAC <- 0.75
+  }
+  if (Irat<0.5) {
+    deltaTAC <- 0.5
+  }
+  
+  advice@TAC <- TACbase * deltaTAC
+  advice
+}
+
+FullRetention <- function(Advice) {
+  Advice@Retention@Pars <- list(RL50=0, RL50_95=0)
+  Advice
+}
+
+MCC11_FR <- function(Data,...) {
+  MCC11(Data, ...) |> FullRetention()
+}
+
+MPs <- c('MCC11', 'MCC11_FR')
+
+MSE <- Project(Hist, MPs)
+
+Data <- DataTrim(MSE@PPD$MCC11$`1`$`Female Male`, 2024)
+Data@Survey@Value[,8]
+
+MSE@PPD$MCC11$`1`$`Female Male`@Survey@Value[,8]
+
+MSE@PPD$MCC11$`1`$`Female Male`@TAC
+
+b <- Biomass(MSE) |> dplyr::filter(Sim==1) |>
+  dplyr::group_by(TimeStep, MP) |>
+  dplyr::summarise(Value=sum(Value))
+
+ggplot(b, aes(x=TimeStep, y=Value, color=MP)) +
+  
+  geom_line() +
+  theme_bw()
+
+l <- Landings(MSE, ByFleet=TRUE) |> dplyr::filter(Sim==1) |>
+  dplyr::group_by(TimeStep, Fleet, MP) |>
+  dplyr::summarise(Value=sum(Value))
+
+ggplot(l, aes(x=TimeStep, y=Value, color=MP)) +
+  facet_wrap(~Fleet) +
+  geom_line() +
+  theme_bw()
+
+l |> dplyr::filter(TimeStep==2022) |> print(n=30)
+
+
+
+# Run 2 - Shift Selectivity Curves to Left 
+
+Hist@OM@Fleet$Female@Selectivity@MeanAtAge 
+Hist@OM@Fleet$Female@Selectivity@MeanAtLength |> dim()
+
+devtools::load_all()
+
+object <- OM@Fleet$Female[[3]]@Selectivity 
+Length <- Hist@OM@Stock$Female@Length
+
+Length@Classes <- object@Classes
+Length@ASK <- CalcAgeSizeKey(Length@MeanAtAge, Length@CVatAge, Length@Classes)
+r <- AtAge2AtSize(object, Length) |> ArrayReduceDims()
+
+plot(object@Classes, object@MeanAtLength[1,,2] , ylim=c(0,1), type='l')
+lines(Length@Classes, r[1,,2], col='blue')
+
+
+
+t <- AtSize2AtAge(object, Length)
+plot(object@MeanAtAge[1,,2] , type='l', ylim=c(0,1))
+lines(t[1,,2], type='l', col='blue')
+
