@@ -235,6 +235,7 @@ Collate:
     'fct_Slick.R'
     'fct_Subset.R'
     'fct_TACs.R'
+    'fct_plot_Schedule.R'
     'iSCAM2OM.R'
     'multiMSE.R'
     'multiMSE_DEVCOPY.R'

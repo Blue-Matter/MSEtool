@@ -53,8 +53,6 @@ GenerateHistoricalData_Catch <- function(Data, HistSim, HistTimeSteps, st, type=
   if (!EmptyObject(slot(Data, type))) 
     return(Data)
   
-
-  
   nTS <- length(HistTimeSteps)
   FleetNames <- HistSim@OM@Fleet[[st]]@Name |> as.character()
   nFleet <- length(FleetNames)
@@ -184,11 +182,13 @@ GenerateProjectionData_Catch <- function(ProjSim, DataTimeStep, TimeStepsAll, st
   ProjSim
 }
 
-GenerateProjectionData_Index <- function(ProjSim, DataTimeStep, TimeStepsHist, TimeStepsAll, st=1) {
+GenerateProjectionData_Index <- function(ProjSim, DataTimeStep, TimeStepsHist, TimeStepsAll, st=1, type=c('CPUE', 'Survey')) {
   
   # TODO hyperstability Beta not functional yet - ignored
+  type <- match.arg(type)
   
-  Index <- ProjSim@Data[[st]]@Index
+  
+  Index <- slot(ProjSim@Data[[st]], type)
   if (EmptyObject(Index))
     return(ProjSim)
   Value <- Index@Value
@@ -199,6 +199,7 @@ GenerateProjectionData_Index <- function(ProjSim, DataTimeStep, TimeStepsHist, T
     return(ProjSim)
   }
   
+  TimeStepsProj <- TimeStepsAll[! TimeStepsAll %in% TimeStepsHist]
   TSIndex <- match(DataTimeStep, TimeStepsAll)
   
   nFleet <- ncol(Value)
@@ -209,12 +210,13 @@ GenerateProjectionData_Index <- function(ProjSim, DataTimeStep, TimeStepsHist, T
                  dimnames = list(TimeStep=DataTimeStep,
                                  Fleet=Index@Name))
   
+  
   FleetIndex <- match(Index@Name, names(ProjSim@OM@Obs[[st]]))
   
   # loop over fleets 
   for (fl in 1:nFleet) {
     Obs <- ProjSim@OM@Obs[[st]][[FleetIndex[fl]]]
-    if (length(Obs@Index@Error)<1)
+    if (length(slot(Obs, type)@Error)<1)
       next()
     # TODO - make this an option
     # currently doesn't simulate index if last two data points were NAs
@@ -222,28 +224,38 @@ GenerateProjectionData_Index <- function(ProjSim, DataTimeStep, TimeStepsHist, T
       next()
     
     # Index 
-    if (nrow(ProjSim@OM@Data[[st]]@Index@Value)>=TSIndex) {
+    if (nrow(slot(ProjSim@OM@Data[[st]],type)@Value)>=TSIndex) {
       # check if real data exists
-      NewValue[,fl] <- ProjSim@OM@Data[[st]]@Index@Value[TSIndex,fl]
+      NewValue[,fl] <- slot(ProjSim@OM@Data[[st]],type)@Value[TSIndex,fl]
     } else {
       if (Index@Timing[fl]!=0)
         cli::cli_alert_warning('`Index@Timing` not working yet. Calculating from beginning of time step')
       
       if (Index@Selectivity[fl]=='Obs') {
-        SelectAtAge <- ArraySubsetTimeStep(Obs@Index@Selectivity, DataTimeStep)
+        SelectAtAge <- ArraySubsetTimeStep(slot(Obs,type)@Selectivity, DataTimeStep)
       } else {
         cli::cli_abort('Not done yet!', .internal=TRUE)
       }
       
-      NumberAtAge <- ProjSim@Number[[st]][,TSIndex,, drop=FALSE] |> apply(1:2, sum) 
-      SimulatedValue <- ArrayMultiply(NumberAtAge, SelectAtAge)
+      SimulatedNumber <- List2Array(ProjSim@Number, 'Stock') |> 
+        AddDimNames(c('Age', 'TimeStep', 'Area', 'Stock'),TimeStepsProj) |>
+        apply(c('Stock', 'Age', 'TimeStep'), sum) |>
+        ArraySubsetTimeStep(DataTimeStep)
+      
+      SimNumberSelected <- ArrayMultiply(SimulatedNumber, SelectAtAge)
       
       if (Index@Units[fl] == 'Biomass') {
+        WeightAtAge <- purrr::map(ProjSim@OM@Stock, \(stock) stock@Weight@MeanAtAge |>
+                                    ArraySubsetTimeStep(DataTimeStep)) |>
+          List2Array('Stock') |> aperm(c('Stock', 'Age', 'TimeStep'))
+        
+        SimulatedValue <- ArrayMultiply(WeightAtAge, SimNumberSelected) |> apply('TimeStep', sum)
+        
         SimulatedValue <- SimulatedValue * ProjSim@OM@Stock[[st]]@Weight@MeanAtAge[,TSIndex]
       }
-      SimulatedValue <- apply(SimulatedValue, 2, sum)
       
-      NewValue[,fl] <- SimulatedValue * Obs@Index@q*Obs@Index@Error[TSIndex]
+      
+      NewValue[,fl] <- SimulatedValue * slot(Obs, type)@q*slot(Obs,type)@Error[TSIndex]
     }
     
     # CV 
@@ -275,7 +287,11 @@ GenerateProjectionData <- function(ProjSim, TimeStep, TimeStepsHist, TimeStepsPr
   
   ProjSim <- GenerateProjectionData_Catch(ProjSim, DataTimeStep, TimeStepsAll, st, type='Removals')
   ProjSim <- GenerateProjectionData_Catch(ProjSim, DataTimeStep, TimeStepsAll, st, type='Landings')
-  # ProjSim <- GenerateProjectionData_Index(ProjSim, DataTimeStep, TimeStepsHist, TimeStepsAll, st, type=c('CPUE', 'Survey'))
+  
+  ProjSim@Data$`Female Male`@Removals@Value
+  ProjSim@Data$`Female Male`@Landings@Value
+  
+  ProjSim <- GenerateProjectionData_Index(ProjSim, DataTimeStep, TimeStepsHist, TimeStepsAll, st, type=c('CPUE', 'Survey'))
   
   # TODO 
   # - CAL

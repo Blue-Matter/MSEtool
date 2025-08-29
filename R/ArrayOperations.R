@@ -231,6 +231,8 @@ ArraySubtract <- function(array1, array2=NULL) {
 }
 
 ArraySubsetTimeStep <- function(object, TimeSteps=NULL, AddPast=TRUE) {
+  
+  
   if (is.null(TimeSteps))
     return(object)
   

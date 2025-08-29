@@ -810,6 +810,8 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
   
     ind <- seq(from=1, by=nSubAges, to=dim(LengthMeanAtAge)[2])
     
+    MeanAtAge <-ArrayExpand(MeanAtAge, dd[1], nAges=dd[2], TimeSteps=TSteps)
+    
     objectMeanAtAge[,ind,] <- MeanAtAge[]
     LengthMeanAtAge[,ind,] <- Length@MeanAtAge[]
     LengthCVatAge[,ind,] <- Length@CVatAge[]
@@ -828,9 +830,8 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
         for (ts in 1:max(dims[,3])) {
           
           # Linear interpolate at-Age schedule
-          temp <- approx(ind2, MeanAtAge[GetIndex(s, dims[1,1]),
-                                         i:(i+1),
-                                         GetIndex(s, dims[1,3])],
+          temp <- approx(ind2, 
+                         MeanAtAge[GetIndex(s, dims[1,1]),i:(i+1), GetIndex(s, dims[1,3])],
                          xout=ind3)
           objectMeanAtAge[s,ind3,ts] <- temp$y
           

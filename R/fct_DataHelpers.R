@@ -32,6 +32,7 @@ ProjectionTimeStep <- function(Data) {
 #' @export
 DataTrim <- function(Data, TimeStep) {
   CheckClass(Data, 'data', 'Data')
+  saveTAC <- Data@TAC
 
   if (!is.numeric(TimeStep))
     cli::cli_abort("`TimeStep` must be a numeric value")
@@ -49,8 +50,8 @@ DataTrim <- function(Data, TimeStep) {
   OutTimeSteps <- TimeSteps[TimeSteps <= TimeStep]
   
   OutData <- SubsetTimeStep(Data, OutTimeSteps, AddPast=FALSE)
-  OutData@TimeSteps <- OutTimeSteps
+  # OutData@TimeSteps <- OutTimeSteps
+  OutData@TAC <- saveTAC
   OutData
 }
-
 

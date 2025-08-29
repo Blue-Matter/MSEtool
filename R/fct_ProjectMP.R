@@ -14,6 +14,8 @@ ProjectMP <- function(ProjSim, MP, TimeStepsHist, TimeStepsProj, ManagementTimeS
     # TODO - add option for Data Lag 
     ProjSim <- GenerateProjectionData(ProjSim, TimeStep, TimeStepsHist, TimeStepsProj)
     
+    ProjSim@Data$`Female Male`@Survey@Value[,8]
+   
     #  Update `ProjSim` with MP Advice
     # tictoc::tic("Apply MP")
     
@@ -25,6 +27,7 @@ ProjectMP <- function(ProjSim, MP, TimeStepsHist, TimeStepsProj, ManagementTimeS
                                ManagementTimeSteps)
 
     # tictoc::toc()
+  
     
     #  Simulate Pop Dynamics for this Time Step
     # tictoc::tic("Update Dynamics")
@@ -32,10 +35,14 @@ ProjectMP <- function(ProjSim, MP, TimeStepsHist, TimeStepsProj, ManagementTimeS
     if (!is.na(TimeStepsProj[i+1])) 
       ProjSim <- SimulateDynamics_(ProjSim, TimeStepsProj[i+1]) # calc recruits before fishing mortality
     
-  
+    
+
     # tictoc::toc()
     
   } 
+  
+  
+  
   # tictoc::toc()
   ProjSim
 }
