@@ -40,8 +40,9 @@ GenerateHistoricalDataStock <- function(i, HistSim, HistTimeSteps, stocks) {
 
   Data@TimeUnits <-  HistSim@OM@Stock[[stocks[1]]]@Ages@Units
 
+  Data <- GenerateHistoricalData_Catch(Data, HistSim, HistTimeSteps, i, stocks)
   
-  # UPTOHERE
+ 
 
   Data@Landings
   Data@Discards
@@ -50,7 +51,7 @@ GenerateHistoricalDataStock <- function(i, HistSim, HistTimeSteps, stocks) {
   Data@CPUE
   Data@Survey
   
-  Data <- GenerateHistoricalData_Catch(Data, HistSim, HistTimeSteps, st)
+  
   Data <- GenerateHistoricalData_Catch(Data, HistSim, HistTimeSteps, st, 'Landings')
   
   # TODO
@@ -65,13 +66,13 @@ GenerateHistoricalDataStock <- function(i, HistSim, HistTimeSteps, stocks) {
 }
   
   
-GenerateHistoricalData_Catch <- function(Data, HistSim, HistTimeSteps, st, type=c('Removals', 'Landings')) {
+GenerateHistoricalData_Catch <- function(Data, HistSim, HistTimeSteps, i, stocks, type=c('Landings', 'Discards')) {
   type <- match.arg(type)
   if (!EmptyObject(slot(Data, type))) 
     return(Data)
   
   nTS <- length(HistTimeSteps)
-  FleetNames <- HistSim@OM@Fleet[[st]]@Name |> as.character()
+  FleetNames <- HistSim@OM@Fleet[[1]]@Name |> as.character()
   nFleet <- length(FleetNames)
   
   CatchData <- new('catchdata')
