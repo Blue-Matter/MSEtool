@@ -41,6 +41,7 @@ GenerateHistoricalDataStock <- function(i, HistSim, HistTimeSteps, stocks) {
   Data@TimeUnits <-  HistSim@OM@Stock[[stocks[1]]]@Ages@Units
 
   
+  # UPTOHERE
 
   Data@Landings
   Data@Discards
