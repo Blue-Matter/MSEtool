@@ -1,11 +1,64 @@
 library(MSEtool)
 library(SWOMSE)
+
+la <- devtools::load_all
+la()
+
 SSDir <- 'G:/My Drive/1_PROJECTS/North_Atlantic_Swordfish/OMs/2024_OMs/Reference/005_M0.2_sigmaR0.2_steepness0.80_cpuelambda1_llq1_env7'
 
+RepList <- ImportSSReport(SSDir)
+
 nSim <- 5
-OM <- ImportSS(SSDir, nSim=nSim, DataLag = 2)
+OM <- ImportSS(RepList, nSim=nSim, DataLag = 2)
+OM@Obs$`Female Male`$Combined_CPUE@Survey@TimeSteps <- 1999:2020
 
 Hist <- Simulate(OM)
+
+
+
+sel <- Hist@OM@Fleet$Female@Selectivity@MeanAtAge[1,,1,1]
+ret <- Hist@OM@Fleet$Female@Retention@MeanAtAge[1,,1,1]
+disc <- Hist@OM@Fleet$Female@DiscardMortality@MeanAtAge[1,,1,1]
+
+plot(sel)
+lines(sel * (ret + (1-ret)*disc))
+lines(ret, col='blue')
+
+
+CompareSSLandings(RepList[[1]], Hist)
+
+CompareSSRemovals(RepList[[1]], Hist)
+
+l <- Hist@Landings$Female + Hist@Landings$Male
+d <- Hist@Discards$Female + Hist@Discards$Male
+
+apply(d[1,,,,1], 2:3, sum)[,1] + 
+apply(l[1,,,,1], 2:3, sum)[,1]
+
+OM@Data$`Female Male`@Discards@Value[,1] + OM@Data$`Female Male`@Landings@Value[,1]
+
+ArrayReduceDims(Hist@OM@Fleet$Female@Selectivity@MeanAtAge)[1,,,1]
+ArrayReduceDims(Hist@OM@Fleet$Female@Retention@MeanAtAge)[1,,,1]
+
+ArrayReduceDims(Hist@OM@Fleet$Female@Selectivity@MeanAtLength)[1,,1,1]  |> plot()
+ArrayReduceDims(Hist@OM@Fleet$Female@Retention@MeanAtLength)[1,,1,1] |> lines()
+
+
+ArrayReduceDims(Hist@OM@Fleet$Female@Selectivity@MeanAtAge)[1,,1,1]  |> plot()
+ArrayReduceDims(Hist@OM@Fleet$Female@Retention@MeanAtAge)[1,,1,1] |> lines()
+
+
+ArrayReduceDims(Hist@OM@Fleet$Female@DiscardMortality@MeanAtAge)[1,,,1]
+
+
+Removals
+
+Landings
+
+Discards 
+
+
+
 
 L <- Landings(Hist, TRUE) |> dplyr::filter(Sim==1, TimeStep==max(TimeStep)) |>
   dplyr::group_by(Fleet) |>

@@ -28,8 +28,8 @@ S4 CalcCatch_(S4 HistSimIn,
   List FDeadAtAgeAreaList = HistSim.slot("FDeadAtAgeArea");
   List FRetainAtAgeAreaList = HistSim.slot("FRetainAtAgeArea");
 
-  List RemovalAtAgeAreaList = HistSim.slot("Removals");
   List RetainAtAgeAreaList = HistSim.slot("Landings");
+  List DiscardsAtAgeAreaList = HistSim.slot("Discards");
 
  int nStock = NumberAtAgeAreaList.size();
 
@@ -39,19 +39,20 @@ S4 CalcCatch_(S4 HistSimIn,
 
     for (int st=0; st<nStock; st++) {
 
-      // Calculate Removals and Retained Number by Area
-      List RemovalAtAgeAreaStock = RemovalAtAgeAreaList[st];
+      // Calculate Discards and Retained Number by Area
       List RetainAtAgeAreaStock = RetainAtAgeAreaList[st];
+      List DiscardsAtAgeAreaStock = DiscardsAtAgeAreaList[st];
       List FDeadAtAgeAreaStock = FDeadAtAgeAreaList[st];
       List FRetainAtAgeAreaStock = FRetainAtAgeAreaList[st];
 
       arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // nAge, nTS, nArea
       arma::mat NumberAtAgeAreaThisTS = NumberAtAgeArea.col(TSindex); // nAge, nArea
       
-      arma::cube RemovalAtAgeAreaThisTS = RemovalAtAgeAreaStock[TSindex]; // nAge, nFleet, nArea
       arma::cube RetainAtAgeAreaThisTS = RetainAtAgeAreaStock[TSindex]; // nAge, nFleet, nArea
+      arma::cube DiscardsAtAgeAreaThisTS = DiscardsAtAgeAreaStock[TSindex]; // nAge, nFleet, nArea
       arma::cube FDeadAtAgeAreaThisTS = FDeadAtAgeAreaStock[TSindex]; // nAge, nFleet, nArea
       arma::cube FRetainAtAgeAreaThisTS = FRetainAtAgeAreaStock[TSindex]; // nAge, nFleet, nArea
+
 
       S4 Stock = StockList[st];
       S4 NaturalMortality = Stock.slot("NaturalMortality");
@@ -62,7 +63,7 @@ S4 CalcCatch_(S4 HistSimIn,
 
       int nAge = NumberAtAgeArea.n_rows;
       int nArea = NumberAtAgeArea.n_slices;
-      int nFleet = RemovalAtAgeAreaThisTS.n_cols;
+      int nFleet = RetainAtAgeAreaThisTS.n_cols;
 
       for (int fl=0; fl<nFleet; fl++) {
         arma::vec fleetweight = FleetWeightAtAge(arma::span(0, nAge-1), arma::span(TSindex), arma::span(fl)); // nAge
@@ -71,29 +72,24 @@ S4 CalcCatch_(S4 HistSimIn,
           arma::mat NDeadThisArea = NumberAtAgeAreaThisTS.col(area) % (1-exp(-ZmortalityThisArea)); // nAge, nFleet
           arma::mat FDead = FDeadAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(fl), arma::span(area));
           arma::mat FRetain = FRetainAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(fl), arma::span(area));
-          RemovalAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(fl), arma::span(area)) = FDead/ZmortalityThisArea % NDeadThisArea % fleetweight;
-          RetainAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(fl), arma::span(area)) = FRetain/ZmortalityThisArea % NDeadThisArea % fleetweight;
+          arma::mat RemovalAtAge  = FDead/ZmortalityThisArea % NDeadThisArea % fleetweight;
+          arma::mat RetainAtAge  = FRetain/ZmortalityThisArea % NDeadThisArea % fleetweight;
+          RetainAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(fl), arma::span(area)) = RetainAtAge;
+          DiscardsAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(fl), arma::span(area)) = RemovalAtAge - RetainAtAge;
         }
       }
 
-      RemovalAtAgeAreaStock[TSindex] = RemovalAtAgeAreaThisTS;
-      RemovalAtAgeAreaList[st] = RemovalAtAgeAreaStock;
+      DiscardsAtAgeAreaStock[TSindex] = DiscardsAtAgeAreaThisTS;
+      DiscardsAtAgeAreaList[st] = DiscardsAtAgeAreaStock;
       RetainAtAgeAreaStock[TSindex] = RetainAtAgeAreaThisTS;
       RetainAtAgeAreaList[st] = RetainAtAgeAreaStock;
       
     } // end of stock loop
   } // end of time step loop
 
-  HistSim.slot("Removals") = RemovalAtAgeAreaList;
-  HistSim.slot("Landings") = RetainAtAgeAreaList;
-
-  // HistSim.slot("FDeadAtAge") = FDeadAtAgeAreaList;
-  // HistSim.slot("FRetainAtAge") = FDeadAtAgeAreaList;
-  // 
-  // HistSim.slot("FDeadAtAgeArea") = FDeadAtAgeAreaList;
-  // HistSim.slot("FRetainAtAgeArea") = FDeadAtAgeAreaList;
-
-
   
+  HistSim.slot("Landings") = RetainAtAgeAreaList;
+  HistSim.slot("Discards") = DiscardsAtAgeAreaList;
+
   return(HistSim);
 }

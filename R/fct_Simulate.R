@@ -84,10 +84,10 @@ Simulate_om <- function(OM=NULL,
   
   HistSimList <- purrr::map(HistSimList, \(HistSim) {
     HistSim@RefPoints@MSYRefPoints <- CalculateMSYSim(StockList=HistSim@OM@Stock,
-                                             FleetList=HistSim@OM@Fleet,                                  
-                                             Complexes=HistSim@OM@Complexes,
-                                             TimeSteps = tail(HistTimeSteps,1),
-                                             maxF=OM@maxF)
+                                                      FleetList=HistSim@OM@Fleet,                                  
+                                                      Complexes=HistSim@OM@Complexes,
+                                                      TimeSteps = tail(HistTimeSteps,1),
+                                                      maxF=OM@maxF)
     HistSim
   }, .progress = list(
     type = "iterator",
@@ -139,15 +139,16 @@ Simulate_om <- function(OM=NULL,
                               format = "Simulating Historical Fishery {cli::pb_bar} {cli::pb_percent}",
                               clear = TRUE))
   
-
   # update CatchFrac 
   HistSimList <- purrr::map(HistSimList, \(HistSim) {
-    HistSim@OM@CatchFrac <- purrr::map(HistSim@Removals, \(stock) {
-      fleetCatch <- apply(stock[[length(stock)]],2, sum)
+    HistSim@OM@CatchFrac <- purrr::map2(HistSim@Landings, HistSim@Discards, \(landings, discards) {
+      removals <- landings[[length(landings)]] + discards[[length(discards)]]
+      fleetCatch <- apply(removals,2, sum)
       fleetCatch/sum(fleetCatch)
     })
     HistSim
   })
+  
   
   # tictoc::toc()
  
@@ -170,13 +171,10 @@ Simulate_om <- function(OM=NULL,
   ProjectionTimeSteps <- TimeSteps(OM, 'Projection')
   HistSimList <- purrr::map(HistSimList, \(HistSim)
                             ConditionObs(HistSim, HistTimeSteps, ProjectionTimeSteps))
+
+  # TODO - check for identical sims
   
-  # TODO - check for identical sims 
-  # TODO - multiple stocks
-  # TODO - pass Obs in OM and update 
-  
-  
-  # ---- Historical Fishery Data ----
+  # # # ---- Historical Fishery Data ----
   # TODO - check for identical sims
   HistSimList <- purrr::map(HistSimList, \(HistSim)
                             GenerateHistoricalData(HistSim, HistTimeSteps),
@@ -187,7 +185,7 @@ Simulate_om <- function(OM=NULL,
 
   # Data:
   # - list of length `nSim` then
-  # - list of length `nStock`
+  # - list of length `nComplex`
   
   # MPs: 
   # - `MMP`

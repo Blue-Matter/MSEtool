@@ -575,7 +575,7 @@ Removals <- function(MSE, ByFleet=FALSE, ByAge=FALSE) {
   HistRemovals <- RemovalsHist(MSE, ByFleet, ByAge)
   HistRemovals$MP <- 'Historical'
   
-  ProjRemovals <- MSE@Removals
+  ProjRemovals <- MSE@Landings + MSE@Discards
   
   if (!ByFleet) {
     ProjRemovals <- ProjRemovals |>
@@ -603,9 +603,12 @@ RemovalsHist <- function(Hist, ByFleet=FALSE, ByAge=FALSE) {
   HistTimeStep <- TimeSteps(Hist@OM, "Historical")
   
   if (inherits(Hist,'mse')) {
-    Value <- Hist@Hist@Removals
+    Value <- purrr::map2(Hist@Hist@Landings, Hist@Hist@Discards, \(landings, discards)
+                         landings+discards)
+  
   } else {
-    Value <- Hist@Removals
+    Value <- purrr::map2(Hist@Landings, Hist@Discards, \(landings, discards)
+                         landings+discards)
   }
   
   Removals <- purrr::map(Value, \(stock) {

@@ -57,8 +57,8 @@ setClass('CompObs',
 #' @export
 setClass('obs',
          slots=c(Name='character',
-                 Removals='catchobs',
                  Landings='catchobs',
+                 Discards='catchobs',
                  
                  CPUE='indicesobs',
                  Survey='indicesobs',

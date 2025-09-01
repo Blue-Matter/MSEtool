@@ -55,8 +55,8 @@ OM2Hist <- function(OM, silent=FALSE) {
   Hist@SBiomass <- Hist@Biomass 
   Hist@SProduction <- Hist@Biomass 
   
-  Hist@Removals <- ListArraySimAgeTimeFleetArea(OM, 'Historical')
-  Hist@Landings <- Hist@Removals
+  Hist@Landings <- ListArraySimAgeTimeFleetArea(OM, 'Historical')
+  Hist@Discards <- Hist@Landings
   
   Hist@Effort <- ListArraySimAgeTimeFleet(OM, 'Historical') |> lapply(DropDimension, 'Age', FALSE) |>
     List2Array('Stock') |> aperm(c('Sim', 'Stock', 'TimeStep', 'Fleet'))
@@ -275,25 +275,27 @@ CombineFleetObject <- function(List, nSim, nAges, TimeSteps) {
   out <- new(class(List[[1]]))
   nms <- slotNames(out)
   
-  if ('MeanAtAge' %in% nms) 
+  if ('MeanAtAge' %in% nms) {
     out@MeanAtAge <- lapply(List, slot, 'MeanAtAge') |>
-    List2Array('Fleet') |>
-    ArrayExpand(nSim, nAges, TimeSteps) 
-    
-    
-  if ('MeanAtLength' %in% nms) 
-    out@MeanAtLength <- lapply(List, slot, 'MeanAtLength') |>
-    List2Array('Fleet') |>
-    ArrayExpand(nSim, nAges, TimeSteps) 
-    
-    # out@MeanAtLength <- lapply(List, slot, 'MeanAtLength') |>
-    # purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |>
-    # List2Array('Fleet')
+      purrr::map(ExpandTimeSteps, TimeSteps) |>
+      List2Array('Fleet') |>
+      ArrayExpand(nSim, nAges, TimeSteps)
+  }
 
-  if ('MeanAtWeight' %in% nms) 
+  
+  if ('MeanAtLength' %in% nms) {
+    out@MeanAtLength <- lapply(List, slot, 'MeanAtLength') |>
+      purrr::map(ExpandTimeSteps, TimeSteps) |>
+      List2Array('Fleet') |>
+      ArrayExpand(nSim, nAges, TimeSteps) 
+  } 
+
+  if ('MeanAtWeight' %in% nms) {
     out@MeanAtWeight <- lapply(List, slot, 'MeanAtWeight') |>
-    List2Array('Fleet') |>
-    ArrayExpand(nSim, nAges, TimeSteps) 
+      purrr::map(ExpandTimeSteps, TimeSteps) |>
+      List2Array('Fleet') |>
+      ArrayExpand(nSim, nAges, TimeSteps)
+  }
   
   if ('Classes' %in% nms) 
     out@Classes <- lapply(List, slot, 'Classes') 
@@ -431,8 +433,8 @@ Hist2HistSimList <- function(Hist) {
   HistSimList <- purrr::map(HistSimList, \(HistSim) {
     HistSim@FDeadAtAgeArea <- purrr::map(HistSim@FDeadAtAgeArea, Array2List, 2)
     HistSim@FRetainAtAgeArea <- purrr::map(HistSim@FRetainAtAgeArea, Array2List, 2)
-    HistSim@Removals <- purrr::map(HistSim@Removals, Array2List, 2)
     HistSim@Landings <- purrr::map(HistSim@Landings, Array2List, 2)
+    HistSim@Discards <- purrr::map(HistSim@Discards, Array2List, 2)
     
     HistSim@OM@Stock <- purrr::map(HistSim@OM@Stock, \(Stock) {
       Stock@Spatial@Movement <- Array2List(Stock@Spatial@Movement,4)
@@ -668,7 +670,7 @@ HistSimListObs <- function(Hist, HistSimList) {
     ObsList <- purrr::map(HistSimList, \(x) x@OM@Obs[[st]])
     for (fl in 1:length(ObsList[[1]])) {
       Obs[[fl]] <- ObsList2SimArray(Obs, ObsList, fl, slot='Landings')
-      Obs[[fl]] <- ObsList2SimArray(Obs, ObsList, fl, slot='Removals')
+      Obs[[fl]] <- ObsList2SimArray(Obs, ObsList, fl, slot='Discards')
       Obs[[fl]] <- ObsList2SimArray(Obs, ObsList, fl, slot='Survey')
       Obs[[fl]] <- ObsList2SimArray(Obs, ObsList, fl, slot='CPUE')
       # Obs <- ObsList2SimArray(Obs, ObsList, fl, slot='CAA')
@@ -755,8 +757,8 @@ HistSimListTimeSeries <- function(Hist, HistSimList, TimeSteps= NULL) {
   
   
   for (st in 1:nStock) {
-    Hist@Removals[[st]] <- purrr::map(HistSimList, \(HistSim) {
-      List2Array(HistSim@Removals[[st]]) |>
+    Hist@Landings[[st]] <- purrr::map(HistSimList, \(HistSim) {
+      List2Array(HistSim@Landings[[st]]) |>
         AddDimNames(c("Age", "Fleet", "Area", "TimeStep"), 
                     TimeSteps=TimeSteps,
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)))
@@ -764,8 +766,9 @@ HistSimListTimeSeries <- function(Hist, HistSimList, TimeSteps= NULL) {
       List2Array("Sim") |>
       aperm(c("Sim", 'Age', 'TimeStep', 'Fleet', 'Area'))
     
-    Hist@Landings[[st]] <- purrr::map(HistSimList, \(HistSim) {
-      List2Array(HistSim@Landings[[st]]) |>
+    
+    Hist@Discards[[st]] <- purrr::map(HistSimList, \(HistSim) {
+      List2Array(HistSim@Discards[[st]]) |>
         AddDimNames(c("Age", "Fleet", "Area", "TimeStep"), 
                     TimeSteps=TimeSteps,
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)))

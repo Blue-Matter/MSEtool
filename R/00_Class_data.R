@@ -100,8 +100,8 @@ setClass('data',
                  TimeStepsPerYear='num.null',
                  nArea='num.null',
                  
-                 Removals='catchdata',  
-                 Landings='catchdata',
+                 Landings='catchdata',  
+                 Discards='catchdata',
                  
                  CPUE='indicesdata', # fleet-specific CPUEs
                  Survey='indicesdata', # Biomass, SBiomass, Recruits, Age-Specific

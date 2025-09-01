@@ -60,7 +60,13 @@ ExpandTS <- function(Array, Dims, TimeSteps) {
     if (any(!is.finite(j)) || length(j)<1)
       next()
     j <- max(j)
-    OutArray[,,i] <- Array[,,j]
+    
+    dimnames(Array)[[ind]][j] <-  TimeSteps[i]
+    
+    ArrayFill(OutArray) <- abind::asub(Array, j, ind, drop=FALSE)
+    # dimnames(Array[[,,j]])
+    # dimnames(OutArray)
+    # OutArray[,,i] <- Array[,,j]
   }
   OutArray
 }

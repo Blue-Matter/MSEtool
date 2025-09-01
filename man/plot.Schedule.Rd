@@ -4,7 +4,14 @@
 \alias{plot.Schedule}
 \title{Plot At-Age or At-Length Schedules}
 \usage{
-\method{plot}{Schedule}(x, TimeLab = "Year", color = "TimeStep", ylab = NULL)
+\method{plot}{Schedule}(
+  x,
+  TimeLab = "Year",
+  color = "TimeStep",
+  ColorLab = NULL,
+  xlab = NULL,
+  ylab = NULL
+)
 }
 \description{
 Plot At-Age or At-Length Schedules

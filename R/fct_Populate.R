@@ -25,16 +25,54 @@ PopulateOM <- function(OM, silent=FALSE) {
     PopulateObs() |>
     # CheckCatchFrac() |> # TODO - auto-populate CatchFrac if OM@Data exists
     # CheckAllocation() |>
-    
+    PopulateComplexes() |> 
     UpdateSPFrom() |> # TODO
     ShareParameters() |>   # share parameters for two-sex stocks TODO
     StartMessages()
-  
+
   #Imp
+  
+  # Complexes
+  
+  OM@Data
+  
+  OM@Complexes 
   
   
   SetDigest(OM)
   
+}
+
+PopulateComplexes <- function(OM) {
+  if (length(OM@Complexes)>0)
+    return(OM)
+  
+  # TODO validation for Complexes
+  
+  if (nStock(OM) ==1) {
+    OM@Complexes <- MakeNamedList(StockNames(OM), 1)
+    return(OM)
+  }
+  
+  
+  if (length(OM@Data)>0) {
+    if (length(OM@Data)==1) {
+      OM@Complexes <- MakeNamedList(names(OM@Data), 1:nStock(OM))
+      return(OM)
+    }
+      
+    if (length(OM@Data)==nStock(OM)) {
+      OM@Complexes <- list()
+      for (i in seq_along(OM@Stock)) {
+        OM@Complexes[[i]] <- i
+      }
+      names(OM@Complexes) <- StockNames(OM)
+      return(OM)
+    }
+
+  }
+  
+  OM 
 }
 
 PopulateStockList <- function(OM, silent=FALSE) {
@@ -1238,11 +1276,11 @@ PopulateObs <- function(OM) {
     for (fl in 1:length(OM@Obs[[1]])) {
       SetSeed(OM@Obs[[st]][[fl]], OM@Seed)
       
-      OM@Obs[[st]][[fl]]@Removals <- PopulateCatchObs(Catch=OM@Obs[[st]][[fl]]@Removals, 
-                                                   nSim=OM@nSim, 
-                                                   TimeSteps=OM@TimeSteps)
-      
       OM@Obs[[st]][[fl]]@Landings <- PopulateCatchObs(Catch=OM@Obs[[st]][[fl]]@Landings, 
+                                                      nSim=OM@nSim, 
+                                                      TimeSteps=OM@TimeSteps)
+      
+      OM@Obs[[st]][[fl]]@Discards <- PopulateCatchObs(Catch=OM@Obs[[st]][[fl]]@Discards, 
                                                       nSim=OM@nSim, 
                                                       TimeSteps=OM@TimeSteps)
       

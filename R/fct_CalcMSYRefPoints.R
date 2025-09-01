@@ -91,21 +91,10 @@ setdnames <- function(dnames, BySim=TRUE) {
 CalculateMSYSim <- function(StockList, FleetList, Complexes, TimeSteps=NULL, maxF=3) {
   logApicalFRange <- log(c(0.01, maxF))
   
-  # if Complexes or SPFrom another stock - calculate overall MSY
-  SPFrom <- purrr::map(StockList, \(stock) stock@SRR@SPFrom) |> unlist()
-  if (is.null(SPFrom))
-    SPFrom <- 1:length(StockList)
-  
-  if (length(Complexes)>0) {
-    # stock complex - calculate MSY for complex TODO
-    cli::cli_alert_warning('MSY calculations for Stock Complexes not complete. Calculating MSY ref points by stock')
-  }
 
-  UniqueSPFrom <- unique(SPFrom)
   MSYRefPoints <- MSYRefPoints(StockNames=names(StockList), TimeSteps=TimeSteps)
-  
-  for (st in seq_along(UniqueSPFrom)) {
-    StockInd <- which(SPFrom==st) |> as.numeric()
+  for (st in seq_along(Complexes)) {
+    StockInd <- Complexes[[st]]
     
     StockList_ <- StockList[StockInd]
     FleetList_ <- FleetList[StockInd]

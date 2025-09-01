@@ -8,7 +8,7 @@ setClassUnion(name="DataList", members=c("data", "list", 'NULL'))
 setClassUnion(name="obs.list", members=c('Obs', "obs", "list", 'NULL'))
 setClassUnion(name="imp.list", members=c('Imp', "imp", "list", 'NULL'))
 
-#' Operating Model Object
+#' Class `om`: Operating Model Object 
 #'
 #' @include Class_definitions.R
 #' @include 00_Class_unions.R
@@ -19,49 +19,83 @@ setClassUnion(name="imp.list", members=c('Imp', "imp", "list", 'NULL'))
 #' @include 00_Class_obs.R
 #' @include 00_Class_imp.R
 #' 
-#' Objects of class `om` contain all the parameters needed to simulate a
-#' historical fishery and project it forward for closed-loop simulation testing.
-#'
 #' @slot Name Name of the Operating Model. Character string.
-#' @slot Agency Name of the agency responsible for the management of the fishery.
-#' Character string. Supports Markdown.
-#' @slot Author Name(s) of author(s) of the operating model. Character string
+#' 
+#' @slot Agency Optional. Name of the agency responsible for the management of the fishery.
+#' Character string. Supports Markdown. 
+#' 
+#' @slot Author Optional. Name(s) of author(s) of the operating model. Character string
 #' with length corresponding to the number of authors.
-#' @slot Email Email address(es) for the author(s) of the operating model.
+#' 
+#' @slot Email Optional. Email address(es) for the author(s) of the operating model.
 #' Character string of with length equal to `length(Author)`. Supports Markdown.
-#' @slot Region Name of the general geographic region of the fishery. Character string.
-#' @slot Latitude Latitude (decimal degrees) to indicate the center of `Region`.
+#' 
+#' @slot Region Optional. Name of the general geographic region of the fishery. Character string.
+#' 
+#' @slot Latitude Optional. Latitude (decimal degrees) to indicate the center of `Region`.
 #' Negative values represent the South of the Equator. Numeric. Single value.
-#' @slot Longitude Longitude (decimal degrees) to indicate the center of `Region`.
+#' 
+#' @slot Longitude Optional. Longitude (decimal degrees) to indicate the center of `Region`.
 #' Negative values represent the West of the Prime Meridian. Numeric. Single value.
-#' @slot Sponsor Name of the organization who sponsored the development of the
+#' 
+#' @slot Sponsor Optional. Name of the organization who sponsored the development of the
 #' Operating Model. Character string. Supports Markdown.
-#' @slot CurrentYear The last historical year of the operating model. Defaults
-#' to the year the Operating Model object is built.
-#' @slot nSim The number of simulations. Numeric. Positive integer `nSim=1` will
+#' 
+#' @slot nSim The number of simulations. Positive integer length 1. `nSim=1` will
 #' produce a deterministic operating model.
+#' 
 #' @slot nYear The number of historical years. Typically corresponds to the
 #' year the fishery was first (assumed to be) exploited. For multi-stock models,
 #' `nYear` should be the earliest exploitation year of all stocks. Numeric.
 #' Single value. Historical years are calculated as `rev(seq(CurrentYear, by=-1, length.out=nYear))`
+#' 
 #' @slot pYear The number of projection years. Numeric. Single value.
 #' Projection years are calculated as `seq(CurrentYear+1, length.out=pYear)`.
-#' @slot Stock A [Stock()] object or a list of [Stock()] objects
-#' for multi-stock models.
-#' @slot Complexes For multi-stock models only. A list of stock complexes.
+#' 
+#' @slot CurrentYear The last historical year of the operating model.
+#' Defaults to the year the Operating Model object is built. Integer. 
+#' 
+#' @slot Stock A list of [Stock()] object(s). For single-stock OMs, a 
+#' [Stock()] object can be used for this slot (i.e., not a list), which will then
+#' be converted internally to a named list length 1. 
+#' 
+#' @slot Fleet A hierarchical list of [Fleet()] object(s) for each [Stock()] and each [Fleet()].
+#' Level 1 is `Stock` and Level 2 `Fleet`. For single-stock/fleet models, this can be a single
+#' [Fleet()] object (i.e., not a list), which will then be converted internally to a named list.
+#' 
+#' @slot Obs A hierarchical list of [Obs()] object(s) for each [Stock()] and each [Fleet()].
+#' Level 1 is `Stock` and Level 2 `Fleet`. For single-stock/fleet models, this can be a single
+#' [Obs()] object (i.e., not a list), which will then be converted internally to a named list.
+#' 
+#' @slot Imp A hierarchical list of [Imp()] object(s) for each [Stock()] and each [Fleet()].
+#' Level 1 is `Stock` and Level 2 `Fleet`. For single-stock/fleet models, this can be a single
+#' [Imp()] object (i.e., not a list), which will then be converted internally to a named list.
+#' 
+#' @slot Data A [Data()] object or a list of [Data()] objects (up to
+#' `length(Stock)`) containing the real fishery data. If `Complexes` is specified,
+#'  `Data` follows the same structure, i.e., elements
+#' in `Data` list will be assumed to be aggregated according to `Complexes`.
+#' 
+#' @slot DataLag 
+#' 
+#' 
+#' 
+#' 
+#' @slot Complexes For multi-stock models only. A list of stock complexes for
+#'  which data and management recommendation should be aggregated. 
 #' Each position is a vector of stock numbers (as they appear in `Stock` list)
 #' for which data and management recommendation should be aggregated; e.g.,
 #' TAC will be split among stocks according to vulnerable biomass.
+#' 
 #' @slot Relations For multi-stock models only. A list of biological and/or
 #' ecological relationships among stocks in `Stock`. For MICE models. Needs
 #' more documentation so bug us if you get stuck.
+#' 
 #' @slot SexPars For multi-stock models only. A named list that controls
 #' sex-specific dynamics, i.e., sex-specific spawning and hermaphroditism.
 #' More generally, controls spawning and moving abundance between stocks. See `Details`.
-#' @slot Data A [data-class()] object or a list of [data-class()] objects (up to
-#' `length(Stock)`) containing the real fishery data.
-#' if `Complexes` is specified, `Data` follows the same structure, i.e., elements
-#' in `Data` list will be assumed to be aggregated according to `Complexes`.
+
+#' 
 #' @slot Interval The management update interval. Management will be implemented
 #' in the first projection time step, and then every `Interval` time step, with
 #' management remaining unchanged in the interim. A single numeric value for the
@@ -72,17 +106,22 @@ setClassUnion(name="imp.list", members=c('Imp', "imp", "list", 'NULL'))
 #' Only for management procedures that generate stochastic management advice (i.e.,
 #' account for uncertainty in the data). Defaults to 1, which produces deterministic
 #' management advice.
+#' 
 #' @slot pStar The percentile of the sample of the management recommendation for each method.
 #' Defaults to 0.5 (median). Only for management procedures that generate
 #' stochastic management advice (i.e., account for uncertainty in the data).
 #' To ensure the management advice matches the correct percentile, `reps` should
 #' be a largish value (i.e., >>1, but exact value depends on the degree of uncertainty in the data)
+#' 
 #' @slot Seed Optional numeric value for the seed for the random number generator.
 #' Only required to over-ride the default seed (calculated internally based on
 #' the contents of the `OM` object)
+#' 
 #' @slot Control A named list of settings. See `Details`
+#' 
 #' @slot Misc A list for storing additional things that don't have anywhere else to go.
 #' Mainly for development purposes.
+#' 
 #' @slot Source Character string. Can be used to reference websites, articles, etc
 #' with relevant information. Supports Markdown.
 #'
@@ -125,7 +164,7 @@ setClassUnion(name="imp.list", members=c('Imp', "imp", "list", 'NULL'))
 #'
 #' @seealso `r See_Also('om')`
 #'
-#' @name OM
+#' @rdname class-om
 #'
 #' @example man-examples/om-class.R
 #' @export
@@ -138,36 +177,48 @@ setClass("om",
                  Latitude='num.null',
                  Longitude='num.null',
                  Sponsor='char.null',
+                 
                  nSim='num.null',
                  nYear='num.null',
                  pYear='num.null',
                  CurrentYear='num.null',
+                 
                  Stock='StockList',
                  Fleet='StockFleetList',
                  Obs='obs.list',
                  Imp='imp.list',
+                 
                  Data='DataList',
                  DataLag='numeric',
+                 
                  CatchFrac='list',
                  Allocation='list',
                  Efactor='list',
+                 
                  Complexes='list',
                  SexPars='sexpars',
                  Relations='list',
+                 
                  Interval='numeric',
+                 
                  nReps='numeric',
                  pStar='numeric',
                  maxF='numeric',
                  Seed='num.null',
+                 
                  TimeUnits='char.null',
                  TimeStepsPerYear='num.null',
                  TimeSteps='num.null',
+                 
                  Control='list.null',
                  Misc='list',
                  Log='list',
                  Source='char.list')
 )
-#' @describeIn OM Create a new object of class `om`
+
+
+#' @rdname class-om
+#' 
 #' @param Name Name of the Operating Model. Character string.
 #' @param Agency Name of the agency responsible for the management of the fishery.
 #' Character string. Supports Markdown.
@@ -235,6 +286,8 @@ setClass("om",
 #' Mainly for development purposes.
 #' @param Source Character string. Can be used to reference websites, articles, etc
 #' with relevant information. Supports Markdown.
+#' 
+#' 
 #' @export
 OM <- function(Name='A new `OM` object',
                Agency='',

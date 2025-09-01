@@ -475,7 +475,7 @@ List2Array <- function(List, dimname="Fleet", dim1="Sim", ListDimNames=NULL) {
   
   array <- array(UnList, 
                  dim=c(dim(List[[1]]), length(List)))
-  
+
   if (!is.null(dimname)) {
     if (!is.null(ListDimNames)) {
       dimnames(List[[1]]) <- ListDimNames
