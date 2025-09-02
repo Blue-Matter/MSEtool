@@ -759,7 +759,7 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
                    StockPars$Asize,
                    StockPars$maxage,
                    StockPars$nareas,
-                   StockPars$M_ageArray,nyears, y,
+                   StockPars$M_ageArray,nyears, y, maxF,
                    control)
   
     # apply max F constraint
@@ -848,19 +848,19 @@ CalcMPDynamics <- function(MPRecs, y, nyears, proyears, nsim, Biomass_P,
 
   # Ftot <- sapply(1:nsim, calcF, retainedCatch, V_P, retA_P, Biomass_P, fishdist,
   #                Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
-  #                M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed 
+  #                M_ageArray=StockPars$M_ageArray,nyears, y, maxF, control) # update if effort has changed 
 
   
   
   # total fishing mortality for realized selectivity curve
   Ftot <- sapply(1:nsim, calcF, removedCatch, out$V_P_real_2, out$retA_P_real_2, Biomass_P, fishdist,
                  Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
-                 M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed
+                 M_ageArray=StockPars$M_ageArray,nyears, y, maxF, control) # update if effort has changed
 
   # total fishing mortality (proxy for effort) for realized selectivity curve that doesn't asymptote at 1
   Ftot2 <- sapply(1:nsim, calcF, removedCatch, out$V_P_real, out$retA_P_real, Biomass_P, fishdist,
                  Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
-                 M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed 
+                 M_ageArray=StockPars$M_ageArray,nyears, y, maxF, control) # update if effort has changed 
   
   # Effort relative to last historical with this catch
   Effort_act <- Ftot2/(FleetPars$FinF * FleetPars$qs*FleetPars$qvar[,y]*
@@ -1070,7 +1070,7 @@ CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
                    StockPars$Asize,
                    StockPars$maxage,
                    StockPars$nareas,
-                   StockPars$M_ageArray, nyears, y,
+                   StockPars$M_ageArray, nyears, y, maxF,
                    control)
     
     Ftot <- matrix(Ftot, nsim, nf, byrow = TRUE)
@@ -1165,13 +1165,13 @@ CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
   Ftot <- sapply(1:nsim, calcF_MF, removedCatch, V_P = lapply(out, getElement, "V_P_real_2"), 
                  retA_P = lapply(out, getElement, "retA_P_real_2"), Biomass_P, fishdist, FM_P = NULL, FM_Pret = NULL,
                  Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
-                 M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed
+                 M_ageArray=StockPars$M_ageArray,nyears, y, maxF, control) # update if effort has changed
   
   # total fishing mortality (proxy for effort) for realized selectivity curve that doesn't asymptote at 1
   Ftot2 <- sapply(1:nsim, calcF_MF, removedCatch, V_P = lapply(out, getElement, "V_P_real"), 
                   retA_P = lapply(out, getElement, "retA_P_real"), Biomass_P, fishdist, FM_P = NULL, FM_Pret = NULL,
                   Asize=StockPars$Asize, maxage=StockPars$maxage, StockPars$nareas,
-                  M_ageArray=StockPars$M_ageArray,nyears, y, control) # update if effort has changed 
+                  M_ageArray=StockPars$M_ageArray,nyears, y, maxF, control) # update if effort has changed 
   
   Ftot <- matrix(Ftot, nf, nsim)
   Ftot2 <- matrix(Ftot2, nf, nsim)
@@ -1537,7 +1537,7 @@ CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
 }
 
 calcF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, Asize, maxage, nareas,
-                  M_ageArray, nyears, y, control) {
+                  M_ageArray, nyears, y, maxF = 100, control) {
   
   maxiterF <- 300
   if(!is.null(control$maxiterF) && is.numeric(control$maxiterF)) maxiterF <- as.integer(control$maxiterF)
@@ -1584,7 +1584,7 @@ calcF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, Asize, maxage, 
     dct <- sum(VBiomass * ((ft * Zmat - Fsolve * ft) * Omat + Fsolve * ft * Zmat * exp(-Zmat))/Zmat/Zmat)
     if (dct<1E-15) break
     
-    log_ft <- log_ft - (pct - ct)/dct
+    log_ft <- min(log_ft - (pct - ct)/dct, log(maxF))
     if (abs(pct - ct)/ct < tolF) break
   }
   return(exp(log_ft))
@@ -1640,157 +1640,158 @@ calcF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, Asize, maxage, 
 #  ft
 #}
 
-# Multifleet version of calcF
-# For fleets managed by effort, i.e., TACusedE[f] = NA, this function will set F from FM_P
-# calcF_MF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, FM_P, FM_Pret, Asize, maxage, nareas,
-#                      M_ageArray, nyears, y, control) {
-#   
-#   maxiterF <- 300
-#   if(!is.null(control$maxiterF) && is.numeric(control$maxiterF)) maxiterF <- as.integer(control$maxiterF)
-#   
-#   tolF <- 1e-4
-#   if(!is.null(control$tolF) && is.numeric(control$tolF)) tolF <- control$tolF
-#   
-#   ct <- TACusedE[x, ]
-#   nf <- length(ct)
-#   
-#   ft <- sapply(1:nf, function(f) ct[f]/sum(Biomass_P[[f]][x,,y,] * V_P[[f]][x,,y+nyears])) # initial guess
-#   log_ft <- log(ft) # initial guess
-#   
-#   fishdist_prop <- matrix(fishdist[x, , ], nareas, nf)
-#   fishdist_prop <- apply(fishdist_prop, 2, function(i) i/sum(i)) # Ensure proportions sum to 1 across areas
-#   
-#   if (all(ct <= 1E-9) || all(ft <= 1E-9)) return(rep(tiny, nf))
-#   Fmat <- Fmat_ret <- predC <- array(NA, c(maxage+1, nareas, nf))
-#   dct <- pct <- numeric(nf)
-#   for (i in 1:maxiterF) {
-#     
-#     ft <- exp(log_ft)
-#     
-#     # distribute F over age, areas, fleet
-#     for (f in 1:nf) {
-#       if (is.na(ct[f])) {
-#         Fmat[, , f] <- FM_P[[f]][x,,y,]
-#         Fmat_ret[, , f] <- FM_Pret[[f]][x,,y,]
-#       } else {
-#         Fmat[, , f] <- ft[f] * V_P[[f]][x, , y + nyears] * matrix(fishdist_prop[, f], maxage+1, nareas, byrow = TRUE)/
-#           matrix(Asize[x, ], maxage+1, nareas, byrow = TRUE)
-#         Fmat_ret[, , f] <- ft[f] * retA_P[[f]][x, , y + nyears] * matrix(fishdist_prop[, f], maxage+1, nareas, byrow = TRUE)/
-#           matrix(Asize[x, ], maxage+1, nareas, byrow = TRUE)
-#       }
-#     }
-#     
-#     # total mortality over age, areas
-#     Zmat <- apply(Fmat, 1:2, sum) + M_ageArray[x,,y+nyears]
-#     Zmat[Zmat==0] <- tiny
-#     
-#     if (is.null(control$TAC)) {
-#       # predicted retained catch
-#       Fsolve <- Fmat_ret
-#     } else {
-#       if (control$TAC == 'removals') {
-#         # TAC applied to predicted removals
-#         Fsolve <- Fmat
-#       }
-#       else {
-#         stop('invalid entry for `OM@cpars$control$TAC`. Must be `OM@cpars$control$TAC="removals"`')
-#       }
-#     }
-#     
-#     for (f in 1:nf) predC[, , f] <- Fsolve[, , f]/Zmat * (1-exp(-Zmat)) * Biomass_P[[f]][x,,y,]
-#     predC[is.infinite(predC)] <- 0
-#     
-#     # derivative of catch wrt log_ft
-#     for (f in 1:nf) {
-#       pct[f] <- sum(predC[, , f], na.rm = TRUE)
-#       
-#       Omat <- 1 - exp(-Zmat)
-#       VBiomass <- Fsolve[, , f]/ft[f] * Biomass_P[[f]][x,,y,]
-#       dct[f] <- sum(VBiomass * ((ft[f] * Zmat - Fsolve[, , f] * ft[f]) * Omat + Fsolve[, , f] * ft[f] * Zmat * exp(-Zmat))/Zmat/Zmat)
-#     }
-#     
-#     if (all(dct[!is.na(ct)] < 1E-15)) break
-#     log_ft <- log_ft - (pct - ct)/dct
-#     
-#     obj <- abs(pct - ct)/ct
-#     if (all(obj[!is.na(ct)] < tolF)) break
-#   }
-#   
-#   return(exp(log_ft))
-# }
-
+#Multifleet version of calcF
+#For fleets managed by effort, i.e., TACusedE[f] = NA, this function will set F from FM_P
 calcF_MF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, FM_P, FM_Pret, Asize, maxage, nareas,
-                    M_ageArray, nyears, y, control) {
-
- maxiterF <- 300
- if(!is.null(control$maxiterF) && is.numeric(control$maxiterF)) maxiterF <- as.integer(control$maxiterF)
-
- tolF <- 1e-4
- if(!is.null(control$tolF) && is.numeric(control$tolF)) tolF <- control$tolF
-
- ct <- TACusedE[x, ]
- nf <- length(ct)
-
- ft <- sapply(1:nf, function(f) ct[f]/sum(Biomass_P[[f]][x,,y,] * V_P[[f]][x,,y+nyears])) # initial guess
-
- fishdist_prop <- matrix(fishdist[x, , ], nareas, nf)
- fishdist_prop <- apply(fishdist_prop, 2, function(i) i/sum(i)) # Ensure proportions sum to 1 across areas
-
- if (all(ct <= 1E-9) || all(ft <= 1E-9)) return(rep(tiny, nf))
- Fmat <- Fmat_ret <- predC <- array(NA, c(maxage+1, nareas, nf))
- dct <- pct <- numeric(nf)
- for (i in 1:maxiterF) {
-
-   # distribute F over age, areas, fleet
-   for (f in 1:nf) {
-     if (is.na(ct[f])) {
-       Fmat[, , f] <- FM_P[[f]][x,,y,]
-       Fmat_ret[, , f] <- FM_Pret[[f]][x,,y,]
-     } else {
-       Fmat[, , f] <- ft[f] * V_P[[f]][x, , y + nyears] * matrix(fishdist_prop[, f], maxage+1, nareas, byrow = TRUE)/
-         matrix(Asize[x, ], maxage+1, nareas, byrow = TRUE)
-       Fmat_ret[, , f] <- ft[f] * retA_P[[f]][x, , y + nyears] * matrix(fishdist_prop[, f], maxage+1, nareas, byrow = TRUE)/
-         matrix(Asize[x, ], maxage+1, nareas, byrow = TRUE)
-     }
-   }
-
-   # total mortality over age, areas
-   Zmat <- apply(Fmat, 1:2, sum) + M_ageArray[x,,y+nyears]
-   Zmat[Zmat==0] <- tiny
-
-   if (is.null(control$TAC)) {
-     # predicted retained catch
-     Fsolve <- Fmat_ret
-   } else {
-     if (control$TAC == 'removals') {
-       # TAC applied to predicted removals
-       Fsolve <- Fmat
-     }
-     else {
-       stop('invalid entry for `OM@cpars$control$TAC`. Must be `OM@cpars$control$TAC="removals"`')
-     }
-   }
-
-   for (f in 1:nf) predC[, , f] <- Fsolve[, , f]/Zmat * (1-exp(-Zmat)) * Biomass_P[[f]][x,,y,]
-   predC[is.infinite(predC)] <- 0
-
-   # derivative of catch wrt ft
-   for (f in 1:nf) {
-     pct[f] <- sum(predC[, , f], na.rm = TRUE)
-
-     Omat <- (1 - exp(-Zmat)) * Biomass_P[[f]][x,,y,]
-     dct[f] <- sum(Omat/Zmat - ((Fsolve[, , f] * Omat)/Zmat^2) + Fsolve[, , f]/Zmat * exp(-Zmat) * Biomass_P[[f]][x,,y,])
-   }
-
-   if (all(dct[!is.na(ct)] < 1E-15)) break
-
-   ft <- ft - (pct - ct)/(0.8*dct)
-   obj <- abs(pct - ct)/ct
-   if (all(obj[!is.na(ct)] < tolF)) break
- }
-
- return(ft)
+                     M_ageArray, nyears, y, maxF, control) {
+  
+  maxiterF <- 300
+  if(!is.null(control$maxiterF) && is.numeric(control$maxiterF)) maxiterF <- as.integer(control$maxiterF)
+  
+  tolF <- 1e-4
+  if(!is.null(control$tolF) && is.numeric(control$tolF)) tolF <- control$tolF
+  
+  ct <- TACusedE[x, ]
+  nf <- length(ct)
+  
+  ft <- sapply(1:nf, function(f) ct[f]/sum(Biomass_P[[f]][x,,y,] * V_P[[f]][x,,y+nyears])) # initial guess
+  log_ft <- log(ft) # initial guess
+  
+  fishdist_prop <- matrix(fishdist[x, , ], nareas, nf)
+  fishdist_prop <- apply(fishdist_prop, 2, function(i) i/sum(i)) # Ensure proportions sum to 1 across areas
+  
+  if (all(ct <= 1E-9) || all(ft <= 1E-9)) return(rep(tiny, nf))
+  Fmat <- Fmat_ret <- predC <- array(NA, c(maxage+1, nareas, nf))
+  dct <- pct <- numeric(nf)
+  for (i in 1:maxiterF) {
+    
+    ft <- exp(log_ft)
+    
+    # distribute F over age, areas, fleet
+    for (f in 1:nf) {
+      if (is.na(ct[f])) {
+        Fmat[, , f] <- FM_P[[f]][x,,y,]
+        Fmat_ret[, , f] <- FM_Pret[[f]][x,,y,]
+      } else {
+        Fmat[, , f] <- ft[f] * V_P[[f]][x, , y + nyears] * matrix(fishdist_prop[, f], maxage+1, nareas, byrow = TRUE)/
+          matrix(Asize[x, ], maxage+1, nareas, byrow = TRUE)
+        Fmat_ret[, , f] <- ft[f] * retA_P[[f]][x, , y + nyears] * matrix(fishdist_prop[, f], maxage+1, nareas, byrow = TRUE)/
+          matrix(Asize[x, ], maxage+1, nareas, byrow = TRUE)
+      }
+    }
+    
+    # total mortality over age, areas
+    Zmat <- apply(Fmat, 1:2, sum) + M_ageArray[x,,y+nyears]
+    Zmat[Zmat==0] <- tiny
+    
+    if (is.null(control$TAC)) {
+      # predicted retained catch
+      Fsolve <- Fmat_ret
+    } else {
+      if (control$TAC == 'removals') {
+        # TAC applied to predicted removals
+        Fsolve <- Fmat
+      }
+      else {
+        stop('invalid entry for `OM@cpars$control$TAC`. Must be `OM@cpars$control$TAC="removals"`')
+      }
+    }
+    
+    for (f in 1:nf) predC[, , f] <- Fsolve[, , f]/Zmat * (1-exp(-Zmat)) * Biomass_P[[f]][x,,y,]
+    predC[is.infinite(predC)] <- 0
+    
+    # derivative of catch wrt log_ft
+    for (f in 1:nf) {
+      pct[f] <- sum(predC[, , f], na.rm = TRUE)
+      
+      Omat <- 1 - exp(-Zmat)
+      VBiomass <- Fsolve[, , f]/ft[f] * Biomass_P[[f]][x,,y,]
+      dct[f] <- sum(VBiomass * ((ft[f] * Zmat - Fsolve[, , f] * ft[f]) * Omat + Fsolve[, , f] * ft[f] * Zmat * exp(-Zmat))/Zmat/Zmat)
+    }
+    
+    if (all(dct[!is.na(ct)] < 1E-15)) break
+    
+    log_ft <- pmin(log_ft - (pct - ct)/dct, log(maxF))
+    
+    obj <- abs(pct - ct)/ct
+    if (all(obj[!is.na(ct)] < tolF)) break
+  }
+  
+  return(exp(log_ft))
 }
+
+#calcF_MF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, FM_P, FM_Pret, Asize, maxage, nareas,
+#                    M_ageArray, nyears, y, control) {
+#
+# maxiterF <- 300
+# if(!is.null(control$maxiterF) && is.numeric(control$maxiterF)) maxiterF <- as.integer(control$maxiterF)
+#
+# tolF <- 1e-4
+# if(!is.null(control$tolF) && is.numeric(control$tolF)) tolF <- control$tolF
+#
+# ct <- TACusedE[x, ]
+# nf <- length(ct)
+#
+# ft <- sapply(1:nf, function(f) ct[f]/sum(Biomass_P[[f]][x,,y,] * V_P[[f]][x,,y+nyears])) # initial guess
+#
+# fishdist_prop <- matrix(fishdist[x, , ], nareas, nf)
+# fishdist_prop <- apply(fishdist_prop, 2, function(i) i/sum(i)) # Ensure proportions sum to 1 across areas
+#
+# if (all(ct <= 1E-9) || all(ft <= 1E-9)) return(rep(tiny, nf))
+# Fmat <- Fmat_ret <- predC <- array(NA, c(maxage+1, nareas, nf))
+# dct <- pct <- numeric(nf)
+# for (i in 1:maxiterF) {
+#
+#   # distribute F over age, areas, fleet
+#   for (f in 1:nf) {
+#     if (is.na(ct[f])) {
+#       Fmat[, , f] <- FM_P[[f]][x,,y,]
+#       Fmat_ret[, , f] <- FM_Pret[[f]][x,,y,]
+#     } else {
+#       Fmat[, , f] <- ft[f] * V_P[[f]][x, , y + nyears] * matrix(fishdist_prop[, f], maxage+1, nareas, byrow = TRUE)/
+#         matrix(Asize[x, ], maxage+1, nareas, byrow = TRUE)
+#       Fmat_ret[, , f] <- ft[f] * retA_P[[f]][x, , y + nyears] * matrix(fishdist_prop[, f], maxage+1, nareas, byrow = TRUE)/
+#         matrix(Asize[x, ], maxage+1, nareas, byrow = TRUE)
+#     }
+#   }
+#
+#   # total mortality over age, areas
+#   Zmat <- apply(Fmat, 1:2, sum) + M_ageArray[x,,y+nyears]
+#   Zmat[Zmat==0] <- tiny
+#
+#   if (is.null(control$TAC)) {
+#     # predicted retained catch
+#     Fsolve <- Fmat_ret
+#   } else {
+#     if (control$TAC == 'removals') {
+#       # TAC applied to predicted removals
+#       Fsolve <- Fmat
+#     }
+#     else {
+#       stop('invalid entry for `OM@cpars$control$TAC`. Must be `OM@cpars$control$TAC="removals"`')
+#     }
+#   }
+#
+#   for (f in 1:nf) predC[, , f] <- Fsolve[, , f]/Zmat * (1-exp(-Zmat)) * Biomass_P[[f]][x,,y,]
+#   predC[is.infinite(predC)] <- 0
+#
+#   # derivative of catch wrt ft
+#   for (f in 1:nf) {
+#     pct[f] <- sum(predC[, , f], na.rm = TRUE)
+#
+#     Omat <- (1 - exp(-Zmat)) * Biomass_P[[f]][x,,y,]
+#     dct[f] <- sum(Omat/Zmat - ((Fsolve[, , f] * Omat)/Zmat^2) + Fsolve[, , f]/Zmat * exp(-Zmat) * Biomass_P[[f]][x,,y,])
+#   }
+#
+#   if (all(dct[!is.na(ct)] < 1E-15)) break
+#
+#   ft <- ft - (pct - ct)/(0.8*dct)
+#   obj <- abs(pct - ct)/ct
+#   if (all(obj[!is.na(ct)] < tolF)) break
+# }
+#
+# return(ft)
+#}
 
 
 
