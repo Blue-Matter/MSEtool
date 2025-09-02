@@ -106,6 +106,8 @@ CalcPerRecruit_StockList <- function(apicalF, StockList, FleetList, TimeSteps) {
   names(PerRecruitF) <- apicalF
  
   PerRecruit <- new('perrecruit')
+  PerRecruit@SPR0 <- purrr::map(PerRecruitF, slot, 'SPR0')[[1]] 
+  
   PerRecruit@NPRF <- purrr::map(PerRecruitF, slot, 'NPRF') |> List2Array("F")
   PerRecruit@NPRF_SP <- purrr::map(PerRecruitF, slot, 'NPRF_SP') |> List2Array("F")
   PerRecruit@SPRF <- purrr::map(PerRecruitF, slot, 'SPRF') |> List2Array("F")
@@ -283,6 +285,7 @@ CalcPerRecruit_StockList_F <- function(apicalF,
   
   
   PerRecruit <- new('perrecruit')
+  PerRecruit@SPR0 <- SPR0List |> List2Array("Stock") |> aperm(setdnames(c('Stock', 'TimeStep'), BySim))
   PerRecruit@apicalF <- apicalF
   PerRecruit@NPRF <- NPRFList |> List2Array("Stock") |> aperm(setdnames(c('Stock', 'Age', 'TimeStep'), BySim))  
   if (IsSpawnTimeFrac)

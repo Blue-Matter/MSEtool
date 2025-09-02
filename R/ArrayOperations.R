@@ -481,7 +481,10 @@ ExpandTimeSteps <- function(Array, TimeSteps, default=NULL) {
       
     vals <- replicate(nTSFill, vals) 
     if (!inherits(vals, 'array')) {
-      vals <- array(vals, dim=c(1, length(vals)))
+      
+      outDim <- rep(1, length(dnames))
+      outDim[ind] <- length(vals)
+      vals <- array(vals, dim=outDim)
       dimnames(vals) <- dnames
     }
     

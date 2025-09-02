@@ -694,7 +694,7 @@ BevertonHolt <- function(S, S0, R0, h) {
 }
 class(BevertonHolt) <- 'SRR-Model'
 
-# TODO RelRec functions for Ricker and HockeyStick
+# TODO RelRec functions for HockeyStick
 BevertonHoltRelRec <- function(Pars, SPR) {
   if (is.array(SPR)) 
     cli::cli_abort("`SPR` must be numeric length 1.")
@@ -720,9 +720,25 @@ class(Ricker) <- 'SRR-Model'
 
 
 RickerRelRec <- function(Pars, SPR) {
+  if (is.array(SPR)) 
+    cli::cli_abort("`SPR` must be numeric length 1.")
   
- 
+  hR <- Pars$hR
+  R0 <- Pars$R0
+  SPR0 <- Pars$SPR0
+  
+  alpha <- h2alpha(hR, SPR0, 'RK')
+  beta <- h_R0_2beta(hR, R0, SPR0, 'RK')
+  
+  EggF <- SPR0 * SPR
+  RelRec <- ArrayDivide(log(ArrayMultiply(alpha, EggF)), ArrayMultiply(beta, EggF)) 
+
+  out <- ArrayDivide(RelRec,R0)
+  out[out<0] <- 0
+  out
 }
+
+
 
 #' @describeIn SRRModels Hockey Stick Stock-Recruitment Model
 #' @param Shinge The hinge-point of the SRR, relative to `S0`

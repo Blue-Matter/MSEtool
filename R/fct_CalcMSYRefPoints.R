@@ -91,7 +91,6 @@ setdnames <- function(dnames, BySim=TRUE) {
 CalculateMSYSim <- function(StockList, FleetList, Complexes, TimeSteps=NULL, maxF=3) {
   logApicalFRange <- log(c(0.01, maxF))
   
-
   MSYRefPoints <- MSYRefPoints(StockNames=names(StockList), TimeSteps=TimeSteps)
   for (st in seq_along(Complexes)) {
     StockInd <- Complexes[[st]]
@@ -139,11 +138,17 @@ OptMSY <- function(logApicalF, StockList, FleetList, TimeSteps, option=1) {
   if (is.null(SPFrom))
     SPFrom <- 1:length(StockList)
   
-  RecParsList <- purrr::map(StockList, \(Stock) 
-                            purrr::map(Stock@SRR@Pars, \(pars) ArraySubsetTimeStep(pars,TimeSteps))
-  )
+  SPR0List <- PerRecruit@SPR0 |> Array2List(1)
+  
+  RecParsList <- purrr::map2(StockList, SPR0List, \(Stock, SPR0) {
+    Pars <- purrr::map(Stock@SRR@Pars, \(pars) ArraySubsetTimeStep(pars,TimeSteps))
+    Pars$R0 <- ArraySubsetTimeStep(Stock@SRR@R0, TimeSteps)
+    Pars$SPR0 <- ArraySubsetTimeStep(SPR0, TimeSteps)
+    Pars
+  })
+  
   RecParsList <- RecParsList[SPFrom]
-  names(RecParsList) <-   names(SPFrom)
+  names(RecParsList) <-  names(SPFrom)
   
   RelRecFunList <- purrr::map(StockList, \(Stock) {
     if (!is.null(Stock@SRR@Model) && inherits(Stock@SRR@Model, 'character')) {

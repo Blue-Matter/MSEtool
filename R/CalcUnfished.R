@@ -18,7 +18,7 @@ CalcEquilibriumUnfished <- function(OM) {
   })
                
   UnfishedNumberAtAge <- purrr::map2(UnfishedSurvival, R0List, ArrayMultiply)
-  UnfishedSpawnNumberAtAge <- purrr::map2(UnfishedSurvival, R0List, ArrayMultiply)
+  UnfishedSpawnNumberAtAge <- purrr::map2(UnfishedSurvivalSP, R0List, ArrayMultiply)
   
   WeightAtAge <- purrr::map(OM@Stock, \(x) {
     x@Weight@MeanAtAge 

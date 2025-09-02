@@ -150,22 +150,9 @@ Simulate_om <- function(OM=NULL,
   })
   
   
-  # tictoc::toc()
  
   # ---- Check for Depletion Optimization ----
-  # OM@Stock$Albacore@Depletion@Final
-  # OM@Stock$Albacore@Depletion@Reference
-  # 
-  # HistSimList$`1`@Biomass[1,50]/HistSimList$`1`@Unfished@Equilibrium@Biomass[1,50]
-  
-  # TODO 
-  # B0 <- Hist@Unfished@Equilibrium@Biomass[,1,1:360]
-  # B <- Hist@Biomass[,1,]
-  # B <- B/B0
-  # matplot(t(B), type='l', ylim=c(0,1.2))
-  # 
-  # which(B[,360] > 0.4)
-  
+  OptRatio <- CheckDepletionOpt(HistSimList) # TODO - warning message or re-sample 
 
   # ---- Condition Observation Object on Real Fishery Data ----
   ProjectionTimeSteps <- TimeSteps(OM, 'Projection')

@@ -67,13 +67,12 @@ GenerateHistoricalData_Catch <- function(Data, HistSim, HistTimeSteps, i,
   
   for (fl in 1:nFleet) {
     Obs <- HistSim@OM@Obs[[i]][[fl]]
-    if (EmptyObject(Obs)) {
+   
+    obs <- slot(Obs, type)
+    if (EmptyObject(obs)) {
       next()
     }
-    if (!inherits(Obs, 'obs')) # TODO
-      next()
     
-    obs <- slot(Obs, type)
     CatchData@Value <-  Catch[,fl] * ArraySubsetTimeStep(obs@Error, HistTimeSteps) * obs@Bias
     
     NA_TS <- which(!HistTimeSteps %in% obs@TimeSteps)
@@ -179,12 +178,12 @@ GenerateHistoricalData_Index <- function(HistSim, HistTimeSteps, i, stocks,
 
     SimulatedIndexError <- SimulatedIndex *  ArraySubsetTimeStep(IndexObs@Error, HistTimeSteps)
     StIndex <- SimulatedIndexError/mean(SimulatedIndexError, na.rm=TRUE)
-    slot(Data, type)@Value[,fl] <- StIndex
+    IndexData@Value[,fl] <- StIndex
     NonNAInd <- which(!is.na(StIndex))
     IndexObs@q <- mean(StIndex, na.rm=TRUE)/mean(SimulatedIndex[NonNAInd], na.rm=TRUE)
     slot(HistSim@OM@Obs[[i]][[FleetNames[fl]]],type) <- IndexObs
   }
-  HistSim@Data[[i]] <- Data
+  slot(HistSim@Data[[i]],type) <- IndexData
   HistSim
 }
   
