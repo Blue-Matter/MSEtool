@@ -136,3 +136,14 @@ GetRetentionAtLength <- function(OM, df=TRUE) {
   GetSchedule(OM, "Retention", 'MeanAtLength', df=df)
 }
 
+#' @rdname Get
+#' @export
+GetDiscardMortalityAtAge <- function(OM, df=TRUE) {
+  GetSchedule(OM, "DiscardMortality", 'MeanAtAge', df=df)
+}
+
+#' @rdname Get
+#' @export
+GetDiscardMortalityAtLength <- function(OM, df=TRUE) {
+  GetSchedule(OM, "DiscardMortality", 'MeanAtLength', df=df)
+}

@@ -11,6 +11,8 @@
 \alias{GetRetentionAtAge}
 \alias{GetSelectivityAtLength}
 \alias{GetRetentionAtLength}
+\alias{GetDiscardMortalityAtAge}
+\alias{GetDiscardMortalityAtLength}
 \title{Get Values from OM, Hist, and MSE Objects}
 \usage{
 GetNaturalMortalityAtAge(OM, df = TRUE)
@@ -30,6 +32,10 @@ GetRetentionAtAge(OM, df = TRUE)
 GetSelectivityAtLength(OM, df = TRUE)
 
 GetRetentionAtLength(OM, df = TRUE)
+
+GetDiscardMortalityAtAge(OM, df = TRUE)
+
+GetDiscardMortalityAtLength(OM, df = TRUE)
 }
 \description{
 Returned as a data frame

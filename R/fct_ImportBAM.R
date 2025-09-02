@@ -290,8 +290,6 @@ ImportBAM <- function(x='Red Snapper',
   OM@Fleet[[BAMdata$info$species]] <- BAM2Fleet(x, OM@Stock[[1]])
   
   
-  BAMdata$t.series |> names()
-  
   # TODO - Obs & Imp
   if (populate) 
     OM <- PopulateOM(OM)

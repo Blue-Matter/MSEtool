@@ -105,6 +105,9 @@ GenerateHistoricalData_Index <- function(HistSim, HistTimeSteps, i, stocks,
   FleetNames <- names(ObsObjectList)
   TypeFleets <- purrr::map(ObsObjectList, \(obs) !is.null(obs@Error)) |> unlist() |> which()
   
+  if (!length(TypeFleets))
+    return(HistSim)
+  
   ObsObjectList <- ObsObjectList[TypeFleets]
   FleetNames <- FleetNames[TypeFleets]
   nFleet <- length(FleetNames)

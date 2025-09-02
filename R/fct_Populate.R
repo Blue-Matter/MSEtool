@@ -19,7 +19,7 @@ PopulateOM <- function(OM, silent=FALSE) {
   # chk <- Check(OM)
   
   OM@Stock  <- PopulateStockList(OM, silent)
-  OM@Fleet <- PopulateFleetList(OM, OM@Stock, silent)
+  OM@Fleet <- PopulateFleetList(OM, silent)
   
   OM <- OM |>
     PopulateObs() |>
@@ -104,13 +104,14 @@ PopulateStockList <- function(OM, silent=FALSE) {
   }
   StockList
 }
-PopulateFleetList <- function(OM, StockList, silent=FALSE) {
+
+PopulateFleetList <- function(OM, silent=FALSE) {
+  StockList <- OM@Stock
   nStocks <- nStock(OM)
   nFleets <- nFleet(OM)
   FleetList <- vector('list', nStocks)
   class(FleetList) <- 'StockFleetList'
   names(FleetList) <- paste('Stock', 1:nStocks)
-  
   
   for (st in 1:nStocks) {
     names(FleetList)[st] <- names(StockList)[st]
@@ -802,14 +803,14 @@ PopulateFleet <- function(Fleet,
                                                      seed,
                                                      silent)
   
-  Fleet@DiscardMortality <- PopulateDiscardMortality(Fleet@DiscardMortality,
-                                     Ages,
-                                     Length,
-                                     nsim,
-                                     TimeSteps,
-                                     CalcAtLength=TRUE,
-                                     seed=seed,
-                                     silent)
+  Fleet@DiscardMortality <- PopulateDiscardMortality(DiscardMortality=Fleet@DiscardMortality,
+                                                     Ages,
+                                                     Length,
+                                                     nsim,
+                                                     TimeSteps,
+                                                     CalcAtLength=TRUE,
+                                                     seed=seed,
+                                                     silent)
   
   Fleet@Selectivity <- PopulateSelectivity(Selectivity=Fleet@Selectivity,
                                            FishingMortality=Fleet@FishingMortality,
