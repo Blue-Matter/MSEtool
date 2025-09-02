@@ -32,8 +32,6 @@ Project_hist <- function(Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, nSim=N
   .lapply <- define.lapply(silent) 
   .sapply <- define.sapply(silent)
   
-  # Extend Arrays for Projection TimeSteps
-  
   MSEobj <- FALSE
   if (inherits(Hist,'mse')) {
     MSE <- Hist
@@ -41,7 +39,7 @@ Project_hist <- function(Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, nSim=N
   }
   
   Proj <- ExtendHist(Hist)
-  
+
   # List of `Hist` objects, each with one simulation
   ProjSimList <- Hist2HistSimList(Proj)
   
@@ -52,8 +50,7 @@ Project_hist <- function(Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, nSim=N
   # TODO calculate externally with option in Simulate or OM@Control
   
   # Populate Number-at-Age at Beginning of Projection TimeStep
-  LastHistTS <- tail(TimeStepsHist,1)
-  ProjSimList <- purrr::map(ProjSimList, \(ProjSim) SimulateDynamics_(ProjSim, LastHistTS))
+  ProjSimList <- purrr::map(ProjSimList, \(ProjSim) SimulateDynamics_(ProjSim,  tail(TimeStepsHist,1)))
   
   # Recruitment for first projection timestep 
   ProjSimList <- purrr::map(ProjSimList, \(ProjSim) SimulateDynamics_(ProjSim, head(TimeStepsProj,1)))

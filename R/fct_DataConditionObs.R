@@ -19,11 +19,11 @@ ConditionObs <- function(HistSim, HistTimeSteps, ProjectionTimeSteps) {
   for (i in seq_along(FisheryDataList)) {
     FisheryData <- FisheryDataList[[i]]
     stocks <- Complexes[[i]]
-    HistSim <- ConditionObs_Catch(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps, 'Landings', stocks, i)
-    HistSim <- ConditionObs_Catch(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps, 'Discards', stocks, i)
+    HistSim <- ConditionObs_Catch(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps, stocks, i)
+    HistSim <- ConditionObs_Catch(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps, stocks, i, 'Discards')
     
-    HistSim <- ConditionObs_Index(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps, 'CPUE', stocks, i)
-    HistSim <- ConditionObs_Index(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps, 'Survey',  stocks, i)
+    HistSim <- ConditionObs_Index(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps, stocks, i)
+    HistSim <- ConditionObs_Index(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps,  stocks, i, 'Survey')
   }
 
   # FisheryData@CAA
@@ -37,10 +37,9 @@ ConditionObs <- function(HistSim, HistTimeSteps, ProjectionTimeSteps) {
 # ----- Catch ----
 
 ConditionObs_Catch <- function(HistSim, FisheryData, HistTimeSteps,
-                               ProjectionTimeSteps, type=c('Landings', 'Discards'), stocks, i) {
+                               ProjectionTimeSteps, stocks, i, type=c('Landings', 'Discards')) {
   
   type <- match.arg(type)
-  
   nHistTS <- length(HistTimeSteps)
   nProjTS <- length(ProjectionTimeSteps)
   
@@ -59,19 +58,19 @@ ConditionObs_Catch <- function(HistSim, FisheryData, HistTimeSteps,
     List2Array('Stock') |> 
     apply(c('TimeStep', 'Fleet'), sum)
   
-  
   for (fl in 1:nFleet) {
     CatchObs <- slot(HistSim@OM@Obs[[i]][[fl]], type)
     CatchObs@Type <- slot(FisheryData,type)@Type[fl]
     
     if (is.null(CatchObs@TimeSteps)) 
-      CatchObs@TimeSteps <- HistTimeSteps # TODO - currently calculates obs error from all historical time-steps
+      CatchObs@TimeSteps <- HistTimeSteps
     
     SimValue <- SimulatedCatch[,fl]
     SimValue[SimValue<0] <- 1E-15
     
     # Bias 
     Bias <- ArraySubsetTimeStep(ObservedCatch[,fl], CatchObs@TimeSteps)/ArraySubsetTimeStep(SimValue, CatchObs@TimeSteps)
+    Bias[Bias<0.001] <- NA
     Bias <- Bias[is.finite(Bias)]
     BiasMean <- mean(Bias, na.rm=TRUE) 
     CatchObs@Bias <- array(BiasMean, dim=nHistTS, dimnames = list(TimeStep=HistTimeSteps))
@@ -81,6 +80,7 @@ ConditionObs_Catch <- function(HistSim, FisheryData, HistTimeSteps,
     CatchErrorHist[!is.finite(CatchErrorHist)] <- NA
   
     CatchErrorHistCondition <- CatchErrorHist[as.character(CatchObs@TimeSteps)]
+    CatchErrorHistCondition[CatchErrorHistCondition<0.001] <- NA
     CatchErrorHistCondition <- CatchErrorHistCondition/mean(CatchErrorHistCondition, na.rm=TRUE)
     CatchObs@CV <- as.numeric(CatchErrorHistCondition) |> sd(na.rm=TRUE) 
     SD <- CatchObs@CV 
@@ -169,7 +169,7 @@ ApplyIndexAC <- function(Residuals, ac, LastError) {
 }
 
 ConditionObs_Index <- function(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps, 
-                               type=c('CPUE', 'Survey'), stocks, i) {
+                               stocks, i, type=c('CPUE', 'Survey')) {
   
   type <- match.arg(type)
   
@@ -237,7 +237,7 @@ ConditionObs_Index <- function(HistSim, FisheryData, HistTimeSteps, ProjectionTi
         apply(c('TimeStep'), sum) 
       
     } else {
-      cli::cli_abort('Not done yet!', .internal=TRUE)
+      cli::cli_abort('Only `Biomass` and `Number` supported for `Units` in `Data@CPUE` and `Data@Survey`', .internal=TRUE)
     }
 
     NonNAInd <- which(!is.na(ObservedIndex))

@@ -876,7 +876,7 @@ ImportSS <- function(x,
   # Data
   # etc 
   
-  OM
+  PopulateOM(OM)
 }
 
 

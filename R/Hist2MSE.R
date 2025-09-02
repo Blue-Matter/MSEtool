@@ -20,9 +20,8 @@ Hist2MSE <- function(Hist, MPs) {
   
   MSE@SBiomass <- MSE@SProduction <- MSE@Biomass
   
-  MSE@Removals <- ArraySimStockTimeFleetMP(Hist@OM, "Projection", MPs=MPNames)
-  
-  MSE@Landings <-  MSE@Removals
+  MSE@Landings <- ListArraySimAgeTimeFleetAreaMP(Hist@OM, 'Projection', MPNames)
+  MSE@Discards <-  MSE@Landings
   
   MSE@Effort <- ArraySimStockTimeFleetMP(Hist@OM, "Projection", MPs=MPNames)
   

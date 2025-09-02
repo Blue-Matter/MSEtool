@@ -36,6 +36,9 @@ SubsetSim <- function(object, Sim=1, drop=FALSE, debug=FALSE) {
   
   if (inherits(object, c('StockList',  'StockFleetList', 'FleetList', 'list'))) {
     outlist <- object 
+    if (Sim %in% names(object)) {
+      return(outlist[[Sim]])
+    } 
     for (j in seq_along(object)) {
       if (is.null(object[[j]])) {
         outlist[[j]] <- object[[j]]

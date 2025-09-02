@@ -1271,6 +1271,7 @@ PopulateObs <- function(OM) {
   }
  
   OM <- StructureObs(OM)
+
   
   for (st in 1:length(OM@Obs)) {
     for (fl in 1:length(OM@Obs[[1]])) {
@@ -1289,8 +1290,8 @@ PopulateObs <- function(OM) {
                                                    TimeSteps=OM@TimeSteps)
     
       OM@Obs[[st]][[fl]]@Survey <- PopulateIndexObs(Index=OM@Obs[[st]][[fl]]@Survey, 
-                                                  nSim=OM@nSim, 
-                                                  TimeSteps=OM@TimeSteps)
+                                                    nSim=OM@nSim, 
+                                                    TimeSteps=OM@TimeSteps)
       
       OM@Obs[[st]][[fl]]@CAA
       
@@ -1351,7 +1352,7 @@ PopulateCatchObs <- function(Catch, nSim, TimeSteps) {
 
 PopulateObsCV <- function(CV, nSim) {
   if (is.null(CV)) {
-    CV <- array(0, nSim, dimnames = list(Sim=1:nSim))
+    # CV <- array(0, nSim, dimnames = list(Sim=1:nSim))
     return(CV)
   }
   
@@ -1369,6 +1370,8 @@ PopulateObsCV <- function(CV, nSim) {
 PopulateObsError <- function(object, nSim, TimeSteps) {
   nTS <- length(TimeSteps)
   if (length(object@Error)<1) {
+    if (is.null(object@CV))
+      return(object@Error)
     Error <- array(rlnorm(nTS * nSim,
                           mconv(1, rep(object@CV, nTS)),
                           sdconv(1, rep(object@CV, nTS))),

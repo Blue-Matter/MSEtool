@@ -1,6 +1,8 @@
 
 ApplyMPAdvice <- function(ProjSim, MP, TimeStep, TimeStepsHist, TimeStepsProj, ManagementTimeSteps) {
   
+  stop()
+  # UP TO HERE - need to run MP over complexes ...
   ###############################
   st <- 1 
   ##############################

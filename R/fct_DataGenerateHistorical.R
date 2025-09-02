@@ -4,9 +4,8 @@
 
 GenerateHistoricalData <- function(HistSim, HistTimeSteps) {
   OM <- HistSim@OM
-  Complexes <- Complexes(HistSim@OM)
+  Complexes <- HistSim@OM@Complexes
   HistSim@Data <- MakeNamedList(names(Complexes), new('data'))
-  
   
   if (!is.null(HistSim@OM@Data)) {
     HistSim@Data <- HistSim@OM@Data
@@ -16,57 +15,32 @@ GenerateHistoricalData <- function(HistSim, HistTimeSteps) {
   
   for (i in 1:nStockData) {
     stocks <- Complexes[[i]]
-    HistSim@Data[[i]] <- GenerateHistoricalDataStock(i, HistSim, HistTimeSteps, stocks)
+    Data <- HistSim@Data[[i]]
+    if (is.null(Data@Name)) {
+      Data@Name <- purrr::map(HistSim@OM@Stock[stocks], slot, 'Name') |> unlist() |> paste(collapse='-')
+    }
+    if (is.null(Data@TimeSteps)) {
+      Data@TimeSteps <- HistTimeSteps
+    }
+    if (is.null(Data@TimeStepLH)) {
+      Data@TimeStepLH <- Data@TimeSteps[length(Data@TimeSteps)]
+    }
+    Data@TimeUnits <-  HistSim@OM@Stock[[stocks[1]]]@Ages@Units
+    
+    Data <- GenerateHistoricalData_Catch(Data, HistSim, HistTimeSteps, i, stocks, 'Landings')
+    Data <- GenerateHistoricalData_Catch(Data, HistSim, HistTimeSteps, i, stocks, 'Discards')
+    HistSim@Data[[i]] <- Data
+    
+    HistSim <- GenerateHistoricalData_Index(HistSim, HistTimeSteps, i, stocks)
+    HistSim <- GenerateHistoricalData_Index(HistSim, HistTimeSteps, i, stocks, 'Survey')
   }
-  
   HistSim
   
 }
 
-GenerateHistoricalDataStock <- function(i, HistSim, HistTimeSteps, stocks) {
-  Data <- HistSim@Data[[i]]
-
-  if (is.null(Data@Name)) {
-    Data@Name <- purrr::map(HistSim@OM@Stock[stocks], slot, 'Name') |> unlist() |> paste(collapse='-')
-  }
   
-  if (is.null(Data@TimeSteps)) {
-    Data@TimeSteps <- HistTimeSteps
-  }
-  
-  if (is.null(Data@TimeStepLH)) {
-    Data@TimeStepLH <- Data@TimeSteps[length(Data@TimeSteps)]
-  }
-
-  Data@TimeUnits <-  HistSim@OM@Stock[[stocks[1]]]@Ages@Units
-
-  Data <- GenerateHistoricalData_Catch(Data, HistSim, HistTimeSteps, i, stocks)
-  
- 
-
-  Data@Landings
-  Data@Discards
-  
-  
-  Data@CPUE
-  Data@Survey
-  
-  
-  Data <- GenerateHistoricalData_Catch(Data, HistSim, HistTimeSteps, st, 'Landings')
-  
-  # TODO
-  Data <- GenerateHistoricalData_Index(Data, HistSim, HistTimeSteps, st)
-  Data <- GenerateHistoricalData_Index(Data, HistSim, HistTimeSteps, st, 'Survey')
-
-  # Data@Index
-  # Data@CAA
-  # Data@CAL
-  
-  Data
-}
-  
-  
-GenerateHistoricalData_Catch <- function(Data, HistSim, HistTimeSteps, i, stocks, type=c('Landings', 'Discards')) {
+GenerateHistoricalData_Catch <- function(Data, HistSim, HistTimeSteps, i, 
+                                         stocks, type=c('Landings', 'Discards')) {
   type <- match.arg(type)
   if (!EmptyObject(slot(Data, type))) 
     return(Data)
@@ -83,17 +57,16 @@ GenerateHistoricalData_Catch <- function(Data, HistSim, HistTimeSteps, i, stocks
   CatchData@CV <- CatchData@Value 
   CatchData@CV[] <- 0.2
   
-  if (type=='Removals') {
-    Catch <- apply(List2Array(HistSim@Removals[[st]]), c(2,4), sum) |> t()
-  } else {
-    Catch <- apply(List2Array(HistSim@Landings[[st]]), c(2,4), sum) |> t()
-  }
+  Catch  <- purrr::map(slot(HistSim, type)[stocks], \(catch) 
+                       catch |> List2Array() |> apply(c(2,4), sum) |> t()
+  ) |> List2Array('Stock') |>
+    apply(1:2, sum)
   dimnames(Catch) <- list(TimeStep=HistTimeSteps, 
                           Fleet=FleetNames)
   
   
   for (fl in 1:nFleet) {
-    Obs <- HistSim@OM@Obs[[st]][[fl]]
+    Obs <- HistSim@OM@Obs[[i]][[fl]]
     if (EmptyObject(Obs)) {
       next()
     }
@@ -117,17 +90,99 @@ GenerateHistoricalData_Catch <- function(Data, HistSim, HistTimeSteps, i, stocks
   Data
 }
   
-GenerateHistoricalData_Index <- function(Data, HistSim, HistTimeSteps, st, type=c('CPUE', 'Survey')) {
-  # TODO add ability to generate additional indices using info in Obs 
+GenerateHistoricalData_Index <- function(HistSim, HistTimeSteps, i, stocks, 
+                                         type=c('CPUE', 'Survey')) {
+  
   type <- match.arg(type)
+  Data <- HistSim@Data[[i]]
+
   if (!EmptyObject(slot(Data, type))) 
-    return(Data)
+    return(HistSim)
   
   nTS <- length(HistTimeSteps)
-  FleetNames <- HistSim@OM@Fleet[[st]]@Name |> as.character()
+  
+  ObsObjectList <- purrr::map(HistSim@OM@Obs[[i]], \(obs) slot(obs,type))
+  FleetNames <- names(ObsObjectList)
+  TypeFleets <- purrr::map(ObsObjectList, \(obs) !is.null(obs@Error)) |> unlist() |> which()
+  
+  ObsObjectList <- ObsObjectList[TypeFleets]
+  FleetNames <- FleetNames[TypeFleets]
   nFleet <- length(FleetNames)
   
-  Data
+  IndexData <- new('indicesdata')
+  IndexData@Value <- array(NA, dim=c(nTS, nFleet),
+                           dimnames=list(TimeStep=HistTimeSteps,
+                                         Fleet=FleetNames))
+  
+  IndexData@CV <-  IndexData@Value
+  IndexData@CV[] <- 0.2
+  IndexData@Units <- rep('Biomass', nFleet)
+
+  SimulatedNumberList <- purrr::map(HistSim@Number[stocks], \(stock) {
+    stock |> AddDimNames(c('Age', 'TimeStep', 'Area'),HistTimeSteps) |>
+      apply(c('Age', 'TimeStep'), sum)
+  })
+  
+  for (fl in 1:nFleet) {
+    IndexObs <- slot(HistSim@OM@Obs[[i]][[FleetNames[fl]]],type)
+    SelectivityAtAge <- IndexObs@Selectivity
+    SelectivityAtAgeList <- MakeNamedList(StockNames(HistSim@OM)[stocks])
+    
+    if (is.character(SelectivityAtAge)) {
+      if (SelectivityAtAge == 'Biomass') {
+        for (st in seq_along(stocks)) {
+          SelectivityAtAgeList[[st]] <- matrix(1,nAge(HistSim@OM, stocks[st]), 1) |>
+            AddDimNames(c('Age', 'TimeStep'), HistTimeSteps)
+        }
+      } else if (SelectivityAtAge == 'SBiomass') {
+        for (st in seq_along(stocks)) {
+          SelectivityAtAgeList[[st]] <- HistSim@OM@Stock[[stocks[st]]]@Maturity@MeanAtAge |> ArrayReduceDims()
+        }
+        
+      } else if (SelectivityAtAge == 'Obs') {
+        SelectivityAtAgeList <- IndexObs@Selectivity
+      }
+    } else {
+      SelectivityAtAgeList <- purrr::map(HistSim@OM@Fleet[stocks], \(stock) {
+        stock@Selectivity@MeanAtAge[,,fl] |>
+          ArraySubsetTimeStep(HistTimeSteps) |> 
+          ArrayReduceDims()
+      }) 
+    }
+    
+    Units <- IndexData@Units[fl]
+    SimNumberSelectedList <- purrr::map2(SimulatedNumberList, SelectivityAtAgeList, ArrayMultiply)
+    
+    if (Units=='Biomass') {
+      WeightAtAgeList <- purrr::map(HistSim@OM@Stock[stocks], \(stock) stock@Weight@MeanAtAge |>
+                                      ArraySubsetTimeStep(HistTimeSteps)) 
+      
+      SimulatedIndex <- purrr::map2(SimNumberSelectedList, WeightAtAgeList, ArrayMultiply) |>
+        purrr::map(apply, 'TimeStep', sum) |>
+        List2Array('Stock', 'TimeStep') |>
+        AddDimNames(c('TimeStep', 'Stock'), HistTimeSteps) |> 
+        apply(c('TimeStep'), sum) 
+      
+    } else if (Units=='Number') {
+      SimulatedIndex <- SimNumberSelectedList |>
+        purrr::map(apply, 'TimeStep', sum) |>
+        List2Array('Stock', 'TimeStep') |>
+        AddDimNames(c('TimeStep', 'Stock'), HistTimeSteps) |> 
+        apply(c('TimeStep'), sum) 
+      
+    } else {
+      cli::cli_abort('Not done yet!', .internal=TRUE)
+    }
+
+    SimulatedIndexError <- SimulatedIndex *  ArraySubsetTimeStep(IndexObs@Error, HistTimeSteps)
+    StIndex <- SimulatedIndexError/mean(SimulatedIndexError, na.rm=TRUE)
+    slot(Data, type)@Value[,fl] <- StIndex
+    NonNAInd <- which(!is.na(StIndex))
+    IndexObs@q <- mean(StIndex, na.rm=TRUE)/mean(SimulatedIndex[NonNAInd], na.rm=TRUE)
+    slot(HistSim@OM@Obs[[i]][[FleetNames[fl]]],type) <- IndexObs
+  }
+  HistSim@Data[[i]] <- Data
+  HistSim
 }
   
   

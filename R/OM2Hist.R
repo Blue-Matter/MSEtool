@@ -414,7 +414,7 @@ MSE2HistSimList <- function(MSE) {
 Hist2HistSimList <- function(Hist) {
   
   # parallel <- snowfall::sfIsRunning()
-  
+
   HistSimList <- purrr::map(1:nSim(Hist@OM), \(x) {
     hist <- SubsetSim(Hist, Sim=x, drop=TRUE)
     if (length(Hist@Data)<1)
@@ -445,50 +445,6 @@ Hist2HistSimList <- function(Hist) {
     HistSim
   }, .progress = 'Processing internal object')
   
-  # TODO
-  # - parallel a lot slower with large objects 
-  # - consider breaking HistSim into many smaller sub-objects
-  # 
-  # st <- Sys.time()
-  # if (parallel) {
-  #   cli::cli_progress_message("{cli::symbol$info} Processing internal object ...")
-  #   
-  #   HistSimList <- snowfall::sfLapply(HistSimList, function(HistSim) {
-  #     
-  #     HistSim@FDeadAtAgeArea <- purrr::map(HistSim@FDeadAtAgeArea, MSEtool:::Array2List, 2)
-  #     HistSim@FRetainAtAgeArea <- purrr::map(HistSim@FRetainAtAgeArea, MSEtool:::Array2List, 2)
-  #     HistSim@Removals <- purrr::map(HistSim@Removals, MSEtool:::Array2List, 2)
-  #     HistSim@Landings <- purrr::map(HistSim@Landings, MSEtool:::Array2List, 2)
-  #     
-  #     HistSim@OM@Stock <- purrr::map(HistSim@OM@Stock, \(Stock) {
-  #       Stock@Spatial@Movement <- MSEtool:::Array2List(Stock@Spatial@Movement,4)
-  #       Stock
-  #     })
-  #     
-  #     HistSim
-  #   })
-  #   
-  #   cli::cli_process_done()
-  #   
-  # } else {
-  #   HistSimList <- purrr::map(HistSimList, \(HistSim) {
-  #     HistSim@FDeadAtAgeArea <- purrr::map(HistSim@FDeadAtAgeArea, Array2List, 2)
-  #     HistSim@FRetainAtAgeArea <- purrr::map(HistSim@FRetainAtAgeArea, Array2List, 2)
-  #     HistSim@Removals <- purrr::map(HistSim@Removals, Array2List, 2)
-  #     HistSim@Landings <- purrr::map(HistSim@Landings, Array2List, 2)
-  #     
-  #     HistSim@OM@Stock <- purrr::map(HistSim@OM@Stock, \(Stock) {
-  #       Stock@Spatial@Movement <- Array2List(Stock@Spatial@Movement,4)
-  #       Stock
-  #     })
-  #     HistSim
-  #   }, .progress = 'Processing internal object')
-  # }
-  # 
-  # end <- Sys.time()
-  # 
-  # print(end-st)
-
   class(HistSimList) <- 'histsimlist'
   HistSimList
 }
@@ -639,7 +595,7 @@ ObsList2SimArray <- function(Obs, ObsList, fl, slot='Catch') {
         Val <- aperm(Val, c('Sim', 'TimeStep'))
       }
     
-    } else if (inherits(Val[[1]], 'numeric')) {
+    } else if (inherits(Val[[1]], 'numeric') | inherits(Val[[1]], 'integer')) {
       if (length(Val[[1]])==1) {
         Val <- List2Array(Val, 'Sim')[1,]
         Val <- array(Val, length(Val), dimnames=list(Sim=names(Val)))
@@ -654,7 +610,7 @@ ObsList2SimArray <- function(Obs, ObsList, fl, slot='Catch') {
     } else if (inherits(Val[[1]], 'list')) {
       
     } else {
-      stop("!")
+      stop("!!!")
     }
     slot(slot(Obs[[fl]], slot), sl) <- Val
   }

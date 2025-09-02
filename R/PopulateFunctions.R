@@ -297,8 +297,10 @@ UpdateSPFrom <- function(OM) {
   if (length(stocknames)==1)
     return(OM)
   for (st in 1:nStock(OM)) {
-    if (!is.null(OM@Stock[[st]]@SRR@SPFrom))
-      OM@Stock[[st]]@SRR@SPFrom <- stocknames[OM@Stock[[st]]@SRR@SPFrom]
+    if (!is.null(OM@Stock[[st]]@SRR@SPFrom)) {
+      if (is.numeric(OM@Stock[[st]]@SRR@SPFrom))
+        OM@Stock[[st]]@SRR@SPFrom <- stocknames[OM@Stock[[st]]@SRR@SPFrom]
+    }
   }
   OM
 }
