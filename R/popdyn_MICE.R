@@ -179,7 +179,7 @@ popdynMICE <- function(qsx, qfracx, np, nf, nyears, nareas, maxage, Nx, VFx, Fre
     Fdist[is.na(Fdist)] <- 0 # This is an NA catch for hermaphroditism
     
     FMx[Find] <- qsx[Find[, 1]] * qfracx[Find[, 1:2]] * Ecur[Find[, 1:2]] * Fdist[Find] *
-      Vcur[Find[, 1:3]] # / Asizex[Find[, c(1, 4)]]
+      Vcur[Find[, 1:3]] / Asizex[Find[, c(1, 4)]]
     FMx[FMx > maxF] <- maxF # apply maxF
     
     # FMx[1,1,,1] |> max()
