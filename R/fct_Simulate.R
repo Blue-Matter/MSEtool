@@ -152,7 +152,7 @@ Simulate_om <- function(OM=NULL,
   
  
   # ---- Check for Depletion Optimization ----
-  OptRatio <- CheckDepletionOpt(HistSimList) # TODO - warning message or re-sample 
+  OptRatio <- CheckDepletionOpt(HistSimList, HistTimeSteps) # TODO - warning message or re-sample 
 
   # ---- Condition Observation Object on Real Fishery Data ----
   ProjectionTimeSteps <- TimeSteps(OM, 'Projection')
