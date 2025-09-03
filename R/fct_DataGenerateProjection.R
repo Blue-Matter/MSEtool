@@ -14,11 +14,17 @@ GenerateProjectionData <- function(ProjSim, TimeStep, TimeStepsHist, TimeStepsPr
       next()
     
     ProjSim@Data[[i]]@TimeSteps <- TimeStepsAll[1:TSIndex]
-    ProjSim <- GenerateProjectionData_Catch(ProjSim, DataTimeStep, TimeStepsAll, i, stocks)
-    ProjSim <- GenerateProjectionData_Catch(ProjSim, DataTimeStep, TimeStepsAll, i, stocks, type='Discards')
+    ProjSim <- GenerateProjectionData_Catch(ProjSim, DataTimeStep, 
+                                            TimeStepsAll, i, stocks)
     
-    ProjSim <- GenerateProjectionData_Index(ProjSim, DataTimeStep, TimeStepsHist, TimeStepsAll, i, stocks)
-    ProjSim <- GenerateProjectionData_Index(ProjSim, DataTimeStep, TimeStepsHist, TimeStepsAll, i, stocks, 'Survey')
+    ProjSim <- GenerateProjectionData_Catch(ProjSim, DataTimeStep, 
+                                            TimeStepsAll, i, stocks, type='Discards')
+    
+    ProjSim <- GenerateProjectionData_Index(ProjSim, DataTimeStep, 
+                                            TimeStepsHist, TimeStepsAll, i, stocks)
+    
+    ProjSim <- GenerateProjectionData_Index(ProjSim, DataTimeStep, 
+                                            TimeStepsHist, TimeStepsAll, i, stocks, 'Survey')
     
     # TODO 
     # - CAL
@@ -57,10 +63,10 @@ GenerateProjectionData_Catch <- function(ProjSim, DataTimeStep, TimeStepsAll, i,
   
   TSIndex <- match(DataTimeStep, TimeStepsAll)
   
-  nFleet <- ncol(Value)
+  nFleet <- length(FleetNames)
   NewValue <- array(NA, dim=c(1, nFleet),
                     dimnames = list(TimeStep=DataTimeStep,
-                                    Fleet=DataCatch@Name))
+                                    Fleet=FleetNames))
   NewCV <- NewValue
   
   # loop over fleets 
@@ -83,7 +89,7 @@ GenerateProjectionData_Catch <- function(ProjSim, DataTimeStep, TimeStepsAll, i,
     }
     
     # CV 
-    if (nrow(slot(ProjSim@OM@Data[[i]],type)@CV)>=TSIndex) {
+    if (!is.null(ProjSim@OM@Data[[i]]) &&  nrow(slot(ProjSim@OM@Data[[i]],type)@CV)>=TSIndex) {
       NewCV[,fl] <- slot(ProjSim@OM@Data[[i]],type)@CV[TSIndex,fl]
     } else {
       NewCV[,fl] <- SubsetTimeStep(DataCatch@CV, DataTimeStep)[fl]
@@ -103,7 +109,7 @@ GenerateProjectionData_Index <- function(ProjSim, DataTimeStep, TimeStepsHist, T
   type <- match.arg(type)
   
   DataIndex <- slot(ProjSim@Data[[i]], type)
-  if (EmptyObject(Index))
+  if (EmptyObject(DataIndex))
     return(ProjSim)
   Value <- DataIndex@Value
   CV <- DataIndex@CV
@@ -142,11 +148,11 @@ GenerateProjectionData_Index <- function(ProjSim, DataTimeStep, TimeStepsHist, T
       next()
     
     # Index 
-    if (nrow(slot(ProjSim@OM@Data[[i]],type)@Value)>=TSIndex) {
+    if (!is.null(ProjSim@OM@Data[[i]]) && nrow(slot(ProjSim@OM@Data[[i]],type)@Value)>=TSIndex) {
       # check if real data exists
       NewValue[,fl] <- slot(ProjSim@OM@Data[[i]],type)@Value[TSIndex,fl]
     } else {
-      if (DataIndex@Timing[fl]!=0)
+      if (!is.na(DataIndex@Timing[fl]) && DataIndex@Timing[fl]!=0)
         cli::cli_alert_warning('`Index@Timing` not working yet. Calculating from beginning of time step')
       
       SelectivityAtAge <- DataIndex@Selectivity[fl]
@@ -201,7 +207,7 @@ GenerateProjectionData_Index <- function(ProjSim, DataTimeStep, TimeStepsHist, T
     }
     
     # CV 
-    if (nrow(slot(ProjSim@OM@Data[[i]],type)@CV)>=TSIndex) {
+    if (!is.null(ProjSim@OM@Data[[i]]) &&  nrow(slot(ProjSim@OM@Data[[i]],type)@CV)>=TSIndex) {
       NewCV[,fl] <- slot(ProjSim@OM@Data[[i]],type)@CV[TSIndex,fl]
     } else {
       previouscv <- DataIndex@CV[,fl]

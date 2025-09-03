@@ -6,6 +6,8 @@ CheckDepletionOpt <- function(HistSimList, HistTimeSteps) {
     OptRatio <- rep(0, length(Reference))
     
     for (st in seq_along(Reference)) {
+      if (!length(Final[[st]]))
+          next()
       if (Reference[[st]] == 'B0') {
         RefVal <- HistSim@Unfished@Equilibrium@Biomass |> 
           ArraySubsetTimeStep(tail(HistTimeSteps,1)) |>

@@ -22,6 +22,10 @@ GenerateHistoricalData <- function(HistSim, HistTimeSteps) {
     if (is.null(Data@TimeSteps)) {
       Data@TimeSteps <- HistTimeSteps
     }
+    if (is.null(Data@TimeStepsPerYear)) {
+      Data@TimeStepsPerYear <- HistSim@OM@TimeStepsPerYear
+    }
+    
     if (is.null(Data@TimeStepLH)) {
       Data@TimeStepLH <- Data@TimeSteps[length(Data@TimeSteps)]
     }
@@ -50,6 +54,7 @@ GenerateHistoricalData_Catch <- function(Data, HistSim, HistTimeSteps, i,
   nFleet <- length(FleetNames)
   
   CatchData <- new('catchdata')
+  CatchData@Name <- FleetNames
   CatchData@Type <- type
   CatchData@Value <- array(NA, dim=c(nTS, nFleet),
                            dimnames=list(TimeStep=HistTimeSteps,
@@ -73,7 +78,7 @@ GenerateHistoricalData_Catch <- function(Data, HistSim, HistTimeSteps, i,
       next()
     }
     
-    CatchData@Value <-  Catch[,fl] * ArraySubsetTimeStep(obs@Error, HistTimeSteps) * obs@Bias
+    CatchData@Value[,fl] <- Catch[,fl] * ArraySubsetTimeStep(obs@Error, HistTimeSteps) * obs@Bias
     
     NA_TS <- which(!HistTimeSteps %in% obs@TimeSteps)
     if (length(NA_TS)>0) {
@@ -112,6 +117,7 @@ GenerateHistoricalData_Index <- function(HistSim, HistTimeSteps, i, stocks,
   nFleet <- length(FleetNames)
   
   IndexData <- new('indicesdata')
+  IndexData@Name <- FleetNames
   IndexData@Value <- array(NA, dim=c(nTS, nFleet),
                            dimnames=list(TimeStep=HistTimeSteps,
                                          Fleet=FleetNames))
