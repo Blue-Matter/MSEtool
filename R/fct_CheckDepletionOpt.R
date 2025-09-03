@@ -1,4 +1,4 @@
-CheckDepletionOpt <- function(HistSimList) {
+CheckDepletionOpt <- function(HistSimList, HistTimeSteps) {
   OptRatio <- purrr::map(HistSimList, \(HistSim){
     Reference <- purrr::map(HistSim@OM@Stock, \(stock) stock@Depletion@Reference)
     Final <- purrr::map(HistSim@OM@Stock, \(stock) stock@Depletion@Final)
