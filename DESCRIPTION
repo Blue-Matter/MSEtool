@@ -214,6 +214,7 @@ Collate:
     'fct_CalcRefPoints.R'
     'fct_CalcSurvival.R'
     'fct_CheckCatchFrac.R'
+    'fct_CheckDepletionOpt.R'
     'fct_Convert.R'
     'fct_ConvertOM.R'
     'fct_ConvertOM2fleet.R'
