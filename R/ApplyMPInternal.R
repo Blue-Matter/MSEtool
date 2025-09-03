@@ -29,6 +29,7 @@ UpdateTAC <- function(ProjSim, MPAdvice, TSIndex) {
     # sum(ArrayMultiply(number, select))
   }) |> unlist()
   
+
   StockAllocation <- RelVuln/sum(RelVuln)
   FleetAllocation <- ProjSim@OM@Allocation
   for (st in 1:nStock) {
@@ -237,11 +238,13 @@ UpdateDiscardMortality <- function(ProjSim, MPAdvice, MPAdvicePrevious, TimeStep
 }
 
 UpdateSelectivity <- function(ProjSim, MPAdvice, MPAdvicePrevious, 
-                              TimeStepsAll, TSIndex,type='Selectivity') {
+                              TimeStepsAll, TSIndex,type=c('Selectivity', 'Retention')) {
+  type <- match.arg(type)
   
   if (is.null(MPAdvice))
     return(ProjSim)
   
+
   # if (!is.null(MPAdvicePrevious)) {
   #   if (IdenticalS4(slot(MPAdvice,type), slot(MPAdvicePrevious,type)))
   #     return(ProjSim)  
@@ -272,7 +275,9 @@ UpdateSelectivity <- function(ProjSim, MPAdvice, MPAdvicePrevious,
       if (type=="Selectivity") {
         Length@Classes <- ProjSim@OM@Fleet[[st]]@Selectivity@Classes[[fl]]
       } else  {
-        Length@Classes <- ProjSim@OM@Fleet[[st]]@Retention@Classes[[fl]]
+        Length@Classes <- ProjSim@OM@Fleet[[st]]@Retention@Classes[[fl]] # TODO Classes should be populated
+        if (is.null(Length@Classes))
+          Length@Classes <- ProjSim@OM@Fleet[[st]]@Selectivity@Classes[[fl]]
       }
       
       Length@MeanAtAge <- Length@MeanAtAge |> ArraySubsetTimeStep(TimeStep)

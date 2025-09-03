@@ -27,9 +27,11 @@ Simulate_om <- function(OM=NULL,
                         silent=FALSE,
                         nSim=NULL,
                         ...) {
-  OnExit()
+ 
   
   # ---- Initial Checks and Setup ----
+  OnExit()
+  
   CheckClass(OM)
   OM <- OM |> StartUp(nSim) 
   HistTimeSteps <- TimeSteps(OM, 'Historical')
@@ -152,8 +154,9 @@ Simulate_om <- function(OM=NULL,
   
  
   # ---- Check for Depletion Optimization ----
-  OptRatio <- CheckDepletionOpt(HistSimList) # TODO - warning message or re-sample 
-
+  OptDepletionRatio <- CheckDepletionOpt(HistSimList) # TODO - warning message or re-sample 
+  Hist@Log$OptDepletionRatio <- OptDepletionRatio
+  
   # ---- Condition Observation Object on Real Fishery Data ----
   ProjectionTimeSteps <- TimeSteps(OM, 'Projection')
   HistSimList <- purrr::map(HistSimList, \(HistSim)
@@ -170,18 +173,12 @@ Simulate_om <- function(OM=NULL,
                               format = "Generating Historical Data {cli::pb_bar} {cli::pb_percent}",
                               clear = TRUE))
 
-  # Data:
-  # - list of length `nSim` then
+  # Hist@Data:
+  # - list of length `nSim` (or length 1) then
   # - list of length `nComplex`
-  
-  # MPs: 
-  # - `MMP`
-  # - 'complex' 
-  
   
   # ---- Return `hist` Object ----
   Hist <- HistSimList2Hist(Hist, HistSimList)
-  
   Hist <- SetDigest(Hist)
   Hist
 }

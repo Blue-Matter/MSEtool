@@ -1,3 +1,11 @@
+CheckMPClass <- function(MPs) {
+  MPFunctions <- purrr::map(MPs, get)
+  names(MPFunctions) <- MPs
+  MPClass <- purrr::map(MPFunctions, class) |> unlist()
+  if (any(MPClass != 'mp')) 
+    cli::cli_abort("Currently only MPs of class `mp` are supported")
+  
+}
 
 #' @describeIn runMSE Run the Forward Projections
 #'
@@ -16,10 +24,11 @@ Project <- function(Hist=NULL, MPs=NA, parallel=FALSE,
   Project_hist(Hist, MPs, parallel, silent, nSim=NULL)
 }
 
-
 Project_hist <- function(Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, nSim=NULL) {
   
   OnExit()
+  
+  CheckMPClass(MPs)
   
   Hist <- ReduceNSim(Hist, nSim)
   
@@ -66,6 +75,7 @@ Project_hist <- function(Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, nSim=N
   }
   
   MSE <- Hist2MSE(Hist, MPs) 
+  
 
   # if(!MSEobj) {
   #   MSE <- Hist2MSE(Hist, MPs)  
@@ -125,9 +135,10 @@ Project_hist <- function(Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, nSim=N
     
     # attributes(MSE@MPs)$complete[mp] <- TRUE
     MSE <- UpdateMSEObject(MSE, ProjSimListMP, mp, TimeStepsHist, TimeStepsProj, MP)
-    MSE@Log
-    
+  
   }
+  
+  MSE@Log <- c(Hist@Log, MSE@Log)
   MSE
 }
 
@@ -213,37 +224,46 @@ UpdateMSEObject <- function(MSE, ProjSimListMP, mp, TimeStepsHist, TimeStepsProj
     ArraySubsetTimeStep(TimeSteps=TimeStepsProj) |>
     aperm(c("Sim", "Stock", "TimeStep"))
   
-  MSE@Removals[,,,,mp] <- purrr::map(ProjSimListMP, \(x) {
-    purrr::map(x@Removals, \(y) {
-      List2Array(y, "TimeStep") |>
+  
+  LandingsList <- purrr::map(ProjSimListMP, \(ProjSim) {
+    purrr::map(ProjSim@Landings, \(Landings) {
+      List2Array(Landings, "TimeStep") |>
         AddDimNames(c("Age", "Fleet", "Area", "TimeStep"),
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)),
                     TimeSteps=TimeStepsAll) |>
         ArraySubsetTimeStep(TimeSteps=TimeStepsProj) |>
-        apply(c("TimeStep", "Fleet"), sum)
-    }) 
-  } ) |> 
+        ArrayReduceDims(FALSE)
+    })
+  }) |> 
     ReverseList() |>
     purrr::map(List2Array,"Sim") |>
-    List2Array("Stock") |>
-    aperm(c("Sim", "Stock", "TimeStep", "Fleet"))
+    purrr::map(aperm, c('Sim', 'Age', 'TimeStep',  'Fleet', 'Area'))
   
-  MSE@Landings[,,,,mp] <- purrr::map(ProjSimListMP, \(x) {
-    purrr::map(x@Landings, \(y) {
-      List2Array(y, "TimeStep") |>
+  MSE@Landings <- purrr::map2(MSE@Landings, LandingsList, \(MSELanding, Landings) {
+    MSELanding[,,,,,mp] <- Landings
+    MSELanding
+  })
+  
+  DiscardsList <- purrr::map(ProjSimListMP, \(ProjSim) {
+    purrr::map(ProjSim@Discards, \(Discards) {
+      List2Array(Discards, "TimeStep") |>
         AddDimNames(c("Age", "Fleet", "Area", "TimeStep"),
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)),
                     TimeSteps=TimeStepsAll) |>
         ArraySubsetTimeStep(TimeSteps=TimeStepsProj) |>
-        apply(c("TimeStep", "Fleet"), sum)
-    }) 
-  } ) |> 
+        ArrayReduceDims(FALSE)
+    })
+  }) |> 
     ReverseList() |>
     purrr::map(List2Array,"Sim") |>
-    List2Array("Stock") |>
-    aperm(c("Sim", "Stock", "TimeStep", "Fleet"))
+    purrr::map(aperm, c('Sim', 'Age', 'TimeStep',  'Fleet', 'Area'))
   
+  MSE@Discards <- purrr::map2(MSE@Discards, DiscardsList, \(MSEDiscards, Discards) {
+    MSEDiscards[,,,,,mp] <- Discards
+    MSEDiscards
+  })
   
+
   MSE@Effort[,,,,mp] <- purrr::map(ProjSimListMP, \(x) 
                                    x@Effort |> 
                                      AddDimNames(c("Stock", "TimeStep", "Fleet"),
@@ -378,9 +398,12 @@ MSE2Hist <- function(MSE) {
 
 ProcessLogMSE <- function(MSE, ProjSimListMP, mp, MP) {
   
-  LogList <- purrr::map(ProjSimListMP, \(ProjSim) slot(ProjSim,'Log'))
-  purrr::map(LogList, length)
-
+  LogList <- purrr::map(ProjSimListMP, \(ProjSim) {
+    Log <- ProjSim@Log
+    Log$OptDepletionRatio <- NULL
+    Log
+    })
+  
   if (is.null(MSE@Log[["MP"]]))
     MSE@Log[["MP"]] <- list()
   
