@@ -460,80 +460,62 @@ ProcessLogMSE <- function(MSE, ProjSimListMP, mp, MP) {
 #   
 # }
 
-
-KeepRetention <- function(MSE, ProjSimListMP, mp) {
-  MPretention <- purrr::map(ProjSimListMP, \(ProjSim) {
+KeepSelectRetenDisc <- function(MSE, ProjSimListMP, mp, Slot='Retention') {
+  
+  ProjTimeStep <- TimeSteps(MSE@OM, 'Projection')
+  AtAge <- purrr::map(ProjSimListMP, \(ProjSim) {
     purrr::map(ProjSim@OM@Fleet, \(fleet) {
-      fleet@Retention@MeanAtAge
+      slot(fleet, Slot)@MeanAtAge |> ArraySubsetTimeStep(ProjTimeStep) 
     }) 
   }) |> 
     ReverseList() |>
     purrr::map(List2Array, 'Sim') |>
-    purrr::map(aperm, c('Sim', 'Age', 'TimeStep', 'Fleet'))
+    purrr::map(aperm, c('Sim', 'Age', 'TimeStep', 'Fleet')) |>
+    purrr::map(ArrayReduceDims) 
+    
+    
+  # AtLength <- purrr::map(ProjSimListMP, \(ProjSim) {
+  #   purrr::map(ProjSim@OM@Fleet, \(fleet) {
+  #     slot(fleet, Slot)@MeanAtLength
+  #   }) 
+  # }) |> 
+  #   ReverseList() |>
+  #   purrr::map(List2Array, 'Sim') |>
+  #   purrr::map(aperm, c('Sim', 'Class', 'TimeStep', 'Fleet'))
   
   stocks <- StockNames(MSE@OM)
+  
   for (st in seq_along(stocks)) {
-    if (!prod(MPretention[[st]] == MSE@OM@Fleet[[st]]@Retention@MeanAtAge)) {
-      if (is.null(MSE@Misc$Retention)) {
-        MSE@Misc$Retention <- list()
+    omvals <- slot(MSE@OM@Fleet[[st]],Slot)@MeanAtAge |> ArraySubsetTimeStep(ProjTimeStep) |>
+      ArrayReduceDims()
+    
+    if (!prod(AtAge[[st]] == omvals)) {
+      if (is.null(MSE@Misc[[Slot]])) {
+        MSE@Misc[[Slot]] <- list()
       }
       
       MPName <- names(MSE@MPs)[mp]
-      MSE@Misc$Retention[[MPName]]  <- list()
-      MSE@Misc$Retention[[MPName]][[stocks[st]]] <- MPretention[[st]]
-      
+      if (is.null(MSE@Misc[[Slot]][[MPName]])) {
+        MSE@Misc[[Slot]][[MPName]] <- list()
+      }
+      MSE@Misc[[Slot]][[MPName]][[stocks[st]]] <- AtAge[[st]]
     }
-    
   }
+  MSE@Misc[[Slot]][[MPName]] <- MSE@Misc[[Slot]][[MPName]][stocks]
   MSE
+  
+}
+
+KeepRetention <- function(MSE, ProjSimListMP, mp) {
+  KeepSelectRetenDisc(MSE, ProjSimListMP, mp)
 }
 
 KeepSelectivity <- function(MSE, ProjSimListMP, mp) {
-  MPselectivity <- purrr::map(ProjSimListMP, \(ProjSim) {
-    purrr::map(ProjSim@OM@Fleet, \(fleet) {
-      fleet@Selectivity@MeanAtAge
-    }) 
-  }) |> 
-    ReverseList() |>
-    purrr::map(List2Array, 'Sim') |>
-    purrr::map(aperm, c('Sim', 'Age', 'TimeStep', 'Fleet'))
-  
-  stocks <- StockNames(MSE@OM)
-  for (st in seq_along(stocks)) {
-    if (!prod(MPselectivity[[st]] == MSE@OM@Fleet[[st]]@Selectivity@MeanAtAge)) {
-      if (is.null(MSE@Misc$Selectivity)) {
-        MSE@Misc$Selectivity <- list()
-      }
-      MPName <- names(MSE@MPs)[mp]
-      MSE@Misc$Selectivity[[MPName]]  <- list()
-      MSE@Misc$Selectivity[[MPName]][[stocks[st]]] <- MPselectivity[[st]]
-    }
-  }
-  MSE
+  KeepSelectRetenDisc(MSE, ProjSimListMP, mp, 'Selectivity')
 }
 
 KeepDiscardMortality <- function(MSE, ProjSimListMP, mp) {
-  MPDiscardMortality <- purrr::map(ProjSimListMP, \(ProjSim) {
-    purrr::map(ProjSim@OM@Fleet, \(fleet) {
-      fleet@DiscardMortality@MeanAtAge
-    }) 
-  }) |> 
-    ReverseList() |>
-    purrr::map(List2Array, 'Sim') |>
-    purrr::map(aperm, c('Sim', 'Age', 'TimeStep', 'Fleet'))
-  
-  stocks <- StockNames(MSE@OM)
-  for (st in seq_along(stocks)) {
-    if (!prod(MPDiscardMortality[[st]] == MSE@OM@Fleet[[st]]@DiscardMortality@MeanAtAge)) {
-      if (is.null(MSE@Misc$DiscardMortality)) {
-        MSE@Misc$DiscardMortality <- list()
-      }
-      MPName <- names(MSE@MPs)[mp]
-      MSE@Misc$DiscardMortality[[MPName]]  <- list()
-      MSE@Misc$DiscardMortality[[MPName]][[stocks[st]]] <- MPDiscardMortality[[st]]
-    }
-  }
-  MSE
+  KeepSelectRetenDisc(MSE, ProjSimListMP, mp, 'DiscardMortality')
 }
 
 AddPPD <- function(MSE, ProjSimListMP, mp) {

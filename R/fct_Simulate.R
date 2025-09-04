@@ -155,15 +155,20 @@ Simulate_om <- function(OM=NULL,
  
   # ---- Check for Depletion Optimization ----
 
-  OptRatio <- CheckDepletionOpt(HistSimList, HistTimeSteps) # TODO - warning message or re-sample 
+  OptDepletionRatio <- CheckDepletionOpt(HistSimList, HistTimeSteps) # TODO - warning message or re-sample 
   Hist@Log$OptDepletionRatio <- OptDepletionRatio
 
   # ---- Condition Observation Object on Real Fishery Data ----
+  # TODO - check for identical sims - but need to generate independent obs error by sim
   ProjectionTimeSteps <- TimeSteps(OM, 'Projection')
   HistSimList <- purrr::map(HistSimList, \(HistSim)
-                            ConditionObs(HistSim, HistTimeSteps, ProjectionTimeSteps))
+                            ConditionObs(HistSim, HistTimeSteps, ProjectionTimeSteps),
+                            .progress = list(
+                              type = "iterator",
+                              format = "Conditioning Observation Error on Provided Fishery Data {cli::pb_bar} {cli::pb_percent}",
+                              clear = TRUE))
 
-  # TODO - check for identical sims
+
   
   # # # ---- Historical Fishery Data ----
   # TODO - check for identical sims

@@ -49,7 +49,7 @@ ApplyMPAdvice <- function(ProjSim, MP, TimeStep, TimeStepsHist, TimeStepsProj, M
       for (i in seq_along(MPData)) { # loop over stock complexes
         MPAdvice <- try(MPFunction(Data=MPData[[i]]), silent=TRUE)
         if (!inherits(MPAdvice, 'advice'))
-          cli::cli_abort("MP {.val {MP}} failed in TimeStep {.val {TimeStep}}")
+          cli::cli_abort(paste(MPAdvice, TimeStep))
         
         # TODO - clean this up
         ProjSim@Data[[i]]@Misc <- MPAdvice@Misc

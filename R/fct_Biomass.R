@@ -558,276 +558,211 @@ SPRMSY <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL) {
   GetMSYRefValue(MSE, Metric='SPRMSY', Ref, TimeSteps)
 }
 
-# ---- Removals ----
-
-
-
-
-
-#' @describeIn Biomass Dead Removals (Landings + Discards)
-#' @export
-Removals <- function(MSE, ByFleet=FALSE, ByAge=FALSE) {
-  CheckClass(MSE, c('mse', 'hist'), 'MSE')
-  
-  if (inherits(MSE, 'hist')) 
-    return(RemovalsHist(MSE, ByFleet, ByAge))
-  
-  HistRemovals <- RemovalsHist(MSE, ByFleet, ByAge)
-  HistRemovals$MP <- 'Historical'
-  
-  ProjRemovals <- MSE@Landings + MSE@Discards
-  
-  if (!ByFleet) {
-    ProjRemovals <- ProjRemovals |>
-      apply(c('Sim', 'Stock', 'TimeStep', 'MP'), sum)
-  } 
-  
-  ProjRemovals <- array2DF(ProjRemovals) |> 
-    dplyr::mutate(Period='Projection', Variable='Removals') |>
-    ConvertDF()
- 
-  units <- lapply(MSE@OM@Stock, slot, 'Weight') |> 
-    lapply(Units) |> 
-    unlist() 
-  
-  ProjRemovals <- ProjRemovals |> 
-    dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock') 
-    
-  dplyr::bind_rows(HistRemovals, ProjRemovals) |>
-    dplyr::arrange(Sim, TimeStep, Period) |>
-    ConvertDF()
-}
-
-RemovalsHist <- function(Hist, ByFleet=FALSE, ByAge=FALSE) {
-  CheckClass(Hist, c('hist', 'mse'))
-  HistTimeStep <- TimeSteps(Hist@OM, "Historical")
-  
-  if (inherits(Hist,'mse')) {
-    Value <- purrr::map2(Hist@Hist@Landings, Hist@Hist@Discards, \(landings, discards)
-                         landings+discards)
-  
-  } else {
-    Value <- purrr::map2(Hist@Landings, Hist@Discards, \(landings, discards)
-                         landings+discards)
-  }
-  
-  Removals <- purrr::map(Value, \(stock) {
-    if (ByFleet & ByAge) {
-      apply(stock, c('Sim',  'Age', 'TimeStep', 'Fleet'), sum) 
-    } else if (ByFleet & !ByAge) {
-      apply(stock, c('Sim', 'TimeStep', 'Fleet'), sum) 
-    } else if (!ByFleet & ByAge) {
-      apply(stock, c('Sim', 'Age', 'TimeStep'), sum) 
-    } else if (!ByFleet & !ByAge) {
-      apply(stock, c('Sim', 'TimeStep'), sum) 
-    }
-  }) |> List2Array('Stock') |>
-    array2DF() |>
-    ConvertDF() |>
-    dplyr::mutate(Variable="Removals", Period='Historical')
-  
-  
-  units <- lapply(Hist@OM@Stock, slot, 'Weight') |> 
-    lapply(Units) |> 
-    unlist()
-  
-  Removals |>
-    dplyr::filter(TimeStep%in%HistTimeStep) |> 
-    dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock') 
-  
-}
-
 
 # ---- Landings ----
-#' @describeIn Biomass Landings
-#' @export
-Landings <- function(MSE, ByFleet=FALSE, ByAge=FALSE) {
-  CheckClass(MSE, c('mse', 'hist'), 'MSE')
-  
-  if (inherits(MSE, 'hist')) 
-    return(LandingsHist(MSE, ByFleet, ByAge))
-  
-  HistLandings <- LandingsHist(MSE, ByFleet, ByAge)
-  HistLandings$MP <- 'Historical'
-  
-  ProjLandings <- MSE@Landings
-  
-  if (!ByFleet) {
-    ProjLandings <- ProjLandings |>
-      apply(c('Sim', 'Stock', 'TimeStep', 'MP'), sum)
-  } 
-  
-  ProjLandings <- array2DF(ProjLandings) |> 
-    dplyr::mutate(Period='Projection', Variable='Landings') |>
-    ConvertDF()
-  
-  units <- lapply(MSE@OM@Stock, slot, 'Weight') |> 
-    lapply(Units) |> 
-    unlist() 
-  
-  ProjLandings <- ProjLandings |> 
-    dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock') 
-  
-  dplyr::bind_rows(HistLandings, ProjLandings) |>
-    dplyr::arrange(Sim, TimeStep, Period) |>
-    ConvertDF()
-}
 
-LandingsHist <- function(Hist, ByFleet=FALSE, ByAge=FALSE) {
+CatchHist <- function(Hist, ByAge=FALSE, ByFleet=FALSE, ByArea=FALSE, 
+                      type=c('Landings', 'Discards'),
+                      disctype=c('dead', 'alive', 'all')) {
+  type <- match.arg(type)
+  disctype <- match.arg(disctype)
+  
   CheckClass(Hist, c('hist', 'mse'))
+  
   HistTimeStep <- TimeSteps(Hist@OM, "Historical")
   
   if (inherits(Hist,'mse')) {
-    Value <- Hist@Hist@Landings
+    Value <- slot(Hist@Hist, type)
   } else {
-    Value <- Hist@Landings
+    Value <- slot(Hist,type)
   }
   
+  varname <- type
+  if (type=='Discards') {
+    varname <- paste0(type, ' (',disctype,')')
+  }
   
-  Landings <- purrr::map(Value, \(stock) {
-    if (ByFleet & ByAge) {
-      apply(stock, c('Sim',  'Age', 'TimeStep', 'Fleet'), sum) 
-    } else if (ByFleet & !ByAge) {
-      apply(stock, c('Sim', 'TimeStep', 'Fleet'), sum) 
-    } else if (!ByFleet & ByAge) {
-      apply(stock, c('Sim', 'Age', 'TimeStep'), sum) 
-    } else if (!ByFleet & !ByAge) {
-      apply(stock, c('Sim', 'TimeStep'), sum) 
+  if (disctype=='alive' | disctype=='all') {
+    DiscardMortality <- purrr::map(Hist@OM@Fleet, \(fleet) fleet@DiscardMortality@MeanAtAge |>
+                                     ArraySubsetTimeStep(HistTimeStep) |>
+                                     AddDimension('Area')
+    )
+    DiscardsAll <- purrr::map2(Value, DiscardMortality, ArrayDivide)
+    DiscardsAlive <- purrr::map2(DiscardsAll, Value, ArraySubtract)
+    
+    if (disctype=='alive') {
+      Value <- DiscardsAlive
+    } else {
+      Value <- DiscardsAll
     }
-  }) |> List2Array('Stock') |>
+  }
+  
+  Value <- purrr::map(Value, \(stock) {
+    if (!ByFleet & ByAge & ByArea) {
+      stock <- apply(stock, c('Sim',  'Age', 'TimeStep', 'Area'), sum) 
+    } 
+    if (ByFleet & !ByAge & ByArea) {
+      stock <- apply(stock, c('Sim',  'TimeStep', 'Fleet', 'Area'), sum) 
+    }
+    if (!ByFleet & !ByAge & ByArea) {
+      stock <- apply(stock, c('Sim',  'TimeStep', 'Area'), sum)
+    }
+    if (ByFleet & ByAge & !ByArea) {
+      stock <- apply(stock, c('Sim', 'Age', 'TimeStep', 'Fleet'), sum)
+    }
+    if (!ByFleet & ByAge & !ByArea) {
+      stock <- apply(stock, c('Sim', 'Age', 'TimeStep'), sum)
+    }
+    if (ByFleet & !ByAge & !ByArea) {
+      stock <- apply(stock, c('Sim', 'TimeStep', 'Fleet'), sum)
+    }
+    if (!ByFleet & !ByAge & !ByArea) {
+      stock <- apply(stock, c('Sim', 'TimeStep'), sum)
+    }
+    stock
+  }) |> List2Array('Stock') 
+  
+  dnames <- c('Stock', Value |> dimnames() |> names())
+  order <- c('Sim', 'Stock', 'Age', 'TimeStep', 'Fleet', 'Area')
+  order <- order[order %in% dnames]
+  
+  Value <- Value |>
+    aperm(order) |>
     array2DF() |>
     ConvertDF() |>
-    dplyr::mutate(Variable="Landings", Period='Historical')
-  
+    dplyr::mutate(Variable=varname, Period='Historical')
   
   units <- lapply(Hist@OM@Stock, slot, 'Weight') |> 
     lapply(Units) |> 
     unlist()
   
-  Landings |>
+  Value |>
     dplyr::filter(TimeStep%in%HistTimeStep) |> 
     dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock') 
   
+}
+
+CatchValues <- function(MSE, ByAge=FALSE, ByFleet=FALSE, ByArea=FALSE, type=c('Landings', 'Discards'),
+                        disctype=c('dead', 'alive', 'all')) {
+  
+  type <- match.arg(type)
+  disctype <- match.arg(disctype)
+  
+  CheckClass(MSE, c('mse', 'hist'), 'MSE')
+  
+  HistValues <- CatchHist(MSE, ByAge, ByFleet, ByArea,type, disctype)
+  
+  if (inherits(MSE, 'hist')) 
+    return(HistValues)
+  
+  ProjTimeStep <- TimeSteps(MSE@OM, "Projection")
+  HistValues$MP <- 'Historical'
+  
+  Value <- slot(MSE,type)
+  
+  varname <- type
+  if (type=='Discards') {
+    varname <- paste0(type, ' (', disctype, ')')
+  }
+  
+  if (disctype=='alive' | disctype=='all') {
+    DiscardMortality <- purrr::map(Hist@OM@Fleet, \(fleet) fleet@DiscardMortality@MeanAtAge |>
+                                     ArraySubsetTimeStep(HistTimeStep) |>
+                                     AddDimension('Area') |>
+                                     AddDimension('MP') |>
+                                     ArraySubsetTimeStep(ProjTimeStep)
+    )
+    DiscardsAll <- purrr::map2(Value, DiscardMortality, ArrayDivide)
+    DiscardsAlive <- purrr::map2(DiscardsAll, Value, ArraySubtract)
+    
+    if (disctype=='alive') {
+      Value <- DiscardsAlive
+    } else {
+      Value <- DiscardsAll
+    }
+  }
+  
+  Value <- purrr::map(Value, \(stock) {
+    if (!ByFleet & ByAge & ByArea) {
+      stock <- apply(stock, c('Sim',  'Age', 'TimeStep', 'Area', 'MP'), sum) 
+    } 
+    if (ByFleet & !ByAge & ByArea) {
+      stock <- apply(stock, c('Sim',  'TimeStep', 'Fleet', 'Area', 'MP'), sum) 
+    }
+    if (!ByFleet & !ByAge & ByArea) {
+      stock <- apply(stock, c('Sim',  'TimeStep', 'Area', 'MP'), sum)
+    }
+    if (ByFleet & ByAge & !ByArea) {
+      stock <- apply(stock, c('Sim', 'Age', 'TimeStep', 'Fleet', 'MP'), sum)
+    }
+    if (!ByFleet & ByAge & !ByArea) {
+      stock <- apply(stock, c('Sim', 'Age', 'TimeStep', 'MP'), sum)
+    }
+    if (ByFleet & !ByAge & !ByArea) {
+      stock <- apply(stock, c('Sim', 'TimeStep', 'Fleet', 'MP'), sum)
+    }
+    if (!ByFleet & !ByAge & !ByArea) {
+      stock <- apply(stock, c('Sim', 'TimeStep', 'MP'), sum)
+    }
+    stock
+  }) |> 
+    List2Array('Stock') 
+  
+  dnames <- c('Stock', Value |> dimnames() |> names())
+  order <- c('Sim', 'Stock', 'Age', 'TimeStep', 'Fleet', 'Area', 'MP')
+  order <- order[order %in% dnames]
+  
+  Value <- Value |>
+    aperm(order) |>
+    array2DF() |>
+    ConvertDF() |>
+    dplyr::mutate(Variable=type, Period='Projection')
+  
+  units <- lapply(MSE@OM@Stock, slot, 'Weight') |> 
+    lapply(Units) |> 
+    unlist() 
+  
+  Value <- Value |> 
+    dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock')
+  
+  dplyr::bind_rows(HistValues, Value) |>  ConvertDF() 
+  
+}
+
+#' @describeIn Biomass Landings
+#' @export
+Landings <- function(MSE, ByAge=FALSE, ByFleet=FALSE, ByArea=FALSE) {
+  CatchValues(MSE, ByAge, ByFleet, ByArea, 'Landings')
 }
 
 # ---- Discards ----
 
 #' @describeIn Biomass Discards
 #' @export
-Discards <- function(MSE, ByFleet=FALSE, ByAge=FALSE, type=c('Dead', 'Alive', 'All')) {
-  type <- match.arg(type)
-  
+Discards <- function(MSE, ByAge=FALSE, ByFleet=FALSE, ByArea=FALSE, type=c('dead', 'alive', 'all')) {
+  CatchValues(MSE, ByAge, ByFleet, ByArea, 'Discards', disctype=type)
+}
+
+# ---- Removals ----
+
+#' @describeIn Biomass Dead Removals (Landings + Dead Discards)
+#' @export
+Removals <- function(MSE,  ByAge=FALSE, ByFleet=FALSE, ByArea=FALSE) {
   CheckClass(MSE, c('mse', 'hist'), 'MSE')
   
-  if (inherits(MSE, 'hist')) 
-    return(DiscardsHist(MSE, ByFleet, ByAge, type))
+  Removals <- Landings(MSE, ByAge, ByFleet, ByArea)
+  Discards <- Discards(MSE, ByAge, ByFleet, ByArea)
   
-  HistDiscards <- DiscardsHist(MSE, ByFleet, ByAge, type)
-  HistDiscards$MP <- 'Historical'
+  if (!all(dim(Removals) == dim(Discards)))
+    cli::cli_abort("Landings and Discards data.frames do not have the same dimensions", .internal=TRUE)
   
-  
-  ProjTimeStep <- TimeSteps(MSE@OM, "Projection")
-  
-  ProjDiscards <- MSE@Discards
-  Value <-  purrr::map(ProjDiscards, \(stock) 
-                       apply(stock, c('Sim',  'Age', 'TimeStep', 'Fleet'), sum)) 
-  
-  
-  Var <- "Discards (dead)"
-  if (type=='Alive' | type=='All') {
-    DiscardMortality <- purrr::map(MSE@OM@Fleet, \(fleet) fleet@DiscardMortality@MeanAtAge |>
-                                     ArraySubsetTimeStep(ProjTimeStep)
-    )
-    
-    DiscardsAll <- purrr::map2(ProjDiscards, DiscardMortality, ArrayDivide)
-    DiscardsAlive <- purrr::map2(DiscardsAll, Value, ArraySubtract)
-    
-    if (type=='Alive') {
-      Value <- DiscardsAlive
-      Var <- "Discards (alive)"
-    } else {
-      Value <- DiscardsAll
-      Var <- "Discards (all)"
-    }
-  }
-  
-  
-  if (!ByFleet) {
-    ProjDiscards <- ProjDiscards |>
-      apply(c('Sim', 'Stock', 'TimeStep', 'MP'), sum)
-  } 
-  
-  ProjDiscards <- array2DF(ProjDiscards) |> 
-    dplyr::mutate(Period='Projection', Variable='Discards') |>
-    ConvertDF()
-  
-  units <- lapply(MSE@OM@Stock, slot, 'Weight') |> 
-    lapply(Units) |> 
-    unlist() 
-  
-  ProjDiscards <- ProjDiscards |> 
-    dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock') 
-  
-  dplyr::bind_rows(HistDiscards, ProjDiscards) |>
-    dplyr::arrange(Sim, TimeStep, Period) |>
-    ConvertDF()
+  Removals$Value <- Removals$Value + Discards$Value
+  Removals$Variable <- 'Removals'
+  Removals
 }
 
-DiscardsHist <- function(Hist, ByFleet=FALSE, ByAge=FALSE, type=c('Dead', 'Alive', 'All')) {
-  type <- match.arg(type)
-  CheckClass(Hist, c('hist', 'mse'))
-  HistTimeStep <- TimeSteps(Hist@OM, "Historical")
-  
-  if (inherits(Hist,'mse')) {
-    Value <- Hist@Hist@Discards # dead discards
-  } else {
-    Value <- Hist@Discards # dead discards
-  }
 
-  Value <-  purrr::map(Value, \(stock) 
-                       apply(stock, c('Sim',  'Age', 'TimeStep', 'Fleet'), sum)) 
-  
-  Var <- "Discards (dead)"
-  if (type=='Alive' | type=='All') {
-    DiscardMortality <- purrr::map(Hist@OM@Fleet, \(fleet) fleet@DiscardMortality@MeanAtAge |>
-                                     ArraySubsetTimeStep(HistTimeStep)
-    )
-    
-    DiscardsAll <- purrr::map2(Value, DiscardMortality, ArrayDivide)
-    DiscardsAlive <- purrr::map2(DiscardsAll, Value, ArraySubtract)
-    
-    if (type=='Alive') {
-      Value <- DiscardsAlive
-      Var <- "Discards (alive)"
-    } else {
-      Value <- DiscardsAll
-      Var <- "Discards (all)"
-    }
-  }
-  
-  Discards <- purrr::map(Value, \(stock) {
-   if (ByFleet & !ByAge) {
-      out <- apply(stock, c('Sim', 'TimeStep', 'Fleet'), sum) 
-    } else if (!ByFleet & ByAge) {
-      out <- apply(stock, c('Sim', 'Age', 'TimeStep'), sum) 
-    } else if (!ByFleet & !ByAge) {
-      out <- apply(stock, c('Sim', 'TimeStep'), sum) 
-    }
-    stock
-  }) |> List2Array('Stock') |>
-    array2DF() |>
-    ConvertDF() |>
-    dplyr::mutate(Variable=Var, Period='Historical')
-  
-  units <- lapply(Hist@OM@Stock, slot, 'Weight') |> 
-    lapply(Units) |> 
-    unlist()
-  
-  Discards |>
-    dplyr::filter(TimeStep%in%HistTimeStep) |> 
-    dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock') 
-  
-}
+
 
 
 # ---- MSY ----

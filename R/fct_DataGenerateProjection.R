@@ -184,7 +184,7 @@ GenerateProjectionData_Index <- function(ProjSim, DataTimeStep, TimeStepsHist, T
       SimNumberSelectedList <- purrr::map2(SimulatedNumberList, SelectivityAtAgeList, ArrayMultiply)
       
       if (DataIndex@Units[fl] == 'Biomass') {
-        WeightAtAgeList <- purrr::map(HistSim@OM@Stock[stocks], \(stock) stock@Weight@MeanAtAge |>
+        WeightAtAgeList <- purrr::map(ProjSim@OM@Stock[stocks], \(stock) stock@Weight@MeanAtAge |>
                                         ArraySubsetTimeStep(DataTimeStep)) 
         
         SimulatedIndex <- purrr::map2(SimNumberSelectedList, WeightAtAgeList, ArrayMultiply) |>

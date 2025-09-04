@@ -19,9 +19,17 @@ GetSchedule <- function(OM, Variable='Length', Slot='MeanAtAge', df=TRUE) {
   
   if (inherits(OM, 'om')) {
     Array <- GetScheduleOM(OM, Variable, Slot, isStock)
-  } else {
+  } else  {
+    # TODO - report MP specific values
+    # if (is.null(OM@Misc[[Variable]])) {
+    #   Array <- GetScheduleHist(OM, Variable, Slot, isStock)
+    # } else {
+    #   Array <- GetScheduleMSE(OM, Variable, Slot, isStock)
+    # }
     Array <- GetScheduleHist(OM, Variable, Slot, isStock)
-  }
+    
+  } 
+  
   if (!df)
     return(Array)
   
@@ -39,46 +47,80 @@ GetSchedule <- function(OM, Variable='Length', Slot='MeanAtAge', df=TRUE) {
   
 }
 
-GetAtLength <- function(OM, Variable, df=TRUE) {
-  GetSchedule(OM, Variable, Slot='MeanAtLength', df=TRUE)
-}
-
-GetAtAge <- function(OM, slotName, df=TRUE) {
-  GetSchedule(OM, Variable, Slot='MeanAtAge', df=TRUE)
-}
-
-GetScheduleOM <- function(OM, slotName, Slot, isStock) {
+GetScheduleOM <- function(OM, Variable, Slot, isStock) {
   CheckClass(OM, c('om', 'hist', 'mse'))
   OM <- PopulateOM(OM, silent=TRUE)
   if (isStock)
     return(
       purrr::map(OM@Stock, \(Stock)
-                 Stock |> slot(slotName) |> slot(Slot) |>
+                 Stock |> slot(Variable) |> slot(Slot) |>
                    ArrayReduceDims()) |>
         List2Array("Stock")
     )
   purrr::map(OM@Fleet, \(Stock) {
-    purrr::map(Stock, \(Fleet) Fleet |> slot(slotName) |> slot(Slot) |>
+    purrr::map(Stock, \(Fleet) Fleet |> slot(Variable) |> slot(Slot) |>
                  ArrayReduceDims()) |>
       List2Array("Fleet")
   }) |> List2Array("Stock")
 }
 
-GetScheduleHist <- function(Hist, slotName, Slot,isStock) {
-  CheckClass(Hist, c('hist', 'mse'))
+GetScheduleHist <- function(Hist, Variable, Slot, isStock) {
+  CheckClass(Hist, 'mse')
   OM <- Hist@OM
   if (isStock)
     return(
       purrr::map(OM@Stock, \(Stock)
-                 Stock |> slot(slotName) |> slot(Slot) |>
+                 Stock |> slot(Variable) |> slot(Slot) |>
                    ArrayReduceDims())|>
         List2Array("Stock")
     )
   
   purrr::map(OM@Fleet, \(Stock)
-             Stock |> slot(slotName) |> slot(Slot) |>
+             Stock |> slot(Variable) |> slot(Slot) |>
                ArrayReduceDims())|>
     List2Array("Stock")
+}
+
+GetScheduleMSE <- function(MSE, Variable, Slot,isStock) {
+  # CheckClass(MSE, c('hist', 'mse'))
+  # OM <- MSE@OM
+  # if (isStock)
+  #   return(
+  #     purrr::map(OM@Stock, \(Stock)
+  #                Stock |> slot(Variable) |> slot(Slot) |>
+  #                  ArrayReduceDims())|>
+  #       List2Array("Stock")
+  #   )
+  # 
+  # array <- purrr::map(OM@Fleet, \(Stock)
+  #            Stock |> slot(Variable) |> slot(Slot) |>
+  #              ArrayReduceDims())|>
+  #   List2Array("Stock")
+  # 
+  # MPspecific <- MSE@Misc[[Variable]]
+  # 
+  # if (is.null(MPspecific))
+  #   return(array)
+  # 
+  # MPArray <- purrr::map(MPspecific, \(mp) {
+  #   purrr::map(mp, \(stock) ArrayReduceDims(stock)) |>
+  #     List2Array("Stock")
+  # }) |>
+  #   List2Array("MP")
+         
+ 
+  
+}
+
+
+
+
+GetAtLength <- function(OM, Variable, df=TRUE) {
+  GetSchedule(OM, Variable, Slot='MeanAtLength', df=TRUE)
+}
+
+GetAtAge <- function(OM, Variable, df=TRUE) {
+  GetSchedule(OM, Variable, Slot='MeanAtAge', df=TRUE)
 }
 
 #' @rdname Get

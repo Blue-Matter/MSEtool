@@ -3,7 +3,7 @@ CheckDepletionOpt <- function(HistSimList, HistTimeSteps) {
     Reference <- purrr::map(HistSim@OM@Stock, \(stock) stock@Depletion@Reference)
     Final <- purrr::map(HistSim@OM@Stock, \(stock) stock@Depletion@Final)
     
-    OptRatio <- rep(0, length(Reference))
+    OptRatio <- rep(NA, length(Reference))
     
     for (st in seq_along(Reference)) {
       if (!length(Final[[st]]))
@@ -23,7 +23,7 @@ CheckDepletionOpt <- function(HistSimList, HistTimeSteps) {
         RefVal <- RefVal[[st]]
         CurrVal <- HistSim@SBiomass[st,] |> tail(1)
       }
-      OptRatio[st] <- abs((CurrVal/RefVal)/Final[[st]] - 1)
+      OptRatio[st] <- (CurrVal/RefVal)/Final[[st]] 
     }
     OptRatio
   }) |> unlist() |> matrix(nrow=nStock(HistSimList$`1`@OM), ncol=length(HistSimList))
