@@ -14,17 +14,17 @@ CheckMPClass <- function(MPs) {
 #' @export
 #'
 Project <- function(Hist=NULL, MPs=NA, parallel=FALSE,
-                    silent=FALSE, extended=FALSE, checkMPs=FALSE) {
+                    silent=FALSE, extended=FALSE, checkMPs=FALSE,nSim=NULL, Reduce=TRUE) {
   
   if (inherits(Hist, 'Hist'))
     return(
       Project_Hist(Hist, MPs, parallel, silent, extended, checkMPs)
     )
   
-  Project_hist(Hist, MPs, parallel, silent, nSim=NULL)
+  Project_hist(Hist, MPs, parallel, silent, nSim)
 }
 
-Project_hist <- function(Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, nSim=NULL) {
+Project_hist <- function(Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, nSim=NULL, Reduce=TRUE) {
   
   OnExit()
   
@@ -48,9 +48,14 @@ Project_hist <- function(Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, nSim=N
   }
   
   Proj <- ExtendHist(Hist)
-
+  
+  
+  
   # List of `Hist` objects, each with one simulation
   ProjSimList <- Hist2HistSimList(Proj)
+  
+  ProjSimList$`40`@OM@Stock$Female@Length@MeanAtAge |> dimnames()
+  
   
   TimeStepsHist <- TimeSteps(ProjSimList[[1]]@OM, "Historical")
   TimeStepsProj <- TimeSteps(ProjSimList[[1]]@OM, "Projection")
@@ -61,6 +66,29 @@ Project_hist <- function(Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, nSim=N
   # Populate Number-at-Age at Beginning of Projection TimeStep
   ProjSimList <- purrr::map(ProjSimList, \(ProjSim) SimulateDynamics_(ProjSim,  tail(TimeStepsHist,1)))
   
+  
+  
+  Hist@OM@Stock$Female@Weight@MeanAtAge |> dimnames()
+  Hist@OM@Stock$Male@Weight@MeanAtAge |> dimnames()
+  
+  Proj@OM@Stock$Female@Weight@MeanAtAge |> dimnames()
+  Proj@OM@Stock$Male@Weight@MeanAtAge |> dimnames()
+  
+  ProjSim = ProjSimList[[1]]
+  
+  ProjSim@Number$Male |> dimnames()
+  
+  ProjSim@OM@Stock$Female@Weight@MeanAtAge |> dimnames()
+  ProjSim@OM@Stock$Male@Weight@MeanAtAge |> dimnames()
+  
+  
+  ProjSim@OM@Fleet$Female@Retention@MeanAtAge |> dimnames()
+  
+  ProjSim@Landings$Female$`1950` |> dimnames()
+  
+  r = SimulateDynamics_(ProjSim,  tail(TimeStepsHist,1), debug=T)
+  
+                    
   # Recruitment for first projection timestep 
   ProjSimList <- purrr::map(ProjSimList, \(ProjSim) SimulateDynamics_(ProjSim, head(TimeStepsProj,1)))
   
@@ -139,7 +167,9 @@ Project_hist <- function(Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, nSim=N
   }
   
   MSE@Log <- c(Hist@Log, MSE@Log)
-  MSE
+  if (Reduce)
+    MSE <-ArrayReduceDims(MSE) 
+  MSE 
 }
 
 CheckMSERun <- function(ProjSimListMP, ProjSimList, MP, StartTime, EndTime) {
@@ -232,7 +262,7 @@ UpdateMSEObject <- function(MSE, ProjSimListMP, mp, TimeStepsHist, TimeStepsProj
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)),
                     TimeSteps=TimeStepsAll) |>
         ArraySubsetTimeStep(TimeSteps=TimeStepsProj) |>
-        ArrayReduceDims(FALSE)
+        ArrayReduceDims(IncTimeStep=FALSE)
     })
   }) |> 
     ReverseList() |>
@@ -251,7 +281,7 @@ UpdateMSEObject <- function(MSE, ProjSimListMP, mp, TimeStepsHist, TimeStepsProj
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)),
                     TimeSteps=TimeStepsAll) |>
         ArraySubsetTimeStep(TimeSteps=TimeStepsProj) |>
-        ArrayReduceDims(FALSE)
+        ArrayReduceDims(IncTimeStep=FALSE)
     })
   }) |> 
     ReverseList() |>
@@ -346,6 +376,27 @@ UpdateMSEObject <- function(MSE, ProjSimListMP, mp, TimeStepsHist, TimeStepsProj
 ExtendHist <- function(Hist, TimeSteps=NULL) {
   if (is.null(TimeSteps))
     TimeSteps <- TimeSteps(Hist@OM)
+  
+  nSim <- nSim(Hist)
+  nStock <- nStock(Hist@OM)
+  
+  # OM
+  for (st in 1:nStock) {
+    nAge <- nAge(Hist@OM,st)
+    Hist@OM@Stock[[st]] <- ArrayExpand(Hist@OM@Stock[[st]], nSim, nAge, TimeSteps)
+    Hist@OM@Fleet[[st]] <- ArrayExpand(Hist@OM@Fleet[[st]], nSim, nAge, TimeSteps)
+    if (length(Hist@OM@Obs)>=st)
+      Hist@OM@Obs[[st]] <- ArrayExpand(Hist@OM@Obs[[st]], nSim, nAge, TimeSteps)
+    if (length(Hist@OM@Imp)>=st)
+    Hist@OM@Imp[[st]] <- ArrayExpand(Hist@OM@Imp[[st]], nSim, nAge, TimeSteps)
+  }
+
+  # Unfished 
+  
+  
+  # RefPoints 
+  
+
   
   slots <- slotNames('timeseries')
   slots <- slots[!slots=='Misc']

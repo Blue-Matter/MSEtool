@@ -26,7 +26,7 @@ UniqueTimeSteps <- function(array) {
   dd <- dim(array)    
   if (dd[TSInd]==1)
     return(1)
-  
+
   meanTS <- apply(array, TSInd, mean)
   match(unique(meanTS), meanTS)
 }

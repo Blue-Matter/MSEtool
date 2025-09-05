@@ -364,7 +364,7 @@ SS2SRR <- function(st, RepList, mainyrs, AgeClasses, pYear, nSim) {
                            dimnames = list(TimeStep=mainyrs,
                                            Sim=1:ncol(RecDevs))) |>
     aperm(c('Sim', 'TimeStep')) |>
-    ArrayReduceDims(includeTimeStep=FALSE)
+    ArrayReduceDims(IncTimeStep=FALSE)
   
   recdevs <- SRR@RecDevHist
   

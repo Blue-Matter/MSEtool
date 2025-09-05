@@ -26,6 +26,7 @@ Simulate_om <- function(OM=NULL,
                         parallel=FALSE,
                         silent=FALSE,
                         nSim=NULL,
+                        Reduce=TRUE,
                         ...) {
  
   
@@ -154,7 +155,6 @@ Simulate_om <- function(OM=NULL,
   
  
   # ---- Check for Depletion Optimization ----
-
   OptDepletionRatio <- CheckDepletionOpt(HistSimList, HistTimeSteps) # TODO - warning message or re-sample 
   Hist@Log$OptDepletionRatio <- OptDepletionRatio
 
@@ -184,8 +184,12 @@ Simulate_om <- function(OM=NULL,
   # - list of length `nComplex`
   
   # ---- Return `hist` Object ----
-  Hist <- HistSimList2Hist(Hist, HistSimList)
-  Hist <- SetDigest(Hist)
+  Hist |> 
+    HistSimList2Hist(HistSimList) |> 
+    SetDigest()
+  
+  if (Reduce)
+    Hist <- ArrayReduceDims(Hist) 
   Hist
 }
 

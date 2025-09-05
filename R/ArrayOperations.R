@@ -335,13 +335,37 @@ ArraySubsetSim <- function(object, Sims=NULL, drop=FALSE) {
 
 # ----- Array Expand ----
 
-ArrayExpand <- function(Array, nSim, nAges, TimeSteps, AgeOpt=3) {
+#' @export
+ArrayExpand <- function(array, nSim, nAges, TimeSteps, AgeOpt=3) {
   
-  out <- Array |>
+  if (!is.array(array)) {
+    if (isS4(array)) {
+      if (inherits(array, 'data'))
+        return(array)
+      slots <- slotNames(array)
+      for (sl in slots) {
+        slot(array, sl) <- Recall(slot(array, sl), nSim, nAges, TimeSteps, AgeOpt)
+      }
+      return(array)
+    }
+    if (is.list(array)) {
+      if (length(array)) {
+        for (i in 1:length(array)) {
+          temp <- Recall(array[[i]], nSim, nAges, TimeSteps, AgeOpt)
+          if (!is.null(temp))
+            array[[i]] <- temp 
+        }
+        return(array)
+      }
+    }
+
+  }
+  
+  array |>
     ExpandSims(nSim) |>
     ExpandAges(nAges, AgeOpt) |>
     ExpandTimeSteps(TimeSteps)
-  out
+  
 }
 
 # AgeOpt = 1 fills all additional age classes with 1e-16
