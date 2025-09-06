@@ -12,7 +12,9 @@ Project(
   parallel = FALSE,
   silent = FALSE,
   extended = FALSE,
-  checkMPs = FALSE
+  checkMPs = FALSE,
+  nSim = NULL,
+  Reduce = TRUE
 )
 
 Simulate(

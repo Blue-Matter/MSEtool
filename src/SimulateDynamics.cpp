@@ -150,7 +150,7 @@ S4 SimulateDynamics_(S4 HistSimIn,
       
 
       // Calculate F within each Area
-      if (debug)
+      if (debug) 
         Rcout << "FMortFleetArea" << std::endl;
       
       List FMortFleetArea = CalcFMortality(EffortArea.row(TSindex), // nFleet, nArea,

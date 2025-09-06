@@ -451,7 +451,7 @@ AddAgeTimeStepDimensions <- function(object, outdim=4) {
 }
 
 #' @export
-List2Array <- function(List, dimname="Fleet", dim1="Sim", ListDimNames=NULL) {
+List2Array <- function(List, dimname="Fleet", dim1="Sim", ListDimNames=NULL, pos=NULL) {
   if (inherits(List, 'array'))
     return(List)
   if (!length(List))
@@ -489,7 +489,23 @@ List2Array <- function(List, dimname="Fleet", dim1="Sim", ListDimNames=NULL) {
  
   }
   
-  array
+  if (is.null(pos))
+    return(array)
+  
+  dnames <- array |> dimnames() |> names()
+  dnamesDrop <- dnames[!dnames==dimname]
+  dnamesNew <- rep(NA, length(dnames))
+  dnamesNew[pos] <- dimname
+  
+  cnt <- 1
+  for (i in seq_along(dnamesNew)) {
+    if (is.na(dnamesNew[i])) {
+      dnamesNew[i] <- dnamesDrop[cnt]
+      cnt <- cnt + 1
+    }
+  }
+  
+  array |> aperm(dnamesNew)
 }
 
 Array2List <- function(array, pos=3, sim=NULL) {

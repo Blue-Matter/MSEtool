@@ -20,9 +20,9 @@
 \alias{SPMSY}
 \alias{SP_SPMSY}
 \alias{SPRMSY}
-\alias{Removals}
 \alias{Landings}
 \alias{Discards}
+\alias{Removals}
 \alias{MSY}
 \title{Extract values from an MSE or Hist object}
 \usage{
@@ -64,11 +64,17 @@ SP_SPMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
 
 SPRMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
 
-Removals(MSE, ByFleet = FALSE, ByAge = FALSE)
+Landings(MSE, ByAge = FALSE, ByFleet = FALSE, ByArea = FALSE)
 
-Landings(MSE, ByFleet = FALSE, ByAge = FALSE)
+Discards(
+  MSE,
+  ByAge = FALSE,
+  ByFleet = FALSE,
+  ByArea = FALSE,
+  type = c("dead", "alive", "all")
+)
 
-Discards(MSE, ByFleet = FALSE, ByAge = FALSE, type = c("Dead", "Alive", "All"))
+Removals(MSE, ByAge = FALSE, ByFleet = FALSE, ByArea = FALSE)
 
 MSY(MSE, TimeSteps = NULL, type = c("Removals", "Landings"))
 }
@@ -122,11 +128,11 @@ Returns as a data.frame
 
 \item \code{SPRMSY()}: SBMSY
 
-\item \code{Removals()}: Dead Removals (Landings + Discards)
-
 \item \code{Landings()}: Landings
 
 \item \code{Discards()}: Discards
+
+\item \code{Removals()}: Dead Removals (Landings + Dead Discards)
 
 \item \code{MSY()}: MSY
 

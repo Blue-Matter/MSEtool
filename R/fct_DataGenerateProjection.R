@@ -23,9 +23,12 @@ GenerateProjectionData <- function(ProjSim, TimeStep, TimeStepsHist, TimeStepsPr
     ProjSim <- GenerateProjectionData_Index(ProjSim, DataTimeStep, 
                                             TimeStepsHist, TimeStepsAll, i, stocks)
     
+    ProjSim@Data$`Female Male`@CPUE@Value
+    
     ProjSim <- GenerateProjectionData_Index(ProjSim, DataTimeStep, 
                                             TimeStepsHist, TimeStepsAll, i, stocks, 'Survey')
     
+    ProjSim@Data$`Female Male`@Survey@Value
     # TODO 
     # - CAL
     # - CAA

@@ -716,7 +716,7 @@ CatchValues <- function(MSE, ByAge=FALSE, ByFleet=FALSE, ByArea=FALSE, type=c('L
     aperm(order) |>
     array2DF() |>
     ConvertDF() |>
-    dplyr::mutate(Variable=type, Period='Projection')
+    dplyr::mutate(Variable=varname, Period='Projection')
   
   units <- lapply(MSE@OM@Stock, slot, 'Weight') |> 
     lapply(Units) |> 

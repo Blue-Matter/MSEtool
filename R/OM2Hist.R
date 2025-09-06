@@ -30,7 +30,7 @@ OM2Hist <- function(OM, silent=FALSE) {
   
   Hist <- new('hist')
   Hist@OM <- OM
-  TimeSteps <- TimeSteps(OM)
+  TimeSteps <- TimeSteps(OM, 'Historical')
   nArea <- nArea(OM)
   
   Hist@OM@Stock <- purrr::map(Hist@OM@Stock, \(Stock) 
@@ -93,8 +93,6 @@ StockObject <- function(object, nSim, nAges, TimeSteps) {
     }
     
   
-  
-  
   if ("RelRecFun" %in% nms) {
     if (!is.null(object@Model) && inherits(object@Model, 'character')) {
       if (is.null(object@RelRecFun)) {
@@ -114,8 +112,6 @@ StockObject <- function(object, nSim, nAges, TimeSteps) {
       }
     }
   }
-  
-
   
   if ("MeanAtAge" %in% nms)
     object@MeanAtAge <- ArrayExpand(object@MeanAtAge, nSim, nAges, TimeSteps)
@@ -413,8 +409,6 @@ MSE2HistSimList <- function(MSE) {
 
 Hist2HistSimList <- function(Hist) {
   
-  # parallel <- snowfall::sfIsRunning()
-
   HistSimList <- purrr::map(1:nSim(Hist@OM), \(x) {
     hist <- SubsetSim(Hist, Sim=x, drop=TRUE)
     hist@Log$OptDepletionRatio <- SubsetSim(Hist@Log$OptDepletionRatio, x)
@@ -441,8 +435,7 @@ Hist2HistSimList <- function(Hist) {
       Stock@Spatial@Movement <- Array2List(Stock@Spatial@Movement,4)
       Stock
     })
-    
-    
+
     HistSim
   }, .progress = 'Processing internal object')
   
@@ -609,7 +602,7 @@ ObsList2SimArray <- function(Obs, ObsList, fl, slot='Catch') {
       Val <- List2Array(Val, 'Sim')[1,]
       
     } else if (inherits(Val[[1]], 'list')) {
-      
+      Val <- Val |> ReverseList() |> purrr::map(List2Array, 'Sim', pos=1)
     } else {
       stop("!!!")
     }

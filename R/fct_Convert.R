@@ -199,56 +199,56 @@ get_cpars <- function(OM, st=1, fl=1) {
 }
 
 #' @export
-ArrayReduceDims <- function(array, IncSim=TRUE, IncAge=FALSE, IncTimeStep=TRUE, debug=FALSE) {
+ArrayReduceDims <- function(array, IncSim=TRUE, IncAge=FALSE, IncTimeStep=TRUE, debug=FALSE, silent=FALSE, id=NULL) {
   
   if (debug)
     print(class(array))
   
-  if (!incSim & !incTimeStep & !incAge) 
+  if (!IncSim & !IncTimeStep & !IncAge) 
     return(array)
-  
   
   if (!length(array))
     return(array)
   
   if (!is.array(array)) {
     if (isS4(array)) {
+      if (!silent) {
+        if (is.null(id)) {
+          id <- cli::cli_progress_bar('Reducing dimensions to minimum size', type='tasks')
+        } else {
+          cli::cli_progress_update(id=id) 
+        }
+      }
+      
       if (inherits(array, 'data'))
         return(array)
       slots <- slotNames(array)
       for (sl in slots) {
-        slot(array, sl) <- Recall(slot(array, sl), IncSim, IncAge, IncTimeStep, debug)
+        slot(array, sl) <- Recall(slot(array, sl), IncSim, IncAge, IncTimeStep, debug, silent, id)
       }
       return(array)
     }
     if (is.list(array)) {
       if (length(array)) {
         for (i in 1:length(array)) {
-          temp <- Recall(array[[i]], IncSim, IncAge, IncTimeStep, debug)
+          temp <- Recall(array[[i]], IncSim, IncAge, IncTimeStep, debug, silent, id)
           if (!is.null(temp))
           array[[i]] <- temp 
         }
         return(array)
       }
     }
-    
-    # if (is.numeric(array)) {
-    #   return(array)
-    # }
   }
   
   dnames <- array |> dimnames() |> names()
   
   indSim <- which(dnames=='Sim')
-  indTimeStep <- which(dnames=='TimeStep')
   indAge <- which(dnames=='Age')
+  indTimeStep <- which(dnames=='TimeStep')
   
   incSim <- length(indSim)
-  incTimeStep <- length(indTimeStep)
   incAge <- length(indAge)
-  
-  if (!IncTimeStep)
-    incTimeStep <- 0
+  incTimeStep <- length(indTimeStep)
   
   if (!IncSim)
     incSim <- 0
@@ -256,7 +256,9 @@ ArrayReduceDims <- function(array, IncSim=TRUE, IncAge=FALSE, IncTimeStep=TRUE, 
   if (!IncAge)
     incAge <- 0
   
-
+  if (!IncTimeStep)
+    incTimeStep <- 0
+  
   if (incSim & incTimeStep & incAge) {
     idenSim <- IdenticalSims(array) 
     idenTime <- IdenticalTimeSteps(array)
@@ -888,11 +890,11 @@ data2Data <- function(data) {
   DataOut <- new('Data')
   DataOut@Year <- data@TimeSteps
   DataOut@LHYear <- data@TimeStepLH
-  DataOut@Ind <- matrix(data@Index@Value[,1], nrow=1)
-  DataOut@CV_Ind <- matrix(data@Index@CV[,1], nrow=1)
+  DataOut@Ind <- matrix(data@CPUE@Value[,1], nrow=1)
+  DataOut@CV_Ind <- matrix(data@CPUE@CV[,1], nrow=1)
   
-  DataOut@Cat <- matrix(rowSums(data@Catch@Value), nrow=1)
-  DataOut@CV_Cat <- matrix(data@Catch@CV[,1], nrow=1)
+  DataOut@Cat <- matrix(rowSums(data@Landings@Value, na.rm=TRUE) + rowSums(data@Discards@Value, na.rm=TRUE), nrow=1)
+  DataOut@CV_Cat <- matrix(data@Landings@CV[,1], nrow=1)
   DataOut@CV_Cat[is.na(DataOut@CV_Cat)] <- 0.2 # hack for some DLMtool MPs that require CV
   
   DataOut

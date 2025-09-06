@@ -65,7 +65,7 @@ GetScheduleOM <- function(OM, Variable, Slot, isStock) {
 }
 
 GetScheduleHist <- function(Hist, Variable, Slot, isStock) {
-  CheckClass(Hist, 'mse')
+  CheckClass(OM, c('om', 'hist', 'mse'))
   OM <- Hist@OM
   if (isStock)
     return(

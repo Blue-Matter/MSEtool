@@ -32,6 +32,9 @@ UpdateTAC <- function(ProjSim, MPAdvice, TSIndex) {
 
   StockAllocation <- RelVuln/sum(RelVuln)
   FleetAllocation <- ProjSim@OM@Allocation
+  
+  # TODO - this is setting effort individually for stocks - ie different effort by stock for each fleet
+  
   for (st in 1:nStock) {
     
     TotalRemovalsFleet <- MPAdvice@TAC *StockAllocation[st] * FleetAllocation[[st]] |> as.numeric()
@@ -54,7 +57,7 @@ UpdateTAC <- function(ProjSim, MPAdvice, TSIndex) {
     RequiredEffort <- FInteract / ProjSim@OM@Fleet[[st]]@Effort@Catchability[TSIndex,] 
     RequiredEffort[RequiredEffort<1E-5] <- 1E-5 
     
-    ProjSim@Effort[st,TSIndex,] <- RequiredEffort
+    ProjSim@Effort[st,TSIndex,] <- as.vector(RequiredEffort)
   }
   
   ProjSim

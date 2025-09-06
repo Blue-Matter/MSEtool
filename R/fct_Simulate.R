@@ -37,23 +37,6 @@ Simulate_om <- function(OM=NULL,
   OM <- OM |> StartUp(nSim) 
   HistTimeSteps <- TimeSteps(OM, 'Historical')
   
-  # Set up parallel processing 
-  # if (parallel & !snowfall::sfIsRunning())
-  #   setup()
-  # ncpus <- set_parallel(any(unlist(parallel)))
-
-  # Set pbapply functions
-  # .lapply <- define.lapply(silent)
-  # .sapply <- define.sapply(silent)
-  
-  # NOTE: future appears a lot slower 
-  # if (parallel) {
-  #   ncores <- parallelly::availableCores(logical=FALSE)
-  #   future::plan('multisession', workers=ncores)
-  # } else {
-  #   future::plan()
-  # }
-  
   # ---- Make Hist Object ----
   Hist <- OM2Hist(OM, silent)
 
@@ -167,24 +150,26 @@ Simulate_om <- function(OM=NULL,
                               type = "iterator",
                               format = "Conditioning Observation Error on Provided Fishery Data {cli::pb_bar} {cli::pb_percent}",
                               clear = TRUE))
+  
 
 
   
   # # # ---- Historical Fishery Data ----
-  # TODO - check for identical sims
+  # TODO - check for identical sims 
   HistSimList <- purrr::map(HistSimList, \(HistSim)
                             GenerateHistoricalData(HistSim, HistTimeSteps),
                             .progress = list(
                               type = "iterator",
                               format = "Generating Historical Data {cli::pb_bar} {cli::pb_percent}",
                               clear = TRUE))
-
+  
+  
   # Hist@Data:
   # - list of length `nSim` (or length 1) then
   # - list of length `nComplex`
   
   # ---- Return `hist` Object ----
-  Hist |> 
+  Hist <- Hist |> 
     HistSimList2Hist(HistSimList) |> 
     SetDigest()
   

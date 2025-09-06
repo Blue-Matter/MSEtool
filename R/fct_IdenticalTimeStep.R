@@ -28,5 +28,8 @@ UniqueTimeSteps <- function(array) {
     return(1)
 
   meanTS <- apply(array, TSInd, mean)
+  if (length(unique(meanTS))>2) {
+    return(c(match(unique(meanTS), meanTS), length(meanTS)) |> unique())
+  }
   match(unique(meanTS), meanTS)
 }

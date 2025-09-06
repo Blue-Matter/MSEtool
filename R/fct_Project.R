@@ -24,74 +24,33 @@ Project <- function(Hist=NULL, MPs=NA, parallel=FALSE,
   Project_hist(Hist, MPs, parallel, silent, nSim)
 }
 
-Project_hist <- function(Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, nSim=NULL, Reduce=TRUE) {
+Project_hist <- function(Hist=NULL, 
+                         MPs=NA, 
+                         parallel=FALSE, 
+                         silent=FALSE, 
+                         nSim=NULL, 
+                         Reduce=TRUE) {
   
   OnExit()
-  
   CheckMPClass(MPs)
   
-  Hist <- ReduceNSim(Hist, nSim)
+  TimeStepsHist <- TimeSteps(Hist@OM, "Historical")
+  TimeStepsProj <- TimeSteps(Hist@OM, "Projection")
   
-  # Set up parallel processing 
-  if (parallel & !snowfall::sfIsRunning())
-    setup()
-  ncpus <- set_parallel(any(unlist(parallel)))
-  
-  # Set pbapply functions 
-  .lapply <- define.lapply(silent) 
-  .sapply <- define.sapply(silent)
-  
-  MSEobj <- FALSE
-  if (inherits(Hist,'mse')) {
-    MSE <- Hist
-    Hist <- MSE2Hist(Hist) 
-  }
-  
-  Proj <- ExtendHist(Hist)
-  
-  
+  Proj <- Hist |> ReduceNSim(nSim) |> ExtendHist()
   
   # List of `Hist` objects, each with one simulation
   ProjSimList <- Hist2HistSimList(Proj)
-  
-  ProjSimList$`40`@OM@Stock$Female@Length@MeanAtAge |> dimnames()
-  
-  
-  TimeStepsHist <- TimeSteps(ProjSimList[[1]]@OM, "Historical")
-  TimeStepsProj <- TimeSteps(ProjSimList[[1]]@OM, "Projection")
   
   # Calculate Reference Catch 
   # TODO calculate externally with option in Simulate or OM@Control
   
   # Populate Number-at-Age at Beginning of Projection TimeStep
   ProjSimList <- purrr::map(ProjSimList, \(ProjSim) SimulateDynamics_(ProjSim,  tail(TimeStepsHist,1)))
-  
-  
-  
-  Hist@OM@Stock$Female@Weight@MeanAtAge |> dimnames()
-  Hist@OM@Stock$Male@Weight@MeanAtAge |> dimnames()
-  
-  Proj@OM@Stock$Female@Weight@MeanAtAge |> dimnames()
-  Proj@OM@Stock$Male@Weight@MeanAtAge |> dimnames()
-  
-  ProjSim = ProjSimList[[1]]
-  
-  ProjSim@Number$Male |> dimnames()
-  
-  ProjSim@OM@Stock$Female@Weight@MeanAtAge |> dimnames()
-  ProjSim@OM@Stock$Male@Weight@MeanAtAge |> dimnames()
-  
-  
-  ProjSim@OM@Fleet$Female@Retention@MeanAtAge |> dimnames()
-  
-  ProjSim@Landings$Female$`1950` |> dimnames()
-  
-  r = SimulateDynamics_(ProjSim,  tail(TimeStepsHist,1), debug=T)
-  
-                    
+
   # Recruitment for first projection timestep 
   ProjSimList <- purrr::map(ProjSimList, \(ProjSim) SimulateDynamics_(ProjSim, head(TimeStepsProj,1)))
-  
+
   # Check Allocation - should be done in Simulate # TODO 
   chk <- purrr::map(ProjSimList, \(ProjSim) ProjSim@OM@Allocation) |> unlist()
   if (is.null(chk)) {
@@ -103,39 +62,13 @@ Project_hist <- function(Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, nSim=N
   }
   
   MSE <- Hist2MSE(Hist, MPs) 
-  
-
-  # if(!MSEobj) {
-  #   MSE <- Hist2MSE(Hist, MPs)  
-  # } else {
-  #   newMPs <- which(!MPs %in% names(MSE@MPs))
-  #   if (length(newMPs)>0) {
-  #     newMPList <- lapply(MPs[newMPs], get)
-  #     names(newMPList) <- MPs[newMPs]
-  #     attributes(newMPList)$complete <- rep(FALSE, length(newMPList))
-  #     MSE@MPs <- c(MSE@MPs, newMPList)
-  #     
-  #     
-  #     # TODO - add dimensions for new MPs 
-  #     # check if MP has changed
-  #     # check if MSE object has changed
-  #     # run new MPs and changed MP - or all MPs if MSE object has changed
-  #     stop()
-  #     MSE@Number[[1]] 
-  #     MSE@Number[[1]] |> dimnames()
-  #     
-  #   }
-  # }
-  
-  nStock <- nStock(Hist@OM)
   nMPs <- length(MPs)
   
   # Projection MP loop
-  mp <- 1 # for debugging 
+  mp <- 1 # for debugging
   ProjSim <- ProjSimList$`1` # for debugging
   
   cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
-  
   for (mp in seq_along(MPs)) {
     MP <- MPs[mp]
     
@@ -163,7 +96,6 @@ Project_hist <- function(Hist=NULL, MPs=NA, parallel=FALSE, silent=FALSE, nSim=N
     
     # attributes(MSE@MPs)$complete[mp] <- TRUE
     MSE <- UpdateMSEObject(MSE, ProjSimListMP, mp, TimeStepsHist, TimeStepsProj, MP)
-  
   }
   
   MSE@Log <- c(Hist@Log, MSE@Log)
@@ -373,64 +305,7 @@ UpdateMSEObject <- function(MSE, ProjSimListMP, mp, TimeStepsHist, TimeStepsProj
 }
 
 
-ExtendHist <- function(Hist, TimeSteps=NULL) {
-  if (is.null(TimeSteps))
-    TimeSteps <- TimeSteps(Hist@OM)
-  
-  nSim <- nSim(Hist)
-  nStock <- nStock(Hist@OM)
-  
-  # OM
-  for (st in 1:nStock) {
-    nAge <- nAge(Hist@OM,st)
-    Hist@OM@Stock[[st]] <- ArrayExpand(Hist@OM@Stock[[st]], nSim, nAge, TimeSteps)
-    Hist@OM@Fleet[[st]] <- ArrayExpand(Hist@OM@Fleet[[st]], nSim, nAge, TimeSteps)
-    if (length(Hist@OM@Obs)>=st)
-      Hist@OM@Obs[[st]] <- ArrayExpand(Hist@OM@Obs[[st]], nSim, nAge, TimeSteps)
-    if (length(Hist@OM@Imp)>=st)
-    Hist@OM@Imp[[st]] <- ArrayExpand(Hist@OM@Imp[[st]], nSim, nAge, TimeSteps)
-  }
 
-  # Unfished 
-  
-  
-  # RefPoints 
-  
-
-  
-  slots <- slotNames('timeseries')
-  slots <- slots[!slots=='Misc']
-  for (sl in slots) {
-    object <- slot(Hist, sl) 
-    if (is.list(object)) {
-      object <- purrr::map(object, \(x) ExpandTimeSteps(x, TimeSteps, default = tiny/2))
-    } else {
-      object <- ExpandTimeSteps(object, TimeSteps, default = tiny/2)
-    }
-    slot(Hist, sl) <- object
-  }
-  Hist
-  # 
-  # if (isS4(object)) {
-  #   nms <- slotNames(object)
-  #   for (i in seq_along(nms)) {
-  #     slot(object, nms[i]) <- Recall(slot(object, nms[i]), TimeSteps)
-  #   }  
-  # }
-  # 
-  # if (is.list(object)) {
-  #   for (i in seq_along(object)) {
-  #     object[[i]] <- Recall(object[[i]], TimeSteps)
-  #   }  
-  # }
-  # if (inherits(object,'array'))  {
-  #   dnames <- names(dimnames(object))
-  #   if ("TimeStep" %in% dnames)
-  #     object <- ExpandTimeSteps(object, TimeSteps, default=tiny/2)
-  # }
-  # object
-
-}
 
 MSE2Hist <- function(MSE) {
   Hist <- Hist()
@@ -535,7 +410,7 @@ KeepSelectRetenDisc <- function(MSE, ProjSimListMP, mp, Slot='Retention') {
   #   purrr::map(aperm, c('Sim', 'Class', 'TimeStep', 'Fleet'))
   
   stocks <- StockNames(MSE@OM)
-  
+  MPName <- names(MSE@MPs)[mp]
   for (st in seq_along(stocks)) {
     omvals <- slot(MSE@OM@Fleet[[st]],Slot)@MeanAtAge |> ArraySubsetTimeStep(ProjTimeStep) |>
       ArrayReduceDims()
@@ -544,8 +419,6 @@ KeepSelectRetenDisc <- function(MSE, ProjSimListMP, mp, Slot='Retention') {
       if (is.null(MSE@Misc[[Slot]])) {
         MSE@Misc[[Slot]] <- list()
       }
-      
-      MPName <- names(MSE@MPs)[mp]
       if (is.null(MSE@Misc[[Slot]][[MPName]])) {
         MSE@Misc[[Slot]][[MPName]] <- list()
       }

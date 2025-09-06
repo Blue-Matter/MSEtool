@@ -180,7 +180,7 @@ PopulateStock <- function(stock,
   # ALK <- RequireALK(stock)
   # AWK <- RequireAWK(stock)
   
-  stock@Length <- PopulateLength(stock@Length,
+  stock@Length <- PopulateLength(Length=stock@Length,
                                  Ages=stock@Ages,
                                  nsim=nSim(stock),
                                  TimeSteps=TimeSteps(stock),
@@ -1218,12 +1218,20 @@ PopulateDistribution <- function(Distribution,
     )
     
   } else {
-    stop('`Closure` not done yet')
+    dd <- dim(Distribution@Closure)
+    if (!all(dd == c(nsim, length(TimeSteps), nAreas)))
+      cli::cli_abort(c("`Distribution@Closure` has incorrect dimensions", 
+                       '>'= 'Should be 3D array with dimensions: {.val {c(nsim, length(TimeSteps), nAreas)}} (`c(nSim , length(TimeSteps), nAreas)`)',
+                       '>' = 'Currently has dimensions: {.val {dd}}'))
+    
+    dimnames(Distribution@Closure) <- list(Sim=1:nsim,
+                                           TimeStep=TimeSteps,
+                                           Area=1:nAreas)
   }
   
   # Cost 
   if (!EmptyObject(Distribution@Cost))
-    cli::cli_warn('`Distribution@Cost` not currently supported')
+    cli::cli_alert_warning('`Distribution@Cost` not currently supported. Ignored')
   
   SetDigest(Distribution, argList)
 }
