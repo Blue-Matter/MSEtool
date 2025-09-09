@@ -19,12 +19,14 @@ Depends:
     snowfall
 Imports:
     abind,
+    cli,
     dplyr,
-    methods,
     grDevices,
     ggplot2,
     ggrepel,
     gridExtra,
+    lubridate,
+    methods,
     parallel,
     Rcpp,
     stats,
@@ -135,6 +137,7 @@ Collate:
     'DocData.R'
     'Effort.R'
     'Empirical_MP.R'
+    'ExtendHist.R'
     'Fease_Functions.R'
     'Find.R'
     'Generate.R'
