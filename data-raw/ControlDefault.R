@@ -9,6 +9,9 @@ ControlDefault <- list()
 ControlDefault$RefYield <- list()
 ControlDefault$RefYield$lastnTS <- 5
 
+
+ControlDefault$RefPointTimeSteps <- NULL
+
 usethis::use_data(ControlDefault, overwrite = TRUE)
 
 

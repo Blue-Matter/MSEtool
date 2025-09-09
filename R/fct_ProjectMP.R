@@ -29,20 +29,6 @@ ProjectMP <- function(ProjSim, MP, TimeStepsHist, TimeStepsProj, ManagementTimeS
       # - updated again after fishing mortality for SpawnTimeFrac > 0
       ProjSim <- SimulateDynamics_(ProjSim, TimeStepsProj[ts+1], CalcCatch = 0)
     }
-  
-    fl <- 4
-    ProjSim@Effort[,74,fl]
-    ProjSim@EffortArea$Female[74,,1]
-    
-    ProjSim@OM@Fleet$Female@Effort@Catchability[74,11]
-    
-    ProjSim@FDeadAtAgeArea$Female[[as.character(TimeStep)]][,fl,]
-    
-    ProjSim@FDeadAtAge$Female[,74,fl] 
-    ProjSim@Landings$Female[[as.character(TimeStep)]][,fl,1] 
-    
-    sum(ProjSim@Landings$Female[[as.character(TimeStep)]])
-    sum(ProjSim@Landings$Male[[as.character(TimeStep)]])
     # tictoc::toc()
     
   } 

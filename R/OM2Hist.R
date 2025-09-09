@@ -329,8 +329,7 @@ CombineEffort <- function(List, nSim, nAges, TimeSteps) {
     List2Array('Fleet') |>
     aperm(c('Sim', 'TimeStep', 'Fleet')) 
   
-  
-  
+
   Effort@Catchability <- lapply(List, slot, 'Catchability') |>
     purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |>
     List2Array('Fleet') |>
@@ -497,7 +496,8 @@ HistSimList2Hist <- function(Hist, HistSimList, TimeSteps=NULL) {
   
 
 HistSimListRefPoints <- function(Hist, HistSimList) {
-  
+  if (!EmptyObject(Hist@RefPoints@MSYRefPoints))
+    return(Hist)
   slots <- slotNames(Hist@RefPoints@MSYRefPoints)
   for (slot in slots) {
     slot(Hist@RefPoints@MSYRefPoints, slot) <- purrr::map(HistSimList, \(HistSim) 

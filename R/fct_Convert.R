@@ -350,7 +350,7 @@ ArrayReduceDims <- function(array, IncSim=TRUE, IncAge=FALSE, IncTimeStep=TRUE, 
       return(abind::asub(array, list(1,1), c(indSim, indTimeStep), drop=FALSE))
     
     if (!idenSim & idenTime) 
-      return(abind::asub(array, list(1,1), c(indTimeStep), drop=FALSE))
+      return(abind::asub(array, list(1), c(indTimeStep), drop=FALSE))
     
     if (idenSim & !idenTime) 
       return(abind::asub(array, list(1, UniqueTimeSteps(array)), c(indSim, indTimeStep), drop=FALSE))

@@ -70,11 +70,12 @@ Project_hist <- function(Hist=NULL,
   
   cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
   for (mp in seq_along(MPs)) {
-    MP <- MPs[mp]
     
     # TODO add option to specify Interval by MP
     ind <- seq(1, by=ProjSimList[[1]]@OM@Interval, to=length(TimeStepsProj)) 
     ManagementTimeSteps <- TimeStepsProj[ind] # time steps where management will be implemented
+    
+    MP <- MPs[mp]
     
     StartTime <- Sys.time()
     ProjSimListMP <- purrr::map(ProjSimList, \(ProjSim) 
@@ -99,8 +100,12 @@ Project_hist <- function(Hist=NULL,
   }
   
   MSE@Log <- c(Hist@Log, MSE@Log)
-  if (Reduce)
-    MSE <-ArrayReduceDims(MSE) 
+  if (Reduce) {
+    MSE@OM <- ArrayReduceDims(MSE@OM)
+    MSE@Hist <- ArrayReduceDims(MSE@Hist)
+    
+  }
+    
   MSE 
 }
 
@@ -396,8 +401,7 @@ KeepSelectRetenDisc <- function(MSE, ProjSimListMP, mp, Slot='Retention') {
   }) |> 
     ReverseList() |>
     purrr::map(List2Array, 'Sim') |>
-    purrr::map(aperm, c('Sim', 'Age', 'TimeStep', 'Fleet')) |>
-    purrr::map(ArrayReduceDims) 
+    purrr::map(aperm, c('Sim', 'Age', 'TimeStep', 'Fleet')) 
     
     
   # AtLength <- purrr::map(ProjSimListMP, \(ProjSim) {
@@ -412,9 +416,12 @@ KeepSelectRetenDisc <- function(MSE, ProjSimListMP, mp, Slot='Retention') {
   stocks <- StockNames(MSE@OM)
   MPName <- names(MSE@MPs)[mp]
   for (st in seq_along(stocks)) {
-    omvals <- slot(MSE@OM@Fleet[[st]],Slot)@MeanAtAge |> ArraySubsetTimeStep(ProjTimeStep) |>
-      ArrayReduceDims()
     
+    dd <- dimnames(AtAge[[st]])
+    
+    omvals <- slot(MSE@OM@Fleet[[st]],Slot)@MeanAtAge |> ArraySubsetTimeStep(ProjTimeStep) |>
+      ArrayExpand(nSim=length(dd$Sim), nAges=length(dd$Age), TimeSteps = dd$TimeStep)
+
     if (!prod(AtAge[[st]] == omvals)) {
       if (is.null(MSE@Misc[[Slot]])) {
         MSE@Misc[[Slot]] <- list()
@@ -425,7 +432,7 @@ KeepSelectRetenDisc <- function(MSE, ProjSimListMP, mp, Slot='Retention') {
       MSE@Misc[[Slot]][[MPName]][[stocks[st]]] <- AtAge[[st]]
     }
   }
-  MSE@Misc[[Slot]][[MPName]] <- MSE@Misc[[Slot]][[MPName]][stocks]
+  # MSE@Misc[[Slot]][[MPName]] <- MSE@Misc[[Slot]][[MPName]][stocks]
   MSE
   
 }

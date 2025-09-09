@@ -135,6 +135,7 @@ Collate:
     'DocData.R'
     'Effort.R'
     'Empirical_MP.R'
+    'ExtendHist.R'
     'Fease_Functions.R'
     'Find.R'
     'Generate.R'

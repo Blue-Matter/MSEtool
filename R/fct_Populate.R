@@ -1280,12 +1280,16 @@ PopulateObs <- function(OM) {
   }
  
   OM <- StructureObs(OM)
-
   
   for (st in 1:length(OM@Obs)) {
     for (fl in 1:length(OM@Obs[[1]])) {
       SetSeed(OM@Obs[[st]][[fl]], OM@Seed)
       
+      OM@Obs[[st]][[fl]]@Effort <- PopulateEffortObs(Effort=OM@Obs[[st]][[fl]]@Effort, 
+                                                     nSim=OM@nSim, 
+                                                     TimeSteps=OM@TimeSteps)
+      
+    
       OM@Obs[[st]][[fl]]@Landings <- PopulateCatchObs(Catch=OM@Obs[[st]][[fl]]@Landings, 
                                                       nSim=OM@nSim, 
                                                       TimeSteps=OM@TimeSteps)
@@ -1325,7 +1329,8 @@ PopulateIndexObs <- function(Index, nSim, TimeSteps) {
   Index@CV <- PopulateObsCV(Index@CV, nSim)
   Index@Error <- PopulateObsError(Index, nSim, TimeSteps)
   Index@Beta # TODO - currently not implemented
- 
+  Index@Ref <- PopulateObsRef(Index@Ref, nSim)
+
   if (length(Index@TimeSteps)<1)
     Index@TimeSteps <- TimeSteps
   
@@ -1341,6 +1346,19 @@ PopulateIndexObs <- function(Index, nSim, TimeSteps) {
   
 }
 
+PopulateEffortObs <- function(Effort, nSim, TimeSteps) {
+  if (EmptyObject(Effort))
+    return(Effort)
+  
+  nTS <- length(TimeSteps)
+  Effort@CV <- PopulateObsCV(Effort@CV, nSim)
+  Effort@Error <- PopulateObsError(Effort, nSim, TimeSteps)
+  Effort@Bias <- PopulateObsBias(Effort, nSim)
+  
+  # if (length(Effort@TimeSteps)<1)
+  #   Effort@TimeSteps <- TimeSteps
+  Effort
+}
 
 PopulateCatchObs <- function(Catch, nSim, TimeSteps) {
   if (EmptyObject(Catch))
@@ -1349,6 +1367,7 @@ PopulateCatchObs <- function(Catch, nSim, TimeSteps) {
   Catch@CV <- PopulateObsCV(Catch@CV, nSim)
   Catch@Error <- PopulateObsError(Catch, nSim, TimeSteps)
   Catch@Bias <- PopulateObsBias(Catch, nSim)
+  Catch@Ref <- PopulateObsRef(Catch@Ref, nSim)
   
   if (length(Catch@TimeSteps)<1)
     Catch@TimeSteps <- TimeSteps
@@ -1359,15 +1378,38 @@ PopulateCatchObs <- function(Catch, nSim, TimeSteps) {
   Catch
 }
 
+PopulateObsRef <- function(Ref, nSim) {
+  if (!length(Ref)) {
+    return(Ref)
+  }
+  
+  if (!is.null(dimnames(Ref))) {
+    return(Ref[1:nSim])
+  }
+  
+  if (nSim!=2 && length(Ref)==nSim)
+    return(Ref)
+
+  CV <- StructurePars(list(Ref), nSim)[[1]] |> 
+    ExpandSims(nSim) |>
+    DropDimension("TimeStep", FALSE)
+  
+  Error <- array(rlnorm(nSim,
+                        mconv(1, CV),
+                        sdconv(1, CV)),
+                 nSim)
+  
+  dimnames(Error) <- list(Sim=1:nSim)
+  Error
+}
+
 PopulateObsCV <- function(CV, nSim) {
-  if (is.null(CV)) {
-    # CV <- array(0, nSim, dimnames = list(Sim=1:nSim))
+  if  (!length(CV)) {
     return(CV)
   }
   
   if (!is.null(dimnames(CV))) {
     return(CV[1:nSim])
-  
   }
   CV <- StructurePars(list(CV), nSim)[[1]] |> 
     ExpandSims(nSim) |>

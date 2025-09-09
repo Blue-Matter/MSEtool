@@ -166,8 +166,7 @@ UpdateSpatial <- function(ProjSim, MPAdvice, MPAdvicePrevious, TSIndex) {
     nArea <- dd[3]
     
     if (length(MPAdvice@Spatial) != nArea) {
-      cli::cli_warn(c("x"='`length(MPAdvice@Spatial)` ({.val {(length(MPAdvice@Spatial))}}) != `nArea` ({.val {nArea}})',
-                      'i'="Ignoring Spatial Management Advice")
+      cli::cli_abort(c('`length(MPAdvice@Spatial)` ({.val {(length(MPAdvice@Spatial))}}) != `nArea` ({.val {nArea}}) ')
       )
       return(ProjSim)
     }
@@ -247,7 +246,7 @@ UpdateSelectivity <- function(ProjSim, MPAdvice, MPAdvicePrevious,
   if (is.null(MPAdvice))
     return(ProjSim)
   
-
+  
   # if (!is.null(MPAdvicePrevious)) {
   #   if (IdenticalS4(slot(MPAdvice,type), slot(MPAdvicePrevious,type)))
   #     return(ProjSim)  
@@ -262,80 +261,81 @@ UpdateSelectivity <- function(ProjSim, MPAdvice, MPAdvicePrevious,
   TimeStep <- TimeStepsAll[TSIndex]
   nprojTS <- length(TimeStepsAll)
   projInd <- TSIndex:nprojTS
+  TimeStepProj <- TimeStepsAll[projInd]
   
   Selectivity@Model <- FindModel(Selectivity)
   
   ModelClass <- getModelClass(Selectivity@Model)
+  
+  LengthModel <- grepl('at-Length', ModelClass)
+  WeightModel <- grepl('at-Weight', ModelClass)
   
   nStock <- nStock(ProjSim@OM)
   nFleet <- nFleet(ProjSim@OM)
   
   for (st in 1:nStock) {
     
-    Length <- ProjSim@OM@Stock[[st]]@Length
+    # LengthWeight is either a `length` or a `weight` class object
+    if (LengthModel) {
+      LengthWeight <- ProjSim@OM@Stock[[st]]@Length  
+    } else {
+      LengthWeight <- ProjSim@OM@Stock[[st]]@Weight  
+    }
+    
     
     for (fl in 1:nFleet) {
-      if (type=="Selectivity") {
-        Length@Classes <- ProjSim@OM@Fleet[[st]]@Selectivity@Classes[[fl]]
-      } else  {
-        Length@Classes <- ProjSim@OM@Fleet[[st]]@Retention@Classes[[fl]] # TODO Classes should be populated
-        if (is.null(Length@Classes))
-          Length@Classes <- ProjSim@OM@Fleet[[st]]@Selectivity@Classes[[fl]]
-      }
+      LengthWeight@Classes <- slot(ProjSim@OM@Fleet[[st]], type)@Classes[[fl]]
+      if (is.null(LengthWeight@Classes))
+        LengthWeight@Classes <- ProjSim@OM@Fleet[[st]]@Selectivity@Classes[[fl]]
       
-      Length@MeanAtAge <- Length@MeanAtAge |> ArraySubsetTimeStep(TimeStep)
-      Length@CVatAge <- Length@CVatAge |> ArraySubsetTimeStep(TimeStep)
-      SDatAge <- ArrayMultiply(Length@MeanAtAge, Length@CVatAge)
+      LengthWeight@MeanAtAge <- LengthWeight@MeanAtAge |> ArraySubsetTimeStep(TimeStep)
+      LengthWeight@CVatAge <- LengthWeight@CVatAge |> ArraySubsetTimeStep(TimeStep)
+      SDatAge <- ArrayMultiply(LengthWeight@MeanAtAge, LengthWeight@CVatAge)
       
-      Length@ASK <- CalcAgeSizeKey_(Length@MeanAtAge, 
-                                    SDatAge, 
-                                    Length@Classes, 
-                                    Length@TruncSD, 
-                                    Length@Dist)
+      LengthWeight@ASK <- CalcAgeSizeKey_(LengthWeight@MeanAtAge, 
+                                          SDatAge, 
+                                          LengthWeight@Classes, 
+                                          LengthWeight@TruncSD, 
+                                          LengthWeight@Dist)
       
-      Weight <- ProjSim@OM@Stock[[st]]@Weight |> ArraySubsetTimeStep(TimeStep)
+      
       Ages <- ProjSim@OM@Stock[[st]]@Ages
-      if (grepl('at-Length',ModelClass)) {
+      if (LengthModel) {
         Selectivity@Classes <- Length@Classes
         
         Selectivity@MeanAtLength <- GenerateMeanatLength(Model=Selectivity@Model,
                                                          Pars=Selectivity@Pars,
                                                          Length=Selectivity@Classes)
         dimnames(Selectivity@MeanAtLength) <- list(Sim=1,
-                                                   Class=   Selectivity@Classes,
+                                                   Class= Selectivity@Classes,
                                                    TimeStep=TimeStep)
         
         Selectivity@MeanAtLength <- Selectivity@MeanAtLength 
+        Selectivity <- MeanAtLength2MeanAtAge(Selectivity, LengthWeight, Ages, nsim=1, TimeSteps=TimeStep)
         
-      }  else if (grepl('at-Weight',getModelClass(Selectivity@Model))) {
-        Selectivity <- PopulateMeanAtWeight(Selectivity, Weight, TimeSteps=TimeStep, Ages, nsim, seed, silent)
+      }  else if (WeightModel) {
+        Selectivity <- PopulateMeanAtWeight(Selectivity, LengthWeight, TimeSteps=TimeStep, Ages, nsim, seed, silent)
         Selectivity@MeanAtWeight <- Selectivity@MeanAtWeight |> ExpandTimeSteps(TimeSteps=TimeStepProj)
         
+        Selectivity <- MeanAtWeight2MeanAtAge(object=Selectivity, 
+                                              Weight=LengthWeight, 
+                                              Ages, nsim,
+                                              TimeSteps=TimeStepProj, 
+                                              seed, silent)
+        
       } else {
-        Selectivity <- PopulateMeanAtAge(Selectivity, Ages, TimeSteps=TimeStep)
-        Selectivity@MeanAtAge <- Selectivity@MeanAtAge |> ExpandTimeSteps(TimeSteps=TimeStepProj)
+        cli::cli_abort("Not developed yet!", .internal=TRUE)
+        # Selectivity <- PopulateMeanAtAge(Selectivity, Ages, TimeSteps=TimeStep)
+        # Selectivity@MeanAtAge <- Selectivity@MeanAtAge |> ExpandTimeSteps(TimeSteps=TimeStepProj)
       }
       
-      Selectivity <- MeanAtLength2MeanAtAge(Selectivity, Length, Ages, nsim=1, TimeSteps=TimeStep)
+      ArrayFill(slot(ProjSim@OM@Fleet[[st]],type)@MeanAtAge[,,fl]) <- abind::adrop(Selectivity@MeanAtAge, 1)
       
-      Selectivity <- MeanAtWeight2MeanAtAge(Selectivity, Weight, Ages, nsim,
-                                            TimeSteps=TimeStep, seed, silent) 
+      if (!is.null(slot(ProjSim@OM@Fleet[[st]],type)@MeanAtLength[,projInd,fl]) && !is.null(Selectivity@MeanAtLength)) 
+        ArrayFill(slot(ProjSim@OM@Fleet[[st]],type)@MeanAtLength[,projInd,fl]) <- abind::adrop(Selectivity@MeanAtLength, 1)
       
-      dimnames(Selectivity@MeanAtAge) <- list(Sim=1,
-                                              Age=ProjSim@OM@Stock[[st]]@Ages@Classes,
-                                              TimeStep=TimeStep)
-      
-      if (type=="Selectivity") {
-        ProjSim@OM@Fleet[[st]]@Selectivity@MeanAtLength[,projInd,fl] <- Selectivity@MeanAtLength[1,,]
-        ProjSim@OM@Fleet[[st]]@Selectivity@MeanAtWeight[,projInd,fl] <- Selectivity@MeanAtWeight[1,,]
-        ProjSim@OM@Fleet[[st]]@Selectivity@MeanAtAge[,projInd,fl] <- Selectivity@MeanAtAge[1,,]
-      } else if (type=="Retention") {
-        ProjSim@OM@Fleet[[st]]@Retention@MeanAtLength[,projInd,fl] <- Selectivity@MeanAtLength[1,,]
-        ProjSim@OM@Fleet[[st]]@Retention@MeanAtWeight[,projInd,fl] <- Selectivity@MeanAtWeight[1,,]
-        ProjSim@OM@Fleet[[st]]@Retention@MeanAtAge[,projInd,fl] <- Selectivity@MeanAtAge[1,,]
-      } else{
-        stop("type must be `Selectivity` or `Retention`")
-      }
+      if (!is.null(slot(ProjSim@OM@Fleet[[st]],type)@MeanAtWeight[,projInd,fl])) 
+        ArrayFill(slot(ProjSim@OM@Fleet[[st]],type)@MeanAtWeight[,projInd,fl]) <- abind::adrop(Selectivity@MeanAtWeight, 1)
     }
   }
   

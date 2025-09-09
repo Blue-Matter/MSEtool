@@ -433,9 +433,10 @@ ExpandSims <- function(array, nSim) {
     # return(abind::asub(array, ind, 1:nSim, drop=FALSE))
   }
     
-  
-  if (length(existing)>1)
-    cli::cli_abort('`Sim` dimension must be either length `nSim` or length 1', .internal=TRUE)
+  if (length(existing)>1) 
+    cli::cli_abort(c('The `Sim` dimension must be either length `nSim` ({.val {nSim}}) or length 1',
+                     'x' ='The `Sim` dimension of this array has length {.val {d[ind]}}')
+    )
   
   
   AddDim <- nSim - length(existing)

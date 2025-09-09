@@ -219,6 +219,8 @@ getnleet <- function(Fleets) {
 getModelClass <- function(Model=NULL) {
   if (is.null(Model))
     return(NULL)
+  if (inherits(Model, 'function'))
+    return('function')
   class(get(Model))
 }
 

@@ -16,9 +16,9 @@ Simulate <- function(OM=MSEtool::testOM,
     nSim <- nsim
   
   if (inherits(OM, 'om'))
-    return(Simulate_om(OM, parallel, silent, nSim))
+    return(Simulate_om(OM, parallel, silent, nSim, ...))
   
-  SimulateOM(OM, parallel, silent, nSim)
+  SimulateOM(OM, parallel, silent, nSim, ...)
 }
 
 # Simulate for new `om` class objects
@@ -26,6 +26,7 @@ Simulate_om <- function(OM=NULL,
                         parallel=FALSE,
                         silent=FALSE,
                         nSim=NULL,
+                        MSYRefPoints=TRUE,
                         Reduce=TRUE,
                         ...) {
  
@@ -63,24 +64,33 @@ Simulate_om <- function(OM=NULL,
   # FleetList=HistSim@OM@Fleet
   # 
   # Complexes=HistSim@OM@Complexes
-  # TimeSteps = tail(HistTimeSteps,1)
+  # TimeSteps =  tail(HistTimeSteps,OM@TimeStepsPerYear)
   # maxF=OM@maxF
   
   # TODO - check if varies over simulations
+  RefPointTimeSteps <- OM@Control$RefPointTimeSteps
+  if (is.null(RefPointTimeSteps))
+    RefPointTimeSteps <- tail(HistTimeSteps, OM@TimeStepsPerYear)
+   
+  if (inherits(MSYRefPoints, 'logical') && MSYRefPoints) {
+    HistSimList <- purrr::map(HistSimList, \(HistSim) {
+      HistSim@RefPoints@MSYRefPoints <- CalculateMSYSim(StockList=HistSim@OM@Stock,
+                                                        FleetList=HistSim@OM@Fleet,                                  
+                                                        Complexes=HistSim@OM@Complexes,
+                                                        TimeSteps = RefPointTimeSteps,
+                                                        maxF=OM@maxF)
+      HistSim
+    }, .progress = list(
+      type = "iterator",
+      format = "Calculating MSY Reference Points {cli::pb_bar} {cli::pb_percent}",
+      clear = TRUE))
+  } else if (inherits(MSYRefPoints, 'msyrefpoints')) {
+    Hist@RefPoints@MSYRefPoints <- MSYRefPoints
+  }
   
-  HistSimList <- purrr::map(HistSimList, \(HistSim) {
-    HistSim@RefPoints@MSYRefPoints <- CalculateMSYSim(StockList=HistSim@OM@Stock,
-                                                      FleetList=HistSim@OM@Fleet,                                  
-                                                      Complexes=HistSim@OM@Complexes,
-                                                      TimeSteps = tail(HistTimeSteps,1),
-                                                      maxF=OM@maxF)
-    HistSim
-  }, .progress = list(
-    type = "iterator",
-    format = "Calculating MSY Reference Points {cli::pb_bar} {cli::pb_percent}",
-    clear = TRUE))
-
-  # Per-Recruit Curves TODO
+  
+  # Per-Recruit Curves 
+  # TODO
   
   # ---- Calculate Unfished Equilibrium and Dynamic ----
   HistSimList <- CalcDynamicUnfished(HistSimList)
@@ -136,13 +146,13 @@ Simulate_om <- function(OM=NULL,
   })
   
   
- 
   # ---- Check for Depletion Optimization ----
   OptDepletionRatio <- CheckDepletionOpt(HistSimList, HistTimeSteps) # TODO - warning message or re-sample 
   Hist@Log$OptDepletionRatio <- OptDepletionRatio
 
   # ---- Condition Observation Object on Real Fishery Data ----
   # TODO - check for identical sims - but need to generate independent obs error by sim
+  # TODO - add conditioning obs error for Effort
   ProjectionTimeSteps <- TimeSteps(OM, 'Projection')
   HistSimList <- purrr::map(HistSimList, \(HistSim)
                             ConditionObs(HistSim, HistTimeSteps, ProjectionTimeSteps),
@@ -152,9 +162,8 @@ Simulate_om <- function(OM=NULL,
                               clear = TRUE))
   
 
-
-  
   # # # ---- Historical Fishery Data ----
+  HistSim <- HistSimList$`1` # for debugging
   # TODO - check for identical sims 
   HistSimList <- purrr::map(HistSimList, \(HistSim)
                             GenerateHistoricalData(HistSim, HistTimeSteps),
@@ -174,11 +183,9 @@ Simulate_om <- function(OM=NULL,
     SetDigest()
   
   if (Reduce)
-    Hist <- ArrayReduceDims(Hist) 
+    Hist <- ArrayReduceDims(Hist)
   Hist
 }
-
-
 
 
 

@@ -94,22 +94,24 @@ CalculateMSYSim <- function(StockList, FleetList, Complexes, TimeSteps=NULL, max
   MSYRefPoints <- MSYRefPoints(StockNames=names(StockList), TimeSteps=TimeSteps)
   for (st in seq_along(Complexes)) {
     StockInd <- Complexes[[st]]
-    
     StockList_ <- StockList[StockInd]
     FleetList_ <- FleetList[StockInd]
     
-    opt <- optimize(OptMSY, 
-                    logApicalFRange, 
-                    StockList_, 
-                    FleetList_, 
-                    TimeSteps=TimeSteps)
-  
-    MSYRefs <- OptMSY(opt$minimum, StockList_, FleetList_, TimeSteps,2)
     
-    for (sl in slotNames(MSYRefs)) {
-      val <- slot(MSYRefs,sl)
-      if (!is.null(val))
-        abind::afill(slot(MSYRefPoints,sl)) <- val
+    for (ts in seq_along(TimeSteps)) {
+      opt <- optimize(OptMSY, 
+                      logApicalFRange, 
+                      StockList_, 
+                      FleetList_, 
+                      TimeSteps=TimeSteps[ts])
+      MSYRefs <- OptMSY(opt$minimum, StockList_, FleetList_, TimeSteps[ts],2)
+      
+      for (sl in slotNames(MSYRefs)) {
+        val <- slot(MSYRefs,sl)
+        if (!is.null(val))
+          ArrayFill(slot(MSYRefPoints,sl)) <- val
+          
+      }
     }
   }
   MSYRefPoints
@@ -196,8 +198,8 @@ OptMSY <- function(logApicalF, StockList, FleetList, TimeSteps, option=1) {
   MSYRefPoints@SPMSY <- SProduction 
   MSYRefPoints@SPRMSY <- SPR 
   MSYRefPoints@MSYRemovals <- Removals 
-  if (!all(Landings == Removals))
-    MSYRefPoints@MSYLandings <- Landings 
+  # if (!all(Landings == Removals))
+  MSYRefPoints@MSYLandings <- Landings 
   
   MSYRefPoints
 }

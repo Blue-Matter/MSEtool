@@ -7,10 +7,22 @@ setClass("catchdata",
                  Value='array.null',
                  CV='array.null',
                  Units='char.null',
-                 Type='char.null' # Removals or Landings
+                 Type='char.null', # Removals or Landings
+                 Ref='array.null',
+                 RefCV='array.null'
          )
 )
 
+#' Class `effortdata`
+#' @include 00_Class_unions.R
+#' @include 00_Class_child.R
+setClass("effortdata",
+         slots=c(Name='char.null',
+                 Value='array.null',
+                 CV='array.null',
+                 Units='char.null'
+         )
+)
 
 #' Class `indicesdata`
 #' @include 00_Class_unions.R
@@ -20,6 +32,7 @@ setClass("indicesdata",
                  Value='array.null',
                  CV='array.null',
                  Units='char.null',
+                 Ref='array.null',
                  Timing='numeric',
                  Selectivity='array.char.num', # fleet number, Biomass, SBiomass, Recruits, age vector
                  Misc="MiscClass"
@@ -99,6 +112,8 @@ setClass('data',
                  TimeUnits='char.null', # time units - same as `Ages`
                  TimeStepsPerYear='num.null',
                  nArea='num.null',
+                 
+                 Effort='effortdata',
                  
                  Landings='catchdata',  
                  Discards='catchdata',

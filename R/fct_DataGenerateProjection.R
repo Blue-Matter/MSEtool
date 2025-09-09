@@ -10,10 +10,14 @@ GenerateProjectionData <- function(ProjSim, TimeStep, TimeStepsHist, TimeStepsPr
   # loop over complexes 
   for (i in seq_along(Complexes)) {
     stocks <- Complexes[[i]]
-    if (max(ProjSim@Data[[i]]@TimeSteps) == DataTimeStep)
+    if (max(ProjSim@Data[[i]]@TimeSteps) >= DataTimeStep)
       next()
     
     ProjSim@Data[[i]]@TimeSteps <- TimeStepsAll[1:TSIndex]
+    
+    ProjSim <- GenerateProjectionData_Effort(ProjSim, DataTimeStep, 
+                                            TimeStepsAll, i, stocks)
+    
     ProjSim <- GenerateProjectionData_Catch(ProjSim, DataTimeStep, 
                                             TimeStepsAll, i, stocks)
     
@@ -23,12 +27,9 @@ GenerateProjectionData <- function(ProjSim, TimeStep, TimeStepsHist, TimeStepsPr
     ProjSim <- GenerateProjectionData_Index(ProjSim, DataTimeStep, 
                                             TimeStepsHist, TimeStepsAll, i, stocks)
     
-    ProjSim@Data$`Female Male`@CPUE@Value
-    
     ProjSim <- GenerateProjectionData_Index(ProjSim, DataTimeStep, 
                                             TimeStepsHist, TimeStepsAll, i, stocks, 'Survey')
     
-    ProjSim@Data$`Female Male`@Survey@Value
     # TODO 
     # - CAL
     # - CAA
@@ -39,6 +40,61 @@ GenerateProjectionData <- function(ProjSim, TimeStep, TimeStepsHist, TimeStepsPr
   ProjSim
 }
 
+GenerateProjectionData_Effort <- function(ProjSim, DataTimeStep, TimeStepsAll, i, stocks) {
+  EffortData <- ProjSim@Data[[i]]@Effort
+  if (EmptyObject(EffortData))
+    return(ProjSim)
+  
+  FleetNames <- EffortData@Name
+  
+  TSIndex <- match(DataTimeStep, TimeStepsAll)
+  
+  SimEffort <- ProjSim@Effort[stocks,TSIndex,,drop=FALSE] |> apply(2:3, mean, na.rm=TRUE)
+  dimnames(SimEffort) <- list(TimeStep=DataTimeStep, 
+                             Fleet=FleetNames)
+  
+  Value <- EffortData@Value
+  CV <- EffortData@CV
+  
+  if (DataTimeStep %in% dimnames(Value)[[1]]) 
+    return(ProjSim)
+  
+  nFleet <- length(FleetNames)
+  NewValue <- array(NA, dim=c(1, nFleet),
+                    dimnames = list(TimeStep=DataTimeStep,
+                                    Fleet=FleetNames))
+  NewCV <- NewValue
+  
+  for (fl in 1:nFleet) {
+    EffortObs <- ProjSim@OM@Obs[[i]][[fl]]@Effort
+    if (EmptyObject(EffortObs)) {
+      next()
+    }
+    if (length(EffortObs@Error)<1)
+      next()
+    
+    if (!is.null(ProjSim@OM@Data[[i]]) && nrow(ProjSim@OM@Data[[i]]@Effort@Value)>=TSIndex) {
+      NewValue[,fl] <- ProjSim@OM@Data[[i]]@Effort@Value[TSIndex,fl]
+    } else {
+      error <- ArraySubsetTimeStep(EffortObs@Error, DataTimeStep)
+      bias <- ArraySubsetTimeStep(EffortObs@Bias, DataTimeStep)
+      NewValue[,fl] <- SimEffort[fl] * error * bias
+    }
+    
+    # CV 
+    if (!is.null(ProjSim@OM@Data[[i]]) &&  nrow(ProjSim@OM@Data[[i]]@Effort@CV)>=TSIndex) {
+      NewCV[,fl] <- ProjSim@OM@Data[[i]]@Effort@CV[TSIndex,fl]
+    } else {
+      NewCV[,fl] <- SubsetTimeStep(EffortData@CV, DataTimeStep)[fl]
+    }
+  }
+  
+  EffortData@Value <- abind::abind(Value, NewValue, along=1, use.dnns=TRUE)
+  EffortData@CV <- abind::abind(CV, NewCV, along=1, use.dnns=TRUE)
+  
+  ProjSim@Data[[i]]@Effort <- EffortData
+  ProjSim
+}
 
 GenerateProjectionData_Catch <- function(ProjSim, DataTimeStep, TimeStepsAll, i, 
                                          stocks, type=c('Landings', 'Discards')) {
@@ -51,7 +107,7 @@ GenerateProjectionData_Catch <- function(ProjSim, DataTimeStep, TimeStepsAll, i,
   FleetNames <- DataCatch@Name
   SimCatch <- purrr::map(slot(ProjSim, type)[stocks], \(catch) 
                          catch[[as.character(DataTimeStep)]] |>  apply(2:3, sum) |> t()
-  ) |> List2Array('Stock') |>  apply(1:2, sum)
+  ) |> List2Array('Stock') |>  apply(2:3, sum)
   dimnames(SimCatch) <- list(TimeStep=DataTimeStep, 
                           Fleet=FleetNames)
   
@@ -59,10 +115,8 @@ GenerateProjectionData_Catch <- function(ProjSim, DataTimeStep, TimeStepsAll, i,
   Value <- DataCatch@Value
   CV <- DataCatch@CV
   
-  if (DataTimeStep %in% dimnames(Value)[[1]]) {
-    # data already exists
+  if (DataTimeStep %in% dimnames(Value)[[1]]) 
     return(ProjSim)
-  }
   
   TSIndex <- match(DataTimeStep, TimeStepsAll)
   
