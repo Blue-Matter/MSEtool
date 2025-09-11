@@ -116,11 +116,13 @@ MSE2Kobe <- function(MSE) {
     
     for (mm in 1:nMP) {
       Kobe@Value[,om,mm,1,] <- SB_SBMSY |> 
+        dplyr::arrange(Sim, TimeStep, MP) |>
         dplyr::filter(MP==MPs[mm]) |> 
         dplyr::pull(Value) |>
         matrix(nrow=nsim, ncol=nTS, byrow=TRUE)
       
       Kobe@Value[,om,mm,2,] <- F_FMSY |> 
+        dplyr::arrange(Sim, TimeStep, MP) |>
         dplyr::filter(MP==MPs[mm]) |> 
         dplyr::pull(Value) |>
         matrix(nrow=nsim, ncol=nTS, byrow=TRUE)
@@ -185,7 +187,7 @@ GetTimeseriesVariable <- function(Var, MSE) {
   nTS <- length(TimeSteps(MSE@OM))
   Array <- array(NA, dim=c(nsim, nMP, nTS))
   
-  DF <- do.call(Var, c(list(MSE)))
+  DF <- do.call(Var, c(list(MSE))) |> dplyr::arrange(Sim, TimeStep, MP)
   
   DF$MP <- as.character(DF$MP)
   MPs <- DF$MP |> unique()
@@ -196,16 +198,16 @@ GetTimeseriesVariable <- function(Var, MSE) {
   HistValues <- DF |> dplyr::filter(MP=='Historical') |> dplyr::pull(Value) 
   HistValues <- matrix(HistValues, nrow=nsim, ncol=nHistTS, byrow=TRUE)
   
+
   MPs <- MPs[!MPs=='Historical']
   for (mm in seq_along(MPs)) {
-    ProjValues <- DF |> dplyr::filter(MP==MPs[mm]) |> dplyr::pull(Value) 
+    ProjValues <- DF |> dplyr::filter(MP==MPs[mm]) |> 
+      dplyr::pull(Value) 
     ProjValues <- matrix(ProjValues, nrow=nsim, ncol=nTS-nHistTS, byrow=TRUE)
     Array[,mm,] <- cbind(HistValues, ProjValues)
   }
   Array
 }
-
-
 
 
 

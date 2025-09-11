@@ -10,7 +10,7 @@ LastTAC <- function(Data) {
   CheckClass(Data, 'data', 'Data')
   LastTAC <- tail(Data@TAC[!is.na(Data@TAC)],1) |> as.numeric()
   if (length(LastTAC)<1)
-    LastTAC <- tail(Data@Catch@Value,1) |> sum()
+    LastTAC <- sum(tail(Data@Landings@Value,1) + tail(Data@Discards@Value,1))
   LastTAC
 }
 

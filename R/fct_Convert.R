@@ -884,14 +884,16 @@ ConvertData <- function(Data) {
 }
 
 #' @export
-data2Data <- function(data) {
+data2Data <- function(data, Ind=c('CPUE', 'Survey')) {
   # TODO - AddInd, LifeHistory, CAL, etc etc 
+  
+  Ind <- match.arg(Ind)
   
   DataOut <- new('Data')
   DataOut@Year <- data@TimeSteps
   DataOut@LHYear <- data@TimeStepLH
-  DataOut@Ind <- matrix(data@CPUE@Value[,1], nrow=1)
-  DataOut@CV_Ind <- matrix(data@CPUE@CV[,1], nrow=1)
+  DataOut@Ind <- matrix(slot(data, Ind)@Value[,1], nrow=1)
+  DataOut@CV_Ind <- matrix(slot(data, Ind)@CV[,1], nrow=1)
   
   DataOut@Cat <- matrix(rowSums(data@Landings@Value, na.rm=TRUE) + rowSums(data@Discards@Value, na.rm=TRUE), nrow=1)
   DataOut@CV_Cat <- matrix(data@Landings@CV[,1], nrow=1)

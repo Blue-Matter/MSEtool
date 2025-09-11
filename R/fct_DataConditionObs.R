@@ -179,6 +179,9 @@ ConditionObs_Index <- function(HistSim, FisheryData, HistTimeSteps, ProjectionTi
   ObservedIndices <- slot(FisheryData, type)@Value |>
     ArraySubsetTimeStep(TimeSteps=HistTimeSteps)
   
+  if (EmptyObject(ObservedIndices))
+    return(HistSim)
+  
   nFleet <- ncol(ObservedIndices)
   
   SimulatedNumberList <- purrr::map(HistSim@Number[stocks], \(stock) {

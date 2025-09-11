@@ -1172,7 +1172,8 @@ ImportSSData_Index <- function(replist, Type=c('CPUE', 'Survey'),
   
   CPUE <- replist$cpue
   
-  if(nrow(CPUE) == 0) return(Indices)
+  if(!nrow(CPUE)) 
+    return(Indices)
   
   if (Type=='CPUE') {
     IndFleets <- which(replist$IsFishFleet)
@@ -1187,6 +1188,8 @@ ImportSSData_Index <- function(replist, Type=c('CPUE', 'Survey'),
   mainyrs <- replist$startyr:replist$endyr
   nTS <- length(mainyrs)
   
+  if (!nrow(CPUE))
+    return(Indices)
   
   CPUE_Ind <- CPUE$Fleet |> unique() 
   
