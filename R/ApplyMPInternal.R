@@ -240,12 +240,11 @@ UpdateDiscardMortality <- function(ProjSim, MPAdvice, MPAdvicePrevious, TimeStep
 }
 
 UpdateSelectivity <- function(ProjSim, MPAdvice, MPAdvicePrevious, 
-                              TimeStepsAll, TSIndex,type=c('Selectivity', 'Retention')) {
+                              TimeStepsAll, TSIndex, type=c('Selectivity', 'Retention')) {
   type <- match.arg(type)
   
   if (is.null(MPAdvice))
     return(ProjSim)
-  
   
   # if (!is.null(MPAdvicePrevious)) {
   #   if (IdenticalS4(slot(MPAdvice,type), slot(MPAdvicePrevious,type)))
@@ -282,7 +281,6 @@ UpdateSelectivity <- function(ProjSim, MPAdvice, MPAdvicePrevious,
       LengthWeight <- ProjSim@OM@Stock[[st]]@Weight  
     }
     
-    
     for (fl in 1:nFleet) {
       LengthWeight@Classes <- slot(ProjSim@OM@Fleet[[st]], type)@Classes[[fl]]
       if (is.null(LengthWeight@Classes))
@@ -301,8 +299,7 @@ UpdateSelectivity <- function(ProjSim, MPAdvice, MPAdvicePrevious,
       
       Ages <- ProjSim@OM@Stock[[st]]@Ages
       if (LengthModel) {
-        Selectivity@Classes <- Length@Classes
-        
+        Selectivity@Classes <- LengthWeight@Classes
         Selectivity@MeanAtLength <- GenerateMeanatLength(Model=Selectivity@Model,
                                                          Pars=Selectivity@Pars,
                                                          Length=Selectivity@Classes)
@@ -332,10 +329,10 @@ UpdateSelectivity <- function(ProjSim, MPAdvice, MPAdvicePrevious,
       ArrayFill(slot(ProjSim@OM@Fleet[[st]],type)@MeanAtAge[,,fl]) <- abind::adrop(Selectivity@MeanAtAge, 1)
       
       if (!is.null(slot(ProjSim@OM@Fleet[[st]],type)@MeanAtLength[,projInd,fl]) && !is.null(Selectivity@MeanAtLength)) 
-        ArrayFill(slot(ProjSim@OM@Fleet[[st]],type)@MeanAtLength[,projInd,fl]) <- abind::adrop(Selectivity@MeanAtLength, 1)
+        ArrayFill(slot(ProjSim@OM@Fleet[[st]],type)@MeanAtLength[,,fl]) <- abind::adrop(Selectivity@MeanAtLength, 1)
       
       if (!is.null(slot(ProjSim@OM@Fleet[[st]],type)@MeanAtWeight[,projInd,fl])) 
-        ArrayFill(slot(ProjSim@OM@Fleet[[st]],type)@MeanAtWeight[,projInd,fl]) <- abind::adrop(Selectivity@MeanAtWeight, 1)
+        ArrayFill(slot(ProjSim@OM@Fleet[[st]],type)@MeanAtWeight[,,fl]) <- abind::adrop(Selectivity@MeanAtWeight, 1)
     }
   }
   

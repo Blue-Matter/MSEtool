@@ -535,7 +535,17 @@ ExpandTimeSteps <- function(array, TimeSteps, default=NULL) {
   
   for (i in seq_along(TimeBlocks)) {
     Block <- TimeBlocks[[i]]
-    ValueInd <- which(ArrayTS <=min(Block)) |> max()
+    
+    ValueIndForward <- which(ArrayTS <=min(Block)) 
+    ValueIndBack  <- which(ArrayTS >=min(Block)) 
+    
+    # forward 
+    if (length(ValueIndForward)) {
+      ValueInd <- max(ValueIndForward)
+    } else if ((length(ValueIndBack))) {
+      ValueInd <- min(ValueIndBack)
+    }
+    
     if (!is.finite(ValueInd))
       cli::cli_abort("Non-finite value", .internal=TRUE)
     

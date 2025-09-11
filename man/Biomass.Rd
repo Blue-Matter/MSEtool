@@ -28,41 +28,46 @@
 \usage{
 apicalF(MSE, Type = c("Dead", "Retain"), ByFleet = FALSE)
 
-FMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
+FMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL, Expand = FALSE)
 
 F_FMSY(MSE, TimeSteps = NULL)
 
 Biomass(MSE)
 
-B0(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
+B0(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL, Expand = FALSE)
 
 B_B0(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
 
-BMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
+BMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL, Expand = FALSE)
 
 B_BMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
 
 SBiomass(MSE)
 
-SB0(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
+SB0(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL, Expand = FALSE)
 
 SB_SB0(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
 
-SBMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
+SBMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL, Expand = FALSE)
 
 SB_SBMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
 
 SProduction(MSE)
 
-SP0(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
+SP0(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL, Expand = FALSE)
 
 SP_SP0(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
 
-SPMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
+SPMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL, Expand = FALSE)
 
 SP_SPMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
 
-SPRMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
+SPRMSY(
+  MSE,
+  Ref = c("Equilibrium", "Dynamic"),
+  TimeSteps = NULL,
+  Expand = FALSE
+)
 
 Landings(MSE, ByAge = FALSE, ByFleet = FALSE, ByArea = FALSE)
 

@@ -7,6 +7,11 @@ CheckMPClass <- function(MPs) {
   
 }
 
+# ProcessDotsList <- function(...) {
+#   dotslist <- list(...)  
+#   
+# }
+
 #' @describeIn runMSE Run the Forward Projections
 #'
 #' @param Hist An Historical Simulation object (class `Hist`)
@@ -141,7 +146,10 @@ CheckMSERun <- function(ProjSimListMP, ProjSimList, MP, StartTime, EndTime) {
     }
     time <- format(Sys.time(), "%Y%m%d%H%M")
     logFile <- paste0(time, "_", MP, '.log')
-    logFile <- file.path(getwd(), logFile)
+    LogDir <- file.path(getwd(), 'Log')
+    if (!dir.exists(LogDir))
+      dir.create(LogDir)
+    logFile <- file.path(LogDir, logFile)
     file.create(logFile)
     for (i in Failed) {
       cat(paste0("\nSimulation ", i , '\n'), file=logFile, append=TRUE)

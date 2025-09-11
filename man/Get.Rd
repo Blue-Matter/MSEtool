@@ -15,27 +15,27 @@
 \alias{GetDiscardMortalityAtLength}
 \title{Get Values from OM, Hist, and MSE Objects}
 \usage{
-GetNaturalMortalityAtAge(OM, df = TRUE)
+GetNaturalMortalityAtAge(x, df = TRUE)
 
-GetLengthAtAge(OM, df = TRUE)
+GetLengthAtAge(x, df = TRUE)
 
-GetWeightAtAge(OM, df = TRUE)
+GetWeightAtAge(x, df = TRUE)
 
-GetMaturityAtAge(OM, df = TRUE)
+GetMaturityAtAge(x, df = TRUE)
 
-GetFecundityAtAge(OM, df = TRUE)
+GetFecundityAtAge(x, df = TRUE)
 
-GetSelectivityAtAge(OM, df = TRUE)
+GetSelectivityAtAge(x, df = TRUE)
 
 GetRetentionAtAge(OM, df = TRUE)
 
-GetSelectivityAtLength(OM, df = TRUE)
+GetSelectivityAtLength(x, df = TRUE)
 
 GetRetentionAtLength(OM, df = TRUE)
 
-GetDiscardMortalityAtAge(OM, df = TRUE)
+GetDiscardMortalityAtAge(x, df = TRUE)
 
-GetDiscardMortalityAtLength(OM, df = TRUE)
+GetDiscardMortalityAtLength(x, df = TRUE)
 }
 \description{
 Returned as a data frame

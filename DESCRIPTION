@@ -234,6 +234,7 @@ Collate:
     'fct_IdenticalTimeStep.R'
     'fct_ImportBAM.R'
     'fct_ImportSS3.R'
+    'fct_Logs.R'
     'fct_Populate.R'
     'fct_Project.R'
     'fct_ProjectApplyMPAdvice.R'

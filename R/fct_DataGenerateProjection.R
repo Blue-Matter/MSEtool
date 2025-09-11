@@ -107,7 +107,7 @@ GenerateProjectionData_Catch <- function(ProjSim, DataTimeStep, TimeStepsAll, i,
   FleetNames <- DataCatch@Name
   SimCatch <- purrr::map(slot(ProjSim, type)[stocks], \(catch) 
                          catch[[as.character(DataTimeStep)]] |> apply(2, sum) 
-  ) |> List2Array('Stock', 'Fleet') |> t()
+  ) |> List2Array('Stock', 'Fleet') |> rowSums() |> t()
   dimnames(SimCatch) <- list(TimeStep=DataTimeStep, 
                           Fleet=FleetNames)
   
