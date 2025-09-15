@@ -335,6 +335,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
   sb1 <- replist$timeseries %>% dplyr::filter(Yr == mainyrs[1]) %>% getElement("SpawnBio") %>% sum(na.rm = TRUE)
 
   if (sb1 != sb0) {
+   
     # initD <- sb1$SpawnBio/sb0$SpawnBio
     # cpars_bio$initD <- rep(initD, nsim)
     # Modify rec devs so N-at-age 1 is correct
@@ -352,6 +353,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
     n_init <- n_init %>% dplyr::select(dplyr::all_of(cols)) %>% colSums()
     
     n_virg <- replist$natage %>% dplyr::filter(Sex == i, Era == "VIRG", `Beg/Mid` == 'B')
+    
     if(nrow(n_virg) > 1) {
       n_age0 <- dplyr::filter(n_virg, BirthSeas == Seas) %>% select("0") %>% sum()
       n_virg <- dplyr::filter(n_virg, Seas == 1)
@@ -359,7 +361,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
     }
     n_virg <- n_virg %>% dplyr::select(dplyr::all_of(cols)) %>% colSums()
 
-    adjust <- as.numeric(n_init/n_virg)# *  cpars_bio$Perr_y[1,n_age:1])
+    adjust <- as.numeric(n_init/n_virg) # *  cpars_bio$Perr_y[1,n_age:1]
     cpars_bio$Perr_y[, n_age:1] <- matrix(adjust, nrow = nsim, ncol = n_age, byrow = TRUE)
   }
   

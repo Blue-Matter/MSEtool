@@ -1044,7 +1044,13 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
       for (yr in 1:(nyears+proyears)) {
         b_ind <- rep(NA, nsim)
         for (i in 1:nsim) {
-          temp <- min(which(SLarray[i,,yr]>=0.05))
+          ind <- which(SLarray[i,,yr]>=0.05)
+          if (length(ind)) {
+            temp <- min(ind)
+          } else {
+            temp <- 1
+          }
+          
           if (length(temp)<1) temp <- 1
           if (is.na(temp)) temp <- 1
           b_ind[i] <- temp
@@ -1072,9 +1078,13 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
       for (yr in 1:(nyears+proyears)) {
         b_ind <- rep(NA, nsim)
         for (i in 1:nsim) {
-          temp <- min(which(SLarray[i,,yr]>=0.05))
-          if (length(temp)<1) temp <- 1
-          if (is.na(temp)) temp <- 1
+          
+          ind <- which(SLarray[i,,yr]>=0.05)
+          if (length(ind)) {
+            temp <- min(ind)
+          } else {
+            temp <- 1
+          }
           b_ind[i] <- temp
         }
 
@@ -1185,7 +1195,13 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
       for (yr in 1:(nyears+proyears)) {
         b_ind <- rep(NA, nsim)
         for (i in 1:nsim) {
-          temp <- min(which(retL[i,,yr]>=0.05))
+          ind <- which(retL[i,,yr]>=0.05)
+          if (length(ind)) {
+            temp <- min(ind)
+          } else {
+            temp <- 1
+          }
+
           if (length(temp)<1) temp <- 1
           if (is.na(temp)) temp <- 1
           b_ind[i] <- temp

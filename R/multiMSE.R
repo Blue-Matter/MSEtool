@@ -132,6 +132,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     StockPars[[p]] <- SampleStockPars(Stock = Stocks[[p]], nsim, nyears,
                                       proyears, cpars = SampCpars[[p]][[1]],
                                       msg = !silent)
+    
     StockPars[[p]]$plusgroup <- plusgroup[p]
     StockPars[[p]]$maxF <- MOM@maxF
     StockPars[[p]]$n_age <- StockPars[[p]]$maxage+1
@@ -180,7 +181,8 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       StockPars_t <- StockPars
       FleetPars_t <- FleetPars
       
-      slot_s <- c("D", "hs", "AC", "R0", "R0a", "Perr_y")
+      # slot_s <- c("D", "hs", "AC", "R0", "R0a", "Perr_y")
+      slot_s <- c("D", "hs", "AC",  "Perr_y")
       # slot_f <- c("Esd", "Find", "dFFinal", "Spat_targ", "qinc", "qcv", "qvar", "FinF")
       slot_f <- c("Esd", "Spat_targ", "qinc", "qcv", "qvar")
       
@@ -191,6 +193,10 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       
       for (p in 1:np) {
         StockPars[[p]][slot_s] <- StockPars_t[[parcopy[p]]][slot_s]
+        
+        # keep historical rec devs 
+        StockPars[[p]][slot_s]$Perr_y[,1:nyears] <-  StockPars_t[[p]][slot_s]$Perr_y[,1:nyears]
+        
         for (f in 1:nf) {
           FleetPars[[p]][[f]][slot_f] <- FleetPars_t[[parcopy[p]]][[f]][slot_f]
           ObsPars[[p]][[f]] <- ObsPars[[parcopy[p]]][[f]]
@@ -418,7 +424,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     } # end of loop over fleets
   } # end of loop over stocks
   
-  
   # ---- SexPars - Update SSB0 and Ricker SRR parameters for male stock ----
   # Other parameters have been updated (R0, h, rec devs) earlier
   if (length(SexPars)) {
@@ -521,7 +526,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
           if(length(cpars)>0 && length(cpars[[p]][[f]])>0){
             # check each list object has the same length and if not stop and error report
             ncparsim <- cparscheck(cpars[[p]][[f]])
-            SampCpars2[[f]] <- SampleCpars(cpars[[p]][[f]], Nprob, silent=silent)
+            SampCpars2[[f]] <- SampleCpars(cpars[[p]][[f]], Nprob, silent=TRUE)
           }
         }
 
@@ -1178,7 +1183,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                                         nsim,
                                         nyears,
                                         proyears,
-                                        msg=!silent,
+                                        msg=FALSE,
                                         control)
           
           updatedData$ObsPars[[1]][[1]]$VIerr_y[1,1:69]
