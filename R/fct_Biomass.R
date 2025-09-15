@@ -690,7 +690,7 @@ CatchValues <- function(MSE, ByAge=FALSE, ByFleet=FALSE, ByArea=FALSE, type=c('L
   }
   
   if (disctype=='alive' | disctype=='all') {
-    DiscardMortality <- purrr::map(Hist@OM@Fleet, \(fleet) fleet@DiscardMortality@MeanAtAge |>
+    DiscardMortality <- purrr::map(MSE@OM@Fleet, \(fleet) fleet@DiscardMortality@MeanAtAge |>
                                      ArraySubsetTimeStep(HistTimeStep) |>
                                      AddDimension('Area') |>
                                      AddDimension('MP') |>
