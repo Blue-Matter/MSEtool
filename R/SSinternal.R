@@ -26,6 +26,7 @@ SS_import <- function(SSdir, silent = FALSE, ...) {
 SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1, i=1) {
   
   SRR <- NULL
+  Rec <- NULL
 
   if(replist$SRRtype == 3 || replist$SRRtype == 6) { # Beverton-Holt SR
     SRrel <- 1L
