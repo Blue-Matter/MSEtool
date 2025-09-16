@@ -55,6 +55,13 @@ SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1) {
     
     SRrel <- 3L
     
+    relstock <- replist$natage |> 
+      dplyr::filter(Era=='VIRG', `Beg/Mid`=='B') |> 
+      dplyr::select(Sex, Yr, Rec='0') |>
+      dplyr::pull(Rec)
+    
+    relstock <- (relstock/sum(relstock))[i]
+    
     R0 <- exp(replist$parameters$Value[replist$parameters$Label == "SR_LN(R0)"])
     zfrac <- replist$parameters$Value[replist$parameters$Label == "SR_surv_zfrac"]
     Beta <- replist$parameters$Value[replist$parameters$Label == "SR_surv_Beta"]
@@ -78,7 +85,7 @@ SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1) {
       
       z <- z0 + (zmin - z0) * (1 - dep^Beta)
       surv <- exp(-z)
-      R <- SB * surv
+      R <- SB * surv * relstock
       return(R)
     }
     
@@ -86,7 +93,8 @@ SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1) {
       R0 = rep(R0, nsim),
       zfrac = rep(zfrac, nsim),
       Beta = rep(Beta, nsim),
-      SB0 = rep(SB0, nsim)
+      SB0 = rep(SB0, nsim),
+      relstock =rep(relstock, nsim)
     )
     
     relRfun <- function(SSBpR, SRRpars) {
