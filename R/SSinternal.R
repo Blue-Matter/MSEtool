@@ -23,7 +23,7 @@ SS_import <- function(SSdir, silent = FALSE, ...) {
   return(replist)
 }
 
-SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1) {
+SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1, i=1) {
   
   SRR <- NULL
 
@@ -328,7 +328,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
   Stock@M <- mean(M_age[, nyears]) %>% rep(2)
 
   # Steepness
-  SR_par <- SS_steepness(replist, mainyrs, mean_h, nsim, seed)
+  SR_par <- SS_steepness(replist, mainyrs, mean_h, nsim, seed, i=i)
   Stock@SRrel <- SR_par[[1]]
   h_out <- SR_par[[2]]
   Stock@h <- SR_par[[2]]
