@@ -675,6 +675,7 @@ CatchValues <- function(MSE, ByAge=FALSE, ByFleet=FALSE, ByArea=FALSE, type=c('L
   CheckClass(MSE, c('mse', 'hist'), 'MSE')
   
   HistValues <- CatchHist(MSE, ByAge, ByFleet, ByArea,type, disctype)
+  HistTimeStep <- TimeSteps(MSE@OM, "Historical")
   
   if (inherits(MSE, 'hist')) 
     return(HistValues)
