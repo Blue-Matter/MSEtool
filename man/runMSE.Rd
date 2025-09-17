@@ -12,18 +12,20 @@ Project(
   parallel = FALSE,
   silent = FALSE,
   extended = FALSE,
-  checkMPs = FALSE,
-  nSim = NULL,
-  Reduce = TRUE
+  checkMPs = FALSE
 )
 
-Simulate(
-  OM = MSEtool::testOM,
+Simulate(OM = MSEtool::testOM, parallel = FALSE, silent = FALSE, nsim = NULL)
+
+Simulate(OM = MSEtool::testOM, parallel = FALSE, silent = FALSE, nsim = NULL)
+
+Project(
+  Hist = NULL,
+  MPs = NA,
   parallel = FALSE,
   silent = FALSE,
-  nsim = NULL,
-  nSim = NULL,
-  ...
+  extended = FALSE,
+  checkMPs = FALSE
 )
 
 runMSE(
@@ -107,6 +109,10 @@ create problems when combining into a single object.
 \item \code{Project()}: Run the Forward Projections
 
 \item \code{Simulate()}: Run the Historical Simulations from an object of class \code{OM} or class \code{om}
+
+\item \code{Simulate()}: Run the Historical Simulations from an object of class \code{OM}
+
+\item \code{Project()}: Run the Forward Projections
 
 \item \code{runMSE()}: Run the Historical Simulations and Forward Projections
 from an object of class `OM

@@ -1828,10 +1828,6 @@ setMethod("show", "Data", function(object) show_int(object))
 #' @rdname show-MSEtool
 setMethod("show", "OM", function(object) show_int(object, slots_check = "cpars"))
 
-#' @rdname show-MSEtool
-setMethod("show", "MOM", function(object) {
-  show_int(object)
-})
 
 #' @rdname show-MSEtool
 setMethod("show", "Hist", function(object) show_int(object))

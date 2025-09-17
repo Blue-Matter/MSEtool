@@ -159,6 +159,13 @@ setMethod("initialize", "MOM", function(.Object, Stocks=NULL, Fleets=NULL,
 })
 
 
+#' @rdname show-MSEtool
+setMethod("show", "MOM", function(object) {
+  show_int(object)
+})
+
+
+
 # setGeneric("tinyErr", function(x, obs = TRUE, imp = TRUE, proc = TRUE, grad = TRUE, silent = FALSE)
 #   standardGeneric("tinyErr") )
 

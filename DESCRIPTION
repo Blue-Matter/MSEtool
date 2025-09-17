@@ -149,6 +149,7 @@ Collate:
     'MICE.R'
     'MICE_Rel.R'
     'MMSE_Object.r'
+    'MMSE_functions.R'
     'MMSE_plots.R'
     'MOM_import.R'
     'MOM_object.r'
