@@ -9,6 +9,7 @@
 #' @param nsim The number of simulations in the operating model
 #' @param proyears The number of MSE projection years
 #' @param mcmc Logical, whether to use mcmc samples. Currently unsupported. 
+#' @param spawn_time_frac Numeric, the fraction of a year when spawning takes place (e.g., 0.5 is the midpoint of the year)
 #' @param Name The name of the operating model
 #' @param Source Reference to assessment documentation e.g. a url
 #' @param nyr_par_mu integer, the number of recent years to estimate vulnerability over for future projections
@@ -24,7 +25,8 @@
 #' @author Q. Huynh
 #' @seealso \link{Assess2OM}
 #' @export
-ASAP2OM <- function(asap, nsim = 48, proyears = 50, mcmc = FALSE, Name = "ASAP Model", Source = "No source provided",
+ASAP2OM <- function(asap, nsim = 48, proyears = 50, mcmc = FALSE, 
+                    spawn_time_frac = 0, Name = "ASAP Model", Source = "No source provided",
                     nyr_par_mu = 3, Author = "No author provided", report = FALSE, silent = FALSE) {
   
   # get dimensions
@@ -69,8 +71,11 @@ ASAP2OM <- function(asap, nsim = 48, proyears = 50, mcmc = FALSE, Name = "ASAP M
                   naa = N, faa = FM, waa = Wt_age, Mataa = Mat_age, Maa = M, laa = Len_age,
                   nyr_par_mu = nyr_par_mu, LowerTri = sage,
                   recind = 0, plusgroup = TRUE, altinit = 0, fixq1 = TRUE,
-                  report = FALSE, silent = silent, R0 = R0, phi0 = phi0, 
-                  Perr = sdconv(1, max(asap$control.parms$recruit.cv)))
+                  report = FALSE, silent = silent, 
+                  R0 = R0, phi0 = phi0, 
+                  Perr = sdconv(1, max(asap$control.parms$recruit.cv)),
+                  fecaa = Fec_age,
+                  spawn_time_frac = spawn_time_frac)
   
   # Wt_age C
   OM@cpars$Wt_age_C <- local({

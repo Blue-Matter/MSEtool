@@ -803,6 +803,7 @@ Dom <- function(MSEobj, ..., PMlist=NULL, Refs=NULL, Yrs=NULL) {
 #' @describeIn checkMSE Adds additional MPs to an MSE object by combining
 #' multiple MSE objects that have identical historical OM values but different
 #' MPs.
+#' @seealso [addMMPs()]
 #' @export
 addMPs <- function(MSEobjs) {
   # join two or more MSE objects
@@ -1029,107 +1030,3 @@ joinHist <- function(Hist_List) {
   
   return(Hist)
 }
-
-# ----- MSEtool 4.0 Objects ----
-
-
-MPSelect <- function(MSE, MP) {
-  MSE_MPs <- names(MSE@MPs)
-  
-  MPind <- match(MP, MSE_MPs)
-  chk <- is.na(MPind)
-  if (all(chk))
-    cli::cli_abort('{.val {MP}} {?is/are} not MP{?s} in this MSE object ')
-  
-  if (any(chk))
-    cli::cli_warn(c('{.val {MP[chk]}} {?is/are} not MP{?s} in this MSE object ',
-                    'i'='Dropping and continuing'))
-  
-  MP <- MP[!chk]
-  MPind <- match(MP, MSE_MPs)
-  chk <- is.na(MPind)
-  
-  MPkeep <- seq_along(MSE_MPs) %in% MPind
-  
-  MSEOut <- MSE
-  MSEOut@MPs[!MPkeep] <- NULL
-  attributes(MSEOut@MPs)$complete <-  attributes(MSEOut@MPs)$complete[MPkeep]
-  
-  # MSEOut@PPD  TODO
-  MPslots <- c("Number", "Biomass", "SBiomass", "SProduction",
-               "Removals", "Landings", "Effort", "FDeadAtAge",
-               "FRetainAtAge", "EffortArea", "FDeadAtAgeArea", "FRetainAtAgeArea")
-  
-  for (sl in MPslots) {
-    val <- slot(MSEOut, sl)
-    if (is.list(val)) {
-      for (i in 1:length(val)) {
-        DimInd <- which(names(dimnames(val[[i]])) == 'MP')
-        val[[i]] <- abind::asub(val[[i]], MPind, DimInd, drop=FALSE)
-      }
-    } else {
-      DimInd <- which(names(dimnames(val)) == 'MP')
-      val <- abind::asub(val, MPind, DimInd, drop=FALSE)
-    }
-    slot(MSEOut, sl) <- val
-  }
-  MSEOut
-}
-
-MPAdd <- function(MSE, MSEAdd, pos=1) {
-  MSE_MPs <- names(MSE@MPs)
-  MSEAdd_MPs <- names(MSEAdd@MPs)
-  chk <- MSEAdd_MPs %in% MSE_MPs
-  
-  if (any(chk))
-    cli::cli_abort("{.val {MSEAdd_MPs[chk]}} {?is/are} already in MSE object")
-  
-  MSEOut <- MSE
-  
-  if (pos==1) {
-    MSEOut@MPs <- c(MSEAdd@MPs, MSE@MPs)
-    attributes(MSEOut@MPs)$complete <- c(attributes(MSEAdd@MPs)$complete, attributes(MSE@MPs)$complete)
-  } else {
-    MSEOut@MPs <- c(MSE@MPs, MSEAdd@MPs)
-    attributes(MSEOut@MPs)$complete <- c(attributes(MSE@MPs)$complete, attributes(MSEAdd@MPs)$complete)
-  }
-  
-  # MSEOut@PPD  TODO
-  MPslots <- c("Number", "Biomass", "SBiomass", "SProduction",
-               "Removals", "Landings", "Effort", "FDeadAtAge",
-               "FRetainAtAge", "EffortArea", "FDeadAtAgeArea", "FRetainAtAgeArea")
-  
-  MPslots <- c("Biomass", "SBiomass", "SProduction",
-               "Removals", "Landings", "Effort", "FDeadAtAge",
-               "FRetainAtAge")
-  
-  for (sl in MPslots) {
-    val <- slot(MSEOut, sl)
-    valAdd <- slot(MSEAdd, sl)
-    if (is.list(val)) {
-      for (i in 1:length(val)) {
-        DimNames <- names(dimnames(val[[i]]))
-        DimInd <- which(DimNames== 'MP')
-        if (pos==1) {
-          val[[i]] <- abind::abind(valAdd[[i]], val[[i]], along=DimInd)
-        } else {
-          val[[i]] <- abind::abind(val[[i]], valAdd[[i]], along=DimInd)
-        }
-        names(dimnames(val[[i]])) <- DimNames
-      }
-    } else {
-      DimNames <- names(dimnames(val))
-      DimInd <- which(DimNames== 'MP')
-      if (pos==1) {
-        val <- abind::abind(valAdd, val, along=DimInd)
-      } else {
-        val <- abind::abind(val, valAdd, along=DimInd)
-      }
-      names(dimnames(val)) <- DimNames
-    }
-    slot(MSEOut, sl) <- val
-  }
-  MSEOut
-}
-
-

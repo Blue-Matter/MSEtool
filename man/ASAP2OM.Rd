@@ -10,6 +10,7 @@ ASAP2OM(
   nsim = 48,
   proyears = 50,
   mcmc = FALSE,
+  spawn_time_frac = 0,
   Name = "ASAP Model",
   Source = "No source provided",
   nyr_par_mu = 3,
@@ -28,6 +29,8 @@ ASAP2Data(asap, Name = "ASAP assessment")
 \item{proyears}{The number of MSE projection years}
 
 \item{mcmc}{Logical, whether to use mcmc samples. Currently unsupported.}
+
+\item{spawn_time_frac}{Numeric, the fraction of a year when spawning takes place (e.g., 0.5 is the midpoint of the year)}
 
 \item{Name}{The name of the operating model}
 

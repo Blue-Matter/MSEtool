@@ -1147,15 +1147,12 @@ setMethod("show", signature = (object="PMobj"), function(object) {
     colnames(df) <- object@MPs
     names(lst) <- object@MPs
     if (nsim > (nprint+1)) {
-      ndots <- min(nsim-nprint-1, 3)
-      if (length(object@MPs)==1) {
-        dots <- data.frame('.')
-        colnames(dots) <- object@MPs
-      } else {
-        dots <- df[1,]
-        dots[] <- '.'
-              }
+      ndots <- nsim-nprint-1
+      
+      dots <- df[1,]
+      dots[] <- '.'
       dots <- do.call("rbind", replicate(ndots, dots, simplify = FALSE))
+      
       df <- rbind(df, dots, lst)
       rownames(df) <-  c(1:nprint, nprint+1:ndots, nsim)
     }
@@ -1830,6 +1827,11 @@ setMethod("show", "Data", function(object) show_int(object))
 
 #' @rdname show-MSEtool
 setMethod("show", "OM", function(object) show_int(object, slots_check = "cpars"))
+
+#' @rdname show-MSEtool
+setMethod("show", "MOM", function(object) {
+  show_int(object)
+})
 
 #' @rdname show-MSEtool
 setMethod("show", "Hist", function(object) show_int(object))

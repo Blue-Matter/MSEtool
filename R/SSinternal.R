@@ -23,7 +23,10 @@ SS_import <- function(SSdir, silent = FALSE, ...) {
   return(replist)
 }
 
-SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1) {
+SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1, i=1) {
+  
+  SRR <- NULL
+  Rec <- NULL
 
   if(replist$SRRtype == 3 || replist$SRRtype == 6) { # Beverton-Holt SR
     SRrel <- 1L
@@ -50,20 +53,91 @@ SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1) {
       h_out <- rnorm(nsim, h, hsd)
     }
   } else if(replist$SRRtype == 7) {
-    SRrel <- 1L
-
-    s_frac <- replist$parameters$Value[replist$parameters$Label == "SR_surv_Sfrac"]
+    
+    SRrel <- 3L
+    
+    relstock <- replist$natage |> 
+      dplyr::filter(Era=='VIRG', `Beg/Mid`=='B') |> 
+      dplyr::select(Sex, Yr, Rec='0') |>
+      dplyr::pull(Rec)
+    
+    relstock <- (relstock/sum(relstock))[i]
+    
+    R0 <- exp(replist$parameters$Value[replist$parameters$Label == "SR_LN(R0)"])
+    zfrac <- replist$parameters$Value[replist$parameters$Label == "SR_surv_zfrac"]
     Beta <- replist$parameters$Value[replist$parameters$Label == "SR_surv_Beta"]
-
-    s0 <- 1/SpR0
-    z0 <- -log(s0)
-    z_min <- z0 * (1 - s_frac)
-
-    h <- 0.2 * exp(z0 * s_frac * (1 - 0.2 ^ Beta))
+    SB0 <- replist$timeseries %>% dplyr::filter(Era == "VIRG") %>% getElement("SpawnBio") %>% sum(na.rm = TRUE)
+    z0 <- log(SB0/R0)
+    
+    h <- 0.2 * exp(z0 * zfrac * (1 - 0.2 ^ Beta))
     hsd <- 0
-
+    
     h_out <- rep(h, nsim)
+    
+    SRRfun <- function(SB, SRRpars) {
+      SB0 <- SRRpars$SB0
+      zfrac <- SRRpars$zfrac
+      R0 <- SRRpars$R0
+      Beta <- SRRpars$Beta
+      
+      z0 <- log(SB0/R0)
+      zmin <- z0 * (1 - zfrac)
+      dep <- SB/SB0
+      
+      z <- z0 + (zmin - z0) * (1 - dep^Beta)
+      surv <- exp(-z)
+      R <- SB * surv * relstock
+      return(R)
+    }
+    
+    SRRpars <- data.frame(
+      R0 = rep(R0, nsim),
+      zfrac = rep(zfrac, nsim),
+      Beta = rep(Beta, nsim),
+      SB0 = rep(SB0, nsim),
+      relstock =rep(relstock, nsim)
+    )
+    
+    relRfun <- function(SSBpR, SRRpars) {
+      SB0 <- SRRpars$SB0
+      zfrac <- SRRpars$zfrac
+      R0 <- SRRpars$R0
+      Beta <- SRRpars$Beta
+      
+      z0 <- log(SB0/R0)
+      zmin <- z0 * (1 - zfrac)
+      
+      SB <- SB0 * (1 - (log(SSBpR) - z0)/(zmin - z0))^(1/Beta)
+      SB <- max(0, SB)
+      dep <- SB/SB0
+      
+      z <- z0 + (zmin - z0) * (1 - dep^Beta)
+      surv <- exp(-z)
+      R <- SB * surv
+      return(R)
+    }
+    
+    SPRcrashfun <- function(SSBpR0, SRRpars) {
+      SB0 <- SRRpars$SB0
+      zfrac <- SRRpars$zfrac
+      R0 <- SRRpars$R0
+      
+      z0 <- log(SB0/R0)
+      zmin <- z0 * (1 - zfrac)
+      
+      surv <- exp(-zmin) # R/S as S --> 0
+      surv0 <- R0/SB0 # R/S at S = S0
+      
+      SPRcrash <- surv0/surv
+      return(SPRcrash)
+    }
+    
+    SRR <- list(SRRfun = SRRfun, SRRpars = SRRpars, relRfun = relRfun, SPRcrashfun = SPRcrashfun)
+
   } else {
+    
+    warning("SRRtype ", replist$SRRtype, " not yet coded into MSEtool::SS_steepness(). Assuming Beverton-Holt relationship for now.")
+    
     if(packageVersion("r4ss") == '1.24') {
       SR_ind <- match(mainyrs, replist$recruit$year)
       SSB <- replist$recruit$spawn_bio[SR_ind]
@@ -88,7 +162,7 @@ SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1) {
   h_out[h_out < 0.2] <- 0.2
   if(SRrel == 1) h_out[h_out > 0.999] <- 0.999
 
-  return(list(SRrel = SRrel, h = h_out))
+  return(list(SRrel = SRrel, h = h_out, SRR = SRR))
 }
 
 
@@ -255,10 +329,14 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
   Stock@M <- mean(M_age[, nyears]) %>% rep(2)
 
   # Steepness
-  SR_par <- SS_steepness(replist, mainyrs, mean_h, nsim, seed)
+  SR_par <- SS_steepness(replist, mainyrs, mean_h, nsim, seed, i=i)
   Stock@SRrel <- SR_par[[1]]
   h_out <- SR_par[[2]]
   Stock@h <- SR_par[[2]]
+  
+  if (Stock@SRrel == 3) {
+    cpars_bio$SRR <- SR_par$SRR
+  }
 
   Stock@Perr <- rep(replist$sigma_R_in, 2)
 
@@ -335,6 +413,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
   sb1 <- replist$timeseries %>% dplyr::filter(Yr == mainyrs[1]) %>% getElement("SpawnBio") %>% sum(na.rm = TRUE)
 
   if (sb1 != sb0) {
+   
     # initD <- sb1$SpawnBio/sb0$SpawnBio
     # cpars_bio$initD <- rep(initD, nsim)
     # Modify rec devs so N-at-age 1 is correct
@@ -352,6 +431,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
     n_init <- n_init %>% dplyr::select(dplyr::all_of(cols)) %>% colSums()
     
     n_virg <- replist$natage %>% dplyr::filter(Sex == i, Era == "VIRG", `Beg/Mid` == 'B')
+    
     if(nrow(n_virg) > 1) {
       n_age0 <- dplyr::filter(n_virg, BirthSeas == Seas) %>% select("0") %>% sum()
       n_virg <- dplyr::filter(n_virg, Seas == 1)
@@ -359,7 +439,7 @@ SS_stock <- function(i, replist, mainyrs, nyears, proyears, nsim, single_sex = T
     }
     n_virg <- n_virg %>% dplyr::select(dplyr::all_of(cols)) %>% colSums()
 
-    adjust <- as.numeric(n_init/n_virg)# *  cpars_bio$Perr_y[1,n_age:1])
+    adjust <- as.numeric(n_init/n_virg) # *  cpars_bio$Perr_y[1,n_age:1]
     cpars_bio$Perr_y[, n_age:1] <- matrix(adjust, nrow = nsim, ncol = n_age, byrow = TRUE)
   }
   
@@ -524,8 +604,6 @@ SS_fleet <- function(ff, i, replist, Stock, mainyrs, nyears, proyears, nsim, sin
     if(!is.numeric(Fdisc1[n_age,yy])) Fdisc1[n_age,yy] <- Fdisc1[n_age-1]
     
     # back-calculate retention probability curve
-
-    
     retA[,yy] <- retA[,yy]/V[,yy]
     isZero <- which(V[,yy]==0)
     if (length(isZero)>0) retA[isZero,yy] <- 0

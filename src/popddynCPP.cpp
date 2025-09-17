@@ -26,6 +26,7 @@ arma::mat popdynOneTScpp(double nareas, double maxage,
   for (int A=0; A < nareas; A++) {
     Nnext(0, A) = 0; // Recruitment calculated later
     // Mortality
+    
     for (int age=1; age<n_age; age++) {
       Nnext(age, A) = Ncurr(age-1, A) * exp(-Zcurr(age-1, A)); // Total mortality
     }
@@ -33,8 +34,10 @@ arma::mat popdynOneTScpp(double nareas, double maxage,
     if (plusgroup > 0) {
       Nnext(maxage, A) += Ncurr(maxage, A) * exp(-Zcurr(maxage, A)); // Total mortality
     }
+    
   }
-
+ 
+  
   return Nnext;
 }
 
@@ -205,7 +208,6 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
   Zarray.subcube(0,0, 0, maxage, 0, nareas-1) = Marray.subcube(0,0, 0, maxage, 0, nareas-1) + FMarray.subcube(0,0, 0, maxage, 0, nareas-1);
 
   for (int yr=0; yr<(pyears-1); yr++) { //
-    // Rcpp::Rcout << "yr = " << yr << std::endl;
     arma::vec SB(nareas);
 
     for (int A=0; A<nareas; A++) SB(A) = accu(SBarray.subcube(0, yr, A, maxage, yr, A));
@@ -217,7 +219,7 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
     arma::mat Nnext = popdynOneTScpp(nareas, maxage,
                              wrap(Ncurr2), wrap(Zcurr),
                              plusgroup);
-  
+
     // Move stock - ages 1+
     arma::cube movcy = movc(yr+1);
     arma::mat NextYrN = movestockCPP(nareas, maxage, movcy, wrap(Nnext));
@@ -229,13 +231,14 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
       SSNarray.subcube(0, yr+1, A, maxage, yr+1, A) = NextYrN.col(A) % MatAge.col(yr+1);
       VBarray.subcube(0, yr+1, A, maxage, yr+1, A) = NextYrN.col(A) % WtAge.col(yr+1) % Vuln.col(yr+1);
       Marray.subcube(0, yr+1, A, maxage, yr+1, A) = M_age.col(yr+1);
-      tempVec(A) = accu(VBarray.subcube(0, yr+1, A, maxage-1, yr+1, A));
+      tempVec(A) = accu(VBarray.subcube(0, yr+1, A, maxage, yr+1, A));
     }
 
     Narray.subcube(0, yr+1, 0, maxage, yr+1, nareas-1) = NextYrN;
    
     fishdist = (pow(tempVec, Spat_targc))/sum((pow(tempVec, Spat_targc)));
 
+    
     arma::vec d1(nareas);
     for (int A=0; A<nareas; A++) {
       d1(A) = MPA(yr+1,A) * fishdist(A);// historical closures
@@ -246,6 +249,7 @@ List popdynCPP(double nareas, double maxage, arma::mat Ncurr, double pyears,
       fracE2(A) = d1(A) * (fracE + (1-fracE))/fracE;
     }
     fishdist = fracE2;
+ 
   
     // calculate F at age for next year
     if (control == 1) {

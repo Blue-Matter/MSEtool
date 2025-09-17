@@ -121,7 +121,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     SampCpars[[p]] <- lapply(1:nf, function(f) {
       if (length(cpars) && length(cpars[[p]][[f]])) {
         if (!silent) message("Sampling custom parameters for ", Snames[p], Fnames[f, p])
-        SampleCpars(cpars[[p]][[f]], nsim, silent=silent)
+        SampleCpars(cpars[[p]][[f]], nsim, silent=TRUE)
       } else {
         list()
       }
@@ -132,6 +132,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     StockPars[[p]] <- SampleStockPars(Stock = Stocks[[p]], nsim, nyears,
                                       proyears, cpars = SampCpars[[p]][[1]],
                                       msg = !silent)
+    
     StockPars[[p]]$plusgroup <- plusgroup[p]
     StockPars[[p]]$maxF <- MOM@maxF
     StockPars[[p]]$n_age <- StockPars[[p]]$maxage+1
@@ -150,7 +151,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                       cpars = SampCpars[[p]][[f]],
                       msg=!silent)
     })
-
+    
     # --- Sample Obs Parameters ----
     ObsPars[[p]] <- lapply(1:nf, function(f) {
       SampleObsPars(MOM@Obs[[p]][[f]], nsim,
@@ -180,7 +181,8 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       StockPars_t <- StockPars
       FleetPars_t <- FleetPars
       
-      slot_s <- c("D", "hs", "AC", "R0", "R0a", "Perr_y")
+      # slot_s <- c("D", "hs", "AC", "R0", "R0a", "Perr_y")
+      slot_s <- c("D", "hs", "AC",  "Perr_y")
       # slot_f <- c("Esd", "Find", "dFFinal", "Spat_targ", "qinc", "qcv", "qvar", "FinF")
       slot_f <- c("Esd", "Spat_targ", "qinc", "qcv", "qvar")
       
@@ -191,6 +193,10 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       
       for (p in 1:np) {
         StockPars[[p]][slot_s] <- StockPars_t[[parcopy[p]]][slot_s]
+        
+        # keep historical rec devs 
+        StockPars[[p]][slot_s]$Perr_y[,1:nyears] <-  StockPars_t[[p]][slot_s]$Perr_y[,1:nyears]
+        
         for (f in 1:nf) {
           FleetPars[[p]][[f]][slot_f] <- FleetPars_t[[parcopy[p]]][[f]][slot_f]
           ObsPars[[p]][[f]] <- ObsPars[[parcopy[p]]][[f]]
@@ -361,8 +367,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     N[SPAYR] <- StockPars[[p]]$R0[S] * surv[SAY] * HermFrac[SPA] *
       StockPars[[p]]$initdist[SAR] * StockPars[[p]]$Perr_y[Sa]
 
-    
-    
     # Calculate initial stock biomass
     Biomass[SPAYR] <- N[SPAYR] * StockPars[[p]]$Wt_age[SAY]
     # Calculate spawning stock biomass
@@ -419,7 +423,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       
     } # end of loop over fleets
   } # end of loop over stocks
-  
   
   # ---- SexPars - Update SSB0 and Ricker SRR parameters for male stock ----
   # Other parameters have been updated (R0, h, rec devs) earlier
@@ -523,7 +526,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
           if(length(cpars)>0 && length(cpars[[p]][[f]])>0){
             # check each list object has the same length and if not stop and error report
             ncparsim <- cparscheck(cpars[[p]][[f]])
-            SampCpars2[[f]] <- SampleCpars(cpars[[p]][[f]], Nprob, silent=silent)
+            SampCpars2[[f]] <- SampleCpars(cpars[[p]][[f]], Nprob, silent=TRUE)
           }
         }
 
@@ -612,7 +615,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   if(!silent)
     message("Calculating historical stock and fishing dynamics")
 
-  
   # ---- Run Historical Simulations ----
   histYrs <- .sapply(1:nsim, HistMICE, 
                      StockPars=StockPars,
@@ -1181,7 +1183,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                                         nsim,
                                         nyears,
                                         proyears,
-                                        msg=!silent,
+                                        msg=FALSE,
                                         control)
           
           updatedData$ObsPars[[1]][[1]]$VIerr_y[1,1:69]

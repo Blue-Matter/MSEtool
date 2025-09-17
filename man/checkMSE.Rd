@@ -56,6 +56,8 @@ Returns an object of class matching class(MSEobj)
 
 }}
 \seealso{
+\code{\link[=addMMPs]{addMMPs()}}
+
 \link{joinData}
 }
 \author{

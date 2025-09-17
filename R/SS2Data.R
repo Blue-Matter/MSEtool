@@ -37,13 +37,7 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
     stop("Package `reshape2` is required for this function. Install with `install.packages('reshape2')`", call. = FALSE)
   }
 
-  if (inherits(SSdir, 'list')) {
-    replist <- SSdir
-    SSdir <- 'Imported from SS3'
-  } else {
-    replist <- SS_import(SSdir, ...)  
-  }
-  
+  replist <- SS_import(SSdir, ...)
 
   season_as_years <- FALSE
   if(replist$nseasons == 1 && replist$seasduration < 1) {
@@ -594,6 +588,14 @@ SS2Data_get_comps <- function(replist, mainyrs, maxage, season_as_years = FALSE,
 
 SS2Data_get_index <- function(replist, mainyrs, season_as_years = FALSE, nseas = 1, index_season = "mean") {
 
+  nms <- names(replist$cpue)
+  if (!"Fleet"%in% nms) {
+    firstrow <- replist$cpue[1,]
+    if (!"Fleet"%in% firstrow) 
+      stop("Can't find replist$cpue$Fleet")
+    replist$cpue <- replist$cpue[2:nrow(replist$cpue),]
+    colnames(replist$cpue) <- firstrow
+  }
   cpue_split <- split(replist$cpue, replist$cpue$Fleet)
   cpue_name <- vapply(cpue_split, function(x) {
     out <- unique(x$Fleet_name)
@@ -628,9 +630,11 @@ SS2Data_get_index <- function(replist, mainyrs, season_as_years = FALSE, nseas =
 
   AddInd <- do.call(rbind, lapply(cpue_split, function(x) x$Obs[match(mainyrs, x$Yr)])) %>%
     array(c(1, length(cpue_split), length(mainyrs)))
-
+  AddInd <- array(as.numeric(AddInd), dim=dim(AddInd))
+  
   SE_AddInd <- do.call(rbind, lapply(cpue_split, function(x) x$SE[match(mainyrs, x$Yr)])) %>%
     array(c(1, length(cpue_split), length(mainyrs)))
+  SE_AddInd <- array(as.numeric(SE_AddInd), dim=dim(SE_AddInd))
 
   AddIunits <- replist$survey_units[names(cpue_split) %>% as.numeric()]
 
