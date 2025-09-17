@@ -1801,18 +1801,28 @@ setMethod("show", signature = (object="Rec"), function(object) {
 # ---- Internal show methods ----
 #' @importFrom utils capture.output str
 show_int <- function(object, slots_check) {
-  cat(paste0("S4 object of class ", dQuote(class(object)), ".\n"))
+  cli::cli_par()
+  
+  cli::cli_h2("A S4 object of class {.val {class(object)}}")
+  cli::cli_text("Access help documentation with: {.val {paste0('class?', class(object))}}")
+  
+  
+  # cat(paste0("S4 object of class ", dQuote(class(object)), ".\n"))
   if (!missing(slots_check)) {
+    cli::cli_par() 
     for(i in slots_check) {
       len <- length(slot(object, i))
-      if (len) cat(paste0(len, " items found in slot ", dQuote(i), ".\n"))
+      if (len) 
+        cli::cli_text("{len} item{?s} found in slot {.val {i}}")
     }
   }
-  cat("\n")
-  cat("Use str(), slotNames(),", dQuote("@"), "etc. to explore contents:\n\n")
   
+  cli::cli_text("\n\n") 
+  cli::cli_text("Use `str()`, `slotNames()` to explore object structure and `@` to access slots:\n\n")
+ 
   txt <- capture.output(utils::str(object))
-  for(i in txt[1:5]) cat(i, "\n")
+
+  for(i in txt[1:5]) cli::cli_alert(i, "\n")
   invisible()
 }
 
@@ -1828,10 +1838,7 @@ setMethod("show", "Data", function(object) show_int(object))
 #' @rdname show-MSEtool
 setMethod("show", "OM", function(object) show_int(object, slots_check = "cpars"))
 
-#' @rdname show-MSEtool
-setMethod("show", "MOM", function(object) {
-  show_int(object)
-})
+
 
 #' @rdname show-MSEtool
 setMethod("show", "Hist", function(object) show_int(object))

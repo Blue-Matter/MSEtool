@@ -83,7 +83,7 @@ setMethod("initialize", "MOM", function(.Object, Stocks=NULL, Fleets=NULL,
     .Object@seed <- 1
     return(.Object)
   }
-
+ 
 
   # Needed:
   # helper function to expand Fleets by stock
@@ -156,6 +156,11 @@ setMethod("initialize", "MOM", function(.Object, Stocks=NULL, Fleets=NULL,
   .Object@Rel=Rel
   .Object
 
+})
+
+#' @rdname show-MSEtool
+setMethod("show", "MOM", function(object) {
+  show_int(object)
 })
 
 
