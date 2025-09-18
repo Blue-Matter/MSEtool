@@ -762,6 +762,16 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       })
     })
     
+    # ############################################################################
+    # SAVE <- StockPars
+    # x <- 1
+    # y <- 1
+    # r = optMSY_eq(x,
+    #           yr.ind=y, 
+    #           StockPars=StockPars[[p]], 
+    #           V=V)
+    # 
+    # ############################################################################
 
     # --- Annual reference points ----
     StockPars[[p]]$MSY_y <- sapply(MSYrefsYr, function(x) x["Yield", ]) %>% t()
@@ -1072,10 +1082,10 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
         DataList[[p]][[f]] <- Data
       }
     } else {
-      if (!silent) message('Generating historical data for', Snames[p])
+      if (!silent) message('Generating historical data for Stock: ', Snames[p])
       
       for (f in 1:nf) {
-        if (!silent) message('Generating historical data for', Fnames[f])
+        if (!silent) message('Generating historical data for Fleet: ', Fnames[f])
         ObsPars[[p]][[f]]$Sample_Area <- Sample_Area # add to Obs Pars
         
         Data <- makeData(Biomass=Biomass[,p,,,],
@@ -1328,7 +1338,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     names(multiHist[[p]]) <- fleet.names
   }
 
-  class(multiHist) <- c('list', 'multiHist')
+  class(multiHist) <- c('multiHist', 'list')
 
   attr(multiHist, "version") <- packageVersion("MSEtool")
   attr(multiHist, "date") <- date()

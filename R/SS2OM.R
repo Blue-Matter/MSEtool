@@ -44,7 +44,8 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1,
     OM <- SS_seasonalyears_to_annual(OM, replist)
   }
   if(report) plot_SS2OM(OM, replist, gender, filename, dir, open_file, silent)
-
+ 
+  OM@cpars$Data <- SS2Data(replist)
   return(OM)
 }
 

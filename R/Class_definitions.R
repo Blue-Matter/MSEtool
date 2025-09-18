@@ -13,7 +13,6 @@ setClassUnion(name="label.class", members=c("call", "character", "function"))
 setClassUnion(name="prob.class", members=c("matrix", "numeric", "data.frame"))
 
 
-
 # ---- Data Class ----
 
 #' Class \code{'Data'}
@@ -1095,6 +1094,18 @@ setClass("PMobj", representation(Name = "character",  Caption='label.class',
 
 
 show <- function(object) methods::show(object)
+
+#' Print method for `multiHist` objects
+#' @param x For \code{print.multiHist}, a \code{multiHist} class object 
+#' @param ... Additional arguments (not used)
+#' @return Prints a summary of object `x` to the console
+#' @export
+print.multiHist <- function(x, ...) {
+  cli::cli_h2("A class `multiHist` Object")
+  cli::cli_text("A hierarchical list with {.val {length(x)}} Stocks and {.val {length(x[[1]])}} Fleets")
+  cli::cli_text("Use `multiHist[[st]][[fl]]` to access the `Hist` object for Stock `st` and Fleet `fl`")
+}
+
 
 
 #' Show the output of a PM

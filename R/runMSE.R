@@ -1069,6 +1069,12 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
 Project <- function (Hist=NULL, MPs=NA, parallel=FALSE,
                      silent=FALSE,
                      extended=FALSE, checkMPs=FALSE) {
+  
+  if (inherits(Hist, 'multiHist'))
+    return(
+      ProjectMOM(multiHist = Hist, MPs, parallel, silent, checkMPs=checkMPs,
+                 extended = extended)
+    )
 
   # ---- Setup ----
   if (!methods::is(Hist,'Hist'))

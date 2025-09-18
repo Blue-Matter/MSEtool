@@ -1,8 +1,14 @@
 
 SS_import <- function(SSdir, silent = FALSE, ...) {
+  
+  if(inherits(SSdir, 'list'))
+    return(SSdir)
+  
   if(!requireNamespace("r4ss", quietly = TRUE)) {
     stop("Download the r4ss package to use this function. It is recommended to install the Github version with: remotes::install_github(\"r4ss/r4ss\")", call. = FALSE)
   }
+  
+  
 
   dots <- list(dir = SSdir, ...)
   if(!any(names(dots) == "covar")) dots$covar <- FALSE
@@ -79,7 +85,7 @@ SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1, i=1) {
       zfrac <- SRRpars$zfrac
       R0 <- SRRpars$R0
       Beta <- SRRpars$Beta
-      
+      relstock <- SRRpars$relstock
       z0 <- log(SB0/R0)
       zmin <- z0 * (1 - zfrac)
       dep <- SB/SB0
@@ -87,7 +93,8 @@ SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1, i=1) {
       z <- z0 + (zmin - z0) * (1 - dep^Beta)
       surv <- exp(-z)
       R <- SB * surv * relstock
-      return(R)
+      R[R<tiny] <- tiny
+      R
     }
     
     SRRpars <- data.frame(
@@ -103,18 +110,22 @@ SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1, i=1) {
       zfrac <- SRRpars$zfrac
       R0 <- SRRpars$R0
       Beta <- SRRpars$Beta
+      relstock <- SRRpars$relstock
       
       z0 <- log(SB0/R0)
       zmin <- z0 * (1 - zfrac)
       
       SB <- SB0 * (1 - (log(SSBpR) - z0)/(zmin - z0))^(1/Beta)
+      if (!is.finite(SB))
+        SB <- 0
       SB <- max(0, SB)
       dep <- SB/SB0
       
       z <- z0 + (zmin - z0) * (1 - dep^Beta)
       surv <- exp(-z)
-      R <- SB * surv
-      return(R)
+      R <- SB * surv * relstock
+      R[R<tiny] <- tiny
+      R
     }
     
     SPRcrashfun <- function(SSBpR0, SRRpars) {
