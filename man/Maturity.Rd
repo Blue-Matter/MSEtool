@@ -168,5 +168,5 @@ plot(Maturity)
 # see Examples in `?Length` for other `Pars` configurations
 }
 \seealso{
-\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=MeanAtWeight]{MeanAtWeight()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Semelparous]{Semelparous()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=ValidUnits]{ValidUnits()}}, \code{\link[=Check]{Check()}}, \code{\link[=MaturityModels]{MaturityModels()}}, \code{\link[=Populate]{Populate()}}
+\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=MeanAtWeight]{MeanAtWeight()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Semelparous]{Semelparous()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=ValidUnits]{ValidUnits()}}, \code{\link[=MaturityModels]{MaturityModels()}}, \code{\link[=Populate]{Populate()}}
 }

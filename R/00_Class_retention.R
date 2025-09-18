@@ -7,7 +7,7 @@
 #'
 #' @slot Misc `r Misc_param()`
 #'
-#' @seealso `r See_Also('retention', c('Check'))`
+#' @seealso `r See_Also('retention')`
 #'
 #' @name Retention
 #' @rdname Retention

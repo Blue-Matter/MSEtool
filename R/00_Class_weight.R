@@ -59,7 +59,7 @@
 #' @slot Classes `r Classes_param()`
 #' @slot Misc `r Misc_param()``
 #'
-#' @seealso `r See_Also('weight', c('ValidUnits', 'Check', 'WeightModels', 'Populate'))`
+#' @seealso `r See_Also('weight', c('ValidUnits', 'WeightModels', 'Populate'))`
 #'
 #' @name Weight
 #' @rdname Weight

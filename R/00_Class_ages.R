@@ -90,7 +90,7 @@ Ages <- function(MaxAge=NA,
 #' @slot PlusGroup `r Plusgroup_param()`
 #' @slot Classes `r AgeClasses_param()`
 #'
-#' @seealso `r See_Also('ages', c('ValidUnits', 'Check'))`
+#' @seealso `r See_Also('ages', c('ValidUnits'))`
 #'
 #'
 #' @example man-examples/Ages-class.R

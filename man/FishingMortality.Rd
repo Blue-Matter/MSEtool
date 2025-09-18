@@ -31,5 +31,5 @@ FishingMortality Object
 
 }}
 \seealso{
-\code{\link[=ApicalF]{ApicalF()}}, \code{\link[=DeadAtAge]{DeadAtAge()}}, \code{\link[=RetainAtAge]{RetainAtAge()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Check]{Check()}}
+\code{\link[=ApicalF]{ApicalF()}}, \code{\link[=DeadAtAge]{DeadAtAge()}}, \code{\link[=RetainAtAge]{RetainAtAge()}}, \code{\link[=Misc]{Misc()}}
 }

@@ -106,7 +106,7 @@
 #' @slot CVStay The logit CV associated with `ProbStaying` (used as a penalty when optimizing for diagonal (`ProbStaying`)). See `?FitMovement` for details.
 #' @slot Misc `r Misc_param()`
 #'
-#' @seealso `r See_Also('spatial', c('CalcMovement', 'Check'))`
+#' @seealso `r See_Also('spatial', c('CalcMovement')`
 #' @name Spatial
 #' @rdname Spatial
 #' @docType class

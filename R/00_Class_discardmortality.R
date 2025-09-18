@@ -7,7 +7,7 @@
 #'
 #' @slot Misc `r Misc_param()`
 #'
-#' @seealso `r See_Also('discardmortality', c('Check'))`
+#' @seealso `r See_Also('discardmortality')`
 #'
 #' @name DiscardMortality
 #' @rdname DiscardMortality

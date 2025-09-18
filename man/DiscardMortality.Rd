@@ -37,5 +37,5 @@ Discard mortality
 }}
 
 \seealso{
-\code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Check]{Check()}}
+\code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Misc]{Misc()}}
 }

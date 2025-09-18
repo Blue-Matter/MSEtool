@@ -70,7 +70,7 @@
 #' the time steps when spawning occurs, with 0 indicating the beginning of the time step.
 #' @slot Misc `r Misc_param()`
 #'
-#' @seealso `r See_Also('srr', c('SRRModels', 'Check'))`
+#' @seealso `r See_Also('srr', c('SRRModels'))`
 #' @name SRR
 #' @rdname SRR
 #' @docType class

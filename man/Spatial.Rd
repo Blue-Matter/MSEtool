@@ -295,5 +295,5 @@ Movement(Spatial)[1,,,6,]
 
 }
 \seealso{
-\code{\link[=UnfishedDist]{UnfishedDist()}}, \code{\link[=ProbStaying]{ProbStaying()}}, \code{\link[=RelativeSize]{RelativeSize()}}, \code{\link[=Movement]{Movement()}}, \code{\link[=FracOther]{FracOther()}}, \code{\link[=Arrangement]{Arrangement()}}, \code{\link[=CVDist]{CVDist()}}, \code{\link[=CVStay]{CVStay()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=CalcMovement]{CalcMovement()}}, \code{\link[=Check]{Check()}}
+\verb{r See_Also('spatial', c('CalcMovement')}
 }

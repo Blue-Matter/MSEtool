@@ -8,7 +8,7 @@
 #'
 #' @slot Misc `r Misc_param()`
 #'
-#' @seealso `r See_Also('selectivity', c('Check'))`
+#' @seealso `r See_Also('selectivity')`
 #'
 #' @name Selectivity
 #' @rdname Selectivity

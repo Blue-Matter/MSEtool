@@ -9,7 +9,7 @@
 #' @slot Trips Numeric array. The average number of trips per vessel per time step.
 #' @slot Misc `r Misc_param()`
 #'
-#' @seealso `r See_Also('effort', c('Check'))`
+#' @seealso `r See_Also('effort')`
 #'
 #' @name Effort
 #' @rdname Effort

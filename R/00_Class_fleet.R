@@ -15,7 +15,7 @@
 #'
 #' @slot Misc `r Misc_param()`
 #'
-#' @seealso `r See_Also('fleet', c('Check'))`
+#' @seealso `r See_Also('fleet')`
 #'
 #' @name FleetClass
 #' @example man-examples/Fleet-class.R

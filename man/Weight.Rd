@@ -221,5 +221,5 @@ plot(Weight)
 
 }
 \seealso{
-\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=Units]{Units()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=CVatAge]{CVatAge()}}, \code{\link[=Dist]{Dist()}}, \code{\link[=TruncSD]{TruncSD()}}, \code{\link[=Timing]{Timing()}}, \code{\link[=Random]{Random()}}, \code{\link[=ASK]{ASK()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=ValidUnits]{ValidUnits()}}, \code{\link[=Check]{Check()}}, \code{\link[=WeightModels]{WeightModels()}}, \code{\link[=Populate]{Populate()}}
+\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=Units]{Units()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=CVatAge]{CVatAge()}}, \code{\link[=Dist]{Dist()}}, \code{\link[=TruncSD]{TruncSD()}}, \code{\link[=Timing]{Timing()}}, \code{\link[=Random]{Random()}}, \code{\link[=ASK]{ASK()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=ValidUnits]{ValidUnits()}}, \code{\link[=WeightModels]{WeightModels()}}, \code{\link[=Populate]{Populate()}}
 }

@@ -231,5 +231,5 @@ plot(Length, Ages=Ages(20), type='ASK')
 
 }
 \seealso{
-\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=Units]{Units()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=CVatAge]{CVatAge()}}, \code{\link[=Dist]{Dist()}}, \code{\link[=TruncSD]{TruncSD()}}, \code{\link[=Timing]{Timing()}}, \code{\link[=Random]{Random()}}, \code{\link[=ASK]{ASK()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=ValidUnits]{ValidUnits()}}, \code{\link[=Check]{Check()}}, \code{\link[=LengthModels]{LengthModels()}}, \code{\link[=Populate]{Populate()}}
+\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=Units]{Units()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=CVatAge]{CVatAge()}}, \code{\link[=Dist]{Dist()}}, \code{\link[=TruncSD]{TruncSD()}}, \code{\link[=Timing]{Timing()}}, \code{\link[=Random]{Random()}}, \code{\link[=ASK]{ASK()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=ValidUnits]{ValidUnits()}}, \code{\link[=LengthModels]{LengthModels()}}, \code{\link[=Populate]{Populate()}}
 }

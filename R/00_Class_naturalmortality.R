@@ -56,7 +56,7 @@
 #' @slot Misc `r Misc_param()`
 
 #'
-#' @seealso `r See_Also('naturalmortality', c('ValidUnits', 'Check', 'NaturalMortalityModels', 'Populate'))`
+#' @seealso `r See_Also('naturalmortality', c('ValidUnits', 'NaturalMortalityModels', 'Populate'))`
 #'
 #' @name NaturalMortality
 #' @rdname NaturalMortality

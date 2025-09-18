@@ -6,7 +6,7 @@
 #' @include 00_Class_child.R
 #'
 #'
-#' @seealso `r See_Also('fishingmortality', c('Check'))`
+#' @seealso `r See_Also('fishingmortality')`
 #'
 #' @name FishingMortality
 #' @rdname FishingMortality

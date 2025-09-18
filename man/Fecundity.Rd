@@ -159,5 +159,5 @@ plot(Fecundity)
 # see Examples in `?Length` for other `Pars` configurations
 }
 \seealso{
-\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=Units]{Units()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=FecundityModels]{FecundityModels()}}, \code{\link[=Check]{Check()}}
+\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=Units]{Units()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=FecundityModels]{FecundityModels()}}
 }

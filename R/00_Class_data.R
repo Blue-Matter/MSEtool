@@ -90,7 +90,7 @@ setClass("compdata",
 #' @slot MaxAge `r MaxAge_param()`
 #' @slot Units `r Units_param()`
 #'
-#' @seealso `r See_Also('data', c('Check'))`
+#' @seealso `r See_Also('data')`
 #'
 #' @name DataClass
 #'

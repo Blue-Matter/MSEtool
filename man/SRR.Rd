@@ -168,5 +168,5 @@ plot(SRR)
 # see Examples in `?Length` for other `Pars` configurations
 }
 \seealso{
-\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=R0]{R0()}}, \code{\link[=SD]{SD()}}, \code{\link[=AC]{AC()}}, \code{\link[=SPFrom]{SPFrom()}}, \code{\link[=TruncSD]{TruncSD()}}, \code{\link[=RecDevInit]{RecDevInit()}}, \code{\link[=RecDevHist]{RecDevHist()}}, \code{\link[=RecDevProj]{RecDevProj()}}, \code{\link[=SpawnTimeFrac]{SpawnTimeFrac()}}, \code{\link[=RelRecFun]{RelRecFun()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=SRRModels]{SRRModels()}}, \code{\link[=Check]{Check()}}
+\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=R0]{R0()}}, \code{\link[=SD]{SD()}}, \code{\link[=AC]{AC()}}, \code{\link[=SPFrom]{SPFrom()}}, \code{\link[=TruncSD]{TruncSD()}}, \code{\link[=RecDevInit]{RecDevInit()}}, \code{\link[=RecDevHist]{RecDevHist()}}, \code{\link[=RecDevProj]{RecDevProj()}}, \code{\link[=SpawnTimeFrac]{SpawnTimeFrac()}}, \code{\link[=RelRecFun]{RelRecFun()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=SRRModels]{SRRModels()}}
 }

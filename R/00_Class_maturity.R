@@ -55,7 +55,7 @@
 #' @slot Semelparous Logical. Do animals die after spawning?
 #' @slot Misc `r Misc_param()`
 #'
-#' @seealso `r See_Also('maturity', c('ValidUnits', 'Check', 'MaturityModels', 'Populate'))`
+#' @seealso `r See_Also('maturity', c('ValidUnits', 'MaturityModels', 'Populate'))`
 #'
 #' @name Maturity
 #' @rdname Maturity

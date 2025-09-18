@@ -46,7 +46,7 @@
 #' @slot Misc `r Misc_param()`
 #' @slot Log A list. Used internally for logging and debugging.
 #'
-#' @seealso `r See_Also('stock', c('Check'))`
+#' @seealso `r See_Also('stock')`
 #'
 #' @name StockClass
 #'

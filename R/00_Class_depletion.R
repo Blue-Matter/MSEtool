@@ -65,7 +65,7 @@
 #' @slot Reference The reference point used to calculate Depletion.  See `Details`.
 #' @slot Misc `r Misc_param()`
 #'
-#' @seealso `r See_Also('depletion', c('Check'))`
+#' @seealso `r See_Also('depletion')`
 #'
 #' @name Depletion
 #' @rdname Depletion

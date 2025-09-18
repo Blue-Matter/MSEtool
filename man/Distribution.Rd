@@ -32,5 +32,5 @@ Spatial Distribution of fishing fleet
 }}
 
 \seealso{
-\code{\link[=Closure]{Closure()}}, \code{\link[=Cost]{Cost()}}, \code{\link[=EffortArea]{EffortArea()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Check]{Check()}}
+\code{\link[=Closure]{Closure()}}, \code{\link[=Cost]{Cost()}}, \code{\link[=EffortArea]{EffortArea()}}, \code{\link[=Misc]{Misc()}}
 }

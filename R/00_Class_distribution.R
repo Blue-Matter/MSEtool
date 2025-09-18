@@ -7,7 +7,7 @@
 #'
 #' @slot Misc `r Misc_param()`
 #'
-#' @seealso `r See_Also('distribution', c('Check'))`
+#' @seealso `r See_Also('distribution')`
 #'
 #' @name Distribution
 #' @rdname Distribution

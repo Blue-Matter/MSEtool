@@ -60,7 +60,7 @@
 #' @slot Classes `r Classes_param()`
 #' @slot Misc `r Misc_param()`
 #'
-#' @seealso `r See_Also('length', c('ValidUnits', 'Check', 'LengthModels', 'Populate'))`
+#' @seealso `r See_Also('length', c('ValidUnits', 'LengthModels', 'Populate'))`
 #'
 #' @name Length
 #' 

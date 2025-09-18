@@ -114,5 +114,5 @@ Populate(Depletion, nsim=5)
 
 }
 \seealso{
-\code{\link[=Initial]{Initial()}}, \code{\link[=Final]{Final()}}, \code{\link[=Reference]{Reference()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Check]{Check()}}
+\code{\link[=Initial]{Initial()}}, \code{\link[=Final]{Final()}}, \code{\link[=Reference]{Reference()}}, \code{\link[=Misc]{Misc()}}
 }

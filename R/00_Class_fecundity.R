@@ -62,7 +62,7 @@
 #' @slot Classes `r Classes_param()`
 #' @slot Misc `r Misc_param()`
 #'
-#' @seealso `r See_Also('fecundity', c('FecundityModels', 'Check'))`
+#' @seealso `r See_Also('fecundity', c('FecundityModels'))`
 #' @name Fecundity
 #' @rdname Fecundity
 #' @docType class
