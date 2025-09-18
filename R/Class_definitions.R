@@ -1,3 +1,4 @@
+
 #' Label class union for performance metric objects
 #'
 #' @description Used internally. Nothing to see here!
@@ -11,7 +12,6 @@ setClassUnion(name="label.class", members=c("call", "character", "function"))
 #' @keywords internal
 #' @export
 setClassUnion(name="prob.class", members=c("matrix", "numeric", "data.frame"))
-
 
 
 # ---- Data Class ----
@@ -1096,6 +1096,18 @@ setClass("PMobj", representation(Name = "character",  Caption='label.class',
 
 show <- function(object) methods::show(object)
 
+#' Print method for `multiHist` objects
+#' @param x For \code{print.multiHist}, a \code{multiHist} class object 
+#' @param ... Additional arguments (not used)
+#' @return Prints a summary of object `x` to the console
+#' @export
+print.multiHist <- function(x, ...) {
+  cli::cli_h2("A class `multiHist` Object")
+  cli::cli_text("A hierarchical list with {.val {length(x)}} Stocks and {.val {length(x[[1]])}} Fleets")
+  cli::cli_text("Use `multiHist[[st]][[fl]]` to access the `Hist` object for Stock `st` and Fleet `fl`")
+}
+
+
 
 #' Show the output of a PM
 #'
@@ -1801,18 +1813,28 @@ setMethod("show", signature = (object="Rec"), function(object) {
 # ---- Internal show methods ----
 #' @importFrom utils capture.output str
 show_int <- function(object, slots_check) {
-  cat(paste0("S4 object of class ", dQuote(class(object)), ".\n"))
+  cli::cli_par()
+  
+  cli::cli_h2("A S4 object of class {.val {class(object)}}")
+  cli::cli_text("Access help documentation with: {.val {paste0('class?', class(object))}}")
+  
+  
+  # cat(paste0("S4 object of class ", dQuote(class(object)), ".\n"))
   if (!missing(slots_check)) {
+    cli::cli_par() 
     for(i in slots_check) {
       len <- length(slot(object, i))
-      if (len) cat(paste0(len, " items found in slot ", dQuote(i), ".\n"))
+      if (len) 
+        cli::cli_text("{len} item{?s} found in slot {.val {i}}")
     }
   }
-  cat("\n")
-  cat("Use str(), slotNames(),", dQuote("@"), "etc. to explore contents:\n\n")
   
+  cli::cli_text("\n\n") 
+  cli::cli_text("Use `str()`, `slotNames()` to explore object structure and `@` to access slots:\n\n")
+ 
   txt <- capture.output(utils::str(object))
-  for(i in txt[1:5]) cat(i, "\n")
+
+  for(i in txt[1:5]) cli::cli_alert(i, "\n")
   invisible()
 }
 
@@ -1829,8 +1851,10 @@ setMethod("show", "Data", function(object) show_int(object))
 setMethod("show", "OM", function(object) show_int(object, slots_check = "cpars"))
 
 
+
 #' @rdname show-MSEtool
 setMethod("show", "Hist", function(object) show_int(object))
 
 #' @rdname show-MSEtool
 setMethod("show", "MSE", function(object) show_int(object))
+

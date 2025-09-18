@@ -209,9 +209,41 @@ optMSY_eq <- function(x, yr.ind=1, StockPars, V, Wt_age_C) {
                       maxage,
                       relRfun = StockPars$relRfun, 
                       SRRpars=StockPars$SRRpars[[x]],
-                      R0[x], SRrel[x], hs[x], SSBpR[x, 1], opt=1,
+                      R0[x], 
+                      SRrel[x], 
+                      hs[x], 
+                      SSBpR[x, 1], 
+                      opt=1,
                       plusgroup=plusgroup,
                       spawn_time_frac=spawn_time_frac[x])
+    
+    # ############################################################################
+    # 
+    # logF <- log(0.1)
+    # x <- 2
+    # 
+    # r <- MSYCalcs(logF,
+    #               M_at_Age, 
+    #               Wt_at_Age, 
+    #               Mat_at_Age,
+    #               Fec_at_Age, 
+    #               V_at_Age, 
+    #               Wt_at_Age_C,
+    #               maxage,
+    #               relRfun = StockPars$relRfun, 
+    #               SRRpars=StockPars$SRRpars[[x]],
+    #               R0[x], 
+    #               SRrel[x], 
+    #               hs[x], 
+    #               SSBpR[x, 1], 
+    #               opt=1,
+    #               plusgroup=plusgroup,
+    #               spawn_time_frac=spawn_time_frac[x])
+    # 
+    # r
+    # 
+    # ############################################################################
+    
     
     MSYs <- MSYCalcs(doopt$minimum, 
                      M_at_Age, 
