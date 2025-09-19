@@ -762,17 +762,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       })
     })
     
-    # ############################################################################
-    # SAVE <- StockPars
-    # x <- 1
-    # y <- 1
-    # r = optMSY_eq(x,
-    #           yr.ind=y, 
-    #           StockPars=StockPars[[p]], 
-    #           V=V)
-    # 
-    # ############################################################################
-
     # --- Annual reference points ----
     StockPars[[p]]$MSY_y <- sapply(MSYrefsYr, function(x) x["Yield", ]) %>% t()
     StockPars[[p]]$FMSY_y <- sapply(MSYrefsYr, function(x) x["F", ]) %>% t()
@@ -1195,9 +1184,6 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
                                         proyears,
                                         msg=FALSE,
                                         control)
-          
-          updatedData$ObsPars[[1]][[1]]$VIerr_y[1,1:69]
-          
 
           if (!is.null(MPrec)) {
             if (is.na(SampCpars[[p]][[f]]$Data@MPrec)) {
