@@ -912,6 +912,8 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
   if (msg)
     message('Updating Simulated Data with Real Data from `OM@cpars$Data`')
 
+  msg <- FALSE
+  
   # check last year
   if (!is.na(RealData@LHYear) && !SimData@LHYear == RealData@LHYear) {
     warning('`Fleet@CurrentYear` (', SimData@LHYear, ') is not the same as `OM@cpars$Data@LHYear` (', RealData@LHYear, ')')
@@ -1401,6 +1403,7 @@ AddRealData_MS <- function(SimData,
   if (msg)
     message('Updating Simulated Data with Real Data from `OM@cpars$Data`')
   
+  msg <- FALSE
   # check last year
   if (!is.na(RealData@LHYear) && !SimData@LHYear == RealData@LHYear) {
     warning('`Fleet@CurrentYear` (', SimData@LHYear, ') is not the same as `OM@cpars$Data@LHYear` (', RealData@LHYear, ')')
