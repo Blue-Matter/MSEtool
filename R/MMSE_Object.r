@@ -76,44 +76,12 @@ setMethod("initialize", "MMSE", function(.Object, Name, nyears, proyears,
                                          OM, Obs, SB_SBMSY, F_FMSY, N, B, SSB, VB, FM, SPR,
                                          Catch, Removals, Effort, TAC,TAE,
                                          BioEco, RefPoint, multiHist, PPD, Misc) {
-  .Object@Name <- Name
-  .Object@nyears <- nyears
-  .Object@proyears <- proyears
-  .Object@nMPs <- nMPs
-  .Object@MPs <- MPs
-  .Object@MPcond<-MPcond
-  .Object@MPrefs<-MPrefs
-  .Object@nsim <- nsim
-  .Object@nstocks<-nstocks
-  .Object@nfleets<-nfleets
-  .Object@Snames<-Snames
-  .Object@Fnames<-Fnames
-  .Object@Stocks<-Stocks
-  .Object@Fleets<-Fleets
-  .Object@Obss<-Obs
-  .Object@Imps<-Imps
-  #.Object@MOM<-MOM
-  .Object@OM <- OM
-  .Object@Obs <- Obs
-  .Object@SB_SBMSY <- SB_SBMSY
-  .Object@F_FMSY <- F_FMSY
-  .Object@N <- N
-  .Object@B <- B
-  .Object@SSB <- SSB
-  .Object@VB <- VB
-  .Object@FM <- FM
-  .Object@SPR <- SPR
-  .Object@Catch <- Catch
-  .Object@Removals <- Removals
-  .Object@Effort <- Effort
-  .Object@TAC <- TAC
-  .Object@TAE <- TAE
-  .Object@BioEco <- BioEco
-  .Object@RefPoint <- RefPoint
-  .Object@multiHist <- multiHist
-  .Object@PPD <- PPD
-  .Object@Misc <- Misc
-
+  
+  slts <- slotNames('MMSE')
+  for (sl in slts) {
+    var <- try(get(sl, inherits = FALSE), silent = TRUE)
+    if (!inherits(var, "try-error")) slot(.Object, sl) <- var
+  }
   .Object
 })
 

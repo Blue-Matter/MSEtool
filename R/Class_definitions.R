@@ -1060,7 +1060,8 @@ setMethod("initialize", "MSE", function(.Object, Name, nyears, proyears,
 
   slts <- slotNames('MSE')
   for (sl in slts) {
-    slot(.Object, sl) <- get(sl)
+    var <- try(get(sl, inherits = FALSE), silent = TRUE)
+    if (!inherits(var, "try-error")) slot(.Object, sl) <- var
   }
   .Object
 })
