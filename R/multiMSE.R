@@ -3042,11 +3042,11 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   }
 
   if (dropHist) {
-    multiHist <- list('multiHist dropped (dropHist=TRUE). Reference points available in MMSE@RefPoint')
+    multiHist <- structure(
+      'multiHist dropped (dropHist=TRUE). Reference points available in MMSE@RefPoint',
+      class = 'multiHist'
+    )
   }
-  
-
-  
   
   MSEout <- new("MMSE",
                 Name = MOM@Name,
