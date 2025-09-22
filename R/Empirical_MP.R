@@ -176,10 +176,14 @@ Emp <- function (x, Data, reps = 1,
   CurYr = max(Data@Year)
   Year <- Data@Year[yind]
   C_hist <- Data@Cat[x, yind]
+
+  
   
   if(is.na(Inds[1])){ # user does not specify AddInd indices
     I_hist <-array(Data@Ind[x,yind],c(1,ny))
   }else{
+    nIndices <- dim(Data@AddInd)[2]
+    Inds <- Inds[Inds %in% 1:nIndices]
     I_hist <- array(Data@AddInd[x,Inds, yind],c(length(Inds),ny))
   } 
   
