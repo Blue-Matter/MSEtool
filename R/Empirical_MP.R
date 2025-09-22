@@ -190,6 +190,8 @@ Emp <- function (x, Data, reps = 1,
   nI = nrow(I_hist)
   if(is.na(I_freq[1])) I_freq = rep(1, nI) # defaults to sampling every year
   if(is.na(I_wt[1])) I_wt = rep(1, nI)     # defaults to even weighting of indices
+
+  I_wt <- I_wt[1:nI] # in case provided I_wt is incorrect length
   
   if(is.na(Ind_fac)){ # user does not specify a rate of C/I relative to today
     FMSY = Data@Misc$ReferencePoints$ByYear$FMSY[,LHYrInd]
