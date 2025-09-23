@@ -36,8 +36,12 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   if(!requireNamespace("reshape2", quietly = TRUE)) {
     stop("Package `reshape2` is required for this function. Install with `install.packages('reshape2')`", call. = FALSE)
   }
-
-  replist <- SS_import(SSdir, ...)
+  
+  if (is.list(SSdir)) {
+    replist <- SSdir
+  } else {
+    replist <- SS_import(SSdir, ...)
+  }
 
   season_as_years <- FALSE
   if(replist$nseasons == 1 && replist$seasduration < 1) {
