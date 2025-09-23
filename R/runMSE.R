@@ -1066,9 +1066,12 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
 #' @param Hist An Historical Simulation object (class `Hist`)
 #'
 #' @export
-Project <- function (Hist=NULL, MPs=NA, parallel=FALSE,
+Project <- function (Hist=NULL,
+                     MPs=NA,
+                     parallel=FALSE,
                      silent=FALSE,
-                     extended=FALSE, checkMPs=FALSE) {
+                     extended=FALSE,
+                     checkMPs=FALSE) {
   
   if (inherits(Hist, 'multiHist'))
     return(
@@ -1804,6 +1807,39 @@ Project <- function (Hist=NULL, MPs=NA, parallel=FALSE,
     # Hist@Ref <- list()
     # Hist@SampPars <- list()
   }
+  
+  # Add dimension names
+  CurrentYr <- Hist@OM@CurrentYr
+  HistYears <- seq(CurrentYr, by=-1, length.out=Hist@OM@nyears) |> rev()
+  ProjYears <- seq(CurrentYr+1, by=1, length.out=Hist@OM@proyears)
+  
+  dimnames(SB_SBMSY_a) <- list(Sim=1:Hist@OM@nsim,
+                               MP=MPs,
+                               Year=ProjYears)
+  
+  dimnames(F_FMSYa) <-  dimnames(SB_SBMSY_a) 
+  
+  nareas <- dim(Hist@TSdata$Number)[3]
+  dimnames(N_P_mp) <- list(Sim=1:Hist@OM@nsim,
+                           Age=0:Hist@OM@maxage,
+                           MP=MPs,
+                           Year=ProjYears,
+                           Area=1:nareas)
+  
+  dimnames(Ba) <-  dimnames(SB_SBMSY_a) 
+  dimnames(SSBa) <-  dimnames(SB_SBMSY_a) 
+  dimnames(VBa) <-  dimnames(SB_SBMSY_a) 
+  dimnames(FMa) <-  dimnames(SB_SBMSY_a) 
+  dimnames(CaRet) <-  dimnames(SB_SBMSY_a) 
+  dimnames(Ca) <-  dimnames(SB_SBMSY_a) 
+  dimnames(Effort) <-  dimnames(SB_SBMSY_a) 
+  dimnames(TACa) <-  dimnames(SB_SBMSY_a)
+  dimnames(TAE_out) <-  dimnames(SB_SBMSY_a)
+  
+  dimnames(CB_hist) <- list(Sim=1:Hist@OM@nsim,
+                            Year=HistYears)
+  dimnames(FM_hist) <- dimnames(CB_hist)
+  dimnames(SSB_hist) <- dimnames(CB_hist)
 
   MSEout <- new("MSE",
                 Name = OM@Name,
