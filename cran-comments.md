@@ -2,9 +2,8 @@
 
 Minor patch and fix issue on CRAN Package Check 
 
-
 ## Test environments
-* local - Windows 4.4.2
+* local - Windows 4.5.1
 * Github actions - windows-latest (release)
 * Github actions - windows-latest (devel)
 * Github actions - macOS-latest (release)
@@ -13,10 +12,7 @@ Minor patch and fix issue on CRAN Package Check
 * Github actions - ubuntu-latest (oldrel-1)
 
 ## R CMD check results
-There were no ERRORs or WARNINGs. 
-
-There was 1 NOTE:
-  - installed size is 8.4Mb
+There were no ERRORs, WARNINGs, or NOTES. 
 
 ## Reverse Dependencies
 All dependent packages work without errors with this release.
