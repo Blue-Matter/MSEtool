@@ -265,6 +265,7 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
   OM@interval <- MOM@interval
   OM@pstar <- MOM@pstar
   OM@cpars <- cpars_out
+  OM@cpars$Data <- SS2Data(replist)
   return(OM)
 }
 
