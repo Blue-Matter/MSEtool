@@ -5,6 +5,13 @@ The current version of the `MSEtool` package is available for download from [CRA
 ## Fixes
 - `calc_weightedmean_c`, used in `SSMOM2OM`, can return `NaN` in `cpars$Wt_age_C = 0`. Overwrite `NaN` with `0`. Occurs with un-exploited age classes, e.g., age zero.
 
+## Updates
+- Add option to turn off Blow calculation in `Simulate` when `control$Bfrac = FALSE`
+- Add `spawn_time_frac` argument in `ASAP2OM`
+- Update gradient in F solver (from TAC) in `Project` for better precision and maxF constraint
+- Update `SS2MOM` for SRR type 7 (survival-based model for elasmobranchs). OM uses custom `OM@SRrel = 3`
+- Add dimension names to arrays in MSE output from `Project`
+
 # MSEtool 3.7.4
 
 ## Fixes
@@ -22,6 +29,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 - `runMSE(extended = TRUE)` leaves StockPars, FleetPars, ReferencePoints in `Data@Misc` of `MSE@PPD` slot
 - add `addMMPs()` function
 - Internal function `Export_customMPs` allows for MPs defined in more than one namespace, e.g., functions initially defined in a package and modified in the global environment.
+
 # MSEtool 3.7.3
 
 ## Fixes
