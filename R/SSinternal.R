@@ -47,17 +47,78 @@ SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1, i=1) {
       h_out <- rnorm(nsim, h, hsd)
     }
   } else if(replist$SRRtype == 2) {
-    SRrel <- 2L
-    par <- replist$parameters[grepl("SR_Ricker", rownames(replist$parameters)), ]
-
-    h <- par$Value
-    hsd <- ifelse(is.na(par$Parm_StDev), 0, par$Parm_StDev)
-    if(mean_h) {
-      h_out <- rep(h, nsim)
-    } else{
-      set.seed(seed)
-      h_out <- rnorm(nsim, h, hsd)
+    
+    SRrel <- 3L
+    
+    relstock <- replist$natage |> 
+      dplyr::filter(Era=='VIRG', `Beg/Mid`=='B') |> 
+      dplyr::select(Sex, Yr, Rec='0') |>
+      dplyr::pull(Rec)
+    
+    relstock <- (relstock/sum(relstock))[i]
+    
+    R0 <- exp(replist$parameters$Value[replist$parameters$Label == "SR_LN(R0)"])
+    beta <- replist$parameters$Value[replist$parameters$Label == "SR_Ricker_beta"]
+    SB0 <- replist$timeseries %>% dplyr::filter(Era == "VIRG") %>% getElement("SpawnBio") %>% sum(na.rm = TRUE)
+    
+    h <- 0.2 * exp(0.8 * beta)
+    hsd <- 0
+    
+    h_out <- rep(h, nsim)
+    
+    SRRfun <- function(SB, SRRpars) {
+      SB0 <- SRRpars$SB0
+      beta <- SRRpars$beta
+      R0 <- SRRpars$R0
+      relstock <- SRRpars$relstock
+      
+      dep <- SB/SB0
+      
+      R <- R0 * dep * exp(beta * (1 - dep)) * relstock
+      R[R<tiny] <- tiny
+      R
     }
+    
+    SRRpars <- data.frame(
+      R0 = rep(R0, nsim),
+      beta = rep(beta, nsim),
+      SB0 = rep(SB0, nsim),
+      relstock =rep(relstock, nsim)
+    )
+    
+    relRfun <- function(SSBpR, SRRpars) {
+      SB0 <- SRRpars$SB0
+      beta <- SRRpars$beta
+      R0 <- SRRpars$R0
+      relstock <- SRRpars$relstock
+      
+      SSBpR0 <- SB0/R0
+      
+      SB <- SB0 * (1 - log(SSBpR0/SSBpR)/beta)
+      if (!is.finite(SB)) SB <- 0
+      SB <- max(0, SB)
+      dep <- SB/SB0
+      
+      R <- R0 * dep * exp(beta * (1 - dep)) * relstock
+      R[R<tiny] <- tiny
+      R
+    }
+    
+    SPRcrashfun <- function(SSBpR0, SRRpars) {
+      SB0 <- SRRpars$SB0
+      beta <- SRRpars$beta
+      R0 <- SRRpars$R0
+      relstock <- SRRpars$relstock
+      
+      RpS_crash <- R0/SB0 * exp(beta)
+      SSBpR_crash <- 1/RpS_crash
+      SPRcrash <- SSBpR_crash/(relstock * SSBpR0)
+      SPRcrash[SPRcrash > 1] <- 1
+      return(SPRcrash)
+    }
+    
+    SRR <- list(SRRfun = SRRfun, SRRpars = SRRpars, relRfun = relRfun, SPRcrashfun = SPRcrashfun)
+    
   } else if(replist$SRRtype == 7) {
     
     SRrel <- 3L
