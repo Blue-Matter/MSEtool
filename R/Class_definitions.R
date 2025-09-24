@@ -1159,9 +1159,10 @@ setMethod("show", signature = (object="PMobj"), function(object) {
     colnames(df) <- object@MPs
     names(lst) <- object@MPs
     if (nsim > (nprint+1)) {
-      ndots <- nsim-nprint-1
+      ndots <- min(nsim-nprint-1, 3)
       
-      dots <- df[1,]
+      dots <- df[1,, drop=FALSE]
+     
       dots[] <- '.'
       dots <- do.call("rbind", replicate(ndots, dots, simplify = FALSE))
       
