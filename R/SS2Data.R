@@ -337,11 +337,11 @@ SS2Data <- function(SSdir, Name = "Imported by SS2Data", Common_Name = "", Speci
   if(season_as_years) {
     rec2 <- aggregate(rec, by = list(Yr = seas1_yind_full$true_year), mean, na.rm = TRUE)$x
     rec <- rec2
-    if (!silent) message("Summing recruitment across seasons.")
+    if (!silent) cli::cli_alert("Summing recruitment across seasons.")
   }
 
   Data@Rec <- matrix(rec/mean(rec), nrow = 1)
-  if (!silent) message("Relative recruitment strength to Data@Rec obtained from assessment.")
+  if (!silent) cli::cli_alert("Relative recruitment strength to Data@Rec obtained from assessment.")
 
   #### Depletion
   if(packageVersion("r4ss") == '1.24') {
