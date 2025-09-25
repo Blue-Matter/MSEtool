@@ -134,14 +134,18 @@ SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1, i=1) {
       SB0 <- SRRpars$SB0
       zfrac <- SRRpars$zfrac
       R0 <- SRRpars$R0
+      relstock <- SRRpars$relstock
       
       z0 <- log(SB0/R0)
       zmin <- z0 * (1 - zfrac)
       
       surv <- exp(-zmin) # R/S as S --> 0
-      surv0 <- R0/SB0 # R/S at S = S0
+      #surv0 <- R0/SB0 # R/S at S = S0
+      #SPRcrash <- surv0/surv
+      SSBpR_crash <- 1/surv
       
-      SPRcrash <- surv0/surv
+      SPRcrash <- SSBpR_crash/(relstock * SSBpR0) # SSBpR0 is 2x surv0
+      SPRcrash[SPRcrash > 1] <- 1
       return(SPRcrash)
     }
     
