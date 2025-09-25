@@ -125,7 +125,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       for (f in 1:nf) cpars[[p]][[f]]$plusgroup <- NULL
     }
     
-    if (length(cpars[[p]]) & !silent)
+    if (!is.null(cpars[[p]]) & !silent)
     if (!silent) 
       cli::cli_alert("Sampling Custom Parameters (`cpars`) for Stock: {.val {Snames[p]}}")
     
@@ -1389,9 +1389,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   MPcond <- "unknown"
   if (!length(Rel) && np == 1 && nf == 1) {
     if (!silent)
-      message_info("runMSE checking: you have specified a single stock and fleet with no MICE relationships.",
-              "For analysis you should be using runMSE(). Use this only for debugging",
-              "against runMSE.")
+      cli::cli_inform(c('!'="runMSE checking: you have specified a single stock and fleet with no MICE relationships.", 
+                        "i"="For analysis you should be using {.fun MSEtool::runMSE}. Use this only for debugging  against `runMSE`."))
     if (!methods::is(MPs,"character")) {
       stop('`MPs` must be specified as a vector of character names if there is only',
            ' 1 stock and 1 fleet. `MPs` is currently a ', class(MPs))
@@ -1426,9 +1425,11 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     MPcond <- rep(NA, length(MPs))
 
     if ('MMP' %in% MP_class) {
-      if (!silent) message_info("MMP mode:\nYou have specified multi-fleet, multi-stock MPs of",
-              "class MMP. This class of MP accepts all data objects (stocks x fleets)",
-              "to simultaneously make a recommendation specific to each stock and fleet")
+      if (!silent) 
+        cli::cli_inform(c(
+          "i"="MMP mode: ",
+          "You have specified multi-fleet, multi-stock MPs of class `MMP`. \n\nThis class of MP accepts all data objects (stocks x fleets) to simultaneously make a recommendation specific to each stock and fleet\n"
+        ))
 
       MPcond[which(MP_classes == 'MMP')] <- "MMP"
       nMP <- length(MPs)
@@ -1436,13 +1437,11 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       MPrefs[] <- MPs
     }
     if ('MP' %in% MP_class) {
-      if (!silent) message_info("Complex mode:\nYou have specified a vector of MPs rather than a",
-              "list of MPs, one list position for MP type. The same MP will",
-              "be applied to the aggregate data for all stocks and fleets.",
-              "The MP will, for example, be used to set a single TAC for all",
-              "stocks and fleets combined. This will be allocated among fleets",
-              "according to recent catches and among stocks according to",
-              "available, vulnerable biomass")
+      if (!silent) 
+        cli::cli_inform(c(
+          "i"="Complex mode: ",
+          "You have specified a vector of MPs rather than a list of MPs, one list position for MP type. \n\nThe same MP will be applied to the aggregate data for all stocks and fleets. The MP will, for example, be used to set a single TAC for all stocks and fleets combined. This will be allocated among fleets according to recent catches and among stocks according to available, vulnerable biomass\n"
+        ))
       MPcond[which(MP_classes == 'MP')] <- "complex"
       MPtemp <- MPs
       nMP <- length(MPs)
@@ -1454,20 +1453,24 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   if (methods::is(MPs,'list') && 'unknown' %in% MPcond) {
 
     if(identical(ldim(MPs), ldim(Fleets))){
-      if (!silent) message_info("Byfleet mode: you have specified an MP for each stock and fleet.",
-              "Only fleet-specific data (e.g. catches and indices) will be used to set",
-              "advice for each fleet for each stock")
+      if (!silent) 
+        cli::cli_inform(c(
+          "i"="Byfleet mode: ",
+          "You have specified an MP for each stock and fleet. Only fleet-specific data (e.g. catches and indices) will be used to set advice for each fleet for each stock\n"
+        ))
+
       MPcond <- "byfleet"
       nMP <- length(MPs[[1]][[1]])
       MPrefs <- array(NA,c(nMP,nf,np))
       MPrefs[]<-unlist(MPs)
 
     } else if (ldim(MPs)==ldim(Fleets)[1]) { # not a two-tier list
-      if (!silent) message_info("Bystock mode: you have specified a vector of MPs for each stock,",
-              "but not a vector of MPs for each stock and fleet. The catch data for these",
-              " fleets will be combined, a single MP will be used to set a single TAC",
-              "for all fleets combined that will be allocated between the fleets",
-              "according to recent catches")
+      if (!silent) 
+        cli::cli_inform(c(
+          "i"="Bystock mode: ",
+          "You have specified a vector of MPs for each stock but not a vector of MPs for each stock and fleet. The catch data for these fleets will be combined, a single MP will be used to set a single TAC for all fleets combined that will be allocated between the fleets according to recent catches\n"
+        ))
+        
       MPcond<-"bystock"
       checkN <- unlist(lapply(MPs, length))
       if (!all(checkN == checkN[1]))
@@ -1531,7 +1534,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   # TODO - make same structure as MPs argument
   if (length(interval) != nMP) interval <- rep(interval, nMP)[1:nMP]
   if (!all(interval == interval[1])) {
-    if (!silent) message("Variable management intervals:")
+    if (!silent) cli::cli_inform("Variable management intervals:")
     df <- data.frame(MP=MPs,interval=interval)
     for (i in 1:nrow(df)) {
       if (!silent) message(df$MP[i], 'has management interval:', df$interval[i], ifelse(i == nrow(df), "\n", ""))
@@ -1661,14 +1664,17 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
   for (mm in 1:nMP) {
     if(!silent){
-      message(" ----- ", mm, "/", nMP, " MPs, Running MSE for: ")  # print a progress report
+      cli::cli_alert("{mm}/{nMP} MPs - Running MSE for: ")  # print a progress report
       for(p in 1:np){
-        MPrep<-data.frame(MPrefs[mm,,p])
-        row.names(MPrep)<-Fnames[,p]
-        names(MPrep)=Snames[p]
-        print(MPrep)
+        MPrep <- data.frame(MPrefs[mm,,p])
+        # row.names(MPrep)<-Fnames[,p]
+        # names(MPrep)=Snames[p]
+       
+        cli::cli_h2(Snames[p])
+        for (ff in 1:nrow(Fnames)) {
+          cli::cli_text("{Fnames[ff,p]}: {.val  {MPrep[ff,,p]}}")
+        }
       }
-      message(" --------------------------------- ")
     }
 
     checkNA <- array(0,c(np,nf,proyears)) # save number of NAs
