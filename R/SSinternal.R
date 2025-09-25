@@ -62,6 +62,8 @@ SS_steepness <- function(replist, mainyrs, mean_h = TRUE, nsim, seed = 1, i=1) {
     
     SRrel <- 3L
     
+    # https://www.sciencedirect.com/science/article/abs/pii/S0165783612001567?via%3Dihub
+    
     relstock <- replist$natage |> 
       dplyr::filter(Era=='VIRG', `Beg/Mid`=='B') |> 
       dplyr::select(Sex, Yr, Rec='0') |>
