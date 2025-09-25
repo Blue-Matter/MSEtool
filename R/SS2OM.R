@@ -45,7 +45,7 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1,
   }
   if(report) plot_SS2OM(OM, replist, gender, filename, dir, open_file, silent)
 
-  OM@cpars$Data <- SS2Data(replist)
+  OM@cpars$Data <- SS2Data(replist, silent=TRUE)
   return(OM)
 }
 
@@ -277,7 +277,7 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
   }
   
   
-  OM@cpars$Data <- SS2Data(replist)
+  OM@cpars$Data <- SS2Data(replist, silent=TRUE)
   return(OM)
 }
 
