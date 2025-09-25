@@ -1831,12 +1831,12 @@ show_int <- function(object, slots_check) {
   }
   
   cli::cli_text("\n\n") 
-  cli::cli_text("Use `str()`, `slotNames()` to explore object structure and `@` to access slots:\n\n")
- 
-  txt <- capture.output(utils::str(object))
-
-  for(i in txt[1:5]) cli::cli_alert(i, "\n")
-  invisible()
+  cli::cli_text("Use `str()`, `slotNames()` to explore object structure and `@` to access slots.")
+  # 
+  # txt <- capture.output(utils::str(object))
+  # 
+  # for(i in txt[1:5]) cli::cli_alert(i, "\n")
+  # invisible()
 }
 
 #' @name show-MSEtool
