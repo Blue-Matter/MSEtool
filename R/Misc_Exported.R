@@ -6,7 +6,7 @@ get_funcs <- function(package, classy , msg) {
 
   if (search_package %in% pkgs) {
     if (msg)
-      message('Searching for objects of class ', classy, ' in package: ', package)
+      cli::cli_alert('Searching for objects of class {.val {classy}} in package {.val {package}}')
     funs <- ls(search_package)[vapply(ls(search_package),
                                getclass,
                                logical(1),
