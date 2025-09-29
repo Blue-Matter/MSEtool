@@ -265,7 +265,6 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
   OM@interval <- MOM@interval
   OM@pstar <- MOM@pstar
   OM@cpars <- cpars_out
-  OM@cpars$Data <- SS2Data(replist)
   return(OM)
 }
 
@@ -300,6 +299,7 @@ plot_SS2OM <- function(x, SSdir, gender = 1:2,
 
   write(rmd, file = file.path(dir, paste0(filename, ".rmd")))
 
+  if(!silent) cli::cli_alert_info("Rendering markdown file to HTML: {.file {file.path(dir, paste0(filename, '.html'))}}")
   if(!silent) message("Rendering markdown file to HTML: ", file.path(dir, paste0(filename, ".html")))
 
   out <- rmarkdown::render(file.path(dir, paste0(filename, ".rmd")), "html_document", paste0(filename, ".html"), dir,
