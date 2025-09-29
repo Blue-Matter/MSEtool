@@ -53,13 +53,14 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   }
 
   if (!length(Rel) && np == 1 && nf == 1) {
-    if (!silent) message_info("You have specified only a single stock and fleet with no MICE relationships. ",
-            "You should really be using the function MSEtool::runMSE()")
+    if (!silent) 
+      cli::cli_alert_info(c("You have specified only a single stock and fleet with no MICE relationships. ",
+            "You should really be using the function {.fun MSEtool::runMSE()}"))
   } else if(np > 1 && !length(MOM@Rel) && !length(MOM@SexPars)) {
-    if (!silent) message_info("You have specified more than one stock but no MICE relationships ",
-            "(slot MOM@Rel) or sex-specific relationships (slot MOM@SexPars) among these. ",
-            "As they are independent, consider doing MSE for one stock at a time for ",
-            "computational efficiency.")
+    if (!silent) 
+        cli::cli_alert_info("You have specified more than one stock but no MICE relationships (slot `MOM@Rel`) or sex-specific relationships (slot MOM@SexPars) among these.")
+        cli::cli_par()
+        cli::cli_text("As they are independent, consider doing MSE for one stock at a time for computational efficiency.")
   }
 
   maxF <- MOM@maxF
@@ -84,29 +85,35 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   # Allocation
   if(!length(MOM@Allocation)) {
     MOM@Allocation <- CatchFrac
-    if (!silent) message_info("Slot @Allocation of MOM object not specified. Setting slot ",
-            "@Allocation equal to slot @CatchFrac - current catch fractions")
+    if (!silent) 
+    cli::cli_alert_info(
+      "Slot {.val Allocation} of MOM object not specified. Setting slot {.val Allocation} equal to slot {.val CatchFrac} - current catch fractions"
+    )
   }
 
   if(!length(MOM@Efactor)) {
     MOM@Efactor <- lapply(1:np, function(x) matrix(1, nsim, nf))
-    if (!silent) message_info("Slot @Efactor of MOM object not specified. Setting slot @Efactor ",
-            "to current effort for all fleets")
+    if (!silent) 
+    cli::cli_alert_info(
+      "Slot {.val Efactor} of MOM object not specified. Setting slot {.val Efactor} to current effort for all fleets"
+    )
   }
 
   # All stocks and sampled parameters must have compatible array sizes (maxage)
   maxage_s <- unique(SIL(Stocks, "maxage"))
   maxage <- max(maxage_s)
   if (length(maxage_s) > 1) {
-    if (!silent) message_info(paste("Stocks of varying maximum ages have been specified,",
-                               "all simulations will run to",max(maxage_s),"ages"))
+    if (!silent) 
+      cli::cli_alert_info(
+      "Stocks of varying maximum ages have been specified all simulations will run to {.val {max(maxage_s)}} ages"
+    )
     Stocks <- lapply(Stocks, function(x) {
       x@maxage <- max(maxage)
       return(x)
     })
   }
   
-  if (!silent) message("Loading operating model")
+  if (!silent) cli::cli_alert("Loading operating model")
   StockPars <- FleetPars <- ObsPars <- ImpPars <- SampCpars <- new('list')
 
   plusgroup <- rep(1, np)
@@ -118,9 +125,12 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       for (f in 1:nf) cpars[[p]][[f]]$plusgroup <- NULL
     }
     
+    if (!is.null(cpars[[p]]) & !silent)
+    if (!silent) 
+      cli::cli_alert("Sampling Custom Parameters (`cpars`) for Stock: {.val {Snames[p]}}")
+    
     SampCpars[[p]] <- lapply(1:nf, function(f) {
       if (length(cpars) && length(cpars[[p]][[f]])) {
-        if (!silent) message("Sampling custom parameters for ", Snames[p], Fnames[f, p])
         SampleCpars(cpars[[p]][[f]], nsim, silent=TRUE)
       } else {
         list()
@@ -186,11 +196,10 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
       # slot_f <- c("Esd", "Find", "dFFinal", "Spat_targ", "qinc", "qcv", "qvar", "FinF")
       slot_f <- c("Esd", "Spat_targ", "qinc", "qcv", "qvar")
       
-      if (!silent)  message_info("You have specified sex-specific dynamics,",
-                                 "these parameters will be mirrored across sex types according to SexPars$SSBfrom:\n",
-                                 paste(c(slot_s, slot_f), collapse = ", "),
-                                 ", all observation and implementation parameters")
-      
+      # if (!silent)
+      #   cli::cli_alert_info(
+      #     "You have specified sex-specific dynamics. These parameters will be mirrored across sex types according to SexPars$SSBfrom: {.val {paste(c(slot_s, slot_f), collapse = ', ')}} and all observation and implementation parameters"
+      #   )
       for (p in 1:np) {
         StockPars[[p]][slot_s] <- StockPars_t[[parcopy[p]]][slot_s]
         
@@ -428,9 +437,8 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   # Other parameters have been updated (R0, h, rec devs) earlier
   if (length(SexPars)) {
     if (is.null(SexPars$share_par) || SexPars$share_par == TRUE) {
-      if (!silent)  message_info("You have specified sex-specific dynamics, unfished spawning biomass",
-                                 "and specified stock depletion will be mirrored across sex types according ",
-                                 "to SexPars$SSBfrom")
+      # if (!silent) 
+      #   cli::cli_alert_info("You have specified sex-specific dynamics, unfished spawning biomass and specified stock depletion will be mirrored across sex types according to {.val SexPars$SSBfrom}")
       sexmatches <- sapply(1:nrow(SexPars$SSBfrom), function(x) paste(SexPars$SSBfrom[x, ], collapse = "_"))
       parcopy <- match(sexmatches, sexmatches)
       StockPars_t <- StockPars # need to store a temporary object for copying to/from
@@ -477,9 +485,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
     exp.time <- round(exp.time,2)
     
     if(!silent)
-      message("Optimizing for user-specified depletion ",
-              'for ', nsim, 'simulations,', np, ' stocks, and ', nf, 'fleets',
-              "(could take a while!)")
+      cli::cli_alert("Optimizing for user-specified depletion for {nsim} simulations, {np} stocks, and {nf} fleets (could take a while!)")
     
     out <- .lapply(1:nsim, getq_multi_MICE, StockPars, FleetPars, np, nf, nareas,
                    maxage, nyears, N, VF, FretA, maxF=MOM@maxF,
@@ -511,10 +517,10 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
 
   if (length(probQ) > 0 & optD) {
     Err <- TRUE
-    if(!silent) message(Nprob,
-                        ' simulations have final biomass that is not ',
-                        'close to sampled depletion')
-    if(!silent) message('Re-sampling depletion, recruitment error and fishing effort')
+    if(!silent) {
+      cli::cli_alert_info('{.val {Nprob}} simulations have final biomass that is not close to sampled depletion')
+      cli::cli_alert('Re-sampling depletion, recruitment error and fishing effort')
+    }
 
     count <- 0
     MOM2 <- MOM
@@ -613,7 +619,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   } # end of re-optimization conditional
 
   if(!silent)
-    message("Calculating historical stock and fishing dynamics")
+    cli::cli_alert("Calculating historical stock and fishing dynamics")
 
   # ---- Run Historical Simulations ----
   histYrs <- .sapply(1:nsim, HistMICE, 
@@ -740,7 +746,7 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
   # --- Calculate MSY statistics for each year ----
   # ignores spatial closures
   # assumes all vulnerable fish are caught - ie no discarding
-  if(!silent) message("Calculating MSY and per-recruit reference points for each year")
+  if(!silent) cli::cli_alert("Calculating MSY and per-recruit reference points for each year")
   # average life-history parameters over ageM years
   SPR_hist <- list()
   for (p in 1:np) {
@@ -1071,10 +1077,10 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
         DataList[[p]][[f]] <- Data
       }
     } else {
-      if (!silent) message('Generating historical data for Stock: ', Snames[p])
+      if (!silent) cli::cli_alert('Generating historical data for Stock: {Snames[p]}')
       
       for (f in 1:nf) {
-        if (!silent) message('Generating historical data for Fleet: ', Fnames[f])
+        # if (!silent) message('Generating historical data for Fleet: ', Fnames[f])
         ObsPars[[p]][[f]]$Sample_Area <- Sample_Area # add to Obs Pars
         
         Data <- makeData(Biomass=Biomass[,p,,,],
@@ -1383,9 +1389,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   MPcond <- "unknown"
   if (!length(Rel) && np == 1 && nf == 1) {
     if (!silent)
-      message_info("runMSE checking: you have specified a single stock and fleet with no MICE relationships.",
-              "For analysis you should be using runMSE(). Use this only for debugging",
-              "against runMSE.")
+      cli::cli_inform(c('!'="runMSE checking: you have specified a single stock and fleet with no MICE relationships.", 
+                        "i"="For analysis you should be using {.fun MSEtool::runMSE}. Use this only for debugging  against `runMSE`."))
     if (!methods::is(MPs,"character")) {
       stop('`MPs` must be specified as a vector of character names if there is only',
            ' 1 stock and 1 fleet. `MPs` is currently a ', class(MPs))
@@ -1420,9 +1425,11 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     MPcond <- rep(NA, length(MPs))
 
     if ('MMP' %in% MP_class) {
-      if (!silent) message_info("MMP mode:\nYou have specified multi-fleet, multi-stock MPs of",
-              "class MMP. This class of MP accepts all data objects (stocks x fleets)",
-              "to simultaneously make a recommendation specific to each stock and fleet")
+      if (!silent) 
+        cli::cli_inform(c(
+          "i"="MMP mode: ",
+          "You have specified multi-fleet, multi-stock MPs of class `MMP`. \n\nThis class of MP accepts all data objects (stocks x fleets) to simultaneously make a recommendation specific to each stock and fleet\n"
+        ))
 
       MPcond[which(MP_classes == 'MMP')] <- "MMP"
       nMP <- length(MPs)
@@ -1430,13 +1437,11 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
       MPrefs[] <- MPs
     }
     if ('MP' %in% MP_class) {
-      if (!silent) message_info("Complex mode:\nYou have specified a vector of MPs rather than a",
-              "list of MPs, one list position for MP type. The same MP will",
-              "be applied to the aggregate data for all stocks and fleets.",
-              "The MP will, for example, be used to set a single TAC for all",
-              "stocks and fleets combined. This will be allocated among fleets",
-              "according to recent catches and among stocks according to",
-              "available, vulnerable biomass")
+      if (!silent) 
+        cli::cli_inform(c(
+          "i"="Complex mode: ",
+          "You have specified a vector of MPs rather than a list of MPs, one list position for MP type. \n\nThe same MP will be applied to the aggregate data for all stocks and fleets. The MP will, for example, be used to set a single TAC for all stocks and fleets combined. This will be allocated among fleets according to recent catches and among stocks according to available, vulnerable biomass\n"
+        ))
       MPcond[which(MP_classes == 'MP')] <- "complex"
       MPtemp <- MPs
       nMP <- length(MPs)
@@ -1448,20 +1453,24 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   if (methods::is(MPs,'list') && 'unknown' %in% MPcond) {
 
     if(identical(ldim(MPs), ldim(Fleets))){
-      if (!silent) message_info("Byfleet mode: you have specified an MP for each stock and fleet.",
-              "Only fleet-specific data (e.g. catches and indices) will be used to set",
-              "advice for each fleet for each stock")
+      if (!silent) 
+        cli::cli_inform(c(
+          "i"="Byfleet mode: ",
+          "You have specified an MP for each stock and fleet. Only fleet-specific data (e.g. catches and indices) will be used to set advice for each fleet for each stock\n"
+        ))
+
       MPcond <- "byfleet"
       nMP <- length(MPs[[1]][[1]])
       MPrefs <- array(NA,c(nMP,nf,np))
       MPrefs[]<-unlist(MPs)
 
     } else if (ldim(MPs)==ldim(Fleets)[1]) { # not a two-tier list
-      if (!silent) message_info("Bystock mode: you have specified a vector of MPs for each stock,",
-              "but not a vector of MPs for each stock and fleet. The catch data for these",
-              " fleets will be combined, a single MP will be used to set a single TAC",
-              "for all fleets combined that will be allocated between the fleets",
-              "according to recent catches")
+      if (!silent) 
+        cli::cli_inform(c(
+          "i"="Bystock mode: ",
+          "You have specified a vector of MPs for each stock but not a vector of MPs for each stock and fleet. The catch data for these fleets will be combined, a single MP will be used to set a single TAC for all fleets combined that will be allocated between the fleets according to recent catches\n"
+        ))
+        
       MPcond<-"bystock"
       checkN <- unlist(lapply(MPs, length))
       if (!all(checkN == checkN[1]))
@@ -1525,7 +1534,7 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
   # TODO - make same structure as MPs argument
   if (length(interval) != nMP) interval <- rep(interval, nMP)[1:nMP]
   if (!all(interval == interval[1])) {
-    if (!silent) message("Variable management intervals:")
+    if (!silent) cli::cli_inform("Variable management intervals:")
     df <- data.frame(MP=MPs,interval=interval)
     for (i in 1:nrow(df)) {
       if (!silent) message(df$MP[i], 'has management interval:', df$interval[i], ifelse(i == nrow(df), "\n", ""))
@@ -1655,14 +1664,17 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
 
   for (mm in 1:nMP) {
     if(!silent){
-      message(" ----- ", mm, "/", nMP, " MPs, Running MSE for: ")  # print a progress report
+      cli::cli_alert("{mm}/{nMP} MPs - Running MSE for: ")  # print a progress report
       for(p in 1:np){
-        MPrep<-data.frame(MPrefs[mm,,p])
-        row.names(MPrep)<-Fnames[,p]
-        names(MPrep)=Snames[p]
-        print(MPrep)
+        MPrep <- data.frame(MPrefs[mm,,p])
+        # row.names(MPrep)<-Fnames[,p]
+        # names(MPrep)=Snames[p]
+       
+        cli::cli_h2(Snames[p])
+        for (ff in 1:nrow(Fnames)) {
+          cli::cli_text("{Fnames[ff,p]}: {.val  {MPrep[ff,,p]}}")
+        }
       }
-      message(" --------------------------------- ")
     }
 
     checkNA <- array(0,c(np,nf,proyears)) # save number of NAs

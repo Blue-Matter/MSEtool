@@ -1071,10 +1071,13 @@ CalcMPDynamics_MF <- function(MPRecs_f, y, nyears, proyears, nsim,
                    fishdist,
                    FM_P = lapply(out, getElement, "FM_P"),
                    FM_Pret = lapply(out, getElement, "FM_Pret"),
-                   StockPars$Asize,
-                   StockPars$maxage,
-                   StockPars$nareas,
-                   StockPars$M_ageArray, nyears, y, maxF,
+                   Asize=StockPars$Asize,
+                   maxage=StockPars$maxage,
+                   nareas=StockPars$nareas,
+                   M_ageArray=StockPars$M_ageArray, 
+                   nyears, 
+                   y, 
+                   maxF,
                    control)
     
     Ftot <- matrix(Ftot, nsim, nf, byrow = TRUE)
@@ -1710,7 +1713,10 @@ calcF_MF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, FM_P, FM_Pre
       
       Omat <- 1 - exp(-Zmat)
       VBiomass <- Fsolve[, , f]/ft[f] * Biomass_P[[f]][x,,y,]
-      dct[f] <- sum(VBiomass * ((ft[f] * Zmat - Fsolve[, , f] * ft[f]) * Omat + Fsolve[, , f] * ft[f] * Zmat * exp(-Zmat))/Zmat/Zmat)
+      dct[f] <- sum(VBiomass * ((ft[f] * Zmat - Fsolve[, , f] * ft[f]) * Omat + 
+                                  Fsolve[, , f] * ft[f] * Zmat * exp(-Zmat))/Zmat/Zmat)
+      if (!is.finite(dct[f]))
+        dct[f] <- 1E-15
     }
     
     if (all(dct[!is.na(ct)] < 1E-15)) break
@@ -1718,6 +1724,8 @@ calcF_MF <- function(x, TACusedE, V_P, retA_P, Biomass_P, fishdist, FM_P, FM_Pre
     log_ft <- pmin(log_ft - (pct - ct)/dct, log(maxF))
     
     obj <- abs(pct - ct)/ct
+    obj[!is.finite(obj)] <- tolF
+    
     if (all(obj[!is.na(ct)] < tolF)) break
   }
   

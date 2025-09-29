@@ -44,8 +44,8 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1,
     OM <- SS_seasonalyears_to_annual(OM, replist)
   }
   if(report) plot_SS2OM(OM, replist, gender, filename, dir, open_file, silent)
- 
-  OM@cpars$Data <- SS2Data(replist)
+
+  OM@cpars$Data <- SS2Data(replist, silent=TRUE)
   return(OM)
 }
 
@@ -265,7 +265,19 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
   OM@interval <- MOM@interval
   OM@pstar <- MOM@pstar
   OM@cpars <- cpars_out
-  return(OM)
+
+  # SRR 
+  if (!is.null(OM@cpars$SRR)) {
+    SRRpars <- OM@cpars$SRR$SRRpars
+    if (all(c("R0", "zfrac", "Beta", "SB0", "relstock") %in%  names(SRRpars))) {
+      SRRpars$R0 <- SRRpars$R0 * 2
+      SRRpars$SB0 <- SRRpars$SB0 * 2
+    }
+    OM@cpars$SRR$SRRpars <- SRRpars
+  }
+
+  OM@cpars$Data <- SS2Data(replist, silent=TRUE)
+  OM
 }
 
 #' @rdname SS2MOM
