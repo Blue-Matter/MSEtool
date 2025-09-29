@@ -13,7 +13,8 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
                      silent=FALSE,
                      control=list()) {
 
-  if(!silent) message("Simulating observed data")
+  if(!silent) 
+    cli::cli_alert("Simulating observed data")
 
   Data <- new("Data")  # create a blank DLM data object
   if (reps == 1) Data <- OneRep(Data)  # make stochastic variables certain for only one rep
@@ -910,7 +911,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
   Data_out <- SimData
 
   if (msg)
-    message('Updating Simulated Data with Real Data from `OM@cpars$Data`')
+    cli::cli_alert('Updating Simulated Data with Real Data from `OM@cpars$Data`')
 
   msg <- FALSE
   
@@ -1401,7 +1402,7 @@ AddRealData_MS <- function(SimData,
   Data_out <- SimData
   
   if (msg)
-    message('Updating Simulated Data with Real Data from `OM@cpars$Data`')
+    cli::cli_alert('Updating Simulated Data with Real Data from `OM@cpars$Data`')
   
   msg <- FALSE
   # check last year

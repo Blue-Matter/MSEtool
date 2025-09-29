@@ -78,12 +78,13 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
   if (!is.null(control$D) && control$D == "SBMSY") control$optSBMSY <- TRUE
 
   # --- Sample OM parameters ----
-  if(!silent) message("Loading operating model")
+  if(!silent)
+    cli::cli_alert("Loading operating model")
 
   # custom parameters exist - sample and write to list
   SampCpars <- list()
   if (length(OM@cpars)>0)  {
-    SampCpars <- SampleCpars(cpars=OM@cpars, nsim, silent=silent)
+    SampCpars <- SampleCpars(cpars=OM@cpars, nsim, silent=TRUE)
   }
 
   set.seed(OM@seed) # set seed again after cpars has been sampled
@@ -249,7 +250,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
   # --- Optimize for Initial Depletion ----
   initD <- SampCpars$initD #
   if (!is.null(initD)) { # initial depletion is not unfished
-    if (!silent) message("Optimizing for user-specified depletion in first historical year")
+    if (!silent) 
+      cli::cli_alert("Optimizing for user-specified depletion in first historical year")
     Perrmulti <- sapply(1:nsim, optDfunwrap, initD=initD, 
                         R0=StockPars$R0,
                         initdist=StockPars$initdist,
@@ -343,7 +345,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
   F_SPR_y <- array(0, dim = c(nsim, length(SPR_target), nyears + proyears)) %>%
     structure(dimnames = list(NULL, paste0("F_", 100*SPR_target, "%"), NULL)) #array of F-SPR% by sim, SPR%, year
 
-  if(!silent) message("Calculating MSY reference points for each year")
+  if(!silent) 
+    cli::cli_alert("Calculating MSY reference points for each year")
   # average life-history parameters over ageM years
 
   # Assuming all vulnerable fish are kept; ie MSY is total removals
@@ -457,12 +460,12 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
   bounds <- c(0.0001, 15) # q bounds for optimizer
   # find the q that gives current stock depletion - optVB = depletion for vulnerable biomass else SB
   if (!is.null(SampCpars$qs)) {
-    if(!silent)
-      message_info("Skipping optimization for depletion - using catchability (q) from OM@cpars.")
+    # if(!silent)
+    #   message_info("Skipping optimization for depletion - using catchability (q) from OM@cpars.")
     qs <- SampCpars$qs
   } else {
     if(!silent)
-      message("Optimizing for user-specified depletion in last historical year")
+      cli::cli_alert("Optimizing for user-specified depletion in last historical year")
     
     qs <- .sapply(1:nsim, CalculateQ, StockPars, FleetPars, pyears=nyears, bounds, control=control)
   }
@@ -484,8 +487,10 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
   # If q has hit bound, re-sample depletion and try again. Tries 'ntrials' times and then alerts user
   if (length(probQ) > 0) {
     Err <- TRUE
-    if(!silent) message_info(Nprob,' simulations have final biomass that is not close to sampled depletion')
-    if(!silent) message_info('Re-sampling depletion, recruitment error, and fishing effort')
+    if(!silent) {
+      cli::cli_alert_warning("{Nprob} simulations have final biomass that is not close to sampled depletion")
+      cli::cli_alert('Re-sampling depletion, recruitment error, and fishing effort')
+    }
 
     count <- 0
     OM2 <- OM
@@ -546,13 +551,15 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
   }
 
   # --- Simulate historical years ----
-  if(!silent) message("Calculating historical stock and fishing dynamics")  # Print a progress update
+  if(!silent) 
+    cli::cli_alert("Calculating historical stock and fishing dynamics")  # Print a progress update
 
   if (inc.progress)
     shiny::incProgress(0.2, detail = 'Simulating Historical Dynamics')
 
   if(!is.null(control$unfished)) { # generate unfished historical simulations
-    if(!silent) message("Simulating unfished historical period")
+    if(!silent) 
+      cli::cli_alert("Simulating unfished historical period")
     Hist <- TRUE
     qs <- rep(0, nsim) # no fishing
   }
@@ -661,7 +668,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
   }
 
   # ---- Calculate per-recruit reference points ----
-  if (!silent) message("Calculating per-recruit reference points")
+  if (!silent) 
+    cli::cli_alert("Calculating per-recruit reference points")
   per_recruit_F <- .lapply(1:nsim, function(x) {
     lapply(1:(nyears+proyears), function(y) {
       per_recruit_F_calc(x, yr.ind=y, 
@@ -699,7 +707,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
   if (!is.null(control$Bfrac)) Bfrac <- control$Bfrac
   if (!Bfrac==FALSE) {
     
-    if(!silent) message("Calculating B-low reference points")
+    if(!silent) 
+      cli::cli_alert("Calculating B-low reference points")
     
     MGThorizon<-floor(HZN*MGT)
     if (!snowfall::sfIsRunning()) {
@@ -773,7 +782,8 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
   StockPars$Blow <- Blow
   
   # --- Calculate Reference Yield ----
-  if(!silent) message("Calculating reference yield - best fixed F strategy")
+  if(!silent) 
+    cli::cli_alert("Calculating reference yield - best fixed F strategy")
   if (!snowfall::sfIsRunning()) {
     RefY <- sapply(1:nsim, calcRefYield, StockPars, FleetPars, proyears,
                    Ncurr=StockPars$N[,,nyears,], nyears, proyears)
@@ -1127,11 +1137,14 @@ Project <- function (Hist=NULL,
   # ---- Set Management Interval for each MP ----
   if (length(interval) != nMP) interval <- rep(interval, nMP)[1:nMP]
   if (!all(interval == interval[1])) {
-    if (!silent) message("Variable management intervals:")
-    df <- data.frame(MP=MPs,interval=interval)
-    for (i in 1:nrow(df)) {
-      message(df$MP[i], 'has management interval:', df$interval[i])
+    if (!silent) {
+      cli::cli_alert_info("Variable management intervals:")
+      df <- data.frame(MP=MPs,interval=interval)
+      for (i in 1:nrow(df)) {
+        message(df$MP[i], 'has management interval:', df$interval[i])
+      }
     }
+      
   }
 
   # --- Add nMP dimension to MSY stats  ----
@@ -1238,7 +1251,11 @@ Project <- function (Hist=NULL,
     Data_MP <- MSElist[[mm]]
     Data_MP@Misc <- Data_Misc # add StockPars etc back to Data object
 
-    if(!silent) message(mm, "/", nMP, " Running MSE for", MPs[mm], ifelse(parallel_MPs[mm], "in parallel", ""))
+    if(!silent) {
+      cli::cat_line()
+      cli::cli_alert("{mm}/{nMP} Running MSE for: {.val {MPs[mm]}} {ifelse(parallel_MPs[mm], 'in parallel', '')}")
+    }
+      
     checkNA <- rep(0, OM@proyears) # save number of NAs
     # years management is updated
     upyrs <- seq(from=1, to=proyears, by=interval[mm])
@@ -1730,8 +1747,8 @@ Project <- function (Hist=NULL,
         ntot <- sum(checkNA[upyrs])
         totyrs <- sum(checkNA[upyrs] >0)
         nfrac <- round(ntot/(length(upyrs)*nsim),2)*100
-        message(totyrs, ' years had TAC = NA for some simulations (', nfrac, "% of total simulations)")
-        message('Used TAC_y = TAC_y-1')
+        cli::cli_alert_warning("{.val {totyrs}} years had TAC = NA for some simulations ({nfrac} of total simulations)")
+        cli::cli_alert_info('Used TAC_y = TAC_y-1')
       }
     }
 
@@ -1953,7 +1970,7 @@ runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
     if (OM@nsim <=1) stop("OM@nsim must be > 1", call.=FALSE)
 
   } else if (methods::is(OM,'Hist')) {
-    if (!silent) message("Using `Hist` object to reproduce historical dynamics")
+    if (!silent) cli::cli_inform("Using `Hist` object to reproduce historical dynamics")
 
     # # --- Extract cpars from Hist object ----
     # cpars <- list()
@@ -1984,7 +2001,7 @@ runMSE <- function(OM=MSEtool::testOM, MPs = NA, Hist=FALSE, silent=FALSE,
   }
   
   if (Hist) {
-    if(!silent) message("Returning historical simulations")
+    if(!silent) cli::cli_alert("Returning historical simulations")
     return(HistSims)
   }
 

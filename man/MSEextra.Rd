@@ -4,12 +4,10 @@
 \alias{MSEextra}
 \title{Load more data from MSEextra package}
 \usage{
-MSEextra(silent = FALSE, force = FALSE)
+MSEextra(silent = FALSE)
 }
 \arguments{
 \item{silent}{Logical. Should messages to printed?}
-
-\item{force}{Logical. For install from github if package is up-to-date?}
 }
 \description{
 Downloads the MSEextra package from GitHub

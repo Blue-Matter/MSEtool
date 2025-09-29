@@ -769,8 +769,8 @@ CheckOM <- function(OM, msg=TRUE, stop_if_missing=TRUE) {
     stop("You must specify an operating model")
 
     
-  if (msg)
-    message_info('Checking OM for completeness')
+  # if (msg)
+  #   message_info('Checking OM for completeness')
   
   nms <- slotNames('OM')
   not_needed <-c("Name", "Agency", "Region", "Sponsor", "Latitude", 'Longitude', 'cpars',

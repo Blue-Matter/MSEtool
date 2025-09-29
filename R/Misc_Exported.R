@@ -141,18 +141,20 @@ DLMDataDir <- function(stock = NA) {
 #'
 #' Downloads the MSEextra package from GitHub
 #' @param silent Logical. Should messages to printed?
-#' @param force Logical. For install from github if package is up-to-date?
 #' @export
 #'
-MSEextra <- function(silent=FALSE, force=FALSE) {
-  if (!requireNamespace("remotes", quietly = TRUE)) {
-    stop("remotes is needed for this function to work. Please install it.",
+MSEextra <- function(silent=FALSE) {
+  if (!requireNamespace("pak", quietly = TRUE)) {
+    stop("`pak` is needed for this function to work. Please install it.",
          call. = FALSE)
   }
 
-  if (!silent) message("\nDownloading 'MSEextra' from GitHub")
-  remotes::install_github("blue-matter/MSEextra", quiet=FALSE, force=force)
-  if (!silent) message("Use 'library(MSEextra)' to load additional data into workspace")
+  if (!silent) 
+    cli::cli_alert("Downloading 'MSEextra' from GitHub")
+  pak::pkg_install('blue-matter/MSEextra')
+
+  if (!silent) 
+    cli::cli_alert_info("Use 'library(MSEextra)' to load additional data into workspace")
 
 }
 
