@@ -392,7 +392,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   if (length(ObsPars$AddIerr)>0) {
     n.ind <- dim(ObsPars$AddIerr)[2]
     AddInd <- array(NA, dim=c(nsim, n.ind, nyears+y-1))
-    dimnames(AddInd) <- dimnames(RealData@AddInd)
+    
     CV_AddInd  <- array(NA, dim=c(nsim, n.ind, nyears+y-1))
     for (i in 1:n.ind) {
       if (all(is.na(RealData@AddIndV[1, , ]))) {
@@ -1099,7 +1099,15 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
       message('Adding Additional Indices to Simulated Data from `OM@cpars$Data@AddInd`')
     n.ind <- dim(RealData@AddInd)[2]
     Data_out@AddInd <- Data_out@CV_AddInd <- array(NA, dim=c(nsim, n.ind, nyears))
+    
+    if (!is.null(dimnames(RealData@AddInd))) {
+      dimnames(Data_out@AddInd) <- list(Sim=1:nsim,
+                                        Fleet=dimnames(RealData@AddInd)[[2]],
+                                        Year=dimnames(RealData@AddInd)[[3]])
+    }
+    
 
+   
     fitbeta <- FALSE
     fitIerr <- TRUE
     if (!is.null(SampCpars$AddIbeta)) {
