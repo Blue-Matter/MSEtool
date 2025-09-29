@@ -1077,10 +1077,14 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
         DataList[[p]][[f]] <- Data
       }
     } else {
-      if (!silent) cli::cli_alert('Generating historical data for Stock: {Snames[p]}')
+      if (!silent) 
+        cli::cli_progress_bar(total=nf,
+                              format='Generating historical data for Stock: {Snames[p]} {cli::pb_bar} {cli::pb_percent} ') 
       
       for (f in 1:nf) {
         # if (!silent) message('Generating historical data for Fleet: ', Fnames[f])
+        if (!silent)
+          cli::cli_progress_update()
         ObsPars[[p]][[f]]$Sample_Area <- Sample_Area # add to Obs Pars
         
         Data <- makeData(Biomass=Biomass[,p,,,],
@@ -1118,6 +1122,8 @@ SimulateMOM <- function(MOM=MSEtool::Albacore_TwoFleet, parallel=TRUE, silent=FA
         Data@Misc$ReferencePoints <- StockPars[[p]]$ReferencePoints
         DataList[[p]][[f]] <- Data
       }
+      if (!silent)
+        cli::cli_progress_done()
     }
   }
 

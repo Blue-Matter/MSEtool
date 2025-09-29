@@ -1433,7 +1433,7 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
     sims <- unique(fails[,1])
     yrs <- unique(fails[,2])
     if (msg)
-      message_info("Vulnerability (V) is <0.01 for all ages in years:", paste0(yrs, collapse=','), 'in some simulations') 
+      cli::cli_alert_warning("Vulnerability (V) is <0.01 for all ages in Years: {yrs} in some simulations") 
   }
   Fleetout
 }

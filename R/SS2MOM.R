@@ -48,7 +48,8 @@ SS2MOM <- function(SSdir, nsim = 48, proyears = 50, reps = 1, maxF = 3, seed = 1
   MOM@maxF <- maxF
   MOM@interval <- interval
 
-  if(!silent) message(replist$nsexes, "- sex and ", replist$nfishfleets, "- fleet model detected.")
+  if(!silent) 
+    cli::cli_alert("{.val {replist$nsexes}} - sex and {.val {replist$nfishfleets}} - fleet model detected.")
 
   mainyrs <- replist$startyr:replist$endyr
   nyears <- length(mainyrs)

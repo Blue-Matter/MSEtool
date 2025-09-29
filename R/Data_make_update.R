@@ -392,6 +392,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   if (length(ObsPars$AddIerr)>0) {
     n.ind <- dim(ObsPars$AddIerr)[2]
     AddInd <- array(NA, dim=c(nsim, n.ind, nyears+y-1))
+    dimnames(AddInd) <- dimnames(RealData@AddInd)
     CV_AddInd  <- array(NA, dim=c(nsim, n.ind, nyears+y-1))
     for (i in 1:n.ind) {
       if (all(is.na(RealData@AddIndV[1, , ]))) {
@@ -1016,7 +1017,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
   # ---- Update Catch ----
   if (!all(is.na(RealData@Cat[1,]))) {
     if (msg)
-      message('Updating Simulated Catch from `OM@cpars$Data@Cat`')
+      cli::cli_alert('Updating Simulated Catch from `OM@cpars$Data@Cat`')
 
     Data_out@Cat <- matrix(RealData@Cat[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
     Data_out@CV_Cat <- matrix(RealData@CV_Cat[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)

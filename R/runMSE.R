@@ -968,7 +968,7 @@ Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL
   StockPars$VBiomass <- VBiomass
   StockPars$N <- N
 
-  if (methods::is(SampCpars$Data, "Data")) {
+  if (inherits(SampCpars$Data, "Data")) {
     # real data has been passed in cpars
     updatedData <- AddRealData(SimData=Data,
                                RealData=SampCpars$Data,

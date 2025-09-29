@@ -15,4 +15,4 @@ Minor patch and fix issue on CRAN Package Check
 There were no ERRORs, WARNINGs, or NOTES. 
 
 ## Reverse Dependencies
-All dependent packages work without errors with this release.
+All dependent packages have been tested and work without errors with this release.

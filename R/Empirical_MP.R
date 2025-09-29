@@ -78,6 +78,11 @@ doIfreq=function(I_hist, I_freq, LHYr, CurYr, Year){
 #' @author T. Carruthers
 #' @export
 doRec = function(MPrec, mod, delta_down, delta_up, TACrng){ 
+  print(MPrec)
+  print(mod)
+  print(delta_down)
+  print(delta_up)
+  print(TACrng)
   
   # TAC change
   minchng_down = delta_down[1]
@@ -90,7 +95,9 @@ doRec = function(MPrec, mod, delta_down, delta_up, TACrng){
   if(mod < (1+minchng_up) & mod > (1-minchng_down)) mod = 1  # within min TAC change
   
   # TAC constraint
+  print(mod)
   TrialTAC = MPrec * mod
+  print(TrialTAC)
   Rec = new('Rec')
   if(TrialTAC > TACrng[2]){
     Rec@TAC = TACrng[2] # max TAC
@@ -229,6 +236,7 @@ Emp <- function (x, Data, reps = 1,
   } else {  # Index target MP
     mod = exp(log(est / ref)*resp) 
   }
+
   
   Rec = doRec(MPrec, mod, delta_down, delta_up, TACrng)
   Rec 
