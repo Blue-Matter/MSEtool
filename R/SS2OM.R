@@ -31,16 +31,16 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1,
 
   if(replist$nsexes == 1) gender <- 1
 
-  if(!silent) message("Converting SS output to MOM...")
+  if(!silent) cli::cli_alert("Converting SS output to MOM...")
   MOM <- SS2MOM(replist, nsim = nsim, proyears = proyears, reps = reps, maxF = maxF, seed = seed,
                 interval = interval, pstar = pstar, Obs = Obs, Imp = Imp, silent = silent,
                 Name = Name, Source = Source)
 
-  if(!silent) message("Converting MOM to OM...")
+  if(!silent) cli::cli_alert("Converting MOM to OM...")
   OM <- SSMOM2OM(MOM, replist, gender, import_mov, seed, silent, model_discards)
   
   if(replist$nseasons == 1 && replist$seasduration < 1 && seasons_to_years) {
-    message("Model with season as years found. Will convert to annual time step.")
+    cli::cli_alert_info("Model with season as years found. Will convert to annual time step.")
     OM <- SS_seasonalyears_to_annual(OM, replist)
   }
   if(report) plot_SS2OM(OM, replist, gender, filename, dir, open_file, silent)
