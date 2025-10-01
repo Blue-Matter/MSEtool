@@ -623,14 +623,14 @@ set_parallel <- function(parallel, msg=TRUE) {
       ncpus <- snowfall::sfCpus()
     } else {
       if (msg)
-        message_info('Setting up parallel processing')
+        cli::cli_alert('Setting up parallel processing')
       setup()
       ncpus <- snowfall::sfCpus()
     }
   } else {
     if (snowfall::sfIsRunning()) {
       if (msg)
-        message_info('Stopping parallel processing')
+        cli::cli_alert('Stopping parallel processing')
       snowfall::sfStop()
     }
     ncpus <- 1

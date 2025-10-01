@@ -13,7 +13,8 @@ makeData <- function(Biomass, CBret, Cret, N, SSB, VBiomass, StockPars,
                      silent=FALSE,
                      control=list()) {
 
-  if(!silent) message("Simulating observed data")
+  if(!silent) 
+    cli::cli_alert("Simulating observed data")
 
   Data <- new("Data")  # create a blank DLM data object
   if (reps == 1) Data <- OneRep(Data)  # make stochastic variables certain for only one rep
@@ -391,6 +392,7 @@ updateData <- function(Data, OM, MPCalcs, Effort, Biomass, N, Biomass_P, CB_Pret
   if (length(ObsPars$AddIerr)>0) {
     n.ind <- dim(ObsPars$AddIerr)[2]
     AddInd <- array(NA, dim=c(nsim, n.ind, nyears+y-1))
+    
     CV_AddInd  <- array(NA, dim=c(nsim, n.ind, nyears+y-1))
     for (i in 1:n.ind) {
       if (all(is.na(RealData@AddIndV[1, , ]))) {
@@ -910,8 +912,10 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
   Data_out <- SimData
 
   if (msg)
-    message('Updating Simulated Data with Real Data from `OM@cpars$Data`')
+    cli::cli_alert('Updating Simulated Data with Real Data from `OM@cpars$Data`')
 
+  msg <- FALSE
+  
   # check last year
   if (!is.na(RealData@LHYear) && !SimData@LHYear == RealData@LHYear) {
     warning('`Fleet@CurrentYear` (', SimData@LHYear, ') is not the same as `OM@cpars$Data@LHYear` (', RealData@LHYear, ')')
@@ -1013,7 +1017,7 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
   # ---- Update Catch ----
   if (!all(is.na(RealData@Cat[1,]))) {
     if (msg)
-      message('Updating Simulated Catch from `OM@cpars$Data@Cat`')
+      cli::cli_alert('Updating Simulated Catch from `OM@cpars$Data@Cat`')
 
     Data_out@Cat <- matrix(RealData@Cat[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
     Data_out@CV_Cat <- matrix(RealData@CV_Cat[1,1:nyears], nrow=nsim, ncol=nyears, byrow=TRUE)
@@ -1095,7 +1099,15 @@ AddRealData <- function(SimData, RealData, ObsPars, StockPars, FleetPars, nsim,
       message('Adding Additional Indices to Simulated Data from `OM@cpars$Data@AddInd`')
     n.ind <- dim(RealData@AddInd)[2]
     Data_out@AddInd <- Data_out@CV_AddInd <- array(NA, dim=c(nsim, n.ind, nyears))
+    
+    if (!is.null(dimnames(RealData@AddInd))) {
+      dimnames(Data_out@AddInd) <- list(Sim=1:nsim,
+                                        Fleet=dimnames(RealData@AddInd)[[2]],
+                                        Year=dimnames(RealData@AddInd)[[3]])
+    }
+    
 
+   
     fitbeta <- FALSE
     fitIerr <- TRUE
     if (!is.null(SampCpars$AddIbeta)) {
@@ -1399,8 +1411,9 @@ AddRealData_MS <- function(SimData,
   Data_out <- SimData
   
   if (msg)
-    message('Updating Simulated Data with Real Data from `OM@cpars$Data`')
+    cli::cli_alert('Updating Simulated Data with Real Data from `OM@cpars$Data`')
   
+  msg <- FALSE
   # check last year
   if (!is.na(RealData@LHYear) && !SimData@LHYear == RealData@LHYear) {
     warning('`Fleet@CurrentYear` (', SimData@LHYear, ') is not the same as `OM@cpars$Data@LHYear` (', RealData@LHYear, ')')

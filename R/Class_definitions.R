@@ -1,4 +1,3 @@
-
 #' Label class union for performance metric objects
 #'
 #' @description Used internally. Nothing to see here!
@@ -1061,7 +1060,8 @@ setMethod("initialize", "MSE", function(.Object, Name, nyears, proyears,
 
   slts <- slotNames('MSE')
   for (sl in slts) {
-    slot(.Object, sl) <- get(sl)
+    var <- try(get(sl, inherits = FALSE), silent = TRUE)
+    if (!inherits(var, "try-error")) slot(.Object, sl) <- var
   }
   .Object
 })
@@ -1159,9 +1159,10 @@ setMethod("show", signature = (object="PMobj"), function(object) {
     colnames(df) <- object@MPs
     names(lst) <- object@MPs
     if (nsim > (nprint+1)) {
-      ndots <- nsim-nprint-1
+      ndots <- min(nsim-nprint-1, 3)
       
-      dots <- df[1,]
+      dots <- df[1,, drop=FALSE]
+     
       dots[] <- '.'
       dots <- do.call("rbind", replicate(ndots, dots, simplify = FALSE))
       
@@ -1830,12 +1831,12 @@ show_int <- function(object, slots_check) {
   }
   
   cli::cli_text("\n\n") 
-  cli::cli_text("Use `str()`, `slotNames()` to explore object structure and `@` to access slots:\n\n")
- 
-  txt <- capture.output(utils::str(object))
-
-  for(i in txt[1:5]) cli::cli_alert(i, "\n")
-  invisible()
+  cli::cli_text("Use `str()`, `slotNames()` to explore object structure and `@` to access slots.")
+  # 
+  # txt <- capture.output(utils::str(object))
+  # 
+  # for(i in txt[1:5]) cli::cli_alert(i, "\n")
+  # invisible()
 }
 
 #' @name show-MSEtool
@@ -1857,4 +1858,3 @@ setMethod("show", "Hist", function(object) show_int(object))
 
 #' @rdname show-MSEtool
 setMethod("show", "MSE", function(object) show_int(object))
-

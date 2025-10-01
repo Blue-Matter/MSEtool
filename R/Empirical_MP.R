@@ -78,7 +78,7 @@ doIfreq=function(I_hist, I_freq, LHYr, CurYr, Year){
 #' @author T. Carruthers
 #' @export
 doRec = function(MPrec, mod, delta_down, delta_up, TACrng){ 
-  
+
   # TAC change
   minchng_down = delta_down[1]
   maxchng_down = delta_down[2]
@@ -166,6 +166,7 @@ Emp <- function (x, Data, reps = 1,
   # x=readRDS("C:/temp/x.rds"); Data = readRDS("C:/temp/Data.rds"); reps = 1; Inds = NA; I_freq=NA; I_wt = NA; calib_yrs = 2; enp_mult = 0.3; Ind_fac = NA; TACrng = NA; delta_down = c(0.01,0.5); delta_up = c(0.01,0.5); resp = 1; curI_2_target = NA;  HCR_CP_B = c(0,0); HCR_CP_TAC=c(0,1); Mode = 1
   #saveRDS(Data, "C:/temp/Data.rds")# ;stop()
   #saveRDS(x, "C:/temp/x.rds")
+  
   dependencies = "Data@Cat, Data@AddInd, Data@Ind, Data@Misc"
   MPrec  = Data@MPrec[x] # last management recommendation
   ny = length(Data@Cat[x, ])
@@ -176,16 +177,21 @@ Emp <- function (x, Data, reps = 1,
   CurYr = max(Data@Year)
   Year <- Data@Year[yind]
   C_hist <- Data@Cat[x, yind]
-  
+
+
   if(is.na(Inds[1])){ # user does not specify AddInd indices
     I_hist <-array(Data@Ind[x,yind],c(1,ny))
   }else{
+    nIndices <- dim(Data@AddInd)[2]
+    Inds <- Inds[Inds %in% 1:nIndices]
     I_hist <- array(Data@AddInd[x,Inds, yind],c(length(Inds),ny))
   } 
   
   nI = nrow(I_hist)
   if(is.na(I_freq[1])) I_freq = rep(1, nI) # defaults to sampling every year
   if(is.na(I_wt[1])) I_wt = rep(1, nI)     # defaults to even weighting of indices
+
+  I_wt <- I_wt[1:nI] # in case provided I_wt is incorrect length
   
   if(is.na(Ind_fac)){ # user does not specify a rate of C/I relative to today
     FMSY = Data@Misc$ReferencePoints$ByYear$FMSY[,LHYrInd]
@@ -214,6 +220,9 @@ Emp <- function (x, Data, reps = 1,
   est = weighted.mean(I_smth[,ny], I_wt, na.rm=T)
   
   if(Mode==1){ # Index rate MP
+    if (all(is.na(I_smth[,ny]))) 
+      cli::cli_abort(c('All index values are NA in the terminal year'))
+      
     TACbyI = I_smth[,ny] * C_I
     TACtemp = mean(TACbyI,na.rm=T) * Ind_fac
     if(is.na(TACtemp)|is.null(TACtemp))TACtemp = Data@MPrec[x]
@@ -223,6 +232,7 @@ Emp <- function (x, Data, reps = 1,
   } else {  # Index target MP
     mod = exp(log(est / ref)*resp) 
   }
+
   
   Rec = doRec(MPrec, mod, delta_down, delta_up, TACrng)
   Rec 

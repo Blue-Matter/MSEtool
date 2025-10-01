@@ -683,7 +683,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
     if (!all(dim(M_ageArray) == c(nsim, n_age, proyears+nyears)))
       stop("'M_ageArray' must be array with dimensions: nsim, maxage+1, nyears + proyears but has dimensions: ",
            paste(dim(M_ageArray), collapse=" "))
-    if(msg & is.null(cpars$M)) message_info("M_ageArray has been provided in OM@cpars. Ignoring OM@M and OM@Msd")
+    # if(msg & is.null(cpars$M)) message_info("M_ageArray has been provided in OM@cpars. Ignoring OM@M and OM@Msd")
     Msd <- rep(0, nsim)
 
     # set M to mean M for mature age-classes in year=nyears
@@ -759,7 +759,10 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
   # --- Calculate movement ----
   initdist <- Pinitdist <- NULL
   if (is.null(cpars$mov)) { # movement matrix has not been passed in cpars
-    if(msg) message("Optimizing for user-specified movement")
+    if(msg) {
+      if (nsim > 30)
+        cli::cli_alert("Optimizing for user-specified movement")
+    }
     nareas <- 2 # default is a 2 area model
     if(snowfall::sfIsRunning()) {
       mov1 <- array(t(snowfall::sfSapply(1:nsim, getmov2, Frac_area_1 = Frac_area_1,
@@ -783,7 +786,7 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
       initdist <- cpars$initdist
     } else {
       # if mov is specified need to calculate age-based spatial distribution (Pinitdist to initdist)
-      if(msg) message("Custom movement matrix detected in cpars: simulating movement among ", nareas," areas")
+      if(msg) cli::cli_alert_info("Custom movement matrix detected in cpars: simulating movement among ", nareas," areas")
       if(is.na(dim(mov)[5])) {
         # movement constant across years
         mind <- as.matrix(expand.grid(1:nsim,1,1:nareas,1:nareas))
@@ -805,12 +808,12 @@ SampleStockPars <- function(Stock, nsim=48, nyears=80, proyears=50, cpars=NULL, 
         Asize <- t(replicate(nsim, Asize) )
       }
     } else {
-      if(msg) message('cpars$Asize is not specified, assuming all areas equal size')
+      if(msg) cli::cli_alert_info('cpars$Asize is not specified, assuming all areas equal size')
       Asize <- matrix(1/nareas, nrow=nsim, ncol=nareas)
     }
 
     if (dim(Asize)[2]!=nareas) {
-      if(msg) message('Asize is not length "nareas", assuming all areas equal size')
+      if(msg) cli::cli_alert_info('Asize is not length "nareas", assuming all areas equal size')
       Asize <- matrix(1/nareas, nrow=nsim, ncol=nareas)
     }
     colnames(Asize) <- NULL
@@ -1430,7 +1433,7 @@ SampleFleetPars <- function(Fleet, Stock=NULL, nsim=NULL, nyears=NULL,
     sims <- unique(fails[,1])
     yrs <- unique(fails[,2])
     if (msg)
-      message_info("Vulnerability (V) is <0.01 for all ages in years:", paste0(yrs, collapse=','), 'in some simulations') 
+      cli::cli_alert_warning("Vulnerability (V) is <0.01 for all ages in Years: {yrs} in some simulations") 
   }
   Fleetout
 }

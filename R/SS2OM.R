@@ -31,21 +31,21 @@ SS2OM <- function(SSdir, nsim = 48, proyears = 50, reps = 1,
 
   if(replist$nsexes == 1) gender <- 1
 
-  if(!silent) message("Converting SS output to MOM...")
+  if(!silent) cli::cli_alert("Converting SS output to MOM...")
   MOM <- SS2MOM(replist, nsim = nsim, proyears = proyears, reps = reps, maxF = maxF, seed = seed,
                 interval = interval, pstar = pstar, Obs = Obs, Imp = Imp, silent = silent,
                 Name = Name, Source = Source)
 
-  if(!silent) message("Converting MOM to OM...")
+  if(!silent) cli::cli_alert("Converting MOM to OM...")
   OM <- SSMOM2OM(MOM, replist, gender, import_mov, seed, silent, model_discards)
   
   if(replist$nseasons == 1 && replist$seasduration < 1 && seasons_to_years) {
-    message("Model with season as years found. Will convert to annual time step.")
+    cli::cli_alert_info("Model with season as years found. Will convert to annual time step.")
     OM <- SS_seasonalyears_to_annual(OM, replist)
   }
   if(report) plot_SS2OM(OM, replist, gender, filename, dir, open_file, silent)
- 
-  OM@cpars$Data <- SS2Data(replist)
+
+  OM@cpars$Data <- SS2Data(replist, silent=TRUE)
   return(OM)
 }
 
@@ -148,9 +148,7 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
 
   # cpars for the first gender, first fleet
   .cpars <- cpars[[1]][[1]]
-  
   cpars_out$hs <- .cpars$hs
-  
   cpars_out$SRR <- .cpars$SRR
   #cpars_out$binWidth <- .cpars$binWidth
   cpars_out$CAL_bins <- .cpars$CAL_bins
@@ -267,7 +265,19 @@ SSMOM2OM <- function(MOM, SSdir, gender = 1:2, import_mov = TRUE, seed = 1, sile
   OM@interval <- MOM@interval
   OM@pstar <- MOM@pstar
   OM@cpars <- cpars_out
-  return(OM)
+
+  # SRR 
+  if (!is.null(OM@cpars$SRR)) {
+    SRRpars <- OM@cpars$SRR$SRRpars
+    if (all(c("R0", "zfrac", "Beta", "SB0", "relstock") %in%  names(SRRpars))) {
+      SRRpars$R0 <- SRRpars$R0 * 2
+      SRRpars$SB0 <- SRRpars$SB0 * 2
+    }
+    OM@cpars$SRR$SRRpars <- SRRpars
+  }
+
+  OM@cpars$Data <- SS2Data(replist, silent=TRUE)
+  OM
 }
 
 #' @rdname SS2MOM
@@ -301,6 +311,7 @@ plot_SS2OM <- function(x, SSdir, gender = 1:2,
 
   write(rmd, file = file.path(dir, paste0(filename, ".rmd")))
 
+  if(!silent) cli::cli_alert_info("Rendering markdown file to HTML: {.file {file.path(dir, paste0(filename, '.html'))}}")
   if(!silent) message("Rendering markdown file to HTML: ", file.path(dir, paste0(filename, ".html")))
 
   out <- rmarkdown::render(file.path(dir, paste0(filename, ".rmd")), "html_document", paste0(filename, ".html"), dir,

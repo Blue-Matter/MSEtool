@@ -241,6 +241,7 @@ reference:
   - optCPU
   - tinyErr
   - writeCSV
+  - print.multiHist
 
 - subtitle: OM
   contents:

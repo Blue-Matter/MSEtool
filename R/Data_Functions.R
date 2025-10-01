@@ -2692,12 +2692,12 @@ applyMP <- function(Data, MPs = NA, reps = 100, nsims=NA, silent=FALSE, parallel
   # if (nMPs < 8 & nsims < 8) runParallel <- FALSE
 
   if (!silent)
-    message_info('Attempting to run ', length(MPs), ' MPs:')
+    cli::cli_alert('Attempting to run {.val {length(MPs)}} MPs:')
 
-  for (mp in 1:nMPs) {
-    if (!silent)  message(MPs[mp])
+  for (mp in 1:length(MPs)) {
+    if (!silent)  
+      cli::cli_bullets(c("*" =MPs[mp]))
     fn <- getMP(MPs[mp])
-    
     
     if (runParallel && parallel[mp]) {
       temp <- try(snowfall::sfLapply(1:nsims, fn, Data = Data, reps = reps), silent=TRUE)
