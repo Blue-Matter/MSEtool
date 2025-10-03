@@ -1,7 +1,5 @@
-#' @describeIn runMSE Run the Historical Simulations from an object of class `OM`
-#' @export
-#
-Simulate <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL) {
+
+SimulateOM <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL) {
   
   if (!is.null(nsim)) {
     if (nsim<OM@nsim) 
