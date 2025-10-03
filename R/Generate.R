@@ -231,7 +231,7 @@ GenerateRecruitmentDeviations <- function(SD=0.2, AC=0, TruncSD=2,
     genInit <- FALSE
   }
 
-  if (!is.null(RecDevHist) & any(!is.na(RecDevHist)) & is.array(RecDevHist)) {
+  if (!is.null(RecDevHist) & all(!is.na(RecDevHist)) & is.array(RecDevHist)) {
       RecDevHist <- array(RecDevHist, dim=c(1, nHistTS))
       logRecDevHist <- log(RecDevHist)
       genHist <- FALSE
