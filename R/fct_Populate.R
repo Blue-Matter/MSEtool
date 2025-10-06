@@ -225,7 +225,7 @@ PopulateStock <- function(stock,
                                        silent=silent)
   
   stock@SRR <- PopulateSRR(SRR=stock@SRR,
-                           MaxAge=stock@Ages@MaxAge,
+                           Ages=stock@Ages,
                            CurrentYear=stock@CurrentYear,
                            TimeSteps=stock@TimeSteps,
                            nsim=stock@nSim,
@@ -542,14 +542,15 @@ PopulateFecundity <- function(Fecundity,
 }
 
 PopulateSRR <- function(SRR,
-                        MaxAge=NULL,
+                        Ages=NULL,
                         CurrentYear=NULL,
                         TimeSteps=NULL,
                         nsim=NULL,
                         seed=NULL,
                         silent=FALSE) {
-  argList <- list(MaxAge, CurrentYear, TimeSteps, nsim, seed)
+  argList <- list(Ages, CurrentYear, TimeSteps, nsim, seed)
   
+  MaxAge <- Ages@MaxAge
   if (is.null(MaxAge))
     cli::cli_abort('`MaxAge` cannot be NULL')
   
@@ -596,7 +597,7 @@ PopulateSRR <- function(SRR,
   RecDeviations <- GenerateRecruitmentDeviations(SD=SRR@SD,
                                                  AC=SRR@AC,
                                                  TruncSD=SRR@TruncSD,
-                                                 MaxAge,
+                                                 Ages,
                                                  nHistTS,
                                                  nProjTS,
                                                  nsim=nsim,
@@ -607,7 +608,7 @@ PopulateSRR <- function(SRR,
   SRR@RecDevInit <- RecDeviations$RecDevInit
   dimnames(SRR@RecDevInit) <- list(
     Sim=1:nrow(SRR@RecDevInit),
-    Age=1:ncol(SRR@RecDevInit)
+    Age=Ages@Classes[-1]
   )
   
   SRR@RecDevHist <- RecDeviations$RecDevHist

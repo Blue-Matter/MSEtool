@@ -441,7 +441,7 @@ nArea <- function(x, st=1) {
 }
 
 
-## MaxAge ----
+## MaxAge/MinAge ----
 
 
 #' @rdname Access
@@ -458,7 +458,27 @@ MaxAge <- function(x) {
   if (value%%1!=0)
     cli::cli_abort('`value` must be an integer')
   x <- assignSlot(x, value, 'MaxAge')
-  x@Classes <- 0:value
+  min <- x@MinAge
+  if (!is.finite(min))
+    min <- 0
+  x@Classes <- min:value
+  x
+}
+
+#' @rdname Access
+#' @export
+MinAge <- function(x) {
+  if (inherits(x, 'stock'))
+    return(x@Ages@MinAge)
+  x@MinAge
+}
+
+#' @rdname Access
+#' @export
+`MinAge<-` <- function(x, value) {
+  if (value%%1!=0)
+    cli::cli_abort('`value` must be an integer')
+  x <- assignSlot(x, value, 'MinAge')
   x
 }
 
@@ -645,6 +665,8 @@ nFleet <- function(x) {
   
   if (inherits(x,'om')) {
     fleet <- x@Fleet
+    if (is.null(fleet))
+      return(0)
     if (inherits(fleet, 'fleet'))
       return(1)
     if (is.list(fleet[[1]]))

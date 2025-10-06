@@ -8,22 +8,20 @@ ImportBAM <- function(Stock='Red Snapper',
                       nSim=48,
                       pYear=30,
                       populate=TRUE, 
-                      ...) {
+                      silent=FALSE) {
   
+  CheckPackage('bamExtras', "pak::pkg_install('nikolaifish/bamExtras')")
 
-  if(!requireNamespace("bamExtras", quietly = TRUE)) {
-    stop("Package `bamExtras` is required for this function. Install with `pak::pkg_install('nikolaifish/bamExtras')`",
-         call. = FALSE)
-  }
-  
   BAMdata <- BAMGetObject(Stock)
   
-  cli::cli_h3('Importing OM from {.href [BAM](https://repository.library.noaa.gov/view/noaa/4847)} Output')
-  cli::cli_ul()
-  cli::cli_li('Title: {.val {BAMdata$info$title}}')
-  cli::cli_li('Species: {.val {BAMdata$info$species}}')
-  cli::cli_li('Date: {.val {BAMdata$info$date}}')
-  cli::cli_end()
+  if (!silent) {
+    cli::cli_h3('Importing OM from {.href [BAM](https://repository.library.noaa.gov/view/noaa/4847)} Output')
+    cli::cli_ul()
+    cli::cli_li('Title: {.val {BAMdata$info$title}}')
+    cli::cli_li('Species: {.val {BAMdata$info$species}}')
+    cli::cli_li('Date: {.val {BAMdata$info$date}}')
+    cli::cli_end()
+  }
 
   OM <- BAMSetupOM(BAMdata, nSim, pYear)
   
@@ -34,7 +32,7 @@ ImportBAM <- function(Stock='Red Snapper',
                                                 TimeSteps=OM@TimeSteps)
   OM@Fleet <- list()
   class(OM@Fleet) <- 'StockFleetList'
-  OM@Fleet[[BAMdata$info$species]] <- BAM2Fleet(Stock, OM@Stock[[1]])
+  OM@Fleet[[BAMdata$info$species]] <- BAM2Fleet(x=Stock, Stock=OM@Stock[[1]])
   
 
   OM@Efactor # TODO 
@@ -60,6 +58,7 @@ CompareBAM <- function(Stock, OM=NULL, ConvertUnits=NULL) {
   } else {
     Hist <- OM
   }
+  
   if (inherits(Stock, 'BAMdata')) {
     BAMOutput <- Stock
   } else {

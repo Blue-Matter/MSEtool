@@ -196,15 +196,22 @@ GenerateStochasticnVessels <- function(nVessels, nsim, Timesteps) {
 
 
 GenerateRecruitmentDeviations <- function(SD=0.2, AC=0, TruncSD=2,
-                                          MaxAge=5, nHistTS=15, nProjTS=15,
+                                          Ages=NULL,
+                                          nHistTS=15, nProjTS=15,
                                           nsim=48,
                                           RecDevInit=NULL,
                                           RecDevHist=NULL,
                                           RecDevProj=NULL) {
   
-  if (is.null(MaxAge))
-    cli::cli_abort('`MaxAge` cannot be NULL')
+  if (is.null(Ages))
+    Ages <- Ages(MaxAge=5)
+  
+  MaxAge <- MaxAge(Ages)
+  MinAge <- MinAge(Ages)
+  Ages@Classes <- MinAge:MaxAge
 
+  nInitRecDev <- length(Ages@Classes)-1
+  
   if (is.null(nHistTS))
     cli::cli_abort('`nHistTS` cannot be NULL')
 
@@ -214,7 +221,7 @@ GenerateRecruitmentDeviations <- function(SD=0.2, AC=0, TruncSD=2,
   if (!is.null(nsim) && nsim==1) {
     cli::cli_alert_info('`nsim=1`. Assuming no process error ')
     return(
-      list(RecDevInit=array(1, dim=c(1,MaxAge)),
+      list(RecDevInit=array(1, dim=c(1, nInitRecDev)),
            RecDevHist=array(1, dim=c(1,nHistTS)),
            RecDevProj=array(1, dim=c(1,nProjTS))
       )
@@ -226,7 +233,7 @@ GenerateRecruitmentDeviations <- function(SD=0.2, AC=0, TruncSD=2,
   genProj <- TRUE
 
   if (!is.null(RecDevInit) & all(!is.na(RecDevInit)) & is.array(RecDevInit)) {
-    RecDevInit <- array(RecDevInit, dim=c(1, MaxAge))
+    RecDevInit <- array(RecDevInit, dim=c(1, nInitRecDev))
     logRecDevInit <- log(RecDevInit)
     genInit <- FALSE
   }
@@ -271,7 +278,7 @@ GenerateRecruitmentDeviations <- function(SD=0.2, AC=0, TruncSD=2,
   upper <- mu+TruncSD*SD
 
   if (genInit)
-    logRecDevInit <- array(rtnorm(nsim*MaxAge, mu, SD, lower, upper), dim=c(nsim, MaxAge))
+    logRecDevInit <- array(rtnorm(nsim*nInitRecDev, mu, SD, lower, upper), dim=c(nsim, nInitRecDev))
 
   if (genHist)
     logRecDevHist <- array(rtnorm(nsim*nHistTS, mu, SD, lower, upper), dim=c(nsim, nHistTS))
@@ -280,9 +287,9 @@ GenerateRecruitmentDeviations <- function(SD=0.2, AC=0, TruncSD=2,
     logRecDevProj <- array(rtnorm(nsim*nProjTS, mu, SD, lower, upper), dim=c(nsim, nProjTS))
 
   # Apply auto-correlation
-  timesteps <- 1:(MaxAge+nHistTS+nProjTS)
-  period <- c(rep('Init', MaxAge), rep('Hist',nHistTS), rep('Proj', nProjTS))
-  required <- c(rep(genInit, MaxAge), rep(genHist,nHistTS), rep(genProj, nProjTS))
+  timesteps <- 1:(nInitRecDev+nHistTS+nProjTS)
+  period <- c(rep('Init', nInitRecDev), rep('Hist',nHistTS), rep('Proj', nProjTS))
+  required <- c(rep(genInit, nInitRecDev), rep(genHist,nHistTS), rep(genProj, nProjTS))
 
   timesteps <- timesteps[required]
 

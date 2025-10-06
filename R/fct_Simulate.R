@@ -146,6 +146,7 @@ Simulate_om <- function(OM=NULL,
   })
   
   
+  
   # ---- Check for Depletion Optimization ----
   OptDepletionRatio <- CheckDepletionOpt(HistSimList, HistTimeSteps) # TODO - warning message or re-sample 
   Hist@Log$OptDepletionRatio <- OptDepletionRatio

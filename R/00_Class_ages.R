@@ -27,6 +27,9 @@ setMethod("initialize", "ages", function(.Object,
                                          MinAge=0,
                                          Units='year',
                                          PlusGroup=TRUE) {
+  
+  .Object@MinAge <- MinAge
+  
   if (!is.na(MaxAge)) {
     .Object@MaxAge <- MaxAge
     .Object@Classes <- MinAge:MaxAge

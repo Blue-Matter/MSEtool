@@ -97,7 +97,6 @@ CalculateMSYSim <- function(StockList, FleetList, Complexes, TimeSteps=NULL, max
     StockList_ <- StockList[StockInd]
     FleetList_ <- FleetList[StockInd]
     
-    
     for (ts in seq_along(TimeSteps)) {
       opt <- optimize(OptMSY, 
                       logApicalFRange, 

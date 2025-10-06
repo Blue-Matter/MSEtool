@@ -126,7 +126,9 @@ GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), TimeSte
   if (is.null(TimeSteps))
     TimeSteps <- TimeSteps(OM, Period)
   
-  nAges <- purrr::map(OM@Stock, nAge)
+  nAges <- purrr::map(OM@Stock, \(stock)
+                      length(stock@Ages@Classes)
+  )
 
   nAreas <- unlist(purrr::map(OM@Stock, nArea)) |> unique()
   

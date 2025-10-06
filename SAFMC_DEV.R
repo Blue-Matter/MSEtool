@@ -1,5 +1,7 @@
 
-devtools::load_all()
+la <- devtools::load_all
+
+la()
 
 dir <- "C:/Users/Admin/Documents/GitHub/SAFMC-MSE"
 
@@ -9,7 +11,25 @@ OM_Dir <- file.path(dir, 'OM_Objects/Base')
 
 
 OM_RS <- ImportBAM('RedSnapper', nSim=nSim, pYear=pYear)
-CompareBAM('RedSnapper', OM_RS)
+CompareBAM('RedSnapper', OM=OM_RS)
+
+OM_GG <- ImportBAM(Stock='GagGrouper', nSim=nSim, pYear=pYear)
+CompareBAM('GagGrouper', OM=OM_GG)
+
+################################################################################
+
+OM_BSB <- ImportBAM(Stock='BlackSeaBass', nSim=nSim, pYear=pYear)
+CompareBAM('BlackSeaBass', OM=OM_BSB, ConvertUnits = 0.453592)
+
+BAMdata <- BAMGetObject('BlackSeaBass')
+Hist <- Simulate(OM_BSB)
+
+
+
+################################################################################
+
+# Add other Stocks ...
+
 
 
 

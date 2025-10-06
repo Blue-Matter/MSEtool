@@ -44,3 +44,25 @@ CreateDir <- function(path) {
 
 
 
+
+CheckPackage <- function(pkg, pkg.path=NULL,  version=NULL) {
+  chk <- requireNamespace(pkg, quietly = TRUE)
+  
+  if (!chk) {
+    if (is.null(pkg.path)) 
+      cli::cli_abort("Package {.pkg {pkg}} is required for this function. Please install it")
+    
+    cli::cli_abort(c("Package {.pkg {pkg}} is required for this function",
+                     "i"="Install with {.var {pkg.path}}"))
+  } 
+  
+  if (!is.null(version))
+    if (packageVersion(pkg) < version) {
+      if (is.null(pkg.path)) 
+        cli::cli_abort(c("Version {val {version}} is required for Package {.pkg {pkg}}. Please install latest version"))
+      
+      cli::cli_abort(c("Version {val {version}} is required for Package {.pkg {pkg}}. Please install latest version",
+                       "i"="Install with {.var {pkg.path}}"))
+      
+    }
+}

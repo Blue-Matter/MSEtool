@@ -772,9 +772,12 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
   
   MeanAtAge <- object@MeanAtAge
   ASK <- Length@ASK
+  AgeDim <- which(names(dimnames(MeanAtAge)) == "Age")
+  nAgeClasses <- dim(MeanAtAge)[AgeDim]
+  
   
   BySim <- 'Sim' %in% names(dimnames(ASK))
-  AgeDim <- which(names(dimnames(MeanAtAge)) == "Age")
+  
   
   if (dim(MeanAtAge)[AgeDim]<30) { # arbitrary number!
     # Generate higher resolution length-at-age

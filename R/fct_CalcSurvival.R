@@ -74,27 +74,27 @@ CalcSurvival <- function(NaturalMortalityAtAge, # Sim, nAge, nTS (Sim optional)
 
 
 # # ---- CalcUnfishedSurvival -----
-CalcUnfishedSurvival <- function(OM, SP=FALSE, TimeSteps=NULL, silent=FALSE) {
+CalcUnfishedSurvival <- function(OM, SP=FALSE, TimeSteps=NULL, silent=FALSE, Expand=TRUE) {
   
   if (inherits(OM,'stock'))
-    return(CalcUnfishedSurvivalStock(OM, SP, TimeSteps))
+    return(CalcUnfishedSurvivalStock(OM, SP, TimeSteps, Expand))
   
   if (inherits(OM,'list'))
-    return(CalcUnfishedSurvivalStockList(OM, SP, TimeSteps))
+    return(CalcUnfishedSurvivalStockList(OM, SP, TimeSteps, Expand))
   
   OM <- PopulateOM(OM, silent)
   if (is.null(TimeSteps))
     TimeSteps <- OM@TimeSteps
   
-  CalcUnfishedSurvivalStockList(OM@Stock, SP, TimeSteps)
+  CalcUnfishedSurvivalStockList(OM@Stock, SP, TimeSteps, Expand)
   
 }
 
-CalcUnfishedSurvivalStockList <- function(StockList, SP=FALSE, TimeSteps=NULL) {
-  purrr::map(StockList, \(Stock) CalcUnfishedSurvivalStock(Stock, SP, TimeSteps))
+CalcUnfishedSurvivalStockList <- function(StockList, SP=FALSE, TimeSteps=NULL, Expand=TRUE) {
+  purrr::map(StockList, \(Stock) CalcUnfishedSurvivalStock(Stock, SP, TimeSteps, Expand))
 }
 
-CalcUnfishedSurvivalStock <- function(Stock, SP=FALSE, TimeSteps=NULL) {
+CalcUnfishedSurvivalStock <- function(Stock, SP=FALSE, TimeSteps=NULL, Expand=TRUE) {
   nAges <- Stock@Ages@Classes |> length()
   NaturalMortalityAtAge <- Stock@NaturalMortality@MeanAtAge |>
     ArrayExpand(Stock@nSim, nAges, TimeSteps) |>
@@ -109,7 +109,6 @@ CalcUnfishedSurvivalStock <- function(Stock, SP=FALSE, TimeSteps=NULL) {
   
   BySim <- 'Sim' %in% names(dimnames(NaturalMortalityAtAge))
   
-
   if (!BySim) {
     if (IsIdenticalTime) {
       NaturalMortalityAtAge <- NaturalMortalityAtAge[,1, drop=FALSE]
@@ -187,8 +186,10 @@ CalcUnfishedSurvivalStock <- function(Stock, SP=FALSE, TimeSteps=NULL) {
       aperm(c('Sim', 'Age', 'TimeStep'))
     
   }
-  Survival |> ArrayExpand(Stock@nSim, nAges, TimeSteps)
   
+  if (Expand) 
+    Survival <- Survival |> ArrayExpand(Stock@nSim, nAges, TimeSteps)
+  Survival
 }
 
 

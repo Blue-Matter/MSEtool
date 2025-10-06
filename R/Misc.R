@@ -761,7 +761,9 @@ PopulatedObject <- function(object) {
   !is.null(attributes(object)$digest)
 }
 
-AddDimNames <- function(array, names=c('Sim', 'Age', 'TimeStep'), TimeSteps=NULL, values=NULL) {
+AddDimNames <- function(array, names=c('Sim', 'Age', 'TimeStep'), 
+                        TimeSteps=NULL, Ages=NULL, Fleets=NULL,
+                        values=NULL) {
   
   if (inherits(array,'list'))
     array <- unlist(array)
@@ -771,7 +773,14 @@ AddDimNames <- function(array, names=c('Sim', 'Age', 'TimeStep'), TimeSteps=NULL
   l <- list()
   for (i in seq_along(names)) {
     if (names[i]=='Age') {
-      l[[i]] <- 0:(d[i]-1)
+      if (!is.null(Ages)) {
+        l[[i]] <- Ages
+      } else {
+        l[[i]] <- 0:(d[i]-1)
+      }
+        
+    } else if (names[i]=='Fleet' && !is.null(Fleets)) {
+      l[[i]] <- Fleets
     } else if (names[i]=='TimeStep' && !is.null(TimeSteps)) {
       l[[i]] <- TimeSteps[1:d[i]]
     } else {

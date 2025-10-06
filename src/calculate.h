@@ -213,6 +213,7 @@ inline double CalcRecruitment_(double SProduction,
 
 
 inline arma::mat CalcNumberNext_(arma::mat NumberAtAgeAreaThisTS, // nAge, nArea
+                                 arma::mat NumberAtAgeAreaNextTS, // nAge, nArea
                                  arma::vec Semelparous,  // nAge
                                  arma::cube FDeadAtAgeAreaThisTS,  // nAge, nFleet, nArea
                                  arma::vec NaturalMortalityAtAgeThisTS,
@@ -220,7 +221,7 @@ inline arma::mat CalcNumberNext_(arma::mat NumberAtAgeAreaThisTS, // nAge, nArea
                                  int nAge,
                                  int nArea) {
   
-  arma::mat Nnext(nAge, nArea, arma::fill::zeros);
+  arma::mat Nnext = NumberAtAgeAreaNextTS;
   
   arma::mat FDead = arma::sum(FDeadAtAgeAreaThisTS, 1);
   arma::mat Zmortality = FDead.each_col() + NaturalMortalityAtAgeThisTS;

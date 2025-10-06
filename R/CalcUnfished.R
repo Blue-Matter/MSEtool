@@ -88,6 +88,7 @@ CalcDynamicUnfished <- function(HistSimList, silent=FALSE) {
     # identical historical period across all sims
     HistSim <- HistSimListCopy[[1]]
     unfished <- SimulateDynamics_(HistSim, TimeSteps)
+    
     HistSim@Unfished@Dynamic@Number <- lapply( unfished@Number, AddDimNames, c("Age", "TimeStep", "Area"), TimeSteps)
     
     HistSim@Unfished@Dynamic@Biomass  <- AddDimNames(unfished@Biomass, 

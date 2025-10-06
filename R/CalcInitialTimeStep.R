@@ -4,7 +4,6 @@ CalcInitialTimeStep <- function(Hist, silent=FALSE) {
   if (is.null(Hist@Unfished@Equilibrium@Number))
     Hist@Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
   
-  
   nSim <- Hist@OM@nSim
   nStock <- nStock(Hist@OM)
   nArea <- nArea(Hist@OM)
@@ -24,6 +23,14 @@ CalcInitialTimeStep <- function(Hist, silent=FALSE) {
     names(dimnames(RecDevHist1))[2] <- 'Age'
   
     ages <- as.numeric(dimnames(RecDevInit)[['Age']])
+    if (!min(ages) > Hist@OM@Stock[[st]]@Ages@MinAge) {
+      cli::cli_abort(c("Error calculating initial age structure for Stock: {.val {names(Hist@OM@Stock)[st]}}",
+                     "i"='The first age class in matrix `Stock |> SRR() |> RecDevHist()` must be one greater than minimum age class',
+                     '*'='Minimum age class: {.val {Hist@OM@Stock[[st]]@Ages@MinAge}}',
+                     '*'='First age class in `RecDevInit`: {.val {min(ages)}}'
+                     )
+      )
+    }
     
     InitAgeClassRecDevs <- cbind(RecDevHist1, RecDevInit) 
     dimnames(InitAgeClassRecDevs) <- list(Sim=1:nSim,

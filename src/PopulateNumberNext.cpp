@@ -49,13 +49,15 @@ S4 PopulateNumberNext_(S4 HistSimIn,
       List FDeadAtAgeAreaStock = FDeadAtAgeAreaList[st];
       
       // Calculate Number at beginning of next time step
-      NumberAtAgeArea.col(TSindex+1) = CalcNumberNext_(NumberAtAgeArea.col(TSindex),
-                          Semelparous.col(TSindex),
-                          FDeadAtAgeAreaStock[TSindex],
-                          NaturalMortalityAtAge.col(TSindex),
-                          plusgroup,
-                          nAge,
-                          nArea);
+      NumberAtAgeArea.col(TSindex+1) = CalcNumberNext_(
+        NumberAtAgeArea.col(TSindex),
+        NumberAtAgeArea.col(TSindex+1),
+        Semelparous.col(TSindex),
+        FDeadAtAgeAreaStock[TSindex],
+        NaturalMortalityAtAge.col(TSindex),
+        plusgroup,
+        nAge,
+        nArea);
       
       
       // Move Population at beginning of next Time Step

@@ -267,8 +267,11 @@ S4 SimulateDynamics_(S4 HistSimIn,
                                            SRRModel,
                                            SRRPars,
                                            TSindex);
-        if (debug)
+        if (debug) {
           Rcout << "Recruits =  " << Recruits << std::endl;
+          Rcout << "TSRec =  " << TSRec << std::endl;
+        }
+          
         
         // Distribute Recruits
         if (debug)
@@ -282,6 +285,10 @@ S4 SimulateDynamics_(S4 HistSimIn,
           if (rec < 1E-6) 
             rec = 1E-6;
           recruitArea(area) = rec;
+          
+          if (debug)
+            Rcout << "Recruits in Area " << area << ": " << rec << std::endl;
+          
         }
         NumberAtAgeArea.subcube(0, TSRec, 0, 0, TSRec, nArea-1) = recruitArea;
       }
@@ -303,16 +310,17 @@ S4 SimulateDynamics_(S4 HistSimIn,
         if (debug)
           Rcout << "NumberAtAgeArea Next"  << std::endl;
         
-        NumberAtAgeArea.col(TSindex+1) = CalcNumberNext_(NumberAtAgeArea.col(TSindex),
-                            Semelparous.col(TSindex),
-                            FDeadAtAgeAreaStock[TSindex],
-                                               NaturalMortalityAtAge.col(TSindex),
-                                               plusgroup,
-                                               nAge,
-                                               nArea);
+        NumberAtAgeArea.col(TSindex+1) = CalcNumberNext_(
+          NumberAtAgeArea.col(TSindex),
+          NumberAtAgeArea.col(TSindex+1),
+          Semelparous.col(TSindex),
+          FDeadAtAgeAreaStock[TSindex],
+          NaturalMortalityAtAge.col(TSindex),
+          plusgroup,
+          nAge,
+          nArea);
         
         // Move Population at beginning of next Time Step
-        
         if (debug)
           Rcout << "Movement"  << std::endl;
         
