@@ -1,6 +1,6 @@
 # ---- multiHist class ----
 
-# setOldClass("multiHist")
+setOldClass("multiHist")
 setClassUnion(name="multiHist.list", members=c("multiHist", "list"))
 
 # ---- MMSE Class ----
