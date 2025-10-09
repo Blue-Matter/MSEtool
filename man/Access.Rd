@@ -63,7 +63,6 @@
 \alias{MeanAtLength<-}
 \alias{Misc}
 \alias{Misc<-}
-\alias{MPs}
 \alias{Model}
 \alias{Model<-}
 \alias{Movement}
@@ -257,8 +256,6 @@ MeanAtLength(x) <- value
 Misc(x)
 
 Misc(x) <- value
-
-MPs(x)
 
 Model(x)
 

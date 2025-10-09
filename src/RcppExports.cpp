@@ -69,8 +69,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // CalcSpawnProduction_
-arma::vec CalcSpawnProduction_(arma::mat NumberAtAgeArea, arma::vec FecundityAtAge, arma::vec MaturityAtAge, arma::vec WeightAtAge, arma::vec NaturalMortalityAtAge, arma::mat FDeadAtAgeArea, arma::vec SpawnMortality, double SpawnTimeFrac);
-RcppExport SEXP _MSEtool_CalcSpawnProduction_(SEXP NumberAtAgeAreaSEXP, SEXP FecundityAtAgeSEXP, SEXP MaturityAtAgeSEXP, SEXP WeightAtAgeSEXP, SEXP NaturalMortalityAtAgeSEXP, SEXP FDeadAtAgeAreaSEXP, SEXP SpawnMortalitySEXP, SEXP SpawnTimeFracSEXP) {
+arma::vec CalcSpawnProduction_(arma::mat NumberAtAgeArea, arma::vec FecundityAtAge, arma::vec MaturityAtAge, arma::vec WeightAtAge, arma::vec NaturalMortalityAtAge, arma::mat FDeadAtAgeArea, double SpawnTimeFrac);
+RcppExport SEXP _MSEtool_CalcSpawnProduction_(SEXP NumberAtAgeAreaSEXP, SEXP FecundityAtAgeSEXP, SEXP MaturityAtAgeSEXP, SEXP WeightAtAgeSEXP, SEXP NaturalMortalityAtAgeSEXP, SEXP FDeadAtAgeAreaSEXP, SEXP SpawnTimeFracSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -80,9 +80,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type WeightAtAge(WeightAtAgeSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type NaturalMortalityAtAge(NaturalMortalityAtAgeSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type FDeadAtAgeArea(FDeadAtAgeAreaSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type SpawnMortality(SpawnMortalitySEXP);
     Rcpp::traits::input_parameter< double >::type SpawnTimeFrac(SpawnTimeFracSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcSpawnProduction_(NumberAtAgeArea, FecundityAtAge, MaturityAtAge, WeightAtAge, NaturalMortalityAtAge, FDeadAtAgeArea, SpawnMortality, SpawnTimeFrac));
+    rcpp_result_gen = Rcpp::wrap(CalcSpawnProduction_(NumberAtAgeArea, FecundityAtAge, MaturityAtAge, WeightAtAge, NaturalMortalityAtAge, FDeadAtAgeArea, SpawnTimeFrac));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -431,7 +430,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_CalcFfromCatch_", (DL_FUNC) &_MSEtool_CalcFfromCatch_, 8},
     {"_MSEtool_CalcAggregateF_", (DL_FUNC) &_MSEtool_CalcAggregateF_, 2},
     {"_MSEtool_CalcCatch_", (DL_FUNC) &_MSEtool_CalcCatch_, 2},
-    {"_MSEtool_CalcSpawnProduction_", (DL_FUNC) &_MSEtool_CalcSpawnProduction_, 8},
+    {"_MSEtool_CalcSpawnProduction_", (DL_FUNC) &_MSEtool_CalcSpawnProduction_, 7},
     {"_MSEtool_vecminInd", (DL_FUNC) &_MSEtool_vecminInd, 1},
     {"_MSEtool_LinInterp_cpp", (DL_FUNC) &_MSEtool_LinInterp_cpp, 3},
     {"_MSEtool_MSYCalcs", (DL_FUNC) &_MSEtool_MSYCalcs, 17},

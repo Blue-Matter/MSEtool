@@ -13,11 +13,125 @@ OM_Dir <- file.path(dir, 'OM_Objects/Base')
 OM_RS <- ImportBAM('RedSnapper', nSim=nSim, pYear=pYear)
 CompareBAM('RedSnapper', OM=OM_RS)
 
-# Red Snapper - latest
+################################################################################
 
+Stock <- 'RedSnapper'
+
+OM <- ImportBAM(Stock, nSim=nSim, pYear=pYear)
+
+OM@Misc 
+
+CompareBAM(Stock, OM)
+
+
+# from  TPL
+# N_mdyr(styr)(1,nages)=elem_prod(N(styr)(1,nages),(mfexp(-1.*(Z_initial(1,nages))*0.5))); //mid year
+# N_spawn(styr)(1,nages)=elem_prod(N(styr)(1,nages),(mfexp(-1.*(Z_initial(1,nages))*spawn_time_frac))); //peak spawning time
+# Z_initial is F at start of first year, but doesn't include F during that year
+
+# TODO - add option to specify spawn production, biomass, etc in OM object 
+# - overriding any relevant OM calcs
+
+BAMdata <- GetBAMOutput(Stock)
+Hist <- Simulate(OM, nsim=1)
+
+data.frame(BAM=BAMdata$t.series$recruits[1:70],
+           OM=Hist@Number[[1]][1,1,,1]) |>
+  dplyr::mutate(Diff=BAM/OM)
+
+
+ts <- 1
+M_spawn_expected <- (BAMdata$a.series$M + BAMdata$F.age[ts,]) * BAMdata$parms$spawn.time
+M_spawn_actual <- -log(BAMdata$N.age.spawn[ts,]/BAMdata$N.age[ts,])
+
+plot(M_spawn_expected, type='l', ylim=c(0, max(c(M_spawn_expected, M_spawn_actual))))
+lines(M_spawn_actual, col='blue')
+
+
+
+BAMdata$t.series$SSB[1]/Hist@SProduction[1,1,1]
+BAMdata$t.series$SSB[2]/Hist@SProduction[1,1,2]
+
+
+plot(BAMdata$t.series$SSB, type='l')
+lines(Hist@SProduction[1,1,], col='blue')
+
+
+BAMdata$parms$F.init
+BAMdata$F.age[,1])
+
+################################################################################
+# Red Snapper - latest
+# TODO
 
 OM_GG <- ImportBAM(Stock='GagGrouper', nSim=nSim, pYear=pYear)
 CompareBAM('GagGrouper', OM=OM_GG) 
+
+
+################################################################################
+
+Stock <- 'GagGrouper'
+
+OM <- ImportBAM(Stock, nSim=nSim, pYear=pYear)
+CompareBAM(Stock, OM)
+
+
+BAMdata <- GetBAMOutput(Stock)
+Hist <- Simulate(OM, nsim=1)
+
+data.frame(BAM=BAMdata$t.series$recruits[1:58],
+           OM=Hist@Number[[1]][1,1,,1]) |>
+  dplyr::mutate(Diff=BAM/OM)
+
+
+ts <- 1
+M_spawn_expected <- (BAMdata$a.series$M + BAMdata$F.age[ts,]) * BAMdata$parms$spawn.time
+M_spawn_actual <- -log(BAMdata$N.age.spawn[ts,]/BAMdata$N.age[ts,])
+
+
+plot(M_spawn_expected, type='l', ylim=c(0, max(c(M_spawn_expected, M_spawn_actual))))
+lines(M_spawn_actual, col='blue')
+
+
+#
+
+BAMdata$parms$F.init
+
+
+Z1 <- (BAMdata$a.series$M + BAMdata$F.age[1,]) * 0.5
+BAMdata$N.age[1,] * exp(-Z1)
+BAMdata$N.age.mdyr[1,]
+BAMdata$N.age.spawn[1,]
+
+
+
+
+tpl <- bamExtras::tpl_GagGrouper
+
+dir <- tempdir()
+fl <- 'text.txt'
+
+file <- file.path(dir, fl)
+
+fileConn<-file(file)
+writeLines(c(tpl), fileConn)
+close(fileConn)
+
+
+################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 DiscMortDF <- data.frame(Fleet=c('cHL', 'cPT', 'cPT', 'rHB', 'rGN'),

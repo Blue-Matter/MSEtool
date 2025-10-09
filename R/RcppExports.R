@@ -17,8 +17,8 @@ CalcCatch_ <- function(HistSimIn, TimeSteps) {
     .Call(`_MSEtool_CalcCatch_`, HistSimIn, TimeSteps)
 }
 
-CalcSpawnProduction_ <- function(NumberAtAgeArea, FecundityAtAge, MaturityAtAge, WeightAtAge, NaturalMortalityAtAge, FDeadAtAgeArea, SpawnMortality, SpawnTimeFrac = 0) {
-    .Call(`_MSEtool_CalcSpawnProduction_`, NumberAtAgeArea, FecundityAtAge, MaturityAtAge, WeightAtAge, NaturalMortalityAtAge, FDeadAtAgeArea, SpawnMortality, SpawnTimeFrac)
+CalcSpawnProduction_ <- function(NumberAtAgeArea, FecundityAtAge, MaturityAtAge, WeightAtAge, NaturalMortalityAtAge, FDeadAtAgeArea, SpawnTimeFrac = 0) {
+    .Call(`_MSEtool_CalcSpawnProduction_`, NumberAtAgeArea, FecundityAtAge, MaturityAtAge, WeightAtAge, NaturalMortalityAtAge, FDeadAtAgeArea, SpawnTimeFrac)
 }
 
 vecminInd <- function(x) {

@@ -25,15 +25,6 @@ S4 SimulateDynamics_(S4 HistSimIn,
   List StockList = OM.slot("Stock");
   List FleetList = OM.slot("Fleet");
   
-  // Hack to manually add spawning mortality in first year
-  // correction for errors in assessment output
-  List Misc = OM.slot("Misc");
-  int MiscLength = Misc.size();
-  RObject SpawnMortality = R_NilValue;  
-  if (MiscLength > 0) {
-    SpawnMortality = Misc["SpawnMortality"];
-  } 
-  
   NumericVector TimeStepsAll = OM.slot("TimeSteps");
   int nTS = TimeSteps.size();
   IntegerVector MatchTS = match(TimeSteps, TimeStepsAll);
@@ -175,18 +166,6 @@ S4 SimulateDynamics_(S4 HistSimIn,
       if (debug)
         Rcout << "SProductSBiomass" << std::endl;
       
-      // Related to hack above for SpawnMortality
-      int nAge = NumberAtAgeArea.n_rows;
-      arma::vec SpawnMortalityVec(nAge);
-      
-      if (!SpawnMortality.isNULL()) {
-        List SpawnMortalityList  = Rcpp::as<Rcpp::List>(SpawnMortality);
-        RObject SpawnMortalityStock = SpawnMortalityList[st];
-        if (!SpawnMortalityStock.isNULL()) {
-          SpawnMortalityVec = as<arma::vec>(SpawnMortalityStock);
-        }
-      }
-      
       arma::cube FDeadFleetArea = FMortFleetArea["FDeadFleetArea"];
       arma::mat FDeadAtAgeArea = arma::sum(FDeadFleetArea,1);
       arma::vec SProductSBiomass = CalcSpawnProduction_(NumberAtAgeArea.col(TSindex), // nAge
@@ -195,7 +174,6 @@ S4 SimulateDynamics_(S4 HistSimIn,
                                                        WeightAtAge.col(TSindex), // nAge
                                                        NaturalMortalityAtAge.col(TSindex), // nAge
                                                        FDeadAtAgeArea,
-                                                       SpawnMortalityVec,
                                                        SpawnTimeFrac // double
       );
       SProduction.row(st).col(TSindex) = SProductSBiomass[0];

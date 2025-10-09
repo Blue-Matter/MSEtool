@@ -12,7 +12,6 @@ arma::vec CalcSpawnProduction_(arma::mat NumberAtAgeArea, // nAge, nArea
                               arma::vec WeightAtAge, // nAge
                               arma::vec NaturalMortalityAtAge, // nAge
                               arma::mat FDeadAtAgeArea, // nAge, nArea
-                              arma::vec SpawnMortality, // nAge
                               double SpawnTimeFrac= 0) {
   
   int nAge = NumberAtAgeArea.n_rows;
@@ -33,19 +32,8 @@ arma::vec CalcSpawnProduction_(arma::mat NumberAtAgeArea, // nAge, nArea
     
     if (SpawnTimeFrac > 0) {
       arma::vec FDeadThisArea = FDeadAtAgeArea.col(area); // nAge
-      arma::vec SpawnMortality2 = (NaturalMortalityAtAge + FDeadThisArea) * SpawnTimeFrac;
-      
-      bool UseSpawnMortality = arma::all(SpawnMortality > 0);
-      
-      if (UseSpawnMortality) {
-        // Rcout << "Using custom SpawnMortality" << SpawnMortality << std::endl;
-        
-        NSpawnThisArea = NSpawnThisArea % exp(-SpawnMortality);
-      } else {
-        NSpawnThisArea = NSpawnThisArea % exp(-SpawnMortality2);  
-      }
-      
-      
+      arma::vec SpawnMortality = (NaturalMortalityAtAge + FDeadThisArea) * SpawnTimeFrac;
+      NSpawnThisArea = NSpawnThisArea % exp(-SpawnMortality);
     }
   
     SProductionArea.col(area) = NSpawnThisArea % FecundityAtAge;
