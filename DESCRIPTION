@@ -228,6 +228,7 @@ Collate:
     'fct_IdenticalSims.R'
     'fct_IdenticalTimeStep.R'
     'fct_ImportBAM.R'
+    'fct_ImportBAM_internal.R'
     'fct_ImportSS3.R'
     'fct_Logs.R'
     'fct_Misc.R'

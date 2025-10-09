@@ -40,7 +40,7 @@ Simulate_om <- function(OM=NULL,
   
   # ---- Make Hist Object ----
   Hist <- OM2Hist(OM, silent)
-
+  
   # ---- Calculate Equilibrium Unfished ----
   Hist@Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
   
@@ -127,7 +127,7 @@ Simulate_om <- function(OM=NULL,
   #   # need to make sure to update all historical dynamics - eg Stock@Length for each sim
   #   # if MICE is used
   # } 
-  # 
+  
   HistSimList <- purrr::map(HistSimList, \(HistSim) 
                             SimulateDynamics_(HistSim, HistTimeSteps),
                             .progress = list(
@@ -135,6 +135,7 @@ Simulate_om <- function(OM=NULL,
                               format = "Simulating Historical Fishery {cli::pb_bar} {cli::pb_percent}",
                               clear = TRUE))
   
+
   # update CatchFrac 
   HistSimList <- purrr::map(HistSimList, \(HistSim) {
     HistSim@OM@CatchFrac <- purrr::map2(HistSim@Landings, HistSim@Discards, \(landings, discards) {
@@ -144,8 +145,6 @@ Simulate_om <- function(OM=NULL,
     })
     HistSim
   })
-  
-  
   
   # ---- Check for Depletion Optimization ----
   OptDepletionRatio <- CheckDepletionOpt(HistSimList, HistTimeSteps) # TODO - warning message or re-sample 

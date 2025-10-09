@@ -77,14 +77,15 @@ ListArraySimAgeTime <- function(OM, Period=c('Historical', 'Projection', 'All'),
 ArraySimAgeTimeArea <- function(OM, Period=c('Historical', 'Projection', 'All'),
                                 stock=1, default=tiny/2, TimeSteps=NULL) {
   meta <- GetMetaData(OM, Period, TimeSteps)
-  nAges <- meta$nAges[[stock]]
+  AgeClasses <-  meta$AgeClasses[[stock]]
+  nAges <- length(AgeClasses)
   
   array(default, dim=c(meta$nSim,
                        nAges,
                        length(meta$TimeSteps),
                        meta$nAreas),
         dimnames=list(Sim=1:meta$nSim,
-                      Age=0:(nAges-1),
+                      Age=AgeClasses,
                       TimeStep=meta$TimeSteps,
                       Area=1:meta$nAreas)
   )
@@ -106,14 +107,15 @@ ListArraySimAgeTimeArea <- function(OM, Period=c('Historical', 'Projection', 'Al
 ArraySimAgeTimeFleet <- function(OM, Period=c('Historical', 'Projection', 'All'),
                                  stock=1, default=tiny/2, TimeSteps=NULL) {
   meta <- GetMetaData(OM, Period, TimeSteps)
-  nAges <-  meta$nAges[[stock]]
+  AgeClasses <-  meta$AgeClasses[[stock]]
+  nAges <- length(AgeClasses)
   
   array(default, dim=c(meta$nSim,
                     nAges,
                     length(meta$TimeSteps),
                     length(meta$FleetNames)),
         dimnames=list(Sim=1:meta$nSim,
-                      Age=0:(nAges-1),
+                      Age=AgeClasses,
                       TimeStep=meta$TimeSteps,
                       Fleet=meta$FleetNames)
   )  
@@ -138,7 +140,8 @@ ListArraySimAgeTimeFleet <- function(OM, Period=c('Historical', 'Projection', 'A
 ArraySimAgeTimeFleetArea <- function(OM, Period=c('Historical', 'Projection', 'All'),
                                      stock=1, default=tiny/2, TimeSteps=NULL) {
   meta <- GetMetaData(OM, Period, TimeSteps)
-  nAges <-  meta$nAges[[stock]]
+  AgeClasses <-  meta$AgeClasses[[stock]]
+  nAges <- length(AgeClasses)
   
   array(default, dim=c(meta$nSim,
                        nAges,
@@ -146,7 +149,7 @@ ArraySimAgeTimeFleetArea <- function(OM, Period=c('Historical', 'Projection', 'A
                        length(meta$FleetNames),
                        meta$nAreas),
         dimnames=list(Sim=1:meta$nSim,
-                      Age=0:(nAges-1),
+                      Age=AgeClasses,
                       TimeStep=meta$TimeSteps,
                       Fleet=meta$FleetNames,
                       Area=1:meta$nAreas)

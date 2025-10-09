@@ -681,7 +681,9 @@ HistSimListTimeSeries <- function(Hist, HistSimList, TimeSteps= NULL) {
   
   for (st in 1:nStock) {
     Hist@Number[[st]] <- purrr::map(HistSimList, \(HistSim) {
-      AddDimNames(HistSim@Number[[st]],  c("Age", "TimeStep", "Area"), TimeSteps=TimeSteps)
+      AddDimNames(HistSim@Number[[st]],  c("Age", "TimeStep", "Area"), 
+                  Ages=HistSim@OM@Stock[[st]]@Ages@Classes,
+                  TimeSteps=TimeSteps)
     }) |>
       List2Array("Sim") |>
       aperm(c("Sim", 'Age', 'TimeStep', 'Area'))

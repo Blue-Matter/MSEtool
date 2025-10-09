@@ -102,7 +102,6 @@ DoOptInitialDepletion <- function(Hist, st) {
              RefVal=RefVal)
   })
   
-  
   nAge <- ncol(NatAge)
   nArea <- nArea(Hist@OM)
   

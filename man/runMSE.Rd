@@ -15,9 +15,14 @@ Project(
   checkMPs = FALSE
 )
 
-Simulate(OM = MSEtool::testOM, parallel = FALSE, silent = FALSE, nsim = NULL)
-
-Simulate(OM = MSEtool::testOM, parallel = FALSE, silent = FALSE, nsim = NULL)
+Simulate(
+  OM = MSEtool::testOM,
+  parallel = FALSE,
+  silent = FALSE,
+  nsim = NULL,
+  nSim = NULL,
+  ...
+)
 
 Project(
   Hist = NULL,
@@ -109,8 +114,6 @@ create problems when combining into a single object.
 \item \code{Project()}: Run the Forward Projections
 
 \item \code{Simulate()}: Run the Historical Simulations from an object of class \code{OM} or class \code{om}
-
-\item \code{Simulate()}: Run the Historical Simulations from an object of class \code{OM}
 
 \item \code{Project()}: Run the Forward Projections
 

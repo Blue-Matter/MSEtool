@@ -342,8 +342,8 @@ PopulateWeight <- function(Weight,
   if (is.null(Weight@CVatAge))
     ASK <- FALSE
   
-  Weight@MeanAtAge <- AddDimNames(Weight@MeanAtAge, TimeSteps=TimeSteps)
-  Weight@CVatAge <- AddDimNames(Weight@CVatAge, TimeSteps=TimeSteps)
+  Weight@MeanAtAge <- AddDimNames(Weight@MeanAtAge, TimeSteps=TimeSteps, Ages=Ages@Classes)
+  Weight@CVatAge <- AddDimNames(Weight@CVatAge, TimeSteps=TimeSteps, Ages=Ages@Classes)
 
   if (ASK) {
     Weight <- PopulateClasses(Weight)

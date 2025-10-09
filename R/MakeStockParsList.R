@@ -126,16 +126,18 @@ GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), TimeSte
   if (is.null(TimeSteps))
     TimeSteps <- TimeSteps(OM, Period)
   
-  nAges <- purrr::map(OM@Stock, \(stock)
-                      length(stock@Ages@Classes)
-  )
+  AgeClasses <- purrr::map(OM@Stock, \(stock)
+                           stock@Ages@Classes
+                           )
 
+  nAges <- purrr::map(AgeClasses, length)
   nAreas <- unlist(purrr::map(OM@Stock, nArea)) |> unique()
   
   if (length(nAreas)>1) 
     cli::cli_abort('All Stocks must have the same number of areas')
   
   list(nSim=nSim(OM),
+       AgeClasses=AgeClasses,
        nAges=nAges,
        nAreas=nAreas,
        StockNames=StockNames(OM),

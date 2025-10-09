@@ -2,6 +2,7 @@
 #include "check.h"
 #include "calculate.h"
 #include "CalcCatch.h"
+#include "CalcSpawnProduction.h"
 #include "CalcAggregateF.h"
 #include "PopulateNumberNext.h"
 //[[Rcpp::depends(RcppArmadillo)]]
@@ -23,6 +24,15 @@ S4 SimulateDynamics_(S4 HistSimIn,
   S4 OM = HistSim.slot("OM");
   List StockList = OM.slot("Stock");
   List FleetList = OM.slot("Fleet");
+  
+  // Hack to manually add spawning mortality in first year
+  // correction for errors in assessment output
+  List Misc = OM.slot("Misc");
+  int MiscLength = Misc.size();
+  RObject SpawnMortality = R_NilValue;  
+  if (MiscLength > 0) {
+    SpawnMortality = Misc["SpawnMortality"];
+  } 
   
   NumericVector TimeStepsAll = OM.slot("TimeSteps");
   int nTS = TimeSteps.size();
@@ -103,20 +113,10 @@ S4 SimulateDynamics_(S4 HistSimIn,
       
       arma::cube FleetWeightAtAge = Fleet.slot("WeightFleet") ; // nAge, nTS, nFleet
 
-      // Calculate Total Biomass 
-      if (debug)
-        Rcout << "Total Biomass" << std::endl;
-      
-      arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // nAge, nTS, nArea
-
-      int nAge = NumberAtAgeArea.n_rows;
-      int nArea = NumberAtAgeArea.n_slices;
-    
-      arma::mat NumberAtAgeAreaThisTS = NumberAtAgeArea.subcube(arma::span(0, nAge-1), arma::span(TSindex), arma::span(0, nArea-1));
-      Biomass.row(st).col(TSindex) = CalcBiomass(NumberAtAgeAreaThisTS, WeightAtAge.col(TSindex));
-
       // Calculate VBiomass by Area
       // VB = vulnerable (selectivity) x available (spatial closure)
+      arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // nAge, nTS, nArea
+      int nArea = NumberAtAgeArea.n_slices;
       
       if (debug)
         Rcout << "VBiomassArea" << std::endl;
@@ -175,14 +175,27 @@ S4 SimulateDynamics_(S4 HistSimIn,
       if (debug)
         Rcout << "SProductSBiomass" << std::endl;
       
+      // Related to hack above for SpawnMortality
+      int nAge = NumberAtAgeArea.n_rows;
+      arma::vec SpawnMortalityVec(nAge);
+      
+      if (!SpawnMortality.isNULL()) {
+        List SpawnMortalityList  = Rcpp::as<Rcpp::List>(SpawnMortality);
+        RObject SpawnMortalityStock = SpawnMortalityList[st];
+        if (!SpawnMortalityStock.isNULL()) {
+          SpawnMortalityVec = as<arma::vec>(SpawnMortalityStock);
+        }
+      }
+      
       arma::cube FDeadFleetArea = FMortFleetArea["FDeadFleetArea"];
       arma::mat FDeadAtAgeArea = arma::sum(FDeadFleetArea,1);
-      arma::vec SProductSBiomass = CalcSpawnProduction(NumberAtAgeArea.col(TSindex), // nAge
+      arma::vec SProductSBiomass = CalcSpawnProduction_(NumberAtAgeArea.col(TSindex), // nAge
                                                        FecundityAtAge.col(TSindex), // nAge
                                                        MaturityAtAge.col(TSindex), // nAge
                                                        WeightAtAge.col(TSindex), // nAge
                                                        NaturalMortalityAtAge.col(TSindex), // nAge
                                                        FDeadAtAgeArea,
+                                                       SpawnMortalityVec,
                                                        SpawnTimeFrac // double
       );
       SProduction.row(st).col(TSindex) = SProductSBiomass[0];
@@ -333,6 +346,22 @@ S4 SimulateDynamics_(S4 HistSimIn,
       }
       NumberAtAgeAreaList[st] = NumberAtAgeArea;
       
+      
+      // Calculate Total Biomass 
+      if (debug)
+        Rcout << "Calculating Total Biomass" << std::endl;
+      
+      S4 Weight = Stock.slot("Weight");
+      arma::mat WeightAtAge = Weight.slot("MeanAtAge");
+      
+      arma::mat NumberAtAgeAreaThisTS = NumberAtAgeArea.subcube(arma::span(0, nAge-1), arma::span(TSindex), arma::span(0, nArea-1));
+      Biomass.row(st).col(TSindex) = CalcBiomass(NumberAtAgeAreaThisTS, WeightAtAge.col(TSindex));
+  
+      if (debug) {
+        double BIOMASS = arma::as_scalar(Biomass.row(st).col(TSindex));
+        Rcout << "Total Biomass = " << BIOMASS << std::endl;
+      }
+    
     } // end of Stock loop
 
   } // end of Time Step loop
