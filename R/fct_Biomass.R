@@ -14,11 +14,26 @@
 NULL 
 
 
+#' 
+#' @export
+Array2DF <- function(array) {
+  if (!inherits(array, c('matrix', 'array'))) 
+    cli::cli_abort('`array` in not class `matrix` or `array`')
+  
+  array2DF(array) |> ConvertDF()
+}
+
 MakeFactor <- function(x) {
   factor(x, ordered = TRUE, levels=unique(x))
 }
 
+
 #' @export
+DF2Array <- function(DF) {
+  
+}
+
+
 ConvertDF <- function(df) {
   nms <- colnames(df)
   if ('Sim' %in% nms)
@@ -33,13 +48,18 @@ ConvertDF <- function(df) {
     df$Fleet <- MakeFactor(df$Fleet)
   # if ('MP' %in% nms)
   #   df$MP <- MakeFactor(df$MP)
+  
   if ('TimeStep' %in% nms)
     df$TimeStep <- as.numeric(df$TimeStep)
+  if ('Year' %in% nms)
+    df$Year <- as.numeric(df$Year)
   if ('Value' %in% nms)
     df$Value <- as.numeric(df$Value)
   
   df |> tibble::as_tibble()
 }
+
+
 
 
 TimeStepsDF <- function(MSE) {
