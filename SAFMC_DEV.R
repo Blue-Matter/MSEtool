@@ -19,7 +19,33 @@ Stock <- 'RedSnapper'
 
 OM <- ImportBAM(Stock, nSim=nSim, pYear=pYear)
 
-OM@Misc 
+OM@Misc$SProduction 
+Hist@SProduction
+
+######################
+DF <- Array2DF(Hist@Biomass)
+
+
+DF2Array <- function(DF, addSim=TRUE) {
+  
+  nms <- names(DF)
+  
+  
+  
+  
+  
+  
+}
+
+
+
+
+DF2Array 
+
+
+
+
+slotNames(Hist)
 
 CompareBAM(Stock, OM)
 
