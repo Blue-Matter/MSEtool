@@ -29,8 +29,24 @@ MakeFactor <- function(x) {
 
 
 #' @export
-DF2Array <- function(DF) {
+DF2Array <- function(DF, addSim=TRUE) {
+  if (!inherits(DF, 'data.frame'))
+    cli::cli_abort("`DF` is not a data.frame")
   
+  nms <- names(DF)
+  PosNames <- c("Sim", "Stock", "Age", "TimeStep", "Fleet", "Area") 
+  DFNames <- nms[nms %in% PosNames]
+  PosNames <- PosNames[PosNames %in% DFNames]
+  
+  df <- DF |> 
+    dplyr::select(dplyr::all_of(DFNames), 'Value') |>
+    dplyr::relocate(dplyr::all_of(PosNames)) 
+  
+  temp <- df
+  temp$Value <- NULL
+  DimNames <- apply(temp, 2, unique, simplify = FALSE)
+  Dim <- lapply(DimNames, length)
+  array(df$Value, dim=Dim, dimnames=DimNames)
 }
 
 

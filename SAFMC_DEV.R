@@ -5,37 +5,51 @@ la()
 
 dir <- "C:/Users/Admin/Documents/GitHub/SAFMC-MSE"
 
+dir <- "C:/Users/Adrian/Documents/GitHub/SAFMC-MSE"
+
+
 source(file.path(dir,'0. Specifications.R'))
 
 OM_Dir <- file.path(dir, 'OM_Objects/Base')
 
 
-OM_RS <- ImportBAM('RedSnapper', nSim=nSim, pYear=pYear)
+OM_RS <- ImportBAM('RedSnapper', nSim=5, pYear=10)
 CompareBAM('RedSnapper', OM=OM_RS)
 
 ################################################################################
 
 Stock <- 'RedSnapper'
 
-OM <- ImportBAM(Stock, nSim=nSim, pYear=pYear)
+OM <- ImportBAM(Stock, nSim=5, pYear=10)
+Hist <- Simulate(OM)
 
-OM@Misc$SProduction 
-Hist@SProduction
+
+# add these to Hist ...
+
+OM@Misc$SProduction
+Hist@SProduction |> dimnames() |> names()
+
+
+
+Hist@FDeadAtAgeArea$`SA Red Snapper` |> dimnames() |> names()
+
+
 
 ######################
+
 DF <- Array2DF(Hist@Biomass)
+Array <- DF2Array(DF)
+
+DF2 <- Array2DF(Array)
 
 
-DF2Array <- function(DF, addSim=TRUE) {
-  
-  nms <- names(DF)
-  
-  
-  
-  
-  
-  
-}
+prod(DF == DF2)
+
+
+
+
+
+
 
 
 
