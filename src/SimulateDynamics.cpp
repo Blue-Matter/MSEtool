@@ -176,8 +176,16 @@ S4 SimulateDynamics_(S4 HistSimIn,
                                                        FDeadAtAgeArea,
                                                        SpawnTimeFrac // double
       );
-      SProduction.row(st).col(TSindex) = SProductSBiomass[0];
-      SBiomass.row(st).col(TSindex) = SProductSBiomass[1];
+      
+      // double SPtemp = arma::as_scalar(SProduction.row(st).col(TSindex));
+    
+      if (arma::as_scalar(SProduction.row(st).col(TSindex)) <= 5e-16)
+        SProduction.row(st).col(TSindex) = SProductSBiomass[0];
+      
+      // double SBtemp = SBiomass.row(st).col(TSindex);
+      // if (SBtemp <= 5e-16)
+      //   SBiomass.row(st).col(TSindex) = SProductSBiomass[1];
+      
     } // end Stock loop
     
     // Apply SPFrom for spawning production from another stock

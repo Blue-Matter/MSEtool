@@ -76,6 +76,8 @@ OM2Hist <- function(OM, silent=FALSE) {
   Hist@FDeadAtAgeArea <- ListArraySimAgeTimeFleetArea(OM, 'Historical')
   Hist@FRetainAtAgeArea <- Hist@FDeadAtAgeArea
   
+  # Add time series info if available
+  Hist <- ProcessMiscOM(Hist)
   
   if (!silent) 
     cli::cli_progress_done()

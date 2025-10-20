@@ -45,6 +45,27 @@ ImportBAM <- function(Stock='Red Snapper',
                                                dimnames = list(Sim=1:nSim,
                                                                Fleet=FleetNames))
   
+  
+  ## ---- Issue with SSB (SProduction in first time step) -----
+  # Z_spawn_expected <- (BAMdata$a.series$M + BAMdata$F.age[1,]) * BAMdata$parms$spawn.time
+  # Z_spawn_actual <- -log(BAMdata$N.age.spawn[1,]/BAMdata$N.age[1,])
+  # 
+  # plot(Z_spawn_expected, type='l', ylim=c(0, max(c(Z_spawn_expected, Z_spawn_actual))))
+  # lines(Z_spawn_actual, col='blue')
+  # 
+  # sum(BAMdata$N.age[1,] * exp(-Z_spawn_expected) * BAMdata$a.series$reprod)
+  # sum(BAMdata$N.age[1,] * exp(-Z_spawn_actual) * BAMdata$a.series$reprod)
+  # BAMdata$t.series$SSB[1]
+  
+  if (BAMdata$parms$spawn.time>0) {
+    OM@Misc$SProduction <- data.frame(Sim=1,
+                                      Stock=BAMdata$info$species,
+                                      TimeStep=BAMdata$t.series$year[1], 
+                                      Value=BAMdata$t.series$SSB[1])
+  }
+  
+  
+  
   # TODO - Data
   
   if (populate) 
@@ -108,8 +129,7 @@ ListBAMStocks <- function(type=c('rdat', 'dat')) {
 }
 
 
-CompareBAM_Number <- function(Stock, OM=NULL) {
-  
+ProcessBAMArgs <- function(Stock, OM=NULL) {
   if (is.null(OM))
     OM <- ImportBAM(Stock, 2,1)
   
@@ -127,101 +147,49 @@ CompareBAM_Number <- function(Stock, OM=NULL) {
     BAMOutput <- GetBAMOutput(Stock)
   }
   
-  OM_Value <- Number(Hist, byAge=TRUE) |> dplyr::mutate(Model='OM') |>
-    dplyr::filter(Sim==1)
-  
-  BAM_Value <- BAMOutput$N.age
-  dnames <- dimnames(BAM_Value)
-  dimnames(BAM_Value) <- list(TimeStep=dnames[[1]],
-                              Age=dnames[[2]])
-  
-  
-  BAM_Value <- BAM_Value |> array2DF() |> 
-    ConvertDF() |>
-    dplyr::mutate(Model='BAM', Variable='Number')
-  
-  df <- dplyr::bind_rows(OM_Value, BAM_Value)
-  
-  ggplot(df,  aes(x=TimeStep, y=Value, color=Model, linetype=Model)) +
-    facet_wrap(~Age, scales='free_y') +
-    geom_line() +
-    expand_limits(y=0) +
-    labs(x='Year', y='Number') +
-    theme_bw()
-  
+  list(Hist=Hist,
+       BAMOutput=BAMOutput)
 }
 
-CompareBAM_Biomass <- function(Stock, OM=NULL, ConvertUnits=NULL) {
-  
-  if (is.null(OM))
-    OM <- ImportBAM(Stock, 2,1)
-  
-  CheckClass(OM, c('om', 'hist'))
-  
-  if (inherits(OM, 'om')) {
-    Hist <- Simulate(OM, nSim=1)
+PrintPlotBAMRE <- function(Out, name, thresh=0.5) {
+  re <- Out[[name]]$RelativeError |> dplyr::filter(RelativeError>thresh)
+  if (nrow(re)>0) {
+    cli::cli_alert('{.val {name}:} Some Relative Error > {thresh}%')
+    print(re) 
+    
+    p <- ggplot(Out[[name]]$df, aes(x=TimeStep, y=Value, color=Model)) +
+      geom_line() +
+      labs(x='Year', y=name, title = Out$Stock) +
+      theme_bw()
+    
+    print(p)
+    
   } else {
-    Hist <- OM
+    cli::cli_alert('{.val {name}:} All Relative Error < {thresh}%')
   }
-  
-  if (inherits(Stock, 'BAMdata')) {
-    BAMOutput <- Stock
-  } else {
-    BAMOutput <- GetBAMOutput(Stock)
-  }
-  
-  OM_B <- Biomass(Hist) |>
-    dplyr::mutate(Model='OM', 
-                  Value=Value/1000) # convert to metric tons  
-  
-  BAM_B <- BAMOutput$t.series |> 
-    dplyr::select(TimeStep=year, Value=B) |>
-    dplyr::mutate(Variable='Biomass', Model='BAM') |>
-    dplyr::filter(TimeStep%in% OM_B$TimeStep) 
-  
-  if (!is.null(ConvertUnits)) 
-    BAM_B <- BAM_B |> dplyr::mutate(Value=Value*ConvertUnits)
-  B_DF <- dplyr::bind_rows(OM_B, BAM_B)
-  
-  rng <- (range(OM_B$Value/BAM_B$Value)-1) |> round(2) |> unique()
-  cli::cli_inform("Range in delta biomass: {rng}")
-  
-  ggplot(B_DF, aes(x=TimeStep, y=Value, color=Model, linetype=Model)) +
-    geom_line() +
-    expand_limits(y=0) +
-    labs(x='Year', y='Biomass') +
-    theme_bw()
-  
-  
 }
 
 
 #' @describeIn ImportBAM Compare BAM and OM dynamics
 #' @export
-CompareBAM <- function(Stock, OM=NULL, ConvertUnits=NULL) {
+CompareBAM <- function(Stock, OM=NULL, ScaleBiomass=NULL, thresh=0.5) {
   
-  if (is.null(OM))
-    OM <- ImportBAM(Stock, 2,1)
+  List <- ProcessBAMArgs(Stock, OM)
+  Hist <- List$Hist
+  BAMOutput <- List$BAMOutput
   
-  CheckClass(OM, c('om', 'hist'))
+  Out <- list()
+  Out$Stock <- BAMOutput$info$species
+  Out$Recruits <- CompareBAM_Recruits(BAMOutput, Hist)
+  Out$Number <- CompareBAM_Number(BAMOutput, Hist)
+  Out$Biomass <- CompareBAM_Biomass(BAMOutput, Hist, ScaleBiomass)
   
-  if (inherits(OM, 'om')) {
-    Hist <- Simulate(OM, nSim=1)
-  } else {
-    Hist <- OM
-  }
   
-  if (inherits(Stock, 'BAMdata')) {
-    BAMOutput <- Stock
-  } else {
-    BAMOutput <- GetBAMOutput(Stock)
-  }
+  PrintPlotBAMRE(Out, 'Recruits', thresh)
+  PrintPlotBAMRE(Out, 'Number', thresh)
+  PrintPlotBAMRE(Out, 'Biomass', thresh)
   
-  # Number 
-  print(CompareBAM_Number(BAMOutput, Hist))
   
-  # Biomass
-  print(CompareBAM_Biomass(BAMOutput, Hist, ConvertUnits))
   
   # Spawning Biomass
   # BAM_SB <- BAMOutput$t.series |> 
@@ -241,5 +209,113 @@ CompareBAM <- function(Stock, OM=NULL, ConvertUnits=NULL) {
   #   labs(x='Year', y='Biomass') +
   #   theme_bw()
   
+  
+  invisible(Out)
+}
+
+
+
+
+
+CompareBAM_Number <- function(Stock, OM=NULL) {
+  
+  List <- ProcessBAMArgs(Stock, OM)
+  Hist <- List$Hist
+  BAMOutput <- List$BAMOutput
+ 
+  OM_Value <- Number(Hist) |> dplyr::mutate(Model='OM') |>
+    dplyr::filter(Sim==1)
+  
+  BAM_Value <- BAMOutput$N.age
+  dnames <- dimnames(BAM_Value)
+  dimnames(BAM_Value) <- list(TimeStep=dnames[[1]],
+                              Age=dnames[[2]])
+  
+  
+  BAM_Value <- BAM_Value |> array2DF() |> 
+    ConvertDF() |>
+    dplyr::mutate(Model='BAM', Variable='Number') |>
+    dplyr::group_by(TimeStep, Model) |>
+    dplyr::summarise(Value=sum(Value)) |>
+    dplyr::arrange(TimeStep) 
+  
+  
+  df <- dplyr::bind_rows(OM_Value, BAM_Value) |>
+    dplyr::select(TimeStep, Value, Model) |>
+    dplyr::arrange(TimeStep) 
+  
+  RelativeError <- df |> 
+    tidyr::pivot_wider(names_from = Model, values_from = Value) |> 
+    dplyr::group_by(TimeStep) |>
+    dplyr::summarise(RelativeError=(OM-BAM)/BAM*100, .groups='drop') 
+  
+  list(df=df, RelativeError=RelativeError)
+}
+
+CompareBAM_Biomass <- function(Stock, OM=NULL, ScaleBiomass=NULL) {
+  
+  List <- ProcessBAMArgs(Stock, OM)
+  Hist <- List$Hist
+  BAMOutput <- List$BAMOutput
+  
+  OM_Value <- Biomass(Hist) |> dplyr::mutate(Model='OM') |>
+    dplyr::filter(Sim==1) |>
+    dplyr::mutate(Model='OM', 
+                  Value=Value/1000) # convert to metric tons  
+  
+  
+  BAM_Value <- BAMOutput$t.series |> 
+    dplyr::select(TimeStep=year, Value=B) |>
+    dplyr::mutate(Variable='Biomass', Model='BAM') |>
+    dplyr::filter(TimeStep%in%OM_Value$TimeStep) 
+  
+  if (!is.null(ScaleBiomass)) 
+    BAM_Value <- BAM_Value |> dplyr::mutate(Value=Value*ScaleBiomass)
+
+  df <- dplyr::bind_rows(OM_Value, BAM_Value) |>
+    dplyr::select(TimeStep, Value, Model) |>
+    dplyr::arrange(TimeStep) 
+  
+  RelativeError <- df |> 
+    tidyr::pivot_wider(names_from = Model, values_from = Value) |> 
+    dplyr::group_by(TimeStep) |>
+    dplyr::summarise(RelativeError=(OM-BAM)/BAM*100, .groups='drop') 
+  
+  list(df=df, RelativeError=RelativeError)
+
+}
+
+CompareBAM_Recruits <- function(Stock, OM=NULL) {
+  List <- ProcessBAMArgs(Stock, OM)
+  Hist <- List$Hist
+  BAMOutput <- List$BAMOutput
+  
+  OM_Value <- Number(Hist, byAge=TRUE) |> 
+    dplyr::mutate(Model='OM') |>
+    dplyr::filter(Sim==1, Age==min(Age)) |>
+    dplyr::select(TimeStep, Value, Model) 
+ 
+  BAM_Value <- BAMOutput$N.age
+  dnames <- dimnames(BAM_Value)
+  dimnames(BAM_Value) <- list(TimeStep=dnames[[1]],
+                              Age=dnames[[2]])
+  
+  
+  BAM_Value <- BAM_Value |> array2DF() |> 
+    ConvertDF() |>
+    dplyr::mutate(Model='BAM', Variable='Number') |>
+    dplyr::filter(Age==min(Age)) 
+  
+
+  df <- dplyr::bind_rows(OM_Value, BAM_Value) |>
+    dplyr::select(TimeStep, Value, Model) |>
+    dplyr::arrange(TimeStep) 
+  
+  RelativeError <- df |> 
+    tidyr::pivot_wider(names_from = Model, values_from = Value) |> 
+    dplyr::group_by(TimeStep) |>
+    dplyr::summarise(RelativeError=(OM-BAM)/BAM*100, .groups='drop') 
+  
+  list(df=df, RelativeError=RelativeError)
   
 }

@@ -50,7 +50,7 @@ Simulate_om <- function(OM=NULL,
   # ---- Build HistSimList ----
   # List of `Hist` objects, each with one simulation
   HistSimList <- Hist2HistSimList(Hist)
-  
+
   # ---- Calculate Reference Points ----
   # unfished spawning per recruit (egg production; i.e. fecundity)
   HistSimList <- purrr::map(HistSimList, \(HistSim) {

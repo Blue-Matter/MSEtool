@@ -13,96 +13,31 @@ source(file.path(dir,'0. Specifications.R'))
 OM_Dir <- file.path(dir, 'OM_Objects/Base')
 
 
+# ---- Exact Match ----
+
+DiscMortDF <- data.frame(Fleet=c('cHL', 'cPT', 'cPT', 'rHB', 'rGN'),
+                         Value=c(0.19,   0.14, 0.068, 0.152, 0.137),
+                         Year= c(1977, 1977, 2007, 1977, 1977))
+
+OM_BSB <- ImportBAM(Stock='BlackSeaBass', nSim=nSim, pYear=pYear, DiscMortDF)
+
+CompareBAM('BlackSeaBass', OM=OM_BSB, ScaleBiomass=0.453592)
+
+
+
+OM_SCG <- ImportBAM(Stock='ScampGrouper', nSim=nSim, pYear=pYear)
+CompareBAM('ScampGrouper', OM=OM_SCG)
+
+
+
 OM_RS <- ImportBAM('RedSnapper', nSim=5, pYear=10)
 CompareBAM('RedSnapper', OM=OM_RS)
 
-################################################################################
 
-Stock <- 'RedSnapper'
-
-OM <- ImportBAM(Stock, nSim=5, pYear=10)
-Hist <- Simulate(OM)
-
-
-# add these to Hist ...
-
-OM@Misc$SProduction
-Hist@SProduction |> dimnames() |> names()
-
-
-
-Hist@FDeadAtAgeArea$`SA Red Snapper` |> dimnames() |> names()
-
-
-
-######################
-
-DF <- Array2DF(Hist@Biomass)
-Array <- DF2Array(DF)
-
-DF2 <- Array2DF(Array)
-
-
-prod(DF == DF2)
-
-
-
-
-
-
-
-
-
-
-DF2Array 
-
-
-
-
-slotNames(Hist)
-
-CompareBAM(Stock, OM)
-
-
-# from  TPL
-# N_mdyr(styr)(1,nages)=elem_prod(N(styr)(1,nages),(mfexp(-1.*(Z_initial(1,nages))*0.5))); //mid year
-# N_spawn(styr)(1,nages)=elem_prod(N(styr)(1,nages),(mfexp(-1.*(Z_initial(1,nages))*spawn_time_frac))); //peak spawning time
-# Z_initial is F at start of first year, but doesn't include F during that year
-
-# TODO - add option to specify spawn production, biomass, etc in OM object 
-# - overriding any relevant OM calcs
-
-BAMdata <- GetBAMOutput(Stock)
-Hist <- Simulate(OM, nsim=1)
-
-data.frame(BAM=BAMdata$t.series$recruits[1:70],
-           OM=Hist@Number[[1]][1,1,,1]) |>
-  dplyr::mutate(Diff=BAM/OM)
-
-
-ts <- 1
-M_spawn_expected <- (BAMdata$a.series$M + BAMdata$F.age[ts,]) * BAMdata$parms$spawn.time
-M_spawn_actual <- -log(BAMdata$N.age.spawn[ts,]/BAMdata$N.age[ts,])
-
-plot(M_spawn_expected, type='l', ylim=c(0, max(c(M_spawn_expected, M_spawn_actual))))
-lines(M_spawn_actual, col='blue')
-
-
-
-BAMdata$t.series$SSB[1]/Hist@SProduction[1,1,1]
-BAMdata$t.series$SSB[2]/Hist@SProduction[1,1,2]
-
-
-plot(BAMdata$t.series$SSB, type='l')
-lines(Hist@SProduction[1,1,], col='blue')
-
-
-BAMdata$parms$F.init
-BAMdata$F.age[,1])
-
-################################################################################
 # Red Snapper - latest
 # TODO
+
+################################################################################
 
 OM_GG <- ImportBAM(Stock='GagGrouper', nSim=nSim, pYear=pYear)
 CompareBAM('GagGrouper', OM=OM_GG) 
@@ -115,9 +50,12 @@ Stock <- 'GagGrouper'
 OM <- ImportBAM(Stock, nSim=nSim, pYear=pYear)
 CompareBAM(Stock, OM)
 
-
 BAMdata <- GetBAMOutput(Stock)
 Hist <- Simulate(OM, nsim=1)
+
+plot(BAMdata$t.series$SSB, type='l')
+lines(Hist@SProduction[1,1,], col='blue')
+
 
 data.frame(BAM=BAMdata$t.series$recruits[1:58],
            OM=Hist@Number[[1]][1,1,,1]) |>
@@ -174,13 +112,6 @@ close(fileConn)
 
 
 
-DiscMortDF <- data.frame(Fleet=c('cHL', 'cPT', 'cPT', 'rHB', 'rGN'),
-                         Value=c(0.19,   0.14, 0.068, 0.152, 0.137),
-                         Year= c(1977, 1977, 2007, 1977, 1977))
-
-OM_BSB <- ImportBAM(Stock='BlackSeaBass', nSim=nSim, pYear=pYear, DiscMortDF)
-CompareBAM('BlackSeaBass', OM=OM_BSB, ConvertUnits = 0.453592)
-
 
 OM_GA <- ImportBAM(Stock='GreaterAmberjack', nSim=nSim, pYear=pYear)
 CompareBAM('GreaterAmberjack', OM=OM_GA)
@@ -188,8 +119,7 @@ CompareBAM('GreaterAmberjack', OM=OM_GA)
 OM_TF <- ImportBAM(Stock='Tilefish', nSim=nSim, pYear=pYear)
 CompareBAM('Tilefish', OM=OM_TF)
 
-OM_SCG <- ImportBAM(Stock='ScampGrouper', nSim=nSim, pYear=pYear)
-CompareBAM('ScampGrouper', OM=OM_SCG)
+
 
 ####################### Minor Differences ######################################
 
