@@ -13,6 +13,9 @@ source(file.path(dir,'0. Specifications.R'))
 OM_Dir <- file.path(dir, 'OM_Objects/Base')
 
 
+# Red Snapper - latest
+# TODO
+
 # ---- Exact Match ----
 
 DiscMortDF <- data.frame(Fleet=c('cHL', 'cPT', 'cPT', 'rHB', 'rGN'),
@@ -30,98 +33,28 @@ CompareBAM('ScampGrouper', OM=OM_SCG)
 
 
 
-OM_RS <- ImportBAM('RedSnapper', nSim=5, pYear=10)
-CompareBAM('RedSnapper', OM=OM_RS)
-
-
-# Red Snapper - latest
-# TODO
-
-################################################################################
-
-OM_GG <- ImportBAM(Stock='GagGrouper', nSim=nSim, pYear=pYear)
-CompareBAM('GagGrouper', OM=OM_GG) 
-
-
-################################################################################
-
-Stock <- 'GagGrouper'
-
-OM <- ImportBAM(Stock, nSim=nSim, pYear=pYear)
-CompareBAM(Stock, OM)
-
-BAMdata <- GetBAMOutput(Stock)
-Hist <- Simulate(OM, nsim=1)
-
-plot(BAMdata$t.series$SSB, type='l')
-lines(Hist@SProduction[1,1,], col='blue')
-
-
-data.frame(BAM=BAMdata$t.series$recruits[1:58],
-           OM=Hist@Number[[1]][1,1,,1]) |>
-  dplyr::mutate(Diff=BAM/OM)
-
-
-ts <- 1
-M_spawn_expected <- (BAMdata$a.series$M + BAMdata$F.age[ts,]) * BAMdata$parms$spawn.time
-M_spawn_actual <- -log(BAMdata$N.age.spawn[ts,]/BAMdata$N.age[ts,])
-
-
-plot(M_spawn_expected, type='l', ylim=c(0, max(c(M_spawn_expected, M_spawn_actual))))
-lines(M_spawn_actual, col='blue')
-
-
-#
-
-BAMdata$parms$F.init
-
-
-Z1 <- (BAMdata$a.series$M + BAMdata$F.age[1,]) * 0.5
-BAMdata$N.age[1,] * exp(-Z1)
-BAMdata$N.age.mdyr[1,]
-BAMdata$N.age.spawn[1,]
-
-
-
-
-tpl <- bamExtras::tpl_GagGrouper
-
-dir <- tempdir()
-fl <- 'text.txt'
-
-file <- file.path(dir, fl)
-
-fileConn<-file(file)
-writeLines(c(tpl), fileConn)
-close(fileConn)
-
-
-################################################################################
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# ---- Work in Progress ----
 
 
 OM_GA <- ImportBAM(Stock='GreaterAmberjack', nSim=nSim, pYear=pYear)
 CompareBAM('GreaterAmberjack', OM=OM_GA)
 
+
 OM_TF <- ImportBAM(Stock='Tilefish', nSim=nSim, pYear=pYear)
 CompareBAM('Tilefish', OM=OM_TF)
 
 
+OM_RS <- ImportBAM('RedSnapper', nSim=5, pYear=10)
+CompareBAM('RedSnapper', OM=OM_RS)
 
-####################### Minor Differences ######################################
+
+
+
+
+OM_GG <- ImportBAM(Stock='GagGrouper', nSim=nSim, pYear=pYear)
+CompareBAM('GagGrouper', OM=OM_GG) 
+
+
 
 
 ## ---- SnowyGrouper -----
