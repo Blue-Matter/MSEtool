@@ -94,8 +94,6 @@ GetBAMOutput <- function(Stock='Red Snapper', type=c('rdat', 'dat')) {
                        'i'='Valid stocks in `bamExtras` are: {.val {ListBAMStocks()}}')
       )
     
-    if (type=='rdat')
-      BAMdata <- ConvertUnitsBAM(BAMdata)
     class(BAMdata) <- 'BAMdata'
     return(BAMdata)
   }
@@ -142,17 +140,19 @@ ProcessBAMArgs <- function(Stock, OM=NULL) {
   }
   
   if (inherits(Stock, 'BAMdata')) {
-    BAMOutput <- Stock
+    BAMdata <- Stock
   } else {
-    BAMOutput <- GetBAMOutput(Stock)
+    BAMdata <- GetBAMOutput(Stock)
   }
   
   list(Hist=Hist,
-       BAMOutput=BAMOutput)
+       BAMdata=BAMdata)
 }
 
-PrintPlotBAMRE <- function(Out, name, thresh=0.5) {
-  re <- Out[[name]]$RelativeError |> dplyr::filter(RelativeError>thresh)
+PrintPlotBAMRE <- function(Out, name, thresh=0.1) {
+  re <- Out[[name]]$RelativeError |> 
+    dplyr::mutate(RelativeError=abs(RelativeError)) |> 
+    dplyr::filter(RelativeError>thresh)
   if (nrow(re)>0) {
     cli::cli_alert('{.val {name}:} Some Relative Error > {thresh}%')
     print(re) 
@@ -172,44 +172,24 @@ PrintPlotBAMRE <- function(Out, name, thresh=0.5) {
 
 #' @describeIn ImportBAM Compare BAM and OM dynamics
 #' @export
-CompareBAM <- function(Stock, OM=NULL, ScaleBiomass=NULL, thresh=0.5) {
+CompareBAM <- function(Stock, OM=NULL, ScaleBiomass=NULL, thresh=0.1) {
   
   List <- ProcessBAMArgs(Stock, OM)
   Hist <- List$Hist
-  BAMOutput <- List$BAMOutput
+  BAMdata <- List$BAMdata
   
   Out <- list()
-  Out$Stock <- BAMOutput$info$species
-  Out$Recruits <- CompareBAM_Recruits(BAMOutput, Hist)
-  Out$Number <- CompareBAM_Number(BAMOutput, Hist)
-  Out$Biomass <- CompareBAM_Biomass(BAMOutput, Hist, ScaleBiomass)
+  Out$Stock <- BAMdata$info$species
+  Out$Recruits <- CompareBAM_Recruits(BAMdata, Hist)
+  Out$Number <- CompareBAM_Number(BAMdata, Hist)
+  Out$Biomass <- CompareBAM_Biomass(BAMdata, Hist, ScaleBiomass)
   
   
   PrintPlotBAMRE(Out, 'Recruits', thresh)
   PrintPlotBAMRE(Out, 'Number', thresh)
   PrintPlotBAMRE(Out, 'Biomass', thresh)
   
-  
-  
-  # Spawning Biomass
-  # BAM_SB <- BAMOutput$t.series |> 
-  #   dplyr::select(TimeStep=year, Value=SSB) |>
-  #   dplyr::mutate(Variable='SBiomass', Model='BAM')
-  # 
-  # OM_SB <- SProduction(Hist) |>
-  #   dplyr::mutate(Model='OM', 
-  #                 Value=Value) # convert to metric tons  
-  # 
-  # # BAMOutput$info$units.biomass
-  # SB_DF <- dplyr::bind_rows(OM_SB, BAM_SB)
-  # 
-  # ggplot(SB_DF, aes(x=TimeStep, y=Value, color=Model, linetype=Model)) +
-  #   geom_line() +
-  #   expand_limits(y=0) +
-  #   labs(x='Year', y='Biomass') +
-  #   theme_bw()
-  
-  
+
   invisible(Out)
 }
 
@@ -221,12 +201,12 @@ CompareBAM_Number <- function(Stock, OM=NULL) {
   
   List <- ProcessBAMArgs(Stock, OM)
   Hist <- List$Hist
-  BAMOutput <- List$BAMOutput
+  BAMdata <- List$BAMdata
  
   OM_Value <- Number(Hist) |> dplyr::mutate(Model='OM') |>
     dplyr::filter(Sim==1)
   
-  BAM_Value <- BAMOutput$N.age
+  BAM_Value <- BAMdata$N.age
   dnames <- dimnames(BAM_Value)
   dimnames(BAM_Value) <- list(TimeStep=dnames[[1]],
                               Age=dnames[[2]])
@@ -256,7 +236,15 @@ CompareBAM_Biomass <- function(Stock, OM=NULL, ScaleBiomass=NULL) {
   
   List <- ProcessBAMArgs(Stock, OM)
   Hist <- List$Hist
-  BAMOutput <- List$BAMOutput
+  BAMdata <- List$BAMdata
+  
+  if (BAMdata$info$units.biomass == '1000 lb') {
+    BAMdata$t.series$B <- (BAMdata$t.series$B) |> lb2kg()
+  } else {
+    cli::cli_abort('`BAMdata$info$units.biomass`:  {.val {BAMdata$info$units.biomass}} currently not supported', .internal=TRUE)
+    
+  }
+  
   
   OM_Value <- Biomass(Hist) |> dplyr::mutate(Model='OM') |>
     dplyr::filter(Sim==1) |>
@@ -264,7 +252,7 @@ CompareBAM_Biomass <- function(Stock, OM=NULL, ScaleBiomass=NULL) {
                   Value=Value/1000) # convert to metric tons  
   
   
-  BAM_Value <- BAMOutput$t.series |> 
+  BAM_Value <- BAMdata$t.series |> 
     dplyr::select(TimeStep=year, Value=B) |>
     dplyr::mutate(Variable='Biomass', Model='BAM') |>
     dplyr::filter(TimeStep%in%OM_Value$TimeStep) 
@@ -288,14 +276,14 @@ CompareBAM_Biomass <- function(Stock, OM=NULL, ScaleBiomass=NULL) {
 CompareBAM_Recruits <- function(Stock, OM=NULL) {
   List <- ProcessBAMArgs(Stock, OM)
   Hist <- List$Hist
-  BAMOutput <- List$BAMOutput
+  BAMdata <- List$BAMdata
   
   OM_Value <- Number(Hist, byAge=TRUE) |> 
     dplyr::mutate(Model='OM') |>
     dplyr::filter(Sim==1, Age==min(Age)) |>
     dplyr::select(TimeStep, Value, Model) 
  
-  BAM_Value <- BAMOutput$N.age
+  BAM_Value <- BAMdata$N.age
   dnames <- dimnames(BAM_Value)
   dimnames(BAM_Value) <- list(TimeStep=dnames[[1]],
                               Age=dnames[[2]])

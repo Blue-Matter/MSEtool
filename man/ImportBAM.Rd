@@ -20,7 +20,7 @@ GetBAMOutput(Stock = "Red Snapper", type = c("rdat", "dat"))
 
 ListBAMStocks(type = c("rdat", "dat"))
 
-CompareBAM(Stock, OM = NULL, ConvertUnits = NULL)
+CompareBAM(Stock, OM = NULL, ScaleBiomass = NULL, thresh = 0.1)
 }
 \arguments{
 \item{Stock}{Character string matching ... or a list ...}

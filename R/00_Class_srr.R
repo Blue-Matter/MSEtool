@@ -90,6 +90,7 @@ setClass("srr",
                  RecDevProj='num.array.list',
                  SpawnTimeFrac='numeric',
                  RelRecFun="fun.char",
+                 Units='numeric',
                  Misc='list'
          )
 )
@@ -110,6 +111,7 @@ setMethod("initialize", "srr", function(.Object,
                                         RecDevProj=array(),
                                         SpawnTimeFrac=0,
                                         RelRecFun=NULL,
+                                        Units=1,
                                         Misc=list()) {
   .Object@Pars <- Pars
   .Object@Model <- Model
@@ -123,9 +125,9 @@ setMethod("initialize", "srr", function(.Object,
   .Object@RecDevProj <- RecDevProj
   .Object@SpawnTimeFrac <- SpawnTimeFrac
   .Object@RelRecFun <- RelRecFun
+  .Object@Units <- Units
   .Object@Misc <- Misc
-  #   .Object@Created <- Sys.time()
-  
+
   if (length(Pars)>0 &
       !is.null(names(Pars)) &
       all(!is.na(unlist(Pars))) &
@@ -172,6 +174,7 @@ SRR <- function(Pars=list(h=NA),
                 RecDevProj=array(),
                 SpawnTimeFrac=0,
                 RelRecFun=NULL,
+                Units=1,
                 Misc=list()) {
   
   if (methods::is(Pars, 'stock'))
@@ -190,6 +193,7 @@ SRR <- function(Pars=list(h=NA),
                RecDevProj=RecDevProj,
                SpawnTimeFrac=SpawnTimeFrac,
                RelRecFun=RelRecFun,
+               Units=Units,
                Misc=Misc)
 }
 

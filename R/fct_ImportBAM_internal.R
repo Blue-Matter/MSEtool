@@ -1,8 +1,3 @@
-ConvertUnitsBAM <- function(rdat) {
-  rdat$a.series$weight <- rdat$a.series$wgt.mt * 1000
-  rdat
-}
-
 
 
 
@@ -41,21 +36,38 @@ BAM2Stock <- function(BAMdata, nSim, TimeSteps) {
   AgeClasses <- stock |> Ages() |> Classes()
   nAgeClasses <- length(AgeClasses)
   
-  Length(stock) <-  Length(Pars=list(Linf=BAMdata$parms$Linf[1],
+ 
+  if (BAMdata$info$units.length == 'mm') {
+    Linf <- BAMdata$parms$Linf[1]
+  } else if (BAMdata$info$units.length == 'inch') {
+    Linf <- inch2mm(BAMdata$parms$Linf[1])
+  } else {
+    cli::cli_abort('`BAMdata$info$units.length`:  {.val {BAMdata$info$units.length}} currently not supported', .internal=TRUE)
+  }
+  
+  Length(stock) <-  Length(Pars=list(Linf=Linf,
                                      K=BAMdata$parms$K[1],
                                      t0=BAMdata$parms$t0[1]),
-                           Units= BAMdata$info$units.length,
+                           Units= 'mm',
                            CVatAge=AgeSeries$length.cv,
                            Timing=0.5)
 
+  if (BAMdata$info$units.weight == 'kg') {
+    WeightAtAge <- AgeSeries$weight
+  } else if (BAMdata$info$units.weight == 'lb') {
+    WeightAtAge <- lb2kg(AgeSeries$weight)
+  } else {
+    cli::cli_abort('`BAMdata$info$units.weight`:  {.val {BAMdata$info$units.weight}} currently not supported', .internal=TRUE)
+  }
+  
   Weight(stock) <- Weight(Pars=list(),
-                          MeanAtAge = array(AgeSeries$weight,
+                          MeanAtAge = array(WeightAtAge,
                                             dim=c(1, length(AgeClasses), 1),
                                             dimnames=list(Sim=1,
                                                           Age=AgeClasses,
                                                           TimeStep=histTS[1])
                           ),
-                          Units = BAMdata$info$units.weight)
+                          Units = 'kg')
   
   
   NaturalMortality(stock) <- NaturalMortality(Pars=list(), 
@@ -87,14 +99,14 @@ BAM2Stock <- function(BAMdata, nSim, TimeSteps) {
   )
 
  
-  # this might need to be changed for other stocks
   Fecundity(stock) <- Fecundity(Pars=list(),
                                 MeanAtAge=array(AgeSeries$reprod,
                                                 dim=c(1, length(AgeClasses), 1),
                                                 dimnames=list(Sim=1,
                                                               Age=AgeClasses,
                                                               TimeStep=histTS[1])
-                                )
+                                ),
+                                Units=BAMdata$info$units.ssb,
   )
   
   h <- ifelse(is.null(BAMdata$parms[["BH.steep"]]), 0.99,
@@ -104,19 +116,32 @@ BAM2Stock <- function(BAMdata, nSim, TimeSteps) {
   SD <- BAMdata$parms[["R.sigma.logdevs"]]
   ACF <- acf(BAMdata$t.series$logR.dev, lag.max = 1, plot = FALSE, na.action =na.pass)$acf[2]
   
-  phi0 <- BAMdata$parms[["BH.Phi0"]]
-  if(is.null(phi0)) phi0 <- BAMdata$parms[["Phi0"]]
+  # Not sure if this is neccessary. 
+  # SSBpR is different than phi0 in some cases.
+  # Derived h, R0 result in incorrect recruits 
+  # 
+  # phi0 <- BAMdata$parms[["BH.Phi0"]]
+  # if(is.null(phi0)) phi0 <- BAMdata$parms[["Phi0"]]
+  # 
+  # Arec <- 4*h/(1-h)/phi0
+  # Brec <- (5*h-1)/(1-h)/R0/phi0
+  # stock2 <- PopulateStock(stock)
+  # UnfishedSurv <- CalcUnfishedSurvivalStock(stock2, SP=TRUE)
+  # 
+  # SSBpR <- sum(AgeSeries$reprod * UnfishedSurv[1,,1])
+  # 
+  # K <- Arec * SSBpR
+  # h <- K/(4 + K)
+  # if (h < 0.99) 
+  #   R0 <- (5*h-1)/(1-h)/Brec/SSBpR
+  
+  if (BAMdata$info$units.rec == "number fish") {
+    NumberUnits <- 1
+  } else {
+    cli::cli_abort('`BAMdata$info$units.rec`:  {.val {BAMdata$info$units.rec}} currently not supported', .internal=TRUE)
+    
+  }
 
-  Arec <- 4*h/(1-h)/phi0
-  Brec <- (5*h-1)/(1-h)/R0/phi0
-  stock2 <- PopulateStock(stock)
-  UnfishedSurv <- CalcUnfishedSurvivalStock(stock2, SP=TRUE)
-
-  SSBpR <- sum(AgeSeries$reprod * UnfishedSurv[1,,1])
-
-  K <- Arec * SSBpR
-  h <- K/(4 + K)
-  R0 <- (5*h-1)/(1-h)/Brec/SSBpR
   
   SRR(stock) <- SRR(Pars=list(h=h),
                     R0=R0,
@@ -125,7 +150,8 @@ BAM2Stock <- function(BAMdata, nSim, TimeSteps) {
                     RecDevInit = array(0),
                     RecDevHist = array(0),
                     RecDevProj = array(0),
-                    SpawnTimeFrac = BAMdata$parms$spawn.time
+                    SpawnTimeFrac = BAMdata$parms$spawn.time,
+                    Units=NumberUnits
   )
   
   # already done in rec devs
@@ -133,7 +159,6 @@ BAM2Stock <- function(BAMdata, nSim, TimeSteps) {
   
   stock <- PopulateStock(stock)
 
-  
   # Recruitment Deviations 
   UnfishedEq <- ArrayMultiply(CalcUnfishedSurvival(stock, TimeSteps=TimeSteps, Expand = FALSE), 
                              aperm(AddDimension(stock@SRR@R0, 'Age'), c(1,3,2))
@@ -154,13 +179,21 @@ BAM2Stock <- function(BAMdata, nSim, TimeSteps) {
                                  stock@SRR@R0[1,1], 
                                  stock@SRR@Pars$h[1,1])
   
-
   recruits <- N.age[,1]
   RecTimeSteps <- histTS # + BAMdata$parms$rec.lag
   rowInd <- match(RecTimeSteps, names(recruits))
-  RecDevHist <- recruits[rowInd]/RecruitsHistEq
-  RecDevHist[1] <- N.age[1,1]/UnfishedEq[1,1,1] # update for first year
   
+  ageRec <- colnames(N.age) |> as.numeric() |> min()
+  if (ageRec>0) {
+    # Calculate equilibrium numbers
+    RecruitsHistEq <- c(rep(BAMdata$eq.series$R.eq[1], ageRec), RecruitsHistEq)
+    RecruitsHistEq <- RecruitsHistEq[rowInd]
+  }
+
+  RecDevHist <- recruits[rowInd]/RecruitsHistEq
+  
+  # RecDevHist[1] <- N.age[1,1]/UnfishedEq[1,1,1] # update for first year
+
   stock@SRR@RecDevHist <- array(RecDevHist,
                                 dim=c(1, nYear),
                                 dimnames=list(Sim=1,

@@ -13,7 +13,6 @@ Number <- function(object, df=TRUE, hist=TRUE, byArea=FALSE, byAge=FALSE) {
   if (!df)
     return(object@Number)
   
-  
   projN <- list()
   for (i in seq_along(object@Number)) {
     n <- object@Number[[i]] 
@@ -80,6 +79,7 @@ NumberHist <- function(Hist, df=TRUE, byArea=FALSE, byAge=FALSE) {
     n$Stock <- names(Hist@Number)[i]
     n$Period <- 'Historical'
     n$Variable <- "Number"
+    n$Units <- Hist@OM@Stock[[i]]@SRR@Units
     histN[[i]] <- n
   }
   if (length(histN)>1) {

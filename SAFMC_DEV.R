@@ -24,35 +24,92 @@ DiscMortDF <- data.frame(Fleet=c('cHL', 'cPT', 'cPT', 'rHB', 'rGN'),
 
 OM_BSB <- ImportBAM(Stock='BlackSeaBass', nSim=nSim, pYear=pYear, DiscMortDF)
 
-CompareBAM('BlackSeaBass', OM=OM_BSB, ScaleBiomass=0.453592)
+
+SBiomass(Hist) # why not populated?? 
+
+CompareBAM(Stock='BlackSeaBass', OM=OM_BSB)
+
+# TODO - Biomass units should be converted internally to kg
+# - check if recruitment is number of fish or 1000 fish
+# - add and check other units
+
 
 
 
 OM_SCG <- ImportBAM(Stock='ScampGrouper', nSim=nSim, pYear=pYear)
 CompareBAM('ScampGrouper', OM=OM_SCG)
 
+OM_GA <- ImportBAM(Stock='GreaterAmberjack', nSim=nSim, pYear=pYear)
+CompareBAM('GreaterAmberjack', OM=OM_GA)
+
+OM_TF <- ImportBAM(Stock='Tilefish', nSim=nSim, pYear=pYear)
+CompareBAM('Tilefish', OM=OM_TF)
+
+OM_RS <- ImportBAM('RedSnapper', nSim=5, pYear=10)
+CompareBAM('RedSnapper', OM=OM_RS)
+
+OM_GG <- ImportBAM(Stock='GagGrouper', nSim=nSim, pYear=pYear)
+CompareBAM('GagGrouper', OM=OM_GG) 
+
+OM_SG <- ImportBAM(Stock='SnowyGrouper', nSim=nSim, pYear=pYear)
+CompareBAM('SnowyGrouper', OM=OM_SG)
+
+
+################################################################################
+Stock <- 'ScampGrouper'
+OM <- ImportBAM(Stock, nSim=nSim, pYear=pYear)
+BAMdata <- GetBAMOutput(Stock)
+Hist <- Simulate(OM, nsim = 1)
+
+
+recdev <- Hist@OM@Stock$`SA Greater Amberjack`@SRR@RecDevHist[1]
+mod <- Hist@OM@Stock$`SA Greater Amberjack`@SRR@Model
+
+
+sp0 <- BAMdata$eq.series$SSB[1]
+r0 <- BAMdata$eq.series$R.eq[1]
+sp <- BAMdata$t.series$SSB[1]
+h <- BAMdata$parms[["BH.steep"]]
+mod(sp, sp0, r0, h) * recdev
+
+
+sp0 <- Hist@Unfished@Equilibrium@SProduction[1,1,1]
+r0 <- Hist@OM@Stock$`SA Greater Amberjack`@SRR@R0[1,1]
+sp <- Hist@SProduction[1,1,1]
+h <- Hist@OM@Stock$`SA Greater Amberjack`@SRR@Pars$h[1,1]
+
+mod(sp, sp0, r0, h) * recdev
+
+Hist@Number$`SA Greater Amberjack`[1,1,1,1]
+BAMdata$N.age[1,1]
+
+data.frame(BAM=BAMdata$N.age[1:Hist@OM@nYear,1], 
+           OM=Hist@Number$`SA Greater Amberjack`[1,1,,1])
+
+
+################################################################################
+
+
+
+
+
 
 
 # ---- Work in Progress ----
 
 
-OM_GA <- ImportBAM(Stock='GreaterAmberjack', nSim=nSim, pYear=pYear)
-CompareBAM('GreaterAmberjack', OM=OM_GA)
-
-
-OM_TF <- ImportBAM(Stock='Tilefish', nSim=nSim, pYear=pYear)
-CompareBAM('Tilefish', OM=OM_TF)
-
-
-OM_RS <- ImportBAM('RedSnapper', nSim=5, pYear=10)
-CompareBAM('RedSnapper', OM=OM_RS)
 
 
 
 
 
-OM_GG <- ImportBAM(Stock='GagGrouper', nSim=nSim, pYear=pYear)
-CompareBAM('GagGrouper', OM=OM_GG) 
+
+
+
+
+
+
+
 
 
 
@@ -61,8 +118,7 @@ CompareBAM('GagGrouper', OM=OM_GG)
 
 # Nage.spawn is calculated differently than expected in first year
 
-OM_SG <- ImportBAM(Stock='SnowyGrouper', nSim=nSim, pYear=pYear)
-CompareBAM('SnowyGrouper', OM=OM_SG)
+
 
 
 

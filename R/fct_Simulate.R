@@ -88,7 +88,7 @@ Simulate_om <- function(OM=NULL,
     Hist@RefPoints@MSYRefPoints <- MSYRefPoints
   }
   
-  
+
   # Per-Recruit Curves 
   # TODO
   
@@ -135,7 +135,6 @@ Simulate_om <- function(OM=NULL,
                               format = "Simulating Historical Fishery {cli::pb_bar} {cli::pb_percent}",
                               clear = TRUE))
   
-
   # update CatchFrac 
   HistSimList <- purrr::map(HistSimList, \(HistSim) {
     HistSim@OM@CatchFrac <- purrr::map2(HistSim@Landings, HistSim@Discards, \(landings, discards) {
