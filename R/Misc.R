@@ -270,11 +270,32 @@ CalcTimeSteps <- function(nYear, pYear, CurrentYear, TimeUnits='year', Period=NU
     if (is.null(Period))
       return(c(hist, proj))
     
-    if (Period=='Historical')
+    if (grepl('H', Period))
       return(hist)
     
-    if (Period=='Projection')
+    if (grepl('P', Period))
       return(proj)
+  }
+  
+  if (TimeUnits=='year') {
+    FirstHistYear <- CurrentYear-nYear+1
+    LastHistYear <- CurrentYear
+    
+    FirstProjYear <- CurrentYear+1
+    LastProjYear <- CurrentYear+pYear
+    
+    hist <- FirstHistYear:LastHistYear
+    proj <- FirstProjYear:LastProjYear
+    
+    if (is.null(Period))
+      return(c(hist, proj))
+    
+    if (grepl('H', Period))
+      return(hist)
+    
+    if (grepl('P', Period))
+      return(proj)
+    
   }
   
   FirstHistYear <- lubridate::ymd(paste0(CurrentYear-nYear+1, '-01-01'))
@@ -282,13 +303,10 @@ CalcTimeSteps <- function(nYear, pYear, CurrentYear, TimeUnits='year', Period=NU
   
   FirstProjYear <- lubridate::ymd(paste0(CurrentYear+1, '-01-01'))
   LastProjYear <- lubridate::ymd(paste0(CurrentYear+pYear, '-12-31'))
-  
   validTimeUnits <- c('year', 'half-year', 'quarter', 'month', 'week', 'day')
   
-  if (TimeUnits=='year') {
-    hist <- seq(FirstHistYear, LastHistYear, by='year') |> lubridate::decimal_date()
-    proj <- seq(FirstProjYear, LastProjYear, by='year') |> lubridate::decimal_date()
-  } else if (TimeUnits=='half-year') {
+  
+  if (TimeUnits=='half-year') {
     hist <- seq(FirstHistYear, LastHistYear, by='6 months') |> lubridate::decimal_date()
     proj <- seq(FirstProjYear, LastProjYear, by='6 months') |> lubridate::decimal_date()
   } else if (TimeUnits=='quarter') {
@@ -313,10 +331,10 @@ CalcTimeSteps <- function(nYear, pYear, CurrentYear, TimeUnits='year', Period=NU
   if (is.null(Period))
     return(c(hist, proj))
 
-  if (Period=='Historical')
+  if (grepl('H', Period))
     return(hist)
 
-  if (Period=='Projection')
+  if (grepl('P', Period))
     return(proj)
 }
 

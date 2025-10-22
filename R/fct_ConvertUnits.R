@@ -5,6 +5,8 @@ lb2kg <- function(x)
 lb2mt <- function(x)
   lb2kg(x) / 1000
 
+
+
 kg2lb <- function(x)
   x/0.453592
 
@@ -17,4 +19,5 @@ inch2mm <- function(x)
 mm2inch <- function(x)
   x/25.4
 
-
+kg2mt <- function(x)
+  x / 1000

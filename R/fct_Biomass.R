@@ -49,6 +49,33 @@ DF2Array <- function(DF, addSim=TRUE) {
   array(df$Value, dim=Dim, dimnames=DimNames)
 }
 
+ArrangeDF <- function(df) {
+  
+  cnames <- colnames(df)
+  colInd <- c('Sim', 'TimeStep', 'Age') %in% cnames
+  
+  if (prod(colInd))
+    return(
+      df |> dplyr::arrange(Sim, TimeStep, Age)
+    )
+    
+  if (prod(colInd[1:2]))
+    return(
+      df |> dplyr::arrange(Sim, TimeStep)
+    )
+  
+  if (prod(colInd[c(1,3)]))
+    return(
+      df |> dplyr::arrange(Sim, Age)
+    )
+  
+  if (prod(colInd[c(2,3)]))
+    return(
+      df |> dplyr::arrange(TimeStep, Age)
+    )
+  
+ df
+}
 
 ConvertDF <- function(df) {
   nms <- colnames(df)
@@ -114,7 +141,7 @@ GetMSYRefValue <- function(MSE, Metric='FMSY', Ref=c('Equilibrium', 'Dynamic'), 
   if (Ref !="Equilibrium")
     cli::cli_alert_warning("Only Equilibrium msy reference points are currently working")
   
-  RefValue <- try(slot(MSE@RefPoints@MSYRefPoints, Metric), silent=TRUE)
+  RefValue <- try(slot(MSE@RefPoints, Metric), silent=TRUE)
   if (inherits(RefValue, 'try-error')) {
     RefValue <- try(slot(MSE@RefPoints@MSY, Metric), silent=TRUE)
   }
@@ -141,16 +168,16 @@ GetMSYRefValue <- function(MSE, Metric='FMSY', Ref=c('Equilibrium', 'Dynamic'), 
 # ----- Fishing Mortality ----
 #' @describeIn Biomass Apical Fishing Mortality
 #' @export
-apicalF <- function(MSE, Type=c('Dead', 'Retain'), ByFleet=FALSE) {
+apicalF <- function(MSE, Type=c('Dead', 'Retain'), byFleet=FALSE) {
   CheckClass(MSE, c('mse', 'hist'), 'MSE')
 
   Type <- match.arg(Type)
   
   if (inherits(MSE, 'hist')) {
-    return(apicalFHist(MSE, Type, ByFleet))
+    return(apicalFHist(MSE, Type, byFleet))
   }
     
-  apicalFHist <- apicalFHist(MSE, Type, ByFleet)
+  apicalFHist <- apicalFHist(MSE, Type, byFleet)
   apicalFHist$MP <- 'Historical'
   
   if (Type=='Dead') {
@@ -160,7 +187,7 @@ apicalF <- function(MSE, Type=c('Dead', 'Retain'), ByFleet=FALSE) {
   }
   
   apicalF <- purrr::map(Values, \(stock) {
-    if (ByFleet) {
+    if (byFleet) {
       apply(stock, c('Sim', 'Age', 'TimeStep', 'Fleet', 'MP'), sum) |>
         apply(c('Sim', 'TimeStep', 'Fleet', 'MP'), max)  
     } else {
@@ -180,7 +207,7 @@ apicalF <- function(MSE, Type=c('Dead', 'Retain'), ByFleet=FALSE) {
   ConvertDF(apicalF)
 }
 
-apicalFHist <- function(Hist, Type=c('Dead', 'Retain'), ByFleet=FALSE) {
+apicalFHist <- function(Hist, Type=c('Dead', 'Retain'), byFleet=FALSE) {
   CheckClass(Hist, c('hist', 'mse'))
   Type <- match.arg(Type)
   
@@ -199,7 +226,7 @@ apicalFHist <- function(Hist, Type=c('Dead', 'Retain'), ByFleet=FALSE) {
   }
 
   apicalF <- purrr::map(Values, \(stock) {
-    if (ByFleet) {
+    if (byFleet) {
       apply(stock, c('Sim', 'Age', 'TimeStep', 'Fleet'), sum) |>
         apply(c('Sim', 'TimeStep', 'Fleet'), max)  
     } else {
@@ -209,7 +236,7 @@ apicalFHist <- function(Hist, Type=c('Dead', 'Retain'), ByFleet=FALSE) {
   }) |> List2Array('Stock') |>
     array2DF() 
   
-  if (ByFleet) {
+  if (byFleet) {
     apicalF <- apicalF |> dplyr::select(c('Sim', 'Stock', 'TimeStep', 'Fleet', 'Value'))
   } else {
     apicalF <- apicalF |>  dplyr::select(c('Sim', 'Stock', 'TimeStep', 'Value'))
@@ -621,7 +648,7 @@ SPRMSY <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), TimeSteps=NULL, Expand=
 
 # ---- Landings ----
 
-CatchHist <- function(Hist, ByAge=FALSE, ByFleet=FALSE, ByArea=FALSE, 
+CatchHist <- function(Hist, byAge=FALSE, byFleet=FALSE, byArea=FALSE, 
                       type=c('Landings', 'Discards'),
                       disctype=c('dead', 'alive', 'all')) {
   type <- match.arg(type)
@@ -658,25 +685,25 @@ CatchHist <- function(Hist, ByAge=FALSE, ByFleet=FALSE, ByArea=FALSE,
   }
   
   Value <- purrr::map(Value, \(stock) {
-    if (!ByFleet & ByAge & ByArea) {
+    if (!byFleet & byAge & byArea) {
       stock <- apply(stock, c('Sim',  'Age', 'TimeStep', 'Area'), sum) 
     } 
-    if (ByFleet & !ByAge & ByArea) {
+    if (byFleet & !byAge & byArea) {
       stock <- apply(stock, c('Sim',  'TimeStep', 'Fleet', 'Area'), sum) 
     }
-    if (!ByFleet & !ByAge & ByArea) {
+    if (!byFleet & !byAge & byArea) {
       stock <- apply(stock, c('Sim',  'TimeStep', 'Area'), sum)
     }
-    if (ByFleet & ByAge & !ByArea) {
+    if (byFleet & byAge & !byArea) {
       stock <- apply(stock, c('Sim', 'Age', 'TimeStep', 'Fleet'), sum)
     }
-    if (!ByFleet & ByAge & !ByArea) {
+    if (!byFleet & byAge & !byArea) {
       stock <- apply(stock, c('Sim', 'Age', 'TimeStep'), sum)
     }
-    if (ByFleet & !ByAge & !ByArea) {
+    if (byFleet & !byAge & !byArea) {
       stock <- apply(stock, c('Sim', 'TimeStep', 'Fleet'), sum)
     }
-    if (!ByFleet & !ByAge & !ByArea) {
+    if (!byFleet & !byAge & !byArea) {
       stock <- apply(stock, c('Sim', 'TimeStep'), sum)
     }
     stock
@@ -702,7 +729,7 @@ CatchHist <- function(Hist, ByAge=FALSE, ByFleet=FALSE, ByArea=FALSE,
   
 }
 
-CatchValues <- function(MSE, ByAge=FALSE, ByFleet=FALSE, ByArea=FALSE, type=c('Landings', 'Discards'),
+CatchValues <- function(MSE, byAge=FALSE, byFleet=FALSE, byArea=FALSE, type=c('Landings', 'Discards'),
                         disctype=c('dead', 'alive', 'all')) {
   
   type <- match.arg(type)
@@ -710,7 +737,7 @@ CatchValues <- function(MSE, ByAge=FALSE, ByFleet=FALSE, ByArea=FALSE, type=c('L
   
   CheckClass(MSE, c('mse', 'hist'), 'MSE')
   
-  HistValues <- CatchHist(MSE, ByAge, ByFleet, ByArea,type, disctype)
+  HistValues <- CatchHist(MSE, byAge, byFleet, byArea,type, disctype)
   HistTimeStep <- TimeSteps(MSE@OM, "Historical")
   
   if (inherits(MSE, 'hist')) 
@@ -744,25 +771,25 @@ CatchValues <- function(MSE, ByAge=FALSE, ByFleet=FALSE, ByArea=FALSE, type=c('L
   }
   
   Value <- purrr::map(Value, \(stock) {
-    if (!ByFleet & ByAge & ByArea) {
+    if (!byFleet & byAge & byArea) {
       stock <- apply(stock, c('Sim',  'Age', 'TimeStep', 'Area', 'MP'), sum) 
     } 
-    if (ByFleet & !ByAge & ByArea) {
+    if (byFleet & !byAge & byArea) {
       stock <- apply(stock, c('Sim',  'TimeStep', 'Fleet', 'Area', 'MP'), sum) 
     }
-    if (!ByFleet & !ByAge & ByArea) {
+    if (!byFleet & !byAge & byArea) {
       stock <- apply(stock, c('Sim',  'TimeStep', 'Area', 'MP'), sum)
     }
-    if (ByFleet & ByAge & !ByArea) {
+    if (byFleet & byAge & !byArea) {
       stock <- apply(stock, c('Sim', 'Age', 'TimeStep', 'Fleet', 'MP'), sum)
     }
-    if (!ByFleet & ByAge & !ByArea) {
+    if (!byFleet & byAge & !byArea) {
       stock <- apply(stock, c('Sim', 'Age', 'TimeStep', 'MP'), sum)
     }
-    if (ByFleet & !ByAge & !ByArea) {
+    if (byFleet & !byAge & !byArea) {
       stock <- apply(stock, c('Sim', 'TimeStep', 'Fleet', 'MP'), sum)
     }
-    if (!ByFleet & !ByAge & !ByArea) {
+    if (!byFleet & !byAge & !byArea) {
       stock <- apply(stock, c('Sim', 'TimeStep', 'MP'), sum)
     }
     stock
@@ -792,48 +819,31 @@ CatchValues <- function(MSE, ByAge=FALSE, ByFleet=FALSE, ByArea=FALSE, type=c('L
 
 #' @describeIn Biomass Landings
 #' @export
-Landings <- function(MSE, ByAge=FALSE, ByFleet=FALSE, ByArea=FALSE) {
-  CatchValues(MSE, ByAge, ByFleet, ByArea, 'Landings')
+Landings <- function(MSE, byAge=FALSE, byFleet=FALSE, byArea=FALSE) {
+  CatchValues(MSE, byAge, byFleet, byArea, 'Landings')
 }
 
 # ---- Discards ----
 
 #' @describeIn Biomass Discards
 #' @export
-Discards <- function(MSE, ByAge=FALSE, ByFleet=FALSE, ByArea=FALSE, type=c('dead', 'alive', 'all')) {
-  CatchValues(MSE, ByAge, ByFleet, ByArea, 'Discards', disctype=type)
+Discards <- function(MSE, byAge=FALSE, byFleet=FALSE, byArea=FALSE, type=c('dead', 'alive', 'all')) {
+  CatchValues(MSE, byAge, byFleet, byArea, 'Discards', disctype=type)
 }
 
 # ---- Removals ----
 
 #' @describeIn Biomass Dead Removals (Landings + Dead Discards)
 #' @export
-Removals <- function(MSE,  ByAge=FALSE, ByFleet=FALSE, ByArea=FALSE) {
+Removals <- function(MSE,  byAge=FALSE, byFleet=FALSE, byArea=FALSE) {
   CheckClass(MSE, c('mse', 'hist'), 'MSE')
   
-  Removals <- Landings(MSE, ByAge, ByFleet, ByArea)
-  Discards <- Discards(MSE, ByAge, ByFleet, ByArea)
+  Removals <- Landings(MSE, byAge, byFleet, byArea)
+  Discards <- Discards(MSE, byAge, byFleet, byArea)
   
-  Removals |> dplyr::filter(Period=='Historical')
-  Discards |> dplyr::filter(Period=='Historical')
-  
-  if (inherits(MSE,'mse')) {
-    DF <- dplyr::left_join(Removals, Discards,
-                           by=dplyr::join_by(Sim, Stock, TimeStep, Period, Unit, MP))  
-  } else {
-    DF <- dplyr::left_join(Removals, Discards,
-                           by=dplyr::join_by(Sim, Stock, TimeStep, Period, Unit))
-  }
-  
-  
-  DF$Value <- DF$Value.x + DF$Value.y
+  Removals$Value <- Removals$Value + Discards$Value
   DF$Variable <- 'Removals'
-  
-  if (inherits(MSE,'mse')) {
-    DF <- DF |> dplyr::select('Sim', 'Stock', 'TimeStep', 'Value', 'Variable', 'Period', 'Unit', 'MP')  
-  } else {
-    DF <- DF |> dplyr::select('Sim', 'Stock', 'TimeStep', 'Value', 'Variable', 'Period', 'Unit')  
-  }
+  DF <- suppressMessages(dplyr::left_join(Removals, Discards))
   DF
 }
 

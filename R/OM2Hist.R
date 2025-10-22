@@ -715,6 +715,7 @@ HistSimListTimeSeries <- function(Hist, HistSimList, TimeSteps= NULL) {
       List2Array(HistSim@Landings[[st]]) |>
         AddDimNames(c("Age", "Fleet", "Area", "TimeStep"), 
                     TimeSteps=TimeSteps,
+                    Ages=HistSim@OM@Stock[[st]]@Ages@Classes,
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)))
     }) |>
       List2Array("Sim") |>
@@ -725,6 +726,7 @@ HistSimListTimeSeries <- function(Hist, HistSimList, TimeSteps= NULL) {
       List2Array(HistSim@Discards[[st]]) |>
         AddDimNames(c("Age", "Fleet", "Area", "TimeStep"), 
                     TimeSteps=TimeSteps,
+                    Ages=HistSim@OM@Stock[[st]]@Ages@Classes,
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)))
     }) |>
       List2Array("Sim") |>
@@ -744,6 +746,7 @@ HistSimListTimeSeries <- function(Hist, HistSimList, TimeSteps= NULL) {
       List2Array(HistSim@FDeadAtAgeArea[[st]]) |>
         AddDimNames(c("Age", "Fleet", "Area", "TimeStep"), 
                     TimeSteps=TimeSteps,
+                    Ages=HistSim@OM@Stock[[st]]@Ages@Classes,
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)))
     }) |>
       List2Array("Sim") |>
@@ -753,6 +756,7 @@ HistSimListTimeSeries <- function(Hist, HistSimList, TimeSteps= NULL) {
       HistSim@FDeadAtAge[[st]] |>
         AddDimNames(c("Age", "TimeStep", "Fleet"), 
                     TimeSteps=TimeSteps,
+                    Ages=HistSim@OM@Stock[[st]]@Ages@Classes,
                     values=c(list(NA), list(NA), list(FleetNames)))
     }) |>
       List2Array("Sim") |>
@@ -763,6 +767,7 @@ HistSimListTimeSeries <- function(Hist, HistSimList, TimeSteps= NULL) {
       List2Array(HistSim@FRetainAtAgeArea[[st]]) |>
         AddDimNames(c("Age", "Fleet", "Area", "TimeStep"), 
                     TimeSteps=TimeSteps,
+                    Ages=HistSim@OM@Stock[[st]]@Ages@Classes,
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)))
     }) |>
       List2Array("Sim") |>
@@ -772,6 +777,7 @@ HistSimListTimeSeries <- function(Hist, HistSimList, TimeSteps= NULL) {
       HistSim@FRetainAtAge[[st]] |>
         AddDimNames(c("Age", "TimeStep", "Fleet"), 
                     TimeSteps=TimeSteps,
+                    Ages=HistSim@OM@Stock[[st]]@Ages@Classes,
                     values=c(list(NA), list(NA), list(FleetNames)))
     }) |>
       List2Array("Sim") |>

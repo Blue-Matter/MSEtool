@@ -8,6 +8,9 @@ ImportBAM <- function(Stock='Red Snapper',
                       nSim=48,
                       pYear=30,
                       DiscMortDF=NULL,
+                      DiscFleets=NULL,
+                      DiscSelFleets=NULL,
+                      RetSelFleets=NULL,
                       populate=TRUE, 
                       silent=FALSE) {
   
@@ -34,9 +37,12 @@ ImportBAM <- function(Stock='Red Snapper',
   
   OM@Fleet <- list()
   class(OM@Fleet) <- 'StockFleetList'
-  OM@Fleet[[BAMdata$info$species]] <- BAM2Fleet(x=Stock, 
-                                                Stock=OM@Stock[[1]], 
-                                                DiscMortDF)
+  OM@Fleet[[BAMdata$info$species]] <- BAM2Fleet(Stock, 
+                                                OM, 
+                                                DiscMortDF,
+                                                DiscFleets,
+                                                DiscSelFleets,
+                                                RetSelFleets)
   
 
   FleetNames <- names(OM@Fleet[[BAMdata$info$species]])
@@ -172,7 +178,7 @@ PrintPlotBAMRE <- function(Out, name, thresh=0.1) {
 
 #' @describeIn ImportBAM Compare BAM and OM dynamics
 #' @export
-CompareBAM <- function(Stock, OM=NULL, ScaleBiomass=NULL, thresh=0.1) {
+CompareBAM <- function(Stock, OM=NULL, thresh=0.1) {
   
   List <- ProcessBAMArgs(Stock, OM)
   Hist <- List$Hist
@@ -182,7 +188,7 @@ CompareBAM <- function(Stock, OM=NULL, ScaleBiomass=NULL, thresh=0.1) {
   Out$Stock <- BAMdata$info$species
   Out$Recruits <- CompareBAM_Recruits(BAMdata, Hist)
   Out$Number <- CompareBAM_Number(BAMdata, Hist)
-  Out$Biomass <- CompareBAM_Biomass(BAMdata, Hist, ScaleBiomass)
+  Out$Biomass <- CompareBAM_Biomass(BAMdata, Hist)
   
   
   PrintPlotBAMRE(Out, 'Recruits', thresh)
@@ -232,24 +238,25 @@ CompareBAM_Number <- function(Stock, OM=NULL) {
   list(df=df, RelativeError=RelativeError)
 }
 
-CompareBAM_Biomass <- function(Stock, OM=NULL, ScaleBiomass=NULL) {
+CompareBAM_Biomass <- function(Stock, OM=NULL) {
   
   List <- ProcessBAMArgs(Stock, OM)
   Hist <- List$Hist
   BAMdata <- List$BAMdata
   
   if (BAMdata$info$units.biomass == '1000 lb') {
-    BAMdata$t.series$B <- (BAMdata$t.series$B) |> lb2kg()
+    BAMdata$t.series$B <- (BAMdata$t.series$B * 1000) |> lb2kg()
+  } else if (BAMdata$info$units.biomass == 'metric tons') {
+    BAMdata$t.series$B <- BAMdata$t.series$B * 1000
   } else {
     cli::cli_abort('`BAMdata$info$units.biomass`:  {.val {BAMdata$info$units.biomass}} currently not supported', .internal=TRUE)
     
   }
   
-  
   OM_Value <- Biomass(Hist) |> dplyr::mutate(Model='OM') |>
     dplyr::filter(Sim==1) |>
     dplyr::mutate(Model='OM', 
-                  Value=Value/1000) # convert to metric tons  
+                  Value=Value) 
   
   
   BAM_Value <- BAMdata$t.series |> 
@@ -257,9 +264,6 @@ CompareBAM_Biomass <- function(Stock, OM=NULL, ScaleBiomass=NULL) {
     dplyr::mutate(Variable='Biomass', Model='BAM') |>
     dplyr::filter(TimeStep%in%OM_Value$TimeStep) 
   
-  if (!is.null(ScaleBiomass)) 
-    BAM_Value <- BAM_Value |> dplyr::mutate(Value=Value*ScaleBiomass)
-
   df <- dplyr::bind_rows(OM_Value, BAM_Value) |>
     dplyr::select(TimeStep, Value, Model) |>
     dplyr::arrange(TimeStep) 

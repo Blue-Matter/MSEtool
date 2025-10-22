@@ -125,6 +125,7 @@ ListArraySimAgeTimeFleet <- function(OM, Period=c('Historical', 'Projection', 'A
                                     default=tiny/2, TimeSteps=NULL) {
   meta <- GetMetaData(OM, Period)
   stocknames <- meta$StockNames
+
   
   List <- MakeNamedList(stocknames)
   for (st in 1:length(List)) {

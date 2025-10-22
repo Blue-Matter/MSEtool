@@ -56,6 +56,8 @@ BAM2Stock <- function(BAMdata, nSim, TimeSteps) {
     WeightAtAge <- AgeSeries$weight
   } else if (BAMdata$info$units.weight == 'lb') {
     WeightAtAge <- lb2kg(AgeSeries$weight)
+  } else if (BAMdata$info$units.weight == 'lb (gutted)') {
+    WeightAtAge <- lb2kg(AgeSeries$weight)
   } else {
     cli::cli_abort('`BAMdata$info$units.weight`:  {.val {BAMdata$info$units.weight}} currently not supported', .internal=TRUE)
   }
@@ -205,18 +207,17 @@ BAM2Stock <- function(BAMdata, nSim, TimeSteps) {
   stock
 }
 
-GetBAMDiscardMortality <- function(x, TimeSteps, RetainFleets, Stock, DiscMortDF=NULL) {
+GetBAMDiscardMortality <- function(Stock, TimeSteps, RetainFleets, OM, DiscMortDF=NULL) {
   
+  BAMdata <- GetBAMOutput(Stock)
   nFleet <- length(RetainFleets)
-  
-  BAMdata <- GetBAMOutput(x)
-  
+
   ind <- grep('D.mort.', names(BAMdata$parms))
   
   if (!length(ind)) { # No discard mortality parameters
-    AgesClasses <- Stock@Ages@Classes
+    AgesClasses <- OM@Stock[[1]]@Ages@Classes
     nAgeClasses <- length(AgesClasses)
-    DiscardMortArray <- array(tiny, dim=c(nAgeClasses, nYear(Stock), nFleet)) |>
+    DiscardMortArray <- array(tiny, dim=c(nAgeClasses, nYear(OM@Stock[[1]]), nFleet)) |>
       AddDimNames(c("Age", "TimeStep", 'Fleet'), 
                   TimeSteps = TimeSteps, 
                   Ages=AgesClasses,
@@ -225,7 +226,7 @@ GetBAMDiscardMortality <- function(x, TimeSteps, RetainFleets, Stock, DiscMortDF
     return(DiscardMortArray)
   }
   
-  RawData <- GetBAMOutput(x, 'dat')
+  RawData <- GetBAMOutput(Stock, 'dat')
   
   if (is.null(DiscMortDF)) {
     DMValues <- BAMdata$parms[ind]
@@ -270,9 +271,9 @@ GetBAMDiscardMortality <- function(x, TimeSteps, RetainFleets, Stock, DiscMortDF
     )
   
   
-  AgesClasses <- Stock@Ages@Classes
+  AgesClasses <- OM@Stock[[1]]@Ages@Classes
   nAgeClasses <- length(AgesClasses)
-  DiscardMortArray <- array(tiny, dim=c(nAgeClasses, nYear(Stock), nFleet)) |>
+  DiscardMortArray <- array(tiny, dim=c(nAgeClasses, nYear(OM@Stock[[1]]), nFleet)) |>
     AddDimNames(c("Age", "TimeStep", 'Fleet'), 
                 TimeSteps = TimeSteps, 
                 Ages=AgesClasses,
@@ -301,10 +302,12 @@ FixFleetNames <- function(FleetNames) {
 }
 
 
-BAM2Fleet <- function(x, Stock, DiscMortDF=NULL) {
+BAM2Fleet <- function(Stock, OM, DiscMortDF=NULL, DiscFleets=NULL, 
+                      DiscSelFleets=NULL,
+                      RetSelFleets=NULL) {
   
-  TimeSteps <- TimeSteps(Stock)
-  BAMdata <- GetBAMOutput(x)
+  BAMdata <- GetBAMOutput(Stock)
+  TimeSteps <- TimeSteps(OM)
   
   # Combines Retention and Discard fleets 
   FleetNames <- names(BAMdata$parms)[grepl("F.prop", names(BAMdata$parms))] |>
@@ -320,9 +323,9 @@ BAM2Fleet <- function(x, Stock, DiscMortDF=NULL) {
   nFleet <- length(RetainFleets)
   
   # Discard Mortality Values and Time Blocks
-  DiscardMortArray <- GetBAMDiscardMortality(x, TimeSteps, RetainFleets, Stock, DiscMortDF)
+  DiscardMortArray <- GetBAMDiscardMortality(Stock, TimeSteps, RetainFleets, OM, DiscMortDF)
   
-  HistTS <- TimeSteps[TimeSteps<=Stock@CurrentYear]
+  HistTS <- TimeSteps[TimeSteps<=OM@Stock[[1]]@CurrentYear]
   nHist <- length(HistTS)
   TimeSeries <- BAMdata$t.series |> dplyr::filter(year %in% HistTS)
   
@@ -330,7 +333,6 @@ BAM2Fleet <- function(x, Stock, DiscMortDF=NULL) {
   chk <- any(!FCols %in% names(TimeSeries))
   if (chk) 
     FCols <- paste0('F.', FleetNamesOrig)
-  
   
   ApicalF <- TimeSeries[FCols]
   names(ApicalF) <- paste0('F.', FleetNames)
@@ -349,20 +351,32 @@ BAM2Fleet <- function(x, Stock, DiscMortDF=NULL) {
     fleet <- RetainFleets[fl]
     retain <- paste0('F.', fleet)
     discard <- paste0('F.', fleet, '.D')
-    selretain <- paste0('sel.m.', fleet)
-    seldiscard <- paste0('sel.m.', fleet, '.D')
- 
-    RetainSelect <- BAMdata$sel.age[[selretain]]
     
-    if (is.null(RetainSelect)) {
-      if (fl>1) {
-        # this works for GrayTriggerfish but not a general solution
-        selretain <- paste0('sel.m.', RetainFleets[fl-1])
-        RetainSelect <- BAMdata$sel.age[[selretain]]  
+    if (!is.null(DiscFleets)) {
+      ind <- match(fleet, names(DiscFleets))
+      if (!is.na(ind)) {
+        discard <- as.character(DiscFleets[ind])
       }
     }
-
+    
+    selretain <- paste0('sel.m.', fleet)
+    if (!is.null(RetSelFleets)) {
+      ind <- match(fleet, names(RetSelFleets))
+      if (!is.na(ind)) {
+        selretain <- paste0('sel.m.', as.character(RetSelFleets[ind]))
+      }
+    }
+    RetainSelect <- BAMdata$sel.age[[selretain]]
+    
+    seldiscard <- paste0('sel.m.', fleet, '.D')
+    if (!is.null(DiscSelFleets)) {
+      ind <- match(fleet, names(DiscSelFleets))
+      if (!is.na(ind)) {
+        seldiscard <- as.character(DiscSelFleets[ind])
+      }
+    }
     DiscardSelect <- BAMdata$sel.age[[seldiscard]]
+    
     if (is.null(DiscardSelect))
       DiscardSelect <- BAMdata$sel.age[["sel.m.D"]]
     
@@ -384,7 +398,9 @@ BAM2Fleet <- function(x, Stock, DiscMortDF=NULL) {
   }
 
   FDeadDiscard <- ArraySubtract(FDeadatAge, FRetainatAge)
-  FInteractatAge <- ArrayAdd(FRetainatAge, ArrayDivide(FDeadDiscard, DiscardMortArray))
+  FDiscardTotal <- ArrayDivide(FDeadDiscard, DiscardMortArray)
+  FDiscardTotal[!is.finite(FDiscardTotal)] <- 0
+  FInteractatAge <- ArrayAdd(FRetainatAge, FDiscardTotal)
   Effort <- apply(FInteractatAge, 2:3, max, na.rm=TRUE)
   
   FInteractMax <- replicate(nAgeClasses, apply(FInteractatAge, 2:3, max)) |> aperm(c(3,1,2)) 
