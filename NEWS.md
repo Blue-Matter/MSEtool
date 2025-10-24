@@ -1,5 +1,11 @@
 The current version of the `MSEtool` package is available for download from [CRAN](https://CRAN.R-project.org/package=MSEtool).
 
+# MSEtool 3.7.6 - Development Version
+
+## Fixes 
+- Fix issue where `MMSE` objects could not handle `multiHist` objects from earlier versions
+- Fix to generating CAL data
+
 # MSEtool 3.7.5
 
 ## Fixes
