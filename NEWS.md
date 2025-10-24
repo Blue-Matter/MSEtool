@@ -4,6 +4,7 @@ The current version of the `MSEtool` package is available for download from [CRA
 
 ## Fixes 
 - Fix issue where `MMSE` objects could not handle `multiHist` objects from earlier versions
+- Fix to generating CAL data
 
 # MSEtool 3.7.5
 
