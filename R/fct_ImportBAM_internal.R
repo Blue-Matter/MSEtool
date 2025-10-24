@@ -302,7 +302,9 @@ FixFleetNames <- function(FleetNames) {
 }
 
 
-BAM2Fleet <- function(Stock, OM, DiscMortDF=NULL, DiscFleets=NULL, 
+BAM2Fleet <- function(Stock, OM, 
+                      DiscMortDF=NULL, 
+                      DiscFleets=NULL, 
                       DiscSelFleets=NULL,
                       RetSelFleets=NULL) {
   
