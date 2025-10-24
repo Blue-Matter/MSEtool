@@ -156,11 +156,11 @@ ProcessBAMArgs <- function(Stock, OM=NULL) {
 }
 
 PrintPlotBAMRE <- function(Out, name, thresh=0.1) {
-  re <- Out[[name]]$RelativeError |> 
-    dplyr::mutate(RelativeError=abs(RelativeError)) |> 
-    dplyr::filter(RelativeError>thresh)
+  re <- Out[[name]]$MARE |> 
+    dplyr::mutate(MARE=abs(MARE)) |> 
+    dplyr::filter(MARE>thresh)
   if (nrow(re)>0) {
-    cli::cli_alert('{.val {name}:} Some Relative Error > {thresh}%')
+    cli::cli_alert('{.val {name}:} Some Absolute Relative Error > {thresh}%')
     print(re) 
     
     p <- ggplot(Out[[name]]$df, aes(x=TimeStep, y=Value, color=Model)) +
@@ -171,7 +171,7 @@ PrintPlotBAMRE <- function(Out, name, thresh=0.1) {
     print(p)
     
   } else {
-    cli::cli_alert('{.val {name}:} All Relative Error < {thresh}%')
+    cli::cli_alert('{.val {name}:} All Absolute Relative Error < {thresh}%')
   }
 }
 
@@ -190,17 +190,22 @@ CompareBAM <- function(Stock, OM=NULL, thresh=0.1) {
   Out$Number <- CompareBAM_Number(BAMdata, Hist)
   Out$Biomass <- CompareBAM_Biomass(BAMdata, Hist)
   
-  
   PrintPlotBAMRE(Out, 'Recruits', thresh)
   PrintPlotBAMRE(Out, 'Number', thresh)
   PrintPlotBAMRE(Out, 'Biomass', thresh)
   
-
   invisible(Out)
 }
 
 
-
+CalcBAM_MARE <- function(df) {
+  MARE <- df |> 
+    tidyr::pivot_wider(names_from = Model, values_from = Value) |> 
+    dplyr::group_by(TimeStep) |>
+    dplyr::summarise(MARE=abs((OM-BAM)/BAM*100), .groups='drop') 
+  list(df=df, MARE=MARE)
+  
+}
 
 
 CompareBAM_Number <- function(Stock, OM=NULL) {
@@ -230,12 +235,7 @@ CompareBAM_Number <- function(Stock, OM=NULL) {
     dplyr::select(TimeStep, Value, Model) |>
     dplyr::arrange(TimeStep) 
   
-  RelativeError <- df |> 
-    tidyr::pivot_wider(names_from = Model, values_from = Value) |> 
-    dplyr::group_by(TimeStep) |>
-    dplyr::summarise(RelativeError=(OM-BAM)/BAM*100, .groups='drop') 
-  
-  list(df=df, RelativeError=RelativeError)
+  CalcBAM_MARE(df)
 }
 
 CompareBAM_Biomass <- function(Stock, OM=NULL) {
@@ -268,13 +268,7 @@ CompareBAM_Biomass <- function(Stock, OM=NULL) {
     dplyr::select(TimeStep, Value, Model) |>
     dplyr::arrange(TimeStep) 
   
-  RelativeError <- df |> 
-    tidyr::pivot_wider(names_from = Model, values_from = Value) |> 
-    dplyr::group_by(TimeStep) |>
-    dplyr::summarise(RelativeError=(OM-BAM)/BAM*100, .groups='drop') 
-  
-  list(df=df, RelativeError=RelativeError)
-
+  CalcBAM_MARE(df)
 }
 
 CompareBAM_Recruits <- function(Stock, OM=NULL) {
@@ -298,16 +292,10 @@ CompareBAM_Recruits <- function(Stock, OM=NULL) {
     dplyr::mutate(Model='BAM', Variable='Number') |>
     dplyr::filter(Age==min(Age)) 
   
-
   df <- dplyr::bind_rows(OM_Value, BAM_Value) |>
     dplyr::select(TimeStep, Value, Model) |>
     dplyr::arrange(TimeStep) 
   
-  RelativeError <- df |> 
-    tidyr::pivot_wider(names_from = Model, values_from = Value) |> 
-    dplyr::group_by(TimeStep) |>
-    dplyr::summarise(RelativeError=(OM-BAM)/BAM*100, .groups='drop') 
-  
-  list(df=df, RelativeError=RelativeError)
+  CalcBAM_MARE(df)
   
 }

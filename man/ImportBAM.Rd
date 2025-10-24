@@ -12,6 +12,9 @@ ImportBAM(
   nSim = 48,
   pYear = 30,
   DiscMortDF = NULL,
+  DiscFleets = NULL,
+  DiscSelFleets = NULL,
+  RetSelFleets = NULL,
   populate = TRUE,
   silent = FALSE
 )
@@ -20,7 +23,7 @@ GetBAMOutput(Stock = "Red Snapper", type = c("rdat", "dat"))
 
 ListBAMStocks(type = c("rdat", "dat"))
 
-CompareBAM(Stock, OM = NULL, ScaleBiomass = NULL, thresh = 0.1)
+CompareBAM(Stock, OM = NULL, thresh = 0.1)
 }
 \arguments{
 \item{Stock}{Character string matching ... or a list ...}

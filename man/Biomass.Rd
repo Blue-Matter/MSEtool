@@ -26,7 +26,7 @@
 \alias{MSY}
 \title{Extract values from an MSE or Hist object}
 \usage{
-apicalF(MSE, Type = c("Dead", "Retain"), ByFleet = FALSE)
+apicalF(MSE, Type = c("Dead", "Retain"), byFleet = FALSE)
 
 FMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL, Expand = FALSE)
 
@@ -69,17 +69,17 @@ SPRMSY(
   Expand = FALSE
 )
 
-Landings(MSE, ByAge = FALSE, ByFleet = FALSE, ByArea = FALSE)
+Landings(MSE, byAge = FALSE, byFleet = FALSE, byArea = FALSE)
 
 Discards(
   MSE,
-  ByAge = FALSE,
-  ByFleet = FALSE,
-  ByArea = FALSE,
+  byAge = FALSE,
+  byFleet = FALSE,
+  byArea = FALSE,
   type = c("dead", "alive", "all")
 )
 
-Removals(MSE, ByAge = FALSE, ByFleet = FALSE, ByArea = FALSE)
+Removals(MSE, byAge = FALSE, byFleet = FALSE, byArea = FALSE)
 
 MSY(MSE, TimeSteps = NULL, type = c("Removals", "Landings"))
 }

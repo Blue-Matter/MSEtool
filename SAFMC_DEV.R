@@ -5,7 +5,7 @@ la()
 
 dir <- "C:/Users/Admin/Documents/GitHub/SAFMC-MSE"
 
-dir <- "C:/Users/Adrian/Documents/GitHub/SAFMC-MSE"
+# dir <- "C:/Users/Adrian/Documents/GitHub/SAFMC-MSE"
 
 
 source(file.path(dir,'0. Specifications.R'))
@@ -47,7 +47,7 @@ CompareBAM(Stock='BlackSeaBass', OM=OM_BSB)
 OM_GG <- ImportBAM(Stock='GagGrouper', nSim=nSim, pYear=pYear)
 CompareBAM('GagGrouper', OM=OM_GG) 
 
-# ---- Gray Triggerfish ----
+# ---- Gray Triggerfish  - TO BE FIXED SEE BELOW----
 
 # SEDAR 82
 # 1982- 2021
@@ -59,7 +59,8 @@ CompareBAM('GagGrouper', OM=OM_GG)
 DiscMortDF <- data.frame(Fleet=c('cHLs', 'rHBs', 'rGNs', 'rGNn'),
                          Value=c(0.589),
                          Year= c(1981))
-OM_GT <- ImportBAM(Stock, 
+
+OM_GT <- ImportBAM('GrayTriggerfish', 
                    nSim=nSim, 
                    pYear=pYear,
                    DiscMortDF=DiscMortDF,
@@ -72,6 +73,7 @@ OM_GT <- ImportBAM(Stock,
                    RetSelFleets=c(cHLn="cHLs",
                                   rGNn='rGNs')
 )
+
 CompareBAM('GrayTriggerfish', OM=OM_GT)
 
 
@@ -152,25 +154,35 @@ OM_VS <- ImportBAM(Stock='VermilionSnapper', nSim=nSim, pYear=pYear,
 CompareBAM('VermilionSnapper', OM=OM_VS)
 
 
-################################################################################
+############## UP TO HERE ####################
+
 
 Stock <- 'GrayTriggerfish'
 
 DiscMortDF <- data.frame(Fleet=c('cHLs', 'rHBs', 'rGNs', 'rGNn'),
                          Value=c(0.589),
                          Year= c(1981))
+
+DiscFleets <- c(rHBs="F.rHDs.D", 
+                rGNs="F.rGDn.D",
+                rGNn="F.rGDn.D")
+
+DiscSelFleets <- c(rHBs="sel.m.rHDs", 
+                   rGNs="sel.m.rGDs",
+                   rGNn="sel.m.rGDs"
+)
+  
+
+RetSelFleets <- c(cHLn="cHLs",
+                  rGNn='rGNs')
+
 OM <- ImportBAM(Stock, 
-                   nSim=nSim, 
-                   pYear=pYear,
-                   DiscMortDF=DiscMortDF,
-                   DiscFleets=c(rHBs="F.rHDs.D", 
-                                rGNs="F.rGDs.D",
-                                rGNn="F.rGDn.D"),
-                   DiscSelFleets=c(rHBs="sel.m.rHDs", 
-                                   rGNs="sel.m.rGDs",
-                                   rGNn="sel.m.rGNs"),
-                   RetSelFleets=c(cHLn="cHLs",
-                                  rGNn='rGNs')
+                nSim=nSim, 
+                pYear=pYear,
+                DiscMortDF=DiscMortDF,
+                DiscFleets=DiscFleets,
+                DiscSelFleets=DiscSelFleets,
+                RetSelFleets=RetSelFleets
 )
 CompareBAM('GrayTriggerfish', OM=OM)
 
@@ -180,38 +192,14 @@ Hist <- Simulate(OM, nsim=1)
 BAMdata <- GetBAMOutput(Stock)
 
 
-dimnames(Hist@FDeadAtAge$`SA gray triggerfish`)
 
-Fret_OM <- Hist@FRetainAtAge$`SA gray triggerfish`[1,,,1]
-Fret <- t(BAMdata$sel.age$sel.m.cHLs * BAMdata$t.series$F.L.cHLs[1:40])
-range(Fret_OM/ Fret, na.rm=TRUE)
-
-
-Fret_OM <- Hist@FRetainAtAge$`SA gray triggerfish`[1,,,2]
-Fret <- t(BAMdata$sel.age$sel.m.cHLs * BAMdata$t.series$F.L.cHLn[1:40])
-range(Fret_OM/ Fret, na.rm=TRUE)
-
-
-dimnames(Hist@FDeadAtAge$`SA gray triggerfish`)$Fleet[3]
-Fret_OM <- Hist@FRetainAtAge$`SA gray triggerfish`[1,,,3]
-Fdisc_OM <- Hist@FDeadAtAge$`SA gray triggerfish`[1,,,3] - Hist@FRetainAtAge$`SA gray triggerfish`[1,,,3]
-Fret <- t(BAMdata$sel.age$sel.m.rHBs * BAMdata$t.series$F.L.rHBs[1:40])
-Fdisc <- t(BAMdata$sel.age$sel.m.rHDs * BAMdata$t.series$F.D.rHDs[1:40]) 
-range(Fret_OM/ Fret, na.rm=TRUE)
-
-Fdisc_OM <- round(Fdisc_OM,5)
-Fdisc <- round(Fdisc,5)
-range(Fdisc_OM/ Fdisc, na.rm=TRUE)
-
-
-############## UP TO HERE ####################
 dimnames(Hist@FDeadAtAge$`SA gray triggerfish`)$Fleet[5]
 Fret_OM <- Hist@FRetainAtAge$`SA gray triggerfish`[1,,,5]
 Fret <- t(BAMdata$sel.age$sel.m.rGNs * BAMdata$t.series$F.L.rGNn[1:40])
 range(Fret_OM/ Fret, na.rm=TRUE)
 
 Fdisc_OM <- Hist@FDeadAtAge$`SA gray triggerfish`[1,,,5] - Hist@FRetainAtAge$`SA gray triggerfish`[1,,,5]
-Fdisc <- t(BAMdata$sel.age$sel.m.rGDs * BAMdata$t.series$F.D.rGDs[1:40]) 
+Fdisc <- t(BAMdata$sel.age$sel.m.rGDs * BAMdata$t.series$F.D.rGDn[1:40]) 
 
 plot(Fdisc[,40], type='l')
 lines(Fdisc_OM[,40])
