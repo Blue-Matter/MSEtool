@@ -3066,6 +3066,8 @@ ProjectMOM <- function (multiHist=NULL, MPs=NA, parallel=FALSE, silent=FALSE,
     )
   }
   
+  class(multiHist) <- c('multiHist', 'list')
+  
   MSEout <- new("MMSE",
                 Name = MOM@Name,
                 nyears,
