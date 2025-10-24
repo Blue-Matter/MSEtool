@@ -1,7 +1,7 @@
 # ---- multiHist class ----
 
 setOldClass("multiHist")
-setClassUnion(name="multiHist.list", members=c("multiHist", "list"))
+# setClassUnion(name="multiHist.list", members=c("multiHist", "list"))
 
 # ---- MMSE Class ----
 #' Class \code{'MMSE'}
@@ -67,7 +67,7 @@ setClass("MMSE", representation(Name = "character", nyears = "numeric",
                                 N='array', B = "array", SSB="array", VB="array", FM = "array",
                                 SPR='list', Catch = "array", Removals='array', Effort = "array",
                                 TAC = "array", TAE='array',
-                                BioEco='list', RefPoint='list', multiHist='multiHist.list',
+                                BioEco='list', RefPoint='list', multiHist='multiHist',
                                 PPD='list', Misc="list"))
 
 
