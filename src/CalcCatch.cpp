@@ -25,8 +25,8 @@ S4 CalcCatch_(S4 HistSimIn,
   }
 
   List NumberAtAgeAreaList = HistSim.slot("Number"); // nStock
-  List FDeadAtAgeAreaList = HistSim.slot("FDeadAtAgeArea");
-  List FRetainAtAgeAreaList = HistSim.slot("FRetainAtAgeArea");
+  List FDeadAtAgeAreaList = HistSim.slot("FDeadArea");
+  List FRetainAtAgeAreaList = HistSim.slot("FRetainArea");
 
   List RetainAtAgeAreaList = HistSim.slot("Landings");
   List DiscardsAtAgeAreaList = HistSim.slot("Discards");

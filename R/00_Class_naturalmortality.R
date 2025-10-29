@@ -137,6 +137,19 @@ NaturalMortality <- function(Pars=list(M=NA),
                Misc=Misc)
 }
 
+#' @describeIn NaturalMortality Alternative for `NaturalMortality`
+#' @export
+NMortality <- function(Pars=list(M=NA),
+                             Model=NULL,
+                             Units='year',
+                             MeanAtAge=NULL,
+                             MeanAtLength=NULL,
+                             Random=NULL,
+                             Classes=NULL,
+                             Misc=list()) {
+  NaturalMortality(Pars, Model, Units, MeanAtAge, MeanAtLength, Random, Classes, Misc)
+}
+  
 
 #' @describeIn NaturalMortality Assign an `naturalmortality` class object to a [Stock()] object
 #' @param x A [Stock()] class object
@@ -146,4 +159,9 @@ NaturalMortality <- function(Pars=list(M=NA),
   assignSlot(x, value, 'NaturalMortality')
 }
 
+#' @describeIn NaturalMortality Assign an `naturalmortality` class object to a [Stock()] object
+#' @export
+`NMortality<-` <- function(x, value) {
+  assignSlot(x, value, 'NaturalMortality')
+}
 

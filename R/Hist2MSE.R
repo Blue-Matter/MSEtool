@@ -25,13 +25,11 @@ Hist2MSE <- function(Hist, MPs) {
   
   MSE@Effort <- ArraySimStockTimeFleetMP(Hist@OM, "Projection", MPs=MPNames)
   
-  MSE@FDeadAtAge <- ListArraySimAgeTimeFleetMP(Hist@OM, "Projection", MPNames)
-  MSE@FRetainAtAge <-  MSE@FDeadAtAge
-  
+  MSE@FDead <- MSE@FRetain <- ListArraySimAgeTimeFleetMP(Hist@OM, "Projection", MPNames)
   MSE@EffortArea <- ListArraySimTimeFleetAreaMP(Hist@OM, "Projection", MPNames)
   
-  MSE@FDeadAtAgeArea <- ListArraySimAgeTimeFleetAreaMP(Hist@OM, "Projection", MPNames)
-  MSE@FRetainAtAgeArea <- MSE@FDeadAtAgeArea
+  MSE@FDeadArea <- ListArraySimAgeTimeFleetAreaMP(Hist@OM, "Projection", MPNames)
+  MSE@FRetainArea <- MSE@FDeadArea
   
   MSE
 }

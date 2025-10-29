@@ -38,8 +38,8 @@ S4 SimulateDynamics_(S4 HistSimIn,
   
   int nStock = NumberAtAgeAreaList.size();
   
-  List FDeadAtAgeAreaList = HistSim.slot("FDeadAtAgeArea");
-  List FRetainAtAgeAreaList = HistSim.slot("FRetainAtAgeArea");
+  List FDeadAtAgeAreaList = HistSim.slot("FDeadArea");
+  List FRetainAtAgeAreaList = HistSim.slot("FRetainArea");
   
   S4 Unfished = HistSim.slot("Unfished");
   S4 UnfishedEquilibrium = Unfished.slot("Equilibrium");
@@ -117,8 +117,6 @@ S4 SimulateDynamics_(S4 HistSimIn,
                                             SelectivityAtAge.col(TSindex), // nAge, nFleet
                                             ClosureArea.row(TSindex)); // nFleet, nArea
       
-
-      
       // Distribute Effort over Areas
       // currently proportional to VB - ie no SpatTarg
       if (debug)
@@ -133,7 +131,8 @@ S4 SimulateDynamics_(S4 HistSimIn,
       
       if (EffortAreaEmpty) {
         EffortArea.subcube(arma::span(TSindex), arma::span(0, nFleet-1), arma::span(0, nArea-1))= 
-          CalcEffortDistribution(VBiomassArea, EffortCube.subcube(arma::span(st), arma::span(TSindex), arma::span(0, nFleet-1)), nArea);
+          CalcEffortDistribution(VBiomassArea, 
+                                 EffortCube.subcube(arma::span(st), arma::span(TSindex), arma::span(0, nFleet-1)), nArea);
   
       }
       EffortAreaList[st] = EffortArea;
@@ -358,8 +357,8 @@ S4 SimulateDynamics_(S4 HistSimIn,
   HistSim.slot("SProduction") = SProduction;
   HistSim.slot("EffortArea") = EffortAreaList;
   HistSim.slot("Effort") = EffortCube;
-  HistSim.slot("FDeadAtAgeArea") = FDeadAtAgeAreaList;
-  HistSim.slot("FRetainAtAgeArea") = FRetainAtAgeAreaList;
+  HistSim.slot("FDeadArea") = FDeadAtAgeAreaList;
+  HistSim.slot("FRetainArea") = FRetainAtAgeAreaList;
   
   // CalcCatch and overall F
   if (CalcCatch>0) {

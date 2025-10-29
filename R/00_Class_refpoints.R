@@ -1,13 +1,4 @@
-#' @include 00_Class_msyrefpoints.R
 
-
-
-setClass("refpoints",
-         slots=c(MSYRefPoints='msyrefpoints',
-                 SPR0='array.list.null',
-                 Misc='list'
-         )
-)
 
 
  

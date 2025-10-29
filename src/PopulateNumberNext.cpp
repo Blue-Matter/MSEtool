@@ -24,7 +24,7 @@ S4 PopulateNumberNext_(S4 HistSimIn,
   List NumberAtAgeAreaList = HistSim.slot("Number"); // nStock
   int nStock = NumberAtAgeAreaList.size();
   
-  List FDeadAtAgeAreaList = HistSim.slot("FDeadAtAgeArea");
+  List FDeadAtAgeAreaList = HistSim.slot("FDeadArea");
   
   int TSindex = MatchTS[0] -1;
   

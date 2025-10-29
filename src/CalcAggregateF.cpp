@@ -161,11 +161,11 @@ S4 CalcAggregateF_(S4 HistSimIn,
   List NumberAtAgeAreaList = HistSim.slot("Number"); // nStock
   int nStock = NumberAtAgeAreaList.size();
   
-  List FDeadAtAgeAreaList = HistSim.slot("FDeadAtAgeArea");
-  List FRetainAtAgeAreaList = HistSim.slot("FRetainAtAgeArea");
+  List FDeadAtAgeAreaList = HistSim.slot("FDeadArea");
+  List FRetainAtAgeAreaList = HistSim.slot("FRetainArea");
   
-  List FDeadAtAgeList =  HistSim.slot("FDeadAtAge");
-  List FRetainAtAgeList = HistSim.slot("FRetainAtAge");
+  List FDeadAtAgeList =  HistSim.slot("FDead");
+  List FRetainAtAgeList = HistSim.slot("FRetain");
   
   List LandingsList = HistSim.slot("Landings");
   List DiscardsList =  HistSim.slot("Discards"); 
@@ -262,8 +262,8 @@ S4 CalcAggregateF_(S4 HistSimIn,
     
   } // end of time step loop
   
-  HistSim.slot("FDeadAtAge") = FDeadAtAgeList;
-  HistSim.slot("FRetainAtAge") = FRetainAtAgeList;
+  HistSim.slot("FDead") = FDeadAtAgeList;
+  HistSim.slot("FRetain") = FRetainAtAgeList;
   
   return(HistSim);
 }

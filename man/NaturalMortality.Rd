@@ -3,7 +3,9 @@
 \docType{class}
 \name{NaturalMortality}
 \alias{NaturalMortality}
+\alias{NMortality}
 \alias{NaturalMortality<-}
+\alias{NMortality<-}
 \title{NaturalMortality Object}
 \usage{
 NaturalMortality(
@@ -17,7 +19,20 @@ NaturalMortality(
   Misc = list()
 )
 
+NMortality(
+  Pars = list(M = NA),
+  Model = NULL,
+  Units = "year",
+  MeanAtAge = NULL,
+  MeanAtLength = NULL,
+  Random = NULL,
+  Classes = NULL,
+  Misc = list()
+)
+
 NaturalMortality(x) <- value
+
+NMortality(x) <- value
 }
 \arguments{
 \item{Pars}{A named list of parameters for a model to generate \code{MeanAtAge} or \code{MeanAtLength}. See \code{Parameters} section in \code{Details}.}
@@ -103,7 +118,11 @@ corresponding with each change point can be specified using \code{attributes}, s
 \itemize{
 \item \code{NaturalMortality()}: Create a new \code{naturalmortality} class object
 
+\item \code{NMortality()}: Alternative for \code{NaturalMortality}
+
 \item \code{NaturalMortality(x) <- value}: Assign an \code{naturalmortality} class object to a \code{\link[=Stock]{Stock()}} object
+
+\item \code{NMortality(x) <- value}: Assign an \code{naturalmortality} class object to a \code{\link[=Stock]{Stock()}} object
 
 }}
 \section{Slots}{

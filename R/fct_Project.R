@@ -252,13 +252,13 @@ UpdateMSEObject <- function(MSE, ProjSimListMP, mp, TimeStepsHist, TimeStepsProj
     aperm(c("Sim", "Stock", "TimeStep", "Fleet"))
   
   for (st in 1:nStock) {
-    MSE@FDeadAtAge[[st]][,,,,mp] <- purrr::map(ProjSimListMP, \(x) x@FDeadAtAge[[st]]) |> 
+    MSE@FDead[[st]][,,,,mp] <- purrr::map(ProjSimListMP, \(x) x@FDead[[st]]) |> 
       List2Array("Sim") |>
       AddDimNames(names=c("Age", "TimeStep", "Fleet", "Sim"), TimeSteps=TimeStepsAll) |> 
       ArraySubsetTimeStep(TimeSteps=TimeStepsProj) |>
       aperm(c("Sim", "Age", "TimeStep", "Fleet"))
     
-    MSE@FRetainAtAge[[st]][,,,,mp] <- purrr::map(ProjSimListMP, \(x) x@FRetainAtAge[[st]]) |> 
+    MSE@FRetain[[st]][,,,,mp] <- purrr::map(ProjSimListMP, \(x) x@FRetain[[st]]) |> 
       List2Array("Sim") |>
       AddDimNames(names=c("Age", "TimeStep", "Fleet", "Sim"), TimeSteps=TimeStepsAll) |> 
       ArraySubsetTimeStep(TimeSteps=TimeStepsProj) |>
@@ -271,8 +271,8 @@ UpdateMSEObject <- function(MSE, ProjSimListMP, mp, TimeStepsHist, TimeStepsProj
       ArraySubsetTimeStep(TimeSteps=TimeStepsProj) |>
       aperm(c("Sim", "TimeStep", "Fleet", "Area"))
     
-    MSE@FDeadAtAgeArea[[st]][,,,,,mp] <- purrr::map(ProjSimListMP, \(x) {
-      x@FDeadAtAgeArea[[st]] |> 
+    MSE@FDeadArea[[st]][,,,,,mp] <- purrr::map(ProjSimListMP, \(x) {
+      x@FDeadArea[[st]] |> 
         List2Array("TimeStep") |>
         AddDimNames(c("Age", "Fleet", "Area", "TimeStep"),
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)),
@@ -283,8 +283,8 @@ UpdateMSEObject <- function(MSE, ProjSimListMP, mp, TimeStepsHist, TimeStepsProj
       aperm(c("Sim", "Age", "TimeStep", "Fleet", "Area"))
     
     
-    MSE@FRetainAtAgeArea[[st]][,,,,,mp] <- purrr::map(ProjSimListMP, \(x) {
-      x@FRetainAtAgeArea[[st]] |> 
+    MSE@FRetainArea[[st]][,,,,,mp] <- purrr::map(ProjSimListMP, \(x) {
+      x@FRetainArea[[st]] |> 
         List2Array("TimeStep") |>
         AddDimNames(c("Age", "Fleet", "Area", "TimeStep"),
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)),

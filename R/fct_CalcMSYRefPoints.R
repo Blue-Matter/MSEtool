@@ -91,7 +91,7 @@ setdnames <- function(dnames, BySim=TRUE) {
 CalculateMSYSim <- function(StockList, FleetList, Complexes, TimeSteps=NULL, maxF=3) {
   logApicalFRange <- log(c(0.01, maxF))
   
-  MSYRefPoints <- MSYRefPoints(StockNames=names(StockList), TimeSteps=TimeSteps)
+  MSYRefPoints <- RefPointsMSY(StockNames=names(StockList), TimeSteps=TimeSteps)
   for (st in seq_along(Complexes)) {
     StockInd <- Complexes[[st]]
     StockList_ <- StockList[StockInd]
@@ -135,6 +135,7 @@ OptMSY <- function(logApicalF, StockList, FleetList, TimeSteps, option=1) {
                                          StockList, 
                                          FleetList, 
                                          TimeSteps)
+  
   SPFrom <- purrr::map(StockList, \(stock) stock@SRR@SPFrom) |> unlist()
   if (is.null(SPFrom))
     SPFrom <- 1:length(StockList)
@@ -174,7 +175,6 @@ OptMSY <- function(logApicalF, StockList, FleetList, TimeSteps, option=1) {
   R0 <- purrr::map(StockList, \(Stock) Stock@SRR@R0 |> ArraySubsetTimeStep(TimeSteps)) |>
     List2Array('Stock') |> aperm(c('Stock', 'TimeStep'))
   
-
   Recruits <- ArrayMultiply(R0, RelRecruits) |>  AddDimension("F")
   Removals <- ArrayMultiply(PerRecruit@Removals, Recruits) |> DropDimension("F")
   
@@ -190,16 +190,15 @@ OptMSY <- function(logApicalF, StockList, FleetList, TimeSteps, option=1) {
   Landings <- ArrayMultiply(PerRecruit@Landings, Recruits) |> DropDimension("F")
   
   
-  MSYRefPoints <- new("msyrefpoints")
+  MSYRefPoints <- new("refpointsMSY")
   MSYRefPoints@FMSY <- array(apicalF, dim(Biomass), dimnames=dimnames(Biomass))
   MSYRefPoints@BMSY <- Biomass 
   MSYRefPoints@SBMSY <- SBiomass 
   MSYRefPoints@SPMSY <- SProduction 
   MSYRefPoints@SPRMSY <- SPR 
-  MSYRefPoints@MSYRemovals <- Removals 
+  MSYRefPoints@MSY <- Removals 
   # if (!all(Landings == Removals))
   MSYRefPoints@MSYLandings <- Landings 
-  
   MSYRefPoints
 }
 

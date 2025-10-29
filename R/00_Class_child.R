@@ -57,7 +57,7 @@ setClass("Timing",
 )
 
 setClass("MiscClass",
-         slots=c(Misc='list')
+         slots=c(Misc='list.null')
 )
 
 

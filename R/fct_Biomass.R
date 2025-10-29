@@ -181,9 +181,9 @@ apicalF <- function(MSE, Type=c('Dead', 'Retain'), byFleet=FALSE) {
   apicalFHist$MP <- 'Historical'
   
   if (Type=='Dead') {
-    Values <- MSE@FDeadAtAge
+    Values <- MSE@FDead
   } else {
-    Values <- MSE@FRetainAtAge
+    Values <- MSE@FRetain
   }
   
   apicalF <- purrr::map(Values, \(stock) {
@@ -213,15 +213,15 @@ apicalFHist <- function(Hist, Type=c('Dead', 'Retain'), byFleet=FALSE) {
   
   if (inherits(Hist, 'mse')) {
     if (Type=='Dead') {
-      Values <- Hist@Hist@FDeadAtAge
+      Values <- Hist@Hist@FDead
     } else {
-      Values <- Hist@Hist@FRetainAtAge
+      Values <- Hist@Hist@FRetain
     }
   } else {
     if (Type=='Dead') {
-      Values <- Hist@FDeadAtAge
+      Values <- Hist@FDead
     } else {
-      Values <- Hist@FRetainAtAge
+      Values <- Hist@FRetain
     }
   }
 

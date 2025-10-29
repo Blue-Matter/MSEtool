@@ -11,6 +11,7 @@ ImportBAM(
   Stock = "Red Snapper",
   nSim = 48,
   pYear = 30,
+  StockName = NULL,
   DiscMortDF = NULL,
   DiscFleets = NULL,
   DiscSelFleets = NULL,

@@ -15,11 +15,10 @@ ProcessMiscOM <- function(Hist) {
     FillFromMisc('Landings', FALSE) |> 
     FillFromMisc('Discards', FALSE) |> 
     FillFromMisc('Effort', FALSE) |> 
-    FillFromMisc('FDeadAtAge', FALSE) |> 
-    FillFromMisc('FRetainAtAge', FALSE) |> 
-    FillFromMisc('EffortArea', FALSE) |> 
-    FillFromMisc('FDeadAtAgeArea', FALSE) |> 
-    FillFromMisc('FRetainAtAgeArea', FALSE)
+    FillFromMisc('FDead', FALSE) |> 
+    FillFromMisc('FRetain', FALSE) |> 
+    FillFromMisc('FDeadArea', FALSE) |> 
+    FillFromMisc('FRetainArea', FALSE)
   
 }
 

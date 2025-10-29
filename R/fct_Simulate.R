@@ -1,6 +1,12 @@
 
 
-
+GetRefPointTimeSteps <- function(OM) {
+  HistTimeSteps <- TimeSteps(OM, 'Historical')
+  RefPointTimeSteps <- OM@Control$RefPointTimeSteps
+  if (is.null(RefPointTimeSteps))
+    RefPointTimeSteps <- tail(HistTimeSteps, OM@TimeStepsPerYear)
+  RefPointTimeSteps
+}
 
 
 #' @describeIn runMSE Run the Historical Simulations from an object of class `OM` or class `om`
@@ -26,7 +32,7 @@ Simulate_om <- function(OM=NULL,
                         parallel=FALSE,
                         silent=FALSE,
                         nSim=NULL,
-                        MSYRefPoints=TRUE,
+                        RefPointsMSY=TRUE,
                         Reduce=TRUE,
                         ...) {
  
@@ -49,12 +55,12 @@ Simulate_om <- function(OM=NULL,
   
   # ---- Build HistSimList ----
   # List of `Hist` objects, each with one simulation
-  HistSimList <- Hist2HistSimList(Hist)
+  SimList <- Hist2SimList(Hist)
 
   # ---- Calculate Reference Points ----
   # unfished spawning per recruit (egg production; i.e. fecundity)
-  HistSimList <- purrr::map(HistSimList, \(HistSim) {
-    HistSim@RefPoints@SPR0 <- CalcSPR0(HistSim)
+  SimList <- purrr::map(SimList, \(HistSim) {
+    HistSim@RefPointsPR@SPR0 <- CalcSPR0(HistSim)
     HistSim
     }) 
   
@@ -68,36 +74,35 @@ Simulate_om <- function(OM=NULL,
   # maxF=OM@maxF
   
   # TODO - check if varies over simulations
-  RefPointTimeSteps <- OM@Control$RefPointTimeSteps
-  if (is.null(RefPointTimeSteps))
-    RefPointTimeSteps <- tail(HistTimeSteps, OM@TimeStepsPerYear)
-   
-  if (inherits(MSYRefPoints, 'logical') && MSYRefPoints) {
-    HistSimList <- purrr::map(HistSimList, \(HistSim) {
-      HistSim@RefPoints@MSYRefPoints <- CalculateMSYSim(StockList=HistSim@OM@Stock,
-                                                        FleetList=HistSim@OM@Fleet,                                  
-                                                        Complexes=HistSim@OM@Complexes,
-                                                        TimeSteps = RefPointTimeSteps,
-                                                        maxF=OM@maxF)
+  
+  RefPointTimeSteps <- GetRefPointTimeSteps(OM) # historical time steps to calculate ref points
+
+  if (inherits(RefPointsMSY, 'logical') && RefPointsMSY) {
+    SimList <- purrr::map(SimList, \(HistSim) {
+      HistSim@RefPointsMSY <- CalculateMSYSim(StockList=HistSim@OM@Stock,
+                                      FleetList=HistSim@OM@Fleet,                                  
+                                      Complexes=HistSim@OM@Complexes,
+                                      TimeSteps = RefPointTimeSteps,
+                                      maxF=OM@maxF)
+    
       HistSim
     }, .progress = list(
       type = "iterator",
       format = "Calculating MSY Reference Points {cli::pb_bar} {cli::pb_percent}",
       clear = TRUE))
-  } else if (inherits(MSYRefPoints, 'msyrefpoints')) {
-    Hist@RefPoints@MSYRefPoints <- MSYRefPoints
+  } else if (inherits(RefPointsMSY, 'refpointsMSY')) {
+    Hist@RefPointsMSY <- RefPointsMSY
   }
   
-
   # Per-Recruit Curves 
   # TODO
   
   # ---- Calculate Unfished Equilibrium and Dynamic ----
-  HistSimList <- CalcDynamicUnfished(HistSimList)
+  SimList <- CalcDynamicUnfished(SimList)
   
   # ---- Optimize for Final Depletion ----
   # # check if catchability values exist
-  Catchability <- purrr::map(HistSimList, \(HistSim) {
+  Catchability <- purrr::map(SimList, \(HistSim) {
     purrr::map(HistSim@OM@Fleet, \(StockFleet)
                apply(StockFleet@Effort@Catchability, 2, max)
     ) |>
@@ -108,10 +113,10 @@ Simulate_om <- function(OM=NULL,
   if (!(all(Catchability>1E-5))) {
     if (parallel) {
       cli::cli_progress_message("Optimizing catchability (q) for Final Depletion")
-      HistSimList <- .lapply(HistSimList, OptimizeCatchability)
+      SimList <- .lapply(HistSimList, OptimizeCatchability)
       cli::cli_progress_done()
     } else {
-      HistSimList <- purrr::map(HistSimList, \(HistSim)
+      SimList <- purrr::map(SimList, \(HistSim)
                                 OptimizeCatchability(HistSim),
                                 .progress = list(
                                   type = "iterator",
@@ -123,20 +128,20 @@ Simulate_om <- function(OM=NULL,
   # ---- Historical Population Dynamics ----
   
   # if (IdenticalAcrossSims) {
-  #   # TODO - only run SimulateDynamics_ once and copy across HistSimList
+  #   # TODO - only run SimulateDynamics_ once and copy across SimList
   #   # need to make sure to update all historical dynamics - eg Stock@Length for each sim
   #   # if MICE is used
   # } 
   
-  HistSimList <- purrr::map(HistSimList, \(HistSim) 
-                            SimulateDynamics_(HistSim, HistTimeSteps),
-                            .progress = list(
-                              type = "iterator", 
-                              format = "Simulating Historical Fishery {cli::pb_bar} {cli::pb_percent}",
-                              clear = TRUE))
+  SimList <- purrr::map(SimList, \(HistSim) 
+                        SimulateDynamics_(HistSim, HistTimeSteps),
+                        .progress = list(
+                          type = "iterator", 
+                          format = "Simulating Historical Fishery {cli::pb_bar} {cli::pb_percent}",
+                          clear = TRUE))
   
   # update CatchFrac 
-  HistSimList <- purrr::map(HistSimList, \(HistSim) {
+  SimList <- purrr::map(SimList, \(HistSim) {
     HistSim@OM@CatchFrac <- purrr::map2(HistSim@Landings, HistSim@Discards, \(landings, discards) {
       removals <- landings[[length(landings)]] + discards[[length(discards)]]
       fleetCatch <- apply(removals,2, sum)
@@ -146,14 +151,14 @@ Simulate_om <- function(OM=NULL,
   })
   
   # ---- Check for Depletion Optimization ----
-  OptDepletionRatio <- CheckDepletionOpt(HistSimList, HistTimeSteps) # TODO - warning message or re-sample 
+  OptDepletionRatio <- CheckDepletionOpt(SimList, HistTimeSteps) # TODO - warning message or re-sample 
   Hist@Log$OptDepletionRatio <- OptDepletionRatio
 
   # ---- Condition Observation Object on Real Fishery Data ----
   # TODO - check for identical sims - but need to generate independent obs error by sim
   # TODO - add conditioning obs error for Effort
   ProjectionTimeSteps <- TimeSteps(OM, 'Projection')
-  HistSimList <- purrr::map(HistSimList, \(HistSim)
+  SimList <- purrr::map(SimList, \(HistSim)
                             ConditionObs(HistSim, HistTimeSteps, ProjectionTimeSteps),
                             .progress = list(
                               type = "iterator",
@@ -162,14 +167,14 @@ Simulate_om <- function(OM=NULL,
   
 
   # # # ---- Historical Fishery Data ----
-  HistSim <- HistSimList$`1` # for debugging
+  HistSim <- SimList$`1` # for debugging
   # TODO - check for identical sims 
-  HistSimList <- purrr::map(HistSimList, \(HistSim)
-                            GenerateHistoricalData(HistSim, HistTimeSteps),
-                            .progress = list(
-                              type = "iterator",
-                              format = "Generating Historical Data {cli::pb_bar} {cli::pb_percent}",
-                              clear = TRUE))
+  SimList <- purrr::map(SimList, \(HistSim)
+                        GenerateHistoricalData(HistSim, HistTimeSteps),
+                        .progress = list(
+                          type = "iterator",
+                          format = "Generating Historical Data {cli::pb_bar} {cli::pb_percent}",
+                          clear = TRUE))
   
   
   # Hist@Data:
@@ -177,13 +182,11 @@ Simulate_om <- function(OM=NULL,
   # - list of length `nComplex`
   
   # ---- Return `hist` Object ----
-  Hist <- Hist |> 
-    HistSimList2Hist(HistSimList) |> 
-    SetDigest()
-  
+  Hist <- SimList2Hist(Hist, SimList) 
+    
   if (Reduce)
     Hist <- ArrayReduceDims(Hist)
-  Hist
+  SetDigest(Hist)
 }
 
 

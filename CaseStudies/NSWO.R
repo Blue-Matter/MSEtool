@@ -65,7 +65,7 @@ FatAgeSS$Stock <- StockNames(Hist@OM)[FatAgeSS$Stock]
 FatAgeSS$Fleet <- Hist@OM@Fleet[[1]]@Name[FatAgeSS$Fleet]
 FatAgeSS$Model <- 'SS3'
 
-FatAgeHist <- lapply(Hist@FDeadAtAge, array2DF)
+FatAgeHist <- lapply(Hist@FDead, array2DF)
 for (i in seq_along(FatAgeHist))
   FatAgeHist[[i]]$Stock <- StockNames(Hist@OM)[i]
 
