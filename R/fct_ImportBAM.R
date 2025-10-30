@@ -445,7 +445,8 @@ BAM2Fleet <- function(Stock, OM,
                       DiscMortDF=NULL, 
                       DiscFleets=NULL, 
                       DiscSelFleets=NULL,
-                      RetSelFleets=NULL) {
+                      RetSelFleets=NULL,
+                      silent=FALSE) {
   
   BAMdata <- GetBAMOutput(Stock)
   TimeSteps <- TimeSteps(OM)
@@ -466,6 +467,8 @@ BAM2Fleet <- function(Stock, OM,
   RetainFleets <- FleetNames[!FleetNames %in% DiscardFleets] |> as.character()
   
   nFleet <- length(RetainFleets)
+  HistTS <- TimeSteps[TimeSteps<=OM@Stock[[1]]@CurrentYear]
+  nHist <- length(HistTS)
   
   # Discard Mortality Values and Time Blocks
   DiscardMortArray <- GetBAMDiscardMortality(Stock, 
@@ -475,10 +478,8 @@ BAM2Fleet <- function(Stock, OM,
                                              OM, 
                                              DiscMortDF)
   
-  HistTS <- TimeSteps[TimeSteps<=OM@Stock[[1]]@CurrentYear]
-  nHist <- length(HistTS)
+  # Selectivity, Retention, Effort, Catchability 
   TimeSeries <- BAMdata$t.series |> dplyr::filter(year %in% HistTS)
-  
   FCols <- paste0('F.', FleetNames)
   chk <- any(!FCols %in% names(TimeSeries))
   if (chk) 
@@ -491,11 +492,12 @@ BAM2Fleet <- function(Stock, OM,
   BAM_Ages <- AgeSeries$age
   nAgeClasses <- length(BAM_Ages)
   
-  FDeadatAge <- array(0, dim=c(nAgeClasses, nHist, length(RetainFleets)),
-                      dimnames = list(Age=BAM_Ages,
-                                      TimeStep=TimeSteps[1:nHist],
-                                      Fleet=RetainFleets))
-  FRetainatAge <- FDeadatAge
+  FDeadatAge <- FRetainatAge <- array(0, dim=c(nAgeClasses, 
+                                               nHist, 
+                                               length(RetainFleets)),
+                                      dimnames = list(Age=BAM_Ages,
+                                                      TimeStep=TimeSteps[1:nHist],
+                                                      Fleet=RetainFleets))
   
   for (fl in seq_along(RetainFleets)) {
     fleet <- RetainFleets[fl]
@@ -552,8 +554,10 @@ BAM2Fleet <- function(Stock, OM,
   FDiscardTotal[!is.finite(FDiscardTotal)] <- 0
   FInteractatAge <- ArrayAdd(FRetainatAge, FDiscardTotal)
   Effort <- apply(FInteractatAge, 2:3, max, na.rm=TRUE)
-  
-  FInteractMax <- replicate(nAgeClasses, apply(FInteractatAge, 2:3, max)) |> aperm(c(3,1,2)) 
+  Effort
+
+  FInteractMax <- replicate(nAgeClasses, apply(FInteractatAge, 2:3, max)) |> 
+    aperm(c(3,1,2)) 
   dimnames(FInteractMax) <-  dimnames(FInteractatAge)
   
   SelectivityAtAge <- ArrayDivide(FInteractatAge, FInteractMax) 
@@ -562,32 +566,30 @@ BAM2Fleet <- function(Stock, OM,
   RetentionAtAge <- ArrayDivide(FRetainatAge, FInteractatAge)
   RetentionAtAge[!is.finite(RetentionAtAge)] <- 0
   
-  FleetList <- list()
+ 
+  FleetList <- MakeNamedList(RetainFleets)
   class(FleetList) <- 'FleetList'
+  
   for (fl in seq_along(RetainFleets)) {
     fleet <- Fleet(Name=RetainFleets[fl])
-    apicalF <-  apply(FDeadatAge, 2:3, max)[,fl, drop=FALSE] |> t()
-    dimnames(apicalF) <- list(Sim=1,
-                              'TimeStep'=  dimnames(apicalF)$TimeStep)
+    thisFleetEffort <- Effort[,fl, drop=FALSE]
+    thisFleetEffort[] <- thisFleetEffort[,1]/tail(thisFleetEffort[,1],1)
     
-    fleet@FishingMortality <- FishingMortality(ApicalF=apicalF)
+    fleet@Effort@Vessels <- AddDimension(thisFleetEffort, 'Sim') |>
+      abind::adrop(2) |> aperm(c('Sim', 'TimeStep'))
     
-    discmort <- AddDimension(DiscardMortArray[,,fl], 'Sim') |>
-      aperm(c(3,1,2))
+    fleet@Effort@Trips <- fleet@Effort@Vessels
+    fleet@Effort@Trips[] <- 1
     
-    fleet@DiscardMortality <- DiscardMortality(MeanAtAge = discmort)
-    
-    effort <- AddDimension(Effort[,fl, drop=FALSE], 'Sim') |>
-      abind::adrop(2) |> aperm(2:1)
-    fleet@Effort <- Effort(Effort=effort)
-    fleet@Effort@Catchability <- array(1, c(1,1))  |> 
+    fleet@Catchability@Q <- array(1, c(1,1))  |> 
       AddDimNames(c('Sim', 'TimeStep'), TimeSteps=TimeSteps)
     
-    MeanAtAge <- AddDimension(SelectivityAtAge[,,fl], 'Sim') |> aperm(c(3,1,2))
-    fleet@Selectivity <- Selectivity(MeanAtAge=MeanAtAge)
-    MeanAtAge <- AddDimension(RetentionAtAge[,,fl], 'Sim') |> aperm(c(3,1,2))
-    fleet@Retention <- Retention(MeanAtAge=MeanAtAge)
-    
+    fleet@Selectivity@MeanAtAge <- AddDimension(SelectivityAtAge[,,fl], 'Sim') |>
+      aperm(c('Sim', 'Age', 'TimeStep'))
+    fleet@Retention@MeanAtAge <- AddDimension(RetentionAtAge[,,fl], 'Sim') |>
+      aperm(c('Sim', 'Age', 'TimeStep'))
+    fleet@DiscardMortality@MeanAtAge <- AddDimension(DiscardMortArray[,,fl], 'Sim') |>
+      aperm(c('Sim', 'Age', 'TimeStep'))
     
     FleetList[[fleet@Name]] <- fleet
   }

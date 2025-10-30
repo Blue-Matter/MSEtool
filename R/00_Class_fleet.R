@@ -1,16 +1,15 @@
 
+
 # Fleet Class ----
 
 #' Fleet Object
 #'
 #' Fleet Object
 #'
-#' @include 00_Class_fishingmortality.R
 #' @include 00_Class_discardmortality.R
 #' @include 00_Class_effort.R
 #' @include 00_Class_selectivity.R
 #' @include 00_Class_retention.R
-#' @include 00_Class_distribution.R
 #' 
 #'
 #' @slot Misc `r Misc_param()`
@@ -22,14 +21,18 @@
 #' @export
 setClass('fleet',
          slots=c(Name='char.null',
-                 FishingMortality='fishingmortality',
-                 DiscardMortality='discardmortality',
                  Effort='effort',
+                 Catchability='catchability',
                  Selectivity='selectivity',
                  Retention='retention',
-                 Distribution='distribution',
+                 DiscardMortality='discardmortality',
+                
+                 Closure='num.array',
+                 Targetting='num.array',
+                 
                  WeightFleet='array.null',
                  BioEconomic='list',
+                 
                  nYear='num.null',
                  pYear='num.null',
                  nSim='num.null',
@@ -44,23 +47,25 @@ setClass('fleet',
 
 setMethod("initialize", "fleet", function(.Object,
                                           Name=NULL,
-                                          FishingMortality=new('fishingmortality'),
-                                          DiscardMortality=new('discardmortality'),
                                           Effort=new('effort'),
+                                          Catchability=new('catchability'),
                                           Selectivity=new('selectivity'),
                                           Retention=new('retention'),
-                                          Distribution=new('distribution'),
+                                          DiscardMortality=new('discardmortality'),
+                                          Closure=array(),
+                                          Targetting=array(),
                                           WeightFleet=array(),
                                           BioEconomic=list(),
                                           Misc=list()) {
   
   .Object@Name <- Name
-  .Object@FishingMortality <- FishingMortality
-  .Object@DiscardMortality <- DiscardMortality
   .Object@Effort <- Effort
+  .Object@Catchability <- Catchability
   .Object@Selectivity <- Selectivity
   .Object@Retention <- Retention
-  .Object@Distribution <- Distribution
+  .Object@DiscardMortality <- DiscardMortality
+  .Object@Closure <- Closure
+  .Object@Targetting <- Targetting
   .Object@WeightFleet <- WeightFleet
   .Object@BioEconomic <- BioEconomic
   .Object@Misc <- Misc
@@ -73,12 +78,13 @@ setMethod("initialize", "fleet", function(.Object,
 #' @describeIn FleetClass Create a new `Fleet` object
 #' @export
 Fleet <- function(Name=NULL,
-                  FishingMortality=new('fishingmortality'),
-                  DiscardMortality=new('discardmortality'),
                   Effort=new('effort'),
+                  Catchability=new('catchability'),
                   Selectivity=new('selectivity'),
                   Retention=new('retention'),
-                  Distribution=new('distribution'),
+                  DiscardMortality=new('discardmortality'),
+                  Closure=array(),
+                  Targetting=array(),
                   WeightFleet=array(),
                   BioEconomic=list(),
                   Misc=list()) {
@@ -88,15 +94,16 @@ Fleet <- function(Name=NULL,
   
   methods::new('fleet',
                Name=Name,
-               FishingMortality=FishingMortality,
-               DiscardMortality=DiscardMortality,
                Effort=Effort,
+               Catchability=Catchability,
                Selectivity=Selectivity,
                Retention=Retention,
-               Distribution=Distribution,
-               WeightFleet=array(),
-               BioEconomic=list(),
-               Misc=list())
+               DiscardMortality=DiscardMortality,
+               Closure=Closure,
+               Targetting=Targetting,
+               WeightFleet=WeightFleet,
+               BioEconomic=BioEconomic,
+               Misc=Misc)
 }
 
 #' @describeIn FleetClass Assign an `Fleet` object to an [OM()] object

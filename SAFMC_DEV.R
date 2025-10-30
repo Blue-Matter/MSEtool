@@ -16,7 +16,12 @@ OM_Dir <- file.path(dir, 'OM_Objects/Base')
 
 # Slot Names and documentation
 
-OM <- ImportBAM(Stock='GagGrouper', nSim=nSim, pYear=pYear, StockName='Gag Grouper')
+OM <- ImportBAM(Stock='GagGrouper', 
+                nSim, 
+                pYear, StockName='Gag Grouper', 
+                populate = FALSE)
+
+PopulateOM()
 
 Hist <- Simulate(OM)
 

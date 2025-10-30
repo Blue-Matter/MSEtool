@@ -585,8 +585,8 @@ SetSeed <- function(object, seed=NULL) {
   if ('RelRecFun' %in% slotNames(object))
     object@RelRecFun <- NULL
   
-  if ('Catchability' %in% slotNames(object))
-    object@Catchability <- NULL
+  # if ('Catchability' %in% slotNames(object))
+  #   object@Catchability <- NULL
 
   val <- digest::digest2int(digest::digest(object))
 

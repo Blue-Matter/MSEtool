@@ -570,9 +570,9 @@ MeanAtLength2MeanAtAge <- function(object, Length, Ages, nsim, TimeSteps, seed, 
   
   object@MeanAtAge <- AtSize2AtAge(object, Length) 
   
-  if ('Units' %in% slotNames(object))
-    attributes(object@MeanAtAge)$Units <- object@Units
-  attributes(object@MeanAtAge)$UnitsAge <- Ages@Units
+  # if ('Units' %in% slotNames(object))
+  #   attributes(object@MeanAtAge)$Units <- object@Units
+  # attributes(object@MeanAtAge)$UnitsAge <- Ages@Units
   
   if (max1) {
     maxValue <- apply(object@MeanAtAge, c(1,3), max)

@@ -58,14 +58,15 @@ BugReports: https://github.com/Blue-Matter/MSEtool/issues
 URL: https://msetool.openmse.com/
 Collate: 
     '00_Class_CheckList.R'
+    '00_Class_fishingmortality.R'
     '00_Class_unions.R'
     '00_Class_child.R'
-    '00_Class_fishingmortality.R'
     '00_Class_discardmortality.R'
     '00_Class_retention.R'
     '00_Class_selectivity.R'
     '00_Class_advice.R'
     '00_Class_ages.R'
+    '00_Class_catchability.R'
     '00_Class_data.R'
     '00_Class_depletion.R'
     '00_Class_distribution.R'

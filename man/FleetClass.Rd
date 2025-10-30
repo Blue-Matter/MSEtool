@@ -9,12 +9,12 @@
 \usage{
 Fleet(
   Name = NULL,
-  FishingMortality = new("fishingmortality"),
-  DiscardMortality = new("discardmortality"),
   Effort = new("effort"),
+  Catchability = new("catchability"),
   Selectivity = new("selectivity"),
   Retention = new("retention"),
-  Distribution = new("distribution"),
+  DiscardMortality = new("discardmortality"),
+  Closure = array(),
   WeightFleet = array(),
   BioEconomic = list(),
   Misc = list()
@@ -44,5 +44,5 @@ Fleet Object
 }}
 
 \seealso{
-\code{\link[=Name]{Name()}}, \code{\link[=FishingMortality]{FishingMortality()}}, \code{\link[=DiscardMortality]{DiscardMortality()}}, \code{\link[=Effort]{Effort()}}, \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}}, \code{\link[=Distribution]{Distribution()}}, \code{\link[=WeightFleet]{WeightFleet()}}, \code{\link[=BioEconomic]{BioEconomic()}}, \code{\link[=nYear]{nYear()}}, \code{\link[=pYear]{pYear()}}, \code{\link[=nSim]{nSim()}}, \code{\link[=CurrentYear]{CurrentYear()}}, \code{\link[=TimeUnits]{TimeUnits()}}, \code{\link[=TimeSteps]{TimeSteps()}}, \code{\link[=TimeStepsPerYear]{TimeStepsPerYear()}}, \code{\link[=Misc]{Misc()}}
+\code{\link[=Name]{Name()}}, \code{\link[=Effort]{Effort()}}, \code{\link[=Catchability]{Catchability()}}, \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}}, \code{\link[=DiscardMortality]{DiscardMortality()}}, \code{\link[=Closure]{Closure()}}, \code{\link[=WeightFleet]{WeightFleet()}}, \code{\link[=BioEconomic]{BioEconomic()}}, \code{\link[=nYear]{nYear()}}, \code{\link[=pYear]{pYear()}}, \code{\link[=nSim]{nSim()}}, \code{\link[=CurrentYear]{CurrentYear()}}, \code{\link[=TimeUnits]{TimeUnits()}}, \code{\link[=TimeSteps]{TimeSteps()}}, \code{\link[=TimeStepsPerYear]{TimeStepsPerYear()}}, \code{\link[=Misc]{Misc()}}
 }

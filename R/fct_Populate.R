@@ -798,11 +798,11 @@ PopulateFleet <- function(Fleet,
   
   SetSeed(Fleet, seed)
   
-  Fleet@FishingMortality <- PopulateFishingMortality(Fleet@FishingMortality,
-                                                     nsim,
-                                                     TimeSteps,
-                                                     seed,
-                                                     silent)
+  # Fleet@FishingMortality <- PopulateFishingMortality(Fleet@FishingMortality,
+  #                                                    nsim,
+  #                                                    TimeSteps,
+  #                                                    seed,
+  #                                                    silent)
   
   Fleet@DiscardMortality <- PopulateDiscardMortality(DiscardMortality=Fleet@DiscardMortality,
                                                      Ages,
@@ -814,8 +814,6 @@ PopulateFleet <- function(Fleet,
                                                      silent)
   
   Fleet@Selectivity <- PopulateSelectivity(Selectivity=Fleet@Selectivity,
-                                           FishingMortality=Fleet@FishingMortality,
-                                           DiscardMortality=Fleet@DiscardMortality,
                                            Ages,
                                            Length,
                                            Weight,
@@ -826,8 +824,6 @@ PopulateFleet <- function(Fleet,
                                            silent=silent)
   
   Fleet@Retention <- PopulateRetention(Fleet@Retention,
-                                       FishingMortality=Fleet@FishingMortality,
-                                       DiscardMortality=Fleet@DiscardMortality,
                                        Ages,
                                        Length,
                                        Weight,
@@ -837,15 +833,16 @@ PopulateFleet <- function(Fleet,
                                        seed,
                                        silent=silent)
   
+
   Fleet@Effort <- PopulateEffort(Effort=Fleet@Effort,
-                                 FishingMortality=Fleet@FishingMortality,
-                                 DiscardMortality=Fleet@DiscardMortality,
                                  Ages,
                                  Length,
                                  nsim,
                                  HistTimeSteps,
                                  seed,
                                  silent)
+  # TODO - catchability 
+  stop()
   
   Fleet@Distribution <- PopulateDistribution(Fleet@Distribution, 
                                              nsim, 
@@ -862,37 +859,37 @@ PopulateFleet <- function(Fleet,
   
   SetDigest(Fleet, argList)
 }
-
-
-PopulateFishingMortality <- function(FishingMortality,
-                                     nsim=NULL,
-                                     TimeSteps=NULL,
-                                     seed=NULL,
-                                     silent=FALSE) {
-  
-  TimeSteps <- TimeStepAttributes(FishingMortality, TimeSteps)
-  argList <- list(nsim, TimeSteps, seed)
-  
-  if (CheckDigest(FishingMortality, argList) | EmptyObject(FishingMortality))
-    return(FishingMortality)
-  
-  SetSeed(FishingMortality, seed)
- 
-  FishingMortality@ApicalF <- AddSimDimension(FishingMortality@ApicalF,
-                                              c('Sim', 'TimeStep'), 
-                                              TimeSteps=TimeSteps)
-  
-  FishingMortality@DeadAtAge <- AddSimDimension(FishingMortality@DeadAtAge,
-                                                TimeSteps=TimeSteps)
-  FishingMortality@RetainAtAge <- AddSimDimension(FishingMortality@RetainAtAge,
-                                                  TimeSteps=TimeSteps)
-  
-  if (EmptyObject(FishingMortality@ApicalF)) # calculate from `DeadAtAge`
-    FishingMortality@ApicalF <- apply(FishingMortality@DeadAtAge, c(1,3), max)
-  
-  SetDigest(FishingMortality, argList)
-  
-}
+# 
+# 
+# PopulateFishingMortality <- function(FishingMortality,
+#                                      nsim=NULL,
+#                                      TimeSteps=NULL,
+#                                      seed=NULL,
+#                                      silent=FALSE) {
+#   
+#   TimeSteps <- TimeStepAttributes(FishingMortality, TimeSteps)
+#   argList <- list(nsim, TimeSteps, seed)
+#   
+#   if (CheckDigest(FishingMortality, argList) | EmptyObject(FishingMortality))
+#     return(FishingMortality)
+#   
+#   SetSeed(FishingMortality, seed)
+#  
+#   FishingMortality@ApicalF <- AddSimDimension(FishingMortality@ApicalF,
+#                                               c('Sim', 'TimeStep'), 
+#                                               TimeSteps=TimeSteps)
+#   
+#   FishingMortality@DeadAtAge <- AddSimDimension(FishingMortality@DeadAtAge,
+#                                                 TimeSteps=TimeSteps)
+#   FishingMortality@RetainAtAge <- AddSimDimension(FishingMortality@RetainAtAge,
+#                                                   TimeSteps=TimeSteps)
+#   
+#   if (EmptyObject(FishingMortality@ApicalF)) # calculate from `DeadAtAge`
+#     FishingMortality@ApicalF <- apply(FishingMortality@DeadAtAge, c(1,3), max)
+#   
+#   SetDigest(FishingMortality, argList)
+#   
+# }
   
 
 PopulateDiscardMortality <- function(DiscardMortality,
@@ -933,8 +930,6 @@ PopulateDiscardMortality <- function(DiscardMortality,
 }
   
 PopulateSelectivity <- function(Selectivity,
-                                FishingMortality=NULL,
-                                DiscardMortality=NULL,
                                 Ages=NULL,
                                 Length=NULL,
                                 Weight=NULL,
@@ -946,18 +941,15 @@ PopulateSelectivity <- function(Selectivity,
                                 CheckMaxValue=TRUE) {
   
   TimeSteps <- TimeStepAttributes(Selectivity, TimeSteps)
-  argList <- list(FishingMortality, DiscardMortality, Ages, 
-                  Length, Weight, TimeSteps, nsim, CalcAtLength, seed)
+  argList <- list(Ages, Length, Weight, TimeSteps, nsim, CalcAtLength, seed)
   
   if (CheckDigest(Selectivity, argList))
     return(Selectivity)
   
   SetSeed(Selectivity, seed)
  
-  
   Selectivity@Pars <- StructurePars(Pars=Selectivity@Pars, nsim, TimeSteps)
   Selectivity@Model <- FindModel(Selectivity)
-  
   ModelClass <- getModelClass(Selectivity@Model)
   
   if (!is.null(ModelClass)) {
@@ -988,29 +980,28 @@ PopulateSelectivity <- function(Selectivity,
     Selectivity <- MeanAtAge2MeanAtLength(Selectivity, Length, Ages, nsim, TimeSteps, seed, silent)
   
   if (is.null(Selectivity@MeanAtAge)) {
-    chk <- CheckRequiredObject(FishingMortality, 'fishingmortality', 'FishingMortality')
-    if (!chk@populated)
-      FishingMortality <- PopulateFishingMortality(FishingMortality,
-                                   nsim,
-                                   TimeSteps,
-                                   seed,
-                                   silent)
-    
-    if (!EmptyObject(FishingMortality@DeadAtAge)) {
-      Selectivity@MeanAtAge <- FishingMortality2Selectivity(FishingMortality,
-                                                            DiscardMortality,
-                                                            Ages,
-                                                            TimeSteps,
-                                                            Length)
-    } else {
-      cli::cli_abort('`Selectivity` requires either `Pars`, `MeanAtAge` or a `FishingMortality` object')
-    }
+    # chk <- CheckRequiredObject(FishingMortality, 'fishingmortality', 'FishingMortality')
+    # if (!chk@populated)
+    #   FishingMortality <- PopulateFishingMortality(FishingMortality,
+    #                                nsim,
+    #                                TimeSteps,
+    #                                seed,
+    #                                silent)
+    # 
+    # if (!EmptyObject(FishingMortality@DeadAtAge)) {
+    #   Selectivity@MeanAtAge <- FishingMortality2Selectivity(FishingMortality,
+    #                                                         DiscardMortality,
+    #                                                         Ages,
+    #                                                         TimeSteps,
+    #                                                         Length)
+    # } else {
+      cli::cli_abort('`Selectivity` requires either `Pars` or `MeanAtAge`')
+    # }
   }
   
   # Check Selectivity has a max value of one across age classes
   if(CheckMaxValue) 
     Selectivity@MeanAtAge <- CheckSelectivityMaximum(Selectivity@MeanAtAge)
-  
   
   # Dimnames for at length
   if (!is.null(Selectivity@MeanAtLength)) {
@@ -1022,16 +1013,11 @@ PopulateSelectivity <- function(Selectivity,
                                                  TimeStep=TimeSteps[1:dd[3]])
   }
   
-  
-  # selectivity <- AddMeanAtAgeAttributes(selectivity, TimeSteps, Ages)
-
   SetDigest(Selectivity, argList)
 }
 
 
 PopulateRetention <- function(Retention, 
-                              FishingMortality=NULL,
-                              DiscardMortality=NULL,
                               Ages=NULL,
                               Length=NULL,
                               Weight=NULL,
@@ -1042,7 +1028,7 @@ PopulateRetention <- function(Retention,
                               silent=FALSE) {
   
   TimeSteps <- TimeStepAttributes(Retention, TimeSteps)
-  argList <- list(FishingMortality, DiscardMortality, Ages, Length, 
+  argList <- list(Ages, Length, 
                   TimeSteps, nsim, CalcAtLength, seed)
   
   
@@ -1106,23 +1092,23 @@ PopulateRetention <- function(Retention,
                                         nsim, TimeSteps, seed, silent)
   
   if (is.null(Retention@MeanAtAge)) {
-    chk <- CheckRequiredObject(FishingMortality, 'fishingmortality', 'FishingMortality')
-    if (!chk@populated)
-      FishingMortality <- PopulateFishingMortality(FishingMortality,
-                                   nsim,
-                                   TimeSteps,
-                                   seed,
-                                   silent)
-    
-    if (!EmptyObject(FishingMortality@DeadAtAge)) {
-      Retention@MeanAtAge <- FishingMortality2Retention(FishingMortality,
-                                                        DiscardMortality,
-                                                        Ages,
-                                                        TimeSteps,
-                                                        Length)
-    } else {
-      cli::cli_abort('`Retention` requires either `Pars`, `MeanAtAge` or a `FishingMortality` object')
-    }
+    # chk <- CheckRequiredObject(FishingMortality, 'fishingmortality', 'FishingMortality')
+    # if (!chk@populated)
+    #   FishingMortality <- PopulateFishingMortality(FishingMortality,
+    #                                nsim,
+    #                                TimeSteps,
+    #                                seed,
+    #                                silent)
+    # 
+    # if (!EmptyObject(FishingMortality@DeadAtAge)) {
+    #   Retention@MeanAtAge <- FishingMortality2Retention(FishingMortality,
+    #                                                     DiscardMortality,
+    #                                                     Ages,
+    #                                                     TimeSteps,
+    #                                                     Length)
+    # } else {
+      cli::cli_abort('`Retention` requires either `Pars` or `MeanAtAge`')
+    # }
   }
   
   
@@ -1142,30 +1128,13 @@ PopulateRetention <- function(Retention,
 }
 
   
-
-PopulateEffort <- function(Effort,
-                           FishingMortality=NULL,
-                           DiscardMortality=NULL,
-                           Ages=NULL,
-                           Length=NULL,
-                           nsim=NULL,
-                           TimeSteps=NULL,
-                           seed=NULL,
-                           silent=FALSE) {
+PopulateCatchability <- function(Catchability,
+                                 nsim=NULL,
+                                 TimeSteps=NULL,
+                                 seed=NULL,
+                                 silent=FALSE) {
   
-  argList <- list(FishingMortality,
-                  DiscardMortality,
-                  Ages,
-                  Length,
-                  TimeSteps,
-                  seed)
-  
-  if (CheckDigest(Effort, argList))
-    return(Effort)
-  
-  SetSeed(Effort, seed)
-  
-  if (EmptyObject(Effort@Catchability)) {
+  if (EmptyObject(Catchability@Q)) {
     # if (!silent)
     # cli::cli_alert_info('`Catchability` (q) not populated. Assuming `q=1`')
     Effort@Catchability <- matrix(tiny/2,1,1) |> AddDimNames(c('Sim', 'TimeStep'),
@@ -1175,7 +1144,44 @@ PopulateEffort <- function(Effort,
       AddDimNames(c('Sim', 'TimeStep'), TimeSteps=TimeSteps)
   }
   
-  if (EmptyObject(Effort@Effort)) {
+  
+  Catchability@Q
+  Catchability@qCV
+  Catchability@qInc
+  Catchability@qArea
+  
+  Catchability
+}
+
+PopulateEffort <- function(Effort,
+                           Ages=NULL,
+                           Length=NULL,
+                           nsim=NULL,
+                           TimeSteps=NULL,
+                           seed=NULL,
+                           silent=FALSE) {
+  
+  argList <- list(Ages,
+                  Length,
+                  TimeSteps,
+                  seed)
+  
+  if (CheckDigest(Effort, argList))
+    return(Effort)
+  
+  SetSeed(Effort, seed)
+  
+  # TODO 
+  stop()
+  Fleet@Effort
+  
+  Fleet@Effort@Vessels
+  Fleet@Effort@Trips
+  Fleet@Effort@Distribution
+  
+  
+
+  if (EmptyObject(Effort@Vessels)) {
     FInteract <- CalculateFInteract(FishingMortality,
                                     DiscardMortality,
                                     Ages,
@@ -1186,8 +1192,8 @@ PopulateEffort <- function(Effort,
                                    array2=apply(FInteract,c(1,3), max)
     ) |> AddDimNames(c('Sim', 'TimeStep'), TimeSteps=TimeSteps)
   } else {
-    if (methods::is(Effort@Effort, 'data.frame')) {
-      Effort@Effort <- GenerateHistoricalEffort(Effort@Effort, nsim, TimeSteps)
+    if (methods::is(Effort@Vessels, 'data.frame')) {
+      Effort@Effort <- GenerateHistoricalEffort(Effort@Vessels, nsim, TimeSteps)
       
     } else{
       Effort@Effort <- Structure(Effort@Effort, c('nSim', 'nTS')) |>

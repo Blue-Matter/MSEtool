@@ -8,7 +8,7 @@
 \usage{
 Effort(
   Effort = NULL,
-  Catchability = NULL,
+  EffortArea = NULL,
   Vessels = NULL,
   Trips = NULL,
   MaxVessels = NULL,
@@ -45,5 +45,5 @@ Historical fishing effort
 }}
 
 \seealso{
-\code{\link[=Effort]{Effort()}}, \code{\link[=Catchability]{Catchability()}}, \code{\link[=qCV]{qCV()}}, \code{\link[=qInc]{qInc()}}, \code{\link[=Vessels]{Vessels()}}, \code{\link[=Trips]{Trips()}}, \code{\link[=MaxVessels]{MaxVessels()}}, \code{\link[=MaxTrips]{MaxTrips()}}, \code{\link[=Units]{Units()}}, \code{\link[=Misc]{Misc()}}
+\code{\link[=Effort]{Effort()}}, \code{\link[=EffortArea]{EffortArea()}}, \code{\link[=Vessels]{Vessels()}}, \code{\link[=Trips]{Trips()}}, \code{\link[=MaxVessels]{MaxVessels()}}, \code{\link[=MaxTrips]{MaxTrips()}}, \code{\link[=Units]{Units()}}, \code{\link[=Misc]{Misc()}}
 }

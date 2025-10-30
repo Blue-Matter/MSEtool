@@ -5,8 +5,8 @@
 #' @include 00_Class_unions.R
 #' @include 00_Class_child.R
 #'
-#' @slot Vessels Numeric array. The average number of fishing vessels per time step.
-#' @slot Trips Numeric array. The average number of trips per vessel per time step.
+#' @slot Vessels Numeric array. The number of fishing vessels per time step.
+#' @slot Trips Numeric array. The number of trips per vessel per time step.
 #' @slot Misc `r Misc_param()`
 #'
 #' @seealso `r See_Also('effort')`
@@ -17,14 +17,11 @@
 #' @example man-examples/Effort-class.R
 #' @export
 setClass('effort',
-         slots=c(Effort='num.array.df',
-                 Catchability='num.array',
-                 qCV='num.array.list',
-                 qInc='num.array.list',
-                 Vessels='num.array.df',
+         slots=c(Vessels='num.array.df',
                  Trips='num.array.list',
                  MaxVessels='num.array.list',
                  MaxTrips='num.array.list',
+                 Distribution='num.array.list',
                  Units='char.null'
          ),
          contains = c('MiscClass')
@@ -33,20 +30,19 @@ setClass('effort',
 setValidity('effort', isValidObject)
 
 setMethod("initialize", "effort", function(.Object,
-                                           Effort=NULL,
-                                           Catchability=NULL,
                                            Vessels=NULL,
                                            Trips=NULL,
                                            MaxVessels=NULL,
                                            MaxTrips=NULL,
+                                           Distribution=NULL,
                                            Units=c('Vessels', 'Trips'),
                                            Misc=list()) {
-  .Object@Effort <- Effort
-  .Object@Catchability <- Catchability
+ 
   .Object@Vessels <- Vessels
   .Object@Trips <- Trips
   .Object@MaxVessels <- MaxVessels
   .Object@MaxTrips <- MaxTrips
+  .Object@Distribution <- Distribution
   .Object@Units <- Units
   .Object@Misc <- Misc
   #   .Object@Created <- Sys.time()
@@ -55,24 +51,22 @@ setMethod("initialize", "effort", function(.Object,
 
 #' @describeIn Effort Create a new `effort` class object
 #' @export
-Effort <- function(Effort=NULL,
-                   Catchability=NULL,
-                   Vessels=NULL,
+Effort <- function(Vessels=NULL,
                    Trips=NULL,
                    MaxVessels=NULL,
                    MaxTrips=NULL,
+                   Distribution=NULL,
                    Units=c('Vessels', 'Trips'),
                    Misc=list()) {
   if (methods::is(Effort, 'fleet'))
     return(Effort@Effort)
   
   methods::new('effort',
-               Effort=Effort,
-               Catchability=Catchability,
                Vessels=Vessels,
                Trips=Trips,
                MaxVessels=MaxVessels,
                MaxTrips=MaxTrips,
+               Distribution=Distribution,
                Units=Units,
                Misc=Misc)
 }
