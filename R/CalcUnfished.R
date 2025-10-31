@@ -76,7 +76,7 @@ CalcDynamicUnfished <- function(SimList, silent=FALSE) {
   SimListCopy <- purrr::map(SimList, \(x) {
     nStock <- nStock(x@OM)
     for (st in 1:nStock) {
-      x@OM@Fleet[[st]]@Effort@Catchability[] <- tiny
+      x@OM@Fleet[[st]]@Catchability[] <- tiny
     }
     x
   })
@@ -88,9 +88,11 @@ CalcDynamicUnfished <- function(SimList, silent=FALSE) {
     # identical historical period across all sims
     HistSim <- SimListCopy[[1]]
     unfished <- SimulateDynamics_(HistSim, TimeSteps)
-    
-    
-    HistSim@Unfished@Dynamic@Number <- lapply( unfished@Number, AddDimNames, c("Age", "TimeStep", "Area"), TimeSteps)
+
+    HistSim@Unfished@Dynamic@Number <- lapply(unfished@Number, 
+                                              AddDimNames, 
+                                              c("Age", "TimeStep", "Area"), 
+                                              TimeSteps)
     
     HistSim@Unfished@Dynamic@Biomass  <- AddDimNames(unfished@Biomass, 
                                                      c('Stock', 'TimeStep'), 
@@ -148,7 +150,7 @@ CalcDynamicUnfished <- function(SimList, silent=FALSE) {
   SimListOut <- purrr::map2(SimListOut, SimList, \(x,y) {
     nStock <- nStock(x@OM)
     for (st in 1:nStock) {
-      x@OM@Fleet[[st]]@Effort@Catchability[] <- y@OM@Fleet[[st]]@Effort@Catchability[]
+      x@OM@Fleet[[st]]@Catchability[] <- y@OM@Fleet[[st]]@Catchability[]
     }
     x
   })

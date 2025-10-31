@@ -7,10 +7,10 @@ setClass("timeseries",
                  SProduction='array',  # nSim, nStock, TimeStep
                  Landings='list', # list `nStock`of array dimensions: nSim, nAge, TimeStep, Fleet, Area
                  Discards='list', # list `nStock`of array dimensions: nSim, nAge, TimeStep, Fleet, Area
-                 Effort='array', # sim, stock, timestep, fleet
+                 Effort='array', # Sim, Stock, TimeStep, Fleet
+                 Distribution='array.list.null', # Sim, Stock, TimeStep, Fleet, Area # fraction effort by area
                  FDead='array.list.null',  # list `nStock`of array dimensions: nSim, nAge, TimeStep, Fleet
                  FRetain='array.list.null', # list `nStock`of array dimensions: nSim, nAge, TimeStep, Fleet
-                 EffortArea='array.list.null', # list `nStock`of array dimensions: nSim, TimeStep, Fleet, Area
                  FDeadArea='array.list.null', # list `nStock`of array dimensions: nSim, nAge, TimeStep, Fleet, Area
                  FRetainArea='array.list.null', # list `nStock`of array dimensions: nSim, nAge, TimeStep, Fleet, Area
                  Misc='list'

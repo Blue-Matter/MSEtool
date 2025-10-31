@@ -55,7 +55,7 @@ OM2stock <- function(OM, cpars=NULL, TimeSteps=NULL, nSim, seed=NULL) {
     )
     
   SRR(stock) <- OM2SRR(OM, cpars, TimeSteps) |>
-    PopulateSRR(MaxAge = stock@Ages@MaxAge,
+    PopulateSRR(Ages = stock@Ages,
                 CurrentYear = max(TimeSteps$HistTS),
                 TimeSteps=as.numeric(unlist(TimeSteps)),
                 nsim=nSim,

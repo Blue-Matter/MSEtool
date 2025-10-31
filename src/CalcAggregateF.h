@@ -2,7 +2,8 @@
 #define CalcAggregateF_H
 
 Rcpp::S4 CalcAggregateF_(Rcpp::S4 OMListSim,
-                    Rcpp::NumericVector TimeSteps);
+                    Rcpp::NumericVector TimeSteps,
+                    int debug);
 
 #endif
 

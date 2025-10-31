@@ -1,9 +1,9 @@
 
 CalcFleetAllocationF <- function(FleetList, TimeSteps) {
-  BySim <- "Sim" %in% (FleetList[[1]]@Effort@Effort |> dimnames() |> names())
+  BySim <- "Sim" %in% (FleetList[[1]]@Effort |> dimnames() |> names())
   FDistribution <- purrr::map(FleetList, \(Stock) {
-    ArrayMultiply(Stock@Effort@Effort |>  ArraySubsetTimeStep(TimeSteps),
-                  Stock@Effort@Catchability |>  ArraySubsetTimeStep(TimeSteps))
+    ArrayMultiply(Stock@Effort |>  ArraySubsetTimeStep(TimeSteps),
+                  Stock@Catchability |>  ArraySubsetTimeStep(TimeSteps))
   }) |> 
     List2Array('Stock') |>
     aperm(setdnames(c('Stock', 'TimeStep', 'Fleet'), BySim))
@@ -19,7 +19,6 @@ CalcFleetAllocationF <- function(FleetList, TimeSteps) {
     aperm(setdnames(c('Stock', 'TimeStep', 'Fleet'), BySim))
   
   ArrayDivide(FDistribution, FDistributionTotal) 
-  
 }
 
 CalcPerRecruit <- function(apicalF, OM, TimeSteps=NULL) {

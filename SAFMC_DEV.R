@@ -16,10 +16,15 @@ OM_Dir <- file.path(dir, 'OM_Objects/Base')
 
 # Slot Names and documentation
 
-OM <- ImportBAM(Stock='GagGrouper', 
+TESTOM <- ImportBAM(Stock='GagGrouper', 
                 nSim, 
-                pYear, StockName='Gag Grouper', 
+                pYear, 
+                StockName='Gag Grouper', 
                 populate = FALSE)
+
+Fleet=TESTOM@Fleet$`Gag Grouper`$cHL
+
+OM <- TESTOM
 
 PopulateOM()
 
@@ -83,12 +88,20 @@ CompareBAM(Stock='BlackSeaBass', OM=OM_BSB)
 
 # ---- Gag Grouper ----
 
+stop()
+
+#### ------ UP TO HERE -------
+
+
 # SEDAR 71 
 # 1962 - 2019
 # https://sedarweb.org/documents/sedar-71-stock-assessment-report-south-atlantic-gag/
   
 OM_GG <- ImportBAM(Stock='GagGrouper', nSim=nSim, pYear=pYear, StockName='Gag Grouper')
 CompareBAM('GagGrouper', OM=OM_GG) 
+
+
+
 
 # ---- Gray Triggerfish ----
 

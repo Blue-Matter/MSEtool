@@ -65,14 +65,14 @@ Simulate_om <- function(OM=NULL,
     }) 
   
   # MSY Ref Points 
-  # HistSim=HistSimList$`1`
+  # HistSim=SimList$`1`
   # StockList=HistSim@OM@Stock
   # FleetList=HistSim@OM@Fleet
   # 
   # Complexes=HistSim@OM@Complexes
   # TimeSteps =  tail(HistTimeSteps,OM@TimeStepsPerYear)
   # maxF=OM@maxF
-  
+  # 
   # TODO - check if varies over simulations
   
   RefPointTimeSteps <- GetRefPointTimeSteps(OM) # historical time steps to calculate ref points
@@ -101,29 +101,13 @@ Simulate_om <- function(OM=NULL,
   SimList <- CalcDynamicUnfished(SimList)
   
   # ---- Optimize for Final Depletion ----
-  # # check if catchability values exist
-  Catchability <- purrr::map(SimList, \(HistSim) {
-    purrr::map(HistSim@OM@Fleet, \(StockFleet)
-               apply(StockFleet@Effort@Catchability, 2, max)
-    ) |>
-      List2Array('Stock')
-  })|> List2Array()
-  
-  # TODO - check if CatchFrac exists for multiple fleets
-  if (!(all(Catchability>1E-5))) {
-    if (parallel) {
-      cli::cli_progress_message("Optimizing catchability (q) for Final Depletion")
-      SimList <- .lapply(HistSimList, OptimizeCatchability)
-      cli::cli_progress_done()
-    } else {
-      SimList <- purrr::map(SimList, \(HistSim)
-                                OptimizeCatchability(HistSim),
-                                .progress = list(
-                                  type = "iterator",
-                                  format = "Optimizing catchability (q) for Final Depletion {cli::pb_bar} {cli::pb_percent}",
-                                  clear = TRUE))
-    }
-  }
+  SimList <- purrr::map(SimList, \(HistSim)
+                        OptimizeCatchability(HistSim),
+                        .progress = list(
+                          type = "iterator",
+                          format = "Optimizing catchability (q) for Final Depletion {cli::pb_bar} {cli::pb_percent}",
+                          clear = TRUE))
+
 
   # ---- Historical Population Dynamics ----
   

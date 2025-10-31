@@ -147,7 +147,8 @@ List CalcAggF_(arma::cube FDeadAtAgeAreaThisTS, // nAge, nFleet, nArea
 
 // [[Rcpp::export]]
 S4 CalcAggregateF_(S4 HistSimIn,
-                   Rcpp::NumericVector TimeSteps) {
+                   Rcpp::NumericVector TimeSteps, 
+                   int debug=0) {
   
   S4 HistSim = clone(HistSimIn);
   S4 OM = HistSim.slot("OM");
@@ -170,7 +171,6 @@ S4 CalcAggregateF_(S4 HistSimIn,
   List LandingsList = HistSim.slot("Landings");
   List DiscardsList =  HistSim.slot("Discards"); 
   
- 
   for (int timestep=0; timestep<nTS; timestep++) {
     NumericVector TSmatch = abs(TimeStepsAll - TimeSteps[timestep]);
     int TSindex = which_min(TSmatch);
@@ -182,24 +182,15 @@ S4 CalcAggregateF_(S4 HistSimIn,
       S4 NaturalMortality = Stock.slot("NaturalMortality");
       arma::mat NaturalMortalityAtAge = NaturalMortality.slot("MeanAtAge");
       
-    
       S4 Fleet = FleetList[st];
-      
-      S4 FleetEffort = Fleet.slot("Effort");
-      arma::mat Catchability = FleetEffort.slot("Catchability"); // nTS, nFleet
-      
       S4 Selectivity = Fleet.slot("Selectivity");
       arma::cube SelectivityAtAge = Selectivity.slot("MeanAtAge"); // nAge, nTS, nFleet
-      
       
       S4 Retention = Fleet.slot("Retention");
       arma::cube RetentionAtAge = Retention.slot("MeanAtAge"); // nAge, nTS, nFleet
       
       S4 DiscardMortality = Fleet.slot("DiscardMortality");
       arma::cube DiscardMortalityAtAge = DiscardMortality.slot("MeanAtAge"); // nAge, nTS, nFleet
-      
-      S4 Distribution = Fleet.slot("Distribution"); 
-      arma::cube ClosureArea = Distribution.slot("Closure"); // nTS, nFleet, nArea
       
       List LandingsStock = LandingsList[st]; // nTS
       List DiscardsStock = DiscardsList[st]; // nTS

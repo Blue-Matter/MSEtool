@@ -3,12 +3,14 @@ OM2obs <- function(OM, cpars=NULL) {
   Obs <- SubOM(OM, 'Obs')
   obs@Name <- Obs@Name
   
-  
-  obs@Removals@Bias <- Obs@Cbiascv
-  obs@Removals@CV <- Obs@Cobs
-  
   obs@Landings@Bias <- Obs@Cbiascv
   obs@Landings@CV <- Obs@Cobs
+  
+  obs@Discards@Bias <- Obs@Cbiascv
+  obs@Discards@CV <- Obs@Cobs
+  
+  # obs@Landings@Bias <- Obs@Cbiascv
+  # obs@Landings@CV <- Obs@Cobs
   
   obs@CPUE@CV <- Obs@Iobs
   obs@CPUE@Beta <-  Obs@beta

@@ -5,8 +5,9 @@
 using namespace Rcpp;
 
 // [[Rcpp::export]]
-S4 CalcCatch_(S4 HistSimIn,
-              Rcpp::NumericVector TimeSteps) {
+Rcpp::S4 CalcCatch_(Rcpp::S4 HistSimIn,
+                    Rcpp::NumericVector TimeSteps,
+                    int debug=0) {
   
  
   S4 HistSim = clone(HistSimIn);

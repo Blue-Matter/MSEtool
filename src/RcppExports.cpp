@@ -45,26 +45,75 @@ BEGIN_RCPP
 END_RCPP
 }
 // CalcAggregateF_
-S4 CalcAggregateF_(S4 HistSimIn, Rcpp::NumericVector TimeSteps);
-RcppExport SEXP _MSEtool_CalcAggregateF_(SEXP HistSimInSEXP, SEXP TimeStepsSEXP) {
+S4 CalcAggregateF_(S4 HistSimIn, Rcpp::NumericVector TimeSteps, int debug);
+RcppExport SEXP _MSEtool_CalcAggregateF_(SEXP HistSimInSEXP, SEXP TimeStepsSEXP, SEXP debugSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< S4 >::type HistSimIn(HistSimInSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcAggregateF_(HistSimIn, TimeSteps));
+    Rcpp::traits::input_parameter< int >::type debug(debugSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcAggregateF_(HistSimIn, TimeSteps, debug));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcBiomass_
+double CalcBiomass_(arma::mat NumberAtAgeArea, arma::vec WeightAtAge);
+RcppExport SEXP _MSEtool_CalcBiomass_(SEXP NumberAtAgeAreaSEXP, SEXP WeightAtAgeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type NumberAtAgeArea(NumberAtAgeAreaSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type WeightAtAge(WeightAtAgeSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcBiomass_(NumberAtAgeArea, WeightAtAge));
     return rcpp_result_gen;
 END_RCPP
 }
 // CalcCatch_
-S4 CalcCatch_(S4 HistSimIn, Rcpp::NumericVector TimeSteps);
-RcppExport SEXP _MSEtool_CalcCatch_(SEXP HistSimInSEXP, SEXP TimeStepsSEXP) {
+Rcpp::S4 CalcCatch_(Rcpp::S4 HistSimIn, Rcpp::NumericVector TimeSteps, int debug);
+RcppExport SEXP _MSEtool_CalcCatch_(SEXP HistSimInSEXP, SEXP TimeStepsSEXP, SEXP debugSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< S4 >::type HistSimIn(HistSimInSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type HistSimIn(HistSimInSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcCatch_(HistSimIn, TimeSteps));
+    Rcpp::traits::input_parameter< int >::type debug(debugSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcCatch_(HistSimIn, TimeSteps, debug));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcNumberNext_
+arma::mat CalcNumberNext_(arma::mat NumberAtAgeAreaThisTS, arma::mat NumberAtAgeAreaNextTS, arma::vec Semelparous, arma::cube FDeadAtAgeAreaThisTS, arma::vec NaturalMortalityAtAgeThisTS, bool plusgroup, int nAge, int nArea);
+RcppExport SEXP _MSEtool_CalcNumberNext_(SEXP NumberAtAgeAreaThisTSSEXP, SEXP NumberAtAgeAreaNextTSSEXP, SEXP SemelparousSEXP, SEXP FDeadAtAgeAreaThisTSSEXP, SEXP NaturalMortalityAtAgeThisTSSEXP, SEXP plusgroupSEXP, SEXP nAgeSEXP, SEXP nAreaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type NumberAtAgeAreaThisTS(NumberAtAgeAreaThisTSSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type NumberAtAgeAreaNextTS(NumberAtAgeAreaNextTSSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type Semelparous(SemelparousSEXP);
+    Rcpp::traits::input_parameter< arma::cube >::type FDeadAtAgeAreaThisTS(FDeadAtAgeAreaThisTSSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type NaturalMortalityAtAgeThisTS(NaturalMortalityAtAgeThisTSSEXP);
+    Rcpp::traits::input_parameter< bool >::type plusgroup(plusgroupSEXP);
+    Rcpp::traits::input_parameter< int >::type nAge(nAgeSEXP);
+    Rcpp::traits::input_parameter< int >::type nArea(nAreaSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcNumberNext_(NumberAtAgeAreaThisTS, NumberAtAgeAreaNextTS, Semelparous, FDeadAtAgeAreaThisTS, NaturalMortalityAtAgeThisTS, plusgroup, nAge, nArea));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcRecruitment_
+double CalcRecruitment_(double SProduction, double R0, double SP0, double RecDev, Function SRRModel, List SRRPars, int TSindex);
+RcppExport SEXP _MSEtool_CalcRecruitment_(SEXP SProductionSEXP, SEXP R0SEXP, SEXP SP0SEXP, SEXP RecDevSEXP, SEXP SRRModelSEXP, SEXP SRRParsSEXP, SEXP TSindexSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type SProduction(SProductionSEXP);
+    Rcpp::traits::input_parameter< double >::type R0(R0SEXP);
+    Rcpp::traits::input_parameter< double >::type SP0(SP0SEXP);
+    Rcpp::traits::input_parameter< double >::type RecDev(RecDevSEXP);
+    Rcpp::traits::input_parameter< Function >::type SRRModel(SRRModelSEXP);
+    Rcpp::traits::input_parameter< List >::type SRRPars(SRRParsSEXP);
+    Rcpp::traits::input_parameter< int >::type TSindex(TSindexSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcRecruitment_(SProduction, R0, SP0, RecDev, SRRModel, SRRPars, TSindex));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -82,6 +131,21 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type FDeadAtAgeArea(FDeadAtAgeAreaSEXP);
     Rcpp::traits::input_parameter< double >::type SpawnTimeFrac(SpawnTimeFracSEXP);
     rcpp_result_gen = Rcpp::wrap(CalcSpawnProduction_(NumberAtAgeArea, FecundityAtAge, MaturityAtAge, WeightAtAge, NaturalMortalityAtAge, FDeadAtAgeArea, SpawnTimeFrac));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcStockMovement_
+arma::cube CalcStockMovement_(arma::cube NumberAtAgeArea, arma::cube Movement, int nAge, int nArea, int TSindex);
+RcppExport SEXP _MSEtool_CalcStockMovement_(SEXP NumberAtAgeAreaSEXP, SEXP MovementSEXP, SEXP nAgeSEXP, SEXP nAreaSEXP, SEXP TSindexSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::cube >::type NumberAtAgeArea(NumberAtAgeAreaSEXP);
+    Rcpp::traits::input_parameter< arma::cube >::type Movement(MovementSEXP);
+    Rcpp::traits::input_parameter< int >::type nAge(nAgeSEXP);
+    Rcpp::traits::input_parameter< int >::type nArea(nAreaSEXP);
+    Rcpp::traits::input_parameter< int >::type TSindex(TSindexSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcStockMovement_(NumberAtAgeArea, Movement, nAge, nArea, TSindex));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -428,9 +492,13 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_CalcAgeSizeKey_", (DL_FUNC) &_MSEtool_CalcAgeSizeKey_, 5},
     {"_MSEtool_CalcFfromCatch_", (DL_FUNC) &_MSEtool_CalcFfromCatch_, 8},
-    {"_MSEtool_CalcAggregateF_", (DL_FUNC) &_MSEtool_CalcAggregateF_, 2},
-    {"_MSEtool_CalcCatch_", (DL_FUNC) &_MSEtool_CalcCatch_, 2},
+    {"_MSEtool_CalcAggregateF_", (DL_FUNC) &_MSEtool_CalcAggregateF_, 3},
+    {"_MSEtool_CalcBiomass_", (DL_FUNC) &_MSEtool_CalcBiomass_, 2},
+    {"_MSEtool_CalcCatch_", (DL_FUNC) &_MSEtool_CalcCatch_, 3},
+    {"_MSEtool_CalcNumberNext_", (DL_FUNC) &_MSEtool_CalcNumberNext_, 8},
+    {"_MSEtool_CalcRecruitment_", (DL_FUNC) &_MSEtool_CalcRecruitment_, 7},
     {"_MSEtool_CalcSpawnProduction_", (DL_FUNC) &_MSEtool_CalcSpawnProduction_, 7},
+    {"_MSEtool_CalcStockMovement_", (DL_FUNC) &_MSEtool_CalcStockMovement_, 5},
     {"_MSEtool_vecminInd", (DL_FUNC) &_MSEtool_vecminInd, 1},
     {"_MSEtool_LinInterp_cpp", (DL_FUNC) &_MSEtool_LinInterp_cpp, 3},
     {"_MSEtool_MSYCalcs", (DL_FUNC) &_MSEtool_MSYCalcs, 17},

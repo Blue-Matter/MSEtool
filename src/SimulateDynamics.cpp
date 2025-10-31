@@ -1,10 +1,16 @@
 #include <RcppArmadillo.h>
 #include "check.h"
-#include "calculate.h"
+#include "CalcVBiomass.h"
+#include "CalcEffortDistribution.h"
+#include "CalcFMortality.h"
 #include "CalcCatch.h"
 #include "CalcSpawnProduction.h"
+#include "CalcRecruitment.h"
+#include "CalcBiomass.h"
 #include "CalcAggregateF.h"
-#include "PopulateNumberNext.h"
+#include "CalcStockMovement.h"
+#include "CalcNumberNext.h"
+
 //[[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::plugins("cpp11")]]
 using namespace Rcpp;
@@ -33,7 +39,7 @@ S4 SimulateDynamics_(S4 HistSimIn,
   arma::mat Biomass = HistSim.slot("Biomass"); // nStock, nTS
   arma::mat SBiomass = HistSim.slot("SBiomass"); // nStock, nTS
   arma::mat SProduction = HistSim.slot("SProduction"); // nStock, nTS
-  List EffortAreaList = HistSim.slot("EffortArea"); // nStock
+  List DistributionList = HistSim.slot("Distribution"); // nStock
   arma::cube EffortCube = HistSim.slot("Effort"); // nStock, nTS, nFleet
   
   int nStock = NumberAtAgeAreaList.size();
@@ -87,9 +93,10 @@ S4 SimulateDynamics_(S4 HistSimIn,
       
       S4 Fleet = FleetList[st];
       
-      S4 FleetEffort = Fleet.slot("Effort");
-      arma::mat Catchability = FleetEffort.slot("Catchability"); // nTS, nFleet
-      
+      arma::mat Catchability = Fleet.slot("Catchability"); // nTS, nFleet
+      arma::cube qArea = Fleet.slot("qArea"); // nTS, nFleet, nArea
+      arma::cube Distribution = DistributionList[st]; // TimeStep, Fleet, Area 
+     
       S4 Selectivity = Fleet.slot("Selectivity");
       arma::cube SelectivityAtAge = Selectivity.slot("MeanAtAge"); // nAge, nTS, nFleet
     
@@ -99,9 +106,7 @@ S4 SimulateDynamics_(S4 HistSimIn,
       S4 DiscardMortality = Fleet.slot("DiscardMortality");
       arma::cube DiscardMortalityAtAge = DiscardMortality.slot("MeanAtAge"); // nAge, nTS, nFleet
       
-      S4 Distribution = Fleet.slot("Distribution"); 
-      arma::cube ClosureArea = Distribution.slot("Closure"); // nTS, nFleet, nArea
-      
+      arma::cube ClosureArea = Fleet.slot("Closure"); // nTS, nFleet, nArea
       arma::cube FleetWeightAtAge = Fleet.slot("WeightFleet") ; // nAge, nTS, nFleet
 
       // Calculate VBiomass by Area
@@ -112,10 +117,10 @@ S4 SimulateDynamics_(S4 HistSimIn,
       if (debug)
         Rcout << "VBiomassArea" << std::endl;
       
-      arma::mat VBiomassArea = CalcVBiomass(NumberAtAgeArea.col(TSindex), // nAge, nArea
-                                            FleetWeightAtAge.col(TSindex), // nAge, nFleet
-                                            SelectivityAtAge.col(TSindex), // nAge, nFleet
-                                            ClosureArea.row(TSindex)); // nFleet, nArea
+      arma::mat VBiomassArea = CalcVBiomass_(NumberAtAgeArea.col(TSindex), // nAge, nArea
+                                             FleetWeightAtAge.col(TSindex), // nAge, nFleet
+                                             SelectivityAtAge.col(TSindex), // nAge, nFleet
+                                             ClosureArea.row(TSindex)); // nFleet, nArea
       
       // Distribute Effort over Areas
       // currently proportional to VB - ie no SpatTarg
@@ -123,29 +128,26 @@ S4 SimulateDynamics_(S4 HistSimIn,
         Rcout << "Effort" << std::endl;
       
       int nFleet = VBiomassArea.n_rows;
-      arma::cube EffortArea = EffortAreaList[st]; // nTS, nFleet, nArea
-      bool EffortAreaEmpty = all(arma::vectorise(EffortArea.row(TSindex)) < 1E-6);
+      bool EffortAreaEmpty = all(arma::vectorise(Distribution.row(TSindex)) < 1E-6);
       
       if (debug)
         Rcout << "EffortAreaEmpty = " << EffortAreaEmpty << std::endl;
       
       if (EffortAreaEmpty) {
-        EffortArea.subcube(arma::span(TSindex), arma::span(0, nFleet-1), arma::span(0, nArea-1))= 
-          CalcEffortDistribution(VBiomassArea, 
+        Distribution.subcube(arma::span(TSindex), arma::span(0, nFleet-1), arma::span(0, nArea-1))= 
+          CalcEffortDistribution_(VBiomassArea, 
                                  EffortCube.subcube(arma::span(st), arma::span(TSindex), arma::span(0, nFleet-1)), nArea);
   
       }
-      EffortAreaList[st] = EffortArea;
-      
-      
-
+      DistributionList[st] = Distribution;
+    
       // Calculate F within each Area
       if (debug) 
         Rcout << "FMortFleetArea" << std::endl;
       
-      List FMortFleetArea = CalcFMortality(EffortArea.row(TSindex), // nFleet, nArea,
+      List FMortFleetArea = CalcFMortality_(Distribution.row(TSindex), // nFleet, nArea,
                                            arma::vectorise(Catchability.row(TSindex)), // nFleet
-                                           RelativeSize, // nArea
+                                           qArea.row(TSindex), // Fleet, Area
                                            SelectivityAtAge.col(TSindex), // nAge, nFleet
                                            RetentionAtAge.col(TSindex), // nAge, nFleet
                                            DiscardMortalityAtAge.col(TSindex), // nAge, nFleet
@@ -159,9 +161,7 @@ S4 SimulateDynamics_(S4 HistSimIn,
       FDeadAtAgeAreaList[st] = FDeadAtAgeAreaStock;
       FRetainAtAgeAreaList[st] = FRetainAtAgeAreaStock;
       
-      
       // Calc Spawning Production and Spawning Biomass
-      // (first calculate by area and then summed over areas)
       if (debug)
         Rcout << "SProductSBiomass" << std::endl;
       
@@ -237,7 +237,6 @@ S4 SimulateDynamics_(S4 HistSimIn,
         // NOTE: uses SP0 and R0 from first time step
         // Uses aggregate SProduction - ie summed over areas
         // TODO option to use time-varying alpha, beta
-        
         
         // double SP = arma::as_scalar(SProduction.row(st).col(TSindex));
         // Rcout << "SP = " << SP << std::endl;
@@ -337,7 +336,7 @@ S4 SimulateDynamics_(S4 HistSimIn,
       arma::mat WeightAtAge = Weight.slot("MeanAtAge");
       
       arma::mat NumberAtAgeAreaThisTS = NumberAtAgeArea.subcube(arma::span(0, nAge-1), arma::span(TSindex), arma::span(0, nArea-1));
-      Biomass.row(st).col(TSindex) = CalcBiomass(NumberAtAgeAreaThisTS, WeightAtAge.col(TSindex));
+      Biomass.row(st).col(TSindex) = CalcBiomass_(NumberAtAgeAreaThisTS, WeightAtAge.col(TSindex));
   
       if (debug) {
         double BIOMASS = arma::as_scalar(Biomass.row(st).col(TSindex));
@@ -348,22 +347,20 @@ S4 SimulateDynamics_(S4 HistSimIn,
 
   } // end of Time Step loop
  
-  
 
-  
   HistSim.slot("Number") = NumberAtAgeAreaList;
   HistSim.slot("Biomass") = Biomass;
   HistSim.slot("SBiomass") = SBiomass;
   HistSim.slot("SProduction") = SProduction;
-  HistSim.slot("EffortArea") = EffortAreaList;
+  HistSim.slot("Distribution") = DistributionList;
   HistSim.slot("Effort") = EffortCube;
   HistSim.slot("FDeadArea") = FDeadAtAgeAreaList;
   HistSim.slot("FRetainArea") = FRetainAtAgeAreaList;
   
   // CalcCatch and overall F
   if (CalcCatch>0) {
-    HistSim = CalcCatch_(HistSim, TimeSteps);
-    HistSim = CalcAggregateF_(HistSim, TimeSteps);
+    HistSim = CalcCatch_(HistSim, TimeSteps, debug);
+    HistSim = CalcAggregateF_(HistSim, TimeSteps, debug);
   }
   
   

@@ -9,16 +9,32 @@ CalcFfromCatch_ <- function(NumberAtAge, RemovalNAtAge, SelectivityAtAge, Retent
     .Call(`_MSEtool_CalcFfromCatch_`, NumberAtAge, RemovalNAtAge, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, NaturalMortalityAtAge, MaxIt, tolF)
 }
 
-CalcAggregateF_ <- function(HistSimIn, TimeSteps) {
-    .Call(`_MSEtool_CalcAggregateF_`, HistSimIn, TimeSteps)
+CalcAggregateF_ <- function(HistSimIn, TimeSteps, debug = 0L) {
+    .Call(`_MSEtool_CalcAggregateF_`, HistSimIn, TimeSteps, debug)
 }
 
-CalcCatch_ <- function(HistSimIn, TimeSteps) {
-    .Call(`_MSEtool_CalcCatch_`, HistSimIn, TimeSteps)
+CalcBiomass_ <- function(NumberAtAgeArea, WeightAtAge) {
+    .Call(`_MSEtool_CalcBiomass_`, NumberAtAgeArea, WeightAtAge)
+}
+
+CalcCatch_ <- function(HistSimIn, TimeSteps, debug = 0L) {
+    .Call(`_MSEtool_CalcCatch_`, HistSimIn, TimeSteps, debug)
+}
+
+CalcNumberNext_ <- function(NumberAtAgeAreaThisTS, NumberAtAgeAreaNextTS, Semelparous, FDeadAtAgeAreaThisTS, NaturalMortalityAtAgeThisTS, plusgroup, nAge, nArea) {
+    .Call(`_MSEtool_CalcNumberNext_`, NumberAtAgeAreaThisTS, NumberAtAgeAreaNextTS, Semelparous, FDeadAtAgeAreaThisTS, NaturalMortalityAtAgeThisTS, plusgroup, nAge, nArea)
+}
+
+CalcRecruitment_ <- function(SProduction, R0, SP0, RecDev, SRRModel, SRRPars, TSindex) {
+    .Call(`_MSEtool_CalcRecruitment_`, SProduction, R0, SP0, RecDev, SRRModel, SRRPars, TSindex)
 }
 
 CalcSpawnProduction_ <- function(NumberAtAgeArea, FecundityAtAge, MaturityAtAge, WeightAtAge, NaturalMortalityAtAge, FDeadAtAgeArea, SpawnTimeFrac = 0) {
     .Call(`_MSEtool_CalcSpawnProduction_`, NumberAtAgeArea, FecundityAtAge, MaturityAtAge, WeightAtAge, NaturalMortalityAtAge, FDeadAtAgeArea, SpawnTimeFrac)
+}
+
+CalcStockMovement_ <- function(NumberAtAgeArea, Movement, nAge, nArea, TSindex) {
+    .Call(`_MSEtool_CalcStockMovement_`, NumberAtAgeArea, Movement, nAge, nArea, TSindex)
 }
 
 vecminInd <- function(x) {

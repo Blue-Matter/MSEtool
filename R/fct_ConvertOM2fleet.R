@@ -5,17 +5,22 @@ OM2fleet <- function(OM, cpars=NULL, Fdisc=NULL) {
   } else {
     fleet@Name <- OM@Name
   }
- 
-  FishingMortality(fleet) <- OM2FishingMortality(OM, cpars)
-  DiscardMortality(fleet) <- OM2DiscardMortality(OM, cpars, Fdisc)
-  Effort(fleet) <- OM2Effort(OM, cpars)
+  
+  # FishingMortality(fleet) <- OM2FishingMortality(OM, cpars)
+  
+  fleet@Effort <- OM2Effort(OM, cpars)
+  Catchability <- OM2Catchability(OM, cpars) 
+  fleet@Catchability <- Catchability$Catchability
+  fleet@qCV <- Catchability$qCV
+  fleet@qInc <- Catchability$qInc
+  
   Selectivity(fleet) <- OM2Selectivity(OM, cpars)
   Retention(fleet) <- OM2Retention(OM, cpars)
+  fleet@DiscardMortality <- OM2DiscardMortality(OM, cpars, Fdisc)
+
+  # fleet@Closure <- # OM@MPA # TODO
+  fleet@Targeting <- OM@Spat_targ
   
-  # SpatTarg
-  Distribution(fleet) <- OM2Distribution(OM, cpars)
-  
-  # Weight
   fleet@WeightFleet <- process_cpars(cpars$Wt_age_C)
   
   # BioEco
@@ -23,17 +28,27 @@ OM2fleet <- function(OM, cpars=NULL, Fdisc=NULL) {
   fleet
 }
 
-OM2FishingMortality <- function(OM, cpars=NULL) {
+OM2Catchability <- function(OM, cpars=NULL) {
   if (is.null(cpars) & inherits(OM, 'OM'))
     cpars <- OM@cpars
-  if (!EmptyObject(cpars)) {
-    FishingMortality <- cpars2FishingMortality(cpars)
-  } else {
-    FishingMortality <- FishingMortality()
-  }
   
-  FishingMortality
+  if (length(cpars))
+    stop('Not done yet!')
+  
+  list(Catchability=tiny, qCV=OM@qcv, qInc=OM@qinc)
 }
+
+# OM2FishingMortality <- function(OM, cpars=NULL) {
+#   if (is.null(cpars) & inherits(OM, 'OM'))
+#     cpars <- OM@cpars
+#   if (!EmptyObject(cpars)) {
+#     FishingMortality <- cpars2FishingMortality(cpars)
+#   } else {
+#     FishingMortality <- FishingMortality()
+#   }
+#   
+#   FishingMortality
+# }
 
 cpars2FishingMortality <- function(cpars) {
   FishingMortality <- FishingMortality()
@@ -64,19 +79,14 @@ OM2Effort <- function(OM, cpars=NULL) {
   if (is.null(cpars) & inherits(OM, 'OM'))
     cpars <- OM@cpars
   if (!EmptyObject(cpars)) {
-    Effort <- cpars2Effort(cpars)
-  } else {
-    Effort <- Effort()
+    stop('not done yet!')
+    # Effort <- cpars2Effort(cpars)
   }
-  if (is.null(Effort@Effort)) {
-    Effort@Effort <- data.frame(TimeStep=OM@EffYears,
-                                Lower=OM@EffLower,
-                                Upper=OM@EffUpper,
-                                CV=OM@Esd[1])
-  } 
-  Effort@qCV <- OM@qcv
-  Effort@qInc <- OM@qinc
-  Effort
+  
+  data.frame(TimeStep=OM@EffYears,
+             Lower=OM@EffLower,
+             Upper=OM@EffUpper,
+             CV=OM@Esd[1])
 }
 
 cpars2Effort <- function(cpars) {

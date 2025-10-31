@@ -21,14 +21,21 @@
 #' @export
 setClass('fleet',
          slots=c(Name='char.null',
-                 Effort='effort',
-                 Catchability='catchability',
+                 Effort='num.array.df',
+                 Units='char.null', # effort units
+                 Distribution='num.array',
+                 
+                 Catchability='num.array',
+                 qCV='num.array',
+                 qInc='num.array',
+                 qArea='num.array',
+                 
                  Selectivity='selectivity',
                  Retention='retention',
                  DiscardMortality='discardmortality',
                 
-                 Closure='num.array',
-                 Targetting='num.array',
+                 Closure='num.array', # historical spatial closures
+                 Targeting='num.array', # spatial targeting - not currently used
                  
                  WeightFleet='array.null',
                  BioEconomic='list',
@@ -39,55 +46,72 @@ setClass('fleet',
                  CurrentYear='num.null',
                  TimeUnits='char.null',
                  TimeSteps='num.null',
-                 TimeStepsPerYear='num.null',
-                 Misc='list'
-         )
+                 TimeStepsPerYear='num.null'
+         ),
+         contains = c('MiscClass')
 )
 
 
 setMethod("initialize", "fleet", function(.Object,
                                           Name=NULL,
-                                          Effort=new('effort'),
-                                          Catchability=new('catchability'),
+                                          Effort=array(),
+                                          Units=NULL,
+                                          Distribution=array(),
+                                          Catchability=array(),
+                                          qCV=NULL,
+                                          qInc=NULL,
+                                          qArea=array(),
                                           Selectivity=new('selectivity'),
                                           Retention=new('retention'),
                                           DiscardMortality=new('discardmortality'),
                                           Closure=array(),
-                                          Targetting=array(),
+                                          Targeting=array(),
                                           WeightFleet=array(),
                                           BioEconomic=list(),
                                           Misc=list()) {
   
   .Object@Name <- Name
   .Object@Effort <- Effort
+  .Object@Units <- Units
+  .Object@Distribution <- Distribution
+  
   .Object@Catchability <- Catchability
+  .Object@qCV <- qCV
+  .Object@qInc <- qInc
+  .Object@qArea <- qArea
+  
   .Object@Selectivity <- Selectivity
   .Object@Retention <- Retention
   .Object@DiscardMortality <- DiscardMortality
+  
   .Object@Closure <- Closure
-  .Object@Targetting <- Targetting
+  .Object@Targeting <- Targeting
+  
   .Object@WeightFleet <- WeightFleet
   .Object@BioEconomic <- BioEconomic
   .Object@Misc <- Misc
   
-  #   .Object@Created <- Sys.time()
-  # methods::validObject(.Object)
   .Object
 })
 
 #' @describeIn FleetClass Create a new `Fleet` object
 #' @export
-Fleet <- function(Name=NULL,
-                  Effort=new('effort'),
-                  Catchability=new('catchability'),
-                  Selectivity=new('selectivity'),
-                  Retention=new('retention'),
-                  DiscardMortality=new('discardmortality'),
-                  Closure=array(),
-                  Targetting=array(),
-                  WeightFleet=array(),
-                  BioEconomic=list(),
-                  Misc=list()) {
+Fleet <- function( Name=NULL,
+                   Effort=array(),
+                   Units=NULL,
+                   Distribution=array(),
+                   Catchability=array(),
+                   qCV=NULL,
+                   qInc=NULL,
+                   qArea=array(),
+                   Selectivity=new('selectivity'),
+                   Retention=new('retention'),
+                   DiscardMortality=new('discardmortality'),
+                   Closure=array(),
+                   Targeting=array(),
+                   WeightFleet=array(),
+                   BioEconomic=list(),
+                   Misc=list()) {
   
   if (methods::is(Name, 'om'))
     return(Name@Fleet)
@@ -95,12 +119,17 @@ Fleet <- function(Name=NULL,
   methods::new('fleet',
                Name=Name,
                Effort=Effort,
+               Units=Units,
+               Distribution=Distribution,
                Catchability=Catchability,
+               qCV=qCV,
+               qInc=qInc,
+               qArea=qArea,
                Selectivity=Selectivity,
                Retention=Retention,
                DiscardMortality=DiscardMortality,
                Closure=Closure,
-               Targetting=Targetting,
+               Targeting=Targeting,
                WeightFleet=WeightFleet,
                BioEconomic=BioEconomic,
                Misc=Misc)

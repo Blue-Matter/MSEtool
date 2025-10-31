@@ -15,15 +15,15 @@ OptimizeCatchability <- function(HistSim) {
   
   if (nStock > 1 || nFleet > 1) {
     
-    # multi stock/fleet
-    QMatrix <- matrix(0, nStock, nFleet) 
-    for (st in 1:nStock) {
-      QMatrix[st,] <- apply(HistSim@OM@Fleet[[st]]@Effort@Catchability, 2, max)
-    }
-
-    if (all(QMatrix>1E-5))
+    FinalDepletion <- purrr::map(HistSim@OM@Stock, \(stock) stock@Depletion@Final) |>
+      List2Array('Stock')
+    
+    if (!length(FinalDepletion))
       return(HistSim)
-     
+    
+    stop('OptimizeCatchability not complete for multiOM')
+    
+
     # Catch divided by effort (q proxy)
     CatchFrac <- List2Array(HistSim@OM@CatchFrac, dimname = 'Stock') |> t()
     EffortFleet <- array(NA, dim=dim(CatchFrac))
@@ -56,8 +56,9 @@ OptimizeCatchability <- function(HistSim) {
     pars <- doOpt$par
   } else {
       # single stock/fleet
-      q1 <- HistSim@OM@Fleet[[1]]@Effort@Catchability[1,1]
-      if (q1>tiny)
+      FinalDepletion <- HistSim@OM@Stock[[1]]@Depletion@Final
+      
+      if (!length(FinalDepletion))
         return(HistSim)
       
       doOpt <- stats::optimize(OptCatchability,
@@ -102,7 +103,9 @@ OptimizeCatchability <- function(HistSim) {
     
     for (st in 1:nStock) {
       for (fl in 1:nFleet) {
-        HistSim@OM@Fleet[[st]]@Effort@Catchability[, fl] <- qStock[st] * qFleet[st,fl]
+        StCatchability <- HistSim@OM@Fleet[[st]]@Catchability[,fl]
+        StCatchability <- StCatchability/StCatchability[1]
+        HistSim@OM@Fleet[[st]]@Catchability[,fl] <- StCatchability * qStock[st] * qFleet[st,fl]
       }
     }
   
@@ -121,10 +124,10 @@ OptCatchability <- function(pars, HistSim, TimeStepsHist, debug=FALSE) {
   DepletionReference <- unlist(lapply(HistSim@OM@Stock, \(stock) stock@Depletion@Reference))
   
   if (length(DepletionTarget)!= nStock)
-    cli::cli_abort("`Effort@Catchability` not set for first time step and no value set for `Depletion@Final`")
+    cli::cli_abort("`Depletion@Final` not set for all Stocks")
   
   if (length(DepletionReference)!= nStock)
-    cli::cli_abort("`Effort@Catchability` not set for first time step and no value set for `Depletion@Reference`")
+    cli::cli_abort("`Depletion@Reference` not set for all Stocks")
   
   if (nFleet > 1) {
     qlogit <- matrix(0, nStock, nFleet)
@@ -134,15 +137,33 @@ OptCatchability <- function(pars, HistSim, TimeStepsHist, debug=FALSE) {
  
   for (st in 1:nStock) {
     for (fl in 1:nFleet) {
-      # TODO add qinc and qcv here
-      HistSim@OM@Fleet[[st]]@Effort@Catchability[,fl] <- qStock[st] * qFleet[st,fl]
+      StCatchability <- HistSim@OM@Fleet[[st]]@Catchability[,fl]
+      StCatchability <- StCatchability/StCatchability[1]
+      HistSim@OM@Fleet[[st]]@Catchability[,fl] <- StCatchability * qStock[st] * qFleet[st,fl]
     }
   }
     
-  TermInd <-  length(TimeStepsHist)
+  TermInd <- length(TimeStepsHist)
   PopDynamicsHistorical <- SimulateDynamics_(HistSim,
                                              TimeStepsHist,
                                              CalcCatch = 0)
+  
+  ##############################################################################
+  # PopDynamicsHistorical@Biomass[st,TermInd]/RefVal
+  # 
+  # PopDynamicsHistorical@OM@Fleet$Albacore@qArea[1,,]
+  # 
+  # 
+  # HistSim@Effort
+  # HistSim@OM@Fleet[[st]]@Catchability[,fl]
+  # PopDynamicsHistorical@FDeadArea$Albacore$`1977`[,1,]
+  # 
+  # qStock = 5
+  # 
+  # 
+  # 
+  # # stop()
+  ##############################################################################
  
   # Depletion objective
   PredDep <- rep(NA, nStock)

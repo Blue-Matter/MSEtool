@@ -14,7 +14,17 @@ la()
 
 OM <- ConvertOM(testOM)
 
+
+
+
+
 OM@Fleet$Albacore$Generic_Fleet
+
+parallel=FALSE
+silent=FALSE
+nSim=NULL
+RefPointsMSY=TRUE
+Reduce=TRUE
 
 
 Hist <- Simulate(OM)

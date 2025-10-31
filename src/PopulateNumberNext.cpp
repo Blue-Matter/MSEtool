@@ -1,5 +1,7 @@
 #include <RcppArmadillo.h>
-#include "calculate.h"
+#include "CalcNumberNext.h"
+#include "CalcStockMovement.h"
+
 //[[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::plugins("cpp11")]]
 using namespace Rcpp;
