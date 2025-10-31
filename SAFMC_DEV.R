@@ -88,7 +88,20 @@ CompareBAM(Stock='BlackSeaBass', OM=OM_BSB)
 
 # ---- Gag Grouper ----
 
+
 stop()
+
+# - no longer correct after updates for slots 
+
+BAMdata <- GetBAMOutput('GagGrouper')
+
+OM <- ImportBAM('GagGrouper')
+Hist <- Simulate(OM)
+
+# TODO - MSY ref points calculated per sim??
+Hist@FDead$`SA Gag Grouper`[1,,,]
+Hist@Biomass[1,,]
+
 
 #### ------ UP TO HERE -------
 
