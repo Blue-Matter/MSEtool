@@ -206,15 +206,9 @@ OM_VS <- ImportBAM(Stock='VermilionSnapper',
                    StockName='Vermilion Snapper',
                    DiscSelFleets=c(rGN="sel.m.rHB.D"))
 
-OM_VS@Fleet$`Vermilion Snapper`$cOT@Effort
-OM_VS@Fleet$`Vermilion Snapper`$cTW@Effort
-
 CompareBAM('VermilionSnapper', OM=OM_VS)
 
 
-OM <- OM_VS
-
-Hist <- Simulate(OM)
 
 
 
