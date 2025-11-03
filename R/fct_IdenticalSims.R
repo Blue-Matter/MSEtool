@@ -22,13 +22,52 @@ IdenticalSims <- function(SimList, TimeSteps, EditSlots=TRUE) {
   TRUE
 }
 
-CheckIdenticalSims <- function(HistSimList, TimeSteps=NULL, Period='Historical') {
+# CheckIdenticalSims(SimList, Equilibrium=TRUE)
+
+# FindDiffSlots <- function(object1, object2) {
+#   if (class(object1) != class(object2))
+#     cli::cli_abort('Both objects must be the same class')
+#   
+#   digest::digest(object1, algo='spookyhash')
+#   digest::digest(object2, algo='spookyhash')
+#   
+#   
+#   digest::digest(object1@OM@Stock[[1]]@SRR, algo='spookyhash')
+#   digest::digest(object2@OM@Stock[[1]]@SRR, algo='spookyhash')
+#   
+#   slots <- slotNames(object1)
+#   
+#   for (i in seq_along(slots)) {
+#     sub1 <- slot(object1, slots[i])
+#     sub2 <- slot(object2, slots[i])
+#     
+#     
+#   }
+#   
+#   
+# }
+
+
+
+
+# Equilibrium = ignores recruitment deviations
+CheckIdenticalSims <- function(SimList, 
+                               TimeSteps=NULL, 
+                               Period=c('Historical', 'Projection', 'All'), 
+                               Equilibrium=FALSE) {
+  
+  Period <- match.arg(Period)
+  
   if (is.null(TimeSteps))
-    TimeSteps <- TimeSteps(HistSimList[[1]]@OM, Period)
-  Digest <- vector('character', length(HistSimList)) 
-  for (i in seq_along(HistSimList)) {
-    HistSimList[[i]]@OM@Stock <- lapply(HistSimList[[i]]@OM@Stock, EditSlotsForSimCheck)
-    Digest[i] <- digest::digest(HistSimList[[i]], algo='spookyhash')
+    TimeSteps <- TimeSteps(SimList[[1]]@OM, Period)
+  Digest <- vector('character', length(SimList)) 
+  
+  for (i in seq_along(SimList)) {
+    if (Equilibrium) {
+      SimList[[i]]@OM@Stock <- lapply(SimList[[i]]@OM@Stock, EditSlotsForSimCheck)
+    }
+     
+    Digest[i] <- digest::digest(SimList[[i]], algo='spookyhash')
     if (Digest[i] != Digest[1]) {
       return(FALSE)
     } 
@@ -36,7 +75,7 @@ CheckIdenticalSims <- function(HistSimList, TimeSteps=NULL, Period='Historical')
   TRUE
 }
 
-
+# removes rec devs so no differences across sims
 EditSlotsForSimCheck <- function(object) {
   if (!isS4(object)) {
     for (i in seq_along(object))
@@ -48,19 +87,20 @@ EditSlotsForSimCheck <- function(object) {
     object2 <- slot(object, nm)
     if (!isS4(object2))
       next()
+    
     if (inherits(object2, 'srr')) {
-      dimnames(object2@RecDevInit) <- NULL
-      names(object2@RecDevInit) <- NULL
-      object2@RecDevInit <- array(object2@RecDevInit)
+      object2@RecDevInit <-  array()
+      object2@RecDevHist <-  array()
       object2@RecDevProj <- array()
     }
     
-    slots <- slotNames(object2)
-    
-    if (!'Pars' %in% slots)
-      next()
-    object2@Pars <- list()
     slot(object, nm) <- object2
+    
+    # slots <- slotNames(object2)
+    # if (!'Pars' %in% slots)
+    #   next()
+    # object2@Pars <- list()
+    
   }
   object
 }

@@ -868,36 +868,6 @@ aperm <- function(a, perm, ...) {
 
 
 
-# EditSlotsForSimCheck <- function(object, TimeSteps) {
-#   # TODO subset time dimension to check for identical historical
-#   nms <- slotNames(object)
-#   
-#   for (nm in nms) {
-#     object2 <- slot(object, nm)
-#     if (!isS4(object2))
-#       next()
-#     
-#     if (inherits(object2, 'srr')) {
-#       dimnames(object2@RecDevInit) <- NULL
-#       names(object2@RecDevInit) <- NULL
-#       object2@RecDevInit <- array(object2@RecDevInit)
-#       object2@RecDevProj <- array()
-#     }
-#     
-#     slots <- slotNames(object2)
-# 
-#     # if ('MeanAtAge' %in% slots) 
-#     #   object2@MeanAtAge <- ArraySubsetTimeStep(object2@MeanAtAge, TimeSteps)
-#     #   
-#   
-#     if (!'Pars' %in% slots)
-#       next()
-#     object2@Pars <- list()
-#     slot(object, nm) <- object2
-#   }
-#   object
-# }
-
 
 
 # slots <- slotNames(HistSimList[[1]]@OM@Fleet$Female)

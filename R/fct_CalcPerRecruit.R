@@ -1,5 +1,6 @@
 
 CalcFleetAllocationF <- function(FleetList, TimeSteps) {
+  
   BySim <- "Sim" %in% (FleetList[[1]]@Effort |> dimnames() |> names())
   FDistribution <- purrr::map(FleetList, \(Stock) {
     ArrayMultiply(Stock@Effort |>  ArraySubsetTimeStep(TimeSteps),

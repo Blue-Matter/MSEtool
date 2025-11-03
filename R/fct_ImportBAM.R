@@ -572,7 +572,7 @@ BAM2Fleet <- function(Stock,
   for (fl in seq_along(RetainFleets)) {
     fleet <- Fleet(Name=RetainFleets[fl])
     thisFleetEffort <- apicalEffort[,fl, drop=FALSE]
-    thisFleetEffort[] <- thisFleetEffort[,1]/tail(thisFleetEffort[,1],1)
+    thisFleetEffort[] <- thisFleetEffort[,1]/mean(thisFleetEffort[,1])
     
     fleet@Effort <- AddDimension(thisFleetEffort, 'Sim') |>
       abind::adrop(2) |> aperm(c('Sim', 'TimeStep'))

@@ -136,7 +136,7 @@ S4 SimulateDynamics_(S4 HistSimIn,
       if (EffortAreaEmpty) {
         Distribution.subcube(arma::span(TSindex), arma::span(0, nFleet-1), arma::span(0, nArea-1))= 
           CalcEffortDistribution_(VBiomassArea, 
-                                 EffortCube.subcube(arma::span(st), arma::span(TSindex), arma::span(0, nFleet-1)), nArea);
+                                  EffortCube.subcube(arma::span(st), arma::span(TSindex), arma::span(0, nFleet-1)), nArea);
   
       }
       DistributionList[st] = Distribution;

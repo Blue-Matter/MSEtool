@@ -3,9 +3,22 @@ la <- devtools::load_all
 la()
 
 
+LoadArgs <- function(fun='Simulate') {
+  
+  formals <- get(fun) |> formals()
+  args <- names(formals)
+  for (i in seq_along(args))
+    assign(args[i], formals[[i]], envir = .GlobalEnv)
+  
+}
+
+LoadArgs()
+
+
+
 dir <- "C:/Users/Admin/Documents/GitHub/SAFMC-MSE"
 
-dir <- "C:/Users/Adrian/Documents/GitHub/SAFMC-MSE"
+# dir <- "C:/Users/Adrian/Documents/GitHub/SAFMC-MSE"
 
 
 source(file.path(dir,'0. Specifications.R'))
@@ -64,9 +77,6 @@ Hist2@RefPointsMSY
 # Ref Points - compare BAM and OM 
 
 
-# Red Snapper - latest
-# TODO
-
 # ---- Black Sea Bass ----
 
 # SEDAR 76 
@@ -88,24 +98,6 @@ CompareBAM(Stock='BlackSeaBass', OM=OM_BSB)
 
 # ---- Gag Grouper ----
 
-
-stop()
-
-# - no longer correct after updates for slots 
-
-BAMdata <- GetBAMOutput('GagGrouper')
-
-OM <- ImportBAM('GagGrouper')
-Hist <- Simulate(OM)
-
-# TODO - MSY ref points calculated per sim??
-Hist@FDead$`SA Gag Grouper`[1,,,]
-Hist@Biomass[1,,]
-
-
-#### ------ UP TO HERE -------
-
-
 # SEDAR 71 
 # 1962 - 2019
 # https://sedarweb.org/documents/sedar-71-stock-assessment-report-south-atlantic-gag/
@@ -114,15 +106,13 @@ OM_GG <- ImportBAM(Stock='GagGrouper', nSim=nSim, pYear=pYear, StockName='Gag Gr
 CompareBAM('GagGrouper', OM=OM_GG) 
 
 
-
-
 # ---- Gray Triggerfish ----
 
 # SEDAR 82
 # 1982- 2021
 # https://sedarweb.org/documents/sedar-82-south-atlantic-gray-triggerfish-final-stock-assessment-report/
 
-OM_GT <- ImportBAM(Stock, 
+OM_GT <- ImportBAM(Stock='GrayTriggerfish', 
                    nSim=nSim, 
                    pYear=pYear,
                    StockName='Gray Triggerfish',
@@ -170,7 +160,7 @@ CompareBAM('RedPorgy', OM=OM_RP)
 # 1950 - 2019
 # https://sedarweb.org/documents/sedar-73-stock-assessment-report-south-atlantic-red-snapper/
   
-OM_RS <- ImportBAM('RedSnapper', nSim=nSim, pYear=pYear StockName='Red Snapper')
+OM_RS <- ImportBAM('RedSnapper', nSim=nSim, pYear=pYear, StockName='Red Snapper')
 CompareBAM('RedSnapper', OM=OM_RS)
 
 # ---- Red Snapper - Update ----
@@ -210,25 +200,21 @@ CompareBAM('Tilefish', OM=OM_TF)
 # 1946 - 2016 
 # https://sedarweb.org/documents/sedar-55-stock-assessment-report-south-atlantic-vermilion-snapper/
   
-OM_VS <- ImportBAM(Stock='VermilionSnapper', nSim=nSim, pYear=pYear,
+OM_VS <- ImportBAM(Stock='VermilionSnapper',
+                   nSim=nSim, 
+                   pYear=pYear,
                    StockName='Vermilion Snapper',
                    DiscSelFleets=c(rGN="sel.m.rHB.D"))
+
+OM_VS@Fleet$`Vermilion Snapper`$cOT@Effort
+OM_VS@Fleet$`Vermilion Snapper`$cTW@Effort
+
 CompareBAM('VermilionSnapper', OM=OM_VS)
 
 
+OM <- OM_VS
 
-
-
-
-
-
-
-
-
-
-
-
-
+Hist <- Simulate(OM)
 
 
 

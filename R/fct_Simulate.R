@@ -78,18 +78,32 @@ Simulate_om <- function(OM=NULL,
   RefPointTimeSteps <- GetRefPointTimeSteps(OM) # historical time steps to calculate ref points
 
   if (inherits(RefPointsMSY, 'logical') && RefPointsMSY) {
-    SimList <- purrr::map(SimList, \(HistSim) {
-      HistSim@RefPointsMSY <- CalculateMSYSim(StockList=HistSim@OM@Stock,
-                                      FleetList=HistSim@OM@Fleet,                                  
-                                      Complexes=HistSim@OM@Complexes,
-                                      TimeSteps = RefPointTimeSteps,
-                                      maxF=OM@maxF)
     
+    if (CheckIdenticalSims(SimList, Equilibrium=TRUE)) {
+      SimOne <- SimList[[1]]
+      SimOne@RefPointsMSY <- CalculateMSYSim(StockList=SimOne@OM@Stock,
+                                              FleetList=SimOne@OM@Fleet,                                  
+                                              Complexes=SimOne@OM@Complexes,
+                                              TimeSteps = RefPointTimeSteps,
+                                              maxF=OM@maxF)
+      
+      SimList <- purrr::map(SimList, \(HistSim) {
+        HistSim@RefPointsMSY <- SimOne@RefPointsMSY
+        HistSim
+      })
+    } else {
+      SimList <- purrr::map(SimList, \(HistSim) {
+        HistSim@RefPointsMSY <- CalculateMSYSim(StockList=HistSim@OM@Stock,
+                                                FleetList=HistSim@OM@Fleet,                                  
+                                                Complexes=HistSim@OM@Complexes,
+                                                TimeSteps = RefPointTimeSteps,
+                                                maxF=OM@maxF)
       HistSim
     }, .progress = list(
       type = "iterator",
       format = "Calculating MSY Reference Points {cli::pb_bar} {cli::pb_percent}",
       clear = TRUE))
+    }
   } else if (inherits(RefPointsMSY, 'refpointsMSY')) {
     Hist@RefPointsMSY <- RefPointsMSY
   }

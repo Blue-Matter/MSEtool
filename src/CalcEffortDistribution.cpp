@@ -2,8 +2,8 @@
 #include "check.h"
 
 arma::mat CalcEffortDistribution_(arma::mat VBiomassFleetArea, // nFleet, nArea
-                                 arma::vec Effort,
-                                 int nArea) {  // nFleet
+                                  arma::vec Effort,
+                                  int nArea) {  // nFleet
   
   int nFleet = VBiomassFleetArea.n_rows;
   
