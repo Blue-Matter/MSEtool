@@ -262,7 +262,7 @@ CalcTimeSteps <- function(nYear, pYear, CurrentYear, TimeUnits='year', Period=NU
   
   TimeUnits <- tolower(TimeUnits)
   
-  if (CurrentYear<1900) {
+  if (CurrentYear<1900 && TimeUnits=='year') {
     # not in year units
     hist <- seq(CurrentYear, by=-1, length.out=nYear) |> rev()
     proj <- seq(CurrentYear+1, by=1, length.out=pYear)
@@ -310,8 +310,8 @@ CalcTimeSteps <- function(nYear, pYear, CurrentYear, TimeUnits='year', Period=NU
     hist <- seq(FirstHistYear, LastHistYear, by='6 months') |> lubridate::decimal_date()
     proj <- seq(FirstProjYear, LastProjYear, by='6 months') |> lubridate::decimal_date()
   } else if (TimeUnits=='quarter') {
-    hist <- seq(FirstHistYear, LastHistYear, by='4 months') |> lubridate::decimal_date()
-    proj <- seq(FirstProjYear, LastProjYear, by='4 months') |> lubridate::decimal_date()
+    hist <- seq(FirstHistYear, LastHistYear, by='3 months') |> lubridate::decimal_date()
+    proj <- seq(FirstProjYear, LastProjYear, by='3 months') |> lubridate::decimal_date()
   } else if (TimeUnits=='month') {
     hist <- seq(FirstHistYear, LastHistYear, by='1 month') |> lubridate::decimal_date()
     proj <- seq(FirstProjYear, LastProjYear, by='1 month') |> lubridate::decimal_date()

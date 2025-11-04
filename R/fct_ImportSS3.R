@@ -1,15 +1,200 @@
-# Import <- function(dir=NULL,
-#                    nSim=48,
-#                    pYear=50, ...) {
-#   list.files(dir)
-#   
-# }
+GetSSTimeUnits <- function(replist) {
+  TimeStepsPerYear <- ifelse(is.null(replist$nseasons), 1, replist$nseasons)
+  if (TimeStepsPerYear==1) {
+    TimeUnits <- 'year'
+  } else if (TimeStepsPerYear==4) {
+    TimeUnits <- 'quarter'
+  } else {
+    cli::cli_abort(
+      "{.val {TimeStepsPerYear}} TimeSteps Per Year currently not supported",
+      .internal=TRUE)
+  }
+  
+  if (!is.null(replist$seasdurations)) {
+    if (!all(replist$seasdurations/mean(replist$seasdurations) == 1))
+      cli::cli_abort(
+        "Season durations not equal. Currently not supported", 
+        .internal=TRUE)
+  }
+  TimeUnits
+}
+
+GetSSTimeSteps <- function(replist, pYear=30) {
+  FirstHistYear <- replist$startyr
+  LastHistYear <- replist$endyr
+  HistYears <- FirstHistYear:LastHistYear
+  nYear <- length(HistYears)
+  
+  TimeUnits <- GetSSTimeUnits(replist)
+  TimeStepsHist <- CalcTimeSteps(nYear, pYear, LastHistYear, TimeUnits, 'Historical')
+  TimeStepsProj <-  CalcTimeSteps(nYear, pYear, LastHistYear, TimeUnits, 'Projection')
+
+  list(nYear=nYear,
+       CurrentYear=LastHistYear, 
+       TimeSteps=c(TimeStepsHist, TimeStepsProj),
+       TimeUnits=TimeUnits,
+       TimeStepsPerYear=TSperYear(TimeUnits)
+  )
+}
+
+ProcessSS_StockName <- function(StockName, nStock) {
+  if (is.null(StockName)) {
+    if (nStock==1) {
+      StockName <- 'Combined Sex'
+    } else if (nStock==2) {
+      StockName <- c('Female', 'Male')
+    } else {
+      cli::cli_abort('`nStock` should be {.val {1} or {2}}')
+    }
+  }
+  
+  if (length(StockName)!=nStock)
+    cli::cli_abort('`StockName` ({.val {StockName}}) should be length `nStock` ({.val {nStock}})')
+  StockName
+}
+
+## Import SS  ----
+#' Import an OM from SS3 Output
+#' @param x Either a character string  
+#' @export
+ImportSS <- function(SSDir,     
+                     Name = "Imported SS3 Model",
+                     nSim=48,
+                     pYear=30, 
+                     Agency='',
+                     Author='',
+                     Email='',
+                     Region='',
+                     Latitude=numeric(),
+                     Longitude=numeric(),
+                     Sponsor='',
+                     StockName=NULL,
+                     CommonName=NULL,
+                     Species=NULL,
+                     FleetNames=NULL,
+                     Interval=1,
+                     DataLag=0,
+                     silent=FALSE,
+                     ...) {
+  OnExit()
+  RepList <- ImportSSReport(SSDir, silent, ...)
+  nStock <- RepList[[1]]$nsexes
+  nFleet <- RepList[[1]]$nfishfleets
+  
+  DotsList <- list(...)
+  if (!is.null(DotsList$nsim))
+    nSim <- DotsList$nsim
+  
+  if(!silent) 
+    cli::cli_alert('{.val {nStock}-sex} and {.val {nFleet}-fleet} model detected.')
+  
+  if (length(RepList)>1) 
+    nSim <- length(RepList)
+  
+  OM <- OM(Name=Name, 
+           Agency=Agency, 
+           Author=Author, 
+           Email=Email, 
+           Region=Region, 
+           Latitude=Latitude,
+           Longitude=Longitude,
+           Sponsor=Sponsor, 
+           Interval=Interval,
+           DataLag=DataLag,
+           nSim=nSim)
+  
+  TimeStepsList <- GetSSTimeSteps(RepList[[1]], pYear)
+  OM@nYear <- TimeStepsList$nYear
+  OM@pYear <- pYear
+  OM@CurrentYear <- TimeStepsList$CurrentYear
+  OM@TimeSteps <- TimeStepsList$TimeSteps
+  OM@TimeUnits <- TimeStepsList$TimeUnits
+  
+  StockName <- ProcessSS_StockName(StockName, nStock)
+  OM@Stock <- purrr::map(seq_along(StockName), \(st) {
+    stock <- SS2Stock(st, RepList, pYear, nSim=nSim)
+    stock@Name <- StockName[st]
+    stock@CommonName <- CommonName[st]
+    stock@Species <- Species[st]
+    stock
+  })
+  names(OM@Stock) <- StockName
+  
+  endgrowth <- GetEndGrowth(st, replist)
+  endgrowth$Wt_Beg
+  GetSS_Length_at_Age
+  endgrowth$Len_Beg
+  
+  endgrowth$Age_Mid
+  
+  OM@Stock$Female@Weight@MeanAtAge
+  replist$mean_body_wt
+  
+  
+  OM@Stock$Female@Weight@MeanAtAge
+  OM@Stock$Male@Weight@MeanAtAge
+  
+  OM@Fleet <- MakeNamedList(StockName, list())
+  SSFleetNames <- RepList[[1]]$catch$Fleet_Name |> unique()
+  nFleet <- length(SSFleetNames)
+  if (is.null(FleetNames)) 
+    FleetNames <- SSFleetNames
+  
+  if (length(FleetNames)!=nFleet)
+    cli::cli_abort('`FleetNames` should be length `nFleet`: {.val {nFleet}}')
+  
+  for (st in seq_along(OM@Fleet)) {
+    OM@Fleet[[st]] <- MakeNamedList(FleetNames, new('fleet'))
+    for (fl in seq_along(FleetNames)) {
+      OM@Fleet[[st]][[fl]] <- SS2Fleet(st, fl, RepList, mainyrs, Stock=OM@Stock[[st]])
+    }
+  }
+  
+  OM@Data <- list(ImportSSData(RepList, OM@Name))
+  names(OM@Data) <- paste(StockName, collapse=' ')
+  
+  # Obs
+  SurveyNames <- OM@Data[[1]]@Survey@Name
+  AllFleetNames <- c(FleetNames, SurveyNames) |> unique()
+  OM@Obs <- MakeNamedList(names(OM@Data), MakeNamedList(AllFleetNames, new('obs')))
+  OM <- ProcessSurveyObsSelectivity(OM, RepList)
+  
+  # OM@Imp - TODO 
+  
+  Allocation <- MakeNamedList(StockName)
+  AgeClasses <- GetSSAgeClasses(RepList[[1]])
+  
+  for (st in 1:nStock) {
+    CatchFrac <-  RepList[[1]]$catage |> DropXXCols() |> 
+      dplyr::filter(Sex==st, Yr==max(mainyrs)) |>
+      tidyr::pivot_longer(as.character(AgeClasses)) |>
+      dplyr::group_by(Fleet) |>
+      dplyr::summarise(Catch=sum(value), .groups='drop') |>
+      dplyr::reframe(Catch=Catch/sum(Catch)) |> 
+      dplyr::pull(Catch)
+    
+    Allocation[[st]] <-  array(CatchFrac, 
+                               dim=c(1, nFleet), 
+                               dimnames = list(Sim=1,
+                                               Fleet=FleetNames))
+    
+  }
+  OM@Allocation <- Allocation
+  
+  
+  # OM@Efactor - TODO - update to different name 
+  # OM@Complexes
+  # OM@SexPars
+  # OM@Relations
+  
+  # CatchFrac
+  # Data
+  # etc 
+  
+  PopulateOM(OM)
+}
 
 
-
-
-
-# ---- SS3 ----
 
 ## --- Stock ----
 GetEndGrowth <- function(st,replist) {
@@ -436,9 +621,7 @@ GetSS_Effort <- function(st, fl, replist, mainyrs, type=c('Effort', 'q')) {
   FInteract <- replist$fatage |> 
     dplyr::filter(Sex==st, Fleet==fl, Yr %in% mainyrs)
   
-  AgeClasses <- suppressWarnings(as.numeric(colnames(FInteract)))
-  AgeClasses <- AgeClasses[!is.na(AgeClasses)]
-  
+  AgeClasses <- GetSSAgeClasses(replist)
   FInteract <- t(FInteract[,as.character(AgeClasses)])
   dimnames(FInteract) <- list(Age=AgeClasses,
                               TimeStep=mainyrs)
@@ -461,7 +644,7 @@ GetSS_Effort <- function(st, fl, replist, mainyrs, type=c('Effort', 'q')) {
 }
 
 SS2Effort <- function(st, fl, RepList, mainyrs) {
-  Effort <- Effort()
+  
   RelEffort <- purrr::map(RepList, \(replist)
                           GetSS_Effort(st, fl, replist, mainyrs))
   
@@ -738,150 +921,6 @@ SS2Fleet <- function(st, fl, RepList, mainyrs, Stock) {
   Fleet
 }
 
-## Import SS  ----
-#' Import an OM from SS3 Output
-#' @param x Either a character string  
-#' @export
-ImportSS <- function(x,     
-                     Name = "Imported SS3 Model",
-                     nSim=48,
-                     pYear=30, 
-                     Agency='',
-                     Author='',
-                     Email='',
-                     Region='',
-                     Latitude=numeric(),
-                     Longitude=numeric(),
-                     Sponsor='',
-                     StockName=NULL,
-                     CommonName=NULL,
-                     Species=NULL,
-                     FleetNames=NULL,
-                     Interval=1,
-                     DataLag=0,
-                     silent=FALSE,
-                     ...) {
-  OnExit()
-  RepList <- ImportSSReport(x, silent, ...)
-  nStock <- RepList[[1]]$nsexes
-  nFleet <- RepList[[1]]$nfishfleets
-  
-  DotsList <- list(...)
-  if (!is.null(DotsList$nsim))
-    nSim <- DotsList$nsim
-  
-
-  if(!silent) 
-    cli::cli_alert('{.val {nStock}-sex} and {.val {nFleet}-fleet} model detected.')
-  
-  if (length(RepList)>1) 
-    nSim <- length(RepList)
-  
-  OM <- OM(Name=Name, 
-           Agency=Agency, 
-           Author=Author, 
-           Email=Email, 
-           Region=Region, 
-           Latitude=Latitude,
-           Longitude=Longitude,
-           Sponsor=Sponsor, 
-           Interval=Interval,
-           DataLag=DataLag)
-  
-  OM@nSim <- nSim
-  FirstHistYear <- RepList[[1]]$startyr
-  LastHistYear <- RepList[[1]]$endyr
-  
-  mainyrs <- FirstHistYear:LastHistYear
-  OM@nYear <- length(mainyrs)
-  OM@pYear <- pYear
-  OM@CurrentYear <- max(mainyrs)
-  ProYears <- seq(max(mainyrs)+1, by=1, length.out=pYear)
-  OM@TimeSteps <- c(mainyrs, ProYears)
-  
-  if (is.null(StockName)) {
-    if (nStock==1) {
-      StockName <- 'Combined Sex'
-    } else if (nStock==2) {
-      StockName <- c('Female', 'Male')
-    } else {
-      cli::cli_abort('`nStock` should be {.val {1} or {2}}')
-    }
-  }
-  
-  if (length(StockName)!=nStock)
-    cli::cli_abort('`StockName` ({.val {StockName}}) should be length `nStock` ({.val {nStock}})')
-  
-  OM@Stock <- purrr::map(seq_along(StockName), \(st) {
-    stock <- SS2Stock(st, RepList, pYear, nSim=nSim)
-    stock@Name <- StockName[st]
-    stock@CommonName <- CommonName[st]
-    stock@Species <- Species[st]
-    stock
-  })
-  names(OM@Stock) <- StockName
-  
-  OM@Fleet <- MakeNamedList(StockName, list())
-  SSFleetNames <- RepList[[1]]$catch$Fleet_Name |> unique()
-  nFleet <- length(SSFleetNames)
-  if (is.null(FleetNames)) 
-    FleetNames <- SSFleetNames
-    
-  if (length(FleetNames)!=nFleet)
-    cli::cli_abort('`FleetNames` should be length `nFleet`: {.val {nFleet}}')
-  
-  
-  for (st in seq_along(OM@Fleet)) {
-    OM@Fleet[[st]] <- MakeNamedList(FleetNames, new('fleet'))
-    for (fl in seq_along(FleetNames)) {
-      OM@Fleet[[st]][[fl]] <- SS2Fleet(st, fl, RepList, mainyrs, OM@Stock[[st]])
-    }
-  }
-  
-  OM@Data <- list(ImportSSData(RepList, OM@Name))
-  names(OM@Data) <- paste(StockName, collapse=' ')
-  
-  # Obs
-  SurveyNames <- OM@Data[[1]]@Survey@Name
-  AllFleetNames <- c(FleetNames, SurveyNames) |> unique()
-  OM@Obs <- MakeNamedList(names(OM@Data), MakeNamedList(AllFleetNames, new('obs')))
-  OM <- ProcessSurveyObsSelectivity(OM, RepList)
-  
-  # OM@Imp - TODO 
-  
-  Allocation <- MakeNamedList(StockName)
-  AgeClasses <- GetSSAgeClasses(RepList[[1]])
-  
-  for (st in 1:nStock) {
-    CatchFrac <-  RepList[[1]]$catage |> DropXXCols() |> 
-      dplyr::filter(Sex==st, Yr==max(mainyrs)) |>
-      tidyr::pivot_longer(as.character(AgeClasses)) |>
-      dplyr::group_by(Fleet) |>
-      dplyr::summarise(Catch=sum(value), .groups='drop') |>
-      dplyr::reframe(Catch=Catch/sum(Catch)) |> 
-      dplyr::pull(Catch)
-                    
-    Allocation[[st]] <-  array(CatchFrac, 
-                               dim=c(1, nFleet), 
-                               dimnames = list(Sim=1,
-                                               Fleet=FleetNames))
-    
-  }
-  OM@Allocation <- Allocation
-  
-
-  # OM@Efactor - TODO - update to different name 
-  # OM@Complexes
-  # OM@SexPars
-  # OM@Relations
-  
-  # CatchFrac
-  # Data
-  # etc 
-  
-  PopulateOM(OM)
-}
-
 
 
 ProcessSurveyObsSelectivity <- function(OM, RepList) {
@@ -948,30 +987,30 @@ GetSSRepList <- function(SSdir, silent=FALSE, ...) {
 
 #' @describeIn ImportSS Import SS3 Report
 #' @export
-ImportSSReport <- function(x, silent=FALSE, parallel=TRUE, ...) {
+ImportSSReport <- function(SSDir, silent=FALSE, parallel=TRUE, ...) {
   OnExit()
-  if (inherits(x, 'list')) {
-    if (inherits(x[[1]], 'list')) {
-      names(x) <- 1:length(x)
-      return(x)
-    } else if (!is.null(x$SS_version)) {
-      RepList <- list(x)
+  if (inherits(SSDir, 'list')) {
+    if (inherits(SSDir[[1]], 'list')) {
+      names(SSDir) <- 1:length(SSDir)
+      return(SSDir)
+    } else if (!is.null(SSDir$SS_version)) {
+      RepList <- list(SSDir)
       names(RepList) <- 1:length(RepList)
       return(RepList)
     } else {
-      cli::cli_abort('`x` is a list but does not appear to be generated by `r4ss::SS_output`')
+      cli::cli_abort('`SSDir` is a list but does not appear to be generated by `r4ss::SS_output`')
     }
   } 
-  if (inherits(x, 'character')) {
-    if (length(x)>1) {
+  if (inherits(SSDir, 'character')) {
+    if (length(SSDir)>1) {
       # 
-      AllSSFiles <- lapply(x, list.files)
+      AllSSFiles <- lapply(SSDir, list.files)
       ReportExists <- lapply(AllSSFiles, function(x) sum(grepl('^Report.sso', x))) |> 
         unlist()
       ind <- which(ReportExists<1)
       if (length(ind)>0) {
         cli::cli_alert_warning('Warning: SS3 output is not available in {?directory/directories}: {.val {basename(x[ind])}}. \nSkipping {?this/these} {?directory/directories} ...')
-        x <- x[-ind]
+        SSDir <- SSDir[-ind]
       }
       
       
@@ -998,7 +1037,7 @@ ImportSSReport <- function(x, silent=FALSE, parallel=TRUE, ...) {
       #   )
       # }
       
-      RepList <- purrr::map(x, \(SSdir) GetSSRepList(SSdir, silent=TRUE, ...),
+      RepList <- purrr::map(SSDir, \(SSdir) GetSSRepList(SSdir, silent=TRUE, ...),
                             .progress=  list(
                               caller = environment(),
                               format =  'Reading SS3 Output from {.val {length(x)}} directories {cli::pb_bar} {cli::pb_percent}')
@@ -1007,7 +1046,7 @@ ImportSSReport <- function(x, silent=FALSE, parallel=TRUE, ...) {
       names(RepList) <- 1:length(RepList)
       return(RepList)
     } else {
-      RepList <- list(GetSSRepList(x, silent, ...))
+      RepList <- list(GetSSRepList(SSDir, silent, ...))
       names(RepList) <- 1:length(RepList)
       return(RepList)
     }
@@ -1016,13 +1055,13 @@ ImportSSReport <- function(x, silent=FALSE, parallel=TRUE, ...) {
 
 ## Import SS Data ----
 
-ImportSSData <- function(x,  
+ImportSSData <- function(SSDir,  
                          Name="Imported by ImportSSData", 
                          CommonName = "", 
                          Species = "",
                          silent=FALSE, ...) {
   OnExit()
-  RepList <- ImportSSReport(x, silent, ...)
+  RepList <- ImportSSReport(SSDir, silent, ...)
   replist <- RepList[[1]]
   nStock <- replist$nsexes
   
