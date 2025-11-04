@@ -2,7 +2,6 @@
 #include <RcppArmadillo.h>
 #include "check.h"
 //[[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::plugins("cpp11")]]
 using namespace Rcpp;
 
 // [[Rcpp::export]]

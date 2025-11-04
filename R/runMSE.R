@@ -1,4 +1,22 @@
 
+#' @describeIn runMSE Run the Historical Simulations from an object of class `OM` or class `om`
+#' @export
+#
+Simulate <- function(OM=MSEtool::testOM, 
+                     parallel=FALSE, 
+                     silent=FALSE, 
+                     nsim=NULL, 
+                     nSim=NULL, ...) {
+  
+  if (!is.null(nsim))
+    nSim <- nsim
+  
+  if (inherits(OM, 'om'))
+    return(Simulate_om(OM, parallel, silent, nSim, ...))
+  
+  SimulateOM(OM, parallel, silent, nSim, ...)
+}
+
 SimulateOM <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL) {
   
   if (!is.null(nsim)) {
@@ -1079,7 +1097,14 @@ Project <- function (Hist=NULL,
                      parallel=FALSE,
                      silent=FALSE,
                      extended=FALSE,
-                     checkMPs=FALSE) {
+                     checkMPs=FALSE,
+                     nSim=NULL, 
+                     Reduce=TRUE) {
+  
+  if (inherits(Hist, 'hist'))
+    return(
+      Project_hist(Hist, MPs, parallel, silent, nSim, Reduce)
+    )
   
   if (inherits(Hist, 'multiHist'))
     return(

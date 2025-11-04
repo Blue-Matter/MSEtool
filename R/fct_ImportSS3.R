@@ -331,12 +331,15 @@ GetSS_R0 <- function(st, replist) {
   N_at_age[[as.character(min(AgeClasses))]] |> sum(na.rm=TRUE)
 }
 
-SS2SRR <- function(st, RepList, mainyrs, AgeClasses, pYear, nSim) {
+SS2SRR <- function(st, RepList, mainyrs, Ages, pYear, nSim) {
   
   SRR <- SRR()
   
   SD <- purrr::map(RepList, \(replist) replist$sigma_R_in) |> unlist()
   SRR@SD <- as.numeric(SD) 
+  
+  
+  AgeClasses <- Ages@Classes
   
   # option for time-varying SD?
   # array(SD, dim=c(nSim, length(mainyrs))) |>
@@ -381,7 +384,7 @@ SS2SRR <- function(st, RepList, mainyrs, AgeClasses, pYear, nSim) {
   
   RecDevs <- GenerateRecruitmentDeviations(SD=SRR@SD, 
                                            AC=SRR@AC, 
-                                           MaxAge = max(AgeClasses),
+                                           Ages = Ages,
                                            nHistTS=length(mainyrs), 
                                            nProjTS=pYear,
                                            nsim=nSim,
@@ -414,7 +417,7 @@ SS2Stock <- function(st, RepList, pYear, nSim) {
   Stock@Maturity <- SS2Maturity(st, RepList, mainyrs, AgeClasses)
   Stock@Fecundity <- SS2Fecundity(st, RepList, mainyrs, AgeClasses)
   Stock@Depletion <- SS2Depletion(st, RepList, mainyrs)
-  Stock@SRR <- SS2SRR(st, RepList, mainyrs, AgeClasses, pYear, nSim)
+  Stock@SRR <- SS2SRR(st, RepList, mainyrs, Ages=Stock@Ages, pYear, nSim)
   Stock@nYear <- length(mainyrs)
   Stock@pYear <- pYear
   Stock@nSim <- nSim
@@ -1320,7 +1323,7 @@ CompareSSLandings <- function(replist, Hist) {
   mainyrs <- replist$startyr:replist$endyr
   AgeClasses <- GetSSAgeClasses(replist$natage)
   
-  HistLandings <- Landings(Hist, ByFleet=TRUE) |>
+  HistLandings <- Landings(Hist, byFleet=TRUE) |>
     dplyr::mutate(Model='Import') |>
     dplyr::filter(Sim==1) |>
     dplyr::group_by(TimeStep, Fleet, Model) |>
@@ -1366,7 +1369,7 @@ CompareSSRemovals <- function(replist, Hist) {
   mainyrs <- replist$startyr:replist$endyr
   AgeClasses <- GetSSAgeClasses(replist$natage)
   
-  HistRemovals <- Removals(Hist, ByFleet=TRUE) |>
+  HistRemovals <- Removals(Hist, byFleet=TRUE) |>
     dplyr::mutate(Model='Import') |>
     dplyr::filter(Sim==1) |>
     dplyr::group_by(TimeStep, Fleet, Model) |>

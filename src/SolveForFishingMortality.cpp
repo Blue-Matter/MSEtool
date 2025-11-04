@@ -1,8 +1,6 @@
 #include <RcppArmadillo.h>
 //[[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::plugins("cpp11")]]
 using namespace Rcpp;
-
 
 // [[Rcpp::export]]
 List SolveForFishingMortality(arma::vec NumberAtAge, // nAge

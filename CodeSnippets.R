@@ -335,35 +335,6 @@ setMethod("initialize", "effort", function(.Object,
   .Object
 })
 
-#' @describeIn Effort Create a new `effort` class object
-#' @export
-Effort <- function(Vessels=NULL,
-                   Trips=NULL,
-                   MaxVessels=NULL,
-                   MaxTrips=NULL,
-                   Distribution=NULL,
-                   Units=c('Vessels', 'Trips'),
-                   Misc=list()) {
-  if (methods::is(Effort, 'fleet'))
-    return(Effort@Effort)
-  
-  methods::new('effort',
-               Vessels=Vessels,
-               Trips=Trips,
-               MaxVessels=MaxVessels,
-               MaxTrips=MaxTrips,
-               Distribution=Distribution,
-               Units=Units,
-               Misc=Misc)
-}
-
-#' @describeIn Effort Assign an `Effort` object to a [Fleet()] object
-#' @param x A [Fleet()] class object
-#' @param value A `Effort` object to assign to `x`
-#' @export
-`Effort<-` <- function(x, value) {
-  assignSlot(x, value, 'Effort')
-}
 
 
 

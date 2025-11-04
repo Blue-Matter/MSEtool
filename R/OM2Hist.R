@@ -21,7 +21,7 @@ CopySlots <- function(ObjectOut,
   ObjectOut
 }
 
-OM2Hist <- function(OM, silent=FALSE) {
+OM2Hist <- function(OM, RefPointsMSY=TRUE, silent=FALSE) {
   
   if (!silent) 
     id <- cli::cli_progress_bar("Initializing `Hist` Object")  
@@ -74,6 +74,10 @@ OM2Hist <- function(OM, silent=FALSE) {
   
   if (!silent) 
     cli::cli_progress_done()
+  
+  if (inherits(RefPointsMSY, 'refpointsMSY')) {
+    Hist@RefPointsMSY <- RefPointsMSY
+  }
 
   Hist
 }
@@ -433,7 +437,7 @@ Hist2SimList <- function(Hist) {
     
   
 # Convert SimList back to Hist
-SimList2Hist <- function(Hist, SimList, TimeSteps=NULL) {
+SimList2Hist <- function(Hist, SimList, TimeSteps=NULL, Reduce=TRUE ) {
   
   if (is.null(TimeSteps))
     TimeSteps <- TimeSteps(Hist@OM, "Historical")
@@ -483,13 +487,22 @@ SimList2Hist <- function(Hist, SimList, TimeSteps=NULL) {
     Hist@Data <- HistData
   }
 
-  Hist
+  
+  # Check for Depletion Optimization 
+  # TODO - warning message or re-sample 
+  OptDepletionRatio <- CheckDepletionOpt(SimList, TimeSteps) 
+  Hist@Log$OptDepletionRatio <- OptDepletionRatio
+  
+  if (Reduce)
+    Hist <- ArrayReduceDims(Hist)
+  SetDigest(Hist)
 }
   
 
 SimListRefPointsMSY <- function(Hist, SimList) {
   if (!EmptyObject(Hist@RefPointsMSY))
     return(Hist)
+  
   slots <- slotNames(Hist@RefPointsMSY)
   for (slot in slots) {
     slot(Hist@RefPointsMSY, slot) <- purrr::map(SimList, \(HistSim) 
@@ -545,17 +558,21 @@ SimListFleet <- function(Hist, SimList) {
       List2Array('Sim') |>
       aperm(c('Sim','TimeStep', 'Fleet'))
     
-    # Fleet@Selectivity@MeanAtAge <- purrr::map(FleetList, \(x) x@Selectivity@MeanAtAge) |> 
-    #   List2Array('Sim') |>
-    #   aperm(c('Sim', 'Age', 'TimeStep', 'Fleet'))
-    # 
-    # Fleet@Retention@MeanAtAge <- purrr::map(FleetList, \(x) x@Retention@MeanAtAge) |> 
-    #   List2Array('Sim') |>
-    #   aperm(c('Sim', 'Age', 'TimeStep', 'Fleet'))
-    # 
-    # Fleet@DiscardMortality@MeanAtAge <- purrr::map(FleetList, \(x) x@DiscardMortality@MeanAtAge) |> 
-    #   List2Array('Sim') |>
-    #   aperm(c('Sim', 'Age', 'TimeStep', 'Fleet'))
+    Fleet@qArea <- purrr::map(FleetList, \(x) x@qArea) |> 
+      List2Array('Sim') |>
+      aperm(c('Sim','TimeStep', 'Fleet', 'Area'))
+    
+    Fleet@Selectivity@MeanAtAge <- purrr::map(FleetList, \(x) x@Selectivity@MeanAtAge) |>
+      List2Array('Sim') |>
+      aperm(c('Sim', 'Age', 'TimeStep', 'Fleet'))
+
+    Fleet@Retention@MeanAtAge <- purrr::map(FleetList, \(x) x@Retention@MeanAtAge) |>
+      List2Array('Sim') |>
+      aperm(c('Sim', 'Age', 'TimeStep', 'Fleet'))
+
+    Fleet@DiscardMortality@MeanAtAge <- purrr::map(FleetList, \(x) x@DiscardMortality@MeanAtAge) |>
+      List2Array('Sim') |>
+      aperm(c('Sim', 'Age', 'TimeStep', 'Fleet'))
 
     Hist@OM@Fleet[[st]] <- Fleet
   }

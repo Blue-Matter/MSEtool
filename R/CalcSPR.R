@@ -1,5 +1,15 @@
-
 CalcSPR0 <- function(HistSim, TimeSteps=NULL) {
+  
+  if (inherits(HistSim, 'simlist')) {
+    SimList <- purrr::map(HistSim, CalcSPR0, TimeSteps=TimeSteps) 
+    class(SimList) <- 'simlist'
+    return(SimList)
+  } else if (inherits(HistSim, 'hist')) {
+    return(CalcSPR0_Hist(HistSim, TimeSteps))
+  }
+}
+
+CalcSPR0_Hist <- function(HistSim, TimeSteps=NULL) {
   if (is.null(TimeSteps))
     TimeSteps <- HistSim@OM@TimeSteps
   
@@ -15,7 +25,8 @@ CalcSPR0 <- function(HistSim, TimeSteps=NULL) {
   
   SPR0 <- List2Array(SPR0, 'Stock', 'TimeStep') |> t() 
   dimnames(SPR0)[[2]] <- TimeSteps
-  SPR0 |> ArrayReduceDims()
+  HistSim@RefPointsPR@SPR0 <- SPR0 |> ArrayReduceDims()
+  HistSim
 }
 
 CalcSPR0_Stock <- function(Stock, TimeSteps) {

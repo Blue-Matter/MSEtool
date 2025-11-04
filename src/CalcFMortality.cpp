@@ -39,6 +39,7 @@ List CalcFMortality_(arma::mat EffortFleetArea, // nFleet, nArea
     for (int area=0; area<nArea; area++) {
       double catchabilityArea = arma::as_scalar(qArea.row(fl).col(area));
       double effortarea = arma::as_scalar(EffortFleetArea.row(fl).col(area));
+
       arma::vec FInteract = effortarea * catchabilityArea * SelectivityAtAgeFleet.col(fl);
       arma::vec FRetain = FInteract % RetentionAtAgeFleet.col(fl);
       arma::vec Discard = FInteract - FRetain;

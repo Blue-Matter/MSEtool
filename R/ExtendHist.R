@@ -23,16 +23,16 @@ ExtendHist <- function(Hist) {
     }
     
     fleet <- Hist@OM@Fleet[[st]]
-    fleet@FishingMortality <- ArrayExpand(fleet@FishingMortality, 1, nAge, TimeSteps)
     fleet@DiscardMortality <- ArrayExpand(fleet@DiscardMortality, 1, nAge, TimeSteps)
     fleet@Effort <- ArrayExpand(fleet@Effort, 1, nAge, TimeStepsHist)
-    fleet@Effort@Catchability <- ArrayExpand(fleet@Effort@Catchability, 1, nAge, TimeSteps)
+    fleet@Catchability <- ArrayExpand(fleet@Catchability, 1, nAge, TimeSteps)
+    fleet@qArea <- ArrayExpand(fleet@qArea, 1, nAge, TimeSteps)
     fleet@Selectivity <- ArrayExpand(fleet@Selectivity, 1, nAge, TimeSteps)
     fleet@Retention <- ArrayExpand(fleet@Retention, 1, nAge, TimeSteps)
     fleet@DiscardMortality <- ArrayExpand(fleet@DiscardMortality, 1, nAge, TimeSteps)
     fleet@Distribution <- ArrayExpand(fleet@Distribution, 1, nAge, TimeSteps)
     fleet@WeightFleet <- ArrayExpand(fleet@WeightFleet, 1, nAge, TimeSteps)
-    
+    fleet@Closure <- ArrayExpand(fleet@Closure, 1, nAge, TimeSteps)
     Hist@OM@Fleet[[st]] <- fleet
   }
   

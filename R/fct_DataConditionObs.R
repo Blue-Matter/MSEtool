@@ -1,6 +1,21 @@
 # HistSimHistSim <- HistSimList$`1`
 
-ConditionObs <- function(HistSim, HistTimeSteps, ProjectionTimeSteps) {
+# TODO - check for identical sims - but need to generate independent obs error by sim
+# TODO - add conditioning obs error for Effort
+
+ConditionObs <- function(SimList, HistTimeSteps, ProjTimeSteps) {
+  SimList <- purrr::map(SimList, \(HistSim)
+                        ConditionObs_Sim(HistSim, HistTimeSteps, ProjTimeSteps),
+                        .progress = list(
+                          type = "iterator",
+                          format = "Conditioning Observation Error on Provided Fishery Data {cli::pb_bar} {cli::pb_percent}",
+                          clear = TRUE))
+  class(SimList) <- 'simlist'
+  SimList
+}
+
+
+ConditionObs_Sim <- function(HistSim, HistTimeSteps, ProjTimeSteps) {
   
   FisheryDataList <- HistSim@OM@Data
   nData <- length(FisheryDataList)
@@ -19,11 +34,11 @@ ConditionObs <- function(HistSim, HistTimeSteps, ProjectionTimeSteps) {
   for (i in seq_along(FisheryDataList)) {
     FisheryData <- FisheryDataList[[i]]
     stocks <- Complexes[[i]]
-    HistSim <- ConditionObs_Catch(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps, stocks, i)
-    HistSim <- ConditionObs_Catch(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps, stocks, i, 'Discards')
+    HistSim <- ConditionObs_Catch(HistSim, FisheryData, HistTimeSteps, ProjTimeSteps, stocks, i)
+    HistSim <- ConditionObs_Catch(HistSim, FisheryData, HistTimeSteps, ProjTimeSteps, stocks, i, 'Discards')
     
-    HistSim <- ConditionObs_Index(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps, stocks, i)
-    HistSim <- ConditionObs_Index(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps,  stocks, i, 'Survey')
+    HistSim <- ConditionObs_Index(HistSim, FisheryData, HistTimeSteps, ProjTimeSteps, stocks, i)
+    HistSim <- ConditionObs_Index(HistSim, FisheryData, HistTimeSteps, ProjTimeSteps,  stocks, i, 'Survey')
   }
 
   # FisheryData@CAA
@@ -37,11 +52,11 @@ ConditionObs <- function(HistSim, HistTimeSteps, ProjectionTimeSteps) {
 # ----- Catch ----
 
 ConditionObs_Catch <- function(HistSim, FisheryData, HistTimeSteps,
-                               ProjectionTimeSteps, stocks, i, type=c('Landings', 'Discards')) {
+                               ProjTimeSteps, stocks, i, type=c('Landings', 'Discards')) {
   
   type <- match.arg(type)
   nHistTS <- length(HistTimeSteps)
-  nProjTS <- length(ProjectionTimeSteps)
+  nProjTS <- length(ProjTimeSteps)
   
   ObservedCatch <- slot(FisheryData, type)@Value |>
     ArraySubsetTimeStep(TimeSteps=HistTimeSteps)
@@ -89,7 +104,7 @@ ConditionObs_Catch <- function(HistSim, FisheryData, HistTimeSteps,
     
     CatchErrorProj <- exp(rnorm(nProjTS, -((SD^2)/2), SD))
     CatchObs@Error <-c(CatchErrorHist,CatchErrorProj) |> 
-      array(dimnames = list(TimeStep=c(HistTimeSteps, ProjectionTimeSteps)))
+      array(dimnames = list(TimeStep=c(HistTimeSteps, ProjTimeSteps)))
     slot(HistSim@OM@Obs[[i]][[fl]], type) <- CatchObs
     
   }
@@ -138,12 +153,12 @@ CalcResidualStats <- function(LogResiduals) {
   data.frame(AC=ac, SD=sd) # log-space residuals
 }
 
-GenerateIndexResiduals <- function(Stats, ProjectionTimeSteps) {
+GenerateIndexResiduals <- function(Stats, ProjTimeSteps) {
   sd <- Stats$SD
   ac <- Stats$AC
   ac[!is.finite(ac)] <- 0
   LastError <- Stats$LastError
-  nTS <- length(ProjectionTimeSteps)
+  nTS <- length(ProjTimeSteps)
   
   if (all(is.na(sd))) {
     cli::cli_abort('Not done yet!!', .internal=TRUE)
@@ -151,7 +166,7 @@ GenerateIndexResiduals <- function(Stats, ProjectionTimeSteps) {
   
   mu <- -0.5 * (sd)^2 * (1 - ac)/sqrt(1 - ac^2)
   
-  Residuals <- array(rnorm(nTS, mu, sd), nTS, dimnames = list(TimeStep=ProjectionTimeSteps))
+  Residuals <- array(rnorm(nTS, mu, sd), nTS, dimnames = list(TimeStep=ProjTimeSteps))
   # apply a pseudo AR1 autocorrelation
   Residuals <- ApplyIndexAC(Residuals, ac, LastError)
   exp(Residuals)
@@ -168,7 +183,7 @@ ApplyIndexAC <- function(Residuals, ac, LastError) {
   Residuals
 }
 
-ConditionObs_Index <- function(HistSim, FisheryData, HistTimeSteps, ProjectionTimeSteps, 
+ConditionObs_Index <- function(HistSim, FisheryData, HistTimeSteps, ProjTimeSteps, 
                                stocks, i, type=c('CPUE', 'Survey')) {
   
   type <- match.arg(type)
@@ -267,11 +282,11 @@ ConditionObs_Index <- function(HistSim, FisheryData, HistTimeSteps, ProjectionTi
     
     # Generate residuals for projections
     ResidualsHistorical <- exp(LogResiduals)
-    ResidualsProjection <- GenerateIndexResiduals(Stats, ProjectionTimeSteps)
+    ResidualsProjection <- GenerateIndexResiduals(Stats, ProjTimeSteps)
     
     # TODO - option to discard indices that are NA for x timesteps before terminal historical year
     IndexObs@Error <- c(ResidualsHistorical, ResidualsProjection) |> 
-      array(dimnames = list(TimeStep=c(HistTimeSteps,  ProjectionTimeSteps)))
+      array(dimnames = list(TimeStep=c(HistTimeSteps,  ProjTimeSteps)))
     
     slot(HistSim@OM@Obs[[i]][[NameIndices[fl]]],type) <- IndexObs
   }

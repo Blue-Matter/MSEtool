@@ -1,10 +1,11 @@
 IdenticalSims <- function(SimList, TimeSteps, EditSlots=TRUE) {
   
-  if (is.numeric(SimList))
-    return(TRUE)
   if (is.array(SimList))
     return(IdenticalSimsArray(SimList))
   
+  if (is.numeric(SimList))
+    return(TRUE)
+
   SimList <- purrr::map(SimList, \(List) {
     List <-  List |> SubsetTimeStep(TimeSteps, AddPast = FALSE)
     if (EditSlots) 

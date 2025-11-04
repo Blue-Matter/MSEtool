@@ -3,14 +3,7 @@ la <- devtools::load_all
 la()
 
 
-LoadArgs <- function(fun='Simulate') {
-  
-  formals <- get(fun) |> formals()
-  args <- names(formals)
-  for (i in seq_along(args))
-    assign(args[i], formals[[i]], envir = .GlobalEnv)
-  
-}
+
 
 LoadArgs()
 
@@ -29,11 +22,26 @@ OM_Dir <- file.path(dir, 'OM_Objects/Base')
 
 # Slot Names and documentation
 
-TESTOM <- ImportBAM(Stock='GagGrouper', 
+OM <- ImportBAM(Stock='GagGrouper', 
                 nSim, 
                 pYear, 
                 StockName='Gag Grouper', 
                 populate = FALSE)
+
+Name(OM)
+slotNames(OM)
+
+OM@Stock
+
+
+
+OM@Fleet
+
+
+
+
+
+FleetNames(OM)
 
 Fleet=TESTOM@Fleet$`Gag Grouper`$cHL
 

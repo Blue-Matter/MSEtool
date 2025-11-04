@@ -86,6 +86,38 @@ setdnames <- function(dnames, BySim=TRUE) {
 #   MSYRefPoints
 # }
 
+CalcMSYRefPoints <- function(SimList, RefPointTimeSteps, RefPointsMSY=TRUE) {
+  
+  if (inherits(RefPointsMSY, 'logical') && RefPointsMSY) {
+    if (CheckIdenticalSims(SimList, Equilibrium=TRUE)) {
+      SimOne <- SimList[[1]]
+      SimOne@RefPointsMSY <- CalculateMSYSim(StockList=SimOne@OM@Stock,
+                                             FleetList=SimOne@OM@Fleet,                                  
+                                             Complexes=SimOne@OM@Complexes,
+                                             TimeSteps = RefPointTimeSteps,
+                                             maxF=HistSim@OM@maxF)
+      
+      SimList <- purrr::map(SimList, \(HistSim) {
+        HistSim@RefPointsMSY <- SimOne@RefPointsMSY
+        HistSim
+      })
+    } else {
+      SimList <- purrr::map(SimList, \(HistSim) {
+        HistSim@RefPointsMSY <- CalculateMSYSim(StockList=HistSim@OM@Stock,
+                                                FleetList=HistSim@OM@Fleet,                                  
+                                                Complexes=HistSim@OM@Complexes,
+                                                TimeSteps = RefPointTimeSteps,
+                                                maxF=HistSim@OM@maxF)
+        HistSim
+      }, .progress = list(
+        type = "iterator",
+        format = "Calculating MSY Reference Points {cli::pb_bar} {cli::pb_percent}",
+        clear = TRUE))
+    }
+  } 
+  class(SimList) <- 'simlist'
+  SimList
+}
 
 
 CalculateMSYSim <- function(StockList, FleetList, Complexes, TimeSteps=NULL, maxF=3) {

@@ -12,7 +12,6 @@
 #include "CalcNumberNext.h"
 
 //[[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::plugins("cpp11")]]
 using namespace Rcpp;
 
 //' Simulate Fishery Dynamics
@@ -120,7 +119,8 @@ S4 SimulateDynamics_(S4 HistSimIn,
       arma::mat VBiomassArea = CalcVBiomass_(NumberAtAgeArea.col(TSindex), // nAge, nArea
                                              FleetWeightAtAge.col(TSindex), // nAge, nFleet
                                              SelectivityAtAge.col(TSindex), // nAge, nFleet
-                                             ClosureArea.row(TSindex)); // nFleet, nArea
+                                             ClosureArea.row(TSindex), // nFleet, nArea
+                                             debug); 
       
       // Distribute Effort over Areas
       // currently proportional to VB - ie no SpatTarg

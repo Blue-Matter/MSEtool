@@ -1,8 +1,19 @@
 # Optimizes catchability to match specified terminal depletion and fleet catch fractions
 
-OptimizeCatchability <- function(HistSim) {
-  
-  # TODO add qinc, qvar etc for historical and projection
+# HistSim=SimList[[7]]
+
+OptFinalDepletion <- function(SimList) {
+  SimList <- purrr::map(SimList, \(HistSim)
+                        OptimizeCatchability(HistSim),
+                        .progress = list(
+                          type = "iterator",
+                          format = "Optimizing catchability (q) for Final Depletion {cli::pb_bar} {cli::pb_percent}",
+                          clear = TRUE))
+  class(SimList) <- 'simlist'
+  SimList
+}
+
+OptimizeCatchability <- function(HistSim, debug=FALSE) {
   
   bounds <- c(1e-02, 3)
   tol <- 1E-5
@@ -11,105 +22,112 @@ OptimizeCatchability <- function(HistSim) {
   nStock <- nStock(HistSim@OM)
   nFleet <- nFleet(HistSim@OM)
   
-  TimeStepsHist <-TimeSteps(HistSim@OM, 'Historical')
+  TimeStepsHist <- TimeSteps(HistSim@OM, 'Historical')
   
   if (nStock > 1 || nFleet > 1) {
-    
-    FinalDepletion <- purrr::map(HistSim@OM@Stock, \(stock) stock@Depletion@Final) |>
-      List2Array('Stock')
-    
-    if (!length(FinalDepletion))
-      return(HistSim)
-    
-    stop('OptimizeCatchability not complete for multiOM')
-    
-
-    # Catch divided by effort (q proxy)
-    CatchFrac <- List2Array(HistSim@OM@CatchFrac, dimname = 'Stock') |> t()
-    EffortFleet <- array(NA, dim=dim(CatchFrac))
-    nTS <- length(TimeStepsHist)
-    for (st in 1:nStock) {
-      EffortFleet[st,] <- HistSim@OM@Fleet[[st]]@Effort@Effort[nTS]
-    }
-    
-    FDist <- CatchFrac/EffortFleet
-    FDist[!is.finite(FDist)] <- tiny
-    FDist <- FDist/apply(FDist[, , drop = FALSE], 1, sum)    # q ratio proxy (real space)
-
-    if (nFleet == 1) {
-      pars <- rep(-5, nStock)
-    } else {
-      # low initial F followed by logit guess at fraction based on Fdist
-      # according to catch fraction in recent year
-      pars <- c(rep(-5,nStock), logit(FDist[, 2:nFleet]))
-    }
-    
-    doOpt <- optim(pars,
-                   OptCatchability,
-                   method = "L-BFGS-B",
-                   lower = c(rep(log(bounds[1]), nStock), rep(-5, nStock * (nFleet-1))),
-                   upper = c(rep(log(bounds[2]), nStock), rep(5, nStock*(nFleet-1))),
-                   HistSim=HistSim,
-                   TimeStepsHist=TimeStepsHist,
-                   control = list(trace = ifelse(silent, 0, 1), factr = tol/.Machine$double.eps)
-    )
-    pars <- doOpt$par
+    pars <- OptimizeCatchability_Multi(HistSim, TimeStepsHist,  bounds, tol, silent, debug)
   } else {
-      # single stock/fleet
-      FinalDepletion <- HistSim@OM@Stock[[1]]@Depletion@Final
-      
-      if (!length(FinalDepletion))
-        return(HistSim)
-      
-      doOpt <- stats::optimize(OptCatchability,
-                        log(bounds),
-                        HistSim=HistSim,
-                        TimeStepsHist=TimeStepsHist,
-                        tol=tol)
-      pars <- doOpt$minimum
-      
-    
-      # qs <- seq(0.01, 0.5, length.out=100)
-      # obj <- rep(NA, 100)
-      # for (i in seq_along(qs)) {
-      #   obj[i] = OptCatchability(log(qs[i]), HistSim)
-      # }
-      # 
-      # plot(qs, obj)
-      # qs[which.min(obj)]
-      
-      
-      if (any(abs(exp(pars) - bounds) < 0.01)) {
-        # more robust than optimize but slower
-        doOpt <- stats::nlminb(mean(log(bounds)),
-                               OptCatchability,
-                               HistSim=HistSim,
-                               TimeStepsHist=TimeStepsHist, 
-                               lower=log(bounds[1]),
-                               upper=log(bounds[2]))
-        pars <- doOpt$par
-      }
-      
-    }
-    
-    qStock <- exp(pars[1:nStock])
-    qFleet <- matrix(1, nStock, nFleet)
-    
-    if (nFleet > 1) {
-      qlogit <- matrix(0, nStock, nFleet)
-      qlogit[, 2:nFleet] <- pars[(nStock+1):length(pars)]
-      qFleet <- ilogitm(qlogit)
-    }
-    
-    for (st in 1:nStock) {
-      for (fl in 1:nFleet) {
-        StCatchability <- HistSim@OM@Fleet[[st]]@Catchability[,fl]
-        StCatchability <- StCatchability/StCatchability[1]
-        HistSim@OM@Fleet[[st]]@Catchability[,fl] <- StCatchability * qStock[st] * qFleet[st,fl]
-      }
-    }
+    pars <- OptimizeCatchability_Single(HistSim, TimeStepsHist, bounds, tol, silent, debug)
+  }
+ 
+  qStock <- exp(pars[1:nStock])
+  qFleet <- matrix(1, nStock, nFleet)
   
-    HistSim
+  if (nFleet > 1) {
+    qlogit <- matrix(0, nStock, nFleet)
+    qlogit[, 2:nFleet] <- pars[(nStock+1):length(pars)]
+    qFleet <- ilogitm(qlogit)
+  }
+  
+  for (st in 1:nStock) {
+    for (fl in 1:nFleet) {
+      StCatchability <- HistSim@OM@Fleet[[st]]@Catchability[,fl]
+      StCatchability <- StCatchability/StCatchability[1]
+      HistSim@OM@Fleet[[st]]@Catchability[,fl] <- StCatchability * qStock[st] * qFleet[st,fl]
+      HistSim@OM@Fleet[[st]]@qArea[,fl,] <- HistSim@OM@Fleet[[st]]@Catchability[,fl] / as.numeric(HistSim@OM@Stock[[st]]@Spatial@RelativeSize)
+    }
+  }
+  
+  HistSim
+}
+
+
+OptimizeCatchability_Multi <- function(HistSim, TimeStepsHist, bounds, tol, silent, debug=FALSE) {
+  
+  stop('OptimizeCatchability not complete for multiOM')
+  
+  nStock <- nStock(HistSim@OM)
+  nFleet <- nFleet(HistSim@OM)
+  
+  FinalDepletion <- purrr::map(HistSim@OM@Stock, \(stock) stock@Depletion@Final) |>
+    List2Array('Stock')
+  
+  if (!length(FinalDepletion))
+    return(HistSim)
+  
+  
+  # Catch divided by effort (q proxy)
+  CatchFrac <- List2Array(HistSim@OM@CatchFrac, dimname = 'Stock') |> t()
+  EffortFleet <- array(NA, dim=dim(CatchFrac))
+  nTS <- length(TimeStepsHist)
+  for (st in 1:nStock) {
+    EffortFleet[st,] <- HistSim@OM@Fleet[[st]]@Effort@Effort[nTS]
+  }
+  
+  FDist <- CatchFrac/EffortFleet
+  FDist[!is.finite(FDist)] <- tiny
+  FDist <- FDist/apply(FDist[, , drop = FALSE], 1, sum)    # q ratio proxy (real space)
+  
+  if (nFleet == 1) {
+    pars <- rep(-5, nStock)
+  } else {
+    # low initial F followed by logit guess at fraction based on Fdist
+    # according to catch fraction in recent year
+    pars <- c(rep(-5,nStock), logit(FDist[, 2:nFleet]))
+  }
+  
+  doOpt <- optim(pars,
+                 OptCatchability,
+                 method = "L-BFGS-B",
+                 lower = c(rep(log(bounds[1]), nStock), rep(-5, nStock * (nFleet-1))),
+                 upper = c(rep(log(bounds[2]), nStock), rep(5, nStock*(nFleet-1))),
+                 HistSim=HistSim,
+                 TimeStepsHist=TimeStepsHist,
+                 debug=debug,
+                 control = list(trace = ifelse(silent, 0, 1), factr = tol/.Machine$double.eps)
+  )
+  pars <- doOpt$par
+  pars
+}
+
+OptimizeCatchability_Single <- function(HistSim, TimeStepsHist, bounds, tol, silent, debug=FALSE) {
+  
+  FinalDepletion <- HistSim@OM@Stock[[1]]@Depletion@Final
+  
+  if (!length(FinalDepletion))
+    return(HistSim)
+  
+  doOpt <- stats::optimize(OptCatchability,
+                           log(bounds),
+                           HistSim=HistSim,
+                           TimeStepsHist=TimeStepsHist,
+                           debug=debug,
+                           tol=tol)
+  pars <- doOpt$minimum
+  
+  if (any(abs(exp(pars) - bounds) < 0.01)) {
+    # more robust than optimize but slower
+    doOpt <- stats::nlminb(mean(log(bounds)),
+                           OptCatchability,
+                           HistSim=HistSim,
+                           TimeStepsHist=TimeStepsHist, 
+                           debug=debug,
+                           lower=log(bounds[1]),
+                           upper=log(bounds[2]))
+    pars <- doOpt$par
+  }
+  pars
+  
 }
 
 OptCatchability <- function(pars, HistSim, TimeStepsHist, debug=FALSE) {
@@ -140,6 +158,7 @@ OptCatchability <- function(pars, HistSim, TimeStepsHist, debug=FALSE) {
       StCatchability <- HistSim@OM@Fleet[[st]]@Catchability[,fl]
       StCatchability <- StCatchability/StCatchability[1]
       HistSim@OM@Fleet[[st]]@Catchability[,fl] <- StCatchability * qStock[st] * qFleet[st,fl]
+      HistSim@OM@Fleet[[st]]@qArea[,fl,] <- HistSim@OM@Fleet[[st]]@Catchability[,fl] / as.numeric(HistSim@OM@Stock[[st]]@Spatial@RelativeSize)
     }
   }
     
@@ -148,23 +167,6 @@ OptCatchability <- function(pars, HistSim, TimeStepsHist, debug=FALSE) {
                                              TimeStepsHist,
                                              CalcCatch = 0)
   
-  ##############################################################################
-  # PopDynamicsHistorical@Biomass[st,TermInd]/RefVal
-  # 
-  # PopDynamicsHistorical@OM@Fleet$Albacore@qArea[1,,]
-  # 
-  # 
-  # HistSim@Effort
-  # HistSim@OM@Fleet[[st]]@Catchability[,fl]
-  # PopDynamicsHistorical@FDeadArea$Albacore$`1977`[,1,]
-  # 
-  # qStock = 5
-  # 
-  # 
-  # 
-  # # stop()
-  ##############################################################################
- 
   # Depletion objective
   PredDep <- rep(NA, nStock)
   for (st in 1:nStock) {
@@ -181,6 +183,8 @@ OptCatchability <- function(pars, HistSim, TimeStepsHist, debug=FALSE) {
     }
   }
   
+  
+  
   depOBJ <- sum(log(PredDep/DepletionTarget)^2)
   
   if (debug) {
@@ -191,7 +195,7 @@ OptCatchability <- function(pars, HistSim, TimeStepsHist, debug=FALSE) {
     print(paste("Objective = ", depOBJ))
     print("*******************")
     cat("\n")
-    return(PopDynamicsHistorical)
+    # return(PopDynamicsHistorical)
   }
   
   # TODO need to do SPFrom for Depletion sharing ---

@@ -21,7 +21,7 @@ CalcRefLandings <- function(MSE, type=c('Landings', 'Removals')) {
   TimeSteps <- c(TimeStepsHist, TimeStepsProj)
   projind <- match(TimeStepsProj,TimeSteps)
   
-  Proj <- ExtendHist(Hist, TimeSteps)
+  Proj <- ExtendHist(Hist)
   ProjSimList <- Hist2HistSimList(Proj)
   LastHistTS <- tail(TimeStepsHist,1)
   ProjSimList <- purrr::map(ProjSimList, \(ProjSim) PopulateNumberNext_(ProjSim, LastHistTS))

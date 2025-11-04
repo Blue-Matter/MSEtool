@@ -1,5 +1,5 @@
-CheckDepletionOpt <- function(HistSimList, HistTimeSteps) {
-  OptRatio <- purrr::map(HistSimList, \(HistSim){
+CheckDepletionOpt <- function(SimList, HistTimeSteps) {
+  OptRatio <- purrr::map(SimList, \(HistSim){
     Reference <- purrr::map(HistSim@OM@Stock, \(stock) stock@Depletion@Reference)
     Final <- purrr::map(HistSim@OM@Stock, \(stock) stock@Depletion@Final)
     
@@ -26,10 +26,10 @@ CheckDepletionOpt <- function(HistSimList, HistTimeSteps) {
       OptRatio[st] <- (CurrVal/RefVal)/Final[[st]] 
     }
     OptRatio
-  }) |> unlist() |> matrix(nrow=nStock(HistSimList$`1`@OM), ncol=length(HistSimList))
+  }) |> unlist() |> matrix(nrow=nStock(SimList$`1`@OM), ncol=length(SimList))
   
-  dimnames(OptRatio) <- list(Stock=StockNames(HistSimList$`1`@OM),
-                             Sim=1:length(HistSimList)
+  dimnames(OptRatio) <- list(Stock=StockNames(SimList$`1`@OM),
+                             Sim=1:length(SimList)
   )
   OptRatio <- t(OptRatio)
   

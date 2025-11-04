@@ -1,8 +1,27 @@
 
 # HistSim <- HistSimList$`1`
+# TODO - check for identical sims 
 
 
-GenerateHistoricalData <- function(HistSim, HistTimeSteps) {
+# Hist@Data:
+# - list of length `nSim` (or length 1) then
+# - list of length `nComplex`
+
+GenerateHistoricalData <- function(SimList, HistTimeSteps) {
+  
+  SimList <- purrr::map(SimList, \(HistSim)
+                        GenerateHistoricalData_Sim(HistSim, HistTimeSteps),
+                        .progress = list(
+                          type = "iterator",
+                          format = "Generating Historical Data {cli::pb_bar} {cli::pb_percent}",
+                          clear = TRUE))
+  
+  class(SimList) <- 'simlist'
+  SimList
+  
+}
+
+GenerateHistoricalData_Sim <- function(HistSim, HistTimeSteps) {
   OM <- HistSim@OM
   Complexes <- HistSim@OM@Complexes
   HistSim@Data <- MakeNamedList(names(Complexes), new('data'))
@@ -228,10 +247,9 @@ GenerateHistoricalData_Index <- function(HistSim, HistTimeSteps, i, stocks,
     # Ref value 
     if (length(IndexObs@Ref)) {
       # TODO - index ref value if units != Biomass
-      if (!is.null(HistSim@RefPoints@MSYRefPoints@BMSY)) {
+      if (!is.null(HistSim@RefPointsMSY@BMSY)) {
         adjust <- mean(SimulatedIndex/apply(HistSim@Biomass[i,,drop=FALSE], 2, mean, na.rm=TRUE), na.rm=TRUE)
-        
-        IndexData@Ref <- array(mean(HistSim@RefPoints@MSYRefPoints@BMSY[i,], na.rm=TRUE) *  adjust *IndexObs@q)  
+        IndexData@Ref <- array(mean(HistSim@RefPointsMSY@BMSY[i,], na.rm=TRUE) *  adjust *IndexObs@q)  
       }
     }
     

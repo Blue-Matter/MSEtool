@@ -154,6 +154,7 @@ CalcDynamicUnfished <- function(SimList, silent=FALSE) {
     }
     x
   })
+  class(SimListOut) <- 'simlist'
   SimListOut
 }
 
