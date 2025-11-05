@@ -26,8 +26,12 @@ OptimizeCatchability <- function(HistSim, debug=FALSE) {
   
   if (nStock > 1 || nFleet > 1) {
     pars <- OptimizeCatchability_Multi(HistSim, TimeStepsHist,  bounds, tol, silent, debug)
+    if (inherits(pars, 'hist'))
+      return(pars)
   } else {
     pars <- OptimizeCatchability_Single(HistSim, TimeStepsHist, bounds, tol, silent, debug)
+    if (inherits(pars, 'hist'))
+      return(pars)
   }
  
   qStock <- exp(pars[1:nStock])
@@ -54,7 +58,6 @@ OptimizeCatchability <- function(HistSim, debug=FALSE) {
 
 OptimizeCatchability_Multi <- function(HistSim, TimeStepsHist, bounds, tol, silent, debug=FALSE) {
   
-  stop('OptimizeCatchability not complete for multiOM')
   
   nStock <- nStock(HistSim@OM)
   nFleet <- nFleet(HistSim@OM)
@@ -64,8 +67,7 @@ OptimizeCatchability_Multi <- function(HistSim, TimeStepsHist, bounds, tol, sile
   
   if (!length(FinalDepletion))
     return(HistSim)
-  
-  
+
   # Catch divided by effort (q proxy)
   CatchFrac <- List2Array(HistSim@OM@CatchFrac, dimname = 'Stock') |> t()
   EffortFleet <- array(NA, dim=dim(CatchFrac))

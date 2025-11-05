@@ -195,29 +195,27 @@ GenerateStochasticnVessels <- function(nVessels, nsim, Timesteps) {
 }
 
 
-GenerateRecruitmentDeviations <- function(SD=0.2, AC=0, TruncSD=2,
+GenerateRecruitmentDeviations <- function(SD=0.2, 
+                                          AC=0,
+                                          TruncSD=2,
                                           Ages=NULL,
-                                          nHistTS=15, nProjTS=15,
+                                          HistTS=NULL, 
+                                          ProjTS=NULL,
                                           nsim=48,
                                           RecDevInit=NULL,
                                           RecDevHist=NULL,
                                           RecDevProj=NULL) {
   
-  if (is.null(Ages))
-    Ages <- Ages(MaxAge=5)
-  
-  MaxAge <- MaxAge(Ages)
-  MinAge <- MinAge(Ages)
-  Ages@Classes <- MinAge:MaxAge
-
-  nInitRecDev <- length(Ages@Classes)-1
-  
-  if (is.null(nHistTS))
+  if (is.null(HistTS))
     cli::cli_abort('`nHistTS` cannot be NULL')
-
-  if (is.null(nProjTS))
+  
+  if (is.null(ProjTS))
     cli::cli_abort('`nProjTS` cannot be NULL')
-
+  
+  nInitRecDev <- length(Ages@Classes)-1
+  nHistTS <- length(HistTS)
+  nProjTS <- length(ProjTS)
+  
   if (!is.null(nsim) && nsim==1) {
     cli::cli_alert_info('`nsim=1`. Assuming no process error ')
     return(

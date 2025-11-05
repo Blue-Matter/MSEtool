@@ -28,8 +28,10 @@ UniqueTimeSteps <- function(array) {
     return(1)
 
   meanTS <- apply(array, TSInd, mean)
-  if (length(unique(meanTS))>2) {
-    return(c(match(unique(meanTS), meanTS), length(meanTS)) |> unique())
+  logVec <- rep(TRUE, length(meanTS))
+  
+  for (i in seq_along(logVec)[-1]) {
+    logVec[i] <- meanTS[i] != meanTS[i-1]
   }
-  match(unique(meanTS), meanTS)
+  which(logVec)
 }

@@ -95,7 +95,7 @@ CalcMSYRefPoints <- function(SimList, RefPointTimeSteps, RefPointsMSY=TRUE) {
                                              FleetList=SimOne@OM@Fleet,                                  
                                              Complexes=SimOne@OM@Complexes,
                                              TimeSteps = RefPointTimeSteps,
-                                             maxF=HistSim@OM@maxF)
+                                             maxF=SimOne@OM@maxF)
       
       SimList <- purrr::map(SimList, \(HistSim) {
         HistSim@RefPointsMSY <- SimOne@RefPointsMSY

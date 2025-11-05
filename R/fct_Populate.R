@@ -44,6 +44,8 @@ PopulateObs <- function(OM) {
   
   if (EmptyObject(OM@Obs)) {
     # initialize Obs object for conditioning
+    if(is.null(FleetNames(OM)))
+      return(OM)
     OM@Obs <- MakeNamedList(StockNames(OM),
                             MakeNamedList(FleetNames(OM),new('obs')))
     return(OM)

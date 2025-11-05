@@ -17,7 +17,8 @@ CalcAgeSizeKey(
 }
 \arguments{
 \item{MeanAtAge}{The mean size at age. Either a numeric vector of length \code{nage}, a 2D array with
-dimensions \code{c(nsim, nage)}, or a 3D array with dimensions \code{c(nsim, nage, nTS)}.}
+dimensions \code{c(nsim, nage)}, or a 3D array with dimensions \code{c(nsim, nage, nTS)}.
+Alternatively, can be a \code{\link[=Length]{Length()}} object, in which case no other arguments are needed.}
 
 \item{CVatAge}{The coefficient of variation (CV) at age. Same structure as \code{MeanAtAge}.}
 

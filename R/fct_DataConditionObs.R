@@ -222,7 +222,9 @@ ConditionObs_Index <- function(HistSim, FisheryData, HistTimeSteps, ProjTimeStep
         }
    
       } else if (SelectivityAtAge == 'Obs') {
-        SelectivityAtAgeList <- IndexObs@Selectivity
+        for (st in seq_along(stocks)) {
+          SelectivityAtAgeList[[st]] <- IndexObs@Selectivity
+        }
       }
     } else {
       SelectivityAtAgeList <- purrr::map(HistSim@OM@Fleet[stocks], \(stock) {

@@ -34,9 +34,9 @@ setClass("indicesdata",
                  Units='char.null',
                  Ref='array.null',
                  Timing='numeric',
-                 Selectivity='array.char.num', # fleet number, Biomass, SBiomass, Recruits, age vector
-                 Misc="MiscClass"
-         )
+                 Selectivity='array.char.num' # fleet number, Biomass, SBiomass, Recruits, age vector
+         ),
+         contains='MiscClass'
 )
 
 # Selectivity
@@ -58,9 +58,9 @@ setClass("compdata",
                  Value='array.null',
                  Classes='num.null',
                  Units='char.null',
-                 Misc="MiscClass",
                  Log='list'
-         )
+         ),
+         contains='MiscClass'
 )
 
 

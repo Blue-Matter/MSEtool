@@ -6,7 +6,7 @@
 \title{Import an OM from SS3 Output}
 \usage{
 ImportSS(
-  x,
+  SSDir,
   Name = "Imported SS3 Model",
   nSim = 48,
   pYear = 30,
@@ -27,7 +27,7 @@ ImportSS(
   ...
 )
 
-ImportSSReport(x, silent = FALSE, parallel = TRUE, ...)
+ImportSSReport(SSDir, silent = FALSE, parallel = TRUE, ...)
 }
 \arguments{
 \item{x}{Either a character string}

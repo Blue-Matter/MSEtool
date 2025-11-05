@@ -6,13 +6,13 @@ CalcEquilibriumUnfished <- function(OM) {
   # i.e., an expected change in recruitment if Fecundity-at-Age changes over time 
   # e.g., change in Weight-at-Age etc
   
-  UnfishedSurvival <- CalcUnfishedSurvival(OM)
+  UnfishedSurvival <- CalcUnfishedSurvival(OM) 
   UnfishedSurvivalSP <- CalcUnfishedSurvival(OM, TRUE)
   
   EquilibriumUnfished <- new('popdynamics')
   
-  R0List <- purrr::map(OM@Stock, \(x) {
-    x@SRR@R0 |> 
+  R0List <- purrr::map(OM@Stock, \(Stock) {
+    Stock@SRR@R0 |> 
       AddDimension('Age') |>
       aperm(c('Sim', 'Age', 'TimeStep'))
   })

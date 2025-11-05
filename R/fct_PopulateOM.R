@@ -70,11 +70,15 @@ PopulateFleetList <- function(OM, silent=FALSE) {
     class(FleetList[[st]]) <- 'FleetList'
     
     for (fl in 1:nFleets) {
+      if (is.null(OM@Fleet))
+        next()
       if (isS4(OM@Fleet)) {
         fleet <- OM@Fleet
       } else if (inherits(OM@Fleet, 'FleetList')) {
         fleet <- OM@Fleet[[fl]]
       } else {
+        if (!length(OM@Fleet[[st]]))
+            next()
         fleet <- OM@Fleet[[st]][[fl]]
       }
       

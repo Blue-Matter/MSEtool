@@ -25,10 +25,10 @@ Simulate_om <- function(OM=NULL,
   
   # ---- Initial Checks and Setup ----
   OnExit()
-  OM <- OM |> CheckClass() |> StartUp(nSim) 
+  OM <- StartUp(OM, nSim) 
   
   HistTimeSteps <- TimeSteps(OM, 'Historical')
-  ProjectionTimeSteps <- TimeSteps(OM, 'Projection')
+  ProjTimeSteps <- TimeSteps(OM, 'Projection')
   RefPointTimeSteps <- GetRefPointTimeSteps(OM) # historical time steps to calculate ref points
   
   # ---- Make Hist Object ----
@@ -68,9 +68,6 @@ Simulate_om <- function(OM=NULL,
  
   # ---- Return `hist` Object ----
   Hist <- SimList2Hist(Hist, SimList, HistTimeSteps, Reduce) 
-  Hist@Biomass |> dim()
-  
-  
   Hist
 }
 

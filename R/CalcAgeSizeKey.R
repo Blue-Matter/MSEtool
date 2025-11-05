@@ -5,7 +5,8 @@
 #' standard deviations.
 #'
 #' @param MeanAtAge The mean size at age. Either a numeric vector of length `nage`, a 2D array with
-#' dimensions `c(nsim, nage)`, or a 3D array with dimensions `c(nsim, nage, nTS)`.
+#' dimensions `c(nsim, nage)`, or a 3D array with dimensions `c(nsim, nage, nTS)`. 
+#' Alternatively, can be a [Length()] object, in which case no other arguments are needed.
 #' @param CVatAge The coefficient of variation (CV) at age. Same structure as `MeanAtAge`.
 #' @param Classes A numeric vector with the midpoints of the size classes for the age-size key.
 #' @param TruncSD Numeric value indicating the number of standard deviations
@@ -26,6 +27,15 @@ CalcAgeSizeKey <- function(MeanAtAge,
                            type='Length') {
   
   Dist <- match.arg(Dist)
+  
+  if (inherits(MeanAtAge, 'length')) {
+    LengthObject <- MeanAtAge
+    MeanAtAge <- LengthObject@MeanAtAge
+    CVatAge <- LengthObject@CVatAge
+    Classes <- LengthObject@Classes
+    TruncSD <- LengthObject@TruncSD
+    Dist <- LengthObject@Dist
+  }
   
   # Checks
   if (any(Classes<0))

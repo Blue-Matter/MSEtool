@@ -52,7 +52,7 @@ ConvertToList <- function(x) {
 
 
 StartUp <- function(OM, nSim=NULL, silent=FALSE) {
-  
+  CheckClass(OM)
   # TODO                    
   if (!is.null(OM@SexPars@Herm))
     stop('Herm not done yet!')

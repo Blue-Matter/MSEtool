@@ -468,7 +468,8 @@ CalcUnfishedDist <- function(Spatial,
 CheckSelectivityMaximum <- function(MeanAtAge) {
   MaxValues <- apply(MeanAtAge, c(1,3), max) |> round(3)
   
-  ind <- MaxValues<1 & MaxValues!=0
+  
+  ind <- MaxValues<0.99 & MaxValues!=0
   if (all(!ind))
     return(MeanAtAge)
   
@@ -565,6 +566,16 @@ MeanAtLength2MeanAtAge <- function(object, Length, Ages, nsim, TimeSteps, seed, 
   CheckRequiredObject(Ages, 'ages')
   
   if (is.null(Length@ASK)) {
+    return(object)
+  }
+  
+  if (all(object@MeanAtLength>0.99)) {
+    object@MeanAtAge <- array(1, dim=c(1, length(Ages@Classes), 1),
+                              dimnames = list(
+                                Sim=1,
+                                Age=Ages@Classes,
+                                TimeStep=TimeSteps[1]
+                              ))
     return(object)
   }
   
@@ -703,6 +714,8 @@ AtSize2AtAge <- function(object, Length) {
   }
   
   ASK <- Length@ASK
+  if (is.null(ASK)) 
+    cli::cli_abort("`Length@ASK` is not populated", .internal=TRUE)
   dim_MeanAtSize <- dim(MeanAtSize)
   dim_ASK <- dim(ASK)
 
@@ -739,12 +752,16 @@ AtSize2AtAge <- function(object, Length) {
   for (s in 1:nsim) {
     for (t in 1:nTS) {
       MeanAtSize_ts <- MeanAtSize[GetIndex(s, nsim_MeanAtSize), ,GetIndex(t, nTS_MeanAtSize)]
-      if (bySim) {
-        ASK_ts <- ASK[GetIndex(s, nsim_ASK),,,GetIndex(t, nTS_ASK)]
-        AtAge[s,,t] <- MeanAtSize_ts %*%t(ASK_ts)
+      if (all(MeanAtSize_ts>0.99)) {
+        AtAge[s,,t] <- 1
       } else {
-        ASK_ts <- ASK[,,GetIndex(t, nTS_ASK)]
-        AtAge[s,,t] <- (MeanAtSize_ts %*%t(ASK_ts))[1,]
+        if (bySim) {
+          ASK_ts <- ASK[GetIndex(s, nsim_ASK),,,GetIndex(t, nTS_ASK)]
+          AtAge[s,,t] <- MeanAtSize_ts %*%t(ASK_ts)
+        } else {
+          ASK_ts <- ASK[,,GetIndex(t, nTS_ASK)]
+          AtAge[s,,t] <- (MeanAtSize_ts %*%t(ASK_ts))[1,]
+        }
       }
     }
   }

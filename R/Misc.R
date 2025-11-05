@@ -305,7 +305,6 @@ CalcTimeSteps <- function(nYear, pYear, CurrentYear, TimeUnits='year', Period=NU
   LastProjYear <- lubridate::ymd(paste0(CurrentYear+pYear, '-12-31'))
   validTimeUnits <- c('year', 'half-year', 'quarter', 'month', 'week', 'day')
   
-  
   if (TimeUnits=='half-year') {
     hist <- seq(FirstHistYear, LastHistYear, by='6 months') |> lubridate::decimal_date()
     proj <- seq(FirstProjYear, LastProjYear, by='6 months') |> lubridate::decimal_date()
