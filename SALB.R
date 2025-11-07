@@ -1,4 +1,4 @@
-la <- devtools::load_all
+library(MSEtool)
 
 la()
 
@@ -18,34 +18,17 @@ CompareSSNumber(RepList[[1]], Hist)
 CompareSSLandings(RepList[[1]], Hist)
 
 
-
-
-TS <- TimeSteps(Hist, 'H')
 replist <- RepList$`1`
-ageclasses <- GetSSAgeClasses(replist)
 
-replist$recruit |> head()
-plot(replist$recruit$Yr, replist$recruit$exp_recr)
-lines(replist$recruit$Yr[1:63], Hist@Number$Albacore[1,1,,1])
+Natage <- GetSSNatAge(replist, OM, yrs=1956)
 
+Number(Hist, byAge=TRUE) |> dplyr::filter(TimeStep==1956)
 
-# Track N-at-Age 
-N_OM <- Hist@Number$Albacore[1,,,1]
-N_SS <- replist$natage
-
-# Track F-at-Age 
-fl <- 1
-
-F_OM <- Hist@FDead$Albacore[1,,,fl]
-F_SS <- replist$fatage |> dplyr::filter(Yr%in%TS, Fleet==fl)
-F_SS <- F_SS[,as.character(ageclasses)] |> t()
-
-ts <- 30
-plot(F_SS[,ts])
-lines(F_OM[,ts])
+Natage
 
 
-
-
+birthseas <- ifelse(is.null(replist$birthseas), 
+                    1, 
+                    max(replist$birthseas)) 
 
 

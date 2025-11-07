@@ -26,12 +26,16 @@ UniqueTimeSteps <- function(array) {
   dd <- dim(array)    
   if (dd[TSInd]==1)
     return(1)
-
-  meanTS <- apply(array, TSInd, mean)
-  logVec <- rep(TRUE, length(meanTS))
   
+  Ref <- abind::asub(array, 1, TSInd)
+  nTS <- dimnames(array)[[TSInd]] |> length()
+  logVec <- rep(TRUE, nTS)
+
   for (i in seq_along(logVec)[-1]) {
-    logVec[i] <- meanTS[i] != meanTS[i-1]
+    Comp1 <- abind::asub(array, i, TSInd)
+    Comp2 <- abind::asub(array, i-1, TSInd)
+    logVec[i] <- !any(round(Comp1, 4) != round(Comp2, 4))
   }
+  
   which(logVec)
 }

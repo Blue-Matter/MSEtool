@@ -199,11 +199,11 @@ GetnTS <- function(TimeSteps) {
   nTS
 }
 
-TimeStepAttributes <- function(object, TimeSteps) {
-  if (!is.null(attributes(object)$TimeSteps))
-    TimeSteps <- attributes(object)$TimeSteps
-  TimeSteps
-}
+# TimeStepAttributes <- function(object, TimeSteps) {
+#   if (!is.null(attributes(object)$TimeSteps))
+#     TimeSteps <- attributes(object)$TimeSteps
+#   TimeSteps
+# }
 
 
 
@@ -247,6 +247,23 @@ getFleetInfo <- function(Fleets) {
   list(nFleet=nFleet, nyear=nyear)
 }
 
+CalcTSUnits <- function(TSperYear) {
+
+  out <- switch(as.character(TSperYear),
+         '1'='year',
+         '2'='half-year',
+         '4'='quarter',
+         '12'='month',
+         '52'='week',
+         '365'='day')
+  
+  if (is.null(out))
+    cli::cli_abort(c("x"="`TSperYear`: {.val {TSperYear}} is invalid ",
+                     "i"="Must be one of {.val {c(1,2,4,12,52,365)}}")
+    )
+  out
+}
+
 TSperYear <- function(Units) {
   Units <- tolower(Units)
   switch(Units,
@@ -258,9 +275,9 @@ TSperYear <- function(Units) {
          'day'=365)
 }
 
-CalcTimeSteps <- function(nYear, pYear, CurrentYear, TimeUnits='year', Period=NULL) {
+CalcTimeSteps <- function(nYear, pYear, CurrentYear, TSperYear=1, Period=NULL) {
   
-  TimeUnits <- tolower(TimeUnits)
+  TimeUnits <- CalcTSUnits(TSperYear)
   
   if (CurrentYear<1900 && TimeUnits=='year') {
     # not in year units
@@ -820,26 +837,26 @@ AddDimNames <- function(array, names=c('Sim', 'Age', 'TimeStep'),
   array
 }
 
-AddMeanAtAgeAttributes <- function(object, TimeSteps=NULL, Ages=NULL) {
-
-  object@MeanAtAge <- Structure(value=object@MeanAtAge,
-                                out=c('nsim', 'nage', 'nTS'))
-  
-  if (is.null(dimnames(object@MeanAtAge)))  
-    object@MeanAtAge <- object@MeanAtAge |> AddDimNames(TimeSteps=TimeSteps)
-
-  if ('Units' %in% slotNames(object))
-    attributes(object@MeanAtAge)$Units <- object@Units
-
-  # if (is.null(attributes(object@MeanAtAge)$TimeSteps))
-  #   attributes(object@MeanAtAge)$TimeSteps <- TimeSteps
-  # 
-  if (methods::is(Ages, 'ages')) {
-    # attributes(object@MeanAtAge)$Ages <- Ages@Classes
-    attributes(object@MeanAtAge)$UnitsAge <- Ages@Units
-  }
-  object
-}
+# AddMeanAtAgeAttributes <- function(object, TimeSteps=NULL, Ages=NULL) {
+# 
+#   object@MeanAtAge <- Structure(value=object@MeanAtAge,
+#                                 out=c('nsim', 'nage', 'nTS'))
+#   
+#   if (is.null(dimnames(object@MeanAtAge)))  
+#     object@MeanAtAge <- object@MeanAtAge |> AddDimNames(TimeSteps=TimeSteps)
+# 
+#   if ('Units' %in% slotNames(object))
+#     attributes(object@MeanAtAge)$Units <- object@Units
+# 
+#   # if (is.null(attributes(object@MeanAtAge)$TimeSteps))
+#   #   attributes(object@MeanAtAge)$TimeSteps <- TimeSteps
+#   # 
+#   if (methods::is(Ages, 'ages')) {
+#     # attributes(object@MeanAtAge)$Ages <- Ages@Classes
+#     attributes(object@MeanAtAge)$UnitsAge <- Ages@Units
+#   }
+#   object
+# }
 
 
 

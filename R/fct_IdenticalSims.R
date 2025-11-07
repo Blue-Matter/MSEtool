@@ -23,30 +23,74 @@ IdenticalSims <- function(SimList, TimeSteps, EditSlots=TRUE) {
   TRUE
 }
 
+
+IdenticalSimsArray <- function(array, logical=TRUE) {
+  if (!is.array(array))
+    cli::cli_abort('`array` is not an array')
+  
+  dnames <- dimnames(array)
+  SimInd <- which(names(dnames) == 'Sim')
+  if (!length(SimInd))
+    cli::cli_abort('No `Sim` dimension in this array')
+  
+  dd <- dim(array)    
+  if (dd[SimInd]==1)
+    return(TRUE)
+  
+  Ref <- abind::asub(array, 1, SimInd)
+  if (any(is.na(Ref)))
+    return(FALSE)
+  nSim <- dimnames(array)[[SimInd]] |> length()
+  
+  logVec <- rep(TRUE, nSim)
+  for (sim in seq_along(logVec)[-1]) {
+    Comp1 <- abind::asub(array, sim, SimInd)
+    Comp2 <- abind::asub(array, sim-1, SimInd)
+    logVec[sim] <- !any(round(Comp1, 4) != round(Comp2, 4))
+  }
+  sum(logVec)<2
+}
+
+
+
+
 # CheckIdenticalSims(SimList, Equilibrium=TRUE)
 
-# FindDiffSlots <- function(object1, object2) {
-#   if (class(object1) != class(object2))
-#     cli::cli_abort('Both objects must be the same class')
-#   
-#   digest::digest(object1, algo='spookyhash')
-#   digest::digest(object2, algo='spookyhash')
-#   
-#   
-#   digest::digest(object1@OM@Stock[[1]]@SRR, algo='spookyhash')
-#   digest::digest(object2@OM@Stock[[1]]@SRR, algo='spookyhash')
-#   
-#   slots <- slotNames(object1)
-#   
-#   for (i in seq_along(slots)) {
-#     sub1 <- slot(object1, slots[i])
-#     sub2 <- slot(object2, slots[i])
-#     
-#     
-#   }
-#   
-#   
-# }
+# FindDiffSlots(SimList[[1]], SimList[[2]])
+
+
+FindDiffSlots <- function(object1, object2) {
+
+  if (class(object1) != class(object2))
+    cli::cli_abort('Both objects must be the same class')
+
+  if (isS4(object1)) {
+    slots <- slotNames(object1)
+    for (x in seq_along(slots)) {
+      obj1 <- slot(object1, slots[x])
+      obj2 <- slot(object2, slots[x])
+      chk <- digest::digest(obj1, algo='spookyhash') ==  digest::digest(obj2, algo='spookyhash')
+      if (!chk) {
+        cli::cli_alert_info("{.val {slots[x]}}")
+        Recall(obj1, obj2)
+      }
+    }
+  }
+  
+  if (is.list(object1)) {
+    for (x in seq_along(object1)) {
+      obj1 <- object1[[x]]
+      obj2 <- object2[[x]]
+      chk <- digest::digest(obj1, algo='spookyhash') ==  digest::digest(obj2, algo='spookyhash')
+      if (!chk) {
+        cli::cli_alert_info("{.val {names(object1)[x]}}")
+        Recall(obj1, obj2)
+      }
+    }
+  }
+  
+  
+}
 
 
 
@@ -57,10 +101,11 @@ CheckIdenticalSims <- function(SimList,
                                Period=c('Historical', 'Projection', 'All'), 
                                Equilibrium=FALSE) {
   
-  Period <- match.arg(Period)
+  # Period <- match.arg(Period)
+  # 
+  # if (is.null(TimeSteps))
+  #   TimeSteps <- TimeSteps(SimList[[1]]@OM, Period)
   
-  if (is.null(TimeSteps))
-    TimeSteps <- TimeSteps(SimList[[1]]@OM, Period)
   Digest <- vector('character', length(SimList)) 
   
   for (i in seq_along(SimList)) {
@@ -106,35 +151,3 @@ EditSlotsForSimCheck <- function(object) {
   object
 }
 
-IdenticalSimsArray <- function(array, logical=TRUE) {
-  if (!is.array(array))
-    return(TRUE)
-  
-  unique <- UniqueSims(array)
-  
-  if (!logical) 
-    return(unique)
-  
-  if (is.null(unique))
-    return(TRUE)
-  
-  length(unique)==1
-  
-}
-
-UniqueSims <- function(array) {
-  if (!is.array(array))
-    cli::cli_abort('`array` is not an array')
-  
-  dnames <- dimnames(array)
-  SimInd <- which(names(dnames) == 'Sim')
-  if (!length(SimInd))
-    return(NULL)
-  
-  dd <- dim(array)    
-  if (dd[SimInd]==1)
-    return(1)
-  
-  meanSim <- apply(array, SimInd, mean)
-  match(unique(meanSim), meanSim)
-}

@@ -1,19 +1,24 @@
-OM2stock <- function(OM, cpars=NULL, TimeSteps=NULL, nSim, seed=NULL) {
+OM2stock <- function(OM, cpars=NULL, TimeStepsList=NULL, nSim, seed=NULL) {
   stock <- Stock()
   if (inherits(OM, 'OM')) {
     stock@Name <- SubOM(OM, 'Stock')@Name
   } else {
     stock@Name <- OM@Name
   }
-  
+  stock@Name <- gsub("REPLACED -- ", '', stock@Name)
   stock@CommonName <- OM@Common_Name
   stock@Species <- OM@Species
-  stock@Ages <- Ages(OM@maxage)
+  stock@Ages <- Ages(MaxAge=OM@maxage/TimeStepsList$TSperYear ,
+                     MinAge=0,
+                     Units=TimeStepsList$TimeUnits)
   
-  Length(stock) <- OM2Length(OM, cpars, TimeSteps) |> 
+  stock@TimeSteps <- c(TimeStepsList$HistTS, TimeStepsList$ProjTS)
+  stock@TSperYear <- TimeStepsList$TSperYear
+  
+  Length(stock) <- OM2Length(OM, cpars, TimeStepsList) |> 
     PopulateLength(Ages=stock@Ages,
                    nsim=nSim,
-                   as.numeric(unlist(TimeSteps)),
+                   TimeSteps=c(TimeStepsList$HistTS, TimeStepsList$ProjTS),
                    ASK=TRUE,
                    seed)
   
@@ -21,7 +26,7 @@ OM2stock <- function(OM, cpars=NULL, TimeSteps=NULL, nSim, seed=NULL) {
     PopulateWeight(Ages=stock@Ages,
                    Length=stock@Length,
                    nsim=nSim,
-                   as.numeric(unlist(TimeSteps)),
+                   TimeSteps=c(TimeStepsList$HistTS, TimeStepsList$ProjTS),
                    ASK=FALSE,
                    seed=seed)
   
@@ -30,7 +35,7 @@ OM2stock <- function(OM, cpars=NULL, TimeSteps=NULL, nSim, seed=NULL) {
       Ages=stock@Ages,
       Length=stock@Length,
       nsim=nSim,
-      TimeSteps=as.numeric(unlist(TimeSteps)),
+      TimeSteps=c(TimeStepsList$HistTS, TimeStepsList$ProjTS),
       seed=seed
     )
   
@@ -39,7 +44,7 @@ OM2stock <- function(OM, cpars=NULL, TimeSteps=NULL, nSim, seed=NULL) {
                      Length=stock@Length,
                      Weight=stock@Weight,
                      nsim=nSim,
-                     TimeSteps=as.numeric(unlist(TimeSteps)),
+                     TimeSteps=c(TimeStepsList$HistTS, TimeStepsList$ProjTS),
                      CalcAtLength=TRUE,
                      seed=seed)
   
@@ -50,20 +55,20 @@ OM2stock <- function(OM, cpars=NULL, TimeSteps=NULL, nSim, seed=NULL) {
       Weight=stock@Weight,
       Maturity=stock@Maturity,
       nsim=nSim,
-      TimeSteps=as.numeric(unlist(TimeSteps)),
+      TimeSteps=c(TimeStepsList$HistTS, TimeStepsList$ProjTS),
       seed=seed
     )
     
-  SRR(stock) <- OM2SRR(OM, cpars, TimeSteps) |>
+  SRR(stock) <- OM2SRR(OM, cpars, TimeStepsList) |>
     PopulateSRR(Ages = stock@Ages,
-                CurrentYear = max(TimeSteps$HistTS),
-                TimeSteps=as.numeric(unlist(TimeSteps)),
+                CurrentYear = max(TimeStepsList$HistTS),
+                TimeSteps=c(TimeStepsList$HistTS, TimeStepsList$ProjTS),
                 nsim=nSim,
                 seed=seed)
   
-  Spatial(stock) <- OM2Spatial(OM, cpars, TimeSteps) |>
+  Spatial(stock) <- OM2Spatial(OM, cpars, TimeStepsList) |>
     PopulateSpatial(Ages=stock@Ages,
-                    TimeSteps=as.numeric(unlist(TimeSteps)),
+                    TimeSteps=c(TimeStepsList$HistTS, TimeStepsList$ProjTS),
                     nsim=nSim,
                     seed=seed)
     
@@ -107,35 +112,35 @@ OM2Length <- function(OM, cpars=NULL, TimeSteps=NULL) {
   Length@CVatAge <- OM@LenCV
   
   # ASK
-  if (!is.null(Length@Classes)) {
-    dd <- dim(Length@MeanAtAge)
-    AllTimeSteps <- c(TimeSteps$HistTS, TimeSteps$ProjTS)
-    DimNames <- list(Sim=1:dd[1],
-                     Age=0:OM@maxage,
-                     TimeSteps=AllTimeSteps[1:dd[3]])
-    dimnames(Length@MeanAtAge) <- DimNames
-    dimnames(Length@CVatAge) <- DimNames
-    
-    Length@ASK <- CalcAgeSizeKey(MeanAtAge=Length@MeanAtAge, 
-                                 CVatAge=Length@CVatAge,
-                                 Classes=Length@Classes,  
-                                 TruncSD=Length@TruncSD)
-  }
+  # if (!is.null(Length@Classes)) {
+  #   dd <- dim(Length@MeanAtAge)
+  #   AllTimeSteps <- c(TimeSteps$HistTS, TimeSteps$ProjTS)
+  #   DimNames <- list(Sim=1:dd[1],
+  #                    Age=0:OM@maxage,
+  #                    TimeSteps=AllTimeSteps[1:dd[3]])
+  #   dimnames(Length@MeanAtAge) <- DimNames
+  #   dimnames(Length@CVatAge) <- DimNames
+  #   
+  #   Length@ASK <- CalcAgeSizeKey(MeanAtAge=Length@MeanAtAge, 
+  #                                CVatAge=Length@CVatAge,
+  #                                Classes=Length@Classes,  
+  #                                TruncSD=Length@TruncSD)
+  # }
   
   Length
 }
 
 cpars2Length <- function(cpars) {
   Length <- Length()
-  MeanAtAge(Length) <- process_cpars(cpars$Len_age)
-  CVatAge(Length) <- process_cpars(cpars$LatASD) / MeanAtAge(Length)
+  MeanAtAge(Length) <- cpars$Len_age
+  CVatAge(Length) <- cpars$LatASD / Length@MeanAtAge
   CVatAge(Length)[!is.finite(CVatAge(Length))] <- tiny
   
   Classes(Length) <- cpars$CAL_binsmid
   pars <- Pars(Length)
-  pars$Linf <- process_cpars(cpars$Linf)
-  pars$K <- process_cpars(cpars$K)
-  pars$t0  <-  process_cpars(cpars$t0)
+  pars$Linf <- cpars$Linf
+  pars$K <- cpars$K
+  pars$t0  <-  cpars$t0
   Pars(Length) <- pars
   Length
 }
@@ -163,10 +168,10 @@ OM2Weight <- function(OM, cpars=NULL) {
 
 cpars2Weight <- function(cpars) {
   Weight <- Weight()
-  MeanAtAge(Weight) <- process_cpars(cpars$Wt_age)
+  MeanAtAge(Weight) <- cpars$Wt_age
   pars <- list()
-  pars$a <- process_cpars(cpars$Wa)
-  pars$b <- process_cpars(cpars$Wb)
+  pars$a <- cpars$Wa
+  pars$b <- cpars$Wb
   Pars(Weight) <- pars
   Weight
 }
@@ -194,10 +199,10 @@ OM2NaturalMortality <- function(OM, cpars=NULL) {
 
 cpars2NaturalMortality <- function(cpars) {
   NaturalMortality <- NaturalMortality()
-  MeanAtAge(NaturalMortality) <- process_cpars(cpars$M_ageArray)
+  MeanAtAge(NaturalMortality) <- cpars$M_ageArray
   pars <- Pars(NaturalMortality)
-  pars$M <- process_cpars(cpars[['M']])
-  pars$Msd <- process_cpars(cpars[['Msd']])
+  pars$M <- cpars[['M']]
+  pars$Msd <- cpars[['Msd']]
   Pars(NaturalMortality) <- pars
   NaturalMortality
 }
@@ -223,16 +228,24 @@ OM2Maturity <- function(OM, cpars=NULL) {
     if (!all(L50_95==0))
       pars$L50_95 <- L50_95
   }
+  
+  for (p in seq_along(pars)) {
+    if (is.array(pars[[p]])) {
+      pars[[p]] <- pars[[p]][,1]
+    }
+  }
+  
+  
   Pars(Maturity) <- pars
   Maturity
 }
 
 cpars2Maturity <- function(cpars) {
   Maturity <- Maturity()
-  MeanAtAge(Maturity) <- process_cpars(cpars$Mat_age)
+  MeanAtAge(Maturity) <- cpars$Mat_age
   pars <- Pars(Maturity)
-  pars$L50 <- process_cpars(cpars$L50)
-  pars$L50_95 <- process_cpars(cpars$L50_95)
+  pars$L50 <- cpars$L50
+  pars$L50_95 <- cpars$L50_95
   Pars(Maturity) <- pars
   Maturity
 }
@@ -251,7 +264,7 @@ OM2Fecundity <- function(OM, cpars=NULL) {
 
 cpars2Fecundity <- function(cpars) {
   Fecundity <- Fecundity()
-  MeanAtAge(Fecundity) <- process_cpars(cpars$Fec_age)
+  MeanAtAge(Fecundity) <- cpars$Fec_age
   Fecundity
 }
 
@@ -280,11 +293,11 @@ OM2SRR <- function(OM, cpars=NULL, TimeSteps=NULL) {
   Pars(SRR) <- pars
   
   SRR@Model <- switchSRR(OM@SRrel[1])
-  if (!is.finite(SRR@R0) || is.null(SRR@R0)) 
+  if (!any(is.finite(SRR@R0)) || is.null(SRR@R0)) 
     SRR@R0 <- OM@R0
-  if (!is.finite(SRR@SD) || is.null(SRR@SD))
+  if (!any(is.finite(SRR@SD)) || is.null(SRR@SD))
     SRR@SD <- OM@Perr
-  if (!is.finite(SRR@AC) || is.null(SRR@AC)) 
+  if (!any(is.finite(SRR@AC)) || is.null(SRR@AC)) 
     SRR@AC <- OM@AC
   
   # Add dimnames
@@ -314,11 +327,11 @@ OM2SRR <- function(OM, cpars=NULL, TimeSteps=NULL) {
 
 cpars2SRR <- function(cpars, nYear=NULL, maxage=NULL) {
   SRR <- SRR()
-  Pars(SRR)$h <- process_cpars(cpars$h)
-  SRR@R0 <- process_cpars(cpars$R0)
+  Pars(SRR)$h <- cpars$h
+  SRR@R0 <- cpars$R0
   SRR@Model <- switchSRR(cpars$SRrel[1])
-  SRR@SD <- process_cpars(cpars[['Perr']])
-  SRR@AC <- process_cpars(cpars[['AC']])
+  SRR@SD <- cpars[['Perr']]
+  SRR@AC <- cpars[['AC']]
   
   # Perr_y
   perr_y <- cpars[['Perr_y']]
@@ -339,27 +352,31 @@ cpars2SRR <- function(cpars, nYear=NULL, maxage=NULL) {
     proyears <- dd - nYear - maxage
     
     
-    init_age_classes <- perr_y[,1:maxage]
+    init_age_classes <- perr_y[,maxage:1]
+    SRR@RecDevInit <- init_age_classes
     
-    if (IdenticalSim(init_age_classes)) {
-      SRR@RecDevInit <- matrix(init_age_classes[1,], nrow=1)
-    } else {
-      SRR@RecDevInit <- init_age_classes
-    }
+    # if (IdenticalSims(init_age_classes)) {
+    #   SRR@RecDevInit <- matrix(init_age_classes[1,], nrow=1)
+    # } else {
+    #   SRR@RecDevInit <- init_age_classes
+    # }
     
     hist_yrs <- perr_y[,(maxage+1):(nYear+maxage)]
-    if (IdenticalSim(hist_yrs)) {
-      SRR@RecDevHist <- matrix(hist_yrs[1,], nrow=1)
-    } else {
-      SRR@RecDevHist <- hist_yrs
-    }
+    SRR@RecDevHist <- hist_yrs
+    # 
+    # if (IdenticalSims(hist_yrs)) {
+    #   SRR@RecDevHist <- matrix(hist_yrs[1,], nrow=1)
+    # } else {
+    #   
+    # }
     
     pro_yrs <- perr_y[,(nYear+maxage+1):(nYear+maxage+proyears)]
-    if (IdenticalSim(pro_yrs)) {
-      SRR@RecDevProj <- matrix(pro_yrs[1,], nrow=1)
-    } else {
-      SRR@RecDevProj <- pro_yrs
-    }
+    SRR@RecDevProj <- pro_yrs
+    # if (IdenticalSims(pro_yrs)) {
+    #   SRR@RecDevProj <- matrix(pro_yrs[1,], nrow=1)
+    # } else {
+    #   
+    # }
   }
   
   if (!is.null(cpars$spawn_time_frac))
@@ -439,7 +456,7 @@ process_mov <- function(mov, nage=1, nts=1) {
 
 cpars2Spatial <- function(cpars, TimeSteps) {
   Spatial <- Spatial()
-  Spatial@RelativeSize <- process_cpars(cpars$Asize)
+  Spatial@RelativeSize <- cpars$Asize
   Spatial@Movement <- process_mov(cpars$mov)
   Spatial <- CalcUnfishedDist(Spatial, c(TimeSteps$HistTS, TimeSteps$ProjTS))
   Spatial
@@ -447,8 +464,8 @@ cpars2Spatial <- function(cpars, TimeSteps) {
 
 cpars2Depletion <- function(cpars) {
   Depletion <- Depletion()
-  Depletion@Initial <- process_cpars(cpars$initD)
-  Depletion@Final <- process_cpars(cpars[['D']])
+  Depletion@Initial <- cpars$initD
+  Depletion@Final <- cpars[['D']]
   Depletion
 }
 

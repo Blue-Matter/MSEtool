@@ -42,8 +42,8 @@ GenerateHistoricalData_Sim <- function(HistSim, HistTimeSteps) {
     if (is.null(Data@TimeSteps)) {
       Data@TimeSteps <- HistTimeSteps
     }
-    if (is.null(Data@TimeStepsPerYear)) {
-      Data@TimeStepsPerYear <- HistSim@OM@TimeStepsPerYear
+    if (is.null(Data@TSperYear)) {
+      Data@TSperYear <- HistSim@OM@TSperYear
     }
     
     if (is.null(Data@TimeStepLH)) {

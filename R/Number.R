@@ -17,7 +17,10 @@ Number <- function(object, df=TRUE, hist=TRUE, byArea=FALSE, byAge=FALSE) {
   for (i in seq_along(object@Number)) {
     n <- object@Number[[i]] 
     n <- array2DF(n)
-    
+    n <- n |> 
+      dplyr::mutate(Age=as.numeric(Age),
+                    Area=as.numeric(Area)) |>
+      dplyr::arrange(Sim, TimeStep, Age, Area)
     if (!byArea & !byAge) {
       n <- n |> dplyr::group_by(Sim, TimeStep, MP) |>
         dplyr::summarise(Value=sum(Value), .groups='drop')
@@ -64,6 +67,10 @@ NumberHist <- function(Hist, df=TRUE, byArea=FALSE, byAge=FALSE) {
   for (i in seq_along(Hist@Number)) {
     n <- Hist@Number[[i]] |> ArraySubsetTimeStep(HistTimeStep)
     n <- array2DF(n)
+    n <- n |> 
+      dplyr::mutate(Age=as.numeric(Age),
+                    Area=as.numeric(Area)) |>
+      dplyr::arrange(Sim, TimeStep, Age, Area)
     
     if (!byArea & !byAge) {
       n <- n |> dplyr::group_by(Sim, TimeStep) |>

@@ -71,8 +71,8 @@ setMethod('show', 'ages', function(object) {
   
   cli::cli_h3('{.code Classes}')
   cli::cli_text("{.val {object@Classes}}")
-  cli::cli_h3('{.code Units}')
-  cli::cli_text("{.val {object@Units}}")
+  # cli::cli_h3('{.code Units}')
+  # cli::cli_text("{.val {object@Units}}")
   cli::cli_h3('{.code PlusGroup}')
   cli::cli_text("{.val {object@PlusGroup}}")
   cli::cli_end()
@@ -371,8 +371,8 @@ setMethod("show", "om", function(object) {
   cli::cli_h3('{.code pYear}')
   cli::cli_text("{.val {object@pYear}}")
   
-  cli::cli_h3('{.code TimeUnits}')
-  cli::cli_text("{.val {object@TimeUnits}}")
+  # cli::cli_h3('{.code TimeUnits}')
+  # cli::cli_text("{.val {object@TimeUnits}}")
   
   
   cli::cli_h3('Number of Stocks')

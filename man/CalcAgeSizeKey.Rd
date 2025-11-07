@@ -10,7 +10,7 @@ CalcAgeSizeKey(
   Classes,
   TruncSD = 2,
   Dist = c("normal", "lognormal"),
-  Ages = NULL,
+  AgeClasses = NULL,
   silent = FALSE,
   type = "Length"
 )
@@ -29,7 +29,7 @@ where the distribution is truncated. Use high values to approximate a non-trunca
 
 \item{Dist}{The distribution of \code{MeanAtAge}. Character, either \code{normal} or \code{lognormal}}
 
-\item{Ages}{Optional. Numeric vector of values for the age classes. Defaults to \code{0:(nage-1)}.}
+\item{AgeClasses}{Optional. Numeric vector of values for the age classes. Defaults to \code{0:(nage-1)}.}
 }
 \value{
 A 4D array with dimensions \code{nsim}, \code{nage}, \code{nClasses}, and \code{nTS}

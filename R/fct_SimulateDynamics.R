@@ -4,7 +4,7 @@ SimulateDynamics <- function(SimList,
   
   
   if (CheckIdenticalSims(SimList, HistTimeSteps)) {
-    stop('not done yet!')
+    # stop('not done yet!')
     
     # if (IdenticalAcrossSims) {
     #   # TODO - only run SimulateDynamics_ once and copy across SimList
@@ -20,7 +20,7 @@ SimulateDynamics <- function(SimList,
                           type = "iterator", 
                           format = "Simulating Historical Fishery {cli::pb_bar} {cli::pb_percent}",
                           clear = TRUE))
-  
+
   # populate CatchFrac if needed
   SimList <- purrr::map(SimList, \(HistSim) {
     if (length(HistSim@OM@CatchFrac))

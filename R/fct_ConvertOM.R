@@ -1,15 +1,9 @@
-#' @rdname Convert
-#' @export
-ConvertMOM <- function(MOM, ...) {
-  ConvertOM(MOM,...)
-}
 
 
 #' @rdname Convert
 #' @export
 ConvertOM <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
-  CheckClass(OM, c('OM', 'MOM'), 'OM')
-  isMOM <- inherits(OM, 'MOM')
+  CheckClass(OM, c('OM'), 'OM')
   
   om <- OM()
   om@Name <- OM@Name
@@ -30,42 +24,44 @@ ConvertOM <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
   om@Source <- OM@Source
   
   if (is.null(CurrentYear)) {
-    if (isMOM) {
-      om@CurrentYear <- OM@Fleets[[1]][[1]]@CurrentYr
-      if (om@CurrentYear < 1000)
-        om@CurrentYear <- as.numeric(format(Sys.Date(), '%Y'))
-    } else {
-      om@CurrentYear <- as.numeric(format(Sys.Date(), '%Y'))
-    }
+    om@CurrentYear <- as.numeric(format(Sys.Date(), '%Y'))
   } else {
     om@CurrentYear <- CurrentYear
   }
   
-  om@TimeUnits <- 'Year'
-  om@TimeStepsPerYear <- 1
+  TimeUnits <- CalcTSUnits(TSperYear)
+  om@TSperYear <- TSperYear
   om@TimeSteps <- CalcTimeSteps(nYear=om@nYear,
                                 pYear=om@pYear,
                                 CurrentYear=om@CurrentYear,
-                                TimeUnits=om@TimeUnits)
+                                TSperYear)
   
-  TimeSteps <- list(HistTS=TimeSteps(om, 'Historical'),
-                    ProjTS=TimeSteps(om, 'Projection')
+  TimeStepsList <- list(HistTS=TimeSteps(om, 'Historical'),
+                        ProjTS=TimeSteps(om, 'Projection'),
+                        TimeUnits=TimeUnits,
+                        TSperYear=TSperYear
   )
   
-  if (isMOM)
-    stop("not done yet!")
-  
-  om@Stock <- OM2stock(OM, cpars=OM@cpars, TimeSteps, OM@nsim, OM@seed)
+  om@Stock <- OM2stock(OM, cpars=OM@cpars, TimeStepsList, OM@nsim, OM@seed)
   om@Fleet <- OM2fleet(OM, OM@cpars, OM@Fdisc)
-  
   om <- UpdateSelRet(OM, om)
-  
-  om@Obs <- OM2obs(OM, OM@cpars)
+ 
+   om@Obs <- OM2obs(OM, OM@cpars)
   om@Imp <- OM2imp(OM, OM@cpars)
   
   # update because Vmaxlen and Rmaxlen now correspond with maximum length class
   om <- SolveForVmaxlen(om) 
   om <- SolveForRmaxlen(om)
+  
+  
+  om@Efactor <- MakeNamedList(StockNames(om), 
+                              array(1, dim=c(om@nSim, nFleet(om)),
+                                    dimnames = list(
+                                      Sim=1:om@nSim,
+                                      Fleet=FleetNames(om)
+                                    )
+                              ))   
+  
   if (Populate)
     om <- PopulateOM(om, silent=FALSE)
   

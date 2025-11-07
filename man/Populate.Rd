@@ -20,7 +20,7 @@ PopulateFleet(
 
 PopulateOM(OM, silent = FALSE)
 
-PopulateStock(stock, ALK = TRUE, AWK = TRUE, seed = NULL, silent = FALSE)
+PopulateStock(Stock, ALK = TRUE, AWK = TRUE, seed = NULL, silent = FALSE)
 }
 \arguments{
 \item{seed}{Seed for the random number generator}

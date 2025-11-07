@@ -108,11 +108,10 @@ CalcUnfishedSurvivalStock <- function(Stock, SP=FALSE, TimeSteps=NULL, Expand=TR
     Stock@Maturity@Semelparous <- array(1, dim = c(Stock@nSim, nAges, 1))
   }
   
-  Semelparous <- Stock@Maturity@Semelparous |> ArrayExpand(Stock@nSim, nAges, TimeSteps)
+  Semelparous <- Stock@Maturity@Semelparous |> ArrayExpand(Stock@nSim, nAges, TimeSteps) |>
+    ArraySubsetTimeStep(TimeSteps)
   
   IsIdenticalTime <- all(IdenticalTimeSteps(NaturalMortalityAtAge) & IdenticalTimeSteps(Semelparous))
-  IsIdenticalSim <- all(IdenticalSims(NaturalMortalityAtAge) & IdenticalSims(Semelparous))
-  
   BySim <- 'Sim' %in% names(dimnames(NaturalMortalityAtAge))
   
   if (!BySim) {
@@ -143,6 +142,8 @@ CalcUnfishedSurvivalStock <- function(Stock, SP=FALSE, TimeSteps=NULL, Expand=TR
     }
     
   }
+  
+  IsIdenticalSim <- all(IdenticalSims(NaturalMortalityAtAge) & IdenticalSims(Semelparous))
   
   if (IsIdenticalSim & IsIdenticalTime) {
     NaturalMortalityAtAge <- abind::adrop(NaturalMortalityAtAge[1,,1, drop=FALSE], 1)

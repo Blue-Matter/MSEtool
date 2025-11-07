@@ -48,7 +48,12 @@ OptimizeCatchability <- function(HistSim, debug=FALSE) {
       StCatchability <- HistSim@OM@Fleet[[st]]@Catchability[,fl]
       StCatchability <- StCatchability/StCatchability[1]
       HistSim@OM@Fleet[[st]]@Catchability[,fl] <- StCatchability * qStock[st] * qFleet[st,fl]
-      HistSim@OM@Fleet[[st]]@qArea[,fl,] <- HistSim@OM@Fleet[[st]]@Catchability[,fl] / as.numeric(HistSim@OM@Stock[[st]]@Spatial@RelativeSize)
+      
+      nArea <- length(HistSim@OM@Stock[[st]]@Spatial@RelativeSize)
+      nTS <- length( HistSim@OM@Fleet[[st]]@Catchability[,fl] )
+      RelativeSize <- matrix(HistSim@OM@Stock[[st]]@Spatial@RelativeSize, nrow=nTS, ncol=nArea, byrow=TRUE)
+      qArea <- matrix(HistSim@OM@Fleet[[st]]@Catchability[,fl], nrow=nTS, ncol=nArea) / RelativeSize
+      HistSim@OM@Fleet[[st]]@qArea[,fl,] <- qArea
     }
   }
   
@@ -57,7 +62,6 @@ OptimizeCatchability <- function(HistSim, debug=FALSE) {
 
 
 OptimizeCatchability_Multi <- function(HistSim, TimeStepsHist, bounds, tol, silent, debug=FALSE) {
-  
   
   nStock <- nStock(HistSim@OM)
   nFleet <- nFleet(HistSim@OM)
@@ -69,11 +73,22 @@ OptimizeCatchability_Multi <- function(HistSim, TimeStepsHist, bounds, tol, sile
     return(HistSim)
 
   # Catch divided by effort (q proxy)
+  if (!length(HistSim@OM@CatchFrac)) {
+    HistSim@OM@CatchFrac <- MakeNamedList(StockNames(HistSim@OM))
+    FleetNames <- as.character(HistSim@OM@Fleet[[1]]@Name)
+    for (st in 1:nStock) {
+      effort <- HistSim@OM@Fleet[[st]]@Effort
+      q <- HistSim@OM@Fleet[[st]]@Catchability
+      relF <- effort[ncol(effort),] * q[ncol(q),]
+      HistSim@OM@CatchFrac[[st]] <- relF/sum(relF)
+    }
+  }
+  
   CatchFrac <- List2Array(HistSim@OM@CatchFrac, dimname = 'Stock') |> t()
   EffortFleet <- array(NA, dim=dim(CatchFrac))
   nTS <- length(TimeStepsHist)
   for (st in 1:nStock) {
-    EffortFleet[st,] <- HistSim@OM@Fleet[[st]]@Effort@Effort[nTS]
+    EffortFleet[st,] <- HistSim@OM@Fleet[[st]]@Effort[nTS]
   }
   
   FDist <- CatchFrac/EffortFleet
@@ -160,7 +175,11 @@ OptCatchability <- function(pars, HistSim, TimeStepsHist, debug=FALSE) {
       StCatchability <- HistSim@OM@Fleet[[st]]@Catchability[,fl]
       StCatchability <- StCatchability/StCatchability[1]
       HistSim@OM@Fleet[[st]]@Catchability[,fl] <- StCatchability * qStock[st] * qFleet[st,fl]
-      HistSim@OM@Fleet[[st]]@qArea[,fl,] <- HistSim@OM@Fleet[[st]]@Catchability[,fl] / as.numeric(HistSim@OM@Stock[[st]]@Spatial@RelativeSize)
+      nArea <- length(HistSim@OM@Stock[[st]]@Spatial@RelativeSize)
+      nTS <- length( HistSim@OM@Fleet[[st]]@Catchability[,fl] )
+      RelativeSize <- matrix(HistSim@OM@Stock[[st]]@Spatial@RelativeSize, nrow=nTS, ncol=nArea, byrow=TRUE)
+      qArea <- matrix(HistSim@OM@Fleet[[st]]@Catchability[,fl], nrow=nTS, ncol=nArea) / RelativeSize
+      HistSim@OM@Fleet[[st]]@qArea[,fl,] <- qArea
     }
   }
     

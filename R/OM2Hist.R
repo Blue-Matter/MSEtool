@@ -3,7 +3,7 @@ CopySlots <- function(ObjectOut,
                       ObjectIn, 
                       Concate=c("nYear", "pYear", "nSim", 
                                 "CurrentYear", "TimeUnits",
-                                "TimeStepsPerYear"),
+                                "TSperYear"),
                       List=c('Misc', 'Log')) {
   Slots <- slotNames(ObjectOut)
   for (sl in Concate) {
@@ -44,7 +44,7 @@ OM2Hist <- function(OM, RefPointsMSY=TRUE, silent=FALSE) {
   nAgesList <- purrr::map(Hist@OM@Stock, \(Stock) 
     length(Stock@Ages@Classes))
   
-  Hist@OM@Fleet <- purrr::map2(Hist@OM@Fleet, nAgesList, \(FleetList,nAges)
+  Hist@OM@Fleet <- purrr::map2(Hist@OM@Fleet, nAgesList, \(FleetList, nAges)
     Fleet2Hist(FleetList, nAges, nSim=nSim(OM), TimeSteps=TimeSteps, nArea, silent, id)
   )
   
@@ -437,7 +437,7 @@ Hist2SimList <- function(Hist) {
     
   
 # Convert SimList back to Hist
-SimList2Hist <- function(Hist, SimList, TimeSteps=NULL, Reduce=TRUE ) {
+SimList2Hist <- function(Hist, SimList, TimeSteps=NULL, Reduce=TRUE) {
   
   if (is.null(TimeSteps))
     TimeSteps <- TimeSteps(Hist@OM, "Historical")
@@ -487,14 +487,17 @@ SimList2Hist <- function(Hist, SimList, TimeSteps=NULL, Reduce=TRUE ) {
     Hist@Data <- HistData
   }
 
-  
   # Check for Depletion Optimization 
   # TODO - warning message or re-sample 
   OptDepletionRatio <- CheckDepletionOpt(SimList, TimeSteps) 
   Hist@Log$OptDepletionRatio <- OptDepletionRatio
   
-  if (Reduce)
+  if (Reduce) {
+    # cli::cli_alert('Note: `Reduce` not currently working')
     Hist <- ArrayReduceDims(Hist)
+    
+  }
+    
   SetDigest(Hist)
 }
   

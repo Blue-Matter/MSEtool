@@ -333,6 +333,26 @@ ArraySubsetSim <- function(object, Sims=NULL, drop=FALSE) {
   
 }
 
+ArraySubsetAge <- function(object, Ages=NULL, drop=FALSE) {
+  if (is.null(Ages))
+    return(object)
+  
+  Ages <- Ages |> as.numeric() 
+  
+  DN <- dimnames(object)
+  DN$Age <- as.numeric(DN$Age)
+  AgeInd <- which(names(DN) == 'Age')
+  
+  if (length(AgeInd)==0)
+    cli::cli_abort("`Age` dimension not found in this array", .internal=TRUE)
+  
+  if (any(Ages > max(DN$Age))) {
+    cli::cli_abort("`Ages` greater than ages in this array", .internal=TRUE)
+  } 
+  
+  abind::asub(object, (DN[[AgeInd]] %in% Ages), AgeInd, drop=FALSE) 
+}
+
 # ----- Array Expand ----
 
 #' @export
@@ -573,3 +593,197 @@ ExpandTimeSteps <- function(array, TimeSteps, default=NULL) {
   abind::afill(OutArray) <- FillArray
   OutArray
 }
+
+
+
+
+#' @export
+ArrayReduceDims <- function(array, 
+                            IncSim=TRUE, 
+                            IncAge=FALSE, 
+                            IncTimeStep=TRUE,
+                            debug=FALSE, 
+                            silent=FALSE, 
+                            id=NULL) {
+  
+  if (debug)
+    print(class(array))
+  
+  if (!IncSim & !IncTimeStep & !IncAge) 
+    return(array)
+  
+  if (!length(array))
+    return(array)
+  
+  if (!is.array(array)) {
+    if (isS4(array)) {
+      if (!silent) {
+        if (is.null(id)) {
+          id <- cli::cli_progress_bar('Reducing dimensions to minimum size', type='tasks')
+        } else {
+          cli::cli_progress_update(id=id) 
+        }
+      }
+      
+      if (inherits(array, 'data'))
+        return(array)
+      slots <- slotNames(array)
+      for (sl in slots) {
+        slot(array, sl) <- Recall(slot(array, sl), IncSim, IncAge, IncTimeStep, debug, silent, id)
+      }
+      return(array)
+    }
+    if (is.list(array)) {
+      if (length(array)) {
+        for (i in 1:length(array)) {
+          temp <- Recall(array[[i]], IncSim, IncAge, IncTimeStep, debug, silent, id)
+          if (!is.null(temp))
+            array[[i]] <- temp 
+        }
+        return(array)
+      }
+    }
+  }
+  
+  dnames <- array |> dimnames() |> names()
+  
+  indSim <- which(dnames=='Sim')
+  indAge <- which(dnames=='Age')
+  indTimeStep <- which(dnames=='TimeStep')
+  
+  incSim <- length(indSim)
+  incAge <- length(indAge)
+  incTimeStep <- length(indTimeStep)
+  
+  if (!IncSim)
+    incSim <- 0
+  
+  if (!IncAge)
+    incAge <- 0
+  
+  if (!IncTimeStep)
+    incTimeStep <- 0
+  
+  if (incSim & incTimeStep & incAge) {
+    idenSim <- IdenticalSims(array) 
+    idenTime <- IdenticalTimeSteps(array)
+    idenAge <- IdenticalAge(array)
+    
+    if (idenSim & idenTime & idenAge) 
+      return(abind::asub(array, list(1,1,1), c(indSim, indAge, indTimeStep), drop=FALSE))
+    
+    if (!idenSim & idenTime & idenAge) 
+      return(abind::asub(array, list(1,1), c(indAge, indTimeStep), drop=FALSE))
+    
+    if (idenSim & !idenTime & idenAge) {
+      return(abind::asub(array, list(1,1,UniqueTimeSteps(array)), c(indSim, indAge, indTimeStep), drop=FALSE))
+    }
+    
+    if (!idenSim & !idenTime & idenAge) 
+      return(abind::asub(array, list(1,UniqueTimeSteps(array)), c(indAge, idenTime), drop=FALSE))
+    
+    if (idenSim & idenTime & !idenAge)
+      return(abind::asub(array, list(1,1), c(indSim, indTimeStep), drop=FALSE))
+    
+    if (!idenSim & idenTime & !idenAge) 
+      return(abind::asub(array, list(1), c(indTimeStep), drop=FALSE))
+    
+    if (idenSim & !idenTime & !idenAge) 
+      return(abind::asub(array, list(1, UniqueTimeSteps(array)), c(indSim, indTimeStep), drop=FALSE))
+    
+    if (!idenSim & !idenTime & !idenAge) {
+      return(abind::asub(array, list(UniqueTimeSteps(array)), c(indTimeStep), drop=FALSE))
+    }
+    
+  }
+  
+  if (!incSim & incTimeStep & incAge) {
+    idenTime <- IdenticalTimeSteps(array)
+    idenAge <- IdenticalAge(array)
+    
+    if (idenTime & idenAge) 
+      return(abind::asub(array, list(1,1), c(indAge, indTimeStep), drop=FALSE))
+    if (!idenTime & idenAge) 
+      return(abind::asub(array, list(1, UniqueTimeSteps(array)), c(indAge, indTimeStep), drop=FALSE))
+    
+    if (idenTime & !idenAge)
+      return(abind::asub(array, list(1), c(indTimeStep), drop=FALSE))
+    
+    if (!idenTime & !idenAge) 
+      return(abind::asub(array, list(UniqueTimeSteps(array)), c(indTimeStep), drop=FALSE))
+  }
+  
+  if (incSim & !incTimeStep & incAge) {
+    idenSim <- IdenticalSims(array) 
+    idenAge <- IdenticalAge(array)
+    
+    if (idenSim  & idenAge) 
+      return(abind::asub(array, list(1,1), c(indSim, indAge), drop=FALSE))
+    
+    if (!idenSim & idenAge) 
+      return(abind::asub(array, list(1), c(indAge), drop=FALSE))
+    
+    if (idenSim & idenAge) 
+      return(abind::asub(array, list(1,1), c(indSim, indAge), drop=FALSE))
+    
+    if (!idenSim & idenAge) 
+      return(abind::asub(array, list(1), c(indAge), drop=FALSE))
+    
+    if (idenSim & !idenAge)
+      return(abind::asub(array, list(1,1), c(indSim), drop=FALSE))
+    
+    if (!idenSim & !idenAge) 
+      return(array)
+    
+  }
+  
+  if (!incSim & !incTimeStep & incAge) {
+    idenAge <- IdenticalAge(array)
+    
+    if (idenAge) 
+      return(abind::asub(array, list(1), c(indAge), drop=FALSE))
+    
+    if (!idenAge) 
+      return(array)
+  }
+  
+  if (incSim & incTimeStep & !incAge) {
+    idenSim <- IdenticalSims(array) 
+    idenTime <- IdenticalTimeSteps(array)
+    
+    if (idenSim & idenTime) 
+      return(abind::asub(array, list(1,1), c(indSim, indTimeStep), drop=FALSE))
+    
+    if (!idenSim & idenTime) 
+      return(abind::asub(array, list(1), c(indTimeStep), drop=FALSE))
+    
+    if (idenSim & !idenTime) 
+      return(abind::asub(array, list(1, UniqueTimeSteps(array)), c(indSim, indTimeStep), drop=FALSE))
+    
+    if (!idenSim & !idenTime) 
+      return(abind::asub(array, list(UniqueTimeSteps(array)), c(indTimeStep), drop=FALSE))
+    
+  }
+  
+  if (!incSim & incTimeStep & !incAge) {
+    idenTime <- IdenticalTimeSteps(array)
+    if (idenTime) 
+      return(abind::asub(array, list(1), c(indTimeStep), drop=FALSE))
+    
+    if (!idenTime) 
+      return(abind::asub(array, UniqueTimeSteps(array), indTimeStep, drop=FALSE))
+  }
+  
+  if (incSim & !incTimeStep & !incAge) {
+    idenSim <- IdenticalSims(array) 
+    if (idenSim) 
+      return(abind::asub(array, list(1), c(indSim), drop=FALSE))
+    if (!idenSim) 
+      return(array)
+  }
+  
+  
+  
+  array
+}
+

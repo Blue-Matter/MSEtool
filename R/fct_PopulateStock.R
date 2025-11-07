@@ -1,92 +1,92 @@
 
 #' @describeIn Populate Populate a [Stock()] object
 #' @export
-PopulateStock <- function(stock, 
+PopulateStock <- function(Stock, 
                           ALK=TRUE, 
                           AWK=TRUE, 
                           seed=NULL, 
                           silent=FALSE) {
   
   argList <- list(seed, ALK, AWK)
-  if (CheckDigest(stock, argList) | EmptyObject(stock))
-    return(stock)
+  if (CheckDigest(Stock, argList) | EmptyObject(Stock))
+    return(Stock)
   
-  SetSeed(stock, seed)
+  SetSeed(Stock, seed)
   
-  stock@TimeUnits <- stock@Ages@Units
-  stock@TimeStepsPerYear <- TSperYear(stock@TimeUnits)
-  stock@TimeSteps <- CalcTimeSteps(nYear=stock@nYear, 
-                                   pYear=stock@pYear, 
-                                   CurrentYear=stock@CurrentYear, 
-                                   TimeUnits=stock@TimeUnits)
+  Stock@TimeUnits <- Stock@Ages@Units
+  Stock@TSperYear <- TSperYear(Stock@TimeUnits)
+  Stock@TimeSteps <- CalcTimeSteps(nYear=Stock@nYear, 
+                                   pYear=Stock@pYear, 
+                                   CurrentYear=Stock@CurrentYear, 
+                                   TSperYear=  Stock@TSperYear )
   # Require ALK and/or AWK?
-  # ALK <- RequireALK(stock)
-  # AWK <- RequireAWK(stock)
+  # ALK <- RequireALK(Stock)
+  # AWK <- RequireAWK(Stock)
   
-  stock@Length <- PopulateLength(Length=stock@Length,
-                                 Ages=stock@Ages,
-                                 nsim=nSim(stock),
-                                 TimeSteps=TimeSteps(stock),
+  Stock@Length <- PopulateLength(Length=Stock@Length,
+                                 Ages=Stock@Ages,
+                                 nsim=nSim(Stock),
+                                 TimeSteps=TimeSteps(Stock),
                                  ASK=ALK,
                                  seed=seed,
                                  silent=silent)
   
-  stock@Weight <- PopulateWeight(Weight=stock@Weight,
-                                 Ages=stock@Ages,
-                                 Length=stock@Length,
-                                 nSim(stock),
-                                 TimeSteps=TimeSteps(stock),
+  Stock@Weight <- PopulateWeight(Weight=Stock@Weight,
+                                 Ages=Stock@Ages,
+                                 Length=Stock@Length,
+                                 nSim(Stock),
+                                 TimeSteps=TimeSteps(Stock),
                                  ASK=AWK,
                                  seed=seed,
                                  silent=silent)
   
-  stock@NaturalMortality <- PopulateNaturalMortality(stock@NaturalMortality,
-                                                     Ages=stock@Ages,
-                                                     Length=stock@Length,
-                                                     nsim=nSim(stock),
-                                                     TimeSteps=TimeSteps(stock),
+  Stock@NaturalMortality <- PopulateNaturalMortality(Stock@NaturalMortality,
+                                                     Ages=Stock@Ages,
+                                                     Length=Stock@Length,
+                                                     nsim=nSim(Stock),
+                                                     TimeSteps=TimeSteps(Stock),
                                                      seed=seed,
                                                      silent=silent)
   
-  stock@Maturity <- PopulateMaturity(Maturity=stock@Maturity,
-                                     Ages=stock@Ages,
-                                     Length=stock@Length,
-                                     Weight=stock@Weight,
-                                     nsim=nSim(stock),
-                                     TimeSteps=TimeSteps(stock),
+  Stock@Maturity <- PopulateMaturity(Maturity=Stock@Maturity,
+                                     Ages=Stock@Ages,
+                                     Length=Stock@Length,
+                                     Weight=Stock@Weight,
+                                     nsim=nSim(Stock),
+                                     TimeSteps=TimeSteps(Stock),
                                      seed=seed,
                                      silent=silent)
   
-  stock@Fecundity <- PopulateFecundity(stock@Fecundity,
-                                       Ages=stock@Ages,
-                                       Length=stock@Length,
-                                       Weight=stock@Weight,
-                                       Maturity=stock@Maturity,
-                                       nsim=nSim(stock),
-                                       TimeSteps=TimeSteps(stock),
+  Stock@Fecundity <- PopulateFecundity(Stock@Fecundity,
+                                       Ages=Stock@Ages,
+                                       Length=Stock@Length,
+                                       Weight=Stock@Weight,
+                                       Maturity=Stock@Maturity,
+                                       nsim=nSim(Stock),
+                                       TimeSteps=TimeSteps(Stock),
                                        seed=seed,
                                        silent=silent)
   
-  stock@SRR <- PopulateSRR(SRR=stock@SRR,
-                           Ages=stock@Ages,
-                           CurrentYear=stock@CurrentYear,
-                           TimeSteps=stock@TimeSteps,
-                           nsim=stock@nSim,
+  Stock@SRR <- PopulateSRR(SRR=Stock@SRR,
+                           Ages=Stock@Ages,
+                           CurrentYear=Stock@CurrentYear,
+                           TimeSteps=Stock@TimeSteps,
+                           nsim=Stock@nSim,
                            seed=seed,
                            silent=silent)
   
-  stock@Spatial <- PopulateSpatial(Spatial=stock@Spatial,
-                                   Ages=stock@Ages,
-                                   TimeSteps=TimeSteps(stock),
-                                   nsim=stock@nSim,
+  Stock@Spatial <- PopulateSpatial(Spatial=Stock@Spatial,
+                                   Ages=Stock@Ages,
+                                   TimeSteps=TimeSteps(Stock),
+                                   nsim=Stock@nSim,
                                    seed=seed,
                                    silent=silent)
   
-  stock@Depletion <- PopulateDepletion(stock@Depletion,
-                                       nsim=stock@nSim,
+  Stock@Depletion <- PopulateDepletion(Stock@Depletion,
+                                       nsim=Stock@nSim,
                                        seed=seed)
   
-  SetDigest(stock, argList)
+  SetDigest(Stock, argList)
 }
 
 
@@ -98,7 +98,7 @@ PopulateLength <- function(Length,
                            seed=NULL,
                            silent=FALSE) {
   
-  TimeSteps <- TimeStepAttributes(Length, TimeSteps)
+  # TimeSteps <- TimeStepAttributes(Length, TimeSteps)
   argList <- list(Ages, nsim, TimeSteps, ASK, seed)
   
   if (CheckDigest(Length, argList) | EmptyObject(Length))
@@ -122,12 +122,11 @@ PopulateLength <- function(Length,
   if (!is.null(Length@CVatAge))
     Length <- PopulateClasses(Length)
   
-  
   if (ASK) {
     Length <- PopulateASK(Length, Ages, TimeSteps, silent=silent)
   }
   
-  Length <- AddMeanAtAgeAttributes(Length, TimeSteps, Ages)
+  # Length <- AddMeanAtAgeAttributes(Length, TimeSteps, Ages)
   SetDigest(Length, argList)
 }
 
@@ -141,7 +140,7 @@ PopulateWeight <- function(Weight,
                            CalcAtLength=FALSE,
                            seed=NULL,
                            silent=FALSE) {
-  TimeSteps <- TimeStepAttributes(Weight, TimeSteps)
+  # TimeSteps <- TimeStepAttributes(Weight, TimeSteps)
   argList <- list(Ages, Length, nsim, TimeSteps, ASK,
                   CalcAtLength, seed)
   
@@ -206,7 +205,7 @@ PopulateNaturalMortality <- function(NaturalMortality,
                                      seed=NULL,
                                      silent=FALSE) {
   
-  TimeSteps <- TimeStepAttributes(NaturalMortality, TimeSteps)
+  # TimeSteps <- TimeStepAttributes(NaturalMortality, TimeSteps)
   
   argList <- list(Ages, Length, nsim, TimeSteps, CalcAtLength, seed)
   if (CheckDigest( NaturalMortality, argList) | EmptyObject(NaturalMortality))
@@ -237,7 +236,7 @@ PopulateNaturalMortality <- function(NaturalMortality,
   
   NaturalMortality <- PopulateRandom(NaturalMortality)
   
-  NaturalMortality <- AddMeanAtAgeAttributes(NaturalMortality, TimeSteps, Ages)
+  # NaturalMortality <- AddMeanAtAgeAttributes(NaturalMortality, TimeSteps, Ages)
   SetDigest(NaturalMortality, argList)
 }
 
@@ -251,15 +250,14 @@ PopulateMaturity <- function(Maturity,
                              seed=NULL,
                              silent=FALSE) {
   
-  TimeSteps <- TimeStepAttributes(Maturity, TimeSteps)
+  # TimeSteps <- TimeStepAttributes(Maturity, TimeSteps)
   argList <- list(Ages, Length, nsim, TimeSteps, CalcAtLength, seed)
   
   if (CheckDigest(Maturity, argList) | EmptyObject(Maturity))
     return(Maturity)
   
   SetSeed(Maturity, seed)
-  
-  
+
   Maturity@Pars <- StructurePars(Pars=Maturity@Pars, nsim, TimeSteps)
   Maturity@Model <- FindModel(Maturity)
   ModelClass <- getModelClass(Maturity@Model)
@@ -286,7 +284,7 @@ PopulateMaturity <- function(Maturity,
     Maturity <- MeanAtAge2MeanAtLength(Maturity, Length, Ages, nsim, 
                                        TimeSteps, seed, silent)
   
-  Maturity <- AddMeanAtAgeAttributes(Maturity, TimeSteps, Ages)
+  # Maturity <- AddMeanAtAgeAttributes(Maturity, TimeSteps, Ages)
   
   # Semelparous 
   if (inherits(Maturity@Semelparous, 'array')) {
@@ -299,6 +297,8 @@ PopulateMaturity <- function(Maturity,
       Maturity@Semelparous[] <- 0
     }
   }
+  Maturity@MeanAtAge <- AddDimNames(Maturity@MeanAtAge, TimeSteps=TimeSteps, Ages=Ages@Classes)
+  Maturity@Semelparous <- AddDimNames(Maturity@Semelparous, TimeSteps=TimeSteps, Ages=Ages@Classes)
   
   SetDigest(Maturity, argList)
 }
@@ -313,7 +313,7 @@ PopulateFecundity <- function(Fecundity,
                               CalcAtLength=FALSE,
                               seed=NULL,
                               silent=FALSE) {
-  TimeSteps <- TimeStepAttributes(Fecundity, TimeSteps)
+  # TimeSteps <- TimeStepAttributes(Fecundity, TimeSteps)
   argList <- list(Ages, Length, Weight, Maturity, nsim, TimeSteps, CalcAtLength, seed)
   
   if (EmptyObject(Fecundity)) {
@@ -379,7 +379,7 @@ PopulateFecundity <- function(Fecundity,
     Fecundity <- MeanAtAge2MeanAtLength(Fecundity, Length, Ages, nsim, 
                                         TimeSteps, seed, silent)
   
-  Fecundity <- AddMeanAtAgeAttributes(Fecundity, TimeSteps, Ages)
+  Fecundity@MeanAtAge <- AddDimNames(Fecundity@MeanAtAge, TimeSteps=TimeSteps, Ages=Ages@Classes)
   
   SetDigest(Fecundity, argList)
 }
@@ -409,10 +409,10 @@ PopulateSRR <- function(SRR,
   }
   
   tTimeSteps <- floor(TimeSteps)
-  histTS <- TimeSteps[tTimeSteps<=CurrentYear]
-  projTS <- TimeSteps[tTimeSteps>CurrentYear]
-  nHistTS <- length(histTS)
-  nProjTS <- length(projTS)
+  HistTS <- TimeSteps[tTimeSteps<=CurrentYear]
+  ProjTS <- TimeSteps[tTimeSteps>CurrentYear]
+  nHistTS <- length(HistTS)
+  nProjTS <- length(ProjTS)
   
   if (CheckDigest(SRR, argList) | EmptyObject(SRR))
     return(SRR)
@@ -441,8 +441,8 @@ PopulateSRR <- function(SRR,
                                                  AC=SRR@AC,
                                                  TruncSD=SRR@TruncSD,
                                                  Ages,
-                                                 nHistTS,
-                                                 nProjTS,
+                                                 HistTS,
+                                                 ProjTS,
                                                  nsim=nsim,
                                                  RecDevInit=SRR@RecDevInit,
                                                  RecDevHist=SRR@RecDevHist,
@@ -457,13 +457,13 @@ PopulateSRR <- function(SRR,
   SRR@RecDevHist <- RecDeviations$RecDevHist
   dimnames(SRR@RecDevHist) <- list(
     Sim=1:nrow(SRR@RecDevHist),
-    TimeStep=histTS
+    TimeStep=HistTS
   )
   
   SRR@RecDevProj <- RecDeviations$RecDevProj
   dimnames(SRR@RecDevProj) <- list(
     Sim=1:nrow(SRR@RecDevProj),
-    TimeStep=projTS
+    TimeStep=ProjTS
   )
   SetDigest(SRR, argList)
 }

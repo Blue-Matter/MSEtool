@@ -5,14 +5,14 @@ OM2fleet <- function(OM, cpars=NULL, Fdisc=NULL) {
   } else {
     fleet@Name <- OM@Name
   }
+  fleet@Name <- gsub("REPLACED -- ", '', fleet@Name)
   
   # FishingMortality(fleet) <- OM2FishingMortality(OM, cpars)
   
   fleet@Effort <- OM2Effort(OM, cpars)
-  Catchability <- OM2Catchability(OM, cpars) 
-  fleet@Catchability <- Catchability$Catchability
-  fleet@qCV <- Catchability$qCV
-  fleet@qInc <- Catchability$qInc
+  fleet@Catchability <- OM2Catchability(OM, cpars) 
+  fleet@qCV <- OM@qcv
+  fleet@qInc <- OM@qinc
   
   Selectivity(fleet) <- OM2Selectivity(OM, cpars)
   Retention(fleet) <- OM2Retention(OM, cpars)
@@ -21,7 +21,7 @@ OM2fleet <- function(OM, cpars=NULL, Fdisc=NULL) {
   # fleet@Closure <- # OM@MPA # TODO
   fleet@Targeting <- OM@Spat_targ
   
-  fleet@WeightFleet <- process_cpars(cpars$Wt_age_C)
+  fleet@WeightFleet <- cpars$Wt_age_C
   
   # BioEco
   
@@ -32,10 +32,9 @@ OM2Catchability <- function(OM, cpars=NULL) {
   if (is.null(cpars) & inherits(OM, 'OM'))
     cpars <- OM@cpars
   
-  if (length(cpars))
-    stop('Not done yet!')
-  
-  list(Catchability=tiny, qCV=OM@qcv, qInc=OM@qinc)
+  if (!is.null(cpars$qs))
+    return(matrix(cpars$qs, nrow=length(cpars$qs), ncol=1))
+  matrix(tiny, nrow=1, ncol=1)
 }
 
 # OM2FishingMortality <- function(OM, cpars=NULL) {
@@ -52,7 +51,7 @@ OM2Catchability <- function(OM, cpars=NULL) {
 
 cpars2FishingMortality <- function(cpars) {
   FishingMortality <- FishingMortality()
-  FishingMortality@ApicalF <- process_cpars(cpars$qs) * process_cpars(cpars$Find)
+  FishingMortality@ApicalF <- cpars$qs * cpars$Find
   FishingMortality
 }
 
@@ -69,9 +68,9 @@ OM2DiscardMortality <- function(OM, cpars=NULL, Fdisc=NULL) {
 
 cpars2DiscardMortality <- function(cpars) {
   DiscardMortality <- DiscardMortality()
-  DiscardMortality@MeanAtAge <- process_cpars(cpars$Fdisc_array1)
-  DiscardMortality@MeanAtLength <- process_cpars(cpars$Fdisc_array2)
-  DiscardMortality@Classes <- process_cpars(cpars$CAL_binsmid)
+  DiscardMortality@MeanAtAge <- cpars$Fdisc_array1
+  DiscardMortality@MeanAtLength <- cpars$Fdisc_array2
+  DiscardMortality@Classes <- cpars$CAL_binsmid
   DiscardMortality
 }
 
@@ -79,8 +78,7 @@ OM2Effort <- function(OM, cpars=NULL) {
   if (is.null(cpars) & inherits(OM, 'OM'))
     cpars <- OM@cpars
   if (!EmptyObject(cpars)) {
-    stop('not done yet!')
-    # Effort <- cpars2Effort(cpars)
+    return(cpars$Find)
   }
   
   data.frame(TimeStep=OM@EffYears,
@@ -91,8 +89,8 @@ OM2Effort <- function(OM, cpars=NULL) {
 
 cpars2Effort <- function(cpars) {
   Effort <- Effort()
-  Effort@Effort <- process_cpars(cpars$Find)
-  Effort@Catchability <- process_cpars(cpars$qs)
+  Effort@Effort <- cpars$Find
+  Effort@Catchability <- cpars$qs
   Effort
 }
 
@@ -113,9 +111,9 @@ OM2Selectivity <- function(OM, cpars=NULL) {
 
 cpars2Selectivity <- function(cpars) {
   Selectivity <- Selectivity()
-  Selectivity@MeanAtAge <- process_cpars(cpars[['V']])
-  Selectivity@MeanAtLength <- process_cpars(cpars[['SLarray']])
-  Selectivity@Classes <- process_cpars(cpars$CAL_binsmid)
+  Selectivity@MeanAtAge <- cpars[['V']]
+  Selectivity@MeanAtLength <- cpars[['SLarray']]
+  Selectivity@Classes <- cpars$CAL_binsmid
   Selectivity
 }
 
@@ -135,9 +133,9 @@ OM2Retention <- function(OM, cpars=NULL) {
 
 cpars2Retention <- function(cpars) {
   Retention <- Retention()
-  Retention@MeanAtAge <- process_cpars(cpars[['retA']])
-  Retention@MeanAtLength <- process_cpars(cpars[['retL']])
-  Retention@Classes <- process_cpars(cpars$CAL_binsmid)
+  Retention@MeanAtAge <- cpars[['retA']]
+  Retention@MeanAtLength <- cpars[['retL']]
+  Retention@Classes <- cpars$CAL_binsmid
   Retention
 }
 
@@ -155,6 +153,6 @@ OM2Distribution <- function(OM, cpars) {
 
 cpars2Distribution <- function(cpars) {
   Distribution <- Distribution()
-  Distribution@Closure <- process_cpars(cpars$MPA)
+  Distribution@Closure <- cpars$MPA
   Distribution
 }

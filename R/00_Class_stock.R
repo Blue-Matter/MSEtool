@@ -71,7 +71,7 @@ setClass('stock',
                  CurrentYear='num.null',
                  TimeUnits='char.null',
                  TimeSteps='num.null',
-                 TimeStepsPerYear='num.null',
+                 TSperYear='num.null',
                  Misc='list',
                  Log='list')
 )
@@ -93,7 +93,7 @@ setMethod("initialize", "stock", function(.Object,
                                           pYear=30,
                                           nSim=48,
                                           CurrentYear=as.numeric(format(Sys.Date(), '%Y')),
-                                          TimeUnits='year',
+                                          TSperYear=1,
                                           Misc=list()) {
   .Object@Name <- Name
   .Object@CommonName <- CommonName
@@ -112,9 +112,9 @@ setMethod("initialize", "stock", function(.Object,
   .Object@nSim <- nSim
   .Object@CurrentYear <- CurrentYear
   
-  .Object@TimeStepsPerYear <- TSperYear(TimeUnits)
-  .Object@TimeSteps <- CalcTimeSteps(nYear, pYear, CurrentYear, TimeUnits)
-  .Object@TimeUnits <- TimeUnits
+  .Object@TSperYear <- TSperYear
+  .Object@TimeSteps <- CalcTimeSteps(nYear, pYear, CurrentYear, TSperYear)
+  .Object@TimeUnits <- CalcTSUnits(TSperYear)
   .Object@Misc <- Misc
   #   .Object@Created <- Sys.time()
   .Object
@@ -157,6 +157,7 @@ Stock <- function(Name=NULL,
                   SRR=new('srr'),
                   Spatial=new('spatial'),
                   Depletion=new('depletion'),
+                  TSperYear=1,
                   Misc=list(),
                   ...) {
   
@@ -185,7 +186,7 @@ Stock <- function(Name=NULL,
   pYear <- 30
   nSim <- 48
   CurrentYear <- as.numeric(format(Sys.Date(), '%Y'))
-  TimeUnits <- 'year'
+  TimeUnits <- CalcTSUnits(TSperYear)
   for (nm in names(dots)) 
     assign(nm, dots[[nm]])
   
@@ -206,7 +207,6 @@ Stock <- function(Name=NULL,
                pYear=pYear,
                nSim=nSim,
                CurrentYear=CurrentYear,
-               TimeUnits=TimeUnits,
                Misc=Misc)
 }
 

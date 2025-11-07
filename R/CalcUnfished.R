@@ -6,8 +6,8 @@ CalcEquilibriumUnfished <- function(OM) {
   # i.e., an expected change in recruitment if Fecundity-at-Age changes over time 
   # e.g., change in Weight-at-Age etc
   
-  UnfishedSurvival <- CalcUnfishedSurvival(OM) 
-  UnfishedSurvivalSP <- CalcUnfishedSurvival(OM, TRUE)
+  UnfishedSurvival_List <- CalcUnfishedSurvival(OM) 
+  UnfishedSurvivalSP_List <- CalcUnfishedSurvival(OM, TRUE)
   
   EquilibriumUnfished <- new('popdynamics')
   
@@ -16,10 +16,57 @@ CalcEquilibriumUnfished <- function(OM) {
       AddDimension('Age') |>
       aperm(c('Sim', 'Age', 'TimeStep'))
   })
-               
-  UnfishedNumberAtAge <- purrr::map2(UnfishedSurvival, R0List, ArrayMultiply)
-  UnfishedSpawnNumberAtAge <- purrr::map2(UnfishedSurvivalSP, R0List, ArrayMultiply)
   
+  # if (OM@TSperYear==1) {
+    UnfishedNumberAtAge <- purrr::map2(UnfishedSurvival_List, R0List, ArrayMultiply)
+    UnfishedSpawnNumberAtAge <- purrr::map2(UnfishedSurvivalSP_List, R0List, ArrayMultiply)
+  # } else {
+  #   
+  #   # ---------------------- DEBUG ----------------------
+  #   # seasonal model 
+  #   
+  #   UnfishedSurvival <- UnfishedSurvival_List$Female
+  #   R0 <- R0List$Female
+  #   CalcSeasonalUnfishedNumber <- function(UnfishedSurvival, R0) {
+  #     
+  #     d1 <- dim(UnfishedSurvival)
+  #     d2 <- dim(R0)
+  #     
+  #     nSim <- max(d1[1], d2[1])
+  #     R0 <- ExpandSims(R0, nSim)
+  #     
+  #     
+  #     UnfishedNumberAtAge <- UnfishedSurvival
+  #     UnfishedNumberAtAge[] <- 0 
+  #     
+  #     UnfishedNumberAtAge[,3,] <- R0[,1,]
+  #     
+  #     for (i in 3:nrow(UnfishedNumberAtAge))
+  #     
+  #     UnfishedNumberAtAge[1,,1:4]
+  #     
+  #     Classes <- OM@Stock$Female@Ages@Classes
+  #     nClasses <- length(Classes)
+  #     
+  #     r0 <- R0[1,1,]
+  #     eqAge <- r0[1:4] * UnfishedSurvival[1,,1:4]
+  #     
+  #     InitialAgeStructure <- array(0, dim=c(nClasses, OM@TSperYear))
+  #     for (a in 1:OM@TSperYear) {
+  #       InitialAgeStructure[a,a] <- r0[a]
+  #     }
+  #     
+  #     
+  #   }
+    
+  # }
+               
+  
+  # -------------------- END DEBUG --------------------
+  
+  
+  
+
   WeightAtAge <- purrr::map(OM@Stock, \(x) {
     x@Weight@MeanAtAge 
   })
@@ -59,8 +106,6 @@ CalcEquilibriumUnfished <- function(OM) {
       EquilibriumUnfished@SProduction[,st,] <- EquilibriumUnfished@SProduction[,ind,]
     }
   }
-  
-  
   EquilibriumUnfished
 }
 
@@ -77,6 +122,7 @@ CalcDynamicUnfished <- function(SimList, silent=FALSE) {
     nStock <- nStock(x@OM)
     for (st in 1:nStock) {
       x@OM@Fleet[[st]]@Catchability[] <- tiny
+      x@OM@Fleet[[st]]@qArea[] <- tiny
     }
     x
   })

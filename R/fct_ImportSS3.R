@@ -2,14 +2,14 @@
 # - arguments to set Length and Weight units 
 
 GetSSTimeUnits <- function(replist) {
-  TimeStepsPerYear <- ifelse(is.null(replist$nseasons), 1, replist$nseasons)
-  if (TimeStepsPerYear==1) {
+  TSperYear <- ifelse(is.null(replist$nseasons), 1, replist$nseasons)
+  if (TSperYear==1) {
     TimeUnits <- 'year'
-  } else if (TimeStepsPerYear==4) {
+  } else if (TSperYear==4) {
     TimeUnits <- 'quarter'
   } else {
     cli::cli_abort(
-      "{.val {TimeStepsPerYear}} TimeSteps Per Year currently not supported",
+      "{.val {TSperYear}} TimeSteps Per Year currently not supported",
       .internal=TRUE)
   }
   
@@ -38,7 +38,7 @@ GetSSTimeSteps <- function(replist, pYear=30) {
        TimeStepsHist=TimeStepsHist, 
        TimeStepsProj=TimeStepsProj,
        TimeUnits=TimeUnits,
-       TimeStepsPerYear=TSperYear(TimeUnits)
+       TSperYear=TSperYear(TimeUnits)
   )
 }
 
@@ -128,7 +128,7 @@ ImportSS <- function(SSDir,
   OM@TimeSteps <- c(TimeStepsList$TimeStepsHist,
                     TimeStepsList$TimeStepsProj)
   OM@TimeUnits <- TimeStepsList$TimeUnits
-  OM@TimeStepsPerYear <- TimeStepsList$TimeStepsPerYear
+  OM@TSperYear <- TimeStepsList$TSperYear
   
   # Stock
   StockName <- ProcessSS_StockName(StockName, nStock)
@@ -223,14 +223,14 @@ SS2Stock <- function(st, RepList, TimeStepsList, nSim) {
   Stock@SRR <- SS2SRR(st, RepList, TimeStepsList, Ages=Stock@Ages, nSim)
   Stock@nYear <- TimeStepsList$nYear
   Stock@pYear <- TimeStepsList$pYear
+  Stock@TSperYear <- TimeStepsList$TSperYear
   Stock@nSim <- nSim
   Stock
 }
 
 SS2Ages <- function(st, RepList, TimeStepsList) {
-  AgeClasses <- GetSSAgeClasses(RepList[[1]])
-  Ages(MaxAge=CalcSSMaxAgeClass(AgeClasses, TimeStepsList$TimeUnits),
-       MinAge=min(AgeClasses),
+  Ages(MaxAge=CalcSSMaxAgeClass(RepList[[1]], TimeStepsList),
+       MinAge=CalcSSMinAgeClass(RepList[[1]], TimeStepsList),
        Units=TimeStepsList$TimeUnits)
 }
 
@@ -244,26 +244,43 @@ GetSSLengthClasses <- function(replist) {
   LengthClasses[!is.na(LengthClasses)]
 }
 
-CalcSSMaxAgeClass <- function(AgeClasses, TimeUnits) {
+CalcSSMaxAgeClass <- function(replist, TimeStepsList) {
+  AgeClasses <- GetSSAgeClasses(replist)
+  TimeUnits <- TimeStepsList$TimeUnits
   maxAgeYear <- max(AgeClasses)
   validTimeUnits <- c('year', 'half-year', 'quarter', 'month', 'week', 'day')
   if (TimeUnits=='year') {
     return(maxAgeYear)
   } else if (TimeUnits=='half-year') {
-    return(maxAgeYear+1/2)*2
+    return(maxAgeYear+1/2)
   } else if (TimeUnits=='quarter') {
-    return((maxAgeYear+3/4)*4)
+    return((maxAgeYear+3/4))
   } else if (TimeUnits=='month') {
-    return((maxAgeYear+11/12)*12)
+    return((maxAgeYear+11/12))
   } else if (TimeUnits=='week') {
-    return((maxAgeYear+51/52)*52)
+    return((maxAgeYear+51/52))
   } else if (TimeUnits=='day') {
-    return((maxAgeYear+364/365)*365)
+    return((maxAgeYear+364/365))
   } else {
     cli::cli_abort('`TimeUnits` must be one of: {.val {validTimeUnits}}')
   }
-  
 }
+
+CalcSSMinAgeClass <- function(replist, TimeStepsList) {
+    AgeClasses <- GetSSAgeClasses(replist)
+    TimeUnits <- TimeStepsList$TimeUnits
+    if (TimeUnits=='year') 
+      return(min(AgeClasses))
+      
+    birthseas <- GetSSBirthSeas(replist)
+    if (birthseas==1) {
+      return(min(AgeClasses))
+    } 
+
+    MaxAge <- CalcSSMaxAgeClass(replist, TimeStepsList)
+    Ages <- seq( min(AgeClasses), by=1/TimeStepsList$TSperYear, to=MaxAge)
+    Ages[birthseas]
+  }
 
 GetSS_Length_at_Age <- function(st, replist, TimeStepsList) {
   TimeStepsHist <- TimeStepsList$TimeStepsHist
@@ -289,11 +306,13 @@ SS2Length <- function(st, RepList, TimeStepsList, Ages) {
   Length <- Length(Pars=list())
   Length@MeanAtAge <- purrr::map(RepList, \(replist) {
     GetSS_Length_at_Age(st, replist, TimeStepsList)
-  }) |> List2Array('Sim', pos=1)
+  }) |> List2Array('Sim', pos=1) |>
+    ArraySubsetAge(Ages=Ages@Classes)
   
   Length@CVatAge <- purrr::map(RepList, \(replist) {
     GetSS_LengthCV_at_Age(st, replist, TimeStepsList)
-  }) |> List2Array('Sim', pos=1)
+  }) |> List2Array('Sim', pos=1) |>
+    ArraySubsetAge(Ages=Ages@Classes)
   
   if (Ages@Classes |> length() != dim(Length@MeanAtAge)[2]) 
     cli::cli_abort(c("x"='Number of age-classes for `Length@MeanAtAge` does not match `Ages@Classes`',
@@ -348,7 +367,8 @@ SS2Weight <- function(st, RepList, TimeStepsList, Ages) {
   
   Weight@MeanAtAge <- purrr::map(RepList, \(replist) {
     GetSS_WeightAtAge(st, replist, TimeStepsList)
-  }) |> List2Array('Sim', pos=1)
+  }) |> List2Array('Sim', pos=1) |>
+    ArraySubsetAge(Ages=Ages@Classes)
   
   if (Ages@Classes |> length() != dim(Weight@MeanAtAge)[2]) 
     cli::cli_abort(c("x"='Number of age-classes for `Weight@MeanAtAge` does not match `Ages@Classes`',
@@ -392,8 +412,8 @@ GetSS_M_at_age <- function(st, replist, TimeStepsList, Ages) {
   if (TimeStepsList$TimeUnits == 'quarter') {
     M_at_ageDF <- Array2DF(M_at_age)
     M_at_ageDF$AgeAnnual <- M_at_ageDF$Age
-    M_at_ageDF$Age <- M_at_ageDF$Age * TimeStepsList$TimeStepsPerYear
-    M_at_ageDF$Value <- M_at_ageDF$Value/TimeStepsList$TimeStepsPerYear
+    M_at_ageDF$Age <- M_at_ageDF$Age * TimeStepsList$TSperYear
+    M_at_ageDF$Value <- M_at_ageDF$Value/TimeStepsList$TSperYear
     
     tempDF <- data.frame(Age=Ages@Classes, 
                          TimeStep=rep(unique(M_at_ageDF$TimeStep), each=length(Ages@Classes)))
@@ -415,7 +435,8 @@ SS2NaturalMortality <- function(st, RepList, TimeStepsList, Ages) {
   NaturalMortality <- NaturalMortality(Pars=list())
   NaturalMortality@MeanAtAge <- purrr::map(RepList, \(replist) {
     GetSS_M_at_age(st, replist, TimeStepsList, Ages)
-  }) |> List2Array('Sim', pos=1)
+  }) |> List2Array('Sim', pos=1) |>
+    ArraySubsetAge(Ages=Ages@Classes)
   NaturalMortality
 }
 
@@ -431,10 +452,10 @@ GetSS_Maturity_at_Age <- function(st, replist, TimeStepsList, Ages) {
 
 SS2Maturity <- function(st, RepList, TimeStepsList, Ages) {
   Maturity <- Maturity(Pars=list())
-  
   Maturity@MeanAtAge <- purrr::map(RepList, \(replist) {
     GetSS_Maturity_at_Age(st, replist, TimeStepsList, Ages)
-  }) |> List2Array('Sim', pos=1)
+  }) |> List2Array('Sim', pos=1) |>
+    ArraySubsetAge(Ages=Ages@Classes)
   Maturity
 }
 
@@ -493,7 +514,8 @@ SS2Fecundity <- function(st, RepList, TimeStepsList, Ages) {
   Fecundity <- Fecundity(Pars=list())
   Fecundity@MeanAtAge <- purrr::map(RepList, \(replist) {
     GetSS_Fecundity(st, replist, TimeStepsList, Ages)
-  }) |> List2Array('Sim', pos=1)
+  }) |> List2Array('Sim', pos=1) |>
+    ArraySubsetAge(Ages=Ages@Classes)
   Fecundity
 }
 
@@ -610,10 +632,7 @@ GetSS_RecDevs <- function(replist, TimeStepsList, Ages, period=c( 'Historical', 
     return(dev)  
   }
   
-  agesAnnual <- Ages
-  MinAge <- agesAnnual@MinAge/TimeStepsList$TimeStepsPerYear |> floor()
-  MaxAge <- agesAnnual@MaxAge/TimeStepsList$TimeStepsPerYear |> floor()
-  AgeClasses <- MinAge:MaxAge
+  AgeClasses <- Ages@Classes[-1]
 
   dev <- array(1, dim=length(AgeClasses), 
         dimnames=list(Age=rev(AgeClasses)))
@@ -625,14 +644,33 @@ GetSS_RecDevs <- function(replist, TimeStepsList, Ages, period=c( 'Historical', 
   dev
 }
 
+GetSSBirthSeas <- function(replist) {
+  # NPSWO - birthseas = 2:3 but recruitment is actually only season 3
+  # not sure if this generalizes
+  ifelse(is.null(replist$birthseas),
+         1, 
+         max(replist$birthseas)) 
+}
+
 GetSS_R0 <- function(st, replist, TimeStepsList) {
   AgeClasses <- GetSSAgeClasses(replist)
   
-  R0 <- dplyr::filter(replist$natage, Sex == st, `Beg/Mid` == "B", Era == "VIRG") |>
+  birthseas <- GetSSBirthSeas(replist)
+                      
+  R0 <- dplyr::filter(replist$natage, Sex == st, `Beg/Mid` == "B", Era == "VIRG",
+                      Seas==birthseas) |>
     tidyr::pivot_longer(as.character(AgeClasses), names_to = 'Age', values_to = 'Number') |>
     dplyr::mutate(Age=as.numeric(Age)) |>
     dplyr::filter(Age==min(Age)) |>
     dplyr::pull(Number)
+  
+  nSeas <- replist$natage$Seas |> unique() |> length()
+  if (length(R0)!=nSeas) {
+    R0Vec <- rep(0, nSeas)
+    R0Vec[birthseas] <- R0
+    R0 <- R0Vec
+  }
+  
   
   TimeStepsAll <- c(TimeStepsList$TimeStepsHist, TimeStepsList$TimeStepsProj)
   R0 <- rep(R0, length(TimeStepsAll))
@@ -668,7 +706,6 @@ SS2SRR <- function(st, RepList, TimeStepsList, Ages, nSim) {
                         GetSS_RecDevs(replist, TimeStepsList, Ages)) |>
     List2Array('Sim', pos=1)
   
-
   AC <- log(SRR@RecDevHist) |>
     apply(1, acf, lag.max = 1, plot = FALSE, na.rm=TRUE) |>
     lapply(getElement,'acf') |>
@@ -721,10 +758,16 @@ GetSS_Effort <- function(st, fl, replist, TimeStepsList, type=c('Effort', 'q')) 
   # all fish that interact with the gear, including those that are discarded alive
   # ie don't suffer discard mortality
   
-  FInteract <- replist$fatage |> 
-    dplyr::filter(Sex==st, Fleet==fl, Yr %in% TimeStepsList$TimeStepsHist)
-  
   AgeClasses <- GetSSAgeClasses(replist)
+  
+  FInteract <- replist$fatage |> 
+    dplyr::filter(Sex==st, Fleet==fl, Yr %in% TimeStepsList$TimeStepsHist) 
+    
+  nMorph <- FInteract$Morph |> unique() |> length()
+  
+  if (nMorph>1)
+    cli::cli_abort("More than 1 Morph not currently supported", .internal=TRUE)
+
   FInteract <- t(FInteract[,as.character(AgeClasses)])
   dimnames(FInteract) <- list(Age=AgeClasses,
                               TimeStep=TimeStepsList$TimeStepsHist)
@@ -823,9 +866,10 @@ GetSSALK_seasonal <- function(st, replist, AgeClasses, LengthClasses, TimeStepsL
     lbinspop <- sort(as.numeric(dimnames(ALK)$Length))
     ALK <- ALK[match(lbinspop, dimnames(ALK)$Length), ] |> t()
     names(dimnames(ALK))[1] <- 'Age'
-    
-    ages <- AgeClasses[seq(from=seas, by=TimeStepsList$TimeStepsPerYear, length.out=nrow(ALK))]
+  
+    ages <- AgeClasses[seq(from=seas, by=TimeStepsList$TSperYear, length.out=nrow(ALK))]
     dimnames(ALK)$Age <- ages
+    
     rowind <- match(ages, AgeClasses)
     ALK_Out[rowind, ] <- ALK
   }
@@ -835,7 +879,7 @@ GetSSALK_seasonal <- function(st, replist, AgeClasses, LengthClasses, TimeStepsL
 
 GetSSALK <- function(st, replist, Ages, LengthClasses, TimeStepsList) {
   
-  if (TimeStepsList$TimeStepsPerYear==1) 
+  if (TimeStepsList$TSperYear==1) 
     return(GetSSALK_annual(st, replist, AgeClasses=Ages@Classes, LengthClasses, TimeStepsList))
   
   GetSSALK_seasonal(st, replist, AgeClasses=Ages@Classes, LengthClasses, TimeStepsList)
@@ -1189,7 +1233,7 @@ ImportSSData <- function(SSDir,
   Data@TimeSteps <- TimeStepsList$TimeStepsHist
   Data@TimeStepLH <- TimeStepsList$CurrentYear
   Data@TimeUnits <- 'year'
-  Data@TimeStepsPerYear <- 1
+  Data@TSperYear <- 1
   Data@nArea <- 1 
 
   Data@Landings <- ImportSSData_Catch(replist, 'Landings', silent)
@@ -1528,3 +1572,59 @@ CompareSSRefPoints <- function(replist, Hist) {
   dplyr::left_join(OM, SS) |> dplyr::mutate("OM/SS"=OM/SS)
 }
 
+# ---- Other Useful Stuff ----
+
+
+GetSSNatAge <- function(replist, OM, yrs=NULL, sex=1) {
+  if (is.null(yrs)) {
+    yrs <- replist$natage |> dplyr::filter(Era=='TIME') |>
+      dplyr::distinct(Yr) |> dplyr::pull(Yr)
+    
+  }
+    
+  
+  AgeClasses <- OM@Stock[[1]]@Ages@Classes
+  HistTimeSteps <- TimeSteps(OM, 'H')
+  
+  SSN <- replist$natage |> dplyr::filter(Yr%in%yrs, `Beg/Mid`=='B', Sex==sex) |>
+    dplyr::select(Yr, Time, Seas, as.character(GetSSAgeClasses(replist))) |>
+    tidyr::pivot_longer(as.character(GetSSAgeClasses(replist))) |>
+    dplyr::mutate(Age=as.numeric(name))
+  
+  Seas <- unique(SSN$Seas)
+  nSeas <- length(Seas)
+  nTS <- length(yrs) * nSeas
+  Yrs <- SSN$Yr |> unique()
+  
+  Initial <- array(NA, c(length(AgeClasses),nTS), 
+                   dimnames=list(
+                     Age=AgeClasses/nSeas,
+                     TimeStep=HistTimeSteps[1:nTS]
+                   ))
+  
+  i <- 0
+  for (yr in Yrs) {
+    for (sea in 1:nSeas) {
+      i <- i+1
+      n <- SSN |> dplyr::filter(Seas==sea, Yr<yr+1 & Yr>=yr) |>
+        dplyr::mutate(Age=Age*4)
+      
+      n$Age <- n$Age + (sea-4)+1
+      n$Age <- n$Age / 4  + 2/4
+      n <- n |> dplyr::filter(Age>=0)
+      
+      temp <- array(n$value, dim=c(nrow(n), 1),
+                    dimnames=list(
+                      Age=n$Age,
+                      TimeStep=HistTimeSteps[i]
+                    )
+      )
+      
+      
+      ArrayFill(Initial) <- temp
+    }
+  }
+  
+  Initial
+  
+}

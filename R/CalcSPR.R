@@ -13,7 +13,6 @@ CalcSPR0_Hist <- function(HistSim, TimeSteps=NULL) {
   if (is.null(TimeSteps))
     TimeSteps <- HistSim@OM@TimeSteps
   
-  
   SPR0 <- purrr::map(HistSim@OM@Stock, \(stock) CalcSPR0_Stock(stock, TimeSteps))
   
   SPFrom <- purrr::map(HistSim@OM@Stock, \(stock) stock@SRR@SPFrom)

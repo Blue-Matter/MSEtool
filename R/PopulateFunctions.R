@@ -241,37 +241,6 @@ PopulateMeanAtWeight <- function(object,
   object
 }
 
-CalcSDatAge <- function(MeanAtAge, CVatAge) {
-  
-  dims <- rbind(dim(MeanAtAge),
-                dim(CVatAge))
-  dim <- apply(dims, 2, max)
-  
-  d1 <- dim(MeanAtAge)
-  ind1 <- expand.grid(1:d1[1], 1:d1[2], 1:d1[3]) |> as.matrix()
-  d2 <- dim(CVatAge)
-  ind2 <- expand.grid(1:d2[1], 1:d2[2], 1:d2[3]) |> as.matrix()
-  
-  nsim <- dim[1]
-  nage <- dim[2]
-  nTS <- dim[3]
-  
-  SDatAge <- array(NA, dim=c(nsim, nage, nTS))
-  
-  ind3 <- expand.grid(1:dim[1], 1:dim[2], 1:dim[3]) |> as.matrix()
-  SDatAge[ind3] <-  MeanAtAge[ind1] * CVatAge[ind2]
-  
-  
-  if (all(d1 >= d2)) {
-    dimnames(SDatAge) <- dimnames(MeanAtAge)
-  } else { 
-    dimnames(SDatAge) <- dimnames(CVatAge)
-  }
-  
-  SDatAge
-}
-
-
 
 
 
@@ -374,7 +343,7 @@ CalcMaxBin <- function(MeanAtAge, CVatAge, TruncSD=2, dist='normal') {
   ind1 <- expand.grid(1:d1[1], 1:d1[2], 1:d1[3]) |> as.matrix()
   
   if (dist =='normal') {
-    SDatAge <- CalcSDatAge(MeanAtAge, CVatAge)
+    SDatAge <- ArrayMultiply(MeanAtAge, CVatAge)
     d2 <- dim(SDatAge)
     ind2 <- expand.grid(1:d2[1], 1:d2[2], 1:d2[3]) |> as.matrix()
     MaxBin <- max(TruncSD * SDatAge[ind2] + MeanAtAge[ind1]) |> ceiling()
@@ -421,8 +390,9 @@ PopulateASK <- function(object, Ages=NULL, TimeSteps=NULL, silent=FALSE, type='L
   Dist <- object@Dist
   TruncSD <- object@TruncSD
   
-  object@ASK <- CalcAgeSizeKey(MeanAtAge, CVatAge, Classes, TruncSD, Dist, Ages@Classes,
-                        silent=silent, type=type)
+  object@ASK <- CalcAgeSizeKey(MeanAtAge, CVatAge, Classes, TruncSD, Dist,
+                               AgeClasses=Ages@Classes,
+                               silent=silent, type=type)
   
 
   timesteps <- c(dimnames(MeanAtAge)$TimeStep,
@@ -788,11 +758,10 @@ AtSize2AtAge <- function(object, Length) {
 AtAge2AtSize <- function(object, Length, max1=TRUE) {
   
   MeanAtAge <- object@MeanAtAge
-  ASK <- Length@ASK
+  ASK <- Length@ASK 
   AgeDim <- which(names(dimnames(MeanAtAge)) == "Age")
   nAgeClasses <- dim(MeanAtAge)[AgeDim]
-  
-  
+
   BySim <- 'Sim' %in% names(dimnames(ASK))
   
   
@@ -820,6 +789,7 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
     TSteps <- c(dimnames(MeanAtAge)[[3]], dimnames(Length@MeanAtAge)[[3]]) |> unique() |> sort()
     dname1[["TimeStep"]] <- TSteps
     
+    dname1$Sim <- 1:dd[1]
     dimnames(LengthMeanAtAge) <- dname1
     
     Length@CVatAge <- ArrayExpand(Length@CVatAge, dd[1], dd[2], dname1[["TimeStep"]])

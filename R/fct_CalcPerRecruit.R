@@ -64,6 +64,7 @@ CalcPerRecruit_StockList <- function(apicalF, StockList, FleetList, TimeSteps) {
     SPFrom <- 1:length(StockList)
   
   SPR0List <- purrr::map(StockList, \(Stock) CalcSPR0_Stock(Stock, TimeSteps))
+  
   SPR0List <- SPR0List[SPFrom]
   names(SPR0List) <- names(NaturalMortalityList)
   

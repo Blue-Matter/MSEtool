@@ -1,19 +1,98 @@
-la <- devtools::load_all
+library(MSEtool)
+
 la()
 
 SSDir <- '../WCNPOSWO-2023/Final Base-case'
 
 RepList <- ImportSSReport(SSDir)
 
-OM <- ImportSS(RepList, populate=FALSE)
+# Correct M-at-Age for initial age class
+# for some unknown reason, M for age-0 is exactly half the actual value
+RepList[[1]]$M_at_age[,4] <- RepList[[1]]$M_at_age[,4] * 2 
 
 LoadArgs('ImportSS')
 
-OM <- PopulateOM(OM)
+OM <- ImportSS(RepList)
+
+LoadArgs('Simulate_om')
 
 Hist <- Simulate_om(OM)
 
-GetSS_RecDevs
+
+# ---------------------- DEBUG ----------------------
+
+TimeStepsList <- GetSSTimeSteps(replist, 1)
+
+
+replist <- RepList[[1]]
+
+GetSSNatAge(replist, OM, yrs=1973)
+GetSSNatAge(replist, OM, yrs=1975)
+
+replist$natage |> dplyr::filter(Yr==1975, `Beg/Mid`=='B')
+
+replist$batage |> dplyr::filter(Yr==1975, `Beg/Mid`=='B')
+
+TimeSteps(OM, 'H')
+
+replist$spawnseas
+
+replist$M_at_age |> dplyr::filter(Sex==1, Yr==1975)
+
+
+# -------------------- END DEBUG --------------------
+
+
+
+# TODO  - initialize equilbrium seasonal model 
+
+Stock <- OM@Stock$Female
+Stock@SRR@R0[1,1:4]
+
+TimeSteps <- TimeSteps(OM, 'H')
+
+Hist@Unfished@Equilibrium@Number$Female[1,,1]
+Hist@Unfished@Equilibrium@Number$Female[1,,2]
+Hist@Unfished@Equilibrium@Number$Female[1,,3]
+Hist@Unfished@Equilibrium@Number$Female[1,,4]
+
+
+
+SSN |> dplyr::filter(Age==0)
+SSN |> dplyr::filter(Age==15)
+
+
+replist$M_at_age |> head()
+
+Stock@NaturalMortality@MeanAtAge[1,,1]
+
+421.404 * exp(-0.0525)
+
+
+Stock@SRR@R0[1,1:4]
+-log(345.8800/379.4010)
+-log(315.3210/345.8800)
+-log(287.4630/315.3210)
+
+
+
+SSN |> dplyr::filter(Age==1)
+
+Stock@NaturalMortality@MeanAtAge[1,3,1]
+
+
+
+
+Hist@Effort[1,1,,] |> apply('TimeStep', sum) |> plot(type='l')
+
+##############################################################################
+
+
+
+
+
+
+
 
 # MOM <- SS2MOM(SSDir)
 # plot_SS2MOM(MOM, SSDir)

@@ -1039,7 +1039,7 @@ TimeSteps <- function(x, Period=NULL) {
       return(TimeSteps)
     if (Period=='All')
       return(TimeSteps)
-    return(CalcTimeSteps(x@nYear, x@pYear, x@CurrentYear, x@TimeUnits, Period))
+    return(CalcTimeSteps(x@nYear, x@pYear, x@CurrentYear, x@TSperYear, Period))
   }
   
   if (is.list(x))

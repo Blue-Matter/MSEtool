@@ -148,6 +148,7 @@ S4 SimulateDynamics_(S4 HistSimIn,
       List FMortFleetArea = CalcFMortality_(Distribution.row(TSindex), // nFleet, nArea,
                                            arma::vectorise(Catchability.row(TSindex)), // nFleet
                                            qArea.row(TSindex), // Fleet, Area
+                                           RelativeSize, // nArea
                                            SelectivityAtAge.col(TSindex), // nAge, nFleet
                                            RetentionAtAge.col(TSindex), // nAge, nFleet
                                            DiscardMortalityAtAge.col(TSindex), // nAge, nFleet
@@ -157,6 +158,10 @@ S4 SimulateDynamics_(S4 HistSimIn,
       List FRetainAtAgeAreaStock = FRetainAtAgeAreaList[st];
       FDeadAtAgeAreaStock[TSindex] = FMortFleetArea["FDeadFleetArea"];
       FRetainAtAgeAreaStock[TSindex] = FMortFleetArea["FRetainFleetArea"];
+      
+      arma::vec qAreaTS = FMortFleetArea["qArea"];
+      qArea.row(TSindex) = qAreaTS;
+      
       
       FDeadAtAgeAreaList[st] = FDeadAtAgeAreaStock;
       FRetainAtAgeAreaList[st] = FRetainAtAgeAreaStock;

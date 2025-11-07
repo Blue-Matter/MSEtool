@@ -12,8 +12,7 @@
 #' @param TruncSD Numeric value indicating the number of standard deviations
 #' where the distribution is truncated. Use high values to approximate a non-truncated distribution
 #' @param Dist The distribution of `MeanAtAge`. Character, either `normal` or `lognormal`
-#' @param Ages Optional. Numeric vector of values for the age classes. Defaults to `0:(nage-1)`.
-#'
+#' @param AgeClasses Optional. Numeric vector of values for the age classes. Defaults to `0:(nage-1)`.
 #' @return A 4D array with dimensions `nsim`, `nage`, `nClasses`, and `nTS`
 #'
 #' @export
@@ -22,7 +21,7 @@ CalcAgeSizeKey <- function(MeanAtAge,
                            Classes,
                            TruncSD=2, 
                            Dist=c('normal', 'lognormal'),
-                           Ages=NULL, 
+                           AgeClasses=NULL,
                            silent=FALSE,
                            type='Length') {
   
@@ -49,8 +48,7 @@ CalcAgeSizeKey <- function(MeanAtAge,
   
   
   MeanAtAge <- Structure(MeanAtAge)
-  SDatAge <- CalcSDatAge(MeanAtAge, CVatAge)
-  
+  SDatAge <- ArrayMultiply(MeanAtAge, CVatAge)
 
   dim_MeanAtAge <- dim(MeanAtAge)
   nage <- dim_MeanAtAge[2]
@@ -66,8 +64,9 @@ CalcAgeSizeKey <- function(MeanAtAge,
   
   nsim <- max(dim_MeanAtAge[1], dim_SDatAge[1]) # maximum number of simulations
   
-  TimeStepsList <- list(attributes(MeanAtAge)$dimnames[["TimeStep"]],
-                        attributes(SDatAge)$dimnames[["TimeStep"]])
+  
+  TimeStepsList <- list(dimnames(MeanAtAge)[['TimeStep']],
+                        dimnames(SDatAge)[['TimeStep']])
   
   ind <- unlist(lapply(TimeStepsList, length)) |> which.max()
   TimeSteps <- TimeStepsList[[ind]]
@@ -96,17 +95,17 @@ CalcAgeSizeKey <- function(MeanAtAge,
                              clear = TRUE))
   }
 
-  if (is.null(Ages))
-    Ages <- 0:(nage-1)
+  if (is.null(AgeClasses))
+    AgeClasses <- 0:(nage-1)
   
-  ListDimNames <- list(Age=Ages,
+  ListDimNames <- list(Age=AgeClasses,
                        Class=Classes,
                        TimeStep=dimnames(MeanAtAgeList[[1]])$TimeStep)
   
   ASK <- List2Array(ASKList, "Sim", "Age", ListDimNames) |>
     aperm(c("Sim", 'Age', 'Class', 'TimeStep'))
 
-  attributes(ASK)$Classes <- Classes
-  attributes(ASK)$Ages <- Ages
+  # attributes(ASK)$Classes <- Classes
+  # attributes(ASK)$Ages <- Ages
   ASK
 }

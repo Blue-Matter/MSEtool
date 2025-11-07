@@ -40,18 +40,18 @@ PopulateStockList <- function(OM, silent=FALSE) {
   
   for (st in 1:nStocks) {
     if (isS4(OM@Stock)) {
-      stock <- OM@Stock 
+      Stock <- OM@Stock 
     } else {
-      stock <- OM@Stock[[st]]
+      Stock <- OM@Stock[[st]]
     }
-    stock@nSim <- OM@nSim
-    stock@nYear <- OM@nYear
-    stock@pYear <- OM@pYear
-    stock@CurrentYear <- OM@CurrentYear
-    StockList[[st]] <- PopulateStock(stock, 
+    Stock@nSim <- OM@nSim
+    Stock@nYear <- OM@nYear
+    Stock@pYear <- OM@pYear
+    Stock@CurrentYear <- OM@CurrentYear
+    StockList[[st]] <- PopulateStock(Stock, 
                                      seed=OM@Seed, 
                                      silent=silent)
-    names(StockList)[st] <- stock@Name
+    names(StockList)[st] <- Stock@Name
   }
   StockList
 }
@@ -73,28 +73,29 @@ PopulateFleetList <- function(OM, silent=FALSE) {
       if (is.null(OM@Fleet))
         next()
       if (isS4(OM@Fleet)) {
-        fleet <- OM@Fleet
+        Fleet <- OM@Fleet
       } else if (inherits(OM@Fleet, 'FleetList')) {
-        fleet <- OM@Fleet[[fl]]
+        Fleet <- OM@Fleet[[fl]]
       } else {
         if (!length(OM@Fleet[[st]]))
             next()
-        fleet <- OM@Fleet[[st]][[fl]]
+        Fleet <- OM@Fleet[[st]][[fl]]
       }
       
-      fleet@nSim <- OM@nSim
-      fleet@nYear <- OM@nYear
-      fleet@pYear <- OM@pYear
-      fleet@CurrentYear <- OM@CurrentYear
-      stock <- StockList[[st]]
-      fleet@TimeUnits <- stock@Ages@Units
-      fleet@TimeStepsPerYear <- TSperYear(stock@TimeUnits)
-      fleet@TimeSteps <- CalcTimeSteps(stock@nYear, 
-                                       stock@pYear, 
-                                       stock@CurrentYear, 
-                                       stock@TimeUnits)
+      Fleet@nSim <- OM@nSim
+      Fleet@nYear <- OM@nYear
+      Fleet@pYear <- OM@pYear
+      Fleet@CurrentYear <- OM@CurrentYear
+      Stock <- StockList[[st]]
+      Fleet@TimeUnits <- Stock@Ages@Units
+      Fleet@TSperYear <- TSperYear(Stock@TimeUnits)
       
-      FleetList[[st]][[fl]] <- PopulateFleet(Fleet=fleet, 
+      Fleet@TimeSteps <- CalcTimeSteps(nYear=Stock@nYear, 
+                                       pYear=Stock@pYear, 
+                                       CurrentYear=Stock@CurrentYear, 
+                                       TSperYear= Stock@TSperYear )
+      
+      FleetList[[st]][[fl]] <- PopulateFleet(Fleet=Fleet, 
                                              Ages=Ages(StockList[[st]]),
                                              Length=Length(StockList[[st]]),
                                              Weight=Weight(StockList[[st]]),

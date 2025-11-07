@@ -206,8 +206,7 @@ setClass("om",
                  maxF='numeric',
                  Seed='num.null',
                  
-                 TimeUnits='char.null',
-                 TimeStepsPerYear='num.null',
+                 TSperYear='num.null',
                  TimeSteps='num.null',
                  
                  Control='list.null',
@@ -301,7 +300,7 @@ OM <- function(Name='A new `OM` object',
                nYear=20,
                pYear=30,
                CurrentYear=as.numeric(format(Sys.Date(), '%Y')),
-               TimeUnits='year',
+               TSperYear=1,
                Stock=NULL,
                Fleet=NULL,
                Obs=list(),
@@ -336,10 +335,7 @@ OM <- function(Name='A new `OM` object',
   .Object@pYear <- pYear
   
   .Object@CurrentYear <- CurrentYear
-  .Object@TimeUnits <- TimeUnits
-  
-  .Object@TimeStepsPerYear <- TSperYear(TimeUnits)
-  .Object@TimeSteps <- CalcTimeSteps(nYear, pYear, CurrentYear, TimeUnits)
+  .Object@TimeSteps <- CalcTimeSteps(nYear, pYear, CurrentYear, TSperYear)
   
   .Object@Stock <- Stock
   .Object@Fleet <- Fleet

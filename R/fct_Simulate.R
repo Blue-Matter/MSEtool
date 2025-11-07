@@ -7,7 +7,7 @@ GetRefPointTimeSteps <- function(OM) {
   HistTimeSteps <- TimeSteps(OM, 'Historical')
   RefPointTimeSteps <- OM@Control$RefPointTimeSteps
   if (is.null(RefPointTimeSteps))
-    RefPointTimeSteps <- tail(HistTimeSteps, OM@TimeStepsPerYear)
+    RefPointTimeSteps <- tail(HistTimeSteps, OM@TSperYear)
   RefPointTimeSteps
 }
 
@@ -19,7 +19,7 @@ Simulate_om <- function(OM=NULL,
                         silent=FALSE,
                         nSim=NULL,
                         RefPointsMSY=TRUE,
-                        Reduce=TRUE,
+                        Reduce=FALSE,
                         ...) {
  
   
@@ -39,7 +39,7 @@ Simulate_om <- function(OM=NULL,
   
   # ---- Calculate Number-at-Age for Initial TimeStep ----
   Hist <- CalcInitialTimeStep(Hist)
-  
+
   # ---- Build SimList ----
   SimList <- Hist2SimList(Hist)  # List of `Hist` objects, each with one simulation
 

@@ -5,6 +5,7 @@
 List CalcFMortality_(arma::mat EffortFleetArea, // nFleet, nArea
                     arma::vec Catchability, // nFleet
                     arma::mat qArea, // Fleet, nArea
+                    arma::vec RelativeSize, // nArea
                     arma::mat SelectivityAtAgeFleet, // nAge, nFleet
                     arma::mat RetentionAtAgeFleet, // nAge, nFleet
                     arma::mat DiscardMortalityAtAgeFleet, // nAge, nFleet
@@ -24,7 +25,7 @@ List CalcFMortality_(arma::mat EffortFleetArea, // nFleet, nArea
   int nAge = SelectivityAtAgeFleet.n_rows;
   
   CheckLength(Catchability.size(), nFleet, "Catchability", "nFleet (nrow(EffortFleetArea))");
-  // CheckLength(RelativeSize.size(), nArea, "RelativeSize", "nArea (ncol(EffortFleetArea))");
+  CheckLength(RelativeSize.size(), nArea, "RelativeSize", "nArea (ncol(EffortFleetArea))");
   
   CheckDimensions(nFleet, SelectivityAtAgeFleet.n_cols, "SelectivityAtAgeFleet", "nFleet", 1);
   CheckDimensions(nAge, RetentionAtAgeFleet.n_rows, "RetentionAtAgeFleet", "nAge");
@@ -38,6 +39,12 @@ List CalcFMortality_(arma::mat EffortFleetArea, // nFleet, nArea
   for (int fl=0; fl<nFleet; fl++) {
     for (int area=0; area<nArea; area++) {
       double catchabilityArea = arma::as_scalar(qArea.row(fl).col(area));
+      
+      if (catchabilityArea < 1E-5) {
+        catchabilityArea = Catchability(fl)/RelativeSize(area);
+        qArea.row(fl).col(area) = catchabilityArea;
+      }
+      
       double effortarea = arma::as_scalar(EffortFleetArea.row(fl).col(area));
 
       arma::vec FInteract = effortarea * catchabilityArea * SelectivityAtAgeFleet.col(fl);
@@ -50,7 +57,8 @@ List CalcFMortality_(arma::mat EffortFleetArea, // nFleet, nArea
   }
   
   List L = List::create(Named("FDeadFleetArea") = FDeadFleetArea,
-                        Named("FRetainFleetArea") = FRetainFleetArea);
+                        Named("FRetainFleetArea") = FRetainFleetArea,
+                        Named("qArea") = qArea);
   return(L);
 }
 

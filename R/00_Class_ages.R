@@ -28,9 +28,10 @@ setMethod("initialize", "ages", function(.Object,
                                          Units='year',
                                          PlusGroup=TRUE) {
   .Object@MinAge <- MinAge
+  TSperYear <- TSperYear(Units)
   if (!is.na(MaxAge)) {
     .Object@MaxAge <- MaxAge
-    .Object@Classes <- MinAge:MaxAge  
+    .Object@Classes <- seq(MinAge, by=1/TSperYear, MaxAge)
   }
   
   .Object@Units <- Units
