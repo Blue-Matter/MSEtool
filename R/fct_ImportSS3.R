@@ -1,44 +1,24 @@
 # TODO 
 # - arguments to set Length and Weight units 
 
-GetSSTimeUnits <- function(replist) {
-  TSperYear <- ifelse(is.null(replist$nseasons), 1, replist$nseasons)
-  if (TSperYear==1) {
-    TimeUnits <- 'year'
-  } else if (TSperYear==4) {
-    TimeUnits <- 'quarter'
-  } else {
-    cli::cli_abort(
-      "{.val {TSperYear}} TimeSteps Per Year currently not supported",
-      .internal=TRUE)
-  }
-  
-  if (!is.null(replist$seasdurations)) {
-    if (!all(replist$seasdurations/mean(replist$seasdurations) == 1))
-      cli::cli_abort(
-        "Season durations not equal. Currently not supported", 
-        .internal=TRUE)
-  }
-  TimeUnits
-}
 
 GetSSTimeSteps <- function(replist, pYear=30) {
+  TSperYear <- ifelse(is.null(replist$nseasons), 1, replist$nseasons)
   FirstHistYear <- replist$startyr
   LastHistYear <- replist$endyr
   HistYears <- FirstHistYear:LastHistYear
   nYear <- length(HistYears)
   
-  TimeUnits <- GetSSTimeUnits(replist)
-  TimeStepsHist <- CalcTimeSteps(nYear, pYear, LastHistYear, TimeUnits, 'Historical')
-  TimeStepsProj <-  CalcTimeSteps(nYear, pYear, LastHistYear, TimeUnits, 'Projection')
+  TimeStepsHist <- CalcTimeSteps(nYear, pYear, LastHistYear, TSperYear, 'Historical')
+  TimeStepsProj <-  CalcTimeSteps(nYear, pYear, LastHistYear, TSperYear, 'Projection')
 
   list(nYear=nYear,
        pYear=pYear,
        CurrentYear=LastHistYear, 
        TimeStepsHist=TimeStepsHist, 
        TimeStepsProj=TimeStepsProj,
-       TimeUnits=TimeUnits,
-       TSperYear=TSperYear(TimeUnits)
+       TimeUnits=CalcTSUnits(TSperYear),
+       TSperYear=TSperYear
   )
 }
 
@@ -127,7 +107,6 @@ ImportSS <- function(SSDir,
   OM@CurrentYear <- TimeStepsList$CurrentYear
   OM@TimeSteps <- c(TimeStepsList$TimeStepsHist,
                     TimeStepsList$TimeStepsProj)
-  OM@TimeUnits <- TimeStepsList$TimeUnits
   OM@TSperYear <- TimeStepsList$TSperYear
   
   # Stock
