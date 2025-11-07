@@ -18,17 +18,4 @@ CompareSSNumber(RepList[[1]], Hist)
 CompareSSLandings(RepList[[1]], Hist)
 
 
-replist <- RepList$`1`
-
-Natage <- GetSSNatAge(replist, OM, yrs=1956)
-
-Number(Hist, byAge=TRUE) |> dplyr::filter(TimeStep==1956)
-
-Natage
-
-
-birthseas <- ifelse(is.null(replist$birthseas), 
-                    1, 
-                    max(replist$birthseas)) 
-
 
