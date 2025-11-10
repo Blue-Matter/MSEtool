@@ -1210,7 +1210,7 @@ ImportSSData <- function(SSDir,
   
   Data@Years <- YearsList$YearsHist
   Data@YearLH <- YearsList$CurrentYear
-  Data@TimeUnits <- 'year'
+  # Data@TimeUnits <- 'year'
   Data@TSperYear <- 1
   Data@nArea <- 1 
 
