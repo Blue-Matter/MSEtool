@@ -7,13 +7,13 @@ setdnames <- function(dnames, BySim=TRUE) {
 
 # TODO - update for new OptMSY and CalculateMSYSim
 
-# CalculateMSY <- function(OM, TimeSteps=NULL) {
+# CalculateMSY <- function(OM, Years=NULL) {
 #   
-#   if (is.null(TimeSteps))
-#     TimeSteps <- OM |> TimeSteps('Historical') |> tail(1)
+#   if (is.null(Years))
+#     Years <- OM |> Years('Historical') |> tail(1)
 #   
-#   StockList <- PopulateStockList(OM) |> SubsetTimeStep(TimeSteps, AddPast = FALSE)
-#   StockFleetList <- PopulateFleetList(OM, StockList) |> SubsetTimeStep(TimeSteps)
+#   StockList <- PopulateStockList(OM) |> SubsetYear(Years, AddPast = FALSE)
+#   StockFleetList <- PopulateFleetList(OM, StockList) |> SubsetYear(Years)
 #   CatchFracList <- OM |> CheckCatchFrac() |> CatchFrac()
 #   
 #   Complexes <- OM@Complexes
@@ -24,7 +24,7 @@ setdnames <- function(dnames, BySim=TRUE) {
 #   FleetList <- purrr::map2(StockFleetList, nAgesList, \(FleetList,nAges)
 #                            Fleet2Hist(FleetList, nAges,
 #                                       nSim=nSim(OM), 
-#                                       TimeSteps=TimeSteps,
+#                                       Years=Years,
 #                                       nArea(StockList[[1]]),
 #                                       silent=TRUE)
 #   )
@@ -44,28 +44,28 @@ setdnames <- function(dnames, BySim=TRUE) {
 #   })
 #   names(CatchFracSimList) <- 1:nSim(OM)
 #   
-#   CalculateMSYSimList(StockSimList, FleetSimList, CatchFracSimList, Complexes, TimeSteps)
+#   CalculateMSYSimList(StockSimList, FleetSimList, CatchFracSimList, Complexes, Years)
 #   
 # }
 
 
-# CalculateMSYSimList <- function(StockSimList, FleetSimList, CatchFracSimList, Complexes, TimeSteps) {
-#   IdenticalAcrossSims <- IdenticalSims(StockSimList, TimeSteps) &
-#     IdenticalSims(FleetSimList, TimeSteps) &
-#     IdenticalSims(CatchFracSimList, TimeSteps, EditSlots=FALSE)
+# CalculateMSYSimList <- function(StockSimList, FleetSimList, CatchFracSimList, Complexes, Years) {
+#   IdenticalAcrossSims <- IdenticalSims(StockSimList, Years) &
+#     IdenticalSims(FleetSimList, Years) &
+#     IdenticalSims(CatchFracSimList, Years, EditSlots=FALSE)
 #   
 #   if (IdenticalAcrossSims) {
 #     MSYRefPointsList <- CalculateMSYSim(StockSimList[[1]], 
 #                                         FleetSimList[[1]], 
 #                                         CatchFracSimList[[1]],
 #                                         Complexes,
-#                                         TimeSteps)
+#                                         Years)
 #     
 #     MSYRefPointsList <- replicate(OM@nSim, MSYRefPointsList, simplify = FALSE)
 #     names(MSYRefPointsList) <- 1:OM@nSim
 #   } else {
 #     MSYRefPointsList <- purrr::pmap(list(StockSimList, FleetSimList, CatchFracSimList), 
-#                                     CalculateMSYSim, Complexes=Complexes, TimeSteps=TimeSteps,
+#                                     CalculateMSYSim, Complexes=Complexes, Years=Years,
 #                                     .progress = list(
 #                                       type = "iterator",
 #                                       format = "Calculating MSY Reference Points {cli::pb_bar} {cli::pb_percent}",
@@ -81,12 +81,12 @@ setdnames <- function(dnames, BySim=TRUE) {
 #   for (sl in slots) {
 #     slot(MSYRefPoints, sl) <- purrr::map(MSYRefPointsList, slot, sl) |> 
 #       List2Array("Sim") |> 
-#       aperm(c('Sim', 'Stock', 'TimeStep'))
+#       aperm(c('Sim', 'Stock', 'Year'))
 #   }
 #   MSYRefPoints
 # }
 
-CalcMSYRefPoints <- function(SimList, RefPointTimeSteps, RefPointsMSY=TRUE) {
+CalcMSYRefPoints <- function(SimList, RefPointYears, RefPointsMSY=TRUE) {
   
   if (inherits(RefPointsMSY, 'logical') && RefPointsMSY) {
     if (CheckIdenticalSims(SimList, Equilibrium=TRUE)) {
@@ -94,7 +94,7 @@ CalcMSYRefPoints <- function(SimList, RefPointTimeSteps, RefPointsMSY=TRUE) {
       SimOne@RefPointsMSY <- CalculateMSYSim(StockList=SimOne@OM@Stock,
                                              FleetList=SimOne@OM@Fleet,                                  
                                              Complexes=SimOne@OM@Complexes,
-                                             TimeSteps = RefPointTimeSteps,
+                                             Years = RefPointYears,
                                              maxF=SimOne@OM@maxF)
       
       SimList <- purrr::map(SimList, \(HistSim) {
@@ -106,7 +106,7 @@ CalcMSYRefPoints <- function(SimList, RefPointTimeSteps, RefPointsMSY=TRUE) {
         HistSim@RefPointsMSY <- CalculateMSYSim(StockList=HistSim@OM@Stock,
                                                 FleetList=HistSim@OM@Fleet,                                  
                                                 Complexes=HistSim@OM@Complexes,
-                                                TimeSteps = RefPointTimeSteps,
+                                                Years = RefPointYears,
                                                 maxF=HistSim@OM@maxF)
         HistSim
       }, .progress = list(
@@ -120,22 +120,22 @@ CalcMSYRefPoints <- function(SimList, RefPointTimeSteps, RefPointsMSY=TRUE) {
 }
 
 
-CalculateMSYSim <- function(StockList, FleetList, Complexes, TimeSteps=NULL, maxF=3) {
+CalculateMSYSim <- function(StockList, FleetList, Complexes, Years=NULL, maxF=3) {
   logApicalFRange <- log(c(0.01, maxF))
   
-  MSYRefPoints <- RefPointsMSY(StockNames=names(StockList), TimeSteps=TimeSteps)
+  MSYRefPoints <- RefPointsMSY(StockNames=names(StockList), Years=Years)
   for (st in seq_along(Complexes)) {
     StockInd <- Complexes[[st]]
     StockList_ <- StockList[StockInd]
     FleetList_ <- FleetList[StockInd]
     
-    for (ts in seq_along(TimeSteps)) {
+    for (ts in seq_along(Years)) {
       opt <- optimize(OptMSY, 
                       logApicalFRange, 
                       StockList_, 
                       FleetList_, 
-                      TimeSteps=TimeSteps[ts])
-      MSYRefs <- OptMSY(opt$minimum, StockList_, FleetList_, TimeSteps[ts],2)
+                      Years=Years[ts])
+      MSYRefs <- OptMSY(opt$minimum, StockList_, FleetList_, Years[ts],2)
       
       for (sl in slotNames(MSYRefs)) {
         val <- slot(MSYRefs,sl)
@@ -149,16 +149,16 @@ CalculateMSYSim <- function(StockList, FleetList, Complexes, TimeSteps=NULL, max
 }
 
 
-OptMSY <- function(logApicalF, StockList, FleetList, TimeSteps, option=1) {
+OptMSY <- function(logApicalF, StockList, FleetList, Years, option=1) {
   
   if (length(logApicalF)>1) {
     cli::cli_alert_danger('{.var logApicalF} must be length 1. Using first value {.val {logApicalF[1]}}')
     logApicalF <- logApicalF[1]
   }
   
-  if (length(TimeSteps)>1) {
-    cli::cli_alert_danger('{.var TimeSteps} must be length 1. Using last value {.val {tail(TimeSteps,1)}}')
-    TimeSteps <- tail(TimeSteps,1)
+  if (length(Years)>1) {
+    cli::cli_alert_danger('{.var Years} must be length 1. Using last value {.val {tail(Years,1)}}')
+    Years <- tail(Years,1)
   }
   
   apicalF <- exp(logApicalF)
@@ -166,7 +166,7 @@ OptMSY <- function(logApicalF, StockList, FleetList, TimeSteps, option=1) {
   PerRecruit <- CalcPerRecruit_StockList(apicalF, 
                                          StockList, 
                                          FleetList, 
-                                         TimeSteps)
+                                         Years)
   
   SPFrom <- purrr::map(StockList, \(stock) stock@SRR@SPFrom) |> unlist()
   if (is.null(SPFrom))
@@ -175,9 +175,9 @@ OptMSY <- function(logApicalF, StockList, FleetList, TimeSteps, option=1) {
   SPR0List <- PerRecruit@SPR0 |> Array2List(1)
   
   RecParsList <- purrr::map2(StockList, SPR0List, \(Stock, SPR0) {
-    Pars <- purrr::map(Stock@SRR@Pars, \(pars) ArraySubsetTimeStep(pars,TimeSteps))
-    Pars$R0 <- ArraySubsetTimeStep(Stock@SRR@R0, TimeSteps)
-    Pars$SPR0 <- ArraySubsetTimeStep(SPR0, TimeSteps)
+    Pars <- purrr::map(Stock@SRR@Pars, \(pars) ArraySubsetYear(pars,Years))
+    Pars$R0 <- ArraySubsetYear(Stock@SRR@R0, Years)
+    Pars$SPR0 <- ArraySubsetYear(SPR0, Years)
     Pars
   })
   
@@ -201,11 +201,11 @@ OptMSY <- function(logApicalF, StockList, FleetList, TimeSteps, option=1) {
     RelRecruits[RelRecruits<0] <- 0
     RelRecruits
   }) |>
-    List2Array('Stock') |> aperm(c('Stock', 'TimeStep'))
+    List2Array('Stock') |> aperm(c('Stock', 'Year'))
   
   
-  R0 <- purrr::map(StockList, \(Stock) Stock@SRR@R0 |> ArraySubsetTimeStep(TimeSteps)) |>
-    List2Array('Stock') |> aperm(c('Stock', 'TimeStep'))
+  R0 <- purrr::map(StockList, \(Stock) Stock@SRR@R0 |> ArraySubsetYear(Years)) |>
+    List2Array('Stock') |> aperm(c('Stock', 'Year'))
   
   Recruits <- ArrayMultiply(R0, RelRecruits) |>  AddDimension("F")
   Removals <- ArrayMultiply(PerRecruit@Removals, Recruits) |> DropDimension("F")

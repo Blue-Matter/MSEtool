@@ -74,32 +74,32 @@ CalcSurvival <- function(NaturalMortalityAtAge, # Sim, nAge, nTS (Sim optional)
 
 
 # # ---- CalcUnfishedSurvival -----
-CalcUnfishedSurvival <- function(OM, SP=FALSE, TimeSteps=NULL, silent=FALSE, Expand=TRUE) {
+CalcUnfishedSurvival <- function(OM, SP=FALSE, Years=NULL, silent=FALSE, Expand=TRUE) {
   
   if (inherits(OM,'stock'))
-    return(CalcUnfishedSurvivalStock(OM, SP, TimeSteps, Expand))
+    return(CalcUnfishedSurvivalStock(OM, SP, Years, Expand))
   
   if (inherits(OM,'list'))
-    return(CalcUnfishedSurvivalStockList(OM, SP, TimeSteps, Expand))
+    return(CalcUnfishedSurvivalStockList(OM, SP, Years, Expand))
   
   OM <- PopulateOM(OM, silent)
-  if (is.null(TimeSteps))
-    TimeSteps <- OM@TimeSteps
+  if (is.null(Years))
+    Years <- OM@Years
   
-  CalcUnfishedSurvivalStockList(OM@Stock, SP, TimeSteps, Expand)
+  CalcUnfishedSurvivalStockList(OM@Stock, SP, Years, Expand)
   
 }
 
-CalcUnfishedSurvivalStockList <- function(StockList, SP=FALSE, TimeSteps=NULL, Expand=TRUE) {
-  purrr::map(StockList, \(Stock) CalcUnfishedSurvivalStock(Stock, SP, TimeSteps, Expand))
+CalcUnfishedSurvivalStockList <- function(StockList, SP=FALSE, Years=NULL, Expand=TRUE) {
+  purrr::map(StockList, \(Stock) CalcUnfishedSurvivalStock(Stock, SP, Years, Expand))
 }
 
-CalcUnfishedSurvivalStock <- function(Stock, SP=FALSE, TimeSteps=NULL, Expand=TRUE) {
+CalcUnfishedSurvivalStock <- function(Stock, SP=FALSE, Years=NULL, Expand=TRUE) {
   AgeClasses <- Stock@Ages@Classes
   nAges <- length(AgeClasses)
   NaturalMortalityAtAge <- Stock@NaturalMortality@MeanAtAge |>
-    ArrayExpand(Stock@nSim, nAges, TimeSteps) |>
-    ArraySubsetTimeStep(TimeSteps)
+    ArrayExpand(Stock@nSim, nAges, Years) |>
+    ArraySubsetYear(Years)
   
   PlusGroup <- Stock@Ages@PlusGroup
   SpawnTimeFrac <- ifelse(SP, Stock@SRR@SpawnTimeFrac, 0)
@@ -108,10 +108,10 @@ CalcUnfishedSurvivalStock <- function(Stock, SP=FALSE, TimeSteps=NULL, Expand=TR
     Stock@Maturity@Semelparous <- array(1, dim = c(Stock@nSim, nAges, 1))
   }
   
-  Semelparous <- Stock@Maturity@Semelparous |> ArrayExpand(Stock@nSim, nAges, TimeSteps) |>
-    ArraySubsetTimeStep(TimeSteps)
+  Semelparous <- Stock@Maturity@Semelparous |> ArrayExpand(Stock@nSim, nAges, Years) |>
+    ArraySubsetYear(Years)
   
-  IsIdenticalTime <- all(IdenticalTimeSteps(NaturalMortalityAtAge) & IdenticalTimeSteps(Semelparous))
+  IsIdenticalTime <- all(IdenticalYears(NaturalMortalityAtAge) & IdenticalYears(Semelparous))
   BySim <- 'Sim' %in% names(dimnames(NaturalMortalityAtAge))
   
   if (!BySim) {
@@ -123,13 +123,13 @@ CalcUnfishedSurvivalStock <- function(Stock, SP=FALSE, TimeSteps=NULL, Expand=TR
                                SpawnTimeFrac=SpawnTimeFrac,
                                Semelparous=Semelparous)
       dnames <- dimnames(Survival)
-      nTS <- length(TimeSteps)
+      nTS <- length(Years)
       
       SurvivalList <- replicate(nTS, Survival, simplify = FALSE)
       
       Survival <- abind::abind(SurvivalList, along=2)
       dimnames(Survival) <- list(Age=dnames[[1]],
-                                 TimeStep=TimeSteps)
+                                 Year=Years)
       
       return(Survival)
       
@@ -154,8 +154,8 @@ CalcUnfishedSurvivalStock <- function(Stock, SP=FALSE, TimeSteps=NULL, Expand=TR
                              Semelparous=Semelparous
     )
     Survival <- replicate(1, Survival) |>
-      AddDimNames(c('Age', 'TimeStep', 'Sim'), TimeSteps, Ages=AgeClasses) |>
-      aperm(c('Sim', 'Age', 'TimeStep'))
+      AddDimNames(c('Age', 'Year', 'Sim'), Years, Ages=AgeClasses) |>
+      aperm(c('Sim', 'Age', 'Year'))
     
   } else if (IsIdenticalSim & !IsIdenticalTime) {
     NaturalMortalityAtAge <- abind::adrop(NaturalMortalityAtAge[1,,, drop=FALSE], 1)
@@ -166,8 +166,8 @@ CalcUnfishedSurvivalStock <- function(Stock, SP=FALSE, TimeSteps=NULL, Expand=TR
                              Semelparous=Semelparous
     )
     Survival <- replicate(1, Survival) |>
-      AddDimNames(c('Age', 'TimeStep', 'Sim'), TimeSteps, Ages=AgeClasses) |>
-      aperm(c('Sim', 'Age', 'TimeStep'))
+      AddDimNames(c('Age', 'Year', 'Sim'), Years, Ages=AgeClasses) |>
+      aperm(c('Sim', 'Age', 'Year'))
     
   } else if (!IsIdenticalSim & IsIdenticalTime) {
     NaturalMortalityAtAgeList <- Array2List(NaturalMortalityAtAge[,,1, drop=FALSE], 1)
@@ -179,7 +179,7 @@ CalcUnfishedSurvivalStock <- function(Stock, SP=FALSE, TimeSteps=NULL, Expand=TR
       Semelparous=SemelparousList),
       CalcSurvival
     ) |> List2Array('Sim') |>
-      aperm(c('Sim', 'Age', 'TimeStep'))
+      aperm(c('Sim', 'Age', 'Year'))
     
   } else {
     NaturalMortalityAtAgeList <- Array2List(NaturalMortalityAtAge, 1)
@@ -190,12 +190,12 @@ CalcUnfishedSurvivalStock <- function(Stock, SP=FALSE, TimeSteps=NULL, Expand=TR
       Semelparous=SemelparousList),
       CalcSurvival, SpawnTimeFrac=SpawnTimeFrac) |>
       List2Array('Sim') |>
-      aperm(c('Sim', 'Age', 'TimeStep'))
+      aperm(c('Sim', 'Age', 'Year'))
     
   }
   
   if (Expand) 
-    Survival <- Survival |> ArrayExpand(Stock@nSim, nAges, TimeSteps)
+    Survival <- Survival |> ArrayExpand(Stock@nSim, nAges, Years)
   Survival
 }
 

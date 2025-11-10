@@ -1,89 +1,89 @@
 
-CalcFleetAllocationF <- function(FleetList, TimeSteps) {
+CalcFleetAllocationF <- function(FleetList, Years) {
   
   BySim <- "Sim" %in% (FleetList[[1]]@Effort |> dimnames() |> names())
   FDistribution <- purrr::map(FleetList, \(Stock) {
-    ArrayMultiply(Stock@Effort |>  ArraySubsetTimeStep(TimeSteps),
-                  Stock@Catchability |>  ArraySubsetTimeStep(TimeSteps))
+    ArrayMultiply(Stock@Effort |>  ArraySubsetYear(Years),
+                  Stock@Catchability |>  ArraySubsetYear(Years))
   }) |> 
     List2Array('Stock') |>
-    aperm(setdnames(c('Stock', 'TimeStep', 'Fleet'), BySim))
+    aperm(setdnames(c('Stock', 'Year', 'Fleet'), BySim))
   
-  FDistributionTotal <- apply(FDistribution, setdnames('TimeStep', BySim), sum) 
+  FDistributionTotal <- apply(FDistribution, setdnames('Year', BySim), sum) 
   if (!is.array(FDistributionTotal)) {
     FDistributionTotal <- array(FDistributionTotal, length(FDistributionTotal),
-                                dimnames = list(TimeStep=TimeSteps))
+                                dimnames = list(Year=Years))
   }
   
   FDistributionTotal <- FDistributionTotal |>
     AddDimension("Fleet") |> AddDimension("Stock") |>
-    aperm(setdnames(c('Stock', 'TimeStep', 'Fleet'), BySim))
+    aperm(setdnames(c('Stock', 'Year', 'Fleet'), BySim))
   
   ArrayDivide(FDistribution, FDistributionTotal) 
 }
 
-CalcPerRecruit <- function(apicalF, OM, TimeSteps=NULL) {
+CalcPerRecruit <- function(apicalF, OM, Years=NULL) {
 
-  if (is.null(TimeSteps))
-    TimeSteps <- OM |> TimeSteps('Historical') |> tail(1)
+  if (is.null(Years))
+    Years <- OM |> Years('Historical') |> tail(1)
 
-  StockList <- PopulateStockList(OM) |> SubsetTimeStep(TimeSteps, AddPast = FALSE)
-  StockFleetList <- PopulateFleetList(OM, StockList) |> SubsetTimeStep(TimeSteps)
+  StockList <- PopulateStockList(OM) |> SubsetYear(Years, AddPast = FALSE)
+  StockFleetList <- PopulateFleetList(OM, StockList) |> SubsetYear(Years)
   nAgesList <- purrr::map(StockList, \(Stock)
                           length(Stock@Ages@Classes))
 
   FleetList <- purrr::map2(StockFleetList, nAgesList, \(FleetList,nAges)
                            Fleet2Hist(FleetList, nAges,
                                       nSim=nSim(OM),
-                                      TimeSteps=TimeSteps,
+                                      Years=Years,
                                       nArea(StockList[[1]]),
                                       silent=TRUE)
   )
   
-  CalcPerRecruit_StockList(apicalF, StockList, FleetList, TimeSteps)
+  CalcPerRecruit_StockList(apicalF, StockList, FleetList, Years)
 }
 
-CalcPerRecruit_StockList <- function(apicalF, StockList, FleetList, TimeSteps) {
+CalcPerRecruit_StockList <- function(apicalF, StockList, FleetList, Years) {
 
   NaturalMortalityList <- purrr::map(StockList, \(Stock) 
-                                     Stock@NaturalMortality@MeanAtAge |> ArraySubsetTimeStep(TimeSteps))
+                                     Stock@NaturalMortality@MeanAtAge |> ArraySubsetYear(Years))
   
   BySim <- "Sim" %in% (NaturalMortalityList[[1]] |> dimnames() |> names())
   
-  StockFleetAllocation <- CalcFleetAllocationF(FleetList, TimeSteps)
+  StockFleetAllocation <- CalcFleetAllocationF(FleetList, Years)
 
   PlusGroupList <- purrr::map(StockList, \(Stock) Stock@Ages@PlusGroup)
-  MaturityList <- purrr::map(StockList, \(Stock) Stock@  Maturity@MeanAtAge |> ArraySubsetTimeStep(TimeSteps))
+  MaturityList <- purrr::map(StockList, \(Stock) Stock@  Maturity@MeanAtAge |> ArraySubsetYear(Years))
   SemelparousList <- purrr::map(StockList, \(Stock) 
-                                Stock@Maturity@Semelparous |> ArraySubsetTimeStep(TimeSteps))
+                                Stock@Maturity@Semelparous |> ArraySubsetYear(Years))
   WeightList <- purrr::map(StockList, \(Stock) Stock@Weight@MeanAtAge |> 
-                             ArraySubsetTimeStep(TimeSteps))
+                             ArraySubsetYear(Years))
   SpawnTimeFracList <- purrr::map(StockList, \(Stock) Stock@SRR@SpawnTimeFrac)
   SPFrom <- purrr::map(StockList, \(stock) stock@SRR@SPFrom) |> unlist()
   if (is.null(SPFrom))
     SPFrom <- 1:length(StockList)
   
-  SPR0List <- purrr::map(StockList, \(Stock) CalcSPR0_Stock(Stock, TimeSteps))
+  SPR0List <- purrr::map(StockList, \(Stock) CalcSPR0_Stock(Stock, Years))
   
   SPR0List <- SPR0List[SPFrom]
   names(SPR0List) <- names(NaturalMortalityList)
   
   FecundityList <- purrr::map(StockList, \(Stock) Stock@Fecundity@MeanAtAge |> 
-                                ArraySubsetTimeStep(TimeSteps))
+                                ArraySubsetYear(Years))
   WeightFleetList <-purrr::map(FleetList, \(Fleet) Fleet@WeightFleet |>
-                                 ArraySubsetTimeStep(TimeSteps))
+                                 ArraySubsetYear(Years))
   
   Selectivity <- purrr::map(FleetList, \(Stock) Stock@Selectivity@MeanAtAge |> 
-                              ArraySubsetTimeStep(TimeSteps)) |> 
-    List2Array('Stock') |> aperm(setdnames(c('Stock', 'Age', 'TimeStep', 'Fleet'), BySim))
+                              ArraySubsetYear(Years)) |> 
+    List2Array('Stock') |> aperm(setdnames(c('Stock', 'Age', 'Year', 'Fleet'), BySim))
   
   Retention <- purrr::map(FleetList, \(Stock) Stock@Retention@MeanAtAge |> 
-                            ArraySubsetTimeStep(TimeSteps)) |> 
-    List2Array('Stock') |> aperm(setdnames(c('Stock', 'Age', 'TimeStep', 'Fleet'), BySim))
+                            ArraySubsetYear(Years)) |> 
+    List2Array('Stock') |> aperm(setdnames(c('Stock', 'Age', 'Year', 'Fleet'), BySim))
   
   DiscardMortality <- purrr::map(FleetList, \(Stock) Stock@DiscardMortality@MeanAtAge |> 
-                                   ArraySubsetTimeStep(TimeSteps)) |> 
-    List2Array('Stock') |> aperm(setdnames(c('Stock', 'Age', 'TimeStep', 'Fleet'), BySim))
+                                   ArraySubsetYear(Years)) |> 
+    List2Array('Stock') |> aperm(setdnames(c('Stock', 'Age', 'Year', 'Fleet'), BySim))
   
   PerRecruitF <- purrr::map(apicalF, \(F)
                             CalcPerRecruit_StockList_F(F, 
@@ -101,7 +101,7 @@ CalcPerRecruit_StockList <- function(apicalF, StockList, FleetList, TimeSteps) {
                                                        Selectivity,
                                                        Retention,
                                                        DiscardMortality,
-                                                       TimeSteps,
+                                                       Years,
                                                        BySim)
   )
   names(PerRecruitF) <- apicalF
@@ -138,25 +138,25 @@ CalcPerRecruit_StockList_F <- function(apicalF,
                                        Selectivity,
                                        Retention,
                                        DiscardMortality,
-                                       TimeSteps,
+                                       Years,
                                        BySim) {
   
 
   apicalFAge <- apicalF * StockFleetAllocation  |> 
     AddDimension("Age") |> 
-    aperm(setdnames(c('Stock', 'Age', 'TimeStep', 'Fleet'), BySim))
+    aperm(setdnames(c('Stock', 'Age', 'Year', 'Fleet'), BySim))
   
   FInteract <- ArrayMultiply(apicalFAge, Selectivity)
   FRetain <- ArrayMultiply(FInteract, Retention)  
   FDiscardTotal <- ArraySubtract(FInteract, FRetain)
   FDiscardDead <- ArrayMultiply(FDiscardTotal, DiscardMortality)
   FDead <- FRetain + FDiscardDead
-  # FDeadStock <- apply(FDead, setdnames(c('Stock', 'Age', 'TimeStep'), BySim), sum) 
-  FDeadTotal <- apply(FDead, setdnames(c('Stock', 'Age', 'TimeStep'), BySim), sum) 
-  ActualApicalF <- apply(FDeadTotal, setdnames('TimeStep', BySim), max)  
+  # FDeadStock <- apply(FDead, setdnames(c('Stock', 'Age', 'Year'), BySim), sum) 
+  FDeadTotal <- apply(FDead, setdnames(c('Stock', 'Age', 'Year'), BySim), sum) 
+  ActualApicalF <- apply(FDeadTotal, setdnames('Year', BySim), max)  
   if (!is.array(ActualApicalF)) {
     ActualApicalF <- array(ActualApicalF, length(ActualApicalF),
-                           dimnames = list(TimeStep=TimeSteps))
+                           dimnames = list(Year=Years))
   }
   
   if (apicalF>0 & any(abs(ActualApicalF/apicalF - 1) > 1E-2)) {
@@ -165,15 +165,15 @@ CalcPerRecruit_StockList_F <- function(apicalF,
     
     adjust <- ArrayDivide(apicalFSimTS,ActualApicalF)
     adjust <- adjust |> AddDimension("Age") |> AddDimension("Fleet") |> AddDimension("Stock")
-    adjust <- aperm(adjust, setdnames(c('Stock', 'Age', 'TimeStep', 'Fleet'), BySim))
+    adjust <- aperm(adjust, setdnames(c('Stock', 'Age', 'Year', 'Fleet'), BySim))
     
     FInteract <- ArrayMultiply(adjust, FInteract)
     FRetain <- ArrayMultiply(FInteract, Retention)  
     FDiscardTotal <- ArraySubtract(FInteract, FRetain)
     FDiscardDead <- ArrayMultiply(FDiscardTotal, DiscardMortality)
     FDead <- FRetain + FDiscardDead
-    FDeadTotal <- apply(FDead, setdnames(c('Stock', 'Age', 'TimeStep'), BySim), sum) 
-    ActualApicalF <- apply(FDeadTotal, setdnames('TimeStep', BySim), max) 
+    FDeadTotal <- apply(FDead, setdnames(c('Stock', 'Age', 'Year'), BySim), sum) 
+    ActualApicalF <- apply(FDeadTotal, setdnames('Year', BySim), max) 
   }
   
   stockInd <- which(names(dimnames(FDeadTotal)) == 'Stock')
@@ -206,16 +206,16 @@ CalcPerRecruit_StockList_F <- function(apicalF,
   
   # SPR 
   SPRFList <- purrr::map2(NPRF_SPList, FecundityList, \(NPRF_SP, Fecundity) {
-    SPRF <- ArrayMultiply(NPRF_SP, Fecundity) |> apply(setdnames(c('TimeStep'), BySim), sum)
+    SPRF <- ArrayMultiply(NPRF_SP, Fecundity) |> apply(setdnames(c('Year'), BySim), sum)
     if (!is.array(SPRF)) 
-      SPRF <- array(SPRF, length(SPRF), dimnames = list(TimeStep=TimeSteps))
+      SPRF <- array(SPRF, length(SPRF), dimnames = list(Year=Years))
     SPRF
   })
   
   SPRFList <- SPRFList[SPFrom]  
   names(SPRFList) <- names(NPRFList)
   SPR <- purrr::map2(SPRFList, SPR0List, \(SPRF, SPR0) ArrayDivide(SPRF, SPR0)) |> List2Array('Stock') |>
-    aperm(setdnames(c("Stock", "TimeStep"), BySim))
+    aperm(setdnames(c("Stock", "Year"), BySim))
   
   
   # Removals and Landings
@@ -234,13 +234,13 @@ CalcPerRecruit_StockList_F <- function(apicalF,
   Removals <- purrr::pmap(list(FishingDeadList, NDeadList, WeightFleetList), \(FishingDead, NDead, WeightFleet) {
     NDeadFleet <- AddDimension(NDead, 'Fleet')
     removals <- ArrayMultiply(FishingDead, NDeadFleet) |> ArrayMultiply(WeightFleet) |>
-      apply(setdnames('TimeStep', BySim), sum)
+      apply(setdnames('Year', BySim), sum)
     if (!is.array(removals))
-      removals <- array(removals, length(removals), dimnames = list(TimeStep=TimeSteps))
+      removals <- array(removals, length(removals), dimnames = list(Year=Years))
     removals
   }) |> 
     List2Array('Stock') |>
-    aperm(setdnames(c('Stock', 'TimeStep'), BySim))
+    aperm(setdnames(c('Stock', 'Year'), BySim))
   
   stockInd <- which(names(dimnames(FRetain)) == 'Stock')
   FRetainList <- FRetain |> Array2List(stockInd)
@@ -253,45 +253,45 @@ CalcPerRecruit_StockList_F <- function(apicalF,
   Landings <- purrr::pmap(list(FishingRetainList, NDeadList, WeightFleetList), \(FishingRetain, NDead, WeightFleet) {
     NDeadFleet <- AddDimension(NDead, 'Fleet')
     removals <- ArrayMultiply(FishingRetain, NDeadFleet) |> ArrayMultiply(WeightFleet) |>
-      apply(setdnames('TimeStep', BySim), sum)
+      apply(setdnames('Year', BySim), sum)
     if (!is.array(removals))
-      removals <- array(removals, length(removals), dimnames = list(TimeStep=TimeSteps))
+      removals <- array(removals, length(removals), dimnames = list(Year=Years))
     removals
   }) |> List2Array('Stock') |>
-    aperm(setdnames(c('Stock', 'TimeStep'), BySim))
+    aperm(setdnames(c('Stock', 'Year'), BySim))
   
   Biomass <- purrr::map2(NPRFList, WeightList, \(NPRF, Weight) {
-    biomass <- ArrayMultiply(NPRF, Weight) |> apply(setdnames('TimeStep', BySim), sum)
+    biomass <- ArrayMultiply(NPRF, Weight) |> apply(setdnames('Year', BySim), sum)
     if (!is.array(biomass))
-      biomass <- array(biomass, length(biomass), dimnames = list(TimeStep=TimeSteps))
+      biomass <- array(biomass, length(biomass), dimnames = list(Year=Years))
     biomass
-  }) |> List2Array("Stock") |> aperm(setdnames(c('Stock', 'TimeStep'), BySim)) 
+  }) |> List2Array("Stock") |> aperm(setdnames(c('Stock', 'Year'), BySim)) 
   
   SBiomass <- purrr::pmap(list(NPRF_SPList, WeightList, MaturityList), \(NPRF_SP, Weight, Maturity) {
     biomass <- ArrayMultiply(NPRF_SP, Weight) |>
       ArrayMultiply(Maturity) |>
-      apply(setdnames('TimeStep', BySim), sum)
+      apply(setdnames('Year', BySim), sum)
     if (!is.array(biomass))
-      biomass <- array(biomass, length(biomass), dimnames = list(TimeStep=TimeSteps))
+      biomass <- array(biomass, length(biomass), dimnames = list(Year=Years))
     biomass
-  }) |> List2Array("Stock") |> aperm(setdnames(c('Stock', 'TimeStep'), BySim)) 
+  }) |> List2Array("Stock") |> aperm(setdnames(c('Stock', 'Year'), BySim)) 
   
   SProduction <- purrr::map2(NPRF_SPList,FecundityList, \(NPRF_SP, Fecundity) {
     biomass <- ArrayMultiply(NPRF_SP, Fecundity) |>
-      apply(setdnames('TimeStep', BySim), sum)
+      apply(setdnames('Year', BySim), sum)
     if (!is.array(biomass))
-      biomass <- array(biomass, length(biomass), dimnames = list(TimeStep=TimeSteps))
+      biomass <- array(biomass, length(biomass), dimnames = list(Year=Years))
     biomass
-  }) |> List2Array("Stock") |> aperm(setdnames(c('Stock', 'TimeStep'), BySim)) 
+  }) |> List2Array("Stock") |> aperm(setdnames(c('Stock', 'Year'), BySim)) 
   
   
   PerRecruit <- new('perrecruit')
-  PerRecruit@SPR0 <- SPR0List |> List2Array("Stock") |> aperm(setdnames(c('Stock', 'TimeStep'), BySim))
+  PerRecruit@SPR0 <- SPR0List |> List2Array("Stock") |> aperm(setdnames(c('Stock', 'Year'), BySim))
   PerRecruit@apicalF <- apicalF
-  PerRecruit@NPRF <- NPRFList |> List2Array("Stock") |> aperm(setdnames(c('Stock', 'Age', 'TimeStep'), BySim))  
+  PerRecruit@NPRF <- NPRFList |> List2Array("Stock") |> aperm(setdnames(c('Stock', 'Age', 'Year'), BySim))  
   if (IsSpawnTimeFrac)
-    PerRecruit@NPRF_SP <- NPRF_SPList |> List2Array("Stock") |> aperm(setdnames(c('Stock', 'Age', 'TimeStep'), BySim)) 
-  PerRecruit@SPRF <- SPRFList |>  List2Array("Stock") |> aperm(setdnames(c('Stock', 'TimeStep'), BySim)) 
+    PerRecruit@NPRF_SP <- NPRF_SPList |> List2Array("Stock") |> aperm(setdnames(c('Stock', 'Age', 'Year'), BySim)) 
+  PerRecruit@SPRF <- SPRFList |>  List2Array("Stock") |> aperm(setdnames(c('Stock', 'Year'), BySim)) 
   PerRecruit@SPR <- SPR
   PerRecruit@Biomass <- Biomass
   PerRecruit@SBiomass <- SBiomass

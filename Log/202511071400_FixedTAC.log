@@ -1,0 +1,12 @@
+
+Simulation 1
+Error in ProjSim@OM@Fleet[[st]]@Effort@Catchability : 
+  no applicable method for `@` applied to an object of class "matrix"
+
+Simulation 2
+Error in ProjSim@OM@Fleet[[st]]@Effort@Catchability : 
+  no applicable method for `@` applied to an object of class "matrix"
+
+Simulation 3
+Error in ProjSim@OM@Fleet[[st]]@Effort@Catchability : 
+  no applicable method for `@` applied to an object of class "matrix"

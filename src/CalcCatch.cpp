@@ -5,7 +5,7 @@ using namespace Rcpp;
 
 // [[Rcpp::export]]
 Rcpp::S4 CalcCatch_(Rcpp::S4 HistSimIn,
-                    Rcpp::NumericVector TimeSteps,
+                    Rcpp::NumericVector Years,
                     int debug=0) {
   
  
@@ -15,13 +15,13 @@ Rcpp::S4 CalcCatch_(Rcpp::S4 HistSimIn,
   List FleetList = OM.slot("Fleet");
 
   // Time Steps
-  NumericVector TimeStepsAll = OM.slot("TimeSteps");
-  int nTS = TimeSteps.size();
-  IntegerVector MatchTS = match(TimeSteps, TimeStepsAll);
+  NumericVector YearsAll = OM.slot("Years");
+  int nTS = Years.size();
+  IntegerVector MatchTS = match(Years, YearsAll);
 
   LogicalVector chkTS = any(MatchTS<1);
   if (chkTS[0]) {
-    stop("All values in `TimeSteps` must be matched in `OMListSim$TimeSteps`");
+    stop("All values in `Years` must be matched in `OMListSim$Years`");
   }
 
   List NumberAtAgeAreaList = HistSim.slot("Number"); // nStock
@@ -34,7 +34,7 @@ Rcpp::S4 CalcCatch_(Rcpp::S4 HistSimIn,
  int nStock = NumberAtAgeAreaList.size();
 
   for (int timestep=0; timestep<nTS; timestep++) {
-    NumericVector TSmatch = abs(TimeStepsAll - TimeSteps[timestep]);
+    NumericVector TSmatch = abs(YearsAll - Years[timestep]);
     int TSindex = MatchTS[timestep] -1;
 
     for (int st=0; st<nStock; st++) {

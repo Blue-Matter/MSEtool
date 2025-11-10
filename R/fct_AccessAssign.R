@@ -404,10 +404,10 @@ nAge <- function(x, st=1) {
 nTS <- function(x) {
   
   if (isS4(x))
-    return(length(TimeSteps(x)))
+    return(length(Years(x)))
   dnames <- dimnames(x) 
   if (!is.null(dnames))
-    return(length(dnames[['TimeStep']]))
+    return(length(dnames[['Year']]))
   
 }
 
@@ -1025,32 +1025,32 @@ Species <- function(x) {
   assignSlot(x, value, 'Species')
 }
 
-## ---- TimeSteps ----
+## ---- Years ----
 
 #' @rdname Access
 #' @export
-TimeSteps <- function(x, Period=NULL) {
+Years <- function(x, Period=NULL) {
   if (isS4(x)) {
     if (inherits(x, 'mse') | inherits(x, 'hist'))
       x <- x@OM
     
-    TimeSteps <- x@TimeSteps
+    Years <- x@Years
     if (is.null(Period))
-      return(TimeSteps)
+      return(Years)
     if (Period=='All')
-      return(TimeSteps)
-    return(CalcTimeSteps(x@nYear, x@pYear, x@CurrentYear, x@TSperYear, Period))
+      return(Years)
+    return(CalcYears(x@nYear, x@pYear, x@CurrentYear, x@TSperYear, Period))
   }
   
   if (is.list(x))
-    purrr::map(x, TimeSteps, Period)
+    purrr::map(x, Years, Period)
 
 }
 
 #' @rdname Access
 #' @export
-`TimeSteps<-` <- function(x, value) {
-  assignSlot(x, value, 'TimeSteps')
+`Years<-` <- function(x, value) {
+  assignSlot(x, value, 'Years')
 }
 
 ## ---- TimeUnits ----

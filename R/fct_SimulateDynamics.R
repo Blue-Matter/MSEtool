@@ -1,9 +1,9 @@
 SimulateDynamics <- function(SimList,
-                             HistTimeSteps) {
+                             HistYears) {
   
   
   
-  if (CheckIdenticalSims(SimList, HistTimeSteps)) {
+  if (CheckIdenticalSims(SimList, HistYears)) {
     # stop('not done yet!')
     
     # if (IdenticalAcrossSims) {
@@ -15,7 +15,7 @@ SimulateDynamics <- function(SimList,
   }
   
   SimList <- purrr::map(SimList, \(HistSim) 
-                        SimulateDynamics_(HistSim, HistTimeSteps),
+                        SimulateDynamics_(HistSim, HistYears),
                         .progress = list(
                           type = "iterator", 
                           format = "Simulating Historical Fishery {cli::pb_bar} {cli::pb_percent}",

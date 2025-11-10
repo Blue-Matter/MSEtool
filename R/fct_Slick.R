@@ -21,9 +21,9 @@ SlickChecks <- function(MSE) {
     if (!SameMPs)
       cli::cli_abort("All MSE objects must have the same MPs. Use {.run MPs(MSE)} to check.")
     
-    SameTSs <-  TimeSteps(MSE) |> unique() |> length() == 1
+    SameTSs <-  Years(MSE) |> unique() |> length() == 1
     if (!SameTSs)
-      cli::cli_abort("All MSE objects must have the Time Steps. Use {.run TimeSteps(MSE)} to check.")
+      cli::cli_abort("All MSE objects must have the Time Steps. Use {.run Years(MSE)} to check.")
     
   } else {
     if (nStock(MSE@OM)>1)
@@ -80,19 +80,19 @@ MSE2Kobe <- function(MSE) {
                         'Fishing mortality (F) relative to F corresponding MSY')
   
   if (is.list(MSE)) {
-    Kobe@Time <- TimeSteps(MSE[[1]]@OM, 'Projection')
+    Kobe@Time <- Years(MSE[[1]]@OM, 'Projection')
     Kobe@TimeLab <- firstup(MSE[[1]]@OM@TimeUnits)
     MPs <- names(MSE[[1]]@MPs)
     nsim <- MSE[[1]]@OM@nSim
     nOM <- length(MSE)
-    ProjectionTS <- TimeSteps(MSE[[1]]@OM, 'Projection')
+    ProjectionTS <- Years(MSE[[1]]@OM, 'Projection')
   } else {
-    Kobe@Time <- TimeSteps(MSE@OM, 'Projection')
+    Kobe@Time <- Years(MSE@OM, 'Projection')
     Kobe@TimeLab <- firstup(MSE@OM@TimeUnits)  
     MPs <- names(MSE@MPs)
     nsim <- MSE@OM@nSim
     nOM <- 1
-    ProjectionTS <- TimeSteps(MSE@OM, 'Projection')
+    ProjectionTS <- Years(MSE@OM, 'Projection')
   }
   nMP <- length(MPs)
   nTS <- length(Kobe@Time)
@@ -109,20 +109,20 @@ MSE2Kobe <- function(MSE) {
     }
     Stocks <- StockNames(mse@OM)
     
-    SB_SBMSY <- SB_SBMSY(mse) |> dplyr::filter(TimeStep%in%ProjectionTS, Stock%in%Stocks[1])
-    F_FMSY <- F_FMSY(mse) |> dplyr::filter(TimeStep%in%ProjectionTS, Stock%in%Stocks[1])
+    SB_SBMSY <- SB_SBMSY(mse) |> dplyr::filter(Year%in%ProjectionTS, Stock%in%Stocks[1])
+    F_FMSY <- F_FMSY(mse) |> dplyr::filter(Year%in%ProjectionTS, Stock%in%Stocks[1])
     # TODO  MSE@Misc$Failed
     # TODO get MP specific MSY ref points if applicable
     
     for (mm in 1:nMP) {
       Kobe@Value[,om,mm,1,] <- SB_SBMSY |> 
-        dplyr::arrange(Sim, TimeStep, MP) |>
+        dplyr::arrange(Sim, Year, MP) |>
         dplyr::filter(MP==MPs[mm]) |> 
         dplyr::pull(Value) |>
         matrix(nrow=nsim, ncol=nTS, byrow=TRUE)
       
       Kobe@Value[,om,mm,2,] <- F_FMSY |> 
-        dplyr::arrange(Sim, TimeStep, MP) |>
+        dplyr::arrange(Sim, Year, MP) |>
         dplyr::filter(MP==MPs[mm]) |> 
         dplyr::pull(Value) |>
         matrix(nrow=nsim, ncol=nTS, byrow=TRUE)
@@ -143,15 +143,15 @@ MSE2Timeseries <- function(MSE,
   Timeseries@Description
   
   if (is.list(MSE)) {
-    Timeseries@Time <- TimeSteps(MSE[[1]])
-    Timeseries@TimeNow <- TimeSteps(MSE[[1]]@OM, 'Historical') |> max()
+    Timeseries@Time <- Years(MSE[[1]])
+    Timeseries@TimeNow <- Years(MSE[[1]]@OM, 'Historical') |> max()
     Timeseries@TimeLab <- firstup(MSE[[1]]@OM@TimeUnits)
     nsim <- nSim(MSE[[1]])
     nOM <- length(MSE)
     nMP <- length(MSE[[1]]@MPs)
   } else {
-    Timeseries@Time <- TimeSteps(MSE@OM)
-    Timeseries@TimeNow <- TimeSteps(MSE@OM, 'Historical') |> max()
+    Timeseries@Time <- Years(MSE@OM)
+    Timeseries@TimeNow <- Years(MSE@OM, 'Historical') |> max()
     Timeseries@TimeLab <- firstup(MSE@OM@TimeUnits)
     nsim <- MSE@OM@nSim
     nOM <- 1
@@ -184,15 +184,15 @@ MSE2Timeseries <- function(MSE,
 GetTimeseriesVariable <- function(Var, MSE) {
   nsim <- MSE@OM@nSim
   nMP <- length(MSE@MPs)
-  nTS <- length(TimeSteps(MSE@OM))
+  nTS <- length(Years(MSE@OM))
   Array <- array(NA, dim=c(nsim, nMP, nTS))
   
-  DF <- do.call(Var, c(list(MSE))) |> dplyr::arrange(Sim, TimeStep, MP)
+  DF <- do.call(Var, c(list(MSE))) |> dplyr::arrange(Sim, Year, MP)
   
   DF$MP <- as.character(DF$MP)
   MPs <- DF$MP |> unique()
   nHistTS <- DF |> dplyr::filter(Period=='Historical') |>
-    dplyr::pull(TimeStep) |>
+    dplyr::pull(Year) |>
     unique() |> length()
   
   HistValues <- DF |> dplyr::filter(MP=='Historical') |> dplyr::pull(Value) 

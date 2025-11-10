@@ -3,13 +3,13 @@ CheckMPClass <- function(MPs) {
   names(MPFunctions) <- MPs
   MPClass <- purrr::map(MPFunctions, class) |> unlist()
   if (any(MPClass != 'mp')) 
-    cli::cli_abort("Currently only MPs of class `mp` are supported")
+    cli::cli_abort("Currently only MPs of class `mp` are supported", call=NULL)
   
 }
 
 
-InitialProjectionTimeStep <- function(SimList, TimeStepsHist, TimeStepsProj) {
-  TS <- c(tail(TimeStepsHist,1), head(TimeStepsProj,1))
+InitialProjectionYear <- function(SimList, YearsHist, YearsProj) {
+  TS <- c(tail(YearsHist,1), head(YearsProj,1))
   SimList <- purrr::map(SimList, \(ProjSim) 
                         SimulateDynamics_(ProjSim, TS))
   class(SimList) <- "simlist"
@@ -40,40 +40,42 @@ Project_hist <- function(Hist=NULL,
                          parallel=FALSE, 
                          silent=FALSE, 
                          nSim=NULL, 
-                         Reduce=TRUE) {
+                         Reduce=FALSE) {
   
   # ---- Initial Checks and Setup ----
   OnExit()
   CheckClass(Hist, 'hist', 'Hist')
   CheckMPClass(MPs)
   
-  TimeStepsHist <- TimeSteps(Hist@OM, "Historical")
-  TimeStepsProj <- TimeSteps(Hist@OM, "Projection")
+  YearsHist <- Years(Hist@OM, "Historical")
+  YearsProj <- Years(Hist@OM, "Projection")
   
   nMPs <- length(MPs)
   
-  # ---- Extend Arrays with Projection TimeSteps ----
+  # ---- Extend Arrays with Projection Years ----
   Proj <- Hist |> ReduceNSim(nSim) |> ExtendHist()
   
   # ---- Build SimList ----
   SimList <- Hist2SimList(Proj) |> UpdateAllocation()
   
-  # ---- Populate Number-at-Age at Beginning of Projection TimeStep ----
-  SimList <- InitialProjectionTimeStep(SimList, TimeStepsHist, TimeStepsProj)
+  # ---- Populate Number-at-Age at Beginning of Projection Year ----
+  SimList <- InitialProjectionYear(SimList, YearsHist, YearsProj)
   
   # ---- Create MSE Object ----
   MSE <- Hist2MSE(Hist, MPs) 
-  
+
   # ---- Project MPs ----
   cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
+  mp <- 1 # for debugging
   for (mp in seq_along(MPs)) {
-    MSE <- ProjectMP(SimList, MSE, MPs, TimeStepsHist, TimeStepsProj, mp) 
+    MP <- MPs[mp]
+    MSE <- ProjectMP(SimList, MSE, MP, mp, YearsHist, YearsProj) 
   }
   
   MSE@Log <- c(Hist@Log, MSE@Log)
   if (Reduce) {
-    MSE@OM <- ArrayReduceDims(MSE@OM)
-    MSE@Hist <- ArrayReduceDims(MSE@Hist)
+    # MSE@OM <- ArrayReduceDims(MSE@OM)
+    # MSE@Hist <- ArrayReduceDims(MSE@Hist)
     
     # TODO 
     # - historical data is repeated in each MP - reduce

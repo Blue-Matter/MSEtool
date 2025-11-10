@@ -1,24 +1,25 @@
-OM2stock <- function(OM, cpars=NULL, TimeStepsList=NULL, nSim, seed=NULL) {
+OM2stock <- function(OM, cpars=NULL, YearsList=NULL, nSim, seed=NULL) {
   stock <- Stock()
   if (inherits(OM, 'OM')) {
     stock@Name <- SubOM(OM, 'Stock')@Name
   } else {
     stock@Name <- OM@Name
   }
+  
   stock@Name <- gsub("REPLACED -- ", '', stock@Name)
   stock@CommonName <- OM@Common_Name
   stock@Species <- OM@Species
-  stock@Ages <- Ages(MaxAge=OM@maxage/TimeStepsList$TSperYear ,
+  stock@Ages <- Ages(MaxAge=OM@maxage/YearsList$TSperYear,
                      MinAge=0,
-                     Units=TimeStepsList$TimeUnits)
+                     Units=CalcTSUnits(YearsList$TSperYear))
   
-  stock@TimeSteps <- c(TimeStepsList$HistTS, TimeStepsList$ProjTS)
-  stock@TSperYear <- TimeStepsList$TSperYear
+  stock@Years <- c(YearsList$HistTS, YearsList$ProjTS)
+  stock@TSperYear <- YearsList$TSperYear
   
-  Length(stock) <- OM2Length(OM, cpars, TimeStepsList) |> 
+  Length(stock) <- OM2Length(OM, cpars, YearsList) |> 
     PopulateLength(Ages=stock@Ages,
                    nsim=nSim,
-                   TimeSteps=c(TimeStepsList$HistTS, TimeStepsList$ProjTS),
+                   Years=c(YearsList$HistTS, YearsList$ProjTS),
                    ASK=TRUE,
                    seed)
   
@@ -26,7 +27,7 @@ OM2stock <- function(OM, cpars=NULL, TimeStepsList=NULL, nSim, seed=NULL) {
     PopulateWeight(Ages=stock@Ages,
                    Length=stock@Length,
                    nsim=nSim,
-                   TimeSteps=c(TimeStepsList$HistTS, TimeStepsList$ProjTS),
+                   Years=c(YearsList$HistTS, YearsList$ProjTS),
                    ASK=FALSE,
                    seed=seed)
   
@@ -35,7 +36,7 @@ OM2stock <- function(OM, cpars=NULL, TimeStepsList=NULL, nSim, seed=NULL) {
       Ages=stock@Ages,
       Length=stock@Length,
       nsim=nSim,
-      TimeSteps=c(TimeStepsList$HistTS, TimeStepsList$ProjTS),
+      Years=c(YearsList$HistTS, YearsList$ProjTS),
       seed=seed
     )
   
@@ -44,7 +45,7 @@ OM2stock <- function(OM, cpars=NULL, TimeStepsList=NULL, nSim, seed=NULL) {
                      Length=stock@Length,
                      Weight=stock@Weight,
                      nsim=nSim,
-                     TimeSteps=c(TimeStepsList$HistTS, TimeStepsList$ProjTS),
+                     Years=c(YearsList$HistTS, YearsList$ProjTS),
                      CalcAtLength=TRUE,
                      seed=seed)
   
@@ -55,20 +56,20 @@ OM2stock <- function(OM, cpars=NULL, TimeStepsList=NULL, nSim, seed=NULL) {
       Weight=stock@Weight,
       Maturity=stock@Maturity,
       nsim=nSim,
-      TimeSteps=c(TimeStepsList$HistTS, TimeStepsList$ProjTS),
+      Years=c(YearsList$HistTS, YearsList$ProjTS),
       seed=seed
     )
     
-  SRR(stock) <- OM2SRR(OM, cpars, TimeStepsList) |>
+  SRR(stock) <- OM2SRR(OM, cpars, YearsList) |>
     PopulateSRR(Ages = stock@Ages,
-                CurrentYear = max(TimeStepsList$HistTS),
-                TimeSteps=c(TimeStepsList$HistTS, TimeStepsList$ProjTS),
+                CurrentYear = max(YearsList$HistTS),
+                Years=c(YearsList$HistTS, YearsList$ProjTS),
                 nsim=nSim,
                 seed=seed)
   
-  Spatial(stock) <- OM2Spatial(OM, cpars, TimeStepsList) |>
+  Spatial(stock) <- OM2Spatial(OM, cpars, YearsList) |>
     PopulateSpatial(Ages=stock@Ages,
-                    TimeSteps=c(TimeStepsList$HistTS, TimeStepsList$ProjTS),
+                    Years=c(YearsList$HistTS, YearsList$ProjTS),
                     nsim=nSim,
                     seed=seed)
     
@@ -80,7 +81,7 @@ OM2stock <- function(OM, cpars=NULL, TimeStepsList=NULL, nSim, seed=NULL) {
   stock
 }
 
-OM2Length <- function(OM, cpars=NULL, TimeSteps=NULL) {
+OM2Length <- function(OM, cpars=NULL, Years=NULL) {
   if (is.null(cpars) & inherits(OM, 'OM'))
     cpars <- OM@cpars
   
@@ -114,10 +115,10 @@ OM2Length <- function(OM, cpars=NULL, TimeSteps=NULL) {
   # ASK
   # if (!is.null(Length@Classes)) {
   #   dd <- dim(Length@MeanAtAge)
-  #   AllTimeSteps <- c(TimeSteps$HistTS, TimeSteps$ProjTS)
+  #   AllYears <- c(Years$HistTS, Years$ProjTS)
   #   DimNames <- list(Sim=1:dd[1],
   #                    Age=0:OM@maxage,
-  #                    TimeSteps=AllTimeSteps[1:dd[3]])
+  #                    Years=AllYears[1:dd[3]])
   #   dimnames(Length@MeanAtAge) <- DimNames
   #   dimnames(Length@CVatAge) <- DimNames
   #   
@@ -276,7 +277,7 @@ switchSRR <- function(SRrel) {
          '2'='Ricker')
 }
 
-OM2SRR <- function(OM, cpars=NULL, TimeSteps=NULL) {
+OM2SRR <- function(OM, cpars=NULL, Years=NULL) {
   if (is.null(cpars) & inherits(OM, 'OM'))
     cpars <- OM@cpars
   
@@ -311,14 +312,14 @@ OM2SRR <- function(OM, cpars=NULL, TimeSteps=NULL) {
   if (!is.null(SRR@RecDevHist)  && !all(is.na(SRR@RecDevHist))) {
     dimnames(SRR@RecDevHist) <- list(
       Sim=1:nrow(SRR@RecDevHist),
-      TimeStep= TimeSteps$HistTS
+      Year= Years$HistTS
     )
   }
   
   if (!is.null(SRR@RecDevProj)  && !all(is.na(SRR@RecDevProj))) {
     dimnames(SRR@RecDevProj) <- list(
       Sim=1:nrow(SRR@RecDevProj),
-      TimeStep= TimeSteps$ProjTS
+      Year= Years$ProjTS
     )
   }
   
@@ -399,11 +400,11 @@ OM2Depletion <- function(OM, cpars=NULL) {
   Depletion
 }
 
-OM2Spatial <- function(OM, cpars=NULL, TimeSteps=NULL) {
+OM2Spatial <- function(OM, cpars=NULL, Years=NULL) {
   if (is.null(cpars) & inherits(OM, 'OM'))
     cpars <- OM@cpars
   if (!EmptyObject(cpars)) {
-    Spatial <- cpars2Spatial(cpars, TimeSteps)
+    Spatial <- cpars2Spatial(cpars, Years)
   } else {
     Spatial <- Spatial()
   }
@@ -448,17 +449,17 @@ process_mov <- function(mov, nage=1, nts=1) {
   }
   
   mov <- aperm(mov, c(1,4,5,3,2)) |>
-    AddDimNames(c('Sim', 'Area', 'Area', 'Age', 'TimeStep')) |>
+    AddDimNames(c('Sim', 'Area', 'Area', 'Age', 'Year')) |>
     ArrayReduceDims()
   
   mov
 }
 
-cpars2Spatial <- function(cpars, TimeSteps) {
+cpars2Spatial <- function(cpars, Years) {
   Spatial <- Spatial()
   Spatial@RelativeSize <- cpars$Asize
   Spatial@Movement <- process_mov(cpars$mov)
-  Spatial <- CalcUnfishedDist(Spatial, c(TimeSteps$HistTS, TimeSteps$ProjTS))
+  Spatial <- CalcUnfishedDist(Spatial, c(Years$HistTS, Years$ProjTS))
   Spatial
 }
 

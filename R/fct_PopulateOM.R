@@ -11,6 +11,7 @@ PopulateOM <- function(OM, silent=FALSE) {
   
   OM@Stock  <- PopulateStockList(OM, silent)
   OM@Fleet <- PopulateFleetList(OM, silent)
+  OM@Imp <- PopulateImpList(OM, silent)
   
   OM <- OM |>
     PopulateObs() |>
@@ -48,6 +49,7 @@ PopulateStockList <- function(OM, silent=FALSE) {
     Stock@nYear <- OM@nYear
     Stock@pYear <- OM@pYear
     Stock@CurrentYear <- OM@CurrentYear
+    Stock@TSperYear <- OM@TSperYear
     StockList[[st]] <- PopulateStock(Stock, 
                                      seed=OM@Seed, 
                                      silent=silent)
@@ -87,10 +89,10 @@ PopulateFleetList <- function(OM, silent=FALSE) {
       Fleet@pYear <- OM@pYear
       Fleet@CurrentYear <- OM@CurrentYear
       Stock <- StockList[[st]]
-      Fleet@TimeUnits <- Stock@Ages@Units
-      Fleet@TSperYear <- TSperYear(Stock@TimeUnits)
+  
+      Fleet@TSperYear <- Stock@TSperYear
       
-      Fleet@TimeSteps <- CalcTimeSteps(nYear=Stock@nYear, 
+      Fleet@Years <- CalcYears(nYear=Stock@nYear, 
                                        pYear=Stock@pYear, 
                                        CurrentYear=Stock@CurrentYear, 
                                        TSperYear= Stock@TSperYear )
@@ -109,7 +111,6 @@ PopulateFleetList <- function(OM, silent=FALSE) {
   }
   FleetList
 }
-
 
 PopulateComplexes <- function(OM) {
   if (length(OM@Complexes)>0)
@@ -139,3 +140,25 @@ PopulateComplexes <- function(OM) {
   }
   OM 
 }
+
+PopulateImpList <- function(OM, silent=FALSE) {
+  nStocks <- nStock(OM)
+  nFleets <- nFleet(OM)
+  ImpList <- MakeNamedList(StockNames(OM),
+                           MakeNamedList(FleetNames(OM),
+                           new('imp'))
+  )
+  
+  for (st in 1:nStocks) {
+    for (fl in 1:nFleets) {
+      if (isS4(OM@Imp)) {
+        Imp <- OM@Imp 
+      } else {
+        Imp <- OM@Imp[[st]][[fl]]
+      }
+      ImpList[[st]][[fl]] <- Imp
+    }
+  }
+  ImpList
+}
+

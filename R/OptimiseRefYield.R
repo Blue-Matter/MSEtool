@@ -16,14 +16,14 @@ CalcRefLandings <- function(MSE, type=c('Landings', 'Removals')) {
     stop('TODO...')
   }
   
-  TimeStepsHist <- TimeSteps(MSE@OM, 'Historical')
-  TimeStepsProj <- TimeSteps(MSE@OM, 'Projection')
-  TimeSteps <- c(TimeStepsHist, TimeStepsProj)
-  projind <- match(TimeStepsProj,TimeSteps)
+  YearsHist <- Years(MSE@OM, 'Historical')
+  YearsProj <- Years(MSE@OM, 'Projection')
+  Years <- c(YearsHist, YearsProj)
+  projind <- match(YearsProj,Years)
   
   Proj <- ExtendHist(Hist)
   ProjSimList <- Hist2HistSimList(Proj)
-  LastHistTS <- tail(TimeStepsHist,1)
+  LastHistTS <- tail(YearsHist,1)
   ProjSimList <- purrr::map(ProjSimList, \(ProjSim) PopulateNumberNext_(ProjSim, LastHistTS))
   
   nStock <- nStock(MSE@OM)
@@ -42,7 +42,7 @@ CalcRefLandings <- function(MSE, type=c('Landings', 'Removals')) {
     doOpt <- optimize(OptRefLandings,
                       log(bounds),
                       ProjSim=ProjSim,
-                      TimeStepsProj=TimeStepsProj,
+                      YearsProj=YearsProj,
                       projind=projind,
                       type=type,
                       tol=1e-2)
@@ -75,7 +75,7 @@ CalcRefRemovals <- function(MSE, type=c('Landings', 'Removals')) {
   CalcRefLandings(MSE, type)
 }
 
-OptRefLandings <- function(logF, ProjSim, TimeStepsProj, projind, type=c('Landings', 'Removals')) {
+OptRefLandings <- function(logF, ProjSim, YearsProj, projind, type=c('Landings', 'Removals')) {
    
   type <- match.arg(type)
   # TODO update for multiple stocks and fleets
@@ -85,12 +85,12 @@ OptRefLandings <- function(logF, ProjSim, TimeStepsProj, projind, type=c('Landin
   ProjSim@Effort[st,projind,fl] <- exp(logF) # ProjSim@Effort[st,min(projind)-1,fl] * exp(logEffort)
   ProjSim@OM@Fleet[[st]]@Effort@Catchability[] <- 1
 
-  PopDynamicsProject <- SimulateDynamics_(ProjSim, TimeStepsProj)
+  PopDynamicsProject <- SimulateDynamics_(ProjSim, YearsProj)
   
   if (type=='Landings') {
-    Yield <- PopDynamicsProject@Landings[[st]] |> List2Array("TimeStep")
+    Yield <- PopDynamicsProject@Landings[[st]] |> List2Array("Year")
   } else {
-    Yield <- PopDynamicsProject@Removals[[st]] |> List2Array("TimeStep")
+    Yield <- PopDynamicsProject@Removals[[st]] |> List2Array("Year")
   }
   
 
@@ -105,7 +105,7 @@ OptRefLandings <- function(logF, ProjSim, TimeStepsProj, projind, type=c('Landin
   
   TSmean <- (nTS-lastnTS+1):nTS
   
-  -mean(apply(Yield[,,,TSmean,drop=FALSE], c('TimeStep'), sum))
+  -mean(apply(Yield[,,,TSmean,drop=FALSE], c('Year'), sum))
   
 }
 

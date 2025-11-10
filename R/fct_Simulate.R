@@ -3,12 +3,12 @@ print.simlist <- function(x, ...) {
   cli::cli_text('Internal `simlist` object. List of length `nSim`')
 }
 
-GetRefPointTimeSteps <- function(OM) {
-  HistTimeSteps <- TimeSteps(OM, 'Historical')
-  RefPointTimeSteps <- OM@Control$RefPointTimeSteps
-  if (is.null(RefPointTimeSteps))
-    RefPointTimeSteps <- tail(HistTimeSteps, OM@TSperYear)
-  RefPointTimeSteps
+GetRefPointYears <- function(OM) {
+  HistYears <- Years(OM, 'Historical')
+  RefPointYears <- OM@Control$RefPointYears
+  if (is.null(RefPointYears))
+    RefPointYears <- tail(HistYears, OM@TSperYear)
+  RefPointYears
 }
 
 
@@ -27,9 +27,9 @@ Simulate_om <- function(OM=NULL,
   OnExit()
   OM <- StartUp(OM, nSim) 
   
-  HistTimeSteps <- TimeSteps(OM, 'Historical')
-  ProjTimeSteps <- TimeSteps(OM, 'Projection')
-  RefPointTimeSteps <- GetRefPointTimeSteps(OM) # historical time steps to calculate ref points
+  HistYears <- Years(OM, 'Historical')
+  ProjYears <- Years(OM, 'Projection')
+  RefPointYears <- GetRefPointYears(OM) # historical time steps to calculate ref points
   
   # ---- Make Hist Object ----
   Hist <- OM2Hist(OM, RefPointsMSY, silent)
@@ -37,15 +37,15 @@ Simulate_om <- function(OM=NULL,
   # ---- Calculate Equilibrium Unfished ----
   Hist@Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
   
-  # ---- Calculate Number-at-Age for Initial TimeStep ----
-  Hist <- CalcInitialTimeStep(Hist)
+  # ---- Calculate Number-at-Age for Initial Year ----
+  Hist <- CalcInitialYear(Hist)
 
   # ---- Build SimList ----
   SimList <- Hist2SimList(Hist)  # List of `Hist` objects, each with one simulation
 
   # ---- Calculate Reference Points ----
   SimList <- CalcSPR0(SimList)  # unfished spawning per recruit (i.e. fecundity) 
-  SimList <- CalcMSYRefPoints(SimList, RefPointTimeSteps, RefPointsMSY)
+  SimList <- CalcMSYRefPoints(SimList, RefPointYears, RefPointsMSY)
   
   # TODO
   # - Per-Recruit Curves 
@@ -58,16 +58,16 @@ Simulate_om <- function(OM=NULL,
   SimList <- OptFinalDepletion(SimList)
 
   # ---- Historical Population Dynamics ----
-  SimList <- SimulateDynamics(SimList, HistTimeSteps) 
+  SimList <- SimulateDynamics(SimList, HistYears) 
 
   # ---- Condition Observation Object on Real Fishery Data ----
-  SimList <- ConditionObs(SimList, HistTimeSteps, ProjTimeSteps)
+  SimList <- ConditionObs(SimList, HistYears, ProjYears)
   
   # ---- Historical Fishery Data ----
-  SimList <- GenerateHistoricalData(SimList, HistTimeSteps)
+  SimList <- GenerateHistoricalData(SimList, HistYears)
  
   # ---- Return `hist` Object ----
-  Hist <- SimList2Hist(Hist, SimList, HistTimeSteps, Reduce) 
+  Hist <- SimList2Hist(Hist, SimList, HistYears, Reduce) 
   Hist
 }
 

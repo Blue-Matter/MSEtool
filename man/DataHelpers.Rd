@@ -3,18 +3,18 @@
 \name{DataHelpers}
 \alias{DataHelpers}
 \alias{LastTAC}
-\alias{GetTimeStepLH}
-\alias{ProjectionTimeStep}
+\alias{GetYearLH}
+\alias{ProjectionYear}
 \alias{DataTrim}
 \title{Data Helper Functions}
 \usage{
 LastTAC(Data)
 
-GetTimeStepLH(Data)
+GetYearLH(Data)
 
-ProjectionTimeStep(Data)
+ProjectionYear(Data)
 
-DataTrim(Data, TimeStep)
+DataTrim(Data, Year)
 }
 \description{
 Data Helper Functions
@@ -23,9 +23,9 @@ Data Helper Functions
 \itemize{
 \item \code{LastTAC()}: Get the last TAC
 
-\item \code{GetTimeStepLH()}: Get the index for the last historical time step
+\item \code{GetYearLH()}: Get the index for the last historical time step
 
-\item \code{ProjectionTimeStep()}: Get the index for current time step
+\item \code{ProjectionYear()}: Get the index for current time step
 
 \item \code{DataTrim()}: Trim a Data object to a specific Time Step
 

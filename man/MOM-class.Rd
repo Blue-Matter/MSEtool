@@ -58,7 +58,7 @@ the data inputs is used.}
 
 \item{\code{Allocation}}{A list nstock long, of matrices nsim x nfleet representing the fraction of future TACs of the various fleets to each stock (each matrix is nsim by nfleet long and rows sum to 1 for each stock).}
 
-\item{\code{Efactor}}{A list nstock long, of current effort factors by fleet (default is 1 - same as current effort)}
+\item{\code{EFactor}}{A list nstock long, of current effort factors by fleet (default is 1 - same as current effort)}
 
 \item{\code{Complexes}}{A list of stock complexes. Each position is a vector of stock numbers (as they appear in StockPars) for which data should be aggregated and TAC recommendations split among stocks according to vulnerable biomass}
 

@@ -81,7 +81,7 @@ OM2Effort <- function(OM, cpars=NULL) {
     return(cpars$Find)
   }
   
-  data.frame(TimeStep=OM@EffYears,
+  data.frame(Year=OM@EffYears,
              Lower=OM@EffLower,
              Upper=OM@EffUpper,
              CV=OM@Esd[1])

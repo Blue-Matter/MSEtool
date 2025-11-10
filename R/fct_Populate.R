@@ -59,24 +59,24 @@ PopulateObs <- function(OM) {
       
       OM@Obs[[st]][[fl]]@Effort <- PopulateEffortObs(Effort=OM@Obs[[st]][[fl]]@Effort, 
                                                      nSim=OM@nSim, 
-                                                     TimeSteps=OM@TimeSteps)
+                                                     Years=OM@Years)
       
     
       OM@Obs[[st]][[fl]]@Landings <- PopulateCatchObs(Catch=OM@Obs[[st]][[fl]]@Landings, 
                                                       nSim=OM@nSim, 
-                                                      TimeSteps=OM@TimeSteps)
+                                                      Years=OM@Years)
       
       OM@Obs[[st]][[fl]]@Discards <- PopulateCatchObs(Catch=OM@Obs[[st]][[fl]]@Discards, 
                                                       nSim=OM@nSim, 
-                                                      TimeSteps=OM@TimeSteps)
+                                                      Years=OM@Years)
       
       OM@Obs[[st]][[fl]]@CPUE <- PopulateIndexObs(Index=OM@Obs[[st]][[fl]]@CPUE, 
                                                    nSim=OM@nSim, 
-                                                   TimeSteps=OM@TimeSteps)
+                                                   Years=OM@Years)
     
       OM@Obs[[st]][[fl]]@Survey <- PopulateIndexObs(Index=OM@Obs[[st]][[fl]]@Survey, 
                                                     nSim=OM@nSim, 
-                                                    TimeSteps=OM@TimeSteps)
+                                                    Years=OM@Years)
       
       OM@Obs[[st]][[fl]]@CAA
       
@@ -97,14 +97,14 @@ getACF <- function(Value) {
   acf(Value, plot=FALSE)[[1]][2,1,1]
 }
 
-PopulateIndexObs <- function(Index, nSim, TimeSteps) {
+PopulateIndexObs <- function(Index, nSim, Years) {
   Index@CV <- PopulateObsCV(Index@CV, nSim)
-  Index@Error <- PopulateObsError(Index, nSim, TimeSteps)
+  Index@Error <- PopulateObsError(Index, nSim, Years)
   Index@Beta # TODO - currently not implemented
   Index@Ref <- PopulateObsRef(Index@Ref, nSim)
 
-  if (length(Index@TimeSteps)<1)
-    Index@TimeSteps <- TimeSteps
+  if (length(Index@Years)<1)
+    Index@Years <- Years
   
   # TODO implement AC if specified 
   if (!is.null(Index@AC)) {
@@ -118,31 +118,31 @@ PopulateIndexObs <- function(Index, nSim, TimeSteps) {
   
 }
 
-PopulateEffortObs <- function(Effort, nSim, TimeSteps) {
+PopulateEffortObs <- function(Effort, nSim, Years) {
   if (EmptyObject(Effort))
     return(Effort)
   
-  nTS <- length(TimeSteps)
+  nTS <- length(Years)
   Effort@CV <- PopulateObsCV(Effort@CV, nSim)
-  Effort@Error <- PopulateObsError(Effort, nSim, TimeSteps)
+  Effort@Error <- PopulateObsError(Effort, nSim, Years)
   Effort@Bias <- PopulateObsBias(Effort, nSim)
   
-  # if (length(Effort@TimeSteps)<1)
-  #   Effort@TimeSteps <- TimeSteps
+  # if (length(Effort@Years)<1)
+  #   Effort@Years <- Years
   Effort
 }
 
-PopulateCatchObs <- function(Catch, nSim, TimeSteps) {
+PopulateCatchObs <- function(Catch, nSim, Years) {
   if (EmptyObject(Catch))
     return(Catch)
-  nTS <- length(TimeSteps)
+  nTS <- length(Years)
   Catch@CV <- PopulateObsCV(Catch@CV, nSim)
-  Catch@Error <- PopulateObsError(Catch, nSim, TimeSteps)
+  Catch@Error <- PopulateObsError(Catch, nSim, Years)
   Catch@Bias <- PopulateObsBias(Catch, nSim)
   Catch@Ref <- PopulateObsRef(Catch@Ref, nSim)
   
-  if (length(Catch@TimeSteps)<1)
-    Catch@TimeSteps <- TimeSteps
+  if (length(Catch@Years)<1)
+    Catch@Years <- Years
   
   if (!Catch@Type %in% c('Removals', 'Landings'))
     cli::cli_abort(message="Valid values for `Obs@Catch@Type` are: {.val {c('Removals', 'Landings')}} ")
@@ -164,7 +164,7 @@ PopulateObsRef <- function(Ref, nSim) {
 
   CV <- StructurePars(list(Ref), nSim)[[1]] |> 
     ExpandSims(nSim) |>
-    DropDimension("TimeStep", FALSE)
+    DropDimension("Year", FALSE)
   
   Error <- array(rlnorm(nSim,
                         mconv(1, CV),
@@ -185,13 +185,13 @@ PopulateObsCV <- function(CV, nSim) {
   }
   CV <- StructurePars(list(CV), nSim)[[1]] |> 
     ExpandSims(nSim) |>
-    DropDimension("TimeStep", FALSE)
+    DropDimension("Year", FALSE)
   CV
 }
 
 
-PopulateObsError <- function(object, nSim, TimeSteps) {
-  nTS <- length(TimeSteps)
+PopulateObsError <- function(object, nSim, Years) {
+  nTS <- length(Years)
   if (length(object@Error)<1) {
     if (is.null(object@CV))
       return(object@Error)
@@ -201,7 +201,7 @@ PopulateObsError <- function(object, nSim, TimeSteps) {
                    c(nSim, nTS))
     
     dimnames(Error) <- list(Sim=1:nSim,
-                            TimeStep=TimeSteps)
+                            Year=Years)
     object@Error <- Error
   } else {
     if (!inherits(object@Error, 'array'))
@@ -215,7 +215,7 @@ PopulateObsError <- function(object, nSim, TimeSteps) {
     }
     
     
-    chk2 <- ncol(object@Error) != length(TimeSteps)
+    chk2 <- ncol(object@Error) != length(Years)
     if (chk1 & chk2) 
       cli::cli_abort("`object@Error` must be an array with `nSim` rows and `nTS` columns")
     if (chk1 & !chk2) 
@@ -225,7 +225,7 @@ PopulateObsError <- function(object, nSim, TimeSteps) {
       cli::cli_abort("`object@Error` must be an array with `nTS` columns")
     
     dimnames(object@Error) <- list(Sim=1:nSim,
-                                   TimeStep=TimeSteps)
+                                   Year=Years)
     
   }
   object@Error

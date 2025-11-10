@@ -1,19 +1,19 @@
-CalcSPR0 <- function(HistSim, TimeSteps=NULL) {
+CalcSPR0 <- function(HistSim, Years=NULL) {
   
   if (inherits(HistSim, 'simlist')) {
-    SimList <- purrr::map(HistSim, CalcSPR0, TimeSteps=TimeSteps) 
+    SimList <- purrr::map(HistSim, CalcSPR0, Years=Years) 
     class(SimList) <- 'simlist'
     return(SimList)
   } else if (inherits(HistSim, 'hist')) {
-    return(CalcSPR0_Hist(HistSim, TimeSteps))
+    return(CalcSPR0_Hist(HistSim, Years))
   }
 }
 
-CalcSPR0_Hist <- function(HistSim, TimeSteps=NULL) {
-  if (is.null(TimeSteps))
-    TimeSteps <- HistSim@OM@TimeSteps
+CalcSPR0_Hist <- function(HistSim, Years=NULL) {
+  if (is.null(Years))
+    Years <- HistSim@OM@Years
   
-  SPR0 <- purrr::map(HistSim@OM@Stock, \(stock) CalcSPR0_Stock(stock, TimeSteps))
+  SPR0 <- purrr::map(HistSim@OM@Stock, \(stock) CalcSPR0_Stock(stock, Years))
   
   SPFrom <- purrr::map(HistSim@OM@Stock, \(stock) stock@SRR@SPFrom)
   
@@ -22,22 +22,22 @@ CalcSPR0_Hist <- function(HistSim, TimeSteps=NULL) {
       SPR0[[st]][] <- NA
   }
   
-  SPR0 <- List2Array(SPR0, 'Stock', 'TimeStep') |> t() 
-  dimnames(SPR0)[[2]] <- TimeSteps
+  SPR0 <- List2Array(SPR0, 'Stock', 'Year') |> t() 
+  dimnames(SPR0)[[2]] <- Years
   HistSim@RefPointsPR@SPR0 <- SPR0 |> ArrayReduceDims()
   HistSim
 }
 
-CalcSPR0_Stock <- function(Stock, TimeSteps) {
-  FecundityAtAge <- Stock@Fecundity@MeanAtAge |> ArraySubsetTimeStep(TimeSteps)
-  UnfishedSurvival <- CalcUnfishedSurvival(Stock, TRUE, TimeSteps)
+CalcSPR0_Stock <- function(Stock, Years) {
+  FecundityAtAge <- Stock@Fecundity@MeanAtAge |> ArraySubsetYear(Years)
+  UnfishedSurvival <- CalcUnfishedSurvival(Stock, TRUE, Years)
   
   BySim <- "Sim" %in% names(dimnames(FecundityAtAge))
   if (BySim) {
-    SPR0 <- ArrayMultiply(UnfishedSurvival, FecundityAtAge) |> apply(c('Sim', 'TimeStep'), sum)
+    SPR0 <- ArrayMultiply(UnfishedSurvival, FecundityAtAge) |> apply(c('Sim', 'Year'), sum)
   } else {
-    SPR0 <- ArrayMultiply(UnfishedSurvival, FecundityAtAge) |> apply('TimeStep', sum) |>
-      array(dimnames=list(TimeStep=TimeSteps))
+    SPR0 <- ArrayMultiply(UnfishedSurvival, FecundityAtAge) |> apply('Year', sum) |>
+      array(dimnames=list(Year=Years))
     
   }
   SPR0
@@ -47,12 +47,12 @@ CalcSPR0_Stock <- function(Stock, TimeSteps) {
 # 
 # # ---- CalcSPRF -----
 # 
-# setGeneric('CalcSPRF', function(x, NPR=NULL, FSearch=NULL, TimeSteps=NULL)
+# setGeneric('CalcSPRF', function(x, NPR=NULL, FSearch=NULL, Years=NULL)
 #   standardGeneric('CalcSPRF')
 # )
 # 
 # 
-# setMethod('CalcSPRF', c('stock', 'FleetList',  'ANY'), function(x, NPR=NULL, FSearch=NULL, TimeSteps=NULL) {
+# setMethod('CalcSPRF', c('stock', 'FleetList',  'ANY'), function(x, NPR=NULL, FSearch=NULL, Years=NULL) {
 #   
 #   if (!is.null(x@SRR@SPFrom) && x@SRR@SPFrom!=x@Name)
 #     return(NULL)
@@ -60,8 +60,8 @@ CalcSPR0_Stock <- function(Stock, TimeSteps) {
 #   out <- lapply(cli::cli_progress_along(seq_along(FSearch), 
 #                                         format='Calculating Spawning-Per-Recruit {.val {x@Name}} {cli::pb_bar} {cli::pb_percent} '),
 #                 function(i) {
-#                   Fleet <- UpdateApicalF(NPR, FSearch[i],TimeSteps=TimeSteps) 
-#                   FishedSurvival <- CalcFishedSurvival(x, Fleet, SP=TRUE, TimeSteps=TimeSteps)
+#                   Fleet <- UpdateApicalF(NPR, FSearch[i],Years=Years) 
+#                   FishedSurvival <- CalcFishedSurvival(x, Fleet, SP=TRUE, Years=Years)
 #                   
 #                   # fished egg production per recruit
 #                   # TODO need to check if Fecundity@MeanAtAge always include maturity-at-age
@@ -79,31 +79,31 @@ CalcSPR0_Stock <- function(Stock, TimeSteps) {
 # })
 # 
 # setMethod('CalcSPRF', c('StockList', 'StockFleetList',  'ANY'), 
-#           function(x, NPR=NULL, FSearch=NULL, TimeSteps=NULL) {
-#             purrr::map2(x, NPR, CalcSPRF, FSearch=FSearch, TimeSteps=TimeSteps)
+#           function(x, NPR=NULL, FSearch=NULL, Years=NULL) {
+#             purrr::map2(x, NPR, CalcSPRF, FSearch=FSearch, Years=Years)
 #           })
 # 
 # setMethod('CalcSPRF', c('om', 'ANY',  'ANY'), 
-#           function(x, NPR=NULL, FSearch=NULL, TimeSteps=NULL) {
+#           function(x, NPR=NULL, FSearch=NULL, Years=NULL) {
 #             if (is.null(FSearch))
 #               FSearch <- x@Control$Curves$FSearch
-#             purrr::map2(x@Stock, x@Fleet, CalcSPRF, FSearch=FSearch, TimeSteps=TimeSteps)
+#             purrr::map2(x@Stock, x@Fleet, CalcSPRF, FSearch=FSearch, Years=Years)
 #           })
 # 
 # setMethod('CalcSPRF', c('stock', 'array',  'ANY'), 
-#           function(x, NPR=NULL, FSearch=NULL, TimeSteps=NULL) {
+#           function(x, NPR=NULL, FSearch=NULL, Years=NULL) {
 #            
 #             if (!is.null(x@SRR@SPFrom) && x@SRR@SPFrom!=x@Name)
 #               return(NULL)
 #             
-#             fecundity <- AddDimension(GetFecundityAtAge(x, TimeSteps), 'apicalF')
+#             fecundity <- AddDimension(GetFecundityAtAge(x, Years), 'apicalF')
 #             ArrayMultiply(NPR, fecundity) |>
 #               apply(c(1,3,4), sum) 
 #           })
 # 
 # # ---- CalcSPR ---- 
 # 
-# CalcSPR <- function(OM, SPR0=NULL, NPR=NULL, FSearch=NULL, TimeSteps=NULL) {
+# CalcSPR <- function(OM, SPR0=NULL, NPR=NULL, FSearch=NULL, Years=NULL) {
 #   # TODO add option to specify Time Steps to calculate
 #   # currently does all
 #  
@@ -114,10 +114,10 @@ CalcSPR0_Stock <- function(Stock, TimeSteps) {
 #     FSearch <- OM@Control$Curves$FSearch
 #   if (is.null(NPR)) 
 #     NPR <- CalcNPR(OM, FSearch=FSearch)
-#   if (is.null(TimeSteps)) 
-#     TimeSteps <- TimeSteps(OM, 'Historical')
+#   if (is.null(Years)) 
+#     Years <- Years(OM, 'Historical')
 #   
-#   SPRF <- purrr::map2(OM@Stock, NPR, CalcSPRF, TimeSteps=TimeSteps)
+#   SPRF <- purrr::map2(OM@Stock, NPR, CalcSPRF, Years=Years)
 #   
 #   # add apicalF dimension for division
 #   SPR0 <- purrr::map(SPR0, AddDimension, 'apicalF') 

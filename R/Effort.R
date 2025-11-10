@@ -20,7 +20,7 @@ ReturnEffort <- function(object, df=TRUE, hist=TRUE) {
     temp@Effort <- object@Hist@Effort
     hist <-EffortHist(temp, df)
     proj <- dplyr::bind_rows(hist, proj) |>
-      dplyr::arrange(Sim, TimeStep, Period, MP)
+      dplyr::arrange(Sim, Year, Period, MP)
   }
   class(proj) <- c("removals", class(proj))
   proj
@@ -34,7 +34,7 @@ EffortProj <- function(object, df=TRUE, hist=TRUE, slot='Effort') {
   proj$Period <- 'Projection'
   proj$Variable <- slot
   proj <- ConvertDF(proj) |>
-    dplyr::arrange(Sim, TimeStep, Period, MP)
+    dplyr::arrange(Sim, Year, Period, MP)
   proj
   
 }
@@ -46,24 +46,24 @@ EffortHist <- function(Hist, df=TRUE, slot='Effort') {
   if (!df)
     return(slot(Hist, slot))
   
-  HistTimeStep <- TimeSteps(Hist@OM, "Historical")
+  HistYear <- Years(Hist@OM, "Historical")
   histN <- list()
   val <- slot(Hist, slot)
   if (is.list(val)) {
     for (i in seq_along(val)) {
-      n <- val[[i]] |> ArraySubsetTimeStep(HistTimeStep)
+      n <- val[[i]] |> ArraySubsetYear(HistYear)
       n <- array2DF(n)
       
-      n <- n |> dplyr::group_by(Sim, TimeStep, Fleet) |>
+      n <- n |> dplyr::group_by(Sim, Year, Fleet) |>
         dplyr::summarise(Value=sum(Value), .groups='drop')
       
       # if (!byArea & !byAge) {
       # 
       # } else if (!byArea) {
-      #   n <- n |> dplyr::group_by(Sim, TimeStep, Age) |>
+      #   n <- n |> dplyr::group_by(Sim, Year, Age) |>
       #     dplyr::summarise(Value=sum(Value), .groups='drop')
       # } else if (!byAge) {
-      #   n <- n |> dplyr::group_by(Sim, TimeStep, Area) |>
+      #   n <- n |> dplyr::group_by(Sim, Year, Area) |>
       #     dplyr::summarise(Value=sum(Value), .groups='drop')
       # }
       # 
@@ -73,10 +73,10 @@ EffortHist <- function(Hist, df=TRUE, slot='Effort') {
       histN[[i]] <- n
     }
   } else {
-    n <- val|> ArraySubsetTimeStep(HistTimeStep)
+    n <- val|> ArraySubsetYear(HistYear)
     n <- array2DF(n)
     
-    n <- n |> dplyr::group_by(Sim, TimeStep, Fleet) |>
+    n <- n |> dplyr::group_by(Sim, Year, Fleet) |>
       dplyr::summarise(Value=sum(Value), .groups='drop')
     
     n$Stock <- names(slot(Hist, slot))

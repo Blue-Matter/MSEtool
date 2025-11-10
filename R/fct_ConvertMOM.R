@@ -1,6 +1,11 @@
 #' @rdname Convert
 #' @export
-ConvertMOM <- function(MOM, Author='', CurrentYear=NULL, TSperYear=1, Populate=TRUE) {
+ConvertMOM <- function(MOM, Author='', CurrentYear=NULL, TSperYear=1, Populate=TRUE, silent=FALSE) {
+  
+  CheckClass(OM, c('MOM'), 'MOM')
+  
+  if (!silent)
+    cli::cli_alert('Converting object of class {.cls OM} to class {.cls om}')
   
   om <- OM()
   om@Name <- MOM@Name
@@ -30,18 +35,18 @@ ConvertMOM <- function(MOM, Author='', CurrentYear=NULL, TSperYear=1, Populate=T
   
   TimeUnits <- CalcTSUnits(TSperYear)
   om@TSperYear <- TSperYear
-  om@TimeSteps <- CalcTimeSteps(nYear=om@nYear,
+  om@Years <- CalcYears(nYear=om@nYear,
                                 pYear=om@pYear,
                                 CurrentYear=om@CurrentYear,
                                 TSperYear)
   
-  TimeStepsList <- list(HistTS=TimeSteps(om, 'Historical'),
-                        ProjTS=TimeSteps(om, 'Projection'),
+  YearsList <- list(HistTS=Years(om, 'Historical'),
+                        ProjTS=Years(om, 'Projection'),
                         TimeUnits=TimeUnits,
                         TSperYear=TSperYear
   )
   
-  om@Stock <- ConvertToList(MOM2stock(MOM, TimeStepsList))
+  om@Stock <- ConvertToList(MOM2stock(MOM, YearsList))
   
   StockNames <- lapply(MOM@Stocks, slot, 'Name') 
   StockNames <- lapply(StockNames, function(x) gsub("REPLACED -- ", '', x)) |> unlist()
@@ -58,7 +63,7 @@ ConvertMOM <- function(MOM, Author='', CurrentYear=NULL, TSperYear=1, Populate=T
     names(om@Fleet[[st]]) <- FleetNames
   }
   
-  om@Efactor <- MakeNamedList(StockNames(om), 
+  om@EFactor <- MakeNamedList(StockNames(om), 
                               array(1, dim=c(om@nSim, nFleet(om)),
                                     dimnames = list(
                                       Sim=1:om@nSim,
@@ -91,7 +96,7 @@ MOM2fleet <- function(MOM, st) {
   FleetList
 }
 
-MOM2stock <- function(MOM, TimeStepsList=NULL) {
+MOM2stock <- function(MOM, YearsList=NULL) {
   StockList <- list()
   stocks <- MOM@Stocks
   nstocks <- length(stocks)
@@ -99,7 +104,7 @@ MOM2stock <- function(MOM, TimeStepsList=NULL) {
   for (st in 1:nstocks) {
     Stock <- stocks[[st]]
     cpars <- MOM@cpars[[st]][[1]]
-    StockList[[st]] <- OM2stock(Stock, cpars, TimeStepsList, MOM@nsim, MOM@seed)
+    StockList[[st]] <- OM2stock(Stock, cpars, YearsList, MOM@nsim, MOM@seed)
     
   }
   if (nstocks==1) return(StockList[[1]])

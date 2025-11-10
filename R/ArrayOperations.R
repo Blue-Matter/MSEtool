@@ -46,22 +46,22 @@ RepeatArrayDim <- function(array, dim, n) {
   aperm(OutArray, perm) 
 }
 
-ExpandTS <- function(array, Dims, TimeSteps) {
-  ind <- which(names(dimnames(array))=='TimeStep')
+ExpandTS <- function(array, Dims, Years) {
+  ind <- which(names(dimnames(array))=='Year')
   if (length(ind)<1) 
     return(array)
   
   ArrayTS <- dimnames(array)[[ind]] |> as.numeric()
   
   OutArray <- array(NA, dim=Dims) |>
-    AddDimNames(names(dimnames(array)), TimeSteps=TimeSteps)
-  for (i in seq_along(TimeSteps)) {
-    j <- which(ArrayTS <= TimeSteps[i])
+    AddDimNames(names(dimnames(array)), Years=Years)
+  for (i in seq_along(Years)) {
+    j <- which(ArrayTS <= Years[i])
     if (any(!is.finite(j)) || length(j)<1)
       next()
     j <- max(j)
     
-    dimnames(array)[[ind]][j] <-  TimeSteps[i]
+    dimnames(array)[[ind]][j] <-  Years[i]
     
     ArrayFill(OutArray) <- abind::asub(array, j, ind, drop=FALSE)
     # dimnames(Array[[,,j]])
@@ -71,15 +71,15 @@ ExpandTS <- function(array, Dims, TimeSteps) {
   OutArray
 }
 
-MatchArrayTimeSteps <- function(ArrayList) {
+MatchArrayYears <- function(ArrayList) {
   array1 <- ArrayList[[1]]
   array2 <- ArrayList[[2]]
   
   nm1 <- names(dimnames(array1))
-  ind <- which(nm1=='TimeStep')
+  ind <- which(nm1=='Year')
   
   nm2 <- names(dimnames(array2))
-  ind2 <- which(nm2=='TimeStep')
+  ind2 <- which(nm2=='Year')
   
   if (length(ind)<1)
     return(list(array1, array2))
@@ -98,9 +98,9 @@ MatchArrayTimeSteps <- function(ArrayList) {
   d2[ind2] <- length(TSout)
   
   if (!all(TSout %in% TSarray1) & length(TSarray1)>1) 
-    array1 <- ExpandTS(array=array1, Dims=d1, TimeSteps=TSout)
+    array1 <- ExpandTS(array=array1, Dims=d1, Years=TSout)
   if (!all(TSout %in% TSarray2)& length(TSarray2)>1) 
-    array2 <- ExpandTS(array=array2, Dims=d2, TimeSteps=TSout)
+    array2 <- ExpandTS(array=array2, Dims=d2, Years=TSout)
   
   list(array1=array1, array2=array2)
 }
@@ -110,7 +110,7 @@ ExpandArrays <- function(ArrayList, array2=NULL) {
   if (inherits(ArrayList, 'array') & !is.null(array2))
     ArrayList <- list(ArrayList, array2)
    
-  ArrayList <- MatchArrayTimeSteps(ArrayList) # match time-steps
+  ArrayList <- MatchArrayYears(ArrayList) # match time-steps
   
   AllDims <- rbind(dim(ArrayList[[1]]), dim(ArrayList[[2]]))
   MatchDims <- AllDims[1,] == AllDims[2,]
@@ -236,28 +236,28 @@ ArraySubtract <- function(array1, array2=NULL) {
 
 }
 
-ArraySubsetTimeStep <- function(object, TimeSteps=NULL, AddPast=TRUE) {
+ArraySubsetYear <- function(object, Years=NULL, AddPast=TRUE) {
   
   
-  if (is.null(TimeSteps))
+  if (is.null(Years))
     return(object)
   
-  TimeSteps <- as.numeric(TimeSteps)
+  Years <- as.numeric(Years)
   
   DN <- dimnames(object)
   if (is.null(DN))
     return(object)
   
-  DN$TimeStep <- as.numeric(DN$TimeStep)
-  TSind <- which(names(DN) == 'TimeStep')
+  DN$Year <- as.numeric(DN$Year)
+  TSind <- which(names(DN) == 'Year')
   if (length(TSind)==0)
-    cli::cli_abort("`TimeStep` dimension not found in this array", .internal=TRUE)
+    cli::cli_abort("`Year` dimension not found in this array", .internal=TRUE)
   
-  TSexist <- TimeSteps[TimeSteps %in% DN$TimeStep]
-  TSimpute <- TimeSteps[!TimeSteps %in% DN$TimeStep]
+  TSexist <- Years[Years %in% DN$Year]
+  TSimpute <- Years[!Years %in% DN$Year]
   
   if (!AddPast & length(TSexist)) {
-    TSimpute <- TSimpute[!TSimpute<min(DN$TimeStep)]
+    TSimpute <- TSimpute[!TSimpute<min(DN$Year)]
   }
   
   if (length(TSimpute)) {
@@ -265,22 +265,22 @@ ArraySubsetTimeStep <- function(object, TimeSteps=NULL, AddPast=TRUE) {
     matchTS <- rep(NA, length(TSimpute))
     for (i in seq_along(TSimpute)) {
       
-      FutureImpute <- which(DN$TimeStep < TSimpute[i]) 
+      FutureImpute <- which(DN$Year < TSimpute[i]) 
       if (length(FutureImpute)>0)
-        matchTS[i] <- DN$TimeStep[max(FutureImpute)]
+        matchTS[i] <- DN$Year[max(FutureImpute)]
       
-      PastImpute <- which(DN$TimeStep >TSimpute[i]) 
+      PastImpute <- which(DN$Year >TSimpute[i]) 
       if (length(PastImpute)>0)
-        matchTS[i] <- DN$TimeStep[min(PastImpute)]
+        matchTS[i] <- DN$Year[min(PastImpute)]
     }
     
-    TimeStepsMod <- c(TSexist, matchTS) |> as.character() 
-    array <- abind::asub(object, TimeStepsMod, TSind, drop=FALSE)
-    dimnames(array)$TimeStep <- TimeSteps
+    YearsMod <- c(TSexist, matchTS) |> as.character() 
+    array <- abind::asub(object, YearsMod, TSind, drop=FALSE)
+    dimnames(array)$Year <- Years
     return(array)
   }
   
-  abind::asub(object, (DN[[TSind]] %in% TimeSteps), TSind, drop=FALSE)
+  abind::asub(object, (DN[[TSind]] %in% Years), TSind, drop=FALSE)
 }
 
 ArraySubsetSim <- function(object, Sims=NULL, drop=FALSE) {
@@ -305,8 +305,8 @@ ArraySubsetSim <- function(object, Sims=NULL, drop=FALSE) {
         matchTS[i] <- DN$Sim[DN$Sim < TSimpute[i]] |> max()
       }
     }
-    TimeStepsMod <- c(TSexist, matchTS)
-    array <- abind::asub(object, TimeStepsMod, TSind, drop=drop)
+    YearsMod <- c(TSexist, matchTS)
+    array <- abind::asub(object, YearsMod, TSind, drop=drop)
 
     if (!is.null( dimnames(array)))
       dimnames(array)$`Sim` <- Sims
@@ -322,7 +322,7 @@ ArraySubsetSim <- function(object, Sims=NULL, drop=FALSE) {
       } else  if (any(is.na(numericNames))) {
         out <- array(out, dim=length(out), dimnames=list(Fleet=names(out)))
       } else {
-        out <- array(out, dim=length(out), dimnames=list(TimeStep=names(out)))
+        out <- array(out, dim=length(out), dimnames=list(Year=names(out)))
       }
     }
     return(out)  
@@ -356,7 +356,7 @@ ArraySubsetAge <- function(object, Ages=NULL, drop=FALSE) {
 # ----- Array Expand ----
 
 #' @export
-ArrayExpand <- function(array, nSim, nAges, TimeSteps, AgeOpt=3, debug=FALSE) {
+ArrayExpand <- function(array, nSim, nAges, Years, AgeOpt=3, debug=FALSE) {
   
   if (debug)
     print(class(array))
@@ -370,14 +370,14 @@ ArrayExpand <- function(array, nSim, nAges, TimeSteps, AgeOpt=3, debug=FALSE) {
       for (sl in slots) {
         if (debug)
           print(sl)
-        slot(array, sl) <- Recall(slot(array, sl), nSim, nAges, TimeSteps, AgeOpt, debug)
+        slot(array, sl) <- Recall(slot(array, sl), nSim, nAges, Years, AgeOpt, debug)
       }
       return(array)
     }
     if (is.list(array)) {
       if (length(array)) {
         for (i in 1:length(array)) {
-          temp <- Recall(array[[i]], nSim, nAges, TimeSteps, AgeOpt, debug)
+          temp <- Recall(array[[i]], nSim, nAges, Years, AgeOpt, debug)
           if (!is.null(temp))
             array[[i]] <- temp 
         }
@@ -390,7 +390,7 @@ ArrayExpand <- function(array, nSim, nAges, TimeSteps, AgeOpt=3, debug=FALSE) {
   array |>
     ExpandSims(nSim) |>
     ExpandAges(nAges, AgeOpt) |>
-    ExpandTimeSteps(TimeSteps)
+    ExpandYears(Years)
   
 }
 
@@ -474,14 +474,14 @@ ExpandSims <- function(array, nSim) {
 
 
 # fills all time step values
-ExpandTimeSteps <- function(array, TimeSteps, default=NULL) {
+ExpandYears <- function(array, Years, default=NULL) {
   # array1 <<- array
-  # TimeSteps1 <<- TimeSteps
+  # Years1 <<- Years
   # 
-  # TimeSteps <- TimeSteps1
+  # Years <- Years1
   # array = Array1
   
-  ind <- which(names(dimnames(array))=='TimeStep')
+  ind <- which(names(dimnames(array))=='Year')
   if (length(ind)<1)
     return(array)
   
@@ -490,36 +490,36 @@ ExpandTimeSteps <- function(array, TimeSteps, default=NULL) {
   
   ArrayTS <- dnames[[ind]] |> as.numeric()
   
-  # TimeSteps <- TimeSteps[TimeSteps>=ArrayTS]
-  # TimeSteps <- TimeSteps[!is.na(TimeSteps)]
+  # Years <- Years[Years>=ArrayTS]
+  # Years <- Years[!is.na(Years)]
   
-  if (prod(TimeSteps %in% ArrayTS))
+  if (prod(Years %in% ArrayTS))
     return(array)
   
-  namematch <- match(ArrayTS, TimeSteps)
-  adddim <- length(TimeSteps) - length(namematch)
-  d[ind] <- length(TimeSteps)
-  dnames$TimeStep <- TimeSteps
+  namematch <- match(ArrayTS, Years)
+  adddim <- length(Years) - length(namematch)
+  d[ind] <- length(Years)
+  dnames$Year <- Years
   OutArray <- array(NA, dim=d, dimnames=dnames)
 
-  TSmatch <- which(ArrayTS %in% TimeSteps)
+  TSmatch <- which(ArrayTS %in% Years)
   if (!length(TSmatch))
     return(array)
-  TimeStepsKeep <- TimeSteps[TSmatch]
+  YearsKeep <- Years[TSmatch]
   KeepValues <- abind::asub(array, TSmatch, ind, drop=FALSE)
   abind::afill(OutArray) <- KeepValues
   
-  TSfill <- which(!TimeSteps %in% ArrayTS)
+  TSfill <- which(!Years %in% ArrayTS)
   
   if (length(TSfill)<1)
     return(OutArray)
   
-  TimeStepsFill <- TimeSteps[TSfill]
+  YearsFill <- Years[TSfill]
   
   nTSFill <- dim(OutArray)[ind] - dim(array)[ind]
   d2 <- d
   d2[ind] <- nTSFill
-  dnames[[ind]] <- TimeStepsFill
+  dnames[[ind]] <- YearsFill
   FillArray <- array(NA, dim=d2, dimnames = dnames)
   
   if (length(ArrayTS)==1) {
@@ -539,19 +539,19 @@ ExpandTimeSteps <- function(array, TimeSteps, default=NULL) {
     }
     
     dnames2 <- vals |> dimnames() |> names()
-    tsInd <- which(dnames2=='TimeStep')
+    tsInd <- which(dnames2=='Year')
 
     if (length(tsInd)<1) 
       tsInd <- which(nchar(dnames2)==0)  
     
-    dimnames(vals)[[tsInd]] <- TimeStepsFill
-    names(dimnames(vals))[tsInd] <- 'TimeStep'
+    dimnames(vals)[[tsInd]] <- YearsFill
+    names(dimnames(vals))[tsInd] <- 'Year'
     vals <- aperm(vals, names(dnames))
     abind::afill(OutArray) <- vals
     return(OutArray)
   }
 
-  TimeBlocks <- split(TimeStepsFill, TimeStepsFill - seq_along(TimeStepsFill)) |> unname()
+  TimeBlocks <- split(YearsFill, YearsFill - seq_along(YearsFill)) |> unname()
   
   for (i in seq_along(TimeBlocks)) {
     Block <- TimeBlocks[[i]]
@@ -569,21 +569,21 @@ ExpandTimeSteps <- function(array, TimeSteps, default=NULL) {
     if (!is.finite(ValueInd))
       cli::cli_abort("Non-finite value", .internal=TRUE)
     
-    ValueTimeStep <- abind::asub(array, ValueInd, ind, drop=FALSE)
+    ValueYear <- abind::asub(array, ValueInd, ind, drop=FALSE)
     if (!is.null(default))
-      ValueTimeStep[] <- default
+      ValueYear[] <- default
     
-    dd <- dim(ValueTimeStep)
+    dd <- dim(ValueYear)
     dd[ind] <- length(Block)
     
     ValueExpanded <- array(NA, dim = dd)
-    dnames <- dimnames(ValueTimeStep)
+    dnames <- dimnames(ValueYear)
     dnames[[ind]] <- Block
     dimnames(ValueExpanded) <- dnames
     
     for (j in seq_along(Block)) {
-      dimnames(ValueTimeStep)[[ind]] <- Block[j]
-      abind::afill(ValueExpanded) <- ValueTimeStep  
+      dimnames(ValueYear)[[ind]] <- Block[j]
+      abind::afill(ValueExpanded) <- ValueYear  
     }
 
     abind::afill(FillArray) <- ValueExpanded
@@ -601,7 +601,7 @@ ExpandTimeSteps <- function(array, TimeSteps, default=NULL) {
 ArrayReduceDims <- function(array, 
                             IncSim=TRUE, 
                             IncAge=FALSE, 
-                            IncTimeStep=TRUE,
+                            IncYear=TRUE,
                             debug=FALSE, 
                             silent=FALSE, 
                             id=NULL) {
@@ -609,7 +609,7 @@ ArrayReduceDims <- function(array,
   if (debug)
     print(class(array))
   
-  if (!IncSim & !IncTimeStep & !IncAge) 
+  if (!IncSim & !IncYear & !IncAge) 
     return(array)
   
   if (!length(array))
@@ -629,14 +629,14 @@ ArrayReduceDims <- function(array,
         return(array)
       slots <- slotNames(array)
       for (sl in slots) {
-        slot(array, sl) <- Recall(slot(array, sl), IncSim, IncAge, IncTimeStep, debug, silent, id)
+        slot(array, sl) <- Recall(slot(array, sl), IncSim, IncAge, IncYear, debug, silent, id)
       }
       return(array)
     }
     if (is.list(array)) {
       if (length(array)) {
         for (i in 1:length(array)) {
-          temp <- Recall(array[[i]], IncSim, IncAge, IncTimeStep, debug, silent, id)
+          temp <- Recall(array[[i]], IncSim, IncAge, IncYear, debug, silent, id)
           if (!is.null(temp))
             array[[i]] <- temp 
         }
@@ -649,11 +649,11 @@ ArrayReduceDims <- function(array,
   
   indSim <- which(dnames=='Sim')
   indAge <- which(dnames=='Age')
-  indTimeStep <- which(dnames=='TimeStep')
+  indYear <- which(dnames=='Year')
   
   incSim <- length(indSim)
   incAge <- length(indAge)
-  incTimeStep <- length(indTimeStep)
+  incYear <- length(indYear)
   
   if (!IncSim)
     incSim <- 0
@@ -661,59 +661,59 @@ ArrayReduceDims <- function(array,
   if (!IncAge)
     incAge <- 0
   
-  if (!IncTimeStep)
-    incTimeStep <- 0
+  if (!IncYear)
+    incYear <- 0
   
-  if (incSim & incTimeStep & incAge) {
+  if (incSim & incYear & incAge) {
     idenSim <- IdenticalSims(array) 
-    idenTime <- IdenticalTimeSteps(array)
+    idenTime <- IdenticalYears(array)
     idenAge <- IdenticalAge(array)
     
     if (idenSim & idenTime & idenAge) 
-      return(abind::asub(array, list(1,1,1), c(indSim, indAge, indTimeStep), drop=FALSE))
+      return(abind::asub(array, list(1,1,1), c(indSim, indAge, indYear), drop=FALSE))
     
     if (!idenSim & idenTime & idenAge) 
-      return(abind::asub(array, list(1,1), c(indAge, indTimeStep), drop=FALSE))
+      return(abind::asub(array, list(1,1), c(indAge, indYear), drop=FALSE))
     
     if (idenSim & !idenTime & idenAge) {
-      return(abind::asub(array, list(1,1,UniqueTimeSteps(array)), c(indSim, indAge, indTimeStep), drop=FALSE))
+      return(abind::asub(array, list(1,1,UniqueYears(array)), c(indSim, indAge, indYear), drop=FALSE))
     }
     
     if (!idenSim & !idenTime & idenAge) 
-      return(abind::asub(array, list(1,UniqueTimeSteps(array)), c(indAge, idenTime), drop=FALSE))
+      return(abind::asub(array, list(1,UniqueYears(array)), c(indAge, idenTime), drop=FALSE))
     
     if (idenSim & idenTime & !idenAge)
-      return(abind::asub(array, list(1,1), c(indSim, indTimeStep), drop=FALSE))
+      return(abind::asub(array, list(1,1), c(indSim, indYear), drop=FALSE))
     
     if (!idenSim & idenTime & !idenAge) 
-      return(abind::asub(array, list(1), c(indTimeStep), drop=FALSE))
+      return(abind::asub(array, list(1), c(indYear), drop=FALSE))
     
     if (idenSim & !idenTime & !idenAge) 
-      return(abind::asub(array, list(1, UniqueTimeSteps(array)), c(indSim, indTimeStep), drop=FALSE))
+      return(abind::asub(array, list(1, UniqueYears(array)), c(indSim, indYear), drop=FALSE))
     
     if (!idenSim & !idenTime & !idenAge) {
-      return(abind::asub(array, list(UniqueTimeSteps(array)), c(indTimeStep), drop=FALSE))
+      return(abind::asub(array, list(UniqueYears(array)), c(indYear), drop=FALSE))
     }
     
   }
   
-  if (!incSim & incTimeStep & incAge) {
-    idenTime <- IdenticalTimeSteps(array)
+  if (!incSim & incYear & incAge) {
+    idenTime <- IdenticalYears(array)
     idenAge <- IdenticalAge(array)
     
     if (idenTime & idenAge) 
-      return(abind::asub(array, list(1,1), c(indAge, indTimeStep), drop=FALSE))
+      return(abind::asub(array, list(1,1), c(indAge, indYear), drop=FALSE))
     if (!idenTime & idenAge) 
-      return(abind::asub(array, list(1, UniqueTimeSteps(array)), c(indAge, indTimeStep), drop=FALSE))
+      return(abind::asub(array, list(1, UniqueYears(array)), c(indAge, indYear), drop=FALSE))
     
     if (idenTime & !idenAge)
-      return(abind::asub(array, list(1), c(indTimeStep), drop=FALSE))
+      return(abind::asub(array, list(1), c(indYear), drop=FALSE))
     
     if (!idenTime & !idenAge) 
-      return(abind::asub(array, list(UniqueTimeSteps(array)), c(indTimeStep), drop=FALSE))
+      return(abind::asub(array, list(UniqueYears(array)), c(indYear), drop=FALSE))
   }
   
-  if (incSim & !incTimeStep & incAge) {
+  if (incSim & !incYear & incAge) {
     idenSim <- IdenticalSims(array) 
     idenAge <- IdenticalAge(array)
     
@@ -737,7 +737,7 @@ ArrayReduceDims <- function(array,
     
   }
   
-  if (!incSim & !incTimeStep & incAge) {
+  if (!incSim & !incYear & incAge) {
     idenAge <- IdenticalAge(array)
     
     if (idenAge) 
@@ -747,34 +747,34 @@ ArrayReduceDims <- function(array,
       return(array)
   }
   
-  if (incSim & incTimeStep & !incAge) {
+  if (incSim & incYear & !incAge) {
     idenSim <- IdenticalSims(array) 
-    idenTime <- IdenticalTimeSteps(array)
+    idenTime <- IdenticalYears(array)
     
     if (idenSim & idenTime) 
-      return(abind::asub(array, list(1,1), c(indSim, indTimeStep), drop=FALSE))
+      return(abind::asub(array, list(1,1), c(indSim, indYear), drop=FALSE))
     
     if (!idenSim & idenTime) 
-      return(abind::asub(array, list(1), c(indTimeStep), drop=FALSE))
+      return(abind::asub(array, list(1), c(indYear), drop=FALSE))
     
     if (idenSim & !idenTime) 
-      return(abind::asub(array, list(1, UniqueTimeSteps(array)), c(indSim, indTimeStep), drop=FALSE))
+      return(abind::asub(array, list(1, UniqueYears(array)), c(indSim, indYear), drop=FALSE))
     
     if (!idenSim & !idenTime) 
-      return(abind::asub(array, list(UniqueTimeSteps(array)), c(indTimeStep), drop=FALSE))
+      return(abind::asub(array, list(UniqueYears(array)), c(indYear), drop=FALSE))
     
   }
   
-  if (!incSim & incTimeStep & !incAge) {
-    idenTime <- IdenticalTimeSteps(array)
+  if (!incSim & incYear & !incAge) {
+    idenTime <- IdenticalYears(array)
     if (idenTime) 
-      return(abind::asub(array, list(1), c(indTimeStep), drop=FALSE))
+      return(abind::asub(array, list(1), c(indYear), drop=FALSE))
     
     if (!idenTime) 
-      return(abind::asub(array, UniqueTimeSteps(array), indTimeStep, drop=FALSE))
+      return(abind::asub(array, UniqueYears(array), indYear, drop=FALSE))
   }
   
-  if (incSim & !incTimeStep & !incAge) {
+  if (incSim & !incYear & !incAge) {
     idenSim <- IdenticalSims(array) 
     if (idenSim) 
       return(abind::asub(array, list(1), c(indSim), drop=FALSE))

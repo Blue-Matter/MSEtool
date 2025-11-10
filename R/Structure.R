@@ -1,12 +1,12 @@
 
-StructurePars <- function(Pars, nsim=NULL, TimeSteps=NULL) {
-  OutPars <- lapply(Pars, StructurePars_, nsim=nsim, TimeSteps)
-  OutPars <- ApplyRandomWalk(OutPars, nsim, TimeSteps)
+StructurePars <- function(Pars, nsim=NULL, Years=NULL) {
+  OutPars <- lapply(Pars, StructurePars_, nsim=nsim, Years)
+  OutPars <- ApplyRandomWalk(OutPars, nsim, Years)
   OutPars
 }
 
 
-StructurePars_ <- function(Par, nsim=NULL, TimeSteps=NULL) {
+StructurePars_ <- function(Par, nsim=NULL, Years=NULL) {
   # returns an array - nsim by nTS
 
   # Par already an array
@@ -21,7 +21,7 @@ StructurePars_ <- function(Par, nsim=NULL, TimeSteps=NULL) {
   if (length(Par)==1) {
     out <- array(Par, dim=c(1,1))
     dimnames(out) <- list(Sim=1,
-                          TimeStep=TimeSteps[1])
+                          Year=Years[1])
     return(out)
   }
    
@@ -35,13 +35,13 @@ StructurePars_ <- function(Par, nsim=NULL, TimeSteps=NULL) {
     if (nsim==1) {
       out <- array(mean(c(Par[1], Par[2])), dim=c(1, 1))
       dimnames(out) <- list(Sim=1,
-                            TimeStep=TimeSteps[1])
+                            Year=Years[1])
       return(out)
     }
       
     out <- array(stats::runif(nsim, Par[1], Par[2]), dim=c(nsim, 1))
     dimnames(out) <- list(Sim=1:nsim,
-                          TimeStep=TimeSteps[1])
+                          Year=Years[1])
     return(out)
   }
 
@@ -53,7 +53,7 @@ StructurePars_ <- function(Par, nsim=NULL, TimeSteps=NULL) {
   # Par are `nsim` long
   out <- array(Par, dim=c(length(Par), 1))
   dimnames(out) <- list(Sim=1:nsim,
-                        TimeStep=TimeSteps[1])
+                        Year=Years[1])
   out
 }
 
@@ -61,13 +61,13 @@ substrRight <- function(x, n){
   substr(x, nchar(x)-n+1, nchar(x))
 }
 
-RandomWalk <- function(targ, targsd, nsim, TimeSteps) {
-  nTS <- length(TimeSteps)
+RandomWalk <- function(targ, targsd, nsim, Years) {
+  nTS <- length(Years)
   targ <- matrix(targ, nsim, nTS)
   mutemp <- -0.5 * targsd^2
   temp <- array(exp(rnorm(nsim*nTS, mutemp, targsd)),dim = c(nsim, nTS))
   dimnames(temp) <- list(Sim=1:nsim,
-                        TimeStep=TimeSteps)
+                        Year=Years)
   if (nsim >1) {
     return(targ * temp/apply(temp, 1, mean))
   } else {
@@ -75,7 +75,7 @@ RandomWalk <- function(targ, targsd, nsim, TimeSteps) {
   }
 }
 
-ApplyRandomWalk <- function(Pars, nsim, TimeSteps) {
+ApplyRandomWalk <- function(Pars, nsim, Years) {
   detect_sd <- which(tolower(names(Pars)) |> substrRight(2) == 'sd') 
   if (length(detect_sd)==0)
     return(Pars)
@@ -83,15 +83,15 @@ ApplyRandomWalk <- function(Pars, nsim, TimeSteps) {
     nm_sd <- names(Pars)[i]
     nm_par <- strsplit(nm_sd, split="(?<=.)(?=.{2}$)", perl=T)[[1]][1]
     par_ind <- match(nm_par, names(Pars))
-    if (is.null(TimeSteps))
-      cli::cli_abort(c('`TimeSteps` required to generate stochastic time-varying values',
-                       'i'='Add time steps to the `TimeSteps` argument')
+    if (is.null(Years))
+      cli::cli_abort(c('`Years` required to generate stochastic time-varying values',
+                       'i'='Add time steps to the `Years` argument')
       )
 
     Pars[[par_ind]] <- RandomWalk(targ=Pars[[par_ind]],
                                   targsd=Pars[[i]],
                                   nsim=nsim,
-                                  TimeSteps=TimeSteps
+                                  Years=Years
                                   )
     Pars[[i]] <- NA
   }

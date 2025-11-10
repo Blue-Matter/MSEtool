@@ -1,5 +1,5 @@
 
-CalcInitialTimeStep <- function(Hist, silent=FALSE) {
+CalcInitialYear <- function(Hist, silent=FALSE) {
   
   if (is.null(Hist@Unfished@Equilibrium@Number))
     Hist@Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)

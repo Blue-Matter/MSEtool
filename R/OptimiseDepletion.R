@@ -22,14 +22,14 @@ OptimizeCatchability <- function(HistSim, debug=FALSE) {
   nStock <- nStock(HistSim@OM)
   nFleet <- nFleet(HistSim@OM)
   
-  TimeStepsHist <- TimeSteps(HistSim@OM, 'Historical')
+  YearsHist <- Years(HistSim@OM, 'Historical')
   
   if (nStock > 1 || nFleet > 1) {
-    pars <- OptimizeCatchability_Multi(HistSim, TimeStepsHist,  bounds, tol, silent, debug)
+    pars <- OptimizeCatchability_Multi(HistSim, YearsHist,  bounds, tol, silent, debug)
     if (inherits(pars, 'hist'))
       return(pars)
   } else {
-    pars <- OptimizeCatchability_Single(HistSim, TimeStepsHist, bounds, tol, silent, debug)
+    pars <- OptimizeCatchability_Single(HistSim, YearsHist, bounds, tol, silent, debug)
     if (inherits(pars, 'hist'))
       return(pars)
   }
@@ -61,7 +61,7 @@ OptimizeCatchability <- function(HistSim, debug=FALSE) {
 }
 
 
-OptimizeCatchability_Multi <- function(HistSim, TimeStepsHist, bounds, tol, silent, debug=FALSE) {
+OptimizeCatchability_Multi <- function(HistSim, YearsHist, bounds, tol, silent, debug=FALSE) {
   
   nStock <- nStock(HistSim@OM)
   nFleet <- nFleet(HistSim@OM)
@@ -86,7 +86,7 @@ OptimizeCatchability_Multi <- function(HistSim, TimeStepsHist, bounds, tol, sile
   
   CatchFrac <- List2Array(HistSim@OM@CatchFrac, dimname = 'Stock') |> t()
   EffortFleet <- array(NA, dim=dim(CatchFrac))
-  nTS <- length(TimeStepsHist)
+  nTS <- length(YearsHist)
   for (st in 1:nStock) {
     EffortFleet[st,] <- HistSim@OM@Fleet[[st]]@Effort[nTS]
   }
@@ -109,7 +109,7 @@ OptimizeCatchability_Multi <- function(HistSim, TimeStepsHist, bounds, tol, sile
                  lower = c(rep(log(bounds[1]), nStock), rep(-5, nStock * (nFleet-1))),
                  upper = c(rep(log(bounds[2]), nStock), rep(5, nStock*(nFleet-1))),
                  HistSim=HistSim,
-                 TimeStepsHist=TimeStepsHist,
+                 YearsHist=YearsHist,
                  debug=debug,
                  control = list(trace = ifelse(silent, 0, 1), factr = tol/.Machine$double.eps)
   )
@@ -117,7 +117,7 @@ OptimizeCatchability_Multi <- function(HistSim, TimeStepsHist, bounds, tol, sile
   pars
 }
 
-OptimizeCatchability_Single <- function(HistSim, TimeStepsHist, bounds, tol, silent, debug=FALSE) {
+OptimizeCatchability_Single <- function(HistSim, YearsHist, bounds, tol, silent, debug=FALSE) {
   
   FinalDepletion <- HistSim@OM@Stock[[1]]@Depletion@Final
   
@@ -127,7 +127,7 @@ OptimizeCatchability_Single <- function(HistSim, TimeStepsHist, bounds, tol, sil
   doOpt <- stats::optimize(OptCatchability,
                            log(bounds),
                            HistSim=HistSim,
-                           TimeStepsHist=TimeStepsHist,
+                           YearsHist=YearsHist,
                            debug=debug,
                            tol=tol)
   pars <- doOpt$minimum
@@ -137,7 +137,7 @@ OptimizeCatchability_Single <- function(HistSim, TimeStepsHist, bounds, tol, sil
     doOpt <- stats::nlminb(mean(log(bounds)),
                            OptCatchability,
                            HistSim=HistSim,
-                           TimeStepsHist=TimeStepsHist, 
+                           YearsHist=YearsHist, 
                            debug=debug,
                            lower=log(bounds[1]),
                            upper=log(bounds[2]))
@@ -147,7 +147,7 @@ OptimizeCatchability_Single <- function(HistSim, TimeStepsHist, bounds, tol, sil
   
 }
 
-OptCatchability <- function(pars, HistSim, TimeStepsHist, debug=FALSE) {
+OptCatchability <- function(pars, HistSim, YearsHist, debug=FALSE) {
 
   nStock <- nStock(HistSim@OM)
   nFleet <- nFleet(HistSim@OM) 
@@ -183,9 +183,9 @@ OptCatchability <- function(pars, HistSim, TimeStepsHist, debug=FALSE) {
     }
   }
     
-  TermInd <- length(TimeStepsHist)
+  TermInd <- length(YearsHist)
   PopDynamicsHistorical <- SimulateDynamics_(HistSim,
-                                             TimeStepsHist,
+                                             YearsHist,
                                              CalcCatch = 0)
   
   # Depletion objective
@@ -222,7 +222,7 @@ OptCatchability <- function(pars, HistSim, TimeStepsHist, debug=FALSE) {
   # TODO need to do SPFrom for Depletion sharing ---
   if (nFleet>1) {
     # Catch objective
-    terminalLandings <- CalcCatch_(PopDynamicsHistorical, max(TimeStepsHist))
+    terminalLandings <- CalcCatch_(PopDynamicsHistorical, max(YearsHist))
     predCatchFrac <- purrr::map(terminalLandings@Landings, \(x) 
                                 apply(x[[TermInd]],2, sum)) |> 
       List2Array("Stock", "Fleet") |> 

@@ -1,9 +1,9 @@
 
-IdenticalTimeSteps <- function(array, logical=TRUE) {
+IdenticalYears <- function(array, logical=TRUE) {
   if (!is.array(array))
     return(TRUE)
   
-  unique <- UniqueTimeSteps(array)
+  unique <- UniqueYears(array)
   
   if (!logical) 
     return(unique)
@@ -14,12 +14,12 @@ IdenticalTimeSteps <- function(array, logical=TRUE) {
   length(unique)==1
 }
 
-UniqueTimeSteps <- function(array) {
+UniqueYears <- function(array) {
   if (!is.array(array))
     cli::cli_abort('`array` is not an array')
   
   dnames <- dimnames(array)
-  TSInd <- which(names(dnames) == 'TimeStep')
+  TSInd <- which(names(dnames) == 'Year')
   if (!length(TSInd))
     return(NULL)
   

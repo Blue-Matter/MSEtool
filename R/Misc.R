@@ -32,21 +32,7 @@ ReduceNSim <- function(object, nSim=NULL) {
   SubsetSim(object, Sim=1:nSim)
 }
 
-#' Update missing slots in an S4 object 
-#' @export
-UpdateObject <- function(object) {
-  if (!isS4(object))
-    return(object)
-  slots <- slotNames(object)
-  for (sl in slots) {
-    chk <- try(slot(object,sl), silent=TRUE)
-    if (inherits(chk, 'try-error')) {
-      newobject <- new(class(object))
-      slot(object,sl) <- slot(newobject,sl)
-    }
-  }
-  object
-}
+
 
 
 not <- function(val) !val
@@ -167,14 +153,14 @@ StartMessages <- function(OM, messages='default') {
   #   }
   # }
   
-  if(!length(OM@Efactor)) {
-    OM@Efactor <- lapply(1:nStock(OM), function(x) 
+  if(!length(OM@EFactor)) {
+    OM@EFactor <- lapply(1:nStock(OM), function(x) 
       matrix(1, nSim(OM), nFleet(OM)))
     if (nFleet(OM)>1) {
       if (isTRUE(msg$alert)) 
         cli::cli(c(
-          cli::cli_alert_info("`Efactor(OM)` not specified"),
-          cli::cli_alert("Setting `Efactor(OM)` to current effort for all fleets")
+          cli::cli_alert_info("`EFactor(OM)` not specified"),
+          cli::cli_alert("Setting `EFactor(OM)` to current effort for all fleets")
         ))
     }
   }
@@ -192,23 +178,15 @@ StartMessages <- function(OM, messages='default') {
 
 # ----------------------------------
 
-GetnTS <- function(TimeSteps) {
-  nTS <- length(TimeSteps)
+GetnTS <- function(Years) {
+  nTS <- length(Years)
   if (nTS==0)
     nTS <- NULL
   nTS
 }
 
-# TimeStepAttributes <- function(object, TimeSteps) {
-#   if (!is.null(attributes(object)$TimeSteps))
-#     TimeSteps <- attributes(object)$TimeSteps
-#   TimeSteps
-# }
 
-
-
-
-getnleet <- function(Fleets) {
+getnFleet <- function(Fleets) {
   if (inherits(Fleets, 'list')) {
     nfleet <- length(Fleets)
   } else {
@@ -256,7 +234,7 @@ CalcTSUnits <- function(TSperYear) {
          '12'='month',
          '52'='week',
          '365'='day')
-  
+
   if (is.null(out))
     cli::cli_abort(c("x"="`TSperYear`: {.val {TSperYear}} is invalid ",
                      "i"="Must be one of {.val {c(1,2,4,12,52,365)}}")
@@ -264,7 +242,7 @@ CalcTSUnits <- function(TSperYear) {
   out
 }
 
-TSperYear <- function(Units) {
+CalcTSperYear <- function(Units) {
   Units <- tolower(Units)
   switch(Units,
          'year'=1,
@@ -275,7 +253,7 @@ TSperYear <- function(Units) {
          'day'=365)
 }
 
-CalcTimeSteps <- function(nYear, pYear, CurrentYear, TSperYear=1, Period=NULL) {
+CalcYears <- function(nYear, pYear, CurrentYear, TSperYear=1, Period=NULL) {
   
   TimeUnits <- CalcTSUnits(TSperYear)
   
@@ -354,7 +332,6 @@ CalcTimeSteps <- function(nYear, pYear, CurrentYear, TSperYear=1, Period=NULL) {
     return(proj)
 }
 
-
 GenerateStochasticValues <- function(object, nsim=NULL) {
   if (!is.array(object) & length(object)==2) {
     if (is.null(nsim))
@@ -423,15 +400,15 @@ AddDimension <- function(array, name=NULL, val=1) {
   outarray
 }
 
-AddSimDimension <- function(array, names=c('Sim', 'Age', 'TimeStep'), TimeSteps=NULL) {
+AddSimDimension <- function(array, names=c('Sim', 'Age', 'Year'), Years=NULL) {
   dd <- dim(array)
   if (length(dd)==length(names))
-    return(AddDimNames(array, names, TimeSteps=TimeSteps))
+    return(AddDimNames(array, names, Years=Years))
   
   if (length(dd)==2) {
     array <- replicate(1, array) |> aperm(c(3,1,2))
   }
-  AddDimNames(array, names, TimeSteps=TimeSteps)
+  AddDimNames(array, names, Years=Years)
 }
 
 
@@ -449,7 +426,7 @@ AddAreaDimension <- function(array) {
   array
 }
 
-AddAgeTimeStepDimensions <- function(object, outdim=4) {
+AddAgeYearDimensions <- function(object, outdim=4) {
   if (is.null(object))
     return(object)
   dd <- dim(object)
@@ -795,8 +772,8 @@ PopulatedObject <- function(object) {
   !is.null(attributes(object)$digest)
 }
 
-AddDimNames <- function(array, names=c('Sim', 'Age', 'TimeStep'), 
-                        TimeSteps=NULL, Ages=NULL, Fleets=NULL,
+AddDimNames <- function(array, names=c('Sim', 'Age', 'Year'), 
+                        Years=NULL, Ages=NULL, Fleets=NULL,
                         values=NULL) {
   
   if (inherits(array,'list'))
@@ -815,8 +792,8 @@ AddDimNames <- function(array, names=c('Sim', 'Age', 'TimeStep'),
         
     } else if (names[i]=='Fleet' && !is.null(Fleets)) {
       l[[i]] <- Fleets
-    } else if (names[i]=='TimeStep' && !is.null(TimeSteps)) {
-      l[[i]] <- TimeSteps[1:d[i]]
+    } else if (names[i]=='Year' && !is.null(Years)) {
+      l[[i]] <- Years[1:d[i]]
     } else {
       if (is.null(values)) {
         l[[i]] <- 1:d[i]  
@@ -837,19 +814,19 @@ AddDimNames <- function(array, names=c('Sim', 'Age', 'TimeStep'),
   array
 }
 
-# AddMeanAtAgeAttributes <- function(object, TimeSteps=NULL, Ages=NULL) {
+# AddMeanAtAgeAttributes <- function(object, Years=NULL, Ages=NULL) {
 # 
 #   object@MeanAtAge <- Structure(value=object@MeanAtAge,
 #                                 out=c('nsim', 'nage', 'nTS'))
 #   
 #   if (is.null(dimnames(object@MeanAtAge)))  
-#     object@MeanAtAge <- object@MeanAtAge |> AddDimNames(TimeSteps=TimeSteps)
+#     object@MeanAtAge <- object@MeanAtAge |> AddDimNames(Years=Years)
 # 
 #   if ('Units' %in% slotNames(object))
 #     attributes(object@MeanAtAge)$Units <- object@Units
 # 
-#   # if (is.null(attributes(object@MeanAtAge)$TimeSteps))
-#   #   attributes(object@MeanAtAge)$TimeSteps <- TimeSteps
+#   # if (is.null(attributes(object@MeanAtAge)$Years))
+#   #   attributes(object@MeanAtAge)$Years <- Years
 #   # 
 #   if (methods::is(Ages, 'ages')) {
 #     # attributes(object@MeanAtAge)$Ages <- Ages@Classes

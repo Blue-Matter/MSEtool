@@ -27,7 +27,7 @@ SProduction <- function(object, df=TRUE, hist=TRUE) {
     temp@SProduction <- object@Hist@SProduction
     hist <- SProductionHist(temp, df)
     proj <- dplyr::bind_rows(hist, proj) |>
-      dplyr::arrange(Sim, TimeStep, Period)
+      dplyr::arrange(Sim, Year, Period)
   }
   class(proj) <- c("sproduction", class(proj))
   proj
@@ -37,7 +37,7 @@ SProductionHist <- function(Hist, df=TRUE) {
   CheckClass(Hist, 'hist', 'Hist')
   if (!df)
     return(Hist@SProduction)
-  HistTimeStep <- TimeSteps(Hist@OM, "Historical")
+  HistYear <- Years(Hist@OM, "Historical")
   hist <- array2DF(Hist@SProduction)
   hist$Period <- 'Historical'
   hist$Variable <- "Spawning Production"
@@ -46,7 +46,7 @@ SProductionHist <- function(Hist, df=TRUE) {
   
   units <- lapply(Hist@OM@Stock, slot, 'Fecundity') |> lapply(Units) |> unlist()
   hist <- hist |>
-    dplyr::filter(TimeStep%in%HistTimeStep) |> 
+    dplyr::filter(Year%in%HistYear) |> 
     dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock') 
   class(hist) <- c("sproduction", class(hist))
   hist

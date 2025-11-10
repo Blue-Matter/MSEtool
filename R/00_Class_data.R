@@ -107,9 +107,8 @@ setClass('data',
                  Latitude='num.null',
                  Longitude='num.null',
                  
-                 TimeSteps='num.null', # should be in fraction of year - or convert Date to fraction year
-                 TimeStepLH='num.null', # last historical time step,
-                 TimeUnits='char.null', # time units - same as `Ages`
+                 Years='num.null', # should be in fraction of year - or convert Date to fraction year
+                 YearLH='num.null', # last historical time step,
                  TSperYear='num.null',
                  nArea='num.null',
                  
@@ -153,7 +152,6 @@ setValidity('data', validDataObject)
 
 setMethod("initialize", "data", function(.Object) {
   # TODO
-  .Object@TimeUnits <- 'year'
   .Object
 })
 

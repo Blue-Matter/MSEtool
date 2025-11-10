@@ -23,7 +23,7 @@ ApplyCustomAtAgeModel <- function(Model, Pars, Ages) {
   }
   dimnames(out) <- list(Sim=1:nsim,
                         Age=Ages,
-                        TimeStep=TSnames$TimeStep)
+                        Year=TSnames$Year)
   out
 }
 
@@ -51,7 +51,7 @@ ApplyCustomAtLengthModel <- function(Model, Pars, Length) {
   }
   dimnames(out) <- list(Sim=1:nsim,
                         Class=Length,
-                        TimeStep=TSnames$TimeStep)
+                        Year=TSnames$Year)
   out
 }
 
@@ -142,15 +142,15 @@ GenerateSRR <- function(Model, Pars, S=NULL, S0=NULL) {
 }
 
 
-GenerateStochasticnVessels <- function(nVessels, nsim, Timesteps) {
+GenerateStochasticnVessels <- function(nVessels, nsim, Years) {
   nms <- names(nVessels)
   if (!all(c('EffLower', 'EffUpper', 'EffYears') %in% nms)) {
     cli::cli_abort(paste('If `nVessels` is a dataframe, it must have names:', paste(c('EffLower', 'EffUpper', 'EffYears'), collapse=', ')))
   }
-  ind <- which(Timesteps@Period=='Historical')
-  HistTimesteps <- Timesteps@Timestep[ind]
-  refTimeSteps <- seq_along(HistTimesteps)
-  nts <- length(refTimeSteps)
+  ind <- which(Years@Period=='Historical')
+  HistYears <- Years@Year[ind]
+  refYears <- seq_along(HistYears)
+  nts <- length(refYears)
 
   EffLower <- nVessels$EffLower
   EffUpper <- nVessels$EffUpper
@@ -285,11 +285,11 @@ GenerateRecruitmentDeviations <- function(SD=0.2,
     logRecDevProj <- array(rtnorm(nsim*nProjTS, mu, SD, lower, upper), dim=c(nsim, nProjTS))
 
   # Apply auto-correlation
-  timesteps <- 1:(nInitRecDev+nHistTS+nProjTS)
+  Years <- 1:(nInitRecDev+nHistTS+nProjTS)
   period <- c(rep('Init', nInitRecDev), rep('Hist',nHistTS), rep('Proj', nProjTS))
   required <- c(rep(genInit, nInitRecDev), rep(genHist,nHistTS), rep(genProj, nProjTS))
 
-  timesteps <- timesteps[required]
+  Years <- Years[required]
 
   for (i in 1:nsim) {
     logRecDeviations <- c(logRecDevInit[GetIndex(i, nrow(logRecDevInit)),],
@@ -297,9 +297,9 @@ GenerateRecruitmentDeviations <- function(SD=0.2,
                           logRecDevProj[GetIndex(i, nrow(logRecDevProj)),]
                           )
 
-    for (ts in seq_along(timesteps)[-1]) {
-      logRecDeviations[timesteps[ts]] <- AC[i] * logRecDeviations[timesteps[ts]-1] +
-        logRecDeviations[timesteps[ts]] * (1 - AC[i] * AC[i])^0.5
+    for (ts in seq_along(Years)[-1]) {
+      logRecDeviations[Years[ts]] <- AC[i] * logRecDeviations[Years[ts]-1] +
+        logRecDeviations[Years[ts]] * (1 - AC[i] * AC[i])^0.5
     }
 
     if (genInit)

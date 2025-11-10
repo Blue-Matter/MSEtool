@@ -1,18 +1,18 @@
 #' @include 00_Class_unions.R
 
 setClass("timeseries",
-         slots=c(Number='list', # list `nStock`of array dimensions: nSim, nAge, TimeStep, Area
-                 Biomass='array', # nSim, nStock, TimeStep
-                 SBiomass='array', # nSim, nStock, TimeStep
-                 SProduction='array',  # nSim, nStock, TimeStep
-                 Landings='list', # list `nStock`of array dimensions: nSim, nAge, TimeStep, Fleet, Area
-                 Discards='list', # list `nStock`of array dimensions: nSim, nAge, TimeStep, Fleet, Area
-                 Effort='array', # Sim, Stock, TimeStep, Fleet
-                 Distribution='array.list.null', # Sim, Stock, TimeStep, Fleet, Area # fraction effort by area
-                 FDead='array.list.null',  # list `nStock`of array dimensions: nSim, nAge, TimeStep, Fleet
-                 FRetain='array.list.null', # list `nStock`of array dimensions: nSim, nAge, TimeStep, Fleet
-                 FDeadArea='array.list.null', # list `nStock`of array dimensions: nSim, nAge, TimeStep, Fleet, Area
-                 FRetainArea='array.list.null', # list `nStock`of array dimensions: nSim, nAge, TimeStep, Fleet, Area
+         slots=c(Number='list', # list `nStock`of array dimensions: nSim, nAge, Year, Area
+                 Biomass='array', # nSim, nStock, Year
+                 SBiomass='array', # nSim, nStock, Year
+                 SProduction='array',  # nSim, nStock, Year
+                 Landings='list', # list `nStock`of array dimensions: nSim, nAge, Year, Fleet, Area
+                 Discards='list', # list `nStock`of array dimensions: nSim, nAge, Year, Fleet, Area
+                 Effort='array', # Sim, Stock, Year, Fleet
+                 Distribution='array.list.null', # Sim, Stock, Year, Fleet, Area # fraction effort by area
+                 FDead='array.list.null',  # list `nStock`of array dimensions: nSim, nAge, Year, Fleet
+                 FRetain='array.list.null', # list `nStock`of array dimensions: nSim, nAge, Year, Fleet
+                 FDeadArea='array.list.null', # list `nStock`of array dimensions: nSim, nAge, Year, Fleet, Area
+                 FRetainArea='array.list.null', # list `nStock`of array dimensions: nSim, nAge, Year, Fleet, Area
                  Misc='list'
          )
 )

@@ -2,9 +2,12 @@
 
 #' @rdname Convert
 #' @export
-ConvertOM <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
+ConvertOM <- function(OM, Author='', CurrentYear=NULL, TSperYear=1, Populate=TRUE, silent=FALSE) {
   CheckClass(OM, c('OM'), 'OM')
   
+  if (!silent)
+    cli::cli_alert('Converting object of class {.cls OM} to class {.cls om}')
+
   om <- OM()
   om@Name <- OM@Name
   om@Agency <-  OM@Agency
@@ -14,7 +17,7 @@ ConvertOM <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
   om@Latitude <- OM@Latitude
   om@Sponsor <- OM@Sponsor
   om@nSim <- OM@nsim
-  om@nYear <- ifelse(isMOM,  OM@Fleets[[1]][[1]]@nyears, OM@nyears)
+  om@nYear <- OM@nyears
   om@pYear <- OM@proyears
   om@Interval <- OM@interval
   om@Seed <- OM@seed
@@ -22,45 +25,50 @@ ConvertOM <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
   om@maxF <- OM@maxF
   om@nReps <- OM@reps
   om@Source <- OM@Source
-  
-  if (is.null(CurrentYear)) {
-    om@CurrentYear <- as.numeric(format(Sys.Date(), '%Y'))
-  } else {
-    om@CurrentYear <- CurrentYear
-  }
-  
-  TimeUnits <- CalcTSUnits(TSperYear)
+  om@CurrentYear <- ifelse(is.null(CurrentYear),
+                           as.numeric(format(Sys.Date(), '%Y')),
+                           CurrentYear
+                           )
   om@TSperYear <- TSperYear
-  om@TimeSteps <- CalcTimeSteps(nYear=om@nYear,
-                                pYear=om@pYear,
-                                CurrentYear=om@CurrentYear,
-                                TSperYear)
+  om@Years <- CalcYears(nYear=om@nYear,
+                        pYear=om@pYear,
+                        CurrentYear=om@CurrentYear,
+                        TSperYear)
   
-  TimeStepsList <- list(HistTS=TimeSteps(om, 'Historical'),
-                        ProjTS=TimeSteps(om, 'Projection'),
+  YearsList <- list(HistTS=Years(om, 'Historical'),
+                        ProjTS=Years(om, 'Projection'),
                         TimeUnits=TimeUnits,
                         TSperYear=TSperYear
   )
-  
-  om@Stock <- OM2stock(OM, cpars=OM@cpars, TimeStepsList, OM@nsim, OM@seed)
-  om@Fleet <- OM2fleet(OM, OM@cpars, OM@Fdisc)
+  StockName <- SubOM(OM, 'Stock')@Name
+  om@Stock <- MakeNamedList(StockName,
+                            OM2stock(OM, cpars=OM@cpars, YearsList, OM@nsim, OM@seed)
+  )
+  FleetName <- SubOM(OM, 'Fleet')@Name
+  om@Fleet <- MakeNamedList(StockName,
+                            MakeNamedList(FleetName,
+                                          OM2fleet(OM, OM@cpars, OM@Fdisc)
+                                          )
+  )
   om <- UpdateSelRet(OM, om)
  
-   om@Obs <- OM2obs(OM, OM@cpars)
-  om@Imp <- OM2imp(OM, OM@cpars)
+  om@Obs <- MakeNamedList(StockName,
+                          MakeNamedList(FleetName,
+                                        OM2obs(OM, OM@cpars)
+                          )
+  )
+  
+  om@Imp <- MakeNamedList(StockName,
+                          MakeNamedList(FleetName,
+                                        OM2imp(OM, OM@cpars)
+                          )
+  )
   
   # update because Vmaxlen and Rmaxlen now correspond with maximum length class
-  om <- SolveForVmaxlen(om) 
-  om <- SolveForRmaxlen(om)
-  
-  
-  om@Efactor <- MakeNamedList(StockNames(om), 
-                              array(1, dim=c(om@nSim, nFleet(om)),
-                                    dimnames = list(
-                                      Sim=1:om@nSim,
-                                      Fleet=FleetNames(om)
-                                    )
-                              ))   
+  om <- om |> 
+    SolveForVmaxlen('Selectivity') |>
+    SolveForVmaxlen('Retention') |>
+    ProcessEFactor()
   
   if (Populate)
     om <- PopulateOM(om, silent=FALSE)
@@ -73,21 +81,29 @@ UpdateSelRet <- function(OM, om) {
   if (!as.logical(OM@isRel))
     return(om)
   
-  L50 <- GetLengthClass(om@Stock@Maturity, 0.5)
+  nStock <- nStock(om)
+  nFleet <- nFleet(om)
   
-  om@Fleet@Selectivity@Pars <- StructurePars(Pars=om@Fleet@Selectivity@Pars,
-                                             nsim=om@nSim, 
-                                             TimeSteps=om@TimeSteps)
-  
-  om@Fleet@Selectivity@Pars$L5 <- ArrayMultiply(L50, om@Fleet@Selectivity@Pars$L5)
-  om@Fleet@Selectivity@Pars$LFS <- ArrayMultiply(L50, om@Fleet@Selectivity@Pars$LFS)
-  
-  om@Fleet@Retention@Pars <- StructurePars(Pars=om@Fleet@Retention@Pars,
-                                           nsim=om@nSim, 
-                                           TimeSteps=om@TimeSteps)
-  
-  om@Fleet@Retention@Pars$LR5 <- ArrayMultiply(L50, om@Fleet@Retention@Pars$LR5)
-  om@Fleet@Retention@Pars$LFR <- ArrayMultiply(L50, om@Fleet@Retention@Pars$LFR)
+  for (st in 1:nStock) {
+    for (fl in 1:nFleet) {
+      L50 <- GetLengthClass(om@Stock[[st]]@Maturity, 0.5)
+      om@Fleet[[st]][[fl]]@Selectivity@Pars <- StructurePars(Pars=om@Fleet[[st]][[fl]]@Selectivity@Pars,
+                                                 nsim=om@nSim, 
+                                                 Years=om@Years)
+      om@Fleet[[st]][[fl]]@Selectivity@Pars$L5 <- ArrayMultiply(L50, 
+                                                                om@Fleet[[st]][[fl]]@Selectivity@Pars$L5)
+      om@Fleet[[st]][[fl]]@Selectivity@Pars$LFS <- ArrayMultiply(L50, 
+                                                                 om@Fleet[[st]][[fl]]@Selectivity@Pars$LFS)
+      om@Fleet[[st]][[fl]]@Retention@Pars <- StructurePars(Pars=om@Fleet[[st]][[fl]]@Retention@Pars,
+                                                           nsim=om@nSim, 
+                                                           Years=om@Years)
+      om@Fleet[[st]][[fl]]@Retention@Pars$LR5 <- ArrayMultiply(L50,
+                                                               om@Fleet[[st]][[fl]]@Retention@Pars$LR5)
+      om@Fleet[[st]][[fl]]@Retention@Pars$LFR <- ArrayMultiply(L50, 
+                                                               om@Fleet[[st]][[fl]]@Retention@Pars$LFR)
+    }
+  }
+
   om
 }
 
@@ -107,52 +123,75 @@ GetLengthClass <- function(object, RefValue=0.5) {
 }
 
 
-SolveForVmaxlen <- function(om) {
-  # calculates new value for Vmaxlen to correspond with maximum
+SolveForVmaxlen <- function(om, type=c('Selectivity', 'Retention')) {
+  type <- match.arg(type, c('Selectivity', 'Retention'))
+  # calculates new value for Vmaxlen/Rmaxlen to correspond with maximum
   # length bin rather than Linf, as previously defined
-  Linf <- om@Stock@Length@Pars$Linf 
-  dd <- dim(Linf)
-  L5 <- om@Fleet@Selectivity@Pars$L5
-  LFS <- om@Fleet@Selectivity@Pars$LFS
-  Vmaxlen <- om@Fleet@Selectivity@Pars$Vmaxlen
   
-  df <- rbind(dim(Linf),
-              dim(L5),
-              dim(LFS),
-              dim(Vmaxlen)
-  )
-  nsim <- max(df[,1])
+  nStock <- nStock(om)
+  nFleet <- nFleet(om)
+  StockNames <- StockNames(om)
+  FleetNames <- FleetNames(om)
   
-  timestepsList <- list(dimnames(Linf)$TimeStep,
-                        dimnames(L5)$TimeStep,
-                        dimnames(LFS)$TimeStep,
-                        dimnames(Vmaxlen)$TimeStep
-  )
-  timesteps <- timestepsList[[which.max(df[,2])]]                      
+  Var_Vmax <- switch(type, 
+                     'Selectivity'='Vmaxlen',
+                     'Retention'='Rmaxlen')
   
-  Linf <- Linf |> ArrayExpand(nsim, TimeSteps=timesteps)
-  L5 <- L5 |> ArrayExpand(nsim, TimeSteps=timesteps)
-  LFS <- LFS |> ArrayExpand(nsim, TimeSteps=timesteps)
-  Vmaxlen <- Vmaxlen |> ArrayExpand(nsim, TimeSteps=timesteps)
+  Var_L5 <- switch(type, 
+                   'Selectivity'='L5',
+                   'Retention'='LR5')
   
-  VmaxlenOut <- array(0, dim=dd)
-  dimnames(VmaxlenOut) <- dimnames(Linf)
+  Var_LFR <- switch(type, 
+                    'Selectivity'='LFS',
+                    'Retention'='LFR')
   
-  cli::cli_progress_bar('Calculating `Vmaxlen`', total=prod(dd))
-  for (s in 1:nsim) {
-    for (ts in seq_along(timesteps)) {
-      VmaxlenOut[s,ts] <- VmaxLenOpt(L5[s,ts], 
-                                     LFS[s,ts],
-                                     Vmaxlen[s, ts],
-                                     Linf[s,ts])
-      cli::cli_progress_update()
+  for (st in 1:nStock) {
+    Linf <- om@Stock[[st]]@Length@Pars$Linf 
+    dd <- prod(dim(Linf)) * nFleet
+    
+    for (fl in 1:nFleet) {
+      cli::cli_progress_bar('Calculating {.var {Var_Vmax}} for Stock: {.val {StockNames[st]}} Fleet:  {.val {FleetNames[st]}}', total=dd)
+      
+      L5 <- slot(om@Fleet[[st]][[fl]], type)@Pars[[Var_L5]]
+      LFS <- slot(om@Fleet[[st]][[fl]], type)@Pars[[Var_LFR]]
+      Vmaxlen <- slot(om@Fleet[[st]][[fl]], type)@Pars[[Var_Vmax]]
+      
+      df <- rbind(dim(Linf),
+                  dim(L5),
+                  dim(LFS),
+                  dim(Vmaxlen))
+      nsim <- max(df[,1])
+      
+      YearsList <- list(dimnames(Linf)$Year,
+                        dimnames(L5)$Year,
+                        dimnames(LFS)$Year,
+                        dimnames(Vmaxlen)$Year
+      )
+      Years <- YearsList[[which.max(df[,2])]]                      
+      
+      Linf <- Linf |> ArrayExpand(nsim, Years=Years)
+      L5 <- L5 |> ArrayExpand(nsim, Years=Years)
+      LFS <- LFS |> ArrayExpand(nsim, Years=Years)
+      Vmaxlen <- Vmaxlen |> ArrayExpand(nsim, Years=Years)
+      
+      VmaxlenOut <- array(0, dim=dim(Linf))
+      dimnames(VmaxlenOut) <- dimnames(Linf)
+      
+      for (s in 1:nsim) {
+        for (ts in seq_along(Years)) {
+          VmaxlenOut[s,ts] <- VmaxLenOpt(L5[s,ts], 
+                                         LFS[s,ts],
+                                         Vmaxlen[s, ts],
+                                         Linf[s,ts])
+          cli::cli_progress_update()
+        }
+      }
+      slot(om@Fleet[[st]][[fl]], type)@Pars[[Var_Vmax]] <- VmaxlenOut
+      cli::cli_progress_done()
     }
   }
-  cli::cli_progress_done()
-  om@Fleet@Selectivity@Pars$Vmaxlen <- VmaxlenOut
   om
 }
-
 
 VmaxLenOpt <- function(l5, lfs, vmaxlen, linf) {
   if (vmaxlen > 0.99)
@@ -166,45 +205,6 @@ VmaxLenOpt <- function(l5, lfs, vmaxlen, linf) {
   return(ilogit(opt$minimum))
 }
 
-SolveForRmaxlen <- function(om) {
-  # calculates new value for Rmaxlen  to correspond with maximum
-  # length bin rather than Linf, as previously defined
-  Linf <- om@Stock@Length@Pars$Linf
-  dd <- dim(Linf)
-  L5 <- om@Fleet@Retention@Pars$LR5
-  LFS <- om@Fleet@Retention@Pars$LFR
-  Rmaxlen <- om@Fleet@Retention@Pars$Rmaxlen
-  
-  RmaxlenOut <- array(0, dim=dd)
-  dimnames(RmaxlenOut) <- dimnames(Linf)
-  cli::cli_progress_bar('Calculating `Rmaxlen`', total=prod(dd))
-  for (s in 1:dd[1]) {
-    for (ts in 1:dd[2]) {
-      l5 <- L5[GetIndex(s, nrow(L5)), GetIndex(ts, ncol(L5))]
-      lfs <- LFS[GetIndex(s, nrow(LFS)), GetIndex(ts, ncol(LFS))]
-      linf <- Linf[GetIndex(s, nrow(Linf)), GetIndex(ts, ncol(Linf))]
-      rmaxlen <- Rmaxlen[GetIndex(s, nrow(Rmaxlen)), GetIndex(ts, ncol(Rmaxlen))]
-      
-      if (l5==0)
-        next()
-      
-      
-      if (rmaxlen==1)
-        next()
-      opt <- optimize(optForVmaxLen,
-                      interval=logit(c(0.001, 0.999)),
-                      l5=l5,
-                      lfs=lfs,
-                      linf=linf,
-                      vmaxlen=rmaxlen)
-      RmaxlenOut[s,ts] <- ilogit(opt$minimum)
-      cli::cli_progress_update()
-    }
-  }
-  cli::cli_progress_done()
-  om@Fleet@Retention@Pars$Rmaxlen <- RmaxlenOut
-  om
-}
 
 optForVmaxLen <- function(logitTrial, l5, lfs, linf, vmaxlen) {
   trial <- ilogit(logitTrial)

@@ -2,7 +2,7 @@
 #' 
 #' @export
 TACs <- function(MSE) {
-  TimeStepsDF <- TimeStepsDF(MSE)
+  YearDF <- YearDF(MSE)
   
   purrr::map(MSE@PPD, \(DataMP) 
              purrr::map(DataMP, \(DataSim) {
@@ -12,6 +12,6 @@ TACs <- function(MSE) {
     array2DF() |>
     MSEtool:::ConvertDF() |>
     dplyr::mutate(Variable='TAC') |>
-    dplyr::left_join(TimeStepsDF, by='TimeStep') |>
-    dplyr::arrange("Sim", "Stock", 'TimeStep', 'Value', 'Variable', 'Period', 'MP')
+    dplyr::left_join(YearDF, by='Year') |>
+    dplyr::arrange("Sim", "Stock", 'Year', 'Value', 'Variable', 'Period', 'MP')
 }

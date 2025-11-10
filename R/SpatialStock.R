@@ -3,7 +3,7 @@
 #'
 #' @export
 CalcMovement <- function(Spatial,
-                         TimeSteps=NULL,
+                         Years=NULL,
                          nsim=NULL,
                          seed=NULL,
                          nits=100,
@@ -22,8 +22,8 @@ CalcMovement <- function(Spatial,
 
   # add age and time-step dimensions
   Spatial@UnfishedDist  <- Spatial@UnfishedDist |>
-    AddAgeTimeStepDimensions() |>
-    AddDimNames(c('Sim', 'Area', 'Age', 'TimeStep'), TimeSteps=TimeSteps)
+    AddAgeYearDimensions() |>
+    AddDimNames(c('Sim', 'Area', 'Age', 'Year'), Years=Years)
 
   nareas <- max(2,dim(Spatial@UnfishedDist)[2])
 
@@ -40,8 +40,8 @@ CalcMovement <- function(Spatial,
       cli::cli_abort('Second and third dimensions of `FracOther` must length `nArea`')
 
     Spatial@FracOther  <- Spatial@FracOther |>
-      AddAgeTimeStepDimensions(outdim=5) |>
-      AddDimNames(c('Sim', 'FromArea', 'ToArea', 'Age', 'TimeStep'), TimeSteps=TimeSteps)
+      AddAgeYearDimensions(outdim=5) |>
+      AddDimNames(c('Sim', 'FromArea', 'ToArea', 'Age', 'Year'), Years=Years)
   }
 
   # generate stochastic values if needed
@@ -55,8 +55,8 @@ CalcMovement <- function(Spatial,
 
   # add age and time-step dimensions
   Spatial@ProbStaying  <- Spatial@ProbStaying |>
-    AddAgeTimeStepDimensions() |>
-    AddDimNames(c('Sim', 'Area', 'Age', 'TimeStep'), TimeSteps=TimeSteps)
+    AddAgeYearDimensions() |>
+    AddDimNames(c('Sim', 'Area', 'Age', 'Year'), Years=Years)
 
   dims <- lapply(list(Spatial@UnfishedDist, Spatial@ProbStaying), dim)
   if (!is.null(Spatial@FracOther)) {
@@ -73,8 +73,8 @@ CalcMovement <- function(Spatial,
                                                   nareas,
                                                   outdims[3],
                                                   outdims[4])),
-                                  c('Sim', 'FromArea', 'ToArea', 'Age', 'TimeStep'),
-                                  TimeSteps=TimeSteps)
+                                  c('Sim', 'FromArea', 'ToArea', 'Age', 'Year'),
+                                  Years=Years)
 
 
   # nasty loop for now
@@ -87,8 +87,8 @@ CalcMovement <- function(Spatial,
                                               nareas,
                                               outdims[3],
                                               outdims[4])),
-                              c('Sim', 'Area', 'Age', 'TimeStep'),
-                              TimeSteps=TimeSteps)
+                              c('Sim', 'Area', 'Age', 'Year'),
+                              Years=Years)
 
 
 

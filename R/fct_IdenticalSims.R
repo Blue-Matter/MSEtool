@@ -1,4 +1,4 @@
-IdenticalSims <- function(SimList, TimeSteps, EditSlots=TRUE) {
+IdenticalSims <- function(SimList, Years, EditSlots=TRUE) {
   
   if (is.array(SimList))
     return(IdenticalSimsArray(SimList))
@@ -7,7 +7,7 @@ IdenticalSims <- function(SimList, TimeSteps, EditSlots=TRUE) {
     return(TRUE)
 
   SimList <- purrr::map(SimList, \(List) {
-    List <-  List |> SubsetTimeStep(TimeSteps, AddPast = FALSE)
+    List <-  List |> SubsetYear(Years, AddPast = FALSE)
     if (EditSlots) 
       List <- EditSlotsForSimCheck(List)
     List
@@ -97,14 +97,14 @@ FindDiffSlots <- function(object1, object2) {
 
 # Equilibrium = ignores recruitment deviations
 CheckIdenticalSims <- function(SimList, 
-                               TimeSteps=NULL, 
+                               Years=NULL, 
                                Period=c('Historical', 'Projection', 'All'), 
                                Equilibrium=FALSE) {
   
   # Period <- match.arg(Period)
   # 
-  # if (is.null(TimeSteps))
-  #   TimeSteps <- TimeSteps(SimList[[1]]@OM, Period)
+  # if (is.null(Years))
+  #   Years <- Years(SimList[[1]]@OM, Period)
   
   Digest <- vector('character', length(SimList)) 
   

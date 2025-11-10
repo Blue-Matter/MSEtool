@@ -146,7 +146,7 @@ List CalcAggF_(arma::cube FDeadAtAgeAreaThisTS, // nAge, nFleet, nArea
 
 // [[Rcpp::export]]
 S4 CalcAggregateF_(S4 HistSimIn,
-                   Rcpp::NumericVector TimeSteps, 
+                   Rcpp::NumericVector Years, 
                    int debug=0) {
   
   S4 HistSim = clone(HistSimIn);
@@ -154,9 +154,9 @@ S4 CalcAggregateF_(S4 HistSimIn,
   List StockList = OM.slot("Stock");
   List FleetList = OM.slot("Fleet");
   
-  NumericVector TimeStepsAll = OM.slot("TimeSteps");
-  int nTS = TimeSteps.size();
-  IntegerVector MatchTS = match(TimeSteps, TimeStepsAll);
+  NumericVector YearsAll = OM.slot("Years");
+  int nTS = Years.size();
+  IntegerVector MatchTS = match(Years, YearsAll);
   
   List NumberAtAgeAreaList = HistSim.slot("Number"); // nStock
   int nStock = NumberAtAgeAreaList.size();
@@ -170,8 +170,8 @@ S4 CalcAggregateF_(S4 HistSimIn,
   List LandingsList = HistSim.slot("Landings");
   List DiscardsList =  HistSim.slot("Discards"); 
   
-  for (int timestep=0; timestep<nTS; timestep++) {
-    NumericVector TSmatch = abs(TimeStepsAll - TimeSteps[timestep]);
+  for (int Year=0; Year<nTS; Year++) {
+    NumericVector TSmatch = abs(YearsAll - Years[Year]);
     int TSindex = which_min(TSmatch);
     
     for (int st=0; st<nStock; st++) {

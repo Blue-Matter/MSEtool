@@ -1,4 +1,4 @@
-CalcMICE <- function(Hist, TimeSteps=NULL) {
+CalcMICE <- function(Hist, Years=NULL) {
   
   HistRel <- SetHistRel(Hist) 
   
@@ -8,7 +8,7 @@ CalcMICE <- function(Hist, TimeSteps=NULL) {
     # TODO
     # update all relevant at-age/length Stock and Fleet dynamics
     # based on MICE relations
-    # only for `TimeSteps` 
+    # only for `Years` 
   }
   
   

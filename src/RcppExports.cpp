@@ -45,15 +45,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // CalcAggregateF_
-S4 CalcAggregateF_(S4 HistSimIn, Rcpp::NumericVector TimeSteps, int debug);
-RcppExport SEXP _MSEtool_CalcAggregateF_(SEXP HistSimInSEXP, SEXP TimeStepsSEXP, SEXP debugSEXP) {
+S4 CalcAggregateF_(S4 HistSimIn, Rcpp::NumericVector Years, int debug);
+RcppExport SEXP _MSEtool_CalcAggregateF_(SEXP HistSimInSEXP, SEXP YearsSEXP, SEXP debugSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< S4 >::type HistSimIn(HistSimInSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Years(YearsSEXP);
     Rcpp::traits::input_parameter< int >::type debug(debugSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcAggregateF_(HistSimIn, TimeSteps, debug));
+    rcpp_result_gen = Rcpp::wrap(CalcAggregateF_(HistSimIn, Years, debug));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -70,15 +70,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // CalcCatch_
-Rcpp::S4 CalcCatch_(Rcpp::S4 HistSimIn, Rcpp::NumericVector TimeSteps, int debug);
-RcppExport SEXP _MSEtool_CalcCatch_(SEXP HistSimInSEXP, SEXP TimeStepsSEXP, SEXP debugSEXP) {
+Rcpp::S4 CalcCatch_(Rcpp::S4 HistSimIn, Rcpp::NumericVector Years, int debug);
+RcppExport SEXP _MSEtool_CalcCatch_(SEXP HistSimInSEXP, SEXP YearsSEXP, SEXP debugSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4 >::type HistSimIn(HistSimInSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Years(YearsSEXP);
     Rcpp::traits::input_parameter< int >::type debug(debugSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcCatch_(HistSimIn, TimeSteps, debug));
+    rcpp_result_gen = Rcpp::wrap(CalcCatch_(HistSimIn, Years, debug));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -223,28 +223,28 @@ BEGIN_RCPP
 END_RCPP
 }
 // PopulateNumberNext_
-S4 PopulateNumberNext_(S4 HistSimIn, NumericVector TimeStep);
-RcppExport SEXP _MSEtool_PopulateNumberNext_(SEXP HistSimInSEXP, SEXP TimeStepSEXP) {
+S4 PopulateNumberNext_(S4 HistSimIn, NumericVector Year);
+RcppExport SEXP _MSEtool_PopulateNumberNext_(SEXP HistSimInSEXP, SEXP YearSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< S4 >::type HistSimIn(HistSimInSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type TimeStep(TimeStepSEXP);
-    rcpp_result_gen = Rcpp::wrap(PopulateNumberNext_(HistSimIn, TimeStep));
+    Rcpp::traits::input_parameter< NumericVector >::type Year(YearSEXP);
+    rcpp_result_gen = Rcpp::wrap(PopulateNumberNext_(HistSimIn, Year));
     return rcpp_result_gen;
 END_RCPP
 }
 // SimulateDynamics_
-S4 SimulateDynamics_(S4 HistSimIn, Rcpp::NumericVector TimeSteps, int CalcCatch, int debug);
-RcppExport SEXP _MSEtool_SimulateDynamics_(SEXP HistSimInSEXP, SEXP TimeStepsSEXP, SEXP CalcCatchSEXP, SEXP debugSEXP) {
+S4 SimulateDynamics_(S4 HistSimIn, Rcpp::NumericVector Years, int CalcCatch, int debug);
+RcppExport SEXP _MSEtool_SimulateDynamics_(SEXP HistSimInSEXP, SEXP YearsSEXP, SEXP CalcCatchSEXP, SEXP debugSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< S4 >::type HistSimIn(HistSimInSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type TimeSteps(TimeStepsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Years(YearsSEXP);
     Rcpp::traits::input_parameter< int >::type CalcCatch(CalcCatchSEXP);
     Rcpp::traits::input_parameter< int >::type debug(debugSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulateDynamics_(HistSimIn, TimeSteps, CalcCatch, debug));
+    rcpp_result_gen = Rcpp::wrap(SimulateDynamics_(HistSimIn, Years, CalcCatch, debug));
     return rcpp_result_gen;
 END_RCPP
 }

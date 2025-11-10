@@ -1,7 +1,7 @@
-CalcRecruitment <- function(Hist, TimeStep=NULL) {
+CalcRecruitment <- function(Hist, Year=NULL) {
 
   SpawnProduction <- Hist@SProduction |> 
-    ArraySubsetTimeStep(TimeSteps=TimeStep)
+    ArraySubsetYear(Years=Year)
   
   Recruits <- vector('list', nStock(Hist@OM))
   names(Recruits) <- StockNames(Hist@OM)
@@ -10,19 +10,19 @@ CalcRecruitment <- function(Hist, TimeStep=NULL) {
     fun <- Hist@OM@Stock[[st]]@SRR@Model
 
     SRRPars <- purrr::map(Hist@OM@Stock[[st]]@SRR@Pars,
-                          ArraySubsetTimeStep,
-                          TimeSteps=TimeStep)
+                          ArraySubsetYear,
+                          Years=Year)
 
 
     S0 <- Hist@Unfished@Equilibrium@SProduction[,st,,drop=FALSE] |>
-      apply(c('Sim', 'TimeStep'), sum) |>
-      ArraySubsetTimeStep(TimeSteps=TimeStep)
+      apply(c('Sim', 'Year'), sum) |>
+      ArraySubsetYear(Years=Year)
 
     R0 <- Hist@OM@Stock[[st]]@SRR@R0 |>
-      ArraySubsetTimeStep(TimeSteps=TimeStep)
+      ArraySubsetYear(Years=Year)
 
     S <- apply(SpawnProduction[,st,, drop=FALSE],
-               c('Sim', 'TimeStep'),
+               c('Sim', 'Year'),
                sum)
 
     Arglist <- c(list(S=S,
@@ -32,7 +32,7 @@ CalcRecruitment <- function(Hist, TimeStep=NULL) {
 
     RecruitEq <- RunSRRfunction(fun, Arglist)
     RecDev <- Hist@OM@Stock[[st]]@SRR@RecDevHist |> 
-      ArraySubsetTimeStep(TimeSteps=TimeStep)
+      ArraySubsetYear(Years=Year)
     
     Recruit <- ArrayMultiply(RecruitEq, RecDev) |>
       AddDimension('Age', val=0) |>
@@ -40,7 +40,7 @@ CalcRecruitment <- function(Hist, TimeStep=NULL) {
       aperm(c(1,3,2,4))
 
     R0Dist <- Hist@OM@Stock[[st]]@Spatial@UnfishedDist |>
-      ArraySubsetTimeStep(TimeSteps=TimeStep)
+      ArraySubsetYear(Years=Year)
 
     if (!is.null(R0Dist)) {
       # distributr R0
@@ -59,7 +59,7 @@ CalcRecruitment <- function(Hist, TimeStep=NULL) {
 RunSRRfunction <- function(fun, Arglist) {
   dnames <- lapply(Arglist, dimnames)
   SimsList <- lapply(dnames, '[[', 'Sim') 
-  TSList <- lapply(dnames, '[[', 'TimeStep')
+  TSList <- lapply(dnames, '[[', 'Year')
   Sims <- lapply(SimsList, as.numeric) |> unlist() |> unique() |> sort()
   MaxSims <- length(Sims)
   TSs <- lapply(TSList, as.numeric) |> unlist() |> unique() |> sort()
@@ -67,7 +67,7 @@ RunSRRfunction <- function(fun, Arglist) {
   
   Recruit <- array(NA, dim=c(MaxSims, MaxTS),
                    dimnames = list(Sim=Sims,
-                                   TimeStep= TSs)
+                                   Year= TSs)
   )
   
   for (sim in 1:MaxSims) {
@@ -78,7 +78,7 @@ RunSRRfunction <- function(fun, Arglist) {
       for (arg in seq_along(Arglist2)) {
         Arglist2[[arg]] <- Arglist2[[arg]] |>
           ArraySubsetSim(Sim) |>
-          ArraySubsetTimeStep(TS)
+          ArraySubsetYear(TS)
       }
       Recruit[sim, ts] <- do.call(fun, Arglist2)
       

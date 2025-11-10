@@ -1,4 +1,4 @@
-CheckDepletionOpt <- function(SimList, HistTimeSteps) {
+CheckDepletionOpt <- function(SimList, HistYears) {
   OptRatio <- purrr::map(SimList, \(HistSim){
     Reference <- purrr::map(HistSim@OM@Stock, \(stock) stock@Depletion@Reference)
     Final <- purrr::map(HistSim@OM@Stock, \(stock) stock@Depletion@Final)
@@ -10,7 +10,7 @@ CheckDepletionOpt <- function(SimList, HistTimeSteps) {
           next()
       if (Reference[[st]] == 'B0') {
         RefVal <- HistSim@Unfished@Equilibrium@Biomass |> 
-          ArraySubsetTimeStep(tail(HistTimeSteps,1)) |>
+          ArraySubsetYear(tail(HistYears,1)) |>
           tail(1) |> Array2List(1)
         RefVal <- RefVal[[st]]
         
@@ -18,7 +18,7 @@ CheckDepletionOpt <- function(SimList, HistTimeSteps) {
         
       } else if (Reference[[st]] == 'SB0') {
         RefVal <- HistSim@Unfished@Equilibrium@SBiomass |> 
-          ArraySubsetTimeStep(tail(HistTimeSteps,1)) |>
+          ArraySubsetYear(tail(HistYears,1)) |>
           tail(1) |> Array2List(1)
         RefVal <- RefVal[[st]]
         CurrVal <- HistSim@SBiomass[st,] |> tail(1)

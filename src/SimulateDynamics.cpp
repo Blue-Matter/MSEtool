@@ -21,7 +21,7 @@ using namespace Rcpp;
 //'
 // [[Rcpp::export]]
 S4 SimulateDynamics_(S4 HistSimIn, 
-                       Rcpp::NumericVector TimeSteps,
+                       Rcpp::NumericVector Years,
                        int CalcCatch = 1,
                        int debug = 0) {
   
@@ -30,9 +30,9 @@ S4 SimulateDynamics_(S4 HistSimIn,
   List StockList = OM.slot("Stock");
   List FleetList = OM.slot("Fleet");
   
-  NumericVector TimeStepsAll = OM.slot("TimeSteps");
-  int nTS = TimeSteps.size();
-  IntegerVector MatchTS = match(TimeSteps, TimeStepsAll);
+  NumericVector YearsAll = OM.slot("Years");
+  int nTS = Years.size();
+  IntegerVector MatchTS = match(Years, YearsAll);
   
   List NumberAtAgeAreaList = HistSim.slot("Number"); // nStock
   arma::mat Biomass = HistSim.slot("Biomass"); // nStock, nTS
@@ -51,12 +51,12 @@ S4 SimulateDynamics_(S4 HistSimIn,
   arma::mat SP0 = UnfishedEquilibrium.slot("SProduction"); // nStock, nTS
   
   for (int timestep=0; timestep<nTS; timestep++) {
-    NumericVector TSmatch = abs(TimeStepsAll - TimeSteps[timestep]);
+    NumericVector TSmatch = abs(YearsAll - Years[timestep]);
     int TSindex = MatchTS[timestep] -1;
 
     if (debug) {
-      Rcout << "\n\nTimestep = " << TimeSteps[timestep] << std::endl;
-      // Rcout << "TimeStepsAll = " << TimeStepsAll << std::endl;
+      Rcout << "\n\nTimestep = " << Years[timestep] << std::endl;
+      // Rcout << "YearsAll = " << YearsAll << std::endl;
       // Rcout << "MatchTS = " << MatchTS << std::endl;
       // Rcout << "TSmatch = " << TSmatch << std::endl;
       // Rcout << "timestep = " << timestep << std::endl;
@@ -94,7 +94,7 @@ S4 SimulateDynamics_(S4 HistSimIn,
       
       arma::mat Catchability = Fleet.slot("Catchability"); // nTS, nFleet
       arma::cube qArea = Fleet.slot("qArea"); // nTS, nFleet, nArea
-      arma::cube Distribution = DistributionList[st]; // TimeStep, Fleet, Area 
+      arma::cube Distribution = DistributionList[st]; // Year, Fleet, Area 
      
       S4 Selectivity = Fleet.slot("Selectivity");
       arma::cube SelectivityAtAge = Selectivity.slot("MeanAtAge"); // nAge, nTS, nFleet
@@ -364,8 +364,8 @@ S4 SimulateDynamics_(S4 HistSimIn,
   
   // CalcCatch and overall F
   if (CalcCatch>0) {
-    HistSim = CalcCatch_(HistSim, TimeSteps, debug);
-    HistSim = CalcAggregateF_(HistSim, TimeSteps, debug);
+    HistSim = CalcCatch_(HistSim, Years, debug);
+    HistSim = CalcAggregateF_(HistSim, Years, debug);
   }
   
   

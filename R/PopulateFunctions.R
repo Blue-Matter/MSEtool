@@ -83,7 +83,7 @@ CheckRequiredObject <- function(object, class, argName=NULL) {
   NULL
 }
 
-PopulateMeanAtAge <- function(object, Ages=NULL, TimeSteps=NULL, Length=NULL) {
+PopulateMeanAtAge <- function(object, Ages=NULL, Years=NULL, Length=NULL) {
   
   if (!is.null(object@MeanAtAge)) {
     object@MeanAtAge <- Structure(object@MeanAtAge)
@@ -91,7 +91,7 @@ PopulateMeanAtAge <- function(object, Ages=NULL, TimeSteps=NULL, Length=NULL) {
       dd <- dim(object@MeanAtAge)
       dimnames(object@MeanAtAge) <- list(Sim=1:dd[1],
                                          Age=Ages@Classes[1:dd[2]],
-                                         TimeStep=TimeSteps[1:dd[3]])
+                                         Year=Years[1:dd[3]])
     }
     
     return(object)
@@ -109,7 +109,7 @@ PopulateMeanAtAge <- function(object, Ages=NULL, TimeSteps=NULL, Length=NULL) {
       # chk <- Check(Length)
       # if(!chk@populated) {
       #   CheckRequiredObject(Ages, 'ages', 'Ages')
-      #   Length <- Populate(Length, Ages, nsim, TimeSteps, seed, ASK=TRUE, silent)
+      #   Length <- Populate(Length, Ages, nsim, Years, seed, ASK=TRUE, silent)
       # }
       object@MeanAtAge <- GenerateMeanatLength(Model=object@Model,
                                                Pars=object@Pars,
@@ -130,14 +130,14 @@ PopulateMeanAtAge <- function(object, Ages=NULL, TimeSteps=NULL, Length=NULL) {
     dd <- dim(object@MeanAtAge)
     dimnames(object@MeanAtAge) <- list(Sim=1:dd[1],
                                        Age=Ages@Classes[1:dd[2]],
-                                       TimeStep=TimeSteps[1:dd[3]])
+                                       Year=Years[1:dd[3]])
   }
   object
 }
 
 PopulateMeanAtLength <- function(object, 
                                  Length=NULL, 
-                                 TimeSteps=NULL, 
+                                 Years=NULL, 
                                  Ages=NULL, 
                                  nsim=NULL,
                                  seed=NULL, silent) {
@@ -163,7 +163,7 @@ PopulateMeanAtLength <- function(object,
       # chk <- Check(Length)
       # if(!chk@populated) {
       #   CheckRequiredObject(Ages, 'ages', 'Ages')
-      #   Length <- Populate(Length, Ages, nsim, TimeSteps, seed, ASK=TRUE, silent)
+      #   Length <- Populate(Length, Ages, nsim, Years, seed, ASK=TRUE, silent)
       # }
     }
     object@MeanAtLength <- GenerateMeanatLength(Model=object@Model,
@@ -175,24 +175,24 @@ PopulateMeanAtLength <- function(object,
     dd <- dim(object@MeanAtLength)
     dimnames(object@MeanAtLength) <- list(Sim=1:dd[1],
                                           Class=Length@Classes,
-                                          TimeStep=TimeSteps[1:dd[3]])
+                                          Year=Years[1:dd[3]])
     
     
   #   if ('Units' %in% slotNames(object))
   #     attributes(object@MeanAtLength)$Units <- object@Units
-  #   attributes(object@MeanAtLength)$TimeSteps <- TimeSteps
+  #   attributes(object@MeanAtLength)$Years <- Years
   #   if (methods::is(Length, 'length')) {
   #     attributes(object@MeanAtLength)$LengthClasses <- Length@Classes
   #     attributes(object@MeanAtLength)$UnitsLength <- Length@Units
   #   }
-  #   object@MeanAtLength <- AddDimNames(object@MeanAtLength, c('Sim', 'Class', 'TimeStep'), TimeSteps)
+  #   object@MeanAtLength <- AddDimNames(object@MeanAtLength, c('Sim', 'Class', 'Year'), Years)
   }
   object
 }
 
 PopulateMeanAtWeight <- function(object, 
                                  Weight=NULL, 
-                                 TimeSteps=NULL, 
+                                 Years=NULL, 
                                  Ages=NULL, 
                                  nsim=NULL,
                                  seed=NULL, silent) {
@@ -218,7 +218,7 @@ PopulateMeanAtWeight <- function(object,
       # chk <- Check(Length)
       # if(!chk@populated) {
         # CheckRequiredObject(Ages, 'ages', 'Ages')
-        # Weight <- Populate(Weight, Ages, nsim, TimeSteps, seed, ASK=TRUE, silent)
+        # Weight <- Populate(Weight, Ages, nsim, Years, seed, ASK=TRUE, silent)
       # }
     }
     object@MeanAtWeight <- GenerateMeanatWeight(Model=object@Model,
@@ -229,11 +229,11 @@ PopulateMeanAtWeight <- function(object,
     
     # if ('Units' %in% slotNames(object))
     #   attributes(object@MeanAtWeight)$Units <- object@Units
-    # attributes(object@MeanAtWeight)$TimeSteps <- TimeSteps
+    # attributes(object@MeanAtWeight)$Years <- Years
     dd <- dim(object@MeanAtWeight)
     dimnames(object@MeanAtWeight) <- list(Sim=1:dd[1],
                                           Class=Weight@Classes,
-                                          TimeStep=TimeSteps[1:dd[3]])
+                                          Year=Years[1:dd[3]])
       
     
     
@@ -377,7 +377,7 @@ PopulateClasses <- function(object) {
   object
 }
 
-PopulateASK <- function(object, Ages=NULL, TimeSteps=NULL, silent=FALSE, type='Length') {
+PopulateASK <- function(object, Ages=NULL, Years=NULL, silent=FALSE, type='Length') {
   
   CheckRequiredObject(Ages, 'ages', 'Ages')
   if ('Timing' %in% slotNames(object)) {
@@ -395,15 +395,15 @@ PopulateASK <- function(object, Ages=NULL, TimeSteps=NULL, silent=FALSE, type='L
                                silent=silent, type=type)
   
 
-  timesteps <- c(dimnames(MeanAtAge)$TimeStep,
-                 dimnames(CVatAge)$TimeStep) |> unique() |> sort()
+  Years <- c(dimnames(MeanAtAge)$Year,
+                 dimnames(CVatAge)$Year) |> unique() |> sort()
   
   dd <- dim(object@ASK)
   if (is.null(  dimnames(object@ASK))) {
     dimnames(object@ASK) <- list(Sim=1:dd[1],
                                  Age=Ages@Classes,
                                  Class=Classes,
-                                 TimeStep=timesteps)
+                                 Year=Years)
   }
  
   object
@@ -411,7 +411,7 @@ PopulateASK <- function(object, Ages=NULL, TimeSteps=NULL, silent=FALSE, type='L
 
 
 CalcUnfishedDist <- function(Spatial,
-                             TimeSteps=NULL,
+                             Years=NULL,
                              plot=FALSE,
                              nits=100) {
   dims <- dim(Spatial@Movement)
@@ -421,8 +421,8 @@ CalcUnfishedDist <- function(Spatial,
                                               dims[2],
                                               dims[4],
                                               dims[5])),
-                              c('Sim', 'Area', 'Age', 'TimeStep'),
-                              TimeSteps=TimeSteps)
+                              c('Sim', 'Area', 'Age', 'Year'),
+                              Years=Years)
   for (s in 1:dims[1]) {
     for (ts in 1:dims[5]) {
       for (age in 1:dims[4]) {
@@ -449,7 +449,7 @@ CheckSelectivityMaximum <- function(MeanAtAge) {
   sims <- which(apply(ind,1, sum)>0) |> cli::cli_vec(list("vec-trunc" = 5))
   TSs <- which(apply(ind, 2, sum)>0) |> cli::cli_vec(list("vec-trunc" = 5))
   
-  cli::cli_alert('Simulations {.val {sims}}; TimeSteps {.val {TSs}}')
+  cli::cli_alert('Simulations {.val {sims}}; Years {.val {TSs}}')
   
   for (i in 1:nrow(ind)) {
     for (j in 1:ncol(ind)) {
@@ -465,12 +465,12 @@ CheckSelectivityMaximum <- function(MeanAtAge) {
 
 
 
-GenerateHistoricalEffort <- function(Effort, nsim=NULL, TimeSteps=NULL) {
+GenerateHistoricalEffort <- function(Effort, nsim=NULL, Years=NULL) {
   if (!methods::is(Effort, 'data.frame'))
     cli::cli_abort('`Effort` must be a data.frame')
   
-  if (!all(names(Effort) %in% c("TimeStep", "Lower", "Upper", "CV" )))
-    cli::cli_abort('`Effort` must be a data.frame with columns: "TimeStep", "Lower", "Upper", "CV" ')
+  if (!all(names(Effort) %in% c("Year", "Lower", "Upper", "CV" )))
+    cli::cli_abort('`Effort` must be a data.frame with columns: "Year", "Lower", "Upper", "CV" ')
   
   if (is.null(nsim)) {
     cli::cli_warn('`nsim` not specified, assuming `nsim=100`')
@@ -478,56 +478,56 @@ GenerateHistoricalEffort <- function(Effort, nsim=NULL, TimeSteps=NULL) {
   }
   
   
-  if (is.null(TimeSteps)) {
-    cli::cli_warn('`TimeSteps` not specified, assuming last time step is: {.val {max(Effort$TimeStep)}}')
-    TimeSteps <- 1:max(Effort$TimeStep)
+  if (is.null(Years)) {
+    cli::cli_warn('`Years` not specified, assuming last time step is: {.val {max(Effort$Year)}}')
+    Years <- 1:max(Effort$Year)
   }
   
-  if (all(Effort$TimeStep< 1000)) {
-    chk <- max(Effort$TimeStep) %in% seq_along(TimeSteps)  
+  if (all(Effort$Year< 1000)) {
+    chk <- max(Effort$Year) %in% seq_along(Years)  
     if (!chk)
-      cli::cli_abort('`max(Effort$TimeStep)` ({.val {max(Effort$TimeStep)}})')
+      cli::cli_abort('`max(Effort$Year)` ({.val {max(Effort$Year)}})')
   } else {
-    chk <- max(Effort$TimeStep) %in% TimeSteps
+    chk <- max(Effort$Year) %in% Years
     if (!chk)
-      cli::cli_abort('`max(Effort$TimeStep)` ({.val {max(Effort$TimeStep)}})')
+      cli::cli_abort('`max(Effort$Year)` ({.val {max(Effort$Year)}})')
   }
   
-  nTimeSteps <- length(TimeSteps)
+  nYears <- length(Years)
   
   EffortPoints <- mapply(runif, n = nsim, min = Effort$Lower, max = Effort$Upper)  # sample Effort
   if (nsim>1) {
     EffortTS <- t(sapply(1:nsim, function(x) 
-      approx(x = Effort$TimeStep,
+      approx(x = Effort$Year,
              y = EffortPoints[x, ], 
              method = "linear", 
-             n = nTimeSteps)$y)
+             n = nYears)$y)
     )
   } else {
-    EffortTS <- approx(x = Effort$TimeStep,
+    EffortTS <- approx(x = Effort$Year,
                        y = EffortPoints,
                        method = "linear", 
-                       n = nTimeSteps)$y
+                       n = nYears)$y
   }
   
   Esd <- Effort$CV[1]
   if (!is.null(Esd)) {
     Emu <- -0.5 * Esd^2
-    EffortError <- array(exp(rnorm(nTimeSteps * nsim, rep(Emu, nTimeSteps), 
-                                   rep(Esd, nTimeSteps))), 
-                         c(nsim, nTimeSteps))  
+    EffortError <- array(exp(rnorm(nYears * nsim, rep(Emu, nYears), 
+                                   rep(Esd, nYears))), 
+                         c(nsim, nYears))  
     EffortTS <- EffortTS * EffortError
   }
-  EffortTS <- EffortTS |> AddDimNames(names=c('Sim', 'TimeStep'), 
-                                      TimeSteps = TimeSteps)
+  EffortTS <- EffortTS |> AddDimNames(names=c('Sim', 'Year'), 
+                                      Years = Years)
   
-  EffortTS/matrix(EffortTS[,nTimeSteps], nsim, nTimeSteps, byrow=FALSE)
+  EffortTS/matrix(EffortTS[,nYears], nsim, nYears, byrow=FALSE)
 }
 
 
 
 
-MeanAtLength2MeanAtAge <- function(object, Length, Ages, nsim, TimeSteps, seed, silent,
+MeanAtLength2MeanAtAge <- function(object, Length, Ages, nsim, Years, seed, silent,
                                    max1=TRUE) {
   if (!is.null(object@MeanAtAge))
     return(object)
@@ -544,7 +544,7 @@ MeanAtLength2MeanAtAge <- function(object, Length, Ages, nsim, TimeSteps, seed, 
                               dimnames = list(
                                 Sim=1,
                                 Age=Ages@Classes,
-                                TimeStep=TimeSteps[1]
+                                Year=Years[1]
                               ))
     return(object)
   }
@@ -571,7 +571,7 @@ MeanAtLength2MeanAtAge <- function(object, Length, Ages, nsim, TimeSteps, seed, 
   object
 }
 
-MeanAtWeight2MeanAtAge <- function(object, Weight, Ages, nsim, TimeSteps, seed, silent,
+MeanAtWeight2MeanAtAge <- function(object, Weight, Ages, nsim, Years, seed, silent,
                                    max1=TRUE) {
   if (!is.null(object@MeanAtAge))
     return(object)
@@ -583,7 +583,7 @@ MeanAtWeight2MeanAtAge <- function(object, Weight, Ages, nsim, TimeSteps, seed, 
     return(object)
   
   object@MeanAtAge <- AtSize2AtAge(object, Weight) |>
-    AddDimNames(TimeSteps=TimeSteps)
+    AddDimNames(Years=Years)
   
   if ('Units' %in% slotNames(object))
     attributes(object@MeanAtAge)$Units <- object@Units
@@ -605,7 +605,7 @@ MeanAtWeight2MeanAtAge <- function(object, Weight, Ages, nsim, TimeSteps, seed, 
   object
 }
 
-MeanAtAge2MeanAtLength <- function(object, Length, Ages, nsim, TimeSteps, seed=NULL, silent=TRUE, replace=FALSE) {
+MeanAtAge2MeanAtLength <- function(object, Length, Ages, nsim, Years, seed=NULL, silent=TRUE, replace=FALSE) {
   
   if (!is.null(object@MeanAtLength) & !replace)
     return(object)
@@ -621,14 +621,14 @@ MeanAtAge2MeanAtLength <- function(object, Length, Ages, nsim, TimeSteps, seed=N
     return(object)
   
   if (is.null(Length@ASK)) {
-    Length <- PopulateLength(Length, Ages, nsim, TimeSteps, seed, ASK=TRUE, silent)
+    Length <- PopulateLength(Length, Ages, nsim, Years, seed, ASK=TRUE, silent)
   }
   
   object@MeanAtLength <- AtAge2AtSize(object, Length)
   
   if ('Units' %in% slotNames(object))
     attributes(object@MeanAtLength)$Units <- object@Units
-  attributes(object@MeanAtLength)$TimeSteps <- TimeSteps
+  attributes(object@MeanAtLength)$Years <- Years
   
   attributes(object@MeanAtLength)$ClassesLength <- Length@Classes
   attributes(object@MeanAtLength)$UnitsLength <- Length@Units
@@ -639,7 +639,7 @@ MeanAtAge2MeanAtLength <- function(object, Length, Ages, nsim, TimeSteps, seed=N
   
 }
 
-MeanAtAge2MeanAtWeight <- function(object, Weight, Ages, nsim, TimeSteps, seed, silent) {
+MeanAtAge2MeanAtWeight <- function(object, Weight, Ages, nsim, Years, seed, silent) {
   if (!is.null(object@MeanAtLength))
     return(object)
   
@@ -660,7 +660,7 @@ MeanAtAge2MeanAtWeight <- function(object, Weight, Ages, nsim, TimeSteps, seed, 
   
   if ('Units' %in% slotNames(object))
     attributes(object@MeanAtLength)$Units <- object@Units
-  attributes(object@MeanAtLength)$TimeSteps <- TimeSteps
+  attributes(object@MeanAtLength)$Years <- Years
   
   # attributes(object@MeanAtLength)$ClassesLength <- Length@Classes
   # attributes(object@MeanAtLength)$UnitsLength <- Length@Units
@@ -670,286 +670,3 @@ MeanAtAge2MeanAtWeight <- function(object, Weight, Ages, nsim, TimeSteps, seed, 
   
 }
 
-
-AtSize2AtAge <- function(object, Length) {
-  # OBJ <<- object
-  # LEN <<- Length
-  
-  if (inherits(Length, 'length')) {
-    MeanAtSize <- object@MeanAtLength
-  } else if (inherits(Length, 'weight')) {
-    MeanAtSize <- object@MeanAtWeight
-  } else {
-    cli::abort("`Length` must be an object of class `length` or `weight`")
-  }
-  
-  ASK <- Length@ASK
-  if (is.null(ASK)) 
-    cli::cli_abort("`Length@ASK` is not populated", .internal=TRUE)
-  dim_MeanAtSize <- dim(MeanAtSize)
-  dim_ASK <- dim(ASK)
-
-  DNames <- names(dimnames(Length@MeanAtAge))
-  bySim <- TRUE
-  if ("Sim" %in% DNames) {
-    nage <- dim_ASK[2]
-    nClasses <- dim_ASK[3]
-    
-    nsim_MeanAtSize <- dim_MeanAtSize[1]
-    nTS_MeanAtSize <- dim_MeanAtSize[3]
-    
-    nsim_ASK <- dim_ASK[1]
-    nTS_ASK <- dim_ASK[4]
-    
-    nsim <- max(nsim_MeanAtSize, nsim_ASK) # maximum number of simulations
-    nTS <- max(nTS_MeanAtSize, nTS_ASK) # maximum number of time-steps
-  } else {
-    bySim <- FALSE
-    
-    nage <- dim_ASK[1]
-    nClasses <- dim_ASK[2]
-    
-    nsim_ASK <- 1
-    nsim_MeanAtSize <- 1
-    nsim <- 1
-    
-    nTS_ASK <- 1
-    nTS_MeanAtSize <- 1
-    nTS <- dim_MeanAtSize[3]
-  }
-  
-  AtAge <- array(0, dim=c(nsim, nage, nTS))
-  for (s in 1:nsim) {
-    for (t in 1:nTS) {
-      MeanAtSize_ts <- MeanAtSize[GetIndex(s, nsim_MeanAtSize), ,GetIndex(t, nTS_MeanAtSize)]
-      if (all(MeanAtSize_ts>0.99)) {
-        AtAge[s,,t] <- 1
-      } else {
-        if (bySim) {
-          ASK_ts <- ASK[GetIndex(s, nsim_ASK),,,GetIndex(t, nTS_ASK)]
-          AtAge[s,,t] <- MeanAtSize_ts %*%t(ASK_ts)
-        } else {
-          ASK_ts <- ASK[,,GetIndex(t, nTS_ASK)]
-          AtAge[s,,t] <- (MeanAtSize_ts %*%t(ASK_ts))[1,]
-        }
-      }
-    }
-  }
-  dd <- dim(AtAge)
-  
-  MeanAtSizeDNAmes <- MeanAtSize |> dimnames() |> names()
-  LengthASKDNAmes <- Length@ASK |> dimnames() |> names()
-  
-  ind1 <- which(MeanAtSizeDNAmes == 'TimeStep')
-  ind2 <- which(LengthASKDNAmes == 'TimeStep')
-  
-  TSnames <- c(dimnames(MeanAtSize)[[ind1]],
-               dimnames(Length@ASK)[[ind2]]) |>
-    unique() |>
-    sort()
-
-  AgeInd <- which(names(dimnames(Length@MeanAtAge))=='Age')
-  dimnames(AtAge) <- list(Sim=1:dd[1],
-                          Age=dimnames(Length@MeanAtAge)[[AgeInd]],
-                          TimeStep=TSnames)
-  AtAge
-}
-
-AtAge2AtSize <- function(object, Length, max1=TRUE) {
-  
-  MeanAtAge <- object@MeanAtAge
-  ASK <- Length@ASK 
-  AgeDim <- which(names(dimnames(MeanAtAge)) == "Age")
-  nAgeClasses <- dim(MeanAtAge)[AgeDim]
-
-  BySim <- 'Sim' %in% names(dimnames(ASK))
-  
-  
-  if (dim(MeanAtAge)[AgeDim]<30) { # arbitrary number!
-    # Generate higher resolution length-at-age
-    # linear interpolate Mean length-at-age and CV length-at-age
-    # for 11 time-steps in-between (e.g., months)
-    dims  <- rbind(dim(Length@MeanAtAge),
-                   dim(Length@CVatAge),
-                   dim(MeanAtAge)
-    )
-    dd <- apply(dims, 2, max)
-    
-    nSubAges <- 12
-    SubAgeDim <- (dd[2]*nSubAges)-(nSubAges-1)
-    
-    objectMeanAtAge <- array(0, dim=c(dd[1], SubAgeDim, dd[3]))
-    LengthMeanAtAge <- array(0, dim=c(dd[1], SubAgeDim, dd[3]))
-    LengthCVatAge <- array(0, dim=c(dd[1], SubAgeDim, dd[3]))
-    
-    dname1 <- dimnames(Length@MeanAtAge)
-    ages <- as.numeric(dname1[["Age"]])
-    dname1[["Age"]] <- seq(from=ages[1], to=ages[length(ages)], length.out=SubAgeDim)
-    
-    TSteps <- c(dimnames(MeanAtAge)[[3]], dimnames(Length@MeanAtAge)[[3]]) |> unique() |> sort()
-    dname1[["TimeStep"]] <- TSteps
-    
-    dname1$Sim <- 1:dd[1]
-    dimnames(LengthMeanAtAge) <- dname1
-    
-    Length@CVatAge <- ArrayExpand(Length@CVatAge, dd[1], dd[2], dname1[["TimeStep"]])
-    dname1 <- dimnames(Length@CVatAge)
-    dname1[["Age"]] <- seq(from=ages[1], to=ages[length(ages)], length.out=SubAgeDim)
-    TSteps <- c(dimnames(MeanAtAge)[[3]], dimnames(Length@CVatAge)[[3]]) |> unique() |> sort()
-    dname1[["TimeStep"]] <- TSteps
-    
-    dimnames(LengthCVatAge) <- dname1
-  
-    ind <- seq(from=1, by=nSubAges, to=dim(LengthMeanAtAge)[2])
-    
-    MeanAtAge <-ArrayExpand(MeanAtAge, dd[1], nAges=dd[2], TimeSteps=TSteps)
-    
-    objectMeanAtAge[,ind,] <- MeanAtAge[]
-    LengthMeanAtAge[,ind,] <- Length@MeanAtAge[]
-    LengthCVatAge[,ind,] <- Length@CVatAge[]
-    
-    dims  <- rbind(dim(Length@MeanAtAge),
-                   dim(Length@CVatAge),
-                   dim(MeanAtAge)
-    )
-    
-    for (i in 1:(length(ind)-1)) {
-      ind2 <- c(ind[i], ind[i]+12)
-      ind3 <- (ind2[1]+1): (ind2[2]-1)
-      
-      # silly loop for now!
-      for (s in 1:max(dims[,1])) {
-        for (ts in 1:max(dims[,3])) {
-          
-          # Linear interpolate at-Age schedule
-          temp <- approx(ind2, 
-                         MeanAtAge[GetIndex(s, dims[1,1]),i:(i+1), GetIndex(s, dims[1,3])],
-                         xout=ind3)
-          objectMeanAtAge[s,ind3,ts] <- temp$y
-          
-          # Linear interpolate growth curve
-          temp <- approx(ind2, Length@MeanAtAge[GetIndex(s, dims[1,1]),
-                                                i:(i+1),
-                                                GetIndex(s, dims[1,3])],
-                         xout=ind3)
-          
-          LengthMeanAtAge[s,ind3,ts] <- temp$y
-          
-          
-          
-          if (dims[2,2]==1) {
-            LengthCVatAge[s,,ts] <- Length@CVatAge[GetIndex(s, dims[2,1]),,
-                                                   GetIndex(s, dims[2,3])]
-          } else {
-            temp <- approx(ind2, Length@CVatAge[GetIndex(s, dims[2,1]),
-                                                i:(i+1),
-                                                GetIndex(s, dims[2,3])],
-                           xout=ind3)
-            LengthCVatAge[s,ind3,ts] <- temp$y
-          }
-        }
-      }
-    }
-    
-    # generate a new age-size key with finer temporal resolution
-    ASK <- CalcAgeSizeKey(MeanAtAge=LengthMeanAtAge,
-                          CVatAge=LengthCVatAge,
-                          Classes=Length@Classes,
-                          TruncSD=Length@TruncSD,
-                          Dist=Length@Dist,
-                          Ages=NULL,
-                          silent=TRUE)
-    
-    MeanAtAge <- objectMeanAtAge
-    dimnames(MeanAtAge) <- dname1
-    
-  }
-  
-  dim_MeanAtAge <- dim(MeanAtAge)
-  dim_ASK <- dim(ASK)
-  nage <- dim_ASK[2]
-  nClasses <- dim_ASK[3]
-  
-  if (dim_MeanAtAge[2] != dim_ASK[2])
-    cli::cli_abort('`dim(MeanAtAge)[2] != dim(ASK)[2]`')
-  
-  nsim_MeanAtAge <- dim_MeanAtAge[1]
-  nTS_MeanAtAge <- dim_MeanAtAge[3]
-  
-  nsim_ASK <- dim_ASK[1]
-  nTS_ASK <- dim_ASK[4]
-  
-  nsim <- max(nsim_MeanAtAge, nsim_ASK) # maximum number of simulations
-  nTS <- max(nTS_MeanAtAge, nTS_ASK) # maximum number of time-steps
-  
-  AtSize <- array(0, dim=c(nsim, nClasses, nTS))
-  
-  for (s in 1:nsim) {
-    for (t in 1:nTS) {
-      MeanAtAge_ts <- MeanAtAge[GetIndex(s, nsim_MeanAtAge), ,GetIndex(t, nTS_MeanAtAge)]
-      ASK_ts <- ASK[GetIndex(s, nsim_ASK),,,GetIndex(t, nTS_ASK)]
-      ASK_tsvec <- apply(ASK_ts, 2, sum)
-      ind <- max(which(ASK_tsvec>0))
-      
-      
-      sums <- matrix(apply(ASK_ts, 2, sum), nage, nClasses, byrow=TRUE)
-      ASK_ts_stand <- ASK_ts/sums
-      ASK_ts_stand[!is.finite(ASK_ts_stand)] <- 0
-      AtSize[s,,t] <- MeanAtAge_ts %*% ASK_ts_stand
-      if (max1)
-        AtSize[s,ind:ncol(ASK_ts),t] <- 1
-    }
-  }
-  
-  dimnames(AtSize) <- list(Sim=1:nsim,
-                           Class=Length@Classes,
-                           TimeStep=dimnames(MeanAtAge)[["TimeStep"]][1:nTS])
-  AtSize 
-}
-
-ProcessCatchFrac <- function(object) {
-  if (length(object@CatchFrac)<1) {
-    object@CatchFrac <- MakeNamedList(StockNames(object))
-  }
-    
-  nStock <- nStock(object)
-  nFleet <- nFleet(object)
-  nSim <- nSim(object)
-  
-  names(object@CatchFrac) <- StockNames(object)
-  
-  if (length(object@CatchFrac)!= nStock)
-    cli::cli_abort('`OM@CatchFrac` must be a list length 0 or length `nStock(OM)` ')
-  
-  for (st in 1:nStock) {
-    CatchFracFleet <- object@CatchFrac[[st]]
-    if (is.null(CatchFracFleet)) {
-      CatchFracFleet <- matrix(1/nFleet, nSim, nFleet)
-      if (nFleet>1) 
-        cli::cli_alert_warning("`OM@CatchFrac` must be specified if there are multiple fleets... ")
-        
-    } 
-    dd <- dim(CatchFracFleet)
-   
-    if (dd[1]>nSim)
-      cli::cli_abort('`OM@CatchFrac` must be a list length `nStock(OM)` with a `nSim` by `nFleet` matrix  for each stock')
-      
-    if (dd[2]!=nFleet)
-      cli::cli_abort('`OM@CatchFrac` must be a list length `nStock(OM)` with a `nSim` by `nFleet` matrix  for each stock')
-    
-    if (any(CatchFracFleet<0) || any(!is.finite(CatchFracFleet)))
-      cli::cli_abort('Values in `OM@CatchFrac` must be positive')
-    
-    rsum <- rowSums(CatchFracFleet)
-    if (any(rsum!=1))
-      cli::cli_abort('Values in `OM@CatchFrac` sum to 1 across rows')
-    
-    dimnames(CatchFracFleet) <- list("Sim"=1:dd[1],
-                                     "Fleet"=FleetNames(object))
-    
-    object@CatchFrac[[st]] <- CatchFracFleet
-  }
-  
-  object
-  
-}

@@ -3,7 +3,7 @@
 #' 
 #' @method plot Schedule
 #' @export
-plot.Schedule <- function(x, TimeLab='Year', color='TimeStep',
+plot.Schedule <- function(x, TimeLab='Year', color='Year',
                           ColorLab=NULL,
                           xlab=NULL,
                           ylab=NULL) {
@@ -51,7 +51,7 @@ plot.Schedule <- function(x, TimeLab='Year', color='TimeStep',
   }
   
   if (is.null(ColorLab)) {
-    if (color=='TimeStep') {
+    if (color=='Year') {
       ColorLab <- TimeLab
     } else {
       ColorLab <- color 

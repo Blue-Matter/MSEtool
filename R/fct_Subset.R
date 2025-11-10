@@ -74,7 +74,7 @@ SubsetSim <- function(object, Sim=1, drop=FALSE, debug=FALSE) {
   object
 }
 
-SubsetTimeStep <- function(object, TimeSteps, AddPast=TRUE, debug=FALSE) {
+SubsetYear <- function(object, Years, AddPast=TRUE, debug=FALSE) {
   
   if (debug) 
     cli::cli_alert('Class {.val {class(object)}}')
@@ -92,7 +92,7 @@ SubsetTimeStep <- function(object, TimeSteps, AddPast=TRUE, debug=FALSE) {
       if (debug)
         cli::cli_alert('Class obj {.val {class(obj)}}')
       
-      slot(object, slots[i]) <- Recall(obj, TimeSteps, AddPast, debug)
+      slot(object, slots[i]) <- Recall(obj, Years, AddPast, debug)
     }
  
     return(object)
@@ -104,7 +104,7 @@ SubsetTimeStep <- function(object, TimeSteps, AddPast=TRUE, debug=FALSE) {
       if (is.null(object[[j]])) {
         outlist[[j]] <- object[[j]]
       } else {
-        outlist[[j]] <- Recall(object[[j]], TimeSteps, AddPast, debug)
+        outlist[[j]] <- Recall(object[[j]], Years, AddPast, debug)
       }
       
     }
@@ -115,18 +115,18 @@ SubsetTimeStep <- function(object, TimeSteps, AddPast=TRUE, debug=FALSE) {
   
   if (inherits(object, 'array')) {
     dnames <- dimnames(object)
-    if ("TimeStep" %in% names(dnames)) {
-      ind <- which(names(dnames)=='TimeStep')
+    if ("Year" %in% names(dnames)) {
+      ind <- which(names(dnames)=='Year')
       TSValues <- dnames[[ind]]
       if (is.null(TSValues))
         return(object)
       
-      object <- ArraySubsetTimeStep(object, TimeSteps, AddPast=AddPast)  
+      object <- ArraySubsetYear(object, Years, AddPast=AddPast)  
       # maxTS <- max(TSValues)
-      # if (maxTS< max(TimeSteps)) {
-      #   object <- ArraySubsetTimeStep(object, maxTS, AddPast=AddPast)  
+      # if (maxTS< max(Years)) {
+      #   object <- ArraySubsetYear(object, maxTS, AddPast=AddPast)  
       # } else {
-      #   object <- ArraySubsetTimeStep(object, TimeSteps, AddPast=AddPast)  
+      #   object <- ArraySubsetYear(object, Years, AddPast=AddPast)  
       # }
     }
     return(object)
@@ -134,7 +134,7 @@ SubsetTimeStep <- function(object, TimeSteps, AddPast=TRUE, debug=FALSE) {
   
   # if (inherits(object, 'numeric') | inherits(object, 'integer')) {
   #   if (!is.null(names(object)))
-  #     return(as.numeric(object[TimeSteps]))
+  #     return(as.numeric(object[Years]))
   # } 
   
   object

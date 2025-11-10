@@ -17,40 +17,40 @@ LastTAC <- function(Data) {
 
 #' @describeIn DataHelpers Get the index for the last historical time step
 #' @export
-GetTimeStepLH <- function(Data) {
+GetYearLH <- function(Data) {
   CheckClass(Data, 'data', 'Data')
-  which(Data@TimeSteps == Data@TimeStepLH)
+  which(Data@Years == Data@YearLH)
 }
 
 #' @describeIn DataHelpers Get the index for current time step
 #' @export
-ProjectionTimeStep <- function(Data) {
-  length(Data@TimeSteps[Data@TimeSteps>Data@TimeStepLH])+1
+ProjectionYear <- function(Data) {
+  length(Data@Years[Data@Years>Data@YearLH])+1
 }
 
 #' @describeIn DataHelpers Trim a Data object to a specific Time Step
 #' @export
-DataTrim <- function(Data, TimeStep) {
+DataTrim <- function(Data, Year) {
   CheckClass(Data, 'data', 'Data')
   saveTAC <- Data@TAC
 
-  if (!is.numeric(TimeStep))
-    cli::cli_abort("`TimeStep` must be a numeric value")
-  if (!length(TimeStep)==1)
-    cli::cli_abort("`TimeStep` must be a numeric value length 1")
+  if (!is.numeric(Year))
+    cli::cli_abort("`Year` must be a numeric value")
+  if (!length(Year)==1)
+    cli::cli_abort("`Year` must be a numeric value length 1")
   
-  TimeSteps <- Data@TimeSteps
-  if (!TimeStep %in% TimeSteps)
-    cli::cli_abort("{.var TimeStep} {.val {TimeStep}} is not in `TimeSteps(Data)`: {.val {TimeSteps(Data)}}")
+  Years <- Data@Years
+  if (!Year %in% Years)
+    cli::cli_abort("{.var Year} {.val {Year}} is not in `Years(Data)`: {.val {Years(Data)}}")
   
-  if (TimeStep == max(Data@TimeSteps))
+  if (Year == max(Data@Years))
     return(Data)
   
   
-  OutTimeSteps <- TimeSteps[TimeSteps <= TimeStep]
+  OutYears <- Years[Years <= Year]
   
-  OutData <- SubsetTimeStep(Data, OutTimeSteps, AddPast=FALSE)
-  # OutData@TimeSteps <- OutTimeSteps
+  OutData <- SubsetYear(Data, OutYears, AddPast=FALSE)
+  # OutData@Years <- OutYears
   OutData@TAC <- saveTAC
   OutData
 }

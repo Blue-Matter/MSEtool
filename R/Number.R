@@ -20,15 +20,15 @@ Number <- function(object, df=TRUE, hist=TRUE, byArea=FALSE, byAge=FALSE) {
     n <- n |> 
       dplyr::mutate(Age=as.numeric(Age),
                     Area=as.numeric(Area)) |>
-      dplyr::arrange(Sim, TimeStep, Age, Area)
+      dplyr::arrange(Sim, Year, Age, Area)
     if (!byArea & !byAge) {
-      n <- n |> dplyr::group_by(Sim, TimeStep, MP) |>
+      n <- n |> dplyr::group_by(Sim, Year, MP) |>
         dplyr::summarise(Value=sum(Value), .groups='drop')
     } else if (!byArea) {
-      n <- n |> dplyr::group_by(Sim, TimeStep, Age, MP) |>
+      n <- n |> dplyr::group_by(Sim, Year, Age, MP) |>
         dplyr::summarise(Value=sum(Value), .groups='drop')
     } else if (!byAge) {
-      n <- n |> dplyr::group_by(Sim, TimeStep, Area, MP) |>
+      n <- n |> dplyr::group_by(Sim, Year, Area, MP) |>
         dplyr::summarise(Value=sum(Value), .groups='drop')
     }
     
@@ -52,7 +52,7 @@ Number <- function(object, df=TRUE, hist=TRUE, byArea=FALSE, byAge=FALSE) {
     temp@Number <- object@Hist@Number
     hist <- NumberHist(temp, df, byArea, byAge)
     proj <- dplyr::bind_rows(hist, proj) |>
-      dplyr::arrange(Sim, TimeStep, Period, MP)
+      dplyr::arrange(Sim, Year, Period, MP)
   }
   class(proj) <- c("number", class(proj))
   proj
@@ -62,24 +62,24 @@ NumberHist <- function(Hist, df=TRUE, byArea=FALSE, byAge=FALSE) {
   CheckClass(Hist, 'hist', 'Hist')
   if (!df)
     return(Hist@Number)
-  HistTimeStep <- TimeSteps(Hist@OM, "Historical")
+  HistYear <- Years(Hist@OM, "Historical")
   histN <- list()
   for (i in seq_along(Hist@Number)) {
-    n <- Hist@Number[[i]] |> ArraySubsetTimeStep(HistTimeStep)
+    n <- Hist@Number[[i]] |> ArraySubsetYear(HistYear)
     n <- array2DF(n)
     n <- n |> 
       dplyr::mutate(Age=as.numeric(Age),
                     Area=as.numeric(Area)) |>
-      dplyr::arrange(Sim, TimeStep, Age, Area)
+      dplyr::arrange(Sim, Year, Age, Area)
     
     if (!byArea & !byAge) {
-      n <- n |> dplyr::group_by(Sim, TimeStep) |>
+      n <- n |> dplyr::group_by(Sim, Year) |>
         dplyr::summarise(Value=sum(Value), .groups='drop')
     } else if (!byArea) {
-      n <- n |> dplyr::group_by(Sim, TimeStep, Age) |>
+      n <- n |> dplyr::group_by(Sim, Year, Age) |>
         dplyr::summarise(Value=sum(Value), .groups='drop')
     } else if (!byAge) {
-      n <- n |> dplyr::group_by(Sim, TimeStep, Area) |>
+      n <- n |> dplyr::group_by(Sim, Year, Area) |>
         dplyr::summarise(Value=sum(Value), .groups='drop')
     }
     

@@ -14,7 +14,7 @@ CalcEquilibriumUnfished <- function(OM) {
   R0List <- purrr::map(OM@Stock, \(Stock) {
     Stock@SRR@R0 |> 
       AddDimension('Age') |>
-      aperm(c('Sim', 'Age', 'TimeStep'))
+      aperm(c('Sim', 'Age', 'Year'))
   })
   
   # if (OM@TSperYear==1) {
@@ -82,20 +82,20 @@ CalcEquilibriumUnfished <- function(OM) {
   EquilibriumUnfished@Number <- UnfishedNumberAtAge
   
   EquilibriumUnfished@Biomass <- purrr::map2(UnfishedNumberAtAge, WeightAtAge, ArrayMultiply) |>
-    purrr::map(\(x) apply(x, c('Sim', 'TimeStep'), sum)) |> 
+    purrr::map(\(x) apply(x, c('Sim', 'Year'), sum)) |> 
     List2Array('Stock') |>
-    aperm(c('Sim', 'Stock', 'TimeStep'))
+    aperm(c('Sim', 'Stock', 'Year'))
   
   EquilibriumUnfished@SBiomass <- purrr::map2(UnfishedSpawnNumberAtAge, WeightAtAge, ArrayMultiply) |> 
     purrr::map2(MaturityAtAge, ArrayMultiply) |>
-    purrr::map(\(x) apply(x, c('Sim', 'TimeStep'), sum)) |>
+    purrr::map(\(x) apply(x, c('Sim', 'Year'), sum)) |>
     List2Array('Stock') |>
-    aperm(c('Sim', 'Stock', 'TimeStep'))
+    aperm(c('Sim', 'Stock', 'Year'))
   
   EquilibriumUnfished@SProduction <- purrr::map2(UnfishedSpawnNumberAtAge, FecundityAtAge, ArrayMultiply) |>
-    purrr::map(\(x) apply(x, c('Sim', 'TimeStep'), sum)) |>
+    purrr::map(\(x) apply(x, c('Sim', 'Year'), sum)) |>
     List2Array('Stock') |>
-    aperm(c('Sim', 'Stock', 'TimeStep'))
+    aperm(c('Sim', 'Stock', 'Year'))
   
   # apply SPFrom
   stockNames <- StockNames(OM)
@@ -127,66 +127,66 @@ CalcDynamicUnfished <- function(SimList, silent=FALSE) {
     x
   })
   
-  TimeSteps <- TimeSteps(SimList[[1]]@OM, 'Historical')
+  Years <- Years(SimList[[1]]@OM, 'Historical')
   StockNames <- StockNames(SimList[[1]]@OM)
 
   if (CheckIdenticalSims(SimListCopy)) {
     # identical historical period across all sims
     HistSim <- SimListCopy[[1]]
-    unfished <- SimulateDynamics_(HistSim, TimeSteps)
+    unfished <- SimulateDynamics_(HistSim, Years)
 
     HistSim@Unfished@Dynamic@Number <- lapply(unfished@Number, 
                                               AddDimNames, 
-                                              c("Age", "TimeStep", "Area"), 
-                                              TimeSteps)
+                                              c("Age", "Year", "Area"), 
+                                              Years)
     
     HistSim@Unfished@Dynamic@Biomass  <- AddDimNames(unfished@Biomass, 
-                                                     c('Stock', 'TimeStep'), 
-                                                     TimeSteps=TimeSteps, values=list(StockNames))
+                                                     c('Stock', 'Year'), 
+                                                     Years=Years, values=list(StockNames))
     
     HistSim@Unfished@Dynamic@SBiomass  <- AddDimNames(unfished@SBiomass, 
-                                                      c('Stock', 'TimeStep'), 
-                                                      TimeSteps=TimeSteps, values=list(StockNames))
+                                                      c('Stock', 'Year'), 
+                                                      Years=Years, values=list(StockNames))
     
     HistSim@Unfished@Dynamic@SProduction  <- AddDimNames(unfished@SProduction, 
-                                                         c('Stock', 'TimeStep'), 
-                                                         TimeSteps=TimeSteps, values=list(StockNames))
+                                                         c('Stock', 'Year'), 
+                                                         Years=Years, values=list(StockNames))
     
     
     SimListOut <- purrr::map(SimListCopy, \(HistSim) {
-      HistSim@Unfished@Dynamic@Number <- lapply( unfished@Number, AddDimNames, c("Age", "TimeStep", "Area"), TimeSteps)
+      HistSim@Unfished@Dynamic@Number <- lapply( unfished@Number, AddDimNames, c("Age", "Year", "Area"), Years)
       
       HistSim@Unfished@Dynamic@Biomass  <- AddDimNames(unfished@Biomass, 
-                                                       c('Stock', 'TimeStep'), 
-                                                       TimeSteps=TimeSteps, values=list(StockNames))
+                                                       c('Stock', 'Year'), 
+                                                       Years=Years, values=list(StockNames))
       
       HistSim@Unfished@Dynamic@SBiomass  <- AddDimNames(unfished@SBiomass, 
-                                                        c('Stock', 'TimeStep'), 
-                                                        TimeSteps=TimeSteps, values=list(StockNames))
+                                                        c('Stock', 'Year'), 
+                                                        Years=Years, values=list(StockNames))
       
       HistSim@Unfished@Dynamic@SProduction  <- AddDimNames(unfished@SProduction, 
-                                                           c('Stock', 'TimeStep'), 
-                                                           TimeSteps=TimeSteps, values=list(StockNames))
+                                                           c('Stock', 'Year'), 
+                                                           Years=Years, values=list(StockNames))
       HistSim
       
     }) 
   } else {
     SimListOut <- purrr::map(SimListCopy, \(HistSim) {
-      unfished <- SimulateDynamics_(HistSim, TimeSteps)
+      unfished <- SimulateDynamics_(HistSim, Years)
       
-      HistSim@Unfished@Dynamic@Number <- lapply( unfished@Number, AddDimNames, c("Age", "TimeStep", "Area"), TimeSteps)
+      HistSim@Unfished@Dynamic@Number <- lapply( unfished@Number, AddDimNames, c("Age", "Year", "Area"), Years)
       
       HistSim@Unfished@Dynamic@Biomass  <- AddDimNames(unfished@Biomass, 
-                                                       c('Stock', 'TimeStep'), 
-                                                       TimeSteps=TimeSteps, values=list(StockNames))
+                                                       c('Stock', 'Year'), 
+                                                       Years=Years, values=list(StockNames))
       
       HistSim@Unfished@Dynamic@SBiomass  <- AddDimNames(unfished@SBiomass, 
-                                                        c('Stock', 'TimeStep'), 
-                                                        TimeSteps=TimeSteps, values=list(StockNames))
+                                                        c('Stock', 'Year'), 
+                                                        Years=Years, values=list(StockNames))
       
       HistSim@Unfished@Dynamic@SProduction  <- AddDimNames(unfished@SProduction, 
-                                                           c('Stock', 'TimeStep'), 
-                                                           TimeSteps=TimeSteps, values=list(StockNames))
+                                                           c('Stock', 'Year'), 
+                                                           Years=Years, values=list(StockNames))
       HistSim
       
     }, .progress = 'Calculating Dynamic Unfished')

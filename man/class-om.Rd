@@ -100,7 +100,7 @@ in \code{Data} list will be assumed to be aggregated according to \code{Complexe
 
 \item{DataLag}{Integer length 1. The number of time steps to lag the data.
 Default \code{DataLage=0} means data is generated up to the time step before an MP is implemented.
-E.g., if management advice is being produced for \code{TimeStep=2025}, the data provided to the MP
+E.g., if management advice is being produced for \code{Year=2025}, the data provided to the MP
 will be up to and including \code{2024}.}
 
 \item{Interval}{Integer length 1. The management update interval. Management will be implemented
@@ -296,5 +296,5 @@ with relevant information. Supports Markdown.}
 myOM <- OM('My Example OM')
 }
 \seealso{
-\code{\link[=Name]{Name()}}, \code{\link[=Agency]{Agency()}}, \code{\link[=Author]{Author()}}, \code{\link[=Email]{Email()}}, \code{\link[=Region]{Region()}}, \code{\link[=Latitude]{Latitude()}}, \code{\link[=Longitude]{Longitude()}}, \code{\link[=Sponsor]{Sponsor()}}, \code{\link[=nSim]{nSim()}}, \code{\link[=nYear]{nYear()}}, \code{\link[=pYear]{pYear()}}, \code{\link[=CurrentYear]{CurrentYear()}}, \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=Obs]{Obs()}}, \code{\link[=Imp]{Imp()}}, \code{\link[=Data]{Data()}}, \code{\link[=DataLag]{DataLag()}}, \code{\link[=CatchFrac]{CatchFrac()}}, \code{\link[=Allocation]{Allocation()}}, \code{\link[=Efactor]{Efactor()}}, \code{\link[=Complexes]{Complexes()}}, \code{\link[=SexPars]{SexPars()}}, \code{\link[=Relations]{Relations()}}, \code{\link[=Interval]{Interval()}}, \code{\link[=nReps]{nReps()}}, \code{\link[=pStar]{pStar()}}, \code{\link[=maxF]{maxF()}}, \code{\link[=Seed]{Seed()}}, \code{\link[=TSperYear]{TSperYear()}}, \code{\link[=TimeSteps]{TimeSteps()}}, \code{\link[=Control]{Control()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Log]{Log()}}, \code{\link[=Source]{Source()}}
+\code{\link[=Name]{Name()}}, \code{\link[=Agency]{Agency()}}, \code{\link[=Author]{Author()}}, \code{\link[=Email]{Email()}}, \code{\link[=Region]{Region()}}, \code{\link[=Latitude]{Latitude()}}, \code{\link[=Longitude]{Longitude()}}, \code{\link[=Sponsor]{Sponsor()}}, \code{\link[=nSim]{nSim()}}, \code{\link[=nYear]{nYear()}}, \code{\link[=pYear]{pYear()}}, \code{\link[=CurrentYear]{CurrentYear()}}, \code{\link[=Stock]{Stock()}}, \code{\link[=Fleet]{Fleet()}}, \code{\link[=Obs]{Obs()}}, \code{\link[=Imp]{Imp()}}, \code{\link[=Data]{Data()}}, \code{\link[=DataLag]{DataLag()}}, \code{\link[=CatchFrac]{CatchFrac()}}, \code{\link[=Allocation]{Allocation()}}, \code{\link[=EFactor]{EFactor()}}, \code{\link[=Complexes]{Complexes()}}, \code{\link[=SexPars]{SexPars()}}, \code{\link[=Relations]{Relations()}}, \code{\link[=Interval]{Interval()}}, \code{\link[=nReps]{nReps()}}, \code{\link[=pStar]{pStar()}}, \code{\link[=maxF]{maxF()}}, \code{\link[=Seed]{Seed()}}, \code{\link[=TSperYear]{TSperYear()}}, \code{\link[=Years]{Years()}}, \code{\link[=Control]{Control()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Log]{Log()}}, \code{\link[=Source]{Source()}}
 }

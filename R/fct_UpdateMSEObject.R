@@ -1,7 +1,7 @@
 
-UpdateMSEObject <- function(MSE, SimList_MP, mp, TimeStepsHist, TimeStepsProj, MP) {
+UpdateMSEObject <- function(MSE, SimList_MP, MP, mp, YearsHist, YearsProj) {
   
-  TimeStepsAll <- c(TimeStepsHist, TimeStepsProj)
+  YearsAll <- c(YearsHist, YearsProj)
   
   nStock <- nStock(SimList_MP[[1]]@OM)
   
@@ -10,43 +10,43 @@ UpdateMSEObject <- function(MSE, SimList_MP, mp, TimeStepsHist, TimeStepsProj, M
   for (st in 1:nStock) {
     MSE@Number[[st]][,,,,mp] <- purrr::map(SimList_MP, \(x) x@Number[[st]]) |> 
       List2Array("Sim") |>
-      AddDimNames(names=c("Age", "TimeStep", "Area", "Sim"), TimeSteps=TimeStepsAll) |> 
-      ArraySubsetTimeStep(TimeSteps=TimeStepsProj) |>
-      aperm(c("Sim", "Age", "TimeStep", "Area"))
+      AddDimNames(names=c("Age", "Year", "Area", "Sim"), Years=YearsAll) |> 
+      ArraySubsetYear(Years=YearsProj) |>
+      aperm(c("Sim", "Age", "Year", "Area"))
   }
   
   MSE@Biomass[,,,mp] <- purrr::map(SimList_MP, \(x) x@Biomass) |>
     List2Array("Sim") |>
-    AddDimNames(names=c("Stock", "TimeStep", "Sim"), TimeSteps=TimeStepsAll) |> 
-    ArraySubsetTimeStep(TimeSteps=TimeStepsProj) |>
-    aperm(c("Sim", "Stock", "TimeStep"))
+    AddDimNames(names=c("Stock", "Year", "Sim"), Years=YearsAll) |> 
+    ArraySubsetYear(Years=YearsProj) |>
+    aperm(c("Sim", "Stock", "Year"))
   
   MSE@SBiomass[,,,mp] <- purrr::map(SimList_MP, \(x) x@SBiomass) |>
     List2Array("Sim") |>
-    AddDimNames(names=c("Stock", "TimeStep", "Sim"), TimeSteps=TimeStepsAll) |> 
-    ArraySubsetTimeStep(TimeSteps=TimeStepsProj) |>
-    aperm(c("Sim", "Stock", "TimeStep"))
+    AddDimNames(names=c("Stock", "Year", "Sim"), Years=YearsAll) |> 
+    ArraySubsetYear(Years=YearsProj) |>
+    aperm(c("Sim", "Stock", "Year"))
   
   MSE@SProduction[,,,mp] <- purrr::map(SimList_MP, \(x) x@SProduction) |>
     List2Array("Sim") |>
-    AddDimNames(names=c("Stock", "TimeStep", "Sim"), TimeSteps=TimeStepsAll) |> 
-    ArraySubsetTimeStep(TimeSteps=TimeStepsProj) |>
-    aperm(c("Sim", "Stock", "TimeStep"))
+    AddDimNames(names=c("Stock", "Year", "Sim"), Years=YearsAll) |> 
+    ArraySubsetYear(Years=YearsProj) |>
+    aperm(c("Sim", "Stock", "Year"))
   
   
   LandingsList <- purrr::map(SimList_MP, \(ProjSim) {
     purrr::map(ProjSim@Landings, \(Landings) {
-      List2Array(Landings, "TimeStep") |>
-        AddDimNames(c("Age", "Fleet", "Area", "TimeStep"),
+      List2Array(Landings, "Year") |>
+        AddDimNames(c("Age", "Fleet", "Area", "Year"),
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)),
-                    TimeSteps=TimeStepsAll) |>
-        ArraySubsetTimeStep(TimeSteps=TimeStepsProj) |>
-        ArrayReduceDims(IncTimeStep=FALSE)
+                    Years=YearsAll) |>
+        ArraySubsetYear(Years=YearsProj) |>
+        ArrayReduceDims(IncYear=FALSE)
     })
   }) |> 
     ReverseList() |>
     purrr::map(List2Array,"Sim") |>
-    purrr::map(aperm, c('Sim', 'Age', 'TimeStep',  'Fleet', 'Area'))
+    purrr::map(aperm, c('Sim', 'Age', 'Year',  'Fleet', 'Area'))
   
   MSE@Landings <- purrr::map2(MSE@Landings, LandingsList, \(MSELanding, Landings) {
     MSELanding[,,,,,mp] <- Landings
@@ -55,17 +55,17 @@ UpdateMSEObject <- function(MSE, SimList_MP, mp, TimeStepsHist, TimeStepsProj, M
   
   DiscardsList <- purrr::map(SimList_MP, \(ProjSim) {
     purrr::map(ProjSim@Discards, \(Discards) {
-      List2Array(Discards, "TimeStep") |>
-        AddDimNames(c("Age", "Fleet", "Area", "TimeStep"),
+      List2Array(Discards, "Year") |>
+        AddDimNames(c("Age", "Fleet", "Area", "Year"),
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)),
-                    TimeSteps=TimeStepsAll) |>
-        ArraySubsetTimeStep(TimeSteps=TimeStepsProj) |>
-        ArrayReduceDims(IncTimeStep=FALSE)
+                    Years=YearsAll) |>
+        ArraySubsetYear(Years=YearsProj) |>
+        ArrayReduceDims(IncYear=FALSE)
     })
   }) |> 
     ReverseList() |>
     purrr::map(List2Array,"Sim") |>
-    purrr::map(aperm, c('Sim', 'Age', 'TimeStep',  'Fleet', 'Area'))
+    purrr::map(aperm, c('Sim', 'Age', 'Year',  'Fleet', 'Area'))
   
   MSE@Discards <- purrr::map2(MSE@Discards, DiscardsList, \(MSEDiscards, Discards) {
     MSEDiscards[,,,,,mp] <- Discards
@@ -75,57 +75,57 @@ UpdateMSEObject <- function(MSE, SimList_MP, mp, TimeStepsHist, TimeStepsProj, M
   
   MSE@Effort[,,,,mp] <- purrr::map(SimList_MP, \(x) 
                                    x@Effort |> 
-                                     AddDimNames(c("Stock", "TimeStep", "Fleet"),
+                                     AddDimNames(c("Stock", "Year", "Fleet"),
                                                  values=c(list(StockNames),
                                                           list(NA),
                                                           list(FleetNames)),
-                                                 TimeSteps=TimeStepsAll) |>
-                                     ArraySubsetTimeStep(TimeSteps=TimeStepsProj)
+                                                 Years=YearsAll) |>
+                                     ArraySubsetYear(Years=YearsProj)
   ) |>
     List2Array("Sim") |>
-    aperm(c("Sim", "Stock", "TimeStep", "Fleet"))
+    aperm(c("Sim", "Stock", "Year", "Fleet"))
   
   for (st in 1:nStock) {
     MSE@FDead[[st]][,,,,mp] <- purrr::map(SimList_MP, \(x) x@FDead[[st]]) |> 
       List2Array("Sim") |>
-      AddDimNames(names=c("Age", "TimeStep", "Fleet", "Sim"), TimeSteps=TimeStepsAll) |> 
-      ArraySubsetTimeStep(TimeSteps=TimeStepsProj) |>
-      aperm(c("Sim", "Age", "TimeStep", "Fleet"))
+      AddDimNames(names=c("Age", "Year", "Fleet", "Sim"), Years=YearsAll) |> 
+      ArraySubsetYear(Years=YearsProj) |>
+      aperm(c("Sim", "Age", "Year", "Fleet"))
     
     MSE@FRetain[[st]][,,,,mp] <- purrr::map(SimList_MP, \(x) x@FRetain[[st]]) |> 
       List2Array("Sim") |>
-      AddDimNames(names=c("Age", "TimeStep", "Fleet", "Sim"), TimeSteps=TimeStepsAll) |> 
-      ArraySubsetTimeStep(TimeSteps=TimeStepsProj) |>
-      aperm(c("Sim", "Age", "TimeStep", "Fleet"))
+      AddDimNames(names=c("Age", "Year", "Fleet", "Sim"), Years=YearsAll) |> 
+      ArraySubsetYear(Years=YearsProj) |>
+      aperm(c("Sim", "Age", "Year", "Fleet"))
     
     
     MSE@Distribution[[st]][,,,,mp] <- purrr::map(SimList_MP, \(x) x@Distribution[[st]]) |> 
       List2Array("Sim") |>
-      AddDimNames(names=c("TimeStep", "Fleet", "Area", "Sim"), TimeSteps=TimeStepsAll) |> 
-      ArraySubsetTimeStep(TimeSteps=TimeStepsProj) |>
-      aperm(c("Sim", "TimeStep", "Fleet", "Area"))
+      AddDimNames(names=c("Year", "Fleet", "Area", "Sim"), Years=YearsAll) |> 
+      ArraySubsetYear(Years=YearsProj) |>
+      aperm(c("Sim", "Year", "Fleet", "Area"))
     
     MSE@FDeadArea[[st]][,,,,,mp] <- purrr::map(SimList_MP, \(x) {
       x@FDeadArea[[st]] |> 
-        List2Array("TimeStep") |>
-        AddDimNames(c("Age", "Fleet", "Area", "TimeStep"),
+        List2Array("Year") |>
+        AddDimNames(c("Age", "Fleet", "Area", "Year"),
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)),
-                    TimeSteps=TimeStepsAll) |>
-        ArraySubsetTimeStep(TimeSteps=TimeStepsProj) 
+                    Years=YearsAll) |>
+        ArraySubsetYear(Years=YearsProj) 
     }) |>
       List2Array("Sim") |>
-      aperm(c("Sim", "Age", "TimeStep", "Fleet", "Area"))
+      aperm(c("Sim", "Age", "Year", "Fleet", "Area"))
     
     MSE@FRetainArea[[st]][,,,,,mp] <- purrr::map(SimList_MP, \(x) {
       x@FRetainArea[[st]] |> 
-        List2Array("TimeStep") |>
-        AddDimNames(c("Age", "Fleet", "Area", "TimeStep"),
+        List2Array("Year") |>
+        AddDimNames(c("Age", "Fleet", "Area", "Year"),
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)),
-                    TimeSteps=TimeStepsAll) |>
-        ArraySubsetTimeStep(TimeSteps=TimeStepsProj) 
+                    Years=YearsAll) |>
+        ArraySubsetYear(Years=YearsProj) 
     }) |>
       List2Array("Sim") |>
-      aperm(c("Sim", "Age", "TimeStep", "Fleet", "Area"))
+      aperm(c("Sim", "Age", "Year", "Fleet", "Area"))
   }
   
   # Misc 
@@ -170,15 +170,15 @@ ProcessLogMSE <- function(MSE, SimList_MP, mp, MP) {
 
 KeepSelectRetenDisc <- function(MSE, SimList_MP, mp, Slot='Retention') {
   
-  ProjTimeStep <- TimeSteps(MSE@OM, 'Projection')
+  ProjYear <- Years(MSE@OM, 'Projection')
   AtAge <- purrr::map(SimList_MP, \(ProjSim) {
     purrr::map(ProjSim@OM@Fleet, \(fleet) {
-      slot(fleet, Slot)@MeanAtAge |> ArraySubsetTimeStep(ProjTimeStep) 
+      slot(fleet, Slot)@MeanAtAge |> ArraySubsetYear(ProjYear) 
     }) 
   }) |> 
     ReverseList() |>
     purrr::map(List2Array, 'Sim') |>
-    purrr::map(aperm, c('Sim', 'Age', 'TimeStep', 'Fleet')) 
+    purrr::map(aperm, c('Sim', 'Age', 'Year', 'Fleet')) 
   
   
   # AtLength <- purrr::map(SimList_MP, \(ProjSim) {
@@ -188,7 +188,7 @@ KeepSelectRetenDisc <- function(MSE, SimList_MP, mp, Slot='Retention') {
   # }) |> 
   #   ReverseList() |>
   #   purrr::map(List2Array, 'Sim') |>
-  #   purrr::map(aperm, c('Sim', 'Class', 'TimeStep', 'Fleet'))
+  #   purrr::map(aperm, c('Sim', 'Class', 'Year', 'Fleet'))
   
   stocks <- StockNames(MSE@OM)
   MPName <- names(MSE@MPs)[mp]
@@ -196,8 +196,8 @@ KeepSelectRetenDisc <- function(MSE, SimList_MP, mp, Slot='Retention') {
     
     dd <- dimnames(AtAge[[st]])
     
-    omvals <- slot(MSE@OM@Fleet[[st]],Slot)@MeanAtAge |> ArraySubsetTimeStep(ProjTimeStep) |>
-      ArrayExpand(nSim=length(dd$Sim), nAges=length(dd$Age), TimeSteps = dd$TimeStep)
+    omvals <- slot(MSE@OM@Fleet[[st]],Slot)@MeanAtAge |> ArraySubsetYear(ProjYear) |>
+      ArrayExpand(nSim=length(dd$Sim), nAges=length(dd$Age), Years = dd$Year)
     
     if (!prod(AtAge[[st]] == omvals)) {
       if (is.null(MSE@Misc[[Slot]])) {

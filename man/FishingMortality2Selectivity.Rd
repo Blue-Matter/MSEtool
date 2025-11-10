@@ -8,7 +8,7 @@ FishingMortality2Selectivity(
   FishingMortality,
   DiscardMortality,
   Ages = NULL,
-  TimeSteps = NULL,
+  Years = NULL,
   Length = NULL
 )
 }
@@ -21,7 +21,7 @@ than \code{DeadAtAge}}
 
 \item{Ages}{An \code{\link[=Ages]{Ages()}} object.}
 
-\item{TimeSteps}{A numeric vector indicating the time steps#'}
+\item{Years}{A numeric vector indicating the time steps#'}
 }
 \description{
 Calculate Selectivity-at-Age from Total Fishing-Mortality-atAge

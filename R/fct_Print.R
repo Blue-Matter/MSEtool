@@ -5,6 +5,15 @@
 show <- function(object) methods::show(object)
 
 
+# ---- Hist ----
+
+#' @rdname show
+setMethod('show', 'hist', function(object) {
+  cli::cli_par()
+  cli::cli_h2("A {.help MSEtool::Hist} Object")
+  cli::cli_text("...")
+})
+
 # ---- Stock ----
 
 #' @rdname show
@@ -60,19 +69,14 @@ setMethod('show', 'ages', function(object) {
   cli::cli_h3('{.code MaxAge}')
   cli::cli_text("{.val {object@MaxAge}}")
   
+  cli::cli_h3('{.code Units}')
+  cli::cli_text("{.val {object@Units}}")
   
-
-  if (length(object@MaxAge)>0 && 
-      length(object@MinAge)>0) {
-    if (is.null(object@Classes)) {
-      object@Classes <- object@MinAge:object@MaxAge
-    }
-  }
+  object@Classes <- CalcAgeClasses(object)
   
-  cli::cli_h3('{.code Classes}')
+  cli::cli_h3('{.code Classes} (Year)')
   cli::cli_text("{.val {object@Classes}}")
-  # cli::cli_h3('{.code Units}')
-  # cli::cli_text("{.val {object@Units}}")
+
   cli::cli_h3('{.code PlusGroup}')
   cli::cli_text("{.val {object@PlusGroup}}")
   cli::cli_end()
@@ -418,8 +422,7 @@ printASK <- function(ASK) {
   cli::cli_text('nBin: {.val { dd[3]}}')
   cli::cli_text('nTS: {.val { dd[4]}}')
 
-  if (!is.null(attributes(ASK)$timesteps))
-    cli::cli_text('Time Steps: {.val {attributes(ASK)$timesteps}}')
+
 
 }
 
@@ -491,10 +494,10 @@ printMeanatAge <- function(MeanAtAge, round=2, type='Age') {
     }
 
     if (dd[1]>1 & dd[3]>1) {
-      if (!is.null(attributes(MeanAtAge)$TimeSteps)) {
-        cli::cli_text('TimeStep: {.val {attributes(MeanAtAge)$TimeSteps[ts[i]]}}')
+      if (!is.null(attributes(MeanAtAge)$Years)) {
+        cli::cli_text('Year: {.val {attributes(MeanAtAge)$Years[ts[i]]}}')
       } else {
-        cli::cli_text('TimeStep: {.val {ts[i]}}')
+        cli::cli_text('Year: {.val {ts[i]}}')
       }
 
       cli::cli_text('Mean over simulations: {.val {val}}')
@@ -547,8 +550,8 @@ printPars <- function(Pars, round=2) {
         cli::cli_text('Mean over time steps: {.val {meanTS}}')
       }
 
-      if (!is.null(attributes(Pars)$TimeSteps))
-        cli::cli_text('Time Steps: {.val {attributes(Pars)$TimeSteps}}')
+      if (!is.null(attributes(Pars)$Years))
+        cli::cli_text('Time Steps: {.val {attributes(Pars)$Years}}')
     }
     cli::cli_end()
   }

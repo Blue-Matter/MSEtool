@@ -30,7 +30,7 @@ PrintPlotBAMRE <- function(Out, name, thresh=0.1) {
     cli::cli_alert('{.val {name}:} Some Absolute Relative Error > {thresh}%')
     print(re) 
     
-    p <- ggplot(Out[[name]]$df, aes(x=TimeStep, y=Value, color=Model)) +
+    p <- ggplot(Out[[name]]$df, aes(x=Year, y=Value, color=Model)) +
       geom_line() +
       labs(x='Year', y=name, title = Out$Stock) +
       theme_bw()
@@ -68,7 +68,7 @@ CompareBAM <- function(Stock, OM=NULL, thresh=0.1) {
 CalcBAM_MARE <- function(df) {
   MARE <- df |> 
     tidyr::pivot_wider(names_from = Model, values_from = Value) |> 
-    dplyr::group_by(TimeStep) |>
+    dplyr::group_by(Year) |>
     dplyr::summarise(MARE=abs((OM-BAM)/BAM*100), .groups='drop') 
   list(df=df, MARE=MARE)
   
@@ -86,21 +86,21 @@ CompareBAM_Number <- function(Stock, OM=NULL) {
   
   BAM_Value <- BAMdata$N.age
   dnames <- dimnames(BAM_Value)
-  dimnames(BAM_Value) <- list(TimeStep=dnames[[1]],
+  dimnames(BAM_Value) <- list(Year=dnames[[1]],
                               Age=dnames[[2]])
   
   
   BAM_Value <- BAM_Value |> array2DF() |> 
     ConvertDF() |>
     dplyr::mutate(Model='BAM', Variable='Number') |>
-    dplyr::group_by(TimeStep, Model) |>
+    dplyr::group_by(Year, Model) |>
     dplyr::summarise(Value=sum(Value)) |>
-    dplyr::arrange(TimeStep) 
+    dplyr::arrange(Year) 
   
   
   df <- dplyr::bind_rows(OM_Value, BAM_Value) |>
-    dplyr::select(TimeStep, Value, Model) |>
-    dplyr::arrange(TimeStep) 
+    dplyr::select(Year, Value, Model) |>
+    dplyr::arrange(Year) 
   
   CalcBAM_MARE(df)
 }
@@ -127,13 +127,13 @@ CompareBAM_Biomass <- function(Stock, OM=NULL) {
   
   
   BAM_Value <- BAMdata$t.series |> 
-    dplyr::select(TimeStep=year, Value=B) |>
+    dplyr::select(Year=year, Value=B) |>
     dplyr::mutate(Variable='Biomass', Model='BAM') |>
-    dplyr::filter(TimeStep%in%OM_Value$TimeStep) 
+    dplyr::filter(Year%in%OM_Value$Year) 
   
   df <- dplyr::bind_rows(OM_Value, BAM_Value) |>
-    dplyr::select(TimeStep, Value, Model) |>
-    dplyr::arrange(TimeStep) 
+    dplyr::select(Year, Value, Model) |>
+    dplyr::arrange(Year) 
   
   CalcBAM_MARE(df)
 }
@@ -146,11 +146,11 @@ CompareBAM_Recruits <- function(Stock, OM=NULL) {
   OM_Value <- Number(Hist, byAge=TRUE) |> 
     dplyr::mutate(Model='OM') |>
     dplyr::filter(Sim==1, Age==min(Age)) |>
-    dplyr::select(TimeStep, Value, Model) 
+    dplyr::select(Year, Value, Model) 
   
   BAM_Value <- BAMdata$N.age
   dnames <- dimnames(BAM_Value)
-  dimnames(BAM_Value) <- list(TimeStep=dnames[[1]],
+  dimnames(BAM_Value) <- list(Year=dnames[[1]],
                               Age=dnames[[2]])
   
   
@@ -160,8 +160,8 @@ CompareBAM_Recruits <- function(Stock, OM=NULL) {
     dplyr::filter(Age==min(Age)) 
   
   df <- dplyr::bind_rows(OM_Value, BAM_Value) |>
-    dplyr::select(TimeStep, Value, Model) |>
-    dplyr::arrange(TimeStep) 
+    dplyr::select(Year, Value, Model) |>
+    dplyr::arrange(Year) 
   
   CalcBAM_MARE(df)
   

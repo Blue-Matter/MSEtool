@@ -65,7 +65,7 @@ produce a deterministic operating model. Can be left empty and will be populated
 to the year the Operating Model object is built. Must include \code{CurrentYear} but can be
 in units other than \code{year}. See \code{ValidUnits('Ages')}}
 
-\item{TimeSteps}{Numeric vector of the time steps.}
+\item{Year}{Numeric vector of the years}
 }
 \description{
 Stock Object
@@ -123,9 +123,9 @@ Like all of the new style objects in \code{MSEtool}, the slots in \code{stock} o
 \item{\code{nSim}}{The number of simulations. Numeric. Positive integer \code{nSim=1} will
 produce a deterministic operating model. Can be left empty and will be populated internally.}
 
-\item{\code{CurrentTime}}{Numeric value specifying the last historical time step. Must be in \code{TimeSteps}.}
+\item{\code{CurrentTime}}{Numeric value specifying the last historical time step. Must be in \code{Year}.}
 
-\item{\code{TimeSteps}}{Numeric vector specifying the time steps}
+\item{\code{Year}}{Numeric vector specifying the years (fraction of years for seasons)}
 
 \item{\code{Misc}}{A list for additional miscellaneous objects. Not currently used.}
 
@@ -140,5 +140,5 @@ Stock <- Stock('My Example Stock',
 # TODO
 }
 \seealso{
-\code{\link[=Name]{Name()}}, \code{\link[=CommonName]{CommonName()}}, \code{\link[=Species]{Species()}}, \code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, \code{\link[=Weight]{Weight()}}, \code{\link[=NaturalMortality]{NaturalMortality()}}, \code{\link[=Maturity]{Maturity()}}, \code{\link[=Fecundity]{Fecundity()}}, \code{\link[=SRR]{SRR()}}, \code{\link[=Spatial]{Spatial()}}, \code{\link[=Depletion]{Depletion()}}, \code{\link[=nYear]{nYear()}}, \code{\link[=pYear]{pYear()}}, \code{\link[=nSim]{nSim()}}, \code{\link[=CurrentYear]{CurrentYear()}}, \code{\link[=TimeUnits]{TimeUnits()}}, \code{\link[=TimeSteps]{TimeSteps()}}, \code{\link[=TSperYear]{TSperYear()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Log]{Log()}}
+\code{\link[=Name]{Name()}}, \code{\link[=CommonName]{CommonName()}}, \code{\link[=Species]{Species()}}, \code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, \code{\link[=Weight]{Weight()}}, \code{\link[=NaturalMortality]{NaturalMortality()}}, \code{\link[=Maturity]{Maturity()}}, \code{\link[=Fecundity]{Fecundity()}}, \code{\link[=SRR]{SRR()}}, \code{\link[=Spatial]{Spatial()}}, \code{\link[=Depletion]{Depletion()}}, \code{\link[=nYear]{nYear()}}, \code{\link[=pYear]{pYear()}}, \code{\link[=nSim]{nSim()}}, \code{\link[=CurrentYear]{CurrentYear()}}, \code{\link[=Years]{Years()}}, \code{\link[=TSperYear]{TSperYear()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=Log]{Log()}}
 }

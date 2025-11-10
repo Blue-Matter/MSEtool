@@ -123,8 +123,8 @@
 \alias{SpawnTimeFrac<-}
 \alias{Species}
 \alias{Species<-}
-\alias{TimeSteps}
-\alias{TimeSteps<-}
+\alias{Years}
+\alias{Years<-}
 \alias{TimeUnits}
 \alias{TimeUnits<-}
 \alias{TruncSD}
@@ -381,9 +381,9 @@ Species(x)
 
 Species(x) <- value
 
-TimeSteps(x, Period = NULL)
+Years(x, Period = NULL)
 
-TimeSteps(x) <- value
+Years(x) <- value
 
 TimeUnits(x, Period = NULL)
 

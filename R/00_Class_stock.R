@@ -40,8 +40,8 @@
 #' @slot Depletion A [Depletion()] object. Optional.
 #' @slot nSim The number of simulations. Numeric. Positive integer `nSim=1` will
 #' produce a deterministic operating model. Can be left empty and will be populated internally.
-#' @slot CurrentTime Numeric value specifying the last historical time step. Must be in `TimeSteps`.
-#' @slot TimeSteps Numeric vector specifying the time steps
+#' @slot CurrentTime Numeric value specifying the last historical time step. Must be in `Year`.
+#' @slot Year Numeric vector specifying the years (fraction of years for seasons)
 #'
 #' @slot Misc `r Misc_param()`
 #' @slot Log A list. Used internally for logging and debugging.
@@ -69,8 +69,7 @@ setClass('stock',
                  pYear='num.null',
                  nSim='num.null',
                  CurrentYear='num.null',
-                 TimeUnits='char.null',
-                 TimeSteps='num.null',
+                 Years='num.null',
                  TSperYear='num.null',
                  Misc='list',
                  Log='list')
@@ -111,10 +110,9 @@ setMethod("initialize", "stock", function(.Object,
   .Object@pYear <- pYear
   .Object@nSim <- nSim
   .Object@CurrentYear <- CurrentYear
-  
   .Object@TSperYear <- TSperYear
-  .Object@TimeSteps <- CalcTimeSteps(nYear, pYear, CurrentYear, TSperYear)
-  .Object@TimeUnits <- CalcTSUnits(TSperYear)
+  .Object@Years <- CalcYears(nYear, pYear, CurrentYear, TSperYear)
+  
   .Object@Misc <- Misc
   #   .Object@Created <- Sys.time()
   .Object
@@ -141,7 +139,7 @@ setValidity('stock', isValidObject)
 #' @param CurrentYear The last historical year of the operating model. Defaults
 #' to the year the Operating Model object is built. Must include `CurrentYear` but can be
 #' in units other than `year`. See `ValidUnits('Ages')`
-#' @param TimeSteps Numeric vector of the time steps.
+#' @param Year Numeric vector of the years
 #'
 #' @param Misc `r Misc_param()`
 #' @export
@@ -186,7 +184,6 @@ Stock <- function(Name=NULL,
   pYear <- 30
   nSim <- 48
   CurrentYear <- as.numeric(format(Sys.Date(), '%Y'))
-  TimeUnits <- CalcTSUnits(TSperYear)
   for (nm in names(dots)) 
     assign(nm, dots[[nm]])
   

@@ -30,11 +30,11 @@ OM2Hist <- function(OM, RefPointsMSY=TRUE, silent=FALSE) {
   
   Hist <- new('hist')
   Hist@OM <- OM
-  TimeSteps <- TimeSteps(OM, 'Historical')
+  Years <- Years(OM, 'Historical')
   nArea <- nArea(OM)
   
   Hist@OM@Stock <- purrr::map(Hist@OM@Stock, \(Stock) 
-                              Stock2Hist(Stock, nSim=nSim(OM), TimeSteps=TimeSteps, silent, id))
+                              Stock2Hist(Stock, nSim=nSim(OM), Years=Years, silent, id))
 
   Hist@OM@Stock <- purrr::map(Hist@OM@Stock, \(Stock)  {
     Stock@SRR@SPFrom <- match(Stock@SRR@SPFrom,StockNames(OM))
@@ -45,19 +45,19 @@ OM2Hist <- function(OM, RefPointsMSY=TRUE, silent=FALSE) {
     length(Stock@Ages@Classes))
   
   Hist@OM@Fleet <- purrr::map2(Hist@OM@Fleet, nAgesList, \(FleetList, nAges)
-    Fleet2Hist(FleetList, nAges, nSim=nSim(OM), TimeSteps=TimeSteps, nArea, silent, id)
+    Fleet2Hist(FleetList, nAges, nSim=nSim(OM), Years=Years, nArea, silent, id)
   )
   
   Hist@Number <- ListArraySimAgeTimeArea(OM, 'Historical') 
   
   Hist@Biomass <- ListArraySimAgeTime(OM, 'Historical') |> lapply(DropDimension, 'Age', FALSE) |>
-    List2Array('Stock') |> aperm(c('Sim', 'Stock', 'TimeStep'))
+    List2Array('Stock') |> aperm(c('Sim', 'Stock', 'Year'))
   Hist@SBiomass <-  Hist@SProduction <- Hist@Biomass 
 
   Hist@Landings <- Hist@Discards <- ListArraySimAgeTimeFleetArea(OM, 'Historical')
 
   Hist@Effort <- ListArraySimAgeTimeFleet(OM, 'Historical') |> lapply(DropDimension, 'Age', FALSE) |>
-    List2Array('Stock') |> aperm(c('Sim', 'Stock', 'TimeStep', 'Fleet'))
+    List2Array('Stock') |> aperm(c('Sim', 'Stock', 'Year', 'Fleet'))
   
   nTS <- dim(Hist@Effort)[3]
   for (st in 1:nStock(OM)) {
@@ -83,12 +83,12 @@ OM2Hist <- function(OM, RefPointsMSY=TRUE, silent=FALSE) {
 }
   
 
-StockObject <- function(object, nSim, nAges, TimeSteps) {
+StockObject <- function(object, nSim, nAges, Years) {
   nms <- slotNames(object)
   
   if ("Pars" %in% nms)
     if (!all(unlist(lapply(object@Pars, is.na)))) {
-      object@Pars <- lapply(object@Pars, ArrayExpand, nSim, nAges, TimeSteps)
+      object@Pars <- lapply(object@Pars, ArrayExpand, nSim, nAges, Years)
     }
     
   
@@ -113,67 +113,67 @@ StockObject <- function(object, nSim, nAges, TimeSteps) {
   }
   
   if ("MeanAtAge" %in% nms)
-    object@MeanAtAge <- ArrayExpand(object@MeanAtAge, nSim, nAges, TimeSteps)
+    object@MeanAtAge <- ArrayExpand(object@MeanAtAge, nSim, nAges, Years)
   
   if ("CVatAge" %in% nms)
-    object@CVatAge <- ArrayExpand(object@CVatAge, nSim, nAges, TimeSteps)
+    object@CVatAge <- ArrayExpand(object@CVatAge, nSim, nAges, Years)
   
   if ("MeanAtLength" %in% nms)
-    object@MeanAtLength <- ArrayExpand(object@MeanAtLength, nSim, nAges, TimeSteps)
+    object@MeanAtLength <- ArrayExpand(object@MeanAtLength, nSim, nAges, Years)
   
   if ("MeanAtWeight" %in% nms)
-    object@MeanAtWeight <- ArrayExpand(object@MeanAtWeight, nSim, nAges, TimeSteps)
+    object@MeanAtWeight <- ArrayExpand(object@MeanAtWeight, nSim, nAges, Years)
   
   if ("Semelparous" %in% nms)
-    object@Semelparous  <- ArrayExpand(object@Semelparous , nSim, nAges, TimeSteps)
+    object@Semelparous  <- ArrayExpand(object@Semelparous , nSim, nAges, Years)
   
   if ("Random" %in% nms)
-    object@Random <- ArrayExpand(object@Random, nSim, nAges, TimeSteps)
+    object@Random <- ArrayExpand(object@Random, nSim, nAges, Years)
   
   if ("ASK" %in% nms)
-    object@ASK <- ArrayExpand(object@ASK, nSim, nAges, TimeSteps)
+    object@ASK <- ArrayExpand(object@ASK, nSim, nAges, Years)
   
   
   object
   
 }
 
-Stock2Hist <- function(Stock, nSim, TimeSteps, silent=FALSE, id=NULL) {
+Stock2Hist <- function(Stock, nSim, Years, silent=FALSE, id=NULL) {
 
   if (!silent)
     cli::cli_progress_update(id=id)
   
   nAges <- length(Stock@Ages@Classes)
-  Stock@Length <- StockObject(Stock@Length, nSim, nAges, TimeSteps)
+  Stock@Length <- StockObject(Stock@Length, nSim, nAges, Years)
   
   if (!silent)
     cli::cli_progress_update(id=id)
-  Stock@Weight <- StockObject(Stock@Weight, nSim, nAges, TimeSteps)
+  Stock@Weight <- StockObject(Stock@Weight, nSim, nAges, Years)
   
 
   if (!silent)
     cli::cli_progress_update(id=id)
-  Stock@NaturalMortality <- StockObject(Stock@NaturalMortality, nSim, nAges, TimeSteps)
+  Stock@NaturalMortality <- StockObject(Stock@NaturalMortality, nSim, nAges, Years)
 
   if (!silent)
     cli::cli_progress_update(id=id)
-  Stock@Maturity <- StockObject(Stock@Maturity, nSim, nAges, TimeSteps)
+  Stock@Maturity <- StockObject(Stock@Maturity, nSim, nAges, Years)
 
   if (!silent)
     cli::cli_progress_update(id=id)
-  Stock@Fecundity <- StockObject(Stock@Fecundity, nSim, nAges, TimeSteps)
+  Stock@Fecundity <- StockObject(Stock@Fecundity, nSim, nAges, Years)
 
   if (!silent)
     cli::cli_progress_update(id=id)
-  Stock@SRR <- StockObject(Stock@SRR, nSim, nAges, TimeSteps)
+  Stock@SRR <- StockObject(Stock@SRR, nSim, nAges, Years)
 
-  Stock@SRR@R0 <- ArrayExpand(Stock@SRR@R0, nSim, nAges, TimeSteps)
-  Stock@SRR@SD <- ArrayExpand(Stock@SRR@SD, nSim, nAges, TimeSteps)
-  Stock@SRR@AC <- ArrayExpand(Stock@SRR@AC, nSim, nAges, TimeSteps)
-  # Stock@SRR@RecDevInit <- ArrayExpand(Stock@SRR@RecDevInit, nSim, nAges-1, TimeSteps)
+  Stock@SRR@R0 <- ArrayExpand(Stock@SRR@R0, nSim, nAges, Years)
+  Stock@SRR@SD <- ArrayExpand(Stock@SRR@SD, nSim, nAges, Years)
+  Stock@SRR@AC <- ArrayExpand(Stock@SRR@AC, nSim, nAges, Years)
+  # Stock@SRR@RecDevInit <- ArrayExpand(Stock@SRR@RecDevInit, nSim, nAges-1, Years)
   Stock@SRR@RecDevHist <- Stock@SRR@RecDevHist |> ExpandSims(nSim)
   Stock@SRR@RecDevProj <- Stock@SRR@RecDevProj |> ExpandSims(nSim)
-  Stock@SRR@SpawnTimeFrac <- ArrayExpand(Stock@SRR@SpawnTimeFrac, nSim, nAges, TimeSteps=NULL)
+  Stock@SRR@SpawnTimeFrac <- ArrayExpand(Stock@SRR@SpawnTimeFrac, nSim, nAges, Years=NULL)
   
   if (is.null(Stock@SRR@SPFrom)) {
     Stock@SRR@SPFrom <- Stock@Name
@@ -182,23 +182,23 @@ Stock2Hist <- function(Stock, nSim, TimeSteps, silent=FALSE, id=NULL) {
   
   if (!silent)
     cli::cli_progress_update(id=id)
-  Stock@Spatial@UnfishedDist <- ArrayExpand(Stock@Spatial@UnfishedDist, nSim, nAges, TimeSteps)
-  Stock@Spatial@ProbStaying <- ArrayExpand(Stock@Spatial@ProbStaying, nSim, nAges, TimeSteps)
-  Stock@Spatial@RelativeSize <- ArrayExpand(Stock@Spatial@RelativeSize, nSim, nAges, TimeSteps)
-  Stock@Spatial@Movement <- ArrayExpand(Stock@Spatial@Movement, nSim, nAges, TimeSteps)
-  Stock@Spatial@FracOther <- ArrayExpand(Stock@Spatial@FracOther, nSim, nAges, TimeSteps)
-  Stock@Spatial@Arrangement <- ArrayExpand(Stock@Spatial@Arrangement, nSim, nAges, TimeSteps)
+  Stock@Spatial@UnfishedDist <- ArrayExpand(Stock@Spatial@UnfishedDist, nSim, nAges, Years)
+  Stock@Spatial@ProbStaying <- ArrayExpand(Stock@Spatial@ProbStaying, nSim, nAges, Years)
+  Stock@Spatial@RelativeSize <- ArrayExpand(Stock@Spatial@RelativeSize, nSim, nAges, Years)
+  Stock@Spatial@Movement <- ArrayExpand(Stock@Spatial@Movement, nSim, nAges, Years)
+  Stock@Spatial@FracOther <- ArrayExpand(Stock@Spatial@FracOther, nSim, nAges, Years)
+  Stock@Spatial@Arrangement <- ArrayExpand(Stock@Spatial@Arrangement, nSim, nAges, Years)
   
   if (!silent)
     cli::cli_progress_update(id=id)
 
-  Stock@Depletion@Initial <- ArrayExpand(Stock@Depletion@Initial, nSim, nAges, TimeSteps)
-  Stock@Depletion@Final <- ArrayExpand(Stock@Depletion@Final, nSim, nAges, TimeSteps)
+  Stock@Depletion@Initial <- ArrayExpand(Stock@Depletion@Initial, nSim, nAges, Years)
+  Stock@Depletion@Final <- ArrayExpand(Stock@Depletion@Final, nSim, nAges, Years)
   
   Stock
 }
     
-Fleet2Hist <- function(FleetList, nAges, nSim, TimeSteps, nArea, silent=FALSE, id=NULL) {
+Fleet2Hist <- function(FleetList, nAges, nSim, Years, nArea, silent=FALSE, id=NULL) {
   
   if (!silent)
     cli::cli_progress_update(id=id)
@@ -211,68 +211,68 @@ Fleet2Hist <- function(FleetList, nAges, nSim, TimeSteps, nArea, silent=FALSE, i
     cli::cli_progress_update(id=id)
   
   Fleet@Effort <- lapply(FleetList, slot, 'Effort') |> 
-    purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |> 
+    purrr::map(ArrayExpand, nSim, nAges, Years) |> 
     List2Array('Fleet') |>
-    aperm(c('Sim', 'TimeStep', 'Fleet'))
+    aperm(c('Sim', 'Year', 'Fleet'))
   
   if (!silent)
     cli::cli_progress_update(id=id)
   
   Fleet@Catchability <- lapply(FleetList, slot, 'Catchability') |> 
-    purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |> 
+    purrr::map(ArrayExpand, nSim, nAges, Years) |> 
     List2Array('Fleet') |>
-    aperm(c('Sim', 'TimeStep', 'Fleet'))
+    aperm(c('Sim', 'Year', 'Fleet'))
   
   if (!silent)
     cli::cli_progress_update(id=id)
   
   Fleet@Distribution <- lapply(FleetList, slot, 'Distribution') |> 
-    purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |> 
+    purrr::map(ArrayExpand, nSim, nAges, Years) |> 
     List2Array('Fleet') |>
-    aperm(c('Sim', 'TimeStep', 'Fleet', 'Area'))
+    aperm(c('Sim', 'Year', 'Fleet', 'Area'))
   
   if (!silent)
     cli::cli_progress_update(id=id)
   
   Fleet@qArea <- lapply(FleetList, slot, 'qArea') |> 
-    purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |> 
+    purrr::map(ArrayExpand, nSim, nAges, Years) |> 
     List2Array('Fleet') |>
-    aperm(c('Sim', 'TimeStep', 'Fleet', 'Area'))
+    aperm(c('Sim', 'Year', 'Fleet', 'Area'))
   
   if (!silent)
     cli::cli_progress_update(id=id)
   
-  Fleet@Selectivity <- CombineFleetObject(lapply(FleetList, slot, "Selectivity"), nSim, nAges, TimeSteps)
+  Fleet@Selectivity <- CombineFleetObject(lapply(FleetList, slot, "Selectivity"), nSim, nAges, Years)
 
   if (!silent)
     cli::cli_progress_update(id=id)
   
-  Fleet@Retention <- CombineFleetObject(lapply(FleetList, slot, "Retention"), nSim, nAges, TimeSteps)
+  Fleet@Retention <- CombineFleetObject(lapply(FleetList, slot, "Retention"), nSim, nAges, Years)
   
   if (is.null(Fleet@Retention@MeanAtAge)) {
     Fleet@Retention@MeanAtAge <- Fleet@Selectivity@MeanAtAge
     Fleet@Retention@MeanAtAge[] <- 1
   }
   
-  Fleet@DiscardMortality <- CombineFleetObject(lapply(FleetList, slot, "DiscardMortality"), nSim, nAges, TimeSteps)
+  Fleet@DiscardMortality <- CombineFleetObject(lapply(FleetList, slot, "DiscardMortality"), nSim, nAges, Years)
   if (is.null(Fleet@DiscardMortality@MeanAtAge)) {
     Fleet@DiscardMortality@MeanAtAge <- Fleet@Selectivity@MeanAtAge
     Fleet@DiscardMortality@MeanAtAge[] <- 0
   }
   
   Fleet@Closure <- lapply(FleetList, slot, 'Closure') |> 
-    purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |> 
+    purrr::map(ArrayExpand, nSim, nAges, Years) |> 
     List2Array('Fleet') |>
-    aperm(c('Sim', 'TimeStep', 'Fleet', 'Area'))
+    aperm(c('Sim', 'Year', 'Fleet', 'Area'))
   
   
   if (!silent)
     cli::cli_progress_update(id=id)
   
   Fleet@WeightFleet <- lapply(FleetList, slot, 'WeightFleet') |>
-    purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |>
+    purrr::map(ArrayExpand, nSim, nAges, Years) |>
     List2Array('Fleet') |>
-    aperm(c('Sim', 'Age', 'TimeStep', 'Fleet')) 
+    aperm(c('Sim', 'Age', 'Year', 'Fleet')) 
   
   Fleet@BioEconomic <- lapply(FleetList, slot, 'BioEconomic')
   Fleet <- CopySlots(Fleet, FleetList)
@@ -280,36 +280,36 @@ Fleet2Hist <- function(FleetList, nAges, nSim, TimeSteps, nArea, silent=FALSE, i
   
   if (!silent)
     cli::cli_progress_update(id=id)
-  Fleet@TimeSteps <- TimeSteps
+  Fleet@Years <- Years
   Fleet
 }
 
 
 
-CombineFleetObject <- function(List, nSim, nAges, TimeSteps) {
+CombineFleetObject <- function(List, nSim, nAges, Years) {
   out <- new(class(List[[1]]))
   nms <- slotNames(out)
   
   if ('MeanAtAge' %in% nms) {
     out@MeanAtAge <- lapply(List, slot, 'MeanAtAge') |>
-      purrr::map(ExpandTimeSteps, TimeSteps) |>
+      purrr::map(ExpandYears, Years) |>
       List2Array('Fleet') |>
-      ArrayExpand(nSim, nAges, TimeSteps)
+      ArrayExpand(nSim, nAges, Years)
   }
 
   
   if ('MeanAtLength' %in% nms) {
     out@MeanAtLength <- lapply(List, slot, 'MeanAtLength') |>
-      purrr::map(ExpandTimeSteps, TimeSteps) |>
+      purrr::map(ExpandYears, Years) |>
       List2Array('Fleet') |>
-      ArrayExpand(nSim, nAges, TimeSteps) 
+      ArrayExpand(nSim, nAges, Years) 
   } 
 
   if ('MeanAtWeight' %in% nms) {
     out@MeanAtWeight <- lapply(List, slot, 'MeanAtWeight') |>
-      purrr::map(ExpandTimeSteps, TimeSteps) |>
+      purrr::map(ExpandYears, Years) |>
       List2Array('Fleet') |>
-      ArrayExpand(nSim, nAges, TimeSteps)
+      ArrayExpand(nSim, nAges, Years)
   }
   
   if ('Classes' %in% nms) 
@@ -322,39 +322,39 @@ CombineFleetObject <- function(List, nSim, nAges, TimeSteps) {
 }
 
 
-# CombineFishingMortality <- function(List, nSim, nAges, TimeSteps) {
+# CombineFishingMortality <- function(List, nSim, nAges, Years) {
 #   FishingMortality <- FishingMortality()
 #   
 #   FishingMortality@ApicalF <- lapply(List, slot, 'ApicalF') |> 
-#     purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |>
+#     purrr::map(ArrayExpand, nSim, nAges, Years) |>
 #     List2Array('Fleet') |>
-#     aperm(c('Sim', 'TimeStep', 'Fleet'))
+#     aperm(c('Sim', 'Year', 'Fleet'))
 #   FishingMortality@DeadAtAge <- lapply(List, slot, 'DeadAtAge') |> 
-#     purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |>
+#     purrr::map(ArrayExpand, nSim, nAges, Years) |>
 #     List2Array('Fleet') |>
-#     aperm(c('Sim', 'Age', 'TimeStep', 'Fleet')) 
+#     aperm(c('Sim', 'Age', 'Year', 'Fleet')) 
 #   FishingMortality@RetainAtAge <- lapply(List, slot, 'RetainAtAge') |> 
-#     purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |>
+#     purrr::map(ArrayExpand, nSim, nAges, Years) |>
 #     List2Array('Fleet') |>
-#     aperm(c('Sim', 'Age', 'TimeStep', 'Fleet')) 
+#     aperm(c('Sim', 'Age', 'Year', 'Fleet')) 
 #   FishingMortality@Misc <- lapply(List, slot, 'Misc')
 #   FishingMortality
 # }
 # 
-# CombineEffort <- function(List, nSim, nAges, TimeSteps) {
+# CombineEffort <- function(List, nSim, nAges, Years) {
 #   
 # 
-#   List |> purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |> 
+#   List |> purrr::map(ArrayExpand, nSim, nAges, Years) |> 
 #     List2Array('Fleet') |>
-#     aperm(c('Sim', 'TimeStep', 'Fleet')) 
+#     aperm(c('Sim', 'Year', 'Fleet')) 
 #   
 # 
 #   
 # 
 #   Effort@Catchability <- lapply(List, slot, 'Catchability') |>
-#     purrr::map(ArrayExpand, nSim, nAges, TimeSteps) |>
+#     purrr::map(ArrayExpand, nSim, nAges, Years) |>
 #     List2Array('Fleet') |>
-#     aperm(c('Sim', 'TimeStep', 'Fleet')) 
+#     aperm(c('Sim', 'Year', 'Fleet')) 
 #   
 #   Effort@qCV <- lapply(List, slot, 'qCV') 
 #   Effort@qInc <- lapply(List, slot, 'qInc') 
@@ -368,30 +368,30 @@ CombineFleetObject <- function(List, nSim, nAges, TimeSteps) {
 #   Effort
 # }
 # 
-# CombineDistribution <- function(List, nSim, nAges, TimeSteps, nArea) {
+# CombineDistribution <- function(List, nSim, nAges, Years, nArea) {
 #   Distribution <- Distribution()
 #   Distribution@Closure <- lapply(List, slot, 'Closure') |>
 #     List2Array() |>
-#     aperm(c('Sim', 'TimeStep', 'Fleet', 'Area'))
+#     aperm(c('Sim', 'Year', 'Fleet', 'Area'))
 #   
 #   Distribution@Cost <- lapply(List, slot, 'Cost')
 #   
 #   EffortArea <- lapply(List, slot, 'EffortArea')
 #   for (i in seq_along(EffortArea)) {
 #     if (is.null(EffortArea[[i]])) {
-#       EffortArea[[i]] <- array(tiny/2, c(nSim, length(TimeSteps), nArea),
+#       EffortArea[[i]] <- array(tiny/2, c(nSim, length(Years), nArea),
 #                                dimnames = list(Sim=1:nSim,
-#                                                TimeStep=TimeSteps,
+#                                                Year=Years,
 #                                                Area=1:nArea))
 #     }
-#     if (any((dim(EffortArea[[i]]) != c(nSim, length(TimeSteps), nArea)))) {
+#     if (any((dim(EffortArea[[i]]) != c(nSim, length(Years), nArea)))) {
 #       cli::cli_abort("Dimensions not correct for EffortArea")
 #     }
 #   }
 #   
 #   Distribution@EffortArea <- EffortArea |>
 #     List2Array() |>
-#     aperm(c('Sim', 'TimeStep', 'Fleet', 'Area'))
+#     aperm(c('Sim', 'Year', 'Fleet', 'Area'))
 #   
 #   Distribution@Misc <- lapply(List, slot, 'Misc')
 #   Distribution
@@ -437,10 +437,10 @@ Hist2SimList <- function(Hist) {
     
   
 # Convert SimList back to Hist
-SimList2Hist <- function(Hist, SimList, TimeSteps=NULL, Reduce=TRUE) {
+SimList2Hist <- function(Hist, SimList, Years=NULL, Reduce=TRUE) {
   
-  if (is.null(TimeSteps))
-    TimeSteps <- TimeSteps(Hist@OM, "Historical")
+  if (is.null(Years))
+    Years <- Years(Hist@OM, "Historical")
   
   StockNames <- StockNames(Hist@OM)
   FleetNames <- as.vector(Hist@OM@Fleet[[1]]@Name)
@@ -472,8 +472,11 @@ SimList2Hist <- function(Hist, SimList, TimeSteps=NULL, Reduce=TRUE) {
   # Obs 
   Hist <- SimListObs(Hist, SimList)
 
+  # imp 
+  Hist <- SimListImp(Hist, SimList)
+  
   # Time Series
-  Hist <- SimListTimeSeries(Hist, SimList, TimeSteps)
+  Hist <- SimListTimeSeries(Hist, SimList, Years)
   
   # Data
   HistData <- purrr::map(SimList, \(HistSim)
@@ -489,7 +492,7 @@ SimList2Hist <- function(Hist, SimList, TimeSteps=NULL, Reduce=TRUE) {
 
   # Check for Depletion Optimization 
   # TODO - warning message or re-sample 
-  OptDepletionRatio <- CheckDepletionOpt(SimList, TimeSteps) 
+  OptDepletionRatio <- CheckDepletionOpt(SimList, Years) 
   Hist@Log$OptDepletionRatio <- OptDepletionRatio
   
   if (Reduce) {
@@ -511,7 +514,7 @@ SimListRefPointsMSY <- function(Hist, SimList) {
     slot(Hist@RefPointsMSY, slot) <- purrr::map(SimList, \(HistSim) 
                                                  slot(HistSim@RefPointsMSY, slot)) |>
       List2Array('Sim') |>
-      aperm(c('Sim', 'Stock', 'TimeStep'))
+      aperm(c('Sim', 'Stock', 'Year'))
   }
   
   Hist
@@ -521,7 +524,7 @@ SimListRefPointsPR <- function(Hist, SimList) {
 
   Hist@RefPointsPR@SPR0 <- purrr::map(SimList, \(HistSim) HistSim@RefPointsPR@SPR0) |>
     List2Array('Sim') |>
-    aperm(c('Sim', 'Stock', 'TimeStep'))
+    aperm(c('Sim', 'Stock', 'Year'))
   
   Hist
 }
@@ -559,23 +562,23 @@ SimListFleet <- function(Hist, SimList) {
     
     Fleet@Catchability <- purrr::map(FleetList, \(x) x@Catchability) |> 
       List2Array('Sim') |>
-      aperm(c('Sim','TimeStep', 'Fleet'))
+      aperm(c('Sim','Year', 'Fleet'))
     
     Fleet@qArea <- purrr::map(FleetList, \(x) x@qArea) |> 
       List2Array('Sim') |>
-      aperm(c('Sim','TimeStep', 'Fleet', 'Area'))
+      aperm(c('Sim','Year', 'Fleet', 'Area'))
     
     Fleet@Selectivity@MeanAtAge <- purrr::map(FleetList, \(x) x@Selectivity@MeanAtAge) |>
       List2Array('Sim') |>
-      aperm(c('Sim', 'Age', 'TimeStep', 'Fleet'))
+      aperm(c('Sim', 'Age', 'Year', 'Fleet'))
 
     Fleet@Retention@MeanAtAge <- purrr::map(FleetList, \(x) x@Retention@MeanAtAge) |>
       List2Array('Sim') |>
-      aperm(c('Sim', 'Age', 'TimeStep', 'Fleet'))
+      aperm(c('Sim', 'Age', 'Year', 'Fleet'))
 
     Fleet@DiscardMortality@MeanAtAge <- purrr::map(FleetList, \(x) x@DiscardMortality@MeanAtAge) |>
       List2Array('Sim') |>
-      aperm(c('Sim', 'Age', 'TimeStep', 'Fleet'))
+      aperm(c('Sim', 'Age', 'Year', 'Fleet'))
 
     Hist@OM@Fleet[[st]] <- Fleet
   }
@@ -601,10 +604,10 @@ ObsList2SimArray <- function(Obs, ObsList, fl, slot='Catch') {
       Val <- List2Array(Val, 'Sim') 
       dnames <- names(dimnames(Val)) 
       if (length(dnames)==3) {
-        Val <- aperm(Val, c('Sim', 'Age', 'TimeStep'))
+        Val <- aperm(Val, c('Sim', 'Age', 'Year'))
       }
       if (length(dnames)==2) {
-        Val <- aperm(Val, c('Sim', 'TimeStep'))
+        Val <- aperm(Val, c('Sim', 'Year'))
       }
     
     } else if (inherits(Val[[1]], 'numeric') | inherits(Val[[1]], 'integer')) {
@@ -650,6 +653,12 @@ SimListObs <- function(Hist, SimList) {
   Hist
 }
 
+SimListImp <- function(Hist, SimList) {
+  Hist
+
+}
+
+
 StockList2SimArray <- function(Stock, StockList, slot="Length") {
   if (EmptyObject(slot(Stock, slot))) {
     slot(Stock, slot) <- new(class(slot(Stock, slot)))
@@ -665,33 +674,33 @@ StockList2SimArray <- function(Stock, StockList, slot="Length") {
       slot(Stock, slot)@Pars <- purrr::map(StockList, \(x) slot(x, slot)@Pars) |> 
         ReverseList() |>
         purrr::map(List2Array, 'Sim') |>
-        purrr::map(aperm, c('Sim', 'TimeStep'))
+        purrr::map(aperm, c('Sim', 'Year'))
     }
   }
   
   if ("MeanAtAge" %in% nms)
     slot(Stock, slot)@MeanAtAge <- purrr::map(StockList, \(x) slot(x, slot)@MeanAtAge) |> 
       List2Array('Sim') |>
-      aperm(c('Sim', 'Age', 'TimeStep'))
+      aperm(c('Sim', 'Age', 'Year'))
   
   if ("CVatAge" %in% nms)
     slot(Stock, slot)@CVatAge <- purrr::map(StockList, \(x) slot(x, slot)@CVatAge) |> 
       List2Array('Sim') |>
-      aperm(c('Sim', 'Age', 'TimeStep'))
+      aperm(c('Sim', 'Age', 'Year'))
   
   if ("MeanAtLength" %in% nms)
     slot(Stock, slot)@MeanAtLength <- purrr::map(StockList, \(x) slot(x, slot)@MeanAtLength) |> 
       List2Array('Sim') |>
-      aperm(c('Sim', 'Class', 'TimeStep'))
+      aperm(c('Sim', 'Class', 'Year'))
   
   Stock
 }
 
 
   
-SimListTimeSeries <- function(Hist, SimList, TimeSteps= NULL) {
-  if (is.null(TimeSteps))
-    TimeSteps <- TimeSteps(Hist@OM, "Historical")
+SimListTimeSeries <- function(Hist, SimList, Years= NULL) {
+  if (is.null(Years))
+    Years <- Years(Hist@OM, "Historical")
   
   StockNames <- StockNames(Hist@OM)
   FleetNames <- as.vector(Hist@OM@Fleet[[1]]@Name)
@@ -699,111 +708,111 @@ SimListTimeSeries <- function(Hist, SimList, TimeSteps= NULL) {
   
   for (st in 1:nStock) {
     Hist@Number[[st]] <- purrr::map(SimList, \(HistSim) {
-      AddDimNames(HistSim@Number[[st]],  c("Age", "TimeStep", "Area"), 
+      AddDimNames(HistSim@Number[[st]],  c("Age", "Year", "Area"), 
                   Ages=HistSim@OM@Stock[[st]]@Ages@Classes,
-                  TimeSteps=TimeSteps)
+                  Years=Years)
     }) |>
       List2Array("Sim") |>
-      aperm(c("Sim", 'Age', 'TimeStep', 'Area'))
+      aperm(c("Sim", 'Age', 'Year', 'Area'))
   }
   
   Hist@Biomass <- purrr::map(SimList, \(HistSim)
-                             AddDimNames(HistSim@Biomass, c('Stock', 'TimeStep'), TimeSteps=TimeSteps,
+                             AddDimNames(HistSim@Biomass, c('Stock', 'Year'), Years=Years,
                                          values=list(StockNames))
   ) |> List2Array("Sim") |>
-    aperm(c("Sim", 'Stock', "TimeStep"))
+    aperm(c("Sim", 'Stock', "Year"))
   
   Hist@SBiomass <- purrr::map(SimList, \(HistSim)
-                              AddDimNames(HistSim@SBiomass, c('Stock', 'TimeStep'), TimeSteps=TimeSteps,
+                              AddDimNames(HistSim@SBiomass, c('Stock', 'Year'), Years=Years,
                                           values=list(StockNames))
   ) |> List2Array("Sim") |>
-    aperm(c("Sim", 'Stock', "TimeStep"))
+    aperm(c("Sim", 'Stock', "Year"))
   
   Hist@SProduction <- purrr::map(SimList, \(HistSim)
-                                 AddDimNames(HistSim@SProduction, c('Stock', 'TimeStep'), TimeSteps=TimeSteps,
+                                 AddDimNames(HistSim@SProduction, c('Stock', 'Year'), Years=Years,
                                              values=list(StockNames))
   ) |> List2Array("Sim") |>
-    aperm(c("Sim", 'Stock', "TimeStep"))
+    aperm(c("Sim", 'Stock', "Year"))
   
   
   for (st in 1:nStock) {
     Hist@Landings[[st]] <- purrr::map(SimList, \(HistSim) {
       List2Array(HistSim@Landings[[st]]) |>
-        AddDimNames(c("Age", "Fleet", "Area", "TimeStep"), 
-                    TimeSteps=TimeSteps,
+        AddDimNames(c("Age", "Fleet", "Area", "Year"), 
+                    Years=Years,
                     Ages=HistSim@OM@Stock[[st]]@Ages@Classes,
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)))
     }) |>
       List2Array("Sim") |>
-      aperm(c("Sim", 'Age', 'TimeStep', 'Fleet', 'Area'))
+      aperm(c("Sim", 'Age', 'Year', 'Fleet', 'Area'))
     
     
     Hist@Discards[[st]] <- purrr::map(SimList, \(HistSim) {
       List2Array(HistSim@Discards[[st]]) |>
-        AddDimNames(c("Age", "Fleet", "Area", "TimeStep"), 
-                    TimeSteps=TimeSteps,
+        AddDimNames(c("Age", "Fleet", "Area", "Year"), 
+                    Years=Years,
                     Ages=HistSim@OM@Stock[[st]]@Ages@Classes,
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)))
     }) |>
       List2Array("Sim") |>
-      aperm(c("Sim", 'Age', 'TimeStep', 'Fleet', 'Area'))
+      aperm(c("Sim", 'Age', 'Year', 'Fleet', 'Area'))
   }
   
   Hist@Effort <- purrr::map(SimList, \(HistSim)
-                            AddDimNames(HistSim@Effort, c('Stock', 'TimeStep', 'Fleet'), 
-                                        TimeSteps=TimeSteps,
+                            AddDimNames(HistSim@Effort, c('Stock', 'Year', 'Fleet'), 
+                                        Years=Years,
                                         values=c(list(StockNames), list(NA), list(FleetNames)))) |> 
     List2Array("Sim") |>
-    aperm(c("Sim", 'Stock', "TimeStep", "Fleet"))
+    aperm(c("Sim", 'Stock', "Year", "Fleet"))
   
   Hist@Distribution[[st]] <- purrr::map(SimList, \(HistSim) 
-                                      AddDimNames(HistSim@Distribution[[st]], c('TimeStep', 'Fleet', "Area"), TimeSteps=TimeSteps,
+                                      AddDimNames(HistSim@Distribution[[st]], c('Year', 'Fleet', "Area"), Years=Years,
                                                   values=c(list(NA), list(FleetNames), list(NA)))) |> 
     List2Array("Sim") |>
-    aperm(c("Sim", "TimeStep", "Fleet", 'Area'))
+    aperm(c("Sim", "Year", "Fleet", 'Area'))
   
   
   for (st in 1:nStock) {
     Hist@FDeadArea[[st]] <- purrr::map(SimList, \(HistSim) {
       List2Array(HistSim@FDeadArea[[st]]) |>
-        AddDimNames(c("Age", "Fleet", "Area", "TimeStep"), 
-                    TimeSteps=TimeSteps,
+        AddDimNames(c("Age", "Fleet", "Area", "Year"), 
+                    Years=Years,
                     Ages=HistSim@OM@Stock[[st]]@Ages@Classes,
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)))
     }) |>
       List2Array("Sim") |>
-      aperm(c("Sim", 'Age', 'TimeStep', 'Fleet', 'Area'))
+      aperm(c("Sim", 'Age', 'Year', 'Fleet', 'Area'))
     
     Hist@FDead[[st]] <- purrr::map(SimList, \(HistSim) {
       HistSim@FDead[[st]] |>
-        AddDimNames(c("Age", "TimeStep", "Fleet"), 
-                    TimeSteps=TimeSteps,
+        AddDimNames(c("Age", "Year", "Fleet"), 
+                    Years=Years,
                     Ages=HistSim@OM@Stock[[st]]@Ages@Classes,
                     values=c(list(NA), list(NA), list(FleetNames)))
     }) |>
       List2Array("Sim") |>
-      aperm(c("Sim", 'Age', 'TimeStep', 'Fleet'))
+      aperm(c("Sim", 'Age', 'Year', 'Fleet'))
     
     
     Hist@FRetainArea[[st]] <- purrr::map(SimList, \(HistSim) {
       List2Array(HistSim@FRetainArea[[st]]) |>
-        AddDimNames(c("Age", "Fleet", "Area", "TimeStep"), 
-                    TimeSteps=TimeSteps,
+        AddDimNames(c("Age", "Fleet", "Area", "Year"), 
+                    Years=Years,
                     Ages=HistSim@OM@Stock[[st]]@Ages@Classes,
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)))
     }) |>
       List2Array("Sim") |>
-      aperm(c("Sim", 'Age', 'TimeStep', 'Fleet', 'Area'))
+      aperm(c("Sim", 'Age', 'Year', 'Fleet', 'Area'))
     
     Hist@FRetain[[st]] <- purrr::map(SimList, \(HistSim) {
       HistSim@FRetain[[st]] |>
-        AddDimNames(c("Age", "TimeStep", "Fleet"), 
-                    TimeSteps=TimeSteps,
+        AddDimNames(c("Age", "Year", "Fleet"), 
+                    Years=Years,
                     Ages=HistSim@OM@Stock[[st]]@Ages@Classes,
                     values=c(list(NA), list(NA), list(FleetNames)))
     }) |>
       List2Array("Sim") |>
-      aperm(c("Sim", 'Age', 'TimeStep', 'Fleet'))
+      aperm(c("Sim", 'Age', 'Year', 'Fleet'))
     
     
     

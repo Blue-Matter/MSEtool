@@ -37,7 +37,7 @@ ImportBAM <- function(Stock='Red Snapper',
   class(OM@Stock) <- 'StockList'
   OM@Stock[[BAMdata$info$species]] <- BAM2Stock(BAMdata, 
                                                 nSim=nSim(OM),
-                                                TimeSteps=OM@TimeSteps)
+                                                Years=OM@Years)
   
   
   OM@Fleet <- list()
@@ -49,13 +49,7 @@ ImportBAM <- function(Stock='Red Snapper',
                                                 DiscSelFleets,
                                                 RetSelFleets)
   
-
-  FleetNames <- names(OM@Fleet[[BAMdata$info$species]])
-  OM@Efactor <- list()
-  OM@Efactor[[BAMdata$info$species]] <- matrix(1, nSim, length(FleetNames),
-                                               dimnames = list(Sim=1:nSim,
-                                                               Fleet=FleetNames))
-  
+  OM <- ProcessEFactor(OM)
   
   ## ---- Issue with SSB (SProduction in first time step) -----
   # Z_spawn_expected <- (BAMdata$a.series$M + BAMdata$F.age[1,]) * BAMdata$parms$spawn.time
@@ -71,7 +65,7 @@ ImportBAM <- function(Stock='Red Snapper',
   if (BAMdata$parms$spawn.time>0) {
     OM@Misc$SProduction <- data.frame(Sim=1,
                                       Stock=BAMdata$info$species,
-                                      TimeStep=BAMdata$t.series$year[1], 
+                                      Year=BAMdata$t.series$year[1], 
                                       Value=BAMdata$t.series$SSB[1])
   }
   
@@ -149,7 +143,7 @@ SetupOM_BAM <- function(BAMdata, nSim=48, pYear=30) {
            CurrentYear=max(HistYears)
   )
   
-  om@TimeSteps <- CalcTimeSteps(nYear=om@nYear,
+  om@Years <- CalcYears(nYear=om@nYear,
                                 pYear=om@pYear,
                                 CurrentYear=om@CurrentYear,
                                 TimeUnits=om@TimeUnits)
@@ -157,11 +151,11 @@ SetupOM_BAM <- function(BAMdata, nSim=48, pYear=30) {
 }
 
 
-BAM2Stock <- function(BAMdata, nSim, TimeSteps) {
+BAM2Stock <- function(BAMdata, nSim, Years) {
   CurrentYear <- BAMdata$parms$endyr
-  histTS <- TimeSteps[floor(TimeSteps)<=CurrentYear]
+  histTS <- Years[floor(Years)<=CurrentYear]
   nYear <- length(histTS)
-  pYear <- length(TimeSteps) - nYear
+  pYear <- length(Years) - nYear
   
   stock <- Stock(Name=BAMdata$info$species,
                  nYear=nYear,
@@ -206,7 +200,7 @@ BAM2Stock <- function(BAMdata, nSim, TimeSteps) {
                                             dim=c(1, length(AgeClasses), 1),
                                             dimnames=list(Sim=1,
                                                           Age=AgeClasses,
-                                                          TimeStep=histTS[1])
+                                                          Year=histTS[1])
                           ),
                           Units = 'kg')
   
@@ -216,7 +210,7 @@ BAM2Stock <- function(BAMdata, nSim, TimeSteps) {
                                                               dim=c(1, length(AgeClasses), 1),
                                                               dimnames=list(Sim=1,
                                                                             Age=AgeClasses,
-                                                                            TimeStep=histTS[1])
+                                                                            Year=histTS[1])
                                               )
   )
   
@@ -235,7 +229,7 @@ BAM2Stock <- function(BAMdata, nSim, TimeSteps) {
                                               dim=c(1, length(AgeClasses), 1),
                                               dimnames=list(Sim=1,
                                                             Age=AgeClasses,
-                                                            TimeStep=histTS[1])
+                                                            Year=histTS[1])
                               )
   )
   
@@ -245,7 +239,7 @@ BAM2Stock <- function(BAMdata, nSim, TimeSteps) {
                                                 dim=c(1, length(AgeClasses), 1),
                                                 dimnames=list(Sim=1,
                                                               Age=AgeClasses,
-                                                              TimeStep=histTS[1])
+                                                              Year=histTS[1])
                                 ),
                                 Units=BAMdata$info$units.ssb,
   )
@@ -301,7 +295,7 @@ BAM2Stock <- function(BAMdata, nSim, TimeSteps) {
   stock <- PopulateStock(stock)
   
   # Recruitment Deviations 
-  UnfishedEq <- ArrayMultiply(CalcUnfishedSurvival(stock, TimeSteps=TimeSteps, Expand = FALSE), 
+  UnfishedEq <- ArrayMultiply(CalcUnfishedSurvival(stock, Years=Years, Expand = FALSE), 
                               aperm(AddDimension(stock@SRR@R0, 'Age'), c(1,3,2))
   )
   
@@ -321,8 +315,8 @@ BAM2Stock <- function(BAMdata, nSim, TimeSteps) {
                                  stock@SRR@Pars$h[1,1])
   
   recruits <- N.age[,1]
-  RecTimeSteps <- histTS # + BAMdata$parms$rec.lag
-  rowInd <- match(RecTimeSteps, names(recruits))
+  RecYears <- histTS # + BAMdata$parms$rec.lag
+  rowInd <- match(RecYears, names(recruits))
   
   ageRec <- colnames(N.age) |> as.numeric() |> min()
   if (ageRec>0) {
@@ -338,7 +332,7 @@ BAM2Stock <- function(BAMdata, nSim, TimeSteps) {
   stock@SRR@RecDevHist <- array(RecDevHist,
                                 dim=c(1, nYear),
                                 dimnames=list(Sim=1,
-                                              TimeStep=histTS))
+                                              Year=histTS))
   
   
   
@@ -346,7 +340,7 @@ BAM2Stock <- function(BAMdata, nSim, TimeSteps) {
   stock
 }
 
-GetBAMDiscardMortality <- function(Stock, TimeSteps, RetainFleets, DiscardFleets, OM, DiscMortDF=NULL) {
+GetBAMDiscardMortality <- function(Stock, Years, RetainFleets, DiscardFleets, OM, DiscMortDF=NULL) {
   
   BAMdata <- GetBAMOutput(Stock)
   nFleet <- length(RetainFleets)
@@ -357,8 +351,8 @@ GetBAMDiscardMortality <- function(Stock, TimeSteps, RetainFleets, DiscardFleets
     AgesClasses <- OM@Stock[[1]]@Ages@Classes
     nAgeClasses <- length(AgesClasses)
     DiscardMortArray <- array(tiny, dim=c(nAgeClasses, nYear(OM@Stock[[1]]), nFleet)) |>
-      AddDimNames(c("Age", "TimeStep", 'Fleet'), 
-                  TimeSteps = TimeSteps, 
+      AddDimNames(c("Age", "Year", 'Fleet'), 
+                  Years = Years, 
                   Ages=AgesClasses,
                   Fleets=RetainFleets)
     
@@ -372,7 +366,7 @@ GetBAMDiscardMortality <- function(Stock, TimeSteps, RetainFleets, DiscardFleets
     DMFleets <- gsub('D.mort.', '', names(DMValues))
     DMFleets <- gsub("[0-9]+", '', DMFleets)
     DiscMortDF <- data.frame(Fleet=DMFleets, Value=as.numeric(DMValues))
-    DiscMortDF$Year <- TimeSteps[1]-1
+    DiscMortDF$Year <- Years[1]-1
     
     if (!all(DMFleets %in% RetainFleets))
       cli::cli_abort(c('x'="Could not match fleet names for discard mortality: {.val {DMFleets}} with Fleet Names: {.val {RetainFleets}}",
@@ -413,13 +407,13 @@ GetBAMDiscardMortality <- function(Stock, TimeSteps, RetainFleets, DiscardFleets
   AgesClasses <- OM@Stock[[1]]@Ages@Classes
   nAgeClasses <- length(AgesClasses)
   DiscardMortArray <- array(tiny, dim=c(nAgeClasses, nYear(OM@Stock[[1]]), nFleet)) |>
-    AddDimNames(c("Age", "TimeStep", 'Fleet'), 
-                TimeSteps = TimeSteps, 
+    AddDimNames(c("Age", "Year", 'Fleet'), 
+                Years = Years, 
                 Ages=AgesClasses,
                 Fleets=RetainFleets)
   
   for (i in 1:nrow(DiscMortDF)) {
-    TSind <- which(dimnames(DiscardMortArray)$TimeStep > DiscMortDF$Year[i])
+    TSind <- which(dimnames(DiscardMortArray)$Year > DiscMortDF$Year[i])
     fillvalue <- abind::asub(DiscardMortArray,
                              list(TSind, DiscMortDF$Fleet[i]),
                              2:3, drop=FALSE) 
@@ -450,7 +444,7 @@ BAM2Fleet <- function(Stock,
                       silent=FALSE) {
   
   BAMdata <- GetBAMOutput(Stock)
-  TimeSteps <- TimeSteps(OM)
+  Years <- Years(OM)
   
   # Combines Retention and Discard fleets 
   FleetNames <- names(BAMdata$parms)[grepl("F.prop", names(BAMdata$parms))] |>
@@ -468,12 +462,12 @@ BAM2Fleet <- function(Stock,
   RetainFleets <- FleetNames[!FleetNames %in% DiscardFleets] |> as.character()
   
   nFleet <- length(RetainFleets)
-  HistTS <- TimeSteps[TimeSteps<=OM@Stock[[1]]@CurrentYear]
+  HistTS <- Years[Years<=OM@Stock[[1]]@CurrentYear]
   nHist <- length(HistTS)
   
   # Discard Mortality Values and Time Blocks
   DiscardMortArray <- GetBAMDiscardMortality(Stock, 
-                                             TimeSteps,
+                                             Years,
                                              RetainFleets, 
                                              DiscardFleets,
                                              OM, 
@@ -497,7 +491,7 @@ BAM2Fleet <- function(Stock,
                                                nHist, 
                                                length(RetainFleets)),
                                       dimnames = list(Age=BAM_Ages,
-                                                      TimeStep=TimeSteps[1:nHist],
+                                                      Year=Years[1:nHist],
                                                       Fleet=RetainFleets))
   
   for (fl in seq_along(RetainFleets)) {
@@ -575,19 +569,19 @@ BAM2Fleet <- function(Stock,
     thisFleetEffort[] <- thisFleetEffort[,1]/mean(thisFleetEffort[,1])
     
     fleet@Effort <- AddDimension(thisFleetEffort, 'Sim') |>
-      abind::adrop(2) |> aperm(c('Sim', 'TimeStep'))
+      abind::adrop(2) |> aperm(c('Sim', 'Year'))
     
     q <- mean(apicalEffort[,fl]) / mean(thisFleetEffort[,1]) 
 
     fleet@Catchability <- array(q, c(1,1))  |> 
-      AddDimNames(c('Sim', 'TimeStep'), TimeSteps=TimeSteps)
+      AddDimNames(c('Sim', 'Year'), Years=Years)
     
     fleet@Selectivity@MeanAtAge <- AddDimension(SelectivityAtAge[,,fl], 'Sim') |>
-      aperm(c('Sim', 'Age', 'TimeStep'))
+      aperm(c('Sim', 'Age', 'Year'))
     fleet@Retention@MeanAtAge <- AddDimension(RetentionAtAge[,,fl], 'Sim') |>
-      aperm(c('Sim', 'Age', 'TimeStep'))
+      aperm(c('Sim', 'Age', 'Year'))
     fleet@DiscardMortality@MeanAtAge <- AddDimension(DiscardMortArray[,,fl], 'Sim') |>
-      aperm(c('Sim', 'Age', 'TimeStep'))
+      aperm(c('Sim', 'Age', 'Year'))
     
     FleetList[[fleet@Name]] <- fleet
   }

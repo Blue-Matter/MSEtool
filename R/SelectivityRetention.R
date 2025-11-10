@@ -8,17 +8,17 @@
 #' @param DiscardMortality A [DiscardMortality()] object with `MeanAtAge` populated. Only required if `RetainAtAge` is populated and different
 #' than `DeadAtAge`
 #' @param Ages An [Ages()] object.
-#' @param TimeSteps A numeric vector indicating the time steps#'
+#' @param Years A numeric vector indicating the time steps#'
 #' @export
 FishingMortality2Selectivity <- function(FishingMortality, DiscardMortality, Ages=NULL,
-                                         TimeSteps=NULL, Length=NULL) {
+                                         Years=NULL, Length=NULL) {
 
   # Fishing 'mortality' for all fish that interact with gear, including
   # those discarded alive
   FInteract <- CalculateFInteract(FishingMortality,
                                   DiscardMortality,
                                   Ages,
-                                  TimeSteps,
+                                  Years,
                                   Length)
 
   nAge <- dim(FishingMortality@DeadAtAge)[2]
@@ -32,16 +32,16 @@ FishingMortality2Selectivity <- function(FishingMortality, DiscardMortality, Age
 FishingMortality2Retention <- function(FishingMortality,
                                        DiscardMortality=NULL,
                                        Ages=NULL,
-                                       TimeSteps=NULL,
+                                       Years=NULL,
                                        Length=NULL,
                                        seed=NULL,
                                        silent=FALSE) {
 
-  FRetainAtAge <- AddSimDimension(FishingMortality@RetainAtAge, TimeSteps=TimeSteps)
+  FRetainAtAge <- AddSimDimension(FishingMortality@RetainAtAge, Years=Years)
   FInteract <- CalculateFInteract(FishingMortality,
                                   DiscardMortality,
                                   Ages,
-                                  TimeSteps,
+                                  Years,
                                   Length)
   Retention <- ArrayDivide(FRetainAtAge, FInteract)
   Retention[!is.finite(Retention)] <- 0
@@ -52,9 +52,9 @@ FishingMortality2Retention <- function(FishingMortality,
 
 CalculateFInteract <- function(FishingMortality, DiscardMortality,
                                Ages=NULL,
-                               TimeSteps=NULL, Length=NULL) {
+                               Years=NULL, Length=NULL) {
 
-  DeadAtAge <- AddSimDimension(FishingMortality@DeadAtAge, TimeSteps=TimeSteps)
+  DeadAtAge <- AddSimDimension(FishingMortality@DeadAtAge, Years=Years)
   nAge <- dim(DeadAtAge)[2]
   if (is.null(FishingMortality@RetainAtAge)) {
     return(DeadAtAge)
@@ -67,11 +67,11 @@ CalculateFInteract <- function(FishingMortality, DiscardMortality,
   #                                Ages,
   #                                Length,
   #                                nsim,
-  #                                TimeSteps,
+  #                                Years,
   #                                seed=seed,
   #                                silent=silent)
 
-  RetainAtAge <- AddSimDimension(FishingMortality@RetainAtAge, TimeSteps=TimeSteps)
+  RetainAtAge <- AddSimDimension(FishingMortality@RetainAtAge, Years=Years)
   DiscardAtAge <- ArraySubtract(DeadAtAge, RetainAtAge)
 
   outdims <- rbind(dim(DeadAtAge), dim(RetainAtAge)) |> apply(2, max)
@@ -79,22 +79,22 @@ CalculateFInteract <- function(FishingMortality, DiscardMortality,
   DiscardMortalityAtAge <- array(NA, dim=outdims)
   dd <- dim(DiscardMortality@MeanAtAge)
 
-  if (is.null(attributes(DiscardMortality)$TimeSteps)) {
-    DiscardMortalityAtAge <- AddSimDimension(DiscardMortality@MeanAtAge, TimeSteps = TimeSteps)
+  if (is.null(attributes(DiscardMortality)$Years)) {
+    DiscardMortalityAtAge <- AddSimDimension(DiscardMortality@MeanAtAge, Years = Years)
   } else {
-    discTimeSteps <- attributes(DiscardMortality)$TimeSteps
-    if (is.null(TimeSteps))
-      cli::cli_abort("`TimeSteps` must be a numeric vector")
-    ind <- which(TimeSteps %in% discTimeSteps)
+    discYears <- attributes(DiscardMortality)$Years
+    if (is.null(Years))
+      cli::cli_abort("`Years` must be a numeric vector")
+    ind <- which(Years %in% discYears)
     if (sum(ind)<1)
-      cli::cli_abort("`TimeSteps` must include values in `attributes(DiscardMortality)$TimeSteps`")
+      cli::cli_abort("`Years` must include values in `attributes(DiscardMortality)$Years`")
     if (dd[2]==1) {
       DiscardMortalityAtAge[,,ind] <- t(replicate(nAge,DiscardMortality@MeanAtAge[,1,]))
     } else {
       DiscardMortalityAtAge[,,ind] <- DiscardMortality@MeanAtAge
     }
     for (i in seq_along(ind)) {
-      if (ind[i] == length(TimeSteps))
+      if (ind[i] == length(Years))
         break()
       st <- ind[i]
       end <- ind[i+1]-1

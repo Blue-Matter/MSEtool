@@ -1,34 +1,34 @@
 
-GenerateProjectionData <- function(ProjSim, TimeStep, TimeStepsHist, TimeStepsProj) {
+GenerateProjectionData <- function(ProjSim, Year, YearsHist, YearsProj) {
   
   Complexes <- ProjSim@OM@Complexes
  
-  TimeStepsAll <- c(TimeStepsHist, TimeStepsProj)
-  TSIndex <- match(TimeStep, TimeStepsAll) - 1
-  DataTimeStep <- TimeStepsAll[TSIndex]
+  YearsAll <- c(YearsHist, YearsProj)
+  TSIndex <- match(Year, YearsAll) - 1
+  DataYear <- YearsAll[TSIndex]
   
   # loop over complexes 
   for (i in seq_along(Complexes)) {
     stocks <- Complexes[[i]]
-    if (max(ProjSim@Data[[i]]@TimeSteps) >= DataTimeStep)
+    if (max(ProjSim@Data[[i]]@Years) >= DataYear)
       next()
     
-    ProjSim@Data[[i]]@TimeSteps <- TimeStepsAll[1:TSIndex]
+    ProjSim@Data[[i]]@Years <- YearsAll[1:TSIndex]
     
-    ProjSim <- GenerateProjectionData_Effort(ProjSim, DataTimeStep, 
-                                            TimeStepsAll, i, stocks)
+    ProjSim <- GenerateProjectionData_Effort(ProjSim, DataYear, 
+                                            YearsAll, i, stocks)
     
-    ProjSim <- GenerateProjectionData_Catch(ProjSim, DataTimeStep, 
-                                            TimeStepsAll, i, stocks)
+    ProjSim <- GenerateProjectionData_Catch(ProjSim, DataYear, 
+                                            YearsAll, i, stocks)
     
-    ProjSim <- GenerateProjectionData_Catch(ProjSim, DataTimeStep, 
-                                            TimeStepsAll, i, stocks, type='Discards')
+    ProjSim <- GenerateProjectionData_Catch(ProjSim, DataYear, 
+                                            YearsAll, i, stocks, type='Discards')
     
-    ProjSim <- GenerateProjectionData_Index(ProjSim, DataTimeStep, 
-                                            TimeStepsHist, TimeStepsAll, i, stocks)
+    ProjSim <- GenerateProjectionData_Index(ProjSim, DataYear, 
+                                            YearsHist, YearsAll, i, stocks)
     
-    ProjSim <- GenerateProjectionData_Index(ProjSim, DataTimeStep, 
-                                            TimeStepsHist, TimeStepsAll, i, stocks, 'Survey')
+    ProjSim <- GenerateProjectionData_Index(ProjSim, DataYear, 
+                                            YearsHist, YearsAll, i, stocks, 'Survey')
     
     # TODO 
     # - CAL
@@ -40,28 +40,28 @@ GenerateProjectionData <- function(ProjSim, TimeStep, TimeStepsHist, TimeStepsPr
   ProjSim
 }
 
-GenerateProjectionData_Effort <- function(ProjSim, DataTimeStep, TimeStepsAll, i, stocks) {
+GenerateProjectionData_Effort <- function(ProjSim, DataYear, YearsAll, i, stocks) {
   EffortData <- ProjSim@Data[[i]]@Effort
   if (EmptyObject(EffortData))
     return(ProjSim)
   
   FleetNames <- EffortData@Name
   
-  TSIndex <- match(DataTimeStep, TimeStepsAll)
+  TSIndex <- match(DataYear, YearsAll)
   
   SimEffort <- ProjSim@Effort[stocks,TSIndex,,drop=FALSE] |> apply(2:3, mean, na.rm=TRUE)
-  dimnames(SimEffort) <- list(TimeStep=DataTimeStep, 
+  dimnames(SimEffort) <- list(Year=DataYear, 
                              Fleet=FleetNames)
   
   Value <- EffortData@Value
   CV <- EffortData@CV
   
-  if (DataTimeStep %in% dimnames(Value)[[1]]) 
+  if (DataYear %in% dimnames(Value)[[1]]) 
     return(ProjSim)
   
   nFleet <- length(FleetNames)
   NewValue <- array(NA, dim=c(1, nFleet),
-                    dimnames = list(TimeStep=DataTimeStep,
+                    dimnames = list(Year=DataYear,
                                     Fleet=FleetNames))
   NewCV <- NewValue
   
@@ -76,8 +76,8 @@ GenerateProjectionData_Effort <- function(ProjSim, DataTimeStep, TimeStepsAll, i
     if (!is.null(ProjSim@OM@Data[[i]]) && nrow(ProjSim@OM@Data[[i]]@Effort@Value)>=TSIndex) {
       NewValue[,fl] <- ProjSim@OM@Data[[i]]@Effort@Value[TSIndex,fl]
     } else {
-      error <- ArraySubsetTimeStep(EffortObs@Error, DataTimeStep)
-      bias <- ArraySubsetTimeStep(EffortObs@Bias, DataTimeStep)
+      error <- ArraySubsetYear(EffortObs@Error, DataYear)
+      bias <- ArraySubsetYear(EffortObs@Bias, DataYear)
       NewValue[,fl] <- SimEffort[fl] * error * bias
     }
     
@@ -85,7 +85,7 @@ GenerateProjectionData_Effort <- function(ProjSim, DataTimeStep, TimeStepsAll, i
     if (!is.null(ProjSim@OM@Data[[i]]) &&  nrow(ProjSim@OM@Data[[i]]@Effort@CV)>=TSIndex) {
       NewCV[,fl] <- ProjSim@OM@Data[[i]]@Effort@CV[TSIndex,fl]
     } else {
-      NewCV[,fl] <- SubsetTimeStep(EffortData@CV, DataTimeStep)[fl]
+      NewCV[,fl] <- SubsetYear(EffortData@CV, DataYear)[fl]
     }
   }
   
@@ -96,7 +96,7 @@ GenerateProjectionData_Effort <- function(ProjSim, DataTimeStep, TimeStepsAll, i
   ProjSim
 }
 
-GenerateProjectionData_Catch <- function(ProjSim, DataTimeStep, TimeStepsAll, i, 
+GenerateProjectionData_Catch <- function(ProjSim, DataYear, YearsAll, i, 
                                          stocks, type=c('Landings', 'Discards')) {
   type <- match.arg(type)
   
@@ -106,23 +106,23 @@ GenerateProjectionData_Catch <- function(ProjSim, DataTimeStep, TimeStepsAll, i,
   
   FleetNames <- DataCatch@Name
   SimCatch <- purrr::map(slot(ProjSim, type)[stocks], \(catch) 
-                         catch[[as.character(DataTimeStep)]] |> apply(2, sum) 
+                         catch[[as.character(DataYear)]] |> apply(2, sum) 
   ) |> List2Array('Stock', 'Fleet') |> rowSums() |> t()
-  dimnames(SimCatch) <- list(TimeStep=DataTimeStep, 
+  dimnames(SimCatch) <- list(Year=DataYear, 
                           Fleet=FleetNames)
   
  
   Value <- DataCatch@Value
   CV <- DataCatch@CV
   
-  if (DataTimeStep %in% dimnames(Value)[[1]]) 
+  if (DataYear %in% dimnames(Value)[[1]]) 
     return(ProjSim)
   
-  TSIndex <- match(DataTimeStep, TimeStepsAll)
+  TSIndex <- match(DataYear, YearsAll)
   
   nFleet <- length(FleetNames)
   NewValue <- array(NA, dim=c(1, nFleet),
-                    dimnames = list(TimeStep=DataTimeStep,
+                    dimnames = list(Year=DataYear,
                                     Fleet=FleetNames))
   NewCV <- NewValue
   
@@ -140,8 +140,8 @@ GenerateProjectionData_Catch <- function(ProjSim, DataTimeStep, TimeStepsAll, i,
       if (DataCatch@Units[fl] != 'Biomass')
         cli::cli_alert_warning('Currently Landings & Discards data can only be in units of Biomass. Use `FleetWeight=1`')
       
-      error <- ArraySubsetTimeStep(Obs@Error, DataTimeStep)
-      bias <- ArraySubsetTimeStep(Obs@Bias, DataTimeStep)
+      error <- ArraySubsetYear(Obs@Error, DataYear)
+      bias <- ArraySubsetYear(Obs@Bias, DataYear)
       NewValue[,fl] <- SimCatch[fl] * error * bias
     }
     
@@ -149,7 +149,7 @@ GenerateProjectionData_Catch <- function(ProjSim, DataTimeStep, TimeStepsAll, i,
     if (!is.null(ProjSim@OM@Data[[i]]) &&  nrow(slot(ProjSim@OM@Data[[i]],type)@CV)>=TSIndex) {
       NewCV[,fl] <- slot(ProjSim@OM@Data[[i]],type)@CV[TSIndex,fl]
     } else {
-      NewCV[,fl] <- SubsetTimeStep(DataCatch@CV, DataTimeStep)[fl]
+      NewCV[,fl] <- SubsetYear(DataCatch@CV, DataYear)[fl]
     }
   }
   
@@ -159,7 +159,7 @@ GenerateProjectionData_Catch <- function(ProjSim, DataTimeStep, TimeStepsAll, i,
   ProjSim
 }
 
-GenerateProjectionData_Index <- function(ProjSim, DataTimeStep, TimeStepsHist, TimeStepsAll, i, stocks,
+GenerateProjectionData_Index <- function(ProjSim, DataYear, YearsHist, YearsAll, i, stocks,
                                          type=c('CPUE', 'Survey')) {
   
   # TODO hyperstability Beta not functional yet - ignored
@@ -171,25 +171,25 @@ GenerateProjectionData_Index <- function(ProjSim, DataTimeStep, TimeStepsHist, T
   Value <- DataIndex@Value
   CV <- DataIndex@CV
   
-  if (DataTimeStep %in% dimnames(Value)[[1]]) {
+  if (DataYear %in% dimnames(Value)[[1]]) {
     # data already exists
     return(ProjSim)
   }
   
-  TimeStepsProj <- TimeStepsAll[!TimeStepsAll %in% TimeStepsHist]
-  TSIndex <- match(DataTimeStep, TimeStepsAll)
+  YearsProj <- YearsAll[!YearsAll %in% YearsHist]
+  TSIndex <- match(DataYear, YearsAll)
   
   nFleet <- ncol(Value)
   NewValue <- array(NA, dim=c(1, nFleet),
-                    dimnames = list(TimeStep=DataTimeStep,
+                    dimnames = list(Year=DataYear,
                                     Fleet=DataIndex@Name))
   NewCV <- NewValue
   
   FleetIndex <- match(DataIndex@Name, names(ProjSim@OM@Obs[[i]]))
   
   SimulatedNumberList <- purrr::map(ProjSim@Number[stocks], \(stock) {
-    stock[,TSIndex,,drop=FALSE] |> AddDimNames(c('Age', 'TimeStep', 'Area'),DataTimeStep) |>
-      apply(c('Age', 'TimeStep'), sum)
+    stock[,TSIndex,,drop=FALSE] |> AddDimNames(c('Age', 'Year', 'Area'),DataYear) |>
+      apply(c('Age', 'Year'), sum)
   })
   
   # loop over fleets 
@@ -219,22 +219,22 @@ GenerateProjectionData_Index <- function(ProjSim, DataTimeStep, TimeStepsHist, T
         if (SelectivityAtAge == 'Biomass') {
           for (st in seq_along(stocks)) {
             SelectivityAtAgeList[[st]] <- matrix(1,nAge(ProjSim@OM, stocks[st]), 1) |>
-              AddDimNames(c('Age', 'TimeStep'), DataTimeStep)
+              AddDimNames(c('Age', 'Year'), DataYear)
           }
         } else if (SelectivityAtAge == 'SBiomass') {
           for (st in seq_along(stocks)) {
             SelectivityAtAgeList[[st]] <- ProjSim@OM@Stock[[stocks[st]]]@Maturity@MeanAtAge |> 
-              ArraySubsetTimeStep(DataTimeStep) 
+              ArraySubsetYear(DataYear) 
           }
         } else if (SelectivityAtAge == 'Obs') {
           SelectivityAtAgeList <- purrr::map(IndexObs@Selectivity, \(selectivity)
-                                             ArraySubsetTimeStep(selectivity, DataTimeStep) )
+                                             ArraySubsetYear(selectivity, DataYear) )
                                              
         }
       } else {
         SelectivityAtAgeList <- purrr::map(ProjSim@OM@Fleet[stocks], \(stock) {
           stock@Selectivity@MeanAtAge[,,fl] |>
-            ArraySubsetTimeStep(DataTimeStep) 
+            ArraySubsetYear(DataYear) 
         }) 
       }
       
@@ -242,20 +242,20 @@ GenerateProjectionData_Index <- function(ProjSim, DataTimeStep, TimeStepsHist, T
       
       if (DataIndex@Units[fl] == 'Biomass') {
         WeightAtAgeList <- purrr::map(ProjSim@OM@Stock[stocks], \(stock) stock@Weight@MeanAtAge |>
-                                        ArraySubsetTimeStep(DataTimeStep)) 
+                                        ArraySubsetYear(DataYear)) 
         
         SimulatedIndex <- purrr::map2(SimNumberSelectedList, WeightAtAgeList, ArrayMultiply) |>
-          purrr::map(apply, 'TimeStep', sum) |>
-          List2Array('Stock', 'TimeStep') |>
-          AddDimNames(c('TimeStep', 'Stock'), DataTimeStep) |> 
-          apply(c('TimeStep'), sum)
+          purrr::map(apply, 'Year', sum) |>
+          List2Array('Stock', 'Year') |>
+          AddDimNames(c('Year', 'Stock'), DataYear) |> 
+          apply(c('Year'), sum)
 
       } else if (DataIndex@Units[fl] == 'Number') {
         SimulatedIndex <- SimNumberSelectedList |>
-          purrr::map(apply, 'TimeStep', sum) |>
-          List2Array('Stock', 'TimeStep') |>
-          AddDimNames(c('TimeStep', 'Stock'), DataTimeStep) |> 
-          apply(c('TimeStep'), sum) 
+          purrr::map(apply, 'Year', sum) |>
+          List2Array('Stock', 'Year') |>
+          AddDimNames(c('Year', 'Stock'), DataYear) |> 
+          apply(c('Year'), sum) 
       } else {
         cli::cli_abort('Only `Biomass` and `Number` supported for `Units` in `Data@CPUE` and `Data@Survey`', .internal=TRUE)
       }

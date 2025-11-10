@@ -193,7 +193,7 @@ setClass("om",
                  
                  CatchFrac='list',
                  Allocation='list',
-                 Efactor='list',
+                 EFactor='list',
                  
                  Complexes='list',
                  SexPars='sexpars',
@@ -207,7 +207,7 @@ setClass("om",
                  Seed='num.null',
                  
                  TSperYear='num.null',
-                 TimeSteps='num.null',
+                 Years='num.null',
                  
                  Control='list.null',
                  Misc='list',
@@ -266,7 +266,7 @@ setClass("om",
 #' to the number of management procedures used in [runMSE()] or [Project()].
 #' @param DataLag Integer length 1. The number of time steps to lag the data. 
 #' Default `DataLage=0` means data is generated up to the time step before an MP is implemented.
-#' E.g., if management advice is being produced for `TimeStep=2025`, the data provided to the MP
+#' E.g., if management advice is being produced for `Year=2025`, the data provided to the MP
 #' will be up to and including `2024`. 
 #' @param nReps Number of samples of the management recommendation for each method.
 #' Only for management procedures that generate stochastic management advice (i.e.,
@@ -335,7 +335,8 @@ OM <- function(Name='A new `OM` object',
   .Object@pYear <- pYear
   
   .Object@CurrentYear <- CurrentYear
-  .Object@TimeSteps <- CalcTimeSteps(nYear, pYear, CurrentYear, TSperYear)
+  .Object@TSperYear <- TSperYear
+  .Object@Years <- CalcYears(nYear, pYear, CurrentYear, TSperYear)
   
   .Object@Stock <- Stock
   .Object@Fleet <- Fleet

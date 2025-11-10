@@ -7,7 +7,7 @@
 \method{plot}{Schedule}(
   x,
   TimeLab = "Year",
-  color = "TimeStep",
+  color = "Year",
   ColorLab = NULL,
   xlab = NULL,
   ylab = NULL

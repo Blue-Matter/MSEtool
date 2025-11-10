@@ -44,8 +44,7 @@ setClass('fleet',
                  pYear='num.null',
                  nSim='num.null',
                  CurrentYear='num.null',
-                 TimeUnits='char.null',
-                 TimeSteps='num.null',
+                 Years='num.null',
                  TSperYear='num.null'
          ),
          contains = c('MiscClass')

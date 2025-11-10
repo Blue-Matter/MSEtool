@@ -65,17 +65,17 @@ CalcAgeSizeKey <- function(MeanAtAge,
   nsim <- max(dim_MeanAtAge[1], dim_SDatAge[1]) # maximum number of simulations
   
   
-  TimeStepsList <- list(dimnames(MeanAtAge)[['TimeStep']],
-                        dimnames(SDatAge)[['TimeStep']])
+  YearsList <- list(dimnames(MeanAtAge)[['Year']],
+                        dimnames(SDatAge)[['Year']])
   
-  ind <- unlist(lapply(TimeStepsList, length)) |> which.max()
-  TimeSteps <- TimeStepsList[[ind]]
+  ind <- unlist(lapply(YearsList, length)) |> which.max()
+  Years <- YearsList[[ind]]
   
-  if (!is.null(TimeSteps)) {
+  if (!is.null(Years)) {
     MeanAtAge <- ExpandSims(MeanAtAge, nsim) |> 
-      ExpandTimeSteps(TimeSteps) 
+      ExpandYears(Years) 
     SDatAge <- ExpandSims(SDatAge, nsim) |> 
-      ExpandTimeSteps(TimeSteps) 
+      ExpandYears(Years) 
       
   }
   
@@ -100,10 +100,10 @@ CalcAgeSizeKey <- function(MeanAtAge,
   
   ListDimNames <- list(Age=AgeClasses,
                        Class=Classes,
-                       TimeStep=dimnames(MeanAtAgeList[[1]])$TimeStep)
+                       Year=dimnames(MeanAtAgeList[[1]])$Year)
   
   ASK <- List2Array(ASKList, "Sim", "Age", ListDimNames) |>
-    aperm(c("Sim", 'Age', 'Class', 'TimeStep'))
+    aperm(c("Sim", 'Age', 'Class', 'Year'))
 
   # attributes(ASK)$Classes <- Classes
   # attributes(ASK)$Ages <- Ages

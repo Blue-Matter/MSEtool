@@ -5,7 +5,7 @@ setClass('catchobs',
            CV='num.array.list', # numeric length 1, length 2, or length nSim
            Error='num.array.list', # numeric array nsim by nTS
            Bias='num.array.list',  # numeric length 1, length 2, or length nSim
-           TimeSteps='num.list.null',
+           Years='num.list.null',
            Type='char.list', # 'Removals' or 'Landings'
            Ref='num.array.list'
            ), 
@@ -16,13 +16,13 @@ setMethod("initialize", "catchobs", function(.Object,
                                              CV=numeric(),
                                              Error=numeric(),
                                              Bias=numeric(),
-                                             TimeSteps=NULL,
+                                             Years=NULL,
                                              Type='Removals',
                                              Ref=numeric()) {
   .Object@CV <- CV
   .Object@Error <- Error
   .Object@Bias <- Bias
-  .Object@TimeSteps <- TimeSteps
+  .Object@Years <- Years
   .Object@Type <- Type
   .Object@Ref <- Ref
   .Object
@@ -35,7 +35,7 @@ setClass('effortobs',
            CV='num.array.list', # numeric length 1, length 2, or length nSim
            Error='num.array.list', # numeric array nsim by nTS
            Bias='num.array.list',  # numeric length 1, length 2, or length nSim
-           TimeSteps='num.list.null',
+           Years='num.list.null',
            Ref='num.array.list'
          ), 
          contains='MiscClass'
@@ -48,7 +48,7 @@ setClass('indicesobs',
            Error='num.array.list',
            Beta='num.array.list',
            AC='num.array.list',
-           TimeSteps='num.list.null',
+           Years='num.list.null',
            Selectivity='array.char.num', # Biomass, SBiomass, age classes
            Type='character',
            Ref='num.array.list',
@@ -60,7 +60,7 @@ setClass('indicesobs',
 setClass('CompObs',
          slots=c(
            ESS='num.array', # nSim, nTS
-           TimeSteps='num.null',
+           Years='num.null',
            Bias='num.array'
          ),
          contains='MiscClass'

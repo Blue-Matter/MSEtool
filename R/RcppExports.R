@@ -9,16 +9,16 @@ CalcFfromCatch_ <- function(NumberAtAge, RemovalNAtAge, SelectivityAtAge, Retent
     .Call(`_MSEtool_CalcFfromCatch_`, NumberAtAge, RemovalNAtAge, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, NaturalMortalityAtAge, MaxIt, tolF)
 }
 
-CalcAggregateF_ <- function(HistSimIn, TimeSteps, debug = 0L) {
-    .Call(`_MSEtool_CalcAggregateF_`, HistSimIn, TimeSteps, debug)
+CalcAggregateF_ <- function(HistSimIn, Years, debug = 0L) {
+    .Call(`_MSEtool_CalcAggregateF_`, HistSimIn, Years, debug)
 }
 
 CalcBiomass_ <- function(NumberAtAgeArea, WeightAtAge) {
     .Call(`_MSEtool_CalcBiomass_`, NumberAtAgeArea, WeightAtAge)
 }
 
-CalcCatch_ <- function(HistSimIn, TimeSteps, debug = 0L) {
-    .Call(`_MSEtool_CalcCatch_`, HistSimIn, TimeSteps, debug)
+CalcCatch_ <- function(HistSimIn, Years, debug = 0L) {
+    .Call(`_MSEtool_CalcCatch_`, HistSimIn, Years, debug)
 }
 
 CalcNumberNext_ <- function(NumberAtAgeAreaThisTS, NumberAtAgeAreaNextTS, Semelparous, FDeadAtAgeAreaThisTS, NaturalMortalityAtAgeThisTS, plusgroup, nAge, nArea) {
@@ -73,8 +73,8 @@ Ref_int_cpp <- function(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V
     .Call(`_MSEtool_Ref_int_cpp`, F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, Wt_at_Age_C, relRfun, SRRpars, maxage, plusgroup, spawn_time_frac)
 }
 
-PopulateNumberNext_ <- function(HistSimIn, TimeStep) {
-    .Call(`_MSEtool_PopulateNumberNext_`, HistSimIn, TimeStep)
+PopulateNumberNext_ <- function(HistSimIn, Year) {
+    .Call(`_MSEtool_PopulateNumberNext_`, HistSimIn, Year)
 }
 
 #' Simulate Fishery Dynamics
@@ -82,8 +82,8 @@ PopulateNumberNext_ <- function(HistSimIn, TimeStep) {
 #' Calculates the fishery dynamics for a given simulation and the specified
 #' time steps.
 #'
-SimulateDynamics_ <- function(HistSimIn, TimeSteps, CalcCatch = 1L, debug = 0L) {
-    .Call(`_MSEtool_SimulateDynamics_`, HistSimIn, TimeSteps, CalcCatch, debug)
+SimulateDynamics_ <- function(HistSimIn, Years, CalcCatch = 1L, debug = 0L) {
+    .Call(`_MSEtool_SimulateDynamics_`, HistSimIn, Years, CalcCatch, debug)
 }
 
 SolveForFishingMortality <- function(NumberAtAge, TotalRemovalsFleet, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, FleetWeightAtAge, NaturalMortalityAtAge, MaxIt = 500L, tolF = 1E-4, debug = 0L) {

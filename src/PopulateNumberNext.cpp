@@ -10,7 +10,7 @@ using namespace Rcpp;
 
 // [[Rcpp::export]]
 S4 PopulateNumberNext_(S4 HistSimIn, 
-                       NumericVector TimeStep) {
+                       NumericVector Year) {
   
   S4 HistSim = clone(HistSimIn);
   S4 OM = HistSim.slot("OM");
@@ -18,9 +18,9 @@ S4 PopulateNumberNext_(S4 HistSimIn,
   List FleetList = OM.slot("Fleet");
   
   
-  NumericVector TimeStepsAll = OM.slot("TimeSteps");
-  // int nTS = TimeSteps.size();
-  IntegerVector MatchTS = match(TimeStep, TimeStepsAll);
+  NumericVector YearsAll = OM.slot("Years");
+  // int nTS = Years.size();
+  IntegerVector MatchTS = match(Year, YearsAll);
   
   List NumberAtAgeAreaList = HistSim.slot("Number"); // nStock
   int nStock = NumberAtAgeAreaList.size();

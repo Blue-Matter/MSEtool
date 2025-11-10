@@ -28,46 +28,41 @@
 \usage{
 apicalF(MSE, Type = c("Dead", "Retain"), byFleet = FALSE)
 
-FMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL, Expand = FALSE)
+FMSY(MSE, Ref = c("Equilibrium", "Dynamic"), Years = NULL, Expand = FALSE)
 
-F_FMSY(MSE, TimeSteps = NULL)
+F_FMSY(MSE, Years = NULL)
 
 Biomass(MSE)
 
-B0(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL, Expand = FALSE)
+B0(MSE, Ref = c("Equilibrium", "Dynamic"), Years = NULL, Expand = FALSE)
 
-B_B0(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
+B_B0(MSE, Ref = c("Equilibrium", "Dynamic"), Years = NULL)
 
-BMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL, Expand = FALSE)
+BMSY(MSE, Ref = c("Equilibrium", "Dynamic"), Years = NULL, Expand = FALSE)
 
-B_BMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
+B_BMSY(MSE, Ref = c("Equilibrium", "Dynamic"), Years = NULL)
 
 SBiomass(MSE)
 
-SB0(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL, Expand = FALSE)
+SB0(MSE, Ref = c("Equilibrium", "Dynamic"), Years = NULL, Expand = FALSE)
 
-SB_SB0(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
+SB_SB0(MSE, Ref = c("Equilibrium", "Dynamic"), Years = NULL)
 
-SBMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL, Expand = FALSE)
+SBMSY(MSE, Ref = c("Equilibrium", "Dynamic"), Years = NULL, Expand = FALSE)
 
-SB_SBMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
+SB_SBMSY(MSE, Ref = c("Equilibrium", "Dynamic"), Years = NULL)
 
 SProduction(MSE)
 
-SP0(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL, Expand = FALSE)
+SP0(MSE, Ref = c("Equilibrium", "Dynamic"), Years = NULL, Expand = FALSE)
 
-SP_SP0(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
+SP_SP0(MSE, Ref = c("Equilibrium", "Dynamic"), Years = NULL)
 
-SPMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL, Expand = FALSE)
+SPMSY(MSE, Ref = c("Equilibrium", "Dynamic"), Years = NULL, Expand = FALSE)
 
-SP_SPMSY(MSE, Ref = c("Equilibrium", "Dynamic"), TimeSteps = NULL)
+SP_SPMSY(MSE, Ref = c("Equilibrium", "Dynamic"), Years = NULL)
 
-SPRMSY(
-  MSE,
-  Ref = c("Equilibrium", "Dynamic"),
-  TimeSteps = NULL,
-  Expand = FALSE
-)
+SPRMSY(MSE, Ref = c("Equilibrium", "Dynamic"), Years = NULL, Expand = FALSE)
 
 Landings(MSE, byAge = FALSE, byFleet = FALSE, byArea = FALSE)
 
@@ -81,14 +76,14 @@ Discards(
 
 Removals(MSE, byAge = FALSE, byFleet = FALSE, byArea = FALSE)
 
-MSY(MSE, TimeSteps = NULL, type = c("Removals", "Landings"))
+MSY(MSE, Years = NULL, type = c("Removals", "Landings"))
 }
 \arguments{
 \item{MSE}{An \code{mse} class or \code{hist} object}
 
 \item{Ref}{Character string specifying the reference point to use \verb{('Equilibrium', 'Dynamic)}}
 
-\item{TimeSteps}{Numeric value specifying the time step(s) to use for the reference point. Defaults to all time-steps.}
+\item{Years}{Numeric value specifying the time step(s) to use for the reference point. Defaults to all time-steps.}
 }
 \description{
 Returns as a data.frame

@@ -1,10 +1,10 @@
 
-OMListSimSubsetTimeStep <- function(List, TimeSteps=NULL) {
+OMListSimSubsetYear <- function(List, Years=NULL) {
   nms <- names(List)
   if (is.null(nms)) {
     if (inherits(List, 'array')) {
-      if ("TimeStep" %in% names(dimnames(List))) {
-        List <- ArraySubsetTimeStep(List, TimeSteps)
+      if ("Year" %in% names(dimnames(List))) {
+        List <- ArraySubsetYear(List, Years)
       }
     }
   } else {
@@ -14,26 +14,26 @@ OMListSimSubsetTimeStep <- function(List, TimeSteps=NULL) {
         return(List[[i]])
       }
       
-      hasTS <- "TimeStep" %in% nmsList
+      hasTS <- "Year" %in% nmsList
       if (all(is.na(nmsList)))
         nmsList <- NULL 
       if (inherits(List[[i]], 'array')) {
-        if ("TimeStep" %in% names(dimnames(List[[i]]))) {
-          List[[i]] <- ArraySubsetTimeStep(List[[i]], TimeSteps)
+        if ("Year" %in% names(dimnames(List[[i]]))) {
+          List[[i]] <- ArraySubsetYear(List[[i]], Years)
         }
       } else if (is.list(List[[i]])) {
         for (j in seq_along(List[[i]])) {
-          obj <- Recall(List[[i]][[j]], TimeSteps)
+          obj <- Recall(List[[i]][[j]], Years)
           if (is.null(obj))
             next()
-          List[[i]][[j]] <- Recall(List[[i]][[j]], TimeSteps)
+          List[[i]][[j]] <- Recall(List[[i]][[j]], Years)
         }
       } else if (inherits(List[[i]], 'numeric')) {
         if (hasTS)
-          List[[i]] <- ArraySubsetTimeStep(List[[i]], TimeSteps)
+          List[[i]] <- ArraySubsetYear(List[[i]], Years)
       } else if (inherits(List[[i]], 'integer')) {
         if (hasTS)
-          List[[i]] <-  ArraySubsetTimeStep(List[[i]], TimeSteps)
+          List[[i]] <-  ArraySubsetYear(List[[i]], Years)
       }
     }
   }
@@ -41,13 +41,13 @@ OMListSimSubsetTimeStep <- function(List, TimeSteps=NULL) {
 }
 
 
-CheckSimsUnique <- function(OMList, TimeSteps=NULL, ignore=c('Sim')) {
-  if (is.null(TimeSteps)) {
+CheckSimsUnique <- function(OMList, Years=NULL, ignore=c('Sim')) {
+  if (is.null(Years)) {
     l1 <- OMList[[1]]
     l2 <- OMList[[2]]
   } else {
-    l1 <- OMListSimSubsetTimeStep(OMList[[1]], TimeSteps)
-    l2 <- OMListSimSubsetTimeStep(OMList[[2]], TimeSteps)  
+    l1 <- OMListSimSubsetYear(OMList[[1]], Years)
+    l2 <- OMListSimSubsetYear(OMList[[2]], Years)  
   }
   
   for (nm in ignore) {
@@ -119,12 +119,12 @@ ReverseList <- function(ls) {
 #   OMList
 # }
 
-GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), TimeSteps=NULL) {
+GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), Years=NULL) {
   
   Period <- match.arg(Period)
   
-  if (is.null(TimeSteps))
-    TimeSteps <- TimeSteps(OM, Period)
+  if (is.null(Years))
+    Years <- Years(OM, Period)
   
   AgeClasses <- purrr::map(OM@Stock, \(stock)
                            stock@Ages@Classes
@@ -141,7 +141,7 @@ GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), TimeSte
        nAges=nAges,
        nAreas=nAreas,
        StockNames=StockNames(OM),
-       TimeSteps=TimeSteps,
+       Years=Years,
        Period=Period,
        FleetNames=FleetNames(OM))
 }
@@ -198,10 +198,10 @@ GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), TimeSte
 #   srr <- MakeSRRList(OM, Period)
 #   List$SRRPars <- srr$SRRPars
 #   List$SRRModel <- srr$SRRModel
-#   List$R0 <- List2Array(srr$R0, "Stock") |> aperm(c("Sim", "Stock", "TimeStep"))
+#   List$R0 <- List2Array(srr$R0, "Stock") |> aperm(c("Sim", "Stock", "Year"))
 #   List$SPFrom <- srr$SPFrom
 #   List$RecDevInit <- srr$RecDevInit
-#   List$RecDevs <- srr$RecDevs |> List2Array("Stock") |> aperm(c("Sim", "Stock", "TimeStep"))
+#   List$RecDevs <- srr$RecDevs |> List2Array("Stock") |> aperm(c("Sim", "Stock", "Year"))
 #   List$SpawnTimeFrac <- srr$SpawnTimeFrac
 #   List$RelRecFun <- srr$RelRecFun
 #   
@@ -223,26 +223,26 @@ GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), TimeSte
 #   
 #   List$Biomass <- ListArraySimAgeTime(OM, Period) |>
 #     purrr::map(\(x)  DropDimension(x, 'Age', warn=FALSE)) 
-#   List$Biomass <- List2Array( List$Biomass , 'Stock') |> aperm(c('Sim','Stock', 'TimeStep'))
+#   List$Biomass <- List2Array( List$Biomass , 'Stock') |> aperm(c('Sim','Stock', 'Year'))
 #   
 #   List$SProduction <- List$Biomass
 #   List$SBiomass <-  List$SProduction
 #   
 #   List$CurrentYear <- purrr::map(OM@Stock, \(x) methods::slot(x, 'CurrentYear'))
 #   List$TimeUnits <- purrr::map(OM@Stock, \(x) methods::slot(x, 'TimeUnits'))
-#   List$TimeSteps <- TimeSteps(OM@Stock[[1]])
-#   List$TimeStepsHist <- TimeSteps(OM@Stock[[1]], "Historical")
-#   List$TimeStepsProj <- TimeSteps(OM@Stock[[1]], 'Projection')
-#   List$TimeStepsPerYear <- purrr::map(OM@Stock, \(x) methods::slot(x, 'TimeStepsPerYear'))
+#   List$Years <- Years(OM@Stock[[1]])
+#   List$YearsHist <- Years(OM@Stock[[1]], "Historical")
+#   List$YearsProj <- Years(OM@Stock[[1]], 'Projection')
+#   List$YearsPerYear <- purrr::map(OM@Stock, \(x) methods::slot(x, 'YearsPerYear'))
 #   List$Misc <- purrr::map(OM@Stock, \(x) methods::slot(x, 'Misc'))
 #   
 #   List
 # }
 # 
-# MakeStockSlotList <- function(OM, slot='Length', Period='Historical', TimeSteps=NULL) {
+# MakeStockSlotList <- function(OM, slot='Length', Period='Historical', Years=NULL) {
 #   
-#   if (is.null(TimeSteps))
-#     TimeSteps <- TimeSteps(OM, Period)
+#   if (is.null(Years))
+#     Years <- Years(OM, Period)
 #   
 #   sNames <- slotNames(methods::slot(OM@Stock[[1]], slot))
 #   
@@ -261,7 +261,7 @@ GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), TimeSte
 #       for (j in seq_along(stList)) {
 #         List$Pars[[i]][[j]] <-  List$Pars[[i]][[j]] |> ArrayExpand(OM@nSim, 
 #                                                                    nAge(OM@Stock[[j]]),
-#                                                                    TimeSteps)
+#                                                                    Years)
 #       }
 #     }
 #   }
@@ -277,28 +277,28 @@ GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), TimeSte
 #   
 #   if ('MeanAtAge' %in% sNames) {
 #     fun <- get(paste0('Get', slot, 'AtAge'))
-#     List$MeanAtAge <- fun(OM@Stock, TimeSteps) |>
+#     List$MeanAtAge <- fun(OM@Stock, Years) |>
 #       purrr::imap(\(x, idx) {
 #         ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
-#                     TimeSteps) 
+#                     Years) 
 #       })
 #   }
 #   
 # 
 #   if ('MeanAtLength' %in% sNames) {
 #     fun <- get(paste0('Get', slot, 'AtLength'))
-#     List$MeanAtLength <- fun(OM@Stock, TimeSteps) |>
+#     List$MeanAtLength <- fun(OM@Stock, Years) |>
 #       purrr::imap(\(x, idx) {
 #         ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
-#                     TimeSteps) 
+#                     Years) 
 #       }) 
 #   }
 #   
 #   if ('CVatAge' %in% sNames) {
-#     List$CVAtAge <- GetCVAtAge(OM@Stock, TimeSteps, slot) |>
+#     List$CVAtAge <- GetCVAtAge(OM@Stock, Years, slot) |>
 #       purrr::imap(\(x, idx) {
 #         ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
-#                     TimeSteps) 
+#                     Years) 
 #       })
 #   }
 #   
@@ -329,12 +329,12 @@ GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), TimeSte
 #                              methods::slot('ASK')) |>
 #     purrr::imap(\(x, idx) {
 #       ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
-#                   TimeSteps) 
+#                   Years) 
 #     }) 
 #   
 #   List$ASK$Female |> dimnames()
 #   t = ArrayExpand(List$ASK[[1]], nSim=OM@nSim, nAges=meta$nAges[[1]],
-#                   TimeSteps)
+#                   Years)
 #   
 #   
 #   
@@ -345,10 +345,10 @@ GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), TimeSte
 #                                       methods::slot('Classes'))
 #   
 #   if ('Semelparous' %in% sNames) {
-#     List$Semelparous <- GetSemelparous(OM@Stock, TimeSteps) |>
+#     List$Semelparous <- GetSemelparous(OM@Stock, Years) |>
 #       purrr::imap(\(x, idx) {
 #         ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
-#                     TimeSteps) 
+#                     Years) 
 #       })
 #   }
 #   
@@ -361,11 +361,11 @@ GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), TimeSte
 # }
 # 
 # 
-# MakeSRRList <- function(OM, Period='Historical', TimeSteps=NULL) {
+# MakeSRRList <- function(OM, Period='Historical', Years=NULL) {
 #   meta <- GetMetaData(OM)
 #   
-#   if (is.null(TimeSteps))
-#     TimeSteps <- TimeSteps(OM, Period)
+#   if (is.null(Years))
+#     Years <- Years(OM, Period)
 #   
 #   List <- list()
 #   
@@ -379,7 +379,7 @@ GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), TimeSte
 #     for (j in seq_along(stList)) {
 #       List$SRRPars[[i]][[j]] <- List$SRRPars[[i]][[j]] |> ArrayExpand(OM@nSim, 
 #                                                                       nAge(OM@Stock[[j]]),
-#                                                                       TimeSteps)
+#                                                                       Years)
 #     }
 #   }
 #                               
@@ -394,7 +394,7 @@ GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), TimeSte
 #                         ) |>
 #     purrr::imap(\(x, idx) {
 #       ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
-#                   TimeSteps)
+#                   Years)
 #     })
 #   
 #   
@@ -431,7 +431,7 @@ GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), TimeSte
 # 
 #   List$RecDevs <- purrr::map2(RecDevHist,RecDevProj,  \(x,y) {
 #     r <- cbind(x,y)
-#     names(dimnames(r)) <- c('Sim', 'TimeStep')
+#     names(dimnames(r)) <- c('Sim', 'Year')
 #     r
 #   }) 
 #   
@@ -451,47 +451,47 @@ GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), TimeSte
 #   List
 # }
 # 
-# MakeSpatialList <- function(OM, Period='Historical', TimeSteps=NULL) {
+# MakeSpatialList <- function(OM, Period='Historical', Years=NULL) {
 #   
 #   meta <- GetMetaData(OM)
 #   
-#   if (is.null(TimeSteps))
-#     TimeSteps <- TimeSteps(OM, Period)
+#   if (is.null(Years))
+#     Years <- Years(OM, Period)
 # 
 #   List <- list()
 #   
-#   List$UnfishedDist <- GetUnfishedDist(OM, TimeSteps) |>
-#     purrr::map(\(x) aperm(x, c('Sim', 'Age', 'TimeStep', 'Area'))) |>
+#   List$UnfishedDist <- GetUnfishedDist(OM, Years) |>
+#     purrr::map(\(x) aperm(x, c('Sim', 'Age', 'Year', 'Area'))) |>
 #     purrr::imap(\(x, idx) {
 #       ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
-#                   TimeSteps) 
+#                   Years) 
 #       }) 
 #   
 # 
-#   List$ProbStaying <- GetProbStaying(OM, TimeSteps) |>
-#     purrr::map(\(x) aperm(x, c('Sim', 'Age', 'TimeStep', 'Area'))) |>
+#   List$ProbStaying <- GetProbStaying(OM, Years) |>
+#     purrr::map(\(x) aperm(x, c('Sim', 'Age', 'Year', 'Area'))) |>
 #     purrr::imap(\(x, idx) {
 #       ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
-#                   TimeSteps)
+#                   Years)
 #     }) 
 #   
 #   List$RelativeSize <- GetRelativeSize(OM) |>
 #     purrr::imap(\(x, idx) {
 #       ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
-#                   TimeSteps)
+#                   Years)
 #     })
 #   
 #   List$Movement <- GetMovementAtAge(OM) |>
-#     purrr::imap(\(x, idx) ArrayExpand(x, OM@nSim, meta$nAges[[idx]], TimeSteps)) |>
-#     purrr::map(\(x) aperm(x, c('Sim', 'Age', 'TimeStep', 'FromArea', 'ToArea'))) |>
-#     purrr::map(\(x) Array2List(x, "TimeStep"))
+#     purrr::imap(\(x, idx) ArrayExpand(x, OM@nSim, meta$nAges[[idx]], Years)) |>
+#     purrr::map(\(x) aperm(x, c('Sim', 'Age', 'Year', 'FromArea', 'ToArea'))) |>
+#     purrr::map(\(x) Array2List(x, "Year"))
 # 
 #   # List$FracOther <- purrr::map(OM@Stock, \(x)
 #   #                              x@Spatial@FracOther
 #   #                              ) |>
 #   #   purrr::imap(\(x, idx) {
 #   #     ArrayExpand(x, OM@nSim, meta$nAges[[idx]],
-#   #                 TimeSteps)
+#   #                 Years)
 #   #   }) 
 #   
 #   List$Misc <- purrr::map(OM@Stock, \(x) x |> 
@@ -502,10 +502,10 @@ GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), TimeSte
 #   
 # }
 # 
-# MakeDepletionList <- function(OM, Period='Historical', TimeSteps=NULL) {
+# MakeDepletionList <- function(OM, Period='Historical', Years=NULL) {
 # 
-#   if (is.null(TimeSteps))
-#     TimeSteps <- TimeSteps(OM, Period)
+#   if (is.null(Years))
+#     Years <- Years(OM, Period)
 #     
 #   List <- list()
 #   

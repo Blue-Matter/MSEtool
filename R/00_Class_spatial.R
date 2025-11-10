@@ -173,6 +173,9 @@ Spatial <- function(UnfishedDist=NULL,
   if (methods::is(UnfishedDist, 'stock'))
     return(UnfishedDist@Spatial)
   
+  if (methods::is(UnfishedDist, 'advice'))
+    return(UnfishedDist@Spatial)
+  
   methods::new('spatial',
                UnfishedDist=UnfishedDist,
                ProbStaying=ProbStaying,
