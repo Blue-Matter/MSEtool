@@ -36,7 +36,7 @@
 #' @slot Imps   Hierarchical List of Implementation model objects Level 1 is stock, level 2 is fleet
 #' @slot CatchFrac A list nstock long, of matrices nsim x nfleet representing the fraction of current catches of the various fleets to each stock (each matrix is nsim by nfleet long and rows sum to 1 for each stock)
 #' @slot Allocation  A list nstock long, of matrices nsim x nfleet representing the fraction of future TACs of the various fleets to each stock (each matrix is nsim by nfleet long and rows sum to 1 for each stock).
-#' @slot EFactor A list nstock long, of current effort factors by fleet (default is 1 - same as current effort)
+#' @slot Efactor A list nstock long, of current effort factors by fleet (default is 1 - same as current effort)
 #' @slot Complexes A list of stock complexes. Each position is a vector of stock numbers (as they appear in StockPars) for which data should be aggregated and TAC recommendations split among stocks according to vulnerable biomass
 #' @slot SexPars A list of slots that control sex-specific dynamics, i.e., sex-specific spawning and hermaphroditism. More generally, controls spawning and moving abundance between stocks. See details.
 #' @slot Rel A list of biological / ecological relationships among stocks
@@ -64,7 +64,7 @@ setClass("MOM", representation(Name = "character", Agency="character",
                                Source="character",Stocks='list',
                                Fleets='list',Obs='list',Imps='list',
                                CatchFrac='list',Allocation='list',
-                               EFactor='list',Complexes='list',
+                               Efactor='list',Complexes='list',
                                SexPars='list',Rel='list'))
 
 
@@ -74,7 +74,7 @@ setMethod("initialize", "MOM", function(.Object, Stocks=NULL, Fleets=NULL,
                                         cpars=NULL, interval=4, pstar=0.5,
                                         maxF=0.8, reps=1, nsim=48, proyears=50,
                                         Source=NULL,
-                                        Allocation=NULL,EFactor=NULL,
+                                        Allocation=NULL,Efactor=NULL,
                                         Complexes=NULL, SexPars=NULL, Rel=NULL) {
   # .Object}) ; .Object<-new('MOM')
 
@@ -136,11 +136,11 @@ setMethod("initialize", "MOM", function(.Object, Stocks=NULL, Fleets=NULL,
   .Object@maxF <- maxF
   .Object@reps <- reps
   if(is.null(Allocation))Allocation<-new('list')
-  if(is.null(EFactor))EFactor<-new('list')
+  if(is.null(Efactor))Efactor<-new('list')
   if(is.null(SexPars))SexPars<-new('list')
   if(is.null(Complexes))Complexes<-new('list')
   .Object@Allocation <- Allocation
-  .Object@EFactor<-EFactor
+  .Object@Efactor<-Efactor
   .Object@SexPars<-SexPars
   .Object@Complexes
 
