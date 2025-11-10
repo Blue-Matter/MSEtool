@@ -149,16 +149,20 @@ PopulateImpList <- function(OM, silent=FALSE) {
                            new('imp'))
   )
   
-  for (st in 1:nStocks) {
-    for (fl in 1:nFleets) {
-      if (isS4(OM@Imp)) {
-        Imp <- OM@Imp 
-      } else {
-        Imp <- OM@Imp[[st]][[fl]]
+  if (length(OM@Imp)) {
+    for (st in 1:nStocks) {
+      for (fl in 1:nFleets) {
+        
+        if (isS4(OM@Imp)) {
+          Imp <- OM@Imp 
+        } else {
+          Imp <- OM@Imp[[st]][[fl]]
+        }
+        ImpList[[st]][[fl]] <- Imp
       }
-      ImpList[[st]][[fl]] <- Imp
     }
   }
+
   ImpList
 }
 
