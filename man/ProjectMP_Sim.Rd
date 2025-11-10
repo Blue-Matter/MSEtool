@@ -4,7 +4,7 @@
 \alias{ProjectMP_Sim}
 \title{Projects a single MP from the output of \code{Simulate}}
 \usage{
-ProjectMP_Sim(ProjSim, MP, YearsHist, YearsProj, ManagementYears)
+ProjectMP_Sim(ProjSim, MP, YearsHist, YearsProj, ManagementYears, Sim)
 }
 \description{
 Projects a single MP from the output of \code{Simulate}

@@ -2,6 +2,7 @@
 % Please edit documentation in R/fct_Print.R
 \name{show}
 \alias{show}
+\alias{show,hist-method}
 \alias{show,stock-method}
 \alias{show,ages-method}
 \alias{show,maturity-method}
@@ -13,6 +14,8 @@
 \title{Generic show method}
 \usage{
 show(object)
+
+\S4method{show}{hist}(object)
 
 \S4method{show}{stock}(object)
 

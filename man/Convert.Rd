@@ -14,10 +14,18 @@ ConvertMOM(
   Author = "",
   CurrentYear = NULL,
   TSperYear = 1,
-  Populate = TRUE
+  Populate = TRUE,
+  silent = FALSE
 )
 
-ConvertOM(OM, Author = "", CurrentYear = NULL, TSperYear = 1, Populate = TRUE)
+ConvertOM(
+  OM,
+  Author = "",
+  CurrentYear = NULL,
+  TSperYear = 1,
+  Populate = TRUE,
+  silent = FALSE
+)
 }
 \description{
 Convert old style and new style object classes
