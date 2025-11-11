@@ -1,4 +1,6 @@
 CheckMPClass <- function(MPs) {
+  CheckClass(MPs, 'character', 'MPs')
+
   MPFunctions <- purrr::map(MPs, get)
   names(MPFunctions) <- MPs
   MPClass <- purrr::map(MPFunctions, class) |> unlist()
