@@ -1,18 +1,28 @@
 library(MSEtool)
-library(ggplot2)
-library(openMSE)
+library(SWOMSE)
 
-la <- devtools::load_all
 
-la()
 
-nsim <- 5
-
-SSDir <- 'G:/My Drive/1_PROJECTS/North_Atlantic_Swordfish/OMs/2024_OMs/Reference/001_M0.1_sigmaR0.2_steepness0.69_cpuelambda1_llq1_env7'
-SSDir <- 'G:/My Drive/1_PROJECTS/North_Atlantic_Swordfish/OMs/grid_2022/000_base_case'
+SSDir <- 'G:/My Drive/1_PROJECTS/North_Atlantic_Swordfish/OMs/2024_OMs/Reference/005_M0.2_sigmaR0.2_steepness0.80_cpuelambda1_llq1_env7'
 RepList <- ImportSSReport(SSDir)
 
+nsim <- 5
 OM <- ImportSS(RepList, nSim=nsim)
+Hist <- Simulate(OM)
+
+MSE <- Project_hist(Hist, MPS)
+
+
+MOM <- SWOMSE::MOM_005
+multiHist <- SimulateMOM(MOM)
+
+CompareSSLandings(RepList[[1]], Hist)
+CompareSSRemovals(RepList[[1]], Hist)
+
+multiHist$Female$`Fleet 1`@TSdata$Biomass[1,,] |> rowSums()
+Hist@Biomass[1,1,]
+
+
 
 # TODO -Obs
 # - data conditioning

@@ -104,7 +104,10 @@ StockNames <- function(OM) {
 FleetNames <- function(OM) {
   if (!methods::is(OM, 'om'))
     cli::cli_abort('`OM` must be class `om`')
-  names(OM@Fleet[[1]])
+  if (is.list(OM@Fleet[[1]])) 
+    return(names(OM@Fleet[[1]]))
+  
+  OM@Fleet[[1]]@Name |> as.character()
 }
 
 # 

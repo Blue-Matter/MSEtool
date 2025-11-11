@@ -8,35 +8,44 @@
 ApplyMPAdvice <- function(ProjSim, MP, Year, YearsHist, YearsProj, ManagementYears, Sim) {
   
   YearsAll <- c(YearsHist, YearsProj) 
-  TSIndex <- match(Year, YearsAll)
-  MPAdvicePrevious <- GetPreviousMPAdvice(ProjSim)
+
+  MPAdviceList_Previous <- GetPreviousMPAdvice(ProjSim)
+  Complexes <- ProjSim@OM@Complexes
+  MPData <- GetMPData(ProjSim, Year, YearsAll)
+  CheckDataLength(MPData, Complexes)
   
   if (!Year %in% ManagementYears) {
-    MPAdviceList <- MPAdvicePrevious
+    MPAdviceList <- MPAdviceList_Previous
   } else {
-    MPData <- GetMPData(ProjSim, Year, YearsAll, ManagementYears)
     MPAdviceList <- CalcAdvice(MP, MPData, Sim, Year)
   }
   
-  # loop over stocks/complexes  
-  for (st in seq_along(MPAdviceList)) { 
-    MPAdvice <- MPAdviceList[[st]]
-    ProjSim@Data[[st]]@Misc <- MPAdvice@Misc
+  # loop over stocks/complexes
+  # TODO - test and clean up
+  # for (st in seq_along(MPAdviceList)) { 
+  #   MPAdvice <- MPAdviceList[[st]]
+  #   ProjSim@Data[[st]]@Misc <- MPAdvice@Misc
+  #   
+  #   ProjSim <- ProjSim |>
+  #     MPLog(MP, MPAdvice, Year) |>
+  #     SaveMPTAC(MPAdviceList, st, Year, YearsProj) |> 
+  #     SaveMPAdvice(MPAdvice, Year) 
+  #   
+  # }
+  
+  ProjSim <- ProjSim |>
+    UpdateClosure(MPAdviceList, MPAdviceList_Previous, Year, YearsProj) |>
+    UpdateSelectivity(MPAdviceList, MPAdviceList_Previous, Year, YearsProj) |>
+    UpdateRetention(MPAdviceList, MPAdviceList_Previous, Year, YearsProj) |>
+    UpdateDiscardMortality(MPAdviceList, MPAdviceList_Previous, Year, YearsProj) |>
+    UpdateTAC(MPAdviceList, MPAdviceList_Previous, Year, YearsProj) |>
     
-    ProjSim <- ProjSim |>
-      MPLog(MP, MPAdvice, Year) |>
-      SaveMPTAC(MPAdviceList, st, Year, YearsProj) |> 
-      SaveMPAdvice(MPAdvice, Year) 
-    
-    ProjSim <- ProjSim |>
-      UpdateSpatial(MPAdvice, PreviousMPAdvice, Year, YearsProj, st) |>
-      UpdateSelectivity(MPAdvice, PreviousMPAdvice, YearsAll, TSIndex, st) |>
-      UpdateRetention(MPAdvice, PreviousMPAdvice, YearsAll, TSIndex, st) |>
-      UpdateDiscardMortality(MPAdvice, PreviousMPAdvice, YearsAll, TSIndex, st) |>
-      UpdateTAC(MPAdvice, TSIndex, st) |>
-      UpdateApicalF(MPAdvice, Year, TSIndex, st) |>
-      UpdateEffort(MPAdvice, PreviousMPAdvice, YearsAll, YearsHist, TSIndex, st) 
-  }
+    UpdateEffort(MPAdvice, PreviousMPAdvice, YearsAll, YearsHist, TSIndex, st) 
+  
+
+      # UpdateApicalF(MPAdvice, Year, TSIndex, st) |>
+     
+  
   ProjSim
 }
 
@@ -51,7 +60,7 @@ GetPreviousMPAdvice <- function(ProjSim) {
   PreviousMPAdvice
 }
 
-GetMPData <- function(ProjSim, Year, YearsAll, ManagementYears) {
+GetMPData <- function(ProjSim, Year, YearsAll) {
   TSIndex <- match(Year, YearsAll)
   DataYear <- YearsAll[TSIndex - (ProjSim@OM@DataLag+1)]
   
@@ -102,10 +111,10 @@ SaveMPTAC <- function(ProjSim, MPAdviceList, i, Year, YearsProj) {
   ProjSim
 }
 
-SaveMPAdvice <- function(ProjSim, MPAdvice, Year) {
+SaveMPAdvice <- function(ProjSim, MPAdviceList, Year) {
   if (is.null(ProjSim@Misc$MPAdvice))
     ProjSim@Misc$MPAdvice <- list()
-  ProjSim@Misc$MPAdvice[[as.character(Year)]] <- MPAdvice
+  ProjSim@Misc$MPAdvice[[as.character(Year)]] <- MPAdviceList
   ProjSim
 }
 
@@ -134,4 +143,11 @@ MPLog <- function(ProjSim, MP, MPAdvice, Year) {
   ProjSim
 }
 
+CheckDataLength <- function(MPData, Complexes) {
+  l1 <- length(MPData)
+  l2 <- length(Complexes)
+  
+  if (l1!=l2)
+    cli::cli_abort("length(MPData) != length(Complexes)")
+}
 
