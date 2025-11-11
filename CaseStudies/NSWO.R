@@ -30,6 +30,7 @@ ggplot(df, aes(x=Year, y=Removals)) +
   theme_bw()
 
 
+# TODO -
 # 1. Match SS3
 # 2. Check Fleet catch distribution relative to historical under fixed TAC
 
