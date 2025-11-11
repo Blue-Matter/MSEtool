@@ -20,7 +20,7 @@ RefPointsMSY <- function(MSE=NULL, ...) {
   ArgList <- list(...)
   nSim <- ArgList$nSim
   StockNames <- ArgList$StockNames
-  Year <- ArgList$Year
+  Years <- ArgList$Years
 
   refpointsMSY <- new('refpointsMSY')
 
@@ -28,13 +28,13 @@ RefPointsMSY <- function(MSE=NULL, ...) {
     Array <- array(NA, dim=c(length(StockNames), length(Years)),
                    dimnames=list(
                      Stock=StockNames,
-                     Year=Year))
+                     Year=Years))
   } else {
     Array <- array(NA, dim=c(nSim, length(StockNames), length(Years)),
                    dimnames=list(
                      Sim=1:nSim,
                      Stock=StockNames,
-                     Year=Year))
+                     Year=Years))
 
   }
   for (sl in slotNames(refpointsMSY)) {
