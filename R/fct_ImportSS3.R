@@ -1070,10 +1070,11 @@ ProcessSurveyObsSelectivity <- function(OM, RepList) {
   nStock <- nStock(OM)
   YearsList <- GetSSYears(RepList[[1]], pYear=1)
   
-  for (st in 1:nStock) {
-    for (fl in Survey_Ind) {
+  for (fl in Survey_Ind) {
+    OM@Obs[[1]][[fl]]@Survey@Selectivity <- MakeNamedList(StockNames(OM))
+    for (st in 1:nStock) {
       SurveySelect <- SS2Selectivity(st, fl, RepList, YearsList, Stock=OM@Stock[[st]])
-      OM@Obs[[1]][[fl]]@Survey@Selectivity <- SurveySelect@MeanAtAge
+      OM@Obs[[1]][[fl]]@Survey@Selectivity[[st]] <- SurveySelect@MeanAtAge
     }
   }
   OM

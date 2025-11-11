@@ -163,7 +163,7 @@ GenerateProjectionData_Index <- function(ProjSim, DataYear, YearsHist, YearsAll,
                                          type=c('CPUE', 'Survey')) {
   
   # TODO hyperstability Beta not functional yet - ignored
-  type <- match.arg(type)
+  type <- match.arg(type, c('CPUE', 'Survey'))
   
   DataIndex <- slot(ProjSim@Data[[i]], type)
   if (EmptyObject(DataIndex))

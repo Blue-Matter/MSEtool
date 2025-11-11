@@ -842,8 +842,8 @@ Removals <- function(MSE,  byAge=FALSE, byFleet=FALSE, byArea=FALSE) {
   Discards <- Discards(MSE, byAge, byFleet, byArea)
   
   Removals$Value <- Removals$Value + Discards$Value
-  DF$Variable <- 'Removals'
   DF <- suppressMessages(dplyr::left_join(Removals, Discards))
+  DF$Variable <- 'Removals'
   DF
 }
 

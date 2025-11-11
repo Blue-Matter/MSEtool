@@ -5,19 +5,18 @@ CalcManagementInterval <- function(SimList, YearsProj) {
 }
 
 
-ProjectMP <- function(SimList, MSE, MP, mp=1, YearsHist,YearsProj) {
-
+ProjectMP <- function(SimList, MSE, MPs, mp=1, YearsHist,YearsProj) {
+  MP <- MPs[mp]
   ManagementYears <- CalcManagementInterval(SimList, YearsProj)
   
   StartTime <- Sys.time()
-  SimList_MP <- purrr::imap(SimList, \(ProjSim, Sim) 
+  SimList_MP <- purrr::map(SimList, \(ProjSim) 
                            try(
                              ProjectMP_Sim(ProjSim, 
                                            MP, 
                                            YearsHist, 
                                            YearsProj, 
-                                           ManagementYears,
-                                           Sim=Sim),
+                                           ManagementYears),
                              silent=TRUE
                            ),
                            .progress = list(
@@ -25,6 +24,7 @@ ProjectMP <- function(SimList, MSE, MP, mp=1, YearsHist,YearsProj) {
                              caller = environment(),
                              format = "Projecting {.val {MP}} {cli::pb_bar} {cli::pb_percent}",
                              clear = TRUE))
+                           
   EndTime <- Sys.time()
   
   SimList_MP <- CheckMSERun(SimList_MP, SimList, MP, StartTime, EndTime)
@@ -34,12 +34,12 @@ ProjectMP <- function(SimList, MSE, MP, mp=1, YearsHist,YearsProj) {
 
 
 #' Projects a single MP from the output of `Simulate`
-ProjectMP_Sim <- function(ProjSim, MP,YearsHist,YearsProj, ManagementYears, Sim) {
+ProjectMP_Sim <- function(ProjSim, MP,YearsHist,YearsProj, ManagementYears) {
   # for debugging
- Year <- YearsProj[1]; ts =1; Sim=1
+ Year <- YearsProj[1]; ts =1;
   
   for (ts in seq_along(YearsProj)) {
-   Year <-YearsProj[ts]
+    Year <- YearsProj[ts]
     
     # Generate Data up toYear - 1 - Data Lag done in ApplyMPAdvice
     ProjSim <- GenerateProjectionData(ProjSim, Year, YearsHist, YearsProj)
@@ -49,8 +49,7 @@ ProjectMP_Sim <- function(ProjSim, MP,YearsHist,YearsProj, ManagementYears, Sim)
                              Year, 
                              YearsHist,
                              YearsProj,
-                             ManagementYears,
-                             Sim)
+                             ManagementYears)
 
     #  Simulate Pop Dynamics for this Time Step
     ProjSim <- SimulateDynamics_(ProjSim,Year) 

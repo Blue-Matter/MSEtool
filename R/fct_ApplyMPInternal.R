@@ -47,39 +47,6 @@
 #   
 # }
 
-UpdateEffort <- function(ProjSim, MPAdvice, MPAdvicePrevious, YearsAll, YearsHist, TSIndex) {
-  
-  # *************************** # 
-  st <- 1
-  # *************************** #
-  
-  if (is.null(MPAdvice))
-    return(ProjSim)
-  
-  if (!length(MPAdvice@Effort))
-    return(ProjSim)
-  
-  if (!is.null(MPAdvicePrevious)) {
-    if (IdenticalS4(MPAdvice@Effort, MPAdvicePrevious@Effort))
-      return(ProjSim)  
-  }
-  
-  Year <- YearsAll[TSIndex]
-  YearProj <- YearsAll[TSIndex:length(YearsAll)]
-  nprojTS <- length(YearsAll)
-  projInd <- TSIndex:nprojTS
-  
-  if (length(MPAdvice@Effort)<1)
-    MPAdvice@Effort <- 1
-  
-  if (length(MPAdvice@Effort)>0) {
-    LastHistIndex <- length(YearsHist)
-    futureEffort <- ProjSim@Effort[st,LastHistIndex,] * MPAdvice@Effort
-    ProjSim@Effort[st,projInd,] <-  matrix(futureEffort, nrow=length(projInd), ncol=length(futureEffort), byrow=TRUE)
-  } 
-  ProjSim
-}
-
 
 
 

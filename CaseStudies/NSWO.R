@@ -1,16 +1,42 @@
 library(MSEtool)
 library(SWOMSE)
 
-
-
 SSDir <- 'G:/My Drive/1_PROJECTS/North_Atlantic_Swordfish/OMs/2024_OMs/Reference/005_M0.2_sigmaR0.2_steepness0.80_cpuelambda1_llq1_env7'
 RepList <- ImportSSReport(SSDir)
 
 nsim <- 5
 OM <- ImportSS(RepList, nSim=nsim)
+
 Hist <- Simulate(OM)
 
-MSE <- Project_hist(Hist, MPS)
+FixedTAC <- function(Data) {
+  advice <- Advice()
+  advice@TAC <- 10000
+  advice
+}
+class(FixedTAC) <- 'mp'
+
+MPs='FixedTAC'
+MSE <- Project_hist(Hist, MPs)
+
+df <- Removals(MSE, byFleet=TRUE) |> dplyr::filter(Sim==1) |>
+  dplyr::group_by(Year, Fleet) |>
+  dplyr::summarise(Removals=sum(Value))
+
+ggplot(df, aes(x=Year, y=Removals)) +
+  facet_wrap(~Fleet, scales='free') +
+  geom_line() +
+  expand_limits(y=0) +
+  theme_bw()
+
+
+# 1. Match SS3
+# 2. Check Fleet catch distribution relative to historical under fixed TAC
+
+
+OM@Allocation$Female
+Hist@OM@Allocation$Female
+
 
 
 MOM <- SWOMSE::MOM_005

@@ -1,11 +1,18 @@
-
+GetPreviousMPAdvice <- function(ProjSim) {
+  if (is.null(ProjSim@Misc$MPAdvice))
+    return(NULL)
+  
+  ProjSim@Misc$MPAdvice[[length(ProjSim@Misc$MPAdvice)]]
+}
+  
+  
 # TODO
 # - make logs informative errors for interactive application of CalcAdvice
 #   and store as logged error messages for MSE runs
 
 # TODO
 # - apply BioEconomic to Effort
-ApplyMPAdvice <- function(ProjSim, MP, Year, YearsHist, YearsProj, ManagementYears, Sim) {
+ApplyMPAdvice <- function(ProjSim, MP, Year, YearsHist, YearsProj, ManagementYears) {
   
   YearsAll <- c(YearsHist, YearsProj) 
 
@@ -17,48 +24,36 @@ ApplyMPAdvice <- function(ProjSim, MP, Year, YearsHist, YearsProj, ManagementYea
   if (!Year %in% ManagementYears) {
     MPAdviceList <- MPAdviceList_Previous
   } else {
-    MPAdviceList <- CalcAdvice(MP, MPData, Sim, Year)
+    MPAdviceList <- CalcAdvice(MP, MPData, Year)
   }
   
+  ProjSim <- SaveMPAdvice(ProjSim, MPAdviceList, Year) 
+  
   # loop over stocks/complexes
-  # TODO - test and clean up
-  # for (st in seq_along(MPAdviceList)) { 
-  #   MPAdvice <- MPAdviceList[[st]]
-  #   ProjSim@Data[[st]]@Misc <- MPAdvice@Misc
-  #   
-  #   ProjSim <- ProjSim |>
-  #     MPLog(MP, MPAdvice, Year) |>
-  #     SaveMPTAC(MPAdviceList, st, Year, YearsProj) |> 
-  #     SaveMPAdvice(MPAdvice, Year) 
-  #   
-  # }
+  for (st in seq_along(MPAdviceList)) {
+    MPAdvice <- MPAdviceList[[st]]
+    ProjSim@Data[[st]]@Misc <- MPAdvice@Misc
+    ProjSim <- ProjSim |>
+      MPLog(MP, MPAdvice, Year) |>
+      SaveMPTAC(MPAdviceList, st, Year, YearsProj) 
+
+  }
   
   ProjSim <- ProjSim |>
     UpdateClosure(MPAdviceList, MPAdviceList_Previous, Year, YearsProj) |>
     UpdateSelectivity(MPAdviceList, MPAdviceList_Previous, Year, YearsProj) |>
     UpdateRetention(MPAdviceList, MPAdviceList_Previous, Year, YearsProj) |>
     UpdateDiscardMortality(MPAdviceList, MPAdviceList_Previous, Year, YearsProj) |>
-    UpdateTAC(MPAdviceList, MPAdviceList_Previous, Year, YearsProj) |>
-    
-    UpdateEffort(MPAdvice, PreviousMPAdvice, YearsAll, YearsHist, TSIndex, st) 
+    UpdateTAC(MPAdviceList, MPAdviceList_Previous, Year, YearsAll) |>
+    UpdateEffort(MPAdviceList, MPAdviceList_Previous, Year, YearsHist, YearsProj) 
   
-
-      # UpdateApicalF(MPAdvice, Year, TSIndex, st) |>
-     
+  TSIndex <- match(Year, YearsAll)
+  ProjSim@Effort[1,TSIndex-2,1]
+  ProjSim@Effort[1,TSIndex,1]
   
   ProjSim
 }
 
-
-GetPreviousMPAdvice <- function(ProjSim) {
-  if (!is.null(ProjSim@Misc$MPAdvice) & length(ProjSim@Misc$MPAdvice)>0) {
-    # Has MPAdvice Changed from last time 
-    PreviousMPAdvice <- ProjSim@Misc$MPAdvice[[length(ProjSim@Misc$MPAdvice)]] 
-  } else {
-    PreviousMPAdvice <- NULL
-  }
-  PreviousMPAdvice
-}
 
 GetMPData <- function(ProjSim, Year, YearsAll) {
   TSIndex <- match(Year, YearsAll)
@@ -70,21 +65,21 @@ GetMPData <- function(ProjSim, Year, YearsAll) {
   MPData
 }
 
-CalcAdvice <- function(MP, Data, Sim=NULL, Year=NULL) {
+CalcAdvice <- function(MP, Data, Year=NULL) {
   MPFunction <- get(MP)
   
   if (inherits(MPFunction, 'mmp'))
-    return(CalcAdvice_MMP(MP, Data, Sim, Year))
+    return(CalcAdvice_MMP(MP, Data, Year))
   
-  CalcAdvice_MP(MP, Data, Sim, Year) 
+  CalcAdvice_MP(MP, Data, Year) 
 }
 
-CalcAdvice_MP <- function(MP, Data, Sim=NULL, Year=NULL) {
-  MPAdviceList <- MakeNamedList(names(MPData))
+CalcAdvice_MP <- function(MP, Data, Year=NULL) {
+  MPAdviceList <- MakeNamedList(names(Data))
   MPFunction <- get(MP)
-  for (i in seq_along(MPData)) { 
-    MPAdvice <- try(MPFunction(Data=MPData[[i]]), silent=TRUE)
-    MPErrorLog(MPAdvice, Sim, Year)
+  for (i in seq_along(Data)) { 
+    MPAdvice <- try(MPFunction(Data=Data[[i]]), silent=TRUE)
+    MPErrorLog(MPAdvice, Year)
     MPAdviceList[[i]] <- MPAdvice
   }
   MPAdviceList
@@ -94,9 +89,9 @@ CalcAdvice_MMP <- function(MP, Data) {
   # TODO 
   cli::cli_abort("MP class `mmp` currently not supported", call=NULL)
   
-  MPAdvice <- MakeNamedList(names(MPData))
-  for (i in seq_along(MPData)) { 
-    MPAdvice[[i]] <- try(MPFunction(Data=MPData[[i]]), silent=TRUE)
+  MPAdvice <- MakeNamedList(names(Data))
+  for (i in seq_along(Data)) { 
+    MPAdvice[[i]] <- try(MPFunction(Data=Data[[i]]), silent=TRUE)
   }
   MPAdvice
 }

@@ -23,10 +23,10 @@ ConditionObs_Sim <- function(HistSim, HistYears, ProjYears) {
   if (nData<1)
     return(HistSim)
   
-  if (nData>1) {
-    cli::cli_alert_warning('Observation Error Conditioning is currently not supported for OMs with more than one set of real fishery data. `Obs` will not be calculated!')
-    return(HistSim)
-  }
+  # if (nData>1) {
+  #   cli::cli_alert_warning('Observation Error Conditioning is currently not supported for OMs with more than one set of real fishery data. `Obs` will not be calculated!')
+  #   return(HistSim)
+  # }
     
   Complexes <- HistSim@OM@Complexes
 
@@ -223,7 +223,7 @@ ConditionObs_Index <- function(HistSim, FisheryData, HistYears, ProjYears,
    
       } else if (SelectivityAtAge == 'Obs') {
         for (st in seq_along(stocks)) {
-          SelectivityAtAgeList[[st]] <- IndexObs@Selectivity
+          SelectivityAtAgeList[[st]] <- IndexObs@Selectivity[[st]]
         }
       }
     } else {

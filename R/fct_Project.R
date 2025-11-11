@@ -67,11 +67,11 @@ Project_hist <- function(Hist=NULL,
   MSE <- Hist2MSE(Hist, MPs) 
 
   # ---- Project MPs ----
-  cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
+  if (!silent) 
+    cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
   mp <- 1 # for debugging
   for (mp in seq_along(MPs)) {
-    MP <- MPs[mp]
-    MSE <- ProjectMP(SimList, MSE, MP, mp, YearsHist, YearsProj) 
+    MSE <- ProjectMP(SimList, MSE, MPs, mp, YearsHist, YearsProj) 
   }
   
   MSE@Log <- c(Hist@Log, MSE@Log)
