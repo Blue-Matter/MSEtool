@@ -385,9 +385,9 @@ Longitude <- function(x) {
 #' @export
 nAge <- function(x, st=1) {
   if (inherits(x, 'stock'))
-    return(x@Ages@MaxAge+1)
+    return(x@Ages@Classes)
   if (inherits(x, 'ages'))
-    return(x@MaxAge+1)
+    return(x@Classes)
   if (inherits(x, 'om')) {
     nages <- purrr::map(x@Stock, \(x) {
       length(x@Ages@Classes)

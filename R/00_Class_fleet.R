@@ -7,7 +7,6 @@
 #' Fleet Object
 #'
 #' @include 00_Class_discardmortality.R
-#' @include 00_Class_effort.R
 #' @include 00_Class_selectivity.R
 #' @include 00_Class_retention.R
 #' 

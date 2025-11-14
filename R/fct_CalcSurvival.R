@@ -32,7 +32,7 @@ CalcSurvival <- function(NaturalMortalityAtAge, # Sim, nAge, nTS (Sim optional)
       SpawnTimeFrac <- matrix(SpawnTimeFrac, nSim, nTS, byrow=FALSE)
     }
       
-    Semelparous <- Semelparous |> ExpandSims(nSim)
+    Semelparous <- Semelparous |> ExtendSims(nSim)
 
     for (a in 1:nAge) {
       ZthisAge <- TotalMortalityAtAge[,a,]

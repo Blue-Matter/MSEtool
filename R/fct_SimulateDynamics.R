@@ -14,7 +14,7 @@ SimulateDynamics <- function(SimList,
     
   }
   
-  SimList <- purrr::map(SimList, \(HistSim) 
+  SimListOut <- purrr::map(SimList, \(HistSim) 
                         SimulateDynamics_(HistSim, HistYears),
                         .progress = list(
                           type = "iterator", 
@@ -22,7 +22,7 @@ SimulateDynamics <- function(SimList,
                           clear = TRUE))
 
   # populate CatchFrac if needed
-  SimList <- purrr::map(SimList, \(HistSim) {
+  SimListOut <- purrr::map(SimListOut, \(HistSim) {
     if (length(HistSim@OM@CatchFrac))
       return(HistSim)
     
@@ -34,6 +34,28 @@ SimulateDynamics <- function(SimList,
     HistSim
   })
   
-  class(SimList) <- 'simlist'
-  SimList
+  # Add dimensiom names back
+  SimListOut <- purrr::map2(SimList, SimListOut, AddDimensionNames)
+    
+  
+  class(SimListOut) <- 'simlist'
+  SimListOut
+}
+
+AddDimensionNames <- function(Hist, HistOut) {
+  slots <- slotNames('timeseries')
+  for (sl in slots) { 
+    object <- slot(HistOut, sl) 
+    Namedobject <- slot(Hist, sl)
+    if (is.list(object)) {
+      object <- purrr::map2(object, Namedobject, \(x,y) {
+        dimnames(x) <- dimnames(y)
+        x 
+      })
+    } else {
+      dimnames(object) <- dimnames(Namedobject)
+    }
+    slot(HistOut, sl) <- object
+  }
+  HistOut
 }

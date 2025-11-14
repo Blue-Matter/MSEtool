@@ -89,9 +89,7 @@ PopulateFleetList <- function(OM, silent=FALSE) {
       Fleet@pYear <- OM@pYear
       Fleet@CurrentYear <- OM@CurrentYear
       Stock <- StockList[[st]]
-  
       Fleet@TSperYear <- Stock@TSperYear
-      
       Fleet@Years <- CalcYears(nYear=Stock@nYear, 
                                        pYear=Stock@pYear, 
                                        CurrentYear=Stock@CurrentYear, 

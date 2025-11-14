@@ -34,8 +34,7 @@ UniqueYears <- function(array) {
   for (i in seq_along(logVec)[-1]) {
     Comp1 <- abind::asub(array, i, TSInd)
     Comp2 <- abind::asub(array, i-1, TSInd)
-    logVec[i] <- !any(round(Comp1, 4) != round(Comp2, 4))
+    logVec[i] <- any(round(Comp1, 4) != round(Comp2, 4))
   }
-  
   which(logVec)
 }

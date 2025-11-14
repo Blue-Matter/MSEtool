@@ -5,8 +5,10 @@ CalcManagementInterval <- function(SimList, YearsProj) {
 }
 
 
-ProjectMP <- function(SimList, MSE, MPs, mp=1, YearsHist,YearsProj) {
-  MP <- MPs[mp]
+ProjectMP <- function(SimList, MSE, MP, mp=1, YearsHist,YearsProj) {
+  
+  ProjSim <- SimList[[1]] # for debugging 
+  
   ManagementYears <- CalcManagementInterval(SimList, YearsProj)
   
   StartTime <- Sys.time()

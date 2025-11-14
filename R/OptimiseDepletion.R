@@ -204,8 +204,6 @@ OptCatchability <- function(pars, HistSim, YearsHist, debug=FALSE) {
     }
   }
   
-  
-  
   depOBJ <- sum(log(PredDep/DepletionTarget)^2)
   
   if (debug) {

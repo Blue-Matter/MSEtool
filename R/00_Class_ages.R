@@ -29,12 +29,11 @@ setMethod("initialize", "ages", function(.Object,
                                          PlusGroup=TRUE) {
   .Object@MinAge <- MinAge
   TSperYear <- CalcTSperYear(Units)
+  .Object@Units <- Units
   if (!is.na(MaxAge)) {
     .Object@MaxAge <- MaxAge
-    .Object@Classes <- seq(MinAge, by=1/TSperYear, MaxAge)
+    .Object@Classes <- CalcAgeClasses(.Object)
   }
-  
-  .Object@Units <- Units
   .Object@PlusGroup <- PlusGroup
   .Object
 })

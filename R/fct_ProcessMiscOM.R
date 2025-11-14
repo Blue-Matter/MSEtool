@@ -8,17 +8,20 @@ ProcessMiscOM <- function(Hist) {
     return(Hist)
 
   Hist |>
-    FillFromMisc('Number', FALSE) |>
-    FillFromMisc('Biomass', FALSE) |> 
-    FillFromMisc('SBiomass', FALSE) |> 
+    FillFromMisc('Number') |>
+    FillFromMisc('Biomass') |> 
+    FillFromMisc('SBiomass') |> 
     FillFromMisc('SProduction') |> 
-    FillFromMisc('Landings', FALSE) |> 
-    FillFromMisc('Discards', FALSE) |> 
-    FillFromMisc('Effort', FALSE) |> 
-    FillFromMisc('FDead', FALSE) |> 
-    FillFromMisc('FRetain', FALSE) |> 
-    FillFromMisc('FDeadArea', FALSE) |> 
-    FillFromMisc('FRetainArea', FALSE)
+    FillFromMisc('Landings') |> 
+    FillFromMisc('Discards') |> 
+    FillFromMisc('Effort') |> 
+    FillFromMisc('Distribution') |> 
+    FillFromMisc('Catchability') |> 
+    FillFromMisc('qArea') |> 
+    FillFromMisc('FDead') |> 
+    FillFromMisc('FRetain') |> 
+    FillFromMisc('FDeadArea') |> 
+    FillFromMisc('FRetainArea')
   
 }
 
@@ -56,7 +59,7 @@ FillFromMisc <- function(Hist, sl='Biomass', done=TRUE) {
     )
   }
   
-  value <- ExpandSims(value, nSim(Hist))
+  value <- ExtendSims(value, nSim(Hist))
   
   ArrayFill(slot(Hist, sl)) <- value
   Hist

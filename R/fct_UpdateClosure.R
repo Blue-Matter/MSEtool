@@ -63,7 +63,7 @@ ProcessAdvice_Closure <- function(Closure, FleetNames, nArea, YearsProj) {
   
   Closure |> 
     AddDimension('Year', val=YearsProj[1]) |>
-    ExpandYears(YearsProj) |>
+    ExtendYears(YearsProj) |>
     aperm(c('Year', 'Fleet', 'Area'))
   
 }

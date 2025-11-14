@@ -22,6 +22,8 @@ setClass("hist",
                  Unfished='unfished',
                  RefPointsMSY='refpointsMSY',
                  RefPointsPR='refpointsPR',
+                 RefLandings='array.null',
+                 RefRemovals='array.null',
                  Data='list.data',
                  Log='list'
          ), 

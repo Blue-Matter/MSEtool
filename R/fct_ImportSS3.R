@@ -209,7 +209,7 @@ SS2Stock <- function(st, RepList, YearsList, nSim) {
 SS2Ages <- function(st, RepList, YearsList) {
   Ages(MaxAge=CalcSSMaxAgeClass(RepList[[1]], YearsList),
        MinAge=CalcSSMinAgeClass(RepList[[1]], YearsList),
-       Units=YearsList$TimeUnits)
+       Units='quarter')
 }
 
 GetSSAgeClasses <- function(replist) {
@@ -232,7 +232,7 @@ CalcSSMaxAgeClass <- function(replist, YearsList) {
   } else if (TimeUnits=='half-year') {
     return(maxAgeYear+1/2)
   } else if (TimeUnits=='quarter') {
-    return((maxAgeYear+3/4))
+    return((maxAgeYear+3/4)*4)
   } else if (TimeUnits=='month') {
     return((maxAgeYear+11/12))
   } else if (TimeUnits=='week') {
@@ -257,7 +257,7 @@ CalcSSMinAgeClass <- function(replist, YearsList) {
 
     MaxAge <- CalcSSMaxAgeClass(replist, YearsList)
     Ages <- seq( min(AgeClasses), by=1/YearsList$TSperYear, to=MaxAge)
-    Ages[birthseas]
+    Ages[birthseas]*YearsList$TSperYear
   }
 
 GetSS_Length_at_Age <- function(st, replist, YearsList) {
@@ -388,14 +388,14 @@ GetSS_M_at_age <- function(st, replist, YearsList, Ages) {
   }
   
   if (YearsList$TimeUnits == 'quarter') {
-    M_at_ageDF <- Array2DF(M_at_age)
+    M_at_ageDF <- Array2DF(M_at_age) 
     M_at_ageDF$AgeAnnual <- M_at_ageDF$Age
-    M_at_ageDF$Age <- M_at_ageDF$Age * YearsList$TSperYear
+    
+    AgeClassesFull <- seq(0, to=max(Ages@Classes), by=1/4)
+    tempDF <- data.frame(Age=AgeClassesFull, 
+                         Year=rep(unique(M_at_ageDF$Year), each=length(AgeClassesFull)))
+
     M_at_ageDF$Value <- M_at_ageDF$Value/YearsList$TSperYear
-    
-    tempDF <- data.frame(Age=Ages@Classes, 
-                         Year=rep(unique(M_at_ageDF$Year), each=length(Ages@Classes)))
-    
     M_at_ageDF_seasonal <- dplyr::left_join(tempDF, M_at_ageDF,
                                             by = dplyr::join_by(Age, Year)) |>
       dplyr::select(-AgeAnnual) |>
@@ -470,7 +470,7 @@ GetSS_Fecundity <- function(st, replist, YearsList, Ages) {
     return(fec_age) # continuous spawning
 
   AllYears <- c(YearsList$YearsHist, YearsList$YearsProj)
-  fullArray <- ExpandYears(fec_age, AllYears)
+  fullArray <- ExtendYears(fec_age, AllYears)
   
   spawndf <- data.frame(AllYears, AllSeas) |> 
     dplyr::mutate(Spawn=AllSeas %in% replist$spawnseas)
@@ -831,27 +831,27 @@ GetSSALK_annual <- function(st, replist, AgeClasses, LengthClasses, YearsList) {
 
 GetSSALK_seasonal <- function(st, replist, AgeClasses, LengthClasses, YearsList) {
   nseasons <- replist$nseasons
+  AgeClassesFull <- seq(0, to=max(AgeClasses), by=1/YearsList$TSperYear)
   
-  ALK_Out <- array(NA, dim=c(length(AgeClasses),
+  ALK_Out <- array(NA, dim=c(length(AgeClassesFull),
                              length(LengthClasses)),
                    dimnames = list(
-                     Age=AgeClasses,
+                     Age=AgeClassesFull,
                      Class=LengthClasses)
                    )
-
   for (seas in 1:nseasons) {
     ALK <- replist$ALK[, , paste0("Seas: ", seas, " Sub_Seas: 2 Morph: ", st)]
     lbinspop <- sort(as.numeric(dimnames(ALK)$Length))
     ALK <- ALK[match(lbinspop, dimnames(ALK)$Length), ] |> t()
     names(dimnames(ALK))[1] <- 'Age'
   
-    ages <- AgeClasses[seq(from=seas, by=YearsList$TSperYear, length.out=nrow(ALK))]
+    ages <- AgeClassesFull[seq(from=seas, by=YearsList$TSperYear, length.out=nrow(ALK))]
     dimnames(ALK)$Age <- ages
-    
-    rowind <- match(ages, AgeClasses)
+  
+    rowind <- match(ages, AgeClassesFull)
     ALK_Out[rowind, ] <- ALK
   }
-  ALK_Out
+  ArraySubsetAge(ALK_Out, AgeClasses)
 }
 
 
@@ -939,6 +939,11 @@ GetSS_SelectivityAtAge <- function(st, fl, replist, YearsList, Stock) {
   for (yr in unique(AgeSelect$Yr)) {
     SelectAtAge <- AgeSelect |> dplyr::filter(Yr==yr) |> 
       dplyr::arrange(Age, Seas)
+    
+    SeasonalAges <- seq(min(SelectAtAge$Age), by=1/YearsList$TSperYear, to=max(SelectAtAge$Age)+(YearsList$TSperYear-1)/YearsList$TSperYear)
+    SelectAtAge$Age <- SeasonalAges
+    SelectAtAge <- SelectAtAge |>
+      dplyr::filter(Age%in%AgeClasses)
     
     ind1 <- match(yr, YearsAll)
     ind2 <- match(yr+1, YearsAll) - 1
@@ -1561,23 +1566,31 @@ GetSSNatAge <- function(replist, OM, yrs=NULL, sex=1) {
     
   }
     
-  
   AgeClasses <- OM@Stock[[1]]@Ages@Classes
+  AgeClassesFull <- seq(0, to=max(AgeClasses), by=1/OM@TSperYear)
   HistYears <- Years(OM, 'H')
   
   SSN <- replist$natage |> dplyr::filter(Yr%in%yrs, `Beg/Mid`=='B', Sex==sex) |>
     dplyr::select(Yr, Time, Seas, as.character(GetSSAgeClasses(replist))) |>
     tidyr::pivot_longer(as.character(GetSSAgeClasses(replist))) |>
-    dplyr::mutate(Age=as.numeric(name))
+    dplyr::mutate(Age=as.numeric(name)) |>
+    dplyr::arrange(Age)
   
+  SSN_Ages <- SSN$Age
   Seas <- unique(SSN$Seas)
+  SSN$Age <- AgeClassesFull
+  
+  SSN <- SSN |> dplyr::arrange(Yr, Age) |>
+    dplyr::filter(Age%in% AgeClasses)
+
+  
   nSeas <- length(Seas)
   nTS <- length(yrs) * nSeas
   Yrs <- SSN$Yr |> unique()
   
   Initial <- array(NA, c(length(AgeClasses),nTS), 
                    dimnames=list(
-                     Age=AgeClasses/nSeas,
+                     Age=AgeClasses,
                      Year=HistYears[1:nTS]
                    ))
   
@@ -1585,12 +1598,9 @@ GetSSNatAge <- function(replist, OM, yrs=NULL, sex=1) {
   for (yr in Yrs) {
     for (sea in 1:nSeas) {
       i <- i+1
-      n <- SSN |> dplyr::filter(Seas==sea, Yr<yr+1 & Yr>=yr) |>
-        dplyr::mutate(Age=Age*4)
+      n <- SSN |> dplyr::filter(Seas==sea, Yr<yr+1 & Yr>=yr) 
+    
       
-      n$Age <- n$Age + (sea-4)+1
-      n$Age <- n$Age / 4  + 2/4
-      n <- n |> dplyr::filter(Age>=0)
       
       temp <- array(n$value, dim=c(nrow(n), 1),
                     dimnames=list(

@@ -4,6 +4,15 @@
 #' @export
 show <- function(object) methods::show(object)
 
+# ---- MSE ----
+
+#' @rdname show
+setMethod('show', 'mse', function(object) {
+  cli::cli_par()
+  cli::cli_h2("A {.help MSEtool::MSE} Object")
+  cli::cli_text("...")
+})
+
 
 # ---- Hist ----
 
@@ -13,6 +22,16 @@ setMethod('show', 'hist', function(object) {
   cli::cli_h2("A {.help MSEtool::Hist} Object")
   cli::cli_text("...")
 })
+
+# ---- Data ----
+
+#' @rdname show
+setMethod('show', 'data', function(object) {
+  cli::cli_par()
+  cli::cli_h2("A {.help MSEtool::Data} Object")
+  cli::cli_text("...")
+})
+
 
 # ---- Stock ----
 

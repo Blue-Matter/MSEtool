@@ -2,7 +2,9 @@
 % Please edit documentation in R/fct_Print.R, R/fct_printStock.R
 \name{show}
 \alias{show}
+\alias{show,mse-method}
 \alias{show,hist-method}
+\alias{show,data-method}
 \alias{show,ages-method}
 \alias{show,maturity-method}
 \alias{show,fecundity-method}
@@ -15,7 +17,11 @@
 \usage{
 show(object)
 
+\S4method{show}{mse}(object)
+
 \S4method{show}{hist}(object)
+
+\S4method{show}{data}(object)
 
 \S4method{show}{ages}(object)
 

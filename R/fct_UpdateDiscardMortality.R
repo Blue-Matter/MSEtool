@@ -53,7 +53,7 @@ UpdateDiscardMortality <- function(ProjSim, MPAdviceList, MPAdviceList_Previous,
                                       Year=YearsProj[1]) 
           
           ArrayFill(slot(ProjSim@OM@Fleet[[st]],type)@DiscardMortality[,,fl]) <- MeanAtAge |>
-            ExpandYears(YearsProj)
+            ExtendYears(YearsProj)
           
         } else if (length(DiscardMortality@MeanAtLength)) {
           Length <- ProjSim@OM@Stock[[st]]@Length 
@@ -85,7 +85,8 @@ UpdateDiscardMortality <- function(ProjSim, MPAdviceList, MPAdviceList_Previous,
                                               Sim=1,
                                               Class=DiscardMortality@Classes,
                                               Year=YearsProj[1])
-          ) |> ExpandYears(YearsProj)
+          ) |> 
+            ExtendYears(YearsProj)
           DiscardMortality <- MeanAtLength2MeanAtAge(DiscardMortality, Length, Ages, nsim=1, Years=YearsProj)                              
           
           MeanAtLength <- DiscardMortality@MeanAtLength |> DropDimension('Sim')

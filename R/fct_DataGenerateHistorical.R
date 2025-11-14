@@ -243,7 +243,7 @@ GenerateHistoricalData_Index <- function(HistSim, HistYears, i, stocks,
     # Ref value 
     if (length(IndexObs@Ref)) {
       # TODO - index ref value if units != Biomass
-      if (!is.null(HistSim@RefPointsMSY@BMSY)) {
+      if (!is.null(HistSim@RefPointsMSY@BMSY) && length(HistSim@RefPointsMSY@BMSY)) {
         adjust <- mean(SimulatedIndex/apply(HistSim@Biomass[i,,drop=FALSE], 2, mean, na.rm=TRUE), na.rm=TRUE)
         IndexData@Ref <- array(mean(HistSim@RefPointsMSY@BMSY[i,], na.rm=TRUE) *  adjust *IndexObs@q)  
       }

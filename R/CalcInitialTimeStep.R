@@ -12,14 +12,14 @@ CalcInitialYear <- function(Hist, silent=FALSE) {
   for (st in 1:nStock) {
     
     EquilNumber <- abind::adrop(Hist@Unfished@Equilibrium@Number[[st]][,,1, drop=FALSE], 3) |>
-      ExpandSims(nSim)
+      ExtendSims(nSim)
     DynNumber <- EquilNumber
     
     RecDevInit <- Hist@OM@Stock[[st]]@SRR@RecDevInit |>
-      ExpandSims(nSim)
+      ExtendSims(nSim)
     RecDevHist <- Hist@OM@Stock[[st]]@SRR@RecDevHist
     RecDevHist1 <- RecDevHist[,1, drop=FALSE] |>
-      ExpandSims(nSim)
+      ExtendSims(nSim)
     names(dimnames(RecDevHist1))[2] <- 'Age'
   
     ages <- as.numeric(dimnames(RecDevInit)[['Age']])
@@ -65,10 +65,10 @@ DoOptInitialDepletion <- function(Hist, st) {
   
   if (DepletionReference == 'B0') {
     # currently using Unfished Equilibrium Biomass from first time step
-    RefVal <- abind::adrop(Hist@Unfished@Equilibrium@Biomass[,,1, drop=FALSE], 3) |> ExpandSims(Hist@OM@nSim) |>
+    RefVal <- abind::adrop(Hist@Unfished@Equilibrium@Biomass[,,1, drop=FALSE], 3) |> ExtendSims(Hist@OM@nSim) |>
       apply(c('Sim', 'Stock'), sum)
   } else {
-    RefVal <- abind::adrop(Hist@Unfished@Equilibrium@SBiomass[,,1, drop=FALSE], 3) |> ExpandSims(Hist@OM@nSim) |>
+    RefVal <- abind::adrop(Hist@Unfished@Equilibrium@SBiomass[,,1, drop=FALSE], 3) |> ExtendSims(Hist@OM@nSim) |>
       apply(c('Sim', 'Stock'), sum) 
   }
   RefVal <- RefVal[,st, drop=FALSE] |> abind::adrop(2)

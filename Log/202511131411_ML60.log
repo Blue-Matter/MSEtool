@@ -1,0 +1,12 @@
+
+Simulation 1
+Error in dimnames(AtAge) <- list(Sim = 1:dd[1], Age = dimnames(Length@MeanAtAge)[[AgeInd]],  : 
+  length of 'dimnames' [3] not equal to array extent
+
+Simulation 2
+Error in dimnames(AtAge) <- list(Sim = 1:dd[1], Age = dimnames(Length@MeanAtAge)[[AgeInd]],  : 
+  length of 'dimnames' [3] not equal to array extent
+
+Simulation 3
+Error in dimnames(AtAge) <- list(Sim = 1:dd[1], Age = dimnames(Length@MeanAtAge)[[AgeInd]],  : 
+  length of 'dimnames' [3] not equal to array extent

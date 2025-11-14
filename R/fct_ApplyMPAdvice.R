@@ -47,10 +47,6 @@ ApplyMPAdvice <- function(ProjSim, MP, Year, YearsHist, YearsProj, ManagementYea
     UpdateTAC(MPAdviceList, MPAdviceList_Previous, Year, YearsAll) |>
     UpdateEffort(MPAdviceList, MPAdviceList_Previous, Year, YearsHist, YearsProj) 
   
-  TSIndex <- match(Year, YearsAll)
-  ProjSim@Effort[1,TSIndex-2,1]
-  ProjSim@Effort[1,TSIndex,1]
-  
   ProjSim
 }
 
@@ -85,7 +81,7 @@ CalcAdvice_MP <- function(MP, Data, Year=NULL) {
   MPAdviceList
 }
 
-CalcAdvice_MMP <- function(MP, Data) {
+CalcAdvice_MMP <- function(MP, Data, Year=NULL) {
   # TODO 
   cli::cli_abort("MP class `mmp` currently not supported", call=NULL)
   
@@ -99,9 +95,9 @@ CalcAdvice_MMP <- function(MP, Data) {
 SaveMPTAC <- function(ProjSim, MPAdviceList, i, Year, YearsProj) {
   if (!length(ProjSim@Data[[i]]@TAC)) 
     ProjSim@Data[[i]]@TAC <- array(NA, length(YearsProj), dimnames = list(Year=YearsProj))
-  ProjSim@Data[[i]]@TAC[match(Year, YearsProj)] <- ifelse(is.null(MPAdvice@TAC), 
+  ProjSim@Data[[i]]@TAC[match(Year, YearsProj)] <- ifelse(is.null(MPAdviceList[[i]]@TAC), 
                                                           NA, 
-                                                          MPAdvice@TAC)
+                                                          MPAdviceList[[i]]@TAC)
   
   ProjSim
 }
@@ -114,19 +110,19 @@ SaveMPAdvice <- function(ProjSim, MPAdviceList, Year) {
 }
 
 
-MPErrorLog <- function(MPAdvice, Sim=NULL, Year=NULL) {
-  if (!inherits(MPAdvice, 'advice')) 
-    if (is.null(Sim) || is.null(Year))  {
-      cli::cli_abort(c("x"= "MP {.val {MP}} did not return an object of class {.cls advice}",
-                       ">"= " Returned object:  {MPAdvice}"), 
-                     call=NULL)
-    } else {
-      cli::cli_abort(c("x"= "MP {.val {MP}} did not return an object of class {.cls advice}",
-                       "i"= "Year: {Year}",
-                       "i"= "Sim: {Sim}",
-                       ">"= " Returned object:  {MPAdvice}"), 
-                     call=NULL)
-    }
+MPErrorLog <- function(MPAdvice, Year=NULL) {
+  if (inherits(MPAdvice, 'advice')) 
+    return(NULL)
+  
+  if (is.null(Year))  {
+    stop(MPAdvice)
+    # don't use cli for logging
+    # cli::cli_abort(c("x"= "MP {.val {MP}} did not return an object of class {.cls advice}",
+    #                  ">"= " Returned object:  {MPAdvice}"), 
+    #                call=NULL)
+  } else {
+    stop(c(MPAdvice, paste('Year = ', Year)))
+  }
 }
 
 MPLog <- function(ProjSim, MP, MPAdvice, Year) {

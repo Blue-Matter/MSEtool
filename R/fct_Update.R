@@ -5,6 +5,7 @@ UpdateObject <- function(object, ...) {
   object <- UpdateSlots(object)
   
   DotsList <- list(...)
+  names(DotsList) <- lapply(DotsList, class) |> lapply(firstup)
   if (!length(DotsList))
     return(object)
   

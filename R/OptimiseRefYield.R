@@ -1,4 +1,4 @@
-
+# TODO - update for multiple stocks and stock complexes
 
 #' Calculate Reference Yield
 #' 
@@ -6,94 +6,121 @@
 #' policy
 #' 
 #' @export
-CalcRefLandings <- function(MSE, type=c('Landings', 'Removals')) {
-  type <- match.arg(type)
-  CheckClass(MSE, c('mse', 'hist'), 'MSE')
-  if (inherits(MSE, 'mse')) {
-    Hist <- MSE2Hist(MSE)
-  } else if (inherits(MSE, 'hist')) {
-    Hist <- MSE
-    stop('TODO...')
+CalcRefLandings <- function(SimList, HistYears, ProjYears, type=c('Landings', 'Removals'), Calc=TRUE) {
+  type <- match.arg(type, c('Landings', 'Removals'))
+  
+  if (is.logical(Calc) && !Calc)
+    return(SimList)
+  
+  if (is.array(Calc)) {
+    SimList <- purrr::imap(SimList, \(ProjSim, idx) {
+      array <-  array(Calc[idx,, drop=FALSE] |> abind::adrop(1),
+                      dimnames = list(Stock=dimnames(Calc)$Stock))
+      if (type=='Landings') {
+        ProjSim@RefLandings <- array
+      } else {
+        ProjSim@RefRemovals <- array
+      }
+      ProjSim
+    })
+    return(SimList)
+  }
+  nStock <- nStock(SimList[[1]]@OM)
+  nFleet <- nFleet(SimList[[1]]@OM)
+  if (nStock>1 || nFleet>1) {
+    cli::cli_alert_warning('Optimizing Reference Catch not currently working for multiple stocks/fleets')
+    return(SimList)
   }
   
-  YearsHist <- Years(MSE@OM, 'Historical')
-  YearsProj <- Years(MSE@OM, 'Projection')
-  Years <- c(YearsHist, YearsProj)
-  projind <- match(YearsProj,Years)
-  
-  Proj <- ExtendHist(Hist)
-  ProjSimList <- Hist2HistSimList(Proj)
-  LastHistTS <- tail(YearsHist,1)
-  ProjSimList <- purrr::map(ProjSimList, \(ProjSim) PopulateNumberNext_(ProjSim, LastHistTS))
-  
-  nStock <- nStock(MSE@OM)
-  nFleet <- nFleet(MSE)
-  
   # TODO 
-  if (nStock>1)
-    cli::cli_abort('Optimizing Reference Catch not currently working for multiple stocks', .internal=TRUE)
+  CheckIdenticalSims(SimList, c(HistYears, ProjYears))
   
-  if (nFleet>1)
-    cli::cli_abort('Optimizing Reference Catch not currently working for multiple fleets', .internal=TRUE)
+  # for debugging
+  ProjSim <- SimList[[1]]
+  logF <- log(0.1)
   
-  bounds <- c(0.01, 1)
+  # Extend object to include projection years
+  SimList_Extended <- purrr::map(SimList, \(ProjSim) 
+                        ExtendHist(ProjSim)
+                        )
   
-  RefYieldList <- purrr::imap(ProjSimList, \(ProjSim, idx) {
+  bounds <- c(0.01, 1.1)
+  SimList_Extended <- purrr::map(SimList_Extended, \(ProjSim) {
     doOpt <- optimize(OptRefLandings,
                       log(bounds),
                       ProjSim=ProjSim,
-                      YearsProj=YearsProj,
-                      projind=projind,
+                      HistYears=HistYears,
+                      ProjYears=ProjYears,
                       type=type,
                       tol=1e-2)
     
-    array(-doOpt$objective, dimnames=list(Sim=idx))
+    if (type=='Landings') {
+      ProjSim@RefLandings <- array(-doOpt$objective, 1,
+                                   dimnames = list(
+                                     Stock=StockNames(ProjSim@OM)
+                                   ))
+    } else {
+      ProjSim@RefRemovals <- array(-doOpt$objective, 1,
+                                   dimnames = list(
+                                     Stock=StockNames(ProjSim@OM)
+                                   ))
+    }
+    ProjSim
   }, .progress = list(
     type = "iterator",
     caller = environment(),
     format = "Calculating Reference {type} {cli::pb_bar} {cli::pb_percent}",
     clear = TRUE))
   
-  RefYield <- List2Array(RefYieldList) 
-  dimnames(RefYield) <- list(Stock=StockNames(MSE@OM),
-                             Sim=1:MSE@OM@nSim)
+  SimList <- purrr::map2(SimList_Extended, SimList, \(ProjSim_Extended, ProjSim) {
+    ProjSim@RefLandings <- ProjSim_Extended@RefLandings
+    ProjSim@RefRemovals <- ProjSim_Extended@RefRemovals
+    ProjSim
+  })
   
-  RefYield <- RefYield |>  aperm(c("Sim", 'Stock'))
+  SimList 
   
-  
-  if (type=='Landings') {
-    MSE@RefPoints@RefLandings <- RefYield
-  } else {
-    MSE@RefPoints@RefRemovals <- RefYield
-  }
-  MSE 
 }
+
+
+
 
 #' @describeIn CalcRefLandings Calculate Reference Removals
 #' @export
-CalcRefRemovals <- function(MSE, type=c('Landings', 'Removals')) {
-  CalcRefLandings(MSE, type)
+CalcRefRemovals <- function(Hist, type=c('Landings', 'Removals')) {
+  CalcRefLandings(Hist, type)
 }
 
-OptRefLandings <- function(logF, ProjSim, YearsProj, projind, type=c('Landings', 'Removals')) {
-   
-  type <- match.arg(type)
-  # TODO update for multiple stocks and fleets
+OptRefLandings <- function(logF, ProjSim, HistYears, ProjYears, type=c('Landings', 'Removals')) {
+  type <- match.arg(type, c('Landings', 'Removals'))
+  
+  # TODO update for multiple stocks and fleets & complexes
+  # TODO - test - this should equal MSY under equilibrium conditions
   st <- 1
   fl <- 1
-  
-  ProjSim@Effort[st,projind,fl] <- exp(logF) # ProjSim@Effort[st,min(projind)-1,fl] * exp(logEffort)
-  ProjSim@OM@Fleet[[st]]@Effort@Catchability[] <- 1
 
-  PopDynamicsProject <- SimulateDynamics_(ProjSim, YearsProj)
+  ProjYearInd <- match(ProjYears, c(HistYears, ProjYears))
   
+  ProjSim@Effort[st,ProjYearInd,fl] <- exp(logF) 
+  ProjSim@OM@Fleet[[st]]@Catchability[] <- 1
+  nArea <- nArea(ProjSim@OM)
+  RelativeSize <- as.numeric(ProjSim@OM@Stock[[st]]@Spatial@RelativeSize )
+  qArea <- matrix(1/RelativeSize, length(ProjYearInd), nArea, byrow=TRUE)
+  ProjSim@OM@Fleet[[st]]@qArea[ProjYearInd,fl,] <- qArea
+  LastHistTS <- tail(HistYears,1)
+  
+  PopDynamicsProject <- ProjSim |>
+    PopulateNumberNext_(LastHistTS) |>
+    SimulateDynamics_(ProjYears)
+ 
   if (type=='Landings') {
     Yield <- PopDynamicsProject@Landings[[st]] |> List2Array("Year")
   } else {
-    Yield <- PopDynamicsProject@Removals[[st]] |> List2Array("Year")
+    Landings <- PopDynamicsProject@Landings[[st]] |> List2Array("Year")
+    Discards <- PopDynamicsProject@Discards[[st]] |> List2Array("Year")
+    Yield <- Landings+Discards
   }
   
-
   lastnTS <- ProjSim@OM@Control$RefYield$lastnTS
   if (is.null(lastnTS))
     lastnTS <- 5
@@ -105,7 +132,7 @@ OptRefLandings <- function(logF, ProjSim, YearsProj, projind, type=c('Landings',
   
   TSmean <- (nTS-lastnTS+1):nTS
   
-  -mean(apply(Yield[,,,TSmean,drop=FALSE], c('Year'), sum))
+  -mean(apply(Yield[,,,TSmean,drop=FALSE], 4, sum))
   
 }
 

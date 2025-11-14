@@ -1,13 +1,6 @@
 
-la <- devtools::load_all
+
 la()
-
-
-
-
-LoadArgs()
-
-
 
 dir <- "C:/Users/Admin/Documents/GitHub/SAFMC-MSE"
 
@@ -17,54 +10,6 @@ dir <- "C:/Users/Admin/Documents/GitHub/SAFMC-MSE"
 source(file.path(dir,'0. Specifications.R'))
 
 OM_Dir <- file.path(dir, 'OM_Objects/Base')
-
-################################################################################
-
-# Slot Names and documentation
-
-OM <- ImportBAM(Stock='GagGrouper', 
-                nSim, 
-                pYear, 
-                StockName='Gag Grouper', 
-                populate = FALSE)
-
-Name(OM)
-slotNames(OM)
-
-OM@Stock
-
-
-
-OM@Fleet
-
-
-
-
-
-FleetNames(OM)
-
-Fleet=TESTOM@Fleet$`Gag Grouper`$cHL
-
-OM <- TESTOM
-
-PopulateOM()
-
-Hist <- Simulate(OM)
-
-
-parallel=FALSE
-silent=FALSE
-nSim=NULL
-RefPointsMSY=TRUE
-Reduce=TRUE
-
-Hist2 <- Simulate(OM, RefPointsMSY=Hist@RefPointsMSY)
-
-Hist@RefPointsMSY
-Hist2@RefPointsMSY
-
-################################################################################
-
 
 
 

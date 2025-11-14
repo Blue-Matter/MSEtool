@@ -72,10 +72,10 @@ CalcAgeSizeKey <- function(MeanAtAge,
   Years <- YearsList[[ind]]
   
   if (!is.null(Years)) {
-    MeanAtAge <- ExpandSims(MeanAtAge, nsim) |> 
-      ExpandYears(Years) 
-    SDatAge <- ExpandSims(SDatAge, nsim) |> 
-      ExpandYears(Years) 
+    MeanAtAge <- ExtendSims(MeanAtAge, nsim) |> 
+      ExtendYears(Years) 
+    SDatAge <- ExtendSims(SDatAge, nsim) |> 
+      ExtendYears(Years) 
       
   }
   

@@ -163,7 +163,7 @@ PopulateObsRef <- function(Ref, nSim) {
     return(Ref)
 
   CV <- StructurePars(list(Ref), nSim)[[1]] |> 
-    ExpandSims(nSim) |>
+    ExtendSims(nSim) |>
     DropDimension("Year", FALSE)
   
   Error <- array(rlnorm(nSim,
@@ -184,7 +184,7 @@ PopulateObsCV <- function(CV, nSim) {
     return(CV[1:nSim])
   }
   CV <- StructurePars(list(CV), nSim)[[1]] |> 
-    ExpandSims(nSim) |>
+    ExtendSims(nSim) |>
     DropDimension("Year", FALSE)
   CV
 }

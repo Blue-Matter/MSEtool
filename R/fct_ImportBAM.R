@@ -145,8 +145,7 @@ SetupOM_BAM <- function(BAMdata, nSim=48, pYear=30) {
   
   om@Years <- CalcYears(nYear=om@nYear,
                                 pYear=om@pYear,
-                                CurrentYear=om@CurrentYear,
-                                TimeUnits=om@TimeUnits)
+                                CurrentYear=om@CurrentYear)
   om
 }
 

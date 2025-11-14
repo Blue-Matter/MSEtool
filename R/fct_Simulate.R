@@ -3,7 +3,11 @@ print.simlist <- function(x, ...) {
   cli::cli_text('Internal `simlist` object. List of length `nSim`')
 }
 
-GetRefPointYears <- function(OM) {
+GetRefPointYears <- function(OM, HistYears) {
+  return(tail(HistYears, 1))
+  
+  # TODO - calculate ref points for seasonal time steps
+  
   HistYears <- Years(OM, 'Historical')
   RefPointYears <- OM@Control$RefPointYears
   if (is.null(RefPointYears))
@@ -19,7 +23,9 @@ Simulate_om <- function(OM=NULL,
                         silent=FALSE,
                         nSim=NULL,
                         RefPointsMSY=TRUE,
-                        Reduce=FALSE,
+                        RefLandings=TRUE,
+                        RefRemovals=FALSE,
+                        Reduce=TRUE,
                         ...) {
  
   
@@ -29,10 +35,17 @@ Simulate_om <- function(OM=NULL,
   
   HistYears <- Years(OM, 'Historical')
   ProjYears <- Years(OM, 'Projection')
-  RefPointYears <- GetRefPointYears(OM) # historical time steps to calculate ref points
+  RefPointYears <- GetRefPointYears(OM, HistYears) # historical time steps to calculate ref points
   
   # ---- Make Hist Object ----
-  Hist <- OM2Hist(OM, RefPointsMSY, silent)
+  Hist <- OM2Hist(OM, silent)
+  
+  # ---- Add Reference Points if they exist ----
+  # won't be re-calculated
+  
+  if (inherits(RefPointsMSY, 'refpointsMSY')) {
+    Hist@RefPointsMSY <- RefPointsMSY
+  }
   
   # ---- Calculate Equilibrium Unfished ----
   Hist@Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
@@ -42,7 +55,7 @@ Simulate_om <- function(OM=NULL,
 
   # ---- Build SimList ----
   SimList <- Hist2SimList(Hist)  # List of `Hist` objects, each with one simulation
-
+  
   # ---- Calculate Reference Points ----
   SimList <- CalcSPR0(SimList)  # unfished spawning per recruit (i.e. fecundity) 
   SimList <- CalcMSYRefPoints(SimList, RefPointYears, RefPointsMSY)
@@ -60,15 +73,23 @@ Simulate_om <- function(OM=NULL,
   # ---- Historical Population Dynamics ----
   SimList <- SimulateDynamics(SimList, HistYears) 
 
+  # ---- Calculate Reference Yield ----
+  SimList <- CalcRefLandings(SimList, HistYears, ProjYears, 'Landings', Calc=RefLandings)
+  SimList <- CalcRefLandings(SimList, HistYears, ProjYears, 'Removals', Calc=RefRemovals)
+  
   # ---- Condition Observation Object on Real Fishery Data ----
   SimList <- ConditionObs(SimList, HistYears, ProjYears)
   
   # ---- Historical Fishery Data ----
   SimList <- GenerateHistoricalData(SimList, HistYears)
- 
-  # ---- Return `hist` Object ----
-  Hist <- SimList2Hist(Hist, SimList, HistYears, Reduce) 
-  Hist
+
+  # ---- Aggregate SimList into Hist object ---- 
+  Hist <- SimList2Hist(Hist, SimList, HistYears)
+  
+  # ---- Reduce Dimension Size ----
+  Hist <- ReduceHist(Hist, Reduce)
+  
+  SetDigest(Hist)
 }
 
 

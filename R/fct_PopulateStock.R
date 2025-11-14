@@ -551,7 +551,7 @@ PopulateSpatial <- function(Spatial,
       if (dd[2]<nareas)
         cli::cli_abort('`RelativeSize` must have `nAreas` ({.val {nareas}}) columns')
       
-      rowsums <- apply(Spatial@RelativeSize, 1, sum)
+      rowsums <- apply(Spatial@RelativeSize, 1, sum) |> round(3)
       if (!all(rowsums==1))
         cli::cli_abort('`RelativeSize` must sum to 1 across columns')
     }

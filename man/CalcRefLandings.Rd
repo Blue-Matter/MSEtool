@@ -5,9 +5,15 @@
 \alias{CalcRefRemovals}
 \title{Calculate Reference Yield}
 \usage{
-CalcRefLandings(MSE, type = c("Landings", "Removals"))
+CalcRefLandings(
+  SimList,
+  HistYears,
+  ProjYears,
+  type = c("Landings", "Removals"),
+  Calc = TRUE
+)
 
-CalcRefRemovals(MSE, type = c("Landings", "Removals"))
+CalcRefRemovals(Hist, type = c("Landings", "Removals"))
 }
 \description{
 Highest Landings or Removals over the projection period with a constant F

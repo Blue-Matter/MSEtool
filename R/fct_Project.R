@@ -42,7 +42,7 @@ Project_hist <- function(Hist=NULL,
                          parallel=FALSE, 
                          silent=FALSE, 
                          nSim=NULL, 
-                         Reduce=FALSE) {
+                         Reduce=TRUE) {
   
   # ---- Initial Checks and Setup ----
   OnExit()
@@ -51,7 +51,6 @@ Project_hist <- function(Hist=NULL,
   
   YearsHist <- Years(Hist@OM, "Historical")
   YearsProj <- Years(Hist@OM, "Projection")
-  
   nMPs <- length(MPs)
   
   # ---- Extend Arrays with Projection Years ----
@@ -67,21 +66,18 @@ Project_hist <- function(Hist=NULL,
   MSE <- Hist2MSE(Hist, MPs) 
 
   # ---- Project MPs ----
+  mp <- 1 # for debugging
+  
   if (!silent) 
     cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
-  mp <- 1 # for debugging
+
   for (mp in seq_along(MPs)) {
-    MSE <- ProjectMP(SimList, MSE, MPs, mp, YearsHist, YearsProj) 
+    MP <- MPs[mp]
+    MSE <- ProjectMP(SimList, MSE, MP, mp, YearsHist, YearsProj) 
   }
   
+  MSE <- ReduceMSE(MSE, Reduce)
   MSE@Log <- c(Hist@Log, MSE@Log)
-  if (Reduce) {
-    # MSE@OM <- ArrayReduceDims(MSE@OM)
-    # MSE@Hist <- ArrayReduceDims(MSE@Hist)
-    
-    # TODO 
-    # - historical data is repeated in each MP - reduce
-  }
   MSE 
 }
 

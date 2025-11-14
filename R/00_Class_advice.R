@@ -5,7 +5,6 @@ methods::setClassUnion(name="discardmortality.list", members=c("discardmortality
 #' @include 00_Class_selectivity.R
 #' @include 00_Class_retention.R
 #' @include 00_Class_discardmortality.R
-#' @include 00_Class_fishingmortality.R
 setClass('advice',
          slots=c(TAC='array.numeric.null',
                  Effort='array.numeric.null',

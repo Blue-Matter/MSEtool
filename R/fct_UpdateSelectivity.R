@@ -7,7 +7,7 @@ UpdateRetention <- function(ProjSim, MPAdviceList, MPAdviceList_Previous, Year, 
 UpdateSelectivity <- function(ProjSim, MPAdviceList, MPAdviceList_Previous, 
                               Year, YearsProj,
                               type=c('Selectivity', 'Retention')) {
-  type <- match.arg(type)
+  type <- match.arg(type, c('Selectivity', 'Retention'))
 
   FleetNames <- FleetNames(ProjSim@OM)
   Complexes <- ProjSim@OM@Complexes
@@ -83,7 +83,7 @@ ProcessAdvice_SelectivityMeanAtAge <- function(Selectivity, ProjSim, YearsProj, 
                               Year=YearsProj[1]) 
   
   ArrayFill(slot(ProjSim@OM@Fleet[[st]],type)@MeanAtAge[,,fl]) <- MeanAtAge |>
-    ExpandYears(YearsProj)
+    ExtendYears(YearsProj)
   
   ProjSim
 }
@@ -100,7 +100,6 @@ ProcessAdvice_SelectivityMeanAtLength <- function(Selectivity, ProjSim, YearsPro
   
   Selectivity@Classes <- Length@Classes
   
-  
   if (length(Selectivity@MeanAtLength) != length(Selectivity@Classes)) 
     cli::cli_abort(c('x'='=`Selectivity@MeanAtLength` must be the same length as `Selectivity@Classes`'))
   
@@ -108,11 +107,15 @@ ProcessAdvice_SelectivityMeanAtLength <- function(Selectivity, ProjSim, YearsPro
   Length@CVatAge <- Length@CVatAge |> ArraySubsetYear(YearsProj)
   SDatAge <- ArrayMultiply(Length@MeanAtAge, Length@CVatAge)
   
-  Length@ASK <- CalcAgeSizeKey_(Length@MeanAtAge, 
-                                SDatAge, 
-                                Length@Classes, 
-                                Length@TruncSD, 
-                                Length@Dist)
+  if (dim(Length@ASK)[2] != length(Length@Classes)) {
+    Length@ASK <- CalcAgeSizeKey_(Length@MeanAtAge, 
+                                  SDatAge, 
+                                  Length@Classes, 
+                                  Length@TruncSD, 
+                                  Length@Dist)
+  } else {
+    Length@ASK <- ArraySubsetYear(Length@ASK, YearsProj)
+  }
   
   Selectivity@MeanAtLength <- array(Selectivity@MeanAtLength, 
                                     dim=c(1, length(Selectivity@MeanAtLength),1),
@@ -120,7 +123,7 @@ ProcessAdvice_SelectivityMeanAtLength <- function(Selectivity, ProjSim, YearsPro
                                       Sim=1,
                                       Class=Selectivity@Classes,
                                       Year=YearsProj[1])
-  ) |> ExpandYears(YearsProj)
+  ) |> ExtendYears(YearsProj)
   Selectivity <- MeanAtLength2MeanAtAge(Selectivity, Length, Ages, nsim=1, Years=YearsProj)                              
   
   MeanAtLength <- Selectivity@MeanAtLength |> DropDimension('Sim')
@@ -144,8 +147,8 @@ ProcessAdvice_SelectivityMeanAtWeight <- function(Selectivity, ProjSim, YearsPro
   Selectivity@Classes <- Weight@Classes
   
   
-  if (length(Selectivity@MeanAtLength) != length(Selectivity@Classes)) 
-    cli::cli_abort(c('x'='=`Selectivity@MeanAtLength` must be the same length as `Selectivity@Classes`'))
+  if (length(Selectivity@MeanAtWeight) != length(Selectivity@Classes)) 
+    cli::cli_abort(c('x'='=`Selectivity@MeanAtWeight` must be the same length as `Selectivity@Classes`'))
   
   Weight@MeanAtAge <- Weight@MeanAtAge |> ArraySubsetYear(YearsProj)
   Weight@CVatAge <- Weight@CVatAge |> ArraySubsetYear(YearsProj)
@@ -164,7 +167,7 @@ ProcessAdvice_SelectivityMeanAtWeight <- function(Selectivity, ProjSim, YearsPro
                                       Class=Selectivity@Classes,
                                       Year=YearsProj[1])
   ) |>
-    ExpandYears(YearsProj)
+    ExtendYears(YearsProj)
   
   Selectivity <- MeanAtWeight2MeanAtAge(Selectivity, Weight, Ages, nsim=1, Years=YearsProj)                              
   
@@ -172,6 +175,16 @@ ProcessAdvice_SelectivityMeanAtWeight <- function(Selectivity, ProjSim, YearsPro
   MeanAtAge <- Selectivity@MeanAtAge |> DropDimension('Sim')
   
   ArrayFill(slot(ProjSim@OM@Fleet[[st]],type)@MeanAtAge[,,fl]) <- MeanAtAge
+  
+  if (is.null(slot(ProjSim@OM@Fleet[[st]],type)@MeanAtWeight)) {
+    dnamesOut <- dimnames(slot(ProjSim@OM@Fleet[[st]],type)@MeanAtAge)
+    dnames <- dimnames(MeanAtWeight)
+    dnamesOut[[1]] <- dnames[[1]]
+    names(dnamesOut)[1] <- 'Class'
+    dd <- unlist(lapply(dnamesOut, length))
+    slot(ProjSim@OM@Fleet[[st]],type)@MeanAtWeight <- array(1, dim=dd,  dimnames = dnamesOut)
+  }
+  
   ArrayFill(slot(ProjSim@OM@Fleet[[st]],type)@MeanAtWeight[,,fl]) <- MeanAtWeight
   ProjSim
 }
@@ -190,7 +203,6 @@ ProcessAdvice_SelectivityPars <- function(Selectivity, ProjSim, YearsProj, Ages,
   LengthModel <- grepl('at-Length', ModelClass)
   WeightModel <- grepl('at-Weight', ModelClass)
   AgeModel <- grepl('at-Age', ModelClass)
-  
   
   if (LengthModel) {
     Length <- ProjSim@OM@Stock[[st]]@Length 
@@ -222,7 +234,7 @@ ProcessAdvice_SelectivityPars <- function(Selectivity, ProjSim, YearsProj, Ages,
       Weight@Classes <- ProjSim@OM@Fleet[[st]]@Selectivity@Classes[[fl]]
     
     Selectivity@Classes <- Weight@Classes
-    Selectivity@MeanAtLength <- GenerateMeanatWeight(Model=Selectivity@Model,
+    Selectivity@MeanAtWeight <- GenerateMeanatWeight(Model=Selectivity@Model,
                                                      Pars=Selectivity@Pars,
                                                      Weight=Selectivity@Classes)[1,,1]
     

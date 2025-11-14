@@ -10,35 +10,41 @@ RepList <- ImportSSReport(SSDir)
 # for some unknown reason, M for age-0 is exactly half the actual value
 RepList[[1]]$M_at_age[,4] <- RepList[[1]]$M_at_age[,4] * 2 
 
-LoadArgs('ImportSS')
-
-OM <- ImportSS(RepList)
+OM <- ImportSS(RepList, nSim=2)
 
 LoadArgs('Simulate_om')
-
 Hist <- Simulate_om(OM)
+
+
 
 
 # ---------------------- DEBUG ----------------------
 
-TimeStepsList <- GetSSTimeSteps(replist, 1)
-
-
 replist <- RepList[[1]]
 
 GetSSNatAge(replist, OM, yrs=1973)
+
+
 GetSSNatAge(replist, OM, yrs=1975)
 
-replist$natage |> dplyr::filter(Yr==1975, `Beg/Mid`=='B')
+OM@Stock$Female@SRR@R0
 
-replist$batage |> dplyr::filter(Yr==1975, `Beg/Mid`=='B')
+replist$natage |> dplyr::filter(Yr==1973, `Beg/Mid`=='B', Sex==1)
 
 TimeSteps(OM, 'H')
 
-replist$spawnseas
+-log(421.4040/468.0580)
+0.1050002*4
 
-replist$M_at_age |> dplyr::filter(Sex==1, Yr==1975)
+-log(379.4010/468.0580)
+-log(379.4010/468.0580)
 
+replist$M_at_age
+
+
+
+OM@Stock$Female@NaturalMortality@MeanAtAge[1,,1]
+OM@Stock$Female@Length@MeanAtAge[1,,1]
 
 # -------------------- END DEBUG --------------------
 

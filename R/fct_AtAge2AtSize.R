@@ -100,7 +100,7 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
                           Classes=Length@Classes,
                           TruncSD=Length@TruncSD,
                           Dist=Length@Dist,
-                          Ages=NULL,
+                          AgeClasses=NULL,
                           silent=TRUE)
     
     MeanAtAge <- objectMeanAtAge

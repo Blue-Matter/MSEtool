@@ -390,7 +390,11 @@ PopulateASK <- function(object, Ages=NULL, Years=NULL, silent=FALSE, type='Lengt
   Dist <- object@Dist
   TruncSD <- object@TruncSD
   
-  object@ASK <- CalcAgeSizeKey(MeanAtAge, CVatAge, Classes, TruncSD, Dist,
+  object@ASK <- CalcAgeSizeKey(MeanAtAge, 
+                               CVatAge, 
+                               Classes, 
+                               TruncSD, 
+                               Dist,
                                AgeClasses=Ages@Classes,
                                silent=silent, type=type)
   

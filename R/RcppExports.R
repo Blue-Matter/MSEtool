@@ -73,8 +73,8 @@ Ref_int_cpp <- function(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V
     .Call(`_MSEtool_Ref_int_cpp`, F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, Wt_at_Age_C, relRfun, SRRpars, maxage, plusgroup, spawn_time_frac)
 }
 
-PopulateNumberNext_ <- function(HistSimIn, Year) {
-    .Call(`_MSEtool_PopulateNumberNext_`, HistSimIn, Year)
+PopulateNumberNext_ <- function(HistSimIn, Year, debug = 0L) {
+    .Call(`_MSEtool_PopulateNumberNext_`, HistSimIn, Year, debug)
 }
 
 #' Simulate Fishery Dynamics

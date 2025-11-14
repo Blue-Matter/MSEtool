@@ -7,8 +7,8 @@ StartUp <- function(OM, nSim=NULL, silent=FALSE) {
     stop('Herm not done yet!')
   
   OM |> 
-    ReduceNSim(nSim) |>
     PopulateOM() |>
+    ReduceNSim(nSim) |>
     ConvertToList() # converts OM@Stock and OM@Fleet to lists
   
 }

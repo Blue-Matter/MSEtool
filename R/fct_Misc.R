@@ -20,10 +20,11 @@ Save <- function(object, path=NULL, overwrite=FALSE, ...) {
   
   if (file.exists(path) && !overwrite)
     cli::cli_abort(c('File {.file {path}} already exists',
-                     'i'='Use `overwrite=TRUE` to overwrite existing file'))  
+                     'i'='Use `overwrite=TRUE` to overwrite existing file'),
+                   call=NULL)  
   
   name <- deparse(substitute(object))
-  cli::cli_alert_info('Saving {.val {name}} of class {.val {class(object)}} to {.file {path}}')
+  cli::cli_alert_info('Saving {.val {name}} of class {.val {class(object)}} to {.val {path}}')
   
   saveRDS(object, path, ...)
   invisible(path)

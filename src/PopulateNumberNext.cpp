@@ -10,7 +10,8 @@ using namespace Rcpp;
 
 // [[Rcpp::export]]
 S4 PopulateNumberNext_(S4 HistSimIn, 
-                       NumericVector Year) {
+                       NumericVector Year,
+                       int debug=0) {
   
   S4 HistSim = clone(HistSimIn);
   S4 OM = HistSim.slot("OM");
@@ -29,6 +30,9 @@ S4 PopulateNumberNext_(S4 HistSimIn,
   
   int TSindex = MatchTS[0] -1;
   
+  if (debug)
+    Rcout << "TSindex = " << TSindex << std::endl;
+  
   for (int st=0; st<nStock; st++) {
     
     arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // nAge, nTS, nArea
@@ -36,19 +40,22 @@ S4 PopulateNumberNext_(S4 HistSimIn,
     int nTSNumber = NumberAtAgeArea.n_cols;
     int nArea = NumberAtAgeArea.n_slices;
     
+    if (debug)
+      Rcout << "nTSNumber = " << nTSNumber << std::endl;
+    
     if (TSindex < nTSNumber-1) {
       S4 Stock = StockList[st];
       S4 NaturalMortality = Stock.slot("NaturalMortality");
       arma::mat NaturalMortalityAtAge = NaturalMortality.slot("MeanAtAge");
-      
+
       S4 Maturity = Stock.slot("Maturity");
       arma::mat Semelparous = Maturity.slot("Semelparous");
-      
+
       S4 Ages = Stock.slot("Ages");
       bool plusgroup = Ages.slot("PlusGroup");
-      
+
       List FDeadAtAgeAreaStock = FDeadAtAgeAreaList[st];
-      
+
       // Calculate Number at beginning of next time step
       NumberAtAgeArea.col(TSindex+1) = CalcNumberNext_(
         NumberAtAgeArea.col(TSindex),
@@ -59,8 +66,8 @@ S4 PopulateNumberNext_(S4 HistSimIn,
         plusgroup,
         nAge,
         nArea);
-      
-      
+
+
       // Move Population at beginning of next Time Step
       S4 Spatial = Stock.slot("Spatial");
       List MovementList = Spatial.slot("Movement");
@@ -69,7 +76,7 @@ S4 PopulateNumberNext_(S4 HistSimIn,
                                                        nAge,
                                                        nArea,
                                                        TSindex+1);
-      
+
     }
     NumberAtAgeAreaList[st] = NumberAtAgeArea;
   }

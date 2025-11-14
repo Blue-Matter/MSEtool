@@ -11,7 +11,7 @@ AtSize2AtAge <- function(object, Length) {
     cli::abort("`Length` must be an object of class `length` or `weight`")
   }
   
-  ASK <- Length@ASK
+  ASK <- Length@ASK 
   if (is.null(ASK)) 
     cli::cli_abort("`Length@ASK` is not populated", .internal=TRUE)
   dim_MeanAtSize <- dim(MeanAtSize)

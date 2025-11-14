@@ -223,14 +223,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // PopulateNumberNext_
-S4 PopulateNumberNext_(S4 HistSimIn, NumericVector Year);
-RcppExport SEXP _MSEtool_PopulateNumberNext_(SEXP HistSimInSEXP, SEXP YearSEXP) {
+S4 PopulateNumberNext_(S4 HistSimIn, NumericVector Year, int debug);
+RcppExport SEXP _MSEtool_PopulateNumberNext_(SEXP HistSimInSEXP, SEXP YearSEXP, SEXP debugSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< S4 >::type HistSimIn(HistSimInSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type Year(YearSEXP);
-    rcpp_result_gen = Rcpp::wrap(PopulateNumberNext_(HistSimIn, Year));
+    Rcpp::traits::input_parameter< int >::type debug(debugSEXP);
+    rcpp_result_gen = Rcpp::wrap(PopulateNumberNext_(HistSimIn, Year, debug));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -503,7 +504,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_LinInterp_cpp", (DL_FUNC) &_MSEtool_LinInterp_cpp, 3},
     {"_MSEtool_MSYCalcs", (DL_FUNC) &_MSEtool_MSYCalcs, 17},
     {"_MSEtool_Ref_int_cpp", (DL_FUNC) &_MSEtool_Ref_int_cpp, 12},
-    {"_MSEtool_PopulateNumberNext_", (DL_FUNC) &_MSEtool_PopulateNumberNext_, 2},
+    {"_MSEtool_PopulateNumberNext_", (DL_FUNC) &_MSEtool_PopulateNumberNext_, 3},
     {"_MSEtool_SimulateDynamics_", (DL_FUNC) &_MSEtool_SimulateDynamics_, 4},
     {"_MSEtool_SolveForFishingMortality", (DL_FUNC) &_MSEtool_SolveForFishingMortality, 10},
     {"_MSEtool_calcVatAge", (DL_FUNC) &_MSEtool_calcVatAge, 7},

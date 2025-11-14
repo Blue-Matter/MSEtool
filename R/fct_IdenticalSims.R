@@ -42,13 +42,13 @@ IdenticalSimsArray <- function(array, logical=TRUE) {
     return(FALSE)
   nSim <- dimnames(array)[[SimInd]] |> length()
   
-  logVec <- rep(TRUE, nSim)
-  for (sim in seq_along(logVec)[-1]) {
+  for (sim in 2:nSim) {
     Comp1 <- abind::asub(array, sim, SimInd)
     Comp2 <- abind::asub(array, sim-1, SimInd)
-    logVec[sim] <- !any(round(Comp1, 4) != round(Comp2, 4))
+    if (any(round(Comp1, 4) != round(Comp2, 4)))
+      return(FALSE)
   }
-  sum(logVec)<2
+  TRUE
 }
 
 
