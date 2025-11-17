@@ -50,7 +50,7 @@ Simulate_om <- function(OM=NULL,
   # ---- Calculate Equilibrium Unfished ----
   Hist@Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
   
-  # ---- Calculate Number-at-Age for Initial Year ----
+  # ---- Calculate Number-at-Age for Initial Time Step ----
   Hist <- CalcInitialYear(Hist)
 
   # ---- Build SimList ----

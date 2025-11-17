@@ -10,6 +10,7 @@
 #include "CalcAggregateF.h"
 #include "CalcStockMovement.h"
 #include "CalcNumberNext.h"
+#include "CalcRecruitment_TimeStep.h"
 
 //[[Rcpp::depends(RcppArmadillo)]]
 using namespace Rcpp;
@@ -55,11 +56,8 @@ S4 SimulateDynamics_(S4 HistSimIn,
     int TSindex = MatchTS[timestep] -1;
 
     if (debug) {
-      Rcout << "\n\nTimestep = " << Years[timestep] << std::endl;
-      // Rcout << "YearsAll = " << YearsAll << std::endl;
-      // Rcout << "MatchTS = " << MatchTS << std::endl;
-      // Rcout << "TSmatch = " << TSmatch << std::endl;
-      // Rcout << "timestep = " << timestep << std::endl;
+      Rcout << "\n\n*********************************"  << std::endl;
+      Rcout << "Timestep = " << Years[timestep] << std::endl;
       Rcout << "TSindex = " << TSindex << std::endl;
     }
 
@@ -207,75 +205,78 @@ S4 SimulateDynamics_(S4 HistSimIn,
     // Calculate Recruitment and Numbers at beginning of next time step
     for (int st=0; st<nStock; st++) {
 
-      if (debug)
-        Rcout << "\n\nCalculate Recruitment and Numbers for Stock " << st << std::endl;
-
+      // Determine Age at Recruitment
+      S4 Stock = StockList[st];
+      S4 Ages = Stock.slot("Ages");
+      double TSperYear = Stock.slot("TSperYear");
+      int AgeRec = CalcRecruitment_TimeStep_(Ages, 1/TSperYear);
+      int TSRec = TSindex + AgeRec; // TSindex + 1 for age-1 recruitment
+      
       arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // nAge, nTS, nArea
       int nAge = NumberAtAgeArea.n_rows;
       int nTSnumber = NumberAtAgeArea.n_cols;
       int nArea = NumberAtAgeArea.n_slices;
-
-      // Determine Age at Recruitment
-      S4 Stock = StockList[st];
-      S4 Ages = Stock.slot("Ages");
-      bool plusgroup = Ages.slot("PlusGroup");
-      arma::vec AgeClasses = Ages.slot("Classes");
-      int AgeRec = AgeClasses.min(); // first age class = age of recruitment (should be 0 or 1)
-      int TSRec = TSindex + AgeRec; // TSindex + 1 for age-1 recruitment
-
+      
       S4 Spatial = Stock.slot("Spatial");
-
-      if (debug)
-        Rcout << "Recruitment " << std::endl;
-
+      
+    
+      // Calc recruitment if there is enough space in NumberAtAgeArea
       if (TSRec<nTSnumber) {
+        if (debug) {
+          Rcout << "\n\nCalculate Recruitment and Numbers for Stock " << st << std::endl;
+          Rcout << "TSindex " << TSindex << std::endl;
+          Rcout << "TSperYear " << TSperYear << std::endl;
+          Rcout << "AgeRec " << AgeRec << std::endl;
+          Rcout << "TSRec " << TSRec << std::endl;
+     
+        }
+        
         S4 SRR = Stock.slot("SRR");
         arma::vec R0 = SRR.slot("R0");
         arma::vec RecDevHist = SRR.slot("RecDevHist");
         arma::vec RecDevProj = SRR.slot("RecDevProj");
         arma::vec RecDevs = join_cols(RecDevHist, RecDevProj);
-
+  
         Function SRRModel = SRR.slot("Model");
         List SRRPars = SRR.slot("Pars");
 
         // Calculate Recruitment
-        // NOTE: uses SP0 and R0 from first time step
         // Uses aggregate SProduction - ie summed over areas
         // TODO option to use time-varying alpha, beta
-
-        // double SP = arma::as_scalar(SProduction.row(st).col(TSindex));
-        // Rcout << "SP = " << SP << std::endl;
-        // double r0 =  arma::as_scalar(R0(TSindex));
-        // Rcout << "r0 = " << r0 << std::endl;
-        //
-        //
-        // double recdev = arma::as_scalar(RecDevs(TSRec));
-        // Rcout << "recdev = " << recdev << std::endl;
 
         int sp0_nts = SP0.n_cols;
         double sp0 = arma::as_scalar(SP0.row(st).col(0));
         if (sp0_nts >1 ) {
           sp0 = arma::as_scalar(SP0.row(st).col(TSindex));
         }
-        // Rcout << "sp0 = " << sp0 << std::endl;
 
-        double Recruits = CalcRecruitment_(arma::as_scalar(SProduction.row(st).col(TSindex)),
-                                           arma::as_scalar(R0(TSindex)),
+        double SProductionThisTimeStep = arma::as_scalar(SProduction.row(st).col(TSindex));
+        double R0_recruit_TimeStep = arma::as_scalar(R0(TSRec-1));
+        double RecDev_recruit_TimeStep = arma::as_scalar(RecDevs(TSRec-1));
+        
+        if (debug) {
+          Rcout << "sp0 = " << sp0 << std::endl;
+          Rcout << "SProductionThisTimeStep = " << SProductionThisTimeStep << std::endl;
+          Rcout << "R0_recruit_TimeStep = " << R0_recruit_TimeStep << std::endl;
+          Rcout << "RecDev_recruit_TimeStep = " << RecDev_recruit_TimeStep << std::endl;
+        }
+        
+        double Recruits = CalcRecruitment_(SProductionThisTimeStep,
+                                           R0_recruit_TimeStep,
                                            sp0,
-                                           arma::as_scalar(RecDevs(TSRec)),
+                                           RecDev_recruit_TimeStep,
                                            SRRModel,
                                            SRRPars,
                                            TSindex);
         if (debug) {
           Rcout << "Recruits =  " << Recruits << std::endl;
-          Rcout << "TSRec =  " << TSRec << std::endl;
         }
-
 
         // Distribute Recruits
         if (debug)
           Rcout << "Distribute Recruits " << std::endl;
 
+  
         arma::cube UnfishedDist = Spatial.slot("UnfishedDist"); // nArea, nAge, nTS;
         arma::vec recruitArea(nArea);
 
@@ -289,7 +290,7 @@ S4 SimulateDynamics_(S4 HistSimIn,
             Rcout << "Recruits in Area " << area << ": " << rec << std::endl;
 
         }
-        NumberAtAgeArea.subcube(0, TSRec, 0, 0, TSRec, nArea-1) = recruitArea;
+        NumberAtAgeArea.subcube(0, TSRec-1, 0, 0, TSRec-1, nArea-1) = recruitArea;
       }
 
       if (TSindex <(nTSnumber-1)) {
@@ -297,7 +298,8 @@ S4 SimulateDynamics_(S4 HistSimIn,
         // Rcout << "timestep = " << timestep << std::endl;
         // Rcout << "TSindex = " << TSindex << std::endl;
         // Rcout << "nTSnumber = " << nTSnumber << std::endl;
-
+        bool plusgroup = Ages.slot("PlusGroup");
+        
         List FDeadAtAgeAreaStock = FDeadAtAgeAreaList[st];
 
         S4 NaturalMortality = Stock.slot("NaturalMortality");

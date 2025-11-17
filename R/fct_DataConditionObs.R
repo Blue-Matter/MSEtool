@@ -135,7 +135,15 @@ CalcResidualStats <- function(LogResiduals) {
   
   # calculate auto-correlation for each group of contiguous residuals
   group.length <- Residual.Groups %>% lapply(length) %>% unlist() %>% as.numeric()
-  group.ind <- which(group.length>1) 
+  
+  if (all(group.length==1)) {
+    Residual.Groups <- list(as.numeric(unlist(Residual.Groups)))
+    group.ind <- 1
+  } else {
+    group.ind <- which(group.length>1) 
+    
+  }
+  
   ac.group <- vector('numeric', length=length(group.ind))
   ac.group.n <- ac.group
   
@@ -186,7 +194,7 @@ ApplyIndexAC <- function(Residuals, ac, LastError) {
 ConditionObs_Index <- function(HistSim, FisheryData, HistYears, ProjYears, 
                                stocks, i, type=c('CPUE', 'Survey')) {
   
-  type <- match.arg(type)
+  type <- match.arg(type, c('CPUE', 'Survey'))
   
   nTS <- length(HistYears)
   
@@ -255,9 +263,19 @@ ConditionObs_Index <- function(HistSim, FisheryData, HistYears, ProjYears,
         List2Array('Stock', 'Year') |>
         AddDimNames(c('Year', 'Stock'), HistYears) |> 
         apply(c('Year'), sum) 
-      
+    } else if (Units=='Recruitment') {
+      SimulatedIndex <- SimNumberSelectedList |>
+        purrr::map(\(stock) {
+          ages <- as.numeric(dimnames(stock)[[1]])
+          stock |> ArraySubsetAge(min(ages))
+        }) |> 
+        purrr::map(apply, 'Year', sum) |>
+        List2Array('Stock', 'Year') |>
+        AddDimNames(c('Year', 'Stock'), HistYears) |> 
+        apply(c('Year'), sum) 
+    
     } else {
-      cli::cli_abort('Only `Biomass` and `Number` supported for `Units` in `Data@CPUE` and `Data@Survey`', .internal=TRUE)
+      cli::cli_abort('Only `Biomass`, `Number` and `Recruitment` currently supported for `Units` in `Data@CPUE` and `Data@Survey`', .internal=TRUE)
     }
 
     NonNAInd <- which(!is.na(ObservedIndex))
@@ -284,6 +302,7 @@ ConditionObs_Index <- function(HistSim, FisheryData, HistYears, ProjYears,
     
     # Generate residuals for projections
     ResidualsHistorical <- exp(LogResiduals)
+    # TODO - keep missing (NA) values for seasonal models in the projections
     ResidualsProjection <- GenerateIndexResiduals(Stats, ProjYears)
     
     # TODO - option to discard indices that are NA for x Years before terminal historical year

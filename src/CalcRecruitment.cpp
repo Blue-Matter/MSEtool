@@ -13,7 +13,9 @@ double CalcRecruitment_(double SProduction,
                         List SRRPars,
                         int TSindex) {
   
-  // NOTE: uses SP0 and R0 from first time step
+  if (R0<=0) 
+    return(1E-6);
+  
   // TODO option to use time-varying alpha, beta
   List Arglist = List::create(Named("S") = SProduction,
                               Named("S0") = SP0,

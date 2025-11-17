@@ -11,15 +11,17 @@ RepList <- ImportSSReport(SSDir)
 RepList[[1]]$M_at_age[,4] <- RepList[[1]]$M_at_age[,4] * 2 
 
 OM <- ImportSS(RepList, nSim=2)
+OM@Data$`Female Male`@Survey@Units
 
 Hist <- Simulate_om(OM)
+
 
 LoadArgs('Simulate_om')
 
 # TODO
-# - need to fix age of recruitment in SimulateDynamics.cpp  
-# - doesn't work for seasonal recruitment - only integers? and only accepts 0 or 1
-# - this model has recruits in the third quarter
+# - match N-at-Age for historical
+# - F-at-age are different??
+# - write CompareSS functions ... 
 
 
 
@@ -30,26 +32,52 @@ LoadArgs('Simulate_om')
 
 
 
-
-
 # ---------------------- DEBUG ----------------------
-
 replist <- RepList[[1]]
+yr <- 1975
+OM_N <- Hist@Number$Female
+n1 <- GetSSNatAge(replist, OM, yrs=yr)
+q <- 2
+data.frame(SS=n1[,q], OM=OM_N[1,,q,1])
 
-n0 <- GetSSNatAge(replist, OM, yrs=1973)
-cbind(Hist@Unfished@Equilibrium@Number$Female[1,,1], n0[,1])
+SS_Z <- -log(n1[4,2]/n1[3,1]) # age 1 F in 1975
+OM_Z <- -log(OM_N[1,4,2,1]/OM_N[1,3,1,1]) # age 1 F in 1975
 
-379.40044 * 0.91
+M_1 <- OM@Stock$Female@NaturalMortality@MeanAtAge[1,3,1]
 
-n1 <- GetSSNatAge(replist, OM, yrs=1975)
-cbind(Hist@Number$Female[1,,1,1], n1[,1])
+SS_F <- SS_Z-M_1
+OM_F <- OM_Z-M_1
 
-n0[,1]
+SS_F
+OM_F
+Hist@FDead$Female[1,3,1,] |> sum()
 
-345.67900/379.4004
-OM@Stock$Female@SRR@RecDevInit[1,]
+SS_FDead <- replist$fatage |> dplyr::filter(Yr==1975, Sex==1, Seas==1) |> 
+  dplyr::select(as.character(SSAgeClasses)) |>
+  colSums()
 
 
+# OM F is higher than SS3s 
+ 
+
+# UP TO HERE - need to match n-at-age 
+
+
+
+
+SSAgeClasses <- GetSSAgeClasses(replist)
+
+replist$fatage |> dplyr::filter(Yr==1975, Sex==1, Seas==1) |> 
+  dplyr::select(as.character(SSAgeClasses)) |>
+  colSums()
+
+-log(312.833/345.679) # ss3
+-log(306.13/345.679) # OM
+
+-log(306.13/345.679) - -log(312.833/345.679)
+
+
+apply(HistSim@FDeadArea$Female$`1975`, 1, sum)
 
 
 t <- replist$timeseries |> dplyr::filter(Yr>=1975) 
@@ -69,7 +97,7 @@ OM@Stock$Female@SRR@R0
 
 replist$natage |> dplyr::filter(Yr==1973, `Beg/Mid`=='B', Sex==1)
 
-TimeSteps(OM, 'H')
+Years(OM, 'H')
 
 -log(421.4040/468.0580)
 0.1050002*4

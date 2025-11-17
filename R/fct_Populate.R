@@ -52,6 +52,8 @@ PopulateObs <- function(OM) {
   }
  
   OM <- StructureObs(OM)
+  HistYears <- Years(OM,'H')
+  ProjYears <- Years(OM,'P')
   
   for (st in 1:length(OM@Obs)) {
     for (fl in 1:length(OM@Obs[[1]])) {
@@ -59,24 +61,28 @@ PopulateObs <- function(OM) {
       
       OM@Obs[[st]][[fl]]@Effort <- PopulateEffortObs(Effort=OM@Obs[[st]][[fl]]@Effort, 
                                                      nSim=OM@nSim, 
-                                                     Years=OM@Years)
+                                                     HistYears,
+                                                     ProjYears)
       
-    
       OM@Obs[[st]][[fl]]@Landings <- PopulateCatchObs(Catch=OM@Obs[[st]][[fl]]@Landings, 
                                                       nSim=OM@nSim, 
-                                                      Years=OM@Years)
+                                                      HistYears,
+                                                      ProjYears)
       
       OM@Obs[[st]][[fl]]@Discards <- PopulateCatchObs(Catch=OM@Obs[[st]][[fl]]@Discards, 
                                                       nSim=OM@nSim, 
-                                                      Years=OM@Years)
+                                                      HistYears,
+                                                      ProjYears)
       
       OM@Obs[[st]][[fl]]@CPUE <- PopulateIndexObs(Index=OM@Obs[[st]][[fl]]@CPUE, 
-                                                   nSim=OM@nSim, 
-                                                   Years=OM@Years)
+                                                  nSim=OM@nSim, 
+                                                  HistYears,
+                                                  ProjYears)
     
       OM@Obs[[st]][[fl]]@Survey <- PopulateIndexObs(Index=OM@Obs[[st]][[fl]]@Survey, 
                                                     nSim=OM@nSim, 
-                                                    Years=OM@Years)
+                                                    HistYears,
+                                                    ProjYears)
       
       OM@Obs[[st]][[fl]]@CAA
       
@@ -97,14 +103,14 @@ getACF <- function(Value) {
   acf(Value, plot=FALSE)[[1]][2,1,1]
 }
 
-PopulateIndexObs <- function(Index, nSim, Years) {
+PopulateIndexObs <- function(Index, nSim, HistYears, ProjYears) {
   Index@CV <- PopulateObsCV(Index@CV, nSim)
-  Index@Error <- PopulateObsError(Index, nSim, Years)
+  Index@Error <- PopulateObsError(Index, nSim, c(HistYears, ProjYears))
   Index@Beta # TODO - currently not implemented
   Index@Ref <- PopulateObsRef(Index@Ref, nSim)
 
   if (length(Index@Years)<1)
-    Index@Years <- Years
+    Index@Years <- HistYears
   
   # TODO implement AC if specified 
   if (!is.null(Index@AC)) {
@@ -118,13 +124,11 @@ PopulateIndexObs <- function(Index, nSim, Years) {
   
 }
 
-PopulateEffortObs <- function(Effort, nSim, Years) {
+PopulateEffortObs <- function(Effort, nSim, HistYears, ProjYears) {
   if (EmptyObject(Effort))
     return(Effort)
-  
-  nTS <- length(Years)
   Effort@CV <- PopulateObsCV(Effort@CV, nSim)
-  Effort@Error <- PopulateObsError(Effort, nSim, Years)
+  Effort@Error <- PopulateObsError(Effort, nSim, c(HistYears, ProjYears))
   Effort@Bias <- PopulateObsBias(Effort, nSim)
   
   # if (length(Effort@Years)<1)
@@ -132,17 +136,17 @@ PopulateEffortObs <- function(Effort, nSim, Years) {
   Effort
 }
 
-PopulateCatchObs <- function(Catch, nSim, Years) {
+PopulateCatchObs <- function(Catch, nSim, HistYears, ProjYears) {
   if (EmptyObject(Catch))
     return(Catch)
-  nTS <- length(Years)
+
   Catch@CV <- PopulateObsCV(Catch@CV, nSim)
-  Catch@Error <- PopulateObsError(Catch, nSim, Years)
+  Catch@Error <- PopulateObsError(Catch, nSim, c(HistYears, ProjYears))
   Catch@Bias <- PopulateObsBias(Catch, nSim)
   Catch@Ref <- PopulateObsRef(Catch@Ref, nSim)
   
   if (length(Catch@Years)<1)
-    Catch@Years <- Years
+    Catch@Years <- HistYears
   
   if (!Catch@Type %in% c('Removals', 'Landings'))
     cli::cli_abort(message="Valid values for `Obs@Catch@Type` are: {.val {c('Removals', 'Landings')}} ")

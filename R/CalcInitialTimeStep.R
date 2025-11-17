@@ -44,7 +44,23 @@ CalcInitialYear <- function(Hist, silent=FALSE) {
     UnfishedDist <- abind::adrop(Hist@OM@Stock[[st]]@Spatial@UnfishedDist[,,,1,drop=FALSE], 4) |>
       aperm(c('Sim', 'Age', 'Area'))
     
+    # Age structure in first time step
     Hist@Number[[st]][,,1,] <- ArrayMultiply(NatAge, UnfishedDist)
+    
+    RecruitTimeStep <- CalcRecruitment_TimeStep(Hist, st) 
+    
+    if (RecruitTimeStep>1) {
+      # fill in recruits for initial time steps
+      for (ts in 2:(RecruitTimeStep-1)) {
+        UnfishedDist <- Hist@OM@Stock[[st]]@Spatial@UnfishedDist[,,1,ts,drop=FALSE] |>
+          aperm(c('Sim', 'Age', 'Year', 'Area'))
+        Recruit <- Hist@OM@Stock[[1]]@SRR@R0[,ts, drop=FALSE] |>
+          AddDimension('Area') |>
+          AddDimension('Age') |>
+          aperm(c('Sim', 'Age', 'Year', 'Area'))
+        Hist@Number[[st]][,1,ts,] <-  ArrayMultiply(Recruit, UnfishedDist)
+      }
+    }
     
     InitialDepletion <- Hist@OM@Stock[[st]]@Depletion@Initial
     if (length(InitialDepletion) && all(InitialDepletion!=1)) 

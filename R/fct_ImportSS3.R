@@ -140,8 +140,7 @@ ImportSS <- function(SSDir,
   AllFleetNames <- c(FleetNames, SurveyNames) |> unique()
   OM@Obs <- MakeNamedList(names(OM@Data), MakeNamedList(AllFleetNames, new('obs')))
   OM <- ProcessSurveyObsSelectivity(OM, RepList)
-  
-  
+
   # OM@Imp - TODO 
   
   # Allocation
@@ -595,7 +594,7 @@ GetSS_SRRPars <- function(replist) {
 GetSS_RecDevs_Early <- function(replist, YearsList, Ages, st) {
   
   SSAgeClasses <- GetSSAgeClasses(replist)
-  
+  YearsHist <- YearsList$YearsHist
   Virg <- replist$natage |> 
     dplyr::filter(Era=='VIRG', `Beg/Mid`=='B', Seas==1, Sex==st) |>
     dplyr::select(as.character(SSAgeClasses), Sex) |>
@@ -608,7 +607,7 @@ GetSS_RecDevs_Early <- function(replist, YearsList, Ages, st) {
     tidyr::pivot_longer(as.character(SSAgeClasses),
                         names_to = 'Age', values_to='N1')
   
-  Deviations <- dplyr::left_join(Virg,Init, by = dplyr::join_by(Sex, Age)) |>
+  Deviations <- dplyr::left_join(Virg, Init, by = dplyr::join_by(Sex, Age)) |>
     dplyr::mutate(Deviation=N1/N0) |>
     dplyr::mutate(Value=ifelse(is.finite(Deviation), Deviation, 1),
                   Age=as.numeric(Age)) |>
@@ -626,54 +625,26 @@ GetSS_RecDevs_Early <- function(replist, YearsList, Ages, st) {
 }
 
 
-GetSS_RecDevs <- function(replist, YearsList, Ages, period=c('Historical', 'Early')) {
-  period <- match.arg(period)
-  
+GetSS_RecDevs <- function(replist, YearsList, Ages) {
+
   YearsHist <- YearsList$YearsHist
   recruit <- replist$recruit
   
-  if (period=='Historical') {
-    # if (YearsPerYear==1) {
-      Rec_main <- recruit[recruit$Yr %in% YearsHist, ]
-      dev <- Rec_main$pred_recr/Rec_main$exp_recr
-      dev <- array(dev, dim=length(dev), 
-            dimnames=list(Year=YearsHist[match(Rec_main$Yr, YearsHist)]))
-      return(dev)  
-    # } else {
-    #   
-    # }
-  } 
+  Rec_main <- recruit[recruit$Yr %in% YearsHist, ]
+  dev <- Rec_main$pred_recr/Rec_main$exp_recr
+  dev <- array(dev, dim=length(dev), 
+               dimnames=list(Year=YearsHist[match(Rec_main$Yr, YearsHist)]))
   
-  # Rec Devs for initial age classes 
+  TSperYear <- YearsList$TSperYear
+  if (TSperYear==1) 
+    return(dev)
   
-  # Works for NPSWO - Seasonal Model 
-  # TODO - check if is generalized for other SS3 models
-  
-  
-  RecruitEarly <- recruit |> dplyr::filter(Yr < min(YearsHist)) |>
-    dplyr::select(Year=Yr, Pred=pred_recr, Exp=exp_recr) |>
-    dplyr::mutate(Dev=Pred/Exp)
+  # expand for seasons
+  dev <- rep(dev, each=TSperYear)
+  array(dev, dim=length(dev), 
+        dimnames=list(Year=YearsHist))
 
-  if (!nrow(RecruitEarly)) {
-    EarlyYears <- c((min(YearsHist-1)-(length(Ages@Classes)-2)):(min(YearsHist-1)))
-    AgeClasses <- Ages@Classes[-1]
-    
-    dev <- array(1, dim=length(EarlyYears), 
-                 dimnames=list(Age=rev(AgeClasses)))
-    
-    return(dev)  
-  }
   
-  AgeClasses <- Ages@Classes[-1]
-
-  dev <- array(1, dim=length(AgeClasses), 
-        dimnames=list(Age=rev(AgeClasses)))
-  
-  predev <- array(RecruitEarly$Dev, dim=length(RecruitEarly$Dev), 
-                  dimnames=list(Age=rev(AgeClasses[seq_along(RecruitEarly$Dev)])))
-
-  ArrayFill(dev) <- predev
-  dev
 }
 
 GetSSBirthSeas <- function(replist) {
@@ -1270,7 +1241,7 @@ ImportSSData <- function(SSDir,
   Data@Years <- YearsList$YearsHist
   Data@YearLH <- YearsList$CurrentYear
   # Data@TimeUnits <- 'year'
-  Data@TSperYear <- 1
+  Data@TSperYear <- YearsList$TSperYear
   Data@nArea <- 1 
 
   Data@Landings <- ImportSSData_Catch(replist, 'Landings', silent)
@@ -1350,7 +1321,7 @@ ImportSSData_Catch <- function(replist, Type=c('Landings', 'Discards'), silent=F
 }
 
 ImportSSData_Index <- function(replist, Type=c('CPUE', 'Survey')) {
-  Type <- match.arg(Type)
+  Type <- match.arg(Type, c('CPUE', 'Survey'))
   
   YearsList <- GetSSYears(replist, pYear=1)
   YearsHist <- YearsList$YearsHist
@@ -1425,11 +1396,26 @@ ImportSSData_Index <- function(replist, Type=c('CPUE', 'Survey')) {
     ArrayFill(Indices@CV) <-  CV[[i]]
   }
   
+  # https://nmfs-ost.github.io/ss3-doc/SS330_User_Manual_release.html#surveys-and-indices
   Indices@Units <- sapply(replist$survey_units[CPUE_Ind], function(x)
     switch(as.character(x), 
            '0'="Number",
            '1'='Biomass', 
-           '2'='F')) |> unlist()
+           '2'='F',
+           '30'='Spawning Production',
+           '31'='Expected Recruitment Deviation',
+           '32'='Spawning Production * exp(recruitment deviation)',
+           '33'='Recruitment',
+           '34'='Depletion (spawning biomass/virgin spawning biomass)',
+           '35'='Survey of a Deviation Vector',
+           '36'='Recruitment Deviation'
+           )) |> 
+    unlist()
+  
+  if (length(Indices@Units) != length(CPUENames))
+    cli::cli_abort(c(
+      'x'='CPUE/Survey units do not match fleets'
+    ), internal=TRUE)
   
   if (Type=='CPUE') {
     Indices@Selectivity <- IndFleets
