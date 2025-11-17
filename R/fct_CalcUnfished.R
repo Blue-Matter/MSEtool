@@ -69,6 +69,7 @@ CalcDynamicUnfished <- function(SimList, silent=FALSE) {
   Years <- Years(SimList[[1]]@OM, 'Historical')
   StockNames <- StockNames(SimList[[1]]@OM)
 
+  # TODO - this should only check for historical years
   if (CheckIdenticalSims(SimListCopy)) {
     # identical historical period across all sims
     HistSim <- SimListCopy[[1]]
@@ -111,6 +112,38 @@ CalcDynamicUnfished <- function(SimList, silent=FALSE) {
     }) 
   } else {
     SimListOut <- purrr::map(SimListCopy, \(HistSim) {
+      
+      # ---------------------- DEBUG ----------------------
+      
+      
+      unfished <- SimulateDynamics_(HistSim, Years[1], debug=TRUE)
+      unfished@SProduction[,1]
+      
+      # TODO
+      # - need to fix age of recruitment in SimulateDynamics.cpp  
+      # - doesn't work for seasonal recruitment - only integers?
+      
+      FullAgeClasses
+      HistSim@OM@Stock$Female@Ages@Classes
+      
+      
+      
+      sum(HistSim@OM@Stock$Female@Weight@MeanAtAge[,1] * HistSim@Number$Female[,1,1])
+      unfished@Biomass[,1]
+      
+
+    
+
+      HistSim@OM@Stock$Female@Fecundity@MeanAtAge[,1:4]
+      length(HistSim@OM@Stock$Female@SRR@RecDevHist)
+
+      HistSim@Number$Female[,1,1]
+      
+      
+      
+      
+      # -------------------- END DEBUG --------------------
+      
       unfished <- SimulateDynamics_(HistSim, Years)
       
       HistSim@Unfished@Dynamic@Number <- lapply( unfished@Number, AddDimNames, c("Age", "Year", "Area"), Years)

@@ -12,8 +12,22 @@ RepList[[1]]$M_at_age[,4] <- RepList[[1]]$M_at_age[,4] * 2
 
 OM <- ImportSS(RepList, nSim=2)
 
-LoadArgs('Simulate_om')
 Hist <- Simulate_om(OM)
+
+LoadArgs('Simulate_om')
+
+# TODO
+# - need to fix age of recruitment in SimulateDynamics.cpp  
+# - doesn't work for seasonal recruitment - only integers? and only accepts 0 or 1
+# - this model has recruits in the third quarter
+
+
+
+# TODO 
+# - test NPSWO
+# - test SALB
+# - test NASWO
+
 
 
 
@@ -22,8 +36,32 @@ Hist <- Simulate_om(OM)
 
 replist <- RepList[[1]]
 
-GetSSNatAge(replist, OM, yrs=1973)
+n0 <- GetSSNatAge(replist, OM, yrs=1973)
+cbind(Hist@Unfished@Equilibrium@Number$Female[1,,1], n0[,1])
 
+379.40044 * 0.91
+
+n1 <- GetSSNatAge(replist, OM, yrs=1975)
+cbind(Hist@Number$Female[1,,1,1], n1[,1])
+
+n0[,1]
+
+345.67900/379.4004
+OM@Stock$Female@SRR@RecDevInit[1,]
+
+
+
+
+t <- replist$timeseries |> dplyr::filter(Yr>=1975) 
+
+
+
+plot(t$Bio_all)
+
+lines(colSums(EquilibriumUnfished@Biomass[1,1:2,1:4]), col='blue')
+
+sum(t[59:62,], na.rm = TRUE)
+sum(t, na.rm=TRUE)
 
 GetSSNatAge(replist, OM, yrs=1975)
 

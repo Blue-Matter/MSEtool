@@ -23,18 +23,20 @@ CalcInitialYear <- function(Hist, silent=FALSE) {
     names(dimnames(RecDevHist1))[2] <- 'Age'
   
     ages <- as.numeric(dimnames(RecDevInit)[['Age']])
-    if (!min(ages) > Hist@OM@Stock[[st]]@Ages@MinAge) {
+    AgeClasses <- Hist@OM@Stock[[st]]@Ages@Classes
+    if (min(ages) !=AgeClasses[2]) {
       cli::cli_abort(c("Error calculating initial age structure for Stock: {.val {names(Hist@OM@Stock)[st]}}",
-                     "i"='The first age class in matrix `Stock |> SRR() |> RecDevHist()` must be one greater than minimum age class',
-                     '*'='Minimum age class: {.val {Hist@OM@Stock[[st]]@Ages@MinAge}}',
+                     "i"='The first age class in matrix `Stock |> SRR() |> RecDevHist()` must match the second age class',
+                     '*'='Second age class: {.val {AgeClasses[2]}}',
                      '*'='First age class in `RecDevInit`: {.val {min(ages)}}'
-                     )
+                     ), call=NULL
       )
     }
     
+    
     InitAgeClassRecDevs <- cbind(RecDevHist1, RecDevInit) 
     dimnames(InitAgeClassRecDevs) <- list(Sim=1:nSim,
-                                          Age=c(ages[1]-1, ages))
+                                          Age=c(AgeClasses[1], ages))
     
     NatAge <- ArrayMultiply(InitAgeClassRecDevs, EquilNumber) |>
       AddDimension('Area') 

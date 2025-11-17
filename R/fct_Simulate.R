@@ -63,6 +63,7 @@ Simulate_om <- function(OM=NULL,
   # TODO
   # - Per-Recruit Curves 
   # - FCrash, etc 
+  # - update for seasonal model 
  
   # ---- Calculate Unfished Equilibrium and Dynamic ----
   SimList <- CalcDynamicUnfished(SimList)

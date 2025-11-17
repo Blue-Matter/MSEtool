@@ -4,17 +4,12 @@ dir <- "C:/Users/Admin/Documents/GitHub/IndonesiaHarvestStrategies"
 source(file.path(dir, '0a. Settings.R'))
 source(file.path(dir, "0b. HarvestStrategies.r"))
 
-Hist <-  readRDS(file.path(dir, 'Objects_Hist/Lobster.hist'))
-OM <- readRDS(file.path(dir, 'Objects_OM/Lobster_FourArea_25.om'))
+Hist <-  readRDS(file.path(dir, 'Objects_Hist/Lobster_TwoArea_10.hist'))
 
-Hist <- Simulate(OM,
-                 RefPointsMSY=Hist@RefPointsMSY,
-                 RefLandings=Hist@RefLandings)
-
-
-
-LoadArgs('Simulate_om')
-Simulate_om
+LoadArgs('Project_hist')
+la()
+MPs <- c('SC12')
+nsim <- 2
 
 MSE <- Project_hist(Hist, MPs='ML60')
 

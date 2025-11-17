@@ -197,7 +197,7 @@ SS2Stock <- function(st, RepList, YearsList, nSim) {
   Stock@NaturalMortality <- SS2NaturalMortality(st, RepList, YearsList, Ages=Stock@Ages)
   Stock@Maturity <- SS2Maturity(st, RepList, YearsList, Ages=Stock@Ages)
   Stock@Fecundity <- SS2Fecundity(st, RepList, YearsList, Ages=Stock@Ages)
-  Stock@Depletion <- SS2Depletion(st, RepList, YearsList)
+  # Stock@Depletion <- SS2Depletion(st, RepList, YearsList) # not needed - already accounted for in early rec devs
   Stock@SRR <- SS2SRR(st, RepList, YearsList, Ages=Stock@Ages, nSim)
   Stock@nYear <- YearsList$nYear
   Stock@pYear <- YearsList$pYear
@@ -439,7 +439,13 @@ SS2Maturity <- function(st, RepList, YearsList, Ages) {
 
 GetSS_Fecundity <- function(st, replist, YearsList, Ages) {
   endgrowth <- replist$endgrowth |> dplyr::filter(Sex==st)
-
+  seas <- unique(endgrowth$Seas)
+  
+  if (length(seas)>1)
+    return(
+      GetSS_Fecundity_seasonal(st, replist, YearsList, Ages)
+    )
+  
   if (!is.null(replist$endgrowth[["Mat*Fecund"]])) {
     fec_age <- replist$endgrowth |>
       dplyr::filter(Morph == 1, Sex==st) |>
@@ -452,34 +458,42 @@ GetSS_Fecundity <- function(st, replist, YearsList, Ages) {
         dplyr::select(Age_Beg, Fecundity=Mat_F_wtatage)
     }
   }
+
+  array(fec_age$Fecundity, dim=c(length(Ages@Classes),1),
+        dimnames = list(
+          Age=Ages@Classes,
+          Year=YearsList$YearsHist[1]
+        )
+  )
+    
+}
+ 
+GetSS_Fecundity_seasonal <- function(st, replist, YearsList, Ages) {
+  endgrowth <- replist$endgrowth |> dplyr::filter(Sex==st)
+  if (!is.null(replist$endgrowth[["Mat*Fecund"]])) {
+    fec_age <- replist$endgrowth |>
+      dplyr::filter(Morph == 1, Sex==st) |>
+      dplyr::select(Age=Age_Beg, Seas, Fecundity=`Mat*Fecund`) |>
+      dplyr::arrange(Age)
   
+  } else {
+    if (!is.null(replist$endgrowth$Mat_F_wtatage)) {
+      fec_age <- replist$endgrowth |>
+        dplyr::filter(Morph == 1, Sex==st) |>
+        dplyr::select(Age_Beg, Seas, Fecundity=Mat_F_wtatage) |>
+        dplyr::arrange(Age)
+    }
+  }
   
-  fec_age <- array(fec_age$Fecundity, dim=c(length(Ages@Classes),1),
-                   dimnames = list(
-                     Age=Ages@Classes,
-                     Year=YearsList$YearsHist[1]
-                   )
+  array(fec_age$Fecundity, dim=c(length(Ages@Classes),1),
+        dimnames = list(
+          Age=Ages@Classes,
+          Year=YearsList$YearsHist[1]
+        )
   )
   
-  if (YearsList$TimeUnits == 'year')
-    return(fec_age)
-  
-  # Seasonal fecundity 
-  AllSeas <- unique(endgrowth$Seas)
-  if (all(AllSeas %in% replist$spawnseas)) 
-    return(fec_age) # continuous spawning
-
-  AllYears <- c(YearsList$YearsHist, YearsList$YearsProj)
-  fullArray <- ExtendYears(fec_age, AllYears)
-  
-  spawndf <- data.frame(AllYears, AllSeas) |> 
-    dplyr::mutate(Spawn=AllSeas %in% replist$spawnseas)
-
-  NonSpawn <- which(!spawndf$Spawn)
-  fullArray[,NonSpawn] <- tiny
-  return(fullArray)
 }
-
+  
 SS2Fecundity <- function(st, RepList, YearsList, Ages) {
   # TODO import model and parameters from SS output 
   # replist$FecPar1
@@ -518,6 +532,7 @@ SS2Depletion <- function(st, RepList, YearsList) {
   if (!all(round(SB1/SB0,2)==1)) {
     Depletion@Initial <- SB1/SB0
   }
+  
   # Don't populate Depletion Final or else it will optimize for q
   # if (st==1) {
   #   SBCurr <- purrr::map(RepList, \(replist) {
@@ -577,7 +592,41 @@ GetSS_SRRPars <- function(replist) {
   }
 }
 
-GetSS_RecDevs <- function(replist, YearsList, Ages, period=c( 'Historical', 'Early')) {
+GetSS_RecDevs_Early <- function(replist, YearsList, Ages, st) {
+  
+  SSAgeClasses <- GetSSAgeClasses(replist)
+  
+  Virg <- replist$natage |> 
+    dplyr::filter(Era=='VIRG', `Beg/Mid`=='B', Seas==1, Sex==st) |>
+    dplyr::select(as.character(SSAgeClasses), Sex) |>
+    tidyr::pivot_longer(as.character(SSAgeClasses),
+                        names_to = 'Age', values_to='N0')
+  
+  Init <- replist$natage |> 
+    dplyr::filter(Yr==min(YearsHist), `Beg/Mid`=='B', Seas==1, Sex==st) |>
+    dplyr::select(as.character(SSAgeClasses), Sex) |>
+    tidyr::pivot_longer(as.character(SSAgeClasses),
+                        names_to = 'Age', values_to='N1')
+  
+  Deviations <- dplyr::left_join(Virg,Init, by = dplyr::join_by(Sex, Age)) |>
+    dplyr::mutate(Deviation=N1/N0) |>
+    dplyr::mutate(Value=ifelse(is.finite(Deviation), Deviation, 1),
+                  Age=as.numeric(Age)) |>
+    dplyr::select(Age, Value) |>
+    dplyr::arrange(Age)
+  
+  FullAgeClasses <- seq(0, by=1/CalcTSperYear(Ages@Units), to=max(Ages@Classes))
+  
+  dev <- array(rep(Deviations$Value, each=replist$nseasons), 
+               dim=length(FullAgeClasses), 
+               dimnames=list(Age=FullAgeClasses)) |>
+    ArraySubsetAge(Ages@Classes[-1])
+  
+  dev
+}
+
+
+GetSS_RecDevs <- function(replist, YearsList, Ages, period=c('Historical', 'Early')) {
   period <- match.arg(period)
   
   YearsHist <- YearsList$YearsHist
@@ -596,10 +645,15 @@ GetSS_RecDevs <- function(replist, YearsList, Ages, period=c( 'Historical', 'Ear
   } 
   
   # Rec Devs for initial age classes 
+  
+  # Works for NPSWO - Seasonal Model 
+  # TODO - check if is generalized for other SS3 models
+  
+  
   RecruitEarly <- recruit |> dplyr::filter(Yr < min(YearsHist)) |>
     dplyr::select(Year=Yr, Pred=pred_recr, Exp=exp_recr) |>
     dplyr::mutate(Dev=Pred/Exp)
-  
+
   if (!nrow(RecruitEarly)) {
     EarlyYears <- c((min(YearsHist-1)-(length(Ages@Classes)-2)):(min(YearsHist-1)))
     AgeClasses <- Ages@Classes[-1]
@@ -676,9 +730,8 @@ SS2SRR <- function(st, RepList, YearsList, Ages, nSim) {
   SRR@Pars <- ParsList
   
   SRR@RecDevInit <- purrr::map(RepList, \(replist) 
-                             GetSS_RecDevs(replist, YearsList, Ages, 'Early')) |>
+                               GetSS_RecDevs_Early(replist, YearsList, Ages, st)) |>
     List2Array('Sim', pos=1)
-
   
   SRR@RecDevHist <- purrr::map(RepList, \(replist) 
                         GetSS_RecDevs(replist, YearsList, Ages)) |>

@@ -24,10 +24,9 @@ CalcUnfishedNumber <- function(OM, SP=FALSE) {
   UnfishedNumberAtAge
 }
 
-
-# TODO SP=TRUE
-
 CalcUnfishedNumber_seasonal <- function(OM, SP=FALSE) {
+  # This matches North Pacific Swordfish SS3 model 
+  # Need to check if it generalizes to all seasonal models
   OM <- PopulateOM(OM)
   nStock <- nStock(OM)
   nSim <- OM@nSim
@@ -38,6 +37,8 @@ CalcUnfishedNumber_seasonal <- function(OM, SP=FALSE) {
   for (st in 1:nStock) {
     Stock <- OM@Stock[[st]]
     AgeClasses <- Stock@Ages@Classes
+    MaxAge <- Stock@Ages@MaxAge/OM@TSperYear
+    MaxAgeAnnual <- floor(MaxAge)
     nAge <- length(AgeClasses)
     R0 <- Stock@SRR@R0 |> ExtendYears(Years) |> ExtendSims(nSim) 
     NaturalMortality <- Stock@NaturalMortality@MeanAtAge |> 
@@ -47,7 +48,7 @@ CalcUnfishedNumber_seasonal <- function(OM, SP=FALSE) {
     Semelparous <- Stock@Maturity@Semelparous
     
     if (is.logical(Semelparous)) 
-      Semelparous <- array(1, dim = c(nSim, nAge, nYear),
+      Semelparous <- array(0, dim = c(nSim, nAge, nYear),
                            dimnames = list(
                              Sim=1:nSim,
                              Age=AgeClasses,
@@ -63,26 +64,42 @@ CalcUnfishedNumber_seasonal <- function(OM, SP=FALSE) {
     )
     
     UnfishedNumberAtAgeStock[,1,] <- R0
-    
-    Survival <- CalcSurvival(NaturalMortality, NULL, PlusGroup, SpawnTimeFrac, Semelparous)
+    Survival <- array(1, dim=dim(UnfishedNumberAtAgeStock),
+                      dimnames = dimnames(UnfishedNumberAtAgeStock))
     
     # Initial Year 
     for (age in seq_along(AgeClasses)[-1]) {
-        UnfishedNumberAtAgeStock[,age,1] <- R0[,age] * Survival[,age,1]
+      Age <- AgeClasses[age]
+      MLastAge <- NaturalMortality[,age-1,1, drop=FALSE]
+      MThisAge <- NaturalMortality[,age,1, drop=FALSE]
+      PostSpawnMortalityLastAge <- Semelparous[,age-1,1]
+      
+      Survival[,age,1] <- Survival[,age-1,1] * exp(-(MLastAge*(1-SpawnTimeFrac)+MThisAge*SpawnTimeFrac)) *
+        (1-PostSpawnMortalityLastAge)
+      
+      UnfishedNumberAtAgeStock[,age,1] <- R0[,age] * Survival[,age,1]
+      
+      if (PlusGroup && Age == MaxAgeAnnual) {
+        Survival[,age,1] <- exp(-NaturalMortality[,age,1]*OM@TSperYear)
+        UnfishedNumberAtAgeStock[,age,1] <- UnfishedNumberAtAgeStock[,age,1]/(1-Survival[,age,1]) 
+      }
     }
-    
 
     for (ts in 2:length(Years)) {
       for (age in seq_along(AgeClasses)[-1]) {
+        Age <- AgeClasses[age]
         MLastAge <- NaturalMortality[,age-1,ts-1, drop=FALSE]
         MThisAge <- NaturalMortality[,age,ts-1, drop=FALSE]
         PostSpawnMortalityLastAge <- Semelparous[,age-1,ts-1]
-      
-        UnfishedNumberAtAgeStock[,age,ts] <- UnfishedNumberAtAgeStock[,age-1,ts-1, drop=FALSE] * exp(-(MLastAge*(1-SpawnTimeFrac)+MThisAge*SpawnTimeFrac)) *
+        
+        Survival[,age,ts] <- exp(-(MLastAge*(1-SpawnTimeFrac)+MThisAge*SpawnTimeFrac)) *
           (1-PostSpawnMortalityLastAge)
         
-        if (PlusGroup && age == length(AgeClasses)) {
-          UnfishedNumberAtAgeStock[,age,ts] <- UnfishedNumberAtAgeStock[,age,ts, drop=FALSE] + UnfishedNumberAtAgeStock[,age,ts, drop=FALSE]*exp(-NaturalMortality[,age,ts, drop=FALSE])
+        UnfishedNumberAtAgeStock[,age,ts] <- UnfishedNumberAtAgeStock[,age-1,ts-1, drop=FALSE] * Survival[,age, ts]
+        
+        if (PlusGroup && Age == MaxAgeAnnual) {
+          Survival[,age,ts] <- Survival[,age,ts]/(1-exp(-NaturalMortality[,age,ts]))
+          UnfishedNumberAtAgeStock[,age,ts] <- UnfishedNumberAtAgeStock[,age,ts, drop=FALSE]/Survival[,age,ts]
         }
       }
     }

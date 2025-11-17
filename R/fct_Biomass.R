@@ -29,7 +29,7 @@ MakeFactor <- function(x) {
 
 
 #' @export
-DF2Array <- function(DF, addSim=TRUE) {
+DF2Array <- function(DF) {
   if (!inherits(DF, 'data.frame'))
     cli::cli_abort("`DF` is not a data.frame")
   
