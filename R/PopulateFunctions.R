@@ -587,7 +587,7 @@ MeanAtWeight2MeanAtAge <- function(object, Weight, Ages, nsim, Years, seed, sile
     return(object)
   
   object@MeanAtAge <- AtSize2AtAge(object, Weight) |>
-    AddDimNames(Years=Years)
+    AddDimNames(Years=Years, Ages=Ages@Classes)
   
   if ('Units' %in% slotNames(object))
     attributes(object@MeanAtAge)$Units <- object@Units
