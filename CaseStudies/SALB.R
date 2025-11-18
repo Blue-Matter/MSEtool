@@ -2,8 +2,6 @@ library(MSEtool)
 
 # TODO - reduce Hist/MSE object sims/TS
 
-la <- devtools::load_all
-
 la()
 
 
@@ -24,7 +22,7 @@ SSDir <- 'G:/Shared drives/BM shared/1. Projects/TOF-MSE-SALB/ALB-S_Stochastic/A
 StochasticDirs <- list.dirs(file.path(SSDir), full.names = TRUE, recursive = FALSE)
 StochasticDirs <- StochasticDirs[!grepl('Base', StochasticDirs)]
 
-StochasticDirs <- StochasticDirs[1:5] # fewer for development
+StochasticDirs <- StochasticDirs[1:3] # fewer for development
 
 RepList <- ImportSSReport(StochasticDirs)
 
@@ -38,10 +36,21 @@ OM <- ImportSS(RepList,
                Interval=Interval,
                DataLag=DataLag)
 
+
+Hist <- Simulate(OM)
+
+s <- 1
+RepList[[s]]$natage
+
+CompareSSNumber(RepList[[1]], Hist)
+Hist@Number$Albacore[1,,62:63,1]\
+
 parallel=FALSE
 silent=FALSE
 nsim=NULL
 nSim=NULL
+
+
 
 ################################################################################
 

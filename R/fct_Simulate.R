@@ -72,8 +72,8 @@ Simulate_om <- function(OM=NULL,
   SimList <- OptFinalDepletion(SimList)
 
   # ---- Historical Population Dynamics ----
-  SimList <- SimulateDynamics(SimList, HistYears) 
-
+  SimList <- SimulateDynamics(SimList, HistYears)
+  
   # ---- Calculate Reference Yield ----
   SimList <- CalcRefLandings(SimList, HistYears, ProjYears, 'Landings', Calc=RefLandings)
   SimList <- CalcRefLandings(SimList, HistYears, ProjYears, 'Removals', Calc=RefRemovals)

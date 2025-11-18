@@ -184,6 +184,7 @@ Collate:
     'fct_Biomass.R'
     'fct_CalcMSYRefPoints.R'
     'fct_CalcPerRecruit.R'
+    'fct_CalcRecruitment_TimeStep.R'
     'fct_CalcSurvival.R'
     'fct_CalcUnfished.R'
     'fct_CalcUnfishedNumber.R'

@@ -3,7 +3,6 @@ ReduceHist <- function(Hist, Reduce=TRUE) {
   if (!Reduce)
     return(Hist)
   
-  
   Hist@OM <- ArrayReduceDims(Hist@OM)
   Hist@Unfished <- ArrayReduceDims(Hist@Unfished)
   Hist@RefPointsMSY <- ArrayReduceDims(Hist@RefPointsMSY)

@@ -11,20 +11,23 @@ RepList <- ImportSSReport(SSDir)
 RepList[[1]]$M_at_age[,4] <- RepList[[1]]$M_at_age[,4] * 2 
 
 OM <- ImportSS(RepList, nSim=2)
-OM@Data$`Female Male`@Survey@Units
+Hist <- Simulate_om(OM, Reduce=FALSE)
 
-Hist <- Simulate_om(OM)
+replist <- RepList[[1]]
+CompareSSNumber(replist, Hist)
 
-
-LoadArgs('Simulate_om')
 
 # TODO
-# - match N-at-Age for historical
-# - F-at-age are different??
+# - 
 # - write CompareSS functions ... 
 
-
-
+# Things to check:
+# - SS calculates recruits for age-0 = this should be accounted for otherwise h has different interpretation
+# - N-at-Age doesn't match
+# - use spawntime frac? Calc rec devs better
+# - apply natural mortality to R0?
+# - weight and spawning production differnt in first quarter - n is the same
+# 
 # TODO 
 # - test NPSWO
 # - test SALB
@@ -34,11 +37,91 @@ LoadArgs('Simulate_om')
 
 # ---------------------- DEBUG ----------------------
 replist <- RepList[[1]]
-yr <- 1975
+
+
+Yr <- 1976
+q <- 3
 OM_N <- Hist@Number$Female
 n1 <- GetSSNatAge(replist, OM, yrs=yr)
-q <- 2
-data.frame(SS=n1[,q], OM=OM_N[1,,q,1])
+Yrind <- match(yr, OM@Years) + q - 1 
+df <- data.frame(SS=n1[,q], OM=OM_N[1,,Yrind,1]) 
+apply(df, 2, sum, na.rm=TRUE)
+
+round(df,2)
+
+
+
+Stock <- Hist@OM@Stock$Female
+mod <- Stock@SRR@Model
+S <- Hist@SProduction[1,1,Yrind-3]
+S0 <- Hist@Unfished@Equilibrium@SProduction[1,1,Yrind]
+R0 <- Stock@SRR@R0[1,Yrind] * exp(-((0.42/4) * 2)) 
+h <- Stock@SRR@Pars$h[1,1]
+
+mod(S,S0,R0,h)  * 2
+
+replist$recruit |> dplyr::filter(Yr==1976)
+
+
+replist$timeseries |> dplyr::filter(Yr==1976) |> 
+  dplyr::select(Yr, Bio_all, SpawnBio)
+Hist@SProduction[1,1,1:8]
+apply(Hist@Biomass[1,1:2,1:8],2, sum)
+
+
+
+dev <- Hist@OM@Stock$Female@SRR@RecDevHist[1,Yrind]
+mod(S,S0,R0,h)* dev
+
+mod(S,S0,R0,h) * 0.8813122
+# 383.76 - ss
+(mod(S,S0,R0,h)* dev)/383.76
+
+dev/1.020114
+
+Hist@OM@Stock$Female@SRR@RecDevHist[1,1:10]
+
+t <- replist$recruit |> dplyr::filter(Yr==1976)
+exp(t$dev)
+0.8990389 * 0.98
+
+767.51/875.075       
+
+
+
+
+n1 <- GetSSNatAge(replist, OM, yrs=1975)
+n2 <- GetSSNatAge(replist, OM, yrs=1976)
+
+SS_Zs <- -log(n2[2:62,1]/n1[1:61,4])
+
+OM_Zs <- -log(OM_N[1,2:62,5,1]/OM_N[1,1:61,4,1])
+
+
+cbind(SS_Zs[is.finite(SS_Zs)], OM_Zs[is.finite(SS_Zs)]) |>
+  matplot(type='b')
+
+M_1 <- OM@Stock$Female@NaturalMortality@MeanAtAge[1,,y]
+
+SS_F <- SS_Zs-M_1[1:61]
+OM_F <- OM_Zs-M_1[1:61]
+
+cbind(SS_F[is.finite(SS_F)], OM_F[is.finite(SS_F)]) |>
+  matplot(type='b')
+
+
+
+
+
+
+replist$natage |> dplyr::filter(Yr==1975)
+
+
+
+
+
+# Recruitment deviations are out 
+
 
 SS_Z <- -log(n1[4,2]/n1[3,1]) # age 1 F in 1975
 OM_Z <- -log(OM_N[1,4,2,1]/OM_N[1,3,1,1]) # age 1 F in 1975
@@ -52,9 +135,20 @@ SS_F
 OM_F
 Hist@FDead$Female[1,3,1,] |> sum()
 
+SSAgeClasses <- GetSSAgeClasses(replist)
 SS_FDead <- replist$fatage |> dplyr::filter(Yr==1975, Sex==1, Seas==1) |> 
   dplyr::select(as.character(SSAgeClasses)) |>
   colSums()
+
+
+y <- 3
+SS_Zs <- -log(n1[2:62,y+1]/n1[1:61,y])
+
+OM_Zs <- -log(OM_N[1,2:62,y+1,1]/OM_N[1,1:61,y,1])
+
+cbind(SS_Zs[is.finite(SS_Zs)], OM_Zs[is.finite(OM_Zs)]) |>
+  matplot(type='b')
+
 
 
 # OM F is higher than SS3s 

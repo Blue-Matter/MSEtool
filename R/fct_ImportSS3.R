@@ -208,8 +208,12 @@ SS2Stock <- function(st, RepList, YearsList, nSim) {
 SS2Ages <- function(st, RepList, YearsList) {
   Ages(MaxAge=CalcSSMaxAgeClass(RepList[[1]], YearsList),
        MinAge=CalcSSMinAgeClass(RepList[[1]], YearsList),
-       Units='quarter')
+       Units=CalcTSUnits(RepList[[1]]$nseasons))
 }
+
+
+
+
 
 GetSSAgeClasses <- function(replist) {
   AgeClasses <- suppressWarnings(as.numeric(colnames(replist$natage)))
@@ -631,10 +635,10 @@ GetSS_RecDevs <- function(replist, YearsList, Ages) {
   recruit <- replist$recruit
   
   Rec_main <- recruit[recruit$Yr %in% YearsHist, ]
-  dev <- Rec_main$pred_recr/Rec_main$exp_recr
+  dev <- exp(Rec_main$dev)
   dev <- array(dev, dim=length(dev), 
                dimnames=list(Year=YearsHist[match(Rec_main$Yr, YearsHist)]))
-  
+
   TSperYear <- YearsList$TSperYear
   if (TSperYear==1) 
     return(dev)
@@ -688,10 +692,11 @@ SS2SRR <- function(st, RepList, YearsList, Ages, nSim) {
   R0 <- purrr::map(RepList, \(replist) GetSS_R0(st, replist, YearsList)) |>
     List2Array('Sim', pos=1)
   
-  SpawnTimeFrac <- ifelse(is.na(RepList[[1]]$Spawn_timing_in_season), 
-                          0, 
-                          RepList[[1]]$Spawn_timing_in_season)
+  # SpawnTimeFrac <- ifelse(is.na(RepList[[1]]$Spawn_timing_in_season),
+  #                         0,
+  #                         RepList[[1]]$Spawn_timing_in_season)
   
+  SpawnTimeFrac <- 0
   SRR <- SRR(SD=SD, R0=R0, SpawnTimeFrac=SpawnTimeFrac)
   
   Pars <- purrr::map(RepList, \(replist) GetSS_SRRPars(replist)) 
@@ -774,8 +779,8 @@ GetSS_Effort <- function(st, fl, replist, YearsList, type=c('Effort', 'q')) {
   dimnames(FInteract) <- list(Age=AgeClasses,
                               Year=YearsList$YearsHist)
   
-  
-  FInteractApical <- apply(FInteract, c('Year'), max)
+  FInteractApical <- apply(FInteract, c('Year'), max) *
+    1/replist$nseasons
   FInteractApicalTerminal <- FInteractApical
   FInteractApicalTerminal[] <- 0
   
@@ -802,7 +807,8 @@ SS2Effort <- function(st, fl, RepList, YearsList) {
 SS2Catchability <- function(st, fl, RepList, YearsList) {
   q <- purrr::map(RepList, \(replist)
              GetSS_Effort(st, fl, replist, YearsList, type='q')) |>
-    List2Array('Sim', pos=1, dimname='Year') 
+    List2Array('Sim', pos=1, dim1='Year') |>
+    aperm(c('Sim', 'Year'))
   
   dimnames(q)$Year <- YearsList$YearsHist[1]
   q
@@ -1196,7 +1202,7 @@ ImportSSReport <- function(SSDir, silent=FALSE, parallel=TRUE, ...) {
       RepList <- purrr::map(SSDir, \(SSdir) GetSSRepList(SSdir, silent=TRUE, ...),
                             .progress=  list(
                               caller = environment(),
-                              format =  'Reading SS3 Output from {.val {length(x)}} directories {cli::pb_bar} {cli::pb_percent}')
+                              format =  'Reading SS3 Output from {.val {length(SSDir)}} directories {cli::pb_bar} {cli::pb_percent}')
       )
       
       names(RepList) <- 1:length(RepList)
@@ -1434,7 +1440,7 @@ DropXXCols <- function(array) {
   array[,ind]
 }
 
-CompareSSNumber <- function(replist, Hist) {
+CompareSSNumber <- function(replist, Hist, sim=1) {
   if (!inherits(Hist, 'hist'))
     cli::cli_abort('`Hist` must be class `hist`')
   
@@ -1442,16 +1448,17 @@ CompareSSNumber <- function(replist, Hist) {
   AgeClasses <- GetSSAgeClasses(replist)
   
   NumberHist <- Number(Hist) |> dplyr::mutate(Model='Import') |>
-    dplyr::filter(Sim==1)
+    dplyr::filter(Sim==sim)
   
   NumberSS <- replist$natage |> 
     dplyr::filter(Yr%in%mainyrs, `Beg/Mid`=='B') |>
     dplyr::rename(Year=Yr, Stock=Sex) |>
     tidyr::pivot_longer(cols=as.character(AgeClasses)) |>
-    dplyr::group_by(Stock, Year) |>
+    dplyr::group_by(Stock, Year, Seas) |>
     dplyr::summarise(Value=sum(value), Model='SS3', .groups='drop')
   
   NumberSS$Stock <- unique(NumberHist$Stock)[NumberSS$Stock]
+  NumberSS$Year <- NumberHist$Year
   
   NumberDF <- dplyr::bind_rows(NumberHist, NumberSS)
   

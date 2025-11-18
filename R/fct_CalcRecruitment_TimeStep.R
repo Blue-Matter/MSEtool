@@ -6,13 +6,15 @@ CalcRecruitment_TimeStep <- function(OM, st=NULL) {
   
   if (!is.null(st)) {
     Stock <- OM@Stock[[st]]
-    FullAgeClasses <- seq(0, by=1/Stock@TSperYear, to=max(Stock@Ages@Classes))
-    return(match(min(Stock@Ages@Classes), FullAgeClasses))
+    PreRecruit <- seq(0, by=1/Stock@TSperYear, to=min(Stock@Ages@Classes))
+    return(
+      length(PreRecruit)-1
+    )
   }
   
   purrr::map(OM@Stock, \(Stock) {
-    FullAgeClasses <- seq(0, by=1/Stock@TSperYear, to=max(Stock@Ages@Classes))
-    match(min(Stock@Ages@Classes), FullAgeClasses)
+    PreRecruit <- seq(0, by=1/Stock@TSperYear, to=min(Stock@Ages@Classes))
+    length(PreRecruit)-1
   }) |> 
     List2Array('Stock') |>
     DropDimension('Sim')
