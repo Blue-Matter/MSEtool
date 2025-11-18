@@ -21,11 +21,11 @@ OM2Hist <- function(OM, silent=FALSE, id=NULL) {
   })
                               
   # Fleet
-  nAgesList <- purrr::map(Hist@OM@Stock, \(Stock) 
-                          length(Stock@Ages@Classes))
+  AgeClassList <- purrr::map(Hist@OM@Stock, \(Stock) 
+                             Stock@Ages@Classes)
   
-  Hist@OM@Fleet <- purrr::map2(Hist@OM@Fleet, nAgesList, \(FleetList, nAges)
-                               ExtendFleet(FleetList, nAges, nSim, Years, nArea, silent, id)
+  Hist@OM@Fleet <- purrr::map2(Hist@OM@Fleet, AgeClassList, \(FleetList, AgeClasses)
+                               ExtendFleet(FleetList, AgeClasses, nSim, Years, nArea, silent, id)
   )
   
   # Time Series 

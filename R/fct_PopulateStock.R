@@ -429,6 +429,25 @@ PopulateSRR <- function(SRR,
   SRR@AC[!is.finite(SRR@AC)] <- 0
   SRR@SD[SRR@SD==0] <- 1E-6 # for reproducibility in rnorm
   
+  dd <- dim(SRR@RecDevInit)
+  dimnames(SRR@RecDevInit) <- list(
+    Sim=1:dd[1],
+    Age=Ages@Classes[-1]
+  )
+  
+  dd <- dim(SRR@RecDevHist)
+  dimnames(SRR@RecDevHist) <- list(
+    Sim=1:dd[1],
+    Year=HistTS
+  )
+  
+  dd <- dim(SRR@RecDevProj)
+  dimnames(SRR@RecDevProj) <- list(
+    Sim=1:dd[1],
+    Year=ProjTS
+  )
+  
+  
   EmptyObjects <- c(EmptyObject(SRR@RecDevInit),
                     EmptyObject(SRR@RecDevHist),
                     EmptyObject(SRR@RecDevProj))

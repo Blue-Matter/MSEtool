@@ -26,7 +26,7 @@ CalcInitialYear <- function(Hist, silent=FALSE) {
     AgeClasses <- Hist@OM@Stock[[st]]@Ages@Classes
     if (min(ages) !=AgeClasses[2]) {
       cli::cli_abort(c("Error calculating initial age structure for Stock: {.val {names(Hist@OM@Stock)[st]}}",
-                     "i"='The first age class in matrix `Stock |> SRR() |> RecDevHist()` must match the second age class',
+                     "i"='The first age class in matrix `Stock |> SRR() |> RecDevInit()` must match the second age class',
                      '*'='Second age class: {.val {AgeClasses[2]}}',
                      '*'='First age class in `RecDevInit`: {.val {min(ages)}}'
                      ), call=NULL

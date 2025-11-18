@@ -2,10 +2,10 @@
 #' @export
 ConvertMOM <- function(MOM, Author='', CurrentYear=NULL, TSperYear=1, Populate=TRUE, silent=FALSE) {
   
-  CheckClass(OM, c('MOM'), 'MOM')
+  CheckClass(MOM, c('MOM'), 'MOM')
   
   if (!silent)
-    cli::cli_alert('Converting object of class {.cls OM} to class {.cls om}')
+    cli::cli_alert('Converting object of class {.cls MOM} to class {.cls om}')
   
   om <- OM()
   om@Name <- MOM@Name
@@ -105,6 +105,8 @@ MOM2stock <- function(MOM, YearsList=NULL) {
     Stock <- stocks[[st]]
     cpars <- MOM@cpars[[st]][[1]]
     StockList[[st]] <- OM2stock(Stock, cpars, YearsList, MOM@nsim, MOM@seed)
+    
+    StockList[[st]]@Length@MeanAtAge |> dimnames()
     
   }
   if (nstocks==1) return(StockList[[1]])

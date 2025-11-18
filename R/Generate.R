@@ -248,6 +248,25 @@ GenerateRecruitmentDeviations <- function(SD=0.2,
   }
 
   if (!genInit & !genHist & !genProj) {
+    
+    dd <- dim(RecDevInit)
+    dimnames(RecDevInit) <- list(
+      Sim=1:dd[1],
+      Age=Ages@Classes[-1]
+    )
+    
+    dd <- dim(RecDevHist)
+    dimnames(RecDevHist) <- list(
+      Sim=1:dd[1],
+      Year=HistTS
+    )
+    
+    dd <- dim(RecDevProj)
+    dimnames(RecDevProj) <- list(
+      Sim=1:dd[1],
+      Year=ProjTS
+    )
+    
     return(
       list(RecDevInit=RecDevInit,
            RecDevHist=RecDevHist,
@@ -312,6 +331,24 @@ GenerateRecruitmentDeviations <- function(SD=0.2,
       logRecDevProj[GetIndex(i, nrow(logRecDevProj)), ] <- logRecDeviations[period =='Proj']
 
   }
+  
+  dd <- dim(RecDevInit)
+  dimnames(RecDevInit) <- list(
+    Sim=1:dd[1],
+    Age=Ages@Classes[-1]
+  )
+  
+  dd <- dim(RecDevHist)
+  dimnames(RecDevHist) <- list(
+    Sim=1:dd[1],
+    Year=HistTS
+  )
+  
+  dd <- dim(RecDevProj)
+  dimnames(RecDevProj) <- list(
+    Sim=1:dd[1],
+    Year=ProjTS
+  )
 
   list(RecDevInit=exp(logRecDevInit),
        RecDevHist=exp(logRecDevHist),

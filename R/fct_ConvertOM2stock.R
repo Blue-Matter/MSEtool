@@ -9,7 +9,7 @@ OM2stock <- function(OM, cpars=NULL, YearsList=NULL, nSim, seed=NULL) {
   stock@Name <- gsub("REPLACED -- ", '', stock@Name)
   stock@CommonName <- OM@Common_Name
   stock@Species <- OM@Species
-  stock@Ages <- Ages(MaxAge=OM@maxage/YearsList$TSperYear,
+  stock@Ages <- Ages(MaxAge=OM@maxage, # /YearsList$TSperYear,
                      MinAge=0,
                      Units=CalcTSUnits(YearsList$TSperYear))
   
@@ -66,6 +66,12 @@ OM2stock <- function(OM, cpars=NULL, YearsList=NULL, nSim, seed=NULL) {
                 Years=c(YearsList$HistTS, YearsList$ProjTS),
                 nsim=nSim,
                 seed=seed)
+  
+  SRR <- stock@SRR
+  stock@SRR@RecDevInit |> dimnames()
+  stock@SRR@RecDevHist |> dimnames()
+  stock@SRR@RecDevProj |> dimnames()
+  
   
   Spatial(stock) <- OM2Spatial(OM, cpars, YearsList) |>
     PopulateSpatial(Ages=stock@Ages,
@@ -309,19 +315,20 @@ OM2SRR <- function(OM, cpars=NULL, Years=NULL) {
     )
   }
   
-  if (!is.null(SRR@RecDevHist)  && !all(is.na(SRR@RecDevHist))) {
-    dimnames(SRR@RecDevHist) <- list(
-      Sim=1:nrow(SRR@RecDevHist),
-      Year= Years$HistTS
-    )
-  }
   
-  if (!is.null(SRR@RecDevProj)  && !all(is.na(SRR@RecDevProj))) {
-    dimnames(SRR@RecDevProj) <- list(
-      Sim=1:nrow(SRR@RecDevProj),
-      Year= Years$ProjTS
-    )
-  }
+  # if (!is.null(SRR@RecDevHist)  && !all(is.na(SRR@RecDevHist))) {
+  #   dimnames(SRR@RecDevHist) <- list(
+  #     Sim=1:nrow(SRR@RecDevHist),
+  #     Year= Years$HistTS
+  #   )
+  # }
+  # 
+  # if (!is.null(SRR@RecDevProj)  && !all(is.na(SRR@RecDevProj))) {
+  #   dimnames(SRR@RecDevProj) <- list(
+  #     Sim=1:nrow(SRR@RecDevProj),
+  #     Year= Years$ProjTS
+  #   )
+  # }
   
   SRR
 }
