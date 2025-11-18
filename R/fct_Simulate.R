@@ -56,8 +56,6 @@ Simulate_om <- function(OM=NULL,
   # ---- Build SimList ----
   SimList <- Hist2SimList(Hist)  # List of `Hist` objects, each with one simulation
   
-  SimList$`1`@OM@Fleet$Dolphinfish@Retention@MeanAtAge |> dim()
-  
   # ---- Calculate Reference Points ----
   SimList <- CalcSPR0(SimList)  # unfished spawning per recruit (i.e. fecundity) 
   SimList <- CalcMSYRefPoints(SimList, RefPointYears, RefPointsMSY)

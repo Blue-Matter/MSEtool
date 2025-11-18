@@ -4,6 +4,18 @@ dir <- "C:/Users/Admin/Documents/GitHub/IndonesiaHarvestStrategies"
 source(file.path(dir, '0a. Settings.R'))
 source(file.path(dir, "0b. HarvestStrategies.r"))
 
+
+OM <- readRDS(file.path(dir, 'Objects_OM/octopus.om'))
+
+OM <- PopulateOM(OM)
+
+Hist <- Simulate(OM)
+
+
+la()
+LoadArgs('Simulate_om')
+
+
 Hist <-  readRDS(file.path(dir, 'Objects_Hist/Lobster_TwoArea_10.hist'))
 
 LoadArgs('Project_hist')

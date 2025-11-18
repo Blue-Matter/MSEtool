@@ -332,6 +332,10 @@ GenerateRecruitmentDeviations <- function(SD=0.2,
 
   }
   
+  RecDevInit <- exp(logRecDevInit)
+  RecDevHist <- exp(logRecDevHist)
+  RecDevProj <- exp(logRecDevProj)
+  
   dd <- dim(RecDevInit)
   dimnames(RecDevInit) <- list(
     Sim=1:dd[1],
@@ -350,9 +354,9 @@ GenerateRecruitmentDeviations <- function(SD=0.2,
     Year=ProjTS
   )
 
-  list(RecDevInit=exp(logRecDevInit),
-       RecDevHist=exp(logRecDevHist),
-       RecDevProj=exp(logRecDevProj)
+  list(RecDevInit=RecDevInit,
+       RecDevHist=RecDevHist,
+       RecDevProj=RecDevProj
   )
 
 }
