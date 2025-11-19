@@ -81,7 +81,7 @@ CalcUnfishedNumber_seasonal <- function(OM, SP=FALSE) {
       
       if (PlusGroup && Age == MaxAgeAnnual) {
         Survival[,age,1] <- exp(-NaturalMortality[,age,1]*OM@TSperYear)
-        UnfishedNumberAtAgeStock[,age,1] <- UnfishedNumberAtAgeStock[,age,1]/(1-Survival[,age,1]) 
+        UnfishedNumberAtAgeStock[,age,1] <- UnfishedNumberAtAgeStock[,age,1]/(1-Survival[,age,1])
       }
     }
 
