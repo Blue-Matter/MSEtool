@@ -193,6 +193,7 @@ Collate:
     'fct_CheckDepletionOpt.R'
     'fct_CheckMSERun.R'
     'fct_CompareBAM.R'
+    'fct_CompareSS.R'
     'fct_Convert.R'
     'fct_ConvertMOM.R'
     'fct_ConvertOM.R'
