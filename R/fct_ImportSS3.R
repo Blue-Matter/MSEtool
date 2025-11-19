@@ -83,8 +83,16 @@ ImportSS <- function(SSDir,
   if (!is.null(DotsList$nsim))
     nSim <- DotsList$nsim
   
-  if(!silent) 
-    cli::cli_alert('{.val {nStock}-sex} and {.val {nFleet}-fleet} model detected.')
+  YearsList <- GetSSYears(RepList[[1]], pYear)
+  
+  if (!silent) {
+    cli::cli_h3('Importing OM from {.href [SS3](https://nmfs-ost.github.io/ss3-website/)} Output')
+    cli::cli_ul()
+    cli::cli_li('{.val {nStock}-sex} and {.val {nFleet}-fleet} model detected.')
+    cli::cli_li('Time Steps Per Year: {.val {YearsList$TSperYear}}')
+    cli::cli_li('Years: {.val {min(YearsList$YearsHist)} - {max(YearsList$YearsHist)}}')
+    cli::cli_end()
+  }
   
   if (length(RepList)>1) 
     nSim <- length(RepList)
@@ -101,7 +109,7 @@ ImportSS <- function(SSDir,
            DataLag=DataLag,
            nSim=nSim)
   
-  YearsList <- GetSSYears(RepList[[1]], pYear)
+ 
   OM@nYear <- YearsList$nYear
   OM@pYear <- YearsList$pYear
   OM@CurrentYear <- YearsList$CurrentYear
@@ -192,8 +200,18 @@ SS2Stock <- function(st, RepList, YearsList, nSim) {
   Stock <- Stock(Name=ifelse(st == 1, "Female", "Male")) 
   Stock@Ages <- SS2Ages(st, RepList, YearsList)
   Stock@Length <- SS2Length(st, RepList, YearsList, Ages=Stock@Ages)
+  
+  Stock@Length@MeanAtAge |> dimnames()
+  
   Stock@Weight <- SS2Weight(st, RepList, YearsList, Ages=Stock@Ages)
+  
+  Stock@Weight@MeanAtAge |> dimnames()
+  
   Stock@NaturalMortality <- SS2NaturalMortality(st, RepList, YearsList, Ages=Stock@Ages)
+  
+  Stock@NaturalMortality@MeanAtAge |> dimnames()
+  
+  
   Stock@Maturity <- SS2Maturity(st, RepList, YearsList, Ages=Stock@Ages)
   Stock@Fecundity <- SS2Fecundity(st, RepList, YearsList, Ages=Stock@Ages)
   # Stock@Depletion <- SS2Depletion(st, RepList, YearsList) # not needed - already accounted for in early rec devs
@@ -265,12 +283,40 @@ CalcSSMinAgeClass <- function(replist, YearsList) {
 
 GetSS_Length_at_Age <- function(st, replist, YearsList) {
   YearsHist <- YearsList$YearsHist
-  dplyr::filter(replist$endgrowth, Sex == st) |> 
+  endgrowth <- dplyr::filter(replist$endgrowth, Sex == st)
+  
+  endgrowth |> 
     dplyr::select(Age=Age_Beg, Value=Len_Beg) |>
     dplyr::mutate(Year=YearsHist[1]) |> 
     dplyr::arrange(Age, Year) |>
     dplyr::select(Age, Year, Value) |>
     DF2Array()
+  
+
+  # Seas <- unique(endgrowth$Seas)
+  # 
+  # if (length(Seas)==1) {
+  #   return( 
+  #  
+  # }
+  # 
+  # # Seasonal 
+  # FullAgeClasses <- seq(0, by=1/YearsList$TSperYear, to=max(Ages@Classes))
+  # endgrowth_seas <- endgrowth |> 
+  #   dplyr::select(Age=Age_Beg, Seas, Value=Len_Beg) |>
+  #   dplyr::arrange(Age) |>
+  #   dplyr::mutate(Age=FullAgeClasses) |>
+  #   dplyr::filter(Age%in%Ages@Classes) 
+  # 
+  # 
+  # 
+  #   dplyr::mutate(Year=YearsHist) |> 
+  #   dplyr::arrange(Age, Year) |>
+  #   dplyr::select(Age, Year, Value) |>
+  #   DF2Array()
+  # 
+  
+
 }
 
 GetSS_LengthCV_at_Age <-function(st, replist, YearsList) {
@@ -635,7 +681,9 @@ GetSS_RecDevs <- function(replist, YearsList, Ages) {
   recruit <- replist$recruit
   
   Rec_main <- recruit[recruit$Yr %in% YearsHist, ]
-  dev <- exp(Rec_main$dev)
+  
+  # dev <- exp(Rec_main$dev)
+  dev <- Rec_main$pred_recr/Rec_main$exp_recr
   dev <- array(dev, dim=length(dev), 
                dimnames=list(Year=YearsHist[match(Rec_main$Yr, YearsHist)]))
 
@@ -692,11 +740,11 @@ SS2SRR <- function(st, RepList, YearsList, Ages, nSim) {
   R0 <- purrr::map(RepList, \(replist) GetSS_R0(st, replist, YearsList)) |>
     List2Array('Sim', pos=1)
   
-  # SpawnTimeFrac <- ifelse(is.na(RepList[[1]]$Spawn_timing_in_season),
-  #                         0,
-  #                         RepList[[1]]$Spawn_timing_in_season)
+  SpawnTimeFrac <- ifelse(is.na(RepList[[1]]$Spawn_timing_in_season),
+                          0,
+                          RepList[[1]]$Spawn_timing_in_season)
   
-  SpawnTimeFrac <- 0
+  # SpawnTimeFrac <- 0
   SRR <- SRR(SD=SD, R0=R0, SpawnTimeFrac=SpawnTimeFrac)
   
   Pars <- purrr::map(RepList, \(replist) GetSS_SRRPars(replist)) 
