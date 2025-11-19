@@ -25,7 +25,7 @@ ImportBAM <- function(Stock='Red Snapper',
   if (!silent) {
     cli::cli_h3('Importing OM from {.href [BAM](https://repository.library.noaa.gov/view/noaa/4847)} Output')
     cli::cli_ul()
-    cli::cli_li('Title: {.val {BAMdata$info$title}}')
+    cli::cli_li('Name: {.val {BAMdata$info$title}}')
     cli::cli_li('Species: {.val {BAMdata$info$species}}')
     cli::cli_li('Years: {.val {BAMdata$parms$styr} - {BAMdata$parms$endyr}}')
     cli::cli_end()
@@ -38,7 +38,6 @@ ImportBAM <- function(Stock='Red Snapper',
   OM@Stock[[BAMdata$info$species]] <- BAM2Stock(BAMdata, 
                                                 nSim=nSim(OM),
                                                 Years=OM@Years)
-  
   
   OM@Fleet <- list()
   class(OM@Fleet) <- 'StockFleetList'
@@ -177,12 +176,12 @@ BAM2Stock <- function(BAMdata, nSim, Years) {
     cli::cli_abort('`BAMdata$info$units.length`:  {.val {BAMdata$info$units.length}} currently not supported', .internal=TRUE)
   }
   
-  Length(stock) <-  Length(Pars=list(Linf=Linf,
-                                     K=BAMdata$parms$K[1],
-                                     t0=BAMdata$parms$t0[1]),
-                           Units= 'mm',
-                           CVatAge=AgeSeries$length.cv,
-                           Timing=0.5)
+  Length(stock) <- Length(Pars=list(Linf=Linf,
+                                    K=BAMdata$parms$K[1],
+                                    t0=BAMdata$parms$t0[1]),
+                          Units= 'mm',
+                          CVatAge=AgeSeries$length.cv,
+                          Timing=0.5)
   
   if (BAMdata$info$units.weight == 'kg') {
     WeightAtAge <- AgeSeries$weight
@@ -281,9 +280,6 @@ BAM2Stock <- function(BAMdata, nSim, Years) {
                     R0=R0,
                     SD=SD,
                     AC=ACF,
-                    RecDevInit = array(0),
-                    RecDevHist = array(0),
-                    RecDevProj = array(0),
                     SpawnTimeFrac = BAMdata$parms$spawn.time,
                     Units=NumberUnits
   )
