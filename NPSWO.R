@@ -15,7 +15,8 @@ OM <- ImportSS(RepList, nSim=2)
 Hist <- Simulate(OM, Reduce=FALSE)
 
 # TODO
-# - test and fix MP projections
+# - check if catches are really in numbers for some fleets
+# - check projected catches under constant effort/catch scenarios - should be on same scale as historical
 # - test SALB
 # - test NSWO
 
@@ -26,10 +27,19 @@ test <- function(Data) {
 }
 class(test) <- 'mp'
 
-MSE <- Project(Hist, MPs='test')
+MSE <- Project_hist(Hist, MPs='test')
 
+
+
+# Check projected catches - data and real 
+# Check conditioning for catch in numbers 
+Hist@OM@Obs$`Female Male`$F1_JPN_WCNPO_OSDWCOLL_late_Area1@Landings@Error[1,]
+OM@Data$`Female Male`@Landings@Value[,1]
+
+LoadArgs('Project_hist')
 
 replist <- RepList[[1]]
+
 CompareSSNumber(replist, Hist)
 
 CompareSSLandings(replist, Hist)

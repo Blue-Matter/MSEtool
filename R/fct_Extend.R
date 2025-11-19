@@ -24,7 +24,6 @@ ExtendHist <- function(Hist) {
   
   Hist <- ExtendTimeSeries(Hist, AllYears)
   
-  
   Hist
 }
 

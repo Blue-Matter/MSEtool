@@ -105,11 +105,23 @@ GenerateProjectionData_Catch <- function(ProjSim, DataYear, YearsAll, i,
     return(ProjSim)
   
   FleetNames <- DataCatch@Name
-  SimCatch <- purrr::map(slot(ProjSim, type)[stocks], \(catch) 
-                         catch[[as.character(DataYear)]] |> apply(2, sum) 
-  ) |> List2Array('Stock', 'Fleet') |> rowSums() |> t()
-  dimnames(SimCatch) <- list(Year=DataYear, 
-                          Fleet=FleetNames)
+  SimCatchList <- purrr::map(slot(ProjSim, type)[stocks], \(catch) 
+                             catch[[as.character(DataYear)]] 
+  )
+  
+  SimCatch_Biomass <- purrr::map(SimCatchList, \(Stock) apply(Stock, 2, sum)) |> 
+    List2Array('Stock', 'Fleet') |> rowSums() |> t()
+  dimnames(SimCatch_Biomass) <- list(Year=DataYear, Fleet=FleetNames)
+  
+  if (any(DataCatch@Units=='Number')) {
+    SimCatch_Number <- purrr::map2(SimCatchList, ProjSim@OM@Fleet, \(Catch, Fleet) {
+      fleetweight <- Fleet@WeightFleet |> ArraySubsetYear(DataYear) |> DropDimension('Year')
+      catch <- apply(Catch, 1:2, sum) 
+      apply(catch/fleetweight, 2, sum)
+    }) |>
+      List2Array('Stock', 'Fleet') |> rowSums() |> t()
+    dimnames(SimCatch_Number) <- list(Year=DataYear, Fleet=FleetNames)
+  }
   
  
   Value <- DataCatch@Value
@@ -137,12 +149,16 @@ GenerateProjectionData_Catch <- function(ProjSim, DataYear, YearsAll, i,
     if (!is.null(ProjSim@OM@Data[[i]]) && nrow(slot(ProjSim@OM@Data[[i]],type)@Value)>=TSIndex) {
       NewValue[,fl] <- slot(ProjSim@OM@Data[[i]],type)@Value[TSIndex,fl]
     } else {
-      if (DataCatch@Units[fl] != 'Biomass')
-        cli::cli_alert_warning('Currently Landings & Discards data can only be in units of Biomass. Use `FleetWeight=1`')
-      
       error <- ArraySubsetYear(Obs@Error, DataYear)
       bias <- ArraySubsetYear(Obs@Bias, DataYear)
-      NewValue[,fl] <- SimCatch[fl] * error * bias
+      
+      if (DataCatch@Units[fl] == 'Biomass') {
+        NewValue[,fl] <- SimCatch_Biomass[fl] * error * bias
+      } else if (DataCatch@Units[fl] == 'Number') {
+        NewValue[,fl] <- SimCatch_Number[fl] * error * bias
+      } else {
+        cli::cli_alert_warning('Landings & Discards data can only be in units of `Biomass` or `Number`') 
+      }
     }
     
     # CV 
@@ -158,6 +174,7 @@ GenerateProjectionData_Catch <- function(ProjSim, DataYear, YearsAll, i,
   slot(ProjSim@Data[[i]],type) <- DataCatch
   ProjSim
 }
+
 
 GenerateProjectionData_Index <- function(ProjSim, DataYear, YearsHist, YearsAll, i, stocks,
                                          type=c('CPUE', 'Survey')) {
@@ -249,13 +266,19 @@ GenerateProjectionData_Index <- function(ProjSim, DataYear, YearsHist, YearsAll,
           List2Array('Stock', 'Year') |>
           AddDimNames(c('Year', 'Stock'), DataYear) |> 
           apply(c('Year'), sum)
-
+        
       } else if (DataIndex@Units[fl] == 'Number') {
         SimulatedIndex <- SimNumberSelectedList |>
           purrr::map(apply, 'Year', sum) |>
           List2Array('Stock', 'Year') |>
           AddDimNames(c('Year', 'Stock'), DataYear) |> 
           apply(c('Year'), sum) 
+      } else if (DataIndex@Units[fl] == 'Recruitment') {
+        SimulatedIndex <-  purrr::map(SimNumberSelectedList, \(Stock)
+                                      Stock[1,,drop=FALSE]) |>
+          List2Array('Stock', 'Year') |>
+          AddDimNames(c('Year', 'Stock'), DataYear) |> 
+          apply(c('Year'), sum)
       } else {
         cli::cli_abort('Only `Biomass` and `Number` supported for `Units` in `Data@CPUE` and `Data@Survey`', .internal=TRUE)
       }

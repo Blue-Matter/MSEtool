@@ -22,12 +22,7 @@ ConditionObs_Sim <- function(HistSim, HistYears, ProjYears) {
   
   if (nData<1)
     return(HistSim)
-  
-  # if (nData>1) {
-  #   cli::cli_alert_warning('Observation Error Conditioning is currently not supported for OMs with more than one set of real fishery data. `Obs` will not be calculated!')
-  #   return(HistSim)
-  # }
-    
+
   Complexes <- HistSim@OM@Complexes
 
   # FisheryData # Life History
@@ -54,7 +49,7 @@ ConditionObs_Sim <- function(HistSim, HistYears, ProjYears) {
 ConditionObs_Catch <- function(HistSim, FisheryData, HistYears,
                                ProjYears, stocks, i, type=c('Landings', 'Discards')) {
   
-  type <- match.arg(type)
+  type <- match.arg(type, c('Landings', 'Discards'))
   nHistTS <- length(HistYears)
   nProjTS <- length(ProjYears)
   
@@ -73,14 +68,32 @@ ConditionObs_Catch <- function(HistSim, FisheryData, HistYears,
     List2Array('Stock') |> 
     apply(c('Year', 'Fleet'), sum)
   
+  FleetUnits <- slot(FisheryData,type)@Units
+  if (any(FleetUnits=='Number')) {
+    # Calculate catch in numbers
+    SimulatedCatch_Number <- purrr::map2(catchList, HistSim@OM@Fleet, \(catch, fleet) {
+      catch <- apply(List2Array(catch), c(1,2,4), sum) |> # sum over areas
+        aperm(c(1,3,2))
+      apply(catch/fleet@WeightFleet, 2:3, sum) # sum over ages
+    })  |> 
+      List2Array('Stock') |> 
+      apply(c('Year', 'Fleet'), sum)
+  }
+  
   for (fl in 1:nFleet) {
     CatchObs <- slot(HistSim@OM@Obs[[i]][[fl]], type)
     CatchObs@Type <- slot(FisheryData,type)@Type[fl]
+    Units <- FleetUnits[fl]
     
     if (is.null(CatchObs@Years)) 
       CatchObs@Years <- HistYears
     
-    SimValue <- SimulatedCatch[,fl]
+    if (Units=='Biomass') {
+      SimValue <- SimulatedCatch[,fl]  
+    } else {
+      SimValue <- SimulatedCatch_Number[,fl]
+    }
+    
     SimValue[SimValue<0] <- 1E-15
     
     # Bias 
@@ -91,7 +104,7 @@ ConditionObs_Catch <- function(HistSim, FisheryData, HistYears,
     CatchObs@Bias <- array(BiasMean, dim=nHistTS, dimnames = list(Year=HistYears))
     
     # Error
-    CatchErrorHist <- (ObservedCatch[,fl]/(SimValue*CatchObs@Bias))
+    CatchErrorHist <- ObservedCatch[,fl]/(SimValue*CatchObs@Bias)
     CatchErrorHist[!is.finite(CatchErrorHist)] <- NA
   
     CatchErrorHistCondition <- CatchErrorHist[as.character(CatchObs@Years)]

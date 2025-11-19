@@ -43,7 +43,7 @@ ProjectMP_Sim <- function(ProjSim, MP,YearsHist,YearsProj, ManagementYears) {
   for (ts in seq_along(YearsProj)) {
     Year <- YearsProj[ts]
     
-    # Generate Data up toYear - 1 - Data Lag done in ApplyMPAdvice
+    # Generate Data up to Year - 1 - Data Lag done in ApplyMPAdvice
     ProjSim <- GenerateProjectionData(ProjSim, Year, YearsHist, YearsProj)
     
     ProjSim <- ApplyMPAdvice(ProjSim, 
@@ -63,5 +63,7 @@ ProjectMP_Sim <- function(ProjSim, MP,YearsHist,YearsProj, ManagementYears) {
   } 
   ProjSim
 }
+
+
 
 

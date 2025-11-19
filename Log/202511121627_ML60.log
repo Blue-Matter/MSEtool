@@ -1,8 +1,0 @@
-
-Simulation 1
-Error in abind::abind(object, value, along = ind) : 
-  arg 'X2' has dims=132, 120; but need dims=X, 480
-
-Simulation 2
-Error in abind::abind(object, value, along = ind) : 
-  arg 'X2' has dims=132, 120; but need dims=X, 480

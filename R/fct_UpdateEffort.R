@@ -22,6 +22,7 @@ UpdateEffort <- function(ProjSim, MPAdviceList, MPAdviceList_Previous, Year, Yea
         next()
       }
     }
+    
     ProjSim <- DistributeEffort(ProjSim, MPAdvice, nArea, FleetNames, StockNames, stocks, TSIndex, LastHistIndex)
   }
   ProjSim
