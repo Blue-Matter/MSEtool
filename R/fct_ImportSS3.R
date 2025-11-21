@@ -199,21 +199,20 @@ SS2Stock <- function(st, RepList, YearsList, nSim) {
   
   Stock <- Stock(Name=ifelse(st == 1, "Female", "Male")) 
   Stock@Ages <- SS2Ages(st, RepList, YearsList)
-  Stock@Length <- SS2Length(st, RepList, YearsList, Ages=Stock@Ages)
+  Stock@Length <- SS2Length(st, RepList, YearsList, Ages=Stock@Ages) |>
+    ArrayReduceDims()
   
-  Stock@Length@MeanAtAge |> dimnames()
+  Stock@Weight <- SS2Weight(st, RepList, YearsList, Ages=Stock@Ages) |>
+    ArrayReduceDims()
   
-  Stock@Weight <- SS2Weight(st, RepList, YearsList, Ages=Stock@Ages)
+  Stock@NaturalMortality <- SS2NaturalMortality(st, RepList, YearsList, Ages=Stock@Ages) |>
+    ArrayReduceDims()
   
-  Stock@Weight@MeanAtAge |> dimnames()
+  Stock@Maturity <- SS2Maturity(st, RepList, YearsList, Ages=Stock@Ages) |>
+    ArrayReduceDims()
+  Stock@Fecundity <- SS2Fecundity(st, RepList, YearsList, Ages=Stock@Ages) |>
+    ArrayReduceDims()
   
-  Stock@NaturalMortality <- SS2NaturalMortality(st, RepList, YearsList, Ages=Stock@Ages)
-  
-  Stock@NaturalMortality@MeanAtAge |> dimnames()
-  
-  
-  Stock@Maturity <- SS2Maturity(st, RepList, YearsList, Ages=Stock@Ages)
-  Stock@Fecundity <- SS2Fecundity(st, RepList, YearsList, Ages=Stock@Ages)
   # Stock@Depletion <- SS2Depletion(st, RepList, YearsList) # not needed - already accounted for in early rec devs
   Stock@SRR <- SS2SRR(st, RepList, YearsList, Ages=Stock@Ages, nSim)
   Stock@nYear <- YearsList$nYear
