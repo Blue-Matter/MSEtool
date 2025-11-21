@@ -116,7 +116,8 @@ CompareSS_Landings <- function(RepList, Hist, sim=1) {
   Landings_SS <- replist$catch |> dplyr::filter(Yr %in% HistYears) |>
     dplyr::select(Year=Yr,  Fleet, Seas, Value=ret_bio) |>
     dplyr::mutate(Model='SS3') |>
-    dplyr::arrange(Fleet, Year, Seas)
+    dplyr::arrange(Fleet, Year, Seas) |>
+    dplyr::select(Fleet, Year, Value)
   
   Landings_SS$Year <- Landings_OM$Year
   Landings_SS$Fleet <- FleetNames[Landings_SS$Fleet]
@@ -158,7 +159,8 @@ CompareSS_Removals <- function(RepList, Hist, sim=1) {
   Removals_SS <- replist$catch |> dplyr::filter(Yr %in% HistYears) |>
     dplyr::select(Year=Yr,  Fleet, Seas, Value=kill_bio) |>
     dplyr::mutate(Model='SS3') |>
-    dplyr::arrange(Fleet, Year, Seas)
+    dplyr::arrange(Fleet, Year, Seas) |>
+    dplyr::select(Fleet, Year, Value)
   
   Removals_SS$Year <- Removals_OM$Year
   Removals_SS$Fleet <- FleetNames[Removals_SS$Fleet]
