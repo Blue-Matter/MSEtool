@@ -740,11 +740,13 @@ SS2SRR <- function(st, RepList, YearsList, Ages, nSim) {
   R0 <- purrr::map(RepList, \(replist) GetSS_R0(st, replist, YearsList)) |>
     List2Array('Sim', pos=1)
   
-  SpawnTimeFrac <- ifelse(is.na(RepList[[1]]$Spawn_timing_in_season),
-                          0,
-                          RepList[[1]]$Spawn_timing_in_season)
+  # NOTE: this appears to give incorrect results for NPSWO
+  # SpawnTimeFrac <- ifelse(is.na(RepList[[1]]$Spawn_timing_in_season),
+  #                         0,
+  #                         RepList[[1]]$Spawn_timing_in_season)
   
-  # SpawnTimeFrac <- 0
+  SpawnTimeFrac <- 0
+  
   SRR <- SRR(SD=SD, R0=R0, SpawnTimeFrac=SpawnTimeFrac)
   
   Pars <- purrr::map(RepList, \(replist) GetSS_SRRPars(replist)) 
