@@ -3,9 +3,10 @@ ReduceHist <- function(Hist, Reduce=TRUE) {
   if (!Reduce)
     return(Hist)
   
-  Hist@OM <- ArrayReduceDims(Hist@OM)
-  Hist@Unfished <- ArrayReduceDims(Hist@Unfished)
-  Hist@RefPointsMSY <- ArrayReduceDims(Hist@RefPointsMSY)
+  # TODO 
+  Hist@OM <- ArrayReduceDims(Hist@OM, IncYear=FALSE)
+  Hist@Unfished <- ArrayReduceDims(Hist@Unfished, IncYear=FALSE)
+  Hist@RefPointsMSY <- ArrayReduceDims(Hist@RefPointsMSY, IncYear=FALSE)
   Hist <- ReduceTimeSeries(Hist)
   
   # Hist@Number <- ArrayReduceDims(Hist@Number, IncYear = FALSE)

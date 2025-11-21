@@ -28,7 +28,7 @@ CalcRefLandings <- function(SimList, HistYears, ProjYears, type=c('Landings', 'R
   nStock <- nStock(SimList[[1]]@OM)
   nFleet <- nFleet(SimList[[1]]@OM)
   if (nStock>1 || nFleet>1) {
-    cli::cli_alert_warning('Optimizing Reference Catch not currently working for multiple stocks/fleets')
+    # cli::cli_alert_warning('Optimizing Reference Catch not currently working for multiple stocks/fleets')
     return(SimList)
   }
   

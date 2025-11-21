@@ -18,6 +18,9 @@ InitialProjectionYear <- function(SimList, YearsHist, YearsProj) {
   SimList
 }
 
+
+
+
 UpdateAllocation <- function(SimList) {
   chk <- purrr::map(SimList, \(ProjSim) ProjSim@OM@Allocation) |> unlist()
   if (is.null(chk)) {

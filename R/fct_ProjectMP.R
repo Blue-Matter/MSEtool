@@ -26,7 +26,7 @@ ProjectMP <- function(SimList, MSE, MP, mp=1, YearsHist,YearsProj) {
                              caller = environment(),
                              format = "Projecting {.val {MP}} {cli::pb_bar} {cli::pb_percent}",
                              clear = TRUE))
-                           
+
   EndTime <- Sys.time()
   
   SimList_MP <- CheckMSERun(SimList_MP, SimList, MP, StartTime, EndTime)
@@ -52,7 +52,7 @@ ProjectMP_Sim <- function(ProjSim, MP,YearsHist,YearsProj, ManagementYears) {
                              YearsHist,
                              YearsProj,
                              ManagementYears)
-
+    
     #  Simulate Pop Dynamics for this Time Step
     ProjSim <- SimulateDynamics_(ProjSim,Year) 
     if (!is.na(YearsProj[ts+1])) {

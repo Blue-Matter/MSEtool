@@ -33,7 +33,7 @@ OM(
   nReps = 1,
   pStar = 0.5,
   maxF = 3,
-  Seed = NULL,
+  Seed = 101,
   Control = NULL,
   Misc = list(),
   Log = list(),

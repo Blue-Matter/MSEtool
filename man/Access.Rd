@@ -61,6 +61,8 @@
 \alias{MeanAtAge<-}
 \alias{MeanAtLength}
 \alias{MeanAtLength<-}
+\alias{MeanAtWeight}
+\alias{MeanAtWeight<-}
 \alias{Misc}
 \alias{Misc<-}
 \alias{Model}
@@ -252,6 +254,10 @@ MeanAtAge(x) <- value
 MeanAtLength(x)
 
 MeanAtLength(x) <- value
+
+MeanAtWeight(x)
+
+MeanAtWeight(x) <- value
 
 Misc(x)
 

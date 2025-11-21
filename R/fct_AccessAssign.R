@@ -510,6 +510,21 @@ MeanAtLength <- function(x) {
   assignSlot(x, value, 'MeanAtLength')
 }
 
+## MeanAtWeight ----
+
+#' @rdname Access
+#' @export
+MeanAtWeight <- function(x) {
+  x@MeanAtWeight
+}
+
+#' @rdname Access
+#' @export
+`MeanAtWeight<-` <- function(x, value) {
+  assignSlot(x, value, 'MeanAtWeight')
+}
+
+
 
 ## ---- Misc ----
 

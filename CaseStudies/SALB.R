@@ -39,6 +39,8 @@ OM <- ImportSS(RepList,
 
 Hist <- Simulate(OM)
 
+CompareSS_Landings(RepList, Hist, 2)
+
 s <- 1
 RepList[[s]]$natage
 

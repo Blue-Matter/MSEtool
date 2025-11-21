@@ -732,8 +732,8 @@ CatchHist <- function(Hist, byAge=FALSE, byFleet=FALSE, byArea=FALSE,
 CatchValues <- function(MSE, byAge=FALSE, byFleet=FALSE, byArea=FALSE, type=c('Landings', 'Discards'),
                         disctype=c('dead', 'alive', 'all')) {
   
-  type <- match.arg(type)
-  disctype <- match.arg(disctype)
+  type <- match.arg(type,c('Landings', 'Discards'))
+  disctype <- match.arg(disctype, c('dead', 'alive', 'all'))
   
   CheckClass(MSE, c('mse', 'hist'), 'MSE')
   
@@ -812,6 +812,15 @@ CatchValues <- function(MSE, byAge=FALSE, byFleet=FALSE, byArea=FALSE, type=c('L
   
   Value <- Value |> 
     dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock')
+  
+  MPs <- unique(Value$MP)
+  nMPs <- length(MPs)
+  
+  HistValuesList <- replicate(nMPs, HistValues, simplify = FALSE)
+  for (i in seq_along(HistValuesList)){
+    HistValuesList[[i]]$MP <- MPs[i]
+  }
+  HistValues <- do.call('rbind', HistValuesList)
   
   dplyr::bind_rows(HistValues, Value) |>  ConvertDF() 
   

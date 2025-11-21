@@ -4,6 +4,8 @@
 # TODO - add conditioning obs error for Effort
 
 ConditionObs <- function(SimList, HistYears, ProjYears) {
+  HistSim <- SimList$`1` # for debugging
+  
   SimList <- purrr::map(SimList, \(HistSim)
                         ConditionObs_Sim(HistSim, HistYears, ProjYears),
                         .progress = list(

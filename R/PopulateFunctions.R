@@ -539,9 +539,8 @@ MeanAtLength2MeanAtAge <- function(object, Length, Ages, nsim, Years, seed, sile
   CheckRequiredObject(Length, 'length')
   CheckRequiredObject(Ages, 'ages')
   
-  if (is.null(Length@ASK)) {
+  if (is.null(Length@ASK)) 
     return(object)
-  }
   
   if (all(object@MeanAtLength>0.99)) {
     object@MeanAtAge <- array(1, dim=c(1, length(Ages@Classes), 1),
@@ -553,7 +552,18 @@ MeanAtLength2MeanAtAge <- function(object, Length, Ages, nsim, Years, seed, sile
     return(object)
   }
   
+  if (all(object@MeanAtLength<0.01)) {
+    object@MeanAtAge <- array(tiny, dim=c(1, length(Ages@Classes), 1),
+                              dimnames = list(
+                                Sim=1,
+                                Age=Ages@Classes,
+                                Year=Years[1]
+                              ))
+    return(object)
+  }
+  
   object@MeanAtAge <- AtSize2AtAge(object, Length) 
+  
   
   # if ('Units' %in% slotNames(object))
   #   attributes(object@MeanAtAge)$Units <- object@Units
@@ -571,6 +581,7 @@ MeanAtLength2MeanAtAge <- function(object, Length, Ages, nsim, Years, seed, sile
       }
     }
   }
+  object@MeanAtAge[!is.finite(object@MeanAtAge)] <- tiny
   
   object
 }

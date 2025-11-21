@@ -130,9 +130,9 @@ UpdateMSEObject <- function(MSE, SimList_MP, MP, mp, YearsHist, YearsProj) {
   
   # Misc 
   # keep MPAdvice 
-  if (is.null(MSE@Misc$Advice)) {
+  if (is.null(MSE@Misc$Advice)) 
     MSE@Misc$Advice <- list()
-  }
+  
   MPName <- names(MSE@MPs)[mp]
   MSE@Misc$Advice[[MPName]] <- lapply(SimList_MP, slot, 'Misc') |> lapply("[[", "MPAdvice")
   MSE@Misc$Failed[[MPName]] <- lapply(SimList_MP, slot, 'Misc') |> 
@@ -179,7 +179,6 @@ KeepSelectRetenDisc <- function(MSE, SimList_MP, mp, Slot='Retention') {
     ReverseList() |>
     purrr::map(List2Array, 'Sim') |>
     purrr::map(aperm, c('Sim', 'Age', 'Year', 'Fleet')) 
-  
   
   # AtLength <- purrr::map(SimList_MP, \(ProjSim) {
   #   purrr::map(ProjSim@OM@Fleet, \(fleet) {

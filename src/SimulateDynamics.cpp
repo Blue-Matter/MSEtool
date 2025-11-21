@@ -245,16 +245,18 @@ S4 SimulateDynamics_(S4 HistSimIn,
         // TODO option to use time-varying alpha, beta
         
         // Equilibrium unfished spawning production
+
         int sp0_nts = SP0.n_cols;
         double sp0 = arma::as_scalar(SP0.row(st).col(0));
         if (sp0_nts >1 ) {
           sp0 = arma::as_scalar(SP0.row(st).col(TSRec));
         }
 
+        
+        
         double SProductionThisTimeStep = arma::as_scalar(SProduction.row(st).col(TSindex));
         double R0_recruit_TimeStep = arma::as_scalar(R0(TSRec));
         double RecDev_recruit_TimeStep = arma::as_scalar(RecDevs(TSRec));
-        
         if (debug) {
           Rcout << "sp0 = " << sp0 << std::endl;
           Rcout << "SProductionThisTimeStep = " << SProductionThisTimeStep << std::endl;
