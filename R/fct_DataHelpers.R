@@ -19,7 +19,7 @@ LastTAC <- function(Data) {
 #' @export
 GetYearLH <- function(Data) {
   CheckClass(Data, 'data', 'Data')
-  which(Data@Years == Data@YearLH)
+  which.max(Data@Years[Data@Years<Data@YearLH+1])
 }
 
 #' @describeIn DataHelpers Get the index for current time step
