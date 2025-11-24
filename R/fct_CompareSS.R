@@ -117,7 +117,7 @@ CompareSS_Landings <- function(RepList, Hist, sim=1) {
     dplyr::select(Year=Yr,  Fleet, Seas, Value=ret_bio) |>
     dplyr::mutate(Model='SS3') |>
     dplyr::arrange(Fleet, Year, Seas) |>
-    dplyr::select(Fleet, Year, Value)
+    dplyr::select(Fleet, Year, Value, Model)
   
   Landings_SS$Year <- Landings_OM$Year
   Landings_SS$Fleet <- FleetNames[Landings_SS$Fleet]
