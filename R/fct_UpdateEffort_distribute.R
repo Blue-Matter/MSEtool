@@ -38,15 +38,16 @@ DistributeEffort_ <- function(ProjSim, MPAdvice, nArea, FleetNames, StockNames, 
   FutureYears <- TSIndex:nTS
   for (st in 1:nStock) {
     Effort <- ProjSim@Effort[st,LastHistIndex, ] *  MPAdvice@Effort
+    FleetInd <- 1:nFleet
+    
     # fleets where Effort from TAC exceeds Effort reg
-    EffortFromTAC <- ProjSim@Effort[st,TSIndex, ]
-    
-    if (any(EffortFromTAC>1E-6)) {
-      FleetInd <- which(EffortFromTAC > Effort) 
-    } else {
-      FleetInd <- 1:nFleet
+    if (!is.null(MPAdvice@TAC)) {
+      EffortFromTAC <- ProjSim@Effort[st,TSIndex, ]
+      if (any(EffortFromTAC>1E-6)) {
+        FleetInd <- which(EffortFromTAC > Effort) 
+      }
     }
-    
+      
     ProjSim@Effort[st,FutureYears, FleetInd] <- matrix(Effort[FleetInd],
                                                        length(FutureYears),
                                                        length(FleetInd),
