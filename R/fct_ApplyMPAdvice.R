@@ -44,8 +44,9 @@ ApplyMPAdvice <- function(ProjSim, MP, Year, YearsHist, YearsProj, ManagementYea
     UpdateSelectivity(MPAdviceList, MPAdviceList_Previous, Year, YearsProj) |>
     UpdateRetention(MPAdviceList, MPAdviceList_Previous, Year, YearsProj) |>
     UpdateDiscardMortality(MPAdviceList, MPAdviceList_Previous, Year, YearsProj) |>
-    UpdateTAC(MPAdviceList, MPAdviceList_Previous, Year, YearsAll) |>
-    UpdateEffort(MPAdviceList, MPAdviceList_Previous, Year, YearsHist, YearsProj) 
+    UpdateEffort(MPAdviceList, MPAdviceList_Previous, Year, YearsHist, YearsProj) |>
+    UpdateTAC(MPAdviceList, MPAdviceList_Previous, Year, YearsAll) 
+   
   
   ProjSim
 }

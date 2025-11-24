@@ -21,6 +21,10 @@ UpdateTAC <- function(ProjSim, MPAdviceList, MPAdviceList_Previous, Year, YearsA
       }
     }
     
+    if (!is.null(MPAdvice@Effort))
+      cli::cli_alert_warning("MP has set both TAC and Effort. Only TAC being used - Effort is being ignored. TAC & Effort in development! ")
+
+      
     TAC_StockFleetArea <- DistributeTAC(ProjSim, MPAdvice, nArea, FleetNames, StockNames, stocks, TSIndex)
     
     # Solve for F for each Stock & Fleet within each Area
