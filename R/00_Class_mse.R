@@ -4,16 +4,14 @@
 #' @include 00_Class_om.R
 #' @include 00_Class_hist.R
 #' @include 00_Class_unfished.R
-#' @include 00_Class_refpointsMSY.R
-#' @include 00_Class_refpointsPR.R
+#' @include 00_Class_reference.R
 #' @include 00_Class_timeseries.R
 #' @name MSEClass
 setClass("mse",
          slots=c(OM='om',
                  MPs='list',
                  Unfished='unfished',
-                 RefPointsMSY='refpointsMSY',
-                 RefPointsPR='refpointsPR',
+                 Reference='reference',
                  Hist='timeseries',
                  PPD='list',
                  Log='list'

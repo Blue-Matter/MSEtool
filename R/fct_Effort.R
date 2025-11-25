@@ -4,6 +4,9 @@ Effort <- function(object) {
   if (inherits(object, 'fleet'))
     return(object@Effort)
   
+  CheckClass(object, c('mse', 'hist'), 'object')
+  
+  
 }
 
 #' @describeIn Effort Assign an `Effort` object to a [Fleet()] object

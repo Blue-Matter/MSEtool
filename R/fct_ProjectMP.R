@@ -61,6 +61,7 @@ ProjectMP_Sim <- function(ProjSim, MP,YearsHist,YearsProj, ManagementYears) {
       ProjSim <- SimulateDynamics_(ProjSim,YearsProj[ts+1], CalcCatch = 0)
     }
   } 
+ 
   ProjSim
 }
 

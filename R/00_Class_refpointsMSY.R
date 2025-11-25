@@ -1,3 +1,7 @@
+hasSlot <- function(object, slot) {
+  slot %in% slotNames(object)
+} 
+
 #' @include 00_Class_popdynamics.R
 
 setClass("refpointsMSY",
@@ -14,9 +18,13 @@ setClass("refpointsMSY",
 
 
 RefPointsMSY <- function(MSE=NULL, ...) {
-  if (inherits(MSE, 'mse'))
-    return(MSE@RefPointsMSY)
-
+  if (inherits(MSE, 'mse')) {
+    if (hasSlot(MSE, 'RefPointsMSY')) {
+      return(MSE@RefPointsMSY)
+    } 
+    return(MSE@Reference@MSY)
+  }
+  
   ArgList <- list(...)
   nSim <- ArgList$nSim
   StockNames <- ArgList$StockNames

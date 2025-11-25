@@ -199,8 +199,7 @@ SS2Stock <- function(st, RepList, YearsList, nSim) {
   
   Stock <- Stock(Name=ifelse(st == 1, "Female", "Male")) 
   Stock@Ages <- SS2Ages(st, RepList, YearsList)
-  Stock@Length <- SS2Length(st, RepList, YearsList, Ages=Stock@Ages) |>
-    ArrayReduceDims()
+  Stock@Length <- SS2Length(st, RepList, YearsList, Ages=Stock@Ages) 
   
   Stock@Weight <- SS2Weight(st, RepList, YearsList, Ages=Stock@Ages) |>
     ArrayReduceDims()
@@ -333,13 +332,27 @@ SS2Length <- function(st, RepList, YearsList, Ages) {
   Length@MeanAtAge <- purrr::map(RepList, \(replist) {
     GetSS_Length_at_Age(st, replist, YearsList)
   }) |> List2Array('Sim', pos=1) |>
-    ArraySubsetAge(Ages=Ages@Classes)
+    ArraySubsetAge(Ages=Ages@Classes) |>
+    ArrayReduceDims()
   
   Length@CVatAge <- purrr::map(RepList, \(replist) {
     GetSS_LengthCV_at_Age(st, replist, YearsList)
   }) |> List2Array('Sim', pos=1) |>
-    ArraySubsetAge(Ages=Ages@Classes)
+    ArraySubsetAge(Ages=Ages@Classes) |>
+    ArrayReduceDims()
   
+  # ASK 
+  AgeClasses <- Ages@Classes
+  Length@Classes <- RepList[[1]]$biology$Len_mean
+  
+  ALK <- purrr::map(RepList, \(replist) GetSSALK(st, replist, 
+                                                 AgeClasses, 
+                                                 Length@Classes, 
+                                                 YearsList)) |>
+    List2Array('Sim', pos=1) |>
+    AddDimension('Year', YearsList$YearsHist[1])
+  
+
   if (Ages@Classes |> length() != dim(Length@MeanAtAge)[2]) 
     cli::cli_abort(c("x"='Number of age-classes for `Length@MeanAtAge` does not match `Ages@Classes`',
                      "i"="`Length@MeanAtAge` has {.val {dim(Length@MeanAtAge)[2]}} age classes",
@@ -795,6 +808,7 @@ SS2SRR <- function(st, RepList, YearsList, Ages, nSim) {
 ## Fleet ----
 
 SS2Fleet <- function(st, fl, RepList, YearsList, FleetNames, Stock) {
+  AgeClasses <- Stock@Ages@Classes
   Fleet <- Fleet(FleetNames[fl])
   Fleet@Effort <- SS2Effort(st, fl, RepList, YearsList)
   Fleet@Catchability <- SS2Catchability(st, fl, RepList, YearsList)
@@ -802,7 +816,7 @@ SS2Fleet <- function(st, fl, RepList, YearsList, FleetNames, Stock) {
   Fleet@Selectivity <- SS2Selectivity(st, fl, RepList, YearsList, Stock)
   Fleet@Retention <- SS2Retention(st, fl, RepList, YearsList, 
                                   Selectivity=Fleet@Selectivity, Stock)
-  Fleet@WeightFleet <- SS2WeightFleet(st, fl, RepList, YearsList)
+  Fleet@WeightFleet <- SS2WeightFleet(st, fl, RepList, YearsList, AgeClasses)
   Fleet
 }
 
@@ -934,12 +948,12 @@ GetSSALK_seasonal <- function(st, replist, AgeClasses, LengthClasses, YearsList)
 }
 
 
-GetSSALK <- function(st, replist, Ages, LengthClasses, YearsList) {
+GetSSALK <- function(st, replist, AgeClasses, LengthClasses, YearsList) {
   
   if (YearsList$TSperYear==1) 
-    return(GetSSALK_annual(st, replist, AgeClasses=Ages@Classes, LengthClasses, YearsList))
+    return(GetSSALK_annual(st, replist, AgeClasses, LengthClasses, YearsList))
   
-  GetSSALK_seasonal(st, replist, AgeClasses=Ages@Classes, LengthClasses, YearsList)
+  GetSSALK_seasonal(st, replist, AgeClasses, LengthClasses, YearsList)
 }
 
 
@@ -956,15 +970,6 @@ SS2DiscardMortality <- function(st, fl, RepList, YearsList, Stock) {
   AgeClasses <- Stock@Ages@Classes
   LengthClasses <- dimnames(DiscardMortality@MeanAtLength)$Class |> as.numeric()
   DiscardMortality@Classes <- LengthClasses
-  
-  ALK <- purrr::map(RepList, \(replist) GetSSALK(st, replist, 
-                                                 Ages=Stock@Ages, 
-                                                 LengthClasses, 
-                                                 YearsList)) |>
-    List2Array('Sim', pos=1) |>
-    AddDimension('Year', YearsList$YearsHist[1])
-
-  Stock@Length@ASK <- ALK
   
   DiscardMortality <- MeanAtLength2MeanAtAge(
     object=DiscardMortality, 
@@ -1102,37 +1107,51 @@ SS2Retention <- function(st, fl, RepList, YearsList, Selectivity, Stock) {
 }
 
 
-GetSS_EmpiricalWeight <- function(st, fl, replist, YearsList) {
+GetSS_EmpiricalWeight <- function(st, fl, replist, YearsList, AgeClasses) {
   YearsHist <- YearsList$YearsHist
-  if (inherits(replist$wtatage, 'logical'))
-    return(NULL)
+  Weight_at_Age_array <- NULL
   
-  if (!is.null(replist$wtatage$Yr)) {
-    wt_at_age_c_df <- replist$wtatage |>
-      dplyr::filter(abs(Yr) %in% mainyrs, Sex==st, Fleet==fl)
-  } else {
-    if (!is.null(replist$wtatage$sex)) {
+  if (!inherits(replist$wtatage, 'logical')) {
+    if (!is.null(replist$wtatage$Yr)) {
       wt_at_age_c_df <- replist$wtatage |>
-        dplyr::filter(abs(year) %in% YearsHist, sex==st, fleet==fl)
+        dplyr::filter(abs(Yr) %in% mainyrs, Sex==st, Fleet==fl)
     } else {
-      wt_at_age_c_df <- replist$wtatage |>
-        dplyr::filter(abs(year) %in% YearsHist, Sex==st, Fleet==fl)
-    }
-    wt_at_age_c_df <- wt_at_age_c_df |> dplyr::rename(Yr=year)
-  }  
-  
-  AgeClasses <- suppressWarnings(as.numeric(colnames(wt_at_age_c_df)))
-  AgeClasses <- AgeClasses[!is.na(AgeClasses)]
-  n_age <- length(AgeClasses)
-  Weight_at_Age_array <- wt_at_age_c_df[,as.character(AgeClasses)] |> t()
-  dimnames(Weight_at_Age_array) <- list(Age=AgeClasses,
-                                        Year=YearsHist)
+      if (!is.null(replist$wtatage$sex)) {
+        wt_at_age_c_df <- replist$wtatage |>
+          dplyr::filter(abs(year) %in% YearsHist, sex==st, fleet==fl)
+      } else {
+        wt_at_age_c_df <- replist$wtatage |>
+          dplyr::filter(abs(year) %in% YearsHist, Sex==st, Fleet==fl)
+      }
+      wt_at_age_c_df <- wt_at_age_c_df |> dplyr::rename(Yr=year)
+    }  
+    
+    AgeClasses <- suppressWarnings(as.numeric(colnames(wt_at_age_c_df)))
+    AgeClasses <- AgeClasses[!is.na(AgeClasses)]
+    n_age <- length(AgeClasses)
+    Weight_at_Age_array <- wt_at_age_c_df[,as.character(AgeClasses)] |> t()
+  } else {
+    # Wt_Mid used for NPSWO - maybe not general
+    # NPSWO = Sex is combined - always sex 1 ??
+    # not co
+    wght <- replist$endgrowth |> dplyr::filter(Sex==1) |> 
+      dplyr::select(Age_Beg, Wt_Beg, Wt_Mid, Seas) |>
+      dplyr::arrange(Age_Beg) |>
+      dplyr::filter(Age_Beg%in%AgeClasses)
+    
+    Weight_at_Age_array <- array(wght$Wt_Mid, dim=c(length(AgeClasses), 1))
+    
+  }
+ 
+  if (!is.null(Weight_at_Age_array)) 
+    dimnames(Weight_at_Age_array) <- list(Age=AgeClasses,
+                                        Year=YearsHist[1:ncol(Weight_at_Age_array)])
   Weight_at_Age_array
 }
 
-SS2WeightFleet <- function(st, fl, RepList, YearsList) {
+SS2WeightFleet <- function(st, fl, RepList, YearsList, AgeClasses) {
   Weight_at_Age_array <- purrr::map(RepList, \(replist)
-                                    GetSS_EmpiricalWeight(st, fl, replist, YearsList) 
+                                    GetSS_EmpiricalWeight(st, fl, replist, YearsList, AgeClasses) 
                                     ) |> 
     List2Array('Sim', pos=1) |> 
     ArrayReduceDims()
@@ -1299,8 +1318,9 @@ ImportSSData <- function(SSDir,
   Data@TSperYear <- YearsList$TSperYear
   Data@nArea <- 1 
 
-  Data@Landings <- ImportSSData_Catch(replist, 'Landings', silent)
-  Data@Discards <- ImportSSData_Catch(replist, 'Discards', silent)
+  Landings_Discards <- ImportSSData_Catch(replist, silent) 
+  Data@Landings <- Landings_Discards$Landings
+  Data@Discards <- Landings_Discards$Discards
   
   Data@CPUE <- ImportSSData_Index(replist, 'CPUE')
   Data@Survey <- ImportSSData_Index(replist, 'Survey')
@@ -1311,8 +1331,7 @@ ImportSSData <- function(SSDir,
   Data
 }
 
-ImportSSData_Catch <- function(replist, Type=c('Landings', 'Discards'), silent=FALSE ) {
-  Type <- match.arg(Type)
+ImportSSData_Catch <- function(replist, silent=FALSE ) {
   
   YearsList <- GetSSYears(replist, pYear=1)
   YearsHist <- YearsList$YearsHist
@@ -1320,60 +1339,63 @@ ImportSSData_Catch <- function(replist, Type=c('Landings', 'Discards'), silent=F
   FleetNames <- replist$catch$Fleet_Name |> unique()
   nFleet <- length(FleetNames)
   
-  CatchOut <- new('catchdata')
-  CatchOut@Name <- FleetNames
-  CatchOut@Value <- CatchOut@CV <- array(NA, 
+  # Landings, Dead Discards 
+  Landings <- new('catchdata')
+  Landings@Name <- FleetNames
+  # TODO 
+  Landings@Value <- Landings@CV <- array(0.2,        
                                          dim=c(nTS, nFleet),
                                          dimnames = list(Year=YearsHist,
                                                          Fleet=FleetNames))
-  
-  CatchOut@Units <-  sapply(replist$catch_units[replist$IsFishFleet], function(x)
+  Landings@Units <-  sapply(replist$catch_units[replist$IsFishFleet], function(x)
     switch(x, '1'='Biomass', '2'='Number'))
-  CatchOut@Type <- rep(Type, nFleet)
   
+  Discards <- Landings
+  
+
   CatchColNames <- names(replist$catch)
   CatchDF <- replist$catch |> dplyr::filter(Yr%in%YearsHist) 
   
-  if ('dead_bio' %in% CatchColNames) {
-    DeadDF <- CatchDF |> dplyr::select(Year=Yr, Seas, Fleet, Obs=dead_bio)
-  } else if ('kill_bio' %in% CatchColNames) {
-    DeadDF <- CatchDF |> dplyr::select(Year=Yr, Seas, Fleet, Obs=kill_bio)
-  } else {
-    cli::cli_abort("Neither 'kill_bio' or 'dead_bio' found in this SS3 output")
-  }
+  if (length(unique(CatchDF$Area))>1)
+    cli::cli_abort("`ImportSSData` currently does not support multiple areas", .internal=TRUE)
   
-  if ('ret_bio' %in% CatchColNames) {
-    RetainDF <- CatchDF |> dplyr::select(Year=Yr, Seas, Fleet, Obs=ret_bio)
-  } else {
-    cli::cli_abort("'ret_bio' not found in this SS3 output")
-  }
-  Yrs <- unique(RetainDF$Year)
-  Seas <- unique(RetainDF$Seas)
+  # add missing column names 
+  if (!'kill_bio' %in% CatchColNames)
+    CatchDF <- CatchDF |> dplyr::mutate(kill_bio=dead_bio)
   
-  if (Type=='Landings') {
-    i <- 0
-    for (yr in Yrs) {
-      for (sea in Seas) {
-        i <- i + 1
-        CatchOut@Value[i, ] <- RetainDF |> dplyr::filter(Year==yr, Seas==sea) |> dplyr::pull(Obs)
-      }
+  if (!'ret_bio' %in% CatchColNames) 
+    cli::cli_abort("'ret_bio' not found in `replist$catch` for this SS3 output", .internal=TRUE)
+  
+  # Loop over fleets 
+  for (fl in seq_along(FleetNames)) {
+    
+    units <- Landings@Units[fl]
+  
+    if (units=='Biomass') {
+      Dead <- CatchDF |> dplyr::filter(Fleet==fl) |> dplyr::select(Year=Yr, Obs=kill_bio) 
+    } else if (units=='Number') {
+      Dead <- CatchDF |> dplyr::filter(Fleet==fl) |> dplyr::select(Year=Yr, Obs=kill_num) 
+    } else {
+      cli::cli_alert_warning("Units {.val {units}} not supported for landings & discards")
     }
-  } else {
-    DeadDiscards <- DeadDF
-    DeadDiscards$Obs <- DeadDF$Obs - RetainDF$Obs
-    i <- 0
-    for (yr in Yrs) {
-      for (sea in Seas) {
-        i <- i + 1
-        CatchOut@Value[i, ] <- DeadDiscards |> dplyr::filter(Year==yr, Seas==sea) |> dplyr::pull(Obs)
-      }
+    
+    if (units=='Biomass') {
+      Retain <- CatchDF |> dplyr::filter(Fleet==fl) |> dplyr::select(Year=Yr, Obs=ret_bio)  
+    } else if (units=='Number') {
+      Retain <- CatchDF |> dplyr::filter(Fleet==fl) |> dplyr::select(Year=Yr, Obs=ret_num)  
+    } else {
+      cli::cli_alert_warning("Units {.val {units}} not supported for landings & discards")
     }
+    
+  
+    Landings@Value[,fl] <- Retain$Obs
+    Discards@Value[,fl] <- Dead$Obs - Retain$Obs
   }
-
-  # TODO 
-  # CatchOut@CV
-  CatchOut
+  list(Landings=Landings,
+       Discards=Discards)
 }
+
+
 
 ImportSSData_Index <- function(replist, Type=c('CPUE', 'Survey')) {
   Type <- match.arg(Type, c('CPUE', 'Survey'))

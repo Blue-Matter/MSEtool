@@ -20,10 +20,12 @@ methods::setClassUnion(name="list.data", members=c('list', "data"))
 setClass("hist",
          slots=c(OM='om',
                  Unfished='unfished',
-                 RefPointsMSY='refpointsMSY',
-                 RefPointsPR='refpointsPR',
-                 RefLandings='array.null',
-                 RefRemovals='array.null',
+                 Reference='reference',
+                 
+                 RefPointsMSY='refpointsMSY', # keep for now TODO - remove
+                 RefPointsPR='refpointsPR', # keep for now TODO - remove
+                 RefLandings='array.null', # keep for now TODO - remove
+                 RefRemovals='array.null', # keep for now TODO - remove
                  Data='list.data',
                  Log='list'
          ), 

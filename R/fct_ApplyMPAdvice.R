@@ -54,11 +54,14 @@ ApplyMPAdvice <- function(ProjSim, MP, Year, YearsHist, YearsProj, ManagementYea
 
 GetMPData <- function(ProjSim, Year, YearsAll) {
   TSIndex <- match(Year, YearsAll)
-  DataYear <- YearsAll[TSIndex - (ProjSim@OM@DataLag+1)]
+ 
+  DataYear <- YearsAll[TSIndex - (ProjSim@OM@DataLag+ProjSim@OM@TSperYear)]
   
-  MPData <- purrr::map(ProjSim@Data, \(Data) 
-                       DataTrim(Data, Year=DataYear)
-  )
+  MPData <- purrr::map(ProjSim@Data, \(Data) {
+    if (DataYear<Data@YearLH)
+      return(Data)
+    DataTrim(Data, Year=DataYear) 
+  })
   MPData
 }
 
