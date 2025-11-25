@@ -11,6 +11,7 @@ methods::setClassUnion(name="list.data", members=c('list', "data"))
 #' @include 00_Class_data.R
 #' @include 00_Class_om.R
 #' @include 00_Class_unfished.R
+#' @include 00_Class_reference.R
 #' @include 00_Class_refpointsMSY.R
 #' @include 00_Class_refpointsPR.R
 #' @include 00_Class_timeseries.R

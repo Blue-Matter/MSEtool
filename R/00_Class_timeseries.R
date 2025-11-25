@@ -5,8 +5,8 @@ setClass("timeseries",
                  Biomass='array', # nSim, nStock, Year
                  SBiomass='array', # nSim, nStock, Year
                  SProduction='array',  # nSim, nStock, Year
-                 Landings='array', # nSim, nStock, Year, Fleet (weight)
-                 Discards='array', # nSim, nStock, Year, Fleet (weight)
+                 Landings='array.list.null', # nSim, nStock, Year, Fleet (weight)
+                 Discards='array.list.null', # nSim, nStock, Year, Fleet (weight)
                  LandingsAtAge='list', # list `nStock`of array dimensions: nSim, nAge, Year, Fleet, Area - numbers
                  DiscardsAtAge='list', # list `nStock`of array dimensions: nSim, nAge, Year, Fleet, Area - numbers
                  LandingsAtSize='list', # list `nStock`of array dimensions: nSim, nClass, Year, Fleet, Area - Length unless selectitivty at weight
