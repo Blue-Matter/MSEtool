@@ -226,9 +226,9 @@ getFleetInfo <- function(Fleets) {
   list(nFleet=nFleet, nyear=nyear)
 }
 
-CalcTSUnits <- function(TSperYear) {
+CalcTSUnits <- function(Seasons) {
 
-  out <- switch(as.character(TSperYear),
+  out <- switch(as.character(Seasons),
          '1'='year',
          '2'='half-year',
          '4'='quarter',
@@ -237,13 +237,13 @@ CalcTSUnits <- function(TSperYear) {
          '365'='day')
 
   if (is.null(out))
-    cli::cli_abort(c("x"="`TSperYear`: {.val {TSperYear}} is invalid ",
+    cli::cli_abort(c("x"="`Seasons`: {.val {Seasons}} is invalid ",
                      "i"="Must be one of {.val {c(1,2,4,12,52,365)}}")
     )
   out
 }
 
-CalcTSperYear <- function(Units) {
+CalcSeasons <- function(Units) {
   Units <- tolower(Units)
   switch(Units,
          'year'=1,
@@ -254,9 +254,9 @@ CalcTSperYear <- function(Units) {
          'day'=365)
 }
 
-CalcYears <- function(nYear, pYear, CurrentYear, TSperYear=1, Period=NULL) {
+CalcYears <- function(nYear, pYear, CurrentYear, Seasons=1, Period=NULL) {
   
-  TimeUnits <- CalcTSUnits(TSperYear)
+  TimeUnits <- CalcTSUnits(Seasons)
   
   if (CurrentYear<1900 && TimeUnits=='year') {
     # not in year units

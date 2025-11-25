@@ -35,7 +35,11 @@ OM2Hist <- function(OM, silent=FALSE, id=NULL) {
     List2Array('Stock') |> 
     aperm(c('Sim', 'Stock', 'Year'))
   Hist@SBiomass <-  Hist@SProduction <- Hist@Biomass 
-  Hist@Landings <- Hist@Discards <- ListArraySimAgeTimeFleetArea(OM, 'Historical')
+  Hist@Landings <- Hist@Discards <- ArraySimStockTimeFleetMP(OM,'Historical',1) |> DropDimension('MP')
+  
+  Hist@LandingsAtAge <- Hist@DiscardsAtAge <- ListArraySimAgeTimeFleetArea(OM, 'Historical')
+  
+  Hist@LandingsAtSize <- Hist@DiscardsAtSize <- ListArraySimClassTimeFleetArea(OM, 'Historical')
   
   Hist@Effort <- ListArraySimAgeTimeFleet(OM, 'Historical') |> lapply(DropDimension, 'Age', FALSE) |>
     List2Array('Stock') |> aperm(c('Sim', 'Stock', 'Year', 'Fleet'))

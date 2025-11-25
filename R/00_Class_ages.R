@@ -28,7 +28,7 @@ setMethod("initialize", "ages", function(.Object,
                                          Units='year',
                                          PlusGroup=TRUE) {
   .Object@MinAge <- MinAge
-  TSperYear <- CalcTSperYear(Units)
+  Seasons <- CalcSeasons(Units)
   .Object@Units <- Units
   if (!is.na(MaxAge)) {
     .Object@MaxAge <- MaxAge
@@ -101,8 +101,8 @@ CalcAgeClasses <- function(Ages) {
   # always in years 
   if (!length(Ages@MaxAge) || !length(Ages@MinAge))
     return(NULL)
-  TSperYear <- CalcTSperYear(Ages@Units)
-  seq(from=Ages@MinAge/TSperYear, by=1/TSperYear, to=Ages@MaxAge/TSperYear) |>
+  Seasons <- CalcSeasons(Ages@Units)
+  seq(from=Ages@MinAge/Seasons, by=1/Seasons, to=Ages@MaxAge/Seasons) |>
     round(3)
 }
 

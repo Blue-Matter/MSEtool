@@ -109,7 +109,7 @@ setClass('data',
                  
                  Years='num.null', # should be in fraction of year - or convert Date to fraction year
                  YearLH='num.null', # last historical time step,
-                 TSperYear='num.null',
+                 Seasons='num.null',
                  nArea='num.null',
                  
                  Effort='effortdata',

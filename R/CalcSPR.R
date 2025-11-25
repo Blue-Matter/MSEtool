@@ -24,7 +24,7 @@ CalcSPR0_Hist <- function(HistSim, Years=NULL) {
   
   SPR0 <- List2Array(SPR0, 'Stock', 'Year') |> t() 
   dimnames(SPR0)[[2]] <- Years
-  HistSim@RefPointsPR@SPR0 <- SPR0 |> ArrayReduceDims()
+  HistSim@Reference@SPR0 <- SPR0 |> ArrayReduceDims()
   HistSim
 }
 

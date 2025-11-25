@@ -91,23 +91,33 @@ CalcMSYRefPoints <- function(SimList, RefPointYears, RefPointsMSY=TRUE) {
   if (inherits(RefPointsMSY, 'logical') && RefPointsMSY) {
     if (CheckIdenticalSims(SimList, Equilibrium=TRUE)) {
       SimOne <- SimList[[1]]
-      SimOne@RefPointsMSY <- CalculateMSYSim(StockList=SimOne@OM@Stock,
-                                             FleetList=SimOne@OM@Fleet,                                  
-                                             Complexes=SimOne@OM@Complexes,
-                                             Years = RefPointYears,
-                                             maxF=SimOne@OM@maxF)
+      refvals <- CalculateMSYSim(StockList=SimOne@OM@Stock,
+                           FleetList=SimOne@OM@Fleet,                                  
+                           Complexes=SimOne@OM@Complexes,
+                           Years = RefPointYears,
+                           maxF=SimOne@OM@maxF)
       
+      slots <- slotNames(refvals)
+      for (sl in slots) {
+        slot(SimOne@Reference@MSY, sl) <- slot(refvals,sl)
+      }
+
       SimList <- purrr::map(SimList, \(HistSim) {
-        HistSim@RefPointsMSY <- SimOne@RefPointsMSY
+        HistSim@Reference@MSY <- SimOne@Reference@MSY
         HistSim
       })
     } else {
       SimList <- purrr::map(SimList, \(HistSim) {
-        HistSim@RefPointsMSY <- CalculateMSYSim(StockList=HistSim@OM@Stock,
-                                                FleetList=HistSim@OM@Fleet,                                  
-                                                Complexes=HistSim@OM@Complexes,
-                                                Years = RefPointYears,
-                                                maxF=HistSim@OM@maxF)
+        refvals <- CalculateMSYSim(StockList=HistSim@OM@Stock,
+                                   FleetList=HistSim@OM@Fleet,                                  
+                                   Complexes=HistSim@OM@Complexes,
+                                   Years = RefPointYears,
+                                   maxF=HistSim@OM@maxF)
+        slots <- slotNames(refvals)
+        for (sl in slots) {
+          slot(HistSim@Reference@MSY, sl) <- slot(refvals,sl)
+        }
+         
         HistSim
       }, .progress = list(
         type = "iterator",

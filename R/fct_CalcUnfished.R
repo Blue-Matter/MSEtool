@@ -60,6 +60,7 @@ CalcDynamicUnfished <- function(SimList, silent=FALSE) {
   SimListCopy <- purrr::map(SimList, \(x) {
     nStock <- nStock(x@OM)
     for (st in 1:nStock) {
+      x@OM@Stock[[st]]@SRR@RecDevProj[] <- tiny
       x@OM@Fleet[[st]]@Catchability[] <- tiny
       x@OM@Fleet[[st]]@qArea[] <- tiny
     }
@@ -73,7 +74,7 @@ CalcDynamicUnfished <- function(SimList, silent=FALSE) {
   if (CheckIdenticalSims(SimListCopy)) {
     # identical historical period across all sims
     HistSim <- SimListCopy[[1]]
-    unfished <- SimulateDynamics_(HistSim, Years)
+    unfished <- SimulateDynamics_(HistSim, Years, CalcCatch=0)
 
     HistSim@Unfished@Dynamic@Number <- lapply(unfished@Number, 
                                               AddDimNames, 

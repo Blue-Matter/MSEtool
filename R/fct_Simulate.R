@@ -11,7 +11,7 @@ GetRefPointYears <- function(OM, HistYears) {
   HistYears <- Years(OM, 'Historical')
   RefPointYears <- OM@Control$RefPointYears
   if (is.null(RefPointYears))
-    RefPointYears <- tail(HistYears, OM@TSperYear)
+    RefPointYears <- tail(HistYears, OM@Seasons)
   RefPointYears
 }
 
@@ -22,13 +22,12 @@ Simulate_om <- function(OM=NULL,
                         parallel=FALSE,
                         silent=FALSE,
                         nSim=NULL,
-                        RefPointsMSY=TRUE,
-                        RefLandings=TRUE,
-                        RefRemovals=FALSE,
+                        Reference=list(MSY=TRUE,
+                                       Landings=TRUE,
+                                       Removals=FALSE),
                         Reduce=TRUE,
                         ...) {
  
-  
   # ---- Initial Checks and Setup ----
   OnExit()
   OM <- StartUp(OM, nSim) 
@@ -58,7 +57,7 @@ Simulate_om <- function(OM=NULL,
   
   # ---- Calculate Reference Points ----
   SimList <- CalcSPR0(SimList)  # unfished spawning per recruit (i.e. fecundity) 
-  SimList <- CalcMSYRefPoints(SimList, RefPointYears, RefPointsMSY)
+  SimList <- CalcMSYRefPoints(SimList, RefPointYears, Reference$MSY)
   
   # TODO
   # - Per-Recruit Curves 
@@ -75,8 +74,8 @@ Simulate_om <- function(OM=NULL,
   SimList <- SimulateDynamics(SimList, HistYears)
   
   # ---- Calculate Reference Yield ----
-  SimList <- CalcRefLandings(SimList, HistYears, ProjYears, 'Landings', Calc=RefLandings)
-  SimList <- CalcRefLandings(SimList, HistYears, ProjYears, 'Removals', Calc=RefRemovals)
+  SimList <- CalcRefLandings(SimList, HistYears, ProjYears, 'Landings', Calc=Reference$Landings)
+  SimList <- CalcRefLandings(SimList, HistYears, ProjYears, 'Removals', Calc=Reference$Removals)
   
   # ---- Condition Observation Object on Real Fishery Data ----
   SimList <- ConditionObs(SimList, HistYears, ProjYears)

@@ -70,7 +70,7 @@ setClass('stock',
                  nSim='num.null',
                  CurrentYear='num.null',
                  Years='num.null',
-                 TSperYear='num.null',
+                 Seasons='num.null',
                  Misc='list',
                  Log='list')
 )
@@ -92,7 +92,7 @@ setMethod("initialize", "stock", function(.Object,
                                           pYear=30,
                                           nSim=48,
                                           CurrentYear=as.numeric(format(Sys.Date(), '%Y')),
-                                          TSperYear=1,
+                                          Seasons=1,
                                           Misc=list()) {
   .Object@Name <- Name
   .Object@CommonName <- CommonName
@@ -110,8 +110,8 @@ setMethod("initialize", "stock", function(.Object,
   .Object@pYear <- pYear
   .Object@nSim <- nSim
   .Object@CurrentYear <- CurrentYear
-  .Object@TSperYear <- TSperYear
-  .Object@Years <- CalcYears(nYear, pYear, CurrentYear, TSperYear)
+  .Object@Seasons <- Seasons
+  .Object@Years <- CalcYears(nYear, pYear, CurrentYear, Seasons)
   
   .Object@Misc <- Misc
   #   .Object@Created <- Sys.time()
@@ -155,7 +155,7 @@ Stock <- function(Name=NULL,
                   SRR=new('srr'),
                   Spatial=new('spatial'),
                   Depletion=new('depletion'),
-                  TSperYear=1,
+                  Seasons=1,
                   Misc=list(),
                   ...) {
   

@@ -1054,7 +1054,7 @@ Years <- function(x, Period=NULL) {
       return(Years)
     if (Period=='All')
       return(Years)
-    return(CalcYears(x@nYear, x@pYear, x@CurrentYear, x@TSperYear, Period))
+    return(CalcYears(x@nYear, x@pYear, x@CurrentYear, x@Seasons, Period))
   }
   
   if (is.list(x))

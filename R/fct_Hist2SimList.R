@@ -19,8 +19,19 @@ Hist2SimList <- function(Hist) {
   SimList <- purrr::map(SimList, \(HistSim) {
     HistSim@FDeadArea <- purrr::map(HistSim@FDeadArea, Array2List, 2)
     HistSim@FRetainArea <- purrr::map(HistSim@FRetainArea, Array2List, 2)
-    HistSim@Landings <- purrr::map(HistSim@Landings, Array2List, 2)
-    HistSim@Discards <- purrr::map(HistSim@Discards, Array2List, 2)
+    HistSim@LandingsAtAge <- purrr::map(HistSim@LandingsAtAge, Array2List, 2)
+    HistSim@DiscardsAtAge <- purrr::map(HistSim@DiscardsAtAge, Array2List, 2)
+    
+    HistSim@LandingsAtSize <- purrr::map(HistSim@LandingsAtSize, \(stock) {
+      purrr::map(stock, \(fleet)
+                 Array2List(fleet,2)
+      )
+    })
+    HistSim@DiscardsAtSize <- purrr::map(HistSim@DiscardsAtSize, \(stock) {
+      purrr::map(stock, \(fleet)
+                 Array2List(fleet,2)
+      )
+    })
     
     HistSim@OM@Stock <- purrr::map(HistSim@OM@Stock, \(Stock) {
       Stock@Spatial@Movement <- Array2List(Stock@Spatial@Movement,4)

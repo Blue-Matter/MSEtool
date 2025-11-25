@@ -2,7 +2,7 @@
 
 #' @rdname Convert
 #' @export
-ConvertOM <- function(OM, Author='', CurrentYear=NULL, TSperYear=1, Populate=TRUE, silent=FALSE) {
+ConvertOM <- function(OM, Author='', CurrentYear=NULL, Seasons=1, Populate=TRUE, silent=FALSE) {
   CheckClass(OM, c('OM'), 'OM')
   
   if (!silent)
@@ -29,16 +29,16 @@ ConvertOM <- function(OM, Author='', CurrentYear=NULL, TSperYear=1, Populate=TRU
                            as.numeric(format(Sys.Date(), '%Y')),
                            CurrentYear
                            )
-  om@TSperYear <- TSperYear
+  om@Seasons <- Seasons
   om@Years <- CalcYears(nYear=om@nYear,
                         pYear=om@pYear,
                         CurrentYear=om@CurrentYear,
-                        TSperYear)
+                        Seasons)
   
   YearsList <- list(HistTS=Years(om, 'Historical'),
                         ProjTS=Years(om, 'Projection'),
                         TimeUnits=TimeUnits,
-                        TSperYear=TSperYear
+                        Seasons=Seasons
   )
   StockName <- SubOM(OM, 'Stock')@Name
   om@Stock <- MakeNamedList(StockName,
