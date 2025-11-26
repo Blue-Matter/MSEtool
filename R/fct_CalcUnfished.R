@@ -72,7 +72,6 @@ CalcDynamicUnfished <- function(SimList, silent=FALSE) {
   # TODO - this should only check for historical years
   if (CheckIdenticalSims(SimListCopy)) {
     # identical historical period across all sims
-    HistSim <- SimListCopy[[1]]
     unfished <- SimulateDynamics_(HistSim, Years)
 
     HistSim@Unfished@Dynamic@Number <- lapply(unfished@Number, 
@@ -114,7 +113,7 @@ CalcDynamicUnfished <- function(SimList, silent=FALSE) {
     SimListOut <- purrr::map(SimListCopy, \(HistSim) {
       
       unfished <- SimulateDynamics_(HistSim, Years)
-      
+    
       HistSim@Unfished@Dynamic@Number <- lapply(unfished@Number, AddDimNames, c("Age", "Year", "Area"), Years)
       
       HistSim@Unfished@Dynamic@Biomass  <- AddDimNames(unfished@Biomass, 
