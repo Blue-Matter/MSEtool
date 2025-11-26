@@ -525,18 +525,81 @@ PopulateSpatial <- function(Spatial,
     Spatial <- CalcMovement(Spatial, Years, nsim, seed, nits, plot, 
                             silent)
   } else {
+    dd <- dim(Spatial@Movement)
+    ndim <- length(dd)
     dnames <- dimnames(Spatial@Movement)
-    if (!all(names(dnames)[1:3] == c('Sim', 'FromArea', 'ToArea'))) {
-      cli::cli_abort("First three dimensions of `Spatial@Movement` must be: {.val {c('Sim', 'FromArea', 'ToArea')}}")
+    Names <- names(dnames)
+    
+    if (!ndim%in% c(3,5)) 
+      cli::cli_abort(c('x'="Incorrect dimensions on Spatial@Movemement",
+                       'i'="`Spatial@Movement` should either have dimensions:",
+                       '*'="{.val {c('Sim', 'FromArea', 'ToArea')}} OR",
+                       '*'= "{.val {c('Sim', 'FromArea', 'ToArea', 'Age', 'Year')}}")
+      )
+    
+    if (ndim==3) {
+      Spatial@Movement <- AddAgeYearDimensions(Spatial@Movement, outdim=5)
     }
-    if (length(dnames)==3) {
-      Spatial@Movement <- AddAgeYearDimensions(Spatial@Movement, outdim=5) |>
-        AddDimNames(c('Sim', 'FromArea', 'ToArea', 'Age', 'Year'), Years=Years)
-    } else if (length(dnames)==4) {
-      cli::cli_abort("`Spatial@Movement` should either have dimensions: 
-                     {.val {c('Sim', 'FromArea', 'ToArea')}} OR 
-                     {.val {c('Sim', 'FromArea', 'ToArea', 'Age', 'Year')}}")
+    
+    if (dd[2] != dd[3])
+      cli::cli_abort(c('x'="Incorrect dimensions on Spatial@Movemement",
+                       'i'="`Spatial@Movement@FromArea` should be same length as Spatial@Movement@ToArea")
+      )
+    
+    nArea <- dd[2]
+    
+    if (is.null(Names)) 
+      names(dnames) <- c('Sim', 'FromArea', 'ToArea', 'Age', 'Year')
+    
+    if (!all(dnames$Sim %in% 1:nsim)) {
+      if (length(dnames$Sim)==length(1:nsim)) {
+        dnames$Sim <- 1:nsim
+      } else {
+        cli::cli_abort(c('x'="Incorrect dimension names for {.val Sim} in {.val Spatial@Movemement}",
+                         'i'="Currently: {.val {dnames$Sim}}",
+                         'i'="Values should match those in {.val 1:OM@nSim}: {.val {1:nsim}}")
+        )
+      }
     }
+    
+    if (!all(dnames$FromArea %in% 1:nArea)) {
+      dnames$FromArea <- 1:nArea
+    }
+    
+    if (!all(dnames$ToArea %in% 1:nArea)) {
+      dnames$ToArea <- 1:nArea
+    }
+    
+    if (!all(dnames$Age %in% Ages@Classes)) {
+      if (length(dnames$Age)==length(Ages@Classes)) {
+        dnames$Age <- Ages@Classes
+      } else if (length(dnames$Age)==1) {
+        dnames$Age <- Ages@Classes[1]
+      } else {
+        cli::cli_abort(c('x'="Incorrect dimension names for {.val Age} in {.val Spatial@Movemement}",
+                         'i'="Currently: {.val {dnames$Age}}",
+                         'i'="Values should match those in {.val Ages@Classes}: {.val {Ages@Classes}}")
+        )
+      }
+    }
+    
+    
+    if (!all(dnames$Year %in% Years)) {
+     if (length(dnames$Year)==length(Years)) {
+       dnames$Year <- Years
+     } else if (length(dnames$Year)==1) {
+       dnames$Year <- Years[1]
+     } else {
+       cli::cli_abort(c('x'="Incorrect dimension names for {.val Year} in {.val Spatial@Movemement}",
+                        'i'="Currently: {.val {dnames$Year}}",
+                        'i'="Values should match those in {.val OM@Years}: {.val {OM@Years}}")
+       )
+     }
+    }
+  
+    dimnames(Spatial@Movement) <- dnames
+    
+
   }
   
   
