@@ -217,7 +217,6 @@ CalcPerRecruit_StockList_F <- function(apicalF,
   SPR <- purrr::map2(SPRFList, SPR0List, \(SPRF, SPR0) ArrayDivide(SPRF, SPR0)) |> List2Array('Stock') |>
     aperm(setdnames(c("Stock", "Year"), BySim))
   
-  
   # Removals and Landings
   stockInd <- which(names(dimnames(FDead)) == 'Stock')
   FDeadList <- FDead |> Array2List(stockInd)

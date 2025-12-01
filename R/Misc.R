@@ -855,7 +855,7 @@ range01 <- function (x) {
 
 
 aperm <- function(a, perm, ...) {
-  if (is.null(a))
+  if (is.null(a) || length(a)<1)
     return(a)
   base::aperm(a, perm, ...)
 }

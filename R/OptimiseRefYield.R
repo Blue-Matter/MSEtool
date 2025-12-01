@@ -44,7 +44,7 @@ CalcRefLandings <- function(SimList, HistYears, ProjYears, type=c('Landings', 'R
                         ExtendHist(ProjSim)
                         )
   
-  bounds <- c(0.01, 1.1)
+  bounds <- c(1E-5, ProjSim@OM@maxF)
   SimList_Extended <- purrr::map(SimList_Extended, \(ProjSim) {
     doOpt <- optimize(OptRefLandings,
                       log(bounds),

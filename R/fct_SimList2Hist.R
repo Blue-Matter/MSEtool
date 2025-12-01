@@ -69,7 +69,7 @@ SimList2Hist <- function(Hist, SimList, Years=NULL) {
 
 
 SimListRefPointsMSY <- function(Hist, SimList) {
-  if (EmptyObject(Hist@RefPointsMSY))
+  if (!EmptyObject(Hist@RefPointsMSY))
     return(Hist)
   
   slots <- slotNames(Hist@RefPointsMSY)
