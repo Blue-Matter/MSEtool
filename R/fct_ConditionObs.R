@@ -58,6 +58,10 @@ ConditionObs_Catch <- function(HistSim, FisheryData, HistYears,
   ObservedCatch <- slot(FisheryData, type)@Value |>
     ArraySubsetYear(Years=HistYears)
   
+  if (is.null(ObservedCatch))
+    return(HistSim)
+    
+  
   nFleet <- ncol(ObservedCatch)
   
   catchList <- slot(HistSim, type)[stocks]
@@ -71,6 +75,12 @@ ConditionObs_Catch <- function(HistSim, FisheryData, HistYears,
     apply(c('Year', 'Fleet'), sum)
   
   FleetUnits <- slot(FisheryData,type)@Units
+  if (is.null(FleetUnits))
+    FleetUnits <- 'Biomass'
+  
+  if (length(FleetUnits)!=nFleet)
+    FleetUnits <- rep(FleetUnits, nFleet)[1:nFleet]
+  
   if (any(FleetUnits=='Number')) {
     # Calculate catch in numbers
     SimulatedCatch_Number <- purrr::map2(catchList, HistSim@OM@Fleet, \(catch, fleet) {
@@ -214,13 +224,26 @@ ConditionObs_Index <- function(HistSim, FisheryData, HistYears, ProjYears,
   nTS <- length(HistYears)
   
   NameIndices <- slot(FisheryData, type)@Name
-  ObservedIndices <- slot(FisheryData, type)@Value |>
-    ArraySubsetYear(Years=HistYears)
+  Value <- slot(FisheryData, type)@Value
   
-  if (EmptyObject(ObservedIndices))
+  if (is.null(Value))
     return(HistSim)
   
-  nFleet <- ncol(ObservedIndices)
+  dd <- dim(Value)
+  nFleet <- ncol(Value)
+  
+  if (dd[2] != length(NameIndices)) 
+    cli::cli_abort(c("x"= "`ncol(Data@{type}@Value)` is not the same as `length(Data@{type}@Name)`"))
+  
+  if (dd[1] < nTS) 
+    cli::cli_abort(c("x"= "`nrow(Data@{type}@Value)` must be at least length {.val {nTS}}"))
+  
+  dimnames(Value) <- list(Year=c(HistYears, ProjYears)[1:dd[1]],
+                          Name=NameIndices
+  )
+    
+  ObservedIndices <- Value |>
+    ArraySubsetYear(Years=HistYears)
   
   SimulatedNumberList <- purrr::map(HistSim@Number[stocks], \(stock) {
     stock |> AddDimNames(c('Age', 'Year', 'Area'),HistYears) |>
@@ -259,6 +282,11 @@ ConditionObs_Index <- function(HistSim, FisheryData, HistYears, ProjYears,
   
     ObservedIndex <- ObservedIndices[,fl]
     Units <- slot(FisheryData,type)@Units[fl]
+    if (is.null(Units))
+      Units <- 'Biomass'
+    
+    if (length(Units)!=nFleet)
+      Units <- rep(Units, nFleet)[1:nFleet]
     
     SimNumberSelectedList <- purrr::map2(SimulatedNumberList, SelectivityAtAgeList, ArrayMultiply)
   
