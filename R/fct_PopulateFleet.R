@@ -69,9 +69,7 @@ PopulateFleet <- function(Fleet,
                                                      silent)
   
 
-  
 
-  
   Fleet@Closure <- PopulateClosure(Closure=Fleet@Closure,
                                    nAreas,
                                    nsim,
@@ -251,6 +249,8 @@ PopulateCatchability <- function(Fleet,
                                  aperm(c('Sim', 'Year', 'Area'))
     )
   } else {
+    
+    
     dd <- dim(Fleet@qArea)
     # TODO: check dimensions
     # TODO: add dimnames if neccessary
@@ -513,6 +513,22 @@ PopulateClosure <- function(Closure, nAreas, nsim, Years, silent) {
     )
   } else {
     dd <- dim(Closure)
+    if (dd[3]!=nAreas) {
+      if (dd[1]==1 && dd[2]==1) {
+        Closure <- array(1, dim=c(1,1, nAreas), 
+                         dimnames =list(
+                           Sim=1,
+                           Year=Years[1],
+                           Area=1:nAreas)
+        )
+        
+        
+      } else {
+        cli::cli_abort("Error in {.val Fleet@Closure", .internal=TRUE)
+      }
+    }
+   
+    
     # TODO: check dimensions
     # TODO: add dimnames if neccessary
   }

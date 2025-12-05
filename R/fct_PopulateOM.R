@@ -6,7 +6,8 @@
 #' @export
 PopulateOM <- function(OM, silent=FALSE) {
   CheckClass(OM)
-  if (CheckDigest(OM) | EmptyObject(OM))
+  # if (CheckDigest(OM) | EmptyObject(OM))
+  if (EmptyObject(OM))
     return(OM)
   
   OM@Stock  <- PopulateStockList(OM, silent)
@@ -25,13 +26,29 @@ PopulateOM <- function(OM, silent=FALSE) {
   #Imp
   
   # Complexes
+  OM <- ProcessData(OM)
   
-  # OM@Data
-  
-
   SetDigest(OM)
-  
 }
+
+ProcessData <- function(OM) {
+  if (is.null(OM@Data))
+    return(OM)
+  stocknames <- StockNames(OM)
+  
+  if (isS4(OM@Data)) {
+    if (length(stocknames) > 1) 
+      stocknames <- paste(stocknames, collapes='-')
+    OM@Data <- MakeNamedList(stocknames, OM@Data)
+  }
+  
+  if (is.list(OM@Data) & is.null(names(OM@Data)))
+    names(OM@Data) <- stocknames
+
+  OM
+}
+
+
 
 PopulateStockList <- function(OM, silent=FALSE) {
   nStocks <- nStock(OM)

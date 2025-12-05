@@ -413,6 +413,44 @@ PopulateASK <- function(object, Ages=NULL, Years=NULL, silent=FALSE, type='Lengt
   object
 }
 
+CalculateRelativeSize <- function(Spatial, nsim) {
+  nareas <- dim(Spatial@UnfishedDist)[2]
+  
+  if (!is.null(Spatial@RelativeSize) & !methods::is(Spatial@RelativeSize, 'character')) {
+    Spatial@RelativeSize <- StructurePars(list(Spatial@RelativeSize),nsim)[[1]]
+    dd <- dim(Spatial@RelativeSize)
+    if (dd[2]>nareas)
+      cli::cli_abort('`RelativeSize` is longer than `nAreas` ({.val {nareas}})')
+    
+    if (dd[2]==1 & nareas==2) {
+      RelativeSize <- array(0, dim=c(dd[1], 2))
+      RelativeSize[,1] <- Spatial@RelativeSize
+      RelativeSize[,2] <- 1- RelativeSize[,1]
+      Spatial@RelativeSize <- RelativeSize
+    }
+    
+    if (nareas>2) {
+      if (dd[2]<nareas)
+        cli::cli_abort('`RelativeSize` must have `nAreas` ({.val {nareas}}) columns')
+      
+      rowsums <- apply(Spatial@RelativeSize, 1, sum) |> round(3)
+      if (!all(rowsums==1))
+        cli::cli_abort('`RelativeSize` must sum to 1 across columns')
+    }
+    
+  } else if (methods::is(Spatial@RelativeSize, 'character')) {
+    if (Spatial@RelativeSize=="EqualDensity") {
+      Spatial@RelativeSize <- apply(Spatial@UnfishedDist, c('Sim', 'Area'), mean)   
+    } else {
+      cli::cli_abort('If `Spatial@RelativeSize` is character, it can only be "EqualDensity"')
+    }
+  } else {
+    cli::cli_alert_warning('`RelativeSize` is not specified. Assuming all areas are equal size')
+    Spatial@RelativeSize <- matrix(1/nareas, 1, nareas)
+  }
+  Spatial@RelativeSize <- AddDimNames(Spatial@RelativeSize, c('Sim', 'Area'))
+  Spatial
+}
 
 CalcUnfishedDist <- function(Spatial,
                              Years=NULL,

@@ -85,7 +85,7 @@ Simulate_om <- function(OM=NULL,
 
   # ---- Aggregate SimList into Hist object ---- 
   Hist <- SimList2Hist(Hist, SimList, HistYears)
-  
+
   # ---- Reduce Dimension Size ----
   Hist <- ReduceHist(Hist, Reduce)
   

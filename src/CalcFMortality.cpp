@@ -9,7 +9,8 @@ List CalcFMortality_(arma::mat EffortFleetArea, // nFleet, nArea
                     arma::mat SelectivityAtAgeFleet, // nAge, nFleet
                     arma::mat RetentionAtAgeFleet, // nAge, nFleet
                     arma::mat DiscardMortalityAtAgeFleet, // nAge, nFleet
-                    int nArea) {
+                    int nArea,
+                    int debug=0) {
   
   // int nFleet = EffortFleetArea.n_rows;
   if (nArea==1)
@@ -19,8 +20,16 @@ List CalcFMortality_(arma::mat EffortFleetArea, // nFleet, nArea
     qArea = qArea.t();
   
   int nFleet = Catchability.size();
-  // Rcout << "nFleet = " << nFleet << std::endl;
-  // Rcout << "Catchability = " << Catchability << std::endl;
+  
+  // if (debug) {
+  //   Rcout << "*********************"  << std::endl;
+  //   Rcout << "CalcFMortality_ Function " << nArea << std::endl;
+  //   Rcout << "nArea = " << nArea << std::endl;
+  //   Rcout << "qArea = " << qArea << std::endl;
+  //   Rcout << "nFleet = " << nFleet << std::endl;
+  //   Rcout << "Catchability = " << Catchability << std::endl;
+  // }
+  
   
   int nAge = SelectivityAtAgeFleet.n_rows;
   
@@ -38,6 +47,7 @@ List CalcFMortality_(arma::mat EffortFleetArea, // nFleet, nArea
   
   for (int fl=0; fl<nFleet; fl++) {
     for (int area=0; area<nArea; area++) {
+      
       double catchabilityArea = arma::as_scalar(qArea.row(fl).col(area));
       
       if (catchabilityArea < 1E-5) {
@@ -55,6 +65,9 @@ List CalcFMortality_(arma::mat EffortFleetArea, // nFleet, nArea
       FDeadFleetArea.subcube(0, fl, area, nAge-1,fl, area) = FRetain + DeadDiscard;
     }
   }
+  // if (debug) {
+  //   Rcout << "*********************"  << std::endl;
+  // }
   
   List L = List::create(Named("FDeadFleetArea") = FDeadFleetArea,
                         Named("FRetainFleetArea") = FRetainFleetArea,

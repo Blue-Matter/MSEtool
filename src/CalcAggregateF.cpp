@@ -16,7 +16,7 @@ List CalcFfromCatch_(arma::vec NumberAtAge, // nAge
   int nAge = RemovalNAtAge.n_rows;
   int nFleet = RemovalNAtAge.n_cols;
   
-  arma::vec TotalRemovalsFleet = sum(RemovalNAtAge,0); // nFleet
+  arma::vec TotalRemovalsFleet = sum(RemovalNAtAge,0).t(); // nFleet
   
   double TotalNumber = arma::accu(NumberAtAge);
   
@@ -74,9 +74,13 @@ List CalcAggF_(arma::cube FDeadAtAgeAreaThisTS, // nAge, nFleet, nArea
                arma::mat SelectivityAtAgeThisTS, // nAge, nFleet
                arma::mat RetentionAtAgeThisTS, // nAge, nFleet
                arma::mat DiscardMortalityAtAgeThisTS, // nAge, nFleet
-               arma::mat NaturalMortalityAtAgeThisTS) {
+               arma::mat NaturalMortalityAtAgeThisTS,
+               int debug=0) {
   
   int nArea = NumberAtAgeAreaThisTS.n_cols;
+  
+  if (debug)
+    Rcout << "nArea = " << nArea << std::endl;
   
   if (nArea<2) {
     // no spatial structure
@@ -91,8 +95,8 @@ List CalcAggF_(arma::cube FDeadAtAgeAreaThisTS, // nAge, nFleet, nArea
   
   arma::vec NumberAtAge = arma::sum(NumberAtAgeAreaThisTS,1); // summed over areas
   
-  arma::vec TotalRemovalsFleet = sum(RemovalNumberAtAgeThisTS,0); // nFleet
-  
+  arma::vec TotalRemovalsFleet = sum(RemovalNumberAtAgeThisTS,0).t(); // nFleet
+
   LogicalVector ZeroCatch(nFleet);
   ZeroCatch = TotalRemovalsFleet < 1E-4;
   
@@ -109,6 +113,10 @@ List CalcAggF_(arma::cube FDeadAtAgeAreaThisTS, // nAge, nFleet, nArea
   // check if F same in all areas
   LogicalVector IdenticalF(nFleet);
   for (int fl=0; fl<nFleet; fl++) {
+    
+    if (debug)
+      Rcout << "fleet = " << fl << std::endl;
+  
     arma::mat fdeadfleet = FDeadAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(fl,fl), arma::span(0,nArea-1));
     NumericMatrix FDeadFleet = as<NumericMatrix>(Rcpp::wrap(fdeadfleet));
     int same = 0;
@@ -130,6 +138,12 @@ List CalcAggF_(arma::cube FDeadAtAgeAreaThisTS, // nAge, nFleet, nArea
   
   
   // Solve for overall F given overall Catch (Number) and Numbers
+  if (debug) {
+    Rcout << "*********************"  << std::endl;
+    Rcout << "CalcFfromCatch_ " << std::endl;
+    Rcout << "*********************"  << std::endl;
+  }
+  
   List Foverall = CalcFfromCatch_(NumberAtAge,
                                   RemovalNumberAtAgeThisTS,
                                   SelectivityAtAgeThisTS,
@@ -137,6 +151,12 @@ List CalcAggF_(arma::cube FDeadAtAgeAreaThisTS, // nAge, nFleet, nArea
                                   DiscardMortalityAtAgeThisTS,
                                   NaturalMortalityAtAgeThisTS
   );
+  
+  if (debug) {
+    Rcout << "*********************"  << std::endl;
+    Rcout << "Done CalcFfromCatch_ " << std::endl;
+    Rcout << "*********************"  << std::endl;
+  }
   
   List L = List::create(Named("FDeadAtAgeThisTS") = Foverall["FDeadAtAge"],
                         Named("FRetainAtAgeThisTS") = Foverall["FRetainAtAge"]);
@@ -174,7 +194,17 @@ S4 CalcAggregateF_(S4 HistSimIn,
     NumericVector TSmatch = abs(YearsAll - Years[Year]);
     int TSindex = which_min(TSmatch);
     
+    if (debug) {
+      Rcout << "\n\n*********************************"  << std::endl;
+      Rcout << "Timestep = " << Years[Year] << std::endl;
+      Rcout << "TSindex = " << TSindex << std::endl;
+    }
+    
+    
     for (int st=0; st<nStock; st++) {
+      
+      if (debug) 
+        Rcout << "st = " << st << std::endl;
       
       S4 Stock = StockList[st];
       
@@ -206,6 +236,9 @@ S4 CalcAggregateF_(S4 HistSimIn,
       arma::mat RetainNumberAtAge(nAge, nFleet);
       
       // convert to Catch in Numbers
+      if (debug) 
+        Rcout << "Catch in Numbers = " << std::endl;
+      
       for (int area=0; area<nArea; area++) {
         for (int fl=0; fl<nFleet; fl++) {
           arma::vec landings = arma::vectorise(LandingsTS.subcube(arma::span(0, nAge-1), arma::span(fl), arma::span(area)));
@@ -229,6 +262,13 @@ S4 CalcAggregateF_(S4 HistSimIn,
       arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // nAge, nTS, nArea
       
       // Calculate aggregate F over all areas
+      if (debug) {
+        Rcout << "*********************"  << std::endl;
+        Rcout << "CalcAggF_ " << std::endl;
+        Rcout << "*********************"  << std::endl;
+      }
+      
+      
       List AggF = CalcAggF_(FDeadAtAgeAreaThisTS,
                             FRetainAtAgeAreaThisTS,
                             NumberAtAgeArea.col(TSindex),
@@ -237,9 +277,14 @@ S4 CalcAggregateF_(S4 HistSimIn,
                             SelectivityAtAge.col(TSindex),
                             RetentionAtAge.col(TSindex),
                             DiscardMortalityAtAge.col(TSindex),
-                            NaturalMortalityAtAge.col(TSindex)
+                            NaturalMortalityAtAge.col(TSindex),
+                            debug
       );
-      
+      if (debug) {
+        Rcout << "*********************"  << std::endl;
+        Rcout << "CalcAggF_ " << std::endl;
+        Rcout << "*********************"  << std::endl;
+      }
       arma::mat FDeadAtAgeThisTS = AggF["FDeadAtAgeThisTS"];
       arma::mat FRetainAtAgeThisTS = AggF["FRetainAtAgeThisTS"];
       
