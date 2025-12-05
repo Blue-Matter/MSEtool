@@ -167,8 +167,8 @@ S4 CalcAggregateF_(S4 HistSimIn,
   List FDeadAtAgeList =  HistSim.slot("FDead");
   List FRetainAtAgeList = HistSim.slot("FRetain");
   
-  List LandingsList = HistSim.slot("Landings");
-  List DiscardsList =  HistSim.slot("Discards"); 
+  List LandingsList = HistSim.slot("LandingsAtAge");
+  List DiscardsList =  HistSim.slot("DiscardsAtAge"); 
   
   for (int Year=0; Year<nTS; Year++) {
     NumericVector TSmatch = abs(YearsAll - Years[Year]);

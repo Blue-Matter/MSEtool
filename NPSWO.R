@@ -20,13 +20,10 @@ SSDir <- '../WCNPOSWO-2023/Final Base-case'
 RepList <- ImportSSReport(SSDir)
 
 # Correct M-at-Age for initial age class
-# for some reason, M for age-0 is exactly half the actual value
+# Age-0 is half the actual value, presumably because SS3 has 2 seasons for Age-0
+# while OM has 4 seasons for all age-classes
 RepList[[1]]$M_at_age[,4] <- RepList[[1]]$M_at_age[,4] * 2
 
-# some catches are reported in numbers but this appears to be an error
-RepList$`1`$catch_units[] <- 1
-
-Biomass
 # Meta-data
 Name <- 'North Pacific Swordfish'
 StockName <- c("Female", 'Male')
@@ -51,8 +48,189 @@ OM <- ImportSS(RepList,
                DataLag=DataLag)
 
 
+################################################################################
+replist <- RepList$`1`
+yr <- 2021
+fl <- 3
+replist$catch |> dplyr::filter(Yr==yr, Seas==1, Fleet==fl)
+
+sel_a1 <- OM@Fleet$Female[[fl]]@Selectivity@MeanAtAge[1,seq(1, by=4, to=62),185]
+sel_a2 <- OM@Fleet$Male[[fl]]@Selectivity@MeanAtAge[1,seq(1, by=4, to=62),185]
+
+# replist$catage |> DropXXCols() |> dplyr::filter(Yr==yr, Seas==1, Fleet==1)
+sel_l <- replist$sizeselex |> dplyr::filter(Yr==yr, Fleet==fl, Factor=='Lsel')
+
+# Sex 1
+tempvec_l1 <- sel_l[1,6:56] * replist$biology$Wt_F
+tempvec_l2 <- sel_l[2,6:56] * replist$biology$Wt_M
+
+ALK <- replist$ALK[51:1,,1,drop=TRUE]
+
+sel_bio1 <- sel_a1 * (as.numeric(tempvec_l1) %*% ALK) 
+sel_bio2 <- sel_a2 * (as.numeric(tempvec_l2) %*% ALK) 
+
+MatAge1 <- OM@Stock$Female@NaturalMortality@MeanAtAge[1,seq(1, by=4, to=62),1]
+MatAge2 <- OM@Stock$Male@NaturalMortality@MeanAtAge[1,seq(1, by=4, to=62),1]
+
+FatAge1 <- (replist$fatage |> dplyr::filter(Sex==1, Yr==yr, Seas==1))[,8:23]
+FatAge2 <- (replist$fatage |> dplyr::filter(Sex==2, Yr==yr, Seas==1))[,8:23]
+
+FatAge1 <- FatAge1/4
+FatAge2 <- FatAge2/4
+ZatAge1 <- colSums(FatAge1) + MatAge1
+ZatAge2 <- colSums(FatAge2) + MatAge2
+
+apZatAge1 <- max(ZatAge1)
+apZatAge2 <- max(ZatAge2)
+
+apicF1 <- max(FatAge1[fl,])
+apicF2 <- max(FatAge2[fl,])
+
+NAA1 <- (replist$natage |> dplyr::filter(Sex==1, Yr==yr, Seas==1,
+                                        `Beg/Mid`=='B'))[13:28]
+
+NAA2 <- (replist$natage |> dplyr::filter(Sex==2, Yr==yr, Seas==1,
+                                         `Beg/Mid`=='B'))[13:28]
+
+Ndead1 <- colSums(FatAge1)/ZatAge1 * (NAA1) * (1-exp(-ZatAge1))
+Ndead2 <- colSums(FatAge2)/ZatAge2 * (NAA2) * (1-exp(-ZatAge2))
+
+Ndead1_fl1 <- FatAge1[fl,]/ZatAge1 * (NAA1) * (1-exp(-ZatAge1))
+Ndead2_fl2 <- FatAge2[fl,]/ZatAge2 * (NAA2) * (1-exp(-ZatAge2))
+
+sum(Ndead1+Ndead2)
+replist$catch |> dplyr::filter(Yr==yr, Seas==1) |>
+  dplyr::reframe(n=sum(kill_num))
+sum(Ndead1_fl1+Ndead2_fl2)
+replist$catch |> dplyr::filter(Yr==yr, Seas==1, Fleet==fl) |>
+  dplyr::reframe(n=sum(kill_num))
+
+overallsel1 <- colSums(FatAge1)/max(colSums(FatAge1))
+overallsel2 <- colSums(FatAge2)/max(colSums(FatAge2))
+
+Zrate1 <- sum(Ndead1)/sum(NAA1 * overallsel1)
+Zrate2 <- sum(Ndead2)/sum(NAA2 * overallsel2)
+
+harv1 <- sum(Ndead1_fl1)/sum(NAA1 * overallsel1)
+harv2 <- sum(Ndead2_fl2)/sum(NAA2 * overallsel2)
+
+sum(harv1 * sum(NAA1)) +
+  sum(harv2 * sum(NAA2))
+
+c1 <- FatAge1[fl,]/ZatAge1 * (NAA1) * (1-exp(-ZatAge1))
+c2 <- FatAge2[fl,]/ZatAge2 * (NAA2)  * (1-exp(-ZatAge2))
+sum(c1) + sum(c2)
+replist$catch |> dplyr::filter(Yr==yr, Seas==1, Fleet==fl)
+
+
+sum(c1 * OM@Stock$Female@Weight@MeanAtAge[1,seq(1, by=4, 62),1] +
+      c2 * OM@Stock$Male@Weight@MeanAtAge[1,seq(1, by=4, 62),1])
+
+0.0171894* (NAA1 * sel_bio1[1,]) * (1-exp(-apZatAge1))
+
+
+
+c1 <- apicF1/apZatAge1 * (NAA1 * sel_bio1[1,]) * (1-exp(-apZatAge1))
+c2 <- apicF2/apZatAge2 * (NAA2 * sel_bio2[1,]) * (1-exp(-apZatAge2))
+
+sum(c1) +
+  sum(c2)
+
+replist$timeseries |> dplyr::filter(Yr==yr, Seas==1)
+
+replist$catch |> dplyr::filter(Yr==yr, Seas==1, Fleet==fl)
+
+
+c1 <- FatAge1[1,]/apZatAge1 * (NAA1 * sel_bio1[1,]) * (1-exp(-apZatAge1))
+c2 <- FatAge2[1,]/apZatAge2 * (NAA2 * sel_bio2[1,])  * (1-exp(-apZatAge2))
+
+sum(c1) +
+sum(c2)
+
+replist$catch |> dplyr::filter(Yr==yr, Seas==1, Fleet==1)
+
+
+# Sex 2
+
+
+replist$biology 
+replist$ALK |> dimnames()
+
+
+replist$catch_units
+OM@Data$`Female Male`@Landings@Units
+OM@Data$`Female Male`@Landings@Value[,1:2] 
+
+fl <- 3
+# Calculate Catch-at-Length
+ts <- match(2020, OM@Years)
+area <- 1
+NAA <- Hist@Number$Female[,ts,area]
+ASK <- Hist@OM@Stock$Female@Length@ASK[,,1]
+
+NAL <- NAA %*% ASK
+
+SelL <- Hist@OM@Fleet$Female@Selectivity@MeanAtLength[,ts,fl]
+WghtLen <- replist$biology$Wt_F
+
+SelW <- SelL * WghtLen # line 2022 in SS3 SS_selex.tpl
+SelW_a <- SelW %*% t(ASK)
+
+SelL <- Hist@OM@Fleet$Male@Selectivity@MeanAtLength[,ts,fl]
+WghtLen <- replist$biology$Wt_M
+SelW <- SelL * WghtLen # line 2022 in SS3 SS_selex.tpl
+SelW_a2 <- SelW %*% t( Hist@OM@Stock$Male@Length@ASK[,,1])
+
+
+# TODO - add retention etc 
+M_age <- Hist@OM@Stock$Female@NaturalMortality@MeanAtAge[,ts]
+F_fleet <- Hist@FDead$Female[,ts,] 
+F_this_fleet <- max(F_fleet[,fl])
+F_total <- apply(F_fleet, 'Age', sum) |> max()
+Z <- apply(F_fleet+M_age, 'Age', sum) |> max()
+
+CAL <- NAL * SelL * F_this_fleet/Z * (1-exp(-Z))
+
+sum(CAL)
+
+
+replist$timeseries |> dplyr::filter(Yr==2020, Seas==1) |>
+  dplyr::pull(paste0('F:_', fl)) /4
+
+replist$timeseries |> dplyr::filter(Yr==2020, Seas==1) |>
+  dplyr::select(paste0('F:_', 1:18)) |> sum() / 4
+
+# Calculate Catch Biomass
+
+# Compare with replist catch biomass
+
+replist$catch |> dplyr::filter(Yr==2020, Seas==1, Fleet==fl)
+Hist@LandingsAtAge$Female$`2020`[,fl,1] |> sum() +
+Hist@LandingsAtAge$Male$`2020`[,fl,1] |> sum()
+
+sum(Hist@LandingsAtAge$Female$`2020`[,fl,1] * SelW_a) +
+sum(Hist@LandingsAtAge$Male$`2020`[,fl,1] *SelW_a2) # should match replist bio
+# but doesn't ...
+
+SelA1 <- Hist@OM@Fleet$Female@Selectivity@MeanAtAge[,ts,fl]
+SelA2 <- Hist@OM@Fleet$Male@Selectivity@MeanAtAge[,ts,fl]
+
+sum(SelA1 * SelW_a)
+sum(SelA2 * SelW_a2)
+
+165/217
+
+Hist <- SimList$`1`
+
+replist$sizeselex$Label |> unique()
+
+
+################################################################################
+
 # Simulate Historical Fishery
 Hist <- Simulate(OM)
+
+
 
 # Compare OM Dynamics with SS3 Output
 

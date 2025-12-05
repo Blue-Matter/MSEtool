@@ -17,9 +17,9 @@ CalcRefLandings <- function(SimList, HistYears, ProjYears, type=c('Landings', 'R
       array <-  array(Calc[idx,, drop=FALSE] |> abind::adrop(1),
                       dimnames = list(Stock=dimnames(Calc)$Stock))
       if (type=='Landings') {
-        ProjSim@RefLandings <- array
+        ProjSim@Reference@RefLandings <- array
       } else {
-        ProjSim@RefRemovals <- array
+        ProjSim@Reference@RefRemovals <- array
       }
       ProjSim
     })
@@ -55,12 +55,12 @@ CalcRefLandings <- function(SimList, HistYears, ProjYears, type=c('Landings', 'R
                       tol=1e-2)
     
     if (type=='Landings') {
-      ProjSim@RefLandings <- array(-doOpt$objective, 1,
+      ProjSim@Reference@RefLandings <- array(-doOpt$objective, 1,
                                    dimnames = list(
                                      Stock=StockNames(ProjSim@OM)
                                    ))
     } else {
-      ProjSim@RefRemovals <- array(-doOpt$objective, 1,
+      ProjSim@Reference@RefRemovals <- array(-doOpt$objective, 1,
                                    dimnames = list(
                                      Stock=StockNames(ProjSim@OM)
                                    ))
@@ -73,8 +73,8 @@ CalcRefLandings <- function(SimList, HistYears, ProjYears, type=c('Landings', 'R
     clear = TRUE))
   
   SimList <- purrr::map2(SimList_Extended, SimList, \(ProjSim_Extended, ProjSim) {
-    ProjSim@RefLandings <- ProjSim_Extended@RefLandings
-    ProjSim@RefRemovals <- ProjSim_Extended@RefRemovals
+    ProjSim@Reference@RefLandings <- ProjSim_Extended@Reference@RefLandings
+    ProjSim@Reference@RefRemovals <- ProjSim_Extended@Reference@RefRemovals
     ProjSim
   })
   
@@ -116,8 +116,8 @@ OptRefLandings <- function(logF, ProjSim, HistYears, ProjYears, type=c('Landings
   if (type=='Landings') {
     Yield <- PopDynamicsProject@Landings[[st]] |> List2Array("Year")
   } else {
-    Landings <- PopDynamicsProject@Landings[[st]] |> List2Array("Year")
-    Discards <- PopDynamicsProject@Discards[[st]] |> List2Array("Year")
+    Landings <- PopDynamicsProject@LandingsAtAge[[st]] |> List2Array("Year")
+    Discards <- PopDynamicsProject@DiscardsAtAge[[st]] |> List2Array("Year")
     Yield <- Landings+Discards
   }
   

@@ -206,7 +206,7 @@ setClass("om",
                  maxF='numeric',
                  Seed='num.null',
                  
-                 TSperYear='num.null',
+                 Seasons='num.null',
                  Years='num.null',
                  
                  Control='list.null',
@@ -300,7 +300,7 @@ OM <- function(Name='A new `OM` object',
                nYear=20,
                pYear=30,
                CurrentYear=as.numeric(format(Sys.Date(), '%Y')),
-               TSperYear=1,
+               Seasons=1,
                Stock=NULL,
                Fleet=NULL,
                Obs=list(),
@@ -335,8 +335,8 @@ OM <- function(Name='A new `OM` object',
   .Object@pYear <- pYear
   
   .Object@CurrentYear <- CurrentYear
-  .Object@TSperYear <- TSperYear
-  .Object@Years <- CalcYears(nYear, pYear, CurrentYear, TSperYear)
+  .Object@Seasons <- Seasons
+  .Object@Years <- CalcYears(nYear, pYear, CurrentYear, Seasons)
   
   .Object@Stock <- Stock
   .Object@Fleet <- Fleet

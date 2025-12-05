@@ -2,6 +2,6 @@
 #define CalcRecruitment_TimeStep_H
 
 int CalcRecruitment_TimeStep_(Rcpp::S4 Ages,
-                                   double TSperYear);
+                                   double Seasons);
 
 #endif

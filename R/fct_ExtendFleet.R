@@ -140,7 +140,7 @@ CopySlots <- function(ObjectOut,
                       ObjectIn, 
                       Concate=c("nYear", "pYear", "nSim", 
                                 "CurrentYear", "TimeUnits",
-                                "TSperYear"),
+                                "Seasons"),
                       List=c('Misc', 'Log')) {
   Slots <- slotNames(ObjectOut)
   for (sl in Concate) {

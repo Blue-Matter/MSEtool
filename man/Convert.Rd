@@ -13,7 +13,7 @@ ConvertMOM(
   MOM,
   Author = "",
   CurrentYear = NULL,
-  TSperYear = 1,
+  Seasons = 1,
   Populate = TRUE,
   silent = FALSE
 )
@@ -22,7 +22,7 @@ ConvertOM(
   OM,
   Author = "",
   CurrentYear = NULL,
-  TSperYear = 1,
+  Seasons = 1,
   Populate = TRUE,
   silent = FALSE
 )

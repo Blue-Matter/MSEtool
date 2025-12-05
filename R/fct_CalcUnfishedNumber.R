@@ -37,7 +37,7 @@ CalcUnfishedNumber_seasonal <- function(OM, SP=FALSE) {
   for (st in 1:nStock) {
     Stock <- OM@Stock[[st]]
     AgeClasses <- Stock@Ages@Classes
-    MaxAge <- Stock@Ages@MaxAge/OM@TSperYear
+    MaxAge <- Stock@Ages@MaxAge/OM@Seasons
     MaxAgeAnnual <- floor(MaxAge)
     nAge <- length(AgeClasses)
     R0 <- Stock@SRR@R0 |> ExtendYears(Years) |> ExtendSims(nSim) 
@@ -80,7 +80,7 @@ CalcUnfishedNumber_seasonal <- function(OM, SP=FALSE) {
       UnfishedNumberAtAgeStock[,age,1] <- R0[,age] * Survival[,age,1]
       
       if (PlusGroup && Age == MaxAgeAnnual) {
-        Survival[,age,1] <- exp(-NaturalMortality[,age,1]*OM@TSperYear)
+        Survival[,age,1] <- exp(-NaturalMortality[,age,1]*OM@Seasons)
         UnfishedNumberAtAgeStock[,age,1] <- UnfishedNumberAtAgeStock[,age,1]/(1-Survival[,age,1])
       }
     }
@@ -110,7 +110,7 @@ CalcUnfishedNumber_seasonal <- function(OM, SP=FALSE) {
 
 
 IsSeasonalRecruitment <- function(OM) {
-  if (OM@TSperYear==1)
+  if (OM@Seasons==1)
     return(FALSE)
   
   R0Array <- purrr::map(OM@Stock, \(Stock) {

@@ -2,7 +2,6 @@ SimulateDynamics <- function(SimList,
                              HistYears) {
   
   
-  
   if (CheckIdenticalSims(SimList, HistYears)) {
     # stop('not done yet!')
     
@@ -26,7 +25,7 @@ SimulateDynamics <- function(SimList,
     if (length(HistSim@OM@CatchFrac))
       return(HistSim)
     
-    HistSim@OM@CatchFrac <- purrr::map2(HistSim@Landings, HistSim@Discards, \(landings, discards) {
+    HistSim@OM@CatchFrac <- purrr::map2(HistSim@LandingsAtAge, HistSim@DiscardsAtAge, \(landings, discards) {
       removals <- landings[[length(landings)]] + discards[[length(discards)]]
       fleetCatch <- apply(removals,2, sum)
       fleetCatch/sum(fleetCatch)

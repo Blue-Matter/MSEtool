@@ -3,13 +3,13 @@
 #include "CalcVBiomass.h"
 #include "CalcEffortDistribution.h"
 #include "CalcFMortality.h"
-#include "CalcCatch.h"
 #include "CalcSpawnProduction.h"
 #include "CalcRecruitment.h"
 #include "CalcBiomass.h"
 #include "CalcAggregateF.h"
 #include "CalcStockMovement.h"
 #include "CalcNumberNext.h"
+#include "CalcCatch.h"
 #include "CalcRecruitment_TimeStep.h"
 
 //[[Rcpp::depends(RcppArmadillo)]]
@@ -22,9 +22,9 @@ using namespace Rcpp;
 //'
 // [[Rcpp::export]]
 S4 SimulateDynamics_(S4 HistSimIn, 
-                       Rcpp::NumericVector Years,
-                       int CalcCatch = 1,
-                       int debug = 0) {
+                     Rcpp::NumericVector Years,
+                     int CalcCatch = 1,
+                     int debug = 0) {
   
   S4 HistSim = clone(HistSimIn);
   S4 OM = HistSim.slot("OM");
@@ -208,8 +208,8 @@ S4 SimulateDynamics_(S4 HistSimIn,
       // Determine Age at Recruitment
       S4 Stock = StockList[st];
       S4 Ages = Stock.slot("Ages");
-      double TSperYear = Stock.slot("TSperYear");
-      int AgeRec = CalcRecruitment_TimeStep_(Ages, 1/TSperYear);
+      double Seasons = Stock.slot("Seasons");
+      int AgeRec = CalcRecruitment_TimeStep_(Ages, 1/Seasons);
       int TSRec = TSindex + AgeRec; // TSindex + 1 for age-1 recruitment
       
       arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // nAge, nTS, nArea
@@ -225,7 +225,7 @@ S4 SimulateDynamics_(S4 HistSimIn,
         if (debug) {
           Rcout << "\n\nCalculate Recruitment and Numbers for Stock " << st << std::endl;
           Rcout << "TSindex " << TSindex << std::endl;
-          Rcout << "TSperYear " << TSperYear << std::endl;
+          Rcout << "Seasons " << Seasons << std::endl;
           Rcout << "AgeRec " << AgeRec << std::endl;
           Rcout << "TSRec " << TSRec << std::endl;
      
@@ -357,7 +357,6 @@ S4 SimulateDynamics_(S4 HistSimIn,
 
   } // end of Time Step loop
 
-
   HistSim.slot("Number") = NumberAtAgeAreaList;
   HistSim.slot("Biomass") = Biomass;
   HistSim.slot("SBiomass") = SBiomass;
@@ -373,6 +372,5 @@ S4 SimulateDynamics_(S4 HistSimIn,
     HistSim = CalcAggregateF_(HistSim, Years, debug);
   }
 
-  
   return(HistSim);
 }

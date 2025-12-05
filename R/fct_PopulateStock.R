@@ -16,7 +16,7 @@ PopulateStock <- function(Stock,
   Stock@Years <- CalcYears(nYear=Stock@nYear, 
                                    pYear=Stock@pYear, 
                                    CurrentYear=Stock@CurrentYear, 
-                                   TSperYear=Stock@TSperYear )
+                                   Seasons=Stock@Seasons )
   # Require ALK and/or AWK?
   # ALK <- RequireALK(Stock)
   # AWK <- RequireAWK(Stock)

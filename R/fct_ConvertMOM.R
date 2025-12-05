@@ -1,6 +1,6 @@
 #' @rdname Convert
 #' @export
-ConvertMOM <- function(MOM, Author='', CurrentYear=NULL, TSperYear=1, Populate=TRUE, silent=FALSE) {
+ConvertMOM <- function(MOM, Author='', CurrentYear=NULL, Seasons=1, Populate=TRUE, silent=FALSE) {
   
   CheckClass(MOM, c('MOM'), 'MOM')
   
@@ -16,8 +16,8 @@ ConvertMOM <- function(MOM, Author='', CurrentYear=NULL, TSperYear=1, Populate=T
   om@Latitude <- MOM@Latitude
   om@Sponsor <- MOM@Sponsor
   om@nSim <- MOM@nsim
-  om@nYear <- MOM@Fleets[[1]][[1]]@nyears/TSperYear
-  om@pYear <- MOM@proyears/TSperYear
+  om@nYear <- MOM@Fleets[[1]][[1]]@nyears/Seasons
+  om@pYear <- MOM@proyears/Seasons
   om@Interval <- MOM@interval
   om@Seed <- MOM@seed
   om@pStar <- MOM@pstar
@@ -33,17 +33,17 @@ ConvertMOM <- function(MOM, Author='', CurrentYear=NULL, TSperYear=1, Populate=T
     om@CurrentYear <- CurrentYear
   }
   
-  TimeUnits <- CalcTSUnits(TSperYear)
-  om@TSperYear <- TSperYear
+  TimeUnits <- CalcTSUnits(Seasons)
+  om@Seasons <- Seasons
   om@Years <- CalcYears(nYear=om@nYear,
                                 pYear=om@pYear,
                                 CurrentYear=om@CurrentYear,
-                                TSperYear)
+                                Seasons)
   
   YearsList <- list(HistTS=Years(om, 'Historical'),
                         ProjTS=Years(om, 'Projection'),
                         TimeUnits=TimeUnits,
-                        TSperYear=TSperYear
+                        Seasons=Seasons
   )
   
   om@Stock <- ConvertToList(MOM2stock(MOM, YearsList))

@@ -9,7 +9,7 @@ MOM <- readRDS('C:/Users/Admin/Downloads/MOM.rds')
 MOM <- readRDS('C:/Users/Adrian/Downloads/MOM.rds')
 
 # Convert to new structure
-OM <- Convert(MOM, TSperYear=4) 
+OM <- Convert(MOM, Seasons=4) 
 
 # Note: not including real fishery data at this point !!!
 

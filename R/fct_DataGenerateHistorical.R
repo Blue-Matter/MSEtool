@@ -43,8 +43,8 @@ GenerateHistoricalData_Sim <- function(HistSim, HistYears) {
     if (is.null(Data@Years)) 
       Data@Years <- HistYears
     
-    if (is.null(Data@TSperYear)) 
-      Data@TSperYear <- HistSim@OM@TSperYear
+    if (is.null(Data@Seasons)) 
+      Data@Seasons <- HistSim@OM@Seasons
   
     if (is.null(Data@YearLH)) 
       Data@YearLH <- Data@Years[length(Data@Years)]

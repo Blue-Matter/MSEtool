@@ -9,12 +9,12 @@ OM2stock <- function(OM, cpars=NULL, YearsList=NULL, nSim, seed=NULL) {
   stock@Name <- gsub("REPLACED -- ", '', stock@Name)
   stock@CommonName <- OM@Common_Name
   stock@Species <- OM@Species
-  stock@Ages <- Ages(MaxAge=OM@maxage, # /YearsList$TSperYear,
+  stock@Ages <- Ages(MaxAge=OM@maxage, # /YearsList$Seasons,
                      MinAge=0,
-                     Units=CalcTSUnits(YearsList$TSperYear))
+                     Units=CalcTSUnits(YearsList$Seasons))
   
   stock@Years <- c(YearsList$HistTS, YearsList$ProjTS)
-  stock@TSperYear <- YearsList$TSperYear
+  stock@Seasons <- YearsList$Seasons
   
   Length(stock) <- OM2Length(OM, cpars, YearsList) |> 
     PopulateLength(Ages=stock@Ages,

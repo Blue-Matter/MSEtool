@@ -49,7 +49,7 @@ PopulateStockList <- function(OM, silent=FALSE) {
     Stock@nYear <- OM@nYear
     Stock@pYear <- OM@pYear
     Stock@CurrentYear <- OM@CurrentYear
-    Stock@TSperYear <- OM@TSperYear
+    Stock@Seasons <- OM@Seasons
     StockList[[st]] <- PopulateStock(Stock, 
                                      seed=OM@Seed, 
                                      silent=silent)
@@ -89,11 +89,11 @@ PopulateFleetList <- function(OM, silent=FALSE) {
       Fleet@pYear <- OM@pYear
       Fleet@CurrentYear <- OM@CurrentYear
       Stock <- StockList[[st]]
-      Fleet@TSperYear <- Stock@TSperYear
+      Fleet@Seasons <- Stock@Seasons
       Fleet@Years <- CalcYears(nYear=Stock@nYear, 
                                        pYear=Stock@pYear, 
                                        CurrentYear=Stock@CurrentYear, 
-                                       TSperYear= Stock@TSperYear )
+                                       Seasons= Stock@Seasons )
       
       FleetList[[st]][[fl]] <- PopulateFleet(Fleet=Fleet, 
                                              Ages=Ages(StockList[[st]]),

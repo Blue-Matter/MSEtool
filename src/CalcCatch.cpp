@@ -8,7 +8,6 @@ Rcpp::S4 CalcCatch_(Rcpp::S4 HistSimIn,
                     Rcpp::NumericVector Years,
                     int debug=0) {
   
- 
   S4 HistSim = clone(HistSimIn);
   S4 OM = HistSim.slot("OM");
   List StockList = OM.slot("Stock");
@@ -28,8 +27,8 @@ Rcpp::S4 CalcCatch_(Rcpp::S4 HistSimIn,
   List FDeadAtAgeAreaList = HistSim.slot("FDeadArea");
   List FRetainAtAgeAreaList = HistSim.slot("FRetainArea");
 
-  List RetainAtAgeAreaList = HistSim.slot("Landings");
-  List DiscardsAtAgeAreaList = HistSim.slot("Discards");
+  List RetainAtAgeAreaList = HistSim.slot("LandingsAtAge");
+  List DiscardsAtAgeAreaList = HistSim.slot("DiscardsAtAge");
 
  int nStock = NumberAtAgeAreaList.size();
 
@@ -53,27 +52,26 @@ Rcpp::S4 CalcCatch_(Rcpp::S4 HistSimIn,
       arma::cube FDeadAtAgeAreaThisTS = FDeadAtAgeAreaStock[TSindex]; // nAge, nFleet, nArea
       arma::cube FRetainAtAgeAreaThisTS = FRetainAtAgeAreaStock[TSindex]; // nAge, nFleet, nArea
 
-
       S4 Stock = StockList[st];
       S4 NaturalMortality = Stock.slot("NaturalMortality");
       arma::mat NaturalMortalityAtAge = NaturalMortality.slot("MeanAtAge"); // nAge, nTS
       
       S4 Fleet = FleetList[st];
-      arma::cube FleetWeightAtAge = Fleet.slot("WeightFleet"); // nAge, nTS, nFleet
+      // arma::cube FleetWeightAtAge = Fleet.slot("WeightFleet"); // nAge, nTS, nFleet
 
       int nAge = NumberAtAgeArea.n_rows;
       int nArea = NumberAtAgeArea.n_slices;
       int nFleet = RetainAtAgeAreaThisTS.n_cols;
 
       for (int fl=0; fl<nFleet; fl++) {
-        arma::vec fleetweight = FleetWeightAtAge(arma::span(0, nAge-1), arma::span(TSindex), arma::span(fl)); // nAge
+        // arma::vec fleetweight = FleetWeightAtAge(arma::span(0, nAge-1), arma::span(TSindex), arma::span(fl)); // nAge
         for (int area=0; area<nArea; area++) {
           arma::vec ZmortalityThisArea = arma::sum(FDeadAtAgeAreaThisTS.slice(area),1) + NaturalMortalityAtAge.col(TSindex);
           arma::mat NDeadThisArea = NumberAtAgeAreaThisTS.col(area) % (1-exp(-ZmortalityThisArea)); // nAge, nFleet
           arma::mat FDead = FDeadAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(fl), arma::span(area));
           arma::mat FRetain = FRetainAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(fl), arma::span(area));
-          arma::mat RemovalAtAge  = FDead/ZmortalityThisArea % NDeadThisArea % fleetweight;
-          arma::mat RetainAtAge  = FRetain/ZmortalityThisArea % NDeadThisArea % fleetweight;
+          arma::mat RemovalAtAge  = FDead/ZmortalityThisArea % NDeadThisArea; // % fleetweight;
+          arma::mat RetainAtAge  = FRetain/ZmortalityThisArea % NDeadThisArea; // % fleetweight;
           RetainAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(fl), arma::span(area)) = RetainAtAge;
           DiscardsAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(fl), arma::span(area)) = RemovalAtAge - RetainAtAge;
         }
@@ -88,8 +86,8 @@ Rcpp::S4 CalcCatch_(Rcpp::S4 HistSimIn,
   } // end of time step loop
 
   
-  HistSim.slot("Landings") = RetainAtAgeAreaList;
-  HistSim.slot("Discards") = DiscardsAtAgeAreaList;
+  HistSim.slot("LandingsAtAge") = RetainAtAgeAreaList;
+  HistSim.slot("DiscardsAtAge") = DiscardsAtAgeAreaList;
 
   return(HistSim);
 }
