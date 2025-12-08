@@ -31,10 +31,6 @@
 #' ### `Final`
 #'
 #' `Final` is used to specify the depletion level in the last historical time step.
-#' It is only required if the `Catchability` slot (`q`) in [FishingMortality()] is
-#' not populated. In this case, an optimization routine will calculate the `q`
-#' value for each simulation that results in the biomass relative to `Reference`
-#' in the last historical time step to be equal to `Final`.
 #'
 #' ### `Reference`
 #'

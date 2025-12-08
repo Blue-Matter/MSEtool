@@ -2,7 +2,6 @@
 % Please edit documentation in R/fct_ImportSS3.R
 \name{ImportSS}
 \alias{ImportSS}
-\alias{ImportSSReport}
 \title{Import an OM from SS3 Output}
 \usage{
 ImportSS(
@@ -27,8 +26,6 @@ ImportSS(
   populate = TRUE,
   ...
 )
-
-ImportSSReport(SSDir, silent = FALSE, parallel = TRUE, ...)
 }
 \arguments{
 \item{x}{Either a character string}
@@ -36,8 +33,3 @@ ImportSSReport(SSDir, silent = FALSE, parallel = TRUE, ...)
 \description{
 Import an OM from SS3 Output
 }
-\section{Functions}{
-\itemize{
-\item \code{ImportSSReport()}: Import SS3 Report
-
-}}

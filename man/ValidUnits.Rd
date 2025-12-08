@@ -4,7 +4,7 @@
 \alias{ValidUnits}
 \title{Return Valid Units}
 \usage{
-ValidUnits(x = NULL)
+ValidUnits(x = "ages")
 }
 \arguments{
 \item{x}{Either an \code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, or \code{\link[=Weight]{Weight()}} object, or a character

@@ -17,11 +17,10 @@ Data(x) <- value
 \item{value}{An \code{data} class object to assign to \code{x}}
 }
 \description{
-Data Object
-}
-\details{
 The \code{Data} function is used to create S4 class \code{data} objects or to access or
 assign \code{data} or \code{datalist} objects to \code{\link[=OM]{OM()}} class objects
+}
+\details{
 \subsection{About the \code{data} Class}{
 
 \code{data} is an S4 class used in \code{\link[=OM]{OM()}} class objects. It contains either real
@@ -54,5 +53,5 @@ Like all of the new style objects in \code{MSEtool}, the slots in \code{data} ob
 }}
 
 \seealso{
-\code{\link[=Name]{Name()}}, \code{\link[=CommonName]{CommonName()}}, \code{\link[=Species]{Species()}}, \code{\link[=Agency]{Agency()}}, \code{\link[=Author]{Author()}}, \code{\link[=Email]{Email()}}, \code{\link[=Region]{Region()}}, \code{\link[=Latitude]{Latitude()}}, \code{\link[=Longitude]{Longitude()}}, \code{\link[=Years]{Years()}}, \code{\link[=YearLH]{YearLH()}}, \code{\link[=Seasons]{Seasons()}}, \code{\link[=nArea]{nArea()}}, \code{\link[=Effort]{Effort()}}, \code{\link[=Landings]{Landings()}}, \code{\link[=Discards]{Discards()}}, \code{\link[=CPUE]{CPUE()}}, \code{\link[=Survey]{Survey()}}, \code{\link[=CAA]{CAA()}}, \code{\link[=CAL]{CAL()}}, \code{\link[=TAC]{TAC()}}, \code{\link[=TAE]{TAE()}}, \code{\link[=Log]{Log()}}, \code{\link[=Misc]{Misc()}}
+
 }

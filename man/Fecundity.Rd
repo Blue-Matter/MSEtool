@@ -25,7 +25,7 @@ Fecundity(x) <- value
 
 \item{Units}{Character. Length 1. The units corresponding to \code{MeanAtAge} and
 \code{MeanAtLength}. Defaults to \code{eggs} if not specified. Used for plotting,
-reporting, and determining units of \code{\link[=SpawningOutput]{SpawningOutput()}}.}
+reporting}
 
 \item{MeanAtAge}{Fecundity-at-Age schedule.  Calculated internally from \code{Pars} and \code{Model}. If populated manually,
 \code{Pars} and \code{Model} will be ignored. Should be a 3 dimensional array, with the first dimension either length 1 or
@@ -113,7 +113,7 @@ corresponding with each change point can be specified using \code{attributes}, s
 
 \item{\code{Units}}{Character. Length 1. The units corresponding to \code{MeanAtAge} and
 \code{MeanAtLength}. Defaults to \code{eggs} if not specified. Used for plotting
-and reporting, and determing units of \code{\link[=SpawningOutput]{SpawningOutput()}}.}
+and reporting}
 
 \item{\code{MeanAtAge}}{Fecundity-at-Age schedule.  Calculated internally from \code{Pars} and \code{Model}. If populated manually,
 \code{Pars} and \code{Model} will be ignored. Should be a 3 dimensional array, with the first dimension either length 1 or
@@ -159,5 +159,5 @@ plot(Fecundity)
 # see Examples in `?Length` for other `Pars` configurations
 }
 \seealso{
-\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=Units]{Units()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Misc]{Misc()}}, \code{\link[=FecundityModels]{FecundityModels()}}
+
 }

@@ -1,7 +1,5 @@
 # ---- Parameters & Slots ----
-AgeClasses_param <- function() {
-  "Numeric vector length `MaxAge+1`. The age classes for the stock. Always starts at 0. Populated internally from `MaxAge`."
-}
+
 
 ASK_param <- function(type='length') {
   paste0('The age-', type, ' key. Calculated internally from `MeanAtAge` and `CVatAge`.
@@ -32,9 +30,7 @@ Dist_param <- function() {
   "Character. Length 1. Either `normal` or `lognormal`. Used to generate size composition using `MeanAtAge`, `SDatAge`, and `TruncSD`."
 }
 
-MaxAge_param <- function() {
-  "An integer value (length 1) specifying the maximum age to include in the model. If `PlusGroup==TRUE`, `MaxAge` will be a plusgroup. **Required**. Note that the age classes always start at 0, so there will be `MaxAge+1` age classes."
-}
+
 
 
 MeanAtAge_param <- function(name='Fecundity') {
@@ -71,9 +67,6 @@ Pars_param <- function() {
 }
 
 
-Plusgroup_param <- function() {
-  'Include a plus-group? Defaults to TRUE.'
-}
 
 Random_param <- function() {
   "An array with dimensions matching `MeanAtAge`. `MeanAtAge` is assumed to represent
@@ -112,6 +105,8 @@ Pars_details <- function() {
 # ---- See Also ----
 
 See_Also <- function(class, other=NULL) {
+  return(NULL) # TODO
+
  slots <- slotNames(class)
  txt <- paste(paste0('[', slots, '()]'), collapse=', ')
  if (!is.null(other)) {
@@ -142,5 +137,7 @@ Accessing_Assigning_Slots <- function(class) {
 }
 
 
-
+S4Description <- function(class='ages') {
+  paste("An S4 objects of class", class, "and associated functions to access and modify the object")
+}
 

@@ -10,9 +10,9 @@
 #' @examples
 #' ValidUnits(Ages())
 #'
-ValidUnits <- function(x=NULL) {
+ValidUnits <- function(x='ages') {
   ll <- list()
-  ll$Age <- c('year', 'half-year', 'quarter', 'month', 'week', 'day')
+  ll$Age <- c('year', 'half-year', 'quarter', 'month', 'week')
   ll$Length <- c('mm', 'cm', 'inch')
   ll$Weight <- c('g', 'kg', 'lb')
 

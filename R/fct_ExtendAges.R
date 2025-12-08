@@ -2,9 +2,11 @@
 # AgeOpt = 2 fills all additional age classes with 1 - NOT WORKING
 # AgeOpt = 3 fills all additional age classes with same as last age 
 
-ExtendAges <- function(array, nAges, AgeOpt=3) {
-  if (is.null(nAges))
+ExtendAges <- function(array, AgeClasses=NULL, AgeOpt=3) {
+  if (is.null(AgeClasses))
     return(array)
+  
+  
   ind <- which(names(dimnames(array))=='Age')
   if (length(ind)<1)
     return(array)

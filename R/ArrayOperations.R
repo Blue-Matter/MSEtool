@@ -356,7 +356,7 @@ ArraySubsetAge <- function(object, Ages=NULL, drop=FALSE) {
 # ----- Array Expand ----
 
 #' @export
-ArrayExpand <- function(array, nSim, nAges, Years, AgeOpt=3, debug=FALSE) {
+ArrayExpand <- function(array, nSim, AgeClasses=NULL, Years, AgeOpt=3, debug=FALSE) {
   
   if (debug)
     print(class(array))
@@ -370,14 +370,14 @@ ArrayExpand <- function(array, nSim, nAges, Years, AgeOpt=3, debug=FALSE) {
       for (sl in slots) {
         if (debug)
           print(sl)
-        slot(array, sl) <- Recall(slot(array, sl), nSim, nAges, Years, AgeOpt, debug)
+        slot(array, sl) <- Recall(slot(array, sl), nSim, AgeClasses, Years, AgeOpt, debug)
       }
       return(array)
     }
     if (is.list(array)) {
       if (length(array)) {
         for (i in 1:length(array)) {
-          temp <- Recall(array[[i]], nSim, nAges, Years, AgeOpt, debug)
+          temp <- Recall(array[[i]], nSim, AgeClasses, Years, AgeOpt, debug)
           if (!is.null(temp))
             array[[i]] <- temp 
         }
@@ -389,7 +389,7 @@ ArrayExpand <- function(array, nSim, nAges, Years, AgeOpt=3, debug=FALSE) {
   
   array |>
     ExtendSims(nSim) |>
-    ExtendAges(nAges, AgeOpt) |>
+    ExtendAges(AgeClasses, AgeOpt) |>
     ExtendYears(Years)
   
 }

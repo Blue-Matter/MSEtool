@@ -441,46 +441,7 @@ nArea <- function(x, st=1) {
 }
 
 
-## MaxAge/MinAge ----
 
-
-#' @rdname Access
-#' @export
-MaxAge <- function(x) {
-  if (inherits(x, 'stock'))
-    return(x@Ages@MaxAge)
-  x@MaxAge
-}
-
-#' @rdname Access
-#' @export
-`MaxAge<-` <- function(x, value) {
-  if (value%%1!=0)
-    cli::cli_abort('`value` must be an integer')
-  x <- assignSlot(x, value, 'MaxAge')
-  min <- x@MinAge
-  if (!is.finite(min))
-    min <- 0
-  x@Classes <- min:value
-  x
-}
-
-#' @rdname Access
-#' @export
-MinAge <- function(x) {
-  if (inherits(x, 'stock'))
-    return(x@Ages@MinAge)
-  x@MinAge
-}
-
-#' @rdname Access
-#' @export
-`MinAge<-` <- function(x, value) {
-  if (value%%1!=0)
-    cli::cli_abort('`value` must be an integer')
-  x <- assignSlot(x, value, 'MinAge')
-  x
-}
 
 ## MeanAtAge ----
 

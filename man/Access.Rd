@@ -53,10 +53,6 @@
 \alias{nAge}
 \alias{nTS}
 \alias{nArea}
-\alias{MaxAge}
-\alias{MaxAge<-}
-\alias{MinAge}
-\alias{MinAge<-}
 \alias{MeanAtAge}
 \alias{MeanAtAge<-}
 \alias{MeanAtLength}
@@ -238,14 +234,6 @@ nAge(x, st = 1)
 nTS(x)
 
 nArea(x, st = 1)
-
-MaxAge(x)
-
-MaxAge(x) <- value
-
-MinAge(x)
-
-MinAge(x) <- value
 
 MeanAtAge(x)
 

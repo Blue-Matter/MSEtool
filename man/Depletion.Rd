@@ -49,10 +49,6 @@ to \code{Reference} in the first time step is equal to \code{Initial}.
 \subsection{\code{Final}}{
 
 \code{Final} is used to specify the depletion level in the last historical time step.
-It is only required if the \code{Catchability} slot (\code{q}) in \code{\link[=FishingMortality]{FishingMortality()}} is
-not populated. In this case, an optimization routine will calculate the \code{q}
-value for each simulation that results in the biomass relative to \code{Reference}
-in the last historical time step to be equal to \code{Final}.
 }
 
 \subsection{\code{Reference}}{
@@ -114,5 +110,5 @@ Populate(Depletion, nsim=5)
 
 }
 \seealso{
-\code{\link[=Initial]{Initial()}}, \code{\link[=Final]{Final()}}, \code{\link[=Reference]{Reference()}}, \code{\link[=Misc]{Misc()}}
+
 }
