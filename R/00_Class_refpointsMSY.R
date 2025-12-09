@@ -5,13 +5,13 @@ hasSlot <- function(object, slot) {
 #' @include 00_Class_popdynamics.R
 
 setClass("refpointsMSY",
-         slots=c(FMSY='array',
-                 BMSY='array',
-                 SBMSY='array',
-                 SPMSY='array',
-                 SPRMSY='array',
-                 MSY='array',
-                 MSYLandings='array'
+         slots=c(FMSY='array.numeric.null',
+                 BMSY='array.numeric.null',
+                 SBMSY='array.numeric.null',
+                 SPMSY='array.numeric.null',
+                 SPRMSY='array.numeric.null',
+                 MSY='array.numeric.null',
+                 MSYLandings='array.numeric.null'
          ),
          contains='MiscClass'
 )

@@ -250,8 +250,7 @@ CalcSeasons <- function(Units) {
          'half-year'=2,
          'quarter'=4,
          'month'=12,
-         'week'=52,
-         'day'=365)
+         'week'=52)
 }
 
 CalcYears <- function(nYear, pYear, CurrentYear, Seasons=1, Period=NULL) {
@@ -855,7 +854,7 @@ range01 <- function (x) {
 
 
 aperm <- function(a, perm, ...) {
-  if (is.null(a))
+  if (is.null(a) || length(a)<1)
     return(a)
   base::aperm(a, perm, ...)
 }

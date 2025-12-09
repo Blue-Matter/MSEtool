@@ -1,17 +1,30 @@
-
-## Ages ----
-
-#' Ages Object
+#' S4 Object class `ages`
+#' 
+#' `r S4Description('ages')
+#' 
+#' ## About the Class
+#' The S4 object class `ages` contain information related to the age classes of a [Stock()]
 #'
-#' The `Ages` function is used to create S4 class `ages` objects or to access or
-#' assign `ages` objects to [Stock()] class objects.
-#' @slot MaxAge `r MaxAge_param()`
-#' @slot Units `r Units_param()`
-#' @slot PlusGroup `r Plusgroup_param()`
-#' @slot Classes `r AgeClasses_param()`
-#' @rdname Ages
+#' ## Creating New Objects
+#' `r Creating_New_Objects('ages')`
+#'
+#' ## Accessing and Assigning Slots
+#' `r Accessing_Assigning_Slots('ages')`
+#'
+#' @seealso [MaxAge()], [MinAge()], []
+#' 
+#' @name Ages
+#' 
+NULL
+
 #' @include 00_Class_unions.R
 #' @include 00_Class_child.R
+#' @slot MaxAge Numeric value specifying the maximum age
+#' @slot MinAge Numeric value specifying the minimum age 
+#' @slot Units Character string describing the units of `MaxAge` and `MinAge`
+#' @slot PlusGroup Logical. Use a plusgroup?
+#' @slot Classes Numeric vector of the age classes. **Note:** Age classes are *always* in units of a year
+#' @rdname Ages
 setClass('ages',
          slots=c(MaxAge='numeric',
                  MinAge='numeric',
@@ -20,37 +33,16 @@ setClass('ages',
          contains = c('ClassesClass')
 )
 
-setValidity('ages', isValidObject)
-
-setMethod("initialize", "ages", function(.Object,
-                                         MaxAge=NA,
-                                         MinAge=0,
-                                         Units='year',
-                                         PlusGroup=TRUE) {
-  .Object@MinAge <- MinAge
-  Seasons <- CalcSeasons(Units)
-  .Object@Units <- Units
-  if (!is.na(MaxAge)) {
-    .Object@MaxAge <- MaxAge
-    .Object@Classes <- CalcAgeClasses(.Object)
-  }
-  .Object@PlusGroup <- PlusGroup
-  .Object
-})
-
-
-
 #' @describeIn Ages Create a new `ages` class object
-#' @param MaxAge `r MaxAge_param()`
-#' @param Units `r Units_param()`
-#' @param PlusGroup `r Plusgroup_param()`
-#' @param Classes `r AgeClasses_param()`
+#' @param MaxAge Either an integer specifying the maximum age in units corresponding to `Units` of a [Stock()], or a [Stock()] class object. If `PlusGroup==TRUE`, `MaxAge` will be a plusgroup. **Required**
+#' @param MinAge An integer specifying the minimum age in units corresponding to `Units` for a [Stock()]. Default is 0. 
+#' @param Units A character string specifying the units of `MaxAge` and `MinAge`. Must be one of `ValidUnits()`
+#' @param PlusGroup Logical. Use a plus group?
 #' @export
-Ages <- function(MaxAge=NA,
+Ages <- function(MaxAge,
                  MinAge=0,
                  Units='year',
-                 PlusGroup=TRUE
-                 ) {
+                 PlusGroup=TRUE) {
   if (methods::is(MaxAge, 'stock'))
     return(MaxAge@Ages)
   
@@ -73,28 +65,23 @@ Ages <- function(MaxAge=NA,
 }
 
 
+setValidity('ages', isValidObject)
 
+setMethod("initialize", "ages", function(.Object,
+                                         MaxAge=NA,
+                                         MinAge=0,
+                                         Units='year',
+                                         PlusGroup=TRUE) {
+  .Object@MinAge <- MinAge
+  .Object@Units <- Units
+  if (!is.na(MaxAge)) {
+    .Object@MaxAge <- MaxAge
+    .Object@Classes <- CalcAgeClasses(.Object)
+  }
+  .Object@PlusGroup <- PlusGroup
+  .Object
+})
 
-#' @details
-#' ## About the `ages` Class
-#' `ages` is an S4 class used in [Stock()] class objects. It contains information
-#' relating to the age classes of the stock.
-#'
-#' ## Creating New Objects
-#' `r Creating_New_Objects('ages')`
-#'
-#' ## Accessing and Assigning Slots
-#' `r Accessing_Assigning_Slots('ages')`
-#'
-#' @slot MaxAge `r MaxAge_param()`
-#' @slot Units `r Units_param()`
-#' @slot PlusGroup `r Plusgroup_param()`
-#' @slot Classes `r AgeClasses_param()`
-#'
-#' @seealso `r See_Also('ages', c('ValidUnits'))`
-#'
-#'
-#' @example man-examples/Ages-class.R
 
 
 CalcAgeClasses <- function(Ages) {

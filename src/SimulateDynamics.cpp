@@ -140,9 +140,11 @@ S4 SimulateDynamics_(S4 HistSimIn,
       DistributionList[st] = Distribution;
 
       // Calculate F within each Area
-      if (debug)
+      if (debug) {
         Rcout << "FMortFleetArea" << std::endl;
-
+        Rcout << "nArea = " << nArea << std::endl;
+      }
+      
       List FMortFleetArea = CalcFMortality_(Distribution.row(TSindex), // nFleet, nArea,
                                            arma::vectorise(Catchability.row(TSindex)), // nFleet
                                            qArea.row(TSindex), // Fleet, Area
@@ -150,16 +152,22 @@ S4 SimulateDynamics_(S4 HistSimIn,
                                            SelectivityAtAge.col(TSindex), // nAge, nFleet
                                            RetentionAtAge.col(TSindex), // nAge, nFleet
                                            DiscardMortalityAtAge.col(TSindex), // nAge, nFleet
-                                           nArea);
+                                           nArea, 
+                                           debug);
 
+      if (debug) {
+        Rcout << "*********************"  << std::endl;
+        Rcout << "Done CalcFMortality_ " << std::endl;
+        Rcout << "*********************"  << std::endl;
+      }
+        
       List FDeadAtAgeAreaStock = FDeadAtAgeAreaList[st];
       List FRetainAtAgeAreaStock = FRetainAtAgeAreaList[st];
       FDeadAtAgeAreaStock[TSindex] = FMortFleetArea["FDeadFleetArea"];
       FRetainAtAgeAreaStock[TSindex] = FMortFleetArea["FRetainFleetArea"];
 
-      arma::vec qAreaTS = FMortFleetArea["qArea"];
+      arma::mat qAreaTS = FMortFleetArea["qArea"];
       qArea.row(TSindex) = qAreaTS;
-
 
       FDeadAtAgeAreaList[st] = FDeadAtAgeAreaStock;
       FRetainAtAgeAreaList[st] = FRetainAtAgeAreaStock;
@@ -368,9 +376,31 @@ S4 SimulateDynamics_(S4 HistSimIn,
 
   // CalcCatch and overall F
   if (CalcCatch>0) {
+    if (debug) {
+      Rcout << "*********************"  << std::endl;
+      Rcout << "CalcCatch_ " << std::endl;
+      Rcout << "*********************"  << std::endl;
+    }
+    
     HistSim = CalcCatch_(HistSim, Years, debug);
+    
+    if (debug) {
+      Rcout << "*********************"  << std::endl;
+      Rcout << "Done CalcCatch_ " << std::endl;
+      Rcout << "*********************"  << std::endl;
+    }
+    
+    if (debug) {
+      Rcout << "*********************"  << std::endl;
+      Rcout << "CalcAggregateF_ " << std::endl;
+      Rcout << "*********************"  << std::endl;
+    }
     HistSim = CalcAggregateF_(HistSim, Years, debug);
+    if (debug) {
+      Rcout << "*********************"  << std::endl;
+      Rcout << "Done CalcAggregateF_ " << std::endl;
+      Rcout << "*********************"  << std::endl;
+    }
   }
-
   return(HistSim);
 }

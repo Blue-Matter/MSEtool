@@ -10,7 +10,7 @@ setClassUnion(name="imp.list", members=c('Imp', "imp", "list", 'NULL'))
 
 #' Class `om`: Operating Model Object 
 #'
-#' @include Class_definitions.R
+#' @include lgy_Class_definitions.R
 #' @include 00_Class_unions.R
 #' @include 00_Class_child.R
 #' @include 00_Class_stock.R

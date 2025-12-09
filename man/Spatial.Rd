@@ -295,5 +295,5 @@ Movement(Spatial)[1,,,6,]
 
 }
 \seealso{
-\verb{r See_Also('spatial', c('CalcMovement')}
+
 }

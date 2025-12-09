@@ -43,11 +43,14 @@ DiscMortDF <- data.frame(Fleet=c('cHL', 'cPT', 'cPT', 'rHB', 'rGN'),
                          Value=c(0.19,   0.14, 0.068, 0.152, 0.137),
                          Year= c(1977, 1977, 2007, 1977, 1977))
 
-OM_BSB <- ImportBAM(Stock='BlackSeaBass', nSim=nSim, pYear=pYear,
+OM_BSB <- ImportBAM(Stock='BlackSeaBass', 
+                    nSim=nSim, 
+                    pYear=pYear,
                     StockName='Black Sea Bass',
                     DiscMortDF=DiscMortDF)
 
 CompareBAM(Stock='BlackSeaBass', OM=OM_BSB)
+
 
 # ---- Gag Grouper ----
 

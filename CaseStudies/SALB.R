@@ -1,8 +1,40 @@
+
+
 library(MSEtool)
 
-# TODO - reduce Hist/MSE object sims/TS
+SSDir <- 'G:/Shared drives/BM shared/1. Projects/TOF-MSE-SALB/ALB-S_Stochastic/ALB-S_Stochastic/Condition/SS3'
 
-la()
+RepList <- ImportSSReport(SSDir)
+
+# Steps
+# 1. Import SS Report
+# 2. Import OM from SS Report
+# 3. Plot OM ?
+# 4. Simulate Historical
+# 5. Explore and Plot Historical
+# 6. Explore Data - real vs simulated
+# 7. Make MPs
+# 8. Project
+# 9. Explore MSE Results
+# 10. Performance Metrics 
+
+# 1. MSEtool - install from pre-release
+# 2. OMLibrary Package - Load Data 
+# 3. Case Study Examples 
+
+
+
+OM <- ImportSS(RepList, 
+               pYear = pYear,
+               Name=Name,
+               Agency=Agency,
+               Region=Region,
+               StockName=StockName,
+               Species=Species,
+               Interval=Interval,
+               DataLag=DataLag)
+
+
 
 
 pYear <- 30
@@ -15,26 +47,15 @@ Region <- 'South Atlantic'
 Agency <- 'ICCAT'
 DataLag <- 1 # lagged by 1 year?
 
-SSDir <- 'C:/Users/Admin/Documents/GitHub/SALB-MSE/Condition/SS3/ALB-S_Stochastic/Condition/SS3'
 
-SSDir <- 'G:/Shared drives/BM shared/1. Projects/TOF-MSE-SALB/ALB-S_Stochastic/ALB-S_Stochastic/Condition/SS3'
+
 
 StochasticDirs <- list.dirs(file.path(SSDir), full.names = TRUE, recursive = FALSE)
 StochasticDirs <- StochasticDirs[!grepl('Base', StochasticDirs)]
 
 StochasticDirs <- StochasticDirs[1:3] # fewer for development
 
-RepList <- ImportSSReport(StochasticDirs)
 
-OM <- ImportSS(RepList, 
-               pYear = pYear,
-               Name=Name,
-               Agency=Agency,
-               Region=Region,
-               StockName=StockName,
-               Species=Species,
-               Interval=Interval,
-               DataLag=DataLag)
 
 
 Hist <- Simulate(OM)

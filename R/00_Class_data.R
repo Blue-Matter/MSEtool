@@ -70,8 +70,6 @@ setClass("compdata",
 
 #' Data Object
 #'
-#' 
-#' 
 #' The `Data` function is used to create S4 class `data` objects or to access or
 #' assign `data` or `datalist` objects to [OM()] class objects
 #'

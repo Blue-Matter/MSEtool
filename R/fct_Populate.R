@@ -2,7 +2,18 @@
 #' Populate an Object 
 #' 
 #' @name Populate
-NULL
+#' @export
+Populate <- function(object, ...) {
+  CheckClass(object, c('om', 'stock', 'fleet'), 'object')
+  
+  if (inherits(object, 'om'))
+    return(PopulateOM(object))
+  
+  
+  
+}
+
+
 
 
 

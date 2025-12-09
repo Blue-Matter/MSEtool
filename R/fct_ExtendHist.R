@@ -45,6 +45,8 @@ ExtendTimeSeries <- function(Hist, Years) {
     object <- slot(Hist, sl) 
     
     if (is.list(object)) {
+      if (!length(object))
+        next()
       if (is.list(object[[1]])) {
         object <- purrr::map(object, \(x) {
           ListYears <- names(x)

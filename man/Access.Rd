@@ -26,7 +26,6 @@
 \alias{Complexes<-}
 \alias{Control}
 \alias{Control<-}
-\alias{CurrentYear}
 \alias{CurrentYear<-}
 \alias{CVatAge}
 \alias{CVatAge<-}
@@ -53,10 +52,6 @@
 \alias{nAge}
 \alias{nTS}
 \alias{nArea}
-\alias{MaxAge}
-\alias{MaxAge<-}
-\alias{MinAge}
-\alias{MinAge<-}
 \alias{MeanAtAge}
 \alias{MeanAtAge<-}
 \alias{MeanAtLength}
@@ -79,8 +74,6 @@
 \alias{nReps<-}
 \alias{nStock}
 \alias{nFleet}
-\alias{nYear}
-\alias{nYear<-}
 \alias{Pars}
 \alias{Pars<-}
 \alias{Period}
@@ -91,10 +84,6 @@
 \alias{ProbStaying<-}
 \alias{pStar}
 \alias{pStar<-}
-\alias{pYear}
-\alias{pYear<-}
-\alias{proyears}
-\alias{proyears<-}
 \alias{RecDevInit}
 \alias{RecDevInit<-}
 \alias{RecDevHist}
@@ -125,8 +114,6 @@
 \alias{SpawnTimeFrac<-}
 \alias{Species}
 \alias{Species<-}
-\alias{Years}
-\alias{Years<-}
 \alias{TimeUnits}
 \alias{TimeUnits<-}
 \alias{TruncSD}
@@ -185,8 +172,6 @@ Control(x)
 
 Control(x) <- value
 
-CurrentYear(x)
-
 CurrentYear(x) <- value
 
 CVatAge(x)
@@ -239,14 +224,6 @@ nTS(x)
 
 nArea(x, st = 1)
 
-MaxAge(x)
-
-MaxAge(x) <- value
-
-MinAge(x)
-
-MinAge(x) <- value
-
 MeanAtAge(x)
 
 MeanAtAge(x) <- value
@@ -291,14 +268,6 @@ nStock(x)
 
 nFleet(x)
 
-nYear(x)
-
-nYear(x) <- value
-
-nYear(x)
-
-nYear(x) <- value
-
 Pars(x)
 
 Pars(x) <- value
@@ -318,14 +287,6 @@ ProbStaying(x) <- value
 pStar(x)
 
 pStar(x) <- value
-
-pYear(x)
-
-pYear(x) <- value
-
-proyears(x)
-
-proyears(x) <- value
 
 RecDevInit(x)
 
@@ -386,10 +347,6 @@ SpawnTimeFrac(x) <- value
 Species(x)
 
 Species(x) <- value
-
-Years(x, Period = NULL)
-
-Years(x) <- value
 
 TimeUnits(x, Period = NULL)
 

@@ -9,8 +9,7 @@ Units(Ages) <- 'month'
 # Check valid units
 ValidUnits(Ages)
 
-# Check `Ages` object is complete
-Check(Ages)
 
 
 
+#' @example man-examples/Ages-class.R

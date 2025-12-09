@@ -79,7 +79,8 @@ Spatial@ProbStaying
 
 Spatial@RelativeSize # matrix nsim by nArea (again sim dim can be length 1 if constant)
 
-Spatial@Movement 
+Spatial@Movement |> dimnames()
+
 
 Spatial@FracOther 
 
@@ -90,6 +91,8 @@ OM@Stock$Dolphinfish@Spatial <- Spatial # reassign once populated
 # Fleet Effort Distribution - repeat for each fleet
 # fishing effort
 OM@Fleet$Dolphinfish$`Dolphinfish Fleet 1`@Effort 
+
+
 
 # fishing effort by sim, time, and area 
 OM@Fleet$Dolphinfish$`Dolphinfish Fleet 1`@Distribution 

@@ -1,10 +1,12 @@
-# AgeOpt = 1 fills all additional age classes with 1e-16
-# AgeOpt = 2 fills all additional age classes with 1
+# AgeOpt = 1 fills all additional age classes with 1e-16 - NOT WORKING
+# AgeOpt = 2 fills all additional age classes with 1 - NOT WORKING
 # AgeOpt = 3 fills all additional age classes with same as last age 
 
-ExtendAges <- function(array, nAges, AgeOpt=3) {
-  if (is.null(nAges))
+ExtendAges <- function(array, AgeClasses=NULL, AgeOpt=3) {
+  if (is.null(AgeClasses))
     return(array)
+  
+  
   ind <- which(names(dimnames(array))=='Age')
   if (length(ind)<1)
     return(array)
@@ -18,23 +20,17 @@ ExtendAges <- function(array, nAges, AgeOpt=3) {
   
   AddDim <- nAges - length(existing)
   
-  OutDim <- d
-  OutDim[ind] <- AddDim
-  
-  fillvalue <- tiny/2
-  if (AgeOpt==2)
-    fillvalue <- 1
-  if (AgeOpt==3) {
-    fillvalue <- abind::asub(array, 1, ind)
-  }
+  OutList <- replicate(nAges, array, simplify = FALSE)
+  OutArray <- abind::abind(OutList, along=ind)
+
   existingNames <- dnames[[ind]]
   Last <- existingNames[length(existingNames)] |> as.numeric()
-  AddNames <- seq(Last+1, length.out=AddDim)
+  AddNames <- c(Last, seq(Last+1, length.out=AddDim))
   AddDimNames <- dnames
   AddDimNames[[ind]] <- AddNames
-  empty <- array(fillvalue, dim=OutDim, 
-                 dimnames=AddDimNames)
   
-  abind::abind(array, empty, along=ind,
-               use.dnns=TRUE)
+  dimnames(OutArray) <- AddDimNames
+  
+  OutArray
+
 }

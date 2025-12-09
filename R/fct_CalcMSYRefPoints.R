@@ -131,7 +131,7 @@ CalcMSYRefPoints <- function(SimList, RefPointYears, RefPointsMSY=TRUE) {
 
 
 CalculateMSYSim <- function(StockList, FleetList, Complexes, Years=NULL, maxF=3) {
-  logApicalFRange <- log(c(0.01, maxF))
+  logApicalFRange <- log(c(1E-5, maxF))
   
   MSYRefPoints <- RefPointsMSY(StockNames=names(StockList), Years=Years)
   for (st in seq_along(Complexes)) {

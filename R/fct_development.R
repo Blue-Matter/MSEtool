@@ -4,6 +4,7 @@
 
 #' @export
 LoadArgs <- function(fun='Simulate', envir = .GlobalEnv, debug=FALSE) {
+
   formals <- get(fun) |> formals()
   args <- names(formals)
   for (i in seq_along(args)) {

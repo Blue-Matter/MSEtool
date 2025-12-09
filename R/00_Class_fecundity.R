@@ -1,7 +1,4 @@
 
-
-
-
 ## Fecundity ----
 
 #' Fecundity Object
@@ -55,7 +52,7 @@
 #' @slot Model `r Pars_param()`
 #' @slot Units Character. Length 1. The units corresponding to `MeanAtAge` and
 #' `MeanAtLength`. Defaults to `eggs` if not specified. Used for plotting
-#' and reporting, and determing units of [SpawningOutput()].
+#' and reporting
 #'
 #' @slot MeanAtAge `r MeanAtAge_param()`
 #' @slot MeanAtLength `r MeanAtLength_param()`
@@ -106,7 +103,7 @@ setMethod("initialize", "fecundity", function(.Object,
 #' @param Model `r Pars_param()`
 #' @param Units Character. Length 1. The units corresponding to `MeanAtAge` and
 #' `MeanAtLength`. Defaults to `eggs` if not specified. Used for plotting,
-#' reporting, and determining units of [SpawningOutput()].
+#' reporting
 #' @param MeanAtAge `r MeanAtAge_param()`
 #' @param MeanAtLength `r MeanAtLength_param()`
 #' @param Classes `r Classes_param()`
