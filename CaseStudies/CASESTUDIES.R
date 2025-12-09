@@ -6,15 +6,35 @@
 # 5. Convert
 
 
-TestOM <- Convert(testOM)
 
-MaxAge(TestOM@Stock$Albacore@Ages)  <- 10
-MaxAge(TestOM@Stock$Albacore)
 
-# UP TO HERE
-MaxAge(TestOM@Stock) <- list(5)
-MaxAge(TestOM@Stock)
+x <- Convert(testOM)
+x@Stock$Albacore@CommonName
 
-MaxAge(TestOM) <- list(4)
-MaxAge(TestOM) 
+
+x@Stock$Albacore@Ages
+
+
+
+x@Stock$Albacore@Ages
+
+
+MinAge(x)
+MaxAge(x) <- list(5)
+MaxAge(x)
+
+
+MaxAge(x@Stock)
+MaxAge(x@Stock) <- list(15)
+MaxAge(x@Stock)
+
+
+MaxAge(x@Stock$Albacore)
+MaxAge(x@Stock$Albacore) <- 12
+MaxAge(x@Stock$Albacore)
+
+MaxAge(x@Stock$Albacore@Ages)  <- 10
+MaxAge(x)
+
+
 

@@ -205,11 +205,7 @@ Control <- function(x) {
 
 ## ---- CurrentYear ----
 
-#' @rdname Access
-#' @export
-CurrentYear <- function(x) {
-  x@CurrentYear
-}
+
 
 #' @rdname Access
 #' @export
@@ -659,31 +655,9 @@ nFleet <- function(x) {
 
 }
 
-## ---- nYear ----
 
-#' @rdname Access
-#' @export
-nYear <- function(x) {
-  x@nYear
-}
 
-#' @rdname Access
-#' @export
-`nYear<-` <- function(x, value) {
-  assignSlot(x, value, 'nYear')
-}
 
-#' @rdname Access
-#' @export
-nYear <- function(x) {
-  x@nYear
-}
-
-#' @rdname Access
-#' @export
-`nYear<-` <- function(x, value) {
-  assignSlot(x, value, 'nYear')
-}
 
 ## ---- Pars ----
 
@@ -758,30 +732,6 @@ pStar <- function(x) {
 
 ## ---- pYear ----
 
-#' @rdname Access
-#' @export
-pYear <- function(x) {
-  x@pYear
-}
-
-#' @rdname Access
-#' @export
-`pYear<-` <- function(x, value) {
-  assignSlot(x, value, 'pYear')
-}
-
-
-#' @rdname Access
-#' @export
-proyears <- function(x) {
-  x@pYear
-}
-
-#' @rdname Access
-#' @export
-`proyears<-` <- function(x, value) {
-  assignSlot(x, value, 'pYear')
-}
 
 
 ## ---- RecDevInit ----
@@ -1001,33 +951,6 @@ Species <- function(x) {
   assignSlot(x, value, 'Species')
 }
 
-## ---- Years ----
-
-#' @rdname Access
-#' @export
-Years <- function(x, Period=NULL) {
-  if (isS4(x)) {
-    if (inherits(x, 'mse') | inherits(x, 'hist'))
-      x <- x@OM
-    
-    Years <- x@Years
-    if (is.null(Period))
-      return(Years)
-    if (Period=='All')
-      return(Years)
-    return(CalcYears(x@nYear, x@pYear, x@CurrentYear, x@Seasons, Period))
-  }
-  
-  if (is.list(x))
-    purrr::map(x, Years, Period)
-
-}
-
-#' @rdname Access
-#' @export
-`Years<-` <- function(x, value) {
-  assignSlot(x, value, 'Years')
-}
 
 ## ---- TimeUnits ----
 

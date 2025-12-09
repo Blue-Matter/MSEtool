@@ -4,11 +4,19 @@
 #' @describeIn Populate Populate an [OM()] object
 #' @param seed Seed for the random number generator
 #' @export
-PopulateOM <- function(OM, silent=FALSE) {
+Populate <- function(OM, silent=FALSE) {
   CheckClass(OM)
   # if (CheckDigest(OM) | EmptyObject(OM))
   if (EmptyObject(OM))
     return(OM)
+  
+  if (is.null(OM@Stock))
+    cli::cli_abort(c('x'='{.var OM} must have at least one stock',
+                     'i'='See {.help MSEtool::OM} and {.help MSEtool::Stock}'))
+  
+  if (is.null(OM@Fleet))
+    cli::cli_abort(c('x'='{.var OM} must have at least one fleet',
+                     'i'='See {.help MSEtool::OM} and {.help MSEtool::Fleet}'))
   
   OM@Stock  <- PopulateStockList(OM, silent)
   OM@Fleet <- PopulateFleetList(OM, silent)

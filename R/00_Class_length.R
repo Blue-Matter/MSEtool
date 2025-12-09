@@ -149,8 +149,9 @@ Length <- function(Pars=list(Linf=NA, K=NA, t0=NA),
                    ASK=NULL,
                    Classes=NULL,
                    Misc=list()) {
-  if (methods::is(Pars, 'stock'))
-    return(Pars@Length)
+  if (!inherits(Pars, 'list')) {
+    return(Length_Access(Pars))
+  }
   
   methods::new('length',
                Pars=Pars,
@@ -168,6 +169,8 @@ Length <- function(Pars=list(Linf=NA, K=NA, t0=NA),
 }
 
 
+
+
 #' @describeIn Length Assign an `length` class object to a [Stock()] object
 #' @param x A [Stock()] class object
 #' @param value A `length` class object to assign to `x`
@@ -176,3 +179,7 @@ Length <- function(Pars=list(Linf=NA, K=NA, t0=NA),
   assignSlot(x, value, 'Length')
 }
 
+
+Length_Access <- function(object) {
+  
+}

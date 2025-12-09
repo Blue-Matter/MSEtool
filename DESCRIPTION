@@ -198,6 +198,7 @@ Collate:
     'fct_ConvertOM2obs.R'
     'fct_ConvertOM2stock.R'
     'fct_ConvertUnits.R'
+    'fct_CurrentYear.R'
     'fct_DataGenerateHistorical.R'
     'fct_DataGenerateProjection.R'
     'fct_DataHelpers.R'

@@ -29,7 +29,6 @@ AccessAge <- function(x, slot='MaxAge') {
   
   if (inherits(x, 'StockList')) {
     x <- purrr::map(x, \(stock) slot(stock@Ages, slot))
-    class(x) <- 'StockList'
     return(x)
   }
 
@@ -67,6 +66,7 @@ AssignAge <- function(x, value, slot='MaxAge') {
     
   } else if (inherits(x, 'StockList')) {
     CheckClass(value, 'list', 'value')
+    
     if (length(value)!=length(x))
       cli::cli_abort('`length(value)` must equal {.fun nStock}')
     
@@ -74,10 +74,20 @@ AssignAge <- function(x, value, slot='MaxAge') {
       slot(stock@Ages, slot) <- val
       stock
     })
+    class(x) <- 'StockList'
+    
   } else if (inherits(x, 'om')) {
-    return(Recall(x@Stock, value, slot))
+    x@Stock <- Recall(x@Stock, value, slot)
+    return(x)
   }
   
   methods::validObject(x)
   x
+}
+
+
+#' @describeIn MaxAge Return the age classes
+#' @export
+AgeClasses <- function(x) {
+  AccessAge(x, 'Classes')
 }

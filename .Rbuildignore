@@ -40,3 +40,5 @@ src\*.dll
 ^codecov\.yml$
 ^CRAN-SUBMISSION$
 
+^CaseStudies
+

@@ -250,8 +250,7 @@ CalcSeasons <- function(Units) {
          'half-year'=2,
          'quarter'=4,
          'month'=12,
-         'week'=52,
-         'day'=365)
+         'week'=52)
 }
 
 CalcYears <- function(nYear, pYear, CurrentYear, Seasons=1, Period=NULL) {

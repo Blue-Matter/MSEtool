@@ -11,7 +11,6 @@
 \alias{show,srr-method}
 \alias{show,spatial-method}
 \alias{show,depletion-method}
-\alias{show,om-method}
 \alias{show,stock-method}
 \title{Generic show method}
 \usage{
@@ -35,8 +34,6 @@ show(object)
 
 \S4method{show}{depletion}(object)
 
-\S4method{show}{om}(object)
-
 \S4method{show}{stock}(object)
 }
 \arguments{
@@ -45,8 +42,3 @@ show(object)
 \description{
 Generic show method
 }
-\section{Methods (by class)}{
-\itemize{
-\item \code{show(om)}: Print a \code{\link[=om-class]{om-class()}} object
-
-}}

@@ -5,20 +5,21 @@
 \alias{MinAge}
 \alias{MaxAge<-}
 \alias{MinAge<-}
+\alias{AgeClasses}
 \title{Access or assign the maximum or minimum age}
 \usage{
-MaxAge(object)
+MaxAge(x)
 
-MinAge(object)
+MinAge(x)
 
 MaxAge(x) <- value
 
 MinAge(x) <- value
+
+AgeClasses(x)
 }
 \arguments{
-\item{object}{An \code{\link[=Ages]{Ages()}}, \code{\link[=OM]{OM()}}, or \code{\link[=Stock]{Stock()}} object}
-
-\item{x}{An \code{\link[=Ages]{Ages()}}, \code{\link[=OM]{OM()}}, or \code{\link[=Stock]{Stock()}} object}
+\item{x}{An \code{\link[=Ages]{Ages()}}, \code{\link[=OM]{OM()}}, or \code{\link[=Stock]{Stock()}} x}
 
 \item{value}{Either a numeric value for \code{\link[=Ages]{Ages()}} or \code{\link[=Stock]{Stock()}} objects or a list of
 length \code{\link[=nStock]{nStock()}} for \code{\link[=OM]{OM()}} objects}
@@ -35,5 +36,7 @@ Access or assign the maximum or minimum age
 \item \code{MaxAge(x) <- value}: Assign a value to the \code{MaxAge} slot
 
 \item \code{MinAge(x) <- value}: Assign a value to the \code{MinAge} slot
+
+\item \code{AgeClasses()}: Return the age classes
 
 }}
