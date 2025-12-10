@@ -4,10 +4,11 @@
 \name{Populate}
 \alias{Populate}
 \alias{PopulateFleet}
+\alias{PopulateOM}
 \alias{PopulateStock}
 \title{Populate an Object}
 \usage{
-Populate(OM, silent = FALSE)
+Populate(object, ...)
 
 PopulateFleet(
   Fleet,
@@ -19,7 +20,7 @@ PopulateFleet(
   silent = FALSE
 )
 
-Populate(OM, silent = FALSE)
+PopulateOM(OM, silent = FALSE)
 
 PopulateStock(Stock, ALK = TRUE, AWK = TRUE, seed = NULL, silent = FALSE)
 }
@@ -33,7 +34,7 @@ Populate an Object
 \itemize{
 \item \code{PopulateFleet()}: Populate an \code{\link[=fleet-class]{fleet-class()}} object
 
-\item \code{Populate()}: Populate an \code{\link[=OM]{OM()}} object
+\item \code{PopulateOM()}: Populate an \code{\link[=OM]{OM()}} object
 
 \item \code{PopulateStock()}: Populate a \code{\link[=Stock]{Stock()}} object
 

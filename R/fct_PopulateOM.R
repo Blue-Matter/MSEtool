@@ -4,7 +4,7 @@
 #' @describeIn Populate Populate an [OM()] object
 #' @param seed Seed for the random number generator
 #' @export
-Populate <- function(OM, silent=FALSE) {
+PopulateOM <- function(OM, silent=FALSE) {
   CheckClass(OM)
   # if (CheckDigest(OM) | EmptyObject(OM))
   if (EmptyObject(OM))
