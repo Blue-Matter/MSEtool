@@ -73,36 +73,35 @@ CalcUnfishedNumber_seasonal <- function(OM, SP=FALSE) {
       MLastAge <- NaturalMortality[,age-1,1, drop=FALSE]
       MThisAge <- NaturalMortality[,age,1, drop=FALSE]
       PostSpawnMortalityLastAge <- Semelparous[,age-1,1]
-      
+
       Survival[,age,1] <- Survival[,age-1,1] * exp(-(MLastAge*(1-SpawnTimeFrac)+MThisAge*SpawnTimeFrac)) *
         (1-PostSpawnMortalityLastAge)
-      
+
       UnfishedNumberAtAgeStock[,age,1] <- R0[,age] * Survival[,age,1]
-      
-      if (PlusGroup && Age == MaxAgeAnnual) {
-        Survival[,age,1] <- exp(-NaturalMortality[,age,1]*OM@Seasons)
+
+      if (PlusGroup && Age == max(AgeClasses)) {
         UnfishedNumberAtAgeStock[,age,1] <- UnfishedNumberAtAgeStock[,age,1]/(1-Survival[,age,1])
       }
     }
-
+    
     for (ts in 2:length(Years)) {
       for (age in seq_along(AgeClasses)[-1]) {
         Age <- AgeClasses[age]
         MLastAge <- NaturalMortality[,age-1,ts-1, drop=FALSE]
         MThisAge <- NaturalMortality[,age,ts-1, drop=FALSE]
         PostSpawnMortalityLastAge <- Semelparous[,age-1,ts-1]
-        
+
         Survival[,age,ts] <- exp(-(MLastAge*(1-SpawnTimeFrac)+MThisAge*SpawnTimeFrac)) *
           (1-PostSpawnMortalityLastAge)
-        
+
         UnfishedNumberAtAgeStock[,age,ts] <- UnfishedNumberAtAgeStock[,age-1,ts-1, drop=FALSE] * Survival[,age, ts]
-        
-        if (PlusGroup && Age == MaxAgeAnnual) {
-          Survival[,age,ts] <- Survival[,age,ts]/(1-exp(-NaturalMortality[,age,ts]))
-          UnfishedNumberAtAgeStock[,age,ts] <- UnfishedNumberAtAgeStock[,age,ts, drop=FALSE]/Survival[,age,ts]
+
+        if (PlusGroup && Age == max(AgeClasses)) {
+          UnfishedNumberAtAgeStock[,age,ts] <- UnfishedNumberAtAgeStock[,age,ts]/(1-Survival[,age,ts])
         }
       }
     }
+
     UnfishedNumberAtAge[[st]] <- UnfishedNumberAtAgeStock
   }
   UnfishedNumberAtAge
