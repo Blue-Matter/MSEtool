@@ -204,7 +204,6 @@ SS2Stock <- function(st, RepList, YearsList, nSim) {
   Stock@Weight <- SS2Weight(st, RepList, YearsList, Ages=Stock@Ages) 
   Stock@NaturalMortality <- SS2NaturalMortality(st, RepList, YearsList, Ages=Stock@Ages)
 
-  
   Stock@Maturity <- SS2Maturity(st, RepList, YearsList, Ages=Stock@Ages) |>
     ArrayReduceDims()
   Stock@Fecundity <- SS2Fecundity(st, RepList, YearsList, Ages=Stock@Ages) |>

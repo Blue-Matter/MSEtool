@@ -6,7 +6,6 @@ ExtendAges <- function(array, AgeClasses=NULL, AgeOpt=3) {
   if (is.null(AgeClasses))
     return(array)
   
-  
   ind <- which(names(dimnames(array))=='Age')
   if (length(ind)<1)
     return(array)
@@ -15,6 +14,7 @@ ExtendAges <- function(array, AgeClasses=NULL, AgeOpt=3) {
   dnames <- dimnames(array)
   existing <- as.numeric(dnames[[ind]])
   
+  nAges <- length(AgeClasses)
   if (length(existing)==nAges)
     return(array)
   
@@ -25,7 +25,7 @@ ExtendAges <- function(array, AgeClasses=NULL, AgeOpt=3) {
 
   existingNames <- dnames[[ind]]
   Last <- existingNames[length(existingNames)] |> as.numeric()
-  AddNames <- c(Last, seq(Last+1, length.out=AddDim))
+  AddNames <- c(Last, AgeClasses[!AgeClasses%in%existingNames])
   AddDimNames <- dnames
   AddDimNames[[ind]] <- AddNames
   

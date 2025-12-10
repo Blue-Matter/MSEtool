@@ -5,8 +5,6 @@
 #' @include 00_Class_hist.R
 #' @include 00_Class_unfished.R
 #' @include 00_Class_reference.R
-#' @include 00_Class_refpointsMSY.R
-#' @include 00_Class_refpointsPR.R
 #' @include 00_Class_timeseries.R
 #' @name MSEClass
 setClass("mse",
@@ -14,12 +12,6 @@ setClass("mse",
                  MPs='list',
                  Unfished='unfished',
                  Reference='reference',
-                 
-                 RefPointsMSY='refpointsMSY', # keep for now TODO - remove
-                 RefPointsPR='refpointsPR', # keep for now TODO - remove
-                 RefLandings='array.null', # keep for now TODO - remove
-                 RefRemovals='array.null', # keep for now TODO - remove
-                 
                  Hist='timeseries',
                  PPD='list',
                  Log='list'

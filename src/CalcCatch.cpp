@@ -29,6 +29,9 @@ Rcpp::S4 CalcCatch_(Rcpp::S4 HistSimIn,
 
   List RetainAtAgeAreaList = HistSim.slot("LandingsAtAge");
   List DiscardsAtAgeAreaList = HistSim.slot("DiscardsAtAge");
+  
+  arma::cube Landings = HistSim.slot("Landings");
+  arma::cube Discards = HistSim.slot("Discards");
 
  int nStock = NumberAtAgeAreaList.size();
 
@@ -57,14 +60,13 @@ Rcpp::S4 CalcCatch_(Rcpp::S4 HistSimIn,
       arma::mat NaturalMortalityAtAge = NaturalMortality.slot("MeanAtAge"); // nAge, nTS
       
       S4 Fleet = FleetList[st];
-      // arma::cube FleetWeightAtAge = Fleet.slot("WeightFleet"); // nAge, nTS, nFleet
+      arma::cube FleetWeightAtAge = Fleet.slot("WeightFleet"); // nAge, nTS, nFleet
 
       int nAge = NumberAtAgeArea.n_rows;
       int nArea = NumberAtAgeArea.n_slices;
       int nFleet = RetainAtAgeAreaThisTS.n_cols;
 
       for (int fl=0; fl<nFleet; fl++) {
-        // arma::vec fleetweight = FleetWeightAtAge(arma::span(0, nAge-1), arma::span(TSindex), arma::span(fl)); // nAge
         for (int area=0; area<nArea; area++) {
           arma::vec ZmortalityThisArea = arma::sum(FDeadAtAgeAreaThisTS.slice(area),1) + NaturalMortalityAtAge.col(TSindex);
           arma::mat NDeadThisArea = NumberAtAgeAreaThisTS.col(area) % (1-exp(-ZmortalityThisArea)); // nAge, nFleet
@@ -74,6 +76,23 @@ Rcpp::S4 CalcCatch_(Rcpp::S4 HistSimIn,
           arma::mat RetainAtAge  = FRetain/ZmortalityThisArea % NDeadThisArea; // % fleetweight;
           RetainAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(fl), arma::span(area)) = RetainAtAge;
           DiscardsAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(fl), arma::span(area)) = RemovalAtAge - RetainAtAge;
+        }
+        
+        arma::vec fleetweight = FleetWeightAtAge(arma::span(0, nAge-1), arma::span(TSindex), arma::span(fl)); // nAge
+        arma::vec TotalLandings = arma::sum(RetainAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(fl), arma::span(0, nArea-1)),2); // summed over areas
+        arma::vec TotalDiscards = arma::sum(DiscardsAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(fl), arma::span(0, nArea-1)),2); // summed over areas
+ 
+        Landings(arma::span(st), arma::span(TSindex), arma::span(fl)) = arma::accu(TotalLandings % fleetweight);
+        Discards(arma::span(st), arma::span(TSindex), arma::span(fl)) = arma::accu(TotalDiscards % fleetweight);
+        
+        if (debug) {
+          
+          Rcout << "Fleet = " << fl << std::endl;
+          arma::vec LANDINGBYAREA = arma::sum(RetainAtAgeAreaThisTS(arma::span(0, nAge-1), arma::span(fl), arma::span(0, nArea-1)),2);
+          double TOTALLANDINGS = arma::as_scalar(Landings(arma::span(st), arma::span(TSindex), arma::span(fl)));
+          Rcout << "Landings by Area = " << LANDINGBYAREA << std::endl;
+          Rcout << "Total Landings = " << TOTALLANDINGS << std::endl;
+          
         }
       }
 
@@ -88,6 +107,8 @@ Rcpp::S4 CalcCatch_(Rcpp::S4 HistSimIn,
   
   HistSim.slot("LandingsAtAge") = RetainAtAgeAreaList;
   HistSim.slot("DiscardsAtAge") = DiscardsAtAgeAreaList;
+  HistSim.slot("Landings") = Landings;
+  HistSim.slot("Discards") = Discards;
 
   return(HistSim);
 }

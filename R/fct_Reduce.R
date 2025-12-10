@@ -6,7 +6,7 @@ ReduceHist <- function(Hist, Reduce=TRUE) {
   # TODO 
   Hist@OM <- ArrayReduceDims(Hist@OM, IncYear=FALSE)
   Hist@Unfished <- ArrayReduceDims(Hist@Unfished, IncYear=FALSE)
-  Hist@RefPointsMSY <- ArrayReduceDims(Hist@RefPointsMSY, IncYear=FALSE)
+  Hist@Reference <- ArrayReduceDims(Hist@Reference, IncYear=FALSE)
   Hist <- ReduceTimeSeries(Hist)
   
   # Hist@Number <- ArrayReduceDims(Hist@Number, IncYear = FALSE)

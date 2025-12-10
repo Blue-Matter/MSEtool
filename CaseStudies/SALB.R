@@ -2,7 +2,7 @@
 
 library(MSEtool)
 
-SSDir <- 'G:/Shared drives/BM shared/1. Projects/TOF-MSE-SALB/ALB-S_Stochastic/ALB-S_Stochastic/Condition/SS3'
+SSDir <- 'G:/Shared drives/BM shared/1. Projects/TOF-MSE-SALB/ALB-S_Stochastic/ALB-S_Stochastic/Condition/SS3/Base'
 
 RepList <- ImportSSReport(SSDir)
 
@@ -22,7 +22,14 @@ RepList <- ImportSSReport(SSDir)
 # 2. OMLibrary Package - Load Data 
 # 3. Case Study Examples 
 
-
+pYear <- 30
+Interval <- 3 
+Name <- 'Southern Atlantic Albacore'
+StockName <- "Albacore"
+Species <- "Thunnus alalunga"
+Region <- 'South Atlantic'
+Agency <- 'ICCAT'
+DataLag <- 1 # lagged by 1 year?
 
 OM <- ImportSS(RepList, 
                pYear = pYear,
@@ -35,20 +42,9 @@ OM <- ImportSS(RepList,
                DataLag=DataLag)
 
 
+Hist <- Simulate(OM)
 
-
-pYear <- 30
-
-Interval <- 3 
-Name <- 'Southern Atlantic Albacore'
-StockName <- "Albacore"
-Species <- "Thunnus alalunga"
-Region <- 'South Atlantic'
-Agency <- 'ICCAT'
-DataLag <- 1 # lagged by 1 year?
-
-
-
+LoadArgs('Simulate_om')
 
 StochasticDirs <- list.dirs(file.path(SSDir), full.names = TRUE, recursive = FALSE)
 StochasticDirs <- StochasticDirs[!grepl('Base', StochasticDirs)]
@@ -58,7 +54,7 @@ StochasticDirs <- StochasticDirs[1:3] # fewer for development
 
 
 
-Hist <- Simulate(OM)
+
 
 CompareSS_Landings(RepList, Hist, 2)
 

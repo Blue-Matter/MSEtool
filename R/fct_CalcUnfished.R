@@ -60,7 +60,6 @@ CalcDynamicUnfished <- function(SimList, silent=FALSE) {
   SimListCopy <- purrr::map(SimList, \(x) {
     nStock <- nStock(x@OM)
     for (st in 1:nStock) {
-      x@OM@Stock[[st]]@SRR@RecDevProj[] <- tiny
       x@OM@Fleet[[st]]@Catchability[] <- tiny
       x@OM@Fleet[[st]]@qArea[] <- tiny
     }
@@ -139,6 +138,7 @@ CalcDynamicUnfished <- function(SimList, silent=FALSE) {
     nStock <- nStock(x@OM)
     for (st in 1:nStock) {
       x@OM@Fleet[[st]]@Catchability[] <- y@OM@Fleet[[st]]@Catchability[]
+      x@OM@Fleet[[st]]@qArea[] <- y@OM@Fleet[[st]]@qArea[]
     }
     x
   })

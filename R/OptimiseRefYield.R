@@ -43,7 +43,6 @@ CalcRefLandings <- function(SimList, HistYears, ProjYears, type=c('Landings', 'R
   SimList_Extended <- purrr::map(SimList, \(ProjSim) 
                         ExtendHist(ProjSim)
                         )
-  
   bounds <- c(1E-5, ProjSim@OM@maxF)
   SimList_Extended <- purrr::map(SimList_Extended, \(ProjSim) {
     doOpt <- optimize(OptRefLandings,
@@ -112,12 +111,13 @@ OptRefLandings <- function(logF, ProjSim, HistYears, ProjYears, type=c('Landings
   PopDynamicsProject <- ProjSim |>
     PopulateNumberNext_(LastHistTS) |>
     SimulateDynamics_(ProjYears)
- 
+  
+  
   if (type=='Landings') {
-    Yield <- PopDynamicsProject@Landings[[st]] |> List2Array("Year")
+    Yield <- PopDynamicsProject@Landings
   } else {
-    Landings <- PopDynamicsProject@LandingsAtAge[[st]] |> List2Array("Year")
-    Discards <- PopDynamicsProject@DiscardsAtAge[[st]] |> List2Array("Year")
+    Landings <- PopDynamicsProject@Landings
+    Removals <- Landings + PopDynamicsProject@Discards
     Yield <- Landings+Discards
   }
   
@@ -126,13 +126,13 @@ OptRefLandings <- function(logF, ProjSim, HistYears, ProjYears, type=c('Landings
     lastnTS <- 5
   
   dd <- dim(Yield)
-  nTS <- dd[4]
+  nTS <- dd[2]
   if (lastnTS >nTS)
     lastnTS <- nTS
   
   TSmean <- (nTS-lastnTS+1):nTS
   
-  -mean(apply(Yield[,,,TSmean,drop=FALSE], 4, sum))
+  -mean(apply(Yield[,TSmean,,drop=FALSE], 2, sum))
   
 }
 

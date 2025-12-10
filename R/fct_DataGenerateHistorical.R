@@ -96,7 +96,8 @@ GenerateHistoricalData_Effort <- function(Data, HistSim, HistYears, i, stocks) {
   
 GenerateHistoricalData_Catch <- function(Data, HistSim, HistYears, i, 
                                          stocks, type=c('Landings', 'Discards')) {
-  type <- match.arg(type)
+  type <- match.arg(type, c('Landings', 'Discards'))
+  
   if (!EmptyObject(slot(Data, type))) 
     return(Data)
   
@@ -113,13 +114,7 @@ GenerateHistoricalData_Catch <- function(Data, HistSim, HistYears, i,
   CatchData@CV <- CatchData@Value 
   CatchData@CV[] <- 0.2
   
-  Catch  <- purrr::map(slot(HistSim, type)[stocks], \(catch) 
-                       catch |> List2Array() |> apply(c(2,4), sum) |> t()
-  ) |> List2Array('Stock') |>
-    apply(1:2, sum)
-  dimnames(Catch) <- list(Year=HistYears, 
-                          Fleet=FleetNames)
-  
+  Catch  <- apply(slot(HistSim, type)[stocks,,,drop=FALSE], c('Year', 'Fleet'), sum)
   
   for (fl in 1:nFleet) {
     Obs <- HistSim@OM@Obs[[i]][[fl]]

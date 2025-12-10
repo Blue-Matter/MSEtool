@@ -228,28 +228,29 @@ S4 CalcAggregateF_(S4 HistSimIn,
       arma::cube DiscardsTS = DiscardsStock[TSindex]; // nAge, nFleet, nArea
       arma::cube FleetWeightAtAge = Fleet.slot("WeightFleet") ; // nAge, nTS, nFleet
       
-      int nAge = LandingsTS.n_rows;
-      int nFleet = LandingsTS.n_cols;
-      int nArea = LandingsTS.n_slices;
+      // int nAge = LandingsTS.n_rows;
+      // int nFleet = LandingsTS.n_cols;
+      // int nArea = LandingsTS.n_slices;
       
-      arma::mat RemovalNumberAtAge(nAge, nFleet);
-      arma::mat RetainNumberAtAge(nAge, nFleet);
+      // sum over areas
+      arma::mat RemovalNumberAtAge = arma::sum(LandingsTS+DiscardsTS,2);
+      arma::mat RetainNumberAtAge = arma::sum(LandingsTS,2);
       
-      // convert to Catch in Numbers
-      if (debug) 
-        Rcout << "Catch in Numbers = " << std::endl;
-      
-      for (int area=0; area<nArea; area++) {
-        for (int fl=0; fl<nFleet; fl++) {
-          arma::vec landings = arma::vectorise(LandingsTS.subcube(arma::span(0, nAge-1), arma::span(fl), arma::span(area)));
-          arma::vec discards = arma::vectorise(DiscardsTS.subcube(arma::span(0, nAge-1), arma::span(fl), arma::span(area)));
-          arma::vec removals = landings + discards;
-          
-          arma::vec weight = arma::vectorise(FleetWeightAtAge.subcube(arma::span(0, nAge-1), arma::span(TSindex), arma::span(fl)));
-          RemovalNumberAtAge.col(fl) = removals/weight;
-          RetainNumberAtAge.col(fl) = landings/weight;
-        }  
-      }
+      // // convert to Catch in Numbers
+      // if (debug) 
+      //   Rcout << "Catch in Numbers = " << std::endl;
+      // 
+      // for (int area=0; area<nArea; area++) {
+      //   for (int fl=0; fl<nFleet; fl++) {
+      //     arma::vec landings = arma::vectorise(LandingsTS.subcube(arma::span(0, nAge-1), arma::span(fl), arma::span(area)));
+      //     arma::vec discards = arma::vectorise(DiscardsTS.subcube(arma::span(0, nAge-1), arma::span(fl), arma::span(area)));
+      //     arma::vec removals = landings + discards;
+      //     
+      //     arma::vec weight = arma::vectorise(FleetWeightAtAge.subcube(arma::span(0, nAge-1), arma::span(TSindex), arma::span(fl)));
+      //     RemovalNumberAtAge.col(fl) = removals/weight;
+      //     RetainNumberAtAge.col(fl) = landings/weight;
+      //   }  
+      // }
       
       List FDeadAtAgeAreaStock = FDeadAtAgeAreaList[st];
       List FRetainAtAgeAreaStock = FRetainAtAgeAreaList[st];

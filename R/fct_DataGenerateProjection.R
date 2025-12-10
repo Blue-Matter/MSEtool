@@ -105,25 +105,25 @@ GenerateProjectionData_Catch <- function(ProjSim, DataYear, YearsAll, i,
     return(ProjSim)
   
   FleetNames <- DataCatch@Name
-  SimCatchList <- purrr::map(slot(ProjSim, type)[stocks], \(catch) 
+  SimCatchList <- purrr::map(slot(ProjSim, paste0(type,'AtAge'))[stocks], \(catch) 
                              catch[[as.character(DataYear)]] 
   )
   
-  SimCatch_Biomass <- purrr::map(SimCatchList, \(Stock) apply(Stock, 2, sum)) |> 
+  # catch number
+  SimCatch_Number <- List2Array(SimCatchList, 'Stock') |>
+    apply(c(4,2), sum)
+  dimnames(SimCatch_Number) <- list(Year=DataYear, Fleet=FleetNames)
+  
+  
+  # catch biomass
+  SimCatch_Biomass <- purrr::map2(SimCatchList, ProjSim@OM@Fleet, \(Catch, Fleet) {
+    fleetweight <- Fleet@WeightFleet |> ArraySubsetYear(DataYear) |> DropDimension('Year')
+    catch <- apply(Catch, 1:2, sum) 
+    apply(catch*fleetweight, 2, sum)
+  }) |>
     List2Array('Stock', 'Fleet') |> rowSums() |> t()
-  dimnames(SimCatch_Biomass) <- list(Year=DataYear, Fleet=FleetNames)
+  dimnames(SimCatch_Number) <- list(Year=DataYear, Fleet=FleetNames)
   
-  if (any(DataCatch@Units=='Number')) {
-    SimCatch_Number <- purrr::map2(SimCatchList, ProjSim@OM@Fleet, \(Catch, Fleet) {
-      fleetweight <- Fleet@WeightFleet |> ArraySubsetYear(DataYear) |> DropDimension('Year')
-      catch <- apply(Catch, 1:2, sum) 
-      apply(catch/fleetweight, 2, sum)
-    }) |>
-      List2Array('Stock', 'Fleet') |> rowSums() |> t()
-    dimnames(SimCatch_Number) <- list(Year=DataYear, Fleet=FleetNames)
-  }
-  
- 
   Value <- DataCatch@Value
   CV <- DataCatch@CV
   
