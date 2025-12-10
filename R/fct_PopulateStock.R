@@ -508,15 +508,20 @@ PopulateSpatial <- function(Spatial,
     Spatial@RelativeSize <- AddDimNames(array(1, dim=c(1,1)), 
                                         DimNames[1:2], Years=Years)
     Spatial@ProbStaying <- AddDimNames(array(1, dim=c(1,1,1,1)), 
-                                       DimNames, Years=Years)
+                                       DimNames, Years=Years,
+                                       Ages=Ages@Classes[1])
     Spatial@FracOther <- AddDimNames(array(1, dim=c(1,1,1,1,1)),
                                      c("Sim",'FromArea', 'ToArea','Age', 'Year'), 
-                                     Years=Years)
+                                     Years=Years,
+                                     Ages=Ages@Classes[1])
     Spatial@UnfishedDist  <- AddDimNames(array(1, dim=c(1,1,1,1)),
-                                         DimNames, Years=Years)
+                                         DimNames, 
+                                         Years=Years,
+                                         Ages=Ages@Classes[1])
     Spatial@Movement  <- AddDimNames(array(1, dim=c(1,1,1,1,1)),
                                      c("Sim",'FromArea', 'ToArea','Age', 'Year'),
-                                     Years=Years)
+                                     Years=Years,
+                                     Ages=Ages@Classes[1])
     return(SetDigest(Spatial, argList))
   }
   
