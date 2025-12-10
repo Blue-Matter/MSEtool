@@ -176,10 +176,17 @@ Length <- function(Pars=list(Linf=NA, K=NA, t0=NA),
 #' @param value A `length` class object to assign to `x`
 #' @export
 `Length<-` <- function(x, value) {
-  assignSlot(x, value, 'Length')
+  CheckClass(x, 'stock')
+  x@Length <- value
+  x
 }
 
 
 Length_Access <- function(object) {
   
+  if (inherits(object, 'stock'))
+    return(object@Length)
+  
+  if (inherits(object, 'length'))
+    return(object)
 }
