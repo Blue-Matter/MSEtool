@@ -791,7 +791,7 @@ SS2SRR <- function(st, RepList, YearsList, Ages, nSim) {
                                            Ages = Ages,
                                            HistTS=YearsList$YearsHist, 
                                            ProjTS=YearsList$YearsProj,
-                                           nsim=nSim,
+                                           nSim,
                                            RecDevInit=SRR@RecDevInit,
                                            RecDevHist=SRR@RecDevHist)
   
@@ -975,7 +975,7 @@ SS2DiscardMortality <- function(st, fl, RepList, YearsList, Stock) {
     object=DiscardMortality, 
     Length=Stock@Length,
     Ages=Stock@Ages, 
-    nsim=Stock@nSim,
+    nSim=Stock@nSim,
     Years = YearsList$YearsHist,
     max1=FALSE)
   

@@ -7,7 +7,6 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
   
   BySim <- 'Sim' %in% names(dimnames(ASK))
   
-  
   if (dim(MeanAtAge)[AgeDim]<30) { # arbitrary number!
     # Generate higher resolution length-at-age
     # linear interpolate Mean length-at-age and CV length-at-age
@@ -35,7 +34,7 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
     dname1$Sim <- 1:dd[1]
     dimnames(LengthMeanAtAge) <- dname1
     
-    Length@CVatAge <- ArrayExpand(Length@CVatAge, dd[1], dd[2], dname1[["Year"]])
+    Length@CVatAge <- ArrayExpand(Length@CVatAge, dd[1], ages, dname1[["Year"]])
     dname1 <- dimnames(Length@CVatAge)
     dname1[["Age"]] <- seq(from=ages[1], to=ages[length(ages)], length.out=SubAgeDim)
     TSteps <- c(dimnames(MeanAtAge)[[3]], dimnames(Length@CVatAge)[[3]]) |> unique() |> sort()
@@ -45,7 +44,7 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
     
     ind <- seq(from=1, by=nSubAges, to=dim(LengthMeanAtAge)[2])
     
-    MeanAtAge <-ArrayExpand(MeanAtAge, dd[1], nAges=dd[2], Years=TSteps)
+    MeanAtAge <-ArrayExpand(MeanAtAge, dd[1], ages, Years=TSteps)
     
     objectMeanAtAge[,ind,] <- MeanAtAge[]
     LengthMeanAtAge[,ind,] <- Length@MeanAtAge[]

@@ -110,7 +110,7 @@ PopulateLength <- function(Length,
   Length <- PopulateRandom(Length)
   Length@CVatAge <- StructureCV(Length@CVatAge, nSim)
   dd <- dim(Length@CVatAge)
-  if (!is.null(dimnames(Length@CVatAge)))
+  if (is.null(dimnames(Length@CVatAge)))
     dimnames(Length@CVatAge) <- list(Sim=(1:nSim)[1:dd[1]],
                                      Age=Ages@Classes[1:dd[2]],
                                      Year=Years[1:dd[3]])
