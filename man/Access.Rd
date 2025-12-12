@@ -218,7 +218,7 @@ Longitude(x)
 
 Longitude(x) <- value
 
-nAge(x, st = 1)
+nAge(x, st = NULL)
 
 nTS(x)
 
