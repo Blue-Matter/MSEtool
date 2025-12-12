@@ -649,39 +649,50 @@ SPRMSY <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), Years=NULL, Expand=FALS
 # ---- Landings ----
 
 CatchHist <- function(Hist, byAge=FALSE, byFleet=FALSE, byArea=FALSE, 
+                      units=c('Weight', 'Number'),
                       type=c('Landings', 'Discards'),
                       disctype=c('dead', 'alive', 'all')) {
-  type <- match.arg(type)
-  disctype <- match.arg(disctype)
+  
+  units <- match.arg(units, c('Number', 'Weight'))
+  type <- match.arg(type, c('Landings', 'Discards'))
+  disctype <- match.arg(disctype, c('dead', 'alive', 'all'))
+  
   
   CheckClass(Hist, c('hist', 'mse'))
   
   HistYear <- Years(Hist@OM, "Historical")
   
   if (inherits(Hist,'mse')) {
-    Value <- slot(Hist@Hist, type)
+    Value <- slot(Hist@Hist, paste0(type, 'AtAge'))
   } else {
-    Value <- slot(Hist,type)
+    Value <- slot(Hist,paste0(type, 'AtAge'))
   }
   
   varname <- type
   if (type=='Discards') {
     varname <- paste0(type, ' (',disctype,')')
+    
+    if (disctype=='alive' | disctype=='all') {
+      DiscardMortality <- purrr::map(Hist@OM@Fleet, \(fleet) fleet@DiscardMortality@MeanAtAge |>
+                                       ArraySubsetYear(HistYear) |>
+                                       AddDimension('Area')
+      )
+      DiscardsAll <- purrr::map2(Value, DiscardMortality, ArrayDivide)
+      DiscardsAlive <- purrr::map2(DiscardsAll, Value, ArraySubtract)
+      
+      if (disctype=='alive') {
+        Value <- DiscardsAlive
+      } else {
+        Value <- DiscardsAll
+      }
+    }
   }
   
-  if (disctype=='alive' | disctype=='all') {
-    DiscardMortality <- purrr::map(Hist@OM@Fleet, \(fleet) fleet@DiscardMortality@MeanAtAge |>
-                                     ArraySubsetYear(HistYear) |>
-                                     AddDimension('Area')
-    )
-    DiscardsAll <- purrr::map2(Value, DiscardMortality, ArrayDivide)
-    DiscardsAlive <- purrr::map2(DiscardsAll, Value, ArraySubtract)
-    
-    if (disctype=='alive') {
-      Value <- DiscardsAlive
-    } else {
-      Value <- DiscardsAll
-    }
+  if (units=='Weight') {
+    Value <- purrr::map2(Hist@OM@Fleet, Value, \(fleet, numbers) {
+      fleetWeight <- fleet@WeightFleet |> AddDimension('Area')
+      ArrayMultiply(fleetWeight, numbers)
+    })
   }
   
   Value <- purrr::map(Value, \(stock) {
@@ -707,7 +718,8 @@ CatchHist <- function(Hist, byAge=FALSE, byFleet=FALSE, byArea=FALSE,
       stock <- apply(stock, c('Sim', 'Year'), sum)
     }
     stock
-  }) |> List2Array('Stock') 
+  }) |> 
+    List2Array('Stock') 
   
   dnames <- c('Stock', Value |> dimnames() |> names())
   order <- c('Sim', 'Stock', 'Age', 'Year', 'Fleet', 'Area')
@@ -729,15 +741,17 @@ CatchHist <- function(Hist, byAge=FALSE, byFleet=FALSE, byArea=FALSE,
   
 }
 
-CatchValues <- function(MSE, byAge=FALSE, byFleet=FALSE, byArea=FALSE, type=c('Landings', 'Discards'),
+CatchValues <- function(MSE, byAge=FALSE, byFleet=FALSE, byArea=FALSE, 
+                        units=c('Weight', 'Number'),
+                        type=c('Landings', 'Discards'),
                         disctype=c('dead', 'alive', 'all')) {
-  
+  units <- match.arg(units, c('Weight', 'Number'))
   type <- match.arg(type,c('Landings', 'Discards'))
   disctype <- match.arg(disctype, c('dead', 'alive', 'all'))
   
   CheckClass(MSE, c('mse', 'hist'), 'MSE')
   
-  HistValues <- CatchHist(MSE, byAge, byFleet, byArea,type, disctype)
+  HistValues <- CatchHist(MSE, byAge, byFleet, byArea, units, type, disctype)
   HistYear <- Years(MSE@OM, "Historical")
   
   if (inherits(MSE, 'hist')) 
@@ -751,23 +765,30 @@ CatchValues <- function(MSE, byAge=FALSE, byFleet=FALSE, byArea=FALSE, type=c('L
   varname <- type
   if (type=='Discards') {
     varname <- paste0(type, ' (', disctype, ')')
+    
+    if (disctype=='alive' | disctype=='all') {
+      DiscardMortality <- purrr::map(MSE@OM@Fleet, \(fleet) fleet@DiscardMortality@MeanAtAge |>
+                                       ArraySubsetYear(HistYear) |>
+                                       AddDimension('Area') |>
+                                       AddDimension('MP') |>
+                                       ArraySubsetYear(ProjYear)
+      )
+      DiscardsAll <- purrr::map2(Value, DiscardMortality, ArrayDivide)
+      DiscardsAlive <- purrr::map2(DiscardsAll, Value, ArraySubtract)
+      
+      if (disctype=='alive') {
+        Value <- DiscardsAlive
+      } else {
+        Value <- DiscardsAll
+      }
+    }
   }
   
-  if (disctype=='alive' | disctype=='all') {
-    DiscardMortality <- purrr::map(MSE@OM@Fleet, \(fleet) fleet@DiscardMortality@MeanAtAge |>
-                                     ArraySubsetYear(HistYear) |>
-                                     AddDimension('Area') |>
-                                     AddDimension('MP') |>
-                                     ArraySubsetYear(ProjYear)
-    )
-    DiscardsAll <- purrr::map2(Value, DiscardMortality, ArrayDivide)
-    DiscardsAlive <- purrr::map2(DiscardsAll, Value, ArraySubtract)
-    
-    if (disctype=='alive') {
-      Value <- DiscardsAlive
-    } else {
-      Value <- DiscardsAll
-    }
+  if (units=='Weight') {
+    Value <- purrr::map2(Hist@OM@Fleet, Value, \(fleet, numbers) {
+      fleetWeight <- fleet@WeightFleet |> AddDimension('Area')
+      ArrayMultiply(fleetWeight, numbers)
+    })
   }
   
   Value <- purrr::map(Value, \(stock) {
@@ -828,27 +849,31 @@ CatchValues <- function(MSE, byAge=FALSE, byFleet=FALSE, byArea=FALSE, type=c('L
 
 #' @describeIn Biomass Landings
 #' @export
-Landings <- function(MSE, byAge=FALSE, byFleet=FALSE, byArea=FALSE) {
-  CatchValues(MSE, byAge, byFleet, byArea, 'Landings')
+Landings <- function(MSE, byAge=FALSE, byFleet=FALSE, byArea=FALSE,
+                     units=c('Weight', 'Number')) {
+  CatchValues(MSE, byAge, byFleet, byArea, units, 'Landings')
 }
 
 # ---- Discards ----
 
 #' @describeIn Biomass Discards
 #' @export
-Discards <- function(MSE, byAge=FALSE, byFleet=FALSE, byArea=FALSE, type=c('dead', 'alive', 'all')) {
-  CatchValues(MSE, byAge, byFleet, byArea, 'Discards', disctype=type)
+Discards <- function(MSE, byAge=FALSE, byFleet=FALSE, byArea=FALSE, 
+                     units=c('Weight', 'Number'),
+                     type=c('dead', 'alive', 'all')) {
+  CatchValues(MSE, byAge, byFleet, byArea, units, 'Discards', disctype=type)
 }
 
 # ---- Removals ----
 
 #' @describeIn Biomass Dead Removals (Landings + Dead Discards)
 #' @export
-Removals <- function(MSE,  byAge=FALSE, byFleet=FALSE, byArea=FALSE) {
+Removals <- function(MSE,  byAge=FALSE, byFleet=FALSE, byArea=FALSE,
+                     units=c('Weight', 'Number')) {
   CheckClass(MSE, c('mse', 'hist'), 'MSE')
   
-  Removals <- Landings(MSE, byAge, byFleet, byArea)
-  Discards <- Discards(MSE, byAge, byFleet, byArea)
+  Removals <- Landings(MSE, byAge, byFleet, byArea, units)
+  Discards <- Discards(MSE, byAge, byFleet, byArea, units)
   
   Removals$Value <- Removals$Value + Discards$Value
   DF <- suppressMessages(dplyr::left_join(Removals, Discards))

@@ -235,7 +235,7 @@ GenerateProjectionData_Index <- function(ProjSim, DataYear, YearsHist, YearsAll,
       if (is.character(SelectivityAtAge)) {
         if (SelectivityAtAge == 'Biomass') {
           for (st in seq_along(stocks)) {
-            SelectivityAtAgeList[[st]] <- matrix(1,nAge(ProjSim@OM, stocks[st]), 1) |>
+            SelectivityAtAgeList[[st]] <- matrix(1,nAge(ProjSim@OM, st), 1) |>
               AddDimNames(c('Age', 'Year'), DataYear)
           }
         } else if (SelectivityAtAge == 'SBiomass') {

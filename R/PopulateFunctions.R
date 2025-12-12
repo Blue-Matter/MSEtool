@@ -109,7 +109,7 @@ PopulateMeanAtAge <- function(object, Ages=NULL, Years=NULL, Length=NULL) {
       # chk <- Check(Length)
       # if(!chk@populated) {
       #   CheckRequiredObject(Ages, 'ages', 'Ages')
-      #   Length <- Populate(Length, Ages, nsim, Years, seed, ASK=TRUE, silent)
+      #   Length <- Populate(Length, Ages, nSim, Years, seed, ASK=TRUE, silent)
       # }
       object@MeanAtAge <- GenerateMeanatLength(Model=object@Model,
                                                Pars=object@Pars,
@@ -128,9 +128,20 @@ PopulateMeanAtAge <- function(object, Ages=NULL, Years=NULL, Length=NULL) {
       
     }
     dd <- dim(object@MeanAtAge)
+    yearnames <- purrr::map(object@Pars, \(par) {
+      dimnames(par)$Year
+    }) |> unlist() |> unique()
+    
+    if (is.null(yearnames)) {
+      yearnames <- Years[1:dd[3]]
+    }
+    
+    if (length(yearnames) != dd[3]) 
+      cli::cli_abort('Names for `Year` dimension do not match length of `Year` dimension', .internal=TRUE)
+    
     dimnames(object@MeanAtAge) <- list(Sim=1:dd[1],
                                        Age=Ages@Classes[1:dd[2]],
-                                       Year=Years[1:dd[3]])
+                                       Year=yearnames)
   }
   object
 }
@@ -139,7 +150,7 @@ PopulateMeanAtLength <- function(object,
                                  Length=NULL, 
                                  Years=NULL, 
                                  Ages=NULL, 
-                                 nsim=NULL,
+                                 nSim=NULL,
                                  seed=NULL, silent) {
   
   if (is.null(object@Model))
@@ -163,7 +174,7 @@ PopulateMeanAtLength <- function(object,
       # chk <- Check(Length)
       # if(!chk@populated) {
       #   CheckRequiredObject(Ages, 'ages', 'Ages')
-      #   Length <- Populate(Length, Ages, nsim, Years, seed, ASK=TRUE, silent)
+      #   Length <- Populate(Length, Ages, nSim, Years, seed, ASK=TRUE, silent)
       # }
     }
     object@MeanAtLength <- GenerateMeanatLength(Model=object@Model,
@@ -194,7 +205,7 @@ PopulateMeanAtWeight <- function(object,
                                  Weight=NULL, 
                                  Years=NULL, 
                                  Ages=NULL, 
-                                 nsim=NULL,
+                                 nSim=NULL,
                                  seed=NULL, silent) {
   
   if (is.null(object@Model))
@@ -218,7 +229,7 @@ PopulateMeanAtWeight <- function(object,
       # chk <- Check(Length)
       # if(!chk@populated) {
         # CheckRequiredObject(Ages, 'ages', 'Ages')
-        # Weight <- Populate(Weight, Ages, nsim, Years, seed, ASK=TRUE, silent)
+        # Weight <- Populate(Weight, Ages, nSim, Years, seed, ASK=TRUE, silent)
       # }
     }
     object@MeanAtWeight <- GenerateMeanatWeight(Model=object@Model,
@@ -246,12 +257,18 @@ PopulateMeanAtWeight <- function(object,
 
 
 
-StructureCV <- function(CVatAge, nsim) {
+
+StructureCV <- function(CVatAge, nSim) {
+  
+  
   if (is.null(dim(CVatAge))) {
     if (length(CVatAge)==1)
       return(Structure(CVatAge))
     if (length(CVatAge)==2) {
-      return(Structure(StructurePars_(CVatAge, nsim)))
+      return(Structure(StructurePars_(CVatAge, nSim)))
+    }
+    if (length(CVatAge)==nSim) {
+      CVatAge <- array(CVatAge, dim=nSim)
     }
   } 
   Structure(CVatAge)
@@ -283,7 +300,7 @@ ShareParameters <- function(OM) {
   
   if (length(OM@SexPars@Herm)) {
     stop('Herm not done yet!')
-    # SexPars$Herm <- checkHerm(SexPars$Herm, maxage, nsim, nyears, proyears)
+    # SexPars$Herm <- checkHerm(SexPars$Herm, maxage, nSim, nyears, proyears)
   }
   
   # TODO - remove SPFrom if it remains in SRR
@@ -366,6 +383,9 @@ PopulateClasses <- function(object) {
   if (!EmptyObject(object@Classes))
     return(object)
   
+  if (is.null(object@MeanAtAge))
+    return(object)
+  
   MaxBin <- CalcMaxBin(MeanAtAge=object@MeanAtAge, 
                        CVatAge=object@CVatAge, 
                        TruncSD=object@TruncSD, 
@@ -413,11 +433,11 @@ PopulateASK <- function(object, Ages=NULL, Years=NULL, silent=FALSE, type='Lengt
   object
 }
 
-CalculateRelativeSize <- function(Spatial, nsim) {
+CalculateRelativeSize <- function(Spatial, nSim) {
   nareas <- dim(Spatial@UnfishedDist)[2]
   
   if (!is.null(Spatial@RelativeSize) & !methods::is(Spatial@RelativeSize, 'character')) {
-    Spatial@RelativeSize <- StructurePars(list(Spatial@RelativeSize),nsim)[[1]]
+    Spatial@RelativeSize <- StructurePars(list(Spatial@RelativeSize),nSim)[[1]]
     dd <- dim(Spatial@RelativeSize)
     if (dd[2]>nareas)
       cli::cli_abort('`RelativeSize` is longer than `nAreas` ({.val {nareas}})')
@@ -507,16 +527,16 @@ CheckSelectivityMaximum <- function(MeanAtAge) {
 
 
 
-GenerateHistoricalEffort <- function(Effort, nsim=NULL, Years=NULL) {
+GenerateHistoricalEffort <- function(Effort, nSim=NULL, Years=NULL) {
   if (!methods::is(Effort, 'data.frame'))
     cli::cli_abort('`Effort` must be a data.frame')
   
   if (!all(names(Effort) %in% c("Year", "Lower", "Upper", "CV" )))
     cli::cli_abort('`Effort` must be a data.frame with columns: "Year", "Lower", "Upper", "CV" ')
   
-  if (is.null(nsim)) {
-    cli::cli_warn('`nsim` not specified, assuming `nsim=100`')
-    nsim <- 100
+  if (is.null(nSim)) {
+    cli::cli_warn('`nSim` not specified, assuming `nSim=100`')
+    nSim <- 100
   }
   
   
@@ -537,9 +557,9 @@ GenerateHistoricalEffort <- function(Effort, nsim=NULL, Years=NULL) {
   
   nYears <- length(Years)
   
-  EffortPoints <- mapply(runif, n = nsim, min = Effort$Lower, max = Effort$Upper)  # sample Effort
-  if (nsim>1) {
-    EffortTS <- t(sapply(1:nsim, function(x) 
+  EffortPoints <- mapply(runif, n = nSim, min = Effort$Lower, max = Effort$Upper)  # sample Effort
+  if (nSim>1) {
+    EffortTS <- t(sapply(1:nSim, function(x) 
       approx(x = Effort$Year,
              y = EffortPoints[x, ], 
              method = "linear", 
@@ -555,21 +575,21 @@ GenerateHistoricalEffort <- function(Effort, nsim=NULL, Years=NULL) {
   Esd <- Effort$CV[1]
   if (!is.null(Esd)) {
     Emu <- -0.5 * Esd^2
-    EffortError <- array(exp(rnorm(nYears * nsim, rep(Emu, nYears), 
+    EffortError <- array(exp(rnorm(nYears * nSim, rep(Emu, nYears), 
                                    rep(Esd, nYears))), 
-                         c(nsim, nYears))  
+                         c(nSim, nYears))  
     EffortTS <- EffortTS * EffortError
   }
   EffortTS <- EffortTS |> AddDimNames(names=c('Sim', 'Year'), 
                                       Years = Years)
   
-  EffortTS/matrix(EffortTS[,nYears], nsim, nYears, byrow=FALSE)
+  EffortTS/matrix(EffortTS[,nYears], nSim, nYears, byrow=FALSE)
 }
 
 
 
 
-MeanAtLength2MeanAtAge <- function(object, Length, Ages, nsim, Years, seed, silent,
+MeanAtLength2MeanAtAge <- function(object, Length, Ages, nSim, Years, seed, silent,
                                    max1=TRUE) {
   if (!is.null(object@MeanAtAge))
     return(object)
@@ -624,7 +644,7 @@ MeanAtLength2MeanAtAge <- function(object, Length, Ages, nsim, Years, seed, sile
   object
 }
 
-MeanAtWeight2MeanAtAge <- function(object, Weight, Ages, nsim, Years, seed, silent,
+MeanAtWeight2MeanAtAge <- function(object, Weight, Ages, nSim, Years, seed, silent,
                                    max1=TRUE) {
   if (!is.null(object@MeanAtAge))
     return(object)
@@ -658,7 +678,7 @@ MeanAtWeight2MeanAtAge <- function(object, Weight, Ages, nsim, Years, seed, sile
   object
 }
 
-MeanAtAge2MeanAtLength <- function(object, Length, Ages, nsim, Years, seed=NULL, silent=TRUE, replace=FALSE) {
+MeanAtAge2MeanAtLength <- function(object, Length, Ages, nSim, Years, seed=NULL, silent=TRUE, replace=FALSE) {
   
   if (!is.null(object@MeanAtLength) & !replace)
     return(object)
@@ -674,7 +694,7 @@ MeanAtAge2MeanAtLength <- function(object, Length, Ages, nsim, Years, seed=NULL,
     return(object)
   
   if (is.null(Length@ASK)) {
-    Length <- PopulateLength(Length, Ages, nsim, Years, seed, ASK=TRUE, silent)
+    Length <- PopulateLength(Length, Ages, Years, nSim, seed, ASK=TRUE, silent)
   }
   
   object@MeanAtLength <- AtAge2AtSize(object, Length)
@@ -692,7 +712,7 @@ MeanAtAge2MeanAtLength <- function(object, Length, Ages, nsim, Years, seed=NULL,
   
 }
 
-MeanAtAge2MeanAtWeight <- function(object, Weight, Ages, nsim, Years, seed, silent) {
+MeanAtAge2MeanAtWeight <- function(object, Weight, Ages, nSim, Years, seed, silent) {
   if (!is.null(object@MeanAtLength))
     return(object)
   

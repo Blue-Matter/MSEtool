@@ -3,17 +3,17 @@ ApplyCustomAtAgeModel <- function(Model, Pars, Ages) {
   nSimnTS <- cbind(unlist(lapply(Pars, nSim)),    
                    unlist(lapply(Pars, nTS)))
   
-  nsim <- max(nSimnTS[,1])
+  nSim <- max(nSimnTS[,1])
   nTS <- max(nSimnTS[,2])
   
   tsind <- which.max(nSimnTS[,2])
   TSnames <- dimnames(Pars[[tsind]])
   
-  out <- array(0, dim=c(nsim, length(Ages), nTS))
+  out <- array(0, dim=c(nSim, length(Ages), nTS))
   l <- Pars
   l$Ages <- Ages
   
-  for (s in 1:nsim) {
+  for (s in 1:nSim) {
     for (ts in 1:nTS) {
       for (arg in 1:nrow(nSimnTS)) {
         l[[arg]] <- Pars[[arg]][GetIndex(s, nSimnTS[arg,1]), GetIndex(ts, nSimnTS[arg,2])]
@@ -21,7 +21,7 @@ ApplyCustomAtAgeModel <- function(Model, Pars, Ages) {
       out[s,,ts] <- do.call(Model, l)
     }
   }
-  dimnames(out) <- list(Sim=1:nsim,
+  dimnames(out) <- list(Sim=1:nSim,
                         Age=Ages,
                         Year=TSnames$Year)
   out
@@ -31,17 +31,17 @@ ApplyCustomAtLengthModel <- function(Model, Pars, Length) {
   nSimnTS <- cbind(unlist(lapply(Pars, nSim)),    
                    unlist(lapply(Pars, nTS)))
   
-  nsim <- max(nSimnTS[,1])
+  nSim <- max(nSimnTS[,1])
   nTS <- max(nSimnTS[,2])
   
   tsind <- which.max(nSimnTS[,2])
   TSnames <- dimnames(Pars[[tsind]])
   
-  out <- array(0, dim=c(nsim, length(Length), nTS))
+  out <- array(0, dim=c(nSim, length(Length), nTS))
   l <- Pars
   l$Length <- Length
   
-  for (s in 1:nsim) {
+  for (s in 1:nSim) {
     for (ts in 1:nTS) {
       for (arg in 1:nrow(nSimnTS)) {
         l[[arg]] <- Pars[[arg]][GetIndex(s, nSimnTS[arg,1]), GetIndex(ts, nSimnTS[arg,2])]
@@ -49,7 +49,7 @@ ApplyCustomAtLengthModel <- function(Model, Pars, Length) {
       out[s,,ts] <- do.call(Model, l)
     }
   }
-  dimnames(out) <- list(Sim=1:nsim,
+  dimnames(out) <- list(Sim=1:nSim,
                         Class=Length,
                         Year=TSnames$Year)
   out
@@ -142,7 +142,7 @@ GenerateSRR <- function(Model, Pars, S=NULL, S0=NULL) {
 }
 
 
-GenerateStochasticnVessels <- function(nVessels, nsim, Years) {
+GenerateStochasticnVessels <- function(nVessels, nSim, Years) {
   nms <- names(nVessels)
   if (!all(c('EffLower', 'EffUpper', 'EffYears') %in% nms)) {
     cli::cli_abort(paste('If `nVessels` is a dataframe, it must have names:', paste(c('EffLower', 'EffUpper', 'EffYears'), collapse=', ')))
@@ -164,21 +164,21 @@ GenerateStochasticnVessels <- function(nVessels, nsim, Years) {
     EffUpper <- apply(tt, 1, max)
   }
 
-  nVesselsRange <- mapply(stats::runif, n = nsim, min = EffLower, max = EffUpper)
+  nVesselsRange <- mapply(stats::runif, n = nSim, min = EffLower, max = EffUpper)
 
-  if (nsim > 1) {
+  if (nSim > 1) {
     if (ncol(nVesselsRange) == 1) {
-      nVesselsStochastic <- matrix(nVesselsRange, nrow=nsim, ncol=nts)
+      nVesselsStochastic <- matrix(nVesselsRange, nrow=nSim, ncol=nts)
     } else {
-      nVesselsStochastic <- t(sapply(1:nsim, function(x)
+      nVesselsStochastic <- t(sapply(1:nSim, function(x)
         stats::approx(x = EffYears,
                y = nVesselsRange[x, ],
                method = "linear", n = nts)$y))
     }
   }
-  if (nsim == 1) {
+  if (nSim == 1) {
     if (length(nVesselsRange) == 1) {
-      nVesselsStochastic <- matrix(nVesselsRange, nrow=nsim, ncol=nts)
+      nVesselsStochastic <- matrix(nVesselsRange, nrow=nSim, ncol=nts)
     } else {
       nVesselsStochastic <- matrix(stats::approx(x = EffYears,
                                           y = nVesselsRange,
@@ -201,7 +201,7 @@ GenerateRecruitmentDeviations <- function(SD=0.2,
                                           Ages=NULL,
                                           HistTS=NULL, 
                                           ProjTS=NULL,
-                                          nsim=48,
+                                          nSim=48,
                                           RecDevInit=NULL,
                                           RecDevHist=NULL,
                                           RecDevProj=NULL) {
@@ -216,8 +216,8 @@ GenerateRecruitmentDeviations <- function(SD=0.2,
   nHistTS <- length(HistTS)
   nProjTS <- length(ProjTS)
   
-  if (!is.null(nsim) && nsim==1) {
-    cli::cli_alert_info('`nsim=1`. Assuming no process error ')
+  if (!is.null(nSim) && nSim==1) {
+    cli::cli_alert_info('`nSim=1`. Assuming no process error ')
     return(
       list(RecDevInit=array(1, dim=c(1, nInitRecDev)),
            RecDevHist=array(1, dim=c(1,nHistTS)),
@@ -275,19 +275,19 @@ GenerateRecruitmentDeviations <- function(SD=0.2,
     )
   }
 
-  nsimSD <- length(SD)
-  nsimAC <- length(AC)
+  nSimSD <- length(SD)
+  nSimAC <- length(AC)
 
-  if (nsimSD!=nsim & nsimSD!=1) {
-    cli::cli_alert_warning('`SRR@SD` is not length `nsim` or length `1`. Recycling')
+  if (nSimSD!=nSim & nSimSD!=1) {
+    cli::cli_alert_warning('`SRR@SD` is not length `nSim` or length `1`. Recycling')
   }
-  SD <- rep(SD, nsim)[1:nsim]
+  SD <- rep(SD, nSim)[1:nSim]
 
-  if (nsimAC!=nsim & nsimAC!=1) {
-    cli::cli_alert_warning('`SRR@AC` is not length `nsim` or length `1`. Recycling')
+  if (nSimAC!=nSim & nSimAC!=1) {
+    cli::cli_alert_warning('`SRR@AC` is not length `nSim` or length `1`. Recycling')
   }
 
-  AC <- rep(AC, nsim)[1:nsim]
+  AC <- rep(AC, nSim)[1:nSim]
   AC[!is.finite(AC)] <- 0
 
   mu <- -0.5 * SD^2  * (1 - AC)/sqrt(1 - AC^2)
@@ -295,13 +295,13 @@ GenerateRecruitmentDeviations <- function(SD=0.2,
   upper <- mu+TruncSD*SD
 
   if (genInit)
-    logRecDevInit <- array(rtnorm(nsim*nInitRecDev, mu, SD, lower, upper), dim=c(nsim, nInitRecDev))
+    logRecDevInit <- array(rtnorm(nSim*nInitRecDev, mu, SD, lower, upper), dim=c(nSim, nInitRecDev))
 
   if (genHist)
-    logRecDevHist <- array(rtnorm(nsim*nHistTS, mu, SD, lower, upper), dim=c(nsim, nHistTS))
+    logRecDevHist <- array(rtnorm(nSim*nHistTS, mu, SD, lower, upper), dim=c(nSim, nHistTS))
 
   if (genProj)
-    logRecDevProj <- array(rtnorm(nsim*nProjTS, mu, SD, lower, upper), dim=c(nsim, nProjTS))
+    logRecDevProj <- array(rtnorm(nSim*nProjTS, mu, SD, lower, upper), dim=c(nSim, nProjTS))
 
   # Apply auto-correlation
   Years <- 1:(nInitRecDev+nHistTS+nProjTS)
@@ -310,7 +310,7 @@ GenerateRecruitmentDeviations <- function(SD=0.2,
 
   Years <- Years[required]
 
-  for (i in 1:nsim) {
+  for (i in 1:nSim) {
     logRecDeviations <- c(logRecDevInit[GetIndex(i, nrow(logRecDevInit)),],
                           logRecDevHist[GetIndex(i, nrow(logRecDevHist)),],
                           logRecDevProj[GetIndex(i, nrow(logRecDevProj)),]

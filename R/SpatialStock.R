@@ -15,7 +15,7 @@ CalcMovement <- function(Spatial,
   if (CheckDigest(Spatial, argList))
     return(Spatial)
 
-  SetSeed(Spatial, seed)
+  SetSeed(seed)
 
   # generate stochastic values if needed
   Spatial@UnfishedDist <- GenerateStochasticValues(Spatial@UnfishedDist, nsim)

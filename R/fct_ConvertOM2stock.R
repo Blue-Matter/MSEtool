@@ -18,35 +18,34 @@ OM2stock <- function(OM, cpars=NULL, YearsList=NULL, nSim, seed=NULL) {
   
   Length(stock) <- OM2Length(OM, cpars, YearsList) |> 
     PopulateLength(Ages=stock@Ages,
-                   nsim=nSim,
                    Years=c(YearsList$HistTS, YearsList$ProjTS),
+                   nSim,
                    ASK=TRUE,
                    seed)
   
   Weight(stock) <- OM2Weight(OM, cpars) |>
     PopulateWeight(Ages=stock@Ages,
                    Length=stock@Length,
-                   nsim=nSim,
                    Years=c(YearsList$HistTS, YearsList$ProjTS),
+                   nSim,
                    ASK=FALSE,
-                   seed=seed)
+                   seed)
   
   NaturalMortality(stock) <- OM2NaturalMortality(OM, cpars) |>
     PopulateNaturalMortality(
       Ages=stock@Ages,
       Length=stock@Length,
-      nsim=nSim,
       Years=c(YearsList$HistTS, YearsList$ProjTS),
-      seed=seed
+      nSim,
+      seed
     )
   
   Maturity(stock) <- OM2Maturity(OM, cpars) |>
     PopulateMaturity(Ages=stock@Ages,
                      Length=stock@Length,
                      Weight=stock@Weight,
-                     nsim=nSim,
                      Years=c(YearsList$HistTS, YearsList$ProjTS),
-                     CalcAtLength=TRUE,
+                     nSim,
                      seed=seed)
   
   Fecundity(stock) <- OM2Fecundity(OM, cpars) |> 
@@ -55,8 +54,8 @@ OM2stock <- function(OM, cpars=NULL, YearsList=NULL, nSim, seed=NULL) {
       Length=stock@Length,
       Weight=stock@Weight,
       Maturity=stock@Maturity,
-      nsim=nSim,
       Years=c(YearsList$HistTS, YearsList$ProjTS),
+      nSim,
       seed=seed
     )
     
@@ -64,7 +63,7 @@ OM2stock <- function(OM, cpars=NULL, YearsList=NULL, nSim, seed=NULL) {
     PopulateSRR(Ages = stock@Ages,
                 CurrentYear = max(YearsList$HistTS),
                 Years=c(YearsList$HistTS, YearsList$ProjTS),
-                nsim=nSim,
+                nSim,
                 seed=seed)
   
   SRR <- stock@SRR
@@ -76,7 +75,7 @@ OM2stock <- function(OM, cpars=NULL, YearsList=NULL, nSim, seed=NULL) {
   Spatial(stock) <- OM2Spatial(OM, cpars, YearsList) |>
     PopulateSpatial(Ages=stock@Ages,
                     Years=c(YearsList$HistTS, YearsList$ProjTS),
-                    nsim=nSim,
+                    nSim,
                     seed=seed)
     
     

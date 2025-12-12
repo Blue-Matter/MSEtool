@@ -561,32 +561,10 @@ Array2List <- function(array, pos=3, sim=NULL) {
   list
 }
 
-# Makes sure each seed is unique for the same object
-SetSeed <- function(object, seed=NULL) {
-  if ('Misc' %in% slotNames(object))
-    object@Misc <- list()
-  
-  if ('Created' %in% slotNames(object))
-    object@Created <- NULL
-  
-  if ('Modified' %in% slotNames(object))
-    object@Modified <- NULL
-  
-  if ('Model' %in% slotNames(object))
-    object@Model <- NULL
-  
-  if ('RelRecFun' %in% slotNames(object))
-    object@RelRecFun <- NULL
-  
-  if ('Classes' %in% slotNames(object))
-    object@Classes <- NULL
-
-  val <- digest::digest2int(digest::digest(object))
-
-  if (!is.null(seed))
-    val <- val + seed
- 
-  set.seed(val)
+SetSeed <- function(seed=NULL) {
+  if (is.null(seed))
+    seed <- 101
+  set.seed(seed)
 }
 
 

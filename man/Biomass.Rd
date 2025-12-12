@@ -64,17 +64,30 @@ SP_SPMSY(MSE, Ref = c("Equilibrium", "Dynamic"), Years = NULL)
 
 SPRMSY(MSE, Ref = c("Equilibrium", "Dynamic"), Years = NULL, Expand = FALSE)
 
-Landings(MSE, byAge = FALSE, byFleet = FALSE, byArea = FALSE)
+Landings(
+  MSE,
+  byAge = FALSE,
+  byFleet = FALSE,
+  byArea = FALSE,
+  units = c("Weight", "Number")
+)
 
 Discards(
   MSE,
   byAge = FALSE,
   byFleet = FALSE,
   byArea = FALSE,
+  units = c("Weight", "Number"),
   type = c("dead", "alive", "all")
 )
 
-Removals(MSE, byAge = FALSE, byFleet = FALSE, byArea = FALSE)
+Removals(
+  MSE,
+  byAge = FALSE,
+  byFleet = FALSE,
+  byArea = FALSE,
+  units = c("Weight", "Number")
+)
 
 MSY(MSE, Years = NULL, type = c("Removals", "Landings"))
 }

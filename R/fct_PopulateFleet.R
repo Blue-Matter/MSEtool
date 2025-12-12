@@ -1,26 +1,40 @@
-#' @describeIn Populate Populate an [fleet-class()] object
-#' @export
+
+
+
 PopulateFleet <- function(Fleet, 
-                          Ages=NULL,
-                          Length=NULL,
-                          Weight=NULL,
-                          RelativeSize=NULL,
-                          seed=NULL,
+                          Stock,
+                          seed=103,
                           silent=FALSE) {
   
+  Ages <- Stock@Ages
+  Length <- Stock@Length 
+  Weight <- Stock@Weight
+  RelativeSize <- Stock@Spatial@RelativeSize
   
-  nsim <- nSim(Fleet)
-  Years <- Years(Fleet)
+  Fleet@CurrentYear <- Stock@CurrentYear
+  Fleet@nSim <- Stock@nSim
+  Fleet@Years <- Stock@Years
+  Fleet@nYear <- Stock@nYear
+  Fleet@pYear <- Stock@pYear
+  Fleet@Seasons <- Stock@Seasons
+  
+  Fleet@Years <- CalcYears(nYear=Stock@nYear, 
+                           pYear=Stock@pYear, 
+                           CurrentYear=Stock@CurrentYear, 
+                           Seasons= Stock@Seasons )
+  
+  nsim <- Fleet@nSim 
+  Years <- Fleet@Years 
   HistYears <- Years(Fleet, 'Historical')
   ProjYears <- Years[!Years %in% HistYears]
   
   nAreas <- ncol(RelativeSize)
   
-  argList <- list(Ages, Length, Weight, RelativeSize, nsim, Years, seed)
+  argList <- list(Ages, Length, Weight, RelativeSize)
   if (CheckDigest(Fleet, argList) | EmptyObject(Fleet))
     return(Fleet)
   
-  SetSeed(Fleet, seed)
+  SetSeed(seed)
   
   Fleet@Effort <- PopulateEffort(Effort=Fleet@Effort, 
                                  HistYears, 
@@ -94,7 +108,7 @@ PopulateEffort <- function(Effort, Years, nsim=NULL, seed=NULL) {
   if (CheckDigest(Effort, argList))
     return(Effort)
   
-  SetSeed(Effort, seed)
+  SetSeed(seed)
   
   if (inherits(Effort, 'data.frame')) {
     Effort <- GenerateHistoricalEffort(Effort, nsim, Years)
@@ -145,35 +159,6 @@ PopulateDistribution <- function(Distribution,
 }
 
 
-# PopulateFishingMortality <- function(FishingMortality,
-#                                      nsim=NULL,
-#                                      Years=NULL,
-#                                      seed=NULL,
-#                                      silent=FALSE) {
-#   
-#   Years <- YearAttributes(FishingMortality, Years)
-#   argList <- list(nsim, Years, seed)
-#   
-#   if (CheckDigest(FishingMortality, argList) | EmptyObject(FishingMortality))
-#     return(FishingMortality)
-#   
-#   SetSeed(FishingMortality, seed)
-#  
-#   FishingMortality@ApicalF <- AddSimDimension(FishingMortality@ApicalF,
-#                                               c('Sim', 'Year'), 
-#                                               Years=Years)
-#   
-#   FishingMortality@DeadAtAge <- AddSimDimension(FishingMortality@DeadAtAge,
-#                                                 Years=Years)
-#   FishingMortality@RetainAtAge <- AddSimDimension(FishingMortality@RetainAtAge,
-#                                                   Years=Years)
-#   
-#   if (EmptyObject(FishingMortality@ApicalF)) # calculate from `DeadAtAge`
-#     FishingMortality@ApicalF <- apply(FishingMortality@DeadAtAge, c(1,3), max)
-#   
-#   SetDigest(FishingMortality, argList)
-#   
-# }
 
 PopulateCatchability <- function(Fleet,
                                  RelativeSize,
@@ -281,7 +266,7 @@ PopulateDiscardMortality <- function(DiscardMortality,
     return(SetDigest(DiscardMortality, argList))
   }
 
-  SetSeed(DiscardMortality, seed)
+  SetSeed(seed)
   
   DiscardMortality <- MeanAtLength2MeanAtAge(DiscardMortality, Length,
                                              Ages, nsim, Years, seed, silent)
@@ -321,7 +306,7 @@ PopulateSelectivity <- function(Selectivity,
   if (CheckDigest(Selectivity, argList))
     return(Selectivity)
   
-  SetSeed(Selectivity, seed)
+  SetSeed(seed)
   
   Selectivity@Pars <- StructurePars(Pars=Selectivity@Pars, nsim, Years)
   Selectivity@Model <- FindModel(Selectivity)
@@ -418,7 +403,7 @@ PopulateRetention <- function(Retention,
     return(SetDigest(Retention, argList))
   }
   
-  SetSeed(Retention, seed)
+  SetSeed(seed)
   
   Retention@Pars <- StructurePars(Pars=Retention@Pars, nsim, Years)
   

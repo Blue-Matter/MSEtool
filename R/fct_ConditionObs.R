@@ -255,7 +255,7 @@ ConditionObs_Index <- function(HistSim, FisheryData, HistYears, ProjYears,
     if (is.character(SelectivityAtAge)) {
       if (SelectivityAtAge == 'Biomass') {
         for (st in seq_along(stocks)) {
-          SelectivityAtAgeList[[st]] <- matrix(1,nAge(HistSim@OM, stocks[st]), 1) |>
+          SelectivityAtAgeList[[st]] <- matrix(1,nAge(HistSim@OM, st), 1) |>
             AddDimNames(c('Age', 'Year'), HistYears)
         }
       } else if (SelectivityAtAge == 'SBiomass') {

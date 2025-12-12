@@ -1,9 +1,4 @@
 
-
-## ---- OM -----
-#' @describeIn Populate Populate an [OM()] object
-#' @param seed Seed for the random number generator
-#' @export
 PopulateOM <- function(OM, silent=FALSE) {
   CheckClass(OM)
   # if (CheckDigest(OM) | EmptyObject(OM))
@@ -56,8 +51,6 @@ ProcessData <- function(OM) {
   OM
 }
 
-
-
 PopulateStockList <- function(OM, silent=FALSE) {
   nStocks <- nStock(OM)
   StockList <- vector('list', nStocks)
@@ -76,12 +69,15 @@ PopulateStockList <- function(OM, silent=FALSE) {
     Stock@CurrentYear <- OM@CurrentYear
     Stock@Seasons <- OM@Seasons
     StockList[[st]] <- PopulateStock(Stock, 
-                                     seed=OM@Seed, 
+                                     seed=OM@Seed+st, 
                                      silent=silent)
     names(StockList)[st] <- Stock@Name
   }
   StockList
 }
+
+
+
 
 PopulateFleetList <- function(OM, silent=FALSE) {
   StockList <- OM@Stock
@@ -105,27 +101,15 @@ PopulateFleetList <- function(OM, silent=FALSE) {
         Fleet <- OM@Fleet[[fl]]
       } else {
         if (!length(OM@Fleet[[st]]))
-            next()
+          next()
         Fleet <- OM@Fleet[[st]][[fl]]
       }
       
-      Fleet@nSim <- OM@nSim
-      Fleet@nYear <- OM@nYear
-      Fleet@pYear <- OM@pYear
-      Fleet@CurrentYear <- OM@CurrentYear
       Stock <- StockList[[st]]
-      Fleet@Seasons <- Stock@Seasons
-      Fleet@Years <- CalcYears(nYear=Stock@nYear, 
-                                       pYear=Stock@pYear, 
-                                       CurrentYear=Stock@CurrentYear, 
-                                       Seasons= Stock@Seasons )
       
-      FleetList[[st]][[fl]] <- PopulateFleet(Fleet=Fleet, 
-                                             Ages=Ages(StockList[[st]]),
-                                             Length=Length(StockList[[st]]),
-                                             Weight=Weight(StockList[[st]]),
-                                             RelativeSize=StockList[[st]]@Spatial@RelativeSize,
-                                             seed=OM@Seed,
+      FleetList[[st]][[fl]] <- PopulateFleet(Fleet, 
+                                             Stock,
+                                             seed=OM@Seed+st+fl,
                                              silent=silent)
       
       names(FleetList[[st]])[fl] <- FleetList[[st]][[fl]]@Name
@@ -134,6 +118,7 @@ PopulateFleetList <- function(OM, silent=FALSE) {
   }
   FleetList
 }
+
 
 PopulateComplexes <- function(OM) {
   if (length(OM@Complexes)>0)
