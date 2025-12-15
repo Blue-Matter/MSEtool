@@ -100,7 +100,19 @@ ExampleMaturityComplete |> Pars()
 ExampleMaturityComplete |> MeanAtLength()
 ExampleMaturityComplete |> MeanAtAge()
 
-## ---- create-fecundity ----
+## ---- create-srr ----
+
+SRR(ExampleStock) <- SRR(
+  Pars = list(h = c(0.65, 0.85)),
+  R0 = 1000,
+  SD = c(0.15, 0.3),
+  AC = c(0.1, 0.9)
+)
+
+## --- create-spatial ----
+Spatial(ExampleStock) <- Spatial(
+  UnfishedDist 
+)
 
 
 

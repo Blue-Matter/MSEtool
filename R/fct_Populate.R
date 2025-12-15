@@ -166,9 +166,7 @@ setMethod("Populate", "fecundity", function(object,
 #' @export
 setMethod("Populate", "srr", function(object,
                                       Ages = NULL,
-                                      Length = NULL,
-                                      Weight = NULL,
-                                      Maturity = NULL,
+                                      CurrentYear=NULL,
                                       Years = NULL,
                                       nSim = 5,
                                       seed = NULL,
@@ -194,15 +192,18 @@ setMethod("Populate", "spatial", function(object,
                                           nSim = 5,
                                           seed = NULL,
                                           silent = FALSE,
+                                          plot = FALSE,
+                                          nits = 100,
                                           ...) {
   PopulateSpatial(
     object,
     Ages,
-    CurrentYear,
     Years,
     nSim,
     seed,
-    silent
+    silent,
+    plot,
+    nits
   )
 })
 

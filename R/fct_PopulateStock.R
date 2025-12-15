@@ -489,7 +489,6 @@ PopulateSRR <- function(SRR,
   SRR@AC[!is.finite(SRR@AC)] <- 0
   SRR@SD[SRR@SD==0] <- 1E-6 # for reproducibility in rnorm
   
-
   EmptyObjects <- c(EmptyObject(SRR@RecDevInit),
                     EmptyObject(SRR@RecDevHist),
                     EmptyObject(SRR@RecDevProj))
