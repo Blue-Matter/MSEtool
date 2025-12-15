@@ -1,5 +1,5 @@
 
-#' @rdname Import
+#' @rdname ImportSS
 #' @export
 ImportSSReport <- function(Dir, silent=FALSE, ...) {
   OnExit()

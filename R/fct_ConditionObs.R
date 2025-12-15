@@ -76,7 +76,7 @@ ConditionObs_Catch <- function(HistSim, FisheryData, HistYears,
   SimulatedCatch_Biomass <- purrr::map2(catchList, HistSim@OM@Fleet, \(catch, fleet) {
     catch <- apply(List2Array(catch), c(1,2,4), sum) |> # sum over areas
       aperm(c(1,3,2))
-    apply(catch*fleet@WeightFleet, 2:3, sum) # sum over ages
+    apply(catch*  ArraySubsetYear(fleet@WeightFleet, HistYears), 2:3, sum) # sum over ages
   })  |> 
     List2Array('Stock') |> 
     apply(c('Year', 'Fleet'), sum)

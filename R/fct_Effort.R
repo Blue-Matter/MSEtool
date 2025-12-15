@@ -1,4 +1,10 @@
 
+#' Access and Assign `Effort`
+#' 
+#' @param x A [Fleet()] class object
+#' @param value A `Effort` object to assign to `x`
+#' 
+#' @name Effort
 #' @export
 Effort <- function(object) {
   if (inherits(object, 'fleet'))
@@ -9,9 +15,7 @@ Effort <- function(object) {
   
 }
 
-#' @describeIn Effort Assign an `Effort` object to a [Fleet()] object
-#' @param x A [Fleet()] class object
-#' @param value A `Effort` object to assign to `x`
+#' @rdname Effort
 #' @export
 `Effort<-` <- function(x, value) {
   assignSlot(x, value, 'Effort')

@@ -12,9 +12,9 @@ Populate(object, ...)
 
 \S4method{Populate}{length}(
   object,
-  Ages,
-  Years,
-  nSim = 48,
+  Ages = NULL,
+  Years = NULL,
+  nSim = 5,
   ASK = TRUE,
   seed = NULL,
   silent = FALSE,
@@ -23,10 +23,10 @@ Populate(object, ...)
 
 \S4method{Populate}{weight}(
   object,
-  Ages,
-  Length,
-  Years,
-  nSim = 48,
+  Ages = NULL,
+  Length = NULL,
+  Years = NULL,
+  nSim = 5,
   ASK = FALSE,
   seed = NULL,
   silent = FALSE,
@@ -36,10 +36,10 @@ Populate(object, ...)
 
 \S4method{Populate}{naturalmortality}(
   object,
-  Ages,
-  Length,
-  Years,
-  nSim = 48,
+  Ages = NULL,
+  Length = NULL,
+  Years = NULL,
+  nSim = 5,
   seed = NULL,
   silent = FALSE,
   CalcAtLength = FALSE,
@@ -48,11 +48,11 @@ Populate(object, ...)
 
 \S4method{Populate}{maturity}(
   object,
-  Ages,
-  Length,
-  Weight,
-  Years,
-  nSim = 48,
+  Ages = NULL,
+  Length = NULL,
+  Weight = NULL,
+  Years = NULL,
+  nSim = 5,
   seed = NULL,
   silent = FALSE,
   CalcAtLength = FALSE,
@@ -61,12 +61,12 @@ Populate(object, ...)
 
 \S4method{Populate}{fecundity}(
   object,
-  Ages,
-  Length,
-  Weight,
-  Maturity,
-  Years,
-  nSim = 48,
+  Ages = NULL,
+  Length = NULL,
+  Weight = NULL,
+  Maturity = NULL,
+  Years = NULL,
+  nSim = 5,
   seed = NULL,
   silent = FALSE,
   CalcAtLength = FALSE,
@@ -75,20 +75,28 @@ Populate(object, ...)
 
 \S4method{Populate}{srr}(
   object,
-  Ages,
-  Length,
-  Weight,
-  Maturity,
-  Years,
-  nSim = 48,
+  Ages = NULL,
+  Length = NULL,
+  Weight = NULL,
+  Maturity = NULL,
+  Years = NULL,
+  nSim = 5,
   seed = NULL,
   silent = FALSE,
   ...
 )
 
-\S4method{Populate}{spatial}(object, Ages, Years, nSim = 48, seed = NULL, silent = FALSE, ...)
+\S4method{Populate}{spatial}(
+  object,
+  Ages = NULL,
+  Years = NULL,
+  nSim = 5,
+  seed = NULL,
+  silent = FALSE,
+  ...
+)
 
-\S4method{Populate}{depletion}(object, nSim = 48, seed = NULL, silent = FALSE, ...)
+\S4method{Populate}{depletion}(object, nSim = 5, seed = NULL, silent = FALSE, ...)
 
 \S4method{Populate}{fleet}(object, Stock, seed = NULL, silent = FALSE, ...)
 }

@@ -171,11 +171,8 @@ PopulateMeanAtLength <- function(object,
     
     if ('Length' %in% args) {
       CheckRequiredObject(Length, 'length', 'Length')
-      # chk <- Check(Length)
-      # if(!chk@populated) {
-      #   CheckRequiredObject(Ages, 'ages', 'Ages')
-      #   Length <- Populate(Length, Ages, nSim, Years, seed, ASK=TRUE, silent)
-      # }
+      CheckRequiredObject(Ages, 'ages', 'Ages')
+      Length <- Populate(Length, Ages, Years, nSim, seed, ASK=TRUE, silent)
     }
     object@MeanAtLength <- GenerateMeanatLength(Model=object@Model,
                                                 Pars=object@Pars,
@@ -647,6 +644,9 @@ MeanAtLength2MeanAtAge <- function(object, Length, Ages, nSim, Years, seed, sile
 MeanAtWeight2MeanAtAge <- function(object, Weight, Ages, nSim, Years, seed, silent,
                                    max1=TRUE) {
   if (!is.null(object@MeanAtAge))
+    return(object)
+  
+  if (is.null(object@MeanAtWeight))
     return(object)
   
   CheckRequiredObject(Weight, 'weight')

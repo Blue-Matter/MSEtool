@@ -12,7 +12,6 @@
 #' @name DiscardMortality
 #' @rdname DiscardMortality
 #' @docType class
-#' @example man-examples/DiscardMortality-class.R
 #' @export
 setClass("discardmortality",
          contains= c(

@@ -5,7 +5,7 @@
 \alias{ImportBAM}
 \alias{GetBAMOutput}
 \alias{ListBAMStocks}
-\title{Import an OM from Beaufort Assessment Model (BAM) Output}
+\title{Import BAM}
 \usage{
 CompareBAM(Stock, OM = NULL, thresh = 0.1)
 
@@ -26,18 +26,11 @@ GetBAMOutput(Stock = "Red Snapper", type = c("rdat", "dat"))
 
 ListBAMStocks(type = c("rdat", "dat"))
 }
-\arguments{
-\item{Stock}{Character string matching ... or a list ...}
-}
 \description{
-Import an OM from Beaufort Assessment Model (BAM) Output
+Import BAM
 }
 \section{Functions}{
 \itemize{
 \item \code{CompareBAM()}: Compare BAM and OM dynamics
-
-\item \code{GetBAMOutput()}: description
-
-\item \code{ListBAMStocks()}: description
 
 }}

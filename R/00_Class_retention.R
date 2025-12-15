@@ -12,7 +12,6 @@
 #' @name Retention
 #' @rdname Retention
 #' @docType class
-#' @example man-examples/Retention-class.R
 #' @export
 setClass("retention",
          slots=c(Pars='list',

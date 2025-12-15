@@ -20,6 +20,8 @@ setClass("mse",
                     'MiscClass')
 )
 
+#' @rdname MSEClass
+#' @export
 MSE <- function(Hist=NULL, MPs=NULL,...) {
   if (is.null(Hist))
     return(new('mse'))

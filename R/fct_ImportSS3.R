@@ -3,8 +3,9 @@
 
 
 ## Import SS  ----
-#' Import an OM from SS3 Output
-#' @param x Either a character string  
+#' Import an `OM` from SS3 Output
+#' 
+#' @rdname ImportSS
 #' @export
 ImportSS <- function(SSDir,     
                      Name = "Imported SS3 Model",
@@ -223,10 +224,6 @@ SS2Ages <- function(st, RepList, YearsList) {
        MinAge=CalcSSMinAgeClass(RepList[[1]], YearsList),
        Units=CalcTSUnits(RepList[[1]]$nseasons))
 }
-
-
-
-
 
 GetSSAgeClasses <- function(replist) {
   AgeClasses <- suppressWarnings(as.numeric(colnames(replist$natage)))
@@ -686,7 +683,6 @@ GetSS_RecDevs_Early <- function(replist, YearsList, Ages, st) {
   dev
 }
 
-
 GetSS_RecDevs <- function(replist, YearsList, Ages) {
 
   YearsHist <- YearsList$YearsHist
@@ -801,9 +797,6 @@ SS2SRR <- function(st, RepList, YearsList, Ages, nSim) {
                                    Year=ProjectionYears)
   SRR
 }
-
-
-
 
 ## Fleet ----
 
@@ -1187,6 +1180,7 @@ ProcessSurveyObsSelectivity <- function(OM, RepList) {
  
 ## Import SS Data ----
 
+#' @rdname ImportSS
 ImportSSData <- function(SSDir,  
                          Name="Imported by ImportSSData", 
                          CommonName = "", 

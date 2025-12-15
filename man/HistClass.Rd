@@ -3,7 +3,11 @@
 \docType{class}
 \name{HistClass}
 \alias{HistClass}
+\alias{Hist}
 \title{Class Hist}
+\usage{
+Hist(OM = NULL, ...)
+}
 \description{
 More
 }

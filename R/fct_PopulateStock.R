@@ -88,14 +88,32 @@ PopulateStock <- function(Stock,
   SetDigest(Stock, argList)
 }
 
+DefaultAges <- function(Ages=NULL) {
+  if (!is.null(Ages))
+    return(Ages)
+  Ages(MaxAge=10)
+}
+
+DefaultYears <- function(Years=NULL) {
+  if (!is.null(Years))
+    return(Years)
+  
+  CurrentYear <- format(Sys.Date(), "%Y") |>
+    as.numeric()
+  
+  seq(CurrentYear-5, CurrentYear+5) 
+}
 
 PopulateLength <- function(Length,
-                           Ages,
-                           Years,
+                           Ages=NULL,
+                           Years=NULL,
                            nSim=NULL,
                            ASK=TRUE,
                            seed=NULL,
                            silent=FALSE) {
+  
+  Ages <- DefaultAges(Ages)
+  Years <- DefaultYears(Years)
   
   argList <- list(Ages, nSim, Years, ASK, seed)
   
@@ -139,7 +157,9 @@ PopulateWeight <- function(Weight,
                            seed=NULL,
                            silent=FALSE,
                            CalcAtLength=FALSE) {
-  # Years <- YearAttributes(Weight, Years)
+  Ages <- DefaultAges(Ages)
+  Years <- DefaultYears(Years)
+  
   argList <- list(Ages, Length, nSim, Years, ASK,
                   CalcAtLength, seed)
   
@@ -204,7 +224,8 @@ PopulateNaturalMortality <- function(NaturalMortality,
                                      silent=FALSE,
                                      CalcAtLength=FALSE) {
   
-  # Years <- YearAttributes(NaturalMortality, Years)
+  Ages <- DefaultAges(Ages)
+  Years <- DefaultYears(Years)
   
   argList <- list(Ages, Length, nSim, Years, CalcAtLength, seed)
   if (CheckDigest( NaturalMortality, argList) | EmptyObject(NaturalMortality))
@@ -249,7 +270,9 @@ PopulateMaturity <- function(Maturity,
                              silent=FALSE,
                              CalcAtLength=FALSE) {
   
-  # Years <- YearAttributes(Maturity, Years)
+  Ages <- DefaultAges(Ages)
+  Years <- DefaultYears(Years)
+  
   argList <- list(Ages, Length, nSim, Years, CalcAtLength, seed)
   
   if (CheckDigest(Maturity, argList) | EmptyObject(Maturity))
@@ -263,6 +286,10 @@ PopulateMaturity <- function(Maturity,
   
   if (!is.null(ModelClass)) {
     if (grepl('at-Length',getModelClass(Maturity@Model))) {
+      CheckRequiredObject(Length, 'length', 'Length')
+      CheckRequiredObject(Ages, 'ages', 'Ages')
+      Length <- Populate(Length, Ages, Years, nSim, seed, ASK=TRUE, silent)
+      
       Maturity <- PopulateMeanAtLength(Maturity, Length, Years, Ages, nSim,
                                        seed, silent)
     } else if (grepl('at-Weight',getModelClass(Maturity@Model))) {
@@ -312,7 +339,10 @@ PopulateFecundity <- function(Fecundity,
                               seed=NULL,
                               silent=FALSE,
                               CalcAtLength=FALSE) {
-  # Years <- YearAttributes(Fecundity, Years)
+  
+  Ages <- DefaultAges(Ages)
+  Years <- DefaultYears(Years)
+  
   argList <- list(Ages, Length, Weight, Maturity, nSim, Years, CalcAtLength, seed)
   
   if (EmptyObject(Fecundity)) {
@@ -413,6 +443,14 @@ PopulateSRR <- function(SRR,
                         nSim=NULL,
                         seed=NULL,
                         silent=FALSE) {
+  
+  Ages <- DefaultAges(Ages)
+  if (is.null(CurrentYear))
+    CurrentYear <- format(Sys.Date(), "%Y") |>
+      as.numeric()
+  
+  Years <- DefaultYears(Years)
+  
   argList <- list(Ages, CurrentYear, Years, nSim, seed)
   
   MaxAge <- Ages@MaxAge
@@ -517,6 +555,10 @@ PopulateSpatial <- function(Spatial,
                             silent=FALSE,
                             plot=FALSE,
                             nits=100) {
+  
+  Ages <- DefaultAges(Ages)
+  Years <- DefaultYears(Years)
+  
   argList <- list(Ages, nSim, seed, nits)
   
   if (CheckDigest(Spatial, argList))

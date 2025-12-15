@@ -1,52 +1,13 @@
 library(MSEtool)
 
 
-## ---- initialize-om ----
-SimpleOM <- OM("Example OM",
-  nYear = 30,
-  pYear = 20,
-  nSim = 48
-)
 
-## ---- access-assign-1 ----
-nSim(SimpleOM)
-nSim(SimpleOM) <- 5
-nSim(SimpleOM)
 
-## ---- access-assign-2 ----
-nYear(SimpleOM) <- 20
-pYear(SimpleOM) <- 10
 
-## ---- current-year-assign ----
-CurrentYear(SimpleOM) <- 2020
 
-## ---- change-seasons ----
-Seasons(SimpleOM) <- 4 # 4-quarters
-Years(SimpleOM, "H") |> head(8)
 
-## ---- date-convert ----
-SimpleOM |>
-  Years() |>
-  lubridate::date_decimal() |>
-  lubridate::as_date() |>
-  head()
 
-## ---- initialize-stock ----
-SimpleStock <- Stock("Example Stock",
-  CommonName = "Albacore",
-  Species = "Thunnus alalunga"
-)
 
-## ---- create-ages_1 ----
-Ages(SimpleStock) <- Ages(MaxAge = 4 * 20, Units = "quarter")
-
-## ---- classes-ages ----
-Classes(SimpleStock)
-
-## ---- create-ages_2 ----
-Seasons(SimpleOM) <- 1 # annual
-Ages(SimpleStock) <- Ages(MaxAge = 20)
-Classes(SimpleStock)
 
 
 ## ---- CV-length-uniform ----
@@ -55,9 +16,9 @@ Length_CV_uniform <- Length(CVatAge = c(0.1, 0.2))
 ## ---- CV-length-uniform-populate----
 
 Length_CV_uniform <- Populate(Length_CV_uniform,
-  Ages = Ages(SimpleStock),
-  Years = Years(SimpleStock),
-  nSim = nSim(SimpleOM),
+  Ages = Ages(ExampleStock),
+  Years = Years(ExampleStock),
+  nSim = nSim(ExampleOM),
   seed = 101
 )
 
@@ -80,13 +41,13 @@ Length_CV_uniform |>
 
 # numeric length nSim
 set.seed(101)
-CVatAge <- runif(nSim(SimpleOM), 0.1, 0.2)
+CVatAge <- runif(nSim(ExampleOM), 0.1, 0.2)
 
 Length_CV_uniform_1 <- Length(CVatAge = CVatAge) |>
   Populate(
-    Ages = Ages(SimpleStock),
-    Years = Years(SimpleStock),
-    nSim = nSim(SimpleOM)
+    Ages = Ages(ExampleStock),
+    Years = Years(ExampleStock),
+    nSim = nSim(ExampleOM)
   )
 
 Length_CV_uniform_1 |>
@@ -97,13 +58,13 @@ Length_CV_uniform_1 |>
 
 # Sample from log-normal distribution
 set.seed(101)
-CVatAge <- trlnorm(nSim(SimpleOM), 0.15, 0.2)
+CVatAge <- trlnorm(nSim(ExampleOM), 0.15, 0.2)
 
 Length_CV_lognorm <- Length(CVatAge = CVatAge) |>
   Populate(
-    Ages = Ages(SimpleStock),
-    Years = Years(SimpleStock),
-    nSim = nSim(SimpleOM)
+    Ages = Ages(ExampleStock),
+    Years = Years(ExampleStock),
+    nSim = nSim(ExampleOM)
   )
 
 Length_CV_lognorm |>
@@ -114,21 +75,21 @@ Length_CV_lognorm |>
 set.seed(101)
 CVatAge <- array(
   runif(
-    nSim(SimpleOM) *
-      nAge(SimpleStock),
+    nSim(ExampleOM) *
+      nAge(ExampleStock),
     0.1, 0.2
   ),
   dim = c(
-    nSim(SimpleOM),
-    nAge(SimpleStock)
+    nSim(ExampleOM),
+    nAge(ExampleStock)
   )
 )
 
 Length_CV_uniform_Age <- Length(CVatAge = CVatAge) |>
   Populate(
-    Ages = Ages(SimpleStock),
-    Years = Years(SimpleStock),
-    nSim = nSim(SimpleOM)
+    Ages = Ages(ExampleStock),
+    Years = Years(ExampleStock),
+    nSim = nSim(ExampleOM)
   )
 
 Length_CV_uniform_Age |>
@@ -140,23 +101,23 @@ Length_CV_uniform_Age |>
 set.seed(101)
 CVatAge <- array(
   runif(
-    nSim(SimpleOM) *
-      nAge(SimpleStock) *
-      length(Years(SimpleOM)),
+    nSim(ExampleOM) *
+      nAge(ExampleStock) *
+      length(Years(ExampleOM)),
     0.1, 0.2
   ),
   dim = c(
-    nSim(SimpleOM),
-    nAge(SimpleStock),
-    length(Years(SimpleOM))
+    nSim(ExampleOM),
+    nAge(ExampleStock),
+    length(Years(ExampleOM))
   )
 )
 
 Length_CV_uniform_Age_Time <- Length(CVatAge = CVatAge) |>
   Populate(
-    Ages = Ages(SimpleStock),
-    Years = Years(SimpleStock),
-    nSim = nSim(SimpleOM)
+    Ages = Ages(ExampleStock),
+    Years = Years(ExampleStock),
+    nSim = nSim(ExampleOM)
   )
 
 Length_CV_uniform_Age_Time |>
@@ -176,9 +137,9 @@ Length_Constant <- Length(Pars = list(
   t0 = -1.86
 )) |>
   Populate(
-    Ages = Ages(SimpleStock),
-    Years = Years(SimpleStock),
-    nSim = nSim(SimpleOM)
+    Ages = Ages(ExampleStock),
+    Years = Years(ExampleStock),
+    nSim = nSim(ExampleOM)
   )
 
 Length_Constant |> Pars()
@@ -192,9 +153,9 @@ Length_Sim <- Length(Pars = list(
   t0 = -1.86
 )) |>
   Populate(
-    Ages = Ages(SimpleStock),
-    Years = Years(SimpleStock),
-    nSim = nSim(SimpleOM)
+    Ages = Ages(ExampleStock),
+    Years = Years(ExampleStock),
+    nSim = nSim(ExampleOM)
   )
 
 Length_Sim |> Pars()
@@ -204,20 +165,20 @@ Length_Sim |> MeanAtAge()
 
 set.seed(101)
 # Historical Years
-Years(SimpleStock, 'H')
+Years(ExampleStock, "H")
 
 # Stochastic Linf values for all simulations for 2006 - 2018
-Linf_06_18 <- runif(nSim(SimpleOM), 121, 135)
+Linf_06_18 <- runif(nSim(ExampleOM), 121, 135)
 
-# Linf doubles from 2019 on 
+# Linf doubles from 2019 on
 Linf_19_on <- Linf_06_18 * 2
 
 # Create an array with named dimensions:
 # Dimensions must be named `Sim` and `Year`
 Linf <- array(c(Linf_06_18, Linf_19_on),
-  dim = c(nSim(SimpleOM), 2),
+  dim = c(nSim(ExampleOM), 2),
   dimnames = list(
-    Sim = 1:nSim(SimpleOM),
+    Sim = 1:nSim(ExampleOM),
     Year = c(2006, 2019)
   )
 )
@@ -228,24 +189,22 @@ Length_Sim_Year <- Length(Pars = list(
   t0 = -1.86
 )) |>
   Populate(
-    Ages = Ages(SimpleStock),
-    Years = Years(SimpleStock),
-    nSim = nSim(SimpleOM)
+    Ages = Ages(ExampleStock),
+    Years = Years(ExampleStock),
+    nSim = nSim(ExampleOM)
   )
 
 Length_Sim_Year |> Pars()
-Length_Sim_Year |> MeanAtAge() |>
+Length_Sim_Year |>
+  MeanAtAge() |>
   MSEtool:::ArraySubsetAge(1:4)
 
 
 # TODO Subset function ...
 
 
-
-
-
 ## ---- length-stock ----
-Length(SimpleStock) <- Length(
+Length(ExampleStock) <- Length(
   Pars = list(
     Linf = c(121, 135),
     K = c(0.16, 0.22),
@@ -255,16 +214,16 @@ Length(SimpleStock) <- Length(
 )
 
 
-## ---- create-length ----
+## ---- create-length_2 ----
 # DefaultLength <- Length()
 #
 # Populate(DefaultLength)
 #
 # ?Populate
 #
-# Length(SimpleStock) <- Length()
+# Length(ExampleStock) <- Length()
 #
-# Populate(Length(SimpleStock))
+# Populate(Length(ExampleStock))
 #
 # Pars=list(Linf=c(121, 135),
 #           K=c(0.16, 0.22),

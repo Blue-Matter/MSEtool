@@ -92,7 +92,6 @@ setClass("compdata",
 #'
 #' @name DataClass
 #'
-#' @example man-examples/Data-class.R
 #' @export
 setClass('data',
          slots=c(Name='char.null',

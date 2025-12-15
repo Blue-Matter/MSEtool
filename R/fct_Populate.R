@@ -38,9 +38,9 @@ setMethod("Populate", "stock", function(object,
 #' @param AWK ...
 #' @export
 setMethod("Populate", "length", function(object,
-                                         Ages,
-                                         Years,
-                                         nSim = 48,
+                                         Ages = NULL,
+                                         Years = NULL,
+                                         nSim = 5,
                                          ASK = TRUE,
                                          seed = NULL,
                                          silent = FALSE,
@@ -60,10 +60,10 @@ setMethod("Populate", "length", function(object,
 #' @name Populate
 #' @export
 setMethod("Populate", "weight", function(object,
-                                         Ages,
-                                         Length,
-                                         Years,
-                                         nSim = 48,
+                                         Ages = NULL,
+                                         Length = NULL,
+                                         Years = NULL,
+                                         nSim = 5,
                                          ASK = FALSE,
                                          seed = NULL,
                                          silent = FALSE,
@@ -87,10 +87,10 @@ setMethod("Populate", "weight", function(object,
 #' @name Populate
 #' @export
 setMethod("Populate", "naturalmortality", function(object,
-                                                   Ages,
-                                                   Length,
-                                                   Years,
-                                                   nSim = 48,
+                                                   Ages = NULL,
+                                                   Length = NULL,
+                                                   Years = NULL,
+                                                   nSim = 5,
                                                    seed = NULL,
                                                    silent = FALSE,
                                                    CalcAtLength = FALSE,
@@ -111,11 +111,11 @@ setMethod("Populate", "naturalmortality", function(object,
 #' @name Populate
 #' @export
 setMethod("Populate", "maturity", function(object,
-                                           Ages,
-                                           Length,
-                                           Weight,
-                                           Years,
-                                           nSim = 48,
+                                           Ages = NULL,
+                                           Length = NULL,
+                                           Weight = NULL,
+                                           Years = NULL,
+                                           nSim = 5,
                                            seed = NULL,
                                            silent = FALSE,
                                            CalcAtLength = FALSE,
@@ -137,12 +137,12 @@ setMethod("Populate", "maturity", function(object,
 #' @name Populate
 #' @export
 setMethod("Populate", "fecundity", function(object,
-                                            Ages,
-                                            Length,
-                                            Weight,
-                                            Maturity,
-                                            Years,
-                                            nSim = 48,
+                                            Ages = NULL,
+                                            Length = NULL,
+                                            Weight = NULL,
+                                            Maturity = NULL,
+                                            Years = NULL,
+                                            nSim = 5,
                                             seed = NULL,
                                             silent = FALSE,
                                             CalcAtLength = FALSE,
@@ -165,12 +165,12 @@ setMethod("Populate", "fecundity", function(object,
 #' @name Populate
 #' @export
 setMethod("Populate", "srr", function(object,
-                                      Ages,
-                                      Length,
-                                      Weight,
-                                      Maturity,
-                                      Years,
-                                      nSim = 48,
+                                      Ages = NULL,
+                                      Length = NULL,
+                                      Weight = NULL,
+                                      Maturity = NULL,
+                                      Years = NULL,
+                                      nSim = 5,
                                       seed = NULL,
                                       silent = FALSE,
                                       ...) {
@@ -189,9 +189,9 @@ setMethod("Populate", "srr", function(object,
 #' @name Populate
 #' @export
 setMethod("Populate", "spatial", function(object,
-                                          Ages,
-                                          Years,
-                                          nSim = 48,
+                                          Ages = NULL,
+                                          Years = NULL,
+                                          nSim = 5,
                                           seed = NULL,
                                           silent = FALSE,
                                           ...) {
@@ -212,7 +212,7 @@ setMethod("Populate", "spatial", function(object,
 #' @name Populate
 #' @export
 setMethod("Populate", "depletion", function(object,
-                                            nSim = 48,
+                                            nSim = 5,
                                             seed = NULL,
                                             silent = FALSE,
                                             ...) {
@@ -287,14 +287,13 @@ PopulateObs <- function(OM) {
   }
 
   SetSeed(OM@Seed)
-  
+
   OM <- StructureObs(OM)
   HistYears <- Years(OM, "H")
   ProjYears <- Years(OM, "P")
 
   for (st in 1:length(OM@Obs)) {
     for (fl in 1:length(OM@Obs[[1]])) {
-
       OM@Obs[[st]][[fl]]@Effort <- PopulateEffortObs(
         Effort = OM@Obs[[st]][[fl]]@Effort,
         nSim = OM@nSim,

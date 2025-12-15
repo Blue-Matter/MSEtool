@@ -3,7 +3,11 @@
 \docType{class}
 \name{MSEClass}
 \alias{MSEClass}
+\alias{MSE}
 \title{MSE Class}
+\usage{
+MSE(Hist = NULL, MPs = NULL, ...)
+}
 \description{
 MSE Class
 }

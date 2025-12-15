@@ -28,7 +28,8 @@ setClass("hist",
 )
 
 
-
+#' @rdname HistClass
+#' @export
 Hist <- function(OM=NULL, ...) {
   if (is.null(OM))
     return(new('hist'))
