@@ -71,13 +71,13 @@ GenerateHistoricalData_Effort <- function(Data, HistSim, HistYears, i, stocks) {
   EffortData <- new('effortdata')
   EffortData@Name <- FleetNames
   
-  EffortData@Value <- array(NA, dim=c(nTS, nFleet),
+  Value <- array(NA, dim=c(nTS, nFleet),
                            dimnames=list(Year=HistYears,
                                          Fleet=FleetNames))
-  EffortData@CV <- EffortData@Value 
-  EffortData@CV[] <- 0.2
+  CV <- Value 
+  CV[] <- 0.2
   
-  EffortData@Value[] <- HistSim@Effort[stocks,,,drop=FALSE] |> apply(2:3, mean, na.rm=TRUE)
+  Value[] <- HistSim@Effort[stocks,,,drop=FALSE] |> apply(2:3, mean, na.rm=TRUE)
 
   for (fl in 1:nFleet) {
     EffortObs <- HistSim@OM@Obs[[i]][[fl]]@Effort
@@ -85,11 +85,12 @@ GenerateHistoricalData_Effort <- function(Data, HistSim, HistYears, i, stocks) {
       next()
     }
     
-    EffortData@Value[,fl] <- EffortData@Value[,fl] * 
+    EffortData@Value[,fl] <- Value[,fl] * 
       EffortObs@Bias * 
       ArraySubsetYear(EffortObs@Error, HistYears)
     
   }
+  Data@Effort@CV <- CV
   Data@Effort <- EffortData
   Data
 }
