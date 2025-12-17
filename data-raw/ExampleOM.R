@@ -9,7 +9,6 @@ ExampleOM <- OM("Example OM",
   nSim = 48
 )
 
-
 # ---- Example Stock ----
 
 ## ---- initialize-stock ----
@@ -18,16 +17,13 @@ ExampleStock <- Stock("Example Stock",
   Species = "Thunnus alalunga"
 )
 
-## ---- create-ages_1 ----
-Ages(ExampleStock) <- Ages(MaxAge = 4 * 20, Units = "quarter")
 
-## ---- classes-ages ----
-Classes(ExampleStock)
-
-## ---- create-ages_2 ----
-Seasons(ExampleOM) <- 1 # annual
+## ---- create-ages ----
 Ages(ExampleStock) <- Ages(MaxAge = 20)
+
+## ---- ages-classes ----
 Classes(ExampleStock)
+
 
 ## ---- create-length ----
 Length(ExampleStock) <- Length(
@@ -39,6 +35,65 @@ Length(ExampleStock) <- Length(
   Model = "vonBert",
   CVatAge = c(0.1, 0.15)
 )
+
+
+## ---- create-weight ----
+Weight(ExampleStock) <- Weight(
+  Pars = list(
+    alpha = 1.34E-05,
+    beta = 3.106
+  )
+)
+
+## ---- create-natural-mortality ----
+NaturalMortality(ExampleStock) <- NaturalMortality(
+  Pars = list(
+    M = c(0.35, 0.45)
+  )
+)
+
+## ---- create-maturity ----
+Maturity(ExampleStock) <- Maturity(
+  Pars = list(
+    L50 = c(81, 91),
+    L50_95 = c(10, 12)
+  )
+)
+
+## ---- create-srr ----
+
+SRR(ExampleStock) <- SRR(
+  Pars = list(h = c(0.65, 0.85)),
+  R0 = 1000,
+  SD = c(0.15, 0.3),
+  AC = c(0.1, 0.9)
+)
+
+
+## ---- create-spatial ----
+Spatial(ExampleStock) <- Spatial(
+  UnfishedDist = c(0.095, 0.105),
+  ProbStaying = c(0.8, 0.9),
+  RelativeSize = c(0.095, 0.105)
+)
+
+## ---- create-depletion ----
+Depletion(ExampleStock) <- Depletion(
+  Final = c(0.05, 0.6),
+  Reference = "B0"
+)
+
+
+## ---- create-ages_1 ----
+Ages(ExampleStock) <- Ages(MaxAge = 4 * 20, Units = "quarter")
+
+## ---- classes-ages ----
+Classes(ExampleStock)
+
+## ---- create-ages_2 ----
+Seasons(ExampleOM) <- 1 # annual
+Ages(ExampleStock) <- Ages(MaxAge = 20)
+Classes(ExampleStock)
 
 
 ## ---- populate-length ----
@@ -54,23 +109,6 @@ MeanAtAge(ExampleLengthComplete)
 CVatAge(ExampleLengthComplete)
 
 
-## ---- create-weight ----
-Weight(ExampleStock) <- Weight(
-  Pars = list(
-    alpha = 1.34E-05,
-    beta = 3.106
-  )
-)
-
-## ---- create-natural-mortality ----
-NaturalMortality(ExampleStock) <- NaturalMortality(
-  Pars = list(
-    M = c(0.35, 0.45),
-    Msd = c(0, 0.2)
-  )
-)
-
-
 ## ---- populate-M ----
 ExampleStock |>
   NaturalMortality() |>
@@ -79,13 +117,6 @@ ExampleStock |>
   ) |>
   Pars()
 
-## ---- create-maturity ----
-Maturity(ExampleStock) <- Maturity(
-  Pars = list(
-    L50 = c(81, 91),
-    L50_95 = c(10, 12)
-  )
-)
 
 ## ---- populate-maturity ----
 ExampleMaturityComplete <- ExampleStock |>
@@ -99,21 +130,6 @@ ExampleMaturityComplete <- ExampleStock |>
 ExampleMaturityComplete |> Pars()
 ExampleMaturityComplete |> MeanAtLength()
 ExampleMaturityComplete |> MeanAtAge()
-
-## ---- create-srr ----
-
-SRR(ExampleStock) <- SRR(
-  Pars = list(h = c(0.65, 0.85)),
-  R0 = 1000,
-  SD = c(0.15, 0.3),
-  AC = c(0.1, 0.9)
-)
-
-## --- create-spatial ----
-Spatial(ExampleStock) <- Spatial(
-  UnfishedDist 
-)
-
 
 
 # ---- Example Fleet ----
