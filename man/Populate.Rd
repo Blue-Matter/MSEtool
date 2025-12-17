@@ -76,9 +76,7 @@ Populate(object, ...)
 \S4method{Populate}{srr}(
   object,
   Ages = NULL,
-  Length = NULL,
-  Weight = NULL,
-  Maturity = NULL,
+  CurrentYear = NULL,
   Years = NULL,
   nSim = 5,
   seed = NULL,
@@ -93,6 +91,8 @@ Populate(object, ...)
   nSim = 5,
   seed = NULL,
   silent = FALSE,
+  plot = FALSE,
+  nits = 100,
   ...
 )
 
