@@ -136,6 +136,9 @@ Data <- function(Name=NA, ...) {
   if (methods::is(Name, 'om'))
     return(Name@Data)
   
+  if (methods::is(Name, 'hist'))
+    return(Name@Data)
+  
   .Object <- methods::new('data')
   
   validObject(.Object)
