@@ -847,6 +847,7 @@ SS2SRR <- function(st, RepList, YearsList, Ages, nSim) {
 
   if (st == 2) {
     SRR@SPFrom <- 1
+  }
 
   RecDevs <- GenerateRecruitmentDeviations(SD=SRR@SD, 
                                            AC=SRR@AC, 
@@ -1825,7 +1826,6 @@ UpdateRecDevs <- function(replist, OM) {
       nrow = nrow(currdev),
       ncol = length(newdev)
     )
-
     OM@Stock[[st]]@SRR@RecDevHist[] <- currdev * newdev
   }
   OM
