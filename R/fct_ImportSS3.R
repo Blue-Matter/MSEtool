@@ -847,19 +847,16 @@ SS2SRR <- function(st, RepList, YearsList, Ages, nSim) {
 
   if (st == 2) {
     SRR@SPFrom <- 1
-  }
 
-  RecDevs <- GenerateRecruitmentDeviations(
-    SD = SRR@SD,
-    AC = SRR@AC,
-    Ages = Ages,
-    HistTS = YearsList$YearsHist,
-    ProjTS = YearsList$YearsProj,
-    nSim = nSim,
-    RecDevInit = SRR@RecDevInit,
-    RecDevHist = SRR@RecDevHist
-  )
-
+  RecDevs <- GenerateRecruitmentDeviations(SD=SRR@SD, 
+                                           AC=SRR@AC, 
+                                           Ages = Ages,
+                                           HistTS=YearsList$YearsHist, 
+                                           ProjTS=YearsList$YearsProj,
+                                           nSim=nSim,
+                                           RecDevInit=SRR@RecDevInit,
+                                           RecDevHist=SRR@RecDevHist)
+  
   SRR@RecDevProj <- RecDevs$RecDevProj
   ProjectionYears <- YearsList$YearsProj
   dimnames(SRR@RecDevProj) <- list(
