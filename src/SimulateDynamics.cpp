@@ -257,11 +257,9 @@ S4 SimulateDynamics_(S4 HistSimIn,
         int sp0_nts = SP0.n_cols;
         double sp0 = arma::as_scalar(SP0.row(st).col(0));
         if (sp0_nts >1 ) {
-          sp0 = arma::as_scalar(SP0.row(st).col(TSRec));
+          sp0 = arma::as_scalar(SP0.row(st).col(TSindex));
         }
 
-        
-        
         double SProductionThisTimeStep = arma::as_scalar(SProduction.row(st).col(TSindex));
         double R0_recruit_TimeStep = arma::as_scalar(R0(TSRec));
         double RecDev_recruit_TimeStep = arma::as_scalar(RecDevs(TSRec));
