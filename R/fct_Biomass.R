@@ -785,7 +785,7 @@ CatchValues <- function(MSE, byAge=FALSE, byFleet=FALSE, byArea=FALSE,
   }
   
   if (units=='Weight') {
-    Value <- purrr::map2(Hist@OM@Fleet, Value, \(fleet, numbers) {
+    Value <- purrr::map2(MSE@OM@Fleet, Value, \(fleet, numbers) {
       fleetWeight <- fleet@WeightFleet |> AddDimension('Area')
       ArrayMultiply(fleetWeight, numbers)
     })
