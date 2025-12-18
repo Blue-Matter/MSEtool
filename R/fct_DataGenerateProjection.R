@@ -112,8 +112,7 @@ GenerateProjectionData_Catch <- function(ProjSim, DataYear, YearsAll, i,
   # catch number
   SimCatch_Number <- List2Array(SimCatchList, 'Stock') |>
     apply(c(4,2), sum)
-  dimnames(SimCatch_Number) <- list(Year=DataYear, Fleet=FleetNames)
-  
+
   
   # catch biomass
   SimCatch_Biomass <- purrr::map2(SimCatchList, ProjSim@OM@Fleet, \(Catch, Fleet) {
@@ -122,8 +121,10 @@ GenerateProjectionData_Catch <- function(ProjSim, DataYear, YearsAll, i,
     apply(catch*fleetweight, 2, sum)
   }) |>
     List2Array('Stock', 'Fleet') |> rowSums() |> t()
-  dimnames(SimCatch_Number) <- list(Year=DataYear, Fleet=FleetNames)
+  # dimnames(SimCatch_Biomass) <- list(Year=DataYear, Fleet=FleetNames)
   
+  SimCatch_Number <-  apply(SimCatch_Number, 2, sum) # sum over stocks
+ 
   Value <- DataCatch@Value
   CV <- DataCatch@CV
   
