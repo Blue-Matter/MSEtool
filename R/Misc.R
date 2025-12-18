@@ -92,10 +92,19 @@ firstup <- function(x, n=1) {
 # ---- Names ---- 
 
 #' @export
-StockNames <- function(OM) {
-  if (!methods::is(OM, 'om'))
-    cli::cli_abort('`OM` must be class `om`')
-  names(OM@Stock)
+StockNames <- function(object) {
+  if (inherits(object, 'hist')) {
+    names <- Recall(object@OM)
+  } 
+
+  if (inherits(object, 'om')) {
+    names <- names(object@Stock)
+  }
+  if (inherits(object, 'StockList')) {
+    names <-  names(object)
+  }
+  
+  names
 }
 
 #' @export
