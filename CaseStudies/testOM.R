@@ -4,29 +4,46 @@ library(MSEtool)
 OM <- Convert(testOM)
 Hist <- Simulate(OM)
 
-FixedTAC <- function(...) {
+
+
+EffortbyFleet <- function(Data) {
+  
+  PopDyn <- Misc(Data)$PopDyn 
+  # `hist` class object with all historical and projection data - all stocks
+  # might have to drop stock out of this for class `mp`
+  # TODO - add dimension names to PopDyn arrays
+  
+  LHYearindex <- GetYearLH(Data)
+ 
+  st <- 1 # hard code stock 
+  realEffortFleet <- apply(PopDyn@Effort[st,(LHYearindex-4):LHYearindex, ,drop=FALSE], 3, mean) # historical effort by fleet 
+
   advice <- Advice()
-  advice@TAC <- 1000
+  advice@Effort <- realEffortFleet
   advice
 }
-class(FixedTAC) <- 'mp'
+class(EffortbyFleet) <- 'mp'
 
-FixedEffort <- function(...) {
-  advice <- Advice(Effort)
-  advice@Effort <- 1
+TACbyFleet <- function(Data) {
+  PopDyn <- Misc(Data)$PopDyn 
+  LHYearindex <- GetYearLH(Data)
+  st <- 1 # hard code stock 
+  realCatchFleet <- apply(PopDyn@Landings[st,(LHYearindex-4):LHYearindex, ,drop=FALSE], 3, mean) 
+  
+  advice <- Advice()
+  advice@TAC <- realCatchFleet
   advice
 }
-class(FixedEffort) <- 'mp'
+class(TACbyFleet) <- 'mp'
 
-# Make a set of test/demo MPs 
-# - finish update Selectivity, etc 
+MPs <- c('EffortbyFleet', 'TACbyFleet')
 
-# Test all case study stocks
+MSE <- Project(Hist, MPs)
 
-MSE <- Project_hist(Hist,      
-               MPs=c('FixedTAC', 'FixedEffort'))
-
+MSE@Landings[1,1,,1,]
 MSE@Effort[1,1,,1,]
 
 
+#  ---- Dev -----
 
+LoadArgs(Project_hist)

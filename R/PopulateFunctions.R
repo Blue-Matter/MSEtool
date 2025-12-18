@@ -115,6 +115,8 @@ PopulateMeanAtAge <- function(object, Ages=NULL, Years=NULL, Length=NULL) {
                                                Pars=object@Pars,
                                                Length=Length@MeanAtAge)
       
+      yearnames <- dimnames(Length@MeanAtAge)$Year 
+      
     } else {
       if ('Ages' %in% args) {
         CheckRequiredObject(Ages, 'ages', 'Ages')
@@ -126,11 +128,12 @@ PopulateMeanAtAge <- function(object, Ages=NULL, Years=NULL, Length=NULL) {
                                             Pars=object@Pars,
                                             Ages=Ages@Classes)
       
+      yearnames <- purrr::map(object@Pars, \(par) {
+        dimnames(par)$Year
+      }) |> unlist() |> unique()
+      
     }
     dd <- dim(object@MeanAtAge)
-    yearnames <- purrr::map(object@Pars, \(par) {
-      dimnames(par)$Year
-    }) |> unlist() |> unique()
     
     if (is.null(yearnames)) {
       yearnames <- Years[1:dd[3]]

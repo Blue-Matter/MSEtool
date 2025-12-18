@@ -778,14 +778,15 @@ GetSS_R0 <- function(st, replist, YearsList) {
   AgeClasses <- GetSSAgeClasses(replist)
 
   birthseas <- GetSSBirthSeas(replist)
-
-  R0 <- dplyr::filter(
-    replist$natage, Sex == st, `Beg/Mid` == "B", Era == "VIRG",
-    Seas == birthseas
-  ) |>
-    tidyr::pivot_longer(as.character(AgeClasses), names_to = "Age", values_to = "Number") |>
-    dplyr::mutate(Age = as.numeric(Age)) |>
-    dplyr::filter(Age == min(Age)) |>
+  R0 <- dplyr::filter(replist$natage, Sex == st, 
+                      `Beg/Mid` == "B", 
+                      Era == "VIRG",
+                      Seas==birthseas) |>
+    tidyr::pivot_longer(as.character(AgeClasses), 
+                        names_to = 'Age', 
+                        values_to = 'Number') |>
+    dplyr::mutate(Age=as.numeric(Age)) |>
+    dplyr::filter(Age==min(Age)) |>
     dplyr::pull(Number)
 
   nSeas <- replist$natage$Seas |>
