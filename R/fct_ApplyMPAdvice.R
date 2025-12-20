@@ -20,11 +20,12 @@ ApplyMPAdvice <- function(ProjSim, MP, Year, YearsHist, YearsProj, ManagementYea
   Complexes <- ProjSim@OM@Complexes
   MPData <- GetMPData(ProjSim, Year, YearsAll)
   CheckDataLength(MPData, Complexes)
+
   
   if (!Year %in% ManagementYears) {
     MPAdviceList <- MPAdviceList_Previous
   } else {
-    MPAdviceList <- CalcAdvice(MP, MPData, Year)
+    MPAdviceList <- CalcAdvice(MP, MPData, Year, ProjSim)
   }
   
   ProjSim <- SaveMPAdvice(ProjSim, MPAdviceList, Year) 
@@ -65,19 +66,23 @@ GetMPData <- function(ProjSim, Year, YearsAll) {
   MPData
 }
 
-CalcAdvice <- function(MP, Data, Year=NULL) {
+CalcAdvice <- function(MP, Data, Year=NULL, ProjSim=NULL) {
   MPFunction <- get(MP)
   
   if (inherits(MPFunction, 'mmp'))
-    return(CalcAdvice_MMP(MP, Data, Year))
+    return(CalcAdvice_MMP(MP, Data, Year, ProjSim))
   
-  CalcAdvice_MP(MP, Data, Year) 
+  CalcAdvice_MP(MP, Data, Year, ProjSim) 
 }
 
-CalcAdvice_MP <- function(MP, Data, Year=NULL) {
+CalcAdvice_MP <- function(MP, Data, Year=NULL, ProjSim=NULL) {
   MPAdviceList <- MakeNamedList(names(Data))
   MPFunction <- get(MP)
   for (i in seq_along(Data)) { 
+    # add all real pop dyn info 
+    ProjSim@Data <- list()
+    Data[[i]]@Misc$PopDyn <- ProjSim
+    
     MPAdvice <- try(MPFunction(Data=Data[[i]]), silent=TRUE)
     MPErrorLog(MPAdvice, Year)
     MPAdviceList[[i]] <- MPAdvice
@@ -85,7 +90,7 @@ CalcAdvice_MP <- function(MP, Data, Year=NULL) {
   MPAdviceList
 }
 
-CalcAdvice_MMP <- function(MP, Data, Year=NULL) {
+CalcAdvice_MMP <- function(MP, Data, Year=NULL, ProjSim=NULL) {
   # TODO 
   cli::cli_abort("MP class `mmp` currently not supported", call=NULL)
   

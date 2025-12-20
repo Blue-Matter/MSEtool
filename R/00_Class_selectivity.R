@@ -13,7 +13,6 @@
 #' @name Selectivity
 #' @rdname Selectivity
 #' @docType class
-#' @example man-examples/Selectivity-class.R
 #' @export
 setClass("selectivity",
          slots=c(Pars='list',

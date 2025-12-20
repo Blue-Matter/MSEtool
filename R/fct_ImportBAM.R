@@ -1,7 +1,5 @@
 
-#' Import an OM from Beaufort Assessment Model (BAM) Output
-#' 
-#' @param Stock Character string matching ... or a list ...
+#' Import BAM 
 #' 
 #' @export
 ImportBAM <- function(Stock='Red Snapper',     
@@ -81,7 +79,7 @@ ImportBAM <- function(Stock='Red Snapper',
 
 
 
-#' @describeIn ImportBAM description
+#' @rdname ImportBAM
 #' @export
 GetBAMOutput <- function(Stock='Red Snapper', type=c('rdat', 'dat')) {
   type <- match.arg(type)
@@ -119,7 +117,7 @@ GetBAMOutput <- function(Stock='Red Snapper', type=c('rdat', 'dat')) {
 }
 
 
-#' @describeIn ImportBAM description
+#' @rdname ImportBAM
 #' @export
 ListBAMStocks <- function(type=c('rdat', 'dat')) {
   type <- match.arg(type)

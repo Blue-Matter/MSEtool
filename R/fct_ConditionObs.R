@@ -61,16 +61,23 @@ ConditionObs_Catch <- function(HistSim, FisheryData, HistYears,
   if (is.null(ObservedCatch))
     return(HistSim)
     
-  
   nFleet <- ncol(ObservedCatch)
   
-  catchList <- slot(HistSim, type)[stocks]
+  catchList <- slot(HistSim, paste0(type,'AtAge'))[stocks]
   
-  SimulatedCatch <- purrr::map(catchList, \(catch) {
+  SimulatedCatch_Number <- purrr::map(catchList, \(catch) {
     List2Array(catch) |>
     AddDimNames(c('Age', 'Fleet', 'Area', 'Year'), HistYears) |>
       apply(c('Year', 'Fleet'), sum)
   }) |> 
+    List2Array('Stock') |> 
+    apply(c('Year', 'Fleet'), sum)
+  
+  SimulatedCatch_Biomass <- purrr::map2(catchList, HistSim@OM@Fleet, \(catch, fleet) {
+    catch <- apply(List2Array(catch), c(1,2,4), sum) |> # sum over areas
+      aperm(c(1,3,2))
+    apply(catch*  ArraySubsetYear(fleet@WeightFleet, HistYears), 2:3, sum) # sum over ages
+  })  |> 
     List2Array('Stock') |> 
     apply(c('Year', 'Fleet'), sum)
   
@@ -80,18 +87,7 @@ ConditionObs_Catch <- function(HistSim, FisheryData, HistYears,
   
   if (length(FleetUnits)!=nFleet)
     FleetUnits <- rep(FleetUnits, nFleet)[1:nFleet]
-  
-  if (any(FleetUnits=='Number')) {
-    # Calculate catch in numbers
-    SimulatedCatch_Number <- purrr::map2(catchList, HistSim@OM@Fleet, \(catch, fleet) {
-      catch <- apply(List2Array(catch), c(1,2,4), sum) |> # sum over areas
-        aperm(c(1,3,2))
-      apply(catch/fleet@WeightFleet, 2:3, sum) # sum over ages
-    })  |> 
-      List2Array('Stock') |> 
-      apply(c('Year', 'Fleet'), sum)
-  }
-  
+
   for (fl in 1:nFleet) {
     CatchObs <- slot(HistSim@OM@Obs[[i]][[fl]], type)
     CatchObs@Type <- slot(FisheryData,type)@Type[fl]
@@ -101,7 +97,7 @@ ConditionObs_Catch <- function(HistSim, FisheryData, HistYears,
       CatchObs@Years <- HistYears
     
     if (Units=='Biomass') {
-      SimValue <- SimulatedCatch[,fl]  
+      SimValue <- SimulatedCatch_Biomass[,fl]  
     } else {
       SimValue <- SimulatedCatch_Number[,fl]
     }
@@ -259,7 +255,7 @@ ConditionObs_Index <- function(HistSim, FisheryData, HistYears, ProjYears,
     if (is.character(SelectivityAtAge)) {
       if (SelectivityAtAge == 'Biomass') {
         for (st in seq_along(stocks)) {
-          SelectivityAtAgeList[[st]] <- matrix(1,nAge(HistSim@OM, stocks[st]), 1) |>
+          SelectivityAtAgeList[[st]] <- matrix(1,nAge(HistSim@OM, st), 1) |>
             AddDimNames(c('Age', 'Year'), HistYears)
         }
       } else if (SelectivityAtAge == 'SBiomass') {
@@ -284,9 +280,6 @@ ConditionObs_Index <- function(HistSim, FisheryData, HistYears, ProjYears,
     Units <- slot(FisheryData,type)@Units[fl]
     if (is.null(Units))
       Units <- 'Biomass'
-    
-    if (length(Units)!=nFleet)
-      Units <- rep(Units, nFleet)[1:nFleet]
     
     SimNumberSelectedList <- purrr::map2(SimulatedNumberList, SelectivityAtAgeList, ArrayMultiply)
   

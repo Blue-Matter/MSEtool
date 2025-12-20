@@ -17,7 +17,6 @@
 #' @seealso `r See_Also('fleet')`
 #'
 #' @name FleetClass
-#' @example man-examples/Fleet-class.R
 #' @export
 setClass('fleet',
          slots=c(Name='char.null',

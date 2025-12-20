@@ -1,9 +1,10 @@
-# 
+pak::pkg_install('blue-matter/MSEtool@prerelease')
 
 library(MSEtool)
 
-if (!packageVersion('MSEtool') >= '4.0.0')
-  stop('Needs MSEtool v4+')
+
+
+
 
 MOM <- readRDS('C:/Users/Admin/Downloads/MOM.rds')
 MOM <- readRDS('C:/Users/Adrian/Downloads/MOM.rds')

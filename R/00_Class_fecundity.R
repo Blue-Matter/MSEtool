@@ -134,7 +134,7 @@ Fecundity <- function(Pars=list(L50=NA, L50_95=NA, MaxFec=NA),
 
 
 #' @describeIn Fecundity Assign an `Fecundity` object to a [Stock()] object
-#' @param x A [stock()] object
+#' @param x A [Stock()] object
 #' @param value A `Fecundity` object to assign to `x`
 #' @export
 `Fecundity<-` <- function(x, value) {

@@ -199,7 +199,7 @@ SRR <- function(Pars=list(h=NA),
 
 
 #' @describeIn SRR Assign an `SRR` object to a [Stock()] object
-#' @param x A [stock()] object
+#' @param x A [Stock()] object
 #' @param value A `SRR` object to assign to `x`
 #' @export
 `SRR<-` <- function(x, value) {

@@ -12,13 +12,12 @@ ExtendHist <- function(Hist) {
   }
   
   for (i in seq_along(Hist@OM@Obs)) {
-    Hist@OM@Obs[[i]] <- ArrayExpand(Hist@OM@Obs[[i]], 1, nAge=NULL, Years)
+    Hist@OM@Obs[[i]] <- ArrayExpand(Hist@OM@Obs[[i]], 1, NULL, Years)
   }
   
   for (i in seq_along(Hist@OM@Imp)) {
-    Hist@OM@Imp[[i]] <- ArrayExpand(Hist@OM@Imp[[i]], 1, nAge=NULL, Years)
+    Hist@OM@Imp[[i]] <- ArrayExpand(Hist@OM@Imp[[i]], 1, NULL, Years)
   }
-  
   
   Hist <- ExtendTimeSeries(Hist, Years)
   Hist
@@ -28,6 +27,7 @@ ExtendHist <- function(Hist) {
 ExtendFleet_Hist <- function(Fleet, Years) {
   Fleet@DiscardMortality <- ArrayExpand(Fleet@DiscardMortality, 1, NULL, Years)
   Fleet@Catchability <- ArrayExpand(Fleet@Catchability, 1, NULL, Years)
+  Fleet@Effort <- ArrayExpand(Fleet@Effort, 1, NULL, Years)
   Fleet@qArea <- ArrayExpand(Fleet@qArea, 1, NULL, Years)
   Fleet@Selectivity <- ArrayExpand(Fleet@Selectivity, 1, NULL, Years)
   Fleet@Retention <- ArrayExpand(Fleet@Retention, 1, NULL, Years)

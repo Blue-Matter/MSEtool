@@ -71,13 +71,13 @@ GenerateHistoricalData_Effort <- function(Data, HistSim, HistYears, i, stocks) {
   EffortData <- new('effortdata')
   EffortData@Name <- FleetNames
   
-  EffortData@Value <- array(NA, dim=c(nTS, nFleet),
+  Value <- array(NA, dim=c(nTS, nFleet),
                            dimnames=list(Year=HistYears,
                                          Fleet=FleetNames))
-  EffortData@CV <- EffortData@Value 
-  EffortData@CV[] <- 0.2
+  CV <- Value 
+  CV[] <- 0.2
   
-  EffortData@Value[] <- HistSim@Effort[stocks,,,drop=FALSE] |> apply(2:3, mean, na.rm=TRUE)
+  Value[] <- HistSim@Effort[stocks,,,drop=FALSE] |> apply(2:3, mean, na.rm=TRUE)
 
   for (fl in 1:nFleet) {
     EffortObs <- HistSim@OM@Obs[[i]][[fl]]@Effort
@@ -85,18 +85,20 @@ GenerateHistoricalData_Effort <- function(Data, HistSim, HistYears, i, stocks) {
       next()
     }
     
-    EffortData@Value[,fl] <- EffortData@Value[,fl] * 
+    EffortData@Value[,fl] <- Value[,fl] * 
       EffortObs@Bias * 
       ArraySubsetYear(EffortObs@Error, HistYears)
     
   }
+  Data@Effort@CV <- CV
   Data@Effort <- EffortData
   Data
 }
   
 GenerateHistoricalData_Catch <- function(Data, HistSim, HistYears, i, 
                                          stocks, type=c('Landings', 'Discards')) {
-  type <- match.arg(type)
+  type <- match.arg(type, c('Landings', 'Discards'))
+  
   if (!EmptyObject(slot(Data, type))) 
     return(Data)
   
@@ -113,13 +115,7 @@ GenerateHistoricalData_Catch <- function(Data, HistSim, HistYears, i,
   CatchData@CV <- CatchData@Value 
   CatchData@CV[] <- 0.2
   
-  Catch  <- purrr::map(slot(HistSim, type)[stocks], \(catch) 
-                       catch |> List2Array() |> apply(c(2,4), sum) |> t()
-  ) |> List2Array('Stock') |>
-    apply(1:2, sum)
-  dimnames(Catch) <- list(Year=HistYears, 
-                          Fleet=FleetNames)
-  
+  Catch  <- apply(slot(HistSim, type)[stocks,,,drop=FALSE], c('Year', 'Fleet'), sum)
   
   for (fl in 1:nFleet) {
     Obs <- HistSim@OM@Obs[[i]][[fl]]
@@ -191,7 +187,7 @@ GenerateHistoricalData_Index <- function(HistSim, HistYears, i, stocks,
     if (is.character(SelectivityAtAge)) {
       if (SelectivityAtAge == 'Biomass') {
         for (st in seq_along(stocks)) {
-          SelectivityAtAgeList[[st]] <- matrix(1,nAge(HistSim@OM, stocks[st]), 1) |>
+          SelectivityAtAgeList[[st]] <- matrix(1,nAge(HistSim@OM,st), 1) |>
             AddDimNames(c('Age', 'Year'), HistYears)
         }
       } else if (SelectivityAtAge == 'SBiomass') {

@@ -136,7 +136,18 @@ CatchFrac <- function(x) {
 #' @rdname Access
 #' @export
 Classes <- function(x) {
-  x@Classes
+  CheckClass(x, c('stock', 'StockList', 'ages'), 'x')
+  
+  if (inherits(x, 'ages'))
+    return(x@Classes)
+  
+  if (inherits(x, 'stock')) 
+    return(x@Ages@Classes)
+  
+  if (inherits(x, 'StockList'))
+    return(
+      purrr::map(x, Recall)
+    )
 }
 
 #' @rdname Access
@@ -365,16 +376,18 @@ Longitude <- function(x) {
 
 #' @rdname Access
 #' @export
-nAge <- function(x, st=1) {
+nAge <- function(x, st=NULL) {
   if (inherits(x, 'stock'))
-    return(x@Ages@Classes)
+    return(length(x@Ages@Classes))
   if (inherits(x, 'ages'))
-    return(x@Classes)
+    return(length(x@Classes))
   if (inherits(x, 'om')) {
-    nages <- purrr::map(x@Stock, \(x) {
+    nAges <- purrr::map(x@Stock, \(x) {
       length(x@Ages@Classes)
-    }) |> unlist() |> max()
-    return(nages)
+    })
+    if (is.null(st))
+      return(nAges[[st]])
+    return(nAges)
   }
     
 }

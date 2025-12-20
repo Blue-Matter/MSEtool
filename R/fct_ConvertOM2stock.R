@@ -21,7 +21,7 @@ OM2stock <- function(OM, cpars = NULL, YearsList = NULL,
   stock@SRR <- OM2SRR(OM, cpars)
   stock@Spatial <- OM2Spatial(OM, cpars)
   stock@Depletion <- OM2Depletion(OM, cpars)
-
+  
   PopulateStock(stock, 
                 nYear,
                 pYear,

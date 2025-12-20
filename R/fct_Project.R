@@ -40,8 +40,8 @@ UpdateAllocation <- function(SimList) {
 # }
 
 
-Project_hist <- function(Hist=NULL, 
-                         MPs=NA, 
+Project_hist <- function(Hist,
+                         MPs, 
                          parallel=FALSE, 
                          silent=FALSE, 
                          nSim=NULL, 

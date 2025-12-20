@@ -306,7 +306,6 @@ importslot <- function(name, length=2, Data, Names, numeric=TRUE, essential=TRUE
 #' @author T. Carruthers and A. Hordyk
 #' @export
 #' @keywords classes
-#' @examples
 #'
 #' @name Stock-class
 #'

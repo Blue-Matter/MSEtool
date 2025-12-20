@@ -4,7 +4,11 @@
 
 #' @export
 LoadArgs <- function(fun='Simulate', envir = .GlobalEnv, debug=FALSE) {
-
+  CheckClass(fun, c('character', 'function'), fun)
+  if (inherits(fun, 'function')) {
+    fun <-  deparse(substitute(fun))
+  }
+ 
   formals <- get(fun) |> formals()
   args <- names(formals)
   for (i in seq_along(args)) {

@@ -137,7 +137,6 @@ setClass("advicedata",
 #'
 #' @name DataClass
 #'
-#' @example man-examples/Data-class.R
 #' @export
 setClass('data',
          slots=c(Name='char.null',
@@ -182,6 +181,9 @@ setClass('data',
 #' @export
 Data <- function(Name=NA, ...) {
   if (methods::is(Name, 'om'))
+    return(Name@Data)
+  
+  if (methods::is(Name, 'hist'))
     return(Name@Data)
   
   .Object <- methods::new('data')

@@ -27,10 +27,12 @@ SimList2Hist <- function(Hist, SimList, Years=NULL) {
   Hist <- SimListRefPointsPR(Hist, SimList)
   
   # RefLandings
-  Hist@RefLandings <- purrr::map(SimList, \(HistSim) HistSim@RefLandings) |> List2Array('Sim') |> aperm(c('Sim', 'Stock'))
+  Hist@Reference@RefLandings <- purrr::map(SimList, \(HistSim) HistSim@Reference@RefLandings) |> 
+    List2Array('Sim') |> aperm(c('Sim', 'Stock'))
   
   # RefRemovals
-  Hist@RefRemovals <- purrr::map(SimList, \(HistSim) HistSim@RefRemovals) |> List2Array('Sim') |> aperm(c('Sim', 'Stock'))
+  Hist@Reference@RefRemovals <- purrr::map(SimList, \(HistSim) HistSim@Reference@RefRemovals) |> 
+    List2Array('Sim') |> aperm(c('Sim', 'Stock'))
   
   # Stock
   Hist <- SimListStock(Hist, SimList)
@@ -69,13 +71,13 @@ SimList2Hist <- function(Hist, SimList, Years=NULL) {
 
 
 SimListRefPointsMSY <- function(Hist, SimList) {
-  if (!EmptyObject(Hist@RefPointsMSY))
+  if (!EmptyObject(Hist@Reference@MSY))
     return(Hist)
   
-  slots <- slotNames(Hist@RefPointsMSY)
+  slots <- slotNames(Hist@Reference@MSY)
   for (slot in slots) {
-    slot(Hist@RefPointsMSY, slot) <- purrr::map(SimList, \(HistSim) 
-                                                slot(HistSim@RefPointsMSY, slot)) |>
+    slot(Hist@Reference@MSY, slot) <- purrr::map(SimList, \(HistSim) 
+                                                slot(HistSim@Reference@MSY, slot)) |>
       List2Array('Sim') |>
       aperm(c('Sim', 'Stock', 'Year'))
   }
@@ -85,7 +87,7 @@ SimListRefPointsMSY <- function(Hist, SimList) {
 
 SimListRefPointsPR <- function(Hist, SimList) {
   
-  Hist@RefPointsPR@SPR0 <- purrr::map(SimList, \(HistSim) HistSim@RefPointsPR@SPR0) |>
+  Hist@Reference@SPR0 <- purrr::map(SimList, \(HistSim) HistSim@Reference@SPR0) |>
     List2Array('Sim') |>
     aperm(c('Sim', 'Stock', 'Year'))
   
@@ -297,10 +299,18 @@ SimListTimeSeries <- function(Hist, SimList, Years= NULL) {
   ) |> List2Array("Sim") |>
     aperm(c("Sim", 'Stock', "Year"))
   
+  Hist@Landings <- purrr::map(SimList, \(HistSim) HistSim@Landings) |> 
+    List2Array("Sim") |>
+    aperm(c("Sim", 'Stock', "Year", "Fleet"))
+  
+  Hist@Discards <- purrr::map(SimList, \(HistSim) HistSim@Discards) |> 
+    List2Array("Sim") |>
+    aperm(c("Sim", 'Stock', "Year", "Fleet"))
+
   
   for (st in 1:nStock) {
-    Hist@Landings[[st]] <- purrr::map(SimList, \(HistSim) {
-      List2Array(HistSim@Landings[[st]]) |>
+    Hist@LandingsAtAge[[st]] <- purrr::map(SimList, \(HistSim) {
+      List2Array(HistSim@LandingsAtAge[[st]]) |>
         AddDimNames(c("Age", "Fleet", "Area", "Year"), 
                     Years=Years,
                     Ages=HistSim@OM@Stock[[st]]@Ages@Classes,
@@ -309,9 +319,8 @@ SimListTimeSeries <- function(Hist, SimList, Years= NULL) {
       List2Array("Sim") |>
       aperm(c("Sim", 'Age', 'Year', 'Fleet', 'Area'))
     
-    
-    Hist@Discards[[st]] <- purrr::map(SimList, \(HistSim) {
-      List2Array(HistSim@Discards[[st]]) |>
+    Hist@DiscardsAtAge[[st]] <- purrr::map(SimList, \(HistSim) {
+      List2Array(HistSim@DiscardsAtAge[[st]]) |>
         AddDimNames(c("Age", "Fleet", "Area", "Year"), 
                     Years=Years,
                     Ages=HistSim@OM@Stock[[st]]@Ages@Classes,

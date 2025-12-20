@@ -126,10 +126,10 @@ ProcessAdvice_SelectivityMeanAtLength <- function(Selectivity, ProjSim, YearsPro
   ) |> ExtendYears(YearsProj)
   
   if (type=='Retention') {
-    Selectivity <- MeanAtLength2MeanAtAge(Selectivity, Length, Ages, nsim=1, Years=YearsProj, max1=FALSE)   
+    Selectivity <- MeanAtLength2MeanAtAge(Selectivity, Length, Ages, 1, Years=YearsProj, max1=FALSE)   
     
   } else {
-    Selectivity <- MeanAtLength2MeanAtAge(Selectivity, Length, Ages, nsim=1, Years=YearsProj)                                
+    Selectivity <- MeanAtLength2MeanAtAge(Selectivity, Length, Ages, 1, Years=YearsProj)                                
   }
   Selectivity@MeanAtAge <- Selectivity@MeanAtAge |> ExtendYears(YearsProj) 
   
@@ -176,7 +176,7 @@ ProcessAdvice_SelectivityMeanAtWeight <- function(Selectivity, ProjSim, YearsPro
   ) |>
     ExtendYears(YearsProj)
   
-  Selectivity <- MeanAtWeight2MeanAtAge(Selectivity, Weight, Ages, nsim=1, Years=YearsProj)                              
+  Selectivity <- MeanAtWeight2MeanAtAge(Selectivity, Weight, Ages, 1, Years=YearsProj)                              
   
   MeanAtWeight <- Selectivity@MeanAtWeight |> DropDimension('Sim')
   MeanAtAge <- Selectivity@MeanAtAge |> DropDimension('Sim')

@@ -87,7 +87,7 @@ UpdateDiscardMortality <- function(ProjSim, MPAdviceList, MPAdviceList_Previous,
                                               Year=YearsProj[1])
           ) |> 
             ExtendYears(YearsProj)
-          DiscardMortality <- MeanAtLength2MeanAtAge(DiscardMortality, Length, Ages, nsim=1, Years=YearsProj)                              
+          DiscardMortality <- MeanAtLength2MeanAtAge(DiscardMortality, Length, Ages, 1, Years=YearsProj)                              
           
           MeanAtLength <- DiscardMortality@MeanAtLength |> DropDimension('Sim')
           MeanAtAge <- DiscardMortality@MeanAtAge |> DropDimension('Sim')

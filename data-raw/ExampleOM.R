@@ -1,6 +1,4 @@
 
-## code to prepare `ExampleOM` dataset goes here
-
 library(MSEtool)
 
 # ---- Example OM  ----
@@ -81,33 +79,76 @@ Depletion(ExampleStock) <- Depletion(
 
 # ---- Example Fleet ----
 
-## ---- create-fleet ----
-ExampleFleet <- Fleet("Example Fleet")
 
-## ---- create-effort ----
-
-Effort(ExampleFleet) <- Effort(Value=data.frame(Year=c(1996, 2004, 2013, 2025),
-                                                Lower=c(0, 0.2, 0.8, 1),
-                                                Upper=c(0, 0.6, 1.2, 1))
-)
+# ---- Example Obs ----
 
 
-## --- create-selectivity ----
-Selectivity(ExampleFleet) <- Selectivity(
-  Pars=list(SL50=c(50, 70),
-            SL50_95=c(10, 20))
-)
+# ---- Example OM  Cont. ----
+
+Stock(ExampleOM) <- ExampleStock  
 
 
-# ---- Example OM Populate ----
-Stock(ExampleOM) <- ExampleStock
-Fleet(ExampleOM) <- ExampleFleet
-
-# ---- Save Data Objects -----
+## ---- Save Data Objects -----
 
 usethis::use_data(ExampleStock, overwrite = TRUE)
-usethis::use_data(ExampleFleet, overwrite = TRUE)
 usethis::use_data(ExampleOM, overwrite = TRUE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## ---- access-assign-1 ----
+nSim(ExampleOM)
+nSim(ExampleOM) <- 5
+nSim(ExampleOM)
+
+## ---- access-assign-2 ----
+nYear(ExampleOM) <- 20
+pYear(ExampleOM) <- 10
+
+## ---- current-year-read ----
+CurrentYear(ExampleOM)
+
+## ---- current-year-assign ----
+CurrentYear(ExampleOM) <- 2020
+
+## ---- years-read ----
+Years(ExampleOM, "H")
+Years(ExampleOM, "P")
+
+## ---- change-seasons ----
+Seasons(ExampleOM) <- 4 # 4-quarters
+Years(ExampleOM, "H") |> head(8)
+
+## ---- om-slotnamees ----
+slotNames(ExampleOM)
+ExampleOM@nSim
+
+## ---- print-seasons ----
+`Seasons<-`
+
+## ---- date-convert ----
+ExampleOM |>
+  Years() |>
+  lubridate::date_decimal() |>
+  lubridate::as_date() |>
+  head()
+
+
+
+
 
 
 

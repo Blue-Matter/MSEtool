@@ -98,7 +98,7 @@ CalcUnfishedSurvivalStock <- function(Stock, SP=FALSE, Years=NULL, Expand=TRUE) 
   AgeClasses <- Stock@Ages@Classes
   nAges <- length(AgeClasses)
   NaturalMortalityAtAge <- Stock@NaturalMortality@MeanAtAge |>
-    ArrayExpand(Stock@nSim, nAges, Years) |>
+    ArrayExpand(Stock@nSim, AgeClasses, Years) |>
     ArraySubsetYear(Years)
   
   PlusGroup <- Stock@Ages@PlusGroup
@@ -108,7 +108,7 @@ CalcUnfishedSurvivalStock <- function(Stock, SP=FALSE, Years=NULL, Expand=TRUE) 
     Stock@Maturity@Semelparous <- array(1, dim = c(Stock@nSim, nAges, 1))
   }
   
-  Semelparous <- Stock@Maturity@Semelparous |> ArrayExpand(Stock@nSim, nAges, Years) |>
+  Semelparous <- Stock@Maturity@Semelparous |> ArrayExpand(Stock@nSim, AgeClasses, Years) |>
     ArraySubsetYear(Years)
   
   IsIdenticalTime <- all(IdenticalYears(NaturalMortalityAtAge) & IdenticalYears(Semelparous))
@@ -195,7 +195,7 @@ CalcUnfishedSurvivalStock <- function(Stock, SP=FALSE, Years=NULL, Expand=TRUE) 
   }
   
   if (Expand) 
-    Survival <- Survival |> ArrayExpand(Stock@nSim, nAges, Years)
+    Survival <- Survival |> ArrayExpand(Stock@nSim, AgeClasses, Years)
   Survival
 }
 

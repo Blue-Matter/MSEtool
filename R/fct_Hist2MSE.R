@@ -2,8 +2,8 @@ Hist2MSE <- function(Hist, MPs) {
   MSE <- new('mse')
   MSE@OM <- Hist@OM
   MSE@Unfished <- Hist@Unfished
-  MSE@RefPointsMSY <- Hist@RefPointsMSY
-  MSE@RefPointsPR <- Hist@RefPointsPR
+  MSE@Reference <- Hist@Reference
+  
   
   slots <- slotNames(MSE@Hist)
   for (sl in slots)  {
@@ -20,8 +20,11 @@ Hist2MSE <- function(Hist, MPs) {
   
   MSE@SBiomass <- MSE@SProduction <- MSE@Biomass
   
-  MSE@Landings <- ListArraySimAgeTimeFleetAreaMP(Hist@OM, 'Projection', MPNames)
-  MSE@Discards <-  MSE@Landings
+  MSE@Landings <- ArraySimStockTimeFleetMP(Hist@OM, 'Projection', MPNames)
+  MSE@Discards <-  MSE@Landings 
+  
+  MSE@LandingsAtAge <- ListArraySimAgeTimeFleetAreaMP(Hist@OM, 'Projection', MPNames)
+  MSE@DiscardsAtAge <-  MSE@LandingsAtAge
   
   MSE@Effort <- ArraySimStockTimeFleetMP(Hist@OM, "Projection", MPs=MPNames)
   

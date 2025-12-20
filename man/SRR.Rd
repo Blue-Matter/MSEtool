@@ -59,7 +59,7 @@ the time steps when spawning occurs, with 0 indicating the beginning of the time
 
 \item{Misc}{A list for additional miscellaneous objects. Not currently used.}
 
-\item{x}{A \code{\link[=stock]{stock()}} object}
+\item{x}{A \code{\link[=Stock]{Stock()}} object}
 
 \item{value}{A \code{SRR} object to assign to \code{x}}
 }

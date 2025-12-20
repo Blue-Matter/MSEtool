@@ -33,9 +33,25 @@ UpdateMSEObject <- function(MSE, SimList_MP, MP, mp, YearsHist, YearsProj) {
     ArraySubsetYear(Years=YearsProj) |>
     aperm(c("Sim", "Stock", "Year"))
   
+  MSE@Landings[,,,,mp] <- purrr::map(SimList_MP, \(ProjSim) 
+                                     ProjSim@Landings) |>
+    List2Array('Year') |>
+    AddDimNames(c("Stock", "Year", "Fleet", "Sim"),
+                Years = YearsAll) |>
+    aperm(c('Sim', 'Stock', 'Year', 'Fleet')) |>
+    ArraySubsetYear(Years=YearsProj) 
   
-  LandingsList <- purrr::map(SimList_MP, \(ProjSim) {
-    purrr::map(ProjSim@Landings, \(Landings) {
+  MSE@Discards[,,,,mp] <- purrr::map(SimList_MP, \(ProjSim) 
+                                     ProjSim@Discards) |>
+    List2Array('Year') |>
+    AddDimNames(c("Stock", "Year", "Fleet", "Sim"),
+                Years = YearsAll) |>
+    aperm(c('Sim', 'Stock', 'Year', 'Fleet')) |>
+    ArraySubsetYear(Years=YearsProj) 
+  
+  
+  LandingsAtAgeList <- purrr::map(SimList_MP, \(ProjSim) {
+    purrr::map(ProjSim@LandingsAtAge, \(Landings) {
       List2Array(Landings, "Year") |>
         AddDimNames(c("Age", "Fleet", "Area", "Year"),
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)),
@@ -48,13 +64,13 @@ UpdateMSEObject <- function(MSE, SimList_MP, MP, mp, YearsHist, YearsProj) {
     purrr::map(List2Array,"Sim") |>
     purrr::map(aperm, c('Sim', 'Age', 'Year',  'Fleet', 'Area'))
   
-  MSE@Landings <- purrr::map2(MSE@Landings, LandingsList, \(MSELanding, Landings) {
+  MSE@LandingsAtAge <- purrr::map2(MSE@LandingsAtAge, LandingsAtAgeList, \(MSELanding, Landings) {
     MSELanding[,,,,,mp] <- Landings
     MSELanding
   })
   
-  DiscardsList <- purrr::map(SimList_MP, \(ProjSim) {
-    purrr::map(ProjSim@Discards, \(Discards) {
+  DiscardsAtAgeList <- purrr::map(SimList_MP, \(ProjSim) {
+    purrr::map(ProjSim@DiscardsAtAge, \(Discards) {
       List2Array(Discards, "Year") |>
         AddDimNames(c("Age", "Fleet", "Area", "Year"),
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)),
@@ -67,7 +83,7 @@ UpdateMSEObject <- function(MSE, SimList_MP, MP, mp, YearsHist, YearsProj) {
     purrr::map(List2Array,"Sim") |>
     purrr::map(aperm, c('Sim', 'Age', 'Year',  'Fleet', 'Area'))
   
-  MSE@Discards <- purrr::map2(MSE@Discards, DiscardsList, \(MSEDiscards, Discards) {
+  MSE@DiscardsAtAge <- purrr::map2(MSE@DiscardsAtAge, DiscardsAtAgeList, \(MSEDiscards, Discards) {
     MSEDiscards[,,,,,mp] <- Discards
     MSEDiscards
   })
@@ -192,11 +208,12 @@ KeepSelectRetenDisc <- function(MSE, SimList_MP, mp, Slot='Retention') {
   stocks <- StockNames(MSE@OM)
   MPName <- names(MSE@MPs)[mp]
   for (st in seq_along(stocks)) {
+    AgeClasses <- MSE@OM@Stock[[st]]@Ages@Classes
     
     dd <- dimnames(AtAge[[st]])
     
     omvals <- slot(MSE@OM@Fleet[[st]],Slot)@MeanAtAge |> ArraySubsetYear(ProjYear) |>
-      ArrayExpand(nSim=length(dd$Sim), nAges=length(dd$Age), Years = dd$Year)
+      ArrayExpand(nSim=length(dd$Sim), AgeClasses, Years = dd$Year)
     
     if (!prod(AtAge[[st]] == omvals)) {
       if (is.null(MSE@Misc[[Slot]])) {

@@ -42,7 +42,7 @@ Will also be used for calculating at-length schedules, e.g., \code{\link[=Maturi
 
 \item{Misc}{A list for additional miscellaneous objects. Not currently used.}
 
-\item{x}{A \code{\link[=stock]{stock()}} object}
+\item{x}{A \code{\link[=Stock]{Stock()}} object}
 
 \item{value}{A \code{Fecundity} object to assign to \code{x}}
 }

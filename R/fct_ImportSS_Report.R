@@ -1,7 +1,7 @@
 
-#' @rdname Import
+#' @rdname ImportSS
 #' @export
-ImportSSReport <- function(Dir, ...) {
+ImportSSReport <- function(Dir, silent=FALSE, ...) {
   OnExit()
   CheckPackage("r4ss", '1.52.1', "pak::pkg_install('r4ss/r4ss')")
   

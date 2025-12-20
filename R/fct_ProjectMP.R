@@ -5,7 +5,7 @@ CalcManagementInterval <- function(SimList, YearsProj) {
 }
 
 
-ProjectMP <- function(SimList, MSE, MP, mp=1, YearsHist,YearsProj) {
+ProjectMP <- function(SimList, MSE, MP, mp=1, YearsHist, YearsProj) {
   
   ProjSim <- SimList[[1]] # for debugging 
   
@@ -45,7 +45,7 @@ ProjectMP_Sim <- function(ProjSim, MP,YearsHist,YearsProj, ManagementYears) {
     
     # Generate Data up to Year - 1 - Data Lag done in ApplyMPAdvice
     ProjSim <- GenerateProjectionData(ProjSim, Year, YearsHist, YearsProj)
-    
+
     ProjSim <- ApplyMPAdvice(ProjSim, 
                              MP, 
                              Year, 
@@ -53,8 +53,10 @@ ProjectMP_Sim <- function(ProjSim, MP,YearsHist,YearsProj, ManagementYears) {
                              YearsProj,
                              ManagementYears)
     
+
     #  Simulate Pop Dynamics for this Time Step
-    ProjSim <- SimulateDynamics_(ProjSim,Year) 
+    ProjSim <- SimulateDynamics_(ProjSim,Year)
+    
     if (!is.na(YearsProj[ts+1])) {
       # calc recruits before fishing mortality 
       # - updated again after fishing mortality for SpawnTimeFrac > 0
