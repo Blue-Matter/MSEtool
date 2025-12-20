@@ -1,6 +1,11 @@
 
 
 #' @rdname Convert
+#' @param OM An [OM-class] object
+#' @param Author Author of OM object. Character string. Optional.
+#' @param CurrentYear Numeric. Last historical year of OM. Defaults to current year if missing from `OM`
+#' @param Seasons Numeric length 1. Number of seasons in a year
+#' @param Populate Logical. Populate the `OM`?
 #' @export
 ConvertOM <- function(OM, Author='', CurrentYear=NULL, Seasons=1, Populate=TRUE, silent=FALSE) {
   CheckClass(OM, c('OM'), 'OM')
@@ -25,10 +30,14 @@ ConvertOM <- function(OM, Author='', CurrentYear=NULL, Seasons=1, Populate=TRUE,
   om@maxF <- OM@maxF
   om@nReps <- OM@reps
   om@Source <- OM@Source
-  om@CurrentYear <- ifelse(is.null(CurrentYear),
-                           as.numeric(format(Sys.Date(), '%Y')),
-                           CurrentYear
-                           )
+  om@CurrentYear <- OM@CurrentYr
+  if (om@CurrentYear < 1000) {
+    om@CurrentYear <- ifelse(is.null(CurrentYear),
+                             as.numeric(format(Sys.Date(), '%Y')),
+                             CurrentYear
+    )
+  }
+  
   om@Seasons <- Seasons
   om@Years <- CalcYears(nYear=om@nYear,
                         pYear=om@pYear,
@@ -48,20 +57,20 @@ ConvertOM <- function(OM, Author='', CurrentYear=NULL, Seasons=1, Populate=TRUE,
   FleetName <- SubOM(OM, 'Fleet')@Name
   om@Fleet <- MakeNamedList(StockName,
                             MakeNamedList(FleetName,
-                                          OM2fleet(OM, OM@cpars, OM@Fdisc)
+                                          OM2fleet(OM, OM@cpars)
                                           )
   )
   om <- UpdateSelRet(OM, om)
  
   om@Obs <- MakeNamedList(StockName,
                           MakeNamedList(FleetName,
-                                        OM2obs(OM, OM@cpars)
+                                        ConvertObs(OM, silent=TRUE)
                           )
   )
   
   om@Imp <- MakeNamedList(StockName,
                           MakeNamedList(FleetName,
-                                        OM2imp(OM, OM@cpars)
+                                        ConvertImp(OM, silent=TRUE)
                           )
   )
   

@@ -1,5 +1,8 @@
-devtools::load_all()
 library(MSEtool)
+
+la()
+
+herring <- Convert(Herring)
 
 
 OM <- OM('BFT and Herring MICE Model',
@@ -24,7 +27,7 @@ OM@SexPars$Herm$H_3_11<- c(0,0,0,0,0,0,0,0,0.05,0.1,0.2,0.35,0.65,0.8,0.9,1,1,1,
 lapply(OM@SexPars$Herm, length)
 
 
-
+Convert(Herring)
 
 
 

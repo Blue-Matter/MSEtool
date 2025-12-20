@@ -159,9 +159,9 @@ Stock <- function(Name=NULL,
                   Misc=list(),
                   ...) {
   
-  if (methods::is(Name, 'om')) {
-    if (methods::is(Name@Stock, 'list')) {
-      if (methods::is(CommonName, 'numeric')) {
+  if (inherits(Name, 'om')) {
+    if (inherits(Name@Stock, 'list')) {
+      if (inherits(CommonName, 'numeric')) {
         if (CommonName > nStock(Name)) {
           if (nStock(Name)==1) {
             cli::cli_abort('OM has only {.val {nStock(Name)}} stock')
@@ -179,13 +179,13 @@ Stock <- function(Name=NULL,
     return(Name@Stock)
   }
   
-  dots <- list(...)
+  # dots <- list(...)
   nYear <- 20
   pYear <- 30
   nSim <- 48
   CurrentYear <- as.numeric(format(Sys.Date(), '%Y'))
-  for (nm in names(dots)) 
-    assign(nm, dots[[nm]])
+  # for (nm in names(dots)) 
+  #   assign(nm, dots[[nm]])
   
   methods::new('stock',
                Name=Name,
@@ -210,8 +210,26 @@ Stock <- function(Name=NULL,
 
 #' @describeIn StockClass Assign an `stock` class object to a [OM()] object
 #' @param x A [OM()] class object
-#' @param value An `stock` class object to assign to `x`
+#' @param value A [Stock()] object, or a list of [Stock()] objects to assign to `x`
 #' @export
 `Stock<-` <- function(x, value) {
-  assignSlot(x, value, 'Stock')
+  CheckClass(x)
+  
+  if (inherits(value, 'stock')) {
+    x@Stock <- MakeNamedList(value@Name, value)
+    class(x@Stock) <- 'StockList'
+    return(x)
+  }
+  
+  if (inherits(value, 'list')) {
+    names <- purrr::map(value, \(stock) {
+      if (!inherits(stock, 'stock'))
+        cli::cli_abort('`value` must be a `Stock` object or a list of `Stock` objects')
+      stock@Name
+    }) |> unlist()
+    x@Stock <- MakeNamedList(names, value)
+    class(x@Stock) <- 'StockList'
+    return(x)
+  }
+  cli::cli_abort('`value` must be a `Stock` object or a list of `Stock` objects')
 }

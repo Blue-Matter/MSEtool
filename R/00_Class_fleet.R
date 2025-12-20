@@ -6,6 +6,7 @@
 #'
 #' Fleet Object
 #'
+#' @include 00_Class_effort.R
 #' @include 00_Class_discardmortality.R
 #' @include 00_Class_selectivity.R
 #' @include 00_Class_retention.R
@@ -20,15 +21,8 @@
 #' @export
 setClass('fleet',
          slots=c(Name='char.null',
-                 Effort='num.array.df',
-                 Units='char.null', # effort units
-                 Distribution='num.array',
-                 
-                 Catchability='num.array',
-                 qCV='num.array',
-                 qInc='num.array',
-                 qArea='num.array',
-                 
+                 Effort='effort',
+                 Catchability='catchability',
                  Selectivity='selectivity',
                  Retention='retention',
                  DiscardMortality='discardmortality',
@@ -52,13 +46,8 @@ setClass('fleet',
 
 setMethod("initialize", "fleet", function(.Object,
                                           Name=NULL,
-                                          Effort=array(),
-                                          Units=NULL,
-                                          Distribution=array(),
-                                          Catchability=array(),
-                                          qCV=NULL,
-                                          qInc=NULL,
-                                          qArea=array(),
+                                          Effort=new('effort'),
+                                          Catchability=new('catchability'),
                                           Selectivity=new('selectivity'),
                                           Retention=new('retention'),
                                           DiscardMortality=new('discardmortality'),
@@ -70,13 +59,7 @@ setMethod("initialize", "fleet", function(.Object,
   
   .Object@Name <- Name
   .Object@Effort <- Effort
-  .Object@Units <- Units
-  .Object@Distribution <- Distribution
-  
   .Object@Catchability <- Catchability
-  .Object@qCV <- qCV
-  .Object@qInc <- qInc
-  .Object@qArea <- qArea
   
   .Object@Selectivity <- Selectivity
   .Object@Retention <- Retention
@@ -95,13 +78,8 @@ setMethod("initialize", "fleet", function(.Object,
 #' @describeIn FleetClass Create a new `Fleet` object
 #' @export
 Fleet <- function( Name=NULL,
-                   Effort=array(),
-                   Units=NULL,
-                   Distribution=array(),
-                   Catchability=array(),
-                   qCV=NULL,
-                   qInc=NULL,
-                   qArea=array(),
+                   Effort=new('effort'),
+                   Catchability=new('catchability'),
                    Selectivity=new('selectivity'),
                    Retention=new('retention'),
                    DiscardMortality=new('discardmortality'),
@@ -117,12 +95,7 @@ Fleet <- function( Name=NULL,
   methods::new('fleet',
                Name=Name,
                Effort=Effort,
-               Units=Units,
-               Distribution=Distribution,
                Catchability=Catchability,
-               qCV=qCV,
-               qInc=qInc,
-               qArea=qArea,
                Selectivity=Selectivity,
                Retention=Retention,
                DiscardMortality=DiscardMortality,
@@ -135,10 +108,36 @@ Fleet <- function( Name=NULL,
 
 #' @describeIn FleetClass Assign an `Fleet` object to an [OM()] object
 #' @param x An [OM()] class object
-#' @param value A `Fleet` object, or a list of `Fleet` objects, to assign to `x`
+#' @param value For single stock OMs, a`Fleet` object or a list of `Fleet` objects to assign to `x`.
+#'    For multi-stock OMs, a nested list (length `nStock`) each element containing a `Fleet` object or a list of `Fleet` objects to assign to `x`.
 #' @export
 `Fleet<-` <- function(x, value) {
-  assignSlot(x, value, 'Fleet')
+  CheckClass(x)
+  
+  stocknames <- StockNames(x)
+  
+  if (is.null(stocknames)) {
+    cli::cli_abort("Add `Stock` object(s) to `OM` first")
+  }
+  
+  nstocks <- nStock(x)
+  
+  if (inherits(value, 'fleet')) {
+    value <- MakeNamedList(value@Name, value)
+  }
+  if (!inherits(value, 'list')) {
+    cli::cli_abort("`value` must be a list of `Fleet` objects")
+  }
+  
+  class(value) <- 'FleetList'
+  
+  x@Fleet <- MakeNamedList(stocknames, value)
+  class(x@Fleet) <- 'StockFleetList'
+  x
 }
+
+  
+  
+
 
 

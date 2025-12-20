@@ -56,7 +56,7 @@ Stock(x) <- value
 
 \item{x}{A \code{\link[=OM]{OM()}} class object}
 
-\item{value}{An \code{stock} class object to assign to \code{x}}
+\item{value}{A \code{\link[=Stock]{Stock()}} object, or a list of \code{\link[=Stock]{Stock()}} objects to assign to \code{x}}
 
 \item{nSim}{The number of simulations. Numeric. Positive integer \code{nSim=1} will
 produce a deterministic operating model. Can be left empty and will be populated internally.}

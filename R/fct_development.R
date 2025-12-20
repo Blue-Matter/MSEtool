@@ -36,4 +36,5 @@ LoadArgs <- function(fun='Simulate', envir = .GlobalEnv, debug=FALSE) {
 la <- function() {
   CheckPackage('devtools')
   devtools::load_all()
+  
 }

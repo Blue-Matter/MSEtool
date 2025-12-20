@@ -70,13 +70,14 @@ PopulateStockList <- function(OM, silent=FALSE) {
     } else {
       Stock <- OM@Stock[[st]]
     }
-    Stock@nSim <- OM@nSim
-    Stock@nYear <- OM@nYear
-    Stock@pYear <- OM@pYear
-    Stock@CurrentYear <- OM@CurrentYear
-    Stock@Seasons <- OM@Seasons
     StockList[[st]] <- PopulateStock(Stock, 
                                      seed=OM@Seed, 
+                                     nYear=OM@nYear,
+                                     pYear=OM@pYear,
+                                     CurrentYear=OM@CurrentYear,
+                                     nSim=OM@nSim,
+                                     Seasons=OM@Seasons,
+                                     seed=OM@Seed+st, 
                                      silent=silent)
     names(StockList)[st] <- Stock@Name
   }

@@ -12,35 +12,35 @@ ExtendFleet <- function(FleetList, AgeClasses, nSim, Years, nArea, silent=FALSE,
   if (!silent)
     cli::cli_progress_update(id=id)
   
-  Fleet@Effort <- lapply(FleetList, slot, 'Effort') |> 
-    purrr::map(ArrayExpand, nSim, nAges, Years) |> 
+  Fleet@Effort@Value <- purrr::map(FleetList, \(fleet) 
+                                   ArrayExpand(fleet@Effort@Value, nSim, AgeClasses, Years)
+  ) |>
     List2Array('Fleet') |>
     aperm(c('Sim', 'Year', 'Fleet'))
   
+  Fleet@Effort@Distribution <- purrr::map(FleetList, \(fleet) 
+                                   ArrayExpand(fleet@Effort@Distribution, nSim, AgeClasses, Years)
+  ) |>
+    List2Array('Fleet') |>
+    aperm(c('Sim', 'Year', 'Area', 'Fleet'))
+  
+  
   if (!silent)
     cli::cli_progress_update(id=id)
   
-  Fleet@Catchability <- lapply(FleetList, slot, 'Catchability') |> 
-    purrr::map(ArrayExpand, nSim, nAges, Years) |> 
+
+  Fleet@Catchability@Value <- purrr::map(FleetList, \(fleet) 
+                                   ArrayExpand(fleet@Catchability@Value, nSim, AgeClasses, Years)
+  ) |>
     List2Array('Fleet') |>
     aperm(c('Sim', 'Year', 'Fleet'))
   
-  if (!silent)
-    cli::cli_progress_update(id=id)
-  
-  Fleet@Distribution <- lapply(FleetList, slot, 'Distribution') |> 
-    purrr::map(ArrayExpand, nSim, nAges, Years) |> 
+  Fleet@Catchability@qArea <- purrr::map(FleetList, \(fleet) 
+                                         ArrayExpand(fleet@Catchability@qArea, nSim, AgeClasses, Years)
+  ) |>
     List2Array('Fleet') |>
-    aperm(c('Sim', 'Year', 'Fleet', 'Area'))
-  
-  if (!silent)
-    cli::cli_progress_update(id=id)
-  
-  Fleet@qArea <- lapply(FleetList, slot, 'qArea') |> 
-    purrr::map(ArrayExpand, nSim, nAges, Years) |> 
-    List2Array('Fleet') |>
-    aperm(c('Sim', 'Year', 'Fleet', 'Area'))
-  
+    aperm(c('Sim', 'Year', 'Area', 'Fleet'))
+
   if (!silent)
     cli::cli_progress_update(id=id)
   

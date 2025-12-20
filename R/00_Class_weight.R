@@ -83,7 +83,7 @@ setValidity('weight', isValidObject)
 
 
 setMethod("initialize", "weight", function(.Object,
-                                           Pars=list(a=NA, b=NA),
+                                           Pars=list(),
                                            Model=NULL,
                                            Units='g',
                                            MeanAtAge=NULL,
@@ -139,7 +139,7 @@ setMethod("initialize", "weight", function(.Object,
 #' @param Classes `r Classes_param()`
 #' @param Misc `r Misc_param()`
 #' @export
-Weight <- function(Pars=list(Alpha=NA, Beta=NA),
+Weight <- function(Pars=list(),
                    Model=NULL,
                    Units='g',
                    MeanAtAge=NULL,

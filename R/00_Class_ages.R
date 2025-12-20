@@ -1,6 +1,6 @@
 #' S4 Object class `ages`
 #' 
-#' `r S4Description('ages')
+#' `r S4Description('Ages')`
 #' 
 #' ## About the Class
 #' The S4 object class `ages` contain information related to the age classes of a [Stock()]

@@ -505,8 +505,6 @@ CheckSelectivityMaximum <- function(MeanAtAge) {
 }
 
 
-
-
 GenerateHistoricalEffort <- function(Effort, nsim=NULL, Years=NULL) {
   if (!methods::is(Effort, 'data.frame'))
     cli::cli_abort('`Effort` must be a data.frame')
@@ -565,8 +563,6 @@ GenerateHistoricalEffort <- function(Effort, nsim=NULL, Years=NULL) {
   
   EffortTS/matrix(EffortTS[,nYears], nsim, nYears, byrow=FALSE)
 }
-
-
 
 
 MeanAtLength2MeanAtAge <- function(object, Length, Ages, nsim, Years, seed, silent,

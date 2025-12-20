@@ -59,6 +59,7 @@ setClass('indicesobs',
 
 setClass('CompObs',
          slots=c(
+           SampleSize='num.array', 
            ESS='num.array', # nSim, nTS
            Years='num.null',
            Bias='num.array'
@@ -66,6 +67,32 @@ setClass('CompObs',
          contains='MiscClass'
 )
 
+
+
+# named parameters matching those in Pars
+setClass('lifehistoryobs',
+         slots=c(
+           Ages='list',
+           Length='list',
+           Weight='list',
+           NaturalMortality='list',
+           Maturity='list',
+           Fecundity='list',
+           SRR='list',
+           Spatial='list',
+           Depletion='list'
+         ),
+         contains='MiscClass'
+)
+
+setClass('exploitationobs',
+         slots=c(
+           Selectivity='list',
+           Retention='list',
+           DiscardMortality='list'
+         ),
+         contains='MiscClass'
+)
 
 #' Obs Object
 #' @include 00_Class_unions.R
@@ -75,6 +102,8 @@ setClass('CompObs',
 #' @export
 setClass('obs',
          slots=c(Name='character',
+                 LifeHistory='lifehistoryobs',
+                 Exploitation='exploitationobs',
                  
                  Effort='effortobs',
                  

@@ -138,6 +138,6 @@ Accessing_Assigning_Slots <- function(class) {
 
 
 S4Description <- function(class='ages') {
-  paste("An S4 objects of class", class, "and associated functions to access and modify the object")
+  paste0("An S4 object of class `", class, "` and associated functions to access and modify the object")
 }
 

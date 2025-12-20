@@ -724,12 +724,19 @@ GetSS_R0 <- function(st, replist, YearsList) {
   AgeClasses <- GetSSAgeClasses(replist)
   
   birthseas <- GetSSBirthSeas(replist)
-                      
-  R0 <- dplyr::filter(replist$natage, Sex == st, `Beg/Mid` == "B", Era == "VIRG",
-                      Seas==birthseas) |>
-    tidyr::pivot_longer(as.character(AgeClasses), names_to = 'Age', values_to = 'Number') |>
-    dplyr::mutate(Age=as.numeric(Age)) |>
-    dplyr::filter(Age==min(Age)) |>
+
+  R0 <- dplyr::filter(
+    replist$natage, Sex == st,
+    `Beg/Mid` == "B",
+    Era == "VIRG",
+    Seas == birthseas
+  ) |>
+    tidyr::pivot_longer(as.character(AgeClasses),
+      names_to = "Age",
+      values_to = "Number"
+    ) |>
+    dplyr::mutate(Age = as.numeric(Age)) |>
+    dplyr::filter(Age == min(Age)) |>
     dplyr::pull(Number)
   
   nSeas <- replist$natage$Seas |> unique() |> length()
@@ -786,16 +793,18 @@ SS2SRR <- function(st, RepList, YearsList, Ages, nSim) {
   
   if (st==2)
     SRR@SPFrom <- 1
-  
-  RecDevs <- GenerateRecruitmentDeviations(SD=SRR@SD, 
-                                           AC=SRR@AC, 
-                                           Ages = Ages,
-                                           HistTS=YearsList$YearsHist, 
-                                           ProjTS=YearsList$YearsProj,
-                                           nsim=nSim,
-                                           RecDevInit=SRR@RecDevInit,
-                                           RecDevHist=SRR@RecDevHist)
-  
+
+  RecDevs <- GenerateRecruitmentDeviations(
+    SD = SRR@SD,
+    AC = SRR@AC,
+    Ages = Ages,
+    HistTS = YearsList$YearsHist,
+    ProjTS = YearsList$YearsProj,
+    nSim = nSim,
+    RecDevInit = SRR@RecDevInit,
+    RecDevHist = SRR@RecDevHist
+  )
+
   SRR@RecDevProj <- RecDevs$RecDevProj
   ProjectionYears <- YearsList$YearsProj
   dimnames(SRR@RecDevProj) <- list(Sim=1:nSim,

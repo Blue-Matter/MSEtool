@@ -227,6 +227,9 @@ getFleetInfo <- function(Fleets) {
 }
 
 CalcTSUnits <- function(Seasons) {
+  
+  if (is.null(Seasons))
+    return('year')
 
   out <- switch(as.character(Seasons),
          '1'='year',

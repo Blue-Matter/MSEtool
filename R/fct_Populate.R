@@ -13,8 +13,198 @@ Populate <- function(object, ...) {
   
 }
 
+## ---- Stock ----
+#' @name Populate
+#' @param ALK ...
+#' @param AWK ...
+#' @export
+setMethod("Populate", "stock", function(object,
+                                        nYear,
+                                        pYear,
+                                        CurrentYear=NULL,
+                                        nSim = 5,
+                                        Seasons=1,
+                                        ALK = TRUE,
+                                        AWK = TRUE,
+                                        seed = NULL,
+                                        silent = FALSE, ...) {
+  PopulateStock(object, nYear, pYear, CurrentYear, nSim, Seasons, ALK, AWK, seed, silent)
+})
 
+### ---- Length ----
+#' @name Populate
+#' @param ALK ...
+#' @param AWK ...
+#' @export
+setMethod("Populate", "length", function(object,
+                                         Ages = NULL,
+                                         Years = NULL,
+                                         nSim = 5,
+                                         ASK = TRUE,
+                                         seed = NULL,
+                                         silent = FALSE,
+                                         ...) {
+  PopulateLength(
+    object,
+    Ages,
+    Years,
+    nSim,
+    ASK,
+    seed,
+    silent
+  )
+})
 
+### ---- Weight ----
+#' @name Populate
+#' @export
+setMethod("Populate", "weight", function(object,
+                                         Ages = NULL,
+                                         Length = NULL,
+                                         Years = NULL,
+                                         nSim = 5,
+                                         ASK = FALSE,
+                                         seed = NULL,
+                                         silent = FALSE,
+                                         CalcAtLength = FALSE,
+                                         ...) {
+  PopulateWeight(
+    object,
+    Ages,
+    Length,
+    Years,
+    nSim,
+    ASK,
+    seed,
+    silent,
+    CalcAtLength
+  )
+})
+
+### ---- NaturalMortality ----
+
+#' @name Populate
+#' @export
+setMethod("Populate", "naturalmortality", function(object,
+                                                   Ages = NULL,
+                                                   Length = NULL,
+                                                   Years = NULL,
+                                                   nSim = 5,
+                                                   seed = NULL,
+                                                   silent = FALSE,
+                                                   CalcAtLength = FALSE,
+                                                   ...) {
+  PopulateNaturalMortality(
+    object,
+    Ages,
+    Length,
+    Years,
+    nSim,
+    seed,
+    silent,
+    CalcAtLength
+  )
+})
+
+### ---- Maturity ----
+#' @name Populate
+#' @export
+setMethod("Populate", "maturity", function(object,
+                                           Ages = NULL,
+                                           Length = NULL,
+                                           Weight = NULL,
+                                           Years = NULL,
+                                           nSim = 5,
+                                           seed = NULL,
+                                           silent = FALSE,
+                                           CalcAtLength = FALSE,
+                                           ...) {
+  PopulateMaturity(
+    object,
+    Ages,
+    Length,
+    Weight,
+    Years,
+    nSim,
+    seed,
+    silent,
+    CalcAtLength
+  )
+})
+
+### --- Fecundity ----
+#' @name Populate
+#' @export
+setMethod("Populate", "fecundity", function(object,
+                                            Ages = NULL,
+                                            Length = NULL,
+                                            Weight = NULL,
+                                            Maturity = NULL,
+                                            Years = NULL,
+                                            nSim = 5,
+                                            seed = NULL,
+                                            silent = FALSE,
+                                            CalcAtLength = FALSE,
+                                            ...) {
+  PopulateFecundity(
+    object,
+    Ages,
+    Length,
+    Weight,
+    Maturity,
+    Years,
+    nSim,
+    seed,
+    silent,
+    CalcAtLength
+  )
+})
+
+### --- SRR ----
+#' @name Populate
+#' @export
+setMethod("Populate", "srr", function(object,
+                                      Ages = NULL,
+                                      CurrentYear=NULL,
+                                      Years = NULL,
+                                      nSim = 5,
+                                      seed = NULL,
+                                      silent = FALSE,
+                                      ...) {
+  PopulateSRR(
+    object,
+    Ages,
+    CurrentYear,
+    Years,
+    nSim,
+    seed,
+    silent
+  )
+})
+
+### ---- Spatial ----
+#' @name Populate
+#' @export
+setMethod("Populate", "spatial", function(object,
+                                          Ages = NULL,
+                                          Years = NULL,
+                                          nSim = 5,
+                                          seed = NULL,
+                                          silent = FALSE,
+                                          plot = FALSE,
+                                          nits = 100,
+                                          ...) {
+  PopulateSpatial(
+    object,
+    Ages,
+    Years,
+    nSim,
+    seed,
+    silent,
+    plot,
+    nits
+  )
+})
 
 
 # Obs ----

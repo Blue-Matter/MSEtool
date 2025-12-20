@@ -7,7 +7,6 @@ setClass("catchdata",
                  Value='array.null',
                  CV='array.null',
                  Units='char.null',
-                 Type='char.null', # Removals or Landings
                  Ref='array.null',
                  RefCV='array.null'
          )
@@ -33,6 +32,7 @@ setClass("indicesdata",
                  CV='array.null',
                  Units='char.null',
                  Ref='array.null',
+                 RefCV='array.null',
                  Timing='numeric',
                  Selectivity='array.char.num' # fleet number, Biomass, SBiomass, Recruits, age vector
          ),
@@ -64,8 +64,53 @@ setClass("compdata",
 )
 
 
-# methods::setClassUnion("comp.list", c("composition", "list", 'NULL'))
+#' Class `lifehistorydata`
+#' @include 00_Class_unions.R
+#' @include 00_Class_child.R
+#' @include 00_Class_stock.R
+setClass("lifehistorydata",
+         slots=c(Ages='ages',
+                 Length='length',
+                 Weight='weight',
+                 NaturalMortality='naturalmortality',
+                 Maturity='maturity',
+                 Fecundity='fecundity',
+                 SRR='srr',
+                 Spatial='spatial',
+                 Depletion='depletion'
+         ),
+         contains='MiscClass'
+)
 
+#' Class `exploitationdata`
+#' @include 00_Class_unions.R
+#' @include 00_Class_child.R
+#' @include 00_Class_fleet.R
+setClass("exploitationdata",
+         slots=c(Selectivity='selectivity',
+                 Retention='retention',
+                 DiscardMortality='discardmortality'
+         ),
+         contains='MiscClass'
+)
+
+
+#' Class `referencedata`
+#' @include 00_Class_refpointsMSY.R
+#' @include 00_Class_child.R
+setClass("referencedata",
+         contains=c('refpointsMSY', 'MiscClass')
+)
+
+
+#' Class `advicedata`
+#' @include 00_Class_unions.R
+#' @include 00_Class_child.R
+setClass("advicedata",
+         slots=c(TAC='num.array',
+               Effort='num.array'),
+         contains=c('MiscClass')
+)
 
 
 #' Data Object
@@ -110,6 +155,10 @@ setClass('data',
                  Seasons='num.null',
                  nArea='num.null',
                  
+                 LifeHistory='lifehistorydata',
+                 Exploitation='exploitationdata',
+                 Reference='referencedata',
+                 
                  Effort='effortdata',
                  
                  Landings='catchdata',  
@@ -117,12 +166,10 @@ setClass('data',
                  
                  CPUE='indicesdata', # fleet-specific CPUEs
                  Survey='indicesdata', # Biomass, SBiomass, Recruits, Age-Specific
-                 
-             
+                
                  CAA='compdata',
                  CAL='compdata',
-                 TAC='array',
-                 TAE='array',
+                 Advice='advicedata',
                  Log='list'
          ),
          contains ='MiscClass'

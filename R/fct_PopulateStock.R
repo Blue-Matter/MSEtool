@@ -2,6 +2,11 @@
 #' @describeIn Populate Populate a [Stock()] object
 #' @export
 PopulateStock <- function(Stock, 
+                          nYear,
+                          pYear,
+                          CurrentYear=NULL,
+                          nSim=NULL,
+                          Seasons=1,
                           ALK=TRUE, 
                           AWK=TRUE, 
                           seed=NULL, 
@@ -10,8 +15,15 @@ PopulateStock <- function(Stock,
   argList <- list(seed, ALK, AWK)
   if (CheckDigest(Stock, argList) | EmptyObject(Stock))
     return(Stock)
+
+  if (is.null(CurrentYear))
+    CurrentYear <- format(Sys.Date(), "%Y")
+  Stock@nYear <- nYear
+  Stock@pYear <- pYear
+  Stock@CurrentYear <- CurrentYear
+  Stock@nSim <- nSim
   
-  SetSeed(Stock, seed)
+  SetSeed(seed)
   
   Stock@Years <- CalcYears(nYear=Stock@nYear, 
                                    pYear=Stock@pYear, 

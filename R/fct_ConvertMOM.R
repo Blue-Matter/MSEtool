@@ -89,7 +89,8 @@ MOM2fleet <- function(MOM, st) {
   for (fl in 1:nfleets) {
     Fleet <- MOM@Fleets[[st]][[fl]]
     cpars <- MOM@cpars[[st]][[fl]]
-    FleetList[[fl]] <- OM2fleet(Fleet, cpars)
+    Fdisc <- MOM@Stocks[[st]]@Fdisc
+    FleetList[[fl]] <- OM2fleet(Fleet, cpars, Fdisc)
   }
   names(FleetList) <- FleetNames
   if (nfleets==1) return(FleetList[[1]])
@@ -105,9 +106,6 @@ MOM2stock <- function(MOM, YearsList=NULL) {
     Stock <- stocks[[st]]
     cpars <- MOM@cpars[[st]][[1]]
     StockList[[st]] <- OM2stock(Stock, cpars, YearsList, MOM@nsim, MOM@seed)
-    
-    StockList[[st]]@Length@MeanAtAge |> dimnames()
-    
   }
   if (nstocks==1) return(StockList[[1]])
   StockList

@@ -1,5 +1,4 @@
 
-
 setClassUnion(name="StockList", members=c("stock", 'Stock',  "list", 'NULL'))
 setClassUnion(name="StockFleetList", members=c("fleet", 'Fleet', "list", 'NULL'))
 setClassUnion(name="FleetList", members=c("fleet", 'Fleet', "list", 'NULL'))
@@ -8,8 +7,12 @@ setClassUnion(name="DataList", members=c("data", "list", 'NULL'))
 setClassUnion(name="obs.list", members=c('Obs', "obs", "list", 'NULL'))
 setClassUnion(name="imp.list", members=c('Imp', "imp", "list", 'NULL'))
 
-#' Class `om`: Operating Model Object 
-#'
+# ---- OM Documentation ----
+
+#' `OM` Object
+#' 
+#' `r S4Description('OM')`
+#' 
 #' @include lgy_Class_definitions.R
 #' @include 00_Class_unions.R
 #' @include 00_Class_child.R
@@ -19,6 +22,51 @@ setClassUnion(name="imp.list", members=c('Imp', "imp", "list", 'NULL'))
 #' @include 00_Class_obs.R
 #' @include 00_Class_imp.R
 #' 
+#' @details
+#' 
+#' 
+#' ## About the `om` Class
+#' `om` is a new S4 class that is designed to supersede [OM-class()] and [MOM-class()]
+#' objects. In time, [OM-class()] and [MOM-class()] will be deprecated
+#' and eventually removed from the package.
+#'
+#' ## Creating New Objects
+#' `r Creating_New_Objects('om')`
+#'
+#' ## Accessing and Assigning Slots
+#' `r Accessing_Assigning_Slots('om')`
+#'
+#' ## SexPars
+#' The following are valid names for `SexPars`:
+#'
+#' - `SPfrom`: A `nstock` x `nstock` matrix, where `nstock` is `length(Stock`)
+#' that specifies the proportion of the spawning output of the row `p` stock for
+#' the column `p'` stock. A diagonal matrix means each stock is responsible for
+#' its own recruitment.
+#' - `Herm`: A list with each entry containing a matrix with
+#' dimensions `c(nSim, MaxAge + 1)` that specifies the proportion at age that move from
+#' stock `p` to `p'` (sequential hermaphroditism). The names of the list should be
+#' of the form "H_p'_p" where `p` and `p'` are integers that identify the stocks
+#' in the `Stock` list. For time-varying values, arrays with dimensions
+#'  `c(nSim, (MaxAge + 1),nHistTS + nProjTS)` can be used. `MaxAge` is the maximum age
+#'  for the both stock `p` and stock `p'`. `nHistTS` and `nProjTS` are equal to
+#'  `nYear` and `pYear` respectively, unless `Units` in the stocks' [Ages()]
+#'  object are not `year` (i.e, a higher resolution time step).
+#' - `SharePar`: Optional. Logical to indicate whether stock-recruit, depletion,
+#' and observation/implementation parameters are mirrored between stocks. By default, `TRUE`.
+#'
+#' ## Control
+#' The following are valid names for `Control`:
+#'
+#' TODO
+#' 
+#' @name OM
+#'
+#' @seealso `r See_Also('om')`
+NULL 
+
+
+# ---- OM Class ----
 #' @slot Name Name of the Operating Model. Character string.
 #' 
 #' @slot Agency Optional. Name of the agency responsible for the management of the fishery.
@@ -125,46 +173,8 @@ setClassUnion(name="imp.list", members=c('Imp', "imp", "list", 'NULL'))
 #' @slot Source Character string. Can be used to reference websites, articles, etc
 #' with relevant information. Supports Markdown.
 #'
-#' @details
 #'
-#' ## About the `om` Class
-#' `om` is a new S4 class that is designed to supersede [OM-class()] and [MOM-class()]
-#' objects. In time, [OM-class()] and [MOM-class()] will be deprecated
-#' and eventually removed from the package.
-#'
-#' ## Creating New Objects
-#' `r Creating_New_Objects('om')`
-#'
-#' ## Accessing and Assigning Slots
-#' `r Accessing_Assigning_Slots('om')`
-#'
-#' ## SexPars
-#' The following are valid names for `SexPars`:
-#'
-#' - `SPfrom`: A `nstock` x `nstock` matrix, where `nstock` is `length(Stock`)
-#' that specifies the proportion of the spawning output of the row `p` stock for
-#' the column `p'` stock. A diagonal matrix means each stock is responsible for
-#' its own recruitment.
-#' - `Herm`: A list with each entry containing a matrix with
-#' dimensions `c(nSim, MaxAge + 1)` that specifies the proportion at age that move from
-#' stock `p` to `p'` (sequential hermaphroditism). The names of the list should be
-#' of the form "H_p'_p" where `p` and `p'` are integers that identify the stocks
-#' in the `Stock` list. For time-varying values, arrays with dimensions
-#'  `c(nSim, (MaxAge + 1),nHistTS + nProjTS)` can be used. `MaxAge` is the maximum age
-#'  for the both stock `p` and stock `p'`. `nHistTS` and `nProjTS` are equal to
-#'  `nYear` and `pYear` respectively, unless `Units` in the stocks' [Ages()]
-#'  object are not `year` (i.e, a higher resolution time step).
-#' - `SharePar`: Optional. Logical to indicate whether stock-recruit, depletion,
-#' and observation/implementation parameters are mirrored between stocks. By default, `TRUE`.
-#'
-#' ## Control
-#' The following are valid names for `Control`:
-#'
-#' TODO
-#'
-#' @seealso `r See_Also('om')`
-#'
-#' @rdname class-om
+#' @rdname OM
 #'
 #' @example man-examples/om-class.R
 #' @export
@@ -216,7 +226,8 @@ setClass("om",
 )
 
 
-#' @rdname class-om
+# ---- OM Function ----
+#' @rdname OM
 #' 
 #' @param Name Name of the Operating Model. Character string.
 #' @param Agency Name of the agency responsible for the management of the fishery.

@@ -117,20 +117,6 @@ ASK <- function(x) {
   assignSlot(x, value, 'ASK')
 }
 
-## ---- Catchability ----
-
-#' @rdname Access
-#' @export
-Catchability <- function(x) {
-  x@Catchability
-}
-
-#' @rdname Access
-#' @export
-`Catchability<-` <- function(x, value) {
-  assignSlot(x, value, 'Catchability')
-}
-
 ## ---- CatchFrac ----
 
 #' @rdname Access
