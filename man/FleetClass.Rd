@@ -9,13 +9,8 @@
 \usage{
 Fleet(
   Name = NULL,
-  Effort = array(),
-  Units = NULL,
-  Distribution = array(),
-  Catchability = array(),
-  qCV = NULL,
-  qInc = NULL,
-  qArea = array(),
+  Effort = new("effort"),
+  Catchability = new("catchability"),
   Selectivity = new("selectivity"),
   Retention = new("retention"),
   DiscardMortality = new("discardmortality"),
@@ -31,7 +26,8 @@ Fleet(x) <- value
 \arguments{
 \item{x}{An \code{\link[=OM]{OM()}} class object}
 
-\item{value}{A \code{Fleet} object, or a list of \code{Fleet} objects, to assign to \code{x}}
+\item{value}{For single stock OMs, a\code{Fleet} object or a list of \code{Fleet} objects to assign to \code{x}.
+For multi-stock OMs, a nested list (length \code{nStock}) each element containing a \code{Fleet} object or a list of \code{Fleet} objects to assign to \code{x}.}
 }
 \description{
 Fleet Object

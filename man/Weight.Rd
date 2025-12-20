@@ -7,7 +7,7 @@
 \title{Weight Object}
 \usage{
 Weight(
-  Pars = list(Alpha = NA, Beta = NA),
+  Pars = list(),
   Model = NULL,
   Units = "g",
   MeanAtAge = NULL,

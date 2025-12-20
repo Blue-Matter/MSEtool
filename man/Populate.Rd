@@ -9,6 +9,106 @@
 \usage{
 Populate(OM, silent = FALSE)
 
+\S4method{Populate}{stock}(
+  object,
+  nYear,
+  pYear,
+  CurrentYear = NULL,
+  nSim = 5,
+  Seasons = 1,
+  ALK = TRUE,
+  AWK = TRUE,
+  seed = NULL,
+  silent = FALSE,
+  ...
+)
+
+\S4method{Populate}{length}(
+  object,
+  Ages = NULL,
+  Years = NULL,
+  nSim = 5,
+  ASK = TRUE,
+  seed = NULL,
+  silent = FALSE,
+  ...
+)
+
+\S4method{Populate}{weight}(
+  object,
+  Ages = NULL,
+  Length = NULL,
+  Years = NULL,
+  nSim = 5,
+  ASK = FALSE,
+  seed = NULL,
+  silent = FALSE,
+  CalcAtLength = FALSE,
+  ...
+)
+
+\S4method{Populate}{naturalmortality}(
+  object,
+  Ages = NULL,
+  Length = NULL,
+  Years = NULL,
+  nSim = 5,
+  seed = NULL,
+  silent = FALSE,
+  CalcAtLength = FALSE,
+  ...
+)
+
+\S4method{Populate}{maturity}(
+  object,
+  Ages = NULL,
+  Length = NULL,
+  Weight = NULL,
+  Years = NULL,
+  nSim = 5,
+  seed = NULL,
+  silent = FALSE,
+  CalcAtLength = FALSE,
+  ...
+)
+
+\S4method{Populate}{fecundity}(
+  object,
+  Ages = NULL,
+  Length = NULL,
+  Weight = NULL,
+  Maturity = NULL,
+  Years = NULL,
+  nSim = 5,
+  seed = NULL,
+  silent = FALSE,
+  CalcAtLength = FALSE,
+  ...
+)
+
+\S4method{Populate}{srr}(
+  object,
+  Ages = NULL,
+  CurrentYear = NULL,
+  Years = NULL,
+  nSim = 5,
+  seed = NULL,
+  silent = FALSE,
+  ...
+)
+
+\S4method{Populate}{spatial}(
+  object,
+  Ages = NULL,
+  Years = NULL,
+  nSim = 5,
+  seed = NULL,
+  silent = FALSE,
+  plot = FALSE,
+  nits = 100,
+  ...
+)
+
 PopulateFleet(
   Fleet,
   Ages = NULL,
@@ -21,9 +121,24 @@ PopulateFleet(
 
 Populate(OM, silent = FALSE)
 
-PopulateStock(Stock, ALK = TRUE, AWK = TRUE, seed = NULL, silent = FALSE)
+PopulateStock(
+  Stock,
+  nYear,
+  pYear,
+  CurrentYear = NULL,
+  nSim = NULL,
+  Seasons = 1,
+  ALK = TRUE,
+  AWK = TRUE,
+  seed = NULL,
+  silent = FALSE
+)
 }
 \arguments{
+\item{ALK}{...}
+
+\item{AWK}{...}
+
 \item{seed}{Seed for the random number generator}
 }
 \description{

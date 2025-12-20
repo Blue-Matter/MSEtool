@@ -25,7 +25,7 @@ Ages(x) <- value
 \item{value}{An \code{ages} class object to assign to \code{x}}
 }
 \description{
-`r S4Description('ages')
+An S4 object of class \code{Ages} and associated functions to access and modify the object
 }
 \details{
 \subsection{About the Class}{

@@ -13,7 +13,13 @@ Hist <- Simulate(OM)
 
 # - update internal for new Fleet structure
 # - finalize OM object  - HERM !! & MoveStock
+
+
 # - finalize Hist object 
+# - test Simulaet
+
+# - finalise MSE object
+# - test Project
 
 
 

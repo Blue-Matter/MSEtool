@@ -14,8 +14,6 @@
 \alias{Author<-}
 \alias{ASK}
 \alias{ASK<-}
-\alias{Catchability}
-\alias{Catchability<-}
 \alias{CatchFrac}
 \alias{CatchFrac<-}
 \alias{Classes}
@@ -147,10 +145,6 @@ Author(x) <- value
 ASK(x)
 
 ASK(x) <- value
-
-Catchability(x)
-
-Catchability(x) <- value
 
 CatchFrac(x)
 
