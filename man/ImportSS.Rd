@@ -2,9 +2,8 @@
 % Please edit documentation in R/fct_ImportSS3.R, R/fct_ImportSS_Report.R
 \name{ImportSS}
 \alias{ImportSS}
-\alias{ImportSSData}
 \alias{ImportSSReport}
-\title{Import an \code{OM} from SS3 Output}
+\title{Import an OM from SS3 Output}
 \usage{
 ImportSS(
   SSDir,
@@ -25,20 +24,15 @@ ImportSS(
   Interval = 1,
   DataLag = 0,
   silent = FALSE,
-  ...
-)
-
-ImportSSData(
-  SSDir,
-  Name = "Imported by ImportSSData",
-  CommonName = "",
-  Species = "",
-  silent = FALSE,
+  populate = TRUE,
   ...
 )
 
 ImportSSReport(Dir, silent = FALSE, ...)
 }
+\arguments{
+\item{x}{Either a character string}
+}
 \description{
-Import an \code{OM} from SS3 Output
+Import an OM from SS3 Output
 }
