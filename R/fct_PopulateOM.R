@@ -71,7 +71,6 @@ PopulateStockList <- function(OM, silent=FALSE) {
       Stock <- OM@Stock[[st]]
     }
     StockList[[st]] <- PopulateStock(Stock, 
-                                     seed=OM@Seed, 
                                      nYear=OM@nYear,
                                      pYear=OM@pYear,
                                      CurrentYear=OM@CurrentYear,
