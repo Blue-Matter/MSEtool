@@ -1,17 +1,24 @@
+#' Populate Objects
+#'
+#' @param object A ...
+#' @param silent ...
+#' @param ...
+#'
+#' @rdname Populate
+#' @export
+setGeneric("Populate", function(object, ...) {
+  standardGeneric("Populate")
+})
 
-#' Populate an Object 
-#' 
+## ---- OM ----
+
 #' @name Populate
 #' @export
-Populate <- function(object, ...) {
-  CheckClass(object, c('om', 'stock', 'fleet'), 'object')
-  
-  if (inherits(object, 'om'))
-    return(PopulateOM(object))
-  
-  
-  
-}
+setMethod("Populate", "om", function(object, silent = FALSE, ...) {
+  PopulateOM(object, silent)
+})
+
+
 
 ## ---- Stock ----
 #' @name Populate
