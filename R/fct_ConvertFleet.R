@@ -22,8 +22,14 @@ ConvertFleet <- function(Fleet, silent = FALSE) {
 
 Fleet2Name <- function(Fleet) {
   fleet <- Fleet()
+  if (grepl("Stock:", Fleet@Name) & grepl("Fleet:", Fleet@Name)) {
+    Fleet@Name <- gsub(".*Fleet:", '', Fleet@Name)
+    Fleet@Name <- gsub("Obs model.*", '', Fleet@Name) |> trimws()
+  }
+  
   fleet@Name <- Fleet@Name
   fleet@Name <- gsub("REPLACED -- ", '', fleet@Name)
+  
   fleet
 }
 

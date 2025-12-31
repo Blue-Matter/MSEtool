@@ -1,13 +1,16 @@
 #' @describeIn Populate Populate an [fleet-class()] object
 #' @export
 PopulateFleet <- function(Fleet, 
-                          Ages=NULL,
-                          Length=NULL,
-                          Weight=NULL,
-                          RelativeSize=NULL,
-                          seed=NULL,
+                          Stock,
+                          seed=103,
                           silent=FALSE) {
 
+  Ages <- Stock@Ages
+  Length <- Stock@Length 
+  Weight <- Stock@Weight
+  RelativeSize <- Stock@Spatial@RelativeSize
+  
+  
   Fleet@CurrentYear <- Stock@CurrentYear
   Fleet@nSim <- Stock@nSim
   Fleet@Years <- Stock@Years
@@ -24,17 +27,17 @@ PopulateFleet <- function(Fleet,
   Years <- Fleet@Years 
   HistYears <- Years(Fleet, 'Historical')
   ProjYears <- Years[!Years %in% HistYears]
-  nAreas <- ncol(RelativeSize)
+  nArea <- ncol(RelativeSize)
   
   argList <- list(Ages, Length, Weight, RelativeSize, nsim, Years, seed)
   if (CheckDigest(Fleet, argList) | EmptyObject(Fleet))
     return(Fleet)
   
-  SetSeed(Fleet, seed)
+  SetSeed(seed)
   
   Fleet@Effort <- PopulateEffort(Effort=Fleet@Effort, 
                                  HistYears, 
-                                 nAreas,
+                                 nArea,
                                  nSim, 
                                  seed)
 
@@ -52,6 +55,7 @@ PopulateFleet <- function(Fleet,
                                            Weight,
                                            nSim,
                                            Years,
+                                           nArea,
                                            CalcAtLength=FALSE,
                                            seed,
                                            silent=silent)
@@ -62,6 +66,7 @@ PopulateFleet <- function(Fleet,
                                        Weight,
                                        nSim,
                                        Years,
+                                       nArea,
                                        CalcAtLength=FALSE,
                                        seed,
                                        silent=silent)
@@ -71,6 +76,7 @@ PopulateFleet <- function(Fleet,
                                                      Length,
                                                      nSim,
                                                      Years,
+                                                     nArea,
                                                      CalcAtLength=FALSE,
                                                      seed=seed,
                                                      silent)
@@ -78,7 +84,7 @@ PopulateFleet <- function(Fleet,
 
 
   Fleet@Closure <- PopulateClosure(Closure=Fleet@Closure,
-                                   nAreas,
+                                   nArea,
                                    nSim,
                                    Years,
                                    silent)
@@ -96,7 +102,7 @@ PopulateFleet <- function(Fleet,
 }
 
 
-PopulateEffort <- function(Effort, HistYears, nAreas=1, nSim=48, seed=NULL) {
+PopulateEffort <- function(Effort, HistYears, nArea=1, nSim=5, seed=NULL) {
 
   SetSeed(seed)
 
@@ -117,22 +123,22 @@ PopulateEffort <- function(Effort, HistYears, nAreas=1, nSim=48, seed=NULL) {
   Effort@Distribution <- PopulateDistribution(Distribution=Effort@Distribution,
                                               nSim,
                                               HistYears,
-                                              nAreas)
+                                              nArea)
   Effort
 }
 
 
 PopulateDistribution <- function(Distribution, 
-                                 nSim=NULL,
+                                 nSim=5,
                                  HistYears=NULL,
-                                 nAreas=NULL) {
+                                 nArea=NULL) {
   
   if (is.null(Distribution)) {
-    Distribution <- array(tiny, dim=c(1, 1, nAreas),
+    Distribution <- array(tiny, dim=c(1, 1, nArea),
                           dimnames = list(
                             Sim=1,
                             Year=HistYears[1],
-                            Area=1:nAreas
+                            Area=1:nArea
                           ))
     
   } else {
@@ -148,39 +154,9 @@ PopulateDistribution <- function(Distribution,
 }
 
 
-# PopulateFishingMortality <- function(FishingMortality,
-#                                      nsim=NULL,
-#                                      Years=NULL,
-#                                      seed=NULL,
-#                                      silent=FALSE) {
-#   
-#   Years <- YearAttributes(FishingMortality, Years)
-#   argList <- list(nsim, Years, seed)
-#   
-#   if (CheckDigest(FishingMortality, argList) | EmptyObject(FishingMortality))
-#     return(FishingMortality)
-#   
-#   SetSeed(FishingMortality, seed)
-#  
-#   FishingMortality@ApicalF <- AddSimDimension(FishingMortality@ApicalF,
-#                                               c('Sim', 'Year'), 
-#                                               Years=Years)
-#   
-#   FishingMortality@DeadAtAge <- AddSimDimension(FishingMortality@DeadAtAge,
-#                                                 Years=Years)
-#   FishingMortality@RetainAtAge <- AddSimDimension(FishingMortality@RetainAtAge,
-#                                                   Years=Years)
-#   
-#   if (EmptyObject(FishingMortality@ApicalF)) # calculate from `DeadAtAge`
-#     FishingMortality@ApicalF <- apply(FishingMortality@DeadAtAge, c(1,3), max)
-#   
-#   SetDigest(FishingMortality, argList)
-#   
-# }
-
 PopulateCatchability <- function(Fleet,
                                  RelativeSize,
-                                 nSim=NULL,
+                                 nSim=5,
                                  HistYears=NULL,
                                  ProjYears=NULL,
                                  seed=NULL,
@@ -262,77 +238,34 @@ PopulateCatchability <- function(Fleet,
   Fleet
 }
 
-PopulateDiscardMortality <- function(DiscardMortality,
-                                     Ages=NULL,
-                                     Length=NULL,
-                                     nSim=NULL,
-                                     Years=NULL,
-                                     CalcAtLength=FALSE,
-                                     seed=NULL,
-                                     silent=FALSE) {
-  # Years <- YearAttributes(DiscardMortality, Years)
-  argList <- list(Ages, Length, nSim, Years, CalcAtLength, seed)
-  
-  if (CheckDigest(DiscardMortality, argList))
-    return(DiscardMortality)
-  
-  if (EmptyObject(DiscardMortality)) {
-    DiscardMortality@MeanAtAge <- array(0, dim=c(1,length(Ages@Classes),1)) |> 
-      AddDimNames(Years=Years, Ages=Ages@Classes)
-      DiscardMortality@MeanAtLength <- array(1, dim=c(1,1,1)) |> 
-        AddDimNames(c('Sim', 'Class', 'Year'), Years=Years)  
-    return(SetDigest(DiscardMortality, argList))
-  }
-
-  SetSeed(DiscardMortality, seed)
-  
-  DiscardMortality <- MeanAtLength2MeanAtAge(DiscardMortality, Length,
-                                             Ages, nSim, Years, seed, silent)
-  if (CalcAtLength)
-    DiscardMortality <- MeanAtAge2MeanAtLength(DiscardMortality, Length, Ages,
-                                               nSim, Years, seed, silent)
-  
-  # DiscardMortality <- AddMeanAtAgeAttributes(DiscardMortality, Years, Ages)
-  
-  # Dimnames for at length
-  if (!is.null(DiscardMortality@MeanAtLength)) {
-    dd <- dim(DiscardMortality@MeanAtLength)
-    dnames <- names(dimnames(DiscardMortality@MeanAtLength))
-    if (is.null(dnames)) 
-      dimnames(DiscardMortality@MeanAtLength) <- list(Sim=1:dd[1],
-                                                      Class=DiscardMortality@Classes,
-                                                      Year=Years[1:dd[3]])
-  }
-  
-  SetDigest(DiscardMortality, argList)
-}
 
 PopulateSelectivity <- function(Selectivity,
                                 Ages=NULL,
                                 Length=NULL,
                                 Weight=NULL,
-                                nSim=NULL,
+                                nSim=5,
                                 Years=NULL,
+                                nArea=1,
                                 CalcAtLength=TRUE,
                                 seed=NULL,
                                 silent=FALSE,
                                 CheckMaxValue=TRUE) {
-  
-  # Years <- YearAttributes(Selectivity, Years)
-  argList <- list(Ages, Length, Weight, Years, nSim, CalcAtLength, seed)
+
+  argList <- list(Ages, Length, Weight, Years, nArea, nSim, CalcAtLength, seed)
   
   if (CheckDigest(Selectivity, argList))
     return(Selectivity)
   
-  SetSeed(Selectivity, seed)
+  SetSeed(seed)
   
-  Selectivity@Pars <- StructurePars(Pars=Selectivity@Pars, nSim, Years)
+  Selectivity@Pars <- StructurePars(Pars=Selectivity@Pars, nSim, Years, nArea)
+  
   Selectivity@Model <- FindModel(Selectivity)
   ModelClass <- getModelClass(Selectivity@Model)
   
   if (!is.null(ModelClass)) {
-    
-    if (grepl('at-Length',getModelClass(Selectivity@Model))) {
+    # Model & Parameters exist
+    if (grepl('at-Length', getModelClass(Selectivity@Model))) {
       Selectivity <- PopulateMeanAtLength(Selectivity, 
                                           Length, 
                                           Years,
@@ -340,13 +273,24 @@ PopulateSelectivity <- function(Selectivity,
                                           nSim,
                                           seed, 
                                           silent)
+      
     } else if (grepl('at-Weight',getModelClass(Selectivity@Model))) {
       Selectivity <- PopulateMeanAtWeight(Selectivity, Weight, Years, Ages, nSim, seed, silent)
       
-    } else {
-      Selectivity <- PopulateMeanAtAge(Selectivity, Ages, Years)
+    } else if (grepl('at-Age', getModelClass(Selectivity@Model))) {
+      Selectivity <- PopulateMeanAtAge(Selectivity, Ages, Years, Length)  
     }
-  } 
+  }
+  
+  stop()
+  # UP TO HERE - update below to 
+  # - deal with spatial Selectivity in MeanAtLength2MeanAtAge  & MeanAtWeight2MeanAtAge
+  # - add dimension names where needed
+  # - update Retention & Discard Mortality 
+  
+  # - continue development in SelectivityExample.R
+  # - update Simulate and SimulateDyanmics to deal with area-based select, retain, and discardMort
+  
   
   Selectivity <- MeanAtLength2MeanAtAge(Selectivity, Length, Ages, nSim,
                                         Years, seed, silent)
@@ -366,6 +310,7 @@ PopulateSelectivity <- function(Selectivity,
     Selectivity@MeanAtAge <- CheckSelectivityMaximum(Selectivity@MeanAtAge)
   
   # Dimnames for at length
+  # TODO - add Area dimension
   if (!is.null(Selectivity@MeanAtLength)) {
     if (is.null(names(dimnames(Selectivity@MeanAtLength)))) {
       dd <- dim(Selectivity@MeanAtLength)
@@ -376,11 +321,17 @@ PopulateSelectivity <- function(Selectivity,
   }
   
   if (!is.null(Selectivity@MeanAtAge)) {
+    dd <- dim(Selectivity@MeanAtAge)
+    if (length(dd)==3) {
+      # add Area dimension
+      Selectivity@MeanAtAge <- Selectivity@MeanAtAge |> AddDimension('Area')
+    }
     if (is.null(names(dimnames(Selectivity@MeanAtAge)))) {
-      dd <- dim(Selectivity@MeanAtAge)
-      dimnames(Selectivity@MeanAtAge) <- list(Sim=1:dd[1],
-                                              Age=Ages@Classes[1:dd[2]],
-                                              Year=Years[1:dd[3]])
+        dimnames(Selectivity@MeanAtAge) <- list(Sim=1:dd[1],
+                                                Age=Ages@Classes[1:dd[2]],
+                                                Year=Years[1:dd[3]],
+                                                Area=1)
+     
     }
   }
   
@@ -392,19 +343,20 @@ PopulateRetention <- function(Retention,
                               Ages=NULL,
                               Length=NULL,
                               Weight=NULL,
-                              nSim=NULL,
+                              nSim=5,
                               Years=NULL,
+                              nArea=1,
                               CalcAtLength=TRUE,
                               seed=NULL,
                               silent=FALSE) {
   
   # Years <- YearAttributes(Retention, Years)
-  argList <- list(Ages, Length, 
-                  Years, nSim, CalcAtLength, seed)
-  
+  argList <- list(Ages, Length, Years, nSim, CalcAtLength, seed)
   
   if (CheckDigest(Retention, argList))
     return(Retention)
+  
+  
   
   if (EmptyObject(Retention)) {
     Retention@MeanAtAge <- array(1, dim=c(1,length(Ages@Classes),1)) |> 
@@ -421,7 +373,7 @@ PopulateRetention <- function(Retention,
     return(SetDigest(Retention, argList))
   }
   
-  SetSeed(Retention, seed)
+  SetSeed(seed)
   
   Retention@Pars <- StructurePars(Pars=Retention@Pars, nSim, Years)
   
@@ -503,26 +455,73 @@ PopulateRetention <- function(Retention,
 }
 
 
+PopulateDiscardMortality <- function(DiscardMortality,
+                                     Ages=NULL,
+                                     Length=NULL,
+                                     nSim=5,
+                                     Years=NULL,
+                                     nArea=1,
+                                     CalcAtLength=TRUE,
+                                     seed=NULL,
+                                     silent=FALSE) {
+  # Years <- YearAttributes(DiscardMortality, Years)
+  argList <- list(Ages, Length, nSim, Years, CalcAtLength, seed)
+  
+  if (CheckDigest(DiscardMortality, argList))
+    return(DiscardMortality)
+  
+  if (EmptyObject(DiscardMortality)) {
+    DiscardMortality@MeanAtAge <- array(0, dim=c(1,length(Ages@Classes),1)) |> 
+      AddDimNames(Years=Years, Ages=Ages@Classes)
+    DiscardMortality@MeanAtLength <- array(1, dim=c(1,1,1)) |> 
+      AddDimNames(c('Sim', 'Class', 'Year'), Years=Years)  
+    return(SetDigest(DiscardMortality, argList))
+  }
+  
+  SetSeed(seed)
+  
+  DiscardMortality <- MeanAtLength2MeanAtAge(DiscardMortality, Length,
+                                             Ages, nSim, Years, seed, silent)
+  if (CalcAtLength)
+    DiscardMortality <- MeanAtAge2MeanAtLength(DiscardMortality, Length, Ages,
+                                               nSim, Years, seed, silent)
+  
+  # DiscardMortality <- AddMeanAtAgeAttributes(DiscardMortality, Years, Ages)
+  
+  # Dimnames for at length
+  if (!is.null(DiscardMortality@MeanAtLength)) {
+    dd <- dim(DiscardMortality@MeanAtLength)
+    dnames <- names(dimnames(DiscardMortality@MeanAtLength))
+    if (is.null(dnames)) 
+      dimnames(DiscardMortality@MeanAtLength) <- list(Sim=1:dd[1],
+                                                      Class=DiscardMortality@Classes,
+                                                      Year=Years[1:dd[3]])
+  }
+  
+  SetDigest(DiscardMortality, argList)
+}
 
-PopulateClosure <- function(Closure, nAreas, nSim, Years, silent) {
-  argList <- list(nAreas, Years, nSim)
+
+
+PopulateClosure <- function(Closure, nArea, nSim=5, Years, silent) {
+  argList <- list(nArea, Years, nSim)
   
   if (EmptyObject(Closure)) {
-    Closure <- array(1, dim=c(1,1, nAreas), 
+    Closure <- array(1, dim=c(1,1, nArea), 
                      dimnames =list(
                        Sim=1,
                        Year=Years[1],
-                       Area=1:nAreas)
+                       Area=1:nArea)
     )
   } else {
     dd <- dim(Closure)
-    if (dd[3]!=nAreas) {
+    if (dd[3]!=nArea) {
       if (dd[1]==1 && dd[2]==1) {
-        Closure <- array(1, dim=c(1,1, nAreas), 
+        Closure <- array(1, dim=c(1,1, nArea), 
                          dimnames =list(
                            Sim=1,
                            Year=Years[1],
-                           Area=1:nAreas)
+                           Area=1:nArea)
         )
         
         

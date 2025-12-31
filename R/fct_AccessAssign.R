@@ -863,22 +863,6 @@ SharePar <- function(x) {
 }
 
 
-## ---- SPFrom ----
-
-#' @rdname Access
-#' @export
-SPFrom <- function(x) {
-  if (inherits(x, 'OM'))
-    return(x@SexPars@SPFrom)
-  x@SPFrom
-}
-
-#' @rdname Access
-#' @export
-`SPFrom<-` <- function(x, value) {
-  assignSlot(x, value, 'SPFrom')
-}
-
 
 ## ---- Source ----
 

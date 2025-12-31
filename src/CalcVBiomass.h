@@ -1,10 +1,18 @@
-#ifndef CalcVBiomass_H
-#define CalcVBiomass_H
+#ifndef CALC_V_BIOMASS_H
+#define CALC_V_BIOMASS_H
 
-arma::mat CalcVBiomass_(arma::mat NumberAtAgeArea, // nAge, nArea
-                       arma::mat FleetWeightAtAgeFleet, // nAge, nFleet
-                       arma::mat SelectivityAtAgeFleet, // nAge, nFleet
-                       arma::mat ClosureFleetArea,
-                       int debug);
+#include <RcppArmadillo.h>
 
-#endif
+// This function computes vulnerable biomass by
+// stock × fleet × area for a given timestep.
+arma::cube CalcVBiomass_(
+    const Rcpp::List& NumberAtAgeAreaList, // length nStock, each nAge x nTS x nArea cube
+    const Rcpp::List& FleetList,            // length nStock, each an S4 Fleet object
+    int TSindex,                            // time step index
+    int nStock,
+    int nFleet,
+    int nArea,
+    int debug = 0
+);
+
+#endif // CALC_V_BIOMASS_H

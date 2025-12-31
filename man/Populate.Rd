@@ -111,15 +111,7 @@ Populate(object, ...)
   ...
 )
 
-PopulateFleet(
-  Fleet,
-  Ages = NULL,
-  Length = NULL,
-  Weight = NULL,
-  RelativeSize = NULL,
-  seed = NULL,
-  silent = FALSE
-)
+PopulateFleet(Fleet, Stock, seed = 103, silent = FALSE)
 
 PopulateOM(OM, silent = FALSE)
 }

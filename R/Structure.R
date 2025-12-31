@@ -1,97 +1,118 @@
 
-StructurePars <- function(Pars, nsim=NULL, Years=NULL) {
-  OutPars <- lapply(Pars, StructurePars_, nsim=nsim, Years)
-  OutPars <- ApplyRandomWalk(OutPars, nsim, Years)
-  OutPars
+StructurePars <- function(Pars, nSim=NULL, Years=NULL, nArea=NULL) {
+  Pars <- purrr::map(Pars, \(Par) 
+                        StructurePars_(Par, nSim, Years, nArea)
+  )
+  if (is.null(nArea)) {
+    Pars <- ApplyRandomWalk(Pars)  
+  }
+  Pars
 }
 
-
-StructurePars_ <- function(Par, nsim=NULL, Years=NULL) {
-  # returns an array - nsim by nTS
-
-  # Par already an array
-  if (length(dim(Par))>=2) {
-    if (is.null(dimnames(Par)))
-      cli::cli_abort('array must have dimnames', .internal=TRUE)
+NameParDimensions <- function(Par, nSim=NULL, Years=NULL, nArea=NULL) {
+  if (!is.null(dimnames(Par)))
     return(Par)
+  
+  dd <- dim(Par)
+  
+  if (dd[2]>1) {
+    cli::cli_abort('`Year` dimensions must be named if dimension length > 1' )
   }
-    
-
-  # length 1 - return
-  if (length(Par)==1) {
-    out <- array(Par, dim=c(1,1))
-    dimnames(out) <- list(Sim=1,
+  
+  if (is.null(nArea)) {
+    dimnames(Par) <- list(Sim=(1:nSim)[1:dd[1]],
                           Year=Years[1])
-    return(out)
+  } else {
+    dimnames(Par) <- list(Sim=(1:nSim)[1:dd[1]],
+                          Year=Years[1],
+                          Area=(1:nArea)[1:dd[3]])
   }
-   
+  Par
+}
+
+StructurePars_ <- function(Par, nSim=NULL, Years=NULL, nArea=NULL) {
+  
+  # if Areas==NULL -  returns an array - nSim x nTS x nArea
+  # if Areas !=NULL -  returns an array - nSim x nTS x nArea
+  
+  # Par already an array
+  if (inherits(Par, 'array')) {
+    return(NameParDimensions(Par, nSim, Years, nArea))
+  }
+  
   # length 2 = sample from uniform distribution
-  if (length(Par)==2 && nsim!=2) {
+  if (length(Par)==2 && nSim!=2) {
     Par <- sort(Par)
-    if (is.null(nsim))
-      cli::cli_abort(c('`nsim` required to generate stochastic values',
-                       'i'='Provide number of simulations to `nsim` argument')
+    if (is.null(nSim))
+      cli::cli_abort(c('`nSim` required to generate stochastic values',
+                       'i'='Provide number of simulations to `nSim` argument')
       )
-    if (nsim==1) {
+    if (nSim==1) {
       out <- array(mean(c(Par[1], Par[2])), dim=c(1, 1))
-      dimnames(out) <- list(Sim=1,
-                            Year=Years[1])
-      return(out)
+      return(NameParDimensions(Par, nSim, Years, nArea))
     }
       
-    out <- array(stats::runif(nsim, Par[1], Par[2]), dim=c(nsim, 1))
-    dimnames(out) <- list(Sim=1:nsim,
-                          Year=Years[1])
-    return(out)
+    Par <- array(stats::runif(nSim, Par[1], Par[2]), dim=c(nSim, 1))
+    return(NameParDimensions(Par, nSim, Years, nArea))
   }
 
-  if (length(Par) > nsim) {
-    Par <- Par[1:nsim]
+
+  if (length(Par) > nSim) {
+    Par <- Par[1:nSim]
   }
   
-  
-  # Par are `nsim` long
-  out <- array(Par, dim=c(length(Par), 1))
-  dimnames(out) <- list(Sim=1:nsim,
-                        Year=Years[1])
-  out
+  # Par are `nSim` long
+  if (is.null(nArea)) {
+    Par <- array(Par, dim=c(length(Par), 1))  
+  } else {
+    Par <- array(Par, dim=c(length(Par), 1,1))
+  }
+  NameParDimensions(Par, nSim, Years, nArea)
 }
 
 substrRight <- function(x, n){
   substr(x, nchar(x)-n+1, nchar(x))
 }
 
-RandomWalk <- function(targ, targsd, nsim, Years) {
+RandomWalk <- function(targ, targsd, nSim, Years, nArea=NULL) {
   nTS <- length(Years)
-  targ <- matrix(targ, nsim, nTS)
+  
+  if (nArea>0) {
+    
+  }
+  
+  
+  
+  targ <- matrix(targ, nSim, nTS)
   mutemp <- -0.5 * targsd^2
-  temp <- array(exp(rnorm(nsim*nTS, mutemp, targsd)),dim = c(nsim, nTS))
-  dimnames(temp) <- list(Sim=1:nsim,
+  temp <- array(exp(rnorm(nSim*nTS, mutemp, targsd)),dim = c(nSim, nTS))
+  dimnames(temp) <- list(Sim=1:nSim,
                         Year=Years)
-  if (nsim >1) {
+  if (nSim >1) {
     return(targ * temp/apply(temp, 1, mean))
   } else {
     return(targ * temp/mean(temp))
   }
 }
 
-ApplyRandomWalk <- function(Pars, nsim, Years) {
+ApplyRandomWalk <- function(Pars) {
   detect_sd <- which(tolower(names(Pars)) |> substrRight(2) == 'sd') 
   if (length(detect_sd)==0)
     return(Pars)
+  
   for (i in detect_sd) {
     nm_sd <- names(Pars)[i]
     nm_par <- strsplit(nm_sd, split="(?<=.)(?=.{2}$)", perl=T)[[1]][1]
     par_ind <- match(nm_par, names(Pars))
-    if (is.null(Years))
-      cli::cli_abort(c('`Years` required to generate stochastic time-varying values',
-                       'i'='Add time steps to the `Years` argument')
-      )
-
+    dnames <- dimnames(Pars[[par_ind]])
+    
+    Years <- dnames[["Year"]] |> as.numeric()
+    Sims <- dnames[["Sim"]] |> as.numeric()
+    nSim <- length(Sims)
     Pars[[par_ind]] <- RandomWalk(targ=Pars[[par_ind]],
                                   targsd=Pars[[i]],
-                                  nsim=nsim,
-                                  Years=Years
+                                  nSim,
+                                  Years,
                                   )
     Pars[[i]] <- NA
   }
@@ -103,7 +124,7 @@ ApplyRandomWalk <- function(Pars, nsim, Years) {
 
 
 
-Structure <- function(value, out=c('nsim', 'nage', 'nTS'), req='nage') {
+Structure <- function(value, out=c('nSim', 'nage', 'nTS'), req='nage') {
 
   if (is.null(value))
     return(NULL)

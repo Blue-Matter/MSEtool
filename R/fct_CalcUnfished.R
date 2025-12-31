@@ -60,8 +60,8 @@ CalcDynamicUnfished <- function(SimList, silent=FALSE) {
   SimListCopy <- purrr::map(SimList, \(x) {
     nStock <- nStock(x@OM)
     for (st in 1:nStock) {
-      x@OM@Fleet[[st]]@Catchability[] <- tiny
-      x@OM@Fleet[[st]]@qArea[] <- tiny
+      x@OM@Fleet[[st]]@Catchability@Value[] <- tiny
+      x@OM@Fleet[[st]]@Catchability@qArea[] <- tiny
     }
     x
   })
@@ -114,6 +114,17 @@ CalcDynamicUnfished <- function(SimList, silent=FALSE) {
     SimListOut <- purrr::map(SimListCopy, \(HistSim) {
       
       unfished <- SimulateDynamics_(HistSim, Years)
+      
+      # ---------------------- DEBUG ----------------------
+      
+      # TIMING
+      unfished <- SimulateDynamics_(HistSim, Years, debug=TRUE)
+      
+      
+      
+      
+      # -------------------- END DEBUG --------------------
+        
     
       HistSim@Unfished@Dynamic@Number <- lapply(unfished@Number, AddDimNames, c("Age", "Year", "Area"), Years)
       
@@ -137,7 +148,7 @@ CalcDynamicUnfished <- function(SimList, silent=FALSE) {
   SimListOut <- purrr::map2(SimListOut, SimList, \(x,y) {
     nStock <- nStock(x@OM)
     for (st in 1:nStock) {
-      x@OM@Fleet[[st]]@Catchability[] <- y@OM@Fleet[[st]]@Catchability[]
+      x@OM@Fleet[[st]]@Catchability@Value[] <- y@OM@Fleet[[st]]@Catchability@Value[]
       x@OM@Fleet[[st]]@qArea[] <- y@OM@Fleet[[st]]@qArea[]
     }
     x

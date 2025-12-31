@@ -35,19 +35,25 @@ Simulate_om <- function(OM = NULL,
   # ---- Initial Checks and Setup ----
   OnExit()
   OM <- StartUp(OM, nSim)
-
+  
   HistYears <- Years(OM, "Historical")
   ProjYears <- Years(OM, "Projection")
   RefPointYears <- GetRefPointYears(OM, HistYears) # historical time steps to calculate ref points
 
   # ---- Make Hist Object ----
   Hist <- OM2Hist(OM, silent)
+  
+  Hist@OM@Fleet$Albacore@Selectivity@MeanAtAge |> dim()
+  Hist@OM@Fleet$Albacore@Retention@MeanAtAge |> dim()
+  Hist@OM@Fleet$Albacore@DiscardMortality@MeanAtAge |> dim()
+  
+  
 
   # ---- Add Reference Points if they exist ----
   # won't be re-calculated
 
   if (inherits(RefPointsMSY, "refpointsMSY")) {
-    Hist@RefPointsMSY <- RefPointsMSY
+    Hist@Reference@MSY <- RefPointsMSY
   }
 
   # ---- Calculate Equilibrium Unfished ----
@@ -58,6 +64,19 @@ Simulate_om <- function(OM = NULL,
 
   # ---- Build SimList ----
   SimList <- Hist2SimList(Hist) # List of `Hist` objects, each with one simulation
+  
+  
+  # ---------------------- DEBUG ----------------------
+  
+  t <- SimulateDynamics(SimList,   HistYears[1:2]) 
+  t$`1`@Number$Albacore[,1:3,]
+  
+  
+  
+  
+  # -------------------- END DEBUG --------------------
+  
+  
 
   # ---- Calculate Reference Points ----
   SimList <- CalcSPR0(SimList) # unfished spawning per recruit (i.e. fecundity)

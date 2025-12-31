@@ -4,8 +4,8 @@ setClassUnion(name="StockFleetList", members=c("fleet", 'Fleet', "list", 'NULL')
 setClassUnion(name="FleetList", members=c("fleet", 'Fleet', "list", 'NULL'))
 setClassUnion(name="DataList", members=c("data", "list", 'NULL'))
 
-setClassUnion(name="obs.list", members=c('Obs', "obs", "list", 'NULL'))
-setClassUnion(name="imp.list", members=c('Imp', "imp", "list", 'NULL'))
+setClassUnion(name="ObsList", members=c('Obs', "obs", "list", 'NULL'))
+setClassUnion(name="ImpList", members=c('Imp', "imp", "list", 'NULL'))
 
 # ---- OM Documentation ----
 
@@ -18,7 +18,6 @@ setClassUnion(name="imp.list", members=c('Imp', "imp", "list", 'NULL'))
 #' @include 00_Class_child.R
 #' @include 00_Class_stock.R
 #' @include 00_Class_fleet.R
-#' @include 00_Class_sexpars.R
 #' @include 00_Class_obs.R
 #' @include 00_Class_imp.R
 #' 
@@ -192,22 +191,24 @@ setClass("om",
                  nYear='num.null',
                  pYear='num.null',
                  CurrentYear='num.null',
+                 Seasons='num.null',
                  
                  Stock='StockList',
                  Fleet='StockFleetList',
-                 Obs='obs.list',
-                 Imp='imp.list',
+                 Obs='ObsList',
+                 Imp='ImpList',
                  
                  Data='DataList',
                  DataLag='numeric',
                  
-                 CatchFrac='list',
-                 Allocation='list',
-                 EFactor='list',
+                 CatchFrac='list.null',
+                 Allocation='list.null',
+                 EFactor='list.null',
                  
-                 Complexes='list',
-                 SexPars='sexpars',
-                 Relations='list',
+                 Complexes='list.null',
+                 Herm='list.null',
+                 SharePar='num.log',
+                 Relations='list.null',
                  
                  Interval='numeric',
                  
@@ -216,7 +217,7 @@ setClass("om",
                  maxF='numeric',
                  Seed='num.null',
                  
-                 Seasons='num.null',
+                 
                  Years='num.null',
                  
                  Control='list.null',
@@ -307,29 +308,41 @@ OM <- function(Name='A new `OM` object',
                Latitude=NULL,
                Longitude=NULL,
                Sponsor='',
+               
                nSim=48,
                nYear=20,
                pYear=30,
+               
                CurrentYear=as.numeric(format(Sys.Date(), '%Y')),
                Seasons=1,
+               
                Stock=NULL,
                Fleet=NULL,
-               Obs=list(),
-               Imp=list(),
-               Complexes=list(),
-               Relations=list(),
-               SexPars=new('sexpars'),
+               Obs=NULL,
+               Imp=NULL,
+               
                Data=NULL,
                DataLag=0,
+               
+               CatchFrac=NULL,
+               Allocation=NULL,
+               EFactor=NULL,
+               
+               Complexes=NULL,
+               Herm=NULL,
+               SharePar=NULL,
+               Relations=NULL,
+               
                Interval=1,
                nReps=1,
                pStar=0.5,
                maxF=3,
                Seed=101,
+               
                Control=NULL,
+               
                Misc=list(),
-               Log=list(),
-               Source=list()) {
+               Source=NULL) {
   
   .Object <- new('om')
   .Object@Name <- Name
@@ -353,11 +366,19 @@ OM <- function(Name='A new `OM` object',
   .Object@Fleet <- Fleet
   .Object@Obs <- Obs
   .Object@Imp <- Imp
-  .Object@Complexes <- Complexes
-  .Object@Relations <- Relations
-  .Object@SexPars <- SexPars
+  
   .Object@Data <- Data
   .Object@DataLag <- DataLag
+  
+  .Object@CatchFrac <- CatchFrac
+  .Object@Allocation <- Allocation
+  .Object@EFactor <- EFactor
+  
+  .Object@Complexes <- Complexes
+  .Object@Herm <- Herm
+  .Object@SharePar <- SharePar
+  .Object@Relations <- Relations
+
   .Object@Interval <- Interval
   .Object@nReps <- nReps
   .Object@pStar <- pStar
@@ -371,7 +392,6 @@ OM <- function(Name='A new `OM` object',
   
   .Object@Misc <- Misc
   .Object@Source <- Source
-  #   .Object@Created <- Sys.time()
   
   methods::validObject(.Object)
   .Object

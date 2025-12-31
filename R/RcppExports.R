@@ -29,12 +29,16 @@ CalcRecruitment_ <- function(SProduction, R0, SP0, RecDev, SRRModel, SRRPars, TS
     .Call(`_MSEtool_CalcRecruitment_`, SProduction, R0, SP0, RecDev, SRRModel, SRRPars, TSindex)
 }
 
-CalcSpawnProduction_ <- function(NumberAtAgeArea, FecundityAtAge, MaturityAtAge, WeightAtAge, NaturalMortalityAtAge, FDeadAtAgeArea, SpawnTimeFrac = 0) {
-    .Call(`_MSEtool_CalcSpawnProduction_`, NumberAtAgeArea, FecundityAtAge, MaturityAtAge, WeightAtAge, NaturalMortalityAtAge, FDeadAtAgeArea, SpawnTimeFrac)
+CalcSpawnProduction_ <- function(NumberAtAgeArea, FecundityAtAge, MaturityAtAge, WeightAtAge, NaturalMortalityAtAge, FDeadAtAgeArea, SpawnTimeFrac = 0, debug = 0L) {
+    .Call(`_MSEtool_CalcSpawnProduction_`, NumberAtAgeArea, FecundityAtAge, MaturityAtAge, WeightAtAge, NaturalMortalityAtAge, FDeadAtAgeArea, SpawnTimeFrac, debug)
 }
 
 CalcStockMovement_ <- function(NumberAtAgeArea, Movement, nAge, nArea, TSindex) {
     .Call(`_MSEtool_CalcStockMovement_`, NumberAtAgeArea, Movement, nAge, nArea, TSindex)
+}
+
+CalcVBiomass_ <- function(NumberAtAgeAreaList, FleetList, TSindex, nStock, nFleet, nArea, debug = 0L) {
+    .Call(`_MSEtool_CalcVBiomass_`, NumberAtAgeAreaList, FleetList, TSindex, nStock, nFleet, nArea, debug)
 }
 
 vecminInd <- function(x) {

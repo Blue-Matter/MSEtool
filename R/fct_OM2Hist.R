@@ -35,10 +35,8 @@ OM2Hist <- function(OM, silent=FALSE, id=NULL) {
     List2Array('Stock') |> 
     aperm(c('Sim', 'Stock', 'Year'))
   Hist@SBiomass <-  Hist@SProduction <- Hist@Biomass 
-  Hist@Landings <- Hist@Discards <- ArraySimStockTimeFleetMP(OM,'Historical',1) |> DropDimension('MP')
   
   Hist@LandingsAtAge <- Hist@DiscardsAtAge <- ListArraySimAgeTimeFleetArea(OM, 'Historical')
-  
   Hist@LandingsAtSize <- Hist@DiscardsAtSize <- ListArraySimClassTimeFleetArea(OM, 'Historical')
   
   Hist@Effort <- ListArraySimAgeTimeFleet(OM, 'Historical') |> lapply(DropDimension, 'Age', FALSE) |>
@@ -46,7 +44,7 @@ OM2Hist <- function(OM, silent=FALSE, id=NULL) {
   
   # Add Effort from OM
   for (st in 1:nStock(OM)) {
-    Hist@Effort[,st,,] <- Hist@OM@Fleet[[st]]@Effort
+    Hist@Effort[,st,,] <- Hist@OM@Fleet[[st]]@Effort@Value
   }
   
   Hist@Distribution <- ListArraySimAgeTimeFleetArea(OM, 'Historical') |> 
@@ -54,7 +52,7 @@ OM2Hist <- function(OM, silent=FALSE, id=NULL) {
   
   # Add Distribution from OM
   for (st in 1:nStock(OM)) {
-    Hist@Distribution[[st]] <- Hist@OM@Fleet[[st]]@Distribution[,1:nYears,,,drop=FALSE] 
+    Hist@Distribution[[st]] <- Hist@OM@Fleet[[st]]@Effort@Distribution[,1:nYears,,,drop=FALSE] 
   }
   
   Hist@FDead <-  Hist@FRetain <- ListArraySimAgeTimeFleet(OM, 'Historical') 

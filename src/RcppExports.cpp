@@ -118,8 +118,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // CalcSpawnProduction_
-arma::vec CalcSpawnProduction_(arma::mat NumberAtAgeArea, arma::vec FecundityAtAge, arma::vec MaturityAtAge, arma::vec WeightAtAge, arma::vec NaturalMortalityAtAge, arma::mat FDeadAtAgeArea, double SpawnTimeFrac);
-RcppExport SEXP _MSEtool_CalcSpawnProduction_(SEXP NumberAtAgeAreaSEXP, SEXP FecundityAtAgeSEXP, SEXP MaturityAtAgeSEXP, SEXP WeightAtAgeSEXP, SEXP NaturalMortalityAtAgeSEXP, SEXP FDeadAtAgeAreaSEXP, SEXP SpawnTimeFracSEXP) {
+arma::vec CalcSpawnProduction_(arma::mat NumberAtAgeArea, arma::vec FecundityAtAge, arma::vec MaturityAtAge, arma::vec WeightAtAge, arma::vec NaturalMortalityAtAge, arma::mat FDeadAtAgeArea, double SpawnTimeFrac, int debug);
+RcppExport SEXP _MSEtool_CalcSpawnProduction_(SEXP NumberAtAgeAreaSEXP, SEXP FecundityAtAgeSEXP, SEXP MaturityAtAgeSEXP, SEXP WeightAtAgeSEXP, SEXP NaturalMortalityAtAgeSEXP, SEXP FDeadAtAgeAreaSEXP, SEXP SpawnTimeFracSEXP, SEXP debugSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -130,7 +130,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type NaturalMortalityAtAge(NaturalMortalityAtAgeSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type FDeadAtAgeArea(FDeadAtAgeAreaSEXP);
     Rcpp::traits::input_parameter< double >::type SpawnTimeFrac(SpawnTimeFracSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcSpawnProduction_(NumberAtAgeArea, FecundityAtAge, MaturityAtAge, WeightAtAge, NaturalMortalityAtAge, FDeadAtAgeArea, SpawnTimeFrac));
+    Rcpp::traits::input_parameter< int >::type debug(debugSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcSpawnProduction_(NumberAtAgeArea, FecundityAtAge, MaturityAtAge, WeightAtAge, NaturalMortalityAtAge, FDeadAtAgeArea, SpawnTimeFrac, debug));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -146,6 +147,23 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type nArea(nAreaSEXP);
     Rcpp::traits::input_parameter< int >::type TSindex(TSindexSEXP);
     rcpp_result_gen = Rcpp::wrap(CalcStockMovement_(NumberAtAgeArea, Movement, nAge, nArea, TSindex));
+    return rcpp_result_gen;
+END_RCPP
+}
+// CalcVBiomass_
+arma::cube CalcVBiomass_(const Rcpp::List& NumberAtAgeAreaList, const Rcpp::List& FleetList, int TSindex, int nStock, int nFleet, int nArea, int debug);
+RcppExport SEXP _MSEtool_CalcVBiomass_(SEXP NumberAtAgeAreaListSEXP, SEXP FleetListSEXP, SEXP TSindexSEXP, SEXP nStockSEXP, SEXP nFleetSEXP, SEXP nAreaSEXP, SEXP debugSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type NumberAtAgeAreaList(NumberAtAgeAreaListSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type FleetList(FleetListSEXP);
+    Rcpp::traits::input_parameter< int >::type TSindex(TSindexSEXP);
+    Rcpp::traits::input_parameter< int >::type nStock(nStockSEXP);
+    Rcpp::traits::input_parameter< int >::type nFleet(nFleetSEXP);
+    Rcpp::traits::input_parameter< int >::type nArea(nAreaSEXP);
+    Rcpp::traits::input_parameter< int >::type debug(debugSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcVBiomass_(NumberAtAgeAreaList, FleetList, TSindex, nStock, nFleet, nArea, debug));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -236,7 +254,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // SimulateDynamics_
-S4 SimulateDynamics_(S4 HistSimIn, Rcpp::NumericVector Years, int CalcCatch, int debug);
+Rcpp::S4 SimulateDynamics_(S4 HistSimIn, Rcpp::NumericVector Years, int CalcCatch, int debug);
 RcppExport SEXP _MSEtool_SimulateDynamics_(SEXP HistSimInSEXP, SEXP YearsSEXP, SEXP CalcCatchSEXP, SEXP debugSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -498,8 +516,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_CalcCatch_", (DL_FUNC) &_MSEtool_CalcCatch_, 3},
     {"_MSEtool_CalcNumberNext_", (DL_FUNC) &_MSEtool_CalcNumberNext_, 8},
     {"_MSEtool_CalcRecruitment_", (DL_FUNC) &_MSEtool_CalcRecruitment_, 7},
-    {"_MSEtool_CalcSpawnProduction_", (DL_FUNC) &_MSEtool_CalcSpawnProduction_, 7},
+    {"_MSEtool_CalcSpawnProduction_", (DL_FUNC) &_MSEtool_CalcSpawnProduction_, 8},
     {"_MSEtool_CalcStockMovement_", (DL_FUNC) &_MSEtool_CalcStockMovement_, 5},
+    {"_MSEtool_CalcVBiomass_", (DL_FUNC) &_MSEtool_CalcVBiomass_, 7},
     {"_MSEtool_vecminInd", (DL_FUNC) &_MSEtool_vecminInd, 1},
     {"_MSEtool_LinInterp_cpp", (DL_FUNC) &_MSEtool_LinInterp_cpp, 3},
     {"_MSEtool_MSYCalcs", (DL_FUNC) &_MSEtool_MSYCalcs, 17},

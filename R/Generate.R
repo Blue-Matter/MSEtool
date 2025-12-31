@@ -56,72 +56,9 @@ ApplyCustomAtLengthModel <- function(Model, Pars, Length) {
 }
 
 
-GenerateMeanAtAge <- function(Model, Pars, Ages) {
 
-  if (inherits(Model, 'function')) {
-    return(ApplyCustomAtAgeModel(Model, Pars, Ages))
-  }
 
-  fun_args <- names(formals(Model))
-  fun <- get(Model)
-  arg_ind <- match(names(Pars), fun_args)
-  val_ind <- 1:max(min(arg_ind-1), 1)
 
-  l <- list()
-  for (i in seq_along(val_ind)) {
-    l[[fun_args[[val_ind[i]]]]] <- get(fun_args[[i]])
-  }
-
-  for (i in seq_along(arg_ind)) {
-    l[[fun_args[[arg_ind[i]]]]] <-  Pars[[i]]
-  }
-  do.call(fun, l)
-}
-
-GenerateMeanatLength <- function(Model, Pars, Length) {
-
-  if (inherits(Model, 'function')) {
-    return(ApplyCustomAtLengthModel(Model, Pars, Length))
-  }
-
-  fun_args <- names(formals(Model))
-  fun <- get(Model)
-  arg_ind <- match(names(Pars), fun_args)
-  val_ind <- 1:max(min(arg_ind-1), 1)
-
-  l <- list()
-  for (i in seq_along(val_ind)) {
-    l[[fun_args[[val_ind[i]]]]] <- get(fun_args[[i]])
-  }
-
-  for (i in seq_along(arg_ind)) {
-    l[[fun_args[[arg_ind[i]]]]] <- Pars[[i]]
-  }
-  do.call(fun, l)
-}
-
-GenerateMeanatWeight <- function(Model, Pars, Weight) {
-  
-  if (inherits(Model, 'function')) {
-    stop("R functions not currently supported for MeanAtWeight")
-    # return(ApplyCustomAtLengthModel(Model, Pars, Length))
-  }
-  
-  fun_args <- names(formals(Model))
-  fun <- get(Model)
-  arg_ind <- match(names(Pars), fun_args)
-  val_ind <- 1:max(min(arg_ind-1), 1)
-  
-  l <- list()
-  for (i in seq_along(val_ind)) {
-    l[[fun_args[[val_ind[i]]]]] <- get(fun_args[[i]])
-  }
-  
-  for (i in seq_along(arg_ind)) {
-    l[[fun_args[[arg_ind[i]]]]] <- Pars[[i]]
-  }
-  do.call(fun, l)
-}
 
 GenerateSRR <- function(Model, Pars, S=NULL, S0=NULL) {
 

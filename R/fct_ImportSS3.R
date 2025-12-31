@@ -107,7 +107,7 @@ ImportSS <- function(SSDir,
   OM <- ProcessEFactor(OM)
    
   # OM@Complexes
-  # OM@SexPars
+  
   # OM@Relations
   if (!populate)
     return(OM)

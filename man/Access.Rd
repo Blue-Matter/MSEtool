@@ -100,8 +100,6 @@
 \alias{SD<-}
 \alias{SharePar}
 \alias{SharePar<-}
-\alias{SPFrom}
-\alias{SPFrom<-}
 \alias{Source}
 \alias{Source<-}
 \alias{Sponsor}
@@ -317,10 +315,6 @@ SD(x) <- value
 SharePar(x)
 
 SharePar(x) <- value
-
-SPFrom(x)
-
-SPFrom(x) <- value
 
 Source(x)
 

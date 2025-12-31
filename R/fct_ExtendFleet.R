@@ -1,7 +1,5 @@
 ExtendFleet <- function(FleetList, AgeClasses, nSim, Years, nArea, silent=FALSE, id=NULL) {
   
-  nAges <- length(AgeClasses)
-  
   if (!silent)
     cli::cli_progress_update(id=id)
   
@@ -22,7 +20,7 @@ ExtendFleet <- function(FleetList, AgeClasses, nSim, Years, nArea, silent=FALSE,
                                    ArrayExpand(fleet@Effort@Distribution, nSim, AgeClasses, Years)
   ) |>
     List2Array('Fleet') |>
-    aperm(c('Sim', 'Year', 'Area', 'Fleet'))
+    aperm(c('Sim', 'Year', 'Fleet', 'Area'))
   
   
   if (!silent)
@@ -39,13 +37,13 @@ ExtendFleet <- function(FleetList, AgeClasses, nSim, Years, nArea, silent=FALSE,
                                          ArrayExpand(fleet@Catchability@qArea, nSim, AgeClasses, Years)
   ) |>
     List2Array('Fleet') |>
-    aperm(c('Sim', 'Year', 'Area', 'Fleet'))
+    aperm(c('Sim', 'Year', 'Fleet', 'Area'))
 
   if (!silent)
     cli::cli_progress_update(id=id)
   
   Fleet@Selectivity <- CombineFleetObject(lapply(FleetList, slot, "Selectivity"), 
-                                          nSim, nAges, Years)
+                                          nSim, AgeClasses, Years)
   
   if (!is.null(Fleet@Selectivity@MeanAtAge)) 
     dimnames(Fleet@Selectivity@MeanAtAge)$Age <- AgeClasses
@@ -55,7 +53,7 @@ ExtendFleet <- function(FleetList, AgeClasses, nSim, Years, nArea, silent=FALSE,
     cli::cli_progress_update(id=id)
   
   Fleet@Retention <- CombineFleetObject(lapply(FleetList, slot, "Retention"),
-                                        nSim, nAges, Years)
+                                        nSim, AgeClasses, Years)
   
   if (is.null(Fleet@Retention@MeanAtAge)) {
     Fleet@Retention@MeanAtAge <- Fleet@Selectivity@MeanAtAge
@@ -66,7 +64,7 @@ ExtendFleet <- function(FleetList, AgeClasses, nSim, Years, nArea, silent=FALSE,
     dimnames(Fleet@Retention@MeanAtAge)$Age <- AgeClasses
 
   Fleet@DiscardMortality <- CombineFleetObject(lapply(FleetList, slot, "DiscardMortality"),
-                                               nSim, nAges, Years)
+                                               nSim, AgeClasses, Years)
   if (is.null(Fleet@DiscardMortality@MeanAtAge)) {
     Fleet@DiscardMortality@MeanAtAge <- Fleet@Selectivity@MeanAtAge
     Fleet@DiscardMortality@MeanAtAge[] <- 0
@@ -76,7 +74,7 @@ ExtendFleet <- function(FleetList, AgeClasses, nSim, Years, nArea, silent=FALSE,
     dimnames(Fleet@DiscardMortality@MeanAtAge)$Age <- AgeClasses
 
   Fleet@Closure <- lapply(FleetList, slot, 'Closure') |> 
-    purrr::map(ArrayExpand, nSim, nAges, Years) |> 
+    purrr::map(ArrayExpand, nSim, AgeClasses, Years) |> 
     List2Array('Fleet') |>
     aperm(c('Sim', 'Year', 'Fleet', 'Area'))
   
@@ -85,7 +83,7 @@ ExtendFleet <- function(FleetList, AgeClasses, nSim, Years, nArea, silent=FALSE,
     cli::cli_progress_update(id=id)
   
   Fleet@WeightFleet <- lapply(FleetList, slot, 'WeightFleet') |>
-    purrr::map(ArrayExpand, nSim, nAges, Years) |>
+    purrr::map(ArrayExpand, nSim, AgeClasses, Years) |>
     List2Array('Fleet') |>
     aperm(c('Sim', 'Age', 'Year', 'Fleet')) 
   
@@ -101,7 +99,7 @@ ExtendFleet <- function(FleetList, AgeClasses, nSim, Years, nArea, silent=FALSE,
   Fleet
 }
 
-CombineFleetObject <- function(List, nSim, nAges, Years) {
+CombineFleetObject <- function(List, nSim, AgeClasses, Years) {
   out <- new(class(List[[1]]))
   nms <- slotNames(out)
   
@@ -110,7 +108,7 @@ CombineFleetObject <- function(List, nSim, nAges, Years) {
       purrr::map(ExtendYears, Years) |>
       List2Array('Fleet') |>
       ExtendSims(nSim) |>
-      ExtendAges(nAges)
+      ExtendAges(AgeClasses)
   }
   
   if ('MeanAtLength' %in% nms) {

@@ -85,7 +85,6 @@ Collate:
     '00_Class_unfished.R'
     '00_Class_imp.R'
     '00_Class_obs.R'
-    '00_Class_sexpars.R'
     'lgy_Class_definitions.R'
     '00_Class_om.R'
     '00_Class_hist.R'

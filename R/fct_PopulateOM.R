@@ -109,23 +109,9 @@ PopulateFleetList <- function(OM, silent=FALSE) {
         Fleet <- OM@Fleet[[st]][[fl]]
       }
       
-      Fleet@nSim <- OM@nSim
-      Fleet@nYear <- OM@nYear
-      Fleet@pYear <- OM@pYear
-      Fleet@CurrentYear <- OM@CurrentYear
-      Stock <- StockList[[st]]
-      Fleet@Seasons <- Stock@Seasons
-      Fleet@Years <- CalcYears(nYear=Stock@nYear, 
-                                       pYear=Stock@pYear, 
-                                       CurrentYear=Stock@CurrentYear, 
-                                       Seasons= Stock@Seasons )
-      
       FleetList[[st]][[fl]] <- PopulateFleet(Fleet=Fleet, 
-                                             Ages=Ages(StockList[[st]]),
-                                             Length=Length(StockList[[st]]),
-                                             Weight=Weight(StockList[[st]]),
-                                             RelativeSize=StockList[[st]]@Spatial@RelativeSize,
-                                             seed=OM@Seed,
+                                             Stock=StockList[[st]],
+                                             seed=OM@Seed+st+fl,
                                              silent=silent)
       
       names(FleetList[[st]])[fl] <- FleetList[[st]][[fl]]@Name

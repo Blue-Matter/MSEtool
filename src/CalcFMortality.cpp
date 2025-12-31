@@ -21,14 +21,13 @@ List CalcFMortality_(arma::mat EffortFleetArea, // nFleet, nArea
   
   int nFleet = Catchability.size();
   
-  // if (debug) {
-  //   Rcout << "*********************"  << std::endl;
-  //   Rcout << "CalcFMortality_ Function " << nArea << std::endl;
-  //   Rcout << "nArea = " << nArea << std::endl;
-  //   Rcout << "qArea = " << qArea << std::endl;
-  //   Rcout << "nFleet = " << nFleet << std::endl;
-  //   Rcout << "Catchability = " << Catchability << std::endl;
-  // }
+  if (debug) {
+    Rcout << "Start CalcFMortality " << std::endl;
+    // Rcout << "nArea = " << nArea << std::endl;
+    // Rcout << "qArea = " << qArea << std::endl;
+    // Rcout << "nFleet = " << nFleet << std::endl;
+    // Rcout << "Catchability = " << Catchability << std::endl;
+  }
   
   
   int nAge = SelectivityAtAgeFleet.n_rows;
@@ -65,9 +64,9 @@ List CalcFMortality_(arma::mat EffortFleetArea, // nFleet, nArea
       FDeadFleetArea.subcube(0, fl, area, nAge-1,fl, area) = FRetain + DeadDiscard;
     }
   }
-  // if (debug) {
-  //   Rcout << "*********************"  << std::endl;
-  // }
+  if (debug) {
+    Rcout << "End CalcFMortality" << std::endl;
+  }
   
   List L = List::create(Named("FDeadFleetArea") = FDeadFleetArea,
                         Named("FRetainFleetArea") = FRetainFleetArea,

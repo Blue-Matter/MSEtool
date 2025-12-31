@@ -1,10 +1,10 @@
 
 CalcFleetAllocationF <- function(FleetList, Years) {
   
-  BySim <- "Sim" %in% (FleetList[[1]]@Effort |> dimnames() |> names())
-  FDistribution <- purrr::map(FleetList, \(Stock) {
-    ArrayMultiply(Stock@Effort |>  ArraySubsetYear(Years),
-                  Stock@Catchability |>  ArraySubsetYear(Years))
+  BySim <- "Sim" %in% (FleetList[[1]]@Effort@Value |> dimnames() |> names())
+  FDistribution <- purrr::map(FleetList, \(Fleet) {
+    ArrayMultiply(Fleet@Effort@Value |>  ArraySubsetYear(Years),
+                  Fleet@Catchability@Value |>  ArraySubsetYear(Years))
   }) |> 
     List2Array('Stock') |>
     aperm(setdnames(c('Stock', 'Year', 'Fleet'), BySim))

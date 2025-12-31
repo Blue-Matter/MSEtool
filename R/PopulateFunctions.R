@@ -83,165 +83,6 @@ CheckRequiredObject <- function(object, class, argName=NULL) {
   NULL
 }
 
-PopulateMeanAtAge <- function(object, Ages=NULL, Years=NULL, Length=NULL) {
-  
-  if (!is.null(object@MeanAtAge)) {
-    object@MeanAtAge <- Structure(object@MeanAtAge)
-    if (is.null(dimnames(object@MeanAtAge))) {
-      dd <- dim(object@MeanAtAge)
-      dimnames(object@MeanAtAge) <- list(Sim=1:dd[1],
-                                         Age=Ages@Classes[1:dd[2]],
-                                         Year=Years[1:dd[3]])
-    }
-    
-    return(object)
-  }
-  
-  
-  if (ParsNotEmpty(object@Pars)) {
-    if (is.null(object@Model))
-      object@Model <- FindModel(object)
-    
-    args <- names(formals(object@Model))
-    
-    if ('Length' %in% args) {
-      CheckRequiredObject(Length, 'length', 'Length')
-      # chk <- Check(Length)
-      # if(!chk@populated) {
-      #   CheckRequiredObject(Ages, 'ages', 'Ages')
-      #   Length <- Populate(Length, Ages, nsim, Years, seed, ASK=TRUE, silent)
-      # }
-      object@MeanAtAge <- GenerateMeanatLength(Model=object@Model,
-                                               Pars=object@Pars,
-                                               Length=Length@MeanAtAge)
-      
-    } else {
-      if ('Ages' %in% args) {
-        CheckRequiredObject(Ages, 'ages', 'Ages')
-        if ('Timing' %in% slotNames(object)) {
-          Ages@Classes <- Ages@Classes+object@Timing
-        }
-      }
-      object@MeanAtAge <- GenerateMeanAtAge(Model=object@Model,
-                                            Pars=object@Pars,
-                                            Ages=Ages@Classes)
-      
-    }
-    dd <- dim(object@MeanAtAge)
-    dimnames(object@MeanAtAge) <- list(Sim=1:dd[1],
-                                       Age=Ages@Classes[1:dd[2]],
-                                       Year=Years[1:dd[3]])
-  }
-  object
-}
-
-PopulateMeanAtLength <- function(object, 
-                                 Length=NULL, 
-                                 Years=NULL, 
-                                 Ages=NULL, 
-                                 nsim=NULL,
-                                 seed=NULL, silent) {
-  
-  if (is.null(object@Model))
-    return(object)
-  
-  if (!is.null(object@MeanAtLength))
-    return(object)
-  
-  if (ParsNotEmpty(object@Pars)) {
-    
-    if (is.null(object@Model))
-      object@Model <- FindModel(object)
-    
-    args <- names(formals(object@Model))
-    
-    if ('Ages' %in% args)
-      return(object)
-    
-    if ('Length' %in% args) {
-      CheckRequiredObject(Length, 'length', 'Length')
-      # chk <- Check(Length)
-      # if(!chk@populated) {
-      #   CheckRequiredObject(Ages, 'ages', 'Ages')
-      #   Length <- Populate(Length, Ages, nsim, Years, seed, ASK=TRUE, silent)
-      # }
-    }
-    object@MeanAtLength <- GenerateMeanatLength(Model=object@Model,
-                                                Pars=object@Pars,
-                                                Length=Length@Classes)
-    
-    object@Classes <- Length@Classes
-    
-    dd <- dim(object@MeanAtLength)
-    dimnames(object@MeanAtLength) <- list(Sim=1:dd[1],
-                                          Class=Length@Classes,
-                                          Year=Years[1:dd[3]])
-    
-    
-  #   if ('Units' %in% slotNames(object))
-  #     attributes(object@MeanAtLength)$Units <- object@Units
-  #   attributes(object@MeanAtLength)$Years <- Years
-  #   if (methods::is(Length, 'length')) {
-  #     attributes(object@MeanAtLength)$LengthClasses <- Length@Classes
-  #     attributes(object@MeanAtLength)$UnitsLength <- Length@Units
-  #   }
-  #   object@MeanAtLength <- AddDimNames(object@MeanAtLength, c('Sim', 'Class', 'Year'), Years)
-  }
-  object
-}
-
-PopulateMeanAtWeight <- function(object, 
-                                 Weight=NULL, 
-                                 Years=NULL, 
-                                 Ages=NULL, 
-                                 nsim=NULL,
-                                 seed=NULL, silent) {
-  
-  if (is.null(object@Model))
-    return(object)
-  
-  if (!is.null(object@MeanAtLength))
-    return(object)
-  
-  if (ParsNotEmpty(object@Pars)) {
-    
-    if (is.null(object@Model))
-      object@Model <- FindModel(object)
-    
-    args <- names(formals(object@Model))
-    
-    if ('Ages' %in% args)
-      return(object)
-    
-    if ('Weight' %in% args) {
-      CheckRequiredObject(Weight, 'weight', 'Weight')
-      # chk <- Check(Length)
-      # if(!chk@populated) {
-        # CheckRequiredObject(Ages, 'ages', 'Ages')
-        # Weight <- Populate(Weight, Ages, nsim, Years, seed, ASK=TRUE, silent)
-      # }
-    }
-    object@MeanAtWeight <- GenerateMeanatWeight(Model=object@Model,
-                                                Pars=object@Pars,
-                                                Weight=Weight@Classes)
-    
-    object@Classes <- Weight@Classes
-    
-    # if ('Units' %in% slotNames(object))
-    #   attributes(object@MeanAtWeight)$Units <- object@Units
-    # attributes(object@MeanAtWeight)$Years <- Years
-    dd <- dim(object@MeanAtWeight)
-    dimnames(object@MeanAtWeight) <- list(Sim=1:dd[1],
-                                          Class=Weight@Classes,
-                                          Year=Years[1:dd[3]])
-      
-    
-    
-  }
-  object
-}
-
-
 
 
 
@@ -281,22 +122,22 @@ ShareParameters <- function(OM) {
   # TODO
   
   
-  if (length(OM@SexPars@Herm)) {
+  if (length(OM@Herm)) {
     stop('Herm not done yet!')
     # SexPars$Herm <- checkHerm(SexPars$Herm, maxage, nsim, nyears, proyears)
   }
   
   # TODO - remove SPFrom if it remains in SRR
-  if (!length(OM@SexPars@SPFrom))
+  if (!length(OM@SPFrom))
     return(OM)
   
-  if (isFALSE(OM@SexPars@SharePar))
+  if (isFALSE(OM@SharePar))
     return(OM)
   
-  sexmatches <- sapply(1:nrow(OM@SexPars@SPFrom), function(x) 
-    paste(OM@SexPars@SPFrom[x, ], collapse = "_"))
-  
-  parcopy <- match(sexmatches, sexmatches)
+  # sexmatches <- sapply(1:nrow(OM@SPFrom), function(x) 
+  #   paste(OM@SPFrom[x, ], collapse = "_"))
+  # 
+  # parcopy <- match(sexmatches, sexmatches)
   
   
   # if (!silent)  {

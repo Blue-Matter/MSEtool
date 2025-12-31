@@ -8,6 +8,7 @@ arma::vec CalcSpawnProduction_(arma::mat NumberAtAgeArea, // nAge, nArea
                               arma::vec WeightAtAge, // nAge
                               arma::vec NaturalMortalityAtAge, // nAge
                               arma::mat FDeadAtAgeArea, // nAge, nArea
-                              double SpawnTimeFrac);
+                              double SpawnTimeFrac,
+                              int debug);
 
 #endif

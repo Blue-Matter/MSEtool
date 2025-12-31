@@ -41,6 +41,7 @@ OM <- ImportSS(RepList,
                Interval=Interval,
                DataLag=DataLag)
 
+Object
 
 Hist <- Simulate(OM)
 

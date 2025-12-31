@@ -22,13 +22,17 @@ OM(
   Seasons = 1,
   Stock = NULL,
   Fleet = NULL,
-  Obs = list(),
-  Imp = list(),
-  Complexes = list(),
-  Relations = list(),
-  SexPars = new("sexpars"),
+  Obs = NULL,
+  Imp = NULL,
   Data = NULL,
   DataLag = 0,
+  CatchFrac = NULL,
+  Allocation = NULL,
+  EFactor = NULL,
+  Complexes = NULL,
+  Herm = NULL,
+  SharePar = NULL,
+  Relations = NULL,
   Interval = 1,
   nReps = 1,
   pStar = 0.5,
@@ -36,8 +40,7 @@ OM(
   Seed = 101,
   Control = NULL,
   Misc = list(),
-  Log = list(),
-  Source = list()
+  Source = NULL
 )
 }
 \arguments{
@@ -80,19 +83,6 @@ to the year the Operating Model object is built.}
 \item{Stock}{A \link{Stock} object or a list of \code{\link[=Stock]{Stock()}} objects
 for multi-stock models.}
 
-\item{Complexes}{For multi-stock models only. A list of stock complexes.
-Each position is a vector of stock numbers (as they appear in \code{Stock} list)
-for which data and management recommendation should be aggregated; e.g.,
-TAC will be split among stocks according to vulnerable biomass.}
-
-\item{Relations}{For multi-stock models only. A list of biological and/or
-ecological relationships among stocks in \code{Stock}. For MICE models. Needs
-more documentation so bug us if you get stuck.}
-
-\item{SexPars}{For multi-stock models only. A named list that controls
-sex-specific dynamics, i.e., sex-specific spawning and hermaphroditism.
-More generally, controls spawning and moving abundance between stocks. See \code{Details}.}
-
 \item{Data}{A \code{\link[=data-class]{data-class()}} object or a list of \code{\link[=data-class]{data-class()}} objects (up to
 \code{length(Stock)}) containing the real fishery data.
 if \code{Complexes} is specified, \code{Data} follows the same structure, i.e., elements
@@ -102,6 +92,15 @@ in \code{Data} list will be assumed to be aggregated according to \code{Complexe
 Default \code{DataLage=0} means data is generated up to the time step before an MP is implemented.
 E.g., if management advice is being produced for \code{Year=2025}, the data provided to the MP
 will be up to and including \code{2024}.}
+
+\item{Complexes}{For multi-stock models only. A list of stock complexes.
+Each position is a vector of stock numbers (as they appear in \code{Stock} list)
+for which data and management recommendation should be aggregated; e.g.,
+TAC will be split among stocks according to vulnerable biomass.}
+
+\item{Relations}{For multi-stock models only. A list of biological and/or
+ecological relationships among stocks in \code{Stock}. For MICE models. Needs
+more documentation so bug us if you get stuck.}
 
 \item{Interval}{Integer length 1. The management update interval. Management will be implemented
 in the first projection time step, and then every \code{Interval} time step, with
@@ -132,6 +131,10 @@ Mainly for development purposes.}
 
 \item{Source}{Character string. Can be used to reference websites, articles, etc
 with relevant information. Supports Markdown.}
+
+\item{SexPars}{For multi-stock models only. A named list that controls
+sex-specific dynamics, i.e., sex-specific spawning and hermaphroditism.
+More generally, controls spawning and moving abundance between stocks. See \code{Details}.}
 }
 \description{
 An S4 object of class \code{OM} and associated functions to access and modify the object

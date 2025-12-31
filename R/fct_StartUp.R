@@ -3,7 +3,7 @@
 StartUp <- function(OM, nSim=NULL, silent=FALSE) {
   CheckClass(OM)
   # TODO                    
-  if (!is.null(OM@SexPars@Herm))
+  if (!is.null(OM@Herm))
     stop('Herm not done yet!')
   
   OM |> 

@@ -11,7 +11,12 @@ arma::vec CalcSpawnProduction_(arma::mat NumberAtAgeArea, // nAge, nArea
                               arma::vec WeightAtAge, // nAge
                               arma::vec NaturalMortalityAtAge, // nAge
                               arma::mat FDeadAtAgeArea, // nAge, nArea
-                              double SpawnTimeFrac= 0) {
+                              double SpawnTimeFrac= 0,
+                              int debug = 0) {
+  if (debug) {
+    Rcout << "Start CalcSpawnProduction" << std::endl;
+  }
+  
   
   int nAge = NumberAtAgeArea.n_rows;
   int nArea = NumberAtAgeArea.n_cols;
@@ -42,5 +47,10 @@ arma::vec CalcSpawnProduction_(arma::mat NumberAtAgeArea, // nAge, nArea
   arma::vec out(2, arma::fill::zeros);
   out[0] = arma::accu(SProductionArea);
   out[1] = arma::accu(SBiomassArea);
+  
+  if (debug) {
+    Rcout << "End CalcSpawnProduction" << std::endl;
+  }
+  
   return(out);
 }
