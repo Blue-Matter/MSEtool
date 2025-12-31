@@ -111,6 +111,62 @@ Populate(object, ...)
   ...
 )
 
+\S4method{Populate}{fleet}(object, Stock, seed = NULL, silent = FALSE, ...)
+
+\S4method{Populate}{effort}(object, HistYears = NULL, nArea = 1, nSim = 5, seed = NULL, ...)
+
+\S4method{Populate}{catchability}(
+  object,
+  RelativeSize = NULL,
+  nSim = 5,
+  HistYears = NULL,
+  ProjYears = NULL,
+  seed = NULL,
+  silent = FALSE,
+  ...
+)
+
+\S4method{Populate}{selectivity}(
+  object,
+  Ages,
+  Length,
+  Weight = NULL,
+  nSim = 5,
+  Years,
+  nArea = 1,
+  CalcAtLength = TRUE,
+  seed = NULL,
+  silent = FALSE,
+  ...
+)
+
+\S4method{Populate}{retention}(
+  object,
+  Ages,
+  Length,
+  Weight = NULL,
+  nSim = 5,
+  Years,
+  nArea = 1,
+  CalcAtLength = TRUE,
+  seed = NULL,
+  silent = FALSE,
+  ...
+)
+
+\S4method{Populate}{discardmortality}(
+  object,
+  Ages,
+  Length,
+  nSim = 5,
+  Years,
+  nArea,
+  CalcAtLength = TRUE,
+  seed = NULL,
+  silent = FALSE,
+  ...
+)
+
 PopulateFleet(Fleet, Stock, seed = 103, silent = FALSE)
 
 PopulateOM(OM, silent = FALSE)
