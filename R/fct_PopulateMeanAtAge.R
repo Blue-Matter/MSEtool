@@ -6,7 +6,6 @@ PopulateMeanAtAge <- function(object,
   if (is.null(object@Model))
     return(object)
   
-  
   if (ParsEmpty(object@Pars)) {
     return(Object)
   }
@@ -33,7 +32,7 @@ PopulateMeanAtAge <- function(object,
     object@MeanAtAge <- GenerateMeanAtAge(Model=object@Model,
                                           Pars=object@Pars,
                                           Ages=Ages@Classes)
-    object@Classes <- Ages@Classes
+    # object@Classes <- Ages@Classes
     
   }
   
@@ -44,7 +43,7 @@ PopulateMeanAtAge <- function(object,
                                        Age=Ages@Classes[1:dd[2]],
                                        Year=Years[1:dd[3]])
   } else {
-    dimnames(object@MeanAtLength) <- list(Sim=1:dd[1],
+    dimnames(object@MeanAtAge) <- list(Sim=1:dd[1],
                                           Age=Ages@Classes[1:dd[2]],
                                           Year=Years[1:dd[3]],
                                           Area=1:dd[4])
