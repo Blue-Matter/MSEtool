@@ -9,17 +9,37 @@ OM <- Populate(OM)
 
 
 OM <- Convert(testOM)
-Hist <- Simulate(OM)
+
+
+OM@Fleet$Albacore$Generic_Fleet@Selectivity@MeanAtAge |> dim()
+OM@Fleet$Albacore$Generic_Fleet@Retention@MeanAtAge |> dim()
+OM@Fleet$Albacore$Generic_Fleet@DiscardMortality@MeanAtAge |> dim()
+
+
+
+# - Add option for Selectivity, Retention, DiscardMortality by Area ...
+# - 
+
+LoadArgs('Simulate_om')
+
+Hist <- Simulate_om(OM)
+
+
+OM@Fleet$Albacore$`Stock:Albacore  Fleet:Generic_Fleet  Obs model:Generic_Obs  Imp model:Perfect_Imp`
+
+
+# - Add Selectivity, Retention, DiscardMortality by Area ...
+# - finalize OM object  - HERM !! & MoveStock
+# - finalize Hist object
 
 # - update internal for new Fleet structure
-# - finalize OM object  - HERM !! & MoveStock
+# - test Simulate
 
-
-# - finalize Hist object 
-# - test Simulaet
 
 # - finalise MSE object
 # - test Project
+
+# - merge back into pre-release when ready ... 
 
 
 
