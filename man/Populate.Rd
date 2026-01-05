@@ -129,10 +129,10 @@ Populate(object, ...)
 \S4method{Populate}{selectivity}(
   object,
   Ages,
-  Length,
+  Length = NULL,
   Weight = NULL,
   nSim = 5,
-  Years,
+  Years = NULL,
   nArea = 1,
   CalcAtLength = TRUE,
   seed = NULL,
@@ -143,7 +143,7 @@ Populate(object, ...)
 \S4method{Populate}{retention}(
   object,
   Ages,
-  Length,
+  Length = NULL,
   Weight = NULL,
   nSim = 5,
   Years,
@@ -157,7 +157,7 @@ Populate(object, ...)
 \S4method{Populate}{discardmortality}(
   object,
   Ages,
-  Length,
+  Length = NULL,
   nSim = 5,
   Years,
   nArea,

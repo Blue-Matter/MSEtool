@@ -318,92 +318,71 @@ CalcUnfishedDist <- function(Spatial,
   Spatial
 }
 
-CheckSelectivityMaximum <- function(MeanAtAge) {
-  MaxValues <- apply(MeanAtAge, c(1,3), max) |> round(3)
+CheckSelectivityMaximum <- function(MeanAtAge, alert=TRUE) {
+  dnames <- dimnames(MeanAtAge)
+  byArea <- ifelse(is.null(dnames[['Area']]), FALSE, TRUE)
   
-  
-  ind <- MaxValues<0.99 & MaxValues!=0
-  if (all(!ind))
-    return(MeanAtAge)
-  
-  cli::cli_alert_warning("WARNING: Selectivity-at-Age does not have a maximum value of 1. F-at-Age won't correspond with Apical F")
-  cli::cli_alert_warning('Standardizing to a max value of 1 but you probably want to fix this in the OM')
-  
-  sims <- which(apply(ind,1, sum)>0) |> cli::cli_vec(list("vec-trunc" = 5))
-  TSs <- which(apply(ind, 2, sum)>0) |> cli::cli_vec(list("vec-trunc" = 5))
-  
-  cli::cli_alert('Simulations {.val {sims}}; Years {.val {TSs}}')
-  
-  for (i in 1:nrow(ind)) {
-    for (j in 1:ncol(ind)) {
-      if (ind[i,j]==FALSE)
-        next()
-      MeanAtAge[i, ,j] <- MeanAtAge[i, ,j]/max(MeanAtAge[i, ,j])
-    }
+  if (byArea) {
+    MaxValues <- apply(MeanAtAge, c('Sim', 'Year', 'Area'), max) |> round(3)
+  } else {
+    MaxValues <- apply(MeanAtAge, c('Sim', 'Year'), max) |> round(3)
   }
   
+  ind <- MaxValues<0.99 & MaxValues!=0
+  if (all(!ind)) {
+    return(MeanAtAge)
+  }
+    
+  if (alert) {
+    cli::cli_alert_warning("WARNING: Selectivity-at-Age does not have a maximum value of 1. F-at-Age won't correspond with Apical F")
+    cli::cli_alert_warning('Standardizing to a max value of 1 but you probably want to fix this in the OM')
+  }
+  
+  if (byArea) {
+    if (alert) {
+      sims <- which(apply(ind,1, sum)>0) |> cli::cli_vec(list("vec-trunc" = 5))
+      TSs <- which(apply(ind, 2, sum)>0) |> cli::cli_vec(list("vec-trunc" = 5))
+      areas <- which(apply(ind,3, sum)>0) |> cli::cli_vec(list("vec-trunc" = 5))
+      cli::cli_alert('Simulations {.val {sims}}; Years {.val {TSs}}; Areas: {.val{areas}}')
+    }
+   
+    dd <- dim(MeanAtAge)
+    nSim <- dd[1]
+    nYear <- dd[3]
+    nArea <- dd[4]
+    
+    for (sim in 1:nSim) {
+      for (year in 1:nYear) {
+        for (area in 1:nArea) {
+          MeanAtAge[sim, ,year, area] <-  MeanAtAge[sim, ,year, area]/max(MeanAtAge[sim, ,year, area], na.rm=TRUE)
+        }
+      }
+    }
+ 
+    
+  } else {
+    if (alert) {
+      sims <- which(apply(ind,1, sum)>0) |> cli::cli_vec(list("vec-trunc" = 5))
+      TSs <- which(apply(ind, 2, sum)>0) |> cli::cli_vec(list("vec-trunc" = 5))
+      cli::cli_alert('Simulations {.val {sims}}; Years {.val {TSs}};')
+    }
+    
+    dd <- dim(MeanAtAge)
+    nSim <- dd[1]
+    nYear <- dd[3]
+    
+    for (sim in 1:nSim) {
+      for (year in 1:nYear) {
+        MeanAtAge[sim, ,year] <-  MeanAtAge[sim, ,year]/max(MeanAtAge[sim, ,year], na.rm=TRUE)
+        
+      }
+    }
+    
+  }
   MeanAtAge
 }
 
 
-GenerateHistoricalEffort <- function(Effort, nsim=NULL, Years=NULL) {
-  if (!methods::is(Effort, 'data.frame'))
-    cli::cli_abort('`Effort` must be a data.frame')
-  
-  if (!all(names(Effort) %in% c("Year", "Lower", "Upper", "CV" )))
-    cli::cli_abort('`Effort` must be a data.frame with columns: "Year", "Lower", "Upper", "CV" ')
-  
-  if (is.null(nsim)) {
-    cli::cli_warn('`nsim` not specified, assuming `nsim=100`')
-    nsim <- 100
-  }
-  
-  
-  if (is.null(Years)) {
-    cli::cli_warn('`Years` not specified, assuming last time step is: {.val {max(Effort$Year)}}')
-    Years <- 1:max(Effort$Year)
-  }
-  
-  if (all(Effort$Year< 1000)) {
-    chk <- max(Effort$Year) %in% seq_along(Years)  
-    if (!chk)
-      cli::cli_abort('`max(Effort$Year)` ({.val {max(Effort$Year)}})')
-  } else {
-    chk <- max(Effort$Year) %in% Years
-    if (!chk)
-      cli::cli_abort('`max(Effort$Year)` ({.val {max(Effort$Year)}})')
-  }
-  
-  nYears <- length(Years)
-  
-  EffortPoints <- mapply(runif, n = nsim, min = Effort$Lower, max = Effort$Upper)  # sample Effort
-  if (nsim>1) {
-    EffortTS <- t(sapply(1:nsim, function(x) 
-      approx(x = Effort$Year,
-             y = EffortPoints[x, ], 
-             method = "linear", 
-             n = nYears)$y)
-    )
-  } else {
-    EffortTS <- approx(x = Effort$Year,
-                       y = EffortPoints,
-                       method = "linear", 
-                       n = nYears)$y
-  }
-  
-  Esd <- Effort$CV[1]
-  if (!is.null(Esd)) {
-    Emu <- -0.5 * Esd^2
-    EffortError <- array(exp(rnorm(nYears * nsim, rep(Emu, nYears), 
-                                   rep(Esd, nYears))), 
-                         c(nsim, nYears))  
-    EffortTS <- EffortTS * EffortError
-  }
-  EffortTS <- EffortTS |> AddDimNames(names=c('Sim', 'Year'), 
-                                      Years = Years)
-  
-  EffortTS/matrix(EffortTS[,nYears], nsim, nYears, byrow=FALSE)
-}
 
 MeanAtAge2MeanAtLength <- function(object, Length, replace=FALSE, max1=FALSE) {
   

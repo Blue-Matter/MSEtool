@@ -17,26 +17,44 @@ Selectivity <- Selectivity() # blank Selectivity object
 
 SelectivityModels(full=FALSE, print=FALSE) # 
 
+Selectivity <- Selectivity(Pars=list(A50=5, 
+                                     A50_95=1)) |>
+  Populate(Ages=Ages,
+           Length=Length,
+           nSim=nSim,
+           Years=Years
+  )
+
+
+
+
+# Use Logistic - add equations ...
+
+# Constant over Simulations, Time, and Areas:
+Selectivity <- Selectivity(Pars=list(SL50=55, 
+                                     SL50_95=5)) |>
+  Populate(Ages=Ages,
+           Length=Length,
+           nSim=nSim,
+           Years=Years
+           )
+
+
+
+Selectivity |> MeanAtLength() |> dimnames()
+Selectivity |> MeanAtAge() |> dimnames()
+
+
 
 # UP TO HERE - update below to 
 
-# - add dimension names where needed
-# - update Retention & Discard Mortality 
-
-# - continue development in SelectivityExample.R
+# - Herm - add to OM 
 # - update Simulate and SimulateDyanmics to deal with area-based select, retain, and discardMort
 # - keep OM@Fleet as a list rather than combine over Fleets??
 
-# Logistic - constant over Sim, Time, & Area
-Selectivity <- Selectivity(Pars=list(A50=3, 
-                                     A50_95=1)) |>
-  Populate(Ages=Ages, 
-           Length=Length,
-           Years=Years,
-           nSim=nSim)
 
-Selectivity |> MeanAtLength()
-Selectivity |> MeanAtAge()
+# Logistic - constant over Sim, Time, & Area
+
 
 
 

@@ -98,14 +98,14 @@ UpdateSelRet <- function(OM, om) {
     for (fl in 1:nFleet) {
       L50 <- GetLengthClass(om@Stock[[st]]@Maturity, 0.5)
       om@Fleet[[st]][[fl]]@Selectivity@Pars <- StructurePars(Pars=om@Fleet[[st]][[fl]]@Selectivity@Pars,
-                                                 nsim=om@nSim, 
+                                                 nSim=om@nSim, 
                                                  Years=om@Years)
       om@Fleet[[st]][[fl]]@Selectivity@Pars$L5 <- ArrayMultiply(L50, 
                                                                 om@Fleet[[st]][[fl]]@Selectivity@Pars$L5)
       om@Fleet[[st]][[fl]]@Selectivity@Pars$LFS <- ArrayMultiply(L50, 
                                                                  om@Fleet[[st]][[fl]]@Selectivity@Pars$LFS)
       om@Fleet[[st]][[fl]]@Retention@Pars <- StructurePars(Pars=om@Fleet[[st]][[fl]]@Retention@Pars,
-                                                           nsim=om@nSim, 
+                                                           nSim=om@nSim, 
                                                            Years=om@Years)
       om@Fleet[[st]][[fl]]@Retention@Pars$LR5 <- ArrayMultiply(L50,
                                                                om@Fleet[[st]][[fl]]@Retention@Pars$LR5)

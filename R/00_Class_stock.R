@@ -227,7 +227,8 @@ Stock <- function(Name=NULL,
         cli::cli_abort('`value` must be a `Stock` object or a list of `Stock` objects')
       stock@Name
     }) |> unlist()
-    x@Stock <- MakeNamedList(names, value)
+    x@Stock <- value
+    names(x@Stock) <- names
     class(x@Stock) <- 'StockList'
     return(x)
   }

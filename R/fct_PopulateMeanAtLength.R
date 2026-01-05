@@ -1,5 +1,4 @@
 # Populates the `MeanAtLength` and `Classes` slot for a given object
-# 
 PopulateMeanAtLength <- function(object, 
                                  Length=NULL, 
                                  Years=NULL, 
@@ -14,9 +13,6 @@ PopulateMeanAtLength <- function(object,
   if (ParsEmpty(object@Pars)) {
     return(Object)
   }
-  
-  
-  
   
   if (is.null(object@Model))
     object@Model <- FindModel(object)

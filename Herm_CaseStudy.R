@@ -2,10 +2,61 @@ library(MSEtool)
 
 la()
 
+OM <- ImportBAM('Gag Grouper')
+
+# pop dynamics should be the same for both herm and non-herm models ... 
+
+# Make two stocks 
+Female <- Stock(OM)[[1]]
+Name(Female) <- 'Female'
+
+Male <- Stock(OM)[[1]]
+Male |> SRR() |> SPFrom() <- 1 # spawning production from female
+Name(Male) <- 'Male'
+
+# Add the stocks
+Stock(OM) <- list(Female, Male)
+
+
+# Duplicate the fleets
+Fleet(OM) <- list(Fleet(OM)[[1]], Fleet(OM)[[1]]) 
+
+# Duplicate the fleets
+Fleet(OM) <- list(Fleet(OM)[[1]], Fleet(OM)[[1]]) 
+
+
+AgeClasses <- Male |> Classes()
+
+Herm(OM) <- list('H_2_1') # Sim, Age, Year 
+
+# TODO -
+# herm can sometimes depend on abundance etc ...
+# 
+
+
+
+  
+  
+OM <- Populate(OM)
+
+
+
+
+Fleet(GagGrouper_BAM) |> length()
+
+
+
+
+
+
+PopulateOM(GagGrouper)
+
+OM <- GagGrouper
+
 herring <- Convert(Herring)
 
 
-OM <- OM('BFT and Herring MICE Model',
+OM <- OM('Silly',
          nSim=30,
          pYear=50)
 
@@ -28,6 +79,8 @@ lapply(OM@SexPars$Herm, length)
 
 
 Convert(Herring)
+
+
 
 
 

@@ -113,7 +113,7 @@ DefaultYears <- function(Years=NULL) {
   CurrentYear <- format(Sys.Date(), "%Y") |>
     as.numeric()
   
-  seq(CurrentYear-5, CurrentYear+5) 
+  seq(1950, CurrentYear+5) 
 }
 
 PopulateLength <- function(Length,
@@ -199,10 +199,10 @@ PopulateWeight <- function(Weight,
     }
   }
   
-  Weight <- MeanAtLength2MeanAtAge(Weight, Length, Ages, nSim, Years, seed, silent)
+  Weight <- MeanAtLength2MeanAtAge(Weight, Length)
   
   if (CalcAtLength) {
-    Weight <- MeanAtAge2MeanAtLength(Weight, Length, Ages, nSim, Years, seed, silent)
+    Weight <- MeanAtAge2MeanAtLength(Weight, Length)
   }
   
   Weight <- PopulateRandom(Weight)
@@ -259,8 +259,7 @@ PopulateNaturalMortality <- function(NaturalMortality,
     }
   }
   
-  NaturalMortality <- MeanAtLength2MeanAtAge(NaturalMortality, Length, Ages,
-                                             nSim, Years, seed, silent)
+  NaturalMortality <- MeanAtLength2MeanAtAge(NaturalMortality, Length)
   if (CalcAtLength)
     NaturalMortality <- MeanAtAge2MeanAtLength(NaturalMortality, Length, 
                                                Ages, nSim, Years, seed,
@@ -312,11 +311,8 @@ PopulateMaturity <- function(Maturity,
     }
   }
   
-  Maturity <- MeanAtLength2MeanAtAge(Maturity, Length, Ages, nSim, 
-                                     Years, seed, silent)
-  
-  Maturity <- MeanAtWeight2MeanAtAge(Maturity, Weight, Ages, nSim, Years,
-                                     seed, silent)
+  Maturity <- MeanAtLength2MeanAtAge(Maturity, Length)
+  Maturity <- MeanAtWeight2MeanAtAge(Maturity, Weight)
   
   if (CalcAtLength)
     Maturity <- MeanAtAge2MeanAtLength(Maturity, Length, Ages, nSim, 
@@ -437,11 +433,12 @@ PopulateFecundity <- function(Fecundity,
     }
   }
   
-  Fecundity <- MeanAtLength2MeanAtAge(Fecundity, Length, Ages, nSim, 
-                                      Years, seed, silent)
-  if (CalcAtLength)
-    Fecundity <- MeanAtAge2MeanAtLength(Fecundity, Length, Ages, nSim, 
-                                        Years, seed, silent)
+  Fecundity <- MeanAtLength2MeanAtAge(Fecundity, Length)
+  
+  if (CalcAtLength) {
+    Fecundity <- MeanAtAge2MeanAtLength(Fecundity, Length)
+  }
+    
   
   Fecundity@MeanAtAge <- AddDimNames(Fecundity@MeanAtAge, Years=Years, Ages=Ages@Classes)
   

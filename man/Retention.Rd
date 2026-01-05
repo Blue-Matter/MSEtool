@@ -14,6 +14,7 @@ Retention(
   MeanAtLength = NULL,
   MeanAtWeight = NULL,
   Classes = NULL,
+  isRel = FALSE,
   Misc = list()
 )
 

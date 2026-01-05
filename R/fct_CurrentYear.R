@@ -27,14 +27,14 @@ CurrentYear <- function(x) {
 #' @rdname Timesteps
 #' @export
 nYear <- function(x) {
-  CheckClass(x)
+  # CheckClass(x,)
   x@nYear
 }
 
 #' @rdname Timesteps
 #' @export
 `nYear<-` <- function(x, value) {
-  CheckClass(x)
+  # CheckClass(x)
   x@nYear <- value
   x
 }
@@ -42,14 +42,14 @@ nYear <- function(x) {
 #' @rdname Timesteps
 #' @export
 pYear <- function(x) {
-  CheckClass(x)
+  # CheckClass(x)
   x@pYear
 }
 
 #' @rdname Timesteps
 #' @export
 `pYear<-` <- function(x, value) {
-  CheckClass(x)
+  # CheckClass(x)
   x@pYear <- value
   x
 }
@@ -104,4 +104,21 @@ Years <- function(x, Period=NULL) {
   if (is.list(x))
     purrr::map(x, Years, Period)
   
+}
+
+
+
+#' @rdname Timesteps
+#' @export
+SPFrom <- function(x) {
+  x@SPFrom
+}
+
+
+#' @rdname Timesteps
+#' @export
+`SPFrom<-` <- function(x, value) {
+  # CheckClass(x)
+  x@SPFrom <- value
+  x
 }

@@ -35,8 +35,6 @@ GenerateMeanatGeneric <- function(Model, Pars, ...) {
   
 }
 
-
-
 #' Generate `MeanAtLength` Values
 #'
 #' @param Model Either the name of a built-in model (character) or a valid R function

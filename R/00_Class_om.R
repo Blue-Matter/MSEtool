@@ -35,13 +35,6 @@ setClassUnion(name="ImpList", members=c('Imp', "imp", "list", 'NULL'))
 #' ## Accessing and Assigning Slots
 #' `r Accessing_Assigning_Slots('om')`
 #'
-#' ## SexPars
-#' The following are valid names for `SexPars`:
-#'
-#' - `SPfrom`: A `nstock` x `nstock` matrix, where `nstock` is `length(Stock`)
-#' that specifies the proportion of the spawning output of the row `p` stock for
-#' the column `p'` stock. A diagonal matrix means each stock is responsible for
-#' its own recruitment.
 #' - `Herm`: A list with each entry containing a matrix with
 #' dimensions `c(nSim, MaxAge + 1)` that specifies the proportion at age that move from
 #' stock `p` to `p'` (sequential hermaphroditism). The names of the list should be

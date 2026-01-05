@@ -15,7 +15,8 @@
 #' @export
 setClass("retention",
          slots=c(Pars='list',
-                 Model='fun.char'),
+                 Model='fun.char',
+                 isRel='char.log.num'),
          contains= c('MeanAtAgeClass',
                      'MeanAtLengthClass',
                      'MeanAtWeightClass',
@@ -31,6 +32,7 @@ setMethod("initialize", "retention", function(.Object,
                                               MeanAtLength=NULL,
                                               MeanAtWeight=NULL,
                                               Classes=NULL,
+                                              isRel=FALSE,
                                               Misc=list()) {
   .Object@Pars <- Pars
   if (!is.null(Model))
@@ -46,8 +48,8 @@ setMethod("initialize", "retention", function(.Object,
   .Object@MeanAtLength <- MeanAtLength
   .Object@MeanAtWeight <- MeanAtWeight
   .Object@Classes <- Classes
+  .Object@isRel <- isRel
   .Object@Misc <- Misc
-  #   .Object@Created <- Sys.time()
   .Object
 })
 
@@ -59,6 +61,7 @@ Retention <- function(Pars=list(),
                       MeanAtLength=NULL,
                       MeanAtWeight=NULL,
                       Classes=NULL,
+                      isRel=FALSE,
                       Misc=list()) {
   
   if (methods::is(Pars, 'fleet'))
@@ -71,6 +74,7 @@ Retention <- function(Pars=list(),
                MeanAtLength=MeanAtLength,
                MeanAtWeight=MeanAtWeight,
                Classes=Classes,
+               isRel=isRel,
                Misc=Misc)
 }
 

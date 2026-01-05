@@ -1,21 +1,25 @@
 
-OM2Hist <- function(OM, silent=FALSE, id=NULL) {
+
+# Initialize a `Hist` object for a given `OM`
+OM2Hist <- function(OM, silent=FALSE) {
   
-  if (!silent) 
+  if (!silent) {
     id <- cli::cli_progress_bar("Initializing `Hist` Object")  
-  
-  OM <- PopulateOM(OM, silent=silent)
+  }
+    
+  # Populate if needeed
+  OM <- PopulateOM(OM, silent=silent) 
   
   Hist <- new('hist')
   Hist@OM <- OM
-  Years <- Years(OM, 'Historical')
+  HistYears <- Years(OM, 'Historical')
   nArea <- nArea(OM)
-  nYears <- length(Years)
+  nYears <- length(HistYears)
   nSim <- OM@nSim
   
   # Stock
   Hist@OM@Stock <- purrr::map(OM@Stock, \(Stock) {
-    Stock <- ExtendStock(Stock, nSim, Years, silent, id)
+    Stock <- ExtendStock(Stock, nSim, HistYears, silent, id)
     Stock@SRR@SPFrom <- match(Stock@SRR@SPFrom, StockNames(OM))
     Stock
   })
@@ -25,7 +29,7 @@ OM2Hist <- function(OM, silent=FALSE, id=NULL) {
                              Stock@Ages@Classes)
   
   Hist@OM@Fleet <- purrr::map2(Hist@OM@Fleet, AgeClassList, \(FleetList, AgeClasses)
-                               ExtendFleet(FleetList, AgeClasses, nSim, Years, nArea, silent, id)
+                               ExtendFleet(FleetList, AgeClasses, nSim, HistYears, nArea, silent, id)
   )
   
   # Time Series 

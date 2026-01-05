@@ -13,6 +13,8 @@
 \alias{Seasons}
 \alias{Seasons<-}
 \alias{Years}
+\alias{SPFrom}
+\alias{SPFrom<-}
 \title{Time steps values}
 \usage{
 CurrentYear(x)
@@ -36,6 +38,10 @@ Seasons(x)
 Seasons(x) <- value
 
 Years(x, Period = NULL)
+
+SPFrom(x)
+
+SPFrom(x) <- value
 }
 \arguments{
 \item{x}{A \code{\link[=OM]{OM()}} object}

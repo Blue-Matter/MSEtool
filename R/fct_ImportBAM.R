@@ -13,7 +13,7 @@ ImportBAM <- function(Stock='Red Snapper',
                       populate=TRUE, 
                       silent=FALSE) {
   
-  CheckPackage('bamExtras', "pak::pkg_install('nikolaifish/bamExtras')")
+  CheckPackage('bamExtras', pkg.path="pak::pkg_install('nikolaifish/bamExtras')")
 
   BAMdata <- GetBAMOutput(Stock)
   
@@ -153,12 +153,13 @@ BAM2Stock <- function(BAMdata, nSim, Years) {
   nYear <- length(histTS)
   pYear <- length(Years) - nYear
   
-  stock <- Stock(Name=BAMdata$info$species,
-                 nYear=nYear,
-                 pYear=pYear,
-                 CurrentYear= CurrentYear,
-                 nSim=nSim)
+  stock <- Stock(Name=BAMdata$info$species)
   
+  stock@nSim <- nSim
+  stock@CurrentYear <- CurrentYear
+  nYear(stock) <- nYear
+  pYear(stock) <- pYear
+
   AgeSeries <- BAMdata$a.series
   BAM_Ages <-AgeSeries$age
   Ages(stock) <- Ages(MinAge=min(BAM_Ages), MaxAge=max(BAM_Ages)) 
@@ -285,7 +286,7 @@ BAM2Stock <- function(BAMdata, nSim, Years) {
   # already done in rec devs
   # stock |> Depletion() |> Initial() <- BAMdata$t.series$B.B0[1]
   
-  stock <- PopulateStock(stock)
+  stock <- PopulateStock(stock, stock@nYear, stock@pYear, stock@CurrentYear, stock@nSim)
   
   # Recruitment Deviations 
   UnfishedEq <- ArrayMultiply(CalcUnfishedSurvival(stock, Years=Years, Expand = FALSE), 
@@ -560,13 +561,12 @@ BAM2Fleet <- function(Stock,
     fleet <- Fleet(Name=RetainFleets[fl])
     thisFleetEffort <- apicalEffort[,fl, drop=FALSE]
     thisFleetEffort[] <- thisFleetEffort[,1]/mean(thisFleetEffort[,1])
-    
-    fleet@Effort <- AddDimension(thisFleetEffort, 'Sim') |>
+    fleet@Effort@Value <- AddDimension(thisFleetEffort, 'Sim') |>
       abind::adrop(2) |> aperm(c('Sim', 'Year'))
     
     q <- mean(apicalEffort[,fl]) / mean(thisFleetEffort[,1]) 
 
-    fleet@Catchability <- array(q, c(1,1))  |> 
+    fleet@Catchability@Value <- array(q, c(1,1))  |> 
       AddDimNames(c('Sim', 'Year'), Years=Years)
     
     fleet@Selectivity@MeanAtAge <- AddDimension(SelectivityAtAge[,,fl], 'Sim') |>

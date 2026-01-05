@@ -122,15 +122,21 @@ Fleet <- function( Name=NULL,
   nstocks <- nStock(x)
   
   if (inherits(value, 'fleet')) {
-    value <- MakeNamedList(value@Name, value)
+    x@Fleet <- MakeNamedList(stocknames, 
+                             MakeNamedList(value@Name, value)              
+    )
+   return(x)
   }
+  
   if (!inherits(value, 'list')) {
-    cli::cli_abort("`value` must be a list of `Fleet` objects")
+    cli::cli_abort("`value` must be a list of `Fleet` objects or a nested list of length `nStock` with `Fleet` objects for each stock")
   }
   
-  class(value) <- 'FleetList'
-  
-  x@Fleet <- MakeNamedList(stocknames, value)
+  if (inherits(value[[1]], 'list') || inherits(value[[1]], 'FleetList')) {
+    x@Fleet <- value
+  }
+ 
+  names(x@Fleet) <- stocknames
   class(x@Fleet) <- 'StockFleetList'
   x
 }

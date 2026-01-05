@@ -820,8 +820,8 @@ SS2SRR <- function(st, RepList, YearsList, Ages, nSim) {
 SS2Fleet <- function(st, fl, RepList, YearsList, FleetNames, Stock) {
   AgeClasses <- Stock@Ages@Classes
   Fleet <- Fleet(FleetNames[fl])
-  Fleet@Effort <- SS2Effort(st, fl, RepList, YearsList)
-  Fleet@Catchability <- SS2Catchability(st, fl, RepList, YearsList)
+  Fleet@Effort@Value <- SS2Effort(st, fl, RepList, YearsList)
+  Fleet@Catchability@Value <- SS2Catchability(st, fl, RepList, YearsList)
   Fleet@DiscardMortality <- SS2DiscardMortality(st, fl, RepList, YearsList, Stock)
   Fleet@Selectivity <- SS2Selectivity(st, fl, RepList, YearsList, Stock)
   Fleet@Retention <- SS2Retention(st, fl, RepList, YearsList, 
@@ -981,13 +981,10 @@ SS2DiscardMortality <- function(st, fl, RepList, YearsList, Stock) {
   LengthClasses <- dimnames(DiscardMortality@MeanAtLength)$Class |> as.numeric()
   DiscardMortality@Classes <- LengthClasses
   
+  Stock@Length <- PopulateLength(Stock@Length, Stock@Ages)
   DiscardMortality <- MeanAtLength2MeanAtAge(
     object=DiscardMortality, 
-    Length=Stock@Length,
-    Ages=Stock@Ages, 
-    nsim=Stock@nSim,
-    Years = YearsList$YearsHist,
-    max1=FALSE)
+    Length=Stock@Length)
   
   DiscardMortality@MeanAtAge <- ArrayReduceDims(DiscardMortality@MeanAtAge)
   DiscardMortality

@@ -155,16 +155,7 @@ New \code{om} objects can be created with \code{Om()}, see \code{Usage} and \cod
 \subsection{Accessing and Assigning Slots}{
 
 Like all of the new style objects in \code{MSEtool}, the slots in \code{om} objects can be accessed and assigned with functions matching the slot names. See \verb{See Also} section for functions.
-}
-
-\subsection{SexPars}{
-
-The following are valid names for \code{SexPars}:
 \itemize{
-\item \code{SPfrom}: A \code{nstock} x \code{nstock} matrix, where \code{nstock} is \verb{length(Stock})
-that specifies the proportion of the spawning output of the row \code{p} stock for
-the column \verb{p'} stock. A diagonal matrix means each stock is responsible for
-its own recruitment.
 \item \code{Herm}: A list with each entry containing a matrix with
 dimensions \code{c(nSim, MaxAge + 1)} that specifies the proportion at age that move from
 stock \code{p} to \verb{p'} (sequential hermaphroditism). The names of the list should be

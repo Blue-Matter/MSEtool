@@ -13,8 +13,6 @@ ExtendStock <- function(Stock, nSim, Years, silent=FALSE, id=NULL) {
   
   Stock@Weight <- ExtendStockObject(Stock@Weight, nSim, AgeClasses, Years)
   
-
-  
   if (!silent)
     cli::cli_progress_update(id=id)
   Stock@NaturalMortality <- ExtendStockObject(Stock@NaturalMortality, nSim, AgeClasses, Years)

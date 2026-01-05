@@ -8,6 +8,8 @@
 \usage{
 GenerateMeanatLength(Model, Pars, Length)
 
+GenerateMeanatLength(Model, Pars, Length)
+
 GenerateMeanatWeight(Model, Pars, Weight)
 
 GenerateMeanAtAge(Model, Pars, Ages)
@@ -24,5 +26,7 @@ GenerateMeanAtAge(Model, Pars, Ages)
 \item{Ages}{A numeric vector of age classes}
 }
 \description{
+Generate \code{MeanAtLength} Values
+
 Generate \code{MeanAtLength} Values
 }

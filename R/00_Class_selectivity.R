@@ -16,7 +16,8 @@
 #' @export
 setClass("selectivity",
          slots=c(Pars='list',
-                 Model='fun.char'),
+                 Model='fun.char',
+                 isRel='char.log.num'),
          contains= c('MeanAtAgeClass',
                      'MeanAtLengthClass',
                      'MeanAtWeightClass',
@@ -32,6 +33,7 @@ setMethod("initialize", "selectivity", function(.Object,
                                                 MeanAtLength=NULL,
                                                 MeanAtWeight=NULL,
                                                 Classes=NULL,
+                                                isRel=FALSE,
                                                 Misc=list()) {
   .Object@Pars <- Pars
   if (!is.null(Model))
@@ -47,8 +49,8 @@ setMethod("initialize", "selectivity", function(.Object,
   .Object@MeanAtLength <- MeanAtLength
   .Object@MeanAtWeight <- MeanAtWeight
   .Object@Classes <- Classes
+  .Object@isRel <- isRel
   .Object@Misc <- Misc
-  #   .Object@Created <- Sys.time()
   .Object
 })
 
@@ -60,6 +62,7 @@ Selectivity <- function(Pars=list(),
                         MeanAtLength=NULL,
                         MeanAtWeight=NULL,
                         Classes=NULL,
+                        isRel=FALSE,
                         Misc=list()) {
   
   if (methods::is(Pars, 'fleet'))
@@ -72,6 +75,7 @@ Selectivity <- function(Pars=list(),
                MeanAtLength=MeanAtLength,
                MeanAtWeight=MeanAtWeight,
                Classes=Classes,
+               isRel=isRel,
                Misc=Misc)
 }
 

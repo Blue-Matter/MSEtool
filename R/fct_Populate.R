@@ -274,10 +274,10 @@ setMethod("Populate", "catchability", function(object,
 #' @export
 setMethod("Populate", "selectivity", function(object,
                                               Ages,
-                                              Length,
+                                              Length = NULL,
                                               Weight = NULL,
                                               nSim = 5,
-                                              Years,
+                                              Years = NULL,
                                               nArea = 1,
                                               CalcAtLength = TRUE,
                                               seed = NULL,
@@ -302,7 +302,7 @@ setMethod("Populate", "selectivity", function(object,
 #' @export
 setMethod("Populate", "retention", function(object,
                                             Ages,
-                                            Length,
+                                            Length = NULL,
                                             Weight = NULL,
                                             nSim = 5,
                                             Years,
@@ -330,7 +330,7 @@ setMethod("Populate", "retention", function(object,
 #' @export
 setMethod("Populate", "discardmortality", function(object,
                                                    Ages,
-                                                   Length,
+                                                   Length = NULL,
                                                    nSim = 5,
                                                    Years,
                                                    nArea,
@@ -351,103 +351,6 @@ setMethod("Populate", "discardmortality", function(object,
   )
 })
 
-# Obs ----
-
-StructureObs <- function(OM) {
-  StockNames <- StockNames(OM)
-  FleetNames <- FleetNames(OM)
-
-  # Obs should be list length `nStock`
-  # with each element a list `nFleet`
-
-  # Recycles over both stocks and fleets
-  if (inherits(OM@Obs, "obs")) {
-    OM@Obs <- MakeNamedList(StockNames, MakeNamedList(FleetNames, OM@Obs))
-  }
-
-  if (!is.list(OM@Obs)) {
-    cli::cli_abort("`OM@Obs` must be a list or an object of class `obs`")
-  }
-
-  # if (length(StockNames)>1)
-  #   warning("Multi-stock/fleet Obs not done")
-  #
-  # TODO
-
-
-  # if (length(OM@Obs)!=nStock(OM)) {
-  #   cli::cli_abort('`OM@Obs` must be a list length `nStock(OM)`')
-  # }
-  # names(OM@Obs) <- StockNames(OM)
-
-  OM
-}
-
-PopulateObs <- function(OM) {
-  if (EmptyObject(OM@Obs)) {
-    # initialize Obs object for conditioning
-    if (is.null(FleetNames(OM))) {
-      return(OM)
-    }
-    OM@Obs <- MakeNamedList(
-      StockNames(OM),
-      MakeNamedList(FleetNames(OM), new("obs"))
-    )
-    return(OM)
-  }
-
-  OM <- StructureObs(OM)
-  HistYears <- Years(OM, "H")
-  ProjYears <- Years(OM, "P")
-
-  for (st in 1:length(OM@Obs)) {
-    for (fl in 1:length(OM@Obs[[1]])) {
-      SetSeed(OM@Seed)
-
-      OM@Obs[[st]][[fl]]@Effort <- PopulateEffortObs(
-        Effort = OM@Obs[[st]][[fl]]@Effort,
-        nSim = OM@nSim,
-        HistYears,
-        ProjYears
-      )
-
-      OM@Obs[[st]][[fl]]@Landings <- PopulateCatchObs(
-        Catch = OM@Obs[[st]][[fl]]@Landings,
-        nSim = OM@nSim,
-        HistYears,
-        ProjYears
-      )
-
-      OM@Obs[[st]][[fl]]@Discards <- PopulateCatchObs(
-        Catch = OM@Obs[[st]][[fl]]@Discards,
-        nSim = OM@nSim,
-        HistYears,
-        ProjYears
-      )
-
-      OM@Obs[[st]][[fl]]@CPUE <- PopulateIndexObs(
-        Index = OM@Obs[[st]][[fl]]@CPUE,
-        nSim = OM@nSim,
-        HistYears,
-        ProjYears
-      )
-
-      OM@Obs[[st]][[fl]]@Survey <- PopulateIndexObs(
-        Index = OM@Obs[[st]][[fl]]@Survey,
-        nSim = OM@nSim,
-        HistYears,
-        ProjYears
-      )
-
-      OM@Obs[[st]][[fl]]@CAA
-
-      OM@Obs[[st]][[fl]]@CAL
-    }
-  }
-
-
-  OM
-}
 
 
 getACF <- function(Value) {

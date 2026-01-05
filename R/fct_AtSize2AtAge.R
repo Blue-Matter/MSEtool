@@ -98,6 +98,10 @@ AtSize2AtAge <- function(object, Length, max1=FALSE) {
   } else {
     object@MeanAtAge <- AtSize2AtAge_sim(MeanAtAge, MeanAtSize, ASK, nSim, nAge, nTS, bySim)
   }
+  
+  if (max1) {
+    object@MeanAtAge <- CheckSelectivityMaximum(object@MeanAtAge, alert=FALSE)
+  }
 
   object
 }
@@ -153,6 +157,9 @@ MeanAtLength2MeanAtAge <- function(object,
   if (is.null(object@MeanAtLength)) {
     return(object)
   }
+  if (!is.null(object@MeanAtAge)) {
+    return(object)
+  }
   
   CheckRequiredObject(Length, 'length')
   AtSize2AtAge(object, Length, max1)
@@ -162,6 +169,9 @@ MeanAtWeight2MeanAtAge <- function(object,
                                    Weight,
                                    max1=FALSE) {
   if (is.null(object@MeanAtWeight)) {
+    return(object)
+  }
+  if (!is.null(object@MeanAtAge)) {
     return(object)
   }
   

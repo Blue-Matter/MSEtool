@@ -38,26 +38,26 @@ Simulate_om <- function(OM = NULL,
   
   HistYears <- Years(OM, "Historical")
   ProjYears <- Years(OM, "Projection")
-  RefPointYears <- GetRefPointYears(OM, HistYears) # historical time steps to calculate ref points
 
   # ---- Make Hist Object ----
   Hist <- OM2Hist(OM, silent)
   
-  Hist@OM@Fleet$Albacore@Selectivity@MeanAtAge |> dim()
-  Hist@OM@Fleet$Albacore@Retention@MeanAtAge |> dim()
-  Hist@OM@Fleet$Albacore@DiscardMortality@MeanAtAge |> dim()
+  # ---- Calculate Equilibrium Unfished ----
+  Hist@Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
   
   
+  Hist@OM@Stock$Female@Length@ASK |> dim()
+
+
 
   # ---- Add Reference Points if they exist ----
   # won't be re-calculated
-
+ 
   if (inherits(RefPointsMSY, "refpointsMSY")) {
     Hist@Reference@MSY <- RefPointsMSY
   }
 
-  # ---- Calculate Equilibrium Unfished ----
-  Hist@Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
+
 
   # ---- Calculate Number-at-Age for Initial Time Step ----
   Hist <- CalcInitialYear(Hist)
@@ -80,6 +80,7 @@ Simulate_om <- function(OM = NULL,
 
   # ---- Calculate Reference Points ----
   SimList <- CalcSPR0(SimList) # unfished spawning per recruit (i.e. fecundity)
+  RefPointYears <- GetRefPointYears(OM, HistYears) # historical time steps to calculate ref points
   if (!inherits(Reference, "logical")) {
     SimList <- CalcMSYRefPoints(SimList, RefPointYears, Reference$MSY)
   }

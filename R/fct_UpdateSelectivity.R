@@ -126,10 +126,10 @@ ProcessAdvice_SelectivityMeanAtLength <- function(Selectivity, ProjSim, YearsPro
   ) |> ExtendYears(YearsProj)
   
   if (type=='Retention') {
-    Selectivity <- MeanAtLength2MeanAtAge(Selectivity, Length, Ages, 1, Years=YearsProj, max1=FALSE)   
+    Selectivity <- MeanAtLength2MeanAtAge(Selectivity, Length)   
     
   } else {
-    Selectivity <- MeanAtLength2MeanAtAge(Selectivity, Length, Ages, 1, Years=YearsProj)                                
+    Selectivity <- MeanAtLength2MeanAtAge(Selectivity, Length, max1=TRUE)                                
   }
   Selectivity@MeanAtAge <- Selectivity@MeanAtAge |> ExtendYears(YearsProj) 
   

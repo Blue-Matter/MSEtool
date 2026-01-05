@@ -5,7 +5,7 @@
 \alias{Ages}
 \alias{ages-class}
 \alias{Ages<-}
-\title{S4 Object class \code{ages}}
+\title{\code{Ages} Object and Functions}
 \usage{
 Ages(MaxAge, MinAge = 0, Units = "year", PlusGroup = TRUE)
 
@@ -25,14 +25,9 @@ Ages(x) <- value
 \item{value}{An \code{ages} class object to assign to \code{x}}
 }
 \description{
-An S4 object of class \code{Ages} and associated functions to access and modify the object
+An \code{Ages} object contains information related to the age classes of a \code{\link[=Stock]{Stock()}} object.
 }
 \details{
-\subsection{About the Class}{
-
-The S4 object class \code{ages} contain information related to the age classes of a \code{\link[=Stock]{Stock()}}
-}
-
 \subsection{Creating New Objects}{
 
 New \code{ages} objects can be created with \code{Ages()}, see \code{Usage} and \code{Examples} for details.

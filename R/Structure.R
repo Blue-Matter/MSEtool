@@ -3,6 +3,7 @@ StructurePars <- function(Pars, nSim=NULL, Years=NULL, nArea=NULL) {
   Pars <- purrr::map(Pars, \(Par) 
                         StructurePars_(Par, nSim, Years, nArea)
   )
+
   if (is.null(nArea)) {
     Pars <- ApplyRandomWalk(Pars)  
   }
@@ -19,7 +20,7 @@ NameParDimensions <- function(Par, nSim=NULL, Years=NULL, nArea=NULL) {
     cli::cli_abort('`Year` dimensions must be named if dimension length > 1' )
   }
   
-  if (is.null(nArea)) {
+  if (length(dd)<3) {
     dimnames(Par) <- list(Sim=(1:nSim)[1:dd[1]],
                           Year=Years[1])
   } else {
@@ -31,10 +32,7 @@ NameParDimensions <- function(Par, nSim=NULL, Years=NULL, nArea=NULL) {
 }
 
 StructurePars_ <- function(Par, nSim=NULL, Years=NULL, nArea=NULL) {
-  
-  # if Areas==NULL -  returns an array - nSim x nTS x nArea
-  # if Areas !=NULL -  returns an array - nSim x nTS x nArea
-  
+
   # Par already an array
   if (inherits(Par, 'array')) {
     return(NameParDimensions(Par, nSim, Years, nArea))
@@ -74,15 +72,9 @@ substrRight <- function(x, n){
   substr(x, nchar(x)-n+1, nchar(x))
 }
 
-RandomWalk <- function(targ, targsd, nSim, Years, nArea=NULL) {
+RandomWalk <- function(targ, targsd, nSim, Years) {
   nTS <- length(Years)
-  
-  if (nArea>0) {
-    
-  }
-  
-  
-  
+
   targ <- matrix(targ, nSim, nTS)
   mutemp <- -0.5 * targsd^2
   temp <- array(exp(rnorm(nSim*nTS, mutemp, targsd)),dim = c(nSim, nTS))
@@ -112,7 +104,7 @@ ApplyRandomWalk <- function(Pars) {
     Pars[[par_ind]] <- RandomWalk(targ=Pars[[par_ind]],
                                   targsd=Pars[[i]],
                                   nSim,
-                                  Years,
+                                  Years
                                   )
     Pars[[i]] <- NA
   }
