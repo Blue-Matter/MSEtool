@@ -1,8 +1,20 @@
 
-AtSize2AtAge <- function(object, Length) {
-  # OBJ <<- object
-  # LEN <<- Length
-  
+
+#' Calculates object@MeanAtAge from object@MeanAtLength and Length@ASK
+#' 
+#' @param object Any populated object with slots: `MeanAtAge` and `MeanAtLength` or `MeanAtWeight`
+#' @param Length A [Length()] or [Weight()] object
+#' @param max1 Logical. Standardize so that the maximum value is 1? 
+#' 
+#' @details
+#' `max1` argument:
+#' 
+#' Sometimes SelectivityAtLength can result in maximum values for SelectivityAtAge < 1 
+#' While this is probably 'correct' for the given SelectivityAtLength schedule,
+#' it can result in some weirdness when max(SelectivityAtAge) < 1
+#' This argument forces max(SelectivityAtAge) == 1
+AtSize2AtAge <- function(object, Length, max1=FALSE) {
+
   if (inherits(Length, 'length')) {
     MeanAtSize <- object@MeanAtLength
   } else if (inherits(Length, 'weight')) {
@@ -12,75 +24,147 @@ AtSize2AtAge <- function(object, Length) {
   }
   
   ASK <- Length@ASK 
-  if (is.null(ASK)) 
+  if (is.null(ASK)) {
     cli::cli_abort("`Length@ASK` is not populated", .internal=TRUE)
-  dim_MeanAtSize <- dim(MeanAtSize)
-  dim_ASK <- dim(ASK)
-  
-  DNames <- names(dimnames(Length@MeanAtAge))
-  bySim <- TRUE
-  if ("Sim" %in% DNames) {
-    nage <- dim_ASK[2]
-    nClasses <- dim_ASK[3]
-    
-    nsim_MeanAtSize <- dim_MeanAtSize[1]
-    nTS_MeanAtSize <- dim_MeanAtSize[3]
-    
-    nsim_ASK <- dim_ASK[1]
-    nTS_ASK <- dim_ASK[4]
-    
-    nsim <- max(nsim_MeanAtSize, nsim_ASK) # maximum number of simulations
-    nTS <- max(nTS_MeanAtSize, nTS_ASK) # maximum number of time-steps
-  } else {
-    bySim <- FALSE
-    
-    nage <- dim_ASK[1]
-    nClasses <- dim_ASK[2]
-    
-    nsim_ASK <- 1
-    nsim_MeanAtSize <- 1
-    nsim <- 1
-    
-    nTS_ASK <- 1
-    nTS_MeanAtSize <- 1
-    nTS <- dim_MeanAtSize[3]
   }
   
-  AtAge <- array(0, dim=c(nsim, nage, nTS))
-  for (s in 1:nsim) {
-    for (t in 1:nTS) {
-      MeanAtSize_ts <- MeanAtSize[GetIndex(s, nsim_MeanAtSize), ,GetIndex(t, nTS_MeanAtSize)]
-      if (all(MeanAtSize_ts>0.99)) {
-        AtAge[s,,t] <- 1
-      } else {
-        if (bySim) {
-          ASK_ts <- ASK[GetIndex(s, nsim_ASK),,,GetIndex(t, nTS_ASK)]
-          AtAge[s,,t] <- MeanAtSize_ts %*%t(ASK_ts)
+  dNames_MeanAtSize <- dimnames(MeanAtSize)
+  dNames_ASK <- dimnames(ASK)
+  
+  if ("Sim" %in% names(dNames_MeanAtSize)) {
+    bySim <- TRUE
+    nSim <- c(dNames_MeanAtSize[['Sim']], dNames_ASK[['Sim']]) |>
+      as.numeric() |>
+      unique() |> 
+      max()
+    
+  } else {
+    bySim <- FALSE
+    nSim <- 1
+  }
+  
+  if ("Area" %in% names(dNames_MeanAtSize)) {
+    byArea <- TRUE
+    nArea <- dNames_MeanAtSize[['Area']] |> length()
+  } else {
+    byArea <- FALSE
+  }
+  
+  AgeClasses <- dNames_ASK[['Age']] |> as.numeric()
+  nAge <- length(AgeClasses)
+  
+  Years <- c(dNames_MeanAtSize[['Year']], dNames_ASK[['Year']]) |>
+    as.numeric() |>
+    sort() |>
+    unique()
+  nTS <- length(Years)
+
+  if (byArea) {
+    MeanAtAge <- array(0, dim=c(nSim, nAge, nTS, nArea),
+                       dimnames = list(
+                         Sim=1:nSim,
+                         Age=AgeClasses,
+                         Year=Years,
+                         Area=1:nArea
+                       )
+    )
+  } else {
+    MeanAtAge <- array(0, dim=c(nSim, nAge, nTS),
+                       dimnames = list(
+                         Sim=1:nSim,
+                         Age=AgeClasses,
+                         Year=Years
+                       )
+    )
+  }
+
+  if (all(MeanAtSize>0.99)) {
+    MeanAtAge[] <- 1
+    object@MeanAtAge <- MeanAtAge
+    return(object)
+  }
+  
+  if (all(MeanAtSize<0.01)) {
+    MeanAtAge[] <- tiny
+    object@MeanAtAge <- MeanAtAge
+    return(object)
+  }
+  
+  MeanAtSize <- MeanAtSize |> ExtendSims(nSim) |> ExtendYears(Years)
+  ASK <- ASK |> ExtendSims(nSim) |> ExtendYears(Years)
+  
+  if (byArea) {
+    object@MeanAtAge <- AtSize2AtAge_sim_area(MeanAtAge, MeanAtSize, ASK, nSim, nAge, nTS, nArea, bySim)
+  } else {
+    object@MeanAtAge <- AtSize2AtAge_sim(MeanAtAge, MeanAtSize, ASK, nSim, nAge, nTS, bySim)
+  }
+
+  object
+}
+
+AtSize2AtAge_sim_area <- function(MeanAtAge, MeanAtSize, ASK, nSim, nAge, nTS, nArea, bySim) {
+ 
+  for (sim in 1:nSim) {
+    for (year in 1:nTS) {
+      for (area in 1:nArea) {
+        meanatsize <- MeanAtSize[sim,,year, area]
+        if (all(meanatsize>0.99)) {
+          MeanAtAge[sim,,year, area] <- 1
         } else {
-          ASK_ts <- ASK[,,GetIndex(t, nTS_ASK)]
-          AtAge[s,,t] <- (MeanAtSize_ts %*%t(ASK_ts))[1,]
+          if (bySim) {
+            ASK_ts <- ASK[sim,,,year]
+            MeanAtAge[sim,,year, area] <- meanatsize %*%t(ASK_ts)
+          } else {
+            ASK_ts <- ASK[,,year]
+            MeanAtAge[sim,,year, area] <- (MeanAtSize_ts %*%t(ASK_ts))[1,]
+          }
         }
       }
     }
   }
-  dd <- dim(AtAge)
-  
-  MeanAtSizeDNAmes <- MeanAtSize |> dimnames() |> names()
-  LengthASKDNAmes <- Length@ASK |> dimnames() |> names()
-  
-  ind1 <- which(MeanAtSizeDNAmes == 'Year')
-  ind2 <- which(LengthASKDNAmes == 'Year')
-  
-  TSnames <- c(dimnames(MeanAtSize)[[ind1]],
-               dimnames(Length@ASK)[[ind2]]) |>
-    unique() |>
-    sort()
-  
-  AgeInd <- which(names(dimnames(Length@MeanAtAge))=='Age')
-  dimnames(AtAge) <- list(Sim=1:dd[1],
-                          Age=dimnames(Length@MeanAtAge)[[AgeInd]],
-                          Year=TSnames)
-  AtAge
+  MeanAtAge
 }
 
+AtSize2AtAge_sim <- function(MeanAtAge, MeanAtSize, ASK, nSim, nAge, nTS, bySim=TRUE) {
+  
+  for (sim in 1:nSim) {
+    for (year in 1:nTS) {
+      meanatsize <- MeanAtSize[sim,,year]
+      if (all(meanatsize>0.99)) {
+        MeanAtAge[sim,,year] <- 1
+      } else {
+        if (bySim) {
+          ASK_ts <- ASK[sim,,,year]
+          MeanAtAge[sim,,year] <- meanatsize %*%t(ASK_ts)
+        } else {
+          ASK_ts <- ASK[,,year]
+          MeanAtAge[sim,,year] <- (MeanAtSize_ts %*%t(ASK_ts))[1,]
+        }
+      }
+    }
+  }
+  MeanAtAge
+}
 
+MeanAtLength2MeanAtAge <- function(object,
+                                   Length,
+                                   max1=FALSE) {
+  
+  if (is.null(object@MeanAtLength)) {
+    return(object)
+  }
+  
+  CheckRequiredObject(Length, 'length')
+  AtSize2AtAge(object, Length, max1)
+}
+
+MeanAtWeight2MeanAtAge <- function(object,
+                                   Weight,
+                                   max1=FALSE) {
+  if (is.null(object@MeanAtWeight)) {
+    return(object)
+  }
+  
+  CheckRequiredObject(Weight, 'weight')
+  AtSize2AtAge(object, Weight, max1)
+}

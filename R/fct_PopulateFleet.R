@@ -249,7 +249,8 @@ PopulateSelectivity <- function(Selectivity,
                                 CalcAtLength=TRUE,
                                 seed=NULL,
                                 silent=FALSE,
-                                CheckMaxValue=TRUE) {
+                                CheckMaxValue=TRUE,
+                                class='Selectivity') {
 
   argList <- list(Ages, Length, Weight, Years, nArea, nSim, CalcAtLength, seed)
   
@@ -282,30 +283,19 @@ PopulateSelectivity <- function(Selectivity,
     }
   }
   
-  stop()
-  # UP TO HERE - update below to 
-  # - deal with spatial Selectivity in MeanAtLength2MeanAtAge  & MeanAtWeight2MeanAtAge
-  # - add dimension names where needed
-  # - update Retention & Discard Mortality 
+  Selectivity <- MeanAtLength2MeanAtAge(Selectivity, Length, max1=TRUE)
+  Selectivity <- MeanAtWeight2MeanAtAge(Selectivity, Weight, max1=TRUE)
   
-  # - continue development in SelectivityExample.R
-  # - update Simulate and SimulateDyanmics to deal with area-based select, retain, and discardMort
-  
-  
-  Selectivity <- MeanAtLength2MeanAtAge(Selectivity, Length, Ages, nSim,
-                                        Years, seed, silent)
-  
-  Selectivity <- MeanAtWeight2MeanAtAge(Selectivity, Weight, Ages, nSim,
-                                        Years, seed, silent) 
-  
-  if (CalcAtLength)
-    Selectivity <- MeanAtAge2MeanAtLength(Selectivity, Length, Ages, nSim, Years, seed, silent)
+  if (CalcAtLength) {
+    Selectivity <- MeanAtAge2MeanAtLength(Selectivity, Length, replace=FALSE)
+  }
+
   
   if (is.null(Selectivity@MeanAtAge)) {
-    cli::cli_abort('`Selectivity` requires either `Pars` or `MeanAtAge`')
+    cli::cli_abort(' {.var {class}} requires either `Model` & `Pars` or `MeanAtAge`')
   }
   
-  # Check Selectivity has a max value of one across age classes
+  # Check Selectivity has a max value of 1 across age classes
   if(CheckMaxValue) 
     Selectivity@MeanAtAge <- CheckSelectivityMaximum(Selectivity@MeanAtAge)
   
@@ -408,11 +398,8 @@ PopulateRetention <- function(Retention,
     return(SetDigest(Retention, argList))
   } 
   
-  Retention <- MeanAtLength2MeanAtAge(Retention, Length, Ages,
-                                      nSim, Years, seed, silent)
-  
-  Retention <- MeanAtWeight2MeanAtAge(Retention, Weight, Ages, nSim,
-                                      Years, seed, silent) 
+  Retention <- MeanAtLength2MeanAtAge(Retention, Length)
+  Retention <- MeanAtWeight2MeanAtAge(Retention, Weight) 
   
   if (CalcAtLength)
     Retention <- MeanAtAge2MeanAtLength(Retention, Length, Ages, 
@@ -480,8 +467,7 @@ PopulateDiscardMortality <- function(DiscardMortality,
   
   SetSeed(seed)
   
-  DiscardMortality <- MeanAtLength2MeanAtAge(DiscardMortality, Length,
-                                             Ages, nSim, Years, seed, silent)
+  DiscardMortality <- MeanAtLength2MeanAtAge(DiscardMortality, Length)
   if (CalcAtLength)
     DiscardMortality <- MeanAtAge2MeanAtLength(DiscardMortality, Length, Ages,
                                                nSim, Years, seed, silent)

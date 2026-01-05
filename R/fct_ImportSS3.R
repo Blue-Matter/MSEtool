@@ -1111,7 +1111,7 @@ SS2Retention <- function(st, fl, RepList, YearsList, Selectivity, Stock) {
 
   Stock@Length@Classes <- Retention@Classes
   Stock@Length@ASK <- CalcAgeSizeKey(Stock@Length)
-  Retention@MeanAtAge <- AtSize2AtAge(Retention, Stock@Length)
+  Retention <- AtSize2AtAge(Retention, Stock@Length)
   
   Retention
 }
