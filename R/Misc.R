@@ -344,14 +344,7 @@ CalcYears <- function(nYear, pYear, CurrentYear, Seasons=1, Period=NULL) {
     return(proj)
 }
 
-GenerateStochasticValues <- function(object, nsim=NULL) {
-  if (!is.array(object) & length(object)==2) {
-    if (is.null(nsim))
-      cli::cli_abort('`nsim` required to generate stochastic values')
-    object <- StructurePars(list(object), nsim)[[1]]
-  }
-  object
-}
+
 
 # ---- Add Dimensions ----
 
@@ -438,42 +431,43 @@ AddAreaDimension <- function(array) {
   array
 }
 
-AddAgeYearDimensions <- function(object, outdim=4) {
-  if (is.null(object))
-    return(object)
-  dd <- dim(object)
 
-  if (outdim==4) {
-    if (all(dd==1)) {
-      object <- array(object, dim=c(1,1,1,1))
-    } else {
-      if (length(dd)==2) {
-        # add age and time-step dimension
-        object <- replicate(1, replicate(1, object))
-      } else if (length(dd)==3) {
-        # add time-step dimension
-        object <- replicate(1, object)
-      }
-    }
-  }
-  if (outdim==5) {
-    if (all(dd==1)) {
-      object <- array(object, dim=c(1,1,1,1,1))
-    } else {
-      if (length(dd)==3) {
-        # add age and time-step dimension
-        object <- replicate(1, replicate(1, object))
-      } else if (length(dd)==4) {
-        # add time-step dimension
-        object <- replicate(1, object)
-      }
-    }
-  }
-
-
-
-  object
-}
+# AddAgeYearDimensions <- function(object, outdim=4) {
+#   if (is.null(object))
+#     return(object)
+#   dd <- dim(object)
+# 
+#   if (outdim==4) {
+#     if (all(dd==1)) {
+#       object <- array(object, dim=c(1,1,1,1))
+#     } else {
+#       if (length(dd)==2) {
+#         # add age and time-step dimension
+#         object <- replicate(1, replicate(1, object))
+#       } else if (length(dd)==3) {
+#         # add time-step dimension
+#         object <- replicate(1, object)
+#       }
+#     }
+#   }
+#   if (outdim==5) {
+#     if (all(dd==1)) {
+#       object <- array(object, dim=c(1,1,1,1,1))
+#     } else {
+#       if (length(dd)==3) {
+#         # add age and time-step dimension
+#         object <- replicate(1, replicate(1, object))
+#       } else if (length(dd)==4) {
+#         # add time-step dimension
+#         object <- replicate(1, object)
+#       }
+#     }
+#   }
+# 
+# 
+# 
+#   object
+# }
 
 #' @export
 List2Array <- function(List, dimname="Fleet", dim1="Sim", ListDimNames=NULL, pos=NULL) {

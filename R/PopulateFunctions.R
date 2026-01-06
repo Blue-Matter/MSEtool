@@ -293,30 +293,7 @@ CalculateRelativeSize <- function(Spatial, nsim) {
   Spatial
 }
 
-CalcUnfishedDist <- function(Spatial,
-                             Years=NULL,
-                             plot=FALSE,
-                             nits=100) {
-  dims <- dim(Spatial@Movement)
-  if (is.null(dims))
-    return(Spatial)
-  UnfishedDist <- AddDimNames(array(NA, dim=c(dims[1],
-                                              dims[2],
-                                              dims[4],
-                                              dims[5])),
-                              c('Sim', 'Area', 'Age', 'Year'),
-                              Years=Years)
-  for (s in 1:dims[1]) {
-    for (ts in 1:dims[5]) {
-      for (age in 1:dims[4]) {
-        UnfishedDist[s,,age,ts] <- CalcAsymptoticDist(Movement=Spatial@Movement[s,,,age,ts],
-                                                      plot=plot, nits=nits)
-      }
-    }
-  }
-  Spatial@UnfishedDist <- UnfishedDist
-  Spatial
-}
+
 
 CheckSelectivityMaximum <- function(MeanAtAge, alert=TRUE) {
   dnames <- dimnames(MeanAtAge)

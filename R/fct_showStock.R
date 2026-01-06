@@ -1,3 +1,5 @@
+# ---- Stock ----
+
 #' @rdname show
 setMethod('show', 'stock', function(object) {
   
@@ -28,8 +30,23 @@ setMethod('show', 'stock', function(object) {
   
   for (sl in slots) {
     cli::cli_h3('{.code {sl}}')
-    print_slot(object, sl)
+    # print_slot(object, sl)
   }
   
+  cli::cli_end()
+})
+
+## ---- Spatial ----
+#' @rdname show
+setMethod('show', 'spatial', function(object) {
+  
+  cli::cli_par()
+  cli::cli_h2("A {.help MSEtool::Spatial} Object")
+  slots <- slotNames(object)
+  for (sl in slots) {
+    cli::cli_h3('{.code {sl}}')
+    cli::cli_text('{.val { slot(object,sl)}}')
+    # print_slot(object, sl)
+  }
   cli::cli_end()
 })

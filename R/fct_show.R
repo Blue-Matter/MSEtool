@@ -298,20 +298,9 @@ setMethod('show', 'srr', function(object) {
 
 })
 
-## ---- Spatial ----
 
-#' @rdname show
-setMethod('show', 'spatial', function(object) {
 
-  cli::cli_par()
-  cli::cli_h2("A {.help MSEtool::Spatial} Object")
 
-  cli::cli_inform('...')
-
-  cli::cli_end()
-  # print(Check(object))
-
-})
 
 
 ## ---- Depletion ----

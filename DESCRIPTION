@@ -237,6 +237,7 @@ Collate:
     'fct_OM2Hist.R'
     'fct_Populate.R'
     'fct_PopulateFleet.R'
+    'fct_PopulateFleet_Selectivity.R'
     'fct_PopulateMeanAtAge.R'
     'fct_PopulateMeanAtLength.R'
     'fct_PopulateMeanAtWeight.R'
