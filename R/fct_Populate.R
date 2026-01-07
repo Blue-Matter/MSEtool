@@ -197,8 +197,6 @@ setMethod("Populate", "spatial", function(object,
                                           nSim = 5,
                                           seed = NULL,
                                           silent = FALSE,
-                                          plot = FALSE,
-                                          nits = 100,
                                           ...) {
   PopulateSpatial(
     object,
@@ -206,9 +204,7 @@ setMethod("Populate", "spatial", function(object,
     Years,
     nSim,
     seed,
-    silent,
-    plot,
-    nits
+    silent
   )
 })
 

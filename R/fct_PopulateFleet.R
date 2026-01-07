@@ -3,7 +3,8 @@
 PopulateFleet <- function(Fleet,
                           Stock,
                           seed = 103,
-                          silent = FALSE) {
+                          silent = FALSE,
+                          force=FALSE) {
   Ages <- Stock@Ages
   Length <- Stock@Length
   Weight <- Stock@Weight
@@ -31,7 +32,12 @@ PopulateFleet <- function(Fleet,
   nArea <- ncol(RelativeSize)
 
   argList <- list(Ages, Length, Weight, RelativeSize, nsim, Years, seed)
-  if (CheckDigest(Fleet, argList) | EmptyObject(Fleet)) {
+  
+  if (EmptyObject(Fleet)) {
+    return(Fleet)
+  }
+  
+  if (CheckDigest(Fleet, argList) & !force) {
     return(Fleet)
   }
 
@@ -80,7 +86,8 @@ PopulateFleet <- function(Fleet,
     nArea,
     CalcAtLength = FALSE,
     seed,
-    silent = silent
+    silent = silent,
+    force=force
   )
 
   Fleet@DiscardMortality <- PopulateDiscardMortality(
@@ -275,10 +282,11 @@ PopulateRetention <- function(Retention,
                               nArea = 1,
                               CalcAtLength = TRUE,
                               seed = NULL,
-                              silent = FALSE) {
+                              silent = FALSE,
+                              force=FALSE) {
   argList <- list(Ages, Length, Years, nSim, CalcAtLength, seed)
 
-  if (CheckDigest(Retention, argList)) {
+  if (CheckDigest(Retention, argList) & !force) {
     return(Retention)
   }
 
@@ -367,11 +375,12 @@ PopulateDiscardMortality <- function(DiscardMortality,
                                      nArea = 1,
                                      CalcAtLength = TRUE,
                                      seed = NULL,
-                                     silent = FALSE) {
+                                     silent = FALSE,
+                                     force=FALSE) {
   # Years <- YearAttributes(DiscardMortality, Years)
   argList <- list(Ages, Length, nSim, Years, CalcAtLength, seed)
 
-  if (CheckDigest(DiscardMortality, argList)) {
+  if (CheckDigest(DiscardMortality, argList) & !force) {
     return(DiscardMortality)
   }
 

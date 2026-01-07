@@ -174,6 +174,7 @@ See \code{Details}.}
 
 \examples{
 
+# see SpatialDevs.R ! 
 
 # Two Area
 Spatial <- Spatial(UnfishedDist=0.3, # Fraction Unfished in Area 1

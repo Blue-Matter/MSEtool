@@ -260,7 +260,6 @@ OM2Spatial <- function(OM, cpars = list) {
   
   if (!is.null(cpars$mov)) {
     Spatial@Movement <- process_mov(cpars$mov)  
-    Spatial <- CalcUnfishedDist(Spatial, GetOMYears(OM))
   }
   
   Spatial

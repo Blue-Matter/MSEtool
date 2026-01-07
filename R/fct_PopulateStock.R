@@ -9,12 +9,18 @@ PopulateStock <- function(Stock,
                           ALK=TRUE, 
                           AWK=TRUE, 
                           seed=102, 
-                          silent=FALSE) {
+                          silent=FALSE,
+                          force=FALSE) {
   
   argList <- list(seed, ALK, AWK)
-  if (CheckDigest(Stock, argList) | EmptyObject(Stock))
+  if (EmptyObject(Stock)) {
     return(Stock)
-
+  }
+  
+  if (CheckDigest(Stock, argList) & ~force) {
+    return(Stock)
+  }
+  
   if (is.null(CurrentYear))
     CurrentYear <- format(Sys.Date(), "%Y")
   Stock@nYear <- nYear
@@ -40,7 +46,8 @@ PopulateStock <- function(Stock,
                                  nSim=nSim(Stock),
                                  ASK=ALK,
                                  seed+1,
-                                 silent)
+                                 silent,
+                                 force)
   
   Stock@Weight <- PopulateWeight(Weight=Stock@Weight,
                                  Ages=Stock@Ages,
@@ -49,7 +56,8 @@ PopulateStock <- function(Stock,
                                  nSim=nSim(Stock),
                                  ASK=AWK,
                                  seed+2,
-                                 silent)
+                                 silent,
+                                 force)
   
   Stock@NaturalMortality <- PopulateNaturalMortality(Stock@NaturalMortality,
                                                      Ages=Stock@Ages,
@@ -57,7 +65,8 @@ PopulateStock <- function(Stock,
                                                      Years=Years(Stock),
                                                      nSim=nSim(Stock),
                                                      seed+3,
-                                                     silent)
+                                                     silent,
+                                                     force)
   
   Stock@Maturity <- PopulateMaturity(Maturity=Stock@Maturity,
                                      Ages=Stock@Ages,
@@ -66,7 +75,8 @@ PopulateStock <- function(Stock,
                                      Years=Years(Stock),
                                      nSim=nSim(Stock),
                                      seed+4,
-                                     silent)
+                                     silent,
+                                     force)
   
   Stock@Fecundity <- PopulateFecundity(Stock@Fecundity,
                                        Ages=Stock@Ages,
@@ -76,7 +86,8 @@ PopulateStock <- function(Stock,
                                        Years=Years(Stock),
                                        nSim=nSim(Stock),
                                        seed+5,
-                                       silent)
+                                       silent,
+                                       force)
   
   Stock@SRR <- PopulateSRR(SRR=Stock@SRR,
                            Ages=Stock@Ages,
@@ -122,15 +133,22 @@ PopulateLength <- function(Length,
                            nSim=NULL,
                            ASK=TRUE,
                            seed=NULL,
-                           silent=FALSE) {
+                           silent=FALSE,
+                           force=FALSE) {
   
   Ages <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
   
   argList <- list(Ages, nSim, Years, ASK, seed)
   
-  if (CheckDigest(Length, argList) | EmptyObject(Length))
+  if (EmptyObject(Length)) {
     return(Length)
+  }
+  
+  if (CheckDigest(Length, argList) &!force) {
+    return(Length)
+  }
+  
   
   SetSeed(seed)
   
@@ -168,15 +186,21 @@ PopulateWeight <- function(Weight,
                            ASK=FALSE,
                            seed=NULL,
                            silent=FALSE,
-                           CalcAtLength=FALSE) {
+                           CalcAtLength=FALSE,
+                           force=FALSE) {
   Ages <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
   
   argList <- list(Ages, Length, nSim, Years, ASK,
                   CalcAtLength, seed)
   
-  if (CheckDigest(Weight, argList) | EmptyObject(Weight))
+  if (EmptyObject(Weight)) {
     return(Weight)
+  }
+  
+  if (CheckDigest(Weight, argList) &!force) {
+    return(Weight)
+  }
   
   SetSeed(seed)
   
@@ -234,15 +258,22 @@ PopulateNaturalMortality <- function(NaturalMortality,
                                      nSim=NULL,
                                      seed=NULL,
                                      silent=FALSE,
-                                     CalcAtLength=FALSE) {
+                                     CalcAtLength=FALSE,
+                                     force=FALSE) {
   
   Ages <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
   
   argList <- list(Ages, Length, nSim, Years, CalcAtLength, seed)
-  if (CheckDigest( NaturalMortality, argList) | EmptyObject(NaturalMortality))
-    return(NaturalMortality)
   
+  if (EmptyObject(NaturalMortality)) {
+    return(NaturalMortality)
+  }
+  
+  if (CheckDigest(NaturalMortality, argList) &!force) {
+    return(NaturalMortality)
+  }
+
   SetSeed(seed)
   
   NaturalMortality@Pars <- StructurePars(Pars=NaturalMortality@Pars, nSim, Years)
@@ -260,10 +291,10 @@ PopulateNaturalMortality <- function(NaturalMortality,
   }
   
   NaturalMortality <- MeanAtLength2MeanAtAge(NaturalMortality, Length)
-  if (CalcAtLength)
-    NaturalMortality <- MeanAtAge2MeanAtLength(NaturalMortality, Length, 
-                                               Ages, nSim, Years, seed,
-                                               silent)
+  if (CalcAtLength) {
+    NaturalMortality <- MeanAtAge2MeanAtLength(NaturalMortality, Length)
+  }
+    
   
   NaturalMortality <- PopulateRandom(NaturalMortality)
   
@@ -279,16 +310,22 @@ PopulateMaturity <- function(Maturity,
                              nSim=NULL,
                              seed=NULL,
                              silent=FALSE,
-                             CalcAtLength=FALSE) {
+                             CalcAtLength=FALSE,
+                             force=FALSE) {
   
   Ages <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
   
   argList <- list(Ages, Length, nSim, Years, CalcAtLength, seed)
   
-  if (CheckDigest(Maturity, argList) | EmptyObject(Maturity))
+  if (EmptyObject(Maturity)) {
     return(Maturity)
+  }
   
+  if (CheckDigest(Maturity, argList) &!force) {
+    return(Maturity)
+  }
+
   SetSeed(seed)
 
   Maturity@Pars <- StructurePars(Pars=Maturity@Pars, nSim, Years)
@@ -314,12 +351,11 @@ PopulateMaturity <- function(Maturity,
   Maturity <- MeanAtLength2MeanAtAge(Maturity, Length)
   Maturity <- MeanAtWeight2MeanAtAge(Maturity, Weight)
   
-  if (CalcAtLength)
-    Maturity <- MeanAtAge2MeanAtLength(Maturity, Length, Ages, nSim, 
-                                       Years, seed, silent)
-  
-  # Maturity <- AddMeanAtAgeAttributes(Maturity, Years, Ages)
-  
+  if (CalcAtLength) {
+    Maturity <- MeanAtAge2MeanAtLength(Maturity, Length)
+  }
+    
+
   # Semelparous 
   if (inherits(Maturity@Semelparous, 'array')) {
     
@@ -346,7 +382,8 @@ PopulateFecundity <- function(Fecundity,
                               nSim=NULL,
                               seed=NULL,
                               silent=FALSE,
-                              CalcAtLength=FALSE) {
+                              CalcAtLength=FALSE,
+                              force=FALSE) {
   
   Ages <- DefaultAges(Ages)
   Years <- DefaultYears(Years)
@@ -384,8 +421,13 @@ PopulateFecundity <- function(Fecundity,
     return(SetDigest(Fecundity, argList))
   }
   
-  if (CheckDigest(Fecundity, argList))
+  if (EmptyObject(Fecundity)) {
     return(Fecundity)
+  }
+  
+  if (CheckDigest(Fecundity, argList) &!force) {
+    return(Fecundity)
+  }
   
   SetSeed(seed)
   
@@ -554,12 +596,6 @@ PopulateSRR <- function(SRR,
   )
   SetDigest(SRR, argList)
 }
-
-
-
-
-
-
 
 
 

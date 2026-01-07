@@ -39,14 +39,29 @@ Simulate_om <- function(OM = NULL,
   HistYears <- Years(OM, "Historical")
   ProjYears <- Years(OM, "Projection")
 
+  
+  # ---------------------- DEBUG ----------------------
+  
+  # work through this code ... update Hist, c++
+  
+  
+  
+  
+  # -------------------- END DEBUG --------------------
+  
+  
+
+  
+  
   # ---- Make Hist Object ----
   Hist <- OM2Hist(OM, silent)
+  
   
   # ---- Calculate Equilibrium Unfished ----
   Hist@Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
   
   
-  Hist@OM@Stock$Female@Length@ASK |> dim()
+  
 
 
 

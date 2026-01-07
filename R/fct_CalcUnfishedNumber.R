@@ -23,6 +23,14 @@ CalcUnfishedNumber <- function(OM, SP = FALSE) {
   UnfishedNumberAtAge
 }
 
+CalcUnfishedNumber_seasonal_stock <- function(Stock, SP=FALSE) {
+  AgeClasses <- Stock@Ages@Classes
+  MaxAge <- max(AgeClasses)
+  nAge <- length(AgeClasses)
+  
+  
+  
+}
 CalcUnfishedNumber_seasonal <- function(OM, SP = FALSE) {
   OM <- PopulateOM(OM)
   nStock <- nStock(OM)
@@ -35,12 +43,13 @@ CalcUnfishedNumber_seasonal <- function(OM, SP = FALSE) {
   for (st in 1:nStock) {
     Stock <- OM@Stock[[st]]
     AgeClasses <- Stock@Ages@Classes
-    MaxAge <- Stock@Ages@MaxAge / OM@Seasons
-    MxAgeAnnual <- floor(MaxAge)
+    MaxAge <- max(AgeClasses)
     nAge <- length(AgeClasses)
+    
     R0 <- Stock@SRR@R0 |>
       ExtendYears(Years) |>
       ExtendSims(nSim)
+    
     NaturalMortality <- Stock@NaturalMortality@MeanAtAge |>
       ExtendYears(Years) |>
       ExtendSims(nSim)

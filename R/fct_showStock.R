@@ -50,3 +50,7 @@ setMethod('show', 'spatial', function(object) {
   }
   cli::cli_end()
 })
+
+show_slot <- function(value) {
+  # show arrays, matrices, numeric, etc 
+}

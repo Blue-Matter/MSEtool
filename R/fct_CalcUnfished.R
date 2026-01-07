@@ -1,3 +1,7 @@
+
+#' Calculate Equilibrium Unfished
+#' @param OM An [OM()] object
+#' @export
 CalcEquilibriumUnfished <- function(OM) {
   OM <- PopulateOM(OM)
 

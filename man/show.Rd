@@ -9,10 +9,10 @@
 \alias{show,maturity-method}
 \alias{show,fecundity-method}
 \alias{show,srr-method}
-\alias{show,spatial-method}
 \alias{show,depletion-method}
 \alias{show,om-method}
 \alias{show,stock-method}
+\alias{show,spatial-method}
 \title{Generic show method}
 \usage{
 show(object)
@@ -31,13 +31,13 @@ show(object)
 
 \S4method{show}{srr}(object)
 
-\S4method{show}{spatial}(object)
-
 \S4method{show}{depletion}(object)
 
 \S4method{show}{om}(object)
 
 \S4method{show}{stock}(object)
+
+\S4method{show}{spatial}(object)
 }
 \arguments{
 \item{object}{Object to print to console}

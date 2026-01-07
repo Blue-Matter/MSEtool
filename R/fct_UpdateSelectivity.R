@@ -176,7 +176,7 @@ ProcessAdvice_SelectivityMeanAtWeight <- function(Selectivity, ProjSim, YearsPro
   ) |>
     ExtendYears(YearsProj)
   
-  Selectivity <- MeanAtWeight2MeanAtAge(Selectivity, Weight, Ages, 1, Years=YearsProj)                              
+  Selectivity <- MeanAtWeight2MeanAtAge(Selectivity, Weight)                              
   
   MeanAtWeight <- Selectivity@MeanAtWeight |> DropDimension('Sim')
   MeanAtAge <- Selectivity@MeanAtAge |> DropDimension('Sim')
@@ -204,7 +204,7 @@ ProcessAdvice_SelectivityPars <- function(Selectivity, ProjSim, YearsProj, Ages,
     cli::cli_abort(c("x"="`Advice@Retention@Pars` is populated but cannot find matching model"))
   }
   
-  Selectivity@Pars <- StructurePars(Selectivity@Pars, nsim=1, Years=YearsProj)
+  Selectivity@Pars <- StructurePars(Selectivity@Pars, nSim=1, Years=YearsProj)
   ModelClass <- getModelClass(Selectivity@Model)
   
   LengthModel <- grepl('at-Length', ModelClass)

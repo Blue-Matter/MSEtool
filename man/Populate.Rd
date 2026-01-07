@@ -106,8 +106,6 @@ Populate(object, ...)
   nSim = 5,
   seed = NULL,
   silent = FALSE,
-  plot = FALSE,
-  nits = 100,
   ...
 )
 
@@ -167,9 +165,9 @@ Populate(object, ...)
   ...
 )
 
-PopulateFleet(Fleet, Stock, seed = 103, silent = FALSE)
+PopulateFleet(Fleet, Stock, seed = 103, silent = FALSE, force = FALSE)
 
-PopulateOM(OM, silent = FALSE)
+PopulateOM(OM, silent = FALSE, force = FALSE)
 }
 \arguments{
 \item{object}{A ...}
@@ -183,6 +181,8 @@ PopulateOM(OM, silent = FALSE)
 \item{AWK}{...}
 
 \item{seed}{Seed for the random number generator}
+
+\item{force}{Populate object even if digest hasn't changed?}
 }
 \description{
 Populate Objects

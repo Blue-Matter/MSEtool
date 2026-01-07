@@ -3,12 +3,18 @@
 ## ---- OM -----
 #' @describeIn Populate Populate an [OM()] object
 #' @param seed Seed for the random number generator
+#' @param force Populate object even if digest hasn't changed?
 #' @export
-PopulateOM <- function(OM, silent=FALSE) {
+PopulateOM <- function(OM, silent=FALSE, force=FALSE) {
   CheckClass(OM)
-  # if (CheckDigest(OM) | EmptyObject(OM))
-  if (EmptyObject(OM))
+  
+  if (EmptyObject(OM)) {
     return(OM)
+  }
+  
+  if (CheckDigest(OM) & !force) {
+    return(OM)
+  }  
   
   if (is.null(OM@Stock))
     cli::cli_abort(c('x'='{.var OM} must have at least one stock',
@@ -19,8 +25,8 @@ PopulateOM <- function(OM, silent=FALSE) {
                      'i'='See {.help MSEtool::OM} and {.help MSEtool::Fleet}'))
   
   OM <- OM |>
-    PopulateStockList(silent) |>
-    PopulateFleetList(silent) |>
+    PopulateStockList(silent, force) |>
+    PopulateFleetList(silent, force) |>
     PopulateImpList(silent) |> 
     PopulateComplexes() |>
     ProcessData() |> 
@@ -53,7 +59,7 @@ ProcessData <- function(OM) {
 }
 
 
-PopulateStockList <- function(OM, silent=FALSE) {
+PopulateStockList <- function(OM, silent=FALSE, force=FALSE) {
   nStocks <- nStock(OM)
   StockList <- vector('list', nStocks)
   names(StockList) <- paste('Stock', 1:nStocks)
@@ -72,14 +78,15 @@ PopulateStockList <- function(OM, silent=FALSE) {
                                      nSim=OM@nSim,
                                      Seasons=OM@Seasons,
                                      seed=OM@Seed+st, 
-                                     silent=silent)
+                                     silent=silent,
+                                     force=force)
     names(StockList)[st] <- Stock@Name
   }
   OM@Stock <- StockList
   OM
 }
 
-PopulateFleetList <- function(OM, silent=FALSE) {
+PopulateFleetList <- function(OM, silent=FALSE, force=FALSE) {
   if (is.null(OM@Fleet)) {
     return(OM)
   }
@@ -126,7 +133,8 @@ PopulateFleetList <- function(OM, silent=FALSE) {
       FleetList[[st]][[fl]] <- PopulateFleet(Fleet=FleetList[[st]][[fl]], 
                                              Stock=StockList[[st]],
                                              seed=OM@Seed+st+fl,
-                                             silent=silent)
+                                             silent=silent,
+                                             force=force)
       
       names(FleetList[[st]])[fl] <- FleetList[[st]][[fl]]@Name
       
