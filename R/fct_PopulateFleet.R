@@ -51,8 +51,8 @@ PopulateFleet <- function(Fleet,
     seed
   )
 
-  Fleet <- PopulateCatchability(
-    Fleet,
+  Fleet@Catchability <- PopulateCatchability(
+    Catchability=Fleet@Catchability,
     RelativeSize,
     nSim,
     HistYears,
@@ -127,20 +127,20 @@ PopulateFleet <- function(Fleet,
 PopulateEffort <- function(Effort, HistYears, nArea = 1, nSim = 5, seed = NULL) {
   SetSeed(seed)
 
-  if (is.null(Effort@Value)) {
+  if (is.null(Effort@Effort)) {
     return(Effort)
   }
 
-  if (inherits(Effort@Value, "data.frame")) {
+  if (inherits(Effort@Effort, "data.frame")) {
     Effort <- GenerateHistoricalEffort(Effort, nSim, HistYears)
   }
 
-  dd <- dim(Effort@Value)
+  dd <- dim(Effort@Effort)
   if (dd[2] != length(HistYears)) {
-    cli::cli_abort("`ncol(Effort@Value)` is not equal to `length(HistYears)`")
+    cli::cli_abort("`ncol(Effort@Effort)` is not equal to `length(HistYears)`")
   }
-  dimnames(Effort@Value) <- list(
-    Sim = 1:nrow(Effort@Value),
+  dimnames(Effort@Effort) <- list(
+    Sim = 1:nrow(Effort@Effort),
     Year = HistYears
   )
 
@@ -178,49 +178,52 @@ PopulateDistribution <- function(Distribution,
 }
 
 
-PopulateCatchability <- function(Fleet,
+PopulateCatchability <- function(Catchability,
                                  RelativeSize,
                                  nSim = 5,
                                  HistYears = NULL,
                                  ProjYears = NULL,
                                  seed = NULL,
                                  silent = FALSE) {
-  Catchability <- Fleet@Catchability
+
   pYears <- length(ProjYears)
-
   Years <- c(HistYears, ProjYears)
-
-  if (all(is.na(Catchability@Value)) || all(Catchability@Value <= tiny)) {
-    Catchability@Value <- array(1,
-      dim = c(nSim, length(Years)),
-      dimnames = list(
-        Sim = 1:nSim,
-        Year = Years
-      )
+  
+  if (is.null(Catchability@Efficiency)) {
+    # Catchability not provided  - set all values to 1
+    Catchability@Efficiency <- array(1,
+                                dim = c(nSim, length(Years)),
+                                dimnames = list(
+                                  Sim = 1:nSim,
+                                  Year = Years
+                                )
     )
-  } else {
-    dd <- dim(Catchability@Value)
-    if (dd[1] != nSim) {
-      if (dd[1] != 1) {
-        cli::cli_abort(c(
-          "x" = "Incorrect number of rows in `Catchability@Value` matrix.",
-          "i" = "Must have either 1 row or `nSim` ({.val {nSim}}) rows. "
-        ))
-      }
-    }
-
-    if (is.null(dimnames(Catchability@Value))) {
-      dimnames(Catchability@Value) <- list(
-        Sim = 1:nrow(Catchability@Value),
-        Year = Years[1:ncol(Catchability@Value)]
-      )
-    }
-
-    Catchability@Value <- ExtendYears(Catchability@Value, HistYears)
   }
 
-  if (!is.null(Fleet@Catchability@qInc)) {
-    qIncs <- StructurePars_(Fleet@Catchability@qInc, nSim, Years)[, 1]
+  # Check Catchability@Efficiency dimensions 
+  dd <- dim(Catchability@Efficiency)
+  if (dd[1] != nSim && dd[1] != 1) {
+      cli::cli_abort(c(
+        "x" = "Incorrect number of rows in matrix: `Fleet |> Catchability() |> Efficiency()`",
+        "i" = "Must have either {.val {1}} row or `nSim` ({.val {nSim}}) rows. "
+      ))
+  }
+
+  # Add Dimension Names if Needed  
+  if (is.null(dimnames(Catchability@Efficiency))) {
+    dimnames(Catchability@Efficiency) <- list(
+      Sim = 1:nrow(Catchability@Efficiency),
+      Year = Years[1:ncol(Catchability@Efficiency)]
+    )
+  }
+
+  # Extend q values for all historical years 
+  Catchability@Efficiency <- ExtendYears(Catchability@Efficiency, HistYears)
+  
+
+  # Apply qInc and qCV if applicable - only really for backwards compatibility
+  if (!is.null(Catchability@qInc)) {
+    qIncs <- StructurePars_(Catchability@qInc, nSim, Years)[, 1]
     qIncs <- sapply(qIncs, function(x) {
       (1 + x / 100)^(1:pYears)
     }) |> t()
@@ -230,15 +233,14 @@ PopulateCatchability <- function(Fleet,
       Year = ProjYears
     )
 
-    qfuture <- ArrayMultiply(SubsetYear(Catchability@Value, ProjYears), qIncs)
-    ArrayFill(Catchability@Value) <- qfuture
-    Fleet@Catchability@qInc <- qIncs
+    qfuture <- ArrayMultiply(SubsetYear(Catchability@Efficiency, ProjYears), qIncs)
+    ArrayFill(Catchability@Efficiency) <- qfuture
+    Catchability@qInc <- qIncs
   }
 
-
-  if (!is.null(Fleet@Catchability@qCV)) {
-    qCVs <- StructurePars_(Fleet@Catchability@qCV, nSim, Years)[, 1]
-    Fleet@Catchability@qCV <- qCVs
+  if (!is.null(Catchability@qCV)) {
+    qCVs <- StructurePars_(Catchability@qCV, nSim, Years)[, 1]
+    Catchability@qCV <- qCVs
 
     qmu <- -0.5 * qCVs^2
     qvar <- array(exp(rnorm(pYears * nSim, rep(qmu, pYears), rep(qCVs, pYears))), c(nSim, pYears),
@@ -248,25 +250,13 @@ PopulateCatchability <- function(Fleet,
       )
     )
 
-    qfuture <- ArrayMultiply(SubsetYear(Catchability@Value, ProjYears), qvar)
+    qfuture <- ArrayMultiply(SubsetYear(Catchability@Efficiency, ProjYears), qvar)
     if (!all(qfuture == 1)) {
-      ArrayFill(Catchability@Value) <- qfuture
+      ArrayFill(Catchability@Efficiency) <- qfuture
     }
   }
-  Fleet@Catchability@Value <- Catchability@Value
 
-  if (EmptyObject(Fleet@Catchability@qArea)) {
-    Fleet@Catchability@qArea <- ArrayDivide(
-      array1 = AddDimension(Catchability@Value, "Area"),
-      array2 = AddDimension(RelativeSize, "Year", val = Years[1]) |>
-        aperm(c("Sim", "Year", "Area"))
-    )
-  } else {
-    dd <- dim(Fleet@Catchability@qArea)
-    # TODO: check dimensions
-    # TODO: add dimnames if neccessary
-  }
-  Fleet
+  Catchability
 }
 
 

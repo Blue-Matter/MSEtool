@@ -100,8 +100,8 @@ OptRefLandings <- function(logF, ProjSim, HistYears, ProjYears, type=c('Landings
 
   ProjYearInd <- match(ProjYears, c(HistYears, ProjYears))
   
-  ProjSim@Effort[st,ProjYearInd,fl] <- exp(logF) 
-  ProjSim@OM@Fleet[[st]]@Catchability[] <- 1
+  ProjSim@Effort@Value[st,ProjYearInd,fl] <- exp(logF) 
+  ProjSim@OM@Fleet[[st]]@Catchability@Efficiency[] <- 1
   nArea <- nArea(ProjSim@OM)
   RelativeSize <- as.numeric(ProjSim@OM@Stock[[st]]@Spatial@RelativeSize )
   qArea <- matrix(1/RelativeSize, length(ProjYearInd), nArea, byrow=TRUE)

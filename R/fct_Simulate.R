@@ -33,26 +33,14 @@ Simulate_om <- function(OM = NULL,
                         Reduce = TRUE,
                         ...) {
   # ---- Initial Checks and Setup ----
-  OnExit()
-  OM <- StartUp(OM, nSim)
+  OnExit() # Terminate `cli` on exit
+  
+  # Populate OM, reduce nSim if applicable, checks and warning messages 
+  OM <- StartUp(OM, nSim) 
   
   HistYears <- Years(OM, "Historical")
   ProjYears <- Years(OM, "Projection")
 
-  
-  # ---------------------- DEBUG ----------------------
-  
-  # work through this code ... update Hist, c++
-  
-  
-  
-  
-  # -------------------- END DEBUG --------------------
-  
-  
-
-  
-  
   # ---- Make Hist Object ----
   Hist <- OM2Hist(OM, silent)
   

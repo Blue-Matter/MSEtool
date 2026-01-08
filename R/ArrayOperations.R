@@ -353,52 +353,6 @@ ArraySubsetAge <- function(object, Ages=NULL, drop=FALSE) {
   abind::asub(object, (DN[[AgeInd]] %in% Ages), AgeInd, drop=FALSE) 
 }
 
-# ----- Array Expand ----
-
-#' @export
-ArrayExpand <- function(array, nSim, AgeClasses=NULL, Years, AgeOpt=3, debug=FALSE) {
-  
-  if (debug)
-    print(class(array))
-  
-  if (!is.array(array)) {
-    if (isS4(array)) {
-      if (inherits(array, 'data'))
-        return(array)
-      slots <- slotNames(array)
-      
-      for (sl in slots) {
-        if (debug)
-          print(sl)
-        slot(array, sl) <- Recall(slot(array, sl), nSim, AgeClasses, Years, AgeOpt, debug)
-      }
-      return(array)
-    }
-    if (is.list(array)) {
-      if (length(array)) {
-        for (i in 1:length(array)) {
-          temp <- Recall(array[[i]], nSim, AgeClasses, Years, AgeOpt, debug)
-          if (!is.null(temp))
-            array[[i]] <- temp 
-        }
-        return(array)
-      }
-    }
-
-  }
-  
-  array |>
-    ExtendSims(nSim) |>
-    ExtendAges(AgeClasses, AgeOpt) |>
-    ExtendYears(Years)
-  
-}
-
-
-
-# replicates to `nsim`
-
-
 
 
 

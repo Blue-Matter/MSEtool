@@ -3,51 +3,55 @@ OnExit <- function() {
 }
 
 
-#' Miscellaneous Helper Functions 
+#' Miscellaneous Helper Functions
 #' @name miscellanous
 NULL
 
 #' @describeIn miscellanous Reduce the number of simulations in an `om` or `hist` object
 #' @export
-ReduceNSim <- function(object, nSim=NULL) {
-  if (is.null(nSim))
+ReduceNSim <- function(object, nSim = NULL) {
+  if (is.null(nSim)) {
     return(object)
-  
-  CheckClass(nSim, c('numeric', 'integer'), 'nSim')
-  
-  if (length(nSim)>1)
+  }
+
+  CheckClass(nSim, c("numeric", "integer"), "nSim")
+
+  if (length(nSim) > 1) {
     cli::cli_abort("`nSim` ({.val {nSim}}) must be numeric/integer length 1")
-  
-  if (nSim<1)
+  }
+
+  if (nSim < 1) {
     cli::cli_abort("`nSim` ({.val {nSim}}) must be >= 1")
-  
-  if (nSim>nSim(object)) {
+  }
+
+  if (nSim > nSim(object)) {
     cli::cli_alert_warning("Argument `nSim` ({.val {nSim}}) is greater than {.run nSim(OM)} ({.val {nSim(object)}}). Ignoring argument `nSim`  ")
     nSim <- nSim(object)
   }
-    
-  if (nSim(object) == nSim)
+
+  if (nSim(object) == nSim) {
     return(object)
-  
-  SubsetSim(object, Sim=1:nSim)
+  }
+
+  SubsetSim(object, Sim = 1:nSim)
 }
 
 
 not <- function(val) !val
 
-ReplaceTiny <- function(Array, value=1, default=tiny/2) {
-  Array[Array==default] <- value
+ReplaceTiny <- function(Array, value = 1, default = tiny / 2) {
+  Array[Array == default] <- value
   Array
 }
 
 # Transformations -----
 
 logit <- function(p) {
-  log(p/(1-p))
+  log(p / (1 - p))
 }
 
-ilogit <- function(x)  {
-  1/(1 + exp(-x))
+ilogit <- function(x) {
+  1 / (1 + exp(-x))
 }
 
 
@@ -55,19 +59,19 @@ ilogit <- function(x)  {
 
 # truncated normal distribution
 ptnorm <- function(q, mean, sd, truncsd) {
-  a <- (-truncsd*sd) + mean
-  b <- (truncsd*sd) + mean
-  out <- vector('numeric', length(a))
+  a <- (-truncsd * sd) + mean
+  b <- (truncsd * sd) + mean
+  out <- vector("numeric", length(a))
   for (i in seq_along(a)) {
-    if (q<a[i]) {
+    if (q < a[i]) {
       out[i] <- 0
-    } else if (q>b[i]) {
+    } else if (q > b[i]) {
       out[i] <- 1
     } else {
       p1 <- stats::pnorm(q, mean[i], sd[i], TRUE, FALSE)
       p2 <- stats::pnorm(a[i], mean[i], sd[i], TRUE, FALSE)
       p3 <- stats::pnorm(b[i], mean[i], sd[i], TRUE, FALSE)
-      out[i] <- (p1-p2)/(p3-p2)
+      out[i] <- (p1 - p2) / (p3 - p2)
     }
   }
   out
@@ -75,107 +79,115 @@ ptnorm <- function(q, mean, sd, truncsd) {
 
 rtnorm <- function(n, mu, sigma, lower, upper) {
   qnorm(
-    runif(n,
-          pnorm(lower, mu, sigma),
-          pnorm(upper, mu, sigma)),
+    runif(
+      n,
+      pnorm(lower, mu, sigma),
+      pnorm(upper, mu, sigma)
+    ),
     mu,
-    sigma)
+    sigma
+  )
 }
 
 
 # ---- Text ----
-firstup <- function(x, n=1) {
+firstup <- function(x, n = 1) {
   substr(x, 1, n) <- toupper(substr(x, 1, n))
   x
 }
 
-# ---- Names ---- 
+# ---- Names ----
 
 #' @export
 StockNames <- function(object) {
-  if (inherits(object, 'hist')) {
+  if (inherits(object, "hist")) {
     names <- Recall(object@OM)
-  } 
+  }
 
-  if (inherits(object, 'om')) {
+  if (inherits(object, "om")) {
     names <- names(object@Stock)
   }
-  if (inherits(object, 'StockList')) {
-    names <-  names(object)
+  if (inherits(object, "StockList")) {
+    names <- names(object)
   }
-  
+
   names
 }
 
 #' @export
 FleetNames <- function(OM) {
-  if (!methods::is(OM, 'om'))
-    cli::cli_abort('`OM` must be class `om`')
-  if (is.list(OM@Fleet[[1]])) 
+  if (!methods::is(OM, "om")) {
+    cli::cli_abort("`OM` must be class `om`")
+  }
+  if (is.list(OM@Fleet[[1]])) {
     return(names(OM@Fleet[[1]]))
-  
+  }
+
   OM@Fleet[[1]]@Name |> as.character()
 }
 
-# 
+#
 # `FleetNames<-` <- function(x, value) {
 #   if (inherits(x, 'om'))
 #     AssignFleetNamesOM(x, value)
 # }
-# 
+#
 # AssignFleetNamesOM <- function(OM, value) {
-#   
-# 
+#
+#
 # }
 
 # ---- Messages ----
 
 # default: info, progress, warnings
 # FALSE: no messages or warnings
-# minimal: 
+# minimal:
 
-SetMessages <- function(messages='default') {
+SetMessages <- function(messages = "default") {
   msg <- list()
-  if (isFALSE(messages)) 
+  if (isFALSE(messages)) {
     return(msg)
-  
+  }
+
   msg$info <- TRUE
   msg$alert <- TRUE
   msg$progress <- TRUE
   msg$warning <- TRUE
-  
+
   msg
 }
 
-StartMessages <- function(OM, messages='default') {
+StartMessages <- function(OM, messages = "default") {
   msg <- SetMessages(messages)
-  
+
   # Allocation
- 
+
   # if (!length(OM@Allocation)) {
   #   OM@Allocation <- OM@CatchFrac
   #   if (nFleet(OM)>1) {
-  #     if (isTRUE(msg$alert)) 
+  #     if (isTRUE(msg$alert))
   #       cli::cli(c(
   #         cli::cli_alert_info('`Allocation(OM)` not specified'),
   #         cli::cli_alert('Setting `Allocation` equal to `CatchFrac` (`Allocate(OM) <- CatchFrac(OM)`)')
-  #       ))  
+  #       ))
   #   }
   # }
-  
-  if(!length(OM@EFactor)) {
-    OM@EFactor <- lapply(1:nStock(OM), function(x) 
-      matrix(1, nSim(OM), nFleet(OM)))
-    if (nFleet(OM)>1) {
-      if (isTRUE(msg$alert)) 
+
+  if (!length(OM@EFactor)) {
+    OM@EFactor <- lapply(1:nStock(OM), function(x) {
+      matrix(1, nSim(OM), nFleet(OM))
+    })
+    if (nFleet(OM) > 1) {
+      if (isTRUE(msg$alert)) {
         cli::cli(c(
           cli::cli_alert_info("`EFactor(OM)` not specified"),
           cli::cli_alert("Setting `EFactor(OM)` to current effort for all fleets")
         ))
+      }
     }
   }
-    
-  
+
+
   # if (nStock(OM)>1 && !length(OM@Relations) && !length(OM@Herm)) {
   #   if (isTRUE(msg$alert)) {
   #     cli::cli_alert_info("You have specified more than one stock but no MICE relationships (`Relations(OM)`) or sex-specific relationships (`SexPars(OM)`) among these. \nAs they are independent, consider doing MSE for one stock at a time for computational efficiency\n")
@@ -185,247 +197,266 @@ StartMessages <- function(OM, messages='default') {
 }
 
 
-
 # ----------------------------------
 
 GetnTS <- function(Years) {
   nTS <- length(Years)
-  if (nTS==0)
+  if (nTS == 0) {
     nTS <- NULL
+  }
   nTS
 }
 
 
 getnFleet <- function(Fleets) {
-  if (inherits(Fleets, 'list')) {
+  if (inherits(Fleets, "list")) {
     nfleet <- length(Fleets)
   } else {
     nfleet <- 1
   }
 }
 
-getModelClass <- function(Model=NULL) {
-  if (is.null(Model))
+getModelClass <- function(Model = NULL) {
+  if (is.null(Model)) {
     return(NULL)
-  if (inherits(Model, 'function'))
-    return('function')
+  }
+  if (inherits(Model, "function")) {
+    return("function")
+  }
   class(get(Model))
 }
 
 getFleetInfo <- function(Fleets) {
   nFleet <- getnleet(Fleets)
 
-  if (nFleet>1) {
-    nTS <- max(sapply(1:nFleet, function(f)
+  if (nFleet > 1) {
+    nTS <- max(sapply(1:nFleet, function(f) {
       Fleets[[f]]@FishingMortality@nYear
-    ))
+    }))
   } else {
-    if (!inherits(Fleets, 'list')) {
+    if (!inherits(Fleets, "list")) {
       nyear <- Fleets@FishingMortality@nYear
     } else {
       nyear <- Fleets[[1]]@FishingMortality@nYear
     }
   }
-  if (length(nyear)<1) {
+  if (length(nyear) < 1) {
     cli::cli_alert_danger("`nyear` not set in `FishingMortality`. Setting to `1`")
     nyear <- 1
   }
 
 
-  list(nFleet=nFleet, nyear=nyear)
+  list(nFleet = nFleet, nyear = nyear)
 }
 
 CalcTSUnits <- function(Seasons) {
-  
-  if (is.null(Seasons))
-    return('year')
+  if (is.null(Seasons)) {
+    return("year")
+  }
 
   out <- switch(as.character(Seasons),
-         '1'='year',
-         '2'='half-year',
-         '4'='quarter',
-         '12'='month',
-         '52'='week',
-         '365'='day')
+    "1" = "year",
+    "2" = "half-year",
+    "4" = "quarter",
+    "12" = "month",
+    "52" = "week",
+    "365" = "day"
+  )
 
-  if (is.null(out))
-    cli::cli_abort(c("x"="`Seasons`: {.val {Seasons}} is invalid ",
-                     "i"="Must be one of {.val {c(1,2,4,12,52,365)}}")
-    )
+  if (is.null(out)) {
+    cli::cli_abort(c(
+      "x" = "`Seasons`: {.val {Seasons}} is invalid ",
+      "i" = "Must be one of {.val {c(1,2,4,12,52,365)}}"
+    ))
+  }
   out
 }
 
 CalcSeasons <- function(Units) {
   Units <- tolower(Units)
   switch(Units,
-         'year'=1,
-         'half-year'=2,
-         'quarter'=4,
-         'month'=12,
-         'week'=52)
+    "year" = 1,
+    "half-year" = 2,
+    "quarter" = 4,
+    "month" = 12,
+    "week" = 52
+  )
 }
 
-CalcYears <- function(nYear, pYear, CurrentYear, Seasons=1, Period=NULL) {
-  
+CalcYears <- function(nYear, pYear, CurrentYear, Seasons = 1, Period = NULL) {
   TimeUnits <- CalcTSUnits(Seasons)
-  
-  if (CurrentYear<1900 && TimeUnits=='year') {
+
+  if (CurrentYear < 1900 && TimeUnits == "year") {
     # not in year units
-    hist <- seq(CurrentYear, by=-1, length.out=nYear) |> rev()
-    proj <- seq(CurrentYear+1, by=1, length.out=pYear)
-    
-    if (is.null(Period))
+    hist <- seq(CurrentYear, by = -1, length.out = nYear) |> rev()
+    proj <- seq(CurrentYear + 1, by = 1, length.out = pYear)
+
+    if (is.null(Period)) {
       return(c(hist, proj))
-    
-    if (grepl('H', Period))
+    }
+
+    if (grepl("H", Period)) {
       return(hist)
-    
-    if (grepl('P', Period))
+    }
+
+    if (grepl("P", Period)) {
       return(proj)
+    }
   }
-  
-  if (TimeUnits=='year') {
-    FirstHistYear <- CurrentYear-nYear+1
+
+  if (TimeUnits == "year") {
+    FirstHistYear <- CurrentYear - nYear + 1
     LastHistYear <- CurrentYear
-    
-    FirstProjYear <- CurrentYear+1
-    LastProjYear <- CurrentYear+pYear
-    
+
+    FirstProjYear <- CurrentYear + 1
+    LastProjYear <- CurrentYear + pYear
+
     hist <- FirstHistYear:LastHistYear
     proj <- FirstProjYear:LastProjYear
-    
-    if (is.null(Period))
+
+    if (is.null(Period)) {
       return(c(hist, proj))
-    
-    if (grepl('H', Period))
+    }
+
+    if (grepl("H", Period)) {
       return(hist)
-    
-    if (grepl('P', Period))
+    }
+
+    if (grepl("P", Period)) {
       return(proj)
-    
+    }
   }
-  
-  FirstHistYear <- lubridate::ymd(paste0(CurrentYear-nYear+1, '-01-01'))
-  LastHistYear <- lubridate::ymd(paste0(CurrentYear, '-12-31'))
-  
-  FirstProjYear <- lubridate::ymd(paste0(CurrentYear+1, '-01-01'))
-  LastProjYear <- lubridate::ymd(paste0(CurrentYear+pYear, '-12-31'))
-  validTimeUnits <- c('year', 'half-year', 'quarter', 'month', 'week', 'day')
-  
-  if (TimeUnits=='half-year') {
-    hist <- seq(FirstHistYear, LastHistYear, by='6 months') |> lubridate::decimal_date()
-    proj <- seq(FirstProjYear, LastProjYear, by='6 months') |> lubridate::decimal_date()
-  } else if (TimeUnits=='quarter') {
-    hist <- seq(FirstHistYear, LastHistYear, by='3 months') |> lubridate::decimal_date()
-    proj <- seq(FirstProjYear, LastProjYear, by='3 months') |> lubridate::decimal_date()
-  } else if (TimeUnits=='month') {
-    hist <- seq(FirstHistYear, LastHistYear, by='1 month') |> lubridate::decimal_date()
-    proj <- seq(FirstProjYear, LastProjYear, by='1 month') |> lubridate::decimal_date()
-  } else if (TimeUnits=='week') {
-    hist <- seq(FirstHistYear, LastHistYear, by='1 week') |> lubridate::decimal_date()
-    proj <- seq(FirstProjYear, LastProjYear, by='1 week') |> lubridate::decimal_date()
-  } else if (TimeUnits=='day') {
-    hist <- seq(FirstHistYear, LastHistYear, by='1 day') |> lubridate::decimal_date()
-    proj <- seq(FirstProjYear, LastProjYear, by='1 day') |> lubridate::decimal_date()
+
+  FirstHistYear <- lubridate::ymd(paste0(CurrentYear - nYear + 1, "-01-01"))
+  LastHistYear <- lubridate::ymd(paste0(CurrentYear, "-12-31"))
+
+  FirstProjYear <- lubridate::ymd(paste0(CurrentYear + 1, "-01-01"))
+  LastProjYear <- lubridate::ymd(paste0(CurrentYear + pYear, "-12-31"))
+  validTimeUnits <- c("year", "half-year", "quarter", "month", "week", "day")
+
+  if (TimeUnits == "half-year") {
+    hist <- seq(FirstHistYear, LastHistYear, by = "6 months") |> lubridate::decimal_date()
+    proj <- seq(FirstProjYear, LastProjYear, by = "6 months") |> lubridate::decimal_date()
+  } else if (TimeUnits == "quarter") {
+    hist <- seq(FirstHistYear, LastHistYear, by = "3 months") |> lubridate::decimal_date()
+    proj <- seq(FirstProjYear, LastProjYear, by = "3 months") |> lubridate::decimal_date()
+  } else if (TimeUnits == "month") {
+    hist <- seq(FirstHistYear, LastHistYear, by = "1 month") |> lubridate::decimal_date()
+    proj <- seq(FirstProjYear, LastProjYear, by = "1 month") |> lubridate::decimal_date()
+  } else if (TimeUnits == "week") {
+    hist <- seq(FirstHistYear, LastHistYear, by = "1 week") |> lubridate::decimal_date()
+    proj <- seq(FirstProjYear, LastProjYear, by = "1 week") |> lubridate::decimal_date()
+  } else if (TimeUnits == "day") {
+    hist <- seq(FirstHistYear, LastHistYear, by = "1 day") |> lubridate::decimal_date()
+    proj <- seq(FirstProjYear, LastProjYear, by = "1 day") |> lubridate::decimal_date()
   } else {
-    cli::cli_abort('`TimeUnits` must be one of: {.val {validTimeUnits}}')
+    cli::cli_abort("`TimeUnits` must be one of: {.val {validTimeUnits}}")
   }
-  
+
   hist <- hist |> round(4)
   proj <- proj |> round(4)
- 
-  if (is.null(Period))
+
+  if (is.null(Period)) {
     return(c(hist, proj))
+  }
 
-  if (grepl('H', Period))
+  if (grepl("H", Period)) {
     return(hist)
+  }
 
-  if (grepl('P', Period))
+  if (grepl("P", Period)) {
     return(proj)
+  }
 }
-
 
 
 # ---- Add Dimensions ----
 
 
-SumOverDimension <- function(array, name='Area') {
+SumOverDimension <- function(array, name = "Area") {
   d <- dim(array)
   nms <- names(dimnames(array))
-  ind <- which(nms==name)
+  ind <- which(nms == name)
   if (d[ind] == 1) {
     return(DropDimension(array))
   }
-  apply(array, nms[-ind], sum) 
+  apply(array, nms[-ind], sum)
 }
 
-DropDimension <- function(array, name='Area', warn=TRUE) {
+DropDimension <- function(array, name = "Area", warn = TRUE) {
   # drops the named dimension only if it is length one
   d <- dim(array)
   nms <- names(dimnames(array))
-  ind <- which(nms==name)
-  if (length(ind)<1)
-    cli::cli_abort('Dimension {.var {name}} not found ', .internal=TRUE)
-  
-  if (d[ind]>1 & warn) 
-    cli::cli_alert_warning('Note: Dropping dimension {.val {name}} but dimension length is > 1. Use `warn=FALSE` to suppress')
-  
+  ind <- which(nms == name)
+  if (length(ind) < 1) {
+    cli::cli_abort("Dimension {.var {name}} not found ", .internal = TRUE)
+  }
+
+  if (d[ind] > 1 & warn) {
+    cli::cli_alert_warning("Note: Dropping dimension {.val {name}} but dimension length is > 1. Use `warn=FALSE` to suppress")
+  }
+
   dNames <- dimnames(array)[-ind]
-  
-  array <- abind::asub(array, 1, ind, drop=FALSE) |>
+
+  array <- abind::asub(array, 1, ind, drop = FALSE) |>
     abind::adrop(ind)
-  
-  if (!inherits(array, 'array'))
-    array <- array(array, dimnames=dNames)
+
+  if (!inherits(array, "array")) {
+    array <- array(array, dimnames = dNames)
+  }
   array
 }
 
-AddDimension <- function(array, name=NULL, val=1) {
-  if (inherits(array, 'list'))
+AddDimension <- function(array, name = NULL, val = 1) {
+  if (inherits(array, "list")) {
     array <- unlist(array)
-  if (is.null(array))
+  }
+  if (is.null(array)) {
     return(NULL)
+  }
   d <- dim(array)
   nms <- names(dimnames(array))
-  if (name %in% nms)
+  if (name %in% nms) {
     return(array)
-  
-  if (all(d==1)) {
-    outarray <- array(array, dim=c(d, 1))
-  } else {
-    outarray <- replicate(1, array) 
   }
-  
+
+  if (all(d == 1)) {
+    outarray <- array(array, dim = c(d, 1))
+  } else {
+    outarray <- replicate(1, array)
+  }
+
   # set dimnames
   l <- dimnames(array)
   if (!is.null(l)) {
     l[name] <- val
-    dimnames(outarray) <- l  
+    dimnames(outarray) <- l
   }
   outarray
 }
 
-AddSimDimension <- function(array, names=c('Sim', 'Age', 'Year'), Years=NULL) {
+AddSimDimension <- function(array, names = c("Sim", "Age", "Year"), Years = NULL) {
   dd <- dim(array)
-  if (length(dd)==length(names))
-    return(AddDimNames(array, names, Years=Years))
-  
-  if (length(dd)==2) {
-    array <- replicate(1, array) |> aperm(c(3,1,2))
+  if (length(dd) == length(names)) {
+    return(AddDimNames(array, names, Years = Years))
   }
-  AddDimNames(array, names, Years=Years)
+
+  if (length(dd) == 2) {
+    array <- replicate(1, array) |> aperm(c(3, 1, 2))
+  }
+  AddDimNames(array, names, Years = Years)
 }
 
 
 AddAreaDimension <- function(array) {
   l <- dimnames(array)
   dd <- dim(array)
-  if (all(dd==1)) {
-    array <- array(array, dim=c(dd, 1))
+  if (all(dd == 1)) {
+    array <- array(array, dim = c(dd, 1))
   } else {
-    array <- replicate(1, array) 
+    array <- replicate(1, array)
   }
-  
+
   l$Area <- 1
   dimnames(array) <- l
   array
@@ -436,7 +467,7 @@ AddAreaDimension <- function(array) {
 #   if (is.null(object))
 #     return(object)
 #   dd <- dim(object)
-# 
+#
 #   if (outdim==4) {
 #     if (all(dd==1)) {
 #       object <- array(object, dim=c(1,1,1,1))
@@ -463,59 +494,67 @@ AddAreaDimension <- function(array) {
 #       }
 #     }
 #   }
-# 
-# 
-# 
+#
+#
+#
 #   object
 # }
 
 #' @export
-List2Array <- function(List, dimname="Fleet", dim1="Sim", ListDimNames=NULL, pos=NULL) {
-  if (inherits(List, 'array'))
+List2Array <- function(List, dimname = "Fleet", dim1 = "Sim", ListDimNames = NULL, pos = NULL) {
+  if (inherits(List, "array")) {
     return(List)
-  if (!length(List))
+  }
+  if (!length(List)) {
     return(NULL)
-  
-  
+  }
+
+
   UnList <- unlist(List)
-  if (length(UnList)<1)
+  if (length(UnList) < 1) {
     return(UnList)
-  
+  }
+
   if (is.null(dim(List[[1]]))) {
-    array <- array(UnList, 
-                   dim=c(length(List[[1]]), length(List)))
-    dimnames(array) <- list(dim1=1:nrow(array),
-                            temp=names(List))
+    array <- array(UnList,
+      dim = c(length(List[[1]]), length(List))
+    )
+    dimnames(array) <- list(
+      dim1 = 1:nrow(array),
+      temp = names(List)
+    )
     names(dimnames(array))[1] <- dim1
     names(dimnames(array))[2] <- dimname
     return(array)
-    
-  } 
-  
-  array <- array(UnList, 
-                 dim=c(dim(List[[1]]), length(List)))
+  }
+
+  array <- array(UnList,
+    dim = c(dim(List[[1]]), length(List))
+  )
 
   if (!is.null(dimname)) {
     if (!is.null(ListDimNames)) {
       dimnames(List[[1]]) <- ListDimNames
-    } 
+    }
     d <- dimnames(List[[1]])
-    
+
     if (!is.null(d)) {
       d[[dimname]] <- names(List)
-      dimnames(array) <- d 
+      dimnames(array) <- d
     }
- 
   }
-  
-  if (is.null(pos))
+
+  if (is.null(pos)) {
     return(array)
-  
-  dnames <- array |> dimnames() |> names()
-  dnamesDrop <- dnames[!dnames==dimname]
+  }
+
+  dnames <- array |>
+    dimnames() |>
+    names()
+  dnamesDrop <- dnames[!dnames == dimname]
   dnamesNew <- rep(NA, length(dnames))
   dnamesNew[pos] <- dimname
-  
+
   cnt <- 1
   for (i in seq_along(dnamesNew)) {
     if (is.na(dnamesNew[i])) {
@@ -523,127 +562,123 @@ List2Array <- function(List, dimname="Fleet", dim1="Sim", ListDimNames=NULL, pos
       cnt <- cnt + 1
     }
   }
-  
+
   array |> aperm(dnamesNew)
 }
 
-Array2List <- function(array, pos=3, sim=NULL) {
-  if (is.null(array))
+Array2List <- function(array, pos = 3, sim = NULL) {
+  if (is.null(array)) {
     return(array)
+  }
   dnames <- names(dimnames(array))
   if (is.character(pos)) {
     pos <- match(pos, dnames)
   }
-  
+
   dd <- dim(array)
-  
+
   if (!is.null(sim)) {
-    list <- vector('list', 1)
+    list <- vector("list", 1)
     indexvalue <- sim
   } else {
-    list <- vector('list', dd[pos])  
+    list <- vector("list", dd[pos])
     indexvalue <- 1:length(list)
   }
-  
-  
+
+
   dimnames <- dimnames(array)
-  
+
   listnames <- dimnames[[pos]][indexvalue]
   names(list) <- listnames
   keepnames <- dimnames[-pos]
   keepnames[[names(dimnames)[pos]]] <- 1
-  
+
   for (i in seq_along(indexvalue)) {
     tdimnames <- dimnames
-    tdimnames[pos] <-  dimnames[[pos]][indexvalue[i]]
-    val <- abind::adrop(abind::asub(array, tdimnames, drop=FALSE), pos)
+    tdimnames[pos] <- dimnames[[pos]][indexvalue[i]]
+    val <- abind::adrop(abind::asub(array, tdimnames, drop = FALSE), pos)
     if (is.null(dimnames(val))) {
       tdimnames[pos] <- NULL
-      val <- array(val, dim=length(val), dimnames=tdimnames)
+      val <- array(val, dim = length(val), dimnames = tdimnames)
     }
     list[[i]] <- val
-    
   }
   list
 }
 
-SetSeed <- function(seed=NULL) {
-  if (is.null(seed))
+SetSeed <- function(seed = NULL) {
+  if (is.null(seed)) {
     seed <- 101
+  }
   set.seed(seed)
 }
 
 
-
-
-
-
-
-
-
-get_in_dim <- function(req,  n_sim, p, n_age, n_ts, n_areas) {
+get_in_dim <- function(req, n_sim, p, n_age, n_ts, n_areas) {
   switch(req,
-         'SPAYR' = c(n_sim, p, n_age, n_ts, n_areas),
-         'SPA' = c(n_sim, p, n_age),
-         'SAY' = c(n_sim, n_age, n_ts),
-         'SAR' = c(n_sim, n_age, n_areas),
-         'SA' = c(n_sim, n_age),
-         'SR' = c(n_sim, n_areas),
-         'S' = n_sim,
-         'SY' = c(n_sim, n_ts)
+    "SPAYR" = c(n_sim, p, n_age, n_ts, n_areas),
+    "SPA" = c(n_sim, p, n_age),
+    "SAY" = c(n_sim, n_age, n_ts),
+    "SAR" = c(n_sim, n_age, n_areas),
+    "SA" = c(n_sim, n_age),
+    "SR" = c(n_sim, n_areas),
+    "S" = n_sim,
+    "SY" = c(n_sim, n_ts)
   )
 }
 
 get_out_index <- function(req, SPAYR) {
   switch(req,
-         'SPAYR' = SPAYR,
-         'SPA' = SPAYR[,1:3],
-         'SAY' = SPAYR[, c(1,3,4)],
-         'SAR' = SPAYR[, c(1,3,5)],
-         'SA' = SPAYR[, c(1,3)],
-         'SR' = SPAYR[, c(1,5)],
-         'S' = SPAYR[, 1],
-         'SY' = SPAYR[, c(1, 4)])
-
+    "SPAYR" = SPAYR,
+    "SPA" = SPAYR[, 1:3],
+    "SAY" = SPAYR[, c(1, 3, 4)],
+    "SAR" = SPAYR[, c(1, 3, 5)],
+    "SA" = SPAYR[, c(1, 3)],
+    "SR" = SPAYR[, c(1, 5)],
+    "S" = SPAYR[, 1],
+    "SY" = SPAYR[, c(1, 4)]
+  )
 }
 
 update_index <- function(array, exp_dim, out) {
   dd <- dim(array)
   if (is.null(dd)) {
-    if (length(array)==1) {
+    if (length(array) == 1) {
       out[] <- 1
       return(out)
     }
   }
 
-  match_dims <- dd==exp_dim
+  match_dims <- dd == exp_dim
 
-  if (all(match_dims)) return(out)
+  if (all(match_dims)) {
+    return(out)
+  }
 
   if (!all(match_dims)) {
     not_match <- which(!match_dims)
     if (is.null(dim(out))) {
       out[] <- 1
     } else {
-      out[,!match_dims] <- 1
+      out[, !match_dims] <- 1
     }
 
     return(out)
   }
 
-  if (all(dd==1)) {
+  if (all(dd == 1)) {
     out[] <- 1
     return(out)
   }
 }
 
-calc_index_dim_SPAYR <- function(array, req='S', n_sim, p, n_age, n_ts, n_areas) {
+calc_index_dim_SPAYR <- function(array, req = "S", n_sim, p, n_age, n_ts, n_areas) {
   SPAYR <- as.matrix(expand.grid(1:n_areas, 1:n_ts, 1:n_age, p, 1:n_sim)[5:1])
-  colnames(SPAYR) <- c('n_sim', 'stock', 'n_age', 'n_ts', 'n_areas')
+  colnames(SPAYR) <- c("n_sim", "stock", "n_age", "n_ts", "n_areas")
   out <- get_out_index(req, SPAYR)
-  if (req=='Sa') {
-    out <- get_out_index('SA', SPAYR)
-    out[,2]<- n_age-out[,2] + 1  # This is the process error index for initial year
+  if (req == "Sa") {
+    out <- get_out_index("SA", SPAYR)
+    out[, 2] <- n_age - out[, 2] + 1 # This is the process error index for initial year
   }
 
   exp_dim <- get_in_dim(req, n_sim, p, n_age, n_ts, n_areas)
@@ -656,21 +691,24 @@ ParsEmpty <- function(Pars) {
 }
 
 ParsNotEmpty <- function(Pars) {
-  if (length(Pars)==0) return(FALSE)
+  if (length(Pars) == 0) {
+    return(FALSE)
+  }
   !prod(unlist(lapply(Pars, is.na)))
 }
 
 GetIndex <- function(i, max_i) {
-  if (i>=max_i)
+  if (i >= max_i) {
     return(rep(1:max_i, i)[i])
+  }
   i
 }
 
 IdenticalS4 <- function(object1, object2) {
-  digest::digest(object1, algo='spookyhash') == digest::digest(object2, algo='spookyhash')
+  digest::digest(object1, algo = "spookyhash") == digest::digest(object2, algo = "spookyhash")
 }
 
-SetDigest <- function(object, argList=list()) {
+SetDigest <- function(object, argList = list()) {
   # object@Created <- NULL
   # object@Modified <- NULL
 
@@ -684,13 +722,13 @@ SetDigest <- function(object, argList=list()) {
   }
 
   attributes(object)$digest <- NULL
-  attributes(object)$digest <- digest::digest(list(argList,object), algo='spookyhash')
+  attributes(object)$digest <- digest::digest(list(argList, object), algo = "spookyhash")
   object
 }
 
 
-MakeNamedList <- function(names, values=NULL) {
-  l <- vector('list', length(names))
+MakeNamedList <- function(names, values = NULL) {
+  l <- vector("list", length(names))
   names(l) <- names
   if (!is.null(values)) {
     for (i in 1:length(l)) {
@@ -700,48 +738,52 @@ MakeNamedList <- function(names, values=NULL) {
   l
 }
 
-CheckDigest <- function(object, argList=list()) {
-  if (is.null(attributes(object)$digest))
+CheckDigest <- function(object, argList = list()) {
+  if (is.null(attributes(object)$digest)) {
     return(FALSE)
+  }
   SetDigest <- SetDigest(object, argList)
 
-  if (attributes(SetDigest)$digest == attributes(object)$digest)
+  if (attributes(SetDigest)$digest == attributes(object)$digest) {
     return(TRUE)
+  }
   FALSE
 }
 
 isNewObject <- function(object) {
   thisobject <- object
   newobject <- new(class(object))
-  
-  if ('Created' %in% slotNames(thisobject)) {
+
+  if ("Created" %in% slotNames(thisobject)) {
     thisobject@Created <- NULL
     thisobject@Modified <- NULL
     newobject@Created <- NULL
     newobject@Modified <- NULL
   }
-  if (identical(thisobject, newobject))
+  if (identical(thisobject, newobject)) {
     return(TRUE)
+  }
   FALSE
 }
 
 EmptyObject <- function(object) {
   if (isS4(object)) {
-
-    if (isNewObject(object))
+    if (isNewObject(object)) {
       return(TRUE)
+    }
 
     sltnms <- slotNames(object)
     empty <- rep(TRUE, length(sltnms))
     for (i in seq_along(sltnms)) {
       sl <- sltnms[i]
       val <- slot(object, sl)
-      if (inherits(val, 'function'))
+      if (inherits(val, "function")) {
         next()
+      }
       if (isS4(val)) {
         empty[i] <- Recall(val)
       } else {
-        empty[i] <- is.null(val) || length(val)==0 || all(is.na(val))
+        empty[i] <- is.null(val) || length(val) == 0 || all(is.na(val))
       }
     }
     return(prod(empty))
@@ -750,46 +792,42 @@ EmptyObject <- function(object) {
 }
 
 
-
-
 PopulatedObject <- function(object) {
   !is.null(attributes(object)$digest)
 }
 
-AddDimNames <- function(array, names=c('Sim', 'Age', 'Year'), 
-                        Years=NULL, Ages=NULL, Fleets=NULL,
-                        values=NULL) {
-  
-  if (inherits(array,'list'))
+AddDimNames <- function(array, names = c("Sim", "Age", "Year"),
+                        Years = NULL, Ages = NULL, Fleets = NULL,
+                        values = NULL) {
+  if (inherits(array, "list")) {
     array <- unlist(array)
-  if (is.null(array))
+  }
+  if (is.null(array)) {
     return(array)
+  }
   d <- dim(array)
   l <- list()
   for (i in seq_along(names)) {
-    if (names[i]=='Age') {
+    if (names[i] == "Age") {
       if (!is.null(Ages)) {
         l[[i]] <- Ages
       } else {
-        l[[i]] <- 0:(d[i]-1)
+        l[[i]] <- 0:(d[i] - 1)
       }
-        
-    } else if (names[i]=='Fleet' && !is.null(Fleets)) {
+    } else if (names[i] == "Fleet" && !is.null(Fleets)) {
       l[[i]] <- Fleets
-    } else if (names[i]=='Year' && !is.null(Years)) {
+    } else if (names[i] == "Year" && !is.null(Years)) {
       l[[i]] <- Years[1:d[i]]
     } else {
       if (is.null(values)) {
-        l[[i]] <- 1:d[i]  
+        l[[i]] <- 1:d[i]
       } else {
         if (!is.null(values[[i]]) && !any(is.na(values[[i]]))) {
           l[[i]] <- values[[i]]
         } else {
-          l[[i]] <- 1:d[i]  
+          l[[i]] <- 1:d[i]
         }
-          
       }
-      
     }
   }
 
@@ -799,19 +837,19 @@ AddDimNames <- function(array, names=c('Sim', 'Age', 'Year'),
 }
 
 # AddMeanAtAgeAttributes <- function(object, Years=NULL, Ages=NULL) {
-# 
+#
 #   object@MeanAtAge <- Structure(value=object@MeanAtAge,
 #                                 out=c('nsim', 'nage', 'nTS'))
-#   
-#   if (is.null(dimnames(object@MeanAtAge)))  
+#
+#   if (is.null(dimnames(object@MeanAtAge)))
 #     object@MeanAtAge <- object@MeanAtAge |> AddDimNames(Years=Years)
-# 
+#
 #   if ('Units' %in% slotNames(object))
 #     attributes(object@MeanAtAge)$Units <- object@Units
-# 
+#
 #   # if (is.null(attributes(object@MeanAtAge)$Years))
 #   #   attributes(object@MeanAtAge)$Years <- Years
-#   # 
+#   #
 #   if (methods::is(Ages, 'ages')) {
 #     # attributes(object@MeanAtAge)$Ages <- Ages@Classes
 #     attributes(object@MeanAtAge)$UnitsAge <- Ages@Units
@@ -820,31 +858,17 @@ AddDimNames <- function(array, names=c('Sim', 'Age', 'Year'),
 # }
 
 
-
-
-
-
-
-
-
-
-
-range01 <- function (x) {
-  (x - min(x))/(max(x) - min(x))
+range01 <- function(x) {
+  (x - min(x)) / (max(x) - min(x))
 }
-
-
-
 
 
 aperm <- function(a, perm, ...) {
-  if (is.null(a) || length(a)<1)
+  if (is.null(a) || length(a) < 1) {
     return(a)
+  }
   base::aperm(a, perm, ...)
 }
-
-
-
 
 
 # slots <- slotNames(HistSimList[[1]]@OM@Fleet$Female)
@@ -854,8 +878,3 @@ aperm <- function(a, perm, ...) {
 #   if (dig1 != dig2)
 #     stop(sl)
 # }
-
-
-
-
-

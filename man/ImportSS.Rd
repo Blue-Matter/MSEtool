@@ -24,7 +24,7 @@ ImportSS(
   Interval = 1,
   DataLag = 0,
   silent = FALSE,
-  populate = TRUE,
+  Populate = TRUE,
   ...
 )
 

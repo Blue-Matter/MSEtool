@@ -7,32 +7,48 @@ OM2Hist <- function(OM, silent=FALSE) {
     id <- cli::cli_progress_bar("Initializing `Hist` Object")  
   }
     
-  # Populate if needeed
+  # Populate if needed 
   OM <- PopulateOM(OM, silent=silent) 
   
   Hist <- new('hist')
   Hist@OM <- OM
   HistYears <- Years(OM, 'Historical')
-  nArea <- nArea(OM)
   nYears <- length(HistYears)
   nSim <- OM@nSim
   
-  # Stock
+
+  # Stock - expand all arrays to include all Sims and all Years
+  # TODO - this could be improved later by keeping all arrays at the minimum
+  #        size and updating the code to match Sim/Year
   Hist@OM@Stock <- purrr::map(OM@Stock, \(Stock) {
     Stock <- ExtendStock(Stock, nSim, HistYears, silent, id)
     Stock@SRR@SPFrom <- match(Stock@SRR@SPFrom, StockNames(OM))
     Stock
   })
-                              
-  # Fleet
-  AgeClassList <- purrr::map(Hist@OM@Stock, \(Stock) 
-                             Stock@Ages@Classes)
   
+
+  # Fleet
+  # Extend Fleet arrays to include all Sims and historical years
+  AgeClassList <- purrr::map(Hist@OM@Stock, \(Stock) Stock@Ages@Classes)
   Hist@OM@Fleet <- purrr::map2(Hist@OM@Fleet, AgeClassList, \(FleetList, AgeClasses)
-                               ExtendFleet(FleetList, AgeClasses, nSim, HistYears, nArea, silent, id)
+                               ExtendFleet(FleetList, AgeClasses, nSim, HistYears, silent, id)
   )
   
   # Time Series 
+  
+  
+  # UP TO HERE
+  # ---------------------- DEBUG ----------------------
+  
+  
+  
+  
+  
+  stop()
+  # -------------------- END DEBUG --------------------
+  
+  
+  
   Hist@Number <- ListArraySimAgeTimeArea(OM, 'Historical') 
   Hist@Biomass <- ListArraySimAgeTime(OM, 'Historical') |> 
     lapply(DropDimension, 'Age', FALSE) |>

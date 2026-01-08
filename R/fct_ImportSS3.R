@@ -24,7 +24,7 @@ ImportSS <- function(SSDir,
                      Interval=1,
                      DataLag=0,
                      silent=FALSE,
-                     populate=TRUE,
+                     Populate=TRUE,
                      ...) {
   OnExit()
   RepList <- ImportSSReport(SSDir, silent, ...)
@@ -109,8 +109,10 @@ ImportSS <- function(SSDir,
   # OM@Complexes
   
   # OM@Relations
-  if (!populate)
+  if (!Populate) {
     return(OM)
+  }
+    
   PopulateOM(OM)
 }
 
@@ -820,8 +822,8 @@ SS2SRR <- function(st, RepList, YearsList, Ages, nSim) {
 SS2Fleet <- function(st, fl, RepList, YearsList, FleetNames, Stock) {
   AgeClasses <- Stock@Ages@Classes
   Fleet <- Fleet(FleetNames[fl])
-  Fleet@Effort@Value <- SS2Effort(st, fl, RepList, YearsList)
-  Fleet@Catchability@Value <- SS2Catchability(st, fl, RepList, YearsList)
+  Fleet@Effort@Effort <- SS2Effort(st, fl, RepList, YearsList)
+  Fleet@Catchability@Efficiency <- SS2Catchability(st, fl, RepList, YearsList)
   Fleet@DiscardMortality <- SS2DiscardMortality(st, fl, RepList, YearsList, Stock)
   Fleet@Selectivity <- SS2Selectivity(st, fl, RepList, YearsList, Stock)
   Fleet@Retention <- SS2Retention(st, fl, RepList, YearsList, 

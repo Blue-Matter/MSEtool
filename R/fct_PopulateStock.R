@@ -17,7 +17,7 @@ PopulateStock <- function(Stock,
     return(Stock)
   }
   
-  if (CheckDigest(Stock, argList) & ~force) {
+  if (CheckDigest(Stock, argList) & !force) {
     return(Stock)
   }
   
@@ -530,8 +530,13 @@ PopulateSRR <- function(SRR,
   
   SetSeed(seed)
   
+  # TODO - should add some checks here to make sure parameters/model are ok
   SRR@Pars <- StructurePars(Pars=SRR@Pars, nSim, Years)
   SRR@Model <- FindModel(SRR)
+  
+  if (is.character(SRR@Model) && is.null(SRR@RelRecFun)) {
+    SRR@RelRecFun <- paste(Stock@SRR@Model, "RelRec", sep='_')
+  }
   
   pars <- StructurePars(list(SRR@R0, SRR@SD, SRR@AC), nSim, Years)
   SRR@R0 <- pars[[1]]

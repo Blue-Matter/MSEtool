@@ -11,7 +11,7 @@
 #' @export
 setClass("effort",
          slots=c(
-           Value='num.array.df',
+           Effort='num.array.df',
            Units='char.null',
            Distribution='num.array'  
          ),
@@ -22,12 +22,12 @@ setValidity('effort', isValidObject)
 
 
 setMethod("initialize", "effort", function(.Object,
-                                           Value=NULL,
+                                           Effort=NULL,
                                            Units='',
                                            Distribution=NULL,
                                            Misc=list()) {
   
-  .Object@Value <- Value
+  .Object@Effort <- Effort
   .Object@Units <- Units
   .Object@Distribution <- Distribution
   .Object@Misc <- Misc
@@ -38,18 +38,18 @@ setMethod("initialize", "effort", function(.Object,
 
 #' @rdname Effort
 #' @export
-Effort <- function(Value=NULL,
+Effort <- function(Effort=NULL,
                    Units='',
                    Distribution=NULL,
                    Misc=list()) {
   
-  if (inherits(Value,'fleet'))
+  if (inherits(Effort,'fleet'))
     return(
-      Value@Effort
+      Effort@Effort
     )
   
   methods::new('effort',
-               Value=Value,
+               Effort=Effort,
                Units=Units,
                Distribution=Distribution,
                Misc=Misc)

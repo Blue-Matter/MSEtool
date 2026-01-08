@@ -695,7 +695,7 @@ BevertonHolt <- function(S, S0, R0, h) {
 class(BevertonHolt) <- 'SRR-Model'
 
 # TODO RelRec functions for HockeyStick
-BevertonHoltRelRec <- function(Pars, SPR) {
+BevertonHolt_RelRec <- function(Pars, SPR) {
   if (is.array(SPR)) 
     cli::cli_abort("`SPR` must be numeric length 1.")
 

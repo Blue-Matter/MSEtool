@@ -3,15 +3,12 @@
 \docType{class}
 \name{Catchability}
 \alias{Catchability}
+\alias{Efficiency}
 \title{Catchability Object}
 \usage{
-Catchability(
-  Value = NULL,
-  qArea = NULL,
-  qCV = NULL,
-  qInc = NULL,
-  Misc = list()
-)
+Catchability(Efficiency = NULL, qCV = NULL, qInc = NULL, Misc = list())
+
+Efficiency(object)
 }
 \description{
 Historical Catchability
@@ -19,6 +16,8 @@ Historical Catchability
 \section{Slots}{
 
 \describe{
+\item{\code{Efficiency}}{Gear efficiency (q)}
+
 \item{\code{Misc}}{A list for additional miscellaneous objects. Not currently used.}
 }}
 

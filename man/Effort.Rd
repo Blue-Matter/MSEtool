@@ -6,7 +6,7 @@
 \alias{Effort<-}
 \title{Effort Object}
 \usage{
-Effort(Value = NULL, Units = "", Distribution = NULL, Misc = list())
+Effort(Effort = NULL, Units = "", Distribution = NULL, Misc = list())
 
 Effort(x) <- value
 }
