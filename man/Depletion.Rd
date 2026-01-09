@@ -98,7 +98,7 @@ relative to \code{Reference} in the last historical time step.  See \code{Detail
 
 \item{\code{Reference}}{The reference point used to calculate Depletion.  See \code{Details}.}
 
-\item{\code{Misc}}{A list for additional miscellaneous objects. Not currently used.}
+\item{\code{Misc}}{A list for additional miscellaneous objects}
 }}
 
 \examples{

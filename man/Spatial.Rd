@@ -35,7 +35,7 @@ See \code{Details}.}
 
 \item{CVStay}{The logit CV associated with \code{ProbStaying} (used as a penalty when optimizing for diagonal (\code{ProbStaying})). See \code{?FitMovement} for details.}
 
-\item{Misc}{A list for additional miscellaneous objects. Not currently used.}
+\item{Misc}{A list for additional miscellaneous objects}
 
 \item{x}{A \code{\link[=Stock]{Stock()}} object}
 
@@ -169,7 +169,7 @@ See \code{Details}.}
 
 \item{\code{CVStay}}{The logit CV associated with \code{ProbStaying} (used as a penalty when optimizing for diagonal (\code{ProbStaying})). See \code{?FitMovement} for details.}
 
-\item{\code{Misc}}{A list for additional miscellaneous objects. Not currently used.}
+\item{\code{Misc}}{A list for additional miscellaneous objects}
 }}
 
 \examples{

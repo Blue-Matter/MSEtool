@@ -9,6 +9,10 @@ CalcEquilibriumUnfished(OM)
 \arguments{
 \item{OM}{An \code{\link[=OM]{OM()}} object}
 }
+\value{
+A \link{PopDynamics} object with equilibrium unfished Number, Biomass, SBiomass, and SProduction
+}
 \description{
-Calculate Equilibrium Unfished
+Calculates the equilbrium unfished number, biomass, spawning biomass, and
+spawning production for all \code{\link[=Stock]{Stock()}} objects in an \code{\link[=OM]{OM()}}
 }

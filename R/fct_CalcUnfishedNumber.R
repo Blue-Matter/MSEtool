@@ -1,165 +1,219 @@
-# NOTE: Equilibrium N-at-Age is calculated from R0 (which may vary over time)
-# but does NOT account for expected recruitment from the stock-recruit relationship.
-# i.e., an expected change in recruitment if Fecundity-at-Age changes over time
-# e.g., change in Weight-at-Age etc
-# - that should already by accounted for in R0
+# TODO - need to add Herm
+# TODO - speed up over identical Sims, Years
 
-
+#' Calculate Equilibrium Unfished Number-at-Age
+#' 
+#' Calculates the equilibrium unfished number-at-age
+#' 
+#' Equilibrium N-at-Age is calculated from `R0` (which may vary over time) 
+#' but does NOT account for expected recruitment from the stock-recruit relationship.
+#' 
+#' Any changes in `R0` due to time-varying biology (Fecundity-at-Age changes over time)
+#' should be accounted for in `R0`.
+#'   
+#' @param OM An [OM()] object
+#' @param SP Logical. Account for `SpawnTimeFrac`? Accounts for spawning timing within a time step to 
+#' calculate the number-at-age at the time of spawning
+#' 
+#' @return A named list of length [nStock()] with each element an array with dimensions
+#' Sim, Age, and Year
+#' 
+#' @export
 CalcUnfishedNumber <- function(OM, SP = FALSE) {
+  
   if (IsSeasonalRecruitment(OM)) {
-    return(
-      CalcUnfishedNumber_seasonal(OM, SP)
-    )
+    # Seasonal OM with recruitment changing over seasons for at least 1 stock
+    return(CalcUnfishedNumber_seasonal(OM, SP))
   }
-
+  
+  # Unfished survival by Sim, Age, and Year for each Stock
+  UnfishedSurvival_List <- CalcUnfishedSurvival(OM, SP, Years=Years(OM,'Hist')) 
+  
+  # R0 for each Stock 
   R0List <- purrr::map(OM@Stock, \(Stock) {
     Stock@SRR@R0 |>
       AddDimension("Age") |>
       aperm(c("Sim", "Age", "Year"))
   })
-
-  UnfishedSurvival_List <- CalcUnfishedSurvival(OM, SP)
-  UnfishedNumberAtAge <- purrr::map2(UnfishedSurvival_List, R0List, ArrayMultiply)
-  UnfishedNumberAtAge
-}
-
-CalcUnfishedNumber_seasonal_stock <- function(Stock, SP=FALSE) {
-  AgeClasses <- Stock@Ages@Classes
-  MaxAge <- max(AgeClasses)
-  nAge <- length(AgeClasses)
   
-  
+  # Multiply R0 by Survival
+  purrr::map2(UnfishedSurvival_List, R0List, ArrayMultiply)
   
 }
-CalcUnfishedNumber_seasonal <- function(OM, SP = FALSE) {
-  OM <- PopulateOM(OM)
-  nStock <- nStock(OM)
-  nSim <- OM@nSim
-  Years <- OM@Years
-  nYear <- length(Years)
-  nSeason <- Seasons(OM)
-  UnfishedNumberAtAge <- MakeNamedList(StockNames(OM))
-
-  for (st in 1:nStock) {
-    Stock <- OM@Stock[[st]]
-    AgeClasses <- Stock@Ages@Classes
-    MaxAge <- max(AgeClasses)
-    nAge <- length(AgeClasses)
-    
-    R0 <- Stock@SRR@R0 |>
-      ExtendYears(Years) |>
-      ExtendSims(nSim)
-    
-    NaturalMortality <- Stock@NaturalMortality@MeanAtAge |>
-      ExtendYears(Years) |>
-      ExtendSims(nSim)
-    PlusGroup <- Stock@Ages@PlusGroup
-    SpawnTimeFrac <- ifelse(SP, Stock@SRR@SpawnTimeFrac, 0)
-    Semelparous <- Stock@Maturity@Semelparous
-
-    if (is.logical(Semelparous)) {
-      Semelparous <- array(0,
-        dim = c(nSim, nAge, nYear),
-        dimnames = list(
-          Sim = 1:nSim,
-          Age = AgeClasses,
-          Year = Years
-        )
-      )
-    }
-
-    Semelparous <- Semelparous |>
-      ExtendYears(Years) |>
-      ExtendSims(nSim)
-
-    UnfishedNumberAtAgeStock <- array(0, c(nSim, nAge, nYear),
-      dimnames = list(
-        Sim = 1:nSim,
-        Age = AgeClasses,
-        Year = Years
-      )
-    )
-
-    # Initial Year - runs out pop dynamics to account for plus group with seasonal recruitment
-    UnfishedInitialYear <- CalcUnfishedNumber_seasonal_initial_year(R0, nSim, AgeClasses, 
-                                                                    nSeason, NaturalMortality, 
-                                                                    Semelparous, SpawnTimeFrac, PlusGroup)
-    UnfishedNumberAtAgeStock[, , 1:nSeason] <- UnfishedInitialYear
-    UnfishedNumberAtAgeStock[,1,] <- R0
-
-    # Year 2+
-    for (ts in (nSeason + 1):length(Years)) {
-      for (age in seq_along(AgeClasses)[-1]) {
-        Age <- AgeClasses[age]
-        MLastAge <- NaturalMortality[, age - 1, ts - 1, drop = FALSE]
-        MThisAge <- NaturalMortality[, age, ts - 1, drop = FALSE]
-        PostSpawnMortalityLastAge <- Semelparous[, age - 1, ts - 1]
-
-        surv <- exp(-(MLastAge * (1 - SpawnTimeFrac) + MThisAge * SpawnTimeFrac)) *
-          (1 - PostSpawnMortalityLastAge)
-
-        UnfishedNumberAtAgeStock[, age, ts] <- UnfishedNumberAtAgeStock[, age - 1, ts - 1, drop = FALSE] * surv
-      }
-      if (PlusGroup) {
-        PostSpawnMortalityThisAge <- Semelparous[, age, ts]
-        UnfishedNumberAtAgeStock[, age, ts] <- UnfishedNumberAtAgeStock[, age, ts] + UnfishedNumberAtAgeStock[, age, ts - 1] * exp(-MThisAge) * (1 - PostSpawnMortalityThisAge)
-      }
-    }
-
-    UnfishedNumberAtAge[[st]] <- UnfishedNumberAtAgeStock
-  }
-  UnfishedNumberAtAge
-}
 
 
+# Is the OM seasonal with R0 changing over seasons?
 IsSeasonalRecruitment <- function(OM) {
   if (OM@Seasons == 1) {
     return(FALSE)
   }
-
+  
   R0Array <- purrr::map(OM@Stock, \(Stock) {
     Stock@SRR@R0
   }) |>
     List2Array("Stock") |>
     aperm(c("Sim", "Stock", "Year")) |>
     ArrayReduceDims()
-
+  
   dim(R0Array)[[3]] > 1
 }
 
-CalcUnfishedNumber_seasonal_initial_year <- function(R0, nSim, AgeClasses, nSeason, NaturalMortality, Semelparous, SpawnTimeFrac, PlusGroup) {
-  nAge <- length(AgeClasses)
+CalcUnfishedNumber_seasonal <- function(OM, SP = FALSE) {
+  OM <- PopulateOM(OM, silent)
+  Years <- Years(OM,'Hist')
+  nYear <- OM@nYear
+  StockList <- MakeNamedList(StockNames(OM))
+  
+  for (st in 1:nStock(OM)) {
+    Stock=OM@Stock[[st]]
+    AgeClasses <- Stock@Ages@Classes
+    MaxAge <- max(AgeClasses)
+    nAge <- length(AgeClasses)
+    nSim <- Stock@nSim
+    nSeason <- OM@Seasons
+    
+    N_Stock <- array(NA, dim=c(nSim, nAge, length(Years)),
+                     dimnames=list(Sim=1:nSim, Age=AgeClasses, Year=Years))
+    
+    # R0 Sim by Year                              
+    R0 <- Extend(Stock@SRR@R0, nSim, NULL, Years)
+    
+    # Sim, Age, Year
+    NaturalMortality <- Extend(Stock@NaturalMortality@MeanAtAge, nSim, AgeClasses, Years)
+    
+    PlusGroup <- Stock@Ages@PlusGroup
+    SpawnTimeFrac <- ifelse(SP, Stock@SRR@SpawnTimeFrac, 0)
+    SpawnTimeFrac <- rep(SpawnTimeFrac, nSim)[1:nSim]
+    Semelparous <- ProcessSemelparuous(Stock@Maturity@Semelparous, nSim, AgeClasses, Years)
 
-  # Equilibrium Age-Structure for all seasons in the First Year
-  runoutSeasons <- nAge * 2 * nSeason
-  InitialAgeStructure <- array(0, c(nSim, nAge, runoutSeasons))
-
-  # no doubt a better way to do this, but this works for now ...
-  InitialAgeStructure[, 1, ] <- R0[, 1:nSeason]
-
-  for (ts in 2:runoutSeasons) {
-    for (age in seq_along(AgeClasses)[-1]) {
-      ThisSeasonIndex <- ts %% nSeason
-      if (ThisSeasonIndex == 0) {
-        ThisSeasonIndex <- nSeason
-      }
-      LastSeasonIndex <- ThisSeasonIndex - 1
-      if (LastSeasonIndex == 0) {
-        LastSeasonIndex <- nSeason
-      }
-
-      MLastAge <- NaturalMortality[, age - 1, LastSeasonIndex, drop = FALSE]
-      PostSpawnMortalityLastAge <- Semelparous[, age - 1, LastSeasonIndex]
-      MThisAge <- NaturalMortality[, age, ThisSeasonIndex, drop = FALSE]
-      PostSpawnMortalityThisAge <- Semelparous[, age, ThisSeasonIndex]
-
-      surv <- exp(-(MLastAge * (1 - SpawnTimeFrac) + MThisAge * SpawnTimeFrac)) * (1 - PostSpawnMortalityLastAge)
-      
-      InitialAgeStructure[, age, ts] <- InitialAgeStructure[, age - 1, ts - 1] * surv
+    # Check if seasonal values vary over years
+    season_block_2d <- function(x, y, nSeason) {
+      idx <- ((y - 1) * nSeason + 1):(y * nSeason)
+      x[, idx, drop = FALSE]
     }
-    if (PlusGroup) {
-      InitialAgeStructure[, age, ts] <- InitialAgeStructure[, age, ts] + InitialAgeStructure[, age, ts - 1] * exp(-MThisAge) * (1 - PostSpawnMortalityThisAge)
+    
+    season_block_3d <- function(x, y, nSeason) {
+      idx <- ((y - 1) * nSeason + 1):(y * nSeason)
+      x[, , idx, drop = FALSE]
+    }
+    
+    identical_years <- all(
+      purrr::map_lgl(2:nYear, ~
+                isTRUE(all.equal(season_block_2d(R0, 1, nSeason),
+                                 season_block_2d(R0, .x, nSeason),
+                                 check.attributes = FALSE)) &&
+                isTRUE(all.equal(season_block_3d(NaturalMortality, 1, nSeason),
+                                 season_block_3d(NaturalMortality, .x, nSeason),
+                                 check.attributes = FALSE)) &&
+                isTRUE(all.equal(season_block_3d(Semelparous, 1, nSeason),
+                                 season_block_3d(Semelparous, .x, nSeason),
+                                 check.attributes = FALSE))
+      )
+    )
+    
+    if (identical_years) {
+      SeasonInd <- 1:nSeason
+      N_eq <- CalcUnfishedNumber_equilibrium_season(
+        R0_season     = R0[, SeasonInd, drop = FALSE],
+        M_season      = NaturalMortality[, , SeasonInd, drop = FALSE],
+        Semel_season  = Semelparous[, , SeasonInd, drop = FALSE],
+        SpawnTimeFrac = SpawnTimeFrac,
+        AgeClasses    = AgeClasses,
+        PlusGroup     = PlusGroup,
+        nSeason       = nSeason
+      )
+      N_Stock[] <- array(rep(N_eq, nYear), dim = dim(N_Stock))
+    } else {
+      # Loop over years 
+      for (y in 1:nYear) {
+        SeasonInd <- ((y - 1) * nSeason + 1):(y * nSeason)
+        N_Stock[,,SeasonInd] <- CalcUnfishedNumber_equilibrium_season(R0_season=R0[,SeasonInd, drop=FALSE], 
+                                                                      M_season=NaturalMortality[,,SeasonInd, drop=FALSE],
+                                                                      Semel_season=Semelparous[,,SeasonInd, drop=FALSE],
+                                                                      SpawnTimeFrac,
+                                                                      AgeClasses,
+                                                                      PlusGroup,
+                                                                      nSeason)
+        
+      }
+    }
+    StockList[[st]] <- N_Stock
+    
+  }
+  StockList
+}
+
+
+# Iterates until reaching stable age structure
+CalcUnfishedNumber_equilibrium_season <- function(R0_season, 
+                                                  M_season, 
+                                                  Semel_season,
+                                                  SpawnTimeFrac,
+                                                  AgeClasses, 
+                                                  PlusGroup,
+                                                  nSeason, 
+                                                  tol = 1e-10,
+                                                  max_iter = 5000) {
+  
+  
+  nSim <- dim(R0_season)[1]
+  nAge <- length(AgeClasses)
+  
+ 
+  NumberSeason <- array(1, dim = c(nSim, nAge, nSeason))
+  
+  for (iter in seq_len(max_iter)) {
+    
+    Number_old <- NumberSeason
+    
+    for (s in seq_len(nSeason)) {
+      
+      # previous season index
+      s_prev <- ifelse(s == 1, nSeason, s - 1)
+      
+      # Abundance entering season s
+      N_prev <- NumberSeason[, , s_prev]  
+      
+      # Recruitment 
+      N_new <- matrix(0, nrow = nSim, ncol = nAge)
+      N_new[, 1] <- R0_season[, s]
+      
+      # Natural mortality before spawning 
+      Z_pre <- M_season[, , s] * SpawnTimeFrac
+      N_spawn <- N_prev * exp(-Z_pre)
+      
+      # Semelparous mortality after spawning 
+      N_post_spawn <- N_spawn * (1-Semel_season[, , s])
+      
+      # Natural mortality after spawning 
+      Z_post <- M_season[, , s] * (1 - SpawnTimeFrac)
+      N_survive <- N_post_spawn * exp(-Z_post)
+      
+      #  Ageing 
+      N_new[, 2:nAge] <- N_survive[, 1:(nAge - 1)]
+      
+      if (PlusGroup) {
+        N_new[, nAge] <- N_new[, nAge] + N_survive[, nAge]
+      }
+      
+      NumberSeason[, , s] <- N_new
+    }
+    
+    # Convergence check across all simulations 
+    if (max(abs(NumberSeason - Number_old)) < tol) {
+      break
     }
   }
-  InitialAgeStructure[, , (runoutSeasons - nSeason + 1):runoutSeasons, drop = FALSE]
+  
+  if (iter == max_iter) {
+    cli::cli_alert_warning("Equilibrium not reached for at least one simulation in `CalcUnfishedNumber_equilibrium_season`")
+  }
+  
+  return(NumberSeason)
 }
+
+
+
+
+
+

@@ -27,10 +27,9 @@ setClass('fleet',
                  DiscardMortality='discardmortality',
                 
                  Closure='num.array', # historical spatial closures
-                 Targeting='num.array', # spatial targeting - not currently used
                  
                  WeightFleet='array.null',
-                 BioEconomic='list',
+                 BioEconomic='bioeconomic',
                  
                  nYear='num.null',
                  pYear='num.null',
@@ -51,9 +50,8 @@ setMethod("initialize", "fleet", function(.Object,
                                           Retention=new('retention'),
                                           DiscardMortality=new('discardmortality'),
                                           Closure=array(),
-                                          Targeting=array(),
                                           WeightFleet=array(),
-                                          BioEconomic=list(),
+                                          BioEconomic=new('bioeconomic'),
                                           Misc=list()) {
   
   .Object@Name <- Name
@@ -65,7 +63,6 @@ setMethod("initialize", "fleet", function(.Object,
   .Object@DiscardMortality <- DiscardMortality
   
   .Object@Closure <- Closure
-  .Object@Targeting <- Targeting
   
   .Object@WeightFleet <- WeightFleet
   .Object@BioEconomic <- BioEconomic
@@ -83,9 +80,8 @@ Fleet <- function( Name=NULL,
                    Retention=new('retention'),
                    DiscardMortality=new('discardmortality'),
                    Closure=array(),
-                   Targeting=array(),
                    WeightFleet=array(),
-                   BioEconomic=list(),
+                   BioEconomic=new('bioeconomic'),
                    Misc=list()) {
   
   if (methods::is(Name, 'om'))
@@ -99,7 +95,6 @@ Fleet <- function( Name=NULL,
                Retention=Retention,
                DiscardMortality=DiscardMortality,
                Closure=Closure,
-               Targeting=Targeting,
                WeightFleet=WeightFleet,
                BioEconomic=BioEconomic,
                Misc=Misc)

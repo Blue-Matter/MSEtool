@@ -18,6 +18,6 @@ Historical Catchability
 \describe{
 \item{\code{Efficiency}}{Gear efficiency (q)}
 
-\item{\code{Misc}}{A list for additional miscellaneous objects. Not currently used.}
+\item{\code{Misc}}{A list for additional miscellaneous objects}
 }}
 

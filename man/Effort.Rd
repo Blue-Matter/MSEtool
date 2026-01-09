@@ -6,7 +6,13 @@
 \alias{Effort<-}
 \title{Effort Object}
 \usage{
-Effort(Effort = NULL, Units = "", Distribution = NULL, Misc = list())
+Effort(
+  Effort = NULL,
+  Units = "",
+  Distribution = NULL,
+  Maximum = NULL,
+  Misc = list()
+)
 
 Effort(x) <- value
 }
@@ -21,6 +27,6 @@ Historical Fishing Effort
 \section{Slots}{
 
 \describe{
-\item{\code{Misc}}{A list for additional miscellaneous objects. Not currently used.}
+\item{\code{Misc}}{A list for additional miscellaneous objects}
 }}
 

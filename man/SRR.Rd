@@ -57,7 +57,7 @@ internally from \code{SD} and \code{AC} if not specified.}
 \item{SpawnTimeFrac}{Numeric value between 0 (default) and 1. The relative time in between
 the time steps when spawning occurs, with 0 indicating the beginning of the time step.}
 
-\item{Misc}{A list for additional miscellaneous objects. Not currently used.}
+\item{Misc}{A list for additional miscellaneous objects}
 
 \item{x}{A \code{\link[=Stock]{Stock()}} object}
 
@@ -151,7 +151,7 @@ internally from \code{SD} and \code{AC} if not specified.}
 \item{\code{SpawnTimeFrac}}{Numeric value between 0 (default) and 1. The relative time in between
 the time steps when spawning occurs, with 0 indicating the beginning of the time step.}
 
-\item{\code{Misc}}{A list for additional miscellaneous objects. Not currently used.}
+\item{\code{Misc}}{A list for additional miscellaneous objects}
 }}
 
 \examples{

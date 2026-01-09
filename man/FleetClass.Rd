@@ -15,9 +15,8 @@ Fleet(
   Retention = new("retention"),
   DiscardMortality = new("discardmortality"),
   Closure = array(),
-  Targeting = array(),
   WeightFleet = array(),
-  BioEconomic = list(),
+  BioEconomic = new("bioeconomic"),
   Misc = list()
 )
 
@@ -42,7 +41,7 @@ Fleet Object
 \section{Slots}{
 
 \describe{
-\item{\code{Misc}}{A list for additional miscellaneous objects. Not currently used.}
+\item{\code{Misc}}{A list for additional miscellaneous objects}
 }}
 
 \seealso{

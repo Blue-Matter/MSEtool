@@ -52,7 +52,7 @@ Stock(x) <- value
 
 \item{Depletion}{A \code{\link[=Depletion]{Depletion()}} object. Optional.}
 
-\item{Misc}{A list for additional miscellaneous objects. Not currently used.}
+\item{Misc}{A list for additional miscellaneous objects}
 
 \item{x}{A \code{\link[=OM]{OM()}} class object}
 
@@ -127,7 +127,7 @@ produce a deterministic operating model. Can be left empty and will be populated
 
 \item{\code{Year}}{Numeric vector specifying the years (fraction of years for seasons)}
 
-\item{\code{Misc}}{A list for additional miscellaneous objects. Not currently used.}
+\item{\code{Misc}}{A list for additional miscellaneous objects}
 
 \item{\code{Log}}{A list. Used internally for logging and debugging.}
 }}

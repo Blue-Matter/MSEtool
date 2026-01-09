@@ -40,7 +40,7 @@ Will also be used for calculating at-length schedules, e.g., \code{\link[=Maturi
 
 \item{Semelparous}{Logical. Do animals die after spawning?}
 
-\item{Misc}{A list for additional miscellaneous objects. Not currently used.}
+\item{Misc}{A list for additional miscellaneous objects}
 
 \item{x}{A \code{\link[=Stock]{Stock()}} object}
 
@@ -128,7 +128,7 @@ Will also be used for calculating at-length schedules, e.g., \code{\link[=Maturi
 
 \item{\code{Semelparous}}{Logical. Do animals die after spawning?}
 
-\item{\code{Misc}}{A list for additional miscellaneous objects. Not currently used.}
+\item{\code{Misc}}{A list for additional miscellaneous objects}
 }}
 
 \examples{

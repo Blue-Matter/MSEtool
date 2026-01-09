@@ -48,11 +48,24 @@ Simulate_om <- function(OM = NULL,
   # ---- Calculate Equilibrium Unfished ----
   Hist@Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
   
+  # ---- Dynamic Number-at-Age for Initial Time Step ----
+  # - initial age structure
+  # - distribute over areas
+  # - account for Initial Depletion 
+  Hist <- CalcDynamicInitial(Hist)
   
   
-
-
-
+  
+  # ---------------------- DEBUG ----------------------
+  
+  
+  
+  # up to here ...
+  
+  stop()
+  # -------------------- END DEBUG --------------------
+  
+  
   # ---- Add Reference Points if they exist ----
   # won't be re-calculated
  
@@ -60,26 +73,15 @@ Simulate_om <- function(OM = NULL,
     Hist@Reference@MSY <- RefPointsMSY
   }
 
+  
 
-
-  # ---- Calculate Number-at-Age for Initial Time Step ----
-  Hist <- CalcInitialYear(Hist)
 
   # ---- Build SimList ----
   SimList <- Hist2SimList(Hist) # List of `Hist` objects, each with one simulation
   
   
-  # ---------------------- DEBUG ----------------------
   
-  t <- SimulateDynamics(SimList,   HistYears[1:2]) 
-  t$`1`@Number$Albacore[,1:3,]
-  
-  
-  
-  
-  # -------------------- END DEBUG --------------------
-  
-  
+
 
   # ---- Calculate Reference Points ----
   SimList <- CalcSPR0(SimList) # unfished spawning per recruit (i.e. fecundity)
@@ -87,7 +89,7 @@ Simulate_om <- function(OM = NULL,
   if (!inherits(Reference, "logical")) {
     SimList <- CalcMSYRefPoints(SimList, RefPointYears, Reference$MSY)
   }
-
+  
   # TODO
   # - Per-Recruit Curves
   # - FCrash, etc

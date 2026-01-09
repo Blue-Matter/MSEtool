@@ -1,204 +1,94 @@
-CalcSurvival <- function(NaturalMortalityAtAge, # Sim, nAge, nTS (Sim optional)
-                         FishingMortalityAtAge=NULL, # Sim, nAge, nTS (Sim optional)
-                         PlusGroup=TRUE, # logical 
-                         SpawnTimeFrac=NULL, # double (can be length Sim)  
-                         Semelparous=FALSE) { # FALSE or array Sim, nAge, nTS  (Sim optional)
-  
-  
-  TotalMortalityAtAge <- NaturalMortalityAtAge
-  if (!is.null(FishingMortalityAtAge))
-    TotalMortalityAtAge <- ArrayAdd(NaturalMortalityAtAge, FishingMortalityAtAge)
-  
-  BySim <- "Sim" %in% names(dimnames(NaturalMortalityAtAge))
-  survival <- TotalMortalityAtAge
-  survival[] <- 0
-  
-  AgeInd <- which(names(dimnames(NaturalMortalityAtAge)) == 'Age')
-  nAge <- dim(NaturalMortalityAtAge)[AgeInd]
+# TODO - use IsIdenticalSim and IdenticalYears to speed up if identical over sims and/or years
 
-  if (is.null(SpawnTimeFrac)) 
-    SpawnTimeFrac <- 0
+#' Calculate Survival 
+#' 
+#' @param NaturalMortality Natural Mortality by Age. A 3D array with dimensions `Sim`, `Age`, and `Year`, 
+#' or a 2D array with dimensions `Age`, and `Year`
+#' @param FishingMortality Optional. Fishing Mortality by Age. A 3D array with dimensions `Sim`, `Age`, and `Year`, 
+#' or a 2D array with dimensions `Age`, and `Year`
+#' @param PlusGroup Logical. Use a Plus Group? Default `TRUE`
+#' @param SpawnTimeFrac Numeric length 1 or length `nSim`. 
+#' Spawn timing within a given timestep. Default is 0 (beginning of time step) 
+#' @param Semelparous Semelparous mortality. Either logical (`FALSE`; default) to ignore, or 
+#' a 3D array with named dimensions `Sim`, `Age`, and `Year`, 
+#' or a 2D array with named dimensions `Age`, and `Year`
+#' 
+#' @return An array with the same dimensions as `NaturalMortality` with the 
+#' equilibrium survival from recruitment (first age class) to each age  
+#' 
+#' @export
+CalcSurvival <- function(NaturalMortality, 
+                         FishingMortality = NULL, 
+                         PlusGroup = TRUE, 
+                         SpawnTimeFrac = 0, 
+                         Semelparous = FALSE) {
 
-  if (inherits(Semelparous, 'logical')) {
-    Semelparous <- NaturalMortalityAtAge[,1]
-    Semelparous[] <- 0
+  d <- dim(NaturalMortality)
+  if (!is.array(NaturalMortality) | length(d)!=2 & length(d)!=3) {
+    cli::cli_abort("`NaturalMortality` must be either a 2D or 3D array")
   }
   
-  if (BySim) {
-    nSim <- dim(TotalMortalityAtAge)[1]
-    nTS <- dim(TotalMortalityAtAge)[3]
-    if (length(SpawnTimeFrac) != nSim) {
-      SpawnTimeFrac <- rep(SpawnTimeFrac, nSim)[1:nSim]
-      SpawnTimeFrac <- matrix(SpawnTimeFrac, nSim, nTS, byrow=FALSE)
-    }
-      
-    Semelparous <- Semelparous |> ExtendSims(nSim)
-
-    for (a in 1:nAge) {
-      ZthisAge <- TotalMortalityAtAge[,a,]
-      if (a==1) {
-        survival[,a,] <- exp(-ZthisAge*SpawnTimeFrac)
-      } else {
-        ZlastAge <- TotalMortalityAtAge[,a-1,]
-        PostSpawnMortalityLastAge <- Semelparous[,a-1,]
-        survival[,a,] <- survival[,a-1,]*
-          exp(-(ZlastAge*(1-SpawnTimeFrac)+ZthisAge*SpawnTimeFrac)) *
-          (1-PostSpawnMortalityLastAge)
-      }
-    }
-    
-    if (PlusGroup)
-      survival[,nAge,] <- survival[,nAge,]/(1-exp(-TotalMortalityAtAge[,nAge,]))
-    
-    return(survival)
-  } 
-  
-  
-  for (a in 1:nAge) {
-    ZthisAge <- TotalMortalityAtAge[a,]
-    if (a==1) {
-      survival[a,] <- exp(-ZthisAge*SpawnTimeFrac)
-    } else {
-      ZlastAge <- TotalMortalityAtAge[a-1,]
-      PostSpawnMortalityLastAge <- Semelparous[a-1,]
-      survival[a,] <- survival[a-1,]*
-        exp(-(ZlastAge*(1-SpawnTimeFrac)+ZthisAge*SpawnTimeFrac)) *
-        (1-PostSpawnMortalityLastAge)
-    }
-  }
-  if (PlusGroup)
-    survival[nAge,] <- survival[nAge,]/(1-exp(-TotalMortalityAtAge[nAge,]))
-  
-  survival 
-}
-
-
-# # ---- CalcUnfishedSurvival -----
-CalcUnfishedSurvival <- function(OM, SP=FALSE, Years=NULL, silent=FALSE, Expand=TRUE) {
-  
-  if (inherits(OM,'stock'))
-    return(CalcUnfishedSurvivalStock(OM, SP, Years, Expand))
-  
-  if (inherits(OM,'list'))
-    return(CalcUnfishedSurvivalStockList(OM, SP, Years, Expand))
-  
-  OM <- PopulateOM(OM, silent)
-  if (is.null(Years))
-    Years <- OM@Years
-  
-  CalcUnfishedSurvivalStockList(OM@Stock, SP, Years, Expand)
-  
-}
-
-CalcUnfishedSurvivalStockList <- function(StockList, SP=FALSE, Years=NULL, Expand=TRUE) {
-  purrr::map(StockList, \(Stock) CalcUnfishedSurvivalStock(Stock, SP, Years, Expand))
-}
-
-CalcUnfishedSurvivalStock <- function(Stock, SP=FALSE, Years=NULL, Expand=TRUE) {
-  AgeClasses <- Stock@Ages@Classes
-  nAges <- length(AgeClasses)
-  NaturalMortalityAtAge <- Stock@NaturalMortality@MeanAtAge |>
-    ArrayExpand(Stock@nSim, AgeClasses, Years) |>
-    ArraySubsetYear(Years)
-  
-  PlusGroup <- Stock@Ages@PlusGroup
-  SpawnTimeFrac <- ifelse(SP, Stock@SRR@SpawnTimeFrac, 0)
-  
-  if (is.logical(Stock@Maturity@Semelparous)) {
-    Stock@Maturity@Semelparous <- array(1, dim = c(Stock@nSim, nAges, 1))
+  if (length(d)==2) {
+   # Temporary add sim dimension to NaturalMortality and others as needed
+    stop('nSim = 0') # TODO
   }
   
-  Semelparous <- Stock@Maturity@Semelparous |> ArrayExpand(Stock@nSim, AgeClasses, Years) |>
-    ArraySubsetYear(Years)
+  d <- dim(NaturalMortality)
+  nSim <- d[1]
+  nAge <- d[2]
+  nYear <- d[3]
   
-  IsIdenticalTime <- all(IdenticalYears(NaturalMortalityAtAge) & IdenticalYears(Semelparous))
-  BySim <- 'Sim' %in% names(dimnames(NaturalMortalityAtAge))
+  # Create output array
+  Survival <- array(0, 
+                    dim=dim(NaturalMortality),
+                    dimnames = dimnames(NaturalMortality))
   
-  if (!BySim) {
-    if (IsIdenticalTime) {
-      NaturalMortalityAtAge <- NaturalMortalityAtAge[,1, drop=FALSE]
-      Semelparous <- Semelparous[,1, drop=FALSE]
-      Survival <- CalcSurvival(NaturalMortalityAtAge,
-                               PlusGroup=PlusGroup,
-                               SpawnTimeFrac=SpawnTimeFrac,
-                               Semelparous=Semelparous)
-      dnames <- dimnames(Survival)
-      nTS <- length(Years)
-      
-      SurvivalList <- replicate(nTS, Survival, simplify = FALSE)
-      
-      Survival <- abind::abind(SurvivalList, along=2)
-      dimnames(Survival) <- list(Age=dnames[[1]],
-                                 Year=Years)
-      
-      return(Survival)
-      
-    } else {
-      Survival <- CalcSurvival(NaturalMortalityAtAge,
-                               PlusGroup=PlusGroup,
-                               SpawnTimeFrac=SpawnTimeFrac,
-                               Semelparous=Semelparous)
-      return(Survival)
-    }
-    
+  # Create vector if needed
+  if (length(SpawnTimeFrac) != nSim) {
+    SpawnTimeFrac <- rep(SpawnTimeFrac, nSim)[1:nSim]
   }
   
-  IsIdenticalSim <- all(IdenticalSims(NaturalMortalityAtAge) & IdenticalSims(Semelparous))
+  # Check FishingMortality
+  if (!is.null(FishingMortality)) {
+    ArrayList <- ArrayExtend(NaturalMortality, FishingMortality)
+    NaturalMortality <- ArrayList[[1]]
+    NaturalMortality <- ArrayList[[2]]
+  }
+
+  # Sum if FishingMortality exists, otherwise NaturalMortality
+  Z <- ArrayAdd(NaturalMortality, FishingMortality)
   
-  if (IsIdenticalSim & IsIdenticalTime) {
-    NaturalMortalityAtAge <- abind::adrop(NaturalMortalityAtAge[1,,1, drop=FALSE], 1)
-    Semelparous <- abind::adrop(Semelparous[1,,1, drop=FALSE], 1)
-    Survival <- CalcSurvival(NaturalMortalityAtAge,
-                             PlusGroup=PlusGroup,
-                             SpawnTimeFrac=SpawnTimeFrac,
-                             Semelparous=Semelparous
-    )
-    Survival <- replicate(1, Survival) |>
-      AddDimNames(c('Age', 'Year', 'Sim'), Years, Ages=AgeClasses) |>
-      aperm(c('Sim', 'Age', 'Year'))
-    
-  } else if (IsIdenticalSim & !IsIdenticalTime) {
-    NaturalMortalityAtAge <- abind::adrop(NaturalMortalityAtAge[1,,, drop=FALSE], 1)
-    Semelparous <- abind::adrop(Semelparous[1,,, drop=FALSE], 1)
-    Survival <- CalcSurvival(NaturalMortalityAtAge,
-                             PlusGroup=PlusGroup,
-                             SpawnTimeFrac=SpawnTimeFrac,
-                             Semelparous=Semelparous
-    )
-    Survival <- replicate(1, Survival) |>
-      AddDimNames(c('Age', 'Year', 'Sim'), Years, Ages=AgeClasses) |>
-      aperm(c('Sim', 'Age', 'Year'))
-    
-  } else if (!IsIdenticalSim & IsIdenticalTime) {
-    NaturalMortalityAtAgeList <- Array2List(NaturalMortalityAtAge[,,1, drop=FALSE], 1)
-    SemelparousList <- Array2List(Semelparous[,,1, drop=FALSE], 1)
-    Survival <- purrr::pmap(list(
-      NaturalMortalityAtAge=NaturalMortalityAtAgeList,
-      PlusGroup=PlusGroup,
-      SpawnTimeFrac=SpawnTimeFrac,
-      Semelparous=SemelparousList),
-      CalcSurvival
-    ) |> List2Array('Sim') |>
-      aperm(c('Sim', 'Age', 'Year'))
-    
-  } else {
-    NaturalMortalityAtAgeList <- Array2List(NaturalMortalityAtAge, 1)
-    SemelparousList <- Array2List(Semelparous, 1)
-    Survival <- purrr::pmap(list(
-      NaturalMortalityAtAge=NaturalMortalityAtAgeList,
-      PlusGroup=PlusGroup,
-      Semelparous=SemelparousList),
-      CalcSurvival, SpawnTimeFrac=SpawnTimeFrac) |>
-      List2Array('Sim') |>
-      aperm(c('Sim', 'Age', 'Year'))
-    
+  Years <- dimnames(Z)[['Year']] |> as.numeric()
+  AgeClasses <- dimnames(Z)[['Age']] |> as.numeric() 
+  
+  # Create array if needed
+  Semelparous <- ProcessSemelparuous(Semelparous, nSim, AgeClasses, Years)
+  
+  # Age index 1
+  Survival[, 1, ] <- exp(-Z[, 1, ] * SpawnTimeFrac)
+  
+  # 2+ 
+  for (a in 2:nAge) {
+    Survival[, a, ] <- Survival[, a - 1, ] *
+      exp(-(Z[, a - 1, ] * (1 - SpawnTimeFrac) + Z[, a, ] * SpawnTimeFrac)) *
+      (1 - Semelparous[, a - 1, ])
   }
   
-  if (Expand) 
-    Survival <- Survival |> ArrayExpand(Stock@nSim, AgeClasses, Years)
+  if (PlusGroup) {
+    Survival[, nAge, ] <- survival[, nAge, ] / (1 - exp(-Z[, nAge, ]))
+  }
   Survival
 }
 
-
+ProcessSemelparuous <- function(Semelparous, nSim=NULL, AgeClasses=NULL, Years=NULL) {
+  if (inherits(Semelparous, "logical")) {
+    Semelparous <- array(0, dim=c(nSim, length(AgeClasses), length(Years)),
+                         dimnames=list(Sim=1:nSim,
+                                       Age=AgeClasses,
+                                       Year=Years)
+    )  
+  }
+  Semelparous |> Extend(nSim, AgeClasses, Years)
   
+}
 

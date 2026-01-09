@@ -37,7 +37,7 @@ Selectivity Object
 \section{Slots}{
 
 \describe{
-\item{\code{Misc}}{A list for additional miscellaneous objects. Not currently used.}
+\item{\code{Misc}}{A list for additional miscellaneous objects}
 }}
 
 \seealso{

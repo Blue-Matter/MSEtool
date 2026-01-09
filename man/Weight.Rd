@@ -69,7 +69,7 @@ The \code{Classes} slot is populated internally unless specified in the object.}
 \item{Classes}{The length classes used for the calculation of the age-size key (\code{ASK}).
 Will also be used for calculating at-length schedules, e.g., \code{\link[=Maturity]{Maturity()}} or \code{\link[=Selectivity]{Selectivity()}}.}
 
-\item{Misc}{A list for additional miscellaneous objects. Not currently used.}
+\item{Misc}{A list for additional miscellaneous objects}
 
 \item{x}{A \code{\link[=Stock]{Stock()}} class object}
 

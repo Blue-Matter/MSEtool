@@ -52,7 +52,7 @@ MeanAtLength_param <- function(name='Fecundity') {
 }
 
 Misc_param <- function() {
-  "A list for additional miscellaneous objects. Not currently used."
+  "A list for additional miscellaneous objects"
 }
 
 Model_param <- function(type='Length') {
@@ -113,8 +113,8 @@ Pars_details <- function() {
 
 See_Also <- function(class, other=NULL) {
   return(NULL) # TODO
-  
-  
+
+
  slots <- slotNames(class)
  txt <- paste(paste0('[', slots, '()]'), collapse=', ')
  if (!is.null(other)) {
@@ -142,6 +142,10 @@ Creating_New_Objects <- function(class) {
 Accessing_Assigning_Slots <- function(class) {
   paste0("Like all of the new style objects in `MSEtool`, the slots in `",
          class, "` objects can be accessed and assigned with functions matching the slot names. See `See Also` section for functions.")
+}
+
+S4Description <- function(class='ages') {
+  paste0("An S4 object of class `", class, "` and associated functions to access and modify the object")
 }
 
 

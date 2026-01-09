@@ -60,7 +60,7 @@ NOTE: \code{Random} is not currently implemented.}
 \item{Classes}{The length classes used for the calculation of the age-size key (\code{ASK}).
 Will also be used for calculating at-length schedules, e.g., \code{\link[=Maturity]{Maturity()}} or \code{\link[=Selectivity]{Selectivity()}}.}
 
-\item{Misc}{A list for additional miscellaneous objects. Not currently used.}
+\item{Misc}{A list for additional miscellaneous objects}
 
 \item{x}{A \code{\link[=Stock]{Stock()}} class object}
 
@@ -153,7 +153,7 @@ NOTE: \code{Random} is not currently implemented.}
 \item{\code{Classes}}{The length classes used for the calculation of the age-size key (\code{ASK}).
 Will also be used for calculating at-length schedules, e.g., \code{\link[=Maturity]{Maturity()}} or \code{\link[=Selectivity]{Selectivity()}}.}
 
-\item{\code{Misc}}{A list for additional miscellaneous objects. Not currently used.}
+\item{\code{Misc}}{A list for additional miscellaneous objects}
 }}
 
 \examples{

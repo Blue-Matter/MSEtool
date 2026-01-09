@@ -1,53 +1,49 @@
-
-CalcInitialYear <- function(Hist, silent=FALSE) {
-  
-  if (is.null(Hist@Unfished@Equilibrium@Number))
-    Hist@Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
-  
-  nSim <- Hist@OM@nSim
-  nStock <- nStock(Hist@OM)
-  nArea <- nArea(Hist@OM)
-  
-  # Dynamic Initial Number at Age Area
-  for (st in 1:nStock) {
+CalcDynamicInitial <- function(Hist) {
+  nSim <- nSim(Hist)
+  # ---- Loop over stocks -----
+  for (st in 1:nStock(Hist)) {
     
-    EquilNumber <- abind::adrop(Hist@Unfished@Equilibrium@Number[[st]][,,1, drop=FALSE], 3) |>
-      ExtendSims(nSim)
-    DynNumber <- EquilNumber
+    ## ---- Calculate dynamic age structure (multiply by rec devs) ----
+    EquilNumber <- abind::adrop(Hist@Unfished@Equilibrium@Number[[st]][,,1, drop=FALSE], 3)   
     
-    RecDevInit <- Hist@OM@Stock[[st]]@SRR@RecDevInit |>
-      ExtendSims(nSim)
-    RecDevHist <- Hist@OM@Stock[[st]]@SRR@RecDevHist
-    RecDevHist1 <- RecDevHist[,1, drop=FALSE] |>
-      ExtendSims(nSim)
+    RecDevInit <- Hist@OM@Stock[[st]]@SRR@RecDevInit |> ExtendSims(nSim)
+    RecDevHist <- Hist@OM@Stock[[st]]@SRR@RecDevHist 
+    RecDevHist1 <- RecDevHist[,1, drop=FALSE] |> ExtendSims(nSim)
     names(dimnames(RecDevHist1))[2] <- 'Age'
-  
+    
     ages <- as.numeric(dimnames(RecDevInit)[['Age']])
     AgeClasses <- Hist@OM@Stock[[st]]@Ages@Classes
     if (min(ages) !=AgeClasses[2]) {
       cli::cli_abort(c("Error calculating initial age structure for Stock: {.val {names(Hist@OM@Stock)[st]}}",
-                     "i"='The first age class in matrix `Stock |> SRR() |> RecDevInit()` must match the second age class',
-                     '*'='Second age class: {.val {AgeClasses[2]}}',
-                     '*'='First age class in `RecDevInit`: {.val {min(ages)}}'
-                     ), call=NULL
-      )
+                       "i"='The first age class in matrix `Stock |> SRR() |> RecDevInit()` must match the second age class',
+                       '*'='Second age class: {.val {AgeClasses[2]}}',
+                       '*'='First age class in `RecDevInit`: {.val {min(ages)}}'
+      ), call=NULL)
     }
-    
     
     InitAgeClassRecDevs <- cbind(RecDevHist1, RecDevInit) 
     dimnames(InitAgeClassRecDevs) <- list(Sim=1:nSim,
                                           Age=c(AgeClasses[1], ages))
     
-    NatAge <- ArrayMultiply(InitAgeClassRecDevs, EquilNumber) |>
-      AddDimension('Area') 
     
+    ## ---- Distribute across areas ----
     UnfishedDist <- abind::adrop(Hist@OM@Stock[[st]]@Spatial@UnfishedDist[,,,1,drop=FALSE], 4) |>
       aperm(c('Sim', 'Age', 'Area'))
     
-    # Age structure in first time step
-    Hist@Number[[st]][,,1,] <- ArrayMultiply(NatAge, UnfishedDist)
+    nArea <- dim(UnfishedDist)[3]
+    if (nArea>1 & Hist@OM@Seasons>1) {
+      # TODO - need to account for seasonal movement pattern in initial age structure
+      cli::cli_abort(c("x"="Multi-area seasonal model spatial distribution not finished"), .internal=TRUE)
+    } else {
+      # Multiply unfished by initial rec devs and add an Area dimension
+      NatAge <- ArrayMultiply(InitAgeClassRecDevs, EquilNumber) |> AddDimension('Area') 
+      
+      # Multiply by UnfishedDist to distribute across areas
+      Hist@Number[[st]][,,1,] <- ArrayMultiply(NatAge, UnfishedDist)
+    }
     
-    RecruitTimeStep <- CalcRecruitment_TimeStep(Hist, st) 
+    ## ---- Fill recruitment for initial time steps if age rec > 0  ----
+    RecruitTimeStep <- CalcRecruitment_AgeIndex(Hist, st)
     
     if (RecruitTimeStep>1) {
       # fill in recruits for initial time steps
@@ -62,19 +58,22 @@ CalcInitialYear <- function(Hist, silent=FALSE) {
       }
     }
     
+    # ---- Initial Depletion ----
     InitialDepletion <- Hist@OM@Stock[[st]]@Depletion@Initial
-    if (length(InitialDepletion) && all(InitialDepletion!=1)) 
+    if (length(InitialDepletion) && all(InitialDepletion!=1))  {
       Hist <- DoOptInitialDepletion(Hist, st)
-    
+    }
   }
+  
   Hist
 }
 
-
+# TODO - this should probably account for selectivity, but most of the 
+# time it's already done in Import(OM)
 DoOptInitialDepletion <- function(Hist, st) {
   DepletionInitial <- Hist@OM@Stock[[st]]@Depletion@Initial
   DepletionReference <- Hist@OM@Stock[[st]]@Depletion@Reference
- 
+  
   if (is.null(DepletionInitial))
     return(Hist)
   
@@ -131,7 +130,7 @@ DoOptInitialDepletion <- function(Hist, st) {
   Hist@Number[[st]][,,1,] <- ArrayMultiply(NatAge, adjust)
   Hist
 }
-    
+
 OptInitialDepletion <- function(par=1, 
                                 NumberAtAge,
                                 WeightAtAge,

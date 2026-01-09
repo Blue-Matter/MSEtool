@@ -13,7 +13,8 @@ setClass("effort",
          slots=c(
            Effort='num.array.df',
            Units='char.null',
-           Distribution='num.array'  
+           Distribution='num.array',
+           Maximum='num.array' # maximum fishing effort - Effort < Maximum is latent effort. Increasing Maximum requires Investment (see Bioeconomic)
          ),
          contains='MiscClass'
 )
@@ -25,11 +26,13 @@ setMethod("initialize", "effort", function(.Object,
                                            Effort=NULL,
                                            Units='',
                                            Distribution=NULL,
+                                           Maximum=NULL,
                                            Misc=list()) {
   
   .Object@Effort <- Effort
   .Object@Units <- Units
   .Object@Distribution <- Distribution
+  .Object@Maximum <- Maximum
   .Object@Misc <- Misc
   .Object
 })
@@ -41,6 +44,7 @@ setMethod("initialize", "effort", function(.Object,
 Effort <- function(Effort=NULL,
                    Units='',
                    Distribution=NULL,
+                   Maximum=NULL,
                    Misc=list()) {
   
   if (inherits(Effort,'fleet'))
@@ -52,6 +56,7 @@ Effort <- function(Effort=NULL,
                Effort=Effort,
                Units=Units,
                Distribution=Distribution,
+               Maximum=Maximum,
                Misc=Misc)
   
 

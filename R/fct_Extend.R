@@ -223,7 +223,7 @@ ExtendAges <- function(array, AgeClasses = NULL) {
   })
   
   OutArray <- do.call(`[`, c(list(array), idx, list(drop = FALSE)))
-  dimnames(OutArray)[[age_dim]] <- as.character(seq_len(nAge))
+  dimnames(OutArray)[[age_dim]] <- as.character(AgeClasses)
   OutArray
 
 }

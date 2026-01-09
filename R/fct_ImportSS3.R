@@ -847,15 +847,15 @@ GetSS_Effort <- function(st, fl, replist, YearsList, type=c('Effort', 'q')) {
     
   nMorph <- FInteract$Morph |> unique() |> length()
   
-  if (nMorph>1)
+  if (nMorph>1) {
     cli::cli_abort("More than 1 Morph not currently supported", .internal=TRUE)
-
+  }
+    
   FInteract <- t(FInteract[,as.character(AgeClasses)])
   dimnames(FInteract) <- list(Age=AgeClasses,
                               Year=YearsList$YearsHist)
   
-  FInteractApical <- apply(FInteract, c('Year'), max) *
-    1/replist$nseasons
+  FInteractApical <- apply(FInteract, c('Year'), max) * 1/replist$nseasons
   FInteractApicalTerminal <- FInteractApical
   FInteractApicalTerminal[] <- 0
   
@@ -865,10 +865,9 @@ GetSS_Effort <- function(st, fl, replist, YearsList, type=c('Effort', 'q')) {
     return(FInteractApical[ind])
   }
   
-  RelEffort <- ArrayDivide(FInteractApical,FInteractApicalTerminal)
+  RelEffort <- FInteractApical/FInteractApicalTerminal
   RelEffort <- array(RelEffort, dim=c(length(RelEffort))) 
-  dimnames(RelEffort) <- list(
-                              Year=YearsList$YearsHist)
+  dimnames(RelEffort) <- list(Year=YearsList$YearsHist)
   
   RelEffort
 }
@@ -978,15 +977,17 @@ SS2DiscardMortality <- function(st, fl, RepList, YearsList, Stock) {
     List2Array('Sim', pos=1) |>
     ArrayReduceDims()
   
-
   AgeClasses <- Stock@Ages@Classes
   LengthClasses <- dimnames(DiscardMortality@MeanAtLength)$Class |> as.numeric()
   DiscardMortality@Classes <- LengthClasses
   
-  Stock@Length <- PopulateLength(Stock@Length, Stock@Ages)
-  DiscardMortality <- MeanAtLength2MeanAtAge(
-    object=DiscardMortality, 
-    Length=Stock@Length)
+  Stock@Length <- PopulateLength(Length=Stock@Length, 
+                                 Ages=Stock@Ages, 
+                                 Years=c(YearsList$YearsHist, YearsList$YearsProj),
+                                 nSim=Stock@nSim)
+  
+  DiscardMortality <- MeanAtLength2MeanAtAge(object=DiscardMortality, 
+                                             Length=Stock@Length,)
   
   DiscardMortality@MeanAtAge <- ArrayReduceDims(DiscardMortality@MeanAtAge)
   DiscardMortality

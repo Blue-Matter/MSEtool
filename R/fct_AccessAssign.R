@@ -619,40 +619,9 @@ nReps <- function(x) {
   assignSlot(x, value, 'nReps')
 }
 
-## ---- nStock ----
-
-#' @rdname Access
-#' @export
-nStock <- function(x) {
-  if (!inherits(x,'om'))
-    cli::cli_abort('`x` must be class `om`')
-  length(x@Stock)
-}
 
 ## ---- nFleet ----
 
-#' @rdname Access
-#' @export
-nFleet <- function(x) {
-  CheckClass(x, c('om', 'hist', 'mse'), 'x')
-  
-  if (inherits(x,'om')) {
-    fleet <- x@Fleet
-    if (is.null(fleet))
-      return(0)
-    if (inherits(fleet, 'fleet'))
-      return(1)
-    if (is.list(fleet[[1]]))
-      return(length(fleet[[1]]))
-    if(isS4(fleet[[1]])) {
-      dd <- dim(x@Fleet[[1]]@Selectivity@MeanAtAge)
-      return(dd[3])
-    }
-  }
-    
-  return(dim(x@Landings)[4])
-
-}
 
 
 
