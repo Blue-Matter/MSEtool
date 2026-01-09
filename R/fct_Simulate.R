@@ -44,7 +44,6 @@ Simulate_om <- function(OM = NULL,
   # ---- Make Hist Object ----
   Hist <- OM2Hist(OM, silent)
   
-  
   # ---- Calculate Equilibrium Unfished ----
   Hist@Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
   
@@ -55,12 +54,29 @@ Simulate_om <- function(OM = NULL,
   Hist <- CalcDynamicInitial(Hist)
   
   
+  # ---- Build SimList ----
+  SimList <- Hist2SimList(Hist) # List of `Hist` objects, each with one simulation
   
+  
+  # ---- Calculate Reference Points ----
+  SimList <- CalcSPR0(SimList) # unfished spawning per recruit (i.e. fecundity)
+  
+  if (inherits(Reference$MSY , "refpointsMSY")) {
+    Hist@Reference@MSY <- Reference$MSY
+  } else {
+    RefPointYears <- GetRefPointYears(OM, HistYears) # historical time steps to calculate ref points
+    if (!inherits(Reference, "logical")) {
+      SimList <- CalcMSYRefPoints(SimList, RefPointYears, Reference$MSY)
+    }
+  }
+  
+ 
   # ---------------------- DEBUG ----------------------
   
   
   
   # up to here ...
+  # need to fix CalcMSY ref points for new structure Hist@OM@Fleet
   
   stop()
   # -------------------- END DEBUG --------------------
@@ -69,26 +85,11 @@ Simulate_om <- function(OM = NULL,
   # ---- Add Reference Points if they exist ----
   # won't be re-calculated
  
-  if (inherits(RefPointsMSY, "refpointsMSY")) {
-    Hist@Reference@MSY <- RefPointsMSY
-  }
-
-  
-
-
-  # ---- Build SimList ----
-  SimList <- Hist2SimList(Hist) # List of `Hist` objects, each with one simulation
-  
-  
-  
-
+ 
 
   # ---- Calculate Reference Points ----
-  SimList <- CalcSPR0(SimList) # unfished spawning per recruit (i.e. fecundity)
-  RefPointYears <- GetRefPointYears(OM, HistYears) # historical time steps to calculate ref points
-  if (!inherits(Reference, "logical")) {
-    SimList <- CalcMSYRefPoints(SimList, RefPointYears, Reference$MSY)
-  }
+ 
+
   
   # TODO
   # - Per-Recruit Curves

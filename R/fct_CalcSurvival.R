@@ -28,15 +28,28 @@ CalcSurvival <- function(NaturalMortality,
     cli::cli_abort("`NaturalMortality` must be either a 2D or 3D array")
   }
   
+  Years <- dimnames(NaturalMortality)[['Year']] |> as.numeric()
+  AgeClasses <- dimnames(NaturalMortality)[['Age']] |> as.numeric() 
+  
+  bySim <- TRUE
   if (length(d)==2) {
+    bySim <- FALSE  
    # Temporary add sim dimension to NaturalMortality and others as needed
-    stop('nSim = 0') # TODO
+    NaturalMortality <- AddDimension(NaturalMortality, 'Sim') |> aperm(c('Sim', 'Age', 'Year'))
+    FishingMortality <- AddDimension(FishingMortality, 'Sim') |> aperm(c('Sim', 'Age', 'Year'))
   }
   
   d <- dim(NaturalMortality)
   nSim <- d[1]
   nAge <- d[2]
   nYear <- d[3]
+  
+  # Create array if needed
+  Semelparous <- ProcessSemelparuous(Semelparous, nSim, AgeClasses, Years) 
+  
+  if (!bySim) {
+    Semelparous <- AddDimension(Semelparous, 'Sim') |> aperm(c('Sim', 'Age', 'Year'))
+  }
   
   # Create output array
   Survival <- array(0, 
@@ -57,13 +70,7 @@ CalcSurvival <- function(NaturalMortality,
 
   # Sum if FishingMortality exists, otherwise NaturalMortality
   Z <- ArrayAdd(NaturalMortality, FishingMortality)
-  
-  Years <- dimnames(Z)[['Year']] |> as.numeric()
-  AgeClasses <- dimnames(Z)[['Age']] |> as.numeric() 
-  
-  # Create array if needed
-  Semelparous <- ProcessSemelparuous(Semelparous, nSim, AgeClasses, Years)
-  
+
   # Age index 1
   Survival[, 1, ] <- exp(-Z[, 1, ] * SpawnTimeFrac)
   
@@ -76,6 +83,9 @@ CalcSurvival <- function(NaturalMortality,
   
   if (PlusGroup) {
     Survival[, nAge, ] <- survival[, nAge, ] / (1 - exp(-Z[, nAge, ]))
+  }
+  if (!bySim) {
+    Survival <- DropDimension(Survival, 'Sim')
   }
   Survival
 }
