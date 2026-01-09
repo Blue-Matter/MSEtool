@@ -83,7 +83,7 @@ ExampleFleet <- Fleet("Example Fleet")
 
 
 ## ---- stochastic effort ----
-Effort(ExampleFleet) <- Effort(Value = data.frame(
+Effort(ExampleFleet) <- Effort(Effort = data.frame(
   Year = c(0, 0.3, 0.6, 1.0),
   Lower = c(0, 0.4, 0.4, 1),
   Upper = c(0, 0.6, 0.6, 1),
@@ -106,7 +106,6 @@ Selectivity(ExampleFleet) <- Selectivity(Pars = list(
 
 Stock(ExampleOM) <- ExampleStock
 Fleet(ExampleOM) <- ExampleFleet
-
 
 ## ---- Save Data Objects -----
 

@@ -68,7 +68,7 @@ OM2Length <- function(OM, cpars = list()) {
       Age = GetStockAges(OM),
       Year = GetOMYears(OM)
     )
-    Length@MeanAtAge <- ArrayReduceDims(Length@MeanAtAge)
+    Length@MeanAtAge <- ReduceDims(Length@MeanAtAge)
   }
 
   # CVatAge
@@ -79,7 +79,7 @@ OM2Length <- function(OM, cpars = list()) {
       Age = GetStockAges(OM)[1],
       Year = GetOMYears(OM)[1]
     )
-    Length@CVatAge <- ArrayReduceDims(Length@CVatAge)
+    Length@CVatAge <- ReduceDims(Length@CVatAge)
   }
 
   # Classes
@@ -131,7 +131,7 @@ OM2NaturalMortality <- function(OM, cpars = list()) {
         Year = GetOMYears(OM)
       )
     ) |>
-      ArrayReduceDims()
+      ReduceDims()
   }
   NaturalMortality
 }
@@ -150,7 +150,7 @@ OM2Maturity <- function(OM, cpars = list()) {
         Year = GetOMYears(OM)
       )
     ) |>
-      ArrayReduceDims()
+      ReduceDims()
   }
   Maturity
 }
@@ -166,7 +166,7 @@ OM2Fecundity <- function(OM, cpars = list()) {
         Year = GetOMYears(OM)
       )
     ) |>
-      ArrayReduceDims()
+      ReduceDims()
   }
   Fecundity
 }
@@ -188,7 +188,7 @@ OM2SRR <- function(OM, cpars = list()) {
         Sim = 1:OM@nsim,
         Year = GetOMYears(OM)[1]
       )
-    ) |> ArrayReduceDims()
+    ) |> ReduceDims()
   }
 
   if (!is.null(cpars$AC)) {
@@ -198,7 +198,7 @@ OM2SRR <- function(OM, cpars = list()) {
         Sim = 1:OM@nsim,
         Year = GetOMYears(OM)[1]
       )
-    ) |> ArrayReduceDims()
+    ) |> ReduceDims()
   }
 
   perr_y <- cpars[["Perr_y"]]
@@ -218,7 +218,7 @@ OM2SRR <- function(OM, cpars = list()) {
         Sim = 1:nrow(init_age_classes),
         Age = AgesClasses[-1]
       )
-    ) |> ArrayReduceDims()
+    ) |> ReduceDims()
 
     hist_yrs <- perr_y[, (maxage + 1):(nYear + maxage)]
     SRR@RecDevHist <- array(hist_yrs,
@@ -227,7 +227,7 @@ OM2SRR <- function(OM, cpars = list()) {
         Sim = 1:nrow(hist_yrs),
         Year = HistYears
       )
-    ) |> ArrayReduceDims()
+    ) |> ReduceDims()
 
     pro_yrs <- perr_y[, (nYear + maxage + 1):(nYear + maxage + proyears)]
     SRR@RecDevProj <- array(pro_yrs,
@@ -236,7 +236,7 @@ OM2SRR <- function(OM, cpars = list()) {
         Sim = 1:nrow(pro_yrs),
         Year = ProjYears
       )
-    ) |> ArrayReduceDims()
+    ) |> ReduceDims()
   }
 
   SRR
@@ -287,7 +287,7 @@ process_mov <- function(mov, nage = 1, nts = 1) {
 
   mov <- aperm(mov, c(1, 4, 5, 3, 2)) |>
     AddDimNames(c("Sim", "Area", "Area", "Age", "Year")) |>
-    ArrayReduceDims()
+    ReduceDims()
 
   mov
 }

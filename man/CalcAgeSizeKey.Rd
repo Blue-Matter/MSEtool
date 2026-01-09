@@ -17,7 +17,7 @@ CalcAgeSizeKey(
 }
 \arguments{
 \item{MeanAtAge}{The mean size at age. Either a numeric vector of length \code{nage}, a 2D array with
-dimensions \code{c(nsim, nage)}, or a 3D array with dimensions \code{c(nsim, nage, nTS)}.
+dimensions \code{c(nSim, nage)}, or a 3D array with dimensions \code{c(nSim, nage, nTS)}.
 Alternatively, can be a \code{\link[=Length]{Length()}} object, in which case no other arguments are needed.}
 
 \item{CVatAge}{The coefficient of variation (CV) at age. Same structure as \code{MeanAtAge}.}
@@ -32,7 +32,7 @@ where the distribution is truncated. Use high values to approximate a non-trunca
 \item{AgeClasses}{Optional. Numeric vector of values for the age classes. Defaults to \code{0:(nage-1)}.}
 }
 \value{
-A 4D array with dimensions \code{nsim}, \code{nage}, \code{nClasses}, and \code{nTS}
+A 4D array with dimensions \code{nSim}, \code{nage}, \code{nClasses}, and \code{nTS}
 }
 \description{
 Generates an Age-Size key given mean and standard deviation of size-at-age. The size-at-age

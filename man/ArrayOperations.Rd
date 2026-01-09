@@ -26,6 +26,10 @@ ArrayFill(object) <- value
 \item{array1}{An array with named dimensions.}
 
 \item{array2}{An array with the same named dimensions as \code{array1}.}
+
+\item{object}{An array with named dimensions}
+
+\item{value}{An array with the same dimension names as \code{object}}
 }
 \value{
 The resulting array
@@ -37,7 +41,12 @@ Multiply, divide, subtract, or add two arrays together.
 The arrays must have the same named dimensions, but do not need to have
 the same length for each dimension.
 \itemize{
-\item \code{ArrayExtend} extends the arrays to have matching dimensions (see \code{\link[=Extend]{Extend()}})
+\item \code{ArrayAdd}: Sum \code{array1} and \code{array2}
+\item \code{ArrayDivide}: Divide \code{array1} by \code{array2}
+\item \code{ArrayMultiply}: Multiply \code{array1} and \code{array2}
+\item \code{ArraySubtract}: Subtract \code{array2} from \code{array1}
+\item \code{ArrayExtend}: extends the arrays to have matching dimensions (see \code{\link[=Extend]{Extend()}})
+\item \code{ArrayFill}: Update array \code{object} with the values in \code{value}
 }
 }
 \examples{
@@ -86,4 +95,40 @@ ArrayAdd(array1, array2)
 ArrayDivide(array1, array2)
 ArrayMultiply(array1, array2)
 ArraySubtract(array1, array2)
+
+
+# ArrayFill
+
+## Same dimensions
+object <- array(NA, 
+               dim=c(3,5),
+               dimnames=list(Sim=1:3,
+                             Year=2021:2025)
+)
+
+value <- array(1:2, 
+               dim=c(1,2),
+               dimnames=list(Sim=2,
+                             Year=2022:2023)
+)
+
+ArrayFill(object) <- value
+object
+
+
+## Extend Dimensions
+object <- array(NA, 
+                dim=c(3,5),
+                dimnames=list(Sim=1:3,
+                              Year=2021:2025)
+)
+
+value <- array(1:12, 
+               dim=c(3,4),
+               dimnames=list(Sim=1:3,
+                             Year=c(2022, 2025:2027))
+)
+
+ArrayFill(object) <- value
+object
 }

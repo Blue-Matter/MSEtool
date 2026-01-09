@@ -70,8 +70,6 @@
 \alias{nsim<-}
 \alias{nReps}
 \alias{nReps<-}
-\alias{nStock}
-\alias{nFleet}
 \alias{Pars}
 \alias{Pars<-}
 \alias{Period}
@@ -255,10 +253,6 @@ nsim(x) <- value
 nReps(x)
 
 nReps(x) <- value
-
-nStock(x)
-
-nFleet(x)
 
 Pars(x)
 

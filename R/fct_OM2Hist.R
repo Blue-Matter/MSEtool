@@ -79,7 +79,7 @@ InitializeTimeSeries <- function(Hist)  {
   # Add Effort from OM
   for (st in 1:nStock(OM)) {
     for (fl in 1:nFleet(OM)) {
-      Hist@Effort[,st,,fl] <- Hist@OM@Fleet[[st]][[fl]]@Effort@Effort  
+      Hist@Effort[,st,,fl] <- Hist@OM@Fleet[[st]][[fl]]@Effort@Effort[,1:OM@nYear]  
     }
   }
   
@@ -92,7 +92,7 @@ InitializeTimeSeries <- function(Hist)  {
   # Add Distribution from OM
   for (st in 1:nStock(OM)) {
     for (fl in 1:nFleet(OM)) {
-      Hist@Distribution[,st,,fl,] <- Hist@OM@Fleet[[st]][[fl]]@Effort@Distribution[,1:nYears,,drop=FALSE] 
+      Hist@Distribution[,st,,fl,] <- Hist@OM@Fleet[[st]][[fl]]@Effort@Distribution[,1:OM@nYear,,drop=FALSE] 
     }
   }
   

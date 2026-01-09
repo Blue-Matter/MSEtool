@@ -208,9 +208,9 @@ SS2Stock <- function(st, RepList, YearsList, nSim) {
 
   
   Stock@Maturity <- SS2Maturity(st, RepList, YearsList, Ages=Stock@Ages) |>
-    ArrayReduceDims()
+    ReduceDims()
   Stock@Fecundity <- SS2Fecundity(st, RepList, YearsList, Ages=Stock@Ages) |>
-    ArrayReduceDims()
+    ReduceDims()
   
   # Stock@Depletion <- SS2Depletion(st, RepList, YearsList) # not needed - already accounted for in early rec devs
   Stock@SRR <- SS2SRR(st, RepList, YearsList, Ages=Stock@Ages, nSim)
@@ -333,13 +333,13 @@ SS2Length <- function(st, RepList, YearsList, Ages) {
     GetSS_Length_at_Age(st, replist, YearsList)
   }) |> List2Array('Sim', pos=1) |>
     ArraySubsetAge(Ages=Ages@Classes) |>
-    ArrayReduceDims()
+    ReduceDims()
   
   Length@CVatAge <- purrr::map(RepList, \(replist) {
     GetSS_LengthCV_at_Age(st, replist, YearsList)
   }) |> List2Array('Sim', pos=1) |>
     ArraySubsetAge(Ages=Ages@Classes) |>
-    ArrayReduceDims()
+    ReduceDims()
   
   # ASK 
   AgeClasses <- Ages@Classes
@@ -408,7 +408,7 @@ SS2Weight <- function(st, RepList, YearsList, Ages) {
     GetSS_WeightAtAge(st, replist, YearsList)
   }) |> List2Array('Sim', pos=1) |>
     ArraySubsetAge(Ages=Ages@Classes) |>
-    ArrayReduceDims()
+    ReduceDims()
   
   if (Ages@Classes |> length() != dim(Weight@MeanAtAge)[2]) 
     cli::cli_abort(c("x"='Number of age-classes for `Weight@MeanAtAge` does not match `Ages@Classes`',
@@ -477,7 +477,7 @@ SS2NaturalMortality <- function(st, RepList, YearsList, Ages) {
     GetSS_M_at_age(st, replist, YearsList, Ages)
   }) |> List2Array('Sim', pos=1) |>
     ArraySubsetAge(Ages=Ages@Classes) |>
-    ArrayReduceDims()
+    ReduceDims()
   
   NaturalMortality
 }
@@ -975,7 +975,7 @@ SS2DiscardMortality <- function(st, fl, RepList, YearsList, Stock) {
                                          GetSS_DiscardMortalityAtLength (st, fl, replist, YearsList, Stock)
                                          ) |>
     List2Array('Sim', pos=1) |>
-    ArrayReduceDims()
+    ReduceDims()
   
   AgeClasses <- Stock@Ages@Classes
   LengthClasses <- dimnames(DiscardMortality@MeanAtLength)$Class |> as.numeric()
@@ -989,7 +989,7 @@ SS2DiscardMortality <- function(st, fl, RepList, YearsList, Stock) {
   DiscardMortality <- MeanAtLength2MeanAtAge(object=DiscardMortality, 
                                              Length=Stock@Length,)
   
-  DiscardMortality@MeanAtAge <- ArrayReduceDims(DiscardMortality@MeanAtAge)
+  DiscardMortality@MeanAtAge <- ReduceDims(DiscardMortality@MeanAtAge)
   DiscardMortality
 }
 
@@ -1074,7 +1074,7 @@ SS2Selectivity <- function(st, fl, RepList, YearsList, Stock) {
                               GetSS_SelectivityAtLength(st, fl, replist, 
                                                         YearsList, Stock)) |>
     List2Array('Sim', pos=1) |>
-    ArrayReduceDims()
+    ReduceDims()
   Selectivity@Classes <- as.numeric(dimnames(Selectivity@MeanAtLength)$Class)
   
   Selectivity@MeanAtAge <-  purrr::map(RepList, \(replist)
@@ -1104,7 +1104,7 @@ SS2Retention <- function(st, fl, RepList, YearsList, Selectivity, Stock) {
   Retention@MeanAtLength <-  purrr::map(RepList, \(replist)
                               GetSS_RetentionAtLength(st, fl, replist, YearsList)) |>
     List2Array('Sim', pos=1) |>
-    ArrayReduceDims()
+    ReduceDims()
   
   Retention@MeanAtLength[!is.finite(Retention@MeanAtLength)] <- 0
   Retention@Classes <- as.numeric(dimnames(Retention@MeanAtLength)$Class)
@@ -1164,7 +1164,7 @@ SS2WeightFleet <- function(st, fl, RepList, YearsList, AgeClasses) {
                                     GetSS_EmpiricalWeight(st, fl, replist, YearsList, AgeClasses) 
                                     ) |> 
     List2Array('Sim', pos=1) |> 
-    ArrayReduceDims()
+    ReduceDims()
   Weight_at_Age_array 
 }
 

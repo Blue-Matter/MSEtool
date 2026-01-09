@@ -16,9 +16,12 @@ prints the dimension names (if applicable)}
 Retrieve or set the dimension of an object.
 }
 \examples{
-MyArray <- array(1:6, dim=c(6,2),
-dimnames=list(Age=1:6,
-              Year=c(2025, 2026))
-              )
-              dim(MyArray)
+MyArray <- array(1:6,
+  dim = c(6, 2),
+  dimnames = list(
+    Age = 1:6,
+    Year = c(2025, 2026)
+  )
+)
+dim(MyArray)
 }

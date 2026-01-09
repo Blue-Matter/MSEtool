@@ -2,16 +2,7 @@
 % Please edit documentation in R/Misc.R
 \name{miscellanous}
 \alias{miscellanous}
-\alias{ReduceNSim}
 \title{Miscellaneous Helper Functions}
-\usage{
-ReduceNSim(object, nSim = NULL)
-}
 \description{
 Miscellaneous Helper Functions
 }
-\section{Functions}{
-\itemize{
-\item \code{ReduceNSim()}: Reduce the number of simulations in an \code{om} or \code{hist} object
-
-}}

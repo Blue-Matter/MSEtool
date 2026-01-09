@@ -2,40 +2,12 @@ OnExit <- function() {
   on.exit(cli::stop_app())
 }
 
-
-#' Miscellaneous Helper Functions
-#' @name miscellanous
-NULL
-
-#' @describeIn miscellanous Reduce the number of simulations in an `om` or `hist` object
-#' @export
-ReduceNSim <- function(object, nSim = NULL) {
-  if (is.null(nSim)) {
-    return(object)
+SetSeed <- function(seed = NULL) {
+  if (is.null(seed)) {
+    seed <- 101
   }
-
-  CheckClass(nSim, c("numeric", "integer"), "nSim")
-
-  if (length(nSim) > 1) {
-    cli::cli_abort("`nSim` ({.val {nSim}}) must be numeric/integer length 1")
-  }
-
-  if (nSim < 1) {
-    cli::cli_abort("`nSim` ({.val {nSim}}) must be >= 1")
-  }
-
-  if (nSim > nSim(object)) {
-    cli::cli_alert_warning("Argument `nSim` ({.val {nSim}}) is greater than {.run nSim(OM)} ({.val {nSim(object)}}). Ignoring argument `nSim`  ")
-    nSim <- nSim(object)
-  }
-
-  if (nSim(object) == nSim) {
-    return(object)
-  }
-
-  SubsetSim(object, Sim = 1:nSim)
+  set.seed(seed)
 }
-
 
 not <- function(val) !val
 
@@ -43,6 +15,7 @@ ReplaceTiny <- function(Array, value = 1, default = tiny / 2) {
   Array[Array == default] <- value
   Array
 }
+
 
 # Transformations -----
 
@@ -101,7 +74,7 @@ firstup <- function(x, n = 1) {
 #' @export
 StockNames <- function(object) {
   if (inherits(object, "hist")) {
-    names <- Recall(object@OM)
+    names <- names(object@OM@Stock)
   }
 
   if (inherits(object, "om")) {
@@ -606,12 +579,7 @@ Array2List <- function(array, pos = 3, sim = NULL) {
   list
 }
 
-SetSeed <- function(seed = NULL) {
-  if (is.null(seed)) {
-    seed <- 101
-  }
-  set.seed(seed)
-}
+
 
 
 get_in_dim <- function(req, n_sim, p, n_age, n_ts, n_areas) {

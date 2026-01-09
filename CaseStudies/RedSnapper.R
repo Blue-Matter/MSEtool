@@ -80,11 +80,11 @@ ggplot(b, aes(x=TimeStep, y=Value, color=MP)) +
 
 
 
-MSE@Effort |> ArrayReduceDims() |> range()
+MSE@Effort |> ReduceDims() |> range()
 
 MSE@FDeadAtAge$`SA Red Snapper`[1,,50,,1] |> rowSums()
 
-MSE@FDeadAtAge$`SA Red Snapper` |> ArrayReduceDims() |>
+MSE@FDeadAtAge$`SA Red Snapper` |> ReduceDims() |>
   apply(c('Sim', 'Age', 'TimeStep', 'MP'), sum) |>
   apply(c('Sim', 'TimeStep', 'MP'), max)
 
@@ -101,7 +101,7 @@ Fs <- seq(0, 0.3, by=0.01)
 perRecruit <- CalcPerRecruit(apicalF=0.21, OM) 
 
 
-perRecruit@SBiomass |> ArrayReduceDims()
+perRecruit@SBiomass |> ReduceDims()
 
 data.frame(F=Fs, SPR=perRecruit@SPR[1,,,])
 plot(Fs, perRecruit@SPR[1,,,], type='l', ylim=c(0,1))

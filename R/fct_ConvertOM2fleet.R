@@ -33,7 +33,7 @@ OM2Effort <- function(OM, cpars=list()) {
                             Year=HistYears
                           )
     ) |>
-      ArrayReduceDims()
+      ReduceDims()
   }
   Effort
 }
@@ -51,7 +51,7 @@ OM2Catchability <- function(OM, cpars=list()) {
                                   Sim=seq_along(cpars$qs),
                                   Year=HistYears[1]
                                 )) |>
-      ArrayReduceDims()
+      ReduceDims()
   }
   Catchability
 }
@@ -74,7 +74,7 @@ OM2Selectivity <- function(OM, cpars=list()) {
                                      Year=Years
                                    )
     ) |>
-      ArrayReduceDims()
+      ReduceDims()
   }
   
   if (!is.null(cpars[['SLarray']])) {
@@ -90,7 +90,7 @@ OM2Selectivity <- function(OM, cpars=list()) {
                                      Year=Years
                                    )
     ) |>
-      ArrayReduceDims()
+      ReduceDims()
   }
   
   Selectivity
@@ -114,7 +114,7 @@ OM2Retention <- function(OM, cpars=list()) {
                                      Year=Years
                                    )
     ) |>
-      ArrayReduceDims()
+      ReduceDims()
   }
   
   if (!is.null(cpars[['retL']])) {
@@ -130,7 +130,7 @@ OM2Retention <- function(OM, cpars=list()) {
                                         Year=Years
                                       )
     ) |>
-      ArrayReduceDims()
+      ReduceDims()
   }
   Retention
 }
@@ -169,7 +169,7 @@ OM2DiscardMortality <- function(OM, cpars=list(), Fdisc=NULL) {
                                      Year=Years
                                    )
     ) |>
-      ArrayReduceDims()
+      ReduceDims()
     
   }
   
@@ -186,7 +186,7 @@ OM2DiscardMortality <- function(OM, cpars=list(), Fdisc=NULL) {
                                       Year=Years
                                     )
     ) |>
-      ArrayReduceDims()
+      ReduceDims()
   }
   DiscardMortality
 }
@@ -216,7 +216,7 @@ OM2WeightFleet <- function(OM, cpars=list()) {
           Age=AgeClasses,
           Year=Years
         )) |>
-    ArrayReduceDims()
+    ReduceDims()
   
 }
 

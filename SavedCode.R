@@ -53,7 +53,7 @@ OM2om <- function(OM, Author='', CurrentYear=NULL, Populate=TRUE) {
       }
     }
     # reduce time-series dimension
-    om <- ArrayReduceDims(om)
+    om <- ReduceDims(om)
   }
   if (Populate)
     om <- Populate(om)

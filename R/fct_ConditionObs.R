@@ -260,7 +260,7 @@ ConditionObs_Index <- function(HistSim, FisheryData, HistYears, ProjYears,
         }
       } else if (SelectivityAtAge == 'SBiomass') {
         for (st in seq_along(stocks)) {
-          SelectivityAtAgeList[[st]] <- HistSim@OM@Stock[[stocks[st]]]@Maturity@MeanAtAge |> ArrayReduceDims()
+          SelectivityAtAgeList[[st]] <- HistSim@OM@Stock[[stocks[st]]]@Maturity@MeanAtAge |> ReduceDims()
         }
    
       } else if (SelectivityAtAge == 'Obs') {
@@ -272,7 +272,7 @@ ConditionObs_Index <- function(HistSim, FisheryData, HistYears, ProjYears,
       SelectivityAtAgeList <- purrr::map(HistSim@OM@Fleet[stocks], \(stock) {
         stock@Selectivity@MeanAtAge[,,fl] |>
           ArraySubsetYear(HistYears) |> 
-          ArrayReduceDims()
+          ReduceDims()
         }) 
     }
   

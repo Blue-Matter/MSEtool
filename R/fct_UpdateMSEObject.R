@@ -57,7 +57,7 @@ UpdateMSEObject <- function(MSE, SimList_MP, MP, mp, YearsHist, YearsProj) {
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)),
                     Years=YearsAll) |>
         ArraySubsetYear(Years=YearsProj) |>
-        ArrayReduceDims(IncYear=FALSE)
+        ReduceDims(IncYear=FALSE)
     })
   }) |> 
     ReverseList() |>
@@ -76,7 +76,7 @@ UpdateMSEObject <- function(MSE, SimList_MP, MP, mp, YearsHist, YearsProj) {
                     values=c(list(NA), list(FleetNames), list(NA), list(NA)),
                     Years=YearsAll) |>
         ArraySubsetYear(Years=YearsProj) |>
-        ArrayReduceDims(IncYear=FALSE)
+        ReduceDims(IncYear=FALSE)
     })
   }) |> 
     ReverseList() |>

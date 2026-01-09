@@ -25,8 +25,8 @@ or a 2D array with dimensions \code{Age}, and \code{Year}}
 Spawn timing within a given timestep. Default is 0 (beginning of time step)}
 
 \item{Semelparous}{Semelparous mortality. Either logical (\code{FALSE}; default) to ignore, or
-a 3D array with dimensions \code{Sim}, \code{Age}, and \code{Year},
-or a 2D array with dimensions \code{Age}, and \code{Year}}
+a 3D array with named dimensions \code{Sim}, \code{Age}, and \code{Year},
+or a 2D array with named dimensions \code{Age}, and \code{Year}}
 }
 \value{
 An array with the same dimensions as \code{NaturalMortality} with the

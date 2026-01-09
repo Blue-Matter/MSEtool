@@ -158,25 +158,10 @@ Stock <- function(Name=NULL,
                   Seasons=1,
                   Misc=list(),
                   ...) {
-  
+
   if (inherits(Name, 'om')) {
-    if (inherits(Name@Stock, 'list')) {
-      if (inherits(CommonName, 'numeric')) {
-        if (CommonName > nStock(Name)) {
-          if (nStock(Name)==1) {
-            cli::cli_abort('OM has only {.val {nStock(Name)}} stock')
-          } else {
-            cli::cli_abort('OM has only {.val {nStock(Name)}} stocks')
-          }
-        } else {
-          return(Name@Stock[[CommonName]])
-        }
-      } else {
-        cli::cli_inform('`Stock` is a list. Returning stock list. \n Use `Stock(OM, x)` to access stock `x`')
-        return(Name@Stock)
-      }
-    }
-    return(Name@Stock)
+    # return a Stock or StockList object 
+    return(ReturnStockObject(Name, CommonName))
   }
   
   # dots <- list(...)
@@ -233,4 +218,24 @@ Stock <- function(Name=NULL,
     return(x)
   }
   cli::cli_abort('`value` must be a `Stock` object or a list of `Stock` objects')
+}
+
+ReturnStockObject <- function( Name, CommonName) {
+  if (inherits(Name@Stock, 'StockList')) {
+    if (inherits(CommonName, 'numeric')) {
+      if (CommonName > nStock(Name)) {
+        if (nStock(Name)==1) {
+          cli::cli_abort('OM has only {.val {nStock(Name)}} stock')
+        } else {
+          cli::cli_abort('OM has only {.val {nStock(Name)}} stocks')
+        }
+      } else {
+        return(Name@Stock[[CommonName]])
+      }
+    } else {
+      cli::cli_inform('`Stock` is a list. Returning list of Stock objecgs. \n Use `Stock(OM, x)` to access stock `x`')
+      return(Name@Stock)
+    }
+  }
+  Name@Stock
 }
