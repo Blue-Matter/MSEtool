@@ -84,7 +84,7 @@ OptimizeCatchability_Multi <- function(HistSim, YearsHist, bounds, tol, silent, 
     }
   }
   
-  CatchFrac <- List2Array(HistSim@OM@CatchFrac, dimname = 'Stock') |> t()
+  CatchFrac <- List2Array(HistSim@OM@CatchFrac, name = 'Stock') |> t()
   EffortFleet <- array(NA, dim=dim(CatchFrac))
   nTS <- length(YearsHist)
   for (st in 1:nStock) {
@@ -230,7 +230,7 @@ OptCatchability <- function(pars, HistSim, YearsHist, debug=FALSE) {
     predCatchFrac <- predCatchFrac/total
     
     # Lazy - should be: sum(log(CFc[,2:nf]/Cpred[,2:nf])^2) but this doesn't work for single fleets and it makes no difference anyway
-    CatchFrac <- List2Array(HistSim@OM@CatchFrac, dimname = 'Stock') |> t()
+    CatchFrac <- List2Array(HistSim@OM@CatchFrac, name = 'Stock') |> t()
     cOBJ <- sum(log(CatchFrac/predCatchFrac)^2) 
     depOBJ <- depOBJ+cOBJ
   }

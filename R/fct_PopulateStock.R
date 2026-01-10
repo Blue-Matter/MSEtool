@@ -1,3 +1,5 @@
+#' @rdname PopulateOM
+#' @export
 PopulateStock <- function(Stock,
                           nYear,
                           pYear,
@@ -85,7 +87,8 @@ PopulateStock <- function(Stock,
     force
   )
 
-  Stock@Fecundity <- PopulateFecundity(Stock@Fecundity,
+  Stock@Fecundity <- PopulateFecundity(
+    Fecundity=Stock@Fecundity,
     Ages = Stock@Ages,
     Length = Stock@Length,
     Weight = Stock@Weight,
@@ -265,8 +268,14 @@ PopulateWeight <- function(Weight,
     ASK <- FALSE
   }
 
-  Weight@MeanAtAge <- AddDimNames(Weight@MeanAtAge, Years = Years, Ages = Ages@Classes)
-  Weight@CVatAge <- AddDimNames(Weight@CVatAge, Years = Years, Ages = Ages@Classes)
+  if (is.null(dimnames(Weight@MeanAtAge))) {
+    dd <- dim(Weight@MeanAtAge)
+    dimnames(Weight@MeanAtAge) <- list(
+      Sim=1:dd[1],
+      Age=Ages@Classes[1:dd[2]],
+      Year=Years[1:dd[3]]
+    )
+  }
 
   if (ASK) {
     Weight <- PopulateClasses(Weight)
@@ -395,8 +404,24 @@ PopulateMaturity <- function(Maturity,
       Maturity@Semelparous[] <- 0
     }
   }
-  Maturity@MeanAtAge <- AddDimNames(Maturity@MeanAtAge, Years = Years, Ages = Ages@Classes)
-  Maturity@Semelparous <- AddDimNames(Maturity@Semelparous, Years = Years, Ages = Ages@Classes)
+  
+  if (is.null(dimnames(Maturity@MeanAtAge))) {
+    dd <- dim(Maturity@MeanAtAge)
+    dimnames(Maturity@MeanAtAge) <- list(
+      Sim=1:dd[1],
+      Age=Ages@Classes[1:dd[2]],
+      Year=Years[1:dd[3]]
+    )
+  }
+  
+  if (is.null(dimnames(Maturity@Semelparous))) {
+    dd <- dim(Maturity@Semelparous)
+    dimnames(Maturity@Semelparous) <- list(
+      Sim=1:dd[1],
+      Age=Ages@Classes[1:dd[2]],
+      Year=Years[1:dd[3]]
+    )
+  }
 
   SetDigest(Maturity, argList)
 }
@@ -518,9 +543,15 @@ PopulateFecundity <- function(Fecundity,
     Fecundity <- MeanAtAge2MeanAtLength(Fecundity, Length)
   }
 
-
-  Fecundity@MeanAtAge <- AddDimNames(Fecundity@MeanAtAge, Years = Years, Ages = Ages@Classes)
-
+  if (is.null(dimnames(Fecundity@MeanAtAge))) {
+    dd <- dim(Fecundity@MeanAtAge)
+    dimnames(Fecundity@MeanAtAge) <- list(
+      Sim=1:dd[1],
+      Age=Ages@Classes[1:dd[2]],
+      Year=Years[1:dd[3]]
+    )
+  }
+  
   SetDigest(Fecundity, argList)
 }
 

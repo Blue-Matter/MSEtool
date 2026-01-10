@@ -7,7 +7,7 @@ IdenticalSims <- function(SimList, Years, EditSlots=TRUE) {
     return(TRUE)
 
   SimList <- purrr::map(SimList, \(List) {
-    List <-  List |> SubsetYear(Years, AddPast = FALSE)
+    List <-  List |> SubsetYear(Years, Impute = FALSE)
     if (EditSlots) 
       List <- EditSlotsForSimCheck(List)
     List

@@ -22,5 +22,5 @@ GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), Years=N
        StockNames=StockNames(OM),
        Years=Years,
        Period=Period,
-       FleetNames=FleetNames(OM))
+       FleetNames=FleetNames(OM)[[1]])
 }

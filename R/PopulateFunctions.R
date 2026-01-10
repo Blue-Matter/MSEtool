@@ -237,7 +237,8 @@ PopulateASK <- function(object, Ages=NULL, Years=NULL, silent=FALSE, type='Lengt
                                TruncSD, 
                                Dist,
                                AgeClasses=Ages@Classes,
-                               silent=silent, type=type)
+                               silent=silent, 
+                               type=type)
   
 
   Years <- c(dimnames(MeanAtAge)$Year,

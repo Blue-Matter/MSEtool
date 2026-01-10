@@ -39,7 +39,8 @@ setClass('ages',
          contains = c('ClassesClass')
 )
 
-#' @describeIn Ages Create a new `ages` object
+#' @describeIn Ages Create a new [Ages()] object or access an [Ages()] object from 
+#' a [Stock()] object
 #'
 #' @param MaxAge Either a numeric value specifying the maximum age (in units
 #'   corresponding to `Units`), or a [Stock()] object, in which case the

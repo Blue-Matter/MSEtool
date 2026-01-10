@@ -1,4 +1,4 @@
-#' @describeIn Populate Populate an [fleet-class()] object
+#' @rdname PopulateOM
 #' @export
 PopulateFleet <- function(Fleet,
                           Stock,
@@ -260,7 +260,137 @@ PopulateCatchability <- function(Catchability,
 }
 
 
+FindL50_vec <- function(prob_vec) {
+  classes <- names(prob_vec) |> as.numeric()
+  LinInterp(prob_vec, y=classes, 0.5)
+}
 
+FindL50 <- function(Maturity) {
+  if (!is.null(Maturity@Pars$L50)) {
+    return(Maturity@Pars$L50)
+  }
+  
+  MaturityAtLength <- Maturity@MeanAtLength
+  if (is.null(MaturityAtLength)) {
+    cli::cli_abort("Values required for `Maturity@MeanAtLength` if `Selectivity@isRel == TRUE`")
+  }
+  
+  apply(Maturity@MeanAtLength, c('Sim', 'Year'), FindL50_vec)
+}
+
+PopulateSelectivity <- function(Selectivity,
+                                Ages = NULL,
+                                Length = NULL,
+                                Weight = NULL,
+                                Maturity = NULL,
+                                nSim = 5,
+                                Years = NULL,
+                                nArea = 1,
+                                CalcAtLength = TRUE,
+                                seed = NULL,
+                                silent = FALSE,
+                                CheckMaxValue = TRUE) {
+  argList <- list(Ages, Length, Weight, Years, nArea, nSim, CalcAtLength, seed)
+  
+  if (CheckDigest(Selectivity, argList)) {
+    return(Selectivity)
+  }
+  
+  SetSeed(seed)
+  
+  Selectivity@Pars <- StructurePars(Pars = Selectivity@Pars, nSim, Years, nArea)
+  Selectivity@Model <- FindModel(Selectivity)
+  ModelClass <- getModelClass(Selectivity@Model)
+  
+  if (!is.null(ModelClass)) {
+    # Model & Parameters exist
+    
+    if (Selectivity@isRel) {
+      CheckRequiredObject(Maturity, 'maturity', 'Maturity')
+      L50 <- FindL50(Maturity)
+      # TODO - extend for other parameters? 
+      Selectivity@Pars$L5 <- ArrayMultiply(Selectivity@Pars$L5, L50)
+      Selectivity@Pars$LFS <- ArrayMultiply(Selectivity@Pars$LFS, L50)
+    }
+    
+    if (grepl("at-Length", getModelClass(Selectivity@Model))) {
+      Selectivity <- PopulateMeanAtLength(
+        Selectivity,
+        Length,
+        Years,
+        Ages,
+        nSim,
+        seed,
+        silent
+      )
+    } else if (grepl("at-Weight", getModelClass(Selectivity@Model))) {
+      Selectivity <- PopulateMeanAtWeight(Selectivity, Weight, Years, Ages, nSim, seed, silent)
+    } else if (grepl("at-Age", getModelClass(Selectivity@Model))) {
+      Selectivity <- PopulateMeanAtAge(Selectivity, Ages, Years, Length)
+    }
+  }
+  
+  Selectivity <- MeanAtLength2MeanAtAge(Selectivity, Length, max1 = TRUE)
+  Selectivity <- MeanAtWeight2MeanAtAge(Selectivity, Weight, max1 = TRUE)
+  
+  if (CalcAtLength) {
+    Selectivity <- MeanAtAge2MeanAtLength(Selectivity, Length, replace = FALSE)
+  }
+  
+  
+  if (is.null(Selectivity@MeanAtAge)) {
+    cli::cli_abort(" {.var Selectivity} requires values for either `Model` & `Pars` or `MeanAtAge`")
+  }
+  
+  # Check Selectivity has a max value of 1 across age classes
+  if (CheckMaxValue) {
+    Selectivity@MeanAtAge <- CheckSelectivityMaximum(Selectivity@MeanAtAge)
+  }
+  
+  # Add Area Dimension 
+  Selectivity@MeanAtLength <- AddDimension(Selectivity@MeanAtLength, 'Area')
+  Selectivity@MeanAtWeight <- AddDimension(Selectivity@MeanAtWeight, 'Area') 
+  Selectivity@MeanAtAge <- AddDimension(Selectivity@MeanAtAge, 'Area')
+  
+  # Add Dimension Names
+  if (is.null(dimnames(Selectivity@MeanAtLength))) {
+    dd <- dim(Selectivity@MeanAtLength)
+    if (!is.null(dd)) {
+      dimnames(Selectivity@MeanAtLength) <- list(
+        Sim=1:dd[1],
+        Class=Selectivity@Classes,
+        Year=Years[1:dd[3]],
+        Area=1:dd[4]
+      )
+    }
+  }
+  
+  if (is.null(dimnames(Selectivity@MeanAtWeight))) {
+    dd <- dim(Selectivity@MeanAtWeight)
+    if (!is.null(dd)) {
+      dimnames(Selectivity@MeanAtWeight) <- list(
+        Sim=1:dd[1],
+        Class=Selectivity@Classes,
+        Year=Years[1:dd[3]],
+        Area=1:dd[4]
+      )
+    }
+  }
+  
+  if (is.null(dimnames(Selectivity@MeanAtAge))) {
+    dd <- dim(Selectivity@MeanAtAge)
+    if (!is.null(dd)) {
+      dimnames(Selectivity@MeanAtAge) <- list(
+        Sim=1:dd[1],
+        Age=Ages@Classes[1:dd[2]],
+        Year=Years[1:dd[3]],
+        Area=1:dd[4]
+      )
+    }
+  }
+  
+  SetDigest(Selectivity, argList)
+}
 
 PopulateRetention <- function(Retention,
                               Ages = NULL,
@@ -335,23 +465,41 @@ PopulateRetention <- function(Retention,
   Retention@MeanAtAge <- AddDimension(Retention@MeanAtAge, 'Area')
   
   # Add Dimension Names
-  Retention@MeanAtLength <- SetDimNames_SCYR(
-    Retention@MeanAtLength,
-    Retention@Classes,
-    Years
-  )
-
-  Retention@MeanAtWeight <- SetDimNames_SCYR(
-    Retention@MeanAtWeight,
-    Retention@Classes,
-    Years
-  )
-
-  Retention@MeanAtAge <- SetDimNames_SAYR(
-    Retention@MeanAtAge,
-    Ages@Classes,
-    Years
-  )
+  if (is.null(dimnames(Retention@MeanAtLength))) {
+    dd <- dim(Retention@MeanAtLength)
+    if (!is.null(dd)) {
+      dimnames(Retention@MeanAtLength) <- list(
+        Sim=1:dd[1],
+        Class=Retention@Classes,
+        Year=Years[1:dd[3]],
+        Area=1:dd[4]
+      )
+    }
+  }
+  
+  if (is.null(dimnames(Retention@MeanAtWeight))) {
+    dd <- dim(Retention@MeanAtWeight)
+    if (!is.null(dd)) {
+      dimnames(Retention@MeanAtWeight) <- list(
+        Sim=1:dd[1],
+        Class=Retention@Classes,
+        Year=Years[1:dd[3]],
+        Area=1:dd[4]
+      )
+    }
+  }
+  
+  if (is.null(dimnames(Retention@MeanAtAge))) {
+    dd <- dim(Retention@MeanAtAge)
+    if (!is.null(dd)) {
+      dimnames(Retention@MeanAtAge) <- list(
+        Sim=1:dd[1],
+        Age=Ages@Classes[1:dd[2]],
+        Year=Years[1:dd[3]],
+        Area=1:dd[4]
+      )
+    }
+  }
 
   SetDigest(Retention, argList)
 }
@@ -393,17 +541,30 @@ PopulateDiscardMortality <- function(DiscardMortality,
   DiscardMortality@MeanAtLength <- AddDimension(DiscardMortality@MeanAtLength, 'Area')
   DiscardMortality@MeanAtAge <- AddDimension(DiscardMortality@MeanAtAge, 'Area')
   
-  DiscardMortality@MeanAtLength <- SetDimNames_SCYR(
-    DiscardMortality@MeanAtLength,
-    DiscardMortality@Classes,
-    Years
-  )
-  DiscardMortality@MeanAtAge <- SetDimNames_SAYR(
-    DiscardMortality@MeanAtAge,
-    Ages@Classes,
-    Years
-  )
-
+  if (is.null(dimnames(DiscardMortality@MeanAtLength))) {
+    dd <- dim(DiscardMortality@MeanAtLength)
+    if (!is.null(dd)) {
+      dimnames(DiscardMortality@MeanAtLength) <- list(
+        Sim=1:dd[1],
+        Class=DiscardMortality@Classes,
+        Year=Years[1:dd[3]],
+        Area=1:dd[4]
+      )
+    }
+  }
+  
+  if (is.null(dimnames(DiscardMortality@MeanAtAge))) {
+    dd <- dim(DiscardMortality@MeanAtAge)
+    if (!is.null(dd)) {
+      dimnames(DiscardMortality@MeanAtAge) <- list(
+        Sim=1:dd[1],
+        Age=Ages@Classes[1:dd[2]],
+        Year=Years[1:dd[3]],
+        Area=1:dd[4]
+      )
+    }
+  }
+  
   SetDigest(DiscardMortality, argList)
 }
 

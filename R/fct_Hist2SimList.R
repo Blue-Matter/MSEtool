@@ -4,7 +4,7 @@ Hist2SimList <- function(Hist) {
   # `sim` dimension removed from all 
   
   SimList <- purrr::map(1:nSim(Hist@OM), \(x) {
-    hist <- SubsetSim(Hist, Sim = x, drop = TRUE)
+    hist <- SubsetSim(Hist, Sims = x)
     hist@Log$OptDepletionRatio <- SubsetSim(Hist@Log$OptDepletionRatio, x)
     if (length(Hist@Data) < 1) {
       return(hist)

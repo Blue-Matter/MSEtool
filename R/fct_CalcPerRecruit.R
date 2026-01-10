@@ -27,7 +27,7 @@ CalcPerRecruit <- function(apicalF, OM, Years=NULL) {
   if (is.null(Years))
     Years <- OM |> Years('Historical') |> tail(1)
 
-  StockList <- PopulateStockList(OM) |> SubsetYear(Years, AddPast = FALSE)
+  StockList <- PopulateStockList(OM) |> SubsetYear(Years, Impute  = FALSE)
   StockFleetList <- PopulateFleetList(OM, StockList) |> SubsetYear(Years)
   nAgesList <- purrr::map(StockList, \(Stock)
                           length(Stock@Ages@Classes))

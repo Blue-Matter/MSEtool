@@ -49,7 +49,7 @@ DataTrim <- function(Data, Year) {
   
   OutYears <- Years[Years <= Year]
   
-  OutData <- SubsetYear(Data, OutYears, AddPast=FALSE)
+  OutData <- SubsetYear(Data, OutYears, Impute =FALSE)
   # OutData@Years <- OutYears
   OutData@TAC <- saveTAC
   OutData

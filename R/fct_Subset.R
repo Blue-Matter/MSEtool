@@ -399,6 +399,6 @@ ArraySubsetAge <- function(array, Ages=NULL) {
   ## logical selector preserves order of AgeVals
   sel <- AgeVals %in% Ages
   
-  do.call(`[`, c(list(array), make_index(sel, array), list(drop = drop)))
+  do.call(`[`, c(list(array), make_index(sel, array), list(drop = FALSE)))
 
 }

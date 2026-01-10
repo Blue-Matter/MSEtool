@@ -33,7 +33,7 @@ Simulate_om <- function(OM = NULL,
                         Reduce = TRUE,
                         ...) {
   # ---- Initial Checks and Setup ----
-  OnExit() # Terminate `cli` on exit
+  OnExit() 
   
   # Populate OM, reduce nSim if applicable, checks and warning messages 
   OM <- StartUp(OM, nSim) 
@@ -53,6 +53,18 @@ Simulate_om <- function(OM = NULL,
   # - account for Initial Depletion 
   Hist <- CalcDynamicInitial(Hist)
   
+  
+  ##############################################################################
+  
+  stop()
+  # calculate VB in c++ etc
+
+  tictoc::tic()
+  HistOUT <- CalcFisheryDynamics_(Hist, Years=HistYears)
+  tictoc::toc()
+  
+  
+  ##############################################################################
   
   # ---- Build SimList ----
   SimList <- Hist2SimList(Hist) # List of `Hist` objects, each with one simulation

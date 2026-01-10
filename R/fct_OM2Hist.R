@@ -16,7 +16,6 @@ OM2Hist <- function(OM, silent=FALSE) {
   nYears <- length(HistYears)
   nSim <- OM@nSim
   
-
   # Stock - expand all arrays to include all Sims and all Years
   # TODO - this could be improved later by keeping all arrays at the minimum
   #        size and updating the code to match Sim/Year
@@ -79,7 +78,7 @@ InitializeTimeSeries <- function(Hist)  {
   # Add Effort from OM
   for (st in 1:nStock(OM)) {
     for (fl in 1:nFleet(OM)) {
-      Hist@Effort[,st,,fl] <- Hist@OM@Fleet[[st]][[fl]]@Effort@Effort[,1:OM@nYear]  
+      Hist@Effort[,st,,fl] <- Hist@OM@Fleet[[st]][[fl]]@Effort@Effort
     }
   }
   
@@ -92,7 +91,7 @@ InitializeTimeSeries <- function(Hist)  {
   # Add Distribution from OM
   for (st in 1:nStock(OM)) {
     for (fl in 1:nFleet(OM)) {
-      Hist@Distribution[,st,,fl,] <- Hist@OM@Fleet[[st]][[fl]]@Effort@Distribution[,1:OM@nYear,,drop=FALSE] 
+      Hist@Distribution[,st,,fl,] <- Hist@OM@Fleet[[st]][[fl]]@Effort@Distribution 
     }
   }
   

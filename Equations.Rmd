@@ -1,0 +1,115 @@
+---
+title: "Equations"
+output: html_document
+date: "2026-01-10"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Full Model: Spatial Distribution of Effort for Multi-Stock/Fleet
+
+This is the full model. Not all parameters are currently in MSEtool
+
+### Expected revenue per unit effort:
+
+Indices
+
+-   $f$: fleet
+-   $k$: stock
+-   $s$: spatial area
+-   $a$: age (could also be length)
+-   $t$: time (year or season)
+
+Notation
+
+-   $R$: revenue
+
+-   $S$: selectivity (includes retention in pracice)
+
+-   $B$: biomass by age
+
+-   $q$: catchability by fleet, stock, and time
+
+-   $p$ price by fleet, stock, age and time
+
+-   $\lambda$ : shadow price
+
+$$
+R_{f,s,t}=\sum_k\sum_a\left(p_{f,k,a,t}-\lambda_{f,k,t}\right)\;q_{f,k,t}\;S_{f,k,a}\;B_{k,s,a,t}
+$$
+
+Fleets evaluate areas based on expected gross revenue per unit effort
+
+Shadow price is the marginal value of relaxing the quota constraint.
+
+$$
+\lambda_{f,k,t} = \frac{\partial\Pi_{f,t}}{\partial Q_{f,k,t}}
+$$
+
+No quota constraint $\lambda = 0$
+
+Quota constraint: $\lambda > 0$
+
+$\Pi$ = total economic profit for fleet $f$ in time $t$
+
+Iteratively solve $\lambda$ for multi-stock models with quota
+
+### Deterministic Spatial Utility
+
+$$
+\eta_{f,s,t}=\beta_{f,R}\ln\!\left(R_{f,s,t}\right)-\beta_{f,C} \, c_{f,s,t}-\beta_{f,D} \, d_{f,s}+\xi_{f,s}
+$$
+
+Preference Parameters (relative)
+
+-   $\beta_{f,R}$ : revenue sensitivity
+
+-   $\beta_{f,C}$: cost aversion
+
+-   $\beta_{f,D}$: distance aversion
+
+-   $\xi_{f,s}$: persistent spatial preference (e.g habit, port access, regulation)
+
+Cost Parameters:
+
+-   $c_{f,s,t}$: cost per unit effort by fleet, area, and time
+
+-   $d_{f,s}$: fixed distance/travel cost by fleet and area
+
+### Logit (arbitrary targeting) effort share
+
+$$
+w_{f,s,t}=\frac{\exp\!\left(\theta_f \, \eta_{f,s,t}\right)}{\sum_{j}\exp\!\left(\theta_f \, \eta_{f,j,t}\right)}
+$$
+
+-   $w_{f,s,t}$: effort share
+
+-   $\theta_f$ : targeting strength
+
+    -   Low -\> diffuse effort
+
+    -   High -\> near-IFD behaviour
+
+### Effort Allocation
+
+$$
+E_{f,s,t}=E_{f,t}\,w_{f,s,t},\qquad\sum_s w_{f,s,t} = 1
+$$
+
+## As Currently Coded
+
+### Vulnerable Biomass
+
+$$
+VB_{f,k,s,t}=\sum_aq_{f,k,t}\;S_{f,k,a}\;B_{k,s,a,t}
+$$
+
+### Effective Biomass
+
+$$
+EB_{f,k,s,t} = q_{f,k,t} VB_{f,k,s,t}
+$$
+
+### Spatial Utility

@@ -12,22 +12,29 @@ Ages(MaxAge, MinAge = 0, Units = "year", PlusGroup = TRUE)
 Ages(x) <- value
 }
 \arguments{
-\item{MaxAge}{Either an integer specifying the maximum age in units corresponding to \code{Units} of a \code{\link[=Stock]{Stock()}}, or a \code{\link[=Stock]{Stock()}} class object. If \code{PlusGroup==TRUE}, \code{MaxAge} will be a plusgroup. \strong{Required}}
+\item{MaxAge}{Either a numeric value specifying the maximum age (in units
+corresponding to \code{Units}), or a \code{\link[=Stock]{Stock()}} object, in which case the
+existing \code{Ages} slot is returned.}
 
-\item{MinAge}{An integer specifying the minimum age in units corresponding to \code{Units} for a \code{\link[=Stock]{Stock()}}. Default is 0.}
+\item{MinAge}{Numeric value specifying the minimum age. Default is \code{0}.}
 
-\item{Units}{A character string specifying the units of \code{MaxAge} and \code{MinAge}. Must be one of \code{ValidUnits()}}
+\item{Units}{Character string specifying the units used to define age
+classes. Must be one of \code{ValidUnits()}.}
 
-\item{PlusGroup}{Logical. Use a plus group?}
+\item{PlusGroup}{Logical; should the maximum age be treated as a plus group?}
 
-\item{x}{A \code{\link[=Stock]{Stock()}} class object}
+\item{x}{A \code{\link[=Stock]{Stock()}} object}
 
-\item{value}{An \code{ages} class object to assign to \code{x}}
+\item{value}{An \code{\link[=Ages]{Ages()}} object to assign}
 }
 \description{
-An \code{Ages} object contains information related to the age classes of a \code{\link[=Stock]{Stock()}} object.
+An \code{Ages} object defines the age structure associated with a \code{\link[=Stock]{Stock()}}
+object. It specifies the minimum and maximum ages, whether a plus group
+is used, and the resulting vector of age classes.
 }
 \details{
+Age classes are internally represented as numeric values \strong{in units of
+years}, and may be fractional (e.g. seasonal or sub-annual ages; rounded to 3 digits).
 \subsection{Creating New Objects}{
 
 New \code{ages} objects can be created with \code{Ages()}, see \code{Usage} and \code{Examples} for details.
@@ -40,25 +47,30 @@ Like all of the new style objects in \code{MSEtool}, the slots in \code{ages} ob
 }
 \section{Functions}{
 \itemize{
-\item \code{Ages()}: Create a new \code{ages} class object
+\item \code{Ages()}: Create a new \code{\link[=Ages]{Ages()}} object or access an \code{\link[=Ages]{Ages()}} object from
+a \code{\link[=Stock]{Stock()}} object
 
-\item \code{Ages(x) <- value}: Assign an \code{ages} class object to a \code{\link[=Stock]{Stock()}} object
+\item \code{Ages(x) <- value}: Assign an \code{\link[=Ages]{Ages()}} object to a \code{\link[=Stock]{Stock()}} object
 
 }}
 \section{Slots}{
 
 \describe{
-\item{\code{MaxAge}}{Numeric value specifying the maximum age}
+\item{\code{MaxAge}}{Numeric value specifying the maximum age.
+If \code{PlusGroup = TRUE}, this represents the plus group age.}
 
-\item{\code{MinAge}}{Numeric value specifying the minimum age}
+\item{\code{MinAge}}{Numeric value specifying the minimum age.}
 
-\item{\code{Units}}{Character string describing the units of \code{MaxAge} and \code{MinAge}}
+\item{\code{Units}}{Character string describing the time units used to define
+age classes (e.g. \code{"year"}).}
 
-\item{\code{PlusGroup}}{Logical. Use a plusgroup?}
+\item{\code{PlusGroup}}{Logical; indicates whether the maximum age is treated
+as a plus group.}
 
-\item{\code{Classes}}{Numeric vector of the age classes. \strong{Note:} Age classes are \emph{always} in units of a year}
+\item{\code{Classes}}{Numeric vector of age classes expressed in \strong{years}.
+May include fractional values (e.g. \code{0.25}, \code{1.5}).}
 }}
 
 \seealso{
-\code{\link[=MaxAge]{MaxAge()}}, \code{\link[=MinAge]{MinAge()}}, []
+\code{\link[=MaxAge]{MaxAge()}}, \code{\link[=MinAge]{MinAge()}}
 }

@@ -289,7 +289,7 @@ BAM2Stock <- function(BAMdata, nSim, Years) {
   stock <- PopulateStock(stock, stock@nYear, stock@pYear, stock@CurrentYear, stock@nSim)
   
   # Recruitment Deviations 
-  UnfishedEq <- ArrayMultiply(CalcUnfishedSurvival(stock, Years=Years, Expand = FALSE), 
+  UnfishedEq <- ArrayMultiply(CalcUnfishedSurvival(stock, Years=Years, Extend = FALSE), 
                               aperm(AddDimension(stock@SRR@R0, 'Age'), c(1,3,2))
   )
   

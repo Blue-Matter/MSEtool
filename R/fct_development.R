@@ -37,7 +37,7 @@ LoadArgs <- function(fun='Simulate', envir = .GlobalEnv, debug=FALSE) {
 
 
 #' @export
-la <- function() {
+la <- function(recompile=FALSE) {
   CheckPackage('devtools')
-  devtools::load_all()
+  devtools::load_all(recompile=recompile)
 }

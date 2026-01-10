@@ -1,13 +1,13 @@
-ProcessEFactor <- function(om) {
-  if (!length(om@EFactor)) {
-    om@EFactor <- MakeNamedList(StockNames(om), 
-                                array(1, dim=c(1, nFleet(om)),
+ProcessEFactor <- function(OM) {
+  if (!length(OM@EFactor)) {
+    OM@EFactor <- MakeNamedList(StockNames(OM), 
+                                array(1, dim=c(1, nFleet(OM)),
                                       dimnames = list(
                                         Sim=1,
-                                        Fleet=FleetNames(om)
+                                        Fleet=FleetNames(OM)[[1]]
                                       )
                                 ))
-    return(om)
+    return(OM)
   }
   
   # TODO

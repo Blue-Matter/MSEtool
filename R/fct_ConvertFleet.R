@@ -34,7 +34,7 @@ Fleet2Name <- function(Fleet) {
 }
 
 Fleet2Effort <- function(Fleet) {
-  Effort(Value=data.frame(Year=Fleet@EffYears,
+  Effort(Effort=data.frame(Year=Fleet@EffYears,
                           Lower=Fleet@EffLower,
                           Upper=Fleet@EffUpper,
                           CV=Fleet@Esd[1]))

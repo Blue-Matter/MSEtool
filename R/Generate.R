@@ -153,15 +153,15 @@ GenerateRecruitmentDeviations <- function(SD=0.2,
   nHistTS <- length(HistTS)
   nProjTS <- length(ProjTS)
   
-  if (!is.null(nSim) && nSim==1) {
-    cli::cli_alert_info('`nSim=1`. Assuming no process error ')
-    return(
-      list(RecDevInit=array(1, dim=c(1, nInitRecDev)),
-           RecDevHist=array(1, dim=c(1,nHistTS)),
-           RecDevProj=array(1, dim=c(1,nProjTS))
-      )
-    )
-  }
+  # if (!is.null(nSim) && nSim==1) {
+  #   cli::cli_alert_info('`nSim=1`. Assuming no process error ')
+  #   return(
+  #     list(RecDevInit=array(1, dim=c(1, nInitRecDev)),
+  #          RecDevHist=array(1, dim=c(1,nHistTS)),
+  #          RecDevProj=array(1, dim=c(1,nProjTS))
+  #     )
+  #   )
+  # }
 
   genInit <- TRUE
   genHist <- TRUE

@@ -1,7 +1,76 @@
-## ---- OM -----
-#' @describeIn Populate Populate an [OM()] object
-#' @param seed Seed for the random number generator
-#' @param force Populate object even if digest hasn't changed?
+#' Populate operating model components
+#'
+#' Populate and update operating model objects by filling derived slots,
+#' expanding stochastic dimensions, and generating simulation-level quantities.
+#'
+#' These functions are internal population engines used to initialise and
+#' update \link{OM}, \link{Stock}, and \link{Fleet} objects prior to simulation.
+#' Population is skipped if the object digest is unchanged, unless
+#' `force = TRUE`.
+#'
+#' @section Functions:
+#' \describe{
+#'   \item{\code{PopulateOM()}}{
+#'     Populate a complete operating model.
+#'   }
+#'   \item{\code{PopulateStock()}}{
+#'     Populate biological stock components including growth, mortality,
+#'     maturity, fecundity, recruitment, spatial structure, and depletion.
+#'   }
+#'   \item{\code{PopulateFleet()}}{
+#'     Populate fleet components including effort, catchability, selectivity,
+#'     retention, discard mortality, and spatial closures.
+#'   }
+#' }
+#'
+#' @param OM An \link{OM} object.
+#' @param Stock A \link{Stock} object.
+#' @param Fleet A \link{Fleet} object.
+#'
+#' @param nYear Number of historical years.
+#' @param pYear Number of projection years.
+#' @param CurrentYear Character; current calendar year.
+#' @param nSim Number of simulation replicates.
+#' @param Seasons Number of seasons per year.
+#'
+#' @param ALK Logical; whether to populate age–length keys.
+#' @param AWK Logical; whether to populate age–weight keys.
+#'
+#' @param seed Integer random seed used for stochastic components.
+#' @param silent Logical; suppress informational messages.
+#' @param force Logical; force re-population even if the object digest
+#'   is unchanged.
+#'
+#' @return
+#' An object of the same class as the input, with populated and updated slots.
+#'
+#' @seealso
+#' \link{OM},
+#' \link{Stock},
+#' \link{Fleet}
+#'
+#' @examples
+#' \dontrun{
+#' # Populate a full operating model
+#' OM <- PopulateOM(OM)
+#'
+#' # Populate a stock
+#' Stock <- PopulateStock(
+#'   Stock,
+#'   nYear = 40,
+#'   pYear = 20,
+#'   nSim = 100
+#' )
+#'
+#' # Populate a fleet
+#' Fleet <- PopulateFleet(
+#'   Fleet,
+#'   Stock = Stock,
+#'   nSim = 100
+#' )
+#' }
+#' @name PopulateOM
+#' @rdname PopulateOM
 #' @export
 PopulateOM <- function(OM, silent = FALSE, force = FALSE) {
   CheckClass(OM)
@@ -189,7 +258,7 @@ PopulateImpList <- function(OM, silent = FALSE) {
   ImpList <- MakeNamedList(
     StockNames(OM),
     MakeNamedList(
-      FleetNames(OM),
+      FleetNames(OM)[[1]],
       new("imp")
     )
   )

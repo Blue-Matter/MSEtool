@@ -82,6 +82,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// CalcFisheryDynamics_
+Rcpp::S4 CalcFisheryDynamics_(S4 Hist, Rcpp::NumericVector Years, int CalcCatch, int debug);
+RcppExport SEXP _MSEtool_CalcFisheryDynamics_(SEXP HistSEXP, SEXP YearsSEXP, SEXP CalcCatchSEXP, SEXP debugSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< S4 >::type Hist(HistSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Years(YearsSEXP);
+    Rcpp::traits::input_parameter< int >::type CalcCatch(CalcCatchSEXP);
+    Rcpp::traits::input_parameter< int >::type debug(debugSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcFisheryDynamics_(Hist, Years, CalcCatch, debug));
+    return rcpp_result_gen;
+END_RCPP
+}
 // CalcNumberNext_
 arma::mat CalcNumberNext_(arma::mat NumberAtAgeAreaThisTS, arma::mat NumberAtAgeAreaNextTS, arma::vec Semelparous, arma::cube FDeadAtAgeAreaThisTS, arma::vec NaturalMortalityAtAgeThisTS, bool plusgroup, int nAge, int nArea);
 RcppExport SEXP _MSEtool_CalcNumberNext_(SEXP NumberAtAgeAreaThisTSSEXP, SEXP NumberAtAgeAreaNextTSSEXP, SEXP SemelparousSEXP, SEXP FDeadAtAgeAreaThisTSSEXP, SEXP NaturalMortalityAtAgeThisTSSEXP, SEXP plusgroupSEXP, SEXP nAgeSEXP, SEXP nAreaSEXP) {
@@ -514,6 +528,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_CalcAggregateF_", (DL_FUNC) &_MSEtool_CalcAggregateF_, 3},
     {"_MSEtool_CalcBiomass_", (DL_FUNC) &_MSEtool_CalcBiomass_, 2},
     {"_MSEtool_CalcCatch_", (DL_FUNC) &_MSEtool_CalcCatch_, 3},
+    {"_MSEtool_CalcFisheryDynamics_", (DL_FUNC) &_MSEtool_CalcFisheryDynamics_, 4},
     {"_MSEtool_CalcNumberNext_", (DL_FUNC) &_MSEtool_CalcNumberNext_, 8},
     {"_MSEtool_CalcRecruitment_", (DL_FUNC) &_MSEtool_CalcRecruitment_, 7},
     {"_MSEtool_CalcSpawnProduction_", (DL_FUNC) &_MSEtool_CalcSpawnProduction_, 8},

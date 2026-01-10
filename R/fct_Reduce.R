@@ -55,11 +55,7 @@ ReduceDims <- function(array,
     }
     
     for (sl in slotNames(array)) {
-      slot(array, sl) <-
-        Recall(
-          slot(array, sl),
-          IncSim, IncAge, IncYear, debug
-        )
+      slot(array, sl) <- Recall(slot(array, sl),IncSim, IncAge, IncYear)
     }
     
     return(array)
@@ -68,10 +64,7 @@ ReduceDims <- function(array,
   # Recall for list
   if (is.list(array)) {
     for (i in seq_along(array)) {
-      tmp <- Recall(
-        array[[i]],
-        IncSim, IncAge, IncYear, debug
-      )
+      tmp <- Recall(array[[i]], IncSim, IncAge, IncYear)
       if (!is.null(tmp)) {
         array[[i]] <- tmp
       }

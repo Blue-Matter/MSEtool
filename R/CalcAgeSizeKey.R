@@ -24,7 +24,7 @@ CalcAgeSizeKey <- function(MeanAtAge,
                            AgeClasses = NULL,
                            silent = FALSE,
                            type = "Length") {
-  Dist <- match.arg(Dist)
+  Dist <- match.arg(Dist, c("normal", "lognormal"))
 
   if (inherits(MeanAtAge, "length")) {
     LengthObject <- MeanAtAge
@@ -48,7 +48,6 @@ CalcAgeSizeKey <- function(MeanAtAge,
   if (TruncSD < 0) {
     cli::cli_abort("`TruncSD` < 0 ")
   }
-
 
   MeanAtAge <- Structure(MeanAtAge)
   SDatAge <- ArrayMultiply(MeanAtAge, CVatAge)
@@ -101,17 +100,18 @@ CalcAgeSizeKey <- function(MeanAtAge,
   if (is.null(AgeClasses)) {
     AgeClasses <- 0:(nage - 1)
   }
-
-  ListDimNames <- list(
-    Age = AgeClasses,
-    Class = Classes,
-    Year = dimnames(MeanAtAgeList[[1]])$Year
-  )
-
-  ASK <- List2Array(ASKList, "Sim", "Age", ListDimNames) |>
-    aperm(c("Sim", "Age", "Class", "Year"))
-
-  # attributes(ASK)$Classes <- Classes
-  # attributes(ASK)$Ages <- Ages
-  ASK
+  
+  ASKList <- purrr::map(ASKList, \(ask) {
+    if (is.null(dimnames(ask))) {
+      dd <- dim(ask)
+      dimnames(ask) <- list(
+        Age=AgeClasses,
+        Class=Classes,
+        Year=dimnames(MeanAtAgeList[[1]])$Year[1:dd[3]]
+      )
+    }
+    ask
+  })
+  
+  List2Array(ASKList, "Sim", pos=1) 
 }

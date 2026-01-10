@@ -404,8 +404,6 @@ ProcessRelativeSize <- function(Spatial, nSim) {
   
   
   if (is.array(Spatial@RelativeSize)) {
-    
-    stop('Not done yet !')
     CheckRelativeSize(Spatial)
     return(Spatial)
   } 

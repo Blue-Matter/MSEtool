@@ -21,6 +21,10 @@ CalcCatch_ <- function(HistSimIn, Years, debug = 0L) {
     .Call(`_MSEtool_CalcCatch_`, HistSimIn, Years, debug)
 }
 
+CalcFisheryDynamics_ <- function(Hist, Years, CalcCatch = 1L, debug = 0L) {
+    .Call(`_MSEtool_CalcFisheryDynamics_`, Hist, Years, CalcCatch, debug)
+}
+
 CalcNumberNext_ <- function(NumberAtAgeAreaThisTS, NumberAtAgeAreaNextTS, Semelparous, FDeadAtAgeAreaThisTS, NaturalMortalityAtAgeThisTS, plusgroup, nAge, nArea) {
     .Call(`_MSEtool_CalcNumberNext_`, NumberAtAgeAreaThisTS, NumberAtAgeAreaNextTS, Semelparous, FDeadAtAgeAreaThisTS, NaturalMortalityAtAgeThisTS, plusgroup, nAge, nArea)
 }
