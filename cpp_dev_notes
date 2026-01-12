@@ -1,0 +1,1 @@
+- change #define MSE_ARRAY_BOUNDS_CHECK 1 to 0 for release version

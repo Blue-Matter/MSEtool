@@ -412,8 +412,13 @@ PopulateRetention <- function(Retention,
 
   # Default at retained
   if (EmptyObject(Retention)) {
-    Retention@MeanAtAge <- array(1, dim = c(1, length(Ages@Classes), 1, 1)) |>
-      SetDimNames_SAYR(Age = Ages@Classes, Years = Years)
+    Retention@MeanAtAge <- array(1, dim = c(1, length(Ages@Classes), 1, 1)) 
+    dimnames(Retention@MeanAtAge) <- list(
+      Sim=1,
+      Age=Ages@Classes,
+      Year=Years[1],
+      Area=1
+    )
     return(SetDigest(Retention, argList))
   }
 

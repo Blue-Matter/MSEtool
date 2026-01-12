@@ -83,16 +83,20 @@ BEGIN_RCPP
 END_RCPP
 }
 // CalcFisheryDynamics_
-Rcpp::S4 CalcFisheryDynamics_(S4 Hist, Rcpp::NumericVector Years, int CalcCatch, int debug);
-RcppExport SEXP _MSEtool_CalcFisheryDynamics_(SEXP HistSEXP, SEXP YearsSEXP, SEXP CalcCatchSEXP, SEXP debugSEXP) {
+Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn, Rcpp::NumericVector Years, Rcpp::NumericVector YearsAll, Rcpp::List NumStock, int nSim, int nStock, int nFleet, int nArea);
+RcppExport SEXP _MSEtool_CalcFisheryDynamics_(SEXP HistInSEXP, SEXP YearsSEXP, SEXP YearsAllSEXP, SEXP NumStockSEXP, SEXP nSimSEXP, SEXP nStockSEXP, SEXP nFleetSEXP, SEXP nAreaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< S4 >::type Hist(HistSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type HistIn(HistInSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Years(YearsSEXP);
-    Rcpp::traits::input_parameter< int >::type CalcCatch(CalcCatchSEXP);
-    Rcpp::traits::input_parameter< int >::type debug(debugSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcFisheryDynamics_(Hist, Years, CalcCatch, debug));
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type YearsAll(YearsAllSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type NumStock(NumStockSEXP);
+    Rcpp::traits::input_parameter< int >::type nSim(nSimSEXP);
+    Rcpp::traits::input_parameter< int >::type nStock(nStockSEXP);
+    Rcpp::traits::input_parameter< int >::type nFleet(nFleetSEXP);
+    Rcpp::traits::input_parameter< int >::type nArea(nAreaSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcFisheryDynamics_(HistIn, Years, YearsAll, NumStock, nSim, nStock, nFleet, nArea));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -161,23 +165,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type nArea(nAreaSEXP);
     Rcpp::traits::input_parameter< int >::type TSindex(TSindexSEXP);
     rcpp_result_gen = Rcpp::wrap(CalcStockMovement_(NumberAtAgeArea, Movement, nAge, nArea, TSindex));
-    return rcpp_result_gen;
-END_RCPP
-}
-// CalcVBiomass_
-arma::cube CalcVBiomass_(const Rcpp::List& NumberAtAgeAreaList, const Rcpp::List& FleetList, int TSindex, int nStock, int nFleet, int nArea, int debug);
-RcppExport SEXP _MSEtool_CalcVBiomass_(SEXP NumberAtAgeAreaListSEXP, SEXP FleetListSEXP, SEXP TSindexSEXP, SEXP nStockSEXP, SEXP nFleetSEXP, SEXP nAreaSEXP, SEXP debugSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Rcpp::List& >::type NumberAtAgeAreaList(NumberAtAgeAreaListSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::List& >::type FleetList(FleetListSEXP);
-    Rcpp::traits::input_parameter< int >::type TSindex(TSindexSEXP);
-    Rcpp::traits::input_parameter< int >::type nStock(nStockSEXP);
-    Rcpp::traits::input_parameter< int >::type nFleet(nFleetSEXP);
-    Rcpp::traits::input_parameter< int >::type nArea(nAreaSEXP);
-    Rcpp::traits::input_parameter< int >::type debug(debugSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcVBiomass_(NumberAtAgeAreaList, FleetList, TSindex, nStock, nFleet, nArea, debug));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -528,12 +515,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_CalcAggregateF_", (DL_FUNC) &_MSEtool_CalcAggregateF_, 3},
     {"_MSEtool_CalcBiomass_", (DL_FUNC) &_MSEtool_CalcBiomass_, 2},
     {"_MSEtool_CalcCatch_", (DL_FUNC) &_MSEtool_CalcCatch_, 3},
-    {"_MSEtool_CalcFisheryDynamics_", (DL_FUNC) &_MSEtool_CalcFisheryDynamics_, 4},
+    {"_MSEtool_CalcFisheryDynamics_", (DL_FUNC) &_MSEtool_CalcFisheryDynamics_, 8},
     {"_MSEtool_CalcNumberNext_", (DL_FUNC) &_MSEtool_CalcNumberNext_, 8},
     {"_MSEtool_CalcRecruitment_", (DL_FUNC) &_MSEtool_CalcRecruitment_, 7},
     {"_MSEtool_CalcSpawnProduction_", (DL_FUNC) &_MSEtool_CalcSpawnProduction_, 8},
     {"_MSEtool_CalcStockMovement_", (DL_FUNC) &_MSEtool_CalcStockMovement_, 5},
-    {"_MSEtool_CalcVBiomass_", (DL_FUNC) &_MSEtool_CalcVBiomass_, 7},
     {"_MSEtool_vecminInd", (DL_FUNC) &_MSEtool_vecminInd, 1},
     {"_MSEtool_LinInterp_cpp", (DL_FUNC) &_MSEtool_LinInterp_cpp, 3},
     {"_MSEtool_MSYCalcs", (DL_FUNC) &_MSEtool_MSYCalcs, 17},

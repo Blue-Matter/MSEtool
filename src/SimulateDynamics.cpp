@@ -27,42 +27,42 @@ Rcpp::S4 SimulateDynamics_(S4 HistSimIn,
                      int debug = 0) {
   
   Rcpp::S4 HistSim = clone(HistSimIn);
-  Rcpp::S4 OM = HistSim.slot("OM");
-  Rcpp::List StockList = OM.slot("Stock"); // List of `Stock` objects
-  Rcpp::List FleetList = OM.slot("Fleet"); // List length `nStock` , each elemett a `Fleet` object containing info for all fleets
-  
-  NumericVector YearsAll = OM.slot("Years");
-  int nTS = Years.size();
-  IntegerVector MatchTS = match(Years, YearsAll);
-  
-  List NumberAtAgeAreaList = HistSim.slot("Number"); // nStock
-  arma::mat Biomass = HistSim.slot("Biomass"); // nStock, nTS
-  arma::mat SBiomass = HistSim.slot("SBiomass"); // nStock, nTS
-  arma::mat SProduction = HistSim.slot("SProduction"); // nStock, nTS
-  List DistributionList = HistSim.slot("Distribution"); // nStock # effort distribution 
-  arma::cube EffortCube = HistSim.slot("Effort");; // nStock, nTS, nFleet
-  
-  int nStock = NumberAtAgeAreaList.size();
-  int nFleet = EffortCube.n_slices;
-  arma::cube tempCube = NumberAtAgeAreaList[0]; // nAge, nTS, nArea
-  int nArea = tempCube.n_slices;
-  
-
-  List FDeadAtAgeAreaList = HistSim.slot("FDeadArea");
-  List FRetainAtAgeAreaList = HistSim.slot("FRetainArea");
-  
-  S4 Unfished = HistSim.slot("Unfished");
-  S4 UnfishedEquilibrium = Unfished.slot("Equilibrium");
-  arma::mat SP0 = UnfishedEquilibrium.slot("SProduction"); // nStock, nTS
-  
-  for (int timestep=0; timestep<nTS; timestep++) {
-    NumericVector TSmatch = abs(YearsAll - Years[timestep]);
-    int TSindex = MatchTS[timestep] -1;
-
-    if (debug) {
-      Rcpp::Rcout << "\n--- Begin Timestep " << Years[timestep] << "----" << std::endl;
-      Rcpp::Rcout << "Timestep Index = " << TSindex << std::endl;
-    }
+  // Rcpp::S4 OM = HistSim.slot("OM");
+  // Rcpp::List StockList = OM.slot("Stock"); // List of `Stock` objects
+  // Rcpp::List FleetList = OM.slot("Fleet"); // List length `nStock` , each elemett a `Fleet` object containing info for all fleets
+  // 
+  // NumericVector YearsAll = OM.slot("Years");
+  // int nTS = Years.size();
+  // IntegerVector MatchTS = match(Years, YearsAll);
+  // 
+  // List NumberAtAgeAreaList = HistSim.slot("Number"); // nStock
+  // arma::mat Biomass = HistSim.slot("Biomass"); // nStock, nTS
+  // arma::mat SBiomass = HistSim.slot("SBiomass"); // nStock, nTS
+  // arma::mat SProduction = HistSim.slot("SProduction"); // nStock, nTS
+  // List DistributionList = HistSim.slot("Distribution"); // nStock # effort distribution 
+  // arma::cube EffortCube = HistSim.slot("Effort");; // nStock, nTS, nFleet
+  // 
+  // int nStock = NumberAtAgeAreaList.size();
+  // int nFleet = EffortCube.n_slices;
+  // arma::cube tempCube = NumberAtAgeAreaList[0]; // nAge, nTS, nArea
+  // int nArea = tempCube.n_slices;
+  // 
+  // 
+  // List FDeadAtAgeAreaList = HistSim.slot("FDeadArea");
+  // List FRetainAtAgeAreaList = HistSim.slot("FRetainArea");
+  // 
+  // S4 Unfished = HistSim.slot("Unfished");
+  // S4 UnfishedEquilibrium = Unfished.slot("Equilibrium");
+  // arma::mat SP0 = UnfishedEquilibrium.slot("SProduction"); // nStock, nTS
+  // 
+  // for (int timestep=0; timestep<nTS; timestep++) {
+  //   NumericVector TSmatch = abs(YearsAll - Years[timestep]);
+  //   int TSindex = MatchTS[timestep] -1;
+  // 
+  //   if (debug) {
+  //     Rcpp::Rcout << "\n--- Begin Timestep " << Years[timestep] << "----" << std::endl;
+  //     Rcpp::Rcout << "Timestep Index = " << TSindex << std::endl;
+  //   }
 
     // TODO 
     // Do MICE stuff ...

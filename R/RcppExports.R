@@ -21,8 +21,8 @@ CalcCatch_ <- function(HistSimIn, Years, debug = 0L) {
     .Call(`_MSEtool_CalcCatch_`, HistSimIn, Years, debug)
 }
 
-CalcFisheryDynamics_ <- function(Hist, Years, CalcCatch = 1L, debug = 0L) {
-    .Call(`_MSEtool_CalcFisheryDynamics_`, Hist, Years, CalcCatch, debug)
+CalcFisheryDynamics_ <- function(HistIn, Years, YearsAll, NumStock, nSim, nStock, nFleet, nArea) {
+    .Call(`_MSEtool_CalcFisheryDynamics_`, HistIn, Years, YearsAll, NumStock, nSim, nStock, nFleet, nArea)
 }
 
 CalcNumberNext_ <- function(NumberAtAgeAreaThisTS, NumberAtAgeAreaNextTS, Semelparous, FDeadAtAgeAreaThisTS, NaturalMortalityAtAgeThisTS, plusgroup, nAge, nArea) {
@@ -39,10 +39,6 @@ CalcSpawnProduction_ <- function(NumberAtAgeArea, FecundityAtAge, MaturityAtAge,
 
 CalcStockMovement_ <- function(NumberAtAgeArea, Movement, nAge, nArea, TSindex) {
     .Call(`_MSEtool_CalcStockMovement_`, NumberAtAgeArea, Movement, nAge, nArea, TSindex)
-}
-
-CalcVBiomass_ <- function(NumberAtAgeAreaList, FleetList, TSindex, nStock, nFleet, nArea, debug = 0L) {
-    .Call(`_MSEtool_CalcVBiomass_`, NumberAtAgeAreaList, FleetList, TSindex, nStock, nFleet, nArea, debug)
 }
 
 vecminInd <- function(x) {
