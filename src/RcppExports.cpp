@@ -83,20 +83,19 @@ BEGIN_RCPP
 END_RCPP
 }
 // CalcFisheryDynamics_
-Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn, Rcpp::NumericVector Years, Rcpp::NumericVector YearsAll, Rcpp::List NumStock, int nSim, int nStock, int nFleet, int nArea);
-RcppExport SEXP _MSEtool_CalcFisheryDynamics_(SEXP HistInSEXP, SEXP YearsSEXP, SEXP YearsAllSEXP, SEXP NumStockSEXP, SEXP nSimSEXP, SEXP nStockSEXP, SEXP nFleetSEXP, SEXP nAreaSEXP) {
+Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn, Rcpp::NumericVector Years, int nSim, int nStock, int nFleet, int nArea, int debug);
+RcppExport SEXP _MSEtool_CalcFisheryDynamics_(SEXP HistInSEXP, SEXP YearsSEXP, SEXP nSimSEXP, SEXP nStockSEXP, SEXP nFleetSEXP, SEXP nAreaSEXP, SEXP debugSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4 >::type HistIn(HistInSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Years(YearsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type YearsAll(YearsAllSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type NumStock(NumStockSEXP);
     Rcpp::traits::input_parameter< int >::type nSim(nSimSEXP);
     Rcpp::traits::input_parameter< int >::type nStock(nStockSEXP);
     Rcpp::traits::input_parameter< int >::type nFleet(nFleetSEXP);
     Rcpp::traits::input_parameter< int >::type nArea(nAreaSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcFisheryDynamics_(HistIn, Years, YearsAll, NumStock, nSim, nStock, nFleet, nArea));
+    Rcpp::traits::input_parameter< int >::type debug(debugSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcFisheryDynamics_(HistIn, Years, nSim, nStock, nFleet, nArea, debug));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -251,20 +250,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type Year(YearSEXP);
     Rcpp::traits::input_parameter< int >::type debug(debugSEXP);
     rcpp_result_gen = Rcpp::wrap(PopulateNumberNext_(HistSimIn, Year, debug));
-    return rcpp_result_gen;
-END_RCPP
-}
-// SimulateDynamics_
-Rcpp::S4 SimulateDynamics_(S4 HistSimIn, Rcpp::NumericVector Years, int CalcCatch, int debug);
-RcppExport SEXP _MSEtool_SimulateDynamics_(SEXP HistSimInSEXP, SEXP YearsSEXP, SEXP CalcCatchSEXP, SEXP debugSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< S4 >::type HistSimIn(HistSimInSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Years(YearsSEXP);
-    Rcpp::traits::input_parameter< int >::type CalcCatch(CalcCatchSEXP);
-    Rcpp::traits::input_parameter< int >::type debug(debugSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulateDynamics_(HistSimIn, Years, CalcCatch, debug));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -515,7 +500,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_CalcAggregateF_", (DL_FUNC) &_MSEtool_CalcAggregateF_, 3},
     {"_MSEtool_CalcBiomass_", (DL_FUNC) &_MSEtool_CalcBiomass_, 2},
     {"_MSEtool_CalcCatch_", (DL_FUNC) &_MSEtool_CalcCatch_, 3},
-    {"_MSEtool_CalcFisheryDynamics_", (DL_FUNC) &_MSEtool_CalcFisheryDynamics_, 8},
+    {"_MSEtool_CalcFisheryDynamics_", (DL_FUNC) &_MSEtool_CalcFisheryDynamics_, 7},
     {"_MSEtool_CalcNumberNext_", (DL_FUNC) &_MSEtool_CalcNumberNext_, 8},
     {"_MSEtool_CalcRecruitment_", (DL_FUNC) &_MSEtool_CalcRecruitment_, 7},
     {"_MSEtool_CalcSpawnProduction_", (DL_FUNC) &_MSEtool_CalcSpawnProduction_, 8},
@@ -525,7 +510,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_MSYCalcs", (DL_FUNC) &_MSEtool_MSYCalcs, 17},
     {"_MSEtool_Ref_int_cpp", (DL_FUNC) &_MSEtool_Ref_int_cpp, 12},
     {"_MSEtool_PopulateNumberNext_", (DL_FUNC) &_MSEtool_PopulateNumberNext_, 3},
-    {"_MSEtool_SimulateDynamics_", (DL_FUNC) &_MSEtool_SimulateDynamics_, 4},
     {"_MSEtool_SolveForFishingMortality", (DL_FUNC) &_MSEtool_SolveForFishingMortality, 10},
     {"_MSEtool_calcVatAge", (DL_FUNC) &_MSEtool_calcVatAge, 7},
     {"_MSEtool_combine", (DL_FUNC) &_MSEtool_combine, 1},

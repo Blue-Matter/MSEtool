@@ -92,7 +92,7 @@ List2Array <- function(x, name = "Fleet", dim1='Sim', pos = NULL) {
   if (!is.null(pos)) {
     nd <- length(dim(out))
     if (pos < 1 || pos > nd) {
-      cli::cli_abort("`pos` must be between 1 and number of dimensions ({.val {nd})")
+      cli::cli_abort("`pos` must be between 1 and number of dimensions ({.val {nd}})")
     }
     
     cur <- seq_len(nd)

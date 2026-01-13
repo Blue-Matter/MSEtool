@@ -4,28 +4,19 @@
 #include <Rcpp.h>
 #include <array>
 #include <algorithm>
-#include "array_types.h"   // Array2D ... Array5D
-
-#ifndef MSETOOL_ARRAY_VIEWS_H
-#define MSETOOL_ARRAY_VIEWS_H
-
-// ---------------------------------------------------------
-// Forward declarations (from array_nd.h)
-// ---------------------------------------------------------
+#include "array_types.h"   
+#include "array_nd.h"   
 
 template <size_t N>
 struct ArrayND;
 
-// Aliases (should be in array_types.h, but safe here)
 using Array2D = ArrayND<2>;
 using Array3D = ArrayND<3>;
 using Array4D = ArrayND<4>;
 using Array5D = ArrayND<5>;
 
-// ---------------------------------------------------------
-// Dimension position helpers (recommended)
-// ---------------------------------------------------------
-
+// Dimension position helpers 
+// Update values if dimension position changes 
 namespace Dim2 {
 constexpr size_t i = 0;
 constexpr size_t j = 1;
@@ -52,68 +43,85 @@ constexpr size_t fleet = 3;
 constexpr size_t area  = 4;
 }
 
-// ---------------------------------------------------------
-// Safe ArrayND construction from R objects
-// ---------------------------------------------------------
-
-inline Array2D as_Array2D(const Rcpp::NumericVector& x) {
-  auto d = x.attr("dim");
-  if (d.size() != 2) Rcpp::stop("Expected 2D array");
-  return Array2D(x, d[0], d[1]);
+// ArrayND construction from R objects
+// Generic Constructor
+template <size_t N>
+inline ArrayND<N> as_ArrayND(const Rcpp::NumericVector& x) {
+  
+  if (!x.hasAttribute("dim")) {
+    Rcpp::stop("Expected %dD array", N);
+  }
+   
+  Rcpp::IntegerVector d = x.attr("dim");
+  if (d.size() != static_cast<int>(N)) {
+    Rcpp::stop("Expected %dD array", N);
+  }
+   
+  std::array<int, N> dim;
+  for (size_t i = 0; i < N; ++i) {
+    dim[i] = d[i];
+  }
+   
+  return ArrayND<N>(x, dim);
 }
+ 
 
-inline Array3D as_Array3D(const Rcpp::NumericVector& x) {
-  auto d = x.attr("dim");
-  if (d.size() != 3) Rcpp::stop("Expected 3D array");
-  return Array3D(x, d[0], d[1], d[2]);
-}
-
-inline Array4D as_Array4D(const Rcpp::NumericVector& x) {
-  auto d = x.attr("dim");
-  if (d.size() != 4) Rcpp::stop("Expected 4D array");
-  return Array4D(x, d[0], d[1], d[2], d[3]);
-}
-
-inline Array5D as_Array5D(const Rcpp::NumericVector& x) {
-  auto d = x.attr("dim");
-  if (d.size() != 5) Rcpp::stop("Expected 5D array");
-  return Array5D(x, d[0], d[1], d[2], d[3], d[4]);
-}
-
-// ---------------------------------------------------------
-// Slice helpers (views with copied data, explicit semantics)
-// ---------------------------------------------------------
-
-inline Array3D slice_year(const Array4D& x, int year) {
-  Array3D out(x.dim[0], x.dim[1], x.dim[3]);
-  for (int i = 0; i < x.dim[0]; ++i)
-    for (int j = 0; j < x.dim[1]; ++j)
-      for (int k = 0; k < x.dim[3]; ++k)
-        out(i,j,k) = x(i,j,year,k);
+// Slice helpers 
+inline Array2D 
+slice_year(const Array3D& x, int year) {
+  std::array<int, 2> dim = {x.dim[0], x.dim[1]};
+  Array2D out(dim);
+  for (int i = 0; i < x.dim[0]; ++i) {
+    for (int j = 0; j < x.dim[1]; ++j) {
+      out(i, j) = x(i, j, year);
+    }
+  }
   return out;
 }
 
-inline Array4D slice_year(const Array5D& x, int year) {
-  Array4D out(x.dim[0], x.dim[1], x.dim[3], x.dim[4]);
-  for (int i = 0; i < x.dim[0]; ++i)
-    for (int j = 0; j < x.dim[1]; ++j)
-      for (int k = 0; k < x.dim[3]; ++k)
-        for (int l = 0; l < x.dim[4]; ++l)
-          out(i,j,k,l) = x(i,j,year,k,l);
+inline Array3D 
+slice_year(const Array4D& x, int year) {
+  
+  std::array<int, 3> dim = {
+    x.dim[0], x.dim[1], x.dim[3]
+    };
+  Array3D out(dim);
+  for (int i = 0; i < x.dim[0]; ++i) {
+    for (int j = 0; j < x.dim[1]; ++j) {
+      for (int k = 0; k < x.dim[3]; ++k) {
+        out(i, j, k) = x(i, j, year, k);
+      }
+    }
+  }
   return out;
 }
 
-// ---------------------------------------------------------
-// Broadcasting-aware generic assignment: nD → ND
-// ---------------------------------------------------------
+inline Array4D 
+slice_year(const Array5D& x, int year) {
+  std::array<int, 4> dim = {
+    x.dim[0], x.dim[1], x.dim[3], x.dim[4]
+  };
+  
+  Array4D out(dim);
+  for (int i = 0; i < x.dim[0]; ++i) {
+    for (int j = 0; j < x.dim[1]; ++j) {
+      for (int k = 0; k < x.dim[3]; ++k) {
+        for (int l = 0; l < x.dim[4]; ++l) {
+          out(i, j, k, l) = x(i, j, year, k, l);
+        } 
+      }
+    }
+  }
+  return out;
+} 
 
+// generic assignment nD → ND with broadcasting 
 template <size_t N_big, size_t N_small>
 inline void assign_nd_into_Nd(
     ArrayND<N_big>& target,
     const ArrayND<N_small>& src,
-    const std::array<size_t, N_small>& map,   // src dim → target dim
-    const std::array<int, N_big>& fixed        // -1 = free, else fixed index
-) {
+    const std::array<size_t, N_small>& map,   
+    const std::array<int, N_big>& fixed) {
   static_assert(N_small < N_big, "Source must have fewer dimensions");
   
   // Validate compatibility
@@ -160,11 +168,10 @@ inline void assign_nd_into_Nd(
   }
 }
 
-// ---------------------------------------------------------
-// Convenience wrappers (common OM cases)
-// ---------------------------------------------------------
+// Assignment wrappers
 
-inline void assign_3d_into_5d(
+// 3D sim, fleet, area into 5D sim, stock, year, fleet, area
+inline void sFA_into_sSYFA(
     Array5D& target,
     const Array3D& src,
     int stock,

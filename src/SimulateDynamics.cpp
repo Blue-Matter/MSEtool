@@ -1,417 +1,417 @@
-#include <RcppArmadillo.h>
-#include "check.h"
-#include "CalcVBiomass.h"
-#include "CalcEffortDistribution.h"
-#include "CalcFMortality.h"
-#include "CalcSpawnProduction.h"
-#include "CalcRecruitment.h"
-#include "CalcBiomass.h"
-#include "CalcAggregateF.h"
-#include "CalcStockMovement.h"
-#include "CalcNumberNext.h"
-#include "CalcCatch.h"
-#include "CalcRecruitment_TimeStep.h"
-
-//[[Rcpp::depends(RcppArmadillo)]]
-using namespace Rcpp;
-
-//' Simulate Fishery Dynamics
-//' 
-//' Calculates the fishery dynamics for a given simulation and the specified
-//' time steps.
-//'
-// [[Rcpp::export]]
-Rcpp::S4 SimulateDynamics_(S4 HistSimIn, 
-                     Rcpp::NumericVector Years,
-                     int CalcCatch = 1,
-                     int debug = 0) {
-  
-  Rcpp::S4 HistSim = clone(HistSimIn);
-  // Rcpp::S4 OM = HistSim.slot("OM");
-  // Rcpp::List StockList = OM.slot("Stock"); // List of `Stock` objects
-  // Rcpp::List FleetList = OM.slot("Fleet"); // List length `nStock` , each elemett a `Fleet` object containing info for all fleets
-  // 
-  // NumericVector YearsAll = OM.slot("Years");
-  // int nTS = Years.size();
-  // IntegerVector MatchTS = match(Years, YearsAll);
-  // 
-  // List NumberAtAgeAreaList = HistSim.slot("Number"); // nStock
-  // arma::mat Biomass = HistSim.slot("Biomass"); // nStock, nTS
-  // arma::mat SBiomass = HistSim.slot("SBiomass"); // nStock, nTS
-  // arma::mat SProduction = HistSim.slot("SProduction"); // nStock, nTS
-  // List DistributionList = HistSim.slot("Distribution"); // nStock # effort distribution 
-  // arma::cube EffortCube = HistSim.slot("Effort");; // nStock, nTS, nFleet
-  // 
-  // int nStock = NumberAtAgeAreaList.size();
-  // int nFleet = EffortCube.n_slices;
-  // arma::cube tempCube = NumberAtAgeAreaList[0]; // nAge, nTS, nArea
-  // int nArea = tempCube.n_slices;
-  // 
-  // 
-  // List FDeadAtAgeAreaList = HistSim.slot("FDeadArea");
-  // List FRetainAtAgeAreaList = HistSim.slot("FRetainArea");
-  // 
-  // S4 Unfished = HistSim.slot("Unfished");
-  // S4 UnfishedEquilibrium = Unfished.slot("Equilibrium");
-  // arma::mat SP0 = UnfishedEquilibrium.slot("SProduction"); // nStock, nTS
-  // 
-  // for (int timestep=0; timestep<nTS; timestep++) {
-  //   NumericVector TSmatch = abs(YearsAll - Years[timestep]);
-  //   int TSindex = MatchTS[timestep] -1;
-  // 
-  //   if (debug) {
-  //     Rcpp::Rcout << "\n--- Begin Timestep " << Years[timestep] << "----" << std::endl;
-  //     Rcpp::Rcout << "Timestep Index = " << TSindex << std::endl;
-  //   }
-
-    // TODO 
-    // Do MICE stuff ...
-    // update length, weight, fleet weight, natural mortality, maturity, rec pars, etc
-
-    
-    // ---- Calculate Stock- and Area-Specific Vulnerable Biomass -----
-    // VB = vulnerable (selectivity) x available (spatial closure)
-    // TODO - selectivity by Area ...
-    // arma::cube VBiomassStockFleetArea = CalcVBiomass_(NumberAtAgeAreaList,
-    //                                                   FleetList,
-    //                                                   TSindex,
-    //                                                   nStock,
-    //                                                   nFleet,
-    //                                                   nArea,
-    //                                                   debug);
-      
-      
-     // ---- Distribute Fishing Effort Over Areas ----
-     // UP TO HERE ... continue ...
-     
-     
-  }
-     
-  //    
-  //    arma::cube Distribution = DistributionList[st]; // Year, Fleet, Area
-  //    bool EffortAreaEmpty = all(arma::vectorise(Distribution.row(TSindex)) < 1E-6); 
-  //    
-  //    if (debug)
-  //      Rcout << "EffortAreaEmpty = " << EffortAreaEmpty << std::endl;
-  //     
-  //    
-  //     
-  // 
-  // 
-  //     S4 Stock = StockList[st];
-  //     S4 Weight = Stock.slot("Weight");
-  //     arma::mat WeightAtAge = Weight.slot("MeanAtAge");
-  // 
-  //     S4 Fecundity = Stock.slot("Fecundity");
-  //     arma::mat FecundityAtAge = Fecundity.slot("MeanAtAge");
-  // 
-  //     S4 Maturity = Stock.slot("Maturity");
-  //     arma::mat MaturityAtAge = Maturity.slot("MeanAtAge");
-  // 
-  //     S4 NaturalMortality = Stock.slot("NaturalMortality");
-  //     arma::mat NaturalMortalityAtAge = NaturalMortality.slot("MeanAtAge");
-  // 
-  //     S4 SRR = Stock.slot("SRR");
-  //     double SpawnTimeFrac = SRR.slot("SpawnTimeFrac");
-  // 
-  //     S4 Spatial = Stock.slot("Spatial");
-  //     arma::vec RelativeSize = Spatial.slot("RelativeSize");
-  // 
-  //     S4 Fleet = FleetList[st];
-  //     S4 CatchabilityObject = Fleet.slot("Catchability");
-  // 
-  //     arma::mat Catchability = CatchabilityObject.slot("Value"); // nTS, nFleet
-  //     arma::cube qArea = CatchabilityObject.slot("qArea"); // nTS, nFleet, nArea
-  //     
-  // 
-  //     S4 Selectivity = Fleet.slot("Selectivity");
-  //     arma::cube SelectivityAtAge = Selectivity.slot("MeanAtAge"); // nAge, nTS, nFleet
-  // 
-  //     S4 Retention = Fleet.slot("Retention");
-  //     arma::cube RetentionAtAge = Retention.slot("MeanAtAge"); // nAge, nTS, nFleet
-  // 
-  //     S4 DiscardMortality = Fleet.slot("DiscardMortality");
-  //     arma::cube DiscardMortalityAtAge = DiscardMortality.slot("MeanAtAge"); // nAge, nTS, nFleet
-  // 
-  //     arma::cube ClosureArea = Fleet.slot("Closure"); // nTS, nFleet, nArea
-  //     arma::cube FleetWeightAtAge = Fleet.slot("WeightFleet") ; // nAge, nTS, nFleet
-  // 
-  //     // Calculate VBiomass by Area
-  // 
-  //     int nArea = NumberAtAgeArea.n_slices;
-  // 
-  //     if (debug)
-  //       Rcout << "VBiomassArea" << std::endl;
-  // 
-  //  
-  // 
-      // Distribute Effort over Areas
-      // currently proportional to VB - ie no SpatTarg
-      // if (debug)
-      //   Rcout << "Effort" << std::endl;
-
-      // int nFleet = VBiomassArea.n_rows;
-      // bool EffortAreaEmpty = all(arma::vectorise(Distribution.row(TSindex)) < 1E-6);
-
-      // if (debug)
-        // Rcout << "EffortAreaEmpty = " << EffortAreaEmpty << std::endl;
-
-      // TODO - Effort distribution should account for all stocks
-      // Also develop IFD
-      // if (EffortAreaEmpty) {
-      //   Distribution.subcube(arma::span(TSindex), arma::span(0, nFleet-1), arma::span(0, nArea-1))=
-      //     CalcEffortDistribution_(VBiomassArea,
-      //                             EffortCube.subcube(arma::span(st), arma::span(TSindex), arma::span(0, nFleet-1)), nArea);
-      // 
-      // }
-      // DistributionList[st] = Distribution;
-  // 
-  //     // Calculate F within each Area
-  //     List FMortFleetArea = CalcFMortality_(Distribution.row(TSindex), // nFleet, nArea,
-  //                                          arma::vectorise(Catchability.row(TSindex)), // nFleet
-  //                                          qArea.row(TSindex), // Fleet, Area
-  //                                          RelativeSize, // nArea
-  //                                          SelectivityAtAge.col(TSindex), // nAge, nFleet
-  //                                          RetentionAtAge.col(TSindex), // nAge, nFleet
-  //                                          DiscardMortalityAtAge.col(TSindex), // nAge, nFleet
-  //                                          nArea, 
-  //                                          debug);
-  // 
-  //     List FDeadAtAgeAreaStock = FDeadAtAgeAreaList[st];
-  //     List FRetainAtAgeAreaStock = FRetainAtAgeAreaList[st];
-  //     FDeadAtAgeAreaStock[TSindex] = FMortFleetArea["FDeadFleetArea"];
-  //     FRetainAtAgeAreaStock[TSindex] = FMortFleetArea["FRetainFleetArea"];
-  // 
-  //     arma::mat qAreaTS = FMortFleetArea["qArea"];
-  //     qArea.row(TSindex) = qAreaTS;
-  // 
-  //     FDeadAtAgeAreaList[st] = FDeadAtAgeAreaStock;
-  //     FRetainAtAgeAreaList[st] = FRetainAtAgeAreaStock;
-  // 
-  //     // Calc Spawning Production and Spawning Biomass
-  //     arma::cube FDeadFleetArea = FMortFleetArea["FDeadFleetArea"];
-  //     arma::mat FDeadAtAgeArea = arma::sum(FDeadFleetArea,1);
-  //     arma::vec SProductSBiomass = CalcSpawnProduction_(NumberAtAgeArea.col(TSindex), // nAge
-  //                                                      FecundityAtAge.col(TSindex), // nAge
-  //                                                      MaturityAtAge.col(TSindex), // nAge
-  //                                                      WeightAtAge.col(TSindex), // nAge
-  //                                                      NaturalMortalityAtAge.col(TSindex), // nAge
-  //                                                      FDeadAtAgeArea,
-  //                                                      SpawnTimeFrac, // double
-  //                                                      debug);
-  // 
-  //     if (arma::as_scalar(SProduction.row(st).col(TSindex)) <= 5e-16)
-  //       SProduction.row(st).col(TSindex) = SProductSBiomass[0];
-  // 
-  //     if (arma::as_scalar(SBiomass.row(st).col(TSindex)) <= 5e-16)
-  //       SBiomass.row(st).col(TSindex) = SProductSBiomass[1];
-  // 
-  //   } // end Stock loop
-  // 
-  //   // Apply SPFrom for spawning production from another stock
-  //   // TODO herm
-  //   if (nStock>1) {
-  //     if (debug)
-  //       Rcout << "SPFrom" << std::endl;
-  // 
-  //     for (int st=0; st<nStock; st++) {
-  //       S4 Stock = StockList[st];
-  //       S4 SRR = Stock.slot("SRR");
-  //       int SPFrom = SRR.slot("SPFrom");
-  //       int fromStock = SPFrom - 1;
-  //       SProduction.row(st).col(TSindex) = SProduction.row(fromStock).col(TSindex);
-  //     }
-  //   }
-  // 
-  //   // Calculate Recruitment and Numbers at beginning of next time step
-  //   for (int st=0; st<nStock; st++) {
-  // 
-  //     // Determine Age at Recruitment
-  //     S4 Stock = StockList[st];
-  //     S4 Ages = Stock.slot("Ages");
-  //     double Seasons = Stock.slot("Seasons");
-  //     int AgeRec = CalcRecruitment_TimeStep_(Ages, 1/Seasons);
-  //     int TSRec = TSindex + AgeRec; // TSindex + 1 for age-1 recruitment
-  //     
-  //     arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // nAge, nTS, nArea
-  //     int nAge = NumberAtAgeArea.n_rows;
-  //     int nTSnumber = NumberAtAgeArea.n_cols;
-  //     int nArea = NumberAtAgeArea.n_slices;
-  //     
-  //     S4 Spatial = Stock.slot("Spatial");
-  //     
-  //   
-  //     // Calc recruitment if there is enough space in NumberAtAgeArea
-  //     if (TSRec<nTSnumber) {
-  //       if (debug) {
-  //         Rcout << "\n\nCalculate Recruitment and Numbers for Stock " << st << std::endl;
-  //         Rcout << "TSindex " << TSindex << std::endl;
-  //         Rcout << "Seasons " << Seasons << std::endl;
-  //         Rcout << "AgeRec " << AgeRec << std::endl;
-  //         Rcout << "TSRec " << TSRec << std::endl;
-  //    
-  //       }
-  //       
-  //       S4 SRR = Stock.slot("SRR");
-  //       arma::vec R0 = SRR.slot("R0");
-  //       arma::vec RecDevHist = SRR.slot("RecDevHist");
-  //       arma::vec RecDevProj = SRR.slot("RecDevProj");
-  //       arma::vec RecDevs = join_cols(RecDevHist, RecDevProj);
-  // 
-  //       Function SRRModel = SRR.slot("Model");
-  //       List SRRPars = SRR.slot("Pars");
-  // 
-  //       // Calculate Recruitment
-  //       // Uses aggregate SProduction - ie summed over areas
-  //       // TODO option to use time-varying alpha, beta
-  //       
-  //       // Equilibrium unfished spawning production
-  // 
-  //       int sp0_nts = SP0.n_cols;
-  //       double sp0 = arma::as_scalar(SP0.row(st).col(0));
-  //       if (sp0_nts >1 ) {
-  //         sp0 = arma::as_scalar(SP0.row(st).col(TSindex));
-  //       }
-  // 
-  //       double SProductionThisTimeStep = arma::as_scalar(SProduction.row(st).col(TSindex));
-  //       double R0_recruit_TimeStep = arma::as_scalar(R0(TSRec));
-  //       double RecDev_recruit_TimeStep = arma::as_scalar(RecDevs(TSRec));
-  //       if (debug) {
-  //         Rcout << "sp0 = " << sp0 << std::endl;
-  //         Rcout << "SProductionThisTimeStep = " << SProductionThisTimeStep << std::endl;
-  //         Rcout << "R0_recruit_TimeStep = " << R0_recruit_TimeStep << std::endl;
-  //         Rcout << "RecDev_recruit_TimeStep = " << RecDev_recruit_TimeStep << std::endl;
-  //       }
-  //       
-  //       double Recruits = CalcRecruitment_(SProductionThisTimeStep,
-  //                                          R0_recruit_TimeStep,
-  //                                          sp0,
-  //                                          RecDev_recruit_TimeStep,
-  //                                          SRRModel,
-  //                                          SRRPars,
-  //                                          TSindex);
-  //       if (debug) {
-  //         Rcout << "Recruits =  " << Recruits << std::endl;
-  //       }
-  // 
-  //       // Distribute Recruits
-  //       if (debug)
-  //         Rcout << "Distribute Recruits " << std::endl;
-  // 
-  // 
-  //       arma::cube UnfishedDist = Spatial.slot("UnfishedDist"); // nArea, nAge, nTS;
-  //       arma::vec recruitArea(nArea);
-  // 
-  //       for (int area=0; area<nArea; area++) {
-  //         double rec = Recruits * arma::as_scalar(UnfishedDist(arma::span(area), arma::span(0), arma::span(TSRec)));
-  //         if (rec < 1E-6)
-  //           rec = 1E-6;
-  //         recruitArea(area) = rec;
-  // 
-  //         if (debug)
-  //           Rcout << "Recruits in Area " << area << ": " << rec << std::endl;
-  // 
-  //       }
-  //       NumberAtAgeArea.subcube(0, TSRec, 0, 0, TSRec, nArea-1) = recruitArea;
-  //     }
-  // 
-  //     if (TSindex <(nTSnumber-1)) {
-  // 
-  //       // Rcout << "timestep = " << timestep << std::endl;
-  //       // Rcout << "TSindex = " << TSindex << std::endl;
-  //       // Rcout << "nTSnumber = " << nTSnumber << std::endl;
-  //       bool plusgroup = Ages.slot("PlusGroup");
-  //       
-  //       List FDeadAtAgeAreaStock = FDeadAtAgeAreaList[st];
-  // 
-  //       S4 NaturalMortality = Stock.slot("NaturalMortality");
-  //       arma::mat NaturalMortalityAtAge = NaturalMortality.slot("MeanAtAge");
-  // 
-  //       S4 Maturity = Stock.slot("Maturity");
-  //       arma::mat Semelparous = Maturity.slot("Semelparous");
-  // 
-  //       if (debug)
-  //         Rcout << "NumberAtAgeArea Next"  << std::endl;
-  // 
-  //       NumberAtAgeArea.col(TSindex+1) = CalcNumberNext_(
-  //         NumberAtAgeArea.col(TSindex),
-  //         NumberAtAgeArea.col(TSindex+1),
-  //         Semelparous.col(TSindex),
-  //         FDeadAtAgeAreaStock[TSindex],
-  //         NaturalMortalityAtAge.col(TSindex),
-  //         plusgroup,
-  //         nAge,
-  //         nArea);
-  // 
-  //       // Move Population at beginning of next Time Step
-  //       if (debug)
-  //         Rcout << "Movement"  << std::endl;
-  // 
-  //       List MovementList = Spatial.slot("Movement");
-  //       NumberAtAgeArea = CalcStockMovement_(NumberAtAgeArea,
-  //                                            MovementList[TSindex+1],
-  //                                                        nAge,
-  //                                                        nArea,
-  //                                                        TSindex+1);
-  //     }
-  //     NumberAtAgeAreaList[st] = NumberAtAgeArea;
-  // 
-  // 
-  //     // Calculate Total Biomass
-  //     if (debug)
-  //       Rcout << "Calculating Total Biomass" << std::endl;
-  // 
-  //     S4 Weight = Stock.slot("Weight");
-  //     arma::mat WeightAtAge = Weight.slot("MeanAtAge");
-  // 
-  //     arma::mat NumberAtAgeAreaThisTS = NumberAtAgeArea.subcube(arma::span(0, nAge-1), arma::span(TSindex), arma::span(0, nArea-1));
-  //     Biomass.row(st).col(TSindex) = CalcBiomass_(NumberAtAgeAreaThisTS, WeightAtAge.col(TSindex));
-  // 
-  //     if (debug) {
-  //       double BIOMASS = arma::as_scalar(Biomass.row(st).col(TSindex));
-  //       Rcout << "Total Biomass = " << BIOMASS << std::endl;
-  //     }
-  // 
-  //   } // end of Stock loop
-  // 
-  // } // end of Time Step loop
-  // 
-  // HistSim.slot("Number") = NumberAtAgeAreaList;
-  // HistSim.slot("Biomass") = Biomass;
-  // HistSim.slot("SBiomass") = SBiomass;
-  // HistSim.slot("SProduction") = SProduction;
-  // HistSim.slot("Distribution") = DistributionList;
-  // HistSim.slot("Effort") = EffortCube;
-  // HistSim.slot("FDeadArea") = FDeadAtAgeAreaList;
-  // HistSim.slot("FRetainArea") = FRetainAtAgeAreaList;
-  // 
-  // // CalcCatch and overall F
-  // if (CalcCatch>0) {
-  //   if (debug) {
-  //     Rcout << "*********************"  << std::endl;
-  //     Rcout << "CalcCatch_ " << std::endl;
-  //     Rcout << "*********************"  << std::endl;
-  //   }
-  //   
-  //   HistSim = CalcCatch_(HistSim, Years, debug);
-  //   
-  //   if (debug) {
-  //     Rcout << "*********************"  << std::endl;
-  //     Rcout << "Done CalcCatch_ " << std::endl;
-  //     Rcout << "*********************"  << std::endl;
-  //   }
-  //   
-  //   if (debug) {
-  //     Rcout << "*********************"  << std::endl;
-  //     Rcout << "CalcAggregateF_ " << std::endl;
-  //     Rcout << "*********************"  << std::endl;
-  //   }
-  //   HistSim = CalcAggregateF_(HistSim, Years, debug);
-  //   if (debug) {
-  //     Rcout << "*********************"  << std::endl;
-  //     Rcout << "Done CalcAggregateF_ " << std::endl;
-  //     Rcout << "*********************"  << std::endl;
-  //   }
-  // }
-  return(HistSim);
-}
+// #include <RcppArmadillo.h>
+// #include "check.h"
+// #include "CalcVBiomass.h"
+// #include "CalcEffortDistribution.h"
+// #include "CalcFMortality.h"
+// #include "CalcSpawnProduction.h"
+// #include "CalcRecruitment.h"
+// #include "CalcBiomass.h"
+// #include "CalcAggregateF.h"
+// #include "CalcStockMovement.h"
+// #include "CalcNumberNext.h"
+// #include "CalcCatch.h"
+// #include "CalcRecruitment_TimeStep.h"
+// 
+// //[[Rcpp::depends(RcppArmadillo)]]
+// using namespace Rcpp;
+// 
+// //' Simulate Fishery Dynamics
+// //' 
+// //' Calculates the fishery dynamics for a given simulation and the specified
+// //' time steps.
+// //'
+// // [[Rcpp::export]]
+// Rcpp::S4 SimulateDynamics_(S4 HistSimIn, 
+//                      Rcpp::NumericVector Years,
+//                      int CalcCatch = 1,
+//                      int debug = 0) {
+//   
+//   Rcpp::S4 HistSim = clone(HistSimIn);
+//   // Rcpp::S4 OM = HistSim.slot("OM");
+//   // Rcpp::List StockList = OM.slot("Stock"); // List of `Stock` objects
+//   // Rcpp::List FleetList = OM.slot("Fleet"); // List length `nStock` , each elemett a `Fleet` object containing info for all fleets
+//   // 
+//   // NumericVector YearsAll = OM.slot("Years");
+//   // int nTS = Years.size();
+//   // IntegerVector MatchTS = match(Years, YearsAll);
+//   // 
+//   // List NumberAtAgeAreaList = HistSim.slot("Number"); // nStock
+//   // arma::mat Biomass = HistSim.slot("Biomass"); // nStock, nTS
+//   // arma::mat SBiomass = HistSim.slot("SBiomass"); // nStock, nTS
+//   // arma::mat SProduction = HistSim.slot("SProduction"); // nStock, nTS
+//   // List DistributionList = HistSim.slot("Distribution"); // nStock # effort distribution 
+//   // arma::cube EffortCube = HistSim.slot("Effort");; // nStock, nTS, nFleet
+//   // 
+//   // int nStock = NumberAtAgeAreaList.size();
+//   // int nFleet = EffortCube.n_slices;
+//   // arma::cube tempCube = NumberAtAgeAreaList[0]; // nAge, nTS, nArea
+//   // int nArea = tempCube.n_slices;
+//   // 
+//   // 
+//   // List FDeadAtAgeAreaList = HistSim.slot("FDeadArea");
+//   // List FRetainAtAgeAreaList = HistSim.slot("FRetainArea");
+//   // 
+//   // S4 Unfished = HistSim.slot("Unfished");
+//   // S4 UnfishedEquilibrium = Unfished.slot("Equilibrium");
+//   // arma::mat SP0 = UnfishedEquilibrium.slot("SProduction"); // nStock, nTS
+//   // 
+//   // for (int timestep=0; timestep<nTS; timestep++) {
+//   //   NumericVector TSmatch = abs(YearsAll - Years[timestep]);
+//   //   int TSindex = MatchTS[timestep] -1;
+//   // 
+//   //   if (debug) {
+//   //     Rcpp::Rcout << "\n--- Begin Timestep " << Years[timestep] << "----" << std::endl;
+//   //     Rcpp::Rcout << "Timestep Index = " << TSindex << std::endl;
+//   //   }
+// 
+//     // TODO 
+//     // Do MICE stuff ...
+//     // update length, weight, fleet weight, natural mortality, maturity, rec pars, etc
+// 
+//     
+//     // ---- Calculate Stock- and Area-Specific Vulnerable Biomass -----
+//     // VB = vulnerable (selectivity) x available (spatial closure)
+//     // TODO - selectivity by Area ...
+//     // arma::cube VBiomassStockFleetArea = CalcVBiomass_(NumberAtAgeAreaList,
+//     //                                                   FleetList,
+//     //                                                   TSindex,
+//     //                                                   nStock,
+//     //                                                   nFleet,
+//     //                                                   nArea,
+//     //                                                   debug);
+//       
+//       
+//      // ---- Distribute Fishing Effort Over Areas ----
+//      // UP TO HERE ... continue ...
+//      
+//      
+//   }
+//      
+//   //    
+//   //    arma::cube Distribution = DistributionList[st]; // Year, Fleet, Area
+//   //    bool EffortAreaEmpty = all(arma::vectorise(Distribution.row(TSindex)) < 1E-6); 
+//   //    
+//   //    if (debug)
+//   //      Rcout << "EffortAreaEmpty = " << EffortAreaEmpty << std::endl;
+//   //     
+//   //    
+//   //     
+//   // 
+//   // 
+//   //     S4 Stock = StockList[st];
+//   //     S4 Weight = Stock.slot("Weight");
+//   //     arma::mat WeightAtAge = Weight.slot("MeanAtAge");
+//   // 
+//   //     S4 Fecundity = Stock.slot("Fecundity");
+//   //     arma::mat FecundityAtAge = Fecundity.slot("MeanAtAge");
+//   // 
+//   //     S4 Maturity = Stock.slot("Maturity");
+//   //     arma::mat MaturityAtAge = Maturity.slot("MeanAtAge");
+//   // 
+//   //     S4 NaturalMortality = Stock.slot("NaturalMortality");
+//   //     arma::mat NaturalMortalityAtAge = NaturalMortality.slot("MeanAtAge");
+//   // 
+//   //     S4 SRR = Stock.slot("SRR");
+//   //     double SpawnTimeFrac = SRR.slot("SpawnTimeFrac");
+//   // 
+//   //     S4 Spatial = Stock.slot("Spatial");
+//   //     arma::vec RelativeSize = Spatial.slot("RelativeSize");
+//   // 
+//   //     S4 Fleet = FleetList[st];
+//   //     S4 CatchabilityObject = Fleet.slot("Catchability");
+//   // 
+//   //     arma::mat Catchability = CatchabilityObject.slot("Value"); // nTS, nFleet
+//   //     arma::cube qArea = CatchabilityObject.slot("qArea"); // nTS, nFleet, nArea
+//   //     
+//   // 
+//   //     S4 Selectivity = Fleet.slot("Selectivity");
+//   //     arma::cube SelectivityAtAge = Selectivity.slot("MeanAtAge"); // nAge, nTS, nFleet
+//   // 
+//   //     S4 Retention = Fleet.slot("Retention");
+//   //     arma::cube RetentionAtAge = Retention.slot("MeanAtAge"); // nAge, nTS, nFleet
+//   // 
+//   //     S4 DiscardMortality = Fleet.slot("DiscardMortality");
+//   //     arma::cube DiscardMortalityAtAge = DiscardMortality.slot("MeanAtAge"); // nAge, nTS, nFleet
+//   // 
+//   //     arma::cube ClosureArea = Fleet.slot("Closure"); // nTS, nFleet, nArea
+//   //     arma::cube FleetWeightAtAge = Fleet.slot("WeightFleet") ; // nAge, nTS, nFleet
+//   // 
+//   //     // Calculate VBiomass by Area
+//   // 
+//   //     int nArea = NumberAtAgeArea.n_slices;
+//   // 
+//   //     if (debug)
+//   //       Rcout << "VBiomassArea" << std::endl;
+//   // 
+//   //  
+//   // 
+//       // Distribute Effort over Areas
+//       // currently proportional to VB - ie no SpatTarg
+//       // if (debug)
+//       //   Rcout << "Effort" << std::endl;
+// 
+//       // int nFleet = VBiomassArea.n_rows;
+//       // bool EffortAreaEmpty = all(arma::vectorise(Distribution.row(TSindex)) < 1E-6);
+// 
+//       // if (debug)
+//         // Rcout << "EffortAreaEmpty = " << EffortAreaEmpty << std::endl;
+// 
+//       // TODO - Effort distribution should account for all stocks
+//       // Also develop IFD
+//       // if (EffortAreaEmpty) {
+//       //   Distribution.subcube(arma::span(TSindex), arma::span(0, nFleet-1), arma::span(0, nArea-1))=
+//       //     CalcEffortDistribution_(VBiomassArea,
+//       //                             EffortCube.subcube(arma::span(st), arma::span(TSindex), arma::span(0, nFleet-1)), nArea);
+//       // 
+//       // }
+//       // DistributionList[st] = Distribution;
+//   // 
+//   //     // Calculate F within each Area
+//   //     List FMortFleetArea = CalcFMortality_(Distribution.row(TSindex), // nFleet, nArea,
+//   //                                          arma::vectorise(Catchability.row(TSindex)), // nFleet
+//   //                                          qArea.row(TSindex), // Fleet, Area
+//   //                                          RelativeSize, // nArea
+//   //                                          SelectivityAtAge.col(TSindex), // nAge, nFleet
+//   //                                          RetentionAtAge.col(TSindex), // nAge, nFleet
+//   //                                          DiscardMortalityAtAge.col(TSindex), // nAge, nFleet
+//   //                                          nArea, 
+//   //                                          debug);
+//   // 
+//   //     List FDeadAtAgeAreaStock = FDeadAtAgeAreaList[st];
+//   //     List FRetainAtAgeAreaStock = FRetainAtAgeAreaList[st];
+//   //     FDeadAtAgeAreaStock[TSindex] = FMortFleetArea["FDeadFleetArea"];
+//   //     FRetainAtAgeAreaStock[TSindex] = FMortFleetArea["FRetainFleetArea"];
+//   // 
+//   //     arma::mat qAreaTS = FMortFleetArea["qArea"];
+//   //     qArea.row(TSindex) = qAreaTS;
+//   // 
+//   //     FDeadAtAgeAreaList[st] = FDeadAtAgeAreaStock;
+//   //     FRetainAtAgeAreaList[st] = FRetainAtAgeAreaStock;
+//   // 
+//   //     // Calc Spawning Production and Spawning Biomass
+//   //     arma::cube FDeadFleetArea = FMortFleetArea["FDeadFleetArea"];
+//   //     arma::mat FDeadAtAgeArea = arma::sum(FDeadFleetArea,1);
+//   //     arma::vec SProductSBiomass = CalcSpawnProduction_(NumberAtAgeArea.col(TSindex), // nAge
+//   //                                                      FecundityAtAge.col(TSindex), // nAge
+//   //                                                      MaturityAtAge.col(TSindex), // nAge
+//   //                                                      WeightAtAge.col(TSindex), // nAge
+//   //                                                      NaturalMortalityAtAge.col(TSindex), // nAge
+//   //                                                      FDeadAtAgeArea,
+//   //                                                      SpawnTimeFrac, // double
+//   //                                                      debug);
+//   // 
+//   //     if (arma::as_scalar(SProduction.row(st).col(TSindex)) <= 5e-16)
+//   //       SProduction.row(st).col(TSindex) = SProductSBiomass[0];
+//   // 
+//   //     if (arma::as_scalar(SBiomass.row(st).col(TSindex)) <= 5e-16)
+//   //       SBiomass.row(st).col(TSindex) = SProductSBiomass[1];
+//   // 
+//   //   } // end Stock loop
+//   // 
+//   //   // Apply SPFrom for spawning production from another stock
+//   //   // TODO herm
+//   //   if (nStock>1) {
+//   //     if (debug)
+//   //       Rcout << "SPFrom" << std::endl;
+//   // 
+//   //     for (int st=0; st<nStock; st++) {
+//   //       S4 Stock = StockList[st];
+//   //       S4 SRR = Stock.slot("SRR");
+//   //       int SPFrom = SRR.slot("SPFrom");
+//   //       int fromStock = SPFrom - 1;
+//   //       SProduction.row(st).col(TSindex) = SProduction.row(fromStock).col(TSindex);
+//   //     }
+//   //   }
+//   // 
+//   //   // Calculate Recruitment and Numbers at beginning of next time step
+//   //   for (int st=0; st<nStock; st++) {
+//   // 
+//   //     // Determine Age at Recruitment
+//   //     S4 Stock = StockList[st];
+//   //     S4 Ages = Stock.slot("Ages");
+//   //     double Seasons = Stock.slot("Seasons");
+//   //     int AgeRec = CalcRecruitment_TimeStep_(Ages, 1/Seasons);
+//   //     int TSRec = TSindex + AgeRec; // TSindex + 1 for age-1 recruitment
+//   //     
+//   //     arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // nAge, nTS, nArea
+//   //     int nAge = NumberAtAgeArea.n_rows;
+//   //     int nTSnumber = NumberAtAgeArea.n_cols;
+//   //     int nArea = NumberAtAgeArea.n_slices;
+//   //     
+//   //     S4 Spatial = Stock.slot("Spatial");
+//   //     
+//   //   
+//   //     // Calc recruitment if there is enough space in NumberAtAgeArea
+//   //     if (TSRec<nTSnumber) {
+//   //       if (debug) {
+//   //         Rcout << "\n\nCalculate Recruitment and Numbers for Stock " << st << std::endl;
+//   //         Rcout << "TSindex " << TSindex << std::endl;
+//   //         Rcout << "Seasons " << Seasons << std::endl;
+//   //         Rcout << "AgeRec " << AgeRec << std::endl;
+//   //         Rcout << "TSRec " << TSRec << std::endl;
+//   //    
+//   //       }
+//   //       
+//   //       S4 SRR = Stock.slot("SRR");
+//   //       arma::vec R0 = SRR.slot("R0");
+//   //       arma::vec RecDevHist = SRR.slot("RecDevHist");
+//   //       arma::vec RecDevProj = SRR.slot("RecDevProj");
+//   //       arma::vec RecDevs = join_cols(RecDevHist, RecDevProj);
+//   // 
+//   //       Function SRRModel = SRR.slot("Model");
+//   //       List SRRPars = SRR.slot("Pars");
+//   // 
+//   //       // Calculate Recruitment
+//   //       // Uses aggregate SProduction - ie summed over areas
+//   //       // TODO option to use time-varying alpha, beta
+//   //       
+//   //       // Equilibrium unfished spawning production
+//   // 
+//   //       int sp0_nts = SP0.n_cols;
+//   //       double sp0 = arma::as_scalar(SP0.row(st).col(0));
+//   //       if (sp0_nts >1 ) {
+//   //         sp0 = arma::as_scalar(SP0.row(st).col(TSindex));
+//   //       }
+//   // 
+//   //       double SProductionThisTimeStep = arma::as_scalar(SProduction.row(st).col(TSindex));
+//   //       double R0_recruit_TimeStep = arma::as_scalar(R0(TSRec));
+//   //       double RecDev_recruit_TimeStep = arma::as_scalar(RecDevs(TSRec));
+//   //       if (debug) {
+//   //         Rcout << "sp0 = " << sp0 << std::endl;
+//   //         Rcout << "SProductionThisTimeStep = " << SProductionThisTimeStep << std::endl;
+//   //         Rcout << "R0_recruit_TimeStep = " << R0_recruit_TimeStep << std::endl;
+//   //         Rcout << "RecDev_recruit_TimeStep = " << RecDev_recruit_TimeStep << std::endl;
+//   //       }
+//   //       
+//   //       double Recruits = CalcRecruitment_(SProductionThisTimeStep,
+//   //                                          R0_recruit_TimeStep,
+//   //                                          sp0,
+//   //                                          RecDev_recruit_TimeStep,
+//   //                                          SRRModel,
+//   //                                          SRRPars,
+//   //                                          TSindex);
+//   //       if (debug) {
+//   //         Rcout << "Recruits =  " << Recruits << std::endl;
+//   //       }
+//   // 
+//   //       // Distribute Recruits
+//   //       if (debug)
+//   //         Rcout << "Distribute Recruits " << std::endl;
+//   // 
+//   // 
+//   //       arma::cube UnfishedDist = Spatial.slot("UnfishedDist"); // nArea, nAge, nTS;
+//   //       arma::vec recruitArea(nArea);
+//   // 
+//   //       for (int area=0; area<nArea; area++) {
+//   //         double rec = Recruits * arma::as_scalar(UnfishedDist(arma::span(area), arma::span(0), arma::span(TSRec)));
+//   //         if (rec < 1E-6)
+//   //           rec = 1E-6;
+//   //         recruitArea(area) = rec;
+//   // 
+//   //         if (debug)
+//   //           Rcout << "Recruits in Area " << area << ": " << rec << std::endl;
+//   // 
+//   //       }
+//   //       NumberAtAgeArea.subcube(0, TSRec, 0, 0, TSRec, nArea-1) = recruitArea;
+//   //     }
+//   // 
+//   //     if (TSindex <(nTSnumber-1)) {
+//   // 
+//   //       // Rcout << "timestep = " << timestep << std::endl;
+//   //       // Rcout << "TSindex = " << TSindex << std::endl;
+//   //       // Rcout << "nTSnumber = " << nTSnumber << std::endl;
+//   //       bool plusgroup = Ages.slot("PlusGroup");
+//   //       
+//   //       List FDeadAtAgeAreaStock = FDeadAtAgeAreaList[st];
+//   // 
+//   //       S4 NaturalMortality = Stock.slot("NaturalMortality");
+//   //       arma::mat NaturalMortalityAtAge = NaturalMortality.slot("MeanAtAge");
+//   // 
+//   //       S4 Maturity = Stock.slot("Maturity");
+//   //       arma::mat Semelparous = Maturity.slot("Semelparous");
+//   // 
+//   //       if (debug)
+//   //         Rcout << "NumberAtAgeArea Next"  << std::endl;
+//   // 
+//   //       NumberAtAgeArea.col(TSindex+1) = CalcNumberNext_(
+//   //         NumberAtAgeArea.col(TSindex),
+//   //         NumberAtAgeArea.col(TSindex+1),
+//   //         Semelparous.col(TSindex),
+//   //         FDeadAtAgeAreaStock[TSindex],
+//   //         NaturalMortalityAtAge.col(TSindex),
+//   //         plusgroup,
+//   //         nAge,
+//   //         nArea);
+//   // 
+//   //       // Move Population at beginning of next Time Step
+//   //       if (debug)
+//   //         Rcout << "Movement"  << std::endl;
+//   // 
+//   //       List MovementList = Spatial.slot("Movement");
+//   //       NumberAtAgeArea = CalcStockMovement_(NumberAtAgeArea,
+//   //                                            MovementList[TSindex+1],
+//   //                                                        nAge,
+//   //                                                        nArea,
+//   //                                                        TSindex+1);
+//   //     }
+//   //     NumberAtAgeAreaList[st] = NumberAtAgeArea;
+//   // 
+//   // 
+//   //     // Calculate Total Biomass
+//   //     if (debug)
+//   //       Rcout << "Calculating Total Biomass" << std::endl;
+//   // 
+//   //     S4 Weight = Stock.slot("Weight");
+//   //     arma::mat WeightAtAge = Weight.slot("MeanAtAge");
+//   // 
+//   //     arma::mat NumberAtAgeAreaThisTS = NumberAtAgeArea.subcube(arma::span(0, nAge-1), arma::span(TSindex), arma::span(0, nArea-1));
+//   //     Biomass.row(st).col(TSindex) = CalcBiomass_(NumberAtAgeAreaThisTS, WeightAtAge.col(TSindex));
+//   // 
+//   //     if (debug) {
+//   //       double BIOMASS = arma::as_scalar(Biomass.row(st).col(TSindex));
+//   //       Rcout << "Total Biomass = " << BIOMASS << std::endl;
+//   //     }
+//   // 
+//   //   } // end of Stock loop
+//   // 
+//   // } // end of Time Step loop
+//   // 
+//   // HistSim.slot("Number") = NumberAtAgeAreaList;
+//   // HistSim.slot("Biomass") = Biomass;
+//   // HistSim.slot("SBiomass") = SBiomass;
+//   // HistSim.slot("SProduction") = SProduction;
+//   // HistSim.slot("Distribution") = DistributionList;
+//   // HistSim.slot("Effort") = EffortCube;
+//   // HistSim.slot("FDeadArea") = FDeadAtAgeAreaList;
+//   // HistSim.slot("FRetainArea") = FRetainAtAgeAreaList;
+//   // 
+//   // // CalcCatch and overall F
+//   // if (CalcCatch>0) {
+//   //   if (debug) {
+//   //     Rcout << "*********************"  << std::endl;
+//   //     Rcout << "CalcCatch_ " << std::endl;
+//   //     Rcout << "*********************"  << std::endl;
+//   //   }
+//   //   
+//   //   HistSim = CalcCatch_(HistSim, Years, debug);
+//   //   
+//   //   if (debug) {
+//   //     Rcout << "*********************"  << std::endl;
+//   //     Rcout << "Done CalcCatch_ " << std::endl;
+//   //     Rcout << "*********************"  << std::endl;
+//   //   }
+//   //   
+//   //   if (debug) {
+//   //     Rcout << "*********************"  << std::endl;
+//   //     Rcout << "CalcAggregateF_ " << std::endl;
+//   //     Rcout << "*********************"  << std::endl;
+//   //   }
+//   //   HistSim = CalcAggregateF_(HistSim, Years, debug);
+//   //   if (debug) {
+//   //     Rcout << "*********************"  << std::endl;
+//   //     Rcout << "Done CalcAggregateF_ " << std::endl;
+//   //     Rcout << "*********************"  << std::endl;
+//   //   }
+//   // }
+//   return(HistSim);
+// }

@@ -21,8 +21,8 @@ CalcCatch_ <- function(HistSimIn, Years, debug = 0L) {
     .Call(`_MSEtool_CalcCatch_`, HistSimIn, Years, debug)
 }
 
-CalcFisheryDynamics_ <- function(HistIn, Years, YearsAll, NumStock, nSim, nStock, nFleet, nArea) {
-    .Call(`_MSEtool_CalcFisheryDynamics_`, HistIn, Years, YearsAll, NumStock, nSim, nStock, nFleet, nArea)
+CalcFisheryDynamics_ <- function(HistIn, Years, nSim, nStock, nFleet, nArea, debug = 0L) {
+    .Call(`_MSEtool_CalcFisheryDynamics_`, HistIn, Years, nSim, nStock, nFleet, nArea, debug)
 }
 
 CalcNumberNext_ <- function(NumberAtAgeAreaThisTS, NumberAtAgeAreaNextTS, Semelparous, FDeadAtAgeAreaThisTS, NaturalMortalityAtAgeThisTS, plusgroup, nAge, nArea) {
@@ -79,15 +79,6 @@ Ref_int_cpp <- function(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V
 
 PopulateNumberNext_ <- function(HistSimIn, Year, debug = 0L) {
     .Call(`_MSEtool_PopulateNumberNext_`, HistSimIn, Year, debug)
-}
-
-#' Simulate Fishery Dynamics
-#' 
-#' Calculates the fishery dynamics for a given simulation and the specified
-#' time steps.
-#'
-SimulateDynamics_ <- function(HistSimIn, Years, CalcCatch = 1L, debug = 0L) {
-    .Call(`_MSEtool_SimulateDynamics_`, HistSimIn, Years, CalcCatch, debug)
 }
 
 SolveForFishingMortality <- function(NumberAtAge, TotalRemovalsFleet, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, FleetWeightAtAge, NaturalMortalityAtAge, MaxIt = 500L, tolF = 1E-4, debug = 0L) {

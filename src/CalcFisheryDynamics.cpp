@@ -1,34 +1,128 @@
 #include <Rcpp.h>
 #include "array_types.h"
 #include "array_views.h"
-#include "calc_vbiomass.h"
+#include "helpers.h"
 #include "calc_avail_biomass.h"
+#include "calc_spatial_utility.h"
 
 using namespace Rcpp;
 
-inline Array4D clone_StockList(Rcpp::List& StockList, int st) {
-  Rcpp::NumericVector x = Rcpp::clone(StockList[st]);
-  StockList[st] = x;   // optional: reserve slot immediately
-  return Array4D(x);
-}
+
+
 
 
 // [[Rcpp::export]]
 Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
-                              Rcpp::NumericVector Years, // Yearsto loop over
-                              Rcpp::NumericVector YearsAll, // all Years
+                              Rcpp::NumericVector Years, // Years to loop over
                               
-                              // Stock 
-                              Rcpp::List NumStock,
-                              Rcpp::List nAgeList,
-                           
                               int nSim,
                               int nStock,
                               int nFleet,
-                              int nArea) {
+                              int nArea,
+                              int debug=0) {
 
-  Rcpp::S4 Hist = clone(HistIn); 
+  Rcpp::S4 Hist = Rcpp::clone(HistIn); 
+  Rcpp::S4 OM = Hist.slot("OM");
+  Rcpp::NumericVector YearsAll = OM.slot("Years"); // all historical and projection years (time-steps) 
   
+  // ---------------------------------------------------------
+  // Mutable Hist lost
+  // ---------------------------------------------------------
+  Rcpp::List NumStockList = Hist.slot("Number"); // List of Number-at-Age arrays
+  
+  Array4D Effort = Slot2Array4D(Hist, "Effort"); // sim, stock, year, fleet
+  Array5D Dist = Slot2Array5D(Hist, "Distribution"); // sim, stock, year, fleet, area
+  
+  // ---------------------------------------------------------
+  // Extract non-mutable objects to from Hist@Misc
+  // ---------------------------------------------------------
+  
+  Rcpp::List Misc = Hist.slot("Misc");
+  
+  Rcpp::List SelList = GetMisc_List(Hist, "SelList"); // list nStock of Selectivity arrays
+  Rcpp::List RetList = GetMisc_List(Hist, "RetList"); // list nStock of Retention arrays
+  Rcpp::List WeightFleetList = GetMisc_List(Hist, "WeightFleetList"); // list nStock of WeightFleet arrays
+  Rcpp::List CatchabilityList = GetMisc_List(Hist, "CatchabilityList"); // list nStock of WeightFleet arrays
+  
+ 
+  // Time Steps
+  std::vector<int> ts_index = CalcTSIndex(Years, YearsAll); // time-step index 
+  int nTS = ts_index.size();
+  
+  for (int ts = 0; ts < nTS; ++ts) { // loop over time-steps (Years)
+    int y = ts_index[ts]; // index for this time step
+    
+    
+    // ---------------------------------------------------------
+    // Calculate Spatial Distribution of Fishing Effort
+    // ---------------------------------------------------------
+    
+    
+    
+    // Calculate Spatial Available Biomass (AB) for all stocks
+    // AB = fleet-specific VB x fleet-specific q
+    // output: sim, stock, fleet, area (inst/include/calc_avail_biomass.h)
+    Array4D AB_stocks = CalcAvailBiomass_Stocks( 
+      y,
+      NumStockList,
+      WeightFleetList,
+      SelList,
+      RetList,
+      CatchabilityList,
+      nSim,
+      nStock,
+      nFleet, 
+      nArea
+    );
+    
+    
+    
+    
+    // ---------------------------------------------------------
+    // Loop over Stocks
+    // ---------------------------------------------------------
+    for (int st = 0; st < nStock; ++st) { 
+      // Get Stock Arrays
+      Array4D Num = clone_StockList4D(NumStockList, st); // Number-at-age: sim, age, year, area
+      Array4D Weight = clone_StockList4D(WeightFleetList, st); // Weight-at-age: sim, age, year, fleet
+      Array5D Sel = clone_StockList5D(SelList, st); // selectivity-at-age: sim, age, year, fleet, area
+      Array5D Ret = clone_StockList5D(RetList, st); // retention-at-age: sim, age, year, fleet, area
+      Array3D Catchablity = clone_StockList3D(CatchabilityList, st); // catchability: sim, year, fleet
+      
+      // Get this time step arrays
+      Array3D Num_y = slice_year(Num, y);         // Number-at-age this time step 
+      Array3D Weight_y = slice_year(Weight, y);   // Weight-at-age this time step
+      Array4D Sel_y = slice_year(Sel, y);         // Select-at-age this time step
+      Array4D Ret_y = slice_year(Ret, y);         // Retain-at-age this time step
+      Array2D q_y = slice_year(Catchablity, y);   // q this time step
+      
+      // ---------------------------------------------------------
+      // Calculate Spatial Distribution of Fishing Effort
+      // ---------------------------------------------------------
+      
+      // Available Biomass: sim, fleet, area (inst/include/calc_avail_biomass.h)
+      Array3D AB = CalcAvailBiomass_(Num_y,    // sim, age, area
+                                     Weight_y, // sim, age, fleet
+                                     Sel_y,    // sim, age, fleet, area
+                                     Ret_y,    // sim, age, fleet, area
+                                     q_y);    // sim, fleet
+        
+    }
+       
+      sFA_into_sSYFA(Dist, AB, st, y);
+      
+    } // end loop over stocks
+    
+    
+  } // end loop over time-steps (Years)
+
+
+  Hist.slot("Number") = NumStockList;
+  
+  return(Hist);
+}
+
+
   // Examples 
   // // VB: sim × stock × year × fleet × area
   // Array5D VB = Slot2Array5D(Hist, "VBiomass");
@@ -56,17 +150,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
  // assign_3d_into_5d(VB, VB_ts, st, ts); 
  
  
-  // Rcpp::List Misc = Hist.slot("Misc");
-  // if (!Misc.containsElementNamed("SelList"))
-  //   stop("Hist@Misc$SelList not found");
-  // Rcpp::List SelList = Misc["SelList"]; // list nStock of Selectivity arrays
-  // Rcpp::List RetList = Misc["RetList"]; // list nStock of Selectivity arrays
-  // Rcpp::List WeightFleetList = Misc["WeightFleetList"];  // list nStock of Weight-at-Age arrays
-  // 
-  // Rcpp::List NumStockList = Hist.slot("Number"); // List of Number-at-Age arrays
-  // 
-  // 
-  // 
+
   // // Array5D Dist = Slot2Array5D(Hist, "Distribution"); // sim, stock, year, fleet, area
   // Array5D VB = Slot2Array5D(Hist, "VBiomass"); // sim, stock, year, fleet, area
   // 
@@ -76,12 +160,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
   // std::vector<Array5D> Ret(nStock);
   // std::vector<Array4D> Wgt(nStock);
   // 
-  // // Time Steps 
-  // IntegerVector MatchTS = match(Years, YearsAll);
-  // int nTS = Years.size();
-  // std::vector<int> ts_index(nTS); // loop over Years
-  // 
-  // for (int ts = 0; ts < nTS; ++ts) {
+
   //   
   //   // Time Step Logic 
   //   if (MatchTS[ts] == NA_INTEGER)
@@ -119,8 +198,6 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
   // 
   // 
   // 
-  return(Hist);
-}
 
   // Array3D AB3 = CalcAvailBiomass_(Num, Weight, Sel, Ret, q);
   
