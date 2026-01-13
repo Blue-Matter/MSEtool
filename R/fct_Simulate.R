@@ -86,6 +86,12 @@ Simulate_om <- function(OM = NULL,
     }) |> List2Array(pos = 3) # Sim, Year, Fleet
   })
   
+  Hist@Misc$ClosureList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      fleet@Closure
+    }) |> List2Array(pos = 3) # Sim, Year, Fleet, Area
+  })
+  
   Hist@Misc$HabitatCapacity <- purrr::map(Hist@OM@Stock, \(StockList) {
     purrr::map(StockList, \(stock) {
       stock@Spatial@HabitatCapacity
