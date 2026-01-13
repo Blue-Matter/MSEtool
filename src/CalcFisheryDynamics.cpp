@@ -2,7 +2,6 @@
 #include "array_types.h"
 #include "array_views.h"
 #include "helpers.h"
-#include "calc_avail_biomass.h"
 #include "calc_spatial_utility.h"
 
 using namespace Rcpp;
@@ -59,62 +58,47 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     
     
     
-    // Calculate Spatial Available Biomass (AB) for all stocks
-    // AB = fleet-specific VB x fleet-specific q
-    // output: sim, stock, fleet, area (inst/include/calc_avail_biomass.h)
-    Array4D AB_stocks = CalcAvailBiomass_Stocks( 
-      y,
-      NumStockList,
-      WeightFleetList,
-      SelList,
-      RetList,
-      CatchabilityList,
-      nSim,
-      nStock,
-      nFleet, 
-      nArea
-    );
+
     
-    
-    
+
     
     // ---------------------------------------------------------
     // Loop over Stocks
     // ---------------------------------------------------------
-    for (int st = 0; st < nStock; ++st) { 
-      // Get Stock Arrays
-      Array4D Num = clone_StockList4D(NumStockList, st); // Number-at-age: sim, age, year, area
-      Array4D Weight = clone_StockList4D(WeightFleetList, st); // Weight-at-age: sim, age, year, fleet
-      Array5D Sel = clone_StockList5D(SelList, st); // selectivity-at-age: sim, age, year, fleet, area
-      Array5D Ret = clone_StockList5D(RetList, st); // retention-at-age: sim, age, year, fleet, area
-      Array3D Catchablity = clone_StockList3D(CatchabilityList, st); // catchability: sim, year, fleet
-      
-      // Get this time step arrays
-      Array3D Num_y = slice_year(Num, y);         // Number-at-age this time step 
-      Array3D Weight_y = slice_year(Weight, y);   // Weight-at-age this time step
-      Array4D Sel_y = slice_year(Sel, y);         // Select-at-age this time step
-      Array4D Ret_y = slice_year(Ret, y);         // Retain-at-age this time step
-      Array2D q_y = slice_year(Catchablity, y);   // q this time step
-      
-      // ---------------------------------------------------------
-      // Calculate Spatial Distribution of Fishing Effort
-      // ---------------------------------------------------------
-      
-      // Available Biomass: sim, fleet, area (inst/include/calc_avail_biomass.h)
-      Array3D AB = CalcAvailBiomass_(Num_y,    // sim, age, area
-                                     Weight_y, // sim, age, fleet
-                                     Sel_y,    // sim, age, fleet, area
-                                     Ret_y,    // sim, age, fleet, area
-                                     q_y);    // sim, fleet
-        
-    }
-       
-      sFA_into_sSYFA(Dist, AB, st, y);
-      
-    } // end loop over stocks
-    
-    
-  } // end loop over time-steps (Years)
+  //   for (int st = 0; st < nStock; ++st) { 
+  //     // Get Stock Arrays
+  //     Array4D Num = clone_StockList4D(NumStockList, st); // Number-at-age: sim, age, year, area
+  //     Array4D Weight = clone_StockList4D(WeightFleetList, st); // Weight-at-age: sim, age, year, fleet
+  //     Array5D Sel = clone_StockList5D(SelList, st); // selectivity-at-age: sim, age, year, fleet, area
+  //     Array5D Ret = clone_StockList5D(RetList, st); // retention-at-age: sim, age, year, fleet, area
+  //     Array3D Catchablity = clone_StockList3D(CatchabilityList, st); // catchability: sim, year, fleet
+  //     
+  //     // Get this time step arrays
+  //     Array3D Num_y = slice_year(Num, y);         // Number-at-age this time step 
+  //     Array3D Weight_y = slice_year(Weight, y);   // Weight-at-age this time step
+  //     Array4D Sel_y = slice_year(Sel, y);         // Select-at-age this time step
+  //     Array4D Ret_y = slice_year(Ret, y);         // Retain-at-age this time step
+  //     Array2D q_y = slice_year(Catchablity, y);   // q this time step
+  //     
+  //     // ---------------------------------------------------------
+  //     // Calculate Spatial Distribution of Fishing Effort
+  //     // ---------------------------------------------------------
+  //     
+  //     // Available Biomass: sim, fleet, area (inst/include/calc_avail_biomass.h)
+  //     Array3D AB = CalcAvailBiomass_(Num_y,    // sim, age, area
+  //                                    Weight_y, // sim, age, fleet
+  //                                    Sel_y,    // sim, age, fleet, area
+  //                                    Ret_y,    // sim, age, fleet, area
+  //                                    q_y);    // sim, fleet
+  //       
+  //   }
+  //      
+  //     sFA_into_sSYFA(Dist, AB, st, y);
+  //     
+  //   } // end loop over stocks
+  //   
+  //   
+  // } // end loop over time-steps (Years)
 
 
   Hist.slot("Number") = NumStockList;

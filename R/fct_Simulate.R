@@ -1,3 +1,8 @@
+# TODO
+# - Effort - make it the same for a given fleet across stocks and
+#            add deviations to q
+# - update CalcSpatialUtility to CalcEffortDist and add gravity model with targeting parameter in Fleet object (default 1)
+
 #' @export
 print.simlist <- function(x, ...) {
   cli::cli_text("Internal `simlist` object. List of length `nSim`")
@@ -73,52 +78,50 @@ Simulate_om <- function(OM = NULL,
       fleet@WeightFleet
     }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet
   })
-  
+
   Hist@Misc$CatchabilityList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
     purrr::map(FleetList, \(fleet) {
       fleet@Catchability@Efficiency
     }) |> List2Array(pos = 3) # Sim, Year, Fleet
   })
-  
+
   Hist@Misc$EffortList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
     purrr::map(FleetList, \(fleet) {
       fleet@Effort@Effort
     }) |> List2Array(pos = 3) # Sim, Year, Fleet
   })
-  
+
   Hist@Misc$ClosureList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
     purrr::map(FleetList, \(fleet) {
       fleet@Closure
     }) |> List2Array(pos = 3) # Sim, Year, Fleet, Area
   })
-  
+
   Hist@Misc$HabitatCapacity <- purrr::map(Hist@OM@Stock, \(StockList) {
     purrr::map(StockList, \(stock) {
       stock@Spatial@HabitatCapacity
     }) |> List2Array(pos = 2) # Sim, Stock, Area
   })
-  
-  
-  HistYears <- Years(OM,'H')
+
+
+  HistYears <- Years(OM, "H")
   nSim <- OM@nSim
   nStock <- nStock(OM)
   nFleet <- nFleet(OM)
   nArea <- nArea(OM)
-  
+
   HistOUT <- CalcFisheryDynamics_(Hist,
-                                  Years=HistYears[1:2],
-                                  nSim,
-                                  nStock,
-                                  nFleet,
-                                  nArea)
-  
+    Years = HistYears[1:2],
+    nSim,
+    nStock,
+    nFleet,
+    nArea
+  )
+
   range(Hist@Distribution)
   range(HistOUT@Distribution)
-  HistOUT@Distribution[1,,1,1:2,1]
-  
-  
-  
-  
+  HistOUT@Distribution[1, , 1, 1:2, 1]
+
 
   # 1. make all the arrays and add to Misc
   # 2. Drop OM from Hist for now - re add later?save for space

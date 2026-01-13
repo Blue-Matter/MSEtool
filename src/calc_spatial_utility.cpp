@@ -10,10 +10,12 @@ Array3D CalcSpatialUtility(
   Rcpp::List& WeightFleetList,        // Number-at-age list nStock of array: sim, age, year, area
   Rcpp::List& SelList,                // Selectivity-at-age list nStock of array: sim, age, year, area
   Rcpp::List& RetList,                // Retention-at-age list nStock of array: sim, age, year, area
+  
   Array4D q,                          // Catchability array: sim, stock, year, fleet
   Array5D Closure,                    // Area closed (0) or open (1) array: sim, stock, year, fleet, area
-  Array3D Effort,                     // Total Effort: sim, year, fleet
-  Array2D RelSize,                    // Relative Area Size; sim, area
+
+  Rcpp::List& EffortList,
+  Array3D HabitatCapacity,            // 
   const int nSim,
   const int nStock,
   const int nFleet,
@@ -23,6 +25,7 @@ Array3D CalcSpatialUtility(
   std::array<int,3> dim = {nSim, nFleet, nArea};
   Array3D Util(dim, 0.0);
   
+  
   // Loop over stocks
   for (int st = 0; st < nStock; ++st) { 
     
@@ -31,74 +34,60 @@ Array3D CalcSpatialUtility(
     Array4D Wgt = clone_StockList4D(WeightFleetList, st);
     Array5D Sel = clone_StockList5D(SelList, st);
     Array5D Ret = clone_StockList5D(RetList, st);
-    
-    std::array<int,3> dim = {nSim, nFleet, nArea};
-    Array3D B_hat(dim, 0.0);
 
-    // Exploitable biomass per unit effort
+    // Time-step slices
+    Array3D Num_y = slice_year(Num, y);     // sim, age, area
+    Array3D Wgt_y = slice_year(Wgt, y);     // sim, age, fleet
+    Array4D Sel_y = slice_year(Sel, y);     // sim, age, fleet, area
+    Array4D Ret_y = slice_year(Ret, y);     // sim, age, fleet, area
+    Array4D Clo_y = slice_year(Closure, y); // sim, stock, fleet, area
+    Array3D q_y   = slice_year(q, y);       // sim, fleet
+    
+    // Utility contribution
     for (int sim = 0; sim < nSim; ++sim) {
       for (int fl = 0; fl < nFleet; ++fl) {
         for (int ar = 0; ar < nArea; ++ar) {
-          if (Closure(sim, st, y, fl, ar) <= 0.0) continue;
+          const double closure  = Clo_y(sim, st, ar);
+          if (closure <= 0.0) continue; // closed area
           
-          double B_sfr = 0.0;
-          for (int age = 0; age < Num.dim[1]; ++age) {
-            B_sfr +=
-              Num(sim, age, y, ar) *
-              Wgt(sim, age, y, fl) *
-              Sel(sim, age, y, fl, ar) *
-              Ret(sim, age, y, fl, ar);
+          // catch-rate (available vuln biomass x q)
+          double ab = 0.0;
+          for (int age = 0; age < Num_y.dim[1]; ++age) {
+            ab +=
+              Num_y(sim, age, ar) *
+              Wgt_y(sim, age, fl) *
+              Sel_y(sim, age, fl, ar) *
+              Ret_y(sim, age, fl, ar); 
           }
-          B_hat(sim, fl, ar) = q(sim, st, y, fl) * B_sfr;
-        }
-      }
-    } 
- 
-    // Within-season saturation 
-    for (int sim = 0; sim < nSim; ++sim) {
-      for (int fl = 0; fl < nFleet; ++fl) {
-        const double phi = q(sim, st, y, fl) * Effort(sim, y, fl);
-         
-        // Median B_ref across areas
-        std::vector<double> Bvec(nArea);
-        for (int ar = 0; ar < nArea; ++ar)
-          Bvec[ar] = B_hat(sim, fl, ar);
-         
-        std::nth_element(
-          Bvec.begin(),
-          Bvec.begin() + nArea / 2,
-          Bvec.end()
-        ); 
-        const double Bref = Bvec[nArea / 2];
-         
-        if (Bref <= 0.0) continue;
-         
-        // Apply stock-specific utility
-        for (int ar = 0; ar < nArea; ++ar) {
-          const double B = B_hat(sim, fl, ar);
-          const double A = RelSize(sim, ar);
            
-          if (A > 0.0 && B > 0.0) {
-            const double Gamma = B / (A * Bref);
-            Util(sim, fl, ar) += B / (1.0 + phi * Gamma);
-          }
+          ab *= q_y(sim, st, fl);
+           
+          const double cap = HabitatCapacity(sim, st, ar);
+          if (cap <= 0.0 || ab <= 0.0) continue;
+           
+          // Habitat-scaled, depletion-adjusted utility
+          const double B = ab / cap;
+          const double U = B / (1.0 + alpha * B);
+           
+          Util(sim, fl, ar) += U;
         }
       }
     }
   } // end stock loop
   
-  // --- Normalize across areas ---
+  // Normalize over areas (per sim × fleet)
   for (int sim = 0; sim < nSim; ++sim) {
     for (int fl = 0; fl < nFleet; ++fl) {
       double total = 0.0;
-      for (int ar = 0; ar < nArea; ++ar)
+      for (int ar = 0; ar < nArea; ++ar) {
         total += Util(sim, fl, ar);
-       
+      }
       if (total > 0.0) {
-        for (int ar = 0; ar < nArea; ++ar)
+        for (int ar = 0; ar < nArea; ++ar) {
           Util(sim, fl, ar) /= total;
-      } 
-    }
+        }
+      }
+    } 
   }
 
   return Util;
