@@ -98,13 +98,17 @@ GenerateProjectionData_Effort <- function(ProjSim, DataYear, YearsAll, i, stocks
 
 GenerateProjectionData_Catch <- function(ProjSim, DataYear, YearsAll, i, 
                                          stocks, type=c('Landings', 'Discards')) {
-  type <- match.arg(type)
+  type <- match.arg(type, c('Landings', 'Discards'))
   
   DataCatch <- slot(ProjSim@Data[[i]], type)
   if (EmptyObject(DataCatch))
     return(ProjSim)
   
   FleetNames <- DataCatch@Name
+  if (is.null(FleetNames)) {
+    dd <- dim(DataCatch@Value)
+    FleetNames <- paste("Fleet", 1:dd[2])
+  }
   SimCatchList <- purrr::map(slot(ProjSim, paste0(type,'AtAge'))[stocks], \(catch) 
                              catch[[as.character(DataYear)]] 
   )
@@ -139,6 +143,14 @@ GenerateProjectionData_Catch <- function(ProjSim, DataYear, YearsAll, i,
                                     Fleet=FleetNames))
   NewCV <- NewValue
   
+  if (length(DataCatch@Units) != nFleet) {
+    if (is.null(DataCatch@Units)) {
+      DataCatch@Units <- rep('Biomass', nFleet)
+    } else {
+      DataCatch@Units <- rep(DataCatch@Units, nFleet)[1:nFleet]
+    }
+  }
+  
   # loop over fleets 
   for (fl in 1:nFleet) {
     Obs <- slot(ProjSim@OM@Obs[[i]][[fl]], type)
@@ -163,10 +175,15 @@ GenerateProjectionData_Catch <- function(ProjSim, DataYear, YearsAll, i,
     }
     
     # CV 
-    if (!is.null(ProjSim@OM@Data[[i]]) &&  nrow(slot(ProjSim@OM@Data[[i]],type)@CV)>=TSIndex) {
+    if (!is.null(ProjSim@OM@Data[[i]]) &&  
+        !is.null(slot(ProjSim@OM@Data[[i]],type)@CV) &&
+        nrow(slot(ProjSim@OM@Data[[i]],type)@CV)>=TSIndex) {
       NewCV[,fl] <- slot(ProjSim@OM@Data[[i]],type)@CV[TSIndex,fl]
     } else {
-      NewCV[,fl] <- SubsetYear(DataCatch@CV, DataYear)[fl]
+      if (!is.null(SubsetYear(DataCatch@CV, DataYear)[fl])) {
+        NewCV[,fl] <- SubsetYear(DataCatch@CV, DataYear)[fl]  
+      }
+      
     }
   }
   
@@ -187,7 +204,6 @@ GenerateProjectionData_Index <- function(ProjSim, DataYear, YearsHist, YearsAll,
   if (EmptyObject(DataIndex))
     return(ProjSim)
   Value <- DataIndex@Value
-  CV <- DataIndex@CV
   
   if (DataYear %in% dimnames(Value)[[1]]) {
     # data already exists
@@ -288,16 +304,23 @@ GenerateProjectionData_Index <- function(ProjSim, DataYear, YearsHist, YearsAll,
     }
     
     # CV 
-    if (!is.null(ProjSim@OM@Data[[i]]) &&  nrow(slot(ProjSim@OM@Data[[i]],type)@CV)>=TSIndex) {
+    if (!is.null(ProjSim@OM@Data[[i]]) &&  
+        !is.null(slot(ProjSim@OM@Data[[i]],type)@CV) &&
+        nrow(slot(ProjSim@OM@Data[[i]],type)@CV)>=TSIndex) {
       NewCV[,fl] <- slot(ProjSim@OM@Data[[i]],type)@CV[TSIndex,fl]
     } else {
-      previouscv <- DataIndex@CV[,fl]
-      previouscv <- previouscv[!is.na(previouscv)] |> tail(1) |> as.numeric()
-      NewCV[,fl] <- previouscv
+      if (!is.null(DataIndex@CV)) {
+        previouscv <- DataIndex@CV[,fl]
+        previouscv <- previouscv[!is.na(previouscv)] |> tail(1) |> as.numeric()
+        NewCV[,fl] <- previouscv  
+      }
     }
   }
   DataIndex@Value <- abind::abind(Value, NewValue, along=1, use.dnns=TRUE)
-  DataIndex@CV <- abind::abind(CV, NewCV, along=1, use.dnns=TRUE)
+  if (!is.null(DataIndex@CV)) {
+    DataIndex@CV <- abind::abind(DataIndex@CV, NewCV, along=1, use.dnns=TRUE)  
+  }
+  
   slot(ProjSim@Data[[i]],type) <- DataIndex
   ProjSim
 }
