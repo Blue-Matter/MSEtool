@@ -124,7 +124,7 @@ MPErrorLog <- function(MPAdvice, Year=NULL) {
     return(NULL)
   }
   
-  if (!inhertits(MPAdvice, 'try-error')) {
+  if (!inherits(MPAdvice, 'try-error')) {
     cli::cli_abort("MP did not return an `Advice()` object")
   }
   
