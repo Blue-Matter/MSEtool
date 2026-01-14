@@ -213,7 +213,7 @@ KeepSelectRetenDisc <- function(MSE, SimList_MP, mp, Slot='Retention') {
     dd <- dimnames(AtAge[[st]])
     
     omvals <- slot(MSE@OM@Fleet[[st]],Slot)@MeanAtAge |> ArraySubsetYear(ProjYear) |>
-      ArrayExpand(nSim=length(dd$Sim), AgeClasses, Years = dd$Year)
+      Extend(nSim=length(dd$Sim), AgeClasses, Years = dd$Year)
     
     if (!prod(AtAge[[st]] == omvals)) {
       if (is.null(MSE@Misc[[Slot]])) {

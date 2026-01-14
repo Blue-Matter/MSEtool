@@ -65,7 +65,7 @@ CalcUnfishedNumber_seasonal <- function(OM, SP = FALSE) {
   StockList <- MakeNamedList(StockNames(OM))
   
   for (st in 1:nStock(OM)) {
-    Stock=OM@Stock[[st]]
+    Stock <- OM@Stock[[st]]
     AgeClasses <- Stock@Ages@Classes
     MaxAge <- max(AgeClasses)
     nAge <- length(AgeClasses)
@@ -87,26 +87,26 @@ CalcUnfishedNumber_seasonal <- function(OM, SP = FALSE) {
     Semelparous <- ProcessSemelparuous(Stock@Maturity@Semelparous, nSim, AgeClasses, Years)
 
     # Check if seasonal values vary over years
-    season_block_2d <- function(x, y, nSeason) {
+    GetSeasonBlock2d <- function(x, y, nSeason) {
       idx <- ((y - 1) * nSeason + 1):(y * nSeason)
       x[, idx, drop = FALSE]
     }
     
-    season_block_3d <- function(x, y, nSeason) {
+    GetSeasonBlock3d <- function(x, y, nSeason) {
       idx <- ((y - 1) * nSeason + 1):(y * nSeason)
       x[, , idx, drop = FALSE]
     }
     
     identical_years <- all(
       purrr::map_lgl(2:nYear, ~
-                isTRUE(all.equal(season_block_2d(R0, 1, nSeason),
-                                 season_block_2d(R0, .x, nSeason),
+                isTRUE(all.equal(GetSeasonBlock2d(R0, 1, nSeason),
+                                 GetSeasonBlock2d(R0, .x, nSeason),
                                  check.attributes = FALSE)) &&
-                isTRUE(all.equal(season_block_3d(NaturalMortality, 1, nSeason),
-                                 season_block_3d(NaturalMortality, .x, nSeason),
+                isTRUE(all.equal(GetSeasonBlock3d(NaturalMortality, 1, nSeason),
+                                 GetSeasonBlock3d(NaturalMortality, .x, nSeason),
                                  check.attributes = FALSE)) &&
-                isTRUE(all.equal(season_block_3d(Semelparous, 1, nSeason),
-                                 season_block_3d(Semelparous, .x, nSeason),
+                isTRUE(all.equal(GetSeasonBlock3d(Semelparous, 1, nSeason),
+                                 GetSeasonBlock3d(Semelparous, .x, nSeason),
                                  check.attributes = FALSE))
       )
     )
@@ -163,17 +163,14 @@ CalcUnfishedNumber_equilibrium_season <- function(R0_season,
   NumberSeason <- array(1, dim = c(nSim, nAge, nSeason))
   
   for (iter in seq_len(max_iter)) {
-    
     Number_old <- NumberSeason
     
     for (s in seq_len(nSeason)) {
-      
       # previous season index
       s_prev <- ifelse(s == 1, nSeason, s - 1)
       
       # Abundance entering season s
       N_prev <- NumberSeason[, , s_prev]  
-      
       # Recruitment 
       N_new <- matrix(0, nrow = nSim, ncol = nAge)
       N_new[, 1] <- R0_season[, s]
@@ -183,7 +180,7 @@ CalcUnfishedNumber_equilibrium_season <- function(R0_season,
       N_spawn <- N_prev * exp(-Z_pre)
       
       # Semelparous mortality after spawning 
-      N_post_spawn <- N_spawn * (1-Semel_season[, , s])
+      N_post_spawn <- N_spawn * (1-abind::adrop(Semel_season[, , s, drop=FALSE],3))
       
       # Natural mortality after spawning 
       Z_post <- M_season[, , s] * (1 - SpawnTimeFrac)

@@ -12,6 +12,7 @@ Spatial(
   RelativeSize = NULL,
   Movement = NULL,
   FracOther = NULL,
+  Arrangement = NULL,
   CVDist = 0.1,
   CVStay = 1,
   Misc = list()
@@ -31,6 +32,8 @@ See \code{Details}.}
 
 \item{FracOther}{See \verb{More than Two Areas} in \code{Details}.}
 
+\item{Arrangement}{A numeric matrix with the layout ofthe areas. Used for plotting only.}
+
 \item{CVDist}{The logit CV associated with \code{UnfishedDist} (used as a penalty when optimizing for \code{UnfishedDist}). See \code{?FitMovement} for details.}
 
 \item{CVStay}{The logit CV associated with \code{ProbStaying} (used as a penalty when optimizing for diagonal (\code{ProbStaying})). See \code{?FitMovement} for details.}
@@ -40,8 +43,6 @@ See \code{Details}.}
 \item{x}{A \code{\link[=Stock]{Stock()}} object}
 
 \item{value}{A \code{spatial} object to assign to \code{x}}
-
-\item{Arrangement}{A numeric matrix with the layout ofthe areas. Used for plotting only.}
 }
 \description{
 Spatial Object

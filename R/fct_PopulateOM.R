@@ -1,10 +1,11 @@
 #' Populate operating model components
 #'
-#' Populate and update operating model objects by filling derived slots,
-#' expanding stochastic dimensions, and generating simulation-level quantities.
+#' Populate and update [OM()] objects by generating stochastic values,
+#' filling derived slots, and checking object structure and contents. 
 #'
 #' These functions are internal population engines used to initialise and
-#' update \link{OM}, \link{Stock}, and \link{Fleet} objects prior to simulation.
+#' update \link{OM}, \link{Stock}, and \link{Fleet} objects used by [Simulate()].
+#' 
 #' Population is skipped if the object digest is unchanged, unless
 #' `force = TRUE`.
 #'
@@ -36,10 +37,9 @@
 #' @param ALK Logical; whether to populate age–length keys.
 #' @param AWK Logical; whether to populate age–weight keys.
 #'
-#' @param seed Integer random seed used for stochastic components.
-#' @param silent Logical; suppress informational messages.
-#' @param force Logical; force re-population even if the object digest
-#'   is unchanged.
+#' @param seed Integer random seed used for generating stochastic values.
+#' @param silent Logical; suppress messages.
+#' @param force Logical; force re-population even if the object digest is unchanged.
 #'
 #' @return
 #' An object of the same class as the input, with populated and updated slots.
@@ -134,93 +134,208 @@ ProcessData <- function(OM) {
   OM
 }
 
-
 PopulateStockList <- function(OM, silent = FALSE, force = FALSE) {
-  nStocks <- nStock(OM)
-  StockList <- vector("list", nStocks)
-  names(StockList) <- paste("Stock", 1:nStocks)
-  class(StockList) <- "StockList"
-
-  for (st in 1:nStocks) {
-    if (isS4(OM@Stock)) {
-      Stock <- OM@Stock
-    } else {
-      Stock <- OM@Stock[[st]]
-    }
-    Stock@nSim <- OM@nSim
-    StockList[[st]] <- PopulateStock(Stock,
-      nYear = OM@nYear,
-      pYear = OM@pYear,
-      CurrentYear = OM@CurrentYear,
-      nSim = OM@nSim,
-      Seasons = OM@Seasons,
-      seed = OM@Seed + st,
-      silent = silent,
-      force = force
-    )
-    names(StockList)[st] <- Stock@Name
+  if (is.null(OM@Stock)) {
+    return(OM)
   }
+  
+  nStock <- nStock(OM)
+  if (inherits(OM@Stock, 'stock')) {
+    StockList <- list(OM@Stock)
+  } else if (is.list(OM@Stock)) {
+    StockList <- OM@Stock
+  } else {
+    cli::cli_abort(
+      "`OM@Stock` must be an S4 Stock or a list of `Stock` objects"
+    )
+  }
+  class(StockList) <- "StockList"
+  
+  for (st in seq_len(nStock)) {
+    Stock <- StockList[[st]]
+    Stock@nSim <- OM@nSim
+    StockList[[st]] <- PopulateStock(
+      Stock        = Stock,
+      nYear        = OM@nYear,
+      pYear        = OM@pYear,
+      CurrentYear  = OM@CurrentYear,
+      nSim         = OM@nSim,
+      Seasons      = OM@Seasons,
+      seed         = OM@Seed + st,
+      silent       = silent,
+      force        = force
+    )
+    names(StockList)[st] <- StockList[[st]]@Name
+  }
+  
   OM@Stock <- StockList
   OM
 }
 
+
 PopulateFleetList <- function(OM, silent = FALSE, force = FALSE) {
+  
   if (is.null(OM@Fleet)) {
     return(OM)
   }
-
+  
   StockList <- OM@Stock
-  nStocks <- nStock(OM)
-  nFleets <- nFleet(OM)
-  FleetList <- vector("list", nStocks)
-  class(FleetList) <- "StockFleetList"
-  names(FleetList) <- paste("Stock", 1:nStocks)
-
-  # Prep Fleet List
-  for (st in 1:nStocks) {
-    names(FleetList)[st] <- names(StockList)[st]
-    FleetList[[st]] <- list()
-    class(FleetList[[st]]) <- "FleetList"
-
-    if (isS4(OM@Fleet)) {
-      FleetList[[st]] <- list(OM@Fleet)
-      next()
+  nStocks   <- nStock(OM)
+  nFleets  <- nFleet(OM)
+  
+  # Set OM@Fleet into stock-indexed list
+  FleetInput <- OM@Fleet
+  if (isS4(FleetInput)) {
+    # OM@Fleet = single `fleet` object: replicate across stocks
+    FleetInput <- replicate(nStocks, list(FleetInput), simplify = FALSE)
+  } else if (inherits(FleetInput, "FleetList")) {
+    # OM@Fleet = lost of `fleet` objects: replicate across stocks
+    FleetInput <- replicate(nStocks, FleetInput, simplify = FALSE)
+  } else {
+    if (length(FleetInput) != 1 && length(FleetInput) != nStocks) {
+      cli::cli_abort("`OM@Fleet` must be a list of length 1 or `nStock` ({.val {nStocks}})")
     }
-
-    if (inherits(OM@Fleet, "FleetList")) {
-      FleetList[[st]] <- OM@Fleet
-      next()
-    }
-
-
-    for (fl in 1:nFleets) {
-      if (length(OM@Fleet) < st) {
-        if (length(OM@Fleet) > 1) {
-          cli::cli_abort("`OM@Fleet` must be a list length 1 or length `nStock` ({.val {nStocks}})")
-        }
-        FleetList[[st]][[fl]] <- OM@Fleet[[1]][[fl]]
-      } else {
-        FleetList[[st]][[fl]] <- OM@Fleet[[st]][[fl]]
-      }
+    
+    if (length(FleetInput) == 1) {
+      # If OM@Fleet is a list of `fleet` objects but only provided for one stock,
+      # replicate the FleetList over stocks
+      FleetInput <- replicate(nStocks, FleetInput[[1]], simplify = FALSE)
     }
   }
-
-  for (st in 1:nStocks) {
-    for (fl in 1:nFleets) {
+  
+  # Check all stocks have same fleets
+  nFleetperStock <- lengths(FleetInput)
+  if (length(unique(nFleetperStock)) != 1) {
+    cli::cli_abort(
+      "All stocks must have the same number of fleets. Currently: {.val {nFleetperStock}}"
+    )
+  }
+  
+  # Prepare FleetList output
+  FleetList <- vector("list", nStocks)
+  class(FleetList) <- "StockFleetList"
+  names(FleetList) <- names(StockList)
+  for (st in seq_len(nStocks)) {
+    FleetList[[st]] <- FleetInput[[st]]
+    class(FleetList[[st]]) <- "FleetList"
+  }
+  
+  # Populate fleets 
+  for (st in seq_len(nStocks)) {
+    for (fl in seq_len(nFleets)) {
       FleetList[[st]][[fl]] <- PopulateFleet(
-        Fleet = FleetList[[st]][[fl]],
-        Stock = StockList[[st]],
-        seed = OM@Seed + st + fl,
+        Fleet  = FleetList[[st]][[fl]],
+        Stock  = StockList[[st]],
+        seed   = OM@Seed + st + fl,
         silent = silent,
-        force = force
+        force  = force
       )
-
       names(FleetList[[st]])[fl] <- FleetList[[st]][[fl]]@Name
     }
   }
-  OM@Fleet <- FleetList
+  
+  # Process Effort and Catchability
+  OM@Fleet  <- ProcessFleetEffort(FleetList, silent=TRUE)
   OM
 }
+
+ProcessFleetEffort <- function(FleetList, silent=FALSE) {
+  
+  # For any given Fleet, Effort should be the same for all Stocks 
+  # and all areas.
+  # Deviations in Effort assumed to be differences in stock- and/or time-varying
+  # fishing efficiency (catchability)
+  
+  nStock <- length(FleetList)
+  if (nStock == 1) {
+    return(FleetList)
+  }
+  
+  nFleet <- length(FleetList[[1]])
+  if (nFleet == 1) {
+    return(FleetList)
+  }
+  
+  for (fl in seq_len(nFleet)) {
+    Fleet_fl_all_stocks <- purrr::map(FleetList, `[[`, fl)
+    
+    # List of Effort Objects
+    EffortObjectList <- purrr::map(Fleet_fl_all_stocks, slot, 'Effort')
+    qObjectList <- purrr::map(Fleet_fl_all_stocks, slot, 'Catchability')
+    
+    # Check Effort is the same for all 
+    EffortArrayList <- purrr::map(EffortObjectList, slot, "Effort")
+    qArrayList <- purrr::map(qObjectList, slot, "Efficiency")
+    DistArrayList <- purrr::map(EffortObjectList, slot, "Distribution")
+    
+    # Get Effort and Catchability dimensions and expand if needed
+    EffortDims <- purrr::map(EffortArrayList, dim)
+    qDims <- purrr::map(qArrayList, dim)
+    
+    # Sim 
+    EffSim <- vapply(EffortDims, `[`, numeric(1), 1L) |> max()
+    qSim <- vapply(qDims, `[`, numeric(1), 1L) |> max()
+    nSim <- max(c(EffSim, qSim))
+    
+    # Year
+    EffYears <- purrr::map(EffortArrayList, \(stock) {
+      dimnames(stock)[["Year"]]
+    }) |> unlist() |> unique()
+    
+    qYears <- purrr::map(qArrayList, \(stock) {
+      dimnames(stock)[["Year"]]
+    }) |> unlist() |> unique()
+    
+    Years <- c(EffYears, qYears) |> unique() |> sort()
+    
+    EffortArrayList <- purrr::map(EffortArrayList, \(stock) {
+      Extend(stock, nSim, NULL, Years)
+    })
+    qArrayList <- purrr::map(qArrayList, \(stock) {
+      Extend(stock, nSim, NULL, Years)
+    })
+    
+    tol <- 1e-4  
+    # Stock 1 Effort assumed real Effort
+    for (st in 2:nStock) {
+      # Check Distribution - if populated, should be identical across stocks
+      if (!all(dim(DistArrayList[[st]]) == dim(DistArrayList[[1]]))) {
+        cli::cli_abort("Effort Disribution array (`Fleet |> Effort() |> Distribution()`) must be identical across stocks")
+      }
+      dev <- DistArrayList[[st]] - DistArrayList[[1]]
+      if (any(abs(dev) > tol)) {
+        cli::cli_abort("Effort Disribution array (`Fleet |> Effort() |> Distribution()`) must be identical across stocks")
+      }
+      
+      # Check and update effort
+      Effort_nominal <- EffortArrayList[[st]]
+      q_nominal <- qArrayList[[st]]
+      dev <- Effort_nominal - EffortArrayList[[1]]
+      
+      if (any(abs(dev) > tol)) {
+        if (!silent) {
+          cli::cli_alert_warning("Note: `Effort` values for Fleet {.val {fl}} are not the same across stocks")
+          cli::cli_alert("Setting Effort for all Stocks to Stock 1 effort and adding deviations to Catchability")
+        }
+        # Differences in effective effort assumed deviations in efficiency
+        Effort_updated <- Effort_nominal - dev
+        q_updated <- q_nominal
+        ok <- abs(Effort_updated) > tol
+        
+        q_updated[ok] <- (Effort_nominal[ok] * q_nominal[ok]) / Effort_updated[ok]
+        q_updated[!ok] <- q_nominal[!ok]
+        EffortArrayList[[st]] <- Effort_updated
+        qArrayList[[st]] <- q_updated
+      }
+      
+      FleetList[[st]][[fl]]@Effort@Effort <- EffortArrayList[[st]]
+      FleetList[[st]][[fl]]@Catchability@Efficiency <- qArrayList[[st]]
+    }
+  }
+  FleetList
+}
+
+
 
 PopulateComplexes <- function(OM) {
   if (length(OM@Complexes) > 0) {
@@ -397,3 +512,4 @@ PopulateObsList <- function(OM, silent = FALSE) {
   OM@Obs <- ObsList
   OM
 }
+

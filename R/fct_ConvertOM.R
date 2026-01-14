@@ -179,10 +179,10 @@ SolveForVmaxlen <- function(om, type=c('Selectivity', 'Retention')) {
       )
       Years <- YearsList[[which.max(df[,2])]]                      
       
-      Linf <- Linf |> ArrayExpand(nsim, Years=Years)
-      L5 <- L5 |> ArrayExpand(nsim, Years=Years)
-      LFS <- LFS |> ArrayExpand(nsim, Years=Years)
-      Vmaxlen <- Vmaxlen |> ArrayExpand(nsim, Years=Years)
+      Linf <- Linf |> Extend(nsim, Years=Years)
+      L5 <- L5 |> Extend(nsim, Years=Years)
+      LFS <- LFS |> Extend(nsim, Years=Years)
+      Vmaxlen <- Vmaxlen |> Extend(nsim, Years=Years)
       
       VmaxlenOut <- array(0, dim=dim(Linf))
       dimnames(VmaxlenOut) <- dimnames(Linf)

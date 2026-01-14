@@ -1,5 +1,6 @@
 OnExit <- function() {
-  on.exit(cli::stop_app())
+  do.call(on.exit, list(cli::stop_app(), add = TRUE),
+          envir = parent.frame())
 }
 
 SetSeed <- function(seed = NULL) {

@@ -132,7 +132,8 @@ PopulateEffort <- function(Effort, HistYears, nArea = 1, nSim = 5, seed = NULL) 
   }
 
   if (inherits(Effort@Effort, "data.frame")) {
-    Effort <- GenerateHistoricalEffort(Effort, nSim, HistYears)
+    Effort@Effort <- GenerateHistoricalEffort(Effort@Effort, nSim, HistYears)
+    Effort@Units <- 'unitless'
   }
 
   dd <- dim(Effort@Effort)
@@ -150,9 +151,42 @@ PopulateEffort <- function(Effort, HistYears, nArea = 1, nSim = 5, seed = NULL) 
     HistYears,
     nArea
   )
+  
+  Effort@Targeting <- PopulateTargeting(Effort@Targeting, nSim, HistYears)
+  
   Effort
 }
 
+
+PopulateTargeting <- function(Targeting, nSim, Years) {
+  if (is.null(Targeting)) {
+    return(
+      array(0.8, c(1,1), 
+            dimnames = list(Sim=1, Year=Years[1]))  
+    )
+  }
+  
+  if (is.array(Targeting)) {
+    dd <- dim(Targeting)
+    dnames <- dimnames(Targeting)
+    if (length(dd)>2) {
+      cli::cli_abort("`Targeting` must be numeric or an array with dimensions: Sim x Year")
+    }
+      
+    if ((dd[2]!=1 | dd[2]!=length(Years)) & is.null(dnames[['Year']])) {
+      cli::cli_abort("Year dimension of `Targeting`array must be length 1, length `Years(OM)` or have named dimensions.")
+    }
+    
+    if (is.null(dnames)) {
+      dimnames(Targeting) <- list(
+        Sim=1:dd[1],
+        Years=Years[1:dd[2]]
+      )
+    }
+    
+  }
+  Targeting
+}
 
 PopulateDistribution <- function(Distribution,
                                  nSim = 5,

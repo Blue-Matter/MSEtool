@@ -1,7 +1,8 @@
 #' Populate Operating Model Components
 #'
-#' Populate operating model objects and their component classes by generating
-#' simulation-specific parameters, time series, and derived quantities.
+#' Populate operating model objects and their component classes by generating 
+#' stochastic values, filling derived slots, and checking object structure
+#'  and contents.
 #'
 #' @details
 #' `Populate()` is an S4 generic used to initialize and expand operating
@@ -14,39 +15,39 @@
 #' (e.g. [Fleet()], [Effort()], [Catchability()], [Selectivity()],
 #' [Retention()], [DiscardMortality()]), and observation models.
 #'
-#' Population typically involves drawing stochastic realizations, expanding
-#' scalar or vector parameters across simulation dimensions, and ensuring
-#' internal consistency of array shapes and dimnames.
+#' Population typically involves generating stochastic values, filling derived
+#' slots (e.g., `MeanAtAge` from `Model` and `Pars`), and checking internal
+#' consistency and validity of the objets.
 #'
 #' @param object An object to be populated. The class of `object` determines
 #'   which method is dispatched.
 #'
 #' @param nYear Number of historical years.
 #' @param pYear Number of projection years.
-#' @param CurrentYear Character; current calendar year.
+#' @param CurrentYear Character or numeric. Calendar year of last historical year.
 #' @param Years Numeric vector of years to populate.
 #' @param HistYears Numeric vector of historical years.
 #' @param ProjYears Numeric vector of projection years.
 #'
-#' @param nSim Number of simulation replicates.
+#' @param nSim Number of simulations
 #' @param Seasons Number of seasons per year.
 #' @param nArea Number of spatial areas.
 #'
-#' @param Ages An [Ages()] object or age structure.
+#' @param Ages An [Ages()] object.
 #' @param Length A [Length()] object.
 #' @param Weight A [Weight()] object.
 #' @param Maturity A [Maturity()] object.
-#' @param RelativeSize Relative spatial size matrix.
+#' @param RelativeSize `nSim` x `nArea` matrix of the relative area size
 #'
 #' @param ALK Logical; whether to populate age–length keys.
 #' @param AWK Logical; whether to populate age–weight keys.
 #' @param ASK Logical; whether to populate age–size keys.
 #'
-#' @param CalcAtLength Logical; whether to calculate at-length from at-age arrays#'
-#' @param Stock A [Stock()] object used to populate fleet components.
+#' @param CalcAtLength Logical; whether to calculate at-length from at-age arrays
+#' @param Stock A [Stock()] object used to populate [Fleet()] objects.
 #'
-#' @param seed Integer random seed used for stochastic components.
-#' @param silent Logical; if `TRUE`, suppress informational messages.
+#' @param seed Integer random seed used for gnerating stochastic values.
+#' @param silent Logical; if `TRUE`, suppress messages.
 #' @param force Logical; if `TRUE`, force re-population even if the object
 #'   digest is unchanged.
 #' @param ... Additional arguments passed to class-specific population methods.

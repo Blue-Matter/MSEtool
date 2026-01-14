@@ -118,7 +118,6 @@ setClass('spatial',
                  RelativeSize='num.array.char.null',
                  Movement='array.list.null',
                  FracOther='array.list.null',
-                 HabitatCapacity='num.array.char.null', # habitat capacity - default assumed proportional to area size
                  Arrangement='array.list.null',
                  CVDist='numeric',
                  CVStay='numeric',
@@ -135,7 +134,6 @@ setMethod("initialize", "spatial", function(.Object,
                                             RelativeSize=NULL,
                                             Movement=NULL,
                                             FracOther=NULL,
-                                            HabitatCapacity=NULL,
                                             Arrangement=NULL,
                                             CVDist=0.1,
                                             CVStay=1,
@@ -145,7 +143,6 @@ setMethod("initialize", "spatial", function(.Object,
   .Object@UnfishedDist <- UnfishedDist
   .Object@Movement <- Movement
   .Object@FracOther <- FracOther
-  .Object@HabitatCapacity <- HabitatCapacity
   .Object@Arrangement <- Arrangement
   .Object@CVDist <- CVDist
   .Object@CVStay <- CVStay
@@ -172,7 +169,6 @@ Spatial <- function(UnfishedDist=NULL,
                     RelativeSize=NULL,
                     Movement=NULL,
                     FracOther=NULL,
-                    HabitatCapacity=NULL,
                     Arrangement=NULL,
                     CVDist=0.1,
                     CVStay=1,
@@ -189,7 +185,6 @@ Spatial <- function(UnfishedDist=NULL,
                RelativeSize=RelativeSize,
                Movement=Movement,
                FracOther=FracOther,
-               HabitatCapacity=HabitatCapacity,
                Arrangement=Arrangement,
                CVDist=CVDist,
                CVStay=CVStay,

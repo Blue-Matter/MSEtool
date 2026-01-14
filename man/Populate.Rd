@@ -168,15 +168,15 @@ which method is dispatched.}
 
 \item{...}{Additional arguments passed to class-specific population methods.}
 
-\item{silent}{Logical; if \code{TRUE}, suppress informational messages.}
+\item{silent}{Logical; if \code{TRUE}, suppress messages.}
 
 \item{nYear}{Number of historical years.}
 
 \item{pYear}{Number of projection years.}
 
-\item{CurrentYear}{Character; current calendar year.}
+\item{CurrentYear}{Character or numeric. Calendar year of last historical year.}
 
-\item{nSim}{Number of simulation replicates.}
+\item{nSim}{Number of simulations}
 
 \item{Seasons}{Number of seasons per year.}
 
@@ -184,9 +184,9 @@ which method is dispatched.}
 
 \item{AWK}{...}
 
-\item{seed}{Integer random seed used for stochastic components.}
+\item{seed}{Integer random seed used for gnerating stochastic values.}
 
-\item{Ages}{An \code{\link[=Ages]{Ages()}} object or age structure.}
+\item{Ages}{An \code{\link[=Ages]{Ages()}} object.}
 
 \item{Years}{Numeric vector of years to populate.}
 
@@ -194,19 +194,19 @@ which method is dispatched.}
 
 \item{Length}{A \code{\link[=Length]{Length()}} object.}
 
-\item{CalcAtLength}{Logical; whether to calculate at-length from at-age arrays#'}
+\item{CalcAtLength}{Logical; whether to calculate at-length from at-age arrays}
 
 \item{Weight}{A \code{\link[=Weight]{Weight()}} object.}
 
 \item{Maturity}{A \code{\link[=Maturity]{Maturity()}} object.}
 
-\item{Stock}{A \code{\link[=Stock]{Stock()}} object used to populate fleet components.}
+\item{Stock}{A \code{\link[=Stock]{Stock()}} object used to populate \code{\link[=Fleet]{Fleet()}} objects.}
 
 \item{HistYears}{Numeric vector of historical years.}
 
 \item{nArea}{Number of spatial areas.}
 
-\item{RelativeSize}{Relative spatial size matrix.}
+\item{RelativeSize}{\code{nSim} x \code{nArea} matrix of the relative area size}
 
 \item{ProjYears}{Numeric vector of projection years.}
 
@@ -219,7 +219,8 @@ time-specific values.
 }
 \description{
 Populate operating model objects and their component classes by generating
-simulation-specific parameters, time series, and derived quantities.
+stochastic values, filling derived slots, and checking object structure
+and contents.
 }
 \details{
 \code{Populate()} is an S4 generic used to initialize and expand operating
@@ -232,9 +233,9 @@ Methods are defined for \code{\link[=OM]{OM()}}, stock-level biological componen
 (e.g. \code{\link[=Fleet]{Fleet()}}, \code{\link[=Effort]{Effort()}}, \code{\link[=Catchability]{Catchability()}}, \code{\link[=Selectivity]{Selectivity()}},
 \code{\link[=Retention]{Retention()}}, \code{\link[=DiscardMortality]{DiscardMortality()}}), and observation models.
 
-Population typically involves drawing stochastic realizations, expanding
-scalar or vector parameters across simulation dimensions, and ensuring
-internal consistency of array shapes and dimnames.
+Population typically involves generating stochastic values, filling derived
+slots (e.g., \code{MeanAtAge} from \code{Model} and \code{Pars}), and checking internal
+consistency and validity of the objets.
 }
 \section{Methods}{
 

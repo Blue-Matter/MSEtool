@@ -73,8 +73,6 @@ PopulateSpatial <- function(Spatial,
   Spatial <- CalcUnfishedDist(Spatial, Ages, Years)
   Spatial <- ProcessRelativeSize(Spatial, nSim) 
   
-  stop("TODO - process HabitatCapacity!")
-  
   SetDigest(Spatial, argList)
 }
   

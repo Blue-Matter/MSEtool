@@ -11,8 +11,8 @@ setClass("timeseries",
                  LandingsAtSize='list', # list `nStock`of array dimensions: nSim, nClass, Year, Fleet, Area - size = Length unless selectivity at weight
                  DiscardsAtSize='list', # list `nStock`of array dimensions: nSim, nClass, Year, Fleet, Area - size = Length unless selectivity at weight
                  
-                 Effort='array', # Sim, Stock, Year, Fleet
-                 Distribution='array.list.null', # Sim, Stock, Year, Fleet, Area # fraction effort by area
+                 Effort='array', # Sim, Year, Fleet
+                 Distribution='array', # Sim, Year, Fleet, Area # fraction of fleet-specific effort by area
                  FDead='array.list.null',  # list `nStock`of array dimensions: nSim, nAge, Year, Fleet
                  FRetain='array.list.null', # list `nStock`of array dimensions: nSim, nAge, Year, Fleet
                  

@@ -2,10 +2,51 @@
 % Please edit documentation in R/fct_GenerateHistoricalEffort.R
 \name{GenerateHistoricalEffort}
 \alias{GenerateHistoricalEffort}
-\title{Generate a Historical Effort Trend}
+\title{Generate Stochastic Historical Effort Time Series}
 \usage{
 GenerateHistoricalEffort(Effort, nSim = 5, Years = NULL)
 }
+\arguments{
+\item{Effort}{A \code{data.frame} with columns:
+\describe{
+\item{Year}{Calendar years or indices defining effort control points.}
+\item{Lower}{Lower bound on relative effort at each control year.}
+\item{Upper}{Upper bound on relative effort at each control year.}
+\item{CV}{Coefficient of variation for lognormal annual effort noise
+(typically constant across years; only the first value is used).}
+}}
+
+\item{nSim}{Integer. Number of stochastic effort simulations to generate.}
+
+\item{Years}{Optional integer vector of calendar years defining the full
+effort time series. Required if \code{Effort$Year} is specified
+using indices rather than calendar years.}
+}
+\value{
+An \code{nSim x nYear} numeric array used in the \code{\link[=Effort]{Effort()}} object
+}
 \description{
-Generate a Historical Effort Trend
+Generates stochastic historical fishing effort trajectories from an
+\code{data.frame} containing effort control points.
+}
+\details{
+For each simulation, effort is sampled uniformly between specified
+lower and upper bounds at control years, linearly interpolated to a
+full annual time series, optionally perturbed by lognormal process
+error, and finally normalised to equal 1 in the terminal year.
+
+For each simulation:
+\enumerate{
+\item Effort at each control year is drawn independently from a
+uniform distribution between \code{Lower} and \code{Upper}.
+\item Effort is linearly interpolated to annual resolution across
+\code{Years}.
+\item If \code{CV} is non-\code{NULL}, multiplicative lognormal
+process error is applied with mean 1.
+\item The resulting effort trajectory is normalised so that effort
+in the final year equals 1.
+}
+}
+\seealso{
+\code{\link[=Effort]{Effort()}}
 }

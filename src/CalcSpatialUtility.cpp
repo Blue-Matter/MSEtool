@@ -4,7 +4,9 @@
 #include "array_types.h"
 #include "helpers.h"
 
-Array3D CalcSpatialUtility(
+// TODO - if 1 Area return 1 
+
+Array3D CalcSpatialDistribution(
   int y,                              // time-step index
   Rcpp::List& NumStockList,           // Number-at-age list nStock of array: sim, age, year, area
   Rcpp::List& WeightFleetList,        // Number-at-age list nStock of array: sim, age, year, area

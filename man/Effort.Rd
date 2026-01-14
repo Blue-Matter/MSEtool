@@ -4,12 +4,13 @@
 \name{Effort}
 \alias{Effort}
 \alias{Effort<-}
-\title{Effort Object}
+\title{Effort Class and Constructor}
 \usage{
 Effort(
   Effort = NULL,
   Units = "",
   Distribution = NULL,
+  Targeting = NULL,
   Maximum = NULL,
   Misc = list()
 )
@@ -17,16 +18,72 @@ Effort(
 Effort(x) <- value
 }
 \arguments{
+\item{Effort}{Numeric array or \code{data.frame} describing fishing effort (see \code{Details}).}
+
+\item{Units}{Character string giving effort units.}
+
+\item{Distribution}{Optional spatial effort distribution array.}
+
+\item{Targeting}{Spatial targeting parameter or array.}
+
+\item{Maximum}{Optional maximum effort array.}
+
+\item{Misc}{List of miscellaneous objects.}
+
 \item{x}{A \code{\link[=Fleet]{Fleet()}} class object}
 
 \item{value}{A \code{Effort} object to assign to \code{x}}
 }
 \description{
-Historical Fishing Effort
+The \code{\link[=Effort]{Effort()}} class stores historical fishing effort and
+associated spatial structure for \code{\link[=Fleet]{Fleet()}} object. Effort may be supplied
+directly as an array or generated stochastically from a data frame.
 }
-\section{Slots}{
+\details{
+Effort represents total fishing activity prior to spatial allocation.
+When \code{Distribution} is supplied, effort is partitioned explicitly
+across areas. Otherwise, spatial allocation is derived internally
+using spatial utility, targeting strength, and fleet behavior.
+\subsection{Stochastic Effort}{
+}
+}
+\section{Class slots}{
+
 
 \describe{
-\item{\code{Misc}}{A list for additional miscellaneous objects}
-}}
+\item{\code{Effort}}{
+Numeric array of fishing effort with dimensions \code{nSim x nYear}, or a
+\code{data.frame} describing a stochastic historical effort process (see \code{Details}).
+}
+\item{\code{Units}}{
+Optional character string describing the units of effort
+(e.g., "days", "trips", "kW-days"). Used only for reporting.
+}
+\item{\code{Distribution}}{
+Optional numeric array with dimensions \code{nSim x nYear x nArea}
+giving the fraction of total effort allocated to each spatial area. Only
+applicable for spatial operating models.
+If not supplied, \code{Distribution} will be derived internally from
+\code{Targeting} and spatial utility calculations.
+}
+\item{\code{Targeting}}{
+Numeric array or scalar controlling spatial targeting behavior.
+Higher values imply stronger concentration of effort in high-utility areas.
+Values are commonly around 0.8–1.0. If left empty, a default value of 0.8
+is assumed.
+}
+\item{\code{Maximum}}{
+Numeric array giving the maximum possible fishing effort by simulation
+and year. If supplied, effort below this level represents latent capacity.
+Currently not enforced in the operating model but reserved for
+bioeconomic extensions.
+}
+\item{\code{Misc}}{
+A named list of additional objects carried with the effort class.
+}
+}
+}
 
+\seealso{
+\code{\link[=GenerateHistoricalEffort]{GenerateHistoricalEffort()}}
+}

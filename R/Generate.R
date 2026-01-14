@@ -78,60 +78,6 @@ GenerateSRR <- function(Model, Pars, S=NULL, S0=NULL) {
   do.call(fun, l)
 }
 
-
-GenerateStochasticnVessels <- function(nVessels, nSim, Years) {
-  nms <- names(nVessels)
-  if (!all(c('EffLower', 'EffUpper', 'EffYears') %in% nms)) {
-    cli::cli_abort(paste('If `nVessels` is a dataframe, it must have names:', paste(c('EffLower', 'EffUpper', 'EffYears'), collapse=', ')))
-  }
-  ind <- which(Years@Period=='Historical')
-  HistYears <- Years@Year[ind]
-  refYears <- seq_along(HistYears)
-  nts <- length(refYears)
-
-  EffLower <- nVessels$EffLower
-  EffUpper <- nVessels$EffUpper
-  EffYears <- range01(nVessels$EffYears)
-
-
-  if (any(EffLower > EffUpper)) {
-    ind <- which(EffLower > EffUpper)
-    tt <- cbind(EffLower, EffUpper)
-    EffLower <- apply(tt, 1, min)
-    EffUpper <- apply(tt, 1, max)
-  }
-
-  nVesselsRange <- mapply(stats::runif, n = nSim, min = EffLower, max = EffUpper)
-
-  if (nSim > 1) {
-    if (ncol(nVesselsRange) == 1) {
-      nVesselsStochastic <- matrix(nVesselsRange, nrow=nSim, ncol=nts)
-    } else {
-      nVesselsStochastic <- t(sapply(1:nSim, function(x)
-        stats::approx(x = EffYears,
-               y = nVesselsRange[x, ],
-               method = "linear", n = nts)$y))
-    }
-  }
-  if (nSim == 1) {
-    if (length(nVesselsRange) == 1) {
-      nVesselsStochastic <- matrix(nVesselsRange, nrow=nSim, ncol=nts)
-    } else {
-      nVesselsStochastic <- matrix(stats::approx(x = EffYears,
-                                          y = nVesselsRange,
-                                          method = "linear",
-                                          n = nts)$y, nrow = 1)
-    }
-  }
-
-  if (!all(nVesselsStochastic == mean(nVesselsStochastic)))
-    nVesselsStochastic <- range01(nVesselsStochastic)
-
-  nVesselsStochastic[nVesselsStochastic == 0] <- 1E-15
-  nVesselsStochastic
-}
-
-
 GenerateRecruitmentDeviations <- function(SD=0.2, 
                                           AC=0,
                                           TruncSD=2,

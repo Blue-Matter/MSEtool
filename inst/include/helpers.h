@@ -1,14 +1,18 @@
+#ifndef HELPERS_H
+#define HELPERS_H
+
 #include <Rcpp.h>
+#include <vector>
 #include "array_types.h"
 #include "array_views.h"
+
 
 // Calculate the time step index
 inline std::vector<int>
 CalcTSIndex(const Rcpp::NumericVector& Years,
-                   const Rcpp::NumericVector& YearsAll)
-{
+            const Rcpp::NumericVector& YearsAll) {
   Rcpp::IntegerVector matchTS = Rcpp::match(Years, YearsAll);
-  int nTS = Years.size();
+  const int nTS = Years.size();
   
   std::vector<int> ts_index(nTS);
   
@@ -22,9 +26,7 @@ CalcTSIndex(const Rcpp::NumericVector& Years,
   return ts_index;
 }
 
-// ---------------------------------------------------------
-// Extract mutable objects from Hist or Lists
-// ---------------------------------------------------------
+// Extract + clone S4 slots into mutable Array
 
 inline Array2D
 Slot2Array2D(Rcpp::S4& obj, const char* slot) {
@@ -93,3 +95,136 @@ GetMisc_List(Rcpp::S4& obj, const char* name){
   }
   return Misc[name];
 }
+
+inline Array2D
+GetMisc_2DArray(Rcpp::S4& obj, const char* name){
+  Rcpp::List Misc = obj.slot("Misc");
+  if (!Misc.containsElementNamed(name)) {
+    Rcpp::stop("Hist@Misc$%s not found", name);
+  }
+  Rcpp::NumericVector src = Misc[name];
+  if (!src.hasAttribute("dim")) {
+    Rcpp::stop(std::string("Hist@Misc$") + name + " has no dim attribute");
+  }
+  
+  Rcpp::IntegerVector dim = src.attr("dim");
+  if (dim.size() != 2) {
+    Rcpp::stop(std::string("Hist@Misc$") + name + " is not a 3D array");
+  }
+  
+  // clone to ensure mutability + copy-on-write safety
+  Rcpp::NumericVector x = Rcpp::clone(src);
+  Misc[name] = x;
+  
+  return as_ArrayND<2>(x);
+}
+
+inline Array3D
+GetMisc_3DArray(Rcpp::S4& obj, const char* name){
+  Rcpp::List Misc = obj.slot("Misc");
+  if (!Misc.containsElementNamed(name)) {
+    Rcpp::stop("Hist@Misc$%s not found", name);
+  }
+  Rcpp::NumericVector src = Misc[name];
+  if (!src.hasAttribute("dim")) {
+    Rcpp::stop(std::string("Hist@Misc$") + name + " has no dim attribute");
+  }
+  
+  Rcpp::IntegerVector dim = src.attr("dim");
+  if (dim.size() != 3) {
+    Rcpp::stop(std::string("Hist@Misc$") + name + " is not a 3D array");
+  }
+  
+  // clone to ensure mutability + copy-on-write safety
+  Rcpp::NumericVector x = Rcpp::clone(src);
+  Misc[name] = x;
+  
+  return as_ArrayND<3>(x);
+}
+
+inline Array4D
+GetMisc_4DArray(Rcpp::S4& obj, const char* name){
+  Rcpp::List Misc = obj.slot("Misc");
+  if (!Misc.containsElementNamed(name)) {
+    Rcpp::stop("Hist@Misc$%s not found", name);
+  }
+  Rcpp::NumericVector src = Misc[name];
+  if (!src.hasAttribute("dim")) {
+    Rcpp::stop(std::string("Hist@Misc$") + name + " has no dim attribute");
+  }
+  
+  Rcpp::IntegerVector dim = src.attr("dim");
+  if (dim.size() != 4) {
+    Rcpp::stop(std::string("Hist@Misc$") + name + " is not a 4D array");
+  }
+  
+  // clone to ensure mutability + copy-on-write safety
+  Rcpp::NumericVector x = Rcpp::clone(src);
+  Misc[name] = x;
+  
+  return as_ArrayND<4>(x);
+}
+
+inline Array5D
+GetMisc_5DArray(Rcpp::S4& obj, const char* name){
+  Rcpp::List Misc = obj.slot("Misc");
+  if (!Misc.containsElementNamed(name)) {
+    Rcpp::stop("Hist@Misc$%s not found", name);
+  }
+  Rcpp::NumericVector src = Misc[name];
+  if (!src.hasAttribute("dim")) {
+    Rcpp::stop(std::string("Hist@Misc$") + name + " has no dim attribute");
+  }
+  
+  Rcpp::IntegerVector dim = src.attr("dim");
+  if (dim.size() != 5) {
+    Rcpp::stop(std::string("Hist@Misc$") + name + " is not a 5D array");
+  }
+  
+  // clone to ensure mutability + copy-on-write safety
+  Rcpp::NumericVector x = Rcpp::clone(src);
+  Misc[name] = x;
+  
+  return as_ArrayND<5>(x);
+}
+
+
+// StockList Views
+inline ArrayView3D
+view_StockList3D(Rcpp::List& StockList, int st) {
+  Rcpp::NumericVector x = StockList[st];
+  return as_ArrayViewND<3>(x);
+}
+
+inline ConstArrayView3D
+view_StockList3D(const Rcpp::List& StockList, int st) {
+  Rcpp::NumericVector x = StockList[st];
+  return as_ConstArrayViewND<3>(x);
+}
+
+inline ArrayView4D
+view_StockList4D(Rcpp::List& StockList, int st) {
+  Rcpp::NumericVector x = StockList[st];
+  return as_ArrayViewND<4>(x);
+}
+
+inline ConstArrayView4D
+view_StockList4D(const Rcpp::List& StockList, int st) {
+  Rcpp::NumericVector x = StockList[st];
+  return as_ConstArrayViewND<4>(x);
+}
+
+inline ArrayView5D
+view_StockList5D(Rcpp::List& StockList, int st) {
+  Rcpp::NumericVector x = StockList[st];
+  return as_ArrayViewND<5>(x);
+}
+
+inline ConstArrayView5D
+view_StockList5D(const Rcpp::List& StockList, int st) {
+  Rcpp::NumericVector x = StockList[st];
+  return as_ConstArrayViewND<5>(x);
+}
+
+#endif // HELPERS_H
+

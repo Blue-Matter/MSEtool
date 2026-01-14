@@ -2,7 +2,8 @@
 #include "array_types.h"
 #include "array_views.h"
 #include "helpers.h"
-#include "calc_spatial_utility.h"
+#include "calc_spatial_effort_dist.h"
+#include "calc_area_f.h"
 
 using namespace Rcpp;
 
@@ -25,12 +26,16 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
   Rcpp::NumericVector YearsAll = OM.slot("Years"); // all historical and projection years (time-steps) 
   
   // ---------------------------------------------------------
-  // Mutable Hist lost
+  // Mutable Hist list
   // ---------------------------------------------------------
+  Rcpp::List FDeadAreaList = Hist.slot("FDeadArea"); // List of F-at-Age-Area arrays 
+  Rcpp::List FRetainAreaList = Hist.slot("FRetainArea"); // List of F-at-Age-Area arrays
+  
+  
   Rcpp::List NumStockList = Hist.slot("Number"); // List of Number-at-Age arrays
   
-  Array4D Effort = Slot2Array4D(Hist, "Effort"); // sim, stock, year, fleet
-  Array5D Dist = Slot2Array5D(Hist, "Distribution"); // sim, stock, year, fleet, area
+  Array3D Effort = Slot2Array3D(Hist, "Effort"); // sim, year, fleet
+  Array4D Dist = Slot2Array4D(Hist, "Distribution"); // sim, year, fleet, area
   
   // ---------------------------------------------------------
   // Extract non-mutable objects to from Hist@Misc
@@ -38,71 +43,79 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
   
   Rcpp::List Misc = Hist.slot("Misc");
   
+  Rcpp::List WeightFleetList = GetMisc_List(Hist, "WeightFleetList"); // list nStock of WeightFleet arrays
   Rcpp::List SelList = GetMisc_List(Hist, "SelList"); // list nStock of Selectivity arrays
   Rcpp::List RetList = GetMisc_List(Hist, "RetList"); // list nStock of Retention arrays
-  Rcpp::List WeightFleetList = GetMisc_List(Hist, "WeightFleetList"); // list nStock of WeightFleet arrays
-  Rcpp::List CatchabilityList = GetMisc_List(Hist, "CatchabilityList"); // list nStock of WeightFleet arrays
-  
+  Rcpp::List DiscMList = GetMisc_List(Hist, "DiscMortList"); // list nStock of discard mortality arrays
+  Array4D q = GetMisc_4DArray(Hist, "Catchability"); // sim, stock, year, fleet
+  Array5D Closure =  GetMisc_5DArray(Hist, "Closure"); // sim, stock, year, fleet, area
+  Array3D Targeting = GetMisc_3DArray(Hist, "Targeting"); // sim, year, fleet
+  Array2D RelSize = GetMisc_2DArray(Hist, "RelSize"); // sim, year, fleet
  
   // Time Steps
   std::vector<int> ts_index = CalcTSIndex(Years, YearsAll); // time-step index 
   int nTS = ts_index.size();
   
-  for (int ts = 0; ts < nTS; ++ts) { // loop over time-steps (Years)
-    int y = ts_index[ts]; // index for this time step
+  // Loop over time steps in Years
+  for (int ts = 0; ts < nTS; ++ts) { 
     
+    int y = ts_index[ts]; // index for this time step
     
     // ---------------------------------------------------------
     // Calculate Spatial Distribution of Fishing Effort
+    // src: inst/include/calc_spatial_effort_dist.h
     // ---------------------------------------------------------
     
+    // sim, fleet, area
+    Array3D EffortDist = CalcSpatialDistribution(y,               // year index
+                                                 NumStockList,    // Number-at-age list nStock of array: sim, age, year, area
+                                                 WeightFleetList, // Weight-at-age list nStock of array: sim, age, year, fleet 
+                                                 SelList,         // Selectivity-at-age list nStock of array: sim, age, year, area
+                                                 RetList,         // Retention-at-age list nStock of array: sim, age, year, area
+                                                 q,               // Catchability array: sim, stock, year, fleet
+                                                 Closure,         // Area closed (0) or open (1) array: sim, stock, year, fleet, area
+                                                 Targeting,       // Spatial Targeting: sim, year, fleet
+                                                 Effort,          // Total Effort: sim, year, fleet
+                                                 RelSize,         // Relative Area Size: sim, area
+                                                 nSim,
+                                                 nStock,
+                                                 nFleet,
+                                                 nArea);
     
     
-
     
-
     
     // ---------------------------------------------------------
-    // Loop over Stocks
+    // Calculate Area-Specific Fishing Mortality  
+    // src: inst/include/calc_area_f.h
     // ---------------------------------------------------------
-  //   for (int st = 0; st < nStock; ++st) { 
-  //     // Get Stock Arrays
-  //     Array4D Num = clone_StockList4D(NumStockList, st); // Number-at-age: sim, age, year, area
-  //     Array4D Weight = clone_StockList4D(WeightFleetList, st); // Weight-at-age: sim, age, year, fleet
-  //     Array5D Sel = clone_StockList5D(SelList, st); // selectivity-at-age: sim, age, year, fleet, area
-  //     Array5D Ret = clone_StockList5D(RetList, st); // retention-at-age: sim, age, year, fleet, area
-  //     Array3D Catchablity = clone_StockList3D(CatchabilityList, st); // catchability: sim, year, fleet
-  //     
-  //     // Get this time step arrays
-  //     Array3D Num_y = slice_year(Num, y);         // Number-at-age this time step 
-  //     Array3D Weight_y = slice_year(Weight, y);   // Weight-at-age this time step
-  //     Array4D Sel_y = slice_year(Sel, y);         // Select-at-age this time step
-  //     Array4D Ret_y = slice_year(Ret, y);         // Retain-at-age this time step
-  //     Array2D q_y = slice_year(Catchablity, y);   // q this time step
-  //     
-  //     // ---------------------------------------------------------
-  //     // Calculate Spatial Distribution of Fishing Effort
-  //     // ---------------------------------------------------------
-  //     
-  //     // Available Biomass: sim, fleet, area (inst/include/calc_avail_biomass.h)
-  //     Array3D AB = CalcAvailBiomass_(Num_y,    // sim, age, area
-  //                                    Weight_y, // sim, age, fleet
-  //                                    Sel_y,    // sim, age, fleet, area
-  //                                    Ret_y,    // sim, age, fleet, area
-  //                                    q_y);    // sim, fleet
-  //       
-  //   }
-  //      
-  //     sFA_into_sSYFA(Dist, AB, st, y);
-  //     
-  //   } // end loop over stocks
-  //   
-  //   
-  // } // end loop over time-steps (Years)
-
-
-  Hist.slot("Number") = NumStockList;
+    CalcArea_F(y,
+               FDeadAreaList,
+               FRetainAreaList,
+               EffortDist,
+               q,
+               Effort,
+               RelSize,
+               SelList,
+               RetList,
+               DiscMList,
+               nSim,
+               nStock,
+               nFleet,
+               nArea);
+    
+    // Update Hist Arrays for this time step
+    sFA_into_sYFA(Dist, EffortDist, y); // sim, fleet, area into sim, year, fleet, area
+    
+    
+    
+  }
   
+  // Update Hist Slots 
+  // Hist.slot("Number") = NumStockList;
+  Hist.slot("FDeadArea") = FDeadAreaList;
+  Hist.slot("FRetainArea") = FRetainAreaList;
+
   return(Hist);
 }
 

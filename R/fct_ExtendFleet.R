@@ -9,6 +9,7 @@ ExtendFleet <- function(FleetList, AgeClasses, nSim, Years, silent=FALSE, id=NUL
   FleetList <- purrr::map(FleetList, \(fleet) {
     fleet@Effort@Effort <- Extend(fleet@Effort@Effort, nSim, AgeClasses=NULL, Years)
     fleet@Effort@Distribution <- Extend(fleet@Effort@Distribution, nSim, AgeClasses=NULL, Years)
+    fleet@Effort@Targeting <- Extend(fleet@Effort@Targeting, nSim, AgeClasses=NULL, Years)
     fleet
   }) 
   

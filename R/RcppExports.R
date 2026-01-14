@@ -21,10 +21,6 @@ CalcCatch_ <- function(HistSimIn, Years, debug = 0L) {
     .Call(`_MSEtool_CalcCatch_`, HistSimIn, Years, debug)
 }
 
-CalcFisheryDynamics_ <- function(HistIn, Years, nSim, nStock, nFleet, nArea, debug = 0L) {
-    .Call(`_MSEtool_CalcFisheryDynamics_`, HistIn, Years, nSim, nStock, nFleet, nArea, debug)
-}
-
 CalcNumberNext_ <- function(NumberAtAgeAreaThisTS, NumberAtAgeAreaNextTS, Semelparous, FDeadAtAgeAreaThisTS, NaturalMortalityAtAgeThisTS, plusgroup, nAge, nArea) {
     .Call(`_MSEtool_CalcNumberNext_`, NumberAtAgeAreaThisTS, NumberAtAgeAreaNextTS, Semelparous, FDeadAtAgeAreaThisTS, NaturalMortalityAtAgeThisTS, plusgroup, nAge, nArea)
 }
@@ -87,6 +83,10 @@ SolveForFishingMortality <- function(NumberAtAge, TotalRemovalsFleet, Selectivit
 
 calcVatAge <- function(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid) {
     .Call(`_MSEtool_calcVatAge`, len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid)
+}
+
+CalcFisheryDynamics_ <- function(HistIn, Years, nSim, nStock, nFleet, nArea, debug = 0L) {
+    .Call(`_MSEtool_CalcFisheryDynamics_`, HistIn, Years, nSim, nStock, nFleet, nArea, debug)
 }
 
 combine <- function(list) {

@@ -30,12 +30,11 @@ PopulateStock(
 
 \item{Stock}{A \link{Stock} object.}
 
-\item{seed}{Integer random seed used for stochastic components.}
+\item{seed}{Integer random seed used for generating stochastic values.}
 
-\item{silent}{Logical; suppress informational messages.}
+\item{silent}{Logical; suppress messages.}
 
-\item{force}{Logical; force re-population even if the object digest
-is unchanged.}
+\item{force}{Logical; force re-population even if the object digest is unchanged.}
 
 \item{OM}{An \link{OM} object.}
 
@@ -57,12 +56,13 @@ is unchanged.}
 An object of the same class as the input, with populated and updated slots.
 }
 \description{
-Populate and update operating model objects by filling derived slots,
-expanding stochastic dimensions, and generating simulation-level quantities.
+Populate and update \code{\link[=OM]{OM()}} objects by generating stochastic values,
+filling derived slots, and checking object structure and contents.
 }
 \details{
 These functions are internal population engines used to initialise and
-update \link{OM}, \link{Stock}, and \link{Fleet} objects prior to simulation.
+update \link{OM}, \link{Stock}, and \link{Fleet} objects used by \code{\link[=Simulate]{Simulate()}}.
+
 Population is skipped if the object digest is unchanged, unless
 \code{force = TRUE}.
 }

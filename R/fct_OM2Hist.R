@@ -17,8 +17,9 @@ OM2Hist <- function(OM, silent=FALSE) {
   nSim <- OM@nSim
   
   # Stock - expand all arrays to include all Sims and all Years
-  # TODO - this could be improved later by keeping all arrays at the minimum
-  #        size and updating the code to match Sim/Year
+  # TODO - this can be updated to only extend to all years, with Sim 
+  #        dimension remaining either length or length nSim
+  #        Rest of the code base should support this but currently not tested
   Hist@OM@Stock <- purrr::map(OM@Stock, \(Stock) {
     Stock <- ExtendStock(Stock, nSim, HistYears, silent, id)
     Stock@SRR@SPFrom <- match(Stock@SRR@SPFrom, StockNames(OM))
@@ -28,6 +29,7 @@ OM2Hist <- function(OM, silent=FALSE) {
 
   # Fleet
   # Extend Fleet arrays to include all Sims and historical years
+  # TODO - as above
   AgeClassList <- purrr::map(Hist@OM@Stock, \(Stock) Stock@Ages@Classes)
   Hist@OM@Fleet <- purrr::map2(Hist@OM@Fleet, AgeClassList, \(FleetList, AgeClasses)
                                ExtendFleet(FleetList, AgeClasses, nSim, HistYears, silent, id)
@@ -46,7 +48,7 @@ OM2Hist <- function(OM, silent=FALSE) {
   }
     
   
-  Hist
+  PrepHistMisc(Hist) # add temporary lists and arrays to Hist@Misc for C++
 }
   
 
@@ -71,28 +73,20 @@ InitializeTimeSeries <- function(Hist)  {
   
   # Historical Fishing Effort - Total
   # Sim, Stock, Year, Fleet
-  Hist@Effort <- ListArraySimAgeTimeFleet(OM, 'Historical') |> 
-    lapply(DropDimension, 'Age', FALSE) |>
-    List2Array('Stock') |> aperm(c('Sim', 'Stock', 'Year', 'Fleet'))
-  
+  Hist@Effort <- ArraySimAgeTimeFleet(OM, 'Historical') |> DropDimension('Age', FALSE)
+    
   # Add Effort from OM
-  for (st in 1:nStock(OM)) {
-    for (fl in 1:nFleet(OM)) {
-      Hist@Effort[,st,,fl] <- Hist@OM@Fleet[[st]][[fl]]@Effort@Effort
-    }
+  for (fl in 1:nFleet(OM)) {
+    Hist@Effort[,,fl] <- Hist@OM@Fleet[[1]][[fl]]@Effort@Effort
   }
-  
+    
   # Effort Distribution over Areas - effort by area
-  # Sim, Stock, Year, Fleet, Area
-  Hist@Distribution <- ListArraySimAgeTimeFleetArea(OM, 'Historical') |> 
-    purrr::map(DropDimension, 'Age', FALSE) |>
-    List2Array('Stock') |> aperm(c('Sim', 'Stock', 'Year', 'Fleet', 'Area'))
-  
+  # Sim, Year, Fleet, Area
+  Hist@Distribution <- ArraySimAgeTimeFleetArea(OM, 'Historical') |> DropDimension('Age', FALSE)
+    
   # Add Distribution from OM
-  for (st in 1:nStock(OM)) {
-    for (fl in 1:nFleet(OM)) {
-      Hist@Distribution[,st,,fl,] <- Hist@OM@Fleet[[st]][[fl]]@Effort@Distribution 
-    }
+  for (fl in 1:nFleet(OM)) {
+    Hist@Distribution[,,fl,] <- Hist@OM@Fleet[[1]][[fl]]@Effort@Distribution 
   }
   
   # Fishing Mortality - Dead and Retain 
@@ -106,4 +100,77 @@ InitializeTimeSeries <- function(Hist)  {
   Hist
 }
 
+
+# This prepares arrays for easy access in the C++ code
+# temporary elements of Misc are removed later 
+PrepHistMisc <- function(Hist) {
+  saveMisc <- Hist@Misc
+  Hist@Misc <- list()
+  Hist@Misc$SAVE <- saveMisc
+  
+  
+  # Stock Length Lists                  
+  
+  Hist@Misc$WeightFleetList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      fleet@WeightFleet
+    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet
+  })
+  
+  
+  Hist@Misc$SelList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      fleet@Selectivity@MeanAtAge
+    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet, Area
+  })
+  
+  Hist@Misc$RetList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      fleet@Retention@MeanAtAge
+    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet, Area
+  })
+  
+  Hist@Misc$DiscMortList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      fleet@DiscardMortality@MeanAtAge
+    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet, Area
+  })
+  
+  
+  # 5D Array: Sim, Stock, Year, Fleet, Area  
+  Hist@Misc$Closure <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      fleet@Closure
+    }) |> List2Array(pos = 3) # Sim, Year, Fleet, Area
+  }) |> List2Array(pos = 2, 'Stock') # Sim, Stock, Year, Fleet, Area
+  
+  
+  # 4D Array: Sim, Stock, Year, Fleet   
+  Hist@Misc$Catchability <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      fleet@Catchability@Efficiency
+    }) |> List2Array(pos = 3) # Sim, Year, Fleet
+  }) |> List2Array(pos = 2, 'Stock') # Sim, Stock, Year, Fleet
+  
+  
+  # 3D Array: Sim, Year, Fleet        
+  Hist@Misc$Targeting <- purrr::map(Hist@OM@Fleet[[1]], \(fleet) {
+    fleet@Effort@Targeting
+  }) |> List2Array(pos = 3) # Sim, Year, Fleet
+  
+  
+  # 2D Array: Sim, Year                
+  Hist@Misc$RelSize <- Hist@OM@Stock[[1]]@Spatial@RelativeSize
+  
+  Hist
+}
+
+# Restores Hist@Misc 
+RestoreHistMisc <- function(Hist) {
+  saveMisc <- Hist@Misc$SAVE
+  Hist@Misc <- list()
+  Hist@Misc <- saveMisc
+  Hist
+}
  
+

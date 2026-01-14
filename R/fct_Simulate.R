@@ -1,7 +1,4 @@
-# TODO
-# - Effort - make it the same for a given fleet across stocks and
-#            add deviations to q
-# - update CalcSpatialUtility to CalcEffortDist and add gravity model with targeting parameter in Fleet object (default 1)
+
 
 #' @export
 print.simlist <- function(x, ...) {
@@ -57,53 +54,8 @@ Simulate_om <- function(OM = NULL,
   # - distribute over areas
   # - account for Initial Depletion
   Hist <- CalcDynamicInitial(Hist)
-
-
-  ##############################################################################
-
-  Hist@Misc$SelList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
-    purrr::map(FleetList, \(fleet) {
-      fleet@Selectivity@MeanAtAge
-    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet, Area
-  })
-
-  Hist@Misc$RetList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
-    purrr::map(FleetList, \(fleet) {
-      fleet@Retention@MeanAtAge
-    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet, Area
-  })
-
-  Hist@Misc$WeightFleetList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
-    purrr::map(FleetList, \(fleet) {
-      fleet@WeightFleet
-    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet
-  })
-
-  Hist@Misc$CatchabilityList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
-    purrr::map(FleetList, \(fleet) {
-      fleet@Catchability@Efficiency
-    }) |> List2Array(pos = 3) # Sim, Year, Fleet
-  })
-
-  Hist@Misc$EffortList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
-    purrr::map(FleetList, \(fleet) {
-      fleet@Effort@Effort
-    }) |> List2Array(pos = 3) # Sim, Year, Fleet
-  })
-
-  Hist@Misc$ClosureList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
-    purrr::map(FleetList, \(fleet) {
-      fleet@Closure
-    }) |> List2Array(pos = 3) # Sim, Year, Fleet, Area
-  })
-
-  Hist@Misc$HabitatCapacity <- purrr::map(Hist@OM@Stock, \(StockList) {
-    purrr::map(StockList, \(stock) {
-      stock@Spatial@HabitatCapacity
-    }) |> List2Array(pos = 2) # Sim, Stock, Area
-  })
-
-
+  
+  
   HistYears <- Years(OM, "H")
   nSim <- OM@nSim
   nStock <- nStock(OM)
@@ -117,10 +69,18 @@ Simulate_om <- function(OM = NULL,
     nFleet,
     nArea
   )
-
+  
+  HistOUT@FDeadArea[[1]][1, 1, 1, ,1] # need to check if these Fs are right!!
+  RepList$`1`$timeseries |> dplyr::filter(Yr==1975)
+  
+  range(  HistOUT@FDead[[1]])
+  
+  
+  Hist@Misc$Targeting |> dim()
+  
   range(Hist@Distribution)
   range(HistOUT@Distribution)
-  HistOUT@Distribution[1, , 1, 1:2, 1]
+  
 
 
   # 1. make all the arrays and add to Misc

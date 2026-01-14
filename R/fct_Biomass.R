@@ -153,7 +153,7 @@ GetMSYRefValue <- function(MSE, Metric='FMSY', Ref=c('Equilibrium', 'Dynamic'), 
   Years <- AdjustYears(MSE, Years, YearsDF)
   
   if (Expand) {
-    RefValue <- RefValue |> ArrayExpand(MSE@OM@nSim, NULL,  Years)
+    RefValue <- RefValue |> Extend(MSE@OM@nSim, NULL,  Years)
   }
   
   RefValue |> ArraySubsetYear(Years) |> 
@@ -344,7 +344,7 @@ B0 <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), Years=NULL, Expand=FALSE) {
   Years <- AdjustYears(MSE, Years, YearsDF)
   
   if (Expand) {
-    RefValue <- RefValue |> ArrayExpand(MSE@OM@nSim, NULL,  Years)
+    RefValue <- RefValue |> Extend(MSE@OM@nSim, NULL,  Years)
   }
   
   RefValue |> ArraySubsetYear(Years) |>
@@ -469,7 +469,7 @@ SB0 <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), Years=NULL, Expand=FALSE) 
   Years <- AdjustYears(MSE, Years, YearsDF)
   
   if (Expand) {
-    RefValue <- RefValue |> ArrayExpand(MSE@OM@nSim, NULL,  Years)
+    RefValue <- RefValue |> Extend(MSE@OM@nSim, NULL,  Years)
   }
   
   RefValue |> ArraySubsetYear(Years) |>
@@ -586,7 +586,7 @@ SP0 <- function(MSE, Ref=c('Equilibrium', 'Dynamic'), Years=NULL, Expand=FALSE) 
   Years <- AdjustYears(MSE, Years, YearsDF)
   
   if (Expand) {
-    RefValue <- RefValue |> ArrayExpand(MSE@OM@nSim, NULL,  Years)
+    RefValue <- RefValue |> Extend(MSE@OM@nSim, NULL,  Years)
   }
   
   RefValue |> ArraySubsetYear(Years) |>

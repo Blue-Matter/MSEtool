@@ -170,6 +170,8 @@ inline void assign_nd_into_Nd(
 
 // Assignment wrappers
 
+
+
 // 3D sim, fleet, area into 5D sim, stock, year, fleet, area
 inline void sFA_into_sSYFA(
     Array5D& target,
@@ -185,6 +187,21 @@ inline void sFA_into_sSYFA(
   );
 }
 
+// 3D sim, fleet, area into 4D sim, year, fleet, area
+inline void sFA_into_sYFA(
+    Array4D& target,
+    const Array3D& src,
+    int year
+) {
+  assign_nd_into_Nd<4,3>(
+      target,
+      src,
+      /* map   */ { Dim4::sim, Dim4::fleet, Dim4::area },
+      /* fixed */ { -1, year, -1, -1 }
+  );
+}
+
+
 inline void assign_4d_into_5d(
     Array5D& target,
     const Array4D& src,
@@ -196,6 +213,124 @@ inline void assign_4d_into_5d(
       /* map   */ { Dim5::sim, Dim5::stock, Dim5::fleet, Dim5::area },
       /* fixed */ { -1, -1, year, -1, -1 }
   );
+}
+
+// Array views
+template <size_t N>
+struct ArrayViewND;
+
+template <size_t N>
+struct ConstArrayViewND;
+
+using ArrayView2D = ArrayViewND<2>;
+using ArrayView3D = ArrayViewND<3>;
+using ArrayView4D = ArrayViewND<4>;
+using ArrayView5D = ArrayViewND<5>;
+
+using ConstArrayView2D = ConstArrayViewND<2>;
+using ConstArrayView3D = ConstArrayViewND<3>;
+using ConstArrayView4D = ConstArrayViewND<4>;
+using ConstArrayView5D = ConstArrayViewND<5>;
+
+
+template <size_t N>
+struct ArrayViewND {
+  double* x;                       
+  std::array<int, N> dim;
+   
+  ArrayViewND(double* ptr,
+              const std::array<int, N>& dim_)
+    : x(ptr), dim(dim_) {}
+   
+  // Element access (multi-index)
+  inline double& operator()(const std::array<int, N>& idx) {
+    int flat = 0;
+    int stride = 1;
+    for (size_t d = 0; d < N; ++d) {
+      flat += idx[d] * stride;
+      stride *= dim[d];
+    } 
+    return x[flat];
+  }
+   
+  // Variadic indexing
+  template <typename... Args>
+  inline double& operator()(Args... args) {
+    static_assert(sizeof...(Args) == N, "Invalid number of indices");
+    std::array<int, N> idx{ static_cast<int>(args)... };
+    return (*this)(idx);
+  }
+}; 
+
+template <size_t N>
+struct ConstArrayViewND {
+  
+  const double* x;
+  std::array<int, N> dim;
+  
+  ConstArrayViewND(const double* ptr,
+                   const std::array<int, N>& dim_)
+    : x(ptr), dim(dim_) {}
+   
+  inline double operator()(const std::array<int, N>& idx) const {
+    int flat = 0;
+    int stride = 1;
+    for (size_t d = 0; d < N; ++d) {
+      flat += idx[d] * stride;
+      stride *= dim[d];
+    } 
+    return x[flat];
+  }
+   
+  template <typename... Args>
+  inline double operator()(Args... args) const {
+    static_assert(sizeof...(Args) == N, "Invalid number of indices");
+    std::array<int, N> idx{ static_cast<int>(args)... };
+    return (*this)(idx);
+  }
+}; 
+
+// ArrayView constructors from R objects
+template <size_t N>
+inline ArrayViewND<N>
+as_ArrayViewND(Rcpp::NumericVector& x) {
+  
+  if (!x.hasAttribute("dim")) {
+    Rcpp::stop("Expected %dD array", N);
+  }
+   
+  Rcpp::IntegerVector d = x.attr("dim");
+  if (d.size() != static_cast<int>(N)) {
+    Rcpp::stop("Expected %dD array", N);
+  }
+   
+  std::array<int, N> dim;
+  for (size_t i = 0; i < N; ++i) {
+    dim[i] = d[i];
+  }
+   
+  return ArrayViewND<N>(REAL(x), dim);
+} 
+
+template <size_t N>
+inline ConstArrayViewND<N>
+as_ConstArrayViewND(const Rcpp::NumericVector& x) {
+   
+  if (!x.hasAttribute("dim")) {
+    Rcpp::stop("Expected %dD array", N);
+  }
+   
+  Rcpp::IntegerVector d = x.attr("dim");
+  if (d.size() != static_cast<int>(N)) {
+    Rcpp::stop("Expected %dD array", N);
+  }
+   
+  std::array<int, N> dim;
+  for (size_t i = 0; i < N; ++i) {
+    dim[i] = d[i];
+  }
+   
+  return ConstArrayViewND<N>(REAL(x), dim);
 }
 
 #endif
