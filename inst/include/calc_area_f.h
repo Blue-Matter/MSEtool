@@ -22,12 +22,25 @@ inline void CalcArea_F(
     
     const  Rcpp::List& SelList,               // Selectivity-at-age list nStock of array: sim, age, year, fleet, area
     const  Rcpp::List& RetList,               // Retention-at-age list nStock of array: sim, age, year, fleet, area
-    const  Rcpp::List& DiscMList,             // Discard-mortality-at-age list nStock of array: sim, age, year, area
+    const  Rcpp::List& DiscMList) {           // Discard-mortality-at-age list nStock of array: sim, age, year, area
     
-    const int nSim,
-    const int nStock,
-    const int nFleet,
-    const int nArea)    {  
+
+  // Calculate nSim - maximum number of simulations 
+  int nSim = infer_nSim(
+    FDeadAreaList,
+    FRetainAreaList,
+    Dist,
+    Effort,
+    q,
+    RelSize,
+    SelList,
+    RetList,
+    DiscMList
+  );
+  
+  const int nStock = FDeadAreaList.size();
+  const int nFleet = Effort.dim[2];
+  const int nArea = RelSize.dim[1];
   
   // single area  & single fleet
   if (nArea == 1 && nFleet == 1) {

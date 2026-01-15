@@ -7,10 +7,6 @@
 
 using namespace Rcpp;
 
-
-
-
-
 // [[Rcpp::export]]
 Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                               Rcpp::NumericVector Years, // Years to loop over
@@ -28,9 +24,11 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
   // ---------------------------------------------------------
   // Mutable Hist list
   // ---------------------------------------------------------
+  
+  // TODO - clone outside the time loop here 
+  
   Rcpp::List FDeadAreaList = Hist.slot("FDeadArea"); // List of F-at-Age-Area arrays 
   Rcpp::List FRetainAreaList = Hist.slot("FRetainArea"); // List of F-at-Age-Area arrays
-  
   
   Rcpp::List NumStockList = Hist.slot("Number"); // List of Number-at-Age arrays
   
@@ -43,10 +41,12 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
   
   Rcpp::List Misc = Hist.slot("Misc");
   
-  Rcpp::List WeightFleetList = GetMisc_List(Hist, "WeightFleetList"); // list nStock of WeightFleet arrays
-  Rcpp::List SelList = GetMisc_List(Hist, "SelList"); // list nStock of Selectivity arrays
-  Rcpp::List RetList = GetMisc_List(Hist, "RetList"); // list nStock of Retention arrays
-  Rcpp::List DiscMList = GetMisc_List(Hist, "DiscMortList"); // list nStock of discard mortality arrays
+  // list length nStock, each element an array
+  Rcpp::List WeightFleetList = GetMisc_List(Hist, "WeightFleetList");
+  Rcpp::List SelList = GetMisc_List(Hist, "SelList"); 
+  Rcpp::List RetList = GetMisc_List(Hist, "RetList"); 
+  Rcpp::List DiscMList = GetMisc_List(Hist, "DiscMortList"); 
+  
   Array4D q = GetMisc_4DArray(Hist, "Catchability"); // sim, stock, year, fleet
   Array5D Closure =  GetMisc_5DArray(Hist, "Closure"); // sim, stock, year, fleet, area
   Array3D Targeting = GetMisc_3DArray(Hist, "Targeting"); // sim, year, fleet
@@ -66,6 +66,10 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     // src: inst/include/calc_spatial_effort_dist.h
     // ---------------------------------------------------------
     
+    // TODO - drop nSim and calculate internally
+    //      - drop other int arguments
+    //      - clone arrays outside of time loop
+    
     // sim, fleet, area
     Array3D EffortDist = CalcSpatialDistribution(y,               // year index
                                                  NumStockList,    // Number-at-age list nStock of array: sim, age, year, area
@@ -76,33 +80,24 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                                                  Closure,         // Area closed (0) or open (1) array: sim, stock, year, fleet, area
                                                  Targeting,       // Spatial Targeting: sim, year, fleet
                                                  Effort,          // Total Effort: sim, year, fleet
-                                                 RelSize,         // Relative Area Size: sim, area
-                                                 nSim,
-                                                 nStock,
-                                                 nFleet,
-                                                 nArea);
-    
-    
-    
+                                                 RelSize);         // Relative Area Size: sim, area
+
     
     // ---------------------------------------------------------
     // Calculate Area-Specific Fishing Mortality  
     // src: inst/include/calc_area_f.h
     // ---------------------------------------------------------
-    CalcArea_F(y,
-               FDeadAreaList,
-               FRetainAreaList,
-               EffortDist,
-               q,
-               Effort,
-               RelSize,
-               SelList,
-               RetList,
-               DiscMList,
-               nSim,
-               nStock,
-               nFleet,
-               nArea);
+    
+    // CalcArea_F(y,
+    //            FDeadAreaList,
+    //            FRetainAreaList,
+    //            EffortDist,
+    //            q,
+    //            Effort,
+    //            RelSize,
+    //            SelList,
+    //            RetList,
+    //            DiscMList);
     
     // Update Hist Arrays for this time step
     sFA_into_sYFA(Dist, EffortDist, y); // sim, fleet, area into sim, year, fleet, area

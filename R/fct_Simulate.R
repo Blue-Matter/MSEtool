@@ -62,13 +62,22 @@ Simulate_om <- function(OM = NULL,
   nFleet <- nFleet(OM)
   nArea <- nArea(OM)
 
+  
+  tictoc::tic()
   HistOUT <- CalcFisheryDynamics_(Hist,
-    Years = HistYears[1:2],
+    Years = HistYears,
     nSim,
     nStock,
     nFleet,
     nArea
   )
+  tictoc::toc() # 0.47 seconds laptop
+  
+  # TODO
+  # - prevent clone within time loop
+  # - don't update values in Hist slots if they are already populated
+  # - check speed of CalcFisheryDynamics_ for NPSWO
+  
   
   HistOUT@FDeadArea[[1]][1, 1, 1, ,1] # need to check if these Fs are right!!
   RepList$`1`$timeseries |> dplyr::filter(Yr==1975)

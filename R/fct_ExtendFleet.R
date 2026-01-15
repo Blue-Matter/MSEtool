@@ -4,7 +4,6 @@ ExtendFleet <- function(FleetList, AgeClasses, nSim, Years, silent=FALSE, id=NUL
     cli::cli_progress_update(id=id)
   }
     
-  
   # Effort
   FleetList <- purrr::map(FleetList, \(fleet) {
     fleet@Effort@Effort <- Extend(fleet@Effort@Effort, nSim, AgeClasses=NULL, Years)

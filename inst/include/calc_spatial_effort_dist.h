@@ -45,12 +45,24 @@ inline Array3D CalcSpatialDistribution(
   const  Array5D& Closure,                    // Area closed (0) or open (1) array: sim, stock, year, fleet, area
   const  Array3D& Targeting,                   // Spatial Targeting: sim, year, fleet
   const  Array3D& Effort,                     // Total Effort: sim, year, fleet
-  const  Array2D& RelSize,                    // Relative Area Size; sim, area
-  const int nSim,
-  const int nStock,
-  const int nFleet,
-  const int nArea)    {               
+  const  Array2D& RelSize) {                   // Relative Area Size; sim, area)    {              
   
+  // Calculate nSim - maximum number of simulations 
+  int nSim = infer_nSim(
+    NumStockList,
+    WeightFleetList,
+    SelList,
+    RetList,
+    q,
+    Closure,
+    Targeting,
+    Effort,
+    RelSize
+  );
+  
+  const int nStock = NumStockList.size();
+  const int nFleet = Effort.dim[2];
+  const int nArea = RelSize.dim[1];
   
   const std::array<int,3> dim = {nSim, nFleet, nArea};
   

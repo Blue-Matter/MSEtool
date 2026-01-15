@@ -313,6 +313,10 @@ ExtendYears <- function(array, Years = NULL, default = NULL) {
   OutArray
 }
 
+NoSeasonVals <- function(x) {
+  all(abs(x - round(x)) < .Machine$double.eps^0.5)
+}
+
 ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, tol = 0.01) {
   if (!is.array(array)) {
     cli::cli_abort("`array` must be an array")
@@ -356,47 +360,73 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, tol = 0.01
   # Forward fill years from most recent existing year
   if (length(forward_years)) {
     season_forward <- (forward_years %% 1) |> unique()
-
-    # loop over seasons - match the season
-    for (i in seq_along(season_forward)) {
-      season_ind <- which(abs(forward_years %% 1 - season_forward[i]) < tol)
-      most_recent_ind <- which(abs(season_existing - season_forward[i]) < tol)
-      if (length(existing_years) == 1) {
-        most_recent_ind <- 1
-      }
-      CheckSeasonExists(most_recent_ind, season_forward[i], existing_years, season_existing)
-      most_recent_ind <- max(most_recent_ind)
-
+    if (NoSeasonVals(season_existing)) {
+      # no seasons in provided values - constant over seasons within years
+      most_recent_ind <- nyear
       MostRecent <- abind::asub(array, most_recent_ind, year_dim, drop = FALSE)
       if (!is.null(default)) {
         MostRecent[] <- default
       }
       d <- dim(MostRecent)
-      d[[year_dim]] <- length(forward_years[season_ind])
-      dn[[year_dim]] <- forward_years[season_ind]
+      d[[year_dim]] <- length(forward_years)
+      dn[[year_dim]] <- forward_years
       abind::afill(OutArray) <- array(MostRecent, dim = d, dimnames = dn)
+      
+    } else {
+      # loop over seasons - match the season
+      for (i in seq_along(season_forward)) {
+        season_ind <- which(abs(forward_years %% 1 - season_forward[i]) < tol)
+        most_recent_ind <- which(abs(season_existing - season_forward[i]) < tol)
+        if (length(existing_years) == 1) {
+          most_recent_ind <- 1
+        }
+        
+        CheckSeasonExists(most_recent_ind, season_forward[i], existing_years, season_existing)
+        most_recent_ind <- max(most_recent_ind)
+        
+        MostRecent <- abind::asub(array, most_recent_ind, year_dim, drop = FALSE)
+        if (!is.null(default)) {
+          MostRecent[] <- default
+        }
+        d <- dim(MostRecent)
+        d[[year_dim]] <- length(forward_years[season_ind])
+        dn[[year_dim]] <- forward_years[season_ind]
+        abind::afill(OutArray) <- array(MostRecent, dim = d, dimnames = dn)
+      }
     }
   }
 
   # Back fill years from first existing year
   if (length(back_years)) {
     season_backward <- (back_years %% 1) |> unique()
-
-    # loop over seasons - match the season
-    for (i in seq_along(season_backward)) {
-      season_ind <- which(abs(back_years %% 1 - season_backward[i]) < tol)
-      most_recent_ind <- which(abs(season_existing - season_backward[i]) < tol)
-      if (length(existing_years) == 1) {
-        most_recent_ind <- 1
+    if (NoSeasonVals(season_existing)) {
+      # no seasons in provided values - constant over seasons within years
+      MostRecent <- abind::asub(array, 1, year_dim, drop = FALSE)
+      if (!is.null(default)) {
+        MostRecent[] <- default
       }
-      CheckSeasonExists(most_recent_ind, season_backward[i], existing_years, season_existing)
-      most_recent_ind <- min(most_recent_ind)
-
-      MostRecent <- abind::asub(array, most_recent_ind, year_dim, drop = FALSE)
       d <- dim(MostRecent)
-      d[[year_dim]] <- length(back_years[season_ind])
-      dn[[year_dim]] <- back_years[season_ind]
+      d[[year_dim]] <- length(forward_years)
+      dn[[year_dim]] <- forward_years
       abind::afill(OutArray) <- array(MostRecent, dim = d, dimnames = dn)
+      
+    } else {
+      # loop over seasons - match the season
+      for (i in seq_along(season_backward)) {
+        season_ind <- which(abs(back_years %% 1 - season_backward[i]) < tol)
+        most_recent_ind <- which(abs(season_existing - season_backward[i]) < tol)
+        if (length(existing_years) == 1) {
+          most_recent_ind <- 1
+        }
+        CheckSeasonExists(most_recent_ind, season_backward[i], existing_years, season_existing)
+        most_recent_ind <- min(most_recent_ind)
+        
+        MostRecent <- abind::asub(array, most_recent_ind, year_dim, drop = FALSE)
+        d <- dim(MostRecent)
+        d[[year_dim]] <- length(back_years[season_ind])
+        dn[[year_dim]] <- back_years[season_ind]
+        abind::afill(OutArray) <- array(MostRecent, dim = d, dimnames = dn)
+      }
     }
   }
 
@@ -411,20 +441,34 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, tol = 0.01
       years_block <- TimeBlocks[[i]]
       season_inside <- (years_block %% 1) |> unique()
 
-      for (j in seq_along(season_inside)) {
-        season_ind <- which(abs(years_block %% 1 - season_inside[j]) < tol)
-        most_recent_ind <- which(abs(season_existing - season_inside[i]) < tol)
-        if (length(existing_years) == 1) {
-          most_recent_ind <- 1
-        }
-        CheckSeasonExists(most_recent_ind, season_inside[i], existing_years, season_existing)
-        most_recent_ind <- min(most_recent_ind)
-
+      if (NoSeasonVals(season_existing)) {
+        # no seasons in provided values - constant over seasons within years
+        most_recent_ind <- which(existing_years <  min(years_block)) |> max()
         MostRecent <- abind::asub(array, most_recent_ind, year_dim, drop = FALSE)
+        if (!is.null(default)) {
+          MostRecent[] <- default
+        }
         d <- dim(MostRecent)
-        d[[year_dim]] <- length(years_block[season_ind])
-        dn[[year_dim]] <- years_block[season_ind]
+        d[[year_dim]] <- length(forward_years)
+        dn[[year_dim]] <- forward_years
         abind::afill(OutArray) <- array(MostRecent, dim = d, dimnames = dn)
+        
+      } else {
+        for (j in seq_along(season_inside)) {
+          season_ind <- which(abs(years_block %% 1 - season_inside[j]) < tol)
+          most_recent_ind <- which(abs(season_existing - season_inside[i]) < tol)
+          if (length(existing_years) == 1) {
+            most_recent_ind <- 1
+          }
+          CheckSeasonExists(most_recent_ind, season_inside[i], existing_years, season_existing)
+          most_recent_ind <- min(most_recent_ind)
+          
+          MostRecent <- abind::asub(array, most_recent_ind, year_dim, drop = FALSE)
+          d <- dim(MostRecent)
+          d[[year_dim]] <- length(years_block[season_ind])
+          dn[[year_dim]] <- years_block[season_ind]
+          abind::afill(OutArray) <- array(MostRecent, dim = d, dimnames = dn)
+        }
       }
     }
   }
