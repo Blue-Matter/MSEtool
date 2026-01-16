@@ -12,129 +12,134 @@
 
 inline void CalcArea_F(
     const int y,                              // time-step index
-    Rcpp::List& FDeadAreaList,                // FDead-at-age list nStock of array: sim, age, year, fleet, area
-    Rcpp::List& FRetainAreaList,              // FDead-at-age list nStock of array: sim, age, year, fleet, area
     
-    const Array3D& Dist,                       // Prob Spatial Effort: sim, fleet, area
-    const Array4D& q,                         // Catchability array: sim, stock, year, fleet
+    std::vector<Array5D>& FDeadArea,    // nStock vector: sim, age, year, fleet, area
+    std::vector<Array5D>& FRetainArea,  // nStock vector: sim, age, year, fleet, area
+    const std::vector<ConstArrayView5D>& Sel,
+    const std::vector<ConstArrayView5D>& Ret,
+    const std::vector<ConstArrayView5D>& DiscM,
+  
+    Array4D& EffortDist,                       // Prob Spatial Effort: sim, year, fleet, area
+    const ConstArrayView4D& q,                         // Catchability array: sim, stock, year, fleet
     const Array3D& Effort,                    // Total Effort: sim, year, fleet
-    const Array2D& RelSize,                   // Relative Area Size; sim, area
+    const ConstArrayView2D& RelSize,                   // Relative Area Size; sim, area
     
-    const  Rcpp::List& SelList,               // Selectivity-at-age list nStock of array: sim, age, year, fleet, area
-    const  Rcpp::List& RetList,               // Retention-at-age list nStock of array: sim, age, year, fleet, area
-    const  Rcpp::List& DiscMList) {           // Discard-mortality-at-age list nStock of array: sim, age, year, area
+    const int nStock,
+    const int nFleet,
+    const int nArea) {         
     
 
   // Calculate nSim - maximum number of simulations 
-  int nSim = infer_nSim(
-    FDeadAreaList,
-    FRetainAreaList,
-    Dist,
+  const int nSim = infer_nSim(
+    FDeadArea,
+    FRetainArea,
+    Sel,
+    Ret,
+    DiscM,
+    EffortDist,
     Effort,
     q,
-    RelSize,
-    SelList,
-    RetList,
-    DiscMList
+    RelSize
   );
-  
-  const int nStock = FDeadAreaList.size();
-  const int nFleet = Effort.dim[2];
-  const int nArea = RelSize.dim[1];
   
   // single area  & single fleet
   if (nArea == 1 && nFleet == 1) {
-    for (int st = 0; st < nStock; ++st) { 
-      Array5D FDeadArea = clone_StockList5D(FDeadAreaList, st);     // sim, age, year, fleet, area
-      Array5D FRetainArea = clone_StockList5D(FRetainAreaList, st); // sim, age, year, fleet, area
-      ConstArrayView5D Sel = view_StockList5D(SelList, st);         // sim, age, year, fleet, area
-      ConstArrayView5D Ret = view_StockList5D(RetList, st);         // sim, age, year, fleet, area
-      ConstArrayView5D DiscM = view_StockList5D(DiscMList, st);     // sim, age, year, fleet, area
+    for (int st = 0; st < nStock; ++st) {
+      auto& Fd  = FDeadArea[st];
+      auto& Fr  = FRetainArea[st];
+      const auto& S  = Sel[st];
+      const auto& R  = Ret[st];
+      const auto& DM = DiscM[st];
       
-      const int nAge = FDeadArea.dim[1];
+      const int nAge = Fd.dim[1];
       
       for (int sim = 0; sim < nSim; ++sim) {
         const double effort = Effort(sim, y, 0);
         const double q_eff  = q(sim, st, y, 0) * effort;
+        
         for (int age = 0; age < nAge; ++age) {
-          const double F_interact = q_eff * Sel(sim, age, y, 0, 0);
-          const double F_retain = F_interact * Ret(sim, age, y, 0, 0);
-          const double F_discard_dead = (F_interact - F_retain) * DiscM(sim, age, y, 0, 0);
-          FDeadArea(sim, age, y, 0, 0) = F_retain + F_discard_dead;
-          FRetainArea(sim, age, y, 0, 0) = F_retain;
-        }
-      }
-    }  
+          const double F_interact = q_eff * S(sim, age, y, 0, 0);
+          const double F_retain   = F_interact * R(sim, age, y, 0, 0);
+          const double F_disc     = (F_interact - F_retain) * DM(sim, age, y, 0, 0);
+           
+          Fd(sim, age, y, 0, 0) = F_retain + F_disc;
+          Fr(sim, age, y, 0, 0) = F_retain;
+        } 
+      } 
+    }
     return;
-  } 
+  }  
   
   // single area - multiple fleet
   if (nArea == 1) {
-    for (int st = 0; st < nStock; ++st) { 
-      Array5D FDeadArea = clone_StockList5D(FDeadAreaList, st);     // sim, age, year, fleet, area
-      Array5D FRetainArea = clone_StockList5D(FRetainAreaList, st); // sim, age, year, fleet, area
-      ConstArrayView5D Sel = view_StockList5D(SelList, st);         // sim, age, year, fleet, area
-      ConstArrayView5D Ret = view_StockList5D(RetList, st);         // sim, age, year, fleet, area
-      ConstArrayView5D DiscM = view_StockList5D(DiscMList, st);     // sim, age, year, fleet, area
+    for (int st = 0; st < nStock; ++st) {
       
-      const int nAge = FDeadArea.dim[1];
-      
+      auto& Fd  = FDeadArea[st];
+      auto& Fr  = FRetainArea[st];
+      const auto& S  = Sel[st];
+      const auto& R  = Ret[st];
+      const auto& DM = DiscM[st];
+    
+      const int nAge = Fd.dim[1];
+    
       for (int sim = 0; sim < nSim; ++sim) {
         for (int fl = 0; fl < nFleet; ++fl) {
-          
+         
           const double effort = Effort(sim, y, fl);
           const double q_eff  = q(sim, st, y, fl) * effort;
-          
+         
           for (int age = 0; age < nAge; ++age) {
-            const double F_interact = q_eff * Sel(sim, age, y, fl, 0);
-            const double F_retain = F_interact * Ret(sim, age, y, fl, 0);
-            const double F_discard_dead = (F_interact - F_retain) * DiscM(sim, age, y, fl, 0);
-            FDeadArea(sim, age, y, fl, 0) = F_retain + F_discard_dead;
-            FRetainArea(sim, age, y, fl, 0) = F_retain;
+            const double F_interact = q_eff * S(sim, age, y, fl, 0);
+            const double F_retain   = F_interact * R(sim, age, y, fl, 0);
+            const double F_disc     = (F_interact - F_retain) * DM(sim, age, y, fl, 0);
+             
+            Fd(sim, age, y, fl, 0) = F_retain + F_disc;
+            Fr(sim, age, y, fl, 0) = F_retain;
           }
         }
       }
-    }
+    } 
     return;
-  }
+  } 
   
   // single fleet, multiple areas 
   if (nFleet == 1) {
-    // Compute spatial effort density
-    const std::array<int, 2> dim = {nSim, nArea};
-    Array2D EffortDensity(dim, 0.0);
     
+    Array2D EffortDensity({nSim, nArea}, 0.0);
+     
     for (int sim = 0; sim < nSim; ++sim) {
       const double E = Effort(sim, y, 0);
       for (int ar = 0; ar < nArea; ++ar) {
         const double rs = RelSize(sim, ar);
-        EffortDensity(sim, ar) =  (rs > 0.0) ? E * Dist(sim, 0, ar) / rs : 0.0;
-      }
+        EffortDensity(sim, ar) =
+          (rs > 0.0) ? E * EffortDist(sim, y, 0, ar) / rs : 0.0;
+      } 
     }
     
     for (int st = 0; st < nStock; ++st) {
-      Array5D FDeadArea   = clone_StockList5D(FDeadAreaList, st);
-      Array5D FRetainArea = clone_StockList5D(FRetainAreaList, st);
-      ConstArrayView5D Sel   = view_StockList5D(SelList, st);
-      ConstArrayView5D Ret   = view_StockList5D(RetList, st);
-      ConstArrayView5D DiscM = view_StockList5D(DiscMList, st);
-    
-      const int nAge = FDeadArea.dim[1];
-      
+       
+      auto& Fd  = FDeadArea[st];
+      auto& Fr  = FRetainArea[st];
+      const auto& S  = Sel[st];
+      const auto& R  = Ret[st];
+      const auto& DM = DiscM[st];
+       
+      const int nAge = Fd.dim[1];
+       
       for (int sim = 0; sim < nSim; ++sim) {
         const double q_fl = q(sim, st, y, 0);
-        
+         
         for (int ar = 0; ar < nArea; ++ar) {
           const double q_eff = q_fl * EffortDensity(sim, ar);
+           
           for (int age = 0; age < nAge; ++age) {
-            const double F_interact = q_eff * Sel(sim, age, y, 0, ar);
-            
-            const double F_retain = F_interact * Ret(sim, age, y, 0, ar);
-            const double F_discard_dead = (F_interact - F_retain) * DiscM(sim, age, y, 0, ar);
-            
-            FDeadArea(sim, age, y, 0, ar) = F_retain + F_discard_dead;
-            FRetainArea(sim, age, y, 0, ar) = F_retain;
-          }
+            const double F_interact = q_eff * S(sim, age, y, 0, ar);
+            const double F_retain   = F_interact * R(sim, age, y, 0, ar);
+            const double F_disc     = (F_interact - F_retain) * DM(sim, age, y, 0, ar);
+             
+            Fd(sim, age, y, 0, ar) = F_retain + F_disc;
+            Fr(sim, age, y, 0, ar) = F_retain;
+          } 
         }
       }
     }
@@ -145,46 +150,49 @@ inline void CalcArea_F(
   // multiple areas, multiple fleets 
   
   // Compute spatial effort density
-  const std::array<int, 3> dim = {nSim, nFleet, nArea};
-  Array3D EffortDensity(dim, 0.0);
+  Array3D EffortDensity({nSim, nFleet, nArea}, 0.0);
   
   for (int sim = 0; sim < nSim; ++sim) {
     for (int fl = 0; fl < nFleet; ++fl) {
       const double E = Effort(sim, y, fl);
       for (int ar = 0; ar < nArea; ++ar) {
         const double rs = RelSize(sim, ar);
-        EffortDensity(sim, fl, ar) =  (rs > 0.0) ? E * Dist(sim, fl, ar) / rs : 0.0;
+        EffortDensity(sim, fl, ar) =
+          (rs > 0.0) ? E * EffortDist(sim, y, fl, ar) / rs : 0.0;
       }
-    }
+    } 
   }
   
-  // Loop over stocks 
-  for (int st = 0; st < nStock; ++st) { 
-    Array5D FDeadArea = clone_StockList5D(FDeadAreaList, st);     // sim, age, year, fleet, area
-    Array5D FRetainArea = clone_StockList5D(FRetainAreaList, st); // sim, age, year, fleet, area
-    ConstArrayView5D Sel = view_StockList5D(SelList, st);         // sim, age, year, fleet, area
-    ConstArrayView5D Ret = view_StockList5D(RetList, st);         // sim, age, year, fleet, area
-    ConstArrayView5D DiscM = view_StockList5D(DiscMList, st);     // sim, age, year, fleet, area
-    
-    const int nAge = FDeadArea.dim[1];
-    
+  for (int st = 0; st < nStock; ++st) {
+     
+    auto& Fd  = FDeadArea[st];
+    auto& Fr  = FRetainArea[st];
+    const auto& S  = Sel[st];
+    const auto& R  = Ret[st];
+    const auto& DM = DiscM[st];
+     
+    const int nAge = Fd.dim[1];
+     
     for (int sim = 0; sim < nSim; ++sim) {
       for (int fl = 0; fl < nFleet; ++fl) {
         const double q_fl = q(sim, st, y, fl);
+         
         for (int ar = 0; ar < nArea; ++ar) {
           const double q_eff = q_fl * EffortDensity(sim, fl, ar);
+           
           for (int age = 0; age < nAge; ++age) {
-            const double F_interact = q_eff * Sel(sim, age, y, fl, ar);
-            const double F_retain = F_interact * Ret(sim, age, y, fl, ar);
-            const double F_discard_dead = (F_interact - F_retain) * DiscM(sim, age, y, fl, ar);
-            
-            FDeadArea(sim, age, y, fl, ar) = F_retain + F_discard_dead;
-            FRetainArea(sim, age, y, fl, ar) = F_retain;
+            const double F_interact = q_eff * S(sim, age, y, fl, ar);
+            const double F_retain   = F_interact * R(sim, age, y, fl, ar);
+            const double F_disc     = (F_interact - F_retain) * DM(sim, age, y, fl, ar);
+             
+            Fd(sim, age, y, fl, ar) = F_retain + F_disc;
+            Fr(sim, age, y, fl, ar) = F_retain;
           }
         }
       }
     }
   }
 }
+
 
 #endif // CALC_AREA_F_H

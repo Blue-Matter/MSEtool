@@ -274,7 +274,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // CalcFisheryDynamics_
-Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn, Rcpp::NumericVector Years, int nSim, int nStock, int nFleet, int nArea, int debug);
+Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn, Rcpp::NumericVector Years, int nSim, const int nStock, const int nFleet, const int nArea, const int debug);
 RcppExport SEXP _MSEtool_CalcFisheryDynamics_(SEXP HistInSEXP, SEXP YearsSEXP, SEXP nSimSEXP, SEXP nStockSEXP, SEXP nFleetSEXP, SEXP nAreaSEXP, SEXP debugSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -282,10 +282,10 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::S4 >::type HistIn(HistInSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Years(YearsSEXP);
     Rcpp::traits::input_parameter< int >::type nSim(nSimSEXP);
-    Rcpp::traits::input_parameter< int >::type nStock(nStockSEXP);
-    Rcpp::traits::input_parameter< int >::type nFleet(nFleetSEXP);
-    Rcpp::traits::input_parameter< int >::type nArea(nAreaSEXP);
-    Rcpp::traits::input_parameter< int >::type debug(debugSEXP);
+    Rcpp::traits::input_parameter< const int >::type nStock(nStockSEXP);
+    Rcpp::traits::input_parameter< const int >::type nFleet(nFleetSEXP);
+    Rcpp::traits::input_parameter< const int >::type nArea(nAreaSEXP);
+    Rcpp::traits::input_parameter< const int >::type debug(debugSEXP);
     rcpp_result_gen = Rcpp::wrap(CalcFisheryDynamics_(HistIn, Years, nSim, nStock, nFleet, nArea, debug));
     return rcpp_result_gen;
 END_RCPP

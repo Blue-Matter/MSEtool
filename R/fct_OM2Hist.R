@@ -1,4 +1,15 @@
-# Initialize a `Hist` object for a given `OM`
+#' Initialize a Hist object from an OM
+#'
+#' Internal constructor that converts an initialized [OM()] object into a
+#' corresponding [Hist()] object by expanding all stock, fleet, and time-series
+#' slots over historical years and preparing C++-friendly data structures.
+#'
+#' @param OM An initialized [OM()] object.
+#' @param silent Logical. Suppress progress reporting.
+#'
+#' @return A fully initialized [Hist()] object.
+#'
+#' @keywords internal
 OM2Hist <- function(OM, silent = FALSE) {
   if (!silent) {
     id <- cli::cli_progress_bar("Initializing `Hist` Object")
@@ -27,11 +38,7 @@ OM2Hist <- function(OM, silent = FALSE) {
   Hist@OM@Fleet <- purrr::map2(Hist@OM@Fleet, AgeClassList, \(FleetList, AgeClasses)
                                ExtendFleet(FleetList, AgeClasses, nSim, HistYears, silent, id))
 
-  FleetList <- Hist@OM@Fleet$Female
-  AgeClasses <- AgeClassList$Female
-  t <- ExtendFleet(FleetList, AgeClasses, nSim, HistYears, silent, id)
-  
-  
+
   # Create Time Series Arrays
   Hist <- InitializeTimeSeries(Hist)
 
@@ -107,6 +114,40 @@ PrepHistMisc <- function(Hist) {
 
 
   # Stock Length Lists
+  
+  ## ---- Stock -----
+  Hist@Misc$Fecundity <- purrr::map(Hist@OM@Stock, \(stock) {
+    stock@Fecundity@MeanAtAge
+  })
+  
+  Hist@Misc$Maturity <- purrr::map(Hist@OM@Stock, \(stock) {
+    stock@Maturity@MeanAtAge
+  })
+  
+  Hist@Misc$NaturalMortality <- purrr::map(Hist@OM@Stock, \(stock) {
+    stock@NaturalMortality@MeanAtAge
+  })
+  
+  Hist@Misc$Weight <- purrr::map(Hist@OM@Stock, \(stock) {
+    stock@Weight@MeanAtAge
+  })
+  
+  Hist@Misc$Semelparous <- purrr::map(Hist@OM@Stock, \(stock) {
+    stock@Maturity@Semelparous
+  })
+  
+  Hist@Misc$SpawnTimeFrac <- purrr::map(Hist@OM@Stock, \(stock) {
+    stock@SRR@SpawnTimeFrac
+  })
+  
+  
+  
+  # 2D Array: Sim, Year
+  Hist@Misc$RelSize <- Hist@OM@Stock[[1]]@Spatial@RelativeSize
+  
+  
+  ## ---- Fleet ----
+  
 
   Hist@Misc$WeightFleetList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
     purrr::map(FleetList, \(fleet) {
@@ -156,8 +197,7 @@ PrepHistMisc <- function(Hist) {
   }) |> List2Array(pos = 3) # Sim, Year, Fleet
 
 
-  # 2D Array: Sim, Year
-  Hist@Misc$RelSize <- Hist@OM@Stock[[1]]@Spatial@RelativeSize
+
 
   Hist
 }

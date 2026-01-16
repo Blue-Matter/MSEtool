@@ -14,61 +14,47 @@
 
 /**
  * Calculate spatial effort distribution across areas
- *
- * Computes fleet- and simulation-specific spatial effort shares
- * based on exploitable biomass, saturation, and targeting behaviour.
- *
- * @param y             Time-step index
- * @param NumStockList  List of nStock 4D arrays (sim, age, year, area)
- * @param WeightFleetList List of nStock 4D arrays (sim, age, year, fleet)
- * @param SelList       List of nStock 5D arrays (sim, age, year, fleet, area)
- * @param RetList       List of nStock 5D arrays (sim, age, year, fleet, area)
- * @param q             Catchability array (sim, stock, year, fleet)
- * @param Closure       Area open (1) / closed (0) array (sim, stock, year, fleet, area)
- * @param Targeting     Fleet targeting exponent (sim, year, fleet)
- * @param Effort        Total effort (sim, year, fleet)
- * @param RelSize       Relative area size (sim, area)
- * @param nSim          Number of simulations
- * @param nStock        Number of stocks
- * @param nFleet        Number of fleets
- * @param nArea         Number of spatial areas
- *
- * @return Array3D      Spatial effort distribution (sim, fleet, area)
  */
-inline Array3D CalcSpatialDistribution(
+inline void CalcSpatialDistribution(
   const int y,                              // time-step index
-  const  Rcpp::List& NumStockList,           // Number-at-age list nStock of array: sim, age, year, area
-  const  Rcpp::List& WeightFleetList,        // Number-at-age list nStock of array: sim, age, year, area
-  const  Rcpp::List& SelList,                // Selectivity-at-age list nStock of array: sim, age, year, fleet, area
-  const  Rcpp::List& RetList,                // Retention-at-age list nStock of array: sim, age, year, fleet, area
-  const  Array4D& q,                          // Catchability array: sim, stock, year, fleet
-  const  Array5D& Closure,                    // Area closed (0) or open (1) array: sim, stock, year, fleet, area
-  const  Array3D& Targeting,                   // Spatial Targeting: sim, year, fleet
+  
+  Array4D& EffortDist,          // updated for year y: sim, year, fleet, area
+  
+  std::vector<Array4D>& Num,    // nStock vector: sim, age, year, area
+  
+  const std::vector<ConstArrayView4D>& Wgt,   
+  const std::vector<ConstArrayView5D>& Sel,
+  const std::vector<ConstArrayView5D>& Ret,
+  
+  const  ConstArrayView4D& q,                          // Catchability array: sim, stock, year, fleet
+  const  ConstArrayView5D& Closure,                    // Area closed (0) or open (1) array: sim, stock, year, fleet, area
+  const  ConstArrayView3D& Targeting,                   // Spatial Targeting: sim, year, fleet
   const  Array3D& Effort,                     // Total Effort: sim, year, fleet
-  const  Array2D& RelSize) {                   // Relative Area Size; sim, area)    {              
+  const  ConstArrayView2D& RelSize,
+  
+  const int nStock,
+  const int nFleet,
+  const int nArea) {                   
   
   // Calculate nSim - maximum number of simulations 
-  int nSim = infer_nSim(
-    NumStockList,
-    WeightFleetList,
-    SelList,
-    RetList,
-    q,
-    Closure,
-    Targeting,
+  const int nSim = infer_nSim(
+    EffortDist,
+    Num,
+    Wgt,
+    Sel,
+    Ret,
     Effort,
+    q,
     RelSize
   );
-  
-  const int nStock = NumStockList.size();
-  const int nFleet = Effort.dim[2];
-  const int nArea = RelSize.dim[1];
-  
+
   const std::array<int,3> dim = {nSim, nFleet, nArea};
   
   if (nArea == 1) {
-    Array3D EffortDist(dim, 1.0);
-    return EffortDist;
+    for (int sim = 0; sim < nSim; ++sim)
+      for (int fl = 0; fl < nFleet; ++fl)
+        EffortDist(sim, y, fl, 0) = 1.0;
+    return;
   }
   
   // Util array: sim, fleet, area 
@@ -77,30 +63,33 @@ inline Array3D CalcSpatialDistribution(
   
   // Loop over stocks
   for (int st = 0; st < nStock; ++st) { 
-    ConstArrayView4D Num = view_StockList4D(NumStockList, st);
-    ConstArrayView4D Wgt = view_StockList4D(WeightFleetList, st);
-    ConstArrayView5D Sel = view_StockList5D(SelList, st);
-    ConstArrayView5D Ret = view_StockList5D(RetList, st);
     Array3D B_hat(dim, 0.0);
+    
+    const Array4D& Num_st = Num[st];
+    const ConstArrayView4D& Wgt_st = Wgt[st];
+    const ConstArrayView5D& Sel_st = Sel[st];
+    const ConstArrayView5D& Ret_st = Ret[st];
+     
+    const int nAge = Num_st.dim[1];
 
     // Exploitable biomass per unit effort
     for (int sim = 0; sim < nSim; ++sim) {
       for (int fl = 0; fl < nFleet; ++fl) {
         for (int ar = 0; ar < nArea; ++ar) {
-          if (Closure(sim, st, y, fl, ar) <= 0.0) continue;
           
+          if (Closure(sim, st, y, fl, ar) <= 0.0) continue;
           double B_sfr = 0.0;
-          for (int age = 0; age < Num.dim[1]; ++age) {
+          for (int age = 0; age < nAge; ++age) {
             B_sfr +=
-              Num(sim, age, y, ar) *
-              Wgt(sim, age, y, fl) *
-              Sel(sim, age, y, fl, ar) *
-              Ret(sim, age, y, fl, ar);
+              Num_st(sim, age, y, ar) *
+              Wgt_st(sim, age, y, fl) *
+              Sel_st(sim, age, y, fl, ar) *
+              Ret_st(sim, age, y, fl, ar);
           }
           B_hat(sim, fl, ar) = q(sim, st, y, fl) * B_sfr;
-        }
+        } 
       }
-    } 
+    }
  
     // Within-season saturation 
     for (int sim = 0; sim < nSim; ++sim) {
@@ -150,25 +139,39 @@ inline Array3D CalcSpatialDistribution(
   }
   
   // Calculate Effort Distribution
-  Array3D EffortDist(dim, 0.0);
-  
   for (int sim = 0; sim < nSim; ++sim) {
     for (int fl = 0; fl < nFleet; ++fl) {
       const double theta = Targeting(sim,y,fl);
-      if (theta <= 0.0) 
-        continue;
+      if (theta <= 0.0) continue;
+      
       double total = 0.0;
-      for (int ar = 0; ar < nArea; ++ar)
-        total += std::pow(Util(sim, fl, ar),theta);
+      
+      // cache Util^theta
+      std::vector<double> UtilTheta(nArea);
+      for (int ar = 0; ar < nArea; ++ar) {
+        const double u = Util(sim, fl, ar);
+        if (u > 0.0) {
+          const double ut = std::pow(u, theta);
+          UtilTheta[ar] = ut;
+          total += ut;
+        } else { 
+          UtilTheta[ar] = 0.0;
+        }
+      }
+      
       
       if (total > 0.0) {
-        for (int ar = 0; ar < nArea; ++ar)
-          EffortDist(sim, fl, ar) = std::pow(Util(sim, fl, ar), theta) / total;
-      } 
+        const double inv_total = 1.0 / total;
+        for (int ar = 0; ar < nArea; ++ar) {
+          if (EffortDist(sim, y, fl, ar) <= 1E-6) {
+            EffortDist(sim, y, fl, ar) = UtilTheta[ar] * inv_total;  
+          }
+          
+        }
+      }  
     }
   }
- 
-  return EffortDist;
+
 }
 
 #endif // CALC_SPATIAL_DISTRIBUTION_H

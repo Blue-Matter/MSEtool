@@ -56,13 +56,15 @@ Simulate_om <- function(OM = NULL,
   Hist <- CalcDynamicInitial(Hist)
   
   
+  
+  
   HistYears <- Years(OM, "H")
   nSim <- OM@nSim
   nStock <- nStock(OM)
   nFleet <- nFleet(OM)
   nArea <- nArea(OM)
-
   
+
   tictoc::tic()
   HistOUT <- CalcFisheryDynamics_(Hist,
     Years = HistYears,
@@ -71,47 +73,13 @@ Simulate_om <- function(OM = NULL,
     nFleet,
     nArea
   )
-  tictoc::toc() # 0.47 seconds laptop
+  tictoc::toc()  # 0.4  - 0.9 
   
-  # TODO
-  # - prevent clone within time loop
-  # - don't update values in Hist slots if they are already populated
-  # - check speed of CalcFisheryDynamics_ for NPSWO
-  
-  
-  HistOUT@FDeadArea[[1]][1, 1, 1, ,1] # need to check if these Fs are right!!
-  RepList$`1`$timeseries |> dplyr::filter(Yr==1975)
-  
-  range(  HistOUT@FDead[[1]])
-  
-  
-  Hist@Misc$Targeting |> dim()
-  
-  range(Hist@Distribution)
-  range(HistOUT@Distribution)
-  
+  return(HistOUT)
 
 
-  # 1. make all the arrays and add to Misc
-  # 2. Drop OM from Hist for now - re add later?save for space
-  # 3.
 
 
-  stop()
-  # calculate VB in c++ etc
-  TSind <- 0 # first year
-
-  NumStock <- Hist@Number
-
-  HistOUT <- CalcFisheryDynamics_(
-    NumStock,
-    nSim
-  )
-
-
-  NumStock <- purrr::map(Hist@Number, \(stockN) {
-    abind::asub(stockN, TSind, 3, drop = FALSE) |> abind::adrop(3)
-  })
 
   ##############################################################################
 

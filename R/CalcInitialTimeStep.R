@@ -1,3 +1,14 @@
+#' Initialize dynamic population state in Hist
+#'
+#' Internal helper that constructs the initial age–area population structure
+#' in a [Hist()] object by applying recruitment deviations, spatial
+#' distribution, and optional initial depletion.
+#'
+#' @param Hist A [Hist()] object with initialized unfished equilibrium state.
+#'
+#' @return The modified [Hist()] object.
+#'
+#' @keywords internal
 CalcDynamicInitial <- function(Hist) {
   nSim <- nSim(Hist)
   # ---- Loop over stocks -----
@@ -33,7 +44,7 @@ CalcDynamicInitial <- function(Hist) {
     nArea <- dim(UnfishedDist)[3]
     if (nArea>1 & Hist@OM@Seasons>1) {
       # TODO - need to account for seasonal movement pattern in initial age structure
-      cli::cli_abort(c("x"="Multi-area seasonal model spatial distribution not finished"), .internal=TRUE)
+      cli::cli_abort(c("x"="Multi-area seasonal model spatial distribution are not currently supported."), .internal=TRUE)
     } else {
       # Multiply unfished by initial rec devs and add an Area dimension
       NatAge <- ArrayMultiply(InitAgeClassRecDevs, EquilNumber) |> AddDimension('Area') 
@@ -50,7 +61,7 @@ CalcDynamicInitial <- function(Hist) {
       for (ts in 2:(RecruitTimeStep-1)) {
         UnfishedDist <- Hist@OM@Stock[[st]]@Spatial@UnfishedDist[,,1,ts,drop=FALSE] |>
           aperm(c('Sim', 'Age', 'Year', 'Area'))
-        Recruit <- Hist@OM@Stock[[1]]@SRR@R0[,ts, drop=FALSE] |>
+        Recruit <- Hist@OM@Stock[[st]]@SRR@R0[,ts, drop=FALSE] |>
           AddDimension('Area') |>
           AddDimension('Age') |>
           aperm(c('Sim', 'Age', 'Year', 'Area'))
@@ -68,8 +79,20 @@ CalcDynamicInitial <- function(Hist) {
   Hist
 }
 
-# TODO - this should probably account for selectivity, but most of the 
-# time it's already done in Import(OM)
+# TODO - DoOptInitialDepletion should probably account for selectivity,
+# but most of the time it's already done in Import(OM)
+
+#' Apply initial depletion by scaling numbers-at-age
+#'
+#' Internal helper that rescales initial numbers-at-age to match a target
+#' depletion level relative to unfished biomass or spawning biomass.
+#'
+#' @param Hist A [Hist()] object.
+#' @param st Integer stock index.
+#'
+#' @return The modified [Hist()] object.
+#'
+#' @keywords internal
 DoOptInitialDepletion <- function(Hist, st) {
   DepletionInitial <- Hist@OM@Stock[[st]]@Depletion@Initial
   DepletionReference <- Hist@OM@Stock[[st]]@Depletion@Reference
@@ -131,6 +154,13 @@ DoOptInitialDepletion <- function(Hist, st) {
   Hist
 }
 
+
+#' Objective function for initial depletion optimization
+#'
+#' Internal objective function used to scale numbers-at-age such that biomass
+#' or spawning biomass matches a target depletion level.
+#'
+#' @keywords internal
 OptInitialDepletion <- function(par=1, 
                                 NumberAtAge,
                                 WeightAtAge,
