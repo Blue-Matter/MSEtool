@@ -117,24 +117,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// CalcSpawnProduction_
-arma::vec CalcSpawnProduction_(arma::mat NumberAtAgeArea, arma::vec FecundityAtAge, arma::vec MaturityAtAge, arma::vec WeightAtAge, arma::vec NaturalMortalityAtAge, arma::mat FDeadAtAgeArea, double SpawnTimeFrac, int debug);
-RcppExport SEXP _MSEtool_CalcSpawnProduction_(SEXP NumberAtAgeAreaSEXP, SEXP FecundityAtAgeSEXP, SEXP MaturityAtAgeSEXP, SEXP WeightAtAgeSEXP, SEXP NaturalMortalityAtAgeSEXP, SEXP FDeadAtAgeAreaSEXP, SEXP SpawnTimeFracSEXP, SEXP debugSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type NumberAtAgeArea(NumberAtAgeAreaSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type FecundityAtAge(FecundityAtAgeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type MaturityAtAge(MaturityAtAgeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type WeightAtAge(WeightAtAgeSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type NaturalMortalityAtAge(NaturalMortalityAtAgeSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type FDeadAtAgeArea(FDeadAtAgeAreaSEXP);
-    Rcpp::traits::input_parameter< double >::type SpawnTimeFrac(SpawnTimeFracSEXP);
-    Rcpp::traits::input_parameter< int >::type debug(debugSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcSpawnProduction_(NumberAtAgeArea, FecundityAtAge, MaturityAtAge, WeightAtAge, NaturalMortalityAtAge, FDeadAtAgeArea, SpawnTimeFrac, debug));
-    return rcpp_result_gen;
-END_RCPP
-}
 // CalcStockMovement_
 arma::cube CalcStockMovement_(arma::cube NumberAtAgeArea, arma::cube Movement, int nAge, int nArea, int TSindex);
 RcppExport SEXP _MSEtool_CalcStockMovement_(SEXP NumberAtAgeAreaSEXP, SEXP MovementSEXP, SEXP nAgeSEXP, SEXP nAreaSEXP, SEXP TSindexSEXP) {
@@ -256,37 +238,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// calcVatAge
-NumericMatrix calcVatAge(NumericMatrix len_at_age, NumericMatrix len_aa_sd, NumericMatrix sel_at_length, int n_age, int nyears, int proyears, NumericVector CAL_binsmid);
-RcppExport SEXP _MSEtool_calcVatAge(SEXP len_at_ageSEXP, SEXP len_aa_sdSEXP, SEXP sel_at_lengthSEXP, SEXP n_ageSEXP, SEXP nyearsSEXP, SEXP proyearsSEXP, SEXP CAL_binsmidSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericMatrix >::type len_at_age(len_at_ageSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type len_aa_sd(len_aa_sdSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type sel_at_length(sel_at_lengthSEXP);
-    Rcpp::traits::input_parameter< int >::type n_age(n_ageSEXP);
-    Rcpp::traits::input_parameter< int >::type nyears(nyearsSEXP);
-    Rcpp::traits::input_parameter< int >::type proyears(proyearsSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type CAL_binsmid(CAL_binsmidSEXP);
-    rcpp_result_gen = Rcpp::wrap(calcVatAge(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid));
-    return rcpp_result_gen;
-END_RCPP
-}
 // CalcFisheryDynamics_
-Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn, Rcpp::NumericVector Years, int nSim, const int nStock, const int nFleet, const int nArea, const int debug);
-RcppExport SEXP _MSEtool_CalcFisheryDynamics_(SEXP HistInSEXP, SEXP YearsSEXP, SEXP nSimSEXP, SEXP nStockSEXP, SEXP nFleetSEXP, SEXP nAreaSEXP, SEXP debugSEXP) {
+Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn, Rcpp::NumericVector Years, Rcpp::NumericVector AllYears, int nSim, const int nStock, const int nFleet, const int nArea, const int debug, const int CalcCatch);
+RcppExport SEXP _MSEtool_CalcFisheryDynamics_(SEXP HistInSEXP, SEXP YearsSEXP, SEXP AllYearsSEXP, SEXP nSimSEXP, SEXP nStockSEXP, SEXP nFleetSEXP, SEXP nAreaSEXP, SEXP debugSEXP, SEXP CalcCatchSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4 >::type HistIn(HistInSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Years(YearsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type AllYears(AllYearsSEXP);
     Rcpp::traits::input_parameter< int >::type nSim(nSimSEXP);
     Rcpp::traits::input_parameter< const int >::type nStock(nStockSEXP);
     Rcpp::traits::input_parameter< const int >::type nFleet(nFleetSEXP);
     Rcpp::traits::input_parameter< const int >::type nArea(nAreaSEXP);
     Rcpp::traits::input_parameter< const int >::type debug(debugSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcFisheryDynamics_(HistIn, Years, nSim, nStock, nFleet, nArea, debug));
+    Rcpp::traits::input_parameter< const int >::type CalcCatch(CalcCatchSEXP);
+    rcpp_result_gen = Rcpp::wrap(CalcFisheryDynamics_(HistIn, Years, AllYears, nSim, nStock, nFleet, nArea, debug, CalcCatch));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -502,7 +469,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_CalcCatch_", (DL_FUNC) &_MSEtool_CalcCatch_, 3},
     {"_MSEtool_CalcNumberNext_", (DL_FUNC) &_MSEtool_CalcNumberNext_, 8},
     {"_MSEtool_CalcRecruitment_", (DL_FUNC) &_MSEtool_CalcRecruitment_, 7},
-    {"_MSEtool_CalcSpawnProduction_", (DL_FUNC) &_MSEtool_CalcSpawnProduction_, 8},
     {"_MSEtool_CalcStockMovement_", (DL_FUNC) &_MSEtool_CalcStockMovement_, 5},
     {"_MSEtool_vecminInd", (DL_FUNC) &_MSEtool_vecminInd, 1},
     {"_MSEtool_LinInterp_cpp", (DL_FUNC) &_MSEtool_LinInterp_cpp, 3},
@@ -510,8 +476,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_Ref_int_cpp", (DL_FUNC) &_MSEtool_Ref_int_cpp, 12},
     {"_MSEtool_PopulateNumberNext_", (DL_FUNC) &_MSEtool_PopulateNumberNext_, 3},
     {"_MSEtool_SolveForFishingMortality", (DL_FUNC) &_MSEtool_SolveForFishingMortality, 10},
-    {"_MSEtool_calcVatAge", (DL_FUNC) &_MSEtool_calcVatAge, 7},
-    {"_MSEtool_CalcFisheryDynamics_", (DL_FUNC) &_MSEtool_CalcFisheryDynamics_, 7},
+    {"_MSEtool_CalcFisheryDynamics_", (DL_FUNC) &_MSEtool_CalcFisheryDynamics_, 9},
     {"_MSEtool_combine", (DL_FUNC) &_MSEtool_combine, 1},
     {"_MSEtool_get_freq", (DL_FUNC) &_MSEtool_get_freq, 4},
     {"_MSEtool_get_freq2", (DL_FUNC) &_MSEtool_get_freq2, 3},

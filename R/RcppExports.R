@@ -29,10 +29,6 @@ CalcRecruitment_ <- function(SProduction, R0, SP0, RecDev, SRRModel, SRRPars, TS
     .Call(`_MSEtool_CalcRecruitment_`, SProduction, R0, SP0, RecDev, SRRModel, SRRPars, TSindex)
 }
 
-CalcSpawnProduction_ <- function(NumberAtAgeArea, FecundityAtAge, MaturityAtAge, WeightAtAge, NaturalMortalityAtAge, FDeadAtAgeArea, SpawnTimeFrac = 0, debug = 0L) {
-    .Call(`_MSEtool_CalcSpawnProduction_`, NumberAtAgeArea, FecundityAtAge, MaturityAtAge, WeightAtAge, NaturalMortalityAtAge, FDeadAtAgeArea, SpawnTimeFrac, debug)
-}
-
 CalcStockMovement_ <- function(NumberAtAgeArea, Movement, nAge, nArea, TSindex) {
     .Call(`_MSEtool_CalcStockMovement_`, NumberAtAgeArea, Movement, nAge, nArea, TSindex)
 }
@@ -81,12 +77,8 @@ SolveForFishingMortality <- function(NumberAtAge, TotalRemovalsFleet, Selectivit
     .Call(`_MSEtool_SolveForFishingMortality`, NumberAtAge, TotalRemovalsFleet, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, FleetWeightAtAge, NaturalMortalityAtAge, MaxIt, tolF, debug)
 }
 
-calcVatAge <- function(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid) {
-    .Call(`_MSEtool_calcVatAge`, len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid)
-}
-
-CalcFisheryDynamics_ <- function(HistIn, Years, nSim, nStock, nFleet, nArea, debug = 0L) {
-    .Call(`_MSEtool_CalcFisheryDynamics_`, HistIn, Years, nSim, nStock, nFleet, nArea, debug)
+CalcFisheryDynamics_ <- function(HistIn, Years, AllYears, nSim, nStock, nFleet, nArea, debug = 0L, CalcCatch = 1L) {
+    .Call(`_MSEtool_CalcFisheryDynamics_`, HistIn, Years, AllYears, nSim, nStock, nFleet, nArea, debug, CalcCatch)
 }
 
 combine <- function(list) {

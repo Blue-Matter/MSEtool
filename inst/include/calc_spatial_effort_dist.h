@@ -16,33 +16,28 @@
  * Calculate spatial effort distribution across areas
  */
 inline void CalcSpatialDistribution(
-  const int y,                              // time-step index
-  
-  Array4D& EffortDist,          // updated for year y: sim, year, fleet, area
-  
-  std::vector<Array4D>& Num,    // nStock vector: sim, age, year, area
-  
-  const std::vector<ConstArrayView4D>& Wgt,   
-  const std::vector<ConstArrayView5D>& Sel,
-  const std::vector<ConstArrayView5D>& Ret,
-  
-  const  ConstArrayView4D& q,                          // Catchability array: sim, stock, year, fleet
-  const  ConstArrayView5D& Closure,                    // Area closed (0) or open (1) array: sim, stock, year, fleet, area
-  const  ConstArrayView3D& Targeting,                   // Spatial Targeting: sim, year, fleet
-  const  Array3D& Effort,                     // Total Effort: sim, year, fleet
+  const int y,                            
+  Array4D& Distribution,         
+  const std::vector<Array4D>& Number,    
+  const std::vector<ConstArrayView4D>& WeightFleet,   
+  const std::vector<ConstArrayView5D>& SelAge,
+  const std::vector<ConstArrayView5D>& RetAge,
+  const  ConstArrayView4D& q,                         
+  const  ConstArrayView5D& Closure,                    
+  const  ConstArrayView3D& Targeting,                
+  const  Array3D& Effort,                  
   const  ConstArrayView2D& RelSize,
-  
   const int nStock,
   const int nFleet,
   const int nArea) {                   
   
   // Calculate nSim - maximum number of simulations 
   const int nSim = infer_nSim(
-    EffortDist,
-    Num,
-    Wgt,
-    Sel,
-    Ret,
+    Distribution,
+    Number,
+    WeightFleet,
+    SelAge,
+    RetAge,
     Effort,
     q,
     RelSize
@@ -53,7 +48,7 @@ inline void CalcSpatialDistribution(
   if (nArea == 1) {
     for (int sim = 0; sim < nSim; ++sim)
       for (int fl = 0; fl < nFleet; ++fl)
-        EffortDist(sim, y, fl, 0) = 1.0;
+        Distribution(sim, y, fl, 0) = 1.0;
     return;
   }
   
@@ -65,10 +60,10 @@ inline void CalcSpatialDistribution(
   for (int st = 0; st < nStock; ++st) { 
     Array3D B_hat(dim, 0.0);
     
-    const Array4D& Num_st = Num[st];
-    const ConstArrayView4D& Wgt_st = Wgt[st];
-    const ConstArrayView5D& Sel_st = Sel[st];
-    const ConstArrayView5D& Ret_st = Ret[st];
+    const Array4D& Num_st = Number[st];
+    const ConstArrayView4D& Wgt_st = WeightFleet[st];
+    const ConstArrayView5D& Sel_st = SelAge[st];
+    const ConstArrayView5D& Ret_st = RetAge[st];
      
     const int nAge = Num_st.dim[1];
 
@@ -163,8 +158,8 @@ inline void CalcSpatialDistribution(
       if (total > 0.0) {
         const double inv_total = 1.0 / total;
         for (int ar = 0; ar < nArea; ++ar) {
-          if (EffortDist(sim, y, fl, ar) <= 1E-6) {
-            EffortDist(sim, y, fl, ar) = UtilTheta[ar] * inv_total;  
+          if (Distribution(sim, y, fl, ar) <= 1E-6) {
+            Distribution(sim, y, fl, ar) = UtilTheta[ar] * inv_total;  
           }
           
         }

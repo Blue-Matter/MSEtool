@@ -9,34 +9,29 @@
 #include "array_types.h"
 #include "helpers.h"
 
-
 inline void CalcArea_F(
-    const int y,                              // time-step index
-    
-    std::vector<Array5D>& FDeadArea,    // nStock vector: sim, age, year, fleet, area
-    std::vector<Array5D>& FRetainArea,  // nStock vector: sim, age, year, fleet, area
-    const std::vector<ConstArrayView5D>& Sel,
-    const std::vector<ConstArrayView5D>& Ret,
-    const std::vector<ConstArrayView5D>& DiscM,
-  
-    Array4D& EffortDist,                       // Prob Spatial Effort: sim, year, fleet, area
-    const ConstArrayView4D& q,                         // Catchability array: sim, stock, year, fleet
-    const Array3D& Effort,                    // Total Effort: sim, year, fleet
-    const ConstArrayView2D& RelSize,                   // Relative Area Size; sim, area
-    
+    const int y,                              
+    std::vector<Array5D>& FDeadArea,  
+    std::vector<Array5D>& FRetainArea,  
+    const std::vector<ConstArrayView5D>& SelAge,
+    const std::vector<ConstArrayView5D>& RetAge,
+    const std::vector<ConstArrayView5D>& DiscMort,
+    const Array4D& Distribution,                       
+    const ConstArrayView4D& q,                      
+    const Array3D& Effort,                    
+    const ConstArrayView2D& RelSize,                   
     const int nStock,
     const int nFleet,
-    const int nArea) {         
+    const int nArea) {        
     
-
   // Calculate nSim - maximum number of simulations 
   const int nSim = infer_nSim(
     FDeadArea,
     FRetainArea,
-    Sel,
-    Ret,
-    DiscM,
-    EffortDist,
+    SelAge,
+    RetAge,
+    DiscMort,
+    Distribution,
     Effort,
     q,
     RelSize
@@ -47,9 +42,9 @@ inline void CalcArea_F(
     for (int st = 0; st < nStock; ++st) {
       auto& Fd  = FDeadArea[st];
       auto& Fr  = FRetainArea[st];
-      const auto& S  = Sel[st];
-      const auto& R  = Ret[st];
-      const auto& DM = DiscM[st];
+      const auto& S  = SelAge[st];
+      const auto& R  = RetAge[st];
+      const auto& DM = DiscMort[st];
       
       const int nAge = Fd.dim[1];
       
@@ -76,9 +71,9 @@ inline void CalcArea_F(
       
       auto& Fd  = FDeadArea[st];
       auto& Fr  = FRetainArea[st];
-      const auto& S  = Sel[st];
-      const auto& R  = Ret[st];
-      const auto& DM = DiscM[st];
+      const auto& S  = SelAge[st];
+      const auto& R  = RetAge[st];
+      const auto& DM = DiscMort[st];
     
       const int nAge = Fd.dim[1];
     
@@ -112,7 +107,7 @@ inline void CalcArea_F(
       for (int ar = 0; ar < nArea; ++ar) {
         const double rs = RelSize(sim, ar);
         EffortDensity(sim, ar) =
-          (rs > 0.0) ? E * EffortDist(sim, y, 0, ar) / rs : 0.0;
+          (rs > 0.0) ? E * Distribution(sim, y, 0, ar) / rs : 0.0;
       } 
     }
     
@@ -120,9 +115,9 @@ inline void CalcArea_F(
        
       auto& Fd  = FDeadArea[st];
       auto& Fr  = FRetainArea[st];
-      const auto& S  = Sel[st];
-      const auto& R  = Ret[st];
-      const auto& DM = DiscM[st];
+      const auto& S  = SelAge[st];
+      const auto& R  = RetAge[st];
+      const auto& DM = DiscMort[st];
        
       const int nAge = Fd.dim[1];
        
@@ -158,7 +153,7 @@ inline void CalcArea_F(
       for (int ar = 0; ar < nArea; ++ar) {
         const double rs = RelSize(sim, ar);
         EffortDensity(sim, fl, ar) =
-          (rs > 0.0) ? E * EffortDist(sim, y, fl, ar) / rs : 0.0;
+          (rs > 0.0) ? E * Distribution(sim, y, fl, ar) / rs : 0.0;
       }
     } 
   }
@@ -167,9 +162,9 @@ inline void CalcArea_F(
      
     auto& Fd  = FDeadArea[st];
     auto& Fr  = FRetainArea[st];
-    const auto& S  = Sel[st];
-    const auto& R  = Ret[st];
-    const auto& DM = DiscM[st];
+    const auto& S  = SelAge[st];
+    const auto& R  = RetAge[st];
+    const auto& DM = DiscMort[st];
      
     const int nAge = Fd.dim[1];
      

@@ -112,15 +112,23 @@ PrepHistMisc <- function(Hist) {
   Hist@Misc <- list()
   Hist@Misc$SAVE <- saveMisc
 
+  # ---- 2D Array ----
 
-  # Stock Length Lists
   
-  ## ---- Stock -----
+  # ---- Stock -----
   
-  # 2D Array: Sim, Year
+  ## ---- Vector ----
+  
+  Hist@Misc$SPFrom <- purrr::map(Hist@OM@Stock, \(stock) {
+    stock@SRR@SPFrom
+  }) |> unlist() |> array(dim=nStock(Hist), dimnames = list(Stock=StockNames(Hist)))
+  
+  ## ---- 2D Array ----
+  
+  # Sim, Year
   Hist@Misc$RelSize <- Hist@OM@Stock[[1]]@Spatial@RelativeSize
   
-  # 2D Array: Sim, Stock
+  # Sim Stock
   Hist@Misc$SpawnTimeFrac <- purrr::map(Hist@OM@Stock, \(stock) {
     array(rep(stock@SRR@SpawnTimeFrac, Hist@OM@nSim)[1:Hist@OM@nSim],
           dim=Hist@OM@nSim, 
@@ -128,88 +136,96 @@ PrepHistMisc <- function(Hist) {
     )
   }) |> List2Array('Stock')
   
+  ## ---- Stock Lists ----
   
-  # 3D Array: Sim, Age, Year
-  Hist@Misc$Fecundity <- purrr::map(Hist@OM@Stock, \(stock) {
-    stock@Fecundity@MeanAtAge
+  # Sim, Age, Year
+  Hist@Misc$LengthList <- purrr::map(Hist@OM@Stock, \(stock) {
+    stock@Length@MeanAtAge
   })
   
-  # 3D Array: Sim, Age, Year
-  Hist@Misc$Maturity <- purrr::map(Hist@OM@Stock, \(stock) {
-    stock@Maturity@MeanAtAge
-  })
-  
-  # 3D Array: Sim, Age, Year
-  Hist@Misc$NaturalMortality <- purrr::map(Hist@OM@Stock, \(stock) {
-    stock@NaturalMortality@MeanAtAge
-  })
-  
-  # 3D Array: Sim, Age, Year
-  Hist@Misc$Weight <- purrr::map(Hist@OM@Stock, \(stock) {
+  # Sim, Age, Year
+  Hist@Misc$WeightList <- purrr::map(Hist@OM@Stock, \(stock) {
     stock@Weight@MeanAtAge
   })
   
-  # 3D Array: Sim, Age, Year
-  Hist@Misc$Semelparous <- purrr::map(Hist@OM@Stock, \(stock) {
+  # Sim, Age, Year
+  Hist@Misc$NaturalMortalityList <- purrr::map(Hist@OM@Stock, \(stock) {
+    stock@NaturalMortality@MeanAtAge
+  })
+  
+  # Sim, Age, Year
+  Hist@Misc$MaturityList <- purrr::map(Hist@OM@Stock, \(stock) {
+    stock@Maturity@MeanAtAge
+  })
+  
+  # Sim, Age, Year
+  Hist@Misc$SemelparousList <- purrr::map(Hist@OM@Stock, \(stock) {
     stock@Maturity@Semelparous
   })
   
-
-  
-  
-
-  
-  
-  ## ---- Fleet ----
-  
-
-  Hist@Misc$WeightFleetList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
-    purrr::map(FleetList, \(fleet) {
-      fleet@WeightFleet
-    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet
+  #  Sim, Age, Year
+  Hist@Misc$FecundityList <- purrr::map(Hist@OM@Stock, \(stock) {
+    stock@Fecundity@MeanAtAge
   })
-
-
-  Hist@Misc$SelList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
-    purrr::map(FleetList, \(fleet) {
-      fleet@Selectivity@MeanAtAge
-    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet, Area
-  })
-
-  Hist@Misc$RetList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
-    purrr::map(FleetList, \(fleet) {
-      fleet@Retention@MeanAtAge
-    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet, Area
-  })
-
-  Hist@Misc$DiscMortList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
-    purrr::map(FleetList, \(fleet) {
-      fleet@DiscardMortality@MeanAtAge
-    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet, Area
-  })
-
-
-  # 5D Array: Sim, Stock, Year, Fleet, Area
-  Hist@Misc$Closure <- purrr::map(Hist@OM@Fleet, \(FleetList) {
-    purrr::map(FleetList, \(fleet) {
-      fleet@Closure
-    }) |> List2Array(pos = 3) # Sim, Year, Fleet, Area
-  }) |> List2Array(pos = 2, "Stock") # Sim, Stock, Year, Fleet, Area
-
-
+  
+  # ---- Fleet ----
+  
   # 4D Array: Sim, Stock, Year, Fleet
   Hist@Misc$Catchability <- purrr::map(Hist@OM@Fleet, \(FleetList) {
     purrr::map(FleetList, \(fleet) {
       fleet@Catchability@Efficiency
     }) |> List2Array(pos = 3) # Sim, Year, Fleet
   }) |> List2Array(pos = 2, "Stock") # Sim, Stock, Year, Fleet
-
-
+  
+  # 5D Array: Sim, Stock, Year, Fleet, Area
+  Hist@Misc$Closure <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      fleet@Closure
+    }) |> List2Array(pos = 3) # Sim, Year, Fleet, Area
+  }) |> List2Array(pos = 2, "Stock") # Sim, Stock, Year, Fleet, Area
+  
   # 3D Array: Sim, Year, Fleet
   Hist@Misc$Targeting <- purrr::map(Hist@OM@Fleet[[1]], \(fleet) {
     fleet@Effort@Targeting
   }) |> List2Array(pos = 3) # Sim, Year, Fleet
+  
 
+  ##  ---- Lists - length nStock ---- 
+  Hist@Misc$WeightFleetList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      fleet@WeightFleet
+    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet
+  })
+
+  Hist@Misc$SelAgeList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      fleet@Selectivity@MeanAtAge
+    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet, Area
+  })
+  
+  Hist@Misc$SelSizeList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      fleet@Selectivity@MeanAtLength
+    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet, Area
+  })
+  
+  Hist@Misc$RetAgeList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      fleet@Retention@MeanAtAge
+    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet, Area
+  })
+  
+  Hist@Misc$"RetSizeList" <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      fleet@Retention@MeanAtLength
+    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet, Area
+  })
+  
+  Hist@Misc$DiscMortList <- purrr::map(Hist@OM@Fleet, \(FleetList) {
+    purrr::map(FleetList, \(fleet) {
+      fleet@DiscardMortality@MeanAtAge
+    }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet, Area
+  })
 
 
 

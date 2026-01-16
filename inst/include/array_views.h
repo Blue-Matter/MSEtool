@@ -227,6 +227,7 @@ using ArrayView3D = ArrayViewND<3>;
 using ArrayView4D = ArrayViewND<4>;
 using ArrayView5D = ArrayViewND<5>;
 
+using ConstArrayView1D = ConstArrayViewND<1>;
 using ConstArrayView2D = ConstArrayViewND<2>;
 using ConstArrayView3D = ConstArrayViewND<3>;
 using ConstArrayView4D = ConstArrayViewND<4>;

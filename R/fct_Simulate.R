@@ -59,6 +59,7 @@ Simulate_om <- function(OM = NULL,
   
   
   HistYears <- Years(OM, "H")
+  AllYears <- Years(OM)
   nSim <- OM@nSim
   nStock <- nStock(OM)
   nFleet <- nFleet(OM)
@@ -68,12 +69,15 @@ Simulate_om <- function(OM = NULL,
   tictoc::tic()
   HistOUT <- CalcFisheryDynamics_(Hist,
     Years = HistYears,
+    AllYears,
     nSim,
     nStock,
     nFleet,
     nArea
   )
-  tictoc::toc()  # 0.4  - 0.9 
+  tictoc::toc()  
+  
+  HistOUT@SProduction[,,1]
   
   return(HistOUT)
 
