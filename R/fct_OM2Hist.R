@@ -116,34 +116,48 @@ PrepHistMisc <- function(Hist) {
   # Stock Length Lists
   
   ## ---- Stock -----
+  
+  # 2D Array: Sim, Year
+  Hist@Misc$RelSize <- Hist@OM@Stock[[1]]@Spatial@RelativeSize
+  
+  # 2D Array: Sim, Stock
+  Hist@Misc$SpawnTimeFrac <- purrr::map(Hist@OM@Stock, \(stock) {
+    array(rep(stock@SRR@SpawnTimeFrac, Hist@OM@nSim)[1:Hist@OM@nSim],
+          dim=Hist@OM@nSim, 
+          dimnames = list(Sim=1:Hist@OM@nSim)
+    )
+  }) |> List2Array('Stock')
+  
+  
+  # 3D Array: Sim, Age, Year
   Hist@Misc$Fecundity <- purrr::map(Hist@OM@Stock, \(stock) {
     stock@Fecundity@MeanAtAge
   })
   
+  # 3D Array: Sim, Age, Year
   Hist@Misc$Maturity <- purrr::map(Hist@OM@Stock, \(stock) {
     stock@Maturity@MeanAtAge
   })
   
+  # 3D Array: Sim, Age, Year
   Hist@Misc$NaturalMortality <- purrr::map(Hist@OM@Stock, \(stock) {
     stock@NaturalMortality@MeanAtAge
   })
   
+  # 3D Array: Sim, Age, Year
   Hist@Misc$Weight <- purrr::map(Hist@OM@Stock, \(stock) {
     stock@Weight@MeanAtAge
   })
   
+  # 3D Array: Sim, Age, Year
   Hist@Misc$Semelparous <- purrr::map(Hist@OM@Stock, \(stock) {
     stock@Maturity@Semelparous
   })
   
-  Hist@Misc$SpawnTimeFrac <- purrr::map(Hist@OM@Stock, \(stock) {
-    stock@SRR@SpawnTimeFrac
-  })
+
   
   
-  
-  # 2D Array: Sim, Year
-  Hist@Misc$RelSize <- Hist@OM@Stock[[1]]@Spatial@RelativeSize
+
   
   
   ## ---- Fleet ----
