@@ -17,7 +17,7 @@
 template <size_t N>
 struct ArrayND {
   
-  static_assert(N >= 2, "ArrayND requires N >= 2");
+  static_assert(N >= 1, "ArrayND requires N >= 1");
   
   std::array<int, N> dim; 
   Rcpp::NumericVector x;
@@ -195,7 +195,130 @@ struct ArrayND {
     }
     return out;
   }
+  
+  void set_slice(int sim, const ArrayND<N-1>& src);
 };
+
+
+// set sim slice
+template <size_t N>
+inline void ArrayND<N>::set_slice(
+    int sim,
+    const ArrayND<N-1>& src
+) {
+  static_assert(N >= 2, "set_slice requires N >= 2");
+  
+  if (sim < 0 || sim >= dim[0]) {
+    Rcpp::stop("set_slice: sim index out of bounds");
+  }
+  
+  // Check dimensions
+  for (size_t d = 1; d < N; ++d) {
+    if (dim[d] != src.dim[d - 1]) {
+      Rcpp::stop("set_slice: dimension mismatch at dim %d (target=%d, src=%d)",
+                 d, dim[d], src.dim[d - 1]);
+    }
+  } 
+  std::array<int, N> idx_big{};
+  std::array<int, N-1> idx_small{};
+  idx_big[0] = sim;
+   
+  for (int flat = 0; flat < src.size(); ++flat) {
+     
+    // unravel flat index in src
+    int tmp = flat;
+    for (size_t d = 0; d < N-1; ++d) {
+      idx_small[d] = tmp % src.dim[d];
+      tmp /= src.dim[d];
+      idx_big[d + 1] = idx_small[d];
+    }
+     
+    (*this)(idx_big) = src.x[flat];
+  } 
+} 
+
+inline void set_slice_age(
+    ArrayND<4>& target,   // [sim, age, year, area]
+    int sim,
+    const ArrayND<3>& src // [age, year, area]
+) {
+  if (sim < 0 || sim >= target.dim[0]) {
+    Rcpp::stop("set_slice_age: sim index out of bounds");
+  }
+  
+  // semantic checks
+  if (target.dim[1] != src.dim[0]) {
+    Rcpp::stop("set_slice_age: age mismatch (target=%d, src=%d)",
+               target.dim[1], src.dim[0]);
+  }
+  
+  if (target.dim[2] != src.dim[1]) {
+    Rcpp::stop("set_slice_age: year mismatch");
+  }
+  
+  if (target.dim[3] != src.dim[2]) {
+    Rcpp::stop("set_slice_age: area mismatch");
+  }
+  std::array<int,4> I4{};
+  std::array<int,3> I3{};
+  I4[0] = sim;
+
+  for (int a = 0; a < src.dim[0]; ++a) {
+    I4[1] = a; I3[0] = a;
+    for (int y = 0; y < src.dim[1]; ++y) {
+      I4[2] = y; I3[1] = y;
+      for (int ar = 0; ar < src.dim[2]; ++ar) {
+        I4[3] = ar; I3[2] = ar;
+        target(I4) = src(I3);
+      }
+    }
+  }
+} 
+
+inline void set_slice_age_fleet(
+    ArrayND<5>& target,   // [sim, age, year, fleet, area]
+    int sim,
+    const ArrayND<4>& src // [age, year, fleet, area]
+) {
+  if (sim < 0 || sim >= target.dim[0])
+    Rcpp::stop("set_slice_age_fleet: sim out of bounds");
+  
+  if (target.dim[1] != src.dim[0]) Rcpp::stop("age mismatch");
+  if (target.dim[2] != src.dim[1]) Rcpp::stop("year mismatch");
+  if (target.dim[3] != src.dim[2]) Rcpp::stop("fleet mismatch");
+  if (target.dim[4] != src.dim[3]) Rcpp::stop("area mismatch");
+   
+  for (int a = 0; a < src.dim[0]; ++a)
+    for (int y = 0; y < src.dim[1]; ++y)
+      for (int f = 0; f < src.dim[2]; ++f)
+        for (int ar = 0; ar < src.dim[3]; ++ar)
+          target(sim, a, y, f, ar) = src(a, y, f, ar);
+} 
+
+
+inline void set_slice_length(
+    ArrayND<4>& target,   // [sim, length, year, area]
+    int sim,
+    const ArrayND<3>& src // [length, year, area]
+) {
+  if (sim < 0 || sim >= target.dim[0])
+    Rcpp::stop("set_slice_length: sim out of bounds");
+  
+  if (target.dim[1] != src.dim[0])
+    Rcpp::stop("set_slice_length: length mismatch (target=%d, src=%d)",
+               target.dim[1], src.dim[0]);
+  
+  if (target.dim[2] != src.dim[1])
+    Rcpp::stop("set_slice_length: year mismatch");
+  if (target.dim[3] != src.dim[2])
+    Rcpp::stop("set_slice_length: area mismatch");
+
+  for (int l = 0; l < src.dim[0]; ++l)
+    for (int y = 0; y < src.dim[1]; ++y)
+      for (int a = 0; a < src.dim[2]; ++a)
+        target(sim, l, y, a) = src(l, y, a);
+} 
+
 
 #endif // MSEtool_ARRAY_ND_H
  

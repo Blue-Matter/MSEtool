@@ -86,8 +86,20 @@ ArrayExtend <- function(array1, array2) {
   } else {
     Years <- NULL
   }
-  array1 <- Extend(array1, nSim, AgeClasses, Years)
-  array2 <- Extend(array2, nSim, AgeClasses, Years)
+  
+  # Extend Areas 
+  area_ind <- which(dname1 == "Area")
+  if (length(area_ind)) {
+    area_ind_2 <- which(dname1 == "Area")
+    Areas <- c(dnames$dname1[[area_ind]], dnames$dname2[[area_ind]]) |>
+      unique() |>
+      as.numeric()
+  } else {
+    Areas <- NULL
+  }
+  
+  array1 <- Extend(array1, nSim, AgeClasses, Years, Areas)
+  array2 <- Extend(array2, nSim, AgeClasses, Years, Areas)
 
   list(
     array1 = array1,

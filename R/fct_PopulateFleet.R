@@ -70,7 +70,7 @@ PopulateFleet <- function(Fleet,
     nSim,
     Years,
     nArea,
-    CalcAtLength = FALSE,
+    CalcAtLength = TRUE,
     seed,
     silent = silent
   )
@@ -84,7 +84,7 @@ PopulateFleet <- function(Fleet,
     nSim,
     Years,
     nArea,
-    CalcAtLength = FALSE,
+    CalcAtLength = TRUE,
     seed,
     silent = silent,
     force=force
@@ -97,7 +97,7 @@ PopulateFleet <- function(Fleet,
     nSim,
     Years,
     nArea,
-    CalcAtLength = FALSE,
+    CalcAtLength = TRUE,
     seed = seed,
     silent
   )
@@ -453,6 +453,16 @@ PopulateRetention <- function(Retention,
       Year=Years[1],
       Area=1
     )
+    
+    Retention@Classes <- Length@Classes
+    Retention@MeanAtLength <- array(1, dim = c(1, length(Retention@Classes), 1, 1)) 
+    dimnames(Retention@MeanAtLength) <- list(
+      Sim=1,
+      Class=Retention@Classes,
+      Year=Years[1],
+      Area=1
+    )
+    
     return(SetDigest(Retention, argList))
   }
 
@@ -564,8 +574,18 @@ PopulateDiscardMortality <- function(DiscardMortality,
 
   # Default - no discard mortality
   if (EmptyObject(DiscardMortality)) {
-    DiscardMortality@MeanAtAge <- array(1, dim = c(1, length(Ages@Classes), 1, 1)) |>
+    DiscardMortality@MeanAtAge <- array(0, dim = c(1, length(Ages@Classes), 1, 1)) |>
       SetDimNames_SAYR(Age = Ages@Classes, Years = Years)
+    
+    DiscardMortality@Classes <- Length@Classes
+    DiscardMortality@MeanAtLength <- array(0, 
+                                           dim = c(1, length(DiscardMortality@Classes), 1, 1)) 
+    dimnames(DiscardMortality@MeanAtLength) <- list(
+      Sim=1,
+      Class=DiscardMortality@Classes,
+      Year=Years[1],
+      Area=1
+    )
     return(SetDigest(DiscardMortality, argList))
   }
 

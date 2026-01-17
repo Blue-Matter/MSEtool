@@ -10,6 +10,7 @@
 template <size_t N>
 struct ArrayND;
 
+using Array1D = ArrayND<1>;
 using Array2D = ArrayND<2>;
 using Array3D = ArrayND<3>;
 using Array4D = ArrayND<4>;
@@ -238,6 +239,8 @@ template <size_t N>
 struct ArrayViewND {
   double* x;                       
   std::array<int, N> dim;
+  
+  ArrayViewND() : x(nullptr) { dim.fill(0); }
    
   ArrayViewND(double* ptr,
               const std::array<int, N>& dim_)
@@ -254,9 +257,25 @@ struct ArrayViewND {
     return x[flat];
   }
    
-  // Variadic indexing
   template <typename... Args>
   inline double& operator()(Args... args) {
+    static_assert(sizeof...(Args) == N, "Invalid number of indices");
+    std::array<int, N> idx{ static_cast<int>(args)... };
+    return (*this)(idx);
+  }
+  
+  inline double operator()(const std::array<int, N>& idx) const {
+    int flat = 0;
+    int stride = 1;
+    for (size_t d = 0; d < N; ++d) {
+      flat += idx[d] * stride;
+      stride *= dim[d];
+    }
+    return x[flat];
+  }
+  
+  template <typename... Args>
+  inline double operator()(Args... args) const {
     static_assert(sizeof...(Args) == N, "Invalid number of indices");
     std::array<int, N> idx{ static_cast<int>(args)... };
     return (*this)(idx);
@@ -268,6 +287,12 @@ struct ConstArrayViewND {
   
   const double* x;
   std::array<int, N> dim;
+  
+  // default constructor (null view)
+  ConstArrayViewND()
+    : x(nullptr)   {
+    dim.fill(0);
+  }
   
   ConstArrayViewND(const double* ptr,
                    const std::array<int, N>& dim_)
@@ -334,5 +359,144 @@ as_ConstArrayViewND(const Rcpp::NumericVector& x) {
   return ConstArrayViewND<N>(REAL(x), dim);
 }
 
+
+// Slice sim dimension 
+template <size_t N>
+inline ArrayND<N-1>
+slice_sim(const ArrayND<N>& x, int sim) {
+  static_assert(N >= 2, "slice_sim requires N >= 2");
+  
+  if (sim < 0 || sim >= x.dim[0]) {
+    Rcpp::stop("slice_sim: sim index out of bounds");
+  }
+   
+  // output dimensions: drop dim[0]
+  std::array<int, N-1> dim_out;
+  for (size_t d = 1; d < N; ++d) {
+    dim_out[d - 1] = x.dim[d];
+  }
+   
+  ArrayND<N-1> out(dim_out);
+   
+  // copy
+  std::array<int, N> idx_in{};
+  std::array<int, N-1> idx_out{};
+   
+  idx_in[0] = sim;
+   
+  for (int flat = 0; flat < out.size(); ++flat) {
+     
+    // unravel flat index in out
+    int tmp = flat;
+    for (size_t d = 0; d < N-1; ++d) {
+      idx_out[d] = tmp % dim_out[d];
+      tmp /= dim_out[d];
+      idx_in[d + 1] = idx_out[d];
+    }
+     
+    out.x[flat] = x(idx_in);
+  }
+   
+  return out;
+}
+
+template <size_t N>
+inline ArrayViewND<N-1>
+slice_sim_view(ArrayViewND<N>& x, int sim) {
+  static_assert(N >= 2, "slice_sim_view requires N >= 2");
+  
+  if (sim < 0 || sim >= x.dim[0]) {
+    Rcpp::stop("slice_sim_view: sim index out of bounds");
+  }
+   
+  // output dimensions (drop sim)
+  std::array<int, N-1> dim_out;
+  for (size_t d = 1; d < N; ++d) {
+    dim_out[d - 1] = x.dim[d];
+  }
+   
+  // column-major: sim is stride-1
+  double* ptr = x.x + sim;
+   
+  return ArrayViewND<N-1>(ptr, dim_out);
+} 
+
+
+template <size_t N>
+inline ArrayND<N-1>
+slice_sim_broadcast(const ArrayND<N>& x, int simin) {
+  static_assert(N >= 2, "slice_sim requires N >= 2");
+  
+  const int sim = (x.dim[0] == 1 ? 0 : simin < x.dim[0] ? simin : -1);
+  
+  // output dimensions: drop dim[0]
+  std::array<int, N-1> dim_out;
+  for (size_t d = 1; d < N; ++d) {
+    dim_out[d - 1] = x.dim[d];
+  }
+   
+  ArrayND<N-1> out(dim_out);
+   
+  // copy
+  std::array<int, N> idx_in{};
+  std::array<int, N-1> idx_out{};
+   
+  idx_in[0] = sim;
+  
+  for (int flat = 0; flat < out.size(); ++flat) {
+    
+    // unravel flat index in out
+    int tmp = flat;
+    for (size_t d = 0; d < N-1; ++d) {
+      idx_out[d] = tmp % dim_out[d];
+      tmp /= dim_out[d];
+      idx_in[d + 1] = idx_out[d];
+    }
+     
+    out.x[flat] = x(idx_in);
+  }
+   
+  return out;
+} 
+
+template <size_t N>
+inline ConstArrayViewND<N-1>
+slice_sim_view_broadcast(const ConstArrayViewND<N>& x, int simin) {
+  static_assert(N >= 2, "slice_sim_view_broadcast requires N >= 2");
+  
+  // broadcast sim dimension if needed
+  const int sim =
+    (x.dim[0] == 1 ? 0 :
+       (simin >= 0 && simin < x.dim[0] ? simin : -1));
+   
+  if (sim < 0) {
+    Rcpp::stop("slice_sim_view_broadcast: sim index out of bounds");
+  }
+   
+  // output dimensions (drop sim)
+  std::array<int, N-1> dim_out;
+  for (size_t d = 1; d < N; ++d) {
+    dim_out[d - 1] = x.dim[d];
+  }
+   
+  // column-major offset: sim index is stride-1
+  const double* ptr = x.x + sim;
+   
+  return ConstArrayViewND<N-1>(ptr, dim_out);
+} 
+
+inline ArrayND<3> copy_from_view(const ArrayViewND<3>& v) {
+  ArrayND<3> out(v.dim);
+  for (int i = 0; i < v.dim[0]; ++i)
+    for (int j = 0; j < v.dim[1]; ++j)
+      for (int k = 0; k < v.dim[2]; ++k)
+        out(i, j, k) = v(i, j, k);
+  return out;
+}
+
+
 #endif
+
+
+
 

@@ -100,103 +100,103 @@ GetMisc_ConstArrayView(Rcpp::S4& obj, const char* name)
 
 
 
+// 
+// // StockList Views
+// inline ArrayView3D
+// view_StockList3D(Rcpp::List& StockList, int st) {
+//   Rcpp::NumericVector x = StockList[st];
+//   return as_ArrayViewND<3>(x);
+// }
+// 
+// inline ConstArrayView3D
+// view_StockList3D(const Rcpp::List& StockList, int st) {
+//   Rcpp::NumericVector x = StockList[st];
+//   return as_ConstArrayViewND<3>(x);
+// }
+// 
+// inline ArrayView4D
+// view_StockList4D(Rcpp::List& StockList, int st) {
+//   Rcpp::NumericVector x = StockList[st];
+//   return as_ArrayViewND<4>(x);
+// }
+// 
+// inline ConstArrayView4D
+// view_StockList4D(const Rcpp::List& StockList, int st) {
+//   Rcpp::NumericVector x = StockList[st];
+//   return as_ConstArrayViewND<4>(x);
+// }
+// 
+// inline ArrayView5D
+// view_StockList5D(Rcpp::List& StockList, int st) {
+//   Rcpp::NumericVector x = StockList[st];
+//   return as_ArrayViewND<5>(x);
+// }
+// 
+// 
+// inline ConstArrayView5D
+// view_StockList5D(const Rcpp::List& StockList, int st) {
+//   Rcpp::NumericVector x = StockList[st];
+//   return as_ConstArrayViewND<5>(x);
+// }
 
-// StockList Views
-inline ArrayView3D
-view_StockList3D(Rcpp::List& StockList, int st) {
-  Rcpp::NumericVector x = StockList[st];
-  return as_ArrayViewND<3>(x);
-}
-
-inline ConstArrayView3D
-view_StockList3D(const Rcpp::List& StockList, int st) {
-  Rcpp::NumericVector x = StockList[st];
-  return as_ConstArrayViewND<3>(x);
-}
-
-inline ArrayView4D
-view_StockList4D(Rcpp::List& StockList, int st) {
-  Rcpp::NumericVector x = StockList[st];
-  return as_ArrayViewND<4>(x);
-}
-
-inline ConstArrayView4D
-view_StockList4D(const Rcpp::List& StockList, int st) {
-  Rcpp::NumericVector x = StockList[st];
-  return as_ConstArrayViewND<4>(x);
-}
-
-inline ArrayView5D
-view_StockList5D(Rcpp::List& StockList, int st) {
-  Rcpp::NumericVector x = StockList[st];
-  return as_ArrayViewND<5>(x);
-}
-
-
-inline ConstArrayView5D
-view_StockList5D(const Rcpp::List& StockList, int st) {
-  Rcpp::NumericVector x = StockList[st];
-  return as_ConstArrayViewND<5>(x);
-}
-
-
-// Calculate nSim for generic set of lists or arrays
-inline void update_nSim(int& nSim, int candidate) {
-  if (candidate > nSim) nSim = candidate;
-}
-
-template <size_t N>
-inline void infer_nSim_from(int& nSim, const ArrayND<N>& x) {
-  update_nSim(nSim, x.dim[0]);
-}
-
-inline void infer_nSim_from(int& nSim, const Rcpp::List& L) {
-  for (int i = 0; i < L.size(); ++i) {
-    if (Rcpp::is<Rcpp::NumericVector>(L[i])) {
-      Rcpp::NumericVector arr = L[i];
-      if (!arr.hasAttribute("dim")) continue;
-      Rcpp::IntegerVector dim = arr.attr("dim");
-      if (dim.size() >= 1) {
-        update_nSim(nSim, dim[0]);
-      }
-    } 
-  }
-}
-
-template <typename... Args>
-inline int infer_nSim(const Args&... args) {
-  int nSim = 0;
-  (infer_nSim_from(nSim, args), ...);
-  if (nSim == 0)
-    Rcpp::stop("infer_nSim(): could not infer nSim from inputs");
-  return nSim;
-}
-
-template <size_t N>
-inline void infer_nSim_from(int& nSim, const ArrayViewND<N>& x) {
-  update_nSim(nSim, x.dim[0]);
-}
-
-template <size_t N>
-inline void infer_nSim_from(int& nSim, const ConstArrayViewND<N>& x) {
-  update_nSim(nSim, x.dim[0]);
-}
-
-template <size_t N>
-inline void infer_nSim_from(int& nSim,
-                            const std::vector<ArrayND<N>>& v) {
-  for (const auto& x : v) {
-    update_nSim(nSim, x.dim[0]);
-  }
-}
-
-template <size_t N>
-inline void infer_nSim_from(int& nSim,
-                            const std::vector<ConstArrayViewND<N>>& v) {
-  for (const auto& x : v) {
-    update_nSim(nSim, x.dim[0]);
-  }
-}
+// 
+// // Calculate nSim for generic set of lists or arrays
+// inline void update_nSim(int& nSim, int candidate) {
+//   if (candidate > nSim) nSim = candidate;
+// }
+// 
+// template <size_t N>
+// inline void infer_nSim_from(int& nSim, const ArrayND<N>& x) {
+//   update_nSim(nSim, x.dim[0]);
+// }
+// 
+// inline void infer_nSim_from(int& nSim, const Rcpp::List& L) {
+//   for (int i = 0; i < L.size(); ++i) {
+//     if (Rcpp::is<Rcpp::NumericVector>(L[i])) {
+//       Rcpp::NumericVector arr = L[i];
+//       if (!arr.hasAttribute("dim")) continue;
+//       Rcpp::IntegerVector dim = arr.attr("dim");
+//       if (dim.size() >= 1) {
+//         update_nSim(nSim, dim[0]);
+//       }
+//     } 
+//   }
+// }
+// 
+// template <typename... Args>
+// inline int infer_nSim(const Args&... args) {
+//   int nSim = 0;
+//   (infer_nSim_from(nSim, args), ...);
+//   if (nSim == 0)
+//     Rcpp::stop("infer_nSim(): could not infer nSim from inputs");
+//   return nSim;
+// }
+// 
+// template <size_t N>
+// inline void infer_nSim_from(int& nSim, const ArrayViewND<N>& x) {
+//   update_nSim(nSim, x.dim[0]);
+// }
+// 
+// template <size_t N>
+// inline void infer_nSim_from(int& nSim, const ConstArrayViewND<N>& x) {
+//   update_nSim(nSim, x.dim[0]);
+// }
+// 
+// template <size_t N>
+// inline void infer_nSim_from(int& nSim,
+//                             const std::vector<ArrayND<N>>& v) {
+//   for (const auto& x : v) {
+//     update_nSim(nSim, x.dim[0]);
+//   }
+// }
+// 
+// template <size_t N>
+// inline void infer_nSim_from(int& nSim,
+//                             const std::vector<ConstArrayViewND<N>>& v) {
+//   for (const auto& x : v) {
+//     update_nSim(nSim, x.dim[0]);
+//   }
+// }
 
 
 

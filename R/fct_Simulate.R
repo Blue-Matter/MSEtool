@@ -77,6 +77,11 @@ Simulate_om <- function(OM = NULL,
   )
   tictoc::toc()  
   
+  HistOUT@Distribution |> range()
+  
+  # change from asArrayND to asConstArrayND in extract_ and fishery_sim_state
+  
+  Hist@Misc$SPFrom |> dim()
   HistOUT@SProduction[,,1]
   
   return(HistOUT)

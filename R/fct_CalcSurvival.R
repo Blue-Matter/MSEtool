@@ -82,7 +82,7 @@ CalcSurvival <- function(NaturalMortality,
   }
   
   if (PlusGroup) {
-    Survival[, nAge, ] <- survival[, nAge, ] / (1 - exp(-Z[, nAge, ]))
+    Survival[, nAge, ] <- Survival[, nAge, ] / (1 - exp(-Z[, nAge, ]))
   }
   if (!bySim) {
     Survival <- DropDimension(Survival, 'Sim')

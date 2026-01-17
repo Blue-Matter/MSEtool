@@ -239,8 +239,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // CalcFisheryDynamics_
-Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn, Rcpp::NumericVector Years, Rcpp::NumericVector AllYears, int nSim, const int nStock, const int nFleet, const int nArea, const int debug, const int CalcCatch);
-RcppExport SEXP _MSEtool_CalcFisheryDynamics_(SEXP HistInSEXP, SEXP YearsSEXP, SEXP AllYearsSEXP, SEXP nSimSEXP, SEXP nStockSEXP, SEXP nFleetSEXP, SEXP nAreaSEXP, SEXP debugSEXP, SEXP CalcCatchSEXP) {
+Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn, Rcpp::NumericVector Years, Rcpp::NumericVector AllYears, int nSim, const int nStock, const int nFleet, const int nArea, const int CalcCatch);
+RcppExport SEXP _MSEtool_CalcFisheryDynamics_(SEXP HistInSEXP, SEXP YearsSEXP, SEXP AllYearsSEXP, SEXP nSimSEXP, SEXP nStockSEXP, SEXP nFleetSEXP, SEXP nAreaSEXP, SEXP CalcCatchSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -251,9 +251,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type nStock(nStockSEXP);
     Rcpp::traits::input_parameter< const int >::type nFleet(nFleetSEXP);
     Rcpp::traits::input_parameter< const int >::type nArea(nAreaSEXP);
-    Rcpp::traits::input_parameter< const int >::type debug(debugSEXP);
     Rcpp::traits::input_parameter< const int >::type CalcCatch(CalcCatchSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcFisheryDynamics_(HistIn, Years, AllYears, nSim, nStock, nFleet, nArea, debug, CalcCatch));
+    rcpp_result_gen = Rcpp::wrap(CalcFisheryDynamics_(HistIn, Years, AllYears, nSim, nStock, nFleet, nArea, CalcCatch));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -476,7 +475,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_Ref_int_cpp", (DL_FUNC) &_MSEtool_Ref_int_cpp, 12},
     {"_MSEtool_PopulateNumberNext_", (DL_FUNC) &_MSEtool_PopulateNumberNext_, 3},
     {"_MSEtool_SolveForFishingMortality", (DL_FUNC) &_MSEtool_SolveForFishingMortality, 10},
-    {"_MSEtool_CalcFisheryDynamics_", (DL_FUNC) &_MSEtool_CalcFisheryDynamics_, 9},
+    {"_MSEtool_CalcFisheryDynamics_", (DL_FUNC) &_MSEtool_CalcFisheryDynamics_, 8},
     {"_MSEtool_combine", (DL_FUNC) &_MSEtool_combine, 1},
     {"_MSEtool_get_freq", (DL_FUNC) &_MSEtool_get_freq, 4},
     {"_MSEtool_get_freq2", (DL_FUNC) &_MSEtool_get_freq2, 3},
