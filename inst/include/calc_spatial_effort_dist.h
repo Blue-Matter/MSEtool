@@ -42,8 +42,6 @@ inline void CalcSpatialEffortDistribution(
   // Utility: fleet × area
   Array2D Util({nFleet, nArea}, 0.0);
 
-
-
   // Loop over stocks
   for (int st = 0; st < nStock; ++st) {
     Array2D B_hat({nFleet, nArea}, 0.0);
@@ -138,14 +136,13 @@ inline void CalcSpatialEffortDistribution(
       const double inv_total = 1.0 / total;
       for (int ar = 0; ar < nArea; ++ar) {
         if (Distribution(y, fl, ar) <= 1E-6) {
+          Distribution(y, fl, ar) = 0.0;
           Distribution(y, fl, ar) = UtilTheta[ar] * inv_total;
         }
 
       }
     }
   }
-
-
 }
 
 #endif // CALC_SPATIAL_DISTRIBUTION_H

@@ -5,6 +5,8 @@
 #include "fishery_sim_state.h"
 #include "helpers.h"
 
+
+
 // extract a single sim state from Hist
 inline FisherySimState extract_sim_state(
     Rcpp::S4& Hist,
@@ -65,31 +67,29 @@ inline FisherySimState extract_sim_state(
     // --- size comps ---
     Rcpp::List Lsz = LandSizeList[st_i];
     Rcpp::List Dsz = DiscSizeList[st_i];
-     
+
     if (Lsz.size() != nFleet || Dsz.size() != nFleet) {
       Rcpp::stop("Size comps: wrong fleet dim (stock %d)", st_i + 1);
-    } 
+    }
+
+    if (Lsz.size() != nFleet)
+      Rcpp::stop("LandingsAtSize: wrong fleet dim (stock %d)", st_i + 1);
     
-    std::vector<ArrayND<3>> Lsz_f, Dsz_f;
+    if (Dsz.size() != nFleet)
+      Rcpp::stop("DiscardsAtSize: wrong fleet dim (stock %d)", st_i + 1);
+    
+    std::vector<ArrayND<3>> Lsz_f;
+    std::vector<ArrayND<3>> Dsz_f;
     Lsz_f.reserve(nFleet);
     Dsz_f.reserve(nFleet);
     
     for (int fl = 0; fl < nFleet; ++fl) {
-      Rcpp::NumericVector Lsz_fl = Lsz[fl];
-      Rcpp::NumericVector Dsz_fl = Dsz[fl];
-      
-      auto L = as_ArrayND<4>(Lsz_fl);   // sim, length, year, area
-      ArrayND<3> Ltmp = slice_sim(L, sim);  
-      Lsz_f.emplace_back(std::move(Ltmp));
-      
-      auto D = as_ArrayND<4>(Dsz_fl);
-      ArrayND<3> Dtmp = slice_sim(D, sim);  
-      Dsz_f.emplace_back(std::move(Dtmp));
- 
+      Lsz_f.emplace_back(slice_sim(as_ArrayND<4>(Lsz[fl]), sim));
+      Dsz_f.emplace_back(slice_sim(as_ArrayND<4>(Dsz[fl]), sim));
     }
     
-    st.LandingsAtSize.emplace_back(std::move(Lsz_f));
-    st.DiscardsAtSize.emplace_back(std::move(Dsz_f));
+    st.LandingsAtSize[st_i] = std::move(Lsz_f);
+    st.DiscardsAtSize[st_i] = std::move(Dsz_f);
   } 
   
   // -------------------------
@@ -150,5 +150,7 @@ inline FisherySimState extract_sim_state(
    
   return st;
 }
+
+
  
 #endif

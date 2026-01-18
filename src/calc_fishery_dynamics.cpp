@@ -60,23 +60,24 @@ Rcpp::S4 CalcFisheryDynamics_(
       // -------------------------------------------------
       // Spatial effort distribution
       // -------------------------------------------------
-      CalcSpatialEffortDistribution(
-        y,
-        st.Distribution,
-        st.Number,
-        st.WeightFleet,
-        st.SelAge,
-        st.RetAge,
-        st.q,
-        st.Closure,
-        st.Targeting,
-        st.Effort,
-        st.RelSize,
-        nStock,
-        nFleet,
-        nArea
-      );
-      // 
+      
+      // CalcSpatialEffortDistribution(
+      //   y,
+      //   st.Distribution,
+      //   st.Number,
+      //   st.WeightFleet,
+      //   st.SelAge,
+      //   st.RetAge,
+      //   st.q,
+      //   st.Closure,
+      //   st.Targeting,
+      //   st.Effort,
+      //   st.RelSize,
+      //   nStock,
+      //   nFleet,
+      //   nArea
+      // );
+
       // -------------------------------------------------
       // Spawning biomass & production
       // -------------------------------------------------

@@ -11,3 +11,5 @@ Hist <- Simulate_om(OM)
 OM <- Populate(OM)
 OM@Fleet$`Example Stock`$`Example Fleet`@Retention@MeanAtLength
 ExtendAreas
+
+# test for SelLength is NULL

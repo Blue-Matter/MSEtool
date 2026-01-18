@@ -164,23 +164,20 @@ struct ArrayND {
   
 
   // Slice helpers
+  
   // Fix dimension K at index `fixed`
   template <size_t K>
   ArrayND<N - 1> slice(int fixed) const {
     static_assert(K < N, "Invalid slice dimension");
-     
+    
     std::array<int, N - 1> newdim;
-     
     for (size_t i = 0, j = 0; i < N; ++i) {
-      if (i != K) {
-        newdim[j++] = dim[i];
-      } 
+      if (i != K) newdim[j++] = dim[i];
     }
     
     ArrayND<N - 1> out(newdim);
-     
+
     std::array<int, N> ind{};
-     
     for (int flat = 0; flat < out.size(); ++flat) {
       int tmp = flat;
       for (size_t i = 0; i < N; ++i) {
@@ -191,8 +188,12 @@ struct ArrayND {
           tmp /= dim[i];
         }
       }
-      out.x[flat] = x[idx(ind)];
+      const int off = idx(ind);
+      if (off < 0 || off >= x.size())
+        Rcpp::stop("slice<K>: idx out of bounds");
+      out.x[flat] = x[off];
     }
+    
     return out;
   }
   

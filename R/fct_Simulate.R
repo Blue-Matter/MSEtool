@@ -34,6 +34,7 @@ Simulate_om <- function(OM = NULL,
                         GenerateData = TRUE,
                         Reduce = TRUE,
                         ...) {
+  
   # ---- Initial Checks and Setup ----
   OnExit()
 
@@ -56,8 +57,6 @@ Simulate_om <- function(OM = NULL,
   Hist <- CalcDynamicInitial(Hist)
   
   
-  
-  
   HistYears <- Years(OM, "H")
   AllYears <- Years(OM)
   nSim <- OM@nSim
@@ -65,7 +64,8 @@ Simulate_om <- function(OM = NULL,
   nFleet <- nFleet(OM)
   nArea <- nArea(OM)
   
-
+  Hist@Distribution |> range()
+  
   tictoc::tic()
   HistOUT <- CalcFisheryDynamics_(Hist,
     Years = HistYears,
@@ -77,13 +77,10 @@ Simulate_om <- function(OM = NULL,
   )
   tictoc::toc()  
   
+  # update C++ for NULL in at-length stuff ! and test 
   HistOUT@Distribution |> range()
-  
-  # change from asArrayND to asConstArrayND in extract_ and fishery_sim_state
-  
-  Hist@Misc$SPFrom |> dim()
-  HistOUT@SProduction[,,1]
-  
+
+
   return(HistOUT)
 
 
