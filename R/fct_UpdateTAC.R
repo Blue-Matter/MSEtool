@@ -49,7 +49,7 @@ UpdateTAC <- function(ProjSim, MPAdviceList, MPAdviceList_Previous, Year, YearsA
                                             FleetWeightAtAge,
                                             NaturalMortalityAtAge)
         
-        
+
         FInteract <- t(SolvedF$ApicalFInteract)
         apicalFDead <- apply(SolvedF$FDeadAtAge, 1, sum) |> max()
         

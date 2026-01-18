@@ -120,8 +120,13 @@ SaveMPAdvice <- function(ProjSim, MPAdviceList, Year) {
 
 
 MPErrorLog <- function(MPAdvice, Year=NULL) {
-  if (inherits(MPAdvice, 'advice')) 
+  if (inherits(MPAdvice, 'advice')) {
     return(NULL)
+  }
+  
+  if (!inherits(MPAdvice, 'try-error')) {
+    cli::cli_abort("MP did not return an `Advice()` object")
+  }
   
   if (is.null(Year))  {
     stop(MPAdvice)

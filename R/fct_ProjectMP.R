@@ -39,29 +39,40 @@ ProjectMP <- function(SimList, MSE, MP, mp=1, YearsHist, YearsProj) {
 ProjectMP_Sim <- function(ProjSim, MP,YearsHist,YearsProj, ManagementYears) {
   # for debugging
  Year <- YearsProj[1]; ts =1;
-  
-  for (ts in seq_along(YearsProj)) {
-    Year <- YearsProj[ts]
-    
-    # Generate Data up to Year - 1 - Data Lag done in ApplyMPAdvice
-    ProjSim <- GenerateProjectionData(ProjSim, Year, YearsHist, YearsProj)
-
-    ProjSim <- ApplyMPAdvice(ProjSim, 
-                             MP, 
-                             Year, 
-                             YearsHist,
-                             YearsProj,
-                             ManagementYears)
-    
-
-    #  Simulate Pop Dynamics for this Time Step
-    ProjSim <- SimulateDynamics_(ProjSim,Year)
-    
-    if (!is.na(YearsProj[ts+1])) {
-      # calc recruits before fishing mortality 
-      # - updated again after fishing mortality for SpawnTimeFrac > 0
-      ProjSim <- SimulateDynamics_(ProjSim,YearsProj[ts+1], CalcCatch = 0)
-    }
+ 
+ for (ts in seq_along(YearsProj)) {
+   # tictoc::tic(paste("Time Step", ts))
+   Year <- YearsProj[ts]
+   
+   # Generate Data up to Year - 1 - Data Lag done in ApplyMPAdvice
+   # tictoc::tic("Generate Data")
+   ProjSim <- GenerateProjectionData(ProjSim, Year, YearsHist, YearsProj)
+   # tictoc::toc()
+   
+   # tictoc::tic("Apply MP Advice")
+   ProjSim <- ApplyMPAdvice(ProjSim, 
+                            MP, 
+                            Year, 
+                            YearsHist,
+                            YearsProj,
+                            ManagementYears)
+   # tictoc::toc()
+   
+   #  Simulate Pop Dynamics for this Time Step
+   # tictoc::tic("Simulate")
+   ProjSim <- SimulateDynamics_(ProjSim,Year)
+   ProjSim@Landings[1,148, ]
+   ProjSim@Landings[1,149, ] 
+   ProjSim@LandingsAtAge$Dolphinfish[['2023']] |> sum()
+   
+   # tictoc::toc()
+   
+   if (!is.na(YearsProj[ts+1])) {
+     # calc recruits before fishing mortality 
+     # - updated again after fishing mortality for SpawnTimeFrac > 0
+     ProjSim <- SimulateDynamics_(ProjSim, YearsProj[ts+1], CalcCatch = 0)
+   }
+   # tictoc::toc()
   } 
  
   ProjSim
