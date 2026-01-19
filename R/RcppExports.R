@@ -77,8 +77,8 @@ SolveForFishingMortality <- function(NumberAtAge, TotalRemovalsFleet, Selectivit
     .Call(`_MSEtool_SolveForFishingMortality`, NumberAtAge, TotalRemovalsFleet, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, FleetWeightAtAge, NaturalMortalityAtAge, MaxIt, tolF, debug)
 }
 
-CalcFisheryDynamics_ <- function(HistIn, Years, AllYears, nSim, nStock, nFleet, nArea, CalcCatch = 1L) {
-    .Call(`_MSEtool_CalcFisheryDynamics_`, HistIn, Years, AllYears, nSim, nStock, nFleet, nArea, CalcCatch)
+CalcFisheryDynamics_ <- function(HistIn, Years, AllYears, nSim, nStock, nFleet, nArea, debug = 0L, CalcCatch = 1L) {
+    .Call(`_MSEtool_CalcFisheryDynamics_`, HistIn, Years, AllYears, nSim, nStock, nFleet, nArea, debug, CalcCatch)
 }
 
 combine <- function(list) {

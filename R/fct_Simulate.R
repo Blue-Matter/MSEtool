@@ -66,6 +66,7 @@ Simulate_om <- function(OM = NULL,
   
   Hist@Distribution |> range()
   
+  
   tictoc::tic()
   HistOUT <- CalcFisheryDynamics_(Hist,
     Years = HistYears,
@@ -76,11 +77,21 @@ Simulate_om <- function(OM = NULL,
     nArea
   )
   tictoc::toc()  
+  HistOUT@SBiomass |> range(na.rm=TRUE)
+  
+  
+  HistOUT@SBiomass |> range(na.rm=TRUE)
+  Hist@SBiomass |> range(na.rm=TRUE)
+  
   
   # update C++ for NULL in at-length stuff ! and test 
   HistOUT@Distribution |> range()
+  Hist@Distribution |> range()
+  
+  HistOUT@FDeadArea$Female |> dim()
+  
 
-
+  
   return(HistOUT)
 
 
