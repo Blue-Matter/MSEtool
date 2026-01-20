@@ -53,4 +53,65 @@ Slot2Array5D(Rcpp::S4& obj, const char* slot) {
 }
 
 
+
+
+// Calculate nSim for generic set of lists or arrays
+inline void update_nSim(int& nSim, int candidate) {
+  if (candidate > nSim) nSim = candidate;
+}
+
+template <size_t N>
+inline void infer_nSim_from(int& nSim, const ArrayND<N>& x) {
+  update_nSim(nSim, x.dim[0]);
+}
+
+inline void infer_nSim_from(int& nSim, const Rcpp::List& L) {
+  for (int i = 0; i < L.size(); ++i) {
+    if (Rcpp::is<Rcpp::NumericVector>(L[i])) {
+      Rcpp::NumericVector arr = L[i];
+      if (!arr.hasAttribute("dim")) continue;
+      Rcpp::IntegerVector dim = arr.attr("dim");
+      if (dim.size() >= 1) {
+        update_nSim(nSim, dim[0]);
+      }
+    } 
+  }
+}
+
+template <typename... Args>
+inline int infer_nSim(const Args&... args) {
+  int nSim = 0;
+  (infer_nSim_from(nSim, args), ...);
+  if (nSim == 0)
+    Rcpp::stop("infer_nSim(): could not infer nSim from inputs");
+  return nSim;
+}
+
+template <size_t N>
+inline void infer_nSim_from(int& nSim, const ArrayViewND<N>& x) {
+  update_nSim(nSim, x.dim[0]);
+}
+
+template <size_t N>
+inline void infer_nSim_from(int& nSim, const ConstArrayViewND<N>& x) {
+  update_nSim(nSim, x.dim[0]);
+}
+
+template <size_t N>
+inline void infer_nSim_from(int& nSim,
+                            const std::vector<ArrayND<N>>& v) {
+  for (const auto& x : v) {
+    update_nSim(nSim, x.dim[0]);
+  }
+}
+
+template <size_t N>
+inline void infer_nSim_from(int& nSim,
+                            const std::vector<ConstArrayViewND<N>>& v) {
+  for (const auto& x : v) {
+    update_nSim(nSim, x.dim[0]);
+  }
+}
+
+
 #endif // HELPERS_H

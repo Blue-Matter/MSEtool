@@ -204,6 +204,33 @@ PrepHistMisc <- function(Hist) {
   })
   CheckDims(Hist@Misc$FecundityList, 3, 'FecundityList')
   
+  ## ---- SRR ----
+  
+  # Calculate recruitment lag 
+  Hist@Misc$SRR_RecLag <- purrr::map(Hist@OM@Stock, \(stock) {
+    MinAge <- min(stock@Ages@Classes)
+    which(seq(0, to=max(stock@Ages@Classes), by=1/stock@Seasons) == MinAge) - 1
+  }) |> unlist()
+  
+  if (length(Hist@Misc$SRR_RecLag) != nStock) {
+    cli::cli_abort("`Hist@Misc$SRR_RecLag` should be length `nStock`", .internal=TRUE)
+  }
+
+  
+  
+
+  
+  Hist@Misc$SRR_Pars <- purrr::map(Hist@OM@Stock, \(stock) stock@SRR@Pars)
+ 
+  stock@SRR@Model
+  
+  Hist@Misc$SRR_Pars$Female$h
+  
+  
+  stock <- Hist@OM@Stock$Female
+  stock@SRR@Pars$h 
+  
+  
   # ---- Fleet ----
   
   # 4D Array: Sim, Stock, Year, Fleet

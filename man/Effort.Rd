@@ -30,9 +30,9 @@ Effort(x) <- value
 
 \item{Misc}{List of miscellaneous objects.}
 
-\item{x}{A \code{\link[=Fleet]{Fleet()}} class object}
+\item{x}{A \code{\link[=Fleet]{Fleet()}} object.}
 
-\item{value}{A \code{Effort} object to assign to \code{x}}
+\item{value}{An \code{\link[=Effort]{Effort()}} object to assign.}
 }
 \description{
 The \code{\link[=Effort]{Effort()}} class stores historical fishing effort and
@@ -41,11 +41,13 @@ directly as an array or generated stochastically from a data frame.
 }
 \details{
 Effort represents total fishing activity prior to spatial allocation.
+
 When \code{Distribution} is supplied, effort is partitioned explicitly
 across areas. Otherwise, spatial allocation is derived internally
 using spatial utility, targeting strength, and fleet behavior.
-\subsection{Stochastic Effort}{
-}
+
+If \code{Effort} is a correctly structured \code{data.frame}, it will be used by
+\code{\link[=GenerateHistoricalEffort]{GenerateHistoricalEffort()}} to produce stochastic historical fishing effort.
 }
 \section{Class slots}{
 
@@ -71,6 +73,8 @@ Numeric array or scalar controlling spatial targeting behavior.
 Higher values imply stronger concentration of effort in high-utility areas.
 Values are commonly around 0.8–1.0. If left empty, a default value of 0.8
 is assumed.
+If \code{Targeting} is a numeric vector length 2, \code{nSim} values will be sampled
+from a uniform distribution with bounds \code{range(Targeting)}.
 }
 \item{\code{Maximum}}{
 Numeric array giving the maximum possible fishing effort by simulation

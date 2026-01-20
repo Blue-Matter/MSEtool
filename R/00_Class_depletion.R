@@ -1,82 +1,86 @@
 
-## Depletion ----
-
-#' Depletion Object
-#' 
-#' @include 00_Class_unions.R
-#' @include 00_Class_child.R
+#' Depletion Class and Constructor
 #'
-#' The `Depletion` function is used to create S4 class `depletion` objects or to access or
-#' assign `depletion` objects to [Stock()] class objects
+#' The `Depletion` class defines the depletion state of a stock at the beginning
+#' and end of the historical period.
+#'
+#'
+#' @param x
+#' * For `Depletion()`: missing, numeric, or a [Stock()] object.
+#' * For `Depletion<-`: a [Stock()] object.
+#'
+#' @param Initial Numeric vector or array specifying depletion at the first
+#'   historical time step, expressed relative to `Reference`.
+#'
+#' @param Final Numeric vector or array specifying depletion at the final
+#'   historical time step, expressed relative to `Reference`.
+#'
+#' @param Reference Reference biomass used to calculate depletion. A
+#'  character string (`"B0"` or `"BMSY"`) 
+#'
+#' @param value A `Depletion` object to assign to a [Stock()] object.
 #'
 #' @details
-#' ## About the `depletion` Class
-#' `depletion` is an S4 class used in [Stock()] class objects. It describes the
-#' `Initial` depletion (at beginning of historical period) and the `Final` depletion
-#' (at the end of the historical period).
+#' 
+#' The `Depletion` generic is used to:
+#' * construct new `Depletion` objects;
+#' * access `Depletion` from a [Stock()] object;
+#' * assign a `Depletion` object to a [Stock()] object.
 #'
-#' Depletion is defined as stock biomass divided by the unfished biomass; i.e.,
-#' the lower the depletion value the lower the stock's biomass is related to it's
-#' unfished level.
+#' Depletion is defined as stock biomass divided by a reference biomass.
+#' Lower values indicate a more depleted stock relative to its reference state.
 #'
-#' ### `Initial`
+#' ## Initial depletion
 #'
-#' The stock at the beginning of the historical period is assumed to be in an
-#' unfished state unless `Initial` is populated.
+#' If `Initial` is not supplied, the stock is assumed to be unfished at the
+#' beginning of the historical period.
 #'
-#' When `Initial` is populated, an optimization routine adjusts the mean
-#' recruitment deviations for the initial age classes such that the biomass relative
-#' to `Reference` in the first time step is equal to `Initial`.
+#' When `Initial` is provided, model initialization adjusts early recruitment
+#' deviations so that biomass relative to `Reference` in the first time step
+#' matches the specified value.
 #'
-#' ### `Final`
+#' ## Final depletion
 #'
-#' `Final` is used to specify the depletion level in the last historical time step.
+#' `Final` specifies the depletion level in the last historical time step and is
+#' typically used as a constraint or tuning target during model fitting.
 #'
-#' ### `Reference`
+#' ## Reference biomass
 #'
-#' `Reference` describes the reference point used to calculate depletion.
+#' `Reference` defines the biomass used to scale depletion:
 #'
-#' It can be a character string of either `B0` (default) or `BMSY`,
-#' where `B0` is the equilibrium unfished biomass and `BMSY` the equilibrium
-#' biomass corresponding the maximum sustainable yield.
+#' * `"B0"`: equilibrium unfished biomass (default);
+#' * `"BMSY"`: equilibrium biomass at maximum sustainable yield;
 #'
-#' How are `B0` and `BMSY` calculated? Good question. That hasn't been documented
-#' yet. Bug us to update the documentation!
+#' @return
+#' * `Depletion()`: returns an empty `Depletion` object.
+#' * `Depletion(x)`: returns the `Depletion` object from a [Stock()] object.
+#' * `Depletion(x) <- value`: returns the modified [Stock()] object.
 #'
-#' It can also be a numeric matrix with dimensions `(nSim, 2)` where the first
-#' column is the absolute value for `Initial` and the second column the absolute
-#' value for `Final`. Like all objects, the number of rows can be `nSim` if `Initial`
-#' or `Final` vary over simulations, or otherwise a value of `1`.
-#'
-#' ## Creating New Objects
-#' `r Creating_New_Objects('depletion')`
-#'
-#' ## Accessing and Assigning Slots
-#' `r Accessing_Assigning_Slots('depletion')`
-#'
-#' @slot Initial A numeric of length `nSim` or length 1 specifying the biomass
-#'  relative to `Reference` in the first historical time step. See `Details`.
-#' @slot Final A numeric of length `nSim` or length 1 specifying the biomass
-#'  relative to `Reference` in the last historical time step.  See `Details`.
-#' @slot Reference The reference point used to calculate Depletion.  See `Details`.
-#' @slot Misc `r Misc_param()`
-#'
-#' @seealso `r See_Also('depletion')`
+#' @seealso [Stock()]
 #'
 #' @name Depletion
 #' @rdname Depletion
-#' @docType class
-#' @example man-examples/Depletion-class.R
 #'
-#' @export
+#' @examples
+#' Depletion()
+#'
+#' Depletion(Initial = 0.8, Final = 0.3)
+#'
+#' @include 00_Class_unions.R
+#' @include 00_Class_child.R
+NULL
+
 setClass('depletion',
-         slots=c(Initial='num.array',
-                 Final='num.array',
-                 Reference='array.char.null'),
-         contains = c('MiscClass')
+         slots=c(Initial='num.array.null',
+                 Final='num.array.null',
+                 Reference='array.char.null',
+                 Misc='list')
 )
 
-setValidity('depletion', isValidObject)
+setValidity('depletion', function(object) {
+  # TODO 
+  TRUE
+})
 
 setMethod("initialize", "depletion", function(.Object,
                                               Initial=numeric(),
@@ -85,41 +89,8 @@ setMethod("initialize", "depletion", function(.Object,
   .Object@Initial <- Initial
   .Object@Final <- Final
   .Object@Reference <- Reference
-  #   .Object@Created <- Sys.time()
   .Object
 })
-
-
-#' @describeIn Depletion Create a new `Depletion` object
-#' @param Initial A numeric of length `nSim` or length 1 specifying the biomass
-#'  relative to `Reference` in the first historical time step. See `Details`.
-#' @param Final A numeric of length `nSim` or length 1 specifying the biomass
-#'  relative to `Reference` in the last historical time step.  See `Details`.
-#' @param Reference The reference point used to calculate Depletion.  See `Details`.
-#' @export
-Depletion <- function(Initial=numeric(),
-                      Final=numeric(),
-                      Reference='B0') {
-  
-  if (methods::is(Initial, 'stock'))
-    return(Initial@Depletion)
-  
-  .Object <- methods::new('depletion',
-                          Initial=Initial,
-                          Final=Final,
-                          Reference=Reference)
-  
-  validObject(.Object)
-  .Object
-}
-
-#' @describeIn Depletion Assign an `Depletion` object to a [Stock()] object
-#' @param x A [Stock()] class object
-#' @param value An `depletion` class object to assign to `x`
-#' @export
-`Depletion<-` <- function(x, value) {
-  assignSlot(x, value, 'Depletion')
-}
 
 
 

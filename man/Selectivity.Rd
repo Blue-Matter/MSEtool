@@ -37,9 +37,9 @@ Selectivity Object
 \section{Slots}{
 
 \describe{
-\item{\code{Misc}}{A list for additional miscellaneous objects}
+\item{\code{Misc}}{\verb{r Misc_param()}}
 }}
 
 \seealso{
-
+\verb{r See_Also('selectivity')}
 }

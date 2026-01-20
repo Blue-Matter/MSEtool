@@ -108,6 +108,8 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     // src: inst/include/...
     // ---------------------------------------------------------
     
+    // CalcRecruitment(y,
+    //                 )
     
     // ---------------------------------------------------------
     // Calculate Catch (if applicable)

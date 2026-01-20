@@ -21,10 +21,10 @@ setClass("hist",
                  Unfished='unfished',
                  Reference='reference',
                  Data='list.data',
-                 Log='list'
+                 Log='list',
+                 Misc='list'
          ), 
-         contains=c('timeseries',
-                    'MiscClass')
+         contains=c('timeseries')
 )
 
 

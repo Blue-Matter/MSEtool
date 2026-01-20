@@ -11,9 +11,10 @@ setClass("refpointsMSY",
                  SPMSY='array.numeric.null',
                  SPRMSY='array.numeric.null',
                  MSY='array.numeric.null',
-                 MSYLandings='array.numeric.null'
-         ),
-         contains='MiscClass'
+                 MSYLandings='array.numeric.null',
+                 
+                 Misc='list'
+         )
 )
 
 

@@ -14,12 +14,15 @@ setClass("catchability",
   slots = c(
     Efficiency = "num.array",
     qCV = "num.array",
-    qInc = "num.array"
-  ),
-  contains = "MiscClass"
+    qInc = "num.array",
+    Misc = 'list'
+  )
 )
 
-setValidity("catchability", isValidObject)
+
+setValidity('catchability', function(object) {
+  TRUE
+})
 
 
 setMethod("initialize", "catchability", function(.Object,

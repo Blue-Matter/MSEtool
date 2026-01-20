@@ -34,9 +34,9 @@ setClass("indicesdata",
                  Ref='array.null',
                  RefCV='array.null',
                  Timing='numeric',
-                 Selectivity='array.char.num' # fleet number, Biomass, SBiomass, Recruits, age vector
-         ),
-         contains='MiscClass'
+                 Selectivity='array.char.num', 
+                 Misc = 'list'
+         )
 )
 
 # Selectivity
@@ -58,9 +58,9 @@ setClass("compdata",
                  Value='array.null',
                  Classes='num.null',
                  Units='char.null',
-                 Log='list'
-         ),
-         contains='MiscClass'
+                 Log='list', 
+                 Misc = 'list'
+         )
 )
 
 
@@ -77,9 +77,9 @@ setClass("lifehistorydata",
                  Fecundity='fecundity',
                  SRR='srr',
                  Spatial='spatial',
-                 Depletion='depletion'
-         ),
-         contains='MiscClass'
+                 Depletion='depletion', 
+                 Misc = 'list'
+         )
 )
 
 #' Class `exploitationdata`
@@ -89,9 +89,9 @@ setClass("lifehistorydata",
 setClass("exploitationdata",
          slots=c(Selectivity='selectivity',
                  Retention='retention',
-                 DiscardMortality='discardmortality'
-         ),
-         contains='MiscClass'
+                 DiscardMortality='discardmortality', 
+                 Misc = 'list'
+         )
 )
 
 
@@ -99,7 +99,8 @@ setClass("exploitationdata",
 #' @include 00_Class_refpointsMSY.R
 #' @include 00_Class_child.R
 setClass("referencedata",
-         contains=c('refpointsMSY', 'MiscClass')
+         slots=c(Misc='list'),
+         contains=c('refpointsMSY')
 )
 
 
@@ -108,8 +109,8 @@ setClass("referencedata",
 #' @include 00_Class_child.R
 setClass("advicedata",
          slots=c(TAC='num.array',
-               Effort='num.array'),
-         contains=c('MiscClass')
+               Effort='num.array', 
+               Misc = 'list')
 )
 
 
@@ -169,9 +170,9 @@ setClass('data',
                  CAA='compdata',
                  CAL='compdata',
                  Advice='advicedata',
-                 Log='list'
-         ),
-         contains ='MiscClass'
+                 Log='list', 
+                 Misc = 'list'
+         )
          )
 
 
@@ -195,7 +196,12 @@ Data <- function(Name=NA, ...) {
 validDataObject <- function(object) {
   TRUE
 }
-setValidity('data', validDataObject)
+
+setValidity('data', function(object) {
+  #TODO
+  TRUE
+})
+
 
 setMethod("initialize", "data", function(.Object) {
   # TODO

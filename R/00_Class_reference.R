@@ -15,7 +15,8 @@ setClass("reference",
                  MGT='array.list.null',
                  BLow='array.list.null',
                  Equilibrium='popdynamics',
-                 Dynamic='popdynamics'
-         ),
-         contains='MiscClass'
+                 Dynamic='popdynamics',
+                 
+                 Misc='list'
+         )
 )

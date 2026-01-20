@@ -334,4 +334,74 @@ as_ConstArrayViewND(const Rcpp::NumericVector& x) {
   return ConstArrayViewND<N>(REAL(x), dim);
 }
 
+
+
+// Non-mutable S4 slot arrays
+template <size_t N>
+inline ConstArrayViewND<N>
+GetMisc_ConstArrayView(Rcpp::S4& obj, const char* name)
+{
+  const Rcpp::List Misc = obj.slot("Misc");
+  
+  if (!Misc.containsElementNamed(name)) {
+    Rcpp::stop("Hist@Misc$%s not found", name);
+  }
+  
+  Rcpp::NumericVector src = Misc[name];
+  
+  if (!src.hasAttribute("dim")) {
+    Rcpp::stop(std::string("Hist@Misc$") + name + " has no dim attribute");
+  }
+  
+  Rcpp::IntegerVector dim = src.attr("dim");
+  if (dim.size() != N) {
+    Rcpp::stop(std::string("Hist@Misc$") + name +
+      " is not a " + std::to_string(N) + "D array");
+  } 
+  
+  return as_ConstArrayViewND<N>(src);
+} 
+
+
+// StockList Views
+inline ArrayView3D
+view_StockList3D(Rcpp::List& StockList, int st) {
+  Rcpp::NumericVector x = StockList[st];
+  return as_ArrayViewND<3>(x);
+}
+
+inline ConstArrayView3D
+view_ConstStockList3D(const Rcpp::List& StockList, int st) {
+  Rcpp::NumericVector x = StockList[st];
+  return as_ConstArrayViewND<3>(x);
+}
+
+
+inline ArrayView4D
+view_StockList4D(Rcpp::List& StockList, int st) {
+  Rcpp::NumericVector x = StockList[st];
+  return as_ArrayViewND<4>(x);
+}
+
+inline ConstArrayView4D
+view_ConstStockList4D(const Rcpp::List& StockList, int st) {
+  Rcpp::NumericVector x = StockList[st];
+  return as_ConstArrayViewND<4>(x);
+}
+
+
+inline ArrayView5D
+view_StockList5D(Rcpp::List& StockList, int st) {
+  Rcpp::NumericVector x = StockList[st];
+  return as_ArrayViewND<5>(x);
+}
+
+inline ConstArrayView5D
+view_ConstStockList5D(const Rcpp::List& StockList, int st) {
+  Rcpp::NumericVector x = StockList[st];
+  return as_ConstArrayViewND<5>(x);
+}
+
+
+
 #endif

@@ -1,101 +1,107 @@
-#' `Ages` Object and Functions
-#' 
-#' An `Ages` object defines the age structure associated with a [Stock()]
-#' object. It specifies the minimum and maximum ages, whether a plus group
-#' is used, and the resulting vector of age classes.
-#' 
-#' Age classes are internally represented as numeric values **in units of
-#' years**, and may be fractional (e.g. seasonal or sub-annual ages; rounded to 3 digits).
+#' Ages Class and Constructor
 #'
-#' ## Creating New Objects
-#' `r Creating_New_Objects('ages')`
+#' The `Ages` class defines the age structure associated with a
+#' [Stock()] object. It specifies the minimum and maximum ages,
+#' whether a plus group is used, and the resulting vector of age classes.
 #'
-#' ## Accessing and Assigning Slots
-#' `r Accessing_Assigning_Slots('ages')`
+#' @param MaxAge Either a numeric value specifying the maximum age (in units
+#'   corresponding to `Units`, or a [Stock()] object, in which case
+#'   the existing `Ages` slot is returned. 
+#' @param MinAge Numeric value specifying the minimum age. Default is `0`.
+#' @param Units Character string specifying the units used to define age
+#'   classes. Must be one of [ValidUnits()].
+#' @param PlusGroup Logical; should the maximum age be treated as a plus group?
+#' @param x A [Stock()] object.
+#' @param value An [Ages()] object to assign.
 #'
-#' @seealso [MaxAge()], [MinAge()]
+#' @details
 #' 
+#' Age classes are internally represented as numeric values in units of **years**. 
+#' Fractional ages (e.g. seasonal or sub-annual ages) are supported and are 
+#' rounded to three decimal places.
+#'
+#' The `Ages` generic is used to:
+#' * construct new `Ages` objects;
+#' * access `Ages` when supplied with a [Stock()] object;
+#' * assign an `Ages` object to to a [Stock()] object.
+#' 
+#' ## Slots
+#'
+#' Objects of class `"ages"` contain the following slots:
+#'
+#' * `MaxAge`: Numeric scalar giving the maximum age. If `PlusGroup == TRUE`,
+#'   this represents the plus group age.
+#' * `MinAge`: Numeric scalar giving the minimum age.
+#' * `Units`: Character string describing the time units used to define
+#'   age classes (e.g. `"year"`).
+#'   
+#' * `PlusGroup`: Logical; indicates whether the maximum age is treated
+#'   as a plus group.
+#' * `Classes`: Numeric vector of age classes expressed in **years**, or
+#'   `NULL` if undefined.
+#'   
+#' @return
+#' * `Ages()`: returns an [Ages] class object
+#' * `Ages(x)`: returns an `Ages` object from [Stock() object `x`
+#' * `Ages<-`: returns the modified [Stock()] object
+#'
+#' @seealso [Classes()], [MaxAge()], [MinAge()], [Stock()]
+#'
 #' @name Ages
+#' @rdname Ages
 #' 
+#' @examples 
+#' Ages(MaxAge=20)
+#' 
+#'
+#' @include 00_Class_unions.R
 NULL
 
-#' @include 00_Class_unions.R
-#' @include 00_Class_child.R
-#' @slot MaxAge Numeric value specifying the maximum age.
-#'   If `PlusGroup = TRUE`, this represents the plus group age.
-#' @slot MinAge Numeric value specifying the minimum age.
-#' @slot Units Character string describing the time units used to define
-#'   age classes (e.g. `"year"`).
-#' @slot PlusGroup Logical; indicates whether the maximum age is treated
-#'   as a plus group.
-#' @slot Classes Numeric vector of age classes expressed in **years**.
-#'   May include fractional values (e.g. `0.25`, `1.5`).
-#' @rdname Ages
+
 setClass('ages',
          slots=c(MaxAge='numeric',
                  MinAge='numeric',
                  Units='character',
-                 PlusGroup='logical'),
-         contains = c('ClassesClass')
+                 PlusGroup='logical',
+                 Classes='num.null')
+         
 )
 
-#' @describeIn Ages Create a new [Ages()] object or access an [Ages()] object from 
-#' a [Stock()] object
-#'
-#' @param MaxAge Either a numeric value specifying the maximum age (in units
-#'   corresponding to `Units`), or a [Stock()] object, in which case the
-#'   existing `Ages` slot is returned.
-#' @param MinAge Numeric value specifying the minimum age. Default is `0`.
-#' @param Units Character string specifying the units used to define age
-#'   classes. Must be one of `ValidUnits()`.
-#' @param PlusGroup Logical; should the maximum age be treated as a plus group?
-#'
-#' @export
-Ages <- function(MaxAge,
-                 MinAge=0,
-                 Units='year',
-                 PlusGroup=TRUE) {
-  if (inherits(MaxAge, 'stock'))
-    return(MaxAge@Ages)
+
+setValidity("ages", function(object) {
   
-  .Object <- methods::new('ages',
-                          MaxAge=MaxAge,
-                          MinAge=MinAge,
-                          Units=Units,
-                          PlusGroup=PlusGroup)
+  if (length(object@MaxAge) != 1 || !is.finite(object@MaxAge))
+    return("MaxAge must be a finite numeric scalar")
   
-  validObject(.Object)
-  .Object
-}
-
-#' @describeIn Ages Assign an [Ages()] object to a [Stock()] object
-#' @param x A [Stock()] object
-#' @param value An [Ages()] object to assign
-#' 
-#' @export
-`Ages<-` <- function(x, value) {
-  assignSlot(x, value, 'Ages')
-}
-
-
-setValidity('ages', isValidObject)
-
-setMethod("initialize", "ages", function(.Object,
-                                         MaxAge=NA_real_,
-                                         MinAge=0,
-                                         Units='year',
-                                         PlusGroup=TRUE) {
-  .Object@MinAge <- MinAge
-  .Object@Units <- Units
-  .Object@PlusGroup <- PlusGroup
-  if (!is.na(MaxAge)) {
-    .Object@MaxAge <- MaxAge
-    .Object@Classes <- CalcAgeClasses(.Object)
+  if (length(object@MinAge) != 1 || !is.finite(object@MinAge))
+    return("MinAge must be a finite numeric scalar")
+  
+  if (object@MinAge < 0)
+    return("MinAge must be non-negative")
+  
+  if (object@MaxAge <= object@MinAge)
+    return("MaxAge must be greater than MinAge")
+  
+  if (length(object@Units) != 1)
+    return("Units must be a single character value")
+  
+  if (!object@Units %in% ValidUnits())
+    return("Units is not a valid time unit")
+  
+  if (length(object@PlusGroup) != 1)
+    return("PlusGroup must be a single logical value")
+  
+  if (!is.null(object@Classes)) {
+    if (!is.numeric(object@Classes))
+      return("Classes must be numeric or NULL")
+    
+    if (any(diff(object@Classes) <= 0))
+      return("Classes must be strictly increasing")
   }
-  .Object
-})
-
-
+  
+  TRUE
+}
+)
 
 CalcAgeClasses <- function(Ages) {
   # always in years 
@@ -105,5 +111,38 @@ CalcAgeClasses <- function(Ages) {
   seq(from=Ages@MinAge/Seasons, by=1/Seasons, to=Ages@MaxAge/Seasons) |>
     round(3)
 }
+
+
+setMethod("initialize", "ages", function(.Object,
+                                         MaxAge = NA_real_,
+                                         MinAge = 0,
+                                         Units = "year",
+                                         PlusGroup = TRUE) {
+  
+  .Object@MinAge    <- MinAge
+  .Object@Units     <- Units
+  .Object@PlusGroup <- PlusGroup
+  
+  if (!is.na(MaxAge)) {
+    .Object@MaxAge  <- MaxAge
+    .Object@Classes <- CalcAgeClasses(.Object)
+  }
+  .Object
+}
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

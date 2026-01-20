@@ -3,8 +3,9 @@ setClass('impslot',
            Mean='num.array.list', 
            SD='num.array.list', 
            Compliance='num.array.list',
-           Error='num.array.list'),
-         contains='MiscClass'
+           Error='num.array.list',
+           Misc='list')
+         
 )
 
 
@@ -19,7 +20,7 @@ setClass('imp',
                  TAC='impslot',
                  Effort='impslot',
                  Size='impslot',
-                 Misc='MiscClass' 
+                 Misc='list' 
          ))
 
 #' @describeIn ImpClass description
@@ -34,10 +35,13 @@ Imp <- function(object=NULL) {
   .Object
 }
 
-validImpObject <- function(object) {
+
+
+setValidity('imp', function(object) {
+  #TODO
   TRUE
-}
-setValidity('imp', validImpObject)
+})
+
 
 setMethod("initialize", "imp", function(.Object) {
   .Object

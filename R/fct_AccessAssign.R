@@ -5,8 +5,6 @@ assignSlot <- function(x, value, slot) {
     return()
   }
   slot(x, slot) <- value
-  if ('Modified' %in% nms)
-    slot(x, 'Modified') <- Sys.time()
   methods::validObject(x)
   x
 }

@@ -1,10 +1,7 @@
 
-# Stock Class ----
-
-#' Stock Object
+#' Stock Class and Constructor
 #' 
 #' @include 00_Class_unions.R
-#' @include 00_Class_child.R
 #' @include 00_Class_ages.R
 #' @include 00_Class_length.R
 #' @include 00_Class_weight.R
@@ -14,228 +11,76 @@
 #' @include 00_Class_srr.R
 #' @include 00_Class_spatial.R
 #' @include 00_Class_depletion.R
-#'
+#' 
+#' The `Stock()` function is used to create, access, or assign `Stock` objects.
+#' A `Stock` object defines the biological and population-dynamics properties
+#' of a tock used in an operating model (see [OM()]).
 #'
 #' @details
-#' ## About the `stock` Class
-#' ...
+#' Objects of class `Stock` aggregate age structure, growth, mortality,
+#' reproduction, recruitment, and optional spatial dynamics into a single object.
+#' 
 #'
-#' ## Creating New Objects
-#' `r Creating_New_Objects('stock')`
+#' A `Stock` object can be accessed from an [OM()] object using `Stock(om)` or
+#' `Stock(om, i)` when multiple stocks are present.
 #'
-#' ## Accessing and Assigning Slots
-#' `r Accessing_Assigning_Slots('stock')`
-#'
-#' @slot Name Character string. Unique name for this stock
-#' @slot CommonName Common name of the stock
-#' @slot Species Scientific name (genus and species)
-#' @slot Ages A [Ages()] object. *Required*.
+#' @slot Name Character string. Unique name for the stock.
+#' @slot CommonName Character string. Common name.
+#' @slot Species Character string. Scientific name.
+#' @slot Ages An [Ages()] object (required).
 #' @slot Length A [Length()] object.
 #' @slot Weight A [Weight()] object.
 #' @slot NaturalMortality A [NaturalMortality()] object.
 #' @slot Maturity A [Maturity()] object.
-#' @slot Fecundity A [Fecundity()] object. Optional.
+#' @slot Fecundity A [Fecundity()] object.
 #' @slot SRR A [SRR()] object.
-#' @slot Spatial A [Spatial()] object. Optional.
-#' @slot Depletion A [Depletion()] object. Optional.
-#' @slot nSim The number of simulations. Numeric. Positive integer `nSim=1` will
-#' produce a deterministic operating model. Can be left empty and will be populated internally.
-#' @slot CurrentTime Numeric value specifying the last historical time step. Must be in `Year`.
-#' @slot Year Numeric vector specifying the years (fraction of years for seasons)
+#' @slot Spatial A [Spatial()] object.
+#' @slot Depletion A [Depletion()] object.
+#' @slot nSim Number of simulations.
+#' @slot CurrentYear Final historical year.
+#' @slot Years Numeric vector of model years.
+#' @slot Misc List. User-defined metadata.
+#' @slot Log List. Internal use.
 #'
-#' @slot Misc `r Misc_param()`
-#' @slot Log A list. Used internally for logging and debugging.
+#' @name Stock
+#' @rdname Stock
+#' 
 #'
-#' @seealso `r See_Also('stock')`
-#'
-#' @name StockClass
-#'
-#' @example man-examples/Stock-class.R
-#' @export
-setClass('stock',
-         slots=c(Name='char.null',
-                 CommonName='char.null',
-                 Species='char.null',
-                 Ages='ages',
-                 Length='length',
-                 Weight='weight',
-                 NaturalMortality='naturalmortality',
-                 Maturity='maturity',
-                 Fecundity='fecundity',
-                 SRR='srr',
-                 Spatial='spatial',
-                 Depletion='depletion',
-                 nYear='num.null',
-                 pYear='num.null',
-                 nSim='num.null',
-                 CurrentYear='num.null',
-                 Years='num.null',
-                 Seasons='num.null',
-                 Misc='list',
-                 Log='list')
+NULL
+
+
+setClass(
+  "stock",
+  slots = c(
+    Name = "char.null",
+    CommonName = "char.null",
+    Species = "char.null",
+    Ages = "ages",
+    Length = "length",
+    Weight = "weight",
+    NaturalMortality = "naturalmortality",
+    Maturity = "maturity",
+    Fecundity = "fecundity",
+    SRR = "srr",
+    Spatial = "spatial",
+    Depletion = "depletion",
+    nYear = "num.null",
+    pYear = "num.null",
+    nSim = "num.null",
+    CurrentYear = "num.null",
+    Years = "num.null",
+    Seasons = "num.null",
+    Misc = "list",
+    Log = "list"
+  )
 )
 
-setMethod("initialize", "stock", function(.Object,
-                                          Name=NULL,
-                                          CommonName=NULL,
-                                          Species=NULL,
-                                          Ages=new('ages'),
-                                          Length=new('length'),
-                                          Weight=new('weight'),
-                                          NaturalMortality=new('naturalmortality'),
-                                          Maturity=new('maturity'),
-                                          Fecundity=new('fecundity'),
-                                          SRR=new('srr'),
-                                          Spatial=new('spatial'),
-                                          Depletion=new('depletion'),
-                                          nYear=20,
-                                          pYear=30,
-                                          nSim=48,
-                                          CurrentYear=as.numeric(format(Sys.Date(), '%Y')),
-                                          Seasons=1,
-                                          Misc=list()) {
-  .Object@Name <- Name
-  .Object@CommonName <- CommonName
-  .Object@Species <- Species
-  .Object@Ages <- Ages
-  .Object@Length <- Length
-  .Object@Weight <- Weight
-  .Object@NaturalMortality <- NaturalMortality
-  .Object@Maturity <- Maturity
-  .Object@Fecundity <- Fecundity
-  .Object@SRR <- SRR
-  .Object@Spatial <- Spatial
-  .Object@Depletion <- Depletion
-  .Object@nYear <- nYear
-  .Object@pYear <- pYear
-  .Object@nSim <- nSim
-  .Object@CurrentYear <- CurrentYear
-  .Object@Seasons <- Seasons
-  .Object@Years <- CalcYears(nYear, pYear, CurrentYear, Seasons)
-  
-  .Object@Misc <- Misc
-  #   .Object@Created <- Sys.time()
-  .Object
+setValidity("stock", function(object) {
+  # TODO 
+  TRUE
 })
 
-setValidity('stock', isValidObject)
 
 
-#' @describeIn StockClass Create a new `stock` class object
-#' @param Name Character string. Unique name for this stock
-#' @param CommonName Common name of the stock
-#' @param Species Scientific name (genus and species)
-#' @param Ages A [Ages()] object. *Required*.
-#' @param Length A [Length()] object.
-#' @param Weight A [Weight()] object.
-#' @param NaturalMortality A [NaturalMortality()] object.
-#' @param Maturity A [Maturity()] object.
-#' @param Fecundity A [Fecundity()] object. Optional.
-#' @param SRR A [SRR()] object.
-#' @param Spatial A [Spatial()] object. Optional.
-#' @param Depletion A [Depletion()] object. Optional.
-#' @param nSim The number of simulations. Numeric. Positive integer `nSim=1` will
-#' produce a deterministic operating model. Can be left empty and will be populated internally.
-#' @param CurrentYear The last historical year of the operating model. Defaults
-#' to the year the Operating Model object is built. Must include `CurrentYear` but can be
-#' in units other than `year`. See `ValidUnits('Ages')`
-#' @param Year Numeric vector of the years
-#'
-#' @param Misc `r Misc_param()`
-#' @export
-Stock <- function(Name=NULL,
-                  CommonName=NULL,
-                  Species=NULL,
-                  Ages=new('ages'),
-                  Length=new('length'),
-                  Weight=new('weight'),
-                  NaturalMortality=new('naturalmortality'),
-                  Maturity=new('maturity'),
-                  Fecundity=new('fecundity'),
-                  SRR=new('srr'),
-                  Spatial=new('spatial'),
-                  Depletion=new('depletion'),
-                  Seasons=1,
-                  Misc=list(),
-                  ...) {
-
-  if (inherits(Name, 'om')) {
-    # return a Stock or StockList object 
-    return(ReturnStockObject(Name, CommonName))
-  }
-  
-  # dots <- list(...)
-  nYear <- 20
-  pYear <- 30
-  nSim <- 48
-  CurrentYear <- as.numeric(format(Sys.Date(), '%Y'))
-  # for (nm in names(dots)) 
-  #   assign(nm, dots[[nm]])
-  
-  methods::new('stock',
-               Name=Name,
-               CommonName=CommonName,
-               Species=Species,
-               Ages=Ages,
-               Length=Length,
-               Weight=Weight,
-               NaturalMortality=NaturalMortality,
-               Maturity=Maturity,
-               Fecundity=Fecundity,
-               SRR=SRR,
-               Spatial=Spatial,
-               Depletion=Depletion,
-               nYear=nYear,
-               pYear=pYear,
-               nSim=nSim,
-               CurrentYear=CurrentYear,
-               Misc=Misc)
-}
 
 
-#' @describeIn StockClass Assign an `stock` class object to a [OM()] object
-#' @param x A [OM()] class object
-#' @param value A [Stock()] object, or a list of [Stock()] objects to assign to `x`
-#' @export
-`Stock<-` <- function(x, value) {
-  CheckClass(x)
-  
-  if (inherits(value, 'stock')) {
-    x@Stock <- MakeNamedList(value@Name, value)
-    class(x@Stock) <- 'StockList'
-    return(x)
-  }
-  
-  if (inherits(value, 'list')) {
-    names <- purrr::map(value, \(stock) {
-      if (!inherits(stock, 'stock'))
-        cli::cli_abort('`value` must be a `Stock` object or a list of `Stock` objects')
-      stock@Name
-    }) |> unlist()
-    x@Stock <- value
-    names(x@Stock) <- names
-    class(x@Stock) <- 'StockList'
-    return(x)
-  }
-  cli::cli_abort('`value` must be a `Stock` object or a list of `Stock` objects')
-}
-
-ReturnStockObject <- function( Name, CommonName) {
-  if (inherits(Name@Stock, 'StockList')) {
-    if (inherits(CommonName, 'numeric')) {
-      if (CommonName > nStock(Name)) {
-        if (nStock(Name)==1) {
-          cli::cli_abort('OM has only {.val {nStock(Name)}} stock')
-        } else {
-          cli::cli_abort('OM has only {.val {nStock(Name)}} stocks')
-        }
-      } else {
-        return(Name@Stock[[CommonName]])
-      }
-    } else {
-      cli::cli_inform('`Stock` is a list. Returning list of Stock objecgs. \n Use `Stock(OM, x)` to access stock `x`')
-      return(Name@Stock)
-    }
-  }
-  Name@Stock
-}

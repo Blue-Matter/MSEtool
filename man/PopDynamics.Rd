@@ -19,6 +19,6 @@ array with dimensions Sim, Age, and Year}
 
 \item{\code{SProduction}}{Spawning Production: array with dimensions Sim, Stock, Year}
 
-\item{\code{Misc}}{A list for additional miscellaneous objects}
+\item{\code{Misc}}{\verb{r Misc_param()}}
 }}
 

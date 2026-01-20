@@ -7,9 +7,9 @@ setClass('catchobs',
            Bias='num.array.list',  # numeric length 1, length 2, or length nSim
            Years='num.list.null',
            Type='char.list', # 'Removals' or 'Landings'
-           Ref='num.array.list'
-           ), 
-         contains='MiscClass'
+           Ref='num.array.list',
+           Misc='list'
+           )
 )
 
 setMethod("initialize", "catchobs", function(.Object,
@@ -36,9 +36,9 @@ setClass('effortobs',
            Error='num.array.list', # numeric array nsim by nTS
            Bias='num.array.list',  # numeric length 1, length 2, or length nSim
            Years='num.list.null',
-           Ref='num.array.list'
-         ), 
-         contains='MiscClass'
+           Ref='num.array.list',
+           Misc='list'
+         )
 )
 
 
@@ -52,9 +52,9 @@ setClass('indicesobs',
            Selectivity='array.char.num', # Biomass, SBiomass, age classes
            Type='character',
            Ref='num.array.list',
-           q='num.array.list' 
-         ),
-         contains='MiscClass'
+           q='num.array.list',
+           Misc='list'
+         )
 )
 
 setClass('CompObs',
@@ -62,9 +62,9 @@ setClass('CompObs',
            SampleSize='num.array', 
            ESS='num.array', # nSim, nTS
            Years='num.null',
-           Bias='num.array'
-         ),
-         contains='MiscClass'
+           Bias='num.array',
+           Misc='list'
+         )
 )
 
 
@@ -80,18 +80,18 @@ setClass('lifehistoryobs',
            Fecundity='list',
            SRR='list',
            Spatial='list',
-           Depletion='list'
-         ),
-         contains='MiscClass'
+           Depletion='list',
+           Misc='list'
+         )
 )
 
 setClass('exploitationobs',
          slots=c(
            Selectivity='list',
            Retention='list',
-           DiscardMortality='list'
-         ),
-         contains='MiscClass'
+           DiscardMortality='list',
+           Misc='list'
+         )
 )
 
 #' Obs Object
@@ -114,9 +114,11 @@ setClass('obs',
                  Survey='indicesobs',
                  
                  CAA='CompObs',
-                 CAL='CompObs'
-         ),
-         contains='MiscClass')
+                 CAL='CompObs',
+                 
+                 Misc='list'
+         )
+)
 
 
 
@@ -132,10 +134,14 @@ Obs <- function(object=NULL) {
   .Object
 }
 
-validObsObject <- function(object) {
+
+
+setValidity('obs', function(object) {
+  #TODO
   TRUE
-}
-setValidity('obs', validObsObject)
+})
+
+
 
 setMethod("initialize", "obs", function(.Object) {
   .Object

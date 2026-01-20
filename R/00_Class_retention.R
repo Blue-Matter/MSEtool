@@ -16,14 +16,23 @@
 setClass("retention",
          slots=c(Pars='list',
                  Model='fun.char',
-                 isRel='char.log.num'),
-         contains= c('MeanAtAgeClass',
-                     'MeanAtLengthClass',
-                     'MeanAtWeightClass',
-                     'ClassesClass',
-                     'MiscClass'))
+                 isRel='char.log.num',
+                 MeanAtAge='num.array.null',
+                 MeanAtLength='num.array.null',
+                 MeanAtWeight='num.array.null',
+                 Classes='num.null',
+                 Misc='list')
+)
+                 
+          
 
-setValidity('retention', isValidObject)
+
+setValidity('retention', function(object) {
+  #TODO
+  TRUE
+})
+
+
 
 setMethod("initialize", "retention", function(.Object,
                                               Pars=list(),

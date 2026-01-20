@@ -2,10 +2,8 @@
 
 ## Spatial ----
 
-#' Spatial Object
+#' Spatial  Class and Constructor
 #'
-#' @include 00_Class_unions.R
-#' @include 00_Class_child.R
 #' 
 #' The `Spatial` function is used to create S4 class `spatial` objects or to
 #' access or assign `spatial` objects to [Stock()] class objects
@@ -104,21 +102,24 @@
 #' @slot Arrangement A numeric matrix with the layout ofthe areas. Used for plotting only.
 #' @slot CVDist The logit CV associated with `UnfishedDist` (used as a penalty when optimizing for `UnfishedDist`). See `?FitMovement` for details.
 #' @slot CVStay The logit CV associated with `ProbStaying` (used as a penalty when optimizing for diagonal (`ProbStaying`)). See `?FitMovement` for details.
-#' @slot Misc `r Misc_param()`
 #'
-#' @seealso `r See_Also('spatial', c('CalcMovement'))`
 #' @name Spatial
 #' @rdname Spatial
-#' @docType class
+#' 
+#' @include 00_Class_unions.R
+#' @include 00_Class_child.R
+#' 
 #' @example man-examples/Spatial-class.R
-#' @export
+NULL 
+
+
 setClass('spatial',
-         slots=c(UnfishedDist='num.array',
-                 ProbStaying='num.array',
-                 RelativeSize='num.array.char.null',
-                 Movement='array.list.null',
-                 FracOther='array.list.null',
-                 Arrangement='array.list.null',
+         slots=c(UnfishedDist='num.array.null',
+                 ProbStaying='num.array.null',
+                 RelativeSize='array.char.num',
+                 Movement='array.null',
+                 FracOther='array.null',
+                 Arrangement='array.null',
                  CVDist='numeric',
                  CVStay='numeric',
                  Misc='list'
@@ -126,7 +127,10 @@ setClass('spatial',
 )
 
 
-setValidity('spatial', isValidObject)
+setValidity('spatial', function(object) {
+  # TODO 
+  TRUE
+})
 
 setMethod("initialize", "spatial", function(.Object,
                                             UnfishedDist=NULL,
@@ -147,7 +151,6 @@ setMethod("initialize", "spatial", function(.Object,
   .Object@CVDist <- CVDist
   .Object@CVStay <- CVStay
   .Object@Misc <- Misc
-  #   .Object@Created <- Sys.time()
   .Object
 })
 
@@ -162,7 +165,6 @@ setMethod("initialize", "spatial", function(.Object,
 #' @param Arrangement A numeric matrix with the layout ofthe areas. Used for plotting only.
 #' @param CVDist The logit CV associated with `UnfishedDist` (used as a penalty when optimizing for `UnfishedDist`). See `?FitMovement` for details.
 #' @param CVStay The logit CV associated with `ProbStaying` (used as a penalty when optimizing for diagonal (`ProbStaying`)). See `?FitMovement` for details.
-#' @param Misc `r Misc_param()`
 #' @export
 Spatial <- function(UnfishedDist=NULL,
                     ProbStaying=NULL,

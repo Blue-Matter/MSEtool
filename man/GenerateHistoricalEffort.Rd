@@ -23,7 +23,7 @@ effort time series. Required if \code{Effort$Year} is specified
 using indices rather than calendar years.}
 }
 \value{
-An \code{nSim x nYear} numeric array used in the \code{\link[=Effort]{Effort()}} object
+An \code{nSim x nYear} numeric array used in an \code{\link[=Effort]{Effort()}} object
 }
 \description{
 Generates stochastic historical fishing effort trajectories from an

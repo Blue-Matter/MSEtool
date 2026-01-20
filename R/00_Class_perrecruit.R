@@ -11,9 +11,8 @@ setClass("perrecruit",
                  SBiomass='array.numeric.null', # Sim, Stock, Year, F
                  SProduction='array.numeric.null', # Sim, Stock, Year, F
                  Removals='array.numeric.null', # Sim, Stock, Year, F
-                 Landings='array.numeric.null' # Sim, Stock, Year, F
-               
-         ),
-         contains='MiscClass'
+                 Landings='array.numeric.null', # Sim, Stock, Year, F
+                 Misc='list'
+         )
 )
 

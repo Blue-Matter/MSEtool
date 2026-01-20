@@ -15,9 +15,3 @@ Bioeconomic Information
 \details{
 Revenue and Cost information for a \code{\link[=Fleet]{Fleet()}} and a \code{\link[=Stock]{Stock()}}
 }
-\section{Slots}{
-
-\describe{
-\item{\code{Misc}}{A list for additional miscellaneous objects}
-}}
-

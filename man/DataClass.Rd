@@ -29,12 +29,12 @@ or simulated fishery data
 
 \subsection{Creating New Objects}{
 
-New \code{data} objects can be created with \code{NA()}, see \code{Usage} and \code{Examples} for details.
+\verb{r Creating_New_Objects('data')}
 }
 
 \subsection{Accessing and Assigning Slots}{
 
-Like all of the new style objects in \code{MSEtool}, the slots in \code{data} objects can be accessed and assigned with functions matching the slot names. See \verb{See Also} section for functions.
+\verb{r Accessing_Assigning_Slots('data')}
 }
 }
 \section{Functions}{
@@ -47,11 +47,11 @@ Like all of the new style objects in \code{MSEtool}, the slots in \code{data} ob
 \section{Slots}{
 
 \describe{
-\item{\code{MaxAge}}{An integer value (length 1) specifying the maximum age to include in the model. If \code{PlusGroup==TRUE}, \code{MaxAge} will be a plusgroup. \strong{Required}. Note that the age classes always start at 0, so there will be \code{MaxAge+1} age classes.}
+\item{\code{MaxAge}}{\verb{r MaxAge_param()}}
 
-\item{\code{Units}}{A character string describing the units corresponding to \code{MaxAge}. Valid values are found in \code{ValidUnits(Ages())}. Defaults to \code{year} if not specified.}
+\item{\code{Units}}{\verb{r Units_param()}}
 }}
 
 \seealso{
-
+\verb{r See_Also('data')}
 }

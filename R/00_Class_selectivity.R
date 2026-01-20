@@ -17,14 +17,22 @@
 setClass("selectivity",
          slots=c(Pars='list',
                  Model='fun.char',
-                 isRel='char.log.num'),
-         contains= c('MeanAtAgeClass',
-                     'MeanAtLengthClass',
-                     'MeanAtWeightClass',
-                     'ClassesClass',
-                     'MiscClass'))
+                 isRel='char.log.num',
+                 MeanAtAge='num.array.null',
+                 MeanAtLength='num.array.null',
+                 MeanAtWeight='num.array.null',
+                 Classes='num.null',
+                 Misc='list')
+)
 
-setValidity('selectivity', isValidObject)
+
+
+
+setValidity('selectivity', function(object) {
+  #TODO
+  TRUE
+})
+
 
 setMethod("initialize", "selectivity", function(.Object,
                                                 Pars=list(),

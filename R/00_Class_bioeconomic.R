@@ -7,7 +7,6 @@
 #' @include 00_Class_unions.R
 #' @include 00_Class_child.R
 #'
-#' @slot Misc `r Misc_param()`
 #'
 #' @name Bioeconomic
 #' @export
@@ -18,12 +17,14 @@ setClass("bioeconomic",
     Investment = "num.array", # Sim, Year - investment cost of adding a new unit of effort to the fishery
     Disinvestment = "num.array", # Sim, Year - cost of removing a unit of effort from the fishery
     Depreciation = "num.array", # depreciation rate - Effort units dropping out each year due to eg degradation, expired license, etc
-    Discount = "num.array" # discount factor
-  ),
-  contains = "MiscClass"
+    Discount = "num.array", # discount factor
+    Misc = 'list'
+  )
 )
 
-setValidity("bioeconomic", isValidObject)
+setValidity('bioeconomic', function(object) {
+  TRUE
+})
 
 setMethod("initialize", "bioeconomic", function(.Object,
                                                 Revenue = NULL,

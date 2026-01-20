@@ -74,12 +74,18 @@ setClass("effort",
            Units='char.null',
            Distribution='num.array',
            Targeting='num.array', # currently fixed to 1
-           Maximum='num.array' # TODO - not currently used. Maximum fishing effort - Effort < Maximum is latent effort. Increasing Maximum requires Investment (see Bioeconomic)
-         ),
-         contains='MiscClass'
+           Maximum='num.array', # TODO - not currently used. Maximum fishing effort - Effort < Maximum is latent effort. Increasing Maximum requires Investment (see Bioeconomic)
+           Misc = 'list'
+         )
 )
 
-setValidity('effort', isValidObject)
+
+setValidity('effort', function(object) {
+  #TODO
+  TRUE
+})
+
+
 
 
 setMethod("initialize", "effort", function(.Object,

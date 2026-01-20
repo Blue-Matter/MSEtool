@@ -14,10 +14,10 @@ setClass("mse",
                  Reference='reference',
                  Hist='timeseries',
                  PPD='list',
-                 Log='list'
+                 Log='list',
+                 Misc='list'
          ), 
-         contains=c('timeseries',
-                    'MiscClass')
+         contains=c('timeseries')
 )
 
 #' @rdname MSEClass

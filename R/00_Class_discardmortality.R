@@ -14,14 +14,17 @@
 #' @docType class
 #' @export
 setClass("discardmortality",
-         contains= c(
-           'MeanAtAgeClass',
-           'MeanAtLengthClass',
-           'ClassesClass',
-           'MiscClass')
+         slots=c(
+           MeanAtAge='num.array.null',
+           MeanAtLength='num.array.null',
+           Classes='num.null',
+           Misc='list'
+         )
 )
 
-setValidity('discardmortality', isValidObject)
+setValidity('discardmortality', function(object) {
+  TRUE
+})
 
 setMethod("initialize", "discardmortality", function(.Object,
                                                      MeanAtAge=NULL,

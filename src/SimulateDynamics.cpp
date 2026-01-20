@@ -2,53 +2,52 @@
   //   // Calculate Recruitment and Numbers at beginning of next time step
   //   for (int st=0; st<nStock; st++) {
   //
-  //     // Determine Age at Recruitment
+      // Determine Age at Recruitment
   //     S4 Stock = StockList[st];
   //     S4 Ages = Stock.slot("Ages");
   //     double Seasons = Stock.slot("Seasons");
   //     int AgeRec = CalcRecruitment_TimeStep_(Ages, 1/Seasons);
   //     int TSRec = TSindex + AgeRec; // TSindex + 1 for age-1 recruitment
-  //
+  // 
   //     arma::cube NumberAtAgeArea = NumberAtAgeAreaList[st]; // nAge, nTS, nArea
   //     int nAge = NumberAtAgeArea.n_rows;
   //     int nTSnumber = NumberAtAgeArea.n_cols;
   //     int nArea = NumberAtAgeArea.n_slices;
-  //
+  // 
   //     S4 Spatial = Stock.slot("Spatial");
-  //
-  //
-  //     // Calc recruitment if there is enough space in NumberAtAgeArea
+  // 
+  // //     // Calc recruitment if there is enough space in NumberAtAgeArea
   //     if (TSRec<nTSnumber) {
   //       if (debug) {
   //         Rcout << "\n\nCalculate Recruitment and Numbers for Stock " << st << std::endl;
   //         Rcout << "TSindex " << TSindex << std::endl;
-  //         Rcout << "Seasons " << Seasons << std::endl;
+  //         Rcout << "Seasons f" << Seasons << std::endl;
   //         Rcout << "AgeRec " << AgeRec << std::endl;
   //         Rcout << "TSRec " << TSRec << std::endl;
-  //
+  // 
   //       }
-  //
+  // 
   //       S4 SRR = Stock.slot("SRR");
   //       arma::vec R0 = SRR.slot("R0");
   //       arma::vec RecDevHist = SRR.slot("RecDevHist");
   //       arma::vec RecDevProj = SRR.slot("RecDevProj");
   //       arma::vec RecDevs = join_cols(RecDevHist, RecDevProj);
-  //
+  // 
   //       Function SRRModel = SRR.slot("Model");
   //       List SRRPars = SRR.slot("Pars");
-  //
+  // 
   //       // Calculate Recruitment
   //       // Uses aggregate SProduction - ie summed over areas
   //       // TODO option to use time-varying alpha, beta
-  //
+  // 
   //       // Equilibrium unfished spawning production
-  //
+  // 
   //       int sp0_nts = SP0.n_cols;
   //       double sp0 = arma::as_scalar(SP0.row(st).col(0));
   //       if (sp0_nts >1 ) {
   //         sp0 = arma::as_scalar(SP0.row(st).col(TSindex));
   //       }
-  //
+  // 
   //       double SProductionThisTimeStep = arma::as_scalar(SProduction.row(st).col(TSindex));
   //       double R0_recruit_TimeStep = arma::as_scalar(R0(TSRec));
   //       double RecDev_recruit_TimeStep = arma::as_scalar(RecDevs(TSRec));
@@ -58,7 +57,7 @@
   //         Rcout << "R0_recruit_TimeStep = " << R0_recruit_TimeStep << std::endl;
   //         Rcout << "RecDev_recruit_TimeStep = " << RecDev_recruit_TimeStep << std::endl;
   //       }
-  //
+  // 
   //       double Recruits = CalcRecruitment_(SProductionThisTimeStep,
   //                                          R0_recruit_TimeStep,
   //                                          sp0,
@@ -66,7 +65,7 @@
   //                                          SRRModel,
   //                                          SRRPars,
   //                                          TSindex);
-  //       if (debug) {
+  // //       if (debug) {
   //         Rcout << "Recruits =  " << Recruits << std::endl;
   //       }
   //

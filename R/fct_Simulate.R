@@ -64,7 +64,11 @@ Simulate_om <- function(OM = NULL,
   nFleet <- nFleet(OM)
   nArea <- nArea(OM)
   
-  Hist@Distribution |> range()
+  
+  # Recruitment ...
+  
+  
+  
   
   
   tictoc::tic()
@@ -77,6 +81,15 @@ Simulate_om <- function(OM = NULL,
     nArea
   )
   tictoc::toc()  
+  
+  sim <- 1 
+  y <- 1
+  cbind(HistOUT@Number$Female[sim, , y,1], HistOUT@Number$Male[sim, , y,1])
+  
+  
+  HistOUT@SBiomass[1:2,,1]
+  HistOUT@SBiomass[1:2,,2]
+  
   HistOUT@SBiomass |> range(na.rm=TRUE)
   
   

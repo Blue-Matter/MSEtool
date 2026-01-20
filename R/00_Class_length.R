@@ -1,88 +1,117 @@
 
-
-
-## Length ----
-
-#' Length Object
-#'
-#' The `Length` function is used to create S4 class `length` objects or to access or
-#' assign `length` objects to [Stock()] class objects
-#'
+#' Length Class and Constructor
+#' 
+#' The `Length` class defines the length-at-age structure associated with a
+#' [Stock()] objectect. It stores the parameters and model used to generate
+#' mean length-at-age, along with variability and assumptions regarding the
+#' distribution of length-at-age.
+#' 
+#' @param Pars A named list of parameters defining a valid length-at-age model
+#'   (see [LengthModels()]). Not required if `MeanAtAge` is supplied directly.
+#' @param Model A character string or function identifying the growth model.
+#'   If `NULL`, the model is inferred from `Pars`. Not required if `MeanAtAge` is supplied directly.
+#' @param Units Character string giving the length units (e.g. `"mm"`).
+#' @param MeanAtAge Numeric array giving mean length-at-age directly.
+#' @param CVatAge Numeric value or array giving the coefficient of variation
+#'   of length-at-age.
+#' @param Dist Character string specifying the error distribution.
+#' @param TruncSD Numeric value or array specifying truncation in SD units.
+#' @param Timing Numeric value or array specifying timing within the time step.
+#' @param Random Optional random effects structure. Not currently used. 
+#' @param Classes Optional numeric vector of length classes used to for `at-length` 
+#' schedueles (e.g., [Maturity()], [Selectivity()].
+#' @param Misc A list for additional miscellaneous objectects.
+#' @param x A [Stock()] objectect.
+#' @param value A [Length()] objectect to assign.
+#' 
 #' @details
-#' ## About the `length` Class
-#' Objects of class `length` contain information relating to the length-at-age
-#' of a stock.
+#' Note: `Pars` will overwrite `MeanAtAge`
+#' 
+#' Named dimensions 
+#' 
+#' #' @details
 #'
-#' ## Creating New Objects
-#' `r Creating_New_Objects('length')`
-#'
-#' ## Accessing and Assigning Slots
-#' `r Accessing_Assigning_Slots('length')`
+#' The `Length` generic is used to:
+#' * construct new `Length` objectects;
+#' * access `Length` when supplied with a [Stock()] objectect;
+#' * assign a `Length` objectect to a [Stock()] objectect.
 #'
 #' ## Parameters (`Pars`)
-#' The `Pars` slot is used to store the parameters for the `Model` that generates
-#' the mean length-at-age growth curve. The `MeanAtAge` slot is populated internally
-#' from `Pars` and `Model`.
 #'
-#' `Pars` should be a named list, with the names corresponding to the parameters
-#' for a valid length-at-age model (see [LengthModels()]).
+#' The `Pars` slot stores parameters for the growth model used to generate
+#' mean length-at-age. Supported structures include:
 #'
-#' The elements in `Pars` can be structured several different ways:
+#' * **Constant**: numeric scalar
+#' * **Uniform across simulations**: numeric length 2
+#' * **Lognormal inter-annual variation**: `SD`-suffixed parameters
+#' * **Simulation-specific**: numeric vector of length `nSim`
+#' * **Time-varying**: numeric matrix with `nTS` columns
 #'
-#' - **Constant value over all simulations and time steps**: Numeric length 1
-#' - **Uniformly distributed over simulations, constant all time steps**: Numeric length 2,
-#' representing the lower and upper bounds of a uniform distribution.
-#' - **Log-normally distributed over time steps**: `SD` appended to a previously
-#' specified parameter (e.g., `LinfSD`) representing the lower and upper bound
-#' of a uniform distribution for the log-normally distributed inter-annual variation.
-#' - **Non-uniform distribution over simulations**: Numeric vector of length `nSim` (must be >2).
-#' - **Time-varying**: Numeric matrix with either 1 or `nSim` rows and `nTS` columns,
-#' where `nTS` is the total number of time steps. See note below.
+#' ## Slots
 #'
+#' Objects of class `"length"` contain the following slots:
 #'
-#' TODO - this has changed now - use dimnames not attributes
-#' **Note:** For time-varying parameters, if the parameter only varies in particular
-#' time steps (rather than every time step), the number of columns in the matrix
-#' can be equal to the number of change points instead of `nTS`. The time step
-#' corresponding with each change point can be specified using `attributes`, see `Examples`.
-#' 
+#' * `Pars`: Named list of growth parameters
+#' * `Model`: Growth model identifier
+#' * `Units`: Length units
+#' * `MeanAtAge`: Mean length-at-age array
+#' * `CVatAge`: Coefficient of variation at age
+#' * `Dist`: Distribution name
+#' * `TruncSD`: Truncation in SD units
+#' * `Timing`: Timing within time step
+#' * `Random`: Random effects
+#' * `ASK`: Age–length key
+#' * `Classes`: Length classes
+#' * `Misc`: Additional metadata
 #'
-#' @slot Pars `r Pars_param()`
-#' @slot Model `r Model_param()`
-#' @slot Units `r Units_param(variable="MeanAtAge", class='Length', default='mm')`
-#' @slot MeanAtAge `r MeanAtAge_param('Length')`
-#' @slot CVatAge `r CVatAge_param('length')`
-#' @slot Dist `r Dist_param()`
-#' @slot TruncSD `r TruncSD_param()`
-#' @slot Timing `r Timing_param()`
-#' @slot Random `r Random_param()`
-#' @slot ASK `r ASK_param()`
-#' @slot Classes `r Classes_param()`
-#' @slot Misc `r Misc_param()`
+#' @return
+#' * `Length`: a [Length] class object
+#' * `Length(x)`: a `Length` object from object `x`
+#' * `Length<-`: the modified [Stock()] object
 #'
-#' @seealso `r See_Also('length', c('ValidUnits', 'LengthModels', 'Populate'))`
+#' @seealso [LengthModels()], [Populate()], [Stock()]
 #'
 #' @name Length
+#' @rdname Length
+#'
+#' @example man-examples/class-length.R
 #' 
+#'
 #' @include 00_Class_unions.R
-#' @include 00_Class_child.R
-#' 
-#' @example man-examples/Length-class.R
-#' @export
+NULL
 
 setClass("length",
-         contains= c("ParsClass",
-                     'MeanAtAgeClass',
-                     'DistClass',
-                     'Timing',
-                     'RandomClass',
-                     'ASKClass',
-                     'ClassesClass',
-                     'MiscClass')
-         
+         slots=c(Pars='list',
+                 Model='fun.char',
+                 Units='char.null',
+                 MeanAtAge='num.array.null',
+                 CVatAge='num.array.null',
+                 Dist='character',
+                 TruncSD='num.array.null',
+                 Timing='num.array.null',
+                 Random='num.array.null',
+                 ASK='array.null',
+                 Classes='num.null',
+                 Misc='list'
+         )
 )
 
-setValidity('length', isValidObject)
+setValidity("length", function(object) {
+  
+  # TODO - update for all legitimate cases
+  
+  # if (!is.list(objectect@Pars))
+  #   return("Pars must be a list")
+  # 
+  # if (!is.null(objectect@MeanAtAge) && !is.numeric(objectect@MeanAtAge))
+  #   return("MeanAtAge must be numeric or NULL")
+  # 
+  # if (length(objectect@Units) > 1)
+  #   return("Units must be length 1 or NULL")
+  
+  TRUE
+})
+
 
 setMethod("initialize", "length", function(.Object,
                                            Pars=list(Linf=NA, K=NA, t0=NA),
@@ -98,16 +127,6 @@ setMethod("initialize", "length", function(.Object,
                                            Classes=NULL,
                                            Misc=list()) {
   .Object@Pars <- Pars
-  
-  if (!is.null(Model))
-    .Object@Model <- Model
-  
-  if (length(Pars)>0 &
-      !is.null(names(Pars)) &
-      all(!is.na(unlist(Pars))) &
-      is.null(Model))
-    .Object@Model <- FindModel(.Object)
-  
   .Object@Units <- Units
   .Object@MeanAtAge <- MeanAtAge
   .Object@CVatAge <- CVatAge
@@ -118,75 +137,15 @@ setMethod("initialize", "length", function(.Object,
   .Object@ASK <- ASK
   .Object@Classes <- Classes
   .Object@Misc <- Misc
-  #   .Object@Created <- Sys.time()
-  
+
+  if (!is.null(Model))
+    .Object@Model <- Model
+
+  if (length(Pars)>0 &
+      !is.null(names(Pars)) &
+      all(!is.na(unlist(Pars))) &
+      is.null(Model))
+    .Object@Model <- FindModel(.Object)
+
   .Object
 })
-
-#' @describeIn Length Create a new `length` class object
-#' @param Pars `r Pars_param()`
-#' @param Model `r Model_param()`
-#' @param Units `r Units_param(variable="MeanAtAge", class='Length', default='mm')`
-#' @param MeanAtAge `r MeanAtAge_param('Length')`
-#' @param CVatAge `r CVatAge_param('length')`
-#' @param Dist `r Dist_param()`
-#' @param TruncSD `r TruncSD_param()`
-#' @param Timing `r Timing_param()`
-#' @param Random `r Random_param()`
-#' @param ASK `r ASK_param()`
-#' @param Classes `r Classes_param()`
-#' @param Misc `r Misc_param()`
-#' @export
-Length <- function(Pars=list(Linf=NA, K=NA, t0=NA),
-                   Model=NULL,
-                   Units='mm',
-                   MeanAtAge=NULL,
-                   CVatAge=0.1,
-                   Dist='normal',
-                   TruncSD=2,
-                   Timing=0,
-                   Random=NULL,
-                   ASK=NULL,
-                   Classes=NULL,
-                   Misc=list()) {
-  if (!inherits(Pars, 'list')) {
-    return(Length_Access(Pars))
-  }
-  
-  methods::new('length',
-               Pars=Pars,
-               Model=Model,
-               Units=Units,
-               MeanAtAge=MeanAtAge,
-               CVatAge=CVatAge,
-               Dist=Dist,
-               TruncSD=TruncSD,
-               Timing=Timing,
-               Random=Random,
-               ASK=ASK,
-               Classes=Classes,
-               Misc=Misc)
-}
-
-
-
-
-#' @describeIn Length Assign an `length` class object to a [Stock()] object
-#' @param x A [Stock()] class object
-#' @param value A `length` class object to assign to `x`
-#' @export
-`Length<-` <- function(x, value) {
-  CheckClass(x, 'stock')
-  x@Length <- value
-  x
-}
-
-
-Length_Access <- function(object) {
-  
-  if (inherits(object, 'stock'))
-    return(object@Length)
-  
-  if (inherits(object, 'length'))
-    return(object)
-}

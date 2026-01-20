@@ -5,6 +5,7 @@
 \alias{ExtendSims}
 \alias{ExtendAges}
 \alias{ExtendYears}
+\alias{ExtendAreas}
 \title{Extend an array}
 \usage{
 Extend(
@@ -12,6 +13,7 @@ Extend(
   nSim = NULL,
   AgeClasses = NULL,
   Years = NULL,
+  Areas = NULL,
   default = NULL,
   debug = FALSE
 )
@@ -21,18 +23,22 @@ ExtendSims(array, nSim = NULL)
 ExtendAges(array, AgeClasses = NULL)
 
 ExtendYears(array, Years = NULL, default = NULL)
+
+ExtendAreas(array, Areas = NULL)
 }
 \arguments{
 \item{array}{An \code{\link[=array]{array()}} with named dimensions including at least one of
-\code{Sim}, \code{Year}, or \code{Age}. Alternatively, an \link{S4} or a \code{\link[=list]{list()}} object, in which
+\code{Sim}, \code{Year},  \code{Age}, or \code{Area}. Alternatively, an \link{S4} or a \code{\link[=list]{list()}} object, in which
 case the function will loop over all slots or elements respectively and extend
 any named arrays. Any other objects will be returned unchanged.}
 
-\item{nSim}{The total number of simulations. Integer}
+\item{nSim}{The total number of simulations. Integer (or NULL to skip)}
 
-\item{AgeClasses}{A numeric vector of age classes}
+\item{AgeClasses}{A numeric vector of age classes (or NULL to skip)}
 
-\item{Years}{A numeric vector of \code{Year} values#'}
+\item{Years}{A numeric vector of \code{Year} values (or NULL to skip)}
+
+\item{Areas}{A numeric vector with values 1:\code{nArea} (or NULL to skip)}
 
 \item{default}{Default value for forward filled year values. Default is the same
 value as the most recent year}
@@ -40,7 +46,8 @@ value as the most recent year}
 \item{debug}{Logical. Print debug messages?}
 }
 \description{
-Extends an array with named dimensions to include all simulations and ages, and any missing years,
+Extends an array with named dimensions to include all simulations, ages, and areas
+and any missing years,
 }
 \details{
 \subsection{ExtendSims}{
@@ -53,7 +60,7 @@ all simulations.
 
 \subsection{ExtendAges}{
 
-A \code{Age} dimension in an array must have either length \code{1} or length \code{nAge} for a given stock.
+An \code{Age} dimension in an array must have either length \code{1} or length \code{nAge} for a given stock.
 If the latter, \code{ExtendAges} returns the array unchanged. If the former, the names of the
 \code{Age} dimension is extended to length \code{nAge} with the values of the first age class replicated for
 all age classes.
@@ -65,6 +72,14 @@ A \code{Year} dimension can be any length and include any years in \code{Years(O
 If the names of the \code{Year} dimension includes all values in \code{Years}, the array
 will be returned unchanged. Otherwise, the array will be extended to include
 all missing values in \code{Years}.
+}
+
+\subsection{ExtendAreas}{
+
+An \code{Area} dimension in an array must have either length \code{1} or length \code{nArea} for a given OM
+If the latter, \code{ExtendAreas} returns the array unchanged. If the former, the names of the
+\code{Area} dimension is extended to length \code{nArea} with the values of the first area replicated for
+all other areas.
 
 Values will be back filled or forward filled as necessary to include all \code{Years}.
 If there is seasonality (decimal years), the filled values will match those from the

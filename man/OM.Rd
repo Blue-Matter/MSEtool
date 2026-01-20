@@ -137,7 +137,7 @@ sex-specific dynamics, i.e., sex-specific spawning and hermaphroditism.
 More generally, controls spawning and moving abundance between stocks. See \code{Details}.}
 }
 \description{
-An S4 object of class \code{OM} and associated functions to access and modify the object
+\verb{r S4Description('OM')}
 }
 \details{
 \subsection{About the \code{om} Class}{
@@ -149,12 +149,12 @@ and eventually removed from the package.
 
 \subsection{Creating New Objects}{
 
-New \code{om} objects can be created with \code{Om()}, see \code{Usage} and \code{Examples} for details.
+\verb{r Creating_New_Objects('om')}
 }
 
 \subsection{Accessing and Assigning Slots}{
 
-Like all of the new style objects in \code{MSEtool}, the slots in \code{om} objects can be accessed and assigned with functions matching the slot names. See \verb{See Also} section for functions.
+\verb{r Accessing_Assigning_Slots('om')}
 \itemize{
 \item \code{Herm}: A list with each entry containing a matrix with
 dimensions \code{c(nSim, MaxAge + 1)} that specifies the proportion at age that move from
@@ -290,5 +290,5 @@ with relevant information. Supports Markdown.}
 myOM <- OM('My Example OM')
 }
 \seealso{
-
+\verb{r See_Also('om')}
 }
