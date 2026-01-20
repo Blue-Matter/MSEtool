@@ -283,6 +283,23 @@ setMethod("Populate", "spatial", function(object,
   )
 })
 
+
+### --- Depletion ----
+#' @name Populate
+#' @export
+setMethod("Populate", "depletion", function(object,
+                                      nSim = 5,
+                                      seed = NULL,
+                                      silent = FALSE,
+                                      ...) {
+  PopulateDepletion(
+    object,
+    nSim,
+    seed,
+    silent
+  )
+})
+
 # Fleet ----
 #' @name Populate
 #' @export

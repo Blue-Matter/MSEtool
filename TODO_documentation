@@ -2,15 +2,15 @@ Document all Classes
 
 
 
-Ages - done 
-Length - examples and update documentation for different ways to populate
+Ages  - DONE
+Length - examples and update documentation for different ways to populate - update show
 Weight  - examples and update documentation for different ways to populate
-NaturalMortality
-Maturity
-Fecundity
-SRR
-Spatial
-Depletion
+NaturalMortality - as above
+Maturity - as above
+Fecundity - update documentation to explain its optional and other stuff above
+SRR - as above
+Spatial - as above 
+Depletion - DONE
 
 Stock 
 
@@ -18,3 +18,14 @@ Stock
 
 
 Advice - document and examples
+
+
+
+TODO 
+- complete documentation for length explaining different was to populate and 
+ that Pars and Model overwrite other arrays
+- update GenerateMeanAtAge for von Bert for the new function structure
+- refactor all models in same manner as length models
+- check for duplicate helpers (eg Classes, MeanAtAge, Pars) and document together
+- show methods for all
+- plot methods for all 

@@ -148,7 +148,7 @@ DefaultYears <- function(Years = NULL) {
 PopulateLength <- function(Length,
                            Ages = NULL,
                            Years = NULL,
-                           nSim = NULL,
+                           nSim = 5,
                            ASK = TRUE,
                            seed = NULL,
                            silent = FALSE,

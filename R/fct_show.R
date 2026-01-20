@@ -1,3 +1,60 @@
+
+.format_sim_values <- function(x) {
+  n <- length(x)
+  
+  if (n == 0)
+    return("not specified")
+  
+  if (n == 1)
+    return(format(x))
+  
+  if (n == 2)
+    return(paste0("uniform [", x[1], "–", x[2], "]"))
+  
+  paste0(
+    "range ", signif(min(x), 3), "–", signif(max(x), 3),
+    " (median ", signif(stats::median(x), 3), "; n = ", n, ")"
+  )
+}
+
+
+.format_array <- function(x, name) {
+  if (is.null(x) || length(x) == 0) {
+    return("{.emph not specified}")
+  }
+  
+  d <- dim(x)
+  
+  if (is.null(d)) {
+    return("{.val scalar}")
+  }
+  
+  if (length(d) == 2) {
+    paste0(
+      "{.val ", d[1], " × ", d[2], "} (sim x age)"
+    )
+  } else if (length(d) == 3) {
+    paste0(
+      "{.val ", d[1], " × ", d[2], " × ", d[3], "} (sim x age × year)"
+    )
+  } else {
+    paste0(
+      "{.val ", paste(d, collapse = " × "), "} array"
+    )
+  }
+}
+
+.format_vec <- function(x) {
+  if (is.null(x) || length(x) == 0) {
+    "{.emph not specified}"
+  } else {
+    cli::cli_vec(x, list("vec-trunc" = 10))
+  }
+}
+
+
+
+
 #' Generic show method
 #'
 #' @param object Object to print to console
@@ -35,82 +92,6 @@ setMethod('show', 'data', function(object) {
 
 # ---- Stock ----
 
-
-
-
-## --- Ages ----
-
-#' @rdname show
-setMethod('show', 'ages', function(object) {
-  cli::cli_par()
-  cli::cli_h2("An {.help MSEtool::Ages} Object")
-
-  cli::cli_h3('{.code MinAge}')
-  cli::cli_text("{.val {object@MinAge}}")
-  
-  cli::cli_h3('{.code MaxAge}')
-  cli::cli_text("{.val {object@MaxAge}}")
-  
-  cli::cli_h3('{.code Units}')
-  cli::cli_text("{.val {object@Units}}")
-  
-  object@Classes <- CalcAgeClasses(object)
-  
-  cli::cli_h3('{.code Classes} (Year)')
-  cli::cli_text("{.val {object@Classes}}")
-
-  cli::cli_h3('{.code PlusGroup}')
-  cli::cli_text("{.val {object@PlusGroup}}")
-  cli::cli_end()
-
-  # print(Check(object))
-
-})
-
-## ---- Length ----
-
-setMethod('show', 'length', function(object) {
-
-  cli::cli_par()
-  cli::cli_h2("{.help MSEtool::Length} Object")
-  cli::cli_h3('{.code Pars}')
-  printPars(object@Pars)
-
-  cli::cli_h3('{.code Model}')
-  cli::cli_text('{.val { object@Model}}')
-
-  cli::cli_h3('{.code Units}')
-  cli::cli_text('{.val { object@Units}}')
-
-  cli::cli_h3('{.code MeanAtAge}')
-  printMeanatAge(object@MeanAtAge)
-
-  cli::cli_h3('{.code CVatAge}')
-  printMeanatAge(object@CVatAge)
-
-  cli::cli_h3('{.code Dist}')
-  cli::cli_text('{.val { object@Dist}}')
-
-  cli::cli_h3('{.code TruncSD}')
-  cli::cli_text('{.val { object@TruncSD}}')
-
-  cli::cli_h3('{.code Timing}')
-  cli::cli_text('{.val { object@Timing}}')
-
-  cli::cli_h3('{.code ASK}')
-  printASK(object@ASK)
-
-  cli::cli_h3('{.code Classes}')
-  if (!is.null(object@Classes)) {
-    val <- cli::cli_vec(object@Classes, list("vec-trunc" = 10))
-    cli::cli_text('nBins: {.val {length(object@Classes)}}')
-    cli::cli_text('Classes: {.val { val}}')
-  }
-
-
-  cli::cli_end()
-  # print(Check(object))
-})
 
 
 
@@ -303,20 +284,7 @@ setMethod('show', 'srr', function(object) {
 
 
 
-## ---- Depletion ----
 
-#' @rdname show
-setMethod('show', 'depletion', function(object) {
-  
-  cli::cli_par()
-  cli::cli_h2("A {.help MSEtool::Depletion} Object")
-  
-  cli::cli_inform('...')
-  
-  cli::cli_end()
-  # print(Check(object))
-  
-})
 
 
 

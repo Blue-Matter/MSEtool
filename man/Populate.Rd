@@ -106,6 +106,8 @@ Populate(object, ...)
   ...
 )
 
+\S4method{Populate}{depletion}(object, nSim = 5, seed = NULL, silent = FALSE, ...)
+
 \S4method{Populate}{fleet}(object, Stock, seed = NULL, silent = FALSE, ...)
 
 \S4method{Populate}{effort}(object, HistYears = NULL, nArea = 1, nSim = 5, seed = NULL, ...)

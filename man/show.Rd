@@ -5,13 +5,10 @@
 \alias{show,mse-method}
 \alias{show,hist-method}
 \alias{show,data-method}
-\alias{show,ages-method}
 \alias{show,maturity-method}
 \alias{show,fecundity-method}
 \alias{show,srr-method}
-\alias{show,depletion-method}
 \alias{show,om-method}
-\alias{show,stock-method}
 \alias{show,spatial-method}
 \title{Generic show method}
 \usage{
@@ -23,19 +20,13 @@ show(object)
 
 \S4method{show}{data}(object)
 
-\S4method{show}{ages}(object)
-
 \S4method{show}{maturity}(object)
 
 \S4method{show}{fecundity}(object)
 
 \S4method{show}{srr}(object)
 
-\S4method{show}{depletion}(object)
-
 \S4method{show}{om}(object)
-
-\S4method{show}{stock}(object)
 
 \S4method{show}{spatial}(object)
 }

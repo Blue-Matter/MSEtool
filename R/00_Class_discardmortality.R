@@ -5,7 +5,6 @@
 #' @include 00_Class_unions.R
 #' @include 00_Class_child.R
 #'
-#' @slot Misc `r Misc_param()`
 #'
 #' @seealso `r See_Also('discardmortality')`
 #'

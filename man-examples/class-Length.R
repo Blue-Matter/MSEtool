@@ -3,14 +3,15 @@
 LengthModels()
 
 ## Constant over simulations and time
-Length <- Length(Pars=list(Linf=100, K=0.2, t0=-0.1))
-
-
-FindModel()
-
 # Populate the object (usually done internally; see `?Populate`)
+Length(Pars=list(Linf=100, K=0.2, t0=-0.1)) |>
+  Populate(Ages(20))
+
+
 Length <- Populate(Length, Ages(20))
 MeanAtAge(Length)
+
+PopulateLength()
 
 plot(Length)
 

@@ -30,12 +30,6 @@ Discard mortality
 \item \code{DiscardMortality(x) <- value}: Assign an \code{DiscardMortality} object to a \code{\link[=Fleet]{Fleet()}} object
 
 }}
-\section{Slots}{
-
-\describe{
-\item{\code{Misc}}{\verb{r Misc_param()}}
-}}
-
 \seealso{
 \verb{r See_Also('discardmortality')}
 }
