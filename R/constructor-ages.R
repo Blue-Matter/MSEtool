@@ -52,6 +52,9 @@ Ages <- function(MaxAge,
     PlusGroup = PlusGroup
   )
   
+  
+  object@Classes <- CalcAgeClasses(object)
+  
   methods::validObject(object)
   object
 }

@@ -11,7 +11,7 @@
 #'   as a plus group.
 #' @slot Classes Numeric vector of age classes expressed in years
 #' @export
-#' @include 00_Class_unions.R
+#' @include class-unions.R
 setClass('ages',
          slots=c(MaxAge='numeric',
                  MinAge='numeric',

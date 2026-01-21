@@ -17,7 +17,7 @@
 #' @param Classes Length classes
 #' @param `Misc` Miscellaneous list
 #' 
-#' @include 00_Class_unions.R
+#' @include class-unions.R
 setClass("length",
          slots=c(Pars='list',
                  Model='fun.char',

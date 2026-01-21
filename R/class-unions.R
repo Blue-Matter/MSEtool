@@ -9,6 +9,7 @@ setClassUnion("array.null", c("array", "NULL"))
 
 
 setClassUnion("char.num", c("character", "numeric", "NULL"))
+setClassUnion("char.list", c("character", "list", "NULL"))
 setClassUnion("num.log", c("numeric", "logical", "NULL"))
 setClassUnion("logical.list", c("logical", "list"))
 setClassUnion("missing.char", c("missing", "character"))
@@ -21,7 +22,9 @@ setClassUnion("num.array.null", c("numeric", "array", "NULL"))
 
 
 setClassUnion("array.char.null", c("array", "character", "NULL"))
+setClassUnion("char.log.num", c("character", 'logical', 'numeric', "NULL"))
 setClassUnion("array.char.num", c("array", "character", "numeric", "NULL"))
+setClassUnion("array.char.num.list", c("array", "character", "numeric", 'list', "NULL"))
 setClassUnion("num.array.list", c("numeric", "array", "list", "NULL"))
 setClassUnion("num.array.df", c("numeric", "array", "data.frame", "NULL"))
 

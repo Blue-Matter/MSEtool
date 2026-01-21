@@ -2,7 +2,7 @@
 #'
 #' @details
 #' These functions extract stock or fleet names from objects used in the MSE
-#' framework, including [OM()], [Hist()], [Stock()], [Fleet()], and [MSE()]
+#' framework, including [OM()], [Hist()], [Stock()], [Fleet()], and [MSE]
 #' objects
 #'
 #' \strong{StockNames}
@@ -14,7 +14,7 @@
 #' Returns the names of fleets contained in the object. For objects containing
 #' multiple stocks, a list of character vectors is returned.
 #'
-#' @param object An [OM()], [Hist()], [Stock()], [Fleet()], or [MSE()] object.
+#' @param object An [OM()], [Hist()], [Stock()], [Fleet()], or [MSE] object.
 #'
 #' @return
 #' \itemize{

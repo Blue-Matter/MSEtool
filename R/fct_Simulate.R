@@ -46,16 +46,22 @@ Simulate_om <- function(OM = NULL,
 
   # ---- Make Hist Object ----
   Hist <- OM2Hist(OM, silent)
-
+  
   # ---- Calculate Equilibrium Unfished ----
   Hist@Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
-
+  
   # ---- Dynamic Number-at-Age for Initial Time Step ----
   # - initial age structure
   # - distribute over areas
   # - account for Initial Depletion
   Hist <- CalcDynamicInitial(Hist)
   
+  
+  # add temporary lists and arrays to Hist@Misc for C++
+  Hist <- PrepHistMisc(Hist) 
+  
+  Hist@Misc$RecDevs[[1]] |> class()
+  Hist@Misc$RecDevs$Male |> dim()
   
   HistYears <- Years(OM, "H")
   AllYears <- Years(OM)
@@ -64,23 +70,44 @@ Simulate_om <- function(OM = NULL,
   nFleet <- nFleet(OM)
   nArea <- nArea(OM)
   
-  
-  # Recruitment ...
-  
-  
-  
-  
-  
+
   tictoc::tic()
   HistOUT <- CalcFisheryDynamics_(Hist,
-    Years = HistYears,
+    Years = HistYears[1],
     AllYears,
     nSim,
     nStock,
     nFleet,
     nArea
   )
-  tictoc::toc()  
+  tictoc::toc()
+  
+  Hist@Misc$R0 |> dim()
+  Hist@Misc$SP0 |> dim()
+  
+  HistOUT@Number$Female[1, 1, 1:4, 1]
+  HistOUT@Number$Male[1, 1, 1:4, 1]
+  
+  HistOUT@Number$Female[1, , 4, 1]
+  
+  HistOUT@Number$Female[1:2, 1, 1:4, 1]
+  HistOUT@Number$Male[1:2, 1, 1:4, 1]
+  
+  
+  HistOUT@SProduction[1:2, 1, 1:4]
+  HistOUT@SProduction[1:2, 2, 1:4]
+  
+  HistOUT@SProduction[1, 1, 1]
+  HistOUT@SProduction[1, 2, 1]
+  
+  
+ 
+  
+
+  
+  
+  return(HistOUT)
+  
   
   sim <- 1 
   y <- 1
@@ -105,7 +132,7 @@ Simulate_om <- function(OM = NULL,
   
 
   
-  return(HistOUT)
+
 
 
 

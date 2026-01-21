@@ -1,7 +1,7 @@
 #' Return Effort from Hist or MSE object
 #' 
 #' Returns `Effort` 
-#' @param object A [Hist()] or [MSE()] object
+#' @param object A [Hist] or [MSE] object
 #' @return A [data.frame()] or a multi-dimensional [array()] if `df=FALSE`
 #' @export
 ReturnEffort <- function(object, df=TRUE, hist=TRUE) {

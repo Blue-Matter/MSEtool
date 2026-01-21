@@ -31,7 +31,7 @@ PopulateFleet <- function(Fleet,
   ProjYears <- Years[!Years %in% HistYears]
   nArea <- ncol(RelativeSize)
 
-  argList <- list(Ages, Length, Weight, RelativeSize, nsim, Years, seed)
+  argList <- list(Ages, Length, Weight, RelativeSize, nSim, Years, seed)
   
   if (EmptyObject(Fleet)) {
     return(Fleet)

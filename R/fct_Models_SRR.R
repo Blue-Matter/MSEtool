@@ -77,7 +77,7 @@ NULL
 
 # ---------------------- NOTE ----------------------
 # 
-#   These built-in SRR models have C++ equivalents in inst/include/srr_models.h
+#   These built-in SRR models have C++ equivalents in src/srr_models.cpp
 #   The C++ models are called internally in inst/include/calc_recruitment.h 
 #   any changes or additions to these R functions should be matched by equivalent
 #   changes to inst/include/srr_models.h
@@ -106,12 +106,17 @@ BevertonHolt <- function(S, S0, R0, h) {
   isScalarNumeric(R0, 'R0')
   isScalarNumeric(h, 'h')
   
-  phi0 <- S0 / R0
-  alpha <- 4 * h / ((1 - h) * phi0)
-  beta <- (5 * h - 1) / ((1 - h) * phi0 * R0)
-  alpha * S / (1 + beta * S)
+  # phi0 <- S0 / R0
+  # alpha <- 4 * h / ((1 - h) * phi0)
+  # beta <- (5 * h - 1) / ((1 - h) * phi0 * R0)
+  # alpha * S / (1 + beta * S)
+  
+  BevertonHolt_cpp(S, S0, R0, h)
 }
 class(BevertonHolt) <- "SRR-Model"
+
+
+
 
 #' @rdname SRRModels
 #' @export
@@ -134,10 +139,12 @@ Ricker <- function(S, S0, R0, hR) {
   isScalarNumeric(R0, 'R0')
   isScalarNumeric(hR, 'hR')
   
-  phi0 <- S0 / R0
-  alpha <- (5 * hR)^1.25 / phi0
-  beta <- log((5 * hR)^1.25) / (phi0 * R0)
-  alpha * S * exp(-beta * S)
+  # phi0 <- S0 / R0
+  # alpha <- (5 * hR)^1.25 / phi0
+  # beta <- log((5 * hR)^1.25) / (phi0 * R0)
+  # alpha * S * exp(-beta * S)
+  
+  Ricker_cpp(S, S0, R0, hR)
 }
 class(Ricker) <- "SRR-Model"
 
@@ -168,10 +175,10 @@ HockeyStick <- function(S, S0, R0, Shinge) {
     ))
   }
   
-  
-  S_hinge <- S0 * Shinge
-  expR <- (R0/(2*S_hinge)) * ((S+S_hinge) - abs((S-S_hinge)))
-  pmax(expR, 0)  
+  # S_hinge <- S0 * Shinge
+  # expR <- (R0/(2*S_hinge)) * ((S+S_hinge) - abs((S-S_hinge)))
+  # pmax(expR, 0)
+  HockeyStick_cpp(S, S0, R0, Shinge)
 }
 
 class(HockeyStick) <- "SRR-Model"

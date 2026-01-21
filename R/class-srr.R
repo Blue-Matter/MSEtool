@@ -18,7 +18,7 @@
 #' @slot Units Scaling factor for recruitment.
 #' @slot Misc Miscellaneous list.
 #'
-#' @include 00_Class_unions.R
+#' @include class-unions.R
 setClass(
   "srr",
   slots = c(

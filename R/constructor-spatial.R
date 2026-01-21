@@ -106,7 +106,6 @@
 #' [GetSpatial()], [SetSpatial()],
 #' [UnfishedDist()], [ProbStaying()], [Movement()]
 #'
-#' @example man-examples/class-Spatial.R
 #'
 #' @export
 Spatial <- function(UnfishedDist,

@@ -16,7 +16,7 @@
 #' @param Classes Weight classes
 #' @param `Misc` Miscellaneous list
 #' @export
-#' @include 00_Class_unions.R
+#' @include class-unions.R
 setClass("weight",
          slots=c(Pars='list',
                  Model='fun.char',
@@ -42,7 +42,3 @@ setValidity("weight", function(object) {
 })
 
 
-setValidity("length", function(object) {
-  # TODO
-  TRUE
-})

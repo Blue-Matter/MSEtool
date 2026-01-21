@@ -6,6 +6,8 @@
 #include "calc_spatial_effort_dist.h"
 #include "calc_area_f.h"
 #include "calc_spawn_production.h"
+#include "calc_recruitment.h"
+#include "calc_number_next.h"
 
 using namespace Rcpp;
 
@@ -50,6 +52,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     // ---------------------------------------------------------
     
     CalcSpatialDistribution(y,
+                            nSim,
                             hv.Distribution,
                             hv.Number,
                             hv.WeightFleet,
@@ -70,6 +73,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     // ---------------------------------------------------------
     
     CalcArea_F(y,
+               nSim,
                hv.FDeadArea,
                hv.FRetainArea,
                hv.SelAge,
@@ -89,6 +93,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     // ---------------------------------------------------------
     
     CalcSpawnProduction(y,
+                        nSim,
                         hv.SBiomass,
                         hv.SProduction,
                         hv.Number,
@@ -104,12 +109,39 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                         nArea);
     
     // ---------------------------------------------------------
-    // Calculate Recruitment
-    // src: inst/include/...
+    // Calculate Recruitment & Distribute over areas
+    // src: inst/include/calc_recruitment.h
     // ---------------------------------------------------------
     
-    // CalcRecruitment(y,
-    //                 )
+    CalcRecruitment(y,
+                    nSim,
+                    hv.Number,
+                    hv.SProduction,
+                    hv.SRR_Pars,
+                    hv.SRR_Model,
+                    hv.RecLag,
+                    hv.RecDevs,
+                    hv.SP0,
+                    hv.R0,
+                    hv.RecDist,
+                    nStock,
+                    nArea);
+    
+    // ---------------------------------------------------------
+    // Calculate Number at beginning of next time step
+    // src: inst/include/calc_numiber_next.h
+    // ---------------------------------------------------------
+    
+    CalcNumberNext(y,
+                   nSim,
+                   hv.Number,
+                   hv.FDeadArea,
+                   hv.NaturalMortality,
+                   hv.Semelparous,
+                   hv.PlusGroup,
+                   hv.Movement,
+                   nStock,
+                   nArea);
     
     // ---------------------------------------------------------
     // Calculate Catch (if applicable)
@@ -121,13 +153,6 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     // Calculate overall F (if applicable)
     // src: inst/include/...
     // ---------------------------------------------------------
-    
-    
-    // ---------------------------------------------------------
-    // Calculate Number at beginning of next time step
-    // src: inst/include/...
-    // ---------------------------------------------------------
-    
     
     
     

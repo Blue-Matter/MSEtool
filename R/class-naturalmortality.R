@@ -13,7 +13,7 @@
 #' @slot Misc Miscellaneous list.
 #'
 #' @export
-#' @include class_unions.R
+#' @include class-unions.R
 setClass(
   "naturalmortality",
   slots = c(

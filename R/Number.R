@@ -2,7 +2,7 @@
 #' Return Number from Hist or MSE object
 #' 
 #' Returns `Number` 
-#' @param object A [Hist()] or [MSE()] object
+#' @param object A [Hist()] or [MSE] object
 #' @return A [data.frame()] or a multi-dimensional [array()] if `df=FALSE`
 #' @export
 Number <- function(object, df=TRUE, hist=TRUE, byArea=FALSE, byAge=FALSE) {

@@ -12,7 +12,24 @@ SRR - as above
 Spatial - as above 
 Depletion - DONE
 
-Stock 
+Stock - done - review documentation and add examples
+
+
+Effort 
+Catchability - update documentation after tech manual complete
+Selectivity - as above
+Retention   - as above
+DiscardMortality - 
+Closure - document in Fleet
+WeightFleet - document in Fleet 
+BioEconomic - as above 
+
+Fleet - as above
+
+
+OM - as aboe
+
+
 
 
 
@@ -26,6 +43,7 @@ TODO
  that Pars and Model overwrite other arrays
 - update GenerateMeanAtAge for von Bert for the new function structure
 - refactor all models in same manner as length models
+- document all internal S4 objects used in Data, Obs, etc
 - check for duplicate helpers (eg Classes, MeanAtAge, Pars) and document together
 - show methods for all
 - plot methods for all 

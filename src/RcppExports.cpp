@@ -100,23 +100,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// CalcRecruitment_
-double CalcRecruitment_(double SProduction, double R0, double SP0, double RecDev, Function SRRModel, List SRRPars, int TSindex);
-RcppExport SEXP _MSEtool_CalcRecruitment_(SEXP SProductionSEXP, SEXP R0SEXP, SEXP SP0SEXP, SEXP RecDevSEXP, SEXP SRRModelSEXP, SEXP SRRParsSEXP, SEXP TSindexSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type SProduction(SProductionSEXP);
-    Rcpp::traits::input_parameter< double >::type R0(R0SEXP);
-    Rcpp::traits::input_parameter< double >::type SP0(SP0SEXP);
-    Rcpp::traits::input_parameter< double >::type RecDev(RecDevSEXP);
-    Rcpp::traits::input_parameter< Function >::type SRRModel(SRRModelSEXP);
-    Rcpp::traits::input_parameter< List >::type SRRPars(SRRParsSEXP);
-    Rcpp::traits::input_parameter< int >::type TSindex(TSindexSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcRecruitment_(SProduction, R0, SP0, RecDev, SRRModel, SRRPars, TSindex));
-    return rcpp_result_gen;
-END_RCPP
-}
 // CalcStockMovement_
 arma::cube CalcStockMovement_(arma::cube NumberAtAgeArea, arma::cube Movement, int nAge, int nArea, int TSindex);
 RcppExport SEXP _MSEtool_CalcStockMovement_(SEXP NumberAtAgeAreaSEXP, SEXP MovementSEXP, SEXP nAgeSEXP, SEXP nAreaSEXP, SEXP TSindexSEXP) {
@@ -477,6 +460,48 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// BevertonHolt_cpp
+NumericVector BevertonHolt_cpp(const NumericVector& S, const double S0, const double R0, const double h);
+RcppExport SEXP _MSEtool_BevertonHolt_cpp(SEXP SSEXP, SEXP S0SEXP, SEXP R0SEXP, SEXP hSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type S(SSEXP);
+    Rcpp::traits::input_parameter< const double >::type S0(S0SEXP);
+    Rcpp::traits::input_parameter< const double >::type R0(R0SEXP);
+    Rcpp::traits::input_parameter< const double >::type h(hSEXP);
+    rcpp_result_gen = Rcpp::wrap(BevertonHolt_cpp(S, S0, R0, h));
+    return rcpp_result_gen;
+END_RCPP
+}
+// Ricker_cpp
+NumericVector Ricker_cpp(const NumericVector& S, const double S0, const double R0, const double hR);
+RcppExport SEXP _MSEtool_Ricker_cpp(SEXP SSEXP, SEXP S0SEXP, SEXP R0SEXP, SEXP hRSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type S(SSEXP);
+    Rcpp::traits::input_parameter< const double >::type S0(S0SEXP);
+    Rcpp::traits::input_parameter< const double >::type R0(R0SEXP);
+    Rcpp::traits::input_parameter< const double >::type hR(hRSEXP);
+    rcpp_result_gen = Rcpp::wrap(Ricker_cpp(S, S0, R0, hR));
+    return rcpp_result_gen;
+END_RCPP
+}
+// HockeyStick_cpp
+NumericVector HockeyStick_cpp(const NumericVector& S, const double S0, const double R0, const double Shinge);
+RcppExport SEXP _MSEtool_HockeyStick_cpp(SEXP SSEXP, SEXP S0SEXP, SEXP R0SEXP, SEXP ShingeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type S(SSEXP);
+    Rcpp::traits::input_parameter< const double >::type S0(S0SEXP);
+    Rcpp::traits::input_parameter< const double >::type R0(R0SEXP);
+    Rcpp::traits::input_parameter< const double >::type Shinge(ShingeSEXP);
+    rcpp_result_gen = Rcpp::wrap(HockeyStick_cpp(S, S0, R0, Shinge));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_CalcAgeSizeKey_", (DL_FUNC) &_MSEtool_CalcAgeSizeKey_, 5},
@@ -485,7 +510,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_CalcBiomass_", (DL_FUNC) &_MSEtool_CalcBiomass_, 2},
     {"_MSEtool_CalcCatch_", (DL_FUNC) &_MSEtool_CalcCatch_, 3},
     {"_MSEtool_CalcNumberNext_", (DL_FUNC) &_MSEtool_CalcNumberNext_, 8},
-    {"_MSEtool_CalcRecruitment_", (DL_FUNC) &_MSEtool_CalcRecruitment_, 7},
     {"_MSEtool_CalcStockMovement_", (DL_FUNC) &_MSEtool_CalcStockMovement_, 5},
     {"_MSEtool_vecminInd", (DL_FUNC) &_MSEtool_vecminInd, 1},
     {"_MSEtool_LinInterp_cpp", (DL_FUNC) &_MSEtool_LinInterp_cpp, 3},
@@ -507,6 +531,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_popdynOneTScpp", (DL_FUNC) &_MSEtool_popdynOneTScpp, 5},
     {"_MSEtool_movestockCPP", (DL_FUNC) &_MSEtool_movestockCPP, 4},
     {"_MSEtool_popdynCPP", (DL_FUNC) &_MSEtool_popdynCPP, 31},
+    {"_MSEtool_BevertonHolt_cpp", (DL_FUNC) &_MSEtool_BevertonHolt_cpp, 4},
+    {"_MSEtool_Ricker_cpp", (DL_FUNC) &_MSEtool_Ricker_cpp, 4},
+    {"_MSEtool_HockeyStick_cpp", (DL_FUNC) &_MSEtool_HockeyStick_cpp, 4},
     {NULL, NULL, 0}
 };
 

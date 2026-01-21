@@ -33,7 +33,6 @@
 #' [Pars()], [Model()], [MeanAtAge()], [MeanAtLength()],
 #' [MeanAtWeight()], [Classes()], [Populate()]
 #'
-#' @example man-examples/class-Maturity.R
 #'
 #' @export
 Maturity <- function(Pars,

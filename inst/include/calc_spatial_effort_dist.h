@@ -16,7 +16,8 @@
  * Calculate spatial effort distribution across areas
  */
 inline void CalcSpatialDistribution(
-    const int y,                            
+    const int y,    
+    const int nSim,
     Array4D& Distribution,         
     const std::vector<Array4D>& Number,    
     const std::vector<ConstArrayView4D>& WeightFleet,   
@@ -31,20 +32,6 @@ inline void CalcSpatialDistribution(
     const int nFleet,
     const int nArea) {                   
   
-  // Calculate nSim - maximum number of simulations 
-  const int nSim = infer_nSim(
-    Distribution,
-    Number,
-    WeightFleet,
-    SelAge,
-    RetAge,
-    Effort,
-    q,
-    RelSize
-  );
-  
-  const std::array<int,3> dim = {nSim, nFleet, nArea};
-  
   if (nArea == 1) {
     for (int sim = 0; sim < nSim; ++sim)
       for (int fl = 0; fl < nFleet; ++fl)
@@ -52,8 +39,9 @@ inline void CalcSpatialDistribution(
     return;
   }
   
+
   // Util array: sim, fleet, area 
-  // Stored because we may want to keep this object later
+  const std::array<int,3> dim = {nSim, nFleet, nArea};
   Array3D Util(dim, 0.0);
   
   // Loop over stocks
@@ -67,29 +55,47 @@ inline void CalcSpatialDistribution(
     
     const int nAge = Num_st.dim[1];
     
+    const int simN = Num_st.dim[0];
+    const int simW = Wgt_st.dim[0];
+    const int simS = Sel_st.dim[0];
+    const int simR = Ret_st.dim[0];
+    const int simQ = q.dim[0];
+    const int simC = Closure.dim[0];
+    
     // Exploitable biomass per unit effort
     for (int sim = 0; sim < nSim; ++sim) {
+      const int iN = sim_i(sim, simN);
+      const int iW = sim_i(sim, simW);
+      const int iS = sim_i(sim, simS);
+      const int iR = sim_i(sim, simR);
+      const int iQ = sim_i(sim, simQ);
+      const int iC = sim_i(sim, simC);
+      
       for (int fl = 0; fl < nFleet; ++fl) {
         for (int ar = 0; ar < nArea; ++ar) {
           
-          if (Closure(sim, st, y, fl, ar) <= 0.0) continue;
+          if (Closure(iC, st, y, fl, ar) <= 0.0) continue;
           double B_sfr = 0.0;
           for (int age = 0; age < nAge; ++age) {
             B_sfr +=
-              Num_st(sim, age, y, ar) *
-              Wgt_st(sim, age, y, fl) *
-              Sel_st(sim, age, y, fl, ar) *
-              Ret_st(sim, age, y, fl, ar);
+              Num_st(iN, age, y, ar) *
+              Wgt_st(iW, age, y, fl) *
+              Sel_st(iS, age, y, fl, ar) *
+              Ret_st(iR, age, y, fl, ar);
           }
-          B_hat(sim, fl, ar) = q(sim, st, y, fl) * B_sfr;
+          B_hat(sim, fl, ar) = q(iQ, st, y, fl) * B_sfr;
         } 
       }
     }
     
     // Within-season saturation 
     for (int sim = 0; sim < nSim; ++sim) {
+      
+      const int iQ = sim_i(sim, q.dim[0]);
+      const int iE = sim_i(sim, Effort.dim[0]);
+      
       for (int fl = 0; fl < nFleet; ++fl) {
-        const double phi = q(sim, st, y, fl) * Effort(sim, y, fl);
+        const double phi = q(iQ, st, y, fl) * Effort(iE, y, fl);
         
         // Median B_ref across areas
         std::vector<double> Bvec(nArea);
@@ -135,8 +141,9 @@ inline void CalcSpatialDistribution(
   
   // Calculate Effort Distribution
   for (int sim = 0; sim < nSim; ++sim) {
+    const int iT = sim_i(sim, Targeting.dim[0]);
     for (int fl = 0; fl < nFleet; ++fl) {
-      const double theta = Targeting(sim,y,fl);
+      const double theta = Targeting(iT,y,fl);
       if (theta <= 0.0) continue;
       
       double total = 0.0;

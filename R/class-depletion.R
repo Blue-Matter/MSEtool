@@ -8,7 +8,7 @@
 #' @slot Reference Character scalar identifying the reference biomass.
 #'
 #' @export
-#' @include 00_Class_unions.R
+#' @include class-unions.R
 setClass('depletion',
          slots=c(Initial='num.array.null',
                  Final='num.array.null',

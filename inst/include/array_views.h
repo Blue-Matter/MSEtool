@@ -115,105 +115,105 @@ slice_year(const Array5D& x, int year) {
   return out;
 } 
 
-// generic assignment nD → ND with broadcasting 
-template <size_t N_big, size_t N_small>
-inline void assign_nd_into_Nd(
-    ArrayND<N_big>& target,
-    const ArrayND<N_small>& src,
-    const std::array<size_t, N_small>& map,   
-    const std::array<int, N_big>& fixed) {
-  static_assert(N_small < N_big, "Source must have fewer dimensions");
-  
-  // Validate compatibility
-  for (size_t i = 0; i < N_small; ++i) {
-    int td = target.dim[ map[i] ];
-    int sd = src.dim[i];
-    if (sd != 1 && sd != td) {
-      Rcpp::stop(
-        "assign_nd_into_Nd: incompatible dimension (src=%d, target=%d)",
-        sd, td
-      );
-    }
-  }
-  
-  std::array<int, N_big> idx_big{};
-  std::array<int, N_small> idx_small{};
-  
-  for (int flat = 0; flat < target.size(); ++flat) {
-    
-    // unravel flat index
-    int tmp = flat;
-    for (size_t d = 0; d < N_big; ++d) {
-      idx_big[d] = tmp % target.dim[d];
-      tmp /= target.dim[d];
-    }
-    
-    // fixed dimension check
-    bool ok = true;
-    for (size_t d = 0; d < N_big; ++d) {
-      if (fixed[d] >= 0 && idx_big[d] != fixed[d]) {
-        ok = false;
-        break;
-      }
-    }
-    if (!ok) continue;
-    
-    // map + broadcast
-    for (size_t i = 0; i < N_small; ++i) {
-      int t = idx_big[ map[i] ];
-      idx_small[i] = (src.dim[i] == 1 ? 0 : t);
-    }
-    
-    target.x[flat] = src(idx_small);
-  }
-}
-
-// Assignment wrappers
-
-
-
-// 3D sim, fleet, area into 5D sim, stock, year, fleet, area
-inline void sFA_into_sSYFA(
-    Array5D& target,
-    const Array3D& src,
-    int stock,
-    int year
-) {
-  assign_nd_into_Nd<5,3>(
-      target,
-      src,
-      /* map   */ { Dim5::sim, Dim5::fleet, Dim5::area },
-      /* fixed */ { -1, stock, year, -1, -1 }
-  );
-}
-
-// 3D sim, fleet, area into 4D sim, year, fleet, area
-inline void sFA_into_sYFA(
-    Array4D& target,
-    const Array3D& src,
-    int year
-) {
-  assign_nd_into_Nd<4,3>(
-      target,
-      src,
-      /* map   */ { Dim4::sim, Dim4::fleet, Dim4::area },
-      /* fixed */ { -1, year, -1, -1 }
-  );
-}
-
-
-inline void assign_4d_into_5d(
-    Array5D& target,
-    const Array4D& src,
-    int year
-) {
-  assign_nd_into_Nd<5,4>(
-      target,
-      src,
-      /* map   */ { Dim5::sim, Dim5::stock, Dim5::fleet, Dim5::area },
-      /* fixed */ { -1, -1, year, -1, -1 }
-  );
-}
+// // generic assignment nD → ND with broadcasting 
+// template <size_t N_big, size_t N_small>
+// inline void assign_nd_into_Nd(
+//     ArrayND<N_big>& target,
+//     const ArrayND<N_small>& src,
+//     const std::array<size_t, N_small>& map,   
+//     const std::array<int, N_big>& fixed) {
+//   static_assert(N_small < N_big, "Source must have fewer dimensions");
+//   
+//   // Validate compatibility
+//   for (size_t i = 0; i < N_small; ++i) {
+//     int td = target.dim[ map[i] ];
+//     int sd = src.dim[i];
+//     if (sd != 1 && sd != td) {
+//       Rcpp::stop(
+//         "assign_nd_into_Nd: incompatible dimension (src=%d, target=%d)",
+//         sd, td
+//       );
+//     }
+//   }
+//   
+//   std::array<int, N_big> idx_big{};
+//   std::array<int, N_small> idx_small{};
+//   
+//   for (int flat = 0; flat < target.size(); ++flat) {
+//     
+//     // unravel flat index
+//     int tmp = flat;
+//     for (size_t d = 0; d < N_big; ++d) {
+//       idx_big[d] = tmp % target.dim[d];
+//       tmp /= target.dim[d];
+//     }
+//     
+//     // fixed dimension check
+//     bool ok = true;
+//     for (size_t d = 0; d < N_big; ++d) {
+//       if (fixed[d] >= 0 && idx_big[d] != fixed[d]) {
+//         ok = false;
+//         break;
+//       }
+//     }
+//     if (!ok) continue;
+//     
+//     // map + broadcast
+//     for (size_t i = 0; i < N_small; ++i) {
+//       int t = idx_big[ map[i] ];
+//       idx_small[i] = (src.dim[i] == 1 ? 0 : t);
+//     }
+//     
+//     target.x[flat] = src(idx_small);
+//   }
+// }
+// 
+// // Assignment wrappers
+// 
+// 
+// 
+// // 3D sim, fleet, area into 5D sim, stock, year, fleet, area
+// inline void sFA_into_sSYFA(
+//     Array5D& target,
+//     const Array3D& src,
+//     int stock,
+//     int year
+// ) {
+//   assign_nd_into_Nd<5,3>(
+//       target,
+//       src,
+//       /* map   */ { Dim5::sim, Dim5::fleet, Dim5::area },
+//       /* fixed */ { -1, stock, year, -1, -1 }
+//   );
+// }
+// 
+// // 3D sim, fleet, area into 4D sim, year, fleet, area
+// inline void sFA_into_sYFA(
+//     Array4D& target,
+//     const Array3D& src,
+//     int year
+// ) {
+//   assign_nd_into_Nd<4,3>(
+//       target,
+//       src,
+//       /* map   */ { Dim4::sim, Dim4::fleet, Dim4::area },
+//       /* fixed */ { -1, year, -1, -1 }
+//   );
+// }
+// 
+// 
+// inline void assign_4d_into_5d(
+//     Array5D& target,
+//     const Array4D& src,
+//     int year
+// ) {
+//   assign_nd_into_Nd<5,4>(
+//       target,
+//       src,
+//       /* map   */ { Dim5::sim, Dim5::stock, Dim5::fleet, Dim5::area },
+//       /* fixed */ { -1, -1, year, -1, -1 }
+//   );
+// }
 
 // Array views
 template <size_t N>

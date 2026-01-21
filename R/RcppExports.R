@@ -25,10 +25,6 @@ CalcNumberNext_ <- function(NumberAtAgeAreaThisTS, NumberAtAgeAreaNextTS, Semelp
     .Call(`_MSEtool_CalcNumberNext_`, NumberAtAgeAreaThisTS, NumberAtAgeAreaNextTS, Semelparous, FDeadAtAgeAreaThisTS, NaturalMortalityAtAgeThisTS, plusgroup, nAge, nArea)
 }
 
-CalcRecruitment_ <- function(SProduction, R0, SP0, RecDev, SRRModel, SRRPars, TSindex) {
-    .Call(`_MSEtool_CalcRecruitment_`, SProduction, R0, SP0, RecDev, SRRModel, SRRPars, TSindex)
-}
-
 CalcStockMovement_ <- function(NumberAtAgeArea, Movement, nAge, nArea, TSindex) {
     .Call(`_MSEtool_CalcStockMovement_`, NumberAtAgeArea, Movement, nAge, nArea, TSindex)
 }
@@ -214,5 +210,17 @@ movestockCPP <- function(nareas, maxage, mov, Number) {
 #' @keywords internal
 popdynCPP <- function(nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, SRRfun, SRRpars, plusgroup = 0L, spawn_time_frac = 0) {
     .Call(`_MSEtool_popdynCPP`, nareas, maxage, Ncurr, pyears, M_age, Asize_c, MatAge, WtAge, FecAge, Vuln, Retc, Prec, movc, SRrelc, Effind, Spat_targc, hc, R0c, SSBpRc, aRc, bRc, Qc, Fapic, maxF, MPA, control, SSB0c, SRRfun, SRRpars, plusgroup, spawn_time_frac)
+}
+
+BevertonHolt_cpp <- function(S, S0, R0, h) {
+    .Call(`_MSEtool_BevertonHolt_cpp`, S, S0, R0, h)
+}
+
+Ricker_cpp <- function(S, S0, R0, hR) {
+    .Call(`_MSEtool_Ricker_cpp`, S, S0, R0, hR)
+}
+
+HockeyStick_cpp <- function(S, S0, R0, Shinge) {
+    .Call(`_MSEtool_HockeyStick_cpp`, S, S0, R0, Shinge)
 }
 
