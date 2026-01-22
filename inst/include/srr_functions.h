@@ -4,6 +4,9 @@
 #include <Rcpp.h>
 #include <cmath>
 #include "srr_functions.h"
+#include "array_nd.h"
+#include "array_views.h"
+#include "array_types.h"
 
 using namespace Rcpp;
 
@@ -55,5 +58,52 @@ inline double HockeyStick_kernel(
   return expR > 0.0 ? expR : 0.0;
 } 
 
+// SRR model codes
+constexpr int SRR_BEVERTON_HOLT = 0;
+constexpr int SRR_RICKER        = 1;
+constexpr int SRR_HOCKEY_STICK  = 2;
 
+
+inline double EvalSRR(
+    int model,
+    double S,
+    double S0,
+    double R0,
+    const std::vector<ConstArrayView2D>& pars_st,
+    int sim,   
+    int y) {
+  
+  if (pars_st.empty()) {
+    Rcpp::stop("SRR model %d called with zero parameters", model);
+  }
+  
+  switch (model) {
+
+  case SRR_BEVERTON_HOLT:
+    return BevertonHolt_kernel(
+      S,
+      S0,
+      R0,
+      pars_st[0](sim, y) // h
+    );
+  case SRR_RICKER: 
+    return Ricker_kernel(
+      S,
+      S0,
+      R0,
+      pars_st[0](sim, y) // hR
+    );
+    
+    
+  case SRR_HOCKEY_STICK: 
+    return HockeyStick_kernel(
+      S,
+      S0,
+      R0,
+      pars_st[0](sim, y) // Shinge
+    );
+  default: 
+    Rcpp::stop("Unknown SRR model code");
+  }
+}  
 #endif

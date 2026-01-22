@@ -39,6 +39,19 @@ PrepHistMisc <- function(Hist) {
   
   nStock <- nStock(Hist)
   
+  
+  stock@Length@ASK |> dim()
+  object.size(stock@Length@ASK)/1E6
+  tt <- Extend(stock@Length@ASK, OM@nSim, Years=HistYears)
+  
+  object.size(tt)/1E6
+  dim(tt)
+  dim(stock@Length@ASK)
+  
+  tt <- array(0, dim=c(100, 40, 60, 100))
+  
+  object.size(tt)/1E6
+  
   # ---- 2D Array ----
   
   
@@ -59,7 +72,7 @@ PrepHistMisc <- function(Hist) {
   
   ## ---- 2D Array ----
   
-  # Sim, Year
+  # Sim, Year - must be the same for all stocks
   Hist@Misc$RelSize <- Hist@OM@Stock[[1]]@Spatial@RelativeSize
   CheckDims( Hist@Misc$RelSize, 2, RelSize)
   

@@ -113,11 +113,6 @@ inline void infer_nSim_from(int& nSim,
   }
 }
 
-// Return sim index, respecting broadcasting
-inline int sim_i(int sim, int sim_dim) {
-  return (sim_dim == 1) ? 0 : sim;
-}
-
 
 
 #endif // HELPERS_H

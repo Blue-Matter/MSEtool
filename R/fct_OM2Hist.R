@@ -22,10 +22,10 @@ OM2Hist <- function(OM, silent = FALSE) {
   Hist@OM <- OM
   HistYears <- Years(OM, "Historical")
   nYears <- length(HistYears)
-  nSim <- NULL # don't extend arrays to length OM@nSim
+  nSim <- OM@nSim 
 
   
-  # Stock - expand all arrays to all historical years
+  # Stock - expand all arrays to all sims and historical years
   Hist@OM@Stock <- purrr::map(OM@Stock, \(Stock) {
     Stock <- ExtendStock(Stock, nSim, HistYears, silent, id)
     Stock@SRR@SPFrom <- match(Stock@SRR@SPFrom, StockNames(OM))

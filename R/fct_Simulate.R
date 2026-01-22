@@ -57,11 +57,25 @@ Simulate_om <- function(OM = NULL,
   Hist <- CalcDynamicInitial(Hist)
   
   
-  # add temporary lists and arrays to Hist@Misc for C++
+  # ---- Add temporary lists and arrays to Hist@Misc ----
+  # use for easy acces in C++  - removed later
   Hist <- PrepHistMisc(Hist) 
   
-  Hist@Misc$RecDevs[[1]] |> class()
-  Hist@Misc$RecDevs$Male |> dim()
+  
+  
+  # ---------------------- DEBUG ----------------------
+  
+  Hist@LandingsAtAge$Female |> dim()
+  Hist@DiscardsAtAge$Female 
+  
+  Hist@LandingsAtSize$Female |> dim()
+  Hist@DiscardsAtSize$Female$F1_JPN_WCNPO_OSDWCOLL_late_Area1
+  
+  
+  Hist@Misc$SizeClasses
+  Hist@Misc$ASK 
+  
+  # - check is ASK doesn't exist in C++ 
   
   HistYears <- Years(OM, "H")
   AllYears <- Years(OM)
@@ -69,11 +83,10 @@ Simulate_om <- function(OM = NULL,
   nStock <- nStock(OM)
   nFleet <- nFleet(OM)
   nArea <- nArea(OM)
-  
 
   tictoc::tic()
-  HistOUT <- CalcFisheryDynamics_(Hist,
-    Years = HistYears[1],
+  Hist <- CalcFisheryDynamics_(Hist,
+    Years = HistYears,
     AllYears,
     nSim,
     nStock,
@@ -81,61 +94,18 @@ Simulate_om <- function(OM = NULL,
     nArea
   )
   tictoc::toc()
-  
-  Hist@Misc$R0 |> dim()
-  Hist@Misc$SP0 |> dim()
-  
-  HistOUT@Number$Female[1, 1, 1:4, 1]
-  HistOUT@Number$Male[1, 1, 1:4, 1]
-  
-  HistOUT@Number$Female[1, , 4, 1]
-  
-  HistOUT@Number$Female[1:2, 1, 1:4, 1]
-  HistOUT@Number$Male[1:2, 1, 1:4, 1]
-  
-  
-  HistOUT@SProduction[1:2, 1, 1:4]
-  HistOUT@SProduction[1:2, 2, 1:4]
-  
-  HistOUT@SProduction[1, 1, 1]
-  HistOUT@SProduction[1, 2, 1]
-  
-  
- 
-  
 
+  fl <- 1
+  Hist@FDeadArea$Female[1,,188,fl,] 
+  Hist@FDead$Female[1,,188,fl]
   
   
-  return(HistOUT)
+  # TODO - add maxF to C++ calcs
+  # TODO - add CAL calcs to C++ - update ALK internally
+  # continue with rest of Hist development
   
+  return(Hist)
   
-  sim <- 1 
-  y <- 1
-  cbind(HistOUT@Number$Female[sim, , y,1], HistOUT@Number$Male[sim, , y,1])
-  
-  
-  HistOUT@SBiomass[1:2,,1]
-  HistOUT@SBiomass[1:2,,2]
-  
-  HistOUT@SBiomass |> range(na.rm=TRUE)
-  
-  
-  HistOUT@SBiomass |> range(na.rm=TRUE)
-  Hist@SBiomass |> range(na.rm=TRUE)
-  
-  
-  # update C++ for NULL in at-length stuff ! and test 
-  HistOUT@Distribution |> range()
-  Hist@Distribution |> range()
-  
-  HistOUT@FDeadArea$Female |> dim()
-  
-
-  
-
-
-
-
 
 
   ##############################################################################
@@ -157,7 +127,7 @@ Simulate_om <- function(OM = NULL,
   }
 
 
-  # ---------------------- DEBUG ----------------------
+
 
 
   # up to here ...

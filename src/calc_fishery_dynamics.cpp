@@ -8,6 +8,9 @@
 #include "calc_spawn_production.h"
 #include "calc_recruitment.h"
 #include "calc_number_next.h"
+#include "calc_biomass.h"
+#include "calc_catch.h"
+#include "calc_overall_f.h"
 
 using namespace Rcpp;
 
@@ -19,8 +22,8 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                               const int nStock,
                               const int nFleet,
                               const int nArea,
-                              const int debug=0,
-                              const int CalcCatch=1       // calculate catch and overall F?
+                              const int DoCalcCatch=1,       // calculate catch?
+                              const int DoCalcaggF=1         // calculate overall F?   
 ) {
   
   Rcpp::S4 Hist = Rcpp::clone(HistIn); 
@@ -129,7 +132,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     
     // ---------------------------------------------------------
     // Calculate Number at beginning of next time step
-    // src: inst/include/calc_numiber_next.h
+    // src: inst/include/calc_number_next.h
     // ---------------------------------------------------------
     
     CalcNumberNext(y,
@@ -141,7 +144,22 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                    hv.PlusGroup,
                    hv.Movement,
                    nStock,
+                   nFleet,
                    nArea);
+    
+    // ---------------------------------------------------------
+    // Calculate Biomass (this time step)
+    // src: inst/include/calc_biomass.h
+    // ---------------------------------------------------------
+    
+    CalcBiomass(y,
+                nSim,
+                hv.Biomass,
+                hv.Number,
+                hv.Weight,
+                nStock,
+                nArea);
+    
     
     // ---------------------------------------------------------
     // Calculate Catch (if applicable)
@@ -149,11 +167,50 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     // ---------------------------------------------------------
     
     
+    if (DoCalcCatch) {
+      
+      // TODO   - calc landings- and discards-at-size
+      //        - need to calculate ASK internally
+      //        - and first check if sel_len/wght exists
+      
+      CalcCatch(y,
+                nSim,
+                hv.LandingsAtAge,
+                hv.DiscardsAtAge,
+                hv.FDeadArea,
+                hv.FRetainArea,
+                hv.NaturalMortality,
+                hv.Number,
+                nStock,
+                nFleet,
+                nArea);
+      
+    }
+    
     // ---------------------------------------------------------
     // Calculate overall F (if applicable)
     // src: inst/include/...
     // ---------------------------------------------------------
     
+    if (DoCalcaggF) {
+      CalcOverallF(y,
+                   nSim,
+                   hv.FDead,
+                   hv.FRetain,
+                   hv.FDeadArea,
+                   hv.FRetainArea,
+                   hv.LandingsAtAge,
+                   hv.DiscardsAtAge,
+                   hv.SelAge,
+                   hv.RetAge,
+                   hv.DiscMort,
+                   hv.NaturalMortality,
+                   hv.Number,
+                   hv.WeightFleet,
+                   nStock,
+                   nFleet,
+                   nArea);
+    }
     
     
   }

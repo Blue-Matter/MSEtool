@@ -34,25 +34,16 @@ inline void CalcArea_F(
   if (q.dim[2] <= y)
     Rcpp::stop("q: y out of bounds");
   
-  
-  const int simD = Distribution.dim[0];
-  const int simQ = q.dim[0];
-  const int simE = Effort.dim[0];
-  const int simR = RelSize.dim[0];
-  
+
   // Calculate effort density
   Array3D EffortDensity({nSim, nFleet, nArea}, 0.0);
   for (int sim = 0; sim < nSim; ++sim) {
-    
-    const int iE = sim_i(sim, simE);
-    const int iD = sim_i(sim, simD);
-    const int iR = sim_i(sim, simR);
-    
+  
     for (int fl = 0; fl < nFleet; ++fl) {
-      const double E = Effort(iE, y, fl);
+      const double E = Effort(sim, y, fl);
       for (int ar = 0; ar < nArea; ++ar) {
-        const double rs = RelSize(iR, ar);
-        EffortDensity(sim, fl, ar) = (rs > 0.0) ? E * Distribution(iD, y, fl, ar) / rs  : 0.0;
+        const double rs = RelSize(sim, ar);
+        EffortDensity(sim, fl, ar) = (rs > 0.0) ? E * Distribution(sim, y, fl, ar) / rs  : 0.0;
       }
     }
   }
@@ -69,26 +60,24 @@ inline void CalcArea_F(
   
     const int nAge = Fd.dim[1];
    
-    const int simS  = S.dim[0];
-    const int simRt = R.dim[0];
-    const int simDM = DM.dim[0];
+    if (Fd.dim[0] != nSim)
+      Rcpp::stop("FDeadArea sim dimension must equal nSim");
+    
+    if (Fr.dim[0] != nSim)
+      Rcpp::stop("FRetainArea sim dimension must equal nSim");
     
     for (int sim = 0; sim < nSim; ++sim) {
-      const int iQ  = sim_i(sim, simQ);
-      const int iS  = sim_i(sim, simS);
-      const int iRt = sim_i(sim, simRt);
-      const int iDM = sim_i(sim, simDM);
-      
+
       for (int fl = 0; fl < nFleet; ++fl) {
-        const double q_fl = q(iQ, st, y, fl);
+        const double q_fl = q(sim, st, y, fl);
         
         for (int ar = 0; ar < nArea; ++ar) {
           const double q_eff = q_fl * EffortDensity(sim, fl, ar);
           if (q_eff <= 0.0) continue;
           for (int age = 0; age < nAge; ++age) {
-            const double F_interact = q_eff * S(iS, age, y, fl, ar);
-            const double F_retain = F_interact * R(iRt, age, y, fl, ar);
-            const double F_disc = (F_interact - F_retain) * DM(iDM, age, y, fl, ar);
+            const double F_interact = q_eff * S(sim, age, y, fl, ar);
+            const double F_retain = F_interact * R(sim, age, y, fl, ar);
+            const double F_disc = (F_interact - F_retain) * DM(sim, age, y, fl, ar);
             Fd(sim, age, y, fl, ar) = F_retain + F_disc;
             Fr(sim, age, y, fl, ar) = F_retain;
           }

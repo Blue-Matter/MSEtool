@@ -17,18 +17,6 @@ CalcBiomass_ <- function(NumberAtAgeArea, WeightAtAge) {
     .Call(`_MSEtool_CalcBiomass_`, NumberAtAgeArea, WeightAtAge)
 }
 
-CalcCatch_ <- function(HistSimIn, Years, debug = 0L) {
-    .Call(`_MSEtool_CalcCatch_`, HistSimIn, Years, debug)
-}
-
-CalcNumberNext_ <- function(NumberAtAgeAreaThisTS, NumberAtAgeAreaNextTS, Semelparous, FDeadAtAgeAreaThisTS, NaturalMortalityAtAgeThisTS, plusgroup, nAge, nArea) {
-    .Call(`_MSEtool_CalcNumberNext_`, NumberAtAgeAreaThisTS, NumberAtAgeAreaNextTS, Semelparous, FDeadAtAgeAreaThisTS, NaturalMortalityAtAgeThisTS, plusgroup, nAge, nArea)
-}
-
-CalcStockMovement_ <- function(NumberAtAgeArea, Movement, nAge, nArea, TSindex) {
-    .Call(`_MSEtool_CalcStockMovement_`, NumberAtAgeArea, Movement, nAge, nArea, TSindex)
-}
-
 vecminInd <- function(x) {
     .Call(`_MSEtool_vecminInd`, x)
 }
@@ -65,10 +53,6 @@ Ref_int_cpp <- function(F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V
     .Call(`_MSEtool_Ref_int_cpp`, F_search, M_at_Age, Wt_at_Age, Mat_at_Age, Fec_at_Age, V_at_Age, Wt_at_Age_C, relRfun, SRRpars, maxage, plusgroup, spawn_time_frac)
 }
 
-PopulateNumberNext_ <- function(HistSimIn, Year, debug = 0L) {
-    .Call(`_MSEtool_PopulateNumberNext_`, HistSimIn, Year, debug)
-}
-
 SolveForFishingMortality <- function(NumberAtAge, TotalRemovalsFleet, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, FleetWeightAtAge, NaturalMortalityAtAge, MaxIt = 500L, tolF = 1E-4, debug = 0L) {
     .Call(`_MSEtool_SolveForFishingMortality`, NumberAtAge, TotalRemovalsFleet, SelectivityAtAge, RetentionAtAge, DiscardMortalityAtAge, FleetWeightAtAge, NaturalMortalityAtAge, MaxIt, tolF, debug)
 }
@@ -77,8 +61,8 @@ calcVatAge <- function(len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proy
     .Call(`_MSEtool_calcVatAge`, len_at_age, len_aa_sd, sel_at_length, n_age, nyears, proyears, CAL_binsmid)
 }
 
-CalcFisheryDynamics_ <- function(HistIn, Years, AllYears, nSim, nStock, nFleet, nArea, debug = 0L, CalcCatch = 1L) {
-    .Call(`_MSEtool_CalcFisheryDynamics_`, HistIn, Years, AllYears, nSim, nStock, nFleet, nArea, debug, CalcCatch)
+CalcFisheryDynamics_ <- function(HistIn, Years, AllYears, nSim, nStock, nFleet, nArea, DoCalcCatch = 1L, DoCalcaggF = 1L) {
+    .Call(`_MSEtool_CalcFisheryDynamics_`, HistIn, Years, AllYears, nSim, nStock, nFleet, nArea, DoCalcCatch, DoCalcaggF)
 }
 
 combine <- function(list) {

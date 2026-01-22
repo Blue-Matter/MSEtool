@@ -317,9 +317,12 @@ BiomassHist <- function(Hist) {
     lapply(Units) |> 
     unlist()
   
-  hist <- hist |>
-    dplyr::filter(Year%in%HistYear) |> 
-    dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock') 
+  if (!is.null(units)) {
+    hist <- hist |>
+      dplyr::filter(Year%in%HistYear) |> 
+      dplyr::left_join(data.frame(Stock=names(units), Unit=units), by='Stock')   
+  }
+  
   hist
 }
 

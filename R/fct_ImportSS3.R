@@ -208,9 +208,11 @@ ImportSS <- function(SSDir,
   OM <- ProcessSSAllocation(OM, RepList, StockName, FleetNames)
   OM <- ProcessEFactor(OM)
 
+  
   # OM@Complexes
 
   # OM@Relations
+  
   if (Populate) {
     out <- try(PopulateOM(OM), silent = TRUE)
     if (inherits(out, "om")) {
@@ -497,6 +499,7 @@ GetSS_WeightAtAge <- function(st, replist, YearsList) {
     # Wt_age <- do.call(rbind, lapply(0:n_age, function(x) parse(text = paste0("Wt_age_df$`", x, "`")) %>% eval()))
     # if(ncol(Wt_age) == nyears - 1) Wt_age <- cbind(Wt_age, endgrowth$Wt_Beg[-1]
   }
+  
   YearsHist <- YearsList$YearsHist
   dplyr::filter(replist$endgrowth, Sex == st) |>
     dplyr::select(Age = Age_Beg, Value = Wt_Beg) |>
@@ -509,22 +512,22 @@ GetSS_WeightAtAge <- function(st, replist, YearsList) {
 SS2Weight <- function(st, RepList, YearsList, Ages) {
   Weight <- Weight()
 
-  LengthWeightPars <- purrr::map(RepList, \(replist)
-  GetSS_LengthWeightPars(st, replist))
-
-  alpha <- purrr::map(LengthWeightPars, \(LW) LW[1]) |>
-    unlist() |>
-    unique()
-
-  beta <- purrr::map(LengthWeightPars, \(LW) LW[2]) |>
-    unlist() |>
-    unique()
-
-  Weight@Pars <- list(
-    alpha = alpha,
-    beta = beta
-  )
-  Weight@Model <- FindModel(Weight)
+  # LengthWeightPars <- purrr::map(RepList, \(replist) 
+  #                                GetSS_LengthWeightPars(st, replist))
+  # 
+  # alpha <- purrr::map(LengthWeightPars, \(LW) LW[1]) |>
+  #   unlist() |>
+  #   unique()
+  # 
+  # beta <- purrr::map(LengthWeightPars, \(LW) LW[2]) |>
+  #   unlist() |>
+  #   unique()
+  # 
+  # Weight@Pars <- list(
+  #   Alpha = alpha,
+  #   Beta = beta
+  # )
+  # Weight@Model <- FindModel(Weight)
 
   Weight@MeanAtAge <- purrr::map(RepList, \(replist) {
     GetSS_WeightAtAge(st, replist, YearsList)
@@ -1909,3 +1912,4 @@ GetSSNatAge <- function(replist, OM, yrs = NULL, sex = 1) {
 
   Initial
 }
+
