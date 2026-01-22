@@ -7,8 +7,39 @@ StructurePars <- function(Pars, nSim=NULL, Years=NULL, nArea=NULL) {
   if (is.null(nArea)) {
     Pars <- ApplyRandomWalk(Pars)  
   }
-  Pars
+
+  ExtendPars(Pars)
 }
+
+
+unique_dimname_values <- function(ParsList) {
+  nD <- length(dim(ParsList[[1]]))  # assume all arrays have same rank
+  lapply(seq_len(nD), function(d) {
+    unique(unlist(lapply(ParsList, function(x) {
+      dn <- dimnames(x)
+      if (is.null(dn)) character(0) else dn[[d]]
+    }), use.names = FALSE))
+  })
+}
+
+# make sure Par arrays are the same for all
+ExtendPars <- function(Pars) {
+  dnames <- unique_dimname_values(Pars)
+  
+  nSim <- as.numeric(dnames[[1]]) |> max()
+  Years <- as.numeric(dnames[[2]])
+  if (length(dnames)==3) {
+    Areas <- as.numeric(dnames[[3]]) 
+  } else {
+    Areas <- NULL
+  }
+
+ purrr::map(Pars, \(par) {
+    Extend(par, nSim, NULL, Years, Areas)
+  })
+  
+}
+
 
 NameParDimensions <- function(Par, nSim=NULL, Years=NULL, nArea=NULL) {
   if (!is.null(dimnames(Par)))

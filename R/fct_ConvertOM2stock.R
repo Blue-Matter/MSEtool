@@ -1,4 +1,6 @@
-OM2stock <- function(OM, cpars = NULL, YearsList = NULL, 
+OM2stock <- function(OM, 
+                     cpars = NULL, 
+                     YearsList = NULL, 
                      nSim, 
                      seed = NULL) {
   if (inherits(OM, 'OM')) {

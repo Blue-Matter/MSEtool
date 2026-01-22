@@ -1,37 +1,105 @@
 GenerateMeanatGeneric <- function(Model, Pars, ...) {
-  fun_args <- names(formals(Model))
-  fun <- get(Model)
-  arg_ind <- match(names(Pars), fun_args)
-  val_ind <- 1:max(min(arg_ind - 1), 1)
   dots <- list(...)
   
-  ParsList <- list()
-  for (i in seq_along(val_ind)) {
-    ParsList[[fun_args[[val_ind[i]]]]] <- dots[[fun_args[[i]]]]
+  # fun_args <- names(formals(Model))
+  # fun <- get(Model)
+  # arg_ind <- match(names(Pars), fun_args)
+  # val_ind <- 1:max(min(arg_ind - 1), 1)
+
+  
+  if (length(dots)!=1) {
+    cli::cli_abort("dots must be length 1", .internal=TRUE)
   }
   
-  AreaDimension <- purrr::map(Pars, \(Par) {
-    dimnames(Par)[["Area"]]
-  }) |> unlist()
   
-  if (is.null(AreaDimension)) {
-    for (i in seq_along(arg_ind)) {
-      ParsList[[fun_args[[arg_ind[i]]]]] <- Pars[[i]]
+  ArgNames <- names(dots)
+  ArgLength <- length(dots[[1]])
+  L <- list(dots[[1]])
+  names(L) <- ArgNames
+  
+  arr <- Pars[[1]]
+  dim_out <- c(ArgLength, dim(arr))
+
+  out <- array(NA, dim=dim_out, dimnames = c(L, dimnames(arr)))
+  
+  if (length(dim_out)==3) {
+    # no area
+    for (sim in seq_len(dim_out[2])) {
+      for (year in seq_len(dim_out[3])) {
+        
+        args <- c(dots, lapply(Pars, function(p) {
+          p[sim, year]
+          })
+          )
+        out[, sim, year] <- do.call(fun, args)
+        
+      }
     }
-    return(do.call(fun, ParsList))
+    return(out)
+  } 
+  
+  if (length(dim_out)==4) {
+    # by area
+    for (sim in seq_len(dim_out[2])) {
+      for (year in seq_len(dim_out[3])) {
+        for (area in seq_len(dim_out[4])) {
+          args <- c(dots, lapply(Pars, function(p) {
+            p[sim, year,area]
+          })
+          )
+          out[, sim, year,area] <- do.call(fun, args)
+          
+        }
+      }
+    }
+    return(out)
   }
   
-  nArea <- AreaDimension |>
-    as.numeric() |>
-    max()
-  AreaValues <- list()
-  for (area in 1:nArea) {
-    for (i in seq_along(Pars)) {
-      ParsList[[fun_args[[arg_ind[i]]]]] <- abind::adrop(Pars[[i]][, , area, drop = FALSE], 3)
-    }
-    AreaValues[[area]] <- do.call(fun, ParsList)
-  }
-  abind::abind(AreaValues, along=4)
+  cli::cli_abort(c("x"="Pars must be sim x year or sim x year x area"),)
+
+  
+
+  
+  #              
+  #              
+  # AreaDimension <- purrr::map(Pars, \(Par) {
+  #   dimnames(Par)[["Area"]]
+  # }) |> unlist()
+  # 
+  # if (is.null(AreaDimension)) {
+  #   
+  #   
+  #                          
+  #   
+  #   
+  #   
+  #   for (i in seq_along(arg_ind)) {
+  #     ParsList[[fun_args[[arg_ind[i]]]]] <- Pars[[i]]
+  #   }
+  #   
+  #   # 
+  #  
+  #     NA,
+  #     dim = c(length(Ages), length(sims), length(years)),
+  #     dimnames = list(Age = Ages, Sim = sims, Year = years)
+  #   )
+  #   
+  #   
+  #   
+  #   return(do.call(fun, ParsList))
+  # }
+  # 
+  # nArea <- AreaDimension |>
+  #   as.numeric() |>
+  #   max()
+  # AreaValues <- list()
+  # for (area in 1:nArea) {
+  #   for (i in seq_along(Pars)) {
+  #     ParsList[[fun_args[[arg_ind[i]]]]] <- abind::adrop(Pars[[i]][, , area, drop = FALSE], 3)
+  #   }
+  #   AreaValues[[area]] <- do.call(fun, ParsList)
+  # }
+  # abind::abind(AreaValues, along=4)
   
 }
 

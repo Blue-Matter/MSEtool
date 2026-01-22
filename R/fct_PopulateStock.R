@@ -36,9 +36,6 @@ PopulateStock <- function(Stock,
     CurrentYear = Stock@CurrentYear,
     Seasons = Stock@Seasons
   )
-  # Require ALK and/or AWK?
-  # ALK <- RequireALK(Stock)
-  # AWK <- RequireAWK(Stock)
 
   Stock@Ages@Classes <- CalcAgeClasses(Stock@Ages)
 

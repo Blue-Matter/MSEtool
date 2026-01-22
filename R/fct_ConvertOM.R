@@ -46,13 +46,17 @@ ConvertOM <- function(OM, Author='', CurrentYear=NULL, Seasons=1, Populate=TRUE,
   
   YearsList <- list(HistTS=Years(om, 'Historical'),
                     ProjTS=Years(om, 'Projection'),
-                    TimeUnits=TimeUnits,
+                    TimeUnits='year',
                     Seasons=Seasons
   )
   
   StockName <- SubOM(OM, 'Stock')@Name
   om@Stock <- MakeNamedList(StockName,
-                            OM2stock(OM, cpars=OM@cpars, YearsList, OM@nsim, OM@seed)
+                            OM2stock(OM, 
+                                     cpars=OM@cpars, 
+                                     YearsList, 
+                                     nSim=OM@nsim,
+                                     seed=OM@seed)
   )
   FleetName <- SubOM(OM, 'Fleet')@Name
   om@Fleet <- MakeNamedList(StockName,

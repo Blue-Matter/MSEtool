@@ -104,6 +104,9 @@ Simulate_om <- function(OM = NULL,
   # TODO - add CAL calcs to C++ - update ALK internally
   # continue with rest of Hist development
   
+  
+  # TEST With TESTOM first !!!!
+  # check with NPSWO - does my ASK match the SS one??
   return(Hist)
   
 
