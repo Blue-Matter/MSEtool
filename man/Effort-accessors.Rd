@@ -4,8 +4,7 @@
 \alias{Effort-accessors}
 \alias{GetEffort}
 \alias{SetEffort}
-\alias{Effort}
-\alias{Effort<-}
+\alias{SetEffort<-}
 \alias{Distribution}
 \alias{Distribution<-}
 \alias{Targeting}
@@ -14,13 +13,13 @@
 \alias{Maximum<-}
 \title{Effort accessors and assignment functions}
 \usage{
-GetEffort(Fleet)
+GetEffort(x)
 
 SetEffort(Fleet, Effort)
 
-Effort(x)
+GetEffort(x)
 
-Effort(x) <- value
+SetEffort(x) <- value
 
 Distribution(x)
 
@@ -35,9 +34,9 @@ Maximum(x)
 Maximum(x) <- value
 }
 \arguments{
-\item{Fleet}{A \code{\link[=Fleet]{Fleet()}} object.}
-
 \item{x}{An \code{\link[=Effort]{Effort()}} object.}
+
+\item{Fleet}{A \code{\link[=Fleet]{Fleet()}} object.}
 
 \item{value}{Replacement value.}
 }

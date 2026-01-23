@@ -10,8 +10,6 @@
 \alias{HockeyStick_RelRec}
 \title{Stock–Recruitment Relationships (SRR)}
 \usage{
-SRRModels(full = TRUE, print = TRUE)
-
 BevertonHolt(S, S0, R0, h)
 
 BevertonHolt_RelRec(Pars, SPR)
@@ -23,12 +21,10 @@ Ricker_RelRec(Pars, SPR)
 HockeyStick(S, S0, R0, Shinge)
 
 HockeyStick_RelRec(Pars, SPR)
+
+SRRModels(full = TRUE, print = TRUE)
 }
 \arguments{
-\item{full}{Logical. Provide a complete table (TRUE) or just the model names (FALSE)?}
-
-\item{print}{Logical. Print out the results (TRUE) or just return the data.frame (FALSE)?}
-
 \item{S}{Spawning production (biomass or eggs). Numeric length >= 1}
 
 \item{S0}{Unfished equilibrium spawning production. Numeric scalar.}
@@ -44,6 +40,10 @@ HockeyStick_RelRec(Pars, SPR)
 \item{hR}{Ricker steepness. A named argument in \code{Pars}.}
 
 \item{Shinge}{Hockey-stick hinge point \strong{relative to \code{S0}}. A named argument in \code{Pars}.0 < Shinge <= 1}
+
+\item{full}{Logical. Provide a complete table (TRUE) or just the model names (FALSE)?}
+
+\item{print}{Logical. Print out the results (TRUE) or just return the data.frame (FALSE)?}
 }
 \value{
 For stock–recruitment functions (\code{BevertonHolt()}, \code{Ricker()}, \code{HockeyStick()}):

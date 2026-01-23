@@ -2,15 +2,13 @@
 % Please edit documentation in R/models-length.R
 \name{Length-at-Age-Models}
 \alias{Length-at-Age-Models}
-\alias{LengthModels}
 \alias{vonBert}
 \alias{Brody}
 \alias{Gompertz}
 \alias{Schnute}
+\alias{LengthModels}
 \title{Length-at-Age Growth Models}
 \usage{
-LengthModels(full = TRUE, print = TRUE)
-
 vonBert(Ages, Linf, K, t0 = 0)
 
 Brody(Ages, L0, Linf, K)
@@ -18,22 +16,10 @@ Brody(Ages, L0, Linf, K)
 Gompertz(Ages, Linf, g, a)
 
 Schnute(Ages, y0, y1, t0, t1, a, b)
+
+LengthModels(full = TRUE, print = TRUE)
 }
 \arguments{
-\item{full}{Logical. Provide a complete table (TRUE) or just the model names (FALSE)?}
-
-\item{print}{Logical. Print out the results (TRUE) or just return the data.frame (FALSE)?
-
-The length-at-age models included in the package
-\itemize{
-\item \strong{von Bertalanffy}: standard VBGF
-\item \strong{Brody}: anchored exponential growth
-\item \strong{Gompertz}: asymptotic growth with inflection
-\item \strong{Schnute}: flexible growth model (used in Stock Synthesis 3)
-}
-
-\code{LengthModels()} prints the list of models and parameters to the console}
-
 \item{Ages}{Numeric vector of ages (always in years).}
 
 \item{Linf}{asymptotic length (used by von Bertalanffy, Gompertz, Brody)}
@@ -55,10 +41,22 @@ The length-at-age models included in the package
 \item{t1}{second reference age (Schnute)}
 
 \item{b}{growth shape parameter (Schnute)}
+
+\item{full}{Logical. Provide a complete table (TRUE) or just the model names (FALSE)?}
+
+\item{print}{Logical. Print out the results (TRUE) or just return the data.frame (FALSE)?
+
+\code{LengthModels()} prints the list of models and parameters to the console
+\itemize{
+\item \strong{von Bertalanffy}: \deqn{L(a) = L_\infty (1 - e^{-K (a - t_0)})}
+\item \strong{Brody}: \deqn{L(a) = L_\infty - (L_\infty - L_0) e^{-K a}}
+\item \strong{Gompertz}: \deqn{L(a) = L_\infty \exp(-\exp(-g (a - a)))}
+\item \strong{Schnute}: flexible formula depending on parameters \code{a} and \code{b}
+}}
 }
 \value{
 \itemize{
-\item \code{LengthModels()} prints to the console and invisibly returns a data frame
+\item \code{LengthModels()} invisibly returns a data frame
 containing the models
 \item Growth models: Numeric vector of expected lengths at age.
 }
@@ -66,16 +64,6 @@ containing the models
 \description{
 Length-at-age (LAA) growth models
 }
-\section{Model Equations}{
-
-\itemize{
-\item \strong{von Bertalanffy}: \deqn{L(a) = L_\infty (1 - e^{-K (a - t_0)})}
-\item \strong{Brody}: \deqn{L(a) = L_\infty - (L_\infty - L_0) e^{-K a}}
-\item \strong{Gompertz}: \deqn{L(a) = L_\infty \exp(-\exp(-g (a - a)))}
-\item \strong{Schnute}: flexible formula depending on parameters \code{a} and \code{b}
-}
-}
-
 \examples{
 
 Ages <- 0:15

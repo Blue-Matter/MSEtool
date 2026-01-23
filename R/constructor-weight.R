@@ -33,10 +33,10 @@
 #' @seealso
 #' [GetWeight()], [SetWeight()],
 #' [MeanAtAge()], [MeanAtLength()], [CVatAge()],
-#' [Populate()]
+#' [Populate()], [WeightModels()]
 #'
 #' @export
-Weight <- function(Pars,
+Weight <- function(Pars = list(),
                    Model = NULL,
                    Units = "g",
                    MeanAtAge = NULL,
@@ -49,14 +49,6 @@ Weight <- function(Pars,
                    ASK = NULL,
                    Classes = NULL,
                    Misc = list()) {
-  
-  if (missing(Pars)) {
-    object <- methods::new("weight")
-    methods::validObject(object)
-    return(object)
-  }
-  
-  CheckClass(Pars, "list", "Pars")
   
   object <- methods::new(
     "weight",

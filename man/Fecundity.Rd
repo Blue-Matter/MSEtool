@@ -7,7 +7,7 @@
 \title{Fecundity}
 \usage{
 Fecundity(
-  Pars = list(L50 = NA, L50_95 = NA, MaxFec = NA),
+  Pars = list(),
   Model = NULL,
   Units = "eggs",
   MeanAtAge = NULL,
@@ -84,5 +84,5 @@ plot(Fecundity)
 # see Examples in `?Length` for other `Pars` configurations
 }
 \seealso{
-\code{\link[=GetFecundity]{GetFecundity()}}, \code{\link[=SetFecundity]{SetFecundity()}}
+\code{\link[=GetFecundity]{GetFecundity()}}, \code{\link[=SetFecundity]{SetFecundity()}}, \code{\link[=FecundityModels]{FecundityModels()}}
 }

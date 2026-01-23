@@ -84,14 +84,14 @@ SetEffort <- function(Fleet, Effort) {
 
 #' @rdname Effort-accessors
 #' @export
-Effort <- function(x) {
+GetEffort <- function(x) {
   CheckClass(x, "effort", "x")
   x@Effort
 }
 
 #' @rdname Effort-accessors
 #' @export
-`Effort<-` <- function(x, value) {
+`SetEffort<-` <- function(x, value) {
   CheckClass(x, "effort", "x")
   x@Effort <- value
   methods::validObject(x)

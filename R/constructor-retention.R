@@ -34,29 +34,7 @@ Retention <- function(Pars = list(),
   if (methods::is(Pars, "fleet"))
     return(Pars@Retention)
   
-  ## Infer model if not supplied
-  if (is.null(Model) &&
-      length(Pars) > 0 &&
-      !is.null(names(Pars)) &&
-      all(!is.na(unlist(Pars)))) {
-    
-    object <- methods::new(
-      "retention",
-      Pars = Pars,
-      Model = NA_character_,
-      isRel = isRel,
-      MeanAtAge = MeanAtAge,
-      MeanAtLength = MeanAtLength,
-      MeanAtWeight = MeanAtWeight,
-      Classes = Classes,
-      Misc = Misc
-    )
-    
-    object@Model <- FindModel(object)
-    return(object)
-  }
-  
-  methods::new(
+  object <- methods::new(
     "retention",
     Pars = Pars,
     Model = Model,
@@ -67,6 +45,8 @@ Retention <- function(Pars = list(),
     Classes = Classes,
     Misc = Misc
   )
+  object
+
 }
 
 

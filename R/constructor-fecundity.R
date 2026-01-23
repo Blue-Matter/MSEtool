@@ -27,12 +27,12 @@
 #' @return A valid [fecundity()] object.
 #'
 #' @seealso
-#' [GetFecundity()], [SetFecundity()]
+#' [GetFecundity()], [SetFecundity()], [FecundityModels()]
 #'
 #' @example man-examples/Fecundity-class.R
 #'
 #' @export
-Fecundity <- function(Pars = list(L50 = NA, L50_95 = NA, MaxFec = NA),
+Fecundity <- function(Pars = list(),
                       Model = NULL,
                       Units = "eggs",
                       MeanAtAge = NULL,
@@ -41,7 +41,7 @@ Fecundity <- function(Pars = list(L50 = NA, L50_95 = NA, MaxFec = NA),
                       Timing = NULL,
                       Misc = list()) {
   
-  obj <- new(
+  object <- new(
     "fecundity",
     Pars = Pars,
     Model = Model,
@@ -53,8 +53,7 @@ Fecundity <- function(Pars = list(L50 = NA, L50_95 = NA, MaxFec = NA),
     Misc = Misc
   )
   
-  validObject(obj)
-  obj
+  object
 }
 
 #' @rdname Fecundity

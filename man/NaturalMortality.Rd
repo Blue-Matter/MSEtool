@@ -7,7 +7,7 @@
 \title{NaturalMortality}
 \usage{
 NaturalMortality(
-  Pars,
+  Pars = list(),
   Model = NULL,
   Units = "year",
   MeanAtAge = NULL,
@@ -49,11 +49,8 @@ assumptions for a \code{\link[=Stock]{Stock()}}.
 The \code{NaturalMortality} class defines how natural mortality varies
 with age and/or length in a \code{\link[=Stock]{Stock()}}. Mortality schedules may be
 model-based (via \code{Pars} and \code{Model}) or supplied directly as arrays.
-
-Printing a \code{NaturalMortality} object provides a concise summary of the
-specified assumptions without printing full arrays.
 }
 \seealso{
 \code{\link[=GetNaturalMortality]{GetNaturalMortality()}}, \code{\link[=SetNaturalMortality]{SetNaturalMortality()}},
-\code{\link[=Populate]{Populate()}}
+\code{\link[=Populate]{Populate()}}, \code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}}
 }

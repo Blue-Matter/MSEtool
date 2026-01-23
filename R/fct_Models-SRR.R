@@ -85,17 +85,6 @@ NULL
 # ---------------------------------------------------
 
 
-#' @rdname SRRModels
-#' @param full Logical. Provide a complete table (TRUE) or just the model names (FALSE)?
-#' @param print Logical. Print out the results (TRUE) or just return the data.frame (FALSE)?
-#' 
-#' @export
-SRRModels <- function(full=TRUE, print=TRUE) {
-  ReturnModels(ModelClass=c('SRR-Model'),
-               full, print, Independent=c('S', 'S0', 'R0'))
-  
-}
-
 # ---- Beverton-Holt ----
 
 #' @rdname SRRModels
@@ -189,6 +178,19 @@ HockeyStick_RelRec <- function(Pars, SPR) {
   CheckParsScalarNumeric(Pars, c("Shinge"))
   isScalarNumeric(SPR, "SPR")
   ifelse(SPR >= Pars$Shinge, 1, 0)
+}
+
+
+
+#' @rdname SRRModels
+#' @param full Logical. Provide a complete table (TRUE) or just the model names (FALSE)?
+#' @param print Logical. Print out the results (TRUE) or just return the data.frame (FALSE)?
+#' 
+#' @export
+SRRModels <- function(full=TRUE, print=TRUE) {
+  ReturnModels(ModelClass=c('SRR-Model'),
+               full, print, Independent=c('S', 'S0', 'R0'))
+  
 }
 
 

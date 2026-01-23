@@ -2,21 +2,15 @@
 % Please edit documentation in R/models-maturity.R
 \name{Maturity-Models}
 \alias{Maturity-Models}
-\alias{MaturityModels}
-\alias{MaturityModelsLength}
-\alias{MaturityModelsAge}
 \alias{MaturityModelsWeight}
 \alias{MaturityAtAge}
 \alias{MaturityAtLength}
 \alias{MaturityAtWeight}
+\alias{MaturityModels}
+\alias{MaturityModelsLength}
+\alias{MaturityModelsAge}
 \title{Maturity Models: Age, Length, and Weight}
 \usage{
-MaturityModels(full = TRUE, print = TRUE)
-
-MaturityModelsLength(full = TRUE, print = TRUE)
-
-MaturityModelsAge(full = TRUE, print = TRUE)
-
 MaturityModelsWeight(full = TRUE, print = TRUE)
 
 MaturityAtAge(Ages, A50, A50_95)
@@ -24,6 +18,12 @@ MaturityAtAge(Ages, A50, A50_95)
 MaturityAtLength(Length, L50, L50_95)
 
 MaturityAtWeight(Weight, W50, W50_95)
+
+MaturityModels(full = TRUE, print = TRUE)
+
+MaturityModelsLength(full = TRUE, print = TRUE)
+
+MaturityModelsAge(full = TRUE, print = TRUE)
 }
 \arguments{
 \item{full}{Logical. Provide a complete table (TRUE) or just the model names (FALSE)?}
@@ -34,28 +34,28 @@ MaturityAtWeight(Weight, W50, W50_95)
 
 \item{A50}{age at 50\% maturity (Logistic-at-Age)}
 
-\item{A50_95}{age at 95\% maturity (Logistic-at-Age)}
+\item{A50_95}{interval between \code{A50} and age at 95\% maturity (Logistic-at-Age)}
 
 \item{Length}{numeric vector of length classes (for length-based models)}
 
 \item{L50}{length at 50\% maturity (Logistic-at-Length)}
 
-\item{L50_95}{length at 95\% maturity (Logistic-at-Length)}
+\item{L50_95}{interval between \code{L50} length at 95\% maturity (Logistic-at-Length)}
 
 \item{Weight}{numeric vector of weight classes (for weight-based models)}
 
 \item{W50}{weight at 50\% maturity (Logistic-at-Weight)}
 
-\item{W50_95}{weight at 95\% maturity (Logistic-at-Weight)}
+\item{W50_95}{interval between \code{W50} weight at 95\% maturity (Logistic-at-Weight)}
 }
 \value{
 Each function returns a numeric vector of proportion mature at each age, length, or weight.
-\code{MaturityModels()} prints to the console and invisibly returns a data frame describing available models.
+\code{MaturityModels()} invisibly returns a data frame describing available models.
 
 Prints to console and invisible data.frame or model names
 }
 \description{
-Standard logistic maturity models using the 50/95 parameterization.
+Logistic maturity models
 }
 \details{
 Logistic models produce standard increasing maturity curves.
@@ -64,34 +64,37 @@ Logistic models produce standard increasing maturity curves.
 \item Length-based models return proportion mature by length.
 \item Weight-based models return proportion mature by weight.
 }
-}
-\section{Model Equation}{
 
 All maturity models use a logistic 50/95 parameterization:
 \deqn{M(x) = \frac{1}{1 + \exp\left(-\ln(19) \cdot \frac{x - x_{50}}{x_{95} - x_{50}}\right)}}
-}
 
+at-length and at-weight schedules are converted internally to at-age using the age-length
+age-weight key respectively.
+}
 \examples{
 Ages <- 0:15
 Length <- seq(10, 100, 10)
 Weight <- seq(1, 50, 5)
 
-M_age <- MaturityAtAge(Ages, A50 = 5, A50_95 = 8)
+M_age <- MaturityAtAge(Ages, A50 = 5, A50_95 = 3)
 
-M_length <- MaturityAtLength(Length, L50 = 50, L50_95 = 70)
+M_length <- MaturityAtLength(Length, L50 = 50, L50_95 = 20)
 
-M_weight <- MaturityAtWeight(Weight, W50 = 20, W50_95 = 35)
+M_weight <- MaturityAtWeight(Weight, W50 = 20, W50_95 = 15)
 
 
-plot(Ages, M_age, type = "l", lwd = 2, col = "blue",
-     xlab = "Age (years)", ylab = "Proportion Mature", main = "Maturity-at-Age")
+plot(Ages, M_age, type = "l", lwd = 2,
+     xlab = "Age (years)", ylab = "Proportion Mature", 
+     main = "Maturity-at-Age")
 
-plot(Length, M_length, type = "l", lwd = 2, col = "green",
-     xlab = "Length", ylab = "Proportion Mature", main = "Maturity-at-Length")
+plot(Length, M_length, type = "l", lwd = 2, 
+     xlab = "Length", ylab = "Proportion Mature", 
+     main = "Maturity-at-Length")
 
-plot(Weight, M_weight, type = "l", lwd = 2, col = "red",
-     xlab = "Weight", ylab = "Proportion Mature", main = "Maturity-at-Weight")
+plot(Weight, M_weight, type = "l", lwd = 2,
+     xlab = "Weight", ylab = "Proportion Mature", 
+     main = "Maturity-at-Weight")
 }
 \seealso{
-\code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, \code{\link[=Weight]{Weight()}}, \code{\link[=Stock]{Stock()}}
+\code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, \code{\link[=Maturity]{Maturity()}}, \code{\link[=Weight]{Weight()}}, \code{\link[=Stock]{Stock()}}
 }

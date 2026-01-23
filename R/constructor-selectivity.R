@@ -18,7 +18,7 @@
 #'
 #' @return A `Selectivity` object.
 #'
-#' @seealso [Fleet()]
+#' @seealso [Fleet()], [SelectivityModels()], [GetSelectivity()]
 #'
 #' @export
 Selectivity <- function(Pars = list(),
@@ -33,28 +33,6 @@ Selectivity <- function(Pars = list(),
   ## Fleet pass-through 
   if (methods::is(Pars, "fleet"))
     return(Pars@Selectivity)
-  
-  ## Infer model if not supplied
-  if (is.null(Model) &&
-      length(Pars) > 0 &&
-      !is.null(names(Pars)) &&
-      all(!is.na(unlist(Pars)))) {
-    
-    object <- methods::new(
-      "selectivity",
-      Pars = Pars,
-      Model = NA_character_,
-      isRel = isRel,
-      MeanAtAge = MeanAtAge,
-      MeanAtLength = MeanAtLength,
-      MeanAtWeight = MeanAtWeight,
-      Classes = Classes,
-      Misc = Misc
-    )
-    
-    object@Model <- FindModel(object)
-    return(object)
-  }
   
   methods::new(
     "selectivity",

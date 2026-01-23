@@ -2,7 +2,6 @@
 #'
 #' Length-at-age (LAA) growth models
 #'
-#'
 #' @param Ages Numeric vector of ages (always in years).
 #' @param Linf asymptotic length (used by von Bertalanffy, Gompertz, Brody)
 #' @param K growth coefficient (used by von Bertalanffy, Brody)
@@ -18,17 +17,8 @@
 #' @param full Logical. Provide a complete table (TRUE) or just the model names (FALSE)?
 #' @param print Logical. Print out the results (TRUE) or just return the data.frame (FALSE)?
 #'
-#' The length-at-age models included in the package
-#'
-#' - **von Bertalanffy**: standard VBGF
-#' - **Brody**: anchored exponential growth
-#' - **Gompertz**: asymptotic growth with inflection
-#' - **Schnute**: flexible growth model (used in Stock Synthesis 3)
-#'
 #' `LengthModels()` prints the list of models and parameters to the console
 #'
-#'
-#' @section Model Equations:
 #' - **von Bertalanffy**: \deqn{L(a) = L_\infty (1 - e^{-K (a - t_0)})}
 #' - **Brody**: \deqn{L(a) = L_\infty - (L_\infty - L_0) e^{-K a}}
 #' - **Gompertz**: \deqn{L(a) = L_\infty \exp(-\exp(-g (a - a)))}
@@ -46,12 +36,6 @@
 #' @rdname Length-at-Age-Models
 NULL
 
-
-#' @name Length-at-Age-Models
-#' @export
-LengthModels <- function(full = TRUE, print = TRUE) {
-  ReturnModels(ModelClass = "Length-at-Age-Model", full, print)
-}
 
 
 #' @name Length-at-Age-Models
@@ -100,3 +84,12 @@ Schnute <- function(Ages, y0, y1, t0, t1, a, b) {
   LAA
 }
 class(Schnute) <- "Length-at-Age-Model"
+
+
+
+#' @name Length-at-Age-Models
+#' @export
+LengthModels <- function(full = TRUE, print = TRUE) {
+  ReturnModels(ModelClass = "Length-at-Age-Model", full, print)
+}
+

@@ -36,12 +36,12 @@
 #' [GetLength()], [SetLength()],
 #' [Pars()], [Model()], [Units()], [MeanAtAge()], [CVatAge()],
 #' [Dist()], [TruncSD()], [Timing()], [Random()], [ASK()],
-#' [Classes()], [Populate()]
+#' [Classes()], [Populate()], [LengthModels()]
 #'
 #' @example man-examples/class-Length.R
 #'
 #' @export
-Length <- function(Pars,
+Length <- function(Pars = list(),
                    Model = NULL,
                    Units = "mm",
                    MeanAtAge = NULL,
@@ -53,14 +53,6 @@ Length <- function(Pars,
                    ASK = NULL,
                    Classes = NULL,
                    Misc = list()) {
-  
-  if (missing(Pars)) {
-    object <- methods::new("length")
-    methods::validObject(object)
-    return(object)
-  }
-  
-  CheckClass(Pars, "list", "Pars")
   
   object <- methods::new("length",
                          Pars = Pars,

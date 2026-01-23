@@ -45,5 +45,5 @@ A \code{Selectivity} object defines selectivity-at-age, length, or weight
 relationships.
 }
 \seealso{
-\code{\link[=Fleet]{Fleet()}}
+\code{\link[=Fleet]{Fleet()}}, \code{\link[=SelectivityModels]{SelectivityModels()}}, \code{\link[=GetSelectivity]{GetSelectivity()}}
 }

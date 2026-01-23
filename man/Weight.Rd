@@ -5,7 +5,7 @@
 \title{Weight}
 \usage{
 Weight(
-  Pars,
+  Pars = list(),
   Model = NULL,
   Units = "g",
   MeanAtAge = NULL,
@@ -68,5 +68,5 @@ retrieved using \code{\link[=GetWeight]{GetWeight()}}.
 \seealso{
 \code{\link[=GetWeight]{GetWeight()}}, \code{\link[=SetWeight]{SetWeight()}},
 \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=CVatAge]{CVatAge()}},
-\code{\link[=Populate]{Populate()}}
+\code{\link[=Populate]{Populate()}}, \code{\link[=WeightModels]{WeightModels()}}
 }

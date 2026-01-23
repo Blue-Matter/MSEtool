@@ -17,17 +17,14 @@
 #' with age and/or length in a [Stock()]. Mortality schedules may be
 #' model-based (via `Pars` and `Model`) or supplied directly as arrays.
 #'
-#' Printing a `NaturalMortality` object provides a concise summary of the
-#' specified assumptions without printing full arrays.
-#'
 #' @return A [NaturalMortality()] object.
 #'
 #' @seealso
 #' [GetNaturalMortality()], [SetNaturalMortality()],
-#' [Populate()]
+#' [Populate()], [NaturalMortalityModels()]
 #'
 #' @export
-NaturalMortality <- function(Pars,
+NaturalMortality <- function(Pars = list(),
                              Model = NULL,
                              Units = "year",
                              MeanAtAge = NULL,
@@ -35,14 +32,6 @@ NaturalMortality <- function(Pars,
                              Random = NULL,
                              Classes = NULL,
                              Misc = list()) {
-  
-  if (missing(Pars)) {
-    object <- methods::new("naturalmortality")
-    methods::validObject(object)
-    return(object)
-  }
-  
-  CheckClass(Pars, "list", "Pars")
   
   object <- methods::new(
     "naturalmortality",

@@ -5,7 +5,7 @@
 \title{Length}
 \usage{
 Length(
-  Pars,
+  Pars = list(),
   Model = NULL,
   Units = "mm",
   MeanAtAge = NULL,
@@ -136,5 +136,5 @@ plot(Length, Ages=Ages(20), type='ASK')
 \code{\link[=GetLength]{GetLength()}}, \code{\link[=SetLength]{SetLength()}},
 \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=Units]{Units()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=CVatAge]{CVatAge()}},
 \code{\link[=Dist]{Dist()}}, \code{\link[=TruncSD]{TruncSD()}}, \code{\link[=Timing]{Timing()}}, \code{\link[=Random]{Random()}}, \code{\link[=ASK]{ASK()}},
-\code{\link[=Classes]{Classes()}}, \code{\link[=Populate]{Populate()}}
+\code{\link[=Classes]{Classes()}}, \code{\link[=Populate]{Populate()}}, \code{\link[=LengthModels]{LengthModels()}}
 }

@@ -5,7 +5,7 @@
 \title{Maturity}
 \usage{
 Maturity(
-  Pars,
+  Pars = list(),
   Model = NULL,
   MeanAtAge = NULL,
   MeanAtLength = NULL,
@@ -56,5 +56,5 @@ replacement functions such as \code{\link[=Pars]{Pars()}} and \code{\link[=Model
 \seealso{
 \code{\link[=GetMaturity]{GetMaturity()}}, \code{\link[=SetMaturity]{SetMaturity()}},
 \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}},
-\code{\link[=MeanAtWeight]{MeanAtWeight()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Populate]{Populate()}}
+\code{\link[=MeanAtWeight]{MeanAtWeight()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Populate]{Populate()}},\code{\link[=MaturityModels]{MaturityModels()}}
 }

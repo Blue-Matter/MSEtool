@@ -26,7 +26,7 @@ GetTAC(object)
 
 SetTAC(object, value)
 
-GetEffort(Fleet)
+GetEffort(x)
 
 SetEffort(Fleet, Effort)
 

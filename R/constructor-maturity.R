@@ -31,11 +31,11 @@
 #' @seealso
 #' [GetMaturity()], [SetMaturity()],
 #' [Pars()], [Model()], [MeanAtAge()], [MeanAtLength()],
-#' [MeanAtWeight()], [Classes()], [Populate()]
+#' [MeanAtWeight()], [Classes()], [Populate()],[MaturityModels()]
 #'
 #'
 #' @export
-Maturity <- function(Pars,
+Maturity <- function(Pars = list(),
                      Model = NULL,
                      MeanAtAge = NULL,
                      MeanAtLength = NULL,
@@ -43,14 +43,6 @@ Maturity <- function(Pars,
                      Classes = NULL,
                      Semelparous = FALSE,
                      Misc = list()) {
-  
-  if (missing(Pars)) {
-    object <- methods::new("maturity")
-    methods::validObject(object)
-    return(object)
-  }
-  
-  CheckClass(Pars, "list", "Pars")
   
   object <- methods::new(
     "maturity",

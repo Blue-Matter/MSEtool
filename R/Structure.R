@@ -1,5 +1,7 @@
 
 StructurePars <- function(Pars, nSim=NULL, Years=NULL, nArea=NULL) {
+  if (!length(Pars)) 
+    return(Pars)
   Pars <- purrr::map(Pars, \(Par) 
                         StructurePars_(Par, nSim, Years, nArea)
   )

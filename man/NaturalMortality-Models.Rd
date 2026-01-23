@@ -2,65 +2,89 @@
 % Please edit documentation in R/models-natural-mortality.R
 \name{NaturalMortality-Models}
 \alias{NaturalMortality-Models}
-\alias{NaturalMortalityModels}
 \alias{MortalityAtAge}
-\alias{MortalityAtLength}
 \alias{LorenzenMortalityLength}
 \alias{LorenzenMortalityWeight}
+\alias{NaturalMortalityModels}
 \title{Natural Mortality Models}
 \usage{
-NaturalMortalityModels(full = TRUE, print = TRUE)
-
 MortalityAtAge(Ages, M)
-
-MortalityAtLength(Length, Mref, Lref, c)
 
 LorenzenMortalityLength(Length, Mref, Lref, c = -0.288)
 
 LorenzenMortalityWeight(Weight, Mref, Wref, c = -0.288)
+
+NaturalMortalityModels(full = TRUE, print = TRUE)
 }
 \arguments{
+\item{Ages}{numeric vector of age classes}
+
+\item{M}{natural mortality rate. Recycled if not \code{length(Ages)}}
+
+\item{Length}{numeric vector of length classes}
+
+\item{Mref}{reference mortality}
+
+\item{Lref}{reference length for Lorenzen M-at-length}
+
+\item{c}{exponent for Lorenzen models (default -0.288)}
+
+\item{Weight}{numeric vector of weight classes}
+
+\item{Wref}{reference weight for Lorenzen M-at-weight}
+
 \item{full}{logical; provide a complete table of models (TRUE) or just model names (FALSE)}
 
 \item{print}{logical; print results (TRUE) or return data frame invisibly (FALSE)}
-
-\item{Ages}{numeric vector of age classes (for age-based models)}
-
-\item{M}{constant natural mortality rate (for constant M-at-age)}
-
-\item{Length}{numeric vector of length classes (for length-based models)}
-
-\item{Mref}{reference mortality (for allometric or Lorenzen models)}
-
-\item{Lref}{reference length for allometric or Lorenzen M-at-length}
-
-\item{c}{exponent for allometric M-at-length or Lorenzen models (default -0.288)}
-
-\item{Weight}{numeric vector of weight classes (for weight-based models)}
-
-\item{Wref}{reference weight for Lorenzen M-at-weight}
 }
 \value{
 Numeric vector of natural mortality at each age, length, or weight.
-\code{NaturalMortalityModels()} prints to the console and invisibly returns a data frame describing available models.
+\code{NaturalMortalityModels()} invisibly returns a data frame describing available models.
 }
 \description{
 Natural mortality models for age, length, and weight.
 }
-\section{Model Equations}{
-
+\details{
+at-length and at-weight schedules are converted internally to at-age using the age-length
+age-weight key respectively.
 \itemize{
-\item \strong{Constant M-at-age}: \deqn{M(a) = M}
-\item \strong{Allometric M-at-length}: \deqn{M(L) = M_{ref} \cdot \left(\frac{L}{L_{ref}}\right)^c}
+\item \strong{M-at-age}: \deqn{M(a) = M}
 \item \strong{Lorenzen M-at-length}: \deqn{M(L) = M_{ref} \cdot \left(\frac{L}{L_{ref}}\right)^{-0.288}}
 \item \strong{Lorenzen M-at-weight}: \deqn{M(W) = M_{ref} \cdot \left(\frac{W}{W_{ref}}\right)^{-0.288}}
 }
 
 \code{NaturalMortalityModels()} prints a list of available models.
-
-These functions return numeric vectors of natural mortality for the given ages, lengths, or weights.
 }
+\examples{
+Ages <- 0:15
+Length <- seq(10, 100, 10)
+Weight <- seq(1, 50, 5)
 
+M_age <- MortalityAtAge(Ages, M = 0.2)
+
+M_length_allo <- MortalityAtLength(Length, Mref = 0.3, Lref = 50, c = -0.2)
+
+M_length_lor <- LorenzenMortalityLength(Length, Mref = 0.3, Lref = 50)
+
+M_weight_lor <- LorenzenMortalityWeight(Weight, Mref = 0.3, Wref = 20)
+
+# Plot M-at-age
+plot(Ages, M_age, type = "l", lwd = 2, col = "blue", 
+     xlab = "Age", ylab = "M", main = "Constant M-at-Age",
+     ylim=c(0,0.25))
+
+# Plot M-at-length
+plot(Length, M_length_allo, type = "l", lwd = 2, col = "green", 
+     xlab = "Length", ylab = "M", main = "Allometric M-at-Length",
+     ylim=c(0, 0.5))
+lines(Length, M_length_lor, col = "red", lwd = 2)
+legend("topright", legend = c("Allometric", "Lorenzen"), col = c("green", "red"), lwd = 2)
+
+# Plot M-at-weight
+plot(Weight, M_weight_lor, type = "l", lwd = 2, col = "purple", 
+     xlab = "Weight", ylab = "M", main = "Lorenzen M-at-Weight", 
+     ylim=c(0,0.8))
+}
 \seealso{
 \code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, \code{\link[=Weight]{Weight()}}, \code{\link[=Stock]{Stock()}}
 }

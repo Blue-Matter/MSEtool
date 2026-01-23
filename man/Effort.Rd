@@ -4,7 +4,14 @@
 \alias{Effort}
 \title{Effort}
 \usage{
-Effort(x)
+Effort(
+  Effort = NULL,
+  Units = NULL,
+  Distribution = NULL,
+  Targeting = NULL,
+  Maximum = NULL,
+  Misc = list()
+)
 }
 \description{
 Create an \code{Effort} object

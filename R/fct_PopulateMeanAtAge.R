@@ -25,7 +25,7 @@ PopulateMeanAtAge <- function(object,
   } else {
     if ('Ages' %in% args) {
       CheckRequiredObject(Ages, 'ages', 'Ages')
-      if ('Timing' %in% slotNames(object)) {
+      if ('Timing' %in% slotNames(object) && !is.null(object@Timing)) {
         Ages@Classes <- Ages@Classes+object@Timing
       }
     }
@@ -34,19 +34,6 @@ PopulateMeanAtAge <- function(object,
                                           Ages=Ages@Classes)
     # object@Classes <- Ages@Classes
     
-  }
-  
-  dd <- dim(object@MeanAtAge)
-  
-  if (length(dd)==3) {
-    dimnames(object@MeanAtAge) <- list(Sim=1:dd[1],
-                                       Age=Ages@Classes[1:dd[2]],
-                                       Year=Years[1:dd[3]])
-  } else {
-    dimnames(object@MeanAtAge) <- list(Sim=1:dd[1],
-                                          Age=Ages@Classes[1:dd[2]],
-                                          Year=Years[1:dd[3]],
-                                          Area=1:dd[4])
   }
   
   object

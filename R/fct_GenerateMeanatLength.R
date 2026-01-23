@@ -1,26 +1,49 @@
 GenerateMeanatGeneric <- function(Model, Pars, ...) {
   dots <- list(...)
   
-  # fun_args <- names(formals(Model))
-  # fun <- get(Model)
-  # arg_ind <- match(names(Pars), fun_args)
-  # val_ind <- 1:max(min(arg_ind - 1), 1)
-
-  
   if (length(dots)!=1) {
     cli::cli_abort("dots must be length 1", .internal=TRUE)
   }
   
+  fun <- get(Model)
+  arg <- dots[[1]]
+  
+  stop("Need to update to handle `arg` as numeric vector and nD array")
+  
   
   ArgNames <- names(dots)
-  ArgLength <- length(dots[[1]])
   L <- list(dots[[1]])
   names(L) <- ArgNames
   
-  arr <- Pars[[1]]
+  if (is.array(dots[[1]])) {
+    isArr <- TRUE
+    dn <- names(dimnames(out)) 
+    sim_index <- which(dn == "Sim")
+    year_index <- which(dn == "Year")
+    dd <- dim(dots[[1]])
+    dd[dd[-c(sim_index, year_index)]]
+    
+    
+   dimnames(dots[[1]])
+    
+  } else {
+    isArr <- FALSE
+    ArgLength <- length(dots[[1]])
+  }
+  
+  
+
+  
+
+  
+ 
   dim_out <- c(ArgLength, dim(arr))
 
   out <- array(NA, dim=dim_out, dimnames = c(L, dimnames(arr)))
+  dn <- names(dimnames(out))
+  sim_index <- which(dn == "Sim")
+  new_order <- c(sim_index, setdiff(seq_along(dn), sim_index))
+  out <- aperm(out, new_order)
   
   if (length(dim_out)==3) {
     # no area
@@ -31,7 +54,7 @@ GenerateMeanatGeneric <- function(Model, Pars, ...) {
           p[sim, year]
           })
           )
-        out[, sim, year] <- do.call(fun, args)
+        out[sim, , year] <- do.call(fun, args)
         
       }
     }
@@ -47,7 +70,7 @@ GenerateMeanatGeneric <- function(Model, Pars, ...) {
             p[sim, year,area]
           })
           )
-          out[, sim, year,area] <- do.call(fun, args)
+          out[sim, , year,area] <- do.call(fun, args)
           
         }
       }
@@ -103,19 +126,6 @@ GenerateMeanatGeneric <- function(Model, Pars, ...) {
   
 }
 
-#' Generate `MeanAtLength` Values
-#'
-#' @param Model Either the name of a built-in model (character) or a valid R function
-#' @param Pars A `list` of named parameters for `Model`
-#' @param Length A numeric vector of length classes
-#'
-#' @export
-GenerateMeanatLength <- function(Model, Pars, Length) {
-  if (inherits(Model, "function")) {
-    return(ApplyCustomAtLengthModel(Model, Pars, Length))
-  }
-  GenerateMeanGeneric(Model, Pars, Length=Length)
-}
 
 #' Generate `MeanAtLength` Values
 #'

@@ -2,44 +2,43 @@
 % Please edit documentation in R/models-weight.R
 \name{Weight-Models}
 \alias{Weight-Models}
-\alias{WeightModels}
 \alias{WeightatAge}
 \alias{WeightatLength}
 \alias{WeightatMeanLength}
+\alias{WeightModels}
 \title{Weight-at-Age and Weight-at-Length Models}
 \usage{
-WeightModels(full = TRUE, print = TRUE)
-
 WeightatAge(Ages, a, b)
 
 WeightatLength(Length, Alpha, Beta)
 
-WeightatMeanLength(MeanLength, alpha, beta)
+WeightatMeanLength(Length, alpha, beta)
+
+WeightModels(full = TRUE, print = TRUE)
 }
 \arguments{
-\item{full}{logical; provide a complete table of models (TRUE) or just model names (FALSE)}
-
-\item{print}{logical; print results (TRUE) or return data frame invisibly (FALSE)
-
-\code{WeightModels()} prints the list of available weight models.}
-
 \item{Ages}{numeric vector of age classes (for Weight-at-Age)}
 
 \item{a}{scaling parameter for Weight-at-Age in units of \code{\link[=Weight]{Weight()}}.}
 
 \item{b}{exponent for Weight-at-Age. Typically around 3.}
 
-\item{Length}{numeric vector of length classes (for Weight-at-Length)}
+\item{Length}{numeric vector of length classes for \code{WeightatLength} or
+a mean length-at-age schedule for \code{WeightatMeanLength}}
 
 \item{Alpha}{scaling parameter for Weight-at-Length in units of \code{\link[=Weight]{Weight()}}.}
 
 \item{Beta}{exponent for Weight-at-Length. Typically around 3.}
 
-\item{MeanLength}{numeric vector of mean length-at-age (for Weight-at-Mean-Length)}
-
 \item{alpha}{scaling parameter for Weight-at-Mean-Length in units of \code{\link[=Weight]{Weight()}}.}
 
 \item{beta}{exponent for Weight-at-Mean-Length. Typically around 3.}
+
+\item{full}{logical; provide a complete table of models (TRUE) or just model names (FALSE)}
+
+\item{print}{logical; print results (TRUE) or return data frame invisibly (FALSE)
+
+\code{WeightModels()} prints the list of available weight models.}
 }
 \value{
 Each function returns a numeric vector of expected weights for each age or length.
@@ -51,16 +50,15 @@ Allometric weight models used to compute weight at age or at length.
 \details{
 Models are identified internally by matching the names in \code{Pars}.
 \code{WeightatMeanLength} returns weight-at-age corresponding to the mean length at each age, while \code{WeightatLength} returns weight-at-length for the supplied length classes.
-}
-\section{Model Equations}{
-
 \itemize{
 \item \strong{Weight-at-Age}: \deqn{W(a) = a \cdot Age^b}
 \item \strong{Weight-at-Length}: \deqn{W(L) = \alpha \cdot L^\beta}
 \item \strong{Weight-at-Mean-Length}: \deqn{W(L_{mean}) = \alpha_{mean} \cdot L_{mean}^{\beta_{mean}}}, returning weight-at-age
 }
-}
 
+at-length schedules (except from \code{WeightatMeanLength}) are converted internally
+to at-age using the age-length key respectively.
+}
 \examples{
 Ages <- 0:10
 MeanLength <- vonBert(Ages, 100, 0.2)

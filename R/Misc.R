@@ -333,19 +333,19 @@ CheckDigest <- function(object, argList = list()) {
 }
 
 isNewObject <- function(object) {
-  thisobject <- object
-  newobject <- new(class(object))
+  if (!isS4(object)) 
+    return(FALSE)
+  
+  cl <- class(object)
+  if (inherits(object, 'naturalmortality')) {
+    newobj <- NaturalMortality()
+  } else   if (inherits(object, 'srr')) {
+    newobj <- SRR()
+  } else {
+    newobj <- get(firstup(cl))()
+  }
 
-  if ("Created" %in% slotNames(thisobject)) {
-    thisobject@Created <- NULL
-    thisobject@Modified <- NULL
-    newobject@Created <- NULL
-    newobject@Modified <- NULL
-  }
-  if (identical(thisobject, newobject)) {
-    return(TRUE)
-  }
-  FALSE
+  identical(object, newobj)
 }
 
 EmptyObject <- function(object) {

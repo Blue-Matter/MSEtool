@@ -37,13 +37,14 @@ PopulateStock <- function(Stock,
     Seasons = Stock@Seasons
   )
 
+  Years <- Stock@Years
   Stock@Ages@Classes <- CalcAgeClasses(Stock@Ages)
 
   Stock@Length <- PopulateLength(
     Length = Stock@Length,
     Ages = Stock@Ages,
-    Years = Years(Stock),
-    nSim = nSim(Stock),
+    Years,
+    nSim,
     ASK = ALK,
     seed + 1,
     silent,
@@ -54,19 +55,20 @@ PopulateStock <- function(Stock,
     Weight = Stock@Weight,
     Ages = Stock@Ages,
     Length = Stock@Length,
-    Years = Years(Stock),
-    nSim = nSim(Stock),
+    Years,
+    nSim,
     ASK = AWK,
     seed + 2,
     silent,
     force
   )
 
-  Stock@NaturalMortality <- PopulateNaturalMortality(Stock@NaturalMortality,
+  Stock@NaturalMortality <- PopulateNaturalMortality(
+    NaturalMortality = Stock@NaturalMortality,
     Ages = Stock@Ages,
     Length = Stock@Length,
-    Years = Years(Stock),
-    nSim = nSim(Stock),
+    Years,
+    nSim,
     seed + 3,
     silent,
     force
@@ -77,8 +79,8 @@ PopulateStock <- function(Stock,
     Ages = Stock@Ages,
     Length = Stock@Length,
     Weight = Stock@Weight,
-    Years = Years(Stock),
-    nSim = nSim(Stock),
+    Years,
+    nSim,
     seed + 4,
     silent,
     force
@@ -90,8 +92,8 @@ PopulateStock <- function(Stock,
     Length = Stock@Length,
     Weight = Stock@Weight,
     Maturity = Stock@Maturity,
-    Years = Years(Stock),
-    nSim = nSim(Stock),
+    Years,
+    nSim,
     seed + 5,
     silent,
     force
@@ -101,8 +103,8 @@ PopulateStock <- function(Stock,
     SRR = Stock@SRR,
     Ages = Stock@Ages,
     CurrentYear = Stock@CurrentYear,
-    Years = Stock@Years,
-    nSim = Stock@nSim,
+    Years,
+    nSim,
     seed + 6,
     silent
   )
@@ -110,8 +112,8 @@ PopulateStock <- function(Stock,
   Stock@Spatial <- PopulateSpatial(
     Spatial = Stock@Spatial,
     Ages = Stock@Ages,
-    Years = Years(Stock),
-    nSim = Stock@nSim,
+    Years,
+    nSim,
     seed + 7,
     silent
   )
@@ -229,7 +231,7 @@ PopulateWeight <- function(Weight,
 
   ModelClass <- getModelClass(Weight@Model)
   if (!is.null(ModelClass)) {
-    if (grepl("at-Length", getModelClass(Weight@Model))) {
+      if (grepl("at-Length", getModelClass(Weight@Model))) {
       CheckRequiredObject(Length, "length", "Length")
       # chk <- Check(Length, silent=TRUE)
       # if (!chk@populated) {
