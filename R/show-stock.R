@@ -70,89 +70,22 @@ setMethod("show", "ages", function(object) {
 ## ---- Length ----
 
 setMethod("show", "length", function(object) {
-  
-  cli::cli_par()
   cli::cli_h2("A {.help MSEtool::Length} Object")
-  
-  cli::cli_ul(c(
-    
-    # Growth model
-    "Model: {.val {object@Model}}",
-    
-    # Units
-    "Units: {.val {object@Units}}",
-    
-    # Parameters
-    paste0(
-      "Parameters: ",
-      if (length(object@Pars) == 0) {
-        "{.emph not specified}"
-      } else {
-        paste0(
-          "{.val ", length(object@Pars), "} parameter",
-          if (length(object@Pars) > 1) "s"
-        )
-      }
-    ),
-    
-    # Mean at age
-    paste0(
-      "Mean length-at-age: ",
-      .format_array(object@MeanAtAge, "MeanAtAge")
-    ),
-    
-    # CV at age
-    paste0(
-      "CV at age: ",
-      .format_array(object@CVatAge, "CVatAge")
-    ),
-    
-    # Distribution
-    "Distribution: {.val {object@Dist}}",
-    
-    # Truncation
-    "Truncation (SD): {.val {object@TruncSD}}",
-    
-    # Timing
-    "Timing: {.val {object@Timing}}",
-    
-    # Random effects
-    paste0(
-      "Random effects: ",
-      if (is.null(object@Random) || length(object@Random) == 0) {
-        "{.emph none}"
-      } else {
-        "{.val specified}"
-      }
-    ),
-    
-    # Age–length key
-    paste0(
-      "Age–length key: ",
-      if (is.null(object@ASK) || length(object@ASK) == 0) {
-        "{.emph not specified}"
-      } else {
-        .format_array(object@ASK, "ASK")
-      }
-    ),
-    
-    # Length classes
-    paste0(
-      "Length classes: ",
-      if (is.null(object@Classes) || length(object@Classes) == 0) {
-        "{.emph not specified}"
-      } else {
-        paste0(
-          "{.val ", length(object@Classes), "} bins: ",
-          "{.val { .format_vec(object@Classes) }}"
-        )
-      }
-    )
-    
-  ))
-  
-  cli::cli_end()
+  .show_stock_object(object, type_label = "Age–length")
 })
+
+
+## ---- Weight ----
+setMethod("show", "weight", function(object) {
+  cli::cli_h2("A {.help MSEtool::Weight} Object")
+  .show_stock_object(object, type_label = "Age–weight")
+})
+
+
+ 
+  
+
+
 
 
 ## ---- Spatial ----

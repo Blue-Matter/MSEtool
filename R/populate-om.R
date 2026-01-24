@@ -1,76 +1,44 @@
-#' Populate operating model components
+#' Populate an Operating Model
 #'
-#' Populate and update [OM()] objects by generating stochastic values,
-#' filling derived slots, and checking object structure and contents. 
+#' Populate a complete operating model (`om` object) by populating all
+#' component objects (stocks, fleets, observation models, and derived
+#' structures), performing internal consistency checks, and initializing
+#' simulation-specific values.
 #'
-#' These functions are internal population engines used to initialise and
-#' update \link{OM}, \link{Stock}, and \link{Fleet} objects used by [Simulate()].
+#' @param OM An [OM()] object to populate.
+#' @param silent Logical. If `TRUE`, suppress informational messages and
+#'   warnings during population.
+#' @param force Logical. If `TRUE`, force re-population even if the internal
+#'   object digest indicates no changes since the last call.
+#'
+#' @details
 #' 
-#' Population is skipped if the object digest is unchanged, unless
-#' `force = TRUE`.
+#' This function is typically called internally, but may also be called directly.
+#' 
+#' `PopulateOM()` is the top-level population routine for operating models.
+#' It orchestrates population of all model components, including:
 #'
-#' @section Functions:
-#' \describe{
-#'   \item{\code{PopulateOM()}}{
-#'     Populate a complete operating model.
-#'   }
-#'   \item{\code{PopulateStock()}}{
-#'     Populate biological stock components including growth, mortality,
-#'     maturity, fecundity, recruitment, spatial structure, and depletion.
-#'   }
-#'   \item{\code{PopulateFleet()}}{
-#'     Populate fleet components including effort, catchability, selectivity,
-#'     retention, discard mortality, and spatial closures.
-#'   }
-#' }
-#'
-#' @param OM An \link{OM} object.
-#' @param Stock A \link{Stock} object.
-#' @param Fleet A \link{Fleet} object.
-#'
-#' @param nYear Number of historical years.
-#' @param pYear Number of projection years.
-#' @param CurrentYear Character; current calendar year.
-#' @param nSim Number of simulation replicates.
-#' @param Seasons Number of seasons per year.
-#'
-#' @param ALK Logical; whether to populate age–length keys.
-#' @param AWK Logical; whether to populate age–weight keys.
-#'
-#' @param seed Integer random seed used for generating stochastic values.
-#' @param silent Logical; suppress messages.
-#' @param force Logical; force re-population even if the object digest is unchanged.
+#' * Stocks via [PopulateStock()]
+#' * Fleets via [PopulateFleet()]
+#' * Implementation models (`imp`)
+#' * Observation models (`obs`)
+#' 
+#' To avoid unnecessary recomputation, a digest of the operating model is
+#' checked before population. If the digest is unchanged and `force = FALSE`,
+#' the input object is returned unchanged.
 #'
 #' @return
-#' An object of the same class as the input, with populated and updated slots.
+#' An [OM()] object populated with simulation- and time-specific values.
 #'
 #' @seealso
-#' \link{OM},
-#' \link{Stock},
-#' \link{Fleet}
+#' [Populate()], [PopulateStock()], [PopulateFleet()]
 #'
 #' @examples
 #' \dontrun{
-#' # Populate a full operating model
 #' OM <- PopulateOM(OM)
 #'
-#' # Populate a stock
-#' Stock <- PopulateStock(
-#'   Stock,
-#'   nYear = 40,
-#'   pYear = 20,
-#'   nSim = 100
-#' )
-#'
-#' # Populate a fleet
-#' Fleet <- PopulateFleet(
-#'   Fleet,
-#'   Stock = Stock,
-#'   nSim = 100
-#' )
 #' }
-#' @name PopulateOM
-#' @rdname PopulateOM
+#'
 #' @export
 PopulateOM <- function(OM, silent = FALSE, force = FALSE) {
   CheckClass(OM)
@@ -98,14 +66,14 @@ PopulateOM <- function(OM, silent = FALSE, force = FALSE) {
   }
 
   OM <- OM |>
-    PopulateStockList(silent, force) |>
-    PopulateFleetList(silent, force) |>
-    PopulateImpList(silent) |>
+    PopulateStockList(silent = silent, force = force) |>
+    PopulateFleetList(silent = silent, force = force) |>
+    PopulateImpList(silent = silent) |>
     PopulateComplexes() |>
     ProcessData() |>
-    PopulateObsList(silent) |>
-    UpdateSPFrom() |> # TODO
-    ShareParameters() |> # share parameters for two-sex stocks TODO
+    PopulateObsList(silent = silent) |>
+    UpdateSPFrom() |>   # TODO
+    ShareParameters() |> # TODO
     StartMessages()
 
   # CheckCatchFrac() |> # TODO - auto-populate CatchFrac if OM@Data exists
@@ -122,7 +90,7 @@ ProcessData <- function(OM) {
 
   if (isS4(OM@Data)) {
     if (length(stocknames) > 1) {
-      stocknames <- paste(stocknames, collapes = "-")
+      stocknames <- paste(stocknames, collape = "-")
     }
     OM@Data <- MakeNamedList(stocknames, OM@Data)
   }
@@ -155,15 +123,15 @@ PopulateStockList <- function(OM, silent = FALSE, force = FALSE) {
     Stock <- StockList[[st]]
     Stock@nSim <- OM@nSim
     StockList[[st]] <- PopulateStock(
-      Stock        = Stock,
-      nYear        = OM@nYear,
-      pYear        = OM@pYear,
-      CurrentYear  = OM@CurrentYear,
-      nSim         = OM@nSim,
-      Seasons      = OM@Seasons,
-      seed         = OM@Seed + st,
-      silent       = silent,
-      force        = force
+      Stock = Stock,
+      nYear = OM@nYear,
+      pYear = OM@pYear,
+      CurrentYear = OM@CurrentYear,
+      nSim = OM@nSim,
+      Seasons = OM@Seasons,
+      seed = OM@Seed + st,
+      silent = silent,
+      force = force
     )
     names(StockList)[st] <- StockList[[st]]@Name
   }
@@ -180,16 +148,15 @@ PopulateFleetList <- function(OM, silent = FALSE, force = FALSE) {
   }
   
   StockList <- OM@Stock
-  nStocks   <- nStock(OM)
-  nFleets  <- nFleet(OM)
+  nStocks <- nStock(OM)
+  nFleets <- nFleet(OM)
   
-  # Set OM@Fleet into stock-indexed list
   FleetInput <- OM@Fleet
   if (isS4(FleetInput)) {
     # OM@Fleet = single `fleet` object: replicate across stocks
     FleetInput <- replicate(nStocks, list(FleetInput), simplify = FALSE)
   } else if (inherits(FleetInput, "FleetList")) {
-    # OM@Fleet = lost of `fleet` objects: replicate across stocks
+    # OM@Fleet = list of `fleet` objects: replicate across stocks
     FleetInput <- replicate(nStocks, FleetInput, simplify = FALSE)
   } else {
     if (length(FleetInput) != 1 && length(FleetInput) != nStocks) {
@@ -202,8 +169,7 @@ PopulateFleetList <- function(OM, silent = FALSE, force = FALSE) {
       FleetInput <- replicate(nStocks, FleetInput[[1]], simplify = FALSE)
     }
   }
-  
-  # Check all stocks have same fleets
+
   nFleetperStock <- lengths(FleetInput)
   if (length(unique(nFleetperStock)) != 1) {
     cli::cli_abort(
@@ -211,7 +177,6 @@ PopulateFleetList <- function(OM, silent = FALSE, force = FALSE) {
     )
   }
   
-  # Prepare FleetList output
   FleetList <- vector("list", nStocks)
   class(FleetList) <- "StockFleetList"
   names(FleetList) <- names(StockList)
@@ -220,13 +185,12 @@ PopulateFleetList <- function(OM, silent = FALSE, force = FALSE) {
     class(FleetList[[st]]) <- "FleetList"
   }
   
-  # Populate fleets 
   for (st in seq_len(nStocks)) {
     for (fl in seq_len(nFleets)) {
       FleetList[[st]][[fl]] <- PopulateFleet(
-        Fleet  = FleetList[[st]][[fl]],
-        Stock  = StockList[[st]],
-        seed   = OM@Seed + st + fl,
+        Fleet = FleetList[[st]][[fl]],
+        Stock = StockList[[st]],
+        seed = OM@Seed + st + fl,
         silent = silent,
         force  = force
       )
@@ -234,7 +198,6 @@ PopulateFleetList <- function(OM, silent = FALSE, force = FALSE) {
     }
   }
   
-  # Process Effort and Catchability
   OM@Fleet  <- ProcessFleetEffort(FleetList, silent=TRUE)
   OM
 }

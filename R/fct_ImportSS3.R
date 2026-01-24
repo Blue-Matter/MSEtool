@@ -950,7 +950,7 @@ SS2SRR <- function(st, RepList, YearsList, Ages, nSim) {
     SRR@SPFrom <- 1
   }
 
-  RecDevs <- GenerateRecruitmentDeviations(
+  RecDevs <- GenRecDevs(
     SD = SRR@SD,
     AC = SRR@AC,
     Ages = Ages,

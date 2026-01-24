@@ -38,7 +38,7 @@
 #' @seealso [Effort()]
 #' 
 #' @export
-GenerateHistoricalEffort <- function(Effort, nSim=5, Years=NULL) {
+GenHistEffort <- function(Effort, nSim=5, Years=NULL) {
   if (!methods::is(Effort, 'data.frame')) {
     cli::cli_abort('`Effort` must be a data.frame')
   }

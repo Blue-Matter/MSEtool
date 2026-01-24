@@ -3,7 +3,6 @@ PopulateMeanAtLength <- function(object,
                                  Length=NULL, 
                                  Years=NULL, 
                                  Ages=NULL, 
-                                 nsim=NULL,
                                  seed=NULL, 
                                  silent=FALSE) {
   
@@ -25,9 +24,9 @@ PopulateMeanAtLength <- function(object,
   if ('Length' %in% args) {
     CheckRequiredObject(Length, 'length', 'Length')
   }
-  object@MeanAtLength <- GenerateMeanatLength(Model=object@Model,
-                                              Pars=object@Pars,
-                                              Length=Length@Classes)
+  object@MeanAtLength <- GenMeanAtLength(Model = object@Model,
+                                              Pars = object@Pars,
+                                              Length = Length@Classes)
   
   object@Classes <- Length@Classes
   

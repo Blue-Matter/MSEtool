@@ -18,7 +18,7 @@ PopulateMeanAtAge <- function(object,
   if ('Length' %in% args) {
     CheckRequiredObject(Length, 'length', 'Length')
     
-    object@MeanAtAge <- GenerateMeanatLength(Model=object@Model,
+    object@MeanAtAge <- GenMeanAtLength(Model=object@Model,
                                              Pars=object@Pars,
                                              Length=Length@MeanAtAge)
     object@Classes <- Length@Classes
@@ -29,7 +29,7 @@ PopulateMeanAtAge <- function(object,
         Ages@Classes <- Ages@Classes+object@Timing
       }
     }
-    object@MeanAtAge <- GenerateMeanAtAge(Model=object@Model,
+    object@MeanAtAge <- GenMeanAtAge(Model=object@Model,
                                           Pars=object@Pars,
                                           Ages=Ages@Classes)
     # object@Classes <- Ages@Classes

@@ -1,6 +1,18 @@
+library(MSEtool)
 la()
 
-OM <- Convert(testOM, Populate=FALSE)
+OM <- ConvertOM(testOM, Populate=FALSE)
+
+
+Length <- OM@Stock$Albacore@Length
+Ages <- OM@Stock$Albacore@Ages
+
+
+GetLength(OM@Stock[[1]])
+
+
+Populate
+
 
 t <- Length()
 

@@ -1,94 +1,151 @@
-
-
-#' @rdname Convert
-#' @param OM An [OM-class] object
-#' @param Author Author of OM object. Character string. Optional.
-#' @param CurrentYear Numeric. Last historical year of OM. Defaults to current year if missing from `OM`
-#' @param Seasons Numeric length 1. Number of seasons in a year
-#' @param Populate Logical. Populate the `OM`?
+#' Convert legacy OM object to new OM class
+#'
+#' This function converts an existing legacy [OM-class] object into the
+#' current `om` S4 class, copying attributes, updating year vectors,
+#' and optionally populating the object.
+#'
+#' @param OM An [OM-class] object to convert
+#' @param Author Character string. Author of the OM object. Optional.
+#' @param CurrentYear Numeric. Last historical year of OM. Defaults to
+#'   the current year if missing from `OM`.
+#' @param Seasons Numeric length 1. Number of seasons per year.
+#' @param Populate Logical. If `TRUE`, calls [PopulateOM()] on the converted object.
+#' @param silent Logical. Suppress messages if `TRUE`.
+#'
+#' @return An  `om` class object.
+#'
+#' @details
+#' 
+#' **Note**: Maximum length slots (`Vmaxlen` and `Rmaxlen`) are updated to reflect the 
+#' maximum length class rather than `Linf` as was done previously. This will change
+#' the selectivity/retention curves compared to legacy object if `Vmaxlen` or 
+#' `Rmaxlen` are < 1. Alternatively, users can set the `MeanAtLength` or 
+#' `MeanAtAge` arrays directly in the new [Selectivity()] and [Retention()] objects.
+#'
+#' @examples
+#' \dontrun{
+#' OMlegacy <- LoadOM("MyLegacyOM.rds")
+#' om_new <- ConvertOM(OMlegacy)
+#' }
+#'
 #' @export
-ConvertOM <- function(OM, Author='', CurrentYear=NULL, Seasons=1, Populate=TRUE, silent=FALSE) {
+ConvertOM <- function(OM,
+                      Author = '',
+                      CurrentYear = NULL,
+                      Seasons = 1,
+                      Populate = TRUE,
+                      silent = FALSE) {
+  
   CheckClass(OM, c('OM'), 'OM')
   
-  if (!silent)
+  if (!silent) {
     cli::cli_alert('Converting object of class {.cls OM} to class {.cls om}')
-
+  }
+  
+  # Initialize new OM object
   om <- OM()
-  om@Name <- OM@Name
-  om@Agency <-  OM@Agency
-  om@Region <-  OM@Region
-  om@Author <- Author
-  om@Longitude <- OM@Longitude
-  om@Latitude <- OM@Latitude
-  om@Sponsor <- OM@Sponsor
-  om@nSim <- OM@nsim
-  om@nYear <- OM@nyears
-  om@pYear <- OM@proyears
-  om@Interval <- OM@interval
-  om@Seed <- OM@seed
-  om@pStar <- OM@pstar
-  om@maxF <- OM@maxF
-  om@nReps <- OM@reps
-  om@Source <- OM@Source
+  om@Name        <- OM@Name
+  om@Agency      <- OM@Agency
+  om@Region      <- OM@Region
+  om@Author      <- Author
+  om@Longitude   <- OM@Longitude
+  om@Latitude    <- OM@Latitude
+  om@Sponsor     <- OM@Sponsor
+  om@nSim        <- OM@nsim
+  om@nYear       <- OM@nyears
+  om@pYear       <- OM@proyears
+  om@Interval    <- OM@interval
+  om@Seed        <- OM@seed
+  om@pStar       <- OM@pstar
+  om@maxF        <- OM@maxF
+  om@nReps       <- OM@reps
+  om@Source      <- OM@Source
   om@CurrentYear <- OM@CurrentYr
+  
   if (om@CurrentYear < 1000) {
-    om@CurrentYear <- ifelse(is.null(CurrentYear),
-                             as.numeric(format(Sys.Date(), '%Y')),
-                             CurrentYear
+    om@CurrentYear <- ifelse(
+      is.null(CurrentYear),
+      as.numeric(format(Sys.Date(), '%Y')),
+      CurrentYear
     )
   }
   
   om@Seasons <- Seasons
-  om@Years <- CalcYears(nYear=om@nYear,
-                        pYear=om@pYear,
-                        CurrentYear=om@CurrentYear,
-                        Seasons)
-  
-  YearsList <- list(HistTS=Years(om, 'Historical'),
-                    ProjTS=Years(om, 'Projection'),
-                    TimeUnits='year',
-                    Seasons=Seasons
+  om@Years   <- CalcYears(
+    nYear = om@nYear,
+    pYear = om@pYear,
+    CurrentYear = om@CurrentYear,
+    Seasons = Seasons
   )
   
+  # Prepare years list for stock/fleet conversion
+  YearsList <- list(
+    HistTS    = Years(om, 'Historical'),
+    ProjTS    = Years(om, 'Projection'),
+    TimeUnits = 'year',
+    Seasons   = Seasons
+  )
+  
+  # Stocks
   StockName <- SubOM(OM, 'Stock')@Name
-  om@Stock <- MakeNamedList(StockName,
-                            OM2stock(OM, 
-                                     cpars=OM@cpars, 
-                                     YearsList, 
-                                     nSim=OM@nsim,
-                                     seed=OM@seed)
+  om@Stock <- MakeNamedList(
+    StockName,
+    OM2stock(
+      OM,
+      cpars = OM@cpars,
+      YearsList,
+      nSim = OM@nsim,
+      seed = OM@seed
+    )
   )
+  
+  # Fleets
   FleetName <- SubOM(OM, 'Fleet')@Name
-  om@Fleet <- MakeNamedList(StockName,
-                            MakeNamedList(FleetName,
-                                          OM2fleet(OM, OM@cpars)
-                                          )
+  om@Fleet <- MakeNamedList(
+    StockName,
+    MakeNamedList(
+      FleetName,
+      OM2fleet(OM, OM@cpars)
+    )
   )
+  
+  # Update selectivity/retention slots
   om <- UpdateSelRet(OM, om)
- 
-  om@Obs <- MakeNamedList(StockName,
-                          MakeNamedList(FleetName,
-                                        ConvertObs(OM, silent=TRUE)
-                          )
+  
+  # Observations
+  om@Obs <- MakeNamedList(
+    StockName,
+    MakeNamedList(
+      FleetName,
+      ConvertObs(OM, silent = TRUE)
+    )
   )
   
-  om@Imp <- MakeNamedList(StockName,
-                          MakeNamedList(FleetName,
-                                        ConvertImp(OM, silent=TRUE)
-                          )
+  # Implementation
+  om@Imp <- MakeNamedList(
+    StockName,
+    MakeNamedList(
+      FleetName,
+      ConvertImp(OM, silent = TRUE)
+    )
   )
   
-  # update because Vmaxlen and Rmaxlen now correspond with maximum length class
-  om <- om |> 
+  # Update max length and E-factor
+  om <- om |>
     SolveForVmaxlen('Selectivity') |>
     SolveForVmaxlen('Retention') |>
     ProcessEFactor()
   
-  if (Populate)
-    om <- PopulateOM(om, silent=FALSE)
+  # Populate object if requested
+  if (Populate) {
+    om <- PopulateOM(om, silent = FALSE)
+  }
   
   om
 }
+
+
+
 
 
 UpdateSelRet <- function(OM, om) {

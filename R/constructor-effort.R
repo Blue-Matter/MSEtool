@@ -16,10 +16,10 @@
 #' using spatial utility calculations and fleet behaviour.
 #'
 #' If `Effort` is supplied as a correctly structured `data.frame`,
-#' it will be used by [GenerateHistoricalEffort()] to generate stochastic
+#' it will be used by [GenHistEffort()] to generate stochastic
 #' historical effort.
 #'
-#' @seealso [Fleet()], [GenerateHistoricalEffort()]
+#' @seealso [Fleet()], [GenHistEffort()]
 #'
 #' @include class-unions.R
 #'

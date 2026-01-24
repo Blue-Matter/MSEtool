@@ -1,3 +1,15 @@
+#' Generic show method
+#' 
+#'
+#' @param object Object to print to console
+#' @importFrom methods show
+#' @export
+show <- function(object) methods::show(object)
+
+
+hasSlot <- function(object, slot) {
+  slot %in% slotNames(object)
+}
 
 .format_sim_values <- function(x) {
   n <- length(x)
@@ -52,14 +64,79 @@
   }
 }
 
+.show_stock_object <- function(object, class_name, type_label = NULL) {
+  type_label <- type_label %||% class_name
+  
+  cli::cli_par()
+  
+  lines <- character()
+  
+  if (hasSlot(object, "Model"))
+    lines <- c(lines, paste0("Model: {.val ", object@Model, "}"))
+  
+  if (hasSlot(object, "Units"))
+    lines <- c(lines, paste0("Units: {.val ", object@Units, "}"))
+  
+  if (hasSlot(object, "Pars")) {
+    param_names <- names(object@Pars)
+    if (length(param_names) == 0) {
+      lines <- c(lines, "Parameters: {.emph not specified}")
+    } else {
+      lines <- c(lines, paste0(
+        "Parameters: {.val ", length(param_names), "} parameter",
+        if (length(param_names) > 1) "s",
+        if (!is.null(param_names)) paste0(": {.val ", paste(param_names, collapse=", "), "}")
+      ))
+    }
+  }
+  
+  if (hasSlot(object, "MeanAtAge"))
+    lines <- c(lines, paste0("Mean at age: ", .format_array(object@MeanAtAge, "MeanAtAge")))
+  
+  if (hasSlot(object, "MeanAtLength") && !is.null(object@MeanAtLength))
+    lines <- c(lines, paste0("Mean at length: ", .format_array(object@MeanAtLength, "MeanAtLength")))
+  
+  if (hasSlot(object, "CVatAge"))
+    lines <- c(lines, paste0("CV at age: ", .format_array(object@CVatAge, "CVatAge")))
+  
+  if (hasSlot(object, "Dist"))
+    lines <- c(lines, paste0("Distribution: {.val ", object@Dist, "}"))
+  
+  if (hasSlot(object, "TruncSD"))
+    lines <- c(lines, paste0("Truncation (SD): {.val ", object@TruncSD, "}"))
+  
+  if (hasSlot(object, "Timing"))
+    lines <- c(lines, paste0("Timing: {.val ", object@Timing, "}"))
+  
+  # if (hasSlot(object, "Random"))
+  #   lines <- c(lines, paste0(
+  #     "Random effects: ",
+  #     if (is.null(object@Random) || length(object@Random) == 0) "{.emph none}" else "{.val specified}"
+  #   ))
+  
+  if (hasSlot(object, "ASK"))
+    lines <- c(lines, paste0(
+      type_label, "-key: ",
+      if (is.null(object@ASK) || length(object@ASK) == 0) "{.emph not specified}" else .format_array(object@ASK, "ASK")
+    ))
+  
+  # if (hasSlot(object, "Classes"))
+  #   lines <- c(lines, paste0(
+  #     type_label, " classes: ",
+  #     if (is.null(object@Classes) || length(object@Classes) == 0) "{.emph not specified}" else
+  #       paste0("{.val ", length(object@Classes), "} bins: {.val ", .format_vec(object@Classes), "}")
+  #   ))
+  
+  cli::cli_ul(lines)
+  cli::cli_end()
+}
 
 
 
-#' Generic show method
-#'
-#' @param object Object to print to console
-#' @export
-show <- function(object) methods::show(object)
+
+
+
+
 
 # ---- MSE ----
 
@@ -94,190 +171,6 @@ setMethod('show', 'data', function(object) {
 
 
 
-
-## ---- Weight  ----
-setMethod('show', 'weight', function(object) {
-
-  cli::cli_par()
-  cli::cli_h2("{.help MSEtool::Weight} Object")
-  cli::cli_h3('{.code Pars}')
-  printPars(object@Pars)
-
-  cli::cli_h3('{.code Model}')
-  cli::cli_text('{.val { object@Model}}')
-
-  cli::cli_h3('{.code Units}')
-  cli::cli_text('{.val { object@Units}}')
-
-  cli::cli_h3('{.code MeanAtAge}')
-  printMeanatAge(object@MeanAtAge)
-
-  cli::cli_h3('{.code CVatAge}')
-  printMeanatAge(object@CVatAge)
-
-  cli::cli_h3('{.code Dist}')
-  cli::cli_text('{.val { object@Dist}}')
-
-  cli::cli_h3('{.code TruncSD}')
-  cli::cli_text('{.val { object@TruncSD}}')
-
-  cli::cli_h3('{.code Timing}')
-  cli::cli_text('{.val { object@Timing}}')
-
-  cli::cli_h3('{.code ASK}')
-  printASK(object@ASK)
-
-  cli::cli_h3('{.code Classes}')
-  if (!is.null(object@Classes)) {
-    val <- cli::cli_vec(object@Classes, list("vec-trunc" = 10))
-    cli::cli_text('nBins: {.val {length(object@Classes)}}')
-    cli::cli_text('{.val { val}}')
-  }
-
-
-
-  cli::cli_end()
-  # print(Check(object))
-
-})
-
-## ---- NaturalMortality ----
-setMethod('show', 'naturalmortality', function(object) {
-
-  cli::cli_par()
-  cli::cli_h2("{.help MSEtool::NaturalMortality} Object")
-  cli::cli_h3('{.code Pars}')
-  printPars(object@Pars)
-
-  cli::cli_h3('{.code Model}')
-  cli::cli_text('{.val { object@Model}}')
-
-  cli::cli_h3('{.code Units}')
-  cli::cli_text('{.val { object@Units}}')
-
-  cli::cli_h3('{.code MeanAtAge}')
-  printMeanatAge(object@MeanAtAge)
-
-  cli::cli_h3('{.code MeanAtLength}')
-  printMeanatAge(object@MeanAtLength, type="Length")
-
-  cli::cli_h3('{.code Classes}')
-  if (!is.null(object@Classes)) {
-    val <- cli::cli_vec(object@Classes, list("vec-trunc" = 10))
-    cli::cli_text('nBins: {.val {length(object@Classes)}}')
-    cli::cli_text('{.val { val}}')
-  }
-
-  cli::cli_end()
-  # Check(object)
-})
-
-
-
-## ---- Maturity ----
-
-#' @rdname show
-setMethod('show', 'maturity', function(object) {
-
-  cli::cli_par()
-  cli::cli_h2("A {.help MSEtool::Maturity} Object")
-  cli::cli_h3('{.code Pars}')
-  printPars(object@Pars)
-
-  cli::cli_h3('{.code Model}')
-  cli::cli_text('{.val { object@Model}}')
-
-  cli::cli_h3('{.code MeanAtAge}')
-  printMeanatAge(object@MeanAtAge)
-
-  cli::cli_h3('{.code MeanAtLength}')
-  printMeanatAge(object@MeanAtLength, type='Length')
-
-  cli::cli_h3('{.code Classes}')
-  if (!is.null(object@Classes)) {
-    val <- cli::cli_vec(object@Classes, list("vec-trunc" = 10))
-    cli::cli_text('nBins: {.val {length(object@Classes)}}')
-    cli::cli_text('{.val { val}}')
-  }
-
-  cli::cli_end()
-  # Check(object)
-
-})
-
-
-## ---- Fecundity ----
-
-#' @rdname show
-setMethod('show', 'fecundity', function(object) {
-
-  cli::cli_par()
-  cli::cli_h2("A {.help MSEtool::Fecundity} Object")
-  cli::cli_h3('{.code Pars}')
-  printPars(object@Pars)
-
-  cli::cli_h3('{.code Model}')
-  cli::cli_text('{.val { object@Model}}')
-
-  cli::cli_h3('{.code Units}')
-  cli::cli_text('{.val { object@Units}}')
-
-  cli::cli_h3('{.code MeanAtAge}')
-  printMeanatAge(object@MeanAtAge)
-
-  cli::cli_h3('{.code MeanAtLength}')
-  printMeanatAge(object@MeanAtLength, type='Length')
-
-  cli::cli_h3('{.code Classes}')
-  if (!is.null(object@Classes)) {
-    val <- cli::cli_vec(object@Classes, list("vec-trunc" = 10))
-    cli::cli_text('nBins: {.val {length(object@Classes)}}')
-    cli::cli_text('{.val { val}}')
-  }
-
-  cli::cli_end()
-  # Check(object)
-
-})
-
-## ---- SRR ----
-
-#' @rdname show
-setMethod('show', 'srr', function(object) {
-
-  cli::cli_par()
-  cli::cli_h2("A {.help MSEtool::SRR} Object")
-  cli::cli_h3('{.code Pars}')
-  printPars(object@Pars)
-
-  cli::cli_h3('{.code Model}')
-  cli::cli_text('{.val { object@Model}}')
-
-  cli::cli_h3('{.code SD}')
-  printPars(list(SD=object@SD))
-
-  cli::cli_h3('{.code AC}')
-  printPars(list(AC=object@AC))
-
-  cli::cli_h3('{.code TruncSD}')
-  cli::cli_text('{.val { object@TruncSD}}')
-
-  cli::cli_h3('{.code RecDevInit}')
-  printRecDevs(object@RecDevInit, type='init')
-
-  cli::cli_h3('{.code RecDevHist}')
-  printRecDevs(object@RecDevHist, type='hist')
-
-  cli::cli_h3('{.code RecDevProj}')
-  printRecDevs(object@RecDevProj, type='proj')
-
-  cli::cli_h3('{.code SpawnTimeFrac}')
-  cli::cli_text('{.val { object@SpawnTimeFrac}}')
-
-  cli::cli_end()
-  # Check(object)
-
-})
 
 
 

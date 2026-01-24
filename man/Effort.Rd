@@ -30,9 +30,9 @@ across areas. Otherwise, spatial allocation is derived internally
 using spatial utility calculations and fleet behaviour.
 
 If \code{Effort} is supplied as a correctly structured \code{data.frame},
-it will be used by \code{\link[=GenerateHistoricalEffort]{GenerateHistoricalEffort()}} to generate stochastic
+it will be used by \code{\link[=GenHistEffort]{GenHistEffort()}} to generate stochastic
 historical effort.
 }
 \seealso{
-\code{\link[=Fleet]{Fleet()}}, \code{\link[=GenerateHistoricalEffort]{GenerateHistoricalEffort()}}
+\code{\link[=Fleet]{Fleet()}}, \code{\link[=GenHistEffort]{GenHistEffort()}}
 }

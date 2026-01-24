@@ -221,7 +221,7 @@ ProcessAdvice_SelectivityPars <- function(Selectivity, ProjSim, YearsProj, Ages,
       Length@Classes <- ProjSim@OM@Fleet[[st]]@Selectivity@Classes[[fl]]
     
     Selectivity@Classes <- Length@Classes
-    Selectivity@MeanAtLength <- GenerateMeanatLength(Model=Selectivity@Model,
+    Selectivity@MeanAtLength <- GenMeanAtLength(Model=Selectivity@Model,
                                                      Pars=Selectivity@Pars,
                                                      Length=Selectivity@Classes)[1,,1]
     
@@ -241,7 +241,7 @@ ProcessAdvice_SelectivityPars <- function(Selectivity, ProjSim, YearsProj, Ages,
       Weight@Classes <- ProjSim@OM@Fleet[[st]]@Selectivity@Classes[[fl]]
     
     Selectivity@Classes <- Weight@Classes
-    Selectivity@MeanAtWeight <- GenerateMeanatWeight(Model=Selectivity@Model,
+    Selectivity@MeanAtWeight <- GenMeanAtWeight(Model=Selectivity@Model,
                                                      Pars=Selectivity@Pars,
                                                      Weight=Selectivity@Classes)[1,,1]
     
@@ -251,7 +251,7 @@ ProcessAdvice_SelectivityPars <- function(Selectivity, ProjSim, YearsProj, Ages,
     )
   }
   
-  Selectivity@MeanAtAge <- GenerateMeanAtAge(Model=Selectivity@Model,
+  Selectivity@MeanAtAge <- GenMeanAtAge(Model=Selectivity@Model,
                                              Pars=Selectivity@Pars,
                                              Ages=Ages@Classes)[1,,1]
   ProcessAdvice_SelectivityMeanAtAge(Selectivity, ProjSim, YearsProj, Ages@Classes, type, st, fl)
