@@ -25,9 +25,9 @@ RetentionKnifeEdgeLength(Length, RL)
 
 RetentionAtWeight(Weight, RW50, RW50_95)
 
-DoubleNormalRetention(Length, R5, RFS, Rmaxlen)
+DoubleNormalRetention(Length, LR5, LFR, Rmaxlen)
 
-DoubleNormalRetentionWeight(Weight, RW5, RWFS, Rmaxweight)
+DoubleNormalRetentionWeight(Weight, WR5, WFR, Rmaxweight)
 
 RetentionModels(full = TRUE, print = TRUE)
 
@@ -58,15 +58,15 @@ RetentionModelsWeight(full = TRUE, print = TRUE)
 
 \item{RW50_95}{Interval between 50\% and 95\% retention for logistic retention-at-weight.}
 
-\item{R5}{First length at 5\% retention (double-normal).}
+\item{LR5}{First length at 5\% retention (double-normal).}
 
-\item{RFS}{Full-retention length (double-normal).}
+\item{LFR}{Full-retention length (double-normal).}
 
 \item{Rmaxlen}{Retention value at \code{max(Length)} (double-normal).}
 
-\item{RW5}{First weight at 5\% retention (double-normal).}
+\item{WR5}{First weight at 5\% retention (double-normal).}
 
-\item{RWFS}{Full-retention weight (double-normal).}
+\item{WFR}{Full-retention weight (double-normal).}
 
 \item{Rmaxweight}{Retention value at \code{max(Weight)} (double-normal).}
 

@@ -448,7 +448,7 @@ CheckModel <- function(object) {
   nms <-  names(object@Pars)
   cli::cli_abort(c(
     'No model found for this object class {.val {class(object)}} with parameters named: {.val { nms }}.',
-    'i'='See {.fun { fun}} or set `Pars` to NULL or `Model` to a R function with arguments corresponding with those in `Pars`.')
+    'i'='See {.fun { fun}} or set `Pars` to NULL or `Model` to a R function with arguments corresponding with those in `Pars`.'), call=rlang::caller_call(n=2)
   )
 }
 

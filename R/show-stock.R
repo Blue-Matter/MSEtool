@@ -35,35 +35,23 @@ setMethod('show', 'stock', function(object) {
   cli::cli_end()
 })
 
-## ---- Ages ----
-
 setMethod("show", "ages", function(object) {
   
-  cli::cli_par()
   cli::cli_h2("An {.help MSEtool::Ages} Object")
   
-  cli::cli_ul(c(
-    "Minimum age: {.val {object@MinAge}}",
-    "Maximum age: {.val {object@MaxAge}}",
-    "Units: {.val {object@Units}}",
-    if (isTRUE(object@PlusGroup)) {
-      "Plus group: {.emph enabled} (maximum age is a plus group)"
-    } else {
-      "Plus group: {.emph disabled}"
-    },
-    {
-      AgeClasses <- CalcAgeClasses(object)
-      if (!is.null(AgeClasses)) {
-        if (isTRUE(object@PlusGroup)) {
-          AgeClasses[length(AgeClasses)] <- paste0(AgeClasses[length(AgeClasses)], "+")
-        } 
-      }
-
-      "Age classes: {.val {AgeClasses}}"
-    }
-  ))
+  .show_slot(object, 'MinAge')
+  .show_slot(object, 'MaxAge')
+  .show_slot(object, 'Units')
+  .show_slot(object, 'PlusGroup')
   
-  cli::cli_end()
+  AgeClasses <- CalcAgeClasses(object)
+  if (!is.null(AgeClasses)) {
+    if (isTRUE(object@PlusGroup)) {
+      AgeClasses[length(AgeClasses)] <- paste0(AgeClasses[length(AgeClasses)], "+")
+    } 
+  }
+  object@Classes <- AgeClasses
+  .show_slot(object, 'Classes')
 })
 
 
@@ -93,10 +81,25 @@ setMethod("show", "fecundity", function(object) {
   .show_object(object)
 })
 
+setMethod("show", "srr", function(object) {
+  cli::cli_h2("A {.help MSEtool::SRR} Object")
+  
+  .show_slot(object, 'R0')
+  .show_slot(object, 'SD')
+  .show_slot(object, 'AC')
+  .show_slot(object, 'SPFrom')
+  
+  .show_array(object@RecDevInit, 'RecDevInit')
+  .show_array(object@RecDevHist, 'RecDevHist')
+  .show_array(object@RecDevProj, 'RecDevProj')
+  
+  .show_slot(object, 'SpawnTimeFrac')
+  
+  .show_object(object)
+})
 
 
 
-## ---- Spatial ----
 #' @rdname show
 setMethod('show', 'spatial', function(object) {
   
@@ -110,9 +113,6 @@ setMethod('show', 'spatial', function(object) {
   cli::cli_end()
 })
 
-show_slot <- function(value) {
-  # show arrays, matrices, numeric, etc 
-}
 
 
 ## ---- Depletion ----

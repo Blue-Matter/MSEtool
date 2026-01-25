@@ -124,7 +124,7 @@ PopulateStock <- function(Stock,
     seed = seed + 2,
     silent = silent,
     force = force,
-    CalcAtLength = CalcAtLength
+    CalcAtLength = FALSE
   )
   
   Stock@NaturalMortality <- PopulateNaturalMortality(

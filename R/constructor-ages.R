@@ -36,14 +36,9 @@ Ages <- function(MaxAge,
                  Units = "year",
                  PlusGroup = TRUE) {
   
-  if (missing(MaxAge)) {
-    object <- methods::new("ages")
-    methods::validObject(object)
-    return(object)
-  }
-  
-  CheckClass(MaxAge, "numeric", "MaxAge")
-  
+  if (missing(MaxAge))
+    MaxAge <- numeric()
+
   object <- methods::new(
     "ages",
     MaxAge    = MaxAge,

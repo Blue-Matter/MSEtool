@@ -1,7 +1,19 @@
 library(MSEtool)
 la()
-
+testOM@nsim <- 50
 OM <- ConvertOM(testOM, Populate=FALSE)
+OM
+
+PopulateOM
+
+Length()
+OM@Stock$Albacore@Length
+OM@Stock$Albacore@Weight
+
+object <- OM@Stock$Albacore@SRR
+object
+
+object
 
 
 Length <- OM@Stock$Albacore@Length

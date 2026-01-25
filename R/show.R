@@ -17,42 +17,46 @@ hasSlot <- function(object, slot) {
   
   param_names <- names(object@Pars)
   
-  if (is.null(object@Model) && length(param_names))
+  if (is.null(object@Model) && length(param_names)) {
     object@Model <- FindModel(object)
+  }
+   
   
   if (is.null(object@Model)) {
-    cli::cli_inform("Model: {.emph not specified}")
+    cli::cli_text("Model: {.emph not specified}")
   } else {
-    cli::cli_inform("Model: {.val {object@Model}}") 
+    cli::cli_text("Model: {.val {object@Model}}") 
   }
  
 }
+
 
   
 .show_array_p <- function(x, p ) {
   
   if (is.null(x) || length(x) == 0) {
-    cli::cli_inform("→ {.val {p}}: {.emph not specified}")
+    cli::cli_text("→ {.val {p}}: {.emph not specified}")
     return(invisible(NULL))
   }
   
   d <- dim(x)
   dn <- dimnames(x) |> names()
-  mean_x <- mean(x) |> signif(3)
+  range_x <- range(x) |> signif(3)
   unique_x <- unique(x)
   
   if (length(unique_x)==1) {
-    cli::cli_inform(
-      "→ {.val {p}}: {.val {mean_x}}" 
+    cli::cli_text(
+      "→ {.val {p}}: {.val {range_x[1]}}" 
     )
   } else {
     if (is.null(dn)) {
-      cli::cli_inform(
-        "→ {.val {p}}: {.val {mean_x}}  {.emph  Mean of { paste(d, collapse=' x ')} array} {.strong (Dimension names missing)}" 
+      cli::cli_text(
+        
+        "→ {.val {p}}: {.emph {.val {range_x}}. (Range { paste(d, collapse=' x ')} array}} {.strong (Dimension names missing)}" 
       )
     } else {
-      cli::cli_inform(
-        "→ {.val {p}}: {.val {mean_x}}  {.emph  Mean of { paste( paste(d, dn), collapse=' x ')} array}" 
+      cli::cli_text(
+        "→ {.val {p}}:  {.emph { paste( paste(d, dn), collapse=' x ')} array}. Range: {.val {range_x}}"
       )
     }
    
@@ -63,7 +67,7 @@ hasSlot <- function(object, slot) {
 .show_array <- function(x, name, var='Age') {
   
   if (is.null(x) || length(x) == 0) {
-    cli::cli_inform("{name}: {.emph not specified}")
+    cli::cli_text("{name}: {.emph not specified}")
     return(invisible(NULL))
   }
   
@@ -71,7 +75,7 @@ hasSlot <- function(object, slot) {
 
   
   if (is.null(d)) {
-    cli::cli_inform("{name}: {.val {x}}")
+    cli::cli_text("{name}: {.val {x}}")
     return(invisible(NULL))
   }
   
@@ -80,15 +84,18 @@ hasSlot <- function(object, slot) {
   unique_x <- unique(x)
   
   if (length(unique_x)==1) {
-    cli::cli_inform("{name}: {.val {mean_x}}" )
+    cli::cli_text("{name}: {.val {mean_x}}" )
   } else {
     if (is.null(dn)) {
-      cli::cli_inform(
-        "{name}: {.val {mean_x}}  {.emph  Mean over {dn[dn!=var]} of { paste(d, collapse=' x ')} array} {.strong (Dimension names missing)}" 
+      cli::cli_text(
+        "{name}: {.emph  { paste(d, collapse=' x ')} array} {.strong (Dimension names missing)}" 
+        
+        # "{name}: {.val {mean_x}}  {.emph  Mean over {dn[dn!=var]} of { paste(d, collapse=' x ')} array} {.strong (Dimension names missing)}" 
       )
     } else {
-      cli::cli_inform(
-        "{name}: {.val {mean_x}}  {.emph  Mean over {dn[dn!=var]} of { paste( paste(d, dn), collapse=' x ')} array}" 
+      cli::cli_text(
+        "{name}: {.emph  { paste( paste(d, dn), collapse=' x ') } array}"
+        # "{name}: {.val {mean_x}}  {.emph  Mean over {dn[dn!=var]} of { paste( paste(d, dn), collapse=' x ')} array}" 
       )
     }
   }
@@ -101,7 +108,7 @@ hasSlot <- function(object, slot) {
   if (hasSlot(object, "Pars")) {
     param_names <- names(object@Pars)
     
-    cli::cli_inform(
+    cli::cli_text(
       if (length(param_names) == 0) {
         "Pars: {.emph not specified}"
       } else {
@@ -114,24 +121,22 @@ hasSlot <- function(object, slot) {
         for (p in param_names) {
           vals <- object@Pars[[p]]
           
-    
           if (is.array(vals)) {
             .show_array_p(vals,p)
             
             
           } else if (length(vals)==1) {
-            cli::cli_inform(
+            cli::cli_text(
               "→ {.val {p}}: {.val {(vals)}}"
               
             )
             
           } else if (length(vals)==2) {
-            cli::cli_inform(
+            cli::cli_text(
               "→ {.val {p}}: Uniform Dist. with bounds {.val {range(vals)}}"
             )
           }
-          
-          
+        
         }
       )
     }
@@ -143,18 +148,18 @@ hasSlot <- function(object, slot) {
 .show_units <- function(object) {
   if (!hasSlot(object, "Units"))
     return(NULL)
-  cli::cli_inform("Units: {.val {object@Units}}")
+  cli::cli_text("Units: {.val {object@Units}}")
 }
 
 
-.show_mean_at_ <- function(object, name='MeanAtAge') {
+.show_mean_at_ <- function(object, name='MeanAtAge', var='Age') {
   if (!hasSlot(object, name))
     return(NULL)
   
   if (is.null(slot(object, name))) {
-    cli::cli_inform("{name}: {.emph not specified}")
+    cli::cli_text("{name}: {.emph not specified}")
   } else {
-    .show_array(slot(object, name), name)
+    .show_array(slot(object, name), name, var)
   }
 }
 
@@ -163,15 +168,20 @@ hasSlot <- function(object, slot) {
     return(invisible(NULL))
   }
   
-  if (is.null(slot(object, slot))) {
-    cli::cli_inform("{slot}:  {.emph not specified}")
+  val <- slot(object, slot)
+  if (is.null(val) || !length(val)) {
+    cli::cli_text("{slot}:  {.emph not specified}")
   } else {
-    cli::cli_inform("{slot}:  {.val {slot(object,slot)}}")
+    if (is.numeric(val) && as.integer(val) != val) {
+      val <- signif(val,3)
+    }
+    cli::cli_text("{slot}:  {.val {val}}")
   }
 }
 
 .show_object <- function(object) {
   
+
   .show_model(object)
   .show_pars(object)
   .show_units(object)
@@ -181,153 +191,25 @@ hasSlot <- function(object, slot) {
   .show_slot(object, 'Dist')
   .show_slot(object, 'TruncSD')
   
-  .show_mean_at_(object, 'MeanAtLength')
-  .show_mean_at_(object, 'MeanAtWeight')
+  .show_mean_at_(object, 'MeanAtLength', 'Class')
+  .show_mean_at_(object, 'MeanAtWeight', 'Class')
   
   .show_slot(object, 'Timing')
   .show_slot(object, 'Classes')
  
- 
+  .show_slot(object, 'Semelparous')
+  
   # if (hasSlot(object, 'ASK'))  {
   #   if (inherits(object, 'length')) {
-  #     cli::cli_inform("ALK:", object@ASK)
+  #     cli::cli_text("ALK:", object@ASK)
   #   } else if  (inherits(object, 'weight')) {
-  #     cli::cli_inform("AWK:", object@ASK)
+  #     cli::cli_text("AWK:", object@ASK)
   #   }
   # }
     
   
+  
 }
-
-
-
-.format_sim_values <- function(x) {
-  n <- length(x)
-  
-  if (n == 0)
-    return("not specified")
-  
-  if (n == 1)
-    return(format(x)) 
-  
-  if (n == 2)
-    return(paste0("uniform [", x[1], "–", x[2], "]"))
-  
-  paste0(
-    "range ", signif(min(x), 3), "–", signif(max(x), 3),
-    " (median ", signif(stats::median(x), 3), "; n = ", n, ")"
-  )
-}
-
-.format_array <- function(x, name) {
-  if (is.null(x) || length(x) == 0) {
-    return("{.emph not specified}")
-  }
-  
-  d <- dim(x)
-  
-  if (is.null(d)) {
-    return("{.val scalar}")
-  }
-  
-  if (length(d) == 2) {
-    paste0(
-      "{.val ", d[1], " × ", d[2], "} (sim x age)"
-    )
-  } else if (length(d) == 3) {
-    paste0(
-      "{.val ", d[1], " × ", d[2], " × ", d[3], "} (sim x age × year)"
-    )
-  } else {
-    paste0(
-      "{.val ", paste(d, collapse = " × "), "} array"
-    )
-  }
-}
-
-.format_vec <- function(x) {
-  if (is.null(x) || length(x) == 0) {
-    "{.emph not specified}"
-  } else {
-    cli::cli_vec(x, list("vec-trunc" = 10))
-  }
-}
-
-
-
-
-
-
-.show_stock_object <- function(object, class_name, type_label = NULL) {
-  type_label <- type_label %||% class_name
-  
-  cli::cli_par()
-  
-  lines <- character()
-  
-  if (hasSlot(object, "Model"))
-    lines <- c(lines, paste0("Model: {.val ", object@Model, "}"))
-  
-  if (hasSlot(object, "Units"))
-    lines <- c(lines, paste0("Units: {.val ", object@Units, "}"))
-  
-  if (hasSlot(object, "Pars")) {
-    param_names <- names(object@Pars)
-    if (length(param_names) == 0) {
-      lines <- c(lines, "Parameters: {.emph not specified}")
-    } else {
-      lines <- c(lines, paste0(
-        "Parameters: {.val ", length(param_names), "} parameter",
-        if (length(param_names) > 1) "s",
-        if (!is.null(param_names)) paste0(": {.val ", paste(param_names, collapse=", "), "}")
-      ))
-    }
-  }
-  
-  if (hasSlot(object, "MeanAtAge"))
-    lines <- c(lines, paste0("Mean at age: ", .format_array(object@MeanAtAge, "MeanAtAge")))
-  
-  if (hasSlot(object, "MeanAtLength") && !is.null(object@MeanAtLength))
-    lines <- c(lines, paste0("Mean at length: ", .format_array(object@MeanAtLength, "MeanAtLength")))
-  
-  if (hasSlot(object, "CVatAge"))
-    lines <- c(lines, paste0("CV at age: ", .format_array(object@CVatAge, "CVatAge")))
-  
-  if (hasSlot(object, "Dist"))
-    lines <- c(lines, paste0("Distribution: {.val ", object@Dist, "}"))
-  
-  if (hasSlot(object, "TruncSD"))
-    lines <- c(lines, paste0("Truncation (SD): {.val ", object@TruncSD, "}"))
-  
-  if (hasSlot(object, "Timing"))
-    lines <- c(lines, paste0("Timing: {.val ", object@Timing, "}"))
-  
-  # if (hasSlot(object, "Random"))
-  #   lines <- c(lines, paste0(
-  #     "Random effects: ",
-  #     if (is.null(object@Random) || length(object@Random) == 0) "{.emph none}" else "{.val specified}"
-  #   ))
-  
-  if (hasSlot(object, "ASK"))
-    lines <- c(lines, paste0(
-      type_label, "-key: ",
-      if (is.null(object@ASK) || length(object@ASK) == 0) "{.emph not specified}" else .format_array(object@ASK, "ASK")
-    ))
-  
-  # if (hasSlot(object, "Classes"))
-  #   lines <- c(lines, paste0(
-  #     type_label, " classes: ",
-  #     if (is.null(object@Classes) || length(object@Classes) == 0) "{.emph not specified}" else
-  #       paste0("{.val ", length(object@Classes), "} bins: {.val ", .format_vec(object@Classes), "}")
-  #   ))
-  
-  cli::cli_ul(lines)
-  cli::cli_end()
-}
-
-
-
-
 
 
 
