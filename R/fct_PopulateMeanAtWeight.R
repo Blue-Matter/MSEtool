@@ -2,7 +2,6 @@ PopulateMeanAtWeight <- function(object,
                                  Weight=NULL, 
                                  Years=NULL, 
                                  Ages=NULL, 
-                                 nsim=NULL,
                                  seed=NULL, 
                                  silent=FALSE) {
   

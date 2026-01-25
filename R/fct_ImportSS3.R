@@ -954,8 +954,8 @@ SS2SRR <- function(st, RepList, YearsList, Ages, nSim) {
     SD = SRR@SD,
     AC = SRR@AC,
     Ages = Ages,
-    HistTS = YearsList$YearsHist,
-    ProjTS = YearsList$YearsProj,
+    HistYears  = YearsList$YearsHist,
+    ProjYears  = YearsList$YearsProj,
     nSim = nSim,
     RecDevInit = SRR@RecDevInit,
     RecDevHist = SRR@RecDevHist

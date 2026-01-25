@@ -5,6 +5,12 @@ OM <- ConvertOM(testOM, Populate=FALSE)
 
 
 Length <- OM@Stock$Albacore@Length
+
+Length
+
+# show mean over sims and years. for MeanAtAge ....
+
+
 Ages <- OM@Stock$Albacore@Ages
 
 

@@ -45,10 +45,10 @@ PopulateEffort <- function(Effort,
   }
   
   if (inherits(Effort@Effort, "data.frame")) {
-    Effort@Effort <- GetHistEffort(
+    Effort@Effort <- GenHistEffort(
       Effort = Effort@Effort,
       nSim = nSim,
-      HistYears = HistYears
+      Years = HistYears
     )
     Effort@Units <- "unitless"
   }
@@ -66,7 +66,7 @@ PopulateEffort <- function(Effort,
   Effort@Distribution <- PopulateDistribution(
     Distribution = Effort@Distribution,
     nSim = nSim,
-    Years = HistYears,
+    HistYears = HistYears,
     nArea = nArea
   )
   

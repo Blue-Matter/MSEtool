@@ -96,11 +96,20 @@ PopulateWeight <- function(Weight,
       Length <- PopulateLength(Length, Ages, Years, nSim, seed, AWK = TRUE, silent)
       # }
       Weight <- PopulateMeanAtLength(
-        Weight, Length, Years, Ages,
-        nSim, seed, silent
+        object = Weight, 
+        Length = Length, 
+        Years = Years, 
+        Ages = Ages, 
+        seed = seed,
+        silent = silent
       )
     } else {
-      Weight <- PopulateMeanAtAge(Weight, Ages, Years, Length)
+      Weight <- PopulateMeanAtAge(
+        object = Weight, 
+        Ages= Ages, 
+        Years = Years,
+        Length = Length)
+  
     }
   }
   

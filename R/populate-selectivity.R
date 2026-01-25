@@ -95,27 +95,25 @@ PopulateSelectivity <- function(Selectivity,
     
     if (grepl("at-Length", ModelClass)) {
       Selectivity <- PopulateMeanAtLength(
-        Selectivity = Selectivity,
+        object = Selectivity,
         Length = Length,
         Years = Years,
         Ages = Ages,
-        nSim = nSim,
         seed = seed,
         silent = silent
       )
     } else if (grepl("at-Weight", ModelClass)) {
       Selectivity <- PopulateMeanAtWeight(
-        Selectivity = Selectivity,
+        object = Selectivity,
         Weight = Weight,
         Years = Years,
         Ages = Ages,
-        nSim = nSim,
         seed = seed,
         silent = silent
       )
     } else if (grepl("at-Age", ModelClass)) {
       Selectivity <- PopulateMeanAtAge(
-        Selectivity = Selectivity,
+        object = Selectivity,
         Ages = Ages,
         Years = Years,
         Length = Length
@@ -124,19 +122,19 @@ PopulateSelectivity <- function(Selectivity,
   }
   
   Selectivity <- MeanAtLength2MeanAtAge(
-    Selectivity = Selectivity,
+    object = Selectivity,
     Length = Length,
     max1 = TRUE
   )
   Selectivity <- MeanAtWeight2MeanAtAge(
-    Selectivity = Selectivity,
+    object = Selectivity,
     Weight = Weight,
     max1 = TRUE
   )
   
   if (CalcAtLength) {
     Selectivity <- MeanAtAge2MeanAtLength(
-      Selectivity = Selectivity,
+      object = Selectivity,
       Length = Length,
       replace = FALSE
     )

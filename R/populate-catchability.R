@@ -74,7 +74,7 @@ PopulateCatchability <- function(Catchability,
   
   Catchability@Efficiency <- ExtendYears(
     Catchability@Efficiency,
-    HistYears = HistYears
+    Years = HistYears
   )
   
   if (!is.null(Catchability@qInc)) {

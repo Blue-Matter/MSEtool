@@ -101,14 +101,30 @@ PopulateRetention <- function(Retention,
     
     if (grepl("at-Length", ModelClass)) {
       Retention <- PopulateMeanAtLength(
-        Retention, Length, Years, Ages, nSim, seed, silent
+        object = Retention, 
+        Length = Length, 
+        Years = Years, 
+        Ages = Ages, 
+        seed = seed,
+        silent = silent
       )
+  
     } else if (grepl("at-Weight", ModelClass)) {
       Retention <- PopulateMeanAtWeight(
-        Retention, Weight, Years, Ages, nSim, seed, silent
+        object = Retention, 
+        Weight = Weight, 
+        Years = Years, 
+        Ages = Ages, 
+        seed = seed,
+        silent = silent
       )
+      
+
     } else if (grepl("at-Age", ModelClass)) {
-      Retention <- PopulateMeanAtAge(Retention, Ages, Years, Length)
+      Retention <- PopulateMeanAtAge(
+        object = Retention, 
+        Ages= Ages, 
+        Years = Years)
     }
   }
   

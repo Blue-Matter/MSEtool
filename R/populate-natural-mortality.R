@@ -81,12 +81,18 @@ PopulateNaturalMortality <- function(NaturalMortality,
   if (!is.null(ModelClass)) {
     if (grepl("at-Length", getModelClass(NaturalMortality@Model))) {
       NaturalMortality <- PopulateMeanAtLength(
-        NaturalMortality, Length,
-        Years, Ages, nSim,
-        seed, silent
+        object = NaturalMortality, 
+        Length = Length, 
+        Years = Years, 
+        Ages = Ages, 
+        seed = seed,
+        silent = silent
       )
     } else {
-      NaturalMortality <- PopulateMeanAtAge(NaturalMortality, Ages, Years)
+      NaturalMortality <- PopulateMeanAtAge(
+        object = NaturalMortality, 
+        Ages= Ages, 
+        Years = Years)
     }
   }
   

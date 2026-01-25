@@ -157,8 +157,12 @@ PopulateFecundity <- function(Fecundity,
   if (!is.null(ModelClass)) {
     if (grepl("at-Length", getModelClass(Fecundity@Model))) {
       Fecundity <- PopulateMeanAtLength(
-        Fecundity, Length, Years, Ages, nSim,
-        seed, silent
+        object = Fecundity, 
+        Length = Length, 
+        Years = Years, 
+        Ages = Ages, 
+        seed = seed,
+        silent = silent
       )
     } else {
       Fecundity <- PopulateMeanAtAge(Fecundity, Ages, Years)

@@ -341,6 +341,10 @@ isNewObject <- function(object) {
     newobj <- NaturalMortality()
   } else   if (inherits(object, 'srr')) {
     newobj <- SRR()
+  } else   if (inherits(object, 'om')) {
+    newobj <- OM()
+  } else   if (inherits(object, 'discardmortality')) {
+      newobj <- DiscardMortality()
   } else {
     newobj <- get(firstup(cl))()
   }

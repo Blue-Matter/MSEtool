@@ -67,23 +67,31 @@ setMethod("show", "ages", function(object) {
 })
 
 
-## ---- Length ----
-
 setMethod("show", "length", function(object) {
   cli::cli_h2("A {.help MSEtool::Length} Object")
-  .show_stock_object(object, type_label = "Age–length")
+  .show_object(object)
 })
 
-
-## ---- Weight ----
 setMethod("show", "weight", function(object) {
   cli::cli_h2("A {.help MSEtool::Weight} Object")
-  .show_stock_object(object, type_label = "Age–weight")
+  .show_object(object)
+})
+
+setMethod("show", "naturalmortality", function(object) {
+  cli::cli_h2("A {.help MSEtool::NaturalMortality} Object")
+  .show_object(object)
 })
 
 
- 
+setMethod("show", "maturity", function(object) {
+  cli::cli_h2("A {.help MSEtool::Maturity} Object")
+  .show_object(object)
+})
   
+setMethod("show", "fecundity", function(object) {
+  cli::cli_h2("A {.help MSEtool::Fecundity} Object")
+  .show_object(object)
+})
 
 
 

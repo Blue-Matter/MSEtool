@@ -11,11 +11,11 @@
 #' @param RL50_95 Interval between 50% and 95% retention for logistic retention-at-length.
 #' @param RW50 First weight at 50% retention for logistic retention-at-weight.
 #' @param RW50_95 Interval between 50% and 95% retention for logistic retention-at-weight.
-#' @param R5 First length at 5% retention (double-normal).
-#' @param RFS Full-retention length (double-normal).
+#' @param LR5 First length at 5% retention (double-normal).
+#' @param LFR Full-retention length (double-normal).
 #' @param Rmaxlen Retention value at `max(Length)` (double-normal).
-#' @param RW5 First weight at 5% retention (double-normal).
-#' @param RWFS Full-retention weight (double-normal).
+#' @param WR5 First weight at 5% retention (double-normal).
+#' @param WFR Full-retention weight (double-normal).
 #' @param Rmaxweight Retention value at `max(Weight)` (double-normal).
 #' @param RL Knife-edge length threshold.
 #' @param RA Knife-edge age threshold.
@@ -88,16 +88,16 @@ class(RetentionAtWeight) <- 'Retention-at-Weight-Model'
 # Double-normal retention
 #' @rdname Retention-Models
 #' @export
-DoubleNormalRetention <- function(Length, R5, RFS, Rmaxlen) {
-  double_normal(Length, R5, RFS, Rmaxlen)
+DoubleNormalRetention <- function(Length, LR5, LFR, Rmaxlen) {
+  double_normal(Length, LR5, LFR, Rmaxlen)
 }
 class(DoubleNormalRetention) <- 'Retention-at-Length-Model'
 
 # Double-normal retention at weight
 #' @rdname Retention-Models
 #' @export
-DoubleNormalRetentionWeight <- function(Weight, RW5, RWFS, Rmaxweight) {
-  double_normal(Weight, RW5, RWFS, Rmaxweight)
+DoubleNormalRetentionWeight <- function(Weight, WR5, WFR, Rmaxweight) {
+  double_normal(Weight, WR5, WFR, Rmaxweight)
 }
 class(DoubleNormalRetentionWeight) <- 'Retention-at-Weight-Model'
 

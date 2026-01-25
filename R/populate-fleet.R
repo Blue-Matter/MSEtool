@@ -85,7 +85,6 @@ PopulateFleet <- function(Fleet,
   
   Fleet@Catchability <- PopulateCatchability(
     Catchability = Fleet@Catchability,
-    RelativeSize = RelativeSize,
     nSim = nSim,
     HistYears = HistYears,
     ProjYears = ProjYears,

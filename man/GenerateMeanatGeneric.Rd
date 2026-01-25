@@ -4,7 +4,7 @@
 \alias{GenerateMeanatGeneric}
 \title{Generate mean values for a generic model}
 \usage{
-GenerateMeanatGeneric(Model, Pars, ...)
+GenerateMeanatGeneric(Model, Pars, nSim = 5, Years = NULL, ...)
 }
 \arguments{
 \item{Model}{A function or the name of a function to apply.}
