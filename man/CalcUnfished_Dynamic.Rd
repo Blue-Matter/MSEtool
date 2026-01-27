@@ -2,17 +2,30 @@
 % Please edit documentation in R/calc-unfished-dynamic.R
 \name{CalcUnfished_Dynamic}
 \alias{CalcUnfished_Dynamic}
-\title{Calculate Dynamic Unfished}
+\title{Calculate Dynamic Unfished Population Dynamics}
 \usage{
-CalcUnfished_Dynamic(Hist)
+CalcUnfished_Dynamic(Hist, IdenticalHist = NULL, silent = FALSE)
 }
 \arguments{
-\item{OM}{A \link{Hist} or an \code{\link[=OM]{OM()}} object}
+\item{Hist}{A \code{\link[=Hist]{Hist()}} object containing historical operating model data.}
+
+\item{IdenticalHist}{Logical; if \code{TRUE}, assumes all simulations are identical
+and calculates only a single simulation. If \code{NULL} (default), determined
+automatically via \code{IdenticalSims()}.}
+
+\item{silent}{Logical; if \code{TRUE}, suppress messages during calculation.}
 }
 \value{
-A \link{PopDynamics} object with dynamic unfished Number, Biomass, SBiomass, and SProduction
+A \link{PopDynamics} object containing dynamic unfished
+\code{Number}, \code{Biomass}, \code{SBiomass}, and \code{SProduction} arrays with dimensions
+\verb{Sim × Stock × Year}.
 }
 \description{
-Calculates the dynamic unfished number, biomass, spawning biomass, and
-spawning production for all \code{\link[=Stock]{Stock()}} objects in an \code{\link[=OM]{OM()}}
+Calculate dynamic unfished population quantities for all \code{\link[=Stock]{Stock()}}
+objects in an operating model. Quantities include unfished number-at-age,
+total biomass, spawning biomass, and spawning production, evaluated dynamically
+over historical and projection years.
+}
+\seealso{
+\code{\link[=CalcUnfished_Equilibrium]{CalcUnfished_Equilibrium()}}
 }

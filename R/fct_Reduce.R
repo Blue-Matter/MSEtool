@@ -7,39 +7,33 @@
 #'
 #' @param array An array, list, or S4 object. For non-array objects, the
 #'   function is applied recursively to all components or slots.
-#' @param IncSim Logical; reduce the \code{"Sim"} dimension if present and
+#' @param IncSim Logical; reduce the `Sim` dimension if present and
 #'   all simulations are identical.
-#' @param IncAge Logical; reduce the \code{"Age"} dimension if present and
+#' @param IncAge Logical; reduce the `Age` dimension if present and
 #'   all ages are identical.
-#' @param IncYear Logical; reduce the \code{"Year"} dimension if present and
+#' @param IncYear Logical; reduce the `Year`dimension if present and
 #'   all years are identical or by keeping only unique years.
 #'   
 #' @details
 #' Reduction is controlled independently for each supported dimension.
 #' If a dimension is excluded or not present, it is left unchanged.
 #' 
-#' For arrays, the function detects dimensions named \code{"Sim"},
-#' \code{"Age"}, and \code{"Year"} via \code{dimnames}. If enabled, dimensions
+#' For arrays, the function detects dimensions named `Sim`,
+#' `Age`, and `Year`. If enabled, dimensions
 #' are reduced as follows:
-#' \itemize{
-#'   \item \code{Sim}: kept at length 1 when all simulations are identical.
-#'   \item \code{Age}: kept at length 1 when all ages are identical.
-#'   \item \code{Year}: kept at length 1 when all years are identical; otherwise,
+#' * `Sim`: kept at length 1 when all simulations are identical.
+#' * `Age`:  kept at length 1 when all ages are identical.
+#' * `Year`: kept at length 1 when all years are identical; otherwise,
 #'     only unique years are retained.
-#' }
-#'
-#' The function relies on the internal helpers \code{IdenticalSims()},
-#' \code{IdenticalAge()}, \code{IdenticalYears()}, and \code{UniqueYears()}.
-#'
-#' @return An object of the same class as \code{array}, with reduced dimensions
-#'   where applicable. Dimensions are never dropped entirely; all subsetting
-#'   uses \code{drop = FALSE}.
+#'    
+#' @return An object of the same class as `array`, with reduced dimensions
+#'   where applicable. 
 #'
 #' @export
 ReduceDims <- function(array,
-                            IncSim = TRUE,
-                            IncAge = FALSE,
-                            IncYear = TRUE) {
+                       IncSim = TRUE,
+                       IncAge = FALSE,
+                       IncYear = TRUE) {
   if (!IncSim && !IncYear && !IncAge) {
     return(array)
   }

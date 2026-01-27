@@ -11,7 +11,7 @@
 #' @return Logical `TRUE` if all 'Sim' slices are identical, `FALSE` otherwise.
 #' 
 #' @keywords internal
-Identical_Sim <- function(object, ignore=NULL, debug=FALSE) {
+IdenticalSims <- function(object, ignore=NULL, debug=FALSE) {
   
   if (debug) {
     print(class(object))

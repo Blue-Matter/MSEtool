@@ -1,16 +1,25 @@
-#' Initialize a Hist object from an OM
+#' Create or Access a `Hist` Object
 #'
-#' Internal constructor that converts an initialized [OM()] object into a
-#' corresponding [Hist()] object by expanding all stock, fleet, and time-series
-#' slots over historical years and preparing C++-friendly data structures.
+#' The `Hist()` constructor creates a new historical simulation object or,
+#' when applied to an [OM()] object, returns the historical results stored
+#' within that object.
 #'
-#' @param OM An initialized [OM()] object.
-#' @param silent Logical. Suppress progress reporting.
+#' @param OM A [OM()] object. If missing, an empty `Hist` object is returned.
+#' @param silent Should messages be printed out to the console?
 #'
-#' @return A fully initialized [Hist()] object.
+#' @return A [Hist()] object.
 #'
-#' @keywords internal
-OM2Hist <- function(OM, silent = FALSE) {
+#' @seealso [OM()], [Data()]
+#' @include class-hist.R
+#' @rdname Hist
+#' @export
+Hist <- function(OM=NULL, silent = FALSE) {
+  
+  if (is.null(OM)) {
+    return(methods::new("hist"))
+  }
+  
+  # Create a Hist object from an OM and extend for all Sims and Years
   if (!silent) {
     id <- cli::cli_progress_bar("Initializing `Hist` Object")
   }
@@ -21,36 +30,26 @@ OM2Hist <- function(OM, silent = FALSE) {
   Hist <- new("hist")
   Hist@OM <- OM
   HistYears <- Years(OM, "Historical")
-  nYears <- length(HistYears)
-  nSim <- OM@nSim 
-  nArea <- nArea(OM)
-
-  
-  # Stock - expand all arrays to all sims and historical years
-  Hist@OM@Stock <- purrr::map(OM@Stock, \(Stock) {
-    Stock <- ExtendStock(Stock, nSim, HistYears, silent, id)
-    Stock@SRR@SPFrom <- match(Stock@SRR@SPFrom, StockNames(OM))
-    Stock
-  })
-
-
-  # Fleet
-  # Extend Fleet arrays to include historical years
-  AgeClassList <- purrr::map(Hist@OM@Stock, \(Stock) Stock@Ages@Classes)
-  Hist@OM@Fleet <- purrr::map2(Hist@OM@Fleet, AgeClassList, \(FleetList, AgeClasses)
-                               ExtendFleet(FleetList, AgeClasses, nSim, HistYears, nArea, silent, id))
-
 
   # Create Time Series Arrays
   Hist <- InitializeTimeSeries(Hist)
-
+  
   # Add values included in Misc
   # These values won't be over-written by the model
   # TODO - new feature not used or testedd
   Hist <- FillFromMisc(Hist)
-
+  
+  # Extend all arrays for all sims, ages, historical years, and area
+  Hist <- ExtendHist(Hist, HistYears, silent, id)
+  
+  Hist@OM@Stock <- purrr::map(Hist@OM@Stock, \(Stock) {
+    Stock@SRR@SPFrom <- match(Stock@SRR@SPFrom, StockNames(OM))
+    Stock
+  })
+  
+  
   if (!silent) {
-    cli::cli_progress_done()
+    cli::cli_alert_success("Initialized `Hist` Object")
   }
   Hist 
 }
@@ -101,6 +100,8 @@ InitializeTimeSeries <- function(Hist) {
   # Within Area
   # List of Stocks - array Sim, Age, Year, Fleet, Area
   Hist@FDeadArea <- Hist@FRetainArea <- ListArraySimAgeTimeFleetArea(OM, "Historical")
+  
+  
   Hist
 }
 

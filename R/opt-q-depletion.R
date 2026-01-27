@@ -1,6 +1,6 @@
 
 
-OptFinalDepletion <- function(Hist) {
+OptFinalDepletion <- function(Hist, silent=FALSE) {
   
   FinalDepletion <- purrr::map(Hist@OM@Stock, \(stock) {
     stock@Depletion@Final
@@ -31,6 +31,11 @@ OptFinalDepletion <- function(Hist) {
     }
   
   }
+  
+  if (!silent) {
+    cli::cli_alert_success("Optimized catchability (q) for Final Depletion")
+  }
+  
   Hist
   
 }

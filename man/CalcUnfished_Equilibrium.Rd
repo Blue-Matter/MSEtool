@@ -2,17 +2,38 @@
 % Please edit documentation in R/calc-unfished-equilibrium.R
 \name{CalcUnfished_Equilibrium}
 \alias{CalcUnfished_Equilibrium}
-\title{Calculate Equilibrium Unfished}
+\title{Calculate Equilibrium Unfished Population Dynamics}
 \usage{
-CalcUnfished_Equilibrium(OM)
+CalcUnfished_Equilibrium(OM, silent = FALSE)
 }
 \arguments{
-\item{OM}{An \code{\link[=OM]{OM()}} or \link{Hist} object}
+\item{OM}{An \code{\link[=OM]{OM()}} or \code{\link[=Hist]{Hist()}} object.}
+
+\item{silent}{Logical; if \code{TRUE}, suppress messages during calculation.}
 }
 \value{
-A \link{PopDynamics} object with equilibrium unfished Number, Biomass, SBiomass, and SProduction
+A \link{PopDynamics} object containing equilibrium unfished
+\code{Number}, \code{Biomass}, \code{SBiomass}, and \code{SProduction} arrays with
+dimensions \verb{Sim × Stock × Year}.
 }
 \description{
-Calculates the equilbrium unfished number, biomass, spawning biomass, and
-spawning production for all \code{\link[=Stock]{Stock()}} objects in an \code{\link[=OM]{OM()}}
+Calculate equilibrium unfished population quantities for all \code{\link[=Stock]{Stock()}}
+objects in an operating model. Quantities include unfished number-at-age,
+total biomass, spawning biomass, and spawning production, evaluated under
+equilibrium unfished conditions.
+}
+\details{
+If a \code{\link[=Hist]{Hist()}} object is supplied, its embedded operating model is used.
+The operating model is populated if required prior to calculation.
+\itemize{
+\item Biomass is calculated as the sum over ages of unfished number-at-age
+multiplied by mean weight-at-age.
+\item Spawning biomass additionally applies maturity-at-age.
+\item Spawning production is calculated using fecundity-at-age and may be
+reassigned across stocks using the \code{SPFrom} slot of the stocks \code{\link[=SRR]{SRR()}}
+objects.
+}
+}
+\seealso{
+\code{\link[=CalcUnfished_Dynamic]{CalcUnfished_Dynamic()}}
 }

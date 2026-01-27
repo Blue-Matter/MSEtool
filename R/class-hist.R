@@ -55,32 +55,3 @@ setValidity("hist", function(object) {
   TRUE
 })
 
-
-#' Create or Access a `Hist` Object
-#'
-#' The `Hist()` constructor creates a new historical simulation object or,
-#' when applied to an [OM()] object, returns the historical results stored
-#' within that object.
-#'
-#' @param OM A [OM()] object. If missing, an empty `hist` object is returned.
-#' @param ... Additional arguments passed to the internal historical
-#'   simulation routine.
-#'
-#' @return A `hist` object.
-#'
-#' @seealso [OM()], [Data()]
-#'
-#' @rdname Hist
-#' @export
-Hist <- function(OM = NULL, ...) {
-  
-  if (is.null(OM)) {
-    return(methods::new("hist"))
-  }
-  
-  if (!methods::is(OM, "om")) {
-    cli::cli_abort("`OM` must be an object of class `om`")
-  }
-  
-  OM2Hist(OM, ...)
-}
