@@ -4,7 +4,8 @@
 #' values along the "Sim" dimension are identical. Returns `FALSE` immediately
 #' if a discrepancy is found.
 #'
-#' @param object An S4 object, list, or array to check.
+#' @param object An S4 object, list, or array to check
+#' @param ignore Character vector of slots to ignore (for S4 objects).
 #' @param debug Logical; if `TRUE`, prints debug information for each slot or element.
 #'
 #' @return Logical `TRUE` if all 'Sim' slices are identical, `FALSE` otherwise.
@@ -54,14 +55,11 @@ Identical_Sim <- function(object, ignore=NULL, debug=FALSE) {
       sim_dim <- which(names(dnames) == "Sim")
       dims <- dim(object)
       
-      # Permute Sim dimension to the first position
       perm <- c(sim_dim, setdiff(seq_along(dims), sim_dim))
       arr_perm <- aperm(object, perm)
       
-      # Flatten remaining dimensions
       mat <- matrix(arr_perm, nrow = dims[sim_dim])
       
-      # Compare each column to the first row
       ref <- mat[1, , drop=TRUE]
       if (any(mat != matrix(ref, nrow=nrow(mat), ncol=ncol(mat), byrow=TRUE))) {
         return(FALSE)
