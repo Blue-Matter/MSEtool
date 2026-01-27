@@ -23,7 +23,7 @@
 
 \item{Random}{Random effects}
 
-\item{ASK}{Age–length key}
+\item{ALK}{Age–length key}
 
 \item{Classes}{Length classes}
 

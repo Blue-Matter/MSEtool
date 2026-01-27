@@ -1,4 +1,6 @@
-ExtendFleet <- function(FleetList, AgeClasses, nSim, Years, silent=FALSE, id=NULL) {
+ExtendFleet <- function(FleetList, AgeClasses, nSim, Years, nArea, silent=FALSE, id=NULL) {
+  
+  Areas <- 1:nArea
   
   if (!silent) {
     cli::cli_progress_update(id=id)
@@ -28,8 +30,8 @@ ExtendFleet <- function(FleetList, AgeClasses, nSim, Years, silent=FALSE, id=NUL
  
   # Selectivity 
   FleetList <- purrr::map(FleetList, \(fleet) {
-    fleet@Selectivity@MeanAtAge <- Extend(fleet@Selectivity@MeanAtAge, nSim, AgeClasses, Years)
-    fleet@Selectivity@MeanAtLength <- Extend(fleet@Selectivity@MeanAtLength, nSim, AgeClasses=NULL, Years)
+    fleet@Selectivity@MeanAtAge <- Extend(fleet@Selectivity@MeanAtAge, nSim, AgeClasses, Years, Areas)
+    fleet@Selectivity@MeanAtLength <- Extend(fleet@Selectivity@MeanAtLength, nSim, AgeClasses=NULL, Years, Areas)
     fleet
   })
   
@@ -39,8 +41,8 @@ ExtendFleet <- function(FleetList, AgeClasses, nSim, Years, silent=FALSE, id=NUL
   
   # Retention 
   FleetList <- purrr::map(FleetList, \(fleet) {
-    fleet@Retention@MeanAtAge <- Extend(fleet@Retention@MeanAtAge, nSim, AgeClasses, Years)
-    fleet@Retention@MeanAtLength <- Extend(fleet@Retention@MeanAtLength, nSim, AgeClasses=NULL, Years)
+    fleet@Retention@MeanAtAge <- Extend(fleet@Retention@MeanAtAge, nSim, AgeClasses, Years, Areas)
+    fleet@Retention@MeanAtLength <- Extend(fleet@Retention@MeanAtLength, nSim, AgeClasses=NULL, Years, Areas)
     fleet
   })
   
@@ -50,7 +52,7 @@ ExtendFleet <- function(FleetList, AgeClasses, nSim, Years, silent=FALSE, id=NUL
   
   # DiscardMortality 
   FleetList <- purrr::map(FleetList, \(fleet) {
-    fleet@DiscardMortality@MeanAtAge <- Extend(fleet@DiscardMortality@MeanAtAge, nSim, AgeClasses, Years)
+    fleet@DiscardMortality@MeanAtAge <- Extend(fleet@DiscardMortality@MeanAtAge, nSim, AgeClasses, Years, Areas)
     fleet
   })
   

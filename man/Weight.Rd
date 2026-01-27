@@ -15,7 +15,7 @@ Weight(
   TruncSD = 2,
   Timing = 0,
   Random = NULL,
-  ASK = NULL,
+  AWK = NULL,
   Classes = NULL,
   Misc = list()
 )
@@ -41,7 +41,7 @@ Weight(
 
 \item{Random}{Random effects array (optional).}
 
-\item{ASK}{Age–weight key (optional).}
+\item{AWK}{Age–weight key (optional).}
 
 \item{Classes}{Weight classes (optional).}
 

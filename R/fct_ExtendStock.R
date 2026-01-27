@@ -115,8 +115,5 @@ ExtendStockObject <- function(object, nSim, AgeClasses, Years) {
     object@Random <- Extend(object@Random, nSim, AgeClasses, Years)
   }
 
-  # if ("ASK" %in% nms) # too large in some cases and not needed
-  #   object@ASK <- Extend(object@ASK, nSim, nAges, Years)
-
   object
 }

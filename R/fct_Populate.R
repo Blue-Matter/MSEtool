@@ -50,9 +50,11 @@ PopulateCatchObs <- function(Catch, nSim, HistYears, ProjYears) {
   if (length(Catch@Years) < 1) {
     Catch@Years <- HistYears
   }
-
-  if (!Catch@Type %in% c("Removals", "Landings")) {
-    cli::cli_abort(message = "Valid values for `Obs@Catch@Type` are: {.val {c('Removals', 'Landings')}} ")
+  
+  if (!is.null(Catch@Type)) {
+    if (!Catch@Type %in% c("Removals", "Landings")) {
+      cli::cli_abort(message = "Valid values for `Obs@Catch@Type` are: {.val {c('Removals', 'Landings')}} ")
+    }
   }
 
   Catch

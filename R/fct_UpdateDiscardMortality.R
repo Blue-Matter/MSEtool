@@ -73,7 +73,7 @@ UpdateDiscardMortality <- function(ProjSim, MPAdviceList, MPAdviceList_Previous,
           Length@CVatAge <- Length@CVatAge |> ArraySubsetYear(YearsProj)
           SDatAge <- ArrayMultiply(Length@MeanAtAge, Length@CVatAge)
           
-          Length@ASK <- CalcAgeSizeKey_(Length@MeanAtAge, 
+          Length@ALK <- CalcAgeSizeKey_(Length@MeanAtAge, 
                                         SDatAge, 
                                         Length@Classes, 
                                         Length@TruncSD, 

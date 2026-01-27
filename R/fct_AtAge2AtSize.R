@@ -42,11 +42,22 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
   LengthMeanAtAge <- Length@MeanAtAge
   LengthCVatAge <- Length@CVatAge
   
-  ASK <- Length@ASK 
-  if (is.null(ASK)) {
-    cli::cli_abort("`Length@ASK` is not populated", .internal=TRUE)
+  if (hasSlot(Length, 'ALK')) {
+    ASK <- Length@ALK 
+    if (is.null(ASK)) {
+      cli::cli_abort("`Length@ALK` is not populated", .internal=TRUE)
+    }
+    
+  }
+  if (hasSlot(Length, 'AWK')) {
+    ASK <- Length@AWK 
+    if (is.null(ASK)) {
+      cli::cli_abort("`Weight@AWK` is not populated", .internal=TRUE)
+    }
+    
   }
   
+
   AgeClasses <- dimnames(ASK)[['Age']] |> as.numeric()
   nAge <- length(AgeClasses)
   
@@ -61,17 +72,16 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
                           Classes=Length@Classes,
                           TruncSD=Length@TruncSD,
                           Dist=Length@Dist,
-                          AgeClasses=NULL,
                           silent=TRUE)
     
   }
 
   # Sims 
-  Sims <- c(dimnames(object@MeanAtAge)[['Sim']], dimnames(Length@ASK)[['Sim']]) |>
+  Sims <- c(dimnames(object@MeanAtAge)[['Sim']], dimnames(Length@ALK)[['Sim']]) |>
     as.numeric() |> unique() |> sort()
   
   # Years
-  Years <- c(dimnames(object@MeanAtAge)[['Year']], dimnames(Length@ASK)[['Year']]) |>
+  Years <- c(dimnames(object@MeanAtAge)[['Year']], dimnames(Length@ALK)[['Year']]) |>
     as.numeric() |> unique() |> sort()
   
   

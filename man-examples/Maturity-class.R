@@ -14,7 +14,7 @@ Maturity <- Populate(Maturity,
 MeanAtAge(Maturity)
 MeanAtLength(Maturity)
 
-# Calculate `MeanAtLength` from `MeanAtAge` and `ASK(Length)`
+# Calculate `MeanAtLength` from `MeanAtAge` and `ALK(Length)`
 Maturity <- Populate(Maturity, Ages, Length, CalcAtLength=TRUE, nsim=2)
 MeanAtLength(Maturity)
 

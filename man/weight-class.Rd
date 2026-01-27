@@ -25,7 +25,7 @@
 
 \item{Random}{Random effects}
 
-\item{ASK}{Age–weight key}
+\item{AWK}{Age–weight key}
 
 \item{Classes}{Weight classes}
 

@@ -459,8 +459,8 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, tol = 0.01
           MostRecent[] <- default
         }
         d <- dim(MostRecent)
-        d[[year_dim]] <- length(forward_years)
-        dn[[year_dim]] <- forward_years
+        d[[year_dim]] <- length(inside_years)
+        dn[[year_dim]] <- inside_years
         abind::afill(OutArray) <- array(MostRecent, dim = d, dimnames = dn)
         
       } else {

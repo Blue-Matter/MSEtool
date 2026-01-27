@@ -13,7 +13,7 @@
 #' @param TruncSD Truncation in SD units
 #' @param Timing Timing within time step
 #' @param Random Random effects
-#' @param ASK Age–length key
+#' @param ALK Age–length key
 #' @param Classes Length classes
 #' @param `Misc` Miscellaneous list
 #' 
@@ -28,7 +28,7 @@ setClass("length",
                  TruncSD='num.array.null',
                  Timing='num.array.null',
                  Random='num.array.null',
-                 ASK='array.null',
+                 ALK='array.null',
                  Classes='num.null',
                  Misc='list'
          )

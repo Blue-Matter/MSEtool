@@ -1,43 +1,23 @@
 library(MSEtool)
+
 la()
-testOM@nsim <- 50
-OM <- ConvertOM(testOM, Populate=FALSE)
-OM
 
-PopulateOM
+testOM@nsim <- 10
 
-Length()
-OM@Stock$Albacore@Length
-OM@Stock$Albacore@Weight
-
-object <- OM@Stock$Albacore@SRR
-object
-
-object
+OM <- ConvertOM(testOM)
 
 
-Length <- OM@Stock$Albacore@Length
-
-Length
-
-# show mean over sims and years. for MeanAtAge ....
+LoadArgs(Simulate_om)
 
 
-Ages <- OM@Stock$Albacore@Ages
 
 
-GetLength(OM@Stock[[1]])
 
 
-Populate
+Populate - fix 
 
+NPSWO - hist and projections
 
-t <- Length()
+SALB 
 
-t@Dist
-GenerateMeanatGeneric
-
-SRRModels
-
-# name all files
-# - name class help docs properly
+Octopus ..

@@ -346,6 +346,10 @@ isNewObject <- function(object) {
   } else   if (inherits(object, 'discardmortality')) {
       newobj <- DiscardMortality()
   } else {
+    chk <- try(get(firstup(cl)), silent=TRUE)
+    if (inherits(chk, 'try-error')) {
+      return(FALSE)
+    }
     newobj <- get(firstup(cl))()
   }
 

@@ -57,16 +57,22 @@ logistic_50_95 <- function(x, x50, x50_95, asymp=1) {
 
 double_normal <- function(x, x5, xF, xMax) {
   
+  if (all(x5 ==0) & all(xF==0)) {
+    return(rep(1, length(x)))
+  }
+  
   if (x5 >= xF) {
     cli::cli_abort("`x5` ({.val {x5}}) must be less than `xF` ({.val {xF}}).")
   }
   if (xF >= max(x)) {
     cli::cli_abort("`xF` ({.val {xF}}) must be less than max(x) ({.val {max(x)}}).")
   }
-  if (xMax <= 0 || xMax > 1) {
-    cli::cli_abort("`xMax` ({.val {xMax}}) must be in (0, 1].")
+  
+  if (xMax < 0 || xMax > 1) {
+    cli::cli_abort("`xMax` ({.val {xMax}}) must be in [0, 1].")
   }
   
+
   ref <- max(x)
   sr <- (ref - xF) / ((-log(xMax,2))^0.5)
   sr[!is.finite(sr)] <- Inf

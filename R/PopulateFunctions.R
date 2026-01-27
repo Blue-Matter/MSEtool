@@ -231,27 +231,32 @@ PopulateASK <- function(object, Ages=NULL, Years=NULL, silent=FALSE, type='Lengt
   Dist <- object@Dist
   TruncSD <- object@TruncSD
   
-  object@ASK <- CalcAgeSizeKey(MeanAtAge, 
-                               CVatAge, 
-                               Classes, 
-                               TruncSD, 
-                               Dist,
-                               AgeClasses=Ages@Classes,
-                               silent=silent, 
-                               type=type)
+  ASK <- CalcAgeSizeKey(MeanAtAge, 
+                        CVatAge, 
+                        Classes, 
+                        TruncSD, 
+                        Dist,
+                        silent=silent, 
+                        type=type)
   
 
   Years <- c(dimnames(MeanAtAge)$Year,
                  dimnames(CVatAge)$Year) |> unique() |> sort()
   
-  dd <- dim(object@ASK)
-  if (is.null(  dimnames(object@ASK))) {
-    dimnames(object@ASK) <- list(Sim=1:dd[1],
+  dd <- dim(ASK)
+  if (is.null(dimnames(ASK))) {
+    dimnames(ASK) <- list(Sim=1:dd[1],
                                  Age=Ages@Classes,
                                  Class=Classes,
                                  Year=Years)
   }
- 
+  
+  if (type=='Length') {
+    object@ALK <- ASK
+  } else {
+    object@AWK <- ASK
+  } 
+  
   object
 }
 

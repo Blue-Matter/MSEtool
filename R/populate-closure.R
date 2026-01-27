@@ -30,8 +30,6 @@
 #' @export
 PopulateClosure <- function(Closure, nArea, nSim = 5, Years, silent = FALSE) {
   
-  argList <- list(nArea, Years, nSim)
-  
   if (EmptyObject(Closure)) {
     Closure <- array(1,
                      dim = c(1, 1, nArea),
@@ -65,5 +63,5 @@ PopulateClosure <- function(Closure, nArea, nSim = 5, Years, silent = FALSE) {
     dimnames(Closure) <- dn
   }
   
-  SetDigest(Closure, argList)
+  Closure
 }

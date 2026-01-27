@@ -89,7 +89,7 @@ class(RetentionAtWeight) <- 'Retention-at-Weight-Model'
 #' @rdname Retention-Models
 #' @export
 DoubleNormalRetention <- function(Length, LR5, LFR, Rmaxlen) {
-  double_normal(Length, LR5, LFR, Rmaxlen)
+  double_normal(x=Length, x5=LR5, xF=LFR, xMax=Rmaxlen)
 }
 class(DoubleNormalRetention) <- 'Retention-at-Length-Model'
 

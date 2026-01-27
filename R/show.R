@@ -7,9 +7,139 @@
 show <- function(object) methods::show(object)
 
 
+
 hasSlot <- function(object, slot) {
   slot %in% slotNames(object)
 }
+
+help_topic <- function(pkg, name) {
+  paste0(pkg, "::", name)
+}
+
+a_or_an <- function(x) {
+  ifelse(grepl("^[aeiouAEIOU]", x), "an", "a")
+}
+
+.show_array <- function(x, name) {
+  
+  if (is.null(x) || length(x) == 0) {
+    cli::cli_text("{.strong {name}}: ")
+    return(invisible(NULL))
+  }
+  
+  d <- dim(x)
+  
+  if (is.null(d)) {
+    cli::cli_text("{.strong {name}}: {.val {x}}")
+    return(invisible(NULL))
+  }
+  
+  dn <- dimnames(x) |> names()
+  
+  if (is.null(dn)) {
+    cli::cli_text(
+      "{.strong {name}}: {.val  { paste(d, collapse=' x ')} array} {.strong (Dimension names missing)}" 
+    )
+    return(invisible(NULL))
+  } else {
+    cli::cli_text(
+      "{.strong {name}}: {.val  { paste( paste(d, dn), collapse=' x ') } array}" 
+    )
+    return(invisible(NULL))
+  }
+  
+}
+
+.show_data_frame <- function(x, name) {
+  
+  cli::cli_text("{.strong { name }} {.emph data.frame}")
+  nms <- colnames(x)
+  cli::cli_ul()
+  for (i in seq_len(nrow(x))) {
+    cli::cli_li("{nms[i]}: {.val {x[,i]}}")
+  }
+  cli::cli_end()
+
+}
+
+
+.show_x <- function(x, name=NULL) {
+  
+  if (is.null(x) || !length(x) || all(is.na(x))) {
+    cli::cli_text("{.strong {name}}: {.emph not specified} ")  
+    return(invisible(NULL))
+  }
+  
+  if (inherits(x, 'character')) {
+    if (nchar(x)<1) {
+      cli::cli_text("{.strong {name}}: {.emph not specified}")
+      return(invisible(NULL))
+    } 
+    cli::cli_text("{.strong {name}}:  {.val {x}}")
+    return(invisible(NULL))
+  }
+  
+  if (inherits(x, 'data.frame')) {
+    .show_data_frame(x, name)
+  }
+  
+  if (inherits(x, 'numeric')) {
+    if (all(as.integer(x) != x)) {
+      x <- signif(x,3)
+    }
+    cli::cli_text("{.strong {name}}:  {.val {x}}")
+  }
+  
+  if (inherits(x, 'logical')) {
+    cli::cli_text("{.strong {name}}:  {.val {x}}")
+  }
+  
+  
+  if (inherits(x, 'array')) {
+    .show_array(x, name)
+  }
+  
+  if (is.list(x)) {
+    cli::cli_text("{.strong {name}}: {.emph list length {.val {length(x)}}}")
+    nms <- names(x)
+    for (i in seq_along(x)) {
+      if (!is.null(nms)) {
+        nm <- nms[i]
+      } else {
+        nm <- ''
+      }
+      Recall(x[[i]], nm)
+      cli::cli_text('')
+    }
+    
+  }
+  
+}
+
+.show_slot <- function(object, slot) {
+  if (!hasSlot(object, slot)) {
+    return(invisible(NULL))
+  }
+  if (slot =='Model') {
+    .show_model(object) 
+    return(invisible(NULL))
+  }
+  
+  if (slot =='Pars') {
+    .show_pars(object)
+    return(invisible(NULL))
+  }
+  
+  x <- slot(object, slot)
+  
+  .show_x(x, slot)
+}
+
+cli_fn <- function(fun) {
+  args <- names(formals(fun))
+  cli::cli_text("{.strong Model}: {.emph function with arguments: } {cli::cli_vec(args)}")
+}
+
 
 .show_model <- function(object) {
   if (!hasSlot(object, "Model"))
@@ -19,23 +149,29 @@ hasSlot <- function(object, slot) {
   
   if (is.null(object@Model) && length(param_names)) {
     object@Model <- FindModel(object)
-  }
-   
   
-  if (is.null(object@Model)) {
-    cli::cli_text("Model: {.emph not specified}")
-  } else {
-    cli::cli_text("Model: {.val {object@Model}}") 
   }
- 
+  
+  if (is.character(object@Model)) {
+    cli::cli_text("{.strong Model}:  {.help {help_topic('MSEtool', object@Model)}}") 
+    return(invisible(NULL))
+  }
+  
+
+  
+  if (is.function(object@Model)) {
+    cli_fn(object@Model)
+    return(invisible(NULL))
+  }
+  
+  cli::cli_text("{.strong Model}: ")
 }
 
 
-  
 .show_array_p <- function(x, p ) {
   
   if (is.null(x) || length(x) == 0) {
-    cli::cli_text("→ {.val {p}}: {.emph not specified}")
+    cli::cli_text("→ {.val {p}}:")
     return(invisible(NULL))
   }
   
@@ -52,55 +188,15 @@ hasSlot <- function(object, slot) {
     if (is.null(dn)) {
       cli::cli_text(
         
-        "→ {.val {p}}: {.emph {.val {range_x}}. (Range { paste(d, collapse=' x ')} array}} {.strong (Dimension names missing)}" 
+        "→ {.val {p}}: {.emph { paste(d, collapse=' x ')} array}} {.strong (Dimension names missing)}" 
       )
     } else {
       cli::cli_text(
-        "→ {.val {p}}:  {.emph { paste( paste(d, dn), collapse=' x ')} array}. Range: {.val {range_x}}"
+        "→ {.val {p}}:  {.emph { paste( paste(d, dn), collapse=' x ')} array}. "
       )
     }
-   
+    
   }
-
-}
-
-.show_array <- function(x, name, var='Age') {
-  
-  if (is.null(x) || length(x) == 0) {
-    cli::cli_text("{name}: {.emph not specified}")
-    return(invisible(NULL))
-  }
-  
-  d <- dim(x)
-
-  
-  if (is.null(d)) {
-    cli::cli_text("{name}: {.val {x}}")
-    return(invisible(NULL))
-  }
-  
-  dn <- dimnames(x) |> names()
-  mean_x <- apply(x, var, mean) |> signif(3)
-  unique_x <- unique(x)
-  
-  if (length(unique_x)==1) {
-    cli::cli_text("{name}: {.val {mean_x}}" )
-  } else {
-    if (is.null(dn)) {
-      cli::cli_text(
-        "{name}: {.emph  { paste(d, collapse=' x ')} array} {.strong (Dimension names missing)}" 
-        
-        # "{name}: {.val {mean_x}}  {.emph  Mean over {dn[dn!=var]} of { paste(d, collapse=' x ')} array} {.strong (Dimension names missing)}" 
-      )
-    } else {
-      cli::cli_text(
-        "{name}: {.emph  { paste( paste(d, dn), collapse=' x ') } array}"
-        # "{name}: {.val {mean_x}}  {.emph  Mean over {dn[dn!=var]} of { paste( paste(d, dn), collapse=' x ')} array}" 
-      )
-    }
-  }
-  
-  
   
 }
 
@@ -108,13 +204,7 @@ hasSlot <- function(object, slot) {
   if (hasSlot(object, "Pars")) {
     param_names <- names(object@Pars)
     
-    cli::cli_text(
-      if (length(param_names) == 0) {
-        "Pars: {.emph not specified}"
-      } else {
-        "Pars:"
-      }
-    )
+    cli::cli_text(  "{.strong Pars}: ")
     
     if (length(param_names) > 0) {
       cli::cli_ul(
@@ -136,7 +226,7 @@ hasSlot <- function(object, slot) {
               "→ {.val {p}}: Uniform Dist. with bounds {.val {range(vals)}}"
             )
           }
-        
+          
         }
       )
     }
@@ -144,72 +234,204 @@ hasSlot <- function(object, slot) {
   
 }
 
-
-.show_units <- function(object) {
-  if (!hasSlot(object, "Units"))
-    return(NULL)
-  cli::cli_text("Units: {.val {object@Units}}")
-}
-
-
-.show_mean_at_ <- function(object, name='MeanAtAge', var='Age') {
-  if (!hasSlot(object, name))
-    return(NULL)
+.show_object <- function(object, name, ignore='Misc') {
+  cli::cli_h2("A  {.help {help_topic('MSEtool', name)}} Object")
   
-  if (is.null(slot(object, name))) {
-    cli::cli_text("{name}: {.emph not specified}")
-  } else {
-    .show_array(slot(object, name), name, var)
-  }
-}
-
-.show_slot <- function(object, slot) {
-  if (!hasSlot(object, slot)) {
-    return(invisible(NULL))
-  }
+  slots <- slotNames(object)
+  slots <- slots[!slots%in%ignore]
   
-  val <- slot(object, slot)
-  if (is.null(val) || !length(val)) {
-    cli::cli_text("{slot}:  {.emph not specified}")
-  } else {
-    if (is.numeric(val) && as.integer(val) != val) {
-      val <- signif(val,3)
+  for (sl in slots) {
+    .show_slot(object, sl)  
+    if (sl %in% c('Model', 'TruncSD')) {
+      cli::cli_text("")
     }
-    cli::cli_text("{slot}:  {.val {val}}")
   }
 }
 
-.show_object <- function(object) {
-  
 
-  .show_model(object)
-  .show_pars(object)
-  .show_units(object)
-  .show_mean_at_(object)
-  .show_mean_at_(object, 'CVatAge')
+
+
+# ---- OM ----
+
+setMethod("show", "om", function(object) {
   
-  .show_slot(object, 'Dist')
-  .show_slot(object, 'TruncSD')
+  cli::cli_h2("An {.help MSEtool::OM} Object")
   
-  .show_mean_at_(object, 'MeanAtLength', 'Class')
-  .show_mean_at_(object, 'MeanAtWeight', 'Class')
+  .show_slot(object, 'Name')
   
-  .show_slot(object, 'Timing')
-  .show_slot(object, 'Classes')
- 
-  .show_slot(object, 'Semelparous')
+  # cli::cli_text("")
   
-  # if (hasSlot(object, 'ASK'))  {
-  #   if (inherits(object, 'length')) {
-  #     cli::cli_text("ALK:", object@ASK)
-  #   } else if  (inherits(object, 'weight')) {
-  #     cli::cli_text("AWK:", object@ASK)
-  #   }
-  # }
-    
+  # .show_slot(object, 'Agency')
+  # .show_slot(object, 'Author')
+  # .show_slot(object, 'Email')
+  # .show_slot(object, 'Region')
   
+  .show_slot(object, 'nSim')
   
-}
+  .show_slot(object, 'CurrentYear')
+  .show_slot(object, 'Seasons')
+  
+  .show_slot(object, 'nYear')
+  .show_slot(object, 'pYear')
+  histYears <- Years(object,'H')
+  projYears <- Years(object,'P')
+  
+  cli::cli_text("")
+  
+  cli::cli_text("{.strong Historical Years:} {.val { paste(range(histYears), collapse = ' - ')}}")
+  cli::cli_text("{.strong Projection Years:} {.val { paste(range(projYears), collapse = ' - ')}}")
+  
+  cli::cli_text("")
+  
+  cli::cli_text("{.strong Stocks:} {.val {StockNames(object)}}")
+  cli::cli_text("{.strong Fleets:} {.val {FleetNames(object)}}")
+  
+})
+
+# ---- Stock ----
+
+setMethod('show', 'stock', function(object) {
+  
+  cli::cli_h2("A {.help MSEtool::Stock} Object")
+  
+  .show_slot(object, 'Name')
+  
+  cli::cli_text("")
+  
+  .show_slot(object, 'CommonName')
+  .show_slot(object, 'Species')
+  
+  slots <- c('Ages',
+             'Length',
+             'Weight',
+             'NaturalMortality',
+             'Maturity',
+             'Fecundity',
+             'SRR',
+             'Spatial',
+             'Depletion'
+  )
+  for (name in slots) {
+    if (isNewObject(slot(object, name))) {
+      cli::cli_text("{.strong {name}}: {.emph not specified}")
+    } else {
+      
+      cli::cli_text("{.strong {name}}: {a_or_an(name)}  {.help {help_topic('MSEtool', name)}} Object")
+    }
+  }
+
+})
+
+
+setMethod("show", "ages", function(object) {
+  
+  cli::cli_h2("An {.help MSEtool::Ages} Object")
+  
+  .show_slot(object, 'MinAge')
+  .show_slot(object, 'MaxAge')
+  .show_slot(object, 'Units')
+  .show_slot(object, 'PlusGroup')
+  
+  AgeClasses <- CalcAgeClasses(object)
+  if (!is.null(AgeClasses)) {
+    if (isTRUE(object@PlusGroup)) {
+      AgeClasses[length(AgeClasses)] <- paste0(AgeClasses[length(AgeClasses)], "+")
+    } 
+  }
+  cli::cli_text("{.strong Classes}: {.val {AgeClasses}}")
+})
+
+
+setMethod("show", "length", function(object) {
+  .show_object(object, 'Length')
+})
+
+setMethod("show", "weight", function(object) {
+  .show_object(object, 'Weight')
+})
+
+setMethod("show", "naturalmortality", function(object) {
+  .show_object(object, 'NaturalMortality')
+})
+
+setMethod("show", "maturity", function(object) {
+  .show_object(object, 'Maturity')
+})
+
+setMethod("show", "fecundity", function(object) {
+  .show_object(object, 'Fecundity')
+})
+
+setMethod("show", "srr", function(object) {
+  .show_object(object, 'SRR')
+})
+
+setMethod("show", "spatial", function(object) {
+  .show_object(object, 'Spatial')
+})
+
+setMethod("show", "depletion", function(object) {
+  .show_object(object, 'Depletion')
+})
+
+# ---- Fleet ----
+
+setMethod('show', 'fleet', function(object) {
+  
+  cli::cli_h2("A {.help MSEtool::Fleet} Object")
+  
+  .show_slot(object, 'Name')
+  
+  cli::cli_text("")
+  
+  slots <- c('Effort',
+             'Catchability',
+             'Selectivity',
+             'Retention',
+             'DiscardMortality'
+  )
+  for (name in slots) {
+    if (isNewObject(slot(object, name))) {
+      cli::cli_text("{.strong {name}}: {.emph not specified}")
+    } else {
+      
+      cli::cli_text("{.strong {name}}: {a_or_an(name)}  {.help {help_topic('MSEtool', name)}} Object")
+    }
+  }
+  
+  .show_slot(object, 'Closure')
+  .show_slot(object, 'WeightFleet')
+  
+})
+
+setMethod("show", "effort", function(object) {
+  .show_object(object, 'Effort')
+})
+
+setMethod("show", "catchability", function(object) {
+  .show_object(object, 'Catchability')
+})
+
+setMethod("show", "selectivity", function(object) {
+  .show_object(object, 'Selectivity')
+})
+
+setMethod("show", "retention", function(object) {
+  .show_object(object, 'Retention')
+})
+
+setMethod("show", "discardmortality", function(object) {
+  .show_object(object, 'DiscardMortality')
+})
+
+
+# ---- Hist ----
+
+#' @rdname show
+setMethod('show', 'hist', function(object) {
+  cli::cli_h2("A {.help MSEtool::Hist} Object")
+  cli::cli_text("...")
+})
 
 
 
@@ -218,37 +440,38 @@ hasSlot <- function(object, slot) {
 
 #' @rdname show
 setMethod('show', 'mse', function(object) {
-  cli::cli_par()
   cli::cli_h2("A {.help MSEtool::MSE} Object")
   cli::cli_text("...")
 })
 
 
-# ---- Hist ----
-
-#' @rdname show
-setMethod('show', 'hist', function(object) {
-  cli::cli_par()
-  cli::cli_h2("A {.help MSEtool::Hist} Object")
-  cli::cli_text("...")
-})
 
 # ---- Data ----
 
 #' @rdname show
 setMethod('show', 'data', function(object) {
-  cli::cli_par()
   cli::cli_h2("A {.help MSEtool::Data} Object")
   cli::cli_text("...")
 })
 
 
-# ---- Stock ----
+# ---- Advice ----
 
+#' @rdname show
+setMethod('show', 'advice', function(object) {
+  cli::cli_h2("A {.help MSEtool::Advice} Object")
+  cli::cli_text("...")
+})
 
 
 
+# ---- popdynamics ----
 
+#' @rdname show
+setMethod('show', 'popdynamics', function(object) {
+  .show_object(object, 'popdynamics')
+  
+})
 
 
 
@@ -257,298 +480,6 @@ setMethod('show', 'data', function(object) {
 
 
 
-
-
-
-
-## --- OM  ----
-
-
-## --- CheckList Object ----
-
-# Clashes with Slick - need new object class name
-
-# #' @describeIn show Print a `CheckList` object
-# setMethod('show', 'CheckList', function(object) {
-# 
-#   cli::cli_h3('Checking')
-# 
-#   if (is.list(object@empty)) {
-#     print_list(object)
-#   } else {
-#     print_single(object)
-#   }
-# })
-# 
-# 
-
-
-## --- Supporting Functions ----
-
-
-printASK <- function(ASK) {
-  if (is.null(ASK))
-    return(NULL)
-  dd <- dim(ASK)
-
-  cli::cli_text('nsim: {.val { dd[1]}}')
-  cli::cli_text('nAge: {.val { dd[2]}}')
-  cli::cli_text('nBin: {.val { dd[3]}}')
-  cli::cli_text('nTS: {.val { dd[4]}}')
-
-
-
-}
-
-printRecDevs <- function(RecDevs,round=2, type='init') {
-
-  dd <- dim(RecDevs)
-  if (is.null(dd)) {
-    dd <- c(1, length(RecDevs))
-  }
-
-  cli::cli_text('nsim: {.val { dd[1]}}')
-  if (type=='init')
-    cli::cli_text('MaxAge: {.val { dd[2]}}')
-  if (type=='hist')
-    cli::cli_text('nHistTS: {.val { dd[2]}}')
-  if (type=='proj')
-    cli::cli_text('nProjTS: {.val { dd[2]}}')
-
-  if (dd[1]>1) {
-    meanSim <- apply(RecDevs, 2, mean) |> round(round)
-    val <- cli::cli_vec(meanSim, list("vec-trunc" = 10))
-    cli::cli_text('Mean over simulations: {.val {val}}')
-  } else {
-    val <- cli::cli_vec(RecDevs, list("vec-trunc" = 10)) |> round(round)
-
-    cli::cli_text('Deviations: {.val {val}}')
-  }
-
-}
-
-printMeanatAge <- function(MeanAtAge, round=2, type='Age') {
-  if (is.null(MeanAtAge))
-    return(NULL)
-
-  dd <- dim(MeanAtAge)
-  if (is.null(dd)) {
-    MeanAtAge <- array(MeanAtAge, dim=c(1, length(MeanAtAge), 1))
-  }
-  if (length(dd)==2) {
-    MeanAtAge <- array(MeanAtAge, dim=c(ncol(MeanAtAge), nrow(MeanAtAge), 1))
-  }
-  dd <- dim(MeanAtAge)
-
-  cli::cli_text('nsim: {.val { dd[1]}}')
-  if (type=='Age')
-    cli::cli_text('nAge: {.val { dd[2]}}')
-  if (type=='Length')
-    cli::cli_text('nClasses: {.val { dd[2]}}')
-  cli::cli_text('nTS: {.val { dd[3]}}')
-
-  if (dd[3]>1) {
-    ts <- c(1, dd[3])
-    ts <- c(ts[1], floor(median(ts)), ts[2])
-    ts <- unique(ts)
-  } else {
-    ts <- 1
-  }
-
-  meanSim <- list()
-  for (i in seq_along(ts)) {
-    meanSim[[i]] <- apply(MeanAtAge[,,ts[i], drop=FALSE], 2, mean) |> round(round)
-
-    val <- cli::cli_vec(meanSim[[i]], list("vec-trunc" = 10))
-    if (dd[1]==1 & dd[3]==1) {
-      cli::cli_text('{.val {val}}')
-    }
-    if (dd[1]>1 & dd[3]==1) {
-      cli::cli_text('Mean over simulations: {.val {val}}')
-    }
-
-    if (dd[1]>1 & dd[3]>1) {
-      if (!is.null(attributes(MeanAtAge)$Years)) {
-        cli::cli_text('Year: {.val {attributes(MeanAtAge)$Years[ts[i]]}}')
-      } else {
-        cli::cli_text('Year: {.val {ts[i]}}')
-      }
-
-      cli::cli_text('Mean over simulations: {.val {val}}')
-
-    }
-
-  }
-}
-
-
-printPars <- function(Pars, round=2) {
-  nms <- names(Pars)
-
-  for (i in seq_along(nms)) {
-    cli::cli_par()
-    cli::cli_text('{.strong { nms[i]}}')
-
-    values <- Pars[[i]]
-    dd <- dim(values)
-    if (length(values)==1) {
-      values <- round(values, round)
-      cli::cli_text('{.val { values}}')
-    }
-    if (length(values)==2) {
-      cli::cli_text('Uniform Dist. with bounds: {.val { values}}')
-    }
-
-    if (length(values)>2) {
-      cli::cli_text('nsim: {.val { dd[1]}}')
-      cli::cli_text('nTS: {.val { dd[2]}}')
-      meanSim <- round(apply(values, 1, mean), round)
-      meanTS <- round(apply(values, 2, mean), round)
-      meanSim <- cli::cli_vec(meanSim, list("vec-trunc" = 3))
-      meanTS <- cli::cli_vec(meanTS, list("vec-trunc" = 3))
-      if (dd[1]==1 & dd[2]==1) {
-        cli::cli_text('Value: {.val {meanSim}}')
-      }
-
-      if (dd[1]>1 & dd[2]==1) {
-        cli::cli_text('Value: {.val {meanSim}}')
-      }
-
-      if (dd[1]==1 & dd[2]>1) {
-        cli::cli_text('Mean over time steps: {.val {meanSim}}')
-      }
-
-      if (dd[1]>1 & dd[2]>1) {
-        meanSim <- cli::cli_vec(meanSim, list("vec-trunc" = 3))
-        cli::cli_text('Mean over simulations: {.val {meanSim}}')
-        cli::cli_text('Mean over time steps: {.val {meanTS}}')
-      }
-
-      if (!is.null(attributes(Pars)$Years))
-        cli::cli_text('Time Steps: {.val {attributes(Pars)$Years}}')
-    }
-    cli::cli_end()
-  }
-}
-
-
-print_errors <- function(errors) {
-  if (inherits(errors, 'logical')) {
-    if (length(errors)>0) {
-      nms <- names(errors)
-      for (i in seq_along(errors)) {
-        cli::cli_alert_danger(c(nms[i], ': ', errors[[i]]))
-      }
-    }
-  }else if (inherits(errors, 'list')) {
-    for (i in seq_along(errors)) {
-      object_names <- names(errors)
-      if (length(errors[[i]])>0) {
-        cli::cli_alert_info(' {.val {object_names[i]}}')
-        nms <- names(errors[[i]])
-        for (j in seq_along(errors[[i]])) {
-          if (length(nms[i])>0) {
-            cli::cli_alert_danger(c(nms[i], ': ', errors[[i]][[j]]))
-          } else {
-            cli::cli_alert_danger(errors[[i]][[j]])
-          }
-        }
-      }
-    }
-  }
-}
-
-print_warnings <- function(warnings) {
-  if (inherits(warnings, 'logical')) {
-    if (length(warnings)>0) {
-      nms <- names(warnings)
-      for (i in seq_along(warnings)) {
-        cli::cli_alert_warning(c(nms[i], ': ', warnings[[i]]))
-      }
-    }
-  }else if (inherits(warnings, 'list')) {
-    for (i in seq_along(warnings)) {
-      object_names <- names(warnings)
-      if (!is.null(object_names))
-        cli::cli_alert_info(' {.val {object_names[i]}}')
-      if (length(warnings[[i]])>0) {
-        nms <- names(warnings[[i]])
-        for (j in seq_along(warnings[[i]])) {
-          cli::cli_alert_warning(c(nms[i], warnings[[i]][[j]]))
-        }
-      }
-    }
-  }
-}
-
-print_single <- function(object) {
-  if (object@empty) {
-    cli::cli_alert_info('Object is empty')
-  } else {
-    # Errors
-    print_errors(object@errors)
-
-    # Warnings
-    print_warnings(object@warnings)
-
-    # Messages
-
-    # Status
-    if (object@complete) {
-      cli::cli_alert_success('Complete')
-    } else {
-      if (length(object@errors)>0) {
-        cli::cli_alert_danger('Errors in object')
-      } else if (!object@complete) {
-        cli::cli_alert_danger('Object incomplete')
-      }
-    }
-  }
-}
-
-print_slot <- function(object, name) {
-  obj <- slot(object, name)
-  # chk <- Check(obj)
-  # if (chk@empty)
-    # return(cli::cli_alert_info('Object is empty'))
-  # cli::cli_alert_success('Complete')
-}
-
-## Internal Print Functions ----
-
-
-# PrintPopulating <- function(object, print=TRUE, name=NULL, allup=FALSE) {
-#   if (!print)
-#     return(NULL)
-# 
-#   if (!is.null(name)) {
-#     cli::cli_progress_message("{cli::symbol$info} Populating {.val {name}}")
-#   } else {
-#     if (allup)
-#       cli::cli_progress_message("{cli::symbol$info}Populating {.val {toupper(class(object))}}")
-#     if (!allup)
-#       cli::cli_progress_message("{cli::symbol$info} Populating {.val {firstup(class(object))}}")
-#   }
-# 
-# 
-# }
-# 
-# PrintDonePopulating <- function(object, sb, print=TRUE, name=NULL, allup=FALSE) {
-#   if (!print)
-#     return(NULL)
-# 
-#   cli::cli_progress_done(id = sb)
-# 
-#   if (!is.null(name)) {
-#     cli::cli_alert_success("Populated {.val {name}}")
-#   } else {
-#     if (allup)
-#       cli::cli_alert_success("Populated {.val {toupper(class(object))}}")
-#     if (!allup)
-#       cli::cli_alert_success("Populated {.val {firstup(class(object))}}")
-#   }
-# 
-# }
 
 
 

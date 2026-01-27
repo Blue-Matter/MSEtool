@@ -91,7 +91,6 @@ struct ArrayND {
     return (dim[0] == 1 ? 0 : i);
   } 
   
-  
   // Indexing
   inline int idx(const std::array<int, N>& ind) const {
     int offset = map0(ind[0]);

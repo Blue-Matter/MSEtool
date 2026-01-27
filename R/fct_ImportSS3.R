@@ -321,10 +321,10 @@ SS2Stock <- function(st, RepList, YearsList, nSim) {
 
   Stock@Weight <- SS2Weight(st, RepList, YearsList, Ages = Stock@Ages)
   Stock@NaturalMortality <- SS2NaturalMortality(st, RepList, YearsList, Ages = Stock@Ages)
-
-
+  
   Stock@Maturity <- SS2Maturity(st, RepList, YearsList, Ages = Stock@Ages) |>
     ReduceDims()
+  
   Stock@Fecundity <- SS2Fecundity(st, RepList, YearsList, Ages = Stock@Ages) |>
     ReduceDims()
 
@@ -1327,7 +1327,7 @@ SS2Retention <- function(st, fl, RepList, YearsList, Selectivity, Stock) {
   Retention@Classes <- as.numeric(dimnames(Retention@MeanAtLength)$Class)
 
   Stock@Length@Classes <- Retention@Classes
-  Stock@Length@ASK <- CalcAgeSizeKey(Stock@Length)
+  Stock@Length@ALK <- CalcAgeSizeKey(Stock@Length)
   Retention <- AtSize2AtAge(Retention, Stock@Length)
 
   Retention

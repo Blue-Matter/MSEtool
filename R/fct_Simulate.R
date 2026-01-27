@@ -1,6 +1,5 @@
 
 
-#' @export
 print.simlist <- function(x, ...) {
   cli::cli_text("Internal `simlist` object. List of length `nSim`")
 }
@@ -47,8 +46,15 @@ Simulate_om <- function(OM = NULL,
   # ---- Make Hist Object ----
   Hist <- OM2Hist(OM, silent)
   
+  
+  # ---- Check if Hist is Identical over Sims
+  Identical_Hist <- Identical_Sim(OM, ignore='RecDevProj')
+  
+ 
+  
+  
   # ---- Calculate Equilibrium Unfished ----
-  Hist@Unfished@Equilibrium <- CalcEquilibriumUnfished(OM)
+  Hist@Unfished@Equilibrium <- CalcUnfished_Equilibrium(OM)
   
   # ---- Dynamic Number-at-Age for Initial Time Step ----
   # - initial age structure
@@ -56,24 +62,91 @@ Simulate_om <- function(OM = NULL,
   # - account for Initial Depletion
   Hist <- CalcDynamicInitial(Hist)
   
-  
   # ---- Add temporary lists and arrays to Hist@Misc ----
   # use for easy acces in C++  - removed later
   Hist <- PrepHistMisc(Hist) 
+  
+
+  
+  # ---- Calculate Unfished Equilibrium and Dynamic ----
+  if (DynamicUnfished) {
+    Hist@Unfished@Dynamic <- CalcUnfished_Dynamic(Hist)
+  }
+  
+  # ---- Optimize for Final Depletion ----
+  Hist <- OptFinalDepletion(Hist)
+  
+  
+  # ---- Calculate Reference Points ----
+  
+  # TODO
+  
+  # SimList <- CalcSPR0(SimList) # unfished spawning per recruit (i.e. fecundity)
+  # 
+  # if (inherits(Reference$MSY, "refpointsMSY")) {
+  #   Hist@Reference@MSY <- Reference$MSY
+  # } else {
+  #   RefPointYears <- GetRefPointYears(OM, HistYears) # historical time steps to calculate ref points
+  #   if (!inherits(Reference, "logical")) {
+  #     SimList <- CalcMSYRefPoints(SimList, RefPointYears, Reference$MSY)
+  #   }
+  # }
+  
+
+  # ---- Historical Population Dynamics ----
+  nStock <- nStock(OM)
+  nFleet <- nFleet(OM)
+  nArea <- nArea(OM)
+  HistYears <- Years(OM,'H')
+  AllYears <- Years(OM)
+  
+  t <- Identical_Sim(Hist, ignore='RecDevProj', TRUE)
+  
+  object <- Hist@OM@Fleet$Female$F4_IATTC@Selectivity@MeanAtLength
+  Identical_Sim(object)
+  
+  ExtendYears
+  array <- fleet@Selectivity@MeanAtLength
+  t <- ExtendYears(fleet@Selectivity@MeanAtLength, Years) 
+  t[1,1:2,,]
+  
+  array <- OM@Fleet$Female$F1_JPN_WCNPO_OSDWCOLL_late_Area1@Selectivity@MeanAtLength 
+  t <- ExtendYears(array, Years) 
+  
+  range(t)
+  
+  t[1,,1:2,1]
+  object[20,,,]
+  
+  
+  tictoc::tic()
+  Hist <- CalcFisheryDynamics_(Hist, 
+                               HistYears,
+                               AllYears=AllYears,
+                               nSim=Hist@OM@nSim,
+                               nStock,
+                               nFleet,
+                               nArea,
+                               DoCalcCatch=1,
+                               DoCalcaggF=1)
+  
+  
+  tictoc::toc()
+
+  
+  
+  
+
+  # ---- Remove temporary lists and arrays from Hist@Misc ----
+  # see PrepHistMisc above
+  Hist <- RestoreHistMisc(Hist)
   
   
   
   # ---------------------- DEBUG ----------------------
   
-  Hist@LandingsAtAge$Female |> dim()
-  Hist@DiscardsAtAge$Female 
+
   
-  Hist@LandingsAtSize$Female |> dim()
-  Hist@DiscardsAtSize$Female$F1_JPN_WCNPO_OSDWCOLL_late_Area1
-  
-  
-  Hist@Misc$SizeClasses
-  Hist@Misc$ASK 
   
   # - check is ASK doesn't exist in C++ 
   
@@ -100,7 +173,6 @@ Simulate_om <- function(OM = NULL,
   Hist@FDead$Female[1,,188,fl]
   
   
-  # TODO - add maxF to C++ calcs
   # TODO - add CAL calcs to C++ - update ALK internally
   # continue with rest of Hist development
   
@@ -113,21 +185,7 @@ Simulate_om <- function(OM = NULL,
 
   ##############################################################################
 
-  # ---- Build SimList ----
-  SimList <- Hist2SimList(Hist) # List of `Hist` objects, each with one simulation
 
-
-  # ---- Calculate Reference Points ----
-  SimList <- CalcSPR0(SimList) # unfished spawning per recruit (i.e. fecundity)
-
-  if (inherits(Reference$MSY, "refpointsMSY")) {
-    Hist@Reference@MSY <- Reference$MSY
-  } else {
-    RefPointYears <- GetRefPointYears(OM, HistYears) # historical time steps to calculate ref points
-    if (!inherits(Reference, "logical")) {
-      SimList <- CalcMSYRefPoints(SimList, RefPointYears, Reference$MSY)
-    }
-  }
 
 
 
@@ -152,16 +210,8 @@ Simulate_om <- function(OM = NULL,
   # - FCrash, etc
   # - update for seasonal model
 
-  # ---- Calculate Unfished Equilibrium and Dynamic ----
-  if (DynamicUnfished) {
-    SimList <- CalcDynamicUnfished(SimList)
-  }
 
-  # ---- Optimize for Final Depletion ----
-  SimList <- OptFinalDepletion(SimList)
 
-  # ---- Historical Population Dynamics ----
-  SimList <- SimulateDynamics(SimList, HistYears)
 
   # ---- Calculate Reference Yield ----
   if (!inherits(Reference, "logical")) {

@@ -180,7 +180,7 @@ object <- OM@Fleet$Female[[3]]@Selectivity
 Length <- Hist@OM@Stock$Female@Length
 
 Length@Classes <- object@Classes
-Length@ASK <- CalcAgeSizeKey(Length@MeanAtAge, Length@CVatAge, Length@Classes)
+Length@ALK <- CalcAgeSizeKey(Length@MeanAtAge, Length@CVatAge, Length@Classes)
 r <- AtAge2AtSize(object, Length) |> ArrayReduceDims()
 
 plot(object@Classes, object@MeanAtLength[1,,2] , ylim=c(0,1), type='l')

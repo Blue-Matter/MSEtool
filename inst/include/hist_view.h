@@ -101,8 +101,6 @@ struct HistView {
   std::vector<int> RecLag; // [stock] 
   std::vector<int> SRR_Model; // [stock] SRR model code: 0,1,2
   
-
-  
   // Fleet 
   std::vector<ConstArrayView4D> WeightFleet;   // [stock] sim, age, fleet, year
   std::vector<ConstArrayView5D> SelAge;        // [stock] sim, age, year, fleet, area
@@ -112,7 +110,7 @@ struct HistView {
   std::vector<std::vector<ConstArrayView4D>> SelSize; // [stock][fleet] sim, length, year, area
   std::vector<std::vector<ConstArrayView4D>> RetSize;
   
- 
+  double maxF;
   
   // Constructor
 public:
@@ -402,6 +400,17 @@ inline HistView::HistView(std::nullptr_t,
     SelSize.emplace_back(std::move(ss));
     RetSize.emplace_back(std::move(rs));
   }
+  
+  
+  if (!Misc.containsElementNamed("maxF")) {
+    Rcpp::stop("Hist@Misc$maxF is missing");
+  }
+  maxF = Rcpp::as<double>(Misc["maxF"]);
+  if (!std::isfinite(maxF) || maxF < 0.0) {
+    Rcpp::stop("Invalid maxF in Hist@Misc");
+  }
+  
+  
 } 
 
 

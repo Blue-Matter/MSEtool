@@ -25,8 +25,8 @@ PopulateMeanAtLength <- function(object,
     CheckRequiredObject(Length, 'length', 'Length')
   }
   object@MeanAtLength <- GenMeanAtLength(Model = object@Model,
-                                              Pars = object@Pars,
-                                              Length = Length@Classes)
+                                         Pars = object@Pars,
+                                         Length = Length@Classes)
   
   object@Classes <- Length@Classes
   

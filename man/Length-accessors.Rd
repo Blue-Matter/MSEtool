@@ -22,8 +22,8 @@
 \alias{Timing<-}
 \alias{Random}
 \alias{Random<-}
-\alias{ASK}
-\alias{ASK<-}
+\alias{ALK}
+\alias{ALK<-}
 \alias{Classes}
 \alias{Classes<-}
 \title{Length accessors and assignment functions}
@@ -68,9 +68,9 @@ Random(x)
 
 Random(x) <- value
 
-ASK(x)
+ALK(x)
 
-ASK(x) <- value
+ALK(x) <- value
 
 Classes(x)
 

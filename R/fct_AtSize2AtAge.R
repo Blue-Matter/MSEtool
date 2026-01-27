@@ -23,11 +23,21 @@ AtSize2AtAge <- function(object, Length, max1=FALSE) {
     cli::abort("`Length` must be an object of class `length` or `weight`")
   }
   
-  ASK <- Length@ASK 
-  if (is.null(ASK)) {
-    cli::cli_abort("`Length@ASK` is not populated", .internal=TRUE)
+  if (hasSlot(Length, 'ALK')) {
+    ASK <- Length@ALK 
+    if (is.null(ASK)) {
+      cli::cli_abort("`Length@ALK` is not populated", .internal=TRUE)
+    }
+    
   }
-  
+  if (hasSlot(Length, 'AWK')) {
+    ASK <- Length@AWK 
+    if (is.null(ASK)) {
+      cli::cli_abort("`Weight@AWK` is not populated", .internal=TRUE)
+    }
+    
+  }
+
   dNames_MeanAtSize <- dimnames(MeanAtSize)
   dNames_ASK <- dimnames(ASK)
   

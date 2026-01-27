@@ -69,23 +69,31 @@ GenRecDevs <- function(SD = 0.2,
   
   genInit <- genHist <- genProj <- TRUE
   
-  if (!is.null(RecDevInit) && all(!is.na(RecDevInit)) && is.array(RecDevInit)) {
-    RecDevInit <- array(RecDevInit, dim = c(1, nInitRecDev))
+  if (!is.null(RecDevInit) && all(!is.na(RecDevInit))) {
+    if (!is.array(RecDevInit)) {
+      RecDevInit <- array(RecDevInit, dim = c(1, nInitRecDev))  
+    }
     logRecDevInit <- log(RecDevInit)
     genInit <- FALSE
   }
-  if (!is.null(RecDevHist) && all(!is.na(RecDevHist)) && is.array(RecDevHist)) {
-    RecDevHist <- array(RecDevHist, dim = c(1, nHistTS))
+  if (!is.null(RecDevHist) && all(!is.na(RecDevHist))) {
+    if (!is.array(RecDevHist)) {
+      RecDevHist <- array(RecDevHist, dim = c(1, nHistTS))  
+    }
+    
     logRecDevHist <- log(RecDevHist)
     genHist <- FALSE
   }
-  if (!is.null(RecDevProj) && all(!is.na(RecDevProj)) && is.array(RecDevProj)) {
-    RecDevProj <- array(RecDevProj, dim = c(1, nProjTS))
+  if (!is.null(RecDevProj) && all(!is.na(RecDevProj))) {
+    if (!is.array(RecDevProj)) {
+      RecDevProj <- array(RecDevProj, dim = c(1, nProjTS))
+    }
     logRecDevProj <- log(RecDevProj)
     genProj <- FALSE
   }
   
   # ---- if all already provided, return ----
+  
   if (!genInit && !genHist && !genProj) {
     dimnames(RecDevInit) <- list(Sim = 1:nrow(RecDevInit),
                                  Age = Ages@Classes[-1])
@@ -125,14 +133,20 @@ GenRecDevs <- function(SD = 0.2,
   YearsSeq <- which(required)
   
   for (i in seq_len(nSim)) {
-    logRecDevs <- c(logRecDevInit[i, ], logRecDevHist[i, ], logRecDevProj[i, ])
+    init_sim <- min(nrow(logRecDevInit), i)
+    hist_sim <- min(nrow(logRecDevHist), i)
+    proj_sim <- min(nrow(logRecDevProj), i)
+    
+    logRecDevs <- c(logRecDevInit[init_sim, ], 
+                    logRecDevHist[hist_sim, ], 
+                    logRecDevProj[proj_sim, ])
     for (t in seq_along(YearsSeq)[-1]) {
       logRecDevs[YearsSeq[t]] <- AC[i] * logRecDevs[YearsSeq[t-1]] +
         logRecDevs[YearsSeq[t]] * sqrt(1 - AC[i]^2)
     }
-    if (genInit) logRecDevInit[i, ] <- logRecDevs[period == 'Init']
-    if (genHist) logRecDevHist[i, ] <- logRecDevs[period == 'Hist']
-    if (genProj) logRecDevProj[i, ] <- logRecDevs[period == 'Proj']
+    if (genInit) logRecDevInit[init_sim, ] <- logRecDevs[period == 'Init']
+    if (genHist) logRecDevHist[hist_sim, ] <- logRecDevs[period == 'Hist']
+    if (genProj) logRecDevProj[proj_sim, ] <- logRecDevs[period == 'Proj']
   }
   
   RecDevInit <- exp(logRecDevInit)

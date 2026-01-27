@@ -12,7 +12,7 @@
 #' @param TruncSD Truncation in standard deviation units.
 #' @param Timing Timing within the time step.
 #' @param Random Random effects array (optional)
-#' @param ASK Age–length key (optional)
+#' @param ALK Age–length key (optional)
 #' @param Classes Length class boundaries (optional)
 #' @param Misc Miscellaneous list.
 #'
@@ -35,7 +35,7 @@
 #' @seealso
 #' [GetLength()], [SetLength()],
 #' [Pars()], [Model()], [Units()], [MeanAtAge()], [CVatAge()],
-#' [Dist()], [TruncSD()], [Timing()], [Random()], [ASK()],
+#' [Dist()], [TruncSD()], [Timing()], [Random()], [ALK()],
 #' [Classes()], [Populate()], [LengthModels()]
 #'
 #' @example man-examples/class-Length.R
@@ -50,7 +50,7 @@ Length <- function(Pars = list(),
                    TruncSD = 2,
                    Timing = 0,
                    Random = NULL,
-                   ASK = NULL,
+                   ALK = NULL,
                    Classes = NULL,
                    Misc = list()) {
   
@@ -64,7 +64,7 @@ Length <- function(Pars = list(),
                          TruncSD = TruncSD,
                          Timing = Timing,
                          Random = Random,
-                         ASK  = ASK,
+                         ALK  = ALK,
                          Classes = Classes,
                          Misc = Misc)
   
@@ -270,16 +270,16 @@ Random <- function(x) {
 
 #' @rdname Length-accessors
 #' @export
-ASK <- function(x) {
+ALK <- function(x) {
   CheckClass(x, "length", "x")
-  x@ASK
+  x@ALK
 }
 
 #' @rdname Length-accessors
 #' @export
-`ASK<-` <- function(x, value) {
+`ALK<-` <- function(x, value) {
   CheckClass(x, "length", "x")
-  x@ASK <- value
+  x@ALK <- value
   methods::validObject(x)
   x
 }

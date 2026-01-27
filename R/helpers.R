@@ -23,6 +23,10 @@ nSim <- function(x) {
 #' @rdname helpers
 #' @export
 nArea <- function(x, st=1) {
+  if (inherits(x, 'hist')) {
+   x <- x@OM 
+  }
+    
   if (inherits(x, 'om')) {
     stock <- x@Stock
     if (is.list(stock)) {
@@ -86,7 +90,9 @@ nFleet <- function(object) {
     }
   }
   
-  return(dim(object@Landings)[4])
+  return(
+    dim(object@LandingsAtAge[[1]])[[4]]
+  )
   
 }
 

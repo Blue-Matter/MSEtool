@@ -108,13 +108,13 @@ ProcessAdvice_SelectivityMeanAtLength <- function(Selectivity, ProjSim, YearsPro
   SDatAge <- ArrayMultiply(Length@MeanAtAge, Length@CVatAge)
   
   if (dim(Length@ASK)[2] != length(Length@Classes)) {
-    Length@ASK <- CalcAgeSizeKey_(Length@MeanAtAge, 
+    Length@ALK <- CalcAgeSizeKey_(Length@MeanAtAge, 
                                   SDatAge, 
                                   Length@Classes, 
                                   Length@TruncSD, 
                                   Length@Dist)
   } else {
-    Length@ASK <- ArraySubsetYear(Length@ASK, YearsProj)
+    Length@ALK <- ArraySubsetYear(Length@ALK, YearsProj)
   }
   
   Selectivity@MeanAtLength <- array(Selectivity@MeanAtLength, 
@@ -161,7 +161,7 @@ ProcessAdvice_SelectivityMeanAtWeight <- function(Selectivity, ProjSim, YearsPro
   Weight@CVatAge <- Weight@CVatAge |> ArraySubsetYear(YearsProj)
   SDatAge <- ArrayMultiply(Weight@MeanAtAge, Weight@CVatAge)
   
-  Weight@ASK <- CalcAgeSizeKey_(Weight@MeanAtAge, 
+  Weight@AWK <- CalcAgeSizeKey_(Weight@MeanAtAge, 
                                 SDatAge, 
                                 Weight@Classes, 
                                 Weight@TruncSD, 

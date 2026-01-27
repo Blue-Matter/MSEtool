@@ -21,6 +21,7 @@ inline void CalcArea_F(
     const ConstArrayView4D& q,
     const Array3D& Effort,
     const ConstArrayView2D& RelSize,
+    const double maxF,
     const int nStock,
     const int nFleet,
     const int nArea) {
@@ -34,6 +35,9 @@ inline void CalcArea_F(
   if (q.dim[2] <= y)
     Rcpp::stop("q: y out of bounds");
   
+  if (!std::isfinite(maxF) || maxF < 0.0) {
+    Rcpp::stop("Invalid `maxF`");
+  }
 
   // Calculate effort density
   Array3D EffortDensity({nSim, nFleet, nArea}, 0.0);
@@ -59,6 +63,10 @@ inline void CalcArea_F(
     const auto& DM = DiscMort[st];
   
     const int nAge = Fd.dim[1];
+    
+    if (S.dim[1] != nAge || R.dim[1] != nAge || DM.dim[1] != nAge)
+      Rcpp::stop("Age dimension mismatch in stock %d", st + 1);
+    
    
     if (Fd.dim[0] != nSim)
       Rcpp::stop("FDeadArea sim dimension must equal nSim");
@@ -75,7 +83,9 @@ inline void CalcArea_F(
           const double q_eff = q_fl * EffortDensity(sim, fl, ar);
           if (q_eff <= 0.0) continue;
           for (int age = 0; age < nAge; ++age) {
-            const double F_interact = q_eff * S(sim, age, y, fl, ar);
+            double F_interact = q_eff * S(sim, age, y, fl, ar);
+            if (F_interact > maxF) F_interact = maxF;
+            
             const double F_retain = F_interact * R(sim, age, y, fl, ar);
             const double F_disc = (F_interact - F_retain) * DM(sim, age, y, fl, ar);
             Fd(sim, age, y, fl, ar) = F_retain + F_disc;

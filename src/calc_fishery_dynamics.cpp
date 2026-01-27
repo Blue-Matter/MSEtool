@@ -18,7 +18,7 @@ using namespace Rcpp;
 Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                               Rcpp::NumericVector Years, // Years to loop over
                               Rcpp::NumericVector AllYears,
-                              int nSim,
+                              const int nSim,
                               const int nStock,
                               const int nFleet,
                               const int nArea,
@@ -31,6 +31,12 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
   
   // Time Steps
   std::vector<int> ts_index = CalcTSIndex(Years, AllYears); // time-step index 
+  
+  for (int i : ts_index) {
+    if (i < 0 || i >= AllYears.size())
+      Rcpp::stop("Invalid time index %d from CalcTSIndex()", i);
+  }
+  
   int nTS = ts_index.size();
   
   // Loop over time steps in Years
@@ -86,6 +92,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                hv.q,
                hv.Effort,
                hv.RelSize,
+               hv.maxF,
                nStock,
                nFleet,
                nArea);

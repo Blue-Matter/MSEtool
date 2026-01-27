@@ -12,7 +12,7 @@
 #' @param TruncSD Truncation in SD units
 #' @param Timing Timing within time step
 #' @param Random Random effects
-#' @param ASK Age–weight key
+#' @param AWK Age–weight key
 #' @param Classes Weight classes
 #' @param `Misc` Miscellaneous list
 #' @export
@@ -28,7 +28,7 @@ setClass("weight",
                  TruncSD='num.array.null',
                  Timing='num.array.null',
                  Random='num.array.null',
-                 ASK='array.null',
+                 AWK='array.null',
                  Classes='num.null',
                  Misc='list'
          )

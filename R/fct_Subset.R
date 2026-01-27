@@ -134,7 +134,12 @@ SubsetSim <- function(object, Sims, debug = FALSE) {
   
   ## ---- Named numeric vectors ----
   if (is.numeric(object) && !is.null(names(object))) {
-    return(as.numeric(object[Sims]))
+    if (length(object)>1) {
+      return(as.numeric(object[Sims]))
+    } else {
+      return(as.numeric(object))
+    }
+    
   }
   
   object

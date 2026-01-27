@@ -23,6 +23,7 @@ OM2Hist <- function(OM, silent = FALSE) {
   HistYears <- Years(OM, "Historical")
   nYears <- length(HistYears)
   nSim <- OM@nSim 
+  nArea <- nArea(OM)
 
   
   # Stock - expand all arrays to all sims and historical years
@@ -37,7 +38,7 @@ OM2Hist <- function(OM, silent = FALSE) {
   # Extend Fleet arrays to include historical years
   AgeClassList <- purrr::map(Hist@OM@Stock, \(Stock) Stock@Ages@Classes)
   Hist@OM@Fleet <- purrr::map2(Hist@OM@Fleet, AgeClassList, \(FleetList, AgeClasses)
-                               ExtendFleet(FleetList, AgeClasses, nSim, HistYears, silent, id))
+                               ExtendFleet(FleetList, AgeClasses, nSim, HistYears, nArea, silent, id))
 
 
   # Create Time Series Arrays

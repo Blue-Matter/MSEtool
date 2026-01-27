@@ -13,7 +13,7 @@
 #' @param TruncSD Truncation in SD units.
 #' @param Timing Timing within the time step.
 #' @param Random Random effects array (optional).
-#' @param ASK Age–weight key (optional).
+#' @param AWK Age–weight key (optional).
 #' @param Classes Weight classes (optional).
 #' @param Misc Miscellaneous list.
 #'
@@ -46,7 +46,7 @@ Weight <- function(Pars = list(),
                    TruncSD = 2,
                    Timing = 0,
                    Random = NULL,
-                   ASK = NULL,
+                   AWK = NULL,
                    Classes = NULL,
                    Misc = list()) {
   
@@ -62,7 +62,7 @@ Weight <- function(Pars = list(),
     TruncSD       = TruncSD,
     Timing        = Timing,
     Random        = Random,
-    ASK           = ASK,
+    AWK           = AWK,
     Classes       = Classes,
     Misc          = Misc
   )
