@@ -23,14 +23,14 @@ a_or_an <- function(x) {
 .show_array <- function(x, name) {
   
   if (is.null(x) || length(x) == 0) {
-    cli::cli_text("{.strong {name}}: ")
+    cli::cli_text("{.var {name}}: ")
     return(invisible(NULL))
   }
   
   d <- dim(x)
   
   if (is.null(d)) {
-    cli::cli_text("{.strong {name}}: {.val {x}}")
+    cli::cli_text("{.var {name}}: {.val {x}}")
     return(invisible(NULL))
   }
   
@@ -38,12 +38,12 @@ a_or_an <- function(x) {
   
   if (is.null(dn)) {
     cli::cli_text(
-      "{.strong {name}}: {.val  { paste(d, collapse=' x ')} array} {.strong (Dimension names missing)}" 
+      "{.var {name}}: {.val  { paste(d, collapse=' x ')} array} {.strong (Dimension names missing)}" 
     )
     return(invisible(NULL))
   } else {
     cli::cli_text(
-      "{.strong {name}}: {.val  { paste( paste(d, dn), collapse=' x ') } array}" 
+      "{.var {name}}: {.val  { paste( paste(d, dn), collapse=' x ') } array}" 
     )
     return(invisible(NULL))
   }
@@ -52,7 +52,7 @@ a_or_an <- function(x) {
 
 .show_data_frame <- function(x, name) {
   
-  cli::cli_text("{.strong { name }} {.emph data.frame}")
+  cli::cli_text("{.var { name }} {.emph data.frame}")
   nms <- colnames(x)
   cli::cli_ul()
   for (i in seq_len(nrow(x))) {
@@ -66,16 +66,26 @@ a_or_an <- function(x) {
 .show_x <- function(x, name=NULL) {
   
   if (is.null(x) || !length(x) || all(is.na(x))) {
-    cli::cli_text("{.strong {name}}: {.emph not specified} ")  
+    cli::cli_text("{.var {name}}: {.emph not specified} ")  
     return(invisible(NULL))
   }
   
   if (inherits(x, 'character')) {
-    if (nchar(x)<1) {
-      cli::cli_text("{.strong {name}}: {.emph not specified}")
+    if (length(x)==1 && nchar(x)<1) {
+      cli::cli_text("{.var {name}}: {.emph not specified}")
       return(invisible(NULL))
     } 
-    cli::cli_text("{.strong {name}}:  {.val {x}}")
+    if (length(x)>1) {
+      cli::cli_text("{.var {name}}: ")
+      cli::cli_ul()
+      for (i in seq_along(x)) {
+        cli::cli_li("{.val {x[[i]]}}")
+      }
+      cli::cli_end()
+    } else {
+      cli::cli_text("{.var {name}}:  {.val {x}}")
+    }
+    
     return(invisible(NULL))
   }
   
@@ -87,11 +97,11 @@ a_or_an <- function(x) {
     if (all(as.integer(x) != x)) {
       x <- signif(x,3)
     }
-    cli::cli_text("{.strong {name}}:  {.val {x}}")
+    cli::cli_text("{.var {name}}:  {.val {x}}")
   }
   
   if (inherits(x, 'logical')) {
-    cli::cli_text("{.strong {name}}:  {.val {x}}")
+    cli::cli_text("{.var {name}}:  {.val {x}}")
   }
   
   
@@ -100,7 +110,7 @@ a_or_an <- function(x) {
   }
   
   if (is.list(x)) {
-    cli::cli_text("{.strong {name}}: {.emph list length {.val {length(x)}}}")
+    cli::cli_text(" {name}: {.emph list length {.val {length(x)}}}")
     nms <- names(x)
     for (i in seq_along(x)) {
       if (!is.null(nms)) {
@@ -137,7 +147,7 @@ a_or_an <- function(x) {
 
 cli_fn <- function(fun) {
   args <- names(formals(fun))
-  cli::cli_text("{.strong Model}: {.emph function with arguments: } {cli::cli_vec(args)}")
+  cli::cli_text("{.var Model}: {.emph function with arguments: } {cli::cli_vec(args)}")
 }
 
 
@@ -153,7 +163,7 @@ cli_fn <- function(fun) {
   }
   
   if (is.character(object@Model)) {
-    cli::cli_text("{.strong Model}:  {.help {help_topic('MSEtool', object@Model)}}") 
+    cli::cli_text("{.var Model}:  {.help {help_topic('MSEtool', object@Model)}}") 
     return(invisible(NULL))
   }
   
@@ -164,7 +174,7 @@ cli_fn <- function(fun) {
     return(invisible(NULL))
   }
   
-  cli::cli_text("{.strong Model}: ")
+  cli::cli_text("{.var Model}: ")
 }
 
 
@@ -204,7 +214,7 @@ cli_fn <- function(fun) {
   if (hasSlot(object, "Pars")) {
     param_names <- names(object@Pars)
     
-    cli::cli_text(  "{.strong Pars}: ")
+    cli::cli_text(  "{.var Pars}: ")
     
     if (length(param_names) > 0) {
       cli::cli_ul(
@@ -278,13 +288,16 @@ setMethod("show", "om", function(object) {
   
   cli::cli_text("")
   
-  cli::cli_text("{.strong Historical Years:} {.val { paste(range(histYears), collapse = ' - ')}}")
-  cli::cli_text("{.strong Projection Years:} {.val { paste(range(projYears), collapse = ' - ')}}")
+  cli::cli_text("Historical Years: {.val { paste(range(histYears), collapse = ' - ')}}")
+  cli::cli_text("Projection Years: {.val { paste(range(projYears), collapse = ' - ')}}")
   
   cli::cli_text("")
   
-  cli::cli_text("{.strong Stocks:} {.val {StockNames(object)}}")
-  cli::cli_text("{.strong Fleets:} {.val {FleetNames(object)}}")
+  stockNames <- StockNames(object)
+  fleetNames <- FleetNames(object)
+  cli::cli_text("Stocks: {.val {stockNames}}")
+  .show_x(fleetNames, 'Fleets')
+  # cli::cli_text("Fleets: {.val {FleetNames(object)}}")
   
 })
 

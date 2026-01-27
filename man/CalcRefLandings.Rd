@@ -5,13 +5,7 @@
 \alias{CalcRefRemovals}
 \title{Calculate Reference Yield}
 \usage{
-CalcRefLandings(
-  SimList,
-  HistYears,
-  ProjYears,
-  type = c("Landings", "Removals"),
-  Calc = TRUE
-)
+CalcRefLandings(Hist, IdenticalSim = FALSE, type = c("Landings", "Removals"))
 
 CalcRefRemovals(Hist, type = c("Landings", "Removals"))
 }

@@ -1,14 +1,32 @@
 
-#' Calculate Equilibrium Unfished
-#' 
-#' Calculates the equilbrium unfished number, biomass, spawning biomass, and 
-#' spawning production for all [Stock()] objects in an [OM()]
-#' 
-#' @param OM An [OM()] or [Hist] object
-#' 
-#' @return A [PopDynamics] object with equilibrium unfished Number, Biomass, SBiomass, and SProduction
+#' Calculate Equilibrium Unfished Population Dynamics
+#'
+#' Calculate equilibrium unfished population quantities for all [Stock()]
+#' objects in an operating model. Quantities include unfished number-at-age,
+#' total biomass, spawning biomass, and spawning production, evaluated under
+#' equilibrium unfished conditions.
+#'
+#' If a [Hist()] object is supplied, its embedded operating model is used.
+#' The operating model is populated if required prior to calculation.
+#'
+#' * Biomass is calculated as the sum over ages of unfished number-at-age
+#'   multiplied by mean weight-at-age.
+#' * Spawning biomass additionally applies maturity-at-age.
+#' * Spawning production is calculated using fecundity-at-age and may be
+#'   reassigned across stocks using the `SPFrom` slot of the stocks [SRR()] 
+#'   objects.
+#'
+#' @param OM An [OM()] or [Hist()] object.
+#' @param silent Logical; if `TRUE`, suppress messages during calculation.
+#'
+#' @return A [PopDynamics] object containing equilibrium unfished
+#'   `Number`, `Biomass`, `SBiomass`, and `SProduction` arrays with
+#'   dimensions `Sim × Stock × Year`.
+#'
+#' @seealso [CalcUnfished_Dynamic()]
+#'
 #' @export
-CalcUnfished_Equilibrium <- function(OM) {
+CalcUnfished_Equilibrium <- function(OM, silent=FALSE) {
   
   if (inherits(OM,'hist')) {
     OM <- OM@OM
@@ -66,5 +84,10 @@ CalcUnfished_Equilibrium <- function(OM) {
       EquilibriumUnfished@SProduction[,st,] <- EquilibriumUnfished@SProduction[,ind,]
     }
   }
+  
+  if (!silent) {
+    cli::cli_alert_success("Calculated Equilibrium Unfished Conditions ")
+  }
+    
   EquilibriumUnfished
 }

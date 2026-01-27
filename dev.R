@@ -10,7 +10,7 @@ OM <- ConvertOM(testOM)
 LoadArgs(Simulate_om)
 
 
-
+Hist <- Simulate(testOM)
 
 
 

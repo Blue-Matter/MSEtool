@@ -67,6 +67,7 @@ Subset <- function(object, Sims=NULL, Years=NULL, Ages=NULL, Impute=TRUE) {
 }
 
 SubsetSim <- function(object, Sims, debug = FALSE) {
+  
   if (debug) {
     cli::cli_alert("Class {.val {class(object)}}")
   }
@@ -134,7 +135,7 @@ SubsetSim <- function(object, Sims, debug = FALSE) {
   
   ## ---- Named numeric vectors ----
   if (is.numeric(object) && !is.null(names(object))) {
-    if (length(object)>1) {
+    if (length(object)>1 && "Sim" %in% names(object)) {
       return(as.numeric(object[Sims]))
     } else {
       return(as.numeric(object))
