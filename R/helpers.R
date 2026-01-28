@@ -53,6 +53,36 @@ nArea <- function(x, st=1) {
 
 #' @rdname helpers
 #' @export
+nAge <- function(x, st=NULL) {
+  if (inherits(x, 'hist')) {
+    x <- x@OM 
+  }
+  
+  if (inherits(x, 'mse')) {
+    x <- x@OM 
+  }
+  
+  if (inherits(x, 'om')) {
+    stock <- x@Stock
+    if (is.list(stock)) {
+      if (!is.null(st)) {
+        return(
+          length(stock[[st]]@Ages@Classes)
+               )
+      } else {
+        return(lapply(stock, nAge))
+      }
+      
+    }
+  }
+  if (inherits(x, 'stock')) {
+    return(length(x@Ages@Classes))
+  }
+  
+}
+
+#' @rdname helpers
+#' @export
 nStock <- function(object) {
   
   CheckClass(object, c('om', 'hist', 'mse'), 'object')
@@ -120,6 +150,63 @@ DefaultYears <- function(Years = NULL) {
   seq(1950, CurrentYear + 5)
 }
 
+
+
+#' Copy Slots Between S4 Objects
+#'
+#' Internal utility to copy specified slots from one S4 object to another.
+#' The input and output objects must share the named slots.
+#'
+#' @param S4in An S4 object providing source slot values.
+#' @param S4out An S4 object receiving copied slot values.
+#' @param slots A character vector of slot names to copy.
+#'
+#' @return The modified `S4out` object.
+#'
+#' @keywords internal
+CopySlots <- function(S4in, S4out, slots, ignore='Misc') {
+  
+  if (!isS4(S4in)) {
+    cli::cli_abort("`S4in` must be an S4 object.")
+  }
+  if (!isS4(S4out)) {
+    cli::cli_abort("`S4out` must be an S4 object.")
+  }
+  if (!is.character(slots)) {
+    cli::cli_abort("`slots` must be a character vector.")
+  }
+  if (length(slots) == 0L) {
+    return(S4out)
+  }
+  
+  in_slots  <- slotNames(S4in)
+  out_slots <- slotNames(S4out)
+  
+  missing_in  <- setdiff(slots, in_slots)
+  missing_out <- setdiff(slots, out_slots)
+  
+  if (length(missing_in)) {
+    cli::cli_abort(
+      c("x" = "Some slots are missing from `S4in`:",
+        "*" = paste(missing_in, collapse = ", ")
+      )
+    )
+  }
+  
+  if (length(missing_out)) {
+    cli::cli_abort(
+      c("x"= "Some slots are missing from `S4out`:",
+        "*" = paste(missing_out, collapse = ", ")
+      )
+    )
+  }
+  
+  for (sl in slots) {
+    slot(S4out, sl) <- slot(S4in, sl)
+  }
+  
+  S4out
+}
 
 
 #' Linear interpolation of y at specified x values
@@ -190,3 +277,164 @@ LinInterp <- function(x, y, xlev, ascending = FALSE, zeroint = FALSE) {
                 ties = "ordered")$y
 }
 
+
+#' Print S4 Slot Sizes
+#'
+#' Iteratively inspects all slots of an S4 object and prints the
+#' memory size of each slot in MB or GB. Recursively checks nested S4 objects.
+#'
+#' @param object An S4 object to inspect.
+#' @param unit Character; "MB" or "GB", default is "MB".
+#' @param indent Character; used internally for recursive indentation.
+#' @param recursive Logical; if TRUE, recursively prints nested S4 slots.
+#'
+#' @return Invisibly returns a named list of slot sizes.
+#'
+#' @keywords internal
+S4_SlotSizes <- function(object, unit = "MB", indent = "", recursive = TRUE) {
+  if (!isS4(object)) {
+    cli::cli_abort("`object` must be an S4 object")
+  }
+  
+  slots <- slotNames(object)
+  slot_sizes <- list()
+  
+  for (s in slots) {
+    val <- slot(object, s)
+    size_bytes <- as.numeric(object.size(val))
+    size_val <- switch(
+      toupper(unit),
+      "GB" = size_bytes / 1024^3,
+      "MB" = size_bytes / 1024^2,
+      cli::cli_abort("`unit` must be 'MB' or 'GB'")
+    )
+    
+    slot_sizes[[s]] <- size_val
+    cat(indent, sprintf("%s (class: %s): %.3f %s\n", s, class(val)[1], size_val, toupper(unit)))
+    
+    # Recursive call for nested S4 objects
+    if (recursive && isS4(val)) {
+      slot_sizes[[s]] <- S4_SlotSizes(val, unit = unit, indent = paste0(indent, "  "), recursive = TRUE)
+    }
+  }
+  
+  invisible(slot_sizes)
+}
+
+
+#' Copy first element along `Sim` dimension to all other elements
+#'
+#' @param x An n-dimensional array with the first dimension named `Sim`.
+#'  Or a list of such arrays 
+#'
+#' @return An array of the same dimensions as `x` with the first element
+#'   in the first dimension repeated along that dimension.
+#' @keywords internal
+CopyFirstSim <- function(x) {
+  
+  if (is.list(x)) {
+    for (i in seq_along(x)) {
+      x[[i]] <- Recall(x[[i]])
+    }
+    return(x)  
+  }
+  
+  if (!is.array(x)) cli::cli_abort("x must be an array", .internal=TRUE)
+  
+  dims <- dim(x)
+  dn <- dimnames(x)
+  
+  if (dims[1] < 2) return(x)
+  
+  if (!"Sim" %in% names(dn)) cli::cli_abort("x must have named `Sim` dimension", .internal=TRUE)
+  
+  first_slice <- abind::asub(x, idx = 1, dims = 1, drop = FALSE)
+  new_dims <- dims
+  new_dims[1] <- dims[1]
+  x <- array(rep(first_slice, each = dims[1]), dim = dims)
+  
+  dimnames(x) <- dn
+  x
+}
+
+
+# Much quicker than apply
+sumOverDim <- function(x, dimName) {
+  
+  if (!is.array(x)) 
+    cli::cli_abort("`x` must be an array", .internal = TRUE)
+  
+  dn <- dimnames(x)
+  dims <- dim(x)
+  nd <- length(dims)
+  
+  # Determine which dimension to sum over
+  sumDim <- if (!is.null(dn) && dimName %in% names(dn)) {
+    match(dimName, names(dn))
+  } else {
+    nd  # last dimension if not named
+  }
+  
+  if (dims[sumDim] < 2) {
+    return(DropDimension(x, dimName))
+    
+  }
+  
+  # Move sumDim to last dimension
+  perm <- c(setdiff(seq_len(nd), sumDim), sumDim)
+  x_perm <- aperm(x, perm)
+  
+  new_dims <- dims[perm]
+  x_mat <- matrix(x_perm, ncol = new_dims[length(new_dims)])
+  
+  summed <- rowSums(x_mat)
+  
+  # Rebuild array without the summed dimension
+  out_dims <- new_dims[-length(new_dims)]
+  if (length(out_dims) == 0) out_dims <- 1
+  out <- array(summed, dim = out_dims)
+  
+  # Restore dimnames
+  if (!is.null(dn)) {
+    dn_new <- dn[-sumDim]
+    if (length(dn_new) > 0) dimnames(out) <- dn_new
+  }
+  
+  out
+}
+
+#' Sum over Age dimension
+#'
+#' Internal function to sum an array over its Age dimension.
+#'
+#' @param x Array with a named Age dimension.
+#' @param age_dim Character, name of the Age dimension. Defaults to "Age".
+#' @return Array with Age dimension summed out.
+#' @keywords internal
+SumOverAge <- function(x, age_dim = "Age") {
+  sumOverDim(x, dimName = age_dim)
+}
+
+#' Sum over Area dimension
+#'
+#' Internal function to sum an array over its Area dimension.
+#'
+#' @param x Array with a named Area dimension.
+#' @param area_dim Character, name of the Area dimension. Defaults to "Area".
+#' @return Array with Area dimension summed out. 
+#' @keywords internal
+SumOverArea <- function(x, area_dim = "Area") {
+  sumOverDim(x, dimName = area_dim)
+}
+
+#' Get last non-NA residual per simulation
+#'
+#' @param LogResiduals Numeric array, dimensions nSim x nYear
+#' @return Numeric vector of length nSim, each element is the most recent non-NA residual
+#' @keywords internal
+LastResidual <- function(LogResiduals) {
+  apply(LogResiduals, 1, function(x) {
+    if (all(is.na(x))) return(NA_real_)
+    x[max(which(!is.na(x)))]
+  })
+}

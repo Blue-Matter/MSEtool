@@ -6,80 +6,80 @@
 #' policy
 #' 
 #' @export
-CalcRefLandings <- function(SimList, HistYears, ProjYears, type=c('Landings', 'Removals'), Calc=TRUE) {
-  type <- match.arg(type, c('Landings', 'Removals'))
-  
-  if (is.logical(Calc) && !Calc)
-    return(SimList)
-  
-  if (is.array(Calc)) {
-    SimList <- purrr::imap(SimList, \(ProjSim, idx) {
-      array <-  array(Calc[idx,, drop=FALSE] |> abind::adrop(1),
-                      dimnames = list(Stock=dimnames(Calc)$Stock))
-      if (type=='Landings') {
-        ProjSim@Reference@RefLandings <- array
-      } else {
-        ProjSim@Reference@RefRemovals <- array
-      }
-      ProjSim
-    })
-    return(SimList)
-  }
-  nStock <- nStock(SimList[[1]]@OM)
-  nFleet <- nFleet(SimList[[1]]@OM)
-  if (nStock>1 || nFleet>1) {
-    # cli::cli_alert_warning('Optimizing Reference Catch not currently working for multiple stocks/fleets')
-    return(SimList)
-  }
-  
-  # TODO 
-  CheckIdenticalSims(SimList, c(HistYears, ProjYears))
-  
-  # for debugging
-  ProjSim <- SimList[[1]]
-  logF <- log(0.1)
-  
-  # Extend object to include projection years
-  SimList_Extended <- purrr::map(SimList, \(ProjSim) 
-                        ExtendHist(ProjSim)
-                        )
-  bounds <- c(1E-5, ProjSim@OM@maxF)
-  SimList_Extended <- purrr::map(SimList_Extended, \(ProjSim) {
-    doOpt <- optimize(OptRefLandings,
-                      log(bounds),
-                      ProjSim=ProjSim,
-                      HistYears=HistYears,
-                      ProjYears=ProjYears,
-                      type=type,
-                      tol=1e-2)
-    
-    if (type=='Landings') {
-      ProjSim@Reference@RefLandings <- array(-doOpt$objective, 1,
-                                   dimnames = list(
-                                     Stock=StockNames(ProjSim@OM)
-                                   ))
-    } else {
-      ProjSim@Reference@RefRemovals <- array(-doOpt$objective, 1,
-                                   dimnames = list(
-                                     Stock=StockNames(ProjSim@OM)
-                                   ))
-    }
-    ProjSim
-  }, .progress = list(
-    type = "iterator",
-    caller = environment(),
-    format = "Calculating Reference {type} {cli::pb_bar} {cli::pb_percent}",
-    clear = TRUE))
-  
-  SimList <- purrr::map2(SimList_Extended, SimList, \(ProjSim_Extended, ProjSim) {
-    ProjSim@Reference@RefLandings <- ProjSim_Extended@Reference@RefLandings
-    ProjSim@Reference@RefRemovals <- ProjSim_Extended@Reference@RefRemovals
-    ProjSim
-  })
-  
-  SimList 
-  
-}
+# CalcRefLandings <- function(SimList, HistYears, ProjYears, type=c('Landings', 'Removals'), Calc=TRUE) {
+#   type <- match.arg(type, c('Landings', 'Removals'))
+#   
+#   if (is.logical(Calc) && !Calc)
+#     return(SimList)
+#   
+#   if (is.array(Calc)) {
+#     SimList <- purrr::imap(SimList, \(ProjSim, idx) {
+#       array <-  array(Calc[idx,, drop=FALSE] |> abind::adrop(1),
+#                       dimnames = list(Stock=dimnames(Calc)$Stock))
+#       if (type=='Landings') {
+#         ProjSim@Reference@RefLandings <- array
+#       } else {
+#         ProjSim@Reference@RefRemovals <- array
+#       }
+#       ProjSim
+#     })
+#     return(SimList)
+#   }
+#   nStock <- nStock(SimList[[1]]@OM)
+#   nFleet <- nFleet(SimList[[1]]@OM)
+#   if (nStock>1 || nFleet>1) {
+#     # cli::cli_alert_warning('Optimizing Reference Catch not currently working for multiple stocks/fleets')
+#     return(SimList)
+#   }
+#   
+#   # TODO 
+#   CheckIdenticalSims(SimList, c(HistYears, ProjYears))
+#   
+#   # for debugging
+#   ProjSim <- SimList[[1]]
+#   logF <- log(0.1)
+#   
+#   # Extend object to include projection years
+#   SimList_Extended <- purrr::map(SimList, \(ProjSim) 
+#                         ExtendHist(ProjSim)
+#                         )
+#   bounds <- c(1E-5, ProjSim@OM@maxF)
+#   SimList_Extended <- purrr::map(SimList_Extended, \(ProjSim) {
+#     doOpt <- optimize(OptRefLandings,
+#                       log(bounds),
+#                       ProjSim=ProjSim,
+#                       HistYears=HistYears,
+#                       ProjYears=ProjYears,
+#                       type=type,
+#                       tol=1e-2)
+#     
+#     if (type=='Landings') {
+#       ProjSim@Reference@RefLandings <- array(-doOpt$objective, 1,
+#                                    dimnames = list(
+#                                      Stock=StockNames(ProjSim@OM)
+#                                    ))
+#     } else {
+#       ProjSim@Reference@RefRemovals <- array(-doOpt$objective, 1,
+#                                    dimnames = list(
+#                                      Stock=StockNames(ProjSim@OM)
+#                                    ))
+#     }
+#     ProjSim
+#   }, .progress = list(
+#     type = "iterator",
+#     caller = environment(),
+#     format = "Calculating Reference {type} {cli::pb_bar} {cli::pb_percent}",
+#     clear = TRUE))
+#   
+#   SimList <- purrr::map2(SimList_Extended, SimList, \(ProjSim_Extended, ProjSim) {
+#     ProjSim@Reference@RefLandings <- ProjSim_Extended@Reference@RefLandings
+#     ProjSim@Reference@RefRemovals <- ProjSim_Extended@Reference@RefRemovals
+#     ProjSim
+#   })
+#   
+#   SimList 
+#   
+# }
 
 
 

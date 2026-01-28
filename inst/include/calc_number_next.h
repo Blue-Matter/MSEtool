@@ -13,6 +13,7 @@
 // Calculates numbers at beginning of next time step and distribute over aresa
 inline void CalcNumberNext(
     const int y,
+    const std::vector<int>& Sims,
     const int nSim,
     std::vector<Array4D>& Number,
     const std::vector<Array5D>& FDeadArea,
@@ -41,7 +42,7 @@ inline void CalcNumberNext(
     if (Mov_st.dim[1] != nArea || Mov_st.dim[2] != nArea)
       Rcpp::stop("Movement array has wrong area dimensions");
     
-    for (int sim = 0; sim < nSim; ++sim) {
+    for (int sim : Sims) {
       
       for (int age = 1; age < nAge; ++age) {
         for (int area = 0; area < nArea; ++area) {

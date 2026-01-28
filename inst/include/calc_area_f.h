@@ -11,6 +11,7 @@
 
 inline void CalcArea_F(
     const int y,
+    const std::vector<int>& Sims,
     const int nSim,
     std::vector<Array5D>& FDeadArea,
     std::vector<Array5D>& FRetainArea,
@@ -26,6 +27,7 @@ inline void CalcArea_F(
     const int nFleet,
     const int nArea) {
 
+  // checks 
   if (Distribution.dim[1] <= y)
     Rcpp::stop("Distribution: y out of bounds");
   
@@ -41,8 +43,7 @@ inline void CalcArea_F(
 
   // Calculate effort density
   Array3D EffortDensity({nSim, nFleet, nArea}, 0.0);
-  for (int sim = 0; sim < nSim; ++sim) {
-  
+  for (int sim : Sims) {
     for (int fl = 0; fl < nFleet; ++fl) {
       const double E = Effort(sim, y, fl);
       for (int ar = 0; ar < nArea; ++ar) {
@@ -74,13 +75,14 @@ inline void CalcArea_F(
     if (Fr.dim[0] != nSim)
       Rcpp::stop("FRetainArea sim dimension must equal nSim");
     
-    for (int sim = 0; sim < nSim; ++sim) {
+    for (int sim : Sims) {
 
       for (int fl = 0; fl < nFleet; ++fl) {
         const double q_fl = q(sim, st, y, fl);
-        
+      
         for (int ar = 0; ar < nArea; ++ar) {
           const double q_eff = q_fl * EffortDensity(sim, fl, ar);
+          
           if (q_eff <= 0.0) continue;
           for (int age = 0; age < nAge; ++age) {
             double F_interact = q_eff * S(sim, age, y, fl, ar);
@@ -90,11 +92,14 @@ inline void CalcArea_F(
             const double F_disc = (F_interact - F_retain) * DM(sim, age, y, fl, ar);
             Fd(sim, age, y, fl, ar) = F_retain + F_disc;
             Fr(sim, age, y, fl, ar) = F_retain;
-          }
-        }
-      }
-    }
-  } 
+            
+         
+          } // end age
+        } // end area
+      } // end fleet
+  
+    } // end sim
+  } // end stock 
 
 }
 

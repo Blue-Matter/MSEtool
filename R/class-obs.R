@@ -7,7 +7,6 @@
 #' @slot Error Realized observation error.
 #' @slot Bias Observation bias.
 #' @slot Years Observation years.
-#' @slot Type Character vector indicating catch type (e.g. removals, landings).
 #' @slot Ref Reference values.
 #' @slot Misc Miscellaneous additional information.
 #'
@@ -15,12 +14,11 @@
 setClass(
   "catchobs",
   slots = c(
-    CV    = "num.array.list",
-    Error = "num.array.list",
-    Bias  = "num.array.list",
-    Years = "num.list.null",
-    Type  = "char.list",
-    Ref   = "num.array.list",
+    CV    = "num.array.null",          # sim
+    Error = "num.array.null",
+    Bias  = "num.array.null",
+    Years = "num.null",
+    Ref   = "num.array.null",
     Misc  = "list"
   )
 )
@@ -41,11 +39,11 @@ setClass(
 setClass(
   "effortobs",
   slots = c(
-    CV    = "num.array.list",
-    Error = "num.array.list",
-    Bias  = "num.array.list",
-    Years = "num.list.null",
-    Ref   = "num.array.list",
+    CV    = "num.array.null",
+    Error = "num.array.null",
+    Bias  = "num.array.null",
+    Years = "num.null",
+    Ref   = "num.array.null",
     Misc  = "list"
   )
 )
@@ -63,22 +61,25 @@ setClass(
 #' @slot Selectivity Observation selectivity definition.
 #' @slot Type Index type.
 #' @slot Ref Reference values.
-#' @slot q Catchability.
+#' @slot Efficiency Catchability.
 #' @slot Misc Miscellaneous additional information.
 #'
 #' @include class-unions.R
 setClass(
   "indicesobs",
   slots = c(
-    CV          = "num.array.list",
-    Error       = "num.array.list",
-    Beta        = "num.array.list",
-    AC          = "num.array.list",
-    Years       = "num.list.null",
+    CV          = "num.array.null",
+    Error       = "num.array.null",
+    Beta        = "num.array.null",
+    AC          = "num.array.null",
+    Years       = "num.array.null",
+    Areas       = "num.null",
     Selectivity = "array.char.num.list",
     Type        = "character",
-    Ref         = "num.array.list",
-    q           = "num.array.list",
+    Ref         = "num.array.null",
+    Efficiency  = "num.array.null",
+    TruncSD     = "num.null",   # default 2 
+    Stats       = 'df.null',
     Misc        = "list"
   )
 )

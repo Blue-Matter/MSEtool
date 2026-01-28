@@ -12,6 +12,7 @@
 
 inline void CalcCatch(
     const int y,
+    const std::vector<int>& Sims,
     const int nSim,
     std::vector<Array5D>& LandingsAtAge,                    // [stock] sim, age, year, fleet, area
     std::vector<Array5D>& DiscardsAtAge,
@@ -40,7 +41,7 @@ inline void CalcCatch(
     std::vector<double> Z_age(nAge);
     std::vector<double> N_dead_age(nAge);
     
-    for (int sim = 0; sim < nSim; ++sim) {
+    for (int sim : Sims) {
       for (int area = 0; area < nArea; ++area) {
     
           // Calculate  age- area- total mortality

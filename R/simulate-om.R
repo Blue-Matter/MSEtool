@@ -18,6 +18,7 @@ Simulate_om <- function(OM = NULL,
   
   # ---- Initial Checks and Setup ----
   OnExit()
+  CheckClass(OM) # confirm that OM is class `om`
 
   # Populate OM, reduce nSim if applicable, checks and warning messages
   OM <- StartUp(OM, nSim)
@@ -31,13 +32,13 @@ Simulate_om <- function(OM = NULL,
   
   # ---- Calculate Equilibrium Unfished ----
   Hist@Unfished@Equilibrium <- CalcUnfished_Equilibrium(OM, silent)
-  
+
   # ---- Dynamic Number-at-Age for Initial Time Step ----
   # - initial age structure
   # - distribute over areas
   # - account for Initial Depletion
   Hist <- CalcDynamicInitial(Hist)
-  
+
   # ---- Add temporary lists and arrays to Hist@Misc ----
   # use for easy acces in C++  - removed later
   Hist <- PrepHistMisc(Hist) 
@@ -77,40 +78,39 @@ Simulate_om <- function(OM = NULL,
   
   
   # ---- Historical Population Dynamics ----
-  Hist <- CalcFisheryDynamics(Hist, 
-                              Years=Years(Hist@OM,'H'),
-                              IdenticalSim=IdenticalHist)
+  # Hist <- CalcFisheryDynamics(Hist, IdenticalSim=IdenticalHist)
+  Hist <- CalcFisheryDynamics(Hist, IdenticalSim=FALSE)
+  
+  if (!silent) cli::cli_alert_success("Simulated Historical Fishery")
 
-  if (!silent) {
-    cli::cli_alert_success("Simulated Historical Fishery")
-  }
+ 
+  
+  # ---- Calculate Reference Yield ----
+  
+  # TODO 
+  # if (!inherits(Reference, "logical")) {
+  #   if (Reference$Landings) {
+  #     
+  #   }
+  #   
+  #   if (Reference$Removals) {
+  #     
+  #   }
+  #   
+  #   
+  #   SimList <- CalcRefLandings(SimList, HistYears, ProjYears, "Landings", Calc = Reference$Landings)
+  #   SimList <- CalcRefLandings(SimList, HistYears, ProjYears, "Removals", Calc = Reference$Removals)
+  # }
+
   
   # ---- Remove temporary lists and arrays from Hist@Misc ----
   # see PrepHistMisc above
   Hist <- RestoreHistMisc(Hist)
   
-
-  return(Hist)
-  # ---- Calculate Reference Yield ----
   
-  if (!inherits(Reference, "logical")) {
-    if (Reference$Landings) {
-      
-    }
-    
-    if (Reference$Removals) {
-      
-    }
-    
-    
-    SimList <- CalcRefLandings(SimList, HistYears, ProjYears, "Landings", Calc = Reference$Landings)
-    SimList <- CalcRefLandings(SimList, HistYears, ProjYears, "Removals", Calc = Reference$Removals)
-  }
-
   # ---- Condition Observation Object on Real Fishery Data ----
-  if (ConditionObs) {
-    SimList <- ConditionObs(SimList, HistYears, ProjYears)
-  }
+  if (ConditionObs) Hist <- ConditionObs(Hist, silent)
+  
 
   # ---- Historical Fishery Data ----
   if (GenerateData) {

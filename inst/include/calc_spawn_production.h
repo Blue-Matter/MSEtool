@@ -11,6 +11,7 @@
 
 inline void CalcSpawnProduction(
     const int y,
+    const std::vector<int>& Sims,
     const int nSim,
     Array3D& SBiomass,
     Array3D& SProduction,
@@ -37,8 +38,8 @@ inline void CalcSpawnProduction(
     const auto& M_st   = NaturalMortality[st];
     const auto& FDA_st = FDeadArea[st];
     const int nAge = Num_st.dim[1];
-  ;
-    for (int sim = 0; sim < nSim; ++sim) {
+  
+    for (int sim : Sims) {
       double SB = 0.0;
       double SP = 0.0;
       const double spawnFrac = SpawnTimeFrac(sim, st);
@@ -70,7 +71,7 @@ inline void CalcSpawnProduction(
       Rcpp::stop("SPFrom[%d] out of range", st + 1);
     }
 
-    for (int sim = 0; sim < nSim; ++sim) {
+    for (int sim : Sims) {
       SProduction(sim, st, y) = SProduction(sim, fromSt, y);
     }
   }

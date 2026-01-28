@@ -23,6 +23,8 @@ struct ArrayND {
   Rcpp::NumericVector x;
   
   // Constructors
+  
+  // Default
   ArrayND() {
     dim.fill(0);
   }
@@ -67,7 +69,6 @@ struct ArrayND {
       Rcpp::stop("ArrayND: vector length does not match dimensions");
     } 
   }
-  
   
   // Size helpers
   inline int size() const {

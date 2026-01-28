@@ -7,7 +7,9 @@
 IdenticalSims(object, ignore = NULL, debug = FALSE)
 }
 \arguments{
-\item{object}{An S4 object, list, or array to check.}
+\item{object}{An S4 object, list, or array to check}
+
+\item{ignore}{Character vector of slots to ignore (for S4 objects).}
 
 \item{debug}{Logical; if \code{TRUE}, prints debug information for each slot or element.}
 }

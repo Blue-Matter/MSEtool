@@ -15,6 +15,7 @@
 // Calculate spatial effort distribution across areas
 inline void CalcSpatialDistribution(
     const int y,    
+    const std::vector<int>& Sims,
     const int nSim,
     Array4D& Distribution,         
     const std::vector<Array4D>& Number,    
@@ -121,7 +122,7 @@ inline void CalcSpatialDistribution(
   
   // Single-area shortcut
   if (nArea == 1) {
-    for (int sim = 0; sim < nSim; ++sim)
+    for (int sim : Sims) 
       for (int fl = 0; fl < nFleet; ++fl)
         Distribution(sim, y, fl, 0) = 1.0;
     return;
@@ -165,8 +166,7 @@ inline void CalcSpatialDistribution(
     
     
     // Exploitable biomass per unit effort
-    for (int sim = 0; sim < nSim; ++sim) {
-
+    for (int sim : Sims) {
       for (int fl = 0; fl < nFleet; ++fl) {
         for (int ar = 0; ar < nArea; ++ar) {
           
@@ -178,14 +178,14 @@ inline void CalcSpatialDistribution(
               Wgt_st(sim, age, y, fl) *
               Sel_st(sim, age, y, fl, ar) *
               Ret_st(sim, age, y, fl, ar);
-          }
+          } 
           B_hat(sim, fl, ar) = q(sim, st, y, fl) * B_sfr;
         } 
       }
-    }
+    } 
     
     // Within-season saturation 
-    for (int sim = 0; sim < nSim; ++sim) {
+    for (int sim : Sims) {
       
       for (int fl = 0; fl < nFleet; ++fl) {
         const double phi = q(sim, st, y, fl) * Effort(sim, y, fl);
@@ -219,7 +219,7 @@ inline void CalcSpatialDistribution(
   } // end stock loop
   
   // Normalize utility across areas 
-  for (int sim = 0; sim < nSim; ++sim) {
+  for (int sim : Sims) {
     for (int fl = 0; fl < nFleet; ++fl) {
       double total = 0.0;
       for (int ar = 0; ar < nArea; ++ar)
@@ -233,7 +233,7 @@ inline void CalcSpatialDistribution(
   }
   
   // Calculate Effort Distribution
-  for (int sim = 0; sim < nSim; ++sim) {
+  for (int sim : Sims) {
     for (int fl = 0; fl < nFleet; ++fl) {
       const double theta = Targeting(sim,y,fl);
       if (theta <= 0.0) continue;

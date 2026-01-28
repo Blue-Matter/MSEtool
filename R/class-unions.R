@@ -6,6 +6,7 @@ setClassUnion("char.null", c("character", "NULL"))
 setClassUnion("num.null", c("numeric", "NULL"))
 setClassUnion("list.null", c("list", "NULL"))
 setClassUnion("array.null", c("array", "NULL"))
+setClassUnion("df.null", c("data.frame", "NULL"))
 
 
 setClassUnion("char.num", c("character", "numeric", "NULL"))

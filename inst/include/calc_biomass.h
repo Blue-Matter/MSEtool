@@ -9,6 +9,7 @@
 
 inline void CalcBiomass(
     const int y,    
+    const std::vector<int>& Sims,
     const int nSim,
     Array3D& Biomass,  // sim, stock, year
     const std::vector<Array4D>& Number,
@@ -23,7 +24,7 @@ inline void CalcBiomass(
     
     const int nAge = Num_st.dim[1];
     
-    for (int sim = 0; sim < nSim; ++sim) {
+    for (int sim : Sims) {
       Biomass(sim, st, y) = 0.0; 
       
       for (int age = 0; age < nAge; ++age) {

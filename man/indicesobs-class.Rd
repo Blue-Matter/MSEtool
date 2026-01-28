@@ -26,7 +26,7 @@ Internal class describing observation error associated with abundance indices.
 
 \item{\code{Ref}}{Reference values.}
 
-\item{\code{q}}{Catchability.}
+\item{\code{Efficiency}}{Catchability.}
 
 \item{\code{Misc}}{Miscellaneous additional information.}
 }}

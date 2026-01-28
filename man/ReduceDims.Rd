@@ -10,19 +10,18 @@ ReduceDims(array, IncSim = TRUE, IncAge = FALSE, IncYear = TRUE)
 \item{array}{An array, list, or S4 object. For non-array objects, the
 function is applied recursively to all components or slots.}
 
-\item{IncSim}{Logical; reduce the \code{"Sim"} dimension if present and
+\item{IncSim}{Logical; reduce the \code{Sim} dimension if present and
 all simulations are identical.}
 
-\item{IncAge}{Logical; reduce the \code{"Age"} dimension if present and
+\item{IncAge}{Logical; reduce the \code{Age} dimension if present and
 all ages are identical.}
 
-\item{IncYear}{Logical; reduce the \code{"Year"} dimension if present and
+\item{IncYear}{Logical; reduce the \code{Year}dimension if present and
 all years are identical or by keeping only unique years.}
 }
 \value{
 An object of the same class as \code{array}, with reduced dimensions
-where applicable. Dimensions are never dropped entirely; all subsetting
-uses \code{drop = FALSE}.
+where applicable.
 }
 \description{
 Reduce the size of array-like objects by collapsing dimensions
@@ -34,16 +33,13 @@ applying the reduction to all array-valued components.
 Reduction is controlled independently for each supported dimension.
 If a dimension is excluded or not present, it is left unchanged.
 
-For arrays, the function detects dimensions named \code{"Sim"},
-\code{"Age"}, and \code{"Year"} via \code{dimnames}. If enabled, dimensions
+For arrays, the function detects dimensions named \code{Sim},
+\code{Age}, and \code{Year}. If enabled, dimensions
 are reduced as follows:
 \itemize{
 \item \code{Sim}: kept at length 1 when all simulations are identical.
-\item \code{Age}: kept at length 1 when all ages are identical.
+\item \code{Age}:  kept at length 1 when all ages are identical.
 \item \code{Year}: kept at length 1 when all years are identical; otherwise,
 only unique years are retained.
 }
-
-The function relies on the internal helpers \code{IdenticalSims()},
-\code{IdenticalAge()}, \code{IdenticalYears()}, and \code{UniqueYears()}.
 }

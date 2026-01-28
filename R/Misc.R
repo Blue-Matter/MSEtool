@@ -38,9 +38,35 @@ ilogit <- function(x) {
   1 / (1 + exp(-x))
 }
 
-# Distributions -----
+# ---- Distributions -----
 
-# truncated normal distribution
+#' Distribution Function for a Symmetric Truncated Normal
+#'
+#' Evaluates the cumulative distribution function of a normal distribution
+#' truncated symmetrically around the mean at `± truncsd * sd`.
+#'
+#' For each element, probabilities are rescaled to the truncated support so
+#' that the CDF is 0 below the lower bound and 1 above the upper bound.
+#'
+#' @param q Quantile at which to evaluate the truncated CDF.
+#' @param mean Mean of the normal distribution.
+#' @param sd Standard deviation of the normal distribution.
+#' @param truncsd Truncation distance in units of standard deviations.
+#'
+#' @return
+#' A numeric vector of truncated cumulative probabilities, with length equal
+#' to the recycled length of the input arguments.
+#'
+#' @details
+#' The truncation interval is defined as
+#' `mean ± truncsd * sd`. Values of `q` below this interval return 0,
+#' and values above return 1. Within the interval, probabilities are
+#' computed by rescaling the normal CDF using `pnorm()`.
+#'
+#' This is an internal helper used for likelihood and probability
+#' calculations involving symmetrically truncated normal distributions.
+#'
+#' @keywords internal
 ptnorm <- function(q, mean, sd, truncsd) {
   a <- (-truncsd * sd) + mean
   b <- (truncsd * sd) + mean
@@ -60,17 +86,56 @@ ptnorm <- function(q, mean, sd, truncsd) {
   out
 }
 
+
+
+#' Draw from a Truncated Normal Distribution
+#'
+#' Generates random deviates from a normal distribution with mean `mu`
+#' and standard deviation `sigma`, truncated to the interval
+#' [`lower`, `upper`].
+#'
+#' Arguments `mu`, `sigma`, `lower`, and `upper` follow standard R recycling
+#' rules. An error is raised if the truncation interval has zero probability
+#' mass or if invalid parameter values are supplied.
+#' 
+#' @param n Number of random values to generate. Must be a non-negative scalar.
+#' @param mu Mean of the normal distribution.
+#' @param sigma Standard deviation of the normal distribution. Must be strictly positive.
+#' @param lower Lower truncation bound.
+#' @param upper Upper truncation bound.
+#'
+#' @return A numeric vector of length `n` containing truncated normal draws
+#' 
+#' @keywords internal
 rtnorm <- function(n, mu, sigma, lower, upper) {
-  qnorm(
-    runif(
-      n,
-      pnorm(lower, mu, sigma),
-      pnorm(upper, mu, sigma)
-    ),
-    mu,
-    sigma
-  )
+  
+  if (!is.numeric(n) || length(n) != 1 || n < 0) {
+    cli::cli_abort("`n` must be a non-negative scalar integer.", .internal = TRUE)
+  }
+  
+  if (any(sigma <= 0, na.rm = TRUE)) {
+    cli::cli_abort("`sigma` must be strictly positive.", .internal = TRUE)
+  }
+  
+  if (any(lower >= upper, na.rm = TRUE)) {
+    cli::cli_abort("`lower` must be strictly less than `upper`.", .internal = TRUE)
+  }
+  
+  p_lower <- pnorm(lower, mu, sigma)
+  p_upper <- pnorm(upper, mu, sigma)
+  
+  if (any(p_lower >= p_upper, na.rm = TRUE)) {
+    cli::cli_abort(
+      "Truncation bounds result in zero probability mass.",
+      .internal = TRUE
+    )
+  }
+  
+  qnorm(runif(n, p_lower, p_upper), mu, sigma)
 }
+
+
+
 
 # ---- Text ----
 firstup <- function(x, n = 1) {
@@ -380,67 +445,4 @@ EmptyObject <- function(object) {
   }
   length(object) < 1 | all(is.na(object))
 }
-
-# 
-# AddDimNames <- function(array, names = c("Sim", "Age", "Year"),
-#                         Years = NULL, Ages = NULL, Fleets = NULL,
-#                         values = NULL) {
-#   if (inherits(array, "list")) {
-#     array <- unlist(array)
-#   }
-#   if (is.null(array)) {
-#     return(array)
-#   }
-#   d <- dim(array)
-#   l <- list()
-#   for (i in seq_along(names)) {
-#     if (names[i] == "Age") {
-#       if (!is.null(Ages)) {
-#         l[[i]] <- Ages
-#       } else {
-#         l[[i]] <- 0:(d[i] - 1)
-#       }
-#     } else if (names[i] == "Fleet" && !is.null(Fleets)) {
-#       l[[i]] <- Fleets
-#     } else if (names[i] == "Year" && !is.null(Years)) {
-#       l[[i]] <- Years[1:d[i]]
-#     } else {
-#       if (is.null(values)) {
-#         l[[i]] <- 1:d[i]
-#       } else {
-#         if (!is.null(values[[i]]) && !any(is.na(values[[i]]))) {
-#           l[[i]] <- values[[i]]
-#         } else {
-#           l[[i]] <- 1:d[i]
-#         }
-#       }
-#     }
-#   }
-# 
-#   names(l) <- names
-#   dimnames(array) <- l
-#   array
-# }
-
-# AddMeanAtAgeAttributes <- function(object, Years=NULL, Ages=NULL) {
-#
-#   object@MeanAtAge <- Structure(value=object@MeanAtAge,
-#                                 out=c('nsim', 'nage', 'nTS'))
-#
-#   if (is.null(dimnames(object@MeanAtAge)))
-#     object@MeanAtAge <- object@MeanAtAge |> AddDimNames(Years=Years)
-#
-#   if ('Units' %in% slotNames(object))
-#     attributes(object@MeanAtAge)$Units <- object@Units
-#
-#   # if (is.null(attributes(object@MeanAtAge)$Years))
-#   #   attributes(object@MeanAtAge)$Years <- Years
-#   #
-#   if (methods::is(Ages, 'ages')) {
-#     # attributes(object@MeanAtAge)$Ages <- Ages@Classes
-#     attributes(object@MeanAtAge)$UnitsAge <- Ages@Units
-#   }
-#   object
-# }
-
 

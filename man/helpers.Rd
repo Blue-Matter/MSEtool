@@ -4,6 +4,7 @@
 \alias{helpers}
 \alias{nSim}
 \alias{nArea}
+\alias{nAge}
 \alias{nStock}
 \alias{nFleet}
 \title{General Helper Functions}
@@ -11,6 +12,8 @@
 nSim(x)
 
 nArea(x, st = 1)
+
+nAge(x, st = NULL)
 
 nStock(object)
 

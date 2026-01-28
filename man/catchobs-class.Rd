@@ -18,8 +18,6 @@ Internal class describing observation error associated with catch data.
 
 \item{\code{Years}}{Observation years.}
 
-\item{\code{Type}}{Character vector indicating catch type (e.g. removals, landings).}
-
 \item{\code{Ref}}{Reference values.}
 
 \item{\code{Misc}}{Miscellaneous additional information.}

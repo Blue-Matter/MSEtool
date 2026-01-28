@@ -42,11 +42,18 @@ Hist <- function(OM=NULL, silent = FALSE) {
   # Extend all arrays for all sims, ages, historical years, and area
   Hist <- ExtendHist(Hist, HistYears, silent, id)
   
-  Hist@OM@Stock <- purrr::map(Hist@OM@Stock, \(Stock) {
-    Stock@SRR@SPFrom <- match(Stock@SRR@SPFrom, StockNames(OM))
+  Hist@OM@Stock <- purrr::imap(Hist@OM@Stock, \(Stock, idx) {
+    SPFrom <- Stock@SRR@SPFrom
+    if (!length(SPFrom)) {
+      SPFrom <- idx
+    }
+    if (is.character(SPFrom)) {
+      Stock@SRR@SPFrom <- match(SPFrom, StockNames(OM))
+    } else if (is.numeric(SPFrom)) {
+      Stock@SRR@SPFrom <- SPFrom
+    }
     Stock
   })
-  
   
   if (!silent) {
     cli::cli_alert_success("Initialized `Hist` Object")
@@ -57,6 +64,9 @@ Hist <- function(OM=NULL, silent = FALSE) {
 
 InitializeTimeSeries <- function(Hist) {
   OM <- Hist@OM
+  nSim <- Hist@OM@nSim
+  HistYears <- Years(Hist,'H')
+  Areas <- 1:nArea(Hist)
 
   # List of Stocks - Number by Sim, Age, Year, and Area
   Hist@Number <- ListArraySimAgeTimeArea(OM, "Historical")
@@ -79,8 +89,9 @@ InitializeTimeSeries <- function(Hist) {
   Hist@Effort <- ArraySimAgeTimeFleet(OM, "Historical") |> DropDimension("Age", FALSE)
 
   # Add Effort from OM
+
   for (fl in 1:nFleet(OM)) {
-    Hist@Effort[, , fl] <- Hist@OM@Fleet[[1]][[fl]]@Effort@Effort
+    Hist@Effort[, , fl] <- ExtendSims(Hist@OM@Fleet[[1]][[fl]]@Effort@Effort, nSim)
   }
 
   # Effort Distribution over Areas - effort by area
@@ -89,7 +100,8 @@ InitializeTimeSeries <- function(Hist) {
 
   # Add Distribution from OM
   for (fl in 1:nFleet(OM)) {
-    Hist@Distribution[, , fl, ] <- Hist@OM@Fleet[[1]][[fl]]@Effort@Distribution
+    Hist@Distribution[, , fl, ] <- Extend(Hist@OM@Fleet[[1]][[fl]]@Effort@Distribution,
+                                          nSim, NULL, HistYears, Areas)
   }
 
   # Fishing Mortality - Dead and Retain

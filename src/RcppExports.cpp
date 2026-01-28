@@ -117,21 +117,22 @@ BEGIN_RCPP
 END_RCPP
 }
 // CalcFisheryDynamics_
-Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn, Rcpp::NumericVector Years, Rcpp::NumericVector AllYears, const int nSim, const int nStock, const int nFleet, const int nArea, const int DoCalcCatch, const int DoCalcaggF);
-RcppExport SEXP _MSEtool_CalcFisheryDynamics_(SEXP HistInSEXP, SEXP YearsSEXP, SEXP AllYearsSEXP, SEXP nSimSEXP, SEXP nStockSEXP, SEXP nFleetSEXP, SEXP nAreaSEXP, SEXP DoCalcCatchSEXP, SEXP DoCalcaggFSEXP) {
+Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn, Rcpp::NumericVector Years, Rcpp::NumericVector AllYears, std::vector<int> Sims, const int nSim, const int nStock, const int nFleet, const int nArea, const int DoCalcCatch, const int DoCalcaggF);
+RcppExport SEXP _MSEtool_CalcFisheryDynamics_(SEXP HistInSEXP, SEXP YearsSEXP, SEXP AllYearsSEXP, SEXP SimsSEXP, SEXP nSimSEXP, SEXP nStockSEXP, SEXP nFleetSEXP, SEXP nAreaSEXP, SEXP DoCalcCatchSEXP, SEXP DoCalcaggFSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4 >::type HistIn(HistInSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Years(YearsSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type AllYears(AllYearsSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type Sims(SimsSEXP);
     Rcpp::traits::input_parameter< const int >::type nSim(nSimSEXP);
     Rcpp::traits::input_parameter< const int >::type nStock(nStockSEXP);
     Rcpp::traits::input_parameter< const int >::type nFleet(nFleetSEXP);
     Rcpp::traits::input_parameter< const int >::type nArea(nAreaSEXP);
     Rcpp::traits::input_parameter< const int >::type DoCalcCatch(DoCalcCatchSEXP);
     Rcpp::traits::input_parameter< const int >::type DoCalcaggF(DoCalcaggFSEXP);
-    rcpp_result_gen = Rcpp::wrap(CalcFisheryDynamics_(HistIn, Years, AllYears, nSim, nStock, nFleet, nArea, DoCalcCatch, DoCalcaggF));
+    rcpp_result_gen = Rcpp::wrap(CalcFisheryDynamics_(HistIn, Years, AllYears, Sims, nSim, nStock, nFleet, nArea, DoCalcCatch, DoCalcaggF));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -388,7 +389,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MSEtool_Ref_int_cpp", (DL_FUNC) &_MSEtool_Ref_int_cpp, 12},
     {"_MSEtool_calcVatAge", (DL_FUNC) &_MSEtool_calcVatAge, 7},
     {"_MSEtool_CalcAgeSizeKey_", (DL_FUNC) &_MSEtool_CalcAgeSizeKey_, 5},
-    {"_MSEtool_CalcFisheryDynamics_", (DL_FUNC) &_MSEtool_CalcFisheryDynamics_, 9},
+    {"_MSEtool_CalcFisheryDynamics_", (DL_FUNC) &_MSEtool_CalcFisheryDynamics_, 10},
     {"_MSEtool_combine", (DL_FUNC) &_MSEtool_combine, 1},
     {"_MSEtool_get_freq", (DL_FUNC) &_MSEtool_get_freq, 4},
     {"_MSEtool_get_freq2", (DL_FUNC) &_MSEtool_get_freq2, 3},

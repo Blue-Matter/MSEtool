@@ -11,6 +11,7 @@
 
 
 inline void CalcRecruitment(const int y,
+                            const std::vector<int>& Sims,
                             const int nSim,
                             std::vector<Array4D>& Number,
                             const Array3D& SProduction,
@@ -46,7 +47,7 @@ inline void CalcRecruitment(const int y,
     if (rec_y >= Num_st.dim[2])
       continue;
     
-    for (int sim = 0; sim < nSim; ++sim) {
+    for (int sim : Sims) {
 
       const double SP = SProduction(sim, st, y); // spawning production this time step
       

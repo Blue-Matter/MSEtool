@@ -10,6 +10,7 @@
 
 inline void CalcOverallF(
     const int y,
+    const std::vector<int>& Sims,
     const int nSim,
     std::vector<Array4D>& FDead,                            // sim, age, year, fleet
     std::vector<Array4D>& FRetain,
@@ -69,7 +70,7 @@ inline void CalcOverallF(
     std::vector<double> Removals_total(nFleet, 0.0);
     
     
-    for (int sim = 0; sim < nSim; ++sim) {
+    for (int sim : Sims) {
       // sum numbers across areas
       for (int age = 0; age < nAge; ++age) {
         Nage_total[age] = 0.0;

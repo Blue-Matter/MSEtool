@@ -73,6 +73,8 @@ proyears <- function(x) {
 #' @rdname Timesteps
 #' @export
 Seasons <- function(x) {
+  if (inherits(x,'hist')) x <- x@OM
+  if (inherits(x,'mse')) x <- x@OM
   CheckClass(x)
   x@Seasons
 }

@@ -1,6 +1,7 @@
 
 CalcFisheryDynamics <- function(Hist, 
-                                Years,
+                                Years=NULL,
+                                Sims=NULL,
                                 DoCalcCatch=1,
                                 DoCalcaggF=1,
                                 IdenticalSim=FALSE) {
@@ -11,34 +12,42 @@ CalcFisheryDynamics <- function(Hist,
   AllYears <- Years(Hist@OM)
   nSim <- nSim(Hist)
   
+  
+  if (is.null(Years)) {
+    Years <- Years(Hist@OM,'H')
+  }
+  if (is.null(Sims)) {
+    Sims <- 1:nSim
+  }
+    
+  
   if (IdenticalSim) { 
     # do only for first sim
-    Hist_1 <- Subset(Hist, Sim=1)
-    Hist_1 <- CalcFisheryDynamics_(HistIn=Hist_1, 
+    Hist_1 <- CalcFisheryDynamics_(HistIn=Hist, 
                                    Years=Years,
                                    AllYears=AllYears,
-                                   nSim=1,
+                                   Sims=1,
+                                   nSim=nSim,
                                    nStock=nStock,
                                    nFleet=nFleet,
                                    nArea=nArea,
                                    DoCalcCatch=DoCalcCatch,
                                    DoCalcaggF=DoCalcaggF)
     
-    # fill nSim in Hist
-    slots <- slotNames('timeseries')
-    for (sl in slots) {
-      if (sl=='Misc')
-        next()
-      slot(Hist, sl) <- ExtendSims(slot(Hist_1, sl), nSim)
+
+    for (sl in slotNames('timeseries')) {
+      if (sl=='Misc') next()
+      slot(Hist, sl) <- CopyFirstSim(x=slot(Hist_1, sl))
+      
     }
-    
     return(Hist)
   }
   
   # sim-dependent
-  CalcFisheryDynamics_(HistIn=Hist, 
+  Hist <- CalcFisheryDynamics_(HistIn=Hist, 
                        Years=Years,
                        AllYears=AllYears,
+                       Sims=Sims,
                        nSim=nSim,
                        nStock=nStock,
                        nFleet=nFleet,
@@ -46,6 +55,5 @@ CalcFisheryDynamics <- function(Hist,
                        DoCalcCatch=DoCalcCatch,
                        DoCalcaggF=DoCalcaggF)
   
-  
-  
+  Hist
 }

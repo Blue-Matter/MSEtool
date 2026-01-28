@@ -20,7 +20,7 @@ PopulateIndexObs <- function(Index, nSim, HistYears, ProjYears) {
 
   Index@Selectivity
   Index@Type
-  Index@q
+  Index@Efficiency
   Index
 }
 

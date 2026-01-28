@@ -40,12 +40,9 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
   nStock <- nStock(Hist)
   nFleet <- nFleet(Hist)
   nArea <- nArea(Hist)
+  nSim <- nSim(Hist)
   
-  for (st in 1:nStock) {
-    for (fl in 1:nFleet) {
-      Hist_Copy@OM@Fleet[[st]][[fl]]@Catchability@Efficiency[] <- tiny
-    }
-  }
+  Hist_Copy@Misc$Catchability[] <- tiny
   
   HistYears <- Years(Hist, 'H')
   AllYears <- Years(Hist)
@@ -58,22 +55,29 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
   
   if (IdenticalHist) {
     # run for just sim 1
-    Hist_Copy_1 <- Subset(Hist_Copy, 1)
+    unfished <- CalcFisheryDynamics_(Hist_Copy, 
+                                     Years=HistYears,
+                                     AllYears=AllYears,
+                                     Sims=1,
+                                     nSim=nSim,
+                                     nStock,
+                                     nFleet,
+                                     nArea,
+                                     DoCalcCatch=0,
+                                     DoCalcaggF=0)
     
-    unfished <- CalcFisheryDynamics_(Hist_Copy_1, 
-                                       Years=HistYears,
-                                       AllYears=AllYears,
-                                       nSim=1,
-                                       nStock,
-                                       nFleet,
-                                       nArea,
-                                       DoCalcCatch=0,
-                                       DoCalcaggF=0)
+    for (sl in slotNames('popdynamics')) {
+      if (sl=='Misc') next()
+      slot(unfished, sl) <- CopyFirstSim(x=slot(unfished, sl))
+      
+    }
+    
   } else {
     unfished <- CalcFisheryDynamics_(Hist_Copy, 
                                      Years=HistYears,
                                      AllYears=AllYears,
-                                     nSim=Hist@OM@nSim,
+                                     Sims=1:nSim,
+                                     nSim=nSim,
                                      nStock,
                                      nFleet,
                                      nArea,
@@ -81,9 +85,8 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
                                      DoCalcaggF=0)
   
   }
-  for (sl in slotNames(out)) {
-    slot(out, sl) <- slot(unfished, sl)
-  }
+  
+  out <- CopySlots(unfished, out, slotNames(out))
   
   if (!silent) {
     cli::cli_alert_success("Calculated Dynamic Unfished Conditions")

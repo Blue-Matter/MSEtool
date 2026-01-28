@@ -14,10 +14,19 @@
 
 using namespace Rcpp;
 
+inline void NormalizeSims(std::vector<int>& Sims, int nSim) {
+  for (int& s : Sims) {
+    if (s < 1 || s > nSim)
+      Rcpp::stop("Sims contains out-of-range index");
+    --s;
+  }
+}
+
 // [[Rcpp::export]]
 Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                               Rcpp::NumericVector Years, // Years to loop over
                               Rcpp::NumericVector AllYears,
+                              std::vector<int> Sims,
                               const int nSim,
                               const int nStock,
                               const int nFleet,
@@ -38,6 +47,9 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
   }
   
   int nTS = ts_index.size();
+  
+  // zero index Sims
+  NormalizeSims(Sims, nSim);
   
   // Loop over time steps in Years
   for (int ts = 0; ts < nTS; ++ts) { 
@@ -61,6 +73,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     // ---------------------------------------------------------
     
     CalcSpatialDistribution(y,
+                            Sims,
                             nSim,
                             hv.Distribution,
                             hv.Number,
@@ -82,6 +95,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     // ---------------------------------------------------------
     
     CalcArea_F(y,
+               Sims,
                nSim,
                hv.FDeadArea,
                hv.FRetainArea,
@@ -103,6 +117,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     // ---------------------------------------------------------
     
     CalcSpawnProduction(y,
+                        Sims,
                         nSim,
                         hv.SBiomass,
                         hv.SProduction,
@@ -124,6 +139,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     // ---------------------------------------------------------
     
     CalcRecruitment(y,
+                    Sims,
                     nSim,
                     hv.Number,
                     hv.SProduction,
@@ -143,6 +159,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     // ---------------------------------------------------------
     
     CalcNumberNext(y,
+                   Sims,
                    nSim,
                    hv.Number,
                    hv.FDeadArea,
@@ -160,6 +177,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     // ---------------------------------------------------------
     
     CalcBiomass(y,
+                Sims,
                 nSim,
                 hv.Biomass,
                 hv.Number,
@@ -181,6 +199,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
       //        - and first check if sel_len/wght exists
       
       CalcCatch(y,
+                Sims,
                 nSim,
                 hv.LandingsAtAge,
                 hv.DiscardsAtAge,
@@ -201,6 +220,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     
     if (DoCalcaggF) {
       CalcOverallF(y,
+                   Sims,
                    nSim,
                    hv.FDead,
                    hv.FRetain,
