@@ -10,14 +10,14 @@ An S4 Object for storing population time-series information
 \section{Slots}{
 
 \describe{
-\item{\code{Number}}{Number-at-Age: list of length \code{\link[=nStock]{nStock()}} with each element containing an
-array with dimensions Sim, Age, and Year}
+\item{\code{Number}}{Number-at-Age: list of length\code{nStock} with each element containing an
+array with dimensions \code{Sim}, \code{Age}, \code{Year}, and \code{Area}}
 
-\item{\code{Biomass}}{Total Biomass: array with dimensions Sim, Stock, Year}
+\item{\code{Biomass}}{Total Biomass: array with dimensions \code{Sim}, \code{Stock}, \code{Year}}
 
-\item{\code{SBiomass}}{Spawning Biomass: array with dimensions Sim, Stock, Year}
+\item{\code{SBiomass}}{Spawning Biomass: array with dimensions \code{Sim}, \code{Stock}, \code{Year}}
 
-\item{\code{SProduction}}{Spawning Production: array with dimensions Sim, Stock, Year}
+\item{\code{SProduction}}{Spawning Production: array with dimensions \code{Sim} \code{Stock}, \code{Year}}
 
 \item{\code{Misc}}{Miscellanous list}
 }}

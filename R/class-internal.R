@@ -1,26 +1,26 @@
 
-
 #' Population Dynamics Object
 #' 
 #' An S4 Object for storing population time-series information
 #' 
-#' @slot Number Number-at-Age: list of length [nStock()] with each element containing an
-#' array with dimensions Sim, Age, and Year
-#' @slot Biomass Total Biomass: array with dimensions Sim, Stock, Year
-#' @slot SBiomass Spawning Biomass: array with dimensions Sim, Stock, Year
-#' @slot SProduction Spawning Production: array with dimensions Sim, Stock, Year
+#' @slot Number Number-at-Age: list of length`nStock` with each element containing an
+#' array with dimensions `Sim`, `Age`, `Year`, and `Area`
+#' @slot Biomass Total Biomass: array with dimensions `Sim`, `Stock`, `Year`
+#' @slot SBiomass Spawning Biomass: array with dimensions `Sim`, `Stock`, `Year`
+#' @slot SProduction Spawning Production: array with dimensions `Sim` `Stock`, `Year`
 #' @slot Misc Miscellanous list
 #' @name PopDynamics  
 #' @include class-unions.R
 #' @export
 setClass("popdynamics",
          slots=c(Number='array.list.null',
-                 Biomass='array.list.null',
-                 SBiomass='array.list.null',
-                 SProduction='array.list.null',
+                 Biomass='array.null',
+                 SBiomass='array.null',
+                 SProduction='array.null',
                  Misc='list'
          )
 )
+
 
 
 #' `timeseries` Object
@@ -93,7 +93,7 @@ setClass(
   )
 )
 
-' `refpointsMSY` Object
+#' `refpointsMSY` Object
 #'
 #' Stores MSY-based biological reference points.
 #'

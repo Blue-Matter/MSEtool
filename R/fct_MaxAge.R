@@ -57,11 +57,11 @@ AssignAge <- function(x, value, slot='MaxAge') {
   
   if (inherits(x, 'ages')) {
     CheckClass(value, 'numeric', 'value')
-    CheckValue(value)
+    CheckInteger(value)
     slot(x, slot) <- value
   } else if (inherits(x, 'stock')) {
     CheckClass(value, 'numeric', 'value')
-    CheckValue(value)
+    CheckInteger(value)
     slot(x@Ages, slot) <- value
     
   } else if (inherits(x, 'StockList')) {

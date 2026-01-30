@@ -1,5 +1,17 @@
 
-
+#' Condition Observation Error for Fishery Data
+#'
+#' Internal wrapper to condition all observed fishery data associated with
+#' an operating model `Hist` object.
+#'
+#' Iterates over stock complexes and observed data sets, conditioning
+#' landings, discards, CPUE, and survey indices for historical years and
+#' generating observation error for projection years.
+#'
+#' @param Hist Operating model history object
+#' @param silent Logical; if `TRUE`, suppress progress bars and status messages
+#'
+#' @keywords internal
 ConditionObs <- function(Hist, silent=FALSE) {
   
   HistYears <- Years(Hist,'H')

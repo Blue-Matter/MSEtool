@@ -71,7 +71,9 @@ PrepHistMisc <- function(Hist) {
           dim=Hist@OM@nSim, 
           dimnames = list(Sim=1:Hist@OM@nSim)
     )
-  }) |> List2Array('Stock')
+  }) |> List2Array('Stock') |>
+    ReduceDims(IncYear=FALSE)
+  
   CheckDims(Hist@Misc$SpawnTimeFrac, 2, 'SpawnTimeFrac')
   
   ## ---- Stock Lists ----
@@ -137,9 +139,11 @@ PrepHistMisc <- function(Hist) {
   # SRR rec devs
   Hist@Misc$RecDevs <- purrr::map(Hist@OM@Stock, \(stock) {
     dd <- dim(stock@SRR@RecDevProj)
-    cbind(ExtendSims(stock@SRR@RecDevHist, dd[1]),
-          stock@SRR@RecDevProj)
-
+    hist <- ExtendSims(stock@SRR@RecDevHist, dd[1])
+    proj <- stock@SRR@RecDevProj 
+    abind::abind(hist, proj, along=2, 
+                 use.first.dimnames=TRUE,
+                 use.dnns=TRUE) 
   })
   
   # SRR Model

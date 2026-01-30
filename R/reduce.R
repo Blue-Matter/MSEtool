@@ -28,12 +28,12 @@
 #'    
 #' @return An object of the same class as `array`, with reduced dimensions
 #'   where applicable. 
-#'
+#' @seealso [ReduceNSim()]
 #' @export
 ReduceDims <- function(array,
                        IncSim = TRUE,
                        IncAge = FALSE,
-                       IncYear = TRUE) {
+                       IncYear = FALSE) {
   if (!IncSim && !IncYear && !IncAge) {
     return(array)
   }
@@ -127,45 +127,15 @@ ReduceHist <- function(Hist, Reduce=TRUE) {
   if (!Reduce)
     return(Hist)
   
-  # TODO 
-  Hist@OM <- ReduceDims(Hist@OM, IncYear=FALSE)
-  Hist@Unfished <- ReduceDims(Hist@Unfished, IncYear=FALSE)
-  Hist@Reference <- ReduceDims(Hist@Reference, IncYear=FALSE)
-  Hist <- ReduceTimeSeries(Hist)
-  
-  # Hist@Number <- ReduceDims(Hist@Number, IncYear = FALSE)
-  # Hist@Biomass <- ReduceDims(Hist@Biomass, IncYear = FALSE)
-  # Hist@SBiomass <- ReduceDims(Hist@SBiomass, IncYear = FALSE)
-  # Hist@SProduction <- ReduceDims(Hist@SProduction, IncYear = FALSE)
-  # Hist@Landings <- ReduceDims(Hist@Landings, IncYear = FALSE)
-  # Hist@Discards <- ReduceDims(Hist@Discards, IncYear = FALSE)
-  # Hist@Effort <- ReduceDims(Hist@Effort, IncYear = FALSE)
-  # Hist@Distribution <- ReduceDims(Hist@Distribution, IncYear = FALSE)
-  # Hist@FDead <- ReduceDims(Hist@FDead, IncYear = FALSE)
-  # Hist@FDeadArea <- ReduceDims(Hist@FDeadArea, IncYear = FALSE)
-  # Hist@FRetain <- ReduceDims(Hist@FRetain, IncYear = FALSE)
-  # Hist@FRetainArea <- ReduceDims(Hist@FRetainArea, IncYear = FALSE)
-  Hist
+  ReduceDims(Hist)
 }
-
 
 
 ReduceMSE <- function(MSE, Reduce=TRUE) {
   if (!Reduce)
     return(MSE)
   
-  MSE@OM <- ReduceDims(MSE@OM)
-  MSE@Hist <- ReduceTimeSeries(MSE@Hist)
-  MSE <- ReduceTimeSeries(MSE)
-  MSE
+  ReduceDims(MSE)
 }
 
-ReduceTimeSeries <- function(object) {
-  slots <- slotNames('timeseries')
-  slots <- slots[!slots=='Misc']
-  
-  for (sl in slots) {
-    slot(object, sl) <- ReduceDims(slot(object, sl), IncYear = FALSE)
-  }
-  object
-}
+

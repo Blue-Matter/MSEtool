@@ -4,7 +4,8 @@ CalcFisheryDynamics <- function(Hist,
                                 Sims=NULL,
                                 DoCalcCatch=1,
                                 DoCalcaggF=1,
-                                IdenticalSim=FALSE) {
+                                IdenticalSim=FALSE,
+                                debug = 0) {
   
   nStock <- nStock(Hist)
   nFleet <- nFleet(Hist)
@@ -32,7 +33,8 @@ CalcFisheryDynamics <- function(Hist,
                                    nFleet=nFleet,
                                    nArea=nArea,
                                    DoCalcCatch=DoCalcCatch,
-                                   DoCalcaggF=DoCalcaggF)
+                                   DoCalcaggF=DoCalcaggF,
+                                   debug=debug)
     
 
     for (sl in slotNames('timeseries')) {
@@ -53,7 +55,8 @@ CalcFisheryDynamics <- function(Hist,
                        nFleet=nFleet,
                        nArea=nArea,
                        DoCalcCatch=DoCalcCatch,
-                       DoCalcaggF=DoCalcaggF)
+                       DoCalcaggF=DoCalcaggF,
+                       debug=debug)
   
   Hist
 }

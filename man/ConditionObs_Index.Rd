@@ -2,7 +2,7 @@
 % Please edit documentation in R/condition-obs-index.R
 \name{ConditionObs_Index}
 \alias{ConditionObs_Index}
-\title{Condition Observed Index for a Stock Complex}
+\title{Condition Observed Index for a Stock or Stock Complex}
 \usage{
 ConditionObs_Index(
   Hist,
@@ -15,9 +15,9 @@ ConditionObs_Index(
 )
 }
 \arguments{
-\item{Hist}{Operating model history object}
+\item{Hist}{A \code{\link[=Hist]{Hist()}} object populated with historical fishery dynamics.}
 
-\item{FisheryData}{List of index data for CPUE or Survey}
+\item{FisheryData}{A \code{\link[=Data]{Data()}} object with real fishery data}
 
 \item{HistYears}{Numeric vector of historical years}
 
@@ -30,11 +30,7 @@ ConditionObs_Index(
 \item{type}{Character, either \code{CPUE} or \code{Survey}}
 }
 \description{
-Internal function to generate and condition observed indices (CPUE or Survey)
-for historical and projected years, including residuals and autocorrelated errors.
-}
-\details{
-Handles multiple stocks, fleets, and areas, applies selectivity at age,
-converts number to biomass if necessary, and computes log residuals.
+Internal function to condition observation error from provided indices (CPUE or Survey)
+including residuals and autocorrelated errors.
 }
 \keyword{internal}

@@ -1,5 +1,21 @@
-
-
+#' Calculate Reference Yield
+#'
+#' Internal function to calculate reference yields in terms of either 
+#' `Landings` and/or `Removals`.
+#'
+#' Reference yield is calculated as the highest yield (in units of `Units`) 
+#' summed across all fleets for a given fixed F policy over the entire 
+#' projection period. 
+#'
+#' @param Hist `Hist` object containing historical fishery dynamics
+#' @param type Character vector; one or both of `Landings` and `Removals`
+#' @param Units Character; either `Biomass` or `Number`
+#' @param silent Logical; if `TRUE`, suppress progress bars
+#'
+#' @return Updated `Hist` object with reference yields stored in
+#'   `Hist@Reference$RefLandings` and/or `Hist@Reference$RefRemovals`
+#'
+#' @keywords internal
 CalcRefYield <- function(Hist, 
                          type=c('Landings', 'Removals'),
                          Units=c("Biomass", 'Number'),
@@ -32,28 +48,10 @@ CalcRefYield <- function(Hist,
   ProjSim_List <- lapply(1:nSim, function(i) SubsetSim(Proj, Sims=i))
   names(ProjSim_List) <- 1:nSim
   
-  ProjSim_List[[1]]@Misc$RecDevs$Female|> dim()
-  ProjSim_List[[10]]@Misc$RecDevs$Female |> dim()
-  
-  tt <- SubsetSim(object=Proj@Misc$RecDevs, Sims=10)
-  dim(tt$Female)
-  
-  
-  # Prepare output arrays
-  RefLandings <- RefRemovals <- array(NA, 
-                                      dim=c(nSim, nStock),
-                                      dimnames = list(
-                                        Sim=1:nSim,
-                                        Stock=StockNames
-                                      ))
-  
   log_bounds <- log(c(1E-5, 10))
 
   for (t in type) {
     if (silent) {
-      
-      stop()
-      
       RefYield <- lapply(ProjSim_List, function(ProjSim) {
         DoOpt <- optimize(OptRefYield,
                         log_bounds,
@@ -64,11 +62,23 @@ CalcRefYield <- function(Hist,
                         Units = Units,
                         type = t
         )
+        
+        yield <- OptRefYield(logScalar = DoOpt$minimum, 
+                             ProjSim = ProjSim,
+                             HistYears = HistYears,
+                             ProjYears = ProjYears,
+                             nFleet = nFleet,
+                             Units = Units,
+                             type = t,
+                             opt = 2)
+        
+        
+        yield
       
       })
       
     } else {
-      RefYield <- purrr::map(ProjSim_List[1:3], \(ProjSim) {
+      RefYield <- purrr::map(ProjSim_List, \(ProjSim) {
         
         DoOpt <- optimize(OptRefYield,
                         log_bounds,
@@ -96,16 +106,42 @@ CalcRefYield <- function(Hist,
         format = "Calculating Reference {.val {t}} {cli::pb_bar} {cli::pb_percent}",
         clear = TRUE))
     }
-    List2Array(RefYield, "Sim", "Stock")
     
- 
-  
+    RefYield <- List2Array(RefYield, "Sim", "Stock") |> t()
+    dimnames(RefYield)[['Stock']] <- StockNames
+    slot(Hist@Reference, paste0("Ref",t)) <- RefYield
     
   }
   Hist
 }
 
-OptRefYield <- function(logScalar, ProjSim, HistYears, ProjYears, nFleet,
+#' Optimize Reference Yield for a Single Simulation
+#'
+#' Internal helper function called by `CalcRefYield()` to optimize
+#' fishing effort for a single simulation replicate.
+#'
+#' Scales historical effort by a log scalar, projects forward,
+#' calculates total yield (summed over age, fleet, and area),
+#' and returns either the negative objective function for optimization
+#' or the mean yield per stock.
+#'
+#' @param logScalar Numeric scalar applied to scale historical effort
+#' @param ProjSim Single-simulation subset of the operating model
+#' @param HistYears Numeric vector of historical years
+#' @param ProjYears Numeric vector of projection years
+#' @param nFleet Integer number of fleets
+#' @param Units Character; either `Biomass` or `Number`
+#' @param type Character; either `Landings` or `Removals`
+#' @param opt Integer; if 1, return objective for optimization; if 2, return yields
+#'
+#' @return Numeric; either negative sum of mean yields (opt=1) or vector of mean yields per stock (opt=2)
+#'
+#' @keywords internal
+OptRefYield <- function(logScalar, 
+                        ProjSim, 
+                        HistYears, 
+                        ProjYears, 
+                        nFleet,
                         Units=c('Biomass', 'Number'),
                         type=c('Landings', 'Removals'),
                         opt = 1) {
@@ -124,7 +160,7 @@ OptRefYield <- function(logScalar, ProjSim, HistYears, ProjYears, nFleet,
   ProjSim_opt <- CalcFisheryDynamics(Hist = ProjSim,
                                      Years = c(tail(HistYears, ProjSim@OM@Seasons), ProjYears), 
                                      DoCalcaggF = 0,
-                                     IdenticalSim = IdenticalSim )
+                                     IdenticalSim = FALSE)
   
   # summed over age, fleet, area
   Yield <- GetCatch(ProjSim_opt, Units, type) 

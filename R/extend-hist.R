@@ -1,6 +1,6 @@
 #' Extend Hist Object Years
 #'
-#' Extend all simulation-dependent components of a `Hist` object to include
+#' Extend all components of a `Hist` object to include
 #' additional years. This function expands stock-, fleet-, observation-,
 #' implementation-, and time-series components along the year dimension while
 #' preserving existing values.
@@ -9,8 +9,7 @@
 #' for a particular array  is greater than one. 
 #' 
 #' Simulations are not extended in the `OM` object.
-#'
-#'
+#' 
 #' @param Hist A [Hist()] object.
 #' @param Years Numeric vector of years to extend the historical object to.
 #' 
@@ -77,12 +76,12 @@ ExtendHist <- function(Hist, Years, silent=FALSE, id=NULL) {
   
   # Extend time series 
   slots <- slotNames('timeseries')
-  slots <- slots[!slots=='Misc']
+  
   for (sl in slots) {
     if (!silent) {
       cli::cli_progress_update(id=id)
     }
-    slot(Hist, sl) <- ExtendYears(array=slot(Hist, sl), Years = Years)
+    slot(Hist, sl) <- Extend(array=slot(Hist, sl), nSim=nSim, Years = Years)
     
   }
   

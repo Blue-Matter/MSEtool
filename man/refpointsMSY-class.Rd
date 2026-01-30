@@ -3,7 +3,7 @@
 \docType{class}
 \name{refpointsMSY-class}
 \alias{refpointsMSY-class}
-\title{Stores MSY-based biological reference points.}
+\title{\code{refpointsMSY} Object}
 \description{
 Stores MSY-based biological reference points.
 }

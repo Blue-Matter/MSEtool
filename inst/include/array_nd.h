@@ -5,14 +5,7 @@
 #include <array>
 #include <numeric>
 #include <algorithm>
-
-
-// Compile-time bounds control
-// Define MSE_ARRAY_BOUNDS_CHECK in debug builds
-//
-#ifndef MSE_ARRAY_BOUNDS_CHECK
-#define MSE_ARRAY_BOUNDS_CHECK 1
-#endif
+#include <string>
 
 template <size_t N>
 struct ArrayND {
@@ -21,180 +14,153 @@ struct ArrayND {
   
   std::array<int, N> dim; 
   Rcpp::NumericVector x;
+  std::string name;  // array name for diagnostics
   
   // Constructors
-  
-  // Default
   ArrayND() {
     dim.fill(0);
   }
   
-  // Allocate
-  explicit ArrayND(const std::array<int, N>& d)
-    : dim(d), x(size()) {}
+  explicit ArrayND(const std::array<int, N>& d, const std::string& nm = "")
+    : dim(d), x(size()), name(nm) {}
   
-  // Allocate + fill
-  ArrayND(const std::array<int, N>& d, double value)
-    : dim(d), x(size(), value) {}
+  ArrayND(const std::array<int, N>& d, double value, const std::string& nm = "")
+    : dim(d), x(size(), value), name(nm) {}
   
-  // Wrap existing vector with explicit dims
   ArrayND(const Rcpp::NumericVector& x_,
-          const std::array<int, N>& d)
-    : dim(d), x(x_) {
+          const std::array<int, N>& d,
+          const std::string& nm = "")
+    : dim(d), x(x_), name(nm) {
     
     if (x.size() != size()) {
-      Rcpp::stop("ArrayND: vector length does not match dimensions");
+      Rcpp::stop("ArrayND (" + (name.empty() ? "unnamed" : name) +
+        "): vector length does not match dimensions");
     }
   }
   
-  // Wrap existing R array (infer dims)
-  explicit ArrayND(const Rcpp::NumericVector& x_)
-    : x(x_) {
+  explicit ArrayND(const Rcpp::NumericVector& x_, const std::string& nm = "")
+    : x(x_), name(nm) {
     
     if (!x.hasAttribute("dim")) {
-      Rcpp::stop("ArrayND: object has no 'dim' attribute");
-    }
+      Rcpp::stop("ArrayND (" + (name.empty() ? "unnamed" : name) +
+        "): object has no 'dim' attribute");
+    } 
     
     Rcpp::IntegerVector d = x.attr("dim");
-    
     if (d.size() != static_cast<int>(N)) {
-      Rcpp::stop("ArrayND: expected " + std::to_string(N) + "D array");
-    }
-    
-    for (size_t i = 0; i < N; ++i) {
-      dim[i] = d[i];
+      Rcpp::stop("ArrayND (" + (name.empty() ? "unnamed" : name) +
+        "): expected " + std::to_string(N) + "D array");
     } 
+    
+    for (size_t i = 0; i < N; ++i) dim[i] = d[i];
     
     if (x.size() != size()) {
-      Rcpp::stop("ArrayND: vector length does not match dimensions");
-    } 
-  }
+      Rcpp::stop("ArrayND (" + (name.empty() ? "unnamed" : name) +
+        "): vector length does not match dimensions");
+    }
+  } 
   
   // Size helpers
   inline int size() const {
-    return std::accumulate(
-      dim.begin(), dim.end(),
-      1, std::multiplies<int>()
-    );
+    return std::accumulate(dim.begin(), dim.end(), 1, std::multiplies<int>());
   } 
   
   inline Rcpp::IntegerVector dim_r() const {
     Rcpp::IntegerVector out(N);
-    for (size_t i = 0; i < N; ++i) {
-      out[i] = dim[i];
-    } 
+    for (size_t i = 0; i < N; ++i) out[i] = dim[i];
     return out;
   } 
   
-  
-  // Broadcasting logic (dim 0 only)
   inline int map0(int i) const {
     return (dim[0] == 1 ? 0 : i);
   } 
   
-  // Indexing
+  // Indexing helpers
   inline int idx(const std::array<int, N>& ind) const {
     int offset = map0(ind[0]);
     int stride = dim[0];
-    
     for (size_t k = 1; k < N; ++k) {
       offset += ind[k] * stride;
       stride *= dim[k];
     } 
     return offset;
-  } 
+  }
   
-#if MSE_ARRAY_BOUNDS_CHECK
   inline void check_bounds(const std::array<int, N>& ind) const {
-    
-    const int i0 = map0(ind[0]);
+    int i0 = map0(ind[0]);
     if (i0 < 0 || i0 >= dim[0]) {
-      Rcpp::stop("ArrayND index out of bounds");
-    } 
+      Rcpp::stop("ArrayND (" + (name.empty() ? "unnamed" : name) +
+        ") index out of bounds at dim0: " +
+        std::to_string(i0) + " >= " + std::to_string(dim[0]));
+    }
     
     for (size_t k = 1; k < N; ++k) {
       if (ind[k] < 0 || ind[k] >= dim[k]) {
-        Rcpp::stop("ArrayND index out of bounds");
+        std::string idx_str;
+        for (size_t j = 0; j < N; ++j) {
+          idx_str += std::to_string(ind[j]);
+          if (j != N-1) idx_str += ",";
+        }
+        Rcpp::stop("ArrayND (" + (name.empty() ? "unnamed" : name) +
+          ") index out of bounds at dim" + std::to_string(k) +
+          ": " + std::to_string(ind[k]) + " >= " + std::to_string(dim[k]) +
+          " (indices [" + idx_str + "])");
       }
     }
   }
-#endif
   
-  template <typename... Args> 
+  // Index operators
+  template <typename... Args>
   inline double& operator()(Args... args) {
-    static_assert(sizeof...(Args) == N,
-                  "Incorrect number of indices");
+    static_assert(sizeof...(Args) == N, "Incorrect number of indices");
     std::array<int, N> ind{ static_cast<int>(args)... };
-    
-#if MSE_ARRAY_BOUNDS_CHECK
     check_bounds(ind);
-#endif
     return x[idx(ind)];
   }
   
   template <typename... Args>
   inline double operator()(Args... args) const {
-    static_assert(sizeof...(Args) == N,
-                  "Incorrect number of indices");
-    
+    static_assert(sizeof...(Args) == N, "Incorrect number of indices");
     std::array<int, N> ind{ static_cast<int>(args)... };
-    
-#if MSE_ARRAY_BOUNDS_CHECK
     check_bounds(ind);
-#endif
-    
     return x[idx(ind)];
-  } 
+  }
   
-  
-  // Array-based indexing
   inline double& operator()(const std::array<int, N>& ind) {
-#if MSE_ARRAY_BOUNDS_CHECK
     check_bounds(ind);
-#endif
     return x[idx(ind)];
   }
-  
-  inline double operator()(const std::array<int, N>& ind) const {
-#if MSE_ARRAY_BOUNDS_CHECK
-    check_bounds(ind);
-#endif
-    return x[idx(ind)];
-  }
-  
-  
-  // Slice helpers
-  // Fix dimension K at index `fixed`
-  template <size_t K>
-  ArrayND<N - 1> slice(int fixed) const {
-    static_assert(K < N, "Invalid slice dimension");
-    
-    std::array<int, N - 1> newdim;
-    
-    for (size_t i = 0, j = 0; i < N; ++i) {
-      if (i != K) {
-        newdim[j++] = dim[i];
-      } 
-    }
-    
-    ArrayND<N - 1> out(newdim);
-    
-    std::array<int, N> ind{};
-    
-    for (int flat = 0; flat < out.size(); ++flat) {
-      int tmp = flat;
-      for (size_t i = 0; i < N; ++i) {
-        if (i == K) {
-          ind[i] = fixed;
-        } else {
-          ind[i] = tmp % dim[i];
-          tmp /= dim[i];
-        }
-      }
-      out.x[flat] = x[idx(ind)];
-    }
-    return out;
-  }
-};
 
-#endif // MSEtool_ARRAY_ND_H
+  inline double operator()(const std::array<int, N>& ind) const {
+    check_bounds(ind);
+    return x[idx(ind)];
+  }
+  
+  // // Slice helper
+  // template <size_t K>
+  // ArrayND<N - 1> slice(int fixed) const {
+  //   static_assert(K < N, "Invalid slice dimension");
+  //   std::array<int, N-1> newdim;
+  //   for (size_t i = 0, j = 0; i < N; ++i)
+  //     if (i != K) newdim[j++] = dim[i];
+  //     
+  //     ArrayND<N-1> out(newdim, name + "_slice");
+  //     std::array<int, N> ind{};
+  //     
+  //     for (int flat = 0; flat < out.size(); ++flat) {
+  //       int tmp = flat;
+  //       for (size_t i = 0; i < N; ++i) {
+  //         if (i == K) ind[i] = fixed;
+  //         else {
+  //           ind[i] = tmp % dim[i];
+  //           tmp /= dim[i];
+  //         }
+  //       }
+  //       out.x[flat] = x[idx(ind)];
+  //     }
+  //     return out;
+  // }
+  
+}; 
+
+#endif

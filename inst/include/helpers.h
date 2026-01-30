@@ -31,25 +31,25 @@ inline std::vector<int>
 inline Array2D
 Slot2Array2D(Rcpp::S4& obj, const char* slot) {
   Rcpp::NumericVector x = obj.slot(slot);
-  return as_ArrayND<2>(x);   // modifies Hist@slot in place
+  return as_ArrayND<2>(x, slot);   // modifies Hist@slot in place
 }
 
 inline Array3D
 Slot2Array3D(Rcpp::S4& obj, const char* slot) {
   Rcpp::NumericVector x = obj.slot(slot); 
-  return as_ArrayND<3>(x);   
+  return as_ArrayND<3>(x, slot);   
 }
 
 inline Array4D
 Slot2Array4D(Rcpp::S4& obj, const char* slot) {
   Rcpp::NumericVector x = obj.slot(slot); 
-  return as_ArrayND<4>(x);   
+  return as_ArrayND<4>(x, slot);   
 }
 
 inline Array5D
 Slot2Array5D(Rcpp::S4& obj, const char* slot) {
   Rcpp::NumericVector x = obj.slot(slot); 
-  return as_ArrayND<5>(x);   
+  return as_ArrayND<5>(x, slot);   
 }
 
 

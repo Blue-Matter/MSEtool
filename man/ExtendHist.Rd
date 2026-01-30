@@ -16,7 +16,7 @@ A modified \code{Hist} object with all relevant components extended
 to include the specified years.
 }
 \description{
-Extend all simulation-dependent components of a \code{Hist} object to include
+Extend all components of a \code{Hist} object to include
 additional years. This function expands stock-, fleet-, observation-,
 implementation-, and time-series components along the year dimension while
 preserving existing values.

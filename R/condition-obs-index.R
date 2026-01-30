@@ -1,14 +1,11 @@
 
-#' Condition Observed Index for a Stock Complex
+#' Condition Observed Index for a Stock or Stock Complex
 #'
-#' Internal function to generate and condition observed indices (CPUE or Survey)
-#' for historical and projected years, including residuals and autocorrelated errors.
+#' Internal function to condition observation error from provided indices (CPUE or Survey)
+#' including residuals and autocorrelated errors.
 #'
-#' Handles multiple stocks, fleets, and areas, applies selectivity at age,
-#' converts number to biomass if necessary, and computes log residuals.
-#'
-#' @param Hist Operating model history object
-#' @param FisheryData List of index data for CPUE or Survey
+#' @param Hist A [Hist()] object populated with historical fishery dynamics.
+#' @param FisheryData A [Data()] object with real fishery data
 #' @param HistYears Numeric vector of historical years
 #' @param ProjYears Numeric vector of projection years
 #' @param stocks Integer vector of stock indices in the complex

@@ -1,3 +1,23 @@
+
+#' Condition Observed Catch for a Stock or Stock Complex
+#'
+#' Internal function to condition observation error from observed catch (landings or
+#' discards).
+#'
+#' Computes simulated catch in number or biomass across stocks and fleets,
+#' derives fleet-specific bias and observation error, and generates
+#' lognormal observation error for projection years.
+#'
+#'
+#' @param Hist A [Hist()] object populated with historical fishery dynamics.
+#' @param FisheryData A [Data()] object with real fishery data
+#' @param HistYears Numeric vector of historical years
+#' @param ProjYears Numeric vector of projection years
+#' @param stocks Integer vector of stock indices in the complex
+#' @param i Integer index of observed data set
+#' @param type Character, either `Landings` or `Discards`
+#'
+#' @keywords internal
 ConditionObs_Catch <- function(Hist,
                                FisheryData, 
                                HistYears,

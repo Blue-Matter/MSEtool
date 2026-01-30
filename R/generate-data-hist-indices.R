@@ -1,4 +1,35 @@
-
+#' Generate Historical Index Data
+#'
+#' Internal function to generate simulated historical index data
+#' (`CPUE` or `Survey`) when real observations are not available.
+#'
+#' Uses conditioned observation objects to apply selectivity,
+#' efficiency, and observation error to simulated population
+#' numbers or biomass, aggregated over age, area, and stocks.
+#'
+#' Supports indices in number, biomass, or recruitment units,
+#' applies fleet-specific selectivity-at-age, and standardizes
+#' generated indices to mean 1.
+#'
+#' If real index data already exist, or no observation structure is
+#' defined, the existing data are returned unchanged.
+#'
+#' @param x Integer index of the simulation replicate to extract
+#' @param Data Fishery data object to populate
+#' @param Hist Operating model history object
+#' @param HistYears Numeric vector of historical years
+#' @param i Integer index of observed data set
+#' @param stocks Integer vector of stock indices in the complex
+#' @param StockNames Character vector of stock names
+#' @param nArea Integer number of spatial areas
+#' @param defaultCV Numeric default coefficient of variation applied
+#'   when no fleet-specific CV is provided
+#' @param type Character, either `CPUE` or `Survey`
+#'
+#' @return An object of class `indicesdata` containing simulated
+#'   historical index values and CVs
+#'
+#' @keywords internal
 GenHistData_Indices <- function(x, Data, Hist, HistYears, i, stocks, StockNames, 
                                 nArea,
                                 defaultCV=0.2, type=c('CPUE', 'Survey')) {

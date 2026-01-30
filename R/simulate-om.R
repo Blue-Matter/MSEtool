@@ -1,7 +1,9 @@
 
 
-# Simulate for new `om` class objects
+
 Simulate_om <- function(OM = NULL,
+                        
+                        
                         parallel = FALSE,
                         silent = FALSE,
                         nSim = NULL,
@@ -17,6 +19,7 @@ Simulate_om <- function(OM = NULL,
                         ...) {
   
   # ---- Initial Checks and Setup ----
+  StartTime <- Sys.time()
   OnExit()
   CheckClass(OM) # confirm that OM is class `om`
 
@@ -42,7 +45,7 @@ Simulate_om <- function(OM = NULL,
   # ---- Add temporary lists and arrays to Hist@Misc ----
   # use for easy acces in C++  - removed later
   Hist <- PrepHistMisc(Hist) 
-
+  
   # ---- Calculate Unfished Equilibrium and Dynamic ----
   if (DynamicUnfished) 
     Hist@Unfished@Dynamic <- CalcUnfished_Dynamic(Hist, 
@@ -88,27 +91,12 @@ Simulate_om <- function(OM = NULL,
 
   # ---- Calculate Reference Yield ----
   
-  stop()
+  # TODO - arguments to skip or directly add 
   
-  # - need to add dim names to Hist@Misc - not being subset internally!!
   Hist <- CalcRefYield(Hist, 
                        type='Landings',
+                       Units = "Biomass",
                        silent = silent)
-  # TODO 
-  # if (!inherits(Reference, "logical")) {
-  #   if (Reference$Landings) {
-  #     
-  #   }
-  #   
-  #   if (Reference$Removals) {
-  #     
-  #   }
-  #   
-  #   
-  #   SimList <- CalcRefLandings(SimList, HistYears, ProjYears, "Landings", Calc = Reference$Landings)
-  #   SimList <- CalcRefLandings(SimList, HistYears, ProjYears, "Removals", Calc = Reference$Removals)
-  # }
-
   
   # ---- Remove temporary lists and arrays from Hist@Misc ----
   # see PrepHistMisc above
@@ -125,14 +113,8 @@ Simulate_om <- function(OM = NULL,
     Hist <- GenerateHistoricalData(Hist)
   
   
-
-  return(Hist)
-  
-  stop()
- 
   # TODO 
   # - Ref Points
-  # - Ref Yield 
   # show Hist
   # show - Data
   # show - Obs
@@ -140,7 +122,16 @@ Simulate_om <- function(OM = NULL,
   
   # ---- Reduce Dimension Size ----
   Hist <- ReduceHist(Hist, Reduce)
-
+  
+  
+  # ---- Report Run Time ----
+  EndTime <- Sys.time()
+  
+  elapse_secs <- round(difftime(time1 = EndTime, time2 = StartTime, units = "secs"),2) |> as.numeric()
+  elapse_auto <- round(difftime(time1 = EndTime, time2 = StartTime, units = "auto"),2) |> format()
+  if (!silent)
+    cli::cli_alert_success('Completed {.val Simulate} ({elapse_auto})') 
+  
   SetDigest(Hist)
 }
 

@@ -9,7 +9,6 @@
 #' @return The [OM()] or [Hist()] with reduced `nSim`
 #' 
 #' @example man-examples/ReduceNSim.R
-#' @seealso [Reduce()]
 #' @export
 ReduceNSim <- function(object, nSim = NULL) {
   if (is.null(nSim)) {

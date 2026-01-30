@@ -1,4 +1,28 @@
 
+#' Generate Historical Fishing Effort Data
+#'
+#' Internal function to generate simulated historical fleet effort
+#' when real observations are not available.
+#'
+#' Uses conditioned observation objects to apply fleet-specific bias
+#' and observation error to historical effort data. If real effort
+#' data already exist, or no observation structure is defined, the
+#' existing data are returned unchanged.
+#'
+#' @param x Integer index of the simulation replicate to extract
+#' @param Data Fishery data object to populate
+#' @param Hist Operating model history object
+#' @param HistYears Numeric vector of historical years
+#' @param i Integer index of observed data set
+#' @param stocks Integer vector of stock indices in the complex
+#' @param FleetNames Character vector of fleet names
+#' @param defaultCV Numeric default coefficient of variation applied
+#'   when no fleet-specific CV is provided
+#'
+#' @return An object of class `effortdata` containing simulated
+#'   historical effort values and CVs
+#'
+#' @keywords internal
 GenHistData_Effort <- function(x, Data, Hist, HistYears, i, stocks, FleetNames, defaultCV=0.2) {
   
   # don't simulate data if real data exists

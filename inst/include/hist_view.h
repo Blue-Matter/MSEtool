@@ -231,13 +231,13 @@ inline HistView::HistView(std::nullptr_t,
   for (int st = 0; st < nStock; ++st) {
      
     check_rank(NumberList[st], 4, "Number");
-    Number.emplace_back(as_ArrayND<4>(NumberList[st]));
-    LandingsAtAge.emplace_back(as_ArrayND<5>(LandAgeList[st]));
-    DiscardsAtAge.emplace_back(as_ArrayND<5>(DiscAgeList[st]));
-    FDead.emplace_back(as_ArrayND<4>(FDeadList[st]));
-    FRetain.emplace_back(as_ArrayND<4>(FRetainList[st]));
-    FDeadArea.emplace_back(as_ArrayND<5>(FDeadAreaList[st]));
-    FRetainArea.emplace_back(as_ArrayND<5>(FRetainAreaList[st]));
+    Number.emplace_back(as_ArrayND<4>(NumberList[st], "NumberList"));
+    LandingsAtAge.emplace_back(as_ArrayND<5>(LandAgeList[st], "LandAgeList"));
+    DiscardsAtAge.emplace_back(as_ArrayND<5>(DiscAgeList[st], "DiscAgeList"));
+    FDead.emplace_back(as_ArrayND<4>(FDeadList[st], "FDeadList"));
+    FRetain.emplace_back(as_ArrayND<4>(FRetainList[st], "FRetainList"));
+    FDeadArea.emplace_back(as_ArrayND<5>(FDeadAreaList[st], "FDeadAreaList"));
+    FRetainArea.emplace_back(as_ArrayND<5>(FRetainAreaList[st], "FRetainAreaList"));
     
     // Size comps per fleet
     Rcpp::List LS = LandSizeList[st];
@@ -250,8 +250,8 @@ inline HistView::HistView(std::nullptr_t,
     ds.reserve(nFleet);
     
     for (int fl = 0; fl < nFleet; ++fl) {
-      ls.emplace_back(as_ArrayND<4>(LS[fl]));
-      ds.emplace_back(as_ArrayND<4>(DS[fl]));
+      ls.emplace_back(as_ArrayND<4>(LS[fl], "LS"));
+      ds.emplace_back(as_ArrayND<4>(DS[fl], "DS"));
     }
     
     LandingsAtSize.emplace_back(std::move(ls));
