@@ -123,7 +123,7 @@ SubsetSim <- function(object, Sims, debug = FALSE) {
     if (!is.null(dnames) && "Sim" %in% names(dnames)) {
       SimVals <- as.numeric(dnames$Sim)
       
-      ## early exit: nothing to subset
+      ## nothing to subset
       if (max(SimVals) < max(Sims)) {
         return(object)
       }

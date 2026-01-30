@@ -45,10 +45,14 @@ Simulate_om <- function(OM = NULL,
 
   # ---- Calculate Unfished Equilibrium and Dynamic ----
   if (DynamicUnfished) 
-    Hist@Unfished@Dynamic <- CalcUnfished_Dynamic(Hist, IdenticalHist, silent=silent)
+    Hist@Unfished@Dynamic <- CalcUnfished_Dynamic(Hist, 
+                                                  IdenticalHist, 
+                                                  silent)
   
   # ---- Optimize for Final Depletion ----
-  Hist <- OptFinalDepletion(Hist)
+  Hist <- OptFinalDepletion(Hist, silent = silent)
+  
+  # TODO - check that depletion converged on specified values
   
   
   # ---- Add Reference Points if they exist ----
@@ -84,6 +88,12 @@ Simulate_om <- function(OM = NULL,
 
   # ---- Calculate Reference Yield ----
   
+  stop()
+  
+  # - need to add dim names to Hist@Misc - not being subset internally!!
+  Hist <- CalcRefYield(Hist, 
+                       type='Landings',
+                       silent = silent)
   # TODO 
   # if (!inherits(Reference, "logical")) {
   #   if (Reference$Landings) {

@@ -105,8 +105,12 @@ PopulateMaturity <- function(Maturity,
       
     } else if (grepl("at-Weight", getModelClass(Maturity@Model))) {
       Maturity <- PopulateMeanAtWeight(
-        Maturity, Weight, Years, Ages, nSim,
-        seed, silent
+        object = Maturity, 
+        Weight = Weight, 
+        Years  = Years, 
+        Ages   = Ages,
+        seed   = seed,
+        silent = silent
       )
     } else {
       Maturity <- PopulateMeanAtAge(Maturity, Ages, Years)

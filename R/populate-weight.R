@@ -93,7 +93,13 @@ PopulateWeight <- function(Weight,
       # chk <- Check(Length, silent=TRUE)
       # if (!chk@populated) {
       CheckRequiredObject(Ages, "ages", "Ages")
-      Length <- PopulateLength(Length, Ages, Years, nSim, seed, AWK = TRUE, silent)
+      Length <- PopulateLength(Length = Length, 
+                               Ages = Ages, 
+                               Years = Years, 
+                               nSim = nSim, 
+                               ALK = TRUE, 
+                               seed = seed, 
+                               silent = silent)
       # }
       Weight <- PopulateMeanAtLength(
         object = Weight, 

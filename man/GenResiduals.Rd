@@ -17,7 +17,7 @@ GenResiduals(
 \arguments{
 \item{SD}{Numeric vector of length nSim giving standard deviation of residuals.}
 
-\item{AC}{Numeric vector of length nSim giving autocorrelation (must be in \link{-1,1}).}
+\item{AC}{Numeric vector of length nSim giving autocorrelation (must be between -1 and 1 inclusive).}
 
 \item{Years}{Numeric vector of years for which residuals are generated.}
 

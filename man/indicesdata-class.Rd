@@ -18,7 +18,7 @@ S4 class defining abundance or biomass index observations.
 
 \item{\code{Units}}{Character units of the index}
 
-\item{\code{Ref}}{Numeric array of reference values}
+\item{\code{Ref}}{Numeric vector length \code{nFleet} of reference values}
 
 \item{\code{RefCV}}{Numeric array of reference CVs}
 

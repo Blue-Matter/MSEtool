@@ -126,6 +126,108 @@ nFleet <- function(object) {
   
 }
 
+# Much quicker than apply
+sumOverDim <- function(x, dimName) {
+  
+  if (!is.array(x)) 
+    cli::cli_abort("`x` must be an array", .internal = TRUE)
+  
+  dn <- dimnames(x)
+  dims <- dim(x)
+  nd <- length(dims)
+  
+  # Determine which dimension to sum over
+  sumDim <- if (!is.null(dn) && dimName %in% names(dn)) {
+    match(dimName, names(dn))
+  } else {
+    nd  # last dimension if not named
+  }
+  
+  if (dims[sumDim] < 2) {
+    return(DropDimension(x, dimName))
+    
+  }
+  
+  # Move sumDim to last dimension
+  perm <- c(setdiff(seq_len(nd), sumDim), sumDim)
+  x_perm <- aperm(x, perm)
+  
+  new_dims <- dims[perm]
+  x_mat <- matrix(x_perm, ncol = new_dims[length(new_dims)])
+  
+  summed <- rowSums(x_mat)
+  
+  # Rebuild array without the summed dimension
+  out_dims <- new_dims[-length(new_dims)]
+  if (length(out_dims) == 0) out_dims <- 1
+  out <- array(summed, dim = out_dims)
+  
+  # Restore dimnames
+  if (!is.null(dn)) {
+    dn_new <- dn[-sumDim]
+    if (length(dn_new) > 0) dimnames(out) <- dn_new
+  }
+  
+  out
+}
+
+
+#' Sum over named array dimensions
+#'
+#' Convenience wrappers for summing an array over a specific named dimension.
+#' These functions provide fast, explicit alternatives to `apply()` when
+#' working with multi-dimensional arrays that use named dimensions.
+#'
+#'
+#' If the requested dimension name is present in `names(dimnames(x))`, that
+#' dimension is summed out. If the dimension is not named (or `x` has no
+#' dimension names), the **last dimension** of the array is summed by default.
+#' 
+#' ## Exported functions
+#' * `SumOverAge()` – sum over the `"Age"` dimension
+#' * `SumOverArea()` – sum over the `"Area"` dimension
+#' * `SumOverFleet()` – sum over the `"Fleet"` dimension
+#' * `SumOverStock()` – sum over the `"Stock"` dimension
+#' * `SumOverYear()` – sum over the `"Year"` dimension
+#'
+#' @param x An array. If the requested dimension is named, it will be summed
+#'   out; otherwise the last dimension is used as a fallback.
+#'
+#' @return
+#' An array with the specified dimension removed. Dimension names are preserved
+#' where possible.
+#'
+#'
+#' @rdname SumOverDim
+#' @export
+SumOverAge <- function(x) {
+  sumOverDim(x, dimName = "Age")
+}
+
+#' @rdname SumOverDim
+#' @export
+SumOverArea <- function(x) {
+  sumOverDim(x, dimName = "Area")
+}
+
+#' @rdname SumOverDim
+#' @export
+SumOverFleet <- function(x) {
+  sumOverDim(x, dimName = "Fleet")
+}
+
+#' @rdname SumOverDim
+#' @export
+SumOverStock <- function(x) {
+  sumOverDim(x, dimName = "Stock")
+}
+
+#' @rdname SumOverDim
+#' @export
+SumOverYear <- function(x) {
+  sumOverDim(x, dimName = "Year")
+}
+
 
 
 
@@ -358,74 +460,8 @@ CopyFirstSim <- function(x) {
 }
 
 
-# Much quicker than apply
-sumOverDim <- function(x, dimName) {
-  
-  if (!is.array(x)) 
-    cli::cli_abort("`x` must be an array", .internal = TRUE)
-  
-  dn <- dimnames(x)
-  dims <- dim(x)
-  nd <- length(dims)
-  
-  # Determine which dimension to sum over
-  sumDim <- if (!is.null(dn) && dimName %in% names(dn)) {
-    match(dimName, names(dn))
-  } else {
-    nd  # last dimension if not named
-  }
-  
-  if (dims[sumDim] < 2) {
-    return(DropDimension(x, dimName))
-    
-  }
-  
-  # Move sumDim to last dimension
-  perm <- c(setdiff(seq_len(nd), sumDim), sumDim)
-  x_perm <- aperm(x, perm)
-  
-  new_dims <- dims[perm]
-  x_mat <- matrix(x_perm, ncol = new_dims[length(new_dims)])
-  
-  summed <- rowSums(x_mat)
-  
-  # Rebuild array without the summed dimension
-  out_dims <- new_dims[-length(new_dims)]
-  if (length(out_dims) == 0) out_dims <- 1
-  out <- array(summed, dim = out_dims)
-  
-  # Restore dimnames
-  if (!is.null(dn)) {
-    dn_new <- dn[-sumDim]
-    if (length(dn_new) > 0) dimnames(out) <- dn_new
-  }
-  
-  out
-}
 
-#' Sum over Age dimension
-#'
-#' Internal function to sum an array over its Age dimension.
-#'
-#' @param x Array with a named Age dimension.
-#' @param age_dim Character, name of the Age dimension. Defaults to "Age".
-#' @return Array with Age dimension summed out.
-#' @keywords internal
-SumOverAge <- function(x, age_dim = "Age") {
-  sumOverDim(x, dimName = age_dim)
-}
 
-#' Sum over Area dimension
-#'
-#' Internal function to sum an array over its Area dimension.
-#'
-#' @param x Array with a named Area dimension.
-#' @param area_dim Character, name of the Area dimension. Defaults to "Area".
-#' @return Array with Area dimension summed out. 
-#' @keywords internal
-SumOverArea <- function(x, area_dim = "Area") {
-  sumOverDim(x, dimName = area_dim)
-}
 
 #' Get last non-NA residual per simulation
 #'

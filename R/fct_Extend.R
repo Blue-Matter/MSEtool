@@ -59,7 +59,7 @@ Extend <- function(array,
   if (debug) {
     print(class(array))
   }
-
+  
   # Recall if not an `array` class object
   if (isS4(array)) {
     if (inherits(array, "data")) {
