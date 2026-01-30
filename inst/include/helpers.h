@@ -53,66 +53,70 @@ Slot2Array5D(Rcpp::S4& obj, const char* slot) {
 }
 
 
+// Broadcast dimension i  
+template <size_t N, class ArrayType>
+inline int broadcast_dim(int x, const ArrayType& arr, int i) {
+  static_assert(N > 0, "broadcast_dim: array must have at least one dimension (N>0)");
+  
+  if (i < 0 || i >= static_cast<int>(N)) {
+    Rcpp::stop("broadcast_dim(): dimension index out of bounds");
+  }
+  
+  const int d = arr.dim[i];
 
+  if (d == 1)      return 0;
+  if (x < d)       return x;
 
-// Calculate nSim for generic set of lists or arrays
-inline void update_nSim(int& nSim, int candidate) {
-  if (candidate > nSim) nSim = candidate;
+  Rcpp::stop("broadcast_dim(): dimension length incompatible with index");
 }
 
-template <size_t N>
-inline void infer_nSim_from(int& nSim, const ArrayND<N>& x) {
-  update_nSim(nSim, x.dim[0]);
-}
 
-inline void infer_nSim_from(int& nSim, const Rcpp::List& L) {
-  for (int i = 0; i < L.size(); ++i) {
-    if (Rcpp::is<Rcpp::NumericVector>(L[i])) {
-      Rcpp::NumericVector arr = L[i];
-      if (!arr.hasAttribute("dim")) continue;
-      Rcpp::IntegerVector dim = arr.attr("dim");
-      if (dim.size() >= 1) {
-        update_nSim(nSim, dim[0]);
-      }
+template <size_t N, class ArrayType>
+inline int sim_index(int sim, const ArrayType& arr, const char* name) {
+  try {
+    return broadcast_dim<N>(sim, arr, 0);
+  } catch (...) {
+    Rcpp::stop("sim_index(): incompatible sim dimension in " + std::string(name));
+  }
+} 
+
+
+// Dimension checks 
+template <size_t N, class ArrayType>
+inline void check_dims(const ArrayType& arr,
+                       const std::array<int, N>& expected,
+                       const char* name,
+                       int y = -1,
+                       int t_ind = -1) {
+  static_assert(N > 0, "check_dims: array must have at least one dimension (N>0)");
+  
+  for (size_t i = 0; i < N; ++i) {
+    if (i == 0 && (arr.dim[0] != 1 && arr.dim[0] != expected[0])) {
+      Rcpp::stop(std::string(name) + ": dimension 0 (sim) mismatch");
     } 
+    else if (i != 0 && arr.dim[i] != expected[i]) {
+      Rcpp::stop(std::string(name) + ": dimension " + std::to_string(int(i)) + " mismatch");
+
+    }
+  }
+
+  // Optional y-bound check for time dimension 
+  if (y >= 0 && t_ind >= 0 && t_ind < static_cast<int>(N)) {
+    if (y >= arr.dim[t_ind]) {
+      Rcpp::stop(std::string(name) + ": y index out of bounds (dimension " + std::to_string(t_ind) + ")");
+    }
+  } 
+} 
+
+
+inline void check_years_argument(SEXP Years, const char* name) {
+  if (!Rf_isNumeric(Years)) {
+    Rcpp::stop(std::string("Argument `") + name + "` must be a numeric vector");
+  }
+  
+  if (Rf_length(Years) == 0) {
+    Rcpp::stop(std::string("Argument `") + name + "` cannot be empty");
   }
 }
-
-template <typename... Args>
-inline int infer_nSim(const Args&... args) {
-  int nSim = 0;
-  (infer_nSim_from(nSim, args), ...);
-  if (nSim == 0)
-    Rcpp::stop("infer_nSim(): could not infer nSim from inputs");
-  return nSim;
-}
-
-template <size_t N>
-inline void infer_nSim_from(int& nSim, const ArrayViewND<N>& x) {
-  update_nSim(nSim, x.dim[0]);
-}
-
-template <size_t N>
-inline void infer_nSim_from(int& nSim, const ConstArrayViewND<N>& x) {
-  update_nSim(nSim, x.dim[0]);
-}
-
-template <size_t N>
-inline void infer_nSim_from(int& nSim,
-                            const std::vector<ArrayND<N>>& v) {
-  for (const auto& x : v) {
-    update_nSim(nSim, x.dim[0]);
-  }
-}
-
-template <size_t N>
-inline void infer_nSim_from(int& nSim,
-                            const std::vector<ConstArrayViewND<N>>& v) {
-  for (const auto& x : v) {
-    update_nSim(nSim, x.dim[0]);
-  }
-}
-
-
 
 #endif // HELPERS_H

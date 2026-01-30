@@ -74,7 +74,9 @@ SolveFResult SolveForF(
         double Fint = res.ApicalF[fl] * SelectivityAtAge[age][fl];
         double Fret = Fint * RetentionAtAge[age][fl];
         double Fdisc = Fint - Fret;
-        double Fdead = Fret + Fdisc * DiscardMortAtAge[age][fl];
+        
+        double discMort = std::clamp(DiscardMortAtAge[age][fl], 0.0, 1.0);
+        double Fdead = Fret + Fdisc * discMort;
         
         res.FDeadAtAge[age][fl] = Fdead;
         res.FRetainAtAge[age][fl] = Fret;
@@ -93,6 +95,7 @@ SolveFResult SolveForF(
         // --- sum Z over all fleets ---
         double Z = NaturalMortalityAtAge[age];
         for(int f2=0; f2<nFleet; ++f2) Z += res.FDeadAtAge[age][f2];
+        Z = std::max(Z, 1e-12);
         double Fdead_fl = res.FDeadAtAge[age][fl];
         
         double catchFrac = (Fdead_fl / Z) * (1.0 - std::exp(-Z));
@@ -123,6 +126,8 @@ SolveFResult SolveForF(
     }
     
     if(converged) break;
+    
+    if(iter == MaxIt-1) Rcpp::Rcout << "Warning: SolveForF did not converge for some fleets\n";
     
     if(debug){
       Rcpp::Rcout << "Iter " << iter << ": ApicalF = ";

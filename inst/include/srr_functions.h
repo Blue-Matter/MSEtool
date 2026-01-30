@@ -7,6 +7,7 @@
 #include "array_nd.h"
 #include "array_views.h"
 #include "array_types.h"
+#include "helpers.h"
 
 using namespace Rcpp;
 
@@ -74,34 +75,42 @@ inline double EvalSRR(
     int y) {
   
   if (pars_st.empty()) {
-    Rcpp::stop("SRR model %d called with zero parameters", model);
+    Rcpp::stop("SRR model %d called with zero parameters" + std::to_string(model));
   }
   
   switch (model) {
 
-  case SRR_BEVERTON_HOLT:
+  case SRR_BEVERTON_HOLT: {
+    const int sim_h = sim_index<2>(sim, pars_st[0], "SRR h");
     return BevertonHolt_kernel(
       S,
       S0,
       R0,
-      pars_st[0](sim, y) // h
+      pars_st[0](sim_h, y) // h
     );
-  case SRR_RICKER: 
+  }
+
+  case SRR_RICKER: {
+    const int sim_hR = sim_index<2>(sim, pars_st[0], "SRR hR");
     return Ricker_kernel(
       S,
       S0,
       R0,
-      pars_st[0](sim, y) // hR
+      pars_st[0](sim_hR, y) // hR
     );
-    
-    
-  case SRR_HOCKEY_STICK: 
+  }
+
+  
+  case SRR_HOCKEY_STICK: {
+    const int sim_Sh = sim_index<2>(sim, pars_st[0], "SRR Shinge");
     return HockeyStick_kernel(
       S,
       S0,
       R0,
-      pars_st[0](sim, y) // Shinge
+      pars_st[0](sim_Sh, y) // Shinge
     );
+  }
+ 
   default: 
     Rcpp::stop("Unknown SRR model code");
   }

@@ -58,7 +58,7 @@ struct ArrayND {
     Rcpp::IntegerVector d = x.attr("dim");
     
     if (d.size() != static_cast<int>(N)) {
-      Rcpp::stop("ArrayND: expected %dD array", N);
+      Rcpp::stop("ArrayND: expected " + std::to_string(N) + "D array");
     }
     
     for (size_t i = 0; i < N; ++i) {

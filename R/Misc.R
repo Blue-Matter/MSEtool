@@ -92,7 +92,7 @@ ptnorm <- function(q, mean, sd, truncsd) {
 #'
 #' Generates random deviates from a normal distribution with mean `mu`
 #' and standard deviation `sigma`, truncated to the interval
-#' [`lower`, `upper`].
+#' `lower`, `upper`.
 #'
 #' Arguments `mu`, `sigma`, `lower`, and `upper` follow standard R recycling
 #' rules. An error is raised if the truncation interval has zero probability
@@ -412,13 +412,17 @@ isNewObject <- function(object) {
       newobj <- DiscardMortality()
   } else {
     chk <- try(get(firstup(cl)), silent=TRUE)
+    
     if (inherits(chk, 'try-error')) {
-      return(FALSE)
+      newobj <- new(class(object))
+    } else {
+      newobj <- get(firstup(cl))()
     }
-    newobj <- get(firstup(cl))()
+    
   }
 
   identical(object, newobj)
+  
 }
 
 EmptyObject <- function(object) {

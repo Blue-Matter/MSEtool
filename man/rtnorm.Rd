@@ -23,7 +23,7 @@ A numeric vector of length \code{n} containing truncated normal draws
 \description{
 Generates random deviates from a normal distribution with mean \code{mu}
 and standard deviation \code{sigma}, truncated to the interval
-.
+\code{lower}, \code{upper}.
 }
 \details{
 Arguments \code{mu}, \code{sigma}, \code{lower}, and \code{upper} follow standard R recycling

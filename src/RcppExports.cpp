@@ -117,14 +117,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // CalcFisheryDynamics_
-Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn, Rcpp::NumericVector Years, Rcpp::NumericVector AllYears, std::vector<int> Sims, const int nSim, const int nStock, const int nFleet, const int nArea, const int DoCalcCatch, const int DoCalcaggF);
+Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn, SEXP Years, SEXP AllYears, std::vector<int> Sims, const int nSim, const int nStock, const int nFleet, const int nArea, const int DoCalcCatch, const int DoCalcaggF);
 RcppExport SEXP _MSEtool_CalcFisheryDynamics_(SEXP HistInSEXP, SEXP YearsSEXP, SEXP AllYearsSEXP, SEXP SimsSEXP, SEXP nSimSEXP, SEXP nStockSEXP, SEXP nFleetSEXP, SEXP nAreaSEXP, SEXP DoCalcCatchSEXP, SEXP DoCalcaggFSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::S4 >::type HistIn(HistInSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Years(YearsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type AllYears(AllYearsSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type Years(YearsSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type AllYears(AllYearsSEXP);
     Rcpp::traits::input_parameter< std::vector<int> >::type Sims(SimsSEXP);
     Rcpp::traits::input_parameter< const int >::type nSim(nSimSEXP);
     Rcpp::traits::input_parameter< const int >::type nStock(nStockSEXP);

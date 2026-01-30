@@ -24,8 +24,8 @@ inline void NormalizeSims(std::vector<int>& Sims, int nSim) {
 
 // [[Rcpp::export]]
 Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
-                              Rcpp::NumericVector Years, // Years to loop over
-                              Rcpp::NumericVector AllYears,
+                              SEXP Years, // Years to loop over
+                              SEXP AllYears,
                               std::vector<int> Sims,
                               const int nSim,
                               const int nStock,
@@ -35,22 +35,44 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                               const int DoCalcaggF=1         // calculate overall F?   
 ) {
   
-  Rcpp::S4 Hist = Rcpp::clone(HistIn); 
-  HistView hv(Hist, nSim, nStock, nFleet, nArea);
+  // Checks 
+  check_years_argument(Years, "Years");
+  NumericVector years(Years);
   
-  // Time Steps
-  std::vector<int> ts_index = CalcTSIndex(Years, AllYears); // time-step index 
+  check_years_argument(AllYears, "AllYears");
+  NumericVector all_years(AllYears);
   
-  for (int i : ts_index) {
-    if (i < 0 || i >= AllYears.size())
-      Rcpp::stop("Invalid time index %d from CalcTSIndex()", i);
-  }
+  if (nSim < 1)
+    Rcpp::stop("nSim < 1");
   
-  int nTS = ts_index.size();
+  if (nStock < 1)
+    Rcpp::stop("nStock < 1");
+  
+  if (nFleet < 1)
+    Rcpp::stop("nFleet < 1");
+  
+  if (nArea < 1)
+    Rcpp::stop("nArea < 1");
   
   // zero index Sims
   NormalizeSims(Sims, nSim);
   
+  
+  // Clone hist object
+  Rcpp::S4 Hist = Rcpp::clone(HistIn); 
+  
+  // create HistView object 
+  HistView hv(Hist, nSim, nStock, nFleet, nArea);
+  
+  // Time Steps
+  std::vector<int> ts_index = CalcTSIndex(years, all_years); // time-step index
+  for (int i : ts_index) {
+    if (i < 0 || i >= all_years.size())
+      Rcpp::stop("Invalid time index " + std::to_string(i) + "from CalcTSIndex()");
+  }
+  int nTS = ts_index.size();
+  
+
   // Loop over time steps in Years
   for (int ts = 0; ts < nTS; ++ts) { 
     
@@ -188,7 +210,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     
     // ---------------------------------------------------------
     // Calculate Catch (if applicable)
-    // src: inst/include/...
+    // src: inst/include/calc_catch.h
     // ---------------------------------------------------------
     
     
@@ -215,7 +237,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     
     // ---------------------------------------------------------
     // Calculate overall F (if applicable)
-    // src: inst/include/...
+    // src: inst/include/cacl_overall_f.h
     // ---------------------------------------------------------
     
     if (DoCalcaggF) {

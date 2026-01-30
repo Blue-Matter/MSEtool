@@ -9,7 +9,7 @@ ApplyAC(LogResid, AC, LastError)
 \arguments{
 \item{LogResid}{Numeric matrix of log residuals, dimensions nSim x nYear.}
 
-\item{AC}{Numeric vector of length nSim, autocorrelation coefficient per simulation (must be in \link{-1,1}).}
+\item{AC}{Numeric vector of length nSim, autocorrelation coefficient per simulation (must be in between -1 &  1).}
 
 \item{LastError}{Numeric vector of length nSim, starting value for each simulation.}
 }

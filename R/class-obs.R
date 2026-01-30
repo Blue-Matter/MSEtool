@@ -18,6 +18,7 @@ setClass(
     Error = "num.array.null",
     Bias  = "num.array.null",
     Years = "num.null",
+    Units = "char.null",
     Ref   = "num.array.null",
     Misc  = "list"
   )
@@ -43,6 +44,7 @@ setClass(
     Error = "num.array.null",
     Bias  = "num.array.null",
     Years = "num.null",
+    Units = "char.null",
     Ref   = "num.array.null",
     Misc  = "list"
   )
@@ -74,6 +76,7 @@ setClass(
     AC          = "num.array.null",
     Years       = "num.array.null",
     Areas       = "num.null",
+    Units       = "char.null",
     Selectivity = "array.char.num.list",
     Type        = "character",
     Ref         = "num.array.null",

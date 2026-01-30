@@ -9,18 +9,19 @@
 // Lightweight structural guards
 inline void check_rank(SEXP x, int expected, const char* name) {
   if (!Rf_isNumeric(x) && !Rf_isInteger(x)) {
-    Rcpp::stop("%s must be numeric", name);
+    Rcpp::stop(std::string(name) + " must be numeric");
   }
   
   SEXP dim = Rf_getAttrib(x, R_DimSymbol);
   if (Rf_isNull(dim) || Rf_length(dim) != expected) {
-    Rcpp::stop("%s must be a %dD array", name, expected);
+    Rcpp::stop(std::string(name) + " must be a " + std::to_string(expected) + "D array");
   }
 }
 
 inline void check_size(int got, int expected, const char* name) {
   if (got != expected) {
-    Rcpp::stop("%s has wrong size (%d != %d)", name, got, expected);
+    Rcpp::stop(std::string(name) + " has wrong size (" + 
+      std::to_string(got) + " != " + std::to_string(expected) + ")");
   }
 } 
 
@@ -30,7 +31,7 @@ inline void validate_Hist_misc(Rcpp::S4& Hist) {
   
   auto require_misc = [&](const char* nm, int rank) {
     if (!Misc.containsElementNamed(nm))
-      Rcpp::stop("Hist@Misc$%s is missing", nm);
+      Rcpp::stop(std::string("Hist@Misc$") + nm + " is missing");
     check_rank(Misc[nm], rank, nm);
   };
    
@@ -343,26 +344,27 @@ inline HistView::HistView(std::nullptr_t,
     RecDevs.emplace_back(as_ConstArrayViewND<2>(RecDevsList[st]));
     
     if (RecLagVec[st] < 0)
-      Rcpp::stop("RecLag must be non-negative for stock %d", st+1);
+      Rcpp::stop("RecLag must be non-negative for stock " + std::to_string(st+1));
     RecLag.emplace_back(RecLagVec[st]);
     
     // SRR model
     const int model = SRR_Model_Vec[st];
     if (model < 0 || model > 2) {
-      Rcpp::stop(
-        "Invalid SRR_Model for stock %d (got %d, expected 0, 1, or 2)",
-        st + 1, model
-      );
+      Rcpp::stop("Invalid SRR_Model for stock " + std::to_string(st+1) +
+        " (got " + std::to_string(model) + ", expected 0, 1, or 2)");
     }
-    if (model == 0 && pars_st.size() != 1)
-      Rcpp::stop("Beverton-Holt requires 1 SRR parameter (h) for stock %d", st+1);
     
-    if (model == 1 && pars_st.size() != 1)
-      Rcpp::stop("Ricker requires 1 SRR parameter for stock %d", st+1);
+    if (model == 0 && pars_st.size() != 1) {
+      Rcpp::stop("Beverton-Holt requires 1 SRR parameter (h) for stock " + std::to_string(st+1));
+    }
     
-    if (model == 2 && pars_st.size() != 1)
-      Rcpp::stop("Hockey-stick requires 1 SRR parameter (Shinge) for stock %d", st+1);
+    if (model == 1 && pars_st.size() != 1) {
+      Rcpp::stop("Ricker requires 1 SRR parameter for stock " + std::to_string(st+1));
+    }
     
+    if (model == 2 && pars_st.size() != 1) {
+      Rcpp::stop("Hockey-stick requires 1 SRR parameter (Shinge) for stock " + std::to_string(st+1));
+    }
     SRR_Model.emplace_back(model);
   }
   

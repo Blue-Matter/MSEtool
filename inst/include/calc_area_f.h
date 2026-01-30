@@ -13,30 +13,34 @@ inline void CalcArea_F(
     const int y,
     const std::vector<int>& Sims,
     const int nSim,
-    std::vector<Array5D>& FDeadArea,
-    std::vector<Array5D>& FRetainArea,
-    const std::vector<ConstArrayView5D>& SelAge,
-    const std::vector<ConstArrayView5D>& RetAge,
-    const std::vector<ConstArrayView5D>& DiscMort,
-    const Array4D& Distribution,
-    const ConstArrayView4D& q,
-    const Array3D& Effort,
-    const ConstArrayView2D& RelSize,
-    const double maxF,
+    std::vector<Array5D>& FDeadArea,                  // [stock] sim, age, year, fleet, area
+    std::vector<Array5D>& FRetainArea,                // [stock] sim, age, year, fleet, area
+    const std::vector<ConstArrayView5D>& SelAge,      // [stock] sim, age, year, fleet, area
+    const std::vector<ConstArrayView5D>& RetAge,      // [stock] sim, age, year, fleet, area
+    const std::vector<ConstArrayView5D>& DiscMort,    // [stock] sim, age, year, fleet, area
+    const Array4D& Distribution,                      // sim, year, fleet, area
+    const ConstArrayView4D& q,                        // sim, stock, year, fleet          
+    const Array3D& Effort,                            // sim, year, fleet
+    const ConstArrayView2D& RelSize,                  // sim, area
+    const double maxF,  
     const int nStock,
     const int nFleet,
     const int nArea) {
 
-  // checks 
-  if (Distribution.dim[1] <= y)
-    Rcpp::stop("Distribution: y out of bounds");
+
+  // Checks
+  if ((int)FDeadArea.size() < nStock ||
+      (int)FRetainArea.size() < nStock ||
+      (int)SelAge.size() < nStock ||
+      (int)RetAge.size() < nStock ||
+      (int)DiscMort.size() < nStock)
+    Rcpp::stop("Stock-level input list shorter than nStock");
   
-  if (Effort.dim[1] <= y)
-    Rcpp::stop("Effort: y out of bounds");
-  
-  if (q.dim[2] <= y)
-    Rcpp::stop("q: y out of bounds");
-  
+  check_dims<4>(Distribution, {nSim, Distribution.dim[1], nFleet, nArea}, "Distribution", y, 1);
+  check_dims<4>(q, {nSim, nStock, q.dim[2], nFleet}, "q", y, 2);
+  check_dims<3>(Effort, {nSim, Effort.dim[1], nFleet}, "Effort", y, 1);
+  check_dims<2>(RelSize, {nSim, nArea}, "RelSize");
+
   if (!std::isfinite(maxF) || maxF < 0.0) {
     Rcpp::stop("Invalid `maxF`");
   }
@@ -45,10 +49,14 @@ inline void CalcArea_F(
   Array3D EffortDensity({nSim, nFleet, nArea}, 0.0);
   for (int sim : Sims) {
     for (int fl = 0; fl < nFleet; ++fl) {
-      const double E = Effort(sim, y, fl);
+      const int sim_ef  = sim_index<3>(sim, Effort, "Effort");
+      const int sim_dist  = sim_index<4>(sim, Distribution, "Distribution");
+      const int sim_rs = sim_index<2>(sim, RelSize, "RelSize");
+      
+      const double E = Effort(sim_ef, y, fl);
       for (int ar = 0; ar < nArea; ++ar) {
-        const double rs = RelSize(sim, ar);
-        EffortDensity(sim, fl, ar) = (rs > 0.0) ? E * Distribution(sim, y, fl, ar) / rs  : 0.0;
+        const double rs = RelSize(sim_rs, ar);
+        EffortDensity(sim, fl, ar) = (rs > 0.0) ? E * Distribution(sim_dist, y, fl, ar) / rs  : 0.0;
       }
     }
   }
@@ -56,40 +64,40 @@ inline void CalcArea_F(
   // Calc F-at-age 
   for (int st = 0; st < nStock; ++st) {
     
-    auto& Fd  = FDeadArea[st];
-    auto& Fr  = FRetainArea[st];
+    auto& Fd  = FDeadArea[st];        // sim, age, year, fleet, area
+    auto& Fr  = FRetainArea[st];      // sim, age, year, fleet, area
   
-    const auto& S  = SelAge[st];
-    const auto& R  = RetAge[st];
-    const auto& DM = DiscMort[st];
-  
+    const auto& S  = SelAge[st];      // sim, age, year, fleet, area
+    const auto& R  = RetAge[st];      // sim, age, year, fleet, area
+    const auto& DM = DiscMort[st];    // sim, age, year, fleet, area
+    
     const int nAge = Fd.dim[1];
     
-    if (S.dim[1] != nAge || R.dim[1] != nAge || DM.dim[1] != nAge)
-      Rcpp::stop("Age dimension mismatch in stock %d", st + 1);
-    
-   
-    if (Fd.dim[0] != nSim)
-      Rcpp::stop("FDeadArea sim dimension must equal nSim");
-    
-    if (Fr.dim[0] != nSim)
-      Rcpp::stop("FRetainArea sim dimension must equal nSim");
+    check_dims<5>(S, {nSim, nAge, S.dim[2], nFleet, nArea}, "SelAge", y, 2);
+    check_dims<5>(R, {nSim, nAge, R.dim[2], nFleet, nArea}, "RetAge", y, 2);
+    check_dims<5>(DM, {nSim, nAge, DM.dim[2], nFleet, nArea}, "DiscMort", y, 2);
     
     for (int sim : Sims) {
-
+      
+      const int sim_q   = sim_index<4>(sim, q, "q");
+      const int sim_sel = sim_index<5>(sim, S, "S");
+      const int sim_ret = sim_index<5>(sim, R, "R");
+      const int sim_dm  = sim_index<5>(sim, DM, "DiscMort");
+      
       for (int fl = 0; fl < nFleet; ++fl) {
-        const double q_fl = q(sim, st, y, fl);
+
+        const double q_fl = q(sim_q, st, y, fl);
       
         for (int ar = 0; ar < nArea; ++ar) {
           const double q_eff = q_fl * EffortDensity(sim, fl, ar);
           
           if (q_eff <= 0.0) continue;
           for (int age = 0; age < nAge; ++age) {
-            double F_interact = q_eff * S(sim, age, y, fl, ar);
+            double F_interact = q_eff * S(sim_sel, age, y, fl, ar);
             if (F_interact > maxF) F_interact = maxF;
             
-            const double F_retain = F_interact * R(sim, age, y, fl, ar);
-            const double F_disc = (F_interact - F_retain) * DM(sim, age, y, fl, ar);
+            const double F_retain = F_interact * R(sim_ret, age, y, fl, ar);
+            const double F_disc = (F_interact - F_retain) * DM(sim_dm, age, y, fl, ar);
             Fd(sim, age, y, fl, ar) = F_retain + F_disc;
             Fr(sim, age, y, fl, ar) = F_retain;
             

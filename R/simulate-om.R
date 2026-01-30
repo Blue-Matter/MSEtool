@@ -29,7 +29,7 @@ Simulate_om <- function(OM = NULL,
   
   # ---- Make Hist Object ----
   Hist <- Hist(OM, silent)
-  
+
   # ---- Calculate Equilibrium Unfished ----
   Hist@Unfished@Equilibrium <- CalcUnfished_Equilibrium(OM, silent)
 
@@ -42,12 +42,10 @@ Simulate_om <- function(OM = NULL,
   # ---- Add temporary lists and arrays to Hist@Misc ----
   # use for easy acces in C++  - removed later
   Hist <- PrepHistMisc(Hist) 
-  
 
   # ---- Calculate Unfished Equilibrium and Dynamic ----
-  if (DynamicUnfished) {
+  if (DynamicUnfished) 
     Hist@Unfished@Dynamic <- CalcUnfished_Dynamic(Hist, IdenticalHist, silent=silent)
-  }
   
   # ---- Optimize for Final Depletion ----
   Hist <- OptFinalDepletion(Hist)
@@ -78,13 +76,12 @@ Simulate_om <- function(OM = NULL,
   
   
   # ---- Historical Population Dynamics ----
-  # Hist <- CalcFisheryDynamics(Hist, IdenticalSim=IdenticalHist)
-  Hist <- CalcFisheryDynamics(Hist, IdenticalSim=FALSE)
-  
-  if (!silent) cli::cli_alert_success("Simulated Historical Fishery")
+  Hist <- CalcFisheryDynamics(Hist, IdenticalSim=IdenticalHist)
 
- 
-  
+  if (!silent)
+    cli::cli_alert_success("Simulated Historical Fishery")
+
+
   # ---- Calculate Reference Yield ----
   
   # TODO 
@@ -106,25 +103,38 @@ Simulate_om <- function(OM = NULL,
   # ---- Remove temporary lists and arrays from Hist@Misc ----
   # see PrepHistMisc above
   Hist <- RestoreHistMisc(Hist)
-  
-  
+
   # ---- Condition Observation Object on Real Fishery Data ----
-  if (ConditionObs) Hist <- ConditionObs(Hist, silent)
+  if (ConditionObs) 
+    Hist <- ConditionObs(Hist, silent)
+  
+  
+  # ---- Historical Fishery Data ----
+  
+  if (GenerateData) 
+    Hist <- GenerateHistoricalData(Hist)
+  
   
 
-  # ---- Historical Fishery Data ----
-  if (GenerateData) {
-    SimList <- GenerateHistoricalData(SimList, HistYears)
-  }
-
-  # ---- Aggregate SimList into Hist object ----
-  Hist <- SimList2Hist(Hist, SimList, HistYears)
-
+  return(Hist)
+  
+  stop()
+ 
+  # TODO 
+  # - Ref Points
+  # - Ref Yield 
+  # show Hist
+  # show - Data
+  # show - Obs
+  # - reduce?
+  
   # ---- Reduce Dimension Size ----
   Hist <- ReduceHist(Hist, Reduce)
 
   SetDigest(Hist)
 }
+
+
 
 
 

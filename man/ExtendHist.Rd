@@ -22,7 +22,9 @@ implementation-, and time-series components along the year dimension while
 preserving existing values.
 }
 \details{
-The extension is applied consistently across simulations, stocks, fleets,
-areas, and age classes as appropriate for each component.
+Years in the \code{OM} object are only extended if the \code{Years} dimensions
+for a particular array  is greater than one.
+
+Simulations are not extended in the \code{OM} object.
 }
 \keyword{internal}

@@ -10,20 +10,28 @@
 #include "array_types.h"
 #include "helpers.h"
 
-// Calculates numbers at beginning of next time step and distribute over aresa
+// Calculates numbers at beginning of next time step and distribute over areas
 inline void CalcNumberNext(
     const int y,
     const std::vector<int>& Sims,
     const int nSim,
-    std::vector<Array4D>& Number,
-    const std::vector<Array5D>& FDeadArea,
-    const std::vector<ConstArrayView3D> NaturalMortality,
-    const std::vector<ConstArrayView3D> Semelparous,
-    const ConstArrayView1D PlusGroup,
-    const std::vector<ConstArrayView5D> Movement,
+    std::vector<Array4D>& Number,                           // [stock] sim, age, year, area
+    const std::vector<Array5D>& FDeadArea,                  // [stock] sim, age, year, fleet, area
+    const std::vector<ConstArrayView3D> NaturalMortality,   // [stock] sim, age, year
+    const std::vector<ConstArrayView3D> Semelparous,        // [stock] sim, age, year
+    const ConstArrayView1D PlusGroup,                       // stock
+    const std::vector<ConstArrayView5D> Movement,           // [stock] sim, from, to, age, year
     const int nStock,
     const int nFleet,
     const int nArea) {
+  
+  // Checks
+  if ((int)Number.size() < nStock ||
+      (int)FDeadArea.size() < nStock ||
+      (int)NaturalMortality.size() < nStock ||
+      (int)Semelparous.size() < nStock ||
+      (int)Movement.size() < nStock)
+    Rcpp::stop("Stock-level input list shorter than nStock");
   
   for (int st = 0; st < nStock; ++st) {
     
@@ -39,47 +47,59 @@ inline void CalcNumberNext(
     
     if (y +1 >= nYear) continue; 
     
+    // Check movement array dimensions
     if (Mov_st.dim[1] != nArea || Mov_st.dim[2] != nArea)
       Rcpp::stop("Movement array has wrong area dimensions");
     
+    check_dims<4>(Num_st, {nSim, nAge, nYear, nArea}, "Number", y, 2);
+    check_dims<5>(Fd, {nSim, nAge, nYear, nFleet, nArea}, "FDeadArea", y, 2);
+    check_dims<3>(M_st, {nSim, nAge, nYear}, "NaturalMortality", y, 2);
+    check_dims<3>(Sem_st, {nSim, nAge, nYear}, "Semelparous", y, 2);
+    check_dims<5>(Mov_st, {nSim, nArea, nArea, nAge, nYear}, "Movement", y, 4);
+    
     for (int sim : Sims) {
       
+      const int sim_num   = sim_index<4>(sim, Num_st, "Number");
+      const int sim_fd    = sim_index<5>(sim, Fd, "FDeadArea");
+      const int sim_M     = sim_index<3>(sim, M_st, "NaturalMortality");
+      const int sim_sem   = sim_index<3>(sim, Sem_st, "Semelparous");
+      const int sim_mov   = sim_index<5>(sim, Mov_st, "Movement");
+      
+      // Reset next-year numbers (except recruits - already calculated)
       for (int age = 1; age < nAge; ++age) {
         for (int area = 0; area < nArea; ++area) {
-          // ensure next-year numbers are 0 (except recruits)
-          Num_st(sim, age, y + 1, area) = 0.0; 
+          Num_st(sim_num, age, y + 1, area) = 0.0; 
         }
       }
         
       // survival and aging
       for (int area = 0; area < nArea; ++area) {
-        
         for (int age=0; age<(nAge-1); ++age) {
           
-          const double M = M_st(sim, age, y);
-          const double Sem = Sem_st(sim, age, y);
+          const double M = M_st(sim_M, age, y);
+          const double Sem = Sem_st(sim_sem, age, y);
           double F = 0;
           for (int fl=0; fl<nFleet; ++fl) {
-            F += Fd(sim, age, y, fl, area);
+            F += Fd(sim_fd, age, y, fl, area);
           }
           const double Z = F + M;
           
           if (Sem < 0.0 || Sem > 1.0)
             Rcpp::stop("Semelparity outside [0,1]");
           
-          Num_st(sim, age+1, y+1, area) = Num_st(sim,age,y,area) * std::exp(-Z) * (1-Sem);
+          Num_st(sim_num, age+1, y+1, area) = Num_st(sim_num,age,y,area) * std::exp(-Z) * (1-Sem);
         } 
         
         if (plusgroup_st) {
           const int age = nAge - 1;
-          const double M   = M_st(sim, age, y);
-          const double Sem = Sem_st(sim, age, y);
+          const double M   = M_st(sim_M, age, y);
+          const double Sem = Sem_st(sim_sem, age, y);
           double F = 0;
           for (int fl=0; fl<nFleet; ++fl) {
-            F += Fd(sim, age, y, fl, area);
+            F += Fd(sim_fd, age, y, fl, area);
           }
           const double Z   = F + M;
-          Num_st(sim, age, y + 1, area) += Num_st(sim, age, y, area) * std::exp(-Z) * (1 - Sem);
+          Num_st(sim_num, age, y + 1, area) += Num_st(sim_num, age, y, area) * std::exp(-Z) * (1 - Sem);
         }
       } // end survival and aging
       
@@ -92,14 +112,14 @@ inline void CalcNumberNext(
           std::fill(N_to.begin(), N_to.end(), 0.0);
           
           for (int fromArea=0; fromArea<nArea; ++fromArea) {
-            const double Nfrom = Num_st(sim, age, y + 1, fromArea);
+            const double Nfrom = Num_st(sim_num, age, y + 1, fromArea);
             
             if (Nfrom == 0.0) continue;
             
             double p_sum = 0.0; // mov prob sum
             
             for (int toArea = 0; toArea < nArea; ++toArea) {
-              const double p = Mov_st(sim, fromArea, toArea, age, y + 1);
+              const double p = Mov_st(sim_mov, fromArea, toArea, age, y + 1);
               N_to[toArea] += Nfrom * p;
               p_sum += p;
             }
@@ -108,7 +128,7 @@ inline void CalcNumberNext(
           }
           
           for (int toArea = 0; toArea < nArea; ++toArea) {
-            Num_st(sim, age, y + 1, toArea) = N_to[toArea];
+            Num_st(sim_num, age, y + 1, toArea) = N_to[toArea];
           } 
         }
       } // end movement

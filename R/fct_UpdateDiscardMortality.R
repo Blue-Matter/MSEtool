@@ -29,7 +29,7 @@ UpdateDiscardMortality <- function(ProjSim, MPAdviceList, MPAdviceList_Previous,
     for (st in stocks) {
       Ages <- ProjSim@OM@Stock[[st]]@Ages
       for (fl in seq_along(FleetNames)) {
-        if (length(SelectivityList)>1) {
+        if (length(DiscardMortalityList)>1) {
           DiscardMortality <- DiscardMortalityList[[fl]]
         } else {
           DiscardMortality <- DiscardMortalityList[[1]]

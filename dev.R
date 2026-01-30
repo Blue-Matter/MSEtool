@@ -6,6 +6,7 @@ testOM@nsim <- 100
 
 OM <- ConvertOM(testOM)
 
+
 LoadArgs(Simulate_om)
 
 
@@ -13,16 +14,8 @@ LoadArgs(Simulate_om)
 # ref yield ..
 
 
-
-
 Hist <- Simulate(testOM)
 
 
 
-Populate - fix 
-
-NPSWO - hist and projections
-
-SALB 
-
-Octopus ..
+PopulateCatchObs

@@ -4,14 +4,16 @@
 #' additional years. This function expands stock-, fleet-, observation-,
 #' implementation-, and time-series components along the year dimension while
 #' preserving existing values.
+#' 
+#' Years in the `OM` object are only extended if the `Years` dimensions 
+#' for a particular array  is greater than one. 
+#' 
+#' Simulations are not extended in the `OM` object.
 #'
-#' The extension is applied consistently across simulations, stocks, fleets,
-#' areas, and age classes as appropriate for each component.
 #'
 #' @param Hist A [Hist()] object.
 #' @param Years Numeric vector of years to extend the historical object to.
 #' 
-#'   
 #' @return A modified `Hist` object with all relevant components extended
 #'   to include the specified years.
 #' @keywords internal
@@ -30,7 +32,7 @@ ExtendHist <- function(Hist, Years, silent=FALSE, id=NULL) {
     stock <- Hist@OM@Stock[[st]]
     AgeClasses <- stock@Ages@Classes
     Hist@OM@Stock[[st]] <- Extend(array=stock, 
-                                  nSim = nSim,
+                                  nSim = NULL, # don't extend sims 
                                   AgeClasses = AgeClasses,
                                   Years = Years,
                                   Areas = Areas)
@@ -40,7 +42,7 @@ ExtendHist <- function(Hist, Years, silent=FALSE, id=NULL) {
     
     for (fl in 1:nFleet) {
       Hist@OM@Fleet[[st]][[fl]] <- Extend(array=Hist@OM@Fleet[[st]][[fl]], 
-                                          nSim = nSim,
+                                          nSim = NULL, # don't extend sims 
                                           AgeClasses = NULL,
                                           Years = Years,
                                           Areas = Areas)
@@ -56,7 +58,7 @@ ExtendHist <- function(Hist, Years, silent=FALSE, id=NULL) {
       cli::cli_progress_update(id=id)
     }
     Hist@OM@Obs[[i]] <- Extend(Hist@OM@Obs[[i]], 
-                               nSim = nSim,
+                               nSim = NULL, # don't extend sims 
                                AgeClasses = NULL,
                                Years = Years,
                                Areas = Areas)
@@ -67,7 +69,7 @@ ExtendHist <- function(Hist, Years, silent=FALSE, id=NULL) {
       cli::cli_progress_update(id=id)
     }
     Hist@OM@Imp[[i]] <- Extend(Hist@OM@Imp[[i]], 
-                               nSim = nSim,
+                               nSim = NULL,  # don't extend sims 
                                AgeClasses = NULL,
                                Years = Years,
                                Areas = Areas)

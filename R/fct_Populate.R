@@ -6,6 +6,10 @@ getACF <- function(Value) {
 }
 
 PopulateIndexObs <- function(Index, nSim, HistYears, ProjYears) {
+  if (EmptyObject(Index)) {
+    return(Index)
+  }
+  
   Index@CV <- PopulateObsCV(Index@CV, nSim)
   Index@Error <- PopulateObsError(Index, nSim, c(HistYears, ProjYears))
   Index@Beta # TODO - currently not implemented
@@ -32,8 +36,6 @@ PopulateEffortObs <- function(Effort, nSim, HistYears, ProjYears) {
   Effort@Error <- PopulateObsError(Effort, nSim, c(HistYears, ProjYears))
   Effort@Bias <- PopulateObsBias(Effort, nSim)
 
-  # if (length(Effort@Years)<1)
-  #   Effort@Years <- Years
   Effort
 }
 
@@ -46,17 +48,7 @@ PopulateCatchObs <- function(Catch, nSim, HistYears, ProjYears) {
   Catch@Error <- PopulateObsError(Catch, nSim, c(HistYears, ProjYears))
   Catch@Bias <- PopulateObsBias(Catch, nSim)
   Catch@Ref <- PopulateObsRef(Catch@Ref, nSim)
-
-  if (length(Catch@Years) < 1) {
-    Catch@Years <- HistYears
-  }
   
-  if (!is.null(Catch@Type)) {
-    if (!Catch@Type %in% c("Removals", "Landings")) {
-      cli::cli_abort(message = "Valid values for `Obs@Catch@Type` are: {.val {c('Removals', 'Landings')}} ")
-    }
-  }
-
   Catch
 }
 

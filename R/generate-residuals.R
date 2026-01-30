@@ -7,7 +7,7 @@
 #' The resulting residuals can be propagated with autocorrelation using [ApplyAC()].
 #'
 #' @param SD Numeric vector of length nSim giving standard deviation of residuals.
-#' @param AC Numeric vector of length nSim giving autocorrelation (must be in [-1,1]).
+#' @param AC Numeric vector of length nSim giving autocorrelation (must be between -1 and 1 inclusive).
 #' @param Years Numeric vector of years for which residuals are generated.
 #' @param nSim Optional integer number of simulations (defaults to length(SD)).
 #' @param TruncSD Numeric scalar specifying how many SDs to truncate the residuals.
@@ -88,7 +88,7 @@ expand_seasons <- function(NA_seas, nSeasons, nYear) {
 #' non-NA values within each simulation.
 #'
 #' @param LogResid Numeric matrix of log residuals, dimensions nSim x nYear.
-#' @param AC Numeric vector of length nSim, autocorrelation coefficient per simulation (must be in [-1,1]).
+#' @param AC Numeric vector of length nSim, autocorrelation coefficient per simulation (must be in between -1 &  1).
 #' @param LastError Numeric vector of length nSim, starting value for each simulation.
 #' @return Numeric matrix of same dimensions as `LogResid` with autocorrelated residuals.
 #' @seealso [GenResiduals()], [CalcResidualStats()]

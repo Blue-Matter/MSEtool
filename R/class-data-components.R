@@ -57,7 +57,7 @@ setClass(
 #' @slot Value Numeric array of index values
 #' @slot CV Numeric array of observation CVs
 #' @slot Units Character units of the index
-#' @slot Ref Numeric array of reference values
+#' @slot Ref Numeric vector length `nFleet` of reference values
 #' @slot RefCV Numeric array of reference CVs
 #' @slot Timing Numeric vector of observation timing
 #' @slot Selectivity Selectivity mapping for the index
@@ -73,7 +73,7 @@ setClass(
     Value       = "array.null",
     CV          = "array.null",
     Units       = "char.null",
-    Ref         = "array.null",
+    Ref         = "num.null",
     RefCV       = "array.null",
     Timing      = "numeric",
     Selectivity = "array.char.num",

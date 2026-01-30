@@ -17,16 +17,16 @@ inline void CalcSpatialDistribution(
     const int y,    
     const std::vector<int>& Sims,
     const int nSim,
-    Array4D& Distribution,         
-    const std::vector<Array4D>& Number,    
-    const std::vector<ConstArrayView4D>& WeightFleet,   
-    const std::vector<ConstArrayView5D>& SelAge,
-    const std::vector<ConstArrayView5D>& RetAge,
-    const  ConstArrayView4D& q,                         
-    const  ConstArrayView5D& Closure,                    
-    const  ConstArrayView3D& Targeting,                
-    const  Array3D& Effort,                  
-    const  ConstArrayView2D& RelSize,
+    Array4D& Distribution,                                // sim, year, fleet, area
+    const std::vector<Array4D>& Number,                   // [stock] sim, age, year, area
+    const std::vector<ConstArrayView4D>& WeightFleet,     // [stock] sim, age, year, fleet  
+    const std::vector<ConstArrayView5D>& SelAge,          // [stock] sim, age, year, fleet, area
+    const std::vector<ConstArrayView5D>& RetAge,          // [stock] sim, age, year, fleet, area
+    const  ConstArrayView4D& q,                           // sim, stock, year, fleet          
+    const  ConstArrayView5D& Closure,                     // sim, stock, year, fleet, area       
+    const  ConstArrayView3D& Targeting,                   // sim, year, fleet
+    const  Array3D& Effort,                               // sim, year, fleet
+    const  ConstArrayView2D& RelSize,                     // sim, area
     const int nStock,
     const int nFleet,
     const int nArea) {                   
@@ -34,83 +34,6 @@ inline void CalcSpatialDistribution(
   // ---------------
   // Checks
   // ---------------
-  
-  if (nStock < 1)
-    Rcpp::stop("nStock < 1");
-  
-  if (nFleet < 1)
-    Rcpp::stop("nFleet < 1");
-  
-  if (nArea < 1)
-    Rcpp::stop("nArea < 1");
-  
-  // Distribution
-  if (y < 0 || y >= Distribution.dim[1])
-    Rcpp::stop("Distribution: y out of bounds");
-  
-  if (Distribution.dim[0] != nSim)
-    Rcpp::stop("Distribution nSim mismatch");
-  
-  if (Distribution.dim[2] != nFleet)
-    Rcpp::stop("Distribution nFleet mismatch");
-  
-  if (Distribution.dim[3] != nArea)
-    Rcpp::stop("Distribution nArea mismatch");
-  
-  // q
-  if (q.dim[0] != nSim)
-    Rcpp::stop("q nSim mismatch");
-
-  if (q.dim[1] != nStock)
-    Rcpp::stop("q nStock mismatch");
-  
-  if (y < 0 || y >= q.dim[2])
-    Rcpp::stop("q: y out of bounds");
-
-  if (q.dim[3] != nFleet)
-    Rcpp::stop("q nFleet mismatch");
-  
-  // Closure
-  if (Closure.dim[0] != nSim)
-    Rcpp::stop("Closure nSim mismatch");
- 
-  if (Closure.dim[1] != nStock)
-    Rcpp::stop("Closure nStock mismatch");
- 
-  if (y < 0 || y >= Closure.dim[2])
-    Rcpp::stop("Closure: y out of bounds");
-
-  if (Closure.dim[3] != nFleet)
-    Rcpp::stop("Closure nFleet mismatch");
-
-  if (Closure.dim[4] != nArea)
-    Rcpp::stop("Closure nArea mismatch");
-  // Targeting
-  if (Targeting.dim[0] != nSim)
-    Rcpp::stop("Targeting nSim mismatch");
- 
-  if (y < 0 || y >= Targeting.dim[1])
-    Rcpp::stop("Targeting: y out of bounds");
-  if (Targeting.dim[2] != nFleet)
-    
-    Rcpp::stop("Targeting nFleet mismatch");
- 
-  // Effort
-  if (Effort.dim[0] != nSim)
-    Rcpp::stop("Effort nSim mismatch");
-
-  if (y < 0 || y >= Effort.dim[1])
-    Rcpp::stop("Effort: y out of bounds");
-
-  if (Effort.dim[2] != nFleet)
-    Rcpp::stop("Effort nFleet mismatch");
-
-  // RelSize
-  if (RelSize.dim[0] != nSim)
-    Rcpp::stop("RelSize nSim mismatch");
-
-  if (RelSize.dim[1] != nArea)
-    Rcpp::stop("RelSize nArea mismatch");
 
   
   if ((int)Number.size() < nStock ||
@@ -119,6 +42,12 @@ inline void CalcSpatialDistribution(
       (int)RetAge.size() < nStock)
     Rcpp::stop("Stock-level input list shorter than nStock");
   
+  check_dims<4>(Distribution, {nSim, Distribution.dim[1], nFleet, nArea}, "Distribution", y, 1);
+  check_dims<4>(q, {nSim, nStock, q.dim[2], nFleet}, "q", y, 2);
+  check_dims<5>(Closure, {nSim, nStock, Closure.dim[2], nFleet, nArea}, "Closure", y, 2);
+  check_dims<3>(Targeting, {nSim, Targeting.dim[1], nFleet}, "Targeting", y, 1);
+  check_dims<3>(Effort, {nSim, Effort.dim[1], nFleet}, "Effort", y, 1);
+  check_dims<2>(RelSize, {nSim, nArea}, "RelSize");
   
   // Single-area shortcut
   if (nArea == 1) {
@@ -137,49 +66,39 @@ inline void CalcSpatialDistribution(
   for (int st = 0; st < nStock; ++st) { 
     Array3D B_hat(dim, 0.0);
     
-    const Array4D& Num_st = Number[st];
-    const ConstArrayView4D& Wgt_st = WeightFleet[st];
-    const ConstArrayView5D& Sel_st = SelAge[st];
-    const ConstArrayView5D& Ret_st = RetAge[st];
+    const Array4D& Num_st = Number[st];                 // sim, age, year, area
+    const ConstArrayView4D& Wgt_st = WeightFleet[st];   // sim, age, year, fleet
+    const ConstArrayView5D& Sel_st = SelAge[st];        // sim, age, year, fleet, area
+    const ConstArrayView5D& Ret_st = RetAge[st];        // sim, age, year, fleet, area
     
     const int nAge = Num_st.dim[1];
     
-    if (Num_st.dim[0] != nSim)
-      Rcpp::stop("Number[[%d]] nSim mismatch", st+1);
-    
-    if (Num_st.dim[3] != nArea)
-      Rcpp::stop("Number[[%d]] nArea mismatch", st+1);
-    
-    if (Wgt_st.dim[0] != nSim || Wgt_st.dim[3] != nFleet)
-      Rcpp::stop("WeightFleet[[%d]] dim mismatch", st+1);
-    
-    if (Sel_st.dim[0] != nSim || Sel_st.dim[3] != nFleet || Sel_st.dim[4] != nArea)
-      Rcpp::stop("SelAge[[%d]] dim mismatch", st+1);
-    
-    if (Ret_st.dim[1] != Num_st.dim[1])
-      Rcpp::stop("RetAge[[%d]] age mismatch", st+1);
-    
-    if (Wgt_st.dim[1] != nAge ||
-        Sel_st.dim[1] != nAge ||
-        Ret_st.dim[1] != nAge)
-      Rcpp::stop("Age dimension mismatch in stock %d", st+1);
-    
-    
+    check_dims<4>(Num_st, {nSim, nAge, Num_st.dim[2], nArea}, "Number", y, 2);
+    check_dims<4>(Wgt_st, {nSim, nAge, Wgt_st.dim[2], nFleet}, "WeightFleet", y, 2);
+    check_dims<5>(Sel_st, {nSim, nAge, Sel_st.dim[2], nFleet, nArea}, "SelAge", y, 2);
+    check_dims<5>(Ret_st, {nSim, nAge, Ret_st.dim[2], nFleet, nArea}, "RetAge", y, 2);
+ 
     // Exploitable biomass per unit effort
     for (int sim : Sims) {
       for (int fl = 0; fl < nFleet; ++fl) {
         for (int ar = 0; ar < nArea; ++ar) {
           
-          if (Closure(sim, st, y, fl, ar) <= 0.0) continue;
+          const int sim_cl  = sim_index<4>(sim, Closure, "Closure");
+          const int sim_wgt = sim_index<4>(sim, Wgt_st, "Wgt_st");
+          const int sim_sel = sim_index<5>(sim, Sel_st, "Sel_st");
+          const int sim_ret = sim_index<5>(sim, Ret_st, "Ret_st");
+          const int sim_q   = sim_index<4>(sim, q, "q");
+          
+          if (Closure(sim_cl, st, y, fl, ar) <= 0.0) continue;
           double B_sfr = 0.0;
           for (int age = 0; age < nAge; ++age) {
             B_sfr +=
               Num_st(sim, age, y, ar) *
-              Wgt_st(sim, age, y, fl) *
-              Sel_st(sim, age, y, fl, ar) *
-              Ret_st(sim, age, y, fl, ar);
+              Wgt_st(sim_wgt, age, y, fl) *
+              Sel_st(sim_sel, age, y, fl, ar) *
+              Ret_st(sim_ret, age, y, fl, ar);
           } 
-          B_hat(sim, fl, ar) = q(sim, st, y, fl) * B_sfr;
+          B_hat(sim, fl, ar) = q(sim_q, st, y, fl) * B_sfr;
         } 
       }
     } 
@@ -188,7 +107,8 @@ inline void CalcSpatialDistribution(
     for (int sim : Sims) {
       
       for (int fl = 0; fl < nFleet; ++fl) {
-        const double phi = q(sim, st, y, fl) * Effort(sim, y, fl);
+        const int sim_q = sim_index<4>(sim, q, "q");
+        const double phi = q(sim_q, st, y, fl) * Effort(sim, y, fl);
         
         // Median B_ref across areas
         std::vector<double> Bvec(nArea);
@@ -207,7 +127,8 @@ inline void CalcSpatialDistribution(
         // Apply fleet-specific utility
         for (int ar = 0; ar < nArea; ++ar) {
           const double B = B_hat(sim, fl, ar);
-          const double A = RelSize(sim, ar);
+          const int sim_rs = sim_index<2>(sim, RelSize, "RelSize");
+          const double A = RelSize(sim_rs, ar);
           
           if (A > 0.0 && B > 0.0 && Bref > 0.0) {
             const double Gamma = B / (A * Bref);
@@ -235,7 +156,8 @@ inline void CalcSpatialDistribution(
   // Calculate Effort Distribution
   for (int sim : Sims) {
     for (int fl = 0; fl < nFleet; ++fl) {
-      const double theta = Targeting(sim,y,fl);
+      const int sim_t = sim_index<3>(sim, Targeting, "Targeting");
+      const double theta = Targeting(sim_t, y, fl);
       if (theta <= 0.0) continue;
       
       double total = 0.0;

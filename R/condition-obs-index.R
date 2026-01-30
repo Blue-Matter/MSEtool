@@ -76,7 +76,7 @@ ConditionObs_Index <- function(Hist,
         
         if (SelectivityAtAge_Data == 'Biomass') {
           # all age classes selected 
-          SelectivityAtAgeList[[st]] <- array(1, dim=c(1,nAge(Hist@OM, st), 1, nArea),
+          SelectivityAtAgeList[[st]] <- array(1, dim=c(1,length(AgeClasses), 1, nArea),
                                               dimnames = list(Sim=1,
                                                               Age=AgeClasses,
                                                               Year=HistYears[1],
@@ -129,13 +129,52 @@ ConditionObs_Index <- function(Hist,
       SimulatedIndex <- purrr::map2(SimNumberSelectedList, WeightAtAgeList, ArrayMultiply) 
       
     } else if (Units=='Recruitment') {
-      # keep only first age class
-      SimulatedIndex <- SimNumberSelectedList |>
-        purrr::map(\(stock) {
-          ages <- as.numeric(dimnames(stock)[[1]])
-          stock |> ArraySubsetAge(min(ages))
-        })  
       
+      if (nSeasons > 1) {
+        # match the age & season for observed recruitment
+        # first non-zero age class across all years
+        #
+        # Recruitment should be the first age class, but in some 
+        # applications recruitment in the OM is only in a single season
+        # but the observed 'recruitment' index comes from a 
+        # different season which has 0 the first age class
+        
+        Year_Names <- names(ObservedIndex[!is.na(ObservedIndex)])
+        year_ind <- match(Year_Names, HistYears)
+        
+        SimulatedIndex <- SimNumberSelectedList |>
+          purrr::map(\(stock) {
+            ages <- as.numeric(dimnames(stock)[['Age']])    
+            index <- array(NA, dim=c(nSim, 1, nHistTS, nArea),
+                           dimnames = list(Sim = 1:nSim,
+                                           Age = min(ages),
+                                           Year = HistYears,
+                                           Area = Areas
+                                           )
+                           )
+            
+            n <- stock |> SubsetYear(Years=Year_Names)
+            
+            first_non_zero_age <- apply(n, 1, function(x) {
+              dim(x) <- c(dim(x)[1], prod(dim(x)[-1]))
+              which(rowSums(x > 0) > 0)[1]
+            })
+            for (i in 1:nSim) {
+              index[i,,year_ind,] <- n[i, first_non_zero_age[i],,, drop=FALSE]
+            }
+            index
+          })  
+        
+        
+      } else {
+        # use first age class as recruitment
+        SimulatedIndex <- SimNumberSelectedList |>
+          purrr::map(\(stock) {
+            ages <- as.numeric(dimnames(stock)[['Age']])
+            stock |> ArraySubsetAge(min(ages))
+          })  
+        
+      }
     } else {
       cli::cli_abort('Only {.val Biomass}, {.val Number} and {.val Recruitment} currently supported for {.val Units} in  {.val Data@CPUE} and {.val Data@Survey}', .internal=TRUE)
     }
@@ -166,6 +205,9 @@ ConditionObs_Index <- function(Hist,
     meanIndex <- Nom_Index[,NonNAInd, drop=FALSE] |> rowMeans(na.rm=TRUE)
     
     q <- mean(ObservedIndex[NonNAInd], na.rm=TRUE) / meanIndex
+    
+    q[!is.finite(q)] <- 0
+    
     Index_Obs@Efficiency <- q
 
     SimulatedIndex <- Nom_Index * q
