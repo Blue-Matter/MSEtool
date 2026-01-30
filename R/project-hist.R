@@ -37,6 +37,28 @@ Project_hist <- function(Hist,
   # ---- Create MSE Object ----
   MSE <- Hist2MSE(Hist, MPs) 
   
+  # need method to get internal functions from MPs
+  
+  # helper function either available in package namespace OR global namespace
+  MyFunction <- function(Data) {
+    # do some stuff 
+    Res
+  }
+  
+  # main function either available in package namespace OR global namespace
+  MP <- function(Data, ...) {
+    
+    # do some stuff 
+    
+    Res <- MyFunction(Data)
+    
+    Res
+  }
+  
+  
+  
+  
+  
   # UP THE HERE!!
   
 }
