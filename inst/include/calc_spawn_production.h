@@ -49,6 +49,14 @@ inline void CalcSpawnProduction(
     const auto& M_st   = NaturalMortality[st];
     const auto& FDA_st = FDeadArea[st];
     const int nAge = Num_st.dim[1];
+    
+    check_dims<4>(Num_st, {nSim, nAge, Num_st.dim[2], nArea}, "Number", y, 2);
+    check_dims<3>(Fec_st, {nSim, nAge, Fec_st.dim[2]}, "Fecundity", y, 2);
+    check_dims<3>(Mat_st, {nSim, nAge, Mat_st.dim[2]}, "Maturity", y, 2);
+    check_dims<3>(Wt_st, {nSim, nAge, Wt_st.dim[2]}, "Weight", y, 2);
+    check_dims<3>(M_st, {nSim, nAge, M_st.dim[2]}, "NaturalMortality", y, 2);
+    check_dims<5>(FDA_st, {nSim, nAge, FDA_st.dim[2], nFleet, nArea}, "FDeadArea", y, 2);
+    
   
     for (int sim : Sims) {
       

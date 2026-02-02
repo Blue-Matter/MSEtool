@@ -23,7 +23,7 @@ nSim <- function(x) {
 #' @rdname helpers
 #' @export
 nArea <- function(x, st=1) {
-  if (inherits(x, 'hist')) {
+  if (inherits(x, 'hist') || inherits(x,'mse')) {
    x <- x@OM 
   }
     
@@ -47,7 +47,7 @@ nArea <- function(x, st=1) {
   }
 
   nms <- names(dimnames(stock@Spatial@UnfishedDist))
-  dd[which(nms=='Area')]
+  as.numeric(dd[which(nms=='Area')])
 
 }
 

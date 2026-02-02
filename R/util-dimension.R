@@ -2,37 +2,36 @@
 #'
 #' Utilities to add or drop named dimensions from arrays  
 #'
-#' \strong{AddDimension}
+#' **AddDimension**
 #'
-#' Adds a new dimension of length one to an array. The new dimension is inserted
-#' at position \code{pos} and optionally given a name and value. If the dimension
+#' Adds a new dimension of length `val` to an array. The new dimension is inserted
+#' at position `pos` and optionally given a name and value. If the dimension
 #' name already exists, the array is returned unchanged.
 #'
-#' \strong{DropDimension}
+#' **DropDimension**
 #'
 #' Drops one or more named dimensions from an array.
-#' \itemize{
-#'   \item All requested dimensions must exist
-#'   \item At least one dimension must remain
-#'   \item Dimensions of length one are removed by reshaping only
-#'   \item Dimensions of length greater than one are sliced at their first index,
-#'         with an optional warning
-#' }
+#' 
+#' * All requested dimensions must exist
+#' * At least one dimension must remain
+#' * Dimensions of length one are removed by reshaping only
+#' * Dimensions of length greater than one are sliced at their first index,
+#'   with an optional warning
 #'
 #' Other dimensions are preserved.
 #'
 #' @param array An array with named dimensions
 #' @param name Character vector of dimension names to add or drop.
-#'   For \code{AddDimension}, a single name.
-#'   For \code{DropDimension}, one or more existing dimension names.
-#' @param val Value to assign to the new dimension name in \code{AddDimension}.
+#'   For `AddDimension`, a single name.
+#'   For `DropDimension`, one or more existing dimension names.
+#' @param val Value to assign to the new dimension name in `AddDimension`.
 #' @param pos Integer giving the position at which to insert the new dimension
-#'   in \code{AddDimension}. Defaults to 1.
-#' @param warn Logical; if \code{TRUE}, warn when dropping a dimension of length
-#'   greater than one in \code{DropDimension}.
+#'   in `AddDimension`. Defaults to 1.
+#' @param warn Logical; if `TRUE`, warn when dropping a dimension of length
+#'   greater than one in `DropDimension`.
 #'
 #' @return
-#' An array with modified dimensions and updated \code{dimnames}.
+#' An array with modified dimensions and updated `dimnames`.
 #'
 #' @example man-examples/AddDimension.R
 #'
@@ -47,19 +46,8 @@ AddDimension <- function(array, name, val = 1, pos = NULL) {
   CheckClass(array, 'array', 'array')
   CheckClass(name, 'character', 'name')
   
-  # if (inherits(array, "list")) {
-  #   array <- unlist(array)
-  # }
-  
   d  <- dim(array)
   dn <- dimnames(array)
-  
-  
-  # if (is.null(d)) {
-  #   d <- length(array)
-  #   dn <- list(NULL)
-  # }
-  
   nms <- names(dn)
   
   # If dimension already exists, return unchanged
@@ -74,13 +62,23 @@ AddDimension <- function(array, name, val = 1, pos = NULL) {
   
   if (pos < 1 || pos > nd + 1) {
     cli::cli_abort(
-      "Argument {.arg pos} must be between 1 and {nd + 1}")
+      "Argument {.arg pos} must be between 1 and {nd + 1}"
+      )
   }
   
-  new_dim <- append(d, 1L, after = pos - 1)
+  # size of new dimension
+  new_len <- if (is.null(val)) 1L else length(val)
+  
+  array <- array(
+    data = array,
+    dim  = append(d, new_len, after = pos - 1)
+  )
+  
+  # update dimensions
+  new_dim <- append(d, new_len, after = pos - 1)
   dim(array) <- new_dim
   
-  
+  # update dimnames
   if (!is.null(dn)) {
     new_dn <- append(dn, list(val), after = pos - 1)
     names(new_dn)[pos] <- name

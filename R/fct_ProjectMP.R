@@ -1,8 +1,3 @@
-CalcManagementInterval <- function(SimList, YearsProj) {
-  # TODO add option to specify Interval by MP
-  ind <- seq(1, by=SimList[[1]]@OM@Interval, to=length(YearsProj)) 
-  YearsProj[ind]
-}
 
 
 ProjectMP <- function(SimList, MSE, MP, mp=1, YearsHist, YearsProj) {

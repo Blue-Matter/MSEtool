@@ -1,0 +1,40 @@
+Hist2MSE <- function(Hist, MPs) {
+  MSE <- new('mse')
+  MSE@OM <- Hist@OM
+  MSE@Unfished <- Hist@Unfished
+  MSE@Reference <- Hist@Reference
+  
+  
+  slots <- slotNames(MSE@Hist)
+  for (sl in slots)  {
+    slot(MSE@Hist, sl) <- slot(Hist, sl)
+  }
+  
+  MPNames <- MPs
+  MSE@MPs <- lapply(MPs, function(x) {
+    
+    mp <- try(get(x), silent=TRUE)
+    
+    if (inherits(mp, 'try-error')) {
+      cli::cli_alert_warning('Cannot find MP: {.val {x}} Skipping ... ')
+      return(NULL)
+    }
+    
+    if (!inherits(mp, 'mp')) {
+      cli::cli_alert_warning('MP: {.val {x}} is not class {.val `mp`}. Skipping ... ')
+      return(NULL) 
+    }
+    
+    MakeSelfContained(mp)
+  })
+  
+  valid <- !vapply(MSE@MPs, is.null, logical(1))
+  
+  MPs <- MPs[valid]
+  MSE@MPs <- MSE@MPs[valid]
+  names(MSE@MPs) <- MPNames[valid]
+  
+  MSE <- InitializeTimeSeries(MSE, 'Projection', MPs=MPs)
+  
+  MSE
+}

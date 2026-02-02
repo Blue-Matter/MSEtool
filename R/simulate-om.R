@@ -2,8 +2,6 @@
 
 
 Simulate_om <- function(OM = NULL,
-                        
-                        
                         parallel = FALSE,
                         silent = FALSE,
                         nSim = NULL,
@@ -32,7 +30,7 @@ Simulate_om <- function(OM = NULL,
   
   # ---- Make Hist Object ----
   Hist <- Hist(OM, silent)
-
+  
   # ---- Calculate Equilibrium Unfished ----
   Hist@Unfished@Equilibrium <- CalcUnfished_Equilibrium(OM, silent)
 
@@ -46,11 +44,14 @@ Simulate_om <- function(OM = NULL,
   # use for easy acces in C++  - removed later
   Hist <- PrepHistMisc(Hist) 
   
+  
+  
   # ---- Calculate Unfished Equilibrium and Dynamic ----
   if (DynamicUnfished) 
-    Hist@Unfished@Dynamic <- CalcUnfished_Dynamic(Hist, 
-                                                  IdenticalHist, 
-                                                  silent)
+    Hist@Unfished@Dynamic <- CalcUnfished_Dynamic(Hist = Hist, 
+                                                  IdenticalHist = IdenticalHist, 
+                                                  silent = silent)
+  
   
   # ---- Optimize for Final Depletion ----
   Hist <- OptFinalDepletion(Hist, silent = silent)
@@ -88,7 +89,7 @@ Simulate_om <- function(OM = NULL,
   if (!silent)
     cli::cli_alert_success("Simulated Historical Fishery")
 
-
+  
   # ---- Calculate Reference Yield ----
   
   # TODO - arguments to skip or directly add 

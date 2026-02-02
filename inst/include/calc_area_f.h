@@ -93,11 +93,51 @@ inline void CalcArea_F(
           
           if (q_eff <= 0.0) continue;
           for (int age = 0; age < nAge; ++age) {
-            double F_interact = q_eff * S(sim_sel, age, y, fl, ar);
+            
+            const double sel = S(sim_sel, age, y, fl, ar);
+            const double ret = R(sim_ret, age, y, fl, ar);
+            const double dm  = DM(sim_dm, age, y, fl, ar);
+            
+            if (sel < 0.0 || sel > 1.0)
+              Rcpp::stop(
+                "SelAge out of [0,1] "
+                "(stock=" + std::to_string(st + 1) +
+                  ", sim="   + std::to_string(sim + 1) +
+                  ", age="   + std::to_string(age + 1) +
+                  ", year="  + std::to_string(y + 1) +
+                  ", fleet=" + std::to_string(fl + 1) +
+                  ", area="  + std::to_string(ar + 1) + ")"
+              );
+            
+            if (ret < 0.0 || ret > 1.0)
+              Rcpp::stop(
+                "RetAge out of [0,1] "
+                "(stock=" + std::to_string(st + 1) +
+                  ", sim="   + std::to_string(sim + 1) +
+                  ", age="   + std::to_string(age + 1) +
+                  ", year="  + std::to_string(y + 1) +
+                  ", fleet=" + std::to_string(fl + 1) +
+                  ", area="  + std::to_string(ar + 1) + ")"
+              );
+            
+            if (dm < 0.0 || dm > 1.0)
+              Rcpp::stop(
+                "DiscMort out of [0,1] "
+                "(stock=" + std::to_string(st + 1) +
+                  ", sim="   + std::to_string(sim + 1) +
+                  ", age="   + std::to_string(age + 1) +
+                  ", year="  + std::to_string(y + 1) +
+                  ", fleet=" + std::to_string(fl + 1) +
+                  ", area="  + std::to_string(ar + 1) + ")"
+              );
+            
+          
+            double F_interact = q_eff * sel;
             if (F_interact > maxF) F_interact = maxF;
             
-            const double F_retain = F_interact * R(sim_ret, age, y, fl, ar);
-            const double F_disc = (F_interact - F_retain) * DM(sim_dm, age, y, fl, ar);
+            const double F_retain = F_interact * ret;
+            const double F_disc   = (F_interact - F_retain) * dm;
+            
             Fd(sim, age, y, fl, ar) = F_retain + F_disc;
             Fr(sim, age, y, fl, ar) = F_retain;
             

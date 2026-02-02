@@ -62,56 +62,93 @@ Hist <- function(OM=NULL, silent = FALSE) {
 }
 
 
-InitializeTimeSeries <- function(Hist) {
+InitializeTimeSeries <- function(Hist, Period=c("Historical", 'Projection'), MPs=NULL) {
+  Period <- match.arg(Period, c("Historical", 'Projection'))
+  
   OM <- Hist@OM
   nSim <- Hist@OM@nSim
   HistYears <- Years(Hist,'H')
   Areas <- 1:nArea(Hist)
 
   # List of Stocks - Number by Sim, Age, Year, and Area
-  Hist@Number <- ListArraySimAgeTimeArea(OM, "Historical")
-
+  if (Period=='Historical') {
+    Hist@Number <- ListArraySimAgeTimeArea(OM, Period)  
+  } else {
+    Hist@Number <- ListArraySimAgeTimeAreaMP(OM, Period, MPs)
+  }
+  
   # Arrays: Sim, Stock, Year
-  Hist@Biomass <- ListArraySimAgeTime(OM, "Historical") |>
+  Hist@Biomass <- ListArraySimAgeTime(OM,Period) |>
     lapply(DropDimension, "Age", FALSE) |>
     List2Array("Stock") |>
     aperm(c("Sim", "Stock", "Year"))
+  
+  if (Period=='Projection') {
+    Hist@Biomass <- AddDimension(Hist@Biomass,
+                                 'MP',
+                                 val=MPs)
+  }
+  
   Hist@SBiomass <- Hist@SProduction <- Hist@Biomass
 
-  # Landings and Discards by Age and Size
-  # List of Stocks - array Sim, Age, Year, Fleet, Area
-  Hist@LandingsAtAge <- Hist@DiscardsAtAge <- ListArraySimAgeTimeFleetArea(OM, "Historical")
-  # List of Stocks - list of Fleets - array Sim, Class, Year, Area
-  Hist@LandingsAtSize <- Hist@DiscardsAtSize <- ListArraySimClassTimeFleetArea(OM, "Historical")
+  if (Period=='Historical') {
+    # Landings and Discards by Age and Size
+    # List of Stocks - array Sim, Age, Year, Fleet, Area
+    Hist@LandingsAtAge <- Hist@DiscardsAtAge <- ListArraySimAgeTimeFleetArea(OM, Period)
+    # List of Stocks - list of Fleets - array Sim, Class, Year, Area
+    Hist@LandingsAtSize <- Hist@DiscardsAtSize <- ListArraySimClassTimeFleetArea(OM, Period)
+  } else {
+    # Landings and Discards by Age and Size
+    # List of Stocks - array Sim, Age, Year, Fleet, Area
+    Hist@LandingsAtAge <- Hist@DiscardsAtAge <- ListArraySimAgeTimeFleetAreaMP(OM, Period, MPs=MPs)
+    # List of Stocks - list of Fleets - array Sim, Class, Year, Area
+    Hist@LandingsAtSize <- Hist@DiscardsAtSize <- ListArraySimClassTimeFleetAreaMP(OM, Period, MPs=MPs)
+  }
+
 
   # Historical Fishing Effort - Total
   # Sim, Stock, Year, Fleet
-  Hist@Effort <- ArraySimAgeTimeFleet(OM, "Historical") |> DropDimension("Age", FALSE)
-
-  # Add Effort from OM
-
-  for (fl in 1:nFleet(OM)) {
-    Hist@Effort[, , fl] <- ExtendSims(Hist@OM@Fleet[[1]][[fl]]@Effort@Effort, nSim)
-  }
+  Hist@Effort <- ArraySimAgeTimeFleet(OM, Period) |> DropDimension("Age", FALSE)
 
   # Effort Distribution over Areas - effort by area
   # Sim, Year, Fleet, Area
-  Hist@Distribution <- ArraySimAgeTimeFleetArea(OM, "Historical") |> DropDimension("Age", FALSE)
+  Hist@Distribution <- ArraySimAgeTimeFleetArea(OM, Period) |> DropDimension("Age", FALSE)
 
-  # Add Distribution from OM
-  for (fl in 1:nFleet(OM)) {
-    Hist@Distribution[, , fl, ] <- Extend(Hist@OM@Fleet[[1]][[fl]]@Effort@Distribution,
-                                          nSim, NULL, HistYears, Areas)
+  if (Period=='Projection')  {
+    Hist@Effort <- Hist@Effort |> AddDimension('MP', MPs)
+    Hist@Distribution <- Hist@Distribution |> AddDimension('MP', MPs)
+  }
+    
+  # Add Effort & Distribution from OM
+  if (Period == 'Historical') {
+    for (fl in 1:nFleet(OM)) {
+      Hist@Effort[, , fl] <- ExtendSims(Hist@OM@Fleet[[1]][[fl]]@Effort@Effort, nSim)
+      Hist@Distribution[, , fl, ] <- Extend(Hist@OM@Fleet[[1]][[fl]]@Effort@Distribution,
+                                            nSim, NULL, HistYears, Areas)
+    }  
+  }
+  
+  if (Period == 'Historical') {
+    # Fishing Mortality - Dead and Retain
+    # Overall
+    # List of Stocks - array Sim, Age, Year, Fleet
+    Hist@FDead <- Hist@FRetain <- ListArraySimAgeTimeFleet(OM, Period)
+    
+    # Within Area
+    # List of Stocks - array Sim, Age, Year, Fleet, Area
+    Hist@FDeadArea <- Hist@FRetainArea <- ListArraySimAgeTimeFleetArea(OM, Period)
+    
+  } else {
+    # Fishing Mortality - Dead and Retain
+    # Overall
+    # List of Stocks - array Sim, Age, Year, Fleet
+    Hist@FDead <- Hist@FRetain <- ListArraySimAgeTimeFleetMP(OM, Period, MPs=MPs)
+    
+    # Within Area
+    # List of Stocks - array Sim, Age, Year, Fleet, Area
+    Hist@FDeadArea <- Hist@FRetainArea <- ListArraySimAgeTimeFleetAreaMP(OM, Period, MPs=MPs)
   }
 
-  # Fishing Mortality - Dead and Retain
-  # Overall
-  # List of Stocks - array Sim, Age, Year, Fleet
-  Hist@FDead <- Hist@FRetain <- ListArraySimAgeTimeFleet(OM, "Historical")
-
-  # Within Area
-  # List of Stocks - array Sim, Age, Year, Fleet, Area
-  Hist@FDeadArea <- Hist@FRetainArea <- ListArraySimAgeTimeFleetArea(OM, "Historical")
   
   
   Hist

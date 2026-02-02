@@ -22,7 +22,7 @@ ExtendSims(array, nSim = NULL)
 
 ExtendAges(array, AgeClasses = NULL)
 
-ExtendYears(array, Years = NULL, default = NULL)
+ExtendYears(array, Years = NULL, default = NULL, backfill = FALSE)
 
 ExtendAreas(array, Areas = NULL)
 }

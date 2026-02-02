@@ -51,6 +51,8 @@ PrepHistMisc <- function(Hist) {
   Hist@Misc$SPFrom <- purrr::map(Hist@OM@Stock, \(stock) {
     stock@SRR@SPFrom
   }) |> unlist() |> array(dim=nStock(Hist), dimnames = list(Stock=StockNames(Hist)))
+  
+  
   CheckLength(Hist@Misc$SPFrom, nStock, 'SPFrom')
   
   Hist@Misc$PlusGroup <- purrr::map(Hist@OM@Stock, \(stock) {
@@ -63,7 +65,7 @@ PrepHistMisc <- function(Hist) {
   
   # Sim, Year - must be the same for all stocks
   Hist@Misc$RelSize <- Hist@OM@Stock[[1]]@Spatial@RelativeSize
-  CheckDims( Hist@Misc$RelSize, 2, RelSize)
+  CheckDims( Hist@Misc$RelSize, 2, 'RelSize')
   
   # Sim Stock
   Hist@Misc$SpawnTimeFrac <- purrr::map(Hist@OM@Stock, \(stock) {

@@ -113,6 +113,7 @@ CalcRefYield <- function(Hist,
     
   }
   Hist
+  
 }
 
 #' Optimize Reference Yield for a Single Simulation
@@ -144,7 +145,8 @@ OptRefYield <- function(logScalar,
                         nFleet,
                         Units=c('Biomass', 'Number'),
                         type=c('Landings', 'Removals'),
-                        opt = 1) {
+                        opt = 1,
+                        debug = 0) {
   
   Units <- match.arg(Units, c('Biomass', 'Number'))
   type <- match.arg(type, c('Landings', 'Removals'))
@@ -158,9 +160,10 @@ OptRefYield <- function(logScalar,
   ProjSim@Effort[1,ProjYearInd,] <- LastHistEffort * exp(logScalar)
   
   ProjSim_opt <- CalcFisheryDynamics(Hist = ProjSim,
-                                     Years = c(tail(HistYears, ProjSim@OM@Seasons), ProjYears), 
+                                     # Years = c(tail(HistYears, ProjSim@OM@Seasons), ProjYears), 
+                                     Years = c(HistYears, ProjYears), 
                                      DoCalcaggF = 0,
-                                     IdenticalSim = FALSE)
+                                     debug = debug)
   
   # summed over age, fleet, area
   Yield <- GetCatch(ProjSim_opt, Units, type) 

@@ -26,35 +26,24 @@ Project_hist <- function(Hist,
   Proj <- ExtendHist(Proj, 
                      Years = c(YearsHist, YearsProj))
   
-  
-
   # ---- Populate Number-at-Age at Beginning of Projection Year ----
   Proj <- CalcFisheryDynamics(Proj, 
                               Years=c(tail(YearsHist,1), head(YearsProj,1)))
   
-
-  
   # ---- Create MSE Object ----
-  MSE <- Hist2MSE(Hist, MPs) 
+  MSE <- Hist2MSE(Proj, MPs) 
   
-  # need method to get internal functions from MPs
+  # ---- Project MPs ----
+  mp <- 1 # for debugging
   
-  # helper function either available in package namespace OR global namespace
-  MyFunction <- function(Data) {
-    # do some stuff 
-    Res
+  if (!silent) 
+    cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
+  
+  for (mp in seq_along(MPs)) {
+    # MP <- MPs[mp]
+    # MSE <- ProjectMP(SimList, MSE, MP, mp, YearsHist, YearsProj) 
   }
-  
-  # main function either available in package namespace OR global namespace
-  MP <- function(Data, ...) {
-    
-    # do some stuff 
-    
-    Res <- MyFunction(Data)
-    
-    Res
-  }
-  
+
   
   
   

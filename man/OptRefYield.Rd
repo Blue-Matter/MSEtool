@@ -12,7 +12,8 @@ OptRefYield(
   nFleet,
   Units = c("Biomass", "Number"),
   type = c("Landings", "Removals"),
-  opt = 1
+  opt = 1,
+  debug = 0
 )
 }
 \arguments{

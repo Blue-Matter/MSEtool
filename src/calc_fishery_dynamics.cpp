@@ -135,9 +135,9 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     // src: inst/include/calc_area_f.h
     // ---------------------------------------------------------
     
-    if (debug) 
+    if (debug)
       Rcpp::Rcout << "Begin CalcArea_F \n";
-    
+
     CalcArea_F(y,
                Sims,
                nSim,
@@ -154,18 +154,18 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                nStock,
                nFleet,
                nArea);
-    
-    if (debug) 
+
+    if (debug)
       Rcpp::Rcout << "End CalcArea_F \n";
-    
+
     // ---------------------------------------------------------
     // Calculate Global Spawning Biomass and Spawning Production
     // src: inst/include/calc_spawn_production.h
     // ---------------------------------------------------------
     
-    if (debug) 
+    if (debug)
       Rcpp::Rcout << "Begin CalcSpawnProduction \n";
-    
+
     CalcSpawnProduction(y,
                         Sims,
                         nSim,
@@ -182,8 +182,8 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                         nStock,
                         nFleet,
                         nArea);
-    
-    if (debug) 
+
+    if (debug)
       Rcpp::Rcout << "End CalcSpawnProduction \n";
     
     // ---------------------------------------------------------
@@ -191,9 +191,9 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     // src: inst/include/calc_recruitment.h
     // ---------------------------------------------------------
     
-    if (debug) 
+    if (debug)
       Rcpp::Rcout << "Begin CalcRecruitment \n";
-    
+
     CalcRecruitment(y,
                     Sims,
                     nSim,
@@ -208,18 +208,18 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                     hv.RecDist,
                     nStock,
                     nArea);
-    
-    if (debug) 
+
+    if (debug)
       Rcpp::Rcout << "End CalcRecruitment \n";
-    
+
     // ---------------------------------------------------------
     // Calculate Number at beginning of next time step
     // src: inst/include/calc_number_next.h
     // ---------------------------------------------------------
     
-    if (debug) 
+    if (debug)
       Rcpp::Rcout << "Begin CalcNumberNext \n";
-    
+
     CalcNumberNext(y,
                    Sims,
                    nSim,
@@ -232,20 +232,20 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                    nStock,
                    nFleet,
                    nArea);
-    
-    
-    if (debug) 
+
+
+    if (debug)
       Rcpp::Rcout << "End CalcNumberNext \n";
-    
+
     // ---------------------------------------------------------
     // Calculate Biomass (this time step)
     // src: inst/include/calc_biomass.h
     // ---------------------------------------------------------
     
     
-    if (debug) 
+    if (debug)
       Rcpp::Rcout << "Begin CalcBiomass \n";
-    
+
     CalcBiomass(y,
                 Sims,
                 nSim,
@@ -254,16 +254,15 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                 hv.Weight,
                 nStock,
                 nArea);
-    
-    if (debug) 
+
+    if (debug)
       Rcpp::Rcout << "End CalcBiomass \n";
     
     // ---------------------------------------------------------
     // Calculate Catch (if applicable)
     // src: inst/include/calc_catch.h
     // ---------------------------------------------------------
-    
-    
+  
     if (DoCalcCatch) {
       
       // TODO   - calc landings- and discards-at-size
@@ -271,9 +270,9 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
       //        - and first check if sel_len/wght exists
       
       
-      if (debug) 
+      if (debug)
         Rcpp::Rcout << "Begin CalcCatch \n";
-      
+
       CalcCatch(y,
                 Sims,
                 nSim,
@@ -286,13 +285,11 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                 nStock,
                 nFleet,
                 nArea);
-      
-      if (debug) 
+
+      if (debug)
         Rcpp::Rcout << "End CalcCatch \n";
       
     }
-    
-    
     
     // ---------------------------------------------------------
     // Calculate overall F (if applicable)
@@ -301,9 +298,9 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     
     if (DoCalcaggF) {
       
-      if (debug) 
+      if (debug)
         Rcpp::Rcout << "Begin CalcOverallF \n";
-      
+
       CalcOverallF(y,
                    Sims,
                    nSim,
@@ -322,14 +319,15 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                    nStock,
                    nFleet,
                    nArea);
-      
-      if (debug) 
+
+      if (debug)
         Rcpp::Rcout << "End CalcOverallF \n";
+      
     }
     
     
     if (debug) 
-      Rcpp::Rcout << "******End Time Step ****\\nn";
+      Rcpp::Rcout << "******End Time Step ****\n\n";
   
     
   }

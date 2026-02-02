@@ -180,6 +180,7 @@ ImportSS <- function(SSDir,
   FleetNames <- ProcessSS_FleetNames(FleetNames,
     SSFleetNames = unique(RepList[[1]]$catch$Fleet_Name)
   )
+  
   for (st in seq_along(OM@Fleet)) {
     OM@Fleet[[st]] <- MakeNamedList(FleetNames, new("fleet"))
     for (fl in seq_along(FleetNames)) {
@@ -191,7 +192,7 @@ ImportSS <- function(SSDir,
       )
     }
   }
-
+  
   # Data
   OM@Data <- list(ImportSSData(RepList, OM@Name))
   names(OM@Data) <- paste(StockName, collapse = " ")

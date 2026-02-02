@@ -240,7 +240,7 @@ ExtendAges <- function(array, AgeClasses = NULL) {
 
 #' @rdname Extend
 #' @export
-ExtendYears <- function(array, Years = NULL, default = NULL) {
+ExtendYears <- function(array, Years = NULL, default = NULL, backfill = FALSE) {
   if (!is.array(array) | is.null(Years)) {
     return(array)
   }
@@ -263,6 +263,15 @@ ExtendYears <- function(array, Years = NULL, default = NULL) {
   if (all(fill_years %in% existing_years)) {
     return(array)
   }
+  
+  fill_years <- all_years[!all_years %in% existing_years]
+  back_years <- fill_years[which(fill_years < min(existing_years))]
+  forward_years <- fill_years[which(fill_years > max(existing_years))]
+  inside_years <- fill_years[!fill_years %in% back_years & !fill_years %in% forward_years]
+  
+  if (!backfill) {
+    all_years <- all_years[!all_years %in% back_years]
+  }
 
   # Create output array
   d[[year_dim]] <- length(all_years)
@@ -270,16 +279,13 @@ ExtendYears <- function(array, Years = NULL, default = NULL) {
   OutArray <- array(NA, dim = d, dimnames = dn)
   abind::afill(OutArray) <- array # add the existing values
 
-  fill_years <- all_years[!all_years %in% existing_years]
-  back_years <- fill_years[which(fill_years < min(existing_years))]
-  forward_years <- fill_years[which(fill_years > max(existing_years))]
-  inside_years <- fill_years[!fill_years %in% back_years & !fill_years %in% forward_years]
+ 
 
   # Seasonal
   isSeasonal <- which(all_years - round(all_years, 0) > 0) |> length()
 
   if (isSeasonal) {
-    return(ExtendYears_seasonal(array, Years, default))
+    return(ExtendYears_seasonal(array, Years, default, backfill = backfill))
   }
 
   # Forward fill years from most recent existing year
@@ -296,7 +302,7 @@ ExtendYears <- function(array, Years = NULL, default = NULL) {
 
 
   # Back fill years from first existing year
-  if (length(back_years)) {
+  if (length(back_years) && backfill) {
     FirstYear <- abind::asub(array, 1, year_dim, drop = FALSE)
     d <- dim(FirstYear)
     d[[year_dim]] <- length(back_years)
@@ -327,7 +333,7 @@ NoSeasonVals <- function(x) {
   all(abs(x - round(x)) < .Machine$double.eps^0.5)
 }
 
-ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, tol = 0.01) {
+ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill = FALSE, tol = 0.01) {
   if (!is.array(array)) {
     cli::cli_abort("`array` must be an array")
   }
@@ -355,16 +361,22 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, tol = 0.01
     return(array)
   }
 
+  fill_years <- all_years[!all_years %in% existing_years]
+  back_years <- fill_years[which(fill_years < min(existing_years))]
+  forward_years <- fill_years[which(fill_years > max(existing_years))]
+  inside_years <- fill_years[!fill_years %in% back_years & !fill_years %in% forward_years]
+  
+  
+  if (!backfill) {
+    all_years <- all_years[!all_years %in% back_years]
+  }
+  
   # Create output array
   d[[year_dim]] <- length(all_years)
   dn[[year_dim]] <- all_years
   OutArray <- array(NA, dim = d, dimnames = dn)
   abind::afill(OutArray) <- array # add the existing values
 
-  fill_years <- all_years[!all_years %in% existing_years]
-  back_years <- fill_years[which(fill_years < min(existing_years))]
-  forward_years <- fill_years[which(fill_years > max(existing_years))]
-  inside_years <- fill_years[!fill_years %in% back_years & !fill_years %in% forward_years]
 
   season_existing <- existing_years %% 1
   # Forward fill years from most recent existing year
@@ -407,7 +419,7 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, tol = 0.01
   }
 
   # Back fill years from first existing year
-  if (length(back_years)) {
+  if (length(back_years) && backfill) {
     season_backward <- (back_years %% 1) |> unique()
     if (NoSeasonVals(season_existing)) {
       # no seasons in provided values - constant over seasons within years

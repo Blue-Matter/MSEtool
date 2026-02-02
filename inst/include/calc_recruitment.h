@@ -56,6 +56,12 @@ inline void CalcRecruitment(
     const int rec_y = y + lag; // year index for the recruitment
     if (rec_y >= Num_st.dim[2]) continue;
     
+    if (rec_y >= R0.dim[2]) 
+      Rcpp::stop("rec_y exceeds R0 dimension");
+    
+    if (rec_y >= devs.dim[1])
+      Rcpp::stop("rec_y exceeds RecDevs dimension");
+    
     for (int sim : Sims) {
       
       const int sim_num   = sim_index<4>(sim, Num_st, "Number");
