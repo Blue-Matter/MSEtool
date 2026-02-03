@@ -1,4 +1,10 @@
-GenProjData_Catch <- function(x, Proj, DataYear, YearsAll, y, stocks, type=c('Landings', 'Discards')) {
+GenProjData_Catch <- function(x, 
+                              Proj, 
+                              DataYear,
+                              YearsAll,
+                              i,
+                              stocks, 
+                              type=c('Landings', 'Discards')) {
   
   type <- match.arg(type, c('Landings', 'Discards'))
   
@@ -6,6 +12,10 @@ GenProjData_Catch <- function(x, Proj, DataYear, YearsAll, y, stocks, type=c('La
   if (EmptyObject(CatchData))
     return(Proj)
   
+  nArea <- nArea(Proj)
+  
+  Value <- CatchData@Value
+  CV <- CatchData@CV
  
   FleetNames <- CatchData@Name
   if (is.null(FleetNames)) {
@@ -33,8 +43,6 @@ GenProjData_Catch <- function(x, Proj, DataYear, YearsAll, y, stocks, type=c('La
       abind::adrop(drop=c(1,3))
   }) 
   
-
-  
   # create output arrays
   NewValue <- array(NA, dim=c(1, nFleet),
                     dimnames = list(Year=DataYear,
@@ -44,39 +52,56 @@ GenProjData_Catch <- function(x, Proj, DataYear, YearsAll, y, stocks, type=c('La
   for (fl in 1:nFleet) {
     Obs <- slot(Proj@OM@Obs[[i]][[fl]], type)
     
-    if (length(Obs@Error)<1)
-      next()
+    if (EmptyObject(Obs)) next()
+    
+    if (length(Obs@Error)<1) next()
     
     # Catch 
     if (!is.null(Proj@OM@Data[[i]]) && nrow(slot(Proj@OM@Data[[i]],type)@Value)>=TSIndex) {
       NewValue[,fl] <- slot(Proj@OM@Data[[i]],type)@Value[TSIndex,fl]
     } else {
-      error <- Obs@Error[x, TSIndex]
-      bias <- Obs@Bias[x]
+      error <- ArraySubsetYear(Obs@Error, DataYear)[x]
+      bias <- ArraySubsetYear(Obs@Bias, DataYear)[x] 
       
       if (CatchData@Units[fl] == 'Number') {
         real_catch <- purrr::map(Real_Catch_Number, \(catch_n) {
-          catch_n[,fl,, drop=FALSE] |> SumOverAge() |> SumOverArea()
-        }) |> List2Array('Stock') |> SumOverStock()
+          catch_n[,fl,, drop=FALSE] |> sum()
+        }) |> List2Array('Stock') |> sum()
         
         NewValue[,fl] <- real_catch * error * bias
         
       } else if (DataCatch@Units[fl] == 'Biomass') {
         # Convert to Biomass
+        real_catch_b <- purrr::map2(Real_Catch_Number, Proj@OM@Fleet, 
+                                    \(catch_n, FleetList) {
+                                      fleet <- FleetList[[fl]]
+                                      catch_fleet <- catch_n[,fl,, drop=FALSE] |> abind::adrop(2)
+                                      fleetwght <- fleet@WeightFleet[x,,TSIndex, drop=FALSE] |> 
+                                        abind::adrop(c(1,3), one.d.array = TRUE) |>
+                                        AddDimension('Area') |>
+                                        ExtendAreas(1:nArea)
+                                      ArrayMultiply(catch_fleet, fleetwght)
+                                    }) |>
+          List2Array('Stock') |>
+          sum()
         
-        # up to here !!
-        
-        
+        NewValue[,fl] <- real_catch_b * error * bias
       } else {
         cli::cli_alert_warning('Landings & Discards data can only be in units of `Biomass` or `Number`') 
       }
+    }  # end catch
+    
+    # CV
+    if (!is.null(Proj@OM@Data[[i]]) && 
+        !is.null(slot(Proj@OM@Data[[i]],type)@CV) &&  
+        nrow(slot(Proj@OM@Data[[i]],type)@CV)>=TSIndex) {
+      NewCV[,fl] <- slot(Proj@OM@Data[[i]],type)@CV[TSIndex,fl]
+    } else {
+      NewCV[,fl] <- SubsetYear(CatchData@CV, DataYear)[fl] 
     }
-    
-    
-    
   } # end fleet loop
   
-
-  
+  CatchData@Value <- abind::abind(Value, NewValue, along=1, use.dnns=TRUE)
+  CatchData@CV <- abind::abind(CV, NewCV, along=1, use.dnns=TRUE)
   CatchData
 }

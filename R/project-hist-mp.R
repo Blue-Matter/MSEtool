@@ -6,7 +6,9 @@ CalcManagementInterval <- function(Hist, YearsProj) {
 
 
 # Project Hist object for a single MP 
-Project_MP <- function(Proj, MSE, MP, mp = 1, 
+Project_MP <- function(Proj, MSE, 
+                       MP,
+                       mp = 1, 
                        YearsHist, 
                        YearsProj) {
   
@@ -22,7 +24,10 @@ Project_MP <- function(Proj, MSE, MP, mp = 1,
     # TODO add progress 
     Year <- YearsProj[ts]
     
-    ProjSim <- GenerateProjectionData(ProjSim, Year, YearsHist, YearsProj)
+    # Simulate data for the previous time step
+    Proj <- GenerateProjectionData(Proj, Year, YearsHist, YearsProj)
+      
+    # ProjSim <- GenerateProjectionData(ProjSim, Year, YearsHist, YearsProj)
     
     
     

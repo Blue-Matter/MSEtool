@@ -32,8 +32,16 @@ ConditionObs <- function(Hist, silent=FALSE) {
     
     stocks <- Complexes[[i]]
     FisheryData <- FisheryDataList[[i]]
-    Hist <- ConditionObs_Catch(Hist, FisheryData, HistYears, ProjYears, stocks, i)
     
+    # TODO 
+    # - Effort
+    # - CAA
+    # - CAL
+    # - life history
+    
+    
+    Hist <- ConditionObs_Catch(Hist, FisheryData, HistYears, ProjYears, stocks, i)
+  
     if (!silent) cli::cli_progress_update()
     
     Hist <- ConditionObs_Catch(Hist, FisheryData, HistYears, ProjYears, stocks, i, 'Discards')

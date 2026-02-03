@@ -245,7 +245,8 @@ ConditionObs_Index <- function(Hist,
     ResidualsHistorical <- exp(LogResiduals)
     ResidualsProjection <- exp(logProjResids)
     
-    Index_Obs@Error <- cbind(ResidualsHistorical, ResidualsProjection) 
+    Index_Obs@Error <- abind::abind(ResidualsHistorical, ResidualsProjection,
+                                    along=2, use.dnns=TRUE) 
     dimnames(Index_Obs@Error) <- list(Sim = seq_len(nSim),
                                      Year=c(HistYears, ProjYears))
     

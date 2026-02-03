@@ -31,15 +31,17 @@ GenerateProjectionData <- function(Proj, Year, YearsHist, YearsProj) {
   StockNames <- StockNames(Proj@OM)
   
   # replicate if only 1 sim for historical
-  if (length(Proj@Data) < nSim) {
+  if (length(Proj@Data) == 1) {
     Proj@Data <- replicate(nSim, Proj@Data)
+    names(Proj@Data) <- 1:nSim
   }
   
   
-  
   SimDataList <- purrr::map(1:nSim, \(x)
-                            GenerateProjectionData_Sim(x, Hist, HistYears,
-                                                        nArea, FleetNames, StockNames, silent, id)
+                            GenerateProjectionData_Sim(x, 
+                                                       Proj, 
+                                                       DataYear, 
+                                                       YearsAll)
   )
   names(SimDataList) <- 1:nSim
   
@@ -47,11 +49,12 @@ GenerateProjectionData <- function(Proj, Year, YearsHist, YearsProj) {
   
 }
 
-GenerateProjectionData_Sim <- function(x, Proj, Year, YearsHist, YearsProj) {
+GenerateProjectionData_Sim <- function(x, Proj, DataYear, YearsAll) {
   
   DataList <- Proj@Data[[x]]
   
   Complexes <- Proj@OM@Complexes
+  
   
   
   for (i in seq_along(Complexes)) {
@@ -66,8 +69,31 @@ GenerateProjectionData_Sim <- function(x, Proj, Year, YearsHist, YearsProj) {
     Data@Years <- YearsAll[1:TSIndex]
     
     
-    Data@Effort <- GenHistData_Effort(x, Data, Hist, HistYears, i, stocks, FleetNames)
+    Data@Effort <- GenProjData_Effort(x, 
+                                      Proj, 
+                                      DataYear, 
+                                      YearsAll, 
+                                      i, 
+                                      stocks)
     
+    Data@Landings <- GenProjData_Catch(x,
+                                       Proj, 
+                                       DataYear,
+                                       YearsAll,
+                                       i,
+                                       stocks,
+                                       type='Landings')
+    
+    Data@Discards <- GenProjData_Catch(x,
+                                       Proj, 
+                                       DataYear,
+                                       YearsAll,
+                                       i,
+                                       stocks,
+                                       type='Discards')
+    
+    Data@CPUE 
+    Data@Survey
   }
   
   

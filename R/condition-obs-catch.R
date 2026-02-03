@@ -98,11 +98,9 @@ ConditionObs_Catch <- function(Hist,
     }
     SimValue[SimValue<0] <- 0
     
-    
     SimValue <- ArraySubsetYear(SimValue, CatchObs@Years)
     ObsValue <- ArraySubsetYear(ObservedCatch, CatchObs@Years)
 
-    
     # Bias 
     Bias <- t( t(SimValue) / ObsValue)
     Bias[Bias<0.001] <- NA
@@ -142,7 +140,7 @@ ConditionObs_Catch <- function(Hist,
     dimnames(ErrorProj) <- list(Sim=1:nSim,
                                 Year=ProjYears)
     
-    Error <- cbind(ErrorHist,ErrorProj)
+    Error <- abind::abind(ErrorHist,ErrorProj, along = 2, use.dnns = TRUE)
     CatchObs@Error <- Error
     slot(Hist@OM@Obs[[i]][[fl]], type) <- CatchObs
   }

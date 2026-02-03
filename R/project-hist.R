@@ -40,7 +40,7 @@ Project_hist <- function(Hist,
     cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
   
   for (mp in seq_along(MPs)) {
-    # MP <- MPs[mp]
+    MP <- MPs[mp]
     # MSE <- ProjectMP(SimList, MSE, MP, mp, YearsHist, YearsProj) 
   }
 
