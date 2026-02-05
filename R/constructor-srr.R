@@ -80,6 +80,13 @@ SRR <- function(Pars = list(h = NA),
                 Units = 1,
                 Misc = list()) {
   
+  if (!inherits(Pars, 'list')) {
+    if (!'SRR' %in% slotNames(Pars))
+      cli::cli_abort(c('x'='No slot {.val SRR} found in object class {.val {class(Pars)}}'))
+    return(Pars@SRR)
+  }
+  
+  
   obj <- new(
     "srr",
     Pars = Pars,

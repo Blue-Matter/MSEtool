@@ -93,7 +93,7 @@ a_or_an <- function(x) {
     .show_data_frame(x, name)
   }
   
-  if (inherits(x, 'numeric')) {
+  if (inherits(x, 'numeric') || inherits(x, 'integer')) {
     if (all(as.integer(x) != x)) {
       x <- signif(x,3)
     }
@@ -280,8 +280,9 @@ setMethod("show", "om", function(object) {
   
   .show_slot(object, 'nSim')
   
-  .show_slot(object, 'CurrentYear')
+  if (object@Seasons > 1)
   .show_slot(object, 'Seasons')
+  
   
   .show_slot(object, 'nYear')
   .show_slot(object, 'pYear')
@@ -297,10 +298,11 @@ setMethod("show", "om", function(object) {
   
   stockNames <- StockNames(object)
   fleetNames <- FleetNames(object)
+  if (is.list(fleetNames))
+    fleetNames <- fleetNames[[1]]
   cli::cli_text("Stocks: {.val {stockNames}}")
-  .show_x(fleetNames, 'Fleets')
-  # cli::cli_text("Fleets: {.val {FleetNames(object)}}")
-  
+  cli::cli_text("Fleets: {.val {fleetNames}}")
+
 })
 
 # ---- Stock ----
@@ -311,10 +313,11 @@ setMethod('show', 'stock', function(object) {
   
   .show_slot(object, 'Name')
   
-  cli::cli_text("")
-  
   .show_slot(object, 'CommonName')
   .show_slot(object, 'Species')
+  
+  cli::cli_text("")
+  
   
   slots <- c('Ages',
              'Length',
@@ -328,10 +331,10 @@ setMethod('show', 'stock', function(object) {
   )
   for (name in slots) {
     if (isNewObject(slot(object, name))) {
-      cli::cli_text("{.strong {name}}: {.emph not specified}")
+      cli::cli_text("{.var {name}}: {.emph not specified}")
     } else {
       
-      cli::cli_text("{.strong {name}}: {a_or_an(name)}  {.help {help_topic('MSEtool', name)}} Object")
+      cli::cli_text("{.var {name}}: {a_or_an(name)}  {.help {help_topic('MSEtool', name)}} Object")
     }
   }
 

@@ -85,6 +85,12 @@ OM <- function(Name='A new `OM` object',
                Misc=list(),
                Source=NULL) {
   
+  if (!inherits(Name, 'character')) {
+    if (!'OM' %in% slotNames(Name))
+      cli::cli_abort(c('x'='No slot {.val OM} found in object class {.val {class(Name)}}'))
+    return(Name@OM)
+  }
+  
   .Object <- new('om')
   .Object@Name <- Name
   .Object@Agency <- Agency

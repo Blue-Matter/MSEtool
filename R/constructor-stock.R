@@ -60,9 +60,17 @@ Stock <- function(Name,
     return(object)
   }
   
+  if (!inherits(Name, 'character')) {
+    if (!'Stock' %in% slotNames(Name))
+      cli::cli_abort(c('x'='No slot {.val Stock} found in object class {.val {class(Name)}}'))
+    stock <- Name@Stock
+    if (is.numeric(CommonName))
+      return(stock[[CommonName]])
+    
+    return(Name@Stock)
+  }
 
   
-  CheckClass(Name, "character", "Name")
   
   if (is.null(Ages))  
     Ages <- Ages()
