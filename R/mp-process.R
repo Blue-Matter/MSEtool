@@ -36,7 +36,7 @@ CheckMPClass <- function(MPs) {
 #' A character vector of unique function names referenced in the body of `MP`.
 #'
 #' @keywords internal
-DetectCalledFunctions <- function(MP) {
+DetectCalledFunctions <- function(MP, MSEtool_funs) {
   
   skip <- c("{", "<-", "=", "(", "[", "[[",
             "if", "for", "while", "repeat", "return")
@@ -52,12 +52,12 @@ DetectCalledFunctions <- function(MP) {
       fname <- as.character(fun)
       
       if (!fname %in% skip &&
-          exists(fname, mode = "function", inherits = TRUE)) {
+          exists(fname, mode = "function", inherits = TRUE) &&
+          !fname %in% MSEtool_funs) {
         out <- fname
       }
     }
     
-    # recurse into arguments
     c(out, unlist(lapply(as.list(expr)[-1], find_functions)))
   }
   
@@ -78,18 +78,39 @@ DetectCalledFunctions <- function(MP) {
 #' @keywords internal
 MakeSelfContained <- function(MP) {
   CheckClass(MP, 'mp', 'MP')
-  helpers <- DetectCalledFunctions(MP)
+  
+  # Create a new environment for the function
+  env <- new.env(parent = baseenv())  
+  
+  # Get all exported functions from MSEtool
+  MSEtool_funs <- ls(getNamespace("MSEtool"), all.names = TRUE)
+  MSEtool_funs <- MSEtool_funs[sapply(MSEtool_funs, function(x) is.function(get(x, envir = asNamespace("MSEtool"))))]
+  
+  # Get internal helper functions
+  helpers <- DetectCalledFunctions(MP, MSEtool_funs=MSEtool_funs)
   helpers <- helpers[sapply(helpers, function(x) 
     exists(x, envir = parent.frame()) && 
       !isNamespace(environment(get(x))))] 
   
-  # Create a new environment for the function
-  env <- new.env(parent = baseenv())  
+  # Add helper functions
+  for (hname in helpers) {
+    env[[hname]] <- get(hname, envir = parent.frame())
+  }
   if (!is.null(helpers)) {
     for (hname in helpers) {
       env[[hname]] <- get(hname, envir = parent.frame())  
     }
   }
+  
+  # Add MSEtool exported functions 
+  for (fname in MSEtool_funs) {
+    fun <- try( get(fname, envir = asNamespace("MSEtool")), silent=TRUE)
+    if (!inherits(fun,'try-error')) {
+      env[[fname]] <- fun  
+    }
+    
+  }
+  
   environment(MP) <- env
   MP
 }

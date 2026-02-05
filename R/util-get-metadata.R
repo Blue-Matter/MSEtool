@@ -46,6 +46,10 @@ GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), Years=N
   if (length(nAreas)>1) 
     cli::cli_abort('All Stocks must have the same number of areas')
   
+  FleetNames <- FleetNames(OM)
+  if (is.list(FleetNames))
+    FleetNames <- FleetNames[[1]]
+  
   list(nSim=nSim(OM),
        AgeClasses=AgeClasses,
        nAges=nAges,
@@ -53,5 +57,5 @@ GetMetaData <- function(OM, Period=c('Historical', 'Projection', 'All'), Years=N
        StockNames=StockNames(OM),
        Years=Years,
        Period=Period,
-       FleetNames=FleetNames(OM)[[1]])
+       FleetNames=FleetNames)
 }

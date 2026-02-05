@@ -85,7 +85,6 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
     as.numeric() |> unique() |> sort()
   
   
-  
   ASK <- ExtendYears(ASK, Years)
   object@MeanAtAge <- ExtendYears(object@MeanAtAge, Years)
   
@@ -131,7 +130,9 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
           MeanAtAge <-  ObjectMeanAtAge[s, , y]
         }
         
-        ASK_sim_ts <- ASK[s, , , y]
+        ASK_s <- min(ASK_dim[1], s)
+        ASK_y <- min(ASK_dim[3], y)
+        ASK_sim_ts <- ASK[ASK_s, , , ASK_y]
         sums <- matrix(apply(ASK_sim_ts, 2, sum), nAge, nClass, byrow=TRUE)
         ASK_stand <- ASK_sim_ts/sums
         ASK_stand[!is.finite(ASK_stand)] <- 0

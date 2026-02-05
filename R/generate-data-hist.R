@@ -10,7 +10,7 @@
 #' replicate is returned.
 #'
 #'
-#' @param Hist Operating model history object
+#' @param Hist `Hist` object populated with historical fishery dynamics
 #' @param silent Logical; if `TRUE`, suppress progress bars and status messages
 #'
 #' @return Updated `Hist` object with `Hist@Data` containing simulated historical data

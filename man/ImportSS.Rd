@@ -28,7 +28,7 @@ ImportSS(
   ...
 )
 
-ImportSSReport(SSDir, silent = FALSE, ...)
+ImportSSReport(SSDir, parallel = TRUE, workers = NULL, silent = FALSE, ...)
 }
 \arguments{
 \item{SSDir}{Character string giving the path to a directory containing SS3

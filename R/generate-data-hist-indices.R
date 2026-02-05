@@ -105,11 +105,17 @@ GenHistData_Indices <- function(x, Data, Hist, HistYears, i, stocks, StockNames,
         }
         
       } else if (SelectivityAtAge == 'Obs') {
-        SelectivityAtAgeList <- IndexObs@Selectivity
+        # SelectivityAtAgeList <- IndexObs@Selectivity
+        SelectivityAtAgeList <- purrr::map(IndexObs@Selectivity, \(stock) {
+          stock[x,,TSIndex, drop=FALSE] |>
+            AddDimension('Area') |>
+            DropDimension(c('Sim', 'Year')) |>
+            ExtendAreas(Areas=1:nArea)
+        })
       }
     } else {
       SelectivityAtAgeList <- purrr::map(Hist@OM@Fleet[stocks], \(fleet_list) {
-        select_at_age <- fleet_list[[FleetNames[fl]]]@Selectivity@MeanAtAge[x,,,,drop=FALSE] |>
+        fleet_list[[FleetNames[fl]]]@Selectivity@MeanAtAge[x,,,,drop=FALSE] |>
           ArraySubsetYear(HistYears) |>
           abind::adrop(1)
       }) 
@@ -168,7 +174,6 @@ GenHistData_Indices <- function(x, Data, Hist, HistYears, i, stocks, StockNames,
     
     # Reference Value 
     if (length(IndexObs@Ref)) {
-      print(((IndexObs@Ref)) )
       # TODO - index ref value if units != Biomass - only does BMSY at the moment
       if (length(Hist@Reference@MSY@BMSY)) {
         adjust <- mean(real_nom_index/apply(Hist@Biomass[x,i,,drop=FALSE], 'Year', mean, na.rm=TRUE), na.rm=TRUE)

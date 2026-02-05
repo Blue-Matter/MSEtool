@@ -5,7 +5,7 @@
 \alias{ControlDefault}
 \title{Default OM Control Options}
 \format{
-An object of class \code{list} of length 1.
+An object of class \code{list} of length 2.
 }
 \usage{
 ControlDefault

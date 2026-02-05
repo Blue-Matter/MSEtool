@@ -93,10 +93,10 @@ Simulate_om <- function(OM = NULL,
   
   # TODO - arguments to skip or directly add 
   
-  # Hist <- CalcRefYield(Hist, 
-  #                      type='Landings',
-  #                      Units = "Biomass",
-  #                      silent = silent)
+  Hist <- CalcRefYield(Hist,
+                       type='Landings',
+                       Units = "Biomass",
+                       silent = silent)
   
   # ---- Remove temporary lists and arrays from Hist@Misc ----
   # see PrepHistMisc above

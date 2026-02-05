@@ -16,7 +16,7 @@ PopulateStock(
   seed = 102,
   silent = FALSE,
   force = FALSE,
-  CalcAtLength = TRUE
+  CalcAtLength = FALSE
 )
 }
 \arguments{

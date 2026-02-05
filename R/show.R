@@ -251,6 +251,8 @@ cli_fn <- function(fun) {
   slots <- slots[!slots%in%ignore]
   
   for (sl in slots) {
+    if (sl =='Log')
+      next()
     .show_slot(object, sl)  
     if (sl %in% c('Model', 'TruncSD')) {
       cli::cli_text("")
@@ -472,8 +474,7 @@ setMethod('show', 'data', function(object) {
 
 #' @rdname show
 setMethod('show', 'advice', function(object) {
-  cli::cli_h2("A {.help MSEtool::Advice} Object")
-  cli::cli_text("...")
+  .show_object(object, 'Advice')
 })
 
 

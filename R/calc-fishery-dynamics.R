@@ -12,8 +12,7 @@ CalcFisheryDynamics <- function(Hist,
   nArea <- nArea(Hist)
   AllYears <- Years(Hist@OM)
   nSim <- nSim(Hist)
-  
-  
+
   if (is.null(Years)) {
     Years <- Years(Hist@OM,'H')
   }

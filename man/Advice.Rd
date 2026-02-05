@@ -2,30 +2,30 @@
 % Please edit documentation in R/constructor-advice.R
 \name{Advice}
 \alias{Advice}
-\title{Advice}
+\title{Management Advice}
 \usage{
 Advice(
   TAC = NULL,
   Effort = NULL,
-  EffType = "Rel",
+  EffType = c("Rel", "Abs"),
   Closure = NULL,
-  Selectivity = new("selectivity"),
-  Retention = new("retention"),
-  DiscardMortality = new("discardmortality"),
-  apicalF = NULL,
+  Selectivity = NULL,
+  Retention = NULL,
+  DiscardMortality = NULL,
+  ApicalF = NULL,
   Misc = list()
 )
 }
 \arguments{
-\item{TAC}{Numeric array specifying total allowable catch. See \code{Details}}
+\item{TAC}{Numeric vector or matrix specifying total allowable catch. See \code{Details}}
 
-\item{Effort}{Numeric array specifying relative or absolute fishing effort. See \code{Details}}
+\item{Effort}{Numeric vector or matrix specifying relative or absolute fishing effort. See \code{Details}}
 
 \item{EffType}{Character string specifying effort interpretation:
 \code{"Rel"} for relative to the last historical year, or \code{"Abs"} for absolute
-effort units (in units of \code{\link[=Effort]{Effort()}}).}
+effort units (in units of \code{\link[=Effort]{Effort()}}). Default is \code{"Rel"}.}
 
-\item{Closure}{Numeric or logical array specifying spatial or temporal closures. See \code{Details}}
+\item{Closure}{Numeric vector or array specifying spatial closures. See \code{Details}}
 
 \item{Selectivity}{A \code{\link[=Selectivity]{Selectivity()}} object or an \code{nFleet}-length list of such objects. See \code{Details}}
 
@@ -34,19 +34,169 @@ effort units (in units of \code{\link[=Effort]{Effort()}}).}
 \item{DiscardMortality}{A \code{\link[=DiscardMortality]{DiscardMortality()}} object or an \code{nFleet}-length list
 of such objects. See \code{Details}}
 
-\item{apicalF}{Numeric array specifying target apical fishing mortality. Not currently used}
+\item{ApicalF}{Numeric array specifying target apical fishing mortality. Not currently used}
 
 \item{Misc}{Miscellaneous list.}
 }
 \value{
-An \code{\link[=Advice]{Advice()}} object.
+An \linkS4class{advice} object.
 }
 \description{
-Construct an \code{\link[=Advice]{Advice()}} object defining management advice returned by a
+Construct an \linkS4class{advice} object defining management advice returned by a
 management procedure.
 }
 \details{
-To be added!
+\code{Advice()} constructs a container for management regulations returned by a
+management procedure. All slots are optional; any regulation not supplied
+will remain unchanged from the previous time step.
+
+The management regulations in an \code{Advice} object will be applied in the year/time-step
+that the \code{Advice} object is produced (i.e., when the MP is run) and will
+apply to all future time-steps until a new \code{Advice} object is returned by an
+MP.
+
+The \code{Closure}, \code{Selectivity}, \code{Retention}, and \code{DiscardMortality} regulations
+(if any) are applied first before calculating the fishing mortality corresponding
+with \code{TAC}.
+
+If both \code{TAC} and \code{Effort} regulations are returned, the expected
+fishing effort will be calculated to achieve a catch
+equal to the \code{TAC}. If the expected effort is greater than that set in
+\code{Effort}, the catch will be constrained to that corresponding with \code{Effort}.
+Otherwise, the actual fishing effort will be lower than \code{Effort}.
+\subsection{Valid Configurations for Management Regulations}{
+
+There are several options for populating the slots in an \code{Advice} object:
+}
+
+\subsection{TAC}{
+
+Total allowable catch units of \code{Biomass}.
+\itemize{
+\item single numeric value: global TAC distributed across
+the stocks and fleets in the \code{\link[=Data]{Data()}} object according to \code{Allocation(OM)}.
+\item numeric vector length \code{nFleet}: fleet-specific TAC.
+\item numeric matrix: Fleet- and Area-specific TAC. Must have \code{nFleet}
+rows and \code{nArea} columns.
+}
+}
+
+\subsection{Effort}{
+
+Either in absolute units corresponding with fleet-specific effort
+(\code{EffType}=\code{"Abs"}), or relative to the effort in the last historical year
+(\code{EffType}=\code{"Rel"}; default).
+\itemize{
+\item single numeric value: Total effort (i.e., summed over fleets) Distributed
+across fleets and areas internally (see \href{https://docs.openmse.com/}{Technical Manual})
+\item numeric vector length \code{nFleet}: Fleet-specific Effort. Distributed across
+areas internally (see \href{https://docs.openmse.com/}{Technical Manual})
+\item numeric matrix: Fleet- and Area-specific Effort. Must have \code{nFleet}
+rows and \code{nArea} columns.
+}
+}
+
+\subsection{Closure}{
+
+Can only be \code{0} (closed) or \code{1} (open). Otherwise will be converted to
+\code{0} (\code{Closure}<0.5) or \code{1}
+\itemize{
+\item vector length \code{nArea}
+\item matrix with \code{nFleet} rows and \code{nArea} columns: fleet-specific closures.
+}
+}
+
+\subsection{Selectivity}{
+
+Either a \code{\link[=Selectivity]{Selectivity()}} object, or a list length \code{nFleet} of
+\code{Selectivity} objects.
+
+If a single \code{Selectivity} object, the prescribed selectivity schedule
+is applied to all fleets.
+
+See section below for more details.
+}
+
+\subsection{Retention}{
+
+Same as described for \code{Selectivity}, but for \code{\link[=Retention]{Retention()}} objects.
+}
+
+\subsection{Discard Mortality}{
+
+Same as described for \code{Selectivity}, but for \code{\link[=DiscardMortality]{DiscardMortality()}} objects.
+}
+
+\subsection{ApicalF}{
+
+Not currently used.
+}
+
+\subsection{Misc}{
+
+A list of miscellaneous information that needs to be stored and accessed by
+the MP in future timesteps.
+}
+
+\subsection{Populating Selectivity, Retention, and Discard Mortality Objects}{
+
+The \code{Selectivity}, \code{Retention}, and \code{DiscardMortality} objects are used to
+set the selectivity-, retention-, and discard mortality- at-age or -at-size
+schedules.
+
+If values are provided for these slots in the \code{Advice} object,
+the new regulations/specifications will apply to all future time steps
+until modified again by the \code{MP}.
+
+Values can be set for these objects in the following ways:
+\itemize{
+\item \code{MeanAtAge}:
+\itemize{
+\item A numeric vector length \code{nAge}, where \code{nAge} is the number of
+age classes for the stock (or stocks) that are being managed by the \code{MP}.
+\item For area-specific schedules, a numeric matrix with \code{nAge} rows and
+\code{nArea} columns.
+}
+\item \code{MeanAtLength}:
+\itemize{
+\item A numeric vector length \code{nClass}, where \code{nClass} is the number of
+length classes for the stock (or stocks) that are being managed by the \code{MP}.
+The \code{Classes} slot can be used to set the size classes corresponding with
+\code{MeanAtLength}. Otherwise, the classes will be taken
+from the corresponding \code{Length} object in the \code{OM}(if they exist, otherwise
+an error).
+\item For area-specific schedules, a numeric matrix with \code{nClass} rows and
+\code{nArea} columns.
+}
+\item \code{MeanAtWeight}:
+\itemize{
+\item A numeric vector length \code{nClass}, where \code{nClass} is the number of
+weight classes for the stock (or stocks) that are being managed by the \code{MP}.
+The \code{Classes} slot can be used to set the size classes corresponding with
+\code{MeanAtWeight}. Otherwise, the classes will be taken
+from the corresponding \code{Weight} object in the \code{OM} (if they exist, otherwise
+an error).
+\item For area-specific schedules, a numeric matrix with \code{nClass} rows and
+\code{nArea} columns.
+}
+\item \code{Pars} and \code{Model}: for \code{Selectivity} and \code{Retention} only.
+}
+
+These slots can be used to set the age- or size-schedules using parameters and
+a model. See \code{\link[=SelectivityModels]{SelectivityModels()}} and \code{\link[=RetentionModels]{RetentionModels()}} for a details
+of built-in models.
+
+\code{Pars} should be a named list of parameters, where each parameter can be either
+a single numeric value, or a numeric vector length \code{nArea} for area-specific schedules.
+}
+}
+\examples{
+Advice(TAC = 1000)
+
+Advice(
+  Effort = c(1, 0.8),
+  EffType = "Rel"
+)
 }
 \seealso{
 \code{\link[=Selectivity]{Selectivity()}}, \code{\link[=Retention]{Retention()}}, \code{\link[=DiscardMortality]{DiscardMortality()}}

@@ -1,4 +1,4 @@
-DistributeEffort <- function(ProjSim, MPAdvice, nArea, FleetNames, StockNames, stocks, TSIndex, LastHistIndex) {
+.DistributeEffort <- function(ProjSim, MPAdvice, nArea, FleetNames, StockNames, stocks, TSIndex, LastHistIndex) {
 
   if (!is.array(MPAdvice@Effort)) {
     if (length(MPAdvice@Effort)==1) {

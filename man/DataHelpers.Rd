@@ -5,7 +5,6 @@
 \alias{LastTAC}
 \alias{GetYearLH}
 \alias{ProjectionYear}
-\alias{DataTrim}
 \title{Data Helper Functions}
 \usage{
 LastTAC(Data)
@@ -13,8 +12,6 @@ LastTAC(Data)
 GetYearLH(Data)
 
 ProjectionYear(Data)
-
-DataTrim(Data, Year)
 }
 \description{
 Data Helper Functions
@@ -26,7 +23,5 @@ Data Helper Functions
 \item \code{GetYearLH()}: Get the index for the last historical time step
 
 \item \code{ProjectionYear()}: Get the index for current time step
-
-\item \code{DataTrim()}: Trim a Data object to a specific Time Step
 
 }}

@@ -7,7 +7,7 @@
 GenerateHistoricalData(Hist, silent = FALSE)
 }
 \arguments{
-\item{Hist}{Operating model history object}
+\item{Hist}{\code{Hist} object populated with historical fishery dynamics}
 
 \item{silent}{Logical; if \code{TRUE}, suppress progress bars and status messages}
 }

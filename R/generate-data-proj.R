@@ -45,8 +45,8 @@ GenerateProjectionData <- function(Proj, Year, YearsHist, YearsProj) {
   )
   names(SimDataList) <- 1:nSim
   
-  
-  
+  Proj@Data <- SimDataList
+  Proj
 }
 
 GenerateProjectionData_Sim <- function(x, Proj, DataYear, YearsAll) {
@@ -54,8 +54,6 @@ GenerateProjectionData_Sim <- function(x, Proj, DataYear, YearsAll) {
   DataList <- Proj@Data[[x]]
   
   Complexes <- Proj@OM@Complexes
-  
-  
   
   for (i in seq_along(Complexes)) {
     Data <- DataList[[i]]
@@ -65,9 +63,8 @@ GenerateProjectionData_Sim <- function(x, Proj, DataYear, YearsAll) {
       next()
     
     
-    # update `Year`
-    Data@Years <- YearsAll[1:TSIndex]
-    
+    if (!DataYear %in% Data@Years) 
+      Data@Years <- c(Data@Years, DataYear)
     
     Data@Effort <- GenProjData_Effort(x, 
                                       Proj, 
@@ -92,9 +89,34 @@ GenerateProjectionData_Sim <- function(x, Proj, DataYear, YearsAll) {
                                        stocks,
                                        type='Discards')
     
-    Data@CPUE 
-    Data@Survey
-  }
+    Data@CPUE <- GenProjData_Index(x,
+                                   Proj,
+                                   DataYear,
+                                   YearsAll,
+                                   i,
+                                   stocks,
+                                   type='CPUE')
+    
+    Data@Survey <- GenProjData_Index(x,
+                                     Proj,
+                                     DataYear,
+                                     YearsAll,
+                                     i,
+                                     stocks,
+                                     type='Survey')
+    
+    # CAA - TODO
+    
+    # CAL - TODO
+    
+    # Life-History - TODO
+    
+    DataList[[i]] <- Data
+    
+  }  # end loop over stocks/complexes
   
-  
+  DataList
 }
+
+
+

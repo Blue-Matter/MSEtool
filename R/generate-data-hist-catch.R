@@ -71,8 +71,8 @@ GenHistData_Catch <- function(x, Data, Hist, HistYears, i, stocks, FleetNames,
     if (CatchData@Units[fl] == "Number") {
       real_catch <- purrr::map(Real_Catch_Number, \(catch_n) {
         catch_n[x,,,fl,] |> SumOverAge() |> SumOverArea()
-      }) |> List2Array('Stock') |>
-        apply('Year', sum)
+      }) |> List2Array('Stock') |> 
+        apply('Year', sum) |> SumOverStock()
       
 
     } else if (CatchData@Units[fl] == "Biomass") {

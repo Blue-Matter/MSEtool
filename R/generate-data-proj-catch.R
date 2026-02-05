@@ -10,7 +10,7 @@ GenProjData_Catch <- function(x,
   
   CatchData <- slot(Proj@Data[[x]][[i]], type)
   if (EmptyObject(CatchData))
-    return(Proj)
+    return(CatchData)
   
   nArea <- nArea(Proj)
   

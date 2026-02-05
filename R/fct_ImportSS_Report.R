@@ -1,7 +1,7 @@
 
 #' @rdname ImportSS
 #' @export
-ImportSSReport <- function(SSDir, silent=FALSE, ...) {
+ImportSSReport <- function(SSDir, parallel=TRUE, workers=NULL, silent=FALSE, ...) {
   OnExit()
   CheckPackage("r4ss", '1.52.1', "pak::pkg_install('r4ss/r4ss')")
   
@@ -62,18 +62,38 @@ ImportSSReport <- function(SSDir, silent=FALSE, ...) {
     return(list())
   }
 
-  RepList <- purrr::map(
-    SSDir,
-    GetSSRepList,
-    silent = TRUE,
-    ...,
-    .progress = list(
-      caller = environment(),
-      format = "Reading SS3 Output from {.val {length(SSDir)}} directories {cli::pb_bar} {cli::pb_percent}"
-    )
-  )
+  parallel <- FALSE
   
+  if (!parallel) {
+    RepList <- purrr::map(
+      SSDir,
+      GetSSRepList,
+      silent = TRUE,
+      ...,
+      .progress = list(
+        caller = environment(),
+        format = "Reading SS3 Output from {.val {length(SSDir)}} directories {cli::pb_bar} {cli::pb_percent}"
+      )
+    )
+  } else {
+    # TODO - not currently working as expected
+    RepList <- with_future_plan(
+      parallel = parallel,
+      workers  = workers,
+      expr = {
+        furrr::future_map(
+          SSDir,
+          function(dir) {
+            GetSSRepList(dir, silent = TRUE, ...)
+          },
+          .options = furrr::furrr_options(scheduling = Inf)
+        )
+      }
+    )
+  }
+
   names(RepList) <- seq_along(RepList)
+  class(RepList) <- 'RepList'
   RepList
   
 }

@@ -31,7 +31,8 @@
 #' @param MPs Optional character vector of management procedure names.
 #' @param Years Optional subset of model years.
 #' @param default Scalar value used to initialize arrays.
-#'
+#' 
+#' @name internal_arrays
 #' @keywords internal
 NULL
 

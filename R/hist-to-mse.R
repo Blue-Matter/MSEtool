@@ -1,4 +1,4 @@
-Hist2MSE <- function(Hist, MPs) {
+Hist2MSE <- function(Hist, MPNames) {
   MSE <- new('mse')
   MSE@OM <- Hist@OM
   MSE@Unfished <- Hist@Unfished
@@ -10,7 +10,15 @@ Hist2MSE <- function(Hist, MPs) {
     slot(MSE@Hist, sl) <- slot(Hist, sl)
   }
   
-  MPNames <- MPs
+  MSE <- Add_MP_Functions(MSE, MPNames)
+ 
+  
+  MSE <- InitializeTimeSeries(MSE, 'Projection', MPs=MPs)
+  
+  MSE
+}
+
+Add_MP_Functions <- function(MSE, MPNames) {
   MSE@MPs <- lapply(MPs, function(x) {
     
     mp <- try(get(x), silent=TRUE)
@@ -33,8 +41,7 @@ Hist2MSE <- function(Hist, MPs) {
   MPs <- MPs[valid]
   MSE@MPs <- MSE@MPs[valid]
   names(MSE@MPs) <- MPNames[valid]
-  
-  MSE <- InitializeTimeSeries(MSE, 'Projection', MPs=MPs)
-  
   MSE
+  
+  
 }

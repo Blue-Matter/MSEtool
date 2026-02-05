@@ -160,8 +160,7 @@ OptRefYield <- function(logScalar,
   ProjSim@Effort[1,ProjYearInd,] <- LastHistEffort * exp(logScalar)
   
   ProjSim_opt <- CalcFisheryDynamics(Hist = ProjSim,
-                                     # Years = c(tail(HistYears, ProjSim@OM@Seasons), ProjYears), 
-                                     Years = c(HistYears, ProjYears), 
+                                     Years = c(tail(HistYears, ProjSim@OM@Seasons), ProjYears), 
                                      DoCalcaggF = 0,
                                      debug = debug)
   
@@ -178,7 +177,7 @@ OptRefYield <- function(logScalar,
     lastnTS <- nTS
   
   TSmean <- (nTS-lastnTS+1):nTS
-  mean_Yield <- apply(Yield[1,,TSmean], "Stock", mean)
+  mean_Yield <- apply(Yield[1,,TSmean, drop=FALSE], "Stock", mean)
   obj <- -sum(mean_Yield) 
   
   if (opt==1) {

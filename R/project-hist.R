@@ -31,7 +31,7 @@ Project_hist <- function(Hist,
                               Years=c(tail(YearsHist,1), head(YearsProj,1)))
   
   # ---- Create MSE Object ----
-  MSE <- Hist2MSE(Proj, MPs) 
+  MSE <- Hist2MSE(Proj, MPNames = MPs) 
   
   # ---- Project MPs ----
   mp <- 1 # for debugging
@@ -40,8 +40,17 @@ Project_hist <- function(Hist,
     cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')
   
   for (mp in seq_along(MPs)) {
-    MP <- MPs[mp]
-    # MSE <- ProjectMP(SimList, MSE, MP, mp, YearsHist, YearsProj) 
+    MPName <- MPs[mp]
+    MPfunction <- MSE@MPs[[MPName]]
+    
+    MSE <- Project_MP(Proj, 
+                      MSE,
+                      MPName,
+                      MPfunction,
+                      mp = mp,
+                      YearsHist,
+                      YearsProj)
+    
   }
 
   

@@ -203,8 +203,8 @@ setClass(
 setClass(
   "advicedata",
   slots = c(
-    TAC    = "num.array.null",
-    Effort = "num.array.null",
+    TAC    = "num.array.list",
+    Effort = "num.array.list",
     Misc   = "list"
   )
 )

@@ -8,33 +8,33 @@
 The \code{advice} class defines management advice produced by a management
 procedure. Advice may include output controls (e.g. total allowable catch),
 input controls (e.g. effort), spatial controls (closures), gear effects,
-or direct fishing mortality targets.
+or direct fishing mortality targets. See \code{\link[=Advice]{Advice()}} for details on valid
+entries and options for each slot.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{TAC}}{Numeric array specifying total allowable catch.}
+\item{\code{TAC}}{Numeric vector or numeric array specifying total allowable catch.}
 
-\item{\code{Effort}}{Numeric array specifying relative or absolute fishing effort.}
+\item{\code{Effort}}{Numeric vector array specifying relative or absolute fishing effort.}
 
-\item{\code{EffType}}{Character. Are effort regulations relative to last historical year (\code{Rel}) or
-absolute (\code{Abs}; in units of \code{\link[=Effort]{Effort()}})}
+\item{\code{EffType}}{Character. Are effort regulations relative to last historical year (\code{"Rel"}) or
+absolute (\code{"Abs"}; in units of \code{\link[=Effort]{Effort()}}). Default is \code{"Abs"}.}
 
-\item{\code{Closure}}{Numeric or logical array specifying spatial or temporal
-fishery closures.}
+\item{\code{Closure}}{Numeric vector or array specifying spatial closures.}
 
 \item{\code{Selectivity}}{A \code{\link[=Selectivity]{Selectivity()}} object or an \code{nFleet} long list of \code{\link[=Selectivity]{Selectivity()}} objects
-defining gear selectivity associated with the advice.}
+defining gear selectivity prescribed by the \code{MP}}
 
 \item{\code{Retention}}{A \code{\link[=Retention]{Retention()}} object or an \code{nFleet} long list of \code{\link[=Retention]{Retention()}} objects
-defining retention-at-age associated with the advice.}
+defining retention prescribed by the \code{MP}}
 
 \item{\code{DiscardMortality}}{A \code{\link[=DiscardMortality]{DiscardMortality()}} object or an \code{nFleet} long
-list of \code{\link[=DiscardMortality]{DiscardMortality()}} objects defining discard mortality rates.}
+list of \code{\link[=DiscardMortality]{DiscardMortality()}} objects defining discard mortality set in the \code{MP}}
 
-\item{\code{apicalF}}{Numeric array specifying target apical fishing mortality. Not Currently used}
+\item{\code{ApicalF}}{Numeric array specifying target apical fishing mortality. Not currently used}
 
-\item{\code{Misc}}{Miscellaneous list}
+\item{\code{Misc}}{Miscellaneous list. Will be passed to \code{Data@Misc} in following time steps.}
 
 \item{\code{Log}}{List used internally to store diagnostics}
 }}

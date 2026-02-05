@@ -4,7 +4,7 @@
 \alias{DetectCalledFunctions}
 \title{Detect helper functions called by an MP}
 \usage{
-DetectCalledFunctions(MP)
+DetectCalledFunctions(MP, MSEtool_funs)
 }
 \arguments{
 \item{MP}{A function of class \code{mp}.}

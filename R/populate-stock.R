@@ -68,7 +68,7 @@ PopulateStock <- function(Stock,
                           seed = 102,
                           silent = FALSE,
                           force = FALSE,
-                          CalcAtLength = TRUE) {
+                          CalcAtLength = FALSE) {
   
   if (is.null(seed)) {
     seed <- 102
@@ -136,7 +136,7 @@ PopulateStock <- function(Stock,
     seed = seed + 3,
     silent = silent,
     force = force,
-    CalcAtLength = CalcAtLength
+    CalcAtLength = FALSE
   )
   
   Stock@Maturity <- PopulateMaturity(
