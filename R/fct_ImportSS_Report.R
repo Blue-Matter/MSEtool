@@ -1,7 +1,16 @@
 
-#' @rdname ImportSS
+#' Import SS3 Report directories with optional parallel processing
+#'
+#' @param SSDir Character vector of SS3 report directories
+#' @param parallel Logical; whether to use parallel processing (default FALSE)
+#' @param silent Logical; suppress messages from internal functions (default FALSE)
+#' @param ... Additional arguments passed to `r4ss::SS_output`
+#'
+#' @return A list of parsed SS3 report objects
+#'
+#' @seealso [ImportSS()]
 #' @export
-ImportSSReport <- function(SSDir, parallel=TRUE, workers=NULL, silent=FALSE, ...) {
+ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
   OnExit()
   CheckPackage("r4ss", '1.52.1', "pak::pkg_install('r4ss/r4ss')")
   
@@ -62,7 +71,20 @@ ImportSSReport <- function(SSDir, parallel=TRUE, workers=NULL, silent=FALSE, ...
     return(list())
   }
 
-  parallel <- FALSE
+  if (parallel) {
+    current_plan <- future::plan()
+    
+    # future::sequential is default / indicates no parallel session
+    if (inherits(current_plan, "sequential")) {
+      cli::cli_alert_warning("{.val parallel = TRUE} requested, but no future plan has been set up.")
+      cli::cli_text("Please initialize a future session first, e.g.:")
+      cli::cli_ul()
+      cli::cli_li("`use_multisession(workers = 4)`")
+      
+      cli::cli_text("Until a future session is initialized, running sequentially (`parallel = FALSE`).")
+      parallel <- FALSE
+    }
+  }
   
   if (!parallel) {
     RepList <- purrr::map(
@@ -76,18 +98,24 @@ ImportSSReport <- function(SSDir, parallel=TRUE, workers=NULL, silent=FALSE, ...
       )
     )
   } else {
-    # TODO - not currently working as expected
-    future::plan(future::multisession, workers = 24)
+    # Parallel processing
+    RepList <- progressr::with_progress({
+      p <- progressr::progressor(steps = length(SSDir))
+      
+      furrr::future_map(
+        SSDir,
+        function(dir) {
+          p()
+          MSEtool:::GetSSRepList(dir, silent = silent, ...)
+        },
+        .options = furrr::furrr_options(
+          scheduling = Inf,      
+          globals = FALSE,
+          packages = "MSEtool"
+        )
+      )
+    })
     
-    tictoc::tic()
-    RepList <- furrr::future_map(
-      SSDir,
-      function(dir) {
-        MSEtool:::GetSSRepList(dir, silent = TRUE)
-      },
-      .options = furrr::furrr_options(scheduling = Inf)
-    )
-    tictoc::toc()
   }
 
   names(RepList) <- seq_along(RepList)
