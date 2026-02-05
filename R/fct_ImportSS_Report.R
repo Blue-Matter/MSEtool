@@ -12,7 +12,7 @@ ImportSSReport <- function(SSDir, parallel=TRUE, workers=NULL, silent=FALSE, ...
   }
   
   # SSDir is a list - imort 
-  if (inherits(SSDir, "list")) {
+  if (inherits(SSDir, "list") || inherits(SSDir, "RepList")) {
     
     # already list of SS_output lists
     if (is.list(SSDir[[1]])) {
@@ -77,19 +77,17 @@ ImportSSReport <- function(SSDir, parallel=TRUE, workers=NULL, silent=FALSE, ...
     )
   } else {
     # TODO - not currently working as expected
-    RepList <- with_future_plan(
-      parallel = parallel,
-      workers  = workers,
-      expr = {
-        furrr::future_map(
-          SSDir,
-          function(dir) {
-            GetSSRepList(dir, silent = TRUE, ...)
-          },
-          .options = furrr::furrr_options(scheduling = Inf)
-        )
-      }
+    future::plan(future::multisession, workers = 24)
+    
+    tictoc::tic()
+    RepList <- furrr::future_map(
+      SSDir,
+      function(dir) {
+        MSEtool:::GetSSRepList(dir, silent = TRUE)
+      },
+      .options = furrr::furrr_options(scheduling = Inf)
     )
+    tictoc::toc()
   }
 
   names(RepList) <- seq_along(RepList)
