@@ -28,6 +28,15 @@ Simulate_om <- function(OM = NULL,
   ProjYears <- Years(OM, "Projection")
   IdenticalHist <- IdenticalSims(OM, ignore='RecDevProj')
   
+  
+  if (is.null(OM@Name) || nchar(OM@Name)<2)
+    OM@Name <- 'Unnamed OM'
+  if (!silent) {
+    cli::cli_text('')
+    cli::cli_alert_info('Starting {.val Simulate} for OM {.val {OM@Name}}')
+    
+  }
+    
   # ---- Make Hist Object ----
   Hist <- Hist(OM, silent)
   
@@ -88,7 +97,6 @@ Simulate_om <- function(OM = NULL,
   if (!silent)
     cli::cli_alert_success("Simulated Historical Fishery")
 
-  
   # ---- Calculate Reference Yield ----
   
   # TODO - arguments to skip or directly add 
@@ -130,7 +138,7 @@ Simulate_om <- function(OM = NULL,
   elapse_secs <- round(difftime(time1 = EndTime, time2 = StartTime, units = "secs"),2) |> as.numeric()
   elapse_auto <- round(difftime(time1 = EndTime, time2 = StartTime, units = "auto"),2) |> format()
   if (!silent)
-    cli::cli_alert_success('Completed {.val Simulate} ({elapse_auto})') 
+    cli::cli_alert_success('Completed {.val Simulate} for OM {.val {OM@Name}} ({elapse_auto})') 
   
   SetDigest(Hist)
 }
