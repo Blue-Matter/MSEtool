@@ -90,20 +90,28 @@ Project_MP <- function(Proj,
     )
     
     # Update Pop Dynamics in Proj with MP Advice
-    Proj <- Update_Closure(Proj, Year, AdviceSimList, LastAdviceSimList) 
+    Proj <- Proj |>
+      Update_Closure(Year, AdviceSimList, LastAdviceSimList, YearsProj, Areas, FleetNames) |>
+      Update_Selectivity(Year, AdviceSimList, LastAdviceSimList, YearsProj, Areas, FleetNames) |>
+      Update_Retention(Year, AdviceSimList, LastAdviceSimList, YearsProj, Areas, FleetNames) |>
+      Update_DiscardMortality(Year, AdviceSimList, LastAdviceSimList, YearsProj, Areas, FleetNames) |>
+      Update_Effort(Year, AdviceSimList, LastAdviceSimList, YearsHist, YearsProj, Areas, FleetNames) |>
+      Update_TAC(Year, AdviceSimList, LastAdviceSimList, YearsProj, Areas, FleetNames)
     
-    Update_Selectivity
-    Update_Retention
-    Update_DiscardMortality
-    Update_Effort
-    Update_TAC 
+    
+    
     
   
   
   }
   EndTime <- Sys.time()
   
+  # Checks
   
+  # update MSE object
+  
+  
+  MSE
 }
 
 

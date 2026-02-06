@@ -51,15 +51,16 @@ GenHistData_Indices <- function(x, Data, Hist, HistYears, i, stocks, StockNames,
   TypeFleets <- purrr::map(AllObs, \(obs) !is.null(obs@Error)) |> unlist() |> which()
   FleetNames <- names(AllObs)[TypeFleets]
   
+  nTS <- length(HistYears)
+  
   nFleet <- length(FleetNames)
   IndexData <- new('indicesdata')
   IndexData@Name <- FleetNames
-  IndexData@Value <- array(NA, dim=c(nTS, nFleet),
+  Value <- CV <- array(NA, dim=c(nTS, nFleet),
                            dimnames=list(Year=HistYears,
                                          Fleet=FleetNames))
-  
-  IndexData@CV <-  IndexData@Value
-  IndexData@CV[] <- defaultCV
+
+  CV[] <- defaultCV
   IndexData@Units <- rep('Biomass', nFleet)
   
   IndexData@Ref <- rep(NA_real_, nFleet) 

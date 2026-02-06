@@ -89,38 +89,7 @@ SetSelectivity <- function(Fleet, Selectivity) {
   Fleet
 }
 
-#' @rdname Selectivity-accessors
-#' @export
-Pars <- function(x) {
-  CheckClass(x, "selectivity", "x")
-  x@Pars
-}
 
-#' @rdname Selectivity-accessors
-#' @export
-`Pars<-` <- function(x, value) {
-  CheckClass(x, "selectivity", "x")
-  x@Pars <- value
-  methods::validObject(x)
-  x
-}
-
-
-#' @rdname Selectivity-accessors
-#' @export
-Model <- function(x) {
-  CheckClass(x, "selectivity", "x")
-  x@Model
-}
-
-#' @rdname Selectivity-accessors
-#' @export
-`Model<-` <- function(x, value) {
-  CheckClass(x, "selectivity", "x")
-  x@Model <- value
-  methods::validObject(x)
-  x
-}
 
 
 #' @rdname Selectivity-accessors
@@ -140,89 +109,14 @@ isRel <- function(x) {
 }
 
 
-#' @rdname Selectivity-accessors
-#' @export
-MeanAtAge <- function(x) {
-  CheckClass(x, "selectivity", "x")
-  x@MeanAtAge
-}
-
-#' @rdname Selectivity-accessors
-#' @export
-`MeanAtAge<-` <- function(x, value) {
-  CheckClass(x, "selectivity", "x")
-  x@MeanAtAge <- value
-  methods::validObject(x)
-  x
-}
 
 
-#' @rdname Selectivity-accessors
-#' @export
-MeanAtLength <- function(x) {
-  CheckClass(x, "selectivity", "x")
-  x@MeanAtLength
-}
-
-#' @rdname Selectivity-accessors
-#' @export
-`MeanAtLength<-` <- function(x, value) {
-  CheckClass(x, "selectivity", "x")
-  x@MeanAtLength <- value
-  methods::validObject(x)
-  x
-}
 
 
-#' @rdname Selectivity-accessors
-#' @export
-MeanAtWeight <- function(x) {
-  CheckClass(x, "selectivity", "x")
-  x@MeanAtWeight
-}
-
-#' @rdname Selectivity-accessors
-#' @export
-`MeanAtWeight<-` <- function(x, value) {
-  CheckClass(x, "selectivity", "x")
-  x@MeanAtWeight <- value
-  methods::validObject(x)
-  x
-}
 
 
-#' @rdname Selectivity-accessors
-#' @export
-Classes <- function(x) {
-  CheckClass(x, "selectivity", "x")
-  x@Classes
-}
-
-#' @rdname Selectivity-accessors
-#' @export
-`Classes<-` <- function(x, value) {
-  CheckClass(x, "selectivity", "x")
-  x@Classes <- value
-  methods::validObject(x)
-  x
-}
 
 
-#' @rdname Selectivity-accessors
-#' @export
-Misc <- function(x) {
-  CheckClass(x, "selectivity", "x")
-  x@Misc
-}
-
-#' @rdname Selectivity-accessors
-#' @export
-`Misc<-` <- function(x, value) {
-  CheckClass(x, "selectivity", "x")
-  x@Misc <- value
-  methods::validObject(x)
-  x
-}
 
 
 

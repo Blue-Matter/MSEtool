@@ -31,9 +31,10 @@ Simulate_om <- function(OM = NULL,
   
   if (is.null(OM@Name) || nchar(OM@Name)<2)
     OM@Name <- 'Unnamed OM'
+  
   if (!silent) {
     cli::cli_text('')
-    cli::cli_alert_info('Starting {.val Simulate} for OM {.val {OM@Name}}')
+    cli::cli_alert_info(' Starting  {.val Simulate} for OM {.val {OM@Name}}')
     
   }
     

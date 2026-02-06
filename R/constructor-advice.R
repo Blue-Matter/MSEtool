@@ -67,15 +67,28 @@
 #' (`EffType`=`"Abs"`), or relative to the effort in the last historical year
 #' (`EffType`=`"Rel"`; default).
 #'
-#' * single numeric value: Total effort (i.e., summed over fleets) Distributed
-#' across fleets and areas internally (see [Technical
-#' Manual](https://docs.openmse.com/))
+#' Unless `Effort` is specified by `Area`, the spatial distribution of fishing
+#' effort is calculated internally (see [Technical
+#' Manual](https://docs.openmse.com/)) 
+#' 
+#' * single numeric value: 
+#' 
+#'    * If `EffType`=`"Rel"`: Effort relative to last historical year, applied to all
+#'    fleets. E.g., if `Effort=0.5`, effort for all fleets will be set to half 
+#'    the effort in the last historical year. 
+#'  
+#'    * If `EffType`=`"Abs"`: the total effort (summed over fleets; Note all
+#'    fleets in the OM must have the same units for `Effort`) and 
+#'    distributed over fleets following the same distribution as the last 
+#'    historical year   
 #'
-#' * numeric vector length `nFleet`: Fleet-specific Effort. Distributed across
-#' areas internally (see [Technical Manual](https://docs.openmse.com/))
+#' * numeric vector length `nFleet`: Fleet-specific relative or absolute Effort. 
 #'
-#' * numeric matrix: Fleet- and Area-specific Effort. Must have `nFleet`
-#' rows and `nArea` columns.
+#' * numeric matrix: Fleet- and Area-specific relative or absolute Effort. Must have `nFleet`
+#' rows and `nArea` columns.  
+#' 
+#'   If `Effort` is a matrix, it will be treated as absolute; i.e., `EffType`  
+#'   will be ignored.
 #' 
 #' ## Closure
 #' 

@@ -48,11 +48,10 @@ GenHistData_Catch <- function(x, Data, Hist, HistYears, i, stocks, FleetNames,
   
   CatchData <- new('catchdata')
   CatchData@Name <- FleetNames
-  CatchData@Value <- array(NA, dim=c(nTS, nFleet),
+  Value <- CV <- array(NA, dim=c(nTS, nFleet),
                            dimnames=list(Year=HistYears,
                                          Fleet=FleetNames))
-  CatchData@CV <- CatchData@Value 
-  CatchData@CV[] <- defaultCV
+  CV[] <- defaultCV
   
   Real_Catch_Number <- slot(Hist, paste0(type, 'AtAge'))[stocks]
   

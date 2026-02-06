@@ -181,19 +181,5 @@ Discount <- function(x) {
 }
 
 
-#' @rdname Bioeconomic-accessors
-#' @export
-Misc <- function(x) {
-  CheckClass(x, "bioeconomic", "x")
-  x@Misc
-}
 
-#' @rdname Bioeconomic-accessors
-#' @export
-`Misc<-` <- function(x, value) {
-  CheckClass(x, "bioeconomic", "x")
-  x@Misc <- value
-  methods::validObject(x)
-  x
-}
 

@@ -120,20 +120,5 @@ qInc <- function(x) {
   x
 }
 
-#' @rdname Catchability-accessors
-#' @export
-Misc <- function(x) {
-  CheckClass(x, "catchability", "x")
-  x@Misc
-}
-
-#' @rdname Catchability-accessors
-#' @export
-`Misc<-` <- function(x, value) {
-  CheckClass(x, "catchability", "x")
-  x@Misc <- value
-  methods::validObject(x)
-  x
-}
 
 

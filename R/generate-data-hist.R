@@ -30,8 +30,9 @@ GenerateHistoricalData <- function(Hist, silent=FALSE) {
     id <- cli::cli_progress_bar("Generating Historical {.val Data}")
   
   SimDataList <- purrr::map(1:nSim, \(x)
-                            GenerateHistoricalData_Sim (x, Hist, HistYears,
-                                                        nArea, FleetNames, StockNames, silent, id)
+                            GenerateHistoricalData_Sim(x, Hist, HistYears,
+                                                        nArea, FleetNames,
+                                                       StockNames, silent, id)
                             )
   names(SimDataList) <- 1:nSim
   
@@ -47,6 +48,9 @@ GenerateHistoricalData <- function(Hist, silent=FALSE) {
   } else {
     Hist@Data <- SimDataList
   }
+  
+  if (!silent)
+    cli::cli_alert_success("Generated Historical {.val Data}")
  
   Hist
 }
@@ -140,6 +144,9 @@ GenerateHistoricalData_Sim <- function(x, Hist, HistYears,
     
     if (is.null(Data@YearLH)) 
       Data@YearLH <- Data@Years[length(Data@Years)]
+    
+    # Add Pop Dyn if specified 
+    Data <- AddPopDyn(Data, Hist, x)
     
   
     DataList[[i]] <- Data

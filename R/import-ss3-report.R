@@ -8,7 +8,7 @@
 #'
 #' @return A list of parsed SS3 report objects
 #'
-#' @seealso [ImportSS()]
+#' @seealso [ImportSS()], [SetupParallel()], [DisableParallel()]
 #' @export
 ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
   OnExit()
@@ -16,11 +16,11 @@ ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
   
   if (!requireNamespace("r4ss", quietly = TRUE)) {
     cli::cli_abort(
-      "Download the `r4ss` package to use this function. Install the Github version with: `remotes::install_github(\"r4ss/r4ss\")`", 
+      "Download the `r4ss` package to use this function. Install the Github version with: `pak::pkg_install(\"r4ss/r4ss\")`", 
       call. = FALSE)
   }
   
-  # SSDir is a list - imort 
+  # SSDir is already a list 
   if (inherits(SSDir, "list") || inherits(SSDir, "RepList")) {
     
     # already list of SS_output lists
@@ -74,14 +74,14 @@ ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
   if (parallel) {
     current_plan <- future::plan()
     
-    # future::sequential is default / indicates no parallel session
     if (inherits(current_plan, "sequential")) {
-      cli::cli_alert_warning("{.val parallel = TRUE} requested, but no future plan has been set up.")
-      cli::cli_text("Please initialize a future session first, e.g.:")
+      cli::cli_alert_warning(
+        "{.val parallel = TRUE} requested, but no parallel future plan detected."
+      )
+      cli::cli_text("Initialize a parallel plan first using:")
       cli::cli_ul()
-      cli::cli_li("`use_multisession(workers = 4)`")
-      
-      cli::cli_text("Until a future session is initialized, running sequentially (`parallel = FALSE`).")
+      cli::cli_li("e.g: `SetupParallel(workers = 4)`")
+      cli::cli_text("Running sequentially instead (`parallel = FALSE`).")
       parallel <- FALSE
     }
   }
@@ -99,23 +99,19 @@ ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
     )
   } else {
     # Parallel processing
-    RepList <- progressr::with_progress({
-      p <- progressr::progressor(steps = length(SSDir))
-      
-      furrr::future_map(
-        SSDir,
-        function(dir) {
-          p()
-          MSEtool:::GetSSRepList(dir, silent = silent, ...)
-        },
-        .options = furrr::furrr_options(
-          scheduling = Inf,      
-          globals = FALSE,
-          packages = "MSEtool"
-        )
+    cli::cli_inform("Starting parallel import of {.val {length(SSDir)}} SS3 directories...")
+    RepList <- furrr::future_map(
+      SSDir,
+      function(dir) MSEtool:::GetSSRepList(dir, silent = silent, ...),
+      .options = furrr::furrr_options(
+        scheduling = Inf,      
+        globals = FALSE,
+        packages = "MSEtool",
+        seed = 101
       )
-    })
+    )
     
+    cli::cli_alert_success("Parallel import complete.")
   }
 
   names(RepList) <- seq_along(RepList)

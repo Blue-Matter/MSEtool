@@ -78,7 +78,7 @@ CalcAdvice_Sim_MP <- function(x, MPName,
   
   # loop over stocks/complexes
   for (i in seq_along(DataList)) {  
-    Data <- DataList[[i]] |> AddPopDyn(Proj, Year, x, mp)
+    Data <- DataList[[i]] |> AddPopDyn(Proj, x, Year, YearsProj, mp)
     
     MPAdvice <- try(MPfunction(Data=Data), silent=TRUE)
     
@@ -91,29 +91,30 @@ CalcAdvice_Sim_MP <- function(x, MPName,
 }
 
 
-AddPopDyn <- function(Data, Proj, Year, x, mp, YearsProj) {
-  if (!length(Proj@OM@Control$DataOM)) 
+AddPopDyn <- function(Data, Hist, x, Year=NULL, Years=NULL, mp=1) {
+  if (!length(Hist@OM@Control$DataOM)) 
     return(Data)
   
-  Proj@Data <- list()
+  Hist@Data <- list()
   
-  if (is.logical(Proj@OM@Control$DataOM) && Proj@OM@Control$DataOM) {
+  if (is.logical(Hist@OM@Control$DataOM) && Hist@OM@Control$DataOM) {
     # add everything
-    Data@Misc$DataOM <- SubsetSim(Proj, x)
+    Data@Misc$DataOM <- SubsetSim(Hist, x)
     
-  } else if (is.list(Proj@OM@Control$DataOM)) {
-    nms <- names(Proj@OM@Control$DataOM)
+  } else if (is.list(Hist@OM@Control$DataOM)) {
+    nms <- names(Hist@OM@Control$DataOM)
     Data@Misc$DataOM <- new('hist')
     for (nm in nms) {
-      if (!nm %in% slotNames('hist') && x==1 && Year == min(YearsProj) && mp==1) {
+      
+      if (!is.null(Year) && !nm %in% slotNames('hist') && x==1 && Year == min(Years) && mp==1) {
         cli::cli_alert_warning("{.val {nm}} not a valid slot name for `Hist` object. Ignoring")
       } else {
-        slot(Data@Misc$DataOM, nm) <- slot(Proj,nm) |> SubsetSim(Sims=x)
+        slot(Data@Misc$DataOM, nm) <- slot(Hist,nm) |> SubsetSim(Sims=x)
       }
     }
   } else {
-    if (x==1 && Year == min(YearsProj) && mp==1){
-      cli::cli_alert_warning('`Proj@OM@Control$DataOM` must be either TRUE or a named list')
+    if (!is.null(Year) && x==1 && Year == min(Years) && mp==1){
+      cli::cli_alert_warning('`OM@Control$DataOM` must be either TRUE or a named list')
     }
       
   }

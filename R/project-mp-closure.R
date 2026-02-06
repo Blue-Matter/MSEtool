@@ -1,35 +1,27 @@
-Update_Closure <- function(Proj, Year, AdviceSimList, LastAdviceSimList) {
-  nArea <- nArea(Proj)
+Update_Closure <- function(Proj, Year, AdviceSimList, LastAdviceSimList, YearsProj, Areas, FleetNames) {
+  
+  nArea <- length(Areas)
   
   if (nArea<2)
     return(Proj)
   
-  Areas <- seq_len(nArea(Proj))
-  
   nSim <- Proj@OM@nSim
-  FleetNames <- FleetNames(Proj)
-  if (is.list(FleetNames))
-    FleetNames <- FleetNames[[1]]
-  
-
-  YearsProj <- Years(Proj, 'P')
-  Complexes <- Proj@OM@Complexes
   
   for (sim in seq_len(nSim)) {
     Proj <- Update_Closure_Sim(
-      Proj,
-      sim,
-      Year,
-      YearsProj,
-      AdviceSimList[[sim]],
-      LastAdviceSimList[[sim]],
-      FleetNames,
-      Complexes,
-      Areas,
-      nSim
+      Proj=Proj,
+      sim=sim,
+      Year=Year,
+      YearsProj=YearsProj,
+      AdviceList=AdviceSimList[[sim]],
+      LastAdviceList=LastAdviceSimList[[sim]],
+      FleetNames =FleetNames,
+      Complexes=Proj@OM@Complexes,
+      Areas = Areas,
+      nSim = Proj@OM@nSim
     )
   }
-  
+
   Proj
 }
 
@@ -47,7 +39,7 @@ Update_Closure_Sim <- function(Proj,
   nComplex <- length(AdviceList)
   nFleet <- length(FleetNames)
   nArea <- length(Areas)
-  nSim 
+   
   
   for (i in seq_len(nComplex)) {
     stocks <- Complexes[[i]]
@@ -91,12 +83,17 @@ ApplyClosureToFleet <- function(Proj,
                                 nSim,
                                 NewClosure) {
   
+  stop("Need to use Proj@Misc@Closure instead")
+  
   Current <- Proj@OM@Fleet[[stock]][[fleet]]@Closure
   
   if (dim(Current)[1] < sim)
     Current <- ExtendSims(Current, nSim)
   
   ArrayFill(Current) <- NewClosure
+  
+  Proj@Misc$Closure 
+  
   
   Proj@OM@Fleet[[stock]][[fleet]]@Closure <- Current
   Proj

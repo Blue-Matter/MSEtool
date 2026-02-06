@@ -15,6 +15,8 @@
 #' @return Updated `Hist` object with reference yields stored in
 #'   `Hist@Reference$RefLandings` and/or `Hist@Reference$RefRemovals`
 #'
+#' @name calc-ref-yield
+#'
 #' @keywords internal
 CalcRefYield <- function(Hist, 
                          type=c('Landings', 'Removals'),
@@ -112,6 +114,8 @@ CalcRefYield <- function(Hist,
     slot(Hist@Reference, paste0("Ref",t)) <- RefYield
     
   }
+  if (!silent)
+    cli::cli_alert_success("Calculated Reference {.val {type}}")
   Hist
   
 }

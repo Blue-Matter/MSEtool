@@ -116,6 +116,7 @@ ImportSS <- function(SSDir,
                      silent = FALSE,
                      Populate = TRUE,
                      ...) {
+
   OnExit()
   RepList <- ImportSSReport(SSDir, silent, ...)
   nStock <- RepList[[1]]$nsexes

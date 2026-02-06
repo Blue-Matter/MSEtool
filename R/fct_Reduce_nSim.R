@@ -32,7 +32,7 @@ ReduceNSim <- function(object, nSim = NULL) {
   }
   
   if (nSim > nSim(object)) {
-    cli::cli_alert_warning("Argument `nSim` ({.val {nSim}}) is greater than {.run nSim(OM)} ({.val {nSim(object)}}). Ignoring argument `nSim`  ")
+    cli::cli_alert_warning("Argument `nSim` ({.val {nSim}}) is greater than `nSim(OM)` ({.val {nSim(object)}}). Ignoring argument `nSim`  ")
     nSim <- nSim(object)
   }
   
