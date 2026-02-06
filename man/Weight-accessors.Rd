@@ -4,53 +4,11 @@
 \alias{Weight-accessors}
 \alias{GetWeight}
 \alias{SetWeight}
-\alias{Pars}
-\alias{Pars<-}
-\alias{Model}
-\alias{Model<-}
-\alias{Units}
-\alias{Units<-}
-\alias{MeanAtAge}
-\alias{MeanAtAge<-}
-\alias{MeanAtLength}
-\alias{MeanAtLength<-}
-\alias{CVatAge}
-\alias{CVatAge<-}
-\alias{Classes}
-\alias{Classes<-}
 \title{Weight accessors and assignment functions}
 \usage{
 GetWeight(Stock)
 
 SetWeight(Stock, Weight)
-
-Pars(x)
-
-Pars(x) <- value
-
-Model(x)
-
-Model(x) <- value
-
-Units(x)
-
-Units(x) <- value
-
-MeanAtAge(x)
-
-MeanAtAge(x) <- value
-
-MeanAtLength(x)
-
-MeanAtLength(x) <- value
-
-CVatAge(x)
-
-CVatAge(x) <- value
-
-Classes(x)
-
-Classes(x) <- value
 }
 \arguments{
 \item{Stock}{A \code{\link[=Stock]{Stock()}} object.}

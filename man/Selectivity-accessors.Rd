@@ -4,59 +4,17 @@
 \alias{Selectivity-accessors}
 \alias{GetSelectivity}
 \alias{SetSelectivity}
-\alias{Pars}
-\alias{Pars<-}
-\alias{Model}
-\alias{Model<-}
 \alias{isRel}
 \alias{isRel<-}
-\alias{MeanAtAge}
-\alias{MeanAtAge<-}
-\alias{MeanAtLength}
-\alias{MeanAtLength<-}
-\alias{MeanAtWeight}
-\alias{MeanAtWeight<-}
-\alias{Classes}
-\alias{Classes<-}
-\alias{Misc}
-\alias{Misc<-}
 \title{Selectivity accessors and assignment functions}
 \usage{
 GetSelectivity(Fleet)
 
 SetSelectivity(Fleet, Selectivity)
 
-Pars(x)
-
-Pars(x) <- value
-
-Model(x)
-
-Model(x) <- value
-
 isRel(x)
 
 isRel(x) <- value
-
-MeanAtAge(x)
-
-MeanAtAge(x) <- value
-
-MeanAtLength(x)
-
-MeanAtLength(x) <- value
-
-MeanAtWeight(x)
-
-MeanAtWeight(x) <- value
-
-Classes(x)
-
-Classes(x) <- value
-
-Misc(x)
-
-Misc(x) <- value
 }
 \arguments{
 \item{Fleet}{A \code{\link[=Fleet]{Fleet()}} object.}

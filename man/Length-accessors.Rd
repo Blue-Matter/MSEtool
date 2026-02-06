@@ -4,77 +4,17 @@
 \alias{Length-accessors}
 \alias{GetLength}
 \alias{SetLength}
-\alias{Pars}
-\alias{Pars<-}
-\alias{Model}
-\alias{Model<-}
-\alias{Units}
-\alias{Units<-}
-\alias{MeanAtAge}
-\alias{MeanAtAge<-}
-\alias{CVatAge}
-\alias{CVatAge<-}
-\alias{Dist}
-\alias{Dist<-}
-\alias{TruncSD}
-\alias{TruncSD<-}
-\alias{Timing}
-\alias{Timing<-}
-\alias{Random}
-\alias{Random<-}
 \alias{ALK}
 \alias{ALK<-}
-\alias{Classes}
-\alias{Classes<-}
 \title{Length accessors and assignment functions}
 \usage{
 GetLength(Stock)
 
 SetLength(Stock, Length)
 
-Pars(x)
-
-Pars(x) <- value
-
-Model(x)
-
-Model(x) <- value
-
-Units(x)
-
-Units(x) <- value
-
-MeanAtAge(x)
-
-MeanAtAge(x) <- value
-
-CVatAge(x)
-
-CVatAge(x) <- value
-
-Dist(x)
-
-Dist(x) <- value
-
-TruncSD(x)
-
-TruncSD(x) <- value
-
-Timing(x)
-
-Timing(x) <- value
-
-Random(x)
-
-Random(x) <- value
-
 ALK(x)
 
 ALK(x) <- value
-
-Classes(x)
-
-Classes(x) <- value
 }
 \arguments{
 \item{Stock}{A \code{\link[=Stock]{Stock()}} object.}

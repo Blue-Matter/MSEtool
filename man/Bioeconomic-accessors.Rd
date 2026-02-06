@@ -16,8 +16,6 @@
 \alias{Depreciation<-}
 \alias{Discount}
 \alias{Discount<-}
-\alias{Misc}
-\alias{Misc<-}
 \title{Bioeconomic accessors and assignment functions}
 \usage{
 GetBioeconomic(Fleet)
@@ -47,10 +45,6 @@ Depreciation(x) <- value
 Discount(x)
 
 Discount(x) <- value
-
-Misc(x)
-
-Misc(x) <- value
 }
 \arguments{
 \item{Fleet}{A \code{\link[=Fleet]{Fleet()}} object.}

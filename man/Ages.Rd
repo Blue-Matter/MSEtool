@@ -2,23 +2,18 @@
 % Please edit documentation in R/constructor-ages.R
 \name{Ages}
 \alias{Ages}
-\alias{GetAges}
-\alias{SetAges}
+\alias{Ages<-}
 \alias{MaxAge}
 \alias{MaxAge<-}
 \alias{MinAge}
 \alias{MinAge<-}
-\alias{Units}
-\alias{Units<-}
 \alias{PlusGroup}
 \alias{PlusGroup<-}
 \title{Ages}
 \usage{
 Ages(MaxAge, MinAge = 0, Units = "year", PlusGroup = TRUE)
 
-GetAges(Stock)
-
-SetAges(Stock, Ages)
+Ages(x) <- value
 
 MaxAge(x)
 
@@ -27,10 +22,6 @@ MaxAge(x) <- value
 MinAge(x)
 
 MinAge(x) <- value
-
-Units(x)
-
-Units(x) <- value
 
 PlusGroup(x)
 
@@ -48,28 +39,33 @@ See \code{\link[=ValidUnits]{ValidUnits()}}.}
 \item{PlusGroup}{Logical; whether the maximum age is treated as a plus group.}
 }
 \value{
-An \code{ages} object.
+An \linkS4class{ages} object.
 }
 \description{
-Construct and manipulate an \code{ages} object defining the age structure
+Construct and manipulate an \linkS4class{ages} object defining the age structure
 associated with a \code{\link[=Stock]{Stock()}}.
 }
 \details{
 The \code{Ages} class defines the discrete age structure used by a \code{\link[=Stock]{Stock()}}
-object. Age classes are derived from \code{MinAge}, \code{MaxAge}, and \code{PlusGroup}.
-\subsection{Accessors and assignment}{
-\itemize{
-\item \code{GetAges()} / \code{SetAges()} retrieve or assign the \code{Ages} component of a
-\code{\link[=Stock]{Stock()}} object.
-\item \code{MaxAge()}, \code{MinAge()}, \code{Units()}, and \code{PlusGroup()} access individual
-components of an \code{ages} object.
-\item Replacement functions (e.g. \verb{MaxAge<-}) update the corresponding slot
-and validate the object.
-}
+object. Age classes are derived from \code{MinAge}, \code{MaxAge}, and \code{Units}.
+
+Although \code{MinAge} and \code{MaxAge} are defined in the units described in \code{Units},
+the resulting age classes are always in units of \code{year}; i.e., fractional
+year values for seasonal models
+
+The age classes can be accessed with \code{Classes(MyAges)}
+\subsection{Accessing and Assigning Slots}{
+
+All slots in \linkS4class{ages} objects can be accessed or assigned new values
+with functions matching the slot names. See \code{Examples}.
 }
 }
 \examples{
 a <- Ages(MaxAge = 20)
 MaxAge(a)
-
+MaxAge(a) <- 10
+MaxAge(a)
+}
+\seealso{
+\code{\link[=Units]{Units()}}, \code{\link{Units<-}}, \code{\link[=Classes]{Classes()}}
 }

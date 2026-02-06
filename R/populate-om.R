@@ -249,7 +249,7 @@ ProcessFleetEffort <- function(FleetList, silent=FALSE) {
       dimnames(stock)[["Year"]]
     }) |> unlist() |> unique()
     
-    Years <- c(EffYears, qYears) |> unique() |> sort()
+    Years <- c(EffYears, qYears) |> unique() |> as.numeric() |> sort() 
     
     EffortArrayList <- purrr::map(EffortArrayList, \(stock) {
       Extend(stock, nSim, NULL, Years)
@@ -278,7 +278,7 @@ ProcessFleetEffort <- function(FleetList, silent=FALSE) {
       if (any(abs(dev) > tol)) {
         if (!silent) {
           cli::cli_alert_warning("Note: `Effort` values for Fleet {.val {fl}} are not the same across stocks")
-          cli::cli_alert("Setting Effort for all Stocks to Stock 1 effort and adding deviations to Catchability")
+          cli::cli_alert("Setting Effort for all Stocks to {.val {names(FleetList)[1]}} (Stock 1) effort and adding deviations to {.val Catchability}")
         }
         # Differences in effective effort assumed deviations in efficiency
         Effort_updated <- Effort_nominal - dev

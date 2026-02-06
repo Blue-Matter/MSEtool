@@ -23,16 +23,15 @@
 #' reproduction, recruitment, and optional spatial dynamics into a
 #' single object.
 #'
-#' A `Stock` object can be attached to an [OM()] using [SetStock()] and
-#' retrieved using [GetStock()].
+#' A `Stock` object can be attached to an [OM()] using [Stock()] and
+#' retrieved using [`Stock<-`].
 #'
 #' Individual components may be accessed or modified using accessor
-#' and replacement functions such as [GetAges()], [SetAges(), [GetLength()], [SetLength()], etc.
+#' and replacement functions such as [Ages()], [`Ages<-`], [GetLength()], [SetLength()], etc.
 #'
 #' @return A [Stock()] object.
 #'
 #' @seealso
-#' [GetStock()], [SetStock()],
 #' [Ages()], [Length()], [Weight()], [NaturalMortality()],
 #' [Maturity()], [Fecundity()], [SRR()], [Spatial()], [Depletion()]
 #'

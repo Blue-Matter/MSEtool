@@ -86,13 +86,26 @@ rows and \code{nArea} columns.
 Either in absolute units corresponding with fleet-specific effort
 (\code{EffType}=\code{"Abs"}), or relative to the effort in the last historical year
 (\code{EffType}=\code{"Rel"}; default).
+
+Unless \code{Effort} is specified by \code{Area}, the spatial distribution of fishing
+effort is calculated internally (see \href{https://docs.openmse.com/}{Technical Manual})
 \itemize{
-\item single numeric value: Total effort (i.e., summed over fleets) Distributed
-across fleets and areas internally (see \href{https://docs.openmse.com/}{Technical Manual})
-\item numeric vector length \code{nFleet}: Fleet-specific Effort. Distributed across
-areas internally (see \href{https://docs.openmse.com/}{Technical Manual})
-\item numeric matrix: Fleet- and Area-specific Effort. Must have \code{nFleet}
+\item single numeric value:
+\itemize{
+\item If \code{EffType}=\code{"Rel"}: Effort relative to last historical year, applied to all
+fleets. E.g., if \code{Effort=0.5}, effort for all fleets will be set to half
+the effort in the last historical year.
+\item If \code{EffType}=\code{"Abs"}: the total effort (summed over fleets; Note all
+fleets in the OM must have the same units for \code{Effort}) and
+distributed over fleets following the same distribution as the last
+historical year
+}
+\item numeric vector length \code{nFleet}: Fleet-specific relative or absolute Effort.
+\item numeric matrix: Fleet- and Area-specific relative or absolute Effort. Must have \code{nFleet}
 rows and \code{nArea} columns.
+
+If \code{Effort} is a matrix, it will be treated as absolute; i.e., \code{EffType}
+will be ignored.
 }
 }
 

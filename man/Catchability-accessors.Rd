@@ -8,8 +8,6 @@
 \alias{qCV<-}
 \alias{qInc}
 \alias{qInc<-}
-\alias{Misc}
-\alias{Misc<-}
 \title{Catchability accessors and assignment functions}
 \usage{
 Efficiency(x)
@@ -23,10 +21,6 @@ qCV(x) <- value
 qInc(x)
 
 qInc(x) <- value
-
-Misc(x)
-
-Misc(x) <- value
 }
 \arguments{
 \item{x}{A \code{\link[=Catchability]{Catchability()}} object.}

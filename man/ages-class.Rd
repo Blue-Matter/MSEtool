@@ -13,7 +13,7 @@ An S4 class representing the age structure for a \code{\link[=Stock]{Stock()}} o
 \item{\code{MaxAge}}{Numeric scalar giving the maximum age. If \code{PlusGroup == TRUE},
 this represents the plus group age.}
 
-\item{\code{MinAge}}{Numeric scalar giving the minimum age.#'}
+\item{\code{MinAge}}{Numeric scalar giving the minimum age.}
 
 \item{\code{Units}}{Character string describing the time units used in the definition
 of \code{MaxAge} and \code{MinAge} (e.g. \code{"year"}).}
@@ -24,3 +24,6 @@ as a plus group.}
 \item{\code{Classes}}{Numeric vector of age classes expressed in years}
 }}
 
+\seealso{
+\code{\link[=Ages]{Ages()}}
+}

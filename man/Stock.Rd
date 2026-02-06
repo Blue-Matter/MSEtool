@@ -62,14 +62,13 @@ The \code{Stock} class aggregates age structure, growth, mortality,
 reproduction, recruitment, and optional spatial dynamics into a
 single object.
 
-A \code{Stock} object can be attached to an \code{\link[=OM]{OM()}} using \code{\link[=SetStock]{SetStock()}} and
-retrieved using \code{\link[=GetStock]{GetStock()}}.
+A \code{Stock} object can be attached to an \code{\link[=OM]{OM()}} using \code{\link[=Stock]{Stock()}} and
+retrieved using \code{\link{Stock<-}}.
 
 Individual components may be accessed or modified using accessor
-and replacement functions such as \code{\link[=GetAges]{GetAges()}}, [SetAges(), \code{\link[=GetLength]{GetLength()}}, \code{\link[=SetLength]{SetLength()}}, etc.
+and replacement functions such as \code{\link[=Ages]{Ages()}}, \code{\link{Ages<-}}, \code{\link[=GetLength]{GetLength()}}, \code{\link[=SetLength]{SetLength()}}, etc.
 }
 \seealso{
-\code{\link[=GetStock]{GetStock()}}, \code{\link[=SetStock]{SetStock()}},
 \code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, \code{\link[=Weight]{Weight()}}, \code{\link[=NaturalMortality]{NaturalMortality()}},
 \code{\link[=Maturity]{Maturity()}}, \code{\link[=Fecundity]{Fecundity()}}, \code{\link[=SRR]{SRR()}}, \code{\link[=Spatial]{Spatial()}}, \code{\link[=Depletion]{Depletion()}}
 }

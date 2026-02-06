@@ -4,14 +4,6 @@
 \alias{Maturity-accessors}
 \alias{GetMaturity}
 \alias{SetMaturity}
-\alias{MeanAtAge}
-\alias{MeanAtAge<-}
-\alias{MeanAtLength}
-\alias{MeanAtLength<-}
-\alias{MeanAtWeight}
-\alias{MeanAtWeight<-}
-\alias{Classes}
-\alias{Classes<-}
 \alias{Semelparous}
 \alias{Semelparous<-}
 \title{Maturity accessors and assignment functions}
@@ -19,22 +11,6 @@
 GetMaturity(Stock)
 
 SetMaturity(Stock, Maturity)
-
-MeanAtAge(x)
-
-MeanAtAge(x) <- value
-
-MeanAtLength(x)
-
-MeanAtLength(x) <- value
-
-MeanAtWeight(x)
-
-MeanAtWeight(x) <- value
-
-Classes(x)
-
-Classes(x) <- value
 
 Semelparous(x)
 

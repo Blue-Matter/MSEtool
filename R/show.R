@@ -356,7 +356,7 @@ setMethod("show", "ages", function(object) {
       AgeClasses[length(AgeClasses)] <- paste0(AgeClasses[length(AgeClasses)], "+")
     } 
   }
-  cli::cli_text("{.strong Classes}: {.val {AgeClasses}}")
+  cli::cli_text("{`Classes`}: {.val {AgeClasses}}")
 })
 
 
@@ -410,10 +410,10 @@ setMethod('show', 'fleet', function(object) {
   )
   for (name in slots) {
     if (isNewObject(slot(object, name))) {
-      cli::cli_text("{.strong {name}}: {.emph not specified}")
+      cli::cli_text("`{name}`: {.emph not specified}")
     } else {
       
-      cli::cli_text("{.strong {name}}: {a_or_an(name)}  {.help {help_topic('MSEtool', name)}} Object")
+      cli::cli_text("`{name}`: {a_or_an(name)}  {.help {help_topic('MSEtool', name)}} Object")
     }
   }
   

@@ -1,6 +1,6 @@
 #' Ages
 #'
-#' Construct and manipulate an `ages` object defining the age structure
+#' Construct and manipulate an [ages-class] object defining the age structure
 #' associated with a [Stock()].
 #'
 #' @param MaxAge Numeric scalar giving the maximum age. If `PlusGroup == TRUE`,
@@ -12,24 +12,29 @@
 #'
 #' @details
 #' The `Ages` class defines the discrete age structure used by a [Stock()]
-#' object. Age classes are derived from `MinAge`, `MaxAge`, and `PlusGroup`.
+#' object. Age classes are derived from `MinAge`, `MaxAge`, and `Units`.
+#' 
+#' Although `MinAge` and `MaxAge` are defined in the units described in `Units`, 
+#' the resulting age classes are always in units of `year`; i.e., fractional
+#' year values for seasonal models
+#' 
+#' The age classes can be accessed with `Classes(MyAges)`
+#' 
+#' ## Accessing and Assigning Slots
+#' 
+#' All slots in [ages-class] objects can be accessed or assigned new values
+#' with functions matching the slot names. See `Examples`.
+#' 
 #'
-#' ## Accessors and assignment
+#' @return An [ages-class] object.
 #'
-#' - `GetAges()` / `SetAges()` retrieve or assign the `Ages` component of a
-#'   [Stock()] object.
-#' - `MaxAge()`, `MinAge()`, `Units()`, and `PlusGroup()` access individual
-#'   components of an `ages` object.
-#' - Replacement functions (e.g. `MaxAge<-`) update the corresponding slot
-#'   and validate the object.
-#'
-#' @return An `ages` object.
-#'
-#'
+#' @seealso [Units()], [`Units<-`], [Classes()]
 #' @examples
 #' a <- Ages(MaxAge = 20)
 #' MaxAge(a)
-#'
+#' MaxAge(a) <- 10
+#' MaxAge(a)
+#' 
 #' @export
 Ages <- function(MaxAge,
                  MinAge = 0,
@@ -38,6 +43,9 @@ Ages <- function(MaxAge,
   
   if (missing(MaxAge))
     MaxAge <- numeric()
+  
+  if (inherits(MaxAge, 'stock'))
+    return(MaxAge@Ages)
 
   object <- methods::new(
     "ages",
@@ -47,11 +55,68 @@ Ages <- function(MaxAge,
     PlusGroup = PlusGroup
   )
   
-  
   object@Classes <- CalcAgeClasses(object)
-  
+
   methods::validObject(object)
   object
+}
+
+#' @rdname Ages
+#' @export
+`Ages<-` <- function(x, value) {
+  CheckClass(x, "stock", "x")
+  CheckClass(value, "ages", "value")
+  x@Ages <- value
+  methods::validObject(x)
+  x
+}
+
+#' @rdname Ages
+#' @export
+MaxAge <- function(x) {
+  CheckClass(x, "ages", "Ages")
+  x@MaxAge
+}
+
+#' @rdname Ages
+#' @export
+`MaxAge<-` <- function(x, value) {
+  CheckClass(x, "ages", "Ages")
+  x@MaxAge <- value
+  methods::validObject(x)
+  x
+}
+
+#' @rdname Ages
+#' @export
+MinAge <- function(x) {
+  CheckClass(x, "ages", "Ages")
+  x@MinAge
+}
+
+#' @rdname Ages
+#' @export
+`MinAge<-` <- function(x, value) {
+  CheckClass(x, "ages", "Ages")
+  x@MinAge <- value
+  methods::validObject(x)
+  x
+}
+
+#' @rdname Ages
+#' @export
+PlusGroup <- function(x) {
+  CheckClass(x, "ages", "Ages")
+  x@PlusGroup
+}
+
+#' @rdname Ages
+#' @export
+`PlusGroup<-` <- function(x, value) {
+  CheckClass(x, "ages", "Ages")
+  x@PlusGroup <- value
+  methods::validObject(x)
+  x
 }
 
 
@@ -64,96 +129,3 @@ CalcAgeClasses <- function(Ages) {
     round(3)
 }
 
-
-#' @rdname Ages
-#' @export
-GetAges <- function(Stock) {
-  CheckClass(Stock, "stock", "Stock")
-  Stock@Ages
-}
-
-
-#' @rdname Ages
-#' @export
-SetAges <- function(Stock, Ages) {
-  CheckClass(Stock, "stock", "Stock")
-  CheckClass(Ages, "ages", "Ages")
-  Stock@Ages <- Ages
-  methods::validObject(Stock)
-  Stock
-}
-
-
-#' @rdname Ages
-#' @export
-MaxAge <- function(x) {
-  CheckClass(x, "ages", "Ages")
-  x@MaxAge
-}
-
-
-#' @rdname Ages
-#' @export
-`MaxAge<-` <- function(x, value) {
-  CheckClass(x, "ages", "Ages")
-  x@MaxAge <- value
-  methods::validObject(x)
-  x
-}
-
-
-#' @rdname Ages
-#' @export
-MinAge <- function(x) {
-  CheckClass(x, "ages", "Ages")
-  x@MinAge
-}
-
-
-#' @rdname Ages
-#' @export
-`MinAge<-` <- function(x, value) {
-  CheckClass(x, "ages", "Ages")
-  x@MinAge <- value
-  methods::validObject(x)
-  x
-}
-
-
-#' @rdname Ages
-#' @export
-Units <- function(x) {
-  CheckClass(x, "ages", "Ages")
-  x@Units
-}
-
-
-#' @rdname Ages
-#' @export
-`Units<-` <- function(x, value) {
-  CheckClass(x, "ages", "Ages")
-  x@Units <- value
-  methods::validObject(x)
-  x
-}
-
-
-#' @rdname Ages
-#' @export
-PlusGroup <- function(x) {
-  CheckClass(x, "ages", "Ages")
-  x@PlusGroup
-}
-
-
-#' @rdname Ages
-#' @export
-`PlusGroup<-` <- function(x, value) {
-  CheckClass(x, "ages", "Ages")
-  x@PlusGroup <- value
-  methods::validObject(x)
-  x
-}
-
-
-#
