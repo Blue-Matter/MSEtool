@@ -90,6 +90,7 @@ PopulateStock <- function(Stock,
   Stock@pYear <- pYear
   Stock@CurrentYear <- CurrentYear
   Stock@nSim <- nSim
+  Stock@Seasons <- Seasons
   
   SetSeed(seed)
   

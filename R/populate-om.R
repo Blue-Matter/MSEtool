@@ -327,6 +327,14 @@ PopulateComplexes <- function(OM) {
       return(OM)
     }
   }
+  
+  # each stock is managed separately 
+  stocks <- StockNames(OM)
+  OM@Complexes <- setNames(
+    as.list(seq_along(stocks)),
+    stocks
+  )
+  
   OM
 }
 

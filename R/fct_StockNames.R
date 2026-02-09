@@ -58,10 +58,12 @@ FleetNames <- function(object) {
       return(object@Fleet@Name)
     }
     if (is.list(object@Fleet)) {
-      if (length(object@Fleet)==1) {
-        return(names(object@Fleet[[1]]))
-      }
-      return(lapply(object@Fleet, names))
+      return(names(object@Fleet[[1]]))
+      # 
+      # if (length(object@Fleet)==1) {
+      #   
+      # }
+      # return(lapply(object@Fleet, names))
     }
   }
   

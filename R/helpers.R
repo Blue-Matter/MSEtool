@@ -27,6 +27,10 @@ nArea <- function(x, st=1) {
    x <- x@OM 
   }
     
+  if (inherits(x, 'data')) {
+    return(x@nArea)
+  }
+  
   if (inherits(x, 'om')) {
     stock <- x@Stock
     if (is.list(stock)) {

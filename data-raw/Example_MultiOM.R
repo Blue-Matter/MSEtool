@@ -27,5 +27,12 @@ OM <- OM(Name = "Example 2 Stock 2 Fleet OM",
          )
 )
 
+la()
+LoadArgs(PopulateOM)
+
 OM <- PopulateOM(OM)
+
+LoadArgs(Simulate_om)
+
+
 Hist <- Simulate(OM)
