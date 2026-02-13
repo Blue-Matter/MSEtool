@@ -6,20 +6,21 @@
 \usage{
 OptRefYield(
   logScalar,
-  ProjSim,
+  Proj,
+  sim,
   HistYears,
   ProjYears,
+  ProjYearInd,
   nFleet,
-  Units = c("Biomass", "Number"),
-  type = c("Landings", "Removals"),
-  opt = 1,
-  debug = 0
+  Units,
+  type,
+  baseEffort,
+  debug = 0,
+  opt = 1
 )
 }
 \arguments{
 \item{logScalar}{Numeric scalar applied to scale historical effort}
-
-\item{ProjSim}{Single-simulation subset of the operating model}
 
 \item{HistYears}{Numeric vector of historical years}
 
@@ -32,6 +33,8 @@ OptRefYield(
 \item{type}{Character; either \code{Landings} or \code{Removals}}
 
 \item{opt}{Integer; if 1, return objective for optimization; if 2, return yields}
+
+\item{ProjSim}{Single-simulation subset of the operating model}
 }
 \value{
 Numeric; either negative sum of mean yields (opt=1) or vector of mean yields per stock (opt=2)

@@ -8,6 +8,9 @@
 The \code{catchability} class defines catchability assumptions, including
 optional stochastic or incremental changes to gear efficiency over time.
 }
+\details{
+See \code{\link[=Catchability]{Catchability()}} for details.
+}
 \section{Slots}{
 
 \describe{

@@ -2,6 +2,19 @@
 % Please edit documentation in R/constructor-spatial.R
 \name{Spatial}
 \alias{Spatial}
+\alias{UnfishedDist}
+\alias{UnfishedDist<-}
+\alias{ProbStaying}
+\alias{ProbStaying<-}
+\alias{RelativeSize}
+\alias{RelativeSize<-}
+\alias{Movement}
+\alias{Movement<-}
+\alias{FracOther}
+\alias{FracOther<-}
+\alias{Arrangement}
+\alias{Arrangement<-}
+\alias{Spatial<-}
 \title{Spatial}
 \usage{
 Spatial(
@@ -15,6 +28,32 @@ Spatial(
   CVStay = 1,
   Misc = list()
 )
+
+UnfishedDist(x)
+
+UnfishedDist(x) <- value
+
+ProbStaying(x)
+
+ProbStaying(x) <- value
+
+RelativeSize(x)
+
+RelativeSize(x) <- value
+
+Movement(x)
+
+Movement(x) <- value
+
+FracOther(x)
+
+FracOther(x) <- value
+
+Arrangement(x)
+
+Arrangement(x) <- value
+
+Spatial(x) <- value
 }
 \arguments{
 \item{UnfishedDist}{Numeric or numeric array giving the relative unfished
@@ -30,7 +69,7 @@ remaining in an area.}
 \item{FracOther}{Numeric array defining relative movement among areas when
 more than two areas are present.}
 
-\item{Arrangement}{Numeric matrix defining spatial layout (plotting only).}
+\item{Arrangement}{Numeric matrix defining spatial layout (plotting only). Currently not used.}
 
 \item{CVDist}{Logit-scale CV penalty applied to \code{UnfishedDist}.}
 
@@ -39,10 +78,10 @@ more than two areas are present.}
 \item{Misc}{Miscellaneous list.}
 }
 \value{
-A \code{\link[=Spatial]{Spatial()}} object.
+A \linkS4class{spatial} object.
 }
 \description{
-Construct a \code{\link[=Spatial]{Spatial()}} object defining spatial structure and movement
+Construct a \linkS4class{spatial} object defining spatial structure and movement
 associated with a \code{\link[=Stock]{Stock()}}.
 }
 \details{
@@ -50,6 +89,14 @@ The \code{Spatial} constructor creates an object describing the spatial
 distribution and movement dynamics of a stock.
 
 It is only required for operating models that have explicit spatial structure.
+
+A \code{Spatial} object can be attached to a \code{\link[=Stock]{Stock()}} using \code{Spatial(Stock) <- MySpatial} and
+retrieved using \code{MySpatial <- Spatial(Stock)}
+
+Individual components may be accessed or modified using accessor and
+replacement functions such as \code{\link[=UnfishedDist]{UnfishedDist()}}, \code{\link[=ProbStaying]{ProbStaying()}}, and \code{\link[=RelativeSize]{RelativeSize()}}.
+
+See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
 \subsection{Two Area}{
 
 For operating models with 2 spatial areas, \code{UnfishedDist} and \code{ProbStaying}
@@ -125,15 +172,5 @@ to \code{UnfishedDist} (over-writing any values that are in \code{UnfishedDist})
 \code{nTS}, with each element containing the probability of moving from the first area
 dimension (row in an \code{nArea} by \code{nArea} matrix) to the second area (column in an \code{nArea} by \code{nArea} matrix).
 The last two dimensions \code{nAge} and \code{nTS} are optional.
-
-A \code{Spatial} object can be attached to a \code{\link[=Stock]{Stock()}} using \code{\link[=SetSpatial]{SetSpatial()}} and
-retrieved using \code{\link[=GetSpatial]{GetSpatial()}}.
-
-Individual components may be accessed or modified using accessor and
-replacement functions such as \code{\link[=UnfishedDist]{UnfishedDist()}} and \code{\link[=ProbStaying]{ProbStaying()}}.
 }
-}
-\seealso{
-\code{\link[=GetSpatial]{GetSpatial()}}, \code{\link[=SetSpatial]{SetSpatial()}},
-\code{\link[=UnfishedDist]{UnfishedDist()}}, \code{\link[=ProbStaying]{ProbStaying()}}, \code{\link[=Movement]{Movement()}}
 }

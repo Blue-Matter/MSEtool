@@ -1,7 +1,6 @@
 #' Catchability
 #'
-#' Construct a [Catchability()] object defining (potentially time-varying)
-#' catchability assumptions.
+#' Construct a [catchability-class] object defining fishing gear/vessel efficiency
 #'
 #' @param Efficiency Gear efficiency (q).
 #' @param qCV Coefficient of variation for catchability.
@@ -9,7 +8,7 @@
 #' @param Misc Miscellaneous metadata.
 #'
 #' @details
-#' The `Catchability` class represents assumptions about the
+#' The `Catchability` objects represents assumptions about the
 #' efficiency of fishing gear or surveys in capturing fish.
 #'
 #' Catchability may be specified as fixed values, time-varying
@@ -19,10 +18,18 @@
 #' accessor and replacement functions such as [Efficiency()],
 #' [qCV()], and [qInc()].
 #'
-#' @return A [Catchability()] object.
+#' A `Catchability` object can be attached to a [Fleet()] using `Catchability(Fleet) <- MyCatchability` and
+#' retrieved using `MyCatchability <- Catchability(Fleet)`
+#'
+#' Individual components may be accessed or modified using accessor and
+#' replacement functions such as [Efficiency()], [qCV()], and [qInc()].
+#' 
+#' `r TechManLink()`
+#' 
+#' @return An [catchability-class] object
 #'
 #' @seealso
-#' [Efficiency()], [qCV()], [qInc()]
+#' [Fleet()]
 #'
 #'
 #' @export
@@ -31,16 +38,8 @@ Catchability <- function(Efficiency = NULL,
                          qInc = NULL,
                          Misc = list()) {
   
-  ## ---- Empty constructor ----
-  if (missing(Efficiency) &&
-      missing(qCV) &&
-      missing(qInc) &&
-      missing(Misc)) {
-    
-    object <- methods::new("catchability")
-    methods::validObject(object)
-    return(object)
-  }
+  
+
   
   object <- methods::new(
     "catchability",
@@ -54,32 +53,15 @@ Catchability <- function(Efficiency = NULL,
   object
 }
 
-#' Catchability accessors and assignment functions
-#'
-#' Functions for accessing and modifying a [Catchability()] object.
-#'
-#' @param x A [Catchability()] object.
-#' @param value Replacement value.
-#'
-#' @details
-#' Accessors retrieve individual components of a `Catchability`
-#' object. Replacement functions update components and validate
-#' the object.
-#'
-#' Conceptual details and valid inputs are documented in
-#' [Catchability()].
-#'
-#' @name Catchability-accessors
-NULL
 
-#' @rdname Catchability-accessors
+#' @rdname Catchability 
 #' @export
 Efficiency <- function(x) {
   CheckClass(x, "catchability", "x")
   x@Efficiency
 }
 
-#' @rdname Catchability-accessors
+#' @rdname Catchability 
 #' @export
 `Efficiency<-` <- function(x, value) {
   CheckClass(x, "catchability", "x")
@@ -88,14 +70,14 @@ Efficiency <- function(x) {
   x
 }
 
-#' @rdname Catchability-accessors
+#' @rdname Catchability 
 #' @export
 qCV <- function(x) {
   CheckClass(x, "catchability", "x")
   x@qCV
 }
 
-#' @rdname Catchability-accessors
+#' @rdname Catchability 
 #' @export
 `qCV<-` <- function(x, value) {
   CheckClass(x, "catchability", "x")
@@ -104,14 +86,14 @@ qCV <- function(x) {
   x
 }
 
-#' @rdname Catchability-accessors
+#' @rdname Catchability 
 #' @export
 qInc <- function(x) {
   CheckClass(x, "catchability", "x")
   x@qInc
 }
 
-#' @rdname Catchability-accessors
+#' @rdname Catchability 
 #' @export
 `qInc<-` <- function(x, value) {
   CheckClass(x, "catchability", "x")

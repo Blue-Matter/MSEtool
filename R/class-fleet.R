@@ -3,6 +3,8 @@
 #' The `fleet` class defines fishing fleet structure, effort dynamics,
 #' selectivity, retention, discard mortality, and bioeconomic information.
 #'
+#' See [Fleet()] for details.
+#' 
 #' @slot Name Fleet name.
 #' @slot Effort [Effort()] object.
 #' @slot Catchability [Catchability()] object.
@@ -27,6 +29,7 @@
 #' @include class-retention.R
 #' @include class-discardmortality.R
 #' @include class-bioeconomic.R
+#' @name fleet-class
 setClass(
   "fleet",
   slots = c(

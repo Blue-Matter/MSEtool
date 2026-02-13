@@ -2,6 +2,8 @@
 #'
 #' The `retention` class defines how fishing or survey retention
 #' varies with age, length, or weight.
+#' 
+#' See [Retention()] for details.
 #'
 #' @slot Pars Named list of retention parameters.
 #' @slot Model Retention model identifier.
@@ -13,6 +15,7 @@
 #' @slot Misc Miscellaneous list.
 #'
 #' @include class-unions.R
+#' @name retention-class
 setClass(
   "retention",
   slots = c(

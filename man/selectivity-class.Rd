@@ -8,6 +8,9 @@
 The \code{selectivity} class defines how fishing or survey selectivity
 varies with age, length, or weight.
 }
+\details{
+See \code{\link[=Selectivity]{Selectivity()}} for details.
+}
 \section{Slots}{
 
 \describe{
@@ -23,7 +26,7 @@ varies with age, length, or weight.
 
 \item{\code{MeanAtWeight}}{Mean selectivity-at-weight array.}
 
-\item{\code{Classes}}{Class boundaries (age, length, or weight).}
+\item{\code{Classes}}{Class mid-points (length, or weight).}
 
 \item{\code{Misc}}{Miscellaneous list.}
 }}

@@ -1,8 +1,8 @@
 #' Effort 
 #' 
-#' Create an `Effort` object
+#' Construct a [effort-class] object for a [Fleet()] object.
 #' 
-#' The [Effort()] class stores historical fishing effort and
+#' The `Effort` object stores historical fishing effort and
 #' associated spatial structure for [Fleet()] object. Effort may be supplied
 #' directly as an array or generated stochastically from a data frame.
 #' 
@@ -18,10 +18,20 @@
 #' If `Effort` is supplied as a correctly structured `data.frame`,
 #' it will be used by [GenHistEffort()] to generate stochastic
 #' historical effort.
+#' 
+#' A `Effort` object can be attached to a [Fleet()] using `Effort(Fleet) <- MyEffort` and
+#' retrieved using `MyEffort <- Length(Fleet)`
 #'
+#' Individual components may be accessed or modified using accessor and
+#' replacement functions such as [Effort()], [Units()], and [Distribution()].
+#' 
+#' `r TechManLink()`
+#' 
 #' @seealso [Fleet()], [GenHistEffort()]
 #'
 #' @include class-unions.R
+#' 
+#' @return An [effort-class] object
 #'
 #' @name Effort
 #' @export
@@ -31,6 +41,14 @@ Effort <- function(Effort       = NULL,
                    Targeting    = NULL,
                    Maximum      = NULL,
                    Misc         = list()) {
+  
+  if (inherits(Effort, 'fleet')) {
+    return(Effort@Effort)
+  }
+  
+  if (inherits(Effort, 'effort')) {
+    return(Effort@Effort)
+  }
   
   methods::new(
     "effort",
@@ -43,71 +61,21 @@ Effort <- function(Effort       = NULL,
   )
 }
 
-#' Effort accessors and assignment functions
-#'
-#' Functions for accessing and modifying an [Effort()] object, and for
-#' attaching or retrieving an `Effort` object from a [Fleet()].
-#'
-#' @param Fleet A [Fleet()] object.
-#' @param x An [Effort()] object.
-#' @param value Replacement value.
-#'
-#' @details
-#' - `GetEffort()` and `SetEffort()` retrieve or assign the `Effort`
-#'   component of a [Fleet()] object.
-#' - Accessors such as `Effort()`, `Units()`, and `Distribution()` retrieve
-#'   individual components of an [Effort()] object.
-#' - Replacement functions (e.g. `Effort<-`) update the corresponding
-#'   component and validate the object.
-#'
-#' Conceptual details and valid inputs are documented in [Effort()].
-#'
-#' @name Effort-accessors
-NULL
-
-#' @rdname Effort-accessors
+#' @rdname Effort
 #' @export
-GetEffort <- function(Fleet) {
-  CheckClass(Fleet, "fleet", "Fleet")
-  Fleet@Effort
-}
-
-#' @rdname Effort-accessors
-#' @export
-SetEffort <- function(Fleet, Effort) {
-  CheckClass(Fleet, "fleet", "Fleet")
-  CheckClass(Effort, "effort", "Effort")
-  Fleet@Effort <- Effort
-  methods::validObject(Fleet)
-  Fleet
-}
-
-#' @rdname Effort-accessors
-#' @export
-GetEffort <- function(x) {
-  CheckClass(x, "effort", "x")
-  x@Effort
-}
-
-#' @rdname Effort-accessors
-#' @export
-`SetEffort<-` <- function(x, value) {
-  CheckClass(x, "effort", "x")
-  x@Effort <- value
-  methods::validObject(x)
-  x
+`Effort<-` <- function(x, value) {
+  AssignSlot(x,value,'Effort')
 }
 
 
-
-#' @rdname Effort-accessors
+#' @rdname Effort
 #' @export
 Distribution <- function(x) {
   CheckClass(x, "effort", "x")
   x@Distribution
 }
 
-#' @rdname Effort-accessors
+#' @rdname Effort
 #' @export
 `Distribution<-` <- function(x, value) {
   CheckClass(x, "effort", "x")
@@ -116,14 +84,14 @@ Distribution <- function(x) {
   x
 }
 
-#' @rdname Effort-accessors
+#' @rdname Effort
 #' @export
 Targeting <- function(x) {
   CheckClass(x, "effort", "x")
   x@Targeting
 }
 
-#' @rdname Effort-accessors
+#' @rdname Effort
 #' @export
 `Targeting<-` <- function(x, value) {
   CheckClass(x, "effort", "x")
@@ -132,14 +100,14 @@ Targeting <- function(x) {
   x
 }
 
-#' @rdname Effort-accessors
+#' @rdname Effort
 #' @export
 Maximum <- function(x) {
   CheckClass(x, "effort", "x")
   x@Maximum
 }
 
-#' @rdname Effort-accessors
+#' @rdname Effort
 #' @export
 `Maximum<-` <- function(x, value) {
   CheckClass(x, "effort", "x")

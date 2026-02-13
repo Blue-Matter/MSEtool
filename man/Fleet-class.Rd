@@ -8,6 +8,9 @@
 The \code{fleet} class defines fishing fleet structure, effort dynamics,
 selectivity, retention, discard mortality, and bioeconomic information.
 }
+\details{
+See \code{\link[=Fleet]{Fleet()}} for details.
+}
 \section{Slots}{
 
 \describe{

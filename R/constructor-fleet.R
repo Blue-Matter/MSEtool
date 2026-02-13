@@ -1,9 +1,7 @@
 #' Fleet
 #'
-#' Create a `Fleet` object.
-#'
-#' A `Fleet` object aggregates effort, selectivity, retention,
-#' discard mortality, and bioeconomic components.
+#' Construct a [fleet-class] object defining the exploitation characteristics 
+#' of a fleet for stock used in an operating model.
 #'
 #' @param Name Fleet name.
 #' @param Effort An [Effort()] object.
@@ -16,9 +14,20 @@
 #' @param BioEconomic A [Bioeconomic()] object.
 #' @param Misc Miscellaneous list.
 #'
-#' @return A `Fleet` object.
+#' @details
+#' 
+#' A `Fleet` object can be attached to an [OM()] using [Fleet()] and
+#' retrieved using [`Fleet<-`].
 #'
-#' @seealso [OM()]
+#' Individual components may be accessed or modified using accessor
+#' and replacement functions such as [Effort()], [`Effort<-`], etc.
+#'
+#' `r TechManLink()`
+#' 
+#' @return A [fleet-class] object.
+#'
+#' @seealso [OM()], [Effort()], [Catchability()], [Selectivity()],
+#' [Retention()], [DiscardMortality()], [BioEconomic()]
 #'
 #' @export
 Fleet <- function(Name = NULL,
@@ -32,7 +41,7 @@ Fleet <- function(Name = NULL,
                   BioEconomic = new("bioeconomic"),
                   Misc = list()) {
   
-  ## OM pass-through
+
   if (methods::is(Name, "om"))
     return(Name@Fleet)
   
@@ -51,40 +60,44 @@ Fleet <- function(Name = NULL,
   )
 }
 
-#' Fleet accessors and assignment functions
-#'
-#' Functions for accessing and modifying a [Fleet()] object, and for
-#' attaching or retrieving a `Fleet` object from an [OM()].
-#'
-#' @param OM An [OM()] object.
-#' @param x A [Fleet()] object.
-#' @param value Replacement value.
-#'
-#' @details
-#' - `GetFleet()` and `SetFleet()` retrieve or assign `Fleet` objects
-#'   within an [OM()].
-#' - Slot accessors retrieve individual fleet components.
-#' - Replacement functions update slots and validate the object.
-#'
-#' Conceptual details are documented in [Fleet()].
-#'
-#' @name Fleet-accessors
-NULL
-
-
-#' @rdname Fleet-accessors
+#' @rdname Fleet
 #' @export
-GetFleet <- function(OM) {
-  CheckClass(OM, "om", "OM")
-  OM@Fleet
+Closure <- function(Fleet) {
+  AccessSlot(Fleet, 'Closure')
 }
 
-#' @rdname Fleet-accessors
+#' @rdname Fleet
 #' @export
-SetFleet <- function(OM, Fleet) {
-  CheckClass(OM, "om", "OM")
+`Closure<-` <- function(x, value) {
+  AssignSlot(x, value, 'Closure')
+}
+
+#' @rdname Fleet
+#' @export
+WeightFleet <- function(Fleet) {
+  AccessSlot(Fleet, 'WeightFleet')
+}
+
+#' @rdname Fleet
+#' @export
+`WeightFleet<-` <- function(x,value) {
+  AssignSlot(x, value, 'WeightFleet')
+}
+
+#' @rdname Fleet
+#' @export
+`Fleet<-` <- function(x, value) {
+  CheckClass(x, "om", "x")
   
-  stocknames <- StockNames(OM)
+  OM <- x 
+  Fleet <- value
+  
+  if (inherits(OM@Stock, 'stock')) {
+    stocknames <- OM@Stock@Name
+  } else {
+    stocknames <- StockNames(OM)
+  }
+  
   if (is.null(stocknames))
     cli::cli_abort("Add `Stock` object(s) to `OM` first")
   

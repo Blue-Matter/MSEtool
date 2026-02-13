@@ -2,6 +2,9 @@
 % Please edit documentation in R/constructor-maturity.R
 \name{Maturity}
 \alias{Maturity}
+\alias{Semelparous}
+\alias{Semelparous<-}
+\alias{Maturity<-}
 \title{Maturity}
 \usage{
 Maturity(
@@ -14,6 +17,12 @@ Maturity(
   Semelparous = FALSE,
   Misc = list()
 )
+
+Semelparous(x)
+
+Semelparous(x) <- value
+
+Maturity(x) <- value
 }
 \arguments{
 \item{Pars}{Named list of maturity parameters.}
@@ -26,17 +35,17 @@ Maturity(
 
 \item{MeanAtWeight}{Mean maturity-at-weight array (optional).}
 
-\item{Classes}{Maturity class boundaries (optional).}
+\item{Classes}{Maturity class mid-points (optional).}
 
 \item{Semelparous}{Logical or numeric array indicating semelparity.}
 
 \item{Misc}{Miscellaneous list.}
 }
 \value{
-A \code{\link[=Maturity]{Maturity()}} object.
+A \linkS4class{maturity} object.
 }
 \description{
-Construct a \code{\link[=Maturity]{Maturity()}} object defining the maturity schedule
+Construct a \linkS4class{maturity} object defining the maturity schedule
 associated with a \code{\link[=Stock]{Stock()}}.
 }
 \details{
@@ -47,14 +56,14 @@ model-based (via \code{Pars} and \code{Model}) or supplied directly as arrays.
 Printing a \code{Maturity} object provides a concise summary of the specified
 maturity assumptions without printing full arrays.
 
-A \code{Maturity} object can be attached to a \code{\link[=Stock]{Stock()}} using \code{\link[=SetMaturity]{SetMaturity()}}
-and retrieved using \code{\link[=GetMaturity]{GetMaturity()}}.
+A \code{Maturity} object can be attached to a \code{\link[=Stock]{Stock()}} using \code{Maturity(Stock) <- MyMaturity} and
+retrieved using \code{MyMaturity <- Maturity(Stock)}
 
 Individual components may be accessed or modified using accessor and
-replacement functions such as \code{\link[=Pars]{Pars()}} and \code{\link[=Model]{Model()}}.
+replacement functions such as \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, and \code{\link[=MeanAtAge]{MeanAtAge()}}.
+
+See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
 }
 \seealso{
-\code{\link[=GetMaturity]{GetMaturity()}}, \code{\link[=SetMaturity]{SetMaturity()}},
-\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}},
-\code{\link[=MeanAtWeight]{MeanAtWeight()}}, \code{\link[=Classes]{Classes()}}, \code{\link[=Populate]{Populate()}},\code{\link[=MaturityModels]{MaturityModels()}}
+\code{\link[=Populate]{Populate()}},\code{\link[=MaturityModels]{MaturityModels()}}
 }

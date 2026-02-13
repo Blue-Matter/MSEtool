@@ -67,6 +67,10 @@ AtSize2AtAge <- function(object, Length, max1=FALSE) {
     as.numeric() |>
     sort() |>
     unique()
+  
+  Years <- Years[Years>=min(dNames_MeanAtSize[['Year']])]
+  
+  
   nTS <- length(Years)
 
   if (byArea) {

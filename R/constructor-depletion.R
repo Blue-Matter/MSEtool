@@ -1,6 +1,6 @@
 #' Depletion 
 #'
-#' Construct and manipulate a `depletion` object defining depletion assumptions
+#' Construct and manipulate a [depletion-class] object defining depletion assumptions
 #' for a [Stock()] object.
 #'
 #' @param Initial Numeric initial depletion (optional).
@@ -64,7 +64,7 @@
 #' - Replacement functions (e.g. `Initial<-`) update the corresponding component
 #'   and validate the object.
 #'
-#' @return A `depletion` object.
+#' @return A [depletion-class] object.
 #'
 #' @seealso [Populate()]
 #'
@@ -74,30 +74,22 @@ Depletion <- function(Initial,
                       Final,
                       Reference = "B0") {
   
+  
+  if (missing(Initial)) {
+    object <- methods::new("depletion")
+    return(object)
+  }
+  
+  if (inherits(Initial, 'stock'))
+    return(UnfishedDist@Depletion)
+  
+  
   methods::new("depletion",
                Initial = if (missing(Initial)) numeric() else Initial,
                Final = if (missing(Final))   numeric() else Final,
                Reference = Reference)
 }
 
-
-#' @rdname Depletion
-#' @export
-GetDepletion <- function(Stock) {
-  CheckClass(Stock, "stock", "Stock")
-  Stock@Depletion
-}
-
-
-#' @rdname Depletion
-#' @export
-SetDepletion <- function(Stock, Depletion) {
-  CheckClass(Stock, "stock", "Stock")
-  CheckClass(Depletion, "depletion", "Depletion")
-  Stock@Depletion <- Depletion
-  methods::validObject(Stock)
-  Stock
-}
 
 
 #' @rdname Depletion
@@ -135,22 +127,11 @@ Final <- function(x) {
   x
 }
 
-
 #' @rdname Depletion
 #' @export
-Reference <- function(x) {
-  CheckClass(x, "depletion", "Depletion")
-  x@Reference
-}
-
-
-#' @rdname Depletion
-#' @export
-`Reference<-` <- function(x, value) {
-  CheckClass(x, "depletion", "Depletion")
-  x@Reference <- value
+`Depletion<-`<- function(x, value) {
+  CheckClass(x, "stock", "x")
+  x@Depletion <- value
   methods::validObject(x)
   x
 }
-
-

@@ -2,7 +2,9 @@
 #'
 #' The `effort` class stores historical fishing effort and associated
 #' spatial effort structure for a [Fleet()] object.
-#'
+#' 
+#' See [Effort()] for details.
+#' 
 #' @slot Effort Numeric array of fishing effort 
 #' @slot Units Optional character string describing the units of effort
 #' @slot Distribution Optional numeric array with dimensions `nSim x nYear x nArea`
@@ -11,6 +13,7 @@
 #'  @slot Maximum Numeric array giving the maximum possible fishing effort 
 #'  @slot Misc Miscellaneous list
 #' @include class-unions.R
+#' @name effort-class
 setClass(
   "effort",
   slots = c(

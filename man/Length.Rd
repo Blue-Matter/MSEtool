@@ -2,6 +2,8 @@
 % Please edit documentation in R/constructor-length.R
 \name{Length}
 \alias{Length}
+\alias{ALK}
+\alias{ALK<-}
 \title{Length}
 \usage{
 Length(
@@ -18,11 +20,15 @@ Length(
   Classes = NULL,
   Misc = list()
 )
+
+ALK(x)
+
+ALK(x) <- value
 }
 \arguments{
-\item{Pars}{Named list of growth parameters.}
+\item{Pars}{Named list of growth parameters for models in \code{\link[=LengthModels]{LengthModels()}}}
 
-\item{Model}{Growth model identifier.}
+\item{Model}{Model associated with \code{Pars}}
 
 \item{Units}{Character string giving length units (e.g. \code{"mm"}).}
 
@@ -40,15 +46,15 @@ Length(
 
 \item{ALK}{Age–length key (optional)}
 
-\item{Classes}{Length class boundaries (optional)}
+\item{Classes}{Length class mid-points (optional)}
 
 \item{Misc}{Miscellaneous list.}
 }
 \value{
-A \code{\link[=Length]{Length()}} object.
+A \linkS4class{length} object.
 }
 \description{
-Construct a \code{\link[=Length]{Length()}} object defining the length-at-age structure
+Construct a \linkS4class{length} object defining the length-at-age structure
 associated with a \code{\link[=Stock]{Stock()}}.
 }
 \details{
@@ -56,14 +62,13 @@ The \code{Length} class defines the relationship between age and length for a
 \code{\link[=Stock]{Stock()}} object. Length schedules may be model-based (via \code{Pars}
 and \code{Model}) or supplied directly as arrays.
 
-Printing a \code{Length} object provides a concise summary of the specified
-weight assumptions without printing full arrays.
-
-A \code{Length} object can be attached to a \code{\link[=Stock]{Stock()}} using \code{\link[=SetLength]{SetLength()}} and
-retrieved using \code{\link[=GetLength]{GetLength()}}.
+A \code{Length} object can be attached to a \code{\link[=Stock]{Stock()}} using \code{Length(Stock) <- MyLength} and
+retrieved using \code{MyLength <- Length(Stock)}
 
 Individual components may be accessed or modified using accessor and
 replacement functions such as \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, and \code{\link[=Units]{Units()}}.
+
+See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
 }
 \examples{
 
@@ -133,8 +138,5 @@ plot(Length, Ages=Ages(20), type='ASK')
 
 }
 \seealso{
-\code{\link[=GetLength]{GetLength()}}, \code{\link[=SetLength]{SetLength()}},
-\code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, \code{\link[=Units]{Units()}}, \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=CVatAge]{CVatAge()}},
-\code{\link[=Dist]{Dist()}}, \code{\link[=TruncSD]{TruncSD()}}, \code{\link[=Timing]{Timing()}}, \code{\link[=Random]{Random()}}, \code{\link[=ALK]{ALK()}},
-\code{\link[=Classes]{Classes()}}, \code{\link[=Populate]{Populate()}}, \code{\link[=LengthModels]{LengthModels()}}
+\code{\link[=Populate]{Populate()}}, \code{\link[=LengthModels]{LengthModels()}}
 }

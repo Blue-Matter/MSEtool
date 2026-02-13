@@ -1,10 +1,7 @@
 
 #' `OM` Object
 #'
-#' The `om` class defines an operating model used in management strategy
-#' evaluation (MSE). It contains biological, fishery, observation,
-#' implementation, and management control components for single- or
-#' multi-stock operating models.
+#' The `om` class defines an operating model. See [OM()] for more details.
 #'
 #' @slot Name Name of the operating model. Character string.
 #' @slot Agency Optional. Name of the agency responsible for management.
@@ -23,7 +20,6 @@
 #' operating model. Character string. Supports Markdown.
 #'
 #' @slot nSim Number of stochastic simulations. Positive integer.
-#' `nSim = 1` produces a deterministic operating model.
 #' @slot nYear Number of historical years. Numeric scalar.
 #' @slot pYear Number of projection years. Numeric scalar.
 #' @slot CurrentYear Final historical year of the operating model.
@@ -33,9 +29,11 @@
 #' applicable). Numeric.
 #'
 #' @slot Stock A [Stock()] object or list of [Stock()] objects.
-#' @slot Fleet A hierarchical list of [Fleet()] objects by stock and fleet.
-#' @slot Obs A hierarchical list of [Obs()] objects by stock and fleet.
-#' @slot Imp A hierarchical list of [Imp()] objects by stock and fleet.
+#' @slot Fleet A hierarchical list of [Fleet()] objects by stock and fleet. 
+#' Each stock must have the same number of fleets.
+#' 
+#' @slot Obs A hierarchical list of [Obs()] objects by stock/complex and fleet.
+#' @slot Imp A hierarchical list of [Imp()] objects by stock/complex and fleet.
 #'
 #' @slot Data A [Data()] object or list of [Data()] objects associated with
 #' the operating model.
@@ -74,7 +72,7 @@
 #' @include class-data.R
 #' @include class-obs.R
 #' @include class-imp.R
-#' @name OM
+#' @name om-class
 NULL 
 
 setClassUnion(name="StockList", members=c("stock", 'Stock',  "list", 'NULL'))

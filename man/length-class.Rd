@@ -4,34 +4,37 @@
 \name{length-class}
 \alias{length-class}
 \title{Length Class}
-\arguments{
-\item{Pars}{Named list of growth parameters for \code{\link[=LengthModels]{LengthModels()}}}
-
-\item{Model}{Model associated with \code{Pars}}
-
-\item{Units}{Length units}
-
-\item{MeanAtAge}{Mean length-at-age array}
-
-\item{CVatAge}{Coefficient of variation at age}
-
-\item{Dist}{Distribution name}
-
-\item{TruncSD}{Truncation in SD units}
-
-\item{Timing}{Timing within time step}
-
-\item{Random}{Random effects}
-
-\item{ALK}{Age–length key}
-
-\item{Classes}{Length classes}
-
-\item{`Misc`}{Miscellaneous list}
-}
 \description{
-The \code{Length} class defines the length-at-age schedule associated with a
-\code{\link[=Stock]{Stock()}} object It stores the parameters and model used to generate
-mean length-at-age, along with variability and assumptions regarding the
-distribution of length-at-age.
+An S4 class representing the length-at-age structure for a \code{\link[=Stock]{Stock()}} object.
 }
+\details{
+See \code{\link[=Length]{Length()}} for details.
+}
+\section{Slots}{
+
+\describe{
+\item{\code{Pars}}{Named list of growth parameters for models in \code{\link[=LengthModels]{LengthModels()}}}
+
+\item{\code{Model}}{Model associated with \code{Pars}}
+
+\item{\code{Units}}{Length units}
+
+\item{\code{MeanAtAge}}{Mean length-at-age array}
+
+\item{\code{CVatAge}}{Coefficient of variation at age}
+
+\item{\code{Dist}}{Distribution name}
+
+\item{\code{TruncSD}}{Truncation in SD units}
+
+\item{\code{Timing}}{Timing within time step}
+
+\item{\code{Random}}{Random effects}
+
+\item{\code{ALK}}{Age–length key}
+
+\item{\code{Classes}}{Length classes}
+
+\item{\code{Misc}}{Miscellaneous list}
+}}
+

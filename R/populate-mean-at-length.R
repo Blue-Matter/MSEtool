@@ -24,20 +24,25 @@ PopulateMeanAtLength <- function(object,
   if ('Length' %in% args) {
     CheckRequiredObject(Length, 'length', 'Length')
   }
+  
+  if (is.null(object@Classes)) {
+    object@Classes <- Length@Classes
+  }
+  
   object@MeanAtLength <- GenMeanAtLength(Model = object@Model,
                                          Pars = object@Pars,
-                                         Length = Length@Classes)
+                                         Length = object@Classes)
   
-  object@Classes <- Length@Classes
+ 
   
   dd <- dim(object@MeanAtLength)
   if (length(dd)==3) {
     dimnames(object@MeanAtLength) <- list(Sim=1:dd[1],
-                                          Class=Length@Classes,
+                                          Class=object@Classes,
                                           Year=Years[1:dd[3]])
   } else {
     dimnames(object@MeanAtLength) <- list(Sim=1:dd[1],
-                                          Class=Length@Classes,
+                                          Class=object@Classes,
                                           Year=Years[1:dd[3]],
                                           Area=1:dd[4])
   }

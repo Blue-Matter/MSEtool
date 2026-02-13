@@ -3,6 +3,8 @@
 #' An S4 class defining the spatial structure and movement dynamics associated
 #' with a [Stock()] object.
 #'
+#' See [Spatial()] for details.
+#' 
 #' @slot UnfishedDist Numeric or numeric array giving the relative unfished
 #'   biomass distribution over areas.
 #' @slot ProbStaying Numeric or numeric array giving the probability of
@@ -18,9 +20,8 @@
 #' @slot Misc Miscellaneous list for user-defined information.
 #'
 #'
-#' @seealso
-#' [Spatial()], [GetSpatial()], [SetSpatial()],
-#' [UnfishedDist()], [ProbStaying()], [Movement()]
+#' @include class-unions.R
+#' @name spatial-class
 #'
 setClass('spatial',
          slots=c(UnfishedDist='num.array.null',

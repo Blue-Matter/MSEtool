@@ -6,7 +6,7 @@
 \title{Depletion class}
 \description{
 An S4 class representing initial and/or final depletion relative to
-a reference biomass.
+a reference biomass for a \code{\link[=Stock]{Stock()}} object.
 }
 \section{Slots}{
 

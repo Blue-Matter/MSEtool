@@ -1,6 +1,8 @@
 #' Ages class
 #'
 #' An S4 class representing the age structure for a [Stock()] object.
+#' 
+#' See [Ages()] for details.
 #'
 #' @slot MaxAge Numeric scalar giving the maximum age. If `PlusGroup == TRUE`,
 #'   this represents the plus group age.

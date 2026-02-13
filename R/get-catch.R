@@ -51,6 +51,24 @@ GetCatch <- function(object,
   Units <- match.arg(Units, c('Biomass', 'Number'))
   type <- match.arg(type, c('Landings', 'Discards', 'Removals'))
   
+  if (Units == 'Biomass' && byAge==FALSE && byArea==FALSE) {
+    landings <- object@Landings
+    discards <- object@Discards
+    
+    if (!byFleet) {
+      landings <- SumOverFleet(landings)
+      discards <- SumOverFleet(discards)
+    }
+    
+    if (type=='Landings') {
+      return(landings)
+    } else if (type=='Discards') {
+      return(discards)
+    } else {
+      return(ArrayAdd(landings, discards))  
+    }
+  }
+  
   if (Units == 'Number') {
     landings <- object@LandingsAtAge
     discards <- object@LandingsAtAge

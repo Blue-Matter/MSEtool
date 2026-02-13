@@ -772,6 +772,7 @@ setMethod("initialize", "Imp", function(.Object, file = NA, dec=c(".", ",")) {
 # #' @template Imp_template
 #'
 #' @author T. Carruthers and A. Hordyk
+#' @rdname legacy-OM-class
 #' @export
 #' @keywords classes
 #'

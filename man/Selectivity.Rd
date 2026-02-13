@@ -2,6 +2,9 @@
 % Please edit documentation in R/constructor-selectivity.R
 \name{Selectivity}
 \alias{Selectivity}
+\alias{isRel}
+\alias{isRel<-}
+\alias{Selectivity<-}
 \title{Selectivity}
 \usage{
 Selectivity(
@@ -14,6 +17,12 @@ Selectivity(
   isRel = FALSE,
   Misc = list()
 )
+
+isRel(x)
+
+isRel(x) <- value
+
+Selectivity(x) <- value
 }
 \arguments{
 \item{Pars}{A named list of selectivity parameters.}
@@ -32,18 +41,26 @@ selectivity.}
 
 \item{isRel}{Logical indicating whether selectivity parameters are relative to maturity.}
 
-\item{Misc}{Miscellaneous list}
+\item{Misc}{Miscellaneous list
+
+A \code{Selectivity} object can be attached to a \code{\link[=Fleet]{Fleet()}} using \code{Selectivity(Fleet) <- MySelectivity} and
+retrieved using \code{MySelectivity <- Selectivity(Fleet)}
+
+Individual components may be accessed or modified using accessor and
+replacement functions such as \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, and \code{\link[=Units]{Units()}}.
+
+See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.}
 }
 \value{
-A \code{Selectivity} object.
+An \linkS4class{selectivity} object
 }
 \description{
-Create a \code{Selectivity} object.
+Construct a \linkS4class{selectivity} object for a \code{\link[=Fleet]{Fleet()}} object.
 }
 \details{
 A \code{Selectivity} object defines selectivity-at-age, length, or weight
 relationships.
 }
 \seealso{
-\code{\link[=Fleet]{Fleet()}}, \code{\link[=SelectivityModels]{SelectivityModels()}}, \code{\link[=GetSelectivity]{GetSelectivity()}}
+\code{\link[=Fleet]{Fleet()}}, \code{\link[=SelectivityModels]{SelectivityModels()}}
 }

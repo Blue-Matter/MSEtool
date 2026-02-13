@@ -2,6 +2,8 @@
 #'
 #' The `stock` class defines the biological and population-dynamics
 #' properties of a stock used in an operating model.
+#' 
+#' See [Stock()] for details.
 #'
 #' @slot Name Character string. Unique stock name.
 #' @slot CommonName Character string. Common name.
@@ -34,6 +36,7 @@
 #' @include class-srr.R
 #' @include class-spatial.R
 #' @include class-depletion.R
+#' @name stock-class
 setClass(
   "stock",
   slots = c(
@@ -64,3 +67,4 @@ setValidity("stock", function(object) {
   # TODO: structural consistency checks
   TRUE
 })
+

@@ -9,7 +9,7 @@ The \code{bioeconomic} class stores revenue, cost, and investment information
 associated with a \code{\link[=Fleet]{Fleet()}} and a \code{\link[=Stock]{Stock()}}.
 }
 \details{
-This object is not currently used.
+See \code{\link[=Bioeconomic]{Bioeconomic()}} for details.
 }
 \section{Slots}{
 

@@ -1,6 +1,7 @@
 #' SRR
 #'
-#' Construct or access a stock–recruitment relationship.
+#' Construct a [srr-class] object defining the stock-recruit relationship (SRR)
+#' associated with a [Stock()].
 #'
 #' @param Pars A named list of parameters defining the expected stock–recruit
 #' curve. Parameter names and interpretation depend on the chosen `Model`.
@@ -12,11 +13,11 @@
 #'
 #' @param SD Numeric vector or array giving the standard deviation of recruitment
 #' deviations in log space. May be:
-#' \itemize{
-#'   \item length 1 (constant across simulations),
-#'   \item length 2 (uniform distribution bounds),
-#'   \item length `nSim`.
-#' }
+#' 
+#'  * length 1 (constant across simulations)
+#'  * length 2 (uniform distribution bounds)
+#'  * length `nSim`.
+#' 
 #'
 #' @param AC Numeric vector or array giving the lag-1 autocorrelation of recruitment
 #' deviations. Same structure rules as `SD`.
@@ -54,14 +55,14 @@
 #' `RecDevHist`, and `RecDevProj`, or generated internally from `SD` and `AC`
 #' during model setup.
 #'
-#' A `srr` object is typically attached to a [Stock()] and accessed using
-#' [GetSRR()] and [SetSRR()].
+#' A `SRR` object can be attached to a [Stock()] using `SRR(Stock) <- MySRR` and
+#' retrieved using `MyLSRR <- SRR(Stock)`
 #'
-#' @return A valid [srr()] object.
+#' Individual components may be accessed or modified using accessor and
+#' replacement functions such as [Pars()], [Model()], and [R0()].
 #'
-#' @seealso
-#' [GetSRR()], [SetSRR()]
-#'
+#' @return A  [srr-class] object.
+#' 
 #' @example man-examples/SRR-class.R
 #'
 #' @export
@@ -87,6 +88,9 @@ SRR <- function(Pars = list(h = NA),
   }
   
   
+  if (inherits(Pars, 'stock'))
+    return(Pars@SRR)
+  
   obj <- new(
     "srr",
     Pars = Pars,
@@ -105,51 +109,19 @@ SRR <- function(Pars = list(h = NA),
     Misc = Misc
   )
   
-  validObject(obj)
+  methods::validObject(obj)
   obj
 }
 
 
-#' SRR accessors and assignment functions
-#'
-#' Functions for accessing and modifying components of an [SRR()] object,
-#' and for attaching or retrieving an `SRR` object from a [Stock()].
-#'
-#' @param x An [SRR()] object.
-#' @param value Replacement value.
-#'
-#' @details
-#' These functions provide slot-level access to components of an [SRR()]
-#' object. Replacement functions validate the object after modification.
-#'
-#' Conceptual details and valid inputs are documented in [SRR()].
-#'
-#' @name SRR-accessors
-NULL
-
-
-#' @rdname SRR-accessors
-#' @export
-GetSRR <- function(object) {
-  object@SRR
-}
-
-#' @rdname SRR-accessors
-#' @export
-SetSRR <- function(object, value) {
-  object@SRR <- value
-  validObject(object)
-  object
-}
-
-#' @rdname SRR-accessors
+#' @rdname SRR
 #' @export
 R0 <- function(x) {
   CheckClass(x, "srr", "x")
   x@R0
 }
 
-#' @rdname SRR-accessors
+#' @rdname SRR
 #' @export
 `R0<-` <- function(x, value) {
   CheckClass(x, "srr", "x")
@@ -158,46 +130,15 @@ R0 <- function(x) {
   x
 }
 
-#' @rdname SRR-accessors
-#' @export
-SD <- function(x) {
-  CheckClass(x, "srr", "x")
-  x@SD
-}
 
-#' @rdname SRR-accessors
-#' @export
-`SD<-` <- function(x, value) {
-  CheckClass(x, "srr", "x")
-  x@SD <- value
-  methods::validObject(x)
-  x
-}
-
-#' @rdname SRR-accessors
-#' @export
-AC <- function(x) {
-  CheckClass(x, "srr", "x")
-  x@AC
-}
-
-#' @rdname SRR-accessors
-#' @export
-`AC<-` <- function(x, value) {
-  CheckClass(x, "srr", "x")
-  x@AC <- value
-  methods::validObject(x)
-  x
-}
-
-#' @rdname SRR-accessors
+#' @rdname SRR
 #' @export
 SPFrom <- function(x) {
   CheckClass(x, "srr", "x")
   x@SPFrom
 }
 
-#' @rdname SRR-accessors
+#' @rdname SRR
 #' @export
 `SPFrom<-` <- function(x, value) {
   CheckClass(x, "srr", "x")
@@ -206,14 +147,14 @@ SPFrom <- function(x) {
   x
 }
 
-#' @rdname SRR-accessors
+#' @rdname SRR
 #' @export
 RecDevInit <- function(x) {
   CheckClass(x, "srr", "x")
   x@RecDevInit
 }
 
-#' @rdname SRR-accessors
+#' @rdname SRR
 #' @export
 `RecDevInit<-` <- function(x, value) {
   CheckClass(x, "srr", "x")
@@ -222,14 +163,14 @@ RecDevInit <- function(x) {
   x
 }
 
-#' @rdname SRR-accessors
+#' @rdname SRR
 #' @export
 RecDevHist <- function(x) {
   CheckClass(x, "srr", "x")
   x@RecDevHist
 }
 
-#' @rdname SRR-accessors
+#' @rdname SRR
 #' @export
 `RecDevHist<-` <- function(x, value) {
   CheckClass(x, "srr", "x")
@@ -238,14 +179,14 @@ RecDevHist <- function(x) {
   x
 }
 
-#' @rdname SRR-accessors
+#' @rdname SRR
 #' @export
 RecDevProj <- function(x) {
   CheckClass(x, "srr", "x")
   x@RecDevProj
 }
 
-#' @rdname SRR-accessors
+#' @rdname SRR
 #' @export
 `RecDevProj<-` <- function(x, value) {
   CheckClass(x, "srr", "x")
@@ -254,14 +195,14 @@ RecDevProj <- function(x) {
   x
 }
 
-#' @rdname SRR-accessors
+#' @rdname SRR
 #' @export
 SpawnTimeFrac <- function(x) {
   CheckClass(x, "srr", "x")
   x@SpawnTimeFrac
 }
 
-#' @rdname SRR-accessors
+#' @rdname SRR
 #' @export
 `SpawnTimeFrac<-` <- function(x, value) {
   CheckClass(x, "srr", "x")
@@ -270,14 +211,14 @@ SpawnTimeFrac <- function(x) {
   x
 }
 
-#' @rdname SRR-accessors
+#' @rdname SRR
 #' @export
 RelRecFun <- function(x) {
   CheckClass(x, "srr", "x")
   x@RelRecFun
 }
 
-#' @rdname SRR-accessors
+#' @rdname SRR
 #' @export
 `RelRecFun<-` <- function(x, value) {
   CheckClass(x, "srr", "x")
@@ -286,6 +227,14 @@ RelRecFun <- function(x) {
   x
 }
 
+#' @rdname SRR
+#' @export
+`SRR<-`<- function(x, value) {
+  CheckClass(x, "stock", "x")
+  x@SRR <- value
+  methods::validObject(x)
+  x
+}
 
 
 

@@ -77,8 +77,11 @@ GenerateHistoricalData <- function(Hist, silent=FALSE) {
 #'   simulated historical values for effort, catch, and indices
 #'
 #' @keywords internal
-GenerateHistoricalData_Sim <- function(x, Hist, HistYears, 
-                                       nArea, FleetNames, StockNames, 
+GenerateHistoricalData_Sim <- function(x, Hist, 
+                                       HistYears, 
+                                       nArea,
+                                       FleetNames,
+                                       StockNames, 
                                        silent=FALSE, 
                                        id=NULL) {
   

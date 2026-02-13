@@ -1,6 +1,6 @@
 #' Selectivity
 #'
-#' Create a `Selectivity` object.
+#' Construct a [selectivity-class] object for a [Fleet()] object.
 #'
 #' A `Selectivity` object defines selectivity-at-age, length, or weight
 #' relationships.
@@ -16,9 +16,17 @@
 #' @param isRel Logical indicating whether selectivity parameters are relative to maturity.
 #' @param Misc Miscellaneous list
 #'
-#' @return A `Selectivity` object.
+#' A `Selectivity` object can be attached to a [Fleet()] using `Selectivity(Fleet) <- MySelectivity` and
+#' retrieved using `MySelectivity <- Selectivity(Fleet)`
 #'
-#' @seealso [Fleet()], [SelectivityModels()], [GetSelectivity()]
+#' Individual components may be accessed or modified using accessor and
+#' replacement functions such as [Pars()], [Model()], and [Units()].
+#' 
+#' `r TechManLink()`
+#'
+#' @seealso [Fleet()], [SelectivityModels()]
+#' 
+#' @return An [selectivity-class] object
 #'
 #' @export
 Selectivity <- function(Pars = list(),
@@ -30,7 +38,7 @@ Selectivity <- function(Pars = list(),
                         isRel = FALSE,
                         Misc = list()) {
   
-  ## Fleet pass-through 
+
   if (methods::is(Pars, "fleet"))
     return(Pars@Selectivity)
   
@@ -48,58 +56,15 @@ Selectivity <- function(Pars = list(),
 }
 
 
-#' Selectivity accessors and assignment functions
-#'
-#' Functions for accessing and modifying a [Selectivity()] object, and for
-#' attaching or retrieving a `Selectivity` object from a [Fleet()].
-#'
-#' @param Fleet A [Fleet()] object.
-#' @param x A [Selectivity()] object.
-#' @param value Replacement value.
-#'
-#' @details
-#' - `GetSelectivity()` and `SetSelectivity()` retrieve or assign the
-#'   `Selectivity` component of a [Fleet()] object.
-#' - Accessors such as `Pars()` and `Model()` retrieve individual
-#'   components of a [Selectivity()] object.
-#' - Replacement functions (e.g. `Pars<-`) update the corresponding component
-#'   and validate the object.
-#'
-#' Conceptual details and valid inputs are documented in [Selectivity()].
-#'
-#' @name Selectivity-accessors
-NULL
 
-
-
-#' @rdname Selectivity-accessors
-#' @export
-GetSelectivity <- function(Fleet) {
-  CheckClass(Fleet, "fleet", "Fleet")
-  Fleet@Selectivity
-}
-
-#' @rdname Selectivity-accessors
-#' @export
-SetSelectivity <- function(Fleet, Selectivity) {
-  CheckClass(Fleet, "fleet", "Fleet")
-  CheckClass(Selectivity, "selectivity", "Selectivity")
-  Fleet@Selectivity <- Selectivity
-  methods::validObject(Fleet)
-  Fleet
-}
-
-
-
-
-#' @rdname Selectivity-accessors
+#' @rdname Selectivity
 #' @export
 isRel <- function(x) {
   CheckClass(x, "selectivity", "x")
   x@isRel
 }
 
-#' @rdname Selectivity-accessors
+#' @rdname Selectivity
 #' @export
 `isRel<-` <- function(x, value) {
   CheckClass(x, "selectivity", "x")
@@ -108,6 +73,11 @@ isRel <- function(x) {
   x
 }
 
+#' @rdname Selectivity
+#' @export
+`Selectivity<-`<- function(x,value) {
+  AssignSlot(x, value, 'Selectivity')
+}
 
 
 

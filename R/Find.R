@@ -11,7 +11,8 @@ FindModels <- function(ModelClass) {
 
 FindModel <- function(object, 
                       ignore=c('Ages', 'MeanLength', 'Length', 'Weight', 'nage',
-                               'AtAge', 'MaxLen', 'S0', 'S', 'R0')) {
+                               'AtAge', 'MaxLen', 'S0', 'S', 'R0'),
+                      doCheck=TRUE) {
 
   
   if (inherits(object@Model,'function'))
@@ -53,7 +54,7 @@ FindModel <- function(object,
   }
   model <- models[matching_parameters]
 
-  if (length(model)<1) {
+  if (doCheck && length(model)<1) {
     CheckModel(object)
   }
 

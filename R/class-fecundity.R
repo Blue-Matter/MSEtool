@@ -12,7 +12,8 @@
 #' @slot Timing Numeric array giving timing of fecundity within the year.
 #' @slot Misc Miscellaneous list 
 #'
-#' @export
+#' @include class-unions.R
+#' @name fecundity-class
 setClass(
   "fecundity",
   slots = c(

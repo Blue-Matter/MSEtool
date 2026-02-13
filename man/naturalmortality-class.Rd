@@ -8,6 +8,9 @@
 An S4 class representing natural mortality assumptions associated
 with a \code{\link[=Stock]{Stock()}} object.
 }
+\details{
+See \code{\link[=NaturalMortality]{NaturalMortality()}} for details.
+}
 \section{Slots}{
 
 \describe{
@@ -23,7 +26,7 @@ with a \code{\link[=Stock]{Stock()}} object.
 
 \item{\code{Random}}{Random effects array (optional).}
 
-\item{\code{Classes}}{Age or length class boundaries (optional).}
+\item{\code{Classes}}{Age or length class midpoints (optional).}
 
 \item{\code{Misc}}{Miscellaneous list.}
 }}

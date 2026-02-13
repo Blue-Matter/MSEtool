@@ -8,6 +8,9 @@
 The \code{stock} class defines the biological and population-dynamics
 properties of a stock used in an operating model.
 }
+\details{
+See \code{\link[=Stock]{Stock()}} for details.
+}
 \section{Slots}{
 
 \describe{

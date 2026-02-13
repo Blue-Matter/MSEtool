@@ -4,13 +4,11 @@
 \name{maturity-class}
 \alias{maturity-class}
 \title{Maturity Class}
-\arguments{
-\item{Misc}{Miscellaneous list.}
-}
 \description{
-An S4 class defining maturity-at-age, length, or weight relationships
-for a stock. The class supports parametric maturity models as well as
-fully specified maturity schedules.
+An S4 class representing the maturity schedule for a \code{\link[=Stock]{Stock()}} object.
+}
+\details{
+See \code{\link[=Maturity]{Maturity()}} for details.
 }
 \section{Slots}{
 
@@ -28,5 +26,7 @@ fully specified maturity schedules.
 \item{\code{Classes}}{Optional numeric vector defining maturity classes}
 
 \item{\code{Semelparous}}{Logical or array indicating semelparity}
+
+\item{\code{Misc}}{Miscellaneous list.}
 }}
 

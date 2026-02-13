@@ -118,6 +118,7 @@ struct ArrayViewND;
 template <size_t N>
 struct ConstArrayViewND;
 
+using ArrayView1D = ArrayViewND<1>;
 using ArrayView2D = ArrayViewND<2>;
 using ArrayView3D = ArrayViewND<3>;
 using ArrayView4D = ArrayViewND<4>;

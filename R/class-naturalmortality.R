@@ -2,18 +2,21 @@
 #'
 #' An S4 class representing natural mortality assumptions associated
 #' with a [Stock()] object.
-#'
+#' 
+#' See [NaturalMortality()] for details.
+#' 
 #' @slot Pars Named list of natural mortality parameters.
 #' @slot Model Model identifier associated with `Pars`.
 #' @slot Units Time units (e.g. `"year"`).
 #' @slot MeanAtAge Mean natural mortality-at-age array (optional).
 #' @slot MeanAtLength Mean natural mortality-at-length array (optional).
 #' @slot Random Random effects array (optional).
-#' @slot Classes Age or length class boundaries (optional).
+#' @slot Classes Age or length class midpoints (optional).
 #' @slot Misc Miscellaneous list.
 #'
 #' @export
 #' @include class-unions.R
+#' @name naturalmortality-class
 setClass(
   "naturalmortality",
   slots = c(

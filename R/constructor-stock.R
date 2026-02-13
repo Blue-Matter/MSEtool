@@ -1,6 +1,6 @@
 #' Stock
 #'
-#' Construct a [Stock()] object defining the biological and
+#' Construct a [stock-class] object defining the biological and
 #' population-dynamics properties of a stock used in an operating model.
 #'
 #' @param Name Character string. Unique stock name.
@@ -27,9 +27,11 @@
 #' retrieved using [`Stock<-`].
 #'
 #' Individual components may be accessed or modified using accessor
-#' and replacement functions such as [Ages()], [`Ages<-`], [GetLength()], [SetLength()], etc.
+#' and replacement functions such as [Ages()], [`Ages<-`], etc.
 #'
-#' @return A [Stock()] object.
+#' `r TechManLink()`
+#' 
+#' @return A [stock-class] object.
 #'
 #' @seealso
 #' [Ages()], [Length()], [Weight()], [NaturalMortality()],
@@ -52,11 +54,15 @@ Stock <- function(Name,
                   Seasons = 1,
                   Misc = list()) {
   
-  ## ---- Empty constructor ----
+  
   if (missing(Name)) {
     object <- methods::new("stock")
     methods::validObject(object)
     return(object)
+  }
+  
+  if (inherits(Name, 'om')) {
+    return(Name@Stock)
   }
   
   if (!inherits(Name, 'character')) {
@@ -125,49 +131,9 @@ Stock <- function(Name,
   object
 }
 
-#' Stock accessors and assignment functions
-#'
-#' Functions for accessing and modifying a [Stock()] object, and for
-#' attaching or retrieving a `Stock` object from an [OM()].
-#'
-#' @param OM An [OM()] object.
-#' @param x A [Stock()] object.
-#' @param value Replacement value.
-#' @param i Integer. Index for stock number
-#'
-#' @details
-#' - `GetStock()` and `SetStock()` retrieve or assign stocks to an [OM()].
-#' - Slot accessors retrieve or modify individual components of a `Stock`.
-#'
-#' Conceptual details and valid inputs are documented in [Stock()].
-#'
-#' @name Stock-accessors
-NULL
 
-#' @rdname Stock-accessors
+#' @rdname Stock
 #' @export
-GetStock <- function(OM, i = NULL) {
-  CheckClass(OM, "om", "OM")
-  
-  if (is.null(i))
-    return(OM@Stock)
-  
-  if (!is.numeric(i) || i < 1 || i > length(OM@Stock))
-    cli::cli_abort("Invalid stock index")
-  
-  OM@Stock[[i]]
+`Stock<-` <- function(x, value) {
+  AssignSlot(x, value, 'Stock')
 }
-
-#' @rdname Stock-accessors
-#' @export
-SetStock <- function(OM, Stock) {
-  CheckClass(OM, "om", "OM")
-  CheckClass(Stock, "stock", "Stock")
-  
-  OM@Stock <- list(Stock)
-  names(OM@Stock) <- Stock@Name
-  class(OM@Stock) <- "StockList"
-  
-  OM
-}
-

@@ -161,7 +161,7 @@ MSEextra <- function(silent=FALSE) {
 
 
 #' @rdname SubCpars
-#' @include legacy_Class_definitions.R
+#' @include zz_legacy_Class_definitions.R
 #' @export
 setGeneric("SubCpars", function(x, ...) standardGeneric("SubCpars"))
 
@@ -333,7 +333,7 @@ SubCpars_proyears <- function(xx, yr_diff, cpars) {
 
 
 #' @rdname tinyErr
-#' @include legacy_Class_definitions.R
+#' @include zz_legacy_Class_definitions.R
 #' @export
 setGeneric("tinyErr", function(x, ...) standardGeneric("tinyErr"))
 

@@ -8,6 +8,9 @@
 An S4 class defining stock–recruitment relationships and recruitment
 variability for a \code{\link[=Stock]{Stock()}} object.
 }
+\details{
+See \code{\link[=SRR]{SRR()}} for details.
+}
 \section{Slots}{
 
 \describe{

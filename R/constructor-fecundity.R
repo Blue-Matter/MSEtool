@@ -1,8 +1,9 @@
 #' Fecundity
 #'
-#' Construct or access a [Fecundity()] object.
+#' Construct a [fecundity-class] object defining the length-at-age structure
+#' associated with a [Stock()].
 #'
-#' @param Pars List of fecundity model parameters.
+#' @param Pars List of fecundity model parameters (see [FecundityModels()])..
 #' @param Model Character string or function identifying the fecundity model.
 #' @param Units Character string giving fecundity units.
 #' @param MeanAtAge Numeric array giving fecundity-at-age.
@@ -17,17 +18,18 @@
 #' 
 #' Fecundity is optional. 
 #'
-#' Fecundity may be specified directly using `MeanAtAge` or `MeanAtLength`,
-#' or indirectly using a parametric model defined by `Pars` and `Model`.
+#' A `Fecundity` object can be attached to a [Stock()] using `Fecundity(Stock) <- MyFecundity` and
+#' retrieved using `MyFecundity <- Fecundity(Stock)`
 #'
-#' A `fecundity` object can be attached to a [Stock()] using
-#' [SetFecundity()] and retrieved using [GetFecundity()].
+#' Individual components may be accessed or modified using accessor and
+#' replacement functions such as [Pars()], [Model()], and [Units()].
+#' 
+#' `r TechManLink()`
 #' 
 #'
-#' @return A valid [fecundity()] object.
+#' @return A valid [fecundity-class] object.
 #'
-#' @seealso
-#' [GetFecundity()], [SetFecundity()], [FecundityModels()]
+#' @seealso [Populate()], [FecundityModels()]
 #'
 #' @example man-examples/Fecundity-class.R
 #'
@@ -40,6 +42,10 @@ Fecundity <- function(Pars = list(),
                       Classes = NULL,
                       Timing = NULL,
                       Misc = list()) {
+  
+  
+  if (inherits(Pars, 'stock'))
+    return(Pars@Fecundity)
   
   object <- new(
     "fecundity",
@@ -56,18 +62,9 @@ Fecundity <- function(Pars = list(),
   object
 }
 
-#' @rdname Fecundity
-#' @export
-GetFecundity <- function(object) {
-  object@Fecundity
-}
-
-#' @rdname Fecundity
-#' @export
-SetFecundity <- function(object, value) {
-  object@Fecundity <- value
-  validObject(object)
-  object
+`Fecundity<-` <- function(x, value) {
+  CheckClass(x, "stock", "x")
+  AssignSlot(x, value, 'Fecundity')
 }
 
 

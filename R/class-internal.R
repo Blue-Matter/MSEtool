@@ -23,56 +23,7 @@ setClass("popdynamics",
 
 
 
-#' `timeseries` Object
-#'
-#' Stores detailed simulated time-series outputs including population,
-#' catch, effort, and fishing mortality components.
-#'
-#' @slot Number List of number-at-age arrays (Sim × Age × Year × Area), one per stock.
-#' @slot Biomass Total biomass array (Sim × Stock × Year).
-#' @slot SBiomass Spawning biomass array (Sim × Stock × Year).
-#' @slot SProduction Spawning production array (Sim × Stock × Year).
-#'
-#' @slot LandingsAtAge List of landings-at-age arrays (Sim × Age × Year × Fleet × Area).
-#' @slot DiscardsAtAge List of discards-at-age arrays (Sim × Age × Year × Fleet × Area).
-#' @slot LandingsAtSize List of landings-at-size arrays (Sim × Class × Year × Fleet × Area).
-#' @slot DiscardsAtSize List of discards-at-size arrays (Sim × Class × Year × Fleet × Area).
-#'
-#' @slot Effort Effort array (Sim × Year × Fleet).
-#' @slot Distribution Fleet effort distribution by area (Sim × Year × Fleet × Area).
-#'
-#' @slot FDead Fishing mortality causing death (list of arrays by stock).
-#' @slot FRetain Fishing mortality retained (list of arrays by stock).
-#' @slot FDeadArea Area-specific fishing mortality causing death (list by stock).
-#' @slot FRetainArea Area-specific retained fishing mortality (list by stock).
-#'
-#' @slot Misc Miscellaneous list.
-#'
-#' @export
-setClass(
-  "timeseries",
-  slots = c(
-    Number          = "list",
-    Biomass         = "array",
-    SBiomass        = "array",
-    SProduction     = "array",
-    
-    LandingsAtAge   = "list",
-    DiscardsAtAge   = "list",
-    LandingsAtSize  = "list",
-    DiscardsAtSize  = "list",
-    
-    Effort          = "array",
-    Distribution    = "array",
-    
-    FDead           = "array.list.null",
-    FRetain         = "array.list.null",
-    FDeadArea       = "array.list.null",
-    FRetainArea     = "array.list.null",
-    
-    Misc            = "list"
-  )
-)
+
 
 
 #' `unfished` Object

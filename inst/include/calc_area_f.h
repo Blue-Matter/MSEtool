@@ -54,6 +54,7 @@ inline void CalcArea_F(
       const int sim_rs = sim_index<2>(sim, RelSize, "RelSize");
       
       const double E = Effort(sim_ef, y, fl);
+      
       for (int ar = 0; ar < nArea; ++ar) {
         const double rs = RelSize(sim_rs, ar);
         EffortDensity(sim, fl, ar) = (rs > 0.0) ? E * Distribution(sim_dist, y, fl, ar) / rs  : 0.0;
@@ -66,7 +67,8 @@ inline void CalcArea_F(
     
     auto& Fd  = FDeadArea[st];        // sim, age, year, fleet, area
     auto& Fr  = FRetainArea[st];      // sim, age, year, fleet, area
-  
+    
+
     const auto& S  = SelAge[st];      // sim, age, year, fleet, area
     const auto& R  = RetAge[st];      // sim, age, year, fleet, area
     const auto& DM = DiscMort[st];    // sim, age, year, fleet, area
@@ -89,6 +91,12 @@ inline void CalcArea_F(
         const double q_fl = q(sim_q, st, y, fl);
       
         for (int ar = 0; ar < nArea; ++ar) {
+          // initialize to 0
+          for (int age = 0; age < nAge; ++age) {
+            Fd(sim, age, y, fl, ar) = 0.0;
+            Fr(sim, age, y, fl, ar) = 0.0;
+          }
+          
           const double q_eff = q_fl * EffortDensity(sim, fl, ar);
           
           if (q_eff <= 0.0) continue;
@@ -133,6 +141,8 @@ inline void CalcArea_F(
             
           
             double F_interact = q_eff * sel;
+            
+        
             if (F_interact > maxF) F_interact = maxF;
             
             const double F_retain = F_interact * ret;

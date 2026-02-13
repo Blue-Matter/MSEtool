@@ -344,7 +344,7 @@ PopulateImpList <- function(OM, silent = FALSE) {
   ImpList <- MakeNamedList(
     StockNames(OM),
     MakeNamedList(
-      FleetNames(OM)[[1]],
+      FleetNames(OM),
       new("imp")
     )
   )

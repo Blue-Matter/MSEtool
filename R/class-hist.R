@@ -33,8 +33,9 @@ methods::setClassUnion(
 #' @include class-data.R
 #' @include class-om.R
 #' @include class-internal.R
+#' @include class-timeseries.R
 #' @include class-reference.R
-#'
+#' @name hist-class
 #' @export
 setClass(
   "hist",

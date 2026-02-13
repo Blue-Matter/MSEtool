@@ -2,21 +2,14 @@
 % Please edit documentation in R/constructor-depletion.R
 \name{Depletion}
 \alias{Depletion}
-\alias{GetDepletion}
-\alias{SetDepletion}
 \alias{Initial}
 \alias{Initial<-}
 \alias{Final}
 \alias{Final<-}
-\alias{Reference}
-\alias{Reference<-}
+\alias{Depletion<-}
 \title{Depletion}
 \usage{
 Depletion(Initial, Final, Reference = "B0")
-
-GetDepletion(Stock)
-
-SetDepletion(Stock, Depletion)
 
 Initial(x)
 
@@ -26,9 +19,7 @@ Final(x)
 
 Final(x) <- value
 
-Reference(x)
-
-Reference(x) <- value
+Depletion(x) <- value
 }
 \arguments{
 \item{Initial}{Numeric initial depletion (optional).}
@@ -38,17 +29,17 @@ Reference(x) <- value
 \item{Reference}{Character reference biomass used to calculate depletion.
 One of \code{"B0"} (default) or \code{"BMSY"}.}
 
-\item{Stock}{A \code{\link[=Stock]{Stock()}} object.}
-
 \item{x}{A \code{depletion} object.}
 
 \item{value}{Replacement value.}
+
+\item{Stock}{A \code{\link[=Stock]{Stock()}} object.}
 }
 \value{
-A \code{depletion} object.
+A \linkS4class{depletion} object.
 }
 \description{
-Construct and manipulate a \code{depletion} object defining depletion assumptions
+Construct and manipulate a \linkS4class{depletion} object defining depletion assumptions
 for a \code{\link[=Stock]{Stock()}} object.
 }
 \details{

@@ -23,6 +23,75 @@ Update_Effort <- function(Proj, Year, AdviceSimList, LastAdviceSimList,
 
 }
 
+Update_Effort_Sim <- function(Proj,
+                              sim,
+                              Year,
+                              YearsHist,
+                              YearsProj,
+                              AdviceList,
+                              LastAdviceList,
+                              FleetNames,
+                              Complexes,
+                              Areas) {
+  
+  nComplex <- length(Complexes)
+  nFleet <- length(FleetNames)
+  nArea <- length(Areas)
+  AllYears <- c(YearsHist, YearsProj)
+  TSIndex <- match(Year, AllYears)
+  
+  Distribution <- MakeNamedList(names(Complexes))
+  
+  for (i in seq_len(nComplex)) {
+    stocks <- Complexes[[i]]
+    Advice <- AdviceList[[i]]
+    AdvicePrevious <- LastAdviceList[[i]]
+    
+    if (is.null(Advice@Effort))
+      next()
+    
+    if (UnchangedManagement(Advice, AdvicePrevious, 'Effort'))
+      next()
+    
+    
+    # Convert from Relative to Absolute Effort
+    Advice <- Convert_Effort_Abs(Proj, sim, Advice)
+    
+    # Distribute Effort over Areas if specified in MP 
+    temp <- Distribute_Effort_Area(Proj,
+                                   sim,
+                                   TSIndex,
+                                   Advice,
+                                   nFleet,
+                                   nArea)
+    
+    Distribution[[i]] <- temp$Distribution
+    AdviceList[[i]] <- temp$Advice
+  }
+  
+  # Determine minimum effort by complex
+  EffortArray <- purrr::map(AdviceList, slot, 'Effort') |> List2Array() # nFleet x nComplex
+  MinEffortInd <- apply(EffortArray, 1, which.min) |> as.numeric() # complex with lowest effort
+  row_idx <- seq_len(nrow(EffortArray))
+  MinEffortValues <- EffortArray[cbind(row_idx, MinEffortInd)] # lowest prescribed effort by fleet
+  
+  ProjInd <- TSIndex:length(AllYears) # all future time steps
+  n <- length(ProjInd)
+  Proj@Effort[sim,ProjInd,] <- matrix(MinEffortValues, nrow = n, ncol = nFleet, byrow = TRUE)
+  
+  if (length(Distribution)) {
+    # spatial distribution of effort has been specified 
+    # distribute effort for each fleet according to minimum effort specified across stocks
+    for (fl in 1:nFleet) {
+      complex_ind <- MinEffortInd[fl]
+      if (length(Distribution)>=fleet_ind) {
+        Proj@Distribution[sim, ProjInd, fl] <-  Distribution[[complex_ind]]  
+      }
+    }
+  }
+
+  Proj
+}
 
 # Distribute Effort over areas if specified 
 Distribute_Effort_Area <- function(Proj,
@@ -36,6 +105,11 @@ Distribute_Effort_Area <- function(Proj,
     return(list(Proj = Proj, 
                 Advice = Advice))
   
+  dd <- dim(Advice@Effort)
+  if (length(dd)==1)
+    return(list(Proj = Proj, 
+                Advice = Advice))
+  
   if (!all(dim(Advice@Effort)==c(nFleet, nArea)))
     stop("If `Advice@Effort` is a matrix, it must have nFleet rows and nArea columns")
   
@@ -45,11 +119,12 @@ Distribute_Effort_Area <- function(Proj,
   
   mat <- Rel_Area_Effort(Advice@Effort) # fleet x area
   arr <- array(rep(mat, each = n), dim = c(n, nrow(mat), ncol(mat))) # year x fleet x area
-  Proj@Distribution[sim, ProjInd, ,] <- arr
+  Distribution <- Proj@Distribution[sim, ProjInd, ,, drop=FALSE] |> abind::adrop(1:2)
+  Distribution <- Distribution * arr
   
   Advice@Effort <- rowSums(Advice@Effort)
 
-  list(Proj = Proj, Advice = Advice)
+  list(Distribution = Distribution, Advice = Advice)
 }
 
 
@@ -79,54 +154,3 @@ Convert_Effort_Abs <- function(Proj,
   Advice
 }
 
-Update_Effort_Sim <- function(Proj,
-                              sim,
-                              Year,
-                              YearsHist,
-                              YearsProj,
-                              AdviceList,
-                              LastAdviceList,
-                              FleetNames,
-                              Complexes,
-                              Areas) {
-  
-  nComplex <- length(AdviceList)
-  nFleet <- length(FleetNames)
-  nArea <- length(Areas)
-  AllYears <- c(YearsHist, YearsProj)
-  TSIndex <- match(Year, AllYears)
-  
-  
-  for (i in seq_len(nComplex)) {
-    stocks <- Complexes[[i]]
-    Advice <- AdviceList[[i]]
-    AdvicePrevious <- LastAdviceList[[i]]
-    
-    if (is.null(Advice@Effort))
-      next()
-    
-    if (UnchangedManagement(Advice, AdvicePrevious, 'Effort'))
-      next()
-    
-    
-    # Convert from Relative to Absolute Effort
-    Advice <- Convert_Effort_Abs(Proj, sim, Advice)
-  
-    # Distribute Effort over Areas if specified in MP 
-    temp <- Distribute_Effort_Area(Proj,
-                                   sim,
-                                   TSIndex,
-                                   Advice,
-                                   nFleet,
-                                   nArea)
-    
-    Proj <- temp$Proj
-    Advice <- temp$Advice
-    
-    ProjInd <- TSIndex:length(AllYears) # all future time steps
-    n <- length(ProjInd)
-    Proj@Effort[sim,ProjInd,] <- matrix(Advice@Effort, nrow = n, ncol = nFleet, byrow = TRUE)
- 
-  }
-  Proj
-}

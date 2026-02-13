@@ -2,6 +2,8 @@
 #'
 #' The `catchability` class defines catchability assumptions, including 
 #' optional stochastic or incremental changes to gear efficiency over time.
+#' 
+#' See [Catchability()] for details.
 #'
 #' @slot Efficiency Gear efficiency (q).
 #' @slot qCV Coefficient of variation for catchability.
@@ -9,6 +11,7 @@
 #' @slot Misc Miscellaneous list.
 #'
 #' @include class-unions.R
+#' @name catchability-class
 setClass(
   "catchability",
   slots = c(

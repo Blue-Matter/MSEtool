@@ -55,7 +55,7 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
   
   if (IdenticalHist) {
     # run for just sim 1
-    unfished <- CalcFisheryDynamics_(Hist_Copy, 
+    unfished <- CalcFisheryDynamics_(HistIn=Hist_Copy, 
                                      Years=HistYears,
                                      AllYears=AllYears,
                                      Sims=1,

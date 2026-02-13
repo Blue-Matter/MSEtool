@@ -29,9 +29,11 @@
 
 \item{Classes}{Weight classes}
 
-\item{`Misc`}{Miscellaneous list}
+\item{Misc}{Miscellaneous list}
 }
 \description{
-The \code{Weight} class defines the weight-at-age and weight-at-length
-schedules  associated with a \code{\link[=Stock]{Stock()}} object. It stores the parameters and model used to generate mean weight-at-age, along with variability and assumptions regarding the distribution of weight-at-age.
+An S4 class representing the weight-at-age and -at-length structure for a \code{\link[=Stock]{Stock()}} object.
+}
+\details{
+See \code{\link[=Weight]{Weight()}} for details.
 }

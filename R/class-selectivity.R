@@ -2,6 +2,8 @@
 #'
 #' The `selectivity` class defines how fishing or survey selectivity
 #' varies with age, length, or weight.
+#' 
+#' See [Selectivity()] for details.
 #'
 #' @slot Pars Named list of selectivity parameters.
 #' @slot Model Selectivity model identifier.
@@ -9,10 +11,11 @@
 #' @slot MeanAtAge Mean selectivity-at-age array.
 #' @slot MeanAtLength Mean selectivity-at-length array.
 #' @slot MeanAtWeight Mean selectivity-at-weight array.
-#' @slot Classes Class boundaries (age, length, or weight).
+#' @slot Classes Class mid-points (length, or weight).
 #' @slot Misc Miscellaneous list.
 #'
 #' @include class-unions.R
+#' @name selectivity-class
 setClass(
   "selectivity",
   slots = c(

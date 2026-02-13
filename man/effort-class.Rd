@@ -8,6 +8,9 @@
 The \code{effort} class stores historical fishing effort and associated
 spatial effort structure for a \code{\link[=Fleet]{Fleet()}} object.
 }
+\details{
+See \code{\link[=Effort]{Effort()}} for details.
+}
 \section{Slots}{
 
 \describe{

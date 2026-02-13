@@ -2,6 +2,21 @@
 % Please edit documentation in R/constructor-srr.R
 \name{SRR}
 \alias{SRR}
+\alias{R0}
+\alias{R0<-}
+\alias{SPFrom}
+\alias{SPFrom<-}
+\alias{RecDevInit}
+\alias{RecDevInit<-}
+\alias{RecDevHist}
+\alias{RecDevHist<-}
+\alias{RecDevProj}
+\alias{RecDevProj<-}
+\alias{SpawnTimeFrac}
+\alias{SpawnTimeFrac<-}
+\alias{RelRecFun}
+\alias{RelRecFun<-}
+\alias{SRR<-}
 \title{SRR}
 \usage{
 SRR(
@@ -20,6 +35,36 @@ SRR(
   Units = 1,
   Misc = list()
 )
+
+R0(x)
+
+R0(x) <- value
+
+SPFrom(x)
+
+SPFrom(x) <- value
+
+RecDevInit(x)
+
+RecDevInit(x) <- value
+
+RecDevHist(x)
+
+RecDevHist(x) <- value
+
+RecDevProj(x)
+
+RecDevProj(x) <- value
+
+SpawnTimeFrac(x)
+
+SpawnTimeFrac(x) <- value
+
+RelRecFun(x)
+
+RelRecFun(x) <- value
+
+SRR(x) <- value
 }
 \arguments{
 \item{Pars}{A named list of parameters defining the expected stock–recruit
@@ -33,8 +78,8 @@ calculate expected recruitment (e.g. \code{"BevertonHolt"}).}
 \item{SD}{Numeric vector or array giving the standard deviation of recruitment
 deviations in log space. May be:
 \itemize{
-\item length 1 (constant across simulations),
-\item length 2 (uniform distribution bounds),
+\item length 1 (constant across simulations)
+\item length 2 (uniform distribution bounds)
 \item length \code{nSim}.
 }}
 
@@ -66,10 +111,11 @@ time step when spawning occurs. Defaults to 0 (start of time step).}
 \item{Misc}{Miscellaneous list.}
 }
 \value{
-A valid \code{\link[=srr]{srr()}} object.
+A  \linkS4class{srr} object.
 }
 \description{
-Construct or access a stock–recruitment relationship.
+Construct a \linkS4class{srr} object defining the stock-recruit relationship (SRR)
+associated with a \code{\link[=Stock]{Stock()}}.
 }
 \details{
 The \code{SRR()} constructor defines both the deterministic stock–recruit
@@ -80,8 +126,11 @@ Recruitment deviations may be supplied directly via \code{RecDevInit},
 \code{RecDevHist}, and \code{RecDevProj}, or generated internally from \code{SD} and \code{AC}
 during model setup.
 
-A \code{srr} object is typically attached to a \code{\link[=Stock]{Stock()}} and accessed using
-\code{\link[=GetSRR]{GetSRR()}} and \code{\link[=SetSRR]{SetSRR()}}.
+A \code{SRR} object can be attached to a \code{\link[=Stock]{Stock()}} using \code{SRR(Stock) <- MySRR} and
+retrieved using \code{MyLSRR <- SRR(Stock)}
+
+Individual components may be accessed or modified using accessor and
+replacement functions such as \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, and \code{\link[=R0]{R0()}}.
 }
 \examples{
 SRRModels()
@@ -96,7 +145,4 @@ SRR <- Populate(SRR, MaxAge=10, nHistTS=20, nProjTS=5, nsim=2)
 plot(SRR)
 
 # see Examples in `?Length` for other `Pars` configurations
-}
-\seealso{
-\code{\link[=GetSRR]{GetSRR()}}, \code{\link[=SetSRR]{SetSRR()}}
 }

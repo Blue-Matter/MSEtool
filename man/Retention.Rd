@@ -2,6 +2,7 @@
 % Please edit documentation in R/constructor-retention.R
 \name{Retention}
 \alias{Retention}
+\alias{Retention<-}
 \title{Retention}
 \usage{
 Retention(
@@ -14,6 +15,8 @@ Retention(
   isRel = FALSE,
   Misc = list()
 )
+
+Retention(x) <- value
 }
 \arguments{
 \item{Pars}{A named list of retention parameters.}
@@ -32,18 +35,26 @@ retention.}
 
 \item{isRel}{Logical indicating whether retention parameters are relative to maturity.}
 
-\item{Misc}{Miscellaneous list.}
+\item{Misc}{Miscellaneous list.
+
+A \code{Retention} object can be attached to a \code{\link[=Fleet]{Fleet()}} using \code{Retention(Fleet) <- MyRetention} and
+retrieved using \code{MyRetention <- Retention(Fleet)}
+
+Individual components may be accessed or modified using accessor and
+replacement functions such as \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, and \code{\link[=MeanAtAge]{MeanAtAge()}}.
+
+See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.}
 }
 \value{
-A \code{Retention} object.
+A \linkS4class{retention} object.
 }
 \description{
-Create a \code{Retention} object.
+Construct a \linkS4class{retention} object for a \code{\link[=Fleet]{Fleet()}} object.
 }
 \details{
 A \code{Retention} object defines retention-at-age, length, or weight
 relationships.
 }
 \seealso{
-\code{\link[=Fleet]{Fleet()}}
+\code{\link[=Fleet]{Fleet()}}, \code{\link[=RetentionModels]{RetentionModels()}}
 }

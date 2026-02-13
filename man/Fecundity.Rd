@@ -2,8 +2,6 @@
 % Please edit documentation in R/constructor-fecundity.R
 \name{Fecundity}
 \alias{Fecundity}
-\alias{GetFecundity}
-\alias{SetFecundity}
 \title{Fecundity}
 \usage{
 Fecundity(
@@ -16,13 +14,9 @@ Fecundity(
   Timing = NULL,
   Misc = list()
 )
-
-GetFecundity(object)
-
-SetFecundity(object, value)
 }
 \arguments{
-\item{Pars}{List of fecundity model parameters.}
+\item{Pars}{List of fecundity model parameters (see \code{\link[=FecundityModels]{FecundityModels()}})..}
 
 \item{Model}{Character string or function identifying the fecundity model.}
 
@@ -39,10 +33,11 @@ SetFecundity(object, value)
 \item{Misc}{Miscellaneous list.}
 }
 \value{
-A valid \code{\link[=fecundity]{fecundity()}} object.
+A valid \linkS4class{fecundity} object.
 }
 \description{
-Construct or access a \code{\link[=Fecundity]{Fecundity()}} object.
+Construct a \linkS4class{fecundity} object defining the length-at-age structure
+associated with a \code{\link[=Stock]{Stock()}}.
 }
 \details{
 The \code{Fecundity()} constructor creates a \code{\link[=Fecundity]{Fecundity()}} object describing
@@ -50,11 +45,13 @@ reproductive output as a function of age or length.
 
 Fecundity is optional.
 
-Fecundity may be specified directly using \code{MeanAtAge} or \code{MeanAtLength},
-or indirectly using a parametric model defined by \code{Pars} and \code{Model}.
+A \code{Fecundity} object can be attached to a \code{\link[=Stock]{Stock()}} using \code{Fecundity(Stock) <- MyFecundity} and
+retrieved using \code{MyFecundity <- Fecundity(Stock)}
 
-A \code{fecundity} object can be attached to a \code{\link[=Stock]{Stock()}} using
-\code{\link[=SetFecundity]{SetFecundity()}} and retrieved using \code{\link[=GetFecundity]{GetFecundity()}}.
+Individual components may be accessed or modified using accessor and
+replacement functions such as \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, and \code{\link[=Units]{Units()}}.
+
+See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
 }
 \examples{
 
@@ -84,5 +81,5 @@ plot(Fecundity)
 # see Examples in `?Length` for other `Pars` configurations
 }
 \seealso{
-\code{\link[=GetFecundity]{GetFecundity()}}, \code{\link[=SetFecundity]{SetFecundity()}}, \code{\link[=FecundityModels]{FecundityModels()}}
+\code{\link[=Populate]{Populate()}}, \code{\link[=FecundityModels]{FecundityModels()}}
 }

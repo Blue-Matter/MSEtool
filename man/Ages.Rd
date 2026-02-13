@@ -65,6 +65,7 @@ a <- Ages(MaxAge = 20)
 MaxAge(a)
 MaxAge(a) <- 10
 MaxAge(a)
+
 }
 \seealso{
 \code{\link[=Units]{Units()}}, \code{\link{Units<-}}, \code{\link[=Classes]{Classes()}}

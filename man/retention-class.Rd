@@ -8,6 +8,9 @@
 The \code{retention} class defines how fishing or survey retention
 varies with age, length, or weight.
 }
+\details{
+See \code{\link[=Retention]{Retention()}} for details.
+}
 \section{Slots}{
 
 \describe{

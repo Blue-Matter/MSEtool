@@ -2,6 +2,8 @@
 % Please edit documentation in R/constructor-weight.R
 \name{Weight}
 \alias{Weight}
+\alias{AWK}
+\alias{AWK<-}
 \title{Weight}
 \usage{
 Weight(
@@ -19,11 +21,15 @@ Weight(
   Classes = NULL,
   Misc = list()
 )
+
+AWK(x)
+
+AWK(x) <- value
 }
 \arguments{
 \item{Pars}{Named list of parameters for \code{\link[=WeightModels]{WeightModels()}}.}
 
-\item{Model}{Growth model identifier associated with \code{Pars}.}
+\item{Model}{Model associated with \code{Pars}.}
 
 \item{Units}{Weight units (e.g. \code{"g"}, \code{"kg"}).}
 
@@ -48,10 +54,10 @@ Weight(
 \item{Misc}{Miscellaneous list.}
 }
 \value{
-A \code{\link[=Weight]{Weight()}} object.
+A \linkS4class{weight} object.
 }
 \description{
-Construct a \code{\link[=Weight]{Weight()}} object defining weight-at-age and
+Construct a \linkS4class{weight} object defining weight-at-age and
 weight-at-length schedules associated with a \code{\link[=Stock]{Stock()}}.
 }
 \details{
@@ -59,14 +65,14 @@ The \code{Weight} class defines how weight varies with age and/or length
 in a \code{\link[=Stock]{Stock()}}. Weight schedules may be model-based (via \code{Pars}
 and \code{Model}) or supplied directly as arrays.
 
-Printing a \code{Weight} object provides a concise summary of the specified
-weight assumptions without printing full arrays.
+A \code{Weight} object can be attached to a \code{\link[=Stock]{Stock()}} using \code{Weight(Stock) <- MyWeight} and
+retrieved using \code{MyWeight <- Weight(Stock)}
 
-A \code{Weight} object can be attached to a \code{\link[=Stock]{Stock()}} using \code{\link[=SetWeight]{SetWeight()}} and
-retrieved using \code{\link[=GetWeight]{GetWeight()}}.
+Individual components may be accessed or modified using accessor and
+replacement functions such as \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, and \code{\link[=Units]{Units()}}.
+
+See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
 }
 \seealso{
-\code{\link[=GetWeight]{GetWeight()}}, \code{\link[=SetWeight]{SetWeight()}},
-\code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, \code{\link[=CVatAge]{CVatAge()}},
 \code{\link[=Populate]{Populate()}}, \code{\link[=WeightModels]{WeightModels()}}
 }

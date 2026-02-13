@@ -3,7 +3,7 @@
 #' The `bioeconomic` class stores revenue, cost, and investment information
 #' associated with a [Fleet()] and a [Stock()].
 #' 
-#' This object is not currently used.
+#' See [Bioeconomic()] for details.
 #'
 #' @slot Revenue Revenue array 
 #' @slot Cost Operating cost per unit of effort.
@@ -14,6 +14,7 @@
 #' @slot Misc Miscellaneous list.
 #'
 #' @include class-unions.R
+#' @name bioeconomic-class
 setClass(
   "bioeconomic",
   slots = c(

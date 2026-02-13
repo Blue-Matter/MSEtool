@@ -1,8 +1,8 @@
 #' Maturity Class
 #'
-#' An S4 class defining maturity-at-age, length, or weight relationships
-#' for a stock. The class supports parametric maturity models as well as
-#' fully specified maturity schedules.
+#' An S4 class representing the maturity schedule for a [Stock()] object.
+#' 
+#' See [Maturity()] for details.
 #'
 #' @slot Pars Named list of model parameters (e.g. L50, L50_95)
 #' @slot Model Character or function identifying the maturity model
@@ -11,10 +11,11 @@
 #' @slot MeanAtWeight Numeric array of maturity-at-weight (optional).
 #' @slot Classes Optional numeric vector defining maturity classes
 #' @slot Semelparous Logical or array indicating semelparity
-#' @param Misc Miscellaneous list.
+#' @slot Misc Miscellaneous list.
 #'
 #' @export
 #' @include class-unions.R
+#' @name maturity-class
 setClass(
   "maturity",
   slots = c(

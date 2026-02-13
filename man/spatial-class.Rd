@@ -8,6 +8,9 @@
 An S4 class defining the spatial structure and movement dynamics associated
 with a \code{\link[=Stock]{Stock()}} object.
 }
+\details{
+See \code{\link[=Spatial]{Spatial()}} for details.
+}
 \section{Slots}{
 
 \describe{
@@ -34,7 +37,3 @@ plotting purposes.}
 \item{\code{Misc}}{Miscellaneous list for user-defined information.}
 }}
 
-\seealso{
-\code{\link[=Spatial]{Spatial()}}, \code{\link[=GetSpatial]{GetSpatial()}}, \code{\link[=SetSpatial]{SetSpatial()}},
-\code{\link[=UnfishedDist]{UnfishedDist()}}, \code{\link[=ProbStaying]{ProbStaying()}}, \code{\link[=Movement]{Movement()}}
-}

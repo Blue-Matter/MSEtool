@@ -88,7 +88,7 @@ setClass(
 #'
 #' @slot Name Character name of the dataset
 #' @slot Value Numeric array of composition proportions or counts
-#' @slot Classes Numeric vector of class boundaries
+#' @slot Classes Numeric vector of class midpoints
 #' @slot Units Character units of the data
 #' @slot Log Optional log information
 #' @slot Misc Additional metadata

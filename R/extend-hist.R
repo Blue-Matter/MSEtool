@@ -81,7 +81,7 @@ ExtendHist <- function(Hist, Years, silent=FALSE, id=NULL) {
     if (!silent) {
       cli::cli_progress_update(id=id)
     }
-    slot(Hist, sl) <- Extend(array=slot(Hist, sl), nSim=nSim, Years = Years)
+    slot(Hist, sl) <- Extend(array=slot(Hist, sl), nSim=nSim, Years = Years, default =0)
     
   }
   

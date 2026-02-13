@@ -1,10 +1,10 @@
 #' Weight
 #'
-#' Construct a [Weight()] object defining weight-at-age and
+#' Construct a [weight-class] object defining weight-at-age and
 #' weight-at-length schedules associated with a [Stock()].
 #'
 #' @param Pars Named list of parameters for [WeightModels()].
-#' @param Model Growth model identifier associated with `Pars`.
+#' @param Model Model associated with `Pars`.
 #' @param Units Weight units (e.g. `"g"`, `"kg"`).
 #' @param MeanAtAge Mean weight-at-age array (optional).
 #' @param MeanAtLength Mean weight-at-length array (optional).
@@ -22,18 +22,18 @@
 #' in a [Stock()]. Weight schedules may be model-based (via `Pars`
 #' and `Model`) or supplied directly as arrays.
 #'
-#' Printing a `Weight` object provides a concise summary of the specified
-#' weight assumptions without printing full arrays.
 #'
-#' A `Weight` object can be attached to a [Stock()] using [SetWeight()] and
-#' retrieved using [GetWeight()].
+#' A `Weight` object can be attached to a [Stock()] using `Weight(Stock) <- MyWeight` and
+#' retrieved using `MyWeight <- Weight(Stock)`
 #' 
-#' @return A [Weight()] object.
+#' Individual components may be accessed or modified using accessor and
+#' replacement functions such as [Pars()], [Model()], and [Units()].
+#' 
+#' `r TechManLink()`
+#' 
+#' @return A [weight-class] object.
 #'
-#' @seealso
-#' [GetWeight()], [SetWeight()],
-#' [MeanAtAge()], [MeanAtLength()], [CVatAge()],
-#' [Populate()], [WeightModels()]
+#' @seealso [Populate()], [WeightModels()]
 #'
 #' @export
 Weight <- function(Pars = list(),
@@ -49,6 +49,9 @@ Weight <- function(Pars = list(),
                    AWK = NULL,
                    Classes = NULL,
                    Misc = list()) {
+  
+  if (inherits(Pars, 'stock'))
+    return(Pars@Weight)
   
   object <- methods::new(
     "weight",
@@ -77,50 +80,27 @@ Weight <- function(Pars = list(),
   object
 }
 
-# -------------------------------------------------------------------------
-# Accessors and assignment functions
-# -------------------------------------------------------------------------
 
-#' Weight accessors and assignment functions
-#'
-#' Functions for accessing and modifying a [Weight()] object, and for
-#' attaching or retrieving a `Weight` object from a [Stock()].
-#'
-#' @param Stock A [Stock()] object.
-#' @param x A [Weight()] object.
-#' @param value Replacement value.
-#'
-#' @details
-#' - `GetWeight()` and `SetWeight()` retrieve or assign the `Weight`
-#'   component of a [`Stock`] object.
-#' - Slot accessors (e.g. `MeanAtAge()`, `CVatAge()`) extract individual
-#'   components of a [Weight()] object.
-#' - Replacement functions (e.g. `MeanAtAge<-`) update the corresponding
-#'   component and validate the object.
-#'
-#' Conceptual details and valid inputs are documented in [Weight()].
-#'
-#' @seealso [Weight()], [Populate()]
-#'
-#' @name Weight-accessors
-NULL
-
-# ---- Stock-level ---------------------------------------------------------
-
-#' @rdname Weight-accessors
+#' @rdname Weight
 #' @export
-GetWeight <- function(Stock) {
-  CheckClass(Stock, "stock", "Stock")
-  Stock@Weight
+AWK <- function(x) {
+  CheckClass(x, "weight", "x")
+  x@AWK
 }
 
-#' @rdname Weight-accessors
+#' @rdname Weight
 #' @export
-SetWeight <- function(Stock, Weight) {
-  CheckClass(Stock, "stock", "Stock")
-  CheckClass(Weight, "weight", "Weight")
-  Stock@Weight <- Weight
-  methods::validObject(Stock)
-  Stock
+`AWK<-` <- function(x, value) {
+  CheckClass(x, "weight", "x")
+  x@AWK <- value
+  methods::validObject(x)
+  x
 }
+
+`Weight<-` <- function(x, value) {
+  CheckClass(x, "stock", "x")
+  AssignSlot(x, value, 'Weight')
+}
+
+
 

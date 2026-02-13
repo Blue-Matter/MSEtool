@@ -2,9 +2,27 @@
 % Please edit documentation in R/constructor-catchability.R
 \name{Catchability}
 \alias{Catchability}
+\alias{Efficiency}
+\alias{Efficiency<-}
+\alias{qCV}
+\alias{qCV<-}
+\alias{qInc}
+\alias{qInc<-}
 \title{Catchability}
 \usage{
 Catchability(Efficiency = NULL, qCV = NULL, qInc = NULL, Misc = list())
+
+Efficiency(x)
+
+Efficiency(x) <- value
+
+qCV(x)
+
+qCV(x) <- value
+
+qInc(x)
+
+qInc(x) <- value
 }
 \arguments{
 \item{Efficiency}{Gear efficiency (q).}
@@ -16,14 +34,13 @@ Catchability(Efficiency = NULL, qCV = NULL, qInc = NULL, Misc = list())
 \item{Misc}{Miscellaneous metadata.}
 }
 \value{
-A \code{\link[=Catchability]{Catchability()}} object.
+An \linkS4class{catchability} object
 }
 \description{
-Construct a \code{\link[=Catchability]{Catchability()}} object defining (potentially time-varying)
-catchability assumptions.
+Construct a \linkS4class{catchability} object defining fishing gear/vessel efficiency
 }
 \details{
-The \code{Catchability} class represents assumptions about the
+The \code{Catchability} objects represents assumptions about the
 efficiency of fishing gear or surveys in capturing fish.
 
 Catchability may be specified as fixed values, time-varying
@@ -32,7 +49,15 @@ arrays, or stochastic processes depending on model structure.
 Individual components may be accessed or modified using
 accessor and replacement functions such as \code{\link[=Efficiency]{Efficiency()}},
 \code{\link[=qCV]{qCV()}}, and \code{\link[=qInc]{qInc()}}.
+
+A \code{Catchability} object can be attached to a \code{\link[=Fleet]{Fleet()}} using \code{Catchability(Fleet) <- MyCatchability} and
+retrieved using \code{MyCatchability <- Catchability(Fleet)}
+
+Individual components may be accessed or modified using accessor and
+replacement functions such as \code{\link[=Efficiency]{Efficiency()}}, \code{\link[=qCV]{qCV()}}, and \code{\link[=qInc]{qInc()}}.
+
+See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
 }
 \seealso{
-\code{\link[=Efficiency]{Efficiency()}}, \code{\link[=qCV]{qCV()}}, \code{\link[=qInc]{qInc()}}
+\code{\link[=Fleet]{Fleet()}}
 }

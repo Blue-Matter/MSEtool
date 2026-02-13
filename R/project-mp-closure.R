@@ -7,6 +7,7 @@ Update_Closure <- function(Proj, Year, AdviceSimList, LastAdviceSimList, YearsPr
   
   nSim <- Proj@OM@nSim
   
+  
   for (sim in seq_len(nSim)) {
     Proj <- Update_Closure_Sim(
       Proj=Proj,

@@ -1,3 +1,5 @@
+# TODO - make parallel version
+
 #' Calculate Reference Yield
 #'
 #' Internal function to calculate reference yields in terms of either 
@@ -28,11 +30,11 @@ CalcRefYield <- function(Hist,
   
   HistYears <- Years(Hist,'H')
   ProjYears <- Years(Hist,'P')
+  AllYears <- c(HistYears, ProjYears)
   nSim <- Hist@OM@nSim
   StockNames <- StockNames(Hist)
   nStock <- length(StockNames)
   nFleet <- nFleet(Hist)
-  AllYears <- c(HistYears, ProjYears)
   
   # Extend Year dimensions to include ProjYears
   Proj <- Hist
@@ -41,84 +43,70 @@ CalcRefYield <- function(Hist,
   Proj@Misc <- Extend(Proj@Misc, Years=AllYears)
   
   for (sl in slotNames('timeseries')) {
-    if (sl == 'Misc') 
-      next()
     slot(Proj,sl) <- Extend(slot(Proj,sl), Years=AllYears, default=0) 
   }
   
+  ProjYearInd <- match(ProjYears, AllYears)
+  LastHistEffort <- Proj@Effort[, ProjYearInd[1]-1, , drop = FALSE]
+  
   # List length nSim, each with a Hist object with 1 sim
-  ProjSim_List <- lapply(1:nSim, function(i) SubsetSim(Proj, Sims=i))
-  names(ProjSim_List) <- 1:nSim
   
-  log_bounds <- log(c(1E-5, 10))
-
   for (t in type) {
-    if (silent) {
-      RefYield <- lapply(ProjSim_List, function(ProjSim) {
-        DoOpt <- optimize(OptRefYield,
-                        log_bounds,
-                        ProjSim = ProjSim,
-                        HistYears = HistYears,
-                        ProjYears = ProjYears,
-                        nFleet = nFleet,
-                        Units = Units,
-                        type = t
-        )
-        
-        yield <- OptRefYield(logScalar = DoOpt$minimum, 
-                             ProjSim = ProjSim,
-                             HistYears = HistYears,
-                             ProjYears = ProjYears,
-                             nFleet = nFleet,
-                             Units = Units,
-                             type = t,
-                             opt = 2)
-        
-        
-        yield
-      
-      })
-      
-    } else {
-      RefYield <- purrr::map(ProjSim_List, \(ProjSim) {
-        
-        DoOpt <- optimize(OptRefYield,
-                        log_bounds,
-                        ProjSim = ProjSim,
-                        HistYears = HistYears,
-                        ProjYears = ProjYears,
-                        nFleet = nFleet,
-                        Units = Units,
-                        type = t
-        )
-        
-        yield <- OptRefYield(logScalar = DoOpt$minimum, 
-                             ProjSim = ProjSim,
-                             HistYears = HistYears,
-                             ProjYears = ProjYears,
-                             nFleet = nFleet,
-                             Units = Units,
-                             type = t,
-                             opt = 2)
-        
+    RefYield <- vector("list", nSim)
     
-        yield
-      }, .progress = list(
-        type = "iterator",
-        format = "Calculating Reference {.val {t}} {cli::pb_bar} {cli::pb_percent}",
-        clear = TRUE))
-    }
+    if (!silent) 
+      cli::cli_progress_bar(format = "Calculating Reference {.val {t}} {cli::pb_bar} {cli::pb_percent}",  total = nSim)
     
-    RefYield <- List2Array(RefYield, "Sim", "Stock") |> t()
+    for (sim in seq_len(nSim)) {
+      baseEffort <- LastHistEffort[sim,, , drop = FALSE]
+      RefYield[[sim]] <- vector("numeric", nStock)
+      # Optimize F scalar for this sim
+      DoOpt <- optimize(f = function(logScalar) {
+        OptRefYield(logScalar,
+                    Proj = Proj,
+                    sim = sim,
+                    HistYears = HistYears,
+                    ProjYears = ProjYears,
+                    ProjYearInd = ProjYearInd,
+                    nFleet = nFleet,
+                    Units = Units,
+                    type = t,
+                    baseEffort = baseEffort,
+                    debug = 0,
+                    opt = 1)
+      }, interval = log(c(1e-5, 10)))
+      
+      # Get final yield using optimized scalar
+      RefYield[[sim]] <- OptRefYield(DoOpt$minimum,
+                                     Proj = Proj,
+                                     sim = sim,
+                                     HistYears = HistYears,
+                                     ProjYears = ProjYears,
+                                     ProjYearInd = ProjYearInd,
+                                     nFleet = nFleet,
+                                     Units = Units,
+                                     type = t,
+                                     baseEffort = baseEffort,
+                                     debug = 0,
+                                     opt = 2)
+      
+      if (!silent) cli::cli_progress_update()
+      
+    } # end sim loop 
+    
+    if (!silent) cli::cli_progress_done()
+    
+    # Convert list of vectors to array sim × stock
+    RefYield <- List2Array(RefYield, "Sim", "Stock")[1,,, drop=FALSE] |> abind::adrop(1) |> t()
     dimnames(RefYield)[['Stock']] <- StockNames
-    slot(Hist@Reference, paste0("Ref",t)) <- RefYield
+    slot(Hist@Reference, paste0("Ref", t)) <- RefYield
     
-  }
-  if (!silent)
-    cli::cli_alert_success("Calculated Reference {.val {type}}")
-  Hist
+  } # end type=c('Landings', 'Removals') loop
   
+  if (!silent) cli::cli_alert_success("Calculated Reference {.val {type}}")
+  Hist
 }
+ 
 
 #' Optimize Reference Yield for a Single Simulation
 #'
@@ -142,54 +130,42 @@ CalcRefYield <- function(Hist,
 #' @return Numeric; either negative sum of mean yields (opt=1) or vector of mean yields per stock (opt=2)
 #'
 #' @keywords internal
-OptRefYield <- function(logScalar, 
-                        ProjSim, 
+OptRefYield <- function(logScalar,
+                        Proj,
+                        sim,
                         HistYears, 
                         ProjYears, 
+                        ProjYearInd,
                         nFleet,
-                        Units=c('Biomass', 'Number'),
-                        type=c('Landings', 'Removals'),
-                        opt = 1,
-                        debug = 0) {
+                        Units,
+                        type,
+                        baseEffort,
+                        debug = 0,
+                        opt = 1) {
   
-  Units <- match.arg(Units, c('Biomass', 'Number'))
-  type <- match.arg(type, c('Landings', 'Removals'))
+  # Scale historical effort
+  scaledEffort <- baseEffort * exp(logScalar)
+  Proj@Effort[sim, ProjYearInd, ] <- scaledEffort
   
-  ProjYearInd <- match(ProjYears, c(HistYears, ProjYears))
-  
-  LastHistEffort <- ProjSim@Effort[1,ProjYearInd[1]-1,, drop=FALSE]
-  LastHistEffort <- matrix(LastHistEffort, length(ProjYears), nFleet, byrow=TRUE)
-  LastHistEffort <- LastHistEffort |> AddDimension('Sim', 1)
-  
-  ProjSim@Effort[1,ProjYearInd,] <- LastHistEffort * exp(logScalar)
-  
-  ProjSim_opt <- CalcFisheryDynamics(Hist = ProjSim,
-                                     Years = c(tail(HistYears, ProjSim@OM@Seasons), ProjYears), 
+  # Run fishery dynamics for this sim only
+  ProjSim_opt <- CalcFisheryDynamics(Hist = Proj,
+                                     Sims = sim,
+                                     Years = c(tail(HistYears, Proj@OM@Seasons), ProjYears),
                                      DoCalcaggF = 0,
                                      debug = debug)
   
-  # summed over age, fleet, area
-  Yield <- GetCatch(ProjSim_opt, Units, type) 
+  # Get total catch summed over age, fleet, area
+  Yield <- GetCatch(ProjSim_opt, Units, type)
   
-  lastnTS <- ProjSim@OM@Control$RefYield$lastnTS
-  if (is.null(lastnTS))
-    lastnTS <- 5
+  # Take mean over last few years
+  lastnTS <- Proj@OM@Control$RefYield$lastnTS %||% 5
+  lastnTS <- min(lastnTS, dim(Yield)[3])
+  TSmean <- (dim(Yield)[3]-lastnTS+1):dim(Yield)[3]
   
-  dd <- dim(Yield)
-  nTS <- dd[3]
-  if (lastnTS >nTS)
-    lastnTS <- nTS
+  # Compute mean yield by stock (over years)
+  mean_Yield <- rowMeans(Yield[sim, , TSmean, drop = FALSE], dims = 2)
   
-  TSmean <- (nTS-lastnTS+1):nTS
-  mean_Yield <- apply(Yield[1,,TSmean, drop=FALSE], "Stock", mean)
-  obj <- -sum(mean_Yield) 
-  
-  if (opt==1) {
-    return(obj)
-  }
-  # return Yields
+  if (opt == 1) return(-sum(mean_Yield))
   mean_Yield
-  
 }
-
 

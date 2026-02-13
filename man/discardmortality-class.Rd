@@ -5,6 +5,19 @@
 \alias{discardmortality-class}
 \title{DiscardMortality Object}
 \description{
-Discard mortality describes the proportion of catch that is discarded,
+Discard mortality describes the proportion of catch that is discarded and dies,
 defined either at age or at length.
 }
+\details{
+See \code{\link[=DiscardMortality]{DiscardMortality()}} for details.
+}
+\section{Slots}{
+
+\describe{
+\item{\code{MeanAtAge}}{Mean selectivity-at-age array.}
+
+\item{\code{MeanAtLength}}{Mean selectivity-at-length array.}
+
+\item{\code{Classes}}{Length class mid-points}
+}}
+

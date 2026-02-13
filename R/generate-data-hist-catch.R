@@ -80,7 +80,9 @@ GenHistData_Catch <- function(x, Data, Hist, HistYears, i, stocks, FleetNames,
                                     
                                     fleet_weight <- SubsetYear(fleet_list[[fl]]@WeightFleet[x,,,drop=FALSE], HistYears) |>
                                       abind::adrop(1)
-                                    catch_age <- catch_n[x,,,fl,] |> SumOverArea()
+                                    catch_age <- catch_n[x,,,fl,, drop=FALSE] |> SumOverArea() |>
+                                      DropDimension('Sim') |>
+                                      DropDimension('Fleet')
                                     catch_age_biomass <- ArrayMultiply(catch_age, fleet_weight)
                                     SumOverAge(catch_age_biomass)
                                     

@@ -7,16 +7,17 @@
 Hist(OM = NULL, silent = FALSE)
 }
 \arguments{
-\item{OM}{A \code{\link[=OM]{OM()}} object. If missing, an empty \code{Hist} object is returned.}
+\item{OM}{A \code{\link[=OM]{OM()}} or an \code{\link[=MSE]{MSE()}} object. If missing, an empty \linkS4class{hist} object is returned.}
 
 \item{silent}{Should messages be printed out to the console?}
 }
 \value{
-A \code{\link[=Hist]{Hist()}} object.
+A \linkS4class{hist} object.
 }
 \description{
-The \code{Hist()} constructor creates a new historical simulation object or,
-when applied to an \code{\link[=OM]{OM()}} object, returns the historical results stored
+The \code{Hist()} constructor initializes a new \linkS4class{hist} object using
+information from a populated \code{\link[=OM]{OM()}} object or,
+when applied to an \code{\link[=MSE]{MSE()}} object, returns the historical results stored
 within that object.
 }
 \seealso{

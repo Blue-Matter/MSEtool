@@ -1,6 +1,6 @@
 #' Spatial
 #'
-#' Construct a [Spatial()] object defining spatial structure and movement
+#' Construct a [spatial-class] object defining spatial structure and movement
 #' associated with a [Stock()].
 #'
 #' @param UnfishedDist Numeric or numeric array giving the relative unfished
@@ -11,7 +11,7 @@
 #' @param Movement Numeric array giving movement probabilities among areas.
 #' @param FracOther Numeric array defining relative movement among areas when
 #'   more than two areas are present.
-#' @param Arrangement Numeric matrix defining spatial layout (plotting only).
+#' @param Arrangement Numeric matrix defining spatial layout (plotting only). Currently not used.
 #' @param CVDist Logit-scale CV penalty applied to `UnfishedDist`.
 #' @param CVStay Logit-scale CV penalty applied to `ProbStaying`.
 #' @param Misc Miscellaneous list.
@@ -21,6 +21,14 @@
 #' distribution and movement dynamics of a stock.
 #' 
 #' It is only required for operating models that have explicit spatial structure.
+#' 
+#' A `Spatial` object can be attached to a [Stock()] using `Spatial(Stock) <- MySpatial` and
+#' retrieved using `MySpatial <- Spatial(Stock)`
+#'
+#' Individual components may be accessed or modified using accessor and
+#' replacement functions such as [UnfishedDist()], [ProbStaying()], and [RelativeSize()].
+#' 
+#' `r TechManLink()`
 #'
 #' ## Two Area
 #' For operating models with 2 spatial areas, `UnfishedDist` and `ProbStaying`
@@ -94,19 +102,7 @@
 #' The last two dimensions `nAge` and `nTS` are optional.
 #' 
 #'
-#' A `Spatial` object can be attached to a [Stock()] using [SetSpatial()] and
-#' retrieved using [GetSpatial()].
-#'
-#' Individual components may be accessed or modified using accessor and
-#' replacement functions such as [UnfishedDist()] and [ProbStaying()].
-#'
-#' @return A [Spatial()] object.
-#'
-#' @seealso
-#' [GetSpatial()], [SetSpatial()],
-#' [UnfishedDist()], [ProbStaying()], [Movement()]
-#'
-#'
+#' @return A [spatial-class] object.
 #' @export
 Spatial <- function(UnfishedDist,
                     ProbStaying = NULL,
@@ -123,6 +119,9 @@ Spatial <- function(UnfishedDist,
     methods::validObject(object)
     return(object)
   }
+  
+  if (inherits(UnfishedDist, 'stock'))
+    return(UnfishedDist@Spatial)
   
   object <- methods::new(
     "spatial",
@@ -142,59 +141,15 @@ Spatial <- function(UnfishedDist,
 }
 
 
-#' Spatial accessors and assignment functions
-#'
-#' Functions for accessing and modifying a [Spatial()] object, and for
-#' attaching or retrieving a `Spatial` object from a [Stock()].
-#'
-#' @param Stock A [Stock()] object.
-#' @param x A [Spatial()] object.
-#' @param value Replacement value.
-#'
-#' @details
-#' - `GetSpatial()` and `SetSpatial()` retrieve or assign the `Spatial`
-#'   component of a [Stock()] object.
-#' - Accessors such as `UnfishedDist()` and `ProbStaying()` retrieve
-#'   individual components of a [Spatial()] object.
-#' - Replacement functions (e.g. `UnfishedDist<-`) update the corresponding
-#'   component and validate the object.
-#'
-#' Conceptual details and valid inputs are documented in [Spatial()].
-#'
-#' @name Spatial-accessors
-NULL
 
-
-# ---- Stock attachment ----
-
-#' @rdname Spatial-accessors
-#' @export
-GetSpatial <- function(Stock) {
-  CheckClass(Stock, "stock", "Stock")
-  Stock@Spatial
-}
-
-#' @rdname Spatial-accessors
-#' @export
-SetSpatial <- function(Stock, Spatial) {
-  CheckClass(Stock, "stock", "Stock")
-  CheckClass(Spatial, "spatial", "Spatial")
-  Stock@Spatial <- Spatial
-  methods::validObject(Stock)
-  Stock
-}
-
-
-# ---- Slot accessors ----
-
-#' @rdname Spatial-accessors
+#' @rdname Spatial
 #' @export
 UnfishedDist <- function(x) {
   CheckClass(x, "spatial", "x")
   x@UnfishedDist
 }
 
-#' @rdname Spatial-accessors
+#' @rdname Spatial
 #' @export
 `UnfishedDist<-` <- function(x, value) {
   CheckClass(x, "spatial", "x")
@@ -203,14 +158,14 @@ UnfishedDist <- function(x) {
   x
 }
 
-#' @rdname Spatial-accessors
+#' @rdname Spatial
 #' @export
 ProbStaying <- function(x) {
   CheckClass(x, "spatial", "x")
   x@ProbStaying
 }
 
-#' @rdname Spatial-accessors
+#' @rdname Spatial
 #' @export
 `ProbStaying<-` <- function(x, value) {
   CheckClass(x, "spatial", "x")
@@ -219,14 +174,14 @@ ProbStaying <- function(x) {
   x
 }
 
-#' @rdname Spatial-accessors
+#' @rdname Spatial
 #' @export
 RelativeSize <- function(x) {
   CheckClass(x, "spatial", "x")
   x@RelativeSize
 }
 
-#' @rdname Spatial-accessors
+#' @rdname Spatial
 #' @export
 `RelativeSize<-` <- function(x, value) {
   CheckClass(x, "spatial", "x")
@@ -235,14 +190,14 @@ RelativeSize <- function(x) {
   x
 }
 
-#' @rdname Spatial-accessors
+#' @rdname Spatial
 #' @export
 Movement <- function(x) {
   CheckClass(x, "spatial", "x")
   x@Movement
 }
 
-#' @rdname Spatial-accessors
+#' @rdname Spatial
 #' @export
 `Movement<-` <- function(x, value) {
   CheckClass(x, "spatial", "x")
@@ -251,14 +206,14 @@ Movement <- function(x) {
   x
 }
 
-#' @rdname Spatial-accessors
+#' @rdname Spatial
 #' @export
 FracOther <- function(x) {
   CheckClass(x, "spatial", "x")
   x@FracOther
 }
 
-#' @rdname Spatial-accessors
+#' @rdname Spatial
 #' @export
 `FracOther<-` <- function(x, value) {
   CheckClass(x, "spatial", "x")
@@ -267,14 +222,14 @@ FracOther <- function(x) {
   x
 }
 
-#' @rdname Spatial-accessors
+#' @rdname Spatial
 #' @export
 Arrangement <- function(x) {
   CheckClass(x, "spatial", "x")
   x@Arrangement
 }
 
-#' @rdname Spatial-accessors
+#' @rdname Spatial
 #' @export
 `Arrangement<-` <- function(x, value) {
   CheckClass(x, "spatial", "x")
@@ -282,3 +237,16 @@ Arrangement <- function(x) {
   methods::validObject(x)
   x
 }
+
+
+
+#' @rdname Spatial
+#' @export
+`Spatial<-`<- function(x, value) {
+  CheckClass(x, "stock", "x")
+  x@Spatial <- value
+  methods::validObject(x)
+  x
+}
+
+

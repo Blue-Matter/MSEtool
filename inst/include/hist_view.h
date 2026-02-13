@@ -6,7 +6,7 @@
 #include "array_views.h"
 #include "helpers.h"
 
-// Lightweight structural guards
+// structural guards
 inline void check_rank(SEXP x, int expected, const char* name) {
   if (!Rf_isNumeric(x) && !Rf_isInteger(x)) {
     Rcpp::stop(std::string(name) + " must be numeric");
@@ -55,8 +55,7 @@ struct HistView {
   const int nStock;
   const int nFleet;
   const int nArea;
-  
-  
+
   ConstArrayView3D SP0;           // sim, stock, year
   ConstArrayView3D R0;            // sim, stock, year
   ConstArrayView4D RecDist;       // sim, stock, year, area
@@ -69,21 +68,26 @@ struct HistView {
   ConstArrayView3D Targeting;     // sim, year, fleet
   
   // Mutable Hist slots
+  std::vector<Array4D> Number;            // [stock] sim, age, year, area
   Array3D Biomass;        // sim, stock, year
   Array3D SBiomass; 
   Array3D SProduction;
-  Array3D Effort;         // sim, year, fleet
-  Array4D Distribution;  // sim, year, fleet, area
-
-  std::vector<Array4D> Number;            // [stock] sim, age, year, area
+  
+  Array4D Landings;  // sim, stock, year, fleet
+  Array4D Discards;  // sim, stock, year, fleet
+  
   std::vector<Array5D> LandingsAtAge;     // [stock] sim, age, year, fleet, area
   std::vector<Array5D> DiscardsAtAge;
   std::vector<std::vector<Array4D>> LandingsAtSize;   // [stock][fleet] sim, length, year, area
   std::vector<std::vector<Array4D>> DiscardsAtSize;
-  std::vector<Array4D> FDead;              // sim, age, year, fleet
-  std::vector<Array4D> FRetain;
-  std::vector<Array5D> FDeadArea;           // sim, age, year, fleet, area
-  std::vector<Array5D> FRetainArea;
+  
+  Array3D Effort;         // sim, year, fleet
+  Array4D Distribution;  // sim, year, fleet, area
+
+  Array4D FDead;                        // sim, stock, year, fleet
+  Array4D FRetain;                      // sim, stock, year, fleet
+  std::vector<Array5D> FDeadArea;       // [stock] sim, age, year, fleet, area
+  std::vector<Array5D> FRetainArea;     // [stock] sim, age, year, fleet, area
   
   // Extract non-mutable objects to from Hist@Misc
   
@@ -145,6 +149,13 @@ inline HistView::HistView(Rcpp::S4& Hist,
         check_rank(Hist.slot("Biomass"), 3, "Biomass");
         check_rank(Hist.slot("SBiomass"), 3, "SBiomass");
         check_rank(Hist.slot("SProduction"), 3, "SProduction");
+        
+        check_rank(Hist.slot("Landings"), 4, "Landings");
+        check_rank(Hist.slot("Discards"), 4, "Discards");
+        
+        check_rank(Hist.slot("FDead"), 4, "FDead");
+        check_rank(Hist.slot("FRetain"), 4, "FRetain");
+        
         check_rank(Hist.slot("Effort"), 3, "Effort");
         check_rank(Hist.slot("Distribution"), 4, "Distribution");
          
@@ -185,8 +196,15 @@ inline HistView::HistView(std::nullptr_t,
   Biomass = Slot2Array3D(Hist, "Biomass");
   SBiomass = Slot2Array3D(Hist, "SBiomass");
   SProduction = Slot2Array3D(Hist, "SProduction");
+  
+  Landings = Slot2Array4D(Hist, "Landings");
+  Discards = Slot2Array4D(Hist, "Discards");
+  
   Effort = Slot2Array3D(Hist, "Effort");
   Distribution = Slot2Array4D(Hist, "Distribution");
+  
+  FDead = Slot2Array4D(Hist, "FDead");
+  FRetain = Slot2Array4D(Hist, "FRetain");
   
   const Rcpp::List Misc = Hist.slot("Misc");
   
@@ -210,8 +228,6 @@ inline HistView::HistView(std::nullptr_t,
   Rcpp::List DiscAgeList        = Hist.slot("DiscardsAtAge");
   Rcpp::List LandSizeList       = Hist.slot("LandingsAtSize");
   Rcpp::List DiscSizeList       = Hist.slot("DiscardsAtSize");
-  Rcpp::List FDeadList          = Hist.slot("FDead");
-  Rcpp::List FRetainList        = Hist.slot("FRetain");
   Rcpp::List FDeadAreaList      = Hist.slot("FDeadArea");
   Rcpp::List FRetainAreaList    = Hist.slot("FRetainArea");
 
@@ -223,8 +239,7 @@ inline HistView::HistView(std::nullptr_t,
   DiscardsAtAge.reserve(nStock);
   LandingsAtSize.reserve(nStock);
   DiscardsAtSize.reserve(nStock);
-  FDead.reserve(nStock);
-  FRetain.reserve(nStock);
+
   FDeadArea.reserve(nStock);
   FRetainArea.reserve(nStock);
    
@@ -234,8 +249,6 @@ inline HistView::HistView(std::nullptr_t,
     Number.emplace_back(as_ArrayND<4>(NumberList[st], "NumberList"));
     LandingsAtAge.emplace_back(as_ArrayND<5>(LandAgeList[st], "LandAgeList"));
     DiscardsAtAge.emplace_back(as_ArrayND<5>(DiscAgeList[st], "DiscAgeList"));
-    FDead.emplace_back(as_ArrayND<4>(FDeadList[st], "FDeadList"));
-    FRetain.emplace_back(as_ArrayND<4>(FRetainList[st], "FRetainList"));
     FDeadArea.emplace_back(as_ArrayND<5>(FDeadAreaList[st], "FDeadAreaList"));
     FRetainArea.emplace_back(as_ArrayND<5>(FRetainAreaList[st], "FRetainAreaList"));
     

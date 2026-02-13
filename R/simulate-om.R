@@ -1,3 +1,4 @@
+# TODO  add year broadcast in C++
 
 
 
@@ -5,14 +6,12 @@ Simulate_om <- function(OM = NULL,
                         parallel = FALSE,
                         silent = FALSE,
                         nSim = NULL,
-                        Reference = list(
-                          MSY = TRUE,
-                          Landings = TRUE,
-                          Removals = FALSE
-                        ),
-                        DynamicUnfished = TRUE,
-                        ConditionObs = TRUE,
-                        GenerateData = TRUE,
+                        DoDynamicUnfished = TRUE,
+                        DoRefMSY = TRUE,
+                        DoRefLandings = TRUE,
+                        DoRefRemovals = FALSE,
+                        DoConditionObs = TRUE,
+                        DoGenerateData = TRUE,
                         Reduce = TRUE,
                         ...) {
   
@@ -54,13 +53,11 @@ Simulate_om <- function(OM = NULL,
   # use for easy acces in C++  - removed later
   Hist <- PrepHistMisc(Hist) 
   
-
   # ---- Calculate Unfished Equilibrium and Dynamic ----
   if (DynamicUnfished) 
     Hist@Unfished@Dynamic <- CalcUnfished_Dynamic(Hist = Hist, 
                                                   IdenticalHist = IdenticalHist, 
                                                   silent = silent)
-  
   
   # ---- Optimize for Final Depletion ----
   Hist <- OptFinalDepletion(Hist, silent = silent)
@@ -94,31 +91,36 @@ Simulate_om <- function(OM = NULL,
   
   # ---- Historical Population Dynamics ----
   Hist <- CalcFisheryDynamics(Hist, IdenticalSim=IdenticalHist)
+  
 
   if (!silent)
     cli::cli_alert_success("Simulated Historical Fishery")
 
   # ---- Calculate Reference Yield ----
+  type <- c()
+  if (DoRefLandings) type <- c(type, "Landings")
+  if (DoRefRemovals) type <- c(type, "Removals")
   
-  # TODO - arguments to skip or directly add 
-  
-  Hist <- CalcRefYield(Hist,
-                       type='Landings',
-                       Units = "Biomass",
-                       silent = silent)
+  if (length(type) > 0) {
+    Hist <- CalcRefYield(Hist,
+                         type=type,
+                         Units = "Biomass",
+                         silent = silent)
+    
+  }
   
   # ---- Remove temporary lists and arrays from Hist@Misc ----
   # see PrepHistMisc above
   Hist <- RestoreHistMisc(Hist)
 
   # ---- Condition Observation Object on Real Fishery Data ----
-  if (ConditionObs) 
+  if (DoConditionObs) 
     Hist <- ConditionObs(Hist, silent)
   
   
   # ---- Historical Fishery Data ----
   
-  if (GenerateData) 
+  if (DoGenerateData) 
     Hist <- GenerateHistoricalData(Hist)
   
   

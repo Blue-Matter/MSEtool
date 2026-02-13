@@ -2,6 +2,19 @@
 % Please edit documentation in R/constructor-bioeconomic.R
 \name{Bioeconomic}
 \alias{Bioeconomic}
+\alias{Bioeconomic<-}
+\alias{Revenue}
+\alias{Revenue<-}
+\alias{Cost}
+\alias{Cost<-}
+\alias{Investment}
+\alias{Investment<-}
+\alias{Disinvestment}
+\alias{Disinvestment<-}
+\alias{Depreciation}
+\alias{Depreciation<-}
+\alias{Discount}
+\alias{Discount<-}
 \title{Bioeconomic}
 \usage{
 Bioeconomic(
@@ -13,6 +26,32 @@ Bioeconomic(
   Discount = NULL,
   Misc = list()
 )
+
+Bioeconomic(x) <- value
+
+Revenue(x)
+
+Revenue(x) <- value
+
+Cost(x)
+
+Cost(x) <- value
+
+Investment(x)
+
+Investment(x) <- value
+
+Disinvestment(x)
+
+Disinvestment(x) <- value
+
+Depreciation(x)
+
+Depreciation(x) <- value
+
+Discount(x)
+
+Discount(x) <- value
 }
 \arguments{
 \item{Revenue}{Revenue array.}
@@ -29,13 +68,21 @@ Bioeconomic(
 
 \item{Misc}{Miscellaneous list.
 
-The \code{Bioeconomic} object is not currently used}
+The \code{Bioeconomic} object is not currently used.
+
+A \code{Bioeconomic} object can be attached to a \code{\link[=Fleet]{Fleet()}} using \code{Bioeconomic(Fleet) <- MyBioeconomic} and
+retrieved using \code{MyBioeconomic <- Bioeconomic(Fleet)}
+
+Individual components may be accessed or modified using accessor and
+replacement functions such as \code{\link[=Revenue]{Revenue()}}, \code{\link[=Cost]{Cost()}}, and \code{\link[=Investment]{Investment()}}.
+
+See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.}
 }
 \value{
-A \code{Bioeconomic} object.
+A \linkS4class{bioeconomic} object.
 }
 \description{
-Create a \code{Bioeconomic} object.
+Create a \linkS4class{bioeconomic} object.
 }
 \details{
 A \code{Bioeconomic} object stores revenue, cost, and investment dynamics

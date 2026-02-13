@@ -14,7 +14,7 @@ S4 class defining age or length composition observations.
 
 \item{\code{Value}}{Numeric array of composition proportions or counts}
 
-\item{\code{Classes}}{Numeric vector of class boundaries}
+\item{\code{Classes}}{Numeric vector of class midpoints}
 
 \item{\code{Units}}{Character units of the data}
 

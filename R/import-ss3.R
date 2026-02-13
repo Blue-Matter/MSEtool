@@ -227,7 +227,8 @@ ImportSS <- function(SSDir,
 }
 
 ProcessSSAllocation <- function(OM, RepList, StockName, FleetNames) {
-  Allocation <- MakeNamedList(StockName)
+  ComplexName <- names(OM@Data)
+  Allocation <- MakeNamedList(ComplexName)
   AgeClasses <- GetSSAgeClasses(RepList[[1]])
   YearsList <- GetSSYears(RepList[[1]], pYear = 1)
 
@@ -235,24 +236,21 @@ ProcessSSAllocation <- function(OM, RepList, StockName, FleetNames) {
     DropXXCols() |>
     dplyr::filter(Yr == max(Yr)) |>
     tidyr::pivot_longer(as.character(AgeClasses)) |>
-    dplyr::group_by(Sex, Fleet) |>
+    dplyr::group_by(Fleet) |>
     dplyr::summarise(Catch = sum(value), .groups = "drop") |>
-    dplyr::group_by(Sex) |>
-    dplyr::mutate(Catch = Catch / sum(Catch)) |>
-    dplyr::group_by(Sex) |>
-    dplyr::group_split()
-
+    dplyr::mutate(Catch = Catch / sum(Catch)) 
+    
+    
   nFleet <- length(FleetNames)
 
-  for (st in 1:nStock(OM)) {
-    Allocation[[st]] <- array(CatchFrac[[st]]$Catch,
-      dim = c(1, nFleet),
-      dimnames = list(
-        Sim = 1,
-        Fleet = FleetNames
-      )
-    )
-  }
+  Allocation[[1]] <- array(CatchFrac$Catch,
+                      dim = c(1, nFleet),
+                      dimnames = list(
+                        Sim = 1,
+                        Fleet = FleetNames
+                      )
+  )
+  
   OM@Allocation <- Allocation
   OM
 }

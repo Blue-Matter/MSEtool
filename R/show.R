@@ -350,13 +350,13 @@ setMethod("show", "ages", function(object) {
   .show_slot(object, 'Units')
   .show_slot(object, 'PlusGroup')
   
-  AgeClasses <- CalcAgeClasses(object)
+  AgeClasses <- CalcAgeClasses(object) 
   if (!is.null(AgeClasses)) {
     if (isTRUE(object@PlusGroup)) {
       AgeClasses[length(AgeClasses)] <- paste0(AgeClasses[length(AgeClasses)], "+")
     } 
   }
-  cli::cli_text("{`Classes`}: {.val {AgeClasses}}")
+  cli::cli_text("`Classes`: {.val {AgeClasses}}")
 })
 
 

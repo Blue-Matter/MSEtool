@@ -2,6 +2,8 @@
 #'
 #' An S4 class defining stock–recruitment relationships and recruitment
 #' variability for a [Stock()] object.
+#' 
+#' See [SRR()] for details.
 #'
 #' @slot Pars Named list of parameters defining the stock–recruit model.
 #' @slot Model Character string or function identifying the SRR model.
@@ -19,6 +21,7 @@
 #' @slot Misc Miscellaneous list.
 #'
 #' @include class-unions.R
+#' @name srr-class
 setClass(
   "srr",
   slots = c(

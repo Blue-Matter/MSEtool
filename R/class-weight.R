@@ -1,7 +1,9 @@
 #' Weight Class
 #' 
-#' The `Weight` class defines the weight-at-age and weight-at-length 
-#' schedules  associated with a [Stock()] object. It stores the parameters and model used to generate mean weight-at-age, along with variability and assumptions regarding the distribution of weight-at-age.
+#' An S4 class representing the weight-at-age and -at-length structure for a [Stock()] object.
+#' 
+#' See [Weight()] for details.
+#' 
 #' @param Pars Named list of parameters for [WeightModels()]
 #' @param Model Model associated with `Pars`
 #' @param Units Weight units
@@ -14,9 +16,10 @@
 #' @param Random Random effects
 #' @param AWK Age–weight key
 #' @param Classes Weight classes
-#' @param `Misc` Miscellaneous list
+#' @param Misc Miscellaneous list
 #' @export
 #' @include class-unions.R
+#' @name weight-class
 setClass("weight",
          slots=c(Pars='list',
                  Model='fun.char',

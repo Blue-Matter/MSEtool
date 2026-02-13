@@ -2,6 +2,13 @@
 % Please edit documentation in R/constructor-effort.R
 \name{Effort}
 \alias{Effort}
+\alias{Effort<-}
+\alias{Distribution}
+\alias{Distribution<-}
+\alias{Targeting}
+\alias{Targeting<-}
+\alias{Maximum}
+\alias{Maximum<-}
 \title{Effort}
 \usage{
 Effort(
@@ -12,12 +19,29 @@ Effort(
   Maximum = NULL,
   Misc = list()
 )
+
+Effort(x) <- value
+
+Distribution(x)
+
+Distribution(x) <- value
+
+Targeting(x)
+
+Targeting(x) <- value
+
+Maximum(x)
+
+Maximum(x) <- value
+}
+\value{
+An \linkS4class{effort} object
 }
 \description{
-Create an \code{Effort} object
+Construct a \linkS4class{effort} object for a \code{\link[=Fleet]{Fleet()}} object.
 }
 \details{
-The \code{\link[=Effort]{Effort()}} class stores historical fishing effort and
+The \code{Effort} object stores historical fishing effort and
 associated spatial structure for \code{\link[=Fleet]{Fleet()}} object. Effort may be supplied
 directly as an array or generated stochastically from a data frame.
 
@@ -32,6 +56,14 @@ using spatial utility calculations and fleet behaviour.
 If \code{Effort} is supplied as a correctly structured \code{data.frame},
 it will be used by \code{\link[=GenHistEffort]{GenHistEffort()}} to generate stochastic
 historical effort.
+
+A \code{Effort} object can be attached to a \code{\link[=Fleet]{Fleet()}} using \code{Effort(Fleet) <- MyEffort} and
+retrieved using \code{MyEffort <- Length(Fleet)}
+
+Individual components may be accessed or modified using accessor and
+replacement functions such as \code{\link[=Effort]{Effort()}}, \code{\link[=Units]{Units()}}, and \code{\link[=Distribution]{Distribution()}}.
+
+See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
 }
 \seealso{
 \code{\link[=Fleet]{Fleet()}}, \code{\link[=GenHistEffort]{GenHistEffort()}}

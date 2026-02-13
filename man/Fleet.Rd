@@ -2,6 +2,11 @@
 % Please edit documentation in R/constructor-fleet.R
 \name{Fleet}
 \alias{Fleet}
+\alias{Closure}
+\alias{Closure<-}
+\alias{WeightFleet}
+\alias{WeightFleet<-}
+\alias{Fleet<-}
 \title{Fleet}
 \usage{
 Fleet(
@@ -16,6 +21,16 @@ Fleet(
   BioEconomic = new("bioeconomic"),
   Misc = list()
 )
+
+Closure(Fleet)
+
+Closure(x) <- value
+
+WeightFleet(Fleet)
+
+WeightFleet(x) <- value
+
+Fleet(x) <- value
 }
 \arguments{
 \item{Name}{Fleet name.}
@@ -39,15 +54,22 @@ Fleet(
 \item{Misc}{Miscellaneous list.}
 }
 \value{
-A \code{Fleet} object.
+A \linkS4class{fleet} object.
 }
 \description{
-Create a \code{Fleet} object.
+Construct a \linkS4class{fleet} object defining the exploitation characteristics
+of a fleet for stock used in an operating model.
 }
 \details{
-A \code{Fleet} object aggregates effort, selectivity, retention,
-discard mortality, and bioeconomic components.
+A \code{Fleet} object can be attached to an \code{\link[=OM]{OM()}} using \code{\link[=Fleet]{Fleet()}} and
+retrieved using \code{\link{Fleet<-}}.
+
+Individual components may be accessed or modified using accessor
+and replacement functions such as \code{\link[=Effort]{Effort()}}, \code{\link{Effort<-}}, etc.
+
+See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
 }
 \seealso{
-\code{\link[=OM]{OM()}}
+\code{\link[=OM]{OM()}}, \code{\link[=Effort]{Effort()}}, \code{\link[=Catchability]{Catchability()}}, \code{\link[=Selectivity]{Selectivity()}},
+\code{\link[=Retention]{Retention()}}, \code{\link[=DiscardMortality]{DiscardMortality()}}, \code{\link[=BioEconomic]{BioEconomic()}}
 }

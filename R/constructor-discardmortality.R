@@ -1,16 +1,25 @@
-#' Create a DiscardMortality object
+#' Discard Mortality
 #'
-#' Constructs a [`DiscardMortality`] object describing discard mortality
-#' at age or length.
+#' Construct a [discardmortality-class] object for a [Fleet()] object.
 #'
-#' If a [`Fleet`] object is supplied, the `DiscardMortality` slot is returned.
-#'
+#' Discard mortality describes the proportion of catch that is discarded and dies,
+#' defined either at age or at length.
+#' 
 #' @param MeanAtAge A numeric array of discard mortality at age
 #' @param MeanAtLength A numeric array of discard mortality at length
 #' @param Classes Optional class vector (ages or lengths)
 #' @param Misc A list of miscellaneous parameters
 #'
-#' @return A `DiscardMortality` object
+#'
+#' A `DiscardMortality` object can be attached to a [Fleet()] using `DiscardMortality(Fleet) <- MyDiscardMortality` and
+#' retrieved using `MyDiscardMortality <- DiscardMortality(Fleet)`
+#'
+#' Individual components may be accessed or modified using accessor and
+#' replacement functions such as [MeanAtAge()], [MeanAtLength()], and [Classes()].
+#' 
+#' `r TechManLink()`
+#' 
+#' @return A [discardmortality-class] object
 #'
 #' @export
 DiscardMortality <- function(MeanAtAge    = NULL,
@@ -30,37 +39,9 @@ DiscardMortality <- function(MeanAtAge    = NULL,
   )
 }
 
-#' DiscardMortality accessors and assignment functions
-#'
-#' Functions for accessing and modifying a [DiscardMortality()] object, and for
-#' attaching or retrieving a `DiscardMortality` object from a [Fleet()].
-#'
-#' @param Fleet A [Fleet()] object.
-#' @param x A [DiscardMortality()] object.
-#' @param value Replacement value.
-#'
-#' @details
-#' - `GetDiscardMortality()` and `SetDiscardMortality()` retrieve or assign the
-#'   `DiscardMortality` component of a [Fleet()] object.
-#'
-#' Conceptual details and valid inputs are documented in [DiscardMortality()].
-#'
-#' @name DiscardMortality-accessors
-NULL
 
-#' @rdname DiscardMortality-accessors
+#' @rdname DiscardMortality
 #' @export
-GetDiscardMortality <- function(Fleet) {
-  CheckClass(Fleet, "fleet", "Fleet")
-  Fleet@DiscardMortality
-}
-
-#' @rdname DiscardMortality-accessors
-#' @export
-SetDiscardMortality <- function(Fleet, DiscardMortality) {
-  CheckClass(Fleet, "fleet", "Fleet")
-  CheckClass(DiscardMortality, "discardmortality", "DiscardMortality")
-  Fleet@DiscardMortality <- DiscardMortality
-  methods::validObject(Fleet)
-  Fleet
+`DiscardMortality<-`<- function(x,value) {
+  AssignSlot(x, value, 'DiscardMortality')
 }

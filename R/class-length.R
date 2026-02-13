@@ -1,23 +1,24 @@
 #' Length Class
 #' 
-#' The `Length` class defines the length-at-age schedule associated with a
-#' [Stock()] object It stores the parameters and model used to generate
-#' mean length-at-age, along with variability and assumptions regarding the
-#' distribution of length-at-age.
-#' @param Pars Named list of growth parameters for [LengthModels()]
-#' @param Model Model associated with `Pars`
-#' @param Units Length units
-#' @param MeanAtAge Mean length-at-age array
-#' @param CVatAge Coefficient of variation at age
-#' @param Dist Distribution name
-#' @param TruncSD Truncation in SD units
-#' @param Timing Timing within time step
-#' @param Random Random effects
-#' @param ALK Age–length key
-#' @param Classes Length classes
-#' @param `Misc` Miscellaneous list
+#' An S4 class representing the length-at-age structure for a [Stock()] object.
+#' 
+#' See [Length()] for details.
+#' 
+#' @slot Pars Named list of growth parameters for models in [LengthModels()]
+#' @slot Model Model associated with `Pars`
+#' @slot Units Length units
+#' @slot MeanAtAge Mean length-at-age array
+#' @slot CVatAge Coefficient of variation at age
+#' @slot Dist Distribution name
+#' @slot TruncSD Truncation in SD units
+#' @slot Timing Timing within time step
+#' @slot Random Random effects
+#' @slot ALK Age–length key
+#' @slot Classes Length classes
+#' @slot Misc Miscellaneous list
 #' 
 #' @include class-unions.R
+#' @name length-class
 setClass("length",
          slots=c(Pars='list',
                  Model='fun.char',

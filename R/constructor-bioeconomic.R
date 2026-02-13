@@ -1,6 +1,6 @@
 #' Bioeconomic
 #'
-#' Create a `Bioeconomic` object.
+#' Create a [bioeconomic-class] object.
 #'
 #' A `Bioeconomic` object stores revenue, cost, and investment dynamics
 #' used in fleet-level or stock-level bioeconomic analyses.
@@ -13,9 +13,17 @@
 #' @param Discount Discount factor.
 #' @param Misc Miscellaneous list.
 #' 
-#' The `Bioeconomic` object is not currently used 
+#' The `Bioeconomic` object is not currently used.
+#' 
+#' A `Bioeconomic` object can be attached to a [Fleet()] using `Bioeconomic(Fleet) <- MyBioeconomic` and
+#' retrieved using `MyBioeconomic <- Bioeconomic(Fleet)`
 #'
-#' @return A `Bioeconomic` object.
+#' Individual components may be accessed or modified using accessor and
+#' replacement functions such as [Revenue()], [Cost()], and [Investment()].
+#' 
+#' `r TechManLink()`
+#'
+#' @return A [bioeconomic-class] object.
 #'
 #' @seealso [Fleet()]
 #'
@@ -27,6 +35,9 @@ Bioeconomic <- function(Revenue = NULL,
                         Depreciation = NULL,
                         Discount = NULL,
                         Misc = list()) {
+  
+  if (methods::is(Revenue, "fleet"))
+    return(Revenue@Bioeconomic)
   
   methods::new(
     "bioeconomic",
@@ -40,53 +51,22 @@ Bioeconomic <- function(Revenue = NULL,
   )
 }
 
-#' Bioeconomic accessors and assignment functions
-#'
-#' Functions for accessing and modifying a [Bioeconomic()] object, and for
-#' attaching or retrieving a `Bioeconomic` object from a [Fleet()].
-#'
-#' @param Fleet A [Fleet()] object.
-#' @param x A [Bioeconomic()] object.
-#' @param value Replacement value.
-#'
-#' @details
-#' - `GetBioeconomic()` and `SetBioeconomic()` retrieve or assign the
-#'   `Bioeconomic` component of a [Fleet()] object.
-#' - Accessors such as `Revenue()` and `Cost()` retrieve individual
-#'   components of a [Bioeconomic()] object.
-#' - Replacement functions (e.g. `Revenue<-`) update the corresponding
-#'   component and validate the object.
-#'
-#' Conceptual details and valid inputs are documented in [Bioeconomic()].
-#'
-#' @name Bioeconomic-accessors
-NULL
 
-#' @rdname Bioeconomic-accessors
+
+#' @rdname Bioeconomic 
 #' @export
-GetBioeconomic <- function(Fleet) {
-  CheckClass(Fleet, "fleet", "Fleet")
-  Fleet@Bioeconomic
+`Bioeconomic<-` <- function(x, value) {
+  AssignSlot(x, value, 'Bioeconomic')
 }
 
-#' @rdname Bioeconomic-accessors
-#' @export
-SetBioeconomic <- function(Fleet, Bioeconomic) {
-  CheckClass(Fleet, "fleet", "Fleet")
-  CheckClass(Bioeconomic, "bioeconomic", "Bioeconomic")
-  Fleet@Bioeconomic <- Bioeconomic
-  methods::validObject(Fleet)
-  Fleet
-}
-
-#' @rdname Bioeconomic-accessors
+#' @rdname Bioeconomic 
 #' @export
 Revenue <- function(x) {
   CheckClass(x, "bioeconomic", "x")
   x@Revenue
 }
 
-#' @rdname Bioeconomic-accessors
+#' @rdname Bioeconomic 
 #' @export
 `Revenue<-` <- function(x, value) {
   CheckClass(x, "bioeconomic", "x")
@@ -96,14 +76,14 @@ Revenue <- function(x) {
 }
 
 
-#' @rdname Bioeconomic-accessors
+#' @rdname Bioeconomic 
 #' @export
 Cost <- function(x) {
   CheckClass(x, "bioeconomic", "x")
   x@Cost
 }
 
-#' @rdname Bioeconomic-accessors
+#' @rdname Bioeconomic 
 #' @export
 `Cost<-` <- function(x, value) {
   CheckClass(x, "bioeconomic", "x")
@@ -113,14 +93,14 @@ Cost <- function(x) {
 }
 
 
-#' @rdname Bioeconomic-accessors
+#' @rdname Bioeconomic 
 #' @export
 Investment <- function(x) {
   CheckClass(x, "bioeconomic", "x")
   x@Investment
 }
 
-#' @rdname Bioeconomic-accessors
+#' @rdname Bioeconomic 
 #' @export
 `Investment<-` <- function(x, value) {
   CheckClass(x, "bioeconomic", "x")
@@ -130,14 +110,14 @@ Investment <- function(x) {
 }
 
 
-#' @rdname Bioeconomic-accessors
+#' @rdname Bioeconomic 
 #' @export
 Disinvestment <- function(x) {
   CheckClass(x, "bioeconomic", "x")
   x@Disinvestment
 }
 
-#' @rdname Bioeconomic-accessors
+#' @rdname Bioeconomic 
 #' @export
 `Disinvestment<-` <- function(x, value) {
   CheckClass(x, "bioeconomic", "x")
@@ -147,14 +127,14 @@ Disinvestment <- function(x) {
 }
 
 
-#' @rdname Bioeconomic-accessors
+#' @rdname Bioeconomic 
 #' @export
 Depreciation <- function(x) {
   CheckClass(x, "bioeconomic", "x")
   x@Depreciation
 }
 
-#' @rdname Bioeconomic-accessors
+#' @rdname Bioeconomic 
 #' @export
 `Depreciation<-` <- function(x, value) {
   CheckClass(x, "bioeconomic", "x")
@@ -164,14 +144,14 @@ Depreciation <- function(x) {
 }
 
 
-#' @rdname Bioeconomic-accessors
+#' @rdname Bioeconomic 
 #' @export
 Discount <- function(x) {
   CheckClass(x, "bioeconomic", "x")
   x@Discount
 }
 
-#' @rdname Bioeconomic-accessors
+#' @rdname Bioeconomic 
 #' @export
 `Discount<-` <- function(x, value) {
   CheckClass(x, "bioeconomic", "x")

@@ -119,4 +119,13 @@ inline void check_years_argument(SEXP Years, const char* name) {
   }
 }
 
+
+inline void NormalizeSims(std::vector<int>& Sims, int nSim) {
+  for (int& s : Sims) {
+    if (s < 1 || s > nSim)
+      Rcpp::stop("Sims contains out-of-range index");
+    --s;
+  }
+}
+
 #endif // HELPERS_H

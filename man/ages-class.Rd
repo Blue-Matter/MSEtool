@@ -7,6 +7,9 @@
 \description{
 An S4 class representing the age structure for a \code{\link[=Stock]{Stock()}} object.
 }
+\details{
+See \code{\link[=Ages]{Ages()}} for details.
+}
 \section{Slots}{
 
 \describe{

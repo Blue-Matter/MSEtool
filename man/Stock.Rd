@@ -2,6 +2,7 @@
 % Please edit documentation in R/constructor-stock.R
 \name{Stock}
 \alias{Stock}
+\alias{Stock<-}
 \title{Stock}
 \usage{
 Stock(
@@ -20,6 +21,8 @@ Stock(
   Seasons = 1,
   Misc = list()
 )
+
+Stock(x) <- value
 }
 \arguments{
 \item{Name}{Character string. Unique stock name.}
@@ -51,10 +54,10 @@ Stock(
 \item{Misc}{Miscellaneous list}
 }
 \value{
-A \code{\link[=Stock]{Stock()}} object.
+A \linkS4class{stock} object.
 }
 \description{
-Construct a \code{\link[=Stock]{Stock()}} object defining the biological and
+Construct a \linkS4class{stock} object defining the biological and
 population-dynamics properties of a stock used in an operating model.
 }
 \details{
@@ -66,7 +69,9 @@ A \code{Stock} object can be attached to an \code{\link[=OM]{OM()}} using \code{
 retrieved using \code{\link{Stock<-}}.
 
 Individual components may be accessed or modified using accessor
-and replacement functions such as \code{\link[=Ages]{Ages()}}, \code{\link{Ages<-}}, \code{\link[=GetLength]{GetLength()}}, \code{\link[=SetLength]{SetLength()}}, etc.
+and replacement functions such as \code{\link[=Ages]{Ages()}}, \code{\link{Ages<-}}, etc.
+
+See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
 }
 \seealso{
 \code{\link[=Ages]{Ages()}}, \code{\link[=Length]{Length()}}, \code{\link[=Weight]{Weight()}}, \code{\link[=NaturalMortality]{NaturalMortality()}},

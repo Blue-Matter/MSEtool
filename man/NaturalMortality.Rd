@@ -2,8 +2,7 @@
 % Please edit documentation in R/constructor-naturalmortality.R
 \name{NaturalMortality}
 \alias{NaturalMortality}
-\alias{NMortality}
-\alias{NMortality<-}
+\alias{NaturalMortality<-}
 \title{NaturalMortality}
 \usage{
 NaturalMortality(
@@ -17,14 +16,12 @@ NaturalMortality(
   Misc = list()
 )
 
-NMortality(...)
-
-NMortality(x) <- value
+NaturalMortality(x) <- value
 }
 \arguments{
-\item{Pars}{Named list of natural mortality parameters.}
+\item{Pars}{Named list of natural mortality parameters for models in \code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}}}
 
-\item{Model}{Model identifier associated with \code{Pars}.}
+\item{Model}{Model associated with \code{Pars}.}
 
 \item{Units}{Time units (e.g. \code{"year"}).}
 
@@ -34,12 +31,12 @@ NMortality(x) <- value
 
 \item{Random}{Random effects array (optional).}
 
-\item{Classes}{Age or length class boundaries (optional).}
+\item{Classes}{Age or length class mid-points (optional).}
 
 \item{Misc}{Miscellaneous list.}
 }
 \value{
-A \code{\link[=NaturalMortality]{NaturalMortality()}} object.
+A \linkS4class{naturalmortality} object.
 }
 \description{
 Construct a \code{\link[=NaturalMortality]{NaturalMortality()}} object defining natural mortality
@@ -49,8 +46,15 @@ assumptions for a \code{\link[=Stock]{Stock()}}.
 The \code{NaturalMortality} class defines how natural mortality varies
 with age and/or length in a \code{\link[=Stock]{Stock()}}. Mortality schedules may be
 model-based (via \code{Pars} and \code{Model}) or supplied directly as arrays.
+
+A \code{NaturalMortality} object can be attached to a \code{\link[=Stock]{Stock()}} using \code{NaturalMortality(Stock) <- MyNaturalMortality} and
+retrieved using \code{MyNaturalMortality <- NaturalMortality(Stock)}
+
+Individual components may be accessed or modified using accessor and
+replacement functions such as \code{\link[=Pars]{Pars()}}, \code{\link[=Model]{Model()}}, and \code{\link[=Units]{Units()}}.
+
+See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
 }
 \seealso{
-\code{\link[=GetNaturalMortality]{GetNaturalMortality()}}, \code{\link[=SetNaturalMortality]{SetNaturalMortality()}},
 \code{\link[=Populate]{Populate()}}, \code{\link[=NaturalMortalityModels]{NaturalMortalityModels()}}
 }
