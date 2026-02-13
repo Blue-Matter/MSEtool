@@ -20,6 +20,7 @@ Project_MP <- function(Proj,
   
   YearsAll <- c(YearsHist, YearsProj) 
   
+  StockNames <- StockNames(MSE)
   FleetNames <- FleetNames(MSE)
   if (is.list(FleetNames))
     FleetNames <- FleetNames[[1]]
@@ -60,16 +61,16 @@ Project_MP <- function(Proj,
 
     # Run MP and return nested list of Advice objects
     AdviceSimList <- RunMPIfNeeded(Year, 
-                                  ManagementYears, 
-                                  LastAdvice,
-                                  MPName,
-                                  MPfunction,
-                                  DataSimList,
-                                  Proj,
-                                  YearsProj,
-                                  mp,
-                                  FleetNames,
-                                  Areas)
+                                   ManagementYears, 
+                                   LastAdvice,
+                                   MPName,
+                                   MPfunction,
+                                   DataSimList,
+                                   Proj,
+                                   YearsProj,
+                                   mp,
+                                   FleetNames,
+                                   Areas)
 
     # Save MP Advice 
     Proj <- StoreMPAdvice(Proj, Year, AdviceSimList)
@@ -91,12 +92,23 @@ Project_MP <- function(Proj,
     
     # Update Pop Dynamics in Proj with MP Advice
     Proj <- Proj |>
-      Update_Closure(Year, AdviceSimList, LastAdviceSimList, YearsProj, Areas, FleetNames) |>
-      Update_Selectivity(Year, AdviceSimList, LastAdviceSimList, YearsProj, Areas, FleetNames) |>
-      Update_Retention(Year, AdviceSimList, LastAdviceSimList, YearsProj, Areas, FleetNames) |>
-      Update_DiscardMortality(Year, AdviceSimList, LastAdviceSimList, YearsProj, Areas, FleetNames) |>
-      Update_Effort(Year, AdviceSimList, LastAdviceSimList, YearsHist, YearsProj, Areas, FleetNames) |>
-      Update_TAC(Year, AdviceSimList, LastAdviceSimList, YearsProj, Areas, FleetNames)
+      Update_Closure(Year, AdviceSimList, LastAdviceSimList, 
+                     YearsProj, Areas, FleetNames, StockNames) |>
+      
+      Update_Selectivity(Year, AdviceSimList, LastAdviceSimList, 
+                         YearsProj, Areas, FleetNames) |>
+      
+      Update_Retention(Year, AdviceSimList, LastAdviceSimList, 
+                       YearsProj, Areas, FleetNames) |>
+      
+      Update_DiscardMortality(Year, AdviceSimList, LastAdviceSimList, 
+                              YearsProj, Areas, FleetNames) |>
+      
+      Update_Effort(Year, AdviceSimList, LastAdviceSimList, 
+                    YearsHist, YearsProj, Areas, FleetNames) |>
+      
+      Update_TAC(Year, AdviceSimList, LastAdviceSimList, 
+                 YearsProj, Areas, FleetNames)
     
     
     

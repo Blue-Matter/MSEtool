@@ -90,15 +90,15 @@ Update_Selectivity_Sim <- function(Proj,
     
     for (st in stocks) {
       Ages <- Proj@OM@Stock[[st]]@Ages
-      Length <- Proj@OM@Stock[[st]]@Length
-      Weight <- Proj@OM@Stock[[st]]@Weight
-      Maturity <- Proj@OM@Stock[[st]]@Maturity
+      Length <- Proj@OM@Stock[[st]]@Length |> SubsetSim(sim)
+      Weight <- Proj@OM@Stock[[st]]@Weight |> SubsetSim(sim)
+      Maturity <- Proj@OM@Stock[[st]]@Maturity |> SubsetSim(sim)
       
       for (fl in seq_along(FleetNames)) {
         if (is.list(SelectList)) {
           select <- SelectList[[fl]]
         } else {
-          select <- SelecList
+          select <- SelectList
         }
         
         if (type=='Selectivity') {
@@ -124,10 +124,24 @@ Update_Selectivity_Sim <- function(Proj,
                                       CalcAtLength = TRUE,
                                       silent=TRUE)
         }
-
+        select@MeanAtAge    <- set_sim_dimname(select@MeanAtAge, sim) |> ExtendAreas(1:nArea)  |>
+          ExtendYears(FutureYears)
+        select@MeanAtLength <- set_sim_dimname(select@MeanAtLength, sim) |> ExtendAreas(1:nArea) |>
+          ExtendYears(FutureYears)
+        select@MeanAtWeight <- set_sim_dimname(select@MeanAtWeight, sim) |> ExtendAreas(1:nArea)  |>
+          ExtendYears(FutureYears)
+       
         ArrayFill(slot(Proj@OM@Fleet[[st]][[fl]],type)@MeanAtAge) <- select@MeanAtAge
         ArrayFill(slot(Proj@OM@Fleet[[st]][[fl]],type)@MeanAtLength) <- select@MeanAtLength
         ArrayFill(slot(Proj@OM@Fleet[[st]][[fl]],type)@MeanAtWeight) <- select@MeanAtWeight
+        
+        if (type=='Selectivity') {
+          ArrayFill(Proj@Misc$SelAgeList[[st]]) <- DropDimension(select@MeanAtAge, 'Fleet', FALSE)
+          ArrayFill(Proj@Misc$SelSizeList[[st]][[fl]]) <- select@MeanAtLength
+        } else {
+          ArrayFill(Proj@Misc$RetAgeList[[st]]) <- DropDimension(select@MeanAtAge, 'Fleet', FALSE)
+          ArrayFill(Proj@Misc$RetSizeList[[st]][[fl]]) <- select@MeanAtLength
+        }
         
       } # end fleet loop
     }  # end stock loop
@@ -161,4 +175,16 @@ Update_Retention <- function(Proj, Year, AdviceSimList, LastAdviceSimList,
                      YearsProj, Areas, FleetNames, 
                      type='Retention')
   
+}
+
+set_sim_dimname <- function(x, sim) {
+  if (is.null(x)) return(x)
+  if (!is.array(x)) return(x)
+  
+  dn <- dimnames(x)
+  if (is.null(dn) || !"Sim" %in% names(dn)) return(x)
+  
+  dn[["Sim"]] <- sim
+  dimnames(x) <- dn
+  x
 }

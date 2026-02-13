@@ -43,10 +43,18 @@ AtSize2AtAge <- function(object, Length, max1=FALSE) {
   
   if ("Sim" %in% names(dNames_MeanAtSize)) {
     bySim <- TRUE
-    nSim <- c(dNames_MeanAtSize[['Sim']], dNames_ASK[['Sim']]) |>
-      as.numeric() |>
-      unique() |> 
-      max()
+    if (length(dNames_ASK[['Sim']])==1 &&
+      length(dNames_ASK[['Sim']]==1)) {
+        nSim <- 1
+        sims <- as.numeric(dNames_ASK[['Sim']])
+      } else {
+        nSim <- c(dNames_MeanAtSize[['Sim']], dNames_ASK[['Sim']]) |>
+          as.numeric() |>
+          unique() |> 
+          max()
+        sims <- 1:nSim
+      }
+   
     
   } else {
     bySim <- FALSE
@@ -76,7 +84,7 @@ AtSize2AtAge <- function(object, Length, max1=FALSE) {
   if (byArea) {
     MeanAtAge <- array(0, dim=c(nSim, nAge, nTS, nArea),
                        dimnames = list(
-                         Sim=1:nSim,
+                         Sim=sims,
                          Age=AgeClasses,
                          Year=Years,
                          Area=1:nArea

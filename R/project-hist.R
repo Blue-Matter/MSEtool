@@ -20,21 +20,11 @@ Project_hist <- function(Hist,
   Proj <- Hist |> ReduceNSim(nSim)
   
   # ---- Add temporary lists and arrays to Hist@Misc ----
-  Proj <- PrepHistMisc(Proj) 
-  
+  Proj <- PrepHistMisc(Proj)
+ 
   # ---- Extend Arrays with Projection Years ----
   Proj <- ExtendHist(Proj, 
                      Years = c(YearsHist, YearsProj))
-  
-  
-  # TODO
-  # - initialize projection values as NA
-  # - if Effort is NA, 
-  # current issue: TAC needs to be constrained by Effort if it has been set by an MP
-  # otherwise is should not be constrained
-  # if both TAC and Effort are NA, use effort from previous (seasonal) timestep
-  
-  stop()
   
   # ---- Populate Number-at-Age at Beginning of Projection Year ----
   Proj <- CalcFisheryDynamics(Proj, 

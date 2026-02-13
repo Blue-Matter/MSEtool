@@ -352,6 +352,7 @@ Collate:
     'project-mp-effort.R'
     'project-mp-helpers.R'
     'project-mp-selectivity.R'
+    'project-mp-tac-opteffort.R'
     'project-mp-tac.R'
     'project-mp.R'
     'project.R'

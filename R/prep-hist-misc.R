@@ -32,7 +32,8 @@ CheckLength <- function(vector, length, name=NULL) {
 
 # This prepares arrays for easy access in the C++ code
 # temporary elements of Misc are removed later
-PrepHistMisc <- function(Hist) {
+PrepHistMisc <- function(Hist, Period=c('Historical', 'Projection')) {
+  Period <- match.arg(Period)
   saveMisc <- Hist@Misc
   Hist@Misc <- list()
   Hist@Misc$SAVE <- saveMisc
@@ -255,6 +256,8 @@ PrepHistMisc <- function(Hist) {
     }) |> List2Array(pos = 4) # Sim, Age, Year, Fleet, Area
   })
   CheckDims(Hist@Misc$DiscMortList, 5, 'DiscMortList')
+  
+  Hist@Misc <- ExtendYears( Hist@Misc, Years=Years(Hist,Period))
   
   Hist
 }

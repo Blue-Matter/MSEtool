@@ -97,9 +97,9 @@ AddPopDyn <- function(Data, Hist, x, Year=NULL, Years=NULL, mp=1) {
   
   Hist@Data <- list()
   
-  if (is.logical(Hist@OM@Control$DataOM) && Hist@OM@Control$DataOM) {
-    # add everything
-    Data@Misc$DataOM <- SubsetSim(Hist, x)
+  if (is.logical(Hist@OM@Control$DataOM)) {
+    if (Hist@OM@Control$DataOM) 
+      Data@Misc$DataOM <- SubsetSim(Hist, x) # add everything
     
   } else if (is.list(Hist@OM@Control$DataOM)) {
     nms <- names(Hist@OM@Control$DataOM)

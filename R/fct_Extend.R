@@ -145,9 +145,10 @@ ExtendSims <- function(array, nSim = NULL) {
 
   existing_sims <- as.numeric(dn[[sim_dim]])
 
-  if (length(existing_sims) == nSim) {
+  if (length(existing_sims) >= nSim) {
     return(array)
   }
+  
 
   if (length(existing_sims) != 1) {
     cli::cli_abort(c("The `Sim` dimension must be either length `nSim` ({.val {nSim}}) or length 1",
@@ -241,6 +242,7 @@ ExtendAges <- function(array, AgeClasses = NULL) {
 #' @rdname Extend
 #' @export
 ExtendYears <- function(array, Years = NULL, default = NULL, backfill = FALSE) {
+  
   if (!is.array(array) | is.null(Years)) {
     return(array)
   }
@@ -279,10 +281,8 @@ ExtendYears <- function(array, Years = NULL, default = NULL, backfill = FALSE) {
   OutArray <- array(NA, dim = d, dimnames = dn)
   abind::afill(OutArray) <- array # add the existing values
 
- 
-
   # Seasonal
-  isSeasonal <- which(all_years - round(all_years, 0) > 0) |> length()
+  isSeasonal <- any(all_years %% 1 != 0)
 
   if (isSeasonal) {
     return(ExtendYears_seasonal(array, Years, default, backfill = backfill))
@@ -294,20 +294,26 @@ ExtendYears <- function(array, Years = NULL, default = NULL, backfill = FALSE) {
     if (!is.null(default)) {
       MostRecent[] <- default
     }
-    d <- dim(MostRecent)
-    d[[year_dim]] <- length(forward_years)
-    dn[[year_dim]] <- forward_years
-    abind::afill(OutArray) <- array(MostRecent, dim = d, dimnames = dn)
+    Extended <- extend_along_dim(
+      x = MostRecent,
+      along_dim = year_dim,
+      new_index = forward_years
+    )
+    abind::afill(OutArray) <- Extended
   }
 
 
   # Back fill years from first existing year
   if (length(back_years) && backfill) {
     FirstYear <- abind::asub(array, 1, year_dim, drop = FALSE)
-    d <- dim(FirstYear)
-    d[[year_dim]] <- length(back_years)
-    dn[[year_dim]] <- back_years
-    abind::afill(OutArray) <- array(FirstYear, dim = d, dimnames = dn)
+    
+    Extended <- extend_along_dim(
+      x = FirstYear,
+      along_dim = year_dim,
+      new_index = back_years
+    )
+    abind::afill(OutArray) <- Extended
+
   }
 
   # Fill years within existing years
@@ -320,10 +326,13 @@ ExtendYears <- function(array, Years = NULL, default = NULL, backfill = FALSE) {
     for (i in seq_along(TimeBlocks)) {
       year_ind <- which(existing_years < min(TimeBlocks[[i]])) |> max()
       FillValue <- abind::asub(array, year_ind, year_dim, drop = FALSE)
-      d <- dim(FillValue)
-      d[[year_dim]] <- length(TimeBlocks[[i]])
-      dn[[year_dim]] <- TimeBlocks[[i]]
-      abind::afill(OutArray) <- array(FillValue, dim = d, dimnames = dn)
+      
+      Extended <- extend_along_dim(
+        x = FillValue,
+        along_dim = year_dim,
+        new_index = TimeBlocks[[i]]
+      )
+      abind::afill(OutArray) <- Extended
     }
   }
   OutArray
@@ -389,10 +398,13 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
       if (!is.null(default)) {
         MostRecent[] <- default
       }
-      d <- dim(MostRecent)
-      d[[year_dim]] <- length(forward_years)
-      dn[[year_dim]] <- forward_years
-      abind::afill(OutArray) <- array(MostRecent, dim = d, dimnames = dn)
+      
+      Extended <- extend_along_dim(
+        x = MostRecent,
+        along_dim = year_dim,
+        new_index = forward_years
+      )
+      abind::afill(OutArray) <- Extended
       
     } else {
       # loop over seasons - match the season
@@ -407,13 +419,18 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
         most_recent_ind <- max(most_recent_ind)
         
         MostRecent <- abind::asub(array, most_recent_ind, year_dim, drop = FALSE)
+      
         if (!is.null(default)) {
           MostRecent[] <- default
         }
-        d <- dim(MostRecent)
-        d[[year_dim]] <- length(forward_years[season_ind])
-        dn[[year_dim]] <- forward_years[season_ind]
-        abind::afill(OutArray) <- array(MostRecent, dim = d, dimnames = dn)
+        
+        Extended <- extend_along_dim(
+          x = MostRecent,
+          along_dim = year_dim,
+          new_index = forward_years[season_ind]
+        )
+        abind::afill(OutArray) <- Extended
+        
       }
     }
   }
@@ -427,10 +444,14 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
       if (!is.null(default)) {
         MostRecent[] <- default
       }
-      d <- dim(MostRecent)
-      d[[year_dim]] <- length(forward_years)
-      dn[[year_dim]] <- forward_years
-      abind::afill(OutArray) <- array(MostRecent, dim = d, dimnames = dn)
+      
+      Extended <- extend_along_dim(
+        x = MostRecent,
+        along_dim = year_dim,
+        new_index = back_years
+      )
+      abind::afill(OutArray) <- Extended
+
       
     } else {
       # loop over seasons - match the season
@@ -444,10 +465,14 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
         most_recent_ind <- min(most_recent_ind)
         
         MostRecent <- abind::asub(array, most_recent_ind, year_dim, drop = FALSE)
-        d <- dim(MostRecent)
-        d[[year_dim]] <- length(back_years[season_ind])
-        dn[[year_dim]] <- back_years[season_ind]
-        abind::afill(OutArray) <- array(MostRecent, dim = d, dimnames = dn)
+        
+        Extended <- extend_along_dim(
+          x = MostRecent,
+          along_dim = year_dim,
+          new_index = back_years[season_ind]
+        )
+        abind::afill(OutArray) <- Extended
+
       }
     }
   }
@@ -577,4 +602,39 @@ ExtendAreas <- function(array, Areas = NULL) {
   dimnames(OutArray)[[area_dim]] <- as.character(Areas)
   OutArray
   
+}
+
+
+extend_along_dim <- function(x, along_dim, new_index, dimnames_list = dimnames(x)) {
+  
+  # Permute so target dimension is first
+  perm <- seq_along(dim(x))
+  perm <- c(along_dim, perm[-along_dim])
+  
+  x_perm <- aperm(x, perm)
+  dx_perm <- dim(x_perm)
+  
+  # Build index list for ND subset
+  idx <- vector("list", length(dx_perm))
+  idx[[1]] <- rep(seq_len(dx_perm[1]), length(new_index))
+  for (i in 2:length(dx_perm)) {
+    idx[[i]] <- seq_len(dx_perm[i])
+  }
+  
+  x_rep <- do.call(`[`, c(list(x_perm), idx, list(drop = FALSE)))
+  
+  # Update dimension
+  dim(x_rep)[1] <- length(new_index)
+  
+  # Permute back
+  inv_perm <- order(perm)
+  out <- aperm(x_rep, inv_perm)
+  
+  # Fix dimnames
+  if (!is.null(dimnames_list)) {
+    dimnames_list[[along_dim]] <- new_index
+    dimnames(out) <- dimnames_list
+  }
+  
+  out
 }

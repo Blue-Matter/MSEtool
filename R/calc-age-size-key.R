@@ -69,8 +69,15 @@ CalcAgeSizeKey <- function(MeanAtAge,
       cli::cli_abort("`dim(MeanAtAge)[2] != dim(SDatAge)[2]`")
     }
   }
+  
+  if (length(dim_MeanAtAge[1])==1 && length( dim_SDatAge[1])==1) {
+    nSim <- 1
+    sims <- as.numeric(max(dim_MeanAtAge[1], dim_SDatAge[1]))
 
-  nSim <- max(dim_MeanAtAge[1], dim_SDatAge[1]) # maximum number of simulations
+  } else {
+    nSim <- max(dim_MeanAtAge[1], dim_SDatAge[1]) # maximum number of simulations
+    sims <- 1:nSim
+  }
 
   YearsList <- list(
     dimnames(MeanAtAge)[["Year"]],

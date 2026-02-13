@@ -225,7 +225,7 @@ Advice <- function(TAC = NULL,
     cli::cli_abort("`Retention` must be {.help MSEtool::Retention} object or a list of `Retention` objects ")
   
   if (!is.null(DiscardMortality) && !is.list(DiscardMortality) &&
-      !inherits(DiscardMortality, 'DiscardMortality'))
+      !inherits(DiscardMortality, 'discardmortality'))
     cli::cli_abort("`DiscardMortality` must be {.help MSEtool::DiscardMortality} object or a list of `DiscardMortality` objects ")
   
   if (!is.null(Misc) && !is.list(Misc))

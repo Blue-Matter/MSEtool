@@ -13,10 +13,10 @@ Update_DiscardMortality <- function(Proj, Year,
   for (st in 1:nStock) {
     for (fl in 1:nFleet) {
       Proj@OM@Fleet[[st]][[fl]]@DiscardMortality@MeanAtAge <-  Proj@OM@Fleet[[st]][[fl]]@DiscardMortality@MeanAtAge |> 
-        Extend(nSim=nSim, NULL, FutureYears)
+        Extend(nSim=nSim, NULL, FutureYears, Areas)
       
-      Proj@OM@Fleet[[st]][[fl]]@DiscardMortality@MeanAtLength <-  Proj@OM@Fleet[[st]][[fl]]@DiscardMortality@MeanAtLength |> 
-        Extend(nSim=nSim, NULL, FutureYears)
+      Proj@OM@Fleet[[st]][[fl]]@DiscardMortality@MeanAtLength <-Proj@OM@Fleet[[st]][[fl]]@DiscardMortality@MeanAtLength |> 
+        Extend(nSim=nSim, NULL, FutureYears, Areas)
     }
   }
   
@@ -69,10 +69,11 @@ Update_DiscardMortality_Sim <- function(Proj,
     
     for (st in stocks) {
       Ages <- Proj@OM@Stock[[st]]@Ages
-      Length <- Proj@OM@Stock[[st]]@Length
+      Length <- Proj@OM@Stock[[st]]@Length |> SubsetSim(sim) |>
+        SubsetYear(FutureYears)
       
       for (fl in seq_along(FleetNames)) {
-        if (is.list(SelectList)) {
+        if (is.list(DiscardMortalityList)) {
           DiscardMortality <- DiscardMortalityList[[fl]]
         } else {
           DiscardMortality <- DiscardMortalityList
@@ -85,8 +86,20 @@ Update_DiscardMortality_Sim <- function(Proj,
                                                      Years = FutureYears,
                                                      nArea = nArea,
                                                      silent = TRUE)
-        Proj@OM@Fleet[[st]][[fl]]@DiscardMortality@MeanAtAge <- DiscardMortality@MeanAtAge
-        Proj@OM@Fleet[[st]][[fl]]@DiscardMortality@MeanAtLength <- DiscardMortality@MeanAtLength
+        
+        DiscardMortality@MeanAtAge <- set_sim_dimname(DiscardMortality@MeanAtAge, sim) |> 
+          ExtendAreas(1:nArea)  |>
+          ExtendYears(FutureYears)
+        
+        DiscardMortality@MeanAtLength <- set_sim_dimname(DiscardMortality@MeanAtLength, sim) |> 
+          ExtendAreas(1:nArea) |>
+          ExtendYears(FutureYears)
+        
+        ArrayFill(DiscardMortality@MeanAtAge) <- DiscardMortality@MeanAtAge
+        ArrayFill(DiscardMortality@MeanAtLength) <- DiscardMortality@MeanAtLength
+  
+        # Misc for C++ 
+        ArrayFill(Proj@OM@Fleet[[st]][[fl]]@DiscardMortality@MeanAtAge) <- DiscardMortality@MeanAtAge
      
       } # end fleet loop
     }  # end stock loop

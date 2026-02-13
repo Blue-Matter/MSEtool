@@ -73,6 +73,24 @@ PopulateDiscardMortality <- function(DiscardMortality,
   
   SetSeed(seed)
   
+  AgeClasses <- Ages@Classes
+  nAge <- length(AgeClasses)
+  
+  if (!is.null(DiscardMortality@MeanAtAge)) {
+    if (!is.array(DiscardMortality@MeanAtAge)) {
+      if (!length(DiscardMortality@MeanAtAge)==1 &&
+          !length(DiscardMortality@MeanAtAge)==nAge)
+        cli::cli_abort("If `MeanAtAge(DiscardMortality)` is numeric vector, it must be length 1 or length `nAge`")
+      
+      DiscardMortality@MeanAtAge <- array(DiscardMortality@MeanAtAge, dim=c(1, nAge, 1),
+            dimnames=list(Sim = 1,
+                          Age=AgeClasses,
+                          Year=Years[1]))
+    }
+    
+  }
+ 
+  
   DiscardMortality <- MeanAtLength2MeanAtAge(DiscardMortality, Length)
   
   if (CalcAtLength) {

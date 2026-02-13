@@ -3,6 +3,7 @@ OM2stock <- function(OM,
                      YearsList = NULL, 
                      nSim, 
                      seed = NULL) {
+  
   if (inherits(OM, 'OM')) {
     cpars <- OM@cpars
   }

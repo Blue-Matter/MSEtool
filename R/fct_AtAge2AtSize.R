@@ -77,16 +77,24 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
   }
 
   # Sims 
-  Sims <- c(dimnames(object@MeanAtAge)[['Sim']], dimnames(Length@ALK)[['Sim']]) |>
-    as.numeric() |> unique() |> sort()
+  MeanAtAgeSim <- dimnames(object@MeanAtAge)[['Sim']]
+  ASKSim <- dimnames(ASK)[['Sim']]
   
+  if (length(MeanAtAgeSim) == 1 && length(ASKSim) == 1) {
+    Sims <- max( c(MeanAtAgeSim, ASKSim)) |> as.numeric()
+  } else {
+    Sims <- c(MeanAtAgeSim, ASKSim) |>
+      as.numeric() |> unique() |> sort()
+  }
+ 
   # Years
-  Years <- c(dimnames(object@MeanAtAge)[['Year']], dimnames(Length@ALK)[['Year']]) |>
+  Years <- c(dimnames(object@MeanAtAge)[['Year']], dimnames(ASK)[['Year']]) |>
     as.numeric() |> unique() |> sort()
   
   
-  ASK <- ExtendYears(ASK, Years)
-  object@MeanAtAge <- ExtendYears(object@MeanAtAge, Years)
+  ASK <- ExtendYears(ASK, Years) 
+  ObjectMeanAtAge <- ExtendYears(array=ObjectMeanAtAge, Years) 
+  
   
   
   dnames <- dimnames(object@MeanAtAge)

@@ -35,6 +35,7 @@ ExtendHist <- function(Hist, Years, silent=FALSE, id=NULL) {
                                   AgeClasses = AgeClasses,
                                   Years = Years,
                                   Areas = Areas)
+  
     if (!silent) {
       cli::cli_progress_update(id=id)
     }
@@ -81,7 +82,10 @@ ExtendHist <- function(Hist, Years, silent=FALSE, id=NULL) {
     if (!silent) {
       cli::cli_progress_update(id=id)
     }
-    slot(Hist, sl) <- Extend(array=slot(Hist, sl), nSim=nSim, Years = Years, default =0)
+    slot(Hist, sl) <- Extend(array=slot(Hist, sl), 
+                             nSim=nSim, 
+                             Years = Years,
+                             default = NA)
     
   }
   

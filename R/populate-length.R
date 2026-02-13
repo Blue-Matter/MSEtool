@@ -98,7 +98,8 @@ PopulateLength <- function(Length,
   if (ALK && !is.null(Length@Classes)) {
     Length <- PopulateASK(object = Length, 
                           Ages = Ages, 
-                          Years = Years, silent = silent)
+                          Years = Years, 
+                          silent = silent)
   }
   
   SetDigest(Length, argList)

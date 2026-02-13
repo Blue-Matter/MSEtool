@@ -1,10 +1,30 @@
 
 library(MSEtool)
 
+la()
+
 testOM@nsim <- 10
 OM <- Convert(testOM)
+
+Name(OM) <- 'testOM'
 OM@Control$DataOM <- list(Effort=TRUE)
 Hist <- Simulate(OM)
+
+
+CloseArea1 <- function(Data) {
+  Advice(Closure=c(0,1))
+}
+class(CloseArea1) <- 'mp'
+
+DiscMort <- function(Data) {
+  Advice(DiscardMortality=DiscardMortality(0.5))
+}
+class(DiscMort) <- 'mp'
+
+MPs <- c('DiscMort', 'CloseArea1')
+
+MSE <- Project_hist(Hist, MPs)
+
 
 
 Data <- Hist@Data$`1`$Albacore

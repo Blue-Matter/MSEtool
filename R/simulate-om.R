@@ -54,7 +54,7 @@ Simulate_om <- function(OM = NULL,
   Hist <- PrepHistMisc(Hist) 
   
   # ---- Calculate Unfished Equilibrium and Dynamic ----
-  if (DynamicUnfished) 
+  if (DoDynamicUnfished) 
     Hist@Unfished@Dynamic <- CalcUnfished_Dynamic(Hist = Hist, 
                                                   IdenticalHist = IdenticalHist, 
                                                   silent = silent)

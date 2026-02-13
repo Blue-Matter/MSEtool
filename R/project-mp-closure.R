@@ -1,4 +1,5 @@
-Update_Closure <- function(Proj, Year, AdviceSimList, LastAdviceSimList, YearsProj, Areas, FleetNames) {
+Update_Closure <- function(Proj, Year, AdviceSimList, LastAdviceSimList, YearsProj, Areas, 
+                           FleetNames, StockNames) {
   
   nArea <- length(Areas)
   
@@ -6,7 +7,6 @@ Update_Closure <- function(Proj, Year, AdviceSimList, LastAdviceSimList, YearsPr
     return(Proj)
   
   nSim <- Proj@OM@nSim
-  
   
   for (sim in seq_len(nSim)) {
     Proj <- Update_Closure_Sim(
@@ -16,7 +16,8 @@ Update_Closure <- function(Proj, Year, AdviceSimList, LastAdviceSimList, YearsPr
       YearsProj=YearsProj,
       AdviceList=AdviceSimList[[sim]],
       LastAdviceList=LastAdviceSimList[[sim]],
-      FleetNames =FleetNames,
+      FleetNames = FleetNames,
+      StockNames = StockNames,
       Complexes=Proj@OM@Complexes,
       Areas = Areas,
       nSim = Proj@OM@nSim
@@ -33,6 +34,7 @@ Update_Closure_Sim <- function(Proj,
                                AdviceList,
                                LastAdviceList,
                                FleetNames,
+                               StockNames,
                                Complexes,
                                Areas,
                                nSim) {
@@ -41,7 +43,6 @@ Update_Closure_Sim <- function(Proj,
   nFleet <- length(FleetNames)
   nArea <- length(Areas)
    
-  
   for (i in seq_len(nComplex)) {
     stocks <- Complexes[[i]]
     Advice <- AdviceList[[i]]
@@ -52,7 +53,7 @@ Update_Closure_Sim <- function(Proj,
     if (is.null(Advice@Closure))
       next()
     
-    CheckClosureDimensions(Advice, FleetNames, Areas)
+    CheckClosureDimensions(Closure=Advice@Closure, FleetNames, Areas)
     
     FutureYears <- YearsProj[YearsProj>=Year]
     NewClosure <- Advice@Closure |>
@@ -60,51 +61,35 @@ Update_Closure_Sim <- function(Proj,
       ExtendYears(Years=FutureYears) |>
       AddDimension("Sim", x, pos=1)
     
+    # apply closure to all future time steps
     for (st in stocks) {
       for (fl in seq_along(FleetNames)) {
-        Proj <- ApplyClosureToFleet(
-          Proj,
-          stock = st,
-          fleet = fl,
-          sim = sim,
-          nSim = nSim,
-          NewClosure = NewClosure[,,fl,, drop = FALSE] |>
-            abind::adrop(drop = 3)
-        )
+        Current <- Proj@OM@Fleet[[st]][[fl]]@Closure
+        
+        if (dim(Current)[1] < sim)
+          Current <- ExtendSims(Current, nSim)
+        
+        ArrayFill(Current) <- DropDimension(NewClosure, 'Fleet', FALSE)
+        Proj@OM@Fleet[[st]][[fl]]@Closure <- Current
+        ArrayFill(Proj@Misc$Closure) <- AddDimension(NewClosure, 'Stock',
+                                                     val=StockNames[st],
+                                                     pos=2)
+     
+        
+  
       }
     }
   }
   Proj
 }
 
-ApplyClosureToFleet <- function(Proj,
-                                stock,
-                                fleet,
-                                sim,
-                                nSim,
-                                NewClosure) {
-  
-  stop("Need to use Proj@Misc@Closure instead")
-  
-  Current <- Proj@OM@Fleet[[stock]][[fleet]]@Closure
-  
-  if (dim(Current)[1] < sim)
-    Current <- ExtendSims(Current, nSim)
-  
-  ArrayFill(Current) <- NewClosure
-  
-  Proj@Misc$Closure 
-  
-  
-  Proj@OM@Fleet[[stock]][[fleet]]@Closure <- Current
-  Proj
-}
+
 
 CheckClosureDimensions <- function(Closure, FleetNames, Areas) {
-  if (dim(Closure)[3] != length(FleetNames))
+  if (dim(Closure)[1] != length(FleetNames))
     stop("Closure dimension does not match number of fleets")
   
-  if (dim(Closure)[4] != length(Areas))
+  if (dim(Closure)[2] != length(Areas))
     stop("Closure dimension does not match number of areas")
   
   invisible(TRUE)

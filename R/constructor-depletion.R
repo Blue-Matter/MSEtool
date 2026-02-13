@@ -77,6 +77,7 @@ Depletion <- function(Initial,
   
   if (missing(Initial)) {
     object <- methods::new("depletion")
+    object@Reference <- Reference
     return(object)
   }
   

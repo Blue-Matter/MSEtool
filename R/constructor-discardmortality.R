@@ -10,7 +10,9 @@
 #' @param Classes Optional class vector (ages or lengths)
 #' @param Misc A list of miscellaneous parameters
 #'
-#'
+#'  
+#' @details
+#' 
 #' A `DiscardMortality` object can be attached to a [Fleet()] using `DiscardMortality(Fleet) <- MyDiscardMortality` and
 #' retrieved using `MyDiscardMortality <- DiscardMortality(Fleet)`
 #'

@@ -58,9 +58,15 @@ ArrayExtend <- function(array1, array2) {
   sim_ind <- which(dname1 == "Sim")
   if (length(sim_ind)) {
     sim_ind_2 <- which(dname1 == "Sim")
-    nSim <- c(dnames$dname1[[sim_ind]], dnames$dname2[[sim_ind_2]]) |>
-      unique() |>
-      length()
+    if (length(dnames$dname1[[sim_ind]])==1 &&
+        length(dnames$dname2[[sim_ind_2]]==1)) {
+      nSim <- 1
+    } else {
+      nSim <- c(dnames$dname1[[sim_ind]], dnames$dname2[[sim_ind_2]]) |>
+        unique() |>
+        length()   
+    }
+  
   } else {
     nSim <- NULL
   }

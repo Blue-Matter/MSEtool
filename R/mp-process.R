@@ -88,9 +88,12 @@ MakeSelfContained <- function(MP) {
   
   # Get internal helper functions
   helpers <- DetectCalledFunctions(MP, MSEtool_funs=MSEtool_funs)
-  helpers <- helpers[sapply(helpers, function(x) 
-    exists(x, envir = parent.frame()) && 
-      !isNamespace(environment(get(x))))] 
+  if (length(helpers)) {
+    helpers <- helpers[sapply(helpers, function(x) 
+      exists(x, envir = parent.frame()) && 
+      !isNamespace(environment(get(x))))]
+  }
+ 
   
   # Add helper functions
   for (hname in helpers) {
