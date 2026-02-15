@@ -21,15 +21,7 @@ DiscardMortality(x) <- value
 
 \item{Classes}{Optional class vector (ages or lengths)}
 
-\item{Misc}{A list of miscellaneous parameters
-
-A \code{DiscardMortality} object can be attached to a \code{\link[=Fleet]{Fleet()}} using \code{DiscardMortality(Fleet) <- MyDiscardMortality} and
-retrieved using \code{MyDiscardMortality <- DiscardMortality(Fleet)}
-
-Individual components may be accessed or modified using accessor and
-replacement functions such as \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, and \code{\link[=Classes]{Classes()}}.
-
-See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.}
+\item{Misc}{A list of miscellaneous parameters}
 }
 \value{
 A \linkS4class{discardmortality} object
@@ -40,4 +32,12 @@ Construct a \linkS4class{discardmortality} object for a \code{\link[=Fleet]{Flee
 \details{
 Discard mortality describes the proportion of catch that is discarded and dies,
 defined either at age or at length.
+
+A \code{DiscardMortality} object can be attached to a \code{\link[=Fleet]{Fleet()}} using \code{DiscardMortality(Fleet) <- MyDiscardMortality} and
+retrieved using \code{MyDiscardMortality <- DiscardMortality(Fleet)}
+
+Individual components may be accessed or modified using accessor and
+replacement functions such as \code{\link[=MeanAtAge]{MeanAtAge()}}, \code{\link[=MeanAtLength]{MeanAtLength()}}, and \code{\link[=Classes]{Classes()}}.
+
+See the \href{https://docs.openmse.com/}{openMSE Technical Manual} for more details.
 }

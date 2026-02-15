@@ -21,7 +21,7 @@ OptEffort <- function(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet,
   nFleet <- length(TAC_by_Fleet)
   
   # initial effort, replace zeros with a small value
-  Effort_init <- Proj@Effort[sim, TSIndex, ]
+  Effort_init <- Proj@Effort[sim, TSIndex-1, ]  # start at previous time step
   Effort_init[Effort_init < minEffort] <- minEffort
   
   # identify fleets to optimize vs. fleets forced to zero

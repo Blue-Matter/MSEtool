@@ -60,7 +60,7 @@ ConditionObs_Catch <- function(Hist,
           catch_n_at_age <- SumOverArea(catch_n_at_age_area)
           
           # sum over ages
-          SumOverAge(ArrayMultiply(FleetWeight, catch_n_at_age))
+          SumOverAge(ArrayMultiply(catch_n_at_age, FleetWeight))
     
   }) |> List2Array('Stock', pos=2) |>
     apply(c('Sim', 'Year', 'Fleet'), sum)

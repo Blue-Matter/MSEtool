@@ -58,11 +58,13 @@ inline void CalcCatch(
     check_dims<3>(M_st, {nSim, nAge, M_st.dim[2]}, "NaturalMortality", y, 2);
     check_dims<4>(FWght_st, {nSim, nAge, FWght_st.dim[2], nFleet}, "FleetWeight", y, 2);
     
-    // temp vectors for age-vectorization calcs
-    std::vector<double> Z_age(nAge);
-    std::vector<double> N_dead_age(nAge);
+   
     
     for (int sim : Sims) {
+      
+      // temp vectors for age-vectorization calcs
+      std::vector<double> Z_age(nAge);
+      std::vector<double> N_dead_age(nAge);
       
       const int sim_num     = sim_index<4>(sim, Num_st, "Number");
       const int sim_fd      = sim_index<5>(sim, Fd, "FDeadArea");
@@ -108,11 +110,12 @@ inline void CalcCatch(
               
               // Convert to biomass and accumulate
               const double weight = FWght_st(sim_FWght, age, y, fl);
-              
               Landings(sim, st, y, fl) += Lnum * weight;
               Discards(sim, st, y, fl) += Dnum * weight;
-              
+         
             } // end age loop 
+          
+    
           } // end fleet loop
       } // end area loop
       

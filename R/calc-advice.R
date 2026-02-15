@@ -74,20 +74,20 @@ CalcAdvice_Sim_MP <- function(x, MPName,
                               mp, FleetNames, 
                               Areas) {
   
-  MPAdviceList <- MakeNamedList(names(DataList))
+  AdviceList <- MakeNamedList(names(DataList))
   
   # loop over stocks/complexes
   for (i in seq_along(DataList)) {  
     Data <- DataList[[i]] |> AddPopDyn(Proj, x, Year, YearsProj, mp)
     
-    MPAdvice <- try(MPfunction(Data=Data), silent=TRUE)
+    Advice <- try(MPfunction(Data=Data), silent=TRUE)
     
-    Log_MPError(MPAdvice, MPName, Data, Sim=x, Year)
+    Log_MPError(Advice, MPName, Data, Sim=x, Year)
     
-    MPAdvice <- CheckAdvice(MPAdvice, Proj, FleetNames, Areas, x) 
-    MPAdviceList[[i]] <- MPAdvice
+    Advice <- CheckAdvice(Advice, Proj, FleetNames, Areas, x) 
+    AdviceList[[i]] <- Advice
   }
-  MPAdviceList
+  AdviceList
 }
 
 

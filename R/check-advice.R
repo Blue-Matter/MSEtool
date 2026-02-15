@@ -1,32 +1,45 @@
 
-CheckAdvice <- function(MPAdvice, Proj, FleetNames, Areas, x) {
+CheckAdvice <- function(Advice, Proj, FleetNames, Areas, x) {
  
-  MPAdvice <- CheckAdvice_TAC(MPAdvice, Proj)
-  MPAdvice <- CheckAdvice_Effort(MPAdvice, Proj, FleetNames, Areas, x)
+  Advice <- CheckAdvice_TAC(Advice, Proj, FleetNames, Areas)
   
-  MPAdvice <- CheckAdvice_Closure(MPAdvice, Proj, FleetNames, Areas)
+  Advice <- CheckAdvice_Effort(Advice, Proj, FleetNames, Areas, x)
   
-  MPAdvice
+  Advice <- CheckAdvice_Closure(Advice, Proj, FleetNames, Areas)
+  
+  Advice
 }
 
-CheckAdvice_TAC <- function(MPAdvice, Proj) {
+CheckAdvice_TAC <- function(Advice, Proj, FleetNames, Areas) {
   
-  if (is.null(MPAdvice@TAC))
-    return(MPAdvice)
+  if (is.null(Advice@TAC))
+    return(Advice)
   
-  stop('TODO!!')
+  nFleet <- length(FleetNames)
+  nArea <- length(Areas)
   
+  if (is.array(Advice@TAC)) {
+    dd <- dim(Advice@TAC)
+    if (dd[1]!=nFleet || dd[2]!=nArea) 
+      stop('If Advice@TAC is an array, it must have `nFleet` rows and `nArea` columns')
+  }
+  
+  if (length(Advice@TAC)!= 1 && length(Advice@TAC)!=nFleet)
+    stop("If Advice@TAC is numeric vector, itmust be either length 1 or length `nFleet`")
+ 
+  Advice@TAC <- as.array(Advice@TAC)
+  Advice
   
 }
 
-CheckAdvice_Effort <- function(MPAdvice, Proj, FleetNames, Areas, x) {
+CheckAdvice_Effort <- function(Advice, Proj, FleetNames, Areas, x) {
   
-  Effort <- MPAdvice@Effort
+  Effort <- Advice@Effort
   nFleet <- length(FleetNames)
   nArea <- length(Areas)
   
   if (is.null(Effort))
-    return(MPAdvice)
+    return(Advice)
   
   if (is.numeric(Effort)) {
     if (length(Effort)==1) {
@@ -36,8 +49,8 @@ CheckAdvice_Effort <- function(MPAdvice, Proj, FleetNames, Areas, x) {
     } else {
       stop("If `Advice@Effort` is numeric, is must be length 1 or length `nFleet`")
     }
-    MPAdvice@Effort <- Effort
-    return(MPAdvice)
+    Advice@Effort <- Effort
+    return(Advice)
   }
   
   if (is.array(Effort)) {
@@ -59,22 +72,22 @@ CheckAdvice_Effort <- function(MPAdvice, Proj, FleetNames, Areas, x) {
     }
   }
   
-  MPAdvice@Effort <- Effort
-  MPAdvice
+  Advice@Effort <- Effort
+  Advice
  
 }
 
 
-CheckAdvice_Closure <- function(MPAdvice, Proj, FleetNames, Areas) {
-  Closure <- MPAdvice@Closure
+CheckAdvice_Closure <- function(Advice, Proj, FleetNames, Areas) {
+  Closure <- Advice@Closure
   if (is.null(Closure))
-    return(MPAdvice)
+    return(Advice)
   
   nFleet <- length(FleetNames)
   nArea <- length(Areas)
   
   if (nArea==1)
-    return(MPAdvice)
+    return(Advice)
   
   Closure <- (Closure >= 0.5) * 1L
   
@@ -98,6 +111,6 @@ CheckAdvice_Closure <- function(MPAdvice, Proj, FleetNames, Areas) {
   dimnames(Closure) <- list(Fleet=FleetNames,
                             Area=Areas)
   
-  MPAdvice@Closure <- Closure
-  MPAdvice
+  Advice@Closure <- Closure
+  Advice
 }

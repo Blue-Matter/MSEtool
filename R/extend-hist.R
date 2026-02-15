@@ -82,11 +82,17 @@ ExtendHist <- function(Hist, Years, silent=FALSE, id=NULL) {
     if (!silent) {
       cli::cli_progress_update(id=id)
     }
+    default <- 0
+    if (sl == 'Misc') 
+      default <- NULL
+
+    if (sl == 'Effort') 
+      default <- NA
+    
     slot(Hist, sl) <- Extend(array=slot(Hist, sl), 
                              nSim=nSim, 
                              Years = Years,
-                             default = NA)
-    
+                             default = default)
   }
   
   if (!silent) {

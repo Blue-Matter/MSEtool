@@ -82,10 +82,7 @@ Project_MP <- function(Proj,
     Proj@Log[[as.character(Year)]] <- ExtractAdviceLogs(AdviceSimList)
     
     # Save TAC and Effort
-    Proj@Data <- purrr::map2(
-      Proj@Data,
-      AdviceSimList,
-      \(DataList, AdviceList) {
+    Proj@Data <- purrr::map2(Proj@Data, AdviceSimList,\(DataList, AdviceList) {
         purrr::map2(DataList, AdviceList, AddAdviceToData, Year = Year)
       }
     )

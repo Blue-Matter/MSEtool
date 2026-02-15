@@ -12,9 +12,22 @@ Update_TAC <- function(Proj, Year,
   nArea <- length(Areas)
   TSIndex <- match(Year, c(YearsHist, YearsProj))
   
-  stop("TO DO!!")
+  AdviceList <- AdviceSimList[[sim]]
+  LastAdviceList <- LastAdviceSimList[[sim]]
+  Complexes <- Proj@OM@Complexes
+  ComplexNames <- names(Proj@OM@Complexes)
   
-  
+  Update_TAC_Sim (Proj,
+                  sim,
+                  Year, 
+                  TSIndex,
+                  AdviceList,
+                  LastAdviceList,
+                  nFleet,
+                  FleetNames,
+                  Complexes,
+                  ComplexNames,
+                  nArea) 
   
   Proj
 }
@@ -25,23 +38,30 @@ Update_TAC_Sim <- function(Proj,
                            sim,
                            Year, 
                            TSIndex,
-                           AdviceList = AdviceSimList[[sim]],
-                           LastAdviceList = LastAdviceSimList[[sim]],
-                           nFleet = nFleet,
-                           Complexes = Proj@OM@Complexes,
-                           nArea = nArea) {
+                           AdviceList,
+                           LastAdviceList,
+                           nFleet,
+                           FleetNames,
+                           Complexes,
+                           ComplexNames,
+                           nArea) {
   
   nComplex <- length(Complexes)
   
   # NOTE: TAC applies to Removals
   # TODO: if there are illegal catches in implementation error model, these
   #       should not contribute to the TAC
+  #       should add overages vs IUU to imp model
   
   # Calculate the effort required to catch the specified TAC
   # constrain for each fleet by the minimum effort before copmlex-specific TAC
   # is met
   
-  ReqEffortMatrix <- matrix(NA, nrow=nFleet, ncol=nComplex)
+  ReqEffortMatrix <- matrix(NA, nrow=nFleet, ncol=nComplex, 
+                            dimnames = list(
+                              Fleet=FleetNames,
+                              Complex=ComplexNames
+                            ))
   
   for (i in seq_len(nComplex)) {
     
@@ -70,14 +90,16 @@ Update_TAC_Sim <- function(Proj,
     #    ie constrain effort to most restrictive TAC x (1+ max discard rate)
     #  - account for implementation error to track 'illegal' catch overages (ie kept fish > TAC)
     
-    if (!is.array(TAC)) {
+    dd <- dim(TAC)
+    
+    if (length(dd)==1) {
       # not by area
       
       if (length(TAC)==1) {
         # global TAC - distribute over Fleets according to Allocation 
         allocation <- OM@Allocation[[i]]
         all_sim <- min(nrow(allocation), sim)
-        TAC <- TAC * OM@Allocation[[i]][all_sim, ]
+        TAC <- as.numeric(TAC) * OM@Allocation[[i]][all_sim, ]
       } 
       if (length(TAC) == nFleet) {
         
@@ -118,13 +140,17 @@ Update_TAC_Sim <- function(Proj,
      
   } # end complex loop
     
-  # Calculate minimum effort 
-  MinEffortInd <- apply(ReqEffortMatrix, 1, which.min) |> as.numeric() # complex with lowest effort
-  row_idx <- seq_len(nrow(EffortArray))
-  MinEffortValues <- EffortArray[cbind(row_idx, MinEffortInd)] # lowest required effort by fleet
   
-  # Apply effort constraint if any 
-  Proj@Effort[sim,TSIndex,]
+  if (nComplex > 1) {
+    # Calculate minimum effort 
+    MinEffortInd <- apply(ReqEffortMatrix, 1, which.min) |> as.numeric() # complex with lowest effort
+    
+    # apply minumum effort constraint for first 
+  }
+  
+  
+  stop() 
+
     
   
   

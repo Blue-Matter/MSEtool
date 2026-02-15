@@ -21,7 +21,7 @@ Project_hist <- function(Hist,
   
   # ---- Add temporary lists and arrays to Hist@Misc ----
   Proj <- PrepHistMisc(Proj)
- 
+
   # ---- Extend Arrays with Projection Years ----
   Proj <- ExtendHist(Proj, 
                      Years = c(YearsHist, YearsProj))
@@ -47,7 +47,7 @@ Project_hist <- function(Hist,
                       MSE,
                       MPName,
                       MPfunction,
-                      mp = mp,
+                      mp,
                       YearsHist,
                       YearsProj)
     
