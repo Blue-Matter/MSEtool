@@ -1,7 +1,7 @@
 
 library(MSEtool)
 
-la()
+
 
 testOM@nsim <- 10
 OM <- Convert(testOM)
@@ -20,6 +20,10 @@ class(CurrentCatch) <- 'mp'
 MPs <- 'CurrentCatch'
 
 MSE <- Project(Hist, MPs)
+
+la()
+
+Project_hist
 
 
 

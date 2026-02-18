@@ -20,7 +20,7 @@ Fleet(
   WeightFleet = array(),
   BioEconomic = new("bioeconomic"),
   Avoidance = 1,
-  Dexterity = 0,
+  Dexterity = 1,
   Misc = list()
 )
 
@@ -79,14 +79,14 @@ of a fleet for stock used in an operating model.
 A \code{Fleet} object describes the fishing characteristics of a fleet for a particular stock
 in an operating model.
 
-The \strong{Avoidance} and \strong{Dexterity} parameters control how fleet effort is adjusted relative
-to Total Allowable Catches (TACs):\tabular{lll}{
+The \strong{Avoidance} and \strong{Dexterity} parameters are used in multi-stock OMs and
+control how fleet effort is adjusted relative to Total Allowable Catches (TACs):\tabular{lll}{
    Parameter \tab Value \tab Effect \cr
-   Avoidance \tab 0 \tab Fleet stops when TAC is reached (hard choke) \cr
-   Avoidance \tab 1 \tab Fleet catches TAC regardless of choke (no avoidance) \cr
-   Avoidance \tab 0-1 \tab Fleet partially avoids exceeding TAC proportionally \cr
+   Avoidance \tab 0 \tab Fleet stops when the most restrictive TAC is reached (hard choke) \cr
+   Avoidance \tab 1 \tab Fleet catches all TACs regardless of choke (no avoidance) \cr
+   Avoidance \tab 0-1 \tab Fleet partially avoids exceeding TACs proportionally \cr
    Dexterity \tab 0 \tab Fleet perfectly targets retained catch (no excess mortality) \cr
-   Dexterity \tab 1 \tab All excess catch is either discarded or retained according to TAC \cr
+   Dexterity \tab 1 \tab All excess catch is discarded \cr
    Dexterity \tab 0-1 \tab Partial precision in targeting; some excess catch may occur \cr
 }
 

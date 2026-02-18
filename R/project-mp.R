@@ -112,19 +112,27 @@ Project_MP <- function(Proj,
       Update_TAC(Year, AdviceSimList, LastAdviceSimList, 
                  YearsHist, YearsProj, Areas, FleetNames)
     
-    
     # Simulate Pop Dynamics for this Time Step
     Proj <- CalcFisheryDynamics(Proj, Year)
-  
+    
   }
+  
+  # TODO - check - is maxF currently by fleet??
+  
+  Proj@Effort[, 50:TSIndex,] |> t() |> matplot()
+  Proj@Biomass[ ,1, 50:TSIndex]|> t() |> matplot()
+  
+  sim <- 8
+  Proj@Effort[sim, 50:TSIndex,] |> plot()
+  Proj@Landings[sim,1,50:TSIndex,1] |> plot()
+
+  Proj@Biomass[sim ,1, 50:TSIndex] |> plot()
+  
   EndTime <- Sys.time()
   
   # Checks
   
-  # up to here - why is testOM landings == ?
-  Proj@Landings[1,1,,1]
-  Proj@Landings[1,1,,1] |> plot()
-  AdviceSimList$`1`$Albacore@TAC
+ 
   
   
   # update MSE object

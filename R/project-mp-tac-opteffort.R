@@ -21,7 +21,14 @@ OptEffort <- function(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet,
   nFleet <- length(TAC_by_Fleet)
   
   # initial effort, replace zeros with a small value
-  Effort_init <- Proj@Effort[sim, TSIndex-1, ]  # start at previous time step
+  # Effort_init <- Proj@Effort[sim, TSIndex-1, ]  # start at previous time step
+  
+  LastF <- Proj@FInteract[sim,stocks,TSIndex-1,, drop=FALSE] |> abind::adrop(c(1,3))
+  LastQ <- Proj@Misc$Catchability[sim,stocks,TSIndex-1,, drop=FALSE] |> abind::adrop(c(1,3))
+  
+  LastEffort <- LastF/LastQ
+  Effort_init <- LastEffort[1,] # should be the same for all stocks
+  
   Effort_init[Effort_init < minEffort] <- minEffort
   
   # identify fleets to optimize vs. fleets forced to zero
@@ -36,12 +43,14 @@ OptEffort <- function(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet,
   if (length(pos_idx) == 0) return(Effort_final)
   
   # nFleet = 1: use optimize
+  # TODO - this can result in large Effort when maxF is met - ie Effort keeps going up 
+  # with no change in landings & discards
   if (length(pos_idx) == 1) {
-    f <- pos_idx
+
     obj <- function(logEff) ObjEffort(logEff, Proj, sim, Year, TSIndex, stocks, TAC_by_Fleet, Effort_final)
-    opt <- optimize(obj, interval = log(c(minEffort, Effort_final[f] * 10)))
-    
-    Effort_final[f] <- Effort_final[f] * exp(opt$minimum)
+    opt <- optimize(obj, interval = log(c(minEffort, Effort_final[pos_idx] * 10)))
+
+    Effort_final[pos_idx] <- Effort_final[pos_idx] * exp(opt$minimum)
     return(Effort_final)
   }
   
@@ -74,6 +83,10 @@ OptEffort <- function(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet,
     # approximate derivative (dC/dF) vector
     dC_dF <- (RemovalsByFleet_pert[pos_idx] - RemovalsByFleet[pos_idx]) / deltaF
     dC_dF[dC_dF <= 0] <- 1e-8
+    if (all(dC_dF < 1e-6)) {
+      converged <- TRUE
+      break
+    }
     
     Effort[pos_idx] <- pmax(Effort[pos_idx] + diff / dC_dF, minEffort)
   }

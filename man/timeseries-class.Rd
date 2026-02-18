@@ -35,6 +35,8 @@ catch, effort, and fishing mortality components.
 
 \item{\code{Distribution}}{Fleet effort distribution by area: Sim × Year × Fleet × Area (x MP for \code{MSE} objects).}
 
+\item{\code{FInteract}}{Apical fishing mortality for fish that are interact with the fishing gear.  Array: Sim x Stock x Year x Fleet (x MP for \code{MSE} objects).'}
+
 \item{\code{FDead}}{Apical fishing mortality for fish that are killed by fishing gear.  Array: Sim x Stock x Year x Fleet (x MP for \code{MSE} objects).}
 
 \item{\code{FRetain}}{Apical fishing mortality for fish that are retained by fishers. Array: Sim x Stock x Year x Fleet (x MP for \code{MSE} objects).}
