@@ -30,9 +30,13 @@ GenerateHistoricalData <- function(Hist, silent=FALSE) {
     id <- cli::cli_progress_bar("Generating Historical {.val Data}")
   
   SimDataList <- purrr::map(1:nSim, \(x)
-                            GenerateHistoricalData_Sim(x, Hist, HistYears,
-                                                        nArea, FleetNames,
-                                                       StockNames, silent, id)
+                            GenerateHistoricalData_Sim(x,
+                                                       Hist,
+                                                       HistYears,
+                                                       nArea,
+                                                       FleetNames,
+                                                       StockNames, 
+                                                       silent, id)
                             )
   names(SimDataList) <- 1:nSim
   
@@ -47,6 +51,26 @@ GenerateHistoricalData <- function(Hist, silent=FALSE) {
     Hist@Data <- list("1"= SimDataList[[1]])
   } else {
     Hist@Data <- SimDataList
+  }
+  
+  # update Index Obs 
+  for (i in seq_along(SimDataList)) {
+    for (st in seq_along(SimDataList[[i]])) {
+      # Survey
+      IndexObs <- SimDataList[[i]][[st]]@Survey@Misc$IndexObs
+      for (fl in seq_along(IndexObs)) {
+        Hist@OM@Obs[[st]][[fl]]@Survey <- IndexObs[[fl]]
+      }
+      SimDataList[[i]][[st]]@Survey@Misc$IndexObs <- NULL
+      
+      # CPUE
+      IndexObs <- SimDataList[[i]][[st]]@CPUE@Misc$IndexObs
+      for (fl in seq_along(IndexObs)) {
+        Hist@OM@Obs[[st]][[fl]]@CPUE <- IndexObs[[fl]]
+      }
+      SimDataList[[i]][[st]]@CPUE@Misc$IndexObs <- NULL
+    }
+    
   }
   
   if (!silent)

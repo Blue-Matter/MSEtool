@@ -10,6 +10,18 @@ Name(OM) <- 'testOM'
 OM@Control$DataOM <- list(Effort=TRUE)
 Hist <- Simulate(OM)
 
+CurrentCatch <- function(Data) {
+  LHind <- match(Data@YearLH,Data@Years)
+  HistLandings <- Data@Landings@Value[LHind, ]
+  Advice(TAC=HistLandings)
+}
+class(CurrentCatch) <- 'mp'
+
+MPs <- 'CurrentCatch'
+
+MSE <- Project(Hist, MPs)
+
+
 
 CloseArea1 <- function(Data) {
   Advice(Closure=c(0,1))

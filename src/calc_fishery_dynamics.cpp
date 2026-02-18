@@ -302,8 +302,10 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
       CalcOverallF(y,
                    Sims,
                    nSim,
+                   hv.FInteract,
                    hv.FDead,
                    hv.FRetain,
+                   hv.DiscMort,
                    hv.LandingsAtAge,
                    hv.DiscardsAtAge,
                    hv.Number,
@@ -328,38 +330,40 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
 
 
 // Optimize a single-fleet log-effort to minimize the objective function
-double OptimizeSingleFleet(std::function<double(double)> obj,
-                           double logLow, double logHigh,
-                           int maxIter = 50, double tol = 1e-6) {
-  
-  const double gr = (std::sqrt(5.0) - 1.0) / 2.0;
-  double a = logLow;
-  double b = logHigh;
-  double c = b - gr * (b - a);
-  double d = a + gr * (b - a);
-  double fc = obj(c);
-  double fd = obj(d);
-  
-  for (int iter = 0; iter < maxIter; ++iter) {
-    if (std::abs(b - a) < tol) break;
-    if (fc < fd) {
-      b = d;
-      d = c;
-      fd = fc;
-      c = b - gr * (b - a);
-      fc = obj(c);
-    } else { 
-      a = c;
-      c = d;
-      fc = fd;
-      d = a + gr * (b - a);
-      fd = obj(d);
-    }
-  } 
-  
-  return (fc < fd) ? c : d;
-} 
-// 
+// double OptimizeSingleFleet(std::function<double(double)> obj,
+//                            double logLow, double logHigh,
+//                            int maxIter = 50, double tol = 1e-6) {
+//   
+//   const double gr = (std::sqrt(5.0) - 1.0) / 2.0;
+//   double a = logLow;
+//   double b = logHigh;
+//   double c = b - gr * (b - a);
+//   double d = a + gr * (b - a);
+//   double fc = obj(c);
+//   double fd = obj(d);
+//   
+//   for (int iter = 0; iter < maxIter; ++iter) {
+//     if (std::abs(b - a) < tol) break;
+//     if (fc < fd) {
+//       b = d;
+//       d = c;
+//       fd = fc;
+//       c = b - gr * (b - a);
+//       fc = obj(c);
+//     } else { 
+//       a = c;
+//       c = d;
+//       fc = fd;
+//       d = a + gr * (b - a);
+//       fd = obj(d);
+//     }
+//   } 
+//   
+//   return (fc < fd) ? c : d;
+// } 
+
+
+
 // // [[Rcpp::export]]
 // NumericVector OptimizeEffort(S4 Hist,
 //                              std::vector<int> Sims,

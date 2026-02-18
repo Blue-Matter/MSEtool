@@ -19,6 +19,8 @@ Fleet(
   Closure = array(),
   WeightFleet = array(),
   BioEconomic = new("bioeconomic"),
+  Avoidance = 1,
+  Dexterity = 0,
   Misc = list()
 )
 
@@ -51,6 +53,19 @@ Fleet(x) <- value
 
 \item{BioEconomic}{A \code{\link[=Bioeconomic]{Bioeconomic()}} object.}
 
+\item{Avoidance}{Numeric between 0 and 1. Determines the ability of the fleet to avoid exceeding TACs.
+\itemize{
+\item \code{0} = hard fleet choke (fleet stops when TAC reached)
+\item \code{1} = full avoidance disabled (fleet catches up to TAC regardless)
+\item Intermediate values = partial avoidance.
+}}
+
+\item{Dexterity}{Numeric between 0 and 1. Determines fleet precision in targeting stocks.
+\itemize{
+\item \code{0} = perfect targeting (no excess catch)
+\item \code{1} = all excess catch is retained/discarded according to TAC fraction.
+}}
+
 \item{Misc}{Miscellaneous list.}
 }
 \value{
@@ -61,6 +76,21 @@ Construct a \linkS4class{fleet} object defining the exploitation characteristics
 of a fleet for stock used in an operating model.
 }
 \details{
+A \code{Fleet} object describes the fishing characteristics of a fleet for a particular stock
+in an operating model.
+
+The \strong{Avoidance} and \strong{Dexterity} parameters control how fleet effort is adjusted relative
+to Total Allowable Catches (TACs):\tabular{lll}{
+   Parameter \tab Value \tab Effect \cr
+   Avoidance \tab 0 \tab Fleet stops when TAC is reached (hard choke) \cr
+   Avoidance \tab 1 \tab Fleet catches TAC regardless of choke (no avoidance) \cr
+   Avoidance \tab 0-1 \tab Fleet partially avoids exceeding TAC proportionally \cr
+   Dexterity \tab 0 \tab Fleet perfectly targets retained catch (no excess mortality) \cr
+   Dexterity \tab 1 \tab All excess catch is either discarded or retained according to TAC \cr
+   Dexterity \tab 0-1 \tab Partial precision in targeting; some excess catch may occur \cr
+}
+
+
 A \code{Fleet} object can be attached to an \code{\link[=OM]{OM()}} using \code{\link[=Fleet]{Fleet()}} and
 retrieved using \code{\link{Fleet<-}}.
 

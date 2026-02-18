@@ -106,10 +106,11 @@ InitializeTimeSeries <- function(Hist,
   }
   
   ## --- Fishing Mortality ---
-  Hist@FDead <-  Hist@FRetain <- ArraySimStockTimeFleetMP(OM, Period, MPs)
+  Hist@FInteract <- Hist@FDead <-  Hist@FRetain <- ArraySimStockTimeFleetMP(OM, Period, MPs)
   Hist@FDeadArea <- Hist@FRetainArea <- ListArraySimAgeTimeFleetAreaMP(OM, Period, MPs = MPs)
   
   if (!isProj) {
+    Hist@FInteract <- DropDimension(Hist@FInteract, 'MP', FALSE)
     Hist@FDead <- DropDimension(Hist@FDead, 'MP', FALSE)
     Hist@FRetain <- DropDimension(Hist@FRetain, 'MP', FALSE)
     

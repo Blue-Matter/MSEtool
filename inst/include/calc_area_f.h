@@ -91,8 +91,10 @@ inline void CalcArea_F(
         const double q_fl = q(sim_q, st, y, fl);
       
         for (int ar = 0; ar < nArea; ++ar) {
+          
           // initialize to 0
           for (int age = 0; age < nAge; ++age) {
+
             Fd(sim, age, y, fl, ar) = 0.0;
             Fr(sim, age, y, fl, ar) = 0.0;
           }
@@ -149,8 +151,18 @@ inline void CalcArea_F(
             const double F_disc   = (F_interact - F_retain) * dm;
             
             Fd(sim, age, y, fl, ar) = F_retain + F_disc;
-            Fr(sim, age, y, fl, ar) = F_retain;
+            Fr(sim, age, y, fl, ar) = F_retain; 
             
+
+            // don't update if already provided
+            if (Fd(sim, age, y, fl, ar)<=0) {
+              Fd(sim, age, y, fl, ar) = F_retain + F_disc;
+            }
+
+            // don't update if already provided
+            if (Fr(sim, age, y, fl, ar)<=0) {
+              Fr(sim, age, y, fl, ar) = F_retain;
+            }
          
           } // end age
         } // end area

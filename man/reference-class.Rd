@@ -19,9 +19,9 @@ by stock and simulation.}
 \item{\code{MSY}}{An object containing MSY-based reference points
 such as FMSY, BMSY, and MSY.}
 
-\item{\code{RefLandings}}{List or array of reference landings values.}
+\item{\code{Landings}}{List or array of reference landings values.}
 
-\item{\code{RefRemovals}}{List or array of reference removals values.}
+\item{\code{Removals}}{List or array of reference removals values.}
 
 \item{\code{F01}}{List or array of fishing mortality corresponding to the
 0.1 slope reference point.}

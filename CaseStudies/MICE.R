@@ -1,10 +1,6 @@
 library(MSEtool)
 
-la <- devtools::load_all
-
-la()
-
-nsim <- 10
+nsim <- 3
 
 # Simple MOM example
 Stocks <- list(Bluefin_tuna, Herring)
@@ -59,16 +55,25 @@ MOM <- new('MOM', Stocks, Fleets, Obs, Imps, CatchFrac, Rel = Rel, nsim = nsim)
 
 
 # Convert to new OM
+OM <- Convert(MOM)
 
-OM <- Convert(MOM, Populate=FALSE)
+Hist <- Simulate(OM, DoRefLandings = FALSE)
 
-OM <- Populate(OM)
 
-parallel=FALSE
-messages='default'
-nSim=NULL
-silent=FALSE
+CurrentCatch <- function(Data) {
+  LHind <- match(Data@YearLH,Data@Years)
+  HistLandings <- Data@Landings@Value[LHind, ]
+  Advice(TAC=HistLandings)
+}
+class(CurrentCatch) <- 'mp'
 
-# SimulateDEV
+MPs <- 'CurrentCatch'
+
+MSE <- Project(Hist, MPs=MPs)
+
+
+# TODO 
+# - fix multi-stock TAC & Effort calcs 
+# - add FInteract by Area 
 
 

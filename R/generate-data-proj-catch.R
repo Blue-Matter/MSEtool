@@ -61,7 +61,7 @@ GenProjData_Catch <- function(x,
       NewValue[,fl] <- slot(Proj@OM@Data[[i]],type)@Value[TSIndex,fl]
     } else {
       error <- ArraySubsetYear(Obs@Error, DataYear)[x]
-      bias <- ArraySubsetYear(Obs@Bias, DataYear)[x] 
+      bias <- Obs@Bias[x] 
       
       if (CatchData@Units[fl] == 'Number') {
         real_catch <- purrr::map(Real_Catch_Number, \(catch_n) {
@@ -70,9 +70,9 @@ GenProjData_Catch <- function(x,
         
         NewValue[,fl] <- real_catch * error * bias
         
-      } else if (DataCatch@Units[fl] == 'Biomass') {
+      } else if (CatchData@Units[fl] == 'Biomass') {
         # Convert to Biomass
-        real_catch_b <- purrr::map2(Real_Catch_Number, Proj@OM@Fleet, 
+        real_catch_b <- purrr::map2(Real_Catch_Number, Proj@OM@Fleet[stocks], 
                                     \(catch_n, FleetList) {
                                       fleet <- FleetList[[fl]]
                                       catch_fleet <- catch_n[,fl,, drop=FALSE] |> abind::adrop(2)

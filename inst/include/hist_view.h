@@ -84,6 +84,7 @@ struct HistView {
   Array3D Effort;         // sim, year, fleet
   Array4D Distribution;  // sim, year, fleet, area
 
+  Array4D FInteract;                        // sim, stock, year, fleet
   Array4D FDead;                        // sim, stock, year, fleet
   Array4D FRetain;                      // sim, stock, year, fleet
   std::vector<Array5D> FDeadArea;       // [stock] sim, age, year, fleet, area
@@ -153,6 +154,7 @@ inline HistView::HistView(Rcpp::S4& Hist,
         check_rank(Hist.slot("Landings"), 4, "Landings");
         check_rank(Hist.slot("Discards"), 4, "Discards");
         
+        check_rank(Hist.slot("FInteract"), 4, "FInteract");
         check_rank(Hist.slot("FDead"), 4, "FDead");
         check_rank(Hist.slot("FRetain"), 4, "FRetain");
         
@@ -203,6 +205,7 @@ inline HistView::HistView(std::nullptr_t,
   Effort = Slot2Array3D(Hist, "Effort");
   Distribution = Slot2Array4D(Hist, "Distribution");
   
+  FInteract = Slot2Array4D(Hist, "FInteract");
   FDead = Slot2Array4D(Hist, "FDead");
   FRetain = Slot2Array4D(Hist, "FRetain");
   

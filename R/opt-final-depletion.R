@@ -59,6 +59,7 @@ OptFinalDepletion <- function(Hist, silent=FALSE) {
     for (st in 1:nStock) {
       for (fl in 1:nFleet) {
         Hist@OM@Fleet[[st]][[fl]]@Catchability@Efficiency[s,] <- opt_q[[s]][[st]][[fl]]@Catchability@Efficiency[1,]
+        Hist@Misc$Catchability[s,st,, fl] <- opt_q[[s]][[st]][[fl]]@Catchability@Efficiency[1,]
       }
     }
   }
@@ -76,10 +77,9 @@ OptFinalDepletion_Sim <- function(HistSim, nStock, nFleet, nArea, YearsHist) {
   
   
   if (nStock > 1 || nFleet > 1) {
-    stop('Multi-Stock/Fleet optimization for q not supported')
-    # pars <- OptimizeCatchability_Multi(HistSim, YearsHist,  nStock, nFleet, bounds, tol, silent, debug)
-    # if (inherits(pars, 'hist'))
-    # return(pars)
+    pars <- OptimizeCatchability_Multi(HistSim, nStock, nFleet, nArea, YearsHist, bounds, tol, silent, debug)
+    if (inherits(pars, 'hist'))
+      return(pars)
   } else {
     pars <- OptimizeCatchability_Single(HistSim, nStock, nFleet, nArea, YearsHist, bounds, tol, silent, debug)
     if (inherits(pars, 'hist'))
@@ -142,8 +142,7 @@ OptimizeCatchability_Single <- function(HistSim, nStock, nFleet, nArea, YearsHis
   
 }
 
-OptCatchability <- function(pars, HistSim, nStock, nFleet, nArea, YearsHist, debug=FALSE) {
-  
+OptCatchability <- function(pars, HistSim, nStock, nFleet, nArea, YearsHist, CatchFrac=NULL, debug=FALSE) {
   
   qStock <- exp(pars[1:nStock])
   qFleet <- matrix(1, nStock, nFleet)
@@ -173,10 +172,15 @@ OptCatchability <- function(pars, HistSim, nStock, nFleet, nArea, YearsHist, deb
     for (fl in 1:nFleet) {
       StCatchability <- HistSim@OM@Fleet[[st]][[fl]]@Catchability@Efficiency
       StCatchability <- StCatchability/StCatchability[1]
-      HistSim@OM@Fleet[[st]][[fl]]@Catchability@Efficiency <- StCatchability * qStock[st] * qFleet[st,fl]
+      # HistSim@OM@Fleet[[st]][[fl]]@Catchability@Efficiency <- StCatchability * qStock[st] * qFleet[st,fl]
+      
+      # update Misc used in C++
+      HistSim@Misc$Catchability[1,st,,fl] <- StCatchability * qStock[st] * qFleet[st,fl]
     }
   }
   
+  DoCalcCatch <- 0 
+  if (nFleet>1) DoCalcCatch <- 1
   
   PopDynamicsHistorical <- CalcFisheryDynamics_(HistSim, 
                                                 Years=YearsHist,
@@ -186,9 +190,9 @@ OptCatchability <- function(pars, HistSim, nStock, nFleet, nArea, YearsHist, deb
                                                 nStock,
                                                 nFleet,
                                                 nArea,
-                                                DoCalcCatch=0,
+                                                DoCalcCatch=DoCalcCatch,
                                                 DoCalcaggF=0)
-  
+
   # Depletion objective
   TermInd <- length(YearsHist)
   
@@ -215,19 +219,15 @@ OptCatchability <- function(pars, HistSim, nStock, nFleet, nArea, YearsHist, deb
   
   # TODO need to do SPFrom for Depletion sharing ---
   
-  stop("TODO! - multi-fleet TODO")
   # Catch objective
-  terminalLandings <- CalcCatch_(PopDynamicsHistorical, max(YearsHist))
-  predCatchFrac <- purrr::map(terminalLandings@Landings, \(x) 
-                              apply(x[[TermInd]],2, sum)) |> 
-    List2Array("Stock", "Fleet") |> 
-    aperm(c('Stock', 'Fleet'))
+  predCatchFrac <- PopDynamicsHistorical@Landings[1,,length(YearsHist), ,drop=FALSE] |>
+    abind::adrop(c(1,3))
+  
   total <- matrix(apply(predCatchFrac, 1, sum), nrow=nStock, ncol=nFleet)
   total[total==0] <- tiny
   predCatchFrac <- predCatchFrac/total
   
   # Lazy - should be: sum(log(CFc[,2:nf]/Cpred[,2:nf])^2) but this doesn't work for single fleets and it makes no difference anyway
-  CatchFrac <- List2Array(HistSim@OM@CatchFrac, name = 'Stock') |> t()
   cOBJ <- sum(log(CatchFrac/predCatchFrac)^2) 
   depOBJ <- depOBJ+cOBJ
   
@@ -236,10 +236,7 @@ OptCatchability <- function(pars, HistSim, nStock, nFleet, nArea, YearsHist, deb
 }
 
 
-
 OptimizeCatchability_Multi <- function(HistSim, nStock, nFleet, nArea, YearsHist, bounds, tol, silent, debug=FALSE) {
-
-  stop("Multi-Stock q optimizer not complete")
   
   FinalDepletion <- purrr::map(HistSim@OM@Stock, \(stock) stock@Depletion@Final) |>
     List2Array('Stock')
@@ -247,26 +244,36 @@ OptimizeCatchability_Multi <- function(HistSim, nStock, nFleet, nArea, YearsHist
   if (!length(FinalDepletion))
     return(HistSim)
   
-  # Catch divided by effort (q proxy)
+  CalcCatchFrac <- FALSE
+  if (is.null(HistSim@OM@CatchFrac)) 
+    CalcCatchFrac <- TRUE
+    
+  if (is.list(HistSim@OM@CatchFrac) && any(lapply(HistSim@OM@CatchFrac, is.null) |> unlist()))
+    CalcCatchFrac <- TRUE
   
-  # TODO 
-  if (!length(HistSim@OM@CatchFrac)) {
+  # Catch divided by effort (q proxy)
+  if (CalcCatchFrac) {
     HistSim@OM@CatchFrac <- MakeNamedList(StockNames(HistSim@OM))
-    FleetNames <- as.character(HistSim@OM@Fleet[[1]]@Name)
     for (st in 1:nStock) {
-      
-      effort <- HistSim@OM@Fleet[[st]]@Effort
-      q <- HistSim@OM@Fleet[[st]][[fl]]@Catchability@Efficiency
-      relF <- effort[ncol(effort),] * q[ncol(q),]
-      HistSim@OM@CatchFrac[[st]] <- relF/sum(relF)
+      relF <- rep(NA, nFleet)
+      for (fl in 1:nFleet) {
+        effort <- HistSim@OM@Fleet[[st]][[fl]]@Effort@Effort
+        q <- HistSim@OM@Fleet[[st]][[fl]]@Catchability@Efficiency
+        relF[fl] <- effort[1,ncol(effort)] * q[1,ncol(q)]
+      }
+      HistSim@OM@CatchFrac[[st]] <-   relF/sum(relF)
     }
   }
   
-  CatchFrac <- List2Array(HistSim@OM@CatchFrac, name = 'Stock') |> t()
+  CatchFrac <- List2Array(HistSim@OM@CatchFrac, name = 'Stock', pos=2) |>
+    DropDimension('Sim', FALSE)
   EffortFleet <- array(NA, dim=dim(CatchFrac))
   nTS <- length(YearsHist)
   for (st in 1:nStock) {
-    EffortFleet[st,] <- HistSim@OM@Fleet[[st]]@Effort[nTS]
+    for (fl in 1:nFleet) {
+      EffortFleet[st,fl] <- HistSim@OM@Fleet[[st]][[fl]]@Effort@Effort[1,nTS]  
+    }
+    
   }
   
   FDist <- CatchFrac/EffortFleet
@@ -286,13 +293,18 @@ OptimizeCatchability_Multi <- function(HistSim, nStock, nFleet, nArea, YearsHist
                  method = "L-BFGS-B",
                  lower = c(rep(log(bounds[1]), nStock), rep(-5, nStock * (nFleet-1))),
                  upper = c(rep(log(bounds[2]), nStock), rep(5, nStock*(nFleet-1))),
-                 HistSim=HistSim,
+                 HistSim = HistSim,
+                 nStock = nStock,
+                 nFleet = nFleet,
+                 nArea = nArea,
                  YearsHist=YearsHist,
+                 CatchFrac = CatchFrac,
                  debug=debug,
                  control = list(trace = ifelse(silent, 0, 1), factr = tol/.Machine$double.eps)
   )
   pars <- doOpt$par
   pars
 }
+
 
 

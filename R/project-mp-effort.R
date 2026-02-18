@@ -69,6 +69,15 @@ Update_Effort_Sim <- function(Proj,
     AdviceList[[i]] <- temp$Advice
   }
   
+  # do Effort Regulation exist?
+  EffortExist <- purrr::map(AdviceList, \(Advice) {
+    !is.null(Advice@Effort)
+  }) |> unlist()
+  
+  if (!any(EffortExist))
+    return(Proj)
+  
+  
   # Determine minimum effort by complex
   EffortArray <- purrr::map(AdviceList, slot, 'Effort') |> List2Array() # nFleet x nComplex
   MinEffortInd <- apply(EffortArray, 1, which.min) |> as.numeric() # complex with lowest effort

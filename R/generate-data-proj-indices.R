@@ -9,6 +9,8 @@ GenProjData_Index <- function(x,
                               YearsAll,
                               i,
                               stocks, 
+                              StockNames,
+                              FleetNames,
                               type=c('CPUE', 'Survey')) {
   
   # TODO hyperstability Beta not functional yet - ignored
@@ -44,6 +46,9 @@ GenProjData_Index <- function(x,
     IndexObs <- slot(Proj@OM@Obs[[i]][[FleetIndex[fl]]], type)
     if (length(IndexObs)<1)
       next()
+    
+    if (is.null(IndexObs@Areas))
+      IndexObs@Areas <- 1:nArea
     
     # TODO - make this an option
     # currently doesn't simulate index if last five data points were NAs
@@ -129,8 +134,7 @@ GenProjData_Index <- function(x,
         cli::cli_abort('Only {.val Biomass}, {.val Number} and {.val Recruitment} currently supported for {.val Units} in  {.val Obs@CPUE} and {.val Obs@Survey}', .internal=TRUE)
       }
       
-      Value[,fl] <- real_nom_index *  ArraySubsetYear(IndexObs@Error, DataYear)[x] *
-        IndexObs@Efficiency[x]
+      Value[,fl] <- real_nom_index *  ArraySubsetYear(IndexObs@Error, DataYear)[x] * IndexObs@Efficiency[x]
       
     } # end simulate Value 
     

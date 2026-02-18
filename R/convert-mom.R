@@ -58,18 +58,44 @@ ConvertMOM <- function(MOM, Author='', CurrentYear=NULL, Seasons=1, Populate=TRU
   FleetNames <- lapply(FleetNames, function(x) gsub("REPLACED -- ", '', x)) |> unlist()
   names(om@Fleet) <- StockNames
   for (st in 1:nStock) {
-    om@Stock[[st]]@Depletion@Final <- NULL #
+    # om@Stock[[st]]@Depletion@Final <- NULL #
     om@Fleet[[st]]  <- ConvertToList(MOM2fleet(MOM, st))
     names(om@Fleet[[st]]) <- FleetNames
   }
   
-  om@EFactor <- MakeNamedList(StockNames(om), 
-                              array(1, dim=c(om@nSim, nFleet(om)),
-                                    dimnames = list(
-                                      Sim=1:om@nSim,
-                                      Fleet=FleetNames(om)
-                                    )
-                              ))   
+  
+  om@Obs <- MakeNamedList(
+    StockNames, MakeNamedList(FleetNames))
+  
+  for (st in 1:nStock) {
+    for (fl in 1:nFleet) {
+      om@Obs[[st]][[fl]] <- ConvertObs(MOM@Obs[[st]][[fl]], silent = TRUE)
+    }
+  }
+
+  if (is.list(MOM@CatchFrac) && length(MOM@CatchFrac)) {
+    names(MOM@CatchFrac) <- StockNames
+    for (st in 1:length(MOM@CatchFrac)) {
+      dimnames(MOM@CatchFrac[[st]]) <- list(Sim = 1:MOM@nsim,
+                                            Fleet = FleetNames)
+      MOM@CatchFrac[[st]] <- ReduceDims(MOM@CatchFrac[[st]])
+    }
+    om@CatchFrac <- MOM@CatchFrac
+  } 
+  
+  if (!length(MOM@Efactor)) {
+    om@EFactor <- MakeNamedList(StockNames(om), 
+                                array(1, dim=c(om@nSim, nFleet(om)),
+                                      dimnames = list(
+                                        Sim=1:om@nSim,
+                                        Fleet=FleetNames(om)
+                                      )
+                                ))  
+  } else {
+    om@EFactor <- MOM@Efactor
+  }
+  
+ 
   
   if (Populate)
     om <- PopulateOM(om, silent=FALSE)

@@ -36,7 +36,7 @@ GenProjData_Effort <- function(x, Proj, DataYear, YearsAll, i, stocks) {
       NewValue[,fl] <- Proj@OM@Data[[i]]@Effort@Value[TSIndex,fl]
     } else {
       error <- ArraySubsetYear(Obs@Error, DataYear)[x]
-      bias <- ArraySubsetYear(Obs@Bias, DataYear)[x] 
+      bias <- Obs@Bias[x] 
       NewValue[,fl] <- Proj@Effort[x,TSIndex, fl] * error * bias
     }
     

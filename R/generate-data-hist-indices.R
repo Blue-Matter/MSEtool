@@ -67,6 +67,8 @@ GenHistData_Indices <- function(x, Data, Hist, HistYears, i, stocks, StockNames,
   
   Real_Pop_Number <- Hist@Number[stocks]
   
+  IndexData@Misc$IndexObs <- list()
+  
   for (fl in 1:nFleet) {
     IndexObs <- slot(Hist@OM@Obs[[i]][[FleetNames[fl]]],type)
     
@@ -171,7 +173,7 @@ GenHistData_Indices <- function(x, Data, Hist, HistYears, i, stocks, StockNames,
     Value[,fl] <- StIndex
     NonNAInd <- which(!is.na(StIndex))
     IndexObs@Efficiency <- mean(StIndex, na.rm=TRUE)/mean(real_nom_index[NonNAInd], na.rm=TRUE)
-    
+    IndexData@Misc$IndexObs[[fl]] <- IndexObs
     
     # Reference Value 
     if (length(IndexObs@Ref)) {
@@ -185,5 +187,6 @@ GenHistData_Indices <- function(x, Data, Hist, HistYears, i, stocks, StockNames,
   
   IndexData@Value <- Value
   IndexData@CV <- CV
+  
   IndexData
 } 

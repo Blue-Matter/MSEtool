@@ -36,12 +36,13 @@ GenerateProjectionData <- function(Proj, Year, YearsHist, YearsProj) {
     names(Proj@Data) <- 1:nSim
   }
   
-  
   SimDataList <- purrr::map(1:nSim, \(x)
                             GenerateProjectionData_Sim(x, 
                                                        Proj, 
                                                        DataYear, 
-                                                       YearsAll)
+                                                       YearsAll,
+                                                       StockNames,
+                                                       FleetNames)
   )
   names(SimDataList) <- 1:nSim
   
@@ -49,7 +50,9 @@ GenerateProjectionData <- function(Proj, Year, YearsHist, YearsProj) {
   Proj
 }
 
-GenerateProjectionData_Sim <- function(x, Proj, DataYear, YearsAll) {
+GenerateProjectionData_Sim <- function(x, Proj, DataYear, YearsAll,
+                                       StockNames,
+                                       FleetNames) {
   
   DataList <- Proj@Data[[x]]
   
@@ -95,6 +98,8 @@ GenerateProjectionData_Sim <- function(x, Proj, DataYear, YearsAll) {
                                    YearsAll,
                                    i,
                                    stocks,
+                                   StockNames,
+                                   FleetNames,
                                    type='CPUE')
     
     Data@Survey <- GenProjData_Index(x,
@@ -103,6 +108,8 @@ GenerateProjectionData_Sim <- function(x, Proj, DataYear, YearsAll) {
                                      YearsAll,
                                      i,
                                      stocks,
+                                     StockNames,
+                                     FleetNames,
                                      type='Survey')
     
     # CAA - TODO

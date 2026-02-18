@@ -99,7 +99,7 @@ CalcRefYield <- function(Hist,
     # Convert list of vectors to array sim × stock
     RefYield <- List2Array(RefYield, "Sim", "Stock")[1,,, drop=FALSE] |> abind::adrop(1) |> t()
     dimnames(RefYield)[['Stock']] <- StockNames
-    slot(Hist@Reference, paste0("Ref", t)) <- RefYield
+    slot(Hist@Reference, t) <- RefYield
     
   } # end type=c('Landings', 'Removals') loop
   

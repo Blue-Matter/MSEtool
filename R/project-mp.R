@@ -13,7 +13,8 @@ Project_MP <- function(Proj,
                        MPfunction,
                        mp = 1, 
                        YearsHist, 
-                       YearsProj) {
+                       YearsProj,
+                       silent=FALSE) {
   
   # Calc management years/time steps
   ManagementYears <- CalcManagementYears(YearsProj, Proj@OM@Interval)
@@ -34,9 +35,14 @@ Project_MP <- function(Proj,
   # for debugging
   Year <- YearsProj[1]; ts =1;
   
+  if (!silent) 
+    cli::cli_progress_bar(format = "Projecting MP {.val {MPName}} {cli::pb_bar} {cli::pb_percent}",  total = length(YearsProj))
+  
+    
   for (ts in seq_along(YearsProj)) {
     
-    # TODO add progress 
+    if (!silent) cli::cli_progress_update()
+    
     Year <- YearsProj[ts]
     TSIndex <- match(Year, YearsAll)
     
@@ -52,7 +58,6 @@ Project_MP <- function(Proj,
                              DataLag = Proj@OM@DataLag,
                              Seasons = Proj@OM@Seasons)
       
- 
     # Trim Data to `DataYear` if applicable
     DataSimList <- TrimMPData(Proj, DataYear)
       
@@ -62,7 +67,7 @@ Project_MP <- function(Proj,
     # Run MP and return nested list of Advice objects
     AdviceSimList <- RunMPIfNeeded(Year, 
                                    ManagementYears, 
-                                   LastAdvice,
+                                   LastAdviceSimList,
                                    MPName,
                                    MPfunction,
                                    DataSimList,
@@ -105,19 +110,22 @@ Project_MP <- function(Proj,
                     YearsHist, YearsProj, Areas, FleetNames) |>
       
       Update_TAC(Year, AdviceSimList, LastAdviceSimList, 
-                 YearsProj, Areas, FleetNames)
+                 YearsHist, YearsProj, Areas, FleetNames)
     
     
-    
-    # update Misc list!!
-    
-    
-  
+    # Simulate Pop Dynamics for this Time Step
+    Proj <- CalcFisheryDynamics(Proj, Year)
   
   }
   EndTime <- Sys.time()
   
   # Checks
+  
+  # up to here - why is testOM landings == ?
+  Proj@Landings[1,1,,1]
+  Proj@Landings[1,1,,1] |> plot()
+  AdviceSimList$`1`$Albacore@TAC
+  
   
   # update MSE object
   

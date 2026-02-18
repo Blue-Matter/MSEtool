@@ -14,6 +14,8 @@
 #' @slot Closure Spatial or temporal closures.
 #' @slot WeightFleet Fleet-specific weights.
 #' @slot BioEconomic [Bioeconomic()] object.
+#' @slot Avoidance numeric value that determines how strictly a fleet stops fishing when TAC is reached (multi-stock models only)
+#' @slot Dexterity numeric value that determines how precisly a fleet can target fish once TAC is reached. Controls how much overcatch is discarded as dead.
 #' @slot nYear Number of years.
 #' @slot pYear Projection year.
 #' @slot nSim Number of simulations.
@@ -42,6 +44,8 @@ setClass(
     Closure = "num.array.null",
     WeightFleet = "array.null",
     BioEconomic = "bioeconomic",
+    Avoidance = 'num.null',
+    Dexterity = 'num.null',
     nYear = "num.null",
     pYear = "num.null",
     nSim = "num.null",

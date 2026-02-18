@@ -49,7 +49,8 @@ Project_hist <- function(Hist,
                       MPfunction,
                       mp,
                       YearsHist,
-                      YearsProj)
+                      YearsProj,
+                      silent)
     
   }
 

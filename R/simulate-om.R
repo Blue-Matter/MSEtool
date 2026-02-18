@@ -123,14 +123,7 @@ Simulate_om <- function(OM = NULL,
   if (DoGenerateData) 
     Hist <- GenerateHistoricalData(Hist)
   
-  
-  # TODO 
-  # - Ref Points
-  # show Hist
-  # show - Data
-  # show - Obs
-  # - reduce?
-  
+
   # ---- Reduce Dimension Size ----
   Hist <- ReduceHist(Hist, Reduce)
   

@@ -32,6 +32,10 @@ See \code{\link[=Fleet]{Fleet()}} for details.
 
 \item{\code{BioEconomic}}{\code{\link[=Bioeconomic]{Bioeconomic()}} object.}
 
+\item{\code{Avoidance}}{numeric value that determines how strictly a fleet stops fishing when TAC is reached (multi-stock models only)}
+
+\item{\code{Dexterity}}{numeric value that determines how precisly a fleet can target fish once TAC is reached. Controls how much overcatch is discarded as dead.}
+
 \item{\code{nYear}}{Number of years.}
 
 \item{\code{pYear}}{Projection year.}

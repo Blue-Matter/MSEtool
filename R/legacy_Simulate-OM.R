@@ -1,3 +1,5 @@
+
+
 SimulateOM <- function(OM=MSEtool::testOM, parallel=FALSE, silent=FALSE, nsim=NULL) {
   
   if (!is.null(nsim)) {

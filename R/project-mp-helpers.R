@@ -97,12 +97,15 @@ UpdateAdviceArray <- function(Current, New, Year) {
   if (is.null(Current)) {
     return(New)
   }
+  if (is.null(dimnames(Current)))
+    return(Current)
+  
   ArrayFill(Current) <- New
   Current
 }
 
 AddAdviceToData <- function(Data, Advice, Year) {
-  Data@Advice@TAC <- UpdateAdviceArray(Data@Advice@TAC, Advice@TAC, Year)
+  Data@Advice@TAC <- UpdateAdviceArray(Current=Data@Advice@TAC, New=Advice@TAC, Year)
   Data@Advice@Effort <- UpdateAdviceArray(Data@Advice@Effort, Advice@Effort, Year)
   Data
 }

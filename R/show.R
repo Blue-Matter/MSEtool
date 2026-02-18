@@ -198,7 +198,7 @@ cli_fn <- function(fun) {
     if (is.null(dn)) {
       cli::cli_text(
         
-        "→ {.val {p}}: {.emph { paste(d, collapse=' x ')} array}} {.strong (Dimension names missing)}" 
+        "→ {.val {p}}: {.emph { paste(d, collapse=' x ')}  array}} {.strong (Dimension names missing)}" 
       )
     } else {
       cli::cli_text(
@@ -448,7 +448,12 @@ setMethod("show", "discardmortality", function(object) {
 #' @rdname show
 setMethod('show', 'hist', function(object) {
   cli::cli_h2("A {.help MSEtool::Hist} Object")
-  cli::cli_text("...")
+  cli::cli_text("")
+  
+  cli::cli_text("Slots:")
+  cli::cli_li(
+  slotNames(object))
+ 
 })
 
 
@@ -459,7 +464,11 @@ setMethod('show', 'hist', function(object) {
 #' @rdname show
 setMethod('show', 'mse', function(object) {
   cli::cli_h2("A {.help MSEtool::MSE} Object")
-  cli::cli_text("...")
+  cli::cli_text("")
+  
+  cli::cli_text("Slots:")
+  cli::cli_li(
+    slotNames(object))
 })
 
 
@@ -469,7 +478,11 @@ setMethod('show', 'mse', function(object) {
 #' @rdname show
 setMethod('show', 'data', function(object) {
   cli::cli_h2("A {.help MSEtool::Data} Object")
-  cli::cli_text("...")
+  cli::cli_text("")
+  
+  cli::cli_text("Slots:")
+  cli::cli_li(
+    slotNames(object))
 })
 
 

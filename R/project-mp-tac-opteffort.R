@@ -40,6 +40,7 @@ OptEffort <- function(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet,
     f <- pos_idx
     obj <- function(logEff) ObjEffort(logEff, Proj, sim, Year, TSIndex, stocks, TAC_by_Fleet, Effort_final)
     opt <- optimize(obj, interval = log(c(minEffort, Effort_final[f] * 10)))
+    
     Effort_final[f] <- Effort_final[f] * exp(opt$minimum)
     return(Effort_final)
   }
@@ -51,8 +52,8 @@ OptEffort <- function(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet,
   for (iter in seq_len(maxIter)) {
     Proj@Effort[sim, TSIndex, ] <- Effort
     Temp <- CalcFisheryDynamics(Hist = Proj, Years = Year, Sims = sim, DoCalcaggF = FALSE)
-    Removals <- Temp@Landings[sim, stocks, TSIndex, ] + Temp@Discards[sim, stocks, TSIndex, ]
-    RemovalsByFleet <- colSums(Removals[, , drop = FALSE])
+    RemovalsByFleet <- Temp@Landings[sim, stocks, TSIndex, ] + Temp@Discards[sim, stocks, TSIndex, ]
+    
     diff <- TAC_by_Fleet[pos_idx] - RemovalsByFleet[pos_idx]
     
     if (all(abs(diff) < tol)) {
@@ -68,9 +69,8 @@ OptEffort <- function(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet,
     Proj@Effort[sim, TSIndex, ] <- Effort_pert
     
     Temp_pert <- CalcFisheryDynamics(Hist = Proj, Years = Year, Sims = sim, DoCalcaggF = FALSE)
-    Removals_pert <- Temp_pert@Landings[sim, stocks, TSIndex, ] + Temp_pert@Discards[sim, stocks, TSIndex, ]
-    RemovalsByFleet_pert <- colSums(Removals_pert[, , drop = FALSE])
-    
+    RemovalsByFleet_pert <- Temp_pert@Landings[sim, stocks, TSIndex, ] + Temp_pert@Discards[sim, stocks, TSIndex, ]
+
     # approximate derivative (dC/dF) vector
     dC_dF <- (RemovalsByFleet_pert[pos_idx] - RemovalsByFleet[pos_idx]) / deltaF
     dC_dF[dC_dF <= 0] <- 1e-8
@@ -93,7 +93,6 @@ OptEffort <- function(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet,
     
     Effort[pos_idx] <- Effort[pos_idx] * exp(opt$par)
   }
-  
   Effort_final[pos_idx] <- Effort[pos_idx]
   Effort_final
 }
@@ -130,7 +129,12 @@ ObjEffort <- function(logEffortVec, Proj, sim, Year, TSIndex, stocks, TAC_by_Fle
   Temp <- CalcFisheryDynamics(Hist = Proj, Years = Year, Sims = sim, DoCalcaggF=FALSE)
   
   Removals <- Temp@Landings[sim, stocks, TSIndex, ] +  Temp@Discards[sim, stocks, TSIndex, ]
-  RemovalsByFleet <- colSums(Removals[, , drop = FALSE])
+  if (is.null(ncol(Removals))) {
+    RemovalsByFleet <- Removals
+  } else {
+    RemovalsByFleet <- colSums(Removals[, , drop = FALSE])
+  }
+  
   
   sum((log(TAC_by_Fleet[pos_idx]) - log(RemovalsByFleet[pos_idx]))^2)
 }

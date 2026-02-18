@@ -11,9 +11,9 @@
 #' @slot MSY An object containing MSY-based reference points
 #' such as FMSY, BMSY, and MSY.
 #'
-#' @slot RefLandings List or array of reference landings values.
+#' @slot Landings List or array of reference landings values.
 #'
-#' @slot RefRemovals List or array of reference removals values.
+#' @slot Removals List or array of reference removals values.
 #'
 #' @slot F01 List or array of fishing mortality corresponding to the
 #' 0.1 slope reference point.
@@ -45,8 +45,8 @@ setClass("reference",
          slots = c(
            SPR0          = "array.list.null",
            MSY           = "refpointsMSY",
-           RefLandings   = "array.list.null",
-           RefRemovals   = "array.list.null",
+           Landings   = "array.list.null",
+           Removals   = "array.list.null",
            
            F01           = "array.list.null",
            FMax          = "array.list.null",

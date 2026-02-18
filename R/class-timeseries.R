@@ -18,6 +18,7 @@
 #' @slot Effort Effort array Sim × Year × Fleet (x MP for `MSE` objects).
 #' @slot Distribution Fleet effort distribution by area: Sim × Year × Fleet × Area (x MP for `MSE` objects).
 #'
+#' @slot FInteract Apical fishing mortality for fish that are interact with the fishing gear.  Array: Sim x Stock x Year x Fleet (x MP for `MSE` objects).'
 #' @slot FDead Apical fishing mortality for fish that are killed by fishing gear.  Array: Sim x Stock x Year x Fleet (x MP for `MSE` objects). 
 #' @slot FRetain Apical fishing mortality for fish that are retained by fishers. Array: Sim x Stock x Year x Fleet (x MP for `MSE` objects).
 #' 
@@ -46,6 +47,7 @@ setClass(
     Effort          = "array",
     Distribution    = "array",
     
+    FInteract       = "array.null",
     FDead           = "array.null",
     FRetain         = "array.null",
     
