@@ -14,7 +14,9 @@ entries and options for each slot.
 \section{Slots}{
 
 \describe{
-\item{\code{TAC}}{Numeric vector or numeric array specifying total allowable catch.}
+\item{\code{TAC}}{Numeric vector or numeric array specifying total allowable catch (currently always in biomass).}
+
+\item{\code{TACType}}{Character. Does the TAC refer to \code{"Removals"} (default) or \code{"Landings"}.}
 
 \item{\code{Effort}}{Numeric vector array specifying relative or absolute fishing effort.}
 

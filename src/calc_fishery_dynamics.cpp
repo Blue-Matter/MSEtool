@@ -14,6 +14,7 @@
 #include "calc_biomass.h"
 #include "calc_catch.h"
 #include "calc_overall_f.h"
+#include "apply_maxf_constraint.h"
 
 using namespace Rcpp;
 
@@ -27,7 +28,6 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                               const int nFleet,
                               const int nArea,
                               const int DoCalcCatch=1,        // calculate catch?
-                              const int DoCalcaggF=1,         // calculate overall F?   
                               const int debug=0
 ) {
   
@@ -136,6 +136,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     CalcArea_F(y,
                Sims,
                nSim,
+               hv.FInteractArea,
                hv.FDeadArea,
                hv.FRetainArea,
                hv.SelAge,
@@ -145,7 +146,6 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                hv.q,
                hv.Effort,
                hv.RelSize,
-               hv.maxF,
                nStock,
                nFleet,
                nArea);
@@ -271,10 +271,13 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
       CalcCatch(y,
                 Sims,
                 nSim,
+                hv.InteractAtAge,
                 hv.LandingsAtAge,
                 hv.DiscardsAtAge,
+                hv.Interactions,
                 hv.Landings,
                 hv.Discards,
+                hv.FInteractArea,
                 hv.FDeadArea,
                 hv.FRetainArea,
                 hv.NaturalMortality,
@@ -294,30 +297,70 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     // src: inst/include/cacl_overall_f.h
     // ---------------------------------------------------------
     
-    if (DoCalcaggF) {
-      
-      if (debug)
-        Rcpp::Rcout << "Begin CalcOverallF \n";
+    if (debug)
+      Rcpp::Rcout << "Begin CalcOverallF \n";
+    
+    CalcOverallF(y,
+                 Sims,
+                 nSim,
+                 hv.FInteract,
+                 hv.FDead,
+                 hv.FRetain,
+                 hv.InteractAtAge,
+                 hv.LandingsAtAge,
+                 hv.DiscardsAtAge,
+                 hv.Number,
+                 nStock,
+                 nFleet,
+                 nArea
+    );
+    
+    if (debug)
+      Rcpp::Rcout << "End CalcOverallF \n";
+    
+    // ---------------------------------------------------------
+    // Apply global maxF constraint (on FInteract)
+    // ---------------------------------------------------------
+    
+    if (debug)
+      Rcpp::Rcout << "Begin Apply Max F Constraint \n";
 
-      CalcOverallF(y,
-                   Sims,
-                   nSim,
-                   hv.FInteract,
-                   hv.FDead,
-                   hv.FRetain,
-                   hv.DiscMort,
-                   hv.LandingsAtAge,
-                   hv.DiscardsAtAge,
-                   hv.Number,
-                   nStock,
-                   nFleet,
-                   nArea
-                   );
+    ApplyMaxF(y,
+              Sims,
+              nSim,
+              hv.FInteractArea,
+              hv.FDeadArea,
+              hv.FRetainArea,
+              hv.SelAge,
+              hv.RetAge,
+              hv.DiscMort,
+              hv.Distribution,
+              hv.q,
+              hv.Effort,
+              hv.RelSize,
+              hv.InteractAtAge,
+              hv.LandingsAtAge,
+              hv.DiscardsAtAge,
+              hv.Interactions,
+              hv.Landings,
+              hv.Discards,
+              hv.NaturalMortality,
+              hv.Number,
+              hv.WeightFleet,
+              hv.FInteract,
+              hv.FDead,
+              hv.FRetain,
+              hv.maxF,
+              nStock,
+              nFleet,
+              nArea,
+              DoCalcCatch,
+              debug);
 
-      if (debug)
-        Rcpp::Rcout << "End CalcOverallF \n";
-      
-    }
+    if (debug)
+      Rcpp::Rcout << "End Apply Max F Constraint \n";
+    
+    
     
     
     if (debug) 

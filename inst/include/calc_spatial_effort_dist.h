@@ -35,7 +35,6 @@ inline void CalcSpatialDistribution(
   // Checks
   // ---------------
 
-  
   if ((int)Number.size() < nStock ||
       (int)WeightFleet.size() < nStock ||
       (int)SelAge.size() < nStock ||
@@ -61,7 +60,6 @@ inline void CalcSpatialDistribution(
   const std::array<int,3> dim = {nSim, nFleet, nArea};
   Array3D Util(dim, 0.0);
 
-  
   // Loop over stocks
   for (int st = 0; st < nStock; ++st) { 
     Array3D B_hat(dim, 0.0);

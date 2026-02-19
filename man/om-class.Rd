@@ -85,7 +85,9 @@ vector.}
 
 \item{\code{pStar}}{Percentile applied to stochastic management advice.}
 
-\item{\code{maxF}}{Maximum allowable fishing mortality.}
+\item{\code{maxF}}{Maximum allowable fishing mortality. Applies to nominal fishing mortality
+for fish that interact with the fishing gear, although actual effective F might be
+lower if some fish are discarded and survive.}
 
 \item{\code{Seed}}{Optional random number generator seed.}
 

@@ -151,7 +151,6 @@ OptRefYield <- function(logScalar,
   ProjSim_opt <- CalcFisheryDynamics(Hist = Proj,
                                      Sims = sim,
                                      Years = c(tail(HistYears, Proj@OM@Seasons), ProjYears),
-                                     DoCalcaggF = 0,
                                      debug = debug)
   
   # Get total catch summed over age, fleet, area

@@ -19,9 +19,13 @@ catch, effort, and fishing mortality components.
 
 \item{\code{SProduction}}{Spawning production array Sim × Stock × Year (x MP for \code{MSE} objects).}
 
+\item{\code{Interactions}}{Total interaction by Stock and Fleet (biomass). Array: Sim x Stock x Year x Fleet (x MP for \code{MSE} objects).}
+
 \item{\code{Landings}}{Total landings by Stock and Fleet (biomass). Array: Sim x Stock x Year x Fleet (x MP for \code{MSE} objects).}
 
-\item{\code{Discards}}{Total discards by Stock and Fleet (biomass). Array: Sim x Stock x Year x Fleet (x MP for \code{MSE} objects).#'}
+\item{\code{Discards}}{Total discards by Stock and Fleet (biomass). Array: Sim x Stock x Year x Fleet (x MP for \code{MSE} objects).}
+
+\item{\code{InteractAtAge}}{List of interactions-at-age (numbers) arrays. Stock: Sim × Age × Year × Fleet × Area  (x MP for \code{MSE} objects).}
 
 \item{\code{LandingsAtAge}}{List of landings-at-age (numbers) arrays. Stock: Sim × Age × Year × Fleet × Area  (x MP for \code{MSE} objects).}
 
@@ -35,11 +39,13 @@ catch, effort, and fishing mortality components.
 
 \item{\code{Distribution}}{Fleet effort distribution by area: Sim × Year × Fleet × Area (x MP for \code{MSE} objects).}
 
-\item{\code{FInteract}}{Apical fishing mortality for fish that are interact with the fishing gear.  Array: Sim x Stock x Year x Fleet (x MP for \code{MSE} objects).'}
+\item{\code{FInteract}}{Apical fishing mortality for fish that interact with the fishing gear.  Array: Sim x Stock x Year x Fleet (x MP for \code{MSE} objects).'}
 
 \item{\code{FDead}}{Apical fishing mortality for fish that are killed by fishing gear.  Array: Sim x Stock x Year x Fleet (x MP for \code{MSE} objects).}
 
 \item{\code{FRetain}}{Apical fishing mortality for fish that are retained by fishers. Array: Sim x Stock x Year x Fleet (x MP for \code{MSE} objects).}
+
+\item{\code{FInteractArea}}{Area-specific fishing mortality-at-age for fish that interact with the fishing gear (list by stock). Stock: Sim x Age x Year x Fleet x Area (x MP for \code{MSE} objects).}
 
 \item{\code{FDeadArea}}{Area-specific fishing mortality-at-age of fish killed by fishing gear (list by stock). Stock: Sim x Age x Year x Fleet x Area (x MP for \code{MSE} objects).}
 

@@ -1,6 +1,13 @@
 
-Update_Effort <- function(Proj, Year, AdviceSimList, LastAdviceSimList, 
-                          YearsHist, YearsProj, Areas, FleetNames) {
+Update_Effort <- function(Proj,
+                          Year, 
+                          AdviceSimList, 
+                          LastAdviceSimList, 
+                          YearsHist,
+                          YearsProj, 
+                          Areas, 
+                          FleetNames,
+                          StockNames) {
 
   nSim <- Proj@OM@nSim
   

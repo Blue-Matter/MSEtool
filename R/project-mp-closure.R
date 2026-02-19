@@ -1,5 +1,12 @@
-Update_Closure <- function(Proj, Year, AdviceSimList, LastAdviceSimList, YearsProj, Areas, 
-                           FleetNames, StockNames) {
+Update_Closure <- function(Proj, 
+                           Year, 
+                           AdviceSimList, 
+                           LastAdviceSimList, 
+                           YearsHist,
+                           YearsProj,
+                           Areas, 
+                           FleetNames, 
+                           StockNames) {
   
   nArea <- length(Areas)
   

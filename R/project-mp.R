@@ -93,50 +93,76 @@ Project_MP <- function(Proj,
     )
     
     # Update Pop Dynamics in Proj with MP Advice
-    Proj <- Proj |>
-      Update_Closure(Year, AdviceSimList, LastAdviceSimList, 
-                     YearsProj, Areas, FleetNames, StockNames) |>
-      
-      Update_Selectivity(Year, AdviceSimList, LastAdviceSimList, 
-                         YearsProj, Areas, FleetNames) |>
-      
-      Update_Retention(Year, AdviceSimList, LastAdviceSimList, 
-                       YearsProj, Areas, FleetNames) |>
-      
-      Update_DiscardMortality(Year, AdviceSimList, LastAdviceSimList, 
-                              YearsProj, Areas, FleetNames) |>
-      
-      Update_Effort(Year, AdviceSimList, LastAdviceSimList, 
-                    YearsHist, YearsProj, Areas, FleetNames) |>
-      
-      Update_TAC(Year, AdviceSimList, LastAdviceSimList, 
-                 YearsHist, YearsProj, Areas, FleetNames)
     
+    # TODO - this can be optimized to avoid the repeated calls to CalcFisheryDynamics
+    
+    # Update Pop Dynamics in Proj with MP Advice
+    update_steps <- list(
+      Update_Closure,
+      Update_Selectivity,
+      Update_Retention,
+      Update_DiscardMortality,
+      Update_Effort,
+      Update_TAC
+    )
+    
+    Error <- FALSE
+    ErrorMessage <- NULL
+    for (fun in update_steps) {
+      
+      tmp <- try(
+        fun(
+          Proj,
+          Year,
+          AdviceSimList,
+          LastAdviceSimList,
+          YearsHist = YearsHist,
+          YearsProj = YearsProj,
+          Areas = Areas,
+          FleetNames = FleetNames,
+          StockNames = StockNames
+        ),
+        silent = TRUE
+      )
+      
+      if (inherits(tmp, "try-error")) {
+        Error <- TRUE
+        ErrorMessage <- tmp
+        
+        # Proj@Log[[as.character(Year)]]$UpdateError <- list(
+        #   Step = deparse(substitute(fun)),
+        #   Message = as.character(tmp)
+        # )
+        
+        # if (!silent) {
+        #   cli::cli_alert_danger(
+        #     "Update step failed in year {Year}: {deparse(substitute(fun))}"
+        #   )
+        # }
+        
+        break
+      }
+      
+      Proj <- tmp
+    }
+    
+    if (Error)
+      break
+    
+
     # Simulate Pop Dynamics for this Time Step
     Proj <- CalcFisheryDynamics(Proj, Year)
     
   }
   
-  # TODO - check - is maxF currently by fleet??
   
-  Proj@Effort[, 50:TSIndex,] |> t() |> matplot()
-  Proj@Biomass[ ,1, 50:TSIndex]|> t() |> matplot()
-  
-  sim <- 8
-  Proj@Effort[sim, 50:TSIndex,] |> plot()
-  Proj@Landings[sim,1,50:TSIndex,1] |> plot()
 
-  Proj@Biomass[sim ,1, 50:TSIndex] |> plot()
-  
   EndTime <- Sys.time()
   
-  # Checks
+  Proj <- CheckMSERun(Proj, MSE, MPName, StartTime, EndTime, Error, ErrorMessage)
   
- 
-  
-  
-  # update MSE object
-  
+  if (!Error) 
+    MSE <- UpdateMSEObject(MSE, Proj, MPName, mp,YearsHist, YearsProj, StockNames, FleetNames)
   
   MSE
 }

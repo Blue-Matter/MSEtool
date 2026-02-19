@@ -1,5 +1,12 @@
-Update_Selectivity <- function(Proj, Year, AdviceSimList, LastAdviceSimList,
-                               YearsProj, Areas, FleetNames,
+Update_Selectivity <- function(Proj,
+                               Year, 
+                               AdviceSimList, 
+                               LastAdviceSimList,
+                               YearsHist,
+                               YearsProj, 
+                               Areas, 
+                               FleetNames,
+                               StockNames,
                                type=c('Selectivity', 'Retention')) {
   
   type <- match.arg(type, c('Selectivity', 'Retention'))
@@ -168,11 +175,25 @@ Advice_Selectivity_Pars <- function(select) {
 
 
 
-Update_Retention <- function(Proj, Year, AdviceSimList, LastAdviceSimList,
-                             YearsProj, Areas, FleetNames) {
+Update_Retention <- function(Proj,
+                             Year, 
+                             AdviceSimList,
+                             LastAdviceSimList,
+                             YearsHist,
+                             YearsProj,
+                             Areas, 
+                             FleetNames,
+                             StockNames) {
   
-  Update_Selectivity(Proj, Year, AdviceSimList, LastAdviceSimList, 
-                     YearsProj, Areas, FleetNames, 
+  Update_Selectivity(Proj,
+                     Year, 
+                     AdviceSimList,
+                     LastAdviceSimList, 
+                     YearsHist,
+                     YearsProj,
+                     Areas, 
+                     FleetNames,
+                     StockNames,
                      type='Retention')
   
 }

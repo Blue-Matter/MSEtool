@@ -2,29 +2,45 @@
 library(MSEtool)
 
 
-
-testOM@nsim <- 10
+testOM@nsim <- 2
 OM <- Convert(testOM)
 
 Name(OM) <- 'testOM'
-OM@Control$DataOM <- list(Effort=TRUE)
 Hist <- Simulate(OM)
+
 
 CurrentCatch <- function(Data) {
   LHind <- match(Data@YearLH,Data@Years)
   HistLandings <- Data@Landings@Value[LHind, ]
-  Advice(TAC=HistLandings)
+  HistDiscards <- Data@Discards@Value[LHind,]
+  Advice(TAC=HistLandings+HistDiscards)
 }
 class(CurrentCatch) <- 'mp'
 
-MPs <- 'CurrentCatch'
+CurrentCatchArea <- function(Data) {
+  LHind <- match(Data@YearLH,Data@Years)
+  HistLandings <- Data@Landings@Value[LHind, ]
+  HistDiscards <- Data@Discards@Value[LHind,]
+  removals <- HistLandings + HistDiscards
+  
+  nFleet <- nFleet(Data)
+  TAC_by_Fleet <- rep(removals/nFleet,nFleet)
+  nArea <- nArea(Data)
+  
+  TAC <- matrix(TAC_by_Fleet/nArea, nFleet, nArea)
+  Advice(TAC=TAC)
+}
+class(CurrentCatchArea) <- 'mp'
+
+MPs <- c('CurrentCatch', 'CurrentCatchArea')
 
 MSE <- Project(Hist, MPs)
 
+
+
+
 la()
-
-Project_hist
-
+LoadArgs(Project_hist)
 
 
 CloseArea1 <- function(Data) {
@@ -39,13 +55,8 @@ class(DiscMort) <- 'mp'
 
 MPs <- c('DiscMort', 'CloseArea1')
 
-MSE <- Project_hist(Hist, MPs)
+MSE <- Project(Hist, MPs)
 
-
-
-Data <- Hist@Data$`1`$Albacore
-
-# TODO - up to here - finish developing Test MPs
 
 
 

@@ -272,7 +272,11 @@ PrepHistMisc <- function(Hist, Period=c('Historical', 'Projection')) {
 # Restores Hist@Misc
 RestoreHistMisc <- function(Hist) {
   saveMisc <- Hist@Misc$SAVE
+  saveAdvice <- Hist@Misc$MPAdvice
+    
   Hist@Misc <- list()
-  Hist@Misc <- saveMisc
+  restore <- c(saveMisc, saveAdvice)
+  if (!is.null(restore))
+    Hist@Misc <- restore
   Hist
 }

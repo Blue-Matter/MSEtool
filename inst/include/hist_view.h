@@ -73,9 +73,11 @@ struct HistView {
   Array3D SBiomass; 
   Array3D SProduction;
   
+  Array4D Interactions;  // sim, stock, year, fleet
   Array4D Landings;  // sim, stock, year, fleet
   Array4D Discards;  // sim, stock, year, fleet
   
+  std::vector<Array5D> InteractAtAge;     // [stock] sim, age, year, fleet, area
   std::vector<Array5D> LandingsAtAge;     // [stock] sim, age, year, fleet, area
   std::vector<Array5D> DiscardsAtAge;
   std::vector<std::vector<Array4D>> LandingsAtSize;   // [stock][fleet] sim, length, year, area
@@ -87,6 +89,8 @@ struct HistView {
   Array4D FInteract;                        // sim, stock, year, fleet
   Array4D FDead;                        // sim, stock, year, fleet
   Array4D FRetain;                      // sim, stock, year, fleet
+  
+  std::vector<Array5D> FInteractArea;   // [stock] sim, age, year, fleet, area
   std::vector<Array5D> FDeadArea;       // [stock] sim, age, year, fleet, area
   std::vector<Array5D> FRetainArea;     // [stock] sim, age, year, fleet, area
   
@@ -151,6 +155,7 @@ inline HistView::HistView(Rcpp::S4& Hist,
         check_rank(Hist.slot("SBiomass"), 3, "SBiomass");
         check_rank(Hist.slot("SProduction"), 3, "SProduction");
         
+        check_rank(Hist.slot("Interactions"), 4, "Interactions");
         check_rank(Hist.slot("Landings"), 4, "Landings");
         check_rank(Hist.slot("Discards"), 4, "Discards");
         
@@ -199,6 +204,7 @@ inline HistView::HistView(std::nullptr_t,
   SBiomass = Slot2Array3D(Hist, "SBiomass");
   SProduction = Slot2Array3D(Hist, "SProduction");
   
+  Interactions = Slot2Array4D(Hist, "Interactions");
   Landings = Slot2Array4D(Hist, "Landings");
   Discards = Slot2Array4D(Hist, "Discards");
   
@@ -227,22 +233,30 @@ inline HistView::HistView(std::nullptr_t,
 
   // Mutable stock slots
   Rcpp::List NumberList         = Hist.slot("Number");
+  Rcpp::List InteractAgeList    = Hist.slot("InteractAtAge");
   Rcpp::List LandAgeList        = Hist.slot("LandingsAtAge");
   Rcpp::List DiscAgeList        = Hist.slot("DiscardsAtAge");
   Rcpp::List LandSizeList       = Hist.slot("LandingsAtSize");
   Rcpp::List DiscSizeList       = Hist.slot("DiscardsAtSize");
+  
+  Rcpp::List FInteractAreaList  = Hist.slot("FInteractArea");
   Rcpp::List FDeadAreaList      = Hist.slot("FDeadArea");
   Rcpp::List FRetainAreaList    = Hist.slot("FRetainArea");
 
   check_size(NumberList.size(), nStock, "Number");
+  check_size(InteractAgeList.size(), nStock, "InteractAtAge");
   check_size(LandAgeList.size(), nStock, "LandingsAtAge");
+  check_size(DiscAgeList.size(), nStock, "DiscardsAtAge");
 
   Number.reserve(nStock);
+  
+  InteractAtAge.reserve(nStock);
   LandingsAtAge.reserve(nStock);
   DiscardsAtAge.reserve(nStock);
   LandingsAtSize.reserve(nStock);
   DiscardsAtSize.reserve(nStock);
 
+  FInteractArea.reserve(nStock);
   FDeadArea.reserve(nStock);
   FRetainArea.reserve(nStock);
    
@@ -250,8 +264,10 @@ inline HistView::HistView(std::nullptr_t,
      
     check_rank(NumberList[st], 4, "Number");
     Number.emplace_back(as_ArrayND<4>(NumberList[st], "NumberList"));
+    InteractAtAge.emplace_back(as_ArrayND<5>(InteractAgeList[st], "InteractAgeList"));
     LandingsAtAge.emplace_back(as_ArrayND<5>(LandAgeList[st], "LandAgeList"));
     DiscardsAtAge.emplace_back(as_ArrayND<5>(DiscAgeList[st], "DiscAgeList"));
+    FInteractArea.emplace_back(as_ArrayND<5>(FInteractAreaList[st], "FInteractAreaList"));
     FDeadArea.emplace_back(as_ArrayND<5>(FDeadAreaList[st], "FDeadAreaList"));
     FRetainArea.emplace_back(as_ArrayND<5>(FRetainAreaList[st], "FRetainAreaList"));
     

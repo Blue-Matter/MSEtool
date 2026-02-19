@@ -6,6 +6,7 @@
 \usage{
 Advice(
   TAC = NULL,
+  TACType = c("Removals", "Landings"),
   Effort = NULL,
   EffType = c("Rel", "Abs"),
   Closure = NULL,
@@ -18,6 +19,8 @@ Advice(
 }
 \arguments{
 \item{TAC}{Numeric vector or matrix specifying total allowable catch. See \code{Details}}
+
+\item{TACType}{Character. Does the TAC refer to \code{"Removals"} (default) or \code{"Landings"}.}
 
 \item{Effort}{Numeric vector or matrix specifying relative or absolute fishing effort. See \code{Details}}
 

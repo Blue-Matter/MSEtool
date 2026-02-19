@@ -56,7 +56,9 @@
 #' vector.
 #' @slot nReps Number of stochastic replicates for management advice.
 #' @slot pStar Percentile applied to stochastic management advice.
-#' @slot maxF Maximum allowable fishing mortality.
+#' @slot maxF Maximum allowable fishing mortality. Applies to nominal fishing mortality
+#' for fish that interact with the fishing gear, although actual effective F might be 
+#' lower if some fish are discarded and survive. 
 #' @slot Seed Optional random number generator seed.
 #'
 #' @slot Control Named list of operating model control settings.

@@ -8,7 +8,6 @@
 #' @param DataSimList Nested list of `Data` objects length nSim, then length nStock/nComplex
 #' @param Year Numeric year for which advice is calculated.
 #' @param Proj `Hist` object containing population dynamics up to `Year`-1
-#' @param MSE Management Strategy Evaluation object containing MPs and OM.
 #' @param YearsProj Numeric vector of projected years
 #'
 #' @return A list of length `length(DataSimList)`, each element containing
@@ -19,7 +18,7 @@
 CalcAdvice <- function(MPName, MPfunction, DataSimList, Year, Proj, YearsProj, mp,
                        FleetNames, Areas) {
   nSim <- length(DataSimList)
-  if (nSim != MSE@OM@nSim) 
+  if (nSim != Proj@OM@nSim) 
     cli::cli_abort("Mismatch in number of simulations", .internal=TRUE)
   
   if (inherits(MPfunction,'mmp')) 
@@ -29,11 +28,12 @@ CalcAdvice <- function(MPName, MPfunction, DataSimList, Year, Proj, YearsProj, m
   AdviceSimList <- MakeNamedList(1:nSim)
   
   for (x in seq_along(AdviceSimList)) {
+    DataList  <- DataSimList[[x]]
     AdviceSimList[[x]] <- try(
       CalcAdvice_Sim_MP(x = x, 
                         MPName = MPName, 
                         MPfunction = MPfunction, 
-                        DataList = DataSimList[[x]],
+                        DataList = DataList,
                         Year = Year, 
                         Proj = Proj,
                         YearsProj = YearsProj,

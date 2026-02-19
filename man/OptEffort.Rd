@@ -11,6 +11,7 @@ OptEffort(
   sim,
   stocks,
   TAC_by_Fleet,
+  TACType,
   minEffort = 1e-06,
   tol = 0.01,
   maxIter = 50
@@ -28,6 +29,8 @@ OptEffort(
 \item{stocks}{Integer vector of stock indices to consider}
 
 \item{TAC_by_Fleet}{Numeric vector of target TAC per fleet}
+
+\item{TACType}{Character. Does the TAC refer to \code{"Removals"} (default) or \code{"Landings"}.}
 
 \item{minEffort}{Small numeric to replace zero starting effort (default 1e-6)}
 

@@ -56,6 +56,20 @@ MOM <- new('MOM', Stocks, Fleets, Obs, Imps, CatchFrac, Rel = Rel, nsim = nsim)
 
 # Convert to new OM
 OM <- Convert(MOM)
+OM@maxF
+
+
+q <- OM@Fleet$Bluefin_tuna$`Generic_Flat effort`@Catchability@Efficiency[1,1:50]
+E <- OM@Fleet$Bluefin_tuna$`Generic_Flat effort`@Effort@Effort[1,]
+E*q
+
+q2 <- OM@Fleet$`Pacific herring`$`Generic_Flat effort`@Catchability@Efficiency[1,1:50]
+E2 <- OM@Fleet$`Pacific herring`$`Generic_Flat effort`@Effort@Effort[1,]
+E2*q2
+
+OM@Fleet$`Pacific herring`$`Generic_Flat effort`@Catchability@Efficiency[1,]
+
+
 
 Hist <- Simulate(OM, DoRefLandings = FALSE)
 

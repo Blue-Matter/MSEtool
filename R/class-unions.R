@@ -1,4 +1,4 @@
-
+#' @include class-dynamics.R
 
 # Custom Class Unions
 
@@ -33,4 +33,4 @@ setClassUnion("num.array.df", c("numeric", "array", "data.frame", "NULL"))
 setClassUnion("fun.char", c("function", "character", "list", "NULL"))
 setClassUnion("num.Date", c("numeric", "Date", "POSIXct", "character", "NULL"))
 
-
+setClassUnion("dynamics.list", c("dynamics", "list"))

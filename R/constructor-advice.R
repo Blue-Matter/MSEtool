@@ -5,6 +5,8 @@
 #'
 #' @param TAC Numeric vector or matrix specifying total allowable catch. See `Details`
 #'
+#' @param TACType Character. Does the TAC refer to `"Removals"` (default) or `"Landings"`.
+#' 
 #' @param Effort Numeric vector or matrix specifying relative or absolute fishing effort. See `Details`
 #'
 #' @param EffType Character string specifying effort interpretation:
@@ -195,6 +197,7 @@
 #'   EffType = "Rel"
 #' )
 Advice <- function(TAC = NULL,
+                   TACType = c('Removals', 'Landings'),
                    Effort = NULL,
                    EffType = c('Rel', 'Abs'),
                    Closure = NULL,
@@ -204,6 +207,7 @@ Advice <- function(TAC = NULL,
                    ApicalF = NULL,
                    Misc = list()) {
   
+  TACType <- match.arg(TACType, c('Removals', 'Landings'))
   EffType <- match.arg(EffType, c('Rel', 'Abs'))
   
   
@@ -232,9 +236,9 @@ Advice <- function(TAC = NULL,
     cli::cli_abort("`Misc` must be a list")
   
   
-  
   methods::new("advice",
                TAC = TAC,
+               TACType = TACType,
                Effort = Effort,
                EffType = EffType,
                Closure = Closure,

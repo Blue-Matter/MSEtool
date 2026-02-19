@@ -278,7 +278,7 @@ nStock <- function(object) {
 #' @rdname Access
 #' @export
 nFleet <- function(object) {
-  CheckClass(object, c('om', 'hist', 'mse'), 'object')
+  CheckClass(object, c('om', 'hist', 'mse', 'data'), 'object')
   
   if (inherits(object,'om')) {
     fleet <- object@Fleet
@@ -292,6 +292,17 @@ nFleet <- function(object) {
       dd <- dim(object@Fleet[[1]]@Selectivity@MeanAtAge)
       return(dd[3])
     }
+  }
+  
+  if (inherits(object, 'data')) {
+    return(
+      lapply(list(object@Landings@Value,
+                  object@Discards@Value,
+                object@Survey@Value,
+                object@CPUE@Value,
+                NULL), ncol) |> 
+      unlist() |> max()
+    )
   }
   
   return(

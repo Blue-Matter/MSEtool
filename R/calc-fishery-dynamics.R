@@ -3,7 +3,6 @@ CalcFisheryDynamics <- function(Hist,
                                 Years=NULL,
                                 Sims=NULL,
                                 DoCalcCatch=1,
-                                DoCalcaggF=1,
                                 IdenticalSim=FALSE,
                                 debug = 0) {
   
@@ -32,7 +31,6 @@ CalcFisheryDynamics <- function(Hist,
                                    nFleet=nFleet,
                                    nArea=nArea,
                                    DoCalcCatch=DoCalcCatch,
-                                   DoCalcaggF=DoCalcaggF,
                                    debug=debug)
     
 
@@ -54,7 +52,6 @@ CalcFisheryDynamics <- function(Hist,
                        nFleet=nFleet,
                        nArea=nArea,
                        DoCalcCatch=DoCalcCatch,
-                       DoCalcaggF=DoCalcaggF,
                        debug=debug)
   
   Hist

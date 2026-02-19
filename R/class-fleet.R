@@ -31,6 +31,7 @@
 #' @include class-retention.R
 #' @include class-discardmortality.R
 #' @include class-bioeconomic.R
+#' @include class-dynamics.R
 #' @name fleet-class
 setClass(
   "fleet",
@@ -44,8 +45,7 @@ setClass(
     Closure = "num.array.null",
     WeightFleet = "array.null",
     BioEconomic = "bioeconomic",
-    Avoidance = 'num.null',
-    Dexterity = 'num.null',
+    Dynamics = "dynamics.list",
     nYear = "num.null",
     pYear = "num.null",
     nSim = "num.null",

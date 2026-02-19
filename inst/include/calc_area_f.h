@@ -3,6 +3,7 @@
 
 #include <Rcpp.h>
 #include <array>
+#include <cmath>
 
 #include "array_nd.h"
 #include "array_views.h"
@@ -13,6 +14,7 @@ inline void CalcArea_F(
     const int y,
     const std::vector<int>& Sims,
     const int nSim,
+    std::vector<Array5D>& FInteractArea,              // [stock] sim, age, year, fleet, area
     std::vector<Array5D>& FDeadArea,                  // [stock] sim, age, year, fleet, area
     std::vector<Array5D>& FRetainArea,                // [stock] sim, age, year, fleet, area
     const std::vector<ConstArrayView5D>& SelAge,      // [stock] sim, age, year, fleet, area
@@ -22,14 +24,14 @@ inline void CalcArea_F(
     const ConstArrayView4D& q,                        // sim, stock, year, fleet          
     const Array3D& Effort,                            // sim, year, fleet
     const ConstArrayView2D& RelSize,                  // sim, area
-    const double maxF,  
     const int nStock,
     const int nFleet,
     const int nArea) {
 
 
   // Checks
-  if ((int)FDeadArea.size() < nStock ||
+  if ((int)FInteractArea.size() < nStock ||
+      (int)FDeadArea.size() < nStock ||
       (int)FRetainArea.size() < nStock ||
       (int)SelAge.size() < nStock ||
       (int)RetAge.size() < nStock ||
@@ -40,11 +42,7 @@ inline void CalcArea_F(
   check_dims<4>(q, {nSim, nStock, q.dim[2], nFleet}, "q", y, 2);
   check_dims<3>(Effort, {nSim, Effort.dim[1], nFleet}, "Effort", y, 1);
   check_dims<2>(RelSize, {nSim, nArea}, "RelSize");
-
-  if (!std::isfinite(maxF) || maxF < 0.0) {
-    Rcpp::stop("Invalid `maxF`");
-  }
-
+  
   // Calculate effort density
   Array3D EffortDensity({nSim, nFleet, nArea}, 0.0);
   for (int sim : Sims) {
@@ -65,10 +63,10 @@ inline void CalcArea_F(
   // Calc F-at-age 
   for (int st = 0; st < nStock; ++st) {
     
+    auto& Fi  = FInteractArea[st];        // sim, age, year, fleet, area
     auto& Fd  = FDeadArea[st];        // sim, age, year, fleet, area
     auto& Fr  = FRetainArea[st];      // sim, age, year, fleet, area
     
-
     const auto& S  = SelAge[st];      // sim, age, year, fleet, area
     const auto& R  = RetAge[st];      // sim, age, year, fleet, area
     const auto& DM = DiscMort[st];    // sim, age, year, fleet, area
@@ -91,18 +89,23 @@ inline void CalcArea_F(
         const double q_fl = q(sim_q, st, y, fl);
       
         for (int ar = 0; ar < nArea; ++ar) {
-          
-          // initialize to 0
-          for (int age = 0; age < nAge; ++age) {
 
-            Fd(sim, age, y, fl, ar) = 0.0;
-            Fr(sim, age, y, fl, ar) = 0.0;
-          }
-          
           const double q_eff = q_fl * EffortDensity(sim, fl, ar);
           
           if (q_eff <= 0.0) continue;
+          
           for (int age = 0; age < nAge; ++age) {
+            
+            double &Fi_val = Fi(sim, age, y, fl, ar);
+            double &Fd_val = Fd(sim, age, y, fl, ar);
+            double &Fr_val = Fr(sim, age, y, fl, ar);
+            
+            
+            
+            // // Skip if all values are already set (not NA)
+            // if (!std::isnan(Fi_val) && !std::isnan(Fd_val) && !std::isnan(Fr_val)) {
+            //   continue; 
+            // }
             
             const double sel = S(sim_sel, age, y, fl, ar);
             const double ret = R(sim_ret, age, y, fl, ar);
@@ -142,28 +145,21 @@ inline void CalcArea_F(
               );
             
           
-            double F_interact = q_eff * sel;
-            
-        
-            if (F_interact > maxF) F_interact = maxF;
-            
+            const double F_interact = q_eff * sel;
             const double F_retain = F_interact * ret;
             const double F_disc   = (F_interact - F_retain) * dm;
             
-            Fd(sim, age, y, fl, ar) = F_retain + F_disc;
-            Fr(sim, age, y, fl, ar) = F_retain; 
+            // don't update if already provided
+            // if (std::isnan(Fi_val) || Fd_val < 0.0) Fi_val = F_interact;
+            // if (std::isnan(Fd_val) || Fd_val < 0.0) Fd_val = F_retain + F_disc;
+            // if (std::isnan(Fr_val) || Fr_val < 0.0) Fr_val = F_retain;
             
-
-            // don't update if already provided
-            if (Fd(sim, age, y, fl, ar)<=0) {
-              Fd(sim, age, y, fl, ar) = F_retain + F_disc;
-            }
-
-            // don't update if already provided
-            if (Fr(sim, age, y, fl, ar)<=0) {
-              Fr(sim, age, y, fl, ar) = F_retain;
-            }
-         
+            
+            Fi_val = F_interact;
+            Fd_val = F_retain + F_disc;
+            Fr_val = F_retain;
+            
+            
           } // end age
         } // end area
       } // end fleet

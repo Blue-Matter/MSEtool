@@ -1,7 +1,12 @@
-Update_DiscardMortality <- function(Proj, Year, 
+Update_DiscardMortality <- function(Proj, 
+                                    Year, 
                                     AdviceSimList, 
                                     LastAdviceSimList, 
-                                    YearsProj, Areas, FleetNames) {
+                                    YearsHist,
+                                    YearsProj,
+                                    Areas, 
+                                    FleetNames,
+                                    StockNames) {
   
   nSim <- Proj@OM@nSim
   nStock <- nStock(Proj)

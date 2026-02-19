@@ -21,7 +21,9 @@ methods::setClassUnion(
 #' or direct fishing mortality targets. See [Advice()] for details on valid 
 #' entries and options for each slot. 
 #'
-#' @slot TAC Numeric vector or numeric array specifying total allowable catch.
+#' @slot TAC Numeric vector or numeric array specifying total allowable catch (currently always in biomass).
+#' 
+#' @slot TACType Character. Does the TAC refer to `"Removals"` (default) or `"Landings"`.
 #' 
 #' @slot Effort Numeric vector array specifying relative or absolute fishing effort.
 #' 
@@ -54,6 +56,7 @@ methods::setClassUnion(
 #' @include class-discardmortality.R
 setClass("advice",
          slots = c(TAC = "num.array.null",
+                   TACType = 'char.null',
                    Effort = "num.array.null",
                    EffType = 'char.null',
                    

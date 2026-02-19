@@ -63,8 +63,7 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
                                      nStock,
                                      nFleet,
                                      nArea,
-                                     DoCalcCatch=0,
-                                     DoCalcaggF=0)
+                                     DoCalcCatch=0)
     
     for (sl in slotNames('popdynamics')) {
       if (sl=='Misc') next()
@@ -81,9 +80,12 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
                                      nStock,
                                      nFleet,
                                      nArea,
-                                     DoCalcCatch=0,
-                                     DoCalcaggF=0)
+                                     DoCalcCatch=0)
+    
   
+    
+
+    
   }
   
   out <- CopySlots(unfished, out, slotNames(out))

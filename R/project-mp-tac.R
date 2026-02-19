@@ -1,10 +1,12 @@
-Update_TAC <- function(Proj, Year, 
+Update_TAC <- function(Proj,
+                       Year, 
                        AdviceSimList, 
                        LastAdviceSimList, 
                        YearsHist, 
                        YearsProj, 
                        Areas, 
-                       FleetNames) {
+                       FleetNames,
+                       StockNames) {
   
   nSim <- Proj@OM@nSim
   nStock <- nStock(Proj)
@@ -79,6 +81,7 @@ Update_TAC_Sim <- function(Proj,
     }
     
     TAC <- Advice@TAC
+    TACType <- Advice@TACType
     AreaSpecific <- FALSE
     
     # TAC options:
@@ -105,7 +108,7 @@ Update_TAC_Sim <- function(Proj,
       if (length(TAC) == nFleet) {
         # Fleet-specific TAC
         TAC_by_Fleet <- TAC
-        RequiredEffort[,i] <- OptEffort(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet)
+        RequiredEffort[,i] <- OptEffort(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet, TACType)
       } else {
         stop("Advice@TAC must be length 1 or length `nFleet`")
       }
@@ -114,8 +117,11 @@ Update_TAC_Sim <- function(Proj,
       # TAC is Fleet × Area
       AreaSpecific <- TRUE
       dd <- dim(TAC)
-      if (dd != c(nFleet, nArea))
+      if (all(dd != c(nFleet, nArea)))
         stop("Advice@TAC must be numeric length 1 or length `nFleet` or a nFleet x nArea matrix")
+      
+      
+      
       
       # TODO area-specific effort optimization
       stop("TAC by Area not done")
@@ -133,8 +139,7 @@ Update_TAC_Sim <- function(Proj,
   
   for (fl in seq_len(nFleet)) {
     if (!is.na(Proj@Effort[sim,TSIndex,fl])) {
-      FleetEffort[fl] <- min(FleetEffort[fl],
-                             Proj@Effort[sim,TSIndex,fl])
+      FleetEffort[fl] <- min(FleetEffort[fl], Proj@Effort[sim,TSIndex,fl])
     }
   }
   Proj@Effort[sim,TSIndex,] <- FleetEffort
@@ -145,7 +150,7 @@ Update_TAC_Sim <- function(Proj,
   
   # Multi-stock complex dynamics
   ProjCopy <- Proj
-  Temp <- CalcFisheryDynamics(Hist = ProjCopy, Years = Year, Sims = sim, DoCalcaggF = FALSE)
+  Temp <- CalcFisheryDynamics(Hist = ProjCopy, Years = Year, Sims = sim)
   
   ChokeConstraintMatrix <- matrix(NA, nrow=nFleet, ncol=nComplex, 
                                   dimnames = list(
@@ -173,14 +178,14 @@ Update_TAC_Sim <- function(Proj,
   
   # Scale Effort based on avoidance
   for (fl in 1:nFleet) {
-    avoidance <- Proj@OM@Fleet[[1]][[fl]]@Avoidance
+    avoidance <- 1 # Proj@OM@Fleet[[1]][[fl]]@Avoidance
     EffortScaling <- (1 - avoidance) * ChokeConstraint[fl] + avoidance
     ProjCopy@Effort[sim, TSIndex, fl] <- ProjCopy@Effort[sim, TSIndex, fl] * EffortScaling
   }
   
   
   # Recalculate fishing mortality with scaled effort
-  Temp_scaled <- CalcFisheryDynamics(Hist = ProjCopy, Years = Year, Sims = sim, DoCalcaggF = TRUE)
+  Temp_scaled <- CalcFisheryDynamics(Hist = ProjCopy, Years = Year, Sims = sim)
   
   # Apply TAC fractions to FRetainArea and FDeadArea
   for (i in seq_len(nComplex)) {
@@ -193,7 +198,7 @@ Update_TAC_Sim <- function(Proj,
       nAge <- nAge(Proj@OM@Stock[[st]])
       for (a in 1:nAge) {
         for (fl in 1:nFleet) {
-          dexterity <- Proj@OM@Fleet[[1]][[fl]]@Dexterity
+          dexterity <- 1 # Proj@OM@Fleet[[1]][[fl]]@Dexterity
           for (ar in 1:nArea) {
             if (fleet_only_TAC) {
               # Fleet-only TAC: same TAC fraction for all areas
@@ -231,7 +236,7 @@ Update_TAC_Sim <- function(Proj,
   
 
   # TODO - calculate apical F directly rather than run full CalcFisheryDynamics
-  Proj <- CalcFisheryDynamics(Hist = ProjCopy, Years = Year, Sims = sim, DoCalcaggF = TRUE)
+  Proj <- CalcFisheryDynamics(Hist = ProjCopy, Years = Year, Sims = sim)
   
   # TODO - overall effort calcs aren't correct - review above code 
   # back calculate actual effort

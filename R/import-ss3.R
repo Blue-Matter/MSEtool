@@ -438,6 +438,7 @@ GetSS_LengthCV_at_Age <- function(st, replist, YearsList) {
     dplyr::mutate(Year = YearsHist[1], Value = SD_Beg / Len_Beg) |>
     dplyr::arrange(Age, Year) |>
     dplyr::select(Age, Year, Value) |>
+    dplyr::mutate(Value=ifelse(is.finite(Value), Value, 0)) |>
     DF2Array()
 }
 

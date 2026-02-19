@@ -22,6 +22,8 @@ CheckAdvice_TAC <- function(Advice, Proj, FleetNames, Areas) {
     dd <- dim(Advice@TAC)
     if (dd[1]!=nFleet || dd[2]!=nArea) 
       stop('If Advice@TAC is an array, it must have `nFleet` rows and `nArea` columns')
+    
+    return(Advice)
   }
   
   if (length(Advice@TAC)!= 1 && length(Advice@TAC)!=nFleet)

@@ -27,7 +27,6 @@ Simulate_om <- function(OM = NULL,
   ProjYears <- Years(OM, "Projection")
   IdenticalHist <- IdenticalSims(OM, ignore='RecDevProj')
   
-  
   if (is.null(OM@Name) || nchar(OM@Name)<2)
     OM@Name <- 'Unnamed OM'
   
@@ -68,7 +67,6 @@ Simulate_om <- function(OM = NULL,
   # ---- Add Reference Points if they exist ----
   # won't be re-calculated
   
-  
   # ---- Calculate Reference Points ----
   # TODO
   
@@ -91,6 +89,7 @@ Simulate_om <- function(OM = NULL,
   
   # ---- Historical Population Dynamics ----
   Hist <- CalcFisheryDynamics(Hist, IdenticalSim=IdenticalHist)
+
   
 
   if (!silent)
@@ -131,7 +130,7 @@ Simulate_om <- function(OM = NULL,
   # ---- Report Run Time ----
   EndTime <- Sys.time()
   
-  elapse_secs <- round(difftime(time1 = EndTime, time2 = StartTime, units = "secs"),2) |> as.numeric()
+  
   elapse_auto <- round(difftime(time1 = EndTime, time2 = StartTime, units = "auto"),2) |> format()
   if (!silent)
     cli::cli_alert_success('Completed {.val Simulate} for OM {.val {OM@Name}} ({elapse_auto})') 

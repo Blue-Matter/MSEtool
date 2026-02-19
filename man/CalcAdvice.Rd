@@ -28,8 +28,6 @@ CalcAdvice(
 \item{Proj}{\code{Hist} object containing population dynamics up to \code{Year}-1}
 
 \item{YearsProj}{Numeric vector of projected years}
-
-\item{MSE}{Management Strategy Evaluation object containing MPs and OM.}
 }
 \value{
 A list of length \code{length(DataSimList)}, each element containing

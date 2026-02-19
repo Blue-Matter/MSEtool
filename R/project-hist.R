@@ -8,6 +8,8 @@ Project_hist <- function(Hist,
   
   
   # ---- Initial Checks and Setup ----
+  StartTime <- Sys.time()
+  
   OnExit()
   CheckClass(Hist, 'hist', 'Hist')
   CheckMPClass(MPs)
@@ -15,6 +17,11 @@ Project_hist <- function(Hist,
   YearsHist <- Years(Hist@OM, "Historical")
   YearsProj <- Years(Hist@OM, "Projection")
   nMPs <- length(MPs)
+  
+  if (!silent) {
+    cli::cli_text('')
+    cli::cli_alert_info(' Starting  {.val Project} for OM {.val {Hist@OM@Name}}')
+  }
   
   # ---- Reduce nSim if provided ----
   Proj <- Hist |> ReduceNSim(nSim)
@@ -54,10 +61,12 @@ Project_hist <- function(Hist,
     
   }
 
+  EndTime <- Sys.time()
+  elapse_auto <- round(difftime(time1 = EndTime, time2 = StartTime, units = "auto"),2) |> format()
+  if (!silent)
+    cli::cli_alert_success('Completed {.val Project} for OM {.val {Hist@OM@Name}} ({elapse_auto})') 
   
+  MSE <- RestoreHistMisc(MSE)
   
-  
-  
-  # UP THE HERE!!
-  
+  MSE
 }
