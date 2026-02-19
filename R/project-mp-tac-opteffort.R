@@ -27,7 +27,7 @@ OptEffort <- function(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet, TACType,
   Effort_init <- pmax(LastEffort, minEffort)
   
   # Pre-check: Check if TACs can be caught 
-  MaxEffort <- CalcMaxEffort(Proj, sim, TSIndex, stocks, Year)
+  MaxEffort <- CalcMaxEffort(Proj, sim, TSIndex, stocks, Year, TAC_by_Fleet)
   Proj@Effort[sim, TSIndex, ] <- MaxEffort
   Temp_max <- CalcFisheryDynamics(Hist = Proj, Years = Year, Sims = sim)
   

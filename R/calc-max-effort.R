@@ -13,8 +13,9 @@
 #'
 #' @return Numeric vector of maximum effort by fleet
 #' @keywords internal
-CalcMaxEffort <- function(Proj, sim, TSIndex, stocks, Year, TAC_type,
-                          tol = 1e-3, maxIter = 10) {
+CalcMaxEffort <- function(Proj, sim, TSIndex, stocks, 
+                          Year, TAC_by_Fleet,
+                          tol = 1e-2, maxIter = 10) {
   
   # Initial guess based on maxF and catchability
   maxF <- Proj@OM@maxF
@@ -22,7 +23,9 @@ CalcMaxEffort <- function(Proj, sim, TSIndex, stocks, Year, TAC_type,
     abind::adrop(c(1, 3))
   
   MaxEffort_guess <- pmin(apply(maxF / CurrQ, 2, min), 1e6)
+  MaxEffort_guess <- MaxEffort_guess * TAC_by_Fleet/sum(TAC_by_Fleet)
   Fprev <- -Inf
+  
   # Iterative scaling
   MaxEffort <- MaxEffort_guess
   for (it in seq_len(maxIter)) {
@@ -45,7 +48,6 @@ CalcMaxEffort <- function(Proj, sim, TSIndex, stocks, Year, TAC_type,
   
     # Maximum FInteract across stocks
     Fcurr <- rowSums(Temp_max@FInteract[sim, stocks, TSIndex, , drop = FALSE]) |> max()
-    
     
     if (!is.finite(Fcurr) || Fcurr <= 0)
       break()

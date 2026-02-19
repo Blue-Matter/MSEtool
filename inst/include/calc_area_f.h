@@ -56,6 +56,7 @@ inline void CalcArea_F(
       for (int ar = 0; ar < nArea; ++ar) {
         const double rs = RelSize(sim_rs, ar);
         EffortDensity(sim, fl, ar) = (rs > 0.0) ? E * Distribution(sim_dist, y, fl, ar) / rs  : 0.0;
+        
       }
     }
   }

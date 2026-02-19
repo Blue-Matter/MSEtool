@@ -155,8 +155,6 @@ Project_MP <- function(Proj,
     
   }
   
-  
-
   EndTime <- Sys.time()
   
   Proj <- CheckMSERun(Proj, MSE, MPName, StartTime, EndTime, Error, ErrorMessage)

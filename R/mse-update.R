@@ -40,10 +40,10 @@ UpdateMSEObject <- function(MSE, Proj, MPName, mp, YearsHist, YearsProj,
   if (is.null(MSE@Misc$Advice)) 
     MSE@Misc$Advice <- list()
   
+  MSE@Misc$Advice[[MPName]] <- Proj@Misc$MPAdvice
 
   
   # TODO 
-  # MSE@Misc$Advice[[MPName]] <- lapply(SimList_MP, slot, 'Misc') |> lapply("[[", "MPAdvice")
   # MSE@Misc$Failed[[MPName]] <- lapply(SimList_MP, slot, 'Misc') |>   lapply("[[", "Failed") |> 
   #   unlist() |> 
   #   as.numeric()

@@ -10,8 +10,8 @@ CalcMaxEffort(
   TSIndex,
   stocks,
   Year,
-  TAC_type,
-  tol = 0.001,
+  TAC_by_Fleet,
+  tol = 0.01,
   maxIter = 10
 )
 }

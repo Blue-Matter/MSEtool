@@ -33,9 +33,12 @@ Project_hist <- function(Hist,
   Proj <- ExtendHist(Proj, 
                      Years = c(YearsHist, YearsProj))
   
+  Years(OM,'H') |> length()
+
   # ---- Populate Number-at-Age at Beginning of Projection Year ----
-  Proj <- CalcFisheryDynamics(Proj, 
-                              Years=c(tail(YearsHist,1), head(YearsProj,1)))
+  Proj <- CalcFisheryDynamics(Proj, Years=c(tail(YearsHist,1))) # doesn't include recruitment
+  
+  # Proj <- CalcFisheryDynamics(Proj, Years=c(tail(YearsHist,1), head(YearsProj,1)))
   
   # ---- Create MSE Object ----
   MSE <- Hist2MSE(Proj, MPNames = MPs) 

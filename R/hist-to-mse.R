@@ -3,11 +3,12 @@ Hist2MSE <- function(Hist, MPNames) {
   MSE@OM <- Hist@OM
   MSE@Unfished <- Hist@Unfished
   MSE@Reference <- Hist@Reference
+  HistYears <- Years(Hist,'H')
   
   
   slots <- slotNames(MSE@Hist)
   for (sl in slots)  {
-    slot(MSE@Hist, sl) <- slot(Hist, sl)
+    slot(MSE@Hist, sl) <- slot(Hist, sl) |> SubsetYear(HistYears)
   }
   
   MSE <- Add_MP_Functions(MSE, MPNames)

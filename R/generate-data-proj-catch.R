@@ -76,7 +76,10 @@ GenProjData_Catch <- function(x,
                                     \(catch_n, FleetList) {
                                       fleet <- FleetList[[fl]]
                                       catch_fleet <- catch_n[,fl,, drop=FALSE] |> abind::adrop(2)
-                                      fleetwght <- fleet@WeightFleet[x,,TSIndex, drop=FALSE] |> 
+                                      fleetwght <- fleet@WeightFleet
+                                      dd <- dim(fleetwght)
+                                      flwsim <- min(dd[1], x)
+                                      fleetwght <- fleet@WeightFleet[flwsim,,TSIndex, drop=FALSE] |> 
                                         abind::adrop(c(1,3), one.d.array = TRUE) |>
                                         AddDimension('Area') |>
                                         ExtendAreas(1:nArea)
