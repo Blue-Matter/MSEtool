@@ -84,15 +84,19 @@ ConvertData <- function(Data, Seasons = 1, sim = 1, silent = FALSE) {
   data <- Data2Exploitation(Data, data, sim)
 
   data <- Data2Effort(Data, data, sim)
+  
   data <- Data2Landings(Data, data, sim)
+  
   data <- Data2CPUE(Data, data, sim)
+  
   data <- Data2Survey(Data, data, sim) # TODO
   
   data <- Data2CAA(Data, data, sim)
+  
   data <- Data2CAL(Data, data, sim)
+  
   data <- Data2Advice(Data, data, sim)
   
-
   data
 }
 
@@ -119,63 +123,81 @@ Data2Years <- function(Data, Seasons=1) {
 }
 
 
-
-
 Data2LifeHistory <- function(Data, data, sim) {
   
   data@LifeHistory@Ages <- Ages(MaxAge = Data@MaxAge,
                                 Units = CalcTSUnits(data@Seasons))
   
-  data@LifeHistory@Length@Pars <- list(Linf=Data@vbLinf[sim],
-                                       Linf_CV=Data@CV_vbLinf[sim],
-                                       K=Data@vbK[sim],
-                                       K_CV=Data@CV_vbK[sim],
-                                       t0=Data@vbt0[sim],
-                                       t0_CV=Data@CV_vbt0[sim])
-  
-  data@LifeHistory@Length@Model <- 'vonBert'
-  data@LifeHistory@Length@CVatAge <- Data@LenCV[sim]
-  
-  data@LifeHistory@Weight@Pars <- list(
-    alpha=Data@wla[sim],
-    alpha_CV=Data@CV_wla[sim],
-    beta=Data@wlb[sim],
-    beta_CV=Data@CV_wlb[sim]
-  )
-  
-  data@LifeHistory@NaturalMortality@Pars <- list(
-    M=Data@Mort[sim],
-    CV_M=Data@CV_Mort[sim]
-  )
-  
-  data@LifeHistory@Maturity@Pars <- list(
-    L50=Data@L50[sim],
-    L50_CV=Data@CV_L50[sim],
-    L50_95=Data@L95[sim]-Data@L50[sim]
-  )
+  if (!is.na(Data@vbLinf[sim])) {
+    data@LifeHistory@Length@Pars <- list(Linf=Data@vbLinf[sim],
+                                         Linf_CV=Data@CV_vbLinf[sim],
+                                         K=Data@vbK[sim],
+                                         K_CV=Data@CV_vbK[sim],
+                                         t0=Data@vbt0[sim],
+                                         t0_CV=Data@CV_vbt0[sim])
     
-  data@LifeHistory@SRR@Pars <- list(
-    h=Data@steep[sim],
-    h_CV=Data@CV_steep[sim]
-  )
+    data@LifeHistory@Length@Model <- 'vonBert'
+    data@LifeHistory@Length@CVatAge <- Data@LenCV[sim]
+  }
+
+  if (!is.na(Data@wla[sim])) {
+    
+    data@LifeHistory@Weight@Pars <- list(
+      alpha=Data@wla[sim],
+      alpha_CV=Data@CV_wla[sim],
+      beta=Data@wlb[sim],
+      beta_CV=Data@CV_wlb[sim]
+    )
+  }
+
+  if (!is.na(Data@Mort[sim])) {
+    data@LifeHistory@NaturalMortality@Pars <- list(
+      M=Data@Mort[sim],
+      CV_M=Data@CV_Mort[sim]
+    )
+  }
+
+  if (!is.na(Data@L50[sim])) {
+    data@LifeHistory@Maturity@Pars <- list(
+      L50=Data@L50[sim],
+      L50_CV=Data@CV_L50[sim],
+      L50_95=Data@L95[sim]-Data@L50[sim]
+    )
+  }
+
+  if (!is.na(Data@L50[sim])) {
+    data@LifeHistory@SRR@Pars <- list(
+      h=Data@steep[sim],
+      h_CV=Data@CV_steep[sim]
+    )
+  }
+    
+  if (!is.na(Data@sigmaR[sim])) {
+    data@LifeHistory@SRR@SD <- list(Value=Data@sigmaR[sim],
+                                    CV=Data@CV_sigmaR[sim])
+  }
   
-  data@LifeHistory@SRR@SD <- list(Value=Data@sigmaR[sim],
-                                  CV=Data@CV_sigmaR[sim])
-  
-  data@LifeHistory@Depletion@Final <- list(Value=Data@Dep[sim],
-                                           CV=Data@CV_Dep[sim])
+  if (!is.na(Data@Dep[sim])) {
+    
+    data@LifeHistory@Depletion@Final <- list(Value=Data@Dep[sim],
+                                             CV=Data@CV_Dep[sim])
+  }
   
   data
 }
 
 Data2Exploitation <- function(Data, data, sim) {
-  data@Exploitation@Selectivity@Pars <- list(
-    L5=Data@LFC[sim],
-    L5_CV=Data@CV_LFC[sim],
-    LFS=Data@LFS[sim],
-    LFS_CV=Data@CV_LFS[sim],
-    Vmaxlen=Data@Vmaxlen[sim]
-  )
+  
+  if (!is.na(Data@LFC[sim])) {
+    data@Exploitation@Selectivity@Pars <- list(
+      L5=Data@LFC[sim],
+      L5_CV=Data@CV_LFC[sim],
+      LFS=Data@LFS[sim],
+      LFS_CV=Data@CV_LFS[sim],
+      Vmaxlen=Data@Vmaxlen[sim]
+    )
+  }
+
   data
 } 
 
@@ -205,6 +227,10 @@ AddFleetArray <- function(Value, data) {
 }
 
 Data2Effort <- function(Data, data, sim) {
+  
+  if (all(is.na(Data@Effort)))
+    return(data)
+  
   data@Effort@Value <- ValorNULL(Data@Effort[sim, ]) |> AddYearFleetArray(data)
   if (!is.null(data@Effort@Value)) {
     data@Effort@CV <- ValorNULL(Data@CV_Effort[sim, ]) |> AddYearFleetArray(data)
@@ -213,10 +239,19 @@ Data2Effort <- function(Data, data, sim) {
 }
 
 Data2Landings <- function(Data, data, sim) {
-  data@Landings@Value <- ValorNULL(Data@Cat[sim, ]) |> AddYearFleetArray(data)
+  
+  if (all(is.na(Data@Cat)))
+    return(data)
+  
+  data@Landings@Value <- ValorNULL( Data@Cat[sim,]) |> AddYearFleetArray(data)
+  
   if (is.null(data@Landings@Value)) {
     return(data)
   }
+  
+  if (all(is.na(Data@CV_Cat)))
+    return(data)
+  
   data@Landings@CV <- ValorNULL(Data@CV_Cat[sim, ]) |> AddYearFleetArray(data)
   data@Landings@Units <- Data@Units
   data@Landings@Ref <- Data@Cref[sim] |> AddFleetArray(data)
@@ -225,13 +260,28 @@ Data2Landings <- function(Data, data, sim) {
 }
 
 Data2CPUE <- function(Data, data, sim) {
+  
+  if (all(is.na(Data@Ind)))
+    return(data)
+  
   data@CPUE@Value <- ValorNULL(Data@Ind[sim, ]) |> AddYearFleetArray(data)
   if (is.null(data@CPUE@Value)) {
     return(data)
   }
+  
+  if (all(is.na(Data@CV_Ind)))
+    return(data)
+  
+  
   data@CPUE@CV <- ValorNULL(Data@CV_Ind[sim, ]) |> AddYearFleetArray(data)
   data@CPUE@Ref <- Data@Iref[sim] |> AddFleetArray(data)
   data@CPUE@RefCV <- Data@CV_Iref[sim] |> AddFleetArray(data)
+  
+  
+  Data@AddInd |> dim()
+  Data@AddIndType
+  Data@AddIndV
+  
   
   if (!all(is.na(Data@AddInd))) {
     cli::cli_alert_warning('`Data@AddInd` is currently not converted to new `Data` object. \nManually add to `CPUE(Data)` or `Survey(Data)` as appropriate ')
