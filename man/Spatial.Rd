@@ -18,7 +18,7 @@
 \title{Spatial}
 \usage{
 Spatial(
-  UnfishedDist,
+  UnfishedDist = NULL,
   ProbStaying = NULL,
   RelativeSize = NULL,
   Movement = NULL,
