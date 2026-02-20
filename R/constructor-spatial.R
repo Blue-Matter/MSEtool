@@ -104,7 +104,7 @@
 #'
 #' @return A [spatial-class] object.
 #' @export
-Spatial <- function(UnfishedDist,
+Spatial <- function(UnfishedDist = NULL,
                     ProbStaying = NULL,
                     RelativeSize = NULL,
                     Movement = NULL,
@@ -114,11 +114,6 @@ Spatial <- function(UnfishedDist,
                     CVStay = 1,
                     Misc = list()) {
   
-  if (missing(UnfishedDist)) {
-    object <- methods::new("spatial")
-    methods::validObject(object)
-    return(object)
-  }
   
   if (inherits(UnfishedDist, 'stock'))
     return(UnfishedDist@Spatial)

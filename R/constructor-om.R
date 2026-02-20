@@ -519,18 +519,6 @@ SharePar <- function(OM) {
   AssignSlot(x, value, 'SharePar')
 }
 
-#' @rdname OM-accessors
-#' @export
-Species <- function(OM) {
-  CheckClass(OM)
-  OM@Species
-}
-
-#' @rdname OM-accessors
-#' @export
-`Species<-` <- function(x, value) {
-  AssignSlot(x, value, 'Species')
-}
 
 
 #' @rdname OM-accessors

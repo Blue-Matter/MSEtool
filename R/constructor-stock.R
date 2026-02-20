@@ -137,3 +137,27 @@ Stock <- function(Name,
 `Stock<-` <- function(x, value) {
   AssignSlot(x, value, 'Stock')
 }
+
+#' @rdname Stock
+#' @export
+CommonName <- function(x) {
+  AccessSlot(x, 'CommonName')
+}
+
+#' @rdname Stock
+#' @export
+`CommonName<-` <- function(x, value) {
+  AssignSlot(x, value, 'CommonName')
+}
+
+#' @rdname Stock
+#' @export
+Species <- function(x) {
+  AccessSlot(x, 'Species')
+}
+
+#' @rdname Stock
+#' @export
+`Species<-` <- function(x, value) {
+  AssignSlot(x, value, 'Species')
+}
