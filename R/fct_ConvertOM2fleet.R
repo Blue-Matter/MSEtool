@@ -1,4 +1,4 @@
-OM2fleet <- function(OM, YearsList, cpars=NULL, Fdisc=NULL) {
+OM2fleet <- function(OM, YearsList, cpars=NULL, Fdisc=NULL, AgeClasses=NULL) {
   if (inherits(OM, 'OM')) {
     cpars <- OM@cpars
   }
@@ -7,8 +7,8 @@ OM2fleet <- function(OM, YearsList, cpars=NULL, Fdisc=NULL) {
   fleet@Effort <- OM2Effort(OM, cpars, YearsList)
   
   fleet@Catchability <- OM2Catchability(OM, cpars, YearsList) 
-  fleet@Selectivity <- OM2Selectivity(OM, cpars, YearsList)
-  fleet@Retention  <- OM2Retention(OM, cpars, YearsList)
+  fleet@Selectivity <- OM2Selectivity(OM, cpars, YearsList, AgeClasses)
+  fleet@Retention  <- OM2Retention(OM, cpars, YearsList, AgeClasses)
   fleet@DiscardMortality <- OM2DiscardMortality(OM, cpars, Fdisc, YearsList)
   fleet@Closure <- OM2Closure(OM, cpars)
   fleet@WeightFleet <- OM2WeightFleet(OM, cpars)
@@ -66,7 +66,7 @@ OM2Catchability <- function(OM, cpars=list(), YearsList=NULL) {
   Catchability
 }
 
-OM2Selectivity <- function(OM, cpars=list(), YearsList=NULL) {
+OM2Selectivity <- function(OM, cpars=list(), YearsList=NULL, AgeClasses=NULL) {
   Selectivity <- Fleet2Selectivity(OM)
   if (!length(cpars)) {
     return(Selectivity)
@@ -78,7 +78,8 @@ OM2Selectivity <- function(OM, cpars=list(), YearsList=NULL) {
     Years <- c(YearsList$HistTS, YearsList$ProjTS) 
   }
   if (!is.null(cpars[['V']])) {
-    AgeClasses <- GetStockAges(OM)
+    if (is.null(AgeClasses)) 
+      AgeClasses <- GetStockAges(OM)
     dd <- dim(cpars[['V']])
     Selectivity@MeanAtAge <- array(cpars[['V']],
                                    dim=dd,
@@ -115,7 +116,7 @@ OM2Selectivity <- function(OM, cpars=list(), YearsList=NULL) {
   Selectivity
 }
 
-OM2Retention <- function(OM, cpars=list(), YearsList=NULL) {
+OM2Retention <- function(OM, cpars=list(), YearsList=NULL, AgeClasses=NULL) {
   Retention <- Fleet2Retention(OM)
   if (!length(cpars)) {
     return(Retention)
@@ -128,7 +129,8 @@ OM2Retention <- function(OM, cpars=list(), YearsList=NULL) {
   }
   
   if (!is.null(cpars[['retA']])) {
-    AgeClasses <- GetStockAges(OM)
+    if (is.null(AgeClasses)) 
+      AgeClasses <- GetStockAges(OM)
     
     dd <- dim(cpars[['retA']])
     Retention@MeanAtAge <- array(cpars[['retA']],
