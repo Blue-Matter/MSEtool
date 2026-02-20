@@ -50,6 +50,14 @@ Effort <- function(Effort       = NULL,
     return(Effort@Effort)
   }
   
+  if (inherits(Effort, 'hist')) {
+    return(Effort@Effort)
+  }
+  
+  if (inherits(Effort, 'mse')) {
+    return(Effort@Effort)
+  }
+  
   methods::new(
     "effort",
     Effort       = Effort,

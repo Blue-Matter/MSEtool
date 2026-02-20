@@ -74,8 +74,11 @@ setClass(
     CPUE = "indicesdata",
     Survey = "indicesdata",
     
-    CAA = "compdata",
-    CAL = "compdata",
+    LandingsAtAge = "compdata",
+    DiscardsAtAge = "compdata",
+    
+    LandingsAtSize = "compdata",
+    DiscardsAtSize = 'compdata',
     
     Advice = "advicedata",
     Log = "list",

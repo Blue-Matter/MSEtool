@@ -10,7 +10,7 @@
 \title{Stock}
 \usage{
 Stock(
-  Name,
+  Name = "New Stock Object",
   CommonName = NULL,
   Species = NULL,
   Ages = NULL,

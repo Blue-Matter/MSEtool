@@ -105,7 +105,7 @@ PopulateSRR <- function(SRR,
   }
 
   pars <- StructurePars(list(SRR@R0, SRR@SD, SRR@AC), nSim, Years)
-  SRR@R0 <- pars[[1]] |> ReduceDims(IncYear =TRUE)
+  SRR@R0 <- pars[[1]] 
   SRR@SD <- pars[[2]][, 1, drop = FALSE] # only one time step for now
   SRR@AC <- pars[[3]][, 1, drop = FALSE] # only one time step for now
   SRR@AC[!is.finite(SRR@AC)] <- 0

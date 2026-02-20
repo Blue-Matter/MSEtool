@@ -39,7 +39,7 @@
 #'
 #'
 #' @export
-Stock <- function(Name,
+Stock <- function(Name = "New Stock Object",
                   CommonName = NULL,
                   Species = NULL,
                   Ages = NULL,
@@ -54,13 +54,7 @@ Stock <- function(Name,
                   Seasons = 1,
                   Misc = list()) {
   
-  
-  if (missing(Name)) {
-    object <- methods::new("stock")
-    methods::validObject(object)
-    return(object)
-  }
-  
+
   if (inherits(Name, 'om')) {
     return(Name@Stock)
   }
@@ -75,7 +69,6 @@ Stock <- function(Name,
     return(Name@Stock)
   }
 
-  
   
   if (is.null(Ages))  
     Ages <- Ages()

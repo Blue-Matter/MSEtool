@@ -12,7 +12,7 @@
 \alias{ConvertStock}
 \title{Convert legacy S4 objects to new S4 object classes}
 \usage{
-ConvertData(Data, Sim = 1, silent = FALSE)
+ConvertData(Data, Seasons = 1, sim = 1, silent = FALSE)
 
 ConvertFleet(Fleet, silent = FALSE)
 
@@ -36,7 +36,7 @@ ConvertStock(Stock, silent = FALSE)
 \arguments{
 \item{Data}{A \linkS4class{Data} object}
 
-\item{Sim}{The simulation number to convert to the new \code{Data} object}
+\item{sim}{The simulation number to convert to the new \code{Data} object}
 
 \item{silent}{Logical. Supress messages?}
 

@@ -22,7 +22,7 @@ CheckMPClass <- function(MPs) {
   if (any(MPClass != 'mp')) 
     cli::cli_abort("Currently only MPs of class `mp` are supported", call=NULL)
   
-  NULL
+  invisible(NULL)
 }
 
 #' Detect helper functions called by an MP

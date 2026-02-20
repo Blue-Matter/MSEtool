@@ -136,6 +136,7 @@ Collate:
     'calc-unfished-dynamic.R'
     'calc-unfished-equilibrium.R'
     'calc-unfished-number.R'
+    'calc-years.R'
     'check-advice.R'
     'check-class.R'
     'check-mse-run.R'
