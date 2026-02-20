@@ -19,7 +19,8 @@
 #' @return
 #' \itemize{
 #'   \item \code{StockNames()}: a character vector of stock names
-#'   \item \code{FleetNames()}: a character vector or a list of character vectors
+#'   \item \code{FleetNames()}: a character vector of fleet names (always taken 
+#'   from the first stock)
 #' }
 #'
 #'
@@ -36,6 +37,9 @@ StockNames <- function(object) {
   }
   
   if (inherits(object, "om")) {
+    if (inherits(object@Stock, 'stock')) 
+      return(object@Stock@Name)
+      
     return(names(object@Stock))
   }
   

@@ -3,9 +3,10 @@ LinearInterpolate_Age <- function(array, nSubAges=12) {
   dnames <- dimnames(array)
   AgeClasses <- dnames[['Age']] |> as.numeric()
   by <- AgeClasses[2] -AgeClasses[1]
+  to <- max(AgeClasses)
   nAge <- length(AgeClasses)
   nAgesOut <- (nAge*nSubAges)-(nSubAges-1)
-  newAgeClasses <- seq(AgeClasses[1], by=by/nSubAges, length.out=nAgesOut) |> round(5)
+  newAgeClasses <- seq(AgeClasses[1], by=by/nSubAges, to=to) |> round(5)
   
   dnames <- names(dnames)
   dnames <- dnames[!dnames=='Age']
@@ -38,9 +39,9 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
     return(object)
   }
   
-  ObjectMeanAtAge <- object@MeanAtAge
-  LengthMeanAtAge <- Length@MeanAtAge
-  LengthCVatAge <- Length@CVatAge
+  ObjectMeanAtAge <- object@MeanAtAge |> ReduceDims()
+  LengthMeanAtAge <- Length@MeanAtAge |> ReduceDims()
+  LengthCVatAge <- Length@CVatAge |> ReduceDims()
   
   if (hasSlot(Length, 'ALK')) {
     ASK <- Length@ALK 
@@ -66,7 +67,7 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
   if (nAge < 50) {  
     # Increases the temporal resolution of `ObjectMeanAtAge` and `ASK`
     # by linear interpolate Mean length-at-age and CV length-at-age
-    ObjectMeanAtAge <- LinearInterpolate_Age(object@MeanAtAge)
+    ObjectMeanAtAge <- LinearInterpolate_Age(array=object@MeanAtAge)
     ASK <- CalcAgeSizeKey(MeanAtAge=LinearInterpolate_Age(LengthMeanAtAge),
                           CVatAge=LinearInterpolate_Age(LengthCVatAge),
                           Classes=Length@Classes,
@@ -91,12 +92,10 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
   Years <- c(dimnames(object@MeanAtAge)[['Year']], dimnames(ASK)[['Year']]) |>
     as.numeric() |> unique() |> sort()
   
-  
   ASK <- ExtendYears(ASK, Years) 
   ObjectMeanAtAge <- ExtendYears(array=ObjectMeanAtAge, Years) 
   
-  
-  
+
   dnames <- dimnames(object@MeanAtAge)
   names(dnames)[2] <- 'Class'
   dnames[['Class']] <- Length@Classes

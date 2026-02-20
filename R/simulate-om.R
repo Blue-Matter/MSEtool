@@ -19,7 +19,8 @@ Simulate_om <- function(OM = NULL,
   StartTime <- Sys.time()
   OnExit()
   CheckClass(OM) # confirm that OM is class `om`
-
+  OM <- UpdateObject(OM)
+  
   # Populate OM, reduce nSim if applicable, checks and warning messages
   OM <- StartUp(OM, nSim)
 
@@ -33,7 +34,6 @@ Simulate_om <- function(OM = NULL,
   if (!silent) {
     cli::cli_text('')
     cli::cli_alert_info(' Starting  {.val Simulate} for OM {.val {OM@Name}}')
-    
   }
     
   # ---- Make Hist Object ----

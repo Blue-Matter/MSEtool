@@ -89,6 +89,8 @@ PopulateRetention <- function(Retention,
   
   Retention@Pars <- StructurePars(Pars = Retention@Pars, nSim, Years)
   Retention@Model <- FindModel(Retention)
+  Retention <- PopulateMeanAtAge(Retention, Ages, Years, Length)
+  
   ModelClass <- getModelClass(Retention@Model)
   
   if (!is.null(ModelClass)) {

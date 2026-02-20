@@ -97,8 +97,15 @@ PopulateSRR <- function(SRR,
     SRR@RelRecFun <- paste(SRR@Model, "RelRec", sep = "_")
   }
   
+  # checks 
+  names <- c('R0', 'SD', 'AC')
+  defaults <- c(1000, 0.4, 0)
+  for (i in seq_along(names)) {
+    SRR <- CheckSRRPars(SRR, names[i], defaults[i])
+  }
+
   pars <- StructurePars(list(SRR@R0, SRR@SD, SRR@AC), nSim, Years)
-  SRR@R0 <- pars[[1]]
+  SRR@R0 <- pars[[1]] |> ReduceDims(IncYear =TRUE)
   SRR@SD <- pars[[2]][, 1, drop = FALSE] # only one time step for now
   SRR@AC <- pars[[3]][, 1, drop = FALSE] # only one time step for now
   SRR@AC[!is.finite(SRR@AC)] <- 0
@@ -162,4 +169,14 @@ PopulateSRR <- function(SRR,
     Year = ProjTS
   )
   SetDigest(SRR, argList)
+}
+
+CheckSRRPars <- function(SRR, name='R0', default=1000) {
+  val <- slot(SRR, name)
+  if (is.null(val)) {
+    cli::cli_alert_danger('Warning: {.val {name}} is missing in {.val SRR}')
+    cli::cli_alert_info('Using default value: {.val {default}}')
+    slot(SRR, name) <- default
+  }
+  SRR
 }

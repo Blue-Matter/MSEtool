@@ -75,6 +75,8 @@ GenerateMeanatGeneric <- function(Model, Pars, nSim = 5, Years=NULL,  ...) {
   arg_name <- names(dots)
   arg <- dots[[1]]
   
+
+
   # Convert non-array input to array
   if (!is.array(arg)) {
     par_array <- Pars[[1]]
@@ -104,8 +106,15 @@ GenerateMeanatGeneric <- function(Model, Pars, nSim = 5, Years=NULL,  ...) {
   if (length(dim_out) == 3) {
     for (sim in seq_len(dim_out[1])) {
       for (year in seq_len(dim_out[3])) {
-        arg_list <- list(arg_array[sim, , year]); names(arg_list) <- arg_name
-        args <- c(arg_list, lapply(Pars, function(p) p[sim, year]))
+        arg_list <- list(arg_array[sim, , year])
+        names(arg_list) <- arg_name
+        args <- c(arg_list, lapply(Pars, function(p) {
+          dd <- dim(p)
+          p_sim <- min(sim, dd[1])
+          p_year <- min(year, dd[2])
+          p[p_sim, p_year]
+        })
+        )
         array_out[sim, , year] <- do.call(fun, args)
       }
     }

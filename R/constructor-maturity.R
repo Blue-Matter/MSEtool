@@ -42,6 +42,17 @@ Maturity <- function(Pars = list(),
                      Semelparous = FALSE,
                      Misc = list()) {
   
+  if (inherits(Pars, 'stock')) {
+    if (inherits(Model, 'numeric') || is.list(Pars)) {
+      return(
+        Pars[[Model]]@Maturity
+      )
+    }
+    return(
+      Pars@Maturity
+    )
+  }
+  
   object <- methods::new(
     "maturity",
     Pars = Pars,

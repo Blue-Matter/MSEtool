@@ -45,7 +45,8 @@ CalcSurvival <- function(NaturalMortality,
   nYear <- d[3]
   
   # Create array if needed
-  Semelparous <- ProcessSemelparuous(Semelparous, nSim, AgeClasses, Years) 
+  Semelparous <- ProcessSemelparuous(Semelparous, nSim, AgeClasses, Years) |>
+    SubsetYear(Years)
   
   if (!bySim) {
     Semelparous <- AddDimension(Semelparous, 'Sim') |> aperm(c('Sim', 'Age', 'Year'))

@@ -228,6 +228,12 @@ nArea <- function(x, st=1) {
 #' @rdname Access
 #' @export
 nAge <- function(x, st=NULL) {
+  if (inherits(x, 'ages')) {
+    return(
+      length(x@Classes )
+    )
+  }
+  
   if (inherits(x, 'hist')) {
     x <- x@OM 
   }
@@ -246,7 +252,10 @@ nAge <- function(x, st=NULL) {
       } else {
         return(lapply(stock, nAge))
       }
-      
+    } else {
+      return(
+        length(stock@Ages@Classes)
+      )
     }
   }
   if (inherits(x, 'stock')) {

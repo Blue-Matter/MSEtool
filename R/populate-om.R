@@ -42,6 +42,10 @@
 #' @export
 PopulateOM <- function(OM, silent = FALSE, force = FALSE) {
   CheckClass(OM)
+  OM <- UpdateObject(OM)
+  
+  if (!length(OM@maxF))
+    OM@maxF <- 3
 
   if (EmptyObject(OM)) {
     return(OM)

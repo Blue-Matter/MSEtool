@@ -3,6 +3,34 @@ PopulateMeanAtAge <- function(object,
                               Years=NULL,
                               Length=NULL) {
   
+  
+  if (!is.null(object@MeanAtAge)) {
+    if (!is.array(object@MeanAtAge)) {
+      if (length(object@MeanAtAge) != length(Ages@Classes)) {
+        cli::cli_abort(c("x"="If `MeanAtAge` is numeric vector it must be length `nAge` ({.val {nAge(Ages)}})",
+                         "i"="Error occured on object class {.val {as.character(class(object))}}")
+        )
+      }
+      object@MeanAtAge <- array(object@MeanAtAge, dim=c(1, nAge(Ages), 1),
+                                dimnames = list(
+                                  Sim=1,
+                                  Age=Ages@Classes,
+                                  Year=Years[1]
+                                ))
+      
+    }
+    dnames <- dimnames(object@MeanAtAge)
+    if (is.null(dnames)) {
+      dd <- dim(object@MeanAtAge)
+      dimnames(object@MeanAtAge) <- list(
+        Sim=1:dd[1],
+        Age=Ages@Classes,
+        Years=Years[1:dd[3]]
+      )
+    }
+    
+  }
+  
   if (is.null(object@Model))
     return(object)
   
@@ -19,8 +47,8 @@ PopulateMeanAtAge <- function(object,
     CheckRequiredObject(Length, 'length', 'Length')
     
     object@MeanAtAge <- GenMeanAtLength(Model=object@Model,
-                                             Pars=object@Pars,
-                                             Length=Length@MeanAtAge)
+                                        Pars=object@Pars,
+                                        Length=Length@MeanAtAge)
     object@Classes <- Length@Classes
   } else {
     if ('Ages' %in% args) {

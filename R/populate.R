@@ -66,6 +66,8 @@
 #' @export
 Populate <- function(object, ...) {
   
+  object <- UpdateObject(object)
+  
   if (inherits(object, "om")) {
     return(PopulateOM(OM = object, ...))
   }

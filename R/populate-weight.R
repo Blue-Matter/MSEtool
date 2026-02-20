@@ -74,6 +74,7 @@ PopulateWeight <- function(Weight,
   )
   
   if (EmptyObject(Weight)) {
+    cli::cli_abort('{.val Weight} is required but is currently empty')
     return(Weight)
   }
   
@@ -85,6 +86,10 @@ PopulateWeight <- function(Weight,
   
   Weight@Pars <- StructurePars(Pars = Weight@Pars, nSim, Years)
   Weight@Model <- FindModel(Weight)
+  Weight <- PopulateMeanAtAge(object = Weight, 
+                              Ages= Ages, 
+                              Years = Years,
+                              Length = Length)
   
   ModelClass <- getModelClass(Weight@Model)
   if (!is.null(ModelClass)) {

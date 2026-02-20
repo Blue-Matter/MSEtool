@@ -65,6 +65,7 @@ PopulateNaturalMortality <- function(NaturalMortality,
   argList <- list(Ages, Length, nSim, Years, CalcAtLength, seed)
   
   if (EmptyObject(NaturalMortality)) {
+    cli::cli_abort('{.val NaturalMortality} is required but is currently empty')
     return(NaturalMortality)
   }
   
@@ -76,6 +77,9 @@ PopulateNaturalMortality <- function(NaturalMortality,
   
   NaturalMortality@Pars <- StructurePars(Pars = NaturalMortality@Pars, nSim, Years)
   NaturalMortality@Model <- FindModel(NaturalMortality)
+  NaturalMortality <- PopulateMeanAtAge(object = NaturalMortality, 
+                                        Ages= Ages, 
+                                        Years = Years)
   
   ModelClass <- getModelClass(NaturalMortality@Model)
   if (!is.null(ModelClass)) {

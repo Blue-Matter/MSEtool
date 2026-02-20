@@ -129,7 +129,10 @@ PrepHistMisc <- function(Hist, Period=c('Historical', 'Projection')) {
   # Calculate recruitment lag 
   Hist@Misc$RecLag <- purrr::map(Hist@OM@Stock, \(stock) {
     MinAge <- min(stock@Ages@Classes)
-    which(seq(0, to=max(stock@Ages@Classes), by=1/stock@Seasons) == MinAge) - 1
+    MaxAge <- max(stock@Ages@Classes)
+    nSeasons <- stock@Seasons
+    AllAges <- seq(from = 0, to=MaxAge, by=1/nSeasons) |> round(3)
+    which(AllAges == MinAge) - 1
   }) |> unlist()
   
   if (length(Hist@Misc$RecLag) != nStock) {

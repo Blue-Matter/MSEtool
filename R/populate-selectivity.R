@@ -70,6 +70,11 @@ PopulateSelectivity <- function(Selectivity,
     Ages, Length, Weight, Years, nArea, nSim, CalcAtLength, seed
   )
   
+  if (EmptyObject(Selectivity)) {
+    cli::cli_abort('{.val Selectivity} is required but is currently empty')
+    # return(Length)
+  }
+  
   if (CheckDigest(Selectivity, argList)) {
     return(Selectivity)
   }
@@ -83,6 +88,9 @@ PopulateSelectivity <- function(Selectivity,
     nArea = nArea
   )
   Selectivity@Model <- FindModel(Selectivity)
+  
+  Selectivity <- PopulateMeanAtAge(Selectivity, Ages, Years, Length)
+  
   ModelClass <- getModelClass(Selectivity@Model)
   
   if (!is.null(ModelClass)) {

@@ -51,11 +51,11 @@ inline void CalcNumberNext(
     if (Mov_st.dim[1] != nArea || Mov_st.dim[2] != nArea)
       Rcpp::stop("Movement array has wrong area dimensions");
     
-    check_dims<4>(Num_st, {nSim, nAge, nYear, nArea}, "Number", y, 2);
-    check_dims<5>(Fd, {nSim, nAge, nYear, nFleet, nArea}, "FDeadArea", y, 2);
-    check_dims<3>(M_st, {nSim, nAge, nYear}, "NaturalMortality", y, 2);
-    check_dims<3>(Sem_st, {nSim, nAge, nYear}, "Semelparous", y, 2);
-    check_dims<5>(Mov_st, {nSim, nArea, nArea, nAge, nYear}, "Movement", y, 4);
+    check_dims<4>(Num_st, {nSim, nAge, Num_st.dim[2], nArea}, "Number", y, 2);
+    check_dims<5>(Fd, {nSim, nAge, Fd.dim[2], nFleet, nArea}, "FDeadArea", y, 2);
+    check_dims<3>(M_st, {nSim, nAge, M_st.dim[2]}, "NaturalMortality", y, 2);
+    check_dims<3>(Sem_st, {nSim, nAge, Sem_st.dim[2]}, "Semelparous", y, 2);
+    check_dims<5>(Mov_st, {nSim, nArea, nArea, nAge, Mov_st.dim[4]}, "Movement", y, 4);
     
     for (int sim : Sims) {
       

@@ -69,7 +69,9 @@ PopulateMaturity <- function(Maturity,
   argList <- list(Ages, Length, nSim, Years, CalcAtLength, seed)
   
   if (EmptyObject(Maturity)) {
-    return(Maturity)
+    # cli::cli_alert_danger('Warning: {.val Maturity} is required but is currently empty')
+    cli::cli_abort('{.val Maturity} is required but is currently empty')
+    # return(Maturity)
   }
   
   if (CheckDigest(Maturity, argList) & !force) {
@@ -80,6 +82,11 @@ PopulateMaturity <- function(Maturity,
   
   Maturity@Pars <- StructurePars(Pars = Maturity@Pars, nSim, Years)
   Maturity@Model <- FindModel(Maturity)
+  Maturity <- PopulateMeanAtAge(object = Maturity, 
+                              Ages, 
+                              Years,
+                              Length)
+  
   ModelClass <- getModelClass(Maturity@Model)
   
   if (!is.null(ModelClass)) {

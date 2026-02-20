@@ -64,7 +64,8 @@ PopulateLength <- function(Length,
   argList <- list(Ages, nSim, Years, ALK, seed)
   
   if (EmptyObject(Length)) {
-    return(Length)
+    cli::cli_abort('{.val Length} is required but is currently empty')
+    # return(Length)
   }
   
   if (CheckDigest(Length, argList) & !force) {
@@ -79,6 +80,7 @@ PopulateLength <- function(Length,
   Length <- PopulateRandom(Length)
   Length@CVatAge <- StructureCV(Length@CVatAge, nSim)
   dd <- dim(Length@CVatAge)
+  
   if (is.null(dimnames(Length@CVatAge))) {
     dimnames(Length@CVatAge) <- list(
       Sim = (1:nSim)[1:dd[1]],

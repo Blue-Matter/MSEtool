@@ -753,19 +753,11 @@ Add_predictive = function(char_vec) {
 
 
 
-#' Check OM object is complete
-#'
-#' @param OM An object of class `OM` 
-#' @param msg Logical. Display messages?
-#' @param stop_if_missing Logical. Stop with error is values are missing and there is no default?
-#'
-#' @return The OM object with default values (if needed)
-#' @export
-#'
-#' @examples
-#' testOM <- CheckOM(testOM)
-CheckOM <- function(OM, msg=TRUE, stop_if_missing=TRUE) {
-  if (!methods::is(OM,'OM')) 
+
+
+CheckOM_legacy <- function(OM, msg=TRUE, stop_if_missing=TRUE) {
+ 
+  if (!inherits(OM,'OM')) 
     stop("You must specify an operating model")
 
     
@@ -782,6 +774,7 @@ CheckOM <- function(OM, msg=TRUE, stop_if_missing=TRUE) {
   }
   invisible(OM)
 }
+
 
 
 checkSlot <- function(slot, OM, msg=TRUE, stop_if_missing=TRUE) {

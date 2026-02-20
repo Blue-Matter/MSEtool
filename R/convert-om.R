@@ -36,6 +36,7 @@ ConvertOM <- function(OM,
                       Populate = TRUE,
                       silent = FALSE) {
   
+ 
   CheckClass(OM, c('OM'), 'OM')
   
   if (!silent) {
@@ -52,8 +53,9 @@ ConvertOM <- function(OM,
   om@Latitude    <- OM@Latitude
   om@Sponsor     <- OM@Sponsor
   om@nSim        <- OM@nsim
-  om@nYear       <- OM@nyears
-  om@pYear       <- OM@proyears
+  om@Seasons     <- Seasons
+  om@nYear       <- OM@nyears/Seasons
+  om@pYear       <- OM@proyears/Seasons
   om@Interval    <- OM@interval
   om@Seed        <- OM@seed
   om@pStar       <- OM@pstar
@@ -69,8 +71,7 @@ ConvertOM <- function(OM,
       CurrentYear
     )
   }
-  
-  om@Seasons <- Seasons
+
   om@Years   <- CalcYears(
     nYear = om@nYear,
     pYear = om@pYear,
@@ -79,10 +80,14 @@ ConvertOM <- function(OM,
   )
   
   # Prepare years list for stock/fleet conversion
+  
   YearsList <- list(
     HistTS    = Years(om, 'Historical'),
     ProjTS    = Years(om, 'Projection'),
-    TimeUnits = 'year',
+    TimeUnits = CalcTSUnits(Seasons),
+    nYear = om@nYear,
+    pYear = om@pYear,
+    CurrentYear = om@CurrentYear,
     Seasons   = Seasons
   )
   
@@ -105,7 +110,7 @@ ConvertOM <- function(OM,
     StockName,
     MakeNamedList(
       FleetName,
-      OM2fleet(OM, OM@cpars)
+      OM2fleet(OM, YearsList=YearsList, cpars=OM@cpars)
     )
   )
   
@@ -217,16 +222,57 @@ SolveForVmaxlen <- function(om, type=c('Selectivity', 'Retention')) {
                     'Retention'='LFR')
   
   for (st in 1:nStock) {
+    om@Stock[[st]] <- PopulateStock(Stock=om@Stock[[st]],
+                                    nYear=om@nYear,
+                                    pYear=om@pYear,
+                                    CurrentYear = om@CurrentYear,
+                                    nSim = om@nSim,
+                                    Seasons = om@Seasons
+    )
+    
     Linf <- om@Stock[[st]]@Length@Pars$Linf 
+    if (is.null(Linf))
+      next()
     dd <- prod(dim(Linf)) * nFleet
     
     for (fl in 1:nFleet) {
       cli::cli_progress_bar('Calculating {.var {Var_Vmax}} for Stock: {.val {StockNames[st]}} Fleet:  {.val {FleetNames[st]}}', total=dd)
       
+      if (type=='Selectivity') {
+        om@Fleet[[st]][[fl]]@Selectivity <- PopulateSelectivity(Selectivity=om@Fleet[[st]][[fl]]@Selectivity,
+                                                                Ages=om@Stock[[st]]@Ages,
+                                                                Length=om@Stock[[st]]@Length,
+                                                                Weight=om@Stock[[st]]@Weight,
+                                                                Maturity=om@Stock[[st]]@Maturity,
+                                                                nSim = om@nSim,
+                                                                Years=Years(om),
+                                                                nArea = nArea(om)
+        )
+      } else {
+        om@Fleet[[st]][[fl]]@Retention <- PopulateRetention(Retention=om@Fleet[[st]][[fl]]@Retention,
+                                                                Ages=om@Stock[[st]]@Ages,
+                                                                Length=om@Stock[[st]]@Length,
+                                                                Weight=om@Stock[[st]]@Weight,
+                                                                Maturity=om@Stock[[st]]@Maturity,
+                                                                nSim = om@nSim,
+                                                                Years=Years(om),
+                                                                nArea = nArea(om)
+        )
+      }
+      
+      
       L5 <- slot(om@Fleet[[st]][[fl]], type)@Pars[[Var_L5]]
+      if (is.null(L5))
+        next()
+      
+      
       LFS <- slot(om@Fleet[[st]][[fl]], type)@Pars[[Var_LFR]]
       Vmaxlen <- slot(om@Fleet[[st]][[fl]], type)@Pars[[Var_Vmax]]
       
+      
+      if (all(L5==0) && all(LFS==0))
+        next()
+        
       df <- rbind(dim(Linf),
                   dim(L5),
                   dim(LFS),

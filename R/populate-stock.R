@@ -101,6 +101,7 @@ PopulateStock <- function(Stock,
     Seasons = Stock@Seasons
   )
   
+  
   Years <- Stock@Years
   Stock@Ages@Classes <- CalcAgeClasses(Stock@Ages)
   

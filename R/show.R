@@ -266,6 +266,7 @@ cli_fn <- function(fun) {
 # ---- OM ----
 
 setMethod("show", "om", function(object) {
+  object <- UpdateObject(object)
   
   cli::cli_h2("An {.help MSEtool::OM} Object")
   
@@ -296,19 +297,110 @@ setMethod("show", "om", function(object) {
   
   cli::cli_text("")
   
-  stockNames <- StockNames(object)
-  fleetNames <- FleetNames(object)
-  if (is.list(fleetNames))
-    fleetNames <- fleetNames[[1]]
-  cli::cli_text("Stocks: {.val {stockNames}}")
-  cli::cli_text("Fleets: {.val {fleetNames}}")
+  MissingSlots <- CheckOM(object)
+  
+  # Stock
+  if (is.null(object@Stock)) {
+    cli::cli_text("Stocks: {.emph None specified}")
+  } else {
+    stockNames <- StockNames(object)  
+    cli::cli_text("Stocks: {.val {stockNames}}")
+  }
+  
+  if (is.null(object@Fleet)) {
+    cli::cli_text("Fleets: {.emph None specified}")
+  } else {
+    fleetNames <- FleetNames(object)  
+    cli::cli_text("Fleets: {.val {fleetNames}}")
+  }
+  
+  if (!is.null(object@Stock)) {
+    MissingStock <- MissingSlots$MissingStock
+    
+    if (!is.null(MissingStock)) {
+      if (!is.list(MissingStock)) {
+        MissingStock <- list(MissingStock)
+        names(MissingStock) <- stockNames
+      }
+      if (lapply(MissingStock, length) |> unlist() |> max() == 0)
+        next()
+      cli::cli_text('')
+      cli::cli_alert_danger('Missing Required Slots:')
+      for (i in seq_along(MissingStock)) {
+        if (!is.null(MissingStock[[i]])) {
+          cli::cli_alert("Stock: {.val {stockNames[i]}}")
+          for (j in seq_along(MissingStock[[i]])) {
+            cli::cli_li("Slot: {.val {MissingStock[[i]][[j]]}}")
+          }
+        }
+      }
+    }
+  }
+  
+  if (!is.null(object@Fleet)) {
+    MissingFleet <- MissingSlots$MissingFleet
+    
+    if (!is.null(MissingFleet)) {
+      if (!is.list(MissingFleet)) {
+        MissingFleet <- list(list(MissingFleet))
+        names(MissingFleet) <- stockNames
+        names(MissingFleet[[1]]) <- fleetNames
+        
+      }
+     
+      
+      if ( lapply(MissingFleet, lapply, length)|> unlist() |> max() == 0)
+        next()
+      
+      cli::cli_text('')
+      cli::cli_alert_danger('Missing Required Slots:')
+      for (i in seq_along(MissingFleet)) {
+        if (!is.null(MissingFleet[[i]])) {
+          cli::cli_alert("Stock: {.val {stockNames[i]}}")
+          for (j in seq_along(MissingFleet[[i]])) {
+            cli::cli_alert("Fleet: {.val {fleetNames[j]}}")
+            for (k in seq_along(MissingFleet[[i]][[j]]))
+              cli::cli_li("Slot: {.val {MissingFleet[[i]][[j]][[k]]}}")
+          }
+        }
+      }
+    }
+  }
+
+    
+    
+  
+  
+  
+  
+  
+  
+  
+  # Fleet 
+  
+
+
+  
+  # Check missing slots 
+  if (!(is.null(object@Stock))) {
+    MissingStock <- CheckStock(object@Stock)
+    
+    
+  }
+  
+  if (!(is.null(object@Fleet))) {
+    MissingFleet <- CheckFleet(object@Fleet)
+  }
+  
 
 })
+
+
 
 # ---- Stock ----
 
 setMethod('show', 'stock', function(object) {
-  
+  object <- UpdateObject(object)
   cli::cli_h2("A {.help MSEtool::Stock} Object")
   
   .show_slot(object, 'Name')
@@ -395,7 +487,7 @@ setMethod("show", "depletion", function(object) {
 # ---- Fleet ----
 
 setMethod('show', 'fleet', function(object) {
-  
+  object <- UpdateObject(object)
   cli::cli_h2("A {.help MSEtool::Fleet} Object")
   
   .show_slot(object, 'Name')

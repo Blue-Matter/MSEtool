@@ -58,6 +58,16 @@ PopulateCatchability <- function(Catchability,
   }
   
   dd <- dim(Catchability@Efficiency)
+  if (is.null(dd)) {
+    Catchability@Efficiency <- array(Catchability@Efficiency, dim=c(1, 1),
+                                     dimnames=list(
+                                       Sim=1,
+                                       Year=HistYears[1]
+                                       )
+                                     )
+    dd <- dim(Catchability@Efficiency)
+  }
+  
   if (dd[1] != nSim && dd[1] != 1) {
     cli::cli_abort(c(
       "x" = "Incorrect number of rows in matrix: `Fleet |> Catchability() |> Efficiency()`",
@@ -78,27 +88,53 @@ PopulateCatchability <- function(Catchability,
   )
   
   if (!is.null(Catchability@qInc)) {
-    qIncs <- StructurePars_(Catchability@qInc, nSim = nSim, Years = Years)[, 1]
-    qIncs <- sapply(qIncs, function(x) (1 + x / 100)^(1:pYears)) |> t()
-    dimnames(qIncs) <- list(Sim = 1:nSim, Year = ProjYears)
-    qfuture <- ArrayMultiply(SubsetYear(Catchability@Efficiency, ProjYears), qIncs)
-    ArrayFill(Catchability@Efficiency) <- qfuture
-    Catchability@qInc <- qIncs
+    if (all(Catchability@qInc==0)) {
+      Catchability@qInc <- NULL
+      
+    } else {
+      qIncs <- StructurePars_(Catchability@qInc, nSim = nSim, Years = Years)[, 1]
+      qIncs <- sapply(qIncs, function(x) (1 + x / 100)^(1:pYears)) |> t()
+      dimnames(qIncs) <- list(Sim = 1:nSim, Year = ProjYears)
+      qIncs <- ReduceDims(qIncs)
+      q_sims <- dimnames(Catchability@Efficiency)[['Sim']] |> as.numeric()
+      qinc_sims <- dimnames(qIncs)[['Sim']] |> as.numeric()
+      
+      if (length(q_sims)>1 || length(qinc_sims)>1) {
+        allSims <- c(q_sims, qinc_sims) |> unique() 
+        maxSims <- 1
+        if (length(allSims)>1)
+          maxSims <- max(allSims)
+        
+        Catchability@Efficiency <- ExtendSims(Catchability@Efficiency, maxSims)
+        qIncs <- ExtendSims(qIncs, maxSims)
+      }
+      
+      qfuture <- ArrayMultiply(SubsetYear(Catchability@Efficiency, ProjYears), qIncs)
+      ArrayFill(Catchability@Efficiency) <- qfuture
+      Catchability@qInc <- qIncs
+    }
+    
+
   }
   
   if (!is.null(Catchability@qCV)) {
-    qCVs <- StructurePars_(Catchability@qCV, nSim = nSim, Years = Years)[, 1]
-    Catchability@qCV <- qCVs
-    qmu <- -0.5 * qCVs^2
-    qvar <- array(
-      exp(rnorm(pYears * nSim, rep(qmu, pYears), rep(qCVs, pYears))),
-      dim = c(nSim, pYears),
-      dimnames = list(Sim = 1:nSim, Year = ProjYears)
-    )
-    qfuture <- ArrayMultiply(SubsetYear(Catchability@Efficiency, ProjYears), qvar)
-    if (!all(qfuture == 1)) {
-      ArrayFill(Catchability@Efficiency) <- qfuture
+    if (all(Catchability@qCV==0)) {
+      Catchability@qCV <- NULL
+    } else {
+      qCVs <- StructurePars_(Catchability@qCV, nSim = nSim, Years = Years)[, 1]
+      Catchability@qCV <- qCVs
+      qmu <- -0.5 * qCVs^2
+      qvar <- array(
+        exp(rnorm(pYears * nSim, rep(qmu, pYears), rep(qCVs, pYears))),
+        dim = c(nSim, pYears),
+        dimnames = list(Sim = 1:nSim, Year = ProjYears)
+      )
+      qfuture <- ArrayMultiply(SubsetYear(Catchability@Efficiency, ProjYears), qvar)
+      if (!all(qfuture == 1)) {
+        ArrayFill(Catchability@Efficiency) <- qfuture
+      }
     }
+
   }
   
   Catchability
