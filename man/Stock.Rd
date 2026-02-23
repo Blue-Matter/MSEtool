@@ -3,10 +3,14 @@
 \name{Stock}
 \alias{Stock}
 \alias{Stock<-}
+\alias{CommonName}
+\alias{CommonName<-}
+\alias{Species}
+\alias{Species<-}
 \title{Stock}
 \usage{
 Stock(
-  Name,
+  Name = "New Stock Object",
   CommonName = NULL,
   Species = NULL,
   Ages = NULL,
@@ -23,6 +27,14 @@ Stock(
 )
 
 Stock(x) <- value
+
+CommonName(x)
+
+CommonName(x) <- value
+
+Species(x)
+
+Species(x) <- value
 }
 \arguments{
 \item{Name}{Character string. Unique stock name.}

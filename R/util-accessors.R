@@ -438,7 +438,7 @@ AccessSlot <- function(x, slotname) {
 AssignSlot <- function(x, value, slot) {
   nms <- slotNames(x)
   if (!slot %in% nms) {
-    cli::cli_alert_warning('Slot {.code {slot}} not found in object class: {.code {class(x# )}}')
+    cli::cli_alert_warning('Slot {.code {slot}} not found in object class: {.code {class(x)}}')
     return()
   }
   slot(x, slot) <- value

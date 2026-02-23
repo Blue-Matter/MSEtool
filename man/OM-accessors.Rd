@@ -48,8 +48,6 @@
 \alias{Seasons<-}
 \alias{SharePar}
 \alias{SharePar<-}
-\alias{Species}
-\alias{Species<-}
 \alias{Source}
 \alias{Source<-}
 \alias{Sponsor}
@@ -147,10 +145,6 @@ Seasons(x) <- value
 SharePar(OM)
 
 SharePar(x) <- value
-
-Species(OM)
-
-Species(x) <- value
 
 Source(OM)
 

@@ -102,7 +102,7 @@ Update_TAC_Sim <- function(Proj,
           if (is.null(allocation))
             stop("Proj@OM@Allocation is NULL")
           all_sim <- min(nrow(allocation), sim)
-          TAC <- as.numeric(TAC) * OM@Allocation[[i]][all_sim, ]  
+          TAC <- as.numeric(TAC) * Proj@OM@Allocation[[i]][all_sim, ]  
         }
       } 
       if (length(TAC) == nFleet) {
@@ -139,7 +139,12 @@ Update_TAC_Sim <- function(Proj,
   
   for (fl in seq_len(nFleet)) {
     if (!is.na(Proj@Effort[sim,TSIndex,fl])) {
-      FleetEffort[fl] <- min(FleetEffort[fl], Proj@Effort[sim,TSIndex,fl])
+      if (is.na(FleetEffort[fl])) {
+        FleetEffort[fl] <- Proj@Effort[sim,TSIndex,fl]
+      } else {
+        FleetEffort[fl] <- min(FleetEffort[fl], Proj@Effort[sim,TSIndex,fl])
+      }
+    
     }
   }
   Proj@Effort[sim,TSIndex,] <- FleetEffort

@@ -35,7 +35,7 @@ ExtendHist <- function(Hist, Years, silent=FALSE, id=NULL) {
                                   AgeClasses = AgeClasses,
                                   Years = Years,
                                   Areas = Areas)
-  
+    
     if (!silent) {
       cli::cli_progress_update(id=id)
     }

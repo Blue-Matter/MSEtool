@@ -75,7 +75,7 @@ CheckFleet <- function(Fleet) {
     
     stockfleetlist <- MakeNamedList(stocknames)
     
-    for (i in seq_along(nms)) {
+    for (i in seq_along(stocknames)) {
       stockfleet <- Fleet[[i]]
       fleetnames <- names(stockfleet)
       if (is.null(fleetnames))

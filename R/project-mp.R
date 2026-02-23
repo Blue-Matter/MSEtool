@@ -36,9 +36,11 @@ Project_MP <- function(Proj,
   Year <- YearsProj[1]; ts =1;
   
   if (!silent) 
-    cli::cli_progress_bar(format = "Projecting MP {.val {MPName}} {cli::pb_bar} {cli::pb_percent}",  total = length(YearsProj))
+    cli::cli_progress_bar(
+      format = "Projecting MP {.val {MPName}} {cli::pb_bar} {cli::pb_percent}",
+      total = length(YearsProj)
+      )
   
-    
   for (ts in seq_along(YearsProj)) {
     
     if (!silent) cli::cli_progress_update()
@@ -98,17 +100,19 @@ Project_MP <- function(Proj,
     
     # Update Pop Dynamics in Proj with MP Advice
     update_steps <- list(
-      Update_Closure,
-      Update_Selectivity,
-      Update_Retention,
-      Update_DiscardMortality,
-      Update_Effort,
-      Update_TAC
+      'Update_Closure',
+      'Update_Selectivity',
+      'Update_Retention',
+      'Update_DiscardMortality',
+      'Update_Effort',
+      'Update_TAC'
     )
     
     Error <- FALSE
     ErrorMessage <- NULL
-    for (fun in update_steps) {
+    for (funName in update_steps) {
+      
+      fun <- get(funName)
       
       tmp <- try(
         fun(
@@ -129,10 +133,10 @@ Project_MP <- function(Proj,
         Error <- TRUE
         ErrorMessage <- tmp
         
-        # Proj@Log[[as.character(Year)]]$UpdateError <- list(
-        #   Step = deparse(substitute(fun)),
-        #   Message = as.character(tmp)
-        # )
+        Proj@Log[[as.character(Year)]]$UpdateError <- list(
+          Step = funName,
+          Message = as.character(tmp)
+        )
         
         # if (!silent) {
         #   cli::cli_alert_danger(
@@ -149,7 +153,6 @@ Project_MP <- function(Proj,
     if (Error)
       break
     
-
     # Simulate Pop Dynamics for this Time Step
     Proj <- CalcFisheryDynamics(Proj, Year)
     
@@ -157,10 +160,14 @@ Project_MP <- function(Proj,
   
   EndTime <- Sys.time()
   
-  Proj <- CheckMSERun(Proj, MSE, MPName, StartTime, EndTime, Error, ErrorMessage)
+  Proj <- CheckMSERun(Proj, MSE, MPName, 
+                      StartTime, EndTime, 
+                      Error, ErrorMessage)
   
   if (!Error) 
-    MSE <- UpdateMSEObject(MSE, Proj, MPName, mp,YearsHist, YearsProj, StockNames, FleetNames)
+    MSE <- UpdateMSEObject(MSE, Proj, MPName, 
+                           mp, 
+                           YearsHist, YearsProj, StockNames, FleetNames)
   
   MSE
 }

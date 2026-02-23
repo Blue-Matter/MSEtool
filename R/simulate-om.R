@@ -1,7 +1,5 @@
 # TODO  add year broadcast in C++
 
-
-
 Simulate_om <- function(OM = NULL,
                         parallel = FALSE,
                         silent = FALSE,

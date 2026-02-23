@@ -164,6 +164,13 @@ CheckMovementDimensions <- function(Spatial, Ages=NULL, Years=NULL) {
   
   dims <- dim(Spatial@Movement)
   nDim <- length(dims)
+
+  
+  if (nDim == 4) {
+    # Add Time Dimesions 
+    Spatial@Movement <- AddDimension(Spatial@Movement, 'Year', Years[1])
+    nDim <- length(dim(Spatial@Movement))
+  }
   
   # Spatial must be an array with either 3 or 5 dimensions
   if (!nDim%in% c(3,5)) {
@@ -180,6 +187,7 @@ CheckMovementDimensions <- function(Spatial, Ages=NULL, Years=NULL) {
     )
   } 
   
+  
   if (nDim==3) {
     # Add Age and Year dimensions
     Spatial@Movement <- Spatial@Movement |>
@@ -187,17 +195,25 @@ CheckMovementDimensions <- function(Spatial, Ages=NULL, Years=NULL) {
       AddDimension('Year', val=Years[1])
   }
   
-  # Check Dimension Names 
-  # TODO - may need to revisit this to check specific dimensions/dimnames
-  #        or auto-name them relevant
-  
+
   dims <- dim(Spatial@Movement)
   dnames <- dimnames(Spatial@Movement)
   Names <- names(dnames)
   nArea <- dims[2]
   
   if (is.null(dnames)) {
-    cli::cli_abort('`Spatial@Movement` must have named dimensions')
+    if (dims[5] != 1) 
+      cli::cli_abort('`Spatial@Movement` must have named dimensions if length of Year dimension > 1')
+    
+    dimnames(Spatial@Movement) <- list(
+      Sim=1:dims[1],
+      FromArea=1:dims[2],
+      ToArea=1:dims[3],
+      Age=Ages@Classes[1:dims[4]],
+      Year=Years[1:dims[5]]
+    )
+    
+    
   }
   Spatial
 }

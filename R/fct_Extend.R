@@ -507,6 +507,7 @@ ExtendYears_seasonal <- function(array, Years = NULL, default = NULL, backfill =
           if (length(existing_years) == 1) {
             most_recent_ind <- 1
           }
+          
           CheckSeasonExists(most_recent_ind, season_inside[i], existing_years, season_existing)
           most_recent_ind <- min(most_recent_ind)
           

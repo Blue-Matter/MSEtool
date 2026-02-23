@@ -248,91 +248,6 @@ CalcSeasons <- function(Units) {
   )
 }
 
-CalcYears <- function(nYear, pYear, CurrentYear, Seasons = 1, Period = NULL) {
-  TimeUnits <- CalcTSUnits(Seasons)
-
-  if (CurrentYear < 1900 && TimeUnits == "year") {
-    # not in year units
-    hist <- seq(CurrentYear, by = -1, length.out = nYear) |> rev()
-    proj <- seq(CurrentYear + 1, by = 1, length.out = pYear)
-
-    if (is.null(Period)) {
-      return(c(hist, proj))
-    }
-
-    if (grepl("H", Period)) {
-      return(hist)
-    }
-
-    if (grepl("P", Period)) {
-      return(proj)
-    }
-  }
-
-  if (TimeUnits == "year") {
-    FirstHistYear <- CurrentYear - nYear + 1
-    LastHistYear <- CurrentYear
-
-    FirstProjYear <- CurrentYear + 1
-    LastProjYear <- CurrentYear + pYear
-
-    hist <- FirstHistYear:LastHistYear
-    proj <- FirstProjYear:LastProjYear
-
-    if (is.null(Period)) {
-      return(c(hist, proj))
-    }
-
-    if (grepl("H", Period)) {
-      return(hist)
-    }
-
-    if (grepl("P", Period)) {
-      return(proj)
-    }
-  }
-
-  FirstHistYear <- lubridate::ymd(paste0(CurrentYear - nYear + 1, "-01-01"))
-  LastHistYear <- lubridate::ymd(paste0(CurrentYear, "-12-31"))
-
-  FirstProjYear <- lubridate::ymd(paste0(CurrentYear + 1, "-01-01"))
-  LastProjYear <- lubridate::ymd(paste0(CurrentYear + pYear, "-12-31"))
-  validTimeUnits <- c("year", "half-year", "quarter", "month", "week", "day")
-
-  if (TimeUnits == "half-year") {
-    hist <- seq(FirstHistYear, LastHistYear, by = "6 months") |> lubridate::decimal_date()
-    proj <- seq(FirstProjYear, LastProjYear, by = "6 months") |> lubridate::decimal_date()
-  } else if (TimeUnits == "quarter") {
-    hist <- seq(FirstHistYear, LastHistYear, by = "3 months") |> lubridate::decimal_date()
-    proj <- seq(FirstProjYear, LastProjYear, by = "3 months") |> lubridate::decimal_date()
-  } else if (TimeUnits == "month") {
-    hist <- seq(FirstHistYear, LastHistYear, by = "1 month") |> lubridate::decimal_date()
-    proj <- seq(FirstProjYear, LastProjYear, by = "1 month") |> lubridate::decimal_date()
-  } else if (TimeUnits == "week") {
-    hist <- seq(FirstHistYear, LastHistYear, by = "1 week") |> lubridate::decimal_date()
-    proj <- seq(FirstProjYear, LastProjYear, by = "1 week") |> lubridate::decimal_date()
-  } else if (TimeUnits == "day") {
-    hist <- seq(FirstHistYear, LastHistYear, by = "1 day") |> lubridate::decimal_date()
-    proj <- seq(FirstProjYear, LastProjYear, by = "1 day") |> lubridate::decimal_date()
-  } else {
-    cli::cli_abort("`TimeUnits` must be one of: {.val {validTimeUnits}}")
-  }
-
-  hist <- hist |> round(4)
-  proj <- proj |> round(4)
-
-  if (is.null(Period)) {
-    return(c(hist, proj))
-  }
-
-  if (grepl("H", Period)) {
-    return(hist)
-  }
-
-  if (grepl("P", Period)) {
-    return(proj)
-  }
-}
 
 
 ParsEmpty <- function(Pars) {
@@ -450,5 +365,16 @@ EmptyObject <- function(object) {
     return(prod(empty))
   }
   length(object) < 1 | all(is.na(object))
+}
+
+
+ValorNULL <- function(Value) {
+  if (all(is.na(Value))) {
+    return(NULL)
+  }
+  if (length(Value) < 1) {
+    return(NULL)
+  }
+  Value
 }
 

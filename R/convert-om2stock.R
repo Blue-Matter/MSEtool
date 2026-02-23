@@ -16,12 +16,12 @@ OM2stock <- function(OM,
   stock@Ages <- Stock2Ages(OM)
   stock@Years <- c(YearsList$HistTS, YearsList$ProjTS)
   stock@Seasons <- YearsList$Seasons
-  stock@Length <- OM2Length(OM, cpars = cpars, Years= stock@Years)
+  stock@Length <- OM2Length(OM, cpars = cpars, Years= stock@Years, nSim)
   stock@Weight <- OM2Weight(OM, cpars = cpars, Years=stock@Years)
-  stock@NaturalMortality <- OM2NaturalMortality(OM, cpars, Years=stock@Years)
-  stock@Maturity <- OM2Maturity(OM, cpars, Years=stock@Years)
-  stock@Fecundity <- OM2Fecundity(OM, cpars, Years=stock@Years)
-  stock@SRR <- OM2SRR(OM, cpars, YearsList=YearsList)
+  stock@NaturalMortality <- OM2NaturalMortality(OM, cpars, Years=stock@Years, nSim)
+  stock@Maturity <- OM2Maturity(OM, cpars, Years=stock@Years, nSim)
+  stock@Fecundity <- OM2Fecundity(OM, cpars, Years=stock@Years, nSim)
+  stock@SRR <- OM2SRR(OM, cpars, YearsList=YearsList, nSim)
   stock@Spatial <- OM2Spatial(OM, cpars)
   stock@Depletion <- OM2Depletion(OM, cpars)
   
@@ -58,7 +58,7 @@ GetStockAges <- function(Stock) {
   0:Stock@maxage
 }
 
-OM2Length <- function(OM, cpars = list(), Years=NULL) {
+OM2Length <- function(OM, cpars = list(), Years=NULL, nSim=NULL) {
   Length <- Stock2Length(OM)
   if (!length(cpars)) {
     return(Length)
@@ -68,12 +68,14 @@ OM2Length <- function(OM, cpars = list(), Years=NULL) {
     Years <- GetOMYears(OM)
   } 
     
+  if (is.null(nSim))
+    nSim <- OM@nsim
 
   # MeanAtAge
   if (!is.null(cpars$Len_age)) {
     Length@MeanAtAge <- cpars$Len_age
     dimnames(Length@MeanAtAge) <- list(
-      Sim = 1:OM@nsim,
+      Sim = 1:nSim,
       Age = GetStockAges(OM),
       Year = Years
     )
@@ -85,7 +87,7 @@ OM2Length <- function(OM, cpars = list(), Years=NULL) {
   if (!is.null(cpars$LenCV)) {
     Length@CVatAge <- array(cpars$LenCV, dim = c(length(cpars$LenCV), 1, 1))
     dimnames(Length@CVatAge) <- list(
-      Sim = 1:OM@nsim,
+      Sim = 1:nSim,
       Age = GetStockAges(OM)[1],
       Year = Years[1]
     )
@@ -138,7 +140,7 @@ OM2Weight <- function(OM, cpars = list(), Years=NULL) {
   Weight
 }
 
-OM2NaturalMortality <- function(OM, cpars = list(), Years=NULL) {
+OM2NaturalMortality <- function(OM, cpars = list(), Years=NULL, nSim=NULL) {
   NaturalMortality <- Stock2NaturalMortality(OM)
   if (!length(cpars)) {
     return(NaturalMortality)
@@ -147,12 +149,14 @@ OM2NaturalMortality <- function(OM, cpars = list(), Years=NULL) {
   if (is.null(Years))
     Years <- GetOMYears(OM)
   
-
+  if (is.null(nSim))
+    nSim <- OM@nsim
+  
   if (!is.null(cpars$M_ageArray)) {
     NaturalMortality@MeanAtAge <- array(cpars$M_ageArray,
       dim = dim(cpars$M_ageArray),
       dimnames = list(
-        Sim = 1:OM@nsim,
+        Sim = 1:nSim,
         Age = GetStockAges(OM),
         Year = Years
       )
@@ -167,7 +171,7 @@ OM2NaturalMortality <- function(OM, cpars = list(), Years=NULL) {
   NaturalMortality
 }
 
-OM2Maturity <- function(OM, cpars = list(), Years=NULL) {
+OM2Maturity <- function(OM, cpars = list(), Years=NULL, nSim=NULL) {
   Maturity <- Stock2Maturity(OM)
   if (!length(cpars)) {
     return(Maturity)
@@ -176,11 +180,14 @@ OM2Maturity <- function(OM, cpars = list(), Years=NULL) {
   if (is.null(Years))
     Years <- GetOMYears(OM)
   
+  if (is.null(nSim))
+    nSim <- OM@nsim
+  
   if (!is.null(cpars$Mat_age)) {
     Maturity@MeanAtAge <- array(cpars$Mat_age,
       dim = dim(cpars$Mat_age),
       dimnames = list(
-        Sim = 1:OM@nsim,
+        Sim = 1:nSim,
         Age = GetStockAges(OM),
         Year = Years
       )
@@ -195,17 +202,20 @@ OM2Maturity <- function(OM, cpars = list(), Years=NULL) {
   Maturity
 }
 
-OM2Fecundity <- function(OM, cpars = list(), Years=NULL) {
+OM2Fecundity <- function(OM, cpars = list(), Years=NULL, nSim=NULL) {
   Fecundity <- Stock2Fecundity(OM)
   
   if (is.null(Years))
     Years <- GetOMYears(OM)
   
+  if (is.null(nSim))
+    nSim <- OM@nsim
+  
   if (!is.null(cpars$Fec_age)) {
     Fecundity@MeanAtAge <- array(cpars$Fec_age,
       dim = dim(cpars$Fec_age),
       dimnames = list(
-        Sim = 1:OM@nsim,
+        Sim = 1:nSim,
         Age = GetStockAges(OM),
         Year = Years
       )
@@ -221,11 +231,15 @@ OM2Fecundity <- function(OM, cpars = list(), Years=NULL) {
   Fecundity
 }
 
-OM2SRR <- function(OM, cpars = list(), YearsList=NULL) {
+OM2SRR <- function(OM, cpars = list(), YearsList=NULL, nSim=NULL) {
   SRR <- Stock2SRR(OM)
   if (!length(cpars)) {
     return(SRR)
   }
+  
+  if (is.null(nSim))
+    nSim <- OM@nsim
+  
 
   if (!is.null(cpars$hs)) {
     SRR@Pars$h <- cpars$hs
@@ -246,7 +260,7 @@ OM2SRR <- function(OM, cpars = list(), YearsList=NULL) {
     SRR@R0 <- array(cpars$R0,
       dim = c(length(cpars$R0), 1),
       dimnames = list(
-        Sim = 1:OM@nsim,
+        Sim = 1:nSim,
         Year = Years[1]
       )
     ) |> ReduceDims()
@@ -256,7 +270,7 @@ OM2SRR <- function(OM, cpars = list(), YearsList=NULL) {
     SRR@AC <- array(cpars$AC,
       dim = c(length(cpars$R0), 1),
       dimnames = list(
-        Sim = 1:OM@nsim,
+        Sim = 1:nSim,
         Year = Years[1]
       )
     ) |> ReduceDims()
@@ -366,7 +380,9 @@ OM2Depletion <- function(OM, cpars = list()) {
   }
   
   if (!is.null(cpars[["D"]])) {
+    Depletion@Final <- NULL # don't use Stock2Depletion if D exists in cpars
     if (is.null(cpars[["qs"]])) {
+      # only use it if qs hasn't been set
       Depletion@Final <- cpars[["D"]]
     }
   }

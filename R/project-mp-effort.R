@@ -95,13 +95,15 @@ Update_Effort_Sim <- function(Proj,
   n <- length(ProjInd)
   Proj@Effort[sim,ProjInd,] <- matrix(MinEffortValues, nrow = n, ncol = nFleet, byrow = TRUE)
   
-  if (length(Distribution)) {
+  if (length(Distribution) && !all(is.null(unlist(Distribution)))) {
     # spatial distribution of effort has been specified 
     # distribute effort for each fleet according to minimum effort specified across stocks
+    
+    # TODO 
     for (fl in 1:nFleet) {
-      complex_ind <- MinEffortInd[fl]
+      fleet_ind <- MinEffortInd[fl]
       if (length(Distribution)>=fleet_ind) {
-        Proj@Distribution[sim, ProjInd, fl] <-  Distribution[[complex_ind]]  
+        Proj@Distribution[sim, ProjInd, fl] <-  Distribution[[fleet_ind]]  
       }
     }
   }

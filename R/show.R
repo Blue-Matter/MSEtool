@@ -322,15 +322,15 @@ setMethod("show", "om", function(object) {
         MissingStock <- list(MissingStock)
         names(MissingStock) <- stockNames
       }
-      if (lapply(MissingStock, length) |> unlist() |> max() == 0)
-        next()
-      cli::cli_text('')
-      cli::cli_alert_danger('Missing Required Slots:')
-      for (i in seq_along(MissingStock)) {
-        if (!is.null(MissingStock[[i]])) {
-          cli::cli_alert("Stock: {.val {stockNames[i]}}")
-          for (j in seq_along(MissingStock[[i]])) {
-            cli::cli_li("Slot: {.val {MissingStock[[i]][[j]]}}")
+      if (lapply(MissingStock, length) |> unlist() |> max() != 0) {
+        cli::cli_text('')
+        cli::cli_alert_danger('Missing Required Slots:')
+        for (i in seq_along(MissingStock)) {
+          if (!is.null(MissingStock[[i]])) {
+            cli::cli_alert("Stock: {.val {stockNames[i]}}")
+            for (j in seq_along(MissingStock[[i]])) {
+              cli::cli_li("Slot: {.val {MissingStock[[i]][[j]]}}")
+            }
           }
         }
       }
@@ -349,20 +349,19 @@ setMethod("show", "om", function(object) {
       }
      
       
-      if ( lapply(MissingFleet, lapply, length)|> unlist() |> max() == 0)
-        next()
-      
-      cli::cli_text('')
-      cli::cli_alert_danger('Missing Required Slots:')
-      for (i in seq_along(MissingFleet)) {
-        if (!is.null(MissingFleet[[i]])) {
-          cli::cli_alert("Stock: {.val {stockNames[i]}}")
-          for (j in seq_along(MissingFleet[[i]])) {
-            cli::cli_alert("Fleet: {.val {fleetNames[j]}}")
-            for (k in seq_along(MissingFleet[[i]][[j]]))
-              cli::cli_li("Slot: {.val {MissingFleet[[i]][[j]][[k]]}}")
+      if ( lapply(MissingFleet, lapply, length)|> unlist() |> max() != 0) {
+        cli::cli_text('')
+        cli::cli_alert_danger('Missing Required Slots:')
+        for (i in seq_along(MissingFleet)) {
+          if (!is.null(MissingFleet[[i]])) {
+            cli::cli_alert("Stock: {.val {stockNames[i]}}")
+            for (j in seq_along(MissingFleet[[i]])) {
+              cli::cli_alert("Fleet: {.val {fleetNames[j]}}")
+              for (k in seq_along(MissingFleet[[i]][[j]]))
+                cli::cli_li("Slot: {.val {MissingFleet[[i]][[j]][[k]]}}")
+            }
           }
-        }
+        } 
       }
     }
   }

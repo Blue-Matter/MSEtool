@@ -4,23 +4,46 @@
 \alias{Data}
 \title{Constructor and Accessors for \code{Data}}
 \usage{
-Data(x)
+Data(
+  Name = "New Data Object",
+  CommonName = NULL,
+  Species = NULL,
+  Agency = NULL,
+  Author = NULL,
+  Email = NULL,
+  Region = NULL,
+  Latitude = NULL,
+  Longitude = NULL,
+  Years = NULL,
+  YearLH = NULL,
+  Seasons = 1,
+  nArea = 1,
+  LifeHistory = NULL,
+  Exploitation = NULL,
+  Reference = NULL,
+  Effort = NULL,
+  Landings = NULL,
+  Discards = NULL,
+  CPUE = NULL,
+  Survey = NULL,
+  LandingsAtAge = NULL,
+  DiscardsAtAge = NULL,
+  LandingsAtSize = NULL,
+  DiscardsAtSize = NULL,
+  Advice = NULL,
+  Misc = list()
+)
 }
 \arguments{
-\item{x}{An \code{\link[=OM]{OM()}} or \code{\link[=Hist]{Hist()}} object}
-
 \item{object}{A \code{\link[=Data]{Data()}} object.}
+
+\item{x}{Leave as NULL to create a new \code{Data} object, or a \code{\link[=OM]{OM()}}, \code{\link[=Hist]{Hist()}}, or \code{\link[=MSE]{MSE()}} object to acces the \code{Data} or \code{PPD} slots.}
 
 \item{value}{Value to assign.}
 }
 \value{
-\itemize{
-\item \verb{Get*} functions return the slot value.
-\item \verb{Set*} functions return a modified \code{\link[=Data]{Data()}} object.
-}
+A \linkS4class{data} object
 }
 \description{
-Internal \verb{Get*} and \verb{Set*} functions used to access and modify slots of a
-\code{\link[=Data]{Data()}} object. These functions are not intended for direct user use.
-User-facing access is provided via accessor and assignment functions
+Constructor and Accessors for \code{Data}
 }
