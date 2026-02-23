@@ -32,7 +32,8 @@
 #' @keywords internal
 GenHistData_Indices <- function(x, Data, Hist, HistYears, i, stocks, StockNames, 
                                 nArea,
-                                defaultCV=0.2, type=c('CPUE', 'Survey')) {
+                                defaultCV=0.2,
+                                type=c('CPUE', 'Survey')) {
   
   type <- match.arg(type, c('CPUE', 'Survey'))
   
