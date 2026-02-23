@@ -1487,7 +1487,6 @@ ImportSSData_Catch <- function(replist, silent = FALSE) {
 
   Discards <- Landings
 
-
   CatchColNames <- names(replist$catch)
   CatchDF <- replist$catch |> dplyr::filter(Yr %in% YearsHist)
 
@@ -1498,6 +1497,10 @@ ImportSSData_Catch <- function(replist, silent = FALSE) {
   # add missing column names
   if (!"kill_bio" %in% CatchColNames) {
     CatchDF <- CatchDF |> dplyr::mutate(kill_bio = dead_bio)
+  }
+  
+  if (!"kill_num" %in% CatchColNames) {
+    CatchDF <- CatchDF |> dplyr::mutate(kill_num = dead_num)
   }
 
   if (!"ret_bio" %in% CatchColNames) {
