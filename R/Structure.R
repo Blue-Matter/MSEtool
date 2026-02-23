@@ -2,6 +2,7 @@
 StructurePars <- function(Pars, nSim=NULL, Years=NULL, nArea=NULL) {
   if (!length(Pars)) 
     return(Pars)
+  
   Pars <- purrr::map(Pars, \(Par) 
                         StructurePars_(Par, nSim, Years, nArea)
   )
@@ -49,16 +50,16 @@ NameParDimensions <- function(Par, nSim=NULL, Years=NULL, nArea=NULL) {
   
   dd <- dim(Par)
   
-  if (dd[2]>1) {
-    cli::cli_abort('`Year` dimensions must be named if dimension length > 1' )
+  if (dd[2]>1 && dd[2] != length(Years)) {
+    cli::cli_abort('`Year` dimensions must be named if dimension length > 1 and dimension is not length `Years(OM)`' )
   }
   
   if (length(dd)<3) {
     dimnames(Par) <- list(Sim=(1:nSim)[1:dd[1]],
-                          Year=Years[1])
+                          Year=Years[1:dd[2]])
   } else {
     dimnames(Par) <- list(Sim=(1:nSim)[1:dd[1]],
-                          Year=Years[1],
+                          Year=Years[1:dd[2]],
                           Area=(1:nArea)[1:dd[3]])
   }
   Par
