@@ -70,8 +70,12 @@ ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
   if (length(SSDir) == 0L) {
     return(list())
   }
+  
+  parallel <- CheckParallel(parallel)
 
-  if (parallel) {
+  CheckParallel <- function(parallel) {
+    if (!parallel)
+      return(FALSE)
     current_plan <- future::plan()
     
     if (inherits(current_plan, "sequential")) {
@@ -82,8 +86,12 @@ ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
       cli::cli_ul()
       cli::cli_li("e.g: `SetupParallel(workers = 4)`")
       cli::cli_text("Running sequentially instead (`parallel = FALSE`).")
-      parallel <- FALSE
+      return(FALSE)
     }
+    parallel
+  }
+  if (parallel) {
+  
   }
   
   if (!parallel) {
