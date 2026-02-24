@@ -73,26 +73,8 @@ ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
   
   parallel <- CheckParallel(parallel)
 
-  CheckParallel <- function(parallel) {
-    if (!parallel)
-      return(FALSE)
-    current_plan <- future::plan()
-    
-    if (inherits(current_plan, "sequential")) {
-      cli::cli_alert_warning(
-        "{.val parallel = TRUE} requested, but no parallel future plan detected."
-      )
-      cli::cli_text("Initialize a parallel plan first using:")
-      cli::cli_ul()
-      cli::cli_li("e.g: `SetupParallel(workers = 4)`")
-      cli::cli_text("Running sequentially instead (`parallel = FALSE`).")
-      return(FALSE)
-    }
-    parallel
-  }
-  if (parallel) {
-  
-  }
+
+ 
   
   if (!parallel) {
     RepList <- purrr::map(
