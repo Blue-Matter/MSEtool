@@ -181,7 +181,9 @@ ImportSS <- function(SSDir,
   for (st in seq_along(OM@Fleet)) {
     OM@Fleet[[st]] <- MakeNamedList(FleetNames, new("fleet"))
     for (fl in seq_along(FleetNames)) {
-      OM@Fleet[[st]][[fl]] <- SS2Fleet(st, fl,
+      OM@Fleet[[st]][[fl]] <- SS2Fleet(
+        st, 
+        fl,
         RepList,
         YearsList,
         FleetNames,
@@ -307,9 +309,10 @@ ProcessSS_FleetNames <- function(FleetNames, SSFleetNames) {
 ## --- Stock ----
 
 SS2Stock <- function(st, RepList, YearsList, nSim) {
-  if (!is.null(RepList[[1]]$movement) && nrow(RepList[[1]]$movement) > 0) {
+  
+  if (!is.null(RepList[[1]]$movement) && nrow(RepList[[1]]$movement) > 0) 
     cli::cli_alert_warning("Movement detected in SS model but not imported right now.")
-  }
+  
 
   Stock <- Stock(Name = ifelse(st == 1, "Female", "Male"))
   Stock@Ages <- SS2Ages(st, RepList, YearsList)
@@ -319,7 +322,9 @@ SS2Stock <- function(st, RepList, YearsList, nSim) {
   Stock@Weight <- SS2Weight(st, RepList, YearsList, Ages = Stock@Ages) |>
     ReduceDims()
   
-  Stock@NaturalMortality <- SS2NaturalMortality(st, RepList, YearsList, 
+  Stock@NaturalMortality <- SS2NaturalMortality(st, 
+                                                RepList, 
+                                                YearsList, 
                                                 Ages = Stock@Ages)
   
   Stock@Maturity <- SS2Maturity(st, RepList, YearsList, Ages = Stock@Ages) |>
@@ -548,19 +553,87 @@ SS2Weight <- function(st, RepList, YearsList, Ages) {
   Weight
 }
 
+ConvertSS_M_Seasonal <- function(M_at_age, YearsList, Ages) {
+  
+  # Convert to seasonal M
+  FillValues <- function(Value) {
+    for (i in seq_along(Value)[-1]) {
+      if (is.na(Value[i])) {
+        Value[i] <- Value[i - 1]
+      }
+    }
+    Value
+  }
+  
+  if (YearsList$TimeUnits == "quarter") {
+    M_at_ageDF <- Array2DF(M_at_age)
+    M_at_ageDF$AgeAnnual <- M_at_ageDF$Age
+    
+    AgeClassesFull <- seq(0, to = max(Ages@Classes), by = 1 / 4)
+    tempDF <- data.frame(
+      Age = AgeClassesFull,
+      Year = rep(unique(M_at_ageDF$Year), each = length(AgeClassesFull))
+    )
+    
+    M_at_ageDF$Value <- M_at_ageDF$Value / YearsList$Seasons
+    M_at_ageDF_seasonal <- dplyr::left_join(tempDF, M_at_ageDF,
+                                            by = dplyr::join_by(Age, Year)
+    ) |>
+      dplyr::select(-AgeAnnual) |>
+      dplyr::group_by(Year) |>
+      dplyr::mutate(Value = FillValues(Value)) |>
+      dplyr::ungroup()
+    return(DF2Array(M_at_ageDF_seasonal))
+  } else {
+    cli::cli_abort("Currently only 'year' and 'quarter' are supported for `TimeUnits`", .internal = TRUE)
+  }
+}
+
 GetSS_M_at_age <- function(st, replist, YearsList, Ages) {
   AgeClasses <- GetSSAgeClasses(replist)
+  
+  if (!is.null(replist$Natural_Mortality)) {
+    
+    M_at_ageDF <- replist$Natural_Mortality |>
+      dplyr::filter(Sex==st, 
+                    `Beg/Mid`=='B',
+                    Era == 'TIME')
+    
+    if (is.null(M_at_ageDF$Year)) {
+      M_at_ageDF$Year <- M_at_ageDF$Yr
+      M_at_ageDF$Yr <- NULL
+    }
+    
+    M_at_age <- M_at_ageDF |>
+      dplyr::select(dplyr::all_of(as.character(AgeClasses))) |>
+      t()
+    
+    dimnames(M_at_age) <- list(
+      Age = AgeClasses,
+      Year = YearsList$YearsHist
+    )
+    
+    if (YearsList$TimeUnits == "year") {
+      return(M_at_age)
+    }
+    
+    return(
+      ConvertSS_M_Seasonal(M_at_age, YearsList, Ages)
+    )
 
+  }
+  
   M_at_ageDF <- replist$M_at_age |> dplyr::filter(Sex == st)
   if (is.null(M_at_ageDF$Year)) {
     M_at_ageDF$Year <- M_at_ageDF$Yr
   }
   Years <- unique(M_at_ageDF$Year)
-
+  
   M_at_age <- M_at_ageDF |>
     dplyr::filter(Sex == st) |>
     dplyr::select(dplyr::all_of(as.character(AgeClasses))) |>
     t()
+  
   dimnames(M_at_age) <- list(
     Age = AgeClasses,
     Year = Years
@@ -574,39 +647,7 @@ GetSS_M_at_age <- function(st, replist, YearsList, Ages) {
   if (YearsList$TimeUnits == "year") {
     return(M_at_age)
   }
-
-  # Convert to seasonal M
-  FillValues <- function(Value) {
-    for (i in seq_along(Value)[-1]) {
-      if (is.na(Value[i])) {
-        Value[i] <- Value[i - 1]
-      }
-    }
-    Value
-  }
-
-  if (YearsList$TimeUnits == "quarter") {
-    M_at_ageDF <- Array2DF(M_at_age)
-    M_at_ageDF$AgeAnnual <- M_at_ageDF$Age
-
-    AgeClassesFull <- seq(0, to = max(Ages@Classes), by = 1 / 4)
-    tempDF <- data.frame(
-      Age = AgeClassesFull,
-      Year = rep(unique(M_at_ageDF$Year), each = length(AgeClassesFull))
-    )
-
-    M_at_ageDF$Value <- M_at_ageDF$Value / YearsList$Seasons
-    M_at_ageDF_seasonal <- dplyr::left_join(tempDF, M_at_ageDF,
-      by = dplyr::join_by(Age, Year)
-    ) |>
-      dplyr::select(-AgeAnnual) |>
-      dplyr::group_by(Year) |>
-      dplyr::mutate(Value = FillValues(Value)) |>
-      dplyr::ungroup()
-    return(DF2Array(M_at_ageDF_seasonal))
-  } else {
-    cli::cli_abort("Currently only 'year' and 'quarter' are supported for `TimeUnits`", .internal = TRUE)
-  }
+  ConvertSS_M_Seasonal(M_at_age, YearsList, Ages)
 }
 
 SS2NaturalMortality <- function(st, RepList, YearsList, Ages) {
@@ -1040,7 +1081,7 @@ SS2Effort <- function(st, fl, RepList, YearsList) {
 
 SS2Catchability <- function(st, fl, RepList, YearsList) {
   q <- purrr::map(RepList, \(replist)
-  GetSS_Effort(st, fl, replist, YearsList, type = "q")) |>
+                  GetSS_Effort(st, fl, replist, YearsList, type = "q")) |>
     List2Array("Sim", pos = 1, dim1 = "Year") |>
     aperm(c("Sim", "Year"))
 
@@ -1899,8 +1940,6 @@ GetSSNatAge <- function(replist, OM, yrs = NULL, sex = 1) {
     for (sea in 1:nSeas) {
       i <- i + 1
       n <- SSN |> dplyr::filter(Seas == sea, Yr < yr + 1 & Yr >= yr)
-
-
       temp <- array(n$value,
         dim = c(nrow(n), 1),
         dimnames = list(
@@ -1908,12 +1947,22 @@ GetSSNatAge <- function(replist, OM, yrs = NULL, sex = 1) {
           Year = HistYears[i]
         )
       )
-
-
       ArrayFill(Initial) <- temp
     }
   }
 
   Initial
+}
+
+
+
+SS_Diagnostic_Check <- function(replist) {
+  
+  SSAgeClasses <- GetSSAgeClasses(replist)
+  
+  # apical F exists
+  df <- replist$fatage |> dplyr::select(as.character(SSAgeClasses))
+  
+  
 }
 
