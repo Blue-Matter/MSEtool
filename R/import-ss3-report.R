@@ -86,7 +86,7 @@ ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
     )
   } else {
     # Parallel processing
-    cli::cli_inform("Starting parallel import of {.val {length(SSDir)}} SS3 directories...")
+    cli::cli_inform("Starting parallel import of {.val {length(SSDir)}} SS3 directories ...")
     RepList <- furrr::future_map(
       SSDir,
       function(dir) MSEtool:::GetSSRepList(dir, silent = silent, ...),
