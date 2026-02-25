@@ -133,6 +133,7 @@ Collate:
     'calc-apicalF.R'
     'calc-fishery-dynamics.R'
     'calc-max-effort.R'
+    'calc-seasonal-spatial.R'
     'calc-unfished-dynamic.R'
     'calc-unfished-equilibrium.R'
     'calc-unfished-number.R'
