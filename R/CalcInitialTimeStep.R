@@ -44,8 +44,14 @@ CalcDynamicInitial <- function(Hist) {
     
     nArea <- dim(UnfishedDist)[3]
     if (nArea>1 & Hist@OM@Seasons>1) {
-      # TODO - need to account for seasonal movement pattern in initial age structure
       cli::cli_abort(c("x"="Multi-area seasonal model spatial distribution are not currently supported."), .internal=TRUE)
+      
+      InitMovMat
+      R0
+      
+      NatAge <- Calc_seas_spat (InitAgeClassRecDevs, UnfishedDist, InitMovMat, R0)
+      
+      
     } else {
       # Multiply unfished by initial rec devs and add an Area dimension
       NatAge <- ArrayMultiply(InitAgeClassRecDevs, EquilNumber) |> AddDimension('Area') 
