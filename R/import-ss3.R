@@ -185,9 +185,7 @@ ImportSS <- function(SSDir,
   
   
   for (st in seq_along(OM@Fleet)) {
-    OM@Fleet[[st]] <- MakeNamedList(FleetNames, new("fleet"))
-    
-    tt <- purrr::map(seq_along(FleetNames), \(fl) {
+    FleetList <- purrr::map(seq_along(FleetNames), \(fl) {
       SS2Fleet(
         st, 
         fl,
@@ -196,13 +194,14 @@ ImportSS <- function(SSDir,
         FleetNames,
         Stock = OM@Stock[[st]]
       )
-    },
+      },
     .progress = list(
       type = "iterator",
       format = "Importing Fleet Dynamics for Stock {.val {StockName[st]}} {cli::pb_bar} {cli::pb_percent}",
       clear = TRUE
     ))
-    
+    names(FleetList) <- FleetNames
+    OM@Fleet[[st]] <- FleetList
   }
     
   # Data
@@ -1473,14 +1472,16 @@ GetSS_EmpiricalWeight <- function(st, fl, replist, YearsList, AgeClasses) {
     }
     
   }
-  Weight_at_Age_array
+  Weight_at_Age_array 
 }
 
 SS2WeightFleet <- function(st, fl, RepList, YearsList, AgeClasses) {
   Weight_at_Age_array <- purrr::map(RepList, \(replist)
                                     GetSS_EmpiricalWeight(st, fl, replist, YearsList, AgeClasses)) |>
     List2Array("Sim", pos = 1) |>
+    ArraySubsetAge(Ages = AgeClasses) |>
     ReduceDims()
+  
   Weight_at_Age_array
 }
 
