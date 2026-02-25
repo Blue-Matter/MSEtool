@@ -1,6 +1,5 @@
 OnExit <- function() {
   do.call(on.exit, list(cli::stop_app(),
-                        DisableParallel(), 
                         add = TRUE),
           envir = parent.frame())
 }

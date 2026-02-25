@@ -72,9 +72,6 @@ ImportSSReport <- function(SSDir, parallel=FALSE, silent=FALSE, ...) {
   }
   
   parallel <- CheckParallel(parallel)
-
-
- 
   
   if (!parallel) {
     RepList <- purrr::map(

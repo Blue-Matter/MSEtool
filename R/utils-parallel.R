@@ -164,7 +164,7 @@ CheckParallel <- function(parallel) {
   if (!parallel)
     return(FALSE)
   current_plan <- future::plan()
-  
+
   if (inherits(current_plan, "sequential")) {
     cli::cli_alert_warning(
       "{.val parallel = TRUE} requested, but no parallel future plan detected."
