@@ -168,7 +168,12 @@ ImportSS <- function(SSDir,
     stock@CommonName <- CommonName[st]
     stock@Species <- Species[st]
     stock
-  })
+  },
+  .progress = list(
+    type = "iterator",
+    format = "Importing Stock Dynamics {cli::pb_bar} {cli::pb_percent}",
+    clear = TRUE
+  ))
 
   names(OM@Stock) <- StockName
 
@@ -178,10 +183,12 @@ ImportSS <- function(SSDir,
     SSFleetNames = unique(RepList[[1]]$catch$Fleet_Name)
   )
   
+  
   for (st in seq_along(OM@Fleet)) {
     OM@Fleet[[st]] <- MakeNamedList(FleetNames, new("fleet"))
-    for (fl in seq_along(FleetNames)) {
-      OM@Fleet[[st]][[fl]] <- SS2Fleet(
+    
+    tt <- purrr::map(seq_along(FleetNames), \(fl) {
+      SS2Fleet(
         st, 
         fl,
         RepList,
@@ -189,9 +196,15 @@ ImportSS <- function(SSDir,
         FleetNames,
         Stock = OM@Stock[[st]]
       )
-    }
+    },
+    .progress = list(
+      type = "iterator",
+      format = "Importing Fleet Dynamics for Stock {.val {StockName[st]}} {cli::pb_bar} {cli::pb_percent}",
+      clear = TRUE
+    ))
+    
   }
-  
+    
   # Data
   OM@Data <- list(ImportSSData(RepList, OM@Name))
   names(OM@Data) <- paste(StockName, collapse = " ")
@@ -313,9 +326,9 @@ SS2Stock <- function(st, RepList, YearsList, nSim) {
   if (!is.null(RepList[[1]]$movement) && nrow(RepList[[1]]$movement) > 0) 
     cli::cli_alert_warning("Movement detected in SS model but not imported right now.")
   
-
   Stock <- Stock(Name = ifelse(st == 1, "Female", "Male"))
   Stock@Ages <- SS2Ages(st, RepList, YearsList)
+  
   Stock@Length <- SS2Length(st, RepList, YearsList, Ages = Stock@Ages) |>
     ReduceDims()
 
@@ -449,6 +462,7 @@ GetSS_LengthCV_at_Age <- function(st, replist, YearsList) {
 
 SS2Length <- function(st, RepList, YearsList, Ages) {
   Length <- Length(Pars = list())
+  
   Length@MeanAtAge <- purrr::map(RepList, \(replist) {
     GetSS_Length_at_Age(st, replist, YearsList)
   }) |>
@@ -553,18 +567,18 @@ SS2Weight <- function(st, RepList, YearsList, Ages) {
   Weight
 }
 
+FillValues <- function(Value) {
+  for (i in seq_along(Value)[-1]) {
+    if (is.na(Value[i])) {
+      Value[i] <- Value[i - 1]
+    }
+  }
+  Value
+}
+
 ConvertSS_M_Seasonal <- function(M_at_age, YearsList, Ages) {
   
   # Convert to seasonal M
-  FillValues <- function(Value) {
-    for (i in seq_along(Value)[-1]) {
-      if (is.na(Value[i])) {
-        Value[i] <- Value[i - 1]
-      }
-    }
-    Value
-  }
-  
   if (YearsList$TimeUnits == "quarter") {
     M_at_ageDF <- Array2DF(M_at_age)
     M_at_ageDF$AgeAnnual <- M_at_ageDF$Age
@@ -1395,10 +1409,48 @@ GetSS_EmpiricalWeight <- function(st, fl, replist, YearsList, AgeClasses) {
       wt_at_age_c_df <- wt_at_age_c_df |> dplyr::rename(Yr = year)
     }
 
-    AgeClasses <- suppressWarnings(as.numeric(colnames(wt_at_age_c_df)))
-    AgeClasses <- AgeClasses[!is.na(AgeClasses)]
-    n_age <- length(AgeClasses)
-    Weight_at_Age_array <- wt_at_age_c_df[, as.character(AgeClasses)] |> t()
+    SS_AgeClasses <- suppressWarnings(as.numeric(colnames(wt_at_age_c_df)))
+    SS_AgeClasses <- SS_AgeClasses[!is.na(SS_AgeClasses)]
+    n_age <- length(SS_AgeClasses)
+    
+    
+    seas <- unique(wt_at_age_c_df$seas)
+    if (length(seas) > 1) {
+      if (YearsList$TimeUnits != "quarter")
+        cli::cli_abort("Only quarterly seasonal models currently supported", .internal=TRUE)
+      
+      if (is.null(wt_at_age_c_df$Year))
+        wt_at_age_c_df$Year <- wt_at_age_c_df$Yr
+      
+      if (is.null(wt_at_age_c_df$Seas))
+        wt_at_age_c_df$Seas <- wt_at_age_c_df$seas
+      
+      df <- wt_at_age_c_df |> dplyr::select(Year, Seas, as.character(SS_AgeClasses)) |>
+        tidyr::pivot_longer(as.character(SS_AgeClasses), names_to = 'Age', values_to = 'Value') |>
+        dplyr::mutate(Age=as.numeric(Age))
+      
+      AgeClassesFull <- seq(0, to = max(AgeClasses), by = 1 / 4)
+      Years <- unique(df$Year) |> sort()
+      
+      Weight_at_Age_array <- array(NA, 
+                                   dim=c(length(AgeClassesFull),
+                                         length(Years)),
+                                   
+                                   dimnames = list(
+                                     Age=AgeClassesFull,
+                                     Year=Years
+                                   ))
+      
+      for (y in seq_along(Years)) {
+        temp <- df |> dplyr::filter(Year==Years[y]) |> 
+          dplyr::arrange(Age)
+        Weight_at_Age_array[,y] <- temp$Value
+      }
+    } else {
+      Weight_at_Age_array <- wt_at_age_c_df[, as.character(SS_AgeClasses)] |> t()  
+    }
+    
+    
   } else {
     # Wt_Mid used for NPSWO - maybe not general
     # NPSWO = Sex is combined - always sex 1 ??
@@ -1407,23 +1459,26 @@ GetSS_EmpiricalWeight <- function(st, fl, replist, YearsList, AgeClasses) {
       dplyr::filter(Sex == 1) |>
       dplyr::select(Age_Beg, Wt_Beg, Wt_Mid, Seas) |>
       dplyr::arrange(Age_Beg) |>
-      dplyr::filter(Age_Beg %in% AgeClasses)
+      dplyr::filter(Age_Beg %in% SS_AgeClasses)
 
-    Weight_at_Age_array <- array(wght$Wt_Mid, dim = c(length(AgeClasses), 1))
+    Weight_at_Age_array <- array(wght$Wt_Mid, dim = c(length(SS_AgeClasses), 1))
   }
 
   if (!is.null(Weight_at_Age_array)) {
-    dimnames(Weight_at_Age_array) <- list(
-      Age = AgeClasses,
-      Year = YearsHist[1:ncol(Weight_at_Age_array)]
-    )
+    if (is.null(dimnames(Weight_at_Age_array))){
+      dimnames(Weight_at_Age_array) <- list(
+        Age = AgeClasses,
+        Year = YearsHist[1:ncol(Weight_at_Age_array)]
+      )  
+    }
+    
   }
   Weight_at_Age_array
 }
 
 SS2WeightFleet <- function(st, fl, RepList, YearsList, AgeClasses) {
   Weight_at_Age_array <- purrr::map(RepList, \(replist)
-  GetSS_EmpiricalWeight(st, fl, replist, YearsList, AgeClasses)) |>
+                                    GetSS_EmpiricalWeight(st, fl, replist, YearsList, AgeClasses)) |>
     List2Array("Sim", pos = 1) |>
     ReduceDims()
   Weight_at_Age_array
