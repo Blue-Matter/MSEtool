@@ -201,7 +201,7 @@ CheckMovementDimensions <- function(Spatial, Ages=NULL, Years=NULL) {
   Names <- names(dnames)
   nArea <- dims[2]
   
-  if (is.null(dnames)) {
+  if (is.null(Names)) {
     if (dims[5] != 1) 
       cli::cli_abort('`Spatial@Movement` must have named dimensions if length of Year dimension > 1')
     
