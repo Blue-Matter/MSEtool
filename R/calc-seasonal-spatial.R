@@ -27,7 +27,7 @@ calc_seas_spat = function(InitAgeClassRecDevs, UnfishedDist, InitMovMat, R0){
   
   # The initial distribution (age class, x axis)
   for(cc in 1:nAge){ # age class 1
-    reclookup = nAge - cc + 1              # reverse Rec devs so first is the last being mapped (most recent)
+    reclookup = nAge - cc + 1 # reverse Rec devs so first is the last being mapped (most recent)
     Ntemp[,1,cc,] = UnfishedDist_s[,1,] * InitAgeClassRecDevs[,reclookup] * R0_s[,cc] # Cohorts start at Age 1 distribution
   }
   
