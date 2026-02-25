@@ -88,8 +88,6 @@ Simulate_om <- function(OM = NULL,
   # ---- Historical Population Dynamics ----
   Hist <- CalcFisheryDynamics(Hist, IdenticalSim=IdenticalHist)
 
-  
-
   if (!silent)
     cli::cli_alert_success("Simulated Historical Fishery")
 
@@ -114,13 +112,11 @@ Simulate_om <- function(OM = NULL,
   if (DoConditionObs) 
     Hist <- ConditionObs(Hist, silent)
   
-  
   # ---- Historical Fishery Data ----
   
   if (DoGenerateData) 
     Hist <- GenerateHistoricalData(Hist)
   
-
   # ---- Reduce Dimension Size ----
   Hist <- ReduceHist(Hist, Reduce)
   
