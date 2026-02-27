@@ -36,7 +36,7 @@ Simulate_om <- function(OM = NULL,
     
   # ---- Make Hist Object ----
   Hist <- Hist(OM, silent)
-  
+
   # ---- Calculate Equilibrium Unfished ----
   Hist@Unfished@Equilibrium <- CalcUnfished_Equilibrium(OM, silent)
 

@@ -86,7 +86,7 @@ ExtendHist <- function(Hist, Years, silent=FALSE, id=NULL) {
     if (sl == 'Misc') 
       default <- NULL
 
-    if (sl == 'Effort') 
+    if (sl == 'Effort' || sl == 'Distribution') 
       default <- NA
     
     slot(Hist, sl) <- Extend(array=slot(Hist, sl), 

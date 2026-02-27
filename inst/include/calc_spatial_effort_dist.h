@@ -176,7 +176,8 @@ inline void CalcSpatialDistribution(
       if (total > 0.0) {
         const double inv_total = 1.0 / total;
         for (int ar = 0; ar < nArea; ++ar) {
-          if (Distribution(sim, y, fl, ar) <= 1E-6) { // skips if users provide values
+          // skips if users provide values
+          if (std::isnan(Distribution(sim, y, fl, ar))) {
             Distribution(sim, y, fl, ar) = 0.0;
             Distribution(sim, y, fl, ar) = UtilTheta[ar] * inv_total;  
           }

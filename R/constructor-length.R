@@ -94,6 +94,8 @@ ALK <- function(x) {
   x
 }
 
+#' @rdname Length
+#' @export
 `Length<-` <- function(x, value) {
   CheckClass(x, "stock", "x")
   AssignSlot(x, value, 'Length')
