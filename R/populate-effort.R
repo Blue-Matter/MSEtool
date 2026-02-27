@@ -116,7 +116,7 @@ PopulateDistribution <- function(Distribution,
                                  HistYears = NULL,
                                  nArea = NULL) {
   if (is.null(Distribution)) {
-    Distribution <- array(tiny,
+    Distribution <- array(NA,
                           dim = c(1, 1, nArea),
                           dimnames = list(
                             Sim = 1,
