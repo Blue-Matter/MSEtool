@@ -4,6 +4,7 @@
 \alias{Weight}
 \alias{AWK}
 \alias{AWK<-}
+\alias{Weight<-}
 \title{Weight}
 \usage{
 Weight(
@@ -25,6 +26,8 @@ Weight(
 AWK(x)
 
 AWK(x) <- value
+
+Weight(x) <- value
 }
 \arguments{
 \item{Pars}{Named list of parameters for \code{\link[=WeightModels]{WeightModels()}}.}

@@ -97,6 +97,8 @@ AWK <- function(x) {
   x
 }
 
+#' @rdname Weight
+#' @export
 `Weight<-` <- function(x, value) {
   CheckClass(x, "stock", "x")
   AssignSlot(x, value, 'Weight')

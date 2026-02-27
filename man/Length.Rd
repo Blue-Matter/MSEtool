@@ -4,6 +4,7 @@
 \alias{Length}
 \alias{ALK}
 \alias{ALK<-}
+\alias{Length<-}
 \title{Length}
 \usage{
 Length(
@@ -24,6 +25,8 @@ Length(
 ALK(x)
 
 ALK(x) <- value
+
+Length(x) <- value
 }
 \arguments{
 \item{Pars}{Named list of growth parameters for models in \code{\link[=LengthModels]{LengthModels()}}}
