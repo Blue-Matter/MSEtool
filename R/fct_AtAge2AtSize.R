@@ -129,24 +129,28 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
   
   
   for (s in seq_len(nSim)) {
+    object_sim <- min(s, dim(ObjectMeanAtAge)[1])
     for (y in seq_len(nYear)) {
       for (a in seq_len(nArea)) { 
         if (hasArea) {
-          MeanAtAge <- ObjectMeanAtAge[s, , y, a]
+          MeanAtAge <- ObjectMeanAtAge[object_sim, , y, a]
         } else {
-          MeanAtAge <-  ObjectMeanAtAge[s, , y]
+          MeanAtAge <-  ObjectMeanAtAge[object_sim, , y]
         }
         
-        ASK_s <- min(ASK_dim[1], s)
-        ASK_y <- min(ASK_dim[3], y)
-        ASK_sim_ts <- ASK[ASK_s, , , ASK_y]
-        sums <- matrix(apply(ASK_sim_ts, 2, sum), nAge, nClass, byrow=TRUE)
-        ASK_stand <- ASK_sim_ts/sums
-        ASK_stand[!is.finite(ASK_stand)] <- 0
-        
-        atlength <- as.numeric(MeanAtAge %*% ASK_stand)
-        
-        
+        if (all(MeanAtAge>=0.99)) {
+          atlength <- 1
+        } else {
+          ASK_s <- min(ASK_dim[1], s)
+          ASK_y <- min(ASK_dim[3], y)
+          ASK_sim_ts <- ASK[ASK_s, , , ASK_y]
+          sums <- matrix(apply(ASK_sim_ts, 2, sum), nAge, nClass, byrow=TRUE)
+          ASK_stand <- ASK_sim_ts/sums
+          ASK_stand[!is.finite(ASK_stand)] <- 0
+          
+          atlength <- as.numeric(MeanAtAge %*% ASK_stand)
+        }
+
         if (hasArea) {
           MeanAtLength[s, , y, a] <- atlength
         } else {

@@ -41,6 +41,7 @@
 #'
 #' @export
 PopulateOM <- function(OM, silent = FALSE, force = FALSE) {
+  
   CheckClass(OM)
   OM <- UpdateObject(OM)
   
@@ -54,6 +55,9 @@ PopulateOM <- function(OM, silent = FALSE, force = FALSE) {
   if (CheckDigest(OM) & !force) {
     return(OM)
   }
+  
+  if (!silent)
+    cli::cli_alert_info('Populating OM {.val {OM@Name}}')
 
   if (is.null(OM@Stock)) {
     cli::cli_abort(c(
@@ -270,7 +274,8 @@ ProcessFleetEffort <- function(FleetList, silent=FALSE) {
         cli::cli_abort("Effort Disribution array (`Fleet |> Effort() |> Distribution()`) must be identical across stocks")
       }
       dev <- DistArrayList[[st]] - DistArrayList[[1]]
-      if (any(abs(dev) > tol)) {
+      
+      if (!any(is.na(dev)) && any(abs(dev) > tol)) {
         cli::cli_abort("Effort Disribution array (`Fleet |> Effort() |> Distribution()`) must be identical across stocks")
       }
       

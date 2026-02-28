@@ -32,7 +32,10 @@ ArrayAdd <- function(array1, array2) {
 #' @rdname ArrayOperations
 #' @export
 ArrayDivide <- function(array1, array2) {
-  ArrayOperation(array1, array2, `/`)
+  out <- ArrayOperation(array1, array2, `/`)
+  out[is.na(out)] <- 0
+  out[is.infinite(out)] <- 0
+  out
 }
 
 #' @rdname ArrayOperations

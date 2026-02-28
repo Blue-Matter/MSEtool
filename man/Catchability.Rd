@@ -2,6 +2,7 @@
 % Please edit documentation in R/constructor-catchability.R
 \name{Catchability}
 \alias{Catchability}
+\alias{Catchability<-}
 \alias{Efficiency}
 \alias{Efficiency<-}
 \alias{qCV}
@@ -11,6 +12,8 @@
 \title{Catchability}
 \usage{
 Catchability(Efficiency = NULL, qCV = NULL, qInc = NULL, Misc = list())
+
+Catchability(x) <- value
 
 Efficiency(x)
 

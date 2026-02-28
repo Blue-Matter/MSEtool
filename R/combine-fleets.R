@@ -1,80 +1,167 @@
 
-# library(MSEtool)
-
-
-# OM <- readRDS('../NPSWO/Objects_OM/Base.om')
- 
-
-# Name <- "JPN_WCNPO_OSDWCOLL_Area1"
-# FleetInds <- c(6, 1)
-# 
-# FleetInds <- c('F6_JPN_WCNPO_OSDWLL_early_Area1',
-#                'F1_JPN_WCNPO_OSDWCOLL_late_Area1')
-
-CombineFleets <- function(OM, Name, FleetInds, silent=FALSE) {
+#' Combine Multiple Fleets into a Single Fleet
+#'
+#' Combine several fleets into a new aggregated fleet within an operating model.
+#'
+#'
+#' @param OM An [OM()] object.
+#' @param Names A character string with the Name for the new combined fleet,
+#' or a list of names.
+#' @param Fleets A character or numeric vector identifying fleets to combine, or 
+#' a list matching the structure of `Names`
+#' @param silent Logical. Suppress informational messages.
+#'
+#' @return An updated `OM` object with the new fleet added for each stock.
+#'
+#' @export
+CombineFleets <- function(OM, Names, Fleets, silent=FALSE) {
+  
+  if (!is.list(Names)) {
+    Names <- list(Names)
+  }
+  
+  if (!is.list(Fleets)) {
+    Fleets <- list(Fleets)
+  }
+  
+  FleetList <- Fleets
+  NamesList <- Names
+  
+  OM <- Populate(OM, silent=TRUE)
+  
+  FleetIndList <- purrr::map(FleetList, \(Fleets) resolve_fleet_indices(OM, Fleets))
+  
   fleetnames <- FleetNames(OM)
   
-  if (is.character(FleetInds)) {
-    fleetInd <- match(FleetInds, fleetnames)
-    if (any(is.na(fleetInd)))
-      cli::cli_abort(c("x"="Could not match `FleetInds` with existing fleet names",
-                       "i"="FleetInds: {.val {FleetInds}}",
-                       "i"="Existing Fleet names: {.val {fleetnames}}"
-                       ))
-    FleetInds <- fleetInd
-  }
+  if (!silent) 
+    cli::cli_alert_info("Combining fleets into aggregated fleet:")
+  
+  # Combine Fleets
+  for (i in seq_along(FleetList)) {
+    if (!silent) 
+      cli::cli_li(
+        "{.val {fleetnames[FleetIndList[[i]]]}} into new fleet: {.val {Names[[i]]}} "
+      )
     
-  if (is.numeric(FleetInds)) {
-    if (!all(FleetInds %in% seq_along(fleetnames)))
-      cli::cli_abort(c("x"="Could not match `FleetInds` with existing fleet indices",
-                       "i"="FleetInds: {.val {FleetInds}}",
-                       "i"="Existing Fleets: {.val {seq_along(fleetnames)}}"
-      ))
+    replaceFleet <- FleetIndList[[i]][1]
+    dropFleet <- FleetIndList[[i]][-1]
+    FleetInds <- FleetIndList[[i]]
+    Name <- NamesList[[i]]
+    
+    for (st in seq_len(nStock(OM))) {
+      OM@Fleet[[st]][[replaceFleet]] <- combine_fleets_stock(OM, st, Name, FleetInds)
+      names(OM@Fleet[[st]])[replaceFleet] <- Name 
+      
+      # combine Obs
+      
+      # combine Imp 
+      
+   
+    }
   }
   
-  combfleets <- fleetnames[FleetInds]
+  DropFleets <- lapply(FleetList, '[', -1) |> unlist()
+  for (st in seq_len(nStock(OM))) {
+    OM@Fleet[[st]][DropFleets] <- NULL
+  }
   
-  if (!silent)
-    cli::cli_alert_info('Combining fleets {.val {combfleets}} into new fleet {.val {Name}}')
-  
-  nstock <- nStock(OM)
-  
-  
-  
-  
+  OM
   
 
 }
 
-CombineFleets_Stock <- function(st, OM, Name, FleetInds) {
-  FleetList <- OM@Fleet[[st]][FleetInds]
-  NewFleet <- Fleet(Name=Name)
+resolve_fleet_indices <- function(OM, Fleets) {
   
-  apicalFList <- purrr::map(FleetList, \(fleet) {
-    ArrayMultiply(fleet@Effort@Effort, fleet@Catchability@Efficiency)
-  })
+  fleetnames <- FleetNames(OM)
   
-  totalApicalF <- purrr::reduce(apicalFList, `+`)
+  if (is.character(Fleets)) {
+    FleetInds <- match(Fleets, fleetnames)
+  } else {
+    FleetInds <- Fleets
+  }
   
-  # Use q from first fleet
-  Efficiency <- FleetList[[1]]@Catchability@Efficiency
+  if (any(is.na(FleetInds)) ||
+      !all(FleetInds %in% seq_along(fleetnames))) {
+    
+    cli::cli_abort(c(
+      "x" = "Invalid `Fleets` supplied.",
+      "i" = "Fleets: {.val {Fleets}}",
+      "i" = "Existing Fleets: {.val {fleetnames}}"
+    ))
+  }
   
-  Effort(Effort=ArrayDivide(totalApicalF, Efficiency))
-  
-  
+  FleetInds
+}
 
+combine_fleets_stock <- function(OM, st, Name, FleetInds) {
   
-  Catchability(Efficiency = FleetList[[1]]@Catchability@Efficiency)
+  FleetList <- OM@Fleet[[st]][FleetInds]
+  NewFleet  <- Fleet(Name = Name)
   
-  total_effort <- purrr::reduce(
-    purrr::map(FleetList, ~ .x@Effort@Effort), `+`
+  apicalFList   <- purrr::map(FleetList, \(fleet)
+                              ArrayMultiply(fleet@Effort@Effort,
+                                            fleet@Catchability@Efficiency)
   )
   
-  cbind(FleetList[[1]]@Catchability@Efficiency[1,],
-        FleetList[[2]]@Catchability@Efficiency[1,])
+  totalApicalF  <- Reduce(`+`, apicalFList)
   
+  Efficiency <- FleetList[[1]]@Catchability@Efficiency
   
+  Effort(NewFleet) <- Effort(Effort = ArrayDivide(totalApicalF, Efficiency))
   
+  Catchability(NewFleet) <- Catchability(Efficiency = Efficiency)
   
+  FInteractList <- purrr::map2(apicalFList, FleetList, \(apicalF, fleet) {
+    Fa_expanded <- apicalF |>
+      AddDimension("Age",  pos = 2) |>
+      AddDimension("Area", pos = 4)
+    
+    ArrayMultiply(Fa_expanded, fleet@Selectivity@MeanAtAge)
+  }) 
+  
+  FInteract <- Reduce(`+`, FInteractList)
+  
+  RetentionList <- purrr::map(FleetList,
+                              \(fleet) fleet@Retention@MeanAtAge
+  )
+  
+  FRetainList <- purrr::map2(FInteractList, RetentionList,
+                             \(Fint, ret)
+                             ArrayMultiply(Fint, ret)
+  )
+  FRetain <- Reduce(`+`, FRetainList)
+  
+  Selectivity(NewFleet) <- Selectivity(MeanAtAge = standardizeF(FInteract))
+  Retention(NewFleet) <- Retention(MeanAtAge = ArrayDivide(FRetain, FInteract))
+  
+  DiscardMortalityList <- purrr::map(FleetList, \(fleet) {
+    -log(1-fleet@DiscardMortality@MeanAtAge)
+  })
+  
+  relFList <- purrr::map(apicalFList, \(Ff) ArrayDivide(Ff, totalApicalF))
+  
+  weightedList <- purrr::map2(relFList, DiscardMortalityList, \(Frel, DiscM) {
+    Frel <- Frel |> AddDimension('Age', pos=2) |>
+      AddDimension('Area', pos=4)
+    temp <- ArrayMultiply(Frel, DiscM)
+    temp[!is.finite(temp)] <- Inf
+    temp
+  })
+  
+  MeanAtAge <- 1-exp(-Reduce(`+`, weightedList))
+ 
+  DiscardMortality(NewFleet) <- DiscardMortality(MeanAtAge = MeanAtAge)
+  
+  NewFleet
+}
+
+
+standardizeF <- function(Farray) {
+  nms <- names(dimnames(Farray))
+  age_ind <- which(nms=='Age')
+  maxF <- apply(Farray,  nms[-age_ind], max) |>
+    AddDimension("Age", pos = age_ind)
+  
+  ArrayDivide(Farray, maxF)
 }
 
