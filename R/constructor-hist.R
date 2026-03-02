@@ -26,7 +26,7 @@ Hist <- function(OM=NULL, silent = FALSE) {
   }
 
   # Populate if needed
-  OM <- PopulateOM(OM, silent = silent)
+  OM <- PopulateOM(OM, silent = TRUE)
 
   Hist <- new("hist")
   Hist@OM <- OM

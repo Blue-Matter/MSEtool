@@ -19,11 +19,12 @@
 StartUp <- function(OM, nSim=NULL, silent=FALSE) {
   CheckClass(OM)
                  
-  if (!is.null(OM@Herm)) {
+  if (!is.null(OM@Herm)) 
     stop('Herm not done yet!')
-  }
-    
   
+  if (is.null(nSim))
+    nSim <- OM@nSim
+    
   OM |> 
     PopulateOM() |>
     ReduceNSim(nSim) 

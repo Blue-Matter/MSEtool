@@ -11,7 +11,7 @@
 #' @keywords internal
 CalcDynamicInitial <- function(Hist) {
   nSim <- nSim(Hist)
-
+  
   # ---- Loop over stocks -----
   for (st in 1:nStock(Hist)) {
 

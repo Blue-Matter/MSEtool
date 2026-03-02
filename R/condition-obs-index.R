@@ -48,11 +48,8 @@ ConditionObs_Index <- function(Hist,
   if (dd[1] < nHistTS) 
     cli::cli_abort(c("x"= "{.val nrow(OM@Data[[{i}]]@{type}@Value)} must be at least length {.val {nHistTS}}"))
   
-  
-  if (is.null(dimnames(Indices_Value))) {
-    dimnames(Indices_Value) <- list(Year=c(HistYears, ProjYears)[1:dd[1]],
-                                    Name=Indices_Name)
-  }
+  dimnames(Indices_Value) <- list(Year=c(HistYears, ProjYears)[1:dd[1]],
+                                  Name=Indices_Name)
   
   Indices_Hist <- Indices_Value |> ArraySubsetYear(Years=HistYears)
   

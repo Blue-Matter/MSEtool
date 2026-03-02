@@ -138,9 +138,9 @@ ArraySubsetSim <- function(array, Sims=NULL) {
     return(array)
   }
     
-  if (!all(diff(Sims) == 1)) {
-    cli::cli_abort("`Sims` must be sequentially increasing values")
-  }
+  # if (!all(diff(Sims) == 1)) {
+  #   cli::cli_abort("`Sims` must be sequentially increasing values")
+  # }
   
   DN <- dimnames(array)
   if (is.null(DN) || !"Sim" %in% names(DN)) {
@@ -171,7 +171,9 @@ ArraySubsetSim <- function(array, Sims=NULL) {
   }
   
   idx <- SimVals %in% Sims
-  do.call(`[`, c(list(array), full_index(idx, array), list(drop = FALSE)))
+  out <- do.call(`[`, c(list(array), full_index(idx, array), list(drop = FALSE)))
+  dimnames(out)$Sim <- seq_along(dimnames(out)$Sim)
+  out
 }
 
 SubsetYear <- function(object, Years, Impute=TRUE, debug=FALSE) {

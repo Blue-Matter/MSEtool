@@ -92,7 +92,7 @@ Simulate_om <- function(OM = NULL,
     cli::cli_alert_success("Simulated Historical Fishery")
 
   # ---- Calculate Reference Yield ----
-  type <- c()
+  type <- NULL
   if (DoRefLandings) type <- c(type, "Landings")
   if (DoRefRemovals) type <- c(type, "Removals")
   

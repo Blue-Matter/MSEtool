@@ -10,6 +10,7 @@
 #' 
 #' @example man-examples/ReduceNSim.R
 #' @export
+#' @seealso [Reduce()]
 ReduceNSim <- function(object, nSim = NULL) {
   if (is.null(nSim)) {
     return(object)
@@ -24,10 +25,6 @@ ReduceNSim <- function(object, nSim = NULL) {
   
   if (nSim < 1) {
     cli::cli_abort("`nSim` ({.val {nSim}}) must be >= 1")
-  }
-  
-  if (nSim(object) == nSim) {
-    return(object)
   }
   
   if (nSim > nSim(object)) {
