@@ -70,22 +70,20 @@ PopulateStock <- function(Stock,
                           force = FALSE,
                           CalcAtLength = FALSE) {
   
-  if (is.null(seed)) {
+  if (is.null(seed)) 
     seed <- 102
-  }
   
   argList <- list(seed, ALK, AWK, nYear, pYear, CurrentYear, nSim)
-  if (EmptyObject(Stock)) {
-    return(Stock)
-  }
   
-  if (CheckDigest(Stock, argList) & !force) {
+  if (EmptyObject(Stock)) 
     return(Stock)
-  }
   
-  if (is.null(CurrentYear)) {
+  if (CheckDigest(Stock, argList) & !force) 
+    return(Stock)
+  
+  if (is.null(CurrentYear)) 
     CurrentYear <- as.numeric(format(Sys.Date(), "%Y"))
-  }
+  
   Stock@nYear <- nYear
   Stock@pYear <- pYear
   Stock@CurrentYear <- CurrentYear

@@ -33,7 +33,7 @@ CalcUnfished_Equilibrium <- function(OM, silent=FALSE) {
   }
   
   # Populate OM if neccessary
-  OM <- PopulateOM(OM) 
+  OM <- PopulateOM(OM, silent = silent) 
   
   # New `popdynamics` object that will be return
   EquilibriumUnfished <- new('popdynamics')

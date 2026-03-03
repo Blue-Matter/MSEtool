@@ -78,9 +78,14 @@ ArrayExtend <- function(array1, array2) {
   age_ind <- which(dname1 == "Age")
   if (length(age_ind)) {
     age_ind_2 <- which(dname1 == "Age")
-    AgeClasses <- c(dnames$dname1[[age_ind]], dnames$dname2[[age_ind_2]]) |>
-      unique() |>
-      as.numeric()
+    age_1 <- dnames$dname1[[age_ind]]
+    age_2 <- dnames$dname2[[age_ind_2]]
+    
+    if (length(age_1)==length(age_2)) {
+      AgeClasses <- NULL
+    } else {
+      AgeClasses <- c(age_1, age_2) |> unique() |>  as.numeric()
+    }
   } else {
     AgeClasses <- NULL
   }

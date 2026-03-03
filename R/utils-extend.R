@@ -170,9 +170,10 @@ ExtendSims <- function(array, nSim = NULL) {
 #' @export
 #'
 ExtendAges <- function(array, AgeClasses = NULL) {
-  if (is.null(AgeClasses)) {
+  
+  if (is.null(AgeClasses)) 
     return(array)
-  }
+  
 
   # Recall if not an `array` class object
   if (isS4(array)) {

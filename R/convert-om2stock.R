@@ -362,9 +362,15 @@ process_mov <- function(mov, nage = 1, nts = 1) {
     mov <- aperm(mov, c(2, 1, 3, 4, 5))
   }
 
-  mov <- aperm(mov, c(1, 4, 5, 3, 2)) |>
-    AddDimNames(c("Sim", "Area", "Area", "Age", "Year")) |>
-    ReduceDims()
+  mov <- aperm(mov, c(1, 4, 5, 3, 2))
+  # dd <- dim(mov)
+  # dimnames(mov) <- list(
+  #   Sim = 1:dd[1],
+  #   FromArea = 1:dd[2],
+  #   ToArea =  1:dd[3],
+  #   Year = NULL # years missing from function
+  # )
+      
 
   mov
 }

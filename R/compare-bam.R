@@ -2,12 +2,14 @@
 
 ProcessBAMArgs <- function(Stock, OM=NULL) {
   if (is.null(OM))
-    OM <- ImportBAM(Stock, 2,1)
+    OM <- ImportBAM(Stock, 
+                    nSim = 1,
+                    pYear = 1)
   
   CheckClass(OM, c('om', 'hist'))
   
   if (inherits(OM, 'om')) {
-    Hist <- Simulate(OM, nSim=1)
+    Hist <- Simulate(OM, nSim=1, silent=TRUE)
   } else {
     Hist <- OM
   }
@@ -27,7 +29,7 @@ PrintPlotBAMRE <- function(Out, name, thresh=0.1) {
     dplyr::mutate(MARE=abs(MARE)) |> 
     dplyr::filter(MARE>thresh)
   if (nrow(re)>0) {
-    cli::cli_alert('{.val {name}:} Some Absolute Relative Error > {thresh}%')
+    cli::cli_alert_warning('{.val {name}:} Some Absolute Relative Error > {thresh}%')
     print(re) 
     
     p <- ggplot(Out[[name]]$df, aes(x=Year, y=Value, color=Model)) +
@@ -43,7 +45,28 @@ PrintPlotBAMRE <- function(Out, name, thresh=0.1) {
 }
 
 
-#' @describeIn ImportBAM Compare BAM and OM dynamics
+
+#' Compare BAM and OM Output
+#'
+#' Compares key population time series between BAM output and a simulated
+#' operating model (OM), reporting the mean absolute relative error (MARE) for
+#' recruits, total numbers, and total biomass. Series with MARE exceeding
+#' `thresh` are printed and plotted automatically.
+#'
+#' @param Stock Character string matching a stock in `bamExtras`, a list of BAM
+#'   output objects containing elements `rdat` and `dat`, or an object of class
+#'   `BAMdata` as returned by [GetBAMOutput()].
+#' @param OM Optional OM or `hist` object. If `NULL` (default), one is
+#'   constructed internally via [ImportBAM()].
+#' @param thresh Numeric. MARE threshold (as a percentage) above which a
+#'   comparison is flagged, printed, and plotted. Default `0.1`.
+#'
+#' @return Invisibly returns a named list with elements `Stock`, `Recruits`,
+#'   `Number`, and `Biomass`. Each of `Recruits`, `Number`, and `Biomass` is a
+#'   list with elements `df` (long-format data.frame of OM and BAM values by
+#'   year) and `MARE` (absolute relative error by year).
+#'
+#' @seealso [ImportBAM()], [GetBAMOutput()]
 #' @export
 CompareBAM <- function(Stock, OM=NULL, thresh=0.1) {
   
@@ -88,7 +111,6 @@ CompareBAM_Number <- function(Stock, OM=NULL) {
   dnames <- dimnames(BAM_Value)
   dimnames(BAM_Value) <- list(Year=dnames[[1]],
                               Age=dnames[[2]])
-  
   
   BAM_Value <- BAM_Value |> array2DF() |> 
     ConvertDF() |>

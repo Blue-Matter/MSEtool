@@ -211,6 +211,7 @@ PopulateClasses <- function(object) {
                        CVatAge=object@CVatAge, 
                        TruncSD=object@TruncSD, 
                        dist=object@Dist)
+  
   bins <- seq(0, to=MaxBin, length.out=40) |> round(2)
   by <- bins[2] - bins[1]
   

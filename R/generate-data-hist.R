@@ -43,10 +43,12 @@ GenerateHistoricalData <- function(Hist, silent=FALSE) {
  
   # Check if all `nSim` data objects are identical and if so, only return sim 1
   identical <- rep(TRUE, nSim)
-  for (sim in 2:nSim) {
-    identical[sim] <- IdenticalS4(SimDataList[[1]], SimDataList[[sim]])
+  if (nSim>1) {
+    for (sim in 2:nSim) {
+      identical[sim] <- IdenticalS4(SimDataList[[1]], SimDataList[[sim]])
+    }
   }
-  
+
   if(prod(identical)) {
     Hist@Data <- list("1"= SimDataList[[1]])
   } else {

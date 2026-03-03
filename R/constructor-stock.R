@@ -54,10 +54,6 @@ Stock <- function(Name = "New Stock Object",
                   Seasons = 1,
                   Misc = list()) {
   
-
-  if (inherits(Name, 'om')) {
-    return(Name@Stock)
-  }
   
   if (!inherits(Name, 'character')) {
     if (!'Stock' %in% slotNames(Name))

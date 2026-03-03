@@ -1,6 +1,60 @@
-
-#' Import BAM 
-#' 
+#' Import BAM Output into an Operating Model
+#'
+#' Imports output from the Beaufort Assessment Model
+#' ([BAM](https://repository.library.noaa.gov/view/noaa/4847)) and converts it
+#' into an operating model ([OM()]) object. Stock and fleet objects are populated
+#' from BAM parameters and time series, including selectivity, retention,
+#' discard mortality, recruitment deviations, and stock-recruitment
+#' relationships.
+#'
+#' @param Stock Character string matching a stock name available in `bamExtras`
+#'   (e.g., `'Red Snapper'`), or a list of BAM output objects containing
+#'   elements `rdat` and `dat`.
+#' @param nSim Integer. Number of simulations. Default `48`.
+#' @param pYear Integer. Number of projection years. Default `30`.
+#' @param StockName Optional character string to override the species name taken
+#'   from the BAM output.
+#' @param DiscMortDF Optional data.frame with columns `Fleet`, `Value`, and
+#'   `Year` specifying discard mortality rates by fleet and time block. If
+#'   `NULL`, values are extracted directly from BAM parameters. 
+#'   
+#' @param DiscFleets Optional named character vector mapping retain fleet names
+#'   to their corresponding discard fleet names in the BAM output, for cases
+#'   where naming conventions differ.
+#'   
+#' @param DiscSelFleets Optional named character vector mapping retain fleet
+#'   names to the selectivity series to use for discards.
+#'   
+#' @param RetSelFleets Optional named character vector mapping retain fleet
+#'   names to alternative retention selectivity series.
+#' @param populate Logical. If `TRUE` (default), calls [PopulateOM()] to
+#'   populate the OM after construction.
+#'   
+#' @param silent Logical. If `TRUE`, suppresses console messages. Default
+#'   `FALSE`.
+#'
+#' @return `ImportBAM()` returns a populated OM object. `GetBAMOutput()` returns
+#'   a BAM output list of class `BAMdata` (for `type = 'rdat'`).
+#'   `ListBAMStocks()` returns a character vector of available stock names.
+#'
+#' @details
+#' `ImportBAM()` requires the `bamExtras` package, which can be installed with
+#' `pak::pkg_install('nikolaifish/bamExtras')`.
+#'
+#' The `DiscMortDF` argument accepts a data.frame with columns:
+#' \describe{
+#'   \item{Fleet}{Fleet name matching the retain fleet names in the OM.}
+#'   \item{Value}{Discard mortality rate (0--1).}
+#'   \item{Year}{The year *before* which the value takes effect (i.e., the
+#'     value applies to all years after this year).}
+#' }
+#'
+#' When `DiscFleets`, `DiscSelFleets`, or `RetSelFleets` are provided, they
+#' should be named character vectors where names are the retain fleet names and
+#' values are the corresponding BAM fleet/selectivity names to use instead of
+#' the defaults.
+#'
+#' @seealso [CompareBAM()]
 #' @export
 ImportBAM <- function(Stock='Red Snapper',     
                       nSim=48,
@@ -71,7 +125,7 @@ ImportBAM <- function(Stock='Red Snapper',
   # TODO - Data
   
   if (populate) 
-    OM <- PopulateOM(OM)
+    OM <- PopulateOM(OM, silent = TRUE)
   
   OM
 }
@@ -80,6 +134,10 @@ ImportBAM <- function(Stock='Red Snapper',
 
 
 #' @rdname ImportBAM
+#'
+#' @param type Character. Format of BAM output to retrieve: `'rdat'`
+#'   (default) returns the R data object; `'dat'` returns the raw input data.
+#'
 #' @export
 GetBAMOutput <- function(Stock='Red Snapper', type=c('rdat', 'dat')) {
   type <- match.arg(type)
@@ -192,23 +250,25 @@ BAM2Stock <- function(BAMdata, nSim, Years) {
     cli::cli_abort('`BAMdata$info$units.weight`:  {.val {BAMdata$info$units.weight}} currently not supported', .internal=TRUE)
   }
   
-  Weight(stock) <- Weight(Pars=list(),
-                          MeanAtAge = array(WeightAtAge,
-                                            dim=c(1, length(AgeClasses), 1),
-                                            dimnames=list(Sim=1,
-                                                          Age=AgeClasses,
-                                                          Year=histTS[1])
-                          ),
-                          Units = 'kg')
+  Weight(stock) <- Weight(
+    Pars=list(),
+    MeanAtAge = array(WeightAtAge,
+                      dim=c(1, length(AgeClasses), 1),
+                      dimnames=list(Sim=1,
+                                    Age=AgeClasses,
+                                    Year=histTS[1])
+    ),
+    Units = 'kg')
   
   
-  NaturalMortality(stock) <- NaturalMortality(Pars=list(), 
-                                              MeanAtAge=array(AgeSeries$M,
-                                                              dim=c(1, length(AgeClasses), 1),
-                                                              dimnames=list(Sim=1,
-                                                                            Age=AgeClasses,
-                                                                            Year=histTS[1])
-                                              )
+  NaturalMortality(stock) <- NaturalMortality(
+    Pars=list(), 
+    MeanAtAge=array(AgeSeries$M,
+                    dim=c(1, length(AgeClasses), 1),
+                    dimnames=list(Sim=1,
+                                  Age=AgeClasses,
+                                  Year=histTS[1])
+    )
   )
   
   
@@ -221,24 +281,27 @@ BAM2Stock <- function(BAMdata, nSim, Years) {
     MaturityAtAge <-  c(AgeSeries$mat.female * AgeSeries$prop.female + 
                           AgeSeries$mat.male * (1 - AgeSeries$prop.female))
   }
-  Maturity(stock) <- Maturity(Pars=list(), 
-                              MeanAtAge=array(MaturityAtAge,
-                                              dim=c(1, length(AgeClasses), 1),
-                                              dimnames=list(Sim=1,
-                                                            Age=AgeClasses,
-                                                            Year=histTS[1])
-                              )
+  
+  Maturity(stock) <- Maturity(
+    Pars=list(), 
+    MeanAtAge=array(MaturityAtAge,
+                    dim=c(1, length(AgeClasses), 1),
+                    dimnames=list(Sim=1,
+                                  Age=AgeClasses,
+                                  Year=histTS[1])
+    )
   )
   
   
-  Fecundity(stock) <- Fecundity(Pars=list(),
-                                MeanAtAge=array(AgeSeries$reprod,
-                                                dim=c(1, length(AgeClasses), 1),
-                                                dimnames=list(Sim=1,
-                                                              Age=AgeClasses,
-                                                              Year=histTS[1])
-                                ),
-                                Units=BAMdata$info$units.ssb,
+  Fecundity(stock) <- Fecundity(
+    Pars=list(),
+    MeanAtAge=array(AgeSeries$reprod,
+                    dim=c(1, length(AgeClasses), 1),
+                    dimnames=list(Sim=1,
+                                  Age=AgeClasses,
+                                  Year=histTS[1])
+    ),
+    Units=BAMdata$info$units.ssb,
   )
   
   h <- ifelse(is.null(BAMdata$parms[["BH.steep"]]), 0.99,
@@ -286,11 +349,15 @@ BAM2Stock <- function(BAMdata, nSim, Years) {
   # already done in rec devs
   # stock |> Depletion() |> Initial() <- BAMdata$t.series$B.B0[1]
   
-  stock <- PopulateStock(stock, stock@nYear, stock@pYear, stock@CurrentYear, stock@nSim)
+  stock <- PopulateStock(Stock = stock, 
+                         nYear = stock@nYear, 
+                         pYear = stock@pYear, 
+                         CurrentYear = stock@CurrentYear,
+                         nSim = stock@nSim)
   
   # Recruitment Deviations 
-  UnfishedEq <- ArrayMultiply(CalcUnfishedSurvival(stock, Years=Years, Extend = FALSE), 
-                              aperm(AddDimension(stock@SRR@R0, 'Age'), c(1,3,2))
+  UnfishedEq <- ArrayMultiply(array1=CalcUnfishedSurvival(stock, Years=Years, Extend = FALSE), 
+                              array2=aperm(AddDimension(stock@SRR@R0, 'Age'), c(1,3,2))
   )
   
   N.age <- BAMdata$N.age
@@ -344,11 +411,14 @@ GetBAMDiscardMortality <- function(Stock, Years, RetainFleets, DiscardFleets, OM
   if (!length(ind)) { # No discard mortality parameters
     AgesClasses <- OM@Stock[[1]]@Ages@Classes
     nAgeClasses <- length(AgesClasses)
-    DiscardMortArray <- array(tiny, dim=c(nAgeClasses, nYear(OM@Stock[[1]]), nFleet)) |>
-      AddDimNames(c("Age", "Year", 'Fleet'), 
-                  Years = Years, 
-                  Ages=AgesClasses,
-                  Fleets=RetainFleets)
+    nYears <- nYear(OM@Stock[[1]])
+    
+    DiscardMortArray <- array(0, dim=c(nAgeClasses, 1, nFleet))
+    dimnames(DiscardMortArray) <- list(Age=AgesClasses, 
+                                       Year=Years[1],
+                                       Fleet=RetainFleets)
+    
+
     
     return(DiscardMortArray)
   }
@@ -400,11 +470,12 @@ GetBAMDiscardMortality <- function(Stock, Years, RetainFleets, DiscardFleets, OM
   
   AgesClasses <- OM@Stock[[1]]@Ages@Classes
   nAgeClasses <- length(AgesClasses)
-  DiscardMortArray <- array(tiny, dim=c(nAgeClasses, nYear(OM@Stock[[1]]), nFleet)) |>
-    AddDimNames(c("Age", "Year", 'Fleet'), 
-                Years = Years, 
-                Ages=AgesClasses,
-                Fleets=RetainFleets)
+  nYears <- nYear(OM@Stock[[1]])
+  DiscardMortArray <- array(0, dim=c(nAgeClasses, nYears, nFleet))
+  dimnames(DiscardMortArray) <- list(Age=AgesClasses, 
+                                     Year=Years[1:nYears],
+                                     Fleet=RetainFleets)
+  
   
   for (i in 1:nrow(DiscMortDF)) {
     TSind <- which(dimnames(DiscardMortArray)$Year > DiscMortDF$Year[i])
@@ -467,6 +538,7 @@ BAM2Fleet <- function(Stock,
                                              OM, 
                                              DiscMortDF)
   
+
   # Selectivity, Retention, Effort, Catchability 
   TimeSeries <- BAMdata$t.series |> dplyr::filter(year %in% HistTS)
   FCols <- paste0('F.', FleetNames)
@@ -531,7 +603,7 @@ BAM2Fleet <- function(Stock,
     
     if (is.null(ApicalFDiscard)) {
       ApicalFDiscard <- ApicalFSelect
-      ApicalFDiscard[] <- tiny
+      ApicalFDiscard[] <- 0
     }
     
     FRetainatAge[,,fl] <- t(ApicalFSelect * RetainSelect)
@@ -561,21 +633,34 @@ BAM2Fleet <- function(Stock,
     fleet <- Fleet(Name=RetainFleets[fl])
     thisFleetEffort <- apicalEffort[,fl, drop=FALSE]
     thisFleetEffort[] <- thisFleetEffort[,1]/mean(thisFleetEffort[,1])
-    fleet@Effort@Value <- AddDimension(thisFleetEffort, 'Sim') |>
+    fleet@Effort@Effort <- AddDimension(thisFleetEffort, 'Sim') |>
       abind::adrop(2) |> aperm(c('Sim', 'Year'))
     
     q <- mean(apicalEffort[,fl]) / mean(thisFleetEffort[,1]) 
 
-    fleet@Catchability@Value <- array(q, c(1,1))  |> 
-      AddDimNames(c('Sim', 'Year'), Years=Years)
+    fleet@Catchability@Efficiency <- array(q, c(1,1),
+                                           dimnames = list(
+                                             Sim = 1,
+                                             Year = Years[1]
+                                           )
+    )
     
-    fleet@Selectivity@MeanAtAge <- AddDimension(SelectivityAtAge[,,fl], 'Sim') |>
-      aperm(c('Sim', 'Age', 'Year'))
-    fleet@Retention@MeanAtAge <- AddDimension(RetentionAtAge[,,fl], 'Sim') |>
-      aperm(c('Sim', 'Age', 'Year'))
-    fleet@DiscardMortality@MeanAtAge <- AddDimension(DiscardMortArray[,,fl], 'Sim') |>
+    
+    fleet@Selectivity@MeanAtAge <- SelectivityAtAge[,,fl, drop=FALSE] |> 
+      abind::adrop(3) |>
+      AddDimension('Sim') |> 
       aperm(c('Sim', 'Age', 'Year'))
     
+    fleet@Retention@MeanAtAge <- RetentionAtAge[,,fl, drop=FALSE] |> 
+      abind::adrop(3) |>
+      AddDimension('Sim') |> 
+      aperm(c('Sim', 'Age', 'Year'))
+
+    fleet@DiscardMortality@MeanAtAge <- DiscardMortArray[,,fl, drop=FALSE] |> 
+      abind::adrop(3) |>
+      AddDimension('Sim') |> 
+      aperm(c('Sim', 'Age', 'Year'))
+      
     FleetList[[fleet@Name]] <- fleet
   }
   FleetList

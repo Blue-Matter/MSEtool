@@ -20,7 +20,7 @@ Simulate_om <- function(OM = NULL,
   OM <- UpdateObject(OM)
   
   # Populate OM, reduce nSim if applicable, checks and warning messages
-  OM <- StartUp(OM, nSim)
+  OM <- StartUp(OM, nSim, silent = silent)
 
   HistYears <- Years(OM, "Historical")
   ProjYears <- Years(OM, "Projection")
@@ -60,7 +60,6 @@ Simulate_om <- function(OM = NULL,
   Hist <- OptFinalDepletion(Hist, silent = silent)
   
   # TODO - check that depletion converged on specified values
-  
   
   # ---- Add Reference Points if they exist ----
   # won't be re-calculated
@@ -115,7 +114,7 @@ Simulate_om <- function(OM = NULL,
   # ---- Historical Fishery Data ----
   
   if (DoGenerateData) 
-    Hist <- GenerateHistoricalData(Hist)
+    Hist <- GenerateHistoricalData(Hist, silent = silent)
   
   # ---- Reduce Dimension Size ----
   Hist <- ReduceHist(Hist, Reduce)

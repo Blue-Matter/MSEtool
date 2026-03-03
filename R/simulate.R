@@ -33,7 +33,8 @@
 #' }
 #'
 #' @export
-Simulate <- function(OM=NULL, parallel = FALSE,
+Simulate <- function(OM=NULL, 
+                     parallel = FALSE,
                      silent = FALSE,
                      nSim = NULL,
                      nsim = NULL,
