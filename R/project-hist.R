@@ -5,8 +5,7 @@ Project_hist <- function(Hist,
                          silent=FALSE, 
                          nSim=NULL, 
                          Reduce=TRUE) {
-  
-  
+
   # ---- Initial Checks and Setup ----
   StartTime <- Sys.time()
   
@@ -30,18 +29,14 @@ Project_hist <- function(Hist,
   Proj <- PrepHistMisc(Proj)
 
   # ---- Extend Arrays with Projection Years ----
-  Proj <- ExtendHist(Proj, 
-                     Years = c(YearsHist, YearsProj))
+  Proj <- ExtendHist(Proj, Years = c(YearsHist, YearsProj))
   
   # ---- Populate Number-at-Age at Beginning of Projection Year ----
   Proj <- CalcFisheryDynamics(Proj, Years=c(tail(YearsHist,1))) 
-  # doesn't include recruitment
-  
-  # Proj <- CalcFisheryDynamics(Proj, Years=c(tail(YearsHist,1), head(YearsProj,1)))
-  
+
   # ---- Create MSE Object ----
-  MSE <- Hist2MSE(Proj, MPNames = MPs) 
-  
+  MSE <- Hist2MSE(Proj, MPNames = MPs)
+
   # ---- Project MPs ----
   mp <- 1 # for debugging
   

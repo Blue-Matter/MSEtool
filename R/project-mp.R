@@ -18,22 +18,14 @@ Project_MP <- function(Proj,
   
   # Calc management years/time steps
   ManagementYears <- CalcManagementYears(YearsProj, Proj@OM@Interval)
-  
-  YearsAll <- c(YearsHist, YearsProj) 
-  
-  StockNames <- StockNames(MSE)
-  FleetNames <- FleetNames(MSE)
-  if (is.list(FleetNames))
-    FleetNames <- FleetNames[[1]]
-  Areas <- 1:nArea(Proj)
-  
-  Complexes <- Proj@OM@Complexes
-  nSim <- Proj@OM@nSim
-  
-  StartTime <- Sys.time()
+  YearsAll    <- c(YearsHist, YearsProj) 
+  StockNames  <- StockNames(MSE)
+  FleetNames  <- FleetNames(MSE)
+  Areas       <- 1:nArea(Proj)
+  StartTime   <- Sys.time()
   
   # for debugging
-  Year <- YearsProj[1]; ts =1;
+  Year <- YearsProj[1]; ts <- 1;
   
   if (!silent) 
     cli::cli_progress_bar(
@@ -41,12 +33,24 @@ Project_MP <- function(Proj,
       total = length(YearsProj)
       )
   
+  Error        <- FALSE
+  ErrorMessage <- NULL
+  
+  update_funs <- list(
+    Update_Closure          = Update_Closure,
+    Update_Selectivity      = Update_Selectivity,
+    Update_Retention        = Update_Retention,
+    Update_DiscardMortality = Update_DiscardMortality,
+    Update_Effort           = Update_Effort,
+    Update_TAC              = Update_TAC
+  )
+  
+  
   for (ts in seq_along(YearsProj)) {
     
     if (!silent) cli::cli_progress_update()
     
     Year <- YearsProj[ts]
-    TSIndex <- match(Year, YearsAll)
     
     # Simulate data for the previous time step 
     Proj <- GenerateProjectionData(Proj, Year, YearsHist, YearsProj)
@@ -55,10 +59,10 @@ Project_MP <- function(Proj,
     LastAdviceSimList <- GetLastMPAdvice(Proj) 
     
     # Data year accounting for lag 
-    DataYear <- CalcDataYear(Year = Year, 
+    DataYear <- CalcDataYear(Year     = Year, 
                              YearsAll = YearsAll, 
-                             DataLag = Proj@OM@DataLag,
-                             Seasons = Proj@OM@Seasons)
+                             DataLag  = Proj@OM@DataLag,
+                             Seasons  = Proj@OM@Seasons)
       
     # Trim Data to `DataYear` if applicable
     DataSimList <- TrimMPData(Proj, DataYear)
@@ -83,79 +87,54 @@ Project_MP <- function(Proj,
     Proj <- StoreMPAdvice(Proj, Year, AdviceSimList)
    
     # Save Advice@Misc to Data@Misc for each sim and stock
-    Proj@Data <- purrr::map2(Proj@Data, AdviceSimList, ApplyAdviceMiscToData)
+    Proj@Data <- purrr::map2(Proj@Data, AdviceSimList, \(DataList, AdviceList)
+                             ApplyAdviceMiscToData(DataList, AdviceList)
+    )
     
     # Save Advice@Log to Proj@Log for each sim and stock
     Proj@Log[[as.character(Year)]] <- ExtractAdviceLogs(AdviceSimList)
     
     # Save TAC and Effort
     Proj@Data <- purrr::map2(Proj@Data, AdviceSimList,\(DataList, AdviceList) {
-        purrr::map2(DataList, AdviceList, AddAdviceToData, Year = Year)
+      if (!inherits(AdviceList, 'try-error'))
+        purrr::map2(DataList, AdviceList, \(Data, Advice) 
+                    AddAdviceToData(Data, Advice, Year)
+        )
       }
     )
     
     # Update Pop Dynamics in Proj with MP Advice
+    # TODO - this could probably be optimized to avoid the repeated calls to CalcFisheryDynamics
+    # and also add parallel processing over simulations
     
-    # TODO - this can be optimized to avoid the repeated calls to CalcFisheryDynamics
-    
-    # Update Pop Dynamics in Proj with MP Advice
-    update_steps <- list(
-      'Update_Closure',
-      'Update_Selectivity',
-      'Update_Retention',
-      'Update_DiscardMortality',
-      'Update_Effort',
-      'Update_TAC'
-    )
-    
-    Error <- FALSE
-    ErrorMessage <- NULL
-    for (funName in update_steps) {
+    for (fun_name in names(update_funs)) {
+   
+      # tictoc::tic(fun_name)
+      result <- run_update_step(fun=update_funs[[fun_name]], 
+                                fun_name,
+                                Proj, Year, AdviceSimList, LastAdviceSimList,
+                                YearsHist, YearsProj, Areas, FleetNames, StockNames)
+
+      # tictoc::toc()
       
-      fun <- get(funName)
-      
-      tmp <- try(
-        fun(
-          Proj,
-          Year,
-          AdviceSimList,
-          LastAdviceSimList,
-          YearsHist = YearsHist,
-          YearsProj = YearsProj,
-          Areas = Areas,
-          FleetNames = FleetNames,
-          StockNames = StockNames
-        ),
-        silent = TRUE
-      )
-      
-      if (inherits(tmp, "try-error")) {
-        Error <- TRUE
-        ErrorMessage <- tmp
-        
+      if (inherits(result, "update_error")) {
+        Error        <- TRUE
+        ErrorMessage <- sprintf("Error in %s (Year %d): %s",
+                                result$step, Year, result$message)
         Proj@Log[[as.character(Year)]]$UpdateError <- list(
-          Step = funName,
-          Message = as.character(tmp)
+          Step    = result$step,
+          Message = result$message
         )
-        
-        # if (!silent) {
-        #   cli::cli_alert_danger(
-        #     "Update step failed in year {Year}: {deparse(substitute(fun))}"
-        #   )
-        # }
-        
         break
       }
-      
-      Proj <- tmp
+      Proj <- result
     }
     
-    if (Error)
-      break
+    if (Error) break
     
     # Simulate Pop Dynamics for this Time Step
     Proj <- CalcFisheryDynamics(Proj, Year)
-    
+   
   }
   
   EndTime <- Sys.time()
@@ -172,6 +151,25 @@ Project_MP <- function(Proj,
   MSE
 }
 
+
+run_update_step <- function(fun, fun_name, Proj, Year, AdviceSimList, LastAdviceSimList,
+                            YearsHist, YearsProj, Areas, FleetNames, StockNames) {
+  tryCatch(
+    fun(Proj, 
+        Year,
+        AdviceSimList, 
+        LastAdviceSimList,
+        YearsHist,
+        YearsProj, 
+        Areas, 
+        FleetNames, 
+        StockNames),
+    error = function(e) structure(
+      list(step = fun_name, message = conditionMessage(e)),
+      class = "update_error"
+    )
+  )
+}
 
 
 

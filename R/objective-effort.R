@@ -1,3 +1,4 @@
+
 #' Objective function to match removals to TAC by fleet
 #'
 #' @param logEffortVec Numeric vector of log-scaled effort (length = number of fleets with positive TAC)
@@ -13,33 +14,39 @@
 ObjEffort <- function(logEffortVec, Proj, sim, Year, TSIndex, stocks, 
                       TAC_by_Fleet, Effort_init, TACType=c('Removals', 'Landings')) {
   
-  TACType <- match.arg(TACType)
+  TACType  <- match.arg(TACType)
   
   pos_idx  <- which(TAC_by_Fleet > 0)
   zero_idx <- which(TAC_by_Fleet == 0)
   
   Effort <- Effort_init
   Effort[pos_idx] <- Effort_init[pos_idx] * exp(logEffortVec)
+  if (length(zero_idx) > 0) Effort[zero_idx] <- 0
   
-  if (length(zero_idx) > 0) {
-    Effort[zero_idx] <- 0
-  }
-
   Proj@Effort[sim, TSIndex, ] <- Effort
   
   Temp <- CalcFisheryDynamics(Hist = Proj, Years = Year, Sims = sim)
+
+  CatchByFleet <- CalcCatchByFleet(Temp, sim, stocks, TSIndex, TACType)
   
-  if (TACType =='Removals') {
-    Catch <- Temp@Landings[sim, stocks, TSIndex, ] +  Temp@Discards[sim, stocks, TSIndex, ]
+  out <- sum((log(TAC_by_Fleet[pos_idx]) - log(CatchByFleet[pos_idx]))^2)
+  out
+}
+
+#' Extract catch by fleet from a fishery dynamics object
+#'
+#' @param Temp     Output of `CalcFisheryDynamics()`
+#' @param sim      Simulation index
+#' @param stocks   Stock indices
+#' @param TSIndex  Time-step index
+#' @param TACType  `"Removals"` or `"Landings"`
+#' @return Named numeric vector of catch per fleet
+#' @keywords internal
+CalcCatchByFleet <- function(Temp, sim, stocks, TSIndex, TACType) {
+  Catch <- if (TACType == "Removals") {
+    Temp@Landings[sim, stocks, TSIndex, ] + Temp@Discards[sim, stocks, TSIndex, ]
   } else {
-    Catch <- Temp@Landings[sim, stocks, TSIndex, ]
+    Temp@Landings[sim, stocks, TSIndex, ]
   }
-  
-  if (is.null(ncol(Catch))) {
-    CatchByFleet <- Catch
-  } else {
-    CatchByFleet <- colSums(Catch[, , drop = FALSE])
-  }
-  
-  sum((log(TAC_by_Fleet[pos_idx]) - log(CatchByFleet[pos_idx]))^2)
+  if (is.null(ncol(Catch))) Catch else colSums(Catch[, , drop = FALSE])
 }

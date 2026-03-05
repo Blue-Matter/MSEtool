@@ -25,95 +25,96 @@ CheckMPClass <- function(MPs) {
   invisible(NULL)
 }
 
+
 #' Detect helper functions called by an MP
 #'
-#' Scans the body of a management procedure (`MP`) and identifies names of
-#' functions that are called within it
+#' Recursively scans the body of an MP function and any detected helper
+#' functions, returning the names of all non-MSEtool, non-base user-defined
+#' functions reachable from the MP. Recurses into helper bodies to catch
+#' second-order dependencies.
 #'
-#' @param MP A function of class `mp`.
-#'
-#' @return
-#' A character vector of unique function names referenced in the body of `MP`.
-#'
+#' @param MP A function of class `"mp"`.
+#' @param MSEtool_funs Character vector of function names exported by MSEtool,
+#'   used to exclude them from the result.
+#' @param visited Character vector of already-visited function names, used
+#'   internally to prevent infinite recursion.
+#' @return Character vector of unique helper function names.
 #' @keywords internal
-DetectCalledFunctions <- function(MP, MSEtool_funs) {
+DetectCalledFunctions <- function(MP, MSEtool_funs, visited = character()) {
   
   skip <- c("{", "<-", "=", "(", "[", "[[",
             "if", "for", "while", "repeat", "return")
   
-  find_functions <- function(expr) {
+  find_calls <- function(expr) {
     if (!is.call(expr)) return(NULL)
-    
     fun <- expr[[1]]
-    
     out <- character()
-    
     if (is.symbol(fun)) {
       fname <- as.character(fun)
-      
       if (!fname %in% skip &&
-          exists(fname, mode = "function", inherits = TRUE) &&
-          !fname %in% MSEtool_funs) {
+          !fname %in% MSEtool_funs &&
+          exists(fname, mode = "function", inherits = TRUE)) {
         out <- fname
       }
     }
-    
-    c(out, unlist(lapply(as.list(expr)[-1], find_functions)))
+    c(out, unlist(lapply(as.list(expr)[-1], find_calls)))
   }
   
-  unique(find_functions(body(MP)))
+  direct <- unique(find_calls(body(MP)))
+  
+  # Recurse into helper bodies to catch second-order dependencies
+  new_helpers <- setdiff(direct, c(MSEtool_funs, visited))
+  visited     <- union(visited, new_helpers)
+  
+  deeper <- unlist(lapply(new_helpers, function(fname) {
+    fun <- tryCatch(get(fname, mode = "function", inherits = TRUE),
+                    error = function(e) NULL)
+    if (is.null(fun) || isNamespace(environment(fun))) return(NULL)
+    DetectCalledFunctions(fun, MSEtool_funs, visited)
+  }))
+  
+  unique(c(direct, deeper))
 }
 
 #' Make an MP self-contained by capturing helper functions
 #'
-#' Creates a new function environment for a management procedure (`MP`) and
-#' stores any detected helper functions within that environment so the MP
-#' can be safely returned and executed independently of the caller's scope.
+#' Creates a new function environment for an MP, parented to the MSEtool
+#' namespace so that package functions (including `methods::new()`,
+#' `utils::tail()`, and all MSEtool internals) are findable by normal lexical
+#' scoping without being copied. Only user-defined helper functions from the
+#' calling environment are captured explicitly.
 #'
-#' @param MP A function of class `mp`.
-#'
-#' @return
-#' The same MP function with an updated environment containing its helpers.
-#'
+#' @param MP A function of class `"mp"`.
+#' @return The same MP with an updated self-contained environment.
 #' @keywords internal
 MakeSelfContained <- function(MP) {
   CheckClass(MP, 'mp', 'MP')
   
   # Create a new environment for the function
-  env <- new.env(parent = baseenv())  
+  env <- new.env(parent = asNamespace("MSEtool"))
+  mp_env <- environment(MP)
   
   # Get all exported functions from MSEtool
-  MSEtool_funs <- ls(getNamespace("MSEtool"), all.names = TRUE)
-  MSEtool_funs <- MSEtool_funs[sapply(MSEtool_funs, function(x) is.function(get(x, envir = asNamespace("MSEtool"))))]
+  MSEtool_funs <- vapply(
+    ls(getNamespace("MSEtool"), all.names = TRUE),
+    function(x) is.function(get(x, envir = asNamespace("MSEtool"))),
+    logical(1)
+  )
+  MSEtool_funs <- names(MSEtool_funs)[MSEtool_funs]
   
+
   # Get internal helper functions
   helpers <- DetectCalledFunctions(MP, MSEtool_funs=MSEtool_funs)
-  if (length(helpers)) {
-    helpers <- helpers[sapply(helpers, function(x) 
-      exists(x, envir = parent.frame()) && 
-      !isNamespace(environment(get(x))))]
+  
+  helpers <- Filter(function(fname) {
+    exists(fname, envir = mp_env, inherits = TRUE) &&
+      !isNamespace(environment(get(fname, envir = mp_env, inherits = TRUE)))
+  }, helpers)
+  
+  for (fname in helpers) {
+    env[[fname]] <- get(fname, envir = mp_env, inherits = TRUE)
   }
  
-  
-  # Add helper functions
-  for (hname in helpers) {
-    env[[hname]] <- get(hname, envir = parent.frame())
-  }
-  if (!is.null(helpers)) {
-    for (hname in helpers) {
-      env[[hname]] <- get(hname, envir = parent.frame())  
-    }
-  }
-  
-  # Add MSEtool exported functions 
-  for (fname in MSEtool_funs) {
-    fun <- try( get(fname, envir = asNamespace("MSEtool")), silent=TRUE)
-    if (!inherits(fun,'try-error')) {
-      env[[fname]] <- fun  
-    }
-    
-  }
-  
   environment(MP) <- env
   MP
 }

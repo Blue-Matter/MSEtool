@@ -4,16 +4,24 @@
 \alias{DetectCalledFunctions}
 \title{Detect helper functions called by an MP}
 \usage{
-DetectCalledFunctions(MP, MSEtool_funs)
+DetectCalledFunctions(MP, MSEtool_funs, visited = character())
 }
 \arguments{
-\item{MP}{A function of class \code{mp}.}
+\item{MP}{A function of class \code{"mp"}.}
+
+\item{MSEtool_funs}{Character vector of function names exported by MSEtool,
+used to exclude them from the result.}
+
+\item{visited}{Character vector of already-visited function names, used
+internally to prevent infinite recursion.}
 }
 \value{
-A character vector of unique function names referenced in the body of \code{MP}.
+Character vector of unique helper function names.
 }
 \description{
-Scans the body of a management procedure (\code{MP}) and identifies names of
-functions that are called within it
+Recursively scans the body of an MP function and any detected helper
+functions, returning the names of all non-MSEtool, non-base user-defined
+functions reachable from the MP. Recurses into helper bodies to catch
+second-order dependencies.
 }
 \keyword{internal}

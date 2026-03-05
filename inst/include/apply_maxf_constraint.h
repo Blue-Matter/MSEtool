@@ -100,7 +100,7 @@ inline void ApplyMaxF(const int y,
     if (!recomputeSim[sim_idx]) continue;
     
     int sim = Sims[sim_idx];
-    
+
     // Recompute area Fs
     CalcArea_F(y,
                {sim},       
@@ -115,6 +115,7 @@ inline void ApplyMaxF(const int y,
                q,
                Effort,
                RelSize,
+               maxF, 
                nStock,
                nFleet,
                nArea);

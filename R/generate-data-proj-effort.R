@@ -1,56 +1,43 @@
 
-GenProjData_Effort <- function(x, Proj, DataYear, YearsAll, i, stocks) {
+#' Generate Projected Effort Data for a Stock/Complex
+#'
+#' Appends a new year of observed effort data (`Value` and `CV`) to the existing
+#' effort data object for a given simulation and stock/complex.
+#'
+#' @param x Integer. Simulation index.
+#' @param Proj A `Hist` object used in the projection
+#' @param DataYear Numeric. The calendar year to generate data for.
+#' @param YearsAll Numeric vector. All calendar years in the historical
+#'  and projection years.
+#' @param i Integer. Stock/complex index.
+#'
+#' @return The updated `Effort` data object.
+#' @keywords internal
+GenProjData_Effort <- function(x, Proj, DataYear, YearsAll, i) {
   
   EffortData <- Proj@Data[[x]][[i]]@Effort
   
-  if (EmptyObject(EffortData))
-    return(EffortData)
+  if (EmptyObject(EffortData)) return(EffortData)
+  if (DataYear %in% dimnames(EffortData@Value)[[1]]) return(EffortData)
   
-  TSIndex <- match(DataYear, YearsAll)
+  TSIndex     <- match(DataYear, YearsAll)
+  Value       <- EffortData@Value
+  CV          <- EffortData@CV
+  FleetNames  <- resolveFleetNames(EffortData)
+  nFleet      <- length(FleetNames)
   
-  Value <- EffortData@Value
-  CV <- EffortData@CV
-  
-  if (DataYear %in% dimnames(Value)[[1]]) 
-    return(EffortData)
-  
-  FleetNames <- EffortData@Name
-  if (is.null(FleetNames)) {
-    dd <- dim(Value)
-    FleetNames <- paste("Fleet", 1:dd[2])
-  }
-  
-  nFleet <- length(FleetNames)
-  NewValue <- array(NA, dim=c(1, nFleet),
-                    dimnames = list(Year=DataYear,
-                                    Fleet=FleetNames))
-  NewCV <- NewValue
-  
-  for (fl in 1:nFleet) {
+  NewValue <- emptyFleetArray(DataYear, FleetNames)
+  NewCV    <- emptyFleetArray(DataYear, FleetNames)
+
+  for (fl in seq_len(nFleet)) {
     Obs <- Proj@OM@Obs[[i]][[fl]]@Effort
-    if (EmptyObject(Obs)) next()
+    if (EmptyObject(Obs) || length(Obs@Error) < 1) next
     
-    if (length(Obs@Error)<1)  next()
-    
-    if (!is.null(Proj@OM@Data[[i]]) && nrow(Proj@OM@Data[[i]]@Effort@Value)>=TSIndex) {
-      NewValue[,fl] <- Proj@OM@Data[[i]]@Effort@Value[TSIndex,fl]
-    } else {
-      error <- ArraySubsetYear(Obs@Error, DataYear)[x]
-      bias <- Obs@Bias[x] 
-      NewValue[,fl] <- Proj@Effort[x,TSIndex, fl] * error * bias
-    }
-    
-    # CV 
-    if (!is.null(Proj@OM@Data[[i]]) &&  nrow(Proj@OM@Data[[i]]@Effort@CV)>=TSIndex) {
-      NewCV[,fl] <- Proj@OM@Data[[i]]@Effort@CV[TSIndex,fl]
-    } else {
-      NewCV[,fl] <- SubsetYear(EffortData@CV, DataYear)[fl]
-    }
-    
+    NewValue[, fl] <- resolveValue(Proj, 'Effort', i, fl, TSIndex, Obs, x, DataYear)
+    NewCV[, fl]    <- resolveCV(Proj, 'Effort', i, fl, TSIndex, EffortData, DataYear)
   }
   
-  EffortData@Value <- abind::abind(Value, NewValue, along=1, use.dnns=TRUE)
-  EffortData@CV <- abind::abind(CV, NewCV, along=1, use.dnns=TRUE)
-  
+  EffortData@Value <- abind::abind(Value, NewValue, along = 1, use.dnns = TRUE)
+  EffortData@CV    <- abind::abind(CV, NewCV, along = 1, use.dnns = TRUE)
   EffortData
 }

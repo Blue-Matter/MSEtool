@@ -39,13 +39,13 @@ Simulate_om <- function(OM = NULL,
 
   # ---- Calculate Equilibrium Unfished ----
   Hist@Unfished@Equilibrium <- CalcUnfished_Equilibrium(OM, silent)
-
+  
   # ---- Dynamic Number-at-Age for Initial Time Step ----
   # - initial age structure
   # - distribute over areas
   # - account for Initial Depletion
   Hist <- CalcDynamicInitial(Hist)
-
+  
   # ---- Add temporary lists and arrays to Hist@Misc ----
   # use for easy acces in C++  - removed later
   Hist <- PrepHistMisc(Hist) 

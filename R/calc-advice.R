@@ -18,6 +18,7 @@
 CalcAdvice <- function(MPName, MPfunction, DataSimList, Year, Proj, YearsProj, mp,
                        FleetNames, Areas) {
   nSim <- length(DataSimList)
+  
   if (nSim != Proj@OM@nSim) 
     cli::cli_abort("Mismatch in number of simulations", .internal=TRUE)
   
@@ -42,6 +43,7 @@ CalcAdvice <- function(MPName, MPfunction, DataSimList, Year, Proj, YearsProj, m
                         Areas = Areas),
       silent=TRUE
     )
+    
   }
   AdviceSimList
   
@@ -81,10 +83,8 @@ CalcAdvice_Sim_MP <- function(x, MPName,
     Data <- DataList[[i]] |> AddPopDyn(Proj, x, Year, YearsProj, mp)
     
     Advice <- try(MPfunction(Data=Data), silent=TRUE)
-    
-    Log_MPError(Advice, MPName, Data, Sim=x, Year)
-    
     Advice <- CheckAdvice(Advice, Proj, FleetNames, Areas, x) 
+    Advice <- Log_MPError(Advice, MPName, Data, Sim=x, Year)
     AdviceList[[i]] <- Advice
   }
   AdviceList

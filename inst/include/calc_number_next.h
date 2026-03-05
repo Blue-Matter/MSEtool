@@ -33,6 +33,10 @@ inline void CalcNumberNext(
       (int)Movement.size() < nStock)
     Rcpp::stop("Stock-level input list shorter than nStock");
   
+  
+  std::vector<double> Z_buf;
+  std::vector<double> N_to(nArea);
+  
   for (int st = 0; st < nStock; ++st) {
     
     auto& Num_st = Number[st];                // sim, age, year, area
@@ -40,8 +44,8 @@ inline void CalcNumberNext(
     const auto& M_st = NaturalMortality[st];  // sim, age, year
     const auto& Sem_st = Semelparous[st];     // sim, age, year
     const auto& Mov_st = Movement[st];        // sim, from, to, age, year
-    const int plusgroup_st = PlusGroup(st);   // st
-  
+    
+    const int plusgroup_st = static_cast<int>(PlusGroup(st));
     const int nAge = Num_st.dim[1];
     const int nYear = Num_st.dim[2];
     
@@ -49,13 +53,10 @@ inline void CalcNumberNext(
     
     // Check movement array dimensions
     if (Mov_st.dim[1] != nArea || Mov_st.dim[2] != nArea)
-      Rcpp::stop("Movement array has wrong area dimensions");
+      Rcpp::stop("Movement array has wrong area dimensions for stock " +
+        std::to_string(st + 1));
     
-    check_dims<4>(Num_st, {nSim, nAge, Num_st.dim[2], nArea}, "Number", y, 2);
-    check_dims<5>(Fd, {nSim, nAge, Fd.dim[2], nFleet, nArea}, "FDeadArea", y, 2);
-    check_dims<3>(M_st, {nSim, nAge, M_st.dim[2]}, "NaturalMortality", y, 2);
-    check_dims<3>(Sem_st, {nSim, nAge, Sem_st.dim[2]}, "Semelparous", y, 2);
-    check_dims<5>(Mov_st, {nSim, nArea, nArea, nAge, Mov_st.dim[4]}, "Movement", y, 4);
+    Z_buf.resize(nAge * nArea);
     
     for (int sim : Sims) {
       
@@ -65,75 +66,81 @@ inline void CalcNumberNext(
       const int sim_sem   = sim_index<3>(sim, Sem_st, "Semelparous");
       const int sim_mov   = sim_index<5>(sim, Mov_st, "Movement");
       
-      // Reset next-year numbers (except recruits - already calculated)
-      for (int age = 1; age < nAge; ++age) {
-        for (int area = 0; area < nArea; ++area) {
-          Num_st(sim_num, age, y + 1, area) = 0.0; 
+      // Compute Z_buf(age, area) = M(age) + sum_fl F_dead 
+      for (int age = 0; age < nAge; ++age) {
+        const double M = M_st(sim_M, age, y);   
+        for (int ar = 0; ar < nArea; ++ar) {
+          double F = 0.0;
+          for (int fl = 0; fl < nFleet; ++fl)
+            F += Fd(sim_fd, age, y, fl, ar);
+          Z_buf[age * nArea + ar] = M + F;
+        }
+      } 
+      
+      // Reset next-year numbers (age 1+; age 0 set by CalcRecruitment)
+      for (int age = 1; age < nAge; ++age)
+        for (int ar = 0; ar < nArea; ++ar)
+          Num_st(sim_num, age, y + 1, ar) = 0.0;
+      
+      // survival and aging
+      for (int age = 0; age < nAge - 1; ++age) {
+        const double Sem = Sem_st(sim_sem, age, y);   
+        const double survive = 1.0 - Sem; 
+        
+        for (int ar = 0; ar < nArea; ++ar) {
+          Num_st(sim_num, age + 1, y + 1, ar) = Num_st(sim_num, age, y, ar) 
+          * std::exp(-Z_buf[age * nArea + ar])
+          * survive;
         }
       }
-        
-      // survival and aging
-      for (int area = 0; area < nArea; ++area) {
-        for (int age=0; age<(nAge-1); ++age) {
-          
-          const double M = M_st(sim_M, age, y);
-          const double Sem = Sem_st(sim_sem, age, y);
-          double F = 0;
-          for (int fl=0; fl<nFleet; ++fl) {
-            F += Fd(sim_fd, age, y, fl, area);
-          }
-          const double Z = F + M;
-          
-          if (Sem < 0.0 || Sem > 1.0)
-            Rcpp::stop("Semelparity outside [0,1]");
-          
-          Num_st(sim_num, age+1, y+1, area) = Num_st(sim_num,age,y,area) * std::exp(-Z) * (1-Sem);
-        } 
-        
-        if (plusgroup_st) {
-          const int age = nAge - 1;
-          const double M   = M_st(sim_M, age, y);
-          const double Sem = Sem_st(sim_sem, age, y);
-          double F = 0;
-          for (int fl=0; fl<nFleet; ++fl) {
-            F += Fd(sim_fd, age, y, fl, area);
-          }
-          const double Z   = F + M;
-          Num_st(sim_num, age, y + 1, area) += Num_st(sim_num, age, y, area) * std::exp(-Z) * (1 - Sem);
-        }
-      } // end survival and aging
       
-      if (nArea > 1) {
-        //  movement among areas for age class 2+ (first age class distributed at recruitment)
-        std::vector<double> N_to(nArea); 
+      // Plus-group accumulation
+      if (plusgroup_st) {
+        const int age    = nAge - 1;
+        const double Sem = Sem_st(sim_sem, age, y);
+        const double survive = 1.0 - Sem;
         
-        for (int age=1; age<nAge; ++age) {
+        for (int ar = 0; ar < nArea; ++ar) {
+          Num_st(sim_num, age, y + 1, ar) +=
+            Num_st(sim_num, age, y, ar)
+          * std::exp(-Z_buf[age * nArea + ar])
+          * survive;
+        }
+      }
+      
+      // Movement among areas (age 1+ only; age 0 distributed at recruitment)
+      if (nArea > 1) {
+        
+        for (int age = 1; age < nAge; ++age) {
           
           std::fill(N_to.begin(), N_to.end(), 0.0);
           
-          for (int fromArea=0; fromArea<nArea; ++fromArea) {
+          for (int fromArea = 0; fromArea < nArea; ++fromArea) {
             const double Nfrom = Num_st(sim_num, age, y + 1, fromArea);
-            
             if (Nfrom == 0.0) continue;
-            
-            double p_sum = 0.0; // mov prob sum
-            
+          
+            double p_sum = 0.0;
             for (int toArea = 0; toArea < nArea; ++toArea) {
               const double p = Mov_st(sim_mov, fromArea, toArea, age, y + 1);
               N_to[toArea] += Nfrom * p;
               p_sum += p;
             }
-            if (std::fabs(p_sum - 1.0) > 1e-8)
-              Rcpp::stop("Movement probabilities do not sum to 1");
+            
+            // TODO in R 
+            // if (std::fabs(p_sum - 1.0) > 1e-8)
+            //   Rcpp::stop(
+            //     "Movement probabilities do not sum to 1 "
+            //     "(stock=" + std::to_string(st + 1) +
+            //       ", sim="  + std::to_string(sim + 1) +
+            //       ", age="  + std::to_string(age + 1) +
+            //       ", from=" + std::to_string(fromArea + 1) + ")"
+            //   );
           }
-          
-          for (int toArea = 0; toArea < nArea; ++toArea) {
+          for (int toArea = 0; toArea < nArea; ++toArea)
             Num_st(sim_num, age, y + 1, toArea) = N_to[toArea];
-          } 
         }
       } // end movement
-      
     } // end sim loop
   } // end stock loop
-}
+} 
 #endif

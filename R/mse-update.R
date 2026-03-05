@@ -48,7 +48,7 @@ UpdateMSEObject <- function(MSE, Proj, MPName, mp, YearsHist, YearsProj,
   #   unlist() |> 
   #   as.numeric()
 
-  MSE <- AddPPD(MSE, Proj, MPName, YearsProj)    
+  MSE <- AddPPD(MSE, Proj, MPName, YearsHist, YearsProj)    
   # TODO 
 
   # MSE <- MSE |> 
@@ -64,8 +64,11 @@ UpdateMSEObject <- function(MSE, Proj, MPName, mp, YearsHist, YearsProj,
   
 }
 
-AddPPD <- function(MSE, Proj, MPName, YearsProj) {
-  PPD <- Proj@Data |> SubsetYear(YearsProj)
+AddPPD <- function(MSE, Proj, MPName, YearsHist, YearsProj) {
+  
+  PPD <- Proj@Data |> AddYearDimnames(Years=c(YearsHist, YearsProj)) |>
+    SubsetYear(YearsProj)
+  
   MSE@PPD[[MPName]] <- PPD
   MSE
 }

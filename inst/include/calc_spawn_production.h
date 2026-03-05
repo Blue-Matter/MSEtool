@@ -41,13 +41,19 @@ inline void CalcSpawnProduction(
   check_dims<2>(SpawnTimeFrac, {nSim, nStock}, "SpawnTimeFrac");
   check_dims<1>(SPFrom, {nStock}, "SPFrom");
 
+  // survival buffer: survival(age, area) = exp(-Z * spawnFrac)
+  std::vector<double> surv_buf;
+  
+  // loop over stocks
   for (int st = 0; st < nStock; ++st) {
+    
     const auto& Num_st = Number[st];
     const auto& Fec_st = Fecundity[st];
     const auto& Mat_st = Maturity[st];
     const auto& Wt_st  = Weight[st];
     const auto& M_st   = NaturalMortality[st];
     const auto& FDA_st = FDeadArea[st];
+    
     const int nAge = Num_st.dim[1];
     
     check_dims<4>(Num_st, {nSim, nAge, Num_st.dim[2], nArea}, "Number", y, 2);
@@ -57,7 +63,9 @@ inline void CalcSpawnProduction(
     check_dims<3>(M_st, {nSim, nAge, M_st.dim[2]}, "NaturalMortality", y, 2);
     check_dims<5>(FDA_st, {nSim, nAge, FDA_st.dim[2], nFleet, nArea}, "FDeadArea", y, 2);
     
-  
+    surv_buf.resize(nAge * nArea);
+    
+    // loop over sims
     for (int sim : Sims) {
       
       const int sim_num  = sim_index<4>(sim, Num_st, "Number");
@@ -68,44 +76,68 @@ inline void CalcSpawnProduction(
       const int sim_fda  = sim_index<5>(sim, FDA_st, "FDeadArea");
       const int sim_stf  = sim_index<2>(sim, SpawnTimeFrac, "SpawnTimeFrac");
       
+      const double spawnFrac = SpawnTimeFrac(sim_stf, st);
+      const bool   doSurv    = spawnFrac > 0.0;
+
+      // compute survival 
+      if (doSurv) {
+        for (int age = 0; age < nAge; ++age) {
+          const double M = M_st(sim_m, age, y); 
+          for (int ar = 0; ar < nArea; ++ar) {
+            double F_sum = 0.0;
+            for (int fl = 0; fl < nFleet; ++fl)
+              F_sum += FDA_st(sim_fda, age, y, fl, ar);
+            const double Z = M + F_sum;
+            surv_buf[age * nArea + ar] = std::exp(-Z * spawnFrac);
+          }
+        }
+      }
+      
       double SB = 0.0;
       double SP = 0.0;
       
-      const double spawnFrac = SpawnTimeFrac(sim_stf, st);
-      for (int age = 0; age < nAge; ++age) {
-        for (int area = 0; area < nArea; ++area) {
-          
-          double N = Num_st(sim_num, age, y, area);
-          if (spawnFrac > 0.0) {
-            double Z = M_st(sim_m, age, y);
-            for (int fl = 0; fl < nFleet; ++fl) {
-              Z += FDA_st(sim_fda, age, y, fl, area);
-            }
-            if (Z < 0.0)
-              Rcpp::stop("Z is negative in CalcSpawnProduction");
-            N *= std::exp(-Z * spawnFrac);
+      if (doSurv) {
+        for (int age = 0; age < nAge; ++age) {
+          const double fec    = Fec_st(sim_fec, age, y);
+          const double wt_mat = Wt_st(sim_wt, age, y) * Mat_st(sim_mat, age, y);
+           
+          for (int ar = 0; ar < nArea; ++ar) {
+            const double N = Num_st(sim_num, age, y, ar) * surv_buf[age * nArea + ar];
+            SP += N * fec;
+            SB += N * wt_mat;
           }
-          SP += N * Fec_st(sim_fec, age, y);
-          SB += N * Wt_st(sim_wt, age, y) * Mat_st(sim_mat, age, y);
+        } 
+      } else {
+        for (int age = 0; age < nAge; ++age) {
+          const double fec    = Fec_st(sim_fec, age, y);
+          const double wt_mat = Wt_st(sim_wt, age, y) * Mat_st(sim_mat, age, y);
+        
+          for (int ar = 0; ar < nArea; ++ar) {
+            const double N = Num_st(sim_num, age, y, ar);
+            SP += N * fec;
+            SB += N * wt_mat;
+          }
         }
-      }
+      } 
       SProduction(sim, st, y) = SP;
       SBiomass(sim, st, y)    = SB;
-    }
-  } 
+    } // end sim loop
+  } // end stock loop 
+  
   
   for (int st = 0; st < nStock; ++st) {
-    const int fromSt = SPFrom(st) - 1;
+    const int fromSt = static_cast<int>(SPFrom(st)) - 1;  // 1-indexed in R
+    
     if (fromSt < 0 || fromSt >= nStock) {
       Rcpp::stop("SPFrom" + std::to_string(st+1) + " out of range");
     }
-
+    
+    if (fromSt == st) continue;
+    
     for (int sim : Sims) {
       SProduction(sim, st, y) = SProduction(sim, fromSt, y);
     }
   }
-
 }
-
 
 #endif

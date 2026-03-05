@@ -1,3 +1,20 @@
+#' Update area closures across all simulations
+#'
+#' Loops over simulations and delegates to [Update_Closure_Sim()]. Returns
+#' `Proj` unchanged when there is only one area.
+#'
+#' @param Proj A `Proj` object.
+#' @param Year Integer. Current projection year.
+#' @param AdviceSimList Nested list of `advice` objects, indexed by sim then complex.
+#' @param LastAdviceSimList Same structure as `AdviceSimList` for the previous year.
+#' @param YearsHist Integer vector of historical years (unused here, kept for
+#'   consistent `update_funs` signature).
+#' @param YearsProj Integer vector of projection years.
+#' @param Areas Integer vector of area indices.
+#' @param FleetNames Character vector of fleet names.
+#' @param StockNames Character vector of stock names.
+#' @return Updated `Proj` object.
+#' @keywords internal
 Update_Closure <- function(Proj, 
                            Year, 
                            AdviceSimList, 
@@ -8,32 +25,51 @@ Update_Closure <- function(Proj,
                            FleetNames, 
                            StockNames) {
   
-  nArea <- length(Areas)
-  
-  if (nArea<2)
+  if (length(Areas) < 2)
     return(Proj)
   
-  nSim <- Proj@OM@nSim
-  
-  for (sim in seq_len(nSim)) {
+  for (sim in seq_len(Proj@OM@nSim)) {
+    AdviceList <- AdviceSimList[[sim]]
+    LastAdviceList <- LastAdviceSimList[[sim]]
+    
     Proj <- Update_Closure_Sim(
-      Proj=Proj,
-      sim=sim,
-      Year=Year,
-      YearsProj=YearsProj,
-      AdviceList=AdviceSimList[[sim]],
-      LastAdviceList=LastAdviceSimList[[sim]],
-      FleetNames = FleetNames,
-      StockNames = StockNames,
-      Complexes=Proj@OM@Complexes,
-      Areas = Areas,
-      nSim = Proj@OM@nSim
+      Proj           = Proj,
+      sim            = sim,
+      Year           = Year,
+      YearsProj      = YearsProj,
+      AdviceList     = AdviceList,
+      LastAdviceList = LastAdviceList,
+      FleetNames     = FleetNames,
+      StockNames     = StockNames,
+      Complexes      = Proj@OM@Complexes,
+      Areas          = Areas,
+      nSim           = Proj@OM@nSim
     )
   }
-
+  
   Proj
 }
 
+#' Update area closures for a single simulation
+#'
+#' Applies closure advice to all future projection years for each complex,
+#' updating both `Proj@OM@Fleet` and `Proj@Misc$Closure`.
+#' Skips a complex when management is unchanged, closure is `NULL`, or the
+#' advice object is not of class `"advice"`.
+#'
+#' @param Proj A `Proj` object.
+#' @param sim Integer. Simulation index.
+#' @param Year Integer. Current projection year.
+#' @param YearsProj Integer vector of projection years.
+#' @param AdviceList List of `advice` objects for this simulation, one per complex.
+#' @param LastAdviceList Same structure as `AdviceList` for the previous year.
+#' @param FleetNames Character vector of fleet names.
+#' @param StockNames Character vector of stock names.
+#' @param Complexes List mapping complex indices to stock indices.
+#' @param Areas Integer vector of area indices.
+#' @param nSim Integer. Total number of simulations.
+#' @return Updated `Proj` object.
+#' @keywords internal
 Update_Closure_Sim <- function(Proj,
                                sim,
                                Year,
@@ -46,23 +82,21 @@ Update_Closure_Sim <- function(Proj,
                                Areas,
                                nSim) {
   
-  nComplex <- length(AdviceList)
-  nFleet <- length(FleetNames)
-  nArea <- length(Areas)
-   
+ 
+  FutureYears <- YearsProj[YearsProj >= Year]
+  nComplex <- length(Complexes)
   for (i in seq_len(nComplex)) {
-    stocks <- Complexes[[i]]
-    Advice <- AdviceList[[i]]
+    stocks         <- Complexes[[i]]
+    Advice         <- AdviceList[[i]]
     AdvicePrevious <- LastAdviceList[[i]]
-    if (UnchangedManagement(Advice, AdvicePrevious, 'Closure'))
-      next()
-    
-    if (is.null(Advice@Closure))
-      next()
-    
+
+    if (!inherits(Advice, 'advice')) next    
+    if (is.null(Advice@Closure)) next
+    if (UnchangedManagement(Advice, AdvicePrevious, 'Closure')) next
+
+
     CheckClosureDimensions(Closure=Advice@Closure, FleetNames, Areas)
     
-    FutureYears <- YearsProj[YearsProj>=Year]
     NewClosure <- Advice@Closure |>
       AddDimension("Year", Year, pos=1) |> 
       ExtendYears(Years=FutureYears) |>
@@ -77,6 +111,7 @@ Update_Closure_Sim <- function(Proj,
           Current <- ExtendSims(Current, nSim)
         
         ArrayFill(Current) <- DropDimension(NewClosure, 'Fleet', FALSE)
+        
         Proj@OM@Fleet[[st]][[fl]]@Closure <- Current
         ArrayFill(Proj@Misc$Closure) <- AddDimension(NewClosure, 'Stock',
                                                      val=StockNames[st],
@@ -89,7 +124,6 @@ Update_Closure_Sim <- function(Proj,
   }
   Proj
 }
-
 
 
 CheckClosureDimensions <- function(Closure, FleetNames, Areas) {

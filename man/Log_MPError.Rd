@@ -4,10 +4,10 @@
 \alias{Log_MPError}
 \title{Check and log errors from a Management Procedure}
 \usage{
-Log_MPError(MPAdvice, MPName, Data, Sim, Year)
+Log_MPError(Advice, MPName, Data, Sim, Year)
 }
 \arguments{
-\item{MPAdvice}{The result returned by the MP. Should be of class \code{advice}.}
+\item{Advice}{The result returned by the MP. Should be of class \code{advice}.}
 
 \item{MPName}{Character. Name of the Management Procedure.}
 
@@ -18,7 +18,7 @@ Log_MPError(MPAdvice, MPName, Data, Sim, Year)
 \item{Year}{Integer. Current simulation year.}
 }
 \value{
-Stops execution with a descriptive error if \code{MPAdvice} is invalid.
+Stops execution with a descriptive error if \code{Advice} is invalid.
 Returns \code{NULL} if \code{MPAdvice} is a valid advice object.
 }
 \description{

@@ -54,7 +54,7 @@ StockNames <- function(object) {
 #' @export
 FleetNames <- function(object) {
   if (inherits(object, c("hist", "mse"))) {
-    return(lapply(object@OM@Fleet, names))
+    return(lapply(object@OM@Fleet, names)[[1]])
   }
   
   if (inherits(object, "om")) {

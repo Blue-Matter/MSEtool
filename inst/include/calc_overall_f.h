@@ -23,10 +23,15 @@ inline void CalcOverallF(
     const int nArea
 ) {
   
-  const double eps = 1e-12;
+  static constexpr double eps = 1e-12;
+  static constexpr double one_minus_eps = 1.0 - eps;
+  
+  std::vector<double> Interact_buf;  // fleet
+  std::vector<double> Land_buf;      // fleet
+  std::vector<double> DeadDisc_buf;  // fleet
+  
   
   for (int st = 0; st < nStock; ++st) {
-    
     
     const auto& Num_st = Number[st];                  // sim, age, year, area
     const auto& IAA_st = InteractAtAge[st];           // sim, age, year, fleet, area
@@ -34,57 +39,49 @@ inline void CalcOverallF(
     const auto& DAA_st = DiscardsAtAge[st];           // sim, age, year, fleet, area
     
     int nAge = Num_st.dim[1];
-    check_dims<4>(Num_st, {nSim, nAge, Num_st.dim[2], nArea}, "Number", y, 2);
-    check_dims<5>(IAA_st, {nSim, nAge, IAA_st.dim[2], nFleet, nArea}, "InteractAtAge", y, 2);
-    check_dims<5>(LAA_st, {nSim, nAge, LAA_st.dim[2], nFleet, nArea}, "LandingsAtAge", y, 2);
-    check_dims<5>(DAA_st, {nSim, nAge, DAA_st.dim[2], nFleet, nArea}, "DiscardsAtAge", y, 2);
     
+    Interact_buf.resize(nFleet);
+    Land_buf.resize(nFleet);
+    DeadDisc_buf.resize(nFleet);
+
     for (int sim : Sims) {
       
-      // sum N over ages and areas
       double N_total = 0.0;
-      for (int age = 0; age < nAge; ++age) {
-        for (int area = 0; area < nArea; ++area) {
-          N_total += Num_st(sim, age, y, area);  
-        }  
-      }
-      N_total = std::max(N_total, eps);
+      std::fill(Interact_buf.begin(), Interact_buf.end(), 0.0);
+      std::fill(Land_buf.begin(),     Land_buf.end(),     0.0);
+      std::fill(DeadDisc_buf.begin(), DeadDisc_buf.end(), 0.0);
       
-      //  sum landings and discards over ages and areas 
-      for (int fl = 0; fl < nFleet; ++fl) {
-        double Interact_total  = 0.0;
-        double Land_total  = 0.0;
-        double DeadDisc_total  = 0.0;
-        
-        for (int age = 0; age < nAge; ++age) {
-          for (int area = 0; area < nArea; ++area) {
-            double inter_val = IAA_st(sim, age, y, fl, area);
-            double land_val = LAA_st(sim, age, y, fl, area);
-            double dead_val = DAA_st(sim, age, y, fl, area);
-            
-            Interact_total += inter_val;
-            Land_total += land_val;
-            DeadDisc_total += dead_val;
-        
+      for (int age = 0; age < nAge; ++age) {
+        for (int ar = 0; ar < nArea; ++ar) {
+          
+          N_total += Num_st(sim, age, y, ar);
+          
+          for (int fl = 0; fl < nFleet; ++fl) {
+            Interact_buf[fl] += IAA_st(sim, age, y, fl, ar);
+            Land_buf[fl]     += LAA_st(sim, age, y, fl, ar);
+            DeadDisc_buf[fl] += DAA_st(sim, age, y, fl, ar);
           }
         }
+      }     
+      
+      N_total = std::max(N_total, eps);
+      const double inv_N = 1.0 / N_total;
+      
+      for (int fl = 0; fl < nFleet; ++fl) {
         
-        const double TotalDead = Land_total + DeadDisc_total;
+        const double TotalDead = Land_buf[fl] + DeadDisc_buf[fl];
         
-        // Instantaneous overall F 
-        double ratio_dead   = std::min(TotalDead / N_total, 1.0 - eps);
-        double ratio_retain = std::min(Land_total / N_total, 1.0 - eps);
-        double ratio_interact = std::min(Interact_total / N_total, 1.0 - eps);
-        
+        const double ratio_interact = std::min(Interact_buf[fl] * inv_N, one_minus_eps);
+        const double ratio_dead     = std::min(TotalDead        * inv_N, one_minus_eps);
+        const double ratio_retain   = std::min(Land_buf[fl]     * inv_N, one_minus_eps);
+         
         FInteract(sim, st, y, fl) = -std::log(1.0 - ratio_interact);
-        FDead(sim,   st, y, fl) = -std::log(1.0 - ratio_dead);
-        FRetain(sim, st, y, fl) = -std::log(1.0 - ratio_retain);
-    
-      } // end fleet loop 
+        FDead(sim,     st, y, fl) = -std::log(1.0 - ratio_dead);
+        FRetain(sim,   st, y, fl) = -std::log(1.0 - ratio_retain);
+      }
       
     } // end sim loop
-  }  // end stock loop
-}
-
+  }   // end stock loop
+} 
 #endif
  

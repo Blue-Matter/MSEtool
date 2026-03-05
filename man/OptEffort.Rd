@@ -14,7 +14,7 @@ OptEffort(
   TACType,
   minEffort = 1e-06,
   tol = 0.01,
-  maxIter = 50
+  maxIter = 20
 )
 }
 \arguments{
@@ -34,7 +34,7 @@ OptEffort(
 
 \item{minEffort}{Small numeric to replace zero starting effort (default 1e-6)}
 
-\item{tol}{Numeric, convergence tolerance for derivative solver (default 1e-6)}
+\item{tol}{Numeric, convergence tolerance for derivative solver (default 1e-2)}
 
 \item{maxIter}{Integer, maximum iterations for derivative solver (default 20)}
 }
@@ -42,8 +42,11 @@ OptEffort(
 Numeric vector of optimized effort per fleet
 }
 \description{
-Calculates fleet-specific effort that achieves target removals (TAC) per fleet.
-Uses the derivative-based solver if multiple fleets, or direct optimization if a single fleet.
-Falls back to \code{optim()} if convergence fails for multiple fleets.
+Calculates fleet-specific effort that achieves target removals (TAC) per
+fleet. Fleets with \code{TAC == 0} are set to zero effort. Fleets with positive
+TAC are solved using \code{optimize()} for a single fleet or Newton-Raphson with
+a diagonal Jacobian approximation for multiple fleets, falling back to the
+full Jacobian if the diagonal step fails to reduce the residual, and then to
+\code{optim()} with BFGS if Newton-Raphson does not converge.
 }
 \keyword{internal}

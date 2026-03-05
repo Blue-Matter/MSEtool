@@ -7,14 +7,16 @@
 MakeSelfContained(MP)
 }
 \arguments{
-\item{MP}{A function of class \code{mp}.}
+\item{MP}{A function of class \code{"mp"}.}
 }
 \value{
-The same MP function with an updated environment containing its helpers.
+The same MP with an updated self-contained environment.
 }
 \description{
-Creates a new function environment for a management procedure (\code{MP}) and
-stores any detected helper functions within that environment so the MP
-can be safely returned and executed independently of the caller's scope.
+Creates a new function environment for an MP, parented to the MSEtool
+namespace so that package functions (including \code{methods::new()},
+\code{utils::tail()}, and all MSEtool internals) are findable by normal lexical
+scoping without being copied. Only user-defined helper functions from the
+calling environment are captured explicitly.
 }
 \keyword{internal}

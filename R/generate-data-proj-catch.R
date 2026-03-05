@@ -1,3 +1,19 @@
+#' Generate Projected Catch Data for a Stock
+#'
+#' Appends a new year of observed catch data (`Value` and `CV`) to the existing
+#' landings or discards data object for a given simulation and stock/complex.
+#'
+#' @param x Integer. Simulation index.
+#' @param Proj A `Hist` object used in the projection
+#' @param DataYear Numeric. The calendar year to generate data for.
+#' @param YearsAll Numeric vector. All calendar years in the historical
+#'  and projection years.
+#' @param i Integer. Stock/complex index.
+#' @param stocks Integer vector. Stock indices used to subset catch-at-age arrays.
+#' @param type Character. One of `"Landings"` or `"Discards"`.
+#'
+#' @return The updated `Landings` or `Discards` object. 
+#' @keywords internal
 GenProjData_Catch <- function(x, 
                               Proj, 
                               DataYear,
@@ -6,103 +22,54 @@ GenProjData_Catch <- function(x,
                               stocks, 
                               type=c('Landings', 'Discards')) {
   
-  type <- match.arg(type, c('Landings', 'Discards'))
-  
+  type      <- match.arg(type)
   CatchData <- slot(Proj@Data[[x]][[i]], type)
-  if (EmptyObject(CatchData))
-    return(CatchData)
   
-  nArea <- nArea(Proj)
+  if (EmptyObject(CatchData)) return(CatchData)
+  if (DataYear %in% dimnames(CatchData@Value)[[1]]) return(CatchData)
   
-  Value <- CatchData@Value
-  CV <- CatchData@CV
- 
-  FleetNames <- CatchData@Name
-  if (is.null(FleetNames)) {
-    dd <- dim(CatchData@Value)
-    FleetNames <- paste("Fleet", 1:dd[2])
-  }
+  TSIndex    <- match(DataYear, YearsAll)
+  nArea      <- nArea(Proj)
+  Value      <- CatchData@Value
+  CV         <- CatchData@CV
+  FleetNames <- resolveFleetNames(CatchData)
+  nFleet     <- length(FleetNames)
+  CatchData  <- resolveUnits(CatchData, nFleet)
   
-  nFleet <- length(FleetNames)
-  
-  # check units 
-  if (length(CatchData@Units) != nFleet) {
-    if (is.null(CatchData@Units)) {
-      CatchData@Units <- rep('Biomass', nFleet)
-    } else {
-      CatchData@Units <- rep(CatchData@Units, nFleet)[1:nFleet]
-    }
-  }
-  
-  # time step index for DataYear
-  TSIndex <- match(DataYear, YearsAll)
-  
-  # catch - number this time step (DataYear)
-  Real_Catch_Number <- purrr::map( slot(Proj, paste0(type, 'AtAge'))[stocks], \(catch_n) {
-    catch_n[x,,TSIndex,,,drop=FALSE] |>
-      abind::adrop(drop=c(1,3))
+  Real_Catch_Number <- purrr::map( slot(Proj, paste0(type, 'AtAge'))[stocks],
+                                   \(catch_n) {
+                                     catch_n[x,,TSIndex,,,drop=FALSE] |> 
+                                       abind::adrop(drop=c(1,3))
   }) 
   
-  # create output arrays
-  NewValue <- array(NA, dim=c(1, nFleet),
-                    dimnames = list(Year=DataYear,
-                                    Fleet=FleetNames))
-  NewCV <- NewValue
+  NewValue <- emptyFleetArray(DataYear, FleetNames)
+  NewCV    <- emptyFleetArray(DataYear, FleetNames)
   
-  for (fl in 1:nFleet) {
+  for (fl in seq_len(nFleet)) {
     Obs <- slot(Proj@OM@Obs[[i]][[fl]], type)
+    if (EmptyObject(Obs) || length(Obs@Error) < 1) next
     
-    if (EmptyObject(Obs)) next()
+    omData   <- Proj@OM@Data[[i]]
     
-    if (length(Obs@Error)<1) next()
+    hasOMVal <- !is.null(omData) &&
+      !is.null(slot(omData, type)@Value) &&
+      nrow(slot(omData, type)@Value) >= TSIndex
     
-    # Catch 
-    if (!is.null(Proj@OM@Data[[i]]) && nrow(slot(Proj@OM@Data[[i]],type)@Value)>=TSIndex) {
-      NewValue[,fl] <- slot(Proj@OM@Data[[i]],type)@Value[TSIndex,fl]
+    if (hasOMVal) {
+      NewValue[, fl] <- slot(omData, type)@Value[TSIndex, fl]
     } else {
       error <- ArraySubsetYear(Obs@Error, DataYear)[x]
-      bias <- Obs@Bias[x] 
+      bias  <- Obs@Bias[x]
       
-      if (CatchData@Units[fl] == 'Number') {
-        real_catch <- purrr::map(Real_Catch_Number, \(catch_n) {
-          catch_n[,fl,, drop=FALSE] |> sum()
-        }) |> List2Array('Stock') |> sum()
-        
-        NewValue[,fl] <- real_catch * error * bias
-        
-      } else if (CatchData@Units[fl] == 'Biomass') {
-        # Convert to Biomass
-        real_catch_b <- purrr::map2(Real_Catch_Number, Proj@OM@Fleet[stocks], 
-                                    \(catch_n, FleetList) {
-                                      fleet <- FleetList[[fl]]
-                                      catch_fleet <- catch_n[,fl,, drop=FALSE] |> abind::adrop(2)
-                                      fleetwght <- fleet@WeightFleet
-                                      dd <- dim(fleetwght)
-                                      flwsim <- min(dd[1], x)
-                                      fleetwght <- fleet@WeightFleet[flwsim,,TSIndex, drop=FALSE] |> 
-                                        abind::adrop(c(1,3), one.d.array = TRUE) |>
-                                        AddDimension('Area') |>
-                                        ExtendAreas(1:nArea)
-                                      ArrayMultiply(catch_fleet, fleetwght)
-                                    }) |>
-          List2Array('Stock') |>
-          sum()
-        
-        NewValue[,fl] <- real_catch_b * error * bias
-      } else {
-        cli::cli_alert_warning('Landings & Discards data can only be in units of `Biomass` or `Number`') 
-      }
-    }  # end catch
-    
-    # CV
-    if (!is.null(Proj@OM@Data[[i]]) && 
-        !is.null(slot(Proj@OM@Data[[i]],type)@CV) &&  
-        nrow(slot(Proj@OM@Data[[i]],type)@CV)>=TSIndex) {
-      NewCV[,fl] <- slot(Proj@OM@Data[[i]],type)@CV[TSIndex,fl]
-    } else {
-      NewCV[,fl] <- SubsetYear(CatchData@CV, DataYear)[fl] 
+      NewValue[, fl] <- switch(CatchData@Units[fl],
+                               Number  = resolveCatchNumber(Real_Catch_Number, fl) * error * bias,
+                               Biomass = resolveCatchBiomass(Proj, stocks, x, TSIndex, fl, nArea,
+                                                             Real_Catch_Number) * error * bias
+      )
+      
     }
-  } # end fleet loop
+    NewCV[, fl] <- resolveCV(Proj, type, i, fl, TSIndex, CatchData, DataYear)
+  } 
   
   CatchData@Value <- abind::abind(Value, NewValue, along=1, use.dnns=TRUE)
   CatchData@CV <- abind::abind(CV, NewCV, along=1, use.dnns=TRUE)

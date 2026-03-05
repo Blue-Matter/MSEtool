@@ -49,9 +49,8 @@ RunMPIfNeeded <- function(Year,
                           mp,
                           FleetNames,
                           Areas) {
-  if (!Year %in% ManagementYears) {
-    return(LastAdviceSimList)
-  }
+  
+  if (!Year %in% ManagementYears) return(LastAdviceSimList)
   
   CalcAdvice(
     MPName,
@@ -75,21 +74,39 @@ StoreMPAdvice <- function(Proj, Year, AdviceSimList) {
 }
 
 ApplyAdviceMiscToData <- function(DataList, AdviceList) {
+  if (!is.list(AdviceList))
+    return(DataList)
+    
   purrr::map2(DataList, AdviceList, \(Data, Advice) {
-    Data@Misc <- Advice@Misc
+    if (inherits(Advice, 'advice'))
+      Data@Misc <- Advice@Misc
     Data
   })
 }
 
 ExtractAdviceLogs <- function(AdviceSimList) {
+  
   purrr::map(AdviceSimList, \(AdviceList) {
+    if (inherits(AdviceList, 'try-error'))
+      return(AdviceList)
+    
     purrr::map(AdviceList, \(Advice) {
-      log <- Advice@Log
-      if (!length(log)) 
-        return(NULL)
-      log
+      if (inherits(Advice, 'advice')) {
+        log <- Advice@Log
+        if (!length(log)) 
+          return(NULL)  
+      }
+      if (inherits(Advice, 'try-error')) {
+        return(as.character(Advice))
+        
+      }
+      if (inherits(Advice, 'character')) {
+        return(Advice)
+        
+      }
     })
   })
+  
 }
 
 UpdateAdviceArray <- function(Current, New, Year) {
@@ -105,6 +122,8 @@ UpdateAdviceArray <- function(Current, New, Year) {
 }
 
 AddAdviceToData <- function(Data, Advice, Year) {
+  if (!inherits(Advice, 'advice'))
+    return(Data)
   Data@Advice@TAC <- UpdateAdviceArray(Current=Data@Advice@TAC, New=Advice@TAC, Year)
   Data@Advice@Effort <- UpdateAdviceArray(Data@Advice@Effort, Advice@Effort, Year)
   Data

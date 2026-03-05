@@ -31,16 +31,11 @@ inline void CalcCatch(
     const int nArea
 ) {
   
-  // Checks 
-  if ((int)LandingsAtAge.size() < nStock ||
-      (int)DiscardsAtAge.size() < nStock ||
-      (int)FInteractArea.size() < nStock ||
-      (int)FDeadArea.size() < nStock ||
-      (int)FRetainArea.size() < nStock ||
-      (int)NaturalMortality.size() < nStock ||
-      (int)Number.size() < nStock)
-    Rcpp::stop("Stock-level input list shorter than nStock");
-  
+  std::vector<double> Z_buf;          // Z(age, area)       = M + sum_fl Fd
+  std::vector<double> Ndead_buf;      // N_dead(age, area)  = N * (1 - exp(-Z))
+  std::vector<double> Fi_ratio_buf;   // (age, fleet, area)
+  std::vector<double> Fr_ratio_buf;   // (age, fleet, area)
+  std::vector<double> Fd_ratio_buf;   // discard dead ratio (age, fleet, area)
   
   for (int st = 0; st < nStock; ++st) {
     
@@ -51,20 +46,19 @@ inline void CalcCatch(
     const auto& M_st = NaturalMortality[st];        // sim, age, year
     const auto& FWght_st = FleetWeight[st];         // sim, age, fleet, year 
     
-    const int nAge = Num_st.dim[1];
-    
     auto& IAA_st = InteractAtAge[st];
     auto& LAA_st = LandingsAtAge[st];
     auto& DAA_st = DiscardsAtAge[st];
     
-    check_dims<5>(Fi, {nSim, nAge, Fd.dim[2], nFleet, nArea}, "FInteractArea", y, 2);
-    check_dims<5>(Fd, {nSim, nAge, Fd.dim[2], nFleet, nArea}, "FDeadArea", y, 2);
-    check_dims<5>(Fr, {nSim, nAge, Fr.dim[2], nFleet, nArea}, "FRetainArea", y, 2);
-    check_dims<4>(Num_st, {nSim, nAge, Num_st.dim[2], nArea}, "Number", y, 2);
-    check_dims<5>(LAA_st, {nSim, nAge, LAA_st.dim[2], nFleet, nArea}, "LandingsAtAge", y, 2);
-    check_dims<5>(DAA_st, {nSim, nAge, DAA_st.dim[2], nFleet, nArea}, "DiscardsAtAge", y, 2);
-    check_dims<3>(M_st, {nSim, nAge, M_st.dim[2]}, "NaturalMortality", y, 2);
-    check_dims<4>(FWght_st, {nSim, nAge, FWght_st.dim[2], nFleet}, "FleetWeight", y, 2);
+    const int nAge = Num_st.dim[1];
+    
+    const int nAgeArea      = nAge * nArea;
+    const int nAgeFleetArea = nAge * nFleet * nArea;
+    Z_buf.resize(nAgeArea);
+    Ndead_buf.resize(nAgeArea);
+    Fi_ratio_buf.resize(nAgeFleetArea);
+    Fr_ratio_buf.resize(nAgeFleetArea);
+    Fd_ratio_buf.resize(nAgeFleetArea);
     
     for (int sim : Sims) {
       
@@ -72,15 +66,15 @@ inline void CalcCatch(
       std::vector<double> Z_age(nAge);
       std::vector<double> N_dead_age(nAge);
       
-      const int sim_num     = sim_index<4>(sim, Num_st, "Number");
-      const int sim_fi      = sim_index<5>(sim, Fi, "FInteractArea");
-      const int sim_fd      = sim_index<5>(sim, Fd, "FDeadArea");
-      const int sim_fr      = sim_index<5>(sim, Fr, "FRetainArea");
-      const int sim_M       = sim_index<3>(sim, M_st, "NaturalMortality");
-      const int sim_iaa     = sim_index<5>(sim, IAA_st, "InteractAtAge");
-      const int sim_laa     = sim_index<5>(sim, LAA_st, "LandingsAtAge");
-      const int sim_daa     = sim_index<5>(sim, DAA_st, "DiscardsAtAge");
-      const int sim_FWght   = sim_index<4>(sim, FWght_st, "FleetWeight");
+      const int sim_num   = sim_index<4>(sim, Num_st,  "Number");
+      const int sim_fi    = sim_index<5>(sim, Fi,      "FInteractArea");
+      const int sim_fd    = sim_index<5>(sim, Fd,      "FDeadArea");
+      const int sim_fr    = sim_index<5>(sim, Fr,      "FRetainArea");
+      const int sim_M     = sim_index<3>(sim, M_st,    "NaturalMortality");
+      const int sim_iaa   = sim_index<5>(sim, IAA_st,  "InteractAtAge");
+      const int sim_laa   = sim_index<5>(sim, LAA_st,  "LandingsAtAge");
+      const int sim_daa   = sim_index<5>(sim, DAA_st,  "DiscardsAtAge");
+      const int sim_fw    = sim_index<4>(sim, FWght_st,"FleetWeight");
       
       for (int fl = 0; fl < nFleet; ++fl) {
         Interactions(sim, st, y, fl) = 0.0;
@@ -88,55 +82,72 @@ inline void CalcCatch(
         Discards(sim, st, y, fl) = 0.0;
       }
       
-      for (int area = 0; area < nArea; ++area) {
-    
-          // Calculate  age- area- total mortality
-          for (int age = 0; age < nAge; ++age) {
-            double F_sum = 0.0;
-            for (int fl = 0; fl < nFleet; ++fl)
-              F_sum += Fd(sim_fd, age, y, fl, area);
-            
-            Z_age[age] = M_st(sim_M, age, y) + F_sum;
-            N_dead_age[age] = Num_st(sim_num, age, y, area) * (1.0 - std::exp(-Z_age[age]));
-          }
-          
-          for (int fl = 0; fl < nFleet; ++fl) {
-            for (int age = 0; age < nAge; ++age) {
-              
-              double Inum  = 0.0;
-              double Lnum = 0.0;
-              double Dnum = 0.0;
-              
-              if (Z_age[age] > 0.0) {
-                const double Fi_ratio = Fi(sim_fi, age, y, fl, area) / Z_age[age];
-                const double Fr_ratio = Fr(sim_fr, age, y, fl, area) / Z_age[age];
-                const double Fdisc_ratio =  std::max(Fd(sim_fd, age, y, fl, area) - Fr(sim_fr, age, y, fl, area), 0.0)/ Z_age[age];
-                Inum = Fi_ratio   * N_dead_age[age];
-                Lnum = Fr_ratio * N_dead_age[age];
-                Dnum = Fdisc_ratio * N_dead_age[age];
-              } 
-              
-              // Store numbers
-              IAA_st(sim_iaa, age, y, fl, area) = Inum;
-              LAA_st(sim_laa, age, y, fl, area) = Lnum;
-              DAA_st(sim_daa, age, y, fl, area) = Dnum;
-              
-              // Convert to biomass and accumulate
-              const double weight = FWght_st(sim_FWght, age, y, fl);
-              
-              Interactions(sim, st, y, fl) += Inum * weight;
-              Landings(sim, st, y, fl) += Lnum * weight;
-              Discards(sim, st, y, fl) += Dnum * weight;
-         
-            } // end age loop 
-          
-    
-          } // end fleet loop
-      } // end area loop
+      // Compute Z and NDead
+      for (int age = 0; age < nAge; ++age) {
+        const double M = M_st(sim_M, age, y);   
+        for (int ar = 0; ar < nArea; ++ar) {
+          double F_sum = 0.0;
+          for (int fl = 0; fl < nFleet; ++fl)
+            F_sum += Fd(sim_fd, age, y, fl, ar);
+          const double Z = M + F_sum;
+          const int idx  = age * nArea + ar;
+          Z_buf[idx]     = Z;
+          Ndead_buf[idx] = Num_st(sim_num, age, y, ar) * (1.0 - std::exp(-Z));
+        }
+      } 
       
+      // Compute F-ratio buffers
+      for (int age = 0; age < nAge; ++age) {
+        for (int fl = 0; fl < nFleet; ++fl) {
+          for (int ar = 0; ar < nArea; ++ar) {
+            const int bidx = age * nFleet * nArea + fl * nArea + ar;
+            const double Z = Z_buf[age * nArea + ar];
+            if (Z > 0.0) {
+              const double inv_Z   = 1.0 / Z;
+              const double fi_val  = Fi(sim_fi, age, y, fl, ar);
+              const double fr_val  = Fr(sim_fr, age, y, fl, ar);
+              const double fdisc   = std::max(Fd(sim_fd, age, y, fl, ar) - fr_val, 0.0);
+              Fi_ratio_buf[bidx] = fi_val  * inv_Z;
+              Fr_ratio_buf[bidx] = fr_val  * inv_Z;
+              Fd_ratio_buf[bidx] = fdisc   * inv_Z;
+            } else {
+              Fi_ratio_buf[bidx] = 0.0;
+              Fr_ratio_buf[bidx] = 0.0;
+              Fd_ratio_buf[bidx] = 0.0;
+            }
+          }
+        }
+      }
+      
+      // Calc Catch biomass
+      for (int fl = 0; fl < nFleet; ++fl) {
+        for (int age = 0; age < nAge; ++age) {
+          const double W = FWght_st(sim_fw, age, y, fl);
+          
+          for (int ar = 0; ar < nArea; ++ar) {
+            const double Ndead = Ndead_buf[age * nArea + ar];
+            const int    bidx  = age * nFleet * nArea + fl * nArea + ar;
+            
+            const double Inum = Fi_ratio_buf[bidx] * Ndead;
+            const double Lnum = Fr_ratio_buf[bidx] * Ndead;
+            const double Dnum = Fd_ratio_buf[bidx] * Ndead;
+             
+            IAA_st(sim_iaa, age, y, fl, ar) = Inum;
+            LAA_st(sim_laa, age, y, fl, ar) = Lnum;
+            DAA_st(sim_daa, age, y, fl, ar) = Dnum;
+          
+            const double IW = Inum * W;
+            const double LW = Lnum * W;
+            const double DW = Dnum * W;
+          
+            Interactions(sim, st, y, fl) += IW;
+            Landings(sim, st, y, fl)     += LW;
+            Discards(sim, st, y, fl)     += DW;
+          }
+        }
+      }
       
     } // end sim loop
-  } // end stock loop
+  }   // end stock loop
 }
-
 #endif 

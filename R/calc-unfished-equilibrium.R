@@ -77,13 +77,17 @@ CalcUnfished_Equilibrium <- function(OM, silent=FALSE) {
   
   # apply SPFrom for SProduction
   stockNames <- StockNames(OM)
-  for (st in seq_along(stockNames)) {
-    SPFrom <- OM@Stock[[st]]@SRR@SPFrom
-    if (!is.null(SPFrom)) {
-      ind <- match(SPFrom, stockNames)
-      EquilibriumUnfished@SProduction[,st,] <- EquilibriumUnfished@SProduction[,ind,]
+  
+  if (length(stockNames) > 1) {
+    for (st in seq_along(stockNames)) {
+      SPFrom <- OM@Stock[[st]]@SRR@SPFrom
+      if (!is.null(SPFrom)) {
+        ind <- match(SPFrom, stockNames)
+        EquilibriumUnfished@SProduction[,st,] <- EquilibriumUnfished@SProduction[,ind,]
+      }
     }
   }
+
   
   if (!silent) {
     cli::cli_alert_success("Calculated Equilibrium Unfished Conditions ")

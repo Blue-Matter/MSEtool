@@ -42,7 +42,7 @@
 Subset <- function(object, Sims=NULL, Years=NULL, Ages=NULL, Impute=TRUE) {
   
   populated <- try(Populate(object), silent=TRUE)
-  if (!inherits(populated, 'try-error')
+  if (!inherits(populated, 'try-error'))
       object <- populated
   
   if (!is.null(Sims)) {

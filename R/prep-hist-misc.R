@@ -186,7 +186,7 @@ PrepHistMisc <- function(Hist, Period=c('Historical', 'Projection')) {
  
   # Unfished distribution
   Hist@Misc$RecDist <- purrr::map(Hist@OM@Stock, \(stock) {
-    abind::adrop(stock@Spatial@UnfishedDist[,,1,, drop=FALSE], 3)   
+    abind::adrop(stock@Spatial@UnfishedDist[,,1,, drop=FALSE], 3) 
   }) |> List2Array("Stock", pos=2) |>
     aperm(c('Sim', 'Stock', 'Year', 'Area'))
   
@@ -275,11 +275,14 @@ PrepHistMisc <- function(Hist, Period=c('Historical', 'Projection')) {
 # Restores Hist@Misc
 RestoreHistMisc <- function(Hist) {
   saveMisc <- Hist@Misc$SAVE
-  saveAdvice <- Hist@Misc$MPAdvice
+  saveAdvice <- Hist@Misc$Advice
     
   Hist@Misc <- list()
-  restore <- c(saveMisc, saveAdvice)
-  if (!is.null(restore))
-    Hist@Misc <- restore
+  if (!is.null(saveMisc))
+    Hist@Misc <- saveMisc
+ 
+  if (!is.null(saveAdvice))
+    Hist@Misc$Advice <- saveAdvice 
+  
   Hist
 }

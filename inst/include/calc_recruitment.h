@@ -41,26 +41,32 @@ inline void CalcRecruitment(
   // Calculate Recruitment and distribute over areas according to movement
   
   for (int st = 0; st < nStock; ++st) {
-    const int model = SRR_Model[st];   // SRR model
+    const int model = SRR_Model[st];   
     const int lag  = RecLag[st];  
+    const int rec_y     = y + lag;    // year index where recruits appear
+    
     const auto& pars_st = SRR_Pars[st];
-    
-    if (pars_st.size() < 1) {
-      Rcpp::stop("SRR_Pars[[" + std::to_string(st+1) + " has no parameters");
-    }
-    
     const auto& devs = RecDevs[st];
     Array4D& Num_st = Number[st]; // sim, age, year, area
     
-    // skip if insufficient room in Number 
-    const int rec_y = y + lag; // year index for the recruitment
+    
+    if (pars_st.size() < 1) {
+      Rcpp::stop("SRR_Pars[[" + std::to_string(st+1) + " ]] has no parameters");
+    }
+    
     if (rec_y >= Num_st.dim[2]) continue;
     
-    if (rec_y >= R0.dim[2]) 
-      Rcpp::stop("rec_y exceeds R0 dimension");
+    if (rec_y >= R0.dim[2])
+      Rcpp::stop("rec_y (" + std::to_string(rec_y) +
+        ") exceeds R0 year dimension for stock " + std::to_string(st + 1));
     
     if (rec_y >= devs.dim[1])
-      Rcpp::stop("rec_y exceeds RecDevs dimension");
+      Rcpp::stop("rec_y (" + std::to_string(rec_y) +
+        ") exceeds RecDevs year dimension for stock " + std::to_string(st + 1));
+    
+    if (rec_y >= RecDist.dim[2])
+      Rcpp::stop("rec_y (" + std::to_string(rec_y) +
+        ") exceeds RecDist year dimension for stock " + std::to_string(st + 1));
     
     for (int sim : Sims) {
       
@@ -72,18 +78,20 @@ inline void CalcRecruitment(
       const int sim_rec   = sim_index<4>(sim, RecDist, "RecDist");
    
       const double SP = SProduction(sim_prod, st, y); // spawning production this time step
+      const double sp0 = SP0(sim_sp0, st, y);
+      const double r0  = R0(sim_r0,   st, rec_y);
+      const double dev = devs(sim_dev, rec_y);
       
       // Calculate recruitment
-      double R = EvalSRR(
-        model,
-        SP,
-        SP0(sim_sp0, st, y),
-        R0(sim_r0, st, rec_y),
-        pars_st,
-        sim, 
-        y);
-    
-      R *=  devs(sim_dev, rec_y);
+      const double R = EvalSRR(model, SP, sp0, r0, pars_st, sim, y) * dev;
+      
+      // double TEMP = EvalSRR(model, SP, sp0, r0, pars_st, sim, y);
+      // 
+      // Rcpp::Rcout << "SP = " << SP << "\n";
+      // Rcpp::Rcout << "sp0 = " << sp0 << "\n";
+      // Rcpp::Rcout << "r0 = " << r0 << "\n";
+      // Rcpp::Rcout << "dev = " << dev << "\n";
+      // Rcpp::Rcout << "R = " << TEMP << "\n";
       
       // distribute over areas according to RecDist
       for (int area = 0; area < nArea; ++area) {

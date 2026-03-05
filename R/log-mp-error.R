@@ -5,32 +5,32 @@
 #' type or a `try-error`, a descriptive error message is thrown including the MP name, data,  
 #' simulation, year, and original error message.
 #'
-#' @param MPAdvice The result returned by the MP. Should be of class `advice`.
+#' @param Advice The result returned by the MP. Should be of class `advice`.
 #' @param MPName Character. Name of the Management Procedure.
 #' @param Data An object containing the simulation data (typically an OM or Data object).
 #' @param Sim Integer. Simulation number.
 #' @param Year Integer. Current simulation year.
 #'
 #' @return
-#' Stops execution with a descriptive error if `MPAdvice` is invalid. 
+#' Stops execution with a descriptive error if `Advice` is invalid. 
 #' Returns `NULL` if `MPAdvice` is a valid advice object.
 #'
 #' @keywords internal
-Log_MPError <- function(MPAdvice, MPName, Data, Sim, Year) {
-  if (inherits(MPAdvice, 'advice')) {
-    return(invisible(NULL))
-  }
+Log_MPError <- function(Advice, MPName, Data, Sim, Year) {
+  if (inherits(Advice, 'advice')) return(Advice)
+    
   
-  if (!inherits(MPAdvice, 'try-error')) {
-    stop(paste0("\nMP `", MPName, " `did not return an `Advice()` object\nData: ",  
+  
+  if (!inherits(Advice, 'try-error')) {
+    return(paste0("\nMP `", MPName, " `did not return an `Advice()` object\nData: ",  
                 Data@Name, 
                 "\nSimulation: ", Sim, 
                 '\nYear: ', Year))
   }
-  stop(paste0("\nMP `", MPName, " Error\nData: ",  
+  return(paste0("\nMP `", MPName, " Error\nData: ",  
               Data@Name, 
               "\nSimulation: ", Sim, 
               '\nYear: ', Year,
-              '\nError: ', MPAdvice)
+              '\nError: ', Advice)
   )
 }

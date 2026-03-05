@@ -64,8 +64,7 @@ GenerateProjectionData_Sim <- function(x, Proj, DataYear, YearsAll,
     stocks <- Complexes[[i]]
     if (max(Data@Years) >= DataYear) # data already exists for this time step
       next()
-    
-    
+  
     if (!DataYear %in% Data@Years) 
       Data@Years <- c(Data@Years, DataYear)
     
@@ -73,8 +72,7 @@ GenerateProjectionData_Sim <- function(x, Proj, DataYear, YearsAll,
                                       Proj, 
                                       DataYear, 
                                       YearsAll, 
-                                      i, 
-                                      stocks)
+                                      i)
     
     Data@Landings <- GenProjData_Catch(x,
                                        Proj, 
@@ -124,6 +122,8 @@ GenerateProjectionData_Sim <- function(x, Proj, DataYear, YearsAll,
   
   DataList
 }
+
+
 
 
 

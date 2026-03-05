@@ -61,8 +61,9 @@ inline void CalcSpatialDistribution(
   Array3D Util(dim, 0.0);
 
   // Loop over stocks
+  Array3D B_hat(dim, 0.0);
   for (int st = 0; st < nStock; ++st) { 
-    Array3D B_hat(dim, 0.0);
+    std::fill(B_hat.x.begin(), B_hat.x.end(), 0.0);
     
     const Array4D& Num_st = Number[st];                 // sim, age, year, area
     const ConstArrayView4D& Wgt_st = WeightFleet[st];   // sim, age, year, fleet
@@ -78,17 +79,19 @@ inline void CalcSpatialDistribution(
  
     // Exploitable biomass per unit effort
     for (int sim : Sims) {
+      const int sim_cl  = sim_index<4>(sim, Closure, "Closure");
+      const int sim_wgt = sim_index<4>(sim, Wgt_st, "Wgt_st");
+      const int sim_sel = sim_index<5>(sim, Sel_st, "Sel_st");
+      const int sim_ret = sim_index<5>(sim, Ret_st, "Ret_st");
+      const int sim_q   = sim_index<4>(sim, q, "q");
+      
       for (int fl = 0; fl < nFleet; ++fl) {
         for (int ar = 0; ar < nArea; ++ar) {
-          
-          const int sim_cl  = sim_index<4>(sim, Closure, "Closure");
-          const int sim_wgt = sim_index<4>(sim, Wgt_st, "Wgt_st");
-          const int sim_sel = sim_index<5>(sim, Sel_st, "Sel_st");
-          const int sim_ret = sim_index<5>(sim, Ret_st, "Ret_st");
-          const int sim_q   = sim_index<4>(sim, q, "q");
-          
           if (Closure(sim_cl, st, y, fl, ar) <= 0.0) continue;
           double B_sfr = 0.0;
+          const double q_val = q(sim_q, st, y, fl);
+          if (q_val <= 0.0) continue; 
+          
           for (int age = 0; age < nAge; ++age) {
             B_sfr +=
               Num_st(sim, age, y, ar) *
@@ -96,7 +99,7 @@ inline void CalcSpatialDistribution(
               Sel_st(sim_sel, age, y, fl, ar) *
               Ret_st(sim_ret, age, y, fl, ar);
           } 
-          B_hat(sim, fl, ar) = q(sim_q, st, y, fl) * B_sfr;
+          B_hat(sim, fl, ar) =q_val * B_sfr;
         } 
       }
     } 
@@ -165,7 +168,7 @@ inline void CalcSpatialDistribution(
       for (int ar = 0; ar < nArea; ++ar) {
         const double u = Util(sim, fl, ar);
         if (u > 0.0) {
-          const double ut = std::pow(std::max(u, 1e-12), theta);
+          const double ut = (theta == 1.0) ? u : std::pow(std::max(u, 1e-12), theta);
           UtilTheta[ar] = ut;
           total += ut;
         } else { 
@@ -178,7 +181,6 @@ inline void CalcSpatialDistribution(
         for (int ar = 0; ar < nArea; ++ar) {
           // skips if users provide values
           if (std::isnan(Distribution(sim, y, fl, ar))) {
-            Distribution(sim, y, fl, ar) = 0.0;
             Distribution(sim, y, fl, ar) = UtilTheta[ar] * inv_total;  
           }
           

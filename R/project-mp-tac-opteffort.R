@@ -1,8 +1,11 @@
 #' Optimize Fleet Effort to Match TAC
 #'
-#' Calculates fleet-specific effort that achieves target removals (TAC) per fleet.
-#' Uses the derivative-based solver if multiple fleets, or direct optimization if a single fleet.
-#' Falls back to `optim()` if convergence fails for multiple fleets.
+#' Calculates fleet-specific effort that achieves target removals (TAC) per
+#' fleet. Fleets with `TAC == 0` are set to zero effort. Fleets with positive
+#' TAC are solved using `optimize()` for a single fleet or Newton-Raphson with
+#' a diagonal Jacobian approximation for multiple fleets, falling back to the
+#' full Jacobian if the diagonal step fails to reduce the residual, and then to
+#' `optim()` with BFGS if Newton-Raphson does not converge.
 #'
 #' @param Proj `Hist` object containing projected effort and fishery dynamics
 #' @param Year Numeric vector of projection years for this step
@@ -12,123 +15,132 @@
 #' @param TAC_by_Fleet Numeric vector of target TAC per fleet
 #' @param TACType Character. Does the TAC refer to `"Removals"` (default) or `"Landings"`.
 #' @param minEffort Small numeric to replace zero starting effort (default 1e-6)
-#' @param tol Numeric, convergence tolerance for derivative solver (default 1e-6)
+#' @param tol Numeric, convergence tolerance for derivative solver (default 1e-2)
 #' @param maxIter Integer, maximum iterations for derivative solver (default 20)
 #' @return Numeric vector of optimized effort per fleet
 #' @keywords internal
 OptEffort <- function(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet, TACType,
-                      minEffort = 1e-6, tol = 1e-2, maxIter = 50) {
+                      minEffort = 1e-6, tol = 1e-2, maxIter = 20) {
   
   TACType <- match.arg(TACType, c('Removals', 'Landings'))
-  nFleet <- length(TAC_by_Fleet)
   
-  # Initial effort (replace zeros)
-  LastEffort <- Proj@Effort[sim, TSIndex-1, ]
-  Effort_init <- pmax(LastEffort, minEffort)
-  
-  # Pre-check: Check if TACs can be caught 
-  MaxEffort <- CalcMaxEffort(Proj, sim, TSIndex, stocks, Year, TAC_by_Fleet)
-  Proj@Effort[sim, TSIndex, ] <- MaxEffort
-  Temp_max <- CalcFisheryDynamics(Hist = Proj, Years = Year, Sims = sim)
-  
-  if (TACType == 'Removals') {
-    MaxCatch <- Temp_max@Landings[sim, stocks, TSIndex, ] + Temp_max@Discards[sim, stocks, TSIndex, ]
-  } else {
-    MaxCatch <- Temp_max@Landings[sim, stocks, TSIndex, ]
-  }
-  MaxCatchByFleet <- if (is.null(ncol(MaxCatch))) MaxCatch else colSums(MaxCatch[, , drop=FALSE])
-  
-  # If max catch < TAC, return max effort immediately
-  pos_idx <- which(TAC_by_Fleet > 0)
+  pos_idx  <- which(TAC_by_Fleet > 0)
   zero_idx <- which(TAC_by_Fleet == 0)
-  Effort_final <- Effort_init
-  Effort_final[zero_idx] <- 0
   
-  infeasible_idx <- pos_idx[MaxCatchByFleet[pos_idx] < TAC_by_Fleet[pos_idx]]
-  if (length(infeasible_idx) > 0) {
-    Effort_final[infeasible_idx] <- MaxEffort[infeasible_idx]
-    pos_idx <- setdiff(pos_idx, infeasible_idx) # only optimize feasible fleets
-  }
+  Effort <- pmax(Proj@Effort[sim, TSIndex - 1, ], minEffort)
+  Effort[zero_idx] <- 0
   
-  # Skip if nothing feasible to optimize
-  if (length(pos_idx) == 0) return(Effort_final)
+  if (length(pos_idx) == 0) return(Effort)
   
   # Single fleet: optimize()
   if (length(pos_idx) == 1) {
-    obj <- function(logEff) ObjEffort(logEff, Proj, sim, Year, TSIndex, stocks, TAC_by_Fleet, Effort_final, TACType)
-    opt <- optimize(obj, interval = log(c(minEffort, MaxEffort[pos_idx])))
-    Effort_final[pos_idx] <- Effort_final[pos_idx] * exp(opt$minimum)
-    return(Effort_final)
+    obj <- function(logEff) {
+      ObjEffort(logEff, Proj, sim, Year, TSIndex, stocks,
+                TAC_by_Fleet, Effort, TACType)
+    }
+    upper_bound <- min(max(Effort[pos_idx]) * 1e3, .Machine$double.xmax)
+    opt <- optimize(obj, interval = log(c(minEffort, upper_bound)))
+    Effort[pos_idx] <- Effort[pos_idx] * exp(opt$minimum)
+    return(Effort)
   }
   
-  # Multi-fleet: Newton-Raphson
-  Effort <- Effort_final
+  # Multi-fleet: Newton-Raphson 
   converged <- FALSE
   
   for (iter in seq_len(maxIter)) {
+    
     Proj@Effort[sim, TSIndex, ] <- Effort
-    Temp <- CalcFisheryDynamics(Hist = Proj, Years = Year, Sims = sim)
+    Temp         <- CalcFisheryDynamics(Hist = Proj, Years = Year, Sims = sim)
+    CatchByFleet <- CalcCatchByFleet(Temp, sim, stocks, TSIndex, TACType)
     
-    if (TACType=='Removals') {
-      CatchByFleet <- Temp@Landings[sim, stocks, TSIndex, ] + Temp@Discards[sim, stocks, TSIndex, ]
-    } else {
-      CatchByFleet <- Temp@Landings[sim, stocks, TSIndex, ] 
-    }
-    CatchByFleet <- if (is.null(ncol(CatchByFleet))) CatchByFleet else colSums(CatchByFleet[, , drop=FALSE])
-    
-    diff <- TAC_by_Fleet[pos_idx] - CatchByFleet[pos_idx]
-    
-    # check convergence
-    if (all(abs(diff) < tol)) {
+    residual <- TAC_by_Fleet[pos_idx] - CatchByFleet[pos_idx]
+    if (all(abs(residual) < tol)) {
       converged <- TRUE
       break
     }
     
-    # approximate derivative
-    deltaF <- pmax(Effort[pos_idx] * 1e-4, 1e-8)
+    # Diagonal Jacobian: perturb all feasible fleets simultaneously 
+    deltaF      <- pmax(Effort[pos_idx] * 1e-4, 1e-8)
     Effort_pert <- Effort
     Effort_pert[pos_idx] <- Effort[pos_idx] + deltaF
+    
     Proj@Effort[sim, TSIndex, ] <- Effort_pert
+    Temp_pert         <- CalcFisheryDynamics(Hist = Proj, Years = Year, Sims = sim)
+    CatchByFleet_pert <- CalcCatchByFleet(Temp_pert, sim, stocks, TSIndex, TACType)
     
-    Temp_pert <- CalcFisheryDynamics(Hist = Proj, Years = Year, Sims = sim)
+    J_diag <- (CatchByFleet_pert[pos_idx] - CatchByFleet[pos_idx]) / deltaF
+    J_diag[J_diag <= 0] <- 1e-8
     
-    if (TACType=='Removals') {
-      CatchByFleet_pert <- Temp@Landings[sim, stocks, TSIndex, ] + Temp@Discards[sim, stocks, TSIndex, ]
-    } else {
-      CatchByFleet_pert <- Temp@Landings[sim, stocks, TSIndex, ] 
-    }
-    CatchByFleet_pert <- if (is.null(ncol(CatchByFleet_pert))) CatchByFleet_pert else colSums(CatchByFleet_pert[, , drop=FALSE])
+    Eff_candidate <- pmax(Effort[pos_idx] + residual / J_diag, minEffort)
     
-    dC_dF <- (CatchByFleet_pert[pos_idx] - CatchByFleet[pos_idx]) / deltaF
-    dC_dF[dC_dF <= 0] <- 1e-8
+    # Accept diagonal step if it reduces the residual; otherwise fall back to
+    # full Jacobian for this iteration 
+    Proj@Effort[sim, TSIndex, ] <- Effort
+    Proj@Effort[sim, TSIndex, pos_idx] <- Eff_candidate
+    Temp_cand         <- CalcFisheryDynamics(Hist = Proj, Years = Year, Sims = sim)
+    CatchByFleet_cand <- CalcCatchByFleet(Temp_cand, sim, stocks, TSIndex, TACType)
+    residual_cand     <- TAC_by_Fleet[pos_idx] - CatchByFleet_cand[pos_idx]
     
-    if (all(dC_dF < 1e-6)) {
-      converged <- TRUE
-      break
-    }
-    
-    Effort[pos_idx] <- pmin(pmax(Effort[pos_idx] + diff / dC_dF, minEffort), MaxEffort[pos_idx])
-  }
-  
-
-  # fallback to optim if derivative solver fails
-  if (!converged) {
-    objFun <- function(logEffortVec) {
-      ObjEffort(logEffortVec, Proj, sim, Year, TSIndex, stocks, TAC_by_Fleet, Effort_final, TACType)
+    if (sum(residual_cand^2) <= sum(residual^2)) {
+      Effort[pos_idx] <- Eff_candidate
+      next
     }
     
-    opt <- optim(
-      par = rep(0, length(pos_idx)),
-      fn = objFun,
-      method = "BFGS",
-      control = list(maxit = 100)
+    # Full Jacobian: J[i, j] = dCatch_i / dEffort_j
+    # Perturb each feasible fleet individually to capture cross-fleet effects
+    nF <- length(pos_idx)
+    J  <- matrix(0, nrow = nF, ncol = nF)
+    diag(J) <- J_diag  # reuse already-computed diagonal
+    
+    for (k in seq_len(nF)) {
+      fleet_k    <- pos_idx[k]
+      deltaF_k   <- max(Effort[fleet_k] * 1e-4, 1e-8)
+      Effort_pert <- Effort
+      Effort_pert[fleet_k] <- Effort[fleet_k] + deltaF_k
+      
+      Proj@Effort[sim, TSIndex, ] <- Effort_pert
+      Temp_pert <- CalcFisheryDynamics(Hist = Proj, Years = Year, Sims = sim)
+      CatchByFleet_pert <- CalcCatchByFleet(Temp_pert, sim, stocks, TSIndex, TACType)
+      
+      J[, k] <- (CatchByFleet_pert[pos_idx] - CatchByFleet[pos_idx]) / deltaF_k
+    }
+    
+    # Newton step
+    delta <- tryCatch(
+      solve(J, residual),
+      error = function(e) {
+        residual / J_diag # singular — diagonal fallbackb
+      }
     )
     
-    Effort[pos_idx] <- pmin(Effort[pos_idx] * exp(opt$par), MaxEffort[pos_idx])
+    Effort[pos_idx] <- pmax(Effort[pos_idx] + delta, minEffort)
   }
-  Effort_final[pos_idx] <- Effort[pos_idx]
-  Effort_final
+  
+  # fallback to optim if derivative solver fails
+  if (!converged) {
+    
+    # cli::cli_alert_warning(
+    #   "OptEffort: Newton-Raphson did not converge after {maxIter} iterations (sim={sim}, TSIndex={TSIndex}). Falling back to optim()."
+    # )
+    
+    objFun <- function(logEffortVec) {
+      ObjEffort(logEffortVec, Proj, sim, Year, TSIndex, stocks,
+                TAC_by_Fleet, Effort_final, TACType)
+    }
+
+    opt <- optim(
+      par     = log(Effort[pos_idx] / Effort_final[pos_idx]),
+      fn      = objFun,
+      method  = "BFGS",
+      control = list(maxit = 200)
+    )
+
+    Effort[pos_idx] <- Effort[pos_idx] * exp(opt$par)
+    
+  }
+  Effort
 }
+
 
 
 

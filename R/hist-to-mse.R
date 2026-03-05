@@ -5,7 +5,6 @@ Hist2MSE <- function(Hist, MPNames) {
   MSE@Reference <- Hist@Reference
   HistYears <- Years(Hist,'H')
   
-  
   slots <- slotNames(MSE@Hist)
   for (sl in slots)  {
     slot(MSE@Hist, sl) <- slot(Hist, sl) |> SubsetYear(HistYears)
@@ -14,13 +13,14 @@ Hist2MSE <- function(Hist, MPNames) {
   MSE <- Add_MP_Functions(MSE, MPNames)
  
   
-  MSE <- InitializeTimeSeries(MSE, 'Projection', MPs=MPs)
+  MSE <- InitializeTimeSeries(MSE, 'Projection', MPs=MPNames)
   
   MSE
 }
 
 Add_MP_Functions <- function(MSE, MPNames) {
-  MSE@MPs <- lapply(MPs, function(x) {
+  
+  MSE@MPs <- lapply(MPNames, function(x) {
     
     mp <- try(get(x), silent=TRUE)
     
@@ -39,10 +39,7 @@ Add_MP_Functions <- function(MSE, MPNames) {
   
   valid <- !vapply(MSE@MPs, is.null, logical(1))
   
-  MPs <- MPs[valid]
   MSE@MPs <- MSE@MPs[valid]
   names(MSE@MPs) <- MPNames[valid]
   MSE
-  
-  
 }

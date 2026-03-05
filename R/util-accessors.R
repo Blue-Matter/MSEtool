@@ -152,6 +152,8 @@ Model <- function(x) {
 #' @rdname Access
 #' @export
 Name <- function(x) {
+  if (inherits(x, 'mse'))
+    x <- x@OM
   AccessSlot(x,'Name')
 }
 

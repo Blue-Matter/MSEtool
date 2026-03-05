@@ -24,6 +24,7 @@ inline void CalcArea_F(
     const ConstArrayView4D& q,                        // sim, stock, year, fleet          
     const Array3D& Effort,                            // sim, year, fleet
     const ConstArrayView2D& RelSize,                  // sim, area
+    const double maxF,
     const int nStock,
     const int nFleet,
     const int nArea) {
@@ -43,28 +44,11 @@ inline void CalcArea_F(
   check_dims<3>(Effort, {nSim, Effort.dim[1], nFleet}, "Effort", y, 1);
   check_dims<2>(RelSize, {nSim, nArea}, "RelSize");
   
-  // Calculate effort density
-  Array3D EffortDensity({nSim, nFleet, nArea}, 0.0);
-  for (int sim : Sims) {
-    for (int fl = 0; fl < nFleet; ++fl) {
-      const int sim_ef  = sim_index<3>(sim, Effort, "Effort");
-      const int sim_dist  = sim_index<4>(sim, Distribution, "Distribution");
-      const int sim_rs = sim_index<2>(sim, RelSize, "RelSize");
-      
-      const double E = Effort(sim_ef, y, fl);
-      
-      for (int ar = 0; ar < nArea; ++ar) {
-        const double rs = RelSize(sim_rs, ar);
-        EffortDensity(sim, fl, ar) = (rs > 0.0) ? E * Distribution(sim_dist, y, fl, ar) / rs  : 0.0;
-        
-      }
-    }
-  }
-  
+
   // Calc F-at-age 
   for (int st = 0; st < nStock; ++st) {
     
-    auto& Fi  = FInteractArea[st];        // sim, age, year, fleet, area
+    auto& Fi  = FInteractArea[st];    // sim, age, year, fleet, area
     auto& Fd  = FDeadArea[st];        // sim, age, year, fleet, area
     auto& Fr  = FRetainArea[st];      // sim, age, year, fleet, area
     
@@ -84,14 +68,22 @@ inline void CalcArea_F(
       const int sim_sel = sim_index<5>(sim, S, "S");
       const int sim_ret = sim_index<5>(sim, R, "R");
       const int sim_dm  = sim_index<5>(sim, DM, "DiscMort");
+      const int sim_ef  = sim_index<3>(sim, Effort, "Effort");
+      const int sim_dist  = sim_index<4>(sim, Distribution, "Distribution");
+      const int sim_rs = sim_index<2>(sim, RelSize, "RelSize");
       
       for (int fl = 0; fl < nFleet; ++fl) {
 
         const double q_fl = q(sim_q, st, y, fl);
+        if (q_fl <= 0.0) continue; 
+        const double E = Effort(sim_ef, y, fl);
       
         for (int ar = 0; ar < nArea; ++ar) {
 
-          const double q_eff = q_fl * EffortDensity(sim, fl, ar);
+          const double rs = RelSize(sim_rs, ar);
+          // Effort density
+          const double ed = (rs > 0.0) ? E * Distribution(sim_dist, y, fl, ar) / rs : 0.0;
+          const double q_eff = q_fl * ed;
           
           if (q_eff <= 0.0) continue;
           
@@ -101,60 +93,13 @@ inline void CalcArea_F(
             double &Fd_val = Fd(sim, age, y, fl, ar);
             double &Fr_val = Fr(sim, age, y, fl, ar);
             
-            
-            
-            // // Skip if all values are already set (not NA)
-            // if (!std::isnan(Fi_val) && !std::isnan(Fd_val) && !std::isnan(Fr_val)) {
-            //   continue; 
-            // }
-            
             const double sel = S(sim_sel, age, y, fl, ar);
             const double ret = R(sim_ret, age, y, fl, ar);
             const double dm  = DM(sim_dm, age, y, fl, ar);
-            
-            if (sel < 0.0 || sel > 1.0)
-              Rcpp::stop(
-                "SelAge out of [0,1] "
-                "(stock=" + std::to_string(st + 1) +
-                  ", sim="   + std::to_string(sim + 1) +
-                  ", age="   + std::to_string(age + 1) +
-                  ", year="  + std::to_string(y + 1) +
-                  ", fleet=" + std::to_string(fl + 1) +
-                  ", area="  + std::to_string(ar + 1) + ")"
-              );
-            
-            if (ret < 0.0 || ret > 1.0)
-              Rcpp::stop(
-                "RetAge out of [0,1] "
-                "(stock=" + std::to_string(st + 1) +
-                  ", sim="   + std::to_string(sim + 1) +
-                  ", age="   + std::to_string(age + 1) +
-                  ", year="  + std::to_string(y + 1) +
-                  ", fleet=" + std::to_string(fl + 1) +
-                  ", area="  + std::to_string(ar + 1) + ")"
-              );
-            
-            if (dm < 0.0 || dm > 1.0)
-              Rcpp::stop(
-                "DiscMort out of [0,1] "
-                "(stock=" + std::to_string(st + 1) +
-                  ", sim="   + std::to_string(sim + 1) +
-                  ", age="   + std::to_string(age + 1) +
-                  ", year="  + std::to_string(y + 1) +
-                  ", fleet=" + std::to_string(fl + 1) +
-                  ", area="  + std::to_string(ar + 1) + ")"
-              );
-            
           
-            const double F_interact = q_eff * sel;
+            const double F_interact = std::min(q_eff * sel, maxF);
             const double F_retain = F_interact * ret;
             const double F_disc   = (F_interact - F_retain) * dm;
-            
-            // don't update if already provided
-            // if (std::isnan(Fi_val) || Fd_val < 0.0) Fi_val = F_interact;
-            // if (std::isnan(Fd_val) || Fd_val < 0.0) Fd_val = F_retain + F_disc;
-            // if (std::isnan(Fr_val) || Fr_val < 0.0) Fr_val = F_retain;
-            
             
             Fi_val = F_interact;
             Fd_val = F_retain + F_disc;

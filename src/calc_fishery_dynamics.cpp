@@ -14,7 +14,7 @@
 #include "calc_biomass.h"
 #include "calc_catch.h"
 #include "calc_overall_f.h"
-#include "apply_maxf_constraint.h"
+#include "back_calculate_effort.h"
 
 using namespace Rcpp;
 
@@ -58,8 +58,33 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
   NormalizeSims(Sims, nSim);
   
   // Clone hist object
-  Rcpp::S4 Hist = Rcpp::clone(HistIn); 
+  Rcpp::S4 Hist = Rcpp::clone(HistIn);
   
+  // Rcpp::S4 Hist(HistIn.get__());
+  // Hist.slot("OM") =  Rcpp::clone(as<S4>(HistIn.slot("OM")));
+  // Hist.slot("Unfished") =   Rcpp::clone(as<S4>(HistIn.slot("Unfished")));
+  // Hist.slot("Misc") =  Rcpp::clone(as<List>(HistIn.slot("Misc")));
+  // Hist.slot("Number") =  Rcpp::clone(as<List>(HistIn.slot("Number")));
+  // Hist.slot("Biomass") = Rcpp::clone(as<NumericVector>(HistIn.slot("Biomass")));
+  // Hist.slot("SBiomass") = Rcpp::clone(as<NumericVector>(HistIn.slot("SBiomass")));
+  // Hist.slot("SProduction") = Rcpp::clone(as<NumericVector>(HistIn.slot("SProduction")));
+  // Hist.slot("Interactions") = Rcpp::clone(as<NumericVector>(HistIn.slot("Interactions")));
+  // Hist.slot("Landings") = Rcpp::clone(as<NumericVector>(HistIn.slot("Landings")));
+  // Hist.slot("Discards") = Rcpp::clone(as<NumericVector>(HistIn.slot("Discards")));
+  // Hist.slot("InteractAtAge") =  Rcpp::clone(as<List>(HistIn.slot("InteractAtAge")));
+  // Hist.slot("LandingsAtAge") = Rcpp::clone(as<List>(HistIn.slot("LandingsAtAge")));
+  // Hist.slot("DiscardsAtAge") = Rcpp::clone(as<List>(HistIn.slot("DiscardsAtAge")));
+  // Hist.slot("LandingsAtSize") =Rcpp::clone(as<List>(HistIn.slot("LandingsAtSize")));
+  // Hist.slot("DiscardsAtSize") = Rcpp::clone(as<List>(HistIn.slot("DiscardsAtSize")));
+  // Hist.slot("Effort") = Rcpp::clone(as<NumericVector>(HistIn.slot("Effort")));
+  // Hist.slot("Distribution") = Rcpp::clone(as<NumericVector>(HistIn.slot("Distribution")));
+  // Hist.slot("FInteract") = Rcpp::clone(as<NumericVector>(HistIn.slot("FInteract")));
+  // Hist.slot("FDead") = Rcpp::clone(as<NumericVector>(HistIn.slot("FDead")));
+  // Hist.slot("FRetain") = Rcpp::clone(as<NumericVector>(HistIn.slot("FRetain")));
+  // Hist.slot("FInteractArea") = Rcpp::clone(as<List>(HistIn.slot("FInteractArea")));
+  // Hist.slot("FDeadArea") = Rcpp::clone(as<List>(HistIn.slot("FDeadArea")));
+  // Hist.slot("FRetainArea") = Rcpp::clone(as<List>(HistIn.slot("FRetainArea")));
+
   // create HistView object 
   HistView hv(Hist, nSim, nStock, nFleet, nArea);
   
@@ -128,6 +153,8 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     // ---------------------------------------------------------
     // Calculate Area-Specific Fishing Mortality  
     // src: inst/include/calc_area_f.h
+    // 
+    // Applies maxF constraint within each area 
     // ---------------------------------------------------------
     
     if (debug)
@@ -146,6 +173,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                hv.q,
                hv.Effort,
                hv.RelSize,
+               hv.maxF,
                nStock,
                nFleet,
                nArea);
@@ -318,50 +346,60 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     if (debug)
       Rcpp::Rcout << "End CalcOverallF \n";
     
-    // ---------------------------------------------------------
-    // Apply global maxF constraint (on FInteract)
-    // ---------------------------------------------------------
+    // Back calculate effort (only needed if maxF constraint is triggered)
+    BackCalculateEffort(y,
+                        Sims,
+                        nSim,
+                        hv.FInteract,
+                        hv.q,
+                        hv.Effort,
+                        nStock,
+                        nFleet);
     
-    if (debug)
-      Rcpp::Rcout << "Begin Apply Max F Constraint \n";
-
-    ApplyMaxF(y,
-              Sims,
-              nSim,
-              hv.FInteractArea,
-              hv.FDeadArea,
-              hv.FRetainArea,
-              hv.SelAge,
-              hv.RetAge,
-              hv.DiscMort,
-              hv.Distribution,
-              hv.q,
-              hv.Effort,
-              hv.RelSize,
-              hv.InteractAtAge,
-              hv.LandingsAtAge,
-              hv.DiscardsAtAge,
-              hv.Interactions,
-              hv.Landings,
-              hv.Discards,
-              hv.NaturalMortality,
-              hv.Number,
-              hv.WeightFleet,
-              hv.FInteract,
-              hv.FDead,
-              hv.FRetain,
-              hv.maxF,
-              nStock,
-              nFleet,
-              nArea,
-              DoCalcCatch,
-              debug);
-
-    if (debug)
-      Rcpp::Rcout << "End Apply Max F Constraint \n";
-    
-    
-    
+  
+    // maxF constraint now applied within each area
+    //
+    // // ---------------------------------------------------------
+    // // Apply global maxF constraint (on FInteract)
+    // // ---------------------------------------------------------
+    // 
+    // if (debug)
+    //   Rcpp::Rcout << "Begin Apply Max F Constraint \n";
+    // 
+    // ApplyMaxF(y,
+    //           Sims,
+    //           nSim,
+    //           hv.FInteractArea,
+    //           hv.FDeadArea,
+    //           hv.FRetainArea,
+    //           hv.SelAge,
+    //           hv.RetAge,
+    //           hv.DiscMort,
+    //           hv.Distribution,
+    //           hv.q,
+    //           hv.Effort,
+    //           hv.RelSize,
+    //           hv.InteractAtAge,
+    //           hv.LandingsAtAge,
+    //           hv.DiscardsAtAge,
+    //           hv.Interactions,
+    //           hv.Landings,
+    //           hv.Discards,
+    //           hv.NaturalMortality,
+    //           hv.Number,
+    //           hv.WeightFleet,
+    //           hv.FInteract,
+    //           hv.FDead,
+    //           hv.FRetain,
+    //           hv.maxF,
+    //           nStock,
+    //           nFleet,
+    //           nArea,
+    //           DoCalcCatch,
+    //           debug);
+    // 
+    // if (debug)
+    //   Rcpp::Rcout << "End Apply Max F Constraint \n";
     
     if (debug) 
       Rcpp::Rcout << "******End Time Step ****\n\n";
@@ -370,197 +408,3 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
   }
   return(Hist);
 }
-
-
-// Optimize a single-fleet log-effort to minimize the objective function
-// double OptimizeSingleFleet(std::function<double(double)> obj,
-//                            double logLow, double logHigh,
-//                            int maxIter = 50, double tol = 1e-6) {
-//   
-//   const double gr = (std::sqrt(5.0) - 1.0) / 2.0;
-//   double a = logLow;
-//   double b = logHigh;
-//   double c = b - gr * (b - a);
-//   double d = a + gr * (b - a);
-//   double fc = obj(c);
-//   double fd = obj(d);
-//   
-//   for (int iter = 0; iter < maxIter; ++iter) {
-//     if (std::abs(b - a) < tol) break;
-//     if (fc < fd) {
-//       b = d;
-//       d = c;
-//       fd = fc;
-//       c = b - gr * (b - a);
-//       fc = obj(c);
-//     } else { 
-//       a = c;
-//       c = d;
-//       fc = fd;
-//       d = a + gr * (b - a);
-//       fd = obj(d);
-//     }
-//   } 
-//   
-//   return (fc < fd) ? c : d;
-// } 
-
-
-
-// // [[Rcpp::export]]
-// NumericVector OptimizeEffort(S4 Hist,
-//                              std::vector<int> Sims,
-//                              int TSIndex,
-//                              NumericVector TAC_by_Fleet,
-//                              SEXP Years,
-//                              SEXP AllYears,
-//                              std::vector<int> stocks,
-//                              int nSim,
-//                              int nStock,
-//                              int nArea,
-//                              double minEffort = 1e-2,
-//                              double tol = 1e-2,
-//                              int maxIter = 20) {
-// 
-//   int nFleet = TAC_by_Fleet.size();
-//   NumericVector Effort_final(nFleet);
-//   
-//   int sim = Sims[0];
-//   
-//   // 0-index 
-//   std::vector<int> stocks0 = stocks;
-//   for (auto& st : stocks0) {
-//     st -= 1;
-//   }
-//   
-//   // construct HistView
-//   HistView hv(Hist, nSim, nStock, nFleet, nArea);
-//   
-//   // initialize effort
-//   for (int f = 0; f < nFleet; ++f) {
-//     Effort_final[f] = hv.Effort(sim, TSIndex, f);
-//     if (Effort_final[f] < minEffort) Effort_final[f] = minEffort;
-//   }
-// 
-// 
-//   // fleets with TAC>0
-//   std::vector<int> pos_idx;
-//   for (int f = 0; f < nFleet; ++f) if (TAC_by_Fleet[f] > 0) pos_idx.push_back(f);
-//   // fleets with TAC==0
-//   for (int f = 0; f < nFleet; ++f) if (TAC_by_Fleet[f] == 0) Effort_final[f] = 0;
-// 
-//   if (pos_idx.empty()) return Effort_final;
-// 
-//  
-//   // single fleet: Brent-style log-space optimization
-//   if (pos_idx.size() == 1) {
-//     int f = pos_idx[0];
-//     double logLow = std::log(minEffort / Effort_final[f]);
-//     double logHigh = std::log(Effort_final[f] * 10 / Effort_final[f]);
-//   
-//     auto obj = [&](double logEff) -> double {
-//       NumericVector EffCopy = clone(Effort_final);
-//       EffCopy[f] *= std::exp(logEff);
-//       for (int i = 0; i < nFleet; ++i) hv.Effort(sim, TSIndex, i) = EffCopy[i];
-//       S4 Temp = CalcFisheryDynamics_(Hist,
-//                                      Years,
-//                                      AllYears,
-//                                      Sims,
-//                                      nSim,
-//                                      nStock,
-//                                      nFleet,
-//                                      nArea,
-//                                      1,
-//                                      0,
-//                                      0);
-// 
-//       double Rem = 0.0;
-//       Array4D Landings = Temp.slot("Landings");
-//       Array4D Discards = Temp.slot("Discards");
-//       for (int st : stocks0) {
-//         Rem += Landings(sim, st, TSIndex, f) + Discards(sim, st, TSIndex, f);
-//       }
-//       return std::pow(std::log(TAC_by_Fleet[f]) - std::log(Rem), 2);
-//     };
-//   
-//     double bestLog = OptimizeSingleFleet(obj, logLow, logHigh);
-//     Effort_final[f] *= std::exp(bestLog);
-//     return Effort_final;
-//   }
-// 
-//   
-//   // multiple fleets: vectorized Newton-Raphson
-//   NumericVector Effort = clone(Effort_final);
-//   NumericVector deltaF(nFleet);
-// 
-//   for (int iter = 0; iter < maxIter; ++iter) {
-//     for (int f = 0; f < nFleet; ++f) hv.Effort(sim, TSIndex, f) = Effort[f];
-//     S4 Temp_base = CalcFisheryDynamics_(Hist,
-//                                    Years,
-//                                    AllYears,
-//                                    Sims,
-//                                    nSim,
-//                                    nStock,
-//                                    nFleet,
-//                                    nArea,
-//                                    1,
-//                                    0,
-//                                    0);
-// 
-//     Array4D Land_base = Temp_base.slot("Landings");
-//     Array4D Disc_base = Temp_base.slot("Discards");
-//      
-//     NumericVector Rem_base(nFleet);
-//     bool done = true;
-//     for (int f : pos_idx) {
-//       double Rem_f = 0.0;
-//       for (int st : stocks0)  {
-//         Rem_f += Land_base(sim, st, TSIndex, f) + Disc_base(sim, st, TSIndex, f); 
-//       }
-//       Rem_base[f] = Rem_f;
-//       if (std::abs(TAC_by_Fleet[f] - Rem_base[f]) > tol) done = false;
-//     }
-//     if (done) break;
-// 
-//     
-//     for (int f : pos_idx) deltaF[f] = std::max(Effort[f] * 1e-4, 1e-8);
-//     NumericVector Eff_pert = clone(Effort);
-// 
-//     for (int f = 0; f < nFleet; ++f) Eff_pert[f] += deltaF[f];
-//    
-//    
-// 
-//    
-//     for (int f = 0; f < nFleet; ++f) hv.Effort(sim, TSIndex, f) = Eff_pert[f];
-//     S4 Temp_pert = CalcFisheryDynamics_(Hist,
-//                                         Years,
-//                                         AllYears,
-//                                         Sims,
-//                                         nSim,
-//                                         nStock,
-//                                         nFleet,
-//                                         nArea,
-//                                         1,
-//                                         0,
-//                                         0);
-//     
-//  
-//     
-//     Array4D Land_pert = Temp_pert.slot("Landings");
-//     Array4D Disc_pert = Temp_pert.slot("Discards");
-//    
-//    for (int f : pos_idx) {
-//      double Rem_pert_f = 0.0;
-//      for (int st : stocks0) Rem_pert_f += Land_pert(sim, st, TSIndex, f) + Disc_pert(sim, st, TSIndex, f);
-//      double dC = (Rem_pert_f - Rem_base[f]) / deltaF[f];
-//      if (dC > 0) Effort[f] = std::max(Effort[f] + (TAC_by_Fleet[f] - Rem_base[f]) / dC, minEffort);
-//      else {
-//        double logAdj = std::log(TAC_by_Fleet[f] / std::max(Rem_base[f], 1e-8));
-//        Effort[f] *= std::exp(logAdj);
-//      }
-//    }
-//   }
-//    
-//   for (int f = 0; f < nFleet; ++f) Effort_final[f] = Effort[f];
-//   return Effort_final;
-// } 

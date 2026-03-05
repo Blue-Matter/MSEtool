@@ -65,13 +65,9 @@ PopulateFleet <- function(Fleet,
   
   argList <- list(Ages, Length, Weight, RelativeSize, nSim, Years, seed)
   
-  if (EmptyObject(Fleet)) {
-    return(Fleet)
-  }
+  if (EmptyObject(Fleet)) return(Fleet)
   
-  if (CheckDigest(Fleet, argList) & !force) {
-    return(Fleet)
-  }
+  if (CheckDigest(Fleet, argList) & !force) return(Fleet)
   
   SetSeed(seed)
   

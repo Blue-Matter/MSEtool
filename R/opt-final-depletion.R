@@ -191,6 +191,7 @@ OptCatchability <- function(pars, HistSim, nStock, nFleet, nArea, YearsHist, Cat
                                                 nFleet,
                                                 nArea,
                                                 DoCalcCatch=DoCalcCatch)
+  
 
   # Depletion objective
   TermInd <- length(YearsHist)

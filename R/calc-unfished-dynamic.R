@@ -42,7 +42,7 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
   nArea <- nArea(Hist)
   nSim <- nSim(Hist)
   
-  Hist_Copy@Misc$Catchability[] <- tiny
+  Hist_Copy@Misc$Catchability[] <- 1E-15
   
   HistYears <- Years(Hist, 'H')
   AllYears <- Years(Hist)
@@ -64,7 +64,7 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
                                      nFleet,
                                      nArea,
                                      DoCalcCatch=0)
-    
+  
     for (sl in slotNames('popdynamics')) {
       if (sl=='Misc') next()
       slot(unfished, sl) <- CopyFirstSim(x=slot(unfished, sl))

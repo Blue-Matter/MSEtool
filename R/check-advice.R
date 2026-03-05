@@ -1,5 +1,7 @@
 
 CheckAdvice <- function(Advice, Proj, FleetNames, Areas, x) {
+  if (inherits(Advice, 'try-error'))
+    return(Advice)
  
   Advice <- CheckAdvice_TAC(Advice, Proj, FleetNames, Areas)
   
