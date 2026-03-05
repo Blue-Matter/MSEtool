@@ -44,7 +44,7 @@ inline void CalcCatch(
     const auto& Fd = FDeadArea[st];                 // sim, age, year, fleet, area
     const auto& Fr = FRetainArea[st];               // sim, age, year, fleet, area
     const auto& M_st = NaturalMortality[st];        // sim, age, year
-    const auto& FWght_st = FleetWeight[st];         // sim, age, fleet, year 
+    const auto& FWght_st = FleetWeight[st];         // sim, age, year, fleet
     
     auto& IAA_st = InteractAtAge[st];
     auto& LAA_st = LandingsAtAge[st];

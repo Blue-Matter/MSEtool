@@ -133,7 +133,7 @@ Project_MP <- function(Proj,
     if (Error) break
     
     # Simulate Pop Dynamics for this Time Step
-    Proj <- CalcFisheryDynamics(Proj, Year)
+    Proj <- CalcFisheryDynamics(Proj, Year, clone=1)
    
   }
   

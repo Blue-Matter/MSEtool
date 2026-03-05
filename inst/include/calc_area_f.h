@@ -64,6 +64,15 @@ inline void CalcArea_F(
     
     for (int sim : Sims) {
       
+      // Zero all F arrays for this sim/year before computing
+      for (int fl = 0; fl < nFleet; ++fl)
+        for (int ar = 0; ar < nArea; ++ar)
+          for (int age = 0; age < nAge; ++age) {
+            Fi(sim, age, y, fl, ar) = 0.0;
+            Fd(sim, age, y, fl, ar) = 0.0;
+            Fr(sim, age, y, fl, ar) = 0.0;
+          }
+    
       const int sim_q   = sim_index<4>(sim, q, "q");
       const int sim_sel = sim_index<5>(sim, S, "S");
       const int sim_ret = sim_index<5>(sim, R, "R");

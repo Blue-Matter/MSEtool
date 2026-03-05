@@ -28,7 +28,8 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
                               const int nFleet,
                               const int nArea,
                               const int DoCalcCatch=1,        // calculate catch?
-                              const int debug=0
+                              const int debug=0,
+                              const int clone=1
 ) {
   
   
@@ -57,34 +58,20 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
   // zero index Sims
   NormalizeSims(Sims, nSim);
   
-  // Clone hist object
-  Rcpp::S4 Hist = Rcpp::clone(HistIn);
-  
-  // Rcpp::S4 Hist(HistIn.get__());
-  // Hist.slot("OM") =  Rcpp::clone(as<S4>(HistIn.slot("OM")));
-  // Hist.slot("Unfished") =   Rcpp::clone(as<S4>(HistIn.slot("Unfished")));
-  // Hist.slot("Misc") =  Rcpp::clone(as<List>(HistIn.slot("Misc")));
-  // Hist.slot("Number") =  Rcpp::clone(as<List>(HistIn.slot("Number")));
-  // Hist.slot("Biomass") = Rcpp::clone(as<NumericVector>(HistIn.slot("Biomass")));
-  // Hist.slot("SBiomass") = Rcpp::clone(as<NumericVector>(HistIn.slot("SBiomass")));
-  // Hist.slot("SProduction") = Rcpp::clone(as<NumericVector>(HistIn.slot("SProduction")));
-  // Hist.slot("Interactions") = Rcpp::clone(as<NumericVector>(HistIn.slot("Interactions")));
-  // Hist.slot("Landings") = Rcpp::clone(as<NumericVector>(HistIn.slot("Landings")));
-  // Hist.slot("Discards") = Rcpp::clone(as<NumericVector>(HistIn.slot("Discards")));
-  // Hist.slot("InteractAtAge") =  Rcpp::clone(as<List>(HistIn.slot("InteractAtAge")));
-  // Hist.slot("LandingsAtAge") = Rcpp::clone(as<List>(HistIn.slot("LandingsAtAge")));
-  // Hist.slot("DiscardsAtAge") = Rcpp::clone(as<List>(HistIn.slot("DiscardsAtAge")));
-  // Hist.slot("LandingsAtSize") =Rcpp::clone(as<List>(HistIn.slot("LandingsAtSize")));
-  // Hist.slot("DiscardsAtSize") = Rcpp::clone(as<List>(HistIn.slot("DiscardsAtSize")));
-  // Hist.slot("Effort") = Rcpp::clone(as<NumericVector>(HistIn.slot("Effort")));
-  // Hist.slot("Distribution") = Rcpp::clone(as<NumericVector>(HistIn.slot("Distribution")));
-  // Hist.slot("FInteract") = Rcpp::clone(as<NumericVector>(HistIn.slot("FInteract")));
-  // Hist.slot("FDead") = Rcpp::clone(as<NumericVector>(HistIn.slot("FDead")));
-  // Hist.slot("FRetain") = Rcpp::clone(as<NumericVector>(HistIn.slot("FRetain")));
-  // Hist.slot("FInteractArea") = Rcpp::clone(as<List>(HistIn.slot("FInteractArea")));
-  // Hist.slot("FDeadArea") = Rcpp::clone(as<List>(HistIn.slot("FDeadArea")));
-  // Hist.slot("FRetainArea") = Rcpp::clone(as<List>(HistIn.slot("FRetainArea")));
+  // Clone hist object if required (clone=1, default)
+  // clone=0 is faster but mutates HistIn directly - only use when 
+  // the caller does not need HistIn preserved after this call
+  Rcpp::S4 Hist = clone ? Rcpp::clone(HistIn) : HistIn;
 
+  // Always ensure Effort and Distribution are independent copies,
+  if (!clone) {
+    // Hist.slot("Effort")       = Rcpp::clone(as<NumericVector>(HistIn.slot("Effort")));
+    // Hist.slot("Distribution") = Rcpp::clone(as<NumericVector>(HistIn.slot("Distribution")));
+    Hist.slot("Effort")       = Rf_duplicate(HistIn.slot("Effort"));
+    Hist.slot("Distribution") = Rf_duplicate(HistIn.slot("Distribution"));
+    
+  }
+  
   // create HistView object 
   HistView hv(Hist, nSim, nStock, nFleet, nArea);
   
@@ -110,7 +97,6 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
       Rcpp::Rcout << "y = " << y+1 << "\n";
     }
       
-    
     // ---------------------------------------------------------
     // MICE Calculations - TODO 
     // 
@@ -286,7 +272,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     // src: inst/include/calc_catch.h
     // ---------------------------------------------------------
   
-    if (DoCalcCatch) {
+    // if (DoCalcCatch) {
       
       // TODO   - calc landings- and discards-at-size
       //        - need to calculate ASK internally
@@ -318,7 +304,7 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
       if (debug)
         Rcpp::Rcout << "End CalcCatch \n";
       
-    }
+    // }
     
     // ---------------------------------------------------------
     // Calculate overall F (if applicable)

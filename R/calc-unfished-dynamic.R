@@ -63,7 +63,8 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
                                      nStock,
                                      nFleet,
                                      nArea,
-                                     DoCalcCatch=0)
+                                     DoCalcCatch=0,
+                                     clone=Hist@OM@Control$Clone)
   
     for (sl in slotNames('popdynamics')) {
       if (sl=='Misc') next()
@@ -80,7 +81,8 @@ CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
                                      nStock,
                                      nFleet,
                                      nArea,
-                                     DoCalcCatch=0)
+                                     DoCalcCatch=0,
+                                     clone=Hist@OM@Control$Clone)
     
   
     

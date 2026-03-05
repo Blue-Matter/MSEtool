@@ -190,7 +190,8 @@ OptCatchability <- function(pars, HistSim, nStock, nFleet, nArea, YearsHist, Cat
                                                 nStock,
                                                 nFleet,
                                                 nArea,
-                                                DoCalcCatch=DoCalcCatch)
+                                                DoCalcCatch=DoCalcCatch,
+                                                clone=1)
   
 
   # Depletion objective

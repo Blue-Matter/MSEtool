@@ -41,8 +41,8 @@ CalcAgeSizeKey_ <- function(MeanAtAge, SDatAge, Classes, TruncSD, Dist) {
     .Call(`_MSEtool_CalcAgeSizeKey_`, MeanAtAge, SDatAge, Classes, TruncSD, Dist)
 }
 
-CalcFisheryDynamics_ <- function(HistIn, Years, AllYears, Sims, nSim, nStock, nFleet, nArea, DoCalcCatch = 1L, debug = 0L) {
-    .Call(`_MSEtool_CalcFisheryDynamics_`, HistIn, Years, AllYears, Sims, nSim, nStock, nFleet, nArea, DoCalcCatch, debug)
+CalcFisheryDynamics_ <- function(HistIn, Years, AllYears, Sims, nSim, nStock, nFleet, nArea, DoCalcCatch = 1L, debug = 0L, clone = 1L) {
+    .Call(`_MSEtool_CalcFisheryDynamics_`, HistIn, Years, AllYears, Sims, nSim, nStock, nFleet, nArea, DoCalcCatch, debug, clone)
 }
 
 combine <- function(list) {

@@ -47,8 +47,17 @@ Fleet <- function(Name = NULL,
                   Misc = list()) {
   
 
-  if (methods::is(Name, "om"))
-    return(Name@Fleet)
+  if (inherits(Name, "om")) {
+    if (inherits(Effort, 'effort'))
+      return(Name@Fleet)
+    if (inherits(Effort, 'numeric')) {
+      if (inherits(Catchability, 'catchability'))
+        return(Name@Fleet[[Effort]])
+      if (inherits(Catchability, 'numeric'))
+        return(Name@Fleet[[Effort]][[Catchability]])
+    }
+  }
+    
   
   methods::new(
     "fleet",

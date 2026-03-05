@@ -24,6 +24,9 @@ StartUp <- function(OM, nSim=NULL, silent=FALSE) {
   
   if (is.null(nSim))
     nSim <- OM@nSim
+  
+  if (is.null(OM@Control$Clone))
+    OM@Control$Clone <- 1
     
   OM |> 
     PopulateOM(silent = silent) |>

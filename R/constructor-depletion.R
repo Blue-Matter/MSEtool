@@ -75,6 +75,7 @@ Depletion <- function(Initial,
                       Reference = "B0") {
   
   
+  
   if (missing(Initial)) {
     object <- methods::new("depletion")
     object@Reference <- Reference
@@ -82,7 +83,7 @@ Depletion <- function(Initial,
   }
   
   if (inherits(Initial, 'stock'))
-    return(UnfishedDist@Depletion)
+    return(Initial@Depletion)
   
   
   methods::new("depletion",

@@ -70,14 +70,10 @@ PopulateSelectivity <- function(Selectivity,
     Ages, Length, Weight, Years, nArea, nSim, CalcAtLength, seed
   )
   
-  if (EmptyObject(Selectivity)) {
+  if (EmptyObject(Selectivity)) 
     cli::cli_abort('{.val Selectivity} is required but is currently empty')
-    # return(Length)
-  }
-  
-  if (CheckDigest(Selectivity, argList)) {
-    return(Selectivity)
-  }
+
+  if (CheckDigest(Selectivity, argList))  return(Selectivity)
   
   SetSeed(seed)
   
@@ -89,8 +85,6 @@ PopulateSelectivity <- function(Selectivity,
   )
   Selectivity@Model <- FindModel(Selectivity)
   
-  Selectivity <- PopulateMeanAtAge(Selectivity, Ages, Years, Length)
-  
   ModelClass <- getModelClass(Selectivity@Model)
   
   if (!is.null(ModelClass)) {
@@ -99,6 +93,7 @@ PopulateSelectivity <- function(Selectivity,
       L50 <- FindL50(Maturity)
       Selectivity@Pars$L5 <- ArrayMultiply(Selectivity@Pars$L5, L50)
       Selectivity@Pars$LFS <- ArrayMultiply(Selectivity@Pars$LFS, L50)
+      Selectivity@isRel <- FALSE
     }
     
     if (grepl("at-Length", ModelClass)) {

@@ -59,8 +59,12 @@ Stock <- function(Name = "New Stock Object",
     if (!'Stock' %in% slotNames(Name))
       cli::cli_abort(c('x'='No slot {.val Stock} found in object class {.val {class(Name)}}'))
     stock <- Name@Stock
-    if (is.numeric(CommonName))
+    
+    if (is.numeric(CommonName) && is.list(stock))
       return(stock[[CommonName]])
+    
+    if (is.numeric(CommonName) && !is.list(stock))
+      return(stock)
     
     return(Name@Stock)
   }

@@ -4,7 +4,8 @@ CalcFisheryDynamics <- function(Hist,
                                 Sims=NULL,
                                 DoCalcCatch=1,
                                 IdenticalSim=FALSE,
-                                debug = 0) {
+                                debug = 0,
+                                clone = NULL) {
   
   nStock <- nStock(Hist)
   nFleet <- nFleet(Hist)
@@ -12,13 +13,15 @@ CalcFisheryDynamics <- function(Hist,
   AllYears <- Years(Hist@OM)
   nSim <- nSim(Hist)
 
-  if (is.null(Years)) {
+  if (is.null(clone)) 
+    clone <- Hist@OM@Control$Clone
+  
+  if (is.null(Years)) 
     Years <- Years(Hist@OM,'H')
-  }
-  if (is.null(Sims)) {
+  
+  if (is.null(Sims)) 
     Sims <- 1:nSim
-  }
-    
+  
   
   if (IdenticalSim) { 
     # do only for first sim
@@ -31,7 +34,8 @@ CalcFisheryDynamics <- function(Hist,
                                    nFleet=nFleet,
                                    nArea=nArea,
                                    DoCalcCatch=DoCalcCatch,
-                                   debug=debug)
+                                   debug=debug,
+                                   clone=clone)
     
 
     for (sl in slotNames('timeseries')) {
@@ -52,7 +56,8 @@ CalcFisheryDynamics <- function(Hist,
                        nFleet=nFleet,
                        nArea=nArea,
                        DoCalcCatch=DoCalcCatch,
-                       debug=debug)
+                       debug=debug,
+                       clone=clone)
   
   Hist
 }
