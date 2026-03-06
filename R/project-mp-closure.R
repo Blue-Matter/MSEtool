@@ -28,6 +28,9 @@ Update_Closure <- function(Proj,
   if (length(Areas) < 2)
     return(Proj)
   
+  if (AllAdviceNull(AdviceSimList, 'Closure'))
+    return(Proj)
+  
   for (sim in seq_len(Proj@OM@nSim)) {
     AdviceList <- AdviceSimList[[sim]]
     LastAdviceList <- LastAdviceSimList[[sim]]
@@ -93,7 +96,6 @@ Update_Closure_Sim <- function(Proj,
     if (!inherits(Advice, 'advice')) next    
     if (is.null(Advice@Closure)) next
     if (UnchangedManagement(Advice, AdvicePrevious, 'Closure')) next
-
 
     CheckClosureDimensions(Closure=Advice@Closure, FleetNames, Areas)
     

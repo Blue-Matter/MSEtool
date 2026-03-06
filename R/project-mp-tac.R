@@ -25,6 +25,9 @@ Update_TAC <- function(Proj,
   
   TSIndex <- match(Year, c(YearsHist, YearsProj))
   
+  if (AllAdviceNull(AdviceSimList, 'TAC'))
+    return(Proj)
+  
   if (is.null(Proj@OM@Allocation) && !is.null(Proj@OM@CatchFrac))
     Proj@OM@Allocation <- Proj@OM@CatchFrac
 

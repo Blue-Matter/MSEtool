@@ -361,9 +361,9 @@ EmptyObject <- function(object) {
         empty[i] <- is.null(val) || length(val) == 0 || all(is.na(val))
       }
     }
-    return(prod(empty))
+    return(as.logical(prod(empty)))
   }
-  length(object) < 1 | all(is.na(object))
+  as.logical(length(object) < 1 | all(is.na(object)))
 }
 
 

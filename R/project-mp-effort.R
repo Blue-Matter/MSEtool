@@ -26,6 +26,9 @@ Update_Effort <- function(Proj,
 
   nSim <- Proj@OM@nSim
   
+  if (AllAdviceNull(AdviceSimList, 'Effort'))
+    return(Proj)
+  
   for (sim in seq_len(nSim)) {
     AdviceList <- AdviceSimList[[sim]]
     LastAdviceList <- LastAdviceSimList[[sim]]
@@ -94,32 +97,26 @@ Update_Effort_Sim <- function(Proj,
     
     if (!inherits(Advice, "advice"))                              next
     if (is.null(Advice@Effort))                                   next
+    
+    if (length(Advice@Effort)!=nFleet) 
+      Advice@Effort <- rep(Advice@Effort,nFleet)[seq_len(nFleet)]
+    
     if (UnchangedManagement(Advice, AdvicePrevious, "Effort"))    next
     
     # Convert from Relative to Absolute Effort
     Advice <- Convert_Effort_Abs(Proj, sim, Advice, YearsHist)
-    
+      
     # Distribute Effort over Areas if specified in MP 
-    temp <- Distribute_Effort_Area(Proj,
-                                   sim,
-                                   TSIndex,
-                                   Advice,
-                                   nFleet,
-                                   nArea)
-    
+    temp <- Distribute_Effort_Area(Proj, sim, TSIndex, Advice, nFleet, nArea)
     Distribution[[i]] <- temp$Distribution
     AdviceList[[i]] <- temp$Advice
   }
   
   # do Effort Regulation exist?
-  # Check whether any effort advice exists
-  effort_exists <- purrr::map(AdviceList, \(a) {
-    if (!inherits(a, 'advice'))
-      return(FALSE)
-    !is.null(a@Effort) 
-    return(logical(1) )
-  }) |> unlist()
-   
+  effort_exists <- purrr::map_lgl(AdviceList, \(a) {
+    inherits(a, 'advice') && !is.null(a@Effort)
+  })
+  
   if (!any(effort_exists))
     return(Proj)
   
@@ -133,16 +130,9 @@ Update_Effort_Sim <- function(Proj,
                                         ncol  = nFleet,
                                         byrow = TRUE)
   
-  
-  # Determine minimum effort by complex
-  EffortArray <- purrr::map(AdviceList, slot, 'Effort') |> List2Array() # nFleet x nComplex
-  MinEffortInd <- apply(EffortArray, 1, which.min) |> as.numeric() # complex with lowest effort
-  row_idx <- seq_len(nrow(EffortArray))
-  MinEffortValues <- EffortArray[cbind(row_idx, MinEffortInd)] # lowest prescribed effort by fleet
-  
   # Apply spatial distribution if specified
-  if (length(Distribution) && !all(is.null(unlist(Distribution)))) {
-    # TODO - review indexing for multi-complex spatial effort distribution
+  # TODO - review indexing for multi-complex spatial effort distribution
+  if (any(!sapply(Distribution, is.null))) {
     for (fl in seq_len(nFleet)) {
       fleet_ind <- MinEffortInd[fl]
       if (length(Distribution) >= fleet_ind)
@@ -150,7 +140,6 @@ Update_Effort_Sim <- function(Proj,
     }
   }
   
-
   Proj
 }
 
@@ -218,8 +207,9 @@ Convert_Effort_Abs <- function(Proj,
   
   if (Advice@EffType == 'Abs') return(Advice)
   
+ 
   LastHistEffort <- Proj@Effort[sim, length(YearsHist), ]
-  Advice@Effort  <- Advice@Effort * LastHistEffort / sum(LastHistEffort)
+  Advice@Effort  <- Advice@Effort * LastHistEffort 
   Advice
 }
 

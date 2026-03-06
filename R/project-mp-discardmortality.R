@@ -31,6 +31,9 @@ Update_DiscardMortality <- function(Proj,
   nFleet      <- length(FleetNames)
   FutureYears <- YearsProj[YearsProj >= Year]
   
+  if (AllAdviceNull(AdviceSimList, 'DiscardMortality'))
+    return(Proj)
+  
   # Expand DiscardMortality arrays to cover future projection years
   for (st in seq_len(nStock)) {
     for (fl in seq_len(nFleet)) {

@@ -66,8 +66,10 @@ UpdateMSEObject <- function(MSE, Proj, MPName, mp, YearsHist, YearsProj,
 
 AddPPD <- function(MSE, Proj, MPName, YearsHist, YearsProj) {
   
-  PPD <- Proj@Data |> AddYearDimnames(Years=c(YearsHist, YearsProj)) |>
-    SubsetYear(YearsProj)
+  PPD <- Proj@Data |> 
+    AddYearDimnames(Years=c(YearsHist, YearsProj)) |>
+    AddFleetDimnames(FleetNames = FleetNames(Proj)) |>
+    SubsetYear(Years=YearsProj)
   
   MSE@PPD[[MPName]] <- PPD
   MSE

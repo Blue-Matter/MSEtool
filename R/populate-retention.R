@@ -20,6 +20,7 @@
 #' @param silent Logical; if `TRUE`, suppresses informational messages.
 #' @param force Logical; if `TRUE`, forces re-population even if digest 
 #'   indicates object is current.
+#' @param ASKOverride Used internally. 
 #'
 #' @details
 #' `PopulateRetention()` handles population of retention-at-age, retention-
@@ -55,7 +56,8 @@ PopulateRetention <- function(Retention,
                               CalcAtLength = TRUE,
                               seed = NULL,
                               silent = FALSE,
-                              force = FALSE) {
+                              force = FALSE,
+                              ASKOverride = NULL) {
   
   argList <- list(Ages, Length, Years, nSim, CalcAtLength, seed)
   
@@ -89,7 +91,6 @@ PopulateRetention <- function(Retention,
   
   Retention@Pars <- StructurePars(Pars = Retention@Pars, nSim, Years)
   Retention@Model <- FindModel(Retention)
-  
   
   ModelClass <- getModelClass(Retention@Model)
   
@@ -134,7 +135,12 @@ PopulateRetention <- function(Retention,
   Retention <- MeanAtWeight2MeanAtAge(Retention, Weight, max1 = FALSE)
   
   if (CalcAtLength) {
-    Retention <- MeanAtAge2MeanAtLength(Retention, Length, replace = FALSE)
+    Retention <- MeanAtAge2MeanAtLength(
+      object = Retention, 
+      Length = Length, 
+      replace = FALSE, 
+      Years = Years,
+      ASK = ASKOverride)
   }
   
   # Add Area dimension

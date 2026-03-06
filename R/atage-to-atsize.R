@@ -28,12 +28,14 @@ LinearInterpolate_Age <- function(array, nSubAges=12) {
 #' @param object Any populated object with slots: `MeanAtAge` and `MeanAtLength` or `MeanAtWeight`
 #' @param Length A [Length()] or [Weight()] object
 #' @param max1 Logical. Standardize so that the maximum value is 1? 
+#' @param Years Numeric vector of years. Optional
+#' @param ASKOverride Optional Age-Size Key. Otherwise it uses the one from Length or Weight object. 
+#' Only used to avoid repeated calls to `CalcAgeSizeKey`
 #' 
 #' Converting from at-age to at-size requires a sufficiently high temporal resolution
 #' to ensure that the `MeanAtAge` schedule can fill all the `MeanAtLength` classes
-#' 
-AtAge2AtSize <- function(object, Length, max1=TRUE) {
-  # TODO extend Years and Sim dimensions as needed 
+#' @keywords internal
+AtAge2AtSize <- function(object, Length, max1=TRUE, Years=NULL, ASKOverride=NULL) {
   
   if (!is.null(object@MeanAtLength)) {
     return(object)
@@ -58,23 +60,27 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
     
   }
   
-
   AgeClasses <- dimnames(ASK)[['Age']] |> as.numeric()
   nAge <- length(AgeClasses)
   
   LengthCVatAge <- ExtendAges(LengthCVatAge, AgeClasses)
   
-  if (nAge < 50) {  
+  if (nAge < 50 ) {  
     # Increases the temporal resolution of `ObjectMeanAtAge` and `ASK`
     # by linear interpolate Mean length-at-age and CV length-at-age
     ObjectMeanAtAge <- LinearInterpolate_Age(array=object@MeanAtAge)
-    ASK <- CalcAgeSizeKey(MeanAtAge=LinearInterpolate_Age(LengthMeanAtAge),
-                          CVatAge=LinearInterpolate_Age(LengthCVatAge),
-                          Classes=Length@Classes,
-                          TruncSD=Length@TruncSD,
-                          Dist=Length@Dist,
-                          silent=TRUE)
-    
+    if (is.null(ASKOverride)) {
+      ASK <- CalcAgeSizeKey(MeanAtAge=LinearInterpolate_Age(LengthMeanAtAge),
+                            CVatAge=LinearInterpolate_Age(LengthCVatAge),
+                            Classes=Length@Classes,
+                            TruncSD=Length@TruncSD,
+                            Dist=Length@Dist,
+                            silent=TRUE)
+      
+    } else {
+      ASK <- ASKOverride
+    }
+      
   }
 
   # Sims 
@@ -89,13 +95,13 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
   }
  
   # Years
-  Years <- c(dimnames(object@MeanAtAge)[['Year']], dimnames(ASK)[['Year']]) |>
+  if (is.null(Years)) 
+    Years <- c(dimnames(object@MeanAtAge)[['Year']], dimnames(ASK)[['Year']]) |>
     as.numeric() |> unique() |> sort()
   
   ASK <- ExtendYears(ASK, Years) 
   ObjectMeanAtAge <- ExtendYears(array=ObjectMeanAtAge, Years) 
   
-
   dnames <- dimnames(object@MeanAtAge)
   names(dnames)[2] <- 'Class'
   dnames[['Class']] <- Length@Classes
@@ -126,7 +132,6 @@ AtAge2AtSize <- function(object, Length, max1=TRUE) {
   
   MeanAtLength <- array(NA, dim=out_dim,
                         dimnames=dnames)
-  
   
   for (s in seq_len(nSim)) {
     object_sim <- min(s, dim(ObjectMeanAtAge)[1])

@@ -94,7 +94,7 @@ PopulateDiscardMortality <- function(DiscardMortality,
   DiscardMortality <- MeanAtLength2MeanAtAge(DiscardMortality, Length)
   
   if (CalcAtLength) {
-    DiscardMortality <- MeanAtAge2MeanAtLength(DiscardMortality, Length, replace = FALSE)
+    DiscardMortality <- MeanAtAge2MeanAtLength(DiscardMortality, Length, replace = FALSE, Years=Years)
   }
   
   # Add Area dimension

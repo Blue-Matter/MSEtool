@@ -20,6 +20,7 @@
 #' @param silent Logical. If `TRUE`, suppress informational messages.
 #' @param CheckMaxValue Logical. If `TRUE`, ensure selectivity has a maximum
 #' value of 1 across age classes.
+#' @param ASKOverride Used internally.
 #'
 #' @details
 #' `PopulateSelectivity()` performs the following steps:
@@ -64,7 +65,8 @@ PopulateSelectivity <- function(Selectivity,
                                 CalcAtLength = TRUE,
                                 seed = NULL,
                                 silent = FALSE,
-                                CheckMaxValue = TRUE) {
+                                CheckMaxValue = TRUE,
+                                ASKOverride = NULL) {
   
   argList <- list(
     Ages, Length, Weight, Years, nArea, nSim, CalcAtLength, seed
@@ -139,7 +141,9 @@ PopulateSelectivity <- function(Selectivity,
     Selectivity <- MeanAtAge2MeanAtLength(
       object = Selectivity,
       Length = Length,
-      replace = FALSE
+      replace = FALSE,
+      Years = Years,
+      ASK = ASKOverride
     )
   }
   

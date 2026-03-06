@@ -16,7 +16,8 @@ PopulateSelectivity(
   CalcAtLength = TRUE,
   seed = NULL,
   silent = FALSE,
-  CheckMaxValue = TRUE
+  CheckMaxValue = TRUE,
+  ASKOverride = NULL
 )
 }
 \arguments{
@@ -48,6 +49,8 @@ values from age-based arrays.}
 
 \item{CheckMaxValue}{Logical. If \code{TRUE}, ensure selectivity has a maximum
 value of 1 across age classes.}
+
+\item{ASKOverride}{Used internally.}
 }
 \value{
 A populated \code{\link[=Selectivity]{Selectivity()}} object.

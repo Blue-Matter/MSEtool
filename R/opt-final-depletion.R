@@ -38,7 +38,7 @@ OptFinalDepletion <- function(Hist, silent=FALSE) {
   YearsHist <- Years(Hist@OM, 'Historical')
   
   # List length nSim, each with a Hist object with 1 sim
-  HistSim_List <- lapply(1:nSim, function(i) Subset(Hist, i))
+  HistSim_List <- lapply(seq_len(nSim), function(i) Subset(Hist, i))
   
   # HistSim <- HistSim_List[[1]] # for debugging
   

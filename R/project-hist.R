@@ -21,7 +21,7 @@ Project_hist <- function(Hist,
     cli::cli_text('')
     cli::cli_alert_info(' Starting  {.val Project} for OM {.val {Hist@OM@Name}}')
   }
-  
+
   # ---- Reduce nSim if provided ----
   Proj <- Hist |> ReduceNSim(nSim)
   
@@ -32,7 +32,9 @@ Project_hist <- function(Hist,
   Proj <- ExtendHist(Proj, Years = c(YearsHist, YearsProj))
   
   # ---- Populate Number-at-Age at Beginning of Projection Year ----
-  Proj <- CalcFisheryDynamics(Proj, Years=c(tail(YearsHist,1))) 
+  Proj <- CalcFisheryDynamics(Proj, 
+                              Years=c(tail(YearsHist,1)), 
+                              clone=1) 
 
   # ---- Create MSE Object ----
   MSE <- Hist2MSE(Proj, MPNames = MPs)

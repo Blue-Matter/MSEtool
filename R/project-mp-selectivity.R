@@ -1,6 +1,8 @@
 #' Update selectivity or retention across all simulations
 #'
-#'
+#' Expands selectivity/retention arrays for future projection years then
+#' delegates per-simulation updates to [Update_Selectivity_Sim()].
+#' 
 #' @param Proj A `Proj` object.
 #' @param Year Integer. Current projection year.
 #' @param AdviceSimList Nested list of `advice` objects, indexed by sim then complex.
@@ -29,9 +31,13 @@ Update_Selectivity <- function(Proj,
   nSim        <- Proj@OM@nSim
   nStock      <- nStock(Proj)
   nFleet      <- length(FleetNames)
+  nArea       <- length(Areas)
   FutureYears <- YearsProj[YearsProj >= Year]
   
-  # Expand Selectivity/Retention Arrays
+  if (AllAdviceNull(AdviceSimList, type))
+    return(Proj)
+  
+  # Expand Selectivity/Retention arrays to cover future years
   for (st in seq_len(nStock)) {
     for (fl in seq_len(nFleet)) {
       target <- slot(Proj@OM@Fleet[[st]][[fl]], type)
@@ -44,19 +50,17 @@ Update_Selectivity <- function(Proj,
   
   
   for (sim in seq_len(nSim)) {
-    AdviceList <- AdviceSimList[[sim]]
-    LastAdviceList <- LastAdviceSimList[[sim]]
-    
     Proj <- Update_Selectivity_Sim(
       Proj           = Proj,
       sim            = sim,
       FutureYears    = FutureYears,
-      AdviceList     = AdviceList,
-      LastAdviceList = LastAdviceList,
+      AdviceList     = AdviceSimList[[sim]],
+      LastAdviceList = LastAdviceSimList[[sim]],
+      FleetNames     = FleetNames,
       nFleet         = nFleet,
       Complexes      = Proj@OM@Complexes,
       nArea          = nArea,
-      nSim           = nSim, 
+      nSim           = nSim,
       type           = type
     )
   }
@@ -75,6 +79,7 @@ Update_Selectivity <- function(Proj,
 #' @param FutureYears Integer vector of years from current year to end of projection.
 #' @param AdviceList List of `advice` objects for this simulation, one per complex.
 #' @param LastAdviceList Same structure as `AdviceList` for the previous year.
+#' @param FleetNames Character vector of fleet names.
 #' @param nFleet Integer. Number of fleets.
 #' @param Complexes List mapping complex indices to stock indices.
 #' @param nArea Integer. Number of areas.
@@ -87,15 +92,21 @@ Update_Selectivity_Sim <- function(Proj,
                                    FutureYears,
                                    AdviceList,
                                    LastAdviceList,
+                                   FleetNames,
                                    nFleet,
                                    Complexes,
                                    nArea,
                                    nSim,
                                    type=c('Selectivity', 'Retention')) {
   
-  type <- match.arg(type, c('Selectivity', 'Retention'))
-  populate <- if (type == "Selectivity") PopulateSelectivity else PopulateRetention
+  type <- match.arg(type)
   
+  populate  <- list(Selectivity=PopulateSelectivity,
+                    Retention=PopulateRetention)[[type]]
+  age_misc  <- list(Selectivity='SelAgeList',
+                    Retention='RetAgeList')[[type]]
+  size_misc <- list(Selectivity='SelSizeList',
+                    Retention='RetSizeList')[[type]]
   
 
   for (i in seq_along(AdviceList)) {
@@ -107,33 +118,57 @@ Update_Selectivity_Sim <- function(Proj,
     if (is.null(slot(Advice,type))) next
     if (UnchangedManagement(Advice, AdvicePrevious, slotName=type)) next
     
-    SelectList <- slot(Advice, type) # either selectivity or retention
+    SelectList <- slot(Advice, type) 
     
     if (length(SelectList) > 1 && length(SelectList) != nFleet)
       stop("Advice@", type, " must be a `", type, "()` object or a list of ",
            "`", type, "()` objects of length nFleet (", nFleet, ")")
     
     for (st in stocks) {
-      Ages     <- Proj@OM@Stock[[st]]@Ages
-      Length   <- SubsetSim(Proj@OM@Stock[[st]]@Length,   sim)
-      Weight   <- SubsetSim(Proj@OM@Stock[[st]]@Weight,   sim)
-      Maturity <- SubsetSim(Proj@OM@Stock[[st]]@Maturity, sim)
+      Stock  <- Proj@OM@Stock[[st]]
+      Ages   <- Stock@Ages
+      Length <- Subset(Stock@Length, Sims=sim, Years=FutureYears)
+      Weight <- Subset(Stock@Weight, Sims=sim, Years=FutureYears)
+      Maturity <- Subset(Stock@Maturity, Sims=sim, Years=FutureYears)
+      
+      ALK <- Length@ALK 
+      
+      if (length(Ages)< 50) {
+        # Increases the temporal resolution of `ObjectMeanAtAge` and `ASK`
+        # by linear interpolate Mean length-at-age and CV length-at-age
+        
+        ALK <- CalcAgeSizeKey(MeanAtAge=LinearInterpolate_Age(Length@MeanAtAge),
+                              CVatAge=LinearInterpolate_Age(Length@CVatAge),
+                              Classes=Length@Classes,
+                              TruncSD=Length@TruncSD,
+                              Dist=Length@Dist,
+                              silent=TRUE)
+      }
+      
+
       
       
       for (fl in seq_along(FleetNames)) {
         select <- if (is.list(SelectList)) SelectList[[fl]] else SelectList
         
-        select <- populate(
-          select,
-          Ages, Length, Weight, Maturity,
-          nSim        = 1,
-          Years       = FutureYears,
-          nArea       = nArea,
-          CalcAtLength = TRUE,
-          silent      = TRUE
-        )
+        # Reshape mean-at-x slots to [nClass, nArea] then add Sim/Year dims
+        select <- ProcessSelectMeanAtAge(select,    Ages,   nArea, type, Year=FutureYears[1])
+        select <- ProcessSelectMeanAtLength(select, Length, nArea, type, Year=FutureYears[1])
+        select <- ProcessSelectMeanAtWeight(select, Weight, nArea, type, Year=FutureYears[1])
         
-        select@MeanAtAge    <- set_sim_dimname(select@MeanAtAge,    sim) |> 
+        select <- populate(select,
+                           Ages     = Ages,
+                           Length   = Length,
+                           Weight   = Weight,
+                           Maturity = Maturity,
+                           nSim     = 1,
+                           Years    = FutureYears,
+                           nArea    = nArea,
+                           CalcAtLength = TRUE,
+                           silent   = TRUE,
+                           ASKOverride = ALK)
+        
+        select@MeanAtAge <- set_sim_dimname(select@MeanAtAge, sim) |> 
           ExtendAreas(1:nArea) |> 
           ExtendYears(FutureYears)
         
@@ -145,20 +180,19 @@ Update_Selectivity_Sim <- function(Proj,
           ExtendAreas(1:nArea) |> 
           ExtendYears(FutureYears)
         
-
         target <- slot(Proj@OM@Fleet[[st]][[fl]], type)
         ArrayFill(target@MeanAtAge)    <- select@MeanAtAge
         ArrayFill(target@MeanAtLength) <- select@MeanAtLength
         ArrayFill(target@MeanAtWeight) <- select@MeanAtWeight
         slot(Proj@OM@Fleet[[st]][[fl]], type) <- target
         
-        if (type=='Selectivity') {
-          ArrayFill(Proj@Misc$SelAgeList[[st]]) <- DropDimension(select@MeanAtAge, 'Fleet', FALSE)
-          ArrayFill(Proj@Misc$SelSizeList[[st]][[fl]]) <- select@MeanAtLength
-        } else {
-          ArrayFill(Proj@Misc$RetAgeList[[st]]) <- DropDimension(select@MeanAtAge, 'Fleet', FALSE)
-          ArrayFill(Proj@Misc$RetSizeList[[st]][[fl]]) <- select@MeanAtLength
-        }
+        ArrayFill(Proj@Misc[[age_misc]][[st]]) <- AddDimension(select@MeanAtAge,
+                                                               'Fleet', 
+                                                               val=FleetNames[fl],
+                                                               pos=4)
+        
+        ArrayFill(Proj@Misc[[size_misc]][[st]][[fl]])   <- select@MeanAtLength
+        
         
       } # end fleet loop
     }  # end stock loop
@@ -183,6 +217,8 @@ Update_Retention <- function(Proj,
                              FleetNames,
                              StockNames) {
   
+  type <- 'Retention'
+  
   Update_Selectivity(Proj,
                      Year, 
                      AdviceSimList,
@@ -192,7 +228,7 @@ Update_Retention <- function(Proj,
                      Areas, 
                      FleetNames,
                      StockNames,
-                     type='Retention')
+                     type = type)
   
 }
 

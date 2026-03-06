@@ -165,10 +165,15 @@ CheckArrays <- function(array1, array2) {
 #' @export
 `ArrayFill<-` <- function(object, value) {
 
-  # if (is.null(object)) {
-  #   object <- value
-  #   return(object)
-  # }
+  if (is.null(value)) 
+    return(object)
+  
+  if (is.null(object)) {
+    object <- value
+    return(object)
+  }
+  
+
   
   if (is.null(dimnames(object)) || is.null(dimnames(value))) {
     cli::cli_abort('`object` and `value` must have named dimension')

@@ -4,7 +4,14 @@
 \alias{Subset}
 \title{Subset an object by simulation and/or year}
 \usage{
-Subset(object, Sims = NULL, Years = NULL, Ages = NULL, Impute = TRUE)
+Subset(
+  object,
+  Sims = NULL,
+  Years = NULL,
+  Ages = NULL,
+  MPs = NULL,
+  Impute = TRUE
+)
 }
 \arguments{
 \item{object}{An object to be subset. Supported types include:
@@ -24,6 +31,9 @@ If \code{NULL}, no subsetting by year is performed.}
 \item{Ages}{Numeric vector of age classes to retain.
 If \code{NULL}, no subsetting by age is performed.}
 
+\item{MPs}{Numeric vector of MPs to retain.
+If \code{NULL}, no subsetting by MP is performed.}
+
 \item{Impute}{Logical; only relevant when subsetting by \code{Years}.
 If \code{TRUE} (default), years not present in the object may be imputed using the
 nearest available past year.
@@ -42,7 +52,8 @@ If a slot named \code{nSim} is present, it is updated to reflect the
 number of retained simulations.}
 }
 \value{
-An object of the same class as \code{object}, subset according to \code{Sims}, \code{Years}, and/or \code{Ages}.
+An object of the same class as \code{object}, subset according to \code{Sims}, \code{Years},
+\code{Ages} and/or \code{MPs}.
 }
 \description{
 Recursively subsets an object along the \code{Sim}, \code{Year}, and/or \code{Age} dimensions.

@@ -18,15 +18,12 @@
 #' @keywords internal
 StartUp <- function(OM, nSim=NULL, silent=FALSE) {
   CheckClass(OM)
-                 
+     
   if (!is.null(OM@Herm)) 
     stop('Herm not done yet!')
   
-  if (is.null(nSim))
-    nSim <- OM@nSim
-  
   if (is.null(OM@Control$Clone))
-    OM@Control$Clone <- 1
+    OM@Control$Clone <- 0
     
   OM |> 
     PopulateOM(silent = silent) |>

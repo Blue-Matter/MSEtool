@@ -44,8 +44,7 @@ Project_MP <- function(Proj,
     Update_Effort           = Update_Effort,
     Update_TAC              = Update_TAC
   )
-  
-  
+
   for (ts in seq_along(YearsProj)) {
     
     if (!silent) cli::cli_progress_update()
@@ -94,6 +93,13 @@ Project_MP <- function(Proj,
     # Save Advice@Log to Proj@Log for each sim and stock
     Proj@Log[[as.character(Year)]] <- ExtractAdviceLogs(AdviceSimList)
     
+    # Check all failed 
+    AllSimsFailed <- purrr::map(Proj@Log[[as.character(Year)]], \(sim) {
+      purrr::map(sim, \(i) !is.null(i))
+    }) |> unlist() |> all()
+    
+    if (AllSimsFailed) break
+    
     # Save TAC and Effort
     Proj@Data <- purrr::map2(Proj@Data, AdviceSimList,\(DataList, AdviceList) {
       if (!inherits(AdviceList, 'try-error'))
@@ -109,14 +115,11 @@ Project_MP <- function(Proj,
     
     for (fun_name in names(update_funs)) {
    
-      # tictoc::tic(fun_name)
       result <- run_update_step(fun=update_funs[[fun_name]], 
                                 fun_name,
                                 Proj, Year, AdviceSimList, LastAdviceSimList,
                                 YearsHist, YearsProj, Areas, FleetNames, StockNames)
 
-      # tictoc::toc()
-      
       if (inherits(result, "update_error")) {
         Error        <- TRUE
         ErrorMessage <- sprintf("Error in %s (Year %d): %s",
@@ -144,9 +147,14 @@ Project_MP <- function(Proj,
                       Error, ErrorMessage)
   
   if (!Error) 
-    MSE <- UpdateMSEObject(MSE, Proj, MPName, 
+    MSE <- UpdateMSEObject(MSE, 
+                           Proj,
+                           MPName, 
                            mp, 
-                           YearsHist, YearsProj, StockNames, FleetNames)
+                           YearsHist, 
+                           YearsProj, 
+                           StockNames, 
+                           FleetNames)
   
   MSE
 }

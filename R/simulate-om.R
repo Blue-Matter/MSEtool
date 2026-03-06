@@ -1,4 +1,3 @@
-# TODO  add year broadcast in C++
 
 Simulate_om <- function(OM = NULL,
                         parallel = FALSE,
@@ -16,18 +15,16 @@ Simulate_om <- function(OM = NULL,
   # ---- Initial Checks and Setup ----
   StartTime <- Sys.time()
   OnExit()
-  CheckClass(OM) # confirm that OM is class `om`
+  CheckClass(OM)
   OM <- UpdateObject(OM)
+  OM <- StartUp(OM, nSim, silent=silent)
   
-  # Populate OM, reduce nSim if applicable, checks and warning messages
-  OM <- StartUp(OM, nSim, silent = silent)
-
+  if (is.null(OM@Name) || nchar(OM@Name) < 2)
+    OM@Name <- 'Unnamed OM'
+  
   HistYears <- Years(OM, "Historical")
   ProjYears <- Years(OM, "Projection")
   IdenticalHist <- IdenticalSims(OM, ignore='RecDevProj')
-  
-  if (is.null(OM@Name) || nchar(OM@Name)<2)
-    OM@Name <- 'Unnamed OM'
   
   if (!silent) {
     cli::cli_text('')
@@ -85,26 +82,20 @@ Simulate_om <- function(OM = NULL,
   
   
   # ---- Historical Population Dynamics ----
-  Hist <- CalcFisheryDynamics(Hist, IdenticalSim=IdenticalHist)
-
+  Hist <- CalcFisheryDynamics(Hist, IdenticalSim=IdenticalHist, clone = 1)
+  
   if (!silent)
     cli::cli_alert_success("Simulated Historical Fishery")
 
-  # ---- Calculate Reference Yield ----
-  type <- NULL
-  if (DoRefLandings) type <- c(type, "Landings")
-  if (DoRefRemovals) type <- c(type, "Removals")
+  # ---- Reference Yield ----
+  ref_types <- c(
+    if (DoRefLandings) 'Landings',
+    if (DoRefRemovals) 'Removals'
+  )
+  if (length(ref_types) > 0)
+    Hist <- CalcRefYield(Hist, type=ref_types, Units='Biomass', silent=silent)
   
-  if (length(type) > 0) {
-    Hist <- CalcRefYield(Hist,
-                         type=type,
-                         Units = "Biomass",
-                         silent = silent)
-    
-  }
-  
-  # ---- Remove temporary lists and arrays from Hist@Misc ----
-  # see PrepHistMisc above
+  # ---- Restore Hist@Misc ----
   Hist <- RestoreHistMisc(Hist)
 
   # ---- Condition Observation Object on Real Fishery Data ----
@@ -113,20 +104,18 @@ Simulate_om <- function(OM = NULL,
   
   # ---- Historical Fishery Data ----
   
-  if (DoGenerateData) 
-    Hist <- GenerateHistoricalData(Hist, silent = silent)
-  
+  if (DoGenerateData && CheckObs(OM, silent))
+    Hist <- GenerateHistoricalData(Hist, silent=silent)
+    
   # ---- Reduce Dimension Size ----
   Hist <- ReduceHist(Hist, Reduce)
-  
   
   # ---- Report Run Time ----
   EndTime <- Sys.time()
   
-  
-  elapse_auto <- round(difftime(time1 = EndTime, time2 = StartTime, units = "auto"),2) |> format()
+  elapsed <- round(difftime(Sys.time(), StartTime, units='auto'), 2) |> format()
   if (!silent)
-    cli::cli_alert_success('Completed {.val Simulate} for OM {.val {OM@Name}} ({elapse_auto})') 
+    cli::cli_alert_success('Completed {.val Simulate} for OM {.val {OM@Name}} ({elapsed})')
   
   SetDigest(Hist)
 }

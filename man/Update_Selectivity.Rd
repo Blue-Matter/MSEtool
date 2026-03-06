@@ -43,6 +43,7 @@ consistent \code{update_funs} signature).}
 Updated \code{Proj} object.
 }
 \description{
-Update selectivity or retention across all simulations
+Expands selectivity/retention arrays for future projection years then
+delegates per-simulation updates to \code{\link[=Update_Selectivity_Sim]{Update_Selectivity_Sim()}}.
 }
 \keyword{internal}

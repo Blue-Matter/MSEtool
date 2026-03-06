@@ -119,6 +119,9 @@ inline void CalcSpawnProduction(
           }
         }
       } 
+      // if (y==0 && sim ==0)
+      //   Rcpp::Rcout << "SP = " << SP << "\n";
+      
       SProduction(sim, st, y) = SP;
       SBiomass(sim, st, y)    = SB;
     } // end sim loop

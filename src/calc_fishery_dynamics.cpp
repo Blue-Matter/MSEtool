@@ -43,17 +43,13 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
   check_years_argument(AllYears, "AllYears");
   NumericVector all_years(AllYears);
   
-  if (nSim < 1)
-    Rcpp::stop("nSim < 1");
+  if (nSim < 1) Rcpp::stop("nSim < 1");
   
-  if (nStock < 1)
-    Rcpp::stop("nStock < 1");
+  if (nStock < 1) Rcpp::stop("nStock < 1");
   
-  if (nFleet < 1)
-    Rcpp::stop("nFleet < 1");
+  if (nFleet < 1) Rcpp::stop("nFleet < 1");
   
-  if (nArea < 1)
-    Rcpp::stop("nArea < 1");
+  if (nArea < 1) Rcpp::stop("nArea < 1");
   
   // zero index Sims
   NormalizeSims(Sims, nSim);
@@ -61,15 +57,24 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
   // Clone hist object if required (clone=1, default)
   // clone=0 is faster but mutates HistIn directly - only use when 
   // the caller does not need HistIn preserved after this call
-  Rcpp::S4 Hist = clone ? Rcpp::clone(HistIn) : HistIn;
-
+  // Rcpp::S4 Hist = clone ? Rcpp::clone(HistIn) : HistIn;
+  
+  Rcpp::S4 Hist = clone ? Rcpp::clone(HistIn) : Rcpp::S4(Rf_shallow_duplicate(HistIn));
   // Always ensure Effort and Distribution are independent copies,
   if (!clone) {
+    SEXP effort_dup = PROTECT(Rf_duplicate(HistIn.slot("Effort")));
+    SEXP dist_dup   = PROTECT(Rf_duplicate(HistIn.slot("Distribution")));
+    SEXP num_dup    = PROTECT(Rf_duplicate(HistIn.slot("Number")));
+    
+    Hist.slot("Effort")       = effort_dup;
+    Hist.slot("Distribution") = dist_dup;
+    Hist.slot("Number")       = num_dup;
+    
+    UNPROTECT(3);
+    
     // Hist.slot("Effort")       = Rcpp::clone(as<NumericVector>(HistIn.slot("Effort")));
     // Hist.slot("Distribution") = Rcpp::clone(as<NumericVector>(HistIn.slot("Distribution")));
-    Hist.slot("Effort")       = Rf_duplicate(HistIn.slot("Effort"));
-    Hist.slot("Distribution") = Rf_duplicate(HistIn.slot("Distribution"));
-    
+    // Hist.slot("Number")         = DeepCloneList(as<List>(HistIn.slot("Number")));
   }
   
   // create HistView object 
@@ -332,15 +337,17 @@ Rcpp::S4 CalcFisheryDynamics_(Rcpp::S4 HistIn,
     if (debug)
       Rcpp::Rcout << "End CalcOverallF \n";
     
-    // Back calculate effort (only needed if maxF constraint is triggered)
-    BackCalculateEffort(y,
-                        Sims,
-                        nSim,
-                        hv.FInteract,
-                        hv.q,
-                        hv.Effort,
-                        nStock,
-                        nFleet);
+    // // Back calculate effort (only needed if maxF constraint is triggered)
+    // if (DoBackCalcEffort)
+    //   BackCalculateEffort(y,
+    //                       Sims,
+    //                       nSim,
+    //                       hv.FInteract,
+    //                       hv.q,
+    //                       hv.Effort,
+    //                       nStock,
+    //                       nFleet);
+    
     
   
     // maxF constraint now applied within each area

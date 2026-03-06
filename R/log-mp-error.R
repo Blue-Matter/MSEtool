@@ -20,14 +20,13 @@ Log_MPError <- function(Advice, MPName, Data, Sim, Year) {
   if (inherits(Advice, 'advice')) return(Advice)
     
   
-  
   if (!inherits(Advice, 'try-error')) {
-    return(paste0("\nMP `", MPName, " `did not return an `Advice()` object\nData: ",  
+    return(paste0("\nMP `", MPName, "` did not return an `Advice()` object\nData: ",  
                 Data@Name, 
                 "\nSimulation: ", Sim, 
                 '\nYear: ', Year))
   }
-  return(paste0("\nMP `", MPName, " Error\nData: ",  
+  return(paste0("\nMP `", MPName, "` Error\nData: ",  
               Data@Name, 
               "\nSimulation: ", Sim, 
               '\nYear: ', Year,

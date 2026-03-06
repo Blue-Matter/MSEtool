@@ -1,3 +1,31 @@
+
+RunMPIfNeeded <- function(Year,
+                          ManagementYears,
+                          LastAdviceSimList,
+                          MPName,
+                          MPfunction,
+                          DataSimList,
+                          Proj,
+                          YearsProj,
+                          mp,
+                          FleetNames,
+                          Areas) {
+  
+  if (!Year %in% ManagementYears) return(LastAdviceSimList)
+  
+  CalcAdvice(
+    MPName,
+    MPfunction,
+    DataSimList,
+    Year,
+    Proj,
+    YearsProj,
+    mp,
+    FleetNames,
+    Areas
+  )
+}
+
 #' Calculate MP Advice for All Simulations
 #'
 #' Runs a management procedure (`MP`) across all simulations in `DataSimList`
@@ -90,33 +118,59 @@ CalcAdvice_Sim_MP <- function(x, MPName,
   AdviceList
 }
 
-
+#' Add Population Dynamics Data to a Data Object
+#'
+#' Optionally populates `Data@Misc$DataOM` with historical population dynamics
+#' from a [Hist()] object, controlled by `OM@Control$DataOM`. Supports adding
+#' all slots (`TRUE`), a named subset of slots (named list), or nothing (`NULL`
+#' or unrecognised value). Warnings for invalid configuration are shown once
+#' only, on the first simulation, year, and MP.
+#'
+#' @param Data A `Data` S4 object.
+#' @param Hist A [Hist()] object containing population dynamics.
+#' @param x Integer. Current simulation index.
+#' @param Year Integer or `NULL`. Current projection year. Used to gate
+#'   one-time warnings.
+#' @param Years Integer vector or `NULL`. All projection years. Used to gate
+#'   one-time warnings.
+#' @param mp Integer. Current MP index. Used to gate one-time warnings.
+#'   Default is `1`.
+#'
+#' @return The `Data` object, with `Data@Misc$DataOM` populated if
+#'   `OM@Control$DataOM` is set, otherwise unchanged.
+#' @keywords internal
 AddPopDyn <- function(Data, Hist, x, Year=NULL, Years=NULL, mp=1) {
-  if (!length(Hist@OM@Control$DataOM)) 
+  
+  if (!length(Hist@OM@Control$DataOM))
     return(Data)
   
   Hist@Data <- list()
   
-  if (is.logical(Hist@OM@Control$DataOM)) {
-    if (Hist@OM@Control$DataOM) 
-      Data@Misc$DataOM <- SubsetSim(Hist, x) # add everything
+  warn_once <- !is.null(Year) && x == 1 && Year == min(Years) && mp == 1
+  
+  if (isTRUE(Hist@OM@Control$DataOM)) {
+    # Add all slots
+    Data@Misc$DataOM <- SubsetSim(Hist, x)
     
   } else if (is.list(Hist@OM@Control$DataOM)) {
+    # Add named subset of slots
     nms <- names(Hist@OM@Control$DataOM)
     Data@Misc$DataOM <- new('hist')
+    
     for (nm in nms) {
-      
-      if (!is.null(Year) && !nm %in% slotNames('hist') && x==1 && Year == min(Years) && mp==1) {
-        cli::cli_alert_warning("{.val {nm}} not a valid slot name for `Hist` object. Ignoring")
+      if (!nm %in% slotNames('hist')) {
+        if (warn_once)
+          cli::cli_alert_warning("{.val {nm}} is not a valid slot name for `Hist`. Ignoring.")
       } else {
-        slot(Data@Misc$DataOM, nm) <- slot(Hist,nm) |> SubsetSim(Sims=x)
+        slot(Data@Misc$DataOM, nm) <- slot(Hist, nm) |> SubsetSim(Sims=x)
       }
     }
+    
   } else {
-    if (!is.null(Year) && x==1 && Year == min(Years) && mp==1){
-      cli::cli_alert_warning('`OM@Control$DataOM` must be either TRUE or a named list')
-    }
-      
+    if (warn_once)
+      cli::cli_alert_warning('`OM@Control$DataOM` must be `TRUE` or a named list.')
   }
+  
   Data
 }
+

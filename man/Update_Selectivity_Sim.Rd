@@ -10,6 +10,7 @@ Update_Selectivity_Sim(
   FutureYears,
   AdviceList,
   LastAdviceList,
+  FleetNames,
   nFleet,
   Complexes,
   nArea,
@@ -27,6 +28,8 @@ Update_Selectivity_Sim(
 \item{AdviceList}{List of \code{advice} objects for this simulation, one per complex.}
 
 \item{LastAdviceList}{Same structure as \code{AdviceList} for the previous year.}
+
+\item{FleetNames}{Character vector of fleet names.}
 
 \item{nFleet}{Integer. Number of fleets.}
 

@@ -128,4 +128,18 @@ inline void NormalizeSims(std::vector<int>& Sims, int nSim) {
   }
 }
 
+inline Rcpp::List DeepCloneList(const Rcpp::List& x) {
+  int n = x.size();
+  Rcpp::List out(n);
+  for (int i = 0; i < n; i++) {
+    SEXP elem = PROTECT(Rf_duplicate(x[i]));
+    out[i] = elem;
+    UNPROTECT(1);
+  }
+  // preserve names if present
+  if (x.hasAttribute("names"))
+    out.attr("names") = x.attr("names");
+  return out;
+}
+
 #endif // HELPERS_H

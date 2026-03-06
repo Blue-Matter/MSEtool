@@ -34,7 +34,7 @@ inline void CalcSpatialDistribution(
   // ---------------
   // Checks
   // ---------------
-
+  
   if ((int)Number.size() < nStock ||
       (int)WeightFleet.size() < nStock ||
       (int)SelAge.size() < nStock ||
@@ -55,11 +55,11 @@ inline void CalcSpatialDistribution(
         Distribution(sim, y, fl, 0) = 1.0;
     return;
   }
-
+  
   // Util array: sim, fleet, area 
   const std::array<int,3> dim = {nSim, nFleet, nArea};
   Array3D Util(dim, 0.0);
-
+  
   // Loop over stocks
   Array3D B_hat(dim, 0.0);
   for (int st = 0; st < nStock; ++st) { 
@@ -76,7 +76,7 @@ inline void CalcSpatialDistribution(
     check_dims<4>(Wgt_st, {nSim, nAge, Wgt_st.dim[2], nFleet}, "WeightFleet", y, 2);
     check_dims<5>(Sel_st, {nSim, nAge, Sel_st.dim[2], nFleet, nArea}, "SelAge", y, 2);
     check_dims<5>(Ret_st, {nSim, nAge, Ret_st.dim[2], nFleet, nArea}, "RetAge", y, 2);
- 
+    
     // Exploitable biomass per unit effort
     for (int sim : Sims) {
       const int sim_cl  = sim_index<4>(sim, Closure, "Closure");
@@ -98,11 +98,11 @@ inline void CalcSpatialDistribution(
               Wgt_st(sim_wgt, age, y, fl) *
               Sel_st(sim_sel, age, y, fl, ar) *
               Ret_st(sim_ret, age, y, fl, ar);
-          } 
+          }  
           B_hat(sim, fl, ar) =q_val * B_sfr;
         } 
       }
-    } 
+    }  
     
     // Within-season saturation 
     for (int sim : Sims) {
@@ -116,12 +116,21 @@ inline void CalcSpatialDistribution(
         for (int ar = 0; ar < nArea; ++ar)
           Bvec[ar] = B_hat(sim, fl, ar);
         
-        std::nth_element(
-          Bvec.begin(),
-          Bvec.begin() + nArea / 2,
-          Bvec.end()
-        ); 
-        const double Bref = Bvec[nArea / 2];
+        // Median B_ref across non-zero areas only
+        // Using all areas causes Bref=0 when majority of areas have zero B_hat
+        // (e.g. closed areas or zero retention), which incorrectly zeroes Util
+        // for areas that do have exploitable biomass
+        std::vector<double> nonzero;
+        nonzero.reserve(nArea);
+        for (int ar = 0; ar < nArea; ++ar) {
+          if (B_hat(sim, fl, ar) > 0.0)
+            nonzero.push_back(B_hat(sim, fl, ar));
+        } 
+        
+        if (nonzero.empty()) continue;
+        
+        std::nth_element(nonzero.begin(), nonzero.begin() + nonzero.size()/2, nonzero.end());
+        const double Bref = nonzero[nonzero.size()/2];
         
         if (Bref <= 0.0) continue;
         
@@ -138,7 +147,7 @@ inline void CalcSpatialDistribution(
         }
       }
     }
-  } // end stock loop
+  } // end stock loop  
   
   // Normalize utility across areas 
   for (int sim : Sims) {
@@ -152,15 +161,21 @@ inline void CalcSpatialDistribution(
           Util(sim, fl, ar) /= total;
       } 
     }
-  }
+  }  
   
   // Calculate Effort Distribution
   for (int sim : Sims) {
     for (int fl = 0; fl < nFleet; ++fl) {
       const int sim_t = sim_index<3>(sim, Targeting, "Targeting");
       const double theta = Targeting(sim_t, y, fl);
-      if (theta <= 0.0) continue;
       
+      if (theta <= 0.0) {
+        for (int ar = 0; ar < nArea; ++ar) {
+          if (std::isnan(Distribution(sim, y, fl, ar)))
+            Distribution(sim, y, fl, ar) = 0.0;
+        } 
+        continue;
+      } 
       double total = 0.0;
       
       // cache Util^theta
@@ -171,11 +186,10 @@ inline void CalcSpatialDistribution(
           const double ut = (theta == 1.0) ? u : std::pow(std::max(u, 1e-12), theta);
           UtilTheta[ar] = ut;
           total += ut;
-        } else { 
-          UtilTheta[ar] = 0.0;
+        } else {           UtilTheta[ar] = 0.0;
         }
       }
-      
+       
       if (total > 0.0) {
         const double inv_total = 1.0 / total;
         for (int ar = 0; ar < nArea; ++ar) {
@@ -183,12 +197,19 @@ inline void CalcSpatialDistribution(
           if (std::isnan(Distribution(sim, y, fl, ar))) {
             Distribution(sim, y, fl, ar) = UtilTheta[ar] * inv_total;  
           }
-          
         }
-      }  
+      } else { 
+        // No exploitable biomass in any area for this fleet (e.g. zero retention or selectivity)
+        for (int ar = 0; ar < nArea; ++ar) {
+          if (std::isnan(Distribution(sim, y, fl, ar))) {
+            Distribution(sim, y, fl, ar) = 0.0;
+          }
+        }
+      }
     }
   }
   
 }
 
 #endif // CALC_SPATIAL_DISTRIBUTION_H
+ 

@@ -17,6 +17,9 @@
 #' If `NULL`, no subsetting by year is performed.
 #' @param Ages Numeric vector of age classes to retain. 
 #' If `NULL`, no subsetting by age is performed.
+#' @param MPs Numeric vector of MPs to retain. 
+#' If `NULL`, no subsetting by MP is performed.
+#' 
 #' @param Impute Logical; only relevant when subsetting by `Years`. 
 #' If `TRUE` (default), years not present in the object may be imputed using the 
 #' nearest available past year. 
@@ -35,11 +38,12 @@
 #' number of retained simulations.
 #'
 #' @return
-#' An object of the same class as `object`, subset according to `Sims`, `Years`, and/or `Ages`.
+#' An object of the same class as `object`, subset according to `Sims`, `Years`, 
+#' `Ages` and/or `MPs`.
 #'
 #' @example man-examples/Subset.R
 #' @export
-Subset <- function(object, Sims=NULL, Years=NULL, Ages=NULL, Impute=TRUE) {
+Subset <- function(object, Sims=NULL, Years=NULL, Ages=NULL, MPs=NULL, Impute=TRUE) {
   
   populated <- try(Populate(object), silent=TRUE)
   if (!inherits(populated, 'try-error'))
@@ -55,6 +59,10 @@ Subset <- function(object, Sims=NULL, Years=NULL, Ages=NULL, Impute=TRUE) {
   
   if (!is.null(Ages)) {
     object <- SubsetAge(object, Ages)
+  }
+  
+  if (!is.null(MPs)) {
+    object <- SubsetMP(object, MPs)
   }
   
   object
@@ -344,8 +352,6 @@ SubsetAge <- function(object, Ages, debug = FALSE) {
   object
 }
 
-
-
 ArraySubsetAge <- function(array, Ages=NULL) {
   if (is.null(Ages)) {
     return(array)
@@ -384,3 +390,102 @@ ArraySubsetAge <- function(array, Ages=NULL) {
   do.call(`[`, c(list(array), make_index(sel, array), list(drop = FALSE)))
 
 }
+
+SubsetMP <- function(object, MPs=NULL, debug = FALSE) {
+  
+  if (debug)
+    cli::cli_alert('Class {.val {class(object)}}')
+  
+  if (isS4(object)) {
+    
+    if (debug)
+      cli::cli_alert('S4 Object')
+    
+    slots <- slotNames(object)
+    
+    for (s in slots) {
+      if (debug)
+        cli::cli_alert('Slot {.val {s}}')
+      
+      val <- slot(object, s)
+      if (!is.null(val))
+        slot(object, s) <- Recall(val, MPs, debug)
+    }
+    
+    return(object)
+  }
+  
+  if (is.list(object)) {
+    
+    n <- length(object)
+    if (n == 0)
+      return(object)
+    
+    out <- object
+    for (i in seq_len(n)) {
+      el <- object[[i]]
+      if (!is.null(el))
+        out[[i]] <- Recall(el, MPs, debug)
+    }
+    
+    return(out)
+  }
+  
+  if (is.array(object)) {
+    
+    dnames <- dimnames(object)
+    
+    if (!is.null(dnames) && "MP" %in% names(dnames)) {
+      object <- ArraySubsetMP(object, MPs)
+    }
+    
+    return(object)
+  }
+  
+  object
+}
+
+ArraySubsetMP <- function(array, MPs=NULL) {
+  
+  if (is.null(MPs)) 
+    return(array)
+  
+  DN <- dimnames(array)
+  
+  if (is.null(DN)) 
+    return(array)
+  
+  MPInd <- match("MP", names(DN))
+  if (is.na(MPInd)) {
+    cli::cli_abort("`MP` dimension not found in this array", .internal = TRUE)
+  }
+  
+  MPNames <- DN[[MPInd]]
+  
+  if (is.numeric(MPs))
+    MPVals <- MPs
+  
+  if (is.character(MPs))
+    MPVals <- match(MPs, MPNames)
+  
+  if (any(is.na(MPVals))) {
+    ind <- which(is.na(MPVals))
+    cli::cli_abort("MP(s) {.val {MPs[ind]}} not found in this array")
+  }
+  
+  MPVals <- MPVals[MPVals %in% seq_along(MPNames)]
+  
+  make_index <- function(i, array) {
+    nd <- length(dim(array))
+    idx <- vector("list", nd)
+    for (k in seq_len(nd))
+      idx[[k]] <- if (k == MPInd) i else seq_len(dim(array)[k])
+    idx
+  }
+  
+  sel <- seq_along(MPNames) %in% MPVals 
+  
+  do.call(`[`, c(list(array), make_index(sel, array), list(drop = FALSE)))
+  
+}
+
