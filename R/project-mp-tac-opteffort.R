@@ -16,11 +16,11 @@
 #' @param TACType Character. Does the TAC refer to `"Removals"` (default) or `"Landings"`.
 #' @param minEffort Small numeric to replace zero starting effort (default 1e-6)
 #' @param tol Numeric, convergence tolerance for derivative solver (default 1e-2)
-#' @param maxIter Integer, maximum iterations for derivative solver (default 20)
+#' @param maxIter Integer, maximum iterations for derivative solver (default 50)
 #' @return Numeric vector of optimized effort per fleet
 #' @keywords internal
 OptEffort <- function(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet, TACType,
-                      minEffort = 1e-6, tol = 1e-2, maxIter = 20) {
+                      minEffort = 1e-15, tol = 1e-2, maxIter = 50) {
   
   TACType <- match.arg(TACType, c('Removals', 'Landings'))
   
@@ -29,6 +29,7 @@ OptEffort <- function(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet, TACType,
   
   Effort <- pmax(Proj@Effort[sim, TSIndex - 1, ], minEffort)
   Effort[zero_idx] <- 0
+  Effort_final <- Effort  # snapshot before any NR modification
   
   if (length(pos_idx) == 0) return(Effort)
   
@@ -36,11 +37,11 @@ OptEffort <- function(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet, TACType,
   if (length(pos_idx) == 1) {
     obj <- function(logEff) {
       ObjEffort(logEff, Proj, sim, Year, TSIndex, stocks,
-                TAC_by_Fleet, Effort, TACType)
+                TAC_by_Fleet, Effort_final, TACType)
     }
     upper_bound <- min(max(Effort[pos_idx]) * 1e3, .Machine$double.xmax)
     opt <- optimize(obj, interval = log(c(minEffort, upper_bound)))
-    Effort[pos_idx] <- Effort[pos_idx] * exp(opt$minimum)
+    Effort[pos_idx] <- Effort_final[pos_idx] * exp(opt$minimum)
     return(Effort)
   }
   
@@ -74,8 +75,8 @@ OptEffort <- function(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet, TACType,
     Eff_candidate <- pmax(Effort[pos_idx] + residual / J_diag, minEffort)
     
     # Accept diagonal step if it reduces the residual; otherwise fall back to
-    # full Jacobian for this iteration 
-    Proj@Effort[sim, TSIndex, ] <- Effort
+    # full Jacobian for this iteration
+    Proj@Effort[sim, TSIndex, ]        <- Effort
     Proj@Effort[sim, TSIndex, pos_idx] <- Eff_candidate
     Temp_cand         <- CalcFisheryDynamics(Hist = Proj, Years = Year, Sims = sim)
     CatchByFleet_cand <- CalcCatchByFleet(Temp_cand, sim, stocks, TSIndex, TACType)
@@ -109,7 +110,7 @@ OptEffort <- function(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet, TACType,
     delta <- tryCatch(
       solve(J, residual),
       error = function(e) {
-        residual / J_diag # singular — diagonal fallbackb
+        residual / J_diag # singular — diagonal fallback
       }
     )
     
@@ -120,7 +121,8 @@ OptEffort <- function(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet, TACType,
   if (!converged) {
     
     # cli::cli_alert_warning(
-    #   "OptEffort: Newton-Raphson did not converge after {maxIter} iterations (sim={sim}, TSIndex={TSIndex}). Falling back to optim()."
+    #   "OptEffort: Newton-Raphson did not converge after {maxIter} iterations \\
+    #   (sim={sim}, TSIndex={TSIndex}). Falling back to optim()."
     # )
     
     objFun <- function(logEffortVec) {
@@ -128,14 +130,18 @@ OptEffort <- function(Proj, Year, TSIndex, sim, stocks, TAC_by_Fleet, TACType,
                 TAC_by_Fleet, Effort_final, TACType)
     }
 
+    par_init <- log(Effort[pos_idx] / Effort_final[pos_idx])
+    # par is log-scale offset from Effort_final; 0 => start at Effort_final
+    par_init[!is.finite(par_init)] <- 0
+    
     opt <- optim(
-      par     = log(Effort[pos_idx] / Effort_final[pos_idx]),
+      par     = par_init,
       fn      = objFun,
       method  = "BFGS",
       control = list(maxit = 200)
     )
 
-    Effort[pos_idx] <- Effort[pos_idx] * exp(opt$par)
+    Effort[pos_idx] <- Effort_final[pos_idx] * exp(opt$par)
     
   }
   Effort

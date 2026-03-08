@@ -3,7 +3,8 @@
 \name{SetupParallel}
 \alias{SetupParallel}
 \alias{DisableParallel}
-\title{Set up parallel processing for openMSE workflows}
+\alias{CheckParallel}
+\title{Set Up Parallel Processing for openMSE Workflows}
 \usage{
 SetupParallel(
   workers = future::availableCores(),
@@ -12,104 +13,89 @@ SetupParallel(
   silent = FALSE
 )
 
-DisableParallel()
+DisableParallel(silent = FALSE)
+
+CheckParallel(parallel)
 }
 \arguments{
-\item{workers}{Integer; number of parallel workers to use.
-Defaults to \code{future::availableCores()}.}
+\item{workers}{Integer. Number of parallel workers. Defaults to
+\code{future::availableCores()}.}
 
-\item{backend}{Character; parallel backend to use. One of:
-\itemize{
-\item \code{"auto"} (default): choose a safe backend based on the operating system
-\item \code{"multisession"}: background R sessions (all platforms)
-\item \code{"multicore"}: forked processes (macOS / Linux only)
-\item \code{"sequential"}: disable parallel processing
-}}
+\item{backend}{Character. Parallel backend to use. One of \code{"auto"}
+(default), \code{"multisession"}, \code{"multicore"}, or
+\code{"sequential"}. \code{"auto"} selects a safe backend based
+on the operating system.}
 
-\item{max_workers}{Character; which type of CPU cores to use when
-determining the maximum number of workers.
-\itemize{
-\item \code{"physical"} (default): limit workers to physical CPU cores
-\item \code{"logical"}: allow use of logical cores (hyperthreads)
-}
+\item{max_workers}{Character. Which CPU cores to count when determining the
+worker ceiling. \code{"physical"} (default) limits to physical
+cores; \code{"logical"} allows hyperthreads. Using \code{"physical"}
+is generally recommended.}
 
-Using \code{"physical"} is generally recommended.}
-
-\item{silent}{Logical; if \code{FALSE}, prints a short message describing
-the selected parallel plan.}
+\item{silent}{Logical. If \code{FALSE} (default), prints a message describing
+the active parallel plan.}
 }
 \value{
-Invisibly returns \code{TRUE}.
+All three functions invisibly return a logical scalar:
+\itemize{
+\item \code{SetupParallel()} and \code{DisableParallel()} return \code{TRUE}
+\item \code{CheckParallel()} returns the value of \code{parallel} if a valid plan is
+active, or \code{FALSE} if no parallel plan is detected
+}
 }
 \description{
-Configure the global parallel processing strategy used throughout
-the openMSE framework via the \code{future} framework.
+Configure the global parallel processing strategy used throughout the
+openMSE framework via the \code{future} backend.
 }
 \details{
-These functions are intended to be called at the
-beginning (and optionally the end) of a workflow to control
-how parallel evaluation is performed.
+These functions are intended to be called at the beginning (and optionally
+the end) of a workflow:
 \itemize{
-\item \code{SetupParallel()} establishes a parallel execution plan, while
+\item \code{SetupParallel()} establishes a parallel execution plan
 \item \code{DisableParallel()} restores sequential execution
+\item \code{CheckParallel()} validates that a parallel plan is active
 }
 
-By default, \code{SetupParallel()} automatically selects a safe and
-platform-appropriate backend:
+By default, \code{SetupParallel()} selects a safe, platform-appropriate backend:
 \itemize{
-\item \strong{Windows}: \code{future::multisession}
-\item \strong{macOS / Linux}: \code{future::multisession} (default), with optional
-support for \code{future::multicore}
+\item \strong{Windows}: \code{multisession}
+\item \strong{macOS / Linux}: \code{multisession} (default), with optional \code{multicore} support
 }
 
 Although \code{future::multicore} is often faster on Unix-like systems,
 \code{multisession} is used by default because it is more robust.
 \subsection{Global side effects}{
 
-This function modifies the \strong{global future plan} for the current R
-session. All packages relying on \code{future} (including \code{furrr}) will
-use this plan until it is changed again or reset with
-\code{DisableParallel()}.
+\code{SetupParallel()} modifies the \strong{global future plan} for the current R
+session. All packages relying on \code{future} (including \code{furrr}) will inherit
+this plan until it is changed or reset with \code{DisableParallel()}.
 }
 
-\subsection{Choosing a backend}{
+\subsection{Backend options}{
 \itemize{
-\item \code{multisession} is the safest and most portable option and works on
-all platforms.
-\item \code{multicore} (Unix-like systems only) uses forked processes and can
-be faster for large workloads, but may be unsafe with certain
-compiled code or external pointers.
-\item \code{sequential} disables parallel processing entirely.
+\item \code{"multisession"} — background R sessions; safe and portable on all platforms
+\item \code{"multicore"} — forked processes (macOS / Linux only); faster for large
+workloads but may be unsafe with certain compiled code or external pointers
+\item \code{"sequential"} — disables parallel processing entirely
 }
 }
 
 \subsection{Recommended usage}{
-\itemize{
-\item Call \code{SetupParallel()} once at the start of an analysis
-\item Use \code{DisableParallel()} to explicitly restore sequential execution
-}
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{SetupParallel()          # start of workflow
+# ... analysis code ...
+DisableParallel()        # restore sequential execution
+}\if{html}{\out{</div>}}
 }
 }
 \examples{
 \dontrun{
-# Typical usage at the start of a workflow
-SetupParallel()
-
-# Explicitly request 4 workers
-SetupParallel(workers = 4)
-
-# Use multicore on Linux/macOS
-SetupParallel(backend = "multicore")
-
-# Disable parallel processing
-DisableParallel()
+SetupParallel()                        # auto-select backend
+SetupParallel(workers = 4)             # explicit worker count
+SetupParallel(backend = "multicore")   # multicore on Linux/macOS
+DisableParallel()                      # restore sequential execution
 }
 
 }
 \seealso{
-\itemize{
-\item \code{\link[future:plan]{future::plan()}}
-\item \code{\link[future:re-exports]{future::availableCores()}}
-\item \code{\link[furrr:future_map]{furrr::future_map()}}
-}
+\code{\link[future:plan]{future::plan()}}, \code{\link[future:re-exports]{future::availableCores()}}, \code{\link[furrr:future_map]{furrr::future_map()}}
 }

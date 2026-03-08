@@ -12,9 +12,9 @@ OptEffort(
   stocks,
   TAC_by_Fleet,
   TACType,
-  minEffort = 1e-06,
+  minEffort = 1e-15,
   tol = 0.01,
-  maxIter = 20
+  maxIter = 50
 )
 }
 \arguments{
@@ -36,7 +36,7 @@ OptEffort(
 
 \item{tol}{Numeric, convergence tolerance for derivative solver (default 1e-2)}
 
-\item{maxIter}{Integer, maximum iterations for derivative solver (default 20)}
+\item{maxIter}{Integer, maximum iterations for derivative solver (default 50)}
 }
 \value{
 Numeric vector of optimized effort per fleet

@@ -1,15 +1,45 @@
 
-RunMPIfNeeded <- function(Year,
-                          ManagementYears,
-                          LastAdviceSimList,
-                          MPName,
-                          MPfunction,
-                          DataSimList,
-                          Proj,
-                          YearsProj,
-                          mp,
-                          FleetNames,
-                          Areas) {
+#' Apply a Management Procedure if in a Management Year
+#'
+#' Checks whether `Year` falls in a scheduled management year. If not,
+#' the previous advice is carried forward unchanged. If so, the MP is
+#' applied via [CalcAdvice()] and a new nested list of `Advice` objects
+#' is returned.
+#'
+#' @param Year              Integer. Current projection year.
+#' @param ManagementYears   Integer vector. Years in which the MP is applied,
+#'                          as computed by [CalcManagementYears()].
+#' @param LastAdviceSimList Nested list of `Advice` objects from the most
+#'                          recent management year. Returned unchanged in
+#'                          non-management years.
+#' @param MPName            Character. Name of the management procedure.
+#' @param MPfunction        Function. The MP to apply; must accept a `Data`
+#'                          object and return an `Advice` object.
+#' @param DataSimList       Nested list of `Data` objects, one per sim and
+#'                          stock, trimmed to the current data year.
+#' @param Proj              `Hist` object containing the current operating
+#'                          model state.
+#' @param YearsProj         Integer vector. All projection years.
+#' @param mp                Integer. Index of the MP within the `MSE` object.
+#' @param FleetNames        Character vector. Fleet names.
+#' @param Areas             Integer vector. Area indices.
+#'
+#' @return A nested list of `Advice` objects — either newly computed by
+#'   [CalcAdvice()] if `Year` is a management year, or `LastAdviceSimList`
+#'   carried forward otherwise.
+#'
+#' @keywords internal
+ApplyMP <- function(Year,
+                    ManagementYears,
+                    LastAdviceSimList,
+                    MPName,
+                    MPfunction,
+                    DataSimList,
+                    Proj,
+                    YearsProj,
+                    mp,
+                    FleetNames,
+                    Areas) {
   
   if (!Year %in% ManagementYears) return(LastAdviceSimList)
   
