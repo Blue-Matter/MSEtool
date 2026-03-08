@@ -1,89 +1,76 @@
-#' Set up parallel processing for openMSE workflows
+#' Set Up Parallel Processing for openMSE Workflows
 #'
-#' Configure the global parallel processing strategy used throughout
-#' the openMSE framework via the `future` framework.
+#' Configure the global parallel processing strategy used throughout the
+#' openMSE framework via the `future` backend.
 #' 
-#' These functions are intended to be called at the 
-#' beginning (and optionally the end) of a workflow to control 
-#' how parallel evaluation is performed.
+#' These functions are intended to be called at the beginning (and optionally
+#' the end) of a workflow:
 #'
-#' * `SetupParallel()` establishes a parallel execution plan, while
-#' * `DisableParallel()` restores sequential execution
+#' - `SetupParallel()` establishes a parallel execution plan
+#' - `DisableParallel()` restores sequential execution
+#' - `CheckParallel()` validates that a parallel plan is active
 #'
-#' By default, `SetupParallel()` automatically selects a safe and
-#' platform-appropriate backend:
+#' By default, `SetupParallel()` selects a safe, platform-appropriate backend:
 #'
-#' * **Windows**: `future::multisession`
-#' * **macOS / Linux**: `future::multisession` (default), with optional
-#'   support for `future::multicore`
-#'
+#' - **Windows**: `multisession`
+#' - **macOS / Linux**: `multisession` (default), with optional `multicore` support
+#' 
 #' Although `future::multicore` is often faster on Unix-like systems,
 #' `multisession` is used by default because it is more robust.
 #' 
 #' ## Global side effects
 #'
-#' This function modifies the **global future plan** for the current R
-#' session. All packages relying on `future` (including `furrr`) will
-#' use this plan until it is changed again or reset with
-#' `DisableParallel()`.
+#' `SetupParallel()` modifies the **global future plan** for the current R
+#' session. All packages relying on `future` (including `furrr`) will inherit
+#' this plan until it is changed or reset with `DisableParallel()`.
+#' 
+#' ## Backend options
 #'
-#' ## Choosing a backend
-#'
-#' * `multisession` is the safest and most portable option and works on
-#'   all platforms.
-#' * `multicore` (Unix-like systems only) uses forked processes and can
-#'   be faster for large workloads, but may be unsafe with certain
-#'   compiled code or external pointers.
-#' * `sequential` disables parallel processing entirely.
+#' - `"multisession"` — background R sessions; safe and portable on all platforms
+#' - `"multicore"` — forked processes (macOS / Linux only); faster for large
+#'   workloads but may be unsafe with certain compiled code or external pointers
+#' - `"sequential"` — disables parallel processing entirely
 #' 
 #' 
 #' ## Recommended usage
 #'
-#' * Call `SetupParallel()` once at the start of an analysis
-#' * Use `DisableParallel()` to explicitly restore sequential execution
+#' ```r
+#' SetupParallel()          # start of workflow
+#' # ... analysis code ...
+#' DisableParallel()        # restore sequential execution
+#' ```
 #'
-#' @param workers Integer; number of parallel workers to use.
-#'   Defaults to `future::availableCores()`.
+#' @param workers    Integer. Number of parallel workers. Defaults to
+#'                   `future::availableCores()`.
+#' @param backend    Character. Parallel backend to use. One of `"auto"`
+#'                   (default), `"multisession"`, `"multicore"`, or
+#'                   `"sequential"`. `"auto"` selects a safe backend based
+#'                   on the operating system.
+#' @param max_workers Character. Which CPU cores to count when determining the
+#'                   worker ceiling. `"physical"` (default) limits to physical
+#'                   cores; `"logical"` allows hyperthreads. Using `"physical"`
+#'                   is generally recommended.
+#' @param silent     Logical. If `FALSE` (default), prints a message describing
+#'                   the active parallel plan.
 #'
-#' @param backend Character; parallel backend to use. One of:
-#'   * `"auto"` (default): choose a safe backend based on the operating system
-#'   * `"multisession"`: background R sessions (all platforms)
-#'   * `"multicore"`: forked processes (macOS / Linux only)
-#'   * `"sequential"`: disable parallel processing
-#'
-#' @param max_workers Character; which type of CPU cores to use when
-#'   determining the maximum number of workers.
-#'   * `"physical"` (default): limit workers to physical CPU cores
-#'   * `"logical"`: allow use of logical cores (hyperthreads)
-#' 
-#' Using `"physical"` is generally recommended.
-#'   
-#' @param silent Logical; if `FALSE`, prints a short message describing
-#'   the selected parallel plan.
-#'
-#' @return Invisibly returns `TRUE`.
-#'
+#' @return All three functions invisibly return a logical scalar:
+#'   - `SetupParallel()` and `DisableParallel()` return `TRUE`
+#'   - `CheckParallel()` returns the value of `parallel` if a valid plan is
+#'     active, or `FALSE` if no parallel plan is detected
+#'     
+#'     
 #' @examples
 #' \dontrun{
-#' # Typical usage at the start of a workflow
-#' SetupParallel()
-#'
-#' # Explicitly request 4 workers
-#' SetupParallel(workers = 4)
-#'
-#' # Use multicore on Linux/macOS
-#' SetupParallel(backend = "multicore")
-#'
-#' # Disable parallel processing
-#' DisableParallel()
+#' SetupParallel()                        # auto-select backend
+#' SetupParallel(workers = 4)             # explicit worker count
+#' SetupParallel(backend = "multicore")   # multicore on Linux/macOS
+#' DisableParallel()                      # restore sequential execution
 #' }
-#'
-#' @seealso
-#' * [future::plan()]
-#' * [future::availableCores()]
-#' * [furrr::future_map()]
+#' 
+#' @seealso [future::plan()], [future::availableCores()], [furrr::future_map()]
 #'
 #' @export
+#' 
 SetupParallel <- function(workers = future::availableCores(),
                           backend = c("auto", "multisession", "multicore", "sequential"),
                           max_workers = c("physical", "logical"),
@@ -111,9 +98,31 @@ SetupParallel <- function(workers = future::availableCores(),
 
 #' @rdname SetupParallel
 #' @export
-DisableParallel <- function() {
+DisableParallel <- function(silent=FALSE) {
   future::plan(future::sequential)
+  cli::cli_inform("Parallel processing disabled. Running sequentially.")
   invisible(TRUE)
+}
+
+#' @rdname SetupParallel
+#' @export
+CheckParallel <- function(parallel) {
+  if (!parallel)
+    return(FALSE)
+  
+  if (inherits(future::plan(), "sequential")) {
+    cli::cli_alert_warning(
+      "{.val parallel = TRUE} requested but no parallel `future` plan is active."
+    )
+    cli::cli_inform(c(
+      "i" = "Initialise a parallel plan first, e.g.:",
+      " " = "{.code SetupParallel(workers = 4)}",
+      "i" = "Running sequentially instead."
+    ))
+    return(FALSE)
+  }
+  
+  parallel
 }
 
 
@@ -160,21 +169,4 @@ IsWindows <- function() {
   .Platform$OS.type == "windows"
 }
 
-CheckParallel <- function(parallel) {
-  if (!parallel)
-    return(FALSE)
-  current_plan <- future::plan()
-
-  if (inherits(current_plan, "sequential")) {
-    cli::cli_alert_warning(
-      "{.val parallel = TRUE} requested, but no parallel future plan detected."
-    )
-    cli::cli_text("Initialize a parallel plan first using:")
-    cli::cli_ul()
-    cli::cli_li("e.g: `SetupParallel(workers = 4)`")
-    cli::cli_text("Running sequentially instead (`parallel = FALSE`).")
-    return(FALSE)
-  }
-  parallel
-}
 
