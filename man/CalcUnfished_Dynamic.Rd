@@ -16,7 +16,7 @@ automatically via \code{IdenticalSims()}.}
 \item{silent}{Logical; if \code{TRUE}, suppress messages during calculation.}
 }
 \value{
-A \link{PopDynamics} object containing dynamic unfished
+A \linkS4class{popdynamics} object containing dynamic unfished
 \code{Number}, \code{Biomass}, \code{SBiomass}, and \code{SProduction} arrays with dimensions
 \verb{Sim × Stock × Year}.
 }

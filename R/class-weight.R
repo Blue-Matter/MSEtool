@@ -4,19 +4,19 @@
 #' 
 #' See [Weight()] for details.
 #' 
-#' @param Pars Named list of parameters for [WeightModels()]
-#' @param Model Model associated with `Pars`
-#' @param Units Weight units
-#' @param MeanAtAge Mean weight-at-age array
-#' @param MeanAtLength Mean weight-at-length array
-#' @param CVatAge Coefficient of variation at age
-#' @param Dist Distribution name
-#' @param TruncSD Truncation in SD units
-#' @param Timing Timing within time step
-#' @param Random Random effects
-#' @param AWK Age–weight key
-#' @param Classes Weight classes
-#' @param Misc Miscellaneous list
+#' @slot Pars Named list of parameters for [WeightModels()]
+#' @slot Model Model associated with `Pars`
+#' @slot Units Weight units
+#' @slot MeanAtAge Mean weight-at-age array
+#' @slot MeanAtLength Mean weight-at-length array
+#' @slot CVatAge Coefficient of variation at age
+#' @slot Dist Distribution name
+#' @slot TruncSD Truncation in SD units
+#' @slot Timing Timing within time step
+#' @slot Random Random effects
+#' @slot AWK Age–weight key
+#' @slot Classes Weight classes
+#' @slot Misc Miscellaneous list
 #' @export
 #' @include class-unions.R
 #' @name weight-class

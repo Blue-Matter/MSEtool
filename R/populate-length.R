@@ -100,7 +100,6 @@ PopulateLength <- function(Length,
   if (ALK && !is.null(Length@Classes)) {
     Length <- PopulateASK(object = Length, 
                           Ages = Ages, 
-                          Years = Years, 
                           silent = silent)
   }
   

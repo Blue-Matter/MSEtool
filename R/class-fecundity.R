@@ -13,6 +13,10 @@
 #' @slot Misc Miscellaneous list 
 #'
 #' @include class-unions.R
+#' 
+#' @details
+#' See [Fecundity()] for details.
+#' 
 #' @name fecundity-class
 setClass(
   "fecundity",

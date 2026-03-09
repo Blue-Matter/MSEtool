@@ -7,7 +7,7 @@
 ReturnEffort(object, df = TRUE, hist = TRUE)
 }
 \arguments{
-\item{object}{A \link{Hist} or \link{MSE} object}
+\item{object}{A \link{hist} or \link{mse} class object}
 }
 \value{
 A \code{\link[=data.frame]{data.frame()}} or a multi-dimensional \code{\link[=array]{array()}} if \code{df=FALSE}

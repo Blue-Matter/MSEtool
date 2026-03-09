@@ -32,7 +32,7 @@
 #' @include class-discardmortality.R
 #' @include class-bioeconomic.R
 #' @include class-dynamics.R
-#' @name fleet-class
+#' @name fleet
 setClass(
   "fleet",
   slots = c(

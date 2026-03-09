@@ -7,7 +7,7 @@
 DoOptInitialDepletion(Hist, st)
 }
 \arguments{
-\item{Hist}{A \code{\link[=Hist]{Hist()}} object.}
+\item{Hist}{A \link{hist} object.}
 
 \item{st}{Integer stock index.}
 }

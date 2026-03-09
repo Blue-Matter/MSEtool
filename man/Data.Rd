@@ -2,7 +2,7 @@
 % Please edit documentation in R/constructor-data.R
 \name{Data}
 \alias{Data}
-\title{Constructor and Accessors for \code{Data}}
+\title{Constructor and Accessor for \code{Data}}
 \usage{
 Data(
   Name = "New Data Object",
@@ -35,15 +35,101 @@ Data(
 )
 }
 \arguments{
-\item{object}{A \code{\link[=Data]{Data()}} object.}
+\item{Name}{Either a character string naming the new \code{Data} object, or an
+existing \link{om}, \link{hist}, or \link{mse} object from which to extract data.
+Defaults to \code{"New Data Object"}.}
 
-\item{x}{Leave as NULL to create a new \code{Data} object, or a \code{\link[=OM]{OM()}}, \code{\link[=Hist]{Hist()}}, or \code{\link[=MSE]{MSE()}} object to acces the \code{Data} or \code{PPD} slots.}
+\item{CommonName}{Optional character string. Common name of the stock.}
 
-\item{value}{Value to assign.}
+\item{Species}{Optional character string. Scientific name of the species.}
+
+\item{Agency}{Optional character string. Name of the managing agency.}
+
+\item{Author}{Optional character string. Name of the data author.}
+
+\item{Email}{Optional character string. Contact email for the author.}
+
+\item{Region}{Optional character string. Geographic region of the stock.}
+
+\item{Latitude}{Optional numeric. Latitude of the stock.}
+
+\item{Longitude}{Optional numeric. Longitude of the stock.}
+
+\item{Years}{Vector of calendar years covered by the data. \strong{Required}}
+
+\item{YearLH}{The last historical year; separates the
+historical period from the projection period. Defaults to \code{max(Years)}.}
+
+\item{Seasons}{A positive integer giving the number of seasons per year.
+Defaults to \code{1}.}
+
+\item{nArea}{A positive integer giving the number of spatial areas.
+Defaults to \code{1}.}
+
+\item{LifeHistory}{Optional. An object of class \code{lifehistorydata}.}
+
+\item{Exploitation}{Optional. An object of class \code{exploitationdata}.}
+
+\item{Reference}{Optional. An object of class \code{referencedata}.}
+
+\item{Effort}{Optional. An object of class \code{effortdata}.}
+
+\item{Landings}{Optional. An object of class \code{catchdata} for landed catch.}
+
+\item{Discards}{Optional. An object of class \code{catchdata} for discarded
+catch.}
+
+\item{CPUE}{Optional. An object of class \code{indicesdata} for catch-per-unit-
+effort indices.}
+
+\item{Survey}{Optional. An object of class \code{indicesdata} for fishery-
+independent survey indices.}
+
+\item{LandingsAtAge}{Optional. An object of class \code{compdata} for age
+composition of landings.}
+
+\item{DiscardsAtAge}{Optional. An object of class \code{compdata} for age
+composition of discards.}
+
+\item{LandingsAtSize}{Optional. An object of class \code{compdata} for size
+composition of landings.}
+
+\item{DiscardsAtSize}{Optional. An object of class \code{compdata} for size
+composition of discards.}
+
+\item{Advice}{Optional. An object of class \code{advicedata} containing TAC and
+related advice.}
+
+\item{Misc}{A named list for any additional user-defined data. Defaults to
+\code{list()}.}
 }
 \value{
-A \linkS4class{data} object
+A \link{data} object, or when \code{Name} is an \link{mse} object, a list
+of \link{data} objects from the \verb{@PPD} slot.
 }
 \description{
-Constructor and Accessors for \code{Data}
+Creates a new \link{data} object, or extracts the \code{Data} or \code{PPD} slot from
+an existing \link{om}, \link{hist}, or \link{mse} class object.
+}
+\details{
+When \code{Name} is an \link{om} or \link{hist} object, the function returns the
+corresponding \verb{@Data} slot. When \code{Name} is an \link{mse} object, the \verb{@PPD}
+slot is returned instead. Otherwise, a new \code{data} object is constructed from
+the supplied arguments.
+
+All slot arguments default to \code{NULL}, in which case an empty sub-object of
+the appropriate class is initialised automatically:
+\itemize{
+\item \code{LifeHistory} → \link{lifehistorydata}
+\item \code{Exploitation} → \link{exploitationdata}
+\item \code{Reference} → \link{referencedata}
+\item \code{Effort} → \link{effortdata}
+\item \code{Landings}, \code{Discards} → \link{catchdata}
+\item \code{CPUE}, \code{Survey} → \link{indicesdata}
+\item \code{LandingsAtAge}, \code{DiscardsAtAge}, \code{LandingsAtSize}, \code{DiscardsAtSize} → \link{compdata}
+\item \code{Advice} → \link{advicedata}
+}
+}
+\seealso{
+\linkS4class{data}, \code{\link[=LastTAC]{LastTAC()}}, \code{\link[=LastHistYearInd]{LastHistYearInd()}}, \code{\link[=ProjectionYear]{ProjectionYear()}}
 }

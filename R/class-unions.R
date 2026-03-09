@@ -2,35 +2,33 @@
 
 # Custom Class Unions
 
-setClassUnion("char.null", c("character", "NULL"))
-setClassUnion("num.null", c("numeric", "NULL"))
-setClassUnion("list.null", c("list", "NULL"))
-setClassUnion("array.null", c("array", "NULL"))
-setClassUnion("df.null", c("data.frame", "NULL"))
+methods::setClassUnion("char.null", c("character", "NULL"))
+methods::setClassUnion("num.null", c("numeric", "NULL"))
+methods::setClassUnion("list.null", c("list", "NULL"))
+methods::setClassUnion("array.null", c("array", "NULL"))
+methods::setClassUnion("df.null", c("data.frame", "NULL"))
+
+methods::setClassUnion("char.num", c("character", "numeric", "NULL"))
+methods::setClassUnion("char.list", c("character", "list", "NULL"))
+methods::setClassUnion("num.log", c("numeric", "logical", "NULL"))
+methods::setClassUnion("logical.list", c("logical", "list"))
+methods::setClassUnion("missing.char", c("missing", "character"))
+
+methods::setClassUnion("array.list.null", c("array", "list", "NULL"))
+methods::setClassUnion("array.log.null", c("array", "logical", "NULL"))
+methods::setClassUnion("num.list.null", c("numeric", "list", "NULL"))
+methods::setClassUnion("num.array.null", c("numeric", "array", "NULL"))
+
+methods::setClassUnion("array.char.null", c("array", "character", "NULL"))
+methods::setClassUnion("char.log.num", c("character", 'logical', 'numeric', "NULL"))
+methods::setClassUnion("array.char.num", c("array", "character", "numeric", "NULL"))
+methods::setClassUnion("array.char.num.list", c("array", "character", "numeric", 'list', "NULL"))
+methods::setClassUnion("num.array.list", c("numeric", "array", "list", "NULL"))
+methods::setClassUnion("num.array.df", c("numeric", "array", "data.frame", "NULL"))
 
 
-setClassUnion("char.num", c("character", "numeric", "NULL"))
-setClassUnion("char.list", c("character", "list", "NULL"))
-setClassUnion("num.log", c("numeric", "logical", "NULL"))
-setClassUnion("logical.list", c("logical", "list"))
-setClassUnion("missing.char", c("missing", "character"))
+methods::setClassUnion("fun.char", c("function", "character", "list", "NULL"))
+methods::setClassUnion("num.Date", c("numeric", "Date", "POSIXct", "character", "NULL"))
 
+methods::setClassUnion("dynamics.list", c("dynamics", "list"))
 
-setClassUnion("array.list.null", c("array", "list", "NULL"))
-setClassUnion("array.log.null", c("array", "logical", "NULL"))
-setClassUnion("num.list.null", c("numeric", "list", "NULL"))
-setClassUnion("num.array.null", c("numeric", "array", "NULL"))
-
-
-setClassUnion("array.char.null", c("array", "character", "NULL"))
-setClassUnion("char.log.num", c("character", 'logical', 'numeric', "NULL"))
-setClassUnion("array.char.num", c("array", "character", "numeric", "NULL"))
-setClassUnion("array.char.num.list", c("array", "character", "numeric", 'list', "NULL"))
-setClassUnion("num.array.list", c("numeric", "array", "list", "NULL"))
-setClassUnion("num.array.df", c("numeric", "array", "data.frame", "NULL"))
-
-
-setClassUnion("fun.char", c("function", "character", "list", "NULL"))
-setClassUnion("num.Date", c("numeric", "Date", "POSIXct", "character", "NULL"))
-
-setClassUnion("dynamics.list", c("dynamics", "list"))

@@ -1,12 +1,3 @@
-#' Generic show method
-#' 
-#'
-#' @param object Object to print to console
-#' @importFrom methods show
-#' @export
-show <- function(object) methods::show(object)
-
-
 
 hasSlot <- function(object, slot) {
   slot %in% slotNames(object)
@@ -20,7 +11,7 @@ a_or_an <- function(x) {
   ifelse(grepl("^[aeiouAEIOU]", x), "an", "a")
 }
 
-.show_array <- function(x, name) {
+.show_array <- function(x, name, list_element=FALSE, show_list_element=TRUE) {
   
   if (is.null(x) || length(x) == 0) {
     cli::cli_text("{.var {name}}: ")
@@ -37,14 +28,28 @@ a_or_an <- function(x) {
   dn <- dimnames(x) |> names()
   
   if (is.null(dn)) {
-    cli::cli_text(
-      "{.var {name}}: {.val  { paste(d, collapse=' x ')} array} {.strong (Dimension names missing)}" 
-    )
+    if (list_element) {
+      if (show_list_element)
+        cli::cli_li(
+        "{.var {name}}: {.val  { paste(d, collapse=' x ')} array} {.strong (Dimension names missing)}" 
+        )
+    } else {
+      cli::cli_text(
+        "{.var {name}}: {.val  { paste(d, collapse=' x ')} array} {.strong (Dimension names missing)}" 
+      )  
+    }
+    
     return(invisible(NULL))
   } else {
-    cli::cli_text(
-      "{.var {name}}: {.val  { paste( paste(d, dn), collapse=' x ') } array}" 
-    )
+    if (list_element) {
+      cli::cli_li(
+        "{.var {name}}: {.val  { paste( paste(d, dn), collapse=' x ') } array}" 
+      )
+    } else {
+      cli::cli_text(
+        "{.var {name}}: {.val  { paste( paste(d, dn), collapse=' x ') } array}" 
+      )  
+    }
     return(invisible(NULL))
   }
   
@@ -55,7 +60,7 @@ a_or_an <- function(x) {
   cli::cli_text("{.var { name }} {.emph data.frame}")
   nms <- colnames(x)
   cli::cli_ul()
-  for (i in seq_len(nrow(x))) {
+  for (i in seq_len(ncol(x))) {
     cli::cli_li("{nms[i]}: {.val {x[,i]}}")
   }
   cli::cli_end()
@@ -63,7 +68,13 @@ a_or_an <- function(x) {
 }
 
 
-.show_x <- function(x, name=NULL) {
+.show_x <- function(x, name=NULL, list_element=FALSE, show_list_element=TRUE) {
+  
+  if (isS4(x)) {
+    cli::cli_text("`{name}`: {a_or_an(class(x))} {.help {help_topic('MSEtool', paste0(class(x), '-class'))}} Object")
+    return(invisible(NULL))
+    
+  }
   
   if (is.null(x) || !length(x) || all(is.na(x))) {
     cli::cli_text("{.var {name}}: {.emph not specified} ")  
@@ -91,6 +102,7 @@ a_or_an <- function(x) {
   
   if (inherits(x, 'data.frame')) {
     .show_data_frame(x, name)
+    return(invisible(NULL))
   }
   
   if (inherits(x, 'numeric') || inherits(x, 'integer')) {
@@ -98,31 +110,37 @@ a_or_an <- function(x) {
       x <- signif(x,3)
     }
     cli::cli_text("{.var {name}}:  {.val {x}}")
+    return(invisible(NULL))
   }
   
   if (inherits(x, 'logical')) {
     cli::cli_text("{.var {name}}:  {.val {x}}")
+    return(invisible(NULL))
   }
   
   
   if (inherits(x, 'array')) {
-    .show_array(x, name)
+    .show_array(x, name, list_element, show_list_element)
+    return(invisible(NULL))
   }
   
   if (is.list(x)) {
-    cli::cli_text(" {name}: {.emph list length {.val {length(x)}}}")
-    nms <- names(x)
-    for (i in seq_along(x)) {
-      if (!is.null(nms)) {
-        nm <- nms[i]
-      } else {
-        nm <- ''
+    cli::cli_text(" {.var {name}}: {.val list length  {length(x)}}")
+    if (show_list_element) {
+      nms <- names(x)
+      for (i in seq_along(x)) {
+        if (!is.null(nms)) {
+          nm <- nms[i]
+        } else {
+          nm <- ''
+        }
+        Recall(x[[i]], nm, list_element=TRUE, show_list_element=show_list_element)
+        cli::cli_text('')  
       }
-      Recall(x[[i]], nm)
-      cli::cli_text('')
     }
-    
+    return(invisible(NULL))
   }
+  
   
 }
 
@@ -198,7 +216,7 @@ cli_fn <- function(fun) {
     if (is.null(dn)) {
       cli::cli_text(
         
-        "→ {.val {p}}: {.emph { paste(d, collapse=' x ')}  array}} {.strong (Dimension names missing)}" 
+        "→ {.val {p}}: {.emph { paste(d, collapse=' x ')}  array} {.strong (Dimension names missing)}" 
       )
     } else {
       cli::cli_text(
@@ -217,7 +235,7 @@ cli_fn <- function(fun) {
     cli::cli_text(  "{.var Pars}: ")
     
     if (length(param_names) > 0) {
-      cli::cli_ul(
+      cli::cli_ul()
         for (p in param_names) {
           vals <- object@Pars[[p]]
           
@@ -238,21 +256,24 @@ cli_fn <- function(fun) {
           }
           
         }
-      )
+      cli::cli_end()
     }
   }
   
 }
 
-.show_object <- function(object, name, ignore='Misc') {
-  cli::cli_h2("A  {.help {help_topic('MSEtool', name)}} Object")
+.show_object <- function(object, name, ignore='Misc', classonly=FALSE) {
+  cli::cli_h2("A  {.help {help_topic('MSEtool', paste0(tolower(name),'-class'))}} Object")
+  
+  if (classonly)
+    return(invisible(NULL))
   
   slots <- slotNames(object)
   slots <- slots[!slots%in%ignore]
   
   for (sl in slots) {
     if (sl =='Log')
-      next()
+      next
     .show_slot(object, sl)  
     if (sl %in% c('Model', 'TruncSD')) {
       cli::cli_text("")
@@ -268,7 +289,7 @@ cli_fn <- function(fun) {
 setMethod("show", "om", function(object) {
   object <- UpdateObject(object)
   
-  cli::cli_h2("An {.help MSEtool::OM} Object")
+  cli::cli_h2("An {.help MSEtool::om-class} Object")
   
   .show_slot(object, 'Name')
   
@@ -287,13 +308,14 @@ setMethod("show", "om", function(object) {
   
   .show_slot(object, 'nYear')
   .show_slot(object, 'pYear')
+  
   histYears <- Years(object,'H')
   projYears <- Years(object,'P')
   
   cli::cli_text("")
   
-  cli::cli_text("Historical Years: {.val { paste(range(histYears), collapse = ' - ')}}")
-  cli::cli_text("Projection Years: {.val { paste(range(projYears), collapse = ' - ')}}")
+  cli::cli_text("Historical Years: {.val { paste(range(histYears), collapse = ' - ')} ({length(histYears)})}")
+  cli::cli_text("Projection Years: {.val { paste(range(projYears), collapse = ' - ')} ({length(projYears)})}")
   
   cli::cli_text("")
   
@@ -365,33 +387,6 @@ setMethod("show", "om", function(object) {
       }
     }
   }
-
-    
-    
-  
-  
-  
-  
-  
-  
-  
-  # Fleet 
-  
-
-
-  
-  # Check missing slots 
-  if (!(is.null(object@Stock))) {
-    MissingStock <- CheckStock(object@Stock)
-    
-    
-  }
-  
-  if (!(is.null(object@Fleet))) {
-    MissingFleet <- CheckFleet(object@Fleet)
-  }
-  
-
 })
 
 
@@ -400,7 +395,7 @@ setMethod("show", "om", function(object) {
 
 setMethod('show', 'stock', function(object) {
   object <- UpdateObject(object)
-  cli::cli_h2("A {.help MSEtool::Stock} Object")
+  cli::cli_h2("A {.help MSEtool::stock-class} Object")
   
   .show_slot(object, 'Name')
   
@@ -431,10 +426,10 @@ setMethod('show', 'stock', function(object) {
 
 })
 
-
+## ---- Ages ----
 setMethod("show", "ages", function(object) {
   
-  cli::cli_h2("An {.help MSEtool::Ages} Object")
+  cli::cli_h2("An {.help MSEtool::ages-class} Object")
   
   .show_slot(object, 'MinAge')
   .show_slot(object, 'MaxAge')
@@ -447,7 +442,7 @@ setMethod("show", "ages", function(object) {
       AgeClasses[length(AgeClasses)] <- paste0(AgeClasses[length(AgeClasses)], "+")
     } 
   }
-  cli::cli_text("`Classes`: {.val {AgeClasses}}")
+  cli::cli_text("{.var Classes}: {.val {AgeClasses}}")
 })
 
 
@@ -487,7 +482,7 @@ setMethod("show", "depletion", function(object) {
 
 setMethod('show', 'fleet', function(object) {
   object <- UpdateObject(object)
-  cli::cli_h2("A {.help MSEtool::Fleet} Object")
+  cli::cli_h2("A {.help MSEtool::fleet-class} Object")
   
   .show_slot(object, 'Name')
   
@@ -503,8 +498,7 @@ setMethod('show', 'fleet', function(object) {
     if (isNewObject(slot(object, name))) {
       cli::cli_text("`{name}`: {.emph not specified}")
     } else {
-      
-      cli::cli_text("`{name}`: {a_or_an(name)}  {.help {help_topic('MSEtool', name)}} Object")
+      cli::cli_text("`{name}`: {a_or_an(name)} {.help {help_topic('MSEtool', paste0(tolower(name), '-class'))}} Object")
     }
   }
   
@@ -536,14 +530,45 @@ setMethod("show", "discardmortality", function(object) {
 
 # ---- Hist ----
 
-#' @rdname show
 setMethod('show', 'hist', function(object) {
-  cli::cli_h2("A {.help MSEtool::Hist} Object")
+  cli::cli_h2("A {.help MSEtool::hist-class} Object")
   cli::cli_text("")
   
-  cli::cli_text("Slots:")
-  cli::cli_li(
-  slotNames(object))
+  slots <- slotNames(object)
+  classslots <- c('OM', 'Unfished', 'Reference')
+  
+  for (name in classslots) {
+      cli::cli_text("`{name}`: {a_or_an(name)} {.help {help_topic('MSEtool', paste0(tolower(name), '-class'))}} Object")
+    
+  }
+  cli::cli_text("")
+  
+  slots2 <- slots[!slots %in% classslots]
+  
+  for (sl in slots2) {
+    if (sl == 'Data') {
+      next
+    }
+    if (sl == 'Log') {
+      next
+    }
+    if (sl == 'Misc') {
+      next
+    }
+    .show_x(slot(object, sl), sl, show_list_element=FALSE)
+  }
+  
+  
+  
+  
+  # cli::cli_text("{.var OM}: A {.help MSEtool::OM} Object")
+  # cli::cli_text("{.var Unfished}: A {.help MSEtool::unfished-class} Object")
+  # 
+  # slots %in% c('OM', 'Unfished')
+  # 
+  # cli::cli_text("Slots:")
+  # cli::cli_li(
+  # slotNames(object))
  
 })
 
@@ -552,7 +577,6 @@ setMethod('show', 'hist', function(object) {
 
 # ---- MSE ----
 
-#' @rdname show
 setMethod('show', 'mse', function(object) {
   cli::cli_h2("A {.help MSEtool::MSE} Object")
   cli::cli_text("")
@@ -566,20 +590,21 @@ setMethod('show', 'mse', function(object) {
 
 # ---- Data ----
 
-#' @rdname show
 setMethod('show', 'data', function(object) {
-  cli::cli_h2("A {.help MSEtool::Data} Object")
-  cli::cli_text("")
+  .show_object(object, 'data')
   
-  cli::cli_text("Slots:")
-  cli::cli_li(
-    slotNames(object))
+  # cli::cli_h2("A {.help MSEtool::data-class} Object")
+  # cli::cli_text("")
+  # 
+  # cli::cli_text("Slots:")
+  # cli::cli_li(
+  #   slotNames(object))
 })
 
 
 # ---- Advice ----
 
-#' @rdname show
+
 setMethod('show', 'advice', function(object) {
   .show_object(object, 'Advice')
 })
@@ -588,7 +613,7 @@ setMethod('show', 'advice', function(object) {
 
 # ---- popdynamics ----
 
-#' @rdname show
+
 setMethod('show', 'popdynamics', function(object) {
   .show_object(object, 'popdynamics')
   

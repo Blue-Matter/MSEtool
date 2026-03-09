@@ -2,24 +2,34 @@
 % Please edit documentation in R/constructor-hist.R
 \name{Hist}
 \alias{Hist}
-\title{Create or Access a \code{Hist} Object}
+\title{\code{hist} Class and Accessor}
 \usage{
-Hist(OM = NULL, silent = FALSE)
+Hist(MSE = NULL)
 }
 \arguments{
-\item{OM}{A \code{\link[=OM]{OM()}} or an \code{\link[=MSE]{MSE()}} object. If missing, an empty \linkS4class{hist} object is returned.}
-
-\item{silent}{Should messages be printed out to the console?}
+\item{MSE}{An \linkS4class{mse} object. If \code{NULL} (default), an empty \linkS4class{hist}
+object is returned.}
 }
 \value{
-A \linkS4class{hist} object.
+When \code{MSE} is supplied, a \linkS4class{timeseries} object extracted from
+the \code{Hist} slot of the \linkS4class{mse} object. Note this is a
+\linkS4class{timeseries} and not a \linkS4class{hist} — slots such as \code{OM},
+\code{Unfished}, and \code{Reference} are stored directly on the parent \linkS4class{mse}
+object to avoid duplication. When \code{MSE = NULL}, an empty \linkS4class{hist}
+object is returned.
 }
 \description{
-The \code{Hist()} constructor initializes a new \linkS4class{hist} object using
-information from a populated \code{\link[=OM]{OM()}} object or,
-when applied to an \code{\link[=MSE]{MSE()}} object, returns the historical results stored
-within that object.
+The \linkS4class{hist} object stores the complete historical time-series generated
+during a MSE spool-up, including population dynamics, exploitation history,
+reference points, and observational data. See \linkS4class{hist} for full
+documentation of all slots.
+}
+\details{
+Users do not typically need to create or manipulate \code{hist} objects directly —
+they are generated automatically as part of \code{\link[=Simulate]{Simulate()}} and stored in the
+\code{Hist} slot of the resulting \linkS4class{mse} object. \code{Hist()} is provided to
+extract that slot when needed.
 }
 \seealso{
-\code{\link[=OM]{OM()}}, \code{\link[=Data]{Data()}}
+\linkS4class{hist}, \linkS4class{mse}, \linkS4class{timeseries}, \code{\link[=Simulate]{Simulate()}}
 }

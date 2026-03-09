@@ -32,7 +32,7 @@ Simulate_om <- function(OM = NULL,
   }
     
   # ---- Make Hist Object ----
-  Hist <- Hist(OM, silent)
+  Hist <- OM2Hist(OM=OM, silent=silent)
 
   # ---- Calculate Equilibrium Unfished ----
   Hist@Unfished@Equilibrium <- CalcUnfished_Equilibrium(OM, silent)

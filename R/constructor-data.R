@@ -1,13 +1,72 @@
-#' Constructor and Accessors for `Data`
+#' Constructor and Accessor for `Data`
 #'
+#' Creates a new [data] object, or extracts the `Data` or `PPD` slot from
+#' an existing [om], [hist], or [mse] class object.
 #'
-#' @param object A [Data()] object.
-#' @param x Leave as NULL to create a new `Data` object, or a [OM()], [Hist()], or [MSE()] object to acces the `Data` or `PPD` slots.
-#' @param value Value to assign.
+#' When `Name` is an [om] or [hist] object, the function returns the
+#' corresponding `@@Data` slot. When `Name` is an [mse] object, the `@@PPD`
+#' slot is returned instead. Otherwise, a new `data` object is constructed from
+#' the supplied arguments.
 #'
-#' @return
-#'  A [data-class] object
+#' All slot arguments default to `NULL`, in which case an empty sub-object of
+#' the appropriate class is initialised automatically:
 #'
+#' - `LifeHistory` → [lifehistorydata]
+#' - `Exploitation` → [exploitationdata]
+#' - `Reference` → [referencedata]
+#' - `Effort` → [effortdata]
+#' - `Landings`, `Discards` → [catchdata]
+#' - `CPUE`, `Survey` → [indicesdata]
+#' - `LandingsAtAge`, `DiscardsAtAge`, `LandingsAtSize`, `DiscardsAtSize` → [compdata]
+#' - `Advice` → [advicedata]
+#'
+#' @param Name Either a character string naming the new `Data` object, or an
+#'   existing [om], [hist], or [mse] object from which to extract data.
+#'   Defaults to `"New Data Object"`.
+#' @param CommonName Optional character string. Common name of the stock.
+#' @param Species Optional character string. Scientific name of the species.
+#' @param Agency Optional character string. Name of the managing agency.
+#' @param Author Optional character string. Name of the data author.
+#' @param Email Optional character string. Contact email for the author.
+#' @param Region Optional character string. Geographic region of the stock.
+#' @param Latitude Optional numeric. Latitude of the stock.
+#' @param Longitude Optional numeric. Longitude of the stock.
+#' @param Years Vector of calendar years covered by the data. **Required**
+#' @param YearLH The last historical year; separates the
+#'   historical period from the projection period. Defaults to `max(Years)`.
+#' @param Seasons A positive integer giving the number of seasons per year.
+#'   Defaults to `1`.
+#' @param nArea A positive integer giving the number of spatial areas.
+#'   Defaults to `1`.
+#' @param LifeHistory Optional. An object of class `lifehistorydata`. 
+#' @param Exploitation Optional. An object of class `exploitationdata`.
+#' @param Reference Optional. An object of class `referencedata`. 
+#' @param Effort Optional. An object of class `effortdata`. 
+#' @param Landings Optional. An object of class `catchdata` for landed catch.
+#' @param Discards Optional. An object of class `catchdata` for discarded
+#'   catch. 
+#' @param CPUE Optional. An object of class `indicesdata` for catch-per-unit-
+#'   effort indices.
+#' @param Survey Optional. An object of class `indicesdata` for fishery-
+#'   independent survey indices. 
+#' @param LandingsAtAge Optional. An object of class `compdata` for age
+#'   composition of landings. 
+#' @param DiscardsAtAge Optional. An object of class `compdata` for age
+#'   composition of discards. 
+#' @param LandingsAtSize Optional. An object of class `compdata` for size
+#'   composition of landings. 
+#' @param DiscardsAtSize Optional. An object of class `compdata` for size
+#'   composition of discards.
+#' @param Advice Optional. An object of class `advicedata` containing TAC and
+#'   related advice. 
+#' @param Misc A named list for any additional user-defined data. Defaults to
+#'   `list()`.
+#'
+#' @return A [data] object, or when `Name` is an [mse] object, a list
+#'   of [data] objects from the `@@PPD` slot.
+#'
+#' @seealso [data-class], [LastTAC()], [LastHistYearInd()], [ProjectionYear()]
+#' @name Data
 #' @export
 Data <- function(Name = 'New Data Object', 
                  CommonName = NULL,
@@ -84,6 +143,9 @@ Data <- function(Name = 'New Data Object',
   
   if (is.null(Advice))
     Advice <- new('advicedata')
+  
+  if (!is.null(Years) && is.null(YearLH))
+    YearLH <- max(Years)
   
   object <- methods::new(
     "data",

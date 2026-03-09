@@ -12,14 +12,13 @@
 #'   automatically via `IdenticalSims()`.
 #' @param silent Logical; if `TRUE`, suppress messages during calculation.
 #'
-#' @return A [PopDynamics] object containing dynamic unfished
+#' @return A [popdynamics-class] object containing dynamic unfished
 #'   `Number`, `Biomass`, `SBiomass`, and `SProduction` arrays with dimensions
 #'   `Sim × Stock × Year`.
 #'
 #' @seealso [CalcUnfished_Equilibrium()]
 #'
 #' @export
-
 CalcUnfished_Dynamic <- function(Hist, IdenticalHist=NULL, silent=FALSE) {
   
   if (inherits(Hist,'om')) {

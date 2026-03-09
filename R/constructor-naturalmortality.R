@@ -1,6 +1,6 @@
 #' NaturalMortality
 #'
-#' Construct a [NaturalMortality()] object defining natural mortality
+#' Construct a [naturalmortality-class()] object defining natural mortality
 #' assumptions for a [Stock()].
 #'
 #' @param Pars Named list of natural mortality parameters for models in [NaturalMortalityModels()]

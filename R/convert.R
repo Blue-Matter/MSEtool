@@ -1,6 +1,7 @@
 #' Convert legacy S4 objects to new S4 object classes
 #' 
-#' @include MOM_object.r
+#' @include zz_MOM_object.r
+#' @include zz_Class_definitions.R
 #' @param x A legacy S4 object of class [OM-class], [MOM-class], [Stock-class], 
 #' [Fleet-class], [Obs-class], [Imp-class], or [Data-class]
 #' @param ... Additional named arguments to pass to the other `Convert` functions.

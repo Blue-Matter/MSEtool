@@ -8,6 +8,9 @@
 An S4 class defining fecundity-at-age or fecundity-at-length relationships
 associated with a \code{\link[=Stock]{Stock()}} object.
 }
+\details{
+See \code{\link[=Fecundity]{Fecundity()}} for details.
+}
 \section{Slots}{
 
 \describe{

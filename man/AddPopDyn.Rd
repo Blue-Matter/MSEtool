@@ -4,14 +4,14 @@
 \alias{AddPopDyn}
 \title{Add Population Dynamics Data to a Data Object}
 \usage{
-AddPopDyn(Data, Hist, x, Year = NULL, Years = NULL, mp = 1)
+AddPopDyn(Data, Hist, sim, Year = NULL, Years = NULL, mp = 1)
 }
 \arguments{
 \item{Data}{A \code{Data} S4 object.}
 
 \item{Hist}{A \code{\link[=Hist]{Hist()}} object containing population dynamics.}
 
-\item{x}{Integer. Current simulation index.}
+\item{sim}{Integer. Current simulation index.}
 
 \item{Year}{Integer or \code{NULL}. Current projection year. Used to gate
 one-time warnings.}

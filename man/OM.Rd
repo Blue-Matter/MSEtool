@@ -50,7 +50,7 @@ Character string. Supports Markdown.}
 \item{Author}{Optional. Name(s) of author(s) of the operating model.
 Character vector.}
 
-\item{Email}{ptional. Email address(es) corresponding to \code{Author}.
+\item{Email}{Optional. Email address(es) corresponding to \code{Author}.
 Character vector. Supports Markdown.}
 
 \item{Region}{Optional. Name of the geographic region of the fishery.
@@ -59,7 +59,7 @@ Character string.}
 \item{Latitude}{Optional. Latitude (decimal degrees) representing the
 center of \code{Region}. Numeric scalar.}
 
-\item{Longitude}{ptional. Longitude (decimal degrees) representing the
+\item{Longitude}{Optional. Longitude (decimal degrees) representing the
 center of \code{Region}. Numeric scalar.}
 
 \item{Sponsor}{Optional. Organization sponsoring development of the

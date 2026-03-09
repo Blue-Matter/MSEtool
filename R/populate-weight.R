@@ -155,7 +155,7 @@ PopulateWeight <- function(Weight,
   
   if (AWK) {
     Weight <- PopulateClasses(Weight)
-    Weight <- PopulateASK(Weight, Ages, Years, silent, type = "Weight")
+    Weight <- PopulateASK(Weight, Ages, silent, type = "Weight")
   }
   
   SetDigest(Weight, argList)

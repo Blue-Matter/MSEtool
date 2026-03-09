@@ -8,13 +8,13 @@
 #' Character string. Supports Markdown.
 #' @param Author Optional. Name(s) of author(s) of the operating model.
 #' Character vector.
-#' @param Email ptional. Email address(es) corresponding to `Author`.
+#' @param Email Optional. Email address(es) corresponding to `Author`.
 #' Character vector. Supports Markdown.
 #' @param Region Optional. Name of the geographic region of the fishery.
 #' Character string.
 #' @param Latitude Optional. Latitude (decimal degrees) representing the
 #' center of `Region`. Numeric scalar.
-#' @param Longitude ptional. Longitude (decimal degrees) representing the
+#' @param Longitude Optional. Longitude (decimal degrees) representing the
 #' center of `Region`. Numeric scalar.
 #' @param Sponsor Optional. Organization sponsoring development of the
 #' operating model. Character string. Supports Markdown.

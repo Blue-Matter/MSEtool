@@ -6,6 +6,10 @@
 #' @slot Initial   Numeric vector of initial depletion values.
 #' @slot Final     Numeric vector of final depletion values.
 #' @slot Reference Character scalar identifying the reference biomass.
+#' 
+#' @details
+#' See [Depletion()] for details.
+#' 
 #'
 #' @export
 #' @include class-unions.R

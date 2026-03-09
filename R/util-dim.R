@@ -26,3 +26,10 @@ dim <- function(x) {
   names(d) <- dnames
   d
 }
+
+
+setdnames <- function(dnames, BySim=TRUE) {
+  if (BySim & !"Sim" %in% dnames) 
+    dnames <- c('Sim', dnames)
+  dnames
+}

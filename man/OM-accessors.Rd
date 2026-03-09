@@ -78,7 +78,7 @@ Control(OM)
 
 Control(x) <- value
 
-CurrentYear(x)
+CurrentYear(OM)
 
 CurrentYear(x) <- value
 
@@ -118,7 +118,7 @@ nReps(OM)
 
 nReps(x) <- value
 
-nYear(x)
+nYear(OM)
 
 nYear(x) <- value
 
@@ -126,7 +126,7 @@ pStar(OM)
 
 pStar(x) <- value
 
-pYear(x)
+pYear(OM)
 
 pYear(x) <- value
 
@@ -138,7 +138,7 @@ Relations(OM)
 
 Relations(x) <- value
 
-Seasons(x)
+Seasons(OM)
 
 Seasons(x) <- value
 

@@ -39,7 +39,8 @@
 #'
 #'
 #' @include class-unions.R
-#' @include class-internal.R
+#' @include class-popdynamics.R
+#' @include class-refpointsMSY.R
 #' @export
 setClass("reference",
          slots = c(

@@ -39,7 +39,7 @@ NaturalMortality(x) <- value
 A \linkS4class{naturalmortality} object.
 }
 \description{
-Construct a \code{\link[=NaturalMortality]{NaturalMortality()}} object defining natural mortality
+Construct a \code{\link[=naturalmortality-class]{naturalmortality-class()}} object defining natural mortality
 assumptions for a \code{\link[=Stock]{Stock()}}.
 }
 \details{

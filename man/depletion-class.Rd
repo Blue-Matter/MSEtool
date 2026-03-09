@@ -8,6 +8,9 @@
 An S4 class representing initial and/or final depletion relative to
 a reference biomass for a \code{\link[=Stock]{Stock()}} object.
 }
+\details{
+See \code{\link[=Depletion]{Depletion()}} for details.
+}
 \section{Slots}{
 
 \describe{

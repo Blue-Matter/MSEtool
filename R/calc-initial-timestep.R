@@ -93,7 +93,7 @@ CalcDynamicInitial <- function(Hist) {
 #' Internal helper that rescales initial numbers-at-age to match a target
 #' depletion level relative to unfished biomass or spawning biomass.
 #'
-#' @param Hist A [Hist()] object.
+#' @param Hist A [hist] object.
 #' @param st Integer stock index.
 #'
 #' @return The modified [Hist()] object.
@@ -187,4 +187,39 @@ OptInitialDepletion <- function(par=1,
     ssq <- ((val/RefVal- DepletionInitial)^2)
   }
   ssq
+}
+
+#' Calculate Recruitment Age Index for One or All Stocks
+#'
+#' Returns the number of pre-recruit age classes (i.e. the age index at which
+#' recruitment occurs) for each stock in an `om` or `hist` class object. Pre-recruit
+#' classes are determined by the seasonal time step and the minimum age class.
+#'
+#' @param OM  An `om` or `hist` class object.
+#' @param st  Integer or `NULL`. If provided, returns the recruitment age index
+#'            for stock `st` only. Default: `NULL` (all stocks).
+#'
+#' @return If `st` is provided, a single integer. Otherwise, an array of
+#'   recruitment age indices with a `Stock` dimension.
+#'
+#' @keywords internal
+CalcRecruitment_AgeIndex <- function(OM, st=NULL) {
+  CheckClass(OM, c('om', 'hist'))
+  
+  if (inherits(OM, 'hist')) 
+    OM <- OM@OM
+  
+  if (!is.null(st)) {
+    Stock <- OM@Stock[[st]]
+    PreRecruit <- seq(0, by=1/Stock@Seasons, to=min(Stock@Ages@Classes))
+    return(length(PreRecruit)-1)
+  }
+  
+  purrr::map(OM@Stock, \(Stock) {
+    PreRecruit <- seq(0, by=1/Stock@Seasons, to=min(Stock@Ages@Classes))
+    length(PreRecruit)-1
+  }) |> 
+    List2Array('Stock') |>
+    DropDimension('Sim')
+  
 }

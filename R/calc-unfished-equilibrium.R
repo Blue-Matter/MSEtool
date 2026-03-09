@@ -19,7 +19,7 @@
 #' @param OM An [OM()] or [Hist()] object.
 #' @param silent Logical; if `TRUE`, suppress messages during calculation.
 #'
-#' @return A [PopDynamics] object containing equilibrium unfished
+#' @return A [popdynamics-class] object containing equilibrium unfished
 #'   `Number`, `Biomass`, `SBiomass`, and `SProduction` arrays with
 #'   dimensions `Sim × Stock × Year`.
 #'

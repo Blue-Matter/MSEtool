@@ -16,7 +16,7 @@ CalcFisheryDynamics(
 )
 }
 \arguments{
-\item{Hist}{A \code{\link[=Hist]{Hist()}} object.}
+\item{Hist}{A \link{hist} object.}
 
 \item{Years}{Integer vector of years to calculate dynamics over. Defaults to
 historical years from \code{Hist@OM}.}

@@ -63,7 +63,31 @@ Classes <- function(x) {
   AssignSlot(x, value, 'Classes')
 }
 
+#' @rdname Access
+#' @export
+CPUE <- function(x) {
+  AccessSlot(x,'CPUE')
+}
 
+#' @rdname Access
+#' @export
+`CPUE<-` <- function(x, value) {
+  AssignSlot(x, value, 'CPUE')
+}
+
+
+#' @rdname Access
+#' @export
+CV <- function(x) {
+  AccessSlot(x,'CV')
+}
+
+
+#' @rdname Access
+#' @export
+`CV<-` <- function(x, value) {
+  AssignSlot(x, value, 'CV')
+}
 
 #' @rdname Access
 #' @export
@@ -84,6 +108,46 @@ CVatAge <- function(x) {
 Dist <- function(x) {
   AccessSlot(x,'Dist')
 }
+
+#' @rdname Access
+#' @export
+Exploitation <- function(x) {
+  AccessSlot(x,'Exploitation')
+}
+
+#' @rdname Access
+#' @export
+`Exploitation<-` <- function(x, value) {
+  AssignSlot(x, value, 'Exploitation')
+}
+
+
+#' @rdname Access
+#' @export
+Landings <- function(x) {
+  AccessSlot(x,'Landings')
+}
+
+#' @rdname Access
+#' @export
+`Landings<-` <- function(x, value) {
+  AssignSlot(x, value, 'Landings')
+}
+
+
+#' @rdname Access
+#' @export
+LifeHistory <- function(x) {
+  AccessSlot(x,'LifeHistory')
+}
+
+#' @rdname Access
+#' @export
+`LifeHistory<-` <- function(x, value) {
+  AssignSlot(x, value, 'LifeHistory')
+}
+
+
 
 #' @rdname Access
 #' @export
@@ -357,6 +421,31 @@ Random <- function(x) {
 
 #' @rdname Access
 #' @export
+Ref <- function(x) {
+  AccessSlot(x,'Ref')
+}
+
+#' @rdname Access
+#' @export
+`Ref<-` <- function(x, value) {
+  AssignSlot(x, value, 'Ref')
+}
+
+#' @rdname Access
+#' @export
+RefCV <- function(x) {
+  AccessSlot(x,'RefCV')
+}
+
+#' @rdname Access
+#' @export
+`RefCV<-` <- function(x, value) {
+  AssignSlot(x, value, 'RefCV')
+}
+
+
+#' @rdname Access
+#' @export
 Reference <- function(x) {
   AccessSlot(x,'Reference')
 }
@@ -423,6 +512,34 @@ Units <- function(x) {
 `Units<-` <- function(x, value) {
   AssignSlot(x, value, 'Units')
 }
+
+#' @rdname Access
+#' @export
+Value <- function(x) {
+  AccessSlot(x,'Value')
+}
+
+
+#' @rdname Access
+#' @export
+`Value<-` <- function(x, value) {
+  AssignSlot(x, value, 'Value')
+}
+
+
+#' @rdname Access
+#' @export
+YearLH <- function(x) {
+  AccessSlot(x,'YearLH')
+}
+
+
+#' @rdname Access
+#' @export
+`YearLH<-` <- function(x, value) {
+  AssignSlot(x, value, 'YearLH')
+}
+
 
 # ---- Helpers -----
 

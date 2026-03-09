@@ -1,11 +1,11 @@
 
-CheckAdvice <- function(Advice, Proj, FleetNames, Areas, x) {
+CheckAdvice <- function(Advice, Proj, FleetNames, Areas, sim) {
   if (inherits(Advice, 'try-error'))
     return(Advice)
  
   Advice <- CheckAdvice_TAC(Advice, Proj, FleetNames, Areas)
   
-  Advice <- CheckAdvice_Effort(Advice, Proj, FleetNames, Areas, x)
+  Advice <- CheckAdvice_Effort(Advice, Proj, FleetNames, Areas, sim)
   
   Advice <- CheckAdvice_Closure(Advice, Proj, FleetNames, Areas)
   
@@ -36,7 +36,7 @@ CheckAdvice_TAC <- function(Advice, Proj, FleetNames, Areas) {
   
 }
 
-CheckAdvice_Effort <- function(Advice, Proj, FleetNames, Areas, x) {
+CheckAdvice_Effort <- function(Advice, Proj, FleetNames, Areas, sim) {
   
   Effort <- Advice@Effort
   nFleet <- length(FleetNames)
@@ -45,7 +45,7 @@ CheckAdvice_Effort <- function(Advice, Proj, FleetNames, Areas, x) {
   if (is.null(Effort))
     return(Advice)
   
-  if (is.numeric(Effort)) {
+  if (is.numeric(Effort) && !is.array(Effort)) {
     if (length(Effort)==1) {
       Effort <- array(Effort)
     } else if (length(Effort)==nFleet) {

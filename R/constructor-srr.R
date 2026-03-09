@@ -50,6 +50,8 @@
 #' The `SRR()` constructor defines both the deterministic stock–recruit
 #' relationship and the stochastic recruitment deviations used in an operating
 #' model.
+#' 
+#' See [SRRModels()] for a list of supported SRR models.
 #'
 #' Recruitment deviations may be supplied directly via `RecDevInit`,
 #' `RecDevHist`, and `RecDevProj`, or generated internally from `SD` and `AC`
@@ -62,6 +64,8 @@
 #' replacement functions such as [Pars()], [Model()], and [R0()].
 #'
 #' @return A  [srr-class] object.
+#' 
+#' @seealso [SRRModels()]
 #' 
 #' @example man-examples/SRR-class.R
 #'

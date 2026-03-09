@@ -57,8 +57,13 @@ PopulateDiscardMortality <- function(DiscardMortality,
   
   # Default: no discard mortality if object is empty
   if (EmptyObject(DiscardMortality)) {
-    DiscardMortality@MeanAtAge <- array(0, dim = c(1, length(Ages@Classes), 1, 1)) |>
-      SetDimNames_SAYR(Age = Ages@Classes, Years = Years)
+    DiscardMortality@MeanAtAge <- array(0, dim = c(1, length(Ages@Classes), 1, 1)) 
+    dimnames(DiscardMortality@MeanAtAge) <- list(
+      Sim = 1,
+      Age = Ages@Classes,
+      Year = Years[1],
+      Area = 1
+    )
     
     DiscardMortality@Classes <- Length@Classes
     DiscardMortality@MeanAtLength <- array(0, dim = c(1, length(DiscardMortality@Classes), 1, 1))

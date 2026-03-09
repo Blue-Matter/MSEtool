@@ -1,4 +1,24 @@
 
+#' Project a `Hist` Object Across Multiple Management Procedures
+#'
+#' Runs the projection loop for all MPs in `MPs`, either sequentially or
+#' in parallel across MPs using `furrr`. Returns a completed `MSE` object
+#' with results for all MPs.
+#'
+#' @param Hist     `Hist` object containing the conditioned operating model.
+#' @param MPs      Character vector of MP names to project. Default: `NULL`
+#'                 (uses all MPs attached to `Hist`).
+#' @param parallel Logical. Not used.
+#' @param silent   Logical. If `TRUE`, suppresses progress messages.
+#'                 Default: `FALSE`.
+#' @param nSim     Integer or `NULL`. If provided, reduces the number of
+#'                 simulations to `nSim` before projecting. Default: `NULL`
+#'                 (use all simulations).
+#' @param Reduce   Logical. Reserved for future use. Default: `TRUE`.
+#'
+#' @return A completed `MSE` object with projection results for all MPs.
+#'
+#' @keywords internal
 Project_hist <- function(Hist,
                          MPs = NULL, 
                          parallel=FALSE, 
@@ -40,7 +60,7 @@ Project_hist <- function(Hist,
   MSE <- Hist2MSE(Proj, MPNames = MPs)
 
   # ---- Project MPs ----
-  mp <- 1 # for debugging
+  mp <- 1 # initialise for debugging
   
   if (!silent) 
     cli::cli_alert('Projecting {.val {nMPs}} MP{?s}')

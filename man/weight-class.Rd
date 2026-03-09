@@ -4,36 +4,39 @@
 \name{weight-class}
 \alias{weight-class}
 \title{Weight Class}
-\arguments{
-\item{Pars}{Named list of parameters for \code{\link[=WeightModels]{WeightModels()}}}
-
-\item{Model}{Model associated with \code{Pars}}
-
-\item{Units}{Weight units}
-
-\item{MeanAtAge}{Mean weight-at-age array}
-
-\item{MeanAtLength}{Mean weight-at-length array}
-
-\item{CVatAge}{Coefficient of variation at age}
-
-\item{Dist}{Distribution name}
-
-\item{TruncSD}{Truncation in SD units}
-
-\item{Timing}{Timing within time step}
-
-\item{Random}{Random effects}
-
-\item{AWK}{Age–weight key}
-
-\item{Classes}{Weight classes}
-
-\item{Misc}{Miscellaneous list}
-}
 \description{
 An S4 class representing the weight-at-age and -at-length structure for a \code{\link[=Stock]{Stock()}} object.
 }
 \details{
 See \code{\link[=Weight]{Weight()}} for details.
 }
+\section{Slots}{
+
+\describe{
+\item{\code{Pars}}{Named list of parameters for \code{\link[=WeightModels]{WeightModels()}}}
+
+\item{\code{Model}}{Model associated with \code{Pars}}
+
+\item{\code{Units}}{Weight units}
+
+\item{\code{MeanAtAge}}{Mean weight-at-age array}
+
+\item{\code{MeanAtLength}}{Mean weight-at-length array}
+
+\item{\code{CVatAge}}{Coefficient of variation at age}
+
+\item{\code{Dist}}{Distribution name}
+
+\item{\code{TruncSD}}{Truncation in SD units}
+
+\item{\code{Timing}}{Timing within time step}
+
+\item{\code{Random}}{Random effects}
+
+\item{\code{AWK}}{Age–weight key}
+
+\item{\code{Classes}}{Weight classes}
+
+\item{\code{Misc}}{Miscellaneous list}
+}}
+

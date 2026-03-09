@@ -122,6 +122,8 @@ The \code{SRR()} constructor defines both the deterministic stock–recruit
 relationship and the stochastic recruitment deviations used in an operating
 model.
 
+See \code{\link[=SRRModels]{SRRModels()}} for a list of supported SRR models.
+
 Recruitment deviations may be supplied directly via \code{RecDevInit},
 \code{RecDevHist}, and \code{RecDevProj}, or generated internally from \code{SD} and \code{AC}
 during model setup.
@@ -145,4 +147,7 @@ SRR <- Populate(SRR, MaxAge=10, nHistTS=20, nProjTS=5, nsim=2)
 plot(SRR)
 
 # see Examples in `?Length` for other `Pars` configurations
+}
+\seealso{
+\code{\link[=SRRModels]{SRRModels()}}
 }

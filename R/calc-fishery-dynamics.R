@@ -2,7 +2,7 @@
 #'
 #' Internal wrapper around C++ `CalcFisheryDynamics_`
 #'
-#' @param Hist A [Hist()] object.
+#' @param Hist A [hist] object.
 #' @param Years Integer vector of years to calculate dynamics over. Defaults to
 #'   historical years from `Hist@OM`.
 #' @param Sims Integer vector of simulation indices to compute. Defaults to all

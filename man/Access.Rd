@@ -6,9 +6,19 @@
 \alias{AC<-}
 \alias{Classes}
 \alias{Classes<-}
+\alias{CPUE}
+\alias{CPUE<-}
+\alias{CV}
+\alias{CV<-}
 \alias{CVatAge}
 \alias{CVatAge<-}
 \alias{Dist}
+\alias{Exploitation}
+\alias{Exploitation<-}
+\alias{Landings}
+\alias{Landings<-}
+\alias{LifeHistory}
+\alias{LifeHistory<-}
 \alias{MeanAtAge}
 \alias{MeanAtAge<-}
 \alias{MeanAtLength}
@@ -32,6 +42,10 @@
 \alias{Period}
 \alias{Period<-}
 \alias{Random}
+\alias{Ref}
+\alias{Ref<-}
+\alias{RefCV}
+\alias{RefCV<-}
 \alias{Reference}
 \alias{Reference<-}
 \alias{Seed}
@@ -43,6 +57,10 @@
 \alias{TruncSD<-}
 \alias{Units}
 \alias{Units<-}
+\alias{Value}
+\alias{Value<-}
+\alias{YearLH}
+\alias{YearLH<-}
 \title{Access Slots from a Compatible Object}
 \usage{
 AC(x)
@@ -53,11 +71,31 @@ Classes(x)
 
 Classes(x) <- value
 
+CPUE(x)
+
+CPUE(x) <- value
+
+CV(x)
+
+CV(x) <- value
+
 CVatAge(x)
 
 CVatAge(x) <- value
 
 Dist(x)
+
+Exploitation(x)
+
+Exploitation(x) <- value
+
+Landings(x)
+
+Landings(x) <- value
+
+LifeHistory(x)
+
+LifeHistory(x) <- value
 
 MeanAtAge(x)
 
@@ -105,6 +143,14 @@ Period(x) <- value
 
 Random(x)
 
+Ref(x)
+
+Ref(x) <- value
+
+RefCV(x)
+
+RefCV(x) <- value
+
 Reference(x)
 
 Reference(x) <- value
@@ -126,6 +172,14 @@ TruncSD(x) <- value
 Units(x)
 
 Units(x) <- value
+
+Value(x)
+
+Value(x) <- value
+
+YearLH(x)
+
+YearLH(x) <- value
 }
 \arguments{
 \item{x}{An S4 object with the corresponding slot.}

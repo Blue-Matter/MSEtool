@@ -8,7 +8,7 @@
 #'
 #' @param Year              Integer. Current projection year.
 #' @param ManagementYears   Integer vector. Years in which the MP is applied,
-#'                          as computed by [CalcManagementYears()].
+#'                          as computed by `CalcManagementYears`.
 #' @param LastAdviceSimList Nested list of `Advice` objects from the most
 #'                          recent management year. Returned unchanged in
 #'                          non-management years.
@@ -25,7 +25,7 @@
 #' @param Areas             Integer vector. Area indices.
 #'
 #' @return A nested list of `Advice` objects — either newly computed by
-#'   [CalcAdvice()] if `Year` is a management year, or `LastAdviceSimList`
+#'   `CalcAdvice` if `Year` is a management year, or `LastAdviceSimList`
 #'   carried forward otherwise.
 #'
 #' @keywords internal
@@ -86,10 +86,10 @@ CalcAdvice <- function(MPName, MPfunction, DataSimList, Year, Proj, YearsProj, m
 
   AdviceSimList <- MakeNamedList(1:nSim)
   
-  for (x in seq_along(AdviceSimList)) {
-    DataList  <- DataSimList[[x]]
-    AdviceSimList[[x]] <- try(
-      CalcAdvice_Sim_MP(x = x, 
+  for (sim in seq_along(AdviceSimList)) {
+    DataList  <- DataSimList[[sim]]
+    AdviceSimList[[sim]] <- try(
+      CalcAdvice_Sim_MP(sim = sim, 
                         MPName = MPName, 
                         MPfunction = MPfunction, 
                         DataList = DataList,
@@ -112,7 +112,7 @@ CalcAdvice <- function(MPName, MPfunction, DataSimList, Year, Proj, YearsProj, m
 #' Runs a management procedure (MP) for a single simulation across all stocks/complexes
 #' and returns a list of `Advice` objects.
 #'
-#' @param x Simulation index (integer) identifying which simulation to run.
+#' @param sim Simulation index (integer) identifying which simulation to run.
 #' @param MPName Name of the management procedure (MP).
 #' @param MPfunction Function object corresponding to `MPName`.
 #' @param DataList List of stock/complex data objects for this simulation.
@@ -127,7 +127,7 @@ CalcAdvice <- function(MPName, MPfunction, DataSimList, Year, Proj, YearsProj, m
 #' @return A named list of `Advice` objects for each stock/complex.
 #'
 #' @keywords internal
-CalcAdvice_Sim_MP <- function(x, MPName, 
+CalcAdvice_Sim_MP <- function(sim, MPName, 
                               MPfunction, DataList, 
                               Year, Proj,
                               YearsProj,
@@ -138,11 +138,11 @@ CalcAdvice_Sim_MP <- function(x, MPName,
   
   # loop over stocks/complexes
   for (i in seq_along(DataList)) {  
-    Data <- DataList[[i]] |> AddPopDyn(Proj, x, Year, YearsProj, mp)
+    Data <- DataList[[i]] |> AddPopDyn(Proj, sim, Year, YearsProj, mp)
     
     Advice <- try(MPfunction(Data=Data), silent=TRUE)
-    Advice <- CheckAdvice(Advice, Proj, FleetNames, Areas, x) 
-    Advice <- Log_MPError(Advice, MPName, Data, Sim=x, Year)
+    Advice <- CheckAdvice(Advice, Proj, FleetNames, Areas, sim) 
+    Advice <- Log_MPError(Advice, MPName, Data, Sim=sim, Year)
     AdviceList[[i]] <- Advice
   }
   AdviceList
@@ -158,7 +158,7 @@ CalcAdvice_Sim_MP <- function(x, MPName,
 #'
 #' @param Data A `Data` S4 object.
 #' @param Hist A [Hist()] object containing population dynamics.
-#' @param x Integer. Current simulation index.
+#' @param sim Integer. Current simulation index.
 #' @param Year Integer or `NULL`. Current projection year. Used to gate
 #'   one-time warnings.
 #' @param Years Integer vector or `NULL`. All projection years. Used to gate
@@ -169,18 +169,18 @@ CalcAdvice_Sim_MP <- function(x, MPName,
 #' @return The `Data` object, with `Data@Misc$DataOM` populated if
 #'   `OM@Control$DataOM` is set, otherwise unchanged.
 #' @keywords internal
-AddPopDyn <- function(Data, Hist, x, Year=NULL, Years=NULL, mp=1) {
+AddPopDyn <- function(Data, Hist, sim, Year=NULL, Years=NULL, mp=1) {
   
   if (!length(Hist@OM@Control$DataOM))
     return(Data)
   
   Hist@Data <- list()
   
-  warn_once <- !is.null(Year) && x == 1 && Year == min(Years) && mp == 1
+  warn_once <- !is.null(Year) && sim == 1 && Year == min(Years) && mp == 1
   
   if (isTRUE(Hist@OM@Control$DataOM)) {
     # Add all slots
-    Data@Misc$DataOM <- SubsetSim(Hist, x)
+    Data@Misc$DataOM <- SubsetSim(Hist, sim)
     
   } else if (is.list(Hist@OM@Control$DataOM)) {
     # Add named subset of slots
@@ -192,14 +192,11 @@ AddPopDyn <- function(Data, Hist, x, Year=NULL, Years=NULL, mp=1) {
         if (warn_once)
           cli::cli_alert_warning("{.val {nm}} is not a valid slot name for `Hist`. Ignoring.")
       } else {
-        slot(Data@Misc$DataOM, nm) <- slot(Hist, nm) |> SubsetSim(Sims=x)
+        slot(Data@Misc$DataOM, nm) <- slot(Hist, nm) |> SubsetSim(Sims=sim)
       }
     }
     
-  } else {
-    if (warn_once)
-      cli::cli_alert_warning('`OM@Control$DataOM` must be `TRUE` or a named list.')
-  }
+  } 
   
   Data
 }

@@ -5,7 +5,7 @@
 \title{Calculate MP Advice for a Single Simulation}
 \usage{
 CalcAdvice_Sim_MP(
-  x,
+  sim,
   MPName,
   MPfunction,
   DataList,
@@ -18,7 +18,7 @@ CalcAdvice_Sim_MP(
 )
 }
 \arguments{
-\item{x}{Simulation index (integer) identifying which simulation to run.}
+\item{sim}{Simulation index (integer) identifying which simulation to run.}
 
 \item{MPName}{Name of the management procedure (MP).}
 
