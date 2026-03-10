@@ -345,7 +345,7 @@ Collate:
     'zz_WHAM2OM.R'
     'zz_aaImportFrom.R'
     'zz_applyMMP.R'
-    'zz_data_documentation_legacy.R'
+    'zz_data_documentation.R'
     'zz_iSCAM2OM.R'
     'zz_multiMSE.R'
     'zz_multiMSE_internal.R'

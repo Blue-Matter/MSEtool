@@ -57,9 +57,8 @@ PopulateSpatial <- function(Spatial,
   
   argList <- list(Ages, Years, nSim, seed)
   
-  if (CheckDigest(Spatial, argList)) {
+  if (CheckDigest(Spatial, argList)) 
     return(Spatial)
-  }
   
   SetSeed(seed)
   

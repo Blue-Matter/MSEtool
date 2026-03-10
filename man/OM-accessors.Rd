@@ -138,7 +138,7 @@ Relations(OM)
 
 Relations(x) <- value
 
-Seasons(OM)
+Seasons(object)
 
 Seasons(x) <- value
 

@@ -56,10 +56,10 @@ CalcUnfishedDist <- function(Spatial, Ages=NULL, Years=NULL) {
   # after apply() collapses it to the last position.
   for (s in seq_len(nSim)) {
     UnfishedDist[s, , , ] <- apply(
-      Spatial@Movement[s, , , , ],
+      zbind::adrop(Spatial@Movement[s, , , , ,drop=FALSE], 1),
       MARGIN  = c(3, 4),   # Age x Year
       FUN     = CalcAsymDist
-    ) |> aperm(c(3, 1, 2))  # Area x Age x Year -> Area first
+    ) |> aperm(c(3, 1, 2))  # Area x Age x Year 
   }
   
   Spatial@UnfishedDist <- UnfishedDist

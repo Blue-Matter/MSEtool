@@ -494,9 +494,10 @@ Relations <- function(OM) {
 
 #' @rdname OM-accessors
 #' @export
-Seasons <- function(OM) {
-  CheckClass(OM)
-  OM@Seasons
+Seasons <- function(object) {
+  if (inherits(object,'hist'))
+      return(object@OM@Seasons)
+  object@Seasons
 }
 
 #' @rdname OM-accessors

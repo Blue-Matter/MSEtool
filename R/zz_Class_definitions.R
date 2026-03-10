@@ -742,9 +742,7 @@ setMethod("initialize", "Imp", function(.Object, file = NA, dec=c(".", ",")) {
 #'
 #' Almost all of these inputs are a vector of length 2 which describes the upper and lower
 #' bounds of a uniform distribution from which to sample the parameter.
-#'
-#' @name OM-class
-#' @docType class
+#' 
 #' @section Objects from the Class: Objects can be created by calls of the form
 #' \code{new('OM', Stock, Fleet, Obs, Imp)}.
 
@@ -772,7 +770,8 @@ setMethod("initialize", "Imp", function(.Object, file = NA, dec=c(".", ",")) {
 # #' @template Imp_template
 #'
 #' @author T. Carruthers and A. Hordyk
-#' @rdname legacy-OM-class
+#'
+#' @name OMlegacy-class
 #' @export
 #' @keywords classes
 #'
