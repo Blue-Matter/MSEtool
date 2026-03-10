@@ -18,6 +18,7 @@
 \alias{CurrentYear<-}
 \alias{DataLag}
 \alias{DataLag<-}
+\alias{Dynamics<-}
 \alias{EFactor}
 \alias{EFactor<-}
 \alias{Email}
@@ -86,6 +87,8 @@ DataLag(OM)
 
 DataLag(x) <- value
 
+Dynamics(x) <- value
+
 EFactor(OM)
 
 EFactor(x) <- value
@@ -138,7 +141,7 @@ Relations(OM)
 
 Relations(x) <- value
 
-Seasons(object)
+Seasons(OM)
 
 Seasons(x) <- value
 

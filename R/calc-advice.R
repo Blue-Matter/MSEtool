@@ -29,7 +29,7 @@
 #'   carried forward otherwise.
 #'
 #' @keywords internal
-ApplyMP <- function(Year,
+Apply_MP <- function(Year,
                     ManagementYears,
                     LastAdviceSimList,
                     MPName,

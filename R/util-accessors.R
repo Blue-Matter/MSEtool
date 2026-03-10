@@ -28,6 +28,19 @@ AC <- function(x) {
   AssignSlot(x, value, 'AC')
 }
 
+#' @rdname Access
+#' @export
+BioEconomic <- function(x) {
+  x@BioEconomic
+}
+
+#' @rdname Access
+#' @export
+`BioEconomic<-` <- function(x, value) {
+  AssignSlot(x, value, 'BioEconomic')
+}
+
+
 
 
 
@@ -124,19 +137,6 @@ Exploitation <- function(x) {
 
 #' @rdname Access
 #' @export
-Landings <- function(x) {
-  AccessSlot(x,'Landings')
-}
-
-#' @rdname Access
-#' @export
-`Landings<-` <- function(x, value) {
-  AssignSlot(x, value, 'Landings')
-}
-
-
-#' @rdname Access
-#' @export
 LifeHistory <- function(x) {
   AccessSlot(x,'LifeHistory')
 }
@@ -148,6 +148,11 @@ LifeHistory <- function(x) {
 }
 
 
+#' @rdname Access
+#' @export
+Log <- function(x) {
+  AccessSlot(x,'Log')
+}
 
 #' @rdname Access
 #' @export
@@ -480,6 +485,20 @@ SD <- function(x) {
 `SD<-` <- function(x, value) {
   AssignSlot(x, value, 'SD')
 }
+
+
+#' @rdname Access
+#' @export
+Survey <- function(x) {
+  AccessSlot(x,'Survey')
+}
+
+#' @rdname Access
+#' @export
+`Survey<-` <- function(x, value) {
+  AssignSlot(x, value, 'Survey')
+}
+
 
 #' @rdname Access
 #' @export

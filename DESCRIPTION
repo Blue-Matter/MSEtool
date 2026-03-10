@@ -267,6 +267,7 @@ Collate:
     'util-dim.R'
     'util-dimension.R'
     'util-get-metadata.R'
+    'utils-access-timeseries.R'
     'utils-add-year-dimnames.R'
     'utils-advice-null.R'
     'utils-array-operations.R'

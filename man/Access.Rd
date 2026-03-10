@@ -4,6 +4,8 @@
 \alias{Access}
 \alias{AC}
 \alias{AC<-}
+\alias{BioEconomic}
+\alias{BioEconomic<-}
 \alias{Classes}
 \alias{Classes<-}
 \alias{CPUE}
@@ -15,10 +17,9 @@
 \alias{Dist}
 \alias{Exploitation}
 \alias{Exploitation<-}
-\alias{Landings}
-\alias{Landings<-}
 \alias{LifeHistory}
 \alias{LifeHistory<-}
+\alias{Log}
 \alias{MeanAtAge}
 \alias{MeanAtAge<-}
 \alias{MeanAtLength}
@@ -52,6 +53,8 @@
 \alias{Seed<-}
 \alias{SD}
 \alias{SD<-}
+\alias{Survey}
+\alias{Survey<-}
 \alias{Timing}
 \alias{TruncSD}
 \alias{TruncSD<-}
@@ -66,6 +69,10 @@
 AC(x)
 
 AC(x) <- value
+
+BioEconomic(x)
+
+BioEconomic(x) <- value
 
 Classes(x)
 
@@ -89,13 +96,11 @@ Exploitation(x)
 
 Exploitation(x) <- value
 
-Landings(x)
-
-Landings(x) <- value
-
 LifeHistory(x)
 
 LifeHistory(x) <- value
+
+Log(x)
 
 MeanAtAge(x)
 
@@ -162,6 +167,10 @@ Seed(x) <- value
 SD(x)
 
 SD(x) <- value
+
+Survey(x)
+
+Survey(x) <- value
 
 Timing(x)
 

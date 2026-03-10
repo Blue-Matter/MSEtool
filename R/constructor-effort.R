@@ -42,21 +42,8 @@ Effort <- function(Effort       = NULL,
                    Maximum      = NULL,
                    Misc         = list()) {
   
-  if (inherits(Effort, 'fleet')) {
+  if (inherits(Effort, c('fleet', 'effort', 'hist', 'obs', 'mse')))
     return(Effort@Effort)
-  }
-  
-  if (inherits(Effort, 'effort')) {
-    return(Effort@Effort)
-  }
-  
-  if (inherits(Effort, 'hist')) {
-    return(Effort@Effort)
-  }
-  
-  if (inherits(Effort, 'mse')) {
-    return(Effort@Effort)
-  }
   
   methods::new(
     "effort",

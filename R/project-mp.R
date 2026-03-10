@@ -87,7 +87,7 @@ Project_MP <- function(Proj,
     CheckMPDataCompleteness(DataSimList, Complexes=Proj@OM@Complexes)
 
     # Run MP and return nested list of Advice objects
-    AdviceSimList <- ApplyMP(Year, 
+    AdviceSimList <- Apply_MP(Year, 
                              ManagementYears, 
                              LastAdviceSimList,
                              MPName,

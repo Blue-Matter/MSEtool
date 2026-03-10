@@ -98,7 +98,13 @@ lower if some fish are discarded and survive.}
 \item{\code{Log}}{List used internally to store diagnostic or runtime information.}
 
 \item{\code{Source}}{Optional character string referencing data sources or
-documentation. Supports Markdown.}
+documentation. Supports Markdown.
+\subsection{Accessing and Assigning Slots}{
+
+Slots in \linkS4class{om} objects can be accessed or assigned using
+functions matching the slot names (e.g., \code{Agency(om)} or
+\code{Agency(om) <- "DFO"}).
+}}
 }}
 
 \seealso{

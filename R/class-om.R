@@ -67,6 +67,12 @@
 #' @slot Source Optional character string referencing data sources or
 #' documentation. Supports Markdown.
 #'
+#' ## Accessing and Assigning Slots
+#'
+#' Slots in [om-class] objects can be accessed or assigned using
+#' functions matching the slot names (e.g., `Agency(om)` or
+#' `Agency(om) <- "DFO"`). 
+#' 
 #' @seealso [OM()], [Stock()], [Fleet()], [Obs()], [Imp()]
 #' 
 #' @include class-stock.R

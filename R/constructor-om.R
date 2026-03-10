@@ -217,8 +217,7 @@ NULL
 #' @rdname OM-accessors
 #' @export
 Agency <- function(OM) {
-  CheckClass(OM)
-  OM@Agency
+  AccessSlot(OM, 'Agency')
 }
 
 #' @rdname OM-accessors
@@ -230,8 +229,7 @@ Agency <- function(OM) {
 #' @rdname OM-accessors
 #' @export
 Allocation <- function(OM) {
-  CheckClass(OM)
-  OM@Allocation
+  AccessSlot(OM, 'Allocation')
 }
 
 #' @rdname OM-accessors
@@ -243,8 +241,7 @@ Allocation <- function(OM) {
 #' @rdname OM-accessors
 #' @export
 Author <- function(OM) {
-  CheckClass(OM)
-  OM@Author
+  AccessSlot(OM, 'Author')
 }
 
 #' @rdname OM-accessors
@@ -256,8 +253,7 @@ Author <- function(OM) {
 #' @rdname OM-accessors
 #' @export
 CatchFrac <- function(OM) {
-  CheckClass(OM)
-  OM@CatchFrac
+  AccessSlot(OM, 'CatchFrac')
 }
 
 #' @rdname OM-accessors
@@ -269,8 +265,7 @@ CatchFrac <- function(OM) {
 #' @rdname OM-accessors
 #' @export
 Complexes <- function(OM) {
-  CheckClass(OM)
-  OM@Complexes
+  AccessSlot(OM, 'Complexes')
 }
 
 #' @rdname OM-accessors
@@ -282,8 +277,7 @@ Complexes <- function(OM) {
 #' @rdname OM-accessors
 #' @export
 Control <- function(OM) {
-  CheckClass(OM)
-  OM@Control
+  AccessSlot(OM, 'Control')
 }
 
 #' @rdname OM-accessors
@@ -295,10 +289,8 @@ Control <- function(OM) {
 #' @rdname OM-accessors
 #' @export
 CurrentYear <- function(OM) {
-  CheckClass(OM)
-  OM@CurrentYear
+  AccessSlot(OM, 'CurrentYear')
 }
-
 
 #' @rdname OM-accessors
 #' @export
@@ -310,8 +302,7 @@ CurrentYear <- function(OM) {
 #' @rdname OM-accessors
 #' @export
 DataLag <- function(OM) {
-  CheckClass(OM)
-  OM@DataLag
+  AccessSlot(OM, 'DataLag')
 }
 
 #' @rdname OM-accessors
@@ -320,11 +311,21 @@ DataLag <- function(OM) {
   AssignSlot(x, value, 'DataLag')
 }
 
+#' @export
+Dynamics <- function(OM) {
+  AccessSlot(OM, 'Dynamics')
+}
+
+#' @rdname OM-accessors
+#' @export
+`Dynamics<-` <- function(x, value) {
+  AssignSlot(x, value, 'Dynamics')
+}
+
 #' @rdname OM-accessors
 #' @export
 EFactor <- function(OM) {
-  CheckClass(OM)
-  OM@EFactor
+  AccessSlot(OM, 'EFactor')
 }
 
 #' @rdname OM-accessors
@@ -335,8 +336,7 @@ EFactor <- function(OM) {
 #' @rdname OM-accessors
 #' @export
 Email <- function(OM) {
-  CheckClass(OM)
-  OM@Email
+  AccessSlot(OM, 'Email')
 }
 
 #' @rdname OM-accessors
@@ -349,8 +349,7 @@ Email <- function(OM) {
 #' @rdname OM-accessors
 #' @export
 Herm <- function(OM) {
-  CheckClass(OM)
-  OM@Herm
+  AccessSlot(OM, 'Herm')
 }
 
 #' @rdname OM-accessors
@@ -362,8 +361,7 @@ Herm <- function(OM) {
 #' @rdname OM-accessors
 #' @export
 Interval <- function(OM) {
-  CheckClass(OM)
-  OM@Interval
+  AccessSlot(OM, 'Interval')
 }
 
 #' @rdname OM-accessors
@@ -376,8 +374,7 @@ Interval <- function(OM) {
 #' @rdname OM-accessors
 #' @export
 Latitude <- function(OM) {
-  CheckClass(OM)
-  OM@Latitude
+  AccessSlot(OM, 'Latitude')
 }
 
 #' @rdname OM-accessors
@@ -389,8 +386,7 @@ Latitude <- function(OM) {
 #' @rdname OM-accessors
 #' @export
 Longitude <- function(OM) {
-  CheckClass(OM)
-  OM@Longitude
+  AccessSlot(OM, 'Longitude')
 }
 
 #' @rdname OM-accessors
@@ -402,8 +398,7 @@ Longitude <- function(OM) {
 #' @rdname OM-accessors
 #' @export
 maxF <- function(OM) {
-  CheckClass(OM)
-  OM@maxF
+  AccessSlot(OM, 'maxF')
 }
 
 #' @rdname OM-accessors
@@ -415,8 +410,7 @@ maxF <- function(OM) {
 #' @rdname OM-accessors
 #' @export
 nReps <- function(OM) {
-  CheckClass(OM)
-  OM@nReps
+  AccessSlot(OM, 'nReps')
 }
 
 #' @rdname OM-accessors
@@ -428,8 +422,7 @@ nReps <- function(OM) {
 #' @rdname OM-accessors
 #' @export
 nYear <- function(OM) {
-  CheckClass(OM)
-  OM@nYear
+  AccessSlot(OM, 'nYear')
 }
 
 #' @rdname OM-accessors
@@ -441,8 +434,7 @@ nYear <- function(OM) {
 #' @rdname OM-accessors
 #' @export
 pStar <- function(OM) {
-  CheckClass(OM)
-  OM@pStar
+  AccessSlot(OM, 'pStar')
 }
 
 #' @rdname OM-accessors
@@ -455,8 +447,7 @@ pStar <- function(OM) {
 #' @rdname OM-accessors
 #' @export
 pYear <- function(OM) {
-  CheckClass(OM)
-  OM@pYear
+  AccessSlot(OM, 'pYear')
 }
 
 #' @rdname OM-accessors
@@ -468,8 +459,7 @@ pYear <- function(OM) {
 #' @rdname OM-accessors
 #' @export
 Region <- function(OM) {
-  CheckClass(OM)
-  OM@Region
+  AccessSlot(OM, 'Region')
 }
 
 #' @rdname OM-accessors
@@ -482,8 +472,7 @@ Region <- function(OM) {
 #' @rdname OM-accessors
 #' @export
 Relations <- function(OM) {
-  CheckClass(OM)
-  OM@Relations
+  AccessSlot(OM, 'Relations')
 }
 
 #' @rdname OM-accessors
@@ -494,10 +483,10 @@ Relations <- function(OM) {
 
 #' @rdname OM-accessors
 #' @export
-Seasons <- function(object) {
-  if (inherits(object,'hist'))
-      return(object@OM@Seasons)
-  object@Seasons
+Seasons <- function(OM) {
+  if (inherits(OM,'hist'))
+      return(OM@OM@Seasons)
+  OM@Seasons
 }
 
 #' @rdname OM-accessors
@@ -510,8 +499,7 @@ Seasons <- function(object) {
 #' @rdname OM-accessors
 #' @export
 SharePar <- function(OM) {
-  CheckClass(OM)
-  OM@SharePar
+  AccessSlot(OM, 'SharePar')
 }
 
 #' @rdname OM-accessors
@@ -525,8 +513,7 @@ SharePar <- function(OM) {
 #' @rdname OM-accessors
 #' @export
 Source <- function(OM) {
-  CheckClass(OM)
-  OM@Source
+  AccessSlot(OM, 'Source')
 }
 
 #' @rdname OM-accessors
@@ -538,8 +525,7 @@ Source <- function(OM) {
 #' @rdname OM-accessors
 #' @export
 Sponsor <- function(OM) {
-  CheckClass(OM)
-  OM@Sponsor
+  AccessSlot(OM, 'Sponsor')
 }
 
 #' @rdname OM-accessors
