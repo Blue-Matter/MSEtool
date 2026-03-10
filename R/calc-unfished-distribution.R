@@ -52,14 +52,13 @@ CalcUnfishedDist <- function(Spatial, Ages=NULL, Years=NULL) {
   }
   
   # For each Sim, apply CalcAsymDist across the Age x Year slices of the
-  # nArea x nArea movement sub-matrix. aperm() restores Area to dimension 1
-  # after apply() collapses it to the last position.
+  # nArea x nArea movement sub-matrix.
   for (s in seq_len(nSim)) {
     UnfishedDist[s, , , ] <- apply(
-      abind::adrop(Spatial@Movement[s, , , , ,drop=FALSE], 1),
-      MARGIN  = c(3, 4),   # Age x Year
-      FUN     = CalcAsymDist
-    ) |> aperm(c(3, 1, 2))  # Area x Age x Year 
+      abind::adrop(Spatial@Movement[s, , , , , drop=FALSE], 1),
+      MARGIN = c(3, 4),   # Age x Year
+      FUN = function(x) CalcAsymDist(matrix(x, nrow=nArea, ncol=nArea))
+    ) # Area x Age x Year
   }
   
   Spatial@UnfishedDist <- UnfishedDist
