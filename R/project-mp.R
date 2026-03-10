@@ -34,6 +34,7 @@ Project_MP <- function(Proj,
                        YearsHist, 
                        YearsProj,
                        silent=FALSE) {
+  
   ManagementYears <- CalcManagementYears(YearsProj, Proj@OM@Interval)
   YearsAll   <- c(YearsHist, YearsProj)
   StockNames <- StockNames(MSE)

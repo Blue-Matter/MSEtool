@@ -30,11 +30,32 @@ ExtendHist <- function(Hist, Years, silent=FALSE, id=NULL) {
   for (st in 1:nStock) {
     stock <- Hist@OM@Stock[[st]]
     AgeClasses <- stock@Ages@Classes
-    Hist@OM@Stock[[st]] <- Extend(array=stock, 
-                                  nSim = NULL, # don't extend sims 
-                                  AgeClasses = AgeClasses,
-                                  Years = Years,
-                                  Areas = Areas)
+    
+    for (sl in slotNames(stock)) {
+      if (sl =='SRR') {
+        for (sl2 in slotNames('srr')) {
+          if (sl2 =='RecDevHist')
+            next
+          
+          slot(Hist@OM@Stock[[st]]@SRR,sl2) <- Extend(array=slot(Hist@OM@Stock[[st]]@SRR,sl2), 
+                                                      nSim = NULL, # don't extend sims 
+                                                      AgeClasses = AgeClasses,
+                                                      Years = Years,
+                                                      Areas = Areas)
+          
+        }
+      } else {
+        slot(Hist@OM@Stock[[st]],sl) <- Extend(array=slot(Hist@OM@Stock[[st]],sl), 
+                                               nSim = NULL, # don't extend sims 
+                                               AgeClasses = AgeClasses,
+                                               Years = Years,
+                                               Areas = Areas)
+      }
+    }
+        
+      
+    
+
     
     if (!silent) {
       cli::cli_progress_update(id=id)

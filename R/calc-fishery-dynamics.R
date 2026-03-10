@@ -22,7 +22,6 @@ CalcFisheryDynamics <- function(Hist,
                                 Years=NULL,
                                 Sims=NULL,
                                 DoCalcCatch=1,
-                                DoBackCalcEffort=1,
                                 IdenticalSim=FALSE,
                                 debug = 0,
                                 clone = NULL) {
@@ -60,8 +59,8 @@ CalcFisheryDynamics <- function(Hist,
                                    clone=1L)
     
 
-    ts_slots <- slotNames(isVirtualClass('timeseries') || 'timeseries')
-    for (sl in slotNames(Hist_1)) {
+    ts_slots <- slotNames('timeseries')
+    for (sl in ts_slots) {
       if (sl == 'Misc') next
       slot(Hist, sl) <- CopyFirstSim(x=slot(Hist_1, sl))
     }

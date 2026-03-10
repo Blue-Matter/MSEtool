@@ -92,28 +92,23 @@ inline void CalcArea_F(
           const double rs = RelSize(sim_rs, ar);
           // Effort density
           const double ed = (rs > 0.0) ? E * Distribution(sim_dist, y, fl, ar) / rs : 0.0;
-          const double q_eff = q_fl * ed;
           
+          double q_eff = std::min(q_fl * ed, maxF);
           if (q_eff <= 0.0) continue;
           
           for (int age = 0; age < nAge; ++age) {
             
-            double &Fi_val = Fi(sim, age, y, fl, ar);
-            double &Fd_val = Fd(sim, age, y, fl, ar);
-            double &Fr_val = Fr(sim, age, y, fl, ar);
-            
             const double sel = S(sim_sel, age, y, fl, ar);
             const double ret = R(sim_ret, age, y, fl, ar);
             const double dm  = DM(sim_dm, age, y, fl, ar);
-          
-            const double F_interact = std::min(q_eff * sel, maxF);
-            const double F_retain = F_interact * ret;
-            const double F_disc   = (F_interact - F_retain) * dm;
             
-            Fi_val = F_interact;
-            Fd_val = F_retain + F_disc;
-            Fr_val = F_retain;
+            const double F_interact = q_eff * sel;
+            const double F_retain   = F_interact * ret;
+            const double F_disc     = (F_interact - F_retain) * dm;
             
+            Fi(sim, age, y, fl, ar) = F_interact;
+            Fd(sim, age, y, fl, ar) = F_retain + F_disc;
+            Fr(sim, age, y, fl, ar) = F_retain;
             
           } // end age
         } // end area

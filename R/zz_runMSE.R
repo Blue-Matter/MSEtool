@@ -14,6 +14,9 @@ Project <- function (Hist=NULL,
                      nSim=NULL, 
                      Reduce=TRUE) {
   
+  
+  Hist <- UpdateObject(Hist)
+  
   if (inherits(Hist, 'hist'))
     return(
       Project_hist(Hist, MPs, parallel, silent, nSim, Reduce)

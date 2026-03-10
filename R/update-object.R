@@ -1,76 +1,121 @@
 #' Update an S4 Object and Its Slots
 #'
-#' Recursively updates an openMSE S4 object to ensure all slots are valid and optionally
-#' replaces specified slots with new values.
-#'
-#' The function first calls `UpdateSlots()` to recursively rebuild any invalid
-#' or corrupted slots using class defaults. It then replaces slots provided via
-#' `...` with the supplied objects, provided the names match existing slot names.
-#'
-#' * Invalid or corrupted slots are reset to their class defaults.
-#' * Nested S4 objects are updated recursively.
-#' * Named arguments in `...` must correspond to slot names.
-#' * Unknown slot names are ignored with a warning.
+#' Recursively updates an openMSE S4 object to ensure all slots are valid, and
+#' optionally replaces specified slots with new values. [UpdateSlots()] is
+#' called first to reset any inaccessible or corrupted slots to their class
+#' defaults, recursing into nested S4 objects. Named arguments in `...` are
+#' then used to replace slots by name.
 #'
 #' @param object An S4 object.
 #' @param ... Named objects used to replace existing slots. Names must match
-#'   slot names in `object`.
+#'   slot names in `object`. Unrecognised names emit a warning and are ignored.
 #'
-#' @return The updated S4 object.
+#' @return The updated S4 object with all slots valid and any supplied
+#'   replacements applied.
 #'
 #' @examples
 #' \dontrun{
-#'   obj <- UpdateObject(obj, Fleet = newFleet)
+#' obj <- UpdateObject(obj, Fleet=newFleet)
 #' }
 #'
 #' @export
 UpdateObject <- function(object, ...) {
   object <- UpdateSlots(object)
   
-  DotsList <- list(...)
-  names(DotsList) <- lapply(DotsList, class) |> lapply(firstup)
-  if (!length(DotsList))
+  dots <- list(...)
+  if (!length(dots))
     return(object)
   
-  slots <- slotNames(class(object))
-  UpdatedSlots <- slots[slots %in% names(DotsList)]
-  Invalid <- names(DotsList)[!names(DotsList) %in% slots]
-  if (length(Invalid)) {
-    cli::cli_alert_warning('Note: {.val {Invalid}} are not slots in object class {.cls {class(object)}}. Ignoring.')
-  }
+  if (is.null(names(dots)) || any(!nzchar(names(dots))))
+    cli::cli_abort("All arguments in `...` must be named with the slot name to update.")
   
-  for (sl in UpdatedSlots) {
-    slot(object, sl) <- DotsList[[sl]]
-  }
+  slots   <- slotNames(class(object))
+  valid   <- names(dots)[names(dots) %in% slots]
+  invalid <- names(dots)[!names(dots) %in% slots]
+  
+  if (length(invalid))
+    cli::cli_alert_warning(
+      "{.val {invalid}} {?is/are} not slot{?s} of {.cls {class(object)}}. Ignoring."
+    )
+  
+  for (sl in valid)
+    slot(object, sl) <- dots[[sl]]
+  
   object
 }
+
+
 
 #' @rdname UpdateObject
 #' @export
 UpdateSlots <- function(object) {
+  if (is.list(object))
+    return(lapply(object, UpdateSlots))
+  
   if (!isS4(object))
     return(object)
-  suppressWarnings(
-    slots <- slotNames(object)
-  )
   
-  for (sl in slots) {
-    chk <- try(slot(object,sl), silent=TRUE)
-
-    if (inherits(chk, "try-error")) {
-      newobject <- new(class(object))
-      slot(object, sl) <- slot(newobject, sl)
-      next
+  has_missing <- any(vapply(slotNames(object), \(sl)
+                            inherits(try(slot(object, sl), silent=TRUE), 'try-error'),
+                            logical(1)
+  ))
+  
+  if (has_missing) {
+    fresh <- try(new(class(object)), silent=TRUE)
+    if (!inherits(fresh, 'try-error')) {
+      for (sl in slotNames(fresh)) {
+        current <- try(slot(object, sl), silent=TRUE)
+        if (!inherits(current, 'try-error'))
+          slot(fresh, sl) <- current
+      }
+      object <- fresh
     }
+  }
+  
+  # Recurse into accessible slots
+  for (sl in slotNames(object)) {
+    current <- try(slot(object, sl), silent=TRUE)
+    if (inherits(current, 'try-error')) next
     
-    if (isS4(chk)) {
-      slot(object, sl) <- Recall(chk)
-    }
+    updated <- if (isS4(current))    UpdateSlots(current)   else
+      if (is.list(current)) update_list(current)   else
+        current
     
+    if (!identical(current, updated))
+      slot(object, sl) <- updated
   }
   object
+  
+ 
 }
 
+any_missing_slots <- function(x) {
+  if (is.list(x))
+    return(any(vapply(x, any_missing_slots, logical(1))))
+  
+  if (!isS4(x))
+    return(FALSE)
+  
+  for (sl in slotNames(x)) {
+    current <- try(slot(x, sl), silent=TRUE)
+    if (inherits(current, 'try-error'))
+      return(TRUE)
+    if (isS4(current)  && any_missing_slots(current)) return(TRUE)
+    if (is.list(current) && any_missing_slots(current)) return(TRUE)
+  }
+  FALSE
+}
 
-
+update_list <- function(lst) {
+  if (!is.list(lst))         return(lst)
+  if (!any_missing_slots(lst)) return(lst)
+  
+  updated        <- lapply(lst, \(x) {
+    if (is.list(x)) return(update_list(x))
+    if (isS4(x))    return(UpdateSlots(x))
+    x
+  })
+  names(updated) <- names(lst)
+  updated
+}
 

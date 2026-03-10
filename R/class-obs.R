@@ -190,17 +190,21 @@ setClass(
 setClass(
   "obs",
   slots = c(
-    Name          = "character",
-    LifeHistory   = "lifehistoryobs",
-    Exploitation  = "exploitationobs",
-    Effort        = "effortobs",
-    Landings      = "catchobs",
-    Discards      = "catchobs",
-    CPUE          = "indicesobs",
-    Survey        = "indicesobs",
-    CAA           = "CompObs",
-    CAL           = "CompObs",
-    Misc          = "list"
+    Name           = "character",
+    LifeHistory    = "lifehistoryobs",
+    Exploitation   = "exploitationobs",
+    Effort         = "effortobs",
+    Landings       = "catchobs",
+    Discards       = "catchobs",
+    CPUE           = "indicesobs",
+    Survey         = "indicesobs",
+    LandingsAtAge  = "CompObs",
+    DiscardsAtAge  = "CompObs",
+    LandingsAtSize = "CompObs",
+    DiscardsAtSize = "CompObs",
+    CAA            = "CompObs", # not used - deprecated
+    CAL            = "CompObs", # not used - deprecated
+    Misc           = "list"
   )
 )
 

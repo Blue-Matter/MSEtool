@@ -104,7 +104,7 @@ Update_Effort_Sim <- function(Proj,
     # if (UnchangedManagement(Advice, AdvicePrevious, "Effort"))    next
     
     # Convert from Relative to Absolute Effort
-    Advice <- Convert_Effort_Abs(Proj, sim, Advice, YearsHist)
+    Advice <- Convert_Effort_Abs(Proj, sim, Advice, YearsHist, nFleet)
       
     # Distribute Effort over Areas if specified in MP 
     temp <- Distribute_Effort_Area(Proj, sim, TSIndex, Advice, nFleet, nArea, FleetNames, YearsHist, YearsProj)
@@ -130,11 +130,12 @@ Update_Effort_Sim <- function(Proj,
                                         ncol  = nFleet,
                                         byrow = TRUE)
   
-  Distribution <- Distribution[[min(MinEffortInd)]]
+  
   
   # Apply spatial distribution if specified
   # TODO - review indexing for multi-complex spatial effort distribution
-  if (!is.null(Distribution)) {
+  if (!is.null(Distribution) && length(Distribution)) {
+    Distribution <- Distribution[[min(MinEffortInd)]]
     ArrayFill(Proj@Distribution) <- Distribution
   }
   
@@ -175,7 +176,7 @@ Distribute_Effort_Area <- function(Proj,
   }   
   
   if (length(dim(Advice@Effort)) == 1) {
-    Advice@Effort <- array(Advice@Effort, dimnames=list(Fleet=FleetNames))
+    Advice@Effort <- array(rep(Advice@Effort,nFleet)[seq_len(nFleet)], dimnames=list(Fleet=FleetNames))
     return(list(Distribution = NULL, Advice = Advice))
   } 
   
@@ -212,14 +213,16 @@ Rel_Area_Effort <- function(mat) {
 Convert_Effort_Abs <- function(Proj,
                                sim,
                                Advice, 
-                               YearsHist) {
-  
-  if (is.array(Advice@Effort)) return(Advice)
+                               YearsHist,
+                               nFleet) {
   
   if (Advice@EffType == 'Abs') return(Advice)
   
- 
+  if (length(dim(Advice@Effort)) >1)
+    return(Advice)
+  
   LastHistEffort <- Proj@Effort[sim, length(YearsHist), ]
+  Advice@Effort <- rep(Advice@Effort, nFleet)[seq_len(nFleet)]
   Advice@Effort  <- Advice@Effort * LastHistEffort 
   Advice
 }

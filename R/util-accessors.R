@@ -124,6 +124,37 @@ Dist <- function(x) {
 
 #' @rdname Access
 #' @export
+`Dist<-` <- function(x, value) {
+  AssignSlot(x, value, 'Dist')
+}
+
+#' @rdname Access
+#' @export
+DiscardsAtAge <- function(x) {
+  AccessSlot(x,'DiscardsAtAge')
+}
+
+#' @rdname Access
+#' @export
+`DiscardsAtAge<-` <- function(x, value) {
+  AssignSlot(x, value, 'DiscardsAtAge')
+}
+
+#' @rdname Access
+#' @export
+DiscardsAtSize <- function(x) {
+  AccessSlot(x,'DiscardsAtSize')
+}
+
+#' @rdname Access
+#' @export
+`DiscardsAtSize<-` <- function(x, value) {
+  AssignSlot(x, value, 'DiscardsAtSize')
+}
+
+
+#' @rdname Access
+#' @export
 Exploitation <- function(x) {
   AccessSlot(x,'Exploitation')
 }
@@ -132,6 +163,30 @@ Exploitation <- function(x) {
 #' @export
 `Exploitation<-` <- function(x, value) {
   AssignSlot(x, value, 'Exploitation')
+}
+
+#' @rdname Access
+#' @export
+LandingsAtAge <- function(x) {
+  AccessSlot(x,'LandingsAtAge')
+}
+
+#' @rdname Access
+#' @export
+`LandingsAtAge<-` <- function(x, value) {
+  AssignSlot(x, value, 'LandingsAtAge')
+}
+
+#' @rdname Access
+#' @export
+LandingsAtSize <- function(x) {
+  AccessSlot(x,'LandingsAtSize')
+}
+
+#' @rdname Access
+#' @export
+`LandingsAtSize<-` <- function(x, value) {
+  AssignSlot(x, value, 'LandingsAtSize')
 }
 
 

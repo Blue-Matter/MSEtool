@@ -54,6 +54,8 @@ IdenticalSims <- function(object, ignore=NULL, debug=FALSE) {
       
       sim_dim <- which(names(dnames) == "Sim")
       dims <- dim(object)
+      if (dims[sim_dim]==1)
+        return(TRUE)
       
       perm <- c(sim_dim, setdiff(seq_along(dims), sim_dim))
       arr_perm <- aperm(object, perm)

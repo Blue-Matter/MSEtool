@@ -17,6 +17,7 @@ Simulate_om <- function(OM = NULL,
   OnExit()
   CheckClass(OM)
   OM <- UpdateObject(OM)
+
   OM <- StartUp(OM, nSim, silent=silent)
   
   if (is.null(OM@Name) || nchar(OM@Name) < 2)

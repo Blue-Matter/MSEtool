@@ -28,6 +28,7 @@ Project_hist <- function(Hist,
 
   # ---- Initial Checks and Setup ----
   StartTime <- Sys.time()
+  Hist <- UpdateObject(Hist)
   
   OnExit()
   CheckClass(Hist, 'hist', 'Hist')
@@ -55,7 +56,7 @@ Project_hist <- function(Hist,
   Proj <- CalcFisheryDynamics(Proj, 
                               Years=c(tail(YearsHist,1)), 
                               clone=1) 
-
+  
   # ---- Create MSE Object ----
   MSE <- Hist2MSE(Proj, MPNames = MPs)
 
