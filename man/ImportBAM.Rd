@@ -88,6 +88,3 @@ should be named character vectors where names are the retain fleet names and
 values are the corresponding BAM fleet/selectivity names to use instead of
 the defaults.
 }
-\seealso{
-\code{\link[=CompareBAM]{CompareBAM()}}
-}

@@ -54,7 +54,6 @@
 #' values are the corresponding BAM fleet/selectivity names to use instead of
 #' the defaults.
 #'
-#' @seealso [CompareBAM()]
 #' @export
 ImportBAM <- function(Stock='Red Snapper',     
                       nSim=48,
